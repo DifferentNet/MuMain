@@ -637,7 +637,7 @@
 //???? NPC ?? 2009.11.24 ???		
 545	1	"Christine Mercader Art. Varios"
 546	1	"Joyero Raul"
-547	1	"Julia Miembro Unión de Mercado"
+547	1	"Moldovan Villager"
 //????????? ?????? ??		
 548	1	"Esqueleto transformado"
 549	1	"Orc Sangriento"

@@ -637,7 +637,7 @@
 //???? NPC ?? 2009.11.24 ???		
 545	1	"Christine, Merc. Prod. Gerais"
 546	1	"Joalheiro Raul"
-547	1	"Julia, Membro da Un. Mercantil"
+547	1	"Moldovan Villager"
 //????????? ?????? ??		
 548	1	"Esqueleto transformado"
 549	1	"Orc sanguinário"
