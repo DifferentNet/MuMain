@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <array>
+#include <map>
 #include <set>
 #include <string>
 #include <thread>
@@ -66,6 +67,7 @@ namespace MUHelper
 		int ComputeDistanceBetween(POINT posA, POINT posB);
 		int SimulateMove(POINT posMove);
 		int ObtainItem();
+		int CountPickupAttempt(int iItemId);
 		int SelectItemToObtain();
 		bool ShouldObtainItem(int iItemId);
 		ActionSkillType GetHealingSkill();
@@ -81,6 +83,7 @@ namespace MUHelper
 		std::set<int> m_setTargets;
 		std::set<int> m_setTargetsAttacking;
 		std::set<int> m_setItems;
+		std::map<int, int> m_mapPickupAttempts; // drop id -> pickups requested; guarded like m_setItems
 		int m_iCurrentItem;
 		int m_iCurrentTarget;
 		int m_iCurrentBuffIndex;

@@ -22,11 +22,14 @@
 #include "World/MapInfra/MapManager.h"
 #include "Network/Server/WSclient.h"
 #include "GameLogic/Items/ItemCategories.h"
+#include "GameLogic/Items/ShopRestrictions.h"
 
 #include "MuHelper.h"
 
 constexpr int MAX_ACTIONABLE_DISTANCE = 10;
 constexpr int DEFAULT_DURABILITY_THRESHOLD = 50;
+// Pickups of one drop the server refused before the helper gives the drop up (see ObtainItem).
+constexpr int MAX_PICKUP_ATTEMPTS = 5;
 
 SpinLock _targetsLock;
 SpinLock _itemsLock;
@@ -712,6 +715,13 @@ namespace MUHelper
                     continue;
                 }
 
+                // Arrows and bolts count their shots as durability but can't be repaired: without this,
+                // a low quiver made the helper send a refused repair request every tick.
+                if (GameLogic::Items::IsRepairBan(pItem))
+                {
+                    continue;
+                }
+
                 ITEM_ATTRIBUTE* pAttr = &ItemAttribute[pItem->Type];
                 if (!pAttr)
                 {
@@ -1005,8 +1015,16 @@ namespace MUHelper
         switch (result)
         {
         case PickupResult::Requested:
-            // The request is out; stop tracking the drop, as before.
-            DeleteItem(m_iCurrentItem);
+            // The drop stays tracked until it leaves the ground (DeleteItem from the viewport): the
+            // server refuses a pickup while it still sees the character a few tiles away, for example
+            // after a quick walk between many drops, and a refused drop must be tried again rather than
+            // left lying there. A drop refused MAX_PICKUP_ATTEMPTS times is given up.
+            if (CountPickupAttempt(m_iCurrentItem) >= MAX_PICKUP_ATTEMPTS)
+            {
+                DeleteItem(m_iCurrentItem);
+            }
+
+            m_iCurrentItem = MAX_ITEMS;
             return 1;
         case PickupResult::Gone:
             DeleteItem(m_iCurrentItem);
@@ -1016,6 +1034,10 @@ namespace MUHelper
             // Walking towards it: the helper's other work waits a frame.
             return 0;
         case PickupResult::TooFar:
+            // Out of reach now (the character moved on to fight): choose the closest drop again on the
+            // next tick instead of waiting for this one to expire, which kept every other drop waiting.
+            m_iCurrentItem = MAX_ITEMS;
+            return 1;
         case PickupResult::Busy:
             return 1;
         }
@@ -1057,6 +1079,7 @@ namespace MUHelper
     {
         _itemsLock.lock();
         m_setItems.insert(iItemId);
+        m_mapPickupAttempts.erase(iItemId); // a new drop may reuse the id of an old one
         _itemsLock.unlock();
     }
 
@@ -1064,12 +1087,21 @@ namespace MUHelper
     {
         _itemsLock.lock();
         m_setItems.erase(iItemId);
+        m_mapPickupAttempts.erase(iItemId);
         _itemsLock.unlock();
 
         if (iItemId == m_iCurrentItem)
         {
             m_iCurrentItem = MAX_ITEMS;
         }
+    }
+
+    int CMuHelper::CountPickupAttempt(int iItemId)
+    {
+        _itemsLock.lock();
+        const int iAttempts = ++m_mapPickupAttempts[iItemId];
+        _itemsLock.unlock();
+        return iAttempts;
     }
 
     int CMuHelper::SelectItemToObtain()
