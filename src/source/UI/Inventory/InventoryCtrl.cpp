@@ -1615,9 +1615,13 @@ bool mu::ui::window::CInventoryCtrl::AreItemsStackable(ITEM* pSourceItem, ITEM* 
         return true;
     }
 
+    // Apple, healing and mana potions and the antidote: our server stacks them up to 255
+    // (config.ItemDefinition, server/trim/season3.sql), where classic MU stopped at 3. The client only
+    // decides whether to try; the server stacks as much as fits and keeps the rest.
+    constexpr int BasicPotionStackLimit = 255;
     if ((iSrcType >= ITEM_POTION && iSrcType <= ITEM_ANTIDOTE && iSrcType != ITEM_SIEGE_POTION) &&
         (iTarType >= ITEM_POTION && iTarType <= ITEM_ANTIDOTE && iTarType != ITEM_SIEGE_POTION) &&
-        (iSrcDurability < 3 && iTarDurability < 3))
+        (iSrcDurability < BasicPotionStackLimit && iTarDurability < BasicPotionStackLimit))
     {
         return true;
     }
