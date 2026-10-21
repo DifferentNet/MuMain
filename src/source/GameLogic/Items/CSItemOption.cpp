@@ -52,6 +52,32 @@ void ReportFileIssue(const wchar_t* filename, const wchar_t* issue)
     MessageBox(g_hWnd, text, nullptr, MB_OK);
     SendMessage(g_hWnd, WM_DESTROY, 0, 0);
 }
+
+// Webzen's set names are UTF-8, but two of them (Chrono's, Semeden's) carry a GB2312 apostrophe, the
+// bytes A1 AF (A1 AE for the opening one), which UTF-8 shows as two unknown characters: "Chrono??s Ring of
+// Magic". They become a plain apostrophe before the conversion.
+void ReplaceGb2312Apostrophes(char* text, std::size_t size)
+{
+    std::size_t out = 0;
+    for (std::size_t in = 0; in < size && text[in] != '\0'; ++in)
+    {
+        const auto lead = static_cast<unsigned char>(text[in]);
+        const auto next = in + 1 < size ? static_cast<unsigned char>(text[in + 1]) : 0;
+        if (lead == 0xA1 && (next == 0xAE || next == 0xAF))
+        {
+            text[out++] = '\'';
+            ++in;
+            continue;
+        }
+
+        text[out++] = text[in];
+    }
+
+    if (out < size)
+    {
+        text[out] = '\0';
+    }
+}
 }
 
 static  CSItemOption csItemOption; // do not delete, required for singleton initialization.
@@ -163,6 +189,7 @@ bool CSItemOption::OpenItemSetOption(const wchar_t* filename)
         std::memcpy(&current, pSeek, entrySize);
         auto* target = &m_ItemSetOption[i];
 
+        ReplaceGb2312Apostrophes(current.strSetName, sizeof(current.strSetName));
         CMultiLanguage::ConvertFromUtf8(target->strSetName, current.strSetName);
         target->byOptionCount = current.byOptionCount;
         target->bySetItemCount = 0; // Is calculated below
