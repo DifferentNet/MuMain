@@ -48,3 +48,12 @@ mu_add_test(
     LINK_LIBS
         MuClient
 )
+
+mu_add_test(
+    NAME test_path_end_nodes
+    SOURCES
+        test_path_end_nodes.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/App/Platform/Windows/Winmain.cpp
+    LINK_LIBS
+        MuClient
+)

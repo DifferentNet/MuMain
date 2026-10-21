@@ -309,72 +309,40 @@ inline bool PATH::FindPath(int xStart, int yStart, int xEnd, int yEnd, bool bErr
 
 inline void PATH::SetEndNodes(bool bErrorCheck, int iWall, int xEnd, int yEnd, float fDistance)
 {
+    // Every tile within the range around the target ends the path. Tiles beyond the map's edge are skipped by
+    // their position: a target near the edge has part of its range outside, as Kanturu's monsters do. Checked by
+    // index alone, a tile past the left or right edge marked one at the other end of the neighbouring row, where
+    // a path could then end across the map, and each one past the top or bottom wrote "Error Path" to the log,
+    // flushed to disk, hundreds of times a session with MU Helper (MU Moldova, 2026-10-21).
+    const auto markEnd = [&](int x, int y)
+    {
+        if (!CheckXYPos(x, y))
+            return;
+
+        const int iEndIndex = GetIndex(x, y);
+        if (!(bErrorCheck && iWall <= m_pbyMap[iEndIndex]))
+        {
+            m_pbyClosed[iEndIndex] = PATH_END;
+            AddClearPos(iEndIndex);
+        }
+    };
+
     int iDistance = (int)fDistance;
     for (int j = -iDistance; j <= iDistance; j++)
     {
         int xRange = iDistance - abs(j);
         for (int i = -xRange; i <= 0; i++)
         {
-            int iEndIndex = GetIndex(xEnd + i, yEnd + j);
-            if (iEndIndex >= 0 && iEndIndex < (m_iSize))
-            {
-                if (!(bErrorCheck && iWall <= m_pbyMap[iEndIndex]))
-                {
-                    m_pbyClosed[iEndIndex] = PATH_END;
-                    AddClearPos(iEndIndex);
-                }
-            }
-            else
-            {
-                g_ErrorReport.Write(L"Error Path : %d \r\n", iEndIndex);
-            }
-            iEndIndex = GetIndex(xEnd - i, yEnd + j);
-
-            if (iEndIndex >= 0 && iEndIndex < (m_iSize))
-            {
-                if (!(bErrorCheck && iWall <= m_pbyMap[iEndIndex]))
-                {
-                    m_pbyClosed[iEndIndex] = PATH_END;
-                    AddClearPos(iEndIndex);
-                }
-            }
-            else
-            {
-                g_ErrorReport.Write(L"Error Path : %d \r\n", iEndIndex);
-            }
+            markEnd(xEnd + i, yEnd + j);
+            markEnd(xEnd - i, yEnd + j);
         }
 
         for (int i = -iDistance; i < -xRange; i++)
         {
             if ((float)sqrt((float)(i * i + j * j)) < fDistance)
             {
-                int iEndIndex = GetIndex(xEnd + i, yEnd + j);
-                if (iEndIndex >= 0 && iEndIndex < (m_iSize))
-                {
-                    if (!(bErrorCheck && iWall <= m_pbyMap[iEndIndex]))
-                    {
-                        m_pbyClosed[iEndIndex] = PATH_END;
-                        AddClearPos(iEndIndex);
-                    }
-                }
-                else
-                {
-                    g_ErrorReport.Write(L"Error Path : %d \r\n", iEndIndex);
-                }
-
-                iEndIndex = GetIndex(xEnd - i, yEnd + j);
-                if (iEndIndex >= 0 && iEndIndex < (m_iSize))
-                {
-                    if (!(bErrorCheck && iWall <= m_pbyMap[iEndIndex]))
-                    {
-                        m_pbyClosed[iEndIndex] = PATH_END;
-                        AddClearPos(iEndIndex);
-                    }
-                }
-                else
-                {
-                    g_ErrorReport.Write(L"Error Path : %d \r\n", iEndIndex);
-                }
+                markEnd(xEnd + i, yEnd + j);
+                markEnd(xEnd - i, yEnd + j);
             }
         }
     }
