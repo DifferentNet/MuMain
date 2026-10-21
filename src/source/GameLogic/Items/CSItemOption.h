@@ -120,6 +120,9 @@ private:
     bool	OpenItemSetOption(const wchar_t* filename);
     void	checkItemType(SET_SEARCH_RESULT* optionList, const int iType, const int ancientDiscriminator) const;
     void	calcSetOptionList(const SET_SEARCH_RESULT* optionList);
+    // Adds the options of set.SetNumber to set.SetOption, active as far as set.ItemCount reaches; returns
+    // whether the set is complete.
+    bool	AddSetOptions(SET_SEARCH_RESULT_OPT& set, int firstClass, int secondClass) const;
     
     void    getAllAddState(std::uint16_t* Strength, std::uint16_t* Dexterity, std::uint16_t* Energy, std::uint16_t* Vitality, std::uint16_t* Charisma) const;
 
