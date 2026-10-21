@@ -145,3 +145,8 @@
 .attr-lines span { color: token(text-primary); }
 .attr-lines span.boosted { color: rgb(100, 150, 255); }
 .attr-lines span.buffed { color: token(accent-gold); }
+
+/* MU Moldova has no master levels (season3.sql sets MaximumMasterLevel to 0), so the
+   master skill tree button is gone; CCharacterInfoWindow::RmlClickMasterLevel and the A key
+   no longer open the window either. */
+#btn_masterlevel { display: none; }

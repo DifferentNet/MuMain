@@ -325,8 +325,8 @@ void mu::ui::window::CCharacterInfoWindow::RmlClickPet()
 
 void mu::ui::window::CCharacterInfoWindow::RmlClickMasterLevel()
 {
-    if (gCharacterManager.IsMasterLevel(Hero->Class) && Hero->Class != CLASS_TEMPLENIGHT)
-        g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_MASTER_LEVEL);
+    // MU Moldova has no master levels or master skill tree: the server caps the master level at 0
+    // and the themes hide this button, so it opens nothing.
 }
 
 void mu::ui::window::CCharacterInfoWindow::LoadImages()

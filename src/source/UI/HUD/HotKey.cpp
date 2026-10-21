@@ -236,18 +236,7 @@ bool mu::ui::window::CHotKey::UpdateKeyEvent()
         PlayBuffer(SOUND_CLICK01);
         return false;
     }
-    else if (mu::ui::window::IsPress('A'))
-    {
-        if (gCharacterManager.IsMasterLevel(Hero->Class) == true
-            && Hero->Class != CLASS_TEMPLENIGHT)
-        {
-            g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_MASTER_LEVEL);
-        }
-
-        PlayBuffer(SOUND_CLICK01);
-
-        return false;
-    }
+    // 'A' opened the master skill tree; MU Moldova has no master levels, so the key does nothing.
     else if (mu::ui::window::IsPress('U'))
     {
         g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_WINDOW_MENU);

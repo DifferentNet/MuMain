@@ -203,3 +203,8 @@
 .attr-lines.attr-lines-agi span { height: calc(13px * var(--root-scale)); }
 .attr-lines.attr-lines-vit span { height: calc(13px * var(--root-scale)); }
 .attr-lines.attr-lines-ene span { height: calc(13px * var(--root-scale)); }
+
+/* MU Moldova has no master levels (season3.sql sets MaximumMasterLevel to 0), so the
+   master skill tree button is gone; CCharacterInfoWindow::RmlClickMasterLevel and the A key
+   no longer open the window either. */
+#btn_masterlevel { display: none; }
