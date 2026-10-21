@@ -1000,6 +1000,13 @@ static bool SDLCALL Win32MessageHook(void* /*userdata*/, MSG* msg)
     // SDL. SDL turns the close into SDL_EVENT_QUIT, which the main loop handles.
     if (msg->message == WM_CLOSE)
         return true;
+    // Title bar and frame mouse messages (the close, minimize and maximize buttons, dragging or sizing the
+    // window) start a modal tracking loop in DefWindowProc. WndProc ends in DefWindowProc and SDL dispatches the
+    // message to it again, so a second loop started after the first one had done its job and held the main
+    // loop until the next click: the window closed, minimized or moved only on a second click. WndProc handles
+    // none of these, so SDL alone takes them.
+    if (msg->message >= WM_NCMOUSEMOVE && msg->message <= WM_NCXBUTTONDBLCLK)
+        return true;
 #ifdef _EDITOR
     // The editor's own windows are not the game's: SDL alone handles theirs.
     if (msg->hwnd != nullptr && msg->hwnd != g_hWnd)
