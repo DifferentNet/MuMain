@@ -283,7 +283,10 @@ void CSkillManager::RebuildSkillAttributeRequirementsCache()
         }
 
         DemendConditionInfo skillRequirements;
-        skillRequirements.SkillLevel = SkillAttribute[baseSkill].Level;
+        // No character level for a learned skill (MU Moldova, 2026-10-21): the server dropped those requirements
+        // (server/trim/season3.sql), so a character can use its skills right after a reset takes it back to level 10.
+        // Learning one still needs the level, which the orb or scroll that teaches it asks for.
+        skillRequirements.SkillLevel = 0;
         skillRequirements.SkillStrength = SkillAttribute[baseSkill].Strength;
         skillRequirements.SkillDexterity = SkillAttribute[baseSkill].Dexterity;
         skillRequirements.SkillVitality = 0;

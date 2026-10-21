@@ -458,7 +458,8 @@ void EmitRequirements(Model& m, const BuildOptions& options, int skillType)
         curCha = CharacterAttribute->Charisma + CharacterAttribute->AddCharisma;
     }
 
-    AddRequirementLine(m, SkillAttribute[skillType].Level, curLevel, GLOBAL_TEXT_REQUIRED_LEVEL);
+    // No level line: a learned skill needs no character level (MU Moldova; see SkillManager.cpp).
+    (void)curLevel;
     AddRequirementLine(m, SkillAttribute[skillType].Strength, curStr, GLOBAL_TEXT_REQUIRED_STRENGTH);
     AddRequirementLine(m, SkillAttribute[skillType].Dexterity, curDex, GLOBAL_TEXT_REQUIRED_DEXTERITY);
     AddRequirementLine(m, reqEnergy, curEnergy, GLOBAL_TEXT_REQUIRED_ENERGY);
