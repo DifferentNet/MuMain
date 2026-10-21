@@ -40,6 +40,8 @@ struct ChatCommand
     std::wstring Description;
     BYTE MinimumCharacterStatus = 0;
     std::vector<ChatCommandParameter> Parameters;
+    // One the client handles itself (CheckCommand in ZzzInterface.cpp), which the server doesn't know.
+    bool IsLocal = false;
 
     // A command without required parameters can be executed right away.
     bool CanExecuteDirectly() const;
@@ -82,7 +84,8 @@ public:
     static std::wstring BuildCommandLine(const ChatCommand& command, const std::vector<std::wstring>& values);
 
     // Sends the line as a chat message. The server routes messages which
-    // start with a slash to the command instead of broadcasting them.
+    // start with a slash to the command instead of broadcasting them. A line of
+    // one of the client's own commands is handled here, as if it had been typed.
     static void Execute(const std::wstring& commandLine);
 
 private:

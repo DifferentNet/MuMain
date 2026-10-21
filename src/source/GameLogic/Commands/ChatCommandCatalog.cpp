@@ -40,6 +40,41 @@ std::wstring ReadString(const BYTE* data, int32_t offset, int32_t length)
     buffer[length] = L'\0';
     return std::wstring(buffer.data());
 }
+
+ChatCommand ClientCommand(const wchar_t* command, const wchar_t* description,
+                          std::vector<ChatCommandParameter> parameters = {})
+{
+    ChatCommand result;
+    result.Command = command;
+    result.Name = command;
+    result.Description = description;
+    result.Parameters = std::move(parameters);
+    result.IsLocal = true;
+    return result;
+}
+
+// The commands the client handles itself (CheckCommand in Engine/Object/ZzzInterface.cpp). The server only
+// lists its own, so these come after them (MU Moldova, 2026-10-21). Most act on the player you selected.
+void AppendClientCommands(std::vector<ChatCommand>& commands)
+{
+    ChatCommandParameter words;
+    words.Name = L"words";
+    ChatCommandParameter text;
+    text.Name = L"text";
+
+    commands.push_back(ClientCommand(L"/trade", L"Trade with the player you selected, or the one who faces you. They have to stand next to you."));
+    commands.push_back(ClientCommand(L"/party", L"Invite the player you selected to your party (also /pt)."));
+    commands.push_back(ClientCommand(L"/guild", L"Ask the guild master you selected to take you into the guild."));
+    commands.push_back(ClientCommand(L"/union", L"Guild masters: ask the guild master you selected for an alliance."));
+    commands.push_back(ClientCommand(L"/rival", L"Guild masters: declare the guild of the guild master you selected hostile."));
+    commands.push_back(ClientCommand(L"/rivaloff", L"Guild masters: end the hostility with the guild of the guild master you selected."));
+    commands.push_back(ClientCommand(L"/duelstart", L"Challenge the player you selected to a duel."));
+    commands.push_back(ClientCommand(L"/duelend", L"End your duel."));
+    commands.push_back(ClientCommand(L"/personalshop", L"Open your personal store, to sell items to other players."));
+    commands.push_back(ClientCommand(L"/purchase", L"Open the personal store of the player you selected."));
+    commands.push_back(ClientCommand(L"/filter", L"Show only the chat lines with these words (up to five). Without words, everything shows again.", {words}));
+    commands.push_back(ClientCommand(L"/1", L"Save a chat line as macro 1; Alt+1 says it. /2 to /9 and /0 do the same for Alt+2 to Alt+0.", {text}));
+}
 } // namespace
 
 bool ChatCommand::CanExecuteDirectly() const
@@ -147,6 +182,11 @@ bool ChatCommandCatalog::AddFromPacket(const BYTE* data, int32_t size)
 
     this->m_commands.push_back(std::move(command));
     this->m_isComplete = this->m_commands.size() >= count;
+    if (this->m_isComplete)
+    {
+        AppendClientCommands(this->m_commands);
+    }
+
     return true;
 }
 
