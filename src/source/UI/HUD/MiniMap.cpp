@@ -39,6 +39,7 @@ constexpr int kMapAreaHeight = 430;
 // Marker sizes, physical px (the original never scaled them).
 constexpr float kNpcSize = 15.f;
 constexpr float kPortalSize = 30.f;
+constexpr float kMonsterSize = 12.f;
 // The side border tiles: 35 x 6 reference units, 20 down each side, turned a quarter.
 constexpr float kTileWidth = 35.f;
 constexpr float kTileHeight = 6.f;
@@ -82,10 +83,11 @@ UI::MiniMap::Screen CurrentScreen()
 }
 
 // The marker the original drew: Kind 1 an NPC (hidden in Crywolf while it is occupied, but the
-// one at 228/48), Kind 2 a gate.
+// one at 228/48), Kind 2 a gate. Kind 3 is ours: where monsters of one kind live (MU Moldova's
+// Minimap_*.bmd files, written by scripts/minimap-spots.py in DifferentNet/mu-moldova).
 bool MarkerDrawn(const MINI_MAP& data)
 {
-    if (data.Kind == 2)
+    if (data.Kind == 2 || data.Kind == 3)
         return true;
     return !(gMapManager.WorldActive == WD_34CRYWOLF_1ST && m_OccupationState > 0) ||
            (data.Location[0] == 228 && data.Location[1] == 48 && gMapManager.WorldActive == WD_34CRYWOLF_1ST);
@@ -292,6 +294,7 @@ void mu::ui::window::CMiniMap::BindRmlModel(Rml::DataModelConstructor& c, MiniMa
 
     auto marker = c.RegisterStruct<MiniMapMarkerEntry>();
     marker.RegisterMember("portal", &MiniMapMarkerEntry::portal);
+    marker.RegisterMember("monster", &MiniMapMarkerEntry::monster);
     marker.RegisterMember("size", &MiniMapMarkerEntry::size);
     marker.RegisterMember("transform", &MiniMapMarkerEntry::transform);
     c.RegisterArray<std::vector<MiniMapMarkerEntry>>();
@@ -420,11 +423,12 @@ void mu::ui::window::CMiniMap::SyncMap()
         const MINI_MAP& data = m_Mini_Map_Data[i];
         if (data.Kind <= 0)
             break;
-        if (data.Kind != 1 && data.Kind != 2)
+        if (data.Kind != 1 && data.Kind != 2 && data.Kind != 3)
             continue;
 
         const bool portal = data.Kind == 2;
-        const float size = portal ? kPortalSize : kNpcSize;
+        const bool monster = data.Kind == 3;
+        const float size = portal ? kPortalSize : monster ? kMonsterSize : kNpcSize;
         const float pointY = (static_cast<float>(data.Location[0]) / 256.f) * length;
         const float pointX = (static_cast<float>(data.Location[1]) / 256.f) * length;
         const UI::MiniMap::Marker marker =
@@ -434,14 +438,15 @@ void mu::ui::window::CMiniMap::SyncMap()
             continue;
         // The original stored the name hint's box of every marker it drew.
         SetBtnPos(i, marker.hitBox[0], marker.hitBox[1], marker.hitBox[2], marker.hitBox[3]);
-        markers.push_back({portal, size, MatrixText(UI::MiniMap::ElementToQuad(marker.quad, size, size))});
+        markers.push_back({portal, monster, size, MatrixText(UI::MiniMap::ElementToQuad(marker.quad, size, size))});
     }
 
     MiniMapRmlModel& model = m_RmlView.GetModel();
     const bool same = model.markers.size() == markers.size() &&
                       std::equal(markers.begin(), markers.end(), model.markers.begin(),
                                  [](const MiniMapMarkerEntry& a, const MiniMapMarkerEntry& b)
-                                 { return a.portal == b.portal && a.size == b.size && a.transform == b.transform; });
+                                 { return a.portal == b.portal && a.monster == b.monster && a.size == b.size &&
+                                          a.transform == b.transform; });
     if (!same)
     {
         model.markers = std::move(markers);

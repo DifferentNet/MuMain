@@ -19,6 +19,7 @@ struct MiniMapClipEntry
 struct MiniMapMarkerEntry
 {
     bool portal = false;   // MINI_MAP::Kind 2 (a gate), else an NPC
+    bool monster = false;  // MINI_MAP::Kind 3 (where monsters of one kind live, MU Moldova)
     float size = 15.f;     // the icon's side, physical px (the original never scaled it)
     Rml::String transform; // CSS matrix() placing the icon element
 };

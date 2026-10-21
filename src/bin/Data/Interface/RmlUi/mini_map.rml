@@ -28,7 +28,7 @@
 				<div class="dim"></div>
 			</div>
 			<img class="map" data-attr-src="map_source" data-style-transform="map_transform"/>
-			<div class="marker" data-for="marker : markers" data-class-portal="marker.portal"
+			<div class="marker" data-for="marker : markers" data-class-portal="marker.portal" data-class-monster="marker.monster"
 			     data-style-width="marker.size + 'px'" data-style-height="marker.size + 'px'"
 			     data-style-transform="marker.transform"></div>
 			<div class="screen">
