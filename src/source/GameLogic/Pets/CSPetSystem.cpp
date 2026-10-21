@@ -445,17 +445,20 @@ void CSPetDarkSpirit::MovePet(void)
             }
         }
 
+        // The flight's turn and step are per 25 FPS frame, like its pitch below. With the step per rendered
+        // frame, the raven flew several times as far at 144 FPS before its pitch levelled out, and climbed
+        // off the top of the screen.
         float Distance = Range[0] * Range[0] + Range[1] * Range[1];
         if (Distance >= FlyRange * FlyRange)
         {
             float Angle = CreateAngle2D(o->Position, TargetPosition);
-            o->Angle[2] = TurnAngle2(o->Angle[2], Angle, Random::RangeFloat(0, 14) + 5.f);
+            o->Angle[2] = TurnAngle2(o->Angle[2], Angle, (Random::RangeFloat(0, 14) + 5.f) * FPS_ANIMATION_FACTOR);
         }
         AngleMatrix(o->Angle, o->Matrix);
 
         vec3_t Direction;
         VectorRotate(o->Direction, o->Matrix, Direction);
-        VectorAdd(o->Position, Direction, o->Position);
+        VectorAddScaled(o->Position, Direction, o->Position, FPS_ANIMATION_FACTOR);
 
         int speedRandom = 28;
         int CharacterHeight = 250;
@@ -481,6 +484,8 @@ void CSPetDarkSpirit::MovePet(void)
                 o->Angle[0] = 15.f;
         }
 
+        // A change of speed and heading as often per second as at 25 FPS (rand_fps_check), so the change
+        // itself is a whole one: the new speed is the mean of the old and a random one.
         float Speed = 0;
         if (rand_fps_check(speedRandom))
         {
@@ -491,10 +496,10 @@ void CSPetDarkSpirit::MovePet(void)
             else
             {
                 Speed = -(Random::RangeFloat(0, 7) + 32.f) * 0.1f;
-                o->Angle[2] += Random::RangeFloat(0, 59) * FPS_ANIMATION_FACTOR;
+                o->Angle[2] += Random::RangeFloat(0, 59);
             }
 
-            Speed += o->Direction[1] * FPS_ANIMATION_FACTOR;
+            Speed += o->Direction[1];
             Speed = Speed / 2.f;
 
             o->Direction[0] = 0.f;
