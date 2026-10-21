@@ -1235,6 +1235,30 @@ void HandleFocusChange(bool active)
     }
 }
 
+// A minimized window gets no swapchain image, so the renderer skips the frame and nothing waits for
+// VSync. With VSync on the target frame rate is uncapped (VSync paces it), so a minimized window
+// spun the main loop on a whole CPU core, in window mode too, where losing focus caps nothing.
+// While minimized, run at the game's reference rate like an inactive fullscreen window: packets,
+// game logic and MU Helper's timer keep going, only nothing is drawn.
+void HandleMinimizedChange(bool minimized)
+{
+    if (minimized)
+    {
+        if (!g_HasInactiveFpsOverride)
+        {
+            g_TargetFpsBeforeInactive = GetTargetFps();
+            SetTargetFps(REFERENCE_FPS);
+            g_HasInactiveFpsOverride = true;
+        }
+    }
+    else if (g_HasInactiveFpsOverride && (g_bWndActive || g_bUseWindowMode))
+    {
+        // An inactive fullscreen window keeps its cap until it gets the focus back.
+        SetTargetFps(g_TargetFpsBeforeInactive);
+        g_HasInactiveFpsOverride = false;
+    }
+}
+
 // UTF-8 <-> UTF-16 conversions sized to the input, so text of any length
 // (typed, copied or pasted) round-trips without truncation (issue #447).
 std::wstring Utf8ToWide(const char* utf8)
@@ -1544,6 +1568,13 @@ MSG MainLoop()
 #endif
             case SDL_EVENT_WINDOW_FOCUS_LOST:
                 HandleFocusChange(false);
+                break;
+            case SDL_EVENT_WINDOW_MINIMIZED:
+                HandleMinimizedChange(true);
+                break;
+            case SDL_EVENT_WINDOW_RESTORED:
+            case SDL_EVENT_WINDOW_MAXIMIZED:
+                HandleMinimizedChange(false);
                 break;
             case SDL_EVENT_TEXT_INPUT:
             case SDL_EVENT_KEY_UP:
