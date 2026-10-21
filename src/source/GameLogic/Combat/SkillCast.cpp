@@ -48,6 +48,7 @@
 #include "GameLogic/Combat/DuelMgr.h"
 #include "GameLogic/Items/ChangeRingManager.h"
 #include "GameLogic/Items/ItemCategories.h"
+#include "GameLogic/Combat/OwnSkillEcho.h"
 
 // File-scope state still owned by ZzzInterface.cpp (no shared header yet).
 extern void SetPlayerBow(CHARACTER* c);
@@ -1201,6 +1202,19 @@ bool SkillElf(CHARACTER* c, ITEM* p)
                     SendRequestMagicContinue(Spe_Num, (c->PositionX),
                         (c->PositionY), (BYTE)(o->Angle[2] / 360.f * 256.f), 0, 0, TKey, 0);
                     SetPlayerAttack(c);
+                    if (c == Hero)
+                    {
+                        // Set at the cast what the server's answer sets for those watching: the timer fires
+                        // the volley at the swing's impact frame. Left to the answer, a swing it reached too
+                        // late showed no arrows on the player's own screen (OwnSkillEcho.h).
+                        c->Skill = Spe_Num;
+                        c->TargetCharacter = -1;
+                        c->AttackFlag = ATTACK_FAIL;
+                        c->SkillX = c->PositionX;
+                        c->SkillY = c->PositionY;
+                        c->AttackTime = 1;
+                        OwnSkillEcho::Expect(Spe_Num);
+                    }
                     if (o->Type != MODEL_PLAYER && o->Kind != KIND_PLAYER)
                         CreateArrows(c, o, NULL, FindHotKey((c->Skill)), 1);
                     Success = true;

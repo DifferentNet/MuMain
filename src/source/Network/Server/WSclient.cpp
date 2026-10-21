@@ -111,6 +111,7 @@ using namespace mu::ui::window;
 #include "Network/Server/ServerListManager.h"
 #include "GameLogic/Items/ItemCategories.h"
 #include "Data/GameData/ItemData/ItemModelSlots.h"
+#include "GameLogic/Combat/OwnSkillEcho.h"
 
 #define MAX_DEBUG_MAX 10
 
@@ -5154,6 +5155,12 @@ BOOL ReceiveMagicContinue(const BYTE* ReceiveBuffer, int Size, BOOL bEncrypted)
 
     CHARACTER* sc = &CharactersClient[FindCharacterIndex(Key)];
     OBJECT* so = &sc->Object;
+
+    // The answer to a volley the hero already started (OwnSkillEcho.h): starting it again would fire it twice.
+    if (sc == Hero && GameLogic::Combat::OwnSkillEcho::Consume(MagicNumber))
+    {
+        return TRUE;
+    }
 
     sc->Skill = MagicNumber;
 

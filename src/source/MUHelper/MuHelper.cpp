@@ -919,6 +919,14 @@ namespace MUHelper
     {
         if (m_config.bReturnToOriginalPosition && m_iSecondsAway > m_config.iMaxSecondsAway)
         {
+            // Let the current swing finish first: a walk started mid-swing cuts the attack
+            // animation, and what a swing fires late in it (the arrows of Triple Shot, for one)
+            // never appears. Attacking and picking up already wait for the swing.
+            if (GameLogic::Automation::IsSwingInProgress())
+            {
+                return 0;
+            }
+
             if (!SimulateMove(m_posOriginal))
             {
                 return 0;
@@ -1007,6 +1015,13 @@ namespace MUHelper
             {
                 return 1;
             }
+        }
+
+        // The walk to a drop would cut the current swing short, like the walk back in Regroup:
+        // finish the attack first, then go for the drop.
+        if (GameLogic::Automation::IsSwingInProgress())
+        {
+            return 0;
         }
 
         using GameLogic::Automation::PickupResult;

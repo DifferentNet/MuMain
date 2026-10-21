@@ -19,33 +19,11 @@ namespace GameLogic::Automation
 {
 bool IsSwingInProgress()
 {
-    const int action = Hero->Object.CurrentAction;
-
-    // Outside the swing enum range entirely -> not a swing.
-    if (!Engine::Object::IsAttackAction(action))
-    {
-        return false;
-    }
-
-    // Several non-swing *stance* animations (mounted idle/walk/run, two-hand-
-    // sword stance, ride-horse, rage-fenrir) share the [PLAYER_ATTACK_FIST ..
-    // PLAYER_RIDE_SKILL] enum range that IsAttackAction() spans. MoveHero
-    // (ZzzInterface.cpp) OR-excludes exactly these four ranges when deciding
-    // whether the hero may move; mirror that here. Otherwise a Fenrir-mounted
-    // idle character (CurrentAction == PLAYER_FENRIR_STAND, inside the range)
-    // reads as a perpetual swing and no automated action ever fires.
-    if ((action >= PLAYER_STOP_TWO_HAND_SWORD_TWO && action <= PLAYER_RUN_TWO_HAND_SWORD_TWO) ||
-        (action >= PLAYER_DARKLORD_STAND && action <= PLAYER_RUN_RIDE_HORSE) ||
-        (action >= PLAYER_FENRIR_RUN && action <= PLAYER_FENRIR_WALK_ONE_LEFT) ||
-        (action >= PLAYER_RAGE_FENRIR_WALK && action <= PLAYER_RAGE_FENRIR_STAND_ONE_LEFT))
-    {
-        return false;
-    }
-
-    // Genuine attack/skill swing -> Fenrir attack/skill actions sit below
-    // PLAYER_FENRIR_RUN, so they stay gated and cadence still tracks
-    // AttackSpeed when mounted.
-    return true;
+    // The stance animations inside the attack enum range don't count: otherwise a
+    // Fenrir-mounted idle character (PLAYER_FENRIR_STAND) reads as a perpetual swing
+    // and no automated action ever fires. Fenrir attack/skill actions sit below
+    // PLAYER_FENRIR_RUN, so they stay gated and cadence still tracks AttackSpeed.
+    return Engine::Object::IsSwingAction(Hero->Object.CurrentAction);
 }
 
 // Steps of the planned path that are walked per call. Re-planning every

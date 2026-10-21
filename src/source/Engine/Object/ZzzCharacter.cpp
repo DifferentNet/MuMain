@@ -1374,6 +1374,11 @@ void SetPlayerShock(CHARACTER* c, int Hit)
     OBJECT* o = &c->Object;
 
     if (o->CurrentAction == PLAYER_ATTACK_SKILL_FURY_STRIKE || o->CurrentAction == PLAYER_SKILL_VITALITY) return;
+    // A hit doesn't cut a player's own attack short, as it doesn't a monster's (below). Otherwise every
+    // second hit taken replaced the swing with the shock, and what the swing fires late in its animation
+    // (the arrows of a bow shot, Triple Shot's volley) never left on the attacker's own screen, while
+    // everyone else, who doesn't get the hit, saw the whole attack.
+    if (o->Type == MODEL_PLAYER && Engine::Object::IsSwingAction(o->CurrentAction)) return;
     if (o->CurrentAction == PLAYER_SKILL_HELL_BEGIN
         || (o->CurrentAction == PLAYER_SKILL_ATT_UP_OURFORCES || o->CurrentAction == PLAYER_SKILL_HP_UP_OURFORCES
             || o->CurrentAction == PLAYER_SKILL_GIANTSWING
