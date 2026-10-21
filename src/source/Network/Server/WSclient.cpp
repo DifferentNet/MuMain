@@ -112,6 +112,7 @@ using namespace mu::ui::window;
 #include "GameLogic/Items/ItemCategories.h"
 #include "Data/GameData/ItemData/ItemModelSlots.h"
 #include "GameLogic/Combat/OwnSkillEcho.h"
+#include "GameLogic/Events/EventTimes.h"
 
 #define MAX_DEBUG_MAX 10
 
@@ -1256,6 +1257,7 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     // ones of a previous character before asking for them again.
     GameLogic::Commands::Catalog().Reset();
     GameLogic::Commands::Catalog().RequestOnce();
+    GameLogic::EventTimes::Times().Reset();
 
     g_ConsoleDebug->Write(MCD_RECEIVE, L"0x03 [ReceiveJoinMapServer]");
 
@@ -1980,7 +1982,11 @@ void ReceiveNotice(const BYTE* ReceiveBuffer)
     }
     else if (Data->Result == 1)
     {
-        if (CHARACTER_SCENE != SceneFlag)
+        // The event timer window's answer (GameLogic/Events/EventTimes.h) stays out of the chat.
+        if (GameLogic::EventTimes::Times().TakeMessage(Text))
+        {
+        }
+        else if (CHARACTER_SCENE != SceneFlag)
         {
             UI::Chat::PostSystem(Text, mu::ui::window::TYPE_SYSTEM_MESSAGE);
             EnableUse = 0;

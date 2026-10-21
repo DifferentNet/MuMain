@@ -1,0 +1,40 @@
+/* Modern theme for CEventScheduleWindow (key O): docked_panel_frame.rcss's forged panel (linked first) at
+   the full dock height and the modern exit button, in the command list's look (chat_command.rcss).
+   Geometry is the legacy one (reference px under the dock transform). */
+
+#panel { height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; pointer-events: none; transform-origin: left top; }
+
+#btn_exit {
+	position: absolute;
+	left: 13px;
+	top: 392px;
+	width: 36px;
+	height: 28px;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+	pointer-events: auto;
+}
+#btn_exit:hover { border-color: token(accent-steel-hover); }
+
+.es-title { left: 0; top: 12px; text-align: center; font-weight: bold; }
+#es_message { left: 22px; top: 36px; }
+
+/* Rows start at y 36, two 15 px lines each and a 2 px gap: eleven fit above the exit button. */
+.es-rows { display: block; position: absolute; left: 22px; top: 36px; width: 146px; }
+.es-row { display: block; position: relative; height: 32px; }
+.es-name { left: 0; top: 0; font-weight: bold; }
+.es-time { left: 0; top: 15px; }
+
+.es-title { color: token(accent-gold); }
+.es-message, .es-name { color: token(text-primary); }
+.es-time { color: token(text-secondary); }
+.es-row.active .es-name, .es-row.active .es-time { color: token(semantic-success); }
+.es-row.soon .es-time { color: token(accent-gold); }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+#es_title { width: calc(100% * var(--root-scale)); }
+#es_message { width: calc(146px * var(--root-scale)); }
+.es-name, .es-time { width: calc(146px * var(--root-scale)); }

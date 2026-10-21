@@ -13408,4 +13408,25 @@
   <data name="Other items" xml:space="preserve">
     <value>Other items</value>
   </data>
+  <data name="EventScheduleTitle" xml:space="preserve">
+    <value>Events</value>
+  </data>
+  <data name="EventScheduleAsking" xml:space="preserve">
+    <value>Asking the server...</value>
+  </data>
+  <data name="EventScheduleNoAnswer" xml:space="preserve">
+    <value>The server sends no event times.</value>
+  </data>
+  <data name="EventScheduleNone" xml:space="preserve">
+    <value>No events are scheduled.</value>
+  </data>
+  <data name="EventScheduleRunning" xml:space="preserve">
+    <value>now, %ls left</value>
+  </data>
+  <data name="EventScheduleEntranceOpen" xml:space="preserve">
+    <value>entrance open, %ls left</value>
+  </data>
+  <data name="EventScheduleStartsIn" xml:space="preserve">
+    <value>in %ls, at %ls</value>
+  </data>
 </root>

@@ -275,6 +275,13 @@ bool mu::ui::window::CHotKey::UpdateKeyEvent()
 
         return false;
     }
+    else if (mu::ui::window::IsPress('O') == true)
+    {
+        // The event timer window: the events' times, kept out of the chat log (EventScheduleWindow.h).
+        g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_EVENT_SCHEDULE);
+        PlayBuffer(SOUND_CLICK01);
+        return false;
+    }
     else if (mu::ui::window::IsPress('M') == true)
     {
         g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_MOVEMAP);

@@ -87,6 +87,7 @@ CSystem::CSystem()
     m_pMuHelperDetail = nullptr;
     m_pNewHelpWindow = nullptr;
     m_pNewChatCommandWindow = nullptr;
+    m_pNewEventScheduleWindow = nullptr;
     m_pNewItemExplanationWindow = nullptr;
     m_pNewSetItemExplanation = nullptr;
     m_pNewQuickCommandWindow = nullptr;
@@ -369,6 +370,12 @@ bool CSystem::LoadMainSceneInterface()
         return false;
     }
 
+    m_pNewEventScheduleWindow = new CEventScheduleWindow;
+    if (m_pNewEventScheduleWindow->Create(m_pNewUIMng) == false)
+    {
+        return false;
+    }
+
     m_pNewHelpWindow = new CHelpWindow;
     if (m_pNewHelpWindow->Create(m_pNewUIMng) == false)
     {
@@ -561,6 +568,7 @@ bool CSystem::LoadMainSceneInterface()
     slot(INTERFACE_GUILDINFO, "guild_info", m_pNewGuildInfoWindow, "guild_info.rml");
     slot(INTERFACE_COMMAND, "command", m_pNewCommandWindow, "command_window.rml");
     slot(INTERFACE_COMMAND_LIST, "command_list", m_pNewChatCommandWindow, "chat_command.rml");
+    slot(INTERFACE_EVENT_SCHEDULE, "event_schedule", m_pNewEventScheduleWindow, "event_schedule.rml");
     slot(INTERFACE_GOLD_BOWMAN, "gold_bowman", m_pNewGoldBowman, "gold_bowman.rml");
     slot(INTERFACE_GOLD_BOWMAN_LENA, "gold_bowman_lena", m_pNewGoldBowmanLena, "gold_bowman_lena.rml");
     slot(INTERFACE_NPC_DIALOGUE, "npc_dialogue", m_pNewNPCDialogue, "npc_dialogue.rml");
@@ -636,6 +644,7 @@ void CSystem::UnloadMainSceneInterface()
 
     SAFE_DELETE(m_pNewHelpWindow);
     SAFE_DELETE(m_pNewChatCommandWindow);
+    SAFE_DELETE(m_pNewEventScheduleWindow);
     SAFE_DELETE(m_pNewItemExplanationWindow);
     SAFE_DELETE(m_pNewSetItemExplanation);
     SAFE_DELETE(m_pNewQuickCommandWindow);
@@ -911,6 +920,11 @@ void CSystem::Show(DWORD dwKey)
     {
         HideAllGroupA();
         m_pNewChatCommandWindow->OpenningProcess();
+    }
+    else if (dwKey == INTERFACE_EVENT_SCHEDULE)
+    {
+        HideAllGroupA();
+        m_pNewEventScheduleWindow->OpenningProcess();
     }
     else if (dwKey == INTERFACE_GUILDINFO)
     {
@@ -1349,6 +1363,10 @@ void CSystem::Hide(DWORD dwKey)
     {
         m_pNewChatCommandWindow->ClosingProcess();
     }
+    else if (dwKey == INTERFACE_EVENT_SCHEDULE)
+    {
+        m_pNewEventScheduleWindow->ClosingProcess();
+    }
     else if (dwKey == INTERFACE_WINDOW_MENU)
     {
         g_pMainFrame->SetBtnState(MAINFRAME_BTN_WINDOW, false);
@@ -1566,6 +1584,7 @@ void CSystem::HideAllGroupA()
         INTERFACE_GUARDSMAN,
         INTERFACE_COMMAND,
         INTERFACE_COMMAND_LIST,
+        INTERFACE_EVENT_SCHEDULE,
         INTERFACE_GUILDINFO,
         INTERFACE_KANTURU2ND_ENTERNPC,
         INTERFACE_DUELWATCH,
@@ -1615,6 +1634,7 @@ void CSystem::HideAllGroupB()
         INTERFACE_GUARDSMAN,
         INTERFACE_COMMAND,
         INTERFACE_COMMAND_LIST,
+        INTERFACE_EVENT_SCHEDULE,
         INTERFACE_GUILDINFO,
         INTERFACE_KANTURU2ND_ENTERNPC,
         INTERFACE_CURSEDTEMPLE_NPC,
@@ -2219,6 +2239,11 @@ CHelpWindow* CSystem::GetUI_NewHelpWindow() const
 CChatCommandWindow* CSystem::GetUI_NewChatCommandWindow() const
 {
     return m_pNewChatCommandWindow;
+}
+
+CEventScheduleWindow* CSystem::GetUI_NewEventScheduleWindow() const
+{
+    return m_pNewEventScheduleWindow;
 }
 
 CItemExplanationWindow* CSystem::GetUI_NewItemExplanationWindow() const

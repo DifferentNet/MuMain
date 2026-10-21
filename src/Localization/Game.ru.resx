@@ -13031,4 +13031,25 @@
   <data name="QuestRequirementBuff" xml:space="preserve">
     <value>Bonus: %ls</value>
   </data>
+  <data name="EventScheduleTitle" xml:space="preserve">
+    <value>Ивенты</value>
+  </data>
+  <data name="EventScheduleAsking" xml:space="preserve">
+    <value>Запрашиваю у сервера...</value>
+  </data>
+  <data name="EventScheduleNoAnswer" xml:space="preserve">
+    <value>Сервер не присылает время ивентов.</value>
+  </data>
+  <data name="EventScheduleNone" xml:space="preserve">
+    <value>Ивентов в расписании нет.</value>
+  </data>
+  <data name="EventScheduleRunning" xml:space="preserve">
+    <value>идёт, осталось %ls</value>
+  </data>
+  <data name="EventScheduleEntranceOpen" xml:space="preserve">
+    <value>вход открыт, осталось %ls</value>
+  </data>
+  <data name="EventScheduleStartsIn" xml:space="preserve">
+    <value>через %ls, в %ls</value>
+  </data>
 </root>

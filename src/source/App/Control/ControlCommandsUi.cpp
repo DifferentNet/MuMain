@@ -53,6 +53,8 @@ constexpr NamedWindow Windows[] = {
     {"my_shop", mu::ui::window::INTERFACE_MYSHOP_INVENTORY},
     {"purchase_shop", mu::ui::window::INTERFACE_PURCHASESHOP_INVENTORY},
     {"npc_quest", mu::ui::window::INTERFACE_NPCQUEST},
+    {"command_list", mu::ui::window::INTERFACE_COMMAND_LIST},
+    {"event_schedule", mu::ui::window::INTERFACE_EVENT_SCHEDULE},
 };
 
 json Pixel(float x, float y)

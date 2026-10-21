@@ -1,0 +1,31 @@
+/* Legacy theme for CEventScheduleWindow (key O), in the command list's look (chat_command.rcss): the
+   docked_panel_frame.rcss frame (linked first; newui_item_back01 top) stretched to the full dock height
+   (432), the title bold and centred, then a row per event -- its name, and the time line below it -- and
+   the exit button. Reference px inside #panel. */
+
+.frame-top { decorator: image(docked-bg-top-b); }
+#panel { height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; pointer-events: none; }
+
+.es-title { left: 0; top: 12px; text-align: center; font-weight: bold; }
+#es_message { left: 22px; top: 36px; }
+
+/* Rows start at y 36, two 15 px lines each and a 2 px gap: eleven fit above the exit button. */
+.es-rows { display: block; position: absolute; left: 22px; top: 36px; width: 146px; }
+.es-row { display: block; position: relative; height: 32px; }
+.es-name { left: 0; top: 0; font-weight: bold; }
+.es-time { left: 0; top: 15px; }
+
+/* The command list's colours: gold title, light names, blue time lines; what runs now is green, what
+   starts within minutes yellow. */
+.es-title { color: rgb(255, 220, 120); }
+.es-message, .es-name { color: rgb(220, 220, 220); }
+.es-time { color: rgb(200, 220, 255); }
+.es-row.active .es-name, .es-row.active .es-time { color: rgb(150, 255, 150); }
+.es-row.soon .es-time { color: rgb(255, 220, 120); }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+#es_title { width: calc(100% * var(--root-scale)); }
+#es_message { width: calc(146px * var(--root-scale)); }
+.es-name, .es-time { width: calc(146px * var(--root-scale)); }

@@ -1,0 +1,36 @@
+<rml>
+<head>
+	<title>Event Timers</title>
+	<link type="text/rcss" href="base.rcss"/>
+	<link type="text/rcss" href="docked_panel_frame.rcss"/>
+	<link type="text/rcss" href="event_schedule.rcss"/>
+</head>
+<body>
+	<!-- The event timer window (CEventScheduleWindow, key O), docked right, full dock height: the title, then
+	     one row per event -- its name, and below it what it does and for how long, or how long until it starts
+	     and at what time -- or a message while there are none, and the exit button. The workspace slot places
+	     and scales #panel. C++ keeps the times and counts them down; a click on the exit button is queued with
+	     event_schedule_exit. -->
+	<div id="panel" data-model="event_schedule">
+		<div class="frame-piece frame-top"></div>
+		<div class="frame-piece frame-left"></div>
+		<div class="frame-piece frame-right"></div>
+		<div class="frame-piece frame-bottom"></div>
+
+		<span id="es_title" class="sharp-text es-title"
+		      data-style-font-size="title.text_px + 'px'">{{title.text}}</span>
+		<span id="es_message" class="sharp-text es-message"
+		      data-style-font-size="message.text_px + 'px'">{{message.text}}</span>
+
+		<div class="es-rows">
+			<div class="es-row" data-for="r : rows" data-class-active="r.active" data-class-soon="r.soon">
+				<span class="sharp-text es-name" data-style-font-size="r.name_px + 'px'">{{r.name}}</span>
+				<span class="sharp-text es-time" data-style-font-size="r.time_px + 'px'">{{r.time}}</span>
+			</div>
+		</div>
+
+		<div id="btn_exit" data-event-click="event_schedule_exit" data-attr-data-hint="exit_tooltip"></div>
+		<div id="frame_corner_close" data-event-click="event_schedule_exit"></div>
+	</div>
+</body>
+</rml>

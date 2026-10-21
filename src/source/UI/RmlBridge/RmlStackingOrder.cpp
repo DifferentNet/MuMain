@@ -128,6 +128,7 @@ constexpr DocumentPlacement Placements[] = {
     {"main_frame.rml", 10.6f, MainScene},
     {"command_window.rml", 10.65f, MainScene}, // UI::RmlBridge::ForegroundPanelLayerDepth
     {"chat_command.rml", 10.65f, MainScene},
+    {"event_schedule.rml", 10.65f, MainScene},
     // The original drew it at 10.5, under the HUD; the modern theme's settings screen covers the
     // whole screen, HUD included. Still under the tooltips and message boxes.
     {"option_window.rml", 10.67f, EveryScene},
