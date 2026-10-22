@@ -91,8 +91,31 @@ void ReportDisconnected(std::int32_t handle, WebConnection* connection)
     }
 }
 
+// index.html?packets: every packet sent and received, unencrypted, in the page's log.
+EM_JS(int, MuWeb_LogPackets, (), { return new URLSearchParams(location.search).has("packets") ? 1 : 0; });
+
+void LogPacket(const char* direction, std::int32_t handle, const std::uint8_t* data, std::size_t size)
+{
+    std::string text = std::string(direction) + " " + std::to_string(handle) + ":";
+    char hex[4];
+    for (std::size_t i = 0; i < size && i < 64; ++i)
+    {
+        std::snprintf(hex, sizeof(hex), " %02X", data[i]);
+        text += hex;
+    }
+    if (size > 64)
+    {
+        text += " ... (" + std::to_string(size) + " bytes)";
+    }
+    std::printf("NET %s\n", text.c_str());
+}
+
 void Deliver(std::int32_t handle, WebConnection* connection, std::vector<std::uint8_t>&& packet)
 {
+    if (MuWeb_LogPackets())
+    {
+        LogPacket("recv", handle, packet.data(), packet.size());
+    }
     if (!connection->receiving)
     {
         connection->pendingPackets.push_back(std::move(packet));
@@ -381,6 +404,10 @@ void mu::web::SendPacket(std::int32_t handle, const std::uint8_t* data, std::siz
         {
             Log(LogLevel::Error, "Not sent: malformed outgoing packet (handle " + std::to_string(handle) + ")");
             return;
+        }
+        if (MuWeb_LogPackets())
+        {
+            LogPacket("send", handle, data + offset, length);
         }
         if (connection->encrypted)
         {

@@ -121,7 +121,16 @@ def emitted(c_type):
     return c_type.replace("BYTE", "std::uint8_t")
 
 
-def write_field(field):
+def field_size(field, packet):
+    """The size of a String or Binary field: its Length; without one, the rest of a fixed-length
+    packet (OpenMU's <Packet>Ref slices it to the end, e.g. DeleteCharacter's SecurityCode); None for
+    the field that ends a variable-length packet."""
+    if field.length is not None:
+        return field.length
+    return packet.length - field.index if packet.length is not None else None
+
+
+def write_field(field, packet):
     """C++ statements writing one field into std::vector<uint8_t> p."""
     i, p = field.index, field.param
     t = field.type
@@ -132,7 +141,8 @@ def write_field(field):
             return [f"SetByteValue(p.data() + {i}, {value}, {bits}, {field.left_shifted or 0});"]
         return [f"p[{i}] = {value};"]
     if t == "Boolean":
-        return [f"SetBoolean(p.data() + {i}, {p} != 0, {field.left_shifted or 0});"]
+        # GenerateExtensionsDotNet.xslt sets it with "== 1": 2..255 are false, not true.
+        return [f"SetBoolean(p.data() + {i}, {p} == 1, {field.left_shifted or 0});"]
     if t in SCALARS:
         size = SCALARS[t][1]
         if t == "Float":
@@ -142,12 +152,14 @@ def write_field(field):
         endian = "BigEndian" if t.endswith("BigEndian") else "LittleEndian"
         return [f"WriteUInt{size * 8}{endian}(p.data() + {i}, {p});"]
     if t == "String":
-        if field.length is not None:
-            return [f"WriteString(p.data() + {i}, {field.length}, {p}Utf8);"]
+        size = field_size(field, packet)
+        if size is not None:
+            return [f"WriteString(p.data() + {i}, {size}, {p}Utf8);"]
         return [f"WriteString(p.data() + {i}, {p}Utf8.size() + 1, {p}Utf8);"]
     if t == "Binary":
-        if field.length is not None:
-            return [f"WriteBinary(p.data() + {i}, {field.length}, {p}, {p}ByteLength);"]
+        size = field_size(field, packet)
+        if size is not None:
+            return [f"WriteBinary(p.data() + {i}, {size}, {p}, {p}ByteLength);"]
         return [f"WriteBinary(p.data() + {i}, {p}ByteLength, {p}, {p}ByteLength);"]
     raise ValueError(f"unsupported field type {t}")
 
@@ -176,7 +188,7 @@ def builder(packet):
     if packet.subcode is not None:
         lines.append(f"    p[{code_index + 1}] = 0x{packet.subcode:02X};")
     for f in packet.fields:
-        lines += ["    " + s for s in write_field(f)]
+        lines += ["    " + s for s in write_field(f, packet)]
     lines += ["    return p;", "}", ""]
     return lines
 

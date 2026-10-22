@@ -95,8 +95,11 @@ inline void WriteBinary(std::uint8_t* target, std::size_t fieldSize, const std::
 }
 
 // The client passes text as UTF-16 (wchar_t on Windows); the packets carry UTF-8.
+// A surrogate without its partner becomes U+FFFD, as .NET's Encoding.UTF8 writes it in the desktop
+// library (tools/web/packet-test checks this).
 inline std::string ToUtf8(const char16_t* text)
 {
+    constexpr std::uint32_t ReplacementCharacter = 0xFFFD;
     std::string result;
     if (text == nullptr)
     {
@@ -109,6 +112,10 @@ inline std::string ToUtf8(const char16_t* text)
         {
             code = 0x10000 + ((code - 0xD800) << 10) + (c[1] - 0xDC00);
             ++c;
+        }
+        else if (code >= 0xD800 && code <= 0xDFFF)
+        {
+            code = ReplacementCharacter;
         }
         if (code < 0x80)
         {

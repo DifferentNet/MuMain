@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Writes the test vectors for the web build's generated packet builders (see README.md).
+    run.sh copies this file into a scratch folder and builds it there with
+      -p:ToolDir=<this folder>               GeneratePacketVectors.cs
+      -p:ClientLibraryDir=<client-src/ClientLibrary>
+    Like ClientLibrary/MUnique.Client.Library.csproj, it turns OpenMU's packet definitions into the
+    desktop library's Send<Packet> functions with ClientLibrary/GenerateExtensionsDotNet.xslt, and
+    compiles them with ClientLibrary/NativeInterop.cs. CapturingConnection.cs stands in for the
+    connection, so the bytes the functions write end up in the vector file instead of a socket.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>PacketVectorGen</AssemblyName>
+    <RootNamespace>MUnique.Client.Library</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <!-- The generated functions have XML docs for parameters this project doesn't document. -->
+    <NoWarn>$(NoWarn);CS1591;CS1573;CS1572</NoWarn>
+    <!-- The same version as ClientLibrary/MUnique.Client.Library.csproj. -->
+    <OpenMuPacketsVersion Condition="'$(OpenMuPacketsVersion)' == ''">0.9.11</OpenMuPacketsVersion>
+    <GeneratedFunctionsDir>$(MSBuildProjectDirectory)/generated</GeneratedFunctionsDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MUnique.OpenMU.Network.Packets" Version="$(OpenMuPacketsVersion)" />
+    <Compile Include="$(ToolDir)/GeneratePacketVectors.cs" />
+    <Compile Include="$(ToolDir)/CapturingConnection.cs" />
+    <Compile Include="$(ClientLibraryDir)/NativeInterop.cs" />
+  </ItemGroup>
+
+  <!-- The XSL transformations of MUnique.Client.Library.csproj's PreBuild target that make the Send functions. -->
+  <Target Name="GenerateSendFunctions" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <PacketsXmlDir>$(NuGetPackageRoot)/munique.openmu.network.packets/$(OpenMuPacketsVersion)/contentFiles/any/net10.0</PacketsXmlDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(GeneratedFunctionsDir)" />
+    <XslTransformation OutputPaths="$(GeneratedFunctionsDir)/ConnectionManager.ClientToServerFunctions.cs" XmlInputPaths="$(PacketsXmlDir)/ClientToServer/ClientToServerPackets.xml" XslInputPath="$(ClientLibraryDir)/GenerateExtensionsDotNet.xslt" Parameters="&lt;Parameter Name='subNamespace' Value='ClientToServer'/&gt;" />
+    <XslTransformation OutputPaths="$(GeneratedFunctionsDir)/ConnectionManager.ChatServerFunctions.cs" XmlInputPaths="$(PacketsXmlDir)/ChatServer/ChatServerPackets.xml" XslInputPath="$(ClientLibraryDir)/GenerateExtensionsDotNet.xslt" Parameters="&lt;Parameter Name='subNamespace' Value='ChatServer'/&gt;" />
+    <XslTransformation OutputPaths="$(GeneratedFunctionsDir)/ConnectionManager.ConnectServerFunctions.cs" XmlInputPaths="$(PacketsXmlDir)/ConnectServer/ConnectServerPackets.xml" XslInputPath="$(ClientLibraryDir)/GenerateExtensionsDotNet.xslt" Parameters="&lt;Parameter Name='subNamespace' Value='ConnectServer'/&gt;" />
+    <ItemGroup>
+      <Compile Include="$(GeneratedFunctionsDir)/ConnectionManager.*Functions.cs" />
+    </ItemGroup>
+  </Target>
+</Project>
