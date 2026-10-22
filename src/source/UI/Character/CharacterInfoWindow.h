@@ -86,6 +86,8 @@ namespace mu::ui::window
         void RmlClickQuest();
         void RmlClickPet();
         void RmlClickMasterLevel();
+        // The fourth button: shows the advanced stats tab in place of the attributes, or the attributes again.
+        void RmlClickAdvancedStats();
 
     private:
         // Populates the shared IMAGE_LIST texture slots sibling windows alias onto (see IMAGE_LIST above).
@@ -110,6 +112,9 @@ namespace mu::ui::window
         void BuildSubjectTexts();
         void BuildTableTexts();
         void BuildAttributeLines();
+        // The advanced stats tab: asks the server for the stats while it shows, and rebuilds its lines when an
+        // answer came (GameLogic/Character/AdvancedStats.h).
+        void BuildAdvancedStatsLines();
 
         struct CharacterInfoRmlModel
         {
@@ -147,8 +152,16 @@ namespace mu::ui::window
 
             bool masterLevelEnabled = false;
 
+            // The advanced stats tab shows in place of the attribute rows while this is set; it stays as it was
+            // when the window closes and opens again.
+            bool advancedView = false;
+            Rml::String advancedAttackTitle, advancedDefenseTitle;
+            // "boosted" for a value above 0, so the theme colours it like the lines items raise.
+            std::vector<StatLine> advancedAttackLines;
+            std::vector<StatLine> advancedDefenseLines;
+
             // Set once at Create() -- static tooltip text, no per-frame update needed.
-            Rml::String exitTooltip, questTooltip, petTooltip, masterLevelTooltip;
+            Rml::String exitTooltip, questTooltip, petTooltip, masterLevelTooltip, advancedStatsTooltip;
         };
 
         void BindRmlModel(Rml::DataModelConstructor& c, CharacterInfoRmlModel& model);
@@ -158,6 +171,8 @@ namespace mu::ui::window
 
     private:
         CManager* m_pNewUIMng;
+        // The answer of the advanced stats store the tab's lines were built from (Store::Version()).
+        unsigned m_advancedStatsVersion = ~0u;
 
     };
 }

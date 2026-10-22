@@ -114,6 +114,7 @@ using namespace mu::ui::window;
 #include "GameLogic/Combat/OwnSkillEcho.h"
 #include "GameLogic/Events/EventTimes.h"
 #include "GameLogic/Events/DailyRewards.h"
+#include "GameLogic/Character/AdvancedStats.h"
 
 #define MAX_DEBUG_MAX 10
 
@@ -1260,6 +1261,7 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     GameLogic::Commands::Catalog().RequestOnce();
     GameLogic::EventTimes::Times().Reset();
     GameLogic::DailyRewards::Rewards().Reset();
+    GameLogic::AdvancedStats::Stats().Reset();
 
     g_ConsoleDebug->Write(MCD_RECEIVE, L"0x03 [ReceiveJoinMapServer]");
 
@@ -1984,9 +1986,11 @@ void ReceiveNotice(const BYTE* ReceiveBuffer)
     }
     else if (Data->Result == 1)
     {
-        // The answers to the event timer window (GameLogic/Events/EventTimes.h) and the daily rewards window
-        // (GameLogic/Events/DailyRewards.h) stay out of the chat.
-        if (GameLogic::EventTimes::Times().TakeMessage(Text) || GameLogic::DailyRewards::Rewards().TakeMessage(Text))
+        // The answers to the event timer window (GameLogic/Events/EventTimes.h), the daily rewards window
+        // (GameLogic/Events/DailyRewards.h) and the character window's advanced stats tab
+        // (GameLogic/Character/AdvancedStats.h) stay out of the chat.
+        if (GameLogic::EventTimes::Times().TakeMessage(Text) || GameLogic::DailyRewards::Rewards().TakeMessage(Text) ||
+            GameLogic::AdvancedStats::Stats().TakeMessage(Text))
         {
         }
         else if (CHARACTER_SCENE != SceneFlag)

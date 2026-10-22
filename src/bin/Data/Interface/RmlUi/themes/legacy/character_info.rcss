@@ -208,3 +208,48 @@
    master skill tree button is gone; CCharacterInfoWindow::RmlClickMasterLevel and the A key
    no longer open the window either. */
 #btn_masterlevel { display: none; }
+
+/* ---- Advanced stats tab (MU Moldova) ----
+   The fourth button sits where the master level button was. Its sprite, a golden bar chart in the stone square
+   of the quest and pet buttons, comes from scripts/chainfo-stats-button.py (main repo). While #panel has
+   .adv-view (the model's advanced_view), two boxes take the place of the attribute rows, each in the summary
+   box's 8-piece frame with a yellow title over the separator like the level line: box 1 at 120 (8 lines, 136
+   high), box 2 at 260 (6 lines, 110 high). */
+@spritesheet chainfo-btn-advstats-sheet { src: "../../../newui_chainfo_btn_stats.tga"; chainfo-btn-advstats: 0px 0px 36px 29px; }
+.info-btn-advstats { left: 124px; decorator: image(chainfo-btn-advstats); }
+
+.adv { display: none; }
+#panel.adv-view .adv { display: block; }
+#panel.adv-view .attr-textbox, #panel.adv-view .attr-label, #panel.adv-view .attr-value,
+#panel.adv-view .attr-lines, #panel.adv-view .stat-btn { display: none; }
+
+.adv-fill { position: absolute; left: 12px; right: 18px; background-color: rgba(0, 0, 0, 77); pointer-events: none; }
+.adv-fill-1 { top: 120px; height: 136px; }
+.adv-fill-2 { top: 260px; height: 110px; }
+.adv-corner-tl-1 { left: 12px;  top: 120px; decorator: image(docked-corner-tl); }
+.adv-corner-tr-1 { right: 13px; top: 120px; decorator: image(docked-corner-tr); }
+.adv-corner-bl-1 { left: 12px;  top: 242px; decorator: image(docked-corner-bl); }
+.adv-corner-br-1 { right: 13px; top: 242px; decorator: image(docked-corner-br); }
+.adv-corner-tl-2 { left: 12px;  top: 260px; decorator: image(docked-corner-tl); }
+.adv-corner-tr-2 { right: 13px; top: 260px; decorator: image(docked-corner-tr); }
+.adv-corner-bl-2 { left: 12px;  top: 356px; decorator: image(docked-corner-bl); }
+.adv-corner-br-2 { right: 13px; top: 356px; decorator: image(docked-corner-br); }
+.adv-edge-top-1       { left: 26px; right: 27px; top: 120px; height: 14px; decorator: image(chainfo-table-top); }
+.adv-edge-bottom-1    { left: 26px; right: 27px; top: 242px; height: 14px; decorator: image(chainfo-table-bottom); }
+.adv-edge-separator-1 { left: 14px; right: 17px; top: 132px; height: 14px; decorator: image(chainfo-table-bottom); }
+.adv-edge-left-1      { left: 12px;  top: 134px; width: 14px; height: 108px; decorator: image(chainfo-table-left); }
+.adv-edge-right-1     { right: 13px; top: 134px; width: 14px; height: 108px; decorator: image(chainfo-table-right); }
+.adv-edge-top-2       { left: 26px; right: 27px; top: 260px; height: 14px; decorator: image(chainfo-table-top); }
+.adv-edge-bottom-2    { left: 26px; right: 27px; top: 356px; height: 14px; decorator: image(chainfo-table-bottom); }
+.adv-edge-separator-2 { left: 14px; right: 17px; top: 272px; height: 14px; decorator: image(chainfo-table-bottom); }
+.adv-edge-left-2      { left: 12px;  top: 274px; width: 14px; height: 82px; decorator: image(chainfo-table-left); }
+.adv-edge-right-2     { right: 13px; top: 274px; width: 14px; height: 82px; decorator: image(chainfo-table-right); }
+
+.adv-title { position: absolute; left: 18px; transform-origin: left top; white-space: nowrap; color: #e6e600; font-weight: bold; pointer-events: none; }
+.adv-title-1 { top: 130px; }
+.adv-title-2 { top: 270px; }
+.adv-lines { position: absolute; left: 18px; transform-origin: left top; pointer-events: none; }
+.adv-lines-1 { top: 147px; }
+.adv-lines-2 { top: 287px; }
+.adv-lines span { display: block; white-space: nowrap; color: #ffffff; height: calc(13px * var(--root-scale)); }
+.adv-lines span.boosted { color: rgb(100, 150, 255); }

@@ -6,6 +6,7 @@
 #include "UI/Core/WindowGeometry.h"
 #include "Character/CharacterManager.h"
 #include "GameLogic/Items/CSItemOption.h"
+#include "GameLogic/Character/AdvancedStats.h"
 #include "Audio/DSPlaySound.h"
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInterface.h"
@@ -29,6 +30,8 @@
 #include <RmlUi/Core/DataModelHandle.h>
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Event.h>
+
+#include <cmath>
 
 using namespace SEASON3B;
 using namespace mu::ui::window;
@@ -166,10 +169,17 @@ void mu::ui::window::CCharacterInfoWindow::BindRmlModel(Rml::DataModelConstructo
 
     c.Bind("master_level_enabled", &model.masterLevelEnabled);
 
+    c.Bind("advanced_view", &model.advancedView);
+    c.Bind("advanced_attack_title", &model.advancedAttackTitle);
+    c.Bind("advanced_defense_title", &model.advancedDefenseTitle);
+    c.Bind("advanced_attack_lines", &model.advancedAttackLines);
+    c.Bind("advanced_defense_lines", &model.advancedDefenseLines);
+
     c.Bind("exit_tooltip", &model.exitTooltip);
     c.Bind("quest_tooltip", &model.questTooltip);
     c.Bind("pet_tooltip", &model.petTooltip);
     c.Bind("masterlevel_tooltip", &model.masterLevelTooltip);
+    c.Bind("advstats_tooltip", &model.advancedStatsTooltip);
 
     c.BindEventCallback("chainfo_increase_stat",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& arguments)
@@ -184,6 +194,8 @@ void mu::ui::window::CCharacterInfoWindow::BindRmlModel(Rml::DataModelConstructo
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickPet(); });
     c.BindEventCallback("chainfo_click_masterlevel",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickMasterLevel(); });
+    c.BindEventCallback("chainfo_click_advstats",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickAdvancedStats(); });
     model.strLabel = StringUtils::WideToNarrow(I18N::Game::STR);
     model.agiLabel = StringUtils::WideToNarrow(I18N::Game::AGI);
     model.vitLabel = StringUtils::WideToNarrow(I18N::Game::STA);
@@ -197,6 +209,9 @@ void mu::ui::window::CCharacterInfoWindow::BindRmlModel(Rml::DataModelConstructo
     model.questTooltip = StringUtils::WideToNarrow(strText);
     model.petTooltip = StringUtils::WideToNarrow(I18N::Game::Pet);
     model.masterLevelTooltip = StringUtils::WideToNarrow(I18N::Game::MasterSkillTreeA);
+    model.advancedStatsTooltip = StringUtils::WideToNarrow(I18N::Game::AdvStatsTooltip);
+    model.advancedAttackTitle = StringUtils::WideToNarrow(I18N::Game::AdvStatsAttack);
+    model.advancedDefenseTitle = StringUtils::WideToNarrow(I18N::Game::AdvStatsDefense);
 }
 
 void mu::ui::window::CCharacterInfoWindow::BuildRmlUi()
@@ -329,6 +344,18 @@ void mu::ui::window::CCharacterInfoWindow::RmlClickMasterLevel()
     // and the themes hide this button, so it opens nothing.
 }
 
+void mu::ui::window::CCharacterInfoWindow::RmlClickAdvancedStats()
+{
+    const bool advanced = !m_RmlView.GetModel().advancedView;
+    SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::advancedView, "advanced_view", advanced);
+    if (advanced)
+    {
+        m_advancedStatsVersion = ~0u;
+        BuildAdvancedStatsLines();
+    }
+    PlayBuffer(SOUND_CLICK01);
+}
+
 void mu::ui::window::CCharacterInfoWindow::LoadImages()
 {
     LoadBitmap(L"Interface\\newui_msgbox_back.jpg", IMAGE_CHAINFO_BACK, GL_LINEAR);
@@ -411,6 +438,77 @@ void mu::ui::window::CCharacterInfoWindow::SyncRmlModel()
     BuildSubjectTexts();
     BuildTableTexts();
     BuildAttributeLines();
+    if (model.advancedView)
+        BuildAdvancedStatsLines();
+}
+
+namespace
+{
+    // A value of the advanced stats store as the tab shows it: "15", "2.5", or "-" before the server answered
+    // (or when it doesn't know the key). `unit` goes after a value ("%"), `sign` before it ("+").
+    std::wstring AdvancedStatText(const double* value, const wchar_t* sign, const wchar_t* unit)
+    {
+        if (value == nullptr)
+            return L"-";
+
+        wchar_t number[32];
+        const double rounded = std::round(*value * 10.0) / 10.0;
+        if (rounded == std::floor(rounded))
+            mu_swprintf(number, L"%.0f", rounded);
+        else
+            mu_swprintf(number, L"%.1f", rounded);
+        return std::wstring(rounded > 0 ? sign : L"") + number + unit;
+    }
+}
+
+void mu::ui::window::CCharacterInfoWindow::BuildAdvancedStatsLines()
+{
+    auto& stats = GameLogic::AdvancedStats::Stats();
+    stats.Request();
+    if (stats.Version() == m_advancedStatsVersion)
+        return;
+    m_advancedStatsVersion = stats.Version();
+
+    struct Row
+    {
+        const wchar_t* format;
+        const wchar_t* key;
+        bool damage; // damage points ("+60") rather than a percentage ("15%")
+    };
+    const auto build = [&stats](std::vector<StatLine>& lines, std::initializer_list<Row> rows)
+    {
+        lines.clear();
+        for (const Row& row : rows)
+        {
+            const double* value = stats.Find(row.key);
+            const std::wstring text = AdvancedStatText(value, row.damage ? L"+" : L"", row.damage ? L"" : L"%");
+            wchar_t line[256];
+            mu_swprintf(line, row.format, text.c_str());
+            lines.push_back({ StringUtils::WideToNarrow(line), value != nullptr && *value > 0 ? "boosted" : "base" });
+        }
+    };
+
+    auto& model = m_RmlView.GetModel();
+    build(model.advancedAttackLines, {
+        { I18N::Game::AdvStatsCriticalRate, L"crit", false },
+        { I18N::Game::AdvStatsCriticalDamage, L"critdmg", true },
+        { I18N::Game::AdvStatsExcellentRate, L"exc", false },
+        { I18N::Game::AdvStatsExcellentDamage, L"excdmg", true },
+        { I18N::Game::AdvStatsDoubleRate, L"dbl", false },
+        { I18N::Game::AdvStatsIgnoreDefense, L"igndef", false },
+        { I18N::Game::AdvStatsIgnoreShield, L"ignsd", false },
+        { I18N::Game::AdvStatsShieldDecrease, L"sddec", false },
+    });
+    build(model.advancedDefenseLines, {
+        { I18N::Game::AdvStatsDamageDecrease, L"dmgdec", false },
+        { I18N::Game::AdvStatsReflect, L"refl", false },
+        { I18N::Game::AdvStatsFullReflect, L"fullrefl", false },
+        { I18N::Game::AdvStatsHealthRecovery, L"hprec", false },
+        { I18N::Game::AdvStatsManaRecovery, L"mprec", false },
+        { I18N::Game::AdvStatsShieldAbsorb, L"sdabs", false },
+    });
+    m_RmlView.MarkDirty("advanced_attack_lines");
+    m_RmlView.MarkDirty("advanced_defense_lines");
 }
 
 void mu::ui::window::CCharacterInfoWindow::BuildSubjectTexts()

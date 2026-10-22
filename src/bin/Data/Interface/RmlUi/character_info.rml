@@ -15,7 +15,7 @@
 	     being enlarged. Positions and box
 	     widths stay in reference px; each leaf's transform-origin (character_info.rcss) keeps it
 	     anchored to the edge or centre its text is aligned to. -->
-	<div id="panel" data-model="character_info">
+	<div id="panel" data-model="character_info" data-class-adv-view="advanced_view">
 		<div class="frame-piece frame-top"></div>
 		<div class="frame-piece frame-left"></div>
 		<div class="frame-piece frame-right"></div>
@@ -97,6 +97,38 @@
 		<div id="btn_stat_cmd" class="stat-btn stat-btn-cmd" data-class-hidden="!can_level_up || !show_charisma"
 		     data-event-click="chainfo_increase_stat(4)"></div>
 
+		<!-- Advanced stats tab (MU Moldova): the fourth button shows it in place of the attribute rows (the
+		     theme hides those while #panel has .adv-view). Two boxes in the summary box's own 8-piece frame; the lines come from
+		     the server's /advstats (GameLogic/Character/AdvancedStats.h). -->
+		<div class="adv adv-fill adv-fill-1"></div>
+		<div class="adv summary-corner adv-corner-tl-1"></div>
+		<div class="adv summary-corner adv-corner-tr-1"></div>
+		<div class="adv summary-corner adv-corner-bl-1"></div>
+		<div class="adv summary-corner adv-corner-br-1"></div>
+		<div class="adv summary-edge adv-edge-top-1"></div>
+		<div class="adv summary-edge adv-edge-bottom-1"></div>
+		<div class="adv summary-edge adv-edge-separator-1"></div>
+		<div class="adv summary-edge adv-edge-left-1"></div>
+		<div class="adv summary-edge adv-edge-right-1"></div>
+		<span class="adv adv-title adv-title-1 counter-scaled" data-style-font-size="text_px + 'px'">{{advanced_attack_title}}</span>
+		<div class="adv adv-lines adv-lines-1 counter-scaled" data-style-font-size="text_px + 'px'">
+			<span data-for="line : advanced_attack_lines" data-class-boosted="line.source == 'boosted'">{{line.text}}</span>
+		</div>
+		<div class="adv adv-fill adv-fill-2"></div>
+		<div class="adv summary-corner adv-corner-tl-2"></div>
+		<div class="adv summary-corner adv-corner-tr-2"></div>
+		<div class="adv summary-corner adv-corner-bl-2"></div>
+		<div class="adv summary-corner adv-corner-br-2"></div>
+		<div class="adv summary-edge adv-edge-top-2"></div>
+		<div class="adv summary-edge adv-edge-bottom-2"></div>
+		<div class="adv summary-edge adv-edge-separator-2"></div>
+		<div class="adv summary-edge adv-edge-left-2"></div>
+		<div class="adv summary-edge adv-edge-right-2"></div>
+		<span class="adv adv-title adv-title-2 counter-scaled" data-style-font-size="text_px + 'px'">{{advanced_defense_title}}</span>
+		<div class="adv adv-lines adv-lines-2 counter-scaled" data-style-font-size="text_px + 'px'">
+			<span data-for="line : advanced_defense_lines" data-class-boosted="line.source == 'boosted'">{{line.text}}</span>
+		</div>
+
 		<!-- Bottom action row: shared close button plus Quest/Pet/Master-Level shortcuts. -->
 		<div id="btn_exit" class="info-btn info-btn-exit" data-event-click="window_close" data-attr-data-hint="exit_tooltip">
 			<span class="btn-exit-label">×</span>
@@ -105,6 +137,8 @@
 		<div id="btn_pet" class="info-btn info-btn-pet" data-event-click="chainfo_click_pet" data-attr-data-hint="pet_tooltip"></div>
 		<div id="btn_masterlevel" class="info-btn info-btn-masterlevel" data-class-locked="!master_level_enabled"
 		     data-event-click="chainfo_click_masterlevel" data-attr-data-hint="masterlevel_tooltip"></div>
+		<div id="btn_advstats" class="info-btn info-btn-advstats" data-event-click="chainfo_click_advstats"
+		     data-attr-data-hint="advstats_tooltip"></div>
 		<div id="frame_corner_close" data-event-click="window_close"></div>
 	</div>
 </body>

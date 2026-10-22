@@ -4541,6 +4541,74 @@
     <value>Домашний питомец</value>
     <comment>legacy_id=1217</comment>
   </data>
+  <data name="AdvStatsTooltip" xml:space="preserve">
+    <value>Расширенные характеристики</value>
+    <comment>MU Moldova: character window, advanced stats tab</comment>
+  </data>
+  <data name="AdvStatsAttack" xml:space="preserve">
+    <value>Атака</value>
+    <comment>MU Moldova: character window, advanced stats tab</comment>
+  </data>
+  <data name="AdvStatsDefense" xml:space="preserve">
+    <value>Защита</value>
+    <comment>MU Moldova: character window, advanced stats tab</comment>
+  </data>
+  <data name="AdvStatsCriticalRate" xml:space="preserve">
+    <value>Шанс крит. урона: %ls</value>
+    <comment>MU Moldova: character window, advanced stats tab</comment>
+  </data>
+  <data name="AdvStatsCriticalDamage" xml:space="preserve">
+    <value>Крит. урон: %ls</value>
+    <comment>MU Moldova: character window, advanced stats tab</comment>
+  </data>
+  <data name="AdvStatsExcellentRate" xml:space="preserve">
+    <value>Шанс отл. урона: %ls</value>
+    <comment>MU Moldova: character window, advanced stats tab</comment>
+  </data>
+  <data name="AdvStatsExcellentDamage" xml:space="preserve">
+    <value>Отл. урон: %ls</value>
+    <comment>MU Moldova: character window, advanced stats tab</comment>
+  </data>
+  <data name="AdvStatsDoubleRate" xml:space="preserve">
+    <value>Шанс двойного урона: %ls</value>
+    <comment>MU Moldova: character window, advanced stats tab</comment>
+  </data>
+  <data name="AdvStatsIgnoreDefense" xml:space="preserve">
+    <value>Игнор защиты: %ls</value>
+    <comment>MU Moldova: character window, advanced stats tab</comment>
+  </data>
+  <data name="AdvStatsIgnoreShield" xml:space="preserve">
+    <value>Игнор SD: %ls</value>
+    <comment>MU Moldova: character window, advanced stats tab</comment>
+  </data>
+  <data name="AdvStatsShieldDecrease" xml:space="preserve">
+    <value>Снижение SD цели: %ls</value>
+    <comment>MU Moldova: character window, advanced stats tab</comment>
+  </data>
+  <data name="AdvStatsDamageDecrease" xml:space="preserve">
+    <value>Снижение урона: %ls</value>
+    <comment>MU Moldova: character window, advanced stats tab</comment>
+  </data>
+  <data name="AdvStatsReflect" xml:space="preserve">
+    <value>Отражение урона: %ls</value>
+    <comment>MU Moldova: character window, advanced stats tab</comment>
+  </data>
+  <data name="AdvStatsFullReflect" xml:space="preserve">
+    <value>Полное отражение: %ls</value>
+    <comment>MU Moldova: character window, advanced stats tab</comment>
+  </data>
+  <data name="AdvStatsHealthRecovery" xml:space="preserve">
+    <value>Полное восст. HP: %ls</value>
+    <comment>MU Moldova: character window, advanced stats tab</comment>
+  </data>
+  <data name="AdvStatsManaRecovery" xml:space="preserve">
+    <value>Полное восст. маны: %ls</value>
+    <comment>MU Moldova: character window, advanced stats tab</comment>
+  </data>
+  <data name="AdvStatsShieldAbsorb" xml:space="preserve">
+    <value>Поглощение SD: %ls</value>
+    <comment>MU Moldova: character window, advanced stats tab</comment>
+  </data>
   <data name="Commands" xml:space="preserve">
     <value>Команды</value>
     <comment>legacy_id=1218</comment>

@@ -18,7 +18,7 @@
 	     CMyInventory, this window has no live-3D icon to paint behind, so the whole forged-dialog
 	     look lives directly in this one foreground document instead of a separate background
 	     context. Keep ids/data-model/event-callback names in sync with ../../character_info.rml. -->
-	<div id="panel" data-model="character_info">
+	<div id="panel" data-model="character_info" data-class-adv-view="advanced_view">
 		<div class="modern-shell-edge"></div>
 		<div class="modern-groove"></div>
 
@@ -87,6 +87,20 @@
 		<div id="btn_stat_cmd" class="stat-btn stat-btn-cmd" data-class-hidden="!can_level_up || !show_charisma"
 		     data-event-click="chainfo_increase_stat(4)">+</div>
 
+		<!-- Advanced stats tab (MU Moldova): the fourth button shows it in place of the attribute rows (the
+		     theme hides those while #panel has .adv-view). Two boxes; the lines come from
+		     the server's /advstats (GameLogic/Character/AdvancedStats.h). -->
+		<div class="adv adv-fill adv-fill-1"></div>
+		<span class="adv adv-title adv-title-1">{{advanced_attack_title}}</span>
+		<div class="adv adv-lines adv-lines-1">
+			<span data-for="line : advanced_attack_lines" data-class-boosted="line.source == 'boosted'">{{line.text}}</span>
+		</div>
+		<div class="adv adv-fill adv-fill-2"></div>
+		<span class="adv adv-title adv-title-2">{{advanced_defense_title}}</span>
+		<div class="adv adv-lines adv-lines-2">
+			<span data-for="line : advanced_defense_lines" data-class-boosted="line.source == 'boosted'">{{line.text}}</span>
+		</div>
+
 		<!-- Bottom action row: same bordered forged-metal square buttons as CMyInventory's
 		     Exit/Repair/My Shop/Expand (base.rcss's .modern-icon-btn-px), not a flat exit button
 		     plus legacy-sprite icons -- keeps this row visually part of the same family. -->
@@ -102,6 +116,10 @@
 		<div id="btn_masterlevel" class="modern-icon-btn-px chainfo-btn-masterlevel" data-class-locked="!master_level_enabled"
 		     data-event-click="chainfo_click_masterlevel" data-attr-data-hint="masterlevel_tooltip">
 			<span class="modern-icon-btn-glyph-px">M</span>
+		</div>
+		<div id="btn_advstats" class="modern-icon-btn-px chainfo-btn-advstats" data-event-click="chainfo_click_advstats"
+		     data-attr-data-hint="advstats_tooltip">
+			<span class="modern-icon-btn-glyph-px">%</span>
 		</div>
 		<div id="frame_corner_close" data-event-click="window_close"></div>
 	</div>

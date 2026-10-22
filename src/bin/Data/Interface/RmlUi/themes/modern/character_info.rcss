@@ -150,3 +150,42 @@
    master skill tree button is gone; CCharacterInfoWindow::RmlClickMasterLevel and the A key
    no longer open the window either. */
 #btn_masterlevel { display: none; }
+
+/* ---- Advanced stats tab (MU Moldova) ----
+   The fourth button sits where the master level button was. While #panel has .adv-view (the model's
+   advanced_view), two boxes take the place of the attribute rows, in the summary box's look: box 1 at 120
+   (8 lines), box 2 at 260 (6 lines). */
+.chainfo-btn-advstats { left: 136px; }
+
+.adv { display: none; }
+#panel.adv-view .adv { display: block; }
+#panel.adv-view .attr-textbox, #panel.adv-view .attr-label, #panel.adv-view .attr-value,
+#panel.adv-view .attr-lines, #panel.adv-view .stat-btn { display: none; }
+
+.adv-fill {
+	position: absolute;
+	left: 12px;
+	right: 13px;
+	background-color: token(surface-panel);
+	border-radius: token(radius-sm)dp;
+	pointer-events: none;
+}
+.adv-fill-1 { top: 120px; height: 136px; }
+.adv-fill-2 { top: 260px; height: 110px; }
+.adv-title {
+	position: absolute;
+	left: 18px;
+	font-size: 10px;
+	font-family: "token(font-body)";
+	font-weight: bold;
+	color: token(accent-gold-hover);
+	white-space: nowrap;
+	pointer-events: none;
+}
+.adv-title-1 { top: 124px; }
+.adv-title-2 { top: 264px; }
+.adv-lines { position: absolute; left: 18px; width: 160px; pointer-events: none; }
+.adv-lines span { display: block; line-height: 13px; font-size: 12px; font-family: "token(font-body)"; white-space: nowrap; color: token(text-primary); }
+.adv-lines span.boosted { color: rgb(100, 150, 255); }
+.adv-lines-1 { top: 141px; }
+.adv-lines-2 { top: 281px; }
