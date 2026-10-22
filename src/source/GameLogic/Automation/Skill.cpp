@@ -15,6 +15,7 @@ extern MovementSkill g_MovementSkill;
 extern int SelectedCharacter;
 extern int TargetX;
 extern int TargetY;
+extern int HeroKey;
 
 namespace GameLogic::Automation
 {
@@ -162,6 +163,9 @@ SkillResult CastSkill(ActionSkillType skill, bool targetRequired, int targetKey,
 
     const float skillDistance = gSkillManager.GetSkillDistance(skill, Hero);
 
+    // Cast where the character stands, rather than at a target.
+    const bool atOwnTile = !targetRequired || IsSelfPositionSkill(skill);
+
     if (!targetRequired)
     {
         TargetX = Hero->PositionX;
@@ -195,7 +199,30 @@ SkillResult CastSkill(ActionSkillType skill, bool targetRequired, int targetKey,
     g_MovementSkill.m_iSkill = skill;
     g_MovementSkill.m_bMagic = true;
 
+    // The execution takes its aim from CheckTarget: the selected character, or with none selected the
+    // ground under the mouse pointer. For a skill cast where the character stands, the pointer is the
+    // wrong place, and with a wall between it and the character the execution walks towards it instead
+    // of casting. The helper then follows the pointer across the map while a buff is missing, or stands
+    // still with neither buff nor attacks when no walk reaches it. Selecting the character itself for
+    // the execution aims it at its own tile, as a cast on one's own model does; the player's selection
+    // is put back afterwards.
+    const int previousSelection = SelectedCharacter;
+    if (atOwnTile)
+    {
+        const int heroIndex = FindCharacterIndex(HeroKey);
+        if (heroIndex != MAX_CHARACTERS_CLIENT)
+        {
+            SelectedCharacter = heroIndex;
+        }
+    }
+
     const int executed = GameLogic::Combat::ExecuteSkill(Hero, skill, skillDistance);
+
+    if (atOwnTile)
+    {
+        SelectedCharacter = previousSelection;
+    }
+
     if (executed == SkillExecutionRefused)
     {
         return SkillResult::Refused;
