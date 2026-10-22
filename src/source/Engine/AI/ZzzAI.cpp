@@ -10,6 +10,8 @@
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzObject.h"
 #include "Engine/Object/ZzzCharacter.h"
+#include "Engine/Object/PlayerActionState.h"
+#include "Engine/Object/SwingCadence.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
 #include "Engine/AI/ZzzAI.h"
 #include "Engine/AI/BoidSteering.h"
@@ -325,6 +327,18 @@ bool IsAliceRideAction_Fenrir(unsigned short byAction)
     return false;
 }
 
+// The key a new action starts at: 0, except for a swing of the hero that follows the last one right away,
+// which starts with the time that swing ran past its end (see SwingCadence.h).
+static float HeroSwingStartKey(const OBJECT* o, const BMD* b, int action)
+{
+    if (Hero == nullptr || o != &Hero->Object || o->Type != MODEL_PLAYER || !Engine::Object::IsSwingAction(action))
+    {
+        return 0.f;
+    }
+
+    return Engine::Object::HeroSwingCadence().TakeStartKey(b->Actions[action].PlaySpeed, RENDERED_FRAME);
+}
+
 void SetAction(OBJECT* o, int Action, bool bBlending)
 {
     BMD* b = &Models[o->Type];
@@ -335,7 +349,7 @@ void SetAction(OBJECT* o, int Action, bool bBlending)
         o->PriorAction = o->CurrentAction;
         o->PriorAnimationFrame = o->AnimationFrame;
         o->CurrentAction = Action;
-        o->AnimationFrame = 0;
+        o->AnimationFrame = HeroSwingStartKey(o, b, Action);
         if (bBlending == false)
         {
             o->PriorAnimationFrame = 0;

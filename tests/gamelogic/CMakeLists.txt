@@ -34,6 +34,14 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME test_swing_cadence
+    SOURCES
+        test_swing_cadence.cpp
+    LINK_LIBS
+        MuClient
+)
+
+mu_add_test(
     NAME test_direction_turning
     SOURCES
         test_direction_turning.cpp

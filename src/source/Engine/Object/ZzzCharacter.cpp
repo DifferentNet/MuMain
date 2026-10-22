@@ -25,6 +25,7 @@
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/AnimationTaskPool.h"
 #include "Engine/Object/PlayerActionState.h"
+#include "Engine/Object/SwingCadence.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
 #include "Render/Textures/ZzzTexture.h"
 #include "Engine/AI/ZzzAI.h"
@@ -813,7 +814,7 @@ int AttackHand = 0;
 
 // Attack and magic speed turn into animation speed in proportion: 0.004 per point of attack speed, 0.004 and
 // 0.002 per point of magic speed. MuMain's RGZ_FIX_ATTACK_SPEED slowed attacks between 509 and 750 and magic
-// in bands up to 3011, so on MU Skynet (server cap 1000) more agility hit slower than at 500. Measured
+// in bands up to 3011, so on MU Skynet (then capped at 1000) more agility hit slower than at 500. Measured
 // 2026-10-22 with every class against a dummy: without it the server takes every hit up to 1000, except an
 // elf's Triple Shot, which loses most of its arrows from attack speed 508 to 569 (at 550: 0.8 hits a second
 // of 8.8 shots). In that band the elf's attack animation plays at the speed of 507 (8.0 shots, all hits).
@@ -2408,6 +2409,23 @@ bool CheckMonsterSkill(CHARACTER* pCharacter, OBJECT* pObject)
     return true;
 }
 
+// When the hero's swing animation has just ended, PlayAnimation left the keys it ran past the end in
+// AnimationFrame; SwingCadence hands that time to the next swing (see SwingCadence.h).
+static void RecordHeroSwingEnd(const CHARACTER* c, const OBJECT* o, const BMD* b, float playSpeed)
+{
+    if (c != Hero || o->Type != MODEL_PLAYER || !Engine::Object::IsSwingAction(o->CurrentAction))
+    {
+        return;
+    }
+
+    if (o->CurrentAction >= b->NumActions || b->Actions[o->CurrentAction].Loop)
+    {
+        return;
+    }
+
+    Engine::Object::HeroSwingCadence().RecordSwingEnd(o->AnimationFrame, playSpeed, FPS_ANIMATION_FACTOR, RENDERED_FRAME);
+}
+
 bool CharacterAnimation(CHARACTER* c, OBJECT* o)
 {
     bool Play;
@@ -2482,6 +2500,10 @@ bool CharacterAnimation(CHARACTER* c, OBJECT* o)
     }
 
     Play = b->PlayAnimation(&o->AnimationFrame, &o->PriorAnimationFrame, &o->PriorAction, PlaySpeed, o->Position, o->Angle);
+    if (!Play)
+    {
+        RecordHeroSwingEnd(c, o, b, PlaySpeed);
+    }
     if (o->CurrentAction == PLAYER_CHANGE_UP)
     {
         if (Play == false)
