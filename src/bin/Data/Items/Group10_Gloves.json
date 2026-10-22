@@ -927,6 +927,7 @@
       "durability": 74,
       "defense": 25,
       "attackSpeed": 5,
+      "attackType": 1,
       "requirements": {
         "strength": 80,
         "dexterity": 21
