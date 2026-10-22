@@ -59,6 +59,9 @@
 				<div id="title" class="modern-header-title-px">{{title}}</div>
 			</div>
 		</div>
+		<!-- The jewel bank's button (JewelBankWindow.h) in the header's free left corner, after the title so it
+		     takes its clicks there; C++ draws a Jewel of Bless over it (CMyInventory::Render3D). -->
+		<div id="btn_jewel_bank" class="inv-jewel-bank" data-event-click="my_inventory_jewel_bank_click" data-attr-data-hint="jewel_bank_tooltip"></div>
 
 		<!-- Wallet + action buttons: base.rcss's shared .modern-wallet-px/.modern-icon-btn-px
 		     family (generalized from this window). Fixed warm-gold value color, not bound to

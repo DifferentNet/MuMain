@@ -1,0 +1,42 @@
+<rml>
+<head>
+	<title>Jewel Bank</title>
+	<link type="text/rcss" href="base.rcss"/>
+	<link type="text/rcss" href="docked_panel_frame.rcss"/>
+	<link type="text/rcss" href="jewel_bank.rcss"/>
+</head>
+<body>
+	<!-- The jewel bank window (CJewelBankWindow, UI/Inventory/JewelBankWindow.h), opened from the inventory and
+	     docked beside it: the title, a status line (a hint, or why there are no counts), then a row per kind of
+	     jewel -- its icon box, which C++ draws the jewel over (#jb_items), its name, the count in the bank with
+	     the jewels in the inventory in brackets, a deposit button and a withdraw button. The workspace slot places
+	     and scales #panel. Clicks are queued with jewel_bank_deposit(i), jewel_bank_withdraw(i) and
+	     jewel_bank_exit; the withdraw button asks how many in a dialog. -->
+	<div id="panel" data-model="jewel_bank">
+		<div class="frame-piece frame-top"></div>
+		<div class="frame-piece frame-left"></div>
+		<div class="frame-piece frame-right"></div>
+		<div class="frame-piece frame-bottom"></div>
+
+		<span id="jb_title" class="sharp-text jb-title" data-style-font-size="text_px + 'px'">{{title}}</span>
+		<span id="jb_status" class="sharp-text jb-status" data-style-font-size="status_px + 'px'">{{status}}</span>
+
+		<div id="jb_rows">
+			<div class="jb-row" data-for="r : rows">
+				<div class="jb-icon"></div>
+				<span class="sharp-text jb-name" data-style-font-size="r.name_px + 'px'">{{r.name}}</span>
+				<span class="sharp-text jb-count" data-style-font-size="text_px + 'px'">{{r.count}}</span>
+				<div class="jb-btn jb-deposit" data-class-disabled="!r.can_deposit"
+				     data-event-click="jewel_bank_deposit(it_index)" data-attr-data-hint="deposit_tooltip"><span class="jb-glyph">&#8595;</span></div>
+				<div class="jb-btn jb-withdraw" data-class-disabled="!r.can_withdraw"
+				     data-event-click="jewel_bank_withdraw(it_index)" data-attr-data-hint="withdraw_tooltip"><span class="jb-glyph">&#8593;</span></div>
+			</div>
+		</div>
+
+		<!-- The jewels, live 3D, drawn by C++ over the icon boxes. -->
+		<img id="jb_items" class="jb-items"/>
+
+		<div id="frame_corner_close" data-event-click="jewel_bank_exit" data-attr-data-hint="exit_tooltip"></div>
+	</div>
+</body>
+</rml>

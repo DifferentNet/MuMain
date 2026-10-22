@@ -74,6 +74,7 @@
 					<div class="slot" data-window="inventory_extension" data-closes="storage_extension my_quest character"></div>
 					<div class="slot" data-window="storage"></div>
 					<div class="slot" data-window="storage_extension"></div>
+					<div class="slot" data-window="jewel_bank"></div>
 					<div class="slot" data-window="npc_shop"></div>
 					<div class="slot" data-window="mix"></div>
 					<div class="slot" data-window="trade"></div>

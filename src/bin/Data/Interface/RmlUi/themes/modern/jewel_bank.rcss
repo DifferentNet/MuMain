@@ -1,0 +1,53 @@
+/* Modern theme for CJewelBankWindow (the jewel bank, a button in the inventory): docked_panel_frame.rcss's forged
+   panel (linked first) at the full dock height, in the daily rewards window's colours (daily_rewards.rcss), with
+   small forged buttons carrying the vault's arrow glyphs (storage.rml: down deposits, up takes). Geometry is the
+   legacy one: reference px inside #panel; text layers are counter-scaled (base.rcss .sharp-text). */
+
+#panel { height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; transform-origin: left top; pointer-events: none; }
+
+.jb-title { left: 0; top: 11px; text-align: center; font-weight: bold; color: token(accent-gold); }
+.jb-status { left: 10px; top: 28px; text-align: center; color: token(text-muted); }
+
+#jb_rows { position: absolute; left: 10px; top: 44px; width: 170px; }
+.jb-row { position: relative; display: block; width: 170px; height: 37px; }
+.jb-icon {
+	position: absolute;
+	left: 1px;
+	top: 3px;
+	width: 26px;
+	height: 30px;
+	background-color: token(surface-recessed);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+	pointer-events: none;
+}
+.jb-name { left: 32px; top: 3px; color: token(text-primary); }
+.jb-count { left: 32px; top: 20px; font-weight: bold; color: token(accent-gold); }
+
+.jb-btn {
+	position: absolute;
+	top: 15px;
+	width: 26px;
+	height: 20px;
+	cursor: pointer;
+	pointer-events: auto;
+	text-align: center;
+	line-height: 20px;
+	color: token(text-secondary);
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+.jb-btn:hover { color: token(accent-gold-hover); border-color: token(border-hover); }
+.jb-btn.disabled { pointer-events: none; filter: brightness(0.45); }
+.jb-deposit { left: 112px; }
+.jb-withdraw { left: 142px; }
+.jb-glyph { font-family: "DejaVu Sans"; font-weight: bold; font-size: 11px; pointer-events: none; }
+
+.jb-items { position: absolute; left: 0; top: 0; width: 190px; height: 432px; pointer-events: none; }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+#jb_title { width: calc(100% * var(--root-scale)); }
+#jb_status { width: calc(170px * var(--root-scale)); }

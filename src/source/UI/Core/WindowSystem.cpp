@@ -89,6 +89,7 @@ CSystem::CSystem()
     m_pNewChatCommandWindow = nullptr;
     m_pNewEventScheduleWindow = nullptr;
     m_pNewDailyRewardsWindow = nullptr;
+    m_pNewJewelBankWindow = nullptr;
     m_pNewItemExplanationWindow = nullptr;
     m_pNewSetItemExplanation = nullptr;
     m_pNewQuickCommandWindow = nullptr;
@@ -383,6 +384,12 @@ bool CSystem::LoadMainSceneInterface()
         return false;
     }
 
+    m_pNewJewelBankWindow = new CJewelBankWindow;
+    if (m_pNewJewelBankWindow->Create(m_pNewUIMng) == false)
+    {
+        return false;
+    }
+
     m_pNewHelpWindow = new CHelpWindow;
     if (m_pNewHelpWindow->Create(m_pNewUIMng) == false)
     {
@@ -601,6 +608,7 @@ bool CSystem::LoadMainSceneInterface()
     slot(INTERFACE_INVENTORY_EXT, "inventory_extension", m_pNewMyInventoryExt, "inventory_extension.rml");
     slot(INTERFACE_STORAGE, "storage", m_pNewStorageInventory, "storage.rml");
     slot(INTERFACE_STORAGE_EXT, "storage_extension", m_pNewStorageInventoryExt, "storage_ext.rml");
+    slot(INTERFACE_JEWEL_BANK, "jewel_bank", m_pNewJewelBankWindow, "jewel_bank.rml");
     slot(INTERFACE_NPCSHOP, "npc_shop", m_pNewNPCShop, "npc_shop.rml");
     slot(INTERFACE_MIXINVENTORY, "mix", m_pNewMixInventory, "mix_inventory.rml");
     slot(INTERFACE_TRADE, "trade", m_pNewTrade, "trade.rml");
@@ -654,6 +662,7 @@ void CSystem::UnloadMainSceneInterface()
     SAFE_DELETE(m_pNewChatCommandWindow);
     SAFE_DELETE(m_pNewEventScheduleWindow);
     SAFE_DELETE(m_pNewDailyRewardsWindow);
+    SAFE_DELETE(m_pNewJewelBankWindow);
     SAFE_DELETE(m_pNewItemExplanationWindow);
     SAFE_DELETE(m_pNewSetItemExplanation);
     SAFE_DELETE(m_pNewQuickCommandWindow);
@@ -939,6 +948,11 @@ void CSystem::Show(DWORD dwKey)
     {
         HideAllGroupA();
         m_pNewDailyRewardsWindow->OpenningProcess();
+    }
+    else if (dwKey == INTERFACE_JEWEL_BANK)
+    {
+        // Beside the inventory, which stays open with it (and the vault, if open).
+        m_pNewJewelBankWindow->OpenningProcess();
     }
     else if (dwKey == INTERFACE_GUILDINFO)
     {
@@ -1385,6 +1399,10 @@ void CSystem::Hide(DWORD dwKey)
     {
         m_pNewDailyRewardsWindow->ClosingProcess();
     }
+    else if (dwKey == INTERFACE_JEWEL_BANK)
+    {
+        m_pNewJewelBankWindow->ClosingProcess();
+    }
     else if (dwKey == INTERFACE_WINDOW_MENU)
     {
         g_pMainFrame->SetBtnState(MAINFRAME_BTN_WINDOW, false);
@@ -1604,6 +1622,7 @@ void CSystem::HideAllGroupA()
         INTERFACE_COMMAND_LIST,
         INTERFACE_EVENT_SCHEDULE,
         INTERFACE_DAILY_REWARDS,
+        INTERFACE_JEWEL_BANK,
         INTERFACE_GUILDINFO,
         INTERFACE_KANTURU2ND_ENTERNPC,
         INTERFACE_DUELWATCH,
@@ -1655,6 +1674,7 @@ void CSystem::HideAllGroupB()
         INTERFACE_COMMAND_LIST,
         INTERFACE_EVENT_SCHEDULE,
         INTERFACE_DAILY_REWARDS,
+        INTERFACE_JEWEL_BANK,
         INTERFACE_GUILDINFO,
         INTERFACE_KANTURU2ND_ENTERNPC,
         INTERFACE_CURSEDTEMPLE_NPC,
@@ -2269,6 +2289,11 @@ CEventScheduleWindow* CSystem::GetUI_NewEventScheduleWindow() const
 CDailyRewardsWindow* CSystem::GetUI_NewDailyRewardsWindow() const
 {
     return m_pNewDailyRewardsWindow;
+}
+
+CJewelBankWindow* CSystem::GetUI_NewJewelBankWindow() const
+{
+    return m_pNewJewelBankWindow;
 }
 
 CItemExplanationWindow* CSystem::GetUI_NewItemExplanationWindow() const

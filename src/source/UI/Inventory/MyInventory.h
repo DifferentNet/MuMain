@@ -111,6 +111,7 @@ namespace mu::ui::window
 
             Rml::String exitTooltip;
             Rml::String expandTooltip;
+            Rml::String jewelBankTooltip;
 
             // Set/Socket option header labels. The shared hover tooltip itself is
             // UI::RmlBridge::Tooltip, not part of this model -- see SyncRmlModel().

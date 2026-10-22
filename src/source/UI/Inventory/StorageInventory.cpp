@@ -15,6 +15,8 @@
 #include "Engine/Object/ZzzInventory.h"
 #include "GameLogic/Items/TradeRestrictions.h"
 #include "UI/Inventory/MyInventory.h"
+#include "UI/Inventory/StorageInventoryExt.h"
+#include "UI/Inventory/VaultPages.h"
 #include "Scenes/SceneCore.h" // g_iLengthAuthorityCode -- the WEBZEN password field's maxLength below
 
 // RmlUi migration -- see this class's header comment.
@@ -215,6 +217,14 @@ void CStorageInventory::BindRmlModel(Rml::DataModelConstructor& c, StorageRmlMod
 
     c.Bind("title", &model.title);
     c.Bind("title_locked", &model.titleLocked);
+    c.Bind("pages_visible", &model.pagesVisible);
+    c.Bind("pages_busy", &model.pagesBusy);
+    c.BindEventCallback("storage_page",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& args)
+        {
+            if (args.size() == 1)
+                m_nPendingPageStep = args[0].Get<int>(0) < 0 ? -1 : 1;
+        });
 
     c.Bind("zen_text", &model.zenText);
     c.Bind("zen_tier", &model.zenTier);
@@ -426,8 +436,49 @@ bool CStorageInventory::Update()
     if (m_pNewInventoryCtrl && !m_pNewInventoryCtrl->Update())
         return false;
 
+    // Opening asks the server which vault page this is; closing forgets it (UI/Inventory/VaultPages.h).
+    if (IsVisible() != m_bWasVisible)
+    {
+        m_bWasVisible = IsVisible();
+        m_nPendingPageStep = 0;
+        if (m_bWasVisible)
+            UI::Storage::Pages().RequestInfo();
+        else
+            UI::Storage::Pages().Reset();
+    }
+
+    if (m_nPendingPageStep != 0)
+    {
+        const int step = m_nPendingPageStep;
+        m_nPendingPageStep = 0;
+        if (IsVisible())
+            StepPage(step);
+    }
+
     SyncRmlModel();
     return true;
+}
+
+void CStorageInventory::StepPage(int step)
+{
+    auto& pages = UI::Storage::Pages();
+    // Not while an item is on the cursor or a move waits for the server: the item would land on the other page.
+    if (!pages.HasInfo() || pages.Pages() < 2 || pages.IsSwitching() || g_pPickedItem || EquipmentItem || m_bItemAutoMove
+        || g_pStorageInventoryExt->IsItemAutoMove())
+        return;
+
+    const int count = pages.Pages();
+    const int next = (pages.Page() - 1 + step + count) % count + 1;
+    PlayBuffer(SOUND_CLICK01);
+    pages.RequestPage(next);
+}
+
+void CStorageInventory::ClearForPageSwitch()
+{
+    CInventoryCtrl::BackupPickedItem();
+    SetItemAutoMove(false);
+    InitBackupItemInfo();
+    DeleteAllItems();
 }
 
 bool CStorageInventory::Render()
@@ -472,11 +523,20 @@ void CStorageInventory::SyncRmlModel()
         syncText(field, boundName, StringUtils::WideToNarrow(text));
     };
 
-    // "Storage (open/close)" title text, red when locked.
+    // "Storage (open/close)" title text, red when locked; once the server told the vault page, "Storage 3/8"
+    // between the arrows (the lock shows on its button, and in legacy as the title's red), which leaves room
+    // for the arrows in every language.
+    const auto& pages = UI::Storage::Pages();
     wchar_t titleBuf[128];
-    mu_swprintf(titleBuf, L"%ls (%ls)", I18N::Game::Storage, I18N::Game::Lookup(m_bLock ? 241 : 240));
+    if (pages.HasInfo())
+        mu_swprintf(titleBuf, L"%ls %d/%d", I18N::Game::Storage, pages.Page(), pages.Pages());
+    else
+        mu_swprintf(titleBuf, L"%ls (%ls)", I18N::Game::Storage, I18N::Game::Lookup(m_bLock ? 241 : 240));
     syncWide(&StorageRmlModel::title, "title", titleBuf);
     syncBool(&StorageRmlModel::titleLocked, "title_locked", m_bLock);
+    syncBool(&StorageRmlModel::pagesVisible, "pages_visible", pages.HasInfo() && pages.Pages() > 1);
+    syncBool(&StorageRmlModel::pagesBusy, "pages_busy",
+             pages.IsSwitching() || g_pPickedItem != nullptr || EquipmentItem || m_bItemAutoMove);
 
     const int nZen = CharacterMachine->StorageGold;
     wchar_t zenBuf[256] = { 0, };

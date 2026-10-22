@@ -13536,4 +13536,28 @@
   <data name="SetItemPieces" xml:space="preserve">
     <value>Set items: %d of %d collected</value>
   </data>
+  <data name="JewelBankTitle" xml:space="preserve">
+    <value>Jewel bank</value>
+  </data>
+  <data name="JewelBankAsking" xml:space="preserve">
+    <value>Asking the server...</value>
+  </data>
+  <data name="JewelBankNoAnswer" xml:space="preserve">
+    <value>The server doesn't answer.</value>
+  </data>
+  <data name="JewelBankUnavailable" xml:space="preserve">
+    <value>The jewel bank is not available.</value>
+  </data>
+  <data name="JewelBankHint" xml:space="preserve">
+    <value>Deposit puts in all of a kind.</value>
+  </data>
+  <data name="JewelBankDeposit" xml:space="preserve">
+    <value>Deposit all of them from the inventory</value>
+  </data>
+  <data name="JewelBankWithdraw" xml:space="preserve">
+    <value>Withdraw</value>
+  </data>
+  <data name="JewelBankHowMany" xml:space="preserve">
+    <value>How many %ls to take? The bank holds %ls.</value>
+  </data>
 </root>

@@ -115,6 +115,8 @@ using namespace mu::ui::window;
 #include "GameLogic/Events/EventTimes.h"
 #include "GameLogic/Events/DailyRewards.h"
 #include "GameLogic/Character/AdvancedStats.h"
+#include "GameLogic/Items/JewelBank.h"
+#include "UI/Inventory/VaultPages.h"
 
 #define MAX_DEBUG_MAX 10
 
@@ -1262,6 +1264,7 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     GameLogic::EventTimes::Times().Reset();
     GameLogic::DailyRewards::Rewards().Reset();
     GameLogic::AdvancedStats::Stats().Reset();
+    GameLogic::JewelBank::Bank().Reset();
 
     g_ConsoleDebug->Write(MCD_RECEIVE, L"0x03 [ReceiveJoinMapServer]");
 
@@ -1987,10 +1990,12 @@ void ReceiveNotice(const BYTE* ReceiveBuffer)
     else if (Data->Result == 1)
     {
         // The answers to the event timer window (GameLogic/Events/EventTimes.h), the daily rewards window
-        // (GameLogic/Events/DailyRewards.h) and the character window's advanced stats tab
-        // (GameLogic/Character/AdvancedStats.h) stay out of the chat.
+        // (GameLogic/Events/DailyRewards.h), the character window's advanced stats tab
+        // (GameLogic/Character/AdvancedStats.h), the vault's pages (UI/Inventory/VaultPages.h) and the jewel bank
+        // window (GameLogic/Items/JewelBank.h) stay out of the chat.
         if (GameLogic::EventTimes::Times().TakeMessage(Text) || GameLogic::DailyRewards::Rewards().TakeMessage(Text) ||
-            GameLogic::AdvancedStats::Stats().TakeMessage(Text))
+            GameLogic::AdvancedStats::Stats().TakeMessage(Text) || UI::Storage::Pages().TakeMessage(Text) ||
+            GameLogic::JewelBank::Bank().TakeMessage(Text))
         {
         }
         else if (CHARACTER_SCENE != SceneFlag)

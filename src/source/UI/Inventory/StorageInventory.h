@@ -49,6 +49,10 @@ namespace mu::ui::window
 
             Rml::String title;
             bool titleLocked = false; // legacy-only red/gray title color toggle -- see SyncRmlModel()
+            // The page arrows beside the title (UI/Inventory/VaultPages.h): shown once the server told the
+            // page, dimmed while a switch waits for its answer or an item is on the cursor.
+            bool pagesVisible = false;
+            bool pagesBusy = false;
 
             Rml::String zenText;
             Rml::String zenTier; // UI::RmlBridge::GoldTierKey() of the amount, legacy only
@@ -78,6 +82,12 @@ namespace mu::ui::window
         void BuildRmlUi();
         void SyncRmlModel();
 
+        // An arrow click (-1 or +1), handled in Update() rather than inside RmlUi's event dispatch.
+        int m_nPendingPageStep = 0;
+        // Whether the window was open last frame: opening asks the server for the page, closing forgets it.
+        bool m_bWasVisible = false;
+        void StepPage(int step);
+
     public:
         CStorageInventory();
         virtual ~CStorageInventory();
@@ -99,6 +109,8 @@ namespace mu::ui::window
         CInventoryCtrl* GetInventoryCtrl() const;
 
         bool ProcessClosing();
+        // Empties the grid for another vault page's items (UI/Inventory/VaultPages.h); the window stays open.
+        void ClearForPageSwitch();
         bool InsertItem(int iIndex, std::span<const BYTE> pbyItemPacket);
         int FindEmptySlot(ITEM* pItemObj);
 
