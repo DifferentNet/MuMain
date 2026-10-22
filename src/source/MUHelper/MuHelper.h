@@ -53,6 +53,12 @@ namespace MUHelper
 		int DrainLife();
 		int ConsumePotion();
 		int Attack();
+		// Whether any pickup is switched on (all items, zen, jewels, ancients, excellents or the extra list).
+		bool PicksUpItems() const;
+		// Standing still: keeps a target within the reach (tiles) of the next attack, switching to the nearest
+		// one that is; false when none is.
+		bool KeepTargetWithinReach(float fReach);
+		bool IsWithinReach(int iTargetId, float fReach) const;
 		int RepairEquipments();
 		int Regroup();
 		ActionSkillType SelectAttackSkill();

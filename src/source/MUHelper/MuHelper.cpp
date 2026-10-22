@@ -166,7 +166,11 @@ namespace MUHelper
         const auto now = std::chrono::steady_clock::now();
         if (now < m_nextRound)
         {
-            if (m_bAttackBetweenRounds)
+            // Not while walking: a walk towards a target out of reach is planned again on every call, and on
+            // every frame that restarted the step and sent the server a new walk each time, so the character
+            // stood or jerked back and forth instead of getting there (players, 2026-10-22). The walk goes on
+            // between the rounds; the next round looks again.
+            if (m_bAttackBetweenRounds && !Hero->Movement)
             {
                 try
                 {
@@ -802,8 +806,18 @@ namespace MUHelper
             }
         }
 
+        // Without any pickup the helper has no reason to leave the spot it was started on: it stands there,
+        // attacks what is within reach and waits for the rest, instead of walking to monsters and back
+        // (ghinzuro, 2026-10-22). With a pickup on it walks to its targets as before.
+        const bool bStandStill = !PicksUpItems();
+
         if (m_config.bUseCombo)
         {
+            if (bStandStill
+                && !KeepTargetWithinReach(gSkillManager.GetSkillDistance((ActionSkillType)m_config.aiSkill[m_iComboState], Hero)))
+            {
+                return 0;
+            }
             return SimulateComboAttack();
         }
 
@@ -813,6 +827,10 @@ namespace MUHelper
             const float fSkillDistance = gSkillManager.GetSkillDistance(m_iCurrentSkill, Hero);
             if (GameLogic::Combat::CanExecuteSkill(Hero, m_iCurrentSkill, fSkillDistance))
             {
+                if (bStandStill && !KeepTargetWithinReach(fSkillDistance))
+                {
+                    return 0;
+                }
                 const int iCast = SimulateAttack(m_iCurrentSkill);
                 if (iCast && m_iTimedSkillSlot >= 0 && m_iTimedSkillSlot < MaxSkillSlots)
                 {
@@ -826,11 +844,80 @@ namespace MUHelper
         {
             if (!Hero->Movement)
             {
+                if (bStandStill && !KeepTargetWithinReach(GameLogic::Automation::EquippedAttackRange()))
+                {
+                    return 0;
+                }
                 return SimulateBasicAttack(m_iCurrentTarget);
             }
         }
 
         return 1;
+    }
+
+    bool CMuHelper::PicksUpItems() const
+    {
+        return m_config.bPickAllItems || m_config.bPickZen || m_config.bPickJewel || m_config.bPickAncient
+            || m_config.bPickExcellent || m_config.bPickExtraItems;
+    }
+
+    bool CMuHelper::IsWithinReach(int iTargetId, float fReach) const
+    {
+        CHARACTER* pTarget = FindCharacterByKey(iTargetId);
+        if (pTarget == nullptr || pTarget->Dead > 0)
+        {
+            return false;
+        }
+
+        // As CheckTile measures it: from the character to the middle of the target's tile.
+        const float fTileX = static_cast<float>(static_cast<int>(pTarget->Object.Position[0] / TERRAIN_SCALE)) * TERRAIN_SCALE + TERRAIN_SCALE * 0.5f;
+        const float fTileY = static_cast<float>(static_cast<int>(pTarget->Object.Position[1] / TERRAIN_SCALE)) * TERRAIN_SCALE + TERRAIN_SCALE * 0.5f;
+        const float fDx = Hero->Object.Position[0] - fTileX;
+        const float fDy = Hero->Object.Position[1] - fTileY;
+        return fDx * fDx + fDy * fDy <= (fReach * TERRAIN_SCALE) * (fReach * TERRAIN_SCALE);
+    }
+
+    bool CMuHelper::KeepTargetWithinReach(float fReach)
+    {
+        if (m_iCurrentTarget != -1 && IsWithinReach(m_iCurrentTarget, fReach))
+        {
+            return true;
+        }
+
+        std::set<int> setTargets;
+        {
+            _targetsLock.lock();
+            setTargets = m_setTargets;
+            _targetsLock.unlock();
+        }
+
+        int iNearest = -1;
+        float fNearest = 0.f;
+        for (const int& iMonsterId : setTargets)
+        {
+            CHARACTER* pTarget = FindCharacterByKey(iMonsterId);
+            if (pTarget == nullptr || !IsMonster(pTarget) || !IsWithinReach(iMonsterId, fReach))
+            {
+                continue;
+            }
+
+            const float fDx = Hero->Object.Position[0] - pTarget->Object.Position[0];
+            const float fDy = Hero->Object.Position[1] - pTarget->Object.Position[1];
+            const float fDistance = fDx * fDx + fDy * fDy;
+            if (iNearest == -1 || fDistance < fNearest)
+            {
+                iNearest = iMonsterId;
+                fNearest = fDistance;
+            }
+        }
+
+        if (iNearest == -1)
+        {
+            return false;
+        }
+
+        m_iCurrentTarget = iNearest;
+        return true;
     }
 
     ActionSkillType CMuHelper::SelectAttackSkill()

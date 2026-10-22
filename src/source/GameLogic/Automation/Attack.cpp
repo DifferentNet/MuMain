@@ -53,7 +53,7 @@ static void ApproachAlong(const PATH_t& path)
 }
 
 // The reach of whatever is in the character's hands right now.
-static float EquippedAttackRange()
+float EquippedAttackRange()
 {
     const int rightHand = CharacterMachine->Equipment[EQUIPMENT_WEAPON_RIGHT].Type;
     const bool spear = GameLogic::Items::IsSpearType(rightHand);

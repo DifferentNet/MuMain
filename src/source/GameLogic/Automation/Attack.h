@@ -42,6 +42,9 @@ inline constexpr float BasicAttackRangeDefault = 1.8f;
 inline constexpr float BasicAttackRangeSpear = 2.2f;
 inline constexpr float BasicAttackRangeBow = 6.0f;
 
+// The plain-attack reach of what the hero holds now, in tiles.
+float EquippedAttackRange();
+
 // A bow outranges a spear, which outreaches everything else.
 [[nodiscard]] constexpr float BasicAttackRange(bool spearEquipped, bool bowEquipped)
 {
