@@ -13183,4 +13183,22 @@
   <data name="JewelBankHowMany" xml:space="preserve">
     <value>Сколько %ls забрать? В банке: %ls.</value>
   </data>
+  <data name="IncreasePhysicalDamagePercentD" xml:space="preserve">
+    <value>Увеличение физического урона +%d%%</value>
+  </data>
+  <data name="PowerOfTheAncients" xml:space="preserve">
+    <value>Сила древних (любой полный древний сет):</value>
+  </data>
+  <data name="PowerOfTheAncientsTwoHandedSwordD" xml:space="preserve">
+    <value>С двуручным мечом: итоговый урон +%d%%</value>
+  </data>
+  <data name="PowerOfTheAncientsTwoHandedStaffD" xml:space="preserve">
+    <value>С двуручным посохом: итоговый урон +%d%%</value>
+  </data>
+  <data name="PowerOfTheAncientsBowD" xml:space="preserve">
+    <value>С луком или арбалетом: итоговый урон +%d%%</value>
+  </data>
+  <data name="PowerOfTheAncientsRavenD" xml:space="preserve">
+    <value>С Тёмным вороном: урон ворона +%d%%</value>
+  </data>
 </root>

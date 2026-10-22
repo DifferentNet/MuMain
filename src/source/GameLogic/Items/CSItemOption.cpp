@@ -79,18 +79,46 @@ void ReplaceGb2312Apostrophes(char* text, std::size_t size)
 
 static  CSItemOption csItemOption; // do not delete, required for singleton initialization.
 
-struct ITEM_SET_OPTION_FILE
+namespace
 {
-    char	strSetName[MAX_ITEM_SET_NAME];
-    std::array<std::array<std::uint8_t, MAX_ITEM_SET_STANDARD_OPTION_PER_ITEM_COUNT>, MAX_ITEM_SET_STANDARD_OPTION_COUNT> byStandardOption{};
-    std::array<std::array<std::uint8_t, MAX_ITEM_SET_STANDARD_OPTION_PER_ITEM_COUNT>, MAX_ITEM_SET_STANDARD_OPTION_COUNT> byStandardOptionValue{};
-    std::array<std::uint8_t, MAX_ITEM_SET_EXT_OPTION_COUNT> byExtOption{};
-    std::array<std::uint8_t, MAX_ITEM_SET_EXT_OPTION_COUNT> byExtOptionValue{};
-    std::uint8_t byOptionCount;
-    std::array<std::uint8_t, MAX_ITEM_SET_FULL_OPTION_COUNT> byFullOption{};
-    std::array<std::uint8_t, MAX_ITEM_SET_FULL_OPTION_COUNT> byFullOptionValue{};
-    std::array<std::uint8_t, MAX_CLASS> byRequireClass{};
+// ItemSetOption_*.bmd: MAX_SET_OPTION records, each BuxConverted, then a checksum. A record holds the name, the
+// tier option codes [6][2] and values, the ext option codes [2] and values, the option count, the full option
+// codes [5] and values, and the class requirement [MAX_CLASS]. Version 1 (Webzen's) keeps the values in one byte,
+// 110 bytes a record; version 2 (MU Moldova's scripts/ancient-options.py) in two, little-endian, 129 bytes.
+constexpr std::size_t SET_OPTION_RECORD_V1 = 110;
+constexpr std::size_t SET_OPTION_RECORD_V2 = 129;
+
+class RecordReader
+{
+public:
+    RecordReader(const std::uint8_t* data, const bool wideValues) : m_data(data), m_wideValues(wideValues) {}
+
+    std::uint8_t Byte() { return m_data[m_offset++]; }
+
+    std::uint16_t Value()
+    {
+        if (!m_wideValues)
+        {
+            return Byte();
+        }
+
+        const auto low = Byte();
+        const auto high = Byte();
+        return static_cast<std::uint16_t>(low | (high << 8));
+    }
+
+    void Text(char* target, const std::size_t size)
+    {
+        std::memcpy(target, m_data + m_offset, size);
+        m_offset += size;
+    }
+
+private:
+    const std::uint8_t* m_data;
+    bool m_wideValues;
+    std::size_t m_offset{};
 };
+} // namespace
 
 
 bool CSItemOption::OpenItemSetScript()
@@ -156,7 +184,17 @@ bool CSItemOption::OpenItemSetOption(const wchar_t* filename)
         return false;
     }
 
-    const std::size_t entrySize = sizeof(ITEM_SET_OPTION_FILE);
+    std::fseek(file.get(), 0, SEEK_END);
+    const auto fileSize = static_cast<std::size_t>(std::ftell(file.get()));
+    std::fseek(file.get(), 0, SEEK_SET);
+    const bool wideValues = fileSize == SET_OPTION_RECORD_V2 * MAX_SET_OPTION + sizeof(std::uint32_t);
+    if (!wideValues && fileSize != SET_OPTION_RECORD_V1 * MAX_SET_OPTION + sizeof(std::uint32_t))
+    {
+        ReportFileIssue(filename, L"Unknown file size.");
+        return false;
+    }
+
+    const std::size_t entrySize = wideValues ? SET_OPTION_RECORD_V2 : SET_OPTION_RECORD_V1;
     std::vector<std::uint8_t> buffer(entrySize * MAX_SET_OPTION);
     if (std::fread(buffer.data(), buffer.size(), 1, file.get()) != 1)
     {
@@ -182,21 +220,31 @@ bool CSItemOption::OpenItemSetOption(const wchar_t* filename)
     {
         BuxConvert(pSeek, static_cast<int>(entrySize));
 
-        ITEM_SET_OPTION_FILE current{};
-        std::memcpy(&current, pSeek, entrySize);
+        RecordReader record(pSeek, wideValues);
         auto* target = &m_ItemSetOption[i];
 
-        ReplaceGb2312Apostrophes(current.strSetName, sizeof(current.strSetName));
-        CMultiLanguage::ConvertFromUtf8(target->strSetName, current.strSetName);
-        target->byOptionCount = current.byOptionCount;
+        char setName[MAX_ITEM_SET_NAME + 1]{};
+        record.Text(setName, MAX_ITEM_SET_NAME);
+        ReplaceGb2312Apostrophes(setName, MAX_ITEM_SET_NAME);
+        CMultiLanguage::ConvertFromUtf8(target->strSetName, setName);
+        for (auto& tier : target->byStandardOption)
+            for (auto& code : tier)
+                code = record.Byte();
+        for (auto& tier : target->byStandardOptionValue)
+            for (auto& value : tier)
+                value = record.Value();
+        for (auto& code : target->byExtOption)
+            code = record.Byte();
+        for (auto& value : target->byExtOptionValue)
+            value = record.Value();
+        target->byOptionCount = record.Byte();
         target->bySetItemCount = 0; // Is calculated below
-        target->byStandardOption = current.byStandardOption;
-        target->byStandardOptionValue = current.byStandardOptionValue;
-        target->byExtOption = current.byExtOption;
-        target->byExtOptionValue = current.byExtOptionValue;
-        target->byFullOption = current.byFullOption;
-        target->byFullOptionValue = current.byFullOptionValue;
-        target->byRequireClass = current.byRequireClass;
+        for (auto& code : target->byFullOption)
+            code = record.Byte();
+        for (auto& value : target->byFullOptionValue)
+            value = record.Value();
+        for (auto& requirement : target->byRequireClass)
+            requirement = record.Byte();
 
         pSeek += entrySize;
     }
@@ -326,7 +374,7 @@ void CSItemOption::TryAddSetOption(std::uint8_t option, int value, int optionInd
 {
     if (option == EMPTY_OPTION
         || value == 0
-        || (option >= MASTERY_OPTION 
+        || (option >= MASTERY_OPTION && option <= LAST_MASTERY_OPTION
             && (setOptions.byRequireClass[firstClass] && secondClass >= setOptions.byRequireClass[firstClass] - 1)))
     {
         return;
@@ -413,6 +461,12 @@ bool CSItemOption::getExplainText(wchar_t* text, std::uint8_t option, int value)
     if (option == EMPTY_OPTION)
     {
         return false;
+    }
+
+    if (option == SET_OPTION_PHYSICAL_DAMAGE_PERCENT)
+    {
+        mu_swprintf(text, I18N::Game::IncreasePhysicalDamagePercentD, value);
+        return true;
     }
 
     switch (option + AT_SET_OPTION_IMPROVE_STRENGTH)
@@ -1081,6 +1135,7 @@ int CSItemOption::RenderSetOptionListInItem(const ITEM* ip, int TextNum, bool bI
         TNum = RenderSetOptionList(set, TNum, bIsEquippedItem, true);
     }
 
+    TNum = RenderPowerOfTheAncients(TNum);
     TNum = RenderSetPieceList(m_bySelectedItemOption, TNum);
 
     mu_swprintf(TextList[TNum], L"\n"); TNum++;
@@ -1129,6 +1184,88 @@ bool HasSetPiece(const int type, const int ancientDiscriminator)
     return false;
 }
 } // namespace
+
+int CSItemOption::RenderPowerOfTheAncients(int textIndex)
+{
+    if (Hero == nullptr || CharacterMachine == nullptr)
+    {
+        return textIndex;
+    }
+
+    // The weapons the server's PowerOfTheAncientsPlugIn looks for.
+    bool twoHandedSword = false;
+    bool twoHandedStaff = false;
+    bool bow = false;
+    bool raven = false;
+    for (const int slot : { EQUIPMENT_WEAPON_RIGHT, EQUIPMENT_WEAPON_LEFT, EQUIPMENT_HELPER })
+    {
+        const int type = CharacterMachine->Equipment[slot].Type;
+        if (type < 0 || type >= MAX_ITEM)
+        {
+            continue;
+        }
+
+        const int group = type / MAX_ITEM_INDEX;
+        const bool twoHanded = ItemAttribute[type].TwoHand;
+        twoHandedSword |= group == ITEM_GROUP_SWORD && twoHanded;
+        twoHandedStaff |= group == ITEM_GROUP_STAFF && twoHanded;
+        bow |= group == ITEM_GROUP_BOW && type != ITEM_BOLT && type != ITEM_ARROWS;
+        raven |= type == ITEM_DARK_RAVEN_ITEM;
+    }
+
+    struct Bonus
+    {
+        const wchar_t* format;
+        int percent;
+        bool weaponWorn;
+    };
+
+    std::vector<Bonus> bonuses;
+    switch (gCharacterManager.GetBaseClass(Hero->Class))
+    {
+    case CLASS_KNIGHT:
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsTwoHandedSwordD, 35, twoHandedSword });
+        break;
+    case CLASS_WIZARD:
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsTwoHandedStaffD, 20, twoHandedStaff });
+        break;
+    case CLASS_ELF:
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsBowD, 10, bow });
+        break;
+    case CLASS_DARK:
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsTwoHandedSwordD, 40, twoHandedSword });
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsTwoHandedStaffD, 25, twoHandedStaff });
+        break;
+    case CLASS_DARK_LORD:
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsRavenD, 20, raven });
+        break;
+    default:
+        return textIndex;
+    }
+
+    if (textIndex + static_cast<int>(bonuses.size()) + 6 > MAX_TEXT_LIST_LINES)
+    {
+        return textIndex;
+    }
+
+    // Hero->ExtendState is 1 while any ancient set is worn complete (calcSetOptionList).
+    const bool fullSetWorn = Hero->ExtendState != 0;
+    mu_swprintf(TextList[textIndex], L"%ls", I18N::Game::PowerOfTheAncients);
+    TextListColor[textIndex] = TEXT_COLOR_YELLOW;
+    TextBold[textIndex] = false;
+    textIndex++;
+    for (const auto& bonus : bonuses)
+    {
+        mu_swprintf(TextList[textIndex], bonus.format, bonus.percent);
+        TextListColor[textIndex] = fullSetWorn && bonus.weaponWorn ? TEXT_COLOR_GREEN : TEXT_COLOR_GRAY;
+        TextBold[textIndex] = false;
+        textIndex++;
+    }
+
+    mu_swprintf(TextList[textIndex], L"\n");
+    textIndex++;
+    return textIndex;
+}
 
 int CSItemOption::RenderSetPieceList(const std::uint8_t setNumber, int textIndex) const
 {

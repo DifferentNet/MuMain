@@ -13560,4 +13560,22 @@
   <data name="JewelBankHowMany" xml:space="preserve">
     <value>How many %ls to take? The bank holds %ls.</value>
   </data>
+  <data name="IncreasePhysicalDamagePercentD" xml:space="preserve">
+    <value>Increase physical damage +%d%%</value>
+  </data>
+  <data name="PowerOfTheAncients" xml:space="preserve">
+    <value>Power of the Ancients (any full ancient set):</value>
+  </data>
+  <data name="PowerOfTheAncientsTwoHandedSwordD" xml:space="preserve">
+    <value>With a two-handed sword: final damage +%d%%</value>
+  </data>
+  <data name="PowerOfTheAncientsTwoHandedStaffD" xml:space="preserve">
+    <value>With a two-handed staff: final damage +%d%%</value>
+  </data>
+  <data name="PowerOfTheAncientsBowD" xml:space="preserve">
+    <value>With a bow or crossbow: final damage +%d%%</value>
+  </data>
+  <data name="PowerOfTheAncientsRavenD" xml:space="preserve">
+    <value>With the Dark Raven: raven damage +%d%%</value>
+  </data>
 </root>
