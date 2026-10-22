@@ -1,13 +1,15 @@
 # Web build (MU Moldova)
 
-MuMain compiled to WebAssembly, playable in Chrome or Edge: Emscripten with JSPI (the game's
-blocking main loop suspends to hand the browser a turn), SDL3's experimental WebGPU GPU backend,
-the game data on the web server, and the game protocol over WebSockets. It logs in to OpenMU,
-enters the world and walks. Local testing only so far: nothing is deployed.
+MuMain compiled to WebAssembly, playable in desktop Chrome or Edge: Emscripten with JSPI (the
+game's blocking main loop suspends to hand the browser a turn), SDL3's experimental WebGPU GPU
+backend, the game data on the web server, and the game protocol over WebSockets. MU Moldova runs it
+at https://skynet-mu.net/play/ since 2026-10-23.
 
 In the MU Moldova repository: `scripts/build-web.sh` builds it into `out/build/web/src`, and
-`scripts/serve-web.py` serves that folder with the headers it needs and bridges WebSockets to the
-local OpenMU. Open http://localhost:8090/.
+`scripts/serve-web.py` (which runs `server/web/serve-web.py`) serves that folder with the headers it
+needs and bridges WebSockets to the local OpenMU; open http://localhost:8090/.
+`scripts/publish-web.py` uploads a build to the VPS, where the same `serve-web.py` runs in a
+container behind Caddy (`server/README.md`, "Browser client").
 
 ## Toolchain
 
@@ -122,6 +124,12 @@ answer (a lost network); OpenMU itself drops a client that stops sending its hea
 
 - Every browser player reaches OpenMU from the bridge's address, so per-address limits and bans
   apply to all of them at once.
+- The friend list's chat windows connect to the chat server's port 55980 (hard-coded in
+  `UI/Social/SocialWindowManager.cpp`), which MU Moldova's bridge doesn't relay; they don't open in
+  the browser. Whispers and the normal chat use the game server and work.
+- Phones: iOS browsers all use WebKit, which has no JSPI, so iPhones can't run it. Android Chrome
+  has what the game needs but was never tried; it has no touch controls (right-click, hotkeys) and
+  the interface is drawn for 1024x768.
 - Files outside the startup pack (other maps, monsters) still download one by one when first read.
 - Saved passwords and the in-game downloader are off in the browser.
 - A synthetic click (down and up in the same frame) doesn't walk; a real mouse press does.

@@ -59,9 +59,9 @@ Known differences, not counted as failures:
 The hand-written sends of `WebNetwork.cpp` (login, chat server authentication and messages) aren't
 covered.
 
-Last run (2026-10-22, MUnique.OpenMU.Network.Packets 0.9.11): 208 packets, 3,016 vectors, each
-through `Build<Packet>` and the export; 244 vectors where the desktop library sends nothing;
-0 failures. The first run found three bugs, fixed in `gen_web_packets.py` and `WebPacketWriting.h`:
+Last run (2026-10-23 on the deploy 11 client, MUnique.OpenMU.Network.Packets 0.9.11, the same as on
+2026-10-22): 208 packets, 3,016 vectors, each through `Build<Packet>` and the export; 244 vectors
+where the desktop library sends nothing; 0 failures. The first run found three bugs, fixed in `gen_web_packets.py` and `WebPacketWriting.h`:
 a text field without a length in a fixed-size packet (DeleteCharacter's security code) overflowed
 the packet buffer; Booleans other than 0 and 1 were sent as true (the desktop library sends true
 only for 1); and lone surrogates became invalid UTF-8 instead of U+FFFD.
