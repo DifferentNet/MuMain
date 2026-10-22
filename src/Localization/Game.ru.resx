@@ -13159,4 +13159,28 @@
   <data name="SetItemPieces" xml:space="preserve">
     <value>Предметы сета: собрано %d из %d</value>
   </data>
+  <data name="JewelBankTitle" xml:space="preserve">
+    <value>Банк камней</value>
+  </data>
+  <data name="JewelBankAsking" xml:space="preserve">
+    <value>Запрос к серверу...</value>
+  </data>
+  <data name="JewelBankNoAnswer" xml:space="preserve">
+    <value>Сервер не отвечает.</value>
+  </data>
+  <data name="JewelBankUnavailable" xml:space="preserve">
+    <value>Банк камней недоступен.</value>
+  </data>
+  <data name="JewelBankHint" xml:space="preserve">
+    <value>«Положить» кладёт все камни вида.</value>
+  </data>
+  <data name="JewelBankDeposit" xml:space="preserve">
+    <value>Положить все такие камни из инвентаря</value>
+  </data>
+  <data name="JewelBankWithdraw" xml:space="preserve">
+    <value>Забрать</value>
+  </data>
+  <data name="JewelBankHowMany" xml:space="preserve">
+    <value>Сколько %ls забрать? В банке: %ls.</value>
+  </data>
 </root>

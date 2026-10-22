@@ -118,3 +118,25 @@
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
 #panel { font-size: calc(var(--text-px, 12px) / var(--root-scale)); }
+
+/* The vault page arrows beside the title (VaultPages.h): the cash shop storage's page arrows
+   (in_game_shop.rcss), 20x22 with hover and pressed frames, placed evenly around the centred title
+   and clear of the corner close (x 163-187). Dimmed while a switch waits or an item is held. */
+@spritesheet stor-page-left-sheet  { src: "../../../InGameShop/IGS_Storage_Page_Left.tga";  stor-page-left-up: 0px 0px 20px 22px;  stor-page-left-over: 0px 22px 20px 22px;  stor-page-left-down: 0px 44px 20px 22px; }
+@spritesheet stor-page-right-sheet { src: "../../../InGameShop/IGS_Storage_Page_Right.tga"; stor-page-right-up: 0px 0px 20px 22px; stor-page-right-over: 0px 22px 20px 22px; stor-page-right-down: 0px 44px 20px 22px; }
+.stor-page-btn {
+	position: absolute;
+	top: 7px;
+	width: 20px;
+	height: 22px;
+	cursor: pointer;
+	pointer-events: auto;
+}
+.stor-page-btn.hidden { display: none; }
+.stor-page-btn.busy { pointer-events: none; filter: brightness(0.5); }
+.stor-page-prev { left: 30px; decorator: image(stor-page-left-up); }
+.stor-page-prev:hover { decorator: image(stor-page-left-over); }
+.stor-page-prev:active { decorator: image(stor-page-left-down); }
+.stor-page-next { left: 140px; decorator: image(stor-page-right-up); }
+.stor-page-next:hover { decorator: image(stor-page-right-over); }
+.stor-page-next:active { decorator: image(stor-page-right-down); }

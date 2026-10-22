@@ -231,6 +231,13 @@ bool CStorageInventoryExt::InsertItem(int iIndex, std::span<const BYTE> pbyItemP
     return false;
 }
 
+void CStorageInventoryExt::ClearForPageSwitch()
+{
+    CInventoryCtrl::BackupPickedItem();
+    SetItemAutoMove(false);
+    DeleteAllItems();
+}
+
 void CStorageInventoryExt::DeleteAllItems() const
 {
     if (m_pNewInventoryCtrl)

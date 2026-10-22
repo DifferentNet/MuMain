@@ -74,6 +74,8 @@ namespace mu::ui::window
         CInventoryCtrl* GetInventoryCtrl() const;
 
         bool ProcessClosing() const;
+        // Empties the grid for another vault page's items (UI/Inventory/VaultPages.h); the window stays open.
+        void ClearForPageSwitch();
         bool InsertItem(int iIndex, std::span<const BYTE> pbyItemPacket) const;
         int FindEmptySlot(const ITEM* pItemObj) const;
         bool ProcessMyInvenItemAutoMove(CInventoryCtrl* sourceCtrl = nullptr);

@@ -195,3 +195,20 @@
 /* The grid's clicks are native (CInventoryCtrl), so the placed panel takes no pointer events; its
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
+
+/* The jewel bank's button (JewelBankWindow.h) on the header rail's right, between the left-aligned
+   title and the corner close: a see-through recessed box C++ draws a Jewel of Bless into
+   (CMyInventory::Render3D, through #item_view below it), lit on hover. */
+.inv-jewel-bank {
+	position: absolute;
+	left: 128px;
+	top: 14px;
+	width: 24px;
+	height: 24px;
+	cursor: pointer;
+	pointer-events: auto;
+	background-color: rgba(8, 10, 8, 110);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+.inv-jewel-bank:hover { border-color: token(border-hover); background-color: rgba(255, 210, 100, 40); }

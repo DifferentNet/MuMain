@@ -159,6 +159,7 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
 
     c.Bind("exit_tooltip", &model.exitTooltip);
     c.Bind("expand_tooltip", &model.expandTooltip);
+    c.Bind("jewel_bank_tooltip", &model.jewelBankTooltip);
 
     c.Bind("set_option_label", &model.setOptionLabel);
     c.Bind("socket_option_label", &model.socketOptionLabel);
@@ -217,6 +218,12 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
         });
     c.BindEventCallback("my_inventory_expand_click",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { g_pNewUISystem->Toggle(INTERFACE_INVENTORY_EXT); });
+    c.BindEventCallback("my_inventory_jewel_bank_click",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
+        {
+            PlayBuffer(SOUND_CLICK01);
+            g_pNewUISystem->Toggle(INTERFACE_JEWEL_BANK);
+        });
 }
 
 // #title is the drag handle (MakeDraggable). The paperdoll and grid follow their drawn boxes, so
@@ -922,6 +929,7 @@ void CMyInventory::SyncRmlModel()
 
     syncWide(&MyInventoryRmlModel::exitTooltip, "exit_tooltip", I18N::Game::CloseIV);
     syncWide(&MyInventoryRmlModel::expandTooltip, "expand_tooltip", I18N::Game::OpenExpandedInventoryK);
+    syncWide(&MyInventoryRmlModel::jewelBankTooltip, "jewel_bank_tooltip", I18N::Game::JewelBankTitle);
 
     // Label text is static per-language but still routed through syncWide (change-checked) rather
     // than bound once at Create() time.
@@ -1049,6 +1057,12 @@ void CMyInventory::Render3D()
                 false);
         }
     }
+
+    // The jewel bank button's jewel (JewelBankWindow.h).
+    Rml::Element* jewelBankButton = m_RmlView.Document() != nullptr ? m_RmlView.Document()->GetElementById("btn_jewel_bank") : nullptr;
+    Rml::Vector2f jewelBankAt;
+    if (jewelBankButton != nullptr && UI::RmlBridge::DrawnTopLeft(*jewelBankButton, jewelBankAt))
+        RenderItem3D(jewelBankAt.x + 1.f * scale, jewelBankAt.y, 22.f * scale, 24.f * scale, ITEM_JEWEL_OF_BLESS, 0, 0, 0, false);
 }
 
 bool CMyInventory::IsVisible() const

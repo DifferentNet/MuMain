@@ -46,6 +46,7 @@
 #include "UI/Dialogs/ChatCommandWindow.h"
 #include "UI/Events/EventScheduleWindow.h"
 #include "UI/Events/DailyRewardsWindow.h"
+#include "UI/Inventory/JewelBankWindow.h"
 #include "UI/Inventory/ItemExplanationWindow.h"
 #include "UI/Inventory/SetItemExplanation.h"
 #include "UI/HUD/QuickCommandWindow.h"
@@ -192,6 +193,7 @@ namespace mu::ui::window
         CChatCommandWindow* m_pNewChatCommandWindow;
         CEventScheduleWindow* m_pNewEventScheduleWindow;
         CDailyRewardsWindow* m_pNewDailyRewardsWindow;
+        CJewelBankWindow* m_pNewJewelBankWindow;
         CItemExplanationWindow* m_pNewItemExplanationWindow;
         CSetItemExplanation* m_pNewSetItemExplanation;
         CQuickCommandWindow* m_pNewQuickCommandWindow;
@@ -281,6 +283,7 @@ namespace mu::ui::window
         CChatCommandWindow* GetUI_NewChatCommandWindow() const;
         CEventScheduleWindow* GetUI_NewEventScheduleWindow() const;
         CDailyRewardsWindow* GetUI_NewDailyRewardsWindow() const;
+        CJewelBankWindow* GetUI_NewJewelBankWindow() const;
         CItemExplanationWindow* GetUI_NewItemExplanationWindow() const;
         CSetItemExplanation* GetUI_NewSetItemExplanation() const;
         CQuickCommandWindow* GetUI_NewQuickCommandWindow() const;

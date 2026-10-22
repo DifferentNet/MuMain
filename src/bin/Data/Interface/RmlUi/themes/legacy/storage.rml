@@ -35,6 +35,11 @@
 			     data-style-font-size="text_px + 'px'">{{c.count}}</span></div>
 		</div>
 		<span class="sharp-text" id="title" data-class-locked="title_locked" data-style-font-size="text_px + 'px'">{{title}}</span>
+		<!-- The vault page arrows (VaultPages.h), after the title so they take the clicks over it. -->
+		<div id="btn_page_prev" class="stor-page-btn stor-page-prev" data-class-hidden="!pages_visible" data-class-busy="pages_busy"
+		     data-event-click="storage_page(-1)"></div>
+		<div id="btn_page_next" class="stor-page-btn stor-page-next" data-class-hidden="!pages_visible" data-class-busy="pages_busy"
+		     data-event-click="storage_page(1)"></div>
 
 		<div id="money_bg"></div>
 		<span id="zen_text" class="sharp-text sharp-right gold-amount" data-style-font-size="text_px + 'px'"

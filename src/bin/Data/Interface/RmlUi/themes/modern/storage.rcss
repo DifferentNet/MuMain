@@ -155,3 +155,32 @@
 /* The grid's clicks are native (CInventoryCtrl), so the placed panel takes no pointer events; its
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
+
+/* The vault page arrows on the header rail's right (VaultPages.h), after the left-aligned title and
+   clear of the corner close (x 163-187): small forged buttons with a triangle. Dimmed while a switch
+   waits or an item is held. */
+.stor-page-btn {
+	position: absolute;
+	top: 14px;
+	width: 18px;
+	height: 18px;
+	cursor: pointer;
+	pointer-events: auto;
+	text-align: center;
+	line-height: 18px;
+	color: token(text-secondary);
+	background-color: #13140f;
+	decorator: linear-gradient(to bottom, #26251d, #15160f 56%, #090a08);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+.stor-page-btn:hover { color: token(accent-gold-hover); border-color: token(border-hover); }
+.stor-page-btn.hidden { display: none; }
+.stor-page-btn.busy { pointer-events: none; filter: brightness(0.5); }
+.stor-page-prev { left: 121px; }
+.stor-page-next { left: 142px; }
+.stor-page-glyph {
+	font-family: "DejaVu Sans";
+	font-size: 9px;
+	pointer-events: none;
+}

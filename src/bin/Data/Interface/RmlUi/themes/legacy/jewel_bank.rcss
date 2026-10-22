@@ -1,0 +1,52 @@
+/* Legacy theme for CJewelBankWindow (the jewel bank, a button in the inventory): the docked_panel_frame.rcss
+   frame (linked first; newui_item_back01 top) at the full dock height (432), the title bold and centred, a grey
+   status line, then a row per kind of jewel: a dark icon box the jewel is drawn over, the name, the count in
+   the bank in gold, and the vault's own zen buttons (newui_Bt_money01 deposits, newui_Bt_money02 takes) at a
+   smaller size. Reference px inside #panel; text layers are counter-scaled (base.rcss .sharp-text). */
+
+@spritesheet jb-deposit-sheet  { src: "../../../newui_Bt_money01.tga"; jb-deposit:  0px 0px 36px 29px; }
+@spritesheet jb-withdraw-sheet { src: "../../../newui_Bt_money02.tga"; jb-withdraw: 0px 0px 36px 29px; }
+
+.frame-top { decorator: image(docked-bg-top-b); }
+#panel { height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; pointer-events: none; }
+
+.jb-title { left: 0; top: 11px; text-align: center; font-weight: bold; color: rgb(255, 220, 120); }
+.jb-status { left: 10px; top: 28px; text-align: center; color: rgb(170, 170, 170); }
+
+#jb_rows { position: absolute; left: 10px; top: 44px; width: 170px; }
+.jb-row { position: relative; display: block; width: 170px; height: 37px; }
+.jb-icon {
+	position: absolute;
+	left: 1px;
+	top: 3px;
+	width: 26px;
+	height: 30px;
+	background-color: rgba(0, 0, 0, 90);
+	border: 1px rgba(120, 100, 60, 120);
+	pointer-events: none;
+}
+.jb-name { left: 32px; top: 3px; color: rgb(225, 225, 225); }
+.jb-count { left: 32px; top: 20px; font-weight: bold; color: rgb(255, 210, 110); }
+
+.jb-btn {
+	position: absolute;
+	top: 15px;
+	width: 26px;
+	height: 21px;
+	cursor: pointer;
+	pointer-events: auto;
+}
+.jb-btn:hover { filter: brightness(1.25); }
+.jb-btn.disabled { pointer-events: none; filter: brightness(0.4); }
+.jb-deposit { left: 112px; decorator: image(jb-deposit); }
+.jb-withdraw { left: 142px; decorator: image(jb-withdraw); }
+/* The modern theme's arrow glyphs; the legacy buttons carry their art. */
+.jb-glyph { display: none; }
+
+.jb-items { position: absolute; left: 0; top: 0; width: 190px; height: 432px; pointer-events: none; }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+#jb_title { width: calc(100% * var(--root-scale)); }
+#jb_status { width: calc(170px * var(--root-scale)); }
