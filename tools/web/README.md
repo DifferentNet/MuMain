@@ -30,6 +30,8 @@ local OpenMU. Open http://localhost:8090/.
 | Shaders | `src/shaders/compiled/*.wgsl`, `Core/Platform/web/RmlUiShadersWgsl.h` | WGSL from the SPIR-V blobs (see below). |
 | RmlUi shaders | `Core/Platform/web/RmlUiGpuShaders.cpp` | RmlUi's SDL_GPU renderer asks for SPIR-V; the build redirects its two calls here, which hand out the WGSL version by the SPIR-V's hash. |
 | Desktop-only libraries | `Core/Platform/web/include`, `TurboJpegShim.cpp`, `CurlFileDownloaderWeb.cpp`, `PlatformCryptoWeb.cpp` | libjpeg-turbo through SDL_image; no downloads and no saved passwords in the browser. |
+| Resolution | `Winmain.cpp` `MuWebDisplayResolutions`, `index.html` `fitCanvas` | SDL reports one display mode in the browser, so Options lists the usual sizes up to the screen's pixels plus the size that fills the window exactly. The page scales the canvas to its window, keeping its shape; Fullscreen applies to the game area. |
+| Settings | `index.html` `saveConfig`, `WebFileSystem.cpp` `MuWeb_MergeSavedConfig` | config.ini (resolution, volume, …) is kept in the browser's storage (`mu-web/config.ini`) and comes back on the next visit, with the server copy's `[CONNECTION SETTINGS]`. |
 | Frame pacing | `Winmain.cpp` `WaitForBrowserFrame`, `SceneCore.cpp` `WaitForNextActivity` | After each frame the game hands the browser a turn and keeps to about 60 frames a second (no cap while loading). `sleep_for` and `yield` would spin without letting the browser deliver network messages. |
 
 ## Shaders

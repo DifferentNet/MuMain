@@ -1334,6 +1334,43 @@ std::string WideToUtf8(const std::wstring& wide)
 
 } // namespace
 
+#ifdef __EMSCRIPTEN__
+// Browser build: sizes from the page, in device pixels. which: 0/1 the game area's width/height
+// (#stage in index.html), 2/3 the screen's.
+EM_JS(int, MuWeb_PagePixels, (int which), {
+    const ratio = window.devicePixelRatio || 1;
+    const stage = document.getElementById("stage");
+    const area = stage ? stage.getBoundingClientRect() : { width: innerWidth, height: innerHeight };
+    const sizes = [area.width, area.height, screen.width, screen.height];
+    return Math.floor(sizes[which] * ratio);
+});
+
+// SDL reports a single display mode in the browser, the screen's size in CSS pixels, so the options
+// offered little above 1024x768. The page scales the canvas to fit its window (index.html), so any
+// size works: the usual ones up to the screen's real pixels, the one that fills the game area
+// exactly, and the current one.
+static std::vector<std::pair<int, int>> MuWebDisplayResolutions()
+{
+    static constexpr std::pair<int, int> kCommon[] = {
+        {800, 600},   {1024, 768},  {1280, 720},  {1280, 800},  {1280, 1024}, {1366, 768},
+        {1440, 900},  {1600, 900},  {1680, 1050}, {1920, 1080}, {1920, 1200}, {2560, 1080},
+        {2560, 1440}, {2560, 1600}, {3440, 1440}, {3840, 2160}};
+    const int screenW = MuWeb_PagePixels(2);
+    const int screenH = MuWeb_PagePixels(3);
+    std::vector<std::pair<int, int>> resolutions;
+    for (const auto& size : kCommon)
+    {
+        if (size.first <= screenW && size.second <= screenH)
+            resolutions.push_back(size);
+    }
+    resolutions.emplace_back(MuWeb_PagePixels(0), MuWeb_PagePixels(1));
+    int currentW = 0, currentH = 0;
+    if (g_sdlWindow && SDL_GetWindowSize(g_sdlWindow, &currentW, &currentH))
+        resolutions.emplace_back(currentW, currentH);
+    return resolutions;
+}
+#endif
+
 std::vector<std::pair<int, int>> MuGetSupportedDisplayResolutions()
 {
     std::vector<std::pair<int, int>> resolutions;
@@ -1341,6 +1378,9 @@ std::vector<std::pair<int, int>> MuGetSupportedDisplayResolutions()
     {
         return resolutions;
     }
+#ifdef __EMSCRIPTEN__
+    return MuWebDisplayResolutions();
+#endif
 
     SDL_DisplayID display = SDL_GetDisplayForWindow(g_sdlWindow);
     if (display == 0)

@@ -8,8 +8,10 @@
   :root { --bg: #0d0e12; --panel: #16181f; --line: rgba(255,255,255,.12); --ink: #f2eee6; --muted: #a0a5b1; --gold: #e5b95c; --bad: #f2766a; color-scheme: dark; }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 14px/1.5 "Segoe UI", system-ui, sans-serif; }
-  #stage { display: flex; align-items: center; justify-content: center; height: calc(100% - 2.5rem); }
-  #canvas { display: block; background: #000; outline: none; max-width: 100%; max-height: 100%; }
+  #stage { display: flex; align-items: center; justify-content: center; height: calc(100% - 2.5rem); overflow: hidden; }
+  #stage:fullscreen { height: 100%; background: #000; }
+  /* fitCanvas() below sizes the canvas to the stage; the game picks its resolution (Options). */
+  #canvas { display: block; background: #000; outline: none; }
   #status { position: absolute; inset: 0 0 2.5rem 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 1rem; pointer-events: none; }
   #status.bad { color: var(--bad); }
   #status[hidden] { display: none; }
@@ -48,7 +50,36 @@
     logEl.scrollTop = logEl.scrollHeight;
   }
   document.getElementById("toggle-log").onclick = () => { logEl.hidden = !logEl.hidden; };
-  document.getElementById("fullscreen").onclick = () => { canvas.requestFullscreen?.().catch(() => {}); canvas.focus(); };
+  const stage = document.getElementById("stage");
+  document.getElementById("fullscreen").onclick = () => { stage.requestFullscreen?.().catch(() => {}); canvas.focus(); };
+
+  // The canvas has the game's resolution (Options; its width and height attributes) and is shown
+  // as large as the stage allows, keeping its shape. Only the CSS size changes, which SDL takes into
+  // account for the mouse. Not before the game has sized the canvas (away from the HTML default of
+  // 300x150): SDL treats a canvas the page already sized as one it may not resize.
+  function fitCanvas() {
+    const w = canvas.width, h = canvas.height;
+    if (w <= 1 || h <= 1 || (w === 300 && h === 150) || !stage.clientWidth || !stage.clientHeight) return;
+    const scale = Math.min(stage.clientWidth / w, stage.clientHeight / h);
+    const cssW = Math.floor(w * scale) + "px", cssH = Math.floor(h * scale) + "px";
+    if (canvas.style.width !== cssW) canvas.style.width = cssW;
+    if (canvas.style.height !== cssH) canvas.style.height = cssH;
+  }
+  new ResizeObserver(fitCanvas).observe(stage);
+  new MutationObserver(fitCanvas).observe(canvas, { attributes: true, attributeFilter: ["width", "height", "style"] });
+
+  // config.ini (resolution, volume, the remembered user name ...) lives in the page's memory; keep
+  // a copy in the browser so the next visit starts with it (WebFileSystem.cpp merges it back).
+  let savedConfig = null;
+  function saveConfig() {
+    try {
+      const text = new TextDecoder().decode(Module.FS.readFile("/game/config.ini"));
+      if (text && text !== savedConfig) {
+        localStorage.setItem("mu-web/config.ini", text);
+        savedConfig = text;
+      }
+    } catch (e) { /* not mounted yet, or no storage in this browser */ }
+  }
 
   // The game needs WebGPU (graphics), JSPI (its frame loop yields to the browser) and cross-origin
   // isolation (threads). Say which one is missing instead of failing somewhere inside the game.
@@ -130,7 +161,12 @@
       print: (text) => { console.log(text); appendLog(text, false); },
       printErr: (text) => { console.error(text); appendLog(text, true); },
       setStatus: (text) => { if (packDone || text) setStatus(text); },
-      onRuntimeInitialized: () => { if (packDone) setStatus(""); canvas.focus(); },
+      onRuntimeInitialized: () => {
+        if (packDone) setStatus("");
+        canvas.focus();
+        setInterval(saveConfig, 3000);
+        addEventListener("pagehide", saveConfig);
+      },
       onAbort: (what) => { setStatus("The game stopped: " + what, true); logEl.hidden = false; },
     };
     const script = document.createElement("script");

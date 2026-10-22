@@ -15,6 +15,7 @@
 
 #include <atomic>
 #include <cstdio>
+#include <cstdlib>
 #include <fcntl.h>
 #include <set>
 #include <string>
@@ -195,6 +196,41 @@ void SetUpMount()
     std::printf("Web file system: %zu game files, %zu of them downloaded when first read\n", count, linked);
     g_mountState = count > 0 ? 1 : -1;
 }
+
+// The player's config.ini from earlier visits (index.html keeps it in the browser's storage), with
+// the server copy's [CONNECTION SETTINGS], so a moved server still reaches everyone. Returns a new
+// string to free, or null without a saved copy.
+EM_JS(char*, MuWeb_MergeSavedConfig, (const char* serverText), {
+    let saved = null;
+    try {
+        saved = localStorage.getItem("mu-web/config.ini");
+    } catch (e) {
+    }
+    if (!saved) {
+        return 0;
+    }
+    const findSection = (text, name) => {
+        const start = text.indexOf("[" + name + "]");
+        if (start < 0) {
+            return null;
+        }
+        const next = text.indexOf("\n[", start + 1);
+        return [start, next < 0 ? text.length : next + 1];
+    };
+    const server = UTF8ToString(serverText);
+    const fromServer = findSection(server, "CONNECTION SETTINGS");
+    if (!fromServer) {
+        return stringToNewUTF8(saved);
+    }
+    let section = server.substring(fromServer[0], fromServer[1]);
+    if (!section.endsWith("\n")) {
+        section += "\n";
+    }
+    const inSaved = findSection(saved, "CONNECTION SETTINGS");
+    const merged = inSaved ? saved.substring(0, inSaved[0]) + section + saved.substring(inSaved[1])
+                           : saved + (saved.endsWith("\n") ? "" : "\n") + section;
+    return stringToNewUTF8(merged);
+});
 } // namespace
 
 bool mu::web::MountGameFiles()
@@ -219,6 +255,18 @@ bool mu::web::MountGameFiles()
     {
         std::fprintf(stderr, "Web file system: can't read files.txt from the web server\n");
         return false;
+    }
+
+    const std::string configPath = std::string(GameDir) + "/config.ini";
+    std::string config;
+    if (ReadWholeFile(configPath, config))
+    {
+        if (char* merged = MuWeb_MergeSavedConfig(config.c_str()))
+        {
+            WriteWholeFile(configPath, merged);
+            std::free(merged);
+            std::printf("Web file system: config.ini from this browser's earlier visits\n");
+        }
     }
     return ::chdir(GameDir) == 0;
 }
