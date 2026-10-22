@@ -1,0 +1,71 @@
+/* Modern theme for CDailyRewardsWindow (key N): docked_panel_frame.rcss's forged panel (linked first) at the full
+   dock height, the modern exit button and the event entry's forged button (event_entry.rcss), in the event
+   timer's look (event_schedule.rcss). Geometry is the legacy one: reference px inside #panel, physical px
+   (reference px times --root-scale) inside the days' pane. */
+
+#panel { height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; transform-origin: left top; }
+
+#btn_exit {
+	position: absolute;
+	left: 13px;
+	top: 392px;
+	width: 36px;
+	height: 28px;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+	pointer-events: auto;
+}
+#btn_exit:hover { border-color: token(accent-steel-hover); }
+
+.dr-title { left: 0; top: 12px; text-align: center; font-weight: bold; pointer-events: none; }
+#dr_status { left: 12px; top: 34px; font-weight: bold; pointer-events: none; }
+#dr_detail { left: 12px; top: 50px; pointer-events: none; }
+
+#dr_days { left: 10px; top: 70px; --flow-w: 170px; line-height: 1.15; }
+.dr-day {
+	display: flex;
+	flex-direction: row;
+	padding: calc(2px * var(--root-scale)) calc(4px * var(--root-scale));
+	margin-bottom: calc(1px * var(--root-scale));
+	border-radius: token(radius-sm)px;
+}
+.dr-label { display: block; flex: 0 0 auto; width: calc(44px * var(--root-scale)); white-space: nowrap; font-weight: bold; }
+.dr-items { display: block; flex: 1 1 auto; }
+.dr-item { display: block; white-space: nowrap; }
+.dr-footer { display: block; margin-top: calc(8px * var(--root-scale)); padding: 0 calc(2px * var(--root-scale)); white-space: nowrap; }
+
+#dr_take {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	margin-top: calc(5px * var(--root-scale));
+	height: calc(29px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+#dr_take:hover { border-color: token(accent-steel-hover); }
+#dr_take:active { background-color: token(surface-recessed); }
+.dr-take-label { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+
+.dr-title { color: token(accent-gold); }
+#dr_status { color: token(text-primary); }
+#dr_detail { color: token(text-secondary); }
+.dr-day { color: token(text-secondary); }
+.dr-label { color: token(text-primary); }
+.dr-day.done { background-color: rgba(120, 255, 120, 18); }
+.dr-day.today { background-color: rgba(255, 200, 90, 40); }
+.dr-day.today .dr-label, .dr-day.today .dr-item { color: token(accent-gold); }
+.dr-day.done .dr-label, .dr-day.done .dr-item { color: token(semantic-success); }
+.dr-footer { color: token(text-muted); }
+.dr-take-label { color: token(text-primary); }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+#dr_title { width: calc(100% * var(--root-scale)); }
+#dr_status, #dr_detail { width: calc(166px * var(--root-scale)); }

@@ -55,6 +55,7 @@ constexpr NamedWindow Windows[] = {
     {"npc_quest", mu::ui::window::INTERFACE_NPCQUEST},
     {"command_list", mu::ui::window::INTERFACE_COMMAND_LIST},
     {"event_schedule", mu::ui::window::INTERFACE_EVENT_SCHEDULE},
+    {"daily_rewards", mu::ui::window::INTERFACE_DAILY_REWARDS},
 };
 
 json Pixel(float x, float y)

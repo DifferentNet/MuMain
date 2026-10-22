@@ -134,6 +134,9 @@ enum INTERFACE_LIST
     // CEventScheduleWindow (UI/Events/EventScheduleWindow.h), the event timer window (key O). Same
     // reasoning as INTERFACE_CREDITS above.
     INTERFACE_EVENT_SCHEDULE,
+    // CDailyRewardsWindow (UI/Events/DailyRewardsWindow.h), the daily rewards window (key N). Same reasoning as
+    // INTERFACE_CREDITS above.
+    INTERFACE_DAILY_REWARDS,
     INTERFACE_END,
     INTERFACE_COUNT = INTERFACE_END - 2,
 };

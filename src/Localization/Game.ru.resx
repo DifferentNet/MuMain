@@ -13052,4 +13052,40 @@
   <data name="EventScheduleStartsIn" xml:space="preserve">
     <value>через %ls, в %ls</value>
   </data>
+  <data name="DailyRewardsTitle" xml:space="preserve">
+    <value>Ежедневные награды</value>
+  </data>
+  <data name="DailyRewardsAsking" xml:space="preserve">
+    <value>Запрашиваю у сервера...</value>
+  </data>
+  <data name="DailyRewardsNoAnswer" xml:space="preserve">
+    <value>Сервер не присылает ежедневные награды.</value>
+  </data>
+  <data name="DailyRewardsDay" xml:space="preserve">
+    <value>День %d</value>
+  </data>
+  <data name="DailyRewardsPlayed" xml:space="preserve">
+    <value>День %d: %d из %d мин сегодня</value>
+  </data>
+  <data name="DailyRewardsLeft" xml:space="preserve">
+    <value>Осталось %d мин</value>
+  </data>
+  <data name="DailyRewardsComing" xml:space="preserve">
+    <value>Награда вот-вот придёт</value>
+  </data>
+  <data name="DailyRewardsReceived" xml:space="preserve">
+    <value>День %d получен сегодня</value>
+  </data>
+  <data name="DailyRewardsNextIn" xml:space="preserve">
+    <value>Следующий день через %ls</value>
+  </data>
+  <data name="DailyRewardsWaiting" xml:space="preserve">
+    <value>Ждут места в инвентаре: %d</value>
+  </data>
+  <data name="DailyRewardsTake" xml:space="preserve">
+    <value>Забрать</value>
+  </data>
+  <data name="DailyRewardsHint" xml:space="preserve">
+    <value>Пропуск дня сбрасывает серию на день 1.</value>
+  </data>
 </root>

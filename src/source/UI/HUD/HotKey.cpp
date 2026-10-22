@@ -282,6 +282,13 @@ bool mu::ui::window::CHotKey::UpdateKeyEvent()
         PlayBuffer(SOUND_CLICK01);
         return false;
     }
+    else if (mu::ui::window::IsPress('N') == true)
+    {
+        // The daily rewards window: the login reward cycle and today's progress (DailyRewardsWindow.h).
+        g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_DAILY_REWARDS);
+        PlayBuffer(SOUND_CLICK01);
+        return false;
+    }
     else if (mu::ui::window::IsPress('M') == true)
     {
         g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_MOVEMAP);

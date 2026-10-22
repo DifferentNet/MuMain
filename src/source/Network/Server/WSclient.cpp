@@ -113,6 +113,7 @@ using namespace mu::ui::window;
 #include "Data/GameData/ItemData/ItemModelSlots.h"
 #include "GameLogic/Combat/OwnSkillEcho.h"
 #include "GameLogic/Events/EventTimes.h"
+#include "GameLogic/Events/DailyRewards.h"
 
 #define MAX_DEBUG_MAX 10
 
@@ -1258,6 +1259,7 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     GameLogic::Commands::Catalog().Reset();
     GameLogic::Commands::Catalog().RequestOnce();
     GameLogic::EventTimes::Times().Reset();
+    GameLogic::DailyRewards::Rewards().Reset();
 
     g_ConsoleDebug->Write(MCD_RECEIVE, L"0x03 [ReceiveJoinMapServer]");
 
@@ -1982,8 +1984,9 @@ void ReceiveNotice(const BYTE* ReceiveBuffer)
     }
     else if (Data->Result == 1)
     {
-        // The event timer window's answer (GameLogic/Events/EventTimes.h) stays out of the chat.
-        if (GameLogic::EventTimes::Times().TakeMessage(Text))
+        // The answers to the event timer window (GameLogic/Events/EventTimes.h) and the daily rewards window
+        // (GameLogic/Events/DailyRewards.h) stay out of the chat.
+        if (GameLogic::EventTimes::Times().TakeMessage(Text) || GameLogic::DailyRewards::Rewards().TakeMessage(Text))
         {
         }
         else if (CHARACTER_SCENE != SceneFlag)

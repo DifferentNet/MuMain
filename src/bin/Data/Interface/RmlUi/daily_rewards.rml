@@ -1,0 +1,48 @@
+<rml>
+<head>
+	<title>Daily Rewards</title>
+	<link type="text/rcss" href="base.rcss"/>
+	<link type="text/rcss" href="docked_panel_frame.rcss"/>
+	<link type="text/rcss" href="daily_rewards.rcss"/>
+</head>
+<body>
+	<!-- The daily rewards window (CDailyRewardsWindow, key N), docked right, full dock height: the title, today's
+	     progress and what is left of it, then one counter-scaled pane in which the days of the cycle flow -- a row
+	     per day with its label and one line per item of its reward -- followed by how many rewards wait for room
+	     with the button that hands them out, or a hint; and the exit button. The workspace slot places and scales
+	     #panel. C++ keeps the state and counts today's time on; clicks are queued with daily_rewards_take and
+	     daily_rewards_exit. -->
+	<div id="panel" data-model="daily_rewards">
+		<div class="frame-piece frame-top"></div>
+		<div class="frame-piece frame-left"></div>
+		<div class="frame-piece frame-right"></div>
+		<div class="frame-piece frame-bottom"></div>
+
+		<span id="dr_title" class="sharp-text dr-title"
+		      data-style-font-size="title.text_px + 'px'">{{title.text}}</span>
+		<span id="dr_status" class="sharp-text dr-status"
+		      data-style-font-size="status.text_px + 'px'">{{status.text}}</span>
+		<span id="dr_detail" class="sharp-text dr-detail"
+		      data-style-font-size="detail.text_px + 'px'">{{detail.text}}</span>
+
+		<div id="dr_days" class="sharp-text sharp-flow">
+			<div class="dr-day" data-for="d : days" data-class-done="d.done" data-class-today="d.today">
+				<span class="dr-label" data-style-font-size="d.label.text_px + 'px'">{{d.label.text}}</span>
+				<div class="dr-items">
+					<span class="dr-item" data-for="it : d.items"
+					      data-style-font-size="it.text_px + 'px'">{{it.text}}</span>
+				</div>
+			</div>
+
+			<span class="dr-footer" data-style-font-size="footer.text_px + 'px'">{{footer.text}}</span>
+
+			<div id="dr_take" data-if="can_take" data-event-click="daily_rewards_take">
+				<span class="dr-take-label" data-style-font-size="take_label.text_px + 'px'">{{take_label.text}}</span>
+			</div>
+		</div>
+
+		<div id="btn_exit" data-event-click="daily_rewards_exit" data-attr-data-hint="exit_tooltip"></div>
+		<div id="frame_corner_close" data-event-click="daily_rewards_exit"></div>
+	</div>
+</body>
+</rml>

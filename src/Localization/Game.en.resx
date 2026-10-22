@@ -13429,4 +13429,40 @@
   <data name="EventScheduleStartsIn" xml:space="preserve">
     <value>in %ls, at %ls</value>
   </data>
+  <data name="DailyRewardsTitle" xml:space="preserve">
+    <value>Daily rewards</value>
+  </data>
+  <data name="DailyRewardsAsking" xml:space="preserve">
+    <value>Asking the server...</value>
+  </data>
+  <data name="DailyRewardsNoAnswer" xml:space="preserve">
+    <value>The server sends no daily rewards.</value>
+  </data>
+  <data name="DailyRewardsDay" xml:space="preserve">
+    <value>Day %d</value>
+  </data>
+  <data name="DailyRewardsPlayed" xml:space="preserve">
+    <value>Day %d: %d of %d min today</value>
+  </data>
+  <data name="DailyRewardsLeft" xml:space="preserve">
+    <value>%d min to go</value>
+  </data>
+  <data name="DailyRewardsComing" xml:space="preserve">
+    <value>The reward is on its way</value>
+  </data>
+  <data name="DailyRewardsReceived" xml:space="preserve">
+    <value>Day %d received today</value>
+  </data>
+  <data name="DailyRewardsNextIn" xml:space="preserve">
+    <value>Next day in %ls</value>
+  </data>
+  <data name="DailyRewardsWaiting" xml:space="preserve">
+    <value>Waiting for room: %d</value>
+  </data>
+  <data name="DailyRewardsTake" xml:space="preserve">
+    <value>Take</value>
+  </data>
+  <data name="DailyRewardsHint" xml:space="preserve">
+    <value>A missed day starts the streak over.</value>
+  </data>
 </root>

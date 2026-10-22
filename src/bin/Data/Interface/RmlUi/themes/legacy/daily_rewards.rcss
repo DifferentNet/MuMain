@@ -1,0 +1,66 @@
+/* Legacy theme for CDailyRewardsWindow (key N), in the event timer's look (event_schedule.rcss): the
+   docked_panel_frame.rcss frame (linked first; newui_item_back01 top) stretched to the full dock height (432),
+   the title bold and centred, today's progress, then one counter-scaled pane in which the days flow (a row per
+   day: its label, and its reward's items below each other), the waiting rewards and the take button in the
+   event entry's button art (event_entry.rcss); and the exit button. Reference px inside #panel; inside the
+   pane, physical px (reference px times --root-scale). */
+
+@spritesheet dr-btn-sheet {
+	src: "../../../newui_btn_empty_big.tga";
+	dr-btn-up: 0px 0px 180px 29px;
+	dr-btn-over: 0px 29px 180px 29px;
+	dr-btn-down: 0px 58px 180px 29px;
+}
+
+.frame-top { decorator: image(docked-bg-top-b); }
+#panel { height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; }
+
+.dr-title { left: 0; top: 12px; text-align: center; font-weight: bold; pointer-events: none; }
+#dr_status { left: 12px; top: 34px; font-weight: bold; pointer-events: none; }
+#dr_detail { left: 12px; top: 50px; pointer-events: none; }
+
+#dr_days { left: 10px; top: 70px; --flow-w: 170px; line-height: 1.15; }
+.dr-day {
+	display: flex;
+	flex-direction: row;
+	padding: calc(2px * var(--root-scale)) calc(4px * var(--root-scale));
+	margin-bottom: calc(1px * var(--root-scale));
+}
+.dr-label { display: block; flex: 0 0 auto; width: calc(44px * var(--root-scale)); white-space: nowrap; font-weight: bold; }
+.dr-items { display: block; flex: 1 1 auto; }
+.dr-item { display: block; white-space: nowrap; }
+.dr-footer { display: block; margin-top: calc(8px * var(--root-scale)); padding: 0 calc(2px * var(--root-scale)); white-space: nowrap; }
+
+#dr_take {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-top: calc(5px * var(--root-scale));
+	height: calc(29px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	decorator: image(dr-btn-up);
+}
+#dr_take:hover { decorator: image(dr-btn-over); }
+#dr_take:active { decorator: image(dr-btn-down); }
+.dr-take-label { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+
+/* The event timer's colours: gold title, light text, blue detail. A day that counted is green on a green band,
+   today's gold on a gold band (its text green once it counted). */
+.dr-title { color: rgb(255, 220, 120); }
+#dr_status { color: rgb(240, 240, 240); }
+#dr_detail { color: rgb(200, 220, 255); }
+.dr-day { color: rgb(200, 200, 200); }
+.dr-label { color: rgb(225, 225, 225); }
+.dr-day.done { background-color: rgba(120, 255, 120, 22); }
+.dr-day.today { background-color: rgba(255, 210, 100, 48); }
+.dr-day.today .dr-label, .dr-day.today .dr-item { color: rgb(255, 220, 120); }
+.dr-day.done .dr-label, .dr-day.done .dr-item { color: rgb(150, 255, 150); }
+.dr-footer { color: rgb(170, 170, 170); }
+.dr-take-label { color: #ffffff; }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+#dr_title { width: calc(100% * var(--root-scale)); }
+#dr_status, #dr_detail { width: calc(166px * var(--root-scale)); }
