@@ -8,10 +8,22 @@
 
 #include <string>
 
+#ifdef __EMSCRIPTEN__
+#include "Core/Platform/web/WebFileSystem.h"
+#endif
+
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nCmdShow);
 
 int main(int argc, char* argv[])
 {
+#ifdef __EMSCRIPTEN__
+    // The browser build (same entry point): the game's files come from the web server.
+    if (!mu::web::MountGameFiles())
+    {
+        return 1;
+    }
+#endif
+
     std::string commandLine;
     for (int index = 1; index < argc; ++index)
     {

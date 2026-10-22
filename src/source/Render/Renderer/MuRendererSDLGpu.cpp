@@ -201,6 +201,10 @@ static_assert(sizeof(FogUniform) == 48, "FogUniform must be 48 bytes (HLSL cbuff
     {
         ext = "msl";
     }
+    else if (driver && std::string(driver) == "webgpu")
+    {
+        ext = "wgsl";
+    }
 
 #ifndef MU_SHADER_DIR
 #define MU_SHADER_DIR ""
@@ -208,6 +212,10 @@ static_assert(sizeof(FogUniform) == 48, "FogUniform must be 48 bytes (HLSL cbuff
     // Primary: cmake build-output path (works for local dev builds).
     // Fallback: shaders/ next to the executable (works for CI artifacts and installs).
     std::string filename = std::string(name) + "." + stage + "." + ext;
+#ifdef __EMSCRIPTEN__
+    // Browser build: shaders/ is in the game directory the page mounts (Core/Platform/web/).
+    return (std::filesystem::path("shaders") / filename).string();
+#endif
     std::filesystem::path cmakePath = std::filesystem::path(MU_SHADER_DIR) / filename;
     if (!cmakePath.empty() && std::filesystem::exists(cmakePath))
     {
@@ -235,6 +243,12 @@ static_assert(sizeof(FogUniform) == 48, "FogUniform must be 48 bytes (HLSL cbuff
     {
         return SDL_GPU_SHADERFORMAT_MSL;
     }
+#ifdef __EMSCRIPTEN__
+    if (driver && std::string(driver) == "webgpu")
+    {
+        return SDL_GPU_SHADERFORMAT_WGSL;
+    }
+#endif
     return SDL_GPU_SHADERFORMAT_SPIRV;
 }
 
@@ -1796,9 +1810,28 @@ public:
         mu::log::Get("render")->info("SDL_gpu -- validation: {}, requested backend: {}",
                                      Render::kGpuValidationEnabled ? "enabled" : "disabled",
                                      requestedDriverName ? requestedDriverName : "(SDL auto-pick)");
+#ifdef __EMSCRIPTEN__
+        // Browser build: the WebGPU backend (libsdl-org/SDL#16020) takes WGSL, and the vertex
+        // shaders write clip distances, an optional WebGPU feature it only requests when asked.
+        {
+            const SDL_PropertiesID props = SDL_CreateProperties();
+            SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_SHADERS_WGSL_BOOLEAN, true);
+            SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_FEATURE_CLIP_DISTANCE_BOOLEAN, true);
+            SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_DEBUGMODE_BOOLEAN, Render::kGpuValidationEnabled);
+            // Transfer buffers up to this size are written through the queue instead of mapped. A
+            // mapped one waits for the GPU each time it's mapped again, and the vertex stream's is
+            // 64 MB, above the backend's 32 MB default, so every frame waited. The backend compares
+            // this value with buffer sizes in bytes, despite the property's "_N_MB" name.
+            SDL_SetNumberProperty(props, SDL_PROP_GPU_DEVICE_CREATE_WEBGPU_PSEUDOMAP_BUFFERS_SMALLER_THAN_N_MB,
+                                  static_cast<Sint64>(256) << 20);
+            s_device = SDL_CreateGPUDeviceWithProperties(props);
+            SDL_DestroyProperties(props);
+        }
+#else
         s_device =
             SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_DXIL | SDL_GPU_SHADERFORMAT_MSL,
                                 Render::kGpuValidationEnabled, requestedDriverName);
+#endif
 
         if (!s_device && requestedDriverName != nullptr)
         {
@@ -5417,7 +5450,15 @@ private:
         auto createShader = [&](const char* name, const char* stage, SDL_GPUShaderStage shaderStage, Uint32 numSamplers,
                                 Uint32 numStorageBuffers, Uint32 numUniformBuffers, bool fatal) -> SDL_GPUShader*
         {
-            const std::vector<Uint8> blob = LoadShaderBlob(name, stage, driverName);
+            std::vector<Uint8> blob = LoadShaderBlob(name, stage, driverName);
+            size_t codeSize = blob.size();
+#ifdef __EMSCRIPTEN__
+            // The WebGPU backend also reads WGSL as a C string (to find the bindings): end it with NUL.
+            if (fmt == SDL_GPU_SHADERFORMAT_WGSL && !blob.empty())
+            {
+                blob.push_back(0);
+            }
+#endif
             if (blob.empty())
             {
                 if (fatal)
@@ -5434,7 +5475,7 @@ private:
 
             SDL_GPUShaderCreateInfo info{};
             info.code = blob.data();
-            info.code_size = blob.size();
+            info.code_size = codeSize;
             // spirv-cross renames "main" to "main0" in MSL because Metal reserves "main".
             info.entrypoint = (fmt == SDL_GPU_SHADERFORMAT_MSL) ? "main0" : "main";
             info.format = fmt;

@@ -126,6 +126,10 @@ inline DWORD GetModuleFileNameW(HMODULE /*hModule*/, LPWSTR lpFilename, DWORD nS
         return 0;
     }
     const ssize_t n = static_cast<ssize_t>(std::strlen(path));
+#elif defined(__EMSCRIPTEN__)
+    // Browser build: the game's files are mounted at /game (Core/Platform/web/WebFileSystem.cpp).
+    std::strcpy(path, "/game/Main");
+    const ssize_t n = static_cast<ssize_t>(std::strlen(path));
 #else
     const ssize_t n = readlink("/proc/self/exe", path, sizeof(path) - 1);
 #endif

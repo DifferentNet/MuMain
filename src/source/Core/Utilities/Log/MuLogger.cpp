@@ -9,6 +9,9 @@
 
 #include <spdlog/sinks/dist_sink.h>
 #include <spdlog/sinks/rotating_file_sink.h>
+#ifdef __EMSCRIPTEN__
+#include <spdlog/sinks/stdout_sinks.h>
+#endif
 
 namespace mu::log
 {
@@ -47,6 +50,10 @@ void ConfigureSinks(LoggerState& state, const std::filesystem::path& directory)
     std::vector<spdlog::sink_ptr> sinks;
     sinks.push_back(std::make_shared<spdlog::sinks::rotating_file_sink_mt>((directory / "MuError.log").string(),
                                                                            5 * 1024 * 1024, 3));
+#ifdef __EMSCRIPTEN__
+    // Browser build: the log file lives in the page's memory, so also print to the browser console.
+    sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_mt>());
+#endif
     state.sink->flush();
     state.sink->set_sinks(std::move(sinks));
     state.sinksInitialized = true;
