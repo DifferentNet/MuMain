@@ -858,6 +858,7 @@
       "durability": 54,
       "defense": 15,
       "attackSpeed": 6,
+      "attackType": 3,
       "requirements": {
         "strength": 53,
         "dexterity": 12
@@ -881,6 +882,7 @@
       "durability": 59,
       "defense": 22,
       "attackSpeed": 6,
+      "attackType": 2,
       "requirements": {
         "strength": 50,
         "dexterity": 70
@@ -904,6 +906,7 @@
       "durability": 81,
       "defense": 27,
       "attackSpeed": 7,
+      "attackType": 1,
       "requirements": {
         "strength": 155,
         "dexterity": 50

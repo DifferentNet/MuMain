@@ -843,6 +843,7 @@
       "level": 68,
       "durability": 54,
       "defense": 17,
+      "attackType": 3,
       "requirements": {
         "strength": 53,
         "dexterity": 12
@@ -865,6 +866,7 @@
       "level": 68,
       "durability": 59,
       "defense": 23,
+      "attackType": 2,
       "requirements": {
         "strength": 50,
         "dexterity": 70
