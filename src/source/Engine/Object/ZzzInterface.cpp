@@ -3065,7 +3065,18 @@ void MoveHero()
     }
     else
     {
-        StandTime++;
+        // A swing isn't standing. Counted as standing, nonstop attacks reached the 40 frames below again and
+        // again, and the hero turned towards the pointer in the middle of them, then back with the next cast:
+        // a Dark Lord's Fire Scream on horseback jerked round about three times a second at 120 fps (players,
+        // 2026-10-22). The turn's screen-space angle isn't where the skill flies, and it tells the server too.
+        if (Engine::Object::IsSwingAction(o->CurrentAction))
+        {
+            StandTime = 0;
+        }
+        else
+        {
+            StandTime++;
+        }
 
         if (StandTime >= 40 && !MouseOnWindow && Hero->Dead == 0 &&
             o->CurrentAction != PLAYER_POSE1 && o->CurrentAction != PLAYER_POSE_FEMALE1 &&
