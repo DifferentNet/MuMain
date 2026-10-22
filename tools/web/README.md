@@ -84,6 +84,8 @@ whispers between the tabs, sound (the audio context runs after the first click; 
 Then, with the server add-on loaded: MU Helper picking up zen and an item (each pickup answered, the item in its
 inventory slot), a party (`/party` with the other player one tile away, accepted in the other tab, both party lists
 shown), and moving an item in the inventory (the server confirmed the move).
+On 2026-10-23, rebased onto the deploy 11 client (`mu-moldova` fbbd471) and against the live add-on and rules: the
+character window's advanced stats tab, the jewel bank (deposit of 8 Jewels of Bless), and MU Helper combat with pickups.
 
 Driving the game from a script has limits that real players don't hit:
 - The game reads keys once per frame, so a key pressed and released within one frame is missed: hold keys ~150 ms.
