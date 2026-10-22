@@ -811,106 +811,24 @@ void SetPlayerWalk(CHARACTER* c)
 extern int CurrentSkill;
 int AttackHand = 0;
 
-#define RGZ_FIX_ATTACK_SPEED
-
+// Attack and magic speed turn into animation speed in proportion: 0.004 per point of attack speed, 0.004 and
+// 0.002 per point of magic speed. MuMain's RGZ_FIX_ATTACK_SPEED slowed attacks between 509 and 750 and magic
+// in bands up to 3011, so on MU Skynet (server cap 1000) more agility hit slower than at 500. Measured
+// 2026-10-22 with every class against a dummy: without it the server takes every hit up to 1000, except an
+// elf's Triple Shot, which loses most of its arrows from attack speed 508 to 569 (at 550: 0.8 hits a second
+// of 8.8 shots). In that band the elf's attack animation plays at the speed of 507 (8.0 shots, all hits).
 void SetAttackSpeed()
 {
-#ifndef RGZ_FIX_ATTACK_SPEED
-    float AttackSpeed1 = CharacterAttribute->AttackSpeed * 0.004f;
+    int attackSpeed = CharacterAttribute->AttackSpeed;
+    if (attackSpeed >= 508 && attackSpeed <= 569 && Hero != nullptr
+        && gCharacterManager.GetBaseClass(Hero->Class) == CLASS_ELF)
+    {
+        attackSpeed = 507;
+    }
+
+    float AttackSpeed1 = attackSpeed * 0.004f;
     float MagicSpeed1 = CharacterAttribute->MagicSpeed * 0.004f;
     float MagicSpeed2 = CharacterAttribute->MagicSpeed * 0.002f;
-#else
-    float AttackSpeed1 = CharacterAttribute->AttackSpeed;
-    float MagicSpeed1 = CharacterAttribute->MagicSpeed;
-    float MagicSpeed2 = CharacterAttribute->MagicSpeed;
-
-    if (CharacterAttribute->AttackSpeed >= 509 && CharacterAttribute->AttackSpeed <= 549)
-    {
-        AttackSpeed1 = AttackSpeed1 * 0.0026000f;
-    }
-    else if (CharacterAttribute->AttackSpeed >= 550 && CharacterAttribute->AttackSpeed <= 750)
-    {
-        AttackSpeed1 = AttackSpeed1 * 0.0017000f;
-    }
-    else
-    {
-        AttackSpeed1 = AttackSpeed1 * 0.0040000f;
-    }
-
-    if (CharacterAttribute->MagicSpeed >= 509 && CharacterAttribute->MagicSpeed <= 549)
-    {
-        MagicSpeed1 = MagicSpeed1 * 0.0026000f;
-    }
-    else if (CharacterAttribute->MagicSpeed >= 550 && CharacterAttribute->MagicSpeed <= 750)
-    {
-        MagicSpeed1 = MagicSpeed1 * 0.0017000f;
-    }
-    else
-    {
-        MagicSpeed1 = MagicSpeed1 * 0.0040000f;
-    }
-
-    if (CharacterAttribute->MagicSpeed >= 455 && CharacterAttribute->MagicSpeed <= 479)
-    {
-        MagicSpeed2 = MagicSpeed2 * 0.0024700f;
-    }
-    else if (CharacterAttribute->MagicSpeed >= 605 && CharacterAttribute->MagicSpeed <= 636)
-    {
-        MagicSpeed2 = MagicSpeed2 * 0.0019000f;
-    }
-    else if (CharacterAttribute->MagicSpeed >= 637 && CharacterAttribute->MagicSpeed <= 668)
-    {
-        MagicSpeed2 = MagicSpeed2 * 0.0018000f;
-    }
-    else if (CharacterAttribute->MagicSpeed >= 669 && CharacterAttribute->MagicSpeed <= 688)
-    {
-        MagicSpeed2 = MagicSpeed2 * 0.0017000f;
-    }
-    else if (CharacterAttribute->MagicSpeed >= 855 && CharacterAttribute->MagicSpeed <= 1040)
-    {
-        MagicSpeed2 = MagicSpeed2 * 0.0016300f;
-    }
-    else if (CharacterAttribute->MagicSpeed >= 1041 && CharacterAttribute->MagicSpeed <= 1104)
-    {
-        MagicSpeed2 = MagicSpeed2 * 0.0015500f;
-    }
-    else if (CharacterAttribute->MagicSpeed >= 1301 && CharacterAttribute->MagicSpeed <= 1500)
-    {
-        MagicSpeed2 = MagicSpeed2 * 0.0017500f;
-    }
-    else if (CharacterAttribute->MagicSpeed >= 1501 && CharacterAttribute->MagicSpeed <= 1524)
-    {
-        MagicSpeed2 = MagicSpeed2 * 0.0015000f;
-    }
-    else if (CharacterAttribute->MagicSpeed >= 1525 && CharacterAttribute->MagicSpeed <= 1800)
-    {
-        MagicSpeed2 = MagicSpeed2 * 0.0014500f;
-    }
-    else if (CharacterAttribute->MagicSpeed >= 1801 && CharacterAttribute->MagicSpeed <= 1999)
-    {
-        MagicSpeed2 = MagicSpeed2 * 0.0013000f;
-    }
-    else if (CharacterAttribute->MagicSpeed >= 2000 && CharacterAttribute->MagicSpeed <= 2167)
-    {
-        MagicSpeed2 = MagicSpeed2 * 0.0012500f;
-    }
-    else if (CharacterAttribute->MagicSpeed >= 2168 && CharacterAttribute->MagicSpeed <= 2354)
-    {
-        MagicSpeed2 = MagicSpeed2 * 0.0011500f;
-    }
-    else if (CharacterAttribute->MagicSpeed >= 2855 && CharacterAttribute->MagicSpeed <= 3011)
-    {
-        MagicSpeed2 = MagicSpeed2 * 0.0009000f;
-    }
-    else if (CharacterAttribute->MagicSpeed >= 3011)
-    {
-        MagicSpeed2 = MagicSpeed2 * 0.0008100f;
-    }
-    else
-    {
-        MagicSpeed2 = MagicSpeed2 * 0.0020000f;
-    }
-#endif
 
     Models[MODEL_PLAYER].Actions[PLAYER_ATTACK_FIST].PlaySpeed = 0.6f + AttackSpeed1;
 
