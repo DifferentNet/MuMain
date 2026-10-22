@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <array>
+#include <chrono>
 #include <map>
 #include <set>
 #include <string>
@@ -99,6 +100,18 @@ namespace MUHelper
 		bool m_bTimerActivatedBuffOngoing;
 		bool m_bPetActivated;
 		int m_iTotalCost;
+
+		// The whole round runs every RoundInterval; between rounds, on every frame, only the attack, while the
+		// last round got as far as it (WorkLoop).
+		static constexpr std::chrono::milliseconds RoundInterval{ 250 };
+		std::chrono::steady_clock::time_point m_nextRound{};
+		bool m_bAttackBetweenRounds = false;
+
+		// The second (m_iSecondsElapsed) in which each skill slot last went off on its timer: once per due
+		// second, now that the attack runs more often than four times a second.
+		static constexpr int MaxSkillSlots = 8;
+		std::array<int, MaxSkillSlots> m_aiTimedSkillSecond{};
+		int m_iTimedSkillSlot = -1;
 	};
 
 	extern CMuHelper g_MuHelper;

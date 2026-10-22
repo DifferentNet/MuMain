@@ -129,6 +129,10 @@ namespace MUHelper
         m_bPetActivated = false;
 
         m_iLoopCounter = 0;
+        m_nextRound = {};
+        m_bAttackBetweenRounds = false;
+        m_aiTimedSkillSecond.fill(-1);
+        m_iTimedSkillSlot = -1;
 
         m_bActive = true;
         g_ConsoleDebug->Write(MCD_NORMAL, L"[MU Helper] Started");
@@ -154,6 +158,29 @@ namespace MUHelper
             return;
         }
 
+        // The game calls this on every frame. The whole round (pet, buffs, potions, pickup, the walk back, the
+        // attack, repairs) runs every RoundInterval, as it always did, so the server's answer to a potion, a buff
+        // or a pickup arrives before the next. Between the rounds only the attack runs, as long as the last round
+        // got as far as it: with a round per cast the helper made at most four casts a second, while a player at
+        // attack speed 1000 casts 10 to 17 by hand (2026-10-22). The attack itself waits for the swing to end.
+        const auto now = std::chrono::steady_clock::now();
+        if (now < m_nextRound)
+        {
+            if (m_bAttackBetweenRounds)
+            {
+                try
+                {
+                    Attack();
+                }
+                catch (...)
+                {
+                    g_ConsoleDebug->Write(MCD_NORMAL, L"[MU Helper] Exception occurred. Ignoring...");
+                }
+            }
+            return;
+        }
+        m_nextRound = now + RoundInterval;
+
         Work();
 
         if (m_iLoopCounter++ == 4)
@@ -175,6 +202,7 @@ namespace MUHelper
 
     void CMuHelper::Work()
     {
+        m_bAttackBetweenRounds = false;
         try
         {
             if (!ActivatePet())
@@ -202,6 +230,7 @@ namespace MUHelper
                 return;
             }
 
+            m_bAttackBetweenRounds = true;
             Attack();
 
             RepairEquipments();
@@ -784,7 +813,12 @@ namespace MUHelper
             const float fSkillDistance = gSkillManager.GetSkillDistance(m_iCurrentSkill, Hero);
             if (GameLogic::Combat::CanExecuteSkill(Hero, m_iCurrentSkill, fSkillDistance))
             {
-                return SimulateAttack(m_iCurrentSkill);
+                const int iCast = SimulateAttack(m_iCurrentSkill);
+                if (iCast && m_iTimedSkillSlot >= 0 && m_iTimedSkillSlot < MaxSkillSlots)
+                {
+                    m_aiTimedSkillSecond[m_iTimedSkillSlot] = m_iSecondsElapsed;
+                }
+                return iCast;
             }
         }
 
@@ -801,6 +835,7 @@ namespace MUHelper
 
     ActionSkillType CMuHelper::SelectAttackSkill()
     {
+        m_iTimedSkillSlot = -1;
         const size_t safeSize = std::min({m_config.aiSkill.size(), m_config.aiSkillCondition.size(), m_config.aiSkillInterval.size()});
         for (int i = 1; i < (int)safeSize; i++)
         {
@@ -813,8 +848,10 @@ namespace MUHelper
             if ((m_config.aiSkillCondition[i] & ON_TIMER)
                 && m_config.aiSkillInterval[i] != 0
                 && m_iSecondsElapsed > 0
-                && m_iSecondsElapsed % m_config.aiSkillInterval[i] == 0)
+                && m_iSecondsElapsed % m_config.aiSkillInterval[i] == 0
+                && (i >= MaxSkillSlots || m_aiTimedSkillSecond[i] != m_iSecondsElapsed))
             {
+                m_iTimedSkillSlot = i;
                 return (ActionSkillType)iSkillId;
             }
 

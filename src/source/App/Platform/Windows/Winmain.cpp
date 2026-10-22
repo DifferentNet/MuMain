@@ -2424,7 +2424,9 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
 
     auto& timers = Core::Time::FrameTimerScheduler::Instance();
     timers.SetRepeating(HACK_TIMER, 20 * 1000, [] { CheckHack(); });
-    timers.SetRepeating(MUHELPER_TIMER, 250 /* ms */,
+    // Every frame: the helper runs its whole round every 250 ms itself and only the attack in between
+    // (CMuHelper::WorkLoop).
+    timers.SetRepeating(MUHELPER_TIMER, 1 /* ms: every frame */,
                         [] { MUHelper::CMuHelper::TimerProc(nullptr, 0, MUHELPER_TIMER, 0); });
 
     srand((unsigned)time(nullptr));
