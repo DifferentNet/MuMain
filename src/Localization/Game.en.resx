@@ -13465,4 +13465,7 @@
   <data name="DailyRewardsHint" xml:space="preserve">
     <value>A missed day starts the streak over.</value>
   </data>
+  <data name="SetItemPieces" xml:space="preserve">
+    <value>Set items: %d of %d collected</value>
+  </data>
 </root>

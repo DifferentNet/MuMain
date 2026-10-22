@@ -10,6 +10,7 @@
 #include "Scenes/SceneCore.h"
 #include "Render/Effects/ZzzEffect.h"
 #include "Engine/AI/ZzzAI.h"
+#include "Engine/Object/ZzzInventory.h"
 #include "Engine/Object/ZzzOpenData.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "Engine/Physics/PhysicsManager.h"
@@ -24,9 +25,6 @@
 #include "Render/Text/CUIRenderText.h"
 
 extern  int  WaterTextureNumber;
-extern	wchar_t TextList[50][100];
-extern  int  TextListColor[50];
-extern	int  TextBold[50];
 
 static  CSWaterTerrain* g_pCSWaterTerrain = NULL;
 static  std::queue<ObjectDescript> g_qObjDes;

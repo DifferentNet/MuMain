@@ -187,10 +187,10 @@ int getLevelGeneration(int level, unsigned int* color)
     return lvl;
 }
 
-wchar_t TextList[50][100];
-int  TextListColor[50];
-int  TextBold[50];
-SIZE Size[50];
+wchar_t TextList[MAX_TEXT_LIST_LINES][100];
+int  TextListColor[MAX_TEXT_LIST_LINES];
+int  TextBold[MAX_TEXT_LIST_LINES];
+SIZE Size[MAX_TEXT_LIST_LINES];
 
 int RenderTextList(int sx, int sy, int TextNum, int Tab, int iSort = RT3_SORT_CENTER)
 {

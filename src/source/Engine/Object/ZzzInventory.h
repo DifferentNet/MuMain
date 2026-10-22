@@ -82,10 +82,12 @@ extern int AllRepairGold;
 //////////////////////////////////////////////////////////////////////////
 // text 관련
 //////////////////////////////////////////////////////////////////////////
-extern wchar_t TextList[50][100];
-extern int TextListColor[50];
-extern int TextBold[50];
-extern SIZE Size[50];
+// Lines of a tooltip's text: an ancient item lists its set's options and pieces too (was 50).
+constexpr int MAX_TEXT_LIST_LINES = 80;
+extern wchar_t TextList[MAX_TEXT_LIST_LINES][100];
+extern int TextListColor[MAX_TEXT_LIST_LINES];
+extern int TextBold[MAX_TEXT_LIST_LINES];
+extern SIZE Size[MAX_TEXT_LIST_LINES];
 
 ///////////////////////////////////////////////////////////////////////////////
 // party

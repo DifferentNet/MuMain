@@ -33,9 +33,9 @@ namespace mu::ui::window
 {
 	int& MouseY = ::MouseY;
 	int& g_iCancelSkillTarget = ::g_iCancelSkillTarget;
-	wchar_t (&TextList)[50][100] = ::TextList;
-	int (&TextListColor)[50] = ::TextListColor;
-	int (&TextBold)[50] = ::TextBold;
+	wchar_t (&TextList)[MAX_TEXT_LIST_LINES][100] = ::TextList;
+	int (&TextListColor)[MAX_TEXT_LIST_LINES] = ::TextListColor;
+	int (&TextBold)[MAX_TEXT_LIST_LINES] = ::TextBold;
 	int& TextNum = ::TextNum;
 	int& ItemHelp = ::ItemHelp;
 	JewelHarmonyInfo*& g_pUIJewelHarmonyinfo = ::g_pUIJewelHarmonyinfo;

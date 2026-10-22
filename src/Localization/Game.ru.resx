@@ -13088,4 +13088,7 @@
   <data name="DailyRewardsHint" xml:space="preserve">
     <value>Пропуск дня сбрасывает серию на день 1.</value>
   </data>
+  <data name="SetItemPieces" xml:space="preserve">
+    <value>Предметы сета: собрано %d из %d</value>
+  </data>
 </root>

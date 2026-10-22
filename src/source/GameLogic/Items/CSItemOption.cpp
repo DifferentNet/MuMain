@@ -29,9 +29,6 @@
 #include <string>
 #include <vector>
 
-extern	wchar_t TextList[50][100];
-extern	int  TextListColor[50];
-extern	int  TextBold[50];
 
 namespace
 {
@@ -1084,10 +1081,98 @@ int CSItemOption::RenderSetOptionListInItem(const ITEM* ip, int TextNum, bool bI
         TNum = RenderSetOptionList(set, TNum, bIsEquippedItem, true);
     }
 
+    TNum = RenderSetPieceList(m_bySelectedItemOption, TNum);
+
     mu_swprintf(TextList[TNum], L"\n"); TNum++;
     mu_swprintf(TextList[TNum], L"\n"); TNum++;
 
     return TNum;
+}
+
+namespace
+{
+// Whether the character has the piece of a set: an item of the type with the set's ancient type (A or B),
+// worn or in the inventory.
+bool HasSetPiece(const int type, const int ancientDiscriminator)
+{
+    const auto isPiece = [type, ancientDiscriminator](const ITEM* item)
+    {
+        return item != nullptr && item->Type == type && item->AncientDiscriminator == ancientDiscriminator;
+    };
+
+    if (CharacterMachine != nullptr)
+    {
+        for (int i = 0; i < MAX_EQUIPMENT_INDEX; ++i)
+        {
+            if (isPiece(&CharacterMachine->Equipment[i]))
+            {
+                return true;
+            }
+        }
+    }
+
+    if (g_pMyInventory != nullptr)
+    {
+        if (auto* inventory = g_pMyInventory->GetInventoryCtrl())
+        {
+            const auto count = static_cast<int>(inventory->GetNumberOfItems());
+            for (int i = 0; i < count; ++i)
+            {
+                if (isPiece(inventory->GetItem(i)))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+} // namespace
+
+int CSItemOption::RenderSetPieceList(const std::uint8_t setNumber, int textIndex) const
+{
+    struct Piece
+    {
+        int type;
+        bool owned;
+    };
+
+    std::vector<Piece> pieces;
+    for (int type = 0; type < MAX_ITEM; ++type)
+    {
+        const auto& setType = m_ItemSetType[type];
+        for (int k = 0; k < MAX_ITEM_SETS_PER_ITEM; ++k)
+        {
+            if (setType.byOption[k] == setNumber)
+            {
+                pieces.push_back({ type, HasSetPiece(type, k + 1) });
+                break;
+            }
+        }
+    }
+
+    // The header, the pieces and the closing lines of the tooltip must fit the text list.
+    if (pieces.empty() || textIndex + static_cast<int>(pieces.size()) + 4 > MAX_TEXT_LIST_LINES)
+    {
+        return textIndex;
+    }
+
+    const auto owned = std::count_if(pieces.begin(), pieces.end(), [](const Piece& piece) { return piece.owned; });
+    mu_swprintf(TextList[textIndex], I18N::Game::SetItemPieces, static_cast<int>(owned), static_cast<int>(pieces.size()));
+    TextListColor[textIndex] = TEXT_COLOR_YELLOW;
+    TextBold[textIndex] = false;
+    textIndex++;
+
+    for (const auto& piece : pieces)
+    {
+        mu_swprintf(TextList[textIndex], L"%ls", ItemAttribute[piece.type].Name);
+        TextListColor[textIndex] = piece.owned ? TEXT_COLOR_GREEN : TEXT_COLOR_GRAY;
+        TextBold[textIndex] = false;
+        textIndex++;
+    }
+
+    return textIndex;
 }
 
 std::uint8_t  CSItemOption::RenderSetOptionList(const SET_SEARCH_RESULT_OPT& set, std::uint8_t textIndex, bool bIsEquippedItem, bool bShowInactive)

@@ -115,6 +115,9 @@ private:
 
     static bool getExplainText(wchar_t* text, std::uint8_t option, int value);
     static std::uint8_t RenderSetOptionList(const SET_SEARCH_RESULT_OPT& set, std::uint8_t textIndex, bool bIsEquippedItem, bool bShowInactive);
+    // Lists the pieces of a set under its options: green the ones the character has (worn or in the inventory),
+    // grey the ones still to collect. Returns the next text line.
+    int     RenderSetPieceList(std::uint8_t setNumber, int textIndex) const;
 
     bool	OpenItemSetType(const wchar_t* filename);
     bool	OpenItemSetOption(const wchar_t* filename);
