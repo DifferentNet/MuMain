@@ -72,10 +72,13 @@ WebConnection* Find(std::int32_t handle)
     return it != g_connections.end() ? it->second.get() : nullptr;
 }
 
-// The page's WebSocket bridge: /ws/<port> on the server that served the page (ws or wss like it).
+// The page's WebSocket bridge: ws/<port> beside the page on the server that served it (ws or wss
+// like it), so the game also runs from a folder: https://skynet-mu.net/play/ uses /play/ws/<port>.
 EM_JS(char*, MuWeb_BridgeBaseUrl, (), {
     const scheme = location.protocol === "https:" ? "wss:" : "ws:";
-    return stringToNewUTF8(scheme + "//" + location.host + "/ws/");
+    const path = location.pathname;
+    const folder = path.substring(0, path.lastIndexOf("/") + 1);
+    return stringToNewUTF8(scheme + "//" + location.host + folder + "ws/");
 });
 
 void ReportDisconnected(std::int32_t handle, WebConnection* connection)

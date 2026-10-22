@@ -115,6 +115,16 @@
     statusEl.appendChild(box);
     console.error("The game stopped:", error);
   }
+  // Leaving the page can keep it frozen in Chrome's back/forward cache with its sockets open, and
+  // the browser still answers the bridge's pings, so the character stayed "already connected"
+  // until OpenMU's own timeout. Close them when the page goes, and start over if it comes back.
+  addEventListener("pagehide", () => {
+    for (const socket of openSockets) {
+      try { socket.close(1000, "page closed"); } catch (e) {}
+    }
+  });
+  addEventListener("pageshow", (event) => { if (event.persisted) location.reload(); });
+
   const isGameError = (error) => error instanceof WebAssembly.RuntimeError || /Main\.wasm/.test(String(error && error.stack));
   addEventListener("error", (event) => { if (isGameError(event.error)) gameCrashed(event.error); });
   addEventListener("unhandledrejection", (event) => { if (isGameError(event.reason)) gameCrashed(event.reason); });

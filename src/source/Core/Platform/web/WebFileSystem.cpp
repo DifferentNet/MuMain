@@ -32,6 +32,16 @@ constexpr unsigned ChunkSize = 1u << 20;
 // 0 while the mount is being set up, 1 when it is ready, -1 when it failed.
 std::atomic<int> g_mountState{0};
 
+// The folder the page came from, as an absolute URL without the last slash. Emscripten's fetch
+// backend resolves a relative base against the site's root, so with "." a page at
+// https://skynet-mu.net/play/ fetched its files from /Data/... instead of /play/Data/...
+std::string g_pageFolderUrl;
+
+EM_JS(char*, MuWeb_PageFolderUrl, (), {
+    const folder = new URL(".", location.href).href;
+    return stringToNewUTF8(folder.endsWith("/") ? folder.slice(0, -1) : folder);
+});
+
 // The page starts downloading the startup pack as it loads (index.html: Module.muStartupPack, a
 // promise of {files: [[path, size], ...], bytes}); this waits for it and writes its files into /game.
 // Returns how many it wrote, 0 without a pack.
@@ -79,7 +89,7 @@ void MakeParentFolders(const std::string& path, std::set<std::string>& made)
 }
 
 // A file created inside the fetch mount downloads from "<base URL>/<its path under the mount>";
-// with the base "." that's a URL relative to the page, so the files sit beside Main.js.
+// the base is the page's folder (g_pageFolderUrl), so the files sit beside Main.js.
 bool CreateOnServer(const std::string& relativePath)
 {
     const std::string full = std::string(ServerDir) + "/" + relativePath;
@@ -131,7 +141,7 @@ bool WriteWholeFile(const std::string& path, const std::string& content)
 // Runs on a worker thread: WasmFS can't create a fetch backend on the browser's main thread.
 void SetUpMount()
 {
-    backend_t fetch = wasmfs_create_fetch_backend(".", ChunkSize);
+    backend_t fetch = wasmfs_create_fetch_backend(g_pageFolderUrl.c_str(), ChunkSize);
     std::string list;
     if (!fetch || wasmfs_create_directory(ServerDir, 0777, fetch) != 0 || !CreateOnServer("files.txt")
         || !ReadWholeFile(std::string(ServerDir) + "/files.txt", list))
@@ -244,6 +254,11 @@ bool mu::web::MountGameFiles()
     {
         std::printf("Web file system: %d files from the startup pack\n", packed);
     }
+
+    // Asked here, on the page's thread: a worker's location is its script's.
+    char* pageFolder = MuWeb_PageFolderUrl();
+    g_pageFolderUrl = pageFolder;
+    std::free(pageFolder);
 
     std::thread worker(SetUpMount);
     while (g_mountState.load() == 0)
