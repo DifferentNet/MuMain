@@ -61,6 +61,21 @@ RmlUi's blur shaders use array varyings naga rejects; `rmlui-wgsl/` holds hand-w
 - A window without area (a hidden page laid out at 0x0) skips frames instead of creating 0x0
   textures, and `WaitAndAcquireSwapchainTexture` no longer waits forever for one.
 - A key event claims keyboard focus when SDL lost it, or typed text was dropped.
+- Fences (Enhanced graphics crashed or froze the tab, 2026-10-22; found with AddressSanitizer, see below):
+  - `SubmitAndAcquireFence` read the queue from the command buffer that Submit had just freed.
+  - `GenerateMipmaps` freed its temporary texture while the command buffer still tracked it.
+  - The work-done callback wrote through the fence pointer it kept, after the fence could be freed. It does nothing now: `QueryFence` takes the state from WaitAny's `completed` flag.
+  - A frame's fence is registered after its submit, so it can't signal early.
+  - `WaitForGPUIdle` uses a fence of its own instead of one re-registered on every submit, which left registrations pending forever.
+  - Waiting for several fences counts each one once.
+
+The game itself builds all mip chains on the CPU in the browser (`GlobalBitmapLoad.cpp` `PlanMipLevels`). With the GPU path the heap still got corrupted where AddressSanitizer couldn't see it; Emscripten's WebGPU port isn't instrumented.
+
+To check memory safety, build a second tree with AddressSanitizer: `-fsanitize=address` in the C, C++ and linker flags, plus `-sINITIAL_MEMORY=1GB` for the linker, in its own build folder. Then serve it with `serve-web.py --root <its src folder> --port 8091`. It runs many times slower, but reports the first bad access with the stacks of the allocation and the free.
+
+## When the game fails in the browser
+
+`index.html` catches a WebAssembly error, shows "The game stopped" with Reload and "Reset settings and reload", and stops calling into the game. A failure can leave a lock taken, and the next call from the page (saving settings, a key, a network message) would wait for it forever and freeze the tab. `?reset` clears the settings saved in the browser.
 
 The game also sets `SDL_PROP_GPU_DEVICE_CREATE_WEBGPU_PSEUDOMAP_BUFFERS_SMALLER_THAN_N_MB` to 256 MB
 (the backend reads it in bytes), so its 64 MB vertex stream is written through the queue instead of

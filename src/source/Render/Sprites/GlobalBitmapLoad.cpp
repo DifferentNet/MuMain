@@ -223,11 +223,17 @@ MipLevels PlanMipLevels(bool mipmapped, const std::uint8_t* rgba, int width, int
     {
         return {};
     }
+#ifdef __EMSCRIPTEN__
+    // Browser build: the CPU builds every chain. The WebGPU backend's GPU mipmap generation
+    // corrupted memory when Enhanced graphics switched on (2026-10-22).
+    return {BuildBitmapMipChain(rgba, width, height, hasAlpha, seconds), false};
+#else
     if (!hasAlpha)
     {
         return {{}, true};
     }
     return {BuildBitmapMipChain(rgba, width, height, true, seconds), false};
+#endif
 }
 
 // GPU bytes of a bitmap's RGBA8 texture, all of its mip levels included.

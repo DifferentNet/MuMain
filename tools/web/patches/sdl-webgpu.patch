@@ -1,5 +1,5 @@
 diff --git a/src/gpu/webgpu/SDL_gpu_webgpu.c b/src/gpu/webgpu/SDL_gpu_webgpu.c
-index cd585cca2..0f1363e9a 100644
+index cd585cca2..25afb94dc 100644
 --- a/src/gpu/webgpu/SDL_gpu_webgpu.c
 +++ b/src/gpu/webgpu/SDL_gpu_webgpu.c
 @@ -14,8 +14,11 @@
@@ -85,7 +85,94 @@ index cd585cca2..0f1363e9a 100644
  };
  
  // FIXME: This has a really bad name.
-@@ -3277,6 +3331,14 @@ static void WEBGPU_INTERNAL_ConfigureSurfaceIfNeeded(WebGPURenderer *renderer, W
+@@ -1377,9 +1431,15 @@ typedef struct WebGPUCommandBuffer
+ static void
+ WEBGPU_INTERNAL_FenceCallback(WGPUQueueWorkDoneStatus status, WGPUStringView message, void *fence, void *unused)
+ {
+-    if (fence != NULL) {
+-        SDL_SetAtomicInt(&((WebGPUFence *)fence)->status, 1);
+-    }
++    // Deliberately doesn't touch the fence. WaitAny sets the waited future's `completed` flag, which
++    // WEBGPU_INTERNAL_QueryFence copies into the fence's status. Writing the status here went through
++    // the pointer the event kept since registration: a fence freed and reused by then (queueDoneFence
++    // is re-registered on every submit, and released fences don't cancel their events) took the
++    // write, and switching to Enhanced graphics in MU died in here with an unaligned access.
++    (void)status;
++    (void)message;
++    (void)fence;
++    (void)unused;
+ }
+ 
+ static void
+@@ -1876,21 +1936,6 @@ static WebGPUFence *WEBGPU_INTERNAL_CreateFenceFromFuture(WGPUFuture future)
+     return fence;
+ }
+ 
+-static void WEBGPU_INTERNAL_ReregisterFence(WGPUQueue queue, WebGPUFence *fence)
+-{
+-    if (fence == NULL) {
+-        return;
+-    }
+-
+-    SDL_SetAtomicInt(&fence->status, 0);
+-    fence->future.future = wgpuQueueOnSubmittedWorkDone(queue, (WGPUQueueWorkDoneCallbackInfo){
+-                                                                   .callback = WEBGPU_INTERNAL_FenceCallback,
+-                                                                   .mode = WGPUCallbackMode_WaitAnyOnly,
+-                                                                   .nextInChain = NULL,
+-                                                                   .userdata1 = fence,
+-                                                                   .userdata2 = NULL,
+-                                                               });
+-}
+ 
+ static bool WEBGPU_INTERNAL_QueryFence(WebGPURenderer *renderer, WebGPUFence *fence)
+ {
+@@ -1917,18 +1962,23 @@ static bool WEBGPU_QueryFence(SDL_GPURenderer *device, SDL_GPUFence *fence)
+ 
+ static bool WEBGPU_INTERNAL_WaitForFences(WebGPURenderer *renderer, bool waitAll, WebGPUFence *const *fences, Uint32 num_fences)
+ {
+-    Uint32 triggeredFenceCount = 0;
+     Uint32 triggeredFenceThreshold = waitAll ? num_fences : 1;
+ 
+-    while (triggeredFenceCount < triggeredFenceThreshold) {
+-        for (int i = 0; i < num_fences; i++) {
++    for (;;) {
++        // Counted afresh on each pass: counting across passes took a fence that had signalled
++        // several times, so waiting for all could return while some were still pending.
++        Uint32 triggeredFenceCount = 0;
++        for (Uint32 i = 0; i < num_fences; i++) {
+             if (WEBGPU_INTERNAL_QueryFence(renderer, fences[i])) {
+                 triggeredFenceCount++;
+             }
+-
+-            // Spin to appease Emscripten.
+-            WEBGPU_INTERNAL_Spin();
+         }
++        if (triggeredFenceCount >= triggeredFenceThreshold) {
++            break;
++        }
++
++        // Spin to appease Emscripten.
++        WEBGPU_INTERNAL_Spin();
+     }
+ 
+     // TODO: Timeout functionality?
+@@ -1942,7 +1992,14 @@ static bool WEBGPU_WaitForFences(SDL_GPURenderer *device, bool waitAll, SDL_GPUF
+ 
+ static bool WEBGPU_Wait(SDL_GPURenderer *driverData)
+ {
+-    return WEBGPU_WaitForFences(driverData, true, (SDL_GPUFence **)&((WebGPURenderer *)driverData)->queueDoneFence, 1);
++    WebGPURenderer *renderer = (WebGPURenderer *)driverData;
++
++    // A fence registered now covers everything submitted so far. (Submit used to re-register one
++    // shared fence each time, which left every earlier registration pending for good.)
++    WebGPUFence *fence = WEBGPU_INTERNAL_CreateFence(renderer->queue);
++    const bool result = WEBGPU_INTERNAL_WaitForFences(renderer, true, &fence, 1);
++    SDL_free(fence); // its event completed in the wait
++    return result;
+ }
+ 
+ static inline size_t WEBGPU_INTERNAL_GetTokenBindGroup(const char *token)
+@@ -3277,6 +3334,14 @@ static void WEBGPU_INTERNAL_ConfigureSurfaceIfNeeded(WebGPURenderer *renderer, W
          return;
      }
  
@@ -100,7 +187,7 @@ index cd585cca2..0f1363e9a 100644
      wgpuSurfaceConfigure(windowData->surface, &config);
      windowData->surfaceWidth = config.width;
      windowData->surfaceHeight = config.height;
-@@ -3311,6 +3373,65 @@ static bool WEBGPU_ClaimWindow(SDL_GPURenderer *renderer, SDL_Window *window)
+@@ -3311,6 +3376,65 @@ static bool WEBGPU_ClaimWindow(SDL_GPURenderer *renderer, SDL_Window *window)
      return true;
  }
  
@@ -166,7 +253,7 @@ index cd585cca2..0f1363e9a 100644
  static bool WEBGPU_AcquireSwapchainTexture(SDL_GPUCommandBuffer *commandBuffer, SDL_Window *window, SDL_GPUTexture **swapchainTexture, Uint32 *width, Uint32 *height)
  {
      WebGPUCommandBuffer *cmdBuf = (WebGPUCommandBuffer *)commandBuffer;
-@@ -3345,7 +3466,24 @@ static bool WEBGPU_AcquireSwapchainTexture(SDL_GPUCommandBuffer *commandBuffer,
+@@ -3345,7 +3469,24 @@ static bool WEBGPU_AcquireSwapchainTexture(SDL_GPUCommandBuffer *commandBuffer,
      }
  
      WEBGPU_INTERNAL_ConfigureSurfaceIfNeeded(cmdBuf->renderer, windowData);
@@ -191,7 +278,18 @@ index cd585cca2..0f1363e9a 100644
  
      switch (surfaceTexture.status) {
      case WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal:
-@@ -4319,18 +4457,28 @@ static void WEBGPU_UploadToBuffer(SDL_GPUCommandBuffer *copyPass, const SDL_GPUT
+@@ -4094,7 +4235,9 @@ static void WEBGPU_GenerateMipmaps(SDL_GPUCommandBuffer *commandBuffer, SDL_GPUT
+         }
+     }
+ 
+-    WEBGPU_INTERNAL_ReleaseTextureContainer(cmdBuf->renderer, (WebGPUTextureContainer *)renderTexture);
++    // Released once the command buffer is done with it: it is tracked as used, and freeing it here
++    // (found with AddressSanitizer) left the command buffer's cleanup writing to freed memory.
++    WEBGPU_INTERNAL_QueueTextureContainerForRelease(cmdBuf->renderer, (WebGPUTextureContainer *)renderTexture);
+ }
+ 
+ static SDL_GPUBuffer *WEBGPU_CreateBuffer(
+@@ -4319,18 +4462,28 @@ static void WEBGPU_UploadToBuffer(SDL_GPUCommandBuffer *copyPass, const SDL_GPUT
  }
  
  // This'll eventually become a public function, but until PR #16249 is merged it'll be internal.
@@ -202,7 +300,7 @@ index cd585cca2..0f1363e9a 100644
  {
      WebGPUCommandBuffer *cmdBuf = (WebGPUCommandBuffer *)copyPass;
      WGPUTexelCopyBufferInfo sourceInfo = {};
-+    WGPUTextureFormat format = ((WebGPUTextureContainer *)destination->texture)->activeTexture->format;
++    SDL_GPUTextureFormat format = ((WebGPUTextureContainer *)destination->texture)->activeTexture->format;
  
      // This should be NULL unless the user didn't pad their data correctly.
      WebGPUBufferContainer *interimBuffer = NULL;
@@ -225,7 +323,7 @@ index cd585cca2..0f1363e9a 100644
  
      if (cycle) {
          WEBGPU_INTERNAL_CycleTextureContainer(cmdBuf->renderer, (WebGPUTextureContainer *)destination->texture);
-@@ -4344,19 +4492,20 @@ static void WEBGPU_INTERNAL_CopyBufferToTexture(SDL_GPUCommandBuffer *copyPass,
+@@ -4344,19 +4497,20 @@ static void WEBGPU_INTERNAL_CopyBufferToTexture(SDL_GPUCommandBuffer *copyPass,
          }
  
          wgpuQueueWriteBuffer(cmdBuf->queue, sourceBuffer->activeBuffer->buffer, source->offset,
@@ -250,7 +348,7 @@ index cd585cca2..0f1363e9a 100644
          // BytesPerRow isn't a multiple of 256! This is a Bad Thing!
          // WebGPU inherits D3D12's horrible 256-byte alignment requirement for BPR, so we'll need to do something about this.
          // To do this, we'll create an interim buffer which'll be 256-byte aligned, and then we'll issue some GPU copies to
-@@ -4366,20 +4515,23 @@ static void WEBGPU_INTERNAL_CopyBufferToTexture(SDL_GPUCommandBuffer *copyPass,
+@@ -4366,20 +4520,23 @@ static void WEBGPU_INTERNAL_CopyBufferToTexture(SDL_GPUCommandBuffer *copyPass,
  
          // HACK: We need to add blockWidth since for some reason 1x1 texture uploads require 260 bytes of data
          // despite WebGPU's very strong insistance on 256-byte alignment? Am I tweaking?
@@ -279,7 +377,7 @@ index cd585cca2..0f1363e9a 100644
                  .offset = 0,
              },
          };
-@@ -4417,6 +4569,7 @@ static void WEBGPU_UploadToTexture(SDL_GPUCommandBuffer *copyPass, const SDL_GPU
+@@ -4417,6 +4574,7 @@ static void WEBGPU_UploadToTexture(SDL_GPUCommandBuffer *copyPass, const SDL_GPU
                                              .buffer = (SDL_GPUBuffer *)source->transfer_buffer,
                                              .offset = source->offset,
                                          },
@@ -287,7 +385,7 @@ index cd585cca2..0f1363e9a 100644
                                          destination, cycle);
  }
  
-@@ -4633,9 +4786,13 @@ static void WEBGPU_SetScissor(SDL_GPUCommandBuffer *commandBuffer, const SDL_Rec
+@@ -4633,9 +4791,13 @@ static void WEBGPU_SetScissor(SDL_GPUCommandBuffer *commandBuffer, const SDL_Rec
  
  static bool WEBGPU_WaitAndAcquireSwapchainTexture(SDL_GPUCommandBuffer *command_buffer, SDL_Window *window, SDL_GPUTexture **swapchain_texture, Uint32 *swapchain_texture_width, Uint32 *swapchain_texture_height)
  {
@@ -302,7 +400,7 @@ index cd585cca2..0f1363e9a 100644
          WEBGPU_INTERNAL_Spin();
  
          result = WEBGPU_AcquireSwapchainTexture(command_buffer, window, swapchain_texture, swapchain_texture_width, swapchain_texture_height);
-@@ -5186,6 +5343,14 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
+@@ -5186,6 +5348,14 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
  
      WEBGPU_INTERNAL_UploadQueuedUniformData(wrapper);
  
@@ -317,7 +415,31 @@ index cd585cca2..0f1363e9a 100644
  #ifdef _MSC_VER
      WGPUCommandBuffer cmdBuf = wgpuCommandEncoderFinish((((WebGPUCommandBuffer *)commandBuffer)->encoder), &(WGPUCommandBufferDescriptor)WGPU_COMMAND_BUFFER_DESCRIPTOR_INIT);
  #else
-@@ -5218,6 +5383,14 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
+@@ -5197,13 +5367,11 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
+         return false;
+     }
+ 
+-    if (wrapper->renderer->queueDoneFence != NULL) {
+-        // Reregister the fence
+-        WEBGPU_INTERNAL_ReregisterFence(wrapper->queue, wrapper->renderer->queueDoneFence);
+-    } else {
+-        wrapper->renderer->queueDoneFence = WEBGPU_INTERNAL_CreateFence(wrapper->queue);
+-    }
++    wgpuQueueSubmit(wrapper->queue, 1, &cmdBuf);
+ 
++    // The fence comes after the submit: onSubmittedWorkDone covers the work submitted before it, so
++    // a fence registered first signalled before this command buffer had run. (WEBGPU_Wait makes
++    // its own fence now, instead of one re-registered here.)
+     wrapper->submitted.fence = WEBGPU_INTERNAL_CreateFence(wrapper->queue);
+ 
+     submitted = SDL_calloc(1, sizeof(*submitted));
+@@ -5212,12 +5380,18 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
+     WEBGPU_INTERNAL_InsertElementIntoArray(wrapper->renderer->submittedCommandBuffers, wrapper->renderer->submittedCommandBufferCapacity,
+                                            wrapper->renderer->submittedCommandBufferCount, WebGPUSubmittedCommandBuffer *, submitted);
+ 
+-    wgpuQueueSubmit(wrapper->queue, 1, &cmdBuf);
+-
+ #ifndef __EMSCRIPTEN__
      for (int i = 0; i < wrapper->surfaceCount; i++) {
          wgpuSurfacePresent(wrapper->surfaces[i]);
      }
@@ -332,7 +454,23 @@ index cd585cca2..0f1363e9a 100644
  #endif
      for (int i = 0; i < wrapper->swapchainTextureCount; i++) {
          WebGPUTextureContainer *container = wrapper->acquiredSwapchainTextures[i];
-@@ -5302,6 +5475,12 @@ static void WEBGPU_ReleaseWindow(SDL_GPURenderer *driverData, SDL_Window *window
+@@ -5248,9 +5422,14 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
+ 
+ static SDL_GPUFence *WEBGPU_SubmitAndAcquireFence(SDL_GPUCommandBuffer *commandBuffer)
+ {
++    // Submit frees the command buffer, so the queue is read before it. Reading it afterwards (found
++    // with AddressSanitizer) mostly still found the old value, but once the memory was reused, as
++    // with MU's Enhanced graphics, the fence was made on a garbage queue and memory got corrupted.
++    WGPUQueue queue = ((WebGPUCommandBuffer *)commandBuffer)->queue;
++
+     WEBGPU_Submit(commandBuffer);
+ 
+-    return (SDL_GPUFence *)WEBGPU_INTERNAL_CreateFence(((WebGPUCommandBuffer *)commandBuffer)->queue);
++    return (SDL_GPUFence *)WEBGPU_INTERNAL_CreateFence(queue);
+ }
+ 
+ static void WEBGPU_DestroyDevice(SDL_GPUDevice *device)
+@@ -5302,6 +5481,12 @@ static void WEBGPU_ReleaseWindow(SDL_GPURenderer *driverData, SDL_Window *window
          return;
      }
  
@@ -345,7 +483,7 @@ index cd585cca2..0f1363e9a 100644
      // FIXME: This should be done in the video subsystem!
      wgpuSurfaceUnconfigure(windowData->surface);
      wgpuSurfaceRelease(windowData->surface);
-@@ -5392,18 +5571,24 @@ static bool WEBGPU_SupportsSwapchainComposition(SDL_GPURenderer *driverData, SDL
+@@ -5392,18 +5577,24 @@ static bool WEBGPU_SupportsSwapchainComposition(SDL_GPURenderer *driverData, SDL
          return false;
      }
  
@@ -380,7 +518,7 @@ index cd585cca2..0f1363e9a 100644
      }
  
      wgpuSurfaceCapabilitiesFreeMembers(caps);
-@@ -5570,9 +5755,28 @@ static bool WEBGPU_WaitForSwapchain(SDL_GPURenderer *driverData, SDL_Window *win
+@@ -5570,9 +5761,28 @@ static bool WEBGPU_WaitForSwapchain(SDL_GPURenderer *driverData, SDL_Window *win
      return true;
  }
  

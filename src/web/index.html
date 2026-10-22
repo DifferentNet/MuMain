@@ -68,10 +68,66 @@
   new ResizeObserver(fitCanvas).observe(stage);
   new MutationObserver(fitCanvas).observe(canvas, { attributes: true, attributeFilter: ["width", "height", "style"] });
 
+  // When the game's code fails (a WebAssembly error), say so and stop calling into it. The failure
+  // can leave a lock taken (inside malloc, say), and the next call from the page (saving settings,
+  // a key, a network message) would wait for it forever and freeze the tab.
+  let crashed = false;
+  const openSockets = new Set();
+  const PageWebSocket = WebSocket;
+  window.WebSocket = class extends PageWebSocket {
+    constructor(...args) {
+      super(...args);
+      openSockets.add(this);
+      this.addEventListener("close", () => openSockets.delete(this));
+    }
+  };
+  const blockAfterCrash = (event) => { if (crashed) event.stopImmediatePropagation(); };
+  for (const type of ["keydown", "keyup", "keypress", "mousedown", "mouseup", "mousemove", "wheel", "pointerdown",
+                      "pointerup", "pointermove", "touchstart", "touchend", "touchmove", "focus", "blur", "resize",
+                      "visibilitychange", "contextmenu"]) {
+    window.addEventListener(type, blockAfterCrash, true);
+  }
+  function gameCrashed(error) {
+    if (crashed) return;
+    crashed = true;
+    for (const socket of openSockets) {
+      socket.onmessage = socket.onclose = socket.onerror = null;
+      try { socket.close(); } catch (e) {}
+    }
+    statusEl.hidden = false;
+    statusEl.classList.add("bad");
+    statusEl.style.pointerEvents = "auto";
+    statusEl.style.background = "rgba(13,14,18,.92)";
+    statusEl.innerHTML = "";
+    const box = document.createElement("div");
+    box.innerHTML = "<p>The game stopped because of an error.</p><p></p>";
+    box.lastChild.textContent = String(error && error.message || error).slice(0, 300);
+    const reload = document.createElement("button");
+    reload.textContent = "Reload";
+    reload.onclick = () => location.reload();
+    const reset = document.createElement("button");
+    reset.textContent = "Reset settings and reload";
+    reset.onclick = () => { location.search = "?reset"; };
+    for (const button of [reload, reset]) {
+      button.style.cssText = "font: inherit; margin: .25rem; padding: .3rem .8rem; cursor: pointer;";
+      box.appendChild(button);
+    }
+    statusEl.appendChild(box);
+    console.error("The game stopped:", error);
+  }
+  const isGameError = (error) => error instanceof WebAssembly.RuntimeError || /Main\.wasm/.test(String(error && error.stack));
+  addEventListener("error", (event) => { if (isGameError(event.error)) gameCrashed(event.error); });
+  addEventListener("unhandledrejection", (event) => { if (isGameError(event.reason)) gameCrashed(event.reason); });
+
   // config.ini (resolution, volume, the remembered user name ...) lives in the page's memory; keep
   // a copy in the browser so the next visit starts with it (WebFileSystem.cpp merges it back).
+  // index.html?reset forgets it, for a setting that keeps the game from starting.
+  if (new URLSearchParams(location.search).has("reset")) {
+    try { localStorage.removeItem("mu-web/config.ini"); } catch (e) {}
+  }
   let savedConfig = null;
   function saveConfig() {
+    if (crashed) return;
     try {
       const text = new TextDecoder().decode(Module.FS.readFile("/game/config.ini"));
       if (text && text !== savedConfig) {
@@ -167,7 +223,7 @@
         setInterval(saveConfig, 3000);
         addEventListener("pagehide", saveConfig);
       },
-      onAbort: (what) => { setStatus("The game stopped: " + what, true); logEl.hidden = false; },
+      onAbort: (what) => gameCrashed(what),
     };
     const script = document.createElement("script");
     script.src = "Main.js";
