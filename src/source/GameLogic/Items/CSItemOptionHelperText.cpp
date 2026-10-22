@@ -55,7 +55,7 @@ int CSItemOption::BuildOptionHelperTextList()
 
     for (int o = 0; o < MAX_ITEM_SET_EXT_OPTION_COUNT; ++o)
     {
-        if (getExplainText(TextList[TextNum], setOption.byExtOption[o], setOption.byExtOption[o]))
+        if (getExplainText(TextList[TextNum], setOption.byExtOption[o], setOption.byExtOptionValue[o]))
         {
             TextListColor[TextNum] = TEXT_COLOR_GREEN;
             TextBold[TextNum] = false;
@@ -65,7 +65,7 @@ int CSItemOption::BuildOptionHelperTextList()
 
     for (int o = 0; o < MAX_ITEM_SET_FULL_OPTION_COUNT; ++o)
     {
-        if (getExplainText(TextList[TextNum], setOption.byFullOption[o], setOption.byFullOption[o]))
+        if (getExplainText(TextList[TextNum], setOption.byFullOption[o], setOption.byFullOptionValue[o]))
         {
             TextListColor[TextNum] = TEXT_COLOR_YELLOW;
             TextBold[TextNum] = false;

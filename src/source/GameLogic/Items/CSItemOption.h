@@ -13,6 +13,10 @@ typedef struct tagITEM ITEM;
 
 constexpr std::uint8_t MAX_SET_OPTION = 64; // Maximum number of possible ancient sets
 constexpr std::uint8_t MASTERY_OPTION = 24; // A mastery option increases a specific skill
+constexpr std::uint8_t LAST_MASTERY_OPTION = MASTERY_OPTION + 11; // ...up to the water mastery
+// Not in Webzen's data: "Increase physical damage +n %" (the server's Physical Base Damage Increase), used by the
+// sets of MU Moldova's scripts/ancient-options.py.
+constexpr std::uint8_t SET_OPTION_PHYSICAL_DAMAGE_PERCENT = 40;
 
 // Each item can be part of up to 2 ancient sets. The following are their identifier.
 constexpr std::uint8_t EXT_A_SET_OPTION = 1;
@@ -49,18 +53,19 @@ struct ITEM_SET_OPTION
 
     // The following arrays are used to store the standard options of the ancient sets.
     // There is typically one option less than the number of items in the set.
-    // These 2-element-arrays are somehow strange. Only the first element is actually used, I found no use case for the second one.
-    // Theoretically Webzen planned to have 2 options per item, but never implemented it.
+    // Webzen's sets use only the first of the two options of a tier; MU Moldova's sets use both (two bonuses for the
+    // same number of pieces worn). The values are 16 bits: version 2 of the file (OpenItemSetOption) holds up to
+    // 65535, Webzen's version 1 one byte.
     std::array<std::array<std::uint8_t, MAX_ITEM_SET_STANDARD_OPTION_PER_ITEM_COUNT>, MAX_ITEM_SET_STANDARD_OPTION_COUNT> byStandardOption{};
-    std::array<std::array<std::uint8_t, MAX_ITEM_SET_STANDARD_OPTION_PER_ITEM_COUNT>, MAX_ITEM_SET_STANDARD_OPTION_COUNT> byStandardOptionValue{};
+    std::array<std::array<std::uint16_t, MAX_ITEM_SET_STANDARD_OPTION_PER_ITEM_COUNT>, MAX_ITEM_SET_STANDARD_OPTION_COUNT> byStandardOptionValue{};
 
     // There are up to 2 ext options which always apply when there are at least two items of a set equipped.
     // Found no set which uses an ExtOption.
     std::array<std::uint8_t, MAX_ITEM_SET_EXT_OPTION_COUNT> byExtOption{};
-    std::array<std::uint8_t, MAX_ITEM_SET_EXT_OPTION_COUNT> byExtOptionValue{};
+    std::array<std::uint16_t, MAX_ITEM_SET_EXT_OPTION_COUNT> byExtOptionValue{};
 
     std::array<std::uint8_t, MAX_ITEM_SET_FULL_OPTION_COUNT> byFullOption{};
-    std::array<std::uint8_t, MAX_ITEM_SET_FULL_OPTION_COUNT> byFullOptionValue{};
+    std::array<std::uint16_t, MAX_ITEM_SET_FULL_OPTION_COUNT> byFullOptionValue{};
     std::array<std::uint8_t, MAX_CLASS> byRequireClass{};
 };
 
@@ -118,6 +123,9 @@ private:
     // Lists the pieces of a set under its options: green the ones the character has (worn or in the inventory),
     // grey the ones still to collect. Returns the next text line.
     int     RenderSetPieceList(std::uint8_t setNumber, int textIndex) const;
+    // "Power of the Ancients" (the server's PowerOfTheAncientsPlugIn): the bonus a full ancient set gives the
+    // character's class with its weapon, gold while it applies, grey otherwise. Returns the next text line.
+    static int RenderPowerOfTheAncients(int textIndex);
 
     bool	OpenItemSetType(const wchar_t* filename);
     bool	OpenItemSetOption(const wchar_t* filename);
