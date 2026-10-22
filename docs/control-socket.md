@@ -87,14 +87,15 @@ Error codes: `bad_request`, `unknown_command`, `wrong_scene`, `busy`,
 | `move` (`x`, `y`) | walk there with the client's own path finder |
 | `warp` (`gate`) | use a warp-list entry by name |
 | `teleport` (`x`, `y`, `map`) | the game master's own move command; `map` is an index, the current map when omitted |
-| `attack` (`target`, `times`, `interval`) | plain attacks on an id or character name |
-| `skill` (`skill`, `target`) | cast a skill the character owns — with `target` it is aimed at that object, without one it is cast where the character stands |
+| `attack` (`target`, `times`, `interval`, `pace`, `duration`) | plain attacks on an id or character name; `pace` is the milliseconds between tries (default 250; 0 swings again as soon as the last animation ends, like the game's auto attack, for measuring attack speed on a server without its speed check), `duration` ends the act after that many milliseconds |
+| `skill` (`skill`, `target`, `times`, `pace`, `duration`) | cast a skill the character owns — with `target` it is aimed at that object, without one it is cast where the character stands; `times` casts (default 1), `pace` and `duration` as for `attack`; the answer counts the `casts` |
 | `pickup` (`item`) | walk to a drop and take it, by the id `nearby` reports for it |
 | `use` (`slot`), `equip` (`slot`, `target_slot`) | inventory actions |
 | `say` (`text`), `whisper` (`name`, `text`) | chat, including `/` commands |
 | `party` (`action`, `target`) | `invite`, `accept`, `decline`, `leave` |
 | `trade` (`action`, `target`) | `request` a trade with another player at most one tile away (`not_allowed` otherwise), or `cancel` the open one; the partner accepts with the Enter key, and items go in with `click-ui` |
 | `halt` | stop the walk or repeated attack in progress |
+| `pet` (`mode`, `target`) | the Dark Lord's raven command, as Shift+1..4 and a right click send it: `normal`, `random`, `owner` (attack the owner's targets) or `target` (with `target`) |
 
 `state` reports the scene and account on every screen, and in the world adds:
 character name, class, level, experience, zen, HP/mana/SD/AG with their
@@ -123,7 +124,7 @@ repairs instead of picking up.
 For the quests and their rewards: `class_name` (e.g. `Blade Knight`; `class`
 is the client's number, e.g. 1 Dark Knight, 8 Blade Knight, 12 Blade Master),
 `level_up_points`, `stats` (`strength`, `agility`, `vitality`, `energy`,
-`command`, without bonuses), `combo` (the Blade Knight's combo from Marlon),
+`command`, without bonuses), `speed` (`attack`, `magic` and the server's cap `max_attack`), `combo` (the Blade Knight's combo from Marlon),
 `quests` (the seven legacy quests with `index`, `name` and `state`:
 `active`, `complete`, `not_started`, `none`, or `unknown` for a value outside
 these, as in the `quest` events), and `npc_quest`, the quest

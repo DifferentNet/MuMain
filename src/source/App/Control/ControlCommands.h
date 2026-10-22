@@ -58,6 +58,7 @@ std::string Teleport(const Request& request, std::unique_ptr<Act>& act);
 std::string Attack(const Request& request, std::unique_ptr<Act>& act);
 std::string Skill(const Request& request, std::unique_ptr<Act>& act);
 std::string Pickup(const Request& request, std::unique_ptr<Act>& act);
+std::string Pet(const Request& request, std::unique_ptr<Act>& act);
 std::string UseItem(const Request& request, std::unique_ptr<Act>& act);
 std::string EquipItem(const Request& request, std::unique_ptr<Act>& act);
 std::string Say(const Request& request, std::unique_ptr<Act>& act);

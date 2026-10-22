@@ -252,8 +252,9 @@ private:
 class AttackAct : public Act
 {
 public:
-    AttackAct(int targetKey, int times, std::chrono::milliseconds interval)
-        : m_targetKey(targetKey), m_times(times), m_interval(interval)
+    AttackAct(int targetKey, int times, std::chrono::milliseconds interval, std::chrono::milliseconds pace,
+              std::chrono::milliseconds duration)
+        : m_targetKey(targetKey), m_times(times), m_interval(interval), m_pace(pace), m_duration(duration)
     {
     }
 
@@ -263,7 +264,7 @@ public:
     }
     [[nodiscard]] std::optional<std::chrono::milliseconds> Deadline() const override
     {
-        return AttackDeadline;
+        return std::max(AttackDeadline, m_duration + std::chrono::milliseconds(5000));
     }
 
     [[nodiscard]] std::string ProgressObject() const override
@@ -277,7 +278,14 @@ public:
 
     [[nodiscard]] Status Tick(std::string& response) override
     {
-        if (m_issued >= m_times)
+        if (m_start.time_since_epoch().count() == 0)
+        {
+            m_start = std::chrono::steady_clock::now();
+        }
+
+        // `duration` ends the act after that long, whatever `times` says.
+        const bool timeUp = m_duration.count() > 0 && std::chrono::steady_clock::now() - m_start >= m_duration;
+        if (m_issued >= m_times || timeUp)
         {
             json result;
             result["attacks"] = m_issued;
@@ -292,7 +300,7 @@ public:
             return Status::Running;
         }
 
-        if (WalkInProgress() || !StepIsDue(m_lastStep))
+        if (WalkInProgress() || !StepIsDue(m_lastStep, m_pace))
         {
             return Status::Running;
         }
@@ -355,7 +363,10 @@ private:
     int m_targetKey;
     int m_times;
     std::chrono::milliseconds m_interval;
+    std::chrono::milliseconds m_pace;
+    std::chrono::milliseconds m_duration;
     int m_issued = 0;
+    std::chrono::steady_clock::time_point m_start{};
     std::chrono::steady_clock::time_point m_lastAttack{};
     std::chrono::steady_clock::time_point m_lastStep{};
 };
@@ -364,8 +375,10 @@ private:
 class SkillAct : public Act
 {
 public:
-    SkillAct(ActionSkillType skill, bool targetRequired, int targetKey)
-        : m_skill(skill), m_targetRequired(targetRequired), m_targetKey(targetKey)
+    SkillAct(ActionSkillType skill, bool targetRequired, int targetKey, int times, std::chrono::milliseconds pace,
+             std::chrono::milliseconds duration)
+        : m_skill(skill), m_targetRequired(targetRequired), m_targetKey(targetKey), m_times(times), m_pace(pace),
+          m_duration(duration)
     {
     }
 
@@ -375,7 +388,7 @@ public:
     }
     [[nodiscard]] std::optional<std::chrono::milliseconds> Deadline() const override
     {
-        return SkillDeadline;
+        return std::max(SkillDeadline, m_duration + std::chrono::milliseconds(5000));
     }
 
     [[nodiscard]] std::string ProgressObject() const override
@@ -383,13 +396,31 @@ public:
         json progress;
         progress["skill"] = static_cast<int>(m_skill);
         progress["target"] = m_targetKey;
+        progress["casts"] = m_cast;
         progress["position"] = PositionObject();
         return progress.dump();
     }
 
     [[nodiscard]] Status Tick(std::string& response) override
     {
-        if (WalkInProgress() || !StepIsDue(m_lastStep))
+        if (m_start.time_since_epoch().count() == 0)
+        {
+            m_start = std::chrono::steady_clock::now();
+        }
+
+        // `times` casts, or as many as fit into `duration`.
+        const bool timeUp = m_duration.count() > 0 && std::chrono::steady_clock::now() - m_start >= m_duration;
+        if (m_cast >= m_times || (timeUp && m_cast > 0))
+        {
+            json result_object;
+            result_object["skill"] = static_cast<int>(m_skill);
+            result_object["target"] = m_targetKey;
+            result_object["casts"] = m_cast;
+            response = App::Control::EncodeResult(EncodedId(), result_object.dump());
+            return Status::Finished;
+        }
+
+        if (WalkInProgress() || !StepIsDue(m_lastStep, m_pace))
         {
             return Status::Running;
         }
@@ -400,13 +431,8 @@ public:
         switch (result)
         {
         case Automation::SkillResult::Cast:
-        {
-            json result_object;
-            result_object["skill"] = static_cast<int>(m_skill);
-            result_object["target"] = m_targetKey;
-            response = App::Control::EncodeResult(EncodedId(), result_object.dump());
-            return Status::Finished;
-        }
+            ++m_cast;
+            return Status::Running;
         case Automation::SkillResult::Approaching:
         case Automation::SkillResult::Busy:
         case Automation::SkillResult::NotReady:
@@ -439,6 +465,11 @@ private:
     ActionSkillType m_skill;
     bool m_targetRequired;
     int m_targetKey;
+    int m_times;
+    std::chrono::milliseconds m_pace;
+    std::chrono::milliseconds m_duration;
+    int m_cast = 0;
+    std::chrono::steady_clock::time_point m_start{};
     std::chrono::steady_clock::time_point m_lastStep{};
 };
 
@@ -813,6 +844,36 @@ std::string Teleport(const Request& request, std::unique_ptr<Act>& act)
     return {};
 }
 
+// `pace`: milliseconds between the act's tries (default PrimitiveInterval). 0 tries every frame, so the
+// next swing follows the animation the way the game's own auto attack does: for measuring attack speed,
+// against a server whose speed check is off. `duration`: milliseconds after which the act ends (0: none).
+std::string ReadPaceAndDuration(const Request& request, std::chrono::milliseconds& pace,
+                                std::chrono::milliseconds& duration)
+{
+    int value = 0;
+    if (request.Has("pace"))
+    {
+        if (!request.GetInt("pace", value) || value < 0)
+        {
+            return EncodeError(request.EncodedId(), ErrorCode::BadRequest,
+                               "`pace` is a whole number of milliseconds, 0 or more");
+        }
+        pace = std::chrono::milliseconds(value);
+    }
+
+    if (request.Has("duration"))
+    {
+        if (!request.GetInt("duration", value) || value < 0)
+        {
+            return EncodeError(request.EncodedId(), ErrorCode::BadRequest,
+                               "`duration` is a whole number of milliseconds, 0 or more");
+        }
+        duration = std::chrono::milliseconds(value);
+    }
+
+    return {};
+}
+
 std::string Attack(const Request& request, std::unique_ptr<Act>& act)
 {
     int targetKey = -1;
@@ -835,7 +896,14 @@ std::string Attack(const Request& request, std::unique_ptr<Act>& act)
                            "`interval` is a whole number of milliseconds, 0 or more");
     }
 
-    act = std::make_unique<AttackAct>(targetKey, times, std::chrono::milliseconds(interval));
+    std::chrono::milliseconds pace = PrimitiveInterval;
+    std::chrono::milliseconds duration{0};
+    if (const std::string failure = ReadPaceAndDuration(request, pace, duration); !failure.empty())
+    {
+        return failure;
+    }
+
+    act = std::make_unique<AttackAct>(targetKey, times, std::chrono::milliseconds(interval), pace, duration);
     return {};
 }
 
@@ -867,7 +935,20 @@ std::string Skill(const Request& request, std::unique_ptr<Act>& act)
     }
     const bool targetRequired = lookup == TargetLookup::Found;
 
-    act = std::make_unique<SkillAct>(skill, targetRequired, targetKey);
+    int times = 1;
+    if (request.Has("times") && (!request.GetInt("times", times) || times < 1))
+    {
+        return EncodeError(request.EncodedId(), ErrorCode::BadRequest, "`times` is a whole number, at least 1");
+    }
+
+    std::chrono::milliseconds pace = PrimitiveInterval;
+    std::chrono::milliseconds duration{0};
+    if (const std::string failure = ReadPaceAndDuration(request, pace, duration); !failure.empty())
+    {
+        return failure;
+    }
+
+    act = std::make_unique<SkillAct>(skill, targetRequired, targetKey, times, pace, duration);
     return {};
 }
 
@@ -892,6 +973,51 @@ std::string Pickup(const Request& request, std::unique_ptr<Act>& act)
 
     act = std::make_unique<PickupAct>(slot, Items[slot].Item.Type, App::Control::DropTile(slot));
     return {};
+}
+
+// pet: the Dark Lord's raven command, the request Shift+1..4 and a right click send (GIPetManager.cpp
+// SendPetCommand): `mode` normal, random, owner (attack the owner's targets) or target (with `target`).
+std::string Pet(const Request& request, std::unique_ptr<Act>&)
+{
+    std::string mode;
+    if (!request.GetString("mode", mode))
+    {
+        return EncodeError(request.EncodedId(), ErrorCode::BadRequest, "`pet` needs a mode: normal, random, owner or target");
+    }
+
+    PetCommandMode command = PetCommandMode::Normal;
+    if (mode == "random")
+    {
+        command = PetCommandMode::AttackRandom;
+    }
+    else if (mode == "owner")
+    {
+        command = PetCommandMode::AttackWithOwner;
+    }
+    else if (mode == "target")
+    {
+        command = PetCommandMode::AttackTarget;
+    }
+    else if (mode != "normal")
+    {
+        return EncodeError(request.EncodedId(), ErrorCode::BadRequest, "`mode` is normal, random, owner or target");
+    }
+
+    int targetKey = 0xFFFF;
+    if (command == PetCommandMode::AttackTarget)
+    {
+        const std::string targetFailure = TargetError(request, ResolveTarget(request, targetKey), "pet", true);
+        if (!targetFailure.empty())
+        {
+            return targetFailure;
+        }
+    }
+
+    SocketClient->ToGameServer()->SendPetCommandRequest(PetType::DarkRaven, command, static_cast<uint16_t>(targetKey));
+
+    json result;
+    result["mode"] = mode;
+    return EncodeResult(request.EncodedId(), result.dump());
 }
 
 std::string UseItem(const Request& request, std::unique_ptr<Act>&)

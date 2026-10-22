@@ -505,6 +505,10 @@ std::string WorldStateObject()
                       {"vitality", CharacterAttribute->Vitality},
                       {"energy", CharacterAttribute->Energy},
                       {"command", CharacterAttribute->Charisma}};
+    // Attack and magic speed as the server sent them, and the server's cap (the character window's numbers).
+    state["speed"] = {{"attack", CharacterAttribute->AttackSpeed},
+                      {"magic", CharacterAttribute->MagicSpeed},
+                      {"max_attack", CharacterAttribute->MaxAttackSpeed}};
     // The Blade Knight's combo, from Marlon's "Secret of Dark Stone".
     state["combo"] = Hero->byExtensionSkill == 1;
 
