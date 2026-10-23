@@ -13530,6 +13530,30 @@
   <data name="DailyRewardsTake" xml:space="preserve">
     <value>Take</value>
   </data>
+  <data name="MuHelperSkillEnergySkip" xml:space="preserve">
+    <value>MU Helper: %ls needs %d energy, you have %d. Skipping it.</value>
+  </data>
+  <data name="MuHelperSkillEnergyPlain" xml:space="preserve">
+    <value>MU Helper: %ls needs %d energy, you have %d. Attacking with plain hits.</value>
+  </data>
+  <data name="MuHelperSkillManaWait" xml:space="preserve">
+    <value>MU Helper: not enough mana for %ls and no mana potions. Waiting for mana.</value>
+  </data>
+  <data name="MuHelperSkillManaPlain" xml:space="preserve">
+    <value>MU Helper: not enough mana for %ls and no mana potions. Attacking with plain hits.</value>
+  </data>
+  <data name="MuHelperSkillAgWait" xml:space="preserve">
+    <value>MU Helper: not enough AG for %ls. Skipping it for now.</value>
+  </data>
+  <data name="MuHelperSkillAgPlain" xml:space="preserve">
+    <value>MU Helper: not enough AG for %ls. Attacking with plain hits.</value>
+  </data>
+  <data name="MuHelperSkillPaused" xml:space="preserve">
+    <value>MU Helper: %ls doesn't cast. Trying again in %d s.</value>
+  </data>
+  <data name="MuHelperNoManaPotions" xml:space="preserve">
+    <value>MU Helper: out of mana potions.</value>
+  </data>
   <data name="DailyRewardsHint" xml:space="preserve">
     <value>A missed day starts the streak over.</value>
   </data>
