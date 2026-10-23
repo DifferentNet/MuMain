@@ -32,6 +32,7 @@ namespace SEASON3A
         int m_iOption;
         int m_iDurability;
         DWORD m_dwSpecialItem;
+        int m_iExcellentCount; // MU Moldova: excellent options, for the Jewel of Ancient recipes
         int m_iCount;
         int m_iTestCount;
         BOOL m_bMixLuck;
@@ -120,6 +121,24 @@ namespace SEASON3A
         MIXTYPE_DETACH_SOCKET,
         MAX_MIX_TYPES
     };
+
+    // MU Moldova: recipe numbers (Mix.bmd's m_iMixID, which the client sends and the server's ItemCrafting numbers
+    // match). Ancient items take +14 and +15 only with the Jewel of Ancient (scripts/mix-bmd.py adds 51 and 52; the
+    // server's AncientJewelCrafting and NonAncientItemUpgradeCrafting, server/addons/src/JewelOfAncient.cs).
+    enum : int
+    {
+        MIXID_ITEM_PLUS_14 = 49,
+        MIXID_ITEM_PLUS_15 = 50,
+        MIXID_ANCIENT_JEWEL_PLUS_14 = 51,
+        MIXID_ANCIENT_JEWEL_PLUS_15 = 52,
+    };
+    constexpr int ANCIENT_JEWEL_MIN_EXCELLENT_OPTIONS = 3;
+
+    inline bool IsAncientJewelMix(int iMixID)
+    {
+        return iMixID == MIXID_ANCIENT_JEWEL_PLUS_14 || iMixID == MIXID_ANCIENT_JEWEL_PLUS_15;
+    }
+
 #define MAX_MIX_SOURCES 8
 #define MAX_MIX_NAMES 3
 #define MAX_MIX_DESCRIPTIONS 3

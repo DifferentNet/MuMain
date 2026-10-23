@@ -12,6 +12,25 @@
 #include "GameLogic/Items/ItemCategories.h"
 #include "Data/GameData/ItemData/ItemDatabase.h"
 
+#include <bit>
+
+namespace
+{
+    // MU Moldova: ancient items take +14 and +15 only with the Jewel of Ancient, so the regular +14/+15 recipes don't
+    // apply while one is in the machine (the server's NonAncientItemUpgradeCrafting refuses them too).
+    bool IsClosedToAncientItems(const SEASON3A::MIX_RECIPE* pRecipe, int iNumMixItems, const SEASON3A::CMixItem* pMixItems)
+    {
+        if (pRecipe->m_iMixID != SEASON3A::MIXID_ITEM_PLUS_14 && pRecipe->m_iMixID != SEASON3A::MIXID_ITEM_PLUS_15)
+            return false;
+        for (int i = 0; i < iNumMixItems; ++i)
+        {
+            if (pMixItems[i].m_dwSpecialItem & SEASON3A::RCP_SP_SETITEM)
+                return true;
+        }
+        return false;
+    }
+}
+
 using namespace SEASON3A;
 
 CMixRecipeMgr g_MixRecipeMgr;
@@ -28,6 +47,7 @@ void CMixItem::Reset()
     m_iOption = 0;
     m_iDurability = 0;
     m_dwSpecialItem = 0;
+    m_iExcellentCount = 0;
     m_b380AddedItem = FALSE;
     m_bFenrirAddedItem = FALSE;
     m_bIsCharmItem = FALSE;
@@ -80,6 +100,7 @@ void CMixItem::SetItem(ITEM* pItem, DWORD dwMixValue)
         }
     }
     if (pItem->ExcellentFlags > 0) m_dwSpecialItem |= RCP_SP_EXCELLENT;
+    m_iExcellentCount = std::popcount(static_cast<unsigned int>(pItem->ExcellentFlags));
     if (pItem->RequireLevel >= 380) m_dwSpecialItem |= RCP_SP_ADD380ITEM;
     if (pItem->AncientDiscriminator > 0) m_dwSpecialItem |= RCP_SP_SETITEM;
     m_b380AddedItem = pItem->option_380;
@@ -338,6 +359,17 @@ int CMixRecipes::CheckRecipe(int iNumMixItems, CMixItem* pMixItems)
         {
             m_iCurMixIndex = (*iter)->m_iMixIndex + 1;
             EvaluateMixItems(iNumMixItems, pMixItems);
+            if (IsAncientJewelMix((*iter)->m_iMixID))
+            {
+                // MU Moldova: only Luck on the ancient item adds to the Jewel of Ancient's rate, as on the server
+                // (AncientJewelCrafting); Luck on the excellent item that is given up doesn't.
+                m_bFindMixLuckItem = FALSE;
+                for (int i = 0; i < iNumMixItems; ++i)
+                {
+                    if ((pMixItems[i].m_dwSpecialItem & RCP_SP_SETITEM) && pMixItems[i].m_bMixLuck)
+                        m_bFindMixLuckItem = TRUE;
+                }
+            }
             CalcCharmBonusRate(iNumMixItems, pMixItems);
             CalcMixRate(iNumMixItems, pMixItems);
             CalcMixReqZen(iNumMixItems, pMixItems);
@@ -358,6 +390,12 @@ BOOL CMixRecipes::CheckRecipeSub(std::vector<MIX_RECIPE*>::iterator iter, int iN
     int iMixRecipeTest[MAX_MIX_SOURCES];
     memset(iMixRecipeTest, 0, sizeof(int) * MAX_MIX_SOURCES);
 
+    // MU Moldova: the regular +14/+15 are closed to ancient items, and the Jewel of Ancient's recipes give up an
+    // excellent item with 3 or more options (AncientJewelCrafting).
+    if (IsClosedToAncientItems(*iter, iNumMixItems, pMixItems))
+        return FALSE;
+    const bool bAncientJewelMix = IsAncientJewelMix((*iter)->m_iMixID);
+
     for (int j = 0; j < (*iter)->m_iNumMixSoruces; ++j)
     {
         if (!IsOptionItem((*iter)->m_MixSources[j])) bFind = FALSE;
@@ -367,6 +405,8 @@ BOOL CMixRecipes::CheckRecipeSub(std::vector<MIX_RECIPE*>::iterator iter, int iN
                 (*iter)->m_MixSources[j].m_iCountMax >= iMixRecipeTest[j] + pMixItems[i].m_iTestCount
                 && !((*iter)->m_bMixOption == 'H' && IsSourceOfAttachSeedSphereToArmor(pMixItems[i]))
                 && !((*iter)->m_bMixOption == 'I' && IsSourceOfAttachSeedSphereToWeapon(pMixItems[i]))
+                && !(bAncientJewelMix && ((*iter)->m_MixSources[j].m_dwSpecialItem & RCP_SP_EXCELLENT)
+                     && pMixItems[i].m_iExcellentCount < ANCIENT_JEWEL_MIN_EXCELLENT_OPTIONS)
                 )
             {
                 if (pMixItems[i].m_iTestCount >= (*iter)->m_MixSources[j].m_iCountMax)
@@ -466,6 +506,12 @@ int CMixRecipes::CheckRecipeSimilaritySub(std::vector<MIX_RECIPE*>::iterator ite
     int iFindTotalPoint = 0;
     int iFindPoint = 0;
 
+    // MU Moldova: don't suggest the regular +14/+15 for an ancient item; the Jewel of Ancient's recipe is the one.
+    // And an excellent item with too few options doesn't count as found in that recipe's list.
+    if (IsClosedToAncientItems(*iter, iNumMixItems, pMixItems))
+        return 0;
+    const bool bAncientJewelMix = IsAncientJewelMix((*iter)->m_iMixID);
+
     for (int j = 0; j < (*iter)->m_iNumMixSoruces; ++j)
     {
         for (int i = 0; i < iNumMixItems; ++i)
@@ -473,6 +519,8 @@ int CMixRecipes::CheckRecipeSimilaritySub(std::vector<MIX_RECIPE*>::iterator ite
             if (CheckItem((*iter)->m_MixSources[j], pMixItems[i]) && pMixItems[i].m_iTestCount > 0
                 && !((*iter)->m_bMixOption == 'H' && IsSourceOfAttachSeedSphereToArmor(pMixItems[i]))
                 && !((*iter)->m_bMixOption == 'I' && IsSourceOfAttachSeedSphereToWeapon(pMixItems[i]))
+                && !(bAncientJewelMix && ((*iter)->m_MixSources[j].m_dwSpecialItem & RCP_SP_EXCELLENT)
+                     && pMixItems[i].m_iExcellentCount < ANCIENT_JEWEL_MIN_EXCELLENT_OPTIONS)
                 )
             {
                 if (IsChaosJewel(pMixItems[i])) iFindPoint = 1;

@@ -3016,6 +3016,8 @@ enum
     ITEM_KALT_STONE = ITEM_POTION + 154,
     ITEM_TANTALOS_ARMOR = ITEM_POTION + 155,
     ITEM_BURNT_MURDERERS_CLUB = ITEM_POTION + 156,
+    // MU Moldova: Season 6's unused Jewel of Extension model, the Jewel of Ancient (ancient +13 -> +14/+15, MixMgr).
+    ITEM_JEWEL_OF_ANCIENT = ITEM_POTION + 160,
     ITEM_SCROLL_OF_POISON = ITEM_ETC + 0,
     ITEM_SCROLL_OF_METEORITE = ITEM_ETC + 1,
     ITEM_SCROLL_OF_LIGHTING = ITEM_ETC + 2,
