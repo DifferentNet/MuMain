@@ -65,6 +65,7 @@
 					<div class="slot" data-window="duel_watch"></div>
 					<div class="slot" data-window="doppelganger_entry"></div>
 					<div class="slot" data-window="empire_guardian_entry"></div>
+					<div class="slot" data-window="tier_maps"></div>
 					<div class="slot" data-window="united_marketplace"></div>
 					<div class="slot" data-window="my_quest" data-closes="party guild_info command command_list event_schedule daily_rewards gold_bowman gold_bowman_lena gens_ranking mu_helper mu_helper_detail mu_helper_skill_list inventory pet"></div>
 					<div class="slot" data-window="pet" data-closes="inventory my_quest party guild_info command command_list event_schedule daily_rewards gold_bowman gold_bowman_lena gens_ranking mu_helper mu_helper_detail mu_helper_skill_list"></div>

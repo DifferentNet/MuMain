@@ -9882,7 +9882,7 @@
     <comment>legacy_id=2800</comment>
   </data>
   <data name="Fortress of Empire Guardians Round %d" xml:space="preserve">
-    <value>Крепость стражей Империи, раунд %d</value>
+    <value>Тир-карта %d</value>
     <comment>legacy_id=2801</comment>
   </data>
   <data name="has been cleared." xml:space="preserve">
@@ -9890,15 +9890,15 @@
     <comment>legacy_id=2802</comment>
   </data>
   <data name="You have failed to conquer the" xml:space="preserve">
-    <value>Вам не удалось победить</value>
+    <value>Вам не удалось пройти</value>
     <comment>legacy_id=2803</comment>
   </data>
   <data name="Fortress of Empire Guardians." xml:space="preserve">
-    <value>Крепость Хранителей Империи.</value>
+    <value>тир-карту.</value>
     <comment>legacy_id=2804</comment>
   </data>
   <data name="Round %d (Zone %d)" xml:space="preserve">
-    <value>Круглый %d (Зона %d)</value>
+    <value>Тир %d · зона %d</value>
     <comment>legacy_id=2805</comment>
   </data>
   <data name="Varka" xml:space="preserve">
@@ -13179,6 +13179,81 @@
   </data>
   <data name="DailyRewardsHint" xml:space="preserve">
     <value>Пропуск дня сбрасывает серию на день 1.</value>
+  </data>
+  <data name="TierMapsTitle" xml:space="preserve">
+    <value>Тир-карты</value>
+  </data>
+  <data name="TierMapsAsking" xml:space="preserve">
+    <value>Запрашиваю у сервера...</value>
+  </data>
+  <data name="TierMapsNoAnswer" xml:space="preserve">
+    <value>Сервер не присылает тир-карты.</value>
+  </data>
+  <data name="TierMapsToday" xml:space="preserve">
+    <value>%ls · босс %ls</value>
+  </data>
+  <data name="TierMapsPartyPower" xml:space="preserve">
+    <value>CP пати %ls, минимум %ls</value>
+  </data>
+  <data name="TierMapsOwnPower" xml:space="preserve">
+    <value>Ваш CP: %ls</value>
+  </data>
+  <data name="TierMapsTicketReady" xml:space="preserve">
+    <value>Приказ Гайона: есть</value>
+  </data>
+  <data name="TierMapsTicketMissing" xml:space="preserve">
+    <value>Нет Приказа Гайона (5 обрывков).</value>
+  </data>
+  <data name="TierMapsReset" xml:space="preserve">
+    <value>Заходов в день: %d, новые через %ls</value>
+  </data>
+  <data name="TierMapsTierTitle" xml:space="preserve">
+    <value>Тир %d: %ls</value>
+  </data>
+  <data name="TierMapsTierDetail" xml:space="preserve">
+    <value>%ls CP · %ls · %ls</value>
+  </data>
+  <data name="TierMapsRecord" xml:space="preserve">
+    <value>рекорд %ls</value>
+  </data>
+  <data name="TierMapsNoRecord" xml:space="preserve">
+    <value>рекорда нет</value>
+  </data>
+  <data name="TierMapsMembers" xml:space="preserve">
+    <value>Пати</value>
+  </data>
+  <data name="TierMapsMember" xml:space="preserve">
+    <value>%ls: %ls CP, заходов: %d</value>
+  </data>
+  <data name="TierMapsMemberAway" xml:space="preserve">
+    <value>%ls: не у NPC</value>
+  </data>
+  <data name="TierMapsEnter" xml:space="preserve">
+    <value>Войти в тир %d</value>
+  </data>
+  <data name="TierMapsEntering" xml:space="preserve">
+    <value>Входим...</value>
+  </data>
+  <data name="TierMapsPickTier" xml:space="preserve">
+    <value>Выберите тир, доступный пати.</value>
+  </data>
+  <data name="TierMapsLeaderOnly" xml:space="preserve">
+    <value>В данж пати ведёт лидер.</value>
+  </data>
+  <data name="TierMapsComeToNpc" xml:space="preserve">
+    <value>Подойдите к Jerint the Assistant в Девиасе или Лоренсии.</value>
+  </data>
+  <data name="TierMapsInRun" xml:space="preserve">
+    <value>Ваша пати уже в данже.</value>
+  </data>
+  <data name="TierMapsNotReady" xml:space="preserve">
+    <value>Не все могут войти (красным).</value>
+  </data>
+  <data name="TierMapsLootTime" xml:space="preserve">
+    <value>Время на сбор добычи</value>
+  </data>
+  <data name="AdvStatsCombatPower" xml:space="preserve">
+    <value>Боевая мощь: %ls</value>
   </data>
   <data name="SetItemPieces" xml:space="preserve">
     <value>Предметы сета: собрано %d из %d</value>

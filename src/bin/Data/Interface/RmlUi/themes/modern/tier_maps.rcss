@@ -1,0 +1,84 @@
+/* Modern theme for CTierMapsWindow (Adviser Jerinteu's Tier Maps): docked_panel_frame.rcss's forged panel (linked
+   first) at the full dock height, the modern exit button and the event entry's forged button (event_entry.rcss), in
+   the daily rewards window's look (daily_rewards.rcss). Geometry is the legacy one: reference px inside #panel,
+   physical px (reference px times --root-scale) inside the list's pane. */
+
+#panel { height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; transform-origin: left top; }
+
+#btn_exit {
+	position: absolute;
+	left: 13px;
+	top: 392px;
+	width: 36px;
+	height: 28px;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+	pointer-events: auto;
+}
+#btn_exit:hover { border-color: token(accent-steel-hover); }
+
+.tm-title { left: 0; top: 12px; text-align: center; font-weight: bold; pointer-events: none; }
+#tm_today { left: 12px; top: 34px; font-weight: bold; pointer-events: none; }
+#tm_power { left: 12px; top: 49px; pointer-events: none; }
+#tm_ticket { left: 12px; top: 63px; pointer-events: none; }
+#tm_reset { left: 12px; top: 77px; pointer-events: none; }
+
+#tm_list { left: 12px; top: 94px; --flow-w: 166px; line-height: 1.12; }
+.tm-tier {
+	display: block;
+	padding: calc(2px * var(--root-scale)) calc(4px * var(--root-scale));
+	margin-bottom: calc(1px * var(--root-scale));
+	border-radius: token(radius-sm)px;
+	cursor: pointer;
+	pointer-events: auto;
+}
+.tm-tier-title { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+.tm-tier-detail { display: block; white-space: nowrap; pointer-events: none; }
+.tm-members-title { display: block; margin-top: calc(6px * var(--root-scale)); white-space: nowrap; font-weight: bold; }
+.tm-member { display: block; padding-left: calc(4px * var(--root-scale)); white-space: nowrap; }
+.tm-hint { display: block; margin-top: calc(5px * var(--root-scale)); white-space: nowrap; }
+
+#tm_enter {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	margin-top: calc(4px * var(--root-scale));
+	height: calc(29px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+#tm_enter:hover { border-color: token(accent-steel-hover); }
+#tm_enter:active { background-color: token(surface-recessed); }
+#tm_enter.off { opacity: 0.45; cursor: arrow; }
+#tm_enter.off:hover { border-color: token(border-frame); }
+.tm-enter-label { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+
+.tm-title { color: token(accent-gold); }
+#tm_today { color: token(text-primary); }
+#tm_power { color: token(text-secondary); }
+#tm_ticket { color: token(semantic-danger); }
+#tm_ticket.ok { color: token(semantic-success); }
+#tm_reset { color: token(text-muted); }
+.tm-tier { color: token(text-muted); }
+.tm-tier:hover { background-color: rgba(255, 255, 255, 12); }
+.tm-tier.open .tm-tier-title { color: token(text-primary); }
+.tm-tier.open .tm-tier-detail { color: token(text-secondary); }
+.tm-tier.selected { background-color: rgba(255, 200, 90, 40); }
+.tm-tier.selected .tm-tier-title { color: token(accent-gold); }
+.tm-members-title { color: token(text-primary); }
+.tm-member { color: token(semantic-danger); }
+.tm-member.ready { color: token(semantic-success); }
+.tm-hint { color: token(text-secondary); }
+.tm-hint.bad { color: token(semantic-danger); }
+.tm-enter-label { color: token(text-primary); }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+#tm_title { width: calc(100% * var(--root-scale)); }
+#tm_today, #tm_power, #tm_ticket, #tm_reset { width: calc(166px * var(--root-scale)); }

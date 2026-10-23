@@ -93,6 +93,10 @@ void CEmpireGuardianTimer::SyncView()
         switch (m_iType)
         {
         case 0:
+            // The loot time after the end (the original showed "Standby time" for it too); the Tier Maps of our
+            // server use the fortress's timer, and players pick up the boss's loot then.
+            caption = {I18N::Game::TierMapsLootTime, "standby"};
+            break;
         case 1:
             caption = {I18N::Game::StandbyTime, "standby"};
             break;

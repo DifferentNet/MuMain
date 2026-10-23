@@ -56,6 +56,7 @@ constexpr NamedWindow Windows[] = {
     {"command_list", mu::ui::window::INTERFACE_COMMAND_LIST},
     {"event_schedule", mu::ui::window::INTERFACE_EVENT_SCHEDULE},
     {"daily_rewards", mu::ui::window::INTERFACE_DAILY_REWARDS},
+    {"tier_maps", mu::ui::window::INTERFACE_TIER_MAPS},
     {"jewel_bank", mu::ui::window::INTERFACE_JEWEL_BANK},
 };
 

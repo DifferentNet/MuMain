@@ -10178,7 +10178,7 @@
     <comment>legacy_id=2800</comment>
   </data>
   <data name="Fortress of Empire Guardians Round %d" xml:space="preserve">
-    <value>Fortress of Empire Guardians Round %d</value>
+    <value>Tier Map %d</value>
     <comment>legacy_id=2801</comment>
   </data>
   <data name="has been cleared." xml:space="preserve">
@@ -10186,15 +10186,15 @@
     <comment>legacy_id=2802</comment>
   </data>
   <data name="You have failed to conquer the" xml:space="preserve">
-    <value>You have failed to conquer the</value>
+    <value>You have failed to clear the</value>
     <comment>legacy_id=2803</comment>
   </data>
   <data name="Fortress of Empire Guardians." xml:space="preserve">
-    <value>Fortress of Empire Guardians.</value>
+    <value>Tier Map.</value>
     <comment>legacy_id=2804</comment>
   </data>
   <data name="Round %d (Zone %d)" xml:space="preserve">
-    <value>Round %d (Zone %d)</value>
+    <value>Tier %d · Zone %d</value>
     <comment>legacy_id=2805</comment>
   </data>
   <data name="Varka" xml:space="preserve">
@@ -13556,6 +13556,81 @@
   </data>
   <data name="DailyRewardsHint" xml:space="preserve">
     <value>A missed day starts the streak over.</value>
+  </data>
+  <data name="TierMapsTitle" xml:space="preserve">
+    <value>Tier Maps</value>
+  </data>
+  <data name="TierMapsAsking" xml:space="preserve">
+    <value>Asking the server...</value>
+  </data>
+  <data name="TierMapsNoAnswer" xml:space="preserve">
+    <value>The server sends no Tier Maps.</value>
+  </data>
+  <data name="TierMapsToday" xml:space="preserve">
+    <value>%ls · boss %ls</value>
+  </data>
+  <data name="TierMapsPartyPower" xml:space="preserve">
+    <value>Party CP %ls, lowest %ls</value>
+  </data>
+  <data name="TierMapsOwnPower" xml:space="preserve">
+    <value>Your Combat Power: %ls</value>
+  </data>
+  <data name="TierMapsTicketReady" xml:space="preserve">
+    <value>Gaion's Order: ready</value>
+  </data>
+  <data name="TierMapsTicketMissing" xml:space="preserve">
+    <value>No Gaion's Order (5 scraps of paper).</value>
+  </data>
+  <data name="TierMapsReset" xml:space="preserve">
+    <value>%d runs a day, new ones in %ls</value>
+  </data>
+  <data name="TierMapsTierTitle" xml:space="preserve">
+    <value>Tier %d: %ls</value>
+  </data>
+  <data name="TierMapsTierDetail" xml:space="preserve">
+    <value>%ls CP · %ls · %ls</value>
+  </data>
+  <data name="TierMapsRecord" xml:space="preserve">
+    <value>record %ls</value>
+  </data>
+  <data name="TierMapsNoRecord" xml:space="preserve">
+    <value>no record yet</value>
+  </data>
+  <data name="TierMapsMembers" xml:space="preserve">
+    <value>Party</value>
+  </data>
+  <data name="TierMapsMember" xml:space="preserve">
+    <value>%ls: %ls CP, %d runs left</value>
+  </data>
+  <data name="TierMapsMemberAway" xml:space="preserve">
+    <value>%ls: not at the NPC</value>
+  </data>
+  <data name="TierMapsEnter" xml:space="preserve">
+    <value>Enter Tier %d</value>
+  </data>
+  <data name="TierMapsEntering" xml:space="preserve">
+    <value>Entering...</value>
+  </data>
+  <data name="TierMapsPickTier" xml:space="preserve">
+    <value>Pick a tier your party can enter.</value>
+  </data>
+  <data name="TierMapsLeaderOnly" xml:space="preserve">
+    <value>The party leader takes the party in.</value>
+  </data>
+  <data name="TierMapsComeToNpc" xml:space="preserve">
+    <value>Come to Jerint the Assistant in Devias or Lorencia.</value>
+  </data>
+  <data name="TierMapsInRun" xml:space="preserve">
+    <value>Your party is in a run.</value>
+  </data>
+  <data name="TierMapsNotReady" xml:space="preserve">
+    <value>Not everyone can go in (in red).</value>
+  </data>
+  <data name="TierMapsLootTime" xml:space="preserve">
+    <value>Loot time</value>
+  </data>
+  <data name="AdvStatsCombatPower" xml:space="preserve">
+    <value>Combat Power: %ls</value>
   </data>
   <data name="SetItemPieces" xml:space="preserve">
     <value>Set items: %d of %d collected</value>

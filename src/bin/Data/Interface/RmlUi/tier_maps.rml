@@ -1,0 +1,55 @@
+<rml>
+<head>
+	<title>Tier Maps</title>
+	<link type="text/rcss" href="base.rcss"/>
+	<link type="text/rcss" href="docked_panel_frame.rcss"/>
+	<link type="text/rcss" href="tier_maps.rcss"/>
+</head>
+<body>
+	<!-- The Tier Maps window (CTierMapsWindow), opened by Jerint the Assistant in Devias, docked right at full dock height:
+	     the title, today's fortress and boss, the party's Combat Power, the leader's Gaion's Order and when the runs
+	     come back; then one counter-scaled pane in which the six tiers flow (a row each, clickable: its name, its
+	     Combat Power, today's boss and its record; open ones bright, the picked one on a gold band), the party's
+	     members (ready ones green), the reason the button is off or the server's last answer, and the button that
+	     takes the party in; and the exit button. The workspace slot places and scales #panel. C++ keeps the state;
+	     clicks are queued with tier_maps_select(tier), tier_maps_enter and tier_maps_exit. -->
+	<div id="panel" data-model="tier_maps">
+		<div class="frame-piece frame-top"></div>
+		<div class="frame-piece frame-left"></div>
+		<div class="frame-piece frame-right"></div>
+		<div class="frame-piece frame-bottom"></div>
+
+		<span id="tm_title" class="sharp-text tm-title"
+		      data-style-font-size="title.text_px + 'px'">{{title.text}}</span>
+		<span id="tm_today" class="sharp-text tm-today"
+		      data-style-font-size="today.text_px + 'px'">{{today.text}}</span>
+		<span id="tm_power" class="sharp-text tm-power"
+		      data-style-font-size="power.text_px + 'px'">{{power.text}}</span>
+		<span id="tm_ticket" class="sharp-text tm-ticket" data-class-ok="ticket_ok"
+		      data-style-font-size="ticket.text_px + 'px'">{{ticket.text}}</span>
+		<span id="tm_reset" class="sharp-text tm-reset"
+		      data-style-font-size="reset.text_px + 'px'">{{reset.text}}</span>
+
+		<div id="tm_list" class="sharp-text sharp-flow">
+			<div class="tm-tier" data-for="t : tiers" data-class-open="t.open" data-class-selected="t.selected"
+			     data-event-click="tier_maps_select(t.tier)">
+				<span class="tm-tier-title" data-style-font-size="t.title.text_px + 'px'">{{t.title.text}}</span>
+				<span class="tm-tier-detail" data-style-font-size="t.detail.text_px + 'px'">{{t.detail.text}}</span>
+			</div>
+
+			<span class="tm-members-title" data-style-font-size="members_title.text_px + 'px'">{{members_title.text}}</span>
+			<span class="tm-member" data-for="m : members" data-class-ready="m.ready"
+			      data-style-font-size="m.text.text_px + 'px'">{{m.text.text}}</span>
+
+			<span class="tm-hint" data-class-bad="hint_bad" data-style-font-size="hint.text_px + 'px'">{{hint.text}}</span>
+
+			<div id="tm_enter" data-class-off="!can_enter" data-event-click="tier_maps_enter">
+				<span class="tm-enter-label" data-style-font-size="enter_label.text_px + 'px'">{{enter_label.text}}</span>
+			</div>
+		</div>
+
+		<div id="btn_exit" data-event-click="tier_maps_exit" data-attr-data-hint="exit_tooltip"></div>
+		<div id="frame_corner_close" data-event-click="tier_maps_exit"></div>
+	</div>
+</body>
+</rml>

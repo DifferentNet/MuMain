@@ -507,6 +507,17 @@ void mu::ui::window::CCharacterInfoWindow::BuildAdvancedStatsLines()
         { I18N::Game::AdvStatsManaRecovery, L"mprec", false },
         { I18N::Game::AdvStatsShieldAbsorb, L"sdabs", false },
     });
+
+    // Combat Power, the Tier Maps' entry rule (server add-on, 2026-10-23): a whole number, under the defense box.
+    if (const double* combatPower = stats.Find(L"cp"))
+    {
+        std::wstring digits = std::to_wstring(static_cast<long long>(*combatPower));
+        for (int i = static_cast<int>(digits.size()) - 3; i > 0; i -= 3)
+            digits.insert(static_cast<size_t>(i), L",");
+        wchar_t line[256];
+        mu_swprintf(line, I18N::Game::AdvStatsCombatPower, digits.c_str());
+        model.advancedDefenseLines.push_back({ StringUtils::WideToNarrow(line), "boosted" });
+    }
     m_RmlView.MarkDirty("advanced_attack_lines");
     m_RmlView.MarkDirty("advanced_defense_lines");
 }
