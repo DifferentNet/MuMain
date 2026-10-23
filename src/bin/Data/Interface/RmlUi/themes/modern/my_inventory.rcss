@@ -40,7 +40,10 @@
 .inv-btn-repair { left: 56px;  }
 .inv-btn-myshop { left: 97px;  }
 .inv-btn-myshop.close-mode { color: token(accent-gold-hover); border-color: token(border-hover); }
-.inv-btn-expand { left: 138px; }
+/* The jewel bank, where the expanded inventory's button was: see-through, since C++ draws the Jewel of Bless
+   under the document (CMyInventory::Render3D, through #item_view), so the button's own fill would hide it. */
+.inv-btn-jewel-bank { left: 138px; background-color: rgba(8, 10, 8, 110); decorator: none; }
+.inv-btn-jewel-bank:hover { background-color: rgba(255, 210, 100, 40); decorator: none; }
 
 /* Set/Socket option header labels -- gray/yellow match legacy since they're semantic
    (active vs. inactive), not part of modern's chrome palette. */
@@ -196,19 +199,3 @@
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
 
-/* The jewel bank's button (JewelBankWindow.h) on the header rail's right, between the left-aligned
-   title and the corner close: a see-through recessed box C++ draws a Jewel of Bless into
-   (CMyInventory::Render3D, through #item_view below it), lit on hover. */
-.inv-jewel-bank {
-	position: absolute;
-	left: 128px;
-	top: 14px;
-	width: 24px;
-	height: 24px;
-	cursor: pointer;
-	pointer-events: auto;
-	background-color: rgba(8, 10, 8, 110);
-	border: 1px token(border-frame);
-	border-radius: token(radius-sm)px;
-}
-.inv-jewel-bank:hover { border-color: token(border-hover); background-color: rgba(255, 210, 100, 40); }

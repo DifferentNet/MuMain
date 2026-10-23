@@ -13563,6 +13563,9 @@
   <data name="JewelBankTitle" xml:space="preserve">
     <value>Jewel bank</value>
   </data>
+  <data name="JewelBankButtonK" xml:space="preserve">
+    <value>Jewel bank (K)</value>
+  </data>
   <data name="JewelBankAsking" xml:space="preserve">
     <value>Asking the server...</value>
   </data>

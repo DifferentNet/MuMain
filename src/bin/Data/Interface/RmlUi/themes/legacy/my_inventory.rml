@@ -54,9 +54,6 @@
 		     physical size, and .counter-scaled cancels #panel's scale so glyphs rasterise at it. #title
 		     stays full size as the drag handle. -->
 		<div id="title"><span class="native-text title-text counter-scaled" data-style-font-size="text_px + 'px'">{{title}}</span></div>
-		<!-- The jewel bank's button (JewelBankWindow.h) in the header's free left corner, after the title so it
-		     takes its clicks there; C++ draws a Jewel of Bless over it (CMyInventory::Render3D). -->
-		<div id="btn_jewel_bank" class="inv-jewel-bank" data-event-click="my_inventory_jewel_bank_click" data-attr-data-hint="jewel_bank_tooltip"></div>
 
 		<div id="gold_bg"></div>
 		<span id="gold_text" class="native-text gold-amount counter-scaled"
@@ -75,7 +72,9 @@
 		     data-class-close-mode="!myshop_mode_open" data-class-locked="myshop_locked"
 		     data-event-click="my_inventory_myshop_click" data-attr-data-hint="myshop_tooltip"></div>
 
-		<div id="btn_expand" class="inv-btn inv-btn-expand" data-event-click="my_inventory_expand_click" data-attr-data-hint="expand_tooltip"></div>
+		<!-- The jewel bank (JewelBankWindow.h, key K) where the expanded inventory's button was; C++ draws a
+		     Jewel of Bless into it (CMyInventory::Render3D). -->
+		<div id="btn_jewel_bank" class="inv-btn inv-btn-jewel-bank" data-event-click="my_inventory_jewel_bank_click" data-attr-data-hint="jewel_bank_tooltip"></div>
 
 		<!-- Set/Socket option header: one centred line with both labels at the same size (the native
 		     client shrank each label into its own narrow box, so a long label came out smaller -- not

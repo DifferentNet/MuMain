@@ -13186,6 +13186,9 @@
   <data name="JewelBankTitle" xml:space="preserve">
     <value>Банк камней</value>
   </data>
+  <data name="JewelBankButtonK" xml:space="preserve">
+    <value>Банк камней (K)</value>
+  </data>
   <data name="JewelBankAsking" xml:space="preserve">
     <value>Запрос к серверу...</value>
   </data>
