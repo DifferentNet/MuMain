@@ -13578,4 +13578,30 @@
   <data name="PowerOfTheAncientsRavenD" xml:space="preserve">
     <value>With the Dark Raven: final damage +%d%%</value>
   </data>
+  <data name="JewelOfAncientDesc" xml:space="preserve">
+    <value>Raises an ancient item +13 to +14 and +15</value>
+  </data>
+  <data name="JewelOfAncientDescMix" xml:space="preserve">
+    <value>in the Chaos Machine (Chaos Goblin).</value>
+  </data>
+  <data name="JewelOfAncientMix14" xml:space="preserve">
+    <value>+14 with Jewel of Ancient</value>
+    <comment>legacy_id=3900</comment>
+  </data>
+  <data name="JewelOfAncientMix15" xml:space="preserve">
+    <value>+15 with Jewel of Ancient</value>
+    <comment>legacy_id=3901</comment>
+  </data>
+  <data name="JewelOfAncientMixDesc1" xml:space="preserve">
+    <value>Excellent item: +13, 3+ options.</value>
+    <comment>legacy_id=3902</comment>
+  </data>
+  <data name="JewelOfAncientMixDesc2" xml:space="preserve">
+    <value>Luck on the ancient item: +10%.</value>
+    <comment>legacy_id=3903</comment>
+  </data>
+  <data name="JewelOfAncientMixDesc3" xml:space="preserve">
+    <value>On failure both items stay.</value>
+    <comment>legacy_id=3904</comment>
+  </data>
 </root>

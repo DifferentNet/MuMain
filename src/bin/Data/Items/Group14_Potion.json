@@ -2327,16 +2327,15 @@
     {
       "number": 160,
       "name": {
-        "en": "Jewel of Extension",
-        "de": "Juwel der Erweiterung",
-        "es": "Joya de Extensión",
-        "pt": "Jóia de Extensão"
+        "en": "Jewel of Ancient",
+        "de": "Jewel of Ancient",
+        "es": "Jewel of Ancient",
+        "pt": "Jewel of Ancient"
       },
+      "tags": ["jewel", "valuable"],
       "width": 1,
       "height": 1,
-      "droppable": false,
       "sellable": false,
-      "personalShopSellable": false,
       "repairable": false
     },
     {

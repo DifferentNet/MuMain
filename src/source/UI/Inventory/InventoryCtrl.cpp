@@ -1083,11 +1083,6 @@ bool mu::ui::window::CInventoryCtrl::DropActsOn(ITEM* pPickItem, ITEM* pTargetIt
             if (pTargetItem->Jewel_Of_Harmony_Option == 0)
                 bSuccess = true;
         }
-        else if (pPickItem->Type == ITEM_POTION + 160)
-        {
-            if (pTargetItem->Durability > 0)
-                bSuccess = true;
-        }
     }
     return bSuccess;
 }

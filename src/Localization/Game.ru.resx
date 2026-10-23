@@ -13201,4 +13201,30 @@
   <data name="PowerOfTheAncientsRavenD" xml:space="preserve">
     <value>С Тёмным вороном: итоговый урон +%d%%</value>
   </data>
+  <data name="JewelOfAncientDesc" xml:space="preserve">
+    <value>Поднимает ancient-вещь с +13 до +14 и +15</value>
+  </data>
+  <data name="JewelOfAncientDescMix" xml:space="preserve">
+    <value>в Chaos Machine (Chaos Goblin).</value>
+  </data>
+  <data name="JewelOfAncientMix14" xml:space="preserve">
+    <value>+14 с Jewel of Ancient</value>
+    <comment>legacy_id=3900</comment>
+  </data>
+  <data name="JewelOfAncientMix15" xml:space="preserve">
+    <value>+15 с Jewel of Ancient</value>
+    <comment>legacy_id=3901</comment>
+  </data>
+  <data name="JewelOfAncientMixDesc1" xml:space="preserve">
+    <value>Excellent-вещь: +13, 3+ опции.</value>
+    <comment>legacy_id=3902</comment>
+  </data>
+  <data name="JewelOfAncientMixDesc2" xml:space="preserve">
+    <value>Luck на ancient-вещи: +10%.</value>
+    <comment>legacy_id=3903</comment>
+  </data>
+  <data name="JewelOfAncientMixDesc3" xml:space="preserve">
+    <value>При провале обе вещи остаются.</value>
+    <comment>legacy_id=3904</comment>
+  </data>
 </root>
