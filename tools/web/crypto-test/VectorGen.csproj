@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Writes the test vectors for MuPacketCrypto with OpenMU's own network library (see README.md).
+    run.sh copies this file into a scratch folder and builds it there, once per OpenMU version:
+      - by default against the NuGet package the desktop ClientLibrary uses (MUnique.OpenMU.Network 0.9.10);
+      - with -p:OpenMuRef=<folder>, against the DLLs of a server image, e.g. ../server/addons/ref (0.9.12).
+    -p:ToolDir=<this folder> points it at GenerateVectors.cs.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>VectorGen</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <OpenMuNetworkVersion Condition="'$(OpenMuNetworkVersion)' == ''">0.9.10</OpenMuNetworkVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(ToolDir)/GenerateVectors.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(OpenMuRef)' == ''">
+    <PackageReference Include="MUnique.OpenMU.Network" Version="$(OpenMuNetworkVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(OpenMuRef)' != ''">
+    <!-- The server image brings these from ASP.NET Core (logging, DI) and its own folder. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <Reference Include="$(OpenMuRef)/MUnique.OpenMU.Network.dll" />
+    <Reference Include="$(OpenMuRef)/MUnique.OpenMU.PlugIns.dll" />
+    <Reference Include="$(OpenMuRef)/Nito.*.dll" />
+    <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.2.8" />
+  </ItemGroup>
+</Project>

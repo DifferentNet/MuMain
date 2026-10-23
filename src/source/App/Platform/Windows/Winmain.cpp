@@ -18,6 +18,8 @@
 #include <dpapi.h>
 #elif defined(__APPLE__)
 #include <mach-o/dyld.h>
+#elif defined(__EMSCRIPTEN__)
+#include <emscripten.h>
 #endif
 #include <clocale>
 #include <cstring>
@@ -46,6 +48,10 @@
 #include "Core/Utilities/FrameProfiler.h"
 #include "Core/Utilities/Benchmark/BenchRecorder.h"
 #include <SDL3/SDL.h>
+
+#ifdef __EMSCRIPTEN__
+extern EGameScene SceneFlag; // read by WaitForBrowserFrame()
+#endif
 #include "Render/Models/ZzzBMD.h"
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzObject.h"
@@ -1193,6 +1199,40 @@ void HandleWindowResize(int width, int height)
     UpdateCursorClip();
 }
 
+#ifdef __EMSCRIPTEN__
+// Browser build: after a frame, hands the browser a turn, so it shows the canvas and delivers input
+// and network messages, and keeps frames at most about 60 a second, so drawing more often than a
+// screen shows doesn't burn a whole core. Not tied to animation frames: Chrome gives a tab that isn't
+// on screen none. While loading (capFrames 0) there's no cap: loading draws a frame between steps.
+EM_ASYNC_JS(void, WaitForBrowserFrameJs, (int capFrames), {
+    const minimumFrameMs = capFrames ? 16 : 0;
+    const now = performance.now();
+    const rest = minimumFrameMs - (now - (Module["muLastFrameEnd"] || 0));
+    if (rest > 1) {
+        await new Promise((resolve) => setTimeout(resolve, rest));
+    } else {
+        if (!Module["muYieldChannel"]) {
+            const channel = new MessageChannel();
+            const waiting = [];
+            channel.port1.onmessage = () => waiting.shift()?.();
+            Module["muYieldChannel"] = { channel, waiting };
+        }
+        const yielder = Module["muYieldChannel"];
+        await new Promise((resolve) => {
+            yielder.waiting.push(resolve);
+            yielder.channel.port2.postMessage(0);
+        });
+    }
+    Module["muLastFrameEnd"] = performance.now();
+});
+
+void WaitForBrowserFrame()
+{
+    const bool loading = SceneFlag == WEBZEN_SCENE || SceneFlag == LOADING_SCENE;
+    WaitForBrowserFrameJs(loading ? 0 : 1);
+}
+#endif
+
 void HandleFocusChange(bool active)
 {
     if (InputDiagnosticsEnabled())
@@ -1294,6 +1334,43 @@ std::string WideToUtf8(const std::wstring& wide)
 
 } // namespace
 
+#ifdef __EMSCRIPTEN__
+// Browser build: sizes from the page, in device pixels. which: 0/1 the game area's width/height
+// (#stage in index.html), 2/3 the screen's.
+EM_JS(int, MuWeb_PagePixels, (int which), {
+    const ratio = window.devicePixelRatio || 1;
+    const stage = document.getElementById("stage");
+    const area = stage ? stage.getBoundingClientRect() : { width: innerWidth, height: innerHeight };
+    const sizes = [area.width, area.height, screen.width, screen.height];
+    return Math.floor(sizes[which] * ratio);
+});
+
+// SDL reports a single display mode in the browser, the screen's size in CSS pixels, so the options
+// offered little above 1024x768. The page scales the canvas to fit its window (index.html), so any
+// size works: the usual ones up to the screen's real pixels, the one that fills the game area
+// exactly, and the current one.
+static std::vector<std::pair<int, int>> MuWebDisplayResolutions()
+{
+    static constexpr std::pair<int, int> kCommon[] = {
+        {800, 600},   {1024, 768},  {1280, 720},  {1280, 800},  {1280, 1024}, {1366, 768},
+        {1440, 900},  {1600, 900},  {1680, 1050}, {1920, 1080}, {1920, 1200}, {2560, 1080},
+        {2560, 1440}, {2560, 1600}, {3440, 1440}, {3840, 2160}};
+    const int screenW = MuWeb_PagePixels(2);
+    const int screenH = MuWeb_PagePixels(3);
+    std::vector<std::pair<int, int>> resolutions;
+    for (const auto& size : kCommon)
+    {
+        if (size.first <= screenW && size.second <= screenH)
+            resolutions.push_back(size);
+    }
+    resolutions.emplace_back(MuWeb_PagePixels(0), MuWeb_PagePixels(1));
+    int currentW = 0, currentH = 0;
+    if (g_sdlWindow && SDL_GetWindowSize(g_sdlWindow, &currentW, &currentH))
+        resolutions.emplace_back(currentW, currentH);
+    return resolutions;
+}
+#endif
+
 std::vector<std::pair<int, int>> MuGetSupportedDisplayResolutions()
 {
     std::vector<std::pair<int, int>> resolutions;
@@ -1301,6 +1378,9 @@ std::vector<std::pair<int, int>> MuGetSupportedDisplayResolutions()
     {
         return resolutions;
     }
+#ifdef __EMSCRIPTEN__
+    return MuWebDisplayResolutions();
+#endif
 
     SDL_DisplayID display = SDL_GetDisplayForWindow(g_sdlWindow);
     if (display == 0)
@@ -1663,6 +1743,9 @@ MSG MainLoop()
                 // it moved (options open or closed).
                 Render::Look::ApplyPendingTuning();
                 RenderProfiledFrame();
+#ifdef __EMSCRIPTEN__
+                WaitForBrowserFrame();
+#endif
 #ifdef _EDITOR
                 // The editor's own windows, now that the game's frame went to the GPU.
                 g_MuEditorCore.RenderPlatformWindows();
@@ -1999,6 +2082,9 @@ static void SetWorkingDirectoryToBasePath()
         std::error_code error;
         std::filesystem::current_path(std::filesystem::path(executablePath).parent_path(), error);
     }
+#elif defined(__EMSCRIPTEN__)
+    // Browser build: SDL's base path is "/", but the game's files are mounted at /game, which
+    // main() has already made the working directory (Core/Platform/web/WebFileSystem.cpp).
 #else
     if (const char* basePath = SDL_GetBasePath(); basePath != nullptr)
     {

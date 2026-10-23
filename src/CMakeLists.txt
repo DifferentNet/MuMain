@@ -39,7 +39,28 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   endif()
 endif()
 
-add_subdirectory(ThirdParty/SDL EXCLUDE_FROM_ALL)
+# Web build: every object must be built with -pthread (shared memory), SDL and the fetched libraries
+# included, or the link fails.
+if(EMSCRIPTEN)
+  add_compile_options(-pthread)
+  add_link_options(-pthread)
+endif()
+
+# Web build (Emscripten): SDL's GPU API has no browser backend in a released SDL yet, so the web
+# build uses a checkout of the experimental WebGPU backend (libsdl-org/SDL#16020), given here.
+set(MU_SDL_SOURCE_DIR "" CACHE PATH "SDL source tree to build instead of ThirdParty/SDL (web build: the WebGPU fork)")
+if(EMSCRIPTEN)
+  if(NOT MU_SDL_SOURCE_DIR)
+    message(FATAL_ERROR "The web build needs MU_SDL_SOURCE_DIR: a checkout of SDL with the WebGPU GPU backend.")
+  endif()
+  set(SDL_WEBGPU ON CACHE BOOL "" FORCE)
+  set(SDL_WEBGPU_EMSCRIPTEN ON CACHE BOOL "" FORCE)
+endif()
+if(MU_SDL_SOURCE_DIR)
+  add_subdirectory("${MU_SDL_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/SDL" EXCLUDE_FROM_ALL)
+else()
+  add_subdirectory(ThirdParty/SDL EXCLUDE_FROM_ALL)
+endif()
 set(_saved_BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS}")
 set(BUILD_SHARED_LIBS OFF)
 FetchContent_MakeAvailable(SDL3_ttf)
@@ -175,6 +196,14 @@ if(WIN32)
 else()
   list(FILTER MU_CLIENT_SOURCES EXCLUDE REGEX "[/\\]Core[/\\]Platform[/\\]win32[/\\]")
 endif()
+# Web build: no curl (the cash shop downloads), no OpenSSL (the saved-login encryption) and no .NET
+# network library; Core/Platform/web/ replaces them. Other builds leave that folder out.
+if(EMSCRIPTEN)
+  list(FILTER MU_CLIENT_SOURCES EXCLUDE REGEX "[/\\]GameShop[/\\]FileDownloader[/\\]CurlFileDownloader\\.cpp$")
+  list(FILTER MU_CLIENT_SOURCES EXCLUDE REGEX "[/\\]Core[/\\]Platform[/\\]PlatformCrypto\\.cpp$")
+else()
+  list(FILTER MU_CLIENT_SOURCES EXCLUDE REGEX "[/\\]Core[/\\]Platform[/\\]web[/\\]")
+endif()
 
 list(FILTER MU_CLIENT_SOURCES EXCLUDE REGEX "[/\\]Render[/\\]Renderer[/\\]MuRenderer\\.cpp$")
 
@@ -276,13 +305,17 @@ if(MSVC)
 endif()
 target_compile_definitions(MuClient PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE)
 target_link_libraries(MuClient PUBLIC SDL3::SDL3 glm::glm spdlog::spdlog)
-find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+if(NOT EMSCRIPTEN)
+  find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+endif()
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND MU_LINK_SDL_PLATFORM_BACKENDS)
   # SDL also dlopen()s libvulkan.so.1; the same option makes it a DT_NEEDED entry of Main
   # (linked below) so the loader resolves through the RUNPATH.
   find_package(Vulkan REQUIRED)
 endif()
-target_link_libraries(MuClient PUBLIC OpenSSL::Crypto)
+if(NOT EMSCRIPTEN)
+  target_link_libraries(MuClient PUBLIC OpenSSL::Crypto)
+endif()
 if(TARGET SDL3_ttf::SDL3_ttf)
   target_link_libraries(MuClient PUBLIC SDL3_ttf::SDL3_ttf)
 endif()
@@ -293,6 +326,14 @@ endif()
 # RmlUi (game UI middleware). The real target is rmlui_core, aliased as RmlUi::Core
 # (Source/Core/CMakeLists.txt).
 target_link_libraries(MuClient PUBLIC RmlUi::Core)
+if(EMSCRIPTEN)
+  # turbojpeg.h of the web shim (Core/Platform/web/TurboJpegShim.cpp).
+  target_include_directories(MuClient PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/source/Core/Platform/web/include")
+  # RmlUi's renderer gets WGSL for its SPIR-V through Core/Platform/web/RmlUiGpuShaders.cpp.
+  set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/RmlUi/Backends/RmlUi_Renderer_SDL_GPU.cpp"
+    PROPERTIES COMPILE_DEFINITIONS
+      "SDL_GetGPUShaderFormats=MuWeb_RmlUi_GetGPUShaderFormats;SDL_CreateGPUShader=MuWeb_RmlUi_CreateGPUShader")
+endif()
 target_include_directories(MuClient PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/RmlUi/Backends"
 )
@@ -312,8 +353,10 @@ target_compile_definitions(MuClient PUBLIC
 )
 
 # The in-game shop downloader uses libcurl on every platform.
-find_package(CURL REQUIRED)
-target_link_libraries(MuClient PUBLIC CURL::libcurl)
+if(NOT EMSCRIPTEN)
+  find_package(CURL REQUIRED)
+  target_link_libraries(MuClient PUBLIC CURL::libcurl)
+endif()
 
 # The engine relies on self-registering globals whose constructors get
 # silently dropped if the linker only pulls archive members on demand, so
@@ -427,7 +470,28 @@ if (MSVC AND MU_REPORT_DEAD_SYMBOLS)
   )
 endif()
 
-if (NOT MSVC)
+if (EMSCRIPTEN)
+  # Browser build: WebAssembly + JavaScript glue. JSPI lets the game's blocking loop yield to
+  # the browser each frame; pthreads need cross-origin isolation (COOP/COEP) from the web server.
+  set_target_properties(Main PROPERTIES SUFFIX ".js")
+  target_link_options(Main PRIVATE
+    "-sJSPI"
+    "-pthread"
+    "-fwasm-exceptions"
+    "-sSUPPORT_LONGJMP=wasm"
+    "-sPTHREAD_POOL_SIZE=8"
+    "-sALLOW_MEMORY_GROWTH=1"
+    "-sINITIAL_MEMORY=256MB"
+    "-sMAXIMUM_MEMORY=4GB"
+    "-sSTACK_SIZE=8MB"
+    "-sWASMFS"
+    "-sFORCE_FILESYSTEM=1"
+    "-sEXIT_RUNTIME=0"
+    "-sENVIRONMENT=web,worker"
+    "-sEXPORTED_RUNTIME_METHODS=['FS']"
+    # Function names in stack traces while the port is being brought up.
+    "--profiling-funcs")
+elseif (NOT MSVC)
   set(MU_MAIN_MAP_FILE "${CMAKE_CURRENT_BINARY_DIR}/Main.map")
   if (APPLE)
     target_link_options(Main PRIVATE "-Wl,-map,${MU_MAIN_MAP_FILE}")
@@ -507,6 +571,34 @@ add_custom_command(TARGET Main POST_BUILD
     "$<TARGET_FILE_DIR:Main>/shaders"
   VERBATIM
 )
+
+if (EMSCRIPTEN)
+  # Web build: the page that hosts the game, and files.txt, the list of game files the browser
+  # mounts (source/Core/Platform/web/WebFileSystem.cpp). Runs after the copies above.
+  # The game's sound and music aren't in this repository; MU_WEB_EXTRA_DATA_DIR names a folder
+  # whose contents (Data/Sound, Data/Music) are copied into the web output too.
+  set(MU_WEB_EXTRA_DATA_DIR "" CACHE PATH "Folder copied into the web output (e.g. one holding Data/Sound and Data/Music)")
+  find_package(Python3 COMPONENTS Interpreter REQUIRED)
+  set(_mu_web_extra_copy "")
+  if (MU_WEB_EXTRA_DATA_DIR)
+    set(_mu_web_extra_copy COMMAND "${CMAKE_COMMAND}" -E copy_directory_if_different
+      "${MU_WEB_EXTRA_DATA_DIR}" "$<TARGET_FILE_DIR:Main>")
+  endif()
+  add_custom_command(TARGET Main POST_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+      "${CMAKE_CURRENT_SOURCE_DIR}/web/index.html"
+      "$<TARGET_FILE_DIR:Main>/index.html"
+    ${_mu_web_extra_copy}
+    COMMAND "${CMAKE_COMMAND}"
+      "-DOUTPUT_DIR=$<TARGET_FILE_DIR:Main>"
+      "-P" "${REPO_ROOT}/cmake/WriteWebFileList.cmake"
+    # startup.pack: the files the game reads before it can be played, in one download.
+    COMMAND "${Python3_EXECUTABLE}" "${REPO_ROOT}/tools/web/make_startup_pack.py"
+      --root "$<TARGET_FILE_DIR:Main>"
+      --list "${CMAKE_CURRENT_SOURCE_DIR}/web/startup-files.txt"
+    VERBATIM
+  )
+endif()
 
 # Skeleton Linux-native linkage. This intentionally depends only on
 # ubiquitous system libraries so we can focus on getting the project to
@@ -645,6 +737,33 @@ add_custom_target(GenWireSizes DEPENDS "${WIRE_SIZES_GEN_HEADER}")
 # header existed and fail (workaround was a manual --target GenWireSizes first).
 add_dependencies(MuClient GenWireSizes)
 
+if(EMSCRIPTEN)
+  # Web build: the C++ versions of MUnique.Client.Library's Send<Packet> functions, generated from
+  # the same packet definitions (tools/web/gen_web_packets.py, Core/Platform/web/WebNetwork.h).
+  cmake_path(GET OPENMU_PACKETS_XML PARENT_PATH _web_packets_xml_dir)          # .../ServerToClient
+  cmake_path(GET _web_packets_xml_dir PARENT_PATH WEB_PACKETS_XML_DIR)          # .../net10.0
+  set(WEB_PACKETS_DIR "${CMAKE_BINARY_DIR}/generated/web")
+  set(WEB_PACKETS_SCRIPT "${REPO_ROOT}/tools/web/gen_web_packets.py")
+  add_custom_command(
+    OUTPUT "${WEB_PACKETS_DIR}/WebPacketBuilders.generated.h" "${WEB_PACKETS_DIR}/WebPacketFunctions.generated.cpp"
+    COMMAND "${Python3_EXECUTABLE}" "${WEB_PACKETS_SCRIPT}"
+            --xml-dir "${WEB_PACKETS_XML_DIR}"
+            --bindings-dir "${CMAKE_CURRENT_SOURCE_DIR}/source/Dotnet"
+            --out-dir "${WEB_PACKETS_DIR}"
+    DEPENDS "${WEB_PACKETS_SCRIPT}"
+            "${WEB_PACKETS_XML_DIR}/ConnectServer/ConnectServerPackets.xml"
+            "${WEB_PACKETS_XML_DIR}/ClientToServer/ClientToServerPackets.xml"
+            "${WEB_PACKETS_XML_DIR}/ChatServer/ChatServerPackets.xml"
+            "${CMAKE_CURRENT_SOURCE_DIR}/source/Dotnet/PacketBindings_ConnectServer.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/source/Dotnet/PacketBindings_ClientToServer.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/source/Dotnet/PacketBindings_ChatServer.h"
+    COMMENT "Generating the web build's packet functions"
+    VERBATIM)
+  target_sources(MuClient PRIVATE "${WEB_PACKETS_DIR}/WebPacketFunctions.generated.cpp")
+  target_include_directories(MuClient PRIVATE "${WEB_PACKETS_DIR}")
+  target_link_options(Main PRIVATE "-lwebsocket.js")
+endif()
+
 target_include_directories(MuClient PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/source"
   # source/App holds the moved PCH header (stdafx.h). Keeping App/ on the
@@ -759,6 +878,11 @@ if (DOTNET_EXECUTABLE)
     message(WARNING "Found Linux dotnet but target is Windows. "
       "Cross-OS Native AOT is not supported. MUnique.Client.Library.dll will NOT be built. "
       "Install the Windows .NET SDK or use WSL interop (dotnet.exe) to enable.")
+    set(DOTNET_CAN_BUILD_CLIENT_LIBRARY FALSE)
+  endif()
+  # The browser can't load a native library: the web build has its own network layer
+  # (Core/Platform/web/), so only the host-side C# tools run.
+  if (EMSCRIPTEN)
     set(DOTNET_CAN_BUILD_CLIENT_LIBRARY FALSE)
   endif()
 endif()

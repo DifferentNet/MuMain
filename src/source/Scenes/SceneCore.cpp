@@ -24,6 +24,9 @@
 #include "UI/Core/WindowSystem.h"
 #include <chrono>
 #include <thread>
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 
 #include "Camera/CameraUtility.h"
 #include "Scenes/SceneManager.h"
@@ -109,6 +112,30 @@ float g_Luminosity;
 
 extern int g_iNoMouseTime;
 
+namespace
+{
+// In the browser the game loop runs on the page's main thread, and only a wait that hands control
+// back lets the browser deliver input and network messages and show frames; sleep_for and yield
+// spin there instead.
+void SleepBetweenFrames(long milliseconds)
+{
+#ifdef __EMSCRIPTEN__
+    emscripten_sleep(static_cast<unsigned int>(milliseconds));
+#else
+    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+#endif
+}
+
+void YieldBetweenFrames()
+{
+#ifdef __EMSCRIPTEN__
+    emscripten_sleep(0);
+#else
+    std::this_thread::yield();
+#endif
+}
+} // namespace
+
 void WaitForNextActivity(bool usePreciseSleep)
 {
     // We only sleep when we have enough time to sleep and have some additional rest time.
@@ -124,16 +151,16 @@ void WaitForNextActivity(bool usePreciseSleep)
         if (rest_ms - sleep_duration_offset_ms > sleep_threshold_ms)
         {
             const auto sleep_ms = std::min<double>(rest_ms - sleep_duration_offset_ms, max_sleep_ms);
-            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<long>(sleep_ms)));
+            SleepBetweenFrames(static_cast<long>(sleep_ms));
         }
         else
         {
-            std::this_thread::yield();
+            YieldBetweenFrames();
         }
     }
     else
     {
-        std::this_thread::yield();
+        YieldBetweenFrames();
     }
 }
 

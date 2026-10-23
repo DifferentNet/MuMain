@@ -145,6 +145,15 @@ else()
     endforeach()
 endif()
 
+# Web build: WGSL for the WebGPU backend, generated from the SPIR-V blobs by
+# tools/web/spirv-to-wgsl.mjs and checked in beside them.
+if(EMSCRIPTEN)
+    foreach(shader_stage IN LISTS MU_SHADER_STAGE_NAMES)
+        configure_file("${MU_SHADER_COMPILED_DIR}/${shader_stage}.wgsl"
+                       "${MU_SHADER_OUTPUT_DIR}/${shader_stage}.wgsl" COPYONLY)
+    endforeach()
+endif()
+
 add_custom_target(ValidateStagedShaderBlobs ALL
     COMMAND "${CMAKE_COMMAND}"
         "-DMU_SHADER_BLOB_DIR=${MU_SHADER_OUTPUT_DIR}"

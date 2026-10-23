@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MU Online (web)</title>
+<style>
+  :root { --bg: #0d0e12; --panel: #16181f; --line: rgba(255,255,255,.12); --ink: #f2eee6; --muted: #a0a5b1; --gold: #e5b95c; --bad: #f2766a; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 14px/1.5 "Segoe UI", system-ui, sans-serif; }
+  #stage { display: flex; align-items: center; justify-content: center; height: calc(100% - 2.5rem); overflow: hidden; }
+  #stage:fullscreen { height: 100%; background: #000; }
+  /* fitCanvas() below sizes the canvas to the stage; the game picks its resolution (Options). */
+  #canvas { display: block; background: #000; outline: none; }
+  #status { position: absolute; inset: 0 0 2.5rem 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 1rem; pointer-events: none; }
+  #status.bad { color: var(--bad); }
+  #status[hidden] { display: none; }
+  footer { height: 2.5rem; display: flex; gap: 1rem; align-items: center; padding: 0 1rem; border-top: 1px solid var(--line); background: var(--panel); color: var(--muted); font-size: .8125rem; }
+  footer button { font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 4px; padding: .15rem .6rem; cursor: pointer; }
+  footer button:focus-visible { outline: 2px solid var(--gold); }
+  #log { position: fixed; left: 0; right: 0; bottom: 2.5rem; height: 40%; margin: 0; padding: .5rem 1rem; overflow: auto; background: rgba(13,14,18,.96); border-top: 1px solid var(--line); font: 12px/1.4 ui-monospace, Consolas, monospace; white-space: pre-wrap; }
+  #log[hidden] { display: none; }
+  .err { color: var(--bad); }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="canvas" tabindex="0" oncontextmenu="event.preventDefault()"></canvas></div>
+<div id="status">Loading…</div>
+<pre id="log" hidden></pre>
+<footer>
+  <span>MU Online in the browser — local test build</span>
+  <button id="toggle-log" type="button">Log</button>
+  <button id="fullscreen" type="button">Fullscreen</button>
+</footer>
+<script>
+  const statusEl = document.getElementById("status");
+  const logEl = document.getElementById("log");
+  const canvas = document.getElementById("canvas");
+  function setStatus(text, bad) {
+    statusEl.hidden = !text;
+    statusEl.textContent = text || "";
+    statusEl.classList.toggle("bad", !!bad);
+  }
+  function appendLog(text, isError) {
+    const line = document.createElement("div");
+    if (isError) line.className = "err";
+    line.textContent = text;
+    logEl.appendChild(line);
+    if (logEl.childElementCount > 3000) logEl.firstChild.remove();
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  document.getElementById("toggle-log").onclick = () => { logEl.hidden = !logEl.hidden; };
+  const stage = document.getElementById("stage");
+  document.getElementById("fullscreen").onclick = () => { stage.requestFullscreen?.().catch(() => {}); canvas.focus(); };
+
+  // The canvas has the game's resolution (Options; its width and height attributes) and is shown
+  // as large as the stage allows, keeping its shape. Only the CSS size changes, which SDL takes into
+  // account for the mouse. Not before the game has sized the canvas (away from the HTML default of
+  // 300x150): SDL treats a canvas the page already sized as one it may not resize.
+  function fitCanvas() {
+    const w = canvas.width, h = canvas.height;
+    if (w <= 1 || h <= 1 || (w === 300 && h === 150) || !stage.clientWidth || !stage.clientHeight) return;
+    const scale = Math.min(stage.clientWidth / w, stage.clientHeight / h);
+    const cssW = Math.floor(w * scale) + "px", cssH = Math.floor(h * scale) + "px";
+    if (canvas.style.width !== cssW) canvas.style.width = cssW;
+    if (canvas.style.height !== cssH) canvas.style.height = cssH;
+  }
+  new ResizeObserver(fitCanvas).observe(stage);
+  new MutationObserver(fitCanvas).observe(canvas, { attributes: true, attributeFilter: ["width", "height", "style"] });
+
+  // When the game's code fails (a WebAssembly error), say so and stop calling into it. The failure
+  // can leave a lock taken (inside malloc, say), and the next call from the page (saving settings,
+  // a key, a network message) would wait for it forever and freeze the tab.
+  let crashed = false;
+  const openSockets = new Set();
+  const PageWebSocket = WebSocket;
+  window.WebSocket = class extends PageWebSocket {
+    constructor(...args) {
+      super(...args);
+      openSockets.add(this);
+      this.addEventListener("close", () => openSockets.delete(this));
+    }
+  };
+  const blockAfterCrash = (event) => { if (crashed) event.stopImmediatePropagation(); };
+  for (const type of ["keydown", "keyup", "keypress", "mousedown", "mouseup", "mousemove", "wheel", "pointerdown",
+                      "pointerup", "pointermove", "touchstart", "touchend", "touchmove", "focus", "blur", "resize",
+                      "visibilitychange", "contextmenu"]) {
+    window.addEventListener(type, blockAfterCrash, true);
+  }
+  function gameCrashed(error) {
+    if (crashed) return;
+    crashed = true;
+    for (const socket of openSockets) {
+      socket.onmessage = socket.onclose = socket.onerror = null;
+      try { socket.close(); } catch (e) {}
+    }
+    statusEl.hidden = false;
+    statusEl.classList.add("bad");
+    statusEl.style.pointerEvents = "auto";
+    statusEl.style.background = "rgba(13,14,18,.92)";
+    statusEl.innerHTML = "";
+    const box = document.createElement("div");
+    box.innerHTML = "<p>The game stopped because of an error.</p><p></p>";
+    box.lastChild.textContent = String(error && error.message || error).slice(0, 300);
+    const reload = document.createElement("button");
+    reload.textContent = "Reload";
+    reload.onclick = () => location.reload();
+    const reset = document.createElement("button");
+    reset.textContent = "Reset settings and reload";
+    reset.onclick = () => { location.search = "?reset"; };
+    for (const button of [reload, reset]) {
+      button.style.cssText = "font: inherit; margin: .25rem; padding: .3rem .8rem; cursor: pointer;";
+      box.appendChild(button);
+    }
+    statusEl.appendChild(box);
+    console.error("The game stopped:", error);
+  }
+  // Leaving the page can keep it frozen in Chrome's back/forward cache with its sockets open, and
+  // the browser still answers the bridge's pings, so the character stayed "already connected"
+  // until OpenMU's own timeout. Close them when the page goes, and start over if it comes back.
+  addEventListener("pagehide", () => {
+    for (const socket of openSockets) {
+      try { socket.close(1000, "page closed"); } catch (e) {}
+    }
+  });
+  addEventListener("pageshow", (event) => { if (event.persisted) location.reload(); });
+
+  const isGameError = (error) => error instanceof WebAssembly.RuntimeError || /Main\.wasm/.test(String(error && error.stack));
+  addEventListener("error", (event) => { if (isGameError(event.error)) gameCrashed(event.error); });
+  addEventListener("unhandledrejection", (event) => { if (isGameError(event.reason)) gameCrashed(event.reason); });
+
+  // config.ini (resolution, volume, the remembered user name ...) lives in the page's memory; keep
+  // a copy in the browser so the next visit starts with it (WebFileSystem.cpp merges it back).
+  // index.html?reset forgets it, for a setting that keeps the game from starting.
+  if (new URLSearchParams(location.search).has("reset")) {
+    try { localStorage.removeItem("mu-web/config.ini"); } catch (e) {}
+  }
+  let savedConfig = null;
+  function saveConfig() {
+    if (crashed) return;
+    try {
+      const text = new TextDecoder().decode(Module.FS.readFile("/game/config.ini"));
+      if (text && text !== savedConfig) {
+        localStorage.setItem("mu-web/config.ini", text);
+        savedConfig = text;
+      }
+    } catch (e) { /* not mounted yet, or no storage in this browser */ }
+  }
+
+  // The game needs WebGPU (graphics), JSPI (its frame loop yields to the browser) and cross-origin
+  // isolation (threads). Say which one is missing instead of failing somewhere inside the game.
+  const missing = [];
+  if (!navigator.gpu) missing.push("WebGPU");
+  if (!("Suspending" in WebAssembly)) missing.push("WebAssembly JSPI");
+  if (!self.crossOriginIsolated) missing.push("cross-origin isolation (serve with scripts/serve-web.py)");
+  if (missing.length) {
+    setStatus("This browser can't run the game: no " + missing.join(", ") + ". Use a current Chrome or Edge.", true);
+  } else {
+    // index.html?profile samples the page's code (JS Self-Profiling API; the server must send
+    // "Document-Policy: js-profiling", as scripts/serve-web.py does). muProfileTop() in the console
+    // lists the functions that took the most time since the page opened.
+    if (new URLSearchParams(location.search).has("profile") && self.Profiler) {
+      const profiler = new Profiler({ sampleInterval: 10, maxBufferSize: 1000000 });
+      window.muProfileTop = async (count = 40) => {
+        const trace = await profiler.stop();
+        const selfCounts = new Map(), totalCounts = new Map();
+        for (const sample of trace.samples) {
+          const seen = new Set();
+          for (let id = sample.stackId, first = true; id !== undefined; id = trace.stacks[id].parentId, first = false) {
+            const frame = trace.frames[trace.stacks[id].frameId];
+            const name = frame.name || "(anonymous)";
+            if (first) selfCounts.set(name, (selfCounts.get(name) || 0) + 1);
+            if (!seen.has(name)) { seen.add(name); totalCounts.set(name, (totalCounts.get(name) || 0) + 1); }
+          }
+        }
+        const top = (map) => [...map].sort((a, b) => b[1] - a[1]).slice(0, count).map(([n, c]) => `${(c * 10 / 1000).toFixed(1)}s ${n}`);
+        return { samples: trace.samples.length, self: top(selfCounts), total: top(totalCounts) };
+      };
+    }
+
+    // index.html?heartbeat logs every 2 s how often timers and animation frames got a turn, to see
+    // whether the game leaves the browser any time between its frames.
+    if (new URLSearchParams(location.search).has("heartbeat")) {
+      let frames = 0, last = performance.now();
+      const countFrame = () => { frames++; requestAnimationFrame(countFrame); };
+      requestAnimationFrame(countFrame);
+      setInterval(() => {
+        const now = performance.now();
+        console.log(`heartbeat: ${Math.round(now - last)} ms since the last one, ${frames} animation frames`);
+        last = now; frames = 0;
+      }, 2000);
+    }
+
+    // The files the game reads before it can be played come in one download (startup.pack, listed in
+    // startup.json), fetched while the game's code loads. WebFileSystem.cpp waits for it; without it
+    // the game fetches each file when it first opens it.
+    let packDone = false;
+    const startupPack = (async () => {
+      const indexResponse = await fetch("startup.json", { cache: "no-cache" });
+      if (!indexResponse.ok) return null;
+      const index = await indexResponse.json();
+      const total = index.files.reduce((sum, file) => sum + file[1], 0);
+      const response = await fetch("startup.pack", { cache: "no-cache" });
+      if (!response.ok) return null;
+      const bytes = new Uint8Array(total);
+      const reader = response.body.getReader();
+      let received = 0, shownMb = -1;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (received + value.length > total) throw new Error("startup.pack is bigger than startup.json says");
+        bytes.set(value, received);
+        received += value.length;
+        const mb = Math.floor(received / 1e6);
+        if (mb !== shownMb) {
+          shownMb = mb;
+          setStatus(`Downloading game data… ${mb} of ${Math.round(total / 1e6)} MB`);
+        }
+      }
+      if (received !== total) throw new Error("startup.pack is incomplete");
+      return { files: index.files, bytes };
+    })().finally(() => { packDone = true; setStatus(""); });
+
+    var Module = {
+      canvas,
+      muStartupPack: startupPack,
+      print: (text) => { console.log(text); appendLog(text, false); },
+      printErr: (text) => { console.error(text); appendLog(text, true); },
+      setStatus: (text) => { if (packDone || text) setStatus(text); },
+      onRuntimeInitialized: () => {
+        if (packDone) setStatus("");
+        canvas.focus();
+        setInterval(saveConfig, 3000);
+        addEventListener("pagehide", saveConfig);
+      },
+      onAbort: (what) => gameCrashed(what),
+    };
+    const script = document.createElement("script");
+    script.src = "Main.js";
+    script.onerror = () => setStatus("Main.js didn't load: is the web build in this folder?", true);
+    document.body.appendChild(script);
+  }
+</script>
+</body>
+</html>

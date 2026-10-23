@@ -11,6 +11,10 @@
 *.spv binary
 *.dxil binary
 src/shaders/compiled/*.msl text eol=lf whitespace=-blank-at-eof
+src/shaders/compiled/*.wgsl text eol=lf whitespace=-blank-at-eof
+# Web build: the SDL patch must apply byte for byte, and shell scripts break with CRLF.
+tools/web/patches/*.patch -text
+tools/web/**/*.sh text eol=lf
 # Item data is written by the item editor with LF; keep checkouts identical
 # so saving unchanged data does not change the files.
 src/bin/Data/Items/**/*.json text eol=lf

@@ -5,6 +5,19 @@
 
 #include "Core/Utilities/Log/MuLogger.h"
 
+#ifdef __EMSCRIPTEN__
+#include "Core/Platform/web/WebNetwork.h"
+
+#include <cstring>
+
+namespace
+{
+// Browser build: there is no dynamic loading. The one library the client loads,
+// MUnique.Client.Library, is built in (Core/Platform/web/WebNetwork.cpp); this marks its handle.
+char g_webNetworkLibrary;
+} // namespace
+#endif
+
 namespace mu::platform
 {
 
@@ -15,6 +28,13 @@ LibraryHandle Load(const char* path)
         mu::log::Get("platform")->error("PLAT: PlatformLibrary::Load() failed -- path is null");
         return nullptr;
     }
+
+#ifdef __EMSCRIPTEN__
+    if (std::strstr(path, "MUnique.Client.Library") != nullptr)
+    {
+        return &g_webNetworkLibrary;
+    }
+#endif
 
     void* handle = dlopen(path, RTLD_LAZY | RTLD_LOCAL);
     if (handle == nullptr)
@@ -41,6 +61,18 @@ void* GetSymbol(LibraryHandle handle, const char* name)
         return nullptr;
     }
 
+#ifdef __EMSCRIPTEN__
+    if (handle == &g_webNetworkLibrary)
+    {
+        void* symbol = mu::web::FindNetworkSymbol(name);
+        if (symbol == nullptr)
+        {
+            mu::log::Get("platform")->error("PLAT: PlatformLibrary::GetSymbol({}) failed -- not in the web network layer", name);
+        }
+        return symbol;
+    }
+#endif
+
     // Clear any existing error
     dlerror();
 
@@ -64,6 +96,13 @@ void Unload(LibraryHandle handle)
     {
         return;
     }
+
+#ifdef __EMSCRIPTEN__
+    if (handle == &g_webNetworkLibrary)
+    {
+        return;
+    }
+#endif
 
     if (dlclose(handle) != 0)
     {
