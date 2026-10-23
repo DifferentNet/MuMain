@@ -23,6 +23,8 @@
 #include "Network/Server/WSclient.h"
 #include "GameLogic/Items/ItemCategories.h"
 #include "GameLogic/Items/ShopRestrictions.h"
+#include "Engine/Object/ZzzInfomation.h"
+#include "I18N/All.h"
 
 #include "MuHelper.h"
 
@@ -133,6 +135,13 @@ namespace MUHelper
         m_bAttackBetweenRounds = false;
         m_aiTimedSkillSecond.fill(-1);
         m_iTimedSkillSlot = -1;
+        m_mapSupportFailures.clear();
+        m_mapSuspendedUntil.clear();
+        m_bManaShort = false;
+        m_setNotified.clear();
+        m_mapForgottenUntil.clear();
+        m_noTargetInReachSince = {};
+        m_walkWatchSince = {};
 
         m_bActive = true;
         g_ConsoleDebug->Write(MCD_NORMAL, L"[MU Helper] Started");
@@ -185,6 +194,7 @@ namespace MUHelper
         }
         m_nextRound = now + RoundInterval;
 
+        StopStuckWalk(now);
         Work();
 
         if (m_iLoopCounter++ == 4)
@@ -204,11 +214,46 @@ namespace MUHelper
         }
     }
 
+    void CMuHelper::StopStuckWalk(std::chrono::steady_clock::time_point now)
+    {
+        // A walk that goes nowhere, its next tile taken by a monster in a crowd, keeps Hero->Movement set, and no
+        // cast completes while it is (ExecuteSkillComplete). Once the helper also walks up to monsters when standing
+        // still (2026-10-23), such a walk must not freeze it: after StuckWalkLimit on the same tile it is stopped.
+        if (!Hero->Movement)
+        {
+            m_walkWatchSince = {};
+            return;
+        }
+        if (m_walkWatchSince == std::chrono::steady_clock::time_point{}
+            || Hero->PositionX != m_posWalkWatch.x || Hero->PositionY != m_posWalkWatch.y)
+        {
+            m_posWalkWatch = { Hero->PositionX, Hero->PositionY };
+            m_walkWatchSince = now;
+            return;
+        }
+        if (now - m_walkWatchSince < StuckWalkLimit)
+        {
+            return;
+        }
+
+        Hero->Path.Lock.lock();
+        Hero->Path.PathNum = 0;
+        Hero->Path.CurrentPath = 0;
+        Hero->Path.CurrentPathFloat = 0;
+        Hero->Path.Lock.unlock();
+        LetHeroStop(Hero, TRUE);
+        m_walkWatchSince = {};
+        m_iCurrentTarget = -1;
+        g_ConsoleDebug->Write(MCD_NORMAL, L"[MU Helper] Stopped a walk that went nowhere");
+    }
+
     void CMuHelper::Work()
     {
         m_bAttackBetweenRounds = false;
         try
         {
+            RefreshTargets();
+
             if (!ActivatePet())
             {
                 return;
@@ -332,6 +377,55 @@ namespace MUHelper
         return static_cast<int>(std::ceil(std::sqrt(iDx * iDx + iDy * iDy)));
     }
 
+    void CMuHelper::RefreshTargets()
+    {
+        // The packets that add targets (a monster appearing, moving, hurt or attacking) say nothing about one
+        // that just stands there: one already around when the helper started, one fighting someone else, or one
+        // given up after a failed cast. The helper then stood among monsters until one moved (ghinzuro in the
+        // Arena, 2026-10-23). So every round the monsters in view within the hunting range join the targets.
+        const auto now = std::chrono::steady_clock::now();
+        for (auto it = m_mapForgottenUntil.begin(); it != m_mapForgottenUntil.end();)
+        {
+            it = now < it->second ? std::next(it) : m_mapForgottenUntil.erase(it);
+        }
+
+        std::vector<int> found;
+        for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
+        {
+            CHARACTER* pChar = &CharactersClient[i];
+            if (!pChar->Object.Live || pChar->Dead > 0 || pChar == Hero || !IsMonster(pChar))
+            {
+                continue;
+            }
+            if (m_mapForgottenUntil.count(pChar->Key) || ComputeDistanceFromTarget(pChar) > m_iHuntingDistance)
+            {
+                continue;
+            }
+            found.push_back(pChar->Key);
+        }
+
+        if (found.empty())
+        {
+            return;
+        }
+        _targetsLock.lock();
+        m_setTargets.insert(found.begin(), found.end());
+        _targetsLock.unlock();
+    }
+
+    void CMuHelper::ForgetTarget(int iTargetId, GameLogic::Automation::SkillResult result)
+    {
+        using GameLogic::Automation::SkillResult;
+        // Only for what is about the target. A refused skill (no mana, too little energy) used to drop the
+        // target too, though the monster was still standing right there.
+        if (result == SkillResult::NotInView || result == SkillResult::NotAttackable
+            || result == SkillResult::NoPath || result == SkillResult::Blocked)
+        {
+            DeleteTarget(iTargetId);
+            m_mapForgottenUntil[iTargetId] = std::chrono::steady_clock::now() + ForgottenTargetRest;
+        }
+    }
+
     int CMuHelper::GetNearestTarget()
     {
         int iClosestMonsterId = -1;
@@ -346,9 +440,13 @@ namespace MUHelper
         for (const int& iMonsterId : setTargets)
         {
             int iIndex = FindCharacterIndex(iMonsterId);
+            if (iIndex == MAX_CHARACTERS_CLIENT)
+            {
+                continue;
+            }
             CHARACTER* pTarget = &CharactersClient[iIndex];
 
-            if (!IsMonster(pTarget))
+            if (!IsMonster(pTarget) || pTarget->Dead > 0 || !pTarget->Object.Live)
             {
                 continue;
             }
@@ -379,9 +477,13 @@ namespace MUHelper
         for (const int& iMonsterId : setTargets)
         {
             int iIndex = FindCharacterIndex(iMonsterId);
+            if (iIndex == MAX_CHARACTERS_CLIENT)
+            {
+                continue;
+            }
             CHARACTER* pTarget = &CharactersClient[iIndex];
 
-            if (!IsMonster(pTarget))
+            if (!IsMonster(pTarget) || pTarget->Dead > 0 || !pTarget->Object.Live)
             {
                 continue;
             }
@@ -535,7 +637,7 @@ namespace MUHelper
         auto CastIfMissing = [&](bool bBuffActive, bool bTimerRespected, bool bNeedsTarget) -> int
         {
             if (!bBuffActive || (bTimerRespected && m_bTimerActivatedBuffOngoing))
-                return SimulateSkill(iBuffSkill, bNeedsTarget, pTargetChar->Key);
+                return CastSupport(iBuffSkill, bNeedsTarget, pTargetChar->Key);
             return 1;
         };
 
@@ -609,6 +711,7 @@ namespace MUHelper
     {
         int64_t iLife = CharacterAttribute->Life;
         int64_t iLifeMax = CharacterAttribute->LifeMax;
+        bool bDrank = false;
 
         if (m_config.bUseHealPotion && iLifeMax > 0 && iLife > 0)
         {
@@ -619,26 +722,185 @@ namespace MUHelper
                 if (iPotionIndex != -1)
                 {
                     SendRequestUse(iPotionIndex, 0);
+                    bDrank = true;
                 }
+            }
+        }
+
+        // Mana potions, under the same "potion" switch, one potion a round with healing first (2026-10-23). The
+        // client's own cast drinks one only after a cast failed for mana, and the helper's skills and buffs, now
+        // up to 17 casts a second, emptied the mana faster than that kept up.
+        const bool bManaShort = m_bManaShort;
+        m_bManaShort = false;
+        const int64_t iMana = CharacterAttribute->Mana;
+        const int64_t iManaMax = CharacterAttribute->ManaMax;
+        if (m_config.bUseHealPotion && !bDrank && iManaMax > 0
+            && (bManaShort || iMana * 100 <= iManaMax * ManaPotionPercent))
+        {
+            const int iPotionIndex = g_pMyInventory->FindManaItemIndex();
+            if (iPotionIndex != -1)
+            {
+                SendRequestUse(iPotionIndex, 0);
+            }
+            else if (bManaShort)
+            {
+                NotifyOnce(-1, I18N::Game::MuHelperNoManaPotions);
             }
         }
 
         return 1;
     }
 
-    int CMuHelper::RecoverHealth()
+    CMuHelper::SkillBlock CMuHelper::GetSkillBlock(ActionSkillType iSkill) const
     {
-        if (!Heal())
+        if (iSkill <= AT_SKILL_UNDEFINED || iSkill >= MAX_SKILLS)
         {
-            return 0;
+            return SkillBlock::None;
         }
-        
-        if (!DrainLife())
+
+        // As the class attacks check it (ClassAttack.cpp): the energy with the gear's bonus.
+        int iEnergy = 0;
+        gSkillManager.GetSkillInformation_Energy(iSkill, &iEnergy);
+        if (iEnergy > CharacterAttribute->Energy + CharacterAttribute->AddEnergy)
+        {
+            return SkillBlock::Energy;
+        }
+
+        // As CheckMana does, with the elf's Infinity Arrow surcharge from AttackElf.
+        int iMana = 0;
+        int iSkillMana = 0;
+        gSkillManager.GetSkillInformation(iSkill, 1, nullptr, &iMana, nullptr, &iSkillMana);
+        OBJECT* pHeroObject = &Hero->Object;
+        if (g_isCharacterBuff(pHeroObject, eBuff_InfinityArrow))
+        {
+            iMana += CharacterMachine->InfinityArrowAdditionalMana;
+        }
+        if (static_cast<int64_t>(iMana) > static_cast<int64_t>(CharacterAttribute->Mana))
+        {
+            return SkillBlock::Mana;
+        }
+        if (static_cast<int64_t>(iSkillMana) > static_cast<int64_t>(CharacterAttribute->SkillMana))
+        {
+            return SkillBlock::Ability;
+        }
+        return SkillBlock::None;
+    }
+
+    bool CMuHelper::IsSkillSuspended(ActionSkillType iSkill) const
+    {
+        const auto it = m_mapSuspendedUntil.find(iSkill);
+        return it != m_mapSuspendedUntil.end() && std::chrono::steady_clock::now() < it->second;
+    }
+
+    int CMuHelper::CastSupport(ActionSkillType iSkill, bool bTargetRequired, int iTarget)
+    {
+        // A buff or heal the character can't cast is passed over, and the round goes on to the potions and the
+        // attack. Before, its failed cast ended the round, every round, so the helper neither attacked nor drank
+        // (2026-10-23: Xeed's elf, Greater Defense and Greater Damage need more energy than his own 15).
+        if (IsSkillSuspended(iSkill))
+        {
+            return 1;
+        }
+
+        const SkillBlock block = GetSkillBlock(iSkill);
+        if (block != SkillBlock::None)
+        {
+            if (block == SkillBlock::Mana)
+            {
+                m_bManaShort = true;
+            }
+            NotifySkillBlocked(iSkill, block, false);
+            return 1;
+        }
+
+        if (SimulateSkill(iSkill, bTargetRequired, iTarget))
+        {
+            m_mapSupportFailures.erase(iSkill);
+            return 1;
+        }
+
+        using GameLogic::Automation::SkillResult;
+        if (m_lastSkillResult == SkillResult::Busy || m_lastSkillResult == SkillResult::Approaching)
         {
             return 0;
         }
 
-        if (!ConsumePotion())
+        // Failing for some other reason, round after round: let it rest and get on with the rest.
+        if (++m_mapSupportFailures[iSkill] >= SupportFailureLimit)
+        {
+            m_mapSupportFailures.erase(iSkill);
+            m_mapSuspendedUntil[iSkill] = std::chrono::steady_clock::now() + SupportSuspendTime;
+            wchar_t szName[MAX_SKILL_NAME + 1] = {};
+            gSkillManager.GetSkillInformation(iSkill, 1, szName, nullptr, nullptr);
+            wchar_t szText[256];
+            mu_swprintf(szText, I18N::Game::MuHelperSkillPaused, szName, static_cast<int>(SupportSuspendTime.count()));
+            NotifyOnce(iSkill * 8 + 4, szText);
+            return 1;
+        }
+        return 0;
+    }
+
+    void CMuHelper::NotifySkillBlocked(ActionSkillType iSkill, SkillBlock block, bool bPlainAttack)
+    {
+        const int iKey = iSkill * 8 + static_cast<int>(block);
+        if (m_setNotified.count(iKey))
+        {
+            return;
+        }
+
+        wchar_t szName[MAX_SKILL_NAME + 1] = {};
+        gSkillManager.GetSkillInformation(iSkill, 1, szName, nullptr, nullptr);
+        wchar_t szText[256];
+        switch (block)
+        {
+        case SkillBlock::Energy:
+        {
+            int iEnergy = 0;
+            gSkillManager.GetSkillInformation_Energy(iSkill, &iEnergy);
+            const int iHave = CharacterAttribute->Energy + CharacterAttribute->AddEnergy;
+            mu_swprintf(szText, bPlainAttack ? I18N::Game::MuHelperSkillEnergyPlain : I18N::Game::MuHelperSkillEnergySkip,
+                szName, iEnergy, iHave);
+            break;
+        }
+        case SkillBlock::Mana:
+            // Mana comes back, by itself or from a potion: only say it when there is no potion to drink.
+            if (g_pMyInventory->FindManaItemIndex() != -1)
+            {
+                return;
+            }
+            mu_swprintf(szText, bPlainAttack ? I18N::Game::MuHelperSkillManaPlain : I18N::Game::MuHelperSkillManaWait, szName);
+            break;
+        case SkillBlock::Ability:
+            mu_swprintf(szText, bPlainAttack ? I18N::Game::MuHelperSkillAgPlain : I18N::Game::MuHelperSkillAgWait, szName);
+            break;
+        default:
+            return;
+        }
+        NotifyOnce(iKey, szText);
+    }
+
+    void CMuHelper::NotifyOnce(int iKey, const wchar_t* pszText)
+    {
+        if (!m_setNotified.insert(iKey).second)
+        {
+            return;
+        }
+        g_pChatListBox->AddText(L"", pszText, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+        g_ConsoleDebug->Write(MCD_NORMAL, L"[MU Helper] %ls", pszText);
+    }
+
+    int CMuHelper::RecoverHealth()
+    {
+        // The potions first, every round: a heal skill that failed used to end the round before them, and the
+        // character stood there being hit with its potions in the bag (players, 2026-10-23).
+        ConsumePotion();
+
+        if (!Heal())
+        {
+            return 0;
+        }
+
+        if (!DrainLife())
         {
             return 0;
         }
@@ -676,7 +938,7 @@ namespace MUHelper
                 else if (pMember->stepHP * 10 <= m_config.iHealPartyThreshold
                     && ComputeDistanceFromTarget(pChar) <= MAX_ACTIONABLE_DISTANCE)
                 {
-                    iHealResult = SimulateSkill(iHealingSkill, true, pChar->Key);
+                    iHealResult = CastSupport(iHealingSkill, true, pChar->Key);
                 }
             }
 
@@ -701,7 +963,7 @@ namespace MUHelper
 
         if (iRemaining <= m_config.iHealThreshold)
         {
-            return SimulateSkill(iHealingSkill, true, HeroKey);
+            return CastSupport(iHealingSkill, true, HeroKey);
         }
 
         return 1;
@@ -729,7 +991,7 @@ namespace MUHelper
             m_iCurrentTarget = GetNearestTarget();
             if (m_iCurrentTarget != -1)
             {
-                return SimulateSkill(iDrainLife, true, m_iCurrentTarget);
+                return CastSupport(iDrainLife, true, m_iCurrentTarget);
             }
         }
 
@@ -811,40 +1073,65 @@ namespace MUHelper
         // (ghinzuro, 2026-10-22). With a pickup on it walks to its targets as before.
         const bool bStandStill = !PicksUpItems();
 
+        // A skill the character can't cast now (too little energy for it, mana or AG) gives way to plain hits,
+        // whether or not the plain attack is ticked as a fallback, and the chat says why, once (2026-10-23).
+        // Without it the helper stood among the monsters doing nothing.
+        bool bPlainAttack = m_config.bFallbackBasicAttack;
+        const auto UsableOrPlain = [&](ActionSkillType iSkill)
+        {
+            const SkillBlock block = GetSkillBlock(iSkill);
+            if (block == SkillBlock::None)
+            {
+                return true;
+            }
+            if (block == SkillBlock::Mana)
+            {
+                m_bManaShort = true;
+            }
+            NotifySkillBlocked(iSkill, block, true);
+            bPlainAttack = true;
+            return false;
+        };
+
         if (m_config.bUseCombo)
         {
-            if (bStandStill
-                && !KeepTargetWithinReach(gSkillManager.GetSkillDistance((ActionSkillType)m_config.aiSkill[m_iComboState], Hero)))
+            if (UsableOrPlain((ActionSkillType)m_config.aiSkill[m_iComboState]))
             {
-                return 0;
-            }
-            return SimulateComboAttack();
-        }
-
-        m_iCurrentSkill = SelectAttackSkill();
-        if (m_iCurrentSkill > AT_SKILL_UNDEFINED)
-        {
-            const float fSkillDistance = gSkillManager.GetSkillDistance(m_iCurrentSkill, Hero);
-            if (GameLogic::Combat::CanExecuteSkill(Hero, m_iCurrentSkill, fSkillDistance))
-            {
-                if (bStandStill && !KeepTargetWithinReach(fSkillDistance))
+                if (bStandStill
+                    && !MayAttackStandingStill(gSkillManager.GetSkillDistance((ActionSkillType)m_config.aiSkill[m_iComboState], Hero)))
                 {
                     return 0;
                 }
-                const int iCast = SimulateAttack(m_iCurrentSkill);
-                if (iCast && m_iTimedSkillSlot >= 0 && m_iTimedSkillSlot < MaxSkillSlots)
+                return SimulateComboAttack();
+            }
+        }
+        else
+        {
+            m_iCurrentSkill = SelectAttackSkill();
+            if (m_iCurrentSkill > AT_SKILL_UNDEFINED && UsableOrPlain(m_iCurrentSkill))
+            {
+                const float fSkillDistance = gSkillManager.GetSkillDistance(m_iCurrentSkill, Hero);
+                if (GameLogic::Combat::CanExecuteSkill(Hero, m_iCurrentSkill, fSkillDistance))
                 {
-                    m_aiTimedSkillSecond[m_iTimedSkillSlot] = m_iSecondsElapsed;
+                    if (bStandStill && !MayAttackStandingStill(fSkillDistance))
+                    {
+                        return 0;
+                    }
+                    const int iCast = SimulateAttack(m_iCurrentSkill);
+                    if (iCast && m_iTimedSkillSlot >= 0 && m_iTimedSkillSlot < MaxSkillSlots)
+                    {
+                        m_aiTimedSkillSecond[m_iTimedSkillSlot] = m_iSecondsElapsed;
+                    }
+                    return iCast;
                 }
-                return iCast;
             }
         }
 
-        if (m_config.bFallbackBasicAttack)
+        if (bPlainAttack)
         {
             if (!Hero->Movement)
             {
-                if (bStandStill && !KeepTargetWithinReach(GameLogic::Automation::EquippedAttackRange()))
+                if (bStandStill && !MayAttackStandingStill(GameLogic::Automation::EquippedAttackRange()))
                 {
                     return 0;
                 }
@@ -875,6 +1162,71 @@ namespace MUHelper
         const float fDx = Hero->Object.Position[0] - fTileX;
         const float fDy = Hero->Object.Position[1] - fTileY;
         return fDx * fDx + fDy * fDy <= (fReach * TERRAIN_SCALE) * (fReach * TERRAIN_SCALE);
+    }
+
+    bool CMuHelper::MayAttackStandingStill(float fReach)
+    {
+        // Standing still, but not idle (ghinzuro, 2026-10-23): in the Arena the helper stood for seconds at a
+        // time while monsters waited 4 to 7 tiles away, some behind the fence, out of the skill's reach. It still
+        // attacks what is within reach from where it stands; only when nothing has been for StandStillPatience
+        // does it go for the nearest monster within the hunting range of its start spot. With "original
+        // position" ticked it walks back there as before (Regroup).
+        if (KeepTargetWithinReach(fReach))
+        {
+            m_noTargetInReachSince = {};
+            return true;
+        }
+
+        const auto now = std::chrono::steady_clock::now();
+        if (m_noTargetInReachSince == std::chrono::steady_clock::time_point{})
+        {
+            m_noTargetInReachSince = now;
+            return false;
+        }
+        if (now - m_noTargetInReachSince < StandStillPatience)
+        {
+            return false;
+        }
+
+        const int iTarget = GetNearestTargetNearSpot();
+        if (iTarget == -1)
+        {
+            return false;
+        }
+        m_iCurrentTarget = iTarget;
+        return true;
+    }
+
+    int CMuHelper::GetNearestTargetNearSpot()
+    {
+        std::set<int> setTargets;
+        {
+            _targetsLock.lock();
+            setTargets = m_setTargets;
+            _targetsLock.unlock();
+        }
+
+        int iNearest = -1;
+        int iNearestDistance = 0;
+        for (const int& iMonsterId : setTargets)
+        {
+            CHARACTER* pTarget = FindCharacterByKey(iMonsterId);
+            if (pTarget == nullptr || pTarget->Dead > 0 || !pTarget->Object.Live || !IsMonster(pTarget))
+            {
+                continue;
+            }
+            if (ComputeDistanceBetween({ pTarget->PositionX, pTarget->PositionY }, m_posOriginal) > m_iHuntingDistance)
+            {
+                continue;
+            }
+            const int iDistance = ComputeDistanceFromTarget(pTarget);
+            if (iNearest == -1 || iDistance < iNearestDistance)
+            {
+                iNearest = iMonsterId;
+                iNearestDistance = iDistance;
+            }
+        }
+        return iNearest;
     }
 
     bool CMuHelper::KeepTargetWithinReach(float fReach)
@@ -1009,10 +1361,11 @@ namespace MUHelper
         // still refused by the primitive when it is dead.
         const SkillResult result =
             GameLogic::Automation::CastSkill(iSkill, bTargetRequired, iTarget, true, m_iHuntingDistance);
+        m_lastSkillResult = result;
 
-        if (iTarget != -1 && GameLogic::Automation::ShouldForgetTarget(result))
+        if (iTarget != -1)
         {
-            DeleteTarget(iTarget);
+            ForgetTarget(iTarget, result);
         }
 
         return result == SkillResult::Cast ? 1 : 0;
@@ -1034,6 +1387,7 @@ namespace MUHelper
         if (GameLogic::Automation::ShouldForgetTarget(result))
         {
             DeleteTarget(iTarget);
+            m_mapForgottenUntil[iTarget] = std::chrono::steady_clock::now() + ForgottenTargetRest;
         }
 
         return result == AttackResult::Attacked ? 1 : 0;

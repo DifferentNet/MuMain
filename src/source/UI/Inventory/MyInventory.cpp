@@ -158,7 +158,6 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
     c.Bind("myshop_tooltip", &model.myShopTooltip);
 
     c.Bind("exit_tooltip", &model.exitTooltip);
-    c.Bind("expand_tooltip", &model.expandTooltip);
     c.Bind("jewel_bank_tooltip", &model.jewelBankTooltip);
 
     c.Bind("set_option_label", &model.setOptionLabel);
@@ -216,8 +215,6 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
                 g_pNewUISystem->Hide(INTERFACE_PURCHASESHOP_INVENTORY);
             }
         });
-    c.BindEventCallback("my_inventory_expand_click",
-        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { g_pNewUISystem->Toggle(INTERFACE_INVENTORY_EXT); });
     c.BindEventCallback("my_inventory_jewel_bank_click",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
         {
@@ -787,9 +784,11 @@ bool CMyInventory::UpdateKeyEvent()
         return false;
     }
 
+    // K opens the jewel bank (2026-10-23, ghinzuro). It opened the expanded inventory, which no account here
+    // has: the cash shop that sells it is off, and every account has the extended vault instead.
     if (IsPress('K'))
     {
-        g_pNewUISystem->Toggle(INTERFACE_INVENTORY_EXT);
+        g_pNewUISystem->Toggle(INTERFACE_JEWEL_BANK);
         PlayBuffer(SOUND_CLICK01);
 
         return false;
@@ -928,8 +927,7 @@ void CMyInventory::SyncRmlModel()
         m_MyShopMode == MYSHOP_MODE_OPEN ? I18N::Game::OpenPersonalStoreS : I18N::Game::ClosePersonalStoreS);
 
     syncWide(&MyInventoryRmlModel::exitTooltip, "exit_tooltip", I18N::Game::CloseIV);
-    syncWide(&MyInventoryRmlModel::expandTooltip, "expand_tooltip", I18N::Game::OpenExpandedInventoryK);
-    syncWide(&MyInventoryRmlModel::jewelBankTooltip, "jewel_bank_tooltip", I18N::Game::JewelBankTitle);
+    syncWide(&MyInventoryRmlModel::jewelBankTooltip, "jewel_bank_tooltip", I18N::Game::JewelBankButtonK);
 
     // Label text is static per-language but still routed through syncWide (change-checked) rather
     // than bound once at Create() time.
@@ -1058,11 +1056,19 @@ void CMyInventory::Render3D()
         }
     }
 
-    // The jewel bank button's jewel (JewelBankWindow.h).
+    // The jewel bank button's jewel (JewelBankWindow.h), centred in the button that took the expanded
+    // inventory's place in the bottom row (2026-10-23).
     Rml::Element* jewelBankButton = m_RmlView.Document() != nullptr ? m_RmlView.Document()->GetElementById("btn_jewel_bank") : nullptr;
     Rml::Vector2f jewelBankAt;
-    if (jewelBankButton != nullptr && UI::RmlBridge::DrawnTopLeft(*jewelBankButton, jewelBankAt))
-        RenderItem3D(jewelBankAt.x + 1.f * scale, jewelBankAt.y, 22.f * scale, 24.f * scale, ITEM_JEWEL_OF_BLESS, 0, 0, 0, false);
+    Rml::Vector2f jewelBankSize;
+    if (jewelBankButton != nullptr
+        && UI::RmlBridge::DrawnBox(*jewelBankButton, Rml::BoxArea::Border, jewelBankAt, jewelBankSize))
+    {
+        const float jewelWidth = 22.f * scale;
+        const float jewelHeight = 24.f * scale;
+        RenderItem3D(jewelBankAt.x + (jewelBankSize.x - jewelWidth) * 0.5f, jewelBankAt.y + (jewelBankSize.y - jewelHeight) * 0.5f,
+                     jewelWidth, jewelHeight, ITEM_JEWEL_OF_BLESS, 0, 0, 0, false);
+    }
 }
 
 bool CMyInventory::IsVisible() const

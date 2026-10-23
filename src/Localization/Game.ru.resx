@@ -13153,6 +13153,30 @@
   <data name="DailyRewardsTake" xml:space="preserve">
     <value>Забрать</value>
   </data>
+  <data name="MuHelperSkillEnergySkip" xml:space="preserve">
+    <value>MU Helper: для %ls нужно %d энергии, у вас %d. Пропускаю.</value>
+  </data>
+  <data name="MuHelperSkillEnergyPlain" xml:space="preserve">
+    <value>MU Helper: для %ls нужно %d энергии, у вас %d. Бью обычным ударом.</value>
+  </data>
+  <data name="MuHelperSkillManaWait" xml:space="preserve">
+    <value>MU Helper: не хватает маны на %ls, банок маны нет. Жду ману.</value>
+  </data>
+  <data name="MuHelperSkillManaPlain" xml:space="preserve">
+    <value>MU Helper: не хватает маны на %ls, банок маны нет. Бью обычным ударом.</value>
+  </data>
+  <data name="MuHelperSkillAgWait" xml:space="preserve">
+    <value>MU Helper: не хватает AG на %ls. Пока пропускаю.</value>
+  </data>
+  <data name="MuHelperSkillAgPlain" xml:space="preserve">
+    <value>MU Helper: не хватает AG на %ls. Бью обычным ударом.</value>
+  </data>
+  <data name="MuHelperSkillPaused" xml:space="preserve">
+    <value>MU Helper: %ls не кастуется. Попробую снова через %d с.</value>
+  </data>
+  <data name="MuHelperNoManaPotions" xml:space="preserve">
+    <value>MU Helper: банки маны закончились.</value>
+  </data>
   <data name="DailyRewardsHint" xml:space="preserve">
     <value>Пропуск дня сбрасывает серию на день 1.</value>
   </data>
@@ -13161,6 +13185,9 @@
   </data>
   <data name="JewelBankTitle" xml:space="preserve">
     <value>Банк камней</value>
+  </data>
+  <data name="JewelBankButtonK" xml:space="preserve">
+    <value>Банк камней (K)</value>
   </data>
   <data name="JewelBankAsking" xml:space="preserve">
     <value>Запрос к серверу...</value>

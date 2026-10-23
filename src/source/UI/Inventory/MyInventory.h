@@ -110,7 +110,6 @@ namespace mu::ui::window
             Rml::String myShopTooltip;
 
             Rml::String exitTooltip;
-            Rml::String expandTooltip;
             Rml::String jewelBankTooltip;
 
             // Set/Socket option header labels. The shared hover tooltip itself is

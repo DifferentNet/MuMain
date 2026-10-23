@@ -94,7 +94,9 @@
 .inv-btn-repair  { left: 50px;      decorator: image(inv-btn-repair); }
 .inv-btn-myshop  { left: 87px;      decorator: image(inv-btn-myshop-open); }
 .inv-btn-myshop.close-mode { decorator: image(inv-btn-myshop-close); }
-.inv-btn-expand  { left: 124px;     decorator: image(inv-btn-expand); }
+/* The jewel bank, where the expanded inventory's button was: a dark box C++ draws a Jewel of Bless into. */
+.inv-btn-jewel-bank { left: 124px; background-color: rgba(0, 0, 0, 90); border: 1px rgba(150, 120, 60, 170); }
+.inv-btn-jewel-bank:hover { filter: none; background-color: rgba(255, 210, 100, 45); border-color: rgba(255, 220, 120, 230); }
 
 /* Button centres (x + 18) less half the row. */
 
@@ -186,17 +188,3 @@
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
 
-/* The jewel bank's button (JewelBankWindow.h) in the header's free left corner, clear of the centred
-   title: a dark box C++ draws a Jewel of Bless into (CMyInventory::Render3D), lit on hover. */
-.inv-jewel-bank {
-	position: absolute;
-	left: 10px;
-	top: 6px;
-	width: 24px;
-	height: 24px;
-	cursor: pointer;
-	pointer-events: auto;
-	background-color: rgba(0, 0, 0, 90);
-	border: 1px rgba(150, 120, 60, 170);
-}
-.inv-jewel-bank:hover { background-color: rgba(255, 210, 100, 45); border-color: rgba(255, 220, 120, 230); }

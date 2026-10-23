@@ -61,7 +61,6 @@
 		</div>
 		<!-- The jewel bank's button (JewelBankWindow.h) in the header's free left corner, after the title so it
 		     takes its clicks there; C++ draws a Jewel of Bless over it (CMyInventory::Render3D). -->
-		<div id="btn_jewel_bank" class="inv-jewel-bank" data-event-click="my_inventory_jewel_bank_click" data-attr-data-hint="jewel_bank_tooltip"></div>
 
 		<!-- Wallet + action buttons: base.rcss's shared .modern-wallet-px/.modern-icon-btn-px
 		     family (generalized from this window). Fixed warm-gold value color, not bound to
@@ -88,9 +87,9 @@
 			<span class="modern-icon-btn-glyph-px">&#9635;</span>
 		</div>
 
-		<div id="btn_expand" class="modern-icon-btn-px inv-btn-expand" data-event-click="my_inventory_expand_click" data-attr-data-hint="expand_tooltip">
-			<span class="modern-icon-btn-glyph-px">+</span>
-		</div>
+		<!-- The jewel bank (JewelBankWindow.h, key K) where the expanded inventory's button was; C++ draws a
+		     Jewel of Bless into it (CMyInventory::Render3D). -->
+		<div id="btn_jewel_bank" class="modern-icon-btn-px inv-btn-jewel-bank" data-event-click="my_inventory_jewel_bank_click" data-attr-data-hint="jewel_bank_tooltip"></div>
 
 		<!-- Set/Socket option header labels, each spanning half of #panel's width to match the
 		     former native hover-rect split. -->

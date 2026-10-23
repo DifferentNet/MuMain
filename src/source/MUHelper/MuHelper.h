@@ -10,6 +10,7 @@
 #include <atomic>
 
 #include "MuHelperData.h"
+#include "GameLogic/Automation/Skill.h"
 
 namespace MUHelper
 {
@@ -43,6 +44,7 @@ namespace MUHelper
 
 	private:
 		void WorkLoop(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
+		void StopStuckWalk(std::chrono::steady_clock::time_point now);
 		void Work();
 		int ActivatePet();
 		int Buff();
@@ -58,6 +60,10 @@ namespace MUHelper
 		// Standing still: keeps a target within the reach (tiles) of the next attack, switching to the nearest
 		// one that is; false when none is.
 		bool KeepTargetWithinReach(float fReach);
+		// Standing still but not idle: true when a target is within the reach, or when none has been for
+		// StandStillPatience and a target stands within the hunting range of the start spot (then the current one).
+		bool MayAttackStandingStill(float fReach);
+		int GetNearestTargetNearSpot();
 		bool IsWithinReach(int iTargetId, float fReach) const;
 		int RepairEquipments();
 		int Regroup();
@@ -81,6 +87,23 @@ namespace MUHelper
 		ActionSkillType GetDrainLifeSkill();
 		bool HasAssignedBuffSkill();
 		bool IsSelfPositionSkill(ActionSkillType iSkill);
+
+		// What keeps the character from casting a skill right now, by the client's own checks: the skill's energy
+		// (with the gear's bonus), its mana or its AG.
+		enum class SkillBlock { None, Energy, Mana, Ability };
+		SkillBlock GetSkillBlock(ActionSkillType iSkill) const;
+		// A buff or heal: cast it, or pass it over when it can't be cast, so the round goes on to the potions
+		// and the attack. 0 only while it is worth waiting for (a swing playing, a walk towards the target).
+		int CastSupport(ActionSkillType iSkill, bool bTargetRequired, int iTarget);
+		bool IsSkillSuspended(ActionSkillType iSkill) const;
+		// Every round: the live monsters in view within the hunting range become targets, not only those the
+		// server reported moving, appearing or attacking (2026-10-23).
+		void RefreshTargets();
+		// A target given up for itself (out of view, dead, behind a wall, no path) rests for a moment.
+		void ForgetTarget(int iTargetId, GameLogic::Automation::SkillResult result);
+		// Says once per run in the chat why a skill isn't used.
+		void NotifySkillBlocked(ActionSkillType iSkill, SkillBlock block, bool bPlainAttack);
+		void NotifyOnce(int iKey, const wchar_t* pszText);
 
 	private:
 		ConfigData m_config;
@@ -118,6 +141,25 @@ namespace MUHelper
 		static constexpr int MaxSkillSlots = 8;
 		std::array<int, MaxSkillSlots> m_aiTimedSkillSecond{};
 		int m_iTimedSkillSlot = -1;
+
+		// Buffs and heals that can't be cast don't hold up the round any more (2026-10-23). One that keeps
+		// failing for another reason is tried again after a pause.
+		static constexpr int SupportFailureLimit = 12;                      // rounds, about 3 seconds
+		static constexpr std::chrono::seconds SupportSuspendTime{ 10 };
+		std::map<int, int> m_mapSupportFailures;                             // skill -> failed rounds in a row
+		std::map<int, std::chrono::steady_clock::time_point> m_mapSuspendedUntil;
+		GameLogic::Automation::SkillResult m_lastSkillResult = GameLogic::Automation::SkillResult::NotReady;
+		// Mana potions: below ManaPotionPercent, or when a skill found too little mana since the last round.
+		static constexpr int ManaPotionPercent = 30;
+		bool m_bManaShort = false;
+		std::set<int> m_setNotified;                                         // chat notices given this run
+		static constexpr std::chrono::milliseconds StandStillPatience{ 1000 };
+		static constexpr std::chrono::milliseconds StuckWalkLimit{ 1200 };
+		std::chrono::steady_clock::time_point m_walkWatchSince{};
+		POINT m_posWalkWatch{};
+		std::chrono::steady_clock::time_point m_noTargetInReachSince{};
+		static constexpr std::chrono::seconds ForgottenTargetRest{ 2 };
+		std::map<int, std::chrono::steady_clock::time_point> m_mapForgottenUntil; // monster key -> back in the list
 	};
 
 	extern CMuHelper g_MuHelper;
