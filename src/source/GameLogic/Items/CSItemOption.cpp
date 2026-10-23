@@ -75,6 +75,60 @@ void ReplaceGb2312Apostrophes(char* text, std::size_t size)
         text[out] = '\0';
     }
 }
+
+// Ancient items are named "<set> <kind>" (ghinzuro, 2026-10-23), so a set's name loses Webzen's possessive:
+// "Warrior's" and "Mahes'" become "Warrior" and "Mahes", as "Enis" and "Apis" always were. The Portuguese and
+// Spanish names ("do guerreiro, ") don't end in one and stay as they are.
+void StripPossessive(char* text)
+{
+    const auto length = std::strlen(text);
+    if (length > 2 && text[length - 2] == '\'' && text[length - 1] == 's')
+    {
+        text[length - 2] = '\0';
+    }
+    else if (length > 1 && text[length - 1] == '\'')
+    {
+        text[length - 1] = '\0';
+    }
+}
+
+// The kind of an ancient item in its name, without the base item's own name (ghinzuro, 2026-10-23): "Enis Pants",
+// not "Enis Legendary Pants". Armour keeps the last word of its name (Helm, Mask, Armor, Pants, Gloves, Boots),
+// weapons and shields say what they are, rings and pendants keep their whole name, element included: Kantata's set
+// has both a Ring of Poison and a Ring of Wind. English like the item names themselves, which have no Russian.
+std::wstring AncientItemKind(const int itemType)
+{
+    const std::wstring name = ItemAttribute[itemType].Name;
+    const auto contains = [&name](const wchar_t* word) { return name.find(word) != std::wstring::npos; };
+    switch (itemType / MAX_ITEM_INDEX)
+    {
+    case ITEM_GROUP_SWORD:
+        return L"Sword";
+    case ITEM_GROUP_AXE:
+        return L"Axe";
+    case ITEM_GROUP_MACE:
+        return contains(L"Scepter") ? L"Scepter" : L"Mace";
+    case ITEM_GROUP_SPEAR:
+        return L"Spear";
+    case ITEM_GROUP_BOW:
+        return contains(L"Crossbow") ? L"Crossbow" : L"Bow";
+    case ITEM_GROUP_STAFF:
+        return contains(L"Stick") ? L"Stick" : contains(L"Book") ? L"Book" : L"Staff";
+    case ITEM_GROUP_SHIELD:
+        return L"Shield";
+    case ITEM_GROUP_HELM:
+    case ITEM_GROUP_ARMOR:
+    case ITEM_GROUP_PANTS:
+    case ITEM_GROUP_GLOVES:
+    case ITEM_GROUP_BOOTS:
+    {
+        const auto space = name.find_last_of(L' ');
+        return space == std::wstring::npos ? name : name.substr(space + 1);
+    }
+    default:
+        return name;
+    }
+}
 }
 
 static  CSItemOption csItemOption; // do not delete, required for singleton initialization.
@@ -226,6 +280,7 @@ bool CSItemOption::OpenItemSetOption(const wchar_t* filename)
         char setName[MAX_ITEM_SET_NAME + 1]{};
         record.Text(setName, MAX_ITEM_SET_NAME);
         ReplaceGb2312Apostrophes(setName, MAX_ITEM_SET_NAME);
+        StripPossessive(setName);
         CMultiLanguage::ConvertFromUtf8(target->strSetName, setName);
         for (auto& tier : target->byStandardOption)
             for (auto& code : tier)
@@ -286,28 +341,26 @@ std::uint16_t CSItemOption::GetMixItemLevel(const int Type) const
     return static_cast<std::uint16_t>(itemSType.byMixItemLevel[0] | (static_cast<std::uint16_t>(itemSType.byMixItemLevel[1]) << 8));
 }
 
-bool CSItemOption::GetSetItemName(wchar_t* strName, const int iType, const int setType) const
+bool CSItemOption::GetAncientItemName(wchar_t* target, const std::size_t targetSize, const int itemType,
+                                      const int ancientDiscriminator) const
 {
-    const int setItemType = (setType % 0x04);
-
-    if (setItemType > 0)
+    const int setItemType = ancientDiscriminator % 0x04;
+    if (setItemType <= 0 || itemType < 0 || itemType >= MAX_ITEM || target == nullptr || targetSize == 0)
     {
-        const ITEM_SET_TYPE& itemSType = m_ItemSetType[iType];
-        if (itemSType.byOption[setItemType - 1] != 255 && itemSType.byOption[setItemType - 1] != 0)
-        {
-            const ITEM_SET_OPTION& itemOption = m_ItemSetOption[itemSType.byOption[setItemType - 1]];
-
-            
-            memcpy(strName, itemOption.strSetName, sizeof itemOption.strSetName);
-
-            const int length = wcslen(strName);
-            strName[length] = ' ';
-            strName[length + 1] = 0;
-            return true;
-        }
+        return false;
     }
 
-    return false;
+    const auto setNumber = m_ItemSetType[itemType].byOption[setItemType - 1];
+    if (setNumber == EMPTY_OPTION || setNumber == 0)
+    {
+        return false;
+    }
+
+    const std::wstring name = std::wstring(m_ItemSetOption[setNumber].strSetName) + L" " + AncientItemKind(itemType);
+    const auto length = std::min(name.size(), targetSize - 1);
+    std::wmemcpy(target, name.c_str(), length);
+    target[length] = L'\0';
+    return true;
 }
 
 
@@ -1272,6 +1325,7 @@ int CSItemOption::RenderSetPieceList(const std::uint8_t setNumber, int textIndex
     struct Piece
     {
         int type;
+        int ancientDiscriminator;
         bool owned;
     };
 
@@ -1283,7 +1337,7 @@ int CSItemOption::RenderSetPieceList(const std::uint8_t setNumber, int textIndex
         {
             if (setType.byOption[k] == setNumber)
             {
-                pieces.push_back({ type, HasSetPiece(type, k + 1) });
+                pieces.push_back({ type, k + 1, HasSetPiece(type, k + 1) });
                 break;
             }
         }
@@ -1303,7 +1357,14 @@ int CSItemOption::RenderSetPieceList(const std::uint8_t setNumber, int textIndex
 
     for (const auto& piece : pieces)
     {
-        mu_swprintf(TextList[textIndex], L"%ls", ItemAttribute[piece.type].Name);
+        // Named as the pieces themselves are ("Karis Helm").
+        wchar_t name[MAX_ITEM_SET_NAME * 2]{};
+        if (!GetAncientItemName(name, std::size(name), piece.type, piece.ancientDiscriminator))
+        {
+            mu_swprintf_s(name, L"%ls", ItemAttribute[piece.type].Name);
+        }
+
+        mu_swprintf(TextList[textIndex], L"%ls", name);
         TextListColor[textIndex] = piece.owned ? TEXT_COLOR_GREEN : TEXT_COLOR_GRAY;
         TextBold[textIndex] = false;
         textIndex++;

@@ -13576,6 +13576,6 @@
     <value>With a bow or crossbow: final damage +%d%%</value>
   </data>
   <data name="PowerOfTheAncientsRavenD" xml:space="preserve">
-    <value>With the Dark Raven: raven damage +%d%%</value>
+    <value>With the Dark Raven: final damage +%d%%</value>
   </data>
 </root>

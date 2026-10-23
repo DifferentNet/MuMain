@@ -13199,6 +13199,6 @@
     <value>С луком или арбалетом: итоговый урон +%d%%</value>
   </data>
   <data name="PowerOfTheAncientsRavenD" xml:space="preserve">
-    <value>С Тёмным вороном: урон ворона +%d%%</value>
+    <value>С Тёмным вороном: итоговый урон +%d%%</value>
   </data>
 </root>

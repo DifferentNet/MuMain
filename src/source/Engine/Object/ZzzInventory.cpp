@@ -2249,11 +2249,7 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
     else
     {
         wchar_t TextName[64];
-        if (g_csItemOption.GetSetItemName(TextName, ip->Type, ip->AncientDiscriminator))
-        {
-            wcscat(TextName, p->Name);
-        }
-        else
+        if (!g_csItemOption.GetAncientItemName(TextName, std::size(TextName), ip->Type, ip->AncientDiscriminator))
         {
             wcscpy(TextName, p->Name);
         }
@@ -6225,17 +6221,24 @@ void BuildGroundItemLabelDescriptor(OBJECT* o, ITEM* ip, GroundItemLabelDescript
             SetDescriptorTextColor(descriptor, 0.4f, 0.7f, 1.f);
         }
 
-        wchar_t SetName[64]{};
-        if (g_csItemOption.GetSetItemName(SetName, Data::Items::ToItemType(o->Type), ip->AncientDiscriminator))
+        // An ancient item: "<set> <kind>" in the ancient colours ("Enis Pants +3"), as in its tooltip.
+        wchar_t ancientName[64]{};
+        if (g_csItemOption.GetAncientItemName(ancientName, std::size(ancientName), Data::Items::ToItemType(o->Type),
+                                              ip->AncientDiscriminator))
         {
             SetDescriptorTextColor(descriptor, 0.f, 1.f, 0.f);
             descriptor.Font = g_hFontBold;
             descriptor.TextColor = MakeRgba(0, 255, 0, 255);
             descriptor.BgColor = MakeRgba(60, 60, 200, 255);
 
-            wchar_t formattedName[_countof(descriptor.Name)]{};
-            FormatGroundItemLabelText(formattedName, L"%ls%ls", SetName, descriptor.Name);
-            CopyGroundItemLabelText(descriptor.Name, formattedName);
+            if (ItemLevel == 0)
+            {
+                CopyGroundItemLabelText(descriptor.Name, ancientName);
+            }
+            else
+            {
+                FormatGroundItemLabelText(descriptor.Name, L"%ls +%d", ancientName, ItemLevel);
+            }
         }
 
         if (ip->HasSkill)

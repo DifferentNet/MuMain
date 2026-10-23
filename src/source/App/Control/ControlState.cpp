@@ -14,6 +14,7 @@
 #include "Engine/Object/ZzzObject.h"
 #include "Core/Utilities/_GlobalFunctions.h"
 #include "UI/Inventory/InventoryContents.h"
+#include "GameLogic/Items/CSItemOption.h"
 #include "GameLogic/Items/InventoryUtils.h"
 #include "Character/CharacterManager.h"
 #include "GameLogic/Quests/CSQuest.h"
@@ -45,11 +46,22 @@ std::string ItemName(const ITEM& item)
     return Core::Text::ToUtf8(App::Control::ItemDisplayName(item.Type, item.Level).c_str());
 }
 
+// An ancient item's name as the player sees it ("Enis Pants"), next to the base item's "name" that scripts match.
+void AddAncientName(json& described, const ITEM& item)
+{
+    wchar_t ancientName[64]{};
+    if (g_csItemOption.GetAncientItemName(ancientName, std::size(ancientName), item.Type, item.AncientDiscriminator))
+    {
+        described["ancient_name"] = Core::Text::ToUtf8(ancientName);
+    }
+}
+
 json DescribeItem(const ITEM& item, int slot)
 {
     json described;
     described["slot"] = slot;
     described["name"] = ItemName(item);
+    AddAncientName(described, item);
     described["level"] = item.Level;
     described["durability"] = item.Durability;
     // What a repair brings the durability back to (a stack's count for potions
@@ -599,6 +611,7 @@ json NearbyArray()
         described["id"] = index;
         described["kind"] = "item";
         described["name"] = ItemName(drop.Item);
+        AddAncientName(described, drop.Item);
         const std::pair<int, int> tile = App::Control::DropTile(index);
         described["position"] = json::array({tile.first, tile.second});
         nearby.push_back(std::move(described));
