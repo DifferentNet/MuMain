@@ -40,10 +40,8 @@
 .inv-btn-repair { left: 56px;  }
 .inv-btn-myshop { left: 97px;  }
 .inv-btn-myshop.close-mode { color: token(accent-gold-hover); border-color: token(border-hover); }
-/* The jewel bank, where the expanded inventory's button was: see-through, since C++ draws the Jewel of Bless
-   under the document (CMyInventory::Render3D, through #item_view), so the button's own fill would hide it. */
-.inv-btn-jewel-bank { left: 138px; background-color: rgba(8, 10, 8, 110); decorator: none; }
-.inv-btn-jewel-bank:hover { background-color: rgba(255, 210, 100, 40); decorator: none; }
+/* The jewel bank, where the expanded inventory's button was. */
+.inv-btn-jewel-bank { left: 138px; }
 
 /* Set/Socket option header labels -- gray/yellow match legacy since they're semantic
    (active vs. inactive), not part of modern's chrome palette. */

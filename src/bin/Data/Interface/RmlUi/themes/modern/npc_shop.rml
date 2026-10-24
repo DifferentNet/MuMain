@@ -54,12 +54,12 @@
 
 		<div id="btn_repair" class="modern-icon-btn-px shop-btn-repair" data-class-hidden="!repair_visible"
 		     data-event-click="npc_shop_repair_click" data-attr-data-hint="repair_tooltip">
-			<span class="modern-icon-btn-glyph-px">&#9099;</span>
+			<span class="modern-icon-btn-glyph-px">&#9874;</span>
 		</div>
 
 		<div id="btn_repair_all" class="modern-icon-btn-px shop-btn-repair-all" data-class-hidden="!repair_visible"
 		     data-event-click="npc_shop_repair_all_click" data-attr-data-hint="repair_all_tooltip">
-			<span class="modern-icon-btn-glyph-px">&#9099;</span>
+			<span class="modern-icon-btn-glyph-px">&#9874;</span>
 		</div>
 
 		<!-- Repair-money strip: base.rcss's shared .modern-wallet-px family (generalized from

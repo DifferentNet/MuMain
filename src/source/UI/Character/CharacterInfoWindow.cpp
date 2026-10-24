@@ -508,7 +508,7 @@ void mu::ui::window::CCharacterInfoWindow::BuildAdvancedStatsLines()
         { I18N::Game::AdvStatsShieldAbsorb, L"sdabs", false },
     });
 
-    // Combat Power, the Tier Maps' entry rule (server add-on, 2026-10-23): a whole number, under the defense box.
+    // Combat Power, the Tier Maps' entry rule (server add-on, 2026-10-23): a whole number, the defense box's last line.
     if (const double* combatPower = stats.Find(L"cp"))
     {
         std::wstring digits = std::to_wstring(static_cast<long long>(*combatPower));

@@ -1055,20 +1055,6 @@ void CMyInventory::Render3D()
                 false);
         }
     }
-
-    // The jewel bank button's jewel (JewelBankWindow.h), centred in the button that took the expanded
-    // inventory's place in the bottom row (2026-10-23).
-    Rml::Element* jewelBankButton = m_RmlView.Document() != nullptr ? m_RmlView.Document()->GetElementById("btn_jewel_bank") : nullptr;
-    Rml::Vector2f jewelBankAt;
-    Rml::Vector2f jewelBankSize;
-    if (jewelBankButton != nullptr
-        && UI::RmlBridge::DrawnBox(*jewelBankButton, Rml::BoxArea::Border, jewelBankAt, jewelBankSize))
-    {
-        const float jewelWidth = 22.f * scale;
-        const float jewelHeight = 24.f * scale;
-        RenderItem3D(jewelBankAt.x + (jewelBankSize.x - jewelWidth) * 0.5f, jewelBankAt.y + (jewelBankSize.y - jewelHeight) * 0.5f,
-                     jewelWidth, jewelHeight, ITEM_JEWEL_OF_BLESS, 0, 0, 0, false);
-    }
 }
 
 bool CMyInventory::IsVisible() const

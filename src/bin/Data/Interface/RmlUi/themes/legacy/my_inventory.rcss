@@ -75,6 +75,7 @@
 @spritesheet inv-btn-exit-sheet    { src: "../../../newui_exit_00.tga";        inv-btn-exit:    0px 0px 36px 29px; }
 @spritesheet inv-btn-repair-sheet  { src: "../../../newui_repair_00.tga";      inv-btn-repair:  0px 0px 36px 29px; }
 @spritesheet inv-btn-expand-sheet  { src: "../../../newui_expansion_btn.tga";  inv-btn-expand:  0px 0px 36px 29px; }
+@spritesheet inv-btn-jewel-bank-sheet { src: "../../../newui_jewelbank_btn.tga"; inv-btn-jewel-bank: 0px 0px 36px 29px; }
 @spritesheet inv-btn-myshop-open-sheet  { src: "../../../newui_Bt_openshop.tga";  inv-btn-myshop-open:  0px 0px 36px 29px; }
 @spritesheet inv-btn-myshop-close-sheet { src: "../../../newui_Bt_closeshop.tga"; inv-btn-myshop-close: 0px 0px 36px 29px; }
 
@@ -94,9 +95,8 @@
 .inv-btn-repair  { left: 50px;      decorator: image(inv-btn-repair); }
 .inv-btn-myshop  { left: 87px;      decorator: image(inv-btn-myshop-open); }
 .inv-btn-myshop.close-mode { decorator: image(inv-btn-myshop-close); }
-/* The jewel bank, where the expanded inventory's button was: a dark box C++ draws a Jewel of Bless into. */
-.inv-btn-jewel-bank { left: 124px; background-color: rgba(0, 0, 0, 90); border: 1px rgba(150, 120, 60, 170); }
-.inv-btn-jewel-bank:hover { filter: none; background-color: rgba(255, 210, 100, 45); border-color: rgba(255, 220, 120, 230); }
+/* The jewel bank, where the expanded inventory's button was: the stock blank plate with a gem in the other icons' palette. */
+.inv-btn-jewel-bank { left: 124px; decorator: image(inv-btn-jewel-bank); }
 
 /* Button centres (x + 18) less half the row. */
 

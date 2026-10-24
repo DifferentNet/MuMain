@@ -154,7 +154,7 @@
 /* ---- Advanced stats tab (MU Moldova) ----
    The fourth button sits where the master level button was. While #panel has .adv-view (the model's
    advanced_view), two boxes take the place of the attribute rows, in the summary box's look: box 1 at 120
-   (8 lines), box 2 at 260 (6 lines). */
+   (8 lines), box 2 at 260 (7 lines: six stats and Combat Power). */
 .chainfo-btn-advstats { left: 136px; }
 
 .adv { display: none; }
@@ -171,7 +171,7 @@
 	pointer-events: none;
 }
 .adv-fill-1 { top: 120px; height: 136px; }
-.adv-fill-2 { top: 260px; height: 110px; }
+.adv-fill-2 { top: 260px; height: 123px; }
 .adv-title {
 	position: absolute;
 	left: 18px;

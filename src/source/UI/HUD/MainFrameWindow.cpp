@@ -141,11 +141,13 @@ void mu::ui::window::CMainFrameWindow::BindRmlModel(Rml::DataModelConstructor& c
     c.Bind("exp_digit", &model.expDigit);
     c.Bind("exp_tooltip", &model.expTooltip);
 
+    // rml-contract-unused: cshop_open: no MU Item Shop button since 2026-10-24 (the server has no cash shop); a battle pass button may take its place
     c.Bind("cshop_open", &model.cShopOpen);
     c.Bind("chainfo_open", &model.chaInfoOpen);
     c.Bind("myinven_open", &model.myInvenOpen);
     c.Bind("friend_open", &model.friendOpen);
     c.Bind("window_open", &model.windowOpen);
+    // rml-contract-unused: cshop_tooltip: the MU Item Shop button's tooltip, see cshop_open
     c.Bind("cshop_tooltip", &model.cShopTooltip);
     c.Bind("chainfo_tooltip", &model.chaInfoTooltip);
     c.Bind("myinven_tooltip", &model.myInvenTooltip);

@@ -72,8 +72,7 @@
 		     data-class-close-mode="!myshop_mode_open" data-class-locked="myshop_locked"
 		     data-event-click="my_inventory_myshop_click" data-attr-data-hint="myshop_tooltip"></div>
 
-		<!-- The jewel bank (JewelBankWindow.h, key K) where the expanded inventory's button was; C++ draws a
-		     Jewel of Bless into it (CMyInventory::Render3D). -->
+		<!-- The jewel bank (JewelBankWindow.h, key K) where the expanded inventory's button was. -->
 		<div id="btn_jewel_bank" class="inv-btn inv-btn-jewel-bank" data-event-click="my_inventory_jewel_bank_click" data-attr-data-hint="jewel_bank_tooltip"></div>
 
 		<!-- Set/Socket option header: one centred line with both labels at the same size (the native

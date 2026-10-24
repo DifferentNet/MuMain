@@ -13,9 +13,6 @@
 	     all here (root cause unknown), flex sidesteps it. -->
 	<div id="top_right_row" class="anchor-top-left">
 		<div id="buttons_top">
-			<div id="btn_cshop_top" class="frame-btn-top" data-class-open="cshop_open" data-event-click="mainframe_cshop_click" data-attr-data-hint="cshop_tooltip">
-				<span>SHOP</span>
-			</div>
 			<div id="btn_chainfo_top" class="frame-btn-top" data-class-open="chainfo_open" data-event-click="mainframe_chainfo_click" data-attr-data-hint="chainfo_tooltip">
 				<span>CHAR</span>
 				<div class="alert-dot-top" data-class-hidden="!chainfo_alert"></div>

@@ -1,4 +1,5 @@
 <rml>
+	<!-- rml-contract-optional-callback: mainframe_cshop_click: no MU Item Shop button since 2026-10-24 (the server has no cash shop); a battle pass button may take its place -->
 	<!-- bound-geometry: the health/mana/SD/AG gauges, the experience bar and every cooldown wipe are
 	     fractions -->
 <head>
@@ -62,11 +63,9 @@
 	</div>
 
 	<!-- The original's bottom button row. A theme that puts these buttons elsewhere hides it (the
-	     modern theme's are in main_frame_top.rml). -->
+	     modern theme's are in main_frame_top.rml). No MU Item Shop button: the server has no cash shop
+	     (removed 2026-10-24; a battle pass button may take its place). -->
 	<div id="buttons" class="hud-part">
-		<div id="btn_cshop" class="frame-btn slot-frame slot-fill" data-class-open="cshop_open" data-event-click="mainframe_cshop_click" data-attr-data-hint="cshop_tooltip">
-			<span class="btn-icon-label">SHOP</span>
-		</div>
 		<div id="btn_chainfo" class="frame-btn slot-frame slot-fill" data-class-open="chainfo_open" data-event-click="mainframe_chainfo_click" data-attr-data-hint="chainfo_tooltip">
 			<span class="btn-icon-label">CHAR</span>
 			<div class="alert-dot" data-class-hidden="!chainfo_alert"></div>
