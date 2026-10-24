@@ -28,7 +28,7 @@
 <div id="status">Loading…</div>
 <pre id="log" hidden></pre>
 <footer>
-  <span>MU Online in the browser — local test build</span>
+  <span>MU Online in the browser</span>
   <button id="toggle-log" type="button">Log</button>
   <button id="fullscreen" type="button">Fullscreen</button>
 </footer>
@@ -153,9 +153,52 @@
   if (!navigator.gpu) missing.push("WebGPU");
   if (!("Suspending" in WebAssembly)) missing.push("WebAssembly JSPI");
   if (!self.crossOriginIsolated) missing.push("cross-origin isolation (serve with scripts/serve-web.py)");
+  // The graphics adapter and the optional WebGPU features the game's renderer requests (SDL's WebGPU
+  // backend requires the first six, the game's shaders the clip distances). Without one of them the
+  // game only said "SDL_gpu Renderer Error. Install the latest graphics card driver." (an AMD
+  // Radeon RX 9070 XT, 2026-10-24). index.html?needfeature=<name> adds one, to try the message.
+  const NEEDED_FEATURES = ["depth32float-stencil8", "rg11b10ufloat-renderable", "indirect-first-instance",
+                           "depth-clip-control", "bgra8unorm-storage", "float32-filterable", "clip-distances"];
+  async function checkGpu() {
+    const needed = NEEDED_FEATURES.concat(new URLSearchParams(location.search).getAll("needfeature"));
+    let adapter = null;
+    try { adapter = await navigator.gpu.requestAdapter({ powerPreference: "high-performance" }); } catch (e) {}
+    if (!adapter) {
+      appendLog("WebGPU: the browser gave no graphics adapter", true);
+      return { ok: false, gpu: "none", missing: [] };
+    }
+    const info = adapter.info || {};
+    const gpu = [info.vendor, info.architecture, info.device, info.description].filter(Boolean).join(" / ") || "unknown";
+    const missing = needed.filter((name) => !adapter.features.has(name));
+    appendLog(`WebGPU adapter: ${gpu}; missing features: ${missing.join(", ") || "none"}`, missing.length > 0);
+    return { ok: missing.length === 0, gpu, missing };
+  }
+  function showGpuProblem(gpu, missingFeatures) {
+    const lines = missingFeatures.length
+      ? ["Your graphics card can't run the game in this browser yet.",
+         "Missing WebGPU features: " + missingFeatures.join(", "),
+         "Update the graphics driver and Chrome or Edge, then reload this page.",
+         "",
+         "Видеокарта пока не может запустить игру в этом браузере.",
+         "Обновите драйвер видеокарты и Chrome или Edge, затем обновите страницу."]
+      : ["The browser gives this page no graphics adapter (WebGPU is off or blocked for this card).",
+         "Update the graphics driver and Chrome or Edge, then reload; chrome://gpu shows why.",
+         "",
+         "Браузер не даёт странице видеокарту (WebGPU выключен или заблокирован для неё).",
+         "Обновите драйвер видеокарты и Chrome или Edge, затем обновите страницу."];
+    lines.push("", "GPU: " + gpu);
+    canvas.style.display = "none";
+    statusEl.style.whiteSpace = "pre-line";
+    setStatus(lines.join("\n"), true);
+  }
+
   if (missing.length) {
     setStatus("This browser can't run the game: no " + missing.join(", ") + ". Use a current Chrome or Edge.", true);
-  } else {
+  } else checkGpu().then((gpuCheck) => {
+    if (!gpuCheck.ok) {
+      showGpuProblem(gpuCheck.gpu, gpuCheck.missing);
+      return;
+    }
     // index.html?profile samples the page's code (JS Self-Profiling API; the server must send
     // "Document-Policy: js-profiling", as scripts/serve-web.py does). muProfileTop() in the console
     // lists the functions that took the most time since the page opened.
@@ -221,7 +264,8 @@
       return { files: index.files, bytes };
     })().finally(() => { packDone = true; setStatus(""); });
 
-    var Module = {
+    // Global for Main.js, which picks up an existing Module object.
+    window.Module = {
       canvas,
       muStartupPack: startupPack,
       print: (text) => { console.log(text); appendLog(text, false); },
@@ -239,7 +283,7 @@
     script.src = "Main.js";
     script.onerror = () => setStatus("Main.js didn't load: is the web build in this folder?", true);
     document.body.appendChild(script);
-  }
+  });
 </script>
 </body>
 </html>
