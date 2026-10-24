@@ -90,6 +90,12 @@ bool Store::TakeMessage(const std::wstring& text)
             m_incomingStatus.Layout = fields[11];
             m_incomingStatus.Boss = fields[12];
             m_incomingStatus.InRun = fields[13] == L"1";
+            // Since the health floor (2026-10-24); an older server leaves them out.
+            if (fields.size() >= 16)
+            {
+                m_incomingStatus.TunedPartySize = ToInt(fields[14]);
+                m_incomingStatus.SmallPartyPercent = ToInt(fields[15]);
+            }
         }
         return true;
     }
@@ -108,6 +114,12 @@ bool Store::TakeMessage(const std::wstring& text)
             tier.RecordMembers = fields[5];
             tier.Layout = fields[7];
             tier.Boss = fields[8];
+            tier.BaseCombatPower = tier.CombatPower;
+            if (fields.size() >= 11)
+            {
+                tier.BaseCombatPower = ToInt(fields[9]);
+                tier.MinimumHealth = ToInt(fields[10]);
+            }
             m_incomingTiers.push_back(std::move(tier));
         }
         return true;
@@ -123,6 +135,8 @@ bool Store::TakeMessage(const std::wstring& text)
             member.CombatPower = ToInt(fields[1]);
             member.RunsLeft = ToInt(fields[2]);
             member.Near = fields[3] == L"1";
+            if (fields.size() >= 5)
+                member.Health = ToInt(fields[4]);
             m_incomingMembers.push_back(std::move(member));
         }
         return true;

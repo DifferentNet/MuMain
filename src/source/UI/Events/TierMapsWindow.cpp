@@ -227,6 +227,7 @@ void mu::ui::window::CTierMapsWindow::BindRmlModel(Rml::DataModelConstructor& c,
     c.Bind("ticket", &model.ticket);
     c.Bind("ticket_ok", &model.ticketOk);
     c.Bind("reset", &model.reset);
+    c.Bind("note", &model.note);
     c.Bind("members_title", &model.membersTitle);
     c.Bind("hint", &model.hint);
     c.Bind("hint_bad", &model.hintBad);
@@ -309,9 +310,13 @@ void mu::ui::window::CTierMapsWindow::SyncContent()
     else
     {
         updated.today = line(Printf(I18N::Game::TierMapsToday, status.Layout.c_str(), status.Boss.c_str()), CONTENT_WIDTH, true);
+        const int ownHealth = maps.Members().empty() ? 0 : maps.Members().front().Health;
         updated.power = line(status.PartySize > 1
                                  ? Printf(I18N::Game::TierMapsPartyPower, Thousands(status.AverageCombatPower).c_str(),
                                           Thousands(status.LowestCombatPower).c_str())
+                             : ownHealth > 0
+                                 ? Printf(I18N::Game::TierMapsOwnPowerHealth, Thousands(status.AverageCombatPower).c_str(),
+                                          Thousands(ownHealth).c_str())
                                  : Printf(I18N::Game::TierMapsOwnPower, Thousands(status.AverageCombatPower).c_str()),
                              CONTENT_WIDTH);
         updated.ticketOk = status.Ticket;
@@ -331,10 +336,21 @@ void mu::ui::window::CTierMapsWindow::SyncContent()
             const std::wstring record = tier.RecordSeconds > 0
                 ? Printf(I18N::Game::TierMapsRecord, FormatDuration(tier.RecordSeconds).c_str())
                 : std::wstring(I18N::Game::TierMapsNoRecord);
-            row.detail = line(Printf(I18N::Game::TierMapsTierDetail, Thousands(tier.CombatPower).c_str(), tier.Boss.c_str(), record.c_str()),
+            // With the HP floor the boss leaves the row (it didn't fit): tiers 1-5 have today's boss from the line at
+            // the top, tier 6 is the Throne of Gaion.
+            row.detail = line(tier.MinimumHealth > 0
+                                  ? Printf(I18N::Game::TierMapsTierDetailHealth, Thousands(tier.CombatPower).c_str(),
+                                           Thousands(tier.MinimumHealth).c_str(), record.c_str())
+                                  : Printf(I18N::Game::TierMapsTierDetail, Thousands(tier.CombatPower).c_str(), tier.Boss.c_str(), record.c_str()),
                               ROW_WIDTH);
             updated.tiers.push_back(std::move(row));
         }
+
+        // The tiers are tuned for a party of three: a smaller one needs more Combat Power (the CP above includes it).
+        const int missing = std::max(0, status.TunedPartySize - status.PartySize);
+        if (missing > 0 && status.SmallPartyPercent > 0)
+            updated.note = line(Printf(I18N::Game::TierMapsSmallParty, status.TunedPartySize, missing * status.SmallPartyPercent),
+                                CONTENT_WIDTH);
 
         updated.membersTitle = line(I18N::Game::TierMapsMembers, CONTENT_WIDTH, true);
         const auto selectedTier = std::find_if(maps.Tiers().begin(), maps.Tiers().end(),
@@ -342,29 +358,39 @@ void mu::ui::window::CTierMapsWindow::SyncContent()
         const int memberMinimum = selectedTier == maps.Tiers().end()
             ? 0
             : (selectedTier->CombatPower * status.MemberSharePercent + 99) / 100;
+        const int healthNeeded = selectedTier == maps.Tiers().end() ? 0 : selectedTier->MinimumHealth;
         bool everyoneReady = true;
+        bool someoneFrail = false;
         for (const auto& member : maps.Members())
         {
             TierMapsMember row;
             const bool strongEnough = !status.Enforced || member.CombatPower >= memberMinimum;
-            row.ready = member.Near && member.RunsLeft > 0 && strongEnough;
+            // An older server sends no HP (0): then only its own check counts.
+            const bool healthyEnough = !status.Enforced || member.Health == 0 || member.Health >= healthNeeded;
+            someoneFrail = someoneFrail || !healthyEnough;
+            row.ready = member.Near && member.RunsLeft > 0 && strongEnough && healthyEnough;
             everyoneReady = everyoneReady && row.ready;
-            row.text = line(member.Near
-                                ? Printf(I18N::Game::TierMapsMember, member.Name.c_str(), Thousands(member.CombatPower).c_str(), member.RunsLeft)
-                                : Printf(I18N::Game::TierMapsMemberAway, member.Name.c_str()),
+            row.text = line(!member.Near
+                                ? Printf(I18N::Game::TierMapsMemberAway, member.Name.c_str())
+                            : member.Health > 0
+                                ? Printf(I18N::Game::TierMapsMemberHealth, member.Name.c_str(), Thousands(member.CombatPower).c_str(),
+                                         Thousands(member.Health).c_str(), member.RunsLeft)
+                                : Printf(I18N::Game::TierMapsMember, member.Name.c_str(), Thousands(member.CombatPower).c_str(), member.RunsLeft),
                             CONTENT_WIDTH);
             updated.members.push_back(std::move(row));
         }
 
         // The button works when the server would let the party in; otherwise the line under it says why.
         const bool tierOpen = selectedTier != maps.Tiers().end() && (selectedTier->Open || !status.Enforced);
-        const wchar_t* reason = nullptr;
+        std::wstring reason;
         if (status.InRun)
             reason = I18N::Game::TierMapsInRun;
         else if (!status.Near)
             reason = I18N::Game::TierMapsComeToNpc;
         else if (!status.Leader)
             reason = I18N::Game::TierMapsLeaderOnly;
+        else if (selected != 0 && someoneFrail)
+            reason = Printf(I18N::Game::TierMapsLowHealth, Thousands(healthNeeded).c_str());
         else if (selected == 0 || !tierOpen)
             reason = I18N::Game::TierMapsPickTier;
         else if (!status.Ticket)
@@ -381,13 +407,13 @@ void mu::ui::window::CTierMapsWindow::SyncContent()
             updated.hint = line(maps.LastEnterText(), CONTENT_WIDTH);
             updated.hintBad = true;
         }
-        else if (reason != nullptr)
+        else if (!reason.empty())
         {
             updated.hint = line(reason, CONTENT_WIDTH);
             updated.hintBad = true;
         }
 
-        updated.canEnter = reason == nullptr && !maps.IsEntering();
+        updated.canEnter = reason.empty() && !maps.IsEntering();
         updated.enterLabel = line(Printf(I18N::Game::TierMapsEnter, std::max(1, selected)), ROW_WIDTH, true);
     }
 
@@ -399,6 +425,7 @@ void mu::ui::window::CTierMapsWindow::SyncContent()
     SyncFieldFrom(binder, &TierMapsRmlModel::ticketOk, "ticket_ok", updated);
     SyncFieldFrom(binder, &TierMapsRmlModel::reset, "reset", updated);
     SyncFieldFrom(binder, &TierMapsRmlModel::tiers, "tiers", updated);
+    SyncFieldFrom(binder, &TierMapsRmlModel::note, "note", updated);
     SyncFieldFrom(binder, &TierMapsRmlModel::membersTitle, "members_title", updated);
     SyncFieldFrom(binder, &TierMapsRmlModel::members, "members", updated);
     SyncFieldFrom(binder, &TierMapsRmlModel::hint, "hint", updated);

@@ -13252,6 +13252,21 @@
   <data name="TierMapsLootTime" xml:space="preserve">
     <value>Время на сбор добычи</value>
   </data>
+  <data name="TierMapsTierDetailHealth" xml:space="preserve">
+    <value>%ls CP · %ls HP · %ls</value>
+  </data>
+  <data name="TierMapsMemberHealth" xml:space="preserve">
+    <value>%ls: %ls CP, %ls HP, заходов: %d</value>
+  </data>
+  <data name="TierMapsOwnPowerHealth" xml:space="preserve">
+    <value>Ваш CP: %ls · HP: %ls</value>
+  </data>
+  <data name="TierMapsSmallParty" xml:space="preserve">
+    <value>Тиры рассчитаны на %d игроков: CP +%d%%</value>
+  </data>
+  <data name="TierMapsLowHealth" xml:space="preserve">
+    <value>Каждому нужно %ls HP (красным).</value>
+  </data>
   <data name="AdvStatsCombatPower" xml:space="preserve">
     <value>Боевая мощь: %ls</value>
   </data>

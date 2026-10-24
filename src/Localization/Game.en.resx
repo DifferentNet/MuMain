@@ -13629,6 +13629,21 @@
   <data name="TierMapsLootTime" xml:space="preserve">
     <value>Loot time</value>
   </data>
+  <data name="TierMapsTierDetailHealth" xml:space="preserve">
+    <value>%ls CP · %ls HP · %ls</value>
+  </data>
+  <data name="TierMapsMemberHealth" xml:space="preserve">
+    <value>%ls: %ls CP, %ls HP, %d runs left</value>
+  </data>
+  <data name="TierMapsOwnPowerHealth" xml:space="preserve">
+    <value>Your CP: %ls · HP: %ls</value>
+  </data>
+  <data name="TierMapsSmallParty" xml:space="preserve">
+    <value>Tiers are tuned for %d players: CP +%d%%</value>
+  </data>
+  <data name="TierMapsLowHealth" xml:space="preserve">
+    <value>Everyone needs %ls HP (in red).</value>
+  </data>
   <data name="AdvStatsCombatPower" xml:space="preserve">
     <value>Combat Power: %ls</value>
   </data>

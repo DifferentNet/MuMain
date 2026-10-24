@@ -33,6 +33,7 @@
 }
 .tm-tier-title { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
 .tm-tier-detail { display: block; white-space: nowrap; pointer-events: none; }
+.tm-note { display: block; margin-top: calc(3px * var(--root-scale)); white-space: nowrap; }
 .tm-members-title { display: block; margin-top: calc(6px * var(--root-scale)); white-space: nowrap; font-weight: bold; }
 .tm-member { display: block; padding-left: calc(4px * var(--root-scale)); white-space: nowrap; }
 .tm-hint { display: block; margin-top: calc(5px * var(--root-scale)); white-space: nowrap; }
@@ -67,6 +68,7 @@
 .tm-tier.open .tm-tier-detail { color: rgb(200, 220, 255); }
 .tm-tier.selected { background-color: rgba(255, 210, 100, 48); }
 .tm-tier.selected .tm-tier-title { color: rgb(255, 220, 120); }
+.tm-note { color: rgb(255, 200, 120); }
 .tm-members-title { color: rgb(225, 225, 225); }
 .tm-member { color: rgb(255, 120, 110); }
 .tm-member.ready { color: rgb(150, 255, 150); }
