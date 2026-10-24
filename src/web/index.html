@@ -135,6 +135,18 @@
   if (new URLSearchParams(location.search).has("reset")) {
     try { localStorage.removeItem("mu-web/config.ini"); } catch (e) {}
   }
+  // Browser players start at 60 frames a second (the server's config.ini, scripts/publish-web.py):
+  // uncapped, the game's own default, stuttered for a player (2026-10-24). Once per browser, a saved
+  // copy that still has the old default (-1, uncapped) gets 60 too; a cap chosen in Options stays.
+  try {
+    if (localStorage.getItem("mu-web/fps-default") !== "60") {
+      const saved = localStorage.getItem("mu-web/config.ini");
+      if (saved && /^FpsCap=-1\r?$/m.test(saved)) {
+        localStorage.setItem("mu-web/config.ini", saved.replace(/^FpsCap=-1(\r?)$/m, "FpsCap=60$1"));
+      }
+      localStorage.setItem("mu-web/fps-default", "60");
+    }
+  } catch (e) { /* no storage in this browser */ }
   let savedConfig = null;
   function saveConfig() {
     if (crashed) return;
