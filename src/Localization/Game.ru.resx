@@ -3602,7 +3602,7 @@
     <comment>legacy_id=967</comment>
   </data>
   <data name="Increase skill attacking rate +%d" xml:space="preserve">
-    <value>Увеличение скорости атаки навыка +%d</value>
+    <value>Увеличение урона навыков +%d</value>
     <comment>legacy_id=968</comment>
   </data>
   <data name="Double damage rate %d%%" xml:space="preserve">

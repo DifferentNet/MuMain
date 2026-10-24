@@ -3898,7 +3898,7 @@
     <comment>legacy_id=967</comment>
   </data>
   <data name="Increase skill attacking rate +%d" xml:space="preserve">
-    <value>Increase skill attacking rate +%d</value>
+    <value>Increase skill damage +%d</value>
     <comment>legacy_id=968</comment>
   </data>
   <data name="Double damage rate %d%%" xml:space="preserve">
