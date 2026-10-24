@@ -3823,3 +3823,12 @@ Data/Player/LuckyItem/70/Skinclass luck206_glove.OZJ
 Data/Player/LuckyItem/70/Skinclass luck206_lower.OZJ
 Data/Player/LuckyItem/70/Skinclass luck206_lowertail.OZT
 Data/Player/LuckyItem/70/Skinclass luck206_upper.OZJ
+# Added 2026-10-24: the deploy 21 client's Tier Maps window and the Season 5 login background
+Data/Interface/RmlUi/themes/legacy/tier_maps.rcss
+Data/Interface/RmlUi/tier_maps.rml
+Data/Interface/lo_back_s5_im01.OZJ
+Data/Interface/lo_back_s5_im02.OZJ
+Data/Interface/lo_back_s5_im03.OZJ
+Data/Interface/lo_back_s5_im04.OZJ
+Data/Interface/lo_back_s5_im05.OZJ
+Data/Interface/lo_back_s5_im06.OZJ
