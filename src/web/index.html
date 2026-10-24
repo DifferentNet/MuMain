@@ -156,24 +156,45 @@
   // The graphics adapter and the optional WebGPU features the game's renderer requests (SDL's WebGPU
   // backend requires the first six, the game's shaders the clip distances). Without one of them the
   // game only said "SDL_gpu Renderer Error. Install the latest graphics card driver." (an AMD
-  // Radeon RX 9070 XT, 2026-10-24). index.html?needfeature=<name> adds one, to try the message.
+  // Radeon RX 9070 XT, 2026-10-24; its browser then gave no adapter at all). index.html?needfeature=<name>
+  // adds a feature and ?noadapter drops the adapter, to see the messages.
   const NEEDED_FEATURES = ["depth32float-stencil8", "rg11b10ufloat-renderable", "indirect-first-instance",
                            "depth-clip-control", "bgra8unorm-storage", "float32-filterable", "clip-distances"];
+  // The browser and its version, for the message: Yandex, Opera and Brave are Chromium too, and some
+  // give pages navigator.gpu but no adapter.
+  function browserName() {
+    const brands = ((navigator.userAgentData && navigator.userAgentData.brands) || [])
+      .filter((b) => !/brand|chromium/i.test(b.brand)).map((b) => b.brand + " " + b.version);
+    const tokens = navigator.userAgent.match(/(YaBrowser|OPR|Edg|Vivaldi|Firefox)\/[\d.]+/g) || [];
+    return brands.concat(tokens).join(", ") || navigator.userAgent;
+  }
   async function checkGpu() {
-    const needed = NEEDED_FEATURES.concat(new URLSearchParams(location.search).getAll("needfeature"));
+    const params = new URLSearchParams(location.search);
+    const needed = NEEDED_FEATURES.concat(params.getAll("needfeature"));
+    // The game asks for the high-performance adapter; the others only tell whether the browser has
+    // any adapter at all (2026-10-24: an RX 9070 XT got none).
+    const tried = [];
     let adapter = null;
-    try { adapter = await navigator.gpu.requestAdapter({ powerPreference: "high-performance" }); } catch (e) {}
+    for (const powerPreference of ["high-performance", "low-power", undefined]) {
+      let found = null;
+      try { found = await navigator.gpu.requestAdapter(powerPreference ? { powerPreference } : undefined); } catch (e) {}
+      if (params.has("noadapter")) found = null;   // index.html?noadapter shows that message
+      tried.push(`${powerPreference || "default"}: ${found ? "yes" : "no"}`);
+      adapter = adapter || found;
+    }
+    const browser = browserName();
     if (!adapter) {
-      appendLog("WebGPU: the browser gave no graphics adapter", true);
-      return { ok: false, gpu: "none", missing: [] };
+      appendLog(`WebGPU: the browser gave no graphics adapter (${tried.join(", ")}); browser: ${browser}`, true);
+      return { ok: false, gpu: "none", browser, missing: [] };
     }
     const info = adapter.info || {};
     const gpu = [info.vendor, info.architecture, info.device, info.description].filter(Boolean).join(" / ") || "unknown";
     const missing = needed.filter((name) => !adapter.features.has(name));
-    appendLog(`WebGPU adapter: ${gpu}; missing features: ${missing.join(", ") || "none"}`, missing.length > 0);
-    return { ok: missing.length === 0, gpu, missing };
+    appendLog(`WebGPU adapter: ${gpu} (${tried.join(", ")}); missing features: ${missing.join(", ") || "none"}; browser: ${browser}`,
+              missing.length > 0);
+    return { ok: missing.length === 0, gpu, browser, missing };
   }
-  function showGpuProblem(gpu, missingFeatures) {
+  function showGpuProblem(gpu, browser, missingFeatures) {
     const lines = missingFeatures.length
       ? ["Your graphics card can't run the game in this browser yet.",
          "Missing WebGPU features: " + missingFeatures.join(", "),
@@ -181,12 +202,20 @@
          "",
          "Видеокарта пока не может запустить игру в этом браузере.",
          "Обновите драйвер видеокарты и Chrome или Edge, затем обновите страницу."]
-      : ["The browser gives this page no graphics adapter (WebGPU is off or blocked for this card).",
-         "Update the graphics driver and Chrome or Edge, then reload; chrome://gpu shows why.",
+      : ["The browser gives this page no graphics card (WebGPU). To fix it:",
+         "1. Use Google Chrome or Microsoft Edge (not Yandex, Opera or Brave).",
+         "2. Settings → System: turn on \"Use graphics acceleration when available\", restart the browser.",
+         "3. Update the graphics driver (AMD Adrenalin, NVIDIA, Intel).",
+         "4. If it still fails: open chrome://flags/#enable-unsafe-webgpu, set Enabled, restart the browser.",
+         "Then reload this page. Still failing: send a screenshot of chrome://gpu.",
          "",
-         "Браузер не даёт странице видеокарту (WebGPU выключен или заблокирован для неё).",
-         "Обновите драйвер видеокарты и Chrome или Edge, затем обновите страницу."];
-    lines.push("", "GPU: " + gpu);
+         "Браузер не даёт странице видеокарту (WebGPU). Как исправить:",
+         "1. Откройте игру в Google Chrome или Microsoft Edge (не в Яндексе, Opera или Brave).",
+         "2. Настройки → Система: включите «Использовать графическое ускорение», перезапустите браузер.",
+         "3. Обновите драйвер видеокарты (AMD Adrenalin, NVIDIA, Intel).",
+         "4. Если не помогло: откройте chrome://flags/#enable-unsafe-webgpu, выберите Enabled, перезапустите браузер.",
+         "Затем обновите эту страницу. Если всё равно не работает, пришлите снимок страницы chrome://gpu."];
+    lines.push("", "GPU: " + gpu + " · Browser: " + browser);
     canvas.style.display = "none";
     statusEl.style.whiteSpace = "pre-line";
     setStatus(lines.join("\n"), true);
@@ -196,7 +225,7 @@
     setStatus("This browser can't run the game: no " + missing.join(", ") + ". Use a current Chrome or Edge.", true);
   } else checkGpu().then((gpuCheck) => {
     if (!gpuCheck.ok) {
-      showGpuProblem(gpuCheck.gpu, gpuCheck.missing);
+      showGpuProblem(gpuCheck.gpu, gpuCheck.browser, gpuCheck.missing);
       return;
     }
     // index.html?profile samples the page's code (JS Self-Profiling API; the server must send
