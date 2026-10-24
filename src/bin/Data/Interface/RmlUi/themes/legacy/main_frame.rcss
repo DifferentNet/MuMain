@@ -269,7 +269,7 @@
 /* Original menu artwork's bottom strip, independent of the progress fill. */
 @spritesheet mainframe-menu01-sheet { src: "../../../newui_menu01.jpg"; mainframe-frame-left: 0px 0px 256px 41px; mainframe-exp-left: 0px 41px 256px 10px; }
 @spritesheet mainframe-menu02-sheet { src: "../../../newui_menu02.jpg"; mainframe-frame-middle: 0px 0px 128px 41px; mainframe-exp-middle: 0px 41px 128px 10px; }
-@spritesheet mainframe-menu03-sheet { src: "../../../newui_menu03.jpg"; mainframe-frame-right: 0px 0px 104px 41px; mainframe-exp-right: 0px 41px 256px 10px; }
+@spritesheet mainframe-menu03-sheet { src: "../../../newui_menu03.jpg"; mainframe-frame-right: 0px 0px 256px 41px; mainframe-exp-right: 0px 41px 256px 10px; }
 .exp-frame { position: absolute; top: 0dp; height: 10dp; pointer-events: none; }
 #exp_frame_left { left: 0dp; width: 256dp; decorator: image(mainframe-exp-left); }
 #exp_frame_middle { left: 256dp; width: 128dp; decorator: image(mainframe-exp-middle); }
