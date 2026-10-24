@@ -10,9 +10,10 @@
 // a party goes in from the NPC with a Gaion's Order, three runs a day per character, the party's Combat Power
 // deciding the tiers. Talking to the NPC sends "#TMO|" (open the window) and the state; "/tierinfo" asks for the
 // state again. The state comes as blue server messages, which this takes out of the chat:
-//   "#TM0|near|leader|party size|ticket|runs a day|seconds to the reset|cp enforced|average cp|lowest cp|member share %|day|layout|boss|in a run"
-//   "#TMT|tier|name|cp|open|record seconds|record members|fixed day|layout|boss" per tier
-//   "#TMP|name|cp|runs left|near" per party member, the leader first
+//   "#TM0|near|leader|party size|ticket|runs a day|seconds to the reset|cp enforced|average cp|lowest cp|member share %|day|layout|boss|in a run|tuned party size|small party cp % per missing member"
+//   "#TMT|tier|name|cp for this party|open|record seconds|record members|fixed day|layout|boss|tier's own cp|hp floor" per tier
+//   "#TMP|name|cp|runs left|near|max hp" per party member, the leader first
+// The last fields of each line came with the health floor (2026-10-24); an older server leaves them out.
 //   "#TM.|"
 // "/tierenter <tier>" takes the party in; its answer is "#TME|ok|text".
 namespace GameLogic::TierMaps
@@ -21,8 +22,12 @@ struct Tier
 {
     int Number = 0;
     std::wstring Name;
+    // The Combat Power this party needs on average: the tier's own, more for a party below the tuned size.
     int CombatPower = 0;
-    // The party's Combat Power lets it in.
+    int BaseCombatPower = 0;
+    // The maximum HP every member needs (0 = none).
+    int MinimumHealth = 0;
+    // The party's Combat Power and HP let it in.
     bool Open = false;
     // The fastest win: seconds (0 = none) and who.
     int RecordSeconds = 0;
@@ -37,6 +42,8 @@ struct Member
     std::wstring Name;
     int CombatPower = 0;
     int RunsLeft = 0;
+    // Maximum HP (0 = the server didn't say).
+    int Health = 0;
     // Stands at the NPC.
     bool Near = false;
 };
@@ -59,6 +66,9 @@ struct Status
     std::wstring Layout;
     std::wstring Boss;
     bool InRun = false;
+    // The party size the tiers are tuned for, and the extra Combat Power % per missing member below it.
+    int TunedPartySize = 0;
+    int SmallPartyPercent = 0;
     std::chrono::steady_clock::time_point ReceivedAt{};
 };
 

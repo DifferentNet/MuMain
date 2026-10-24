@@ -9,10 +9,11 @@
 	<!-- The Tier Maps window (CTierMapsWindow), opened by Jerint the Assistant in Devias, docked right at full dock height:
 	     the title, today's fortress and boss, the party's Combat Power, the leader's Gaion's Order and when the runs
 	     come back; then one counter-scaled pane in which the six tiers flow (a row each, clickable: its name, its
-	     Combat Power, today's boss and its record; open ones bright, the picked one on a gold band), the party's
-	     members (ready ones green), the reason the button is off or the server's last answer, and the button that
-	     takes the party in; and the exit button. The workspace slot places and scales #panel. C++ keeps the state;
-	     clicks are queued with tier_maps_select(tier), tier_maps_enter and tier_maps_exit. -->
+	     Combat Power, HP floor and record; open ones bright, the picked one on a gold band), for a party below
+	     three how much more Combat Power it needs, the party's members (ready ones green), the reason the button is
+	     off or the server's last answer, and the button that takes the party in; and the exit button. The workspace
+	     slot places and scales #panel. C++ keeps the state; clicks are queued with tier_maps_select(tier),
+	     tier_maps_enter and tier_maps_exit. -->
 	<div id="panel" data-model="tier_maps">
 		<div class="frame-piece frame-top"></div>
 		<div class="frame-piece frame-left"></div>
@@ -36,6 +37,8 @@
 				<span class="tm-tier-title" data-style-font-size="t.title.text_px + 'px'">{{t.title.text}}</span>
 				<span class="tm-tier-detail" data-style-font-size="t.detail.text_px + 'px'">{{t.detail.text}}</span>
 			</div>
+
+			<span class="tm-note" data-if="note.text != ''" data-style-font-size="note.text_px + 'px'">{{note.text}}</span>
 
 			<span class="tm-members-title" data-style-font-size="members_title.text_px + 'px'">{{members_title.text}}</span>
 			<span class="tm-member" data-for="m : members" data-class-ready="m.ready"

@@ -37,6 +37,7 @@
 }
 .tm-tier-title { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
 .tm-tier-detail { display: block; white-space: nowrap; pointer-events: none; }
+.tm-note { display: block; margin-top: calc(3px * var(--root-scale)); white-space: nowrap; }
 .tm-members-title { display: block; margin-top: calc(6px * var(--root-scale)); white-space: nowrap; font-weight: bold; }
 .tm-member { display: block; padding-left: calc(4px * var(--root-scale)); white-space: nowrap; }
 .tm-hint { display: block; margin-top: calc(5px * var(--root-scale)); white-space: nowrap; }
@@ -72,6 +73,7 @@
 .tm-tier.open .tm-tier-detail { color: token(text-secondary); }
 .tm-tier.selected { background-color: rgba(255, 200, 90, 40); }
 .tm-tier.selected .tm-tier-title { color: token(accent-gold); }
+.tm-note { color: token(semantic-warning); }
 .tm-members-title { color: token(text-primary); }
 .tm-member { color: token(semantic-danger); }
 .tm-member.ready { color: token(semantic-success); }

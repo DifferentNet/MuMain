@@ -28,7 +28,7 @@ struct TierMapsRow
     bool operator==(const TierMapsRow&) const = default;
 };
 
-// A party member: name, Combat Power and runs left; ready when nothing keeps them out.
+// A party member: name, Combat Power, HP and runs left; ready when nothing keeps them out.
 struct TierMapsMember
 {
     TierMapsLine text;
@@ -47,6 +47,8 @@ struct TierMapsRmlModel
     bool ticketOk = false;
     TierMapsLine reset;
     std::vector<TierMapsRow> tiers;
+    // For a party below the size the tiers are tuned for: how much more Combat Power it needs.
+    TierMapsLine note;
     TierMapsLine membersTitle;
     std::vector<TierMapsMember> members;
     // Why the button is off, or the server's answer to the last Enter.
