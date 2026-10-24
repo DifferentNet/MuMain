@@ -6784,6 +6784,12 @@ void ReceiveRepair(const BYTE* ReceiveBuffer)
 
 void ReceiveLevelUp(const BYTE* ReceiveBuffer, int Size)
 {
+    // The server also sends this packet with the level lower (a reset) or unchanged (a stat reset) when it keeps
+    // the character in the game instead of sending it back to the character selection (MU Moldova's ResetInPlace
+    // add-on). Only a level-up refills health and mana, moves the experience on and plays the effect.
+    const auto previousLevel = CharacterAttribute->Level;
+    const auto previousLife = CharacterAttribute->Life;
+    const auto previousMana = CharacterAttribute->Mana;
 
     if (Size >= sizeof(PRECEIVE_LEVEL_UP_EXTENDED))
     {
@@ -6822,6 +6828,34 @@ void ReceiveLevelUp(const BYTE* ReceiveBuffer, int Size)
         CharacterAttribute->MaxAddPoint = Data->MaxAddPoint;
         CharacterAttribute->wMinusPoint = Data->wMinusPoint;
         CharacterAttribute->wMaxMinusPoint = Data->wMaxMinusPoint;
+    }
+
+    if (CharacterAttribute->Level <= previousLevel)
+    {
+        // Health and mana stay, within the new maximums; the server sends them when they change.
+        if (previousLife < CharacterAttribute->Life)
+        {
+            CharacterAttribute->Life = previousLife;
+        }
+
+        if (previousMana < CharacterAttribute->Mana)
+        {
+            CharacterAttribute->Mana = previousMana;
+        }
+
+        if (CharacterAttribute->Level < previousLevel)
+        {
+            // A reset: the server starts the character's experience again from 0. Only the character information
+            // (F3 03, entering a map) carries the reset count, so the character window counts this one itself.
+            CharacterMachine->CalculateNextExperince();
+            CharacterAttribute->Experience = 0;
+            ++CharacterAttribute->Resets;
+        }
+
+        CharacterMachine->CalculateAll();
+        App::Control::Events::RecordLevelUp(CharacterAttribute->Level);
+        g_ConsoleDebug->Write(MCD_RECEIVE, L"0x05 [ReceiveLevelUp] level %d after %d, no level-up", CharacterAttribute->Level, previousLevel);
+        return;
     }
 
     CharacterMachine->CalculateNextExperince();
