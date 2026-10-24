@@ -89,11 +89,13 @@ namespace MUHelper
 		bool IsSelfPositionSkill(ActionSkillType iSkill);
 
 		// What keeps the character from casting a skill right now, by the client's own checks: the skill's energy
-		// (with the gear's bonus), its mana or its AG.
-		enum class SkillBlock { None, Energy, Mana, Ability };
+		// (with the gear's bonus), its leadership (Dark Lord: Critical Damage 300, Fire Scream 70), its other stat
+		// requirements, its mana or its AG.
+		enum class SkillBlock { None, Energy, Mana, Ability, Leadership, Requirements };
 		SkillBlock GetSkillBlock(ActionSkillType iSkill) const;
 		// A buff or heal: cast it, or pass it over when it can't be cast, so the round goes on to the potions
-		// and the attack. 0 only while it is worth waiting for (a swing playing, a walk towards the target).
+		// and the attack. 0 only while it is worth waiting for (a swing playing, a walk towards the target);
+		// a cast the client refused is passed over too and tried again on the next round.
 		int CastSupport(ActionSkillType iSkill, bool bTargetRequired, int iTarget);
 		bool IsSkillSuspended(ActionSkillType iSkill) const;
 		// Every round: the live monsters in view within the hunting range become targets, not only those the
@@ -142,8 +144,8 @@ namespace MUHelper
 		std::array<int, MaxSkillSlots> m_aiTimedSkillSecond{};
 		int m_iTimedSkillSlot = -1;
 
-		// Buffs and heals that can't be cast don't hold up the round any more (2026-10-23). One that keeps
-		// failing for another reason is tried again after a pause.
+		// Buffs and heals that can't be cast don't hold up the round any more (2026-10-23), nor one the client
+		// refuses for a reason the helper doesn't check itself (2026-10-24). One that keeps failing rests a while.
 		static constexpr int SupportFailureLimit = 12;                      // rounds, about 3 seconds
 		static constexpr std::chrono::seconds SupportSuspendTime{ 10 };
 		std::map<int, int> m_mapSupportFailures;                             // skill -> failed rounds in a row

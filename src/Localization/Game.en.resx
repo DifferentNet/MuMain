@@ -13554,6 +13554,18 @@
   <data name="MuHelperNoManaPotions" xml:space="preserve">
     <value>MU Helper: out of mana potions.</value>
   </data>
+  <data name="MuHelperSkillLeadershipSkip" xml:space="preserve">
+    <value>MU Helper: %ls needs %d command, you have %d. Skipping it.</value>
+  </data>
+  <data name="MuHelperSkillLeadershipPlain" xml:space="preserve">
+    <value>MU Helper: %ls needs %d command, you have %d. Attacking with plain hits.</value>
+  </data>
+  <data name="MuHelperSkillStatsSkip" xml:space="preserve">
+    <value>MU Helper: your stats are too low for %ls. Skipping it.</value>
+  </data>
+  <data name="MuHelperSkillStatsPlain" xml:space="preserve">
+    <value>MU Helper: your stats are too low for %ls. Attacking with plain hits.</value>
+  </data>
   <data name="DailyRewardsHint" xml:space="preserve">
     <value>A missed day starts the streak over.</value>
   </data>

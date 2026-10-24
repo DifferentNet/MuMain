@@ -766,6 +766,25 @@ namespace MUHelper
             return SkillBlock::Energy;
         }
 
+        // As AttackKnight and CanExecuteSkill check it: the leadership with the gear's bonus. A Dark Lord keeps his
+        // skills through /resetstats but not the leadership they ask for (Critical Damage 300, Fire Scream 70,
+        // Electric Spike 340). The client refused such a cast without a word, and the helper, which didn't see why,
+        // waited 3 s for the buff every 13 s, and stood still for good with such an attack skill and the plain
+        // attack fallback off (2026-10-24).
+        int iCharisma = 0;
+        gSkillManager.GetSkillInformation_Charisma(iSkill, &iCharisma);
+        if (iCharisma > CharacterAttribute->Charisma + CharacterAttribute->AddCharisma)
+        {
+            return SkillBlock::Leadership;
+        }
+
+        // The rest of the stats CanExecuteSkill asks for (strength, dexterity), so nothing it refuses for them
+        // comes as a surprise either.
+        if (!gSkillManager.AreSkillAttributeRequirementsMet(iSkill))
+        {
+            return SkillBlock::Requirements;
+        }
+
         // As CheckMana does, with the elf's Infinity Arrow surcharge from AttackElf.
         int iMana = 0;
         int iSkillMana = 0;
@@ -825,7 +844,10 @@ namespace MUHelper
             return 0;
         }
 
-        // Failing for some other reason, round after round: let it rest and get on with the rest.
+        // Refused for a reason the checks above don't see (a cooldown, the weapon, the map): the round goes on to
+        // the potions and the attack all the same, and the next round tries again. It used to end the round here
+        // for up to SupportFailureLimit rounds (3 s), and again after every rest, with neither an attack nor a
+        // potion meanwhile (2026-10-24). One that keeps failing rests, so it isn't tried four times a second.
         if (++m_mapSupportFailures[iSkill] >= SupportFailureLimit)
         {
             m_mapSupportFailures.erase(iSkill);
@@ -834,10 +856,9 @@ namespace MUHelper
             gSkillManager.GetSkillInformation(iSkill, 1, szName, nullptr, nullptr);
             wchar_t szText[256];
             mu_swprintf(szText, I18N::Game::MuHelperSkillPaused, szName, static_cast<int>(SupportSuspendTime.count()));
-            NotifyOnce(iSkill * 8 + 4, szText);
-            return 1;
+            NotifyOnce(iSkill * 8 + 7, szText);
         }
-        return 0;
+        return 1;
     }
 
     void CMuHelper::NotifySkillBlocked(ActionSkillType iSkill, SkillBlock block, bool bPlainAttack)
@@ -872,6 +893,18 @@ namespace MUHelper
             break;
         case SkillBlock::Ability:
             mu_swprintf(szText, bPlainAttack ? I18N::Game::MuHelperSkillAgPlain : I18N::Game::MuHelperSkillAgWait, szName);
+            break;
+        case SkillBlock::Leadership:
+        {
+            int iCharisma = 0;
+            gSkillManager.GetSkillInformation_Charisma(iSkill, &iCharisma);
+            const int iHave = CharacterAttribute->Charisma + CharacterAttribute->AddCharisma;
+            mu_swprintf(szText, bPlainAttack ? I18N::Game::MuHelperSkillLeadershipPlain : I18N::Game::MuHelperSkillLeadershipSkip,
+                szName, iCharisma, iHave);
+            break;
+        }
+        case SkillBlock::Requirements:
+            mu_swprintf(szText, bPlainAttack ? I18N::Game::MuHelperSkillStatsPlain : I18N::Game::MuHelperSkillStatsSkip, szName);
             break;
         default:
             return;

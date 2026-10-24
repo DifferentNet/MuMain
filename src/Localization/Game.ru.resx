@@ -13177,6 +13177,18 @@
   <data name="MuHelperNoManaPotions" xml:space="preserve">
     <value>MU Helper: банки маны закончились.</value>
   </data>
+  <data name="MuHelperSkillLeadershipSkip" xml:space="preserve">
+    <value>MU Helper: для %ls нужно %d командования, у вас %d. Пропускаю.</value>
+  </data>
+  <data name="MuHelperSkillLeadershipPlain" xml:space="preserve">
+    <value>MU Helper: для %ls нужно %d командования, у вас %d. Бью обычным ударом.</value>
+  </data>
+  <data name="MuHelperSkillStatsSkip" xml:space="preserve">
+    <value>MU Helper: не хватает характеристик для %ls. Пропускаю.</value>
+  </data>
+  <data name="MuHelperSkillStatsPlain" xml:space="preserve">
+    <value>MU Helper: не хватает характеристик для %ls. Бью обычным ударом.</value>
+  </data>
   <data name="DailyRewardsHint" xml:space="preserve">
     <value>Пропуск дня сбрасывает серию на день 1.</value>
   </data>
