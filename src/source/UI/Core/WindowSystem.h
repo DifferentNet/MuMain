@@ -48,6 +48,7 @@
 #include "UI/Events/DailyRewardsWindow.h"
 #include "UI/Events/TierMapsWindow.h"
 #include "UI/Inventory/JewelBankWindow.h"
+#include "UI/Dialogs/GmPanelWindow.h"
 #include "UI/Inventory/ItemExplanationWindow.h"
 #include "UI/Inventory/SetItemExplanation.h"
 #include "UI/HUD/QuickCommandWindow.h"
@@ -196,6 +197,7 @@ namespace mu::ui::window
         CDailyRewardsWindow* m_pNewDailyRewardsWindow;
         CTierMapsWindow* m_pNewTierMapsWindow;
         CJewelBankWindow* m_pNewJewelBankWindow;
+        CGmPanelWindow* m_pNewGmPanelWindow;
         CItemExplanationWindow* m_pNewItemExplanationWindow;
         CSetItemExplanation* m_pNewSetItemExplanation;
         CQuickCommandWindow* m_pNewQuickCommandWindow;
@@ -287,6 +289,7 @@ namespace mu::ui::window
         CDailyRewardsWindow* GetUI_NewDailyRewardsWindow() const;
         CTierMapsWindow* GetUI_NewTierMapsWindow() const;
         CJewelBankWindow* GetUI_NewJewelBankWindow() const;
+        CGmPanelWindow* GetUI_NewGmPanelWindow() const;
         CItemExplanationWindow* GetUI_NewItemExplanationWindow() const;
         CSetItemExplanation* GetUI_NewSetItemExplanation() const;
         CQuickCommandWindow* GetUI_NewQuickCommandWindow() const;

@@ -13733,4 +13733,238 @@
     <value>On failure both items stay.</value>
     <comment>legacy_id=3904</comment>
   </data>
+  <data name="GmPanelTitleAdmin" xml:space="preserve">
+    <value>GM panel - admin</value>
+  </data>
+  <data name="GmPanelTitleMod" xml:space="preserve">
+    <value>GM panel - moderator</value>
+  </data>
+  <data name="GmPanelTabPlayers" xml:space="preserve">
+    <value>Players</value>
+  </data>
+  <data name="GmPanelTabWorld" xml:space="preserve">
+    <value>World</value>
+  </data>
+  <data name="GmPanelTabLog" xml:space="preserve">
+    <value>Log</value>
+  </data>
+  <data name="GmPanelModeOnline" xml:space="preserve">
+    <value>Online (%d)</value>
+  </data>
+  <data name="GmPanelModeOnlineNone" xml:space="preserve">
+    <value>Online</value>
+  </data>
+  <data name="GmPanelModeSearch" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="GmPanelModeBans" xml:space="preserve">
+    <value>Bans</value>
+  </data>
+  <data name="GmPanelFind" xml:space="preserve">
+    <value>Find</value>
+  </data>
+  <data name="GmPanelRefresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="GmPanelAsking" xml:space="preserve">
+    <value>Asking the server...</value>
+  </data>
+  <data name="GmPanelNoAnswer" xml:space="preserve">
+    <value>The server doesn't answer.</value>
+  </data>
+  <data name="GmPanelOnlineCount" xml:space="preserve">
+    <value>In game: %d</value>
+  </data>
+  <data name="GmPanelFoundCount" xml:space="preserve">
+    <value>Found: %d (online and offline)</value>
+  </data>
+  <data name="GmPanelBansCount" xml:space="preserve">
+    <value>Bans and mutes: %d</value>
+  </data>
+  <data name="GmPanelEmptyOnline" xml:space="preserve">
+    <value>Nobody in game.</value>
+  </data>
+  <data name="GmPanelFoundMany" xml:space="preserve">
+    <value>First %d found: type more letters</value>
+  </data>
+  <data name="GmPanelEmptyFind" xml:space="preserve">
+    <value>Nobody found.</value>
+  </data>
+  <data name="GmPanelEmptyBans" xml:space="preserve">
+    <value>No bans or mutes.</value>
+  </data>
+  <data name="GmPanelSearchHint" xml:space="preserve">
+    <value>2+ letters of a name, then Enter</value>
+  </data>
+  <data name="GmPanelRowPlayer" xml:space="preserve">
+    <value>Lv %d  R%d  %ls %d,%d</value>
+  </data>
+  <data name="GmPanelTagGm" xml:space="preserve">
+    <value>GM</value>
+  </data>
+  <data name="GmPanelTagMuted" xml:space="preserve">
+    <value>mute</value>
+  </data>
+  <data name="GmPanelTagHidden" xml:space="preserve">
+    <value>hidden</value>
+  </data>
+  <data name="GmPanelTagEvent" xml:space="preserve">
+    <value>event</value>
+  </data>
+  <data name="GmPanelTagTier" xml:space="preserve">
+    <value>Tier Map</value>
+  </data>
+  <data name="GmPanelTagOnline" xml:space="preserve">
+    <value>in game</value>
+  </data>
+  <data name="GmPanelTagBanned" xml:space="preserve">
+    <value>ban</value>
+  </data>
+  <data name="GmPanelKindBan" xml:space="preserve">
+    <value>Ban forever</value>
+  </data>
+  <data name="GmPanelKindTimedBan" xml:space="preserve">
+    <value>Ban till %ls</value>
+  </data>
+  <data name="GmPanelKindMute" xml:space="preserve">
+    <value>Mute till %ls</value>
+  </data>
+  <data name="GmPanelNoneSelected" xml:space="preserve">
+    <value>Pick a player in the list.</value>
+  </data>
+  <data name="GmPanelSelectedStats" xml:space="preserve">
+    <value>%ls, lv %d, resets %d, CP %ls</value>
+  </data>
+  <data name="GmPanelSelectedWhere" xml:space="preserve">
+    <value>%ls %d, %d</value>
+  </data>
+  <data name="GmPanelSelectedOffline" xml:space="preserve">
+    <value>Not in game</value>
+  </data>
+  <data name="GmPanelMutedUntil" xml:space="preserve">
+    <value>muted till %ls</value>
+  </data>
+  <data name="GmPanelBannedUntil" xml:space="preserve">
+    <value>banned till %ls</value>
+  </data>
+  <data name="GmPanelBannedForever" xml:space="preserve">
+    <value>banned forever</value>
+  </data>
+  <data name="GmPanelGoto" xml:space="preserve">
+    <value>Go to</value>
+  </data>
+  <data name="GmPanelSummon" xml:space="preserve">
+    <value>Summon</value>
+  </data>
+  <data name="GmPanelKick" xml:space="preserve">
+    <value>Kick</value>
+  </data>
+  <data name="GmPanelMute" xml:space="preserve">
+    <value>Mute</value>
+  </data>
+  <data name="GmPanelUnmute" xml:space="preserve">
+    <value>Unmute</value>
+  </data>
+  <data name="GmPanelBan" xml:space="preserve">
+    <value>Ban</value>
+  </data>
+  <data name="GmPanelUnban" xml:space="preserve">
+    <value>Unban</value>
+  </data>
+  <data name="GmPanelMuteFor" xml:space="preserve">
+    <value>Mute %ls for:</value>
+  </data>
+  <data name="GmPanelBanFor" xml:space="preserve">
+    <value>Ban the account of %ls for:</value>
+  </data>
+  <data name="GmPanel15Minutes" xml:space="preserve">
+    <value>15 minutes</value>
+  </data>
+  <data name="GmPanel1Hour" xml:space="preserve">
+    <value>1 hour</value>
+  </data>
+  <data name="GmPanel1Day" xml:space="preserve">
+    <value>1 day</value>
+  </data>
+  <data name="GmPanel7Days" xml:space="preserve">
+    <value>7 days</value>
+  </data>
+  <data name="GmPanel30Days" xml:space="preserve">
+    <value>30 days</value>
+  </data>
+  <data name="GmPanelForever" xml:space="preserve">
+    <value>Forever</value>
+  </data>
+  <data name="GmPanelKickConfirm" xml:space="preserve">
+    <value>Disconnect %ls?</value>
+  </data>
+  <data name="GmPanelMuteConfirm" xml:space="preserve">
+    <value>Mute %ls: %ls.</value>
+  </data>
+  <data name="GmPanelBanConfirm" xml:space="preserve">
+    <value>Ban the account of %ls: %ls.</value>
+  </data>
+  <data name="GmPanelReasonOptional" xml:space="preserve">
+    <value>Reason (may stay empty):</value>
+  </data>
+  <data name="GmPanelReasonRequired" xml:space="preserve">
+    <value>Reason (required):</value>
+  </data>
+  <data name="GmPanelNeedReason" xml:space="preserve">
+    <value>A ban needs a reason.</value>
+  </data>
+  <data name="GmPanelUnbanConfirm" xml:space="preserve">
+    <value>Lift the ban of %ls's account?</value>
+  </data>
+  <data name="GmPanelUnmuteConfirm" xml:space="preserve">
+    <value>Let %ls chat again?</value>
+  </data>
+  <data name="GmPanelWarps" xml:space="preserve">
+    <value>Teleport (click a place)</value>
+  </data>
+  <data name="GmPanelMapLabel" xml:space="preserve">
+    <value>Map</value>
+  </data>
+  <data name="GmPanelGo" xml:space="preserve">
+    <value>Go</value>
+  </data>
+  <data name="GmPanelHideOn" xml:space="preserve">
+    <value>Invisible: on</value>
+  </data>
+  <data name="GmPanelHideOff" xml:space="preserve">
+    <value>Invisible: off</value>
+  </data>
+  <data name="GmPanelGmModeOn" xml:space="preserve">
+    <value>GM mode: on</value>
+  </data>
+  <data name="GmPanelGmModeOff" xml:space="preserve">
+    <value>GM mode: off</value>
+  </data>
+  <data name="GmPanelFireworks" xml:space="preserve">
+    <value>Fireworks</value>
+  </data>
+  <data name="GmPanelNotice" xml:space="preserve">
+    <value>Notice</value>
+  </data>
+  <data name="GmPanelNoticePrompt" xml:space="preserve">
+    <value>Golden notice to every player:</value>
+  </data>
+  <data name="GmPanelHere" xml:space="preserve">
+    <value>You: %ls %d, %d</value>
+  </data>
+  <data name="GmPanelLogCount" xml:space="preserve">
+    <value>Last actions: %d</value>
+  </data>
+  <data name="GmPanelEmptyLog" xml:space="preserve">
+    <value>No actions yet.</value>
+  </data>
+  <data name="GmPanelLogTitle" xml:space="preserve">
+    <value>%ls %ls %ls</value>
+  </data>
+  <data name="GmPanelLogDetail" xml:space="preserve">
+    <value>%ls: %ls</value>
+  </data>
+  <data name="GmPanelSending" xml:space="preserve">
+    <value>Sent: %ls</value>
+  </data>
 </root>

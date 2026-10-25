@@ -143,6 +143,9 @@ enum INTERFACE_LIST
     // CJewelBankWindow (UI/Inventory/JewelBankWindow.h), the jewel bank, opened from the inventory. Same
     // reasoning as INTERFACE_CREDITS above.
     INTERFACE_JEWEL_BANK,
+    // CGmPanelWindow (UI/Dialogs/GmPanelWindow.h), the game master panel (key Y, GM accounts only). Same
+    // reasoning as INTERFACE_CREDITS above.
+    INTERFACE_GM_PANEL,
     INTERFACE_END,
     INTERFACE_COUNT = INTERFACE_END - 2,
 };

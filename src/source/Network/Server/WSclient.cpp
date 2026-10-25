@@ -115,6 +115,7 @@ using namespace mu::ui::window;
 #include "GameLogic/Events/EventTimes.h"
 #include "GameLogic/Events/DailyRewards.h"
 #include "GameLogic/Events/TierMaps.h"
+#include "GameLogic/Commands/GmPanel.h"
 #include "GameLogic/Character/AdvancedStats.h"
 #include "GameLogic/Items/JewelBank.h"
 #include "UI/Inventory/VaultPages.h"
@@ -1267,6 +1268,7 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     GameLogic::TierMaps::Maps().Reset();
     GameLogic::AdvancedStats::Stats().Reset();
     GameLogic::JewelBank::Bank().Reset();
+    GameLogic::GmPanel::Panel().Reset();
 
     g_ConsoleDebug->Write(MCD_RECEIVE, L"0x03 [ReceiveJoinMapServer]");
 
@@ -1994,8 +1996,8 @@ void ReceiveNotice(const BYTE* ReceiveBuffer)
         // The answers to the event timer window (GameLogic/Events/EventTimes.h), the daily rewards window
         // (GameLogic/Events/DailyRewards.h), the character window's advanced stats tab
         // (GameLogic/Character/AdvancedStats.h), the vault's pages (UI/Inventory/VaultPages.h), the jewel bank
-        // window (GameLogic/Items/JewelBank.h) and the Tier Maps window (GameLogic/Events/TierMaps.h) stay out of
-        // the chat.
+        // window (GameLogic/Items/JewelBank.h), the Tier Maps window (GameLogic/Events/TierMaps.h) and the GM
+        // panel (GameLogic/Commands/GmPanel.h) stay out of the chat.
         if (GameLogic::EventTimes::Times().TakeMessage(Text) || GameLogic::DailyRewards::Rewards().TakeMessage(Text) ||
             GameLogic::AdvancedStats::Stats().TakeMessage(Text) || UI::Storage::Pages().TakeMessage(Text) ||
             GameLogic::JewelBank::Bank().TakeMessage(Text))
@@ -2006,6 +2008,12 @@ void ReceiveNotice(const BYTE* ReceiveBuffer)
             // Adviser Jerinteu opens the window; the state follows in the next messages.
             if (GameLogic::TierMaps::Maps().TakeOpenRequest() && !UI::Windows::IsVisible(mu::ui::window::INTERFACE_TIER_MAPS))
                 UI::Windows::Show(mu::ui::window::INTERFACE_TIER_MAPS);
+        }
+        else if (GameLogic::GmPanel::Panel().TakeMessage(Text))
+        {
+            // Y asked whether this character may use the panel, and the answer says yes.
+            if (GameLogic::GmPanel::Panel().TakeOpenRequest() && !UI::Windows::IsVisible(mu::ui::window::INTERFACE_GM_PANEL))
+                UI::Windows::Show(mu::ui::window::INTERFACE_GM_PANEL);
         }
         else if (CHARACTER_SCENE != SceneFlag)
         {
@@ -2284,7 +2292,11 @@ BOOL ReceiveTeleport(const BYTE* ReceiveBuffer, BOOL bEncrypted)
             UI::Windows::Hide(mu::ui::window::INTERFACE_EMPIREGUARDIAN_TIMER);
         }
 
+        // A game master warping from the GM panel keeps it open (GmPanelWindow.h).
+        const bool keepGmPanel = UI::Windows::IsVisible(mu::ui::window::INTERFACE_GM_PANEL);
         UI::Windows::HideAll();
+        if (keepGmPanel)
+            UI::Windows::Show(mu::ui::window::INTERFACE_GM_PANEL);
 
         CreatePetDarkSpirit_Now(Hero);
         CreateEffect(BITMAP_MAGIC + 2, o->Position, o->Angle, o->Light, 0, o);

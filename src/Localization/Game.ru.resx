@@ -13356,4 +13356,238 @@
     <value>При провале обе вещи остаются.</value>
     <comment>legacy_id=3904</comment>
   </data>
+  <data name="GmPanelTitleAdmin" xml:space="preserve">
+    <value>GM-панель — админ</value>
+  </data>
+  <data name="GmPanelTitleMod" xml:space="preserve">
+    <value>GM-панель — модератор</value>
+  </data>
+  <data name="GmPanelTabPlayers" xml:space="preserve">
+    <value>Игроки</value>
+  </data>
+  <data name="GmPanelTabWorld" xml:space="preserve">
+    <value>Мир</value>
+  </data>
+  <data name="GmPanelTabLog" xml:space="preserve">
+    <value>Журнал</value>
+  </data>
+  <data name="GmPanelModeOnline" xml:space="preserve">
+    <value>Онлайн (%d)</value>
+  </data>
+  <data name="GmPanelModeOnlineNone" xml:space="preserve">
+    <value>Онлайн</value>
+  </data>
+  <data name="GmPanelModeSearch" xml:space="preserve">
+    <value>Поиск</value>
+  </data>
+  <data name="GmPanelModeBans" xml:space="preserve">
+    <value>Баны</value>
+  </data>
+  <data name="GmPanelFind" xml:space="preserve">
+    <value>Найти</value>
+  </data>
+  <data name="GmPanelRefresh" xml:space="preserve">
+    <value>Обновить</value>
+  </data>
+  <data name="GmPanelAsking" xml:space="preserve">
+    <value>Запрос к серверу...</value>
+  </data>
+  <data name="GmPanelNoAnswer" xml:space="preserve">
+    <value>Сервер не отвечает.</value>
+  </data>
+  <data name="GmPanelOnlineCount" xml:space="preserve">
+    <value>В игре: %d</value>
+  </data>
+  <data name="GmPanelFoundCount" xml:space="preserve">
+    <value>Найдено: %d (в игре и нет)</value>
+  </data>
+  <data name="GmPanelBansCount" xml:space="preserve">
+    <value>Баны и муты: %d</value>
+  </data>
+  <data name="GmPanelEmptyOnline" xml:space="preserve">
+    <value>Никого нет в игре.</value>
+  </data>
+  <data name="GmPanelFoundMany" xml:space="preserve">
+    <value>Первые %d: уточните имя</value>
+  </data>
+  <data name="GmPanelEmptyFind" xml:space="preserve">
+    <value>Никто не найден.</value>
+  </data>
+  <data name="GmPanelEmptyBans" xml:space="preserve">
+    <value>Нет банов и мутов.</value>
+  </data>
+  <data name="GmPanelSearchHint" xml:space="preserve">
+    <value>От 2 букв имени, затем Enter</value>
+  </data>
+  <data name="GmPanelRowPlayer" xml:space="preserve">
+    <value>Ур. %d  Р%d  %ls %d,%d</value>
+  </data>
+  <data name="GmPanelTagGm" xml:space="preserve">
+    <value>GM</value>
+  </data>
+  <data name="GmPanelTagMuted" xml:space="preserve">
+    <value>мут</value>
+  </data>
+  <data name="GmPanelTagHidden" xml:space="preserve">
+    <value>скрыт</value>
+  </data>
+  <data name="GmPanelTagEvent" xml:space="preserve">
+    <value>ивент</value>
+  </data>
+  <data name="GmPanelTagTier" xml:space="preserve">
+    <value>Tier Map</value>
+  </data>
+  <data name="GmPanelTagOnline" xml:space="preserve">
+    <value>в игре</value>
+  </data>
+  <data name="GmPanelTagBanned" xml:space="preserve">
+    <value>бан</value>
+  </data>
+  <data name="GmPanelKindBan" xml:space="preserve">
+    <value>Бан навсегда</value>
+  </data>
+  <data name="GmPanelKindTimedBan" xml:space="preserve">
+    <value>Бан до %ls</value>
+  </data>
+  <data name="GmPanelKindMute" xml:space="preserve">
+    <value>Мут до %ls</value>
+  </data>
+  <data name="GmPanelNoneSelected" xml:space="preserve">
+    <value>Выберите игрока в списке.</value>
+  </data>
+  <data name="GmPanelSelectedStats" xml:space="preserve">
+    <value>%ls, ур. %d, ресетов %d, CP %ls</value>
+  </data>
+  <data name="GmPanelSelectedWhere" xml:space="preserve">
+    <value>%ls %d, %d</value>
+  </data>
+  <data name="GmPanelSelectedOffline" xml:space="preserve">
+    <value>Не в игре</value>
+  </data>
+  <data name="GmPanelMutedUntil" xml:space="preserve">
+    <value>мут до %ls</value>
+  </data>
+  <data name="GmPanelBannedUntil" xml:space="preserve">
+    <value>бан до %ls</value>
+  </data>
+  <data name="GmPanelBannedForever" xml:space="preserve">
+    <value>бан навсегда</value>
+  </data>
+  <data name="GmPanelGoto" xml:space="preserve">
+    <value>К нему</value>
+  </data>
+  <data name="GmPanelSummon" xml:space="preserve">
+    <value>К себе</value>
+  </data>
+  <data name="GmPanelKick" xml:space="preserve">
+    <value>Кик</value>
+  </data>
+  <data name="GmPanelMute" xml:space="preserve">
+    <value>Мут</value>
+  </data>
+  <data name="GmPanelUnmute" xml:space="preserve">
+    <value>Размут</value>
+  </data>
+  <data name="GmPanelBan" xml:space="preserve">
+    <value>Бан</value>
+  </data>
+  <data name="GmPanelUnban" xml:space="preserve">
+    <value>Разбан</value>
+  </data>
+  <data name="GmPanelMuteFor" xml:space="preserve">
+    <value>Мут %ls на:</value>
+  </data>
+  <data name="GmPanelBanFor" xml:space="preserve">
+    <value>Бан аккаунта %ls на:</value>
+  </data>
+  <data name="GmPanel15Minutes" xml:space="preserve">
+    <value>15 минут</value>
+  </data>
+  <data name="GmPanel1Hour" xml:space="preserve">
+    <value>1 час</value>
+  </data>
+  <data name="GmPanel1Day" xml:space="preserve">
+    <value>1 день</value>
+  </data>
+  <data name="GmPanel7Days" xml:space="preserve">
+    <value>7 дней</value>
+  </data>
+  <data name="GmPanel30Days" xml:space="preserve">
+    <value>30 дней</value>
+  </data>
+  <data name="GmPanelForever" xml:space="preserve">
+    <value>Навсегда</value>
+  </data>
+  <data name="GmPanelKickConfirm" xml:space="preserve">
+    <value>Отключить %ls?</value>
+  </data>
+  <data name="GmPanelMuteConfirm" xml:space="preserve">
+    <value>Мут %ls: %ls.</value>
+  </data>
+  <data name="GmPanelBanConfirm" xml:space="preserve">
+    <value>Бан аккаунта %ls: %ls.</value>
+  </data>
+  <data name="GmPanelReasonOptional" xml:space="preserve">
+    <value>Причина (можно пусто):</value>
+  </data>
+  <data name="GmPanelReasonRequired" xml:space="preserve">
+    <value>Причина (обязательно):</value>
+  </data>
+  <data name="GmPanelNeedReason" xml:space="preserve">
+    <value>Для бана нужна причина.</value>
+  </data>
+  <data name="GmPanelUnbanConfirm" xml:space="preserve">
+    <value>Снять бан с аккаунта %ls?</value>
+  </data>
+  <data name="GmPanelUnmuteConfirm" xml:space="preserve">
+    <value>Снять мут с %ls?</value>
+  </data>
+  <data name="GmPanelWarps" xml:space="preserve">
+    <value>Телепорт (клик по месту)</value>
+  </data>
+  <data name="GmPanelMapLabel" xml:space="preserve">
+    <value>Карта</value>
+  </data>
+  <data name="GmPanelGo" xml:space="preserve">
+    <value>Идти</value>
+  </data>
+  <data name="GmPanelHideOn" xml:space="preserve">
+    <value>Невидимость: вкл</value>
+  </data>
+  <data name="GmPanelHideOff" xml:space="preserve">
+    <value>Невидимость: выкл</value>
+  </data>
+  <data name="GmPanelGmModeOn" xml:space="preserve">
+    <value>GM-режим: вкл</value>
+  </data>
+  <data name="GmPanelGmModeOff" xml:space="preserve">
+    <value>GM-режим: выкл</value>
+  </data>
+  <data name="GmPanelFireworks" xml:space="preserve">
+    <value>Салют</value>
+  </data>
+  <data name="GmPanelNotice" xml:space="preserve">
+    <value>Объявление</value>
+  </data>
+  <data name="GmPanelNoticePrompt" xml:space="preserve">
+    <value>Золотое объявление всем игрокам:</value>
+  </data>
+  <data name="GmPanelHere" xml:space="preserve">
+    <value>Вы: %ls %d, %d</value>
+  </data>
+  <data name="GmPanelLogCount" xml:space="preserve">
+    <value>Последние действия: %d</value>
+  </data>
+  <data name="GmPanelEmptyLog" xml:space="preserve">
+    <value>Действий пока нет.</value>
+  </data>
+  <data name="GmPanelLogTitle" xml:space="preserve">
+    <value>%ls %ls %ls</value>
+  </data>
+  <data name="GmPanelLogDetail" xml:space="preserve">
+    <value>%ls: %ls</value>
+  </data>
+  <data name="GmPanelSending" xml:space="preserve">
+    <value>Отправлено: %ls</value>
+  </data>
 </root>

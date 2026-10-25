@@ -1,0 +1,116 @@
+/* Legacy theme for CGmPanelWindow (the game master panel, key Y), in the Tier Maps window's look (tier_maps.rcss):
+   the docked_panel_frame.rcss frame (linked first; newui_item_back01 top) at the full dock height (432), the title
+   bold and centred, then one counter-scaled pane in which the page flows: rows of buttons in the J window's small
+   button art (newui_btn_empty_small, chat_command.rcss), the text fields, the lists in base.rcss's .scroll-pane;
+   under it the server's answer and the exit button. Reference px inside #panel; inside the pane, physical px
+   (reference px times --root-scale). */
+
+@spritesheet gm-btn-sheet {
+	src: "../../../newui_btn_empty_small.tga";
+	gm-btn-up: 0px 0px 64px 29px;
+	gm-btn-over: 0px 29px 64px 29px;
+	gm-btn-down: 0px 58px 64px 29px;
+}
+
+.frame-top { decorator: image(docked-bg-top-b); }
+#panel { height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; }
+
+.gm-title { left: 0; top: 12px; text-align: center; font-weight: bold; pointer-events: none; }
+#gm_body { left: 12px; top: 32px; --flow-w: 166px; line-height: 1.12; }
+#gm_status { left: 12px; top: 352px; white-space: normal; line-height: 1.1; pointer-events: none; }
+
+/* A row of buttons (or fields): spread over the pane's width, wrapping to more rows. */
+.gm-bar {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: calc(3px * var(--root-scale));
+}
+.gm-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: calc(18px * var(--root-scale));
+	margin-bottom: calc(2px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	decorator: image(gm-btn-up);
+}
+.gm-btn:hover { decorator: image(gm-btn-over); }
+.gm-btn:active, .gm-btn.on { decorator: image(gm-btn-down); }
+.gm-btn.off { opacity: 0.4; pointer-events: none; }
+.gm-btn-label { display: block; white-space: nowrap; pointer-events: none; }
+.gm-btn-third { width: calc(54px * var(--root-scale)); }
+.gm-btn-quarter { width: calc(40px * var(--root-scale)); }
+.gm-btn-half { width: calc(82px * var(--root-scale)); }
+.gm-btn-go { width: calc(34px * var(--root-scale)); }
+
+.gm-field {
+	height: calc(18px * var(--root-scale));
+	line-height: calc(16px * var(--root-scale));
+	margin-bottom: calc(2px * var(--root-scale));
+	padding: 0 calc(3px * var(--root-scale));
+	pointer-events: auto;
+}
+.gm-search-field { width: calc(124px * var(--root-scale)); }
+.gm-num-field { width: calc(26px * var(--root-scale)); }
+.gm-label { display: block; white-space: nowrap; margin-bottom: calc(2px * var(--root-scale)); pointer-events: none; }
+
+.gm-info { display: block; white-space: nowrap; margin-bottom: calc(2px * var(--root-scale)); }
+.gm-info-bold { font-weight: bold; }
+
+/* A list's box; the pane inside scrolls (the wheel and base.rcss's scrollbar). The pane stays in the flow with
+   its own height: an absolute pane here would be placed against the counter-scaled layer, not against its box. */
+.gm-list-box { display: block; margin-bottom: calc(3px * var(--root-scale)); }
+.gm-list { display: block; width: 100%; }
+.gm-list-players .gm-list { height: calc(128px * var(--root-scale)); }
+.gm-list-warps .gm-list { height: calc(150px * var(--root-scale)); }
+.gm-list-log .gm-list { height: calc(252px * var(--root-scale)); }
+
+/* The row leaves the pane's right lane to the scrollbar (a full-width row sits under the handle). */
+.gm-row {
+	display: block;
+	box-sizing: border-box;
+	width: calc(100% - 17px * var(--root-scale));
+	padding: calc(1px * var(--root-scale)) calc(4px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+}
+.gm-row-static { cursor: arrow; pointer-events: none; }
+.gm-row-title { display: block; white-space: nowrap; pointer-events: none; }
+.gm-row-detail { display: block; white-space: nowrap; pointer-events: none; }
+.gm-row-title { font-weight: bold; }
+.gm-row-single .gm-row-title { font-weight: normal; }
+
+.gm-sel { display: block; white-space: nowrap; }
+.gm-sel-name { font-weight: bold; margin-top: calc(1px * var(--root-scale)); }
+.gm-grid { margin-top: calc(3px * var(--root-scale)); }
+
+/* The event timer's colours: gold title, light text, blue detail; a picked row on a gold band, an offline one
+   grey, a banned or muted one red; the server's answer green, or red for a refusal. */
+.gm-title { color: rgb(255, 220, 120); }
+.gm-btn-label { color: #ffffff; }
+.gm-btn.on .gm-btn-label { color: rgb(255, 220, 120); }
+.gm-info { color: rgb(200, 220, 255); }
+.gm-info-bold { color: rgb(240, 240, 240); }
+.gm-label { color: rgb(200, 200, 200); }
+.gm-row-title { color: rgb(240, 240, 240); }
+.gm-row-detail { color: rgb(170, 190, 225); }
+.gm-row:hover { background-color: rgba(255, 255, 255, 14); }
+.gm-row.dim .gm-row-title { color: rgb(160, 160, 160); }
+.gm-row.dim .gm-row-detail { color: rgb(130, 130, 130); }
+.gm-row.alert .gm-row-title { color: rgb(255, 150, 120); }
+.gm-row.selected { background-color: rgba(255, 210, 100, 48); }
+.gm-row.selected .gm-row-title { color: rgb(255, 220, 120); }
+.gm-sel { color: rgb(220, 220, 220); }
+.gm-sel-name { color: rgb(255, 230, 160); }
+#gm_status { color: rgb(150, 255, 150); }
+#gm_status.bad { color: rgb(255, 130, 110); }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+#gm_title { width: calc(100% * var(--root-scale)); }
+#gm_status { width: calc(166px * var(--root-scale)); }

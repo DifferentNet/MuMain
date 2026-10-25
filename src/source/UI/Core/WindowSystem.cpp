@@ -91,6 +91,7 @@ CSystem::CSystem()
     m_pNewDailyRewardsWindow = nullptr;
     m_pNewTierMapsWindow = nullptr;
     m_pNewJewelBankWindow = nullptr;
+    m_pNewGmPanelWindow = nullptr;
     m_pNewItemExplanationWindow = nullptr;
     m_pNewSetItemExplanation = nullptr;
     m_pNewQuickCommandWindow = nullptr;
@@ -397,6 +398,12 @@ bool CSystem::LoadMainSceneInterface()
         return false;
     }
 
+    m_pNewGmPanelWindow = new CGmPanelWindow;
+    if (m_pNewGmPanelWindow->Create(m_pNewUIMng) == false)
+    {
+        return false;
+    }
+
     m_pNewHelpWindow = new CHelpWindow;
     if (m_pNewHelpWindow->Create(m_pNewUIMng) == false)
     {
@@ -592,6 +599,7 @@ bool CSystem::LoadMainSceneInterface()
     slot(INTERFACE_EVENT_SCHEDULE, "event_schedule", m_pNewEventScheduleWindow, "event_schedule.rml");
     slot(INTERFACE_DAILY_REWARDS, "daily_rewards", m_pNewDailyRewardsWindow, "daily_rewards.rml");
     slot(INTERFACE_TIER_MAPS, "tier_maps", m_pNewTierMapsWindow, "tier_maps.rml");
+    slot(INTERFACE_GM_PANEL, "gm_panel", m_pNewGmPanelWindow, "gm_panel.rml");
     slot(INTERFACE_GOLD_BOWMAN, "gold_bowman", m_pNewGoldBowman, "gold_bowman.rml");
     slot(INTERFACE_GOLD_BOWMAN_LENA, "gold_bowman_lena", m_pNewGoldBowmanLena, "gold_bowman_lena.rml");
     slot(INTERFACE_NPC_DIALOGUE, "npc_dialogue", m_pNewNPCDialogue, "npc_dialogue.rml");
@@ -672,6 +680,7 @@ void CSystem::UnloadMainSceneInterface()
     SAFE_DELETE(m_pNewDailyRewardsWindow);
     SAFE_DELETE(m_pNewTierMapsWindow);
     SAFE_DELETE(m_pNewJewelBankWindow);
+    SAFE_DELETE(m_pNewGmPanelWindow);
     SAFE_DELETE(m_pNewItemExplanationWindow);
     SAFE_DELETE(m_pNewSetItemExplanation);
     SAFE_DELETE(m_pNewQuickCommandWindow);
@@ -962,6 +971,11 @@ void CSystem::Show(DWORD dwKey)
     {
         HideAllGroupA();
         m_pNewTierMapsWindow->OpenningProcess();
+    }
+    else if (dwKey == INTERFACE_GM_PANEL)
+    {
+        HideAllGroupA();
+        m_pNewGmPanelWindow->OpenningProcess();
     }
     else if (dwKey == INTERFACE_JEWEL_BANK)
     {
@@ -1417,6 +1431,10 @@ void CSystem::Hide(DWORD dwKey)
     {
         m_pNewTierMapsWindow->ClosingProcess();
     }
+    else if (dwKey == INTERFACE_GM_PANEL)
+    {
+        m_pNewGmPanelWindow->ClosingProcess();
+    }
     else if (dwKey == INTERFACE_JEWEL_BANK)
     {
         m_pNewJewelBankWindow->ClosingProcess();
@@ -1641,6 +1659,7 @@ void CSystem::HideAllGroupA()
         INTERFACE_EVENT_SCHEDULE,
         INTERFACE_DAILY_REWARDS,
         INTERFACE_TIER_MAPS,
+        INTERFACE_GM_PANEL,
         INTERFACE_JEWEL_BANK,
         INTERFACE_GUILDINFO,
         INTERFACE_KANTURU2ND_ENTERNPC,
@@ -1694,6 +1713,7 @@ void CSystem::HideAllGroupB()
         INTERFACE_EVENT_SCHEDULE,
         INTERFACE_DAILY_REWARDS,
         INTERFACE_TIER_MAPS,
+        INTERFACE_GM_PANEL,
         INTERFACE_JEWEL_BANK,
         INTERFACE_GUILDINFO,
         INTERFACE_KANTURU2ND_ENTERNPC,
@@ -2319,6 +2339,11 @@ CTierMapsWindow* CSystem::GetUI_NewTierMapsWindow() const
 CJewelBankWindow* CSystem::GetUI_NewJewelBankWindow() const
 {
     return m_pNewJewelBankWindow;
+}
+
+CGmPanelWindow* CSystem::GetUI_NewGmPanelWindow() const
+{
+    return m_pNewGmPanelWindow;
 }
 
 CItemExplanationWindow* CSystem::GetUI_NewItemExplanationWindow() const

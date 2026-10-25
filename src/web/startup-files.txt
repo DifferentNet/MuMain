@@ -3832,3 +3832,6 @@ Data/Interface/lo_back_s5_im03.OZJ
 Data/Interface/lo_back_s5_im04.OZJ
 Data/Interface/lo_back_s5_im05.OZJ
 Data/Interface/lo_back_s5_im06.OZJ
+# Added 2026-10-24: the GM panel window (key Y; the workspace loads it at the start)
+Data/Interface/RmlUi/themes/legacy/gm_panel.rcss
+Data/Interface/RmlUi/gm_panel.rml

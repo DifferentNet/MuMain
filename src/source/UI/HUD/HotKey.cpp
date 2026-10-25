@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "GameLogic/Commands/ChatCommandCatalog.h"
+#include "GameLogic/Commands/GmPanel.h"
 #include "I18N/All.h"
 
 #include "UI/HUD/HotKey.h"
@@ -288,6 +289,23 @@ bool mu::ui::window::CHotKey::UpdateKeyEvent()
         g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_DAILY_REWARDS);
         PlayBuffer(SOUND_CLICK01);
         return false;
+    }
+    else if (mu::ui::window::IsPress('Y') == true)
+    {
+        // The GM panel, for characters of game master accounts (GmPanelWindow.h). The server decides who may: the
+        // first press asks it, and its answer opens the window (WSclient.cpp); for everybody else Y does nothing.
+        auto& gm = GameLogic::GmPanel::Panel();
+        if (gm.IsGm())
+        {
+            g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_GM_PANEL);
+            PlayBuffer(SOUND_CLICK01);
+            return false;
+        }
+        if (gm.GetRole() == GameLogic::GmPanel::Role::Unknown)
+        {
+            gm.Hello(true);
+            return false;
+        }
     }
     else if (mu::ui::window::IsPress('M') == true)
     {
