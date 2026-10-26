@@ -13967,4 +13967,28 @@
   <data name="GmPanelSending" xml:space="preserve">
     <value>Sent: %ls</value>
   </data>
+  <data name="SkyNetBoxOpen" xml:space="preserve">
+    <value>Drop it on the ground to open it</value>
+  </data>
+  <data name="SkyNetBoxPrizeItems" xml:space="preserve">
+    <value>One prize: an excellent or ancient item of your class,</value>
+  </data>
+  <data name="SkyNetBoxPrizeJewels" xml:space="preserve">
+    <value>Jewel of Ancient or Fate, Box of Kundun or jewels</value>
+  </data>
+  <data name="SkyNetBoxBank" xml:space="preserve">
+    <value>Jewels go straight into your jewel bank</value>
+  </data>
+  <data name="SealOfAscensionExperience" xml:space="preserve">
+    <value>+50%% experience for 2 hours of play</value>
+  </data>
+  <data name="SealOfAscensionStack" xml:space="preserve">
+    <value>Another seal adds 2 more hours</value>
+  </data>
+  <data name="SealOfAscensionTime" xml:space="preserve">
+    <value>The time runs only while you are in the game</value>
+  </data>
+  <data name="SealOfAscensionUse" xml:space="preserve">
+    <value>Right-click to use</value>
+  </data>
 </root>

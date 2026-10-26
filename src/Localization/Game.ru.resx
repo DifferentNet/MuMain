@@ -13590,4 +13590,28 @@
   <data name="GmPanelSending" xml:space="preserve">
     <value>Отправлено: %ls</value>
   </data>
+  <data name="SkyNetBoxOpen" xml:space="preserve">
+    <value>Бросьте на землю, чтобы открыть</value>
+  </data>
+  <data name="SkyNetBoxPrizeItems" xml:space="preserve">
+    <value>Один приз: excellent или ancient вещь вашего класса,</value>
+  </data>
+  <data name="SkyNetBoxPrizeJewels" xml:space="preserve">
+    <value>Jewel of Ancient или Fate, Box of Kundun или камни</value>
+  </data>
+  <data name="SkyNetBoxBank" xml:space="preserve">
+    <value>Камни сразу попадают в банк камней</value>
+  </data>
+  <data name="SealOfAscensionExperience" xml:space="preserve">
+    <value>+50%% опыта на 2 часа игры</value>
+  </data>
+  <data name="SealOfAscensionStack" xml:space="preserve">
+    <value>Ещё одна печать добавляет 2 часа</value>
+  </data>
+  <data name="SealOfAscensionTime" xml:space="preserve">
+    <value>Время идёт, только пока вы в игре</value>
+  </data>
+  <data name="SealOfAscensionUse" xml:space="preserve">
+    <value>Правый клик: использовать</value>
+  </data>
 </root>
