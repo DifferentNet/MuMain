@@ -58,10 +58,26 @@ struct GmPanelStep
     bool operator==(const GmPanelStep&) const = default;
 };
 
+// The Character tab's editor: the labels of its typed values.
+struct GmPanelCharLabels
+{
+    GmPanelLine lv;
+    GmPanelLine rs;
+    GmPanelLine pt;
+    GmPanelLine str;
+    GmPanelLine agi;
+    GmPanelLine vit;
+    GmPanelLine ene;
+    GmPanelLine cmd;
+    GmPanelLine zen;
+
+    bool operator==(const GmPanelCharLabels&) const = default;
+};
+
 struct GmPanelRmlModel
 {
     GmPanelLine title;
-    // 0 players, 1 world, 2 log, 3 events, 4 items (the last two admins only).
+    // 0 players, 1 world, 2 log, 3 events, 4 items, 5 character (the last three admins only).
     int tab = 0;
     std::vector<GmPanelButton> tabs;
     // The font size of the text fields.
@@ -120,6 +136,24 @@ struct GmPanelRmlModel
     Rml::String itemSearchText;
     Rml::String itemCountText;
     Rml::String itemDurText;
+
+    // Character: the name typed and Open (`find`); the character's two lines (`sel_name`, `sel_stats`). Editor: the
+    // values typed (filled from the server's answer), their labels, whether the class has a command stat, the steps
+    // (PK, class, move to) and Save / Refresh (`actions`). Items: the picked item's icon and lines (`item_name`,
+    // `item_line`, `item_hint`), the list (`list_info`, `rows`) and Delete / Copy / Refresh. Log: Undo (`actions`).
+    Rml::String charNameText;
+    bool charReady = false;
+    bool charHasCmd = false;
+    GmPanelCharLabels charLabels;
+    Rml::String chLvText;
+    Rml::String chRsText;
+    Rml::String chPtText;
+    Rml::String chStrText;
+    Rml::String chAgiText;
+    Rml::String chVitText;
+    Rml::String chEneText;
+    Rml::String chCmdText;
+    Rml::String chZenText;
 
     // The server's answer to the last action.
     GmPanelLine status;

@@ -37,6 +37,40 @@ int ToInt(const std::wstring& field)
     return static_cast<int>(std::wcstol(field.c_str(), nullptr, 10));
 }
 
+long long ToLong(const std::wstring& field)
+{
+    return std::wcstoll(field.c_str(), nullptr, 10);
+}
+
+// "0A1F..." -> its bytes; empty when it isn't hex.
+std::vector<std::uint8_t> FromHex(const std::wstring& text)
+{
+    auto digit = [](wchar_t c) -> int
+    {
+        if (c >= L'0' && c <= L'9')
+            return c - L'0';
+        if (c >= L'A' && c <= L'F')
+            return c - L'A' + 10;
+        if (c >= L'a' && c <= L'f')
+            return c - L'a' + 10;
+        return -1;
+    };
+
+    std::vector<std::uint8_t> bytes;
+    if (text.size() % 2 != 0)
+        return bytes;
+    bytes.reserve(text.size() / 2);
+    for (size_t i = 0; i + 1 < text.size(); i += 2)
+    {
+        const int high = digit(text[i]);
+        const int low = digit(text[i + 1]);
+        if (high < 0 || low < 0)
+            return {};
+        bytes.push_back(static_cast<std::uint8_t>(high * 16 + low));
+    }
+    return bytes;
+}
+
 // The field at `index`, empty past the end (a newer server may add fields, an older one leave some out).
 const std::wstring& At(const std::vector<std::wstring>& fields, size_t index)
 {
@@ -193,7 +227,10 @@ bool Store::TakeMessage(const std::wstring& text)
                          e.GmName = At(f, 1);
                          e.Op = At(f, 2);
                          e.Target = At(f, 3);
-                         e.Detail = From(f, 4);
+                         // The server takes the bars out of the detail, so the number and the undo flag follow it.
+                         e.Detail = At(f, 4);
+                         e.Id = ToLong(At(f, 5));
+                         e.Undo = At(f, 6);
                          return e;
                      });
         return true;
@@ -223,6 +260,12 @@ bool Store::TakeMessage(const std::wstring& text)
         return true;
     case L'I':
         TakeItemLine(suffix, fields);
+        return true;
+    case L'C':
+        TakeCharacterLine(suffix, fields);
+        return true;
+    case L'V':
+        TakeInventoryLine(suffix, fields);
         return true;
     case L'T':
         TakeListLine(m_tiers, suffix, fields, [](const auto& f)
@@ -312,6 +355,88 @@ void Store::TakeItemLine(wchar_t suffix, const std::vector<std::wstring>& fields
     }
 }
 
+void Store::TakeCharacterLine(wchar_t suffix, const std::vector<std::wstring>& fields)
+{
+    if (suffix == L'0')
+    {
+        CharacterInfo& c = m_characterIncoming;
+        c = CharacterInfo{};
+        c.Name = At(fields, 0);
+        c.Account = At(fields, 1);
+        c.Where = At(fields, 2).empty() ? L'o' : At(fields, 2)[0];
+        c.Class = ToInt(At(fields, 3));
+        c.ClassName = At(fields, 4);
+        c.Level = ToInt(At(fields, 5));
+        c.MaxLevel = ToInt(At(fields, 6));
+        c.Resets = ToInt(At(fields, 7));
+        c.ResetLimit = ToInt(At(fields, 8));
+        c.Points = ToInt(At(fields, 9));
+        c.Zen = ToLong(At(fields, 10));
+        c.MaxZen = ToLong(At(fields, 11));
+        c.PkState = ToInt(At(fields, 12));
+        c.PkCount = ToInt(At(fields, 13));
+        c.Map = ToInt(At(fields, 14));
+        c.MapName = At(fields, 15);
+        c.X = ToInt(At(fields, 16));
+        c.Y = ToInt(At(fields, 17));
+        m_characterReceiving = true;
+        return;
+    }
+
+    if (!m_characterReceiving)
+        return;
+
+    if (suffix == L'.')
+    {
+        m_character = std::move(m_characterIncoming);
+        m_characterIncoming = CharacterInfo{};
+        m_characterReceiving = false;
+        ++m_characterVersion;
+        return;
+    }
+
+    const auto& kind = At(fields, 0);
+    if (kind == L"s")
+        m_characterIncoming.Stats.push_back({At(fields, 1), ToInt(At(fields, 2)), ToInt(At(fields, 3)), From(fields, 4)});
+    else if (kind == L"k")
+        m_characterIncoming.Classes.push_back({ToInt(At(fields, 1)), From(fields, 2)});
+}
+
+void Store::TakeInventoryLine(wchar_t suffix, const std::vector<std::wstring>& fields)
+{
+    if (suffix == L'0')
+    {
+        CharacterItems& items = m_inventoryIncoming;
+        items = CharacterItems{};
+        items.Name = At(fields, 0);
+        items.Where = At(fields, 1).empty() ? L'o' : At(fields, 1)[0];
+        items.Zen = ToLong(At(fields, 2));
+        items.VaultZen = ToLong(At(fields, 3));
+        m_inventoryReceiving = true;
+        return;
+    }
+
+    if (!m_inventoryReceiving)
+        return;
+
+    if (suffix == L'.')
+    {
+        m_inventory = std::move(m_inventoryIncoming);
+        m_inventoryIncoming = CharacterItems{};
+        m_inventoryReceiving = false;
+        ++m_inventoryVersion;
+        return;
+    }
+
+    StoredItem item;
+    item.Storage = At(fields, 0) == L"v" ? L'v' : L'i';
+    item.Slot = ToInt(At(fields, 1));
+    item.Data = FromHex(At(fields, 2));
+    // The shortest item is 5 bytes (group and number, level, durability, flags).
+    if (item.Data.size() >= 5)
+        m_inventoryIncoming.Items.push_back(std::move(item));
+}
+
 void Store::Hello(bool openWhenGm)
 {
     if (SocketClient == nullptr || Hero == nullptr)
@@ -359,6 +484,8 @@ void Store::Reset()
     fresh.m_monsters.Version = m_monsters.Version + 1;
     fresh.m_tiers.Version = m_tiers.Version + 1;
     fresh.m_itemVersion = m_itemVersion + 1;
+    fresh.m_characterVersion = m_characterVersion + 1;
+    fresh.m_inventoryVersion = m_inventoryVersion + 1;
     *this = std::move(fresh);
 }
 } // namespace GameLogic::GmPanel

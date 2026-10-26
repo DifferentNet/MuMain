@@ -23,7 +23,7 @@ class ElementDocument;
 namespace mu::ui::window
 {
 // The game master panel (key Y), for characters of game master accounts: what GMs did with chat commands, with
-// clicks. Three tabs, five for admins:
+// clicks. Three tabs, six for admins:
 //   Players: who is in game (level, resets, where, Combat Power), a search by name over every character, online or
 //     not, and the bans and mutes; for the picked one: go to, summon, kick, mute and unmute, ban (timed or forever,
 //     with a reason) and unban.
@@ -36,6 +36,10 @@ namespace mu::ui::window
 //     option, luck, skill, its excellent or other options, its ancient sets, durability, count): the icon's tooltip
 //     shows the item as it will be made; Create puts it into the GM's bag, the picked player's or on the ground
 //     (with a reason); items can be saved (in config.ini) and loaded again.
+//   Character (admins): a character by its name, online or not. Editor: level, resets, free points, stats, zen, PK
+//     status, class (offline only) and a move; Save shows what changes and asks for a reason. Items: its bag, worn
+//     items, personal store and vault, each with its tooltip; delete one (vault items only offline) or copy it into
+//     the GM's bag. The Log tab undoes an edit or a deletion.
 // The server's add-on (GmPanel) decides every request by the account (GameLogic/Commands/GmPanel.h); the window
 // only shows what it may do. Docked right like the other panels; gm_panel.rml draws it.
 class CGmPanelWindow : public CObject
@@ -54,6 +58,8 @@ class CGmPanelWindow : public CObject
         // The Items tab: a step's label and value, an arrow between them; the item's lines by its icon; the
         // count's and durability's labels; Create and Save, which share their row with the durability.
         STEP_LABEL_WIDTH = 56,
+        // The Character tab's labels before its typed values.
+        PAIR_LABEL_WIDTH = 36,
         STEP_VALUE_WIDTH = 66,
         ITEM_LINES_WIDTH = 120,
         COUNT_LABEL_WIDTH = 30,
@@ -96,6 +102,7 @@ private:
         // Admins only.
         TAB_EVENTS,
         TAB_ITEMS,
+        TAB_CHARACTER,
     };
     enum Mode
     {
@@ -149,6 +156,35 @@ private:
         IT_LOAD,
         IT_DELETE,
         IT_OPTION_KIND_DOWN,
+    };
+    // The Character tab's modes and buttons; the Log tab's.
+    enum CharacterMode
+    {
+        CH_EDITOR,
+        CH_ITEMS,
+    };
+    enum CharacterAction
+    {
+        CH_SAVE = 1,
+        CH_REFRESH,
+        CH_PK_DOWN,
+        CH_PK_UP,
+        CH_CLASS_DOWN,
+        CH_CLASS_UP,
+        CH_MOVE_DOWN,
+        CH_MOVE_UP,
+        CH_ITEM_DELETE,
+        CH_ITEM_COPY,
+    };
+    enum LogAction
+    {
+        LOG_UNDO = 1,
+    };
+    // The Character tab's move step besides the warps (their index in the warp list).
+    enum CharacterMove
+    {
+        MOVE_STAY = -1,
+        MOVE_TO_ME = -2,
     };
     enum Action
     {
@@ -218,6 +254,9 @@ private:
     void SyncItemCatalog(GmPanelRmlModel& updated);
     void SyncItemMake(GmPanelRmlModel& updated);
     void SyncItemSaved(GmPanelRmlModel& updated);
+    void SyncCharacter(GmPanelRmlModel& updated);
+    void SyncCharEditor(GmPanelRmlModel& updated);
+    void SyncCharItems(GmPanelRmlModel& updated);
 
     void HandleClicks();
     void PickRow(int row);
@@ -231,6 +270,27 @@ private:
     void DoEventsAction(int action);
     void DoSwitch(int id);
     void DoItemsAction(int action);
+    void DoCharacterAction(int action);
+    void DoLogAction(int action);
+
+    // The Character tab.
+    // Opens the typed name: asks for its values or its items.
+    void OpenCharacter();
+    // A new answer about the opened character: the typed values and the steps are set from it.
+    void TakeCharacter();
+    // A new list of its items: the items are made again.
+    void TakeInventory();
+    // True while the editor shows the opened character's values.
+    bool CharacterReady() const;
+    // Shows what changes, asks for a reason, sends "/gm edit".
+    void SaveCharacter();
+    // Asks for a reason, sends "/gm itemdel" or "/gm itemcopy" for the picked item.
+    void AskItemAction(bool remove);
+    // The picked item of the list, or null.
+    int PickedItemIndex() const;
+    // The item the icon shows (the Items tab's preview, the Character tab's picked item) and the icon's element id.
+    tagITEM* ShownItem() const;
+    const char* IconId() const;
 
     // The Items tab.
     // The catalog's items (by the group, or by the searched name in every group), its rows built again.
@@ -322,6 +382,24 @@ private:
     std::unique_ptr<tagITEM> m_preview;
     ItemDraft m_previewOf;
     int m_previewInfoVersion = -1;
+    // The Character tab: its mode, the name its answers are about (what Open sent, then as the server writes it),
+    // the editor's steps (the PK state, the class number, the move: MOVE_STAY, MOVE_TO_ME or a warp's index) and
+    // the answer they were set from; the items: the picked one (its storage and slot), the answer they were made
+    // from, the items (made here, owned here) and their rows.
+    int m_chMode = CH_EDITOR;
+    std::wstring m_charName;
+    int m_chPk = 3;
+    int m_chClass = 0;
+    int m_chMove = MOVE_STAY;
+    int m_chSeenVersion = -1;
+    wchar_t m_invStorage = L'i';
+    int m_invSlot = -1;
+    int m_invSeenVersion = -1;
+    std::vector<std::unique_ptr<tagITEM>> m_invItems;
+    std::vector<GmPanelRow> m_invRows;
+    // The Log tab's entry picked for an undo (its number).
+    long long m_logSelected = 0;
+
     UI::Items::ItemCameraTarget m_itemTarget{[this](const Rml::Vector2f&, const Rml::Vector2f&) { RenderItemIcon(); }};
 
     // Clicks RmlUi reported, handled in Update().

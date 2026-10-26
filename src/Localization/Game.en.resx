@@ -14324,4 +14324,169 @@
   <data name="GmPanelItemKind" xml:space="preserve">
     <value>Kind</value>
   </data>
+  <data name="GmPanelTabCharacter" xml:space="preserve">
+    <value>Character</value>
+  </data>
+  <data name="GmPanelModeEditor" xml:space="preserve">
+    <value>Editor</value>
+  </data>
+  <data name="GmPanelModeInventory" xml:space="preserve">
+    <value>Items</value>
+  </data>
+  <data name="GmPanelCharOpen" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="GmPanelCharHint" xml:space="preserve">
+    <value>Type a name, press Open</value>
+  </data>
+  <data name="GmPanelCharNeedName" xml:space="preserve">
+    <value>Type a character name.</value>
+  </data>
+  <data name="GmPanelCharWhereGame" xml:space="preserve">
+    <value>%ls (%ls), in game</value>
+  </data>
+  <data name="GmPanelCharWhereAccount" xml:space="preserve">
+    <value>%ls (%ls), account online</value>
+  </data>
+  <data name="GmPanelCharWhereOffline" xml:space="preserve">
+    <value>%ls (%ls), offline</value>
+  </data>
+  <data name="GmPanelCharLine" xml:space="preserve">
+    <value>%ls, %ls %d %d</value>
+  </data>
+  <data name="GmPanelCharLevel" xml:space="preserve">
+    <value>Level</value>
+  </data>
+  <data name="GmPanelCharResets" xml:space="preserve">
+    <value>Resets</value>
+  </data>
+  <data name="GmPanelCharPoints" xml:space="preserve">
+    <value>Points</value>
+  </data>
+  <data name="GmPanelCharStr" xml:space="preserve">
+    <value>STR</value>
+  </data>
+  <data name="GmPanelCharAgi" xml:space="preserve">
+    <value>AGI</value>
+  </data>
+  <data name="GmPanelCharVit" xml:space="preserve">
+    <value>VIT</value>
+  </data>
+  <data name="GmPanelCharEne" xml:space="preserve">
+    <value>ENE</value>
+  </data>
+  <data name="GmPanelCharCmd" xml:space="preserve">
+    <value>CMD</value>
+  </data>
+  <data name="GmPanelCharZen" xml:space="preserve">
+    <value>Zen</value>
+  </data>
+  <data name="GmPanelCharPk" xml:space="preserve">
+    <value>PK</value>
+  </data>
+  <data name="GmPanelCharClass" xml:space="preserve">
+    <value>Class</value>
+  </data>
+  <data name="GmPanelCharMove" xml:space="preserve">
+    <value>Move to</value>
+  </data>
+  <data name="GmPanelCharStay" xml:space="preserve">
+    <value>stay</value>
+  </data>
+  <data name="GmPanelCharToMe" xml:space="preserve">
+    <value>to me</value>
+  </data>
+  <data name="GmPanelCharPlace" xml:space="preserve">
+    <value>Place</value>
+  </data>
+  <data name="GmPanelPk0" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="GmPanelPk1" xml:space="preserve">
+    <value>Hero</value>
+  </data>
+  <data name="GmPanelPk2" xml:space="preserve">
+    <value>Light hero</value>
+  </data>
+  <data name="GmPanelPk3" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="GmPanelPk4" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="GmPanelPk5" xml:space="preserve">
+    <value>Outlaw</value>
+  </data>
+  <data name="GmPanelPk6" xml:space="preserve">
+    <value>Murderer</value>
+  </data>
+  <data name="GmPanelPkKills" xml:space="preserve">
+    <value>%ls, %d</value>
+  </data>
+  <data name="GmPanelCharSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="GmPanelCharSaveConfirm" xml:space="preserve">
+    <value>Change %ls?</value>
+  </data>
+  <data name="GmPanelCharSavedOnLogout" xml:space="preserve">
+    <value>The account is online: saved when it leaves.</value>
+  </data>
+  <data name="GmPanelCharClassOffline" xml:space="preserve">
+    <value>Class: only while the account is offline</value>
+  </data>
+  <data name="GmPanelCharNothing" xml:space="preserve">
+    <value>Nothing changed.</value>
+  </data>
+  <data name="GmPanelCharTooLong" xml:space="preserve">
+    <value>Too many changes at once: save them in two steps.</value>
+  </data>
+  <data name="GmPanelInvInfo" xml:space="preserve">
+    <value>%d items, zen %ls, vault %ls</value>
+  </data>
+  <data name="GmPanelInvPick" xml:space="preserve">
+    <value>Pick an item in the list</value>
+  </data>
+  <data name="GmPanelInvWorn" xml:space="preserve">
+    <value>worn: %ls</value>
+  </data>
+  <data name="GmPanelInvBag" xml:space="preserve">
+    <value>bag %d</value>
+  </data>
+  <data name="GmPanelInvStore" xml:space="preserve">
+    <value>store %d</value>
+  </data>
+  <data name="GmPanelInvVault" xml:space="preserve">
+    <value>vault %d</value>
+  </data>
+  <data name="GmPanelInvWornSlots" xml:space="preserve">
+    <value>weapon,2nd hand,helm,armor,pants,gloves,boots,wings,pet,pendant,ring,ring</value>
+  </data>
+  <data name="GmPanelInvDur" xml:space="preserve">
+    <value>%ls, durability %d</value>
+  </data>
+  <data name="GmPanelInvVaultOnline" xml:space="preserve">
+    <value>Vault: delete only while offline</value>
+  </data>
+  <data name="GmPanelInvCopy" xml:space="preserve">
+    <value>Copy to me</value>
+  </data>
+  <data name="GmPanelInvDeleteConfirm" xml:space="preserve">
+    <value>Delete %ls of %ls?</value>
+  </data>
+  <data name="GmPanelInvCopyConfirm" xml:space="preserve">
+    <value>Copy %ls of %ls into your bag?</value>
+  </data>
+  <data name="GmPanelInvUndoHint" xml:space="preserve">
+    <value>The Log tab can undo it.</value>
+  </data>
+  <data name="GmPanelLogUndo" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="GmPanelLogUndone" xml:space="preserve">
+    <value>undone</value>
+  </data>
+  <data name="GmPanelUndoConfirm" xml:space="preserve">
+    <value>Undo #%lld: %ls %ls?</value>
+  </data>
 </root>

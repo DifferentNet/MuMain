@@ -8,13 +8,13 @@
 <body>
 	<!-- The game master panel (CGmPanelWindow, key Y), docked right at full dock height: the title (admin or
 	     moderator), then one counter-scaled pane in which the page flows: the tab buttons (players, world, log; for
-	     admins events and items too, as halves in a second row: gm-admin on the pane, whose lists are shorter by
+	     admins events, items and character too, in a second row: gm-admin on the pane, whose lists are shorter by
 	     that row) and the tab's page.
 	       Players: online / search / bans; the search field and its button; how many; the list (two lines a row,
 	       a click picks it); the picked character's three lines; eight action buttons.
 	       World: the teleport places (a click warps); map, x, y fields and Go; four switches (invisible, GM mode,
 	       fireworks, notice); where the GM stands.
-	       Log: refresh, how many, the last actions.
+	       Log: refresh (and undo for admins), how many, the last actions (an admin picks one to undo).
 	       Events: events / monsters / Tier Map runs, with the players' fields (mode, modes, list_info, rows, sel_*,
 	       actions). Events: the list, the picked one, start / skip / end / refresh. Monsters: the search field
 	       and Find, the list (one line a monster), the picked one and two hints, how many, spawn and clear.
@@ -24,11 +24,17 @@
 	       item there, its tooltip shows while hovered) and three lines; the steps (level, the option's kind,
 	       the option, the ancient set: a label, < value >); luck, skill and the count; the extras (a click
 	       switches one); the durability, Create and Save. Saved: the list, open and delete.
+	       Character: editor / items; the name field and Open; the character's two lines. Editor: the values typed in
+	       pairs (level, resets, points, command, the stats, zen), the steps (PK, class, move to), Save and Refresh.
+	       Items: the picked item's icon (#gm_char_icon, drawn through #gm_items as the Items tab's; its tooltip while
+	       hovered, or while its row is) and three lines, how many, the list (one line an item), Delete, Copy, Refresh.
 	     Under the pane, the server's answer to the last action, and the exit button. The workspace slot places and
 	     scales #panel. C++ keeps the state; clicks are queued with gm_tab(id), gm_mode(id), gm_row(index),
 	     gm_warp(index), gm_action(id), gm_switch(id), gm_find, gm_go, gm_log_refresh and gm_exit; Enter in a
 	     field is gm_field_key. The fields' texts are the model's (search_text, map_text, x_text, y_text,
-	     monster_text, count_text, entries_text, item_search_text, item_count_text, item_dur_text). -->
+	     monster_text, count_text, entries_text, item_search_text, item_count_text, item_dur_text, char_name_text,
+	     ch_lv_text, ch_rs_text, ch_pt_text, ch_cmd_text, ch_str_text, ch_agi_text, ch_vit_text, ch_ene_text,
+	     ch_zen_text). -->
 	<div id="panel" data-model="gm_panel">
 		<div class="frame-piece frame-top"></div>
 		<div class="frame-piece frame-left"></div>
@@ -40,8 +46,7 @@
 
 		<div id="gm_body" class="sharp-text sharp-flow" data-class-gm-admin="tabs.size > 3">
 			<div class="gm-bar">
-				<div class="gm-btn gm-btn-third" data-for="b : tabs" data-class-gm-btn-half="b.id >= 3" data-class-on="b.on"
-				     data-event-click="gm_tab(b.id)">
+				<div class="gm-btn gm-btn-third" data-for="b : tabs" data-class-on="b.on" data-event-click="gm_tab(b.id)">
 					<span class="gm-btn-label" data-style-font-size="b.label.text_px + 'px'">{{b.label.text}}</span>
 				</div>
 			</div>
@@ -116,11 +121,15 @@
 					<div class="gm-btn gm-btn-half" data-event-click="gm_log_refresh">
 						<span class="gm-btn-label" data-style-font-size="log_refresh.label.text_px + 'px'">{{log_refresh.label.text}}</span>
 					</div>
+					<div class="gm-btn gm-btn-half" data-for="b : actions" data-class-off="b.off" data-event-click="gm_action(b.id)">
+						<span class="gm-btn-label" data-style-font-size="b.label.text_px + 'px'">{{b.label.text}}</span>
+					</div>
 				</div>
 				<span class="gm-info" data-style-font-size="log_info.text_px + 'px'">{{log_info.text}}</span>
 				<div class="gm-list-box gm-list-log">
 					<div class="gm-list scroll-pane">
-						<div class="gm-row gm-row-static" data-for="r : log" data-class-alert="r.alert">
+						<div class="gm-row" data-for="r : log" data-class-gm-row-static="actions.size == 0" data-class-selected="r.selected"
+						     data-class-dim="r.dim" data-class-alert="r.alert" data-event-click="gm_row(r.index)">
 							<span class="gm-row-title" data-style-font-size="r.title.text_px + 'px'">{{r.title.text}}</span>
 							<span class="gm-row-detail" data-style-font-size="r.detail.text_px + 'px'">{{r.detail.text}}</span>
 						</div>
@@ -251,9 +260,119 @@
 					</div>
 				</div>
 			</div>
+
+			<div class="gm-page" data-if="tab == 5">
+				<div class="gm-bar">
+					<div class="gm-btn gm-btn-half" data-for="b : modes" data-class-on="b.on" data-event-click="gm_mode(b.id)">
+						<span class="gm-btn-label" data-style-font-size="b.label.text_px + 'px'">{{b.label.text}}</span>
+					</div>
+				</div>
+				<div class="gm-bar">
+					<input id="gm_char_name" type="text" class="text-field gm-field gm-search-field" maxlength="10"
+					       data-value="char_name_text" data-style-font-size="field_px + 'px'" data-event-keydown="gm_field_key"/>
+					<div class="gm-btn gm-btn-quarter" data-event-click="gm_find">
+						<span class="gm-btn-label" data-style-font-size="find.label.text_px + 'px'">{{find.label.text}}</span>
+					</div>
+				</div>
+				<span class="gm-sel gm-sel-name" data-style-font-size="sel_name.text_px + 'px'">{{sel_name.text}}&#160;</span>
+				<span class="gm-sel gm-char-line" data-style-font-size="sel_stats.text_px + 'px'">{{sel_stats.text}}&#160;</span>
+				<div class="gm-char-form" data-if="mode == 0 &amp;&amp; char_ready">
+					<div class="gm-bar gm-pack">
+						<div class="gm-pair">
+							<span class="gm-pair-label" data-style-font-size="char_labels.lv.text_px + 'px'">{{char_labels.lv.text}}</span>
+							<input id="gm_ch_lv" type="text" class="text-field text-field--numeric gm-field gm-pair-field" maxlength="4"
+							       data-value="ch_lv_text" data-style-font-size="field_px + 'px'" data-event-keydown="gm_field_key"/>
+						</div>
+						<div class="gm-pair">
+							<span class="gm-pair-label" data-style-font-size="char_labels.rs.text_px + 'px'">{{char_labels.rs.text}}</span>
+							<input id="gm_ch_rs" type="text" class="text-field text-field--numeric gm-field gm-pair-field" maxlength="5"
+							       data-value="ch_rs_text" data-style-font-size="field_px + 'px'" data-event-keydown="gm_field_key"/>
+						</div>
+					</div>
+					<div class="gm-bar gm-pack">
+						<div class="gm-pair">
+							<span class="gm-pair-label" data-style-font-size="char_labels.pt.text_px + 'px'">{{char_labels.pt.text}}</span>
+							<input id="gm_ch_pt" type="text" class="text-field text-field--numeric gm-field gm-pair-field" maxlength="8"
+							       data-value="ch_pt_text" data-style-font-size="field_px + 'px'" data-event-keydown="gm_field_key"/>
+						</div>
+						<div class="gm-pair" data-if="char_has_cmd">
+							<span class="gm-pair-label" data-style-font-size="char_labels.cmd.text_px + 'px'">{{char_labels.cmd.text}}</span>
+							<input id="gm_ch_cmd" type="text" class="text-field text-field--numeric gm-field gm-pair-field" maxlength="5"
+							       data-value="ch_cmd_text" data-style-font-size="field_px + 'px'" data-event-keydown="gm_field_key"/>
+						</div>
+					</div>
+					<div class="gm-bar gm-pack">
+						<div class="gm-pair">
+							<span class="gm-pair-label" data-style-font-size="char_labels.str.text_px + 'px'">{{char_labels.str.text}}</span>
+							<input id="gm_ch_str" type="text" class="text-field text-field--numeric gm-field gm-pair-field" maxlength="5"
+							       data-value="ch_str_text" data-style-font-size="field_px + 'px'" data-event-keydown="gm_field_key"/>
+						</div>
+						<div class="gm-pair">
+							<span class="gm-pair-label" data-style-font-size="char_labels.agi.text_px + 'px'">{{char_labels.agi.text}}</span>
+							<input id="gm_ch_agi" type="text" class="text-field text-field--numeric gm-field gm-pair-field" maxlength="5"
+							       data-value="ch_agi_text" data-style-font-size="field_px + 'px'" data-event-keydown="gm_field_key"/>
+						</div>
+					</div>
+					<div class="gm-bar gm-pack">
+						<div class="gm-pair">
+							<span class="gm-pair-label" data-style-font-size="char_labels.vit.text_px + 'px'">{{char_labels.vit.text}}</span>
+							<input id="gm_ch_vit" type="text" class="text-field text-field--numeric gm-field gm-pair-field" maxlength="5"
+							       data-value="ch_vit_text" data-style-font-size="field_px + 'px'" data-event-keydown="gm_field_key"/>
+						</div>
+						<div class="gm-pair">
+							<span class="gm-pair-label" data-style-font-size="char_labels.ene.text_px + 'px'">{{char_labels.ene.text}}</span>
+							<input id="gm_ch_ene" type="text" class="text-field text-field--numeric gm-field gm-pair-field" maxlength="5"
+							       data-value="ch_ene_text" data-style-font-size="field_px + 'px'" data-event-keydown="gm_field_key"/>
+						</div>
+					</div>
+					<div class="gm-bar gm-pack">
+						<div class="gm-pair gm-pair-wide">
+							<span class="gm-pair-label" data-style-font-size="char_labels.zen.text_px + 'px'">{{char_labels.zen.text}}</span>
+							<input id="gm_ch_zen" type="text" class="text-field text-field--numeric gm-field gm-zen-field" maxlength="10"
+							       data-value="ch_zen_text" data-style-font-size="field_px + 'px'" data-event-keydown="gm_field_key"/>
+						</div>
+					</div>
+				</div>
+				<div class="gm-bar gm-step" data-for="s : steps">
+					<div class="gm-step-label" data-class-gm-btn="s.label_id > 0" data-event-click="gm_action(s.label_id)">
+						<span class="gm-step-text" data-style-font-size="s.label.text_px + 'px'">{{s.label.text}}</span>
+					</div>
+					<div class="gm-btn gm-btn-arrow" data-class-off="s.down_off" data-event-click="gm_action(s.down_id)">
+						<span class="gm-btn-label" data-style-font-size="field_px + 'px'">&lt;</span>
+					</div>
+					<span class="gm-step-value" data-style-font-size="s.value.text_px + 'px'">{{s.value.text}}</span>
+					<div class="gm-btn gm-btn-arrow" data-class-off="s.up_off" data-event-click="gm_action(s.up_id)">
+						<span class="gm-btn-label" data-style-font-size="field_px + 'px'">&gt;</span>
+					</div>
+				</div>
+				<div class="gm-item-head" data-if="mode == 1">
+					<div id="gm_char_icon" class="gm-item-icon"></div>
+					<div class="gm-item-lines">
+						<span class="gm-item-name" data-style-font-size="item_name.text_px + 'px'">{{item_name.text}}&#160;</span>
+						<span class="gm-item-line" data-style-font-size="item_line.text_px + 'px'">{{item_line.text}}&#160;</span>
+						<span class="gm-item-line" data-style-font-size="item_hint.text_px + 'px'">{{item_hint.text}}&#160;</span>
+					</div>
+				</div>
+				<span class="gm-info" data-if="mode == 1" data-style-font-size="list_info.text_px + 'px'">{{list_info.text}}&#160;</span>
+				<div class="gm-list-box gm-list-charinv" data-if="mode == 1">
+					<div class="gm-list scroll-pane">
+						<div class="gm-row gm-row-single gm-inv-row" data-for="r : rows" data-class-selected="r.selected" data-class-live="r.live"
+						     data-class-dim="r.dim" data-attr-gm-row-index="r.index" data-event-click="gm_row(r.index)">
+							<span class="gm-row-title" data-style-font-size="r.title.text_px + 'px'">{{r.title.text}}</span>
+						</div>
+					</div>
+				</div>
+				<div class="gm-bar gm-grid">
+					<div class="gm-btn" data-for="b : actions" data-class-gm-btn-half="mode == 0" data-class-gm-btn-third="mode == 1"
+					     data-class-off="b.off" data-event-click="gm_action(b.id)">
+						<span class="gm-btn-label" data-style-font-size="b.label.text_px + 'px'">{{b.label.text}}</span>
+					</div>
+				</div>
+			</div>
 		</div>
 
-		<!-- The item's 3D icon on the Items tab, drawn into #gm_item_icon's box (CGmPanelWindow's item camera). -->
+		<!-- The item's 3D icon on the Items and Character tabs, drawn into #gm_item_icon's or #gm_char_icon's box
+		     (CGmPanelWindow's item camera). -->
 		<img id="gm_items" class="gm-items" src=""/>
 
 		<span id="gm_status" class="sharp-text gm-status" data-class-bad="status_bad"

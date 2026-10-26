@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -30,6 +31,17 @@
 //      the Dinorant's, r Fenrir's); the index is its bit in "/gm mk"'s mask
 //   "#GMI|a|index|discriminator|bonus levels|set name"   an ancient set (index from 1; bonus levels "1,2": +5, +10)
 //   "#GMI.|"
+// The Character tab (phase 4, admins only), for "/gm char <name>" and "/gm inv <name>":
+//   "#GMC0|name|account|where|class number|class name|level|max level|resets|reset limit|free points|zen|max zen|
+//     pk state|pk count|map|map name|x|y"   (where: g selected in game, a the account online otherwise, o offline;
+//     pk state OpenMU's HeroState, 0 new to 6 murderer, 3 normal)
+//   "#GMC|s|key|value|max|name"   a stat of the class (str, agi, vit, ene, cmd)
+//   "#GMC|k|number|name"   a class of the character's line (a class change chooses one; offline only)
+//   "#GMC.|"
+//   "#GMV0|name|where|zen|vault zen|count", "#GMV|i or v|slot|item", "#GMV.|"   the items: i the character's
+//     (worn 0-11, the bag, the personal store from 204), v the account's vault; the item in the extended item
+//     format the game server sends items in, in hex
+// and the log's lines end with "|id|undo" (undo 1: the Character tab can undo it, u: undone already).
 // Times are UTC, "yyyy-MM-dd HH:mm".
 namespace GameLogic::GmPanel
 {
@@ -102,6 +114,83 @@ struct LogEntry
     std::wstring Op;
     std::wstring Target;
     std::wstring Detail;
+    // Its number ("/gm undo <id>"), 0 from an older server; "1" when it can be undone, "u" when it was.
+    long long Id = 0;
+    std::wstring Undo;
+
+    bool CanUndo() const { return Id > 0 && Undo == L"1"; }
+    bool Undone() const { return Undo == L"u"; }
+};
+
+struct CharacterStat
+{
+    // str, agi, vit, ene, cmd: the key "/gm edit" takes.
+    std::wstring Key;
+    int Value = 0;
+    int Max = 0;
+    std::wstring Name;
+};
+
+struct CharacterClassChoice
+{
+    int Number = 0;
+    std::wstring Name;
+};
+
+// The answer to "/gm char <name>".
+struct CharacterInfo
+{
+    std::wstring Name;
+    std::wstring Account;
+    // g selected in game, a its account online (with another character or choosing one), o offline.
+    wchar_t Where = L'o';
+    int Class = 0;
+    std::wstring ClassName;
+    int Level = 0;
+    int MaxLevel = 0;
+    int Resets = 0;
+    int ResetLimit = 0;
+    int Points = 0;
+    long long Zen = 0;
+    long long MaxZen = 0;
+    int PkState = 3;
+    int PkCount = 0;
+    int Map = 0;
+    std::wstring MapName;
+    int X = 0;
+    int Y = 0;
+    std::vector<CharacterStat> Stats;
+    std::vector<CharacterClassChoice> Classes;
+
+    bool Online() const { return Where != L'o'; }
+    const CharacterStat* Stat(const std::wstring& key) const
+    {
+        for (const auto& stat : Stats)
+        {
+            if (stat.Key == key)
+                return &stat;
+        }
+        return nullptr;
+    }
+};
+
+struct StoredItem
+{
+    // i the character's inventory (worn, bag, personal store), v the vault.
+    wchar_t Storage = L'i';
+    int Slot = 0;
+    // As the game server sends an item (the extended format, ParseItemData).
+    std::vector<std::uint8_t> Data;
+};
+
+// The answer to "/gm inv <name>".
+struct CharacterItems
+{
+    std::wstring Name;
+    wchar_t Where = L'o';
+    long long Zen = 0;
+    long long VaultZen = 0;
+    std::vector<StoredItem> Items;
 };
 
 // One of the lists the server sends: the rows of its last complete answer.
@@ -249,6 +338,11 @@ public:
     // The last complete answer to "iteminfo", and a count of them.
     const ItemInfo& Item() const { return m_item; }
     int ItemVersion() const { return m_itemVersion; }
+    // The last complete answers to "char" and "inv", and counts of them.
+    const CharacterInfo& Character() const { return m_character; }
+    int CharacterVersion() const { return m_characterVersion; }
+    const CharacterItems& Inventory() const { return m_inventory; }
+    int InventoryVersion() const { return m_inventoryVersion; }
 
     // The answer to the last action, and a count of them, so a window notices a new one.
     const Result& LastResult() const { return m_result; }
@@ -260,6 +354,9 @@ public:
 private:
     // A line of the answer to "iteminfo": its header ('0'), a choice (no suffix) or its footer ('.').
     void TakeItemLine(wchar_t suffix, const std::vector<std::wstring>& fields);
+    // The same for "char" and "inv".
+    void TakeCharacterLine(wchar_t suffix, const std::vector<std::wstring>& fields);
+    void TakeInventoryLine(wchar_t suffix, const std::vector<std::wstring>& fields);
 
     Role m_role = Role::Unknown;
     bool m_hidden = false;
@@ -282,6 +379,15 @@ private:
     ItemInfo m_itemIncoming;
     bool m_itemReceiving = false;
     int m_itemVersion = 0;
+
+    CharacterInfo m_character;
+    CharacterInfo m_characterIncoming;
+    bool m_characterReceiving = false;
+    int m_characterVersion = 0;
+    CharacterItems m_inventory;
+    CharacterItems m_inventoryIncoming;
+    bool m_inventoryReceiving = false;
+    int m_inventoryVersion = 0;
 
     Result m_result;
     int m_resultVersion = 0;

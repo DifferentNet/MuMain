@@ -13947,4 +13947,169 @@
   <data name="GmPanelItemKind" xml:space="preserve">
     <value>Вид</value>
   </data>
+  <data name="GmPanelTabCharacter" xml:space="preserve">
+    <value>Персонаж</value>
+  </data>
+  <data name="GmPanelModeEditor" xml:space="preserve">
+    <value>Редактор</value>
+  </data>
+  <data name="GmPanelModeInventory" xml:space="preserve">
+    <value>Предметы</value>
+  </data>
+  <data name="GmPanelCharOpen" xml:space="preserve">
+    <value>Открыть</value>
+  </data>
+  <data name="GmPanelCharHint" xml:space="preserve">
+    <value>Введите имя, нажмите Открыть</value>
+  </data>
+  <data name="GmPanelCharNeedName" xml:space="preserve">
+    <value>Введите имя персонажа.</value>
+  </data>
+  <data name="GmPanelCharWhereGame" xml:space="preserve">
+    <value>%ls (%ls), в игре</value>
+  </data>
+  <data name="GmPanelCharWhereAccount" xml:space="preserve">
+    <value>%ls (%ls), аккаунт в сети</value>
+  </data>
+  <data name="GmPanelCharWhereOffline" xml:space="preserve">
+    <value>%ls (%ls), не в сети</value>
+  </data>
+  <data name="GmPanelCharLine" xml:space="preserve">
+    <value>%ls, %ls %d %d</value>
+  </data>
+  <data name="GmPanelCharLevel" xml:space="preserve">
+    <value>Уровень</value>
+  </data>
+  <data name="GmPanelCharResets" xml:space="preserve">
+    <value>Ресеты</value>
+  </data>
+  <data name="GmPanelCharPoints" xml:space="preserve">
+    <value>Очки</value>
+  </data>
+  <data name="GmPanelCharStr" xml:space="preserve">
+    <value>Сила</value>
+  </data>
+  <data name="GmPanelCharAgi" xml:space="preserve">
+    <value>Ловк.</value>
+  </data>
+  <data name="GmPanelCharVit" xml:space="preserve">
+    <value>Жив.</value>
+  </data>
+  <data name="GmPanelCharEne" xml:space="preserve">
+    <value>Энерг.</value>
+  </data>
+  <data name="GmPanelCharCmd" xml:space="preserve">
+    <value>Ком.</value>
+  </data>
+  <data name="GmPanelCharZen" xml:space="preserve">
+    <value>Зен</value>
+  </data>
+  <data name="GmPanelCharPk" xml:space="preserve">
+    <value>PK</value>
+  </data>
+  <data name="GmPanelCharClass" xml:space="preserve">
+    <value>Класс</value>
+  </data>
+  <data name="GmPanelCharMove" xml:space="preserve">
+    <value>Перенос</value>
+  </data>
+  <data name="GmPanelCharStay" xml:space="preserve">
+    <value>на месте</value>
+  </data>
+  <data name="GmPanelCharToMe" xml:space="preserve">
+    <value>ко мне</value>
+  </data>
+  <data name="GmPanelCharPlace" xml:space="preserve">
+    <value>Место</value>
+  </data>
+  <data name="GmPanelPk0" xml:space="preserve">
+    <value>Новый</value>
+  </data>
+  <data name="GmPanelPk1" xml:space="preserve">
+    <value>Герой</value>
+  </data>
+  <data name="GmPanelPk2" xml:space="preserve">
+    <value>Мал. герой</value>
+  </data>
+  <data name="GmPanelPk3" xml:space="preserve">
+    <value>Обычный</value>
+  </data>
+  <data name="GmPanelPk4" xml:space="preserve">
+    <value>Предупр.</value>
+  </data>
+  <data name="GmPanelPk5" xml:space="preserve">
+    <value>Убийца</value>
+  </data>
+  <data name="GmPanelPk6" xml:space="preserve">
+    <value>Маньяк</value>
+  </data>
+  <data name="GmPanelPkKills" xml:space="preserve">
+    <value>%ls, %d</value>
+  </data>
+  <data name="GmPanelCharSave" xml:space="preserve">
+    <value>Сохранить</value>
+  </data>
+  <data name="GmPanelCharSaveConfirm" xml:space="preserve">
+    <value>Изменить %ls?</value>
+  </data>
+  <data name="GmPanelCharSavedOnLogout" xml:space="preserve">
+    <value>Аккаунт в сети: сохранится при выходе.</value>
+  </data>
+  <data name="GmPanelCharClassOffline" xml:space="preserve">
+    <value>Класс: только когда аккаунт не в сети</value>
+  </data>
+  <data name="GmPanelCharNothing" xml:space="preserve">
+    <value>Ничего не изменено.</value>
+  </data>
+  <data name="GmPanelCharTooLong" xml:space="preserve">
+    <value>Слишком много изменений сразу: сохраните в два шага.</value>
+  </data>
+  <data name="GmPanelInvInfo" xml:space="preserve">
+    <value>Предметов: %d, зен %ls, склад %ls</value>
+  </data>
+  <data name="GmPanelInvPick" xml:space="preserve">
+    <value>Выберите предмет в списке</value>
+  </data>
+  <data name="GmPanelInvWorn" xml:space="preserve">
+    <value>надето: %ls</value>
+  </data>
+  <data name="GmPanelInvBag" xml:space="preserve">
+    <value>сумка %d</value>
+  </data>
+  <data name="GmPanelInvStore" xml:space="preserve">
+    <value>лавка %d</value>
+  </data>
+  <data name="GmPanelInvVault" xml:space="preserve">
+    <value>склад %d</value>
+  </data>
+  <data name="GmPanelInvWornSlots" xml:space="preserve">
+    <value>оружие,2-я рука,шлем,доспех,штаны,перчатки,сапоги,крылья,питомец,кулон,кольцо,кольцо</value>
+  </data>
+  <data name="GmPanelInvDur" xml:space="preserve">
+    <value>%ls, прочность %d</value>
+  </data>
+  <data name="GmPanelInvVaultOnline" xml:space="preserve">
+    <value>Склад: удалять только офлайн</value>
+  </data>
+  <data name="GmPanelInvCopy" xml:space="preserve">
+    <value>Копию мне</value>
+  </data>
+  <data name="GmPanelInvDeleteConfirm" xml:space="preserve">
+    <value>Удалить %ls у %ls?</value>
+  </data>
+  <data name="GmPanelInvCopyConfirm" xml:space="preserve">
+    <value>Копию %ls (%ls) в вашу сумку?</value>
+  </data>
+  <data name="GmPanelInvUndoHint" xml:space="preserve">
+    <value>Отменить можно во вкладке Журнал.</value>
+  </data>
+  <data name="GmPanelLogUndo" xml:space="preserve">
+    <value>Отменить</value>
+  </data>
+  <data name="GmPanelLogUndone" xml:space="preserve">
+    <value>отменено</value>
+  </data>
+  <data name="GmPanelUndoConfirm" xml:space="preserve">
+    <value>Отменить #%lld: %ls %ls?</value>
+  </data>
 </root>

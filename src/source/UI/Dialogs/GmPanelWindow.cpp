@@ -10,6 +10,8 @@
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzInventory.h"
 #include "GameLogic/Commands/GmPanel.h"
+#include "GameLogic/Items/CSItemOption.h"
+#include "Network/Server/SocketSystem.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
 #include "UI/Dialogs/GenericMenuDialog.h"
@@ -30,7 +32,10 @@
 #include <RmlUi/Core/Event.h>
 #include <RmlUi/Core/Input.h>
 
+#include "UI/Inventory/ItemMng.h"
+
 #include <algorithm>
+#include <array>
 #include <bit>
 #include <cstdarg>
 #include <cstdlib>
@@ -39,6 +44,7 @@
 #include <cwchar>
 #include <cwctype>
 #include <map>
+#include <span>
 #include <tuple>
 #include <utility>
 
@@ -72,6 +78,12 @@ constexpr size_t MaxSavedItems = 40;
 constexpr size_t MinItemReason = 3;
 constexpr int MaxItemSearch = 20;
 constexpr int ItemGroups = 16;
+// The Character tab: the worn slots and where the personal store starts (OpenMU's inventory), the highest PK state
+// (OpenMU's HeroState), and how long a request's chat line may be in bytes (UTF-8: a Cyrillic letter takes two).
+constexpr int WornSlots = 12;
+constexpr int FirstStoreSlot = 204;
+constexpr int MaxPkState = 6;
+constexpr size_t MaxLineBytes = 232;
 
 int MeasureInReferenceUnits(const std::wstring& text)
 {
@@ -79,7 +91,7 @@ int MeasureInReferenceUnits(const std::wstring& text)
 }
 
 // 21450 -> "21,450".
-std::wstring Thousands(int value)
+std::wstring Thousands(long long value)
 {
     std::wstring digits = std::to_wstring(std::abs(value));
     for (int i = static_cast<int>(digits.size()) - 3; i > 0; i -= 3)
@@ -318,6 +330,41 @@ void ConfirmRequest(const std::wstring& question, const std::wstring& request, c
     cfg.tag = tag;
     g_pGenericConfirmDialog->Show(std::move(cfg));
 }
+
+// The longest reason, in letters, that still fits the request's chat line (as if every letter took two bytes).
+int ReasonRoom(const std::wstring& request)
+{
+    const size_t used = StringUtils::WideToNarrow((L"/gm " + request + L" ").c_str()).size();
+    return used >= MaxLineBytes ? 0 : std::min(MaxReason, static_cast<int>((MaxLineBytes - used) / 2));
+}
+
+// Asks for a reason (at least `minReason` letters; 0: it may stay empty), then sends the request with it. The item,
+// if any, is shown in the dialog.
+void ConfirmWithReason(std::vector<GenericDialogConfig::Line> lines, const std::wstring& request, size_t minReason, int maxReason,
+                       const char* tag, const ITEM* item = nullptr)
+{
+    GenericDialogConfig cfg;
+    cfg.showCancel = true;
+    cfg.lines = std::move(lines);
+    cfg.input = GenericDialogConfig::InputField{};
+    cfg.input->mode = GenericDialogConfig::InputField::Mode::Text;
+    cfg.input->maxLength = maxReason;
+    if (item != nullptr)
+        cfg.item3D = *item;
+    cfg.onPrimary = [request, minReason, maxReason]
+    {
+        const std::wstring reason = OneLine(g_pGenericConfirmDialog->GetInputText(), static_cast<size_t>(std::max(maxReason, 0)));
+        if (reason.size() < minReason)
+        {
+            g_pSystemLogBox->AddText(I18N::Game::GmPanelItemNeedReason, mu::ui::window::TYPE_ERROR_MESSAGE);
+            g_pGenericConfirmDialog->KeepOpen();
+            return;
+        }
+        Panel().Send(reason.empty() ? request : request + L" " + reason);
+    };
+    cfg.tag = tag;
+    g_pGenericConfirmDialog->Show(std::move(cfg));
+}
 } // namespace
 
 mu::ui::window::CGmPanelWindow::CGmPanelWindow() = default;
@@ -370,8 +417,8 @@ void mu::ui::window::CGmPanelWindow::OpenningProcess()
     m_statusBad = false;
     // The invisibility and GM mode may have changed since (OpenMU's own commands).
     Panel().Send(L"hello");
-    // The Events and Items tabs are the admins'; the role may have changed since.
-    if ((m_tab == TAB_EVENTS || m_tab == TAB_ITEMS) && !Panel().IsAdmin())
+    // The Events, Items and Character tabs are the admins'; the role may have changed since.
+    if (m_tab >= TAB_EVENTS && !Panel().IsAdmin())
         m_tab = TAB_PLAYERS;
     RequestCurrent();
     m_focusSearchPending = FocusField() != nullptr;
@@ -432,6 +479,10 @@ void mu::ui::window::CGmPanelWindow::TakeEnter(const Rml::String& fieldId)
         m_pendingAction = EV_ENTRIES;
     else if (m_tab == TAB_ITEMS && fieldId == "gm_item_search")
         m_pendingFind = true;
+    else if (m_tab == TAB_CHARACTER && fieldId == "gm_char_name")
+        m_pendingFind = true;
+    else if (m_tab == TAB_CHARACTER && fieldId.rfind("gm_ch_", 0) == 0)
+        m_pendingAction = CH_SAVE;
 }
 
 const char* mu::ui::window::CGmPanelWindow::FocusField() const
@@ -442,6 +493,8 @@ const char* mu::ui::window::CGmPanelWindow::FocusField() const
         return "gm_monster";
     if (m_tab == TAB_ITEMS && m_itMode == IT_CATALOG)
         return "gm_item_search";
+    if (m_tab == TAB_CHARACTER && m_charName.empty())
+        return "gm_char_name";
     return nullptr;
 }
 
@@ -512,6 +565,18 @@ void mu::ui::window::CGmPanelWindow::RequestCurrent()
         if (m_itMode == IT_MAKE && m_draft.Picked() && !panel.Item().Is(m_draft.Group, m_draft.Number))
             panel.Send(L"iteminfo " + std::to_wstring(m_draft.Group) + L" " + std::to_wstring(m_draft.Number));
     }
+    else if (m_tab == TAB_CHARACTER)
+    {
+        // The places for the move step; the opened character's values (its two lines in either mode), its items.
+        if (!panel.Warps().Received)
+            panel.Send(L"maps");
+        if (!m_charName.empty())
+        {
+            panel.Send(L"char " + m_charName);
+            if (m_chMode == CH_ITEMS)
+                panel.Send(L"inv " + m_charName);
+        }
+    }
     else
     {
         m_evAskAt = m_requestedAt;
@@ -526,10 +591,19 @@ void mu::ui::window::CGmPanelWindow::RequestCurrent()
 
 void mu::ui::window::CGmPanelWindow::SwitchTab(int tab)
 {
-    if (tab < TAB_PLAYERS || tab > (Panel().IsAdmin() ? TAB_ITEMS : TAB_LOG))
+    if (tab < TAB_PLAYERS || tab > (Panel().IsAdmin() ? TAB_CHARACTER : TAB_LOG))
         return;
     m_tab = tab;
-    RequestCurrent();
+    // The Character tab opens with the player picked on the Players tab, until a name is typed there.
+    if (tab == TAB_CHARACTER && m_charName.empty() && !m_selected.empty() && m_RmlView.GetModel().charNameText.empty())
+    {
+        SyncField(m_RmlView.Binder(), &GmPanelRmlModel::charNameText, "char_name_text", StringUtils::WideToNarrow(m_selected.c_str()));
+        OpenCharacter();
+    }
+    else
+    {
+        RequestCurrent();
+    }
     m_focusSearchPending = FocusField() != nullptr;
 }
 
@@ -546,6 +620,12 @@ void mu::ui::window::CGmPanelWindow::SwitchMode(int mode)
         if (mode < IT_CATALOG || mode > IT_SAVED)
             return;
         m_itMode = mode;
+    }
+    else if (m_tab == TAB_CHARACTER)
+    {
+        if (mode < CH_EDITOR || mode > CH_ITEMS)
+            return;
+        m_chMode = mode;
     }
     else
     {
@@ -887,6 +967,14 @@ void mu::ui::window::CGmPanelWindow::TakeResult()
         if (m_tab == TAB_EVENTS)
             m_evAskAt = std::chrono::steady_clock::now() - EventsRefresh + AfterEventAction;
     }
+    else if (op == L"edit" || op == L"itemdel" || op == L"undo")
+    {
+        // The character's values and items, or the log, as they are now; the Log tab undoes an edit or a deletion.
+        if (op != L"undo")
+            m_status = Joined({result.Text, std::wstring(I18N::Game::GmPanelInvUndoHint)}, L" ");
+        if (m_tab == TAB_CHARACTER || m_tab == TAB_LOG)
+            RequestCurrent();
+    }
 }
 
 void mu::ui::window::CGmPanelWindow::PickRow(int row)
@@ -901,6 +989,26 @@ void mu::ui::window::CGmPanelWindow::PickRow(int row)
             m_monsterSelected = panel.Monsters().Rows[index].Number;
         else if (m_evMode == EV_TIERS && index < panel.Tiers().Rows.size())
             m_tierSelected = panel.Tiers().Rows[index].Leader;
+        return;
+    }
+
+    if (m_tab == TAB_LOG)
+    {
+        // An admin picks an entry to undo.
+        if (panel.IsAdmin() && index < panel.Log().Rows.size())
+            m_logSelected = panel.Log().Rows[index].Id;
+        return;
+    }
+
+    if (m_tab == TAB_CHARACTER)
+    {
+        // An item of the list, by where it is (the list may come again in another order).
+        const auto& items = panel.Inventory().Items;
+        if (m_chMode == CH_ITEMS && m_invSeenVersion == panel.InventoryVersion() && index < items.size() && index < m_invItems.size())
+        {
+            m_invStorage = items[index].Storage;
+            m_invSlot = items[index].Slot;
+        }
         return;
     }
 
@@ -951,7 +1059,7 @@ void mu::ui::window::CGmPanelWindow::HandleClicks()
 
     if (tab >= 0 && tab != m_tab)
         SwitchTab(tab);
-    if (mode >= 0 && mode != (m_tab == TAB_EVENTS ? m_evMode : m_tab == TAB_ITEMS ? m_itMode : m_mode))
+    if (mode >= 0 && mode != (m_tab == TAB_EVENTS ? m_evMode : m_tab == TAB_ITEMS ? m_itMode : m_tab == TAB_CHARACTER ? m_chMode : m_mode))
         SwitchMode(mode);
 
     if (row >= 0)
@@ -963,6 +1071,8 @@ void mu::ui::window::CGmPanelWindow::HandleClicks()
             FindMonsters();
         else if (m_tab == TAB_ITEMS)
             SearchItems();
+        else if (m_tab == TAB_CHARACTER)
+            OpenCharacter();
         else
             Search();
     }
@@ -976,6 +1086,10 @@ void mu::ui::window::CGmPanelWindow::HandleClicks()
             DoEventsAction(action);
         else if (m_tab == TAB_ITEMS)
             DoItemsAction(action);
+        else if (m_tab == TAB_CHARACTER)
+            DoCharacterAction(action);
+        else if (m_tab == TAB_LOG)
+            DoLogAction(action);
         else
             DoAction(action);
     }
@@ -998,8 +1112,8 @@ bool mu::ui::window::CGmPanelWindow::Update()
         }
         if (panel.GetRole() == GameLogic::GmPanel::Role::Unknown)
             panel.Hello(false);
-        // An admin who became a moderator: the Events and Items tabs are gone.
-        if ((m_tab == TAB_EVENTS || m_tab == TAB_ITEMS) && panel.GetRole() == GameLogic::GmPanel::Role::Moderator)
+        // An admin who became a moderator: the Events, Items and Character tabs are gone.
+        if (m_tab >= TAB_EVENTS && panel.GetRole() == GameLogic::GmPanel::Role::Moderator)
             SwitchTab(TAB_PLAYERS);
 
         HandleClicks();
@@ -1026,16 +1140,38 @@ bool mu::ui::window::CGmPanelWindow::Update()
 
 bool mu::ui::window::CGmPanelWindow::Render()
 {
-    // The frame, the lists and the buttons are RmlUi; the item's icon is drawn by m_itemTarget. Only the item's
-    // tooltip is native: drawn every frame while the icon is hovered (it hides itself in a frame it isn't drawn).
-    if (!IsVisible() || m_tab != TAB_ITEMS || m_itMode != IT_MAKE || !m_preview)
+    // The frame, the lists and the buttons are RmlUi; the item's icon is drawn by m_itemTarget. Only an item's
+    // tooltip is native: drawn every frame while the icon is hovered, or on the Character tab an item's row (it hides
+    // itself in a frame it isn't drawn).
+    if (!IsVisible())
         return true;
 
-    Rml::Element* icon = GetField("gm_item_icon");
     Rml::Vector2f offset;
     Rml::Vector2f size;
-    if (icon != nullptr && icon->IsPseudoClassSet("hover") && UI::RmlBridge::DrawnBox(*icon, Rml::BoxArea::Border, offset, size))
-        ::RenderItemInfoAtPx(offset.x + size.x / 2.f, offset.y + size.y, m_preview.get(), false);
+    if (tagITEM* item = ShownItem())
+    {
+        Rml::Element* icon = GetField(IconId());
+        if (icon != nullptr && icon->IsPseudoClassSet("hover") && UI::RmlBridge::DrawnBox(*icon, Rml::BoxArea::Border, offset, size))
+        {
+            ::RenderItemInfoAtPx(offset.x + size.x / 2.f, offset.y + size.y, item, false);
+            return true;
+        }
+    }
+
+    Rml::ElementDocument* document = m_RmlView.Document();
+    if (document == nullptr || m_tab != TAB_CHARACTER || m_chMode != CH_ITEMS || m_invSeenVersion != Panel().InventoryVersion())
+        return true;
+    Rml::ElementList rows;
+    document->QuerySelectorAll(rows, ".gm-inv-row");
+    for (Rml::Element* row : rows)
+    {
+        if (!row->IsPseudoClassSet("hover"))
+            continue;
+        const int index = row->GetAttribute<int>("gm-row-index", -1);
+        if (index >= 0 && index < static_cast<int>(m_invItems.size()) && UI::RmlBridge::DrawnBox(*row, Rml::BoxArea::Border, offset, size))
+            ::RenderItemInfoAtPx(offset.x + size.x / 2.f, offset.y + size.y, m_invItems[static_cast<size_t>(index)].get(), false);
+        break;
+    }
     return true;
 }
 
@@ -1077,6 +1213,17 @@ void mu::ui::window::CGmPanelWindow::BindRmlModel(Rml::DataModelConstructor& c, 
     stepType.RegisterMember("down_off", &GmPanelStep::downOff);
     stepType.RegisterMember("up_off", &GmPanelStep::upOff);
     c.RegisterArray<std::vector<GmPanelStep>>();
+
+    auto charLabelsType = c.RegisterStruct<GmPanelCharLabels>();
+    charLabelsType.RegisterMember("lv", &GmPanelCharLabels::lv);
+    charLabelsType.RegisterMember("rs", &GmPanelCharLabels::rs);
+    charLabelsType.RegisterMember("pt", &GmPanelCharLabels::pt);
+    charLabelsType.RegisterMember("str", &GmPanelCharLabels::str);
+    charLabelsType.RegisterMember("agi", &GmPanelCharLabels::agi);
+    charLabelsType.RegisterMember("vit", &GmPanelCharLabels::vit);
+    charLabelsType.RegisterMember("ene", &GmPanelCharLabels::ene);
+    charLabelsType.RegisterMember("cmd", &GmPanelCharLabels::cmd);
+    charLabelsType.RegisterMember("zen", &GmPanelCharLabels::zen);
 
     c.Bind("title", &model.title);
     c.Bind("tab", &model.tab);
@@ -1133,6 +1280,20 @@ void mu::ui::window::CGmPanelWindow::BindRmlModel(Rml::DataModelConstructor& c, 
     if (model.itemCountText.empty())
         model.itemCountText = "1";
 
+    c.Bind("char_name_text", &model.charNameText);
+    c.Bind("char_ready", &model.charReady);
+    c.Bind("char_has_cmd", &model.charHasCmd);
+    c.Bind("char_labels", &model.charLabels);
+    c.Bind("ch_lv_text", &model.chLvText);
+    c.Bind("ch_rs_text", &model.chRsText);
+    c.Bind("ch_pt_text", &model.chPtText);
+    c.Bind("ch_str_text", &model.chStrText);
+    c.Bind("ch_agi_text", &model.chAgiText);
+    c.Bind("ch_vit_text", &model.chVitText);
+    c.Bind("ch_ene_text", &model.chEneText);
+    c.Bind("ch_cmd_text", &model.chCmdText);
+    c.Bind("ch_zen_text", &model.chZenText);
+
     c.Bind("status", &model.status);
     c.Bind("status_bad", &model.statusBad);
     c.Bind("exit_tooltip", &model.exitTooltip);
@@ -1174,14 +1335,16 @@ void mu::ui::window::CGmPanelWindow::BindRmlModel(Rml::DataModelConstructor& c, 
 void mu::ui::window::CGmPanelWindow::SyncRmlModel()
 {
     m_RmlView.Ensure();
-    // The item's icon (#gm_items over the panel), only while the Make page shows an item; its camera fits the
-    // item into the icon's box.
-    const bool showItem = IsVisible() && m_tab == TAB_ITEMS && m_itMode == IT_MAKE;
-    if (showItem)
+    // The item's icon (#gm_items over the panel), only while the Items tab's Make page or the Character tab's items
+    // show one; its camera fits the item into the icon's box.
+    if (IsVisible() && m_tab == TAB_ITEMS && m_itMode == IT_MAKE)
         UpdatePreview();
-    if (showItem && m_preview)
+    if (IsVisible() && m_tab == TAB_CHARACTER)
+        TakeInventory();
+    const bool showItem = IsVisible() && ShownItem() != nullptr;
+    if (showItem)
         m_itemTarget.SetFieldOfView(ItemFieldOfView());
-    m_itemTarget.Sync(GetField("gm_items"), showItem && m_preview != nullptr);
+    m_itemTarget.Sync(GetField("gm_items"), showItem);
     if (!m_RmlView.Document())
         return;
 
@@ -1435,24 +1598,36 @@ void mu::ui::window::CGmPanelWindow::SyncWorld(GmPanelRmlModel& updated)
 
 void mu::ui::window::CGmPanelWindow::SyncLog(GmPanelRmlModel& updated)
 {
-    const auto& log = Panel().Log();
+    const auto& panel = Panel();
+    const auto& log = panel.Log();
     const auto now = std::chrono::steady_clock::now();
     updated.logRefresh = Button(0, I18N::Game::GmPanelRefresh, SWITCH_WIDTH);
     updated.logInfo = !log.Received
         ? Line(now - m_requestedAt < AnswerTimeout ? I18N::Game::GmPanelAsking : I18N::Game::GmPanelNoAnswer, CONTENT_WIDTH)
         : log.Rows.empty() ? Line(I18N::Game::GmPanelEmptyLog, CONTENT_WIDTH)
                            : Line(Printf(I18N::Game::GmPanelLogCount, static_cast<int>(log.Rows.size())), CONTENT_WIDTH);
+    const bool admin = panel.IsAdmin();
+    const GameLogic::GmPanel::LogEntry* picked = nullptr;
     for (size_t i = 0; i < log.Rows.size(); ++i)
     {
         const auto& e = log.Rows[i];
         GmPanelRow row;
         row.index = static_cast<int>(i);
         // "24.10 23:35 kick Name" over "GmName: reason", so the longer part has the whole second line.
-        row.title = Line(Printf(I18N::Game::GmPanelLogTitle, LocalTime(e.Time).c_str(), e.Op.c_str(), e.Target.c_str()), ROW_WIDTH, true);
+        const std::wstring title = Printf(I18N::Game::GmPanelLogTitle, LocalTime(e.Time).c_str(), e.Op.c_str(), e.Target.c_str());
+        row.title = Line(e.Undone() ? Joined({title, std::wstring(I18N::Game::GmPanelLogUndone)}, L"  ") : title, ROW_WIDTH, true);
         row.detail = Line(e.Detail.empty() ? e.GmName : Printf(I18N::Game::GmPanelLogDetail, e.GmName.c_str(), e.Detail.c_str()), ROW_WIDTH);
         row.alert = e.Op == L"ban" || e.Op == L"kick" || e.Op == L"mute";
+        // An admin picks an entry to undo it (an edit, a deleted item); an undone one is grey.
+        row.dim = e.Undone();
+        row.selected = admin && e.Id > 0 && e.Id == m_logSelected;
+        if (row.selected)
+            picked = &e;
         updated.log.push_back(std::move(row));
     }
+
+    if (admin)
+        updated.actions = {Button(LOG_UNDO, I18N::Game::GmPanelLogUndo, SWITCH_WIDTH, false, picked == nullptr || !picked->CanUndo())};
 }
 
 void mu::ui::window::CGmPanelWindow::SyncEvents(GmPanelRmlModel& updated)
@@ -1614,7 +1789,7 @@ void mu::ui::window::CGmPanelWindow::SyncContent()
     GmPanelRmlModel updated;
     updated.title = Line(panel.IsAdmin() ? I18N::Game::GmPanelTitleAdmin : I18N::Game::GmPanelTitleMod, WINDOW_WIDTH, true);
     updated.tab = m_tab;
-    // Admins have two more tabs, in a second row of two (gm_panel.rml makes the Events and Items tabs halves).
+    // Admins have three more tabs, in a second row.
     updated.tabs = {
         Button(TAB_PLAYERS, I18N::Game::GmPanelTabPlayers, TAB_WIDTH, m_tab == TAB_PLAYERS),
         Button(TAB_WORLD, I18N::Game::GmPanelTabWorld, TAB_WIDTH, m_tab == TAB_WORLD),
@@ -1622,10 +1797,11 @@ void mu::ui::window::CGmPanelWindow::SyncContent()
     };
     if (panel.IsAdmin())
     {
-        updated.tabs.push_back(Button(TAB_EVENTS, I18N::Game::GmPanelTabEvents, SWITCH_WIDTH, m_tab == TAB_EVENTS));
-        updated.tabs.push_back(Button(TAB_ITEMS, I18N::Game::GmPanelTabItems, SWITCH_WIDTH, m_tab == TAB_ITEMS));
+        updated.tabs.push_back(Button(TAB_EVENTS, I18N::Game::GmPanelTabEvents, TAB_WIDTH, m_tab == TAB_EVENTS));
+        updated.tabs.push_back(Button(TAB_ITEMS, I18N::Game::GmPanelTabItems, TAB_WIDTH, m_tab == TAB_ITEMS));
+        updated.tabs.push_back(Button(TAB_CHARACTER, I18N::Game::GmPanelTabCharacter, TAB_WIDTH, m_tab == TAB_CHARACTER));
     }
-    updated.mode = m_tab == TAB_EVENTS ? m_evMode : m_tab == TAB_ITEMS ? m_itMode : m_mode;
+    updated.mode = m_tab == TAB_EVENTS ? m_evMode : m_tab == TAB_ITEMS ? m_itMode : m_tab == TAB_CHARACTER ? m_chMode : m_mode;
 
     if (m_tab == TAB_PLAYERS)
     {
@@ -1642,6 +1818,10 @@ void mu::ui::window::CGmPanelWindow::SyncContent()
     else if (m_tab == TAB_ITEMS)
     {
         SyncItems(updated);
+    }
+    else if (m_tab == TAB_CHARACTER)
+    {
+        SyncCharacter(updated);
     }
     else
     {
@@ -1695,11 +1875,14 @@ void mu::ui::window::CGmPanelWindow::SyncContent()
     SyncFieldFrom(binder, &GmPanelRmlModel::itemCountLabel, "item_count_label", updated);
     SyncFieldFrom(binder, &GmPanelRmlModel::itemDurLabel, "item_dur_label", updated);
     SyncFieldFrom(binder, &GmPanelRmlModel::itemReady, "item_ready", updated);
+    SyncFieldFrom(binder, &GmPanelRmlModel::charReady, "char_ready", updated);
+    SyncFieldFrom(binder, &GmPanelRmlModel::charHasCmd, "char_has_cmd", updated);
+    SyncFieldFrom(binder, &GmPanelRmlModel::charLabels, "char_labels", updated);
     SyncFieldFrom(binder, &GmPanelRmlModel::status, "status", updated);
     SyncFieldFrom(binder, &GmPanelRmlModel::statusBad, "status_bad", updated);
-    // The typed texts (search, map, x, y, monster, count, entries, the items' search, count and durability) are the
-    // player's: the model owns them, nothing writes them here (picking or loading an item sets the count and the
-    // durability).
+    // The typed texts (search, map, x, y, monster, count, entries, the items' search, count and durability, the
+    // character's name and values) are the player's: the model owns them, nothing writes them here (picking or
+    // loading an item sets the count and the durability; a character's answer sets its values).
 }
 
 // The Items tab (phase 3, admins only).
@@ -1831,6 +2014,15 @@ std::wstring ItemTitle(int group, int number, int level)
     return level > 0 ? Printf(L"%ls +%d", name.c_str(), level) : name;
 }
 
+// An item a character has: an ancient one by its set name, as its tooltip calls it ("Hyon Gloves +13").
+std::wstring ItemTitle(const ITEM& item)
+{
+    wchar_t ancient[64]{};
+    if (item.AncientDiscriminator != 0 && g_csItemOption.GetAncientItemName(ancient, std::size(ancient), item.Type, item.AncientDiscriminator))
+        return item.Level > 0 ? Printf(L"%ls +%d", ancient, static_cast<int>(item.Level)) : std::wstring(ancient);
+    return ItemTitle(item.Type / MAX_ITEM_INDEX, item.Type % MAX_ITEM_INDEX, item.Level);
+}
+
 // How many inventory cells the item takes, across and down.
 Rml::Vector2f ItemCells(int type)
 {
@@ -1882,25 +2074,8 @@ std::wstring SetText(const std::wstring& name, int bonus)
 // Asks for the reason, then sends the request ("/gm mk ... <reason>").
 void ConfirmItem(const std::wstring& request, const std::wstring& what, const std::wstring& where)
 {
-    GenericDialogConfig cfg;
-    cfg.showCancel = true;
-    cfg.lines = {{what, true}, {where, false}, {I18N::Game::GmPanelReasonRequired, false}};
-    cfg.input = GenericDialogConfig::InputField{};
-    cfg.input->mode = GenericDialogConfig::InputField::Mode::Text;
-    cfg.input->maxLength = MaxReason;
-    cfg.onPrimary = [request]
-    {
-        const std::wstring reason = OneLine(g_pGenericConfirmDialog->GetInputText(), MaxReason);
-        if (reason.size() < MinItemReason)
-        {
-            g_pSystemLogBox->AddText(I18N::Game::GmPanelItemNeedReason, mu::ui::window::TYPE_ERROR_MESSAGE);
-            g_pGenericConfirmDialog->KeepOpen();
-            return;
-        }
-        Panel().Send(request + L" " + reason);
-    };
-    cfg.tag = "gm_panel_item";
-    g_pGenericConfirmDialog->Show(std::move(cfg));
+    ConfirmWithReason({{what, true}, {where, false}, {I18N::Game::GmPanelReasonRequired, false}}, request, MinItemReason, MaxReason,
+                      "gm_panel_item");
 }
 } // namespace
 
@@ -2615,15 +2790,16 @@ void mu::ui::window::CGmPanelWindow::UpdatePreview()
 
 float mu::ui::window::CGmPanelWindow::ItemFieldOfView() const
 {
-    Rml::Element* icon = GetField("gm_item_icon");
+    const tagITEM* item = ShownItem();
+    Rml::Element* icon = GetField(IconId());
     Rml::Vector2f offset;
     Rml::Vector2f size;
-    if (!m_preview || icon == nullptr || !UI::RmlBridge::DrawnContentBox(*icon, offset, size))
+    if (item == nullptr || icon == nullptr || !UI::RmlBridge::DrawnContentBox(*icon, offset, size))
         return 1.f;
 
     // At a field of view of 1 the item camera draws an inventory cell about a 24th of the window high (20 px of
     // 480); a wider view draws it smaller, so the item's cells fill the icon's box.
-    const Rml::Vector2f cells = ItemCells(m_preview->Type);
+    const Rml::Vector2f cells = ItemCells(item->Type);
     const float cellPx = std::min(size.x / cells.x, size.y / cells.y);
     const float nativeCellPx = static_cast<float>(WindowHeight) / 24.f;
     return std::clamp(nativeCellPx / std::max(cellPx, 1.f), 0.5f, 4.f);
@@ -2631,19 +2807,597 @@ float mu::ui::window::CGmPanelWindow::ItemFieldOfView() const
 
 void mu::ui::window::CGmPanelWindow::RenderItemIcon()
 {
-    if (!m_preview || !IsVisible() || m_tab != TAB_ITEMS || m_itMode != IT_MAKE)
+    const tagITEM* item = IsVisible() ? ShownItem() : nullptr;
+    if (item == nullptr)
         return;
 
-    Rml::Element* icon = GetField("gm_item_icon");
+    Rml::Element* icon = GetField(IconId());
     Rml::Vector2f offset;
     Rml::Vector2f size;
     if (icon == nullptr || !UI::RmlBridge::DrawnContentBox(*icon, offset, size))
         return;
 
     // The item's own box of cells, as big as fits and centred in the icon's (the model's anchor is a part of it).
-    const Rml::Vector2f cells = ItemCells(m_preview->Type);
+    const Rml::Vector2f cells = ItemCells(item->Type);
     const float cell = std::min(size.x / cells.x, size.y / cells.y);
     const Rml::Vector2f box{cell * cells.x, cell * cells.y};
-    ::RenderItem3D(offset.x + (size.x - box.x) / 2.f, offset.y + (size.y - box.y) / 2.f, box.x, box.y, m_preview->Type, m_preview->Level,
-                   m_preview->ExcellentFlags, m_preview->AncientDiscriminator, false);
+    ::RenderItem3D(offset.x + (size.x - box.x) / 2.f, offset.y + (size.y - box.y) / 2.f, box.x, box.y, item->Type, item->Level,
+                   item->ExcellentFlags, item->AncientDiscriminator, false);
+}
+
+// The Character tab and the Log tab's undo (phase 4, admins only).
+namespace
+{
+// OpenMU's HeroState in words.
+std::wstring PkText(int state)
+{
+    const wchar_t* const names[] = {
+        I18N::Game::GmPanelPk0, I18N::Game::GmPanelPk1, I18N::Game::GmPanelPk2, I18N::Game::GmPanelPk3,
+        I18N::Game::GmPanelPk4, I18N::Game::GmPanelPk5, I18N::Game::GmPanelPk6,
+    };
+    return state >= 0 && state < static_cast<int>(std::size(names)) ? std::wstring(names[state]) : std::to_wstring(state);
+}
+
+// Where a character's item is: "worn: helm", "bag 37", "store 210", "vault 5" (the slot as the server counts it).
+std::wstring PlaceText(wchar_t storage, int slot)
+{
+    if (storage == L'v')
+        return Printf(I18N::Game::GmPanelInvVault, slot);
+    if (slot >= 0 && slot < WornSlots)
+    {
+        const std::wstring names = I18N::Game::GmPanelInvWornSlots;
+        std::wstring name = std::to_wstring(slot);
+        size_t start = 0;
+        for (int i = 0; i <= slot; ++i)
+        {
+            const size_t comma = names.find(L',', start);
+            if (i == slot)
+                name = names.substr(start, comma == std::wstring::npos ? std::wstring::npos : comma - start);
+            if (comma == std::wstring::npos)
+                break;
+            start = comma + 1;
+        }
+        return Printf(I18N::Game::GmPanelInvWorn, name.c_str());
+    }
+    return Printf(slot >= FirstStoreSlot ? I18N::Game::GmPanelInvStore : I18N::Game::GmPanelInvBag, slot);
+}
+
+// "Lorencia 130 120".
+std::wstring PlaceOnMap(int map, int x, int y)
+{
+    return Printf(L"%ls %d %d", MapName(map).c_str(), x, y);
+}
+
+// A typed number, or -1 when the field is empty (unchanged).
+long long TypedNumber(const Rml::String& typed)
+{
+    const Rml::String digits = UI::RmlBridge::KeepDigitsOnly(typed);
+    if (digits.empty() || digits.size() > 12)
+        return -1;
+    return std::atoll(digits.c_str());
+}
+} // namespace
+
+void mu::ui::window::CGmPanelWindow::SyncCharacter(GmPanelRmlModel& updated)
+{
+    updated.modes = {
+        Button(CH_EDITOR, I18N::Game::GmPanelModeEditor, SWITCH_WIDTH, m_chMode == CH_EDITOR),
+        Button(CH_ITEMS, I18N::Game::GmPanelModeInventory, SWITCH_WIDTH, m_chMode == CH_ITEMS),
+    };
+    updated.find = Button(0, I18N::Game::GmPanelCharOpen, ACTION_WIDTH);
+    TakeCharacter();
+
+    // The character's two lines: its name, account and whether it plays; its class and place.
+    const auto& info = Panel().Character();
+    const bool waiting = std::chrono::steady_clock::now() - m_requestedAt < AnswerTimeout;
+    updated.selStats = Line({}, CONTENT_WIDTH);
+    if (m_charName.empty())
+    {
+        updated.selName = Line(I18N::Game::GmPanelCharHint, CONTENT_WIDTH);
+    }
+    else if (!CharacterReady())
+    {
+        updated.selName = Line(waiting ? I18N::Game::GmPanelAsking : I18N::Game::GmPanelNoAnswer, CONTENT_WIDTH);
+    }
+    else
+    {
+        const wchar_t* where = info.Where == L'g'   ? I18N::Game::GmPanelCharWhereGame
+                               : info.Where == L'a' ? I18N::Game::GmPanelCharWhereAccount
+                                                    : I18N::Game::GmPanelCharWhereOffline;
+        updated.selName = Line(Printf(where, info.Name.c_str(), info.Account.c_str()), CONTENT_WIDTH, true);
+        // The client's name of the map; the server's while the client has none.
+        std::wstring map = MapName(info.Map);
+        if (map == std::to_wstring(info.Map) && !info.MapName.empty())
+            map = info.MapName;
+        updated.selStats = Line(Printf(I18N::Game::GmPanelCharLine, info.ClassName.c_str(), map.c_str(), info.X, info.Y), CONTENT_WIDTH);
+    }
+
+    if (m_chMode == CH_EDITOR)
+        SyncCharEditor(updated);
+    else
+        SyncCharItems(updated);
+}
+
+void mu::ui::window::CGmPanelWindow::SyncCharEditor(GmPanelRmlModel& updated)
+{
+    const bool ready = CharacterReady();
+    updated.charReady = ready;
+    updated.actions = {
+        Button(CH_SAVE, I18N::Game::GmPanelCharSave, SWITCH_WIDTH, false, !ready),
+        Button(CH_REFRESH, I18N::Game::GmPanelRefresh, SWITCH_WIDTH, false, m_charName.empty()),
+    };
+    if (!ready)
+        return;
+
+    const auto& info = Panel().Character();
+    updated.charHasCmd = info.Stat(L"cmd") != nullptr;
+    auto label = [](const wchar_t* text) { return Line(text, PAIR_LABEL_WIDTH); };
+    updated.charLabels = {label(I18N::Game::GmPanelCharLevel), label(I18N::Game::GmPanelCharResets), label(I18N::Game::GmPanelCharPoints),
+                          label(I18N::Game::GmPanelCharStr),   label(I18N::Game::GmPanelCharAgi),    label(I18N::Game::GmPanelCharVit),
+                          label(I18N::Game::GmPanelCharEne),   label(I18N::Game::GmPanelCharCmd),    label(I18N::Game::GmPanelCharZen)};
+
+    // The PK status (and the kills, which stay); the class, within the character's line, only while the account is
+    // offline; where to move the character: nowhere, to the GM or to a teleport place.
+    GmPanelStep pk;
+    pk.label = Line(I18N::Game::GmPanelCharPk, STEP_LABEL_WIDTH);
+    pk.value = ClippedLine(Printf(I18N::Game::GmPanelPkKills, PkText(m_chPk).c_str(), info.PkCount), STEP_VALUE_WIDTH, true);
+    pk.downId = CH_PK_DOWN;
+    pk.upId = CH_PK_UP;
+    pk.downOff = m_chPk <= 0;
+    pk.upOff = m_chPk >= MaxPkState;
+
+    const auto& classes = info.Classes;
+    const auto chosen = std::find_if(classes.begin(), classes.end(), [&](const auto& c) { return c.Number == m_chClass; });
+    const int classIndex = chosen == classes.end() ? -1 : static_cast<int>(chosen - classes.begin());
+    GmPanelStep cls;
+    cls.label = Line(I18N::Game::GmPanelCharClass, STEP_LABEL_WIDTH);
+    cls.value = ClippedLine(chosen != classes.end() ? chosen->Name : m_chClass == info.Class ? info.ClassName : std::to_wstring(m_chClass),
+                            STEP_VALUE_WIDTH, true);
+    cls.downId = CH_CLASS_DOWN;
+    cls.upId = CH_CLASS_UP;
+    cls.downOff = info.Online() || classIndex <= 0;
+    cls.upOff = info.Online() || classIndex < 0 || classIndex >= static_cast<int>(classes.size()) - 1;
+
+    const auto& warps = Panel().Warps().Rows;
+    if (m_chMove >= static_cast<int>(warps.size()))
+        m_chMove = MOVE_STAY;
+    GmPanelStep move;
+    move.label = Line(I18N::Game::GmPanelCharMove, STEP_LABEL_WIDTH);
+    move.value = ClippedLine(m_chMove == MOVE_STAY    ? std::wstring(I18N::Game::GmPanelCharStay)
+                             : m_chMove == MOVE_TO_ME ? std::wstring(I18N::Game::GmPanelCharToMe)
+                                                      : warps[static_cast<size_t>(m_chMove)].Name,
+                             STEP_VALUE_WIDTH, true);
+    // Stay, to me, then the teleport places in their order.
+    const int at = m_chMove == MOVE_STAY ? 0 : m_chMove == MOVE_TO_ME ? 1 : m_chMove + 2;
+    move.downId = CH_MOVE_DOWN;
+    move.upId = CH_MOVE_UP;
+    move.downOff = at <= 0;
+    move.upOff = at >= static_cast<int>(warps.size()) + 1;
+    updated.steps = {std::move(pk), std::move(cls), std::move(move)};
+}
+
+void mu::ui::window::CGmPanelWindow::SyncCharItems(GmPanelRmlModel& updated)
+{
+    TakeInventory();
+    const auto& panel = Panel();
+    const auto& inv = panel.Inventory();
+    const bool ready = !m_charName.empty() && m_invSeenVersion == panel.InventoryVersion() && SameName(inv.Name, m_charName);
+    const bool waiting = std::chrono::steady_clock::now() - m_requestedAt < AnswerTimeout;
+    if (m_charName.empty())
+        updated.listInfo = Line({}, CONTENT_WIDTH);
+    else if (!ready)
+        updated.listInfo = Line(waiting ? I18N::Game::GmPanelAsking : I18N::Game::GmPanelNoAnswer, CONTENT_WIDTH);
+    else
+        updated.listInfo = Line(Printf(I18N::Game::GmPanelInvInfo, static_cast<int>(inv.Items.size()), Thousands(inv.Zen).c_str(),
+                                       Thousands(inv.VaultZen).c_str()),
+                                CONTENT_WIDTH);
+
+    const int picked = ready ? PickedItemIndex() : -1;
+    if (ready)
+    {
+        updated.rows = m_invRows;
+        for (size_t i = 0; i < updated.rows.size(); ++i)
+            updated.rows[i].selected = static_cast<int>(i) == picked;
+    }
+
+    // The picked item: its icon (its tooltip while hovered), name, place and durability.
+    updated.itemLine = Line({}, ITEM_LINES_WIDTH);
+    updated.itemHint = Line({}, ITEM_LINES_WIDTH);
+    bool vaultLocked = false;
+    if (picked < 0)
+    {
+        updated.itemName = Line(ready ? std::wstring(I18N::Game::GmPanelInvPick) : std::wstring(), ITEM_LINES_WIDTH);
+    }
+    else
+    {
+        const auto& stored = inv.Items[static_cast<size_t>(picked)];
+        const tagITEM* item = m_invItems[static_cast<size_t>(picked)].get();
+        // A vault item is deleted only while the account is offline (the game server keeps the open vault).
+        vaultLocked = stored.Storage == L'v' && inv.Where != L'o';
+        updated.itemName = ClippedLine(ItemTitle(*item), ITEM_LINES_WIDTH, true);
+        updated.itemLine = Line(Printf(I18N::Game::GmPanelInvDur, PlaceText(stored.Storage, stored.Slot).c_str(), static_cast<int>(item->Durability)),
+                                ITEM_LINES_WIDTH);
+        updated.itemHint = Line(vaultLocked ? I18N::Game::GmPanelInvVaultOnline : I18N::Game::GmPanelItemHover, ITEM_LINES_WIDTH);
+    }
+
+    updated.actions = {
+        Button(CH_ITEM_DELETE, I18N::Game::GmPanelItemDelete, TAB_WIDTH, false, picked < 0 || vaultLocked),
+        Button(CH_ITEM_COPY, I18N::Game::GmPanelInvCopy, TAB_WIDTH, false, picked < 0),
+        Button(CH_REFRESH, I18N::Game::GmPanelRefresh, TAB_WIDTH, false, m_charName.empty()),
+    };
+}
+
+void mu::ui::window::CGmPanelWindow::OpenCharacter()
+{
+    const std::wstring name = OneLine(StringUtils::NarrowToWide(m_RmlView.GetModel().charNameText), MaxSearch);
+    if (name.empty())
+    {
+        m_status = I18N::Game::GmPanelCharNeedName;
+        m_statusBad = true;
+        return;
+    }
+
+    // Another character: the pick and the last answer were about the one before.
+    if (!SameName(name, m_charName))
+    {
+        m_invSlot = -1;
+        m_status.clear();
+        m_statusBad = false;
+    }
+    m_charName = name;
+    // The answers are taken again (they may be about this name already, then a newer one comes).
+    m_chSeenVersion = -1;
+    m_invSeenVersion = -1;
+    RequestCurrent();
+}
+
+void mu::ui::window::CGmPanelWindow::TakeCharacter()
+{
+    const auto& panel = Panel();
+    if (panel.CharacterVersion() == m_chSeenVersion)
+        return;
+    m_chSeenVersion = panel.CharacterVersion();
+    const auto& info = panel.Character();
+    if (m_charName.empty() || !SameName(info.Name, m_charName))
+        return;
+
+    // The values as they are now, typed over by the GM; the steps from them; no move.
+    m_charName = info.Name;
+    m_chPk = std::clamp(info.PkState, 0, MaxPkState);
+    m_chClass = info.Class;
+    m_chMove = MOVE_STAY;
+    auto& binder = m_RmlView.Binder();
+    auto text = [](long long value) { return Rml::String(std::to_string(value)); };
+    auto stat = [&](const wchar_t* key)
+    {
+        const auto* found = info.Stat(key);
+        return found != nullptr ? text(found->Value) : Rml::String();
+    };
+    SyncField(binder, &GmPanelRmlModel::chLvText, "ch_lv_text", text(info.Level));
+    SyncField(binder, &GmPanelRmlModel::chRsText, "ch_rs_text", text(info.Resets));
+    SyncField(binder, &GmPanelRmlModel::chPtText, "ch_pt_text", text(info.Points));
+    SyncField(binder, &GmPanelRmlModel::chStrText, "ch_str_text", stat(L"str"));
+    SyncField(binder, &GmPanelRmlModel::chAgiText, "ch_agi_text", stat(L"agi"));
+    SyncField(binder, &GmPanelRmlModel::chVitText, "ch_vit_text", stat(L"vit"));
+    SyncField(binder, &GmPanelRmlModel::chEneText, "ch_ene_text", stat(L"ene"));
+    SyncField(binder, &GmPanelRmlModel::chCmdText, "ch_cmd_text", stat(L"cmd"));
+    SyncField(binder, &GmPanelRmlModel::chZenText, "ch_zen_text", text(info.Zen));
+}
+
+void mu::ui::window::CGmPanelWindow::TakeInventory()
+{
+    const auto& panel = Panel();
+    if (panel.InventoryVersion() == m_invSeenVersion)
+        return;
+    m_invSeenVersion = panel.InventoryVersion();
+    m_invItems.clear();
+    m_invRows.clear();
+    const auto& inv = panel.Inventory();
+    if (m_charName.empty() || !SameName(inv.Name, m_charName))
+        return;
+
+    for (size_t i = 0; i < inv.Items.size(); ++i)
+    {
+        const auto& stored = inv.Items[i];
+        // Read as the item manager reads a server's item (ParseItemData, CItemMng::CreateItemByParameters), but owned
+        // here: no key, not in the manager's list. Padded with zeros: the format's optional bytes follow its flags.
+        std::array<BYTE, 32> data{};
+        std::copy_n(stored.Data.begin(), std::min(stored.Data.size(), data.size()), data.begin());
+        const ItemCreationParams p = ParseItemData(std::span<const BYTE>(data.data(), data.size()));
+
+        auto item = std::make_unique<ITEM>();
+        std::memset(item.get(), 0, sizeof(ITEM));
+        item->bPeriodItem = p.WithExpiration;
+        item->bExpiredPeriod = p.IsExpired;
+        item->Type = static_cast<short>(p.Group * MAX_ITEM_INDEX + p.Number);
+        item->Level = p.Level;
+        item->Durability = p.Durability;
+        item->HasLuck = p.WithLuck;
+        item->HasSkill = p.WithSkill;
+        item->OptionType = p.OptionType;
+        item->OptionLevel = p.OptionLevel;
+        item->ExcellentFlags = p.ExcellentFlags;
+        item->AncientDiscriminator = p.AncientDiscriminator;
+        item->AncientBonusOption = p.AncientBonusOption;
+        item->Jewel_Of_Harmony_Option = p.HarmonyOptionType;
+        item->Jewel_Of_Harmony_OptionLevel = p.HarmonyOptionLevel;
+        item->option_380 = p.HasGuardianOption;
+        item->SocketCount = p.SocketCount;
+        item->SocketSeedSetOption = p.SocketBonusOption;
+        for (int s = 0; s < MAX_SOCKETS; ++s)
+        {
+            item->bySocketOption[s] = p.SocketOptions[s];
+            if (item->bySocketOption[s] == SOCKET_EMPTY)
+            {
+                item->SocketSeedID[s] = SOCKET_EMPTY;
+            }
+            else
+            {
+                item->SocketSeedID[s] = item->bySocketOption[s] % SEASON4A::MAX_SOCKET_OPTION;
+                item->SocketSphereLv[s] = item->bySocketOption[s] / SEASON4A::MAX_SOCKET_OPTION + 1;
+            }
+        }
+        item->byColorState = ITEM_COLOR_NORMAL;
+        SetItemAttributes(item.get());
+
+        // One line an item: its name and where it is; excellent and ancient ones stand out.
+        GmPanelRow row;
+        row.index = static_cast<int>(i);
+        row.title = ClippedLine(Joined({ItemTitle(*item), PlaceText(stored.Storage, stored.Slot)}, L"  "), ROW_WIDTH);
+        row.live = p.ExcellentFlags != 0 || p.AncientDiscriminator != 0;
+        m_invRows.push_back(std::move(row));
+        m_invItems.push_back(std::move(item));
+    }
+
+    // A picked item that is gone (deleted, moved) is picked no more.
+    if (PickedItemIndex() < 0)
+        m_invSlot = -1;
+}
+
+bool mu::ui::window::CGmPanelWindow::CharacterReady() const
+{
+    const auto& panel = Panel();
+    return !m_charName.empty() && m_chSeenVersion == panel.CharacterVersion() && SameName(panel.Character().Name, m_charName);
+}
+
+void mu::ui::window::CGmPanelWindow::SaveCharacter()
+{
+    if (!CharacterReady())
+        return;
+
+    // What changed, as "/gm edit" takes it ("lv=400") and as the GM reads it ("Level: 380 -> 400"). An empty field
+    // stays as it is.
+    const auto& info = Panel().Character();
+    const auto& model = m_RmlView.GetModel();
+    std::vector<std::wstring> spec;
+    std::vector<GenericDialogConfig::Line> lines;
+    lines.push_back({Printf(I18N::Game::GmPanelCharSaveConfirm, info.Name.c_str()), true});
+    auto change = [&](const std::wstring& key, const std::wstring& value, const wchar_t* label, const std::wstring& before,
+                      const std::wstring& after)
+    {
+        spec.push_back(key + L"=" + value);
+        lines.push_back({Printf(L"%ls: %ls -> %ls", label, before.c_str(), after.c_str()), false});
+    };
+    auto number = [&](const Rml::String& typed, const wchar_t* key, const wchar_t* label, long long before)
+    {
+        const long long value = TypedNumber(typed);
+        if (value >= 0 && value != before)
+            change(key, std::to_wstring(value), label, Thousands(before), Thousands(value));
+    };
+    number(model.chLvText, L"lv", I18N::Game::GmPanelCharLevel, info.Level);
+    number(model.chRsText, L"rs", I18N::Game::GmPanelCharResets, info.Resets);
+    number(model.chPtText, L"pt", I18N::Game::GmPanelCharPoints, info.Points);
+    const std::tuple<const wchar_t*, const Rml::String*, const wchar_t*> stats[] = {
+        {L"str", &model.chStrText, I18N::Game::GmPanelCharStr}, {L"agi", &model.chAgiText, I18N::Game::GmPanelCharAgi},
+        {L"vit", &model.chVitText, I18N::Game::GmPanelCharVit}, {L"ene", &model.chEneText, I18N::Game::GmPanelCharEne},
+        {L"cmd", &model.chCmdText, I18N::Game::GmPanelCharCmd},
+    };
+    for (const auto& [key, typed, label] : stats)
+    {
+        if (const auto* stat = info.Stat(key))
+            number(*typed, key, label, stat->Value);
+    }
+    number(model.chZenText, L"zen", I18N::Game::GmPanelCharZen, info.Zen);
+    if (m_chPk != info.PkState)
+        change(L"pk", std::to_wstring(m_chPk), I18N::Game::GmPanelCharPk, PkText(info.PkState), PkText(m_chPk));
+    if (m_chClass != info.Class && !info.Online())
+    {
+        const auto chosen = std::find_if(info.Classes.begin(), info.Classes.end(), [&](const auto& c) { return c.Number == m_chClass; });
+        change(L"cls", std::to_wstring(m_chClass), I18N::Game::GmPanelCharClass, info.ClassName,
+               chosen != info.Classes.end() ? chosen->Name : std::to_wstring(m_chClass));
+    }
+    if (m_chMove != MOVE_STAY)
+    {
+        int map = 0;
+        int x = 0;
+        int y = 0;
+        const auto& warps = Panel().Warps().Rows;
+        if (m_chMove == MOVE_TO_ME && Hero != nullptr)
+        {
+            map = gMapManager.WorldActive;
+            x = static_cast<int>(Hero->PositionX);
+            y = static_cast<int>(Hero->PositionY);
+        }
+        else if (m_chMove >= 0 && m_chMove < static_cast<int>(warps.size()))
+        {
+            const auto& warp = warps[static_cast<size_t>(m_chMove)];
+            map = warp.Map;
+            x = warp.X;
+            y = warp.Y;
+        }
+        else
+        {
+            return;
+        }
+        change(L"pos", Printf(L"%d:%d:%d", map, x, y), I18N::Game::GmPanelCharPlace, PlaceOnMap(info.Map, info.X, info.Y), PlaceOnMap(map, x, y));
+    }
+
+    if (spec.empty())
+    {
+        m_status = I18N::Game::GmPanelCharNothing;
+        m_statusBad = false;
+        return;
+    }
+
+    // The reason shares the chat line with the changes: with too many at once, it wouldn't fit.
+    const std::wstring request = L"edit " + info.Name + L" " + Joined(spec, L",");
+    const int room = ReasonRoom(request);
+    if (room < static_cast<int>(MinItemReason) + 2)
+    {
+        m_status = I18N::Game::GmPanelCharTooLong;
+        m_statusBad = true;
+        return;
+    }
+
+    if (info.Where == L'a')
+        lines.push_back({I18N::Game::GmPanelCharSavedOnLogout, false});
+    lines.push_back({I18N::Game::GmPanelReasonRequired, false});
+    ConfirmWithReason(std::move(lines), request, MinItemReason, room, "gm_panel_edit");
+}
+
+void mu::ui::window::CGmPanelWindow::AskItemAction(bool remove)
+{
+    const int index = PickedItemIndex();
+    if (index < 0)
+        return;
+
+    const auto& inv = Panel().Inventory();
+    const auto& stored = inv.Items[static_cast<size_t>(index)];
+    const tagITEM* item = m_invItems[static_cast<size_t>(index)].get();
+    if (remove && stored.Storage == L'v' && inv.Where != L'o')
+    {
+        m_status = I18N::Game::GmPanelInvVaultOnline;
+        m_statusBad = true;
+        return;
+    }
+
+    const std::wstring title = ItemTitle(*item);
+    const std::wstring request = Printf(L"%ls %ls %lc %d", remove ? L"itemdel" : L"itemcopy", inv.Name.c_str(), stored.Storage, stored.Slot);
+    std::vector<GenericDialogConfig::Line> lines = {
+        {Printf(remove ? I18N::Game::GmPanelInvDeleteConfirm : I18N::Game::GmPanelInvCopyConfirm, title.c_str(), inv.Name.c_str()), true},
+        {PlaceText(stored.Storage, stored.Slot), false},
+    };
+    if (remove)
+        lines.push_back({I18N::Game::GmPanelInvUndoHint, false});
+    lines.push_back({I18N::Game::GmPanelReasonRequired, false});
+    ConfirmWithReason(std::move(lines), request, MinItemReason, ReasonRoom(request), remove ? "gm_panel_itemdel" : "gm_panel_itemcopy", item);
+}
+
+void mu::ui::window::CGmPanelWindow::DoCharacterAction(int action)
+{
+    auto& panel = Panel();
+    if (!panel.IsAdmin())
+        return;
+
+    const auto& info = panel.Character();
+    const bool ready = CharacterReady();
+    switch (action)
+    {
+    case CH_SAVE:
+        SaveCharacter();
+        break;
+    case CH_REFRESH:
+        RequestCurrent();
+        break;
+    case CH_PK_DOWN:
+        if (ready && m_chPk > 0)
+            --m_chPk;
+        break;
+    case CH_PK_UP:
+        if (ready && m_chPk < MaxPkState)
+            ++m_chPk;
+        break;
+    case CH_CLASS_DOWN:
+    case CH_CLASS_UP:
+    {
+        if (!ready)
+            break;
+        if (info.Online())
+        {
+            m_status = I18N::Game::GmPanelCharClassOffline;
+            m_statusBad = true;
+            break;
+        }
+        const auto& classes = info.Classes;
+        const auto chosen = std::find_if(classes.begin(), classes.end(), [&](const auto& c) { return c.Number == m_chClass; });
+        if (chosen == classes.end())
+            break;
+        const int index = static_cast<int>(chosen - classes.begin()) + (action == CH_CLASS_UP ? 1 : -1);
+        if (index >= 0 && index < static_cast<int>(classes.size()))
+            m_chClass = classes[static_cast<size_t>(index)].Number;
+        break;
+    }
+    case CH_MOVE_DOWN:
+    case CH_MOVE_UP:
+    {
+        if (!ready)
+            break;
+        // Stay, to me, then the teleport places in their order.
+        const int places = static_cast<int>(panel.Warps().Rows.size());
+        int at = m_chMove == MOVE_STAY ? 0 : m_chMove == MOVE_TO_ME ? 1 : m_chMove + 2;
+        at = std::clamp(at + (action == CH_MOVE_UP ? 1 : -1), 0, places + 1);
+        m_chMove = at == 0 ? MOVE_STAY : at == 1 ? MOVE_TO_ME : at - 2;
+        break;
+    }
+    case CH_ITEM_DELETE:
+        AskItemAction(true);
+        break;
+    case CH_ITEM_COPY:
+        AskItemAction(false);
+        break;
+    default:
+        break;
+    }
+}
+
+void mu::ui::window::CGmPanelWindow::DoLogAction(int action)
+{
+    const auto& panel = Panel();
+    if (action != LOG_UNDO || !panel.IsAdmin())
+        return;
+
+    const auto& rows = panel.Log().Rows;
+    const auto entry = std::find_if(rows.begin(), rows.end(), [&](const auto& e) { return e.Id > 0 && e.Id == m_logSelected; });
+    if (entry == rows.end() || !entry->CanUndo())
+        return;
+
+    const std::wstring request = L"undo " + std::to_wstring(entry->Id);
+    std::vector<GenericDialogConfig::Line> lines = {
+        {Printf(I18N::Game::GmPanelUndoConfirm, entry->Id, entry->Op.c_str(), entry->Target.c_str()), true},
+    };
+    if (!entry->Detail.empty())
+        lines.push_back({entry->Detail, false});
+    lines.push_back({I18N::Game::GmPanelReasonOptional, false});
+    ConfirmWithReason(std::move(lines), request, 0, ReasonRoom(request), "gm_panel_undo");
+}
+
+int mu::ui::window::CGmPanelWindow::PickedItemIndex() const
+{
+    const auto& panel = Panel();
+    if (m_invSlot < 0 || m_invSeenVersion != panel.InventoryVersion())
+        return -1;
+    const auto& items = panel.Inventory().Items;
+    for (size_t i = 0; i < items.size() && i < m_invItems.size(); ++i)
+    {
+        if (items[i].Storage == m_invStorage && items[i].Slot == m_invSlot)
+            return static_cast<int>(i);
+    }
+    return -1;
+}
+
+tagITEM* mu::ui::window::CGmPanelWindow::ShownItem() const
+{
+    if (m_tab == TAB_ITEMS && m_itMode == IT_MAKE)
+        return m_preview.get();
+    if (m_tab == TAB_CHARACTER && m_chMode == CH_ITEMS)
+    {
+        const int index = PickedItemIndex();
+        return index >= 0 ? m_invItems[static_cast<size_t>(index)].get() : nullptr;
+    }
+    return nullptr;
+}
+
+const char* mu::ui::window::CGmPanelWindow::IconId() const
+{
+    return m_tab == TAB_CHARACTER ? "gm_char_icon" : "gm_item_icon";
 }

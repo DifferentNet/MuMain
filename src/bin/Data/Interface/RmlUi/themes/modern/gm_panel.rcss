@@ -55,7 +55,7 @@
 .gm-btn-quarter { width: calc(40px * var(--root-scale)); }
 .gm-btn-half { width: calc(82px * var(--root-scale)); }
 .gm-btn-go { width: calc(34px * var(--root-scale)); }
-/* Admins have five tabs (events and items): the last two as halves in a second row. */
+/* Admins have six tabs (events, items, character): three more in a second row. */
 .gm-btn-arrow { width: calc(18px * var(--root-scale)); }
 .gm-btn-item { width: calc(48px * var(--root-scale)); }
 
@@ -93,6 +93,18 @@
 .gm-list-items .gm-list { height: calc(176px * var(--root-scale)); }
 .gm-list-extras .gm-list { height: calc(88px * var(--root-scale)); }
 .gm-list-saved .gm-list { height: calc(206px * var(--root-scale)); }
+
+/* The Character tab. The editor: a label and a typed value, two pairs to a row, packed tighter than the other
+   rows; zen has a row of its own. The items: one line an item. */
+.gm-pack { justify-content: flex-start; margin-bottom: calc(1px * var(--root-scale)); }
+.gm-pack .gm-field { margin-bottom: 0; }
+.gm-pair { display: flex; flex-direction: row; align-items: center; width: calc(83px * var(--root-scale)); }
+.gm-pair-wide { width: calc(166px * var(--root-scale)); }
+.gm-pair-label { display: block; white-space: nowrap; width: calc(36px * var(--root-scale)); pointer-events: none; }
+.gm-pair-field { width: calc(44px * var(--root-scale)); }
+.gm-zen-field { width: calc(86px * var(--root-scale)); }
+.gm-char-line { margin-bottom: calc(3px * var(--root-scale)); }
+.gm-list-charinv .gm-list { height: calc(110px * var(--root-scale)); }
 
 /* The row leaves the pane's right lane to the scrollbar (a full-width row sits under the handle). */
 .gm-row {
@@ -181,6 +193,7 @@
 .gm-item-line { color: token(text-secondary); }
 .gm-step-text { color: token(text-secondary); }
 .gm-step-label.gm-btn .gm-step-text { color: token(text-primary); }
+.gm-pair-label { color: token(text-secondary); }
 .gm-step-value { color: token(accent-gold); }
 
 /* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
