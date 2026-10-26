@@ -13967,4 +13967,361 @@
   <data name="GmPanelSending" xml:space="preserve">
     <value>Sent: %ls</value>
   </data>
+  <data name="GmPanelTabEvents" xml:space="preserve">
+    <value>Events</value>
+  </data>
+  <data name="GmPanelModeEvents" xml:space="preserve">
+    <value>Events</value>
+  </data>
+  <data name="GmPanelModeMonsters" xml:space="preserve">
+    <value>Monsters</value>
+  </data>
+  <data name="GmPanelModeTiers" xml:space="preserve">
+    <value>Tier Maps</value>
+  </data>
+  <data name="GmPanelEventsCount" xml:space="preserve">
+    <value>Events: %d</value>
+  </data>
+  <data name="GmPanelEmptyEvents" xml:space="preserve">
+    <value>No events on this server.</value>
+  </data>
+  <data name="GmPanelEventNext" xml:space="preserve">
+    <value>next %ls</value>
+  </data>
+  <data name="GmPanelEventTagSoon" xml:space="preserve">
+    <value>in %ls</value>
+  </data>
+  <data name="GmPanelEventTagOpen" xml:space="preserve">
+    <value>open %ls</value>
+  </data>
+  <data name="GmPanelEventTagRun" xml:space="preserve">
+    <value>running</value>
+  </data>
+  <data name="GmPanelEventTagRunLeft" xml:space="preserve">
+    <value>running %ls</value>
+  </data>
+  <data name="GmPanelEventTagOff" xml:space="preserve">
+    <value>off</value>
+  </data>
+  <data name="GmPanelEventStateIdle" xml:space="preserve">
+    <value>Not running</value>
+  </data>
+  <data name="GmPanelEventStateSoon" xml:space="preserve">
+    <value>Starts in %ls</value>
+  </data>
+  <data name="GmPanelEventStateOpen" xml:space="preserve">
+    <value>Entrance open, closes in %ls</value>
+  </data>
+  <data name="GmPanelEventStateRun" xml:space="preserve">
+    <value>Running</value>
+  </data>
+  <data name="GmPanelEventStateRunLeft" xml:space="preserve">
+    <value>Running, %ls left</value>
+  </data>
+  <data name="GmPanelEventStateOff" xml:space="preserve">
+    <value>Off on this game server</value>
+  </data>
+  <data name="GmPanelEventPick" xml:space="preserve">
+    <value>Pick an event in the list.</value>
+  </data>
+  <data name="GmPanelEventStart" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="GmPanelEventSkip" xml:space="preserve">
+    <value>Skip</value>
+  </data>
+  <data name="GmPanelEventEnd" xml:space="preserve">
+    <value>End</value>
+  </data>
+  <data name="GmPanelEventStartConfirm" xml:space="preserve">
+    <value>Start %ls now?</value>
+  </data>
+  <data name="GmPanelEventRestartConfirm" xml:space="preserve">
+    <value>%ls runs now. End it and start again?</value>
+  </data>
+  <data name="GmPanelEventEndConfirm" xml:space="preserve">
+    <value>End %ls now?</value>
+  </data>
+  <data name="GmPanelMonsterHint" xml:space="preserve">
+    <value>Type a part of the name or the number.</value>
+  </data>
+  <data name="GmPanelMonstersCount" xml:space="preserve">
+    <value>Monsters: %d</value>
+  </data>
+  <data name="GmPanelMonstersMany" xml:space="preserve">
+    <value>First %d: type more of the name</value>
+  </data>
+  <data name="GmPanelEmptyMonsters" xml:space="preserve">
+    <value>No such monsters.</value>
+  </data>
+  <data name="GmPanelMonsterRow" xml:space="preserve">
+    <value>%ls, lvl %d (No. %d)</value>
+  </data>
+  <data name="GmPanelMonsterPick" xml:space="preserve">
+    <value>Pick a monster to spawn.</value>
+  </data>
+  <data name="GmPanelMonsterPicked" xml:space="preserve">
+    <value>%ls (No. %d), level %d</value>
+  </data>
+  <data name="GmPanelSpawnHint" xml:space="preserve">
+    <value>Spawned ones don't come back after death.</value>
+  </data>
+  <data name="GmPanelClearHint" xml:space="preserve">
+    <value>Clear: monsters within 12 steps, no drops.</value>
+  </data>
+  <data name="GmPanelCount" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="GmPanelSpawn" xml:space="preserve">
+    <value>Spawn</value>
+  </data>
+  <data name="GmPanelClear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="GmPanelClearConfirm" xml:space="preserve">
+    <value>Kill every monster within 12 steps of you? No drops, no experience.</value>
+  </data>
+  <data name="GmPanelTiersCount" xml:space="preserve">
+    <value>Tier Map runs: %d</value>
+  </data>
+  <data name="GmPanelEmptyTiers" xml:space="preserve">
+    <value>Nobody is in a Tier Map now.</value>
+  </data>
+  <data name="GmPanelTierTitle" xml:space="preserve">
+    <value>%ls - tier %d, day %d</value>
+  </data>
+  <data name="GmPanelTierDetail" xml:space="preserve">
+    <value>%ls, zone %d/%d, %d monsters, %ls</value>
+  </data>
+  <data name="GmPanelTierPick" xml:space="preserve">
+    <value>Pick a run in the list.</value>
+  </data>
+  <data name="GmPanelTierParty" xml:space="preserve">
+    <value>%d inside: %ls</value>
+  </data>
+  <data name="GmPanelTierState" xml:space="preserve">
+    <value>%ls, %ls left</value>
+  </data>
+  <data name="GmPanelTierEnd" xml:space="preserve">
+    <value>End run</value>
+  </data>
+  <data name="GmPanelTierSkip" xml:space="preserve">
+    <value>Skip wait</value>
+  </data>
+  <data name="GmPanelTierEndConfirm" xml:space="preserve">
+    <value>End the tier %d run of %ls's party? It counts as lost.</value>
+  </data>
+  <data name="GmPanelEntriesInfo" xml:space="preserve">
+    <value>Give today's Tier Map runs back to:</value>
+  </data>
+  <data name="GmPanelEntriesReset" xml:space="preserve">
+    <value>Give back</value>
+  </data>
+  <data name="GmPanelEntriesConfirm" xml:space="preserve">
+    <value>Give %ls all of today's Tier Map runs back?</value>
+  </data>
+  <data name="GmPanelEntriesNeedName" xml:space="preserve">
+    <value>Type the character's name.</value>
+  </data>
+  <data name="GmPanelTierOpen" xml:space="preserve">
+    <value>Entrance open</value>
+  </data>
+  <data name="GmPanelTierClosed" xml:space="preserve">
+    <value>Getting ready</value>
+  </data>
+  <data name="GmPanelTierPlaying" xml:space="preserve">
+    <value>Fighting</value>
+  </data>
+  <data name="GmPanelTierEnded" xml:space="preserve">
+    <value>Over, loot time</value>
+  </data>
+  <data name="GmPanelTierHeld" xml:space="preserve">
+    <value>%ls (held)</value>
+  </data>
+  <data name="GmPanelEventTagStarting" xml:space="preserve">
+    <value>starting</value>
+  </data>
+  <data name="GmPanelEventStateStarting" xml:space="preserve">
+    <value>Starting</value>
+  </data>
+  <data name="GmPanelTabItems" xml:space="preserve">
+    <value>Items</value>
+  </data>
+  <data name="GmPanelModeCatalog" xml:space="preserve">
+    <value>Catalog</value>
+  </data>
+  <data name="GmPanelModeMake" xml:space="preserve">
+    <value>Item</value>
+  </data>
+  <data name="GmPanelModeSaved" xml:space="preserve">
+    <value>Saved</value>
+  </data>
+  <data name="GmPanelItemGroup0" xml:space="preserve">
+    <value>Swords</value>
+  </data>
+  <data name="GmPanelItemGroup1" xml:space="preserve">
+    <value>Axes</value>
+  </data>
+  <data name="GmPanelItemGroup2" xml:space="preserve">
+    <value>Maces</value>
+  </data>
+  <data name="GmPanelItemGroup3" xml:space="preserve">
+    <value>Spears</value>
+  </data>
+  <data name="GmPanelItemGroup4" xml:space="preserve">
+    <value>Bows</value>
+  </data>
+  <data name="GmPanelItemGroup5" xml:space="preserve">
+    <value>Staffs</value>
+  </data>
+  <data name="GmPanelItemGroup6" xml:space="preserve">
+    <value>Shields</value>
+  </data>
+  <data name="GmPanelItemGroup7" xml:space="preserve">
+    <value>Helms</value>
+  </data>
+  <data name="GmPanelItemGroup8" xml:space="preserve">
+    <value>Armors</value>
+  </data>
+  <data name="GmPanelItemGroup9" xml:space="preserve">
+    <value>Pants</value>
+  </data>
+  <data name="GmPanelItemGroup10" xml:space="preserve">
+    <value>Gloves</value>
+  </data>
+  <data name="GmPanelItemGroup11" xml:space="preserve">
+    <value>Boots</value>
+  </data>
+  <data name="GmPanelItemGroup12" xml:space="preserve">
+    <value>Wings, orbs</value>
+  </data>
+  <data name="GmPanelItemGroup13" xml:space="preserve">
+    <value>Pets, rings</value>
+  </data>
+  <data name="GmPanelItemGroup14" xml:space="preserve">
+    <value>Jewels, potions</value>
+  </data>
+  <data name="GmPanelItemGroup15" xml:space="preserve">
+    <value>Scrolls</value>
+  </data>
+  <data name="GmPanelItemGroup" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="GmPanelItemAllGroups" xml:space="preserve">
+    <value>all groups</value>
+  </data>
+  <data name="GmPanelItemSearchHint" xml:space="preserve">
+    <value>Name, or group and number: 14 13</value>
+  </data>
+  <data name="GmPanelItemCount" xml:space="preserve">
+    <value>%d items</value>
+  </data>
+  <data name="GmPanelItemMany" xml:space="preserve">
+    <value>First %d: narrow the search</value>
+  </data>
+  <data name="GmPanelItemEmpty" xml:space="preserve">
+    <value>Nothing found</value>
+  </data>
+  <data name="GmPanelItemNone" xml:space="preserve">
+    <value>Pick an item in the catalog</value>
+  </data>
+  <data name="GmPanelItemInfoLine" xml:space="preserve">
+    <value>(%d,%d), up to +%d</value>
+  </data>
+  <data name="GmPanelItemStackLine" xml:space="preserve">
+    <value>(%d,%d), a stack of up to %d</value>
+  </data>
+  <data name="GmPanelItemHover" xml:space="preserve">
+    <value>Hover the icon: its tooltip</value>
+  </data>
+  <data name="GmPanelItemLevel" xml:space="preserve">
+    <value>Level</value>
+  </data>
+  <data name="GmPanelItemOption" xml:space="preserve">
+    <value>Option</value>
+  </data>
+  <data name="GmPanelItemOff" xml:space="preserve">
+    <value>none</value>
+  </data>
+  <data name="GmPanelItemAncient" xml:space="preserve">
+    <value>Ancient</value>
+  </data>
+  <data name="GmPanelItemLuck" xml:space="preserve">
+    <value>Luck</value>
+  </data>
+  <data name="GmPanelItemSkill" xml:space="preserve">
+    <value>Skill</value>
+  </data>
+  <data name="GmPanelItemExtras" xml:space="preserve">
+    <value>Options (click): %d of %d</value>
+  </data>
+  <data name="GmPanelItemNoExtras" xml:space="preserve">
+    <value>No other options</value>
+  </data>
+  <data name="GmPanelItemCountLabel" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="GmPanelItemDurLabel" xml:space="preserve">
+    <value>Durab.</value>
+  </data>
+  <data name="GmPanelItemPiecesLabel" xml:space="preserve">
+    <value>Pieces</value>
+  </data>
+  <data name="GmPanelItemCreate" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="GmPanelItemSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="GmPanelItemMakeTitle" xml:space="preserve">
+    <value>Make %d x %ls</value>
+  </data>
+  <data name="GmPanelItemToMe" xml:space="preserve">
+    <value>Into my bag</value>
+  </data>
+  <data name="GmPanelItemToPlayer" xml:space="preserve">
+    <value>Into %ls's bag</value>
+  </data>
+  <data name="GmPanelItemToGround" xml:space="preserve">
+    <value>On the ground here</value>
+  </data>
+  <data name="GmPanelItemNeedReason" xml:space="preserve">
+    <value>Write a reason (3 letters at least)</value>
+  </data>
+  <data name="GmPanelItemSavedCount" xml:space="preserve">
+    <value>Saved items: %d</value>
+  </data>
+  <data name="GmPanelItemSavedEmpty" xml:space="preserve">
+    <value>Nothing saved: Save on the Item page</value>
+  </data>
+  <data name="GmPanelItemLoad" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="GmPanelItemDelete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="GmPanelItemSaved" xml:space="preserve">
+    <value>Saved: %ls</value>
+  </data>
+  <data name="GmPanelItemSavedFull" xml:space="preserve">
+    <value>At most %d saved items</value>
+  </data>
+  <data name="GmPanelItemSumOption" xml:space="preserve">
+    <value>opt %d</value>
+  </data>
+  <data name="GmPanelItemSumLuck" xml:space="preserve">
+    <value>luck</value>
+  </data>
+  <data name="GmPanelItemSumSkill" xml:space="preserve">
+    <value>skill</value>
+  </data>
+  <data name="GmPanelItemSumExtras" xml:space="preserve">
+    <value>%d extra</value>
+  </data>
+  <data name="GmPanelItemSumPlain" xml:space="preserve">
+    <value>no options</value>
+  </data>
+  <data name="GmPanelItemKind" xml:space="preserve">
+    <value>Kind</value>
+  </data>
 </root>

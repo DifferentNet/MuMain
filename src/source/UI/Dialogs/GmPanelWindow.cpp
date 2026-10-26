@@ -4,7 +4,11 @@
 #include "UI/Dialogs/GmPanelWindow.h"
 
 #include "Audio/DSPlaySound.h"
+#include "Data/GameConfig/GameConfig.h"
+#include "Data/GameData/ItemData/ItemDatabase.h"
 #include "Engine/Object/ZzzCharacter.h"
+#include "Engine/Object/ZzzInfomation.h"
+#include "Engine/Object/ZzzInventory.h"
 #include "GameLogic/Commands/GmPanel.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
@@ -13,8 +17,10 @@
 
 #include "Core/Utilities/StringUtils.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
+#include "Render/Textures/ZzzOpenglUtil.h"
 #include "Render/Text/CUIRenderText.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
+#include "UI/RmlBridge/RmlElementBox.h"
 #include "UI/RmlBridge/RmlNativeTextSize.h"
 #include "UI/RmlBridge/RmlNumericInputFilter.h"
 #include "UI/RmlBridge/RmlPointer.h"
@@ -25,10 +31,15 @@
 #include <RmlUi/Core/Input.h>
 
 #include <algorithm>
+#include <bit>
 #include <cstdarg>
+#include <cstdlib>
+#include <cstring>
 #include <ctime>
 #include <cwchar>
 #include <cwctype>
+#include <map>
+#include <tuple>
 #include <utility>
 
 using namespace SEASON3B;
@@ -39,12 +50,28 @@ namespace
 {
 // While the players tab shows who is in game, it asks again this often.
 constexpr auto PlayersRefresh = std::chrono::seconds(10);
+// While the Events tab shows the events or the Tier Map runs, it asks again this often; after an action on one,
+// a moment later (a forced start takes the server up to two ticks of a second: prepared, then started).
+constexpr auto EventsRefresh = std::chrono::seconds(5);
+constexpr auto AfterEventAction = std::chrono::milliseconds(2500);
 // Without an answer this long after asking, the server doesn't send it.
 constexpr auto AnswerTimeout = std::chrono::seconds(5);
 // The longest texts the server gets, in characters: the chat packet holds about 240 bytes, Cyrillic takes two.
 constexpr int MaxReason = 60;
 constexpr int MaxNotice = 100;
 constexpr int MaxSearch = 10;
+constexpr int MaxMonsterSearch = 20;
+// The most monsters one spawn makes, and the most a monster search answers with (the add-on's GmPanelEvents).
+constexpr int MaxSpawn = 20;
+constexpr size_t MonsterLimit = 30;
+// The Items tab: the most items the catalog lists, made at a time (the add-on's GmPanelItems) and saved; the
+// shortest reason the server takes for an item; the longest name search.
+constexpr size_t MaxCatalogRows = 150;
+constexpr int MaxItemCount = 20;
+constexpr size_t MaxSavedItems = 40;
+constexpr size_t MinItemReason = 3;
+constexpr int MaxItemSearch = 20;
+constexpr int ItemGroups = 16;
 
 int MeasureInReferenceUnits(const std::wstring& text)
 {
@@ -80,6 +107,25 @@ GmPanelLine Line(const std::wstring& text, int width, bool bold = false)
     g_pRenderText->SetFont(bold ? g_hFontBold : g_hFont);
     return {StringUtils::WideToNarrow(text.c_str()),
             UI::RmlBridge::NativeTextPxInBox(role, static_cast<float>(MeasureInReferenceUnits(text)), static_cast<float>(width))};
+}
+
+// The same, cut short with "..." when even the smallest size would overflow the box (a long option's text).
+GmPanelLine ClippedLine(const std::wstring& text, int width, bool bold = false)
+{
+    GmPanelLine line = Line(text, width, bold);
+    const float normal = UI::RmlBridge::NativeTextPx(bold ? UI::Scaling::FontRole::Bold : UI::Scaling::FontRole::Normal);
+    if (text.empty() || normal <= 0.0f)
+        return line;
+    const float ratio = line.textPx / normal;
+    if (static_cast<float>(MeasureInReferenceUnits(text)) * ratio <= static_cast<float>(width))
+        return line;
+    std::wstring cut = text;
+    while (cut.size() > 1 && static_cast<float>(MeasureInReferenceUnits(cut + L"...")) * ratio > static_cast<float>(width))
+        cut.pop_back();
+    while (!cut.empty() && cut.back() == L' ')
+        cut.pop_back();
+    line.text = StringUtils::WideToNarrow((cut + L"...").c_str());
+    return line;
 }
 
 // A text that wraps in its box instead of shrinking (the server's answers).
@@ -179,6 +225,51 @@ std::wstring Joined(const std::vector<std::wstring>& parts, const wchar_t* separ
     return text;
 }
 
+// 75 -> "1:15", 3725 -> "1:02:05".
+std::wstring Clock(int seconds)
+{
+    seconds = std::max(0, seconds);
+    wchar_t text[32] = {};
+    if (seconds >= 3600)
+        mu_swprintf(text, L"%d:%02d:%02d", seconds / 3600, seconds / 60 % 60, seconds % 60);
+    else
+        mu_swprintf(text, L"%d:%02d", seconds / 60, seconds % 60);
+    return text;
+}
+
+// A Tier Map run that is over: only its loot minute is left.
+bool TierEnded(const std::wstring& state)
+{
+    return state.rfind(L"Ended", 0) == 0 || state.rfind(L"Disposed", 0) == 0;
+}
+
+// The run's state as the server names it (OpenMU's mini game states, " held" when a GM paused it), in words.
+std::wstring TierStateText(const std::wstring& state)
+{
+    const bool held = state.size() > 5 && state.compare(state.size() - 5, 5, L" held") == 0;
+    const std::wstring name = held ? state.substr(0, state.size() - 5) : state;
+    std::wstring text = name;
+    if (name == L"Open")
+        text = I18N::Game::GmPanelTierOpen;
+    else if (name == L"Closed")
+        text = I18N::Game::GmPanelTierClosed;
+    else if (name == L"Playing")
+        text = I18N::Game::GmPanelTierPlaying;
+    else if (TierEnded(name))
+        text = I18N::Game::GmPanelTierEnded;
+    return held ? Printf(I18N::Game::GmPanelTierHeld, text.c_str()) : text;
+}
+
+// A list's line: how many, that it is empty, or that the answer is awaited (or didn't come).
+GmPanelLine ListLine(bool received, size_t count, const wchar_t* countFormat, const wchar_t* empty, bool waiting, int width)
+{
+    if (!received)
+        return Line(waiting ? I18N::Game::GmPanelAsking : I18N::Game::GmPanelNoAnswer, width);
+    if (count == 0)
+        return Line(empty, width);
+    return Line(Printf(countFormat, static_cast<int>(count)), width);
+}
+
 // "Ban forever", "Ban till 24.10 18:00", "Mute till ...".
 std::wstring PenaltyText(const std::wstring& kind, const std::wstring& until)
 {
@@ -252,6 +343,7 @@ bool mu::ui::window::CGmPanelWindow::Create(CManager* pNewUIMng)
 
 void mu::ui::window::CGmPanelWindow::Release()
 {
+    m_itemTarget.Disable();
     if (m_pNewUIMng)
     {
         m_pNewUIMng->RemoveUIObj(this);
@@ -278,8 +370,11 @@ void mu::ui::window::CGmPanelWindow::OpenningProcess()
     m_statusBad = false;
     // The invisibility and GM mode may have changed since (OpenMU's own commands).
     Panel().Send(L"hello");
+    // The Events and Items tabs are the admins'; the role may have changed since.
+    if ((m_tab == TAB_EVENTS || m_tab == TAB_ITEMS) && !Panel().IsAdmin())
+        m_tab = TAB_PLAYERS;
     RequestCurrent();
-    m_focusSearchPending = m_tab == TAB_PLAYERS && m_mode == MODE_SEARCH;
+    m_focusSearchPending = FocusField() != nullptr;
 }
 
 void mu::ui::window::CGmPanelWindow::ClosingProcess()
@@ -310,18 +405,68 @@ bool mu::ui::window::CGmPanelWindow::UpdateKeyEvent()
         return false;
     }
 
-    // Enter in a field: the search, or the teleport to the typed coordinates.
-    const bool typing = m_RmlView.Document() != nullptr && RmlUiRuntime::Instance().GetKeyOwningDocument() == m_RmlView.Document();
+    // Enter in a field: the search, the teleport to the typed coordinates, a spawn, ...
+    Rml::ElementDocument* document = m_RmlView.Document();
+    const bool typing = document != nullptr && RmlUiRuntime::Instance().GetKeyOwningDocument() == document;
     if (typing && IsPress(VK_RETURN))
     {
-        if (m_tab == TAB_PLAYERS && m_mode == MODE_SEARCH)
-            m_pendingFind = true;
-        else if (m_tab == TAB_WORLD)
-            m_pendingGo = true;
+        Rml::Element* focused = document->GetFocusLeafNode();
+        TakeEnter(focused != nullptr ? focused->GetId() : Rml::String());
         return false;
     }
 
     return true;
+}
+
+void mu::ui::window::CGmPanelWindow::TakeEnter(const Rml::String& fieldId)
+{
+    if (m_tab == TAB_PLAYERS && m_mode == MODE_SEARCH)
+        m_pendingFind = true;
+    else if (m_tab == TAB_WORLD)
+        m_pendingGo = true;
+    else if (m_tab == TAB_EVENTS && fieldId == "gm_monster")
+        m_pendingFind = true;
+    else if (m_tab == TAB_EVENTS && fieldId == "gm_count")
+        m_pendingAction = EV_SPAWN;
+    else if (m_tab == TAB_EVENTS && fieldId == "gm_entries")
+        m_pendingAction = EV_ENTRIES;
+    else if (m_tab == TAB_ITEMS && fieldId == "gm_item_search")
+        m_pendingFind = true;
+}
+
+const char* mu::ui::window::CGmPanelWindow::FocusField() const
+{
+    if (m_tab == TAB_PLAYERS && m_mode == MODE_SEARCH)
+        return "gm_search";
+    if (m_tab == TAB_EVENTS && m_evMode == EV_MONSTERS)
+        return "gm_monster";
+    if (m_tab == TAB_ITEMS && m_itMode == IT_CATALOG)
+        return "gm_item_search";
+    return nullptr;
+}
+
+int mu::ui::window::CGmPanelWindow::SecondsLeft(int left, std::chrono::steady_clock::time_point receivedAt) const
+{
+    if (left < 0)
+        return -1;
+    const auto since = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - receivedAt).count();
+    return std::max(0, left - static_cast<int>(since));
+}
+
+void mu::ui::window::CGmPanelWindow::NoteLists()
+{
+    auto& panel = Panel();
+    const auto now = std::chrono::steady_clock::now();
+    if (panel.Events().Version != m_eventsVersion)
+    {
+        m_eventsVersion = panel.Events().Version;
+        m_eventsAt = now;
+    }
+    if (panel.Tiers().Version != m_tiersVersion)
+    {
+        m_tiersVersion = panel.Tiers().Version;
+        m_tiersAt = now;
+    }
 }
 
 void mu::ui::window::CGmPanelWindow::Send(const std::wstring& request)
@@ -357,28 +502,74 @@ void mu::ui::window::CGmPanelWindow::RequestCurrent()
         if (!panel.Warps().Received)
             panel.Send(L"maps");
     }
-    else
+    else if (m_tab == TAB_LOG)
     {
         panel.Send(L"log");
+    }
+    else if (m_tab == TAB_ITEMS)
+    {
+        // What the item being made can have, unless the server said it already (its answer doesn't change).
+        if (m_itMode == IT_MAKE && m_draft.Picked() && !panel.Item().Is(m_draft.Group, m_draft.Number))
+            panel.Send(L"iteminfo " + std::to_wstring(m_draft.Group) + L" " + std::to_wstring(m_draft.Number));
+    }
+    else
+    {
+        m_evAskAt = m_requestedAt;
+        if (m_evMode == EV_EVENTS)
+            panel.Send(L"events");
+        else if (m_evMode == EV_TIERS)
+            panel.Send(L"tiers");
+        else if (!m_lastMonsterSearch.empty())
+            panel.Send(L"monsters " + m_lastMonsterSearch);
     }
 }
 
 void mu::ui::window::CGmPanelWindow::SwitchTab(int tab)
 {
-    if (tab < TAB_PLAYERS || tab > TAB_LOG)
+    if (tab < TAB_PLAYERS || tab > (Panel().IsAdmin() ? TAB_ITEMS : TAB_LOG))
         return;
     m_tab = tab;
     RequestCurrent();
-    m_focusSearchPending = m_tab == TAB_PLAYERS && m_mode == MODE_SEARCH;
+    m_focusSearchPending = FocusField() != nullptr;
 }
 
 void mu::ui::window::CGmPanelWindow::SwitchMode(int mode)
 {
-    if (mode < MODE_ONLINE || mode > MODE_BANS)
-        return;
-    m_mode = mode;
+    if (m_tab == TAB_EVENTS)
+    {
+        if (mode < EV_EVENTS || mode > EV_TIERS)
+            return;
+        m_evMode = mode;
+    }
+    else if (m_tab == TAB_ITEMS)
+    {
+        if (mode < IT_CATALOG || mode > IT_SAVED)
+            return;
+        m_itMode = mode;
+    }
+    else
+    {
+        if (mode < MODE_ONLINE || mode > MODE_BANS)
+            return;
+        m_mode = mode;
+    }
     RequestCurrent();
-    m_focusSearchPending = m_mode == MODE_SEARCH;
+    m_focusSearchPending = FocusField() != nullptr;
+}
+
+void mu::ui::window::CGmPanelWindow::FindMonsters()
+{
+    const std::wstring text = OneLine(StringUtils::NarrowToWide(m_RmlView.GetModel().monsterText), MaxMonsterSearch);
+    if (text.empty())
+    {
+        m_status = I18N::Game::GmPanelMonsterHint;
+        m_statusBad = true;
+        return;
+    }
+
+    m_lastMonsterSearch = text;
+    m_requestedAt = std::chrono::steady_clock::now();
+    Panel().Send(L"monsters " + text);
 }
 
 void mu::ui::window::CGmPanelWindow::Search()
@@ -594,6 +785,78 @@ void mu::ui::window::CGmPanelWindow::DoSwitch(int id)
     }
 }
 
+void mu::ui::window::CGmPanelWindow::DoEventsAction(int action)
+{
+    auto& panel = Panel();
+    if (!panel.IsAdmin())
+        return;
+
+    const auto& events = panel.Events().Rows;
+    const auto event = std::find_if(events.begin(), events.end(), [&](const auto& e) { return e.Key == m_evSelected; });
+    const auto& runs = panel.Tiers().Rows;
+    const auto run = std::find_if(runs.begin(), runs.end(), [&](const auto& r) { return SameName(r.Leader, m_tierSelected); });
+
+    switch (action)
+    {
+    case EV_REFRESH:
+        RequestCurrent();
+        break;
+    case EV_START:
+        if (event != events.end() && event->Can(L's'))
+        {
+            // A mini game that runs ends first (as /startbc).
+            const bool running = event->State == L"open" || event->State == L"run";
+            ConfirmRequest(Printf(running ? I18N::Game::GmPanelEventRestartConfirm : I18N::Game::GmPanelEventStartConfirm, event->Name.c_str()),
+                           L"event start " + event->Key, "gm_panel_event_start");
+        }
+        break;
+    case EV_SKIP:
+        if (event != events.end() && event->Can(L'k'))
+            Send(L"event skip " + event->Key);
+        break;
+    case EV_END:
+        if (event != events.end() && event->Can(L'e'))
+            ConfirmRequest(Printf(I18N::Game::GmPanelEventEndConfirm, event->Name.c_str()), L"event end " + event->Key, "gm_panel_event_end");
+        break;
+    case EV_SPAWN:
+    {
+        const auto& monsters = panel.Monsters().Rows;
+        if (std::none_of(monsters.begin(), monsters.end(), [&](const auto& m) { return m.Number == m_monsterSelected; }))
+            break;
+        const Rml::String digits = UI::RmlBridge::KeepDigitsOnly(m_RmlView.GetModel().countText);
+        const int count = std::clamp(digits.empty() ? 1 : std::atoi(digits.c_str()), 1, MaxSpawn);
+        Send(L"spawn " + std::to_wstring(m_monsterSelected) + L" " + std::to_wstring(count));
+        break;
+    }
+    case EV_CLEAR:
+        ConfirmRequest(I18N::Game::GmPanelClearConfirm, L"clear", "gm_panel_clear");
+        break;
+    case EV_TIER_END:
+        if (run != runs.end())
+            ConfirmRequest(Printf(I18N::Game::GmPanelTierEndConfirm, run->Tier, run->Leader.c_str()), L"tier end " + run->Leader,
+                           "gm_panel_tier_end");
+        break;
+    case EV_TIER_SKIP:
+        if (run != runs.end())
+            Send(L"tier skip " + run->Leader);
+        break;
+    case EV_ENTRIES:
+    {
+        const std::wstring name = OneLine(StringUtils::NarrowToWide(m_RmlView.GetModel().entriesText), MaxSearch);
+        if (name.empty())
+        {
+            m_status = I18N::Game::GmPanelEntriesNeedName;
+            m_statusBad = true;
+            break;
+        }
+        ConfirmRequest(Printf(I18N::Game::GmPanelEntriesConfirm, name.c_str()), L"entries " + name + L" 0", "gm_panel_entries");
+        break;
+    }
+    default:
+        break;
+    }
+}
+
 void mu::ui::window::CGmPanelWindow::TakeResult()
 {
     auto& panel = Panel();
@@ -618,6 +881,46 @@ void mu::ui::window::CGmPanelWindow::TakeResult()
         if (m_tab == TAB_PLAYERS)
             RequestCurrent();
     }
+    else if (op == L"event" || op == L"tier")
+    {
+        // The server changes it at its next tick: the list is asked for again a moment later.
+        if (m_tab == TAB_EVENTS)
+            m_evAskAt = std::chrono::steady_clock::now() - EventsRefresh + AfterEventAction;
+    }
+}
+
+void mu::ui::window::CGmPanelWindow::PickRow(int row)
+{
+    auto& panel = Panel();
+    const size_t index = static_cast<size_t>(row);
+    if (m_tab == TAB_EVENTS)
+    {
+        if (m_evMode == EV_EVENTS && index < panel.Events().Rows.size())
+            m_evSelected = panel.Events().Rows[index].Key;
+        else if (m_evMode == EV_MONSTERS && index < panel.Monsters().Rows.size())
+            m_monsterSelected = panel.Monsters().Rows[index].Number;
+        else if (m_evMode == EV_TIERS && index < panel.Tiers().Rows.size())
+            m_tierSelected = panel.Tiers().Rows[index].Leader;
+        return;
+    }
+
+    if (m_tab == TAB_ITEMS)
+    {
+        if (m_itMode == IT_CATALOG && index < m_itTypes.size())
+            PickItem(m_itTypes[index] / MAX_ITEM_INDEX, m_itTypes[index] % MAX_ITEM_INDEX);
+        else if (m_itMode == IT_MAKE)
+            ToggleExtra(row);
+        else if (m_itMode == IT_SAVED)
+            m_savedSelected = row;
+        return;
+    }
+
+    if (m_mode == MODE_ONLINE && index < panel.Players().Rows.size())
+        m_selected = panel.Players().Rows[index].Name;
+    else if (m_mode == MODE_SEARCH && index < panel.Found().Rows.size())
+        m_selected = panel.Found().Rows[index].Name;
+    else if (m_mode == MODE_BANS && index < panel.Penalties().Rows.size())
+        m_selected = panel.Penalties().Rows[index].Name;
 }
 
 void mu::ui::window::CGmPanelWindow::HandleClicks()
@@ -648,29 +951,34 @@ void mu::ui::window::CGmPanelWindow::HandleClicks()
 
     if (tab >= 0 && tab != m_tab)
         SwitchTab(tab);
-    if (mode >= 0 && mode != m_mode)
+    if (mode >= 0 && mode != (m_tab == TAB_EVENTS ? m_evMode : m_tab == TAB_ITEMS ? m_itMode : m_mode))
         SwitchMode(mode);
 
     if (row >= 0)
-    {
-        auto& panel = Panel();
-        const size_t index = static_cast<size_t>(row);
-        if (m_mode == MODE_ONLINE && index < panel.Players().Rows.size())
-            m_selected = panel.Players().Rows[index].Name;
-        else if (m_mode == MODE_SEARCH && index < panel.Found().Rows.size())
-            m_selected = panel.Found().Rows[index].Name;
-        else if (m_mode == MODE_BANS && index < panel.Penalties().Rows.size())
-            m_selected = panel.Penalties().Rows[index].Name;
-    }
+        PickRow(row);
 
     if (find)
-        Search();
+    {
+        if (m_tab == TAB_EVENTS)
+            FindMonsters();
+        else if (m_tab == TAB_ITEMS)
+            SearchItems();
+        else
+            Search();
+    }
     if (go)
         GoToCoordinates();
     if (warp >= 0)
         Send(L"warp " + std::to_wstring(warp));
     if (action > 0)
-        DoAction(action);
+    {
+        if (m_tab == TAB_EVENTS)
+            DoEventsAction(action);
+        else if (m_tab == TAB_ITEMS)
+            DoItemsAction(action);
+        else
+            DoAction(action);
+    }
     if (switchId > 0)
         DoSwitch(switchId);
     if (logRefresh)
@@ -690,25 +998,44 @@ bool mu::ui::window::CGmPanelWindow::Update()
         }
         if (panel.GetRole() == GameLogic::GmPanel::Role::Unknown)
             panel.Hello(false);
+        // An admin who became a moderator: the Events and Items tabs are gone.
+        if ((m_tab == TAB_EVENTS || m_tab == TAB_ITEMS) && panel.GetRole() == GameLogic::GmPanel::Role::Moderator)
+            SwitchTab(TAB_PLAYERS);
 
         HandleClicks();
         TakeResult();
 
-        if (IsVisible() && m_tab == TAB_PLAYERS && m_mode == MODE_ONLINE &&
-            std::chrono::steady_clock::now() - m_playersAt >= PlayersRefresh)
+        const auto now = std::chrono::steady_clock::now();
+        if (IsVisible() && m_tab == TAB_PLAYERS && m_mode == MODE_ONLINE && now - m_playersAt >= PlayersRefresh)
         {
             panel.Send(L"players");
-            m_playersAt = std::chrono::steady_clock::now();
+            m_playersAt = now;
+        }
+        // The events and the runs change by themselves (starts, waits, kills).
+        if (IsVisible() && m_tab == TAB_EVENTS && m_evMode != EV_MONSTERS && now - m_evAskAt >= EventsRefresh)
+        {
+            panel.Send(m_evMode == EV_EVENTS ? L"events" : L"tiers");
+            m_evAskAt = now;
         }
     }
 
+    NoteLists();
     SyncRmlModel();
     return true;
 }
 
 bool mu::ui::window::CGmPanelWindow::Render()
 {
-    // Nothing native: the frame, the lists and the buttons are RmlUi. Kept because CObject requires it.
+    // The frame, the lists and the buttons are RmlUi; the item's icon is drawn by m_itemTarget. Only the item's
+    // tooltip is native: drawn every frame while the icon is hovered (it hides itself in a frame it isn't drawn).
+    if (!IsVisible() || m_tab != TAB_ITEMS || m_itMode != IT_MAKE || !m_preview)
+        return true;
+
+    Rml::Element* icon = GetField("gm_item_icon");
+    Rml::Vector2f offset;
+    Rml::Vector2f size;
+    if (icon != nullptr && icon->IsPseudoClassSet("hover") && UI::RmlBridge::DrawnBox(*icon, Rml::BoxArea::Border, offset, size))
+        ::RenderItemInfoAtPx(offset.x + size.x / 2.f, offset.y + size.y, m_preview.get(), false);
     return true;
 }
 
@@ -738,7 +1065,18 @@ void mu::ui::window::CGmPanelWindow::BindRmlModel(Rml::DataModelConstructor& c, 
     rowType.RegisterMember("selected", &GmPanelRow::selected);
     rowType.RegisterMember("dim", &GmPanelRow::dim);
     rowType.RegisterMember("alert", &GmPanelRow::alert);
+    rowType.RegisterMember("live", &GmPanelRow::live);
     c.RegisterArray<std::vector<GmPanelRow>>();
+
+    auto stepType = c.RegisterStruct<GmPanelStep>();
+    stepType.RegisterMember("label_id", &GmPanelStep::labelId);
+    stepType.RegisterMember("label", &GmPanelStep::label);
+    stepType.RegisterMember("value", &GmPanelStep::value);
+    stepType.RegisterMember("down_id", &GmPanelStep::downId);
+    stepType.RegisterMember("up_id", &GmPanelStep::upId);
+    stepType.RegisterMember("down_off", &GmPanelStep::downOff);
+    stepType.RegisterMember("up_off", &GmPanelStep::upOff);
+    c.RegisterArray<std::vector<GmPanelStep>>();
 
     c.Bind("title", &model.title);
     c.Bind("tab", &model.tab);
@@ -770,6 +1108,31 @@ void mu::ui::window::CGmPanelWindow::BindRmlModel(Rml::DataModelConstructor& c, 
     c.Bind("log_info", &model.logInfo);
     c.Bind("log", &model.log);
 
+    c.Bind("monster_text", &model.monsterText);
+    c.Bind("count_text", &model.countText);
+    c.Bind("entries_text", &model.entriesText);
+    c.Bind("count_label", &model.countLabel);
+    c.Bind("entries_info", &model.entriesInfo);
+    c.Bind("entries", &model.entries);
+    // One monster a spawn unless the GM types more.
+    if (model.countText.empty())
+        model.countText = "1";
+
+    c.Bind("steps", &model.steps);
+    c.Bind("toggles", &model.toggles);
+    c.Bind("item_name", &model.itemName);
+    c.Bind("item_line", &model.itemLine);
+    c.Bind("item_hint", &model.itemHint);
+    c.Bind("item_count_label", &model.itemCountLabel);
+    c.Bind("item_dur_label", &model.itemDurLabel);
+    c.Bind("item_ready", &model.itemReady);
+    c.Bind("item_search_text", &model.itemSearchText);
+    c.Bind("item_count_text", &model.itemCountText);
+    c.Bind("item_dur_text", &model.itemDurText);
+    // One item unless the GM types more; the durability field empty: a whole item.
+    if (model.itemCountText.empty())
+        model.itemCountText = "1";
+
     c.Bind("status", &model.status);
     c.Bind("status_bad", &model.statusBad);
     c.Bind("exit_tooltip", &model.exitTooltip);
@@ -796,10 +1159,8 @@ void mu::ui::window::CGmPanelWindow::BindRmlModel(Rml::DataModelConstructor& c, 
                             const auto key = static_cast<Rml::Input::KeyIdentifier>(event.GetParameter<int>("key_identifier", 0));
                             if (key != Rml::Input::KI_RETURN && key != Rml::Input::KI_NUMPADENTER)
                                 return;
-                            if (m_tab == TAB_PLAYERS && m_mode == MODE_SEARCH)
-                                m_pendingFind = true;
-                            else if (m_tab == TAB_WORLD)
-                                m_pendingGo = true;
+                            Rml::Element* field = event.GetTargetElement();
+                            TakeEnter(field != nullptr ? field->GetId() : Rml::String());
                         });
     c.BindEventCallback("gm_log_refresh", [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
                         { m_pendingLogRefresh = true; });
@@ -813,6 +1174,14 @@ void mu::ui::window::CGmPanelWindow::BindRmlModel(Rml::DataModelConstructor& c, 
 void mu::ui::window::CGmPanelWindow::SyncRmlModel()
 {
     m_RmlView.Ensure();
+    // The item's icon (#gm_items over the panel), only while the Make page shows an item; its camera fits the
+    // item into the icon's box.
+    const bool showItem = IsVisible() && m_tab == TAB_ITEMS && m_itMode == IT_MAKE;
+    if (showItem)
+        UpdatePreview();
+    if (showItem && m_preview)
+        m_itemTarget.SetFieldOfView(ItemFieldOfView());
+    m_itemTarget.Sync(GetField("gm_items"), showItem && m_preview != nullptr);
     if (!m_RmlView.Document())
         return;
 
@@ -826,7 +1195,12 @@ void mu::ui::window::CGmPanelWindow::SyncRmlModel()
     // The search field takes the keys when the search opens (it exists from the next frame on).
     if (m_focusSearchPending)
     {
-        if (Rml::Element* field = GetField("gm_search"))
+        const char* id = FocusField();
+        if (id == nullptr)
+        {
+            m_focusSearchPending = false;
+        }
+        else if (Rml::Element* field = GetField(id))
         {
             field->Focus();
             if (field->IsPseudoClassSet("focus"))
@@ -1081,6 +1455,158 @@ void mu::ui::window::CGmPanelWindow::SyncLog(GmPanelRmlModel& updated)
     }
 }
 
+void mu::ui::window::CGmPanelWindow::SyncEvents(GmPanelRmlModel& updated)
+{
+    const auto& list = Panel().Events();
+    const bool waiting = std::chrono::steady_clock::now() - m_requestedAt < AnswerTimeout;
+    updated.listInfo = ListLine(list.Received, list.Rows.size(), I18N::Game::GmPanelEventsCount, I18N::Game::GmPanelEmptyEvents, waiting, CONTENT_WIDTH);
+
+    // Short in the list ("open 3:12"), long under it ("Entrance open, closes in 3:12").
+    auto stateText = [](const GameLogic::GmPanel::EventInfo& e, int left, bool brief) -> std::wstring
+    {
+        const std::wstring clock = Clock(left);
+        // Without seconds (Crywolf's notices): starting.
+        if (e.State == L"soon")
+            return left >= 0 ? Printf(brief ? I18N::Game::GmPanelEventTagSoon : I18N::Game::GmPanelEventStateSoon, clock.c_str())
+                             : std::wstring(brief ? I18N::Game::GmPanelEventTagStarting : I18N::Game::GmPanelEventStateStarting);
+        if (e.State == L"open")
+            return Printf(brief ? I18N::Game::GmPanelEventTagOpen : I18N::Game::GmPanelEventStateOpen, clock.c_str());
+        if (e.State == L"run")
+            return left >= 0 ? Printf(brief ? I18N::Game::GmPanelEventTagRunLeft : I18N::Game::GmPanelEventStateRunLeft, clock.c_str())
+                             : std::wstring(brief ? I18N::Game::GmPanelEventTagRun : I18N::Game::GmPanelEventStateRun);
+        if (e.State == L"off")
+            return brief ? I18N::Game::GmPanelEventTagOff : I18N::Game::GmPanelEventStateOff;
+        return brief ? std::wstring() : std::wstring(I18N::Game::GmPanelEventStateIdle);
+    };
+    auto nextText = [](const GameLogic::GmPanel::EventInfo& e)
+    { return e.Next.empty() ? std::wstring() : Printf(I18N::Game::GmPanelEventNext, LocalTime(e.Next).c_str()); };
+
+    const GameLogic::GmPanel::EventInfo* picked = nullptr;
+    for (size_t i = 0; i < list.Rows.size(); ++i)
+    {
+        const auto& e = list.Rows[i];
+        const int left = SecondsLeft(e.Left, m_eventsAt);
+        GmPanelRow row;
+        row.index = static_cast<int>(i);
+        row.title = Line(Joined({e.Name, stateText(e, left, true)}, L"  "), ROW_WIDTH, true);
+        row.detail = Line(Joined({nextText(e), e.Detail}, L", "), ROW_WIDTH);
+        row.selected = e.Key == m_evSelected;
+        row.dim = e.State == L"off";
+        row.live = e.State == L"open" || e.State == L"run" || e.State == L"soon";
+        updated.rows.push_back(std::move(row));
+        if (e.Key == m_evSelected)
+            picked = &e;
+    }
+
+    updated.selStats = Line({}, CONTENT_WIDTH);
+    updated.selWhere = Line({}, CONTENT_WIDTH);
+    if (picked == nullptr)
+    {
+        updated.selName = Line(I18N::Game::GmPanelEventPick, CONTENT_WIDTH);
+    }
+    else
+    {
+        updated.selName = Line(picked->Name, CONTENT_WIDTH, true);
+        updated.selStats = Line(stateText(*picked, SecondsLeft(picked->Left, m_eventsAt), false), CONTENT_WIDTH);
+        updated.selWhere = Line(Joined({nextText(*picked), picked->Detail}, L", "), CONTENT_WIDTH);
+    }
+
+    updated.actions = {
+        Button(EV_START, I18N::Game::GmPanelEventStart, ACTION_WIDTH, false, picked == nullptr || !picked->Can(L's')),
+        Button(EV_SKIP, I18N::Game::GmPanelEventSkip, ACTION_WIDTH, false, picked == nullptr || !picked->Can(L'k')),
+        Button(EV_END, I18N::Game::GmPanelEventEnd, ACTION_WIDTH, false, picked == nullptr || !picked->Can(L'e')),
+        Button(EV_REFRESH, I18N::Game::GmPanelRefresh, ACTION_WIDTH),
+    };
+}
+
+void mu::ui::window::CGmPanelWindow::SyncMonsters(GmPanelRmlModel& updated)
+{
+    const auto& list = Panel().Monsters();
+    const bool waiting = std::chrono::steady_clock::now() - m_requestedAt < AnswerTimeout;
+    updated.find = Button(0, I18N::Game::GmPanelFind, ACTION_WIDTH);
+    updated.listInfo = m_lastMonsterSearch.empty()
+        ? Line(I18N::Game::GmPanelMonsterHint, CONTENT_WIDTH)
+        : ListLine(list.Received, list.Rows.size(),
+                   // The server sends at most MonsterLimit: a full list may leave some out.
+                   list.Rows.size() >= MonsterLimit ? I18N::Game::GmPanelMonstersMany : I18N::Game::GmPanelMonstersCount,
+                   I18N::Game::GmPanelEmptyMonsters, waiting, CONTENT_WIDTH);
+
+    const GameLogic::GmPanel::MonsterInfo* picked = nullptr;
+    for (size_t i = 0; i < list.Rows.size(); ++i)
+    {
+        const auto& m = list.Rows[i];
+        GmPanelRow row;
+        row.index = static_cast<int>(i);
+        // One line a monster: the detail stays empty (and takes no room).
+        row.title = Line(Printf(I18N::Game::GmPanelMonsterRow, m.Name.c_str(), m.Level, m.Number), ROW_WIDTH);
+        row.selected = m.Number == m_monsterSelected;
+        updated.rows.push_back(std::move(row));
+        if (m.Number == m_monsterSelected)
+            picked = &m;
+    }
+
+    updated.selName = picked == nullptr ? Line(I18N::Game::GmPanelMonsterPick, CONTENT_WIDTH)
+                                        : Line(Printf(I18N::Game::GmPanelMonsterPicked, picked->Name.c_str(), picked->Number, picked->Level),
+                                               CONTENT_WIDTH, true);
+    updated.selStats = Line(I18N::Game::GmPanelSpawnHint, CONTENT_WIDTH);
+    updated.selWhere = Line(I18N::Game::GmPanelClearHint, CONTENT_WIDTH);
+    updated.countLabel = Line(I18N::Game::GmPanelCount, 34);
+    updated.actions = {
+        Button(EV_SPAWN, I18N::Game::GmPanelSpawn, ACTION_WIDTH, false, picked == nullptr),
+        Button(EV_CLEAR, I18N::Game::GmPanelClear, ACTION_WIDTH),
+    };
+}
+
+void mu::ui::window::CGmPanelWindow::SyncTiers(GmPanelRmlModel& updated)
+{
+    const auto& list = Panel().Tiers();
+    const bool waiting = std::chrono::steady_clock::now() - m_requestedAt < AnswerTimeout;
+    updated.listInfo = ListLine(list.Received, list.Rows.size(), I18N::Game::GmPanelTiersCount, I18N::Game::GmPanelEmptyTiers, waiting, CONTENT_WIDTH);
+
+    const GameLogic::GmPanel::TierRun* picked = nullptr;
+    for (size_t i = 0; i < list.Rows.size(); ++i)
+    {
+        const auto& r = list.Rows[i];
+        GmPanelRow row;
+        row.index = static_cast<int>(i);
+        row.title = Line(Printf(I18N::Game::GmPanelTierTitle, r.Leader.c_str(), r.Tier, r.Day), ROW_WIDTH, true);
+        row.detail = Line(Printf(I18N::Game::GmPanelTierDetail, MapName(r.Map).c_str(), r.Zone, r.Zones, r.Monsters,
+                                 Clock(SecondsLeft(r.Left, m_tiersAt)).c_str()),
+                          ROW_WIDTH);
+        row.selected = SameName(r.Leader, m_tierSelected);
+        row.live = !TierEnded(r.State);
+        row.dim = TierEnded(r.State);
+        updated.rows.push_back(std::move(row));
+        if (SameName(r.Leader, m_tierSelected))
+            picked = &r;
+    }
+
+    updated.selStats = Line({}, CONTENT_WIDTH);
+    updated.selWhere = Line({}, CONTENT_WIDTH);
+    if (picked == nullptr)
+    {
+        updated.selName = Line(I18N::Game::GmPanelTierPick, CONTENT_WIDTH);
+    }
+    else
+    {
+        updated.selName = Line(Printf(I18N::Game::GmPanelTierTitle, picked->Leader.c_str(), picked->Tier, picked->Day), CONTENT_WIDTH, true);
+        updated.selStats = Line(Printf(I18N::Game::GmPanelTierParty, picked->Alive, picked->Roster.c_str()), CONTENT_WIDTH);
+        updated.selWhere = Line(Printf(I18N::Game::GmPanelTierState, TierStateText(picked->State).c_str(),
+                                       Clock(SecondsLeft(picked->Left, m_tiersAt)).c_str()),
+                                CONTENT_WIDTH);
+    }
+
+    // A run that is over can't end again, and its loot minute can't be skipped.
+    const bool open = picked != nullptr && !TierEnded(picked->State);
+    updated.actions = {
+        Button(EV_TIER_END, I18N::Game::GmPanelTierEnd, TAB_WIDTH, false, !open),
+        Button(EV_TIER_SKIP, I18N::Game::GmPanelTierSkip, TAB_WIDTH, false, !open),
+        Button(EV_REFRESH, I18N::Game::GmPanelRefresh, TAB_WIDTH),
+    };
+    updated.entriesInfo = Line(I18N::Game::GmPanelEntriesInfo, CONTENT_WIDTH);
+    updated.entries = Button(EV_ENTRIES, I18N::Game::GmPanelEntriesReset, ACTION_WIDTH);
+}
+
 void mu::ui::window::CGmPanelWindow::SyncContent()
 {
     auto& panel = Panel();
@@ -1088,19 +1614,49 @@ void mu::ui::window::CGmPanelWindow::SyncContent()
     GmPanelRmlModel updated;
     updated.title = Line(panel.IsAdmin() ? I18N::Game::GmPanelTitleAdmin : I18N::Game::GmPanelTitleMod, WINDOW_WIDTH, true);
     updated.tab = m_tab;
+    // Admins have two more tabs, in a second row of two (gm_panel.rml makes the Events and Items tabs halves).
     updated.tabs = {
         Button(TAB_PLAYERS, I18N::Game::GmPanelTabPlayers, TAB_WIDTH, m_tab == TAB_PLAYERS),
         Button(TAB_WORLD, I18N::Game::GmPanelTabWorld, TAB_WIDTH, m_tab == TAB_WORLD),
         Button(TAB_LOG, I18N::Game::GmPanelTabLog, TAB_WIDTH, m_tab == TAB_LOG),
     };
-    updated.mode = m_mode;
+    if (panel.IsAdmin())
+    {
+        updated.tabs.push_back(Button(TAB_EVENTS, I18N::Game::GmPanelTabEvents, SWITCH_WIDTH, m_tab == TAB_EVENTS));
+        updated.tabs.push_back(Button(TAB_ITEMS, I18N::Game::GmPanelTabItems, SWITCH_WIDTH, m_tab == TAB_ITEMS));
+    }
+    updated.mode = m_tab == TAB_EVENTS ? m_evMode : m_tab == TAB_ITEMS ? m_itMode : m_mode;
 
     if (m_tab == TAB_PLAYERS)
+    {
         SyncPlayers(updated);
+    }
     else if (m_tab == TAB_WORLD)
+    {
         SyncWorld(updated);
-    else
+    }
+    else if (m_tab == TAB_LOG)
+    {
         SyncLog(updated);
+    }
+    else if (m_tab == TAB_ITEMS)
+    {
+        SyncItems(updated);
+    }
+    else
+    {
+        updated.modes = {
+            Button(EV_EVENTS, I18N::Game::GmPanelModeEvents, TAB_WIDTH, m_evMode == EV_EVENTS),
+            Button(EV_MONSTERS, I18N::Game::GmPanelModeMonsters, TAB_WIDTH, m_evMode == EV_MONSTERS),
+            Button(EV_TIERS, I18N::Game::GmPanelModeTiers, TAB_WIDTH, m_evMode == EV_TIERS),
+        };
+        if (m_evMode == EV_EVENTS)
+            SyncEvents(updated);
+        else if (m_evMode == EV_MONSTERS)
+            SyncMonsters(updated);
+        else
+            SyncTiers(updated);
+    }
 
     updated.status = WrappedLine(m_status);
     updated.statusBad = m_statusBad;
@@ -1128,7 +1684,966 @@ void mu::ui::window::CGmPanelWindow::SyncContent()
     SyncFieldFrom(binder, &GmPanelRmlModel::logRefresh, "log_refresh", updated);
     SyncFieldFrom(binder, &GmPanelRmlModel::logInfo, "log_info", updated);
     SyncFieldFrom(binder, &GmPanelRmlModel::log, "log", updated);
+    SyncFieldFrom(binder, &GmPanelRmlModel::countLabel, "count_label", updated);
+    SyncFieldFrom(binder, &GmPanelRmlModel::entriesInfo, "entries_info", updated);
+    SyncFieldFrom(binder, &GmPanelRmlModel::entries, "entries", updated);
+    SyncFieldFrom(binder, &GmPanelRmlModel::steps, "steps", updated);
+    SyncFieldFrom(binder, &GmPanelRmlModel::toggles, "toggles", updated);
+    SyncFieldFrom(binder, &GmPanelRmlModel::itemName, "item_name", updated);
+    SyncFieldFrom(binder, &GmPanelRmlModel::itemLine, "item_line", updated);
+    SyncFieldFrom(binder, &GmPanelRmlModel::itemHint, "item_hint", updated);
+    SyncFieldFrom(binder, &GmPanelRmlModel::itemCountLabel, "item_count_label", updated);
+    SyncFieldFrom(binder, &GmPanelRmlModel::itemDurLabel, "item_dur_label", updated);
+    SyncFieldFrom(binder, &GmPanelRmlModel::itemReady, "item_ready", updated);
     SyncFieldFrom(binder, &GmPanelRmlModel::status, "status", updated);
     SyncFieldFrom(binder, &GmPanelRmlModel::statusBad, "status_bad", updated);
-    // The typed texts (search, map, x, y) are the player's: the model owns them, nothing writes them here.
+    // The typed texts (search, map, x, y, monster, count, entries, the items' search, count and durability) are the
+    // player's: the model owns them, nothing writes them here (picking or loading an item sets the count and the
+    // durability).
+}
+
+// The Items tab (phase 3, admins only).
+namespace
+{
+std::wstring GroupName(int group)
+{
+    const wchar_t* const names[] = {
+        I18N::Game::GmPanelItemGroup0,  I18N::Game::GmPanelItemGroup1,  I18N::Game::GmPanelItemGroup2,  I18N::Game::GmPanelItemGroup3,
+        I18N::Game::GmPanelItemGroup4,  I18N::Game::GmPanelItemGroup5,  I18N::Game::GmPanelItemGroup6,  I18N::Game::GmPanelItemGroup7,
+        I18N::Game::GmPanelItemGroup8,  I18N::Game::GmPanelItemGroup9,  I18N::Game::GmPanelItemGroup10, I18N::Game::GmPanelItemGroup11,
+        I18N::Game::GmPanelItemGroup12, I18N::Game::GmPanelItemGroup13, I18N::Game::GmPanelItemGroup14, I18N::Game::GmPanelItemGroup15,
+    };
+    return group >= 0 && group < static_cast<int>(std::size(names)) ? std::wstring(names[group]) : std::to_wstring(group);
+}
+
+// Lower case for the name search, Cyrillic too (towlower knows only the C locale's letters).
+std::wstring Folded(std::wstring text)
+{
+    for (auto& c : text)
+    {
+        if (c >= 0x0410 && c <= 0x042F)
+            c = static_cast<wchar_t>(c + 0x20);
+        else if (c >= 0x0400 && c <= 0x040F)
+            c = static_cast<wchar_t>(c + 0x50);
+        else
+            c = static_cast<wchar_t>(std::towlower(c));
+    }
+    return text;
+}
+
+// "14 13", "14,13" or "14.13": an item by its group and number.
+bool ParseItemNumbers(const std::wstring& text, int& group, int& number)
+{
+    size_t i = 0;
+    auto digits = [&](int& value)
+    {
+        const size_t start = i;
+        value = 0;
+        while (i < text.size() && text[i] >= L'0' && text[i] <= L'9' && i - start < 4)
+            value = value * 10 + (text[i++] - L'0');
+        return i > start;
+    };
+    auto separator = [&](size_t at) { return at < text.size() && (text[at] == L' ' || text[at] == L',' || text[at] == L'.'); };
+
+    if (!digits(group) || !separator(i))
+        return false;
+    while (separator(i))
+        ++i;
+    return digits(number) && i == text.size();
+}
+
+// The item's name as the client shows it; the server's (English) while the client doesn't know it.
+std::wstring ItemName(int group, int number)
+{
+    if (const auto* definition = g_ItemDatabase.Find(group, number); definition != nullptr && !definition->name.empty())
+        return definition->name;
+    const auto& info = Panel().Item();
+    if (info.Is(group, number) && !info.Name.empty())
+        return info.Name;
+    return Printf(L"(%d,%d)", group, number);
+}
+
+// An option's text as the item's tooltip writes it: the first special that an item of that type and level gains
+// from these options alone (the excellent byte, the option's type and level as OpenMU sends them). The server's name
+// when the client has none (a Fenrir's colour).
+std::wstring GainedText(int type, int level, int excellent, int optionType, int optionLevel, const std::wstring& fallback)
+{
+    static std::map<std::tuple<int, int, int, int, int>, std::wstring> cache;
+    const auto key = std::make_tuple(type, level, excellent, optionType, optionLevel);
+    if (const auto found = cache.find(key); found != cache.end())
+        return found->second;
+
+    const auto make = [type, level](int excellent, int optionType, int optionLevel)
+    {
+        ITEM item;
+        std::memset(&item, 0, sizeof(ITEM));
+        item.Type = static_cast<short>(type);
+        item.Level = level;
+        item.ExcellentFlags = static_cast<BYTE>(excellent);
+        item.OptionType = static_cast<BYTE>(optionType & 0xF);
+        item.OptionLevel = static_cast<BYTE>(optionLevel & 0xF);
+        item.byColorState = ITEM_COLOR_NORMAL;
+        for (int i = 0; i < MAX_SOCKETS; ++i)
+        {
+            item.bySocketOption[i] = SOCKET_EMPTY;
+            item.SocketSeedID[i] = SOCKET_EMPTY;
+        }
+        SetItemAttributes(&item);
+        return item;
+    };
+    const ITEM plain = make(0, 0, 0);
+    const ITEM with = make(excellent, optionType, optionLevel);
+    std::wstring text = fallback;
+    for (int i = 0; i < with.SpecialNum && i < MAX_ITEM_SPECIAL; ++i)
+    {
+        bool had = false;
+        for (int j = 0; j < plain.SpecialNum && j < MAX_ITEM_SPECIAL; ++j)
+            had = had || plain.Special[j] == with.Special[i];
+        if (had)
+            continue;
+        wchar_t buffer[256] = {};
+        GetSpecialOptionText(type, buffer, with.Special[i], with.SpecialValue[i], 0);
+        if (buffer[0] != 0)
+        {
+            text = buffer;
+            break;
+        }
+    }
+    cache.emplace(key, text);
+    return text;
+}
+
+// An extra's text: an excellent or wing option is its bit of the excellent byte, a Fenrir's colour its flag there,
+// a fixed option its bit of the option level.
+std::wstring ExtraText(int type, int level, wchar_t kind, int bit, const std::wstring& fallback)
+{
+    if (kind == L'x')
+        return GainedText(type, level, bit >= 0 && bit < 8 ? 1 << bit : 0, 0, 0, fallback);
+    if (kind == L'r')
+        return GainedText(type, level, bit, 0, 0, fallback);
+    return GainedText(type, level, 0, 0, bit, fallback);
+}
+
+// "Sword of Destruction +13".
+std::wstring ItemTitle(int group, int number, int level)
+{
+    const std::wstring name = ItemName(group, number);
+    return level > 0 ? Printf(L"%ls +%d", name.c_str(), level) : name;
+}
+
+// How many inventory cells the item takes, across and down.
+Rml::Vector2f ItemCells(int type)
+{
+    const auto* definition = g_ItemDatabase.Find(type);
+    const float width = definition != nullptr && definition->width > 0 ? static_cast<float>(definition->width) : 1.f;
+    const float height = definition != nullptr && definition->height > 0 ? static_cast<float>(definition->height) : 1.f;
+    return {width, height};
+}
+
+// The extras' mask bits of the excellent (and wing) options.
+int ExcellentMask(const GameLogic::GmPanel::ItemInfo& info)
+{
+    int mask = 0;
+    for (const auto& extra : info.Extras)
+    {
+        if (extra.IsExcellent() && extra.Index >= 0 && extra.Index < 31)
+            mask |= 1 << extra.Index;
+    }
+    return mask;
+}
+
+const GameLogic::GmPanel::ItemSetInfo* FindSet(const GameLogic::GmPanel::ItemInfo& info, int index)
+{
+    const auto found = std::find_if(info.Sets.begin(), info.Sets.end(), [&](const auto& set) { return set.Index == index; });
+    return found == info.Sets.end() ? nullptr : &*found;
+}
+
+// The ancient step's choices in order: none, then every set with each of its bonus levels (a set without a bonus
+// option once, with bonus 0).
+std::vector<std::pair<int, int>> SetChoices(const GameLogic::GmPanel::ItemInfo& info)
+{
+    std::vector<std::pair<int, int>> choices{{0, 0}};
+    for (const auto& set : info.Sets)
+    {
+        if (set.BonusLevels.empty())
+            choices.emplace_back(set.Index, 0);
+        for (const int level : set.BonusLevels)
+            choices.emplace_back(set.Index, level);
+    }
+    return choices;
+}
+
+// "Hyon +10": the bonus option's level 1 is +5 to a stat, 2 is +10.
+std::wstring SetText(const std::wstring& name, int bonus)
+{
+    return bonus > 0 ? Printf(L"%ls +%d", name.c_str(), bonus * 5) : name;
+}
+
+// Asks for the reason, then sends the request ("/gm mk ... <reason>").
+void ConfirmItem(const std::wstring& request, const std::wstring& what, const std::wstring& where)
+{
+    GenericDialogConfig cfg;
+    cfg.showCancel = true;
+    cfg.lines = {{what, true}, {where, false}, {I18N::Game::GmPanelReasonRequired, false}};
+    cfg.input = GenericDialogConfig::InputField{};
+    cfg.input->mode = GenericDialogConfig::InputField::Mode::Text;
+    cfg.input->maxLength = MaxReason;
+    cfg.onPrimary = [request]
+    {
+        const std::wstring reason = OneLine(g_pGenericConfirmDialog->GetInputText(), MaxReason);
+        if (reason.size() < MinItemReason)
+        {
+            g_pSystemLogBox->AddText(I18N::Game::GmPanelItemNeedReason, mu::ui::window::TYPE_ERROR_MESSAGE);
+            g_pGenericConfirmDialog->KeepOpen();
+            return;
+        }
+        Panel().Send(request + L" " + reason);
+    };
+    cfg.tag = "gm_panel_item";
+    g_pGenericConfirmDialog->Show(std::move(cfg));
+}
+} // namespace
+
+void mu::ui::window::CGmPanelWindow::SyncItems(GmPanelRmlModel& updated)
+{
+    updated.modes = {
+        Button(IT_CATALOG, I18N::Game::GmPanelModeCatalog, TAB_WIDTH, m_itMode == IT_CATALOG),
+        Button(IT_MAKE, I18N::Game::GmPanelModeMake, TAB_WIDTH, m_itMode == IT_MAKE),
+        Button(IT_SAVED, I18N::Game::GmPanelModeSaved, TAB_WIDTH, m_itMode == IT_SAVED),
+    };
+
+    // The server's answer about the item being made: the draft is fitted to it once.
+    const auto& panel = Panel();
+    if (m_draft.Picked() && panel.Item().Is(m_draft.Group, m_draft.Number) && m_draftInfoVersion != panel.ItemVersion())
+        FitDraft();
+
+    if (m_itMode == IT_CATALOG)
+        SyncItemCatalog(updated);
+    else if (m_itMode == IT_MAKE)
+        SyncItemMake(updated);
+    else
+        SyncItemSaved(updated);
+}
+
+void mu::ui::window::CGmPanelWindow::SyncItemCatalog(GmPanelRmlModel& updated)
+{
+    if (m_itListDirty)
+        BuildItemList();
+
+    GmPanelStep group;
+    group.label = Line(I18N::Game::GmPanelItemGroup, STEP_LABEL_WIDTH);
+    group.value = Line(m_itSearch.empty() ? GroupName(m_itGroup) : std::wstring(I18N::Game::GmPanelItemAllGroups), STEP_VALUE_WIDTH, true);
+    group.downId = IT_GROUP_DOWN;
+    group.upId = IT_GROUP_UP;
+    updated.steps = {group};
+    updated.find = Button(0, I18N::Game::GmPanelFind, ACTION_WIDTH);
+    updated.itemHint = Line(I18N::Game::GmPanelItemSearchHint, CONTENT_WIDTH);
+    updated.listInfo = m_itTypes.empty()
+        ? Line(I18N::Game::GmPanelItemEmpty, CONTENT_WIDTH)
+        : Line(Printf(m_itMore ? I18N::Game::GmPanelItemMany : I18N::Game::GmPanelItemCount, static_cast<int>(m_itTypes.size())), CONTENT_WIDTH);
+
+    const int picked = m_draft.Picked() ? m_draft.Group * MAX_ITEM_INDEX + m_draft.Number : -1;
+    updated.rows = m_itRows;
+    for (size_t i = 0; i < updated.rows.size() && i < m_itTypes.size(); ++i)
+        updated.rows[i].selected = m_itTypes[i] == picked;
+}
+
+void mu::ui::window::CGmPanelWindow::SyncItemMake(GmPanelRmlModel& updated)
+{
+    const auto& info = Panel().Item();
+    const bool ready = ItemInfoReady();
+    updated.itemReady = ready;
+    updated.itemLine = Line({}, ITEM_LINES_WIDTH);
+    updated.itemHint = Line({}, ITEM_LINES_WIDTH);
+    if (!m_draft.Picked())
+    {
+        updated.itemName = Line(I18N::Game::GmPanelItemNone, ITEM_LINES_WIDTH);
+        return;
+    }
+
+    const ItemDraft& d = m_draft;
+    updated.itemName = Line(ItemName(d.Group, d.Number), ITEM_LINES_WIDTH, true);
+    if (!ready)
+    {
+        const bool waiting = std::chrono::steady_clock::now() - m_requestedAt < AnswerTimeout;
+        updated.itemLine = Line(waiting ? I18N::Game::GmPanelAsking : I18N::Game::GmPanelNoAnswer, ITEM_LINES_WIDTH);
+        return;
+    }
+
+    updated.itemLine = Line(info.Stack           ? Printf(I18N::Game::GmPanelItemStackLine, d.Group, d.Number, info.MaxDurability)
+                            : info.MaxLevel > 0 ? Printf(I18N::Game::GmPanelItemInfoLine, d.Group, d.Number, info.MaxLevel)
+                                                : Printf(L"(%d,%d)", d.Group, d.Number),
+                            ITEM_LINES_WIDTH);
+    updated.itemHint = Line(I18N::Game::GmPanelItemHover, ITEM_LINES_WIDTH);
+
+    if (info.MaxLevel > 0)
+    {
+        GmPanelStep level;
+        level.label = Line(I18N::Game::GmPanelItemLevel, STEP_LABEL_WIDTH);
+        level.value = Line(Printf(L"+%d", d.Level), STEP_VALUE_WIDTH, true);
+        level.downId = IT_LEVEL_DOWN;
+        level.upId = IT_LEVEL_UP;
+        level.downOff = d.Level <= 0;
+        level.upOff = d.Level >= info.MaxLevel;
+        updated.steps.push_back(std::move(level));
+    }
+
+    if (!info.Options.empty())
+    {
+        const auto& kind = info.Options[static_cast<size_t>(std::clamp(m_optionKind, 0, static_cast<int>(info.Options.size()) - 1))];
+        // Several kinds (wings): which one the option is, a step of its own.
+        if (info.Options.size() > 1)
+        {
+            GmPanelStep kinds;
+            kinds.label = Line(I18N::Game::GmPanelItemKind, STEP_LABEL_WIDTH);
+            // The kind as the tooltip writes it, at the option's level (the server sends the Number + 1).
+            kinds.value = ClippedLine(GainedText(d.Group * MAX_ITEM_INDEX + d.Number, d.Level, 0, kind.Number - 1,
+                                                 std::max(1, d.Option != 0 ? d.OptionLevel : 1), kind.Name),
+                                      STEP_VALUE_WIDTH);
+            kinds.downId = IT_OPTION_KIND_DOWN;
+            kinds.upId = IT_OPTION_KIND;
+            updated.steps.push_back(std::move(kinds));
+        }
+
+        GmPanelStep option;
+        option.label = Line(I18N::Game::GmPanelItemOption, STEP_LABEL_WIDTH);
+        option.value = Line(d.Option == 0 ? std::wstring(I18N::Game::GmPanelItemOff) : Printf(L"%d / %d", d.OptionLevel, kind.MaxLevel),
+                            STEP_VALUE_WIDTH, true);
+        option.downId = IT_OPTION_DOWN;
+        option.upId = IT_OPTION_UP;
+        option.downOff = d.Option == 0;
+        option.upOff = d.Option != 0 && d.OptionLevel >= kind.MaxLevel;
+        updated.steps.push_back(std::move(option));
+    }
+
+    if (!info.Sets.empty())
+    {
+        const auto choices = SetChoices(info);
+        const auto at = std::find(choices.begin(), choices.end(), std::pair<int, int>{d.Set, d.Bonus});
+        const int index = at == choices.end() ? 0 : static_cast<int>(at - choices.begin());
+        GmPanelStep ancient;
+        ancient.label = Line(I18N::Game::GmPanelItemAncient, STEP_LABEL_WIDTH);
+        ancient.value = Line(d.Set == 0 ? std::wstring(I18N::Game::GmPanelItemOff) : SetText(d.SetName, d.Bonus), STEP_VALUE_WIDTH, true);
+        ancient.downId = IT_SET_DOWN;
+        ancient.upId = IT_SET_UP;
+        ancient.downOff = index <= 0;
+        ancient.upOff = index >= static_cast<int>(choices.size()) - 1;
+        updated.steps.push_back(std::move(ancient));
+    }
+
+    updated.toggles = {
+        Button(IT_LUCK, I18N::Game::GmPanelItemLuck, TAB_WIDTH, d.Luck, !info.Luck),
+        Button(IT_SKILL, I18N::Game::GmPanelItemSkill, TAB_WIDTH, d.Skill, !info.Skill),
+    };
+    updated.itemCountLabel = Line(I18N::Game::GmPanelItemCountLabel, COUNT_LABEL_WIDTH);
+    updated.itemDurLabel = Line(info.Stack ? I18N::Game::GmPanelItemPiecesLabel : I18N::Game::GmPanelItemDurLabel, DUR_LABEL_WIDTH);
+
+    // The extras, a click switches one on or off; an excellent one is grey while a set is chosen (it would clear it).
+    updated.listInfo = info.Extras.empty()
+        ? Line(I18N::Game::GmPanelItemNoExtras, CONTENT_WIDTH)
+        : Line(Printf(I18N::Game::GmPanelItemExtras, std::popcount(static_cast<unsigned>(d.Extras)), static_cast<int>(info.Extras.size())),
+               CONTENT_WIDTH);
+    for (size_t i = 0; i < info.Extras.size(); ++i)
+    {
+        const auto& extra = info.Extras[i];
+        GmPanelRow row;
+        row.index = static_cast<int>(i);
+        row.title = ClippedLine(ExtraText(d.Group * MAX_ITEM_INDEX + d.Number, d.Level, extra.Kind, extra.Bit, extra.Name), ROW_WIDTH);
+        row.selected = extra.Index >= 0 && extra.Index < 31 && (d.Extras & (1 << extra.Index)) != 0;
+        row.dim = extra.IsExcellent() && d.Set != 0;
+        updated.rows.push_back(std::move(row));
+    }
+
+    updated.actions = {
+        Button(IT_CREATE, I18N::Game::GmPanelItemCreate, ITEM_BUTTON_WIDTH),
+        Button(IT_SAVE, I18N::Game::GmPanelItemSave, ITEM_BUTTON_WIDTH),
+    };
+}
+
+void mu::ui::window::CGmPanelWindow::SyncItemSaved(GmPanelRmlModel& updated)
+{
+    const auto& saved = GameConfig::GetInstance().GetGmItemFavourites();
+    updated.listInfo = saved.empty() ? Line(I18N::Game::GmPanelItemSavedEmpty, CONTENT_WIDTH)
+                                     : Line(Printf(I18N::Game::GmPanelItemSavedCount, static_cast<int>(saved.size())), CONTENT_WIDTH);
+    for (size_t i = 0; i < saved.size(); ++i)
+    {
+        GmPanelRow row;
+        row.index = static_cast<int>(i);
+        ItemDraft draft;
+        if (ParseSaved(saved[i], draft))
+        {
+            row.title = Line(ItemTitle(draft.Group, draft.Number, draft.Level), ROW_WIDTH, true);
+            row.detail = Line(DraftSummary(draft), ROW_WIDTH);
+        }
+        else
+        {
+            row.title = Line(saved[i], ROW_WIDTH);
+            row.dim = true;
+        }
+        row.selected = static_cast<int>(i) == m_savedSelected;
+        updated.rows.push_back(std::move(row));
+    }
+
+    const bool picked = m_savedSelected >= 0 && m_savedSelected < static_cast<int>(saved.size());
+    updated.actions = {
+        Button(IT_LOAD, I18N::Game::GmPanelItemLoad, SWITCH_WIDTH, false, !picked),
+        Button(IT_DELETE, I18N::Game::GmPanelItemDelete, SWITCH_WIDTH, false, !picked),
+    };
+}
+
+void mu::ui::window::CGmPanelWindow::BuildItemList()
+{
+    m_itListDirty = false;
+    m_itTypes.clear();
+    m_itRows.clear();
+    m_itMore = false;
+
+    // By the group; or by the searched text in every group: "14 13" is that item, anything else a part of the
+    // name as shown or in English.
+    int group = -1;
+    int number = -1;
+    const bool byNumbers = ParseItemNumbers(m_itSearch, group, number);
+    const std::wstring part = Folded(m_itSearch);
+    for (const auto& definition : g_ItemDatabase.GetAllSlots())
+    {
+        if (!definition.Exists())
+            continue;
+
+        bool match = false;
+        if (m_itSearch.empty())
+            match = definition.group == m_itGroup;
+        else if (byNumbers)
+            match = definition.group == group && definition.number == number;
+        else
+            match = Folded(definition.name).find(part) != std::wstring::npos ||
+                    Folded(StringUtils::NarrowToWide(definition.names.GetNeutral().c_str())).find(part) != std::wstring::npos;
+        if (!match)
+            continue;
+
+        if (m_itTypes.size() >= MaxCatalogRows)
+        {
+            m_itMore = true;
+            break;
+        }
+        m_itTypes.push_back(definition.group * MAX_ITEM_INDEX + definition.number);
+    }
+
+    // One line an item: its name and (group,number). Made once a list, not every frame (the names are measured).
+    for (size_t i = 0; i < m_itTypes.size(); ++i)
+    {
+        const int g = m_itTypes[i] / MAX_ITEM_INDEX;
+        const int n = m_itTypes[i] % MAX_ITEM_INDEX;
+        GmPanelRow row;
+        row.index = static_cast<int>(i);
+        row.title = Line(Printf(L"%ls  (%d,%d)", ItemName(g, n).c_str(), g, n), ROW_WIDTH);
+        m_itRows.push_back(std::move(row));
+    }
+}
+
+void mu::ui::window::CGmPanelWindow::SearchItems()
+{
+    m_itSearch = OneLine(StringUtils::NarrowToWide(m_RmlView.GetModel().itemSearchText), MaxItemSearch);
+    m_itListDirty = true;
+}
+
+void mu::ui::window::CGmPanelWindow::PickItem(int group, int number)
+{
+    m_draft = ItemDraft{};
+    m_draft.Group = group;
+    m_draft.Number = number;
+    m_draftFresh = true;
+    m_optionKind = 0;
+    m_draftInfoVersion = -1;
+
+    // One whole item unless the GM types more.
+    auto& binder = m_RmlView.Binder();
+    SyncField(binder, &GmPanelRmlModel::itemCountText, "item_count_text", Rml::String("1"));
+    SyncField(binder, &GmPanelRmlModel::itemDurText, "item_dur_text", Rml::String());
+
+    m_itMode = IT_MAKE;
+    RequestCurrent();
+}
+
+void mu::ui::window::CGmPanelWindow::FitDraft()
+{
+    const auto& panel = Panel();
+    const auto& info = panel.Item();
+    m_draftInfoVersion = panel.ItemVersion();
+    ItemDraft& d = m_draft;
+
+    d.Level = std::clamp(d.Level, 0, std::max(0, info.MaxLevel));
+    // A new item has the skill its kind comes with, as a dropped one.
+    if (std::exchange(m_draftFresh, false))
+        d.Skill = info.Skill;
+    d.Luck = d.Luck && info.Luck;
+    d.Skill = d.Skill && info.Skill;
+
+    const auto option = std::find_if(info.Options.begin(), info.Options.end(), [&](const auto& o) { return o.Number == d.Option; });
+    if (d.Option == 0 || option == info.Options.end())
+    {
+        d.Option = 0;
+        d.OptionLevel = 0;
+    }
+    else
+    {
+        d.OptionLevel = std::clamp(d.OptionLevel, 1, std::max(1, option->MaxLevel));
+        m_optionKind = static_cast<int>(option - info.Options.begin());
+    }
+    m_optionKind = std::clamp(m_optionKind, 0, std::max(0, static_cast<int>(info.Options.size()) - 1));
+
+    int allowed = 0;
+    for (const auto& extra : info.Extras)
+    {
+        if (extra.Index >= 0 && extra.Index < 31)
+            allowed |= 1 << extra.Index;
+    }
+    d.Extras &= allowed;
+
+    if (const auto* set = FindSet(info, d.Set))
+    {
+        if (set->BonusLevels.empty())
+            d.Bonus = 0;
+        else if (std::find(set->BonusLevels.begin(), set->BonusLevels.end(), d.Bonus) == set->BonusLevels.end())
+            d.Bonus = set->BonusLevels.back();
+        d.SetName = set->Name;
+        // An item is excellent or ancient, not both (the server refuses it).
+        d.Extras &= ~ExcellentMask(info);
+    }
+    else
+    {
+        d.Set = 0;
+        d.Bonus = 0;
+        d.SetName.clear();
+    }
+}
+
+bool mu::ui::window::CGmPanelWindow::ItemInfoReady() const
+{
+    const auto& panel = Panel();
+    return m_draft.Picked() && panel.Item().Is(m_draft.Group, m_draft.Number) && m_draftInfoVersion == panel.ItemVersion();
+}
+
+mu::ui::window::CGmPanelWindow::ItemDraft mu::ui::window::CGmPanelWindow::CurrentDraft() const
+{
+    ItemDraft draft = m_draft;
+    const auto& model = m_RmlView.GetModel();
+    const Rml::String count = UI::RmlBridge::KeepDigitsOnly(model.itemCountText);
+    draft.Count = std::clamp(count.empty() ? 1 : std::atoi(count.c_str()), 1, MaxItemCount);
+    const Rml::String durability = UI::RmlBridge::KeepDigitsOnly(model.itemDurText);
+    draft.Durability = std::clamp(durability.empty() ? 0 : std::atoi(durability.c_str()), 0, 255);
+    return draft;
+}
+
+void mu::ui::window::CGmPanelWindow::ToggleExtra(int row)
+{
+    if (!ItemInfoReady())
+        return;
+    const auto& info = Panel().Item();
+    if (row < 0 || row >= static_cast<int>(info.Extras.size()))
+        return;
+    const auto& extra = info.Extras[static_cast<size_t>(row)];
+    if (extra.Index < 0 || extra.Index >= 31)
+        return;
+
+    const int bit = 1 << extra.Index;
+    m_draft.Extras ^= bit;
+    if ((m_draft.Extras & bit) == 0)
+        return;
+
+    // An excellent option takes the set away; a Fenrir has one colour.
+    if (extra.IsExcellent())
+    {
+        m_draft.Set = 0;
+        m_draft.Bonus = 0;
+        m_draft.SetName.clear();
+    }
+    if (extra.Kind == L'r')
+    {
+        for (const auto& other : info.Extras)
+        {
+            if (other.Kind == L'r' && other.Index != extra.Index && other.Index >= 0 && other.Index < 31)
+                m_draft.Extras &= ~(1 << other.Index);
+        }
+    }
+}
+
+void mu::ui::window::CGmPanelWindow::DoItemsAction(int action)
+{
+    if (!Panel().IsAdmin())
+        return;
+
+    const auto& info = Panel().Item();
+    const bool ready = ItemInfoReady();
+    ItemDraft& d = m_draft;
+    const int kinds = static_cast<int>(info.Options.size());
+    switch (action)
+    {
+    case IT_GROUP_DOWN:
+    case IT_GROUP_UP:
+        // The arrows step through the groups; after a search, they first go back to the group.
+        if (m_itSearch.empty())
+            m_itGroup = (m_itGroup + (action == IT_GROUP_UP ? 1 : ItemGroups - 1)) % ItemGroups;
+        m_itSearch.clear();
+        SyncField(m_RmlView.Binder(), &GmPanelRmlModel::itemSearchText, "item_search_text", Rml::String());
+        m_itListDirty = true;
+        break;
+    case IT_LEVEL_DOWN:
+        if (ready && d.Level > 0)
+            --d.Level;
+        break;
+    case IT_LEVEL_UP:
+        if (ready && d.Level < info.MaxLevel)
+            ++d.Level;
+        break;
+    case IT_OPTION_KIND:
+    case IT_OPTION_KIND_DOWN:
+        if (ready && kinds > 1)
+        {
+            m_optionKind = (std::clamp(m_optionKind, 0, kinds - 1) + (action == IT_OPTION_KIND ? 1 : kinds - 1)) % kinds;
+            // A chosen option becomes the new kind, at its level if it has it.
+            if (d.Option != 0)
+            {
+                const auto& kind = info.Options[static_cast<size_t>(m_optionKind)];
+                d.Option = kind.Number;
+                d.OptionLevel = std::clamp(d.OptionLevel, 1, std::max(1, kind.MaxLevel));
+            }
+        }
+        break;
+    case IT_OPTION_DOWN:
+        if (ready && d.Option != 0)
+        {
+            if (d.OptionLevel > 1)
+            {
+                --d.OptionLevel;
+            }
+            else
+            {
+                d.Option = 0;
+                d.OptionLevel = 0;
+            }
+        }
+        break;
+    case IT_OPTION_UP:
+        if (ready && kinds > 0)
+        {
+            const auto& kind = info.Options[static_cast<size_t>(std::clamp(m_optionKind, 0, kinds - 1))];
+            if (d.Option == 0)
+            {
+                d.Option = kind.Number;
+                d.OptionLevel = 1;
+            }
+            else if (d.OptionLevel < kind.MaxLevel)
+            {
+                ++d.OptionLevel;
+            }
+        }
+        break;
+    case IT_SET_DOWN:
+    case IT_SET_UP:
+        if (ready && !info.Sets.empty())
+        {
+            const auto choices = SetChoices(info);
+            const auto at = std::find(choices.begin(), choices.end(), std::pair<int, int>{d.Set, d.Bonus});
+            int index = at == choices.end() ? 0 : static_cast<int>(at - choices.begin());
+            index = std::clamp(index + (action == IT_SET_UP ? 1 : -1), 0, static_cast<int>(choices.size()) - 1);
+            d.Set = choices[static_cast<size_t>(index)].first;
+            d.Bonus = choices[static_cast<size_t>(index)].second;
+            const auto* set = FindSet(info, d.Set);
+            d.SetName = set != nullptr ? set->Name : std::wstring();
+            if (set != nullptr)
+                d.Extras &= ~ExcellentMask(info);
+        }
+        break;
+    case IT_LUCK:
+        if (ready && info.Luck)
+            d.Luck = !d.Luck;
+        break;
+    case IT_SKILL:
+        if (ready && info.Skill)
+            d.Skill = !d.Skill;
+        break;
+    case IT_CREATE:
+        CreateItem();
+        break;
+    case IT_SAVE:
+        SaveDraft();
+        break;
+    case IT_LOAD:
+        LoadSaved();
+        break;
+    case IT_DELETE:
+        DeleteSaved();
+        break;
+    default:
+        break;
+    }
+}
+
+void mu::ui::window::CGmPanelWindow::CreateItem()
+{
+    if (!ItemInfoReady())
+        return;
+
+    const ItemDraft draft = CurrentDraft();
+    const std::wstring what = Printf(L"%d x %ls", draft.Count, ItemTitle(draft.Group, draft.Number, draft.Level).c_str());
+    GenericMenuConfig menu;
+    menu.title = Printf(I18N::Game::GmPanelItemMakeTitle, draft.Count, ItemName(draft.Group, draft.Number).c_str());
+    auto add = [&](const std::wstring& label, const std::wstring& to)
+    {
+        GenericMenuConfig::MenuButton button;
+        button.label = label;
+        button.onClick = [request = MakeRequest(draft, to), what, label] { ConfirmItem(request, what, label); };
+        menu.buttons.push_back(std::move(button));
+    };
+    add(I18N::Game::GmPanelItemToMe, L"@me");
+    // The player picked on the Players tab, while in game.
+    if (const Target target = GetTarget(); target.Online && !target.Name.empty())
+        add(Printf(I18N::Game::GmPanelItemToPlayer, target.Name.c_str()), target.Name);
+    add(I18N::Game::GmPanelItemToGround, L"@ground");
+
+    GenericMenuConfig::MenuButton cancel;
+    cancel.label = I18N::Game::Cancel;
+    cancel.compact = true;
+    cancel.dismiss = true;
+    menu.buttons.push_back(std::move(cancel));
+    g_pGenericMenuDialog->Show(std::move(menu));
+}
+
+void mu::ui::window::CGmPanelWindow::SaveDraft()
+{
+    if (!m_draft.Picked())
+        return;
+
+    auto& config = GameConfig::GetInstance();
+    std::vector<std::wstring> saved = config.GetGmItemFavourites();
+    const std::wstring text = SavedText(CurrentDraft());
+    if (std::find(saved.begin(), saved.end(), text) == saved.end())
+    {
+        if (saved.size() >= MaxSavedItems)
+        {
+            m_status = Printf(I18N::Game::GmPanelItemSavedFull, static_cast<int>(MaxSavedItems));
+            m_statusBad = true;
+            return;
+        }
+        saved.push_back(text);
+        config.SetGmItemFavourites(saved);
+    }
+    m_status = Printf(I18N::Game::GmPanelItemSaved, ItemTitle(m_draft.Group, m_draft.Number, m_draft.Level).c_str());
+    m_statusBad = false;
+}
+
+void mu::ui::window::CGmPanelWindow::LoadSaved()
+{
+    const auto& saved = GameConfig::GetInstance().GetGmItemFavourites();
+    ItemDraft draft;
+    if (m_savedSelected < 0 || m_savedSelected >= static_cast<int>(saved.size()) ||
+        !ParseSaved(saved[static_cast<size_t>(m_savedSelected)], draft))
+        return;
+
+    // As saved; fitted again to what the server says the item can have.
+    m_draft = draft;
+    m_draftFresh = false;
+    m_optionKind = 0;
+    m_draftInfoVersion = -1;
+    auto& binder = m_RmlView.Binder();
+    SyncField(binder, &GmPanelRmlModel::itemCountText, "item_count_text", Rml::String(std::to_string(draft.Count)));
+    SyncField(binder, &GmPanelRmlModel::itemDurText, "item_dur_text",
+              draft.Durability > 0 ? Rml::String(std::to_string(draft.Durability)) : Rml::String());
+
+    m_itMode = IT_MAKE;
+    RequestCurrent();
+}
+
+void mu::ui::window::CGmPanelWindow::DeleteSaved()
+{
+    auto& config = GameConfig::GetInstance();
+    std::vector<std::wstring> saved = config.GetGmItemFavourites();
+    if (m_savedSelected < 0 || m_savedSelected >= static_cast<int>(saved.size()))
+        return;
+
+    saved.erase(saved.begin() + m_savedSelected);
+    config.SetGmItemFavourites(saved);
+    m_savedSelected = std::min(m_savedSelected, static_cast<int>(saved.size()) - 1);
+}
+
+std::wstring mu::ui::window::CGmPanelWindow::SavedText(const ItemDraft& draft)
+{
+    std::wstring setName = draft.SetName;
+    std::replace(setName.begin(), setName.end(), L'|', L' ');
+    return Printf(L"%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%ls", draft.Group, draft.Number, draft.Level, draft.Option, draft.OptionLevel,
+                  draft.Luck ? 1 : 0, draft.Skill ? 1 : 0, draft.Extras, draft.Set, draft.Bonus, draft.Durability, draft.Count, setName.c_str());
+}
+
+bool mu::ui::window::CGmPanelWindow::ParseSaved(const std::wstring& text, ItemDraft& draft)
+{
+    std::vector<std::wstring> fields;
+    for (size_t start = 0;;)
+    {
+        const size_t bar = text.find(L'|', start);
+        fields.push_back(text.substr(start, bar == std::wstring::npos ? std::wstring::npos : bar - start));
+        if (bar == std::wstring::npos)
+            break;
+        start = bar + 1;
+    }
+    if (fields.size() < 12)
+        return false;
+
+    ItemDraft parsed;
+    parsed.Group = ToInt(fields[0]);
+    parsed.Number = ToInt(fields[1]);
+    parsed.Level = std::max(0, ToInt(fields[2]));
+    parsed.Option = std::max(0, ToInt(fields[3]));
+    parsed.OptionLevel = std::max(0, ToInt(fields[4]));
+    parsed.Luck = ToInt(fields[5]) != 0;
+    parsed.Skill = ToInt(fields[6]) != 0;
+    parsed.Extras = std::max(0, ToInt(fields[7]));
+    parsed.Set = std::max(0, ToInt(fields[8]));
+    parsed.Bonus = std::max(0, ToInt(fields[9]));
+    parsed.Durability = std::clamp(ToInt(fields[10]), 0, 255);
+    parsed.Count = std::clamp(ToInt(fields[11]), 1, MaxItemCount);
+    if (fields.size() > 12)
+        parsed.SetName = fields[12];
+    if (parsed.Group < 0 || parsed.Group >= ItemGroups || parsed.Number < 0 || parsed.Number >= MAX_ITEM_INDEX)
+        return false;
+
+    draft = std::move(parsed);
+    return true;
+}
+
+std::wstring mu::ui::window::CGmPanelWindow::DraftSummary(const ItemDraft& draft)
+{
+    std::vector<std::wstring> parts;
+    if (draft.Option != 0)
+        parts.push_back(Printf(I18N::Game::GmPanelItemSumOption, draft.OptionLevel));
+    if (draft.Luck)
+        parts.emplace_back(I18N::Game::GmPanelItemSumLuck);
+    if (draft.Skill)
+        parts.emplace_back(I18N::Game::GmPanelItemSumSkill);
+    if (draft.Extras != 0)
+        parts.push_back(Printf(I18N::Game::GmPanelItemSumExtras, std::popcount(static_cast<unsigned>(draft.Extras))));
+    if (draft.Set != 0)
+        parts.push_back(SetText(draft.SetName, draft.Bonus));
+    if (draft.Count > 1)
+        parts.push_back(Printf(L"x%d", draft.Count));
+    const std::wstring text = Joined(parts, L", ");
+    return text.empty() ? std::wstring(I18N::Game::GmPanelItemSumPlain) : text;
+}
+
+std::wstring mu::ui::window::CGmPanelWindow::MakeRequest(const ItemDraft& draft, const std::wstring& to)
+{
+    return Printf(L"mk %ls %d %d %d %d %d %d %d %d %d %d %d %d", to.c_str(), draft.Group, draft.Number, draft.Level, draft.Option,
+                  draft.Option != 0 ? draft.OptionLevel : 0, draft.Luck ? 1 : 0, draft.Skill ? 1 : 0, draft.Extras, draft.Set,
+                  draft.Set != 0 ? draft.Bonus : 0, draft.Durability, draft.Count);
+}
+
+void mu::ui::window::CGmPanelWindow::UpdatePreview()
+{
+    if (!m_draft.Picked())
+    {
+        m_preview.reset();
+        return;
+    }
+
+    const ItemDraft draft = CurrentDraft();
+    const auto& panel = Panel();
+    if (m_preview && draft == m_previewOf && m_previewInfoVersion == panel.ItemVersion())
+        return;
+    m_previewOf = draft;
+    m_previewInfoVersion = panel.ItemVersion();
+
+    // Built as the item manager builds one from the server's item (CItemMng::CreateItemByParameters), with the
+    // options as OpenMU sends them: a normal option is its number and level; without one, the fixed options' bits
+    // are the option level; an excellent or wing option is a bit of the excellent byte, a Fenrir's colour its flag.
+    const auto& info = panel.Item();
+    const bool known = info.Is(draft.Group, draft.Number);
+    auto item = std::make_unique<ITEM>();
+    std::memset(item.get(), 0, sizeof(ITEM));
+    item->Type = static_cast<short>(draft.Group * MAX_ITEM_INDEX + draft.Number);
+    item->Level = draft.Level;
+    item->HasLuck = draft.Luck;
+    item->HasSkill = draft.Skill;
+
+    int excellent = 0;
+    int fixed = 0;
+    for (const auto& extra : info.Extras)
+    {
+        if (!known || extra.Index < 0 || extra.Index >= 31 || (draft.Extras & (1 << extra.Index)) == 0)
+            continue;
+        if (extra.Kind == L'x' && extra.Bit >= 0 && extra.Bit < 8)
+            excellent |= 1 << extra.Bit;
+        else if (extra.Kind == L'r')
+            excellent |= extra.Bit;
+        else if (extra.Kind == L'f')
+            fixed |= extra.Bit;
+    }
+    if (draft.Option != 0)
+    {
+        item->OptionType = static_cast<BYTE>((draft.Option - 1) & 0xF); // the server sends Number + 1
+        item->OptionLevel = static_cast<BYTE>(draft.OptionLevel);
+    }
+    else if (fixed != 0)
+    {
+        item->OptionLevel = static_cast<BYTE>(fixed & 0xF);
+    }
+    item->ExcellentFlags = static_cast<BYTE>(excellent);
+    if (const auto* set = known && draft.Set != 0 ? FindSet(info, draft.Set) : nullptr)
+    {
+        item->AncientDiscriminator = static_cast<BYTE>(set->Discriminator);
+        item->AncientBonusOption = static_cast<BYTE>(draft.Bonus);
+    }
+    item->byColorState = ITEM_COLOR_NORMAL;
+    for (int i = 0; i < MAX_SOCKETS; ++i)
+    {
+        item->bySocketOption[i] = SOCKET_EMPTY;
+        item->SocketSeedID[i] = SOCKET_EMPTY;
+    }
+    SetItemAttributes(item.get());
+
+    // The durability as the server makes it: a stack's pieces (1 unless typed), or the worn item's full
+    // durability (it grows with the level and the options), or less when typed.
+    if (known && info.Stack)
+    {
+        item->Durability = static_cast<BYTE>(draft.Durability == 0 ? 1 : std::min(draft.Durability, std::max(info.MaxDurability, 1)));
+    }
+    else
+    {
+        const int full = std::min(static_cast<int>(CalcMaxDurability(item.get(), &ItemAttribute[item->Type], item->Level)), 255);
+        item->Durability = static_cast<BYTE>(draft.Durability == 0 ? full : std::min(draft.Durability, std::max(full, 1)));
+    }
+    m_preview = std::move(item);
+}
+
+float mu::ui::window::CGmPanelWindow::ItemFieldOfView() const
+{
+    Rml::Element* icon = GetField("gm_item_icon");
+    Rml::Vector2f offset;
+    Rml::Vector2f size;
+    if (!m_preview || icon == nullptr || !UI::RmlBridge::DrawnContentBox(*icon, offset, size))
+        return 1.f;
+
+    // At a field of view of 1 the item camera draws an inventory cell about a 24th of the window high (20 px of
+    // 480); a wider view draws it smaller, so the item's cells fill the icon's box.
+    const Rml::Vector2f cells = ItemCells(m_preview->Type);
+    const float cellPx = std::min(size.x / cells.x, size.y / cells.y);
+    const float nativeCellPx = static_cast<float>(WindowHeight) / 24.f;
+    return std::clamp(nativeCellPx / std::max(cellPx, 1.f), 0.5f, 4.f);
+}
+
+void mu::ui::window::CGmPanelWindow::RenderItemIcon()
+{
+    if (!m_preview || !IsVisible() || m_tab != TAB_ITEMS || m_itMode != IT_MAKE)
+        return;
+
+    Rml::Element* icon = GetField("gm_item_icon");
+    Rml::Vector2f offset;
+    Rml::Vector2f size;
+    if (icon == nullptr || !UI::RmlBridge::DrawnContentBox(*icon, offset, size))
+        return;
+
+    // The item's own box of cells, as big as fits and centred in the icon's (the model's anchor is a part of it).
+    const Rml::Vector2f cells = ItemCells(m_preview->Type);
+    const float cell = std::min(size.x / cells.x, size.y / cells.y);
+    const Rml::Vector2f box{cell * cells.x, cell * cells.y};
+    ::RenderItem3D(offset.x + (size.x - box.x) / 2.f, offset.y + (size.y - box.y) / 2.f, box.x, box.y, m_preview->Type, m_preview->Level,
+                   m_preview->ExcellentFlags, m_preview->AncientDiscriminator, false);
 }

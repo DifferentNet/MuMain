@@ -18,6 +18,18 @@
 //   "#GMW0|n", "#GMW|warp index|name|map|x|y", "#GMW.|"   the teleport places
 //   "#GML0|n", "#GML|utc time|gm|op|target|detail", "#GML.|"   the last actions, the newest first
 //   "#GMR|ok/err|op|text"   the answer to an action (kick, ban, warp, ...)
+// The Events tab (phase 2, admins only):
+//   "#GME0|n", "#GME|key|name|state|seconds left|next start|ops|detail", "#GME.|"   the scheduled events
+//      (state idle, soon, open, run, off; ops: s start, k skip a wait, e end; seconds -1 when unknown)
+//   "#GMM0|n", "#GMM|number|name|level", "#GMM.|"   monsters found by a part of the name or the number
+//   "#GMT0|n", "#GMT|leader|tier|day|map|zone|zones|monsters|alive|roster|seconds left|state", "#GMT.|"   Tier Map runs
+// The Items tab (phase 3, admins only), for "/gm iteminfo <group> <number>": what an item can have.
+//   "#GMI0|group|number|name|max level|skill 0/1|luck 0/1|stack 0/1|max durability"
+//   "#GMI|o|number|max level|name"   a normal option (one of them, with a level from 1)
+//   "#GMI|x|index|kind|bit|name"   an extra (any of them; kind x excellent or wing option, f fixed option such as
+//      the Dinorant's, r Fenrir's); the index is its bit in "/gm mk"'s mask
+//   "#GMI|a|index|discriminator|bonus levels|set name"   an ancient set (index from 1; bonus levels "1,2": +5, +10)
+//   "#GMI.|"
 // Times are UTC, "yyyy-MM-dd HH:mm".
 namespace GameLogic::GmPanel
 {
@@ -105,6 +117,95 @@ template <typename Row> struct List
     bool Receiving = false;
 };
 
+struct EventInfo
+{
+    // What the server knows it by (its plugin), sent back with a request.
+    std::wstring Key;
+    std::wstring Name;
+    // idle, soon (starts when Left is over), open (an entrance is open), run, off (not on this game server).
+    std::wstring State;
+    int Left = -1;
+    // The next start by the timetable, or empty.
+    std::wstring Next;
+    std::wstring Ops;
+    std::wstring Detail;
+
+    bool Can(wchar_t op) const { return Ops.find(op) != std::wstring::npos; }
+};
+
+struct MonsterInfo
+{
+    int Number = 0;
+    std::wstring Name;
+    int Level = 0;
+};
+
+struct TierRun
+{
+    // The first of the roster: the run's key.
+    std::wstring Leader;
+    int Tier = 0;
+    int Day = 0;
+    int Map = 0;
+    int Zone = 0;
+    int Zones = 0;
+    int Monsters = 0;
+    int Alive = 0;
+    std::wstring Roster;
+    int Left = 0;
+    std::wstring State;
+};
+
+struct ItemOptionInfo
+{
+    // OpenMU's option number (the option type the client gets).
+    int Number = 0;
+    int MaxLevel = 0;
+    std::wstring Name;
+};
+
+struct ItemExtraInfo
+{
+    // Its bit in the request's mask.
+    int Index = 0;
+    // x excellent or wing option (Bit = its excellent flag's bit), f fixed option (Bit = its bit of the option
+    // level), r Fenrir (Bit = the flag itself: black 1, blue 2, gold 4).
+    wchar_t Kind = L'x';
+    int Bit = 0;
+    std::wstring Name;
+
+    bool IsExcellent() const { return Kind == L'x'; }
+};
+
+struct ItemSetInfo
+{
+    // From 1, what the request sends.
+    int Index = 0;
+    int Discriminator = 0;
+    // The bonus option's levels (1 = +5, 2 = +10); empty for a set without one.
+    std::vector<int> BonusLevels;
+    std::wstring Name;
+};
+
+// What the server says one item can have.
+struct ItemInfo
+{
+    int Group = -1;
+    int Number = -1;
+    std::wstring Name;
+    int MaxLevel = 0;
+    bool Skill = false;
+    bool Luck = false;
+    // A stack: its durability is the count of pieces.
+    bool Stack = false;
+    int MaxDurability = 0;
+    std::vector<ItemOptionInfo> Options;
+    std::vector<ItemExtraInfo> Extras;
+    std::vector<ItemSetInfo> Sets;
+
+    bool Is(int group, int number) const { return Group == group && Number == number; }
+};
+
 struct Result
 {
     bool Ok = false;
@@ -142,6 +243,12 @@ public:
     const List<Penalty>& Penalties() const { return m_penalties; }
     const List<Warp>& Warps() const { return m_warps; }
     const List<LogEntry>& Log() const { return m_log; }
+    const List<EventInfo>& Events() const { return m_events; }
+    const List<MonsterInfo>& Monsters() const { return m_monsters; }
+    const List<TierRun>& Tiers() const { return m_tiers; }
+    // The last complete answer to "iteminfo", and a count of them.
+    const ItemInfo& Item() const { return m_item; }
+    int ItemVersion() const { return m_itemVersion; }
 
     // The answer to the last action, and a count of them, so a window notices a new one.
     const Result& LastResult() const { return m_result; }
@@ -151,6 +258,9 @@ public:
     void Reset();
 
 private:
+    // A line of the answer to "iteminfo": its header ('0'), a choice (no suffix) or its footer ('.').
+    void TakeItemLine(wchar_t suffix, const std::vector<std::wstring>& fields);
+
     Role m_role = Role::Unknown;
     bool m_hidden = false;
     bool m_gmMode = false;
@@ -164,6 +274,14 @@ private:
     List<Penalty> m_penalties;
     List<Warp> m_warps;
     List<LogEntry> m_log;
+    List<EventInfo> m_events;
+    List<MonsterInfo> m_monsters;
+    List<TierRun> m_tiers;
+
+    ItemInfo m_item;
+    ItemInfo m_itemIncoming;
+    bool m_itemReceiving = false;
+    int m_itemVersion = 0;
 
     Result m_result;
     int m_resultVersion = 0;

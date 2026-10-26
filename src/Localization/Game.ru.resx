@@ -13590,4 +13590,361 @@
   <data name="GmPanelSending" xml:space="preserve">
     <value>Отправлено: %ls</value>
   </data>
+  <data name="GmPanelTabEvents" xml:space="preserve">
+    <value>События</value>
+  </data>
+  <data name="GmPanelModeEvents" xml:space="preserve">
+    <value>События</value>
+  </data>
+  <data name="GmPanelModeMonsters" xml:space="preserve">
+    <value>Монстры</value>
+  </data>
+  <data name="GmPanelModeTiers" xml:space="preserve">
+    <value>Тир-карты</value>
+  </data>
+  <data name="GmPanelEventsCount" xml:space="preserve">
+    <value>Ивентов: %d</value>
+  </data>
+  <data name="GmPanelEmptyEvents" xml:space="preserve">
+    <value>На этом сервере нет ивентов.</value>
+  </data>
+  <data name="GmPanelEventNext" xml:space="preserve">
+    <value>следующий %ls</value>
+  </data>
+  <data name="GmPanelEventTagSoon" xml:space="preserve">
+    <value>через %ls</value>
+  </data>
+  <data name="GmPanelEventTagOpen" xml:space="preserve">
+    <value>вход %ls</value>
+  </data>
+  <data name="GmPanelEventTagRun" xml:space="preserve">
+    <value>идёт</value>
+  </data>
+  <data name="GmPanelEventTagRunLeft" xml:space="preserve">
+    <value>идёт %ls</value>
+  </data>
+  <data name="GmPanelEventTagOff" xml:space="preserve">
+    <value>выкл.</value>
+  </data>
+  <data name="GmPanelEventStateIdle" xml:space="preserve">
+    <value>Не идёт</value>
+  </data>
+  <data name="GmPanelEventStateSoon" xml:space="preserve">
+    <value>Начнётся через %ls</value>
+  </data>
+  <data name="GmPanelEventStateOpen" xml:space="preserve">
+    <value>Вход открыт, закроется через %ls</value>
+  </data>
+  <data name="GmPanelEventStateRun" xml:space="preserve">
+    <value>Идёт</value>
+  </data>
+  <data name="GmPanelEventStateRunLeft" xml:space="preserve">
+    <value>Идёт, осталось %ls</value>
+  </data>
+  <data name="GmPanelEventStateOff" xml:space="preserve">
+    <value>Выключен на этом сервере</value>
+  </data>
+  <data name="GmPanelEventPick" xml:space="preserve">
+    <value>Выберите ивент в списке.</value>
+  </data>
+  <data name="GmPanelEventStart" xml:space="preserve">
+    <value>Старт</value>
+  </data>
+  <data name="GmPanelEventSkip" xml:space="preserve">
+    <value>Пропуск</value>
+  </data>
+  <data name="GmPanelEventEnd" xml:space="preserve">
+    <value>Стоп</value>
+  </data>
+  <data name="GmPanelEventStartConfirm" xml:space="preserve">
+    <value>Запустить %ls сейчас?</value>
+  </data>
+  <data name="GmPanelEventRestartConfirm" xml:space="preserve">
+    <value>%ls уже идёт. Завершить и запустить заново?</value>
+  </data>
+  <data name="GmPanelEventEndConfirm" xml:space="preserve">
+    <value>Завершить %ls сейчас?</value>
+  </data>
+  <data name="GmPanelMonsterHint" xml:space="preserve">
+    <value>Введите часть имени или номер.</value>
+  </data>
+  <data name="GmPanelMonstersCount" xml:space="preserve">
+    <value>Монстров: %d</value>
+  </data>
+  <data name="GmPanelMonstersMany" xml:space="preserve">
+    <value>Первые %d: уточните имя</value>
+  </data>
+  <data name="GmPanelEmptyMonsters" xml:space="preserve">
+    <value>Таких монстров нет.</value>
+  </data>
+  <data name="GmPanelMonsterRow" xml:space="preserve">
+    <value>%ls, ур. %d (№ %d)</value>
+  </data>
+  <data name="GmPanelMonsterPick" xml:space="preserve">
+    <value>Выберите монстра для призыва.</value>
+  </data>
+  <data name="GmPanelMonsterPicked" xml:space="preserve">
+    <value>%ls (№ %d), уровень %d</value>
+  </data>
+  <data name="GmPanelSpawnHint" xml:space="preserve">
+    <value>Призванные не возрождаются после смерти.</value>
+  </data>
+  <data name="GmPanelClearHint" xml:space="preserve">
+    <value>Очистить: монстры в 12 шагах, без дропа.</value>
+  </data>
+  <data name="GmPanelCount" xml:space="preserve">
+    <value>Кол-во</value>
+  </data>
+  <data name="GmPanelSpawn" xml:space="preserve">
+    <value>Призвать</value>
+  </data>
+  <data name="GmPanelClear" xml:space="preserve">
+    <value>Очистить</value>
+  </data>
+  <data name="GmPanelClearConfirm" xml:space="preserve">
+    <value>Убить всех монстров в 12 шагах от вас? Без дропа и опыта.</value>
+  </data>
+  <data name="GmPanelTiersCount" xml:space="preserve">
+    <value>Забегов на тир-картах: %d</value>
+  </data>
+  <data name="GmPanelEmptyTiers" xml:space="preserve">
+    <value>Сейчас никого нет на тир-картах.</value>
+  </data>
+  <data name="GmPanelTierTitle" xml:space="preserve">
+    <value>%ls - тир %d, день %d</value>
+  </data>
+  <data name="GmPanelTierDetail" xml:space="preserve">
+    <value>%ls, зона %d/%d, монстров %d, %ls</value>
+  </data>
+  <data name="GmPanelTierPick" xml:space="preserve">
+    <value>Выберите забег в списке.</value>
+  </data>
+  <data name="GmPanelTierParty" xml:space="preserve">
+    <value>Внутри %d: %ls</value>
+  </data>
+  <data name="GmPanelTierState" xml:space="preserve">
+    <value>%ls, осталось %ls</value>
+  </data>
+  <data name="GmPanelTierEnd" xml:space="preserve">
+    <value>Завершить</value>
+  </data>
+  <data name="GmPanelTierSkip" xml:space="preserve">
+    <value>Пропуск</value>
+  </data>
+  <data name="GmPanelTierEndConfirm" xml:space="preserve">
+    <value>Завершить забег тира %d группы %ls? Он засчитается как проигранный.</value>
+  </data>
+  <data name="GmPanelEntriesInfo" xml:space="preserve">
+    <value>Вернуть заходы на тир-карты за сегодня:</value>
+  </data>
+  <data name="GmPanelEntriesReset" xml:space="preserve">
+    <value>Вернуть</value>
+  </data>
+  <data name="GmPanelEntriesConfirm" xml:space="preserve">
+    <value>Вернуть %ls все заходы на тир-карты за сегодня?</value>
+  </data>
+  <data name="GmPanelEntriesNeedName" xml:space="preserve">
+    <value>Введите имя персонажа.</value>
+  </data>
+  <data name="GmPanelTierOpen" xml:space="preserve">
+    <value>Вход открыт</value>
+  </data>
+  <data name="GmPanelTierClosed" xml:space="preserve">
+    <value>Подготовка</value>
+  </data>
+  <data name="GmPanelTierPlaying" xml:space="preserve">
+    <value>Идёт бой</value>
+  </data>
+  <data name="GmPanelTierEnded" xml:space="preserve">
+    <value>Окончен, время на лут</value>
+  </data>
+  <data name="GmPanelTierHeld" xml:space="preserve">
+    <value>%ls (на паузе)</value>
+  </data>
+  <data name="GmPanelEventTagStarting" xml:space="preserve">
+    <value>начинается</value>
+  </data>
+  <data name="GmPanelEventStateStarting" xml:space="preserve">
+    <value>Начинается</value>
+  </data>
+  <data name="GmPanelTabItems" xml:space="preserve">
+    <value>Предметы</value>
+  </data>
+  <data name="GmPanelModeCatalog" xml:space="preserve">
+    <value>Каталог</value>
+  </data>
+  <data name="GmPanelModeMake" xml:space="preserve">
+    <value>Предмет</value>
+  </data>
+  <data name="GmPanelModeSaved" xml:space="preserve">
+    <value>Избранное</value>
+  </data>
+  <data name="GmPanelItemGroup0" xml:space="preserve">
+    <value>Мечи</value>
+  </data>
+  <data name="GmPanelItemGroup1" xml:space="preserve">
+    <value>Топоры</value>
+  </data>
+  <data name="GmPanelItemGroup2" xml:space="preserve">
+    <value>Булавы</value>
+  </data>
+  <data name="GmPanelItemGroup3" xml:space="preserve">
+    <value>Копья</value>
+  </data>
+  <data name="GmPanelItemGroup4" xml:space="preserve">
+    <value>Луки</value>
+  </data>
+  <data name="GmPanelItemGroup5" xml:space="preserve">
+    <value>Посохи</value>
+  </data>
+  <data name="GmPanelItemGroup6" xml:space="preserve">
+    <value>Щиты</value>
+  </data>
+  <data name="GmPanelItemGroup7" xml:space="preserve">
+    <value>Шлемы</value>
+  </data>
+  <data name="GmPanelItemGroup8" xml:space="preserve">
+    <value>Доспехи</value>
+  </data>
+  <data name="GmPanelItemGroup9" xml:space="preserve">
+    <value>Штаны</value>
+  </data>
+  <data name="GmPanelItemGroup10" xml:space="preserve">
+    <value>Перчатки</value>
+  </data>
+  <data name="GmPanelItemGroup11" xml:space="preserve">
+    <value>Сапоги</value>
+  </data>
+  <data name="GmPanelItemGroup12" xml:space="preserve">
+    <value>Крылья, сферы</value>
+  </data>
+  <data name="GmPanelItemGroup13" xml:space="preserve">
+    <value>Питомцы, кольца</value>
+  </data>
+  <data name="GmPanelItemGroup14" xml:space="preserve">
+    <value>Камни, зелья</value>
+  </data>
+  <data name="GmPanelItemGroup15" xml:space="preserve">
+    <value>Свитки</value>
+  </data>
+  <data name="GmPanelItemGroup" xml:space="preserve">
+    <value>Группа</value>
+  </data>
+  <data name="GmPanelItemAllGroups" xml:space="preserve">
+    <value>все группы</value>
+  </data>
+  <data name="GmPanelItemSearchHint" xml:space="preserve">
+    <value>Название или группа и номер: 14 13</value>
+  </data>
+  <data name="GmPanelItemCount" xml:space="preserve">
+    <value>Предметов: %d</value>
+  </data>
+  <data name="GmPanelItemMany" xml:space="preserve">
+    <value>Первые %d: уточните поиск</value>
+  </data>
+  <data name="GmPanelItemEmpty" xml:space="preserve">
+    <value>Ничего не найдено</value>
+  </data>
+  <data name="GmPanelItemNone" xml:space="preserve">
+    <value>Выберите предмет в каталоге</value>
+  </data>
+  <data name="GmPanelItemInfoLine" xml:space="preserve">
+    <value>(%d,%d), до +%d</value>
+  </data>
+  <data name="GmPanelItemStackLine" xml:space="preserve">
+    <value>(%d,%d), стопка до %d</value>
+  </data>
+  <data name="GmPanelItemHover" xml:space="preserve">
+    <value>Наведите на иконку: подсказка</value>
+  </data>
+  <data name="GmPanelItemLevel" xml:space="preserve">
+    <value>Уровень</value>
+  </data>
+  <data name="GmPanelItemOption" xml:space="preserve">
+    <value>Опция</value>
+  </data>
+  <data name="GmPanelItemOff" xml:space="preserve">
+    <value>нет</value>
+  </data>
+  <data name="GmPanelItemAncient" xml:space="preserve">
+    <value>Древний</value>
+  </data>
+  <data name="GmPanelItemLuck" xml:space="preserve">
+    <value>Удача</value>
+  </data>
+  <data name="GmPanelItemSkill" xml:space="preserve">
+    <value>Умение</value>
+  </data>
+  <data name="GmPanelItemExtras" xml:space="preserve">
+    <value>Опции (клик): %d из %d</value>
+  </data>
+  <data name="GmPanelItemNoExtras" xml:space="preserve">
+    <value>Других опций нет</value>
+  </data>
+  <data name="GmPanelItemCountLabel" xml:space="preserve">
+    <value>Кол-во</value>
+  </data>
+  <data name="GmPanelItemDurLabel" xml:space="preserve">
+    <value>Прочн.</value>
+  </data>
+  <data name="GmPanelItemPiecesLabel" xml:space="preserve">
+    <value>Штук</value>
+  </data>
+  <data name="GmPanelItemCreate" xml:space="preserve">
+    <value>Создать</value>
+  </data>
+  <data name="GmPanelItemSave" xml:space="preserve">
+    <value>Сохранить</value>
+  </data>
+  <data name="GmPanelItemMakeTitle" xml:space="preserve">
+    <value>Создать %d x %ls</value>
+  </data>
+  <data name="GmPanelItemToMe" xml:space="preserve">
+    <value>В мой инвентарь</value>
+  </data>
+  <data name="GmPanelItemToPlayer" xml:space="preserve">
+    <value>В инвентарь %ls</value>
+  </data>
+  <data name="GmPanelItemToGround" xml:space="preserve">
+    <value>На землю рядом</value>
+  </data>
+  <data name="GmPanelItemNeedReason" xml:space="preserve">
+    <value>Напишите причину (от 3 букв)</value>
+  </data>
+  <data name="GmPanelItemSavedCount" xml:space="preserve">
+    <value>Сохранено: %d</value>
+  </data>
+  <data name="GmPanelItemSavedEmpty" xml:space="preserve">
+    <value>Пусто: «Сохранить» на странице предмета</value>
+  </data>
+  <data name="GmPanelItemLoad" xml:space="preserve">
+    <value>Открыть</value>
+  </data>
+  <data name="GmPanelItemDelete" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="GmPanelItemSaved" xml:space="preserve">
+    <value>Сохранено: %ls</value>
+  </data>
+  <data name="GmPanelItemSavedFull" xml:space="preserve">
+    <value>Не больше %d сохранённых предметов</value>
+  </data>
+  <data name="GmPanelItemSumOption" xml:space="preserve">
+    <value>опц. %d</value>
+  </data>
+  <data name="GmPanelItemSumLuck" xml:space="preserve">
+    <value>удача</value>
+  </data>
+  <data name="GmPanelItemSumSkill" xml:space="preserve">
+    <value>умение</value>
+  </data>
+  <data name="GmPanelItemSumExtras" xml:space="preserve">
+    <value>%d доп.</value>
+  </data>
+  <data name="GmPanelItemSumPlain" xml:space="preserve">
+    <value>без опций</value>
+  </data>
+  <data name="GmPanelItemKind" xml:space="preserve">
+    <value>Вид</value>
+  </data>
 </root>

@@ -79,6 +79,7 @@ void GameConfig::Load()
 
     m_chatCommandFavourites = ReadStringList(L"ChatCommands", L"Favourite");
     m_chatCommandTemplates = ReadStringList(L"ChatCommands", L"Template");
+    m_gmItemFavourites = ReadStringList(L"GmPanel", L"Item");
 
     m_uiLocale = ReadString(CfgSectionUI, CfgKeyUILocale, CfgDefaultUILocale);
     m_fontSelection = ReadString(CfgSectionUI, CfgKeyFont, CfgDefaultFont);
@@ -150,6 +151,7 @@ void GameConfig::Save()
 
     WriteStringList(L"ChatCommands", L"Favourite", m_chatCommandFavourites);
     WriteStringList(L"ChatCommands", L"Template", m_chatCommandTemplates);
+    WriteStringList(L"GmPanel", L"Item", m_gmItemFavourites);
 
     WriteString(CfgSectionUI, CfgKeyUILocale, m_uiLocale);
     WriteString(CfgSectionUI, CfgKeyFont, m_fontSelection);
@@ -217,6 +219,12 @@ void GameConfig::SetChatCommandFavourites(const std::vector<std::wstring>& favou
 void GameConfig::SetChatCommandTemplates(const std::vector<std::wstring>& templates)
 {
     m_chatCommandTemplates = templates;
+    Save();
+}
+
+void GameConfig::SetGmItemFavourites(const std::vector<std::wstring>& favourites)
+{
+    m_gmItemFavourites = favourites;
     Save();
 }
 

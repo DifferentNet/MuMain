@@ -103,6 +103,11 @@ public:
     }
     void SetChatCommandTemplates(const std::vector<std::wstring>& templates);
 
+    // The game master panel's saved items (its Items tab), as "group|number|level|...|name"
+    // (GmPanelWindow's ItemDraft). They belong to the installation, not to a character.
+    const std::vector<std::wstring>& GetGmItemFavourites() const { return m_gmItemFavourites; }
+    void SetGmItemFavourites(const std::vector<std::wstring>& favourites);
+
     // Camera
     int GetZoom() const { return m_zoom; }
     void SetZoom(int zoom);
@@ -189,6 +194,7 @@ private:
 
     std::vector<std::wstring> m_chatCommandFavourites;
     std::vector<std::wstring> m_chatCommandTemplates;
+    std::vector<std::wstring> m_gmItemFavourites;
 
     bool m_rememberMe;
     bool m_savePassword;

@@ -197,8 +197,118 @@ bool Store::TakeMessage(const std::wstring& text)
                          return e;
                      });
         return true;
+    case L'E':
+        TakeListLine(m_events, suffix, fields, [](const auto& f)
+                     {
+                         EventInfo e;
+                         e.Key = At(f, 0);
+                         e.Name = At(f, 1);
+                         e.State = At(f, 2);
+                         e.Left = At(f, 3).empty() ? -1 : ToInt(At(f, 3));
+                         e.Next = At(f, 4);
+                         e.Ops = At(f, 5);
+                         e.Detail = From(f, 6);
+                         return e;
+                     });
+        return true;
+    case L'M':
+        TakeListLine(m_monsters, suffix, fields, [](const auto& f)
+                     {
+                         MonsterInfo m;
+                         m.Number = ToInt(At(f, 0));
+                         m.Name = At(f, 1);
+                         m.Level = ToInt(At(f, 2));
+                         return m;
+                     });
+        return true;
+    case L'I':
+        TakeItemLine(suffix, fields);
+        return true;
+    case L'T':
+        TakeListLine(m_tiers, suffix, fields, [](const auto& f)
+                     {
+                         TierRun r;
+                         r.Leader = At(f, 0);
+                         r.Tier = ToInt(At(f, 1));
+                         r.Day = ToInt(At(f, 2));
+                         r.Map = ToInt(At(f, 3));
+                         r.Zone = ToInt(At(f, 4));
+                         r.Zones = ToInt(At(f, 5));
+                         r.Monsters = ToInt(At(f, 6));
+                         r.Alive = ToInt(At(f, 7));
+                         r.Roster = At(f, 8);
+                         r.Left = ToInt(At(f, 9));
+                         r.State = From(f, 10);
+                         return r;
+                     });
+        return true;
     default:
         return false;
+    }
+}
+
+void Store::TakeItemLine(wchar_t suffix, const std::vector<std::wstring>& fields)
+{
+    if (suffix == L'0')
+    {
+        m_itemIncoming = ItemInfo{};
+        m_itemIncoming.Group = ToInt(At(fields, 0));
+        m_itemIncoming.Number = ToInt(At(fields, 1));
+        m_itemIncoming.Name = At(fields, 2);
+        m_itemIncoming.MaxLevel = ToInt(At(fields, 3));
+        m_itemIncoming.Skill = At(fields, 4) == L"1";
+        m_itemIncoming.Luck = At(fields, 5) == L"1";
+        m_itemIncoming.Stack = At(fields, 6) == L"1";
+        m_itemIncoming.MaxDurability = ToInt(At(fields, 7));
+        m_itemReceiving = true;
+        return;
+    }
+
+    if (!m_itemReceiving)
+        return;
+
+    if (suffix == L'.')
+    {
+        m_item = std::move(m_itemIncoming);
+        m_itemIncoming = ItemInfo{};
+        m_itemReceiving = false;
+        ++m_itemVersion;
+        return;
+    }
+
+    const auto& kind = At(fields, 0);
+    if (kind == L"o")
+    {
+        m_itemIncoming.Options.push_back({ToInt(At(fields, 1)), ToInt(At(fields, 2)), From(fields, 3)});
+    }
+    else if (kind == L"x")
+    {
+        ItemExtraInfo extra;
+        extra.Index = ToInt(At(fields, 1));
+        extra.Kind = At(fields, 2).empty() ? L'x' : At(fields, 2)[0];
+        extra.Bit = ToInt(At(fields, 3));
+        extra.Name = From(fields, 4);
+        m_itemIncoming.Extras.push_back(std::move(extra));
+    }
+    else if (kind == L"a")
+    {
+        ItemSetInfo set;
+        set.Index = ToInt(At(fields, 1));
+        set.Discriminator = ToInt(At(fields, 2));
+        // "1,2"
+        const std::wstring& levels = At(fields, 3);
+        for (size_t start = 0; start < levels.size();)
+        {
+            const size_t comma = levels.find(L',', start);
+            const std::wstring level = levels.substr(start, comma == std::wstring::npos ? std::wstring::npos : comma - start);
+            if (!level.empty())
+                set.BonusLevels.push_back(ToInt(level));
+            if (comma == std::wstring::npos)
+                break;
+            start = comma + 1;
+        }
+        set.Name = From(fields, 4);
+        m_itemIncoming.Sets.push_back(std::move(set));
     }
 }
 
@@ -245,6 +355,10 @@ void Store::Reset()
     fresh.m_penalties.Version = m_penalties.Version + 1;
     fresh.m_warps.Version = m_warps.Version + 1;
     fresh.m_log.Version = m_log.Version + 1;
+    fresh.m_events.Version = m_events.Version + 1;
+    fresh.m_monsters.Version = m_monsters.Version + 1;
+    fresh.m_tiers.Version = m_tiers.Version + 1;
+    fresh.m_itemVersion = m_itemVersion + 1;
     *this = std::move(fresh);
 }
 } // namespace GameLogic::GmPanel

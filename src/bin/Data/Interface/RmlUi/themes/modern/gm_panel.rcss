@@ -55,6 +55,9 @@
 .gm-btn-quarter { width: calc(40px * var(--root-scale)); }
 .gm-btn-half { width: calc(82px * var(--root-scale)); }
 .gm-btn-go { width: calc(34px * var(--root-scale)); }
+/* Admins have five tabs (events and items): the last two as halves in a second row. */
+.gm-btn-arrow { width: calc(18px * var(--root-scale)); }
+.gm-btn-item { width: calc(48px * var(--root-scale)); }
 
 .gm-field {
 	height: calc(18px * var(--root-scale));
@@ -77,6 +80,19 @@
 .gm-list-players .gm-list { height: calc(128px * var(--root-scale)); }
 .gm-list-warps .gm-list { height: calc(150px * var(--root-scale)); }
 .gm-list-log .gm-list { height: calc(252px * var(--root-scale)); }
+.gm-list-events .gm-list { height: calc(200px * var(--root-scale)); }
+.gm-list-monsters .gm-list { height: calc(180px * var(--root-scale)); }
+.gm-list-tiers .gm-list { height: calc(166px * var(--root-scale)); }
+/* Admins' second tab row (20) comes out of the lists. The Items tab is theirs alone. */
+.gm-admin .gm-list-players .gm-list { height: calc(108px * var(--root-scale)); }
+.gm-admin .gm-list-warps .gm-list { height: calc(130px * var(--root-scale)); }
+.gm-admin .gm-list-log .gm-list { height: calc(232px * var(--root-scale)); }
+.gm-admin .gm-list-events .gm-list { height: calc(180px * var(--root-scale)); }
+.gm-admin .gm-list-monsters .gm-list { height: calc(160px * var(--root-scale)); }
+.gm-admin .gm-list-tiers .gm-list { height: calc(146px * var(--root-scale)); }
+.gm-list-items .gm-list { height: calc(176px * var(--root-scale)); }
+.gm-list-extras .gm-list { height: calc(88px * var(--root-scale)); }
+.gm-list-saved .gm-list { height: calc(206px * var(--root-scale)); }
 
 /* The row leaves the pane's right lane to the scrollbar (a full-width row sits under the handle). */
 .gm-row {
@@ -93,10 +109,54 @@
 .gm-row-detail { display: block; white-space: nowrap; pointer-events: none; }
 .gm-row-title { font-weight: bold; }
 .gm-row-single .gm-row-title { font-weight: normal; }
+/* A monster is one line, not bold. */
+.gm-list-monsters .gm-row-title { font-weight: normal; }
 
 .gm-sel { display: block; white-space: nowrap; }
 .gm-sel-name { font-weight: bold; margin-top: calc(1px * var(--root-scale)); }
 .gm-grid { margin-top: calc(3px * var(--root-scale)); }
+
+/* The Items tab. The item's head: its icon (the 3D item is drawn there through #gm_items, the full panel's image
+   in reference px; hovering the icon shows the item's tooltip) and three lines. */
+.gm-items { position: absolute; left: 0; top: 0; width: 190px; height: 432px; pointer-events: none; }
+.gm-item-head {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	margin-bottom: calc(3px * var(--root-scale));
+}
+.gm-item-icon {
+	display: block;
+	box-sizing: border-box;
+	width: calc(40px * var(--root-scale));
+	height: calc(40px * var(--root-scale));
+	margin-right: calc(6px * var(--root-scale));
+	pointer-events: auto;
+}
+.gm-item-lines { display: block; width: calc(120px * var(--root-scale)); }
+.gm-item-name { display: block; white-space: nowrap; font-weight: bold; }
+.gm-item-line { display: block; white-space: nowrap; }
+/* A step: a label (a button when it does something), < value >; packed tighter than the other rows. */
+.gm-step { margin-bottom: calc(1px * var(--root-scale)); }
+.gm-step .gm-btn { margin-bottom: 0; }
+.gm-step-label {
+	display: flex;
+	align-items: center;
+	box-sizing: border-box;
+	width: calc(56px * var(--root-scale));
+	height: calc(18px * var(--root-scale));
+	padding-left: calc(2px * var(--root-scale));
+}
+.gm-step-label.gm-btn { justify-content: center; padding-left: 0; }
+.gm-step-text { display: block; white-space: nowrap; pointer-events: none; }
+.gm-step-value { display: block; width: calc(66px * var(--root-scale)); text-align: center; white-space: nowrap; }
+.gm-dur-field { width: calc(30px * var(--root-scale)); }
+.gm-item-icon {
+	background-color: token(surface-recessed);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+.gm-item-icon:hover { border-color: token(accent-steel-hover); }
 
 .gm-title { color: token(accent-gold); }
 .gm-btn-label { color: token(text-primary); }
@@ -107,6 +167,7 @@
 .gm-row-title { color: token(text-primary); }
 .gm-row-detail { color: token(text-secondary); }
 .gm-row:hover { background-color: rgba(255, 255, 255, 12); }
+.gm-row.live .gm-row-title { color: token(semantic-success); }
 .gm-row.dim .gm-row-title { color: token(text-muted); }
 .gm-row.dim .gm-row-detail { color: token(text-muted); }
 .gm-row.alert .gm-row-title { color: token(semantic-danger); }
@@ -116,6 +177,11 @@
 .gm-sel-name { color: token(text-primary); }
 #gm_status { color: token(semantic-success); }
 #gm_status.bad { color: token(semantic-danger); }
+.gm-item-name { color: token(text-primary); }
+.gm-item-line { color: token(text-secondary); }
+.gm-step-text { color: token(text-secondary); }
+.gm-step-label.gm-btn .gm-step-text { color: token(text-primary); }
+.gm-step-value { color: token(accent-gold); }
 
 /* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
 #gm_title { width: calc(100% * var(--root-scale)); }
