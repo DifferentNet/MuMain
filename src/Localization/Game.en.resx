@@ -13722,7 +13722,7 @@
     <comment>legacy_id=3901</comment>
   </data>
   <data name="JewelOfAncientMixDesc1" xml:space="preserve">
-    <value>Excellent item: +13, 3+ options.</value>
+    <value>Excellent +9 or more, 3+ options.</value>
     <comment>legacy_id=3902</comment>
   </data>
   <data name="JewelOfAncientMixDesc2" xml:space="preserve">
@@ -13732,6 +13732,18 @@
   <data name="JewelOfAncientMixDesc3" xml:space="preserve">
     <value>On failure both items stay.</value>
     <comment>legacy_id=3904</comment>
+  </data>
+  <data name="AncientUpgradeDesc1" xml:space="preserve">
+    <value>On failure an ancient item</value>
+    <comment>legacy_id=3905</comment>
+  </data>
+  <data name="AncientUpgradeDesc2" xml:space="preserve">
+    <value>doesn't burn: it loses one level.</value>
+    <comment>legacy_id=3906</comment>
+  </data>
+  <data name="AncientUpgradeDesc3" xml:space="preserve">
+    <value>The jewels and zen are used up.</value>
+    <comment>legacy_id=3907</comment>
   </data>
   <data name="GmPanelTitleAdmin" xml:space="preserve">
     <value>GM panel - admin</value>
