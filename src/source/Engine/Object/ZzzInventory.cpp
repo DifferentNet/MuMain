@@ -1845,11 +1845,11 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
         {
             if (Sell)
             {
-                DWORD dwValue = ItemValue(ip, 0);
+                DWORD dwValue = ShopPurchasePrice(ip);
                 ConvertGold(dwValue, Text);
                 wchar_t Text2[100];
 
-                ConvertTaxGold(ItemValue(ip, 0), Text2);
+                ConvertTaxGold(ShopPurchasePrice(ip), Text2);
                 mu_swprintf(TextList[TextNum], I18N::Game::PurchasingPriceSS, Text2, Text);
             }
             else

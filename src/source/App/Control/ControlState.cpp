@@ -239,7 +239,7 @@ json NpcShopState()
             continue;
         }
         json described = DescribeItem(*item, item->y * grid->GetNumberOfColumn() + item->x);
-        const int64_t price = ItemValue(item, 0);
+        const int64_t price = ShopPurchasePrice(item);
         described["price"] = price + price * g_pNPCShop->GetTaxRate() / 100;
         items.push_back(std::move(described));
     }

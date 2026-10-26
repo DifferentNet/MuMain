@@ -1351,6 +1351,25 @@ void SetItemAttributes(ITEM* ip)
     CalcExcellentOptions(ip);
 }
 
+// What an NPC shop asks for the item, before the castle tax. Our server sells a few items at fixed prices that don't
+// follow the item formula (FixedShopPriceBuyHandlerPlugIn in the server's add-ons): a stack of 255 large healing or
+// mana potions +13 for 10,000,000 zen (Lumen and Amy) and the Moonstone Pendant for 5,000,000 zen (Lumen). Selling
+// to an NPC still pays a third of the formula, ItemValue(ip, 1).
+int64_t ShopPurchasePrice(ITEM* ip)
+{
+    if (ip != nullptr && (ip->Type == ITEM_LARGE_HEALING_POTION || ip->Type == ITEM_LARGE_MANA_POTION) && ip->Level == 13)
+    {
+        return 10000000LL * ip->Durability / 255;
+    }
+
+    if (ip != nullptr && ip->Type == ITEM_MOONSTONE_PENDANT)
+    {
+        return 5000000;
+    }
+
+    return ItemValue(ip, 0);
+}
+
 int64_t ItemValue(ITEM* ip, int goldType)
 {
     if (ip->Type == -1) return 0;
@@ -1728,7 +1747,12 @@ int64_t ItemValue(ITEM* ip, int goldType)
 
         if (ip->Type >= ITEM_POTION && ip->Type <= ITEM_ANTIDOTE)
         {
-            if (Level > 0)
+            // Our server (OpenMU's ItemPriceCalculator) prices a large healing or mana potion at
+            // 1500 x (level + 1) a piece. Classic MU doubled the price per level, so a stack of 255 at +13
+            // showed 3,133,440,000 zen, more than a character can carry, where the server says 5,355,000.
+            if (Level > 0 && (ip->Type == ITEM_LARGE_HEALING_POTION || ip->Type == ITEM_LARGE_MANA_POTION))
+                Gold *= Level + 1;
+            else if (Level > 0)
                 Gold *= (int64_t)pow((double)2, (double)Level);
 
             Gold = Gold / 10 * 10;

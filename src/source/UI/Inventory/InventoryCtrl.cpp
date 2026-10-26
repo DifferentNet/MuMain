@@ -1621,9 +1621,10 @@ bool mu::ui::window::CInventoryCtrl::AreItemsStackable(ITEM* pSourceItem, ITEM* 
         return true;
     }
 
-    if (GameLogic::Items::IsComplexPotionType(iSrcType) &&
-        GameLogic::Items::IsComplexPotionType(iTarType) &&
-        (iSrcDurability < 3 && iTarDurability < 3))
+    // Shield (SD) and complex potions stack up to 255 on our server as well, where classic MU stopped at 3 and
+    // didn't let SD potions stack by hand at all (server/trim/merchants.sql sells them in stacks of 50 and 255).
+    if ((GameLogic::Items::IsShieldPotionType(iSrcType) || GameLogic::Items::IsComplexPotionType(iSrcType)) &&
+        (iSrcDurability < BasicPotionStackLimit && iTarDurability < BasicPotionStackLimit))
     {
         return true;
     }
