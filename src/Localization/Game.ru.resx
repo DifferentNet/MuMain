@@ -14466,4 +14466,16 @@
   <data name="SealOfAscensionUse" xml:space="preserve">
     <value>Правый клик: использовать</value>
   </data>
+  <data name="ItemCombatPowerBrokenS" xml:space="preserve">
+    <value>Боевая мощь: 0, пока вещь сломана (%ls после ремонта)</value>
+  </data>
+  <data name="ItemCombatPowerSetDS" xml:space="preserve">
+    <value>Сет: +%d за каждую следующую вещь, +%ls за весь сет</value>
+  </data>
+  <data name="ItemCombatPowerChangeS" xml:space="preserve">
+    <value>Если надеть: %ls</value>
+  </data>
+  <data name="ItemCombatPowerNoChange" xml:space="preserve">
+    <value>Если надеть: без изменений</value>
+  </data>
 </root>

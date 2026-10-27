@@ -39,6 +39,7 @@
 #include "GameLogic/Items/ItemCategories.h"
 #include "GameLogic/Events/SeasonMarks.h"
 #include "GameLogic/Items/ItemLevelBonus.h"
+#include "GameLogic/Items/ItemCombatPower.h"
 #include "Render/Items/ItemDisplay.h"
 #include "Data/GameData/ItemData/ItemModelSlots.h"
 #include "UI/Scaling/UITransform.h"
@@ -58,6 +59,9 @@
 #include "UI/Core/WindowSystem.h"
 #include "Network/Server/ServerListManager.h"
 #include <algorithm>
+#include <cstdlib>
+#include <iterator>
+#include <optional>
 #include <time.h>
 #include <unordered_set>
 #include <vector>
@@ -1702,6 +1706,92 @@ void GetSpecialOptionText(int Type, wchar_t* Text, WORD Option, BYTE Value, int 
         gSkillManager.GetSkillInformation(Option, 1, NULL, &iMana, NULL);
         mu_swprintf(Text, I18N::Game::BeastUppercutManaD, iMana);
         break;
+    }
+}
+
+bool GetItemCombatPowerChangeLine(const ITEM* ip, wchar_t* text, std::size_t textSize, int& color)
+{
+    if (ip == nullptr || text == nullptr || textSize == 0)
+    {
+        return false;
+    }
+
+    const std::optional<int> change = GameLogic::Items::GetHeroCombatPowerChange(*ip);
+    if (!change.has_value())
+    {
+        return false;
+    }
+
+    if (*change == 0)
+    {
+        if (GameLogic::Items::GetItemCombatPower(GameLogic::Items::DescribeForCombatPower(*ip)) <= 0)
+        {
+            return false;
+        }
+
+        mu_swprintf_s(text, textSize, L"%ls", I18N::Game::ItemCombatPowerNoChange);
+        color = TEXT_COLOR_GRAY;
+        return true;
+    }
+
+    wchar_t amount[32]{};
+    ConvertGold(std::abs(*change), amount);
+    wchar_t signedAmount[40]{};
+    mu_swprintf(signedAmount, L"%ls%ls", *change > 0 ? L"+" : L"-", amount);
+    mu_swprintf_s(text, textSize, I18N::Game::ItemCombatPowerChangeS, signedAmount);
+    color = *change > 0 ? TEXT_COLOR_GREEN : TEXT_COLOR_RED;
+    return true;
+}
+
+// The tooltip's Combat Power lines (MU Skynet): what the item adds to the character's Combat Power while it is
+// equipped, the same number the server's /cp counts, and for an ancient piece what its set adds.
+static void RenderItemOwnCombatPower(const ITEM* ip, const GameLogic::Items::CombatPowerItem& item, int points)
+{
+    wchar_t pointsText[32]{};
+    ConvertGold(points, pointsText);
+    if (ip->Durability == 0)
+    {
+        mu_swprintf(TextList[TextNum], I18N::Game::ItemCombatPowerBrokenS, pointsText);
+        TextListColor[TextNum] = TEXT_COLOR_RED;
+    }
+    else
+    {
+        mu_swprintf(TextList[TextNum], I18N::Game::AdvStatsCombatPower, pointsText);
+        TextListColor[TextNum] = TEXT_COLOR_REDPURPLE;
+    }
+
+    TextBold[TextNum] = true;
+    TextNum++;
+
+    if (item.IsAncient)
+    {
+        const GameLogic::Items::AncientSetCombatPower set = GameLogic::Items::GetAncientSetCombatPower(item.IsHighTierAncient);
+        wchar_t wholeSetText[32]{};
+        ConvertGold(set.WholeSet, wholeSetText);
+        mu_swprintf(TextList[TextNum], I18N::Game::ItemCombatPowerSetDS, set.PerFurtherPiece, wholeSetText);
+        TextListColor[TextNum] = TEXT_COLOR_REDPURPLE;
+        TextBold[TextNum] = false;
+        TextNum++;
+    }
+}
+
+// The Combat Power lines of the tooltip: the item's own (nothing for items the formula leaves out) and how the
+// hero's Combat Power changes with the item put on.
+static void RenderItemCombatPower(const ITEM* ip)
+{
+    const GameLogic::Items::CombatPowerItem item = GameLogic::Items::DescribeForCombatPower(*ip);
+    const int points = GameLogic::Items::GetItemCombatPower(item);
+    if (points > 0)
+    {
+        RenderItemOwnCombatPower(ip, item, points);
+    }
+
+    int color = TEXT_COLOR_WHITE;
+    if (GetItemCombatPowerChangeLine(ip, TextList[TextNum], std::size(TextList[TextNum]), color))
+    {
+        TextListColor[TextNum] = color;
+        TextBold[TextNum] = false;
+        TextNum++;
     }
 }
 
@@ -4634,6 +4724,8 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
     {
         RequireClass(p);
     }
+
+    RenderItemCombatPower(ip);
 
     if (ip->Type >= ITEM_BOOTS && ip->Type < ITEM_BOOTS + MAX_ITEM_INDEX)
     {

@@ -341,22 +341,49 @@ std::uint16_t CSItemOption::GetMixItemLevel(const int Type) const
     return static_cast<std::uint16_t>(itemSType.byMixItemLevel[0] | (static_cast<std::uint16_t>(itemSType.byMixItemLevel[1]) << 8));
 }
 
-bool CSItemOption::GetAncientItemName(wchar_t* target, const std::size_t targetSize, const int itemType,
-                                      const int ancientDiscriminator) const
+int CSItemOption::GetAncientSetNumber(const int itemType, const int ancientDiscriminator) const
 {
     const int setItemType = ancientDiscriminator % 0x04;
-    if (setItemType <= 0 || itemType < 0 || itemType >= MAX_ITEM || target == nullptr || targetSize == 0)
+    if (setItemType <= 0 || itemType < 0 || itemType >= MAX_ITEM)
     {
-        return false;
+        return 0;
     }
 
     const auto setNumber = m_ItemSetType[itemType].byOption[setItemType - 1];
-    if (setNumber == EMPTY_OPTION || setNumber == 0)
+    if (setNumber == EMPTY_OPTION || setNumber >= MAX_SET_OPTION)
+    {
+        return 0;
+    }
+
+    return setNumber;
+}
+
+int CSItemOption::GetAncientSetItemCount(const int setNumber) const
+{
+    if (setNumber <= 0 || setNumber >= MAX_SET_OPTION)
+    {
+        return 0;
+    }
+
+    return m_ItemSetOption[setNumber].bySetItemCount;
+}
+
+const wchar_t* CSItemOption::GetAncientSetName(const int itemType, const int ancientDiscriminator) const
+{
+    const int setNumber = GetAncientSetNumber(itemType, ancientDiscriminator);
+    return setNumber == 0 ? nullptr : m_ItemSetOption[setNumber].strSetName;
+}
+
+bool CSItemOption::GetAncientItemName(wchar_t* target, const std::size_t targetSize, const int itemType,
+                                      const int ancientDiscriminator) const
+{
+    const wchar_t* setName = GetAncientSetName(itemType, ancientDiscriminator);
+    if (setName == nullptr || target == nullptr || targetSize == 0)
     {
         return false;
     }
 
-    const std::wstring name = std::wstring(m_ItemSetOption[setNumber].strSetName) + L" " + AncientItemKind(itemType);
+    const std::wstring name = std::wstring(setName) + L" " + AncientItemKind(itemType);
     const auto length = std::min(name.size(), targetSize - 1);
     std::wmemcpy(target, name.c_str(), length);
     target[length] = L'\0';

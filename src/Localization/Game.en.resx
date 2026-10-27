@@ -14843,4 +14843,16 @@
   <data name="SealOfAscensionUse" xml:space="preserve">
     <value>Right-click to use</value>
   </data>
+  <data name="ItemCombatPowerBrokenS" xml:space="preserve">
+    <value>Combat Power: 0 while broken (%ls repaired)</value>
+  </data>
+  <data name="ItemCombatPowerSetDS" xml:space="preserve">
+    <value>Set: +%d for each further piece, +%ls for the whole set</value>
+  </data>
+  <data name="ItemCombatPowerChangeS" xml:space="preserve">
+    <value>If equipped: %ls</value>
+  </data>
+  <data name="ItemCombatPowerNoChange" xml:space="preserve">
+    <value>If equipped: no change</value>
+  </data>
 </root>

@@ -150,6 +150,10 @@ void AutoEquipmentChange(int sx, int sy, ITEM* Inv, int InvWidth, int InvHeight)
 
 int CompareItem(ITEM item1, ITEM item2);
 void ConvertGold(double dGold, wchar_t* szText, int iDecimals = 0);
+// The tooltip line on how the hero's Combat Power changes with the item put on (MU Skynet): "If equipped: +1,250"
+// in green, a loss in red, "no change" in grey. False when there is no such line: no hero, an item the hero wears or
+// whose class can't wear it, or an item worth nothing that changes nothing.
+bool GetItemCombatPowerChangeLine(const ITEM* ip, wchar_t* text, std::size_t textSize, int& color);
 void ConvertGold64(__int64 Gold, wchar_t* Text);
 void ConvertTaxGold(DWORD Gold, wchar_t* Text);
 void ConvertChaosTaxGold(DWORD Gold, wchar_t* Text);
