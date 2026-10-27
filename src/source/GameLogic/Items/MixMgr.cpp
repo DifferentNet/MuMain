@@ -309,7 +309,7 @@ BOOL CMixRecipes::IsMixSource(ITEM* pItem)
                 && !((*iter)->m_bMixOption == 'B' && IsChaosItem(mixitem))
                 && !((*iter)->m_bMixOption == 'C' && Is380AddedItem(mixitem))
                 && !((*iter)->m_bMixOption == 'D' && IsFenrirAddedItem(mixitem))
-                && !((*iter)->m_bMixOption == 'E' && !IsUpgradableItem(mixitem))
+                && !((*iter)->m_bMixOption == 'E' && !IsUpgradableItem(mixitem) && mixitem.m_sType != ITEM_JEWEL_OF_FATE)
                 && !((*iter)->m_bMixOption == 'G' && !IsSourceOfRefiningStone(mixitem))
                 )
             {
@@ -916,6 +916,20 @@ void CMixRecipes::CalcMixRate(int iNumMixItems, CMixItem* pMixItems)
     if (m_iSuccessRate > 100)
     {
         m_iSuccessRate = 100;
+    }
+
+    // MU Moldova: the Jewel of Fate makes an upgrade or a Jewel of Ancient recipe succeed, over the cap (the server's
+    // ItemUpgrade.WithJewelOfFate).
+    if (IsJewelOfFateMix(GetCurRecipe()->m_iMixID))
+    {
+        for (int i = 0; i < iNumMixItems; ++i)
+        {
+            if (pMixItems[i].m_sType == ITEM_JEWEL_OF_FATE)
+            {
+                m_iSuccessRate = 100;
+                break;
+            }
+        }
     }
 }
 

@@ -13713,6 +13713,15 @@
   <data name="JewelOfAncientDescMix" xml:space="preserve">
     <value>in the Chaos Machine (Chaos Goblin).</value>
   </data>
+  <data name="JewelOfFateDesc" xml:space="preserve">
+    <value>Makes a +10…+15 upgrade succeed (100%%)</value>
+  </data>
+  <data name="JewelOfFateDescMix" xml:space="preserve">
+    <value>in the Chaos Machine, one jewel per attempt.</value>
+  </data>
+  <data name="JewelOfFateDescAncient" xml:space="preserve">
+    <value>With a Jewel of Ancient: ancient +14 and +15.</value>
+  </data>
   <data name="JewelOfAncientMix14" xml:space="preserve">
     <value>+14 with Jewel of Ancient</value>
     <comment>legacy_id=3900</comment>

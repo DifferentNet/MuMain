@@ -1078,11 +1078,6 @@ bool mu::ui::window::CInventoryCtrl::DropActsOn(ITEM* pPickItem, ITEM* pTargetIt
     if (GameLogic::Items::IsLuckyItemType(pTargetItem->Type))
     {
         bSuccess = false;
-        if (pPickItem->Type == ITEM_POTION + 161)
-        {
-            if (pTargetItem->Jewel_Of_Harmony_Option == 0)
-                bSuccess = true;
-        }
     }
     return bSuccess;
 }

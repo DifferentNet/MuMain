@@ -13336,6 +13336,15 @@
   <data name="JewelOfAncientDescMix" xml:space="preserve">
     <value>в Chaos Machine (Chaos Goblin).</value>
   </data>
+  <data name="JewelOfFateDesc" xml:space="preserve">
+    <value>Заточка +10…+15 проходит со 100%%</value>
+  </data>
+  <data name="JewelOfFateDescMix" xml:space="preserve">
+    <value>в Chaos Machine, один камень на попытку.</value>
+  </data>
+  <data name="JewelOfFateDescAncient" xml:space="preserve">
+    <value>С Jewel of Ancient: ancient +14 и +15.</value>
+  </data>
   <data name="JewelOfAncientMix14" xml:space="preserve">
     <value>+14 с Jewel of Ancient</value>
     <comment>legacy_id=3900</comment>
