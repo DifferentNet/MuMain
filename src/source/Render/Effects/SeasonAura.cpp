@@ -8,6 +8,7 @@
 #include "UI/Core/WindowSystem.h"
 #include "World/MapInfra/MapManager.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 
@@ -25,6 +26,26 @@ constexpr float OuterCircle = 1.9f;
 // About one flake for every this many frames of 25 per second, each living two to three seconds: some ten flakes
 // around a character at a time.
 constexpr int FlakeEveryFrames = 6;
+
+// Up to this many auras in sight snow fully; with more, each snows less, so that all of them together keep to some
+// 120 flakes of the 3,000 particles every effect shares (MAX_PARTICLES): a crowded town loses no skill effects.
+constexpr int FullySnowingAuras = 12;
+
+// The auras drawn in the last frame and in this one (WorldTime changes once a frame).
+int g_aurasLastFrame = 0;
+int g_aurasThisFrame = 0;
+double g_auraFrame = -1.0;
+
+void CountAura()
+{
+    if (WorldTime != g_auraFrame)
+    {
+        g_auraFrame = WorldTime;
+        g_aurasLastFrame = g_aurasThisFrame;
+        g_aurasThisFrame = 0;
+    }
+    ++g_aurasThisFrame;
+}
 
 void RenderCircle(OBJECT* o, const GameLogic::SeasonMarks::SeasonLook& look)
 {
@@ -47,7 +68,12 @@ void RenderCircle(OBJECT* o, const GameLogic::SeasonMarks::SeasonLook& look)
 
 void CreateParticles(OBJECT* o, const GameLogic::SeasonMarks::SeasonLook& look)
 {
-    if (look.ParticleKind != GameLogic::SeasonMarks::Particles::Snow || !rand_fps_check(FlakeEveryFrames))
+    if (look.ParticleKind != GameLogic::SeasonMarks::Particles::Snow)
+        return;
+
+    // Shared evenly: 13 to 24 auras snow half as often, 25 to 36 a third, and so on.
+    const int share = (std::max(g_aurasLastFrame, 1) + FullySnowingAuras - 1) / FullySnowingAuras;
+    if (!rand_fps_check(FlakeEveryFrames * share))
         return;
 
     // A flake starts somewhere over the circle, above the head, and falls (SubType 1 in ZzzEffectParticle.cpp).
@@ -82,6 +108,7 @@ void RenderSeasonAura(CHARACTER* c, OBJECT* o)
         return;
 
     const auto& look = marks.Look(worn.AuraSeason);
+    CountAura();
     RenderCircle(o, look);
     CreateParticles(o, look);
 }

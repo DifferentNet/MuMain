@@ -14,9 +14,10 @@
 // Our server's add-on (MU Moldova, BattlePassMarks) answers the hidden chat command "/bpmarks", which this sends
 // once the character entered the world, with a blue server message per marked character in the game, and from then
 // on sends one for each character that enters the world and for each new mark. This takes them out of the chat:
-//   "#BPM|name|season|title 0/1|aura 0/1"
+//   "#BPM|name|season|title 0/1/2|aura 0/1"
 // A line replaces what is known about that character in that season (both 0: nothing left of it). A character
-// wears the title of its latest season with one and the aura of its latest season with one.
+// wears the title of its latest season with one and the aura of its latest season with one. Title 2 is the gold
+// one of the season's Hall of Fame (its first ten accounts at the last level); 1 is the usual, ice blue one.
 //
 // How each season looks comes from Data/Seasons.json (the circle's texture and colour, the particles, the title's
 // colours; stage 7 adds the seasonal Fenrir's palette). A season missing there looks like the closest season
@@ -44,8 +45,11 @@ struct SeasonLook
     std::wstring Name;
 
     // The title line: text and background, 0-255.
-    unsigned char TitleText[4] = {255, 214, 110, 255};
-    unsigned char TitleBack[4] = {30, 20, 0, 190};
+    unsigned char TitleText[4] = {165, 225, 255, 255};
+    unsigned char TitleBack[4] = {0, 22, 45, 190};
+    // The gold title of the Hall of Fame (title 2).
+    unsigned char TopText[4] = {255, 214, 110, 255};
+    unsigned char TopBack[4] = {30, 20, 0, 190};
 
     Circle CircleTexture = Circle::Runes;
     float CircleColor[3] = {0.35f, 0.65f, 1.0f};
@@ -53,7 +57,7 @@ struct SeasonLook
     float ParticleColor[3] = {0.75f, 0.9f, 1.0f};
 };
 
-// What a character wears: the seasons of its title and aura, -1 for none.
+// What a character wears: the seasons of its title and aura, -1 for none; Title 1 the usual title, 2 the gold one.
 struct Worn
 {
     int TitleSeason = -1;

@@ -216,6 +216,8 @@ void Store::LoadLooks()
         {
             ReadBytes(*title, "text", look.TitleText, 4);
             ReadBytes(*title, "background", look.TitleBack, 4);
+            ReadBytes(*title, "topText", look.TopText, 4);
+            ReadBytes(*title, "topBackground", look.TopBack, 4);
         }
 
         if (const auto aura = entry.find("aura"); aura != entry.end() && aura->is_object())

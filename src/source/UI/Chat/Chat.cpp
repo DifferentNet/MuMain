@@ -471,10 +471,13 @@ void AddGuildName(CHAT* c, CHARACTER* Owner)
         const auto worn = GameLogic::SeasonMarks::Marks().Of(Owner->ID);
         if (worn.TitleSeason >= 0)
         {
+            // Gold for the season's Hall of Fame (title 2), the season's usual colours for the others.
             const auto& look = GameLogic::SeasonMarks::Marks().Look(worn.TitleSeason);
+            const unsigned char* text = worn.Title >= 2 ? look.TopText : look.TitleText;
+            const unsigned char* back = worn.Title >= 2 ? look.TopBack : look.TitleBack;
             mu_swprintf_s(c->Title, I18N::Game::SeasonHeroTitle, worn.TitleSeason);
-            c->TitleText = RGBA(look.TitleText[0], look.TitleText[1], look.TitleText[2], look.TitleText[3]);
-            c->TitleBack = RGBA(look.TitleBack[0], look.TitleBack[1], look.TitleBack[2], look.TitleBack[3]);
+            c->TitleText = RGBA(text[0], text[1], text[2], text[3]);
+            c->TitleBack = RGBA(back[0], back[1], back[2], back[3]);
         }
     }
 }
