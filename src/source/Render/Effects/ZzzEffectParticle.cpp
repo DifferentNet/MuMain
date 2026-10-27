@@ -2762,6 +2762,17 @@ int CreateParticle(int Type, vec3_t Position, vec3_t Angle, vec3_t Light, int Su
                 break;
             case BITMAP_SNOW_EFFECT_1:
             case BITMAP_SNOW_EFFECT_2:
+                if (o->SubType == 1)
+                {
+                    // The battle pass' season aura (Render/Effects/SeasonAura.cpp): a flake falling slowly
+                    // from above the head, drifting a little.
+                    o->Scale = Scale + (rand() % 10) * 0.02f;
+                    o->LifeTime = rand() % 15 + 55;
+                    o->Rotation = (float)(rand() % 360);
+                    o->Gravity = -(float)(rand() % 3 + 4);
+                    Vector((float)(rand() % 13 - 6) * 0.1f, (float)(rand() % 13 - 6) * 0.1f, 0.f, o->Velocity);
+                    break;
+                }
                 o->Scale = Scale + (rand() % 10) * 0.02f;
                 o->LifeTime = rand() % 10 + 30;
                 o->Angle[2] = (float)(rand() % 360);
@@ -7446,6 +7457,20 @@ void MoveParticles()
             break;
             case BITMAP_SNOW_EFFECT_1:
             case BITMAP_SNOW_EFFECT_2:
+                if (o->SubType == 1)
+                {
+                    // The season aura's flake: falls at an even pace, turns slowly, fades out at the end.
+                    o->Rotation += (6.f) * FPS_ANIMATION_FACTOR;
+                    o->Position[2] += (o->Gravity * 0.5f) * FPS_ANIMATION_FACTOR;
+                    if (o->LifeTime < 15)
+                    {
+                        o->Light[0] *= powf(0.85f, FPS_ANIMATION_FACTOR);
+                        o->Light[1] *= powf(0.85f, FPS_ANIMATION_FACTOR);
+                        o->Light[2] *= powf(0.85f, FPS_ANIMATION_FACTOR);
+                    }
+                    VectorAddScaled(o->Position, o->Velocity, o->Position, FPS_ANIMATION_FACTOR);
+                    break;
+                }
                 o->Rotation += (20.f) * FPS_ANIMATION_FACTOR;
                 o->Position[2] += ((o->Gravity * 0.5f)) * FPS_ANIMATION_FACTOR;
 

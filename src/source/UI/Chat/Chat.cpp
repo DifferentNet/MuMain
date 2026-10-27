@@ -49,6 +49,7 @@
 #include "GameLogic/Combat/DuelMgr.h"
 #include "Core/Text/WideString.h"
 #include "Render/Text/CUIRenderText.h"
+#include "GameLogic/Events/SeasonMarks.h"
 
 namespace UI::Chat
 {
@@ -58,6 +59,10 @@ typedef struct
     wchar_t      Union[30];
     wchar_t      Guild[30];
     wchar_t      szShopTitle[16];
+    // The battle pass' title «Hero of Season N» (GameLogic/Events/SeasonMarks.h): the top line, in the season's colours.
+    wchar_t      Title[48];
+    DWORD     TitleText;
+    DWORD     TitleBack;
     char      Color;
     char      GuildColor;
     float       IDLifeTime;
@@ -77,7 +82,7 @@ CHAT Chat[MAX_CHAT];
 
 void SetBooleanPosition(CHAT* c)
 {
-    SIZE Size[5]{};
+    SIZE Size[6]{};
 
     if (g_isCharacterBuff((&c->Owner->Object), eBuff_GMEffect) || (c->Owner->CtlCode == CTLCODE_20OPERATOR) || (c->Owner->CtlCode == CTLCODE_08OPERATOR))
     {
@@ -95,6 +100,7 @@ void SetBooleanPosition(CHAT* c)
     Size[2] = g_pRenderText->MeasureText(c->Text[1], lstrlen(c->Text[1]));
     Size[3] = g_pRenderText->MeasureText(c->Union, lstrlen(c->Union));
     Size[4] = g_pRenderText->MeasureText(c->Guild, lstrlen(c->Guild));
+    Size[5] = g_pRenderText->MeasureText(c->Title, lstrlen(c->Title));
 
     Size[0].cx += 3;
 
@@ -105,8 +111,9 @@ void SetBooleanPosition(CHAT* c)
         c->Width = std::max<int>(std::max<int>(Size[0].cx, Size[1].cx), std::max<int>(Size[3].cx, Size[4].cx));
     else
         c->Width = std::max<int>(std::max<int>(Size[0].cx, Size[3].cx), Size[4].cx);
+    c->Width = std::max<int>(c->Width, Size[5].cx);
     const int lineCount = (c->ID[0] != L'\0') + (c->LifeTime[0] > 0) + (c->LifeTime[1] > 0)
-        + (c->Union[0] != L'\0') + (c->Guild[0] != L'\0');
+        + (c->Union[0] != L'\0') + (c->Guild[0] != L'\0') + (c->Title[0] != L'\0');
     c->LineHeight = 1;
     for (const SIZE& size : Size)
     {
@@ -255,6 +262,19 @@ void RenderBoolean(int x, int y, CHAT* c)
     {
         g_pRenderText->SetBgColor(GetGuildRelationShipBGColor(c->Owner->GuildRelationShip));
         g_pRenderText->SetTextColor(GetGuildRelationShipTextColor(c->Owner->GuildRelationShip));
+    }
+
+    if (c->Title[0])
+    {
+        // The season's title stands above the alliance and the guild, in the season's own colours.
+        const DWORD back = g_pRenderText->GetBgColor();
+        const DWORD text = g_pRenderText->GetTextColor();
+        g_pRenderText->SetBgColor(c->TitleBack);
+        g_pRenderText->SetTextColor(c->TitleText);
+        g_pRenderText->RenderText(RenderPos.x, RenderPos.y, c->Title, RenderBoxSize.cx, iLineHeight, RT3_SORT_CENTER);
+        RenderPos.y += iLineHeight;
+        g_pRenderText->SetBgColor(back);
+        g_pRenderText->SetTextColor(text);
     }
 
     if (c->Union && c->Union[0])
@@ -443,6 +463,23 @@ void AddGuildName(CHAT* c, CHARACTER* Owner)
         c->GuildColor = 0;
         c->Guild[0] = 0;
     }
+
+    // The battle pass' season title; not in Chaos Castle, where the aura stays hidden too.
+    c->Title[0] = 0;
+    if (Owner->Object.Kind == KIND_PLAYER && !gMapManager.InChaosCastle())
+    {
+        const auto worn = GameLogic::SeasonMarks::Marks().Of(Owner->ID);
+        if (worn.TitleSeason >= 0)
+        {
+            // Gold for the season's Hall of Fame (title 2), the season's usual colours for the others.
+            const auto& look = GameLogic::SeasonMarks::Marks().Look(worn.TitleSeason);
+            const unsigned char* text = worn.Title >= 2 ? look.TopText : look.TitleText;
+            const unsigned char* back = worn.Title >= 2 ? look.TopBack : look.TitleBack;
+            mu_swprintf_s(c->Title, I18N::Game::SeasonHeroTitle, worn.TitleSeason);
+            c->TitleText = RGBA(text[0], text[1], text[2], text[3]);
+            c->TitleBack = RGBA(back[0], back[1], back[2], back[3]);
+        }
+    }
 }
 
 void CreateChat(wchar_t* character_name, const wchar_t* chat_text, CHARACTER* Owner, int Flag, int SetColor)
@@ -532,6 +569,7 @@ int CreateChat(wchar_t* character_name, const wchar_t* chat_text, OBJECT* Owner,
             c->Color = Color;
             c->GuildColor = 0;
             c->Guild[0] = 0;
+            c->Title[0] = 0;
             AddChat(c, chat_text, 0);
             c->LifeTime[0] = Flag;
 

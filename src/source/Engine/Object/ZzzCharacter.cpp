@@ -132,6 +132,7 @@ namespace
 #include "GameLogic/Social/MonkSystem.h"
 #include "UI/Core/WindowSystem.h"
 #include "Render/Lighting/LightMoodSetting.h"
+#include "Render/Effects/SeasonAura.h"
 
 CHARACTER* CharactersClient;
 CHARACTER CharacterView;
@@ -11205,6 +11206,9 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                     }
                 }
             }
+
+            // The battle pass' season aura (level 45): on the terms of the full set's glow above.
+            Render::Effects::RenderSeasonAura(c, o);
         }
         break;
     case MODEL_BULL_FIGHTER:

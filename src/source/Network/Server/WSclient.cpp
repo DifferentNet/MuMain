@@ -116,6 +116,7 @@ using namespace mu::ui::window;
 #include "GameLogic/Events/DailyRewards.h"
 #include "GameLogic/Events/BattlePass.h"
 #include "GameLogic/Events/TierMaps.h"
+#include "GameLogic/Events/SeasonMarks.h"
 #include "GameLogic/Commands/GmPanel.h"
 #include "GameLogic/Character/AdvancedStats.h"
 #include "GameLogic/Items/JewelBank.h"
@@ -1271,6 +1272,9 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     GameLogic::AdvancedStats::Stats().Reset();
     GameLogic::JewelBank::Bank().Reset();
     GameLogic::GmPanel::Panel().Reset();
+    // The battle pass' titles and auras of the characters around (GameLogic/Events/SeasonMarks.h).
+    GameLogic::SeasonMarks::Marks().Reset();
+    GameLogic::SeasonMarks::Marks().Request();
 
     g_ConsoleDebug->Write(MCD_RECEIVE, L"0x03 [ReceiveJoinMapServer]");
 
@@ -1999,10 +2003,12 @@ void ReceiveNotice(const BYTE* ReceiveBuffer)
         // (GameLogic/Events/DailyRewards.h), the battle pass window (GameLogic/Events/BattlePass.h), the character
         // window's advanced stats tab (GameLogic/Character/AdvancedStats.h), the vault's pages
         // (UI/Inventory/VaultPages.h), the jewel bank window (GameLogic/Items/JewelBank.h), the Tier Maps window
-        // (GameLogic/Events/TierMaps.h) and the GM panel (GameLogic/Commands/GmPanel.h) stay out of the chat.
+        // (GameLogic/Events/TierMaps.h), the GM panel (GameLogic/Commands/GmPanel.h) and the battle pass' titles and
+        // auras (GameLogic/Events/SeasonMarks.h) stay out of the chat.
         if (GameLogic::EventTimes::Times().TakeMessage(Text) || GameLogic::DailyRewards::Rewards().TakeMessage(Text) ||
             GameLogic::BattlePass::Pass().TakeMessage(Text) || GameLogic::AdvancedStats::Stats().TakeMessage(Text) ||
-            UI::Storage::Pages().TakeMessage(Text) || GameLogic::JewelBank::Bank().TakeMessage(Text))
+            UI::Storage::Pages().TakeMessage(Text) || GameLogic::JewelBank::Bank().TakeMessage(Text) ||
+            GameLogic::SeasonMarks::Marks().TakeMessage(Text))
         {
         }
         else if (GameLogic::TierMaps::Maps().TakeMessage(Text))
