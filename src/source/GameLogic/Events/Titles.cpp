@@ -16,13 +16,13 @@ constexpr std::wstring_view WornLine = L"#TTL|";
 constexpr std::wstring_view ListLine = L"#TTW";
 
 // Splits "a|b|c" into its fields.
-std::vector<std::wstring> Split(std::wstring_view text)
+std::vector<std::wstring> Split(std::wstring_view text, wchar_t separator = L'|')
 {
     std::vector<std::wstring> fields;
     size_t start = 0;
     while (true)
     {
-        const size_t bar = text.find(L'|', start);
+        const size_t bar = text.find(separator, start);
         fields.emplace_back(text.substr(start, bar == std::wstring_view::npos ? std::wstring_view::npos : bar - start));
         if (bar == std::wstring_view::npos)
             break;
@@ -34,6 +34,31 @@ std::vector<std::wstring> Split(std::wstring_view text)
 long long ToNumber(const std::wstring& field)
 {
     return std::wcstoll(field.c_str(), nullptr, 10);
+}
+
+// "3", "2.5": a percent with a dot whatever the C locale says, kept within 0..100.
+float ToPercent(const std::wstring& field)
+{
+    float value = 0.f;
+    float scale = 0.f;
+    for (const wchar_t c : field)
+    {
+        if (c == L'.' && scale == 0.f)
+            scale = 0.1f;
+        else if (c >= L'0' && c <= L'9')
+        {
+            if (scale == 0.f)
+                value = value * 10.f + static_cast<float>(c - L'0');
+            else
+            {
+                value += scale * static_cast<float>(c - L'0');
+                scale *= 0.1f;
+            }
+        }
+        else
+            break;
+    }
+    return std::clamp(value, 0.f, 100.f);
 }
 
 Rarity ToRarity(const std::wstring& field)
@@ -132,7 +157,7 @@ void Store::TakeListLine(std::wstring_view tag, const std::vector<std::wstring>&
         return;
     }
 
-    // title|rarity|term|owned|seconds left|name|hint
+    // title|rarity|term|owned|seconds left|name|hint|bonus
     if (!tag.empty() || fields.size() < 6 || fields[0].empty())
         return;
 
@@ -145,6 +170,14 @@ void Store::TakeListLine(std::wstring_view tag, const std::vector<std::wstring>&
     entry.Name = fields[5];
     if (fields.size() > 6)
         entry.Hint = fields[6];
+    if (fields.size() > 7)
+    {
+        // "HP;taken;damage".
+        const auto parts = Split(fields[7], L';');
+        float* const values[] = {&entry.BonusHealth, &entry.BonusTaken, &entry.BonusDamage};
+        for (size_t i = 0; i < std::size(values) && i < parts.size(); ++i)
+            *values[i] = ToPercent(parts[i]);
+    }
     m_incoming.push_back(std::move(entry));
 }
 

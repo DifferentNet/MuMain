@@ -57,6 +57,31 @@ std::wstring TimeLeft(long long seconds)
     return Printf(I18N::Game::TitlesLeftMinutes, static_cast<int>(minutes));
 }
 
+// "3", "2.5": a percent with a dot, whatever the C locale says.
+std::wstring Percent(float value)
+{
+    const int tenths = static_cast<int>(value * 10.f + 0.5f);
+    return tenths % 10 == 0 ? std::to_wstring(tenths / 10) : std::to_wstring(tenths / 10) + L"." + std::to_wstring(tenths % 10);
+}
+
+// The bonus of a title while it is worn: "+3% HP, -1% damage taken, +1% damage".
+std::wstring BonusText(const GameLogic::Titles::Entry& entry)
+{
+    std::wstring text;
+    auto add = [&text](wchar_t sign, float value, const wchar_t* what)
+    {
+        if (value <= 0.f)
+            return;
+        if (!text.empty())
+            text += L", ";
+        text += sign + Percent(value) + L"% " + what;
+    };
+    add(L'+', entry.BonusHealth, I18N::Game::TitlesBonusHealth);
+    add(L'-', entry.BonusTaken, I18N::Game::TitlesBonusTaken);
+    add(L'+', entry.BonusDamage, I18N::Game::TitlesBonusDamage);
+    return text;
+}
+
 // How long a title not owned yet would last.
 const wchar_t* TermText(GameLogic::Titles::Term term)
 {
@@ -222,6 +247,7 @@ void mu::ui::window::CTitlesWindow::BindRmlModel(Rml::DataModelConstructor& c, T
     rowType.RegisterMember("index", &TitlesRow::index);
     rowType.RegisterMember("name", &TitlesRow::name);
     rowType.RegisterMember("detail", &TitlesRow::detail);
+    rowType.RegisterMember("bonus", &TitlesRow::bonus);
     rowType.RegisterMember("hint", &TitlesRow::hint);
     rowType.RegisterMember("mark", &TitlesRow::mark);
     rowType.RegisterMember("rarity", &TitlesRow::rarity);
@@ -348,6 +374,8 @@ void mu::ui::window::CTitlesWindow::SyncContent()
             row.worn = entry.Owned && entry.Id == store.Wearing();
             if (row.worn)
                 row.mark = wornMark;
+            if (entry.HasBonus())
+                row.bonus = wrapped(BonusText(entry));
 
             if (!entry.Owned)
             {

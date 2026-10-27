@@ -60,6 +60,13 @@
 .tt-row-line { display: flex; flex-direction: row; justify-content: space-between; pointer-events: none; }
 .tt-row-detail { display: block; white-space: nowrap; pointer-events: none; }
 .tt-row-mark { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+.tt-row-bonus {
+	display: block;
+	white-space: normal;
+	line-height: 1.1;
+	margin-top: calc(1px * var(--root-scale));
+	pointer-events: none;
+}
 .tt-row-hint {
 	display: block;
 	white-space: normal;
@@ -98,6 +105,8 @@
 .tt-row-detail { color: rgb(130, 130, 130); }
 .tt-row.owned .tt-row-detail { color: rgb(200, 220, 255); }
 .tt-row-mark { color: rgb(255, 220, 120); }
+.tt-row-bonus { color: rgb(170, 155, 115); }
+.tt-row.owned .tt-row-bonus { color: rgb(233, 207, 134); }
 .tt-row-hint { color: rgb(160, 160, 160); }
 .tt-footer { color: rgb(200, 220, 255); }
 

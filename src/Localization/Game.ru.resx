@@ -14187,4 +14187,13 @@
   <data name="TitlesOwnedCount" xml:space="preserve">
     <value>Получено: %d из %d</value>
   </data>
+  <data name="TitlesBonusHealth" xml:space="preserve">
+    <value>HP</value>
+  </data>
+  <data name="TitlesBonusTaken" xml:space="preserve">
+    <value>урона по вам</value>
+  </data>
+  <data name="TitlesBonusDamage" xml:space="preserve">
+    <value>к урону</value>
+  </data>
 </root>

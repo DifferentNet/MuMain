@@ -10,7 +10,8 @@
 	     /titles, docked right at full dock height: the title, the worn title and whether a new one goes on by
 	     itself; then one counter-scaled pane in which the two tabs (the own titles, the whole catalogue) and the list
 	     (a row a title: its name in its plate's colour, how long it lasts or lasts left, "worn" on the worn one; the
-	     ones not owned dimmed with how to get them; under the rows a note) flow; and the exit button. The workspace
+	     ones not owned dimmed with how to get them; the bonus of its rarity in gold under each; under the rows a note)
+	     flow; and the exit button. The workspace
 	     slot places and scales #panel. C++ keeps the state; clicks are queued with titles_tab(index),
 	     titles_wear(row) and titles_exit. -->
 	<div id="panel" data-model="titles">
@@ -43,6 +44,8 @@
 						<span class="tt-row-detail" data-style-font-size="r.detail.text_px + 'px'">{{r.detail.text}}</span>
 						<span class="tt-row-mark" data-if="r.worn" data-style-font-size="r.mark.text_px + 'px'">{{r.mark.text}}</span>
 					</div>
+					<span class="tt-row-bonus" data-if="r.bonus.text != ''"
+					      data-style-font-size="r.bonus.text_px + 'px'">{{r.bonus.text}}</span>
 					<span class="tt-row-hint" data-if="r.hint.text != ''"
 					      data-style-font-size="r.hint.text_px + 'px'">{{r.hint.text}}</span>
 				</div>

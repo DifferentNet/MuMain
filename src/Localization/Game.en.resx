@@ -14564,4 +14564,13 @@
   <data name="TitlesOwnedCount" xml:space="preserve">
     <value>Owned: %d of %d</value>
   </data>
+  <data name="TitlesBonusHealth" xml:space="preserve">
+    <value>HP</value>
+  </data>
+  <data name="TitlesBonusTaken" xml:space="preserve">
+    <value>damage taken</value>
+  </data>
+  <data name="TitlesBonusDamage" xml:space="preserve">
+    <value>damage</value>
+  </data>
 </root>

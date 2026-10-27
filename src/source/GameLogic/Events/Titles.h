@@ -17,8 +17,9 @@
 //                          from then on one for each character that enters the world or changes its title. An empty
 //                          title ("#TTL|name||||") takes the plate away.
 //   "/titleslist en|ru" -> "#TTW0|worn|auto" (auto 1: the character never chose, a new title goes on by itself),
-//                          "#TTW|title|rarity|term|owned|seconds left|name|hint" for the own titles and then the
-//                          catalogue's, "#TTW.|" at the end. Seconds left: 0 forever, -1 while held.
+//                          "#TTW|title|rarity|term|owned|seconds left|name|hint|bonus" for the own titles and then
+//                          the catalogue's, "#TTW.|" at the end. Seconds left: 0 forever, -1 while held. Bonus: what
+//                          the worn title of that rarity gives, "HP;taken;damage" in percent ("3;1;1"), empty: none.
 //   "/title <title>" or "/title off" wears a title or none; the server answers with the new "#TTL" line.
 namespace GameLogic::Titles
 {
@@ -67,6 +68,12 @@ struct Entry
     long long SecondsLeft = 0;
     std::wstring Name;
     std::wstring Hint;
+    // The bonus while it is worn, in percent: more maximum health, less damage taken, more damage dealt.
+    float BonusHealth = 0.f;
+    float BonusTaken = 0.f;
+    float BonusDamage = 0.f;
+
+    bool HasBonus() const { return BonusHealth != 0.f || BonusTaken != 0.f || BonusDamage != 0.f; }
 };
 
 class Store

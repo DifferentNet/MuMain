@@ -25,13 +25,15 @@ struct TitlesTab
     bool operator==(const TitlesTab&) const = default;
 };
 
-// A row of the list: a title (or "No title"), how long it lasts or lasts left, how to get it while it is not owned.
+// A row of the list: a title (or "No title"), how long it lasts or lasts left, the bonus of its rarity, how to get it
+// while it is not owned.
 struct TitlesRow
 {
     // The row's place in the list, for a click (titles_wear).
     int index = 0;
     TitlesLine name;
     TitlesLine detail;
+    TitlesLine bonus;
     TitlesLine hint;
     TitlesLine mark;
     // The plate's colour (GameLogic::Titles::Rarity); -1 for the "No title" row.
