@@ -58,6 +58,14 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME test_item_combat_power
+    SOURCES
+        test_item_combat_power.cpp
+    LINK_LIBS
+        MuClient
+)
+
+mu_add_test(
     NAME test_path_end_nodes
     SOURCES
         test_path_end_nodes.cpp

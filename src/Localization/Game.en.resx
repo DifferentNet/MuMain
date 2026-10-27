@@ -14489,4 +14489,10 @@
   <data name="GmPanelUndoConfirm" xml:space="preserve">
     <value>Undo #%lld: %ls %ls?</value>
   </data>
+  <data name="ItemCombatPowerBrokenS" xml:space="preserve">
+    <value>Combat Power: 0 while broken (%ls repaired)</value>
+  </data>
+  <data name="ItemCombatPowerSetDS" xml:space="preserve">
+    <value>Set: +%d for each further piece, +%ls for the whole set</value>
+  </data>
 </root>

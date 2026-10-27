@@ -22,6 +22,7 @@
 #include "World/MapInfra/MapManager.h"
 #include "UI/Core/WindowSystem.h"
 #include "GameLogic/Items/PersonalShopTitleImp.h"
+#include "GameLogic/Items/ItemCombatPower.h"
 #include "UI/Core/UIManager.h"
 #include "Render/Models/ZzzBMD.h"
 #include "Render/Effects/ZzzEffect.h"
@@ -750,6 +751,16 @@ static std::uint8_t g_tabBar = 0;
 
         const int ownershipColor = (gCharacterManager.GetBaseClass(Hero->Class) == CLASS_DARK_LORD) ? TEXT_COLOR_WHITE : TEXT_COLOR_DARKRED;
         appendLine(ownershipColor, false, true, ownershipFormat.c_str(), I18N::Game::DarkLord);
+
+        // MU Skynet: what the pet adds to the Combat Power (the Dark Horse; the Dark Raven adds nothing).
+        if (const int combatPower = GameLogic::Items::GetItemCombatPower(GameLogic::Items::DescribeForCombatPower(*pItem)); combatPower > 0)
+        {
+            wchar_t combatPowerText[32]{};
+            ConvertGold(combatPower, combatPowerText);
+            appendLine(pItem->Durability == 0 ? TEXT_COLOR_RED : TEXT_COLOR_REDPURPLE, true, false,
+                       pItem->Durability == 0 ? I18N::Game::ItemCombatPowerBrokenS : I18N::Game::AdvStatsCombatPower,
+                       combatPowerText);
+        }
 
         for (int i = 0; i < pItem->SpecialNum; ++i)
         {

@@ -14112,4 +14112,10 @@
   <data name="GmPanelUndoConfirm" xml:space="preserve">
     <value>Отменить #%lld: %ls %ls?</value>
   </data>
+  <data name="ItemCombatPowerBrokenS" xml:space="preserve">
+    <value>Боевая мощь: 0, пока вещь сломана (%ls после ремонта)</value>
+  </data>
+  <data name="ItemCombatPowerSetDS" xml:space="preserve">
+    <value>Сет: +%d за каждую следующую вещь, +%ls за весь сет</value>
+  </data>
 </root>

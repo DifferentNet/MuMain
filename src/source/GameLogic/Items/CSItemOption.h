@@ -160,6 +160,8 @@ public:
     // An ancient item's name, "<set> <kind>": "Enis Pants", "Muren Ring of Fire". False when the item has no set of
     // that type (ancientDiscriminator: the server's set type, 1 = A, 2 = B).
     bool	GetAncientItemName(wchar_t* target, std::size_t targetSize, int itemType, int ancientDiscriminator) const;
+    // The name of an ancient item's set ("Enis", "Bragi"); nullptr when the item has no set of that type.
+    const wchar_t* GetAncientSetName(int itemType, int ancientDiscriminator) const;
 
     void	PlusSpecial(std::uint16_t* Value, int Special) const;
     void	PlusSpecialPercent(std::uint16_t* Value, int Special) const;

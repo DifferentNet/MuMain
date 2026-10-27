@@ -38,6 +38,7 @@
 #include "GameLogic/Items/ChangeRingManager.h"
 #include "GameLogic/Items/ItemCategories.h"
 #include "GameLogic/Items/ItemLevelBonus.h"
+#include "GameLogic/Items/ItemCombatPower.h"
 #include "Render/Items/ItemDisplay.h"
 #include "Data/GameData/ItemData/ItemModelSlots.h"
 #include "UI/Scaling/UITransform.h"
@@ -1691,6 +1692,45 @@ void GetSpecialOptionText(int Type, wchar_t* Text, WORD Option, BYTE Value, int 
         gSkillManager.GetSkillInformation(Option, 1, NULL, &iMana, NULL);
         mu_swprintf(Text, I18N::Game::BeastUppercutManaD, iMana);
         break;
+    }
+}
+
+// The tooltip's Combat Power lines (MU Skynet): what the item adds to the character's Combat Power while it is
+// equipped, the same number the server's /cp counts; nothing for items the formula leaves out.
+static void RenderItemCombatPower(const ITEM* ip)
+{
+    const GameLogic::Items::CombatPowerItem item = GameLogic::Items::DescribeForCombatPower(*ip);
+    const int points = GameLogic::Items::GetItemCombatPower(item);
+    if (points <= 0)
+    {
+        return;
+    }
+
+    wchar_t pointsText[32]{};
+    ConvertGold(points, pointsText);
+    if (ip->Durability == 0)
+    {
+        mu_swprintf(TextList[TextNum], I18N::Game::ItemCombatPowerBrokenS, pointsText);
+        TextListColor[TextNum] = TEXT_COLOR_RED;
+    }
+    else
+    {
+        mu_swprintf(TextList[TextNum], I18N::Game::AdvStatsCombatPower, pointsText);
+        TextListColor[TextNum] = TEXT_COLOR_REDPURPLE;
+    }
+
+    TextBold[TextNum] = true;
+    TextNum++;
+
+    if (item.IsAncient)
+    {
+        const GameLogic::Items::AncientSetCombatPower set = GameLogic::Items::GetAncientSetCombatPower(item.IsHighTierAncient);
+        wchar_t wholeSetText[32]{};
+        ConvertGold(set.WholeSet, wholeSetText);
+        mu_swprintf(TextList[TextNum], I18N::Game::ItemCombatPowerSetDS, set.PerFurtherPiece, wholeSetText);
+        TextListColor[TextNum] = TEXT_COLOR_REDPURPLE;
+        TextBold[TextNum] = false;
+        TextNum++;
     }
 }
 
@@ -4609,6 +4649,8 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
     {
         RequireClass(p);
     }
+
+    RenderItemCombatPower(ip);
 
     if (ip->Type >= ITEM_BOOTS && ip->Type < ITEM_BOOTS + MAX_ITEM_INDEX)
     {
