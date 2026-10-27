@@ -13977,7 +13977,10 @@
     <value>Jewel of Ancient or Fate, Box of Kundun or jewels</value>
   </data>
   <data name="SkyNetBoxBank" xml:space="preserve">
-    <value>Jewels go straight into your jewel bank</value>
+    <value>Jewels go to your jewel bank, the rest to your inventory</value>
+  </data>
+  <data name="SkyNetBoxRoom" xml:space="preserve">
+    <value>Opens only with inventory room for any prize</value>
   </data>
   <data name="SealOfAscensionExperience" xml:space="preserve">
     <value>+50%% experience for 2 hours of play</value>
