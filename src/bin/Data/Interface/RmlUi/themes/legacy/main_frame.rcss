@@ -22,23 +22,24 @@
 	font-family: "token(font-body)";
 	font-size: 9dp;
 }
-#hud_strip    { margin-left: -320dp; bottom: 10dp; width: 640dp; height: 41dp; }
+#hud_strip    { margin-left: -320dp; bottom: 10dp; width: 488dp; height: 41dp; }
 #gauges_left  { margin-left: -162dp; bottom: 9dp;  width: 62dp;  height: 40dp; }
 #gauges_right { margin-left: 100dp;  bottom: 9dp;  width: 62dp;  height: 40dp; }
-#buttons      { margin-left: 168dp;  bottom: 10dp; width: 152dp; height: 41dp; }
+#buttons      { margin-left: 168dp;  bottom: 10dp; width: 300dp; height: 41dp; }
 #exp          { margin-left: -320dp; bottom: 0dp;  width: 640dp; height: 10dp; }
 #item_slots   { margin-left: -310dp; bottom: 17dp; width: 134dp; height: 20dp; }
 #skill_slots  { margin-left: -98dp;  bottom: 11dp; width: 190dp; height: 40dp; }
 #skill_list   { margin-left: 65dp;   bottom: 52dp; width: 32dp;  height: 38dp; }
 /* The strip and EXP take the pointer so clicks on the art don't reach the world. */
 #hud_strip { pointer-events: auto; }
-/* The original menu art: newui_menu01's first 256px, newui_menu02, then all of newui_menu03 with
-   its four button slots (Season 3's own bar; partCharge1's cash-shop variant has five narrower ones); the highlight is newui_menu02-03 over the hotkey row while it shows its
-   upper set. Each sheet's lower 10px is the EXP frame (#exp). */
+/* The original menu art: newui_menu01's first 256px, newui_menu02, then partCharge1's newui_menu03
+   (the bar with five button slots; the first, once the MU Item Shop's, opens the battle pass) up to
+   the buttons; the highlight is newui_menu02-03 over the hotkey row while it shows its upper set.
+   Each sheet's lower 10px is the EXP frame (#exp). */
 .frame-art { position: absolute; top: 0dp; height: 41dp; pointer-events: none; }
 #frame_left   { left: 0dp;   width: 256dp; decorator: image(mainframe-frame-left); }
 #frame_middle { left: 256dp; width: 128dp; decorator: image(mainframe-frame-middle); }
-#frame_right  { left: 384dp; width: 256dp; decorator: image(mainframe-frame-right); }
+#frame_right  { left: 384dp; width: 104dp; decorator: image(mainframe-frame-right); }
 @spritesheet mainframe-highlight-sheet { src: "../../../newui_menu02-03.jpg"; mainframe-skill-list-highlight: 0px 0px 160px 40px; }
 #skill_list_highlight { position: absolute; left: 0dp; top: 0dp; width: 160dp; height: 40dp; pointer-events: none; decorator: image(mainframe-skill-list-highlight); }
 /* pointer-events:auto required -- otherwise these inherit body's none (base.rcss), and
@@ -105,23 +106,24 @@
 #bar_sd .gauge-num { left: -35dp; top: 31dp; }
 #bar_ag .gauge-num { left: -40.5dp; top: 31dp; }
 
-/* Buttons, next to the mana gauge: Season 3's own 38px buttons on newui_menu03's slots (42px frames,
-   the last row left to the EXP frame). */
-@spritesheet mainframe-btn-chainfo-sheet { src: "../../../newui_menu_Bt01.jpg"; mainframe-btn-chainfo-normal: 0px 0px 38px 41px; mainframe-btn-chainfo-hover: 0px 42px 38px 41px; mainframe-btn-chainfo-open: 0px 84px 38px 41px; }
-@spritesheet mainframe-btn-myinven-sheet { src: "../../../newui_menu_Bt02.jpg"; mainframe-btn-myinven-normal: 0px 0px 38px 41px; mainframe-btn-myinven-hover: 0px 42px 38px 41px; mainframe-btn-myinven-open: 0px 84px 38px 41px; }
-@spritesheet mainframe-btn-friend-sheet  { src: "../../../newui_menu_Bt03.jpg"; mainframe-btn-friend-normal: 0px 0px 38px 41px; mainframe-btn-friend-hover: 0px 42px 38px 41px; mainframe-btn-friend-open: 0px 84px 38px 41px; }
-@spritesheet mainframe-btn-window-sheet  { src: "../../../newui_menu_Bt04.jpg"; mainframe-btn-window-normal: 0px 0px 38px 41px; mainframe-btn-window-hover: 0px 42px 38px 41px; mainframe-btn-window-open: 0px 84px 38px 41px; }
+/* Buttons, next to the mana gauge. */
+@spritesheet mainframe-btn-battle-pass-sheet { src: "../../../partCharge1/newui_menu_Bt05.jpg"; mainframe-btn-battle-pass-normal: 0px 0px 30px 41px; mainframe-btn-battle-pass-hover: 0px 41px 30px 41px; mainframe-btn-battle-pass-open: 0px 82px 30px 41px; }
+@spritesheet mainframe-btn-chainfo-sheet { src: "../../../partCharge1/newui_menu_Bt01.jpg"; mainframe-btn-chainfo-normal: 0px 0px 30px 41px; mainframe-btn-chainfo-hover: 0px 41px 30px 41px; mainframe-btn-chainfo-open: 0px 82px 30px 41px; }
+@spritesheet mainframe-btn-myinven-sheet { src: "../../../partCharge1/newui_menu_Bt02.jpg"; mainframe-btn-myinven-normal: 0px 0px 30px 41px; mainframe-btn-myinven-hover: 0px 41px 30px 41px; mainframe-btn-myinven-open: 0px 82px 30px 41px; }
+@spritesheet mainframe-btn-friend-sheet  { src: "../../../partCharge1/newui_menu_Bt03.jpg"; mainframe-btn-friend-normal: 0px 0px 30px 41px; mainframe-btn-friend-hover: 0px 41px 30px 41px; mainframe-btn-friend-open: 0px 82px 30px 41px; }
+@spritesheet mainframe-btn-window-sheet  { src: "../../../partCharge1/newui_menu_Bt04.jpg"; mainframe-btn-window-normal: 0px 0px 30px 41px; mainframe-btn-window-hover: 0px 41px 30px 41px; mainframe-btn-window-open: 0px 82px 30px 41px; }
 
 .frame-btn {
 	position: absolute;
 	top: 0dp;
-	width: 38dp;
+	width: 30dp;
 	height: 41dp;
 	cursor: pointer;
 	pointer-events: auto;
 }
 /* Native CNewUIButton with an over image (ChangeButtonImgState(..., true)): the sheet's second
    41px frame while hovered; an open window keeps its third (pushed) frame. */
+#btn_battle_pass:hover { decorator: image(mainframe-btn-battle-pass-hover); }
 #btn_chainfo:hover { decorator: image(mainframe-btn-chainfo-hover); }
 #btn_myinven:hover { decorator: image(mainframe-btn-myinven-hover); }
 #btn_friend:hover  { decorator: image(mainframe-btn-friend-hover); }
@@ -243,13 +245,15 @@
 }
 #current_skill_slot .skill-hotkey-label { right: -3dp; bottom: -2dp; }
 
-#btn_chainfo  { left: 0dp;   decorator: image(mainframe-btn-chainfo-normal); }
+#btn_battle_pass { left: 1dp; decorator: image(mainframe-btn-battle-pass-normal); }
+#btn_battle_pass.open { decorator: image(mainframe-btn-battle-pass-open); }
+#btn_chainfo  { left: 31dp;  decorator: image(mainframe-btn-chainfo-normal); }
 #btn_chainfo.open  { decorator: image(mainframe-btn-chainfo-open); }
-#btn_myinven  { left: 38dp;  decorator: image(mainframe-btn-myinven-normal); }
+#btn_myinven  { left: 61dp;  decorator: image(mainframe-btn-myinven-normal); }
 #btn_myinven.open  { decorator: image(mainframe-btn-myinven-open); }
-#btn_friend   { left: 76dp;  decorator: image(mainframe-btn-friend-normal); }
+#btn_friend   { left: 91dp;  decorator: image(mainframe-btn-friend-normal); }
 #btn_friend.open   { decorator: image(mainframe-btn-friend-open); }
-#btn_window   { left: 114dp; decorator: image(mainframe-btn-window-normal); }
+#btn_window   { left: 121dp; decorator: image(mainframe-btn-window-normal); }
 #btn_window.open   { decorator: image(mainframe-btn-window-open); }
 
 /* Char-info quest-alert / friend mail-chat-alert blink dot. */
@@ -269,7 +273,7 @@
 /* Original menu artwork's bottom strip, independent of the progress fill. */
 @spritesheet mainframe-menu01-sheet { src: "../../../newui_menu01.jpg"; mainframe-frame-left: 0px 0px 256px 41px; mainframe-exp-left: 0px 41px 256px 10px; }
 @spritesheet mainframe-menu02-sheet { src: "../../../newui_menu02.jpg"; mainframe-frame-middle: 0px 0px 128px 41px; mainframe-exp-middle: 0px 41px 128px 10px; }
-@spritesheet mainframe-menu03-sheet { src: "../../../newui_menu03.jpg"; mainframe-frame-right: 0px 0px 256px 41px; mainframe-exp-right: 0px 41px 256px 10px; }
+@spritesheet mainframe-menu03-sheet { src: "../../../partCharge1/newui_menu03.jpg"; mainframe-frame-right: 0px 0px 104px 41px; mainframe-exp-right: 0px 41px 256px 10px; }
 .exp-frame { position: absolute; top: 0dp; height: 10dp; pointer-events: none; }
 #exp_frame_left { left: 0dp; width: 256dp; decorator: image(mainframe-exp-left); }
 #exp_frame_middle { left: 256dp; width: 128dp; decorator: image(mainframe-exp-middle); }

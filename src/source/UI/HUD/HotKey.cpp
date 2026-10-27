@@ -331,48 +331,14 @@ bool mu::ui::window::CHotKey::UpdateKeyEvent()
         PlayBuffer(SOUND_CLICK01);
         return false;
     }
-#ifdef PBG_ADD_INGAMESHOP_UI_MAINFRAME
     else if (mu::ui::window::IsPress('X') == true)
     {
-        g_ConsoleDebug->Write(MCD_NORMAL, L"InGameShopStatue.Txt CallStack - CHotKey.UpdateKeyEvent()");
-        if (g_pInGameShop->IsInGameShopOpen() == false)
-            return false;
-
-#ifdef KJH_MOD_SHOP_SCRIPT_DOWNLOAD
-        if (g_InGameShopSystem->IsScriptDownload() == true)
-        {
-            if (g_InGameShopSystem->ScriptDownload() == false)
-                return false;
-        }
-        if (g_InGameShopSystem->IsBannerDownload() == true)
-        {
-            if (g_InGameShopSystem->BannerDownload() == true)
-            {
-                g_pInGameShop->InitBanner(g_InGameShopSystem->GetBannerFileName(), g_InGameShopSystem->GetBannerURL());
-            }
-        }
-#endif // KJH_MOD_SHOP_SCRIPT_DOWNLOAD
-
-        if (g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_INGAMESHOP) == false)
-        {
-            if (g_InGameShopSystem->GetIsRequestShopOpenning() == false)
-            {
-                SocketClient->ToGameServer()->SendCashShopOpenState(0);
-                g_InGameShopSystem->SetIsRequestShopOpenning(true);
-#ifdef KJH_MOD_SHOP_SCRIPT_DOWNLOAD
-                g_pMainFrame->SetBtnState(MAINFRAME_BTN_PARTCHARGE, true);
-#endif // KJH_MOD_SHOP_SCRIPT_DOWNLOAD
-            }
-        }
-        else
-        {
-            SocketClient->ToGameServer()->SendCashShopOpenState(1);
-            g_pNewUISystem->Hide(mu::ui::window::INTERFACE_INGAMESHOP);
-        }
-
+        // The battle pass window: the season's levels and their rewards, the quests (BattlePassWindow.h). X used
+        // to open the MU Item Shop, which the server doesn't have; its bottom bar slot opens the pass too.
+        g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_BATTLE_PASS);
+        PlayBuffer(SOUND_CLICK01);
         return false;
     }
-#endif // PBG_ADD_INGAMESHOP_UI_MAINFRAME
     else if (mu::ui::window::IsPress('B'))
     {
         if (!g_pNewUIGensRanking->SetGensInfo())

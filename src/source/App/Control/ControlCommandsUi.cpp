@@ -3,6 +3,7 @@
 
 #include "Core/Text/Utf8.h"
 #include "Core/Utilities/Log/muConsoleDebug.h"
+#include "GameLogic/Events/BattlePass.h"
 #include "UI/Core/WindowAccess.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
@@ -56,6 +57,7 @@ constexpr NamedWindow Windows[] = {
     {"command_list", mu::ui::window::INTERFACE_COMMAND_LIST},
     {"event_schedule", mu::ui::window::INTERFACE_EVENT_SCHEDULE},
     {"daily_rewards", mu::ui::window::INTERFACE_DAILY_REWARDS},
+    {"battle_pass", mu::ui::window::INTERFACE_BATTLE_PASS},
     {"tier_maps", mu::ui::window::INTERFACE_TIER_MAPS},
     {"jewel_bank", mu::ui::window::INTERFACE_JEWEL_BANK},
     {"gm_panel", mu::ui::window::INTERFACE_GM_PANEL},
@@ -113,6 +115,11 @@ constexpr NamedElement Buttons[] = {
     {"character.stat.command", mu::ui::window::INTERFACE_CHARACTER, "#btn_stat_cmd"},
     {"npc_shop.repair", mu::ui::window::INTERFACE_NPCSHOP, "#btn_repair"},
     {"npc_shop.repair_all", mu::ui::window::INTERFACE_NPCSHOP, "#btn_repair_all"},
+    {"battle_pass.claim", mu::ui::window::INTERFACE_BATTLE_PASS, "#bp_claim"},
+    {"battle_pass.take", mu::ui::window::INTERFACE_BATTLE_PASS, "#bp_take"},
+    {"battle_pass.tab_rewards", mu::ui::window::INTERFACE_BATTLE_PASS, "#bp_tab_rewards"},
+    {"battle_pass.tab_quests", mu::ui::window::INTERFACE_BATTLE_PASS, "#bp_tab_quests"},
+    {"battle_pass.close", mu::ui::window::INTERFACE_BATTLE_PASS, "#btn_exit"},
 };
 
 struct NamedCommand
@@ -142,6 +149,22 @@ json Elements()
     {
         AddElement(elements, "npc_quest.answer." + std::to_string(answer), mu::ui::window::INTERFACE_NPCQUEST,
                    ".nq-answer-row[data-answer=\"" + std::to_string(answer) + "\"]");
+    }
+    // The battle pass' level rows (scrolled into the pane or not, they are reported while drawn) and the daily
+    // quests' replace buttons, by the quest's slot.
+    for (const auto& level : GameLogic::BattlePass::Pass().Levels())
+    {
+        AddElement(elements, "battle_pass.level." + std::to_string(level.Number), mu::ui::window::INTERFACE_BATTLE_PASS,
+                   "#bp_lv_" + std::to_string(level.Number));
+    }
+    for (const auto& quest : GameLogic::BattlePass::Pass().Quests())
+    {
+        if (quest.Kind == GameLogic::BattlePass::QuestKind::Daily)
+        {
+            AddElement(elements, "battle_pass.reroll." + std::to_string(quest.Slot),
+                       mu::ui::window::INTERFACE_BATTLE_PASS,
+                       ".bp-q-reroll[data-slot=\"" + std::to_string(quest.Slot) + "\"]");
+        }
     }
     return elements;
 }

@@ -114,6 +114,7 @@ using namespace mu::ui::window;
 #include "GameLogic/Combat/OwnSkillEcho.h"
 #include "GameLogic/Events/EventTimes.h"
 #include "GameLogic/Events/DailyRewards.h"
+#include "GameLogic/Events/BattlePass.h"
 #include "GameLogic/Events/TierMaps.h"
 #include "GameLogic/Commands/GmPanel.h"
 #include "GameLogic/Character/AdvancedStats.h"
@@ -1265,6 +1266,7 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     GameLogic::Commands::Catalog().RequestOnce();
     GameLogic::EventTimes::Times().Reset();
     GameLogic::DailyRewards::Rewards().Reset();
+    GameLogic::BattlePass::Pass().Reset();
     GameLogic::TierMaps::Maps().Reset();
     GameLogic::AdvancedStats::Stats().Reset();
     GameLogic::JewelBank::Bank().Reset();
@@ -1994,13 +1996,13 @@ void ReceiveNotice(const BYTE* ReceiveBuffer)
     else if (Data->Result == 1)
     {
         // The answers to the event timer window (GameLogic/Events/EventTimes.h), the daily rewards window
-        // (GameLogic/Events/DailyRewards.h), the character window's advanced stats tab
-        // (GameLogic/Character/AdvancedStats.h), the vault's pages (UI/Inventory/VaultPages.h), the jewel bank
-        // window (GameLogic/Items/JewelBank.h), the Tier Maps window (GameLogic/Events/TierMaps.h) and the GM
-        // panel (GameLogic/Commands/GmPanel.h) stay out of the chat.
+        // (GameLogic/Events/DailyRewards.h), the battle pass window (GameLogic/Events/BattlePass.h), the character
+        // window's advanced stats tab (GameLogic/Character/AdvancedStats.h), the vault's pages
+        // (UI/Inventory/VaultPages.h), the jewel bank window (GameLogic/Items/JewelBank.h), the Tier Maps window
+        // (GameLogic/Events/TierMaps.h) and the GM panel (GameLogic/Commands/GmPanel.h) stay out of the chat.
         if (GameLogic::EventTimes::Times().TakeMessage(Text) || GameLogic::DailyRewards::Rewards().TakeMessage(Text) ||
-            GameLogic::AdvancedStats::Stats().TakeMessage(Text) || UI::Storage::Pages().TakeMessage(Text) ||
-            GameLogic::JewelBank::Bank().TakeMessage(Text))
+            GameLogic::BattlePass::Pass().TakeMessage(Text) || GameLogic::AdvancedStats::Stats().TakeMessage(Text) ||
+            UI::Storage::Pages().TakeMessage(Text) || GameLogic::JewelBank::Bank().TakeMessage(Text))
         {
         }
         else if (GameLogic::TierMaps::Maps().TakeMessage(Text))

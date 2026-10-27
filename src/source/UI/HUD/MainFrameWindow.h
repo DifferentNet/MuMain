@@ -84,6 +84,7 @@ namespace mu::ui::window
 
         // Set by the RmlUi document's data-event-click bindings; polled and cleared like other windows' RmlClickX().
         void RmlClickCShop() { m_bRmlCShopClicked = true; }
+        void RmlClickBattlePass() { m_bRmlBattlePassClicked = true; }
         void RmlClickChaInfo() { m_bRmlChaInfoClicked = true; }
         void RmlClickMyInven() { m_bRmlMyInvenClicked = true; }
         void RmlClickFriend() { m_bRmlFriendClicked = true; }
@@ -131,6 +132,9 @@ namespace mu::ui::window
             // Corner buttons: "Open" mirrors SetBtnState()'s bStateDown; tooltips are static strings pushed once.
             bool cShopOpen = false, chaInfoOpen = false, myInvenOpen = false, friendOpen = false, windowOpen = false;
             Rml::String cShopTooltip, chaInfoTooltip, myInvenTooltip, friendTooltip, windowTooltip;
+            // The battle pass button, in the MU Item Shop's former slot: open while its window shows.
+            bool battlePassOpen = false;
+            Rml::String battlePassTooltip;
 
             // Alert-blink dots: bound boolean + CSS dot, computed each frame from the same state
             // the legacy blink read.
@@ -184,6 +188,7 @@ namespace mu::ui::window
             {.afterReload = [this] { OnRmlReloaded(); }}};
 
         bool m_bRmlCShopClicked = false;
+        bool m_bRmlBattlePassClicked = false;
         bool m_bRmlChaInfoClicked = false;
         bool m_bRmlMyInvenClicked = false;
         bool m_bRmlFriendClicked = false;

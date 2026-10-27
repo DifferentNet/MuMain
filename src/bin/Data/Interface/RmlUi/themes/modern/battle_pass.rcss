@@ -1,0 +1,241 @@
+/* Modern theme for CBattlePassWindow (key X): docked_panel_frame.rcss's forged panel (linked first) at the full
+   dock height, the modern exit button and forged buttons (daily_rewards.rcss), steel tabs (my_quest_info.rcss)
+   and token colours. Geometry is the legacy one: reference px inside #panel, physical px (reference px times
+   --root-scale) inside the panes. */
+
+#panel { height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; transform-origin: left top; }
+
+#btn_exit {
+	position: absolute;
+	left: 13px;
+	top: 392px;
+	width: 36px;
+	height: 28px;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+	pointer-events: auto;
+}
+#btn_exit:hover { border-color: token(accent-steel-hover); }
+
+/* The head: title, season and time, level and points, gauge. */
+.bp-title { left: 0; top: 11px; text-align: center; font-weight: bold; pointer-events: none; color: token(accent-gold); }
+#bp_season { left: 12px; top: 30px; pointer-events: none; color: token(text-secondary); }
+#bp_time { right: 12px; top: 30px; pointer-events: none; color: token(text-muted); }
+#bp_level { left: 12px; top: 46px; font-weight: bold; pointer-events: none; color: token(text-primary); }
+#bp_points { right: 12px; top: 46px; pointer-events: none; color: token(accent-gold); }
+
+#bp_gauge {
+	position: absolute;
+	left: 14px;
+	top: 63px;
+	width: 162px;
+	height: 13px;
+	background-color: token(surface-recessed);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+	pointer-events: none;
+}
+#bp_gauge_fill { position: absolute; left: 0; top: 0; height: 100%; background-color: token(accent-gold); border-radius: token(radius-sm)px; }
+.bp-gauge-text { color: #ffffff; font-effect: outline(1px #000000); }
+
+/* The tabs. */
+#bp_tabs { position: absolute; left: 12px; top: 81px; width: 166px; height: 22px; background-color: token(surface-panel); border-radius: token(radius-sm)px; }
+.bp-tab { position: absolute; top: 0; width: 83px; height: 22px; cursor: pointer; pointer-events: auto; }
+.bp-tab-left { left: 0; }
+.bp-tab-right { left: 83px; }
+.bp-tab.active { background-color: token(accent-steel); border-radius: token(radius-sm)px; }
+.bp-tab-label { font-weight: bold; pointer-events: none; color: token(text-secondary); }
+.bp-tab.active .bp-tab-label { color: token(text-warm); }
+.bp-tab:hover .bp-tab-label { color: token(text-primary); }
+
+#bp_status { left: 12px; top: 112px; pointer-events: none; color: token(text-secondary); }
+
+/* The panes and the items' target under the levels' one. */
+.bp-items { position: absolute; left: 10px; top: 107px; width: 170px; height: 281px; pointer-events: none; }
+#bp_levels, #bp_quests { left: 10px; top: 107px; --flow-w: 170px; line-height: 1.15; }
+/* The tab not shown: .sharp-text's display above wins over base.rcss's .hidden (same specificity, later sheet). */
+#bp_items.hidden, #bp_levels.hidden, #bp_quests.hidden { display: none; }
+
+/* A level's row: its number, then its item boxes. */
+.bp-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	box-sizing: border-box;
+	height: calc(30px * var(--root-scale));
+	margin-bottom: calc(1px * var(--root-scale));
+	padding: 0 calc(2px * var(--root-scale));
+	border: calc(1px * var(--root-scale)) rgba(0, 0, 0, 0);
+}
+.bp-row.claimed { background-color: rgba(120, 255, 120, 16); }
+.bp-row.claimable { background-color: rgba(255, 210, 100, 40); cursor: pointer; }
+.bp-row.next { border-color: rgba(255, 210, 100, 150); }
+.bp-lv {
+	display: block;
+	flex: 0 0 auto;
+	width: calc(22px * var(--root-scale));
+	text-align: center;
+	font-weight: bold;
+	white-space: nowrap;
+	color: token(text-muted);
+}
+.bp-row.claimed .bp-lv { color: token(semantic-success); }
+.bp-row.claimable .bp-lv { color: token(accent-gold); }
+.bp-row.next .bp-lv { color: token(text-primary); }
+.bp-icon {
+	display: block;
+	position: relative;
+	flex: 0 0 auto;
+	box-sizing: border-box;
+	width: calc(24px * var(--root-scale));
+	height: calc(26px * var(--root-scale));
+	margin-right: calc(1px * var(--root-scale));
+	border: calc(1px * var(--root-scale)) token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+.bp-icon.sign { background-color: token(surface-raised); }
+.bp-sign {
+	display: block;
+	text-align: center;
+	line-height: calc(24px * var(--root-scale));
+	font-weight: bold;
+	white-space: nowrap;
+	color: token(accent-gold);
+	pointer-events: none;
+}
+.bp-count {
+	display: block;
+	position: absolute;
+	right: calc(1px * var(--root-scale));
+	bottom: 0;
+	font-size: 0.85em;
+	white-space: nowrap;
+	color: #ffffff;
+	font-effect: outline(1px #000000);
+	pointer-events: none;
+}
+.bp-note { display: block; flex: 1 1 auto; white-space: nowrap; color: token(text-muted); }
+.bp-bonus {
+	display: block;
+	margin-top: calc(4px * var(--root-scale));
+	padding: 0 calc(2px * var(--root-scale));
+	white-space: normal;
+	color: token(text-secondary);
+}
+
+/* The quests: headings, quests with their bars, the result. */
+.bp-q {
+	display: block;
+	margin-bottom: calc(3px * var(--root-scale));
+	padding: calc(2px * var(--root-scale)) calc(3px * var(--root-scale));
+	background-color: token(surface-recessed);
+	border-radius: token(radius-sm)px;
+}
+.bp-q-text { display: block; white-space: normal; color: token(text-primary); }
+.bp-q.done { background-color: rgba(120, 255, 120, 22); }
+.bp-q.done .bp-q-text { color: token(semantic-success); }
+.bp-q.head { background-color: transparent; margin-top: calc(5px * var(--root-scale)); margin-bottom: calc(1px * var(--root-scale)); padding: 0 calc(1px * var(--root-scale)); }
+.bp-q.head .bp-q-text { font-weight: bold; color: token(accent-gold); }
+.bp-q.week { background-color: transparent; margin-bottom: 0; padding: 0 calc(1px * var(--root-scale)); }
+.bp-q.week .bp-q-text { color: token(text-secondary); }
+.bp-q-detail { display: block; white-space: nowrap; color: token(text-muted); }
+.bp-q.result {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	background-color: transparent;
+	margin-bottom: 0;
+	padding: 0 calc(1px * var(--root-scale));
+}
+.bp-q.result .bp-q-text { flex: 1 1 auto; color: token(text-secondary); }
+.bp-q.result .bp-q-detail { flex: 0 0 auto; color: token(accent-gold); }
+
+.bp-q-line { display: flex; flex-direction: row; align-items: center; margin-top: calc(2px * var(--root-scale)); }
+.bp-q-bar {
+	display: block;
+	position: relative;
+	flex: 1 1 auto;
+	box-sizing: border-box;
+	height: calc(13px * var(--root-scale));
+	background-color: token(surface-panel);
+	border: calc(1px * var(--root-scale)) token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+.bp-q-fill { position: absolute; left: 0; top: 0; height: 100%; background-color: token(accent-gold); }
+.bp-q.done .bp-q-fill { background-color: token(semantic-success); }
+.bp-q-progress {
+	display: block;
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	text-align: center;
+	white-space: nowrap;
+	line-height: calc(11px * var(--root-scale));
+	font-size: 0.9em;
+	color: #ffffff;
+	font-effect: outline(1px #000000);
+}
+.bp-q-points { display: block; flex: 0 0 auto; margin-left: calc(4px * var(--root-scale)); white-space: nowrap; color: token(accent-gold); }
+.bp-q-reroll {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	margin-left: calc(3px * var(--root-scale));
+	width: calc(53px * var(--root-scale));
+	height: calc(23px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	box-sizing: border-box;
+	background-color: token(surface-raised);
+	border: calc(1px * var(--root-scale)) token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+.bp-q-reroll:hover { border-color: token(accent-steel-hover); }
+.bp-q-reroll:active { background-color: token(surface-recessed); }
+.bp-q-reroll-label { display: block; white-space: nowrap; font-size: 0.9em; color: token(text-primary); pointer-events: none; }
+
+#bp_take {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-top: calc(6px * var(--root-scale));
+	height: calc(29px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	box-sizing: border-box;
+	background-color: token(surface-raised);
+	border: calc(1px * var(--root-scale)) token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+#bp_take:hover { border-color: token(accent-steel-hover); }
+#bp_take:active { background-color: token(surface-recessed); }
+.bp-take-label { display: block; white-space: nowrap; font-weight: bold; color: token(text-primary); pointer-events: none; }
+
+/* The claim button at the bottom, beside the exit button. */
+#bp_claim {
+	position: absolute;
+	left: 64px;
+	top: 392px;
+	width: 108px;
+	height: 28px;
+	cursor: pointer;
+	pointer-events: auto;
+	box-sizing: border-box;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+#bp_claim:hover { border-color: token(accent-steel-hover); }
+#bp_claim:active { background-color: token(surface-recessed); }
+#bp_claim.disabled { pointer-events: none; filter: brightness(0.5); }
+.bp-claim-label { font-weight: bold; color: token(text-primary); pointer-events: none; }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+#bp_title { width: calc(100% * var(--root-scale)); }
+#bp_status { width: calc(166px * var(--root-scale)); white-space: normal; }
+#bp_levels, #bp_quests { height: calc(281px * var(--root-scale)); }

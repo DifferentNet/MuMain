@@ -89,6 +89,7 @@ CSystem::CSystem()
     m_pNewChatCommandWindow = nullptr;
     m_pNewEventScheduleWindow = nullptr;
     m_pNewDailyRewardsWindow = nullptr;
+    m_pNewBattlePassWindow = nullptr;
     m_pNewTierMapsWindow = nullptr;
     m_pNewJewelBankWindow = nullptr;
     m_pNewGmPanelWindow = nullptr;
@@ -386,6 +387,12 @@ bool CSystem::LoadMainSceneInterface()
         return false;
     }
 
+    m_pNewBattlePassWindow = new CBattlePassWindow;
+    if (m_pNewBattlePassWindow->Create(m_pNewUIMng) == false)
+    {
+        return false;
+    }
+
     m_pNewTierMapsWindow = new CTierMapsWindow;
     if (m_pNewTierMapsWindow->Create(m_pNewUIMng) == false)
     {
@@ -598,6 +605,7 @@ bool CSystem::LoadMainSceneInterface()
     slot(INTERFACE_COMMAND_LIST, "command_list", m_pNewChatCommandWindow, "chat_command.rml");
     slot(INTERFACE_EVENT_SCHEDULE, "event_schedule", m_pNewEventScheduleWindow, "event_schedule.rml");
     slot(INTERFACE_DAILY_REWARDS, "daily_rewards", m_pNewDailyRewardsWindow, "daily_rewards.rml");
+    slot(INTERFACE_BATTLE_PASS, "battle_pass", m_pNewBattlePassWindow, "battle_pass.rml");
     slot(INTERFACE_TIER_MAPS, "tier_maps", m_pNewTierMapsWindow, "tier_maps.rml");
     slot(INTERFACE_GM_PANEL, "gm_panel", m_pNewGmPanelWindow, "gm_panel.rml");
     slot(INTERFACE_GOLD_BOWMAN, "gold_bowman", m_pNewGoldBowman, "gold_bowman.rml");
@@ -678,6 +686,7 @@ void CSystem::UnloadMainSceneInterface()
     SAFE_DELETE(m_pNewChatCommandWindow);
     SAFE_DELETE(m_pNewEventScheduleWindow);
     SAFE_DELETE(m_pNewDailyRewardsWindow);
+    SAFE_DELETE(m_pNewBattlePassWindow);
     SAFE_DELETE(m_pNewTierMapsWindow);
     SAFE_DELETE(m_pNewJewelBankWindow);
     SAFE_DELETE(m_pNewGmPanelWindow);
@@ -966,6 +975,11 @@ void CSystem::Show(DWORD dwKey)
     {
         HideAllGroupA();
         m_pNewDailyRewardsWindow->OpenningProcess();
+    }
+    else if (dwKey == INTERFACE_BATTLE_PASS)
+    {
+        HideAllGroupA();
+        m_pNewBattlePassWindow->OpenningProcess();
     }
     else if (dwKey == INTERFACE_TIER_MAPS)
     {
@@ -1427,6 +1441,10 @@ void CSystem::Hide(DWORD dwKey)
     {
         m_pNewDailyRewardsWindow->ClosingProcess();
     }
+    else if (dwKey == INTERFACE_BATTLE_PASS)
+    {
+        m_pNewBattlePassWindow->ClosingProcess();
+    }
     else if (dwKey == INTERFACE_TIER_MAPS)
     {
         m_pNewTierMapsWindow->ClosingProcess();
@@ -1658,6 +1676,7 @@ void CSystem::HideAllGroupA()
         INTERFACE_COMMAND_LIST,
         INTERFACE_EVENT_SCHEDULE,
         INTERFACE_DAILY_REWARDS,
+        INTERFACE_BATTLE_PASS,
         INTERFACE_TIER_MAPS,
         INTERFACE_GM_PANEL,
         INTERFACE_JEWEL_BANK,
@@ -1712,6 +1731,7 @@ void CSystem::HideAllGroupB()
         INTERFACE_COMMAND_LIST,
         INTERFACE_EVENT_SCHEDULE,
         INTERFACE_DAILY_REWARDS,
+        INTERFACE_BATTLE_PASS,
         INTERFACE_TIER_MAPS,
         INTERFACE_GM_PANEL,
         INTERFACE_JEWEL_BANK,
@@ -2329,6 +2349,11 @@ CEventScheduleWindow* CSystem::GetUI_NewEventScheduleWindow() const
 CDailyRewardsWindow* CSystem::GetUI_NewDailyRewardsWindow() const
 {
     return m_pNewDailyRewardsWindow;
+}
+
+CBattlePassWindow* CSystem::GetUI_NewBattlePassWindow() const
+{
+    return m_pNewBattlePassWindow;
 }
 
 CTierMapsWindow* CSystem::GetUI_NewTierMapsWindow() const

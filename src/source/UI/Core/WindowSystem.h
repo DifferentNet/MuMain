@@ -46,6 +46,7 @@
 #include "UI/Dialogs/ChatCommandWindow.h"
 #include "UI/Events/EventScheduleWindow.h"
 #include "UI/Events/DailyRewardsWindow.h"
+#include "UI/Events/BattlePassWindow.h"
 #include "UI/Events/TierMapsWindow.h"
 #include "UI/Inventory/JewelBankWindow.h"
 #include "UI/Dialogs/GmPanelWindow.h"
@@ -195,6 +196,7 @@ namespace mu::ui::window
         CChatCommandWindow* m_pNewChatCommandWindow;
         CEventScheduleWindow* m_pNewEventScheduleWindow;
         CDailyRewardsWindow* m_pNewDailyRewardsWindow;
+        CBattlePassWindow* m_pNewBattlePassWindow;
         CTierMapsWindow* m_pNewTierMapsWindow;
         CJewelBankWindow* m_pNewJewelBankWindow;
         CGmPanelWindow* m_pNewGmPanelWindow;
@@ -287,6 +289,7 @@ namespace mu::ui::window
         CChatCommandWindow* GetUI_NewChatCommandWindow() const;
         CEventScheduleWindow* GetUI_NewEventScheduleWindow() const;
         CDailyRewardsWindow* GetUI_NewDailyRewardsWindow() const;
+        CBattlePassWindow* GetUI_NewBattlePassWindow() const;
         CTierMapsWindow* GetUI_NewTierMapsWindow() const;
         CJewelBankWindow* GetUI_NewJewelBankWindow() const;
         CGmPanelWindow* GetUI_NewGmPanelWindow() const;

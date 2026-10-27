@@ -1,0 +1,112 @@
+<rml>
+	<!-- bound-geometry: the level gauge and the quests' progress bars are fractions -->
+<head>
+	<title>Battle Pass</title>
+	<link type="text/rcss" href="base.rcss"/>
+	<link type="text/rcss" href="docked_panel_frame.rcss"/>
+	<link type="text/rcss" href="battle_pass.rcss"/>
+</head>
+<body>
+	<!-- The battle pass window (CBattlePassWindow, key X and the bottom bar's button), docked right, full dock
+	     height: the title, the season with its time, the level with the season's points, the gauge of the next
+	     level, two tabs, and the button at the bottom that claims all reached levels (or hands out the rewards that
+	     wait) with the exit button.
+	     Rewards: a counter-scaled pane the wheel scrolls, a row per level of the track -- its number, then a box
+	     per item of its reward. C++ draws the game items live in 3D into #bp_items, which lies under the pane at
+	     its place, so the counts and the row tints stay on top and the pane's edges crop the items; it shows the
+	     game's item tooltip over a box (battle_pass_hover), and a box without a model (excellent item, season sign,
+	     item to come) shows a sign with a hint. A click on a reached row claims that level.
+	     Quests: a counter-scaled pane of headings, quests with their progress bar, points and the replace button
+	     of a daily quest, and the season's result with the button that hands out the waiting rewards.
+	     The workspace slot places and scales #panel. Clicks are queued with battle_pass_* callbacks. -->
+	<div id="panel" data-model="battle_pass">
+		<div class="frame-piece frame-top"></div>
+		<div class="frame-piece frame-left"></div>
+		<div class="frame-piece frame-right"></div>
+		<div class="frame-piece frame-bottom"></div>
+
+		<span id="bp_title" class="sharp-text bp-title"
+		      data-style-font-size="title.text_px + 'px'">{{title.text}}</span>
+
+		<span id="bp_season" class="sharp-text bp-season" data-if="has_info"
+		      data-style-font-size="season.text_px + 'px'">{{season.text}}</span>
+		<span id="bp_time" class="sharp-text sharp-right bp-time" data-if="has_info"
+		      data-style-font-size="time.text_px + 'px'">{{time.text}}</span>
+		<span id="bp_level" class="sharp-text bp-level" data-if="has_info"
+		      data-style-font-size="level.text_px + 'px'">{{level.text}}</span>
+		<span id="bp_points" class="sharp-text sharp-right bp-points" data-if="has_info"
+		      data-style-font-size="points.text_px + 'px'">{{points.text}}</span>
+		<div id="bp_gauge" data-if="has_info">
+			<div id="bp_gauge_fill" data-style-width="gauge_fill + '%'"></div>
+			<span class="sharp-text sharp-centre sharp-middle bp-gauge-text"
+			      data-style-font-size="gauge.text_px + 'px'">{{gauge.text}}</span>
+		</div>
+
+		<div id="bp_tabs">
+			<div id="bp_tab_rewards" class="bp-tab bp-tab-left" data-class-active="tab == 0"
+			     data-event-click="battle_pass_tab_rewards">
+				<span class="sharp-text sharp-centre sharp-middle bp-tab-label"
+				      data-style-font-size="tab_rewards.text_px + 'px'">{{tab_rewards.text}}</span>
+			</div>
+			<div id="bp_tab_quests" class="bp-tab bp-tab-right" data-class-active="tab == 1"
+			     data-event-click="battle_pass_tab_quests">
+				<span class="sharp-text sharp-centre sharp-middle bp-tab-label"
+				      data-style-font-size="tab_quests.text_px + 'px'">{{tab_quests.text}}</span>
+			</div>
+		</div>
+
+		<span id="bp_status" class="sharp-text bp-status" data-if="!has_info"
+		      data-style-font-size="status.text_px + 'px'">{{status.text}}</span>
+
+		<!-- The reward items, live 3D, drawn by C++ under the levels' pane. -->
+		<img id="bp_items" class="bp-items" data-class-hidden="tab != 0 || !has_info"/>
+
+		<div id="bp_levels" class="sharp-text sharp-flow scroll-pane" data-class-hidden="tab != 0 || !has_info"
+		     data-style-font-size="text_px + 'px'">
+			<div class="bp-row" data-for="r : levels" data-attr-id="r.id" data-class-claimed="r.claimed"
+			     data-class-claimable="r.claimable" data-class-next="r.next"
+			     data-event-click="battle_pass_claim_level(r.level)">
+				<span class="bp-lv" data-attr-data-hint="r.hint"
+				      data-style-font-size="bold_px + 'px'">{{r.label}}</span>
+				<div class="bp-icon" data-for="ic : r.icons" data-attr-id="ic.id" data-class-sign="ic.sign != ''"
+				     data-attr-data-hint="ic.hint" data-event-mouseover="battle_pass_hover(ic.index)"
+				     data-event-mouseout="battle_pass_hover(-1)">
+					<span class="bp-sign" data-if="ic.sign != ''">{{ic.sign}}</span>
+					<span class="bp-count" data-if="ic.count != ''">{{ic.count}}</span>
+				</div>
+				<span class="bp-note" data-if="r.note != ''">{{r.note}}</span>
+			</div>
+			<span class="bp-bonus" data-if="bonus != ''">{{bonus}}</span>
+		</div>
+
+		<div id="bp_quests" class="sharp-text sharp-flow scroll-pane" data-class-hidden="tab != 1 || !has_info"
+		     data-style-font-size="text_px + 'px'">
+			<div class="bp-q" data-for="q : quests" data-class-head="q.type == 1" data-class-week="q.type == 2"
+			     data-class-result="q.type == 3" data-class-done="q.done">
+				<div class="bp-q-text">{{q.text}}</div>
+				<span class="bp-q-detail" data-if="q.type != 0 &amp;&amp; q.detail != ''">{{q.detail}}</span>
+				<div class="bp-q-line" data-if="q.type == 0">
+					<div class="bp-q-bar">
+						<div class="bp-q-fill" data-style-width="q.fill + '%'"></div>
+						<span class="bp-q-progress">{{q.detail}}</span>
+					</div>
+					<span class="bp-q-points">{{q.points}}</span>
+					<div class="bp-q-reroll" data-if="q.can_reroll" data-attr-data-slot="q.slot" data-event-click="battle_pass_reroll(q.slot)"
+					     data-attr-data-hint="reroll_tooltip"><span class="bp-q-reroll-label">{{reroll_label}}</span></div>
+				</div>
+			</div>
+			<div id="bp_take" data-if="can_take" data-event-click="battle_pass_take">
+				<span class="bp-take-label">{{take_label}}</span>
+			</div>
+		</div>
+
+		<div id="bp_claim" data-class-disabled="!can_claim" data-event-click="battle_pass_claim">
+			<span class="sharp-text sharp-centre sharp-middle bp-claim-label"
+			      data-style-font-size="claim_label.text_px + 'px'">{{claim_label.text}}</span>
+		</div>
+
+		<div id="btn_exit" data-event-click="battle_pass_exit" data-attr-data-hint="exit_tooltip"></div>
+		<div id="frame_corner_close" data-event-click="battle_pass_exit"></div>
+	</div>
+</body>
+</rml>
