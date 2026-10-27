@@ -46,6 +46,7 @@
 #include "Engine/Object/CullingConstants.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "GameLogic/Items/ItemCategories.h"
+#include "GameLogic/Events/SeasonMarks.h"
 #include "Render/Items/ItemDisplay.h"
 #include "Render/Items/ItemGlow.h"
 #include "Render/Items/ItemEffects.h"
@@ -869,17 +870,45 @@ void Draw_RenderObject(OBJECT* o, bool Translate, int Select, int ExtraMon)
                 b->BodyLight[1] = 1.0f;
                 b->BodyLight[2] = 1.0f;
 
+                // The gold Fenrir is the battle pass' seasonal Fenrir (stage 7): it wears the newest season's Fenrir
+                // look in Data/Seasons.json (GameLogic/Events/SeasonMarks.h), the gold one when there is none.
+                const GameLogic::SeasonMarks::FenrirLook* seasonFenrir = nullptr;
                 if (o->Type == MODEL_FENRIR_GOLD)
                 {
+                    if (const auto* season = GameLogic::SeasonMarks::Marks().FenrirSeason())
+                        seasonFenrir = &season->Fenrir;
+                }
+
+                if (o->Type == MODEL_FENRIR_GOLD)
+                {
+                    const unsigned int seasonTexture = seasonFenrir != nullptr ? GameLogic::SeasonMarks::Marks().FenrirTexture() : 0;
+                    const int bodyTexture = seasonTexture != 0 ? static_cast<int>(seasonTexture) : -1;
+
                     b->StreamMesh = 0;
 
-                    b->RenderMesh(0, RENDER_TEXTURE, o->Alpha, o->BlendMesh, o->BlendMeshLight, o->BlendMeshTexCoordU, o->BlendMeshTexCoordV);
-                    b->RenderMesh(0, RENDER_TEXTURE | RENDER_BRIGHT | RENDER_CHROME, o->Alpha, o->BlendMesh, o->BlendMeshLight, o->BlendMeshTexCoordU, o->BlendMeshTexCoordV);
+                    if (seasonFenrir != nullptr)
+                    {
+                        VectorCopy(seasonFenrir->Body, b->BodyLight);
+                    }
+                    b->RenderMesh(0, RENDER_TEXTURE, o->Alpha, o->BlendMesh, o->BlendMeshLight, o->BlendMeshTexCoordU, o->BlendMeshTexCoordV, bodyTexture);
+                    if (seasonFenrir != nullptr)
+                    {
+                        VectorCopy(seasonFenrir->Glow, b->BodyLight);
+                    }
+                    b->RenderMesh(0, RENDER_TEXTURE | RENDER_BRIGHT | RENDER_CHROME, o->Alpha, o->BlendMesh, o->BlendMeshLight, o->BlendMeshTexCoordU, o->BlendMeshTexCoordV, bodyTexture);
+                    Vector(1.0f, 1.0f, 1.0f, b->BodyLight);
                     b->RenderMesh(1, RENDER_TEXTURE, o->Alpha, o->BlendMesh, o->BlendMeshLight, o->BlendMeshTexCoordU, o->BlendMeshTexCoordV);
 
                     if (o->CurrentAction == FENRIR_ATTACK_SKILL)
                     {
-                        Vector(1.0f, 0.0f, 0.0f, vLight);
+                        if (seasonFenrir != nullptr)
+                        {
+                            VectorCopy(seasonFenrir->Sparks, vLight);
+                        }
+                        else
+                        {
+                            Vector(1.0f, 0.0f, 0.0f, vLight);
+                        }
                         Vector((float)(rand() % 10 - 10) * 0.5f, 0.f, (float)(rand() % 40 - 20) * 0.5f, vPos);
                         b->TransformPosition(BoneTransform[14], vPos, vPosition, false);
                         CreateParticleFpsChecked(BITMAP_SPARK + 1, vPosition, o->Angle, vLight, 15, 0.7f + (fLuminosity * 0.05f));
@@ -925,7 +954,16 @@ void Draw_RenderObject(OBJECT* o, bool Translate, int Select, int ExtraMon)
                     }
                 }
 
-                Vector(0.9f + fLuminosity, 0.2f + (fLuminosity * 0.5f), 0.1f + (fLuminosity * 0.5f), vLight);
+                if (seasonFenrir != nullptr)
+                {
+                    // The season's eyes pulse as the others do, by a fifth.
+                    Vector(seasonFenrir->Eyes[0] * (1.0f + fLuminosity), seasonFenrir->Eyes[1] * (1.0f + fLuminosity),
+                           seasonFenrir->Eyes[2] * (1.0f + fLuminosity), vLight);
+                }
+                else
+                {
+                    Vector(0.9f + fLuminosity, 0.2f + (fLuminosity * 0.5f), 0.1f + (fLuminosity * 0.5f), vLight);
+                }
                 Vector(50.f, 2.f, 11.f, vPos);
                 b->TransformPosition(BoneTransform[11], vPos, vPosition, false);
                 CreateSprite(BITMAP_LIGHT, vPosition, 0.5f + (fLuminosity * 0.1f), vLight, o);
@@ -935,7 +973,14 @@ void Draw_RenderObject(OBJECT* o, bool Translate, int Select, int ExtraMon)
                 CreateSprite(BITMAP_LIGHT, vPosition, 0.5f + (fLuminosity * 0.1f), vLight, o);
                 CreateSprite(BITMAP_LIGHT, vPosition, 0.5f + (fLuminosity * 0.1f), vLight, o);
 
-                Vector(1.0f, 0.3f, 0.2f, vLight);
+                if (seasonFenrir != nullptr)
+                {
+                    VectorCopy(seasonFenrir->Chest, vLight);
+                }
+                else
+                {
+                    Vector(1.0f, 0.3f, 0.2f, vLight);
+                }
                 Vector(40.f, 15.f, 0.f, vPos);
                 b->TransformPosition(BoneTransform[13], vPos, vPosition, false);
                 CreateSprite(BITMAP_LIGHT, vPosition, 1.5f, vLight, o);
@@ -952,6 +997,12 @@ void Draw_RenderObject(OBJECT* o, bool Translate, int Select, int ExtraMon)
                     Vector(0.1f, 0.1f, 0.8f, vLight);
                     iSubType = 2;
                 }
+                else if (o->Type == MODEL_FENRIR_GOLD && seasonFenrir != nullptr)
+                {
+                    VectorCopy(seasonFenrir->Lightning, vLight);
+                    // Subtype 0: the paws' lightning keeps the season's colour while it fades.
+                    iSubType = 0;
+                }
                 else if (o->Type == MODEL_FENRIR_GOLD)
                 {
                     Vector(0.8f, 0.8f, 0.1f, vLight);
@@ -965,7 +1016,14 @@ void Draw_RenderObject(OBJECT* o, bool Translate, int Select, int ExtraMon)
                 CreateEffectFpsChecked(MODEL_FENRIR_THUNDER, o->Position, o->Angle, vLight, 0, o);
                 CreateEffectFpsChecked(MODEL_FENRIR_THUNDER, o->Position, o->Angle, vLight, 0, o);
 
-                Vector(1.0f, 1.0f, 1.0f, vLight);
+                if (seasonFenrir != nullptr)
+                {
+                    VectorCopy(seasonFenrir->PawLightning, vLight);
+                }
+                else
+                {
+                    Vector(1.0f, 1.0f, 1.0f, vLight);
+                }
                 if (o->CurrentAction == FENRIR_WALK)
                 {
                     if (o->AnimationFrame >= 0.0f && o->AnimationFrame <= 1.5f)

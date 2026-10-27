@@ -24,6 +24,8 @@ namespace GameLogic::Items
     bool IsRideableMountModel(int modelType);
     bool IsHornMountModel(int modelType);
     bool IsFlyingMount(const ITEM* pItem);
+    // The battle pass' seasonal Fenrir: a gold Horn of Fenrir (excellent option 0x04), bound to its character.
+    bool IsSeasonalFenrir(const ITEM* pItem);
     // Wings or a flying mount that are not broken (durability above 0).
     bool HasFlightEquipment(const ITEM* pItemHelper, const ITEM* pItemWing);
     bool IsDarkLordPet(const ITEM* pItem);

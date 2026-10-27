@@ -3072,15 +3072,17 @@
     {
       "number": 128,
       "name": {
-        "en": "Hawk Figurine",
-        "de": "Falkenfigur",
-        "es": "Figura de Halcón",
-        "pt": "Estatueta de falcão"
+        "en": "Trophy of Season",
+        "ru": "Трофей Сезона"
       },
       "width": 1,
       "height": 1,
-      "slot": "ring",
-      "durability": 255,
+      "durability": 1,
+      "tradable": false,
+      "storable": false,
+      "sellable": false,
+      "personalShopSellable": false,
+      "repairable": false,
       "classRequirements": {
         "darkWizard": 1,
         "darkKnight": 1,
