@@ -464,8 +464,9 @@ void AddGuildName(CHAT* c, CHARACTER* Owner)
         c->Guild[0] = 0;
     }
 
+    // The battle pass' season title; not in Chaos Castle, where the aura stays hidden too.
     c->Title[0] = 0;
-    if (Owner->Object.Kind == KIND_PLAYER)
+    if (Owner->Object.Kind == KIND_PLAYER && !gMapManager.InChaosCastle())
     {
         const auto worn = GameLogic::SeasonMarks::Marks().Of(Owner->ID);
         if (worn.TitleSeason >= 0)
