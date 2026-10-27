@@ -13964,6 +13964,9 @@
   <data name="GmPanelLogDetail" xml:space="preserve">
     <value>%ls: %ls</value>
   </data>
+  <data name="SeasonHeroTitle" xml:space="preserve">
+    <value>Hero of Season %d</value>
+  </data>
   <data name="GmPanelSending" xml:space="preserve">
     <value>Sent: %ls</value>
   </data>

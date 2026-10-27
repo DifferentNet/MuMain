@@ -1,0 +1,18 @@
+{
+  "formatVersion": 1,
+  "_about": "How the battle pass' seasons look (GameLogic/Events/SeasonMarks.cpp). title: the line «Hero of Season N» over the name, text and background as [r, g, b, a] 0-255. aura: circle 'runes' (Effect/mzine_typer2) or 'none', circleColor as light [r, g, b] (1 = full), particles 'snow' (Effect/snowseff01/02, falling) or 'none', particleColor as light. A season missing here looks like the closest season before it. Stage 7 adds each season's Fenrir palette here.",
+  "seasons": [
+    {
+      "season": 0,
+      "name": "Test",
+      "title": { "text": [255, 214, 110, 255], "background": [30, 20, 0, 190] },
+      "aura": { "circle": "runes", "circleColor": [0.3, 0.7, 1.0], "particles": "snow", "particleColor": [0.75, 0.9, 1.0] }
+    },
+    {
+      "season": 1,
+      "name": "Winter",
+      "title": { "text": [255, 214, 110, 255], "background": [30, 20, 0, 190] },
+      "aura": { "circle": "runes", "circleColor": [0.3, 0.7, 1.0], "particles": "snow", "particleColor": [0.75, 0.9, 1.0] }
+    }
+  ]
+}
