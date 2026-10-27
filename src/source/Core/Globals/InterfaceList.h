@@ -137,6 +137,9 @@ enum INTERFACE_LIST
     // CDailyRewardsWindow (UI/Events/DailyRewardsWindow.h), the daily rewards window (key N). Same reasoning as
     // INTERFACE_CREDITS above.
     INTERFACE_DAILY_REWARDS,
+    // CBattlePassWindow (UI/Events/BattlePassWindow.h), the battle pass window (key X). Same reasoning as
+    // INTERFACE_CREDITS above.
+    INTERFACE_BATTLE_PASS,
     // CTierMapsWindow (UI/Events/TierMapsWindow.h), the Tier Maps window of Adviser Jerinteu. Same reasoning as
     // INTERFACE_CREDITS above.
     INTERFACE_TIER_MAPS,

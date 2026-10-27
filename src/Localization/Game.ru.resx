@@ -13192,6 +13192,294 @@
   <data name="DailyRewardsHint" xml:space="preserve">
     <value>Пропуск дня сбрасывает серию на день 1.</value>
   </data>
+  <data name="BattlePassX" xml:space="preserve">
+    <value>Боевой пропуск (X)</value>
+  </data>
+  <data name="BattlePassTitle" xml:space="preserve">
+    <value>Боевой пропуск</value>
+  </data>
+  <data name="BattlePassTabRewards" xml:space="preserve">
+    <value>Награды</value>
+  </data>
+  <data name="BattlePassTabQuests" xml:space="preserve">
+    <value>Задания</value>
+  </data>
+  <data name="BattlePassAsking" xml:space="preserve">
+    <value>Запрашиваю у сервера...</value>
+  </data>
+  <data name="BattlePassNoAnswer" xml:space="preserve">
+    <value>Сервер не ответил: возможно, боевого пропуска на нём ещё нет.</value>
+  </data>
+  <data name="BattlePassOff" xml:space="preserve">
+    <value>Боевой пропуск на сервере выключен.</value>
+  </data>
+  <data name="BattlePassStartsIn" xml:space="preserve">
+    <value>Начало через %ls</value>
+  </data>
+  <data name="BattlePassEndsIn" xml:space="preserve">
+    <value>До конца %ls</value>
+  </data>
+  <data name="BattlePassNewIn" xml:space="preserve">
+    <value>новые через %ls</value>
+  </data>
+  <data name="BattlePassEnded" xml:space="preserve">
+    <value>Сезон завершён</value>
+  </data>
+  <data name="BattlePassDays" xml:space="preserve">
+    <value>%d д %02d:%02d</value>
+  </data>
+  <data name="BattlePassLevel" xml:space="preserve">
+    <value>Уровень %d / %d</value>
+  </data>
+  <data name="BattlePassPoints" xml:space="preserve">
+    <value>Очки: %ls</value>
+  </data>
+  <data name="BattlePassGaugeBonus" xml:space="preserve">
+    <value>Бонус %d/%d: %ls / %ls</value>
+  </data>
+  <data name="BattlePassGaugeDone" xml:space="preserve">
+    <value>Все уровни пройдены</value>
+  </data>
+  <data name="BattlePassLevelClaimed" xml:space="preserve">
+    <value>Уровень %d: получено</value>
+  </data>
+  <data name="BattlePassLevelClaim" xml:space="preserve">
+    <value>Уровень %d: нажмите, чтобы забрать</value>
+  </data>
+  <data name="BattlePassLevelLocked" xml:space="preserve">
+    <value>Уровень %d: ещё не достигнут</value>
+  </data>
+  <data name="BattlePassBonusLevels" xml:space="preserve">
+    <value>Бонусные уровни %d / %d: после последнего уровня каждые %ls очков дают случайную награду.</value>
+  </data>
+  <data name="BattlePassExcellent" xml:space="preserve">
+    <value>Excellent-предмет, опций: %d</value>
+  </data>
+  <data name="BattlePassExcellentLuck" xml:space="preserve">
+    <value>Excellent-предмет, опций: %d, с удачей</value>
+  </data>
+  <data name="BattlePassMarkTitle" xml:space="preserve">
+    <value>Титул сезона %d</value>
+  </data>
+  <data name="BattlePassMarkAura" xml:space="preserve">
+    <value>Аура сезона %d</value>
+  </data>
+  <data name="BattlePassMarkTrophy" xml:space="preserve">
+    <value>Трофей сезона %d</value>
+  </data>
+  <data name="BattlePassMarkFenrir" xml:space="preserve">
+    <value>Фенрир сезона %d</value>
+  </data>
+  <data name="BattlePassMarkOther" xml:space="preserve">
+    <value>Знак сезона %d</value>
+  </data>
+  <data name="BattlePassPlaceholder" xml:space="preserve">
+    <value>Награда скоро появится</value>
+  </data>
+  <data name="BattlePassClaim" xml:space="preserve">
+    <value>Забрать (%d)</value>
+  </data>
+  <data name="BattlePassClaimNone" xml:space="preserve">
+    <value>Нечего забирать</value>
+  </data>
+  <data name="BattlePassTake" xml:space="preserve">
+    <value>Получить (%d)</value>
+  </data>
+  <data name="BattlePassReroll" xml:space="preserve">
+    <value>Заменить</value>
+  </data>
+  <data name="BattlePassRerollTooltip" xml:space="preserve">
+    <value>Заменить задание другим (раз в день)</value>
+  </data>
+  <data name="BattlePassNoQuests" xml:space="preserve">
+    <value>Заданий пока нет.</value>
+  </data>
+  <data name="BattlePassDaily" xml:space="preserve">
+    <value>Ежедневные</value>
+  </data>
+  <data name="BattlePassWeekly" xml:space="preserve">
+    <value>Недельные</value>
+  </data>
+  <data name="BattlePassSeasonal" xml:space="preserve">
+    <value>Сезонные</value>
+  </data>
+  <data name="BattlePassWeek" xml:space="preserve">
+    <value>Неделя %d</value>
+  </data>
+  <data name="BattlePassResult" xml:space="preserve">
+    <value>Итог сезона</value>
+  </data>
+  <data name="BattlePassResultPoints" xml:space="preserve">
+    <value>Очки</value>
+  </data>
+  <data name="BattlePassResultLevel" xml:space="preserve">
+    <value>Уровень</value>
+  </data>
+  <data name="BattlePassResultBonus" xml:space="preserve">
+    <value>Бонусные уровни</value>
+  </data>
+  <data name="BattlePassResultDaily" xml:space="preserve">
+    <value>Ежедневные задания</value>
+  </data>
+  <data name="BattlePassResultWeekly" xml:space="preserve">
+    <value>Недельные задания</value>
+  </data>
+  <data name="BattlePassResultSeasonal" xml:space="preserve">
+    <value>Сезонные задания</value>
+  </data>
+  <data name="BattlePassResultClaimable" xml:space="preserve">
+    <value>Награды к получению</value>
+  </data>
+  <data name="BattlePassResultWaiting" xml:space="preserve">
+    <value>Награды ждут места</value>
+  </data>
+  <data name="BattlePassQuestKill" xml:space="preserve">
+    <value>Убить %d монстров</value>
+  </data>
+  <data name="BattlePassQuestReset" xml:space="preserve">
+    <value>Сделать ресет</value>
+  </data>
+  <data name="BattlePassQuestResets" xml:space="preserve">
+    <value>Сделать ресетов: %d</value>
+  </data>
+  <data name="BattlePassQuestEvents" xml:space="preserve">
+    <value>Сходить на ивенты Blood Castle, Devil Square или Chaos Castle: %d</value>
+  </data>
+  <data name="BattlePassQuestMap" xml:space="preserve">
+    <value>Убить %d монстров в %ls</value>
+  </data>
+  <data name="BattlePassQuestGolden" xml:space="preserve">
+    <value>Убить золотых монстров: %d</value>
+  </data>
+  <data name="BattlePassQuestKalima" xml:space="preserve">
+    <value>Убить босса Kalima</value>
+  </data>
+  <data name="BattlePassQuestJewels" xml:space="preserve">
+    <value>Потратить на заточку Jewel of Bless или Soul: %d</value>
+  </data>
+  <data name="BattlePassQuestMix" xml:space="preserve">
+    <value>Сделать удачные миксы в Chaos Machine: %d</value>
+  </data>
+  <data name="BattlePassQuestParty" xml:space="preserve">
+    <value>Провести в пати %d ч</value>
+  </data>
+  <data name="BattlePassQuestOnline" xml:space="preserve">
+    <value>Играть %d ч за день</value>
+  </data>
+  <data name="BattlePassQuestRuns" xml:space="preserve">
+    <value>Пройти Тир-карты %d раз или сходить на 15 ивентов</value>
+  </data>
+  <data name="BattlePassQuestScraps" xml:space="preserve">
+    <value>Найти Suspicious Scrap of Paper: %d</value>
+  </data>
+  <data name="BattlePassQuestBosses" xml:space="preserve">
+    <value>Убить боссов Kalima, White Wizard, Nightmare или Тир-карт: %d</value>
+  </data>
+  <data name="BattlePassQuestBigEvent" xml:space="preserve">
+    <value>Поучаствовать в Nightmare, Kanturu, Crywolf или Castle Siege</value>
+  </data>
+  <data name="BattlePassQuestUpgrade" xml:space="preserve">
+    <value>Заточить предметы на +9 и выше: %d</value>
+  </data>
+  <data name="BattlePassQuestCraft" xml:space="preserve">
+    <value>Скрафтить крылья, хаос-оружие, Fenrir или +14 через Jewel of Ancient: %d</value>
+  </data>
+  <data name="BattlePassQuestTier" xml:space="preserve">
+    <value>Пройти Тир %d</value>
+  </data>
+  <data name="BattlePassQuestChaosCastle" xml:space="preserve">
+    <value>Победить в Chaos Castle</value>
+  </data>
+  <data name="BattlePassQuestNightmare" xml:space="preserve">
+    <value>Быть в пати, которая убьёт Nightmare</value>
+  </data>
+  <data name="BattlePassQuestAncientSet" xml:space="preserve">
+    <value>Надеть полный ancient-сет</value>
+  </data>
+  <data name="BattlePassQuestAncient14" xml:space="preserve">
+    <value>Поднять ancient-предмет до +14 через Jewel of Ancient</value>
+  </data>
+  <data name="BattlePassQuestWings3" xml:space="preserve">
+    <value>Надеть крылья 3-го уровня</value>
+  </data>
+  <data name="BattlePassQuestFenrir" xml:space="preserve">
+    <value>Скрафтить Horn of Fenrir</value>
+  </data>
+  <data name="BattlePassQuestLogin" xml:space="preserve">
+    <value>Играть дней за сезон: %d</value>
+  </data>
+  <data name="BattlePassQuestEventOne" xml:space="preserve">
+    <value>Сходить на ивент Blood Castle, Devil Square или Chaos Castle</value>
+  </data>
+  <data name="BattlePassQuestMixOne" xml:space="preserve">
+    <value>Сделать удачный микс в Chaos Machine</value>
+  </data>
+  <data name="BattlePassQuestUpgradeOne" xml:space="preserve">
+    <value>Заточить предмет на +9 и выше</value>
+  </data>
+  <data name="BattlePassQuestPartyMinutes" xml:space="preserve">
+    <value>Провести в пати %d мин</value>
+  </data>
+  <data name="BattlePassQuestOnlineMinutes" xml:space="preserve">
+    <value>Играть %d мин за день</value>
+  </data>
+  <data name="BattlePassQuestTierEnter" xml:space="preserve">
+    <value>Зайти на Тир-карты</value>
+  </data>
+  <data name="BattlePassQuestTierWin" xml:space="preserve">
+    <value>Пройти Тир-карту</value>
+  </data>
+  <data name="BattlePassQuestGoblin" xml:space="preserve">
+    <value>Убить гоблина-казначея</value>
+  </data>
+  <data name="BattlePassQuestGoblins" xml:space="preserve">
+    <value>Убить гоблинов-казначеев: %d</value>
+  </data>
+  <data name="BattlePassDifficultyEasy" xml:space="preserve">
+    <value>Лёгкое</value>
+  </data>
+  <data name="BattlePassDifficultyMedium" xml:space="preserve">
+    <value>Среднее</value>
+  </data>
+  <data name="BattlePassDifficultyHard" xml:space="preserve">
+    <value>Тяжёлое</value>
+  </data>
+  <data name="BattlePassDayWeek" xml:space="preserve">
+    <value>Дней с %d+ заданиями: %d из %d</value>
+  </data>
+  <data name="BattlePassDayWeekDays" xml:space="preserve">
+    <value>Дней за неделю: %d из %d</value>
+  </data>
+  <data name="BattlePassDayPoints" xml:space="preserve">
+    <value>Очки пропуска — только за первые %d задания дня (%d/%d)</value>
+  </data>
+  <data name="BattlePassChestDay" xml:space="preserve">
+    <value>Сундук %ls: %d из %d заданий дня</value>
+  </data>
+  <data name="BattlePassChestWeek" xml:space="preserve">
+    <value>Сундук недели: %d дней из 7 с %d+ заданиями</value>
+  </data>
+  <data name="BattlePassChestWeekDays" xml:space="preserve">
+    <value>Сундук недели: %d дней из 7</value>
+  </data>
+  <data name="BattlePassChestWeekLabel" xml:space="preserve">
+    <value>Сундук</value>
+  </data>
+  <data name="BattlePassChestGot" xml:space="preserve">
+    <value>Получен</value>
+  </data>
+  <data name="BattlePassChestNotYet" xml:space="preserve">
+    <value>Ещё не получен</value>
+  </data>
+  <data name="BattlePassDayRewards" xml:space="preserve">
+    <value>Задания дня дают по очереди:</value>
+  </data>
+  <data name="BattlePassDayRewardsAgain" xml:space="preserve">
+    <value>дальше снова с первой</value>
+  </data>
+  <data name="BattlePassDayRewardsNext" xml:space="preserve">
+    <value>за следующее задание</value>
+  </data>
   <data name="TierMapsTitle" xml:space="preserve">
     <value>Тир-карты</value>
   </data>

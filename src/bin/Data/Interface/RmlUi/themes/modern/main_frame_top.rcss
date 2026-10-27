@@ -12,7 +12,7 @@
 #buttons_top.workspace-placed { position: absolute; transform-origin: left top; }
 #buttons_top {
 	position: relative;
-	width: 206dp;
+	width: 256dp;
 	height: 24dp;
 	font-family: "token(font-body)";
 	background-color: rgba(15, 16, 13, 190);
@@ -42,10 +42,11 @@
 	background-color: token(accent-steel);
 	border: 1dp token(accent-steel);
 }
-#btn_chainfo_top  { left: 4dp;   }
-#btn_myinven_top  { left: 54dp;  }
-#btn_friend_top   { left: 104dp; }
-#btn_window_top   { left: 154dp; }
+#btn_battle_pass_top { left: 4dp; }
+#btn_chainfo_top  { left: 54dp;  }
+#btn_myinven_top  { left: 104dp; }
+#btn_friend_top   { left: 154dp; }
+#btn_window_top   { left: 204dp; }
 
 .alert-dot-top {
 	position: absolute;

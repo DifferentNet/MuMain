@@ -39,7 +39,7 @@
 			<div id="safe_area">
 				<!-- Fills from the right edge in document order. -->
 				<div class="region dock-right" data-ref-height="432" data-covers-world>
-					<div class="slot" data-window="character" data-closes="party guild_info command command_list event_schedule daily_rewards gm_panel gold_bowman gold_bowman_lena gens_ranking mu_helper mu_helper_detail mu_helper_skill_list"></div>
+					<div class="slot" data-window="character" data-closes="party guild_info command command_list event_schedule daily_rewards battle_pass gm_panel gold_bowman gold_bowman_lena gens_ranking mu_helper mu_helper_detail mu_helper_skill_list"></div>
 					<div class="slot" data-window="gens_ranking"></div>
 					<div class="slot" data-window="mu_helper"></div>
 					<div class="slot" data-window="mu_helper_detail"></div>
@@ -49,6 +49,7 @@
 					<div class="slot" data-window="command_list"></div>
 					<div class="slot" data-window="event_schedule"></div>
 					<div class="slot" data-window="daily_rewards"></div>
+					<div class="slot" data-window="battle_pass"></div>
 					<div class="slot" data-window="gm_panel"></div>
 					<div class="slot" data-window="gold_bowman"></div>
 					<div class="slot" data-window="gold_bowman_lena"></div>
@@ -68,11 +69,11 @@
 					<div class="slot" data-window="empire_guardian_entry"></div>
 					<div class="slot" data-window="tier_maps"></div>
 					<div class="slot" data-window="united_marketplace"></div>
-					<div class="slot" data-window="my_quest" data-closes="party guild_info command command_list event_schedule daily_rewards gm_panel gold_bowman gold_bowman_lena gens_ranking mu_helper mu_helper_detail mu_helper_skill_list inventory pet"></div>
-					<div class="slot" data-window="pet" data-closes="inventory my_quest party guild_info command command_list event_schedule daily_rewards gm_panel gold_bowman gold_bowman_lena gens_ranking mu_helper mu_helper_detail mu_helper_skill_list"></div>
+					<div class="slot" data-window="my_quest" data-closes="party guild_info command command_list event_schedule daily_rewards battle_pass gm_panel gold_bowman gold_bowman_lena gens_ranking mu_helper mu_helper_detail mu_helper_skill_list inventory pet"></div>
+					<div class="slot" data-window="pet" data-closes="inventory my_quest party guild_info command command_list event_schedule daily_rewards battle_pass gm_panel gold_bowman gold_bowman_lena gens_ranking mu_helper mu_helper_detail mu_helper_skill_list"></div>
 					<div class="slot" data-window="quest_progress_etc" data-closes="inventory my_quest"></div>
 					<div class="slot" data-window="inventory"
-					     data-closes="party guild_info command command_list event_schedule daily_rewards gm_panel gold_bowman gold_bowman_lena gens_ranking mu_helper mu_helper_detail mu_helper_skill_list my_quest"></div>
+					     data-closes="party guild_info command command_list event_schedule daily_rewards battle_pass gm_panel gold_bowman gold_bowman_lena gens_ranking mu_helper mu_helper_detail mu_helper_skill_list my_quest"></div>
 					<div class="slot" data-window="inventory_extension" data-closes="storage_extension my_quest character"></div>
 					<div class="slot" data-window="storage"></div>
 					<div class="slot" data-window="storage_extension"></div>

@@ -1,5 +1,5 @@
 <rml>
-	<!-- rml-contract-optional-callback: mainframe_cshop_click: no MU Item Shop button since 2026-10-24 (the server has no cash shop); a battle pass button may take its place -->
+	<!-- rml-contract-optional-callback: mainframe_cshop_click: no MU Item Shop button since 2026-10-24 (the server has no cash shop); its slot opens the battle pass (mainframe_battle_pass_click) -->
 	<!-- bound-geometry: the health/mana/SD/AG gauges, the experience bar and every cooldown wipe are
 	     fractions -->
 <head>
@@ -63,9 +63,12 @@
 	</div>
 
 	<!-- The original's bottom button row. A theme that puts these buttons elsewhere hides it (the
-	     modern theme's are in main_frame_top.rml). No MU Item Shop button: the server has no cash shop
-	     (removed 2026-10-24; a battle pass button may take its place). -->
+	     modern theme's are in main_frame_top.rml). The first slot was the MU Item Shop's; the server has
+	     no cash shop, so it opens the battle pass (key X). -->
 	<div id="buttons" class="hud-part">
+		<div id="btn_battle_pass" class="frame-btn slot-frame slot-fill" data-class-open="battle_pass_open" data-event-click="mainframe_battle_pass_click" data-attr-data-hint="battle_pass_tooltip">
+			<span class="btn-icon-label">PASS</span>
+		</div>
 		<div id="btn_chainfo" class="frame-btn slot-frame slot-fill" data-class-open="chainfo_open" data-event-click="mainframe_chainfo_click" data-attr-data-hint="chainfo_tooltip">
 			<span class="btn-icon-label">CHAR</span>
 			<div class="alert-dot" data-class-hidden="!chainfo_alert"></div>

@@ -3243,6 +3243,8 @@ Data/Interface/RmlUi/event_schedule.rml
 Data/Interface/RmlUi/themes/legacy/event_schedule.rcss
 Data/Interface/RmlUi/daily_rewards.rml
 Data/Interface/RmlUi/themes/legacy/daily_rewards.rcss
+Data/Interface/RmlUi/battle_pass.rml
+Data/Interface/RmlUi/themes/legacy/battle_pass.rcss
 Data/Interface/RmlUi/help_window.rml
 Data/Interface/RmlUi/themes/legacy/help_window.rcss
 Data/Interface/RmlUi/item_explanation.rml

@@ -141,14 +141,16 @@ void mu::ui::window::CMainFrameWindow::BindRmlModel(Rml::DataModelConstructor& c
     c.Bind("exp_digit", &model.expDigit);
     c.Bind("exp_tooltip", &model.expTooltip);
 
-    // rml-contract-unused: cshop_open: no MU Item Shop button since 2026-10-24 (the server has no cash shop); a battle pass button may take its place
+    // rml-contract-unused: cshop_open: no MU Item Shop button since 2026-10-24 (the server has no cash shop); its slot is the battle pass button's
     c.Bind("cshop_open", &model.cShopOpen);
+    c.Bind("battle_pass_open", &model.battlePassOpen);
     c.Bind("chainfo_open", &model.chaInfoOpen);
     c.Bind("myinven_open", &model.myInvenOpen);
     c.Bind("friend_open", &model.friendOpen);
     c.Bind("window_open", &model.windowOpen);
     // rml-contract-unused: cshop_tooltip: the MU Item Shop button's tooltip, see cshop_open
     c.Bind("cshop_tooltip", &model.cShopTooltip);
+    c.Bind("battle_pass_tooltip", &model.battlePassTooltip);
     c.Bind("chainfo_tooltip", &model.chaInfoTooltip);
     c.Bind("myinven_tooltip", &model.myInvenTooltip);
     c.Bind("friend_tooltip", &model.friendTooltip);
@@ -272,6 +274,8 @@ void mu::ui::window::CMainFrameWindow::BindRmlModel(Rml::DataModelConstructor& c
 
     c.BindEventCallback("mainframe_cshop_click",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickCShop(); });
+    c.BindEventCallback("mainframe_battle_pass_click",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickBattlePass(); });
     c.BindEventCallback("mainframe_chainfo_click",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickChaInfo(); });
     c.BindEventCallback("mainframe_myinven_click",
@@ -405,6 +409,13 @@ bool mu::ui::window::CMainFrameWindow::Update()
     {
         m_bRmlWindowClicked = false;
         g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_WINDOW_MENU);
+        PlayBuffer(SOUND_CLICK01);
+    }
+    if (m_bRmlBattlePassClicked)
+    {
+        // Same as key X (HotKey.cpp).
+        m_bRmlBattlePassClicked = false;
+        g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_BATTLE_PASS);
         PlayBuffer(SOUND_CLICK01);
     }
 #ifdef PBG_ADD_INGAMESHOP_UI_MAINFRAME
@@ -642,6 +653,10 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
     syncWide(&MainFrameRmlModel::myInvenTooltip, "myinven_tooltip", I18N::Game::InventoryIV);
     syncWide(&MainFrameRmlModel::friendTooltip, "friend_tooltip", I18N::Game::FriendF);
     syncWide(&MainFrameRmlModel::windowTooltip, "window_tooltip", I18N::Game::MenuU);
+    syncWide(&MainFrameRmlModel::battlePassTooltip, "battle_pass_tooltip", I18N::Game::BattlePassX);
+    // No SetBtnState() for the battle pass: the window opens from several places, so its state is read here.
+    syncBool(&MainFrameRmlModel::battlePassOpen, "battle_pass_open",
+             g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_BATTLE_PASS));
 #ifdef PBG_ADD_INGAMESHOP_UI_MAINFRAME
     syncWide(&MainFrameRmlModel::cShopTooltip, "cshop_tooltip", I18N::Game::MUItemShopX);
 #endif //defined PBG_ADD_INGAMESHOP_UI_MAINFRAME
