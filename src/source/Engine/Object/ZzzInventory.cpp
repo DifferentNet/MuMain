@@ -2453,22 +2453,16 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
     }
     else if (ip->Type == ITEM_SEAL_OF_ASCENSION)
     {
-        mu_swprintf(TextList[TextNum], I18N::Game::IncreasesExperienceGained);
-        TextListColor[TextNum] = TEXT_COLOR_BLUE;
-        TextBold[TextNum] = false;
-        TextNum++;
-        mu_swprintf(TextList[TextNum], I18N::Game::WarpCommandWindowAvailable);
-        TextListColor[TextNum] = TEXT_COLOR_BLUE;
-        TextBold[TextNum] = false;
-        TextNum++;
-        mu_swprintf(TextList[TextNum], I18N::Game::NotApplicableTo);
-        TextListColor[TextNum] = TEXT_COLOR_YELLOW;
-        TextBold[TextNum] = false;
-        TextNum++;
-        mu_swprintf(TextList[TextNum], I18N::Game::MasterLevelCharacters);
-        TextListColor[TextNum] = TEXT_COLOR_YELLOW;
-        TextBold[TextNum] = false;
-        TextNum++;
+        // MU Moldova: the battle pass's Seal of Ascension, used by a right click; the server keeps its time while the
+        // character is out of the game, and a second seal adds to it (server add-on SealOfAscension.cs).
+        mu_swprintf(TextList[TextNum], I18N::Game::SealOfAscensionExperience);
+        TextListColor[TextNum] = TEXT_COLOR_BLUE; TextBold[TextNum] = false; TextNum++;
+        mu_swprintf(TextList[TextNum], I18N::Game::SealOfAscensionStack);
+        TextListColor[TextNum] = TEXT_COLOR_BLUE; TextBold[TextNum] = false; TextNum++;
+        mu_swprintf(TextList[TextNum], I18N::Game::SealOfAscensionTime);
+        TextListColor[TextNum] = TEXT_COLOR_WHITE; TextBold[TextNum] = false; TextNum++;
+        mu_swprintf(TextList[TextNum], I18N::Game::SealOfAscensionUse);
+        TextListColor[TextNum] = TEXT_COLOR_YELLOW; TextBold[TextNum] = false; TextNum++;
     }
     else if (ip->Type == ITEM_SEAL_OF_WEALTH)
     {
@@ -3460,10 +3454,17 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
     }
     else if (ITEM_GOLDEN_BOX == ip->Type)
     {
-        mu_swprintf(TextList[TextNum], I18N::Game::YouCanDropItWithAFixedProbabilityOfItTurningIntoARareItem);
-        TextListColor[TextNum] = TEXT_COLOR_WHITE;
-        TextBold[TextNum] = false;
-        TextNum++;
+        // MU Moldova: the Golden Box is the battle pass's SkyNet Box, opened by dropping it (server add-on SkyNetBox.cs).
+        mu_swprintf(TextList[TextNum], I18N::Game::SkyNetBoxOpen);
+        TextListColor[TextNum] = TEXT_COLOR_YELLOW; TextBold[TextNum] = false; TextNum++;
+        mu_swprintf(TextList[TextNum], I18N::Game::SkyNetBoxPrizeItems);
+        TextListColor[TextNum] = TEXT_COLOR_BLUE; TextBold[TextNum] = false; TextNum++;
+        mu_swprintf(TextList[TextNum], I18N::Game::SkyNetBoxPrizeJewels);
+        TextListColor[TextNum] = TEXT_COLOR_BLUE; TextBold[TextNum] = false; TextNum++;
+        mu_swprintf(TextList[TextNum], I18N::Game::SkyNetBoxBank);
+        TextListColor[TextNum] = TEXT_COLOR_WHITE; TextBold[TextNum] = false; TextNum++;
+        mu_swprintf(TextList[TextNum], I18N::Game::SkyNetBoxRoom);
+        TextListColor[TextNum] = TEXT_COLOR_WHITE; TextBold[TextNum] = false; TextNum++;
     }
     else if (ITEM_SILVER_BOX == ip->Type)
     {

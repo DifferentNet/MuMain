@@ -101,6 +101,15 @@ void BuffStateValueControl::GetBuffInfoString(std::list<std::wstring>& outstr, e
     const BuffInfo buffinfo = g_BuffInfo(bufftype);
 
     outstr = buffinfo.s_BuffDescriptlist;
+    // MU Moldova: the descriptions are format strings ("EXP gain increase 150%%"), shown unformatted since the values
+    // were dropped (below), so a doubled percent sign becomes one.
+    for (std::wstring& line : outstr)
+    {
+        for (size_t at = line.find(L"%%"); at != std::wstring::npos; at = line.find(L"%%", at + 1))
+        {
+            line.erase(at, 1);
+        }
+    }
     outstr.push_front(L"\n");
     outstr.push_front(buffinfo.s_BuffName);
 

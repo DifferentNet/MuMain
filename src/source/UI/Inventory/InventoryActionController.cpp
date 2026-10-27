@@ -657,7 +657,8 @@ bool CInventoryActionController::TryConsumeItem(CInventoryCtrl* targetControl, I
         return false;
     }
 
-    if (pItem->Type == ITEM_TOWN_PORTAL_SCROLL)
+    // MU Moldova: the Seal of Ascension (battle pass) is used, not worn (server add-on SealOfAscension.cs).
+    if (pItem->Type == ITEM_TOWN_PORTAL_SCROLL || pItem->Type == ITEM_SEAL_OF_ASCENSION)
     {
         SendRequestUse(iIndex, 0);
         return true;

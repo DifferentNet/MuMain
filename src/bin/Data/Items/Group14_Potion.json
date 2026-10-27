@@ -1761,15 +1761,15 @@
     {
       "number": 123,
       "name": {
-        "en": "Golden Box",
-        "de": "Goldene Box",
-        "es": "Caja Dorada",
-        "pt": "Caixa dourada"
+        "en": "SkyNet Box",
+        "de": "SkyNet Box",
+        "es": "SkyNet Box",
+        "pt": "SkyNet Box"
       },
-      "tags": ["cashShop"],
       "width": 1,
       "height": 1,
       "tradable": false,
+      "storable": false,
       "sellable": false,
       "personalShopSellable": false,
       "repairable": false,
