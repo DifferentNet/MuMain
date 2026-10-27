@@ -2,6 +2,7 @@
 #include "Render/Effects/SeasonAura.h"
 
 #include "GameLogic/Events/SeasonMarks.h"
+#include "Engine/Object/ZzzCharacter.h"
 #include "Render/Effects/ZzzEffect.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
 #include "Scenes/SceneCore.h"
@@ -31,20 +32,38 @@ constexpr int FlakeEveryFrames = 6;
 // 120 flakes of the 3,000 particles every effect shares (MAX_PARTICLES): a crowded town loses no skill effects.
 constexpr int FullySnowingAuras = 12;
 
-// The auras drawn in the last frame and in this one (WorldTime changes once a frame).
+// At most this many other characters' auras a frame, besides the own one: a crowded town draws 30 circles (two
+// terrain layers each) and their snow, however many players wear one. Those past the limit, in the order the
+// characters are drawn, show none.
+constexpr int MaxOtherAuras = 30;
+
+// The auras drawn in the last frame and in this one, and the other characters' ones in this one (WorldTime changes
+// once a frame).
 int g_aurasLastFrame = 0;
 int g_aurasThisFrame = 0;
+int g_otherAurasThisFrame = 0;
 double g_auraFrame = -1.0;
 
-void CountAura()
+// Counts an aura about to be drawn; false if it is past the limit and stays undrawn.
+bool CountAura(bool own)
 {
     if (WorldTime != g_auraFrame)
     {
         g_auraFrame = WorldTime;
         g_aurasLastFrame = g_aurasThisFrame;
         g_aurasThisFrame = 0;
+        g_otherAurasThisFrame = 0;
     }
+
+    if (!own)
+    {
+        if (g_otherAurasThisFrame >= MaxOtherAuras)
+            return false;
+        ++g_otherAurasThisFrame;
+    }
+
     ++g_aurasThisFrame;
+    return true;
 }
 
 void RenderCircle(OBJECT* o, const GameLogic::SeasonMarks::SeasonLook& look)
@@ -71,7 +90,7 @@ void CreateParticles(OBJECT* o, const GameLogic::SeasonMarks::SeasonLook& look)
     if (look.ParticleKind != GameLogic::SeasonMarks::Particles::Snow)
         return;
 
-    // Shared evenly: 13 to 24 auras snow half as often, 25 to 36 a third, and so on.
+    // Shared evenly: 13 to 24 auras snow half as often, 25 to 31 (the most drawn) a third.
     const int share = (std::max(g_aurasLastFrame, 1) + FullySnowingAuras - 1) / FullySnowingAuras;
     if (!rand_fps_check(FlakeEveryFrames * share))
         return;
@@ -107,8 +126,10 @@ void RenderSeasonAura(CHARACTER* c, OBJECT* o)
     if (worn.AuraSeason < 0)
         return;
 
+    if (!CountAura(c == Hero))
+        return;
+
     const auto& look = marks.Look(worn.AuraSeason);
-    CountAura();
     RenderCircle(o, look);
     CreateParticles(o, look);
 }
