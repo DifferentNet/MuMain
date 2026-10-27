@@ -1,13 +1,7 @@
 {
   "formatVersion": 1,
-  "_about": "How the battle pass' seasons look (GameLogic/Events/SeasonMarks.cpp). title: the line «Hero of Season N» over the name, text and background as [r, g, b, a] 0-255. aura: circle 'runes' (Effect/mzine_typer2) or 'none', circleColor as light [r, g, b] (1 = full), particles 'snow' (Effect/snowseff01/02, falling) or 'none', particleColor as light. A season missing here looks like the closest season before it. fenrir: the seasonal Fenrir (the gold Horn of Fenrir, the level 50 reward from Season 1 on): texture under Data for the body (empty keeps the gold one), bodyLight and glowLight for the body and its bright glow, eyeLight and chestLight, lightning around the wolf, pawLightning under its paws, sparks of its skill, all as light. Every gold Fenrir in the game wears the newest season's fenrir: other players' clients learn only gold, not the season. name: a text or one per UI language {\"en\": ..., \"ru\": ...}, shown in the seasonal Fenrir's tooltip.",
+  "_about": "How the battle pass' seasons look (GameLogic/Events/SeasonMarks.cpp). title: the line «Hero of Season N» over the name, text and background as [r, g, b, a] 0-255. aura: circle 'runes' (Effect/mzine_typer2) or 'none', circleColor as light [r, g, b] (1 = full), particles 'snow' (Effect/snowseff01/02, falling) or 'none', particleColor as light. A season missing here looks like the closest season before it. fenrir: the seasonal Fenrir (the gold Horn of Fenrir, the level 50 reward): texture under Data for the body (empty keeps the gold one), bodyLight and glowLight for the body and its bright glow, eyeLight and chestLight, lightning around the wolf, pawLightning under its paws, sparks of its skill, all as light. Every gold Fenrir in the game wears the newest season's fenrir: other players' clients learn only gold, not the season. name: a text or one per UI language {\"en\": ..., \"ru\": ...}, shown in the seasonal Fenrir's tooltip.",
   "seasons": [
-    {
-      "season": 0,
-      "name": "Test",
-      "title": { "text": [255, 214, 110, 255], "background": [30, 20, 0, 190] },
-      "aura": { "circle": "runes", "circleColor": [0.3, 0.7, 1.0], "particles": "snow", "particleColor": [0.75, 0.9, 1.0] }
-    },
     {
       "season": 1,
       "name": { "en": "Winter", "ru": "Зима" },

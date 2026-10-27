@@ -23,7 +23,7 @@
 // it that is there.
 //
 // The seasonal Fenrir (stage 7) is the gold Horn of Fenrir (13:37, excellent option 0x04) with the season's number
-// as its level, the level 50 reward from Season 1 on; the trophy (13:128) is named by its level too. Other players'
+// as its level, the level 50 reward; the trophy (13:128) is named by its level too. Other players'
 // clients learn only "gold" from the appearance packet (no pet level), so every gold Fenrir is drawn with the
 // newest season's Fenrir look in Seasons.json (Engine/Object/ZzzObject.cpp); the horn's level only names the
 // season in its tooltip.
