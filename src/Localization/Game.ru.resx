@@ -13345,7 +13345,7 @@
     <comment>legacy_id=3901</comment>
   </data>
   <data name="JewelOfAncientMixDesc1" xml:space="preserve">
-    <value>Excellent-вещь: +13, 3+ опции.</value>
+    <value>Excellent-вещь: от +9, 3+ опции.</value>
     <comment>legacy_id=3902</comment>
   </data>
   <data name="JewelOfAncientMixDesc2" xml:space="preserve">
@@ -13355,6 +13355,18 @@
   <data name="JewelOfAncientMixDesc3" xml:space="preserve">
     <value>При провале обе вещи остаются.</value>
     <comment>legacy_id=3904</comment>
+  </data>
+  <data name="AncientUpgradeDesc1" xml:space="preserve">
+    <value>Ancient-вещь при провале</value>
+    <comment>legacy_id=3905</comment>
+  </data>
+  <data name="AncientUpgradeDesc2" xml:space="preserve">
+    <value>не сгорает, а теряет 1 уровень.</value>
+    <comment>legacy_id=3906</comment>
+  </data>
+  <data name="AncientUpgradeDesc3" xml:space="preserve">
+    <value>Камни и zen расходуются.</value>
+    <comment>legacy_id=3907</comment>
   </data>
   <data name="GmPanelTitleAdmin" xml:space="preserve">
     <value>GM-панель — админ</value>
