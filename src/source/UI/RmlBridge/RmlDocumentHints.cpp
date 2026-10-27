@@ -72,11 +72,23 @@ void Update(Rml::Context& context)
     const float unit = UnitAt(*element, context, size.x);
     const auto anchor = TooltipPlacement::ForButton(offset.x, offset.y, size.x, size.y, unit);
 
-    Tooltip::Line line;
-    line.text = HintOf(*element);
+    // A hint of several lines ("Chest II\nJewel of Chaos x5\n..."): a line each, the first bold, in a tooltip's
+    // framed box; a hint of one line stays a button's.
+    const Rml::String hint = HintOf(*element);
     Tooltip::Config config;
-    config.lines.push_back(std::move(line));
-    config.box = Tooltip::Config::Box::ButtonHint;
+    for (size_t start = 0;;)
+    {
+        const size_t end = hint.find('\n', start);
+        Tooltip::Line line;
+        line.text = hint.substr(start, end == Rml::String::npos ? Rml::String::npos : end - start);
+        config.lines.push_back(std::move(line));
+        if (end == Rml::String::npos)
+            break;
+        start = end + 1;
+    }
+    const bool severalLines = config.lines.size() > 1;
+    config.lines.front().bold = severalLines;
+    config.box = severalLines ? Tooltip::Config::Box::TipTextList : Tooltip::Config::Box::ButtonHint;
     config.textAlign = Tooltip::Config::TextAlign::Center;
     config.centerHorizontally = true;
     config.anchorX = anchor.x;

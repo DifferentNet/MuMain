@@ -13408,6 +13408,78 @@
   <data name="BattlePassQuestLogin" xml:space="preserve">
     <value>Играть дней за сезон: %d</value>
   </data>
+  <data name="BattlePassQuestEventOne" xml:space="preserve">
+    <value>Сходить на ивент Blood Castle, Devil Square или Chaos Castle</value>
+  </data>
+  <data name="BattlePassQuestMixOne" xml:space="preserve">
+    <value>Сделать удачный микс в Chaos Machine</value>
+  </data>
+  <data name="BattlePassQuestUpgradeOne" xml:space="preserve">
+    <value>Заточить предмет на +9 и выше</value>
+  </data>
+  <data name="BattlePassQuestPartyMinutes" xml:space="preserve">
+    <value>Провести в пати %d мин</value>
+  </data>
+  <data name="BattlePassQuestOnlineMinutes" xml:space="preserve">
+    <value>Играть %d мин за день</value>
+  </data>
+  <data name="BattlePassQuestTierEnter" xml:space="preserve">
+    <value>Зайти на Тир-карты</value>
+  </data>
+  <data name="BattlePassQuestTierWin" xml:space="preserve">
+    <value>Пройти Тир-карту</value>
+  </data>
+  <data name="BattlePassQuestGoblin" xml:space="preserve">
+    <value>Убить гоблина-казначея</value>
+  </data>
+  <data name="BattlePassQuestGoblins" xml:space="preserve">
+    <value>Убить гоблинов-казначеев: %d</value>
+  </data>
+  <data name="BattlePassDifficultyEasy" xml:space="preserve">
+    <value>Лёгкое</value>
+  </data>
+  <data name="BattlePassDifficultyMedium" xml:space="preserve">
+    <value>Среднее</value>
+  </data>
+  <data name="BattlePassDifficultyHard" xml:space="preserve">
+    <value>Тяжёлое</value>
+  </data>
+  <data name="BattlePassDayWeek" xml:space="preserve">
+    <value>Дней с %d+ заданиями: %d из %d</value>
+  </data>
+  <data name="BattlePassDayWeekDays" xml:space="preserve">
+    <value>Дней за неделю: %d из %d</value>
+  </data>
+  <data name="BattlePassDayPoints" xml:space="preserve">
+    <value>Очки пропуска — только за первые %d задания дня (%d/%d)</value>
+  </data>
+  <data name="BattlePassChestDay" xml:space="preserve">
+    <value>Сундук %ls: %d из %d заданий дня</value>
+  </data>
+  <data name="BattlePassChestWeek" xml:space="preserve">
+    <value>Сундук недели: %d дней из 7 с %d+ заданиями</value>
+  </data>
+  <data name="BattlePassChestWeekDays" xml:space="preserve">
+    <value>Сундук недели: %d дней из 7</value>
+  </data>
+  <data name="BattlePassChestWeekLabel" xml:space="preserve">
+    <value>Сундук</value>
+  </data>
+  <data name="BattlePassChestGot" xml:space="preserve">
+    <value>Получен</value>
+  </data>
+  <data name="BattlePassChestNotYet" xml:space="preserve">
+    <value>Ещё не получен</value>
+  </data>
+  <data name="BattlePassDayRewards" xml:space="preserve">
+    <value>Задания дня дают по очереди:</value>
+  </data>
+  <data name="BattlePassDayRewardsAgain" xml:space="preserve">
+    <value>дальше снова с первой</value>
+  </data>
+  <data name="BattlePassDayRewardsNext" xml:space="preserve">
+    <value>за следующее задание</value>
+  </data>
   <data name="TierMapsTitle" xml:space="preserve">
     <value>Тир-карты</value>
   </data>

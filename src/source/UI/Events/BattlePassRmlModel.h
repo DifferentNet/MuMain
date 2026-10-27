@@ -51,22 +51,52 @@ struct BattlePassLevelRow
     bool operator==(const BattlePassLevelRow&) const = default;
 };
 
-// A line of the quests tab: a section's heading, a quest, or a line of the season's result.
+// A chest of the daily quests: the day's under its mark on the day's bar, the week's on the week's line. Its hint
+// says what it holds.
+struct BattlePassChestBox
+{
+    // "I", "II", "III"; the week's: a word.
+    Rml::String label;
+    Rml::String hint;
+    // Its id ("bp_chest_1"-"bp_chest_3", the week's "bp_chest_w"), and where its mark is on the day's bar (0-100).
+    Rml::String id;
+    float at = 0.f;
+    // Given; enough quests done for it (the server gives it then, so this is mostly the same).
+    bool got = false;
+    bool reached = false;
+
+    bool operator==(const BattlePassChestBox&) const = default;
+};
+
+// A line of the quests tab: a section's heading, a quest, a line of the season's result, or one of the daily quests'
+// lines (the day's bar with its chests, the note on points, the week's line with its reward).
 struct BattlePassQuestRow
 {
-    // 0 a quest, 1 a section's heading, 2 a week's heading inside the weekly ones, 3 a result line.
+    // 0 a quest, 1 a section's heading, 2 a week's heading inside the weekly ones, 3 a result line, 4 the day's bar,
+    // 5 a note, 6 the week's line of the daily quests.
     int type = 0;
     Rml::String text;
-    // A heading's time left; a quest's progress ("37 / 2500"); a result line's value.
+    // A quest's progress ("37 / 2500"); a result line's value; the day's bar: "4 / 10".
     Rml::String detail;
-    // "+200".
+    // A heading's time left, from the model's own timers (they change every second, the rows don't): 0 none, 1 the
+    // day's, 2 the week's, 3 the season's.
+    int timer = 0;
+    // "+200"; empty for a quest that gives no points.
     Rml::String points;
-    // The progress bar's fill, 0-100.
+    // The progress bar's fill, 0-100 (the day's bar: quests done of the day's).
     float fill = 0.f;
     bool done = false;
+    // A daily quest's difficulty (1 easy, 2 medium, 3 hard; 0 none) and its word.
+    int difficulty = 0;
+    Rml::String difficultyLabel;
     // A daily quest that can be replaced today, and its slot for /bpreroll.
     bool canReroll = false;
     int slot = 0;
+    // The day's bar: what the day's quests give in turn.
+    Rml::String hint;
+    // The day's bar: its chests (a mark and a box each); the week's line: the week's chest. A row's own, so the
+    // other rows hold none.
+    std::vector<BattlePassChestBox> chests;
 
     bool operator==(const BattlePassQuestRow&) const = default;
 };
@@ -100,6 +130,10 @@ struct BattlePassRmlModel
     // Under the track: the bonus levels.
     Rml::String bonus;
     std::vector<BattlePassQuestRow> quests;
+    // The headings' times left ("new in 5:12:30"), kept apart from the rows so a second's tick touches only them.
+    Rml::String dayTimer;
+    Rml::String weekTimer;
+    Rml::String seasonTimer;
 
     // The quests tab's button that hands out the rewards that wait for room, shown while some wait.
     bool canTake = false;

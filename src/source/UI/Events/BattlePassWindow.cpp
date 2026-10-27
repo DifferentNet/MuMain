@@ -25,7 +25,6 @@
 #include <RmlUi/Core/ElementDocument.h>
 
 #include <algorithm>
-#include <ctime>
 
 using namespace SEASON3B;
 using namespace mu::ui::window;
@@ -72,23 +71,29 @@ std::wstring FormatDuration(long long totalSeconds)
     return Format(L"%lld:%02lld", minutes, seconds);
 }
 
-long long UtcSeconds()
+// A line of the window's own text, at the size the native renderer would have shrunk it to for its box.
+BattlePassLine TextLine(const std::wstring& text, int width, bool bold = false)
 {
-    return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    if (text.empty())
+        return {};
+    g_pRenderText->SetFont(bold ? g_hFontBold : g_hFont);
+    const auto role = bold ? UI::Scaling::FontRole::Bold : UI::Scaling::FontRole::Normal;
+    return {Narrow(text), UI::RmlBridge::NativeTextPxInBox(role, static_cast<float>(MeasureInReferenceUnits(text)),
+                                                             static_cast<float>(width))};
 }
 
-// Seconds until the next UTC day, when the daily quests change.
-long long SecondsToNextUtcDay()
+// The season's points multiplier: 200 -> "x2", 150 -> "x1.5", 125 -> "x1.25".
+std::wstring MultiplierText(int percent)
 {
-    return 86400 - UtcSeconds() % 86400;
-}
-
-// Seconds until the next Monday 00:00 UTC, when the week's quests come. 1 January 1970 was a Thursday.
-long long SecondsToNextUtcWeek()
-{
-    const long long now = UtcSeconds();
-    const long long weekday = (now / 86400 + 3) % 7; // Monday 0
-    return (7 - weekday) * 86400 - now % 86400;
+    std::wstring text = Format(L"x%d", percent / 100);
+    if (percent % 100 != 0)
+    {
+        std::wstring fraction = Format(L"%02d", percent % 100);
+        if (fraction.back() == L'0')
+            fraction.pop_back();
+        text += L"." + fraction;
+    }
+    return text;
 }
 
 // 17430 -> "17 430".
@@ -107,40 +112,83 @@ std::wstring MapOfDay(const std::wstring& text)
     return in == std::wstring::npos ? std::wstring{} : text.substr(in + 4);
 }
 
-// The quest in the window's language: its own wording by its id with the server's numbers, or the server's text
-// for a quest this client doesn't know.
-std::wstring QuestText(const Quest& quest)
+// A daily quest's kind: its id's leading letters, without what tells a day's quests of one kind apart
+// ("kill2500", "kill-hard" -> "kill").
+std::wstring DailyKind(const std::wstring& id)
 {
-    const std::wstring& id = quest.Id;
-    const int target = quest.Target;
-    const int hours = std::max(1, target / 60);
+    size_t end = 0;
+    while (end < id.size() && id[end] >= L'a' && id[end] <= L'z')
+        ++end;
+    return id.substr(0, end);
+}
 
-    if (id == L"kill" || id == L"w-kill" || id == L"s-kill")
+// A quest that counts time: "1 h", or "30 min" for a time that isn't whole hours.
+std::wstring TimeQuest(const wchar_t* hours, const wchar_t* minutes, int target)
+{
+    return target >= 60 && target % 60 == 0 ? Format(hours, target / 60) : Format(minutes, std::max(1, target));
+}
+
+// A daily quest in the window's language by its kind and the server's numbers, or the server's text for a kind
+// this client doesn't know.
+std::wstring DailyQuestText(const Quest& quest)
+{
+    const std::wstring kind = DailyKind(quest.Id);
+    const int target = quest.Target;
+
+    if (kind == L"kill")
         return Format(I18N::Game::BattlePassQuestKill, target);
-    if (id == L"reset")
-        return I18N::Game::BattlePassQuestReset;
-    if (id == L"w-reset" || id.starts_with(L"s-reset"))
-        return Format(I18N::Game::BattlePassQuestResets, target);
-    if (id == L"events")
-        return Format(I18N::Game::BattlePassQuestEvents, target);
-    if (id == L"map")
+    if (kind == L"reset")
+        return target > 1 ? Format(I18N::Game::BattlePassQuestResets, target) : I18N::Game::BattlePassQuestReset;
+    if (kind == L"events" || kind == L"event")
+        return target > 1 ? Format(I18N::Game::BattlePassQuestEvents, target) : I18N::Game::BattlePassQuestEventOne;
+    if (kind == L"map")
     {
         const std::wstring map = MapOfDay(quest.Text);
         if (!map.empty())
             return Format(I18N::Game::BattlePassQuestMap, target, map.c_str());
     }
-    if (id == L"golden" || id == L"w-golden")
+    if (kind == L"golden")
         return Format(I18N::Game::BattlePassQuestGolden, target);
-    if (id == L"kalima")
+    if (kind == L"kalima" && target == 1)
         return I18N::Game::BattlePassQuestKalima;
-    if (id == L"jewels")
+    if (kind == L"jewels")
         return Format(I18N::Game::BattlePassQuestJewels, target);
-    if (id == L"mix")
-        return Format(I18N::Game::BattlePassQuestMix, target);
-    if (id == L"party" || id == L"w-party")
-        return Format(I18N::Game::BattlePassQuestParty, hours);
-    if (id == L"online")
-        return Format(I18N::Game::BattlePassQuestOnline, hours);
+    if (kind == L"mix")
+        return target > 1 ? Format(I18N::Game::BattlePassQuestMix, target) : I18N::Game::BattlePassQuestMixOne;
+    if (kind == L"party")
+        return TimeQuest(I18N::Game::BattlePassQuestParty, I18N::Game::BattlePassQuestPartyMinutes, target);
+    if (kind == L"online")
+        return TimeQuest(I18N::Game::BattlePassQuestOnline, I18N::Game::BattlePassQuestOnlineMinutes, target);
+    if ((kind == L"bosses" || kind == L"boss") && target > 1)
+        return Format(I18N::Game::BattlePassQuestBosses, target);
+    if (kind == L"upgrade")
+        return target > 1 ? Format(I18N::Game::BattlePassQuestUpgrade, target) : I18N::Game::BattlePassQuestUpgradeOne;
+    if ((kind == L"tier" || kind == L"tierwin") && target == 1)
+        return quest.Id.find(L"win") != std::wstring::npos ? I18N::Game::BattlePassQuestTierWin
+                                                           : I18N::Game::BattlePassQuestTierEnter;
+    if (kind == L"goblin")
+        return target > 1 ? Format(I18N::Game::BattlePassQuestGoblins, target) : I18N::Game::BattlePassQuestGoblin;
+    return quest.Text;
+}
+
+// The quest in the window's language: its own wording by its id with the server's numbers, or the server's text
+// for a quest this client doesn't know.
+std::wstring QuestText(const Quest& quest)
+{
+    if (quest.Kind == QuestKind::Daily)
+        return DailyQuestText(quest);
+
+    const std::wstring& id = quest.Id;
+    const int target = quest.Target;
+
+    if (id == L"w-kill" || id == L"s-kill")
+        return Format(I18N::Game::BattlePassQuestKill, target);
+    if (id == L"w-reset" || id.starts_with(L"s-reset"))
+        return Format(I18N::Game::BattlePassQuestResets, target);
+    if (id == L"w-golden")
+        return Format(I18N::Game::BattlePassQuestGolden, target);
+    if (id == L"w-party")
+        return TimeQuest(I18N::Game::BattlePassQuestParty, I18N::Game::BattlePassQuestPartyMinutes, target);
     if (id == L"w-runs")
         return Format(I18N::Game::BattlePassQuestRuns, target);
     if (id == L"w-scraps")
@@ -175,8 +223,8 @@ std::wstring QuestText(const Quest& quest)
 // A quest's progress: minutes as hours and minutes for the quests that count time.
 std::wstring QuestProgress(const Quest& quest)
 {
-    const std::wstring& id = quest.Id;
-    if (id == L"party" || id == L"w-party" || id == L"online")
+    const std::wstring kind = quest.Kind == QuestKind::Daily ? DailyKind(quest.Id) : quest.Id;
+    if (kind == L"party" || kind == L"w-party" || kind == L"online")
         return Format(L"%d:%02d / %d:%02d", quest.Progress / 60, quest.Progress % 60, quest.Target / 60,
                       quest.Target % 60);
     return Grouped(quest.Progress) + L" / " + Grouped(quest.Target);
@@ -224,6 +272,160 @@ std::wstring SignText(const RewardItem& item)
     default:
         return L"?";
     }
+}
+
+// A daily quest's difficulty in words.
+std::wstring DifficultyText(int difficulty)
+{
+    switch (difficulty)
+    {
+    case 1:
+        return I18N::Game::BattlePassDifficultyEasy;
+    case 2:
+        return I18N::Game::BattlePassDifficultyMedium;
+    case 3:
+        return I18N::Game::BattlePassDifficultyHard;
+    default:
+        return {};
+    }
+}
+
+// A chest of the day by its number: I, II, III.
+std::wstring ChestName(int number)
+{
+    switch (number)
+    {
+    case 1:
+        return L"I";
+    case 2:
+        return L"II";
+    case 3:
+        return L"III";
+    default:
+        return std::to_wstring(number);
+    }
+}
+
+// A chest's item as a line of its hint ("Box of Kundun +3", "Jewel of Bless x5", "Jewel of Guardian (10%)"); empty for
+// a game item this client doesn't have.
+std::wstring ItemLine(const RewardItem& item)
+{
+    std::wstring line;
+    if (item.Kind == ItemKind::Item)
+    {
+        if (!KnownItem(item))
+            return {};
+        // The longest name the item tables hold, with the level's name ("Box of Kundun +3", "Gold Medal").
+        wchar_t name[128] = {};
+        ::GetItemName(item.Group * MAX_ITEM_INDEX + item.Number, item.Level, name);
+        line = name;
+    }
+    else
+    {
+        line = SignHint(item);
+    }
+    if (item.Count > 1)
+        line += Format(L" x%d", item.Count);
+    if (item.Chance > 0 && item.Chance < 100)
+        line += Format(L" (%d%%)", item.Chance);
+    return line;
+}
+
+// A chest's hint, a line each: which chest, what it holds, and whether it was given.
+std::wstring ChestHint(const Chest& chest, const Day& day)
+{
+    std::wstring hint;
+    if (chest.Kind == ChestKind::Day)
+        hint = Format(I18N::Game::BattlePassChestDay, ChestName(chest.Number).c_str(), chest.Need, day.Total);
+    else if (day.WeekDayQuests > 0)
+        hint = Format(I18N::Game::BattlePassChestWeek, chest.Need, day.WeekDayQuests);
+    else
+        hint = Format(I18N::Game::BattlePassChestWeekDays, chest.Need);
+
+    // The items by this client's names; the server's own words when it has one this client doesn't.
+    std::vector<std::wstring> lines;
+    for (const auto& item : chest.Items)
+    {
+        std::wstring line = ItemLine(item);
+        if (line.empty())
+        {
+            lines.clear();
+            break;
+        }
+        lines.push_back(std::move(line));
+    }
+    if (lines.empty() && !chest.Text.empty())
+    {
+        size_t start = 0;
+        while (start < chest.Text.size())
+        {
+            const size_t comma = chest.Text.find(L", ", start);
+            lines.push_back(chest.Text.substr(start, comma == std::wstring::npos ? std::wstring::npos : comma - start));
+            if (comma == std::wstring::npos)
+                break;
+            start = comma + 2;
+        }
+    }
+    for (const auto& line : lines)
+        hint += L"\n" + line;
+    hint += L"\n";
+    hint += chest.Got ? I18N::Game::BattlePassChestGot : I18N::Game::BattlePassChestNotYet;
+    return hint;
+}
+
+// A chest's box: the day's under its mark on the day's bar (`total` quests), the week's on the week's line.
+BattlePassChestBox ChestBox(const Chest& chest, const Day& day, int total)
+{
+    const bool ofDay = chest.Kind == ChestKind::Day;
+    BattlePassChestBox box;
+    box.id = ofDay ? "bp_chest_" + std::to_string(chest.Number) : "bp_chest_w";
+    box.label = Narrow(ofDay ? ChestName(chest.Number) : std::wstring(I18N::Game::BattlePassChestWeekLabel));
+    box.hint = Narrow(ChestHint(chest, day));
+    box.at = total > 0 ? 100.f * std::clamp(chest.Need, 0, total) / total : 0.f;
+    box.got = chest.Got;
+    box.reached = ofDay ? day.Done >= chest.Need : day.WeekDays >= chest.Need;
+    return box;
+}
+
+// The day's bar's hint: what the day's quests done give in turn (medals), round again after the last, with the one
+// the next quest gives (`done` of `total` done); empty when the server sends none.
+std::wstring DayRewardsHint(const std::vector<Chest>& chests, int done, int total)
+{
+    const int rewards = static_cast<int>(
+        std::count_if(chests.begin(), chests.end(), [](const Chest& c) { return c.Kind == ChestKind::Quest; }));
+    const int next = rewards > 0 && done < total ? done % rewards + 1 : 0;
+    std::wstring lines;
+    int count = 0;
+    for (const auto& chest : chests)
+    {
+        if (chest.Kind != ChestKind::Quest)
+            continue;
+        std::wstring items;
+        for (const auto& item : chest.Items)
+        {
+            const std::wstring line = ItemLine(item);
+            if (line.empty())
+            {
+                items.clear();
+                break;
+            }
+            items += (items.empty() ? L"" : L", ") + line;
+        }
+        if (items.empty())
+            items = chest.Text;
+        if (items.empty())
+            continue;
+        lines += Format(L"\n%d. %ls", chest.Number, items.c_str());
+        if (chest.Number == next)
+            lines += Format(L"  (%ls)", I18N::Game::BattlePassDayRewardsNext);
+        ++count;
+    }
+    if (count == 0)
+        return {};
+    std::wstring hint = I18N::Game::BattlePassDayRewards + lines;
+    if (count < total)
+        hint += std::wstring(L"\n") + I18N::Game::BattlePassDayRewardsAgain;
+    return hint;
 }
 
 // The level the track is opened on: the first that waits to be claimed, else the next to reach.
@@ -285,6 +487,8 @@ void mu::ui::window::CBattlePassWindow::OpenningProcess()
     m_openedAt = std::chrono::steady_clock::now();
     m_refreshDue = {};
     m_centerPending = true;
+    m_builtFrom.reset();
+    m_timersAt = -1;
     Pass().Request();
 }
 
@@ -453,6 +657,15 @@ void mu::ui::window::CBattlePassWindow::BindRmlModel(Rml::DataModelConstructor& 
     levelType.RegisterMember("next", &BattlePassLevelRow::next);
     c.RegisterArray<std::vector<BattlePassLevelRow>>();
 
+    auto chestType = c.RegisterStruct<BattlePassChestBox>();
+    chestType.RegisterMember("label", &BattlePassChestBox::label);
+    chestType.RegisterMember("hint", &BattlePassChestBox::hint);
+    chestType.RegisterMember("id", &BattlePassChestBox::id);
+    chestType.RegisterMember("at", &BattlePassChestBox::at);
+    chestType.RegisterMember("got", &BattlePassChestBox::got);
+    chestType.RegisterMember("reached", &BattlePassChestBox::reached);
+    c.RegisterArray<std::vector<BattlePassChestBox>>();
+
     auto questType = c.RegisterStruct<BattlePassQuestRow>();
     questType.RegisterMember("type", &BattlePassQuestRow::type);
     questType.RegisterMember("text", &BattlePassQuestRow::text);
@@ -460,8 +673,13 @@ void mu::ui::window::CBattlePassWindow::BindRmlModel(Rml::DataModelConstructor& 
     questType.RegisterMember("points", &BattlePassQuestRow::points);
     questType.RegisterMember("fill", &BattlePassQuestRow::fill);
     questType.RegisterMember("done", &BattlePassQuestRow::done);
+    questType.RegisterMember("timer", &BattlePassQuestRow::timer);
+    questType.RegisterMember("difficulty", &BattlePassQuestRow::difficulty);
+    questType.RegisterMember("difficulty_label", &BattlePassQuestRow::difficultyLabel);
     questType.RegisterMember("can_reroll", &BattlePassQuestRow::canReroll);
     questType.RegisterMember("slot", &BattlePassQuestRow::slot);
+    questType.RegisterMember("hint", &BattlePassQuestRow::hint);
+    questType.RegisterMember("chests", &BattlePassQuestRow::chests);
     c.RegisterArray<std::vector<BattlePassQuestRow>>();
 
     c.Bind("text_px", &model.textPx);
@@ -481,6 +699,9 @@ void mu::ui::window::CBattlePassWindow::BindRmlModel(Rml::DataModelConstructor& 
     c.Bind("levels", &model.levels);
     c.Bind("bonus", &model.bonus);
     c.Bind("quests", &model.quests);
+    c.Bind("day_timer", &model.dayTimer);
+    c.Bind("week_timer", &model.weekTimer);
+    c.Bind("season_timer", &model.seasonTimer);
     c.Bind("can_take", &model.canTake);
     c.Bind("take_label", &model.takeLabel);
     c.Bind("can_claim", &model.canClaim);
@@ -523,30 +744,34 @@ void mu::ui::window::CBattlePassWindow::SyncRmlModel()
     if (!IsVisible())
         return;
 
-    SyncContent();
+    const bool built = SyncContent();
+    SyncTimers(built);
     CenterTrack();
 }
 
-void mu::ui::window::CBattlePassWindow::SyncContent()
+bool mu::ui::window::CBattlePassWindow::SyncContent()
 {
-    // A line of the window's own text, at the size the native renderer would have shrunk it to for its box.
-    auto line = [](const std::wstring& text, int width, bool bold = false) -> BattlePassLine
-    {
-        if (text.empty())
-            return {};
-        g_pRenderText->SetFont(bold ? g_hFontBold : g_hFont);
-        const auto role = bold ? UI::Scaling::FontRole::Bold : UI::Scaling::FontRole::Normal;
-        return {Narrow(text), UI::RmlBridge::NativeTextPxInBox(role, static_cast<float>(MeasureInReferenceUnits(text)),
-                                                                 static_cast<float>(width))};
-    };
-
     auto& pass = Pass();
     const auto& status = pass.GetStatus();
     const auto now = std::chrono::steady_clock::now();
 
+    // Built again only when what it is built from changed: every frame would remeasure every text and compare the
+    // whole track and quest list.
+    BuildKey key;
+    key.revision = pass.Revision();
+    key.tab = m_tab;
+    key.state = pass.IsOff() ? 1 : pass.HasInfo() ? 0 : now - m_openedAt < AnswerTimeout ? 2 : 3;
+    key.textPx = UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Normal);
+    key.boldPx = UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Bold);
+    key.language = I18N::Game::BattlePassTitle;
+    if (m_builtFrom == key)
+        return false;
+    m_builtFrom = key;
+
+    auto line = [](const std::wstring& text, int width, bool bold = false) { return TextLine(text, width, bold); };
     BattlePassRmlModel updated;
-    updated.textPx = UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Normal);
-    updated.boldPx = UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Bold);
+    updated.textPx = key.textPx;
+    updated.boldPx = key.boldPx;
     updated.title = line(I18N::Game::BattlePassTitle, WINDOW_WIDTH, true);
     updated.tab = m_tab;
     updated.tabRewards = line(I18N::Game::BattlePassTabRewards, TAB_WIDTH, true);
@@ -556,41 +781,27 @@ void mu::ui::window::CBattlePassWindow::SyncContent()
     updated.claimLabel = line(I18N::Game::BattlePassClaimNone, BUTTON_WIDTH, true);
 
     std::vector<ShownItem> shownItems;
-    if (pass.IsOff() || !pass.HasInfo())
+    if (key.state != 0)
     {
-        const wchar_t* text = pass.IsOff()                         ? I18N::Game::BattlePassOff
-                              : now - m_openedAt < AnswerTimeout ? I18N::Game::BattlePassAsking
-                                                                 : I18N::Game::BattlePassNoAnswer;
+        const wchar_t* text = key.state == 1   ? I18N::Game::BattlePassOff
+                              : key.state == 2 ? I18N::Game::BattlePassAsking
+                                               : I18N::Game::BattlePassNoAnswer;
         updated.status = line(text, CONTENT_WIDTH);
     }
     else
     {
         updated.hasInfo = true;
-        const long long elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - status.ReceivedAt).count();
 
-        // The season and its time.
-        std::wstring season = status.Name;
-        if (status.Multiplier > 1)
-            season += Format(L"  x%d", status.Multiplier);
-        updated.season = line(season, HALF_WIDTH);
-        std::wstring time;
-        switch (status.SeasonPhase)
-        {
-        case Phase::NotStarted:
-            time = Format(I18N::Game::BattlePassStartsIn, FormatDuration(status.SecondsLeft - elapsed).c_str());
-            break;
-        case Phase::Running:
-            time = Format(I18N::Game::BattlePassEndsIn, FormatDuration(status.SecondsLeft - elapsed).c_str());
-            break;
-        default:
-            time = I18N::Game::BattlePassEnded;
-            break;
-        }
-        updated.time = line(time, HALF_WIDTH);
+        // The season (its time left is SyncTimers()').
+        updated.season = line(status.Name, HALF_WIDTH);
 
-        // The level and the gauge of the next one; once the track is done, of the next bonus level.
+        // The level and the gauge of the next one; once the track is done, of the next bonus level. The season's
+        // points multiplier goes before the points (beside the season's name it ran into the time left).
         updated.level = line(Format(I18N::Game::BattlePassLevel, status.Level, status.MaxLevel), HALF_WIDTH, true);
-        updated.points = line(Format(I18N::Game::BattlePassPoints, Grouped(status.Points).c_str()), HALF_WIDTH);
+        std::wstring points = Format(I18N::Game::BattlePassPoints, Grouped(status.Points).c_str());
+        if (status.MultiplierPercent > 100)
+            points = MultiplierText(status.MultiplierPercent) + L"  " + points;
+        updated.points = line(points, HALF_WIDTH);
         std::wstring gauge;
         if (status.Level < status.MaxLevel)
         {
@@ -669,12 +880,15 @@ void mu::ui::window::CBattlePassWindow::SyncContent()
 
         // The quests by kind, the weekly ones by week, and the season's result.
         const auto& quests = pass.Quests();
-        auto heading = [&](int type, const std::wstring& text, const std::wstring& detail)
+        const auto& day = pass.GetDay();
+        // A line that isn't a quest: a heading (with the countdown `timer` names), a week's heading, a note.
+        auto heading = [&](int type, const std::wstring& text, int timer = 0, bool done = false)
         {
             BattlePassQuestRow row;
             row.type = type;
             row.text = Narrow(text);
-            row.detail = Narrow(detail);
+            row.timer = timer;
+            row.done = done;
             updated.quests.push_back(std::move(row));
         };
         int dailyDone = 0, dailyCount = 0, weeklyDone = 0, weeklyCount = 0, seasonalDone = 0, seasonalCount = 0;
@@ -685,11 +899,13 @@ void mu::ui::window::CBattlePassWindow::SyncContent()
             ++count;
             done += quest.Done ? 1 : 0;
         }
+        // The day as the server counts it (a replaced quest's progress stays its own), else as the list shows it.
+        const int dayDone = day.Present ? day.Done : dailyDone;
+        const int dayTotal = day.Present && day.Total > 0 ? day.Total : dailyCount;
 
         if (status.SeasonPhase != Phase::Running || quests.empty())
         {
-            heading(1, status.SeasonPhase == Phase::Ended ? I18N::Game::BattlePassEnded : I18N::Game::BattlePassNoQuests,
-                    L"");
+            heading(1, status.SeasonPhase == Phase::Ended ? I18N::Game::BattlePassEnded : I18N::Game::BattlePassNoQuests);
         }
         else
         {
@@ -706,28 +922,69 @@ void mu::ui::window::CBattlePassWindow::SyncContent()
                     first = false;
                     week = -1;
                     if (kind == QuestKind::Daily)
-                        heading(1, Format(L"%ls  %d/%d", I18N::Game::BattlePassDaily, dailyDone, dailyCount),
-                                Format(I18N::Game::BattlePassNewIn, FormatDuration(SecondsToNextUtcDay()).c_str()));
+                    {
+                        heading(1, Format(L"%ls  %d/%d", I18N::Game::BattlePassDaily, dayDone, dayTotal), 1);
+                        if (day.Present)
+                        {
+                            // The day's bar: the quests done of the day's, with a mark and a chest per chest of the day.
+                            BattlePassQuestRow bar;
+                            bar.type = 4;
+                            bar.detail = Narrow(Format(L"%d / %d", dayDone, dayTotal));
+                            bar.fill = dayTotal > 0 ? 100.f * std::clamp(dayDone, 0, dayTotal) / dayTotal : 0.f;
+                            bar.done = dayTotal > 0 && dayDone >= dayTotal;
+                            bar.hint = Narrow(DayRewardsHint(pass.Chests(), dayDone, dayTotal));
+                            std::vector<BattlePassChestBox> weekChests;
+                            for (const auto& chest : pass.Chests())
+                            {
+                                if (chest.Kind != ChestKind::Quest)
+                                    (chest.Kind == ChestKind::Day ? bar.chests : weekChests)
+                                        .push_back(ChestBox(chest, day, dayTotal));
+                            }
+                            updated.quests.push_back(std::move(bar));
+
+                            // The week's days with enough quests done, with the week's chest.
+                            if (day.WeekNeed > 0)
+                            {
+                                const int days = std::min(day.WeekDays, day.WeekNeed);
+                                heading(6,
+                                        day.WeekDayQuests > 0
+                                            ? Format(I18N::Game::BattlePassDayWeek, day.WeekDayQuests, days, day.WeekNeed)
+                                            : Format(I18N::Game::BattlePassDayWeekDays, days, day.WeekNeed),
+                                        0, day.WeekGot);
+                                updated.quests.back().chests = std::move(weekChests);
+                            }
+                            // Which of the day's quests give the pass' points.
+                            if (day.PointQuests > 0)
+                                heading(5, Format(I18N::Game::BattlePassDayPoints, day.PointQuests,
+                                                  std::min(dayDone, day.PointQuests), day.PointQuests));
+                        }
+                    }
                     else if (kind == QuestKind::Weekly)
-                        heading(1, Format(L"%ls  %d/%d", I18N::Game::BattlePassWeekly, weeklyDone, weeklyCount),
-                                Format(I18N::Game::BattlePassNewIn, FormatDuration(SecondsToNextUtcWeek()).c_str()));
+                    {
+                        heading(1, Format(L"%ls  %d/%d", I18N::Game::BattlePassWeekly, weeklyDone, weeklyCount), 2);
+                    }
                     else
-                        heading(1, Format(L"%ls  %d/%d", I18N::Game::BattlePassSeasonal, seasonalDone, seasonalCount),
-                                Format(I18N::Game::BattlePassEndsIn, FormatDuration(status.SecondsLeft - elapsed).c_str()));
+                    {
+                        heading(1, Format(L"%ls  %d/%d", I18N::Game::BattlePassSeasonal, seasonalDone, seasonalCount), 3);
+                    }
                 }
                 if (kind == QuestKind::Weekly && manyWeeks && quest.Week != week)
                 {
                     week = quest.Week;
-                    heading(2, Format(I18N::Game::BattlePassWeek, week), L"");
+                    heading(2, Format(I18N::Game::BattlePassWeek, week));
                 }
 
                 BattlePassQuestRow row;
                 row.type = 0;
                 row.text = Narrow(QuestText(quest));
                 row.detail = Narrow(QuestProgress(quest));
-                row.points = Narrow(L"+" + Grouped(quest.Points));
+                // A quest past the day's first ones that give points gives none.
+                if (quest.Points > 0)
+                    row.points = Narrow(L"+" + Grouped(quest.Points));
                 row.fill = quest.Done ? 100.f : 100.f * std::clamp(quest.Progress, 0, quest.Target) / quest.Target;
                 row.done = quest.Done;
+                row.difficulty = std::clamp(quest.Difficulty, 0, 3);
+                row.difficultyLabel = Narrow(DifficultyText(row.difficulty));
                 row.slot = quest.Slot;
                 row.canReroll = quest.Kind == QuestKind::Daily && !quest.Done && status.RerollAvailable;
                 updated.quests.push_back(std::move(row));
@@ -742,7 +999,7 @@ void mu::ui::window::CBattlePassWindow::SyncContent()
             row.detail = Narrow(value);
             updated.quests.push_back(std::move(row));
         };
-        heading(1, I18N::Game::BattlePassResult, L"");
+        heading(1, I18N::Game::BattlePassResult);
         result(I18N::Game::BattlePassResultPoints, Grouped(status.Points));
         result(I18N::Game::BattlePassResultLevel, Format(L"%d / %d", status.Level, status.MaxLevel));
         if (status.BonusMax > 0)
@@ -789,7 +1046,6 @@ void mu::ui::window::CBattlePassWindow::SyncContent()
     SyncFieldFrom(binder, &BattlePassRmlModel::boldPx, "bold_px", updated);
     SyncFieldFrom(binder, &BattlePassRmlModel::title, "title", updated);
     SyncFieldFrom(binder, &BattlePassRmlModel::season, "season", updated);
-    SyncFieldFrom(binder, &BattlePassRmlModel::time, "time", updated);
     SyncFieldFrom(binder, &BattlePassRmlModel::level, "level", updated);
     SyncFieldFrom(binder, &BattlePassRmlModel::points, "points", updated);
     SyncFieldFrom(binder, &BattlePassRmlModel::gaugeFill, "gauge_fill", updated);
@@ -812,6 +1068,64 @@ void mu::ui::window::CBattlePassWindow::SyncContent()
     wchar_t closeText[256] = {};
     mu_swprintf_s(closeText, I18N::Game::CloseS, L"X");
     SyncField(binder, &BattlePassRmlModel::exitTooltip, "exit_tooltip", Narrow(closeText));
+    return true;
+}
+
+void mu::ui::window::CBattlePassWindow::SyncTimers(bool force)
+{
+    auto& pass = Pass();
+    const auto& status = pass.GetStatus();
+    const bool shown = pass.HasInfo() && !pass.IsOff();
+    // The seconds since the answer: the server's countdowns run on from it, so the PC's clock doesn't matter.
+    const long long elapsed =
+        shown ? std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - status.ReceivedAt).count()
+              : -1;
+    if (!force && elapsed == m_timersAt)
+        return;
+    m_timersAt = elapsed;
+
+    BattlePassLine time;
+    std::wstring dayTimer;
+    std::wstring weekTimer;
+    std::wstring seasonTimer;
+    if (shown)
+    {
+        const long long seasonLeft = status.SecondsLeft - elapsed;
+        switch (status.SeasonPhase)
+        {
+        case Phase::NotStarted:
+            time = TextLine(Format(I18N::Game::BattlePassStartsIn, FormatDuration(seasonLeft).c_str()), HALF_WIDTH);
+            break;
+        case Phase::Running:
+            seasonTimer = Format(I18N::Game::BattlePassEndsIn, FormatDuration(seasonLeft).c_str());
+            time = TextLine(seasonTimer, HALF_WIDTH);
+            // New quests come only before the season ends; a server that doesn't say shows no time.
+            if (status.DayLeft > 0 && status.DayLeft < status.SecondsLeft)
+                dayTimer = Format(I18N::Game::BattlePassNewIn, FormatDuration(status.DayLeft - elapsed).c_str());
+            if (status.WeekLeft > 0 && status.WeekLeft < status.SecondsLeft)
+                weekTimer = Format(I18N::Game::BattlePassNewIn, FormatDuration(status.WeekLeft - elapsed).c_str());
+            break;
+        default:
+            time = TextLine(I18N::Game::BattlePassEnded, HALF_WIDTH);
+            break;
+        }
+
+        // A countdown that ran out (the day, the week, the season's start or end) asks again, once per answer, a
+        // second late so the server's day has turned.
+        auto ranOut = [elapsed](int left) { return left > 0 && elapsed > left; };
+        if (status.SeasonPhase != Phase::Ended && m_ranOutAskedFor != pass.Revision()
+            && (ranOut(status.SecondsLeft) || ranOut(status.DayLeft) || ranOut(status.WeekLeft)))
+        {
+            m_ranOutAskedFor = pass.Revision();
+            pass.Request();
+        }
+    }
+
+    auto& binder = m_RmlView.Binder();
+    SyncField(binder, &BattlePassRmlModel::time, "time", std::move(time));
+    SyncField(binder, &BattlePassRmlModel::dayTimer, "day_timer", Narrow(dayTimer));
+    SyncField(binder, &BattlePassRmlModel::weekTimer, "week_timer", Narrow(weekTimer));
+    SyncField(binder, &BattlePassRmlModel::seasonTimer, "season_timer", Narrow(seasonTimer));
 }
 
 void mu::ui::window::CBattlePassWindow::CenterTrack()

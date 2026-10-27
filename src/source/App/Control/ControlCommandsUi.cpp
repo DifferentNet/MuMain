@@ -150,8 +150,8 @@ json Elements()
         AddElement(elements, "npc_quest.answer." + std::to_string(answer), mu::ui::window::INTERFACE_NPCQUEST,
                    ".nq-answer-row[data-answer=\"" + std::to_string(answer) + "\"]");
     }
-    // The battle pass' level rows (scrolled into the pane or not, they are reported while drawn) and the daily
-    // quests' replace buttons, by the quest's slot.
+    // The battle pass' level rows (scrolled into the pane or not, they are reported while drawn), the daily
+    // quests' replace buttons, by the quest's slot, and the daily quests' chests (1-3 the day's, "w" the week's).
     for (const auto& level : GameLogic::BattlePass::Pass().Levels())
     {
         AddElement(elements, "battle_pass.level." + std::to_string(level.Number), mu::ui::window::INTERFACE_BATTLE_PASS,
@@ -165,6 +165,16 @@ json Elements()
                        mu::ui::window::INTERFACE_BATTLE_PASS,
                        ".bp-q-reroll[data-slot=\"" + std::to_string(quest.Slot) + "\"]");
         }
+    }
+    for (const auto& chest : GameLogic::BattlePass::Pass().Chests())
+    {
+        if (chest.Kind == GameLogic::BattlePass::ChestKind::Quest)
+            continue;
+        // In its own block: the row's other block, which data-if hides, holds a copy.
+        const bool week = chest.Kind == GameLogic::BattlePass::ChestKind::Week;
+        const std::string name = week ? std::string("w") : std::to_string(chest.Number);
+        AddElement(elements, "battle_pass.chest." + name, mu::ui::window::INTERFACE_BATTLE_PASS,
+                   std::string(week ? ".bp-week-chest" : ".bp-day-chests") + " #bp_chest_" + name);
     }
     return elements;
 }

@@ -1,5 +1,6 @@
 <rml>
-	<!-- bound-geometry: the level gauge and the quests' progress bars are fractions -->
+	<!-- bound-geometry: the level gauge, the quests' and the day's bars are fractions, and the day's chests sit at
+	     their fraction of the day's bar -->
 <head>
 	<title>Battle Pass</title>
 	<link type="text/rcss" href="base.rcss"/>
@@ -16,8 +17,12 @@
 	     its place, so the counts and the row tints stay on top and the pane's edges crop the items; it shows the
 	     game's item tooltip over a box (battle_pass_hover), and a box without a model (excellent item, season sign,
 	     item to come) shows a sign with a hint. A click on a reached row claims that level.
-	     Quests: a counter-scaled pane of headings, quests with their progress bar, points and the replace button
-	     of a daily quest, and the season's result with the button that hands out the waiting rewards.
+	     Quests: a counter-scaled pane of headings with their countdowns, quests with their progress bar, points and
+	     the replace button of a daily quest, and the season's result with the button that hands out the waiting
+	     rewards. The daily quests have the day's bar with a mark and a chest (I-III, a hint with its contents) per
+	     chest of the day, the week's line with its chest, a note on which quests give points, and their difficulty.
+	     A row's chests are its own (the day's bar: the day's, the week's line: the week's), so the other rows,
+	     whose blocks data-if only hides, make none.
 	     The workspace slot places and scales #panel. Clicks are queued with battle_pass_* callbacks. -->
 	<div id="panel" data-model="battle_pass">
 		<div class="frame-piece frame-top"></div>
@@ -82,9 +87,15 @@
 		<div id="bp_quests" class="sharp-text sharp-flow scroll-pane" data-class-hidden="tab != 1 || !has_info"
 		     data-style-font-size="text_px + 'px'">
 			<div class="bp-q" data-for="q : quests" data-class-head="q.type == 1" data-class-week="q.type == 2"
-			     data-class-result="q.type == 3" data-class-done="q.done">
-				<div class="bp-q-text">{{q.text}}</div>
-				<span class="bp-q-detail" data-if="q.type != 0 &amp;&amp; q.detail != ''">{{q.detail}}</span>
+			     data-class-result="q.type == 3" data-class-day="q.type == 4" data-class-note="q.type == 5"
+			     data-class-week-days="q.type == 6" data-class-done="q.done">
+				<div class="bp-q-text" data-if="q.type != 4"><span class="bp-q-diff" data-if="q.difficulty > 0"
+				     data-class-easy="q.difficulty == 1" data-class-medium="q.difficulty == 2"
+				     data-class-hard="q.difficulty == 3">{{q.difficulty_label}}</span> {{q.text}}</div>
+				<span class="bp-q-detail" data-if="q.type != 0 &amp;&amp; q.type != 4 &amp;&amp; q.detail != ''">{{q.detail}}</span>
+				<span class="bp-q-detail" data-if="q.timer == 1 &amp;&amp; day_timer != ''">{{day_timer}}</span>
+				<span class="bp-q-detail" data-if="q.timer == 2 &amp;&amp; week_timer != ''">{{week_timer}}</span>
+				<span class="bp-q-detail" data-if="q.timer == 3 &amp;&amp; season_timer != ''">{{season_timer}}</span>
 				<div class="bp-q-line" data-if="q.type == 0">
 					<div class="bp-q-bar">
 						<div class="bp-q-fill" data-style-width="q.fill + '%'"></div>
@@ -93,6 +104,22 @@
 					<span class="bp-q-points">{{q.points}}</span>
 					<div class="bp-q-reroll" data-if="q.can_reroll" data-attr-data-slot="q.slot" data-event-click="battle_pass_reroll(q.slot)"
 					     data-attr-data-hint="reroll_tooltip"><span class="bp-q-reroll-label">{{reroll_label}}</span></div>
+				</div>
+				<div class="bp-day" data-if="q.type == 4">
+					<div class="bp-day-bar" data-attr-data-hint="q.hint">
+						<div class="bp-day-fill" data-style-width="q.fill + '%'"></div>
+						<div class="bp-day-mark" data-for="c : q.chests" data-style-left="c.at + '%'"></div>
+						<span class="bp-day-count">{{q.detail}}</span>
+					</div>
+					<div class="bp-day-chests">
+						<div class="bp-chest" data-for="c : q.chests" data-style-left="c.at + '%'" data-class-got="c.got"
+						     data-class-reached="c.reached" data-attr-id="c.id"
+						     data-attr-data-hint="c.hint"><span class="bp-chest-label">{{c.label}}</span></div>
+					</div>
+				</div>
+				<div class="bp-week-chest" data-if="q.type == 6">
+					<div class="bp-chest" data-for="c : q.chests" data-class-got="c.got" data-class-reached="c.reached"
+					     data-attr-id="c.id" data-attr-data-hint="c.hint"><span class="bp-chest-label">{{c.label}}</span></div>
 				</div>
 			</div>
 			<div id="bp_take" data-if="can_take" data-event-click="battle_pass_take">

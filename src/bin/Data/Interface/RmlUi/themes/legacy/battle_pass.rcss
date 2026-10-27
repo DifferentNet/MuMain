@@ -205,6 +205,77 @@
 .bp-q-reroll:active { decorator: image(bp-btn-small-down); }
 .bp-q-reroll-label { display: block; white-space: nowrap; font-size: 0.9em; color: #ffffff; pointer-events: none; }
 
+/* The daily quests' day: its bar with a mark per chest of the day and the chests under the marks (the row's sides
+   leave room for the half of a chest at 0 and 100 %), the week's line with its chest, the note on points. */
+.bp-day { display: block; padding: 0 calc(10px * var(--root-scale)); }
+.bp-day-bar {
+	display: block;
+	position: relative;
+	box-sizing: border-box;
+	height: calc(13px * var(--root-scale));
+	background-color: rgba(0, 0, 0, 170);
+	border: calc(1px * var(--root-scale)) rgb(90, 75, 45);
+}
+.bp-day-fill { position: absolute; left: 0; top: 0; height: 100%; background-color: rgb(170, 120, 30); }
+.bp-q.done .bp-day-fill { background-color: rgb(70, 150, 60); }
+.bp-day-mark {
+	position: absolute;
+	top: 0;
+	width: calc(1px * var(--root-scale));
+	height: 100%;
+	margin-left: calc(-1px * var(--root-scale));
+	background-color: rgba(255, 220, 120, 200);
+}
+.bp-day-count {
+	display: block;
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	text-align: center;
+	white-space: nowrap;
+	line-height: calc(11px * var(--root-scale));
+	font-size: 0.9em;
+	color: #ffffff;
+	font-effect: outline(1px #000000);
+}
+.bp-day-chests { display: block; position: relative; height: calc(15px * var(--root-scale)); margin-top: calc(2px * var(--root-scale)); }
+.bp-chest {
+	display: block;
+	box-sizing: border-box;
+	min-width: calc(20px * var(--root-scale));
+	height: calc(15px * var(--root-scale));
+	padding: 0 calc(2px * var(--root-scale));
+	background-color: rgba(40, 30, 15, 220);
+	border: calc(1px * var(--root-scale)) rgb(90, 75, 45);
+	pointer-events: auto;
+}
+.bp-day-chests .bp-chest { position: absolute; top: 0; width: calc(20px * var(--root-scale)); margin-left: calc(-10px * var(--root-scale)); }
+.bp-chest.reached { border-color: rgb(255, 210, 100); }
+.bp-chest.got { background-color: rgba(60, 130, 50, 230); border-color: rgb(150, 255, 150); }
+.bp-chest-label {
+	display: block;
+	text-align: center;
+	line-height: calc(13px * var(--root-scale));
+	font-size: 0.9em;
+	font-weight: bold;
+	white-space: nowrap;
+	color: rgb(150, 150, 150);
+	pointer-events: none;
+}
+.bp-chest.reached .bp-chest-label, .bp-chest.got .bp-chest-label { color: #ffffff; }
+.bp-q.week-days { display: flex; flex-direction: row; align-items: center; }
+.bp-q.week-days .bp-q-text { flex: 1 1 auto; color: rgb(200, 220, 255); }
+.bp-q.week-days.done .bp-q-text { color: rgb(150, 255, 150); }
+.bp-week-chest { display: block; flex: 0 0 auto; margin-left: calc(4px * var(--root-scale)); }
+.bp-q.note { background-color: transparent; padding: 0 calc(1px * var(--root-scale)); }
+.bp-q.note .bp-q-text { font-size: 0.9em; color: rgb(170, 170, 170); }
+
+/* A daily quest's difficulty, before its text. */
+.bp-q-diff { font-weight: bold; color: rgb(140, 220, 120); }
+.bp-q-diff.medium { color: rgb(255, 200, 80); }
+.bp-q-diff.hard { color: rgb(255, 110, 90); }
+
 #bp_take {
 	display: flex;
 	align-items: center;

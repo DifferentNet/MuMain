@@ -13785,6 +13785,78 @@
   <data name="BattlePassQuestLogin" xml:space="preserve">
     <value>Play %d days of the season</value>
   </data>
+  <data name="BattlePassQuestEventOne" xml:space="preserve">
+    <value>Take part in an event: Blood Castle, Devil Square or Chaos Castle</value>
+  </data>
+  <data name="BattlePassQuestMixOne" xml:space="preserve">
+    <value>Make a successful Chaos Machine mix</value>
+  </data>
+  <data name="BattlePassQuestUpgradeOne" xml:space="preserve">
+    <value>Upgrade an item to +9 or higher</value>
+  </data>
+  <data name="BattlePassQuestPartyMinutes" xml:space="preserve">
+    <value>Spend %d min in a party</value>
+  </data>
+  <data name="BattlePassQuestOnlineMinutes" xml:space="preserve">
+    <value>Play %d min in a day</value>
+  </data>
+  <data name="BattlePassQuestTierEnter" xml:space="preserve">
+    <value>Enter Tier Maps</value>
+  </data>
+  <data name="BattlePassQuestTierWin" xml:space="preserve">
+    <value>Clear a Tier Maps run</value>
+  </data>
+  <data name="BattlePassQuestGoblin" xml:space="preserve">
+    <value>Kill a Treasure Goblin</value>
+  </data>
+  <data name="BattlePassQuestGoblins" xml:space="preserve">
+    <value>Kill %d Treasure Goblins</value>
+  </data>
+  <data name="BattlePassDifficultyEasy" xml:space="preserve">
+    <value>Easy</value>
+  </data>
+  <data name="BattlePassDifficultyMedium" xml:space="preserve">
+    <value>Medium</value>
+  </data>
+  <data name="BattlePassDifficultyHard" xml:space="preserve">
+    <value>Hard</value>
+  </data>
+  <data name="BattlePassDayWeek" xml:space="preserve">
+    <value>Days with %d+ quests: %d of %d</value>
+  </data>
+  <data name="BattlePassDayWeekDays" xml:space="preserve">
+    <value>Days this week: %d of %d</value>
+  </data>
+  <data name="BattlePassDayPoints" xml:space="preserve">
+    <value>Pass points only for the day's first %d quests (%d/%d)</value>
+  </data>
+  <data name="BattlePassChestDay" xml:space="preserve">
+    <value>Chest %ls: %d of %d quests of the day</value>
+  </data>
+  <data name="BattlePassChestWeek" xml:space="preserve">
+    <value>Week's chest: %d days of 7 with %d+ quests</value>
+  </data>
+  <data name="BattlePassChestWeekDays" xml:space="preserve">
+    <value>Week's chest: %d days of 7</value>
+  </data>
+  <data name="BattlePassChestWeekLabel" xml:space="preserve">
+    <value>Chest</value>
+  </data>
+  <data name="BattlePassChestGot" xml:space="preserve">
+    <value>Received</value>
+  </data>
+  <data name="BattlePassChestNotYet" xml:space="preserve">
+    <value>Not received yet</value>
+  </data>
+  <data name="BattlePassDayRewards" xml:space="preserve">
+    <value>The day's quests done give, in turn:</value>
+  </data>
+  <data name="BattlePassDayRewardsAgain" xml:space="preserve">
+    <value>then again from the first</value>
+  </data>
+  <data name="BattlePassDayRewardsNext" xml:space="preserve">
+    <value>for the next quest</value>
+  </data>
   <data name="TierMapsTitle" xml:space="preserve">
     <value>Tier Maps</value>
   </data>
