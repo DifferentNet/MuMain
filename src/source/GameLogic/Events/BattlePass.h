@@ -104,7 +104,7 @@ struct Status
     // Bonus levels past the track: reached, the most a season gives, and the points each needs.
     int Bonus = 0;
     int BonusMax = 0;
-    int BonusPer = 2000;
+    int BonusPer = 800;
     // Levels and bonus levels reached but not claimed; rewards that wait for room in the inventory.
     int Claimable = 0;
     int Waiting = 0;
