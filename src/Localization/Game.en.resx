@@ -14276,6 +14276,21 @@
   <data name="SeasonHeroTitle" xml:space="preserve">
     <value>Hero of Season %d</value>
   </data>
+  <data name="SeasonTrophyName" xml:space="preserve">
+    <value>Trophy of Season %d</value>
+  </data>
+  <data name="SeasonFenrirName" xml:space="preserve">
+    <value>Seasonal Fenrir · Season %d</value>
+  </data>
+  <data name="SeasonFenrirNamed" xml:space="preserve">
+    <value>Seasonal Fenrir · Season %d "%ls"</value>
+  </data>
+  <data name="SeasonPassReward" xml:space="preserve">
+    <value>Battle pass reward · Season %d</value>
+  </data>
+  <data name="SeasonItemBound" xml:space="preserve">
+    <value>Bound to the character: can't be traded, stored or sold</value>
+  </data>
   <data name="GmPanelSending" xml:space="preserve">
     <value>Sent: %ls</value>
   </data>

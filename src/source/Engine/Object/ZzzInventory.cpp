@@ -37,6 +37,7 @@
 #include "GameLogic/Events/Cinematic/CDirection.h"
 #include "GameLogic/Items/ChangeRingManager.h"
 #include "GameLogic/Items/ItemCategories.h"
+#include "GameLogic/Events/SeasonMarks.h"
 #include "GameLogic/Items/ItemLevelBonus.h"
 #include "Render/Items/ItemDisplay.h"
 #include "Data/GameData/ItemData/ItemModelSlots.h"
@@ -1261,6 +1262,16 @@ void GetItemName(int iType, int iLevel, wchar_t* Text)
             mu_swprintf(Text, L"%ls", p->Name);
         }
     }
+    else if (iType == ITEM_SEASON_TROPHY)
+    {
+        // The battle pass' trophy: its level is the season.
+        mu_swprintf(Text, L"%ls", GameLogic::SeasonMarks::TrophyName(iLevel).c_str());
+    }
+    else if (iType == ITEM_HORN_OF_FENRIR && iLevel > 0)
+    {
+        // Only the seasonal Fenrir (gold) has a level: the season's.
+        mu_swprintf(Text, L"%ls", GameLogic::SeasonMarks::FenrirName(iLevel).c_str());
+    }
     else if (iType == ITEM_POTION + 12)
     {
         switch (iLevel)
@@ -1950,6 +1961,11 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
             Color = TEXT_COLOR_YELLOW;
         }
     }
+    else if (ip->Type == ITEM_SEASON_TROPHY)
+    {
+        Color = TEXT_COLOR_YELLOW;
+        mu_swprintf(TextList[TextNum], L"%ls", GameLogic::SeasonMarks::TrophyName(Level).c_str());
+    }
     else if (ip->Type == ITEM_POTION + 12)
     {
         switch (Level)
@@ -2201,7 +2217,11 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
             else if ((ip->ExcellentFlags & 63) == 0x02)
                 mu_swprintf(TextList[TextNum], L"%ls %ls", p->Name, I18N::Game::Protect);
             else if ((ip->ExcellentFlags & 63) == 0x04)
-                mu_swprintf(TextList[TextNum], L"%ls %ls", p->Name, I18N::Game::Illusion);
+            {
+                // The gold Fenrir is the battle pass' seasonal Fenrir; its level is the season.
+                Color = TEXT_COLOR_YELLOW;
+                mu_swprintf(TextList[TextNum], L"%ls", GameLogic::SeasonMarks::FenrirName(Level).c_str());
+            }
             else
                 mu_swprintf(TextList[TextNum], L"%ls", p->Name);
         }
@@ -4854,11 +4874,12 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
             TextNum++;
             mu_swprintf(TextList[TextNum], L"\n");
             TextNum++;
-            mu_swprintf(TextList[TextNum], I18N::Game::GoldenFenrir, (Hero->Level / 2));
+            // The seasonal Fenrir of the battle pass instead of the «Golden Fenrir, only for MU heroes» lines.
+            mu_swprintf(TextList[TextNum], I18N::Game::SeasonPassReward, Level);
             TextListColor[TextNum] = TEXT_COLOR_GREEN;
             TextNum++;
-            mu_swprintf(TextList[TextNum], I18N::Game::ExclusiveEditionOnlyGivenToMUHeroes, (Hero->Level / 2));
-            TextListColor[TextNum] = TEXT_COLOR_GREEN;
+            mu_swprintf(TextList[TextNum], L"%ls", I18N::Game::SeasonItemBound);
+            TextListColor[TextNum] = TEXT_COLOR_RED;
             TextNum++;
         }
 
@@ -5044,6 +5065,15 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
         mu_swprintf(TextList[TextNum], I18N::Game::IncreasesEXPBy30);
         TextListColor[TextNum] = TEXT_COLOR_BLUE;
         TextBold[TextNum] = false;
+        TextNum++;
+    }
+    else if (ip->Type == ITEM_SEASON_TROPHY)
+    {
+        mu_swprintf(TextList[TextNum], I18N::Game::SeasonPassReward, Level);
+        TextListColor[TextNum] = TEXT_COLOR_GREEN;
+        TextNum++;
+        mu_swprintf(TextList[TextNum], L"%ls", I18N::Game::SeasonItemBound);
+        TextListColor[TextNum] = TEXT_COLOR_RED;
         TextNum++;
     }
 #ifdef LJH_ADD_SYSTEM_OF_EQUIPPING_ITEM_FROM_INVENTORY
@@ -5882,6 +5912,10 @@ void BuildGroundItemLabelDescriptor(OBJECT* o, ITEM* ip, GroundItemLabelDescript
         if (o->Type == MODEL_ZEN) // Zen
         {
             FormatGroundItemLabelText(descriptor.Name, L"%ls %d", itemName, ItemLevel);
+        }
+        else if (Data::Items::ToItemType(o->Type) == ITEM_SEASON_TROPHY)
+        {
+            CopyGroundItemLabelText(descriptor.Name, GameLogic::SeasonMarks::TrophyName(ItemLevel).c_str());
         }
         else if (ItemLevel == 0)
         {

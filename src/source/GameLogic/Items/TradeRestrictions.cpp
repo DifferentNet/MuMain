@@ -36,7 +36,7 @@ namespace GameLogic::Items
         {
             return false;
         }
-        if (IsHeartOfDarkLord(pItem) || IsWizardsRingVariant(pItem))
+        if (IsHeartOfDarkLord(pItem) || IsWizardsRingVariant(pItem) || IsSeasonalFenrir(pItem))
         {
             return true;
         }
@@ -47,6 +47,10 @@ namespace GameLogic::Items
     bool IsDropBan(const ITEM* pItem)
     {
         if (pItem->bPeriodItem && !IsAllowed(pItem, ItemAction::DropWhileRented))
+        {
+            return true;
+        }
+        if (IsSeasonalFenrir(pItem))
         {
             return true;
         }
@@ -65,7 +69,7 @@ namespace GameLogic::Items
         {
             return false;
         }
-        if (IsHeartOfDarkLord(pItem) || IsWizardsRingVariant(pItem))
+        if (IsHeartOfDarkLord(pItem) || IsWizardsRingVariant(pItem) || IsSeasonalFenrir(pItem))
         {
             return true;
         }

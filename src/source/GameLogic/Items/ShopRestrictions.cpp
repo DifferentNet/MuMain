@@ -34,7 +34,7 @@ namespace GameLogic::Items
         {
             return false;
         }
-        if (IsHeartOfDarkLord(pItem) || IsWizardsRingVariant(pItem))
+        if (IsHeartOfDarkLord(pItem) || IsWizardsRingVariant(pItem) || IsSeasonalFenrir(pItem))
         {
             return true;
         }
@@ -57,6 +57,11 @@ namespace GameLogic::Items
             (pItem->Type == ITEM_WIZARDS_RING && (Level == 1 || Level == 2)) ||
             (pItem->Type == ITEM_WIZARDS_RING && Level == 0 && pItem->bPeriodItem && !pItem->bExpiredPeriod) ||
             (pItem->Type == ITEM_REMEDY_OF_LOVE && Level >= 1 && Level <= 5))
+        {
+            return true;
+        }
+        // The seasonal Fenrir: the server can't refuse a sale to a merchant, so only this does.
+        if (IsSeasonalFenrir(pItem))
         {
             return true;
         }

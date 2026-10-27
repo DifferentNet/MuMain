@@ -13899,6 +13899,21 @@
   <data name="SeasonHeroTitle" xml:space="preserve">
     <value>Герой сезона %d</value>
   </data>
+  <data name="SeasonTrophyName" xml:space="preserve">
+    <value>Трофей Сезона %d</value>
+  </data>
+  <data name="SeasonFenrirName" xml:space="preserve">
+    <value>Сезонный Fenrir · Сезон %d</value>
+  </data>
+  <data name="SeasonFenrirNamed" xml:space="preserve">
+    <value>Сезонный Fenrir · Сезон %d «%ls»</value>
+  </data>
+  <data name="SeasonPassReward" xml:space="preserve">
+    <value>Награда боевого пропуска · Сезон %d</value>
+  </data>
+  <data name="SeasonItemBound" xml:space="preserve">
+    <value>Привязан к персонажу: нельзя передать, сложить в хранилище или продать</value>
+  </data>
   <data name="GmPanelSending" xml:space="preserve">
     <value>Отправлено: %ls</value>
   </data>

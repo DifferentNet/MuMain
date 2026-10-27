@@ -1,18 +1,22 @@
 {
   "formatVersion": 1,
-  "_about": "How the battle pass' seasons look (GameLogic/Events/SeasonMarks.cpp). title: the line «Hero of Season N» over the name, text and background as [r, g, b, a] 0-255; topText and topBackground for the gold title of the season's Hall of Fame (its first ten accounts at the last level). aura: circle 'runes' (Effect/mzine_typer2) or 'none', circleColor as light [r, g, b] (1 = full), particles 'snow' (Effect/snowseff01/02, falling) or 'none', particleColor as light. A season missing here looks like the closest season before it. Stage 7 adds each season's Fenrir palette here.",
+  "_about": "How the battle pass' seasons look (GameLogic/Events/SeasonMarks.cpp). title: the line «Hero of Season N» over the name, text and background as [r, g, b, a] 0-255; topText and topBackground for the gold title of the season's Hall of Fame (its first ten accounts at the last level). aura: circle 'runes' (Effect/mzine_typer2) or 'none', circleColor as light [r, g, b] (1 = full), particles 'snow' (Effect/snowseff01/02, falling) or 'none', particleColor as light. A season missing here looks like the closest season before it. fenrir: the seasonal Fenrir (the gold Horn of Fenrir, the level 50 reward): texture under Data for the body (empty keeps the gold one), bodyLight and glowLight for the body and its bright glow, eyeLight and chestLight, lightning around the wolf, pawLightning under its paws, sparks of its skill, all as light. Every gold Fenrir in the game wears the newest season's fenrir: other players' clients learn only gold, not the season. name: a text or one per UI language {\"en\": ..., \"ru\": ...}, shown in the seasonal Fenrir's tooltip.",
   "seasons": [
     {
-      "season": 0,
-      "name": "Test",
-      "title": { "text": [255, 214, 110, 255], "background": [30, 20, 0, 190] },
-      "aura": { "circle": "runes", "circleColor": [0.3, 0.7, 1.0], "particles": "snow", "particleColor": [0.75, 0.9, 1.0] }
-    },
-    {
       "season": 1,
-      "name": "Winter",
+      "name": { "en": "Winter", "ru": "Зима" },
       "title": { "text": [165, 225, 255, 255], "background": [0, 22, 45, 190], "topText": [255, 214, 110, 255], "topBackground": [30, 20, 0, 190] },
-      "aura": { "circle": "runes", "circleColor": [0.3, 0.7, 1.0], "particles": "snow", "particleColor": [0.75, 0.9, 1.0] }
+      "aura": { "circle": "runes", "circleColor": [0.3, 0.7, 1.0], "particles": "snow", "particleColor": [0.75, 0.9, 1.0] },
+      "fenrir": {
+        "texture": "Skill/fenril_winter.jpg",
+        "bodyLight": [1.0, 1.0, 1.0],
+        "glowLight": [0.55, 0.8, 1.0],
+        "eyeLight": [0.3, 0.75, 1.0],
+        "chestLight": [0.45, 0.8, 1.0],
+        "lightning": [0.35, 0.65, 1.0],
+        "pawLightning": [0.6, 0.85, 1.0],
+        "sparks": [0.6, 0.9, 1.0]
+      }
     }
   ]
 }

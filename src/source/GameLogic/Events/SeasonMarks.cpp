@@ -1,8 +1,12 @@
 #include "stdafx.h"
 #include "GameLogic/Events/SeasonMarks.h"
 
+#include "Core/Text/Utf8.h"
+#include "Data/GameConfig/GameConfig.h"
 #include "Engine/Object/ZzzCharacter.h"
+#include "I18N/All.h"
 #include "Network/Server/WSclient.h"
+#include "Render/Sprites/GlobalBitmap.h"
 
 #include "json.hpp"
 
@@ -79,12 +83,64 @@ void ReadLight(const nlohmann::json& json, const char* key, float* target)
 
 std::wstring Widen(const std::string& text)
 {
-    std::wstring wide;
-    for (const unsigned char ch : text)
-        wide.push_back(ch < 0x80 ? static_cast<wchar_t>(ch) : L'?');
-    return wide;
+    return Core::Text::FromUtf8(text);
+}
+
+// Reads "name": "Winter" (every language) or {"en": "Winter", "ru": "Зима"}.
+void ReadNames(const nlohmann::json& entry, std::map<std::wstring, std::wstring>& names)
+{
+    const auto it = entry.find("name");
+    if (it == entry.end())
+        return;
+
+    if (it->is_string())
+    {
+        names[L"en"] = Widen(it->get<std::string>());
+        return;
+    }
+    if (!it->is_object())
+        return;
+
+    for (const auto& [locale, name] : it->items())
+    {
+        if (name.is_string())
+            names[Widen(locale)] = Widen(name.get<std::string>());
+    }
+}
+
+void ReadFenrir(const nlohmann::json& entry, FenrirLook& fenrir)
+{
+    const auto it = entry.find("fenrir");
+    if (it == entry.end() || !it->is_object())
+        return;
+
+    fenrir.Present = true;
+    if (const auto texture = it->find("texture"); texture != it->end() && texture->is_string())
+    {
+        fenrir.Texture = Widen(texture->get<std::string>());
+        std::replace(fenrir.Texture.begin(), fenrir.Texture.end(), L'/', L'\\');
+    }
+    ReadLight(*it, "bodyLight", fenrir.Body);
+    ReadLight(*it, "glowLight", fenrir.Glow);
+    ReadLight(*it, "eyeLight", fenrir.Eyes);
+    ReadLight(*it, "chestLight", fenrir.Chest);
+    ReadLight(*it, "lightning", fenrir.Lightning);
+    ReadLight(*it, "pawLightning", fenrir.PawLightning);
+    ReadLight(*it, "sparks", fenrir.Sparks);
 }
 } // namespace
+
+std::wstring SeasonLook::Name() const
+{
+    if (Names.empty())
+        return {};
+
+    const auto it = Names.find(GameConfig::GetInstance().GetUILocale());
+    if (it != Names.end())
+        return it->second;
+    const auto english = Names.find(L"en");
+    return english != Names.end() ? english->second : Names.begin()->second;
+}
 
 Store& Store::Instance()
 {
@@ -209,8 +265,7 @@ void Store::LoadLooks()
 
         SeasonLook look;
         look.Season = entry["season"].get<int>();
-        if (entry.contains("name") && entry["name"].is_string())
-            look.Name = Widen(entry["name"].get<std::string>());
+        ReadNames(entry, look.Names);
 
         if (const auto title = entry.find("title"); title != entry.end() && title->is_object())
         {
@@ -230,7 +285,64 @@ void Store::LoadLooks()
             ReadLight(*aura, "particleColor", look.ParticleColor);
         }
 
+        ReadFenrir(entry, look.Fenrir);
+
         m_looks.push_back(std::move(look));
     }
+}
+
+const SeasonLook* Store::FenrirSeason()
+{
+    if (!m_looksLoaded)
+        LoadLooks();
+
+    const SeasonLook* newest = nullptr;
+    for (const SeasonLook& look : m_looks)
+    {
+        if (look.Fenrir.Present && (newest == nullptr || look.Season > newest->Season))
+            newest = &look;
+    }
+    return newest;
+}
+
+unsigned int Store::FenrirTexture()
+{
+    // Loaded once; the game frees its textures only when it closes.
+    if (m_fenrirTextureTried)
+        return m_fenrirTexture;
+
+    m_fenrirTextureTried = true;
+    const SeasonLook* look = FenrirSeason();
+    if (look == nullptr || look->Fenrir.Texture.empty())
+        return m_fenrirTexture = 0;
+
+    // As the models' own textures load (Data/DataHandler/LoadData.cpp: GL_NEAREST, GL_REPEAT).
+    const GLuint index = Bitmaps.LoadImage(L"Data\\" + look->Fenrir.Texture, GL_NEAREST, GL_REPEAT);
+    m_fenrirTexture = index == BITMAP_UNKNOWN ? 0 : index;
+    return m_fenrirTexture;
+}
+
+std::wstring Store::NameOf(int season)
+{
+    const SeasonLook& look = Look(season);
+    return look.Season == season ? look.Name() : std::wstring{};
+}
+
+std::wstring TrophyName(int season)
+{
+    wchar_t text[128] = {};
+    mu_swprintf_s(text, I18N::Game::SeasonTrophyName, season);
+    return text;
+}
+
+std::wstring FenrirName(int season)
+{
+    wchar_t text[160] = {};
+    const std::wstring name = Marks().NameOf(season);
+    if (name.empty())
+        mu_swprintf_s(text, I18N::Game::SeasonFenrirName, season);
+    else
+        mu_swprintf_s(text, I18N::Game::SeasonFenrirNamed, season, name.c_str());
+    return text;
 }
 } // namespace GameLogic::SeasonMarks

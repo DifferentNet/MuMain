@@ -632,7 +632,14 @@ void CStorageInventory::ProcessInventoryCtrl()
         {
             const int nDstIndex = pPickedItem->GetTargetLinealPos(m_pNewInventoryCtrl);
 
-            if (nDstIndex >= 0 && m_pNewInventoryCtrl->CanMove(nDstIndex, pItemObj))
+            if (nDstIndex >= 0 && GameLogic::Items::IsStoreBan(pItemObj)
+                && pPickedItem->GetSourceStorageType() != m_pNewInventoryCtrl->GetStorageType())
+            {
+                // Into the vault, as the auto move refuses it (SendRequestItemToStorage); moves inside the vault stay.
+                g_pSystemLogBox->AddText(I18N::Game::TheseItemsCannotBeStoredInTheInventory, TYPE_ERROR_MESSAGE);
+                CInventoryCtrl::BackupPickedItem();
+            }
+            else if (nDstIndex >= 0 && m_pNewInventoryCtrl->CanMove(nDstIndex, pItemObj))
             {
                 const int nSrcIndex = pPickedItem->GetSourceLinealPos();
                 const auto sourceStorageType = pPickedItem->GetSourceStorageType();

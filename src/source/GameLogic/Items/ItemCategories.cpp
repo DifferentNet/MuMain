@@ -98,6 +98,13 @@ namespace GameLogic::Items
         return HasTag(pItem, ItemTag::Flying);
     }
 
+    bool IsSeasonalFenrir(const ITEM* pItem)
+    {
+        // MU Skynet has no recipe for a gold Fenrir: the battle pass gives every one (server add-on
+        // BattlePass/SeasonalFenrir.cs, which also keeps it in its character's inventory).
+        return pItem != nullptr && pItem->Type == ITEM_HORN_OF_FENRIR && (pItem->ExcellentFlags & 63) == 0x04;
+    }
+
     bool HasFlightEquipment(const ITEM* pItemHelper, const ITEM* pItemWing)
     {
         // An item at 0 durability gives nothing, so it does not fly either
