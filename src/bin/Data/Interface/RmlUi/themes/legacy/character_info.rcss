@@ -218,6 +218,18 @@
 @spritesheet chainfo-btn-advstats-sheet { src: "../../../newui_chainfo_btn_stats.tga"; chainfo-btn-advstats: 0px 0px 36px 29px; }
 .info-btn-advstats { left: 124px; decorator: image(chainfo-btn-advstats); }
 
+/* ---- Titles button (MU Moldova) ----
+   The fifth button opens the titles window (CTitlesWindow) beside this one. Its sprite, a golden plate with a gem
+   in the same stone square, comes from tools/chainfo_titles_button.py. Five 36-wide buttons don't fit the row, so
+   all five (the shared exit too) are 31 wide, a pixel apart: 13, 45, 77, 109, 141. */
+@spritesheet chainfo-btn-titles-sheet { src: "../../../newui_chainfo_btn_titles.tga"; chainfo-btn-titles: 0px 0px 36px 29px; }
+.info-btn-titles { decorator: image(chainfo-btn-titles); }
+#panel #btn_exit, #panel .info-btn { width: 31px; }
+#panel .info-btn-quest { left: 45px; }
+#panel .info-btn-pet { left: 77px; }
+#panel .info-btn-advstats { left: 109px; }
+#panel .info-btn-titles { left: 141px; }
+
 .adv { display: none; }
 #panel.adv-view .adv { display: block; }
 #panel.adv-view .attr-textbox, #panel.adv-view .attr-label, #panel.adv-view .attr-value,

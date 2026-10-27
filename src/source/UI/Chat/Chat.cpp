@@ -40,6 +40,8 @@
 #include "World/MapInfra/MapManager.h"
 #include "GameLogic/Events/Event.h"
 #include "UI/Core/WindowSystem.h"
+#include "GameLogic/Events/Titles.h"
+#include "UI/Character/TitlePlates.h"
 #include "GameLogic/Events/w_CursedTemple.h"
 #include "GameLogic/Social/PartyManager.h"
 #include "UI/Dialogs/CommonMessageBox.h"
@@ -230,6 +232,13 @@ void RenderBoolean(int x, int y, CHAT* c)
                 break;
             }
         }
+    }
+
+    // MU Moldova: the character's title over the box (UI/Character/TitlePlates.h); Chaos Castle hides who is who.
+    if (c->Owner->Object.Kind == KIND_PLAYER && UI::TitlePlates::Enabled() && !gMapManager.InChaosCastle())
+    {
+        if (const GameLogic::Titles::Worn* title = GameLogic::Titles::Titles().Of(c->Owner->ID))
+            UI::TitlePlates::Render(*title, *c->Owner, x + c->Width / 2, y - 1);
     }
 
     bool bGmMode = false;

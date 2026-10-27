@@ -12,9 +12,11 @@
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInventory.h"
 #include "Engine/Object/ZzzObject.h"
+#include "GameLogic/Events/Titles.h"
 #include "GameLogic/Items/PersonalShopTitleImp.h"
 #include "Guild/GuildTypes.h"
 #include "Render/Text/CUIRenderText.h"
+#include "UI/Character/TitlePlates.h"
 #include "UI/Chat/Chat.h"
 #include "World/MapInfra/MapManager.h"
 
@@ -110,8 +112,11 @@ void HeadPosition(OBJECT* o, vec3_t out)
 void Render()
 {
     const GameConfig& config = GameConfig::GetInstance();
-    const bool players = config.GetOverheadPlayerNames();
+    const bool names = config.GetOverheadPlayerNames();
     const bool npcs = config.GetOverheadNpcNames();
+    // The titles go over the names, or over the heads when the names are off.
+    const bool titles = UI::TitlePlates::Enabled() && GameLogic::Titles::Titles().Count() > 0;
+    const bool players = names || titles;
     if ((!players && !npcs) || Hero == nullptr)
         return;
 
@@ -161,7 +166,16 @@ void Render()
     for (int n = shown - 1; n >= 0; --n)
     {
         CHARACTER* c = found[n].character;
-        const bool gameMaster = c->Object.Kind == KIND_PLAYER && IsGameMaster(c);
+        const bool player = c->Object.Kind == KIND_PLAYER;
+        const GameLogic::Titles::Worn* title = player && titles ? GameLogic::Titles::Titles().Of(c->ID) : nullptr;
+        if (player && !names)
+        {
+            if (title != nullptr)
+                UI::TitlePlates::Render(*title, *c, found[n].x, found[n].y);
+            continue;
+        }
+
+        const bool gameMaster = player && IsGameMaster(c);
 
         guild[0] = L'\0';
         if (c->Object.Kind == KIND_PLAYER && c->GuildMarkIndex >= 0 && GuildMark[c->GuildMarkIndex].GuildName[0])
@@ -197,6 +211,9 @@ void Render()
         g_pRenderText->SetFont(gameMaster ? g_hFontBold : g_hFont);
         SetNameColor(c, gameMaster);
         g_pRenderText->RenderText(x, y, c->ID, nameSize.cx, lineHeight, RT3_SORT_LEFT);
+
+        if (title != nullptr)
+            UI::TitlePlates::Render(*title, *c, found[n].x, y - 1);
     }
 
     g_pRenderText->SetFont(g_hFont);

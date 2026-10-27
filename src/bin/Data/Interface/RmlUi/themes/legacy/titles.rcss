@@ -1,0 +1,106 @@
+/* Legacy theme for CTitlesWindow (the titles), in the GM panel's look (gm_panel.rcss): the docked_panel_frame.rcss
+   frame (linked first; newui_item_back01 top) at the full dock height (432), the title bold and centred, the worn
+   title and a hint line, then one counter-scaled pane in which the two tabs in the J window's small button art
+   (newui_btn_empty_small, chat_command.rcss) and the list in base.rcss's .scroll-pane flow; and the exit button.
+   Reference px inside #panel; inside the pane, physical px (reference px times --root-scale). */
+
+@spritesheet tt-btn-sheet {
+	src: "../../../newui_btn_empty_small.tga";
+	tt-btn-up: 0px 0px 64px 29px;
+	tt-btn-over: 0px 29px 64px 29px;
+	tt-btn-down: 0px 58px 64px 29px;
+}
+
+.frame-top { decorator: image(docked-bg-top-b); }
+#panel { height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; }
+
+.tt-title { left: 0; top: 12px; text-align: center; font-weight: bold; pointer-events: none; }
+#tt_status { left: 12px; top: 32px; font-weight: bold; pointer-events: none; }
+#tt_detail { left: 12px; top: 47px; pointer-events: none; }
+
+#tt_body { left: 12px; top: 64px; --flow-w: 166px; line-height: 1.12; }
+
+/* The two tabs, side by side over the list's width. */
+.tt-tabs {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	margin-bottom: calc(3px * var(--root-scale));
+}
+.tt-tab {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: calc(82px * var(--root-scale));
+	height: calc(18px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	decorator: image(tt-btn-up);
+}
+.tt-tab:hover { decorator: image(tt-btn-over); }
+.tt-tab:active, .tt-tab.on { decorator: image(tt-btn-down); }
+.tt-tab-label { display: block; white-space: nowrap; pointer-events: none; }
+
+/* The list; the pane stays in the flow with its own height (an absolute pane would be placed against the
+   counter-scaled layer). The row leaves the pane's right lane to the scrollbar. */
+.tt-list { display: block; width: 100%; height: calc(298px * var(--root-scale)); }
+.tt-row {
+	display: block;
+	box-sizing: border-box;
+	width: calc(100% - 17px * var(--root-scale));
+	padding: calc(2px * var(--root-scale)) calc(4px * var(--root-scale));
+	margin-bottom: calc(1px * var(--root-scale));
+	cursor: arrow;
+	pointer-events: auto;
+}
+.tt-row.owned { cursor: pointer; }
+.tt-row-name { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+.tt-row-line { display: flex; flex-direction: row; justify-content: space-between; pointer-events: none; }
+.tt-row-detail { display: block; white-space: nowrap; pointer-events: none; }
+.tt-row-mark { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+.tt-row-hint {
+	display: block;
+	white-space: normal;
+	line-height: 1.1;
+	margin-top: calc(1px * var(--root-scale));
+	pointer-events: none;
+}
+.tt-footer {
+	display: block;
+	box-sizing: border-box;
+	width: calc(100% - 17px * var(--root-scale));
+	padding: calc(4px * var(--root-scale)) calc(4px * var(--root-scale)) 0;
+	white-space: normal;
+	line-height: 1.1;
+	pointer-events: none;
+}
+
+/* The event timer's colours: gold title, light text, blue detail. A title's name is its plate's colour; one not
+   owned yet is dimmed, with how to get it in grey. The worn one on a gold band. */
+.tt-title { color: rgb(255, 220, 120); }
+#tt_status { color: rgb(240, 240, 240); }
+#tt_detail { color: rgb(170, 170, 170); }
+.tt-tab-label { color: rgb(225, 225, 225); }
+.tt-tab.on .tt-tab-label { color: rgb(255, 220, 120); }
+.tt-row-name { opacity: 0.5; }
+.tt-row.owned .tt-row-name { opacity: 1; }
+.tt-row.owned:hover { background-color: rgba(255, 255, 255, 14); }
+.tt-row.worn, .tt-row.worn:hover { background-color: rgba(255, 210, 100, 48); }
+.tt-row.none .tt-row-name { color: rgb(225, 225, 225); }
+.tt-row.r0 .tt-row-name { color: rgb(200, 205, 215); }
+.tt-row.r1 .tt-row-name { color: rgb(130, 200, 255); }
+.tt-row.r2 .tt-row-name { color: rgb(110, 230, 150); }
+.tt-row.r3 .tt-row-name { color: rgb(255, 210, 90); }
+.tt-row.r4 .tt-row-name { color: rgb(255, 110, 90); }
+.tt-row.r5 .tt-row-name { color: rgb(200, 150, 255); }
+.tt-row-detail { color: rgb(130, 130, 130); }
+.tt-row.owned .tt-row-detail { color: rgb(200, 220, 255); }
+.tt-row-mark { color: rgb(255, 220, 120); }
+.tt-row-hint { color: rgb(160, 160, 160); }
+.tt-footer { color: rgb(200, 220, 255); }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+#tt_title { width: calc(100% * var(--root-scale)); }
+#tt_status, #tt_detail { width: calc(166px * var(--root-scale)); }

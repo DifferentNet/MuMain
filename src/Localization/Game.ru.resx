@@ -14118,4 +14118,73 @@
   <data name="OverheadNpcNames" xml:space="preserve">
     <value>Имена над NPC</value>
   </data>
+  <data name="OverheadTitles" xml:space="preserve">
+    <value>Титулы над игроками</value>
+  </data>
+  <data name="TitlesTitle" xml:space="preserve">
+    <value>Титулы</value>
+  </data>
+  <data name="TitlesTooltip" xml:space="preserve">
+    <value>Титулы (/titles)</value>
+  </data>
+  <data name="TitlesTabMine" xml:space="preserve">
+    <value>Мои</value>
+  </data>
+  <data name="TitlesTabAll" xml:space="preserve">
+    <value>Все</value>
+  </data>
+  <data name="TitlesAsking" xml:space="preserve">
+    <value>Запрос к серверу...</value>
+  </data>
+  <data name="TitlesNoAnswer" xml:space="preserve">
+    <value>Сервер не прислал титулы.</value>
+  </data>
+  <data name="TitlesWearing" xml:space="preserve">
+    <value>Надет: %ls</value>
+  </data>
+  <data name="TitlesWearingNone" xml:space="preserve">
+    <value>Титул не надет</value>
+  </data>
+  <data name="TitlesAutomatic" xml:space="preserve">
+    <value>Новый титул наденется сам.</value>
+  </data>
+  <data name="TitlesClickHint" xml:space="preserve">
+    <value>Нажмите на титул, чтобы надеть.</value>
+  </data>
+  <data name="TitlesNone" xml:space="preserve">
+    <value>Без титула</value>
+  </data>
+  <data name="TitlesNoneDetail" xml:space="preserve">
+    <value>Без плашки над ником</value>
+  </data>
+  <data name="TitlesWorn" xml:space="preserve">
+    <value>надет</value>
+  </data>
+  <data name="TitlesForever" xml:space="preserve">
+    <value>Навсегда</value>
+  </data>
+  <data name="TitlesWhileHeld" xml:space="preserve">
+    <value>Пока за вами</value>
+  </data>
+  <data name="TitlesTermWeek" xml:space="preserve">
+    <value>На неделю</value>
+  </data>
+  <data name="TitlesTermSeason" xml:space="preserve">
+    <value>На сезон</value>
+  </data>
+  <data name="TitlesLeftDays" xml:space="preserve">
+    <value>Осталось %d д %d ч</value>
+  </data>
+  <data name="TitlesLeftHours" xml:space="preserve">
+    <value>Осталось %d ч %d мин</value>
+  </data>
+  <data name="TitlesLeftMinutes" xml:space="preserve">
+    <value>Осталось %d мин</value>
+  </data>
+  <data name="TitlesEmpty" xml:space="preserve">
+    <value>Титулов пока нет. Во вкладке «Все» — все титулы и как их получить.</value>
+  </data>
+  <data name="TitlesOwnedCount" xml:space="preserve">
+    <value>Получено: %d из %d</value>
+  </data>
 </root>

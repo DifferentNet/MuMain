@@ -14495,4 +14495,73 @@
   <data name="OverheadNpcNames" xml:space="preserve">
     <value>Names over NPCs</value>
   </data>
+  <data name="OverheadTitles" xml:space="preserve">
+    <value>Titles over players</value>
+  </data>
+  <data name="TitlesTitle" xml:space="preserve">
+    <value>Titles</value>
+  </data>
+  <data name="TitlesTooltip" xml:space="preserve">
+    <value>Titles (/titles)</value>
+  </data>
+  <data name="TitlesTabMine" xml:space="preserve">
+    <value>Mine</value>
+  </data>
+  <data name="TitlesTabAll" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="TitlesAsking" xml:space="preserve">
+    <value>Asking the server...</value>
+  </data>
+  <data name="TitlesNoAnswer" xml:space="preserve">
+    <value>The server sends no titles.</value>
+  </data>
+  <data name="TitlesWearing" xml:space="preserve">
+    <value>Worn: %ls</value>
+  </data>
+  <data name="TitlesWearingNone" xml:space="preserve">
+    <value>No title worn</value>
+  </data>
+  <data name="TitlesAutomatic" xml:space="preserve">
+    <value>A new title goes on by itself.</value>
+  </data>
+  <data name="TitlesClickHint" xml:space="preserve">
+    <value>Click a title to wear it.</value>
+  </data>
+  <data name="TitlesNone" xml:space="preserve">
+    <value>No title</value>
+  </data>
+  <data name="TitlesNoneDetail" xml:space="preserve">
+    <value>No plate over the name</value>
+  </data>
+  <data name="TitlesWorn" xml:space="preserve">
+    <value>worn</value>
+  </data>
+  <data name="TitlesForever" xml:space="preserve">
+    <value>Forever</value>
+  </data>
+  <data name="TitlesWhileHeld" xml:space="preserve">
+    <value>While yours</value>
+  </data>
+  <data name="TitlesTermWeek" xml:space="preserve">
+    <value>For a week</value>
+  </data>
+  <data name="TitlesTermSeason" xml:space="preserve">
+    <value>For the season</value>
+  </data>
+  <data name="TitlesLeftDays" xml:space="preserve">
+    <value>%d d %d h left</value>
+  </data>
+  <data name="TitlesLeftHours" xml:space="preserve">
+    <value>%d h %d min left</value>
+  </data>
+  <data name="TitlesLeftMinutes" xml:space="preserve">
+    <value>%d min left</value>
+  </data>
+  <data name="TitlesEmpty" xml:space="preserve">
+    <value>No titles yet. The All tab shows every title and how to get it.</value>
+  </data>
+  <data name="TitlesOwnedCount" xml:space="preserve">
+    <value>Owned: %d of %d</value>
+  </data>
 </root>

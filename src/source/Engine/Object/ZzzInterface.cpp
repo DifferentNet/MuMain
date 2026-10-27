@@ -2481,6 +2481,13 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
             }
             return true;
         }
+        // MU Moldova: "/titles" opens the titles window (UI/Events/TitlesWindow.h) instead of the server's list in
+        // the chat.
+        if (wcsicmp(Text, L"/titles") == 0)
+        {
+            g_pNewUISystem->Show(mu::ui::window::INTERFACE_TITLES);
+            return true;
+        }
         if (wcsicmp(Text, L"/charactername") == 0)
         {
             if (IsGMCharacter() == true)

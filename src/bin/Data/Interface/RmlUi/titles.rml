@@ -1,0 +1,58 @@
+<rml>
+<head>
+	<title>Titles</title>
+	<link type="text/rcss" href="base.rcss"/>
+	<link type="text/rcss" href="docked_panel_frame.rcss"/>
+	<link type="text/rcss" href="titles.rcss"/>
+</head>
+<body>
+	<!-- The titles window (CTitlesWindow), opened by the titles button of the character window (C) or by typing
+	     /titles, docked right at full dock height: the title, the worn title and whether a new one goes on by
+	     itself; then one counter-scaled pane in which the two tabs (the own titles, the whole catalogue) and the list
+	     (a row a title: its name in its plate's colour, how long it lasts or lasts left, "worn" on the worn one; the
+	     ones not owned dimmed with how to get them; under the rows a note) flow; and the exit button. The workspace
+	     slot places and scales #panel. C++ keeps the state; clicks are queued with titles_tab(index),
+	     titles_wear(row) and titles_exit. -->
+	<div id="panel" data-model="titles">
+		<div class="frame-piece frame-top"></div>
+		<div class="frame-piece frame-left"></div>
+		<div class="frame-piece frame-right"></div>
+		<div class="frame-piece frame-bottom"></div>
+
+		<span id="tt_title" class="sharp-text tt-title"
+		      data-style-font-size="title.text_px + 'px'">{{title.text}}</span>
+		<span id="tt_status" class="sharp-text tt-status"
+		      data-style-font-size="status.text_px + 'px'">{{status.text}}</span>
+		<span id="tt_detail" class="sharp-text tt-detail"
+		      data-style-font-size="detail.text_px + 'px'">{{detail.text}}</span>
+
+		<div id="tt_body" class="sharp-text sharp-flow">
+			<div class="tt-tabs">
+				<div class="tt-tab" data-for="tab, i : tabs" data-class-on="tab.selected" data-event-click="titles_tab(i)">
+					<span class="tt-tab-label" data-style-font-size="tab.label.text_px + 'px'">{{tab.label.text}}</span>
+				</div>
+			</div>
+
+			<div class="tt-list scroll-pane">
+				<div class="tt-row" data-for="r : rows" data-class-owned="r.owned" data-class-worn="r.worn"
+				     data-class-none="r.rarity == -1" data-class-r0="r.rarity == 0" data-class-r1="r.rarity == 1"
+				     data-class-r2="r.rarity == 2" data-class-r3="r.rarity == 3" data-class-r4="r.rarity == 4"
+				     data-class-r5="r.rarity == 5" data-event-click="titles_wear(r.index)">
+					<span class="tt-row-name" data-style-font-size="r.name.text_px + 'px'">{{r.name.text}}</span>
+					<div class="tt-row-line">
+						<span class="tt-row-detail" data-style-font-size="r.detail.text_px + 'px'">{{r.detail.text}}</span>
+						<span class="tt-row-mark" data-if="r.worn" data-style-font-size="r.mark.text_px + 'px'">{{r.mark.text}}</span>
+					</div>
+					<span class="tt-row-hint" data-if="r.hint.text != ''"
+					      data-style-font-size="r.hint.text_px + 'px'">{{r.hint.text}}</span>
+				</div>
+				<span class="tt-footer" data-if="footer.text != ''"
+				      data-style-font-size="footer.text_px + 'px'">{{footer.text}}</span>
+			</div>
+		</div>
+
+		<div id="btn_exit" data-event-click="titles_exit" data-attr-data-hint="exit_tooltip"></div>
+		<div id="frame_corner_close" data-event-click="titles_exit"></div>
+	</div>
+</body>
+</rml>

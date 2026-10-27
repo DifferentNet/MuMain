@@ -187,6 +187,7 @@ namespace mu::ui::window
         // MU Moldova: names over heads (UI::OverheadNames), saved in config.ini at once.
         void RmlToggleOverheadPlayerNames();
         void RmlToggleOverheadNpcNames();
+        void RmlToggleOverheadTitles();
         void RmlThemeChanged(int index);
         void RmlUIScaleChanged(int index);
         void RmlClickClose();
@@ -364,6 +365,8 @@ namespace mu::ui::window
             Rml::String overheadPlayerNamesLabel;
             bool overheadNpcNames = false;
             Rml::String overheadNpcNamesLabel;
+            bool overheadTitles = true;
+            Rml::String overheadTitlesLabel;
             std::vector<Rml::String> themeLabels;
             int themeIndex = 0;
             Rml::String themeRowLabel;

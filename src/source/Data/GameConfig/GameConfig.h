@@ -93,6 +93,9 @@ public:
     void SetOverheadPlayerNames(bool shown) { m_overheadPlayerNames = shown; }
     bool GetOverheadNpcNames() const { return m_overheadNpcNames; }
     void SetOverheadNpcNames(bool shown) { m_overheadNpcNames = shown; }
+    // Title plates over the players (UI::TitlePlates).
+    bool GetOverheadTitles() const { return m_overheadTitles; }
+    void SetOverheadTitles(bool shown) { m_overheadTitles = shown; }
 
     // Chat commands - the favourites and the named templates of the command
     // window. They belong to the installation, not to a character.
@@ -217,6 +220,7 @@ private:
     int m_uiScalePercent;
     bool m_overheadPlayerNames = true;
     bool m_overheadNpcNames = false;
+    bool m_overheadTitles = true;
     bool m_enableAnimationTaskPool;
 
     int m_zoom;
