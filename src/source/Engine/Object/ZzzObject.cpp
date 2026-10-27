@@ -6503,6 +6503,13 @@ void RenderPartObjectBodyColor(BMD* b, OBJECT* o, int Type, float Alpha, int Ren
             Vector(1.f, 0.6f, 0.1f, b->BodyLight);
         }
     }
+    else if (IsTreasureGoblin(iMonsterIndex) && iMonsterIndex != MONSTER_TREASURE_GOBLIN)
+    {
+        // MU Skynet: the treasure goblins of the other kinds shine in their kind's colour instead of the gold of
+        // the model they share.
+        GetTreasureGoblinColor(iMonsterIndex, b->BodyLight);
+        VectorScale(b->BodyLight, Bright * Alpha, b->BodyLight);
+    }
     else
     {
         PartObjectColor(Type, Alpha, Bright, b->BodyLight, (RenderType & RENDER_EXTRA) ? true : false);

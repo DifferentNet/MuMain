@@ -8471,13 +8471,42 @@ void RenderEye(OBJECT* o, int Left, int Right, float fSize = 1.0f)
     VectorCopy(Position, o->EyeLeft);
 }
 
-// MU Skynet: the Treasure Goblin glitters and has a pulsing gold glow on the ground, so that it stands out from the
-// Golden Goblin of the invasions, whose model it shares.
-static void RenderTreasureGoblinGlitter(OBJECT* o)
+bool IsTreasureGoblin(int monsterIndex)
+{
+    return monsterIndex >= MONSTER_TREASURE_GOBLIN && monsterIndex <= MONSTER_RAINBOW_GOBLIN;
+}
+
+// MU Skynet: the colour of a treasure goblin's kind: gold (the treasurer), blue (the jeweler), steel (the armorer) or
+// slowly changing through the rainbow (the rainbow goblin).
+void GetTreasureGoblinColor(int monsterIndex, vec3_t Color)
+{
+    switch (monsterIndex)
+    {
+    case MONSTER_JEWELER_GOBLIN:
+        Vector(0.3f, 0.65f, 1.f, Color);
+        break;
+    case MONSTER_ARMORER_GOBLIN:
+        Vector(0.75f, 0.8f, 0.9f, Color);
+        break;
+    case MONSTER_RAINBOW_GOBLIN:
+    {
+        const float Hue = WorldTime * 0.0015f;
+        Vector(sinf(Hue) * 0.5f + 0.5f, sinf(Hue + 2.094f) * 0.5f + 0.5f, sinf(Hue + 4.189f) * 0.5f + 0.5f, Color);
+        break;
+    }
+    default:
+        Vector(1.f, 0.85f, 0.35f, Color);
+        break;
+    }
+}
+
+// MU Skynet: a treasure goblin glitters and has a pulsing glow on the ground in its kind's colour, so that it stands
+// out from the Golden Goblin of the invasions, whose model it shares.
+static void RenderTreasureGoblinGlitter(CHARACTER* c, OBJECT* o)
 {
     vec3_t Light;
-    Vector(1.f, 0.85f, 0.35f, Light);
-    if (rand_fps_check(3))
+    GetTreasureGoblinColor(c->MonsterIndex, Light);
+    if (rand_fps_check(c->MonsterIndex == MONSTER_RAINBOW_GOBLIN ? 2 : 3))
     {
         vec3_t Position;
         Vector(o->Position[0] + (float)(rand() % 120 - 60), o->Position[1] + (float)(rand() % 120 - 60),
@@ -8489,16 +8518,33 @@ static void RenderTreasureGoblinGlitter(OBJECT* o)
     EnableAlphaBlend();
     const float Luminosity = sinf(WorldTime * 0.004f) * 0.25f + 0.75f;
     vec3_t Glow;
-    Vector(Luminosity, Luminosity * 0.75f, Luminosity * 0.2f, Glow);
-    RenderTerrainAlphaBitmap(BITMAP_MAGIC + 1, o->Position[0], o->Position[1], 2.2f, 2.2f, Glow, -o->Angle[2]);
+    if (c->MonsterIndex == MONSTER_TREASURE_GOBLIN)
+    {
+        Vector(Luminosity, Luminosity * 0.75f, Luminosity * 0.2f, Glow);
+    }
+    else
+    {
+        Vector(Luminosity * Light[0], Luminosity * Light[1], Luminosity * Light[2], Glow);
+    }
+
+    const float Size = c->MonsterIndex == MONSTER_RAINBOW_GOBLIN ? 2.8f : 2.2f;
+    RenderTerrainAlphaBitmap(BITMAP_MAGIC + 1, o->Position[0], o->Position[1], Size, Size, Glow, -o->Angle[2]);
 }
 
-void CreateTreasureGoblinEscape(OBJECT* o)
+void CreateTreasureGoblinEscape(OBJECT* o, int monsterIndex)
 {
     vec3_t Light;
-    Vector(1.f, 0.8f, 0.3f, Light);
-    // A column of sparks as the Kanturu teleport's BITMAP_SPARK + 1 effect makes, but gold: that effect sets its
-    // own white light.
+    if (monsterIndex == MONSTER_TREASURE_GOBLIN)
+    {
+        Vector(1.f, 0.8f, 0.3f, Light);
+    }
+    else
+    {
+        GetTreasureGoblinColor(monsterIndex, Light);
+    }
+
+    // A column of sparks as the Kanturu teleport's BITMAP_SPARK + 1 effect makes, but in the kind's colour: that
+    // effect sets its own white light.
     vec3_t Column;
     VectorCopy(o->Position, Column);
     for (int j = 0; j < 18; ++j)
@@ -8751,14 +8797,17 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
         }
     }
 
-    if (c->MonsterIndex == MONSTER_BALROG || c->MonsterIndex == MONSTER_GOLDEN_BUDGE_DRAGON || c->MonsterIndex == MONSTER_SILVER_VALKYRIE || c->MonsterIndex == MONSTER_ZAIKAN || c->MonsterIndex == MONSTER_METAL_BALROG || (78 <= c->MonsterIndex && c->MonsterIndex <= MONSTER_GOLDEN_WHEEL) || (c->MonsterIndex >= MONSTER_GOLDEN_DARK_KNIGHT && c->MonsterIndex <= MONSTER_GOLDEN_RABBIT) || c->MonsterIndex == MONSTER_TREASURE_GOBLIN)
+    if (c->MonsterIndex == MONSTER_BALROG || c->MonsterIndex == MONSTER_GOLDEN_BUDGE_DRAGON || c->MonsterIndex == MONSTER_SILVER_VALKYRIE || c->MonsterIndex == MONSTER_ZAIKAN || c->MonsterIndex == MONSTER_METAL_BALROG || (78 <= c->MonsterIndex && c->MonsterIndex <= MONSTER_GOLDEN_WHEEL) || (c->MonsterIndex >= MONSTER_GOLDEN_DARK_KNIGHT && c->MonsterIndex <= MONSTER_GOLDEN_RABBIT) || IsTreasureGoblin(c->MonsterIndex))
     {
         vec3_t vBackupBodyLight;
+
+        // MU Skynet: a treasure goblin passes its kind to the body colour, which shines in the kind's colour then.
+        const int goblinIndex = IsTreasureGoblin(c->MonsterIndex) ? c->MonsterIndex : -1;
 
         float Bright = 1.f;
         if (c->MonsterIndex == MONSTER_ZAIKAN)
             Bright = 0.5f;
-        if (c->MonsterIndex == MONSTER_GOLDEN_BUDGE_DRAGON || (78 <= c->MonsterIndex && c->MonsterIndex <= MONSTER_GOLDEN_WHEEL) || (c->MonsterIndex >= MONSTER_GOLDEN_DARK_KNIGHT && c->MonsterIndex <= MONSTER_GOLDEN_RABBIT) || c->MonsterIndex == MONSTER_TREASURE_GOBLIN)
+        if (c->MonsterIndex == MONSTER_GOLDEN_BUDGE_DRAGON || (78 <= c->MonsterIndex && c->MonsterIndex <= MONSTER_GOLDEN_WHEEL) || (c->MonsterIndex >= MONSTER_GOLDEN_DARK_KNIGHT && c->MonsterIndex <= MONSTER_GOLDEN_RABBIT) || IsTreasureGoblin(c->MonsterIndex))
         {
             if (c->MonsterIndex >= MONSTER_GOLDEN_DARK_KNIGHT && c->MonsterIndex <= MONSTER_GOLDEN_RABBIT)
             {
@@ -8810,7 +8859,7 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                     CreateEffect(MODEL_EFFECT_FIRE_HIK3_MONO, v3EffectPosition, o->Angle, v3EffectLightColor, 1, NULL, -1, 0, 0, 0, fEffectScale);
                 }
             }
-            RenderPartObjectBodyColor(&Models[o->Type], o, o->Type, o->Alpha, RENDER_METAL | RENDER_BRIGHT, Bright);
+            RenderPartObjectBodyColor(&Models[o->Type], o, o->Type, o->Alpha, RENDER_METAL | RENDER_BRIGHT, Bright, -1, goblinIndex);
         }
 
         if (c->MonsterIndex == MONSTER_METAL_BALROG)
@@ -8819,7 +8868,7 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
         }
         else
         {
-            RenderPartObjectBodyColor(&Models[o->Type], o, o->Type, o->Alpha, RENDER_CHROME | RENDER_BRIGHT, Bright);
+            RenderPartObjectBodyColor(&Models[o->Type], o, o->Type, o->Alpha, RENDER_CHROME | RENDER_BRIGHT, Bright, -1, goblinIndex);
         }
 
         if (c->MonsterIndex >= MONSTER_GOLDEN_DARK_KNIGHT && c->MonsterIndex <= MONSTER_GOLDEN_RABBIT)
@@ -8827,9 +8876,9 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
             VectorCopy(vBackupBodyLight, Models[o->Type].BodyLight);
         }
 
-        if (c->MonsterIndex == MONSTER_TREASURE_GOBLIN)
+        if (IsTreasureGoblin(c->MonsterIndex))
         {
-            RenderTreasureGoblinGlitter(o);
+            RenderTreasureGoblinGlitter(c, o);
         }
     }
     else if (c->MonsterIndex == MONSTER_ALQUAMOS)
@@ -13577,6 +13626,29 @@ CHARACTER* CreateMonster(EMonsterType Type, int PositionX, int PositionY, int Ke
         c = CreateCharacter(Key, MODEL_GOBLIN, PositionX, PositionY);
         c->Object.Scale = 1.0f;
         wcscpy(c->ID, L"Treasure Goblin");
+        break;
+    case MONSTER_JEWELER_GOBLIN:
+        // MU Skynet: blue (RenderCharacter), empty-handed.
+        OpenMonsterModel(MONSTER_MODEL_GOBLIN);
+        c = CreateCharacter(Key, MODEL_GOBLIN, PositionX, PositionY);
+        c->Object.Scale = 1.0f;
+        wcscpy(c->ID, L"Jeweler Goblin");
+        break;
+    case MONSTER_ARMORER_GOBLIN:
+        // MU Skynet: steel (RenderCharacter), with a Battle Axe +13: a weapon in the hand is safe, unlike a potion.
+        OpenMonsterModel(MONSTER_MODEL_GOBLIN);
+        c = CreateCharacter(Key, MODEL_GOBLIN, PositionX, PositionY);
+        c->Weapon[0].Type = MODEL_BATTLE_AXE;
+        c->Weapon[0].Level = 13;
+        c->Object.Scale = 1.05f;
+        wcscpy(c->ID, L"Armorer Goblin");
+        break;
+    case MONSTER_RAINBOW_GOBLIN:
+        // MU Skynet: through the rainbow (RenderCharacter), larger, empty-handed.
+        OpenMonsterModel(MONSTER_MODEL_GOBLIN);
+        c = CreateCharacter(Key, MODEL_GOBLIN, PositionX, PositionY);
+        c->Object.Scale = 1.15f;
+        wcscpy(c->ID, L"Rainbow Goblin");
         break;
     case MONSTER_GOLDEN_DERKON:
         OpenMonsterModel(MONSTER_MODEL_DRAGON);

@@ -65,8 +65,10 @@ void ReadEquipmentExtended(int Key, BYTE flags, BYTE* Equipment, CHARACTER* pCha
                            OBJECT* pHelper = nullptr);
 void ClearCharacters(int Key = -1);
 void DeleteCharacter(int Key);
-// MU Skynet: the burst of gold the Treasure Goblin leaves when it escapes alive.
-void CreateTreasureGoblinEscape(OBJECT* o);
+// MU Skynet: the treasure goblins (620 to 623) and the burst in their colour they leave when they escape alive.
+bool IsTreasureGoblin(int monsterIndex);
+void GetTreasureGoblinColor(int monsterIndex, vec3_t Color);
+void CreateTreasureGoblinEscape(OBJECT* o, int monsterIndex);
 void DeleteCharacter(CHARACTER* c, OBJECT* o);
 int FindCharacterIndex(int Key);
 int FindCharacterIndexByMonsterIndex(int Type);
