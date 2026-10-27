@@ -1766,7 +1766,7 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
         ip->Type == ITEM_POTION + 100 ||
         (ip->Type >= ITEM_POTION + 141 && ip->Type <= ITEM_POTION + 144) ||
         GameLogic::Items::IsLuckyItemTicket(ip) ||
-        (ip->Type == ITEM_JEWEL_OF_ANCIENT || ip->Type == ITEM_POTION + 161) ||
+        (ip->Type == ITEM_JEWEL_OF_ANCIENT || ip->Type == ITEM_JEWEL_OF_FATE) ||
         ip->Type == ITEM_JEWEL_OF_LIFE || ip->Type == ITEM_JEWEL_OF_CREATION)
     {
         Color = TEXT_COLOR_YELLOW;
@@ -3910,10 +3910,14 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
         mu_swprintf(TextList[TextNum], I18N::Game::JewelOfAncientDescMix);
         TextListColor[TextNum] = TEXT_COLOR_WHITE; TextBold[TextNum] = false; TextNum++;
     }
-    else if (ip->Type == ITEM_POTION + 161)
+    else if (ip->Type == ITEM_JEWEL_OF_FATE)
     {
-        // 상승의 보석
-        mu_swprintf(TextList[TextNum], I18N::Game::JewelForItemReinforcement);
+        // MU Moldova: what was the Jewel of Elevation (Lucky Items) is the battle pass's 100 % upgrade stone.
+        mu_swprintf(TextList[TextNum], I18N::Game::JewelOfFateDesc);
+        TextListColor[TextNum] = TEXT_COLOR_WHITE; TextBold[TextNum] = false; TextNum++;
+        mu_swprintf(TextList[TextNum], I18N::Game::JewelOfFateDescMix);
+        TextListColor[TextNum] = TEXT_COLOR_WHITE; TextBold[TextNum] = false; TextNum++;
+        mu_swprintf(TextList[TextNum], I18N::Game::JewelOfFateDescAncient);
         TextListColor[TextNum] = TEXT_COLOR_WHITE; TextBold[TextNum] = false; TextNum++;
     }
     else if (GameLogic::Items::IsSecondTierWingExceptCape(ip)) //날개

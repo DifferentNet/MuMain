@@ -3018,6 +3018,9 @@ enum
     ITEM_BURNT_MURDERERS_CLUB = ITEM_POTION + 156,
     // MU Moldova: Season 6's unused Jewel of Extension model, the Jewel of Ancient (ancient +13 -> +14/+15, MixMgr).
     ITEM_JEWEL_OF_ANCIENT = ITEM_POTION + 160,
+    // MU Moldova: Season 6's unused Jewel of Elevation model, the battle pass's Jewel of Fate (a +10…+15 upgrade and
+    // the Jewel of Ancient's recipes at 100 %, MixMgr).
+    ITEM_JEWEL_OF_FATE = ITEM_POTION + 161,
     ITEM_SCROLL_OF_POISON = ITEM_ETC + 0,
     ITEM_SCROLL_OF_METEORITE = ITEM_ETC + 1,
     ITEM_SCROLL_OF_LIGHTING = ITEM_ETC + 2,

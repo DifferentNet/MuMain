@@ -522,11 +522,11 @@ bool CInventoryActionController::RepairItemAtMousePoint(CInventoryCtrl* targetCo
 bool CInventoryActionController::ApplyJewels(CInventoryCtrl* targetControl, CPickedItem* pPickedItem,
                                                   ITEM* pPickItem, int iSourceIndex, int iTargetIndex) const
 {
-    // MU Moldova: 14:160 (Jewel of Extension in Season 6) is the Jewel of Ancient, used in the chaos machine only, so it
-    // is no longer dropped onto items.
+    // MU Moldova: 14:160 and 14:161 (Jewels of Extension and Elevation in Season 6) are the Jewels of Ancient and Fate,
+    // used in the chaos machine only, so they are no longer dropped onto items.
     const bool bIsJewelType = pPickItem->Type == ITEM_JEWEL_OF_BLESS || pPickItem->Type == ITEM_JEWEL_OF_SOUL ||
                               pPickItem->Type == ITEM_JEWEL_OF_LIFE || pPickItem->Type == ITEM_JEWEL_OF_HARMONY ||
-                              GameLogic::Items::IsRefineStone(pPickItem) || pPickItem->Type == ITEM_POTION + 161;
+                              GameLogic::Items::IsRefineStone(pPickItem);
 
     if (!bIsJewelType)
     {
@@ -616,11 +616,6 @@ bool CInventoryActionController::ApplyJewels(CInventoryCtrl* targetControl, CPic
     if (GameLogic::Items::IsLuckyItemType(pItem->Type))
     {
         bSuccess = false;
-        if (pPickItem->Type == ITEM_POTION + 161)
-        {
-            if (pItem->Jewel_Of_Harmony_Option == 0)
-                bSuccess = true;
-        }
     }
 
     if (bSuccess)

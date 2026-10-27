@@ -2341,16 +2341,15 @@
     {
       "number": 161,
       "name": {
-        "en": "Jewel of Elevation",
-        "de": "Juwel der Erhebung",
-        "es": "Joya de Elevación",
-        "pt": "Jóia de Elevação"
+        "en": "Jewel of Fate",
+        "de": "Jewel of Fate",
+        "es": "Jewel of Fate",
+        "pt": "Jewel of Fate"
       },
+      "tags": ["jewel", "valuable"],
       "width": 1,
       "height": 1,
-      "droppable": false,
       "sellable": false,
-      "personalShopSellable": false,
       "repairable": false
     },
     {

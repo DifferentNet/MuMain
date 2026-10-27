@@ -127,6 +127,10 @@ namespace SEASON3A
     // server's AncientJewelCrafting and NonAncientItemUpgradeCrafting, server/addons/src/JewelOfAncient.cs).
     enum : int
     {
+        MIXID_ITEM_PLUS_10 = 3,
+        MIXID_ITEM_PLUS_11 = 4,
+        MIXID_ITEM_PLUS_12 = 22,
+        MIXID_ITEM_PLUS_13 = 23,
         MIXID_ITEM_PLUS_14 = 49,
         MIXID_ITEM_PLUS_15 = 50,
         MIXID_ANCIENT_JEWEL_PLUS_14 = 51,
@@ -137,6 +141,22 @@ namespace SEASON3A
     inline bool IsAncientJewelMix(int iMixID)
     {
         return iMixID == MIXID_ANCIENT_JEWEL_PLUS_14 || iMixID == MIXID_ANCIENT_JEWEL_PLUS_15;
+    }
+
+    // MU Moldova: the battle pass's Jewel of Fate (ITEM_JEWEL_OF_FATE) is an optional last source of these recipes
+    // (scripts/mix-bmd.py jewel-of-fate) and makes them succeed: the server's ItemUpgrade.WithJewelOfFate sets the
+    // rate to 100 % over the cap.
+    inline bool IsJewelOfFateMix(int iMixID)
+    {
+        switch (iMixID)
+        {
+        case MIXID_ITEM_PLUS_10: case MIXID_ITEM_PLUS_11: case MIXID_ITEM_PLUS_12: case MIXID_ITEM_PLUS_13:
+        case MIXID_ITEM_PLUS_14: case MIXID_ITEM_PLUS_15:
+        case MIXID_ANCIENT_JEWEL_PLUS_14: case MIXID_ANCIENT_JEWEL_PLUS_15:
+            return true;
+        default:
+            return false;
+        }
     }
 
 #define MAX_MIX_SOURCES 8
