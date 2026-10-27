@@ -8471,6 +8471,53 @@ void RenderEye(OBJECT* o, int Left, int Right, float fSize = 1.0f)
     VectorCopy(Position, o->EyeLeft);
 }
 
+// MU Skynet: the Treasure Goblin glitters and has a pulsing gold glow on the ground, so that it stands out from the
+// Golden Goblin of the invasions, whose model it shares.
+static void RenderTreasureGoblinGlitter(OBJECT* o)
+{
+    vec3_t Light;
+    Vector(1.f, 0.85f, 0.35f, Light);
+    if (rand_fps_check(3))
+    {
+        vec3_t Position;
+        Vector(o->Position[0] + (float)(rand() % 120 - 60), o->Position[1] + (float)(rand() % 120 - 60),
+               o->Position[2] + (float)(rand() % 120 + 40), Position);
+        CreateParticle(BITMAP_SHINY, Position, o->Angle, Light);
+        CreateParticle(BITMAP_SHINY, Position, o->Angle, Light, 1);
+    }
+
+    EnableAlphaBlend();
+    const float Luminosity = sinf(WorldTime * 0.004f) * 0.25f + 0.75f;
+    vec3_t Glow;
+    Vector(Luminosity, Luminosity * 0.75f, Luminosity * 0.2f, Glow);
+    RenderTerrainAlphaBitmap(BITMAP_MAGIC + 1, o->Position[0], o->Position[1], 2.2f, 2.2f, Glow, -o->Angle[2]);
+}
+
+void CreateTreasureGoblinEscape(OBJECT* o)
+{
+    vec3_t Light;
+    Vector(1.f, 0.8f, 0.3f, Light);
+    // A column of sparks as the Kanturu teleport's BITMAP_SPARK + 1 effect makes, but gold: that effect sets its
+    // own white light.
+    vec3_t Column;
+    VectorCopy(o->Position, Column);
+    for (int j = 0; j < 18; ++j)
+    {
+        Column[2] += 24.f;
+        CreateParticle(BITMAP_SPARK + 1, Column, o->Angle, Light, 1, j == 0 ? 12.f : 6.f);
+    }
+    for (int i = 0; i < 12; ++i)
+    {
+        vec3_t Position;
+        Vector(o->Position[0] + (float)(rand() % 160 - 80), o->Position[1] + (float)(rand() % 160 - 80),
+               o->Position[2] + (float)(rand() % 150 + 20), Position);
+        CreateParticle(BITMAP_SHINY, Position, o->Angle, Light);
+        CreateParticle(BITMAP_SHINY, Position, o->Angle, Light, 1);
+    }
+
+    PlayBuffer(SOUND_MAGIC);
+}
+
 void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
 {
     if (g_isCharacterBuff(o, eBuff_CrywolfNPCHide))
@@ -8704,16 +8751,16 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
         }
     }
 
-    if (c->MonsterIndex == MONSTER_BALROG || c->MonsterIndex == MONSTER_GOLDEN_BUDGE_DRAGON || c->MonsterIndex == MONSTER_SILVER_VALKYRIE || c->MonsterIndex == MONSTER_ZAIKAN || c->MonsterIndex == MONSTER_METAL_BALROG || (78 <= c->MonsterIndex && c->MonsterIndex <= MONSTER_GOLDEN_WHEEL) || (c->MonsterIndex >= MONSTER_GOLDEN_DARK_KNIGHT && c->MonsterIndex <= MONSTER_GOLDEN_RABBIT))
+    if (c->MonsterIndex == MONSTER_BALROG || c->MonsterIndex == MONSTER_GOLDEN_BUDGE_DRAGON || c->MonsterIndex == MONSTER_SILVER_VALKYRIE || c->MonsterIndex == MONSTER_ZAIKAN || c->MonsterIndex == MONSTER_METAL_BALROG || (78 <= c->MonsterIndex && c->MonsterIndex <= MONSTER_GOLDEN_WHEEL) || (c->MonsterIndex >= MONSTER_GOLDEN_DARK_KNIGHT && c->MonsterIndex <= MONSTER_GOLDEN_RABBIT) || c->MonsterIndex == MONSTER_TREASURE_GOBLIN)
     {
         vec3_t vBackupBodyLight;
 
         float Bright = 1.f;
         if (c->MonsterIndex == MONSTER_ZAIKAN)
             Bright = 0.5f;
-        if (c->MonsterIndex == MONSTER_GOLDEN_BUDGE_DRAGON || (78 <= c->MonsterIndex && c->MonsterIndex <= MONSTER_GOLDEN_WHEEL) || (c->MonsterIndex >= MONSTER_GOLDEN_DARK_KNIGHT && c->MonsterIndex <= MONSTER_GOLDEN_RABBIT))
+        if (c->MonsterIndex == MONSTER_GOLDEN_BUDGE_DRAGON || (78 <= c->MonsterIndex && c->MonsterIndex <= MONSTER_GOLDEN_WHEEL) || (c->MonsterIndex >= MONSTER_GOLDEN_DARK_KNIGHT && c->MonsterIndex <= MONSTER_GOLDEN_RABBIT) || c->MonsterIndex == MONSTER_TREASURE_GOBLIN)
         {
-            if (c->MonsterIndex >= MONSTER_GOLDEN_DARK_KNIGHT)
+            if (c->MonsterIndex >= MONSTER_GOLDEN_DARK_KNIGHT && c->MonsterIndex <= MONSTER_GOLDEN_RABBIT)
             {
                 VectorCopy(Models[o->Type].BodyLight, vBackupBodyLight);
                 Vector(1.f, 0.6f, 0.3f, Models[o->Type].BodyLight);
@@ -8778,6 +8825,11 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
         if (c->MonsterIndex >= MONSTER_GOLDEN_DARK_KNIGHT && c->MonsterIndex <= MONSTER_GOLDEN_RABBIT)
         {
             VectorCopy(vBackupBodyLight, Models[o->Type].BodyLight);
+        }
+
+        if (c->MonsterIndex == MONSTER_TREASURE_GOBLIN)
+        {
+            RenderTreasureGoblinGlitter(o);
         }
     }
     else if (c->MonsterIndex == MONSTER_ALQUAMOS)
@@ -13516,6 +13568,15 @@ CHARACTER* CreateMonster(EMonsterType Type, int PositionX, int PositionY, int Ke
         c->Weapon[0].Level = 9;
         c->Object.Scale = 0.8f;
         wcscpy(c->ID, L"고블린");
+        break;
+    case MONSTER_TREASURE_GOBLIN:
+        // MU Skynet: the Golden Goblin's model, larger and empty-handed (it never attacks); it glitters and has a gold
+        // glow on the ground (RenderCharacter). No Box of Kundun in its hand: RenderLinkObject's g_ItemObject only
+        // holds the item groups up to the helpers, so a potion-group model there writes past its end.
+        OpenMonsterModel(MONSTER_MODEL_GOBLIN);
+        c = CreateCharacter(Key, MODEL_GOBLIN, PositionX, PositionY);
+        c->Object.Scale = 1.0f;
+        wcscpy(c->ID, L"Treasure Goblin");
         break;
     case MONSTER_GOLDEN_DERKON:
         OpenMonsterModel(MONSTER_MODEL_DRAGON);

@@ -5102,6 +5102,8 @@ enum EMonsterType : int
     MONSTER_LEINA_THE_GENERAL_GOODS_MERCHANT = 577,
     MONSTER_WEAPONS_MERCHANT_BOLO = 578,
     MONSTER_DAVID = 579,
+    // MU Skynet: the Treasure Goblin, which the server's add-on calls on a kill (not an OpenMU monster).
+    MONSTER_TREASURE_GOBLIN = 620,
     MONSTER_CURSED_STATUE = 658,
     MONSTER_CAPTURED_STONE_STATUE_1 = 659,
     MONSTER_CAPTURED_STONE_STATUE_2 = 660,

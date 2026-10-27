@@ -3202,6 +3202,15 @@ void ReceiveDeleteCharacterViewport(const BYTE* ReceiveBuffer)
 
         App::Control::Events::RecordViewLeaveKey(Key);
 
+        // MU Skynet: a Treasure Goblin taken away alive near the hero has escaped (the server's 3 minutes are up);
+        // one that walks out of the view is farther away than this.
+        if (iIndex < MAX_CHARACTERS_CLIENT && pCha->Object.Live && pCha->MonsterIndex == MONSTER_TREASURE_GOBLIN
+            && pCha->Dead == 0 && Hero != nullptr && std::abs(pCha->PositionX - Hero->PositionX) <= 12
+            && std::abs(pCha->PositionY - Hero->PositionY) <= 12)
+        {
+            CreateTreasureGoblinEscape(&pCha->Object);
+        }
+
         DeleteCharacter(Key);
         CHARACTER* pPlayer = FindCharacterTagShopTitle(Key);
         if (pPlayer)

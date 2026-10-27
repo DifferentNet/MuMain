@@ -65,6 +65,8 @@ void ReadEquipmentExtended(int Key, BYTE flags, BYTE* Equipment, CHARACTER* pCha
                            OBJECT* pHelper = nullptr);
 void ClearCharacters(int Key = -1);
 void DeleteCharacter(int Key);
+// MU Skynet: the burst of gold the Treasure Goblin leaves when it escapes alive.
+void CreateTreasureGoblinEscape(OBJECT* o);
 void DeleteCharacter(CHARACTER* c, OBJECT* o);
 int FindCharacterIndex(int Key);
 int FindCharacterIndexByMonsterIndex(int Type);
