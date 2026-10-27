@@ -14112,4 +14112,10 @@
   <data name="GmPanelUndoConfirm" xml:space="preserve">
     <value>Отменить #%lld: %ls %ls?</value>
   </data>
+  <data name="OverheadPlayerNames" xml:space="preserve">
+    <value>Ники над игроками</value>
+  </data>
+  <data name="OverheadNpcNames" xml:space="preserve">
+    <value>Имена над NPC</value>
+  </data>
 </root>

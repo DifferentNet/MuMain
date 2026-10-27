@@ -19,6 +19,8 @@ Locale=en
 Font=
 RmlTheme=legacy
 UIScalePercent=100
+OverheadPlayerNames=1
+OverheadNpcNames=0
 [Camera]
 Zoom=1735
 [Render]

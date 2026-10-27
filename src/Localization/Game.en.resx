@@ -14489,4 +14489,10 @@
   <data name="GmPanelUndoConfirm" xml:space="preserve">
     <value>Undo #%lld: %ls %ls?</value>
   </data>
+  <data name="OverheadPlayerNames" xml:space="preserve">
+    <value>Names over players</value>
+  </data>
+  <data name="OverheadNpcNames" xml:space="preserve">
+    <value>Names over NPCs</value>
+  </data>
 </root>

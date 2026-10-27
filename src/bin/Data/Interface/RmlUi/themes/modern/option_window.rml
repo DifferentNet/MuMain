@@ -439,6 +439,14 @@
 							</div>
 						</div>
 					</div>
+					<div class="opt-row opt-toggle-row" data-event-click="option_toggle_overhead_player_names">
+						<span class="opt-label">{{overhead_player_names_label}}</span>
+						<div class="opt-control"><div class="opt-toggle" data-class-checked="overhead_player_names"><div class="opt-toggle-knob"></div></div></div>
+					</div>
+					<div class="opt-row opt-toggle-row" data-event-click="option_toggle_overhead_npc_names">
+						<span class="opt-label">{{overhead_npc_names_label}}</span>
+						<div class="opt-control"><div class="opt-toggle" data-class-checked="overhead_npc_names"><div class="opt-toggle-knob"></div></div></div>
+					</div>
 					<div class="opt-row opt-toggle-row" data-event-click="option_toggle_show_fps_counter">
 						<span class="opt-label">{{show_fps_counter_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="show_fps_counter"><div class="opt-toggle-knob"></div></div></div>

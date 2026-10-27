@@ -602,6 +602,16 @@ void MoveChat()
 }
 
 
+bool HasPlate(const CHARACTER* owner)
+{
+    for (const CHAT& c : Chat)
+    {
+        if (c.Owner == owner && (c.IDLifeTime > 0 || c.LifeTime[0] > 0))
+            return true;
+    }
+    return false;
+}
+
 void RenderBooleans()
 {
     g_pRenderText->SetFont(g_hFont);

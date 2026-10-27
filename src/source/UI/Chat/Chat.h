@@ -19,4 +19,6 @@ namespace UI::Chat
     void MoveChat();
     void SetPlayerColor(BYTE PK);
     void RenderBooleans();
+    // True while the character's name plate or chat bubble is up (hovered, speaking).
+    bool HasPlate(const CHARACTER* owner);
 }
