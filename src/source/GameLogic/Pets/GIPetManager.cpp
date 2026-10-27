@@ -762,6 +762,13 @@ static std::uint8_t g_tabBar = 0;
                        combatPowerText);
         }
 
+        wchar_t combatPowerChange[100]{};
+        if (int changeColor = TEXT_COLOR_WHITE;
+            GetItemCombatPowerChangeLine(pItem, combatPowerChange, std::size(combatPowerChange), changeColor))
+        {
+            appendLine(changeColor, false, false, L"%ls", combatPowerChange);
+        }
+
         for (int i = 0; i < pItem->SpecialNum; ++i)
         {
             SetPetItemConvert(pItem, &gs_PetInfo);

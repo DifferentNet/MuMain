@@ -341,21 +341,37 @@ std::uint16_t CSItemOption::GetMixItemLevel(const int Type) const
     return static_cast<std::uint16_t>(itemSType.byMixItemLevel[0] | (static_cast<std::uint16_t>(itemSType.byMixItemLevel[1]) << 8));
 }
 
-const wchar_t* CSItemOption::GetAncientSetName(const int itemType, const int ancientDiscriminator) const
+int CSItemOption::GetAncientSetNumber(const int itemType, const int ancientDiscriminator) const
 {
     const int setItemType = ancientDiscriminator % 0x04;
     if (setItemType <= 0 || itemType < 0 || itemType >= MAX_ITEM)
     {
-        return nullptr;
+        return 0;
     }
 
     const auto setNumber = m_ItemSetType[itemType].byOption[setItemType - 1];
-    if (setNumber == EMPTY_OPTION || setNumber == 0)
+    if (setNumber == EMPTY_OPTION || setNumber >= MAX_SET_OPTION)
     {
-        return nullptr;
+        return 0;
     }
 
-    return m_ItemSetOption[setNumber].strSetName;
+    return setNumber;
+}
+
+int CSItemOption::GetAncientSetItemCount(const int setNumber) const
+{
+    if (setNumber <= 0 || setNumber >= MAX_SET_OPTION)
+    {
+        return 0;
+    }
+
+    return m_ItemSetOption[setNumber].bySetItemCount;
+}
+
+const wchar_t* CSItemOption::GetAncientSetName(const int itemType, const int ancientDiscriminator) const
+{
+    const int setNumber = GetAncientSetNumber(itemType, ancientDiscriminator);
+    return setNumber == 0 ? nullptr : m_ItemSetOption[setNumber].strSetName;
 }
 
 bool CSItemOption::GetAncientItemName(wchar_t* target, const std::size_t targetSize, const int itemType,

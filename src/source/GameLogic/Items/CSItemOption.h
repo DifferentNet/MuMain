@@ -162,6 +162,10 @@ public:
     bool	GetAncientItemName(wchar_t* target, std::size_t targetSize, int itemType, int ancientDiscriminator) const;
     // The name of an ancient item's set ("Enis", "Bragi"); nullptr when the item has no set of that type.
     const wchar_t* GetAncientSetName(int itemType, int ancientDiscriminator) const;
+    // The number of an ancient item's set; 0 when the item has no set of that type.
+    int GetAncientSetNumber(int itemType, int ancientDiscriminator) const;
+    // How many pieces the set has (0 for no set).
+    int GetAncientSetItemCount(int setNumber) const;
 
     void	PlusSpecial(std::uint16_t* Value, int Special) const;
     void	PlusSpecialPercent(std::uint16_t* Value, int Special) const;

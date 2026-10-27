@@ -58,6 +58,9 @@
 #include "UI/Core/WindowSystem.h"
 #include "Network/Server/ServerListManager.h"
 #include <algorithm>
+#include <cstdlib>
+#include <iterator>
+#include <optional>
 #include <time.h>
 #include <unordered_set>
 #include <vector>
@@ -1695,17 +1698,44 @@ void GetSpecialOptionText(int Type, wchar_t* Text, WORD Option, BYTE Value, int 
     }
 }
 
-// The tooltip's Combat Power lines (MU Skynet): what the item adds to the character's Combat Power while it is
-// equipped, the same number the server's /cp counts; nothing for items the formula leaves out.
-static void RenderItemCombatPower(const ITEM* ip)
+bool GetItemCombatPowerChangeLine(const ITEM* ip, wchar_t* text, std::size_t textSize, int& color)
 {
-    const GameLogic::Items::CombatPowerItem item = GameLogic::Items::DescribeForCombatPower(*ip);
-    const int points = GameLogic::Items::GetItemCombatPower(item);
-    if (points <= 0)
+    if (ip == nullptr || text == nullptr || textSize == 0)
     {
-        return;
+        return false;
     }
 
+    const std::optional<int> change = GameLogic::Items::GetHeroCombatPowerChange(*ip);
+    if (!change.has_value())
+    {
+        return false;
+    }
+
+    if (*change == 0)
+    {
+        if (GameLogic::Items::GetItemCombatPower(GameLogic::Items::DescribeForCombatPower(*ip)) <= 0)
+        {
+            return false;
+        }
+
+        mu_swprintf_s(text, textSize, L"%ls", I18N::Game::ItemCombatPowerNoChange);
+        color = TEXT_COLOR_GRAY;
+        return true;
+    }
+
+    wchar_t amount[32]{};
+    ConvertGold(std::abs(*change), amount);
+    wchar_t signedAmount[40]{};
+    mu_swprintf(signedAmount, L"%ls%ls", *change > 0 ? L"+" : L"-", amount);
+    mu_swprintf_s(text, textSize, I18N::Game::ItemCombatPowerChangeS, signedAmount);
+    color = *change > 0 ? TEXT_COLOR_GREEN : TEXT_COLOR_RED;
+    return true;
+}
+
+// The tooltip's Combat Power lines (MU Skynet): what the item adds to the character's Combat Power while it is
+// equipped, the same number the server's /cp counts, and for an ancient piece what its set adds.
+static void RenderItemOwnCombatPower(const ITEM* ip, const GameLogic::Items::CombatPowerItem& item, int points)
+{
     wchar_t pointsText[32]{};
     ConvertGold(points, pointsText);
     if (ip->Durability == 0)
@@ -1729,6 +1759,26 @@ static void RenderItemCombatPower(const ITEM* ip)
         ConvertGold(set.WholeSet, wholeSetText);
         mu_swprintf(TextList[TextNum], I18N::Game::ItemCombatPowerSetDS, set.PerFurtherPiece, wholeSetText);
         TextListColor[TextNum] = TEXT_COLOR_REDPURPLE;
+        TextBold[TextNum] = false;
+        TextNum++;
+    }
+}
+
+// The Combat Power lines of the tooltip: the item's own (nothing for items the formula leaves out) and how the
+// hero's Combat Power changes with the item put on.
+static void RenderItemCombatPower(const ITEM* ip)
+{
+    const GameLogic::Items::CombatPowerItem item = GameLogic::Items::DescribeForCombatPower(*ip);
+    const int points = GameLogic::Items::GetItemCombatPower(item);
+    if (points > 0)
+    {
+        RenderItemOwnCombatPower(ip, item, points);
+    }
+
+    int color = TEXT_COLOR_WHITE;
+    if (GetItemCombatPowerChangeLine(ip, TextList[TextNum], std::size(TextList[TextNum]), color))
+    {
+        TextListColor[TextNum] = color;
         TextBold[TextNum] = false;
         TextNum++;
     }
