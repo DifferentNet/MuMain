@@ -201,6 +201,8 @@ std::wstring QuestText(const Quest& quest)
         return Format(I18N::Game::BattlePassQuestUpgrade, target);
     if (id == L"w-craft")
         return Format(I18N::Game::BattlePassQuestCraft, target);
+    if (id == L"w-goblin")
+        return Format(I18N::Game::BattlePassQuestGoblins, target);
     if (id.starts_with(L"s-tier") && id.size() > 6)
         return Format(I18N::Game::BattlePassQuestTier, static_cast<int>(std::wcstol(id.c_str() + 6, nullptr, 10)));
     if (id == L"s-cc")
@@ -230,8 +232,9 @@ std::wstring QuestProgress(const Quest& quest)
     return Grouped(quest.Progress) + L" / " + Grouped(quest.Target);
 }
 
-// An item this client has in its item list: a newer server may give one it doesn't know yet (Jewel of Fate, 14:161,
-// comes with its own client update).
+// An item this client has in its item list: a newer server may give one it doesn't know yet (a new item comes with
+// its own client update). A slot this client already fills with another item shows that item's name: 14:161 is
+// Jewel of Elevation here until the Jewel of Fate's client update renames it.
 bool KnownItem(const RewardItem& item)
 {
     if (item.Group < 0 || item.Group >= MAX_ITEM_TYPE || item.Number < 0 || item.Number >= MAX_ITEM_INDEX)
