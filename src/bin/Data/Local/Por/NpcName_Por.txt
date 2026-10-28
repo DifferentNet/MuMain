@@ -675,4 +675,8 @@
 // ·°Å°¾ÆÀÌÅÛ NPC Ãß°¡ 2010-09-01 ÀÌ±â¼ö																													
 579	1	"David"
 585	1	"Scarecrow"		
+620	1	"Treasure Goblin"
+621	1	"Jeweler Goblin"
+622	1	"Armorer Goblin"
+623	1	"Rainbow Goblin"
 end		
