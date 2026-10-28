@@ -2135,25 +2135,10 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
             return false;
         }
 
+        // No personal store: the auction at Raul the Auctioneer replaces it (2026-10-28), so say where to sell.
         if (wcscmp(Text, I18N::Game::PersonalStore1117) == 0 || wcsicmp(Text, L"/personalshop") == 0)
         {
-            if (gMapManager.InChaosCastle() == true)
-            {
-                g_pSystemLogBox->AddText(I18N::Game::CanTBeInChaosCastle, mu::ui::window::TYPE_SYSTEM_MESSAGE);
-                return false;
-            }
-
-            int level = CharacterAttribute->Level;
-            if (level >= 6)
-            {
-                g_pNewUISystem->Show(mu::ui::window::INTERFACE_MYSHOP_INVENTORY);
-            }
-            else
-            {
-                wchar_t szError[48] = L"";
-                mu_swprintf(szError, I18N::Game::OnlyAboveLevelDCanUse, 6);
-                g_pSystemLogBox->AddText(szError, mu::ui::window::TYPE_SYSTEM_MESSAGE);
-            }
+            g_pSystemLogBox->AddText(I18N::Game::AuctionStoreClosed, mu::ui::window::TYPE_SYSTEM_MESSAGE);
             return true;
         }
         if (wcsstr(Text, I18N::Game::Buy) != nullptr || wcsstr(Text, L"/purchase") != nullptr)

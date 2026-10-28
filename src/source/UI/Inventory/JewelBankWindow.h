@@ -21,6 +21,8 @@ namespace mu::ui::window
 // A row of the jewel bank window: a kind of jewel, how many the bank holds, and whether its buttons work.
 struct JewelBankRow
 {
+    // Its kind, an index into GameLogic::JewelBank::Kinds() (the buttons send it).
+    int kind = 0;
     Rml::String name;
     // The name's size, shrunk to fit its line (the native renderer's rule).
     float namePx = 0.f;
@@ -90,6 +92,8 @@ private:
     void RenderItems();
 
     CManager* m_pNewUIMng = nullptr;
+    // The kinds of the rows shown, in their order: an optional kind the server doesn't keep has no row.
+    std::vector<int> m_shownKinds;
     std::chrono::steady_clock::time_point m_openedAt{};
     // After a deposit or a withdrawal the counts are asked for again at this time; none while it is the epoch.
     std::chrono::steady_clock::time_point m_refreshDue{};

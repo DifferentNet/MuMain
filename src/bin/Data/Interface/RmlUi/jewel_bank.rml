@@ -10,8 +10,8 @@
 	     docked beside it: the title, a status line (a hint, or why there are no counts), then a row per kind of
 	     jewel -- its icon box, which C++ draws the jewel over (#jb_items), its name, the count in the bank with
 	     the jewels in the inventory in brackets, a deposit button and a withdraw button. The workspace slot places
-	     and scales #panel. Clicks are queued with jewel_bank_deposit(i), jewel_bank_withdraw(i) and
-	     jewel_bank_exit; the withdraw button asks how many in a dialog. -->
+	     and scales #panel. Clicks are queued with jewel_bank_deposit(kind), jewel_bank_withdraw(kind) and
+	     jewel_bank_exit (a kind the server doesn't keep, an optional one, has no row); the withdraw button asks how many in a dialog. -->
 	<div id="panel" data-model="jewel_bank">
 		<div class="frame-piece frame-top"></div>
 		<div class="frame-piece frame-left"></div>
@@ -27,9 +27,9 @@
 				<span class="sharp-text jb-name" data-style-font-size="r.name_px + 'px'">{{r.name}}</span>
 				<span class="sharp-text jb-count" data-style-font-size="text_px + 'px'">{{r.count}}</span>
 				<div class="jb-btn jb-deposit" data-class-disabled="!r.can_deposit"
-				     data-event-click="jewel_bank_deposit(it_index)" data-attr-data-hint="deposit_tooltip"><span class="jb-glyph">&#8595;</span></div>
+				     data-event-click="jewel_bank_deposit(r.kind)" data-attr-data-hint="deposit_tooltip"><span class="jb-glyph">&#8595;</span></div>
 				<div class="jb-btn jb-withdraw" data-class-disabled="!r.can_withdraw"
-				     data-event-click="jewel_bank_withdraw(it_index)" data-attr-data-hint="withdraw_tooltip"><span class="jb-glyph">&#8593;</span></div>
+				     data-event-click="jewel_bank_withdraw(r.kind)" data-attr-data-hint="withdraw_tooltip"><span class="jb-glyph">&#8593;</span></div>
 			</div>
 		</div>
 

@@ -92,6 +92,7 @@ CSystem::CSystem()
     m_pNewBattlePassWindow = nullptr;
     m_pNewTierMapsWindow = nullptr;
     m_pNewJewelBankWindow = nullptr;
+    m_pNewAuctionWindow = nullptr;
     m_pNewGmPanelWindow = nullptr;
     m_pNewTitlesWindow = nullptr;
     m_pNewItemExplanationWindow = nullptr;
@@ -406,6 +407,12 @@ bool CSystem::LoadMainSceneInterface()
         return false;
     }
 
+    m_pNewAuctionWindow = new CAuctionWindow;
+    if (m_pNewAuctionWindow->Create(m_pNewUIMng) == false)
+    {
+        return false;
+    }
+
     m_pNewGmPanelWindow = new CGmPanelWindow;
     if (m_pNewGmPanelWindow->Create(m_pNewUIMng) == false)
     {
@@ -642,6 +649,7 @@ bool CSystem::LoadMainSceneInterface()
     slot(INTERFACE_STORAGE_EXT, "storage_extension", m_pNewStorageInventoryExt, "storage_ext.rml");
     slot(INTERFACE_JEWEL_BANK, "jewel_bank", m_pNewJewelBankWindow, "jewel_bank.rml");
     slot(INTERFACE_NPCSHOP, "npc_shop", m_pNewNPCShop, "npc_shop.rml");
+    slot(INTERFACE_AUCTION, "auction", m_pNewAuctionWindow, "auction.rml");
     slot(INTERFACE_MIXINVENTORY, "mix", m_pNewMixInventory, "mix_inventory.rml");
     slot(INTERFACE_TRADE, "trade", m_pNewTrade, "trade.rml");
     slot(INTERFACE_MYSHOP_INVENTORY, "my_shop", m_pNewMyShopInventory, "my_shop.rml");
@@ -697,6 +705,7 @@ void CSystem::UnloadMainSceneInterface()
     SAFE_DELETE(m_pNewBattlePassWindow);
     SAFE_DELETE(m_pNewTierMapsWindow);
     SAFE_DELETE(m_pNewJewelBankWindow);
+    SAFE_DELETE(m_pNewAuctionWindow);
     SAFE_DELETE(m_pNewGmPanelWindow);
     SAFE_DELETE(m_pNewTitlesWindow);
     SAFE_DELETE(m_pNewItemExplanationWindow);
@@ -1009,6 +1018,14 @@ void CSystem::Show(DWORD dwKey)
     {
         // Beside the inventory, which stays open with it (and the vault, if open).
         m_pNewJewelBankWindow->OpenningProcess();
+    }
+    else if (dwKey == INTERFACE_AUCTION)
+    {
+        // Raul the Auctioneer's: an NPC window with the inventory beside it (the Sell tab lists its bag).
+        HideAllGroupA();
+        m_pNewAuctionWindow->OpenningProcess();
+        m_pNewUIMng->ShowInterface(INTERFACE_INVENTORY);
+        g_pMainFrame->SetBtnState(MAINFRAME_BTN_MYINVEN, true);
     }
     else if (dwKey == INTERFACE_GUILDINFO)
     {
@@ -1479,6 +1496,10 @@ void CSystem::Hide(DWORD dwKey)
     {
         m_pNewJewelBankWindow->ClosingProcess();
     }
+    else if (dwKey == INTERFACE_AUCTION)
+    {
+        m_pNewAuctionWindow->ClosingProcess();
+    }
     else if (dwKey == INTERFACE_WINDOW_MENU)
     {
         g_pMainFrame->SetBtnState(MAINFRAME_BTN_WINDOW, false);
@@ -1703,6 +1724,7 @@ void CSystem::HideAllGroupA()
         INTERFACE_GM_PANEL,
         INTERFACE_TITLES,
         INTERFACE_JEWEL_BANK,
+        INTERFACE_AUCTION,
         INTERFACE_GUILDINFO,
         INTERFACE_KANTURU2ND_ENTERNPC,
         INTERFACE_DUELWATCH,
@@ -1759,6 +1781,7 @@ void CSystem::HideAllGroupB()
         INTERFACE_GM_PANEL,
         INTERFACE_TITLES,
         INTERFACE_JEWEL_BANK,
+        INTERFACE_AUCTION,
         INTERFACE_GUILDINFO,
         INTERFACE_KANTURU2ND_ENTERNPC,
         INTERFACE_CURSEDTEMPLE_NPC,
@@ -2388,6 +2411,11 @@ CTierMapsWindow* CSystem::GetUI_NewTierMapsWindow() const
 CJewelBankWindow* CSystem::GetUI_NewJewelBankWindow() const
 {
     return m_pNewJewelBankWindow;
+}
+
+CAuctionWindow* CSystem::GetUI_NewAuctionWindow() const
+{
+    return m_pNewAuctionWindow;
 }
 
 CGmPanelWindow* CSystem::GetUI_NewGmPanelWindow() const

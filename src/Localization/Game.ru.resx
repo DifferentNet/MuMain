@@ -14562,4 +14562,232 @@
   <data name="TitlesBonusDamage" xml:space="preserve">
     <value>к урону</value>
   </data>
+  <data name="AuctionTitle" xml:space="preserve">
+    <value>Аукцион</value>
+  </data>
+  <data name="AuctionTabSearch" xml:space="preserve">
+    <value>Поиск</value>
+  </data>
+  <data name="AuctionTabMine" xml:space="preserve">
+    <value>Мои лоты</value>
+  </data>
+  <data name="AuctionTabSell" xml:space="preserve">
+    <value>Продать</value>
+  </data>
+  <data name="AuctionCatAll" xml:space="preserve">
+    <value>Все вещи</value>
+  </data>
+  <data name="AuctionCatWeapons" xml:space="preserve">
+    <value>Оружие</value>
+  </data>
+  <data name="AuctionCatShields" xml:space="preserve">
+    <value>Щиты</value>
+  </data>
+  <data name="AuctionCatArmor" xml:space="preserve">
+    <value>Броня</value>
+  </data>
+  <data name="AuctionCatWings" xml:space="preserve">
+    <value>Крылья и др.</value>
+  </data>
+  <data name="AuctionCatJewelry" xml:space="preserve">
+    <value>Кольца, питомцы</value>
+  </data>
+  <data name="AuctionCatOther" xml:space="preserve">
+    <value>Камни, разное</value>
+  </data>
+  <data name="AuctionCatScrolls" xml:space="preserve">
+    <value>Свитки</value>
+  </data>
+  <data name="AuctionMyClass" xml:space="preserve">
+    <value>Мой класс</value>
+  </data>
+  <data name="AuctionExcellent" xml:space="preserve">
+    <value>Отличные</value>
+  </data>
+  <data name="AuctionAncient" xml:space="preserve">
+    <value>Древние</value>
+  </data>
+  <data name="AuctionSortNew" xml:space="preserve">
+    <value>Новые</value>
+  </data>
+  <data name="AuctionSortEnd" xml:space="preserve">
+    <value>Скоро конец</value>
+  </data>
+  <data name="AuctionSortCp" xml:space="preserve">
+    <value>По мощи</value>
+  </data>
+  <data name="AuctionSortLevel" xml:space="preserve">
+    <value>По уровню</value>
+  </data>
+  <data name="AuctionSortName" xml:space="preserve">
+    <value>По имени</value>
+  </data>
+  <data name="AuctionFind" xml:space="preserve">
+    <value>Найти</value>
+  </data>
+  <data name="AuctionAsking" xml:space="preserve">
+    <value>Запрос к серверу...</value>
+  </data>
+  <data name="AuctionNoAnswer" xml:space="preserve">
+    <value>Сервер не ответил.</value>
+  </data>
+  <data name="AuctionPageInfo" xml:space="preserve">
+    <value>Лотов: %d, стр. %d из %d</value>
+  </data>
+  <data name="AuctionNoLots" xml:space="preserve">
+    <value>Ничего не найдено.</value>
+  </data>
+  <data name="AuctionPickLot" xml:space="preserve">
+    <value>Выберите лот.</value>
+  </data>
+  <data name="AuctionSeller" xml:space="preserve">
+    <value>Продавец: %ls</value>
+  </data>
+  <data name="AuctionCp" xml:space="preserve">
+    <value>Мощь %ls</value>
+  </data>
+  <data name="AuctionPrice" xml:space="preserve">
+    <value>Цена: %ls</value>
+  </data>
+  <data name="AuctionYourBank" xml:space="preserve">
+    <value>В банке: %ls</value>
+  </data>
+  <data name="AuctionOwnLot" xml:space="preserve">
+    <value>Это ваш лот.</value>
+  </data>
+  <data name="AuctionBuy" xml:space="preserve">
+    <value>Купить</value>
+  </data>
+  <data name="AuctionBuyConfirm" xml:space="preserve">
+    <value>Купить %ls у %ls?</value>
+  </data>
+  <data name="AuctionBuyFromBank" xml:space="preserve">
+    <value>Камни спишутся из банка камней.</value>
+  </data>
+  <data name="AuctionMineInfo" xml:space="preserve">
+    <value>Ваших лотов: %d, в продаже %d из %d</value>
+  </data>
+  <data name="AuctionMineNone" xml:space="preserve">
+    <value>У вас нет лотов.</value>
+  </data>
+  <data name="AuctionStateActive" xml:space="preserve">
+    <value>В продаже, осталось %ls</value>
+  </data>
+  <data name="AuctionStateSold" xml:space="preserve">
+    <value>Продано: %ls</value>
+  </data>
+  <data name="AuctionStateUnsold" xml:space="preserve">
+    <value>Не продано: заберите</value>
+  </data>
+  <data name="AuctionStateBusy" xml:space="preserve">
+    <value>Занято, подождите</value>
+  </data>
+  <data name="AuctionTakeJewels" xml:space="preserve">
+    <value>«Забрать» кладёт камни в банк.</value>
+  </data>
+  <data name="AuctionTakeItem" xml:space="preserve">
+    <value>«Забрать» вернёт вещь в сумку.</value>
+  </data>
+  <data name="AuctionCancel" xml:space="preserve">
+    <value>Снять</value>
+  </data>
+  <data name="AuctionTake" xml:space="preserve">
+    <value>Забрать</value>
+  </data>
+  <data name="AuctionTakeAll" xml:space="preserve">
+    <value>Забрать всё</value>
+  </data>
+  <data name="AuctionRefresh" xml:space="preserve">
+    <value>Обновить</value>
+  </data>
+  <data name="AuctionCancelConfirm" xml:space="preserve">
+    <value>Снять %ls с продажи? Сбор не вернётся.</value>
+  </data>
+  <data name="AuctionSellInfo" xml:space="preserve">
+    <value>Выберите вещь из сумки.</value>
+  </data>
+  <data name="AuctionSellEmpty" xml:space="preserve">
+    <value>Сумка пуста.</value>
+  </data>
+  <data name="AuctionDays" xml:space="preserve">
+    <value>%d дн.</value>
+  </data>
+  <data name="AuctionFee" xml:space="preserve">
+    <value>Сбор %ls зен, в продаже %d из %d</value>
+  </data>
+  <data name="AuctionNoKind" xml:space="preserve">
+    <value>-</value>
+  </data>
+  <data name="AuctionSell" xml:space="preserve">
+    <value>Выставить</value>
+  </data>
+  <data name="AuctionClear" xml:space="preserve">
+    <value>Сбросить</value>
+  </data>
+  <data name="AuctionSellConfirm" xml:space="preserve">
+    <value>Выставить %ls на %d дн.?</value>
+  </data>
+  <data name="AuctionSellFee" xml:space="preserve">
+    <value>Сбор: %ls зен (не возвращается).</value>
+  </data>
+  <data name="AuctionPickItem" xml:space="preserve">
+    <value>Выберите вещь для продажи.</value>
+  </data>
+  <data name="AuctionNeedCount" xml:space="preserve">
+    <value>Укажите количество: от 1 до %d.</value>
+  </data>
+  <data name="AuctionKindTwice" xml:space="preserve">
+    <value>Камень указан в цене дважды.</value>
+  </data>
+  <data name="AuctionNeedPrice" xml:space="preserve">
+    <value>Укажите цену: камень и количество.</value>
+  </data>
+  <data name="AuctionLeftDays" xml:space="preserve">
+    <value>%dд %dч</value>
+  </data>
+  <data name="AuctionLeftHours" xml:space="preserve">
+    <value>%dч %dм</value>
+  </data>
+  <data name="AuctionLeftMinutes" xml:space="preserve">
+    <value>%dм</value>
+  </data>
+  <data name="AuctionKindChaos" xml:space="preserve">
+    <value>Chaos</value>
+  </data>
+  <data name="AuctionKindLife" xml:space="preserve">
+    <value>Life</value>
+  </data>
+  <data name="AuctionKindSoul" xml:space="preserve">
+    <value>Soul</value>
+  </data>
+  <data name="AuctionKindBless" xml:space="preserve">
+    <value>Bless</value>
+  </data>
+  <data name="AuctionKindCreation" xml:space="preserve">
+    <value>Creation</value>
+  </data>
+  <data name="AuctionKindGuardian" xml:space="preserve">
+    <value>Guardian</value>
+  </data>
+  <data name="AuctionKindHarmony" xml:space="preserve">
+    <value>Harmony</value>
+  </data>
+  <data name="AuctionKindGemstone" xml:space="preserve">
+    <value>Gemstone</value>
+  </data>
+  <data name="AuctionKindLowerStone" xml:space="preserve">
+    <value>Lower stone</value>
+  </data>
+  <data name="AuctionKindHigherStone" xml:space="preserve">
+    <value>Higher stone</value>
+  </data>
+  <data name="AuctionKindAncient" xml:space="preserve">
+    <value>Ancient</value>
+  </data>
+  <data name="AuctionKindFate" xml:space="preserve">
+    <value>Fate</value>
+  </data>
+  <data name="AuctionStoreClosed" xml:space="preserve">
+    <value>Личных магазинов здесь нет: продавайте вещи на аукционе у Рауля (Лорен, Девиас).</value>
+  </data>
 </root>

@@ -1080,14 +1080,9 @@ void CMyInventory::OpenningProcess()
         m_bRepairEnableLevel = false;
     }
 
-    if (wLevel >= 6)
-    {
-        m_bMyShopOpen = true;
-    }
-    else
-    {
-        m_bMyShopOpen = false;
-    }
+    // No personal store: the auction at Raul the Auctioneer replaces it (2026-10-28). Off, the inventory hides the
+    // store's button and S does nothing.
+    m_bMyShopOpen = false;
 
     if (g_QuestMng.IsIndexInCurQuestIndexList(0x1000F))
     {

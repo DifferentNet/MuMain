@@ -11,24 +11,25 @@
 .jb-status { left: 10px; top: 28px; text-align: center; color: token(text-muted); }
 
 #jb_rows { position: absolute; left: 10px; top: 44px; width: 170px; }
-.jb-row { position: relative; display: block; width: 170px; height: 37px; }
+/* 31 px rows: twelve kinds fit the dock height (44 + 12 x 31 = 416). */
+.jb-row { position: relative; display: block; width: 170px; height: 31px; }
 .jb-icon {
 	position: absolute;
 	left: 1px;
-	top: 3px;
-	width: 26px;
-	height: 30px;
+	top: 2px;
+	width: 24px;
+	height: 27px;
 	background-color: token(surface-recessed);
 	border: 1px token(border-frame);
 	border-radius: token(radius-sm)px;
 	pointer-events: none;
 }
-.jb-name { left: 32px; top: 3px; color: token(text-primary); }
-.jb-count { left: 32px; top: 20px; font-weight: bold; color: token(accent-gold); }
+.jb-name { left: 30px; top: 2px; color: token(text-primary); }
+.jb-count { left: 30px; top: 16px; font-weight: bold; color: token(accent-gold); }
 
 .jb-btn {
 	position: absolute;
-	top: 15px;
+	top: 10px;
 	width: 26px;
 	height: 20px;
 	cursor: pointer;

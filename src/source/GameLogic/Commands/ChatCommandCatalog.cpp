@@ -70,8 +70,6 @@ void AppendClientCommands(std::vector<ChatCommand>& commands)
     commands.push_back(ClientCommand(L"/rivaloff", L"Guild masters: end the hostility with the guild of the guild master you selected."));
     commands.push_back(ClientCommand(L"/duelstart", L"Challenge the player you selected to a duel."));
     commands.push_back(ClientCommand(L"/duelend", L"End your duel."));
-    commands.push_back(ClientCommand(L"/personalshop", L"Open your personal store, to sell items to other players."));
-    commands.push_back(ClientCommand(L"/purchase", L"Open the personal store of the player you selected."));
     commands.push_back(ClientCommand(L"/filter", L"Show only the chat lines with these words (up to five). Without words, everything shows again.", {words}));
     commands.push_back(ClientCommand(L"/1", L"Save a chat line as macro 1; Alt+1 says it. /2 to /9 and /0 do the same for Alt+2 to Alt+0.", {text}));
 }

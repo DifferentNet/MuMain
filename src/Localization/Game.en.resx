@@ -14939,4 +14939,232 @@
   <data name="TitlesBonusDamage" xml:space="preserve">
     <value>damage</value>
   </data>
+  <data name="AuctionTitle" xml:space="preserve">
+    <value>Auction</value>
+  </data>
+  <data name="AuctionTabSearch" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="AuctionTabMine" xml:space="preserve">
+    <value>My lots</value>
+  </data>
+  <data name="AuctionTabSell" xml:space="preserve">
+    <value>Sell</value>
+  </data>
+  <data name="AuctionCatAll" xml:space="preserve">
+    <value>All items</value>
+  </data>
+  <data name="AuctionCatWeapons" xml:space="preserve">
+    <value>Weapons</value>
+  </data>
+  <data name="AuctionCatShields" xml:space="preserve">
+    <value>Shields</value>
+  </data>
+  <data name="AuctionCatArmor" xml:space="preserve">
+    <value>Armor</value>
+  </data>
+  <data name="AuctionCatWings" xml:space="preserve">
+    <value>Wings &amp; more</value>
+  </data>
+  <data name="AuctionCatJewelry" xml:space="preserve">
+    <value>Rings, pets</value>
+  </data>
+  <data name="AuctionCatOther" xml:space="preserve">
+    <value>Jewels, other</value>
+  </data>
+  <data name="AuctionCatScrolls" xml:space="preserve">
+    <value>Scrolls</value>
+  </data>
+  <data name="AuctionMyClass" xml:space="preserve">
+    <value>My class</value>
+  </data>
+  <data name="AuctionExcellent" xml:space="preserve">
+    <value>Excellent</value>
+  </data>
+  <data name="AuctionAncient" xml:space="preserve">
+    <value>Ancient</value>
+  </data>
+  <data name="AuctionSortNew" xml:space="preserve">
+    <value>Newest</value>
+  </data>
+  <data name="AuctionSortEnd" xml:space="preserve">
+    <value>Ending</value>
+  </data>
+  <data name="AuctionSortCp" xml:space="preserve">
+    <value>By CP</value>
+  </data>
+  <data name="AuctionSortLevel" xml:space="preserve">
+    <value>By level</value>
+  </data>
+  <data name="AuctionSortName" xml:space="preserve">
+    <value>By name</value>
+  </data>
+  <data name="AuctionFind" xml:space="preserve">
+    <value>Find</value>
+  </data>
+  <data name="AuctionAsking" xml:space="preserve">
+    <value>Asking the server...</value>
+  </data>
+  <data name="AuctionNoAnswer" xml:space="preserve">
+    <value>The server didn't answer.</value>
+  </data>
+  <data name="AuctionPageInfo" xml:space="preserve">
+    <value>Lots: %d, page %d of %d</value>
+  </data>
+  <data name="AuctionNoLots" xml:space="preserve">
+    <value>Nothing on sale.</value>
+  </data>
+  <data name="AuctionPickLot" xml:space="preserve">
+    <value>Pick a lot.</value>
+  </data>
+  <data name="AuctionSeller" xml:space="preserve">
+    <value>Seller: %ls</value>
+  </data>
+  <data name="AuctionCp" xml:space="preserve">
+    <value>CP %ls</value>
+  </data>
+  <data name="AuctionPrice" xml:space="preserve">
+    <value>Price: %ls</value>
+  </data>
+  <data name="AuctionYourBank" xml:space="preserve">
+    <value>In your bank: %ls</value>
+  </data>
+  <data name="AuctionOwnLot" xml:space="preserve">
+    <value>This lot is yours.</value>
+  </data>
+  <data name="AuctionBuy" xml:space="preserve">
+    <value>Buy</value>
+  </data>
+  <data name="AuctionBuyConfirm" xml:space="preserve">
+    <value>Buy %ls from %ls?</value>
+  </data>
+  <data name="AuctionBuyFromBank" xml:space="preserve">
+    <value>The jewels come from your jewel bank.</value>
+  </data>
+  <data name="AuctionMineInfo" xml:space="preserve">
+    <value>Your lots: %d, on sale %d of %d</value>
+  </data>
+  <data name="AuctionMineNone" xml:space="preserve">
+    <value>You have no lots.</value>
+  </data>
+  <data name="AuctionStateActive" xml:space="preserve">
+    <value>On sale, %ls left</value>
+  </data>
+  <data name="AuctionStateSold" xml:space="preserve">
+    <value>Sold to %ls</value>
+  </data>
+  <data name="AuctionStateUnsold" xml:space="preserve">
+    <value>Not sold: take it back</value>
+  </data>
+  <data name="AuctionStateBusy" xml:space="preserve">
+    <value>Busy, a moment</value>
+  </data>
+  <data name="AuctionTakeJewels" xml:space="preserve">
+    <value>Take brings the jewels into the bank.</value>
+  </data>
+  <data name="AuctionTakeItem" xml:space="preserve">
+    <value>Take brings the item into the bag.</value>
+  </data>
+  <data name="AuctionCancel" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="AuctionTake" xml:space="preserve">
+    <value>Take</value>
+  </data>
+  <data name="AuctionTakeAll" xml:space="preserve">
+    <value>Take all</value>
+  </data>
+  <data name="AuctionRefresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="AuctionCancelConfirm" xml:space="preserve">
+    <value>Take %ls off sale? The fee isn't returned.</value>
+  </data>
+  <data name="AuctionSellInfo" xml:space="preserve">
+    <value>Pick an item of your bag.</value>
+  </data>
+  <data name="AuctionSellEmpty" xml:space="preserve">
+    <value>Your bag is empty.</value>
+  </data>
+  <data name="AuctionDays" xml:space="preserve">
+    <value>%d d</value>
+  </data>
+  <data name="AuctionFee" xml:space="preserve">
+    <value>Fee %ls zen, on sale %d of %d</value>
+  </data>
+  <data name="AuctionNoKind" xml:space="preserve">
+    <value>-</value>
+  </data>
+  <data name="AuctionSell" xml:space="preserve">
+    <value>Put on sale</value>
+  </data>
+  <data name="AuctionClear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="AuctionSellConfirm" xml:space="preserve">
+    <value>Put %ls on sale? Days: %d.</value>
+  </data>
+  <data name="AuctionSellFee" xml:space="preserve">
+    <value>Fee: %ls zen (not returned).</value>
+  </data>
+  <data name="AuctionPickItem" xml:space="preserve">
+    <value>Pick the item to sell.</value>
+  </data>
+  <data name="AuctionNeedCount" xml:space="preserve">
+    <value>Type how many, 1 to %d.</value>
+  </data>
+  <data name="AuctionKindTwice" xml:space="preserve">
+    <value>A jewel is in the price twice.</value>
+  </data>
+  <data name="AuctionNeedPrice" xml:space="preserve">
+    <value>Set the price: a jewel and how many.</value>
+  </data>
+  <data name="AuctionLeftDays" xml:space="preserve">
+    <value>%dd %dh</value>
+  </data>
+  <data name="AuctionLeftHours" xml:space="preserve">
+    <value>%dh %dm</value>
+  </data>
+  <data name="AuctionLeftMinutes" xml:space="preserve">
+    <value>%dm</value>
+  </data>
+  <data name="AuctionKindChaos" xml:space="preserve">
+    <value>Chaos</value>
+  </data>
+  <data name="AuctionKindLife" xml:space="preserve">
+    <value>Life</value>
+  </data>
+  <data name="AuctionKindSoul" xml:space="preserve">
+    <value>Soul</value>
+  </data>
+  <data name="AuctionKindBless" xml:space="preserve">
+    <value>Bless</value>
+  </data>
+  <data name="AuctionKindCreation" xml:space="preserve">
+    <value>Creation</value>
+  </data>
+  <data name="AuctionKindGuardian" xml:space="preserve">
+    <value>Guardian</value>
+  </data>
+  <data name="AuctionKindHarmony" xml:space="preserve">
+    <value>Harmony</value>
+  </data>
+  <data name="AuctionKindGemstone" xml:space="preserve">
+    <value>Gemstone</value>
+  </data>
+  <data name="AuctionKindLowerStone" xml:space="preserve">
+    <value>Lower stone</value>
+  </data>
+  <data name="AuctionKindHigherStone" xml:space="preserve">
+    <value>Higher stone</value>
+  </data>
+  <data name="AuctionKindAncient" xml:space="preserve">
+    <value>Ancient</value>
+  </data>
+  <data name="AuctionKindFate" xml:space="preserve">
+    <value>Fate</value>
+  </data>
+  <data name="AuctionStoreClosed" xml:space="preserve">
+    <value>There are no personal stores here: sell your items at the auction of Raul the Auctioneer (Lorencia, Devias).</value>
+  </data>
 </root>

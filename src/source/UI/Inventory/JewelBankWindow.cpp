@@ -33,8 +33,8 @@ namespace
 // Without an answer this long after opening, the server doesn't have the jewel bank.
 constexpr auto AnswerTimeout = std::chrono::seconds(5);
 // The jewel icon's box in a row (reference px; jewel_bank.rcss places it).
-constexpr float IconWidth = 26.f;
-constexpr float IconHeight = 30.f;
+constexpr float IconWidth = 24.f;
+constexpr float IconHeight = 27.f;
 // The most a withdrawal can ask for: the bank keeps at most a million of a kind.
 constexpr int MaximumWithdrawDigits = 7;
 
@@ -67,7 +67,7 @@ int InventoryJewels(const GameLogic::JewelBank::Kind& kind)
             continue;
         if (item->Type == kind.itemType)
             count += 1;
-        else if (item->Type == kind.packedType)
+        else if (kind.packedType >= 0 && item->Type == kind.packedType)
             count += 10 * (item->Level + 1);
     }
     return count;
@@ -229,6 +229,7 @@ void mu::ui::window::CJewelBankWindow::AskWithdrawAmount(int kind)
 void mu::ui::window::CJewelBankWindow::BindRmlModel(Rml::DataModelConstructor& c, JewelBankRmlModel& model)
 {
     auto rowType = c.RegisterStruct<JewelBankRow>();
+    rowType.RegisterMember("kind", &JewelBankRow::kind);
     rowType.RegisterMember("name", &JewelBankRow::name);
     rowType.RegisterMember("name_px", &JewelBankRow::namePx);
     rowType.RegisterMember("count", &JewelBankRow::count);
@@ -294,14 +295,20 @@ void mu::ui::window::CJewelBankWindow::SyncContent()
     JewelBankRmlModel updated;
     updated.title = StringUtils::WideToNarrow(I18N::Game::JewelBankTitle);
 
+    // A row per kind; an optional kind the server doesn't keep is left out once it has answered.
     const auto& kinds = GameLogic::JewelBank::Kinds();
+    std::vector<int> shown;
     for (int i = 0; i < static_cast<int>(kinds.size()); ++i)
     {
+        if (i >= GameLogic::JewelBank::BaseKindCount && !bank.IsAvailable(i))
+            continue;
         const auto& kind = kinds[i];
         const std::wstring name = ItemName(kind.itemType);
         const int inBag = InventoryJewels(kind);
+        shown.push_back(i);
 
         JewelBankRow row;
+        row.kind = i;
         row.name = StringUtils::WideToNarrow(name.c_str());
         row.namePx = fitted(name, NAME_WIDTH);
         if (bank.HasInfo())
@@ -327,6 +334,8 @@ void mu::ui::window::CJewelBankWindow::SyncContent()
     updated.status = StringUtils::WideToNarrow(status.c_str());
     updated.statusPx = fitted(status, STATUS_WIDTH);
 
+    m_shownKinds = std::move(shown);
+
     auto& binder = m_RmlView.Binder();
     SyncFieldFrom(binder, &JewelBankRmlModel::title, "title", updated);
     SyncFieldFrom(binder, &JewelBankRmlModel::rows, "rows", updated);
@@ -344,12 +353,14 @@ void mu::ui::window::CJewelBankWindow::RenderItems()
     const float scale = UI::RmlBridge::DrawnScale(*panel);
     Rml::ElementList icons;
     document->QuerySelectorAll(icons, ".jb-icon");
+    // The icons are the shown rows' (SyncContent), in their order.
     const auto& kinds = GameLogic::JewelBank::Kinds();
-    for (size_t i = 0; i < icons.size() && i < kinds.size(); ++i)
+    for (size_t i = 0; i < icons.size() && i < m_shownKinds.size(); ++i)
     {
         Rml::Vector2f origin;
         if (!UI::RmlBridge::DrawnTopLeft(*icons[i], origin))
             continue;
-        ::RenderItem3D(origin.x, origin.y, IconWidth * scale, IconHeight * scale, kinds[i].itemType, 0, 0, 0, false);
+        ::RenderItem3D(origin.x, origin.y, IconWidth * scale, IconHeight * scale, kinds[static_cast<size_t>(m_shownKinds[i])].itemType,
+                       0, 0, 0, false);
     }
 }

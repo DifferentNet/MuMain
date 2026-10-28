@@ -152,6 +152,9 @@ enum INTERFACE_LIST
     // CTitlesWindow (UI/Events/TitlesWindow.h), the titles window (the character window's titles button, /titles).
     // Same reasoning as INTERFACE_CREDITS above.
     INTERFACE_TITLES,
+    // CAuctionWindow (UI/Inventory/AuctionWindow.h), the auction of Raul the Auctioneer. Same reasoning as
+    // INTERFACE_CREDITS above.
+    INTERFACE_AUCTION,
     INTERFACE_END,
     INTERFACE_COUNT = INTERFACE_END - 2,
 };

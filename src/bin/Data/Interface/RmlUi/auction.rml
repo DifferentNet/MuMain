@@ -1,0 +1,146 @@
+<rml>
+<head>
+	<title>Auction</title>
+	<link type="text/rcss" href="base.rcss"/>
+	<link type="text/rcss" href="docked_panel_frame.rcss"/>
+	<link type="text/rcss" href="auction.rcss"/>
+</head>
+<body>
+	<!-- The auction (CAuctionWindow, Raul the Auctioneer), docked beside the inventory at full dock height: the
+	     title, then one counter-scaled pane in which the page flows: the tab buttons (search, my lots, sell) and the
+	     tab's page.
+	       Search: the category and my class; excellent, ancient and the order; the name field and Find.
+	       Every tab: how many; the list (two lines a row, the bag's items one; a click picks it, a hovered row shows
+	       its item's tooltip); the picked item's icon (#au_icon; #au_items over the panel shows the 3D item there,
+	       its tooltip while hovered) and three lines beside it; two lines under it (not on the Sell tab).
+	       Sell: the days on sale; the price's lines ([<] jewel [>] and the count typed beside it); the fee.
+	       Every tab: its buttons (search: < Buy >; my lots: remove, take, take all, refresh; sell: put on sale, clear).
+	     Under the pane, the server's answer to the last action, and the exit button. The workspace slot places and
+	     scales #panel. C++ keeps the state; clicks are queued with au_tab(id), au_action(id), au_row(index),
+	     au_days(index), au_kind_down(line), au_kind_up(line), au_find and au_exit; Enter in the name field is
+	     au_field_key. The fields' texts are the model's (search_text, count0_text, count1_text, count2_text). -->
+	<div id="panel" data-model="auction">
+		<div class="frame-piece frame-top"></div>
+		<div class="frame-piece frame-left"></div>
+		<div class="frame-piece frame-right"></div>
+		<div class="frame-piece frame-bottom"></div>
+
+		<span id="au_title" class="sharp-text au-title"
+		      data-style-font-size="title.text_px + 'px'">{{title.text}}</span>
+
+		<div id="au_body" class="sharp-text sharp-flow">
+			<div class="au-bar">
+				<div class="au-btn au-btn-third" data-for="b : tabs" data-class-on="b.on" data-event-click="au_tab(b.id)">
+					<span class="au-btn-label" data-style-font-size="b.label.text_px + 'px'">{{b.label.text}}</span>
+				</div>
+			</div>
+
+			<div class="au-page" data-if="tab == 0">
+				<div class="au-bar">
+					<div class="au-btn au-btn-half" data-for="b : filters" data-class-on="b.on" data-event-click="au_action(b.id)">
+						<span class="au-btn-label" data-style-font-size="b.label.text_px + 'px'">{{b.label.text}}</span>
+					</div>
+				</div>
+				<div class="au-bar">
+					<div class="au-btn au-btn-third" data-for="b : toggles" data-class-on="b.on" data-event-click="au_action(b.id)">
+						<span class="au-btn-label" data-style-font-size="b.label.text_px + 'px'">{{b.label.text}}</span>
+					</div>
+				</div>
+				<div class="au-bar">
+					<input id="au_search" type="text" class="text-field au-field au-search-field" maxlength="40"
+					       data-value="search_text" data-style-font-size="field_px + 'px'" data-event-keydown="au_field_key"/>
+					<div class="au-btn au-btn-quarter" data-event-click="au_find">
+						<span class="au-btn-label" data-style-font-size="find.label.text_px + 'px'">{{find.label.text}}</span>
+					</div>
+				</div>
+			</div>
+
+			<span class="au-info" data-style-font-size="list_info.text_px + 'px'">{{list_info.text}}&#160;</span>
+			<div class="au-list-box" data-class-au-list-search="tab == 0" data-class-au-list-mine="tab == 1"
+			     data-class-au-list-sell="tab == 2">
+				<div class="au-list scroll-pane">
+					<div class="au-row" data-for="r : rows" data-class-au-row-single="tab == 2" data-class-selected="r.selected"
+					     data-class-excellent="r.excellent" data-class-ancient="r.ancient" data-class-dim="r.dim"
+					     data-class-live="r.live" data-attr-au-row-index="r.index" data-event-click="au_row(r.index)">
+						<span class="au-row-title" data-style-font-size="r.title.text_px + 'px'">{{r.title.text}}</span>
+						<span class="au-row-detail" data-if="tab != 2" data-style-font-size="r.detail.text_px + 'px'">{{r.detail.text}}&#160;</span>
+					</div>
+				</div>
+			</div>
+
+			<div class="au-item-head">
+				<div id="au_icon" class="au-item-icon"></div>
+				<div class="au-item-lines">
+					<span class="au-item-name" data-style-font-size="item_name.text_px + 'px'">{{item_name.text}}&#160;</span>
+					<span class="au-item-line" data-style-font-size="sel_first.text_px + 'px'">{{sel_first.text}}&#160;</span>
+					<span class="au-item-line" data-style-font-size="sel_second.text_px + 'px'">{{sel_second.text}}&#160;</span>
+				</div>
+			</div>
+			<div class="au-page" data-if="tab != 2">
+				<span class="au-sel" data-style-font-size="sel_third.text_px + 'px'">{{sel_third.text}}&#160;</span>
+				<span class="au-sel" data-class-alert="sel_alert" data-style-font-size="sel_fourth.text_px + 'px'">{{sel_fourth.text}}&#160;</span>
+			</div>
+
+			<div class="au-page" data-if="tab == 2">
+				<div class="au-bar au-days">
+					<div class="au-btn au-btn-third" data-for="b : days" data-class-on="b.on" data-event-click="au_days(b.id)">
+						<span class="au-btn-label" data-style-font-size="b.label.text_px + 'px'">{{b.label.text}}</span>
+					</div>
+				</div>
+				<div class="au-bar au-step" data-if="price_line_count > 0" data-class-unused="!price0.used">
+					<div class="au-btn au-btn-arrow" data-event-click="au_kind_down(0)">
+						<span class="au-btn-label" data-style-font-size="field_px + 'px'">&lt;</span>
+					</div>
+					<span class="au-step-value" data-style-font-size="price0.kind.text_px + 'px'">{{price0.kind.text}}</span>
+					<div class="au-btn au-btn-arrow" data-event-click="au_kind_up(0)">
+						<span class="au-btn-label" data-style-font-size="field_px + 'px'">&gt;</span>
+					</div>
+					<input id="au_count0" type="text" class="text-field text-field--numeric au-field au-count-field" maxlength="4"
+					       data-value="count0_text" data-style-font-size="field_px + 'px'"/>
+				</div>
+				<div class="au-bar au-step" data-if="price_line_count > 1" data-class-unused="!price1.used">
+					<div class="au-btn au-btn-arrow" data-event-click="au_kind_down(1)">
+						<span class="au-btn-label" data-style-font-size="field_px + 'px'">&lt;</span>
+					</div>
+					<span class="au-step-value" data-style-font-size="price1.kind.text_px + 'px'">{{price1.kind.text}}</span>
+					<div class="au-btn au-btn-arrow" data-event-click="au_kind_up(1)">
+						<span class="au-btn-label" data-style-font-size="field_px + 'px'">&gt;</span>
+					</div>
+					<input id="au_count1" type="text" class="text-field text-field--numeric au-field au-count-field" maxlength="4"
+					       data-value="count1_text" data-style-font-size="field_px + 'px'"/>
+				</div>
+				<div class="au-bar au-step" data-if="price_line_count > 2" data-class-unused="!price2.used">
+					<div class="au-btn au-btn-arrow" data-event-click="au_kind_down(2)">
+						<span class="au-btn-label" data-style-font-size="field_px + 'px'">&lt;</span>
+					</div>
+					<span class="au-step-value" data-style-font-size="price2.kind.text_px + 'px'">{{price2.kind.text}}</span>
+					<div class="au-btn au-btn-arrow" data-event-click="au_kind_up(2)">
+						<span class="au-btn-label" data-style-font-size="field_px + 'px'">&gt;</span>
+					</div>
+					<input id="au_count2" type="text" class="text-field text-field--numeric au-field au-count-field" maxlength="4"
+					       data-value="count2_text" data-style-font-size="field_px + 'px'"/>
+				</div>
+				<span class="au-info" data-style-font-size="fee.text_px + 'px'">{{fee.text}}&#160;</span>
+			</div>
+
+			<!-- A quarter wide on My lots and for the page arrows (actions 6 and 7), else half. -->
+			<div class="au-bar au-grid">
+				<div class="au-btn" data-for="b : actions" data-class-au-btn-quarter="tab == 1 || b.id == 6 || b.id == 7"
+				     data-class-au-btn-half="!(tab == 1 || b.id == 6 || b.id == 7)"
+				     data-class-off="b.off" data-event-click="au_action(b.id)">
+					<span class="au-btn-label" data-style-font-size="b.label.text_px + 'px'">{{b.label.text}}</span>
+				</div>
+			</div>
+		</div>
+
+		<!-- The picked item's 3D icon, drawn into #au_icon's box (CAuctionWindow's item camera). -->
+		<img id="au_items" class="au-items" src=""/>
+
+		<span id="au_status" class="sharp-text au-status" data-class-bad="status_bad"
+		      data-style-font-size="status.text_px + 'px'">{{status.text}}</span>
+
+		<div id="btn_exit" data-event-click="au_exit" data-attr-data-hint="exit_tooltip"></div>
+		<div id="frame_corner_close" data-event-click="au_exit"></div>
+	</div>
+</body>
+</rml>

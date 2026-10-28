@@ -120,6 +120,7 @@ using namespace mu::ui::window;
 #include "GameLogic/Events/Titles.h"
 #include "GameLogic/Commands/GmPanel.h"
 #include "GameLogic/Character/AdvancedStats.h"
+#include "GameLogic/Items/Auction.h"
 #include "GameLogic/Items/JewelBank.h"
 #include "UI/Inventory/VaultPages.h"
 
@@ -1272,6 +1273,7 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     GameLogic::TierMaps::Maps().Reset();
     GameLogic::AdvancedStats::Stats().Reset();
     GameLogic::JewelBank::Bank().Reset();
+    GameLogic::Auction::Auctions().Reset();
     GameLogic::GmPanel::Panel().Reset();
     // The battle pass' titles and auras of the characters around (GameLogic/Events/SeasonMarks.h).
     GameLogic::SeasonMarks::Marks().Reset();
@@ -2020,6 +2022,12 @@ void ReceiveNotice(const BYTE* ReceiveBuffer)
             // Adviser Jerinteu opens the window; the state follows in the next messages.
             if (GameLogic::TierMaps::Maps().TakeOpenRequest() && !UI::Windows::IsVisible(mu::ui::window::INTERFACE_TIER_MAPS))
                 UI::Windows::Show(mu::ui::window::INTERFACE_TIER_MAPS);
+        }
+        else if (GameLogic::Auction::Auctions().TakeMessage(Text))
+        {
+            // Raul the Auctioneer opens the auction window (GameLogic/Items/Auction.h); the lists follow on request.
+            if (GameLogic::Auction::Auctions().TakeOpenRequest() && !UI::Windows::IsVisible(mu::ui::window::INTERFACE_AUCTION))
+                UI::Windows::Show(mu::ui::window::INTERFACE_AUCTION);
         }
         else if (GameLogic::GmPanel::Panel().TakeMessage(Text))
         {

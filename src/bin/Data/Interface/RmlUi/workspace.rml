@@ -80,6 +80,7 @@
 					<div class="slot" data-window="storage_extension"></div>
 					<div class="slot" data-window="jewel_bank"></div>
 					<div class="slot" data-window="npc_shop"></div>
+					<div class="slot" data-window="auction"></div>
 					<div class="slot" data-window="mix"></div>
 					<div class="slot" data-window="trade"></div>
 					<div class="slot" data-window="my_shop"></div>

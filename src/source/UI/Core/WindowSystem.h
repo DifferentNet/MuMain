@@ -49,6 +49,7 @@
 #include "UI/Events/BattlePassWindow.h"
 #include "UI/Events/TierMapsWindow.h"
 #include "UI/Inventory/JewelBankWindow.h"
+#include "UI/Inventory/AuctionWindow.h"
 #include "UI/Dialogs/GmPanelWindow.h"
 #include "UI/Events/TitlesWindow.h"
 #include "UI/Inventory/ItemExplanationWindow.h"
@@ -200,6 +201,7 @@ namespace mu::ui::window
         CBattlePassWindow* m_pNewBattlePassWindow;
         CTierMapsWindow* m_pNewTierMapsWindow;
         CJewelBankWindow* m_pNewJewelBankWindow;
+        CAuctionWindow* m_pNewAuctionWindow;
         CGmPanelWindow* m_pNewGmPanelWindow;
         CTitlesWindow* m_pNewTitlesWindow;
         CItemExplanationWindow* m_pNewItemExplanationWindow;
@@ -294,6 +296,7 @@ namespace mu::ui::window
         CBattlePassWindow* GetUI_NewBattlePassWindow() const;
         CTierMapsWindow* GetUI_NewTierMapsWindow() const;
         CJewelBankWindow* GetUI_NewJewelBankWindow() const;
+        CAuctionWindow* GetUI_NewAuctionWindow() const;
         CGmPanelWindow* GetUI_NewGmPanelWindow() const;
         CTitlesWindow* GetUI_NewTitlesWindow() const;
         CItemExplanationWindow* GetUI_NewItemExplanationWindow() const;

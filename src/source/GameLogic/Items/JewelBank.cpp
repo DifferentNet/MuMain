@@ -34,10 +34,12 @@ constexpr Kind Make(int group, int number, int packedNumber)
 
 const std::array<Kind, KindCount>& Kinds()
 {
-    // Chaos, Life, Soul, Bless, Creation, Guardian, Harmony, Gemstone, Lower and Higher Refine Stone.
+    // Chaos, Life, Soul, Bless, Creation, Guardian, Harmony, Gemstone, Lower and Higher Refine Stone, then the
+    // Jewel of Ancient and the Jewel of Fate, which come in no packs.
     static constexpr std::array<Kind, KindCount> kinds{
         Make(12, 15, 141), Make(14, 16, 136), Make(14, 14, 31), Make(14, 13, 30), Make(14, 22, 137),
         Make(14, 31, 138), Make(14, 42, 140), Make(14, 41, 139), Make(14, 43, 142), Make(14, 44, 143),
+        Kind{Data::Items::MakeItemType(14, 160), -1}, Kind{Data::Items::MakeItemType(14, 161), -1},
     };
     return kinds;
 }
@@ -61,12 +63,18 @@ bool Store::TakeMessage(const std::wstring& text)
     if (!view.starts_with(Answer))
         return false;
 
+    // The optional kinds an older server doesn't send stay -1: not kept.
     std::array<int, KindCount> counts{};
+    counts.fill(-1);
     size_t start = Answer.size();
     for (int i = 0; i < KindCount; ++i)
     {
         if (start > view.size())
-            return true; // too few fields: not ours to show
+        {
+            if (i < BaseKindCount)
+                return true; // too few fields: not ours to show
+            break;
+        }
         const size_t bar = view.find(L'|', start);
         const std::wstring field(view.substr(start, bar == std::wstring_view::npos ? std::wstring_view::npos : bar - start));
         counts[i] = static_cast<int>(std::wcstol(field.c_str(), nullptr, 10));
@@ -107,7 +115,7 @@ void Store::Withdraw(int kind, int amount)
 
 void Store::Reset()
 {
-    m_counts = {};
+    m_counts.fill(-1);
     m_hasInfo = false;
     m_unavailable = false;
     m_lastRequest = {};

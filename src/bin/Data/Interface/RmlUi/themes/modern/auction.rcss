@@ -1,0 +1,152 @@
+/* Modern theme for CAuctionWindow (the auction at Raul the Auctioneer): docked_panel_frame.rcss's forged panel
+   (linked first) at the full dock height, the modern exit button and forged buttons, in the GM panel's look
+   (gm_panel.rcss). Geometry is the legacy one: reference px inside #panel, physical px (reference px times
+   --root-scale) inside the page's pane. */
+
+#panel { height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; transform-origin: left top; }
+
+#btn_exit {
+	position: absolute;
+	left: 13px;
+	top: 392px;
+	width: 36px;
+	height: 28px;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+	pointer-events: auto;
+}
+#btn_exit:hover { border-color: token(accent-steel-hover); }
+
+.au-title { left: 0; top: 12px; text-align: center; font-weight: bold; pointer-events: none; }
+#au_body { left: 12px; top: 32px; --flow-w: 166px; line-height: 1.12; }
+#au_status { left: 12px; top: 352px; white-space: normal; line-height: 1.1; pointer-events: none; }
+
+/* A row of buttons (or fields): spread over the pane's width, wrapping to more rows. */
+.au-bar {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: calc(3px * var(--root-scale));
+}
+.au-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	height: calc(18px * var(--root-scale));
+	margin-bottom: calc(2px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+.au-btn:hover { border-color: token(accent-steel-hover); }
+.au-btn:active { background-color: token(surface-recessed); }
+.au-btn.on { background-color: token(surface-recessed); border-color: token(accent-gold); }
+.au-btn.off { opacity: 0.4; pointer-events: none; }
+.au-btn-label { display: block; white-space: nowrap; pointer-events: none; }
+.au-btn-third { width: calc(54px * var(--root-scale)); }
+.au-btn-quarter { width: calc(40px * var(--root-scale)); }
+.au-btn-half { width: calc(82px * var(--root-scale)); }
+.au-btn-arrow { width: calc(18px * var(--root-scale)); }
+
+.au-field {
+	height: calc(18px * var(--root-scale));
+	line-height: calc(16px * var(--root-scale));
+	margin-bottom: calc(2px * var(--root-scale));
+	padding: 0 calc(3px * var(--root-scale));
+	pointer-events: auto;
+}
+.au-search-field { width: calc(124px * var(--root-scale)); }
+.au-count-field { width: calc(50px * var(--root-scale)); }
+
+.au-info { display: block; white-space: nowrap; margin-bottom: calc(2px * var(--root-scale)); }
+
+/* The list's box; the pane inside scrolls (the wheel and base.rcss's scrollbar). The pane stays in the flow with
+   its own height: an absolute pane here would be placed against the counter-scaled layer, not against its box.
+   The search's filters and the sell's price take their rows out of the list. */
+.au-list-box { display: block; margin-bottom: calc(3px * var(--root-scale)); }
+.au-list { display: block; width: 100%; }
+.au-list-search .au-list { height: calc(112px * var(--root-scale)); }
+.au-list-mine .au-list { height: calc(176px * var(--root-scale)); }
+.au-list-sell .au-list { height: calc(116px * var(--root-scale)); }
+
+/* The row leaves the pane's right lane to the scrollbar (a full-width row sits under the handle). */
+.au-row {
+	display: block;
+	box-sizing: border-box;
+	width: calc(100% - 17px * var(--root-scale));
+	padding: calc(1px * var(--root-scale)) calc(4px * var(--root-scale));
+	border-radius: token(radius-sm)px;
+	cursor: pointer;
+	pointer-events: auto;
+}
+.au-row-title { display: block; white-space: nowrap; pointer-events: none; font-weight: bold; }
+.au-row-detail { display: block; white-space: nowrap; pointer-events: none; }
+.au-row-single .au-row-title { font-weight: normal; }
+
+/* The picked item's head: its icon (the 3D item is drawn there through #au_items, the full panel's image in
+   reference px; hovering the icon shows the item's tooltip) and three lines; two lines under it. */
+.au-items { position: absolute; left: 0; top: 0; width: 190px; height: 432px; pointer-events: none; }
+.au-item-head {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	margin-bottom: calc(3px * var(--root-scale));
+}
+.au-item-icon {
+	display: block;
+	box-sizing: border-box;
+	width: calc(40px * var(--root-scale));
+	height: calc(40px * var(--root-scale));
+	margin-right: calc(6px * var(--root-scale));
+	pointer-events: auto;
+	background-color: token(surface-recessed);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+.au-item-icon:hover { border-color: token(accent-steel-hover); }
+.au-item-lines { display: block; width: calc(120px * var(--root-scale)); }
+.au-item-name { display: block; white-space: nowrap; font-weight: bold; }
+.au-item-line { display: block; white-space: nowrap; }
+.au-sel { display: block; white-space: nowrap; }
+.au-grid { margin-top: calc(3px * var(--root-scale)); }
+
+/* The Sell tab: the days, then a price line: < jewel > and its count, packed tighter than the other rows; a line
+   without a jewel faded. */
+.au-step { margin-bottom: calc(1px * var(--root-scale)); }
+.au-step .au-btn, .au-step .au-field { margin-bottom: 0; }
+.au-step-value { display: block; width: calc(70px * var(--root-scale)); text-align: center; white-space: nowrap; }
+.au-step.unused .au-step-value, .au-step.unused .au-count-field { opacity: 0.5; }
+
+.au-title { color: token(accent-gold); }
+.au-btn-label { color: token(text-primary); }
+.au-btn.on .au-btn-label { color: token(accent-gold); }
+.au-info { color: token(text-secondary); }
+.au-row-title { color: token(text-primary); }
+.au-row-detail { color: token(text-secondary); }
+.au-row:hover { background-color: rgba(255, 255, 255, 12); }
+.au-row.live .au-row-title { color: token(semantic-success); }
+.au-row.dim .au-row-title { color: token(text-muted); }
+.au-row.dim .au-row-detail { color: token(text-muted); }
+.au-row.selected { background-color: rgba(255, 200, 90, 40); }
+.au-row.selected .au-row-title { color: token(accent-gold); }
+.au-row.excellent .au-row-title { color: rgb(26, 255, 128); }
+.au-row.ancient .au-row-title { color: rgb(110, 200, 255); }
+.au-sel { color: token(text-secondary); }
+.au-sel.alert { color: token(semantic-danger); }
+.au-item-name { color: token(text-primary); }
+.au-item-line { color: token(text-secondary); }
+.au-step-value { color: token(accent-gold); }
+#au_status { color: token(semantic-success); }
+#au_status.bad { color: token(semantic-danger); }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+#au_title { width: calc(100% * var(--root-scale)); }
+#au_status { width: calc(166px * var(--root-scale)); }

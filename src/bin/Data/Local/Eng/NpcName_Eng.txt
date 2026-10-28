@@ -636,7 +636,7 @@
 544	1	"Gens Vanert Steward"	
 //·Î·£½ÃÀå NPC Ãß°¡ 2009.11.24 È«½Â¿í			
 545	1	"Christine the General Goods Merchant"	
-546	1	"Jeweler Raul"	
+546	1	"Raul the Auctioneer"	
 547	1	"Moldovan Villager"	
 //½ºÄÌ·¹Åæº¯½Å¹ÝÁö¿ë º¯½Å½ºÄÌ·¹Åæ Ãß°¡			
 548	1	"Transformed Skeleton"	
