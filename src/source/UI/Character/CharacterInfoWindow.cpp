@@ -536,8 +536,9 @@ void mu::ui::window::CCharacterInfoWindow::BuildSubjectTexts()
               StringUtils::WideToNarrow(strClassName));
 
     wchar_t strServerName[MAX_TEXT_LENGTH];
+    // No "(Gold)" tags on MU Skynet, as in the server list (ServerListManager::InsertServer).
     const wchar_t* apszGlobalText[4]
-        = { I18N::Game::SDServer, I18N::Game::SDNonPvPServer, I18N::Game::SDGoldPvPServer, I18N::Game::SDGoldServer };
+        = { I18N::Game::SDServer, I18N::Game::SDNonPvPServer, I18N::Game::SDServer, I18N::Game::SDServer };
     mu_swprintf(strServerName, apszGlobalText[g_ServerListManager->GetNonPVPInfo()],
         g_ServerListManager->GetSelectServerName(), g_ServerListManager->GetSelectServerIndex());
     SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::serverNameText, "servername_text",
