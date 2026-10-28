@@ -2,6 +2,7 @@
 #include "UI/Inventory/VaultPages.h"
 
 #include "Engine/Object/ZzzCharacter.h"
+#include "Network/Server/HiddenChatLines.h"
 #include "Network/Server/WSclient.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Inventory/StorageInventory.h"
@@ -101,4 +102,14 @@ void VaultPages::Reset()
     m_pages = 0;
     m_switchAskedAt = {};
 }
+
+namespace
+{
+// The vault pages' lines stay out of the chat (Network/Server/HiddenChatLines.h).
+[[maybe_unused]] const bool Registered = Network::HiddenChatLines::Register({
+    .name = L"VaultPages",
+    .prefixes = {InfoAnswer, SwitchAnswer},
+    .take = [](const std::wstring& text) { return Pages().TakeMessage(text); },
+});
+} // namespace
 } // namespace UI::Storage

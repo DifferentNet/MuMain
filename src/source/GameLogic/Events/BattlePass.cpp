@@ -2,6 +2,7 @@
 #include "GameLogic/Events/BattlePass.h"
 
 #include "Engine/Object/ZzzCharacter.h"
+#include "Network/Server/HiddenChatLines.h"
 #include "Network/Server/WSclient.h"
 
 #include <algorithm>
@@ -357,4 +358,15 @@ void Store::Reset()
     ++m_revision;
     m_lastRequest = {};
 }
+
+namespace
+{
+// The battle pass window's lines stay out of the chat (Network/Server/HiddenChatLines.h).
+[[maybe_unused]] const bool Registered = Network::HiddenChatLines::Register({
+    .name = L"BattlePass",
+    .prefixes = {Header, LevelLine, QuestLine, DayLine, ChestLine, Footer, Signal},
+    .take = [](const std::wstring& text) { return Pass().TakeMessage(text); },
+    .enteredWorld = [] { Pass().Reset(); },
+});
+} // namespace
 } // namespace GameLogic::BattlePass

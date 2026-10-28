@@ -70,6 +70,13 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Commands/ChatCommandCatalog.cpp
 )
 
+mu_add_test(
+    NAME test_hidden_chat_lines
+    SOURCES
+        test_hidden_chat_lines.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Network/Server/HiddenChatLines.cpp
+)
+
 if(DOTNET_EXECUTABLE)
     add_test(
         NAME login_diagnostics_contract

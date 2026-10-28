@@ -3,6 +3,7 @@
 
 #include "Data/GameConfig/GameConfig.h"
 #include "Engine/Object/ZzzCharacter.h"
+#include "Network/Server/HiddenChatLines.h"
 #include "Network/Server/WSclient.h"
 
 #include <algorithm>
@@ -215,4 +216,22 @@ const Worn* Store::Of(std::wstring_view name) const
     const auto it = m_worn.find(name);
     return it == m_worn.end() ? nullptr : &it->second;
 }
+
+namespace
+{
+// A new character: drop the last one's lines and ask the server for this one's.
+void ForgetAndAsk()
+{
+    Titles().Reset();
+    Titles().Request();
+}
+
+// The titles' lines stay out of the chat (Network/Server/HiddenChatLines.h).
+[[maybe_unused]] const bool Registered = Network::HiddenChatLines::Register({
+    .name = L"Titles",
+    .prefixes = {WornLine, ListLine},
+    .take = [](const std::wstring& text) { return Titles().TakeMessage(text); },
+    .enteredWorld = ForgetAndAsk,
+});
+} // namespace
 } // namespace GameLogic::Titles

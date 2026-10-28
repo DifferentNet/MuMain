@@ -3,6 +3,7 @@
 
 #include "Data/GameData/ItemData/ItemType.h"
 #include "Engine/Object/ZzzCharacter.h"
+#include "Network/Server/HiddenChatLines.h"
 #include "Network/Server/WSclient.h"
 
 #include <cwchar>
@@ -120,4 +121,15 @@ void Store::Reset()
     m_unavailable = false;
     m_lastRequest = {};
 }
+
+namespace
+{
+// The jewel bank window's lines stay out of the chat (Network/Server/HiddenChatLines.h).
+[[maybe_unused]] const bool Registered = Network::HiddenChatLines::Register({
+    .name = L"JewelBank",
+    .prefixes = {Answer, Unavailable},
+    .take = [](const std::wstring& text) { return Bank().TakeMessage(text); },
+    .enteredWorld = [] { Bank().Reset(); },
+});
+} // namespace
 } // namespace GameLogic::JewelBank

@@ -2,6 +2,7 @@
 #include "GameLogic/Events/DailyRewards.h"
 
 #include "Engine/Object/ZzzCharacter.h"
+#include "Network/Server/HiddenChatLines.h"
 #include "Network/Server/WSclient.h"
 
 #include <cwchar>
@@ -135,4 +136,15 @@ void Store::Reset()
     m_hasInfo = false;
     m_lastRequest = {};
 }
+
+namespace
+{
+// The daily rewards window's lines stay out of the chat (Network/Server/HiddenChatLines.h).
+[[maybe_unused]] const bool Registered = Network::HiddenChatLines::Register({
+    .name = L"DailyRewards",
+    .prefixes = {Header, Line, Footer},
+    .take = [](const std::wstring& text) { return Rewards().TakeMessage(text); },
+    .enteredWorld = [] { Rewards().Reset(); },
+});
+} // namespace
 } // namespace GameLogic::DailyRewards
