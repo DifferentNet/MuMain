@@ -149,6 +149,9 @@ enum INTERFACE_LIST
     // CGmPanelWindow (UI/Dialogs/GmPanelWindow.h), the game master panel (key Y, GM accounts only). Same
     // reasoning as INTERFACE_CREDITS above.
     INTERFACE_GM_PANEL,
+    // CTitlesWindow (UI/Events/TitlesWindow.h), the titles window (the character window's titles button, /titles).
+    // Same reasoning as INTERFACE_CREDITS above.
+    INTERFACE_TITLES,
     INTERFACE_END,
     INTERFACE_COUNT = INTERFACE_END - 2,
 };

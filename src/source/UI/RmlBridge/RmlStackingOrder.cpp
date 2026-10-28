@@ -134,6 +134,7 @@ constexpr DocumentPlacement Placements[] = {
     {"tier_maps.rml", 10.65f, MainScene},
     {"jewel_bank.rml", 10.65f, MainScene},
     {"gm_panel.rml", 10.65f, MainScene},
+    {"titles.rml", 10.65f, MainScene},
     // The original drew it at 10.5, under the HUD; the modern theme's settings screen covers the
     // whole screen, HUD included. Still under the tooltips and message boxes.
     {"option_window.rml", 10.67f, EveryScene},

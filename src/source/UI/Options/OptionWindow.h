@@ -184,6 +184,10 @@ namespace mu::ui::window
         // globals, no GameConfig persistence), matching $fpscounter/$details today.
         void RmlToggleShowFpsCounter();
         void RmlToggleShowDebugInfo();
+        // MU Moldova: names over heads (UI::OverheadNames), saved in config.ini at once.
+        void RmlToggleOverheadPlayerNames();
+        void RmlToggleOverheadNpcNames();
+        void RmlToggleOverheadTitles();
         void RmlThemeChanged(int index);
         void RmlUIScaleChanged(int index);
         void RmlClickClose();
@@ -357,6 +361,12 @@ namespace mu::ui::window
             Rml::String showFpsCounterLabel;
             bool showDebugInfo = false;
             Rml::String showDebugInfoLabel;
+            bool overheadPlayerNames = true;
+            Rml::String overheadPlayerNamesLabel;
+            bool overheadNpcNames = false;
+            Rml::String overheadNpcNamesLabel;
+            bool overheadTitles = true;
+            Rml::String overheadTitlesLabel;
             std::vector<Rml::String> themeLabels;
             int themeIndex = 0;
             Rml::String themeRowLabel;

@@ -121,6 +121,10 @@
 		     data-attr-data-hint="advstats_tooltip">
 			<span class="modern-icon-btn-glyph-px">%</span>
 		</div>
+		<div id="btn_titles" class="modern-icon-btn-px chainfo-btn-titles" data-event-click="chainfo_click_titles"
+		     data-attr-data-hint="titles_tooltip">
+			<span class="modern-icon-btn-glyph-px">T</span>
+		</div>
 		<div id="frame_corner_close" data-event-click="window_close"></div>
 	</div>
 </body>

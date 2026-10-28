@@ -88,6 +88,8 @@ namespace mu::ui::window
         void RmlClickMasterLevel();
         // The fourth button: shows the advanced stats tab in place of the attributes, or the attributes again.
         void RmlClickAdvancedStats();
+        // The fifth button: the titles window (UI/Events/TitlesWindow.h) beside this one, or closes it.
+        void RmlClickTitles();
 
     private:
         // Populates the shared IMAGE_LIST texture slots sibling windows alias onto (see IMAGE_LIST above).
@@ -161,7 +163,7 @@ namespace mu::ui::window
             std::vector<StatLine> advancedDefenseLines;
 
             // Set once at Create() -- static tooltip text, no per-frame update needed.
-            Rml::String exitTooltip, questTooltip, petTooltip, masterLevelTooltip, advancedStatsTooltip;
+            Rml::String exitTooltip, questTooltip, petTooltip, masterLevelTooltip, advancedStatsTooltip, titlesTooltip;
         };
 
         void BindRmlModel(Rml::DataModelConstructor& c, CharacterInfoRmlModel& model);

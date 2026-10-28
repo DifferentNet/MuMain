@@ -129,7 +129,7 @@
 			<span data-for="line : advanced_defense_lines" data-class-boosted="line.source == 'boosted'">{{line.text}}</span>
 		</div>
 
-		<!-- Bottom action row: shared close button plus Quest/Pet/Master-Level shortcuts. -->
+		<!-- Bottom action row: shared close button plus Quest/Pet/Master-Level/advanced stats/titles shortcuts. -->
 		<div id="btn_exit" class="info-btn info-btn-exit" data-event-click="window_close" data-attr-data-hint="exit_tooltip">
 			<span class="btn-exit-label">×</span>
 		</div>
@@ -139,6 +139,8 @@
 		     data-event-click="chainfo_click_masterlevel" data-attr-data-hint="masterlevel_tooltip"></div>
 		<div id="btn_advstats" class="info-btn info-btn-advstats" data-event-click="chainfo_click_advstats"
 		     data-attr-data-hint="advstats_tooltip"></div>
+		<div id="btn_titles" class="info-btn info-btn-titles" data-event-click="chainfo_click_titles"
+		     data-attr-data-hint="titles_tooltip"></div>
 		<div id="frame_corner_close" data-event-click="window_close"></div>
 	</div>
 </body>

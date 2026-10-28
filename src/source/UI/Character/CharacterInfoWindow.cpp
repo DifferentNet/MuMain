@@ -180,6 +180,7 @@ void mu::ui::window::CCharacterInfoWindow::BindRmlModel(Rml::DataModelConstructo
     c.Bind("pet_tooltip", &model.petTooltip);
     c.Bind("masterlevel_tooltip", &model.masterLevelTooltip);
     c.Bind("advstats_tooltip", &model.advancedStatsTooltip);
+    c.Bind("titles_tooltip", &model.titlesTooltip);
 
     c.BindEventCallback("chainfo_increase_stat",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& arguments)
@@ -196,6 +197,8 @@ void mu::ui::window::CCharacterInfoWindow::BindRmlModel(Rml::DataModelConstructo
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickMasterLevel(); });
     c.BindEventCallback("chainfo_click_advstats",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickAdvancedStats(); });
+    c.BindEventCallback("chainfo_click_titles",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickTitles(); });
     model.strLabel = StringUtils::WideToNarrow(I18N::Game::STR);
     model.agiLabel = StringUtils::WideToNarrow(I18N::Game::AGI);
     model.vitLabel = StringUtils::WideToNarrow(I18N::Game::STA);
@@ -210,6 +213,7 @@ void mu::ui::window::CCharacterInfoWindow::BindRmlModel(Rml::DataModelConstructo
     model.petTooltip = StringUtils::WideToNarrow(I18N::Game::Pet);
     model.masterLevelTooltip = StringUtils::WideToNarrow(I18N::Game::MasterSkillTreeA);
     model.advancedStatsTooltip = StringUtils::WideToNarrow(I18N::Game::AdvStatsTooltip);
+    model.titlesTooltip = StringUtils::WideToNarrow(I18N::Game::TitlesTooltip);
     model.advancedAttackTitle = StringUtils::WideToNarrow(I18N::Game::AdvStatsAttack);
     model.advancedDefenseTitle = StringUtils::WideToNarrow(I18N::Game::AdvStatsDefense);
 }
@@ -336,6 +340,11 @@ void mu::ui::window::CCharacterInfoWindow::RmlClickQuest()
 void mu::ui::window::CCharacterInfoWindow::RmlClickPet()
 {
     g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_PET);
+}
+
+void mu::ui::window::CCharacterInfoWindow::RmlClickTitles()
+{
+    g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_TITLES);
 }
 
 void mu::ui::window::CCharacterInfoWindow::RmlClickMasterLevel()

@@ -61,6 +61,7 @@ constexpr NamedWindow Windows[] = {
     {"tier_maps", mu::ui::window::INTERFACE_TIER_MAPS},
     {"jewel_bank", mu::ui::window::INTERFACE_JEWEL_BANK},
     {"gm_panel", mu::ui::window::INTERFACE_GM_PANEL},
+    {"titles", mu::ui::window::INTERFACE_TITLES},
 };
 
 json Pixel(float x, float y)

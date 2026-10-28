@@ -3,6 +3,7 @@
 #include "UI/Scaling/UITransform.h"
 #include "UI/Chat/Chat.h"
 #include "UI/Character/NameWindow.h"
+#include "UI/Character/OverheadNames.h"
 #include "Render/Models/ZzzBMD.h"
 #include "Engine/Object/ZzzObject.h"
 #include "Engine/Object/ZzzCharacter.h"
@@ -205,6 +206,8 @@ void mu::ui::window::CNameWindow::RenderLabels()
     const UI::Scaling::ScopedScreenStretch screen(static_cast<int>(WindowWidth), static_cast<int>(WindowHeight));
     EnableAlphaTest();
     RenderName();
+    // Under the plates: a hovered or speaking character shows its plate instead.
+    UI::OverheadNames::Render();
     matchEvent::RenderMatchTimes();
     UI::Chat::RenderBooleans();
     RenderMonsterHealthBars();

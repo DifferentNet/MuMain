@@ -117,6 +117,7 @@ using namespace mu::ui::window;
 #include "GameLogic/Events/BattlePass.h"
 #include "GameLogic/Events/TierMaps.h"
 #include "GameLogic/Events/SeasonMarks.h"
+#include "GameLogic/Events/Titles.h"
 #include "GameLogic/Commands/GmPanel.h"
 #include "GameLogic/Character/AdvancedStats.h"
 #include "GameLogic/Items/JewelBank.h"
@@ -1275,6 +1276,9 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     // The battle pass' titles and auras of the characters around (GameLogic/Events/SeasonMarks.h).
     GameLogic::SeasonMarks::Marks().Reset();
     GameLogic::SeasonMarks::Marks().Request();
+    // The titles over the names: the characters in the game now, then each change (GameLogic/Events/Titles.h).
+    GameLogic::Titles::Titles().Reset();
+    GameLogic::Titles::Titles().Request();
 
     g_ConsoleDebug->Write(MCD_RECEIVE, L"0x03 [ReceiveJoinMapServer]");
 
@@ -2003,12 +2007,12 @@ void ReceiveNotice(const BYTE* ReceiveBuffer)
         // (GameLogic/Events/DailyRewards.h), the battle pass window (GameLogic/Events/BattlePass.h), the character
         // window's advanced stats tab (GameLogic/Character/AdvancedStats.h), the vault's pages
         // (UI/Inventory/VaultPages.h), the jewel bank window (GameLogic/Items/JewelBank.h), the Tier Maps window
-        // (GameLogic/Events/TierMaps.h), the GM panel (GameLogic/Commands/GmPanel.h) and the battle pass' titles and
-        // auras (GameLogic/Events/SeasonMarks.h) stay out of the chat.
+        // (GameLogic/Events/TierMaps.h), the GM panel (GameLogic/Commands/GmPanel.h), the battle pass' auras
+        // (GameLogic/Events/SeasonMarks.h) and the titles (GameLogic/Events/Titles.h) stay out of the chat.
         if (GameLogic::EventTimes::Times().TakeMessage(Text) || GameLogic::DailyRewards::Rewards().TakeMessage(Text) ||
             GameLogic::BattlePass::Pass().TakeMessage(Text) || GameLogic::AdvancedStats::Stats().TakeMessage(Text) ||
             UI::Storage::Pages().TakeMessage(Text) || GameLogic::JewelBank::Bank().TakeMessage(Text) ||
-            GameLogic::SeasonMarks::Marks().TakeMessage(Text))
+            GameLogic::SeasonMarks::Marks().TakeMessage(Text) || GameLogic::Titles::Titles().TakeMessage(Text))
         {
         }
         else if (GameLogic::TierMaps::Maps().TakeMessage(Text))

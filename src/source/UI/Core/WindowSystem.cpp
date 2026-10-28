@@ -93,6 +93,7 @@ CSystem::CSystem()
     m_pNewTierMapsWindow = nullptr;
     m_pNewJewelBankWindow = nullptr;
     m_pNewGmPanelWindow = nullptr;
+    m_pNewTitlesWindow = nullptr;
     m_pNewItemExplanationWindow = nullptr;
     m_pNewSetItemExplanation = nullptr;
     m_pNewQuickCommandWindow = nullptr;
@@ -411,6 +412,12 @@ bool CSystem::LoadMainSceneInterface()
         return false;
     }
 
+    m_pNewTitlesWindow = new CTitlesWindow;
+    if (m_pNewTitlesWindow->Create(m_pNewUIMng) == false)
+    {
+        return false;
+    }
+
     m_pNewHelpWindow = new CHelpWindow;
     if (m_pNewHelpWindow->Create(m_pNewUIMng) == false)
     {
@@ -608,6 +615,7 @@ bool CSystem::LoadMainSceneInterface()
     slot(INTERFACE_BATTLE_PASS, "battle_pass", m_pNewBattlePassWindow, "battle_pass.rml");
     slot(INTERFACE_TIER_MAPS, "tier_maps", m_pNewTierMapsWindow, "tier_maps.rml");
     slot(INTERFACE_GM_PANEL, "gm_panel", m_pNewGmPanelWindow, "gm_panel.rml");
+    slot(INTERFACE_TITLES, "titles", m_pNewTitlesWindow, "titles.rml");
     slot(INTERFACE_GOLD_BOWMAN, "gold_bowman", m_pNewGoldBowman, "gold_bowman.rml");
     slot(INTERFACE_GOLD_BOWMAN_LENA, "gold_bowman_lena", m_pNewGoldBowmanLena, "gold_bowman_lena.rml");
     slot(INTERFACE_NPC_DIALOGUE, "npc_dialogue", m_pNewNPCDialogue, "npc_dialogue.rml");
@@ -690,6 +698,7 @@ void CSystem::UnloadMainSceneInterface()
     SAFE_DELETE(m_pNewTierMapsWindow);
     SAFE_DELETE(m_pNewJewelBankWindow);
     SAFE_DELETE(m_pNewGmPanelWindow);
+    SAFE_DELETE(m_pNewTitlesWindow);
     SAFE_DELETE(m_pNewItemExplanationWindow);
     SAFE_DELETE(m_pNewSetItemExplanation);
     SAFE_DELETE(m_pNewQuickCommandWindow);
@@ -991,6 +1000,11 @@ void CSystem::Show(DWORD dwKey)
         HideAllGroupA();
         m_pNewGmPanelWindow->OpenningProcess();
     }
+    else if (dwKey == INTERFACE_TITLES)
+    {
+        // Beside the character window, which stays (the workspace slot closes what docks there instead).
+        m_pNewTitlesWindow->OpenningProcess();
+    }
     else if (dwKey == INTERFACE_JEWEL_BANK)
     {
         // Beside the inventory, which stays open with it (and the vault, if open).
@@ -1233,6 +1247,10 @@ void CSystem::Hide(DWORD dwKey)
         {
             Hide(INTERFACE_PET);
         }
+        if (IsVisible(INTERFACE_TITLES))
+        {
+            Hide(INTERFACE_TITLES);
+        }
     }
     else if (dwKey == INTERFACE_INVENTORY_EXT)
     {
@@ -1452,6 +1470,10 @@ void CSystem::Hide(DWORD dwKey)
     else if (dwKey == INTERFACE_GM_PANEL)
     {
         m_pNewGmPanelWindow->ClosingProcess();
+    }
+    else if (dwKey == INTERFACE_TITLES)
+    {
+        m_pNewTitlesWindow->ClosingProcess();
     }
     else if (dwKey == INTERFACE_JEWEL_BANK)
     {
@@ -1679,6 +1701,7 @@ void CSystem::HideAllGroupA()
         INTERFACE_BATTLE_PASS,
         INTERFACE_TIER_MAPS,
         INTERFACE_GM_PANEL,
+        INTERFACE_TITLES,
         INTERFACE_JEWEL_BANK,
         INTERFACE_GUILDINFO,
         INTERFACE_KANTURU2ND_ENTERNPC,
@@ -1734,6 +1757,7 @@ void CSystem::HideAllGroupB()
         INTERFACE_BATTLE_PASS,
         INTERFACE_TIER_MAPS,
         INTERFACE_GM_PANEL,
+        INTERFACE_TITLES,
         INTERFACE_JEWEL_BANK,
         INTERFACE_GUILDINFO,
         INTERFACE_KANTURU2ND_ENTERNPC,
@@ -2369,6 +2393,11 @@ CJewelBankWindow* CSystem::GetUI_NewJewelBankWindow() const
 CGmPanelWindow* CSystem::GetUI_NewGmPanelWindow() const
 {
     return m_pNewGmPanelWindow;
+}
+
+CTitlesWindow* CSystem::GetUI_NewTitlesWindow() const
+{
+    return m_pNewTitlesWindow;
 }
 
 CItemExplanationWindow* CSystem::GetUI_NewItemExplanationWindow() const

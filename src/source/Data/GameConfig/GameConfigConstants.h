@@ -44,6 +44,11 @@ namespace CfgKeys
     // Rml::Context::SetDensityIndependentPixelRatio(). Only RCSS authored in `dp` units responds
     // to this; existing `px`-authored windows are unaffected until retrofitted.
     inline constexpr wchar_t CfgKeyUIScalePercent[] = L"UIScalePercent";
+    // MU Moldova: names over heads (UI::OverheadNames), set in the options window's Interface tab.
+    inline constexpr wchar_t CfgKeyOverheadPlayerNames[] = L"OverheadPlayerNames";
+    inline constexpr wchar_t CfgKeyOverheadNpcNames[] = L"OverheadNpcNames";
+    // MU Moldova: title plates over the players (UI::TitlePlates).
+    inline constexpr wchar_t CfgKeyOverheadTitles[] = L"OverheadTitles";
     // Animates characters on worker threads when many are in view. Off unless set here or
     // started with --enable-taskpool; manual config.ini edit only.
     inline constexpr wchar_t CfgKeyEnableAnimationTaskPool[] = L"EnableAnimationTaskPool";
@@ -122,6 +127,11 @@ namespace CfgDefaults
     // (UI::Options::UIScalePercentChoices()); a hand-edited config.ini may hold anything in
     // [CfgMinUIScalePercent, CfgMaxUIScalePercent].
     inline constexpr int CfgDefaultUIScalePercent = 100;
+
+    // Players' names over their heads on by default, the NPCs' off (towns would fill with guards).
+    inline constexpr bool CfgDefaultOverheadPlayerNames = true;
+    inline constexpr bool CfgDefaultOverheadNpcNames = false;
+    inline constexpr bool CfgDefaultOverheadTitles = true;
 
     // Bounds GameConfig clamps to, on load and on set. Below 75% text gets too small to read;
     // above 150% a docked panel no longer fits a small window.

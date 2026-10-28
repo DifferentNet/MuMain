@@ -40,6 +40,8 @@
 #include "World/MapInfra/MapManager.h"
 #include "GameLogic/Events/Event.h"
 #include "UI/Core/WindowSystem.h"
+#include "GameLogic/Events/Titles.h"
+#include "UI/Character/TitlePlates.h"
 #include "GameLogic/Events/w_CursedTemple.h"
 #include "GameLogic/Social/PartyManager.h"
 #include "UI/Dialogs/CommonMessageBox.h"
@@ -59,7 +61,7 @@ typedef struct
     wchar_t      Union[30];
     wchar_t      Guild[30];
     wchar_t      szShopTitle[16];
-    // The battle pass' title «Hero of Season N» (GameLogic/Events/SeasonMarks.h): the top line, in the season's colours.
+    // The battle pass' title line «Hero of Season N»; empty since the titles (GameLogic/Events/Titles.h) show it.
     wchar_t      Title[48];
     DWORD     TitleText;
     DWORD     TitleBack;
@@ -237,6 +239,13 @@ void RenderBoolean(int x, int y, CHAT* c)
                 break;
             }
         }
+    }
+
+    // MU Moldova: the character's title over the box (UI/Character/TitlePlates.h); Chaos Castle hides who is who.
+    if (c->Owner->Object.Kind == KIND_PLAYER && UI::TitlePlates::Enabled() && !gMapManager.InChaosCastle())
+    {
+        if (const GameLogic::Titles::Worn* title = GameLogic::Titles::Titles().Of(c->Owner->ID))
+            UI::TitlePlates::Render(*title, *c->Owner, x + c->Width / 2, y - 1);
     }
 
     bool bGmMode = false;
@@ -464,22 +473,9 @@ void AddGuildName(CHAT* c, CHARACTER* Owner)
         c->Guild[0] = 0;
     }
 
-    // The battle pass' season title; not in Chaos Castle, where the aura stays hidden too.
+    // The season's title is one of the titles now (GameLogic/Events/Titles.h, the plate over the box), so the
+    // battle pass' own «Hero of Season N» line stays empty; #BPM still brings the aura.
     c->Title[0] = 0;
-    if (Owner->Object.Kind == KIND_PLAYER && !gMapManager.InChaosCastle())
-    {
-        const auto worn = GameLogic::SeasonMarks::Marks().Of(Owner->ID);
-        if (worn.TitleSeason >= 0)
-        {
-            // Gold for the season's Hall of Fame (title 2), the season's usual colours for the others.
-            const auto& look = GameLogic::SeasonMarks::Marks().Look(worn.TitleSeason);
-            const unsigned char* text = worn.Title >= 2 ? look.TopText : look.TitleText;
-            const unsigned char* back = worn.Title >= 2 ? look.TopBack : look.TitleBack;
-            mu_swprintf_s(c->Title, I18N::Game::SeasonHeroTitle, worn.TitleSeason);
-            c->TitleText = RGBA(text[0], text[1], text[2], text[3]);
-            c->TitleBack = RGBA(back[0], back[1], back[2], back[3]);
-        }
-    }
 }
 
 void CreateChat(wchar_t* character_name, const wchar_t* chat_text, CHARACTER* Owner, int Flag, int SetColor)
@@ -639,6 +635,16 @@ void MoveChat()
     }
 }
 
+
+bool HasPlate(const CHARACTER* owner)
+{
+    for (const CHAT& c : Chat)
+    {
+        if (c.Owner == owner && (c.IDLifeTime > 0 || c.LifeTime[0] > 0))
+            return true;
+    }
+    return false;
+}
 
 void RenderBooleans()
 {
