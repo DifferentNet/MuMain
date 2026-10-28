@@ -82,6 +82,10 @@ struct AuctionRmlModel
     // The fourth line warns (not enough jewels in the bank).
     bool selAlert = false;
     std::vector<AuctionButton> actions;
+    // Search: the bid typed for the picked lot (between actions and moreActions) and whether it can be bid on.
+    std::vector<AuctionButton> moreActions;
+    Rml::String bidText;
+    bool bidOpen = false;
 
     // Sell: the days on sale, the price's lines (their counts typed by the player) and the fee.
     std::vector<AuctionButton> days;
@@ -92,6 +96,9 @@ struct AuctionRmlModel
     Rml::String count0Text;
     Rml::String count1Text;
     Rml::String count2Text;
+    // The starting bid: [<] the jewel [>] and its count typed (bid_start_text); without a jewel no bids.
+    AuctionPriceStep bidStep;
+    Rml::String bidStartText;
     AuctionLine fee;
 
     // The server's answer to the last request.

@@ -14740,7 +14740,7 @@
     <value>Камень указан в цене дважды.</value>
   </data>
   <data name="AuctionNeedPrice" xml:space="preserve">
-    <value>Укажите цену: камень и количество.</value>
+    <value>Укажите цену выкупа, начальную ставку или обе.</value>
   </data>
   <data name="AuctionLeftDays" xml:space="preserve">
     <value>%dд %dч</value>
@@ -14789,5 +14789,71 @@
   </data>
   <data name="AuctionStoreClosed" xml:space="preserve">
     <value>Личных магазинов здесь нет: продавайте вещи на аукционе у Рауля (Лорен, Девиас).</value>
+  </data>
+  <data name="AuctionBid" xml:space="preserve">
+    <value>Ставка</value>
+  </data>
+  <data name="AuctionBidShort" xml:space="preserve">
+    <value>ставка %d %ls</value>
+  </data>
+  <data name="AuctionBidsOnly" xml:space="preserve">
+    <value>Только ставки: побеждает высшая.</value>
+  </data>
+  <data name="AuctionBidInfo" xml:space="preserve">
+    <value>Ставка %d %ls (%d), следующая от %d</value>
+  </data>
+  <data name="AuctionBidStart" xml:space="preserve">
+    <value>Ставки от %d %ls, пока нет</value>
+  </data>
+  <data name="AuctionBidLeads" xml:space="preserve">
+    <value>Ваша ставка первая: %d %ls</value>
+  </data>
+  <data name="AuctionBidConfirm" xml:space="preserve">
+    <value>Поставить %d %ls на %ls?</value>
+  </data>
+  <data name="AuctionBidHold" xml:space="preserve">
+    <value>Камни ждут в ставке; перебьют — вернутся в банк.</value>
+  </data>
+  <data name="AuctionBidExtend" xml:space="preserve">
+    <value>Ставка в последние %d мин продлевает лот на %d мин.</value>
+  </data>
+  <data name="AuctionNeedBid" xml:space="preserve">
+    <value>Укажите ставку: от %d до %d.</value>
+  </data>
+  <data name="AuctionStateBid" xml:space="preserve">
+    <value>Ставка %d %ls, осталось %ls</value>
+  </data>
+  <data name="AuctionStateLeading" xml:space="preserve">
+    <value>Ваша ставка первая, осталось %ls</value>
+  </data>
+  <data name="AuctionStateOutbid" xml:space="preserve">
+    <value>Перебили: заберите камни</value>
+  </data>
+  <data name="AuctionStateWon" xml:space="preserve">
+    <value>Выиграно: заберите</value>
+  </data>
+  <data name="AuctionTakeBid" xml:space="preserve">
+    <value>«Забрать» вернёт камни в банк.</value>
+  </data>
+  <data name="AuctionYourBid" xml:space="preserve">
+    <value>Ваша ставка: %d %ls</value>
+  </data>
+  <data name="AuctionHasBid" xml:space="preserve">
+    <value>Со ставкой лот не снять до конца срока.</value>
+  </data>
+  <data name="AuctionNoBuyout" xml:space="preserve">
+    <value>Без выкупа</value>
+  </data>
+  <data name="AuctionBidKind" xml:space="preserve">
+    <value>Ставка: %ls</value>
+  </data>
+  <data name="AuctionNoBids" xml:space="preserve">
+    <value>Без ставок</value>
+  </data>
+  <data name="AuctionSellBid" xml:space="preserve">
+    <value>Ставки от %d %ls.</value>
+  </data>
+  <data name="AuctionSellNoBuyout" xml:space="preserve">
+    <value>Без выкупа: побеждает высшая ставка.</value>
   </data>
 </root>

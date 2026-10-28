@@ -13,12 +13,15 @@
 	       Every tab: how many; the list (two lines a row, the bag's items one; a click picks it, a hovered row shows
 	       its item's tooltip); the picked item's icon (#au_icon; #au_items over the panel shows the 3D item there,
 	       its tooltip while hovered) and three lines beside it; two lines under it (not on the Sell tab).
-	       Sell: the days on sale; the price's lines ([<] jewel [>] and the count typed beside it); the fee.
-	       Every tab: its buttons (search: < Buy >; my lots: remove, take, take all, refresh; sell: put on sale, clear).
+	       Sell: the days on sale; the buyout's lines and the starting bid's ([<] jewel [>] and the count typed beside
+	       it; a line without a jewel faded); the fee.
+	       Every tab: its buttons (search: < Buy [the bid typed] Bid >; my lots: remove, take, take all, refresh; sell:
+	       put on sale, clear).
 	     Under the pane, the server's answer to the last action, and the exit button. The workspace slot places and
 	     scales #panel. C++ keeps the state; clicks are queued with au_tab(id), au_action(id), au_row(index),
-	     au_days(index), au_kind_down(line), au_kind_up(line), au_find and au_exit; Enter in the name field is
-	     au_field_key. The fields' texts are the model's (search_text, count0_text, count1_text, count2_text). -->
+	     au_days(index), au_kind_down(line), au_kind_up(line) (line 3: the starting bid), au_find and au_exit; Enter
+	     in the name or the bid field is au_field_key. The fields' texts are the model's (search_text, bid_text,
+	     count0_text, count1_text, count2_text, bid_start_text). -->
 	<div id="panel" data-model="auction">
 		<div class="frame-piece frame-top"></div>
 		<div class="frame-piece frame-left"></div>
@@ -120,14 +123,32 @@
 					<input id="au_count2" type="text" class="text-field text-field--numeric au-field au-count-field" maxlength="4"
 					       data-value="count2_text" data-style-font-size="field_px + 'px'"/>
 				</div>
+				<div class="au-bar au-step" data-class-unused="!bid_step.used">
+					<div class="au-btn au-btn-arrow" data-event-click="au_kind_down(3)">
+						<span class="au-btn-label" data-style-font-size="field_px + 'px'">&lt;</span>
+					</div>
+					<span class="au-step-value" data-style-font-size="bid_step.kind.text_px + 'px'">{{bid_step.kind.text}}</span>
+					<div class="au-btn au-btn-arrow" data-event-click="au_kind_up(3)">
+						<span class="au-btn-label" data-style-font-size="field_px + 'px'">&gt;</span>
+					</div>
+					<input id="au_bid_start" type="text" class="text-field text-field--numeric au-field au-count-field" maxlength="4"
+					       data-value="bid_start_text" data-style-font-size="field_px + 'px'"/>
+				</div>
 				<span class="au-info" data-style-font-size="fee.text_px + 'px'">{{fee.text}}&#160;</span>
 			</div>
 
-			<!-- A quarter wide on My lots and for the page arrows (actions 6 and 7), else half. -->
+			<!-- The page arrows (actions 6 and 7) narrow, the others a quarter wide on Search and My lots, half on Sell;
+			     on Search the bid field between Buy and Bid (more_actions). -->
 			<div class="au-bar au-grid">
-				<div class="au-btn" data-for="b : actions" data-class-au-btn-quarter="tab == 1 || b.id == 6 || b.id == 7"
-				     data-class-au-btn-half="!(tab == 1 || b.id == 6 || b.id == 7)"
+				<div class="au-btn" data-for="b : actions" data-class-au-btn-arrow="b.id == 6 || b.id == 7"
+				     data-class-au-btn-quarter="tab != 2 && b.id != 6 && b.id != 7" data-class-au-btn-half="tab == 2"
 				     data-class-off="b.off" data-event-click="au_action(b.id)">
+					<span class="au-btn-label" data-style-font-size="b.label.text_px + 'px'">{{b.label.text}}</span>
+				</div>
+				<input id="au_bid" type="text" class="text-field text-field--numeric au-field au-bid-field" maxlength="4" data-if="tab == 0"
+				       data-class-off="!bid_open" data-value="bid_text" data-style-font-size="field_px + 'px'" data-event-keydown="au_field_key"/>
+				<div class="au-btn" data-for="b : more_actions" data-class-au-btn-arrow="b.id == 6 || b.id == 7"
+				     data-class-au-btn-quarter="b.id != 6 && b.id != 7" data-class-off="b.off" data-event-click="au_action(b.id)">
 					<span class="au-btn-label" data-style-font-size="b.label.text_px + 'px'">{{b.label.text}}</span>
 				</div>
 			</div>

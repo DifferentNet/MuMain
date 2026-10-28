@@ -15117,7 +15117,7 @@
     <value>A jewel is in the price twice.</value>
   </data>
   <data name="AuctionNeedPrice" xml:space="preserve">
-    <value>Set the price: a jewel and how many.</value>
+    <value>Set a buyout price, a starting bid or both.</value>
   </data>
   <data name="AuctionLeftDays" xml:space="preserve">
     <value>%dd %dh</value>
@@ -15166,5 +15166,71 @@
   </data>
   <data name="AuctionStoreClosed" xml:space="preserve">
     <value>There are no personal stores here: sell your items at the auction of Raul the Auctioneer (Lorencia, Devias).</value>
+  </data>
+  <data name="AuctionBid" xml:space="preserve">
+    <value>Bid</value>
+  </data>
+  <data name="AuctionBidShort" xml:space="preserve">
+    <value>bid %d %ls</value>
+  </data>
+  <data name="AuctionBidsOnly" xml:space="preserve">
+    <value>Bids only: the highest bid wins.</value>
+  </data>
+  <data name="AuctionBidInfo" xml:space="preserve">
+    <value>Bid %d %ls (%d), next from %d</value>
+  </data>
+  <data name="AuctionBidStart" xml:space="preserve">
+    <value>Bids from %d %ls, none yet</value>
+  </data>
+  <data name="AuctionBidLeads" xml:space="preserve">
+    <value>Your bid leads: %d %ls</value>
+  </data>
+  <data name="AuctionBidConfirm" xml:space="preserve">
+    <value>Bid %d %ls on %ls?</value>
+  </data>
+  <data name="AuctionBidHold" xml:space="preserve">
+    <value>The jewels wait in the bid; outbid, they come back to your bank.</value>
+  </data>
+  <data name="AuctionBidExtend" xml:space="preserve">
+    <value>A bid in the last %d min keeps the lot on %d min more.</value>
+  </data>
+  <data name="AuctionNeedBid" xml:space="preserve">
+    <value>Type your bid: %d to %d.</value>
+  </data>
+  <data name="AuctionStateBid" xml:space="preserve">
+    <value>Bid %d %ls, %ls left</value>
+  </data>
+  <data name="AuctionStateLeading" xml:space="preserve">
+    <value>Your bid leads, %ls left</value>
+  </data>
+  <data name="AuctionStateOutbid" xml:space="preserve">
+    <value>Outbid: take the jewels back</value>
+  </data>
+  <data name="AuctionStateWon" xml:space="preserve">
+    <value>Won: take it</value>
+  </data>
+  <data name="AuctionTakeBid" xml:space="preserve">
+    <value>Take brings the jewels back into the bank.</value>
+  </data>
+  <data name="AuctionYourBid" xml:space="preserve">
+    <value>Your bid: %d %ls</value>
+  </data>
+  <data name="AuctionHasBid" xml:space="preserve">
+    <value>With a bid it stays on sale until it ends.</value>
+  </data>
+  <data name="AuctionNoBuyout" xml:space="preserve">
+    <value>No buyout</value>
+  </data>
+  <data name="AuctionBidKind" xml:space="preserve">
+    <value>Bid: %ls</value>
+  </data>
+  <data name="AuctionNoBids" xml:space="preserve">
+    <value>No bids</value>
+  </data>
+  <data name="AuctionSellBid" xml:space="preserve">
+    <value>Bids from %d %ls.</value>
+  </data>
+  <data name="AuctionSellNoBuyout" xml:space="preserve">
+    <value>No buyout: the highest bid wins.</value>
   </data>
 </root>

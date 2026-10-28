@@ -235,6 +235,18 @@ std::wstring PriceText(const GameLogic::Auction::Price& price)
     return text;
 }
 
+// A lot's terms as its row says them: "5 Bless", "bid 7 Soul", "5 Bless; bid 7 Soul" (the leading bid, else the
+// start).
+std::wstring LotTerms(const GameLogic::Auction::Lot& lot)
+{
+    const std::wstring buyout = PriceText(lot.price);
+    if (!lot.TakesBids())
+        return buyout;
+    const int shown = lot.bidCount > 0 ? lot.bidCount : lot.nextBid;
+    const std::wstring bid = Printf(I18N::Game::AuctionBidShort, shown, KindName(lot.bidKind).c_str());
+    return buyout.empty() ? bid : buyout + L"; " + bid;
+}
+
 // What the jewel bank holds of a price: "Bless 3/5, Soul 7/2"; `missing` when a line has fewer than it asks.
 std::wstring BankText(const GameLogic::Auction::Price& price, bool& missing)
 {
@@ -271,21 +283,39 @@ std::wstring TimeText(long long seconds)
     return Printf(I18N::Game::AuctionLeftMinutes, static_cast<int>((seconds + 59) / 60));
 }
 
-// A lot of the player's own as its row says it: "On sale, 2d 5h left", "Sold to Name", "Not sold: take it back".
+// A lot of the player's own, or one it bid on, as its row says it: "On sale, 2d 5h left", "Bid 7 Soul, 2d 5h left",
+// "Sold to Name", "Not sold: take it back", "Your bid leads, 5h 12m left", "Outbid: take the jewels back", "Won: take
+// it".
 std::wstring StateText(const GameLogic::Auction::OwnLot& lot, std::chrono::steady_clock::time_point receivedAt)
 {
     using GameLogic::Auction::OwnLotState;
+    const std::wstring left = TimeText(SecondsLeft(lot.secondsLeft, receivedAt));
     switch (lot.state)
     {
     case OwnLotState::Active:
-        return Printf(I18N::Game::AuctionStateActive, TimeText(SecondsLeft(lot.secondsLeft, receivedAt)).c_str());
+        if (lot.bidCount > 0)
+            return Printf(I18N::Game::AuctionStateBid, lot.bidCount, KindName(lot.bidKind).c_str(), left.c_str());
+        return Printf(I18N::Game::AuctionStateActive, left.c_str());
     case OwnLotState::Sold:
-        return Printf(I18N::Game::AuctionStateSold, lot.buyer.c_str());
+        return Printf(I18N::Game::AuctionStateSold, lot.other.c_str());
     case OwnLotState::Unsold:
         return I18N::Game::AuctionStateUnsold;
+    case OwnLotState::Leading:
+        return Printf(I18N::Game::AuctionStateLeading, left.c_str());
+    case OwnLotState::Outbid:
+        return I18N::Game::AuctionStateOutbid;
+    case OwnLotState::Won:
+        return I18N::Game::AuctionStateWon;
     default:
         return I18N::Game::AuctionStateBusy;
     }
+}
+
+// A count typed in a field: 0 when it's empty or too long.
+long long TypedCount(const Rml::String& text)
+{
+    const Rml::String digits = UI::RmlBridge::KeepDigitsOnly(text);
+    return digits.empty() || digits.size() > 9 ? 0 : std::atoll(digits.c_str());
 }
 
 // A "find" / "mine" answer is awaited while the list's version is still the one it had when asked.
@@ -445,6 +475,8 @@ bool mu::ui::window::CAuctionWindow::UpdateKeyEvent()
         Rml::Element* focused = document->GetFocusLeafNode();
         if (focused != nullptr && focused->GetId() == "au_search")
             m_pendingFind = true;
+        else if (focused != nullptr && focused->GetId() == "au_bid")
+            m_pendingAction = ACT_BID;
         return false;
     }
 
@@ -466,6 +498,8 @@ bool mu::ui::window::CAuctionWindow::Update()
             store.RequestSettings();
             if (m_tab == TAB_MINE)
                 RequestMine();
+            else if (m_tab == TAB_SEARCH)
+                Search(store.Found().page);
         }
     }
 
@@ -562,7 +596,7 @@ void mu::ui::window::CAuctionWindow::HandleClicks()
         PickRow(row);
     if (days >= 0 && m_tab == TAB_SELL && days < static_cast<int>(Auctions().GetSettings().durations.size()))
         m_days = days;
-    if (kindLine >= 0 && kindLine < PriceLineSlots && m_tab == TAB_SELL)
+    if (kindLine >= 0 && kindLine <= BidLine && m_tab == TAB_SELL)
         StepKind(kindLine, kindStep);
     if (find && m_tab == TAB_SEARCH)
         Search(1);
@@ -638,6 +672,9 @@ void mu::ui::window::CAuctionWindow::DoAction(int action)
         case ACT_BUY:
             Buy();
             break;
+        case ACT_BID:
+            Bid();
+            break;
         default:
             break;
         }
@@ -675,26 +712,24 @@ void mu::ui::window::CAuctionWindow::DoAction(int action)
 void mu::ui::window::CAuctionWindow::StepKind(int line, int step)
 {
     const auto& settings = Auctions().GetSettings();
-    // The choices: none (not for the first line), then the kinds the server takes that no other line has.
-    std::vector<int> choices;
-    if (line > 0)
-        choices.push_back(NoKind);
+    const bool bid = line == BidLine;
+    int& current = bid ? m_bidKind : m_priceKinds[static_cast<size_t>(line)];
+    // The choices: none, then the kinds the server takes; for a price line those no other price line has.
+    std::vector<int> choices{NoKind};
     for (int kind = 0; kind < GameLogic::JewelBank::KindCount; ++kind)
     {
         bool taken = false;
-        for (int other = 0; other < PriceLineSlots; ++other)
+        for (int other = 0; other < PriceLineSlots && !bid; ++other)
             taken = taken || (other != line && m_priceKinds[static_cast<size_t>(other)] == kind);
         if (settings.Allows(kind) && !taken)
             choices.push_back(kind);
     }
-    if (choices.empty())
-        return;
 
-    const auto at = std::find(choices.begin(), choices.end(), m_priceKinds[static_cast<size_t>(line)]);
+    const auto at = std::find(choices.begin(), choices.end(), current);
     const int count = static_cast<int>(choices.size());
     int index = at == choices.end() ? 0 : static_cast<int>(at - choices.begin()) + (step < 0 ? -1 : 1);
     index = (index % count + count) % count;
-    m_priceKinds[static_cast<size_t>(line)] = choices[static_cast<size_t>(index)];
+    current = choices[static_cast<size_t>(index)];
 }
 
 void mu::ui::window::CAuctionWindow::TakeResult()
@@ -713,6 +748,12 @@ void mu::ui::window::CAuctionWindow::TakeResult()
             m_searchPicked = -1;
             Bank().Request();
         }
+        Search(store.Found().page);
+    }
+    else if (result.op == L"bid")
+    {
+        // Refused or not, the lot's bids changed (someone may have bid first): its page again. The server sends
+        // the jewel bank's counts itself.
         Search(store.Found().page);
     }
     else if (result.op == L"sell")
@@ -788,7 +829,7 @@ void mu::ui::window::CAuctionWindow::Buy()
     if (picked < 0)
         return;
     const auto& lot = Auctions().Found().lots[static_cast<size_t>(picked)];
-    if (lot.own)
+    if (lot.own || lot.price.empty())
         return;
 
     const ITEM* item = m_foundItems[static_cast<size_t>(picked)].get();
@@ -799,13 +840,49 @@ void mu::ui::window::CAuctionWindow::Buy()
             item, [request] { Auctions().Send(request); }, "auction_buy");
 }
 
+void mu::ui::window::CAuctionWindow::Bid()
+{
+    const int picked = FoundIndex();
+    if (picked < 0)
+        return;
+    const auto& settings = Auctions().GetSettings();
+    const auto& lot = Auctions().Found().lots[static_cast<size_t>(picked)];
+    if (lot.own || !lot.TakesBids() || lot.leading)
+        return;
+
+    const long long count = TypedCount(m_RmlView.GetModel().bidText);
+    const int most = settings.maximumCount > 0 ? settings.maximumCount : 9999;
+    if (count < std::max(1, lot.nextBid) || count > most)
+    {
+        SetStatus(Printf(I18N::Game::AuctionNeedBid, std::max(1, lot.nextBid), most), true);
+        return;
+    }
+
+    // The jewels leave the bank for the bid until it is beaten; the question says what the bank holds of them.
+    const ITEM* item = m_foundItems[static_cast<size_t>(picked)].get();
+    const int bid = static_cast<int>(count);
+    const std::wstring request = L"bid " + std::to_wstring(lot.number) + L" " + std::to_wstring(bid);
+    std::vector<GenericDialogConfig::Line> lines{
+        {Printf(I18N::Game::AuctionBidConfirm, bid, KindName(lot.bidKind).c_str(), ItemTitle(item).c_str()), true},
+        {I18N::Game::AuctionBidHold, false},
+    };
+    if (Bank().HasInfo())
+    {
+        bool missing = false;
+        lines.push_back({Printf(I18N::Game::AuctionYourBank, BankText({{lot.bidKind, bid}}, missing).c_str()), false});
+    }
+    if (settings.bidExtendMinutes > 0)
+        lines.push_back({Printf(I18N::Game::AuctionBidExtend, settings.bidExtendMinutes, settings.bidExtendMinutes), false});
+    Confirm(std::move(lines), item, [request] { Auctions().Send(request); }, "auction_bid");
+}
+
 void mu::ui::window::CAuctionWindow::CancelPicked()
 {
     const int picked = MineIndex();
     if (picked < 0)
         return;
     const auto& lot = Auctions().Mine().lots[static_cast<size_t>(picked)];
-    if (lot.state != GameLogic::Auction::OwnLotState::Active)
+    if (lot.bidder || lot.state != GameLogic::Auction::OwnLotState::Active || lot.bidCount > 0)
         return;
 
     const ITEM* item = m_mineItems[static_cast<size_t>(picked)].get();
@@ -816,13 +893,10 @@ void mu::ui::window::CAuctionWindow::CancelPicked()
 
 void mu::ui::window::CAuctionWindow::Take(bool all)
 {
-    using GameLogic::Auction::OwnLotState;
     const auto& lots = Auctions().Mine().lots;
     if (all)
     {
-        const bool any = std::any_of(lots.begin(), lots.end(), [](const auto& lot)
-                                     { return lot.state == OwnLotState::Sold || lot.state == OwnLotState::Unsold; });
-        if (any)
+        if (std::any_of(lots.begin(), lots.end(), [](const auto& lot) { return lot.Takeable(); }))
             Auctions().Send(L"take all");
         return;
     }
@@ -831,11 +905,11 @@ void mu::ui::window::CAuctionWindow::Take(bool all)
     if (picked < 0)
         return;
     const auto& lot = lots[static_cast<size_t>(picked)];
-    if (lot.state == OwnLotState::Sold || lot.state == OwnLotState::Unsold)
+    if (lot.Takeable())
         Auctions().Send(L"take " + std::to_wstring(lot.number));
 }
 
-GameLogic::Auction::Price mu::ui::window::CAuctionWindow::TypedPrice()
+bool mu::ui::window::CAuctionWindow::TypedPrice(GameLogic::Auction::Price& price)
 {
     const auto& settings = Auctions().GetSettings();
     const auto& model = m_RmlView.GetModel();
@@ -843,29 +917,44 @@ GameLogic::Auction::Price mu::ui::window::CAuctionWindow::TypedPrice()
     const int lines = std::clamp(settings.priceLines, 1, PriceLineSlots);
     const int most = settings.maximumCount > 0 ? settings.maximumCount : 9999;
 
-    GameLogic::Auction::Price price;
+    price.clear();
     for (int i = 0; i < lines; ++i)
     {
         const int kind = m_priceKinds[static_cast<size_t>(i)];
-        if (kind == NoKind)
+        if (kind < 0)
             continue;
-        const Rml::String digits = UI::RmlBridge::KeepDigitsOnly(*counts[i]);
-        const long long count = digits.empty() || digits.size() > 9 ? 0 : std::atoll(digits.c_str());
+        const long long count = TypedCount(*counts[i]);
         if (count < 1 || count > most)
         {
             SetStatus(Printf(I18N::Game::AuctionNeedCount, most), true);
-            return {};
+            return false;
         }
         if (std::any_of(price.begin(), price.end(), [kind](const auto& line) { return line.kind == kind; }))
         {
             SetStatus(I18N::Game::AuctionKindTwice, true);
-            return {};
+            return false;
         }
         price.push_back({kind, static_cast<int>(count)});
     }
-    if (price.empty())
-        SetStatus(I18N::Game::AuctionNeedPrice, true);
-    return price;
+    return true;
+}
+
+bool mu::ui::window::CAuctionWindow::TypedBid(int& kind, int& start)
+{
+    const auto& settings = Auctions().GetSettings();
+    kind = m_bidKind;
+    start = 0;
+    if (kind < 0)
+        return true;
+    const int most = settings.maximumCount > 0 ? settings.maximumCount : 9999;
+    const long long count = TypedCount(m_RmlView.GetModel().bidStartText);
+    if (count < 1 || count > most)
+    {
+        SetStatus(Printf(I18N::Game::AuctionNeedCount, most), true);
+        return false;
+    }
+    start = static_cast<int>(count);
+    return true;
 }
 
 void mu::ui::window::CAuctionWindow::Sell()
@@ -879,21 +968,36 @@ void mu::ui::window::CAuctionWindow::Sell()
     }
     if (!Auctions().HasSettings() || settings.durations.empty())
         return;
-    const GameLogic::Auction::Price price = TypedPrice();
-    if (price.empty())
+    GameLogic::Auction::Price price;
+    int bidKind = NoKind;
+    int bidStart = 0;
+    if (!TypedPrice(price) || !TypedBid(bidKind, bidStart))
         return;
+    if (price.empty() && bidKind < 0)
+    {
+        SetStatus(I18N::Game::AuctionNeedPrice, true);
+        return;
+    }
 
+    // "sell slot days kind:count,... [bid=kind:start]", the price "-" without a buyout.
     const auto& entry = m_bag[static_cast<size_t>(index)];
     const int days = settings.durations[static_cast<size_t>(std::clamp(m_days, 0, static_cast<int>(settings.durations.size()) - 1))];
     std::wstring request = L"sell " + std::to_wstring(entry.slot) + L" " + std::to_wstring(days) + L" ";
     for (size_t i = 0; i < price.size(); ++i)
         request += (i > 0 ? L"," : L"") + std::to_wstring(price[i].kind + 1) + L":" + std::to_wstring(price[i].count);
+    if (price.empty())
+        request += L"-";
+    if (bidKind >= 0)
+        request += L" bid=" + std::to_wstring(bidKind + 1) + L":" + std::to_wstring(bidStart);
 
     // The item may move while the question is open: what is sold is what the slot holds when the answer comes.
     const auto key = KeyOf(entry.slot, *entry.item);
-    Confirm({{Printf(I18N::Game::AuctionSellConfirm, ItemTitle(entry.item.get()).c_str(), days), true},
-             {Printf(I18N::Game::AuctionPrice, PriceText(price).c_str()), false},
-             {Printf(I18N::Game::AuctionSellFee, Thousands(settings.feePerDay * days).c_str()), false}},
+    std::vector<GenericDialogConfig::Line> lines{{Printf(I18N::Game::AuctionSellConfirm, ItemTitle(entry.item.get()).c_str(), days), true}};
+    lines.push_back({price.empty() ? std::wstring(I18N::Game::AuctionSellNoBuyout) : Printf(I18N::Game::AuctionPrice, PriceText(price).c_str()), false});
+    if (bidKind >= 0)
+        lines.push_back({Printf(I18N::Game::AuctionSellBid, bidStart, KindName(bidKind).c_str()), false});
+    lines.push_back({Printf(I18N::Game::AuctionSellFee, Thousands(settings.feePerDay * days).c_str()), false});
+    Confirm(std::move(lines),
             entry.item.get(),
             [request, key]
             {
@@ -906,11 +1010,13 @@ void mu::ui::window::CAuctionWindow::Sell()
 void mu::ui::window::CAuctionWindow::ClearSell()
 {
     m_sellSlot = -1;
-    m_priceKinds = {NoKind, NoKind, NoKind};
+    m_priceKinds = {UnsetKind, NoKind, NoKind};
+    m_bidKind = NoKind;
     auto& binder = m_RmlView.Binder();
     SyncField(binder, &AuctionRmlModel::count0Text, "count0_text", Rml::String("1"));
     SyncField(binder, &AuctionRmlModel::count1Text, "count1_text", Rml::String());
     SyncField(binder, &AuctionRmlModel::count2Text, "count2_text", Rml::String());
+    SyncField(binder, &AuctionRmlModel::bidStartText, "bid_start_text", Rml::String());
     m_status.clear();
     m_statusBad = false;
 }
@@ -943,10 +1049,11 @@ void mu::ui::window::CAuctionWindow::TakeFound()
         AuctionRow row;
         row.index = static_cast<int>(i);
         row.title = ClippedLine(ItemTitle(item), ROW_WIDTH, true);
-        row.detail = ClippedLine(PriceText(lot.price) + L"  " + TimeText(SecondsLeft(lot.secondsLeft, found.receivedAt)), ROW_WIDTH);
+        row.detail = ClippedLine(LotTerms(lot) + L"  " + TimeText(SecondsLeft(lot.secondsLeft, found.receivedAt)), ROW_WIDTH);
         row.excellent = IsExcellent(item);
         row.ancient = IsAncient(item);
         row.dim = lot.own;
+        row.live = lot.leading;
         m_foundRows.push_back(std::move(row));
     }
 }
@@ -982,7 +1089,7 @@ void mu::ui::window::CAuctionWindow::TakeMine()
         row.detail = ClippedLine(StateText(lot, mine.receivedAt), ROW_WIDTH);
         row.excellent = IsExcellent(item);
         row.ancient = IsAncient(item);
-        row.live = lot.state == OwnLotState::Sold || lot.state == OwnLotState::Unsold;
+        row.live = lot.Takeable();
         row.dim = lot.state == OwnLotState::Busy;
         m_mineRows.push_back(std::move(row));
     }
@@ -1180,6 +1287,9 @@ void mu::ui::window::CAuctionWindow::BindRmlModel(Rml::DataModelConstructor& c, 
     c.Bind("sel_fourth", &model.selFourth);
     c.Bind("sel_alert", &model.selAlert);
     c.Bind("actions", &model.actions);
+    c.Bind("more_actions", &model.moreActions);
+    c.Bind("bid_text", &model.bidText);
+    c.Bind("bid_open", &model.bidOpen);
 
     c.Bind("days", &model.days);
     c.Bind("price_line_count", &model.priceLineCount);
@@ -1189,6 +1299,8 @@ void mu::ui::window::CAuctionWindow::BindRmlModel(Rml::DataModelConstructor& c, 
     c.Bind("count0_text", &model.count0Text);
     c.Bind("count1_text", &model.count1Text);
     c.Bind("count2_text", &model.count2Text);
+    c.Bind("bid_step", &model.bidStep);
+    c.Bind("bid_start_text", &model.bidStartText);
     c.Bind("fee", &model.fee);
     // One of the first jewel unless the seller types more.
     if (model.count0Text.empty())
@@ -1228,6 +1340,8 @@ void mu::ui::window::CAuctionWindow::BindRmlModel(Rml::DataModelConstructor& c, 
                             Rml::Element* field = event.GetTargetElement();
                             if (field != nullptr && field->GetId() == "au_search")
                                 m_pendingFind = true;
+                            else if (field != nullptr && field->GetId() == "au_bid")
+                                m_pendingAction = ACT_BID;
                         });
     c.BindEventCallback("au_exit", [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { m_pendingExit = true; });
 
@@ -1316,16 +1430,19 @@ void mu::ui::window::CAuctionWindow::SyncContent()
     SyncFieldFrom(binder, &AuctionRmlModel::selFourth, "sel_fourth", updated);
     SyncFieldFrom(binder, &AuctionRmlModel::selAlert, "sel_alert", updated);
     SyncFieldFrom(binder, &AuctionRmlModel::actions, "actions", updated);
+    SyncFieldFrom(binder, &AuctionRmlModel::moreActions, "more_actions", updated);
+    SyncFieldFrom(binder, &AuctionRmlModel::bidOpen, "bid_open", updated);
     SyncFieldFrom(binder, &AuctionRmlModel::days, "days", updated);
     SyncFieldFrom(binder, &AuctionRmlModel::priceLineCount, "price_line_count", updated);
     SyncFieldFrom(binder, &AuctionRmlModel::price0, "price0", updated);
     SyncFieldFrom(binder, &AuctionRmlModel::price1, "price1", updated);
     SyncFieldFrom(binder, &AuctionRmlModel::price2, "price2", updated);
+    SyncFieldFrom(binder, &AuctionRmlModel::bidStep, "bid_step", updated);
     SyncFieldFrom(binder, &AuctionRmlModel::fee, "fee", updated);
     SyncFieldFrom(binder, &AuctionRmlModel::status, "status", updated);
     SyncFieldFrom(binder, &AuctionRmlModel::statusBad, "status_bad", updated);
-    // The typed texts (the name searched, the price's counts) are the player's: the model owns them, nothing
-    // writes them here (Clear sets the counts back).
+    // The typed texts (the name searched, the price's counts, the bids) are the player's: the model owns them,
+    // nothing writes them here (Clear sets the counts back, picking a lot fills its least next bid).
 }
 
 void mu::ui::window::CAuctionWindow::SyncSearch(AuctionRmlModel& updated)
@@ -1356,12 +1473,29 @@ void mu::ui::window::CAuctionWindow::SyncSearch(AuctionRmlModel& updated)
     for (auto& row : updated.rows)
         row.selected = row.index == picked;
 
-    const bool own = picked >= 0 && found.lots[static_cast<size_t>(picked)].own;
+    // < Buy [bid] Bid >: Buy for a lot with a buyout, Bid for one that takes bids and the player's bid doesn't lead.
+    const auto* lot = picked >= 0 ? &found.lots[static_cast<size_t>(picked)] : nullptr;
+    const bool canBuy = lot != nullptr && !lot->own && !lot->price.empty();
+    const bool canBid = lot != nullptr && !lot->own && lot->TakesBids() && !lot->leading;
     updated.actions = {
-        Button(ACT_PREVIOUS, L"<", QUARTER_WIDTH, false, found.page <= 1),
-        Button(ACT_BUY, I18N::Game::AuctionBuy, HALF_WIDTH, false, picked < 0 || own),
-        Button(ACT_NEXT, L">", QUARTER_WIDTH, false, found.page >= found.pages),
+        Button(ACT_PREVIOUS, L"<", ARROW_WIDTH, false, found.page <= 1),
+        Button(ACT_BUY, I18N::Game::AuctionBuy, QUARTER_WIDTH, false, !canBuy),
     };
+    updated.moreActions = {
+        Button(ACT_BID, I18N::Game::AuctionBid, QUARTER_WIDTH, false, !canBid),
+        Button(ACT_NEXT, L">", ARROW_WIDTH, false, found.page >= found.pages),
+    };
+    updated.bidOpen = canBid;
+
+    // The bid field shows the least next bid of the lot picked, again when that changes.
+    const int lotNumber = lot != nullptr ? lot->number : -1;
+    const int next = canBid ? std::max(1, lot->nextBid) : -1;
+    if (lotNumber != m_bidFilledLot || next != m_bidFilledNext)
+    {
+        m_bidFilledLot = lotNumber;
+        m_bidFilledNext = next;
+        SyncField(m_RmlView.Binder(), &AuctionRmlModel::bidText, "bid_text", next > 0 ? Rml::String(std::to_string(next)) : Rml::String());
+    }
 }
 
 void mu::ui::window::CAuctionWindow::SyncSearchPick(AuctionRmlModel& updated)
@@ -1381,10 +1515,24 @@ void mu::ui::window::CAuctionWindow::SyncSearchPick(AuctionRmlModel& updated)
     updated.selFirst = ClippedLine(Printf(I18N::Game::AuctionSeller, lot.seller.c_str()), ITEM_LINES_WIDTH);
     if (lot.combatPower > 0)
         updated.selSecond = Line(Printf(I18N::Game::AuctionCp, Thousands(lot.combatPower).c_str()), ITEM_LINES_WIDTH);
-    updated.selThird = ClippedLine(Printf(I18N::Game::AuctionPrice, PriceText(lot.price).c_str()), CONTENT_WIDTH);
+    updated.selThird = lot.price.empty() ? ClippedLine(I18N::Game::AuctionBidsOnly, CONTENT_WIDTH)
+                                         : ClippedLine(Printf(I18N::Game::AuctionPrice, PriceText(lot.price).c_str()), CONTENT_WIDTH);
     if (lot.own)
     {
         updated.selFourth = Line(I18N::Game::AuctionOwnLot, CONTENT_WIDTH);
+    }
+    else if (lot.TakesBids())
+    {
+        // The bids: the player's leads, the leading one and the least next, or none yet; red while the bank holds
+        // fewer than the least next bid.
+        const std::wstring kind = KindName(lot.bidKind);
+        if (lot.leading)
+            updated.selFourth = ClippedLine(Printf(I18N::Game::AuctionBidLeads, lot.bidCount, kind.c_str()), CONTENT_WIDTH);
+        else if (lot.bidCount > 0)
+            updated.selFourth = ClippedLine(Printf(I18N::Game::AuctionBidInfo, lot.bidCount, kind.c_str(), lot.bids, lot.nextBid), CONTENT_WIDTH);
+        else
+            updated.selFourth = ClippedLine(Printf(I18N::Game::AuctionBidStart, lot.nextBid, kind.c_str()), CONTENT_WIDTH);
+        updated.selAlert = !lot.leading && Bank().HasInfo() && Bank().Count(lot.bidKind) < lot.nextBid;
     }
     else if (Bank().HasInfo())
     {
@@ -1413,12 +1561,13 @@ void mu::ui::window::CAuctionWindow::SyncMine(AuctionRmlModel& updated)
     for (auto& row : updated.rows)
         row.selected = row.index == picked;
 
-    const OwnLotState state = picked >= 0 ? mine.lots[static_cast<size_t>(picked)].state : OwnLotState::Busy;
-    const bool any = std::any_of(mine.lots.begin(), mine.lots.end(), [](const auto& lot)
-                                 { return lot.state == OwnLotState::Sold || lot.state == OwnLotState::Unsold; });
+    // Remove for an own lot on sale without a bid; Take for one where jewels or an item wait.
+    const auto* lot = picked >= 0 ? &mine.lots[static_cast<size_t>(picked)] : nullptr;
+    const bool removable = lot != nullptr && !lot->bidder && lot->state == OwnLotState::Active && lot->bidCount == 0;
+    const bool any = std::any_of(mine.lots.begin(), mine.lots.end(), [](const auto& each) { return each.Takeable(); });
     updated.actions = {
-        Button(ACT_CANCEL, I18N::Game::AuctionCancel, QUARTER_WIDTH, false, picked < 0 || state != OwnLotState::Active),
-        Button(ACT_TAKE, I18N::Game::AuctionTake, QUARTER_WIDTH, false, picked < 0 || (state != OwnLotState::Sold && state != OwnLotState::Unsold)),
+        Button(ACT_CANCEL, I18N::Game::AuctionCancel, QUARTER_WIDTH, false, !removable),
+        Button(ACT_TAKE, I18N::Game::AuctionTake, QUARTER_WIDTH, false, lot == nullptr || !lot->Takeable()),
         Button(ACT_TAKE_ALL, I18N::Game::AuctionTakeAll, QUARTER_WIDTH, false, !any),
         Button(ACT_REFRESH, I18N::Game::AuctionRefresh, QUARTER_WIDTH),
     };
@@ -1439,11 +1588,27 @@ void mu::ui::window::CAuctionWindow::SyncMinePick(AuctionRmlModel& updated)
     updated.selFirst = ClippedLine(StateText(lot, mine.receivedAt), ITEM_LINES_WIDTH);
     if (const int cp = CombatPower(item); cp > 0)
         updated.selSecond = Line(Printf(I18N::Game::AuctionCp, Thousands(cp).c_str()), ITEM_LINES_WIDTH);
-    updated.selThird = ClippedLine(Printf(I18N::Game::AuctionPrice, PriceText(lot.price).c_str()), CONTENT_WIDTH);
+    if (lot.bidder)
+    {
+        // A lot the player bid on: its seller, then the player's bid or what Take does.
+        updated.selThird = ClippedLine(Printf(I18N::Game::AuctionSeller, lot.other.c_str()), CONTENT_WIDTH);
+        if (lot.state == OwnLotState::Leading)
+            updated.selFourth = ClippedLine(Printf(I18N::Game::AuctionYourBid, lot.mine, KindName(lot.bidKind).c_str()), CONTENT_WIDTH);
+        else if (lot.state == OwnLotState::Outbid)
+            updated.selFourth = ClippedLine(I18N::Game::AuctionTakeBid, CONTENT_WIDTH);
+        else if (lot.state == OwnLotState::Won)
+            updated.selFourth = ClippedLine(I18N::Game::AuctionTakeItem, CONTENT_WIDTH);
+        return;
+    }
+
+    updated.selThird = lot.price.empty() ? ClippedLine(I18N::Game::AuctionBidsOnly, CONTENT_WIDTH)
+                                         : ClippedLine(Printf(I18N::Game::AuctionPrice, PriceText(lot.price).c_str()), CONTENT_WIDTH);
     if (lot.state == OwnLotState::Sold)
-        updated.selFourth = Line(I18N::Game::AuctionTakeJewels, CONTENT_WIDTH);
+        updated.selFourth = ClippedLine(I18N::Game::AuctionTakeJewels, CONTENT_WIDTH);
     else if (lot.state == OwnLotState::Unsold)
-        updated.selFourth = Line(I18N::Game::AuctionTakeItem, CONTENT_WIDTH);
+        updated.selFourth = ClippedLine(I18N::Game::AuctionTakeItem, CONTENT_WIDTH);
+    else if (lot.state == OwnLotState::Active && lot.bidCount > 0)
+        updated.selFourth = ClippedLine(I18N::Game::AuctionHasBid, CONTENT_WIDTH);
 }
 
 void mu::ui::window::CAuctionWindow::SyncSell(AuctionRmlModel& updated)
@@ -1493,9 +1658,10 @@ void mu::ui::window::CAuctionWindow::SyncSellPrice(AuctionRmlModel& updated)
     for (int i = 0; i < durations; ++i)
         updated.days.push_back(Button(i, Printf(I18N::Game::AuctionDays, settings.durations[static_cast<size_t>(i)]), THIRD_WIDTH, i == m_days));
 
-    // The price's lines: the first asks for Jewels of Bless (or the first jewel the server takes) at first.
+    // The buyout's lines: the first asks for Jewels of Bless (or the first jewel the server takes) at first; every
+    // line may be set to none, and with none at all the lot goes for bids only.
     updated.priceLineCount = std::clamp(settings.priceLines, 1, PriceLineSlots);
-    if (m_priceKinds[0] == NoKind || !settings.Allows(m_priceKinds[0]))
+    if (m_priceKinds[0] == UnsetKind || (m_priceKinds[0] != NoKind && !settings.Allows(m_priceKinds[0])))
     {
         m_priceKinds[0] = NoKind;
         if (settings.Allows(FirstKind))
@@ -1509,13 +1675,21 @@ void mu::ui::window::CAuctionWindow::SyncSellPrice(AuctionRmlModel& updated)
         if (i >= updated.priceLineCount || (kind != NoKind && !settings.Allows(kind)))
             kind = NoKind;
     }
+    const bool noBuyout = std::all_of(m_priceKinds.begin(), m_priceKinds.end(), [](int kind) { return kind < 0; });
     AuctionPriceStep* steps[PriceLineSlots] = {&updated.price0, &updated.price1, &updated.price2};
     for (int i = 0; i < PriceLineSlots; ++i)
     {
         const int kind = m_priceKinds[static_cast<size_t>(i)];
-        steps[i]->kind = Line(KindName(kind), KIND_WIDTH);
-        steps[i]->used = kind != NoKind;
+        steps[i]->kind = Line(i == 0 && noBuyout ? std::wstring(I18N::Game::AuctionNoBuyout) : KindName(kind), KIND_WIDTH);
+        steps[i]->used = kind >= 0;
     }
+
+    // The starting bid: none at first; with a jewel the lot takes bids in it from the count typed.
+    if (m_bidKind != NoKind && !settings.Allows(m_bidKind))
+        m_bidKind = NoKind;
+    updated.bidStep.kind = Line(m_bidKind < 0 ? std::wstring(I18N::Game::AuctionNoBids) : Printf(I18N::Game::AuctionBidKind, KindName(m_bidKind).c_str()),
+                                KIND_WIDTH);
+    updated.bidStep.used = m_bidKind >= 0;
 
     const int days = durations > 0 ? settings.durations[static_cast<size_t>(m_days)] : 0;
     updated.fee = ClippedLine(Printf(I18N::Game::AuctionFee, Thousands(settings.feePerDay * days).c_str(), settings.onSale, settings.maximumLots),

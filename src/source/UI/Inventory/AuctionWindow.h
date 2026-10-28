@@ -27,12 +27,14 @@ namespace mu::ui::window
 // The auction window (GameLogic/Items/Auction.h), opened by talking to Raul the Auctioneer and docked beside the
 // inventory, which opens with it. Three tabs:
 //   Search: the lots on sale by category, for the hero's class, excellent or ancient only, a name, in an order; a
-//     page at a time. A row is the item and its price and time left (the item's tooltip while hovered); the picked
-//     lot shows its item, seller, price and what the jewel bank holds of it; Buy asks first.
-//   My lots: the account's lots on sale, sold or not sold; Remove takes one off sale, Take brings the jewels of a
-//     sold lot into the jewel bank or an unsold item back into the bag, Take all does every one.
-//   Sell: the bag's items; the picked one goes on sale for some days and up to three lines of jewels, for a fee in
-//     zen a day (asked first).
+//     page at a time. A row is the item and its price (buyout, bid) and time left (the item's tooltip while hovered);
+//     the picked lot shows its item, seller, price, bids and what the jewel bank holds of it; Buy pays the buyout,
+//     Bid bids the count typed beside it (the least next bid at first); both ask first.
+//   My lots: the account's lots on sale, sold or not sold, and the lots it bid on; Remove takes one without a bid
+//     off sale, Take brings the jewels of a sold lot or a beaten bid into the jewel bank, or an unsold or won item
+//     into the bag, Take all does every one.
+//   Sell: the bag's items; the picked one goes on sale for some days, for a buyout of up to three lines of jewels,
+//     for bids in one jewel from a starting count, or both, for a fee in zen a day (asked first).
 // It closes with the inventory and when the hero walks away from the auctioneer. auction.rml draws it; C++ draws the
 // picked item into its icon box through #au_items.
 class CAuctionWindow : public CObject
@@ -51,6 +53,8 @@ class CAuctionWindow : public CObject
         HALF_WIDTH = 82,
         // A price line's jewel, between its arrows.
         KIND_WIDTH = 70,
+        // The page arrows beside Buy and Bid.
+        ARROW_WIDTH = 18,
     };
 
 public:
@@ -102,10 +106,15 @@ private:
         ACT_REFRESH,
         ACT_SELL,
         ACT_CLEAR,
+        ACT_BID,
     };
     static constexpr int PriceLineSlots = 3;
+    // The Sell tab's line of the starting bid, after the price's lines (au_kind_down/up's line).
+    static constexpr int BidLine = PriceLineSlots;
     // A price line without a jewel.
     static constexpr int NoKind = -1;
+    // The price's first line before the Sell tab showed it: it then asks for Jewels of Bless.
+    static constexpr int UnsetKind = -2;
 
     // An item of the bag the Sell tab lists: a copy (the bag may change under it) and its slot.
     struct BagItem
@@ -140,12 +149,15 @@ private:
     void Search(int page);
     void RequestMine();
     void Buy();
+    void Bid();
     void CancelPicked();
     void Take(bool all);
     void Sell();
     void ClearSell();
-    // The price typed on the Sell tab; empty, and a status line saying why, when it's wrong.
-    GameLogic::Auction::Price TypedPrice();
+    // The buyout typed on the Sell tab (empty: none) and the starting bid (kind NoKind: none); false, and a status
+    // line saying why, when it's wrong.
+    bool TypedPrice(GameLogic::Auction::Price& price);
+    bool TypedBid(int& kind, int& start);
 
     // The lists' items and rows, made again when their answer changed (the bag's: when the bag did) and now and
     // then for the time left.
@@ -185,6 +197,9 @@ private:
     int m_foundAsked = -1;
     std::vector<std::unique_ptr<ITEM>> m_foundItems;
     std::vector<AuctionRow> m_foundRows;
+    // The lot and least next bid the bid field was filled for: another one fills it again.
+    int m_bidFilledLot = -1;
+    int m_bidFilledNext = -1;
 
     // My lots: the picked one (its number), the items and rows.
     int m_minePicked = -1;
@@ -194,13 +209,14 @@ private:
     std::vector<AuctionRow> m_mineRows;
 
     // Sell: the bag's items and rows (and what they were made from), the picked one's slot, the days (an index into
-    // the settings' durations) and the price's jewels (kinds, or NoKind).
+    // the settings' durations), the price's jewels and the starting bid's (kinds, or NoKind).
     std::vector<BagItem> m_bag;
     std::vector<AuctionRow> m_bagRows;
     std::vector<BagKey> m_bagKeys;
     int m_sellSlot = -1;
     int m_days = 1;
-    std::array<int, PriceLineSlots> m_priceKinds{NoKind, NoKind, NoKind};
+    std::array<int, PriceLineSlots> m_priceKinds{UnsetKind, NoKind, NoKind};
+    int m_bidKind = NoKind;
 
     // The rows' second lines count the time down: made again this often.
     std::chrono::steady_clock::time_point m_rowsBuiltAt{};

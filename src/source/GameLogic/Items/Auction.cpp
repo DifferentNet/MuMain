@@ -5,6 +5,7 @@
 #include "Engine/Object/ZzzCharacter.h"
 #include "Network/Server/WSclient.h"
 
+#include <algorithm>
 #include <cwchar>
 #include <string_view>
 
@@ -97,7 +98,28 @@ OwnLotState ParseState(const std::wstring& state)
         return OwnLotState::Sold;
     if (state == L"unsold")
         return OwnLotState::Unsold;
+    if (state == L"leading")
+        return OwnLotState::Leading;
+    if (state == L"outbid")
+        return OwnLotState::Outbid;
+    if (state == L"won")
+        return OwnLotState::Won;
     return OwnLotState::Busy;
+}
+
+// "3:7" (kind from 1, the leading bid) -> kind 2, count 7; empty or malformed: no bids (kind -1).
+void ParseBid(const std::wstring& text, int& kind, int& count)
+{
+    kind = -1;
+    count = 0;
+    const size_t colon = text.find(L':');
+    if (colon == std::wstring::npos)
+        return;
+    const int number = ToInt(text.substr(0, colon));
+    if (number < 1)
+        return;
+    kind = number - 1;
+    count = std::max(0, ToInt(text.substr(colon + 1)));
 }
 
 void SendCommand(const std::wstring& command)
@@ -142,7 +164,7 @@ bool Store::TakeMessage(const std::wstring& text)
     else if (view.starts_with(ResultLine))
         TakeResult(Split(view.substr(ResultLine.size())));
     else if (view.starts_with(SoldLine))
-        ++m_soldVersion;
+        TakeNotice(Split(view.substr(SoldLine.size())));
     else
         return false;
     return true;
@@ -162,6 +184,14 @@ void Store::TakeSettings(const std::vector<std::wstring>& fields)
     m_settings.maximumCount = ToInt(fields[5]);
     m_settings.kinds = static_cast<unsigned>(ToNumber(fields[6]));
     m_settings.pageSize = ToInt(fields[7]);
+    // The bids' settings came later: an older server sends none.
+    constexpr size_t BidFields = 11;
+    if (fields.size() >= BidFields)
+    {
+        m_settings.bidStepPercent = ToInt(fields[8]);
+        m_settings.bidMinimumStep = ToInt(fields[9]);
+        m_settings.bidExtendMinutes = ToInt(fields[10]);
+    }
     m_hasSettings = true;
     // Raul's talk opens the window; the window's own question only updates it.
     if (!m_settingsAsked)
@@ -196,6 +226,14 @@ void Store::TakeLot(const std::vector<std::wstring>& fields)
     lot.seller = fields[5];
     lot.combatPower = ToNumber(fields[6]);
     lot.own = fields[7] == L"1";
+    constexpr size_t BidFields = 12;
+    if (fields.size() >= BidFields)
+    {
+        ParseBid(fields[8], lot.bidKind, lot.bidCount);
+        lot.bids = ToInt(fields[9]);
+        lot.nextBid = ToInt(fields[10]);
+        lot.leading = fields[11] == L"1";
+    }
     if (!lot.item.empty())
         m_foundIncoming.lots.push_back(std::move(lot));
 }
@@ -235,7 +273,15 @@ void Store::TakeOwnLot(const std::vector<std::wstring>& fields)
     lot.item = StringUtils::HexToBytes(fields[2]);
     lot.price = ParsePrice(fields[3]);
     lot.secondsLeft = ToNumber(fields[4]);
-    lot.buyer = fields[5];
+    lot.other = fields[5];
+    constexpr size_t BidFields = 10;
+    if (fields.size() >= BidFields)
+    {
+        lot.bidder = fields[6] == L"b";
+        ParseBid(fields[7], lot.bidKind, lot.bidCount);
+        lot.bids = ToInt(fields[8]);
+        lot.mine = ToInt(fields[9]);
+    }
     if (!lot.item.empty())
         m_mineIncoming.lots.push_back(std::move(lot));
 }
@@ -257,6 +303,9 @@ void Store::TakeResult(const std::vector<std::wstring>& fields)
     if (fields.size() < ResultFields)
         return;
 
+    // "/auc refund" is sent without the window: its answers are chat lines only.
+    if (fields[1] == L"refund")
+        return;
     m_result.ok = fields[0] == L"ok";
     m_result.op = fields[1];
     // The text is the rest: it may hold a bar.
@@ -265,6 +314,15 @@ void Store::TakeResult(const std::vector<std::wstring>& fields)
         text += L"|" + fields[i];
     m_result.text = std::move(text);
     ++m_resultVersion;
+}
+
+void Store::TakeNotice(const std::vector<std::wstring>& fields)
+{
+    // A beaten bid's jewels wait in the auction: asked back at once, wherever the player is (the server answers
+    // with chat lines and the jewel bank's counts).
+    if (!fields.empty() && fields[0] == L"outbid")
+        Send(L"refund");
+    ++m_soldVersion;
 }
 
 bool Store::TakeOpenRequest()

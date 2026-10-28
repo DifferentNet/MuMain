@@ -65,17 +65,20 @@
 }
 .au-search-field { width: calc(124px * var(--root-scale)); }
 .au-count-field { width: calc(50px * var(--root-scale)); }
+/* The bid typed on Search, between Buy and Bid; faded while the picked lot can't be bid on. */
+.au-bid-field { width: calc(34px * var(--root-scale)); }
+.au-field.off { opacity: 0.4; pointer-events: none; }
 
 .au-info { display: block; white-space: nowrap; margin-bottom: calc(2px * var(--root-scale)); }
 
 /* The list's box; the pane inside scrolls (the wheel and base.rcss's scrollbar). The pane stays in the flow with
    its own height: an absolute pane here would be placed against the counter-scaled layer, not against its box.
-   The search's filters and the sell's price take their rows out of the list. */
+   The search's filters and the sell's price and starting bid take their rows out of the list. */
 .au-list-box { display: block; margin-bottom: calc(3px * var(--root-scale)); }
 .au-list { display: block; width: 100%; }
 .au-list-search .au-list { height: calc(112px * var(--root-scale)); }
 .au-list-mine .au-list { height: calc(176px * var(--root-scale)); }
-.au-list-sell .au-list { height: calc(116px * var(--root-scale)); }
+.au-list-sell .au-list { height: calc(97px * var(--root-scale)); }
 
 /* The row leaves the pane's right lane to the scrollbar (a full-width row sits under the handle). */
 .au-row {
@@ -118,8 +121,8 @@
 .au-sel { display: block; white-space: nowrap; }
 .au-grid { margin-top: calc(3px * var(--root-scale)); }
 
-/* The Sell tab: the days, then a price line: < jewel > and its count, packed tighter than the other rows; a line
-   without a jewel faded. */
+/* The Sell tab: the days, then the price's lines and the starting bid's: < jewel > and its count, packed tighter
+   than the other rows; a line without a jewel faded. */
 .au-step { margin-bottom: calc(1px * var(--root-scale)); }
 .au-step .au-btn, .au-step .au-field { margin-bottom: 0; }
 .au-step-value { display: block; width: calc(70px * var(--root-scale)); text-align: center; white-space: nowrap; }
