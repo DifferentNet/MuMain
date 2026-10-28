@@ -112,17 +112,7 @@ using namespace mu::ui::window;
 #include "GameLogic/Items/ItemCategories.h"
 #include "Data/GameData/ItemData/ItemModelSlots.h"
 #include "GameLogic/Combat/OwnSkillEcho.h"
-#include "GameLogic/Events/EventTimes.h"
-#include "GameLogic/Events/DailyRewards.h"
-#include "GameLogic/Events/BattlePass.h"
-#include "GameLogic/Events/TierMaps.h"
-#include "GameLogic/Events/SeasonMarks.h"
-#include "GameLogic/Events/Titles.h"
-#include "GameLogic/Commands/GmPanel.h"
-#include "GameLogic/Character/AdvancedStats.h"
-#include "GameLogic/Items/Auction.h"
-#include "GameLogic/Items/JewelBank.h"
-#include "UI/Inventory/VaultPages.h"
+#include "Network/Server/HiddenChatLines.h"
 
 #define MAX_DEBUG_MAX 10
 
@@ -1267,20 +1257,9 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     // ones of a previous character before asking for them again.
     GameLogic::Commands::Catalog().Reset();
     GameLogic::Commands::Catalog().RequestOnce();
-    GameLogic::EventTimes::Times().Reset();
-    GameLogic::DailyRewards::Rewards().Reset();
-    GameLogic::BattlePass::Pass().Reset();
-    GameLogic::TierMaps::Maps().Reset();
-    GameLogic::AdvancedStats::Stats().Reset();
-    GameLogic::JewelBank::Bank().Reset();
-    GameLogic::Auction::Auctions().Reset();
-    GameLogic::GmPanel::Panel().Reset();
-    // The battle pass' titles and auras of the characters around (GameLogic/Events/SeasonMarks.h).
-    GameLogic::SeasonMarks::Marks().Reset();
-    GameLogic::SeasonMarks::Marks().Request();
-    // The titles over the names: the characters in the game now, then each change (GameLogic/Events/Titles.h).
-    GameLogic::Titles::Titles().Reset();
-    GameLogic::Titles::Titles().Request();
+    // The windows fed by hidden chat lines forget the previous character, and the battle pass' marks and the
+    // titles ask for the characters around (each feature's enteredWorld, Network/Server/HiddenChatLines.h).
+    Network::HiddenChatLines::EnteredWorld();
 
     g_ConsoleDebug->Write(MCD_RECEIVE, L"0x03 [ReceiveJoinMapServer]");
 
@@ -2005,35 +1984,11 @@ void ReceiveNotice(const BYTE* ReceiveBuffer)
     }
     else if (Data->Result == 1)
     {
-        // The answers to the event timer window (GameLogic/Events/EventTimes.h), the daily rewards window
-        // (GameLogic/Events/DailyRewards.h), the battle pass window (GameLogic/Events/BattlePass.h), the character
-        // window's advanced stats tab (GameLogic/Character/AdvancedStats.h), the vault's pages
-        // (UI/Inventory/VaultPages.h), the jewel bank window (GameLogic/Items/JewelBank.h), the Tier Maps window
-        // (GameLogic/Events/TierMaps.h), the GM panel (GameLogic/Commands/GmPanel.h), the battle pass' auras
-        // (GameLogic/Events/SeasonMarks.h) and the titles (GameLogic/Events/Titles.h) stay out of the chat.
-        if (GameLogic::EventTimes::Times().TakeMessage(Text) || GameLogic::DailyRewards::Rewards().TakeMessage(Text) ||
-            GameLogic::BattlePass::Pass().TakeMessage(Text) || GameLogic::AdvancedStats::Stats().TakeMessage(Text) ||
-            UI::Storage::Pages().TakeMessage(Text) || GameLogic::JewelBank::Bank().TakeMessage(Text) ||
-            GameLogic::SeasonMarks::Marks().TakeMessage(Text) || GameLogic::Titles::Titles().TakeMessage(Text))
+        // The answers to the client's own windows ("#EVT|…", "#TM0|…"; each feature registers its tags, see
+        // Network/Server/HiddenChatLines.h) stay out of the chat; Tier Maps, the auction and the GM panel open on
+        // the server's word.
+        if (Network::HiddenChatLines::Take(Text))
         {
-        }
-        else if (GameLogic::TierMaps::Maps().TakeMessage(Text))
-        {
-            // Adviser Jerinteu opens the window; the state follows in the next messages.
-            if (GameLogic::TierMaps::Maps().TakeOpenRequest() && !UI::Windows::IsVisible(mu::ui::window::INTERFACE_TIER_MAPS))
-                UI::Windows::Show(mu::ui::window::INTERFACE_TIER_MAPS);
-        }
-        else if (GameLogic::Auction::Auctions().TakeMessage(Text))
-        {
-            // Raul the Auctioneer opens the auction window (GameLogic/Items/Auction.h); the lists follow on request.
-            if (GameLogic::Auction::Auctions().TakeOpenRequest() && !UI::Windows::IsVisible(mu::ui::window::INTERFACE_AUCTION))
-                UI::Windows::Show(mu::ui::window::INTERFACE_AUCTION);
-        }
-        else if (GameLogic::GmPanel::Panel().TakeMessage(Text))
-        {
-            // Y asked whether this character may use the panel, and the answer says yes.
-            if (GameLogic::GmPanel::Panel().TakeOpenRequest() && !UI::Windows::IsVisible(mu::ui::window::INTERFACE_GM_PANEL))
-                UI::Windows::Show(mu::ui::window::INTERFACE_GM_PANEL);
         }
         else if (CHARACTER_SCENE != SceneFlag)
         {

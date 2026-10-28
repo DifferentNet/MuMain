@@ -2,6 +2,7 @@
 #include "GameLogic/Commands/GmPanel.h"
 
 #include "Engine/Object/ZzzCharacter.h"
+#include "Network/Server/HiddenChatLines.h"
 #include "Network/Server/WSclient.h"
 
 #include <cwchar>
@@ -488,4 +489,18 @@ void Store::Reset()
     fresh.m_inventoryVersion = m_inventoryVersion + 1;
     *this = std::move(fresh);
 }
+
+namespace
+{
+// The GM panel's lines stay out of the chat (Network/Server/HiddenChatLines.h).
+[[maybe_unused]] const bool Registered = Network::HiddenChatLines::Register({
+    .name = L"GmPanel",
+    .prefixes = {Prefix},
+    .take = [](const std::wstring& text) { return Panel().TakeMessage(text); },
+    // Y asked whether this character may use the panel, and the answer says yes.
+    .takeOpenRequest = [] { return Panel().TakeOpenRequest(); },
+    .window = mu::ui::window::INTERFACE_GM_PANEL,
+    .enteredWorld = [] { Panel().Reset(); },
+});
+} // namespace
 } // namespace GameLogic::GmPanel

@@ -2,6 +2,7 @@
 #include "GameLogic/Character/AdvancedStats.h"
 
 #include "Engine/Object/ZzzCharacter.h"
+#include "Network/Server/HiddenChatLines.h"
 #include "Network/Server/WSclient.h"
 
 #include <cwchar>
@@ -78,4 +79,15 @@ void Store::Reset()
     ++m_version;
     m_lastRequest = {};
 }
+
+namespace
+{
+// The advanced stats tab's lines stay out of the chat (Network/Server/HiddenChatLines.h).
+[[maybe_unused]] const bool Registered = Network::HiddenChatLines::Register({
+    .name = L"AdvancedStats",
+    .prefixes = {Prefix},
+    .take = [](const std::wstring& text) { return Stats().TakeMessage(text); },
+    .enteredWorld = [] { Stats().Reset(); },
+});
+} // namespace
 } // namespace GameLogic::AdvancedStats

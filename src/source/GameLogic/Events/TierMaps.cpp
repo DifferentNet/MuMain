@@ -2,6 +2,7 @@
 #include "GameLogic/Events/TierMaps.h"
 
 #include "Engine/Object/ZzzCharacter.h"
+#include "Network/Server/HiddenChatLines.h"
 #include "Network/Server/WSclient.h"
 
 #include <cwchar>
@@ -230,4 +231,18 @@ void Store::Reset()
     m_lastRequest = {};
     ++m_version;
 }
+
+namespace
+{
+// The Tier Maps window's lines stay out of the chat (Network/Server/HiddenChatLines.h).
+[[maybe_unused]] const bool Registered = Network::HiddenChatLines::Register({
+    .name = L"TierMaps",
+    .prefixes = {Open, Header, TierLine, MemberLine, Footer, EnterAnswer},
+    .take = [](const std::wstring& text) { return Maps().TakeMessage(text); },
+    // Jerint the Assistant opens the window (#TMO|); the state follows in the next lines.
+    .takeOpenRequest = [] { return Maps().TakeOpenRequest(); },
+    .window = mu::ui::window::INTERFACE_TIER_MAPS,
+    .enteredWorld = [] { Maps().Reset(); },
+});
+} // namespace
 } // namespace GameLogic::TierMaps
