@@ -14856,4 +14856,115 @@
   <data name="AuctionSellNoBuyout" xml:space="preserve">
     <value>Без выкупа: побеждает высшая ставка.</value>
   </data>
+  <data name="EndlessTowerTitle" xml:space="preserve">
+    <value>Бесконечная башня</value>
+  </data>
+  <data name="EndlessTowerAsking" xml:space="preserve">
+    <value>Запрашиваю у сервера...</value>
+  </data>
+  <data name="EndlessTowerNoAnswer" xml:space="preserve">
+    <value>Сервер не присылает данные башни.</value>
+  </data>
+  <data name="EndlessTowerEntry" xml:space="preserve">
+    <value>Вход: %ls зен, %d в день</value>
+  </data>
+  <data name="EndlessTowerParty" xml:space="preserve">
+    <value>Пати: %d (нужно %d–%d)</value>
+  </data>
+  <data name="EndlessTowerReset" xml:space="preserve">
+    <value>Новые заходы через %ls</value>
+  </data>
+  <data name="EndlessTowerBest" xml:space="preserve">
+    <value>Лучшая волна: %ls, топ: %ls</value>
+  </data>
+  <data name="EndlessTowerWave" xml:space="preserve">
+    <value>%d</value>
+  </data>
+  <data name="EndlessTowerNone" xml:space="preserve">
+    <value>нет</value>
+  </data>
+  <data name="EndlessTowerTabParty" xml:space="preserve">
+    <value>Пати</value>
+  </data>
+  <data name="EndlessTowerTabBosses" xml:space="preserve">
+    <value>Боссы</value>
+  </data>
+  <data name="EndlessTowerTabRewards" xml:space="preserve">
+    <value>Награды</value>
+  </data>
+  <data name="EndlessTowerTabTop" xml:space="preserve">
+    <value>Топ</value>
+  </data>
+  <data name="EndlessTowerPayNote" xml:space="preserve">
+    <value>С каждого %ls зен и заход</value>
+  </data>
+  <data name="EndlessTowerMember" xml:space="preserve">
+    <value>%ls · заходы %d/%d · рекорд %d</value>
+  </data>
+  <data name="EndlessTowerMemberNew" xml:space="preserve">
+    <value>%ls · заходы %d/%d</value>
+  </data>
+  <data name="EndlessTowerMemberAway" xml:space="preserve">
+    <value>%ls: не у Lugard</value>
+  </data>
+  <data name="EndlessTowerMemberNoZen" xml:space="preserve">
+    <value>%ls: нет %ls зен</value>
+  </data>
+  <data name="EndlessTowerMemberNoRuns" xml:space="preserve">
+    <value>%ls: заходы кончились</value>
+  </data>
+  <data name="EndlessTowerBossTitle" xml:space="preserve">
+    <value>Босс даёт каждому живому:</value>
+  </data>
+  <data name="EndlessTowerHeightTitle" xml:space="preserve">
+    <value>В конце забега, по волне:</value>
+  </data>
+  <data name="EndlessTowerFromWave" xml:space="preserve">
+    <value>Волна %d+: %ls</value>
+  </data>
+  <data name="EndlessTowerNoRewards" xml:space="preserve">
+    <value>Не заданы.</value>
+  </data>
+  <data name="EndlessTowerTopTitle" xml:space="preserve">
+    <value>Лучшие забеги:</value>
+  </data>
+  <data name="EndlessTowerTopName" xml:space="preserve">
+    <value>%d. %ls (%ls)</value>
+  </data>
+  <data name="EndlessTowerTopDetail" xml:space="preserve">
+    <value>Волна %d · %ls · пати из %d</value>
+  </data>
+  <data name="EndlessTowerTopEmpty" xml:space="preserve">
+    <value>Пока никто не поднимался.</value>
+  </data>
+  <data name="EndlessTowerInRun" xml:space="preserve">
+    <value>Ваша пати уже в башне.</value>
+  </data>
+  <data name="EndlessTowerComeToNpc" xml:space="preserve">
+    <value>Нужен Lugard (Лоренсия, Девиас).</value>
+  </data>
+  <data name="EndlessTowerLeaderOnly" xml:space="preserve">
+    <value>Заводит только лидер пати.</value>
+  </data>
+  <data name="EndlessTowerPartySize" xml:space="preserve">
+    <value>Только пати из %d–%d человек.</value>
+  </data>
+  <data name="EndlessTowerNotNear" xml:space="preserve">
+    <value>Все должны стоять у Lugard.</value>
+  </data>
+  <data name="EndlessTowerNoRuns" xml:space="preserve">
+    <value>У кого-то кончились заходы.</value>
+  </data>
+  <data name="EndlessTowerNoZen" xml:space="preserve">
+    <value>Каждому нужно %ls зен.</value>
+  </data>
+  <data name="EndlessTowerEntering" xml:space="preserve">
+    <value>Входим...</value>
+  </data>
+  <data name="EndlessTowerEnter" xml:space="preserve">
+    <value>Войти (%ls зен)</value>
+  </data>
+  <data name="EndlessTowerWaveTimer" xml:space="preserve">
+    <value>Башня · волна %d</value>
+  </data>
 </root>

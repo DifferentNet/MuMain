@@ -1,0 +1,60 @@
+<rml>
+<head>
+	<title>Endless Tower</title>
+	<link type="text/rcss" href="base.rcss"/>
+	<link type="text/rcss" href="docked_panel_frame.rcss"/>
+	<link type="text/rcss" href="endless_tower.rcss"/>
+</head>
+<body>
+	<!-- The Endless Tower window (CEndlessTowerWindow), opened by Lugard in Lorencia and Devias, docked right at full
+	     dock height: the title, the entry price and runs a day, the party's size (green within 3 to 5), when the runs
+	     come back, the own best and the top's; then one counter-scaled pane with four tabs (party, bosses, rewards by
+	     the wave reached, top climbs; the shown one gold) and the shown tab's lines (by kind: 1 a title, 2 green, 3 red,
+	     4 a bold name, 5 continuing the line above); a second pane at the foot with the reason the button is off or the
+	     server's last answer, and the button that takes the party in; and the exit button. The workspace slot places
+	     and scales #panel. C++ keeps the state; clicks are queued with endless_tower_tab(tab), endless_tower_enter and
+	     endless_tower_exit. -->
+	<div id="panel" data-model="endless_tower">
+		<div class="frame-piece frame-top"></div>
+		<div class="frame-piece frame-left"></div>
+		<div class="frame-piece frame-right"></div>
+		<div class="frame-piece frame-bottom"></div>
+
+		<span id="et_title" class="sharp-text et-title"
+		      data-style-font-size="title.text_px + 'px'">{{title.text}}</span>
+		<span id="et_entry" class="sharp-text et-entry"
+		      data-style-font-size="entry.text_px + 'px'">{{entry.text}}</span>
+		<span id="et_party" class="sharp-text et-party" data-class-ok="party_ok"
+		      data-style-font-size="party.text_px + 'px'">{{party.text}}</span>
+		<span id="et_reset" class="sharp-text et-reset"
+		      data-style-font-size="reset.text_px + 'px'">{{reset.text}}</span>
+		<span id="et_best" class="sharp-text et-best"
+		      data-style-font-size="best.text_px + 'px'">{{best.text}}</span>
+
+		<div id="et_list" class="sharp-text sharp-flow">
+			<div class="et-tabs">
+				<div class="et-tab" data-for="t : tabs" data-class-selected="t.selected"
+				     data-event-click="endless_tower_tab(t.tab)">
+					<span class="et-tab-label" data-style-font-size="t.label.text_px + 'px'">{{t.label.text}}</span>
+				</div>
+			</div>
+
+			<span class="et-row" data-for="r : rows" data-class-title="r.kind == 1" data-class-good="r.kind == 2"
+			      data-class-bad="r.kind == 3" data-class-name="r.kind == 4" data-class-more="r.kind == 5"
+			      data-style-font-size="r.text.text_px + 'px'">{{r.text.text}}</span>
+		</div>
+
+		<div id="et_foot" class="sharp-text sharp-flow">
+			<span class="et-hint" data-for="h : hint" data-class-bad="hint_bad" data-style-font-size="h.text_px + 'px'">{{h.text}}</span>
+
+			<div id="et_enter" data-if="enter_label.text != ''" data-class-off="!can_enter"
+			     data-event-click="endless_tower_enter">
+				<span class="et-enter-label" data-style-font-size="enter_label.text_px + 'px'">{{enter_label.text}}</span>
+			</div>
+		</div>
+
+		<div id="btn_exit" data-event-click="endless_tower_exit" data-attr-data-hint="exit_tooltip"></div>
+		<div id="frame_corner_close" data-event-click="endless_tower_exit"></div>
+	</div>
+</body>
+</rml>

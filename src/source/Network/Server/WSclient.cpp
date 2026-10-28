@@ -116,6 +116,7 @@ using namespace mu::ui::window;
 #include "GameLogic/Events/DailyRewards.h"
 #include "GameLogic/Events/BattlePass.h"
 #include "GameLogic/Events/TierMaps.h"
+#include "GameLogic/Events/EndlessTower.h"
 #include "GameLogic/Events/SeasonMarks.h"
 #include "GameLogic/Events/Titles.h"
 #include "GameLogic/Commands/GmPanel.h"
@@ -1271,6 +1272,7 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     GameLogic::DailyRewards::Rewards().Reset();
     GameLogic::BattlePass::Pass().Reset();
     GameLogic::TierMaps::Maps().Reset();
+    GameLogic::EndlessTower::Tower().Reset();
     GameLogic::AdvancedStats::Stats().Reset();
     GameLogic::JewelBank::Bank().Reset();
     GameLogic::Auction::Auctions().Reset();
@@ -2022,6 +2024,12 @@ void ReceiveNotice(const BYTE* ReceiveBuffer)
             // Adviser Jerinteu opens the window; the state follows in the next messages.
             if (GameLogic::TierMaps::Maps().TakeOpenRequest() && !UI::Windows::IsVisible(mu::ui::window::INTERFACE_TIER_MAPS))
                 UI::Windows::Show(mu::ui::window::INTERFACE_TIER_MAPS);
+        }
+        else if (GameLogic::EndlessTower::Tower().TakeMessage(Text))
+        {
+            // Lugard opens the Endless Tower window (GameLogic/Events/EndlessTower.h); the state follows.
+            if (GameLogic::EndlessTower::Tower().TakeOpenRequest() && !UI::Windows::IsVisible(mu::ui::window::INTERFACE_ENDLESS_TOWER))
+                UI::Windows::Show(mu::ui::window::INTERFACE_ENDLESS_TOWER);
         }
         else if (GameLogic::Auction::Auctions().TakeMessage(Text))
         {
