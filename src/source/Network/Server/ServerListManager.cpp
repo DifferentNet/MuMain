@@ -181,25 +181,18 @@ void CServerListManager::InsertServer(CServerGroup* pServerGroup, int iConnectIn
         iTextIndex = 562;
     }
 
+    // MU Skynet shows its servers by name only ("Skynet-1"), without Webzen's "(Gold)" and "(Gold PVP)" tags
+    // (ghinzuro, 2026-10-28). The byte itself stays as ServerList.bmd has it: its bit 0x01 still marks a non-PvP
+    // server for the game.
     switch (pServerInfo->m_byNonPvP)
     {
-    case 0:
-        mu_swprintf(pServerInfo->m_bName, L"%ls-%d %ls", pServerGroup->m_szName,
-            pServerInfo->m_iIndex, I18N::Game::Lookup(iTextIndex));
-        break;
-
     case 1:
         mu_swprintf(pServerInfo->m_bName, L"%ls-%d(Non-PVP) %ls", pServerGroup->m_szName,
             pServerInfo->m_iIndex, I18N::Game::Lookup(iTextIndex));
         break;
 
-    case 2:
-        mu_swprintf(pServerInfo->m_bName, L"%ls-%d(Gold PVP) %ls", pServerGroup->m_szName,
-            pServerInfo->m_iIndex, I18N::Game::Lookup(iTextIndex));
-        break;
-
-    case 3:
-        mu_swprintf(pServerInfo->m_bName, L"%ls-%d(Gold) %ls", pServerGroup->m_szName,
+    default:
+        mu_swprintf(pServerInfo->m_bName, L"%ls-%d %ls", pServerGroup->m_szName,
             pServerInfo->m_iIndex, I18N::Game::Lookup(iTextIndex));
         break;
     }
