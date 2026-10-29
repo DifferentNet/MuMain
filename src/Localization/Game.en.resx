@@ -15305,4 +15305,58 @@
   <data name="TouchBindPickFor" xml:space="preserve">
     <value>Pick a skill for the lit button</value>
   </data>
+  <data name="InterfaceViewRow" xml:space="preserve">
+    <value>Interface view</value>
+  </data>
+  <data name="ChoiceAuto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="InterfaceViewPc" xml:space="preserve">
+    <value>PC</value>
+  </data>
+  <data name="InterfaceViewPhone" xml:space="preserve">
+    <value>Phone</value>
+  </data>
+  <data name="ControlsRow" xml:space="preserve">
+    <value>Controls</value>
+  </data>
+  <data name="ControlsMouseKeyboard" xml:space="preserve">
+    <value>Mouse and keyboard</value>
+  </data>
+  <data name="ControlsTouch" xml:space="preserve">
+    <value>Touch screen</value>
+  </data>
+  <data name="TouchMenuSkills" xml:space="preserve">
+    <value>Skills</value>
+  </data>
+  <data name="TouchMenuView" xml:space="preserve">
+    <value>PC / phone view</value>
+  </data>
+  <data name="TouchItemEquip" xml:space="preserve">
+    <value>Equip</value>
+  </data>
+  <data name="TouchItemMove" xml:space="preserve">
+    <value>Move</value>
+  </data>
+  <data name="TouchItemSell" xml:space="preserve">
+    <value>Sell</value>
+  </data>
+  <data name="TouchItemHotkeyQ" xml:space="preserve">
+    <value>Put on button Q</value>
+  </data>
+  <data name="TouchItemHotkeyW" xml:space="preserve">
+    <value>Put on button W</value>
+  </data>
+  <data name="TouchItemDrop" xml:space="preserve">
+    <value>Drop</value>
+  </data>
+  <data name="TouchItemDropAsk" xml:space="preserve">
+    <value>Drop it on the ground?</value>
+  </data>
+  <data name="TouchHeroLevel" xml:space="preserve">
+    <value>Lv. %d</value>
+  </data>
+  <data name="TouchHeroMasterLevel" xml:space="preserve">
+    <value>Lv. %d | Master %d</value>
+  </data>
 </root>

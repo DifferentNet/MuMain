@@ -127,3 +127,11 @@ body {
 .icon-tint { left: 0; width: 23px; }
 .icon-tint.half-left { left: 0; width: 11px; }
 .icon-tint.half-right { left: 11px; width: 11px; }
+
+/* MU Moldova: the phone's own HUD (theme flag "mobile-hud", UI::Mobile::InterfaceMode) has its
+   hero frame under the location bar, so the pets' column moves right of it, under the touch
+   controls' top row (touch_controls.rcss: #tc_hero 4dp + 200dp, #tc_quick down to 34dp). */
+@media (theme: mobile-hud) {
+	#pets { left: 210dp; top: 40dp; }
+	#pet_column { left: 0; top: 0; }
+}

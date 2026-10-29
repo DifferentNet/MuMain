@@ -14928,4 +14928,58 @@
   <data name="TouchBindPickFor" xml:space="preserve">
     <value>Выберите навык для подсвеченной кнопки</value>
   </data>
+  <data name="InterfaceViewRow" xml:space="preserve">
+    <value>Вид интерфейса</value>
+  </data>
+  <data name="ChoiceAuto" xml:space="preserve">
+    <value>Авто</value>
+  </data>
+  <data name="InterfaceViewPc" xml:space="preserve">
+    <value>ПК</value>
+  </data>
+  <data name="InterfaceViewPhone" xml:space="preserve">
+    <value>Телефон</value>
+  </data>
+  <data name="ControlsRow" xml:space="preserve">
+    <value>Управление</value>
+  </data>
+  <data name="ControlsMouseKeyboard" xml:space="preserve">
+    <value>Мышь и клавиатура</value>
+  </data>
+  <data name="ControlsTouch" xml:space="preserve">
+    <value>Сенсорный экран</value>
+  </data>
+  <data name="TouchMenuSkills" xml:space="preserve">
+    <value>Умения</value>
+  </data>
+  <data name="TouchMenuView" xml:space="preserve">
+    <value>Вид ПК / телефон</value>
+  </data>
+  <data name="TouchItemEquip" xml:space="preserve">
+    <value>Надеть</value>
+  </data>
+  <data name="TouchItemMove" xml:space="preserve">
+    <value>Переложить</value>
+  </data>
+  <data name="TouchItemSell" xml:space="preserve">
+    <value>Продать</value>
+  </data>
+  <data name="TouchItemHotkeyQ" xml:space="preserve">
+    <value>На кнопку Q</value>
+  </data>
+  <data name="TouchItemHotkeyW" xml:space="preserve">
+    <value>На кнопку W</value>
+  </data>
+  <data name="TouchItemDrop" xml:space="preserve">
+    <value>Выбросить</value>
+  </data>
+  <data name="TouchItemDropAsk" xml:space="preserve">
+    <value>Выбросить на землю?</value>
+  </data>
+  <data name="TouchHeroLevel" xml:space="preserve">
+    <value>Ур. %d</value>
+  </data>
+  <data name="TouchHeroMasterLevel" xml:space="preserve">
+    <value>Ур. %d | Мастер %d</value>
+  </data>
 </root>

@@ -14,6 +14,8 @@
 #include "Scenes/SceneCore.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/HUD/SkillList.h"
+#include "UI/Mobile/HeroFrame.h"
+#include "UI/Mobile/InterfaceMode.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlPointer.h"
 #include "UI/RmlBridge/RmlStackingOrder.h"
@@ -30,6 +32,7 @@
 #include <cstdint>
 #include <iterator>
 #include <optional>
+#include <string>
 #include <string_view>
 
 namespace
@@ -40,7 +43,8 @@ constexpr std::string_view DocumentName = "touch_controls.rml";
 constexpr int SkillButtons = 5;
 
 // Buttons that press a key, as a keyboard would: the potions drink the item hotkeys Q and W, the chat
-// button opens the chat field (Enter) and the rest open their windows (UI/HUD/HotKey.cpp).
+// button opens the chat field (Enter), Back closes the window on top or, with none open, opens the
+// system menu (Esc, as a phone has none), and the rest open their windows (UI/HUD/HotKey.cpp).
 struct KeyButton
 {
     const char* element;
@@ -49,15 +53,31 @@ struct KeyButton
 
 constexpr KeyButton KeyButtons[] = {
     {"tc_potion_q", 'Q'}, {"tc_potion_w", 'W'}, {"tc_chat", VK_RETURN}, {"tc_inventory", 'I'},
-    {"tc_character", 'C'}, {"tc_move", 'M'},     {"tc_map", VK_TAB},
+    {"tc_character", 'C'}, {"tc_move", 'M'},     {"tc_map", VK_TAB},       {"tc_back", VK_ESCAPE},
 };
 constexpr int KeyButtonCount = static_cast<int>(std::size(KeyButtons));
 
-// The menu's windows, by the key that opens them; its labels are menu_label_0..14 in the markup.
+// The skill list, as the PC bar's current-skill icon opens it (the phone layout hides that bar).
+void ToggleSkillList()
+{
+    g_pSkillList->OnCurrentSkillClick();
+}
+
+// Between the phone and the PC layout, saved as a choice of its own (Options -> Interface shows it).
+void ToggleView()
+{
+    using UI::Mobile::ViewChoice;
+    UI::Mobile::SetViewChoice(UI::Mobile::IsPhoneView() ? ViewChoice::Pc : ViewChoice::Phone);
+}
+
+// The menu's items: windows by the key that opens them, or an action of their own. Their labels are
+// menu_label_0.. in the markup.
 struct MenuItem
 {
     const wchar_t* const* label;
+    // Pressed as a keyboard would, when the item has no action.
     int key;
+    void (*action)() = nullptr;
 };
 
 const MenuItem MenuItems[] = {
@@ -75,6 +95,8 @@ const MenuItem MenuItems[] = {
     {&I18N::Game::TouchMenuHelper, 'Z'},
     {&I18N::Game::TouchMenuCommands, 'J'},
     {&I18N::Game::TouchMenuHelp, VK_F1},
+    {&I18N::Game::TouchMenuSkills, 0, &ToggleSkillList},
+    {&I18N::Game::TouchMenuView, 0, &ToggleView},
     {&I18N::Game::TouchMenuSystem, VK_ESCAPE},
 };
 constexpr int MenuItemCount = static_cast<int>(std::size(MenuItems));
@@ -96,10 +118,19 @@ static_assert(ControlCount <= Touch::MaxControls);
 
 constexpr const char* SkillElements[SkillButtons] = {"tc_skill_0", "tc_skill_1", "tc_skill_2", "tc_skill_3",
                                                      "tc_skill_4"};
-constexpr const char* MenuItemElements[MenuItemCount] = {
-    "tc_menu_0", "tc_menu_1", "tc_menu_2",  "tc_menu_3",  "tc_menu_4",  "tc_menu_5",  "tc_menu_6", "tc_menu_7",
-    "tc_menu_8", "tc_menu_9", "tc_menu_10", "tc_menu_11", "tc_menu_12", "tc_menu_13", "tc_menu_14",
-};
+
+// Numbered names, "<prefix>0" .. "<prefix><MenuItemCount - 1>", made once.
+std::array<std::string, MenuItemCount> NumberedNames(std::string_view prefix)
+{
+    std::array<std::string, MenuItemCount> names;
+    for (int item = 0; item < MenuItemCount; ++item)
+        names[item] = std::string(prefix) + std::to_string(item);
+    return names;
+}
+
+// The menu items' elements in the markup, and their label fields in the model.
+const std::array<std::string, MenuItemCount> MenuItemElements = NumberedNames("tc_menu_");
+const std::array<std::string, MenuItemCount> MenuLabelFields = NumberedNames("menu_label_");
 
 // Each control's element in touch_controls.rml.
 const char* ControlElement(int control)
@@ -123,7 +154,7 @@ const char* ControlElement(int control)
         return SkillElements[control - FirstSkillControl];
     if (control >= FirstKeyControl && control < FirstMenuItemControl)
         return KeyButtons[control - FirstKeyControl].element;
-    return MenuItemElements[control - FirstMenuItemControl];
+    return MenuItemElements[control - FirstMenuItemControl].c_str();
 }
 
 // How far outside its box a finger still presses a button, in dp: a thumb is wider than its aim.
@@ -164,7 +195,10 @@ struct ControlsModel
     Rml::String autoLabel;
     Rml::String menuLabel;
     Rml::String chatLabel;
+    Rml::String backLabel;
     std::array<Rml::String, MenuItemCount> menuLabels;
+    // The phone view's hero frame.
+    UI::Mobile::HeroFrame::Model hero;
 };
 
 void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
@@ -208,21 +242,10 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     c.Bind("auto_label", &model.autoLabel);
     c.Bind("menu_label", &model.menuLabel);
     c.Bind("chat_label", &model.chatLabel);
-    c.Bind("menu_label_0", &model.menuLabels[0]);
-    c.Bind("menu_label_1", &model.menuLabels[1]);
-    c.Bind("menu_label_2", &model.menuLabels[2]);
-    c.Bind("menu_label_3", &model.menuLabels[3]);
-    c.Bind("menu_label_4", &model.menuLabels[4]);
-    c.Bind("menu_label_5", &model.menuLabels[5]);
-    c.Bind("menu_label_6", &model.menuLabels[6]);
-    c.Bind("menu_label_7", &model.menuLabels[7]);
-    c.Bind("menu_label_8", &model.menuLabels[8]);
-    c.Bind("menu_label_9", &model.menuLabels[9]);
-    c.Bind("menu_label_10", &model.menuLabels[10]);
-    c.Bind("menu_label_11", &model.menuLabels[11]);
-    c.Bind("menu_label_12", &model.menuLabels[12]);
-    c.Bind("menu_label_13", &model.menuLabels[13]);
-    c.Bind("menu_label_14", &model.menuLabels[14]);
+    c.Bind("back_label", &model.backLabel);
+    for (int item = 0; item < MenuItemCount; ++item)
+        c.Bind(MenuLabelFields[item], &model.menuLabels[item]);
+    UI::Mobile::HeroFrame::Bind(c, model.hero);
 }
 
 // Under every window and the HUD's bar, over the world's labels (RmlStackingOrder.cpp); shown
@@ -383,18 +406,14 @@ void SyncLabel(Rml::String& field, const wchar_t* text, const char* name)
 
 void SyncLabels(ControlsModel& model)
 {
-    static constexpr const char* MenuLabelFields[MenuItemCount] = {
-        "menu_label_0", "menu_label_1",  "menu_label_2",  "menu_label_3",  "menu_label_4",
-        "menu_label_5", "menu_label_6",  "menu_label_7",  "menu_label_8",  "menu_label_9",
-        "menu_label_10", "menu_label_11", "menu_label_12", "menu_label_13", "menu_label_14",
-    };
     SyncLabel(model.attackLabel, I18N::Game::TouchAttack, "attack_label");
     SyncLabel(model.pickupLabel, I18N::Game::TouchPickUp, "pickup_label");
     SyncLabel(model.autoLabel, I18N::Game::TouchAuto, "auto_label");
     SyncLabel(model.menuLabel, I18N::Game::TouchMenu, "menu_label");
     SyncLabel(model.chatLabel, I18N::Game::TouchChat, "chat_label");
+    SyncLabel(model.backLabel, I18N::Game::Back, "back_label");
     for (int item = 0; item < MenuItemCount; ++item)
-        SyncLabel(model.menuLabels[item], *MenuItems[item].label, MenuLabelFields[item]);
+        SyncLabel(model.menuLabels[item], *MenuItems[item].label, MenuLabelFields[item].c_str());
 }
 
 void SyncSkills(ControlsModel& model)
@@ -584,8 +603,11 @@ void UpdateButtons(ControlsModel& model)
     {
         if (!TakePress(FirstMenuItemControl + item) || !model.menuOpen)
             continue;
-        Touch::TapKey(MenuItems[item].key);
         SetField(model.menuOpen, false, "menu_open");
+        if (MenuItems[item].action != nullptr)
+            MenuItems[item].action();
+        else
+            Touch::TapKey(MenuItems[item].key);
     }
 
     SetField(model.helperOn, MUHelper::g_MuHelper.IsActive(), "helper_on");
@@ -607,7 +629,10 @@ namespace UI::HUD::TouchControls
 void Update()
 {
     if (!Touch::IsEnabled())
+    {
+        Hide();
         return;
+    }
 
     const bool inWorld = SceneFlag == MAIN_SCENE && LoadingWorld < 30 && Hero != nullptr;
     if (!inWorld)
@@ -643,6 +668,7 @@ void Update()
     UpdateBinding(model);
     UpdateStick(model);
     UpdateButtons(model);
+    UI::Mobile::HeroFrame::Sync(model.hero, [](const char* field) { g_View.MarkDirty(field); });
     // The boxes the next fingers are tested against: where this frame lays the controls out.
     MeasureBoxes();
 }

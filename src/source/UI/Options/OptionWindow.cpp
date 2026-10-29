@@ -14,6 +14,7 @@
 #include "Render/Lighting/EnhancedLightingSetting.h"
 #include "Render/Lighting/LightMoodScales.h"
 #include "Render/PostProcessing/PostProcessingSetting.h"
+#include "UI/Mobile/InterfaceMode.h"
 #include "UI/Options/TuningRows.h"
 #include "Audio/AudioPlayer.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
@@ -31,6 +32,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <initializer_list>
 #include <optional>
 #include <cstring>
 #include "I18N/All.h"
@@ -69,6 +71,10 @@ using namespace mu::ui::window;
 // resolution/language/font <select> change callbacks are ignored -- see m_rmlSyncCount's own
 // comment in OptionWindow.h.
 static constexpr int kRmlSelectSettleFrames = 5;
+// The custom dropdowns' ids, 0 .. kLastDropdownId (see RmlToggleDropdown()).
+static constexpr int kInterfaceViewDropdown = 8;
+static constexpr int kControlsDropdown = 9;
+static constexpr int kLastDropdownId = kControlsDropdown;
 
 std::vector<UI::Options::DisplayResolution>
 UI::Options::NormalizeDisplayResolutions(std::vector<DisplayResolution> resolutions)
@@ -219,6 +225,16 @@ template <std::size_t N> std::vector<Rml::String> MultiplierLabels(const int (&v
     labels.push_back(StringUtils::WideToNarrow(I18N::Game::Off));
     for (std::size_t i = 1; i < N; ++i)
         labels.push_back(std::to_string(values[i]) + "x");
+    return labels;
+}
+
+// A row's localized entries, in order.
+std::vector<Rml::String> NarrowLabels(std::initializer_list<const wchar_t*> texts)
+{
+    std::vector<Rml::String> labels;
+    labels.reserve(texts.size());
+    for (const wchar_t* text : texts)
+        labels.push_back(StringUtils::WideToNarrow(text));
     return labels;
 }
 
@@ -503,6 +519,14 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("ui_scale_row_label", &model.uiScaleRowLabel);
     c.Bind("ui_scale_value_label", &model.uiScaleValueLabel);
     c.Bind("ui_scale_tooltip", &model.uiScaleTooltip);
+    c.Bind("interface_view_labels", &model.interfaceViewLabels);
+    c.Bind("interface_view_index", &model.interfaceViewIndex);
+    c.Bind("interface_view_row_label", &model.interfaceViewRowLabel);
+    c.Bind("interface_view_value_label", &model.interfaceViewValueLabel);
+    c.Bind("controls_labels", &model.controlsLabels);
+    c.Bind("controls_index", &model.controlsIndex);
+    c.Bind("controls_row_label", &model.controlsRowLabel);
+    c.Bind("controls_value_label", &model.controlsValueLabel);
 
     c.BindEventCallback("option_click_close",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickClose(); });
@@ -739,6 +763,7 @@ bool mu::ui::window::COptionWindow::Update()
     ApplyPendingThemeSwitch();
     ApplyPendingFont();
     ApplyPendingUIScale();
+    ApplyPendingInterfaceMode();
     SyncRmlModel();
     ScrollOpenDropdownToSelection();
     return true;
@@ -850,7 +875,7 @@ void mu::ui::window::COptionWindow::SyncImpliedEffectRows(OptionRmlModel& model)
 
 void mu::ui::window::COptionWindow::RmlToggleDropdown(int dropdownId)
 {
-    if (dropdownId < 0 || dropdownId > 7)
+    if (dropdownId < 0 || dropdownId > kLastDropdownId)
         return;
     // Toggle: clicking the currently-open one's own value box closes it; clicking any other
     // (including a different dropdown's) overwrites m_iOpenDropdown, which closes whatever else
@@ -888,6 +913,12 @@ void mu::ui::window::COptionWindow::RmlDropdownOptionClick(int dropdownId, int o
         break;
     case 7:
         RmlAnisotropyChanged(optionIndex);
+        break;
+    case kInterfaceViewDropdown:
+        RmlInterfaceViewChanged(optionIndex);
+        break;
+    case kControlsDropdown:
+        RmlControlsChanged(optionIndex);
         break;
     default:
         break;
@@ -1411,6 +1442,29 @@ void mu::ui::window::COptionWindow::ApplyPendingUIScale()
     m_iUIScaleIndex = FindCurrentUIScaleIndex();
 }
 
+void mu::ui::window::COptionWindow::RmlInterfaceViewChanged(int index)
+{
+    // See RmlResolutionChanged's own comment -- same settle-frame guard applies here.
+    if (m_rmlSyncCount >= kRmlSelectSettleFrames && index >= 0 && index < UI::Mobile::ViewChoiceCount)
+        m_iPendingInterfaceView = index;
+}
+
+void mu::ui::window::COptionWindow::RmlControlsChanged(int index)
+{
+    if (m_rmlSyncCount >= kRmlSelectSettleFrames && index >= 0 && index < UI::Mobile::ControlChoiceCount)
+        m_iPendingControls = index;
+}
+
+void mu::ui::window::COptionWindow::ApplyPendingInterfaceMode()
+{
+    const int view = std::exchange(m_iPendingInterfaceView, -1);
+    const int controls = std::exchange(m_iPendingControls, -1);
+    if (view >= 0 && view != static_cast<int>(UI::Mobile::GetViewChoice()))
+        UI::Mobile::SetViewChoice(static_cast<UI::Mobile::ViewChoice>(view));
+    if (controls >= 0 && controls != static_cast<int>(UI::Mobile::GetControlChoice()))
+        UI::Mobile::SetControlChoice(static_cast<UI::Mobile::ControlChoice>(controls));
+}
+
 void mu::ui::window::COptionWindow::RmlClickClose()
 {
     g_pNewUISystem->Hide(mu::ui::window::INTERFACE_OPTION);
@@ -1755,6 +1809,8 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.themeRowLabel, "theme_row_label", I18N::Game::UITheme);
     syncLabel(model.uiScaleRowLabel, "ui_scale_row_label", I18N::Game::UIScale);
     syncLabel(model.uiScaleTooltip, "ui_scale_tooltip", I18N::Game::UIScaleTooltip);
+    syncLabel(model.interfaceViewRowLabel, "interface_view_row_label", I18N::Game::InterfaceViewRow);
+    syncLabel(model.controlsRowLabel, "controls_row_label", I18N::Game::ControlsRow);
 
     // positioned/root_x/root_y stay at their model defaults (false/0/0, see OptionRmlModel's own
     // comment): window_shell's `.center-both` CSS places the window, a drag moves it.
@@ -1883,6 +1939,15 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncMultiplierRow(model.anisotropyLabels, "anisotropy_labels", model.anisotropyIndex, "anisotropy_index",
                       model.anisotropyValueLabel, "anisotropy_value_label", MultiplierLabels(s_AnisotropyValues),
                       FindValueIndex(s_AnisotropyValues, GameConfig::GetInstance().GetAnisotropy()));
+    // Rebuilt every sync for a live language switch, as the rows above.
+    syncMultiplierRow(model.interfaceViewLabels, "interface_view_labels", model.interfaceViewIndex,
+                      "interface_view_index", model.interfaceViewValueLabel, "interface_view_value_label",
+                      NarrowLabels({I18N::Game::ChoiceAuto, I18N::Game::InterfaceViewPc, I18N::Game::InterfaceViewPhone}),
+                      static_cast<int>(UI::Mobile::GetViewChoice()));
+    syncMultiplierRow(model.controlsLabels, "controls_labels", model.controlsIndex, "controls_index",
+                      model.controlsValueLabel, "controls_value_label",
+                      NarrowLabels({I18N::Game::ChoiceAuto, I18N::Game::ControlsMouseKeyboard, I18N::Game::ControlsTouch}),
+                      static_cast<int>(UI::Mobile::GetControlChoice()));
 
     const bool showFpsCounter = GetShowFpsCounter();
     const bool showDebugInfo = GetShowDebugInfo();

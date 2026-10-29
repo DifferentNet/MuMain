@@ -139,3 +139,10 @@
 	white-space: nowrap;
 	padding: 0 2rem;
 }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode) gives the four buttons more room, for fingers. */
+@media (theme: mobile) {
+	.btn-icon { width: 81rem; height: 45rem; }
+	#btn_menu { left: 109rem; }
+	#btn_connect { right: 109rem; }
+}

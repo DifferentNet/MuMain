@@ -297,3 +297,8 @@
 	line-height: 15dp;
 }
 #panel[data-kind="chaos-mix"] .gmd-button-cell:nth-child(-n+3) .gmd-btn { margin-top: 3dp; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode) draws menus larger, from their top edge, for fingers. */
+@media (theme: mobile) {
+	#panel { transform: scale(1.3); transform-origin: 50% 0; }
+}

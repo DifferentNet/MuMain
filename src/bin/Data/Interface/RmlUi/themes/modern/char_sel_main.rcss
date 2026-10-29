@@ -73,3 +73,14 @@
 	padding: 0 2dp;
 	font-family: "token(font-body)";
 }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode) gives the four buttons more room, for fingers. */
+@media (theme: mobile) {
+	.btn-icon { width: 81dp; height: 45dp; line-height: 45dp; }
+	#btn_menu { left: 109dp; }
+	#btn_connect { right: 109dp; }
+	#btn_create_item .btn-icon-caption  { left: 26dp; }
+	#btn_menu_item .btn-icon-caption    { left: 113dp; }
+	#btn_connect_item .btn-icon-caption { right: 113dp; }
+	#btn_delete_item .btn-icon-caption  { right: 26dp; }
+}

@@ -38,6 +38,7 @@
 #include "Render/Look/LookProfileSetting.h"
 #include "Render/Look/TuningSetting.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
+#include "UI/Mobile/InterfaceMode.h"
 #include "UI/RmlBridge/RmlRuntimeHooks.h"
 #include "Engine/Object/ZzzOpenData.h"
 #include "Scenes/SceneCore.h"
@@ -2307,8 +2308,6 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     MuWebStartAtPageSize();
     mu::log::Get("platform")->info("Browser device: {}{}", mu::web::DeviceName(mu::web::GetDevice()),
                                    mu::web::IsTouchDevice() ? ", played by touch" : "");
-    // Phones and tablets: fingers drive the on-screen controls (joystick, buttons) and the pointer.
-    Core::Input::Touch::SetEnabled(mu::web::IsTouchDevice());
 #endif
 
     // Apply audio settings from INI — volume 0 = off, >0 = on
@@ -2476,6 +2475,9 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     // SDL_GPUDevice/SDL_Window from mu::GetRenderer() (GetDevice()/GetWindow()).
     UI::RmlBridge::InstallRuntimeHooks();
     RmlUiRuntime::Instance().Create(WindowWidth, WindowHeight);
+    // The phone or PC layout and the controls (Options -> Interface; by default a phone or tablet gets
+    // the phone layout, and its fingers drive the on-screen controls and the pointer).
+    UI::Mobile::Apply();
 
     // Content that must always sit visually on top of RmlUi, regardless of theme: the game
     // cursor, and (login/character scenes specifically) CLoginWin's, CCharMakeWin's, and

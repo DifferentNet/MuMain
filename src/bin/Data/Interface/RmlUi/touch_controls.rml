@@ -16,7 +16,34 @@
 	     joystick bottom left, the attack button bottom right with the five hotkey skills in an arc
 	     around it, pickup and auto-hunt beside it. -->
 	<!-- bound-geometry: the joystick follows the finger (its centre and knob are where the finger
-	     is, in window pixels), and a skill's cooldown wipe is the cooldown's fraction. -->
+	     is, in window pixels), a skill's cooldown wipe is the cooldown's fraction, and a hero
+	     gauge's fill is the gauge's. -->
+
+	<!-- The phone view's hero frame (UI/Mobile/HeroFrame.cpp), in the PC bar's place: the level,
+	     HP and MP with their numbers, SD and AG, and the EXP line along the bottom edge. Shown by
+	     the theme flag "mobile" (touch_controls.rcss). -->
+	<div id="tc_hero">
+		<div id="tc_hero_level">{{hero_level}}</div>
+		<div id="tc_hero_hp" class="tc-gauge">
+			<div class="tc-gauge-fill" data-style-width="hero_hp * 100 + '%'"></div>
+			<div class="tc-gauge-text">{{hero_hp_text}}</div>
+		</div>
+		<div id="tc_hero_mp" class="tc-gauge">
+			<div class="tc-gauge-fill" data-style-width="hero_mp * 100 + '%'"></div>
+			<div class="tc-gauge-text">{{hero_mp_text}}</div>
+		</div>
+		<div id="tc_hero_small">
+			<div id="tc_hero_sd" class="tc-gauge tc-gauge-small">
+				<div class="tc-gauge-fill" data-style-width="hero_sd * 100 + '%'"></div>
+				<div class="tc-gauge-text">{{hero_sd_text}}</div>
+			</div>
+			<div id="tc_hero_ag" class="tc-gauge tc-gauge-small">
+				<div class="tc-gauge-fill" data-style-width="hero_ag * 100 + '%'"></div>
+				<div class="tc-gauge-text">{{hero_ag_text}}</div>
+			</div>
+		</div>
+	</div>
+	<div id="tc_exp"><div id="tc_exp_fill" data-style-width="hero_exp * 100 + '%'"></div></div>
 
 	<!-- The joystick's area: a finger landing anywhere in it walks. #tc_stick_idle shows where the
 	     stick is while no finger holds it. -->
@@ -28,9 +55,12 @@
 		<div id="tc_stick_knob" data-style-left="knob_x + 'px'" data-style-top="knob_y + 'px'"></div>
 	</div>
 
-	<!-- Along the top, right of the location bar: the menu and the windows played most. The window
-	     buttons press the keys a keyboard opens them with. -->
+	<!-- Along the top, right of the location bar: Back (Esc: closes the window on top, or opens the
+	     system menu), the menu and the windows played most. The window buttons press the keys a
+	     keyboard opens them with. Back comes first: the windows docked on the right cover the row's
+	     end. -->
 	<div id="tc_quick">
+		<div id="tc_back" class="tc-button tc-quick">{{back_label}}</div>
 		<div id="tc_menu" class="tc-button tc-quick" data-class-open="menu_open">{{menu_label}}</div>
 		<div id="tc_inventory" class="tc-button tc-quick">{{menu_label_0}}</div>
 		<div id="tc_character" class="tc-button tc-quick">{{menu_label_1}}</div>
@@ -56,11 +86,13 @@
 		<div id="tc_menu_12" class="tc-button tc-menu-item">{{menu_label_12}}</div>
 		<div id="tc_menu_13" class="tc-button tc-menu-item">{{menu_label_13}}</div>
 		<div id="tc_menu_14" class="tc-button tc-menu-item">{{menu_label_14}}</div>
+		<div id="tc_menu_15" class="tc-button tc-menu-item">{{menu_label_15}}</div>
+		<div id="tc_menu_16" class="tc-button tc-menu-item">{{menu_label_16}}</div>
 	</div>
 
-	<!-- The item hotkeys Q and W (the potions), above the joystick. -->
-	<div id="tc_potion_q" class="tc-button tc-potion">Q</div>
-	<div id="tc_potion_w" class="tc-button tc-potion">W</div>
+	<!-- The item hotkeys Q and W (the potions), above the joystick, with how many are left. -->
+	<div id="tc_potion_q" class="tc-button tc-potion">Q<div class="tc-potion-count">{{potion_q_count}}</div></div>
+	<div id="tc_potion_w" class="tc-button tc-potion">W<div class="tc-potion-count">{{potion_w_count}}</div></div>
 
 	<!-- Bottom right: attack (held, it fights the tapped or the nearest monster), the hotkey bar's
 	     five skills around it (a tap makes the skill current, holding casts it), pickup (held, it

@@ -31,11 +31,29 @@ private:
 
     bool HandleRepairClick(CInventoryCtrl* targetControl) const;
 
+    // What a right click on a bag item does, by the windows open with the bag.
+    enum class RightClickTarget
+    {
+        None,
+        Storage,
+        Shop,
+        Mix,
+        Trade,
+        Inventory,
+    };
+    RightClickTarget FindRightClickTarget() const;
+
     bool HandleRightClick(CInventoryCtrl* targetControl) const;
+    // The right click's action on the item under the pointer; without mayDrop an item with no other
+    // use stays where it is.
+    bool RunRightClickAction(CInventoryCtrl* targetControl, RightClickTarget target, bool mayDrop) const;
+    // MU Moldova: a finger's long press is a right click; on an item it opens the item's card
+    // (UI::Mobile::ItemCard) instead. False when there is no item to show.
+    bool ShowTouchItemCard(CInventoryCtrl* targetControl) const;
     bool HandleStorageAutoMove(CInventoryCtrl* targetControl) const;
     bool HandleMixAutoMove(CInventoryCtrl* targetControl) const;
     bool HandleSellToNPC(CInventoryCtrl* targetControl) const;
-    bool HandleInventoryRightClickActions(CInventoryCtrl* targetControl) const;
+    bool HandleInventoryRightClickActions(CInventoryCtrl* targetControl, bool mayDrop) const;
     bool TryEquipItem(CInventoryCtrl* targetControl, ITEM* pItem, int iSrcIndex) const;
     bool TryDropItem(CInventoryCtrl* targetControl, ITEM* pItem) const;
 

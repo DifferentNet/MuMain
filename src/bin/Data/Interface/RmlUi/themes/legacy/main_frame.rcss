@@ -321,3 +321,12 @@
 #pet_skill_row .skill-cell:nth-child(2) { left: 0dp; }
 #pet_skill_row .skill-cell:nth-child(3) { left: 32dp; }
 #pet_skill_row .skill-cell:nth-child(4) { left: 64dp; }
+
+/* MU Moldova: the phone's own HUD (phone view with touch controls, theme flag "mobile-hud",
+   UI::Mobile::InterfaceMode) shows the hero in touch_controls.rml. Of this bar only the skill list
+   stays, for the touch menu's Skills; the root takes no height, so the workspace keeps no room for
+   the bar. */
+@media (theme: mobile-hud) {
+	#hud_layout { height: 0; }
+	#hud_strip, #gauges_left, #gauges_right, #buttons, #exp, #item_slots, #skill_slots { display: none; }
+}

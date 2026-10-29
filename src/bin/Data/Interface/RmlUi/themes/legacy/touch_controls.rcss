@@ -95,12 +95,12 @@
 }
 
 /* Under the row, kept right of the chat log's lines and left of the party list (top right):
-   five columns of three. */
+   six columns of three. */
 #tc_menu_panel {
 	position: absolute;
 	right: 110dp;
 	top: 40dp;
-	width: 548dp;
+	width: 646dp;
 	padding: 8dp;
 	box-sizing: border-box;
 	display: flex;
@@ -210,4 +210,94 @@
 #tc_auto.on {
 	border-color: token(accent-gold);
 	background-color: rgba(255, 210, 60, 110);
+}
+
+/* The phone view's hero frame (theme flag "mobile", UI::Mobile::InterfaceMode) in the PC bar's
+   place: under the location bar, the chat log's lines below it; the EXP line along the bottom. */
+#tc_hero, #tc_exp {
+	display: none;
+	pointer-events: none;
+}
+@media (theme: mobile) {
+	#tc_hero, #tc_exp {
+		display: block;
+	}
+}
+#tc_hero {
+	position: absolute;
+	left: 4dp;
+	top: 26dp;
+	width: 200dp;
+	font-family: "token(font-body)";
+	color: token(text-primary);
+	font-effect: shadow(0dp 1dp #000000);
+}
+#tc_hero * {
+	pointer-events: none;
+}
+#tc_hero_level {
+	height: 14dp;
+	line-height: 14dp;
+	font-size: 11dp;
+}
+.tc-gauge {
+	position: relative;
+	height: 16dp;
+	margin-top: 2dp;
+	box-sizing: border-box;
+	border: 1dp rgba(255, 255, 255, 60);
+	border-radius: 3dp;
+	background-color: rgba(0, 0, 0, 150);
+	overflow: hidden;
+}
+.tc-gauge-fill {
+	position: absolute;
+	left: 0;
+	top: 0;
+	height: 100%;
+}
+.tc-gauge-text {
+	position: relative;
+	height: 100%;
+	line-height: 14dp;
+	font-size: 10dp;
+	text-align: center;
+}
+#tc_hero_small {
+	display: flex;
+	gap: 4dp;
+}
+.tc-gauge-small {
+	flex: 1 1 0;
+	height: 13dp;
+}
+.tc-gauge-small .tc-gauge-text {
+	line-height: 11dp;
+	font-size: 9dp;
+}
+#tc_hero_hp .tc-gauge-fill { background-color: rgba(200, 30, 30, 220); }
+#tc_hero_mp .tc-gauge-fill { background-color: rgba(40, 80, 220, 220); }
+#tc_hero_sd .tc-gauge-fill { background-color: rgba(220, 190, 40, 220); }
+#tc_hero_ag .tc-gauge-fill { background-color: rgba(60, 180, 60, 220); }
+#tc_exp {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 3dp;
+	background-color: rgba(0, 0, 0, 150);
+}
+#tc_exp_fill {
+	height: 100%;
+	background-color: rgba(255, 210, 60, 220);
+}
+
+/* How many potions the button has left, under it. */
+.tc-potion-count {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: -15dp;
+	line-height: 13dp;
+	font-size: 11dp;
 }

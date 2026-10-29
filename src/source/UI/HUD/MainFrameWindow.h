@@ -65,6 +65,8 @@ namespace mu::ui::window
         void SetItemHotKey(int iHotKey, int iItemType, int iItemLevel);
         int GetItemHotKey(int iHotKey);
         int GetItemHotKeyLevel(int iHotKey);
+        // How many of the hotkey's item the inventory holds (0 = none).
+        int GetItemHotKeyCount(int iHotKey);
         //void RenderHotKeyItems();
         void UpdateItemHotKey();
 
