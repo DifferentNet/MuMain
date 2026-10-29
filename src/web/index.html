@@ -720,7 +720,11 @@
   // AMD Radeon RX 9070 XT, 2026-10-24; its browser then gave no adapter at all).
   // index.html?needfeature=<name> adds a feature and ?noadapter drops the adapter, to see the messages.
   const NEEDED_FEATURES = ["depth32float-stencil8", "rg11b10ufloat-renderable", "indirect-first-instance",
-                           "depth-clip-control", "bgra8unorm-storage", "float32-filterable"];
+                           "bgra8unorm-storage", "float32-filterable"];
+  // The game clamps depth where the card can. ARM Mali Bifrost phones (a Galaxy Note 10 Lite in
+  // Chrome 156, 2026-10-30) can't, and the game clips it instead, as the original OpenGL game did
+  // (Module.muDepthClamp). index.html?nodepthclamp clips it on any card, to try it.
+  const DEPTH_CLAMP = "depth-clip-control";
   // The game's shaders use clip distances where the card has them. ARM Mali phones (a Pixel 9 Pro XL,
   // 2026-10-29) don't, and the game takes its soft clip shaders instead (Module.muClipDistances,
   // Core/Platform/web/WebGpuFeatures.cpp). index.html?softclip takes them on any card, to try them.
@@ -819,10 +823,12 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         clipNote = `no, this browser can't build them (${broken}), soft clip shaders`;
       }
     }
+    const depthClamp = adapter.features.has(DEPTH_CLAMP) && !params.has("nodepthclamp");
     appendLog(`WebGPU adapter: ${gpu} (${tried.join(", ")}); missing features: ${missing.join(", ") || "none"}; ` +
-              `clip distances: ${clipNote}; browser: ${browser}`,
+              `clip distances: ${clipNote}; depth clamp: ${depthClamp ? "yes" : "no, depth clipped"}; ` +
+              `browser: ${browser}`,
               missing.length > 0);
-    return { ok: missing.length === 0, gpu, browser, missing, clipDistances };
+    return { ok: missing.length === 0, gpu, browser, missing, clipDistances, depthClamp };
   }
   function showGpuProblem(gpu, browser, missingFeatures) {
     const lines = missingFeatures.length
@@ -1185,6 +1191,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       muMapPack: mapPack,
       muFilesOnPageThread: filesOnPageThread,
       muClipDistances: gpuCheck.clipDistances,
+      muDepthClamp: gpuCheck.depthClamp,
       muKeyboard: phone ? phoneKeyboard : undefined,
       muDevice: device.kind,
       print: (text) => { if (gpuErrorEcho(text)) return; console.log(text); appendLog(text, false); },
