@@ -7,10 +7,36 @@
 <link rel="manifest" href="manifest.webmanifest">
 <title>MU Online (web)</title>
 <script>
-  // Phones (index.html?phone on a PC): the game fills the screen in landscape and the footer opens
-  // from the menu button. Set before the page is drawn, so it doesn't jump.
-  const phone = new URLSearchParams(location.search).has("phone") ||
-    (navigator.userAgentData ? navigator.userAgentData.mobile : /Android|iPhone|iPad/.test(navigator.userAgent));
+  // What the game runs on, decided before the page is drawn, so nothing jumps: a phone, a tablet or a
+  // computer. Phones and tablets are played with the fingers: they get the touch page (html.phone: the
+  // game fills the screen in landscape, the footer opens from the menu button, the device's own
+  // keyboard for text fields), and the game knows it from its first frame (Module.muDevice,
+  // Core/Platform/web/WebDevice.cpp) for its touch controls. index.html?phone, ?tablet or ?desktop
+  // decides it on any device. "reason" goes to the log.
+  // A tablet's or a "desktop site" phone's browser may call itself a computer; a touch screen with
+  // no mouse at all gives it away, and the screen's short side tells a phone from a tablet.
+  const TABLET_SHORT_SIDE = 600;   // CSS pixels: below it, a phone
+  function detectDevice() {
+    const params = new URLSearchParams(location.search);
+    for (const kind of ["phone", "tablet", "desktop"]) {
+      if (params.has(kind)) return { kind, reason: "?" + kind };
+    }
+    const ua = navigator.userAgent;
+    if (navigator.userAgentData && navigator.userAgentData.mobile) return { kind: "phone", reason: "the browser says mobile" };
+    if (/iPhone|iPod|Android.+Mobile/.test(ua)) return { kind: "phone", reason: "user agent" };
+    if (/iPad|Android/.test(ua)) return { kind: "tablet", reason: "user agent" };
+    // iPadOS Safari calls itself a Mac, and Macs have no touch screens.
+    if (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) return { kind: "tablet", reason: "a Mac with a touch screen" };
+    const touchOnly = navigator.maxTouchPoints > 0 && matchMedia("(any-pointer: coarse)").matches &&
+      !matchMedia("(any-pointer: fine)").matches && !matchMedia("(any-hover: hover)").matches;
+    if (touchOnly) {
+      const kind = Math.min(screen.width, screen.height) < TABLET_SHORT_SIDE ? "phone" : "tablet";
+      return { kind, reason: "a touch screen and no mouse" };
+    }
+    return { kind: "desktop", reason: "a mouse, or no touch screen" };
+  }
+  const device = detectDevice();
+  const phone = device.kind !== "desktop";   // phones and tablets: the touch page
   document.documentElement.classList.toggle("phone", phone);
 </script>
 <style>
@@ -106,6 +132,8 @@
     logEl.scrollTop = logEl.scrollHeight;
   }
   document.getElementById("toggle-log").onclick = () => { logEl.hidden = !logEl.hidden; };
+  appendLog(`Device: ${device.kind} (${device.reason}); screen ${screen.width}x${screen.height} CSS px, ` +
+            `${devicePixelRatio} device px each, ${navigator.maxTouchPoints} touch points`);
   const stage = document.getElementById("stage");
   const footer = document.querySelector("footer");
   // Phones put the whole page on the screen, the menu button too, and turn it sideways: browsers lock
@@ -573,34 +601,122 @@
       }, 2000);
     }
 
+    // Main.wasm and startup.pack come as gzip copies (Main.wasm.gz, startup.pack.gz, written by
+    // tools/web/make_startup_pack.py), which the page unpacks itself: the web server sends files as
+    // they are, and a phone on a slow line waits for every megabyte (186 MB as they are, 120 packed,
+    // 2026-10-29). A build without the copies, or a browser without DecompressionStream, gets the
+    // files themselves. Gives the response as it came over the network and whether its body is
+    // still packed (a server that marks the copy as gzip has the browser unpack it already).
+    async function fetchPacked(name, init) {
+      if (self.DecompressionStream) {
+        const response = await fetch(name + ".gz", init).catch(() => null);
+        if (response && response.ok) {
+          return { response, packed: !/gzip/i.test(response.headers.get("Content-Encoding") || "") };
+        }
+      }
+      const response = await fetch(name, init);
+      if (!response.ok) throw new Error(`${name}: HTTP ${response.status}`);
+      return { response, packed: false };
+    }
+    function unpacked(body, packed) {
+      return packed ? body.pipeThrough(new DecompressionStream("gzip")) : body;
+    }
+    // A stream that tells onBytes about every chunk passing through it.
+    function counted(body, onBytes) {
+      return body.pipeThrough(new TransformStream({ transform(chunk, out) { onBytes(chunk.length); out.enqueue(chunk); } }));
+    }
+
     // The files the game reads before it can be played come in one download (startup.pack, listed in
     // startup.json), fetched while the game's code loads. WebFileSystem.cpp waits for it; without it
     // the game fetches each file when it first opens it.
-    let packDone = false;
-    const startupPack = (async () => {
-      const indexResponse = await fetch("startup.json", { cache: "no-cache" });
-      if (!indexResponse.ok) return null;
-      const index = await indexResponse.json();
-      const total = index.files.reduce((sum, file) => sum + file[1], 0);
-      const response = await fetch("startup.pack", { cache: "no-cache" });
-      if (!response.ok) return null;
+    // The browser keeps the pack as it came (packed) in its own storage, under the hash in
+    // startup.json, so the next visit loads it from the device, and a new release downloads it again
+    // only when it changed: a phone's browser cache drops a file this big. index.html?nostore neither
+    // uses nor fills that storage.
+    const PACK_STORE = "mu-web/startup-pack";
+    async function packStore(index) {
+      if (!index.hash || !self.caches || new URLSearchParams(location.search).has("nostore")) return null;
+      try {
+        return { cache: await caches.open(PACK_STORE), key: new URL(`startup.pack?v=${index.hash}`, location.href).href };
+      } catch (e) {
+        return null;   // no storage in this browser (a private window, say)
+      }
+    }
+    // Keeps the pack's second stream (a tee of the download) for the next visit, and drops older ones.
+    function keepStartupPack(store, body, packed, hash) {
+      const kept = new Response(body, { headers: { "X-Mu-Packed": packed ? "1" : "0" } });
+      store.cache.put(store.key, kept).then(async () => {
+        for (const request of await store.cache.keys()) {
+          if (request.url !== store.key) store.cache.delete(request);
+        }
+        if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+        console.log(`Startup pack kept on this device (${hash})`);
+      }).catch((e) => console.warn("Startup pack not kept on this device: " + e));
+    }
+    // Reads the pack into one array: from the device (null when it isn't kept there) or the server.
+    async function readStartupPack(index, total, store, fromDevice) {
+      let source;
+      if (fromDevice) {
+        const kept = await store.cache.match(store.key);
+        if (!kept) return null;
+        source = { response: kept, packed: kept.headers.get("X-Mu-Packed") === "1" };
+      } else {
+        source = await fetchPacked("startup.pack", { cache: "no-store" });
+      }
+      let body = source.response.body;
+      if (!fromDevice && store) {
+        const [forGame, forStore] = body.tee();
+        body = forGame;
+        keepStartupPack(store, forStore, source.packed, index.hash);
+      }
+      // Progress: the bytes coming over the network where their number is known, else the unpacked ones.
+      const verb = fromDevice ? "Loading" : "Downloading";
+      let shownMb = -1;
+      const showProgress = (count, of) => {
+        const mb = Math.floor(count / 1e6);
+        if (mb === shownMb) return;
+        shownMb = mb;
+        setStatus(`${verb} game data… ${mb} of ${Math.round(of / 1e6)} MB`);
+      };
+      const networkTotal = fromDevice ? 0 : Number(source.response.headers.get("Content-Length")) || 0;
+      if (networkTotal) {
+        let networkReceived = 0;
+        body = counted(body, (n) => { networkReceived += n; showProgress(Math.min(networkReceived, networkTotal), networkTotal); });
+      }
       const bytes = new Uint8Array(total);
-      const reader = response.body.getReader();
-      let received = 0, shownMb = -1;
+      const reader = unpacked(body, source.packed).getReader();
+      let received = 0;
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
         if (received + value.length > total) throw new Error("startup.pack is bigger than startup.json says");
         bytes.set(value, received);
         received += value.length;
-        const mb = Math.floor(received / 1e6);
-        if (mb !== shownMb) {
-          shownMb = mb;
-          setStatus(`Downloading game data… ${mb} of ${Math.round(total / 1e6)} MB`);
-        }
+        if (!networkTotal) showProgress(received, total);
       }
       if (received !== total) throw new Error("startup.pack is incomplete");
       return { files: index.files, bytes };
+    }
+    let packDone = false;
+    const startupPack = (async () => {
+      const indexResponse = await fetch("startup.json", { cache: "no-cache" });
+      if (!indexResponse.ok) return null;
+      const index = await indexResponse.json();
+      const total = index.files.reduce((sum, file) => sum + file[1], 0);
+      const store = await packStore(index);
+      if (store) {
+        try {
+          const pack = await readStartupPack(index, total, store, true);
+          if (pack) {
+            console.log(`Startup pack from this device (${index.hash})`);
+            return pack;
+          }
+        } catch (e) {
+          console.warn("Startup pack on this device didn't read, downloading it again: " + e);
+          await store.cache.delete(store.key).catch(() => {});
+        }
+      }
+      return readStartupPack(index, total, store, false);
     })().finally(() => { packDone = true; setStatus(""); });
 
     // Global for Main.js, which picks up an existing Module object.
@@ -609,6 +725,7 @@
       muStartupPack: startupPack,
       muClipDistances: gpuCheck.clipDistances,
       muKeyboard: phone ? phoneKeyboard : undefined,
+      muDevice: device.kind,
       print: (text) => { console.log(text); appendLog(text, false); },
       printErr: (text) => { console.error(text); appendLog(text, true); },
       setStatus: (text) => { if (packDone || text) setStatus(text); },
@@ -619,6 +736,23 @@
         addEventListener("pagehide", saveConfig);
       },
       onAbort: (what) => gameCrashed(what),
+      // Main.js calls this instead of fetching Main.wasm itself: the gzip copy where there is one
+      // (fetchPacked), Main.wasm where that fails.
+      instantiateWasm: (imports, done) => {
+        (async () => {
+          let result;
+          try {
+            const source = await fetchPacked("Main.wasm", { credentials: "same-origin" });
+            const code = new Response(unpacked(source.response.body, source.packed), { headers: { "Content-Type": "application/wasm" } });
+            result = await WebAssembly.instantiateStreaming(code, imports);
+          } catch (e) {
+            appendLog(`Main.wasm.gz didn't load (${e}), taking Main.wasm`, true);
+            result = await WebAssembly.instantiateStreaming(fetch("Main.wasm", { credentials: "same-origin" }), imports);
+          }
+          done(result.instance, result.module);
+        })().catch((e) => gameCrashed("Main.wasm: " + e));
+        return {};
+      },
     };
     const script = document.createElement("script");
     script.src = "Main.js";

@@ -595,13 +595,14 @@ if (EMSCRIPTEN)
       "${CMAKE_CURRENT_SOURCE_DIR}/web/icon-512.png"
       "$<TARGET_FILE_DIR:Main>"
     ${_mu_web_extra_copy}
-    COMMAND "${CMAKE_COMMAND}"
-      "-DOUTPUT_DIR=$<TARGET_FILE_DIR:Main>"
-      "-P" "${REPO_ROOT}/cmake/WriteWebFileList.cmake"
-    # startup.pack: the files the game reads before it can be played, in one download.
+    # startup.pack: the files the game reads before it can be played, in one download; gzip copies
+    # of it and of Main.wasm, which the page unpacks itself. Before files.txt, which lists the copies.
     COMMAND "${Python3_EXECUTABLE}" "${REPO_ROOT}/tools/web/make_startup_pack.py"
       --root "$<TARGET_FILE_DIR:Main>"
       --list "${CMAKE_CURRENT_SOURCE_DIR}/web/startup-files.txt"
+    COMMAND "${CMAKE_COMMAND}"
+      "-DOUTPUT_DIR=$<TARGET_FILE_DIR:Main>"
+      "-P" "${REPO_ROOT}/cmake/WriteWebFileList.cmake"
     VERBATIM
   )
 endif()

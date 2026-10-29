@@ -50,6 +50,7 @@
 #include <SDL3/SDL.h>
 
 #ifdef __EMSCRIPTEN__
+#include "Core/Platform/web/WebDevice.h"
 #include "Core/Platform/web/WebDisplay.h"
 #include "Core/Platform/web/WebKeyboard.h"
 #include <RmlUi/Core/Element.h>
@@ -2281,6 +2282,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     g_bUseFullscreenMode = !g_bUseWindowMode;
 #ifdef __EMSCRIPTEN__
     MuWebStartAtPageSize();
+    mu::log::Get("platform")->info("Browser device: {}{}", mu::web::DeviceName(mu::web::GetDevice()),
+                                   mu::web::IsTouchDevice() ? ", played by touch" : "");
 #endif
 
     // Apply audio settings from INI — volume 0 = off, >0 = on
