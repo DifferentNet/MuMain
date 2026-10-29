@@ -78,6 +78,12 @@
   html.phone #play.show { display: flex; position: fixed; left: 50%; bottom: 1rem; transform: translateX(-50%); z-index: 3; flex-direction: column; align-items: center; gap: .35rem; padding: .75rem 1.25rem; border: 1px solid var(--line); border-radius: 8px; background: rgba(22,24,31,.94); }
   #play-fullscreen { font: inherit; font-size: 1.125rem; font-weight: 600; color: #1b1406; background: var(--gold); border: 0; border-radius: 6px; padding: .6rem 2.25rem; cursor: pointer; }
   #play-here { font: inherit; font-size: .8125rem; color: var(--muted); background: none; border: 0; padding: .25rem; text-decoration: underline; cursor: pointer; }
+  #install { font: inherit; font-size: 1rem; font-weight: 600; color: var(--gold); background: transparent; border: 1px solid var(--gold); border-radius: 6px; padding: .45rem 1.5rem; cursor: pointer; }
+  #play-fullscreen[hidden], #install[hidden], footer button[hidden], #install-hint[hidden] { display: none; }
+  /* Where the browser has no Install of its own to offer: the steps in its menu. */
+  #install-hint { position: fixed; left: 50%; bottom: 1rem; transform: translateX(-50%); z-index: 5; width: min(28rem, calc(100% - 2rem)); padding: .9rem 1.1rem; border: 1px solid var(--gold); border-radius: 8px; background: rgba(22,24,31,.97); text-align: center; white-space: pre-line; }
+  #install-hint p { margin: 0 0 .6rem; }
+  #install-hint button { font: inherit; font-weight: 600; color: #1b1406; background: var(--gold); border: 0; border-radius: 6px; padding: .35rem 1.75rem; cursor: pointer; }
   /* Phones held upright: the game is played sideways. */
   #rotate { position: fixed; inset: 0; z-index: 4; align-items: center; justify-content: center; padding: 1rem; text-align: center; background: var(--bg); }
   @media (orientation: portrait) { html.phone #rotate { display: flex; } }
@@ -97,13 +103,16 @@
 <button id="menu" type="button" aria-label="Menu" title="Menu">⋮</button>
 <div id="play">
   <button id="play-fullscreen" type="button">Play</button>
+  <button id="install" type="button" hidden>Install the game · Установить игру</button>
   <button id="play-here" type="button">Stay in the browser · Остаться в браузере</button>
 </div>
+<div id="install-hint" role="dialog" aria-label="Install" hidden><p></p><button type="button">OK</button></div>
 <div id="rotate"><div><div id="rotate-icon"></div>Turn your phone sideways<br>Поверните телефон горизонтально</div></div>
 <footer>
   <span>MU Online in the browser</span>
   <button id="toggle-log" type="button">Log</button>
   <button id="fullscreen" type="button">Fullscreen</button>
+  <button id="install-menu" type="button" hidden>Install</button>
   <label title="How many pixels the game draws while Options has Auto resolution">Quality
     <select id="quality">
       <option value="high">High</option>
@@ -190,14 +199,83 @@
   canvas.addEventListener("pointerdown", () => footer.classList.remove("open"));
 
   // Phones: Play opens the game fullscreen; "Stay in the browser" keeps the address bar (the menu's
-  // Fullscreen does it later). Not where the page already fills the screen (opened from the home
-  // screen, manifest.webmanifest) or can't (iPhone).
-  const homeScreenApp = matchMedia("(display-mode: fullscreen), (display-mode: standalone)").matches;
-  if (phone && !homeScreenApp && (document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen)) {
+  // Fullscreen does it later); Install (below) puts it on the home screen. Not where the page already
+  // fills the screen (opened from the home screen, manifest.webmanifest). An iPhone has no fullscreen
+  // for pages: there the card offers Install, or playing in the browser.
+  const homeScreenApp = matchMedia("(display-mode: fullscreen), (display-mode: standalone), (display-mode: minimal-ui)").matches;
+  if (phone && !homeScreenApp) {
+    const playButton = document.getElementById("play-fullscreen");
+    const stayButton = document.getElementById("play-here");
+    playButton.hidden = !(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+    if (playButton.hidden) stayButton.textContent = "Play in the browser · Играть в браузере";
     playCard.classList.add("show");
-    document.getElementById("play-fullscreen").onclick = () => { playCard.classList.remove("show"); enterFullscreen(); canvas.focus(); };
-    document.getElementById("play-here").onclick = () => { playCard.classList.remove("show"); canvas.focus(); };
+    playButton.onclick = () => { playCard.classList.remove("show"); enterFullscreen(); canvas.focus(); };
+    stayButton.onclick = () => { playCard.classList.remove("show"); canvas.focus(); };
   }
+
+  // Install: the game as an app on the home screen (or a computer's start menu), which opens it
+  // fullscreen and sideways without the browser around it (manifest.webmanifest). Chrome and Edge
+  // offer it to the page (beforeinstallprompt), and the Install buttons (the Play card, the menu) ask
+  // the browser for it; where the browser offers nothing (an iPhone, Firefox, Samsung Internet, or
+  // Chrome before it decided to), they show where the browser's own menu has it. Phones always show
+  // them, computers only when the browser offers it, and nobody once the game runs as the app.
+  const installButtons = [document.getElementById("install"), document.getElementById("install-menu")];
+  const installHint = document.getElementById("install-hint");
+  let installOffer = null;
+  let installed = homeScreenApp;
+  function showInstallButtons() {
+    const shown = !installed && (phone || installOffer !== null);
+    for (const button of installButtons) button.hidden = !shown;
+  }
+  function installSteps() {
+    const ua = navigator.userAgent;
+    if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) {
+      return "Tap Share (the square with an arrow), then “Add to Home Screen”.\n" +
+             "Нажмите «Поделиться» (квадрат со стрелкой), затем «На экран „Домой“».";
+    }
+    if (/SamsungBrowser/.test(ua)) {
+      return "Open the menu ≡, then “Add page to” → “Home screen”.\n" +
+             "Откройте меню ≡, затем «Добавить страницу на» → «Главный экран».";
+    }
+    if (/Firefox/.test(ua)) {
+      return "Open the menu ⋮, then “Install” or “Add to Home screen”.\n" +
+             "Откройте меню ⋮, затем «Установить» или «Добавить на главный экран».";
+    }
+    return "Open the browser's menu (⋮ or …), then “Install app” or “Add to Home screen”.\n" +
+           "Откройте меню браузера (⋮ или …), затем «Установить приложение» или «Добавить на главный экран».";
+  }
+  async function install() {
+    footer.classList.remove("open");
+    const offer = installOffer;
+    if (!offer) {
+      installHint.firstChild.textContent = installSteps();
+      installHint.hidden = false;
+      return;
+    }
+    installOffer = null;   // the browser's offer is good for one question
+    try {
+      await offer.prompt();
+      appendLog(`Install: ${(await offer.userChoice).outcome}`);
+    } catch (e) {
+      appendLog(`Install: ${e}`, true);
+    }
+    showInstallButtons();
+  }
+  for (const button of installButtons) button.onclick = install;
+  installHint.lastChild.onclick = () => { installHint.hidden = true; canvas.focus(); };
+  addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();   // the page's own buttons instead of the browser's bar
+    installOffer = event;
+    showInstallButtons();
+  });
+  addEventListener("appinstalled", () => {
+    installed = true;
+    installOffer = null;
+    installHint.hidden = true;
+    showInstallButtons();
+    appendLog("Installed: the game opens from the home screen now");
+  });
+  showInstallButtons();
 
   // Phones: their own keyboard for the game's text fields (Module.muKeyboard, called from
   // Core/Platform/web/WebKeyboard.cpp). A canvas can't bring it up, so while a field has the keys the
@@ -307,6 +385,23 @@
   function stored(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
   function store(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* no storage */ } }
   const pageParams = new URLSearchParams(location.search);
+
+  // startup.json (tools/web/make_startup_pack.py): the startup pack's parts and the hashes of Main.js
+  // and Main.wasm. Asked for at once, while the page checks the graphics card.
+  const releaseIndexLoad = fetch("startup.json", { cache: "no-cache" })
+    .then((response) => response.ok ? response.json() : null).catch(() => null);
+
+  // The service worker (sw.js) keeps the game's files on the device and shows a note of its own when
+  // there is no connection. index.html?nosw removes it and the files it kept (its "mu-web/files"), to
+  // see the page without it.
+  if ("serviceWorker" in navigator) {
+    if (pageParams.has("nosw")) {
+      navigator.serviceWorker.getRegistrations().then((all) => all.forEach((registration) => registration.unregister()));
+      if (self.caches) caches.delete("mu-web/files");
+    } else {
+      navigator.serviceWorker.register("sw.js").catch((e) => appendLog(`Service worker: ${e}`, true));
+    }
+  }
 
   // The game's size. Options has "Auto" by default (also for players who picked a size before it
   // existed): the game area in the screen's real pixels (devicePixelRatio), so the picture is drawn
@@ -602,7 +697,7 @@
 
   if (missing.length) {
     setStatus("This browser can't run the game: no " + missing.join(", ") + ". Use a current Chrome or Edge.", true);
-  } else checkGpu().then((gpuCheck) => {
+  } else checkGpu().then(async (gpuCheck) => {
     if (!gpuCheck.ok) {
       showGpuProblem(gpuCheck.gpu, gpuCheck.browser, gpuCheck.missing);
       return;
@@ -642,20 +737,26 @@
       }, 2000);
     }
 
-    // Main.wasm and startup.pack come as gzip copies (Main.wasm.gz, startup.pack.gz, written by
+    const releaseIndex = await releaseIndexLoad;
+    // Main.js?v=<hash>: one version of the file, which the service worker keeps (sw.js).
+    const code = (releaseIndex && releaseIndex.code) || {};
+    const versioned = (name) => code[name] ? `${name}?v=${code[name]}` : name;
+
+    // Main.wasm and the packs come as gzip copies (Main.wasm.gz, packs/*.pack.gz, written by
     // tools/web/make_startup_pack.py), which the page unpacks itself: the web server sends files as
     // they are, and a phone on a slow line waits for every megabyte (186 MB as they are, 120 packed,
-    // 2026-10-29). A build without the copies, or a browser without DecompressionStream, gets the
-    // files themselves. Gives the response as it came over the network and whether its body is
-    // still packed (a server that marks the copy as gzip has the browser unpack it already).
-    async function fetchPacked(name, init) {
+    // 2026-10-29). A browser without DecompressionStream gets Main.wasm itself, and the game's files
+    // one by one. Gives the response as it came over the network and whether its body is still packed
+    // (a server that marks the copy as gzip has the browser unpack it already).
+    async function fetchPacked(name, init, version) {
+      const query = version ? `?v=${version}` : "";
       if (self.DecompressionStream) {
-        const response = await fetch(name + ".gz", init).catch(() => null);
+        const response = await fetch(name + ".gz" + query, init).catch(() => null);
         if (response && response.ok) {
           return { response, packed: !/gzip/i.test(response.headers.get("Content-Encoding") || "") };
         }
       }
-      const response = await fetch(name, init);
+      const response = await fetch(name + query, init);
       if (!response.ok) throw new Error(`${name}: HTTP ${response.status}`);
       return { response, packed: false };
     }
@@ -666,115 +767,164 @@
     function counted(body, onBytes) {
       return body.pipeThrough(new TransformStream({ transform(chunk, out) { onBytes(chunk.length); out.enqueue(chunk); } }));
     }
+    // "Downloading <what>… X of Y MB" as the bytes come (a total of 0: not known).
+    function downloadProgress(what, total) {
+      let received = 0;
+      let shownMb = -1;
+      return (bytes) => {
+        received += bytes;
+        const mb = Math.floor(received / 1e6);
+        if (mb === shownMb) return;
+        shownMb = mb;
+        setStatus(total ? `Downloading ${what}… ${Math.min(mb, Math.round(total / 1e6))} of ${Math.round(total / 1e6)} MB`
+                        : `Downloading ${what}… ${mb} MB`);
+      };
+    }
 
-    // The files the game reads before it can be played come in one download (startup.pack, listed in
-    // startup.json), fetched while the game's code loads. WebFileSystem.cpp waits for it; without it
-    // the game fetches each file when it first opens it. A map's files come the same way when the game
+    // The files the game reads before it can be played come in one download, the startup pack,
+    // fetched while the game's code loads; WebFileSystem.cpp waits for it, and without it the game
+    // fetches each file when it first opens it. The pack comes in parts, a folder or a few each
+    // (startup.json "parts"), a few downloading at once. A map's files come the same way when the game
     // enters it (packs/worldN.pack and .json, Module.muMapPack below): entering Lorencia file by file
     // took a minute on a phone (2026-10-29).
-    // The browser keeps a pack as it came (packed) in its own storage, under the hash in its .json, so
-    // the next visit loads it from the device, and a new release downloads it again only when it
-    // changed: a phone's browser cache drops files this big. index.html?nostore neither uses nor fills
-    // that storage.
-    const STARTUP_PACK = { name: "startup.pack", store: "mu-web/startup-pack", label: "Startup pack", what: "game data" };
+    // The browser keeps each pack as it came (packed) in its own storage, under the hash in its index,
+    // so the next visit loads it from the device, and a release downloads only the packs that changed:
+    // a phone's browser cache drops files this big. index.html?nostore neither uses nor fills that
+    // storage.
+    const STARTUP_STORE = "mu-web/startup-pack";
     const MAP_PACK_STORE = "mu-web/map-packs";
-    async function packStore(pack, index) {
-      if (!index.hash || !self.caches || new URLSearchParams(location.search).has("nostore")) return null;
+    const PACK_DOWNLOADS = 3;   // packs downloading at once
+    async function openStore(name) {
+      if (!self.caches || pageParams.has("nostore")) return null;
       try {
-        return { cache: await caches.open(pack.store), key: new URL(`${pack.name}?v=${index.hash}`, location.href).href };
+        return await caches.open(name);
       } catch (e) {
         return null;   // no storage in this browser (a private window, say)
       }
     }
-    // Keeps the pack's second stream (a tee of the download) for the next visit, and drops its older copies.
-    function keepPack(pack, store, body, packed, hash) {
-      const kept = new Response(body, { headers: { "X-Mu-Packed": packed ? "1" : "0" } });
-      const path = store.key.split("?")[0];
-      store.cache.put(store.key, kept).then(async () => {
-        for (const request of await store.cache.keys()) {
-          if (request.url !== store.key && request.url.split("?")[0] === path) store.cache.delete(request);
+    const packKey = (entry) => new URL(`${entry.name}?v=${entry.hash}`, location.href).href;
+    const packPath = (key) => key.split("?")[0];
+    // Keeps a pack's second stream (a tee of the download) for the next visit, and drops its older copies.
+    function keepPack(label, store, entry, body, packed) {
+      const key = packKey(entry);
+      store.put(key, new Response(body, { headers: { "X-Mu-Packed": packed ? "1" : "0" } })).then(async () => {
+        for (const request of await store.keys()) {
+          if (request.url !== key && packPath(request.url) === packPath(key)) store.delete(request);
         }
         if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-        console.log(`${pack.label} kept on this device (${hash})`);
-      }).catch((e) => console.warn(`${pack.label} not kept on this device: ${e}`));
+        console.log(`${label} kept on this device (${entry.hash})`);
+      }).catch((e) => console.warn(`${label} not kept on this device: ${e}`));
     }
-    // Reads a pack into one array: from the device (null when it isn't kept there) or the server.
-    async function readPack(pack, index, total, store, fromDevice) {
-      let source;
-      if (fromDevice) {
-        const kept = await store.cache.match(store.key);
-        if (!kept) return null;
-        source = { response: kept, packed: kept.headers.get("X-Mu-Packed") === "1" };
+    // Reads a pack ({name, hash, files: [[path, size], ...]}) into one array: from its copy on the
+    // device (kept) or from the server, telling onNetworkBytes about each downloaded byte.
+    async function readPack(label, entry, store, kept, onNetworkBytes) {
+      let body, packed;
+      if (kept) {
+        body = kept.body;
+        packed = kept.headers.get("X-Mu-Packed") === "1";
       } else {
-        source = await fetchPacked(pack.name, { cache: "no-store" });
+        const source = await fetchPacked(entry.name, { cache: "no-store" });
+        body = counted(source.response.body, onNetworkBytes);
+        packed = source.packed;
+        if (store) {
+          const [forGame, forStore] = body.tee();
+          body = forGame;
+          keepPack(label, store, entry, forStore, packed);
+        }
       }
-      let body = source.response.body;
-      if (!fromDevice && store) {
-        const [forGame, forStore] = body.tee();
-        body = forGame;
-        keepPack(pack, store, forStore, source.packed, index.hash);
-      }
-      // Progress: the bytes coming over the network where their number is known, else the unpacked ones.
-      const verb = fromDevice ? "Loading" : "Downloading";
-      let shownMb = -1;
-      const showProgress = (count, of) => {
-        const mb = Math.floor(count / 1e6);
-        if (mb === shownMb) return;
-        shownMb = mb;
-        setStatus(`${verb} ${pack.what}… ${mb} of ${Math.round(of / 1e6)} MB`);
-      };
-      const networkTotal = fromDevice ? 0 : Number(source.response.headers.get("Content-Length")) || 0;
-      if (networkTotal) {
-        let networkReceived = 0;
-        body = counted(body, (n) => { networkReceived += n; showProgress(Math.min(networkReceived, networkTotal), networkTotal); });
-      }
+      const total = entry.files.reduce((sum, file) => sum + file[1], 0);
       const bytes = new Uint8Array(total);
-      const reader = unpacked(body, source.packed).getReader();
+      const reader = unpacked(body, packed).getReader();
       let received = 0;
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
-        if (received + value.length > total) throw new Error(`${pack.name} is bigger than its .json says`);
+        if (received + value.length > total) throw new Error(`${entry.name} is bigger than its index says`);
         bytes.set(value, received);
         received += value.length;
-        if (!networkTotal) showProgress(received, total);
       }
-      if (received !== total) throw new Error(`${pack.name} is incomplete`);
-      return { files: index.files, bytes };
+      if (received !== total) throw new Error(`${entry.name} is incomplete`);
+      return { files: entry.files, bytes };
     }
-    // A pack's files and bytes, or null when the build has no such pack.
-    async function loadPack(pack) {
-      const indexResponse = await fetch(pack.name.replace(/\.pack$/, ".json"), { cache: "no-cache" });
-      if (!indexResponse.ok) return null;
-      const index = await indexResponse.json();
-      const total = index.files.reduce((sum, file) => sum + file[1], 0);
-      const store = await packStore(pack, index);
-      if (store) {
+    // A pack's files and bytes: from the device where it is kept and reads, else from the server.
+    async function loadPack(label, entry, store, kept, onNetworkBytes) {
+      if (kept) {
         try {
-          const kept = await readPack(pack, index, total, store, true);
-          if (kept) {
-            console.log(`${pack.label} from this device (${index.hash})`);
-            return kept;
-          }
+          const pack = await readPack(label, entry, null, kept, null);
+          console.log(`${label} from this device (${entry.hash})`);
+          return pack;
         } catch (e) {
-          console.warn(`${pack.label} on this device didn't read, downloading it again: ${e}`);
-          await store.cache.delete(store.key).catch(() => {});
+          console.warn(`${label} on this device didn't read, downloading it again: ${e}`);
+          await store.delete(packKey(entry)).catch(() => {});
         }
       }
-      return readPack(pack, index, total, store, false);
+      return readPack(label, entry, store, null, onNetworkBytes);
+    }
+    // Runs the tasks given to it at most `count` at a time, in the order given.
+    function taskQueue(count) {
+      let running = 0;
+      const waiting = [];
+      const finished = () => {
+        running--;
+        if (waiting.length) waiting.shift()();
+      };
+      return (task) => new Promise((resolve, reject) => {
+        const start = () => {
+          running++;
+          task().then(resolve, reject).finally(finished);
+        };
+        if (running < count) start();
+        else waiting.push(start);
+      });
+    }
+    // The startup pack's parts, each a promise of its files and bytes (WebFileSystem.cpp takes them in
+    // order as they come), or null where startup.json has none.
+    async function startupPack() {
+      const parts = releaseIndex && releaseIndex.parts;
+      if (!parts) return null;
+      const store = await openStore(STARTUP_STORE);
+      const kept = await Promise.all(parts.map((part) => store && store.match(packKey(part)).catch(() => undefined)));
+      if (store) {
+        // Parts this release no longer has, the single pack of earlier releases among them.
+        const current = new Set(parts.map((part) => packPath(packKey(part))));
+        for (const request of await store.keys()) {
+          if (!current.has(packPath(request.url))) store.delete(request);
+        }
+      }
+      const toDownload = parts.reduce((sum, part, i) => sum + (kept[i] ? 0 : part.packed), 0);
+      const onNetworkBytes = downloadProgress("game data", toDownload);
+      if (toDownload) onNetworkBytes(0);
+      else setStatus("Loading game data…");
+      const queue = taskQueue(PACK_DOWNLOADS);
+      return parts.map((part, i) => {
+        const loading = queue(() => loadPack(`Startup pack part ${part.name}`, part, store, kept[i], onNetworkBytes));
+        loading.catch(() => {});   // WebFileSystem.cpp says which part failed
+        return loading;
+      });
     }
     let packDone = false;
-    const startupPack = loadPack(STARTUP_PACK).finally(() => { packDone = true; setStatus(""); });
-    // WebFileSystem.cpp LoadWorldFiles: the files of the map folder the game enters (Data/WorldN, ObjectN).
-    function mapPack(world) {
-      const pack = { name: `packs/world${world}.pack`, store: MAP_PACK_STORE, label: `Map pack ${world}`, what: "map" };
-      return loadPack(pack).finally(() => setStatus(""));
+    const startupParts = startupPack();
+    startupParts.then((parts) => Promise.allSettled(parts || []), () => {})
+      .finally(() => { packDone = true; setStatus(""); });
+    // WebFileSystem.cpp LoadWorldFiles: the files of the map folder the game enters (Data/WorldN,
+    // ObjectN), or null where the map has no pack.
+    async function mapPack(world) {
+      try {
+        const indexResponse = await fetch(`packs/world${world}.json`, { cache: "no-cache" });
+        if (!indexResponse.ok) return null;
+        const entry = Object.assign({ name: `packs/world${world}.pack` }, await indexResponse.json());
+        const store = await openStore(MAP_PACK_STORE);
+        const kept = store ? await store.match(packKey(entry)).catch(() => undefined) : undefined;
+        return await loadPack(`Map pack ${world}`, entry, store, kept, downloadProgress("the map", entry.packed || 0));
+      } finally {
+        setStatus("");
+      }
     }
 
     // Global for Main.js, which picks up an existing Module object.
     window.Module = {
       canvas,
-      muStartupPack: startupPack,
+      muStartupPack: startupParts,
       muMapPack: mapPack,
       muClipDistances: gpuCheck.clipDistances,
       muKeyboard: phone ? phoneKeyboard : undefined,
@@ -795,12 +945,12 @@
         (async () => {
           let result;
           try {
-            const source = await fetchPacked("Main.wasm", { credentials: "same-origin" });
-            const code = new Response(unpacked(source.response.body, source.packed), { headers: { "Content-Type": "application/wasm" } });
-            result = await WebAssembly.instantiateStreaming(code, imports);
+            const source = await fetchPacked("Main.wasm", { credentials: "same-origin" }, code["Main.wasm"]);
+            const wasm = new Response(unpacked(source.response.body, source.packed), { headers: { "Content-Type": "application/wasm" } });
+            result = await WebAssembly.instantiateStreaming(wasm, imports);
           } catch (e) {
             appendLog(`Main.wasm.gz didn't load (${e}), taking Main.wasm`, true);
-            result = await WebAssembly.instantiateStreaming(fetch("Main.wasm", { credentials: "same-origin" }), imports);
+            result = await WebAssembly.instantiateStreaming(fetch(versioned("Main.wasm"), { credentials: "same-origin" }), imports);
           }
           done(result.instance, result.module);
         })().catch((e) => gameCrashed("Main.wasm: " + e));
@@ -808,7 +958,7 @@
       },
     };
     const script = document.createElement("script");
-    script.src = "Main.js";
+    script.src = versioned("Main.js");
     script.onerror = () => setStatus("Main.js didn't load: is the web build in this folder?", true);
     document.body.appendChild(script);
   });
