@@ -20,9 +20,12 @@ namespace
 {
 using Art::Plate;
 
-// The plate's core (its coloured field) is the text's height and this much more.
-constexpr float CorePadding = 5.f;
-// The room the text keeps on each side, inside where the core starts to narrow.
+// The field (the coloured rectangle the text sits on) is the font's height and this much more. Every title and every
+// rarity gets the same field, so every plate keeps one size whatever its text.
+constexpr float FieldPadding = 5.f;
+// The field's ends are points: at the text's top and bottom they are about this much of the text's height in.
+constexpr float TipInset = 0.55f;
+// The room the text keeps on each side, inside the points.
 constexpr float TextMargin = 3.f;
 
 // The text's colour on each rarity's plate (light tints of the plate's colours).
@@ -50,61 +53,12 @@ GLuint Texture()
     return texture;
 }
 
-// Where and how big a plate is drawn: k screen units per atlas pixel, the straight part on each side in atlas
-// pixels (0: the ends meet the middle).
-struct Layout
+SIZE Measure(const std::wstring& text, HFONT font)
 {
-    float k;
-    float straight;
-};
-
-Layout Fit(const Plate& plate, const SIZE& text)
-{
-    const float k = (static_cast<float>(text.cy) + CorePadding) / (plate.coreBottom - plate.coreTop);
-    const float straightLeft = plate.decoLeft - plate.capLeft;
-    const float straightRight = plate.capRight - plate.decoRight;
-    // The text's room when the straight parts are cut down to nothing; each atlas pixel of them adds one.
-    const float shortestRoom = plate.textRight - plate.textLeft - straightLeft - straightRight;
-    const float needed = (static_cast<float>(text.cx) + 2.f * TextMargin) / k;
-    return Layout{k, std::max(0.f, (needed - shortestRoom) / 2.f)};
-}
-
-// Draws the plate's atlas columns [from, to) at x; returns where the next piece starts.
-float Columns(GLuint texture, const Plate& plate, float from, float to, float x, float y, float k)
-{
-    const float width = (to - from) * k;
-    if (width <= 0.f)
-        return x;
-    RenderBitmap(static_cast<int>(texture), x, y, width, plate.height * k, (plate.x + from) / Art::AtlasSize,
-                 plate.y / Art::AtlasSize, (to - from) / Art::AtlasSize, plate.height / Art::AtlasSize, true, true,
-                 0.f);
-    return x + width;
-}
-
-// Draws one atlas column (at its centre) stretched to width at x; returns where the next piece starts.
-float Stretched(GLuint texture, const Plate& plate, float column, float width, float x, float y, float k)
-{
-    if (width <= 0.f)
-        return x;
-    RenderBitmap(static_cast<int>(texture), x, y, width, plate.height * k, (plate.x + column) / Art::AtlasSize,
-                 plate.y / Art::AtlasSize, 0.f, plate.height / Art::AtlasSize, true, true, 0.f);
-    return x + width;
-}
-
-// The left end, the straight part (its own pixels as far as they go, then its cleanest column stretched), the
-// middle, and the same mirrored on the right; the middle is centred on centerX.
-void Frame(GLuint texture, const Plate& plate, const Layout& layout, float centerX, float y)
-{
-    const float k = layout.k;
-    const float ownLeft = std::min(layout.straight, plate.decoLeft - plate.capLeft);
-    const float ownRight = std::min(layout.straight, plate.capRight - plate.decoRight);
-
-    float x = centerX - (plate.capLeft + layout.straight + (plate.decoRight - plate.decoLeft) / 2.f) * k;
-    x = Columns(texture, plate, 0.f, plate.capLeft + ownLeft, x, y, k);
-    x = Stretched(texture, plate, plate.cleanLeft, (layout.straight - ownLeft) * k, x, y, k);
-    x = Columns(texture, plate, plate.decoLeft, plate.decoRight, x, y, k);
-    x = Stretched(texture, plate, plate.cleanRight, (layout.straight - ownRight) * k, x, y, k);
-    Columns(texture, plate, plate.capRight - ownRight, plate.width, x, y, k);
+    g_pRenderText->SetFont(font);
+    SIZE size = g_pRenderText->MeasureText(text.c_str(), static_cast<int>(text.size()));
+    size.cx += 2;
+    return size;
 }
 
 // The party HP bar's top over a party member (as RenderPartyHP places it: 100 over the head), else bottomY.
@@ -132,10 +86,10 @@ int OverPartyBar(const CHARACTER& owner, int bottomY)
 }
 
 // The title in its rarity's colour over a 1 px dark shadow, so it reads on the plate's glints too.
-void Text(const GameLogic::Titles::Worn& title, int x, int y, const SIZE& size)
+void Text(const GameLogic::Titles::Worn& title, HFONT font, int x, int y, const SIZE& size)
 {
     const auto* color = TextColor[static_cast<int>(title.Color)];
-    g_pRenderText->SetFont(g_hFontBold);
+    g_pRenderText->SetFont(font);
     g_pRenderText->SetBgColor(0, 0, 0, 0);
     g_pRenderText->SetTextColor(0, 0, 0, 255);
     g_pRenderText->RenderText(x + 1, y + 1, title.Text().c_str(), size.cx, size.cy, RT3_SORT_LEFT);
@@ -157,20 +111,30 @@ int Render(const GameLogic::Titles::Worn& title, const CHARACTER& owner, int cen
     if (text.empty() || texture == 0)
         return 0;
 
-    g_pRenderText->SetFont(g_hFontBold);
-    SIZE size = g_pRenderText->MeasureText(text.c_str(), static_cast<int>(text.size()));
-    size.cx += 2;
+    // One scale for every plate (the atlas keeps the drawn plates' sizes), set by the font: the same field for all.
+    HFONT font = g_hFontBold;
+    SIZE size = Measure(text, font);
+    const float k = (static_cast<float>(size.cy) + FieldPadding) / Art::FieldHeight;
+    const float room = Art::FieldWidth * k - 2.f * (TipInset * static_cast<float>(size.cy) + TextMargin);
+    if (static_cast<float>(size.cx) > room)
+    {
+        // A title too long for the field in bold gets the regular font; the plate keeps its size.
+        font = g_hFont;
+        size = Measure(text, font);
+    }
 
     const Plate& plate = Art::Plates[static_cast<int>(title.Color)];
-    const Layout layout = Fit(plate, size);
-    const float height = plate.height * layout.k;
+    const float height = plate.height * k;
     const float top = static_cast<float>(bottomY) - height;
-    Frame(texture, plate, layout, static_cast<float>(centerX), top);
+    const float left = static_cast<float>(centerX) - (plate.fieldLeft + plate.fieldRight) / 2.f * k;
+    RenderBitmap(static_cast<int>(texture), left, top, plate.width * k, height, plate.x / Art::AtlasSize,
+                 plate.y / Art::AtlasSize, plate.width / Art::AtlasSize, plate.height / Art::AtlasSize, true, true,
+                 0.f);
 
-    const float coreMiddle = top + (plate.coreTop + plate.coreBottom) / 2.f * layout.k;
+    const float fieldMiddle = top + (plate.fieldTop + plate.fieldBottom) / 2.f * k;
     const int textX = static_cast<int>(static_cast<float>(centerX) - static_cast<float>(size.cx) / 2.f + 0.5f);
-    const int textY = static_cast<int>(coreMiddle - static_cast<float>(size.cy) / 2.f + 0.5f);
-    Text(title, textX, textY, size);
+    const int textY = static_cast<int>(fieldMiddle - static_cast<float>(size.cy) / 2.f + 0.5f);
+    Text(title, font, textX, textY, size);
 
     g_pRenderText->SetFont(g_hFont);
     return static_cast<int>(height + 0.5f);
