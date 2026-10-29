@@ -477,166 +477,166 @@
     <comment>legacy_id=119</comment>
   </data>
   <data name="Key Function" xml:space="preserve">
-    <value>Ключевая функция</value>
+    <value>Клавиши</value>
     <comment>legacy_id=120</comment>
   </data>
   <data name="F1 : Help On/Off" xml:space="preserve">
-    <value>F1: Включение/выключение справки.</value>
+    <value>F1 : Справка вкл/выкл</value>
     <comment>legacy_id=121</comment>
   </data>
   <data name="F2 : Chat window on/off" xml:space="preserve">
-    <value>F2: включение/выключение окна чата.</value>
+    <value>F2 : Окно чата вкл/выкл</value>
     <comment>legacy_id=122</comment>
   </data>
   <data name="F3 : Whisper Mode window on/off" xml:space="preserve">
-    <value>F3: включение/выключение окна режима шепота.</value>
+    <value>F3 : Режим шёпота вкл/выкл</value>
     <comment>legacy_id=123</comment>
   </data>
   <data name="F4 : Adjust Chat Window size" xml:space="preserve">
-    <value>F4: настроить размер окна чата.</value>
+    <value>F4 : Размер окна чата</value>
     <comment>legacy_id=124</comment>
   </data>
   <data name="F8 - Toggle Monster HP Bar" xml:space="preserve">
-    <value>F8 - Включить/выключить полосу HP монстров</value>
+    <value>F8 : Полоски HP монстров вкл/выкл</value>
   </data>
   <data name="F9 - Toggle 3D Camera" xml:space="preserve">
-    <value>F9 - Переключить 3D-камеру</value>
+    <value>F9 : 3D-камера вкл/выкл</value>
   </data>
   <data name="F10 - Lock / Unlock Camera Zoom" xml:space="preserve">
-    <value>F10 - Заблокировать / Разблокировать масштаб камеры</value>
+    <value>F10 : Зум камеры вкл/выкл</value>
   </data>
   <data name="F11 - Reset Camera View" xml:space="preserve">
-    <value>F11 - Сбросить вид камеры</value>
+    <value>F11 : Сбросить камеру</value>
   </data>
   <data name="Home - Toggle MU Helper" xml:space="preserve">
-    <value>Home - Переключить MU Helper</value>
+    <value>Home : MU Helper вкл/выкл</value>
   </data>
   <data name="Enter: Chatting Mode" xml:space="preserve">
-    <value>Войдите: режим чата</value>
+    <value>Enter : Написать в чат</value>
     <comment>legacy_id=125</comment>
   </data>
   <data name="C : Character Info" xml:space="preserve">
-    <value>C: Информация о персонаже</value>
+    <value>C : Персонаж</value>
     <comment>legacy_id=126</comment>
   </data>
   <data name="I,V : Inventory" xml:space="preserve">
-    <value>I,V: Инвентарь</value>
+    <value>I, V : Инвентарь</value>
     <comment>legacy_id=127</comment>
   </data>
   <data name="P : Party Window" xml:space="preserve">
-    <value>P: Окно вечеринки</value>
+    <value>P : Группа</value>
     <comment>legacy_id=128</comment>
   </data>
   <data name="G : Guild Window" xml:space="preserve">
-    <value>G: Окно гильдии</value>
+    <value>G : Гильдия</value>
     <comment>legacy_id=129</comment>
   </data>
   <data name="Q : Use Healing Potion" xml:space="preserve">
-    <value>Вопрос: Использовать лечебное зелье.</value>
+    <value>Q : Зелье лечения</value>
     <comment>legacy_id=130</comment>
   </data>
   <data name="W : Use Mana Potion" xml:space="preserve">
-    <value>W: использовать зелье маны.</value>
+    <value>W : Зелье маны</value>
     <comment>legacy_id=131</comment>
   </data>
   <data name="E : Use Antidote" xml:space="preserve">
-    <value>E: использовать противоядие.</value>
+    <value>E : Противоядие</value>
     <comment>legacy_id=132</comment>
   </data>
   <data name="Shift: Character lockup key" xml:space="preserve">
-    <value>Shift: клавиша блокировки персонажа.</value>
+    <value>Shift : Стоять на месте</value>
     <comment>legacy_id=133</comment>
   </data>
   <data name="Ctrl+Num: Set hot keys for skills" xml:space="preserve">
-    <value>Ctrl+Num: установить горячие клавиши для навыков.</value>
+    <value>Ctrl+цифра : Назначить навык на цифру</value>
     <comment>legacy_id=134</comment>
   </data>
   <data name="Num: Use skill hot keys" xml:space="preserve">
-    <value>Num: использовать горячие клавиши навыков.</value>
+    <value>Цифра : Навык с этой цифры</value>
     <comment>legacy_id=135</comment>
   </data>
   <data name="Alt: Show dropped items" xml:space="preserve">
-    <value>Alt: показать выпавшие предметы</value>
+    <value>Alt : Показать предметы на земле</value>
     <comment>legacy_id=136</comment>
   </data>
   <data name="Alt+items: Select items in primary order" xml:space="preserve">
-    <value>Alt+items: выбрать элементы в основном порядке.</value>
+    <value>Alt+предметы : Выбор по очереди</value>
     <comment>legacy_id=137</comment>
   </data>
   <data name="Ctrl+Click: PvP mode, attack other players" xml:space="preserve">
-    <value>Ctrl+щелчок: режим PvP, атаковать других игроков.</value>
+    <value>Ctrl+клик : PvP, атаковать игрока</value>
     <comment>legacy_id=138</comment>
   </data>
   <data name="Print Screen: Save screenshots" xml:space="preserve">
-    <value>Print Screen: сохранение снимков экрана.</value>
+    <value>Print Screen : Скриншот</value>
     <comment>legacy_id=139</comment>
   </data>
   <data name="Chatting Instructions" xml:space="preserve">
-    <value>Инструкции по чату</value>
+    <value>Чат</value>
     <comment>legacy_id=140</comment>
   </data>
   <data name="Tab: switch to the ID window" xml:space="preserve">
-    <value>Вкладка: переключиться в окно идентификатора</value>
+    <value>Tab : Поле имени для шёпота</value>
     <comment>legacy_id=141</comment>
   </data>
   <data name="Right click on msg: Whispering ID" xml:space="preserve">
-    <value>Щелкните правой кнопкой мыши сообщение: Whispering ID.</value>
+    <value>ПКМ по сообщению : Шёпот автору</value>
     <comment>legacy_id=142</comment>
   </data>
   <data name="Up/Down: View Chatting History" xml:space="preserve">
-    <value>Вверх/Вниз: просмотр истории чата</value>
+    <value>Вверх/Вниз : История чата</value>
     <comment>legacy_id=143</comment>
   </data>
   <data name="PageUP, PageDN: Scroll Message" xml:space="preserve">
-    <value>PageUP, PageDN: прокрутка сообщения</value>
+    <value>PageUp, PageDown : Прокрутка чата</value>
     <comment>legacy_id=144</comment>
   </data>
   <data name="~ &lt;msg&gt;: Message to party members" xml:space="preserve">
-    <value>~ &lt;msg&gt;: Сообщение членам группы.</value>
+    <value>~ &lt;текст&gt; : Сообщение группе</value>
     <comment>legacy_id=145</comment>
   </data>
   <data name="@ &lt;msg&gt;: Message to guild members" xml:space="preserve">
-    <value>@ &lt;msg&gt;: Сообщение членам гильдии.</value>
+    <value>@ &lt;текст&gt; : Сообщение гильдии</value>
     <comment>legacy_id=146</comment>
   </data>
   <data name="@&gt; &lt;msg&gt;: Posting to guild members" xml:space="preserve">
-    <value>@&gt; &lt;msg&gt;: Отправка сообщения членам гильдии.</value>
+    <value>@&gt; &lt;текст&gt; : Объявление гильдии</value>
     <comment>legacy_id=147</comment>
   </data>
   <data name="# &lt;msg&gt;: Make message appear longer" xml:space="preserve">
-    <value># &lt;msg&gt;: сделать сообщение длиннее</value>
+    <value># &lt;текст&gt; : Сообщение дольше на экране</value>
     <comment>legacy_id=148</comment>
   </data>
   <data name="/trade(pointing player): trade" xml:space="preserve">
-    <value>/trade(указывающий игрок): торговля</value>
+    <value>/trade (на игрока) : Торговля</value>
     <comment>legacy_id=149</comment>
   </data>
   <data name="/party(pointing player): form a party" xml:space="preserve">
-    <value>/party(указывающий игрок): сформировать группу</value>
+    <value>/party (на игрока) : Позвать в группу</value>
     <comment>legacy_id=150</comment>
   </data>
   <data name="/guild(pointing player): form a guild" xml:space="preserve">
-    <value>/guild(указывающий игрок): сформировать гильдию</value>
+    <value>/guild (на игрока) : Заявка в гильдию</value>
     <comment>legacy_id=151</comment>
   </data>
   <data name="/war &lt;guild name&gt;: Declare Guild War" xml:space="preserve">
-    <value>/war &lt;имя гильдии&gt;: объявить войну гильдии</value>
+    <value>/war &lt;гильдия&gt; : Объявить войну гильдий</value>
     <comment>legacy_id=152</comment>
   </data>
   <data name="/&lt;item name&gt;: item info" xml:space="preserve">
-    <value>/&lt;имя элемента&gt;: информация об элементе</value>
+    <value>/&lt;предмет&gt; : Сведения о предмете</value>
     <comment>legacy_id=153</comment>
   </data>
   <data name="/warp &lt;world&gt;: Warp to another world" xml:space="preserve">
-    <value>/warp &lt;мир&gt;: перейти в другой мир.</value>
+    <value>/warp &lt;карта&gt; : Перемещение на карту</value>
     <comment>legacy_id=154</comment>
   </data>
   <data name="/filter word1 word2: View Chats with word" xml:space="preserve">
-    <value>/filter word1 word2: просмотр чатов с word2.</value>
+    <value>/filter слово1 слово2 : Чат только с этими словами</value>
     <comment>legacy_id=155</comment>
   </data>
   <data name="Move cursor down-&gt; Adjust chat window" xml:space="preserve">
-    <value>Переместить курсор вниз-&gt; Настроить окно чата.</value>
+    <value>Курсор вниз -&gt; Размер окна чата</value>
     <comment>legacy_id=156</comment>
   </data>
   <data name="Warp to the corresponding area after %d seconds" xml:space="preserve">
@@ -15044,5 +15044,68 @@
   </data>
   <data name="EndlessTowerShopEmpty" xml:space="preserve">
     <value>Товаров нет.</value>
+  </data>
+  <data name="HelpSkynetKeysHeading" xml:space="preserve">
+    <value>MU Skynet</value>
+  </data>
+  <data name="HelpSkynetKeysEvents" xml:space="preserve">
+    <value>O : Расписание ивентов  ·  N : Ежедневные награды</value>
+  </data>
+  <data name="HelpSkynetKeysPass" xml:space="preserve">
+    <value>X : Боевой пропуск  ·  I + K : Банк камней</value>
+  </data>
+  <data name="HelpSkynetKeysMap" xml:space="preserve">
+    <value>M : Перемещение  ·  Tab : Мини-карта  ·  T : Квесты</value>
+  </data>
+  <data name="HelpSkynetKeysHelper" xml:space="preserve">
+    <value>Z : Настройки MU Helper  ·  F : Друзья</value>
+  </data>
+  <data name="HelpSkynetKeysCommand" xml:space="preserve">
+    <value>D : Окно команд  ·  Пробел : Поднять предмет</value>
+  </data>
+  <data name="HelpNextPageHint" xml:space="preserve">
+    <value>F1 : Следующая страница, чат и команды</value>
+  </data>
+  <data name="HelpSkynetCommandsHeading" xml:space="preserve">
+    <value>Команды MU Skynet</value>
+  </data>
+  <data name="HelpSkynetCommandList" xml:space="preserve">
+    <value>J : Все команды с описанием</value>
+  </data>
+  <data name="HelpSkynetCommandReset" xml:space="preserve">
+    <value>/reset : Ресет (/resetinfo : что для него нужно)</value>
+  </data>
+  <data name="HelpSkynetCommandResetStats" xml:space="preserve">
+    <value>/resetstats : Вернуть вложенные очки статов</value>
+  </data>
+  <data name="HelpSkynetCommandAddPoints" xml:space="preserve">
+    <value>/addstr /addagi /addvit /addene &lt;n&gt; : Вложить очки</value>
+  </data>
+  <data name="HelpSkynetCommandCp" xml:space="preserve">
+    <value>/cp : Ваша боевая мощь</value>
+  </data>
+  <data name="HelpSkynetCommandEvents" xml:space="preserve">
+    <value>/events : Ближайшие ивенты и заходы на сегодня</value>
+  </data>
+  <data name="HelpSkynetCommandPass" xml:space="preserve">
+    <value>/bp : Уровень пропуска и задания</value>
+  </data>
+  <data name="HelpSkynetCommandPvp" xml:space="preserve">
+    <value>/crown /tdm /throne /vulcanus : Вступить в ивент</value>
+  </data>
+  <data name="HelpSkynetCommandDuels" xml:space="preserve">
+    <value>/duelbet /duelrank : Рейтинговые дуэли</value>
+  </data>
+  <data name="HelpSkynetCommandTier" xml:space="preserve">
+    <value>/tiertop : Рейтинг Tier Maps</value>
+  </data>
+  <data name="HelpSkynetCommandStuck" xml:space="preserve">
+    <value>/stuck : Застрял в Бесконечной башне</value>
+  </data>
+  <data name="HelpCloseHint" xml:space="preserve">
+    <value>F1 : Закрыть</value>
+  </data>
+  <data name="JToggleChatCommands" xml:space="preserve">
+    <value>J : Список команд вкл/выкл</value>
   </data>
 </root>

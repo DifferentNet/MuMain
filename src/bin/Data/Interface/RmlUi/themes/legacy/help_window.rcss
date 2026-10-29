@@ -40,6 +40,10 @@
 	color: #ffffff;
 	font-family: "token(font-body)";
 }
+/* MU Skynet's last row, "F1 : next page" or "F1 : close": the original's yellow. */
+.help-line.hint .help-text {
+	color: #ffe680;
+}
 .help-line.heading .help-text {
 	line-height: calc(var(--bold-line-height, 0px) * var(--root-scale));
 	color: #80b3ff;

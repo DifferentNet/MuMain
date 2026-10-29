@@ -15422,4 +15422,64 @@
   <data name="EndlessTowerShopEmpty" xml:space="preserve">
     <value>Nothing for sale.</value>
   </data>
+  <data name="HelpSkynetKeysHeading" xml:space="preserve">
+    <value>MU Skynet</value>
+  </data>
+  <data name="HelpSkynetKeysEvents" xml:space="preserve">
+    <value>O : Event timer  ·  N : Daily rewards</value>
+  </data>
+  <data name="HelpSkynetKeysPass" xml:space="preserve">
+    <value>X : Battle pass  ·  I + K : Jewel bank</value>
+  </data>
+  <data name="HelpSkynetKeysMap" xml:space="preserve">
+    <value>M : Warp map  ·  Tab : Mini map  ·  T : Quests</value>
+  </data>
+  <data name="HelpSkynetKeysHelper" xml:space="preserve">
+    <value>Z : MU Helper settings  ·  F : Friends</value>
+  </data>
+  <data name="HelpSkynetKeysCommand" xml:space="preserve">
+    <value>D : Command window  ·  Space : Pick up an item</value>
+  </data>
+  <data name="HelpNextPageHint" xml:space="preserve">
+    <value>F1 : Next page, chat and commands</value>
+  </data>
+  <data name="HelpSkynetCommandsHeading" xml:space="preserve">
+    <value>MU Skynet commands</value>
+  </data>
+  <data name="HelpSkynetCommandList" xml:space="preserve">
+    <value>J : Every command with its description</value>
+  </data>
+  <data name="HelpSkynetCommandReset" xml:space="preserve">
+    <value>/reset : Reset (/resetinfo : what it needs)</value>
+  </data>
+  <data name="HelpSkynetCommandResetStats" xml:space="preserve">
+    <value>/resetstats : Take back spent stat points</value>
+  </data>
+  <data name="HelpSkynetCommandAddPoints" xml:space="preserve">
+    <value>/addstr /addagi /addvit /addene &lt;n&gt; : Add points</value>
+  </data>
+  <data name="HelpSkynetCommandCp" xml:space="preserve">
+    <value>/cp : Your Combat Power</value>
+  </data>
+  <data name="HelpSkynetCommandEvents" xml:space="preserve">
+    <value>/events : Next events and runs left today</value>
+  </data>
+  <data name="HelpSkynetCommandPass" xml:space="preserve">
+    <value>/bp : Battle pass level and quests</value>
+  </data>
+  <data name="HelpSkynetCommandPvp" xml:space="preserve">
+    <value>/crown /tdm /throne /vulcanus : Join an event</value>
+  </data>
+  <data name="HelpSkynetCommandDuels" xml:space="preserve">
+    <value>/duelbet /duelrank : Ranked duels</value>
+  </data>
+  <data name="HelpSkynetCommandTier" xml:space="preserve">
+    <value>/tiertop : Tier Maps ranking</value>
+  </data>
+  <data name="HelpSkynetCommandStuck" xml:space="preserve">
+    <value>/stuck : Stuck in the Endless Tower</value>
+  </data>
+  <data name="HelpCloseHint" xml:space="preserve">
+    <value>F1 : Close</value>
+  </data>
 </root>
