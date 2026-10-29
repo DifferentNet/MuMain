@@ -2,6 +2,7 @@
 #include "GameLogic/Events/EndlessTowerShop.h"
 
 #include "GameLogic/Events/EndlessTowerLines.h"
+#include "Network/Server/HiddenChatLines.h"
 
 #include <algorithm>
 
@@ -179,4 +180,15 @@ void Shop::Reset()
     ++m_version;
     m_lastRequest = {};
 }
+
+namespace
+{
+// Lugard's shop lines (the tower window's shop tab) stay out of the chat (Network/Server/HiddenChatLines.h).
+[[maybe_unused]] const bool Registered = Network::HiddenChatLines::Register({
+    .name = L"EndlessTowerShop",
+    .prefixes = {Header, ItemLine, Footer, BuyAnswer},
+    .take = [](const std::wstring& text) { return TowerShop().TakeMessage(text); },
+    .enteredWorld = [] { TowerShop().Reset(); },
+});
+} // namespace
 } // namespace GameLogic::EndlessTower

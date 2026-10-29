@@ -5,6 +5,7 @@
 #include "Data/GameConfig/GameConfig.h"
 #include "Engine/Object/ZzzCharacter.h"
 #include "I18N/All.h"
+#include "Network/Server/HiddenChatLines.h"
 #include "Network/Server/WSclient.h"
 #include "Render/Sprites/GlobalBitmap.h"
 
@@ -345,4 +346,22 @@ std::wstring FenrirName(int season)
         mu_swprintf_s(text, I18N::Game::SeasonFenrirNamed, season, name.c_str());
     return text;
 }
+
+namespace
+{
+// A new character: drop the last one's lines and ask the server for this one's.
+void ForgetAndAsk()
+{
+    Marks().Reset();
+    Marks().Request();
+}
+
+// The battle pass' auras and titles lines stay out of the chat (Network/Server/HiddenChatLines.h).
+[[maybe_unused]] const bool Registered = Network::HiddenChatLines::Register({
+    .name = L"SeasonMarks",
+    .prefixes = {Line},
+    .take = [](const std::wstring& text) { return Marks().TakeMessage(text); },
+    .enteredWorld = ForgetAndAsk,
+});
+} // namespace
 } // namespace GameLogic::SeasonMarks

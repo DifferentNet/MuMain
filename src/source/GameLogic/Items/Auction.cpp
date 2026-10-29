@@ -3,6 +3,7 @@
 
 #include "Core/Utilities/StringUtils.h"
 #include "Engine/Object/ZzzCharacter.h"
+#include "Network/Server/HiddenChatLines.h"
 #include "Network/Server/WSclient.h"
 
 #include <algorithm>
@@ -360,4 +361,18 @@ void Store::Reset()
     ++m_foundVersion;
     ++m_mineVersion;
 }
+
+namespace
+{
+// The auction window's lines stay out of the chat (Network/Server/HiddenChatLines.h).
+[[maybe_unused]] const bool Registered = Network::HiddenChatLines::Register({
+    .name = L"Auction",
+    .prefixes = {SettingsLine, PageHeader, PageEnd, LotLine, OwnHeader, OwnEnd, OwnLine, ResultLine, SoldLine},
+    .take = [](const std::wstring& text) { return Auctions().TakeMessage(text); },
+    // Raul the Auctioneer opens the window; the lists follow on request.
+    .takeOpenRequest = [] { return Auctions().TakeOpenRequest(); },
+    .window = mu::ui::window::INTERFACE_AUCTION,
+    .enteredWorld = [] { Auctions().Reset(); },
+});
+} // namespace
 } // namespace GameLogic::Auction

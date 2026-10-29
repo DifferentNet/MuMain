@@ -2,6 +2,7 @@
 #include "GameLogic/Events/EventTimes.h"
 
 #include "Engine/Object/ZzzCharacter.h"
+#include "Network/Server/HiddenChatLines.h"
 #include "Network/Server/WSclient.h"
 
 #include <cwchar>
@@ -107,4 +108,15 @@ void Store::Reset()
     m_hasTimes = false;
     m_lastRequest = {};
 }
+
+namespace
+{
+// The event timer window's lines stay out of the chat (Network/Server/HiddenChatLines.h).
+[[maybe_unused]] const bool Registered = Network::HiddenChatLines::Register({
+    .name = L"EventTimes",
+    .prefixes = {Header, Line, Footer},
+    .take = [](const std::wstring& text) { return Times().TakeMessage(text); },
+    .enteredWorld = [] { Times().Reset(); },
+});
+} // namespace
 } // namespace GameLogic::EventTimes

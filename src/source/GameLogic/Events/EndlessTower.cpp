@@ -2,6 +2,7 @@
 #include "GameLogic/Events/EndlessTower.h"
 
 #include "GameLogic/Events/EndlessTowerLines.h"
+#include "Network/Server/HiddenChatLines.h"
 
 namespace GameLogic::EndlessTower
 {
@@ -208,4 +209,18 @@ void Store::Reset()
     m_lastRequest = {};
     ++m_version;
 }
+
+namespace
+{
+// The Endless Tower window's lines stay out of the chat (Network/Server/HiddenChatLines.h).
+[[maybe_unused]] const bool Registered = Network::HiddenChatLines::Register({
+    .name = L"EndlessTower",
+    .prefixes = {Open, Header, MemberLine, TopLine, BossLine, HeightLine, Footer, EnterAnswer},
+    .take = [](const std::wstring& text) { return Tower().TakeMessage(text); },
+    // Lugard opens the window (#ETO|); the state follows in the next lines.
+    .takeOpenRequest = [] { return Tower().TakeOpenRequest(); },
+    .window = mu::ui::window::INTERFACE_ENDLESS_TOWER,
+    .enteredWorld = [] { Tower().Reset(); },
+});
+} // namespace
 } // namespace GameLogic::EndlessTower
