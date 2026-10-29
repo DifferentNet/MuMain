@@ -155,6 +155,9 @@ enum INTERFACE_LIST
     // CAuctionWindow (UI/Inventory/AuctionWindow.h), the auction of Raul the Auctioneer. Same reasoning as
     // INTERFACE_CREDITS above.
     INTERFACE_AUCTION,
+    // CEndlessTowerWindow (UI/Events/EndlessTowerWindow.h), the Endless Tower window of Lugard. Same reasoning as
+    // INTERFACE_CREDITS above.
+    INTERFACE_ENDLESS_TOWER,
     INTERFACE_END,
     INTERFACE_COUNT = INTERFACE_END - 2,
 };
