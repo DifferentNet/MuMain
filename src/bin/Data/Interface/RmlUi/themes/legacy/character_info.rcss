@@ -27,7 +27,11 @@
 @spritesheet chainfo-btn-pet-sheet { src: "../../../newui_chainfo_btn_pet.tga"; chainfo-btn-pet: 0px 0px 36px 29px; }
 @spritesheet chainfo-btn-masterlevel-sheet { src: "../../../newui_chainfo_btn_master.tga"; chainfo-btn-masterlevel: 0px 0px 36px 29px; }
 
-.frame-top { decorator: image(docked-bg-top-a); }
+/* The window's top is newui_item_back04 with a name plate in the frame's manner where the original had a flat
+   black box behind the name (tools/chainfo_name_plate.py, MU Skynet 2026-10-29). The other windows on back04 keep
+   it as it was. */
+@spritesheet chainfo-top-sheet { src: "../../../newui_chainfo_top.tga"; chainfo-top: 0px 0px 190px 64px; }
+.frame-top { decorator: image(chainfo-top); }
 
 /* Right-hand pieces and the action row are pinned to #panel's edges (the original's places in a
    190x429 panel), so they follow a wider or filled panel; the content stays at the top. */
@@ -202,7 +206,17 @@
 .attr-lines span.buffed { color: rgb(255, 0, 240); }
 
 /* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
-#name { width: calc(100% * var(--root-scale)); margin-left: calc(50% - 50% * var(--root-scale)); }
+/* The name stands in the plate of the window's top (newui_chainfo_top: x 55-133, y 12-26) between the inner tips
+   of its end studs, from 59 to 129 of 190 (in % so it follows the plate when a theme fills a wider panel), its
+   middle on the plate's middle at any panel scale (translateY(-50%), as .sharp-middle in base.rcss); a longer name
+   shrinks to that box (character_info.rml), so even ten W's fit at 800x600. */
+#name {
+	left: 31.0526%;
+	top: 19px;
+	width: calc(36.8421% * var(--root-scale));
+	transform-origin: left center;
+	transform: translateY(-50%) scale(calc(1 / var(--root-scale, 1)));
+}
 #classname { width: calc(100% * var(--root-scale)); margin-left: calc(50% - 50% * var(--root-scale)); }
 #servername { width: calc(100% * var(--root-scale)); margin-left: calc(50% - 50% * var(--root-scale)); }
 .level-row { width: calc(152px * var(--root-scale)); }

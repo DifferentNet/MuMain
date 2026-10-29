@@ -21,12 +21,13 @@
 		<div class="frame-piece frame-right"></div>
 		<div class="frame-piece frame-bottom"></div>
 
-		<!-- The header leaves centre in a box as wide as #panel: counter-scaled, it must be
-		     --root-scale times wider and shifted back by half the growth (character_info.rcss), or a
-		     long server name wraps instead of staying centred on one line. -->
-		<span class="counter-scaled" id="name" data-class-pk-0="pk_level == 0" data-class-pk-1="pk_level == 1" data-class-pk-2="pk_level == 2" data-class-pk-3="pk_level == 3" data-class-pk-4="pk_level == 4" data-class-pk-5="pk_level == 5" data-class-pk-6="pk_level >= 6" data-style-font-size="text_px + 'px'">{{name_text}}</span>
+		<!-- The name stands in the plate of the window's top, centred on it (character_info.rcss); a name wider
+		     than the plate shrinks to it (.native-fit-small). -->
+		<div class="counter-scaled" id="name" data-class-pk-0="pk_level == 0" data-class-pk-1="pk_level == 1" data-class-pk-2="pk_level == 2" data-class-pk-3="pk_level == 3" data-class-pk-4="pk_level == 4" data-class-pk-5="pk_level == 5" data-class-pk-6="pk_level >= 6" data-style-font-size="text_px + 'px'"><span class="native-fit native-fit-small">{{name_text}}</span></div>
 		<!-- Class name and server name crossfade in place (legacy's sine-wave alpha blend
-		     between the two, RenderSubjectTexts()) -- two stacked spans, opacity-driven. -->
+		     between the two, RenderSubjectTexts()) -- two stacked spans, opacity-driven. They centre in a box
+		     as wide as #panel: counter-scaled, it must be --root-scale times wider and shifted back by half the
+		     growth (character_info.rcss), or a long server name wraps instead of staying centred on one line. -->
 		<span class="counter-scaled" id="classname" data-style-opacity="classname_opacity" data-style-font-size="text_px + 'px'">{{classname_text}}</span>
 		<span class="counter-scaled" id="servername" data-style-opacity="servername_opacity" data-style-font-size="text_px + 'px'">{{servername_text}}</span>
 
