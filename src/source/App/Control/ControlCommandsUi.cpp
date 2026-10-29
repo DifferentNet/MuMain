@@ -54,6 +54,7 @@ constexpr NamedWindow Windows[] = {
     {"my_shop", mu::ui::window::INTERFACE_MYSHOP_INVENTORY},
     {"purchase_shop", mu::ui::window::INTERFACE_PURCHASESHOP_INVENTORY},
     {"npc_quest", mu::ui::window::INTERFACE_NPCQUEST},
+    {"npc_dialogue", mu::ui::window::INTERFACE_NPC_DIALOGUE},
     {"command_list", mu::ui::window::INTERFACE_COMMAND_LIST},
     {"event_schedule", mu::ui::window::INTERFACE_EVENT_SCHEDULE},
     {"daily_rewards", mu::ui::window::INTERFACE_DAILY_REWARDS},
@@ -110,6 +111,9 @@ constexpr NamedElement Buttons[] = {
     {"my_shop.close", mu::ui::window::INTERFACE_MYSHOP_INVENTORY, "#btn_close"},
     {"npc_quest.complete", mu::ui::window::INTERFACE_NPCQUEST, "#btn_complete"},
     {"npc_quest.close", mu::ui::window::INTERFACE_NPCQUEST, "#btn_exit"},
+    {"npc_dialogue.next", mu::ui::window::INTERFACE_NPC_DIALOGUE, "#btn_npc_next"},
+    {"npc_dialogue.prev", mu::ui::window::INTERFACE_NPC_DIALOGUE, "#btn_npc_prev"},
+    {"npc_dialogue.close", mu::ui::window::INTERFACE_NPC_DIALOGUE, "#btn_exit"},
     // The "+" buttons, shown while there are level-up points; command for a Dark Lord only.
     {"character.stat.strength", mu::ui::window::INTERFACE_CHARACTER, "#btn_stat_str"},
     {"character.stat.agility", mu::ui::window::INTERFACE_CHARACTER, "#btn_stat_agi"},
@@ -152,6 +156,12 @@ json Elements()
     {
         AddElement(elements, "npc_quest.answer." + std::to_string(answer), mu::ui::window::INTERFACE_NPCQUEST,
                    ".nq-answer-row[data-answer=\"" + std::to_string(answer) + "\"]");
+    }
+    // The NPC dialog's answers shown on its current page, by their number minus one.
+    for (int answer = 0; answer < MAX_ANSWER_FOR_DIALOG; ++answer)
+    {
+        AddElement(elements, "npc_dialogue.answer." + std::to_string(answer), mu::ui::window::INTERFACE_NPC_DIALOGUE,
+                   ".nd-answer-row[data-answer=\"" + std::to_string(answer) + "\"]");
     }
     // The battle pass' level rows (scrolled into the pane or not, they are reported while drawn), the daily
     // quests' replace buttons, by the quest's slot, and the daily quests' chests (1-3 the day's, "w" the week's).
