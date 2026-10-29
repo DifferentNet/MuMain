@@ -163,6 +163,7 @@
       if (oldest) oldest.remove();
     }
     if (!logScroll) logScroll = requestAnimationFrame(() => { logScroll = 0; logEl.scrollTop = logEl.scrollHeight; });
+    return line;
   }
   function appendLog(text, isError) {
     const last = logEl.lastElementChild;
@@ -181,6 +182,57 @@
     addLogLine(text, isError);
     return true;
   }
+  // WebGPU errors whole, each different one once. SDL prints an error as many log lines, and WebKit's
+  // shader errors carry the whole generated Metal code with the reason last: with a long shader the
+  // reason fell past the kept error lines and the per-second limit (Safari, 2026-10-29). The page
+  // listens on the game's device itself: one kept line per different error, reason included, a count
+  // for repeats, and the lines SDL prints for it left out. muGpuErrors() in the browser console gives
+  // the errors whole: copy(muGpuErrors()).
+  const GPU_ERRORS_KEPT = 20, GPU_ECHO_MS = 1000;
+  const gpuErrors = new Map();   // message -> { count, summary, line }
+  let gpuErrorText = "", gpuEchoUntil = 0;
+  function gpuErrorSummary(message) {
+    // WebKit: "Failed to compile the shader source, generated metal:\n<Metal code> - error <reason>"
+    const reasonAt = message.lastIndexOf(" - error ");
+    const firstLineEnd = message.indexOf("\n");
+    const text = reasonAt >= 0 && firstLineEnd >= 0
+      ? `${message.slice(0, firstLineEnd)} … ${message.slice(reasonAt + 3)}` : message;
+    return "WebGPU error: " + text.replace(/\s+/g, " ").trim().slice(0, 1500);
+  }
+  function onGpuError(event) {
+    const message = String((event.error && event.error.message) || "unknown");
+    const seen = gpuErrors.get(message);
+    if (!seen && gpuErrors.size >= GPU_ERRORS_KEPT) return;   // SDL's lines go to the log as before
+    gpuErrorText = message;
+    gpuEchoUntil = performance.now() + GPU_ECHO_MS;
+    if (seen) {
+      seen.count++;
+      seen.line.textContent = `${seen.summary} (×${seen.count})`;
+      return;
+    }
+    const summary = gpuErrorSummary(message);
+    const line = addLogLine(summary, true);
+    line.dataset.keep = "1";
+    gpuErrors.set(message, { count: 1, summary, line });
+    console.error(message);
+  }
+  // A line SDL prints for the error onGpuError just took: "ERROR: WebGPU uncaptured error!", then the
+  // message line by line (the [sdl] log the same way).
+  function gpuErrorEcho(text) {
+    if (performance.now() > gpuEchoUntil) return false;
+    return /WebGPU uncaptured error!$/.test(text) || gpuErrorText.includes(text.replace(/^ERROR: /, ""));
+  }
+  if (self.GPUAdapter) {
+    const requestDevice = GPUAdapter.prototype.requestDevice;
+    GPUAdapter.prototype.requestDevice = function (...args) {
+      return requestDevice.apply(this, args).then((gpuDevice) => {
+        gpuDevice.addEventListener("uncapturederror", onGpuError);
+        return gpuDevice;
+      });
+    };
+  }
+  window.muGpuErrors = () =>
+    [...gpuErrors].map(([message, e]) => `(×${e.count}) ${message}`).join("\n\n") || "no WebGPU errors";
   document.getElementById("toggle-log").onclick = () => { logEl.hidden = !logEl.hidden; };
   appendLog(`Device: ${device.kind} (${device.reason}); screen ${screen.width}x${screen.height} CSS px, ` +
             `${devicePixelRatio} device px each, ${navigator.maxTouchPoints} touch points`);
@@ -1033,8 +1085,8 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       muClipDistances: gpuCheck.clipDistances,
       muKeyboard: phone ? phoneKeyboard : undefined,
       muDevice: device.kind,
-      print: (text) => { console.log(text); appendLog(text, false); },
-      printErr: (text) => { if (appendLog(text, true)) console.error(text); },
+      print: (text) => { if (gpuErrorEcho(text)) return; console.log(text); appendLog(text, false); },
+      printErr: (text) => { if (!gpuErrorEcho(text) && appendLog(text, true)) console.error(text); },
       setStatus: (text) => { if (packDone || text) setStatus(text); },
       onRuntimeInitialized: () => {
         if (packDone) setStatus("");
