@@ -66,6 +66,11 @@ To rewrite only the copies from the checked-in WGSL:
 node tools/web/wgsl-soft-clip.mjs src/shaders/compiled
 ```
 
+Depth clamp: the pipelines clamp depth, as on every other platform, where the card has WebGPU's
+`depth-clip-control`. ARM Mali Bifrost phones (a Galaxy Note 10 Lite, 2026-10-30) don't, and the game clips
+depth there instead, as the original OpenGL game did (`Module.muDepthClamp`; the log says "depth clamp: no,
+depth clipped"). `index.html?nodepthclamp` clips it on any card.
+
 ## The SDL patch
 
 `patches/sdl-webgpu.patch` (MU Moldova changes to the fork; each is commented in place):
@@ -81,6 +86,8 @@ node tools/web/wgsl-soft-clip.mjs src/shaders/compiled
 - A window without area (a hidden page laid out at 0x0) skips frames instead of creating 0x0
   textures, and `WaitAndAcquireSwapchainTexture` no longer waits forever for one.
 - A key event claims keyboard focus when SDL lost it, or typed text was dropped.
+- `DepthClipControl` is optional: requested where the adapter has it and the app leaves
+  `FEATURE_DEPTH_CLAMPING` on; without it pipelines clip depth (ARM Mali Bifrost phones lack it).
 - Fewer calls into the page per frame (each WebGPU call costs; a phone feels it most). Measured in Lorencia on
   2026-10-29: 915 draws a frame set 4 bind groups each (3,660 calls) and wrote 736 uniform blocks one call each.
   - A draw sets only the bind groups whose bindings changed, and not when the same group and offsets are
