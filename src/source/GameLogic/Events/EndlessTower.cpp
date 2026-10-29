@@ -1,10 +1,7 @@
 #include "stdafx.h"
 #include "GameLogic/Events/EndlessTower.h"
 
-#include "Engine/Object/ZzzCharacter.h"
-#include "Network/Server/WSclient.h"
-
-#include <cwchar>
+#include "GameLogic/Events/EndlessTowerLines.h"
 
 namespace GameLogic::EndlessTower
 {
@@ -24,50 +21,6 @@ constexpr const wchar_t* EnterCommand = L"/towerenter";
 constexpr auto RequestInterval = std::chrono::seconds(2);
 // An Enter the server didn't answer counts as answered after this time, so the button comes back.
 constexpr auto EnterTimeout = std::chrono::seconds(8);
-
-// Splits "a|b|c" into its fields.
-std::vector<std::wstring> Split(std::wstring_view text)
-{
-    std::vector<std::wstring> fields;
-    size_t start = 0;
-    while (true)
-    {
-        const size_t bar = text.find(L'|', start);
-        fields.emplace_back(text.substr(start, bar == std::wstring_view::npos ? std::wstring_view::npos : bar - start));
-        if (bar == std::wstring_view::npos)
-            break;
-        start = bar + 1;
-    }
-    return fields;
-}
-
-int ToInt(const std::wstring& field)
-{
-    return static_cast<int>(std::wcstol(field.c_str(), nullptr, 10));
-}
-
-long long ToLong(const std::wstring& field)
-{
-    return std::wcstoll(field.c_str(), nullptr, 10);
-}
-
-// The rest of the fields from the given one, joined again: a text field comes last, so it may hold a bar.
-std::wstring Rest(const std::vector<std::wstring>& fields, size_t from)
-{
-    std::wstring text;
-    for (size_t i = from; i < fields.size(); ++i)
-        text += (i > from ? L"|" : L"") + fields[i];
-    return text;
-}
-
-void SendCommand(const std::wstring& command)
-{
-    if (SocketClient == nullptr || Hero == nullptr)
-        return;
-
-    // Sent as a chat line, as typed commands are; the server takes lines starting with a slash as commands.
-    SocketClient->ToGameServer()->SendPublicChatMessage(MU_C16(Hero->ID), MU_C16(command.c_str()));
-}
 } // namespace
 
 Store& Store::Instance()
@@ -219,7 +172,7 @@ void Store::Request()
 
     if (m_lastRequest != std::chrono::steady_clock::time_point{} && now - m_lastRequest < RequestInterval)
         return;
-    if (SocketClient == nullptr || Hero == nullptr)
+    if (!CanSendCommand())
         return;
 
     m_lastRequest = now;

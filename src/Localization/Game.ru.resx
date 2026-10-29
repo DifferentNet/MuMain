@@ -14967,4 +14967,64 @@
   <data name="EndlessTowerWaveTimer" xml:space="preserve">
     <value>Башня · волна %d</value>
   </data>
+  <data name="EndlessTowerTabShop" xml:space="preserve">
+    <value>Лавка</value>
+  </data>
+  <data name="EndlessTowerShopAsking" xml:space="preserve">
+    <value>Спрашиваю лавку Лугарда...</value>
+  </data>
+  <data name="EndlessTowerShopNoAnswer" xml:space="preserve">
+    <value>Сервер не прислал лавку.</value>
+  </data>
+  <data name="EndlessTowerShopBalance" xml:space="preserve">
+    <value>Очки башни: %ls</value>
+  </data>
+  <data name="EndlessTowerShopEarn" xml:space="preserve">
+    <value>За волну %d, за босса +%d</value>
+  </data>
+  <data name="EndlessTowerShopRenewDays" xml:space="preserve">
+    <value>Лимиты обновятся через %d д %d ч</value>
+  </data>
+  <data name="EndlessTowerShopRenew" xml:space="preserve">
+    <value>Лимиты обновятся через %ls</value>
+  </data>
+  <data name="EndlessTowerShopWaiting" xml:space="preserve">
+    <value>Ждут места в сумке: %lld</value>
+  </data>
+  <data name="EndlessTowerShopItem" xml:space="preserve">
+    <value>%ls · %ls оч.</value>
+  </data>
+  <data name="EndlessTowerShopItemLimit" xml:space="preserve">
+    <value>%ls · %ls оч. · %d/%d</value>
+  </data>
+  <data name="EndlessTowerShopPick" xml:space="preserve">
+    <value>Выберите товар.</value>
+  </data>
+  <data name="EndlessTowerShopInfo" xml:space="preserve">
+    <value>%ls: %ls оч. за штуку, в этом месяце ещё %d.</value>
+  </data>
+  <data name="EndlessTowerShopInfoNoLimit" xml:space="preserve">
+    <value>%ls: %ls оч. за штуку.</value>
+  </data>
+  <data name="EndlessTowerShopToBank" xml:space="preserve">
+    <value>Идёт в банк камней.</value>
+  </data>
+  <data name="EndlessTowerShopToBag" xml:space="preserve">
+    <value>Идёт в сумку.</value>
+  </data>
+  <data name="EndlessTowerShopLimitReached" xml:space="preserve">
+    <value>Лимит этого месяца выкуплен.</value>
+  </data>
+  <data name="EndlessTowerShopNoPoints" xml:space="preserve">
+    <value>Не хватает очков башни.</value>
+  </data>
+  <data name="EndlessTowerShopBuying" xml:space="preserve">
+    <value>Покупаю...</value>
+  </data>
+  <data name="EndlessTowerShopBuy" xml:space="preserve">
+    <value>Купить %d</value>
+  </data>
+  <data name="EndlessTowerShopEmpty" xml:space="preserve">
+    <value>Товаров нет.</value>
+  </data>
 </root>

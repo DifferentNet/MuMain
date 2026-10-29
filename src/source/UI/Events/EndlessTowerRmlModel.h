@@ -27,11 +27,14 @@ struct EndlessTowerTab
 };
 
 // A line of the shown tab. Its kind picks the look: 0 plain, 1 a section title, 2 good (green), 3 bad (red),
-// 4 a top entry's name (bold), 5 a line that continues the one above (indented).
+// 4 a top entry's name (bold), 5 a line that continues the one above (indented), 6 out of reach (grey).
+// A shop item's line carries its index in the shop's list (-1 for the others) and whether it is the picked one.
 struct EndlessTowerRow
 {
     EndlessTowerLine text;
     int kind = 0;
+    int item = -1;
+    bool selected = false;
 
     bool operator==(const EndlessTowerRow&) const = default;
 };
@@ -52,6 +55,13 @@ struct EndlessTowerRmlModel
     bool hintBad = false;
     bool canEnter = false;
     EndlessTowerLine enterLabel;
+    // The shop's two buttons instead of Enter: one piece and as many as the second says (up to 10).
+    bool showBuy = false;
+    bool canBuy = false;
+    bool canBuyMore = false;
+    int buyMoreCount = 0;
+    EndlessTowerLine buyOneLabel;
+    EndlessTowerLine buyMoreLabel;
 
     Rml::String exitTooltip;
 };

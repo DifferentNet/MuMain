@@ -15344,4 +15344,64 @@
   <data name="EndlessTowerWaveTimer" xml:space="preserve">
     <value>Tower · Wave %d</value>
   </data>
+  <data name="EndlessTowerTabShop" xml:space="preserve">
+    <value>Shop</value>
+  </data>
+  <data name="EndlessTowerShopAsking" xml:space="preserve">
+    <value>Asking Lugard for the shop...</value>
+  </data>
+  <data name="EndlessTowerShopNoAnswer" xml:space="preserve">
+    <value>The server sends no shop.</value>
+  </data>
+  <data name="EndlessTowerShopBalance" xml:space="preserve">
+    <value>Tower points: %ls</value>
+  </data>
+  <data name="EndlessTowerShopEarn" xml:space="preserve">
+    <value>%d per wave, +%d per boss</value>
+  </data>
+  <data name="EndlessTowerShopRenewDays" xml:space="preserve">
+    <value>Limits renew in %d d %d h</value>
+  </data>
+  <data name="EndlessTowerShopRenew" xml:space="preserve">
+    <value>Limits renew in %ls</value>
+  </data>
+  <data name="EndlessTowerShopWaiting" xml:space="preserve">
+    <value>%lld waiting: make room in the bag</value>
+  </data>
+  <data name="EndlessTowerShopItem" xml:space="preserve">
+    <value>%ls · %ls pts</value>
+  </data>
+  <data name="EndlessTowerShopItemLimit" xml:space="preserve">
+    <value>%ls · %ls pts · %d/%d</value>
+  </data>
+  <data name="EndlessTowerShopPick" xml:space="preserve">
+    <value>Pick an item to buy it.</value>
+  </data>
+  <data name="EndlessTowerShopInfo" xml:space="preserve">
+    <value>%ls: %ls pts each, %d left this month.</value>
+  </data>
+  <data name="EndlessTowerShopInfoNoLimit" xml:space="preserve">
+    <value>%ls: %ls pts each.</value>
+  </data>
+  <data name="EndlessTowerShopToBank" xml:space="preserve">
+    <value>Goes to the jewel bank.</value>
+  </data>
+  <data name="EndlessTowerShopToBag" xml:space="preserve">
+    <value>Goes to the bag.</value>
+  </data>
+  <data name="EndlessTowerShopLimitReached" xml:space="preserve">
+    <value>Bought out this month.</value>
+  </data>
+  <data name="EndlessTowerShopNoPoints" xml:space="preserve">
+    <value>Not enough tower points.</value>
+  </data>
+  <data name="EndlessTowerShopBuying" xml:space="preserve">
+    <value>Buying...</value>
+  </data>
+  <data name="EndlessTowerShopBuy" xml:space="preserve">
+    <value>Buy %d</value>
+  </data>
+  <data name="EndlessTowerShopEmpty" xml:space="preserve">
+    <value>Nothing for sale.</value>
+  </data>
 </root>

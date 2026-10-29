@@ -8,11 +8,13 @@
 <body>
 	<!-- The Endless Tower window (CEndlessTowerWindow), opened by Lugard in Lorencia and Devias, docked right at full
 	     dock height: the title, the entry price and runs a day, the party's size (green within 3 to 5), when the runs
-	     come back, the own best and the top's; then one counter-scaled pane with four tabs (party, bosses, rewards by
-	     the wave reached, top climbs; the shown one gold) and the shown tab's lines (by kind: 1 a title, 2 green, 3 red,
-	     4 a bold name, 5 continuing the line above); a second pane at the foot with the reason the button is off or the
-	     server's last answer, and the button that takes the party in; and the exit button. The workspace slot places
-	     and scales #panel. C++ keeps the state; clicks are queued with endless_tower_tab(tab), endless_tower_enter and
+	     come back, the own best and the top's; then one counter-scaled pane with five tabs (party, bosses, rewards by
+	     the wave reached, top climbs, Lugard's shop; the shown one gold) and the shown tab's lines (by kind: 1 a title,
+	     2 green, 3 red, 4 a bold name, 5 continuing the line above, 6 grey; a shop item's line can be picked, the
+	     picked one on a gold band); a second pane at the foot with the reason the button is off or the server's last
+	     answer, and the button that takes the party in (on the shop, the two that buy the picked item); and the exit
+	     button. The workspace slot places and scales #panel. C++ keeps the state and checks every click; clicks are
+	     queued with endless_tower_tab(tab), endless_tower_row(item), endless_tower_buy(count), endless_tower_enter and
 	     endless_tower_exit. -->
 	<div id="panel" data-model="endless_tower">
 		<div class="frame-piece frame-top"></div>
@@ -41,6 +43,8 @@
 
 			<span class="et-row" data-for="r : rows" data-class-title="r.kind == 1" data-class-good="r.kind == 2"
 			      data-class-bad="r.kind == 3" data-class-name="r.kind == 4" data-class-more="r.kind == 5"
+			      data-class-dim="r.kind == 6" data-class-pick="r.item >= 0" data-class-selected="r.selected"
+			      data-event-click="endless_tower_row(r.item)"
 			      data-style-font-size="r.text.text_px + 'px'">{{r.text.text}}</span>
 		</div>
 
@@ -50,6 +54,15 @@
 			<div id="et_enter" data-if="enter_label.text != ''" data-class-off="!can_enter"
 			     data-event-click="endless_tower_enter">
 				<span class="et-enter-label" data-style-font-size="enter_label.text_px + 'px'">{{enter_label.text}}</span>
+			</div>
+
+			<div id="et_buy" data-if="show_buy">
+				<div class="et-buy-btn" data-class-off="!can_buy" data-event-click="endless_tower_buy(1)">
+					<span class="et-enter-label" data-style-font-size="buy_one_label.text_px + 'px'">{{buy_one_label.text}}</span>
+				</div>
+				<div class="et-buy-btn" data-class-off="!can_buy_more" data-event-click="endless_tower_buy(buy_more_count)">
+					<span class="et-enter-label" data-style-font-size="buy_more_label.text_px + 'px'">{{buy_more_label.text}}</span>
+				</div>
 			</div>
 		</div>
 

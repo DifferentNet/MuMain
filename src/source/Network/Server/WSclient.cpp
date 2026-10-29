@@ -117,6 +117,7 @@ using namespace mu::ui::window;
 #include "GameLogic/Events/BattlePass.h"
 #include "GameLogic/Events/TierMaps.h"
 #include "GameLogic/Events/EndlessTower.h"
+#include "GameLogic/Events/EndlessTowerShop.h"
 #include "GameLogic/Events/SeasonMarks.h"
 #include "GameLogic/Events/Titles.h"
 #include "GameLogic/Commands/GmPanel.h"
@@ -1273,6 +1274,7 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     GameLogic::BattlePass::Pass().Reset();
     GameLogic::TierMaps::Maps().Reset();
     GameLogic::EndlessTower::Tower().Reset();
+    GameLogic::EndlessTower::TowerShop().Reset();
     GameLogic::AdvancedStats::Stats().Reset();
     GameLogic::JewelBank::Bank().Reset();
     GameLogic::Auction::Auctions().Reset();
@@ -2012,11 +2014,13 @@ void ReceiveNotice(const BYTE* ReceiveBuffer)
         // window's advanced stats tab (GameLogic/Character/AdvancedStats.h), the vault's pages
         // (UI/Inventory/VaultPages.h), the jewel bank window (GameLogic/Items/JewelBank.h), the Tier Maps window
         // (GameLogic/Events/TierMaps.h), the GM panel (GameLogic/Commands/GmPanel.h), the battle pass' auras
-        // (GameLogic/Events/SeasonMarks.h) and the titles (GameLogic/Events/Titles.h) stay out of the chat.
+        // (GameLogic/Events/SeasonMarks.h), the titles (GameLogic/Events/Titles.h) and Lugard's shop
+        // (GameLogic/Events/EndlessTowerShop.h) stay out of the chat.
         if (GameLogic::EventTimes::Times().TakeMessage(Text) || GameLogic::DailyRewards::Rewards().TakeMessage(Text) ||
             GameLogic::BattlePass::Pass().TakeMessage(Text) || GameLogic::AdvancedStats::Stats().TakeMessage(Text) ||
             UI::Storage::Pages().TakeMessage(Text) || GameLogic::JewelBank::Bank().TakeMessage(Text) ||
-            GameLogic::SeasonMarks::Marks().TakeMessage(Text) || GameLogic::Titles::Titles().TakeMessage(Text))
+            GameLogic::SeasonMarks::Marks().TakeMessage(Text) || GameLogic::Titles::Titles().TakeMessage(Text) ||
+            GameLogic::EndlessTower::TowerShop().TakeMessage(Text))
         {
         }
         else if (GameLogic::TierMaps::Maps().TakeMessage(Text))
