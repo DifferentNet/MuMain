@@ -114,6 +114,8 @@ constexpr NamedElement Buttons[] = {
     {"npc_dialogue.next", mu::ui::window::INTERFACE_NPC_DIALOGUE, "#btn_npc_next"},
     {"npc_dialogue.prev", mu::ui::window::INTERFACE_NPC_DIALOGUE, "#btn_npc_prev"},
     {"npc_dialogue.close", mu::ui::window::INTERFACE_NPC_DIALOGUE, "#btn_exit"},
+    {"npc_dialogue.answers_next", mu::ui::window::INTERFACE_NPC_DIALOGUE, "#btn_ans_next"},
+    {"npc_dialogue.answers_prev", mu::ui::window::INTERFACE_NPC_DIALOGUE, "#btn_ans_prev"},
     // The "+" buttons, shown while there are level-up points; command for a Dark Lord only.
     {"character.stat.strength", mu::ui::window::INTERFACE_CHARACTER, "#btn_stat_str"},
     {"character.stat.agility", mu::ui::window::INTERFACE_CHARACTER, "#btn_stat_agi"},

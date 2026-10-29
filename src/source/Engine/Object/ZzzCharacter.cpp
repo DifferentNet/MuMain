@@ -41,6 +41,7 @@
 #include "Engine/Physics/PhysicsManager.h"
 #include "Engine/AI/GOBoid.h"
 #include "GameLogic/Items/CSItemOption.h"
+#include "GameLogic/Quests/PhantomGuide.h"
 
 // Phase 5: Camera system includes for 3D frustum culling
 #include "Camera/CameraManager.h"
@@ -3347,8 +3348,8 @@ void OnlyNpcChatProcess(CHARACTER* c, OBJECT* o)
             UI::Chat::CreateChat(c->ID, I18N::Game::CrywolfIsAskingForYourHelpOnlyYouCanSaveThisContinent, c);
             break;
         case MODEL_PLAYER:
-            if (c->MonsterIndex == MONSTER_ELF_SOLDIER)
-                UI::Chat::CreateChat(c->ID, I18N::Game::ILlBeYourStrengthForTheJourneyToBecomeAWarrior, c);
+            if (c->MonsterIndex == MONSTER_ELF_SOLDIER) // her old line and the guide's invitation in turn
+                UI::Chat::CreateChat(c->ID, PhantomGuide::OverheadLine(c->Key), c);
             break;
         }
     }

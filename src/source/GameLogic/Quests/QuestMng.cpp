@@ -4,6 +4,7 @@
 
 #include "stdafx.h"
 #include "QuestMng.h"
+#include "PhantomGuide.h"
 #include "I18N/All.h"
 
 
@@ -39,7 +40,7 @@ void CQuestMng::LoadQuestScript()
 
 namespace
 {
-constexpr DWORD kShadowPhantomSoldier = 257;
+constexpr DWORD kShadowPhantomSoldier = PhantomGuide::kNpc;
 constexpr int kAnswerQuestList = 901;
 
 // Takes the answers leading to `result` out of a dialog state; the others keep their order.
@@ -96,6 +97,9 @@ void CQuestMng::LoadNPCDialogueScript()
     }
 
     ::fclose(fp);
+
+    // Her guide to this server (ghinzuro, 2026-10-29): topics in her dialog, next to her buff.
+    PhantomGuide::AddTo(m_mapNPCDialogue);
 }
 
 void CQuestMng::LoadQuestProgressScript()
@@ -334,6 +338,9 @@ void CQuestMng::SetCurQuestProgress(DWORD dwQuestIndex)
 
 const wchar_t* CQuestMng::GetWords(int nWordsIndex)
 {
+    if (const wchar_t* guideWords = PhantomGuide::Words(nWordsIndex))
+        return guideWords;
+
     QuestWordsMap::const_iterator iter = m_mapQuestWords.find(nWordsIndex);
     if (iter == m_mapQuestWords.end())
         return NULL;
