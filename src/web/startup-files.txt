@@ -3843,3 +3843,52 @@ Data/Interface/lo_back_s5_im06.OZJ
 # Added 2026-10-24: the GM panel window (key Y; the workspace loads it at the start)
 Data/Interface/RmlUi/themes/legacy/gm_panel.rcss
 Data/Interface/RmlUi/gm_panel.rml
+# Added 2026-10-29: the interface of the game itself (loading screens, the bottom bar, the chat,
+# the minimap marks), read on entering the first map: 43 files that came one request each before.
+Data/Interface/LSBg01.OZJ
+Data/Interface/LSBg02.OZJ
+Data/Interface/LSBg03.OZJ
+Data/Interface/LSBg04.OZJ
+Data/Interface/MacroUI/MacroUI_Setup.OZT
+Data/Interface/MacroUI/MacroUI_Start.OZT
+Data/Interface/MacroUI/Minimap_positionC.OZT
+Data/Interface/Minimap_positionA.OZT
+Data/Interface/Minimap_positionB.OZT
+Data/Interface/RmlUi/auction.rml
+Data/Interface/RmlUi/chat_input.rml
+Data/Interface/RmlUi/cursor_item.rml
+Data/Interface/RmlUi/hud_status.rml
+Data/Interface/RmlUi/item_endurance.rml
+Data/Interface/RmlUi/map_name.rml
+Data/Interface/RmlUi/match_status.rml
+Data/Interface/RmlUi/themes/legacy/auction.rcss
+Data/Interface/RmlUi/themes/legacy/chat_input.rcss
+Data/Interface/RmlUi/themes/legacy/chat_log.rcss
+Data/Interface/RmlUi/themes/legacy/chat_log.rml
+Data/Interface/RmlUi/themes/legacy/cursor_item.rcss
+Data/Interface/RmlUi/themes/legacy/hud_status.rcss
+Data/Interface/RmlUi/themes/legacy/item_endurance.rcss
+Data/Interface/RmlUi/themes/legacy/map_name.rcss
+Data/Interface/RmlUi/themes/legacy/match_status.rcss
+Data/Interface/RmlUi/themes/legacy/system_log.rcss
+Data/Interface/RmlUi/themes/legacy/system_log.rml
+Data/Interface/RmlUi/themes/legacy/titles.rcss
+Data/Interface/RmlUi/titles.rml
+Data/Interface/newui_Exbar.OZJ
+Data/Interface/newui_menu01.OZJ
+Data/Interface/newui_menu02-03.OZJ
+Data/Interface/newui_menu02.OZJ
+Data/Interface/newui_menu_AG.OZJ
+Data/Interface/newui_menu_SD.OZJ
+Data/Interface/newui_menu_blue.OZJ
+Data/Interface/newui_menu_red.OZJ
+Data/Interface/partCharge1/newui_menu03.OZJ
+Data/Interface/partCharge1/newui_menu_Bt01.OZJ
+Data/Interface/partCharge1/newui_menu_Bt02.OZJ
+Data/Interface/partCharge1/newui_menu_Bt03.OZJ
+Data/Interface/partCharge1/newui_menu_Bt04.OZJ
+Data/Interface/partCharge1/newui_menu_Bt05.OZJ
+# Added 2026-10-29: the hawk statue model and its textures, read before the login screen
+Data/Item/hawkstatue.bmd
+Data/Item/hawkstatue.ozj
+Data/Item/hawkstatueb.ozj

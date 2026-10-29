@@ -489,8 +489,11 @@ if (EMSCRIPTEN)
     "-sEXIT_RUNTIME=0"
     "-sENVIRONMENT=web,worker"
     "-sEXPORTED_RUNTIME_METHODS=['FS']"
+    # The game's fetch mount with one request per file instead of Emscripten's two.
+    "--js-library=${CMAKE_CURRENT_SOURCE_DIR}/web/fetch-backend.js"
     # Function names in stack traces while the port is being brought up.
     "--profiling-funcs")
+  set_property(TARGET Main APPEND PROPERTY LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/web/fetch-backend.js")
 elseif (NOT MSVC)
   set(MU_MAIN_MAP_FILE "${CMAKE_CURRENT_BINARY_DIR}/Main.map")
   if (APPLE)
@@ -596,7 +599,8 @@ if (EMSCRIPTEN)
       "$<TARGET_FILE_DIR:Main>"
     ${_mu_web_extra_copy}
     # startup.pack: the files the game reads before it can be played, in one download; gzip copies
-    # of it and of Main.wasm, which the page unpacks itself. Before files.txt, which lists the copies.
+    # of it and of Main.wasm, which the page unpacks itself; a pack per map (packs/). Before
+    # files.txt, which lists the copies and the packs.
     COMMAND "${Python3_EXECUTABLE}" "${REPO_ROOT}/tools/web/make_startup_pack.py"
       --root "$<TARGET_FILE_DIR:Main>"
       --list "${CMAKE_CURRENT_SOURCE_DIR}/web/startup-files.txt"

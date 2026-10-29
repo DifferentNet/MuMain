@@ -137,15 +137,55 @@
   const stage = document.getElementById("stage");
   const footer = document.querySelector("footer");
   // Phones put the whole page on the screen, the menu button too, and turn it sideways: browsers lock
-  // the orientation only in fullscreen. Called from a tap, as fullscreen needs one.
+  // the orientation only in fullscreen. Called from a tap, as fullscreen needs one. The footer's
+  // button also leaves fullscreen. A browser that refuses says why in the log and for a moment on the
+  // screen: on a Pixel's Edge the button did nothing at all (2026-10-29).
+  const FULLSCREEN_NOTE_MS = 4000;
+  const fullscreenButton = document.getElementById("fullscreen");
+  let fullscreenNoteTimer = 0;
+  function inFullscreen() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  function fullscreenRefused(reason) {
+    const text = "Fullscreen refused: " + (reason && reason.message ? reason.message : String(reason));
+    appendLog(text, true);
+    if (!statusEl.hidden && !fullscreenNoteTimer) return; // "Loading…" and the like stay
+    setStatus(text);
+    clearTimeout(fullscreenNoteTimer);
+    fullscreenNoteTimer = setTimeout(() => { fullscreenNoteTimer = 0; setStatus(""); }, FULLSCREEN_NOTE_MS);
+  }
   function enterFullscreen() {
     const target = phone ? document.documentElement : stage;
-    if (!target.requestFullscreen) return;
-    target.requestFullscreen({ navigationUI: "hide" }).then(() => {
+    const request = target.requestFullscreen || target.webkitRequestFullscreen;
+    if (!request) {
+      fullscreenRefused("this browser has no fullscreen for pages");
+      return;
+    }
+    let result;
+    try {
+      result = request.call(target, { navigationUI: "hide" });
+    } catch (e) {
+      fullscreenRefused(e);
+      return;
+    }
+    Promise.resolve(result).then(() => {
       if (phone && screen.orientation && screen.orientation.lock) screen.orientation.lock("landscape").catch(() => {});
-    }, () => {});
+    }, fullscreenRefused);
   }
-  document.getElementById("fullscreen").onclick = () => { enterFullscreen(); footer.classList.remove("open"); canvas.focus(); };
+  function leaveFullscreen() {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen;
+    if (exit) Promise.resolve(exit.call(document)).catch(fullscreenRefused);
+  }
+  function showFullscreenState() {
+    fullscreenButton.textContent = inFullscreen() ? "Leave fullscreen" : "Fullscreen";
+    appendLog(inFullscreen() ? "Fullscreen" : "Fullscreen left");
+  }
+  document.addEventListener("fullscreenchange", showFullscreenState);
+  document.addEventListener("webkitfullscreenchange", showFullscreenState);
+  fullscreenButton.onclick = () => {
+    if (inFullscreen()) leaveFullscreen();
+    else enterFullscreen();
+    footer.classList.remove("open");
+    canvas.focus();
+  };
   document.getElementById("menu").onclick = () => footer.classList.toggle("open");
   canvas.addEventListener("pointerdown", () => footer.classList.remove("open"));
 
@@ -153,7 +193,7 @@
   // Fullscreen does it later). Not where the page already fills the screen (opened from the home
   // screen, manifest.webmanifest) or can't (iPhone).
   const homeScreenApp = matchMedia("(display-mode: fullscreen), (display-mode: standalone)").matches;
-  if (phone && !homeScreenApp && document.documentElement.requestFullscreen) {
+  if (phone && !homeScreenApp && (document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen)) {
     playCard.classList.add("show");
     document.getElementById("play-fullscreen").onclick = () => { playCard.classList.remove("show"); enterFullscreen(); canvas.focus(); };
     document.getElementById("play-here").onclick = () => { playCard.classList.remove("show"); canvas.focus(); };
@@ -273,7 +313,8 @@
   // 1:1 instead of stretched, at most the quality's pixel budget (PC, phones). Never below 640x480,
   // the game's smallest screen, nor below half a pixel per CSS pixel. Picking a size in Options turns
   // "Auto" off. The game follows muDisplay once a frame (Winmain.cpp MuWebFollowPageSize) and draws
-  // its interface `ratio` times larger, as on a desktop display set to 125 or 150 %.
+  // its interface `ratio` times larger, as on a desktop display set to 125 or 150 %, but no larger
+  // than the original's 640x480 screen fits (a low phone window: Winmain.cpp WebContentScale).
   // index.html?q=high|medium|low picks the quality (kept, like the footer's choice); ?dpr=N stands
   // in for the screen's ratio.
   const QUALITY_BUDGETS = { high: [2560 * 1440, 1.5e6], medium: [1920 * 1080, 0.75e6], low: [1280 * 720, 0.4e6] };
@@ -628,46 +669,50 @@
 
     // The files the game reads before it can be played come in one download (startup.pack, listed in
     // startup.json), fetched while the game's code loads. WebFileSystem.cpp waits for it; without it
-    // the game fetches each file when it first opens it.
-    // The browser keeps the pack as it came (packed) in its own storage, under the hash in
-    // startup.json, so the next visit loads it from the device, and a new release downloads it again
-    // only when it changed: a phone's browser cache drops a file this big. index.html?nostore neither
-    // uses nor fills that storage.
-    const PACK_STORE = "mu-web/startup-pack";
-    async function packStore(index) {
+    // the game fetches each file when it first opens it. A map's files come the same way when the game
+    // enters it (packs/worldN.pack and .json, Module.muMapPack below): entering Lorencia file by file
+    // took a minute on a phone (2026-10-29).
+    // The browser keeps a pack as it came (packed) in its own storage, under the hash in its .json, so
+    // the next visit loads it from the device, and a new release downloads it again only when it
+    // changed: a phone's browser cache drops files this big. index.html?nostore neither uses nor fills
+    // that storage.
+    const STARTUP_PACK = { name: "startup.pack", store: "mu-web/startup-pack", label: "Startup pack", what: "game data" };
+    const MAP_PACK_STORE = "mu-web/map-packs";
+    async function packStore(pack, index) {
       if (!index.hash || !self.caches || new URLSearchParams(location.search).has("nostore")) return null;
       try {
-        return { cache: await caches.open(PACK_STORE), key: new URL(`startup.pack?v=${index.hash}`, location.href).href };
+        return { cache: await caches.open(pack.store), key: new URL(`${pack.name}?v=${index.hash}`, location.href).href };
       } catch (e) {
         return null;   // no storage in this browser (a private window, say)
       }
     }
-    // Keeps the pack's second stream (a tee of the download) for the next visit, and drops older ones.
-    function keepStartupPack(store, body, packed, hash) {
+    // Keeps the pack's second stream (a tee of the download) for the next visit, and drops its older copies.
+    function keepPack(pack, store, body, packed, hash) {
       const kept = new Response(body, { headers: { "X-Mu-Packed": packed ? "1" : "0" } });
+      const path = store.key.split("?")[0];
       store.cache.put(store.key, kept).then(async () => {
         for (const request of await store.cache.keys()) {
-          if (request.url !== store.key) store.cache.delete(request);
+          if (request.url !== store.key && request.url.split("?")[0] === path) store.cache.delete(request);
         }
         if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-        console.log(`Startup pack kept on this device (${hash})`);
-      }).catch((e) => console.warn("Startup pack not kept on this device: " + e));
+        console.log(`${pack.label} kept on this device (${hash})`);
+      }).catch((e) => console.warn(`${pack.label} not kept on this device: ${e}`));
     }
-    // Reads the pack into one array: from the device (null when it isn't kept there) or the server.
-    async function readStartupPack(index, total, store, fromDevice) {
+    // Reads a pack into one array: from the device (null when it isn't kept there) or the server.
+    async function readPack(pack, index, total, store, fromDevice) {
       let source;
       if (fromDevice) {
         const kept = await store.cache.match(store.key);
         if (!kept) return null;
         source = { response: kept, packed: kept.headers.get("X-Mu-Packed") === "1" };
       } else {
-        source = await fetchPacked("startup.pack", { cache: "no-store" });
+        source = await fetchPacked(pack.name, { cache: "no-store" });
       }
       let body = source.response.body;
       if (!fromDevice && store) {
         const [forGame, forStore] = body.tee();
         body = forGame;
-        keepStartupPack(store, forStore, source.packed, index.hash);
+        keepPack(pack, store, forStore, source.packed, index.hash);
       }
       // Progress: the bytes coming over the network where their number is known, else the unpacked ones.
       const verb = fromDevice ? "Loading" : "Downloading";
@@ -676,7 +721,7 @@
         const mb = Math.floor(count / 1e6);
         if (mb === shownMb) return;
         shownMb = mb;
-        setStatus(`${verb} game data… ${mb} of ${Math.round(of / 1e6)} MB`);
+        setStatus(`${verb} ${pack.what}… ${mb} of ${Math.round(of / 1e6)} MB`);
       };
       const networkTotal = fromDevice ? 0 : Number(source.response.headers.get("Content-Length")) || 0;
       if (networkTotal) {
@@ -689,40 +734,48 @@
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
-        if (received + value.length > total) throw new Error("startup.pack is bigger than startup.json says");
+        if (received + value.length > total) throw new Error(`${pack.name} is bigger than its .json says`);
         bytes.set(value, received);
         received += value.length;
         if (!networkTotal) showProgress(received, total);
       }
-      if (received !== total) throw new Error("startup.pack is incomplete");
+      if (received !== total) throw new Error(`${pack.name} is incomplete`);
       return { files: index.files, bytes };
     }
-    let packDone = false;
-    const startupPack = (async () => {
-      const indexResponse = await fetch("startup.json", { cache: "no-cache" });
+    // A pack's files and bytes, or null when the build has no such pack.
+    async function loadPack(pack) {
+      const indexResponse = await fetch(pack.name.replace(/\.pack$/, ".json"), { cache: "no-cache" });
       if (!indexResponse.ok) return null;
       const index = await indexResponse.json();
       const total = index.files.reduce((sum, file) => sum + file[1], 0);
-      const store = await packStore(index);
+      const store = await packStore(pack, index);
       if (store) {
         try {
-          const pack = await readStartupPack(index, total, store, true);
-          if (pack) {
-            console.log(`Startup pack from this device (${index.hash})`);
-            return pack;
+          const kept = await readPack(pack, index, total, store, true);
+          if (kept) {
+            console.log(`${pack.label} from this device (${index.hash})`);
+            return kept;
           }
         } catch (e) {
-          console.warn("Startup pack on this device didn't read, downloading it again: " + e);
+          console.warn(`${pack.label} on this device didn't read, downloading it again: ${e}`);
           await store.cache.delete(store.key).catch(() => {});
         }
       }
-      return readStartupPack(index, total, store, false);
-    })().finally(() => { packDone = true; setStatus(""); });
+      return readPack(pack, index, total, store, false);
+    }
+    let packDone = false;
+    const startupPack = loadPack(STARTUP_PACK).finally(() => { packDone = true; setStatus(""); });
+    // WebFileSystem.cpp LoadWorldFiles: the files of the map folder the game enters (Data/WorldN, ObjectN).
+    function mapPack(world) {
+      const pack = { name: `packs/world${world}.pack`, store: MAP_PACK_STORE, label: `Map pack ${world}`, what: "map" };
+      return loadPack(pack).finally(() => setStatus(""));
+    }
 
     // Global for Main.js, which picks up an existing Module object.
     window.Module = {
       canvas,
       muStartupPack: startupPack,
+      muMapPack: mapPack,
       muClipDistances: gpuCheck.clipDistances,
       muKeyboard: phone ? phoneKeyboard : undefined,
       muDevice: device.kind,

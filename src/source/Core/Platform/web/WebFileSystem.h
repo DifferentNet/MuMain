@@ -10,4 +10,10 @@ namespace mu::web
 // (written by the build) into /game, and makes it the game's working directory. Blocks until that's
 // done, yielding to the browser meanwhile. Returns false when the file list can't be read.
 bool MountGameFiles();
+
+// Brings the files of the map folders Data/World<world> and Data/Object<world> in one download (the
+// map's pack, packs/world<world>, tools/web/make_startup_pack.py) before the game reads them, instead of
+// a request per file. Call it before loading a map; blocks until done, yielding to the browser meanwhile.
+// Without a pack the files still download one by one as the game opens them.
+void LoadWorldFiles(int world);
 } // namespace mu::web
