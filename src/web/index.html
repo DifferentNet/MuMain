@@ -681,6 +681,61 @@
     const tokens = navigator.userAgent.match(/(YaBrowser|OPR|Edg|Vivaldi|Firefox)\/[\d.]+/g) || [];
     return brands.concat(tokens).join(", ") || navigator.userAgent;
   }
+  // Safari 27.0.1 (WebKit 7625; ghinzuro's MacBook Air M4, 2026-10-29) reports clip-distances, but
+  // the Metal code it writes for basic_textured.vert and skinned_*.vert doesn't compile: the clip
+  // distances member becomes a C array, and the shader returns the whole array as one value. The
+  // pipeline is then invalid and every frame fails ("encoder state is not valid"). This shader has
+  // the same output struct and the same return, so where it doesn't build, the game takes its soft
+  // clip shaders. Returns why it failed, or "" where it builds.
+  const CLIP_TEST_SHADER = `enable clip_distances;
+struct VertexOutput {
+    @builtin(position) member: vec4<f32>,
+    @location(0) member_1: vec2<f32>,
+    @location(1) member_2: vec4<f32>,
+    @location(2) member_3: f32,
+    @location(3) member_4: f32,
+    @builtin(clip_distances) member_5: array<f32, 1>,
+}
+var<private> clipDist: array<f32, 1> = array<f32, 1>();
+@vertex
+fn vs(@location(0) pos: vec3<f32>) -> VertexOutput {
+    let position = vec4<f32>(pos, 1f);
+    clipDist[0i] = position.w - 1f;
+    let clip = clipDist;
+    return VertexOutput(position, pos.xy, position, pos.z, position.w, clip);
+}
+@fragment
+fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
+    return vec4<f32>(uv, 0f, 1f);
+}`;
+  async function clipDistancesBroken(adapter) {
+    let device = null;
+    const test = (async () => {
+      device = await adapter.requestDevice({ requiredFeatures: [CLIP_DISTANCES] });
+      device.pushErrorScope("internal");
+      device.pushErrorScope("validation");
+      const module = device.createShaderModule({ code: CLIP_TEST_SHADER });
+      device.createRenderPipeline({
+        layout: "auto",
+        vertex: { module, entryPoint: "vs",
+                  buffers: [{ arrayStride: 12, attributes: [{ shaderLocation: 0, offset: 0, format: "float32x3" }] }] },
+        fragment: { module, entryPoint: "fs", targets: [{ format: "rgba8unorm" }] },
+      });
+      const errors = [await device.popErrorScope(), await device.popErrorScope()].filter(Boolean);
+      if (!errors.length) return "";
+      // WebKit: "Failed to compile the shader source, generated metal:\n<Metal code> - error <reason>"
+      return String(errors[0].message).split(" - error ").pop().replace(/\s+/g, " ").trim().slice(0, 300) || "error";
+    })();
+    const timeout = new Promise((resolve) => setTimeout(() => resolve("no answer in 5 s"), 5000));
+    try {
+      return await Promise.race([test, timeout]);
+    } catch (e) {
+      return String((e && e.message) || e).slice(0, 300) || "error";
+    } finally {
+      // A device that arrives after the timeout is destroyed once the test ends.
+      test.finally(() => { if (device) device.destroy(); }).catch(() => {});
+    }
+  }
   async function checkGpu() {
     const params = new URLSearchParams(location.search);
     const needed = NEEDED_FEATURES.concat(params.getAll("needfeature"));
@@ -703,9 +758,17 @@
     const info = adapter.info || {};
     const gpu = [info.vendor, info.architecture, info.device, info.description].filter(Boolean).join(" / ") || "unknown";
     const missing = needed.filter((name) => !adapter.features.has(name));
-    const clipDistances = adapter.features.has(CLIP_DISTANCES) && !params.has("softclip");
+    let clipDistances = adapter.features.has(CLIP_DISTANCES) && !params.has("softclip");
+    let clipNote = clipDistances ? "yes" : "no, soft clip shaders";
+    if (clipDistances && missing.length === 0) {
+      const broken = await clipDistancesBroken(adapter);
+      if (broken) {
+        clipDistances = false;
+        clipNote = `no, this browser can't build them (${broken}), soft clip shaders`;
+      }
+    }
     appendLog(`WebGPU adapter: ${gpu} (${tried.join(", ")}); missing features: ${missing.join(", ") || "none"}; ` +
-              `clip distances: ${clipDistances ? "yes" : "no, soft clip shaders"}; browser: ${browser}`,
+              `clip distances: ${clipNote}; browser: ${browser}`,
               missing.length > 0);
     return { ok: missing.length === 0, gpu, browser, missing, clipDistances };
   }
