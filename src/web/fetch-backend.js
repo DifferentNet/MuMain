@@ -9,6 +9,11 @@
  * This one asks for the first two chunks at once. The answer brings the file's size too (its
  * Content-Range), and a file of up to two chunks (nearly all of them) is complete with it. Bigger ones
  * (music, long sounds) read the rest chunk by chunk, as Emscripten's does.
+ *
+ * A file with a hash in startup.json ("versions", tools/web/make_startup_pack.py) is asked for as
+ * path?v=<hash>: the page's service worker (sw.js) keeps it on the device under that URL and goes to
+ * the server again only when a release changes the file, and so its hash. Without startup.json or a
+ * hash, the plain URL.
  */
 addToLibrary({
   _wasmfs_create_fetch_backend_js__deps: [
@@ -19,16 +24,35 @@ addToLibrary({
     '_wasmfs_fetch_get_chunk_size',
   ],
   _wasmfs_create_fetch_backend_js: async function(backend) {
-    function fileUrl(file) {
+    // This runs in a worker, whose location is Main.js's: the page's folder.
+    var pageFolder = new URL('.', self.location.href).href;
+    var versions = null;
+    function fileVersions() {
+      if (!versions) {
+        versions = fetch(new URL('startup.json', pageFolder), {cache: 'no-cache'})
+          .then((response) => response.ok ? response.json() : {})
+          .then((index) => index.versions || {}, () => ({}));
+      }
+      return versions;
+    }
+
+    async function fileUrl(file) {
       var url = UTF8ToString(__wasmfs_fetch_get_file_url(file));
-      if (url.indexOf('://') !== -1) {
+      if (url.indexOf('://') === -1) {
+        try {
+          url = new URL(url, self.location.origin).toString();
+        } catch (_e) {
+          throw {status: 404};
+        }
+      }
+      if (!url.startsWith(pageFolder)) {
         return url;
       }
-      try {
-        return new URL(url, self.location.origin).toString();
-      } catch (_e) {
-        throw {status: 404};
-      }
+      // The mount joins its folder and the file's path with a slash too many (Emscripten's
+      // fetch_backend.cpp: folder + '/' + '/Data/...').
+      var path = url.slice(pageFolder.length).replace(/^\/+/, '');
+      var hash = (await fileVersions())[path];
+      return pageFolder + path + (hash ? `?v=${hash}` : '');
     }
 
     // The file's size and its first two chunks (or all of it), in one request.
@@ -59,7 +83,7 @@ addToLibrary({
 
     // Makes sure the chunks holding bytes offset .. offset + len - 1 are here.
     async function getFileRange(file, offset, len) {
-      var url = fileUrl(file);
+      var url = await fileUrl(file);
       if (!wasmFS$JSMemoryRanges[file]) {
         await fetchStart(file, url, __wasmfs_fetch_get_chunk_size(file));
       }

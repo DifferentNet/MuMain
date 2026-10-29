@@ -13,6 +13,8 @@
 #include <emscripten.h>
 #include <emscripten/wasmfs.h>
 
+#include <algorithm>
+#include <array>
 #include <atomic>
 #include <cstdio>
 #include <cstdlib>
@@ -29,13 +31,20 @@ namespace
 constexpr const char* GameDir = "/game";
 constexpr const char* ServerDir = "/server";
 constexpr unsigned ChunkSize = 1u << 20;
-// The page's gzip copies of startup.pack and Main.wasm (tools/web/make_startup_pack.py). files.txt
-// lists them so scripts/publish-web.py uploads them, but only the page reads them. Copied like
-// config.ini, they were downloaded again at every start (120 MB in 1 MB pieces), which left a phone
-// at a black screen (a Pixel 9 Pro XL, 2026-10-29).
+// files.txt also lists the page's own files, so scripts/publish-web.py uploads them, but only the page
+// reads them. Copied like config.ini, they were downloaded again at every start: the gzip copy of the
+// startup pack took 120 MB in 1 MB pieces and left a phone at a black screen (a Pixel 9 Pro XL,
+// 2026-10-29). They are the gzip copies (Main.wasm.gz), the packs (packs/, tools/web/make_startup_pack.py:
+// the startup pack's parts and the map packs, for LoadWorldFiles) and these.
 constexpr std::string_view PageCopySuffix = ".gz";
-// The map packs (packs/worldN.json and .pack.gz): the page reads them for LoadWorldFiles.
 constexpr std::string_view PagePacksFolder = "packs/";
+constexpr std::array<std::string_view, 4> PageFiles = {"manifest.webmanifest", "icon-192.png", "icon-512.png", "sw.js"};
+
+bool IsPageFile(std::string_view path)
+{
+    return path.ends_with(PageCopySuffix) || path.starts_with(PagePacksFolder)
+           || std::find(PageFiles.begin(), PageFiles.end(), path) != PageFiles.end();
+}
 
 // 0 while the mount is being set up, 1 when it is ready, -1 when it failed.
 std::atomic<int> g_mountState{0};
@@ -51,33 +60,41 @@ EM_JS(char*, MuWeb_PageFolderUrl, (), {
 });
 
 // The page starts downloading the startup pack as it loads (index.html: Module.muStartupPack, a
-// promise of {files: [[path, size], ...], bytes}); this waits for it and writes its files into /game.
-// Returns how many it wrote, 0 without a pack.
+// promise of its parts, each a promise of {files: [[path, size], ...], bytes}); this writes each
+// part's files into /game as it arrives and lets go of it, so the page never holds the whole pack.
+// A part that fails leaves its files to download one by one. Returns how many files it wrote, 0
+// without a pack.
 EM_ASYNC_JS(int, MuWeb_InstallStartupPack, (), {
-    let pack = null;
+    let parts = null;
     try {
-        pack = await Module["muStartupPack"];
+        parts = await Module["muStartupPack"];
     } catch (e) {
         err("Startup pack: " + e + "; the game downloads its files one by one instead");
     }
     Module["muStartupPack"] = null;
-    if (!pack) {
-        return 0;
-    }
     const folders = new Set();
-    let offset = 0;
     let written = 0;
-    for (const [path, size] of pack.files) {
-        const full = "/game/" + path;
-        const folder = full.substring(0, full.lastIndexOf("/"));
-        if (!folders.has(folder)) {
-            FS.mkdirTree(folder);
-            folders.add(folder);
+    for (let i = 0; parts && i < parts.length; i++) {
+        let pack = null;
+        try {
+            pack = await parts[i];
+        } catch (e) {
+            err("Startup pack part " + (i + 1) + ": " + e + "; the game downloads its files one by one instead");
         }
-        if (FS.writeFile(full, pack.bytes.subarray(offset, offset + size)) >= 0) {
-            ++written;
+        parts[i] = null;
+        let offset = 0;
+        for (const [path, size] of pack ? pack.files : []) {
+            const full = "/game/" + path;
+            const folder = full.substring(0, full.lastIndexOf("/"));
+            if (!folders.has(folder)) {
+                FS.mkdirTree(folder);
+                folders.add(folder);
+            }
+            if (FS.writeFile(full, pack.bytes.subarray(offset, offset + size)) >= 0) {
+                ++written;
+            }
+            offset += size;
         }
-        offset += size;
     }
     return written;
 });
@@ -209,7 +226,7 @@ void SetUpMount()
         {
             line.pop_back();
         }
-        if (line.empty() || line == "files.txt" || line.ends_with(PageCopySuffix) || line.starts_with(PagePacksFolder))
+        if (line.empty() || line == "files.txt" || IsPageFile(line))
         {
             continue;
         }

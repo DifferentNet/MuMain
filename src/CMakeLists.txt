@@ -591,22 +591,24 @@ if (EMSCRIPTEN)
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
       "${CMAKE_CURRENT_SOURCE_DIR}/web/index.html"
       "$<TARGET_FILE_DIR:Main>/index.html"
-    # Phones: "Add to home screen" opens the game fullscreen and sideways.
+    # Phones: "Install" or "Add to home screen" opens the game fullscreen and sideways; the service
+    # worker keeps the game's files on the device.
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
       "${CMAKE_CURRENT_SOURCE_DIR}/web/manifest.webmanifest"
       "${CMAKE_CURRENT_SOURCE_DIR}/web/icon-192.png"
       "${CMAKE_CURRENT_SOURCE_DIR}/web/icon-512.png"
+      "${CMAKE_CURRENT_SOURCE_DIR}/web/sw.js"
       "$<TARGET_FILE_DIR:Main>"
     ${_mu_web_extra_copy}
-    # startup.pack: the files the game reads before it can be played, in one download; gzip copies
-    # of it and of Main.wasm, which the page unpacks itself; a pack per map (packs/). Before
-    # files.txt, which lists the copies and the packs.
-    COMMAND "${Python3_EXECUTABLE}" "${REPO_ROOT}/tools/web/make_startup_pack.py"
-      --root "$<TARGET_FILE_DIR:Main>"
-      --list "${CMAKE_CURRENT_SOURCE_DIR}/web/startup-files.txt"
     COMMAND "${CMAKE_COMMAND}"
       "-DOUTPUT_DIR=$<TARGET_FILE_DIR:Main>"
       "-P" "${REPO_ROOT}/cmake/WriteWebFileList.cmake"
+    # The startup pack in parts (the files the game reads before it can be played), a pack per map,
+    # the gzip copy of Main.wasm and startup.json, the index the page reads first. After files.txt,
+    # which it reads and adds its files to.
+    COMMAND "${Python3_EXECUTABLE}" "${REPO_ROOT}/tools/web/make_startup_pack.py"
+      --root "$<TARGET_FILE_DIR:Main>"
+      --list "${CMAKE_CURRENT_SOURCE_DIR}/web/startup-files.txt"
     VERBATIM
   )
 endif()
