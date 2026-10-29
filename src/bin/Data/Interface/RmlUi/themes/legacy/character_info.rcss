@@ -73,7 +73,11 @@
 .edge-left      { left: 12px;  top: 62px;  width: 14px;  height: 43px; decorator: image(chainfo-table-left); }
 .edge-right     { right: 13px; top: 62px;  width: 14px;  height: 43px; decorator: image(chainfo-table-right); }
 
-.level-text, .levelup-point-text, .exp-text, .point-probability-text, .point-text {
+/* Each row is a box from 18 to 170, the summary box's inside; its text shrinks to it when wider
+   (character_info.rml). The level row lays the level out on the left and the points to spend on
+   the right; when even the smallest size is too wide, the level is cut at the points instead of
+   running under them. */
+.level-row, .exp-text, .point-probability-text, .point-text {
 	display: block;
 	position: absolute;
 	left: 18px;
@@ -81,8 +85,10 @@
 	white-space: nowrap;
 	pointer-events: none;
 }
-.level-text { top: 58px; color: #e6e600; font-weight: bold; }
-.levelup-point-text { top: 58px; left: 110px; color: #ff8a00; font-weight: bold; }
+.level-row { top: 58px; font-weight: bold; }
+.level-row .level-row-fit { display: flex; flex-direction: row; justify-content: space-between; }
+.level-text { flex: 0 1 auto; overflow: hidden; color: #e6e600; }
+.levelup-point-text { flex: 0 0 auto; color: #ff8a00; }
 .exp-text { top: 75px; color: token(text-primary); }
 .point-probability-text { top: 88px; color: #4cc5fe; }
 .point-text { top: 101px; color: #4cc5fe; }
@@ -199,6 +205,15 @@
 #name { width: calc(100% * var(--root-scale)); margin-left: calc(50% - 50% * var(--root-scale)); }
 #classname { width: calc(100% * var(--root-scale)); margin-left: calc(50% - 50% * var(--root-scale)); }
 #servername { width: calc(100% * var(--root-scale)); margin-left: calc(50% - 50% * var(--root-scale)); }
+.level-row { width: calc(152px * var(--root-scale)); }
+.exp-text, .point-probability-text, .point-text { width: calc(152px * var(--root-scale)); }
+.levelup-point-text { margin-left: calc(6px * var(--root-scale)); }
+/* The extra lines and the advanced stats end at 170 too, inside the frame's right edge, and shrink
+   to it (character_info.rml). */
+.attr-lines.attr-lines-str { width: calc(150px * var(--root-scale)); }
+.attr-lines.attr-lines-agi { width: calc(150px * var(--root-scale)); }
+.attr-lines.attr-lines-vit { width: calc(150px * var(--root-scale)); }
+.attr-lines.attr-lines-ene { width: calc(152px * var(--root-scale)); }
 .attr-lines.attr-lines-str span { height: calc(13px * var(--root-scale)); }
 .attr-lines.attr-lines-agi span { height: calc(13px * var(--root-scale)); }
 .attr-lines.attr-lines-vit span { height: calc(13px * var(--root-scale)); }
@@ -257,10 +272,10 @@
 .adv-edge-left-2      { left: 12px;  top: 274px; width: 14px; height: 95px; decorator: image(chainfo-table-left); }
 .adv-edge-right-2     { right: 13px; top: 274px; width: 14px; height: 95px; decorator: image(chainfo-table-right); }
 
-.adv-title { position: absolute; left: 18px; transform-origin: left top; white-space: nowrap; color: #e6e600; font-weight: bold; pointer-events: none; }
+.adv-title { position: absolute; left: 18px; width: calc(152px * var(--root-scale)); transform-origin: left top; white-space: nowrap; color: #e6e600; font-weight: bold; pointer-events: none; }
 .adv-title-1 { top: 130px; }
 .adv-title-2 { top: 270px; }
-.adv-lines { position: absolute; left: 18px; transform-origin: left top; pointer-events: none; }
+.adv-lines { position: absolute; left: 18px; width: calc(152px * var(--root-scale)); transform-origin: left top; pointer-events: none; }
 .adv-lines-1 { top: 147px; }
 .adv-lines-2 { top: 287px; }
 .adv-lines span { display: block; white-space: nowrap; color: #ffffff; height: calc(13px * var(--root-scale)); }
