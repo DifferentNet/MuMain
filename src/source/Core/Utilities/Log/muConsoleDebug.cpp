@@ -26,6 +26,7 @@
 #include "Scenes/SceneCore.h"
 #include "Scenes/SceneManager.h"
 #include "Scenes/MainScene.h"
+#include "UI/Character/TitlePlates.h"
 #include "UI/Core/WindowCommon.h"
 #include "UI/Core/WindowManager.h"
 #include "UI/Core/WindowSystem.h"
@@ -122,6 +123,16 @@ bool CheckDeveloperLookCommand(const std::wstring& command)
                                      history.FollowedCount(Render::Lighting::LightSource::Map),
                                      history.FollowedCount(Render::Lighting::LightSource::Character),
                                      history.FollowedCount(Render::Lighting::LightSource::Effect), history.Overflow());
+        mu::log::Get("render")->flush();
+        return true;
+    }
+    if (command.starts_with(L"$titlescale "))
+    {
+        // The title plates' size in percent (UI/Character/TitlePlates.h), to try sizes on screen.
+        const int percent = _wtoi(command.c_str() + 12);
+        if (percent > 0)
+            UI::TitlePlates::SetScale(static_cast<float>(percent) / 100.f);
+        mu::log::Get("render")->info("Title plates at {} %", static_cast<int>(UI::TitlePlates::Scale() * 100.f + 0.5f));
         mu::log::Get("render")->flush();
         return true;
     }
