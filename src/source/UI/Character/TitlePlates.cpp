@@ -2,6 +2,7 @@
 #include "UI/Character/TitlePlates.h"
 
 #include <algorithm>
+#include <cmath>
 
 #include "App/Platform/Windows/Winmain.h"
 #include "Camera/CameraProjection.h"
@@ -13,6 +14,7 @@
 #include "Render/Text/CUIRenderText.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
 #include "UI/Character/TitlePlatesArt.h"
+#include "UI/Scaling/UITransform.h"
 
 namespace UI::TitlePlates
 {
@@ -20,13 +22,26 @@ namespace
 {
 using Art::Plate;
 
-// The field (the coloured rectangle the text sits on) is the font's height and this much more. Every title and every
-// rarity gets the same field, so every plate keeps one size whatever its text.
+// At scale 1 the field (the coloured rectangle the text sits on) is the font's height and this much more. Every title
+// and every rarity gets the same field, so every plate keeps one size whatever its text.
 constexpr float FieldPadding = 5.f;
+// The plates' size, the text's with them (as far as the font may shrink); see Scale(). 70 %: at full size they took
+// too much of the screen, so ghinzuro picked 70 % from shots at 1024 x 768 to 1920 x 1080 (2026-10-29).
+constexpr float DefaultScale = 0.7f;
+float PlateScale = DefaultScale;
 // The field's ends are points: at the text's top and bottom they are about this much of the text's height in.
 constexpr float TipInset = 0.55f;
 // The room the text keeps on each side, inside the points.
 constexpr float TextMargin = 3.f;
+
+// The widest titles there are (the server's Titles/TitlesConfiguration.cs and the battle pass' season titles, both
+// languages, 2026-10-29). Every field is made wide enough for the widest of them in the regular font: on small
+// windows, where the text can't shrink as far as the plate, all plates grow together and keep one size (ghinzuro,
+// 2026-10-29). Add a title here when a wider one comes; until then that one alone gets a larger plate.
+constexpr const wchar_t* WidestTitles[] = {
+    L"Рыцарь Кровавого замка", L"Защитник Крайвульфа", L"Masters of the Throne",
+    L"Gladiator of the Week",  L"Blood Castle Knight",
+};
 
 // The text's colour on each rarity's plate (light tints of the plate's colours).
 constexpr unsigned char TextColor[GameLogic::Titles::RarityCount][3] = {
@@ -85,7 +100,8 @@ int OverPartyBar(const CHARACTER& owner, int bottomY)
     return bottomY;
 }
 
-// The title in its rarity's colour over a 1 px dark shadow, so it reads on the plate's glints too.
+// The title in its rarity's colour over a 1 px dark shadow, so it reads on the plate's glints too; size is its box,
+// the measured size times the text's scale (the renderer shrinks the text into it).
 void Text(const GameLogic::Titles::Worn& title, HFONT font, int x, int y, const SIZE& size)
 {
     const auto* color = TextColor[static_cast<int>(title.Color)];
@@ -96,11 +112,48 @@ void Text(const GameLogic::Titles::Worn& title, HFONT font, int x, int y, const 
     g_pRenderText->SetTextColor(color[0], color[1], color[2], 255);
     g_pRenderText->RenderText(x, y, title.Text().c_str(), size.cx, size.cy, RT3_SORT_LEFT);
 }
+
+SIZE Scaled(const SIZE& size, float scale)
+{
+    return SIZE{static_cast<LONG>(std::ceil(static_cast<float>(size.cx) * scale)),
+                static_cast<LONG>(std::ceil(static_cast<float>(size.cy) * scale))};
+}
+
+// The widest of WidestTitles in the regular font, unscaled; measured again when the font's size changes.
+LONG WidestTitleWidth(float fontPx)
+{
+    static float measuredAt = -1.f;
+    static LONG width = 0;
+    if (fontPx != measuredAt)
+    {
+        measuredAt = fontPx;
+        width = 0;
+        for (const wchar_t* text : WidestTitles)
+            width = std::max(width, Measure(text, g_hFont).cx);
+    }
+    return width;
+}
+
+// How much the plate is scaled (atlas pixels to screen) for a field that holds a text of textWidth x textHeight.
+float ScaleForWidth(float textWidth, float textHeight)
+{
+    return (textWidth + 2.f * (TipInset * textHeight + TextMargin * PlateScale)) / Art::FieldWidth;
+}
 } // namespace
 
 bool Enabled()
 {
     return GameConfig::GetInstance().GetOverheadTitles();
+}
+
+float Scale()
+{
+    return PlateScale;
+}
+
+void SetScale(float scale)
+{
+    PlateScale = std::clamp(scale, 0.3f, 1.5f);
 }
 
 int Render(const GameLogic::Titles::Worn& title, const CHARACTER& owner, int centerX, int bottomY)
@@ -111,16 +164,29 @@ int Render(const GameLogic::Titles::Worn& title, const CHARACTER& owner, int cen
     if (text.empty() || texture == 0)
         return 0;
 
-    // One scale for every plate (the atlas keeps the drawn plates' sizes), set by the font: the same field for all.
+    // One scale for every plate (the atlas keeps the drawn plates' sizes), set by the font and PlateScale: the same
+    // field for all. The text shrinks with the plate as far as the renderer lets a font shrink; where it can't, the
+    // field stays high enough for it and wide enough for the widest title.
     HFONT font = g_hFontBold;
-    SIZE size = Measure(text, font);
-    const float k = (static_cast<float>(size.cy) + FieldPadding) / Art::FieldHeight;
-    const float room = Art::FieldWidth * k - 2.f * (TipInset * static_cast<float>(size.cy) + TextMargin);
-    if (static_cast<float>(size.cx) > room)
+    using UI::Scaling::FontRole;
+    const float fontPx =
+        UI::Scaling::NativeTextPixelSize(FontRole::Bold, static_cast<int>(WindowWidth), static_cast<int>(WindowHeight));
+    const float smallest = UI::Scaling::MinimumTextPixelSize(FontRole::Bold) / std::max(fontPx, 1.f);
+    const float textScale = std::max(PlateScale, std::min(smallest, 1.f));
+    const SIZE natural = Measure(text, font);
+    SIZE size = Scaled(natural, textScale);
+    const float fieldHeight =
+        std::max((static_cast<float>(natural.cy) + FieldPadding) * PlateScale, static_cast<float>(size.cy) + 2.f);
+    const float textHeight = static_cast<float>(size.cy);
+    const float widest = static_cast<float>(WidestTitleWidth(fontPx)) * textScale;
+    float k = std::max(fieldHeight / Art::FieldHeight, ScaleForWidth(widest, textHeight));
+    if (ScaleForWidth(static_cast<float>(size.cx), textHeight) > k)
     {
-        // A title too long for the field in bold gets the regular font; the plate keeps its size.
+        // A title too long for the field in bold gets the regular font; the plate keeps its size, unless the title is
+        // wider than all of WidestTitles.
         font = g_hFont;
-        size = Measure(text, font);
+        size = Scaled(Measure(text, font), textScale);
+        k = std::max(k, ScaleForWidth(static_cast<float>(size.cx), textHeight));
     }
 
     const Plate& plate = Art::Plates[static_cast<int>(title.Color)];

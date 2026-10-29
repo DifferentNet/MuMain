@@ -17,6 +17,12 @@ namespace UI::TitlePlates
 // Titles over the players: Options, Interface tab; config.ini [UI] OverheadTitles.
 bool Enabled();
 
+// The plates' size, the text's with them (as far as the font may shrink): 1 is a field as high as the font and 5 more,
+// 0.8 all of it a fifth smaller. The game uses 0.7 (ghinzuro, 2026-10-29). Dev builds try other sizes with the
+// console's "$titlescale <percent>".
+float Scale();
+void SetScale(float scale);
+
 // Draws the title of owner centred on centerX, its lowest point on bottomY, or over the owner's party HP bar
 // (Engine/Object/ZzzInterface.cpp RenderPartyHP) when that is higher. Returns how high it is (0: nothing drawn).
 int Render(const GameLogic::Titles::Worn& title, const CHARACTER& owner, int centerX, int bottomY);
