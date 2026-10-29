@@ -9,6 +9,7 @@
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzInventory.h"
 #include "GameLogic/Events/BattlePass.h"
+#include "GameLogic/Events/SeasonMarks.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Inventory/ItemMng.h"
 #include "UI/Tooltip/LegacyTextListTooltip.h"
@@ -242,6 +243,32 @@ bool KnownItem(const RewardItem& item)
     return ItemAttribute[item.Group * MAX_ITEM_INDEX + item.Number].Name[0] != 0;
 }
 
+// The hint of a season's mark: by the season's name in Data/Seasons.json («Aura «Winter I»»), by its number for a
+// season it doesn't have.
+std::wstring MarkHint(const RewardItem& item)
+{
+    auto& marks = GameLogic::SeasonMarks::Marks();
+    if (item.Mark == L"title")
+    {
+        const std::wstring hero = marks.HeroNameOf(item.Season);
+        return hero.empty() ? Format(I18N::Game::BattlePassMarkTitle, item.Season)
+                            : Format(I18N::Game::BattlePassMarkTitleNamed, hero.c_str());
+    }
+
+    const std::wstring name = marks.NameOf(item.Season);
+    if (item.Mark == L"aura")
+        return name.empty() ? Format(I18N::Game::BattlePassMarkAura, item.Season)
+                            : Format(I18N::Game::BattlePassMarkAuraNamed, name.c_str());
+    if (item.Mark == L"trophy")
+        return name.empty() ? Format(I18N::Game::BattlePassMarkTrophy, item.Season)
+                            : Format(I18N::Game::BattlePassMarkTrophyNamed, name.c_str());
+    if (item.Mark == L"fenrir")
+        return name.empty() ? Format(I18N::Game::BattlePassMarkFenrir, item.Season)
+                            : Format(I18N::Game::BattlePassMarkFenrirNamed, name.c_str());
+    return name.empty() ? Format(I18N::Game::BattlePassMarkOther, item.Season)
+                        : Format(I18N::Game::BattlePassMarkOtherNamed, name.c_str());
+}
+
 // The hint of a reward item without a model.
 std::wstring SignHint(const RewardItem& item)
 {
@@ -250,15 +277,7 @@ std::wstring SignHint(const RewardItem& item)
     case ItemKind::Excellent:
         return Format(item.Luck ? I18N::Game::BattlePassExcellentLuck : I18N::Game::BattlePassExcellent, item.Options);
     case ItemKind::Mark:
-        if (item.Mark == L"title")
-            return Format(I18N::Game::BattlePassMarkTitle, item.Season);
-        if (item.Mark == L"aura")
-            return Format(I18N::Game::BattlePassMarkAura, item.Season);
-        if (item.Mark == L"trophy")
-            return Format(I18N::Game::BattlePassMarkTrophy, item.Season);
-        if (item.Mark == L"fenrir")
-            return Format(I18N::Game::BattlePassMarkFenrir, item.Season);
-        return Format(I18N::Game::BattlePassMarkOther, item.Season);
+        return MarkHint(item);
     default:
         return I18N::Game::BattlePassPlaceholder;
     }

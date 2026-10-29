@@ -13635,6 +13635,21 @@
   <data name="BattlePassExcellentLuck" xml:space="preserve">
     <value>Excellent item, %d options and Luck</value>
   </data>
+  <data name="BattlePassMarkTitleNamed" xml:space="preserve">
+    <value>Title «%ls»</value>
+  </data>
+  <data name="BattlePassMarkAuraNamed" xml:space="preserve">
+    <value>Aura «%ls»</value>
+  </data>
+  <data name="BattlePassMarkTrophyNamed" xml:space="preserve">
+    <value>Trophy «%ls»</value>
+  </data>
+  <data name="BattlePassMarkFenrirNamed" xml:space="preserve">
+    <value>Fenrir «%ls»</value>
+  </data>
+  <data name="BattlePassMarkOtherNamed" xml:space="preserve">
+    <value>Mark «%ls»</value>
+  </data>
   <data name="BattlePassMarkTitle" xml:space="preserve">
     <value>Season %d title</value>
   </data>
@@ -14282,8 +14297,11 @@
   <data name="SeasonFenrirName" xml:space="preserve">
     <value>Seasonal Fenrir · Season %d</value>
   </data>
+  <data name="SeasonTrophyNamed" xml:space="preserve">
+    <value>Trophy «%ls»</value>
+  </data>
   <data name="SeasonFenrirNamed" xml:space="preserve">
-    <value>Seasonal Fenrir · Season %d "%ls"</value>
+    <value>Seasonal Fenrir «%ls»</value>
   </data>
   <data name="SeasonPassReward" xml:space="preserve">
     <value>Battle pass reward · Season %d</value>

@@ -1,10 +1,11 @@
 {
   "formatVersion": 1,
-  "_about": "How the battle pass' seasons look (GameLogic/Events/SeasonMarks.cpp). title: the line «Hero of Season N» over the name, text and background as [r, g, b, a] 0-255; topText and topBackground for the gold title of the season's Hall of Fame (its first ten accounts at the last level). aura: circle 'runes' (Effect/mzine_typer2) or 'none', circleColor as light [r, g, b] (1 = full), particles 'snow' (Effect/snowseff01/02, falling) or 'none', particleColor as light. A season missing here looks like the closest season before it. fenrir: the seasonal Fenrir (the gold Horn of Fenrir, the level 50 reward): texture under Data for the body (empty keeps the gold one), bodyLight and glowLight for the body and its bright glow, eyeLight and chestLight, lightning around the wolf, pawLightning under its paws, sparks of its skill, all as light. Every gold Fenrir in the game wears the newest season's fenrir: other players' clients learn only gold, not the season. name: a text or one per UI language {\"en\": ..., \"ru\": ...}, shown in the seasonal Fenrir's tooltip.",
+  "_about": "How the battle pass' seasons look (GameLogic/Events/SeasonMarks.cpp). The seasons go in pairs of themes: 1 and 2 Winter I and II, 3 and 4 Spring, 5 and 6 Summer, 7 and 8 Autumn; the two of a pair share the title's colours and the aura, each has its own Fenrir. name: a text or one per UI language {\"en\": ..., \"ru\": ...}, which names the trophy, the seasonal Fenrir and the battle pass window's marks (a season missing here is named by its number); hero: the season's title the same way («Hero of Winter I»), for the battle pass window. title: the season's title line over the name, text and background as [r, g, b, a] 0-255; topText and topBackground for the gold title of the season's Hall of Fame (its first ten accounts at the last level). aura: circle 'runes' (Effect/mzine_typer2) or 'none', circleColor as light [r, g, b] (1 = full), particles 'snow' (Effect/snowseff01/02, falling) or 'none', particleColor as light. A season missing here looks like the closest season before it. fenrir: the seasonal Fenrir (the gold Horn of Fenrir, the level 50 reward): texture under Data for the body (empty keeps the gold one), bodyLight and glowLight for the body and its bright glow, eyeLight and chestLight, lightning around the wolf, pawLightning under its paws, sparks of its skill, all as light. A gold Fenrir wears its rider's season's fenrir (the server's #BPF lines; the own one by the horn's level), the closest season before it that has one, and the newest season's when the season isn't known.",
   "seasons": [
     {
       "season": 1,
-      "name": { "en": "Winter", "ru": "Зима" },
+      "name": { "en": "Winter I", "ru": "Зима I" },
+      "hero": { "en": "Hero of Winter I", "ru": "Герой Зимы I" },
       "title": { "text": [165, 225, 255, 255], "background": [0, 22, 45, 190], "topText": [255, 214, 110, 255], "topBackground": [30, 20, 0, 190] },
       "aura": { "circle": "runes", "circleColor": [0.3, 0.7, 1.0], "particles": "snow", "particleColor": [0.75, 0.9, 1.0] },
       "fenrir": {
@@ -16,6 +17,23 @@
         "lightning": [0.35, 0.65, 1.0],
         "pawLightning": [0.6, 0.85, 1.0],
         "sparks": [0.6, 0.9, 1.0]
+      }
+    },
+    {
+      "season": 2,
+      "name": { "en": "Winter II", "ru": "Зима II" },
+      "hero": { "en": "Hero of Winter II", "ru": "Герой Зимы II" },
+      "title": { "text": [165, 225, 255, 255], "background": [0, 22, 45, 190], "topText": [255, 214, 110, 255], "topBackground": [30, 20, 0, 190] },
+      "aura": { "circle": "runes", "circleColor": [0.3, 0.7, 1.0], "particles": "snow", "particleColor": [0.75, 0.9, 1.0] },
+      "fenrir": {
+        "texture": "Skill/fenril_winter2.jpg",
+        "bodyLight": [0.7, 0.7, 0.9],
+        "glowLight": [0.4, 0.2, 0.8],
+        "eyeLight": [0.8, 0.35, 1.0],
+        "chestLight": [0.3, 1.0, 0.85],
+        "lightning": [0.2, 1.0, 0.8],
+        "pawLightning": [0.6, 1.0, 0.9],
+        "sparks": [0.85, 0.6, 1.0]
       }
     }
   ]
