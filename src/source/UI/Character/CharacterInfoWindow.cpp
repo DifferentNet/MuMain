@@ -31,6 +31,7 @@
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Event.h>
 
+#include <algorithm>
 #include <cmath>
 
 using namespace SEASON3B;
@@ -38,6 +39,26 @@ using namespace mu::ui::window;
 
 namespace
 {
+    // The class name and the server name take turns in one place under the name: each stays SUBJECT_LINE_SHOW_MS,
+    // fading in and out over SUBJECT_LINE_FADE_MS at its ends, so the two never show at once. The original's sine
+    // crossfade kept both half visible most of the time, one drawn over the other (MU Skynet, 2026-10-29).
+    constexpr double SUBJECT_LINE_SHOW_MS = 4000.0;
+    constexpr double SUBJECT_LINE_FADE_MS = 300.0;
+
+    // The opacity of the class name's line (serverLine false) or the server name's at worldTimeMs.
+    float SubjectLineOpacity(double worldTimeMs, bool serverLine)
+    {
+        const double cycle = std::fmod(worldTimeMs, 2.0 * SUBJECT_LINE_SHOW_MS);
+        const double own = serverLine ? cycle - SUBJECT_LINE_SHOW_MS : cycle;
+        if (own < 0.0 || own >= SUBJECT_LINE_SHOW_MS)
+        {
+            return 0.f;
+        }
+
+        const double fromEdge = std::min(own, SUBJECT_LINE_SHOW_MS - own);
+        return static_cast<float>(std::min(1.0, fromEdge / SUBJECT_LINE_FADE_MS));
+    }
+
     float GetMasterSkillValue(ActionSkillType skill)
     {
         return CharacterAttribute->MasterSkillInfo[skill].GetSkillValue();
@@ -553,10 +574,10 @@ void mu::ui::window::CCharacterInfoWindow::BuildSubjectTexts()
     SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::serverNameText, "servername_text",
               StringUtils::WideToNarrow(strServerName));
 
-    const float fAlpha = sinf(WorldTime * 0.001f) + 1.f;
     SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::classNameOpacity, "classname_opacity",
-              (127 * (2.f - fAlpha)) / 255.f);
-    SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::serverNameOpacity, "servername_opacity", (127 * fAlpha) / 255.f);
+              SubjectLineOpacity(WorldTime, false));
+    SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::serverNameOpacity, "servername_opacity",
+              SubjectLineOpacity(WorldTime, true));
 }
 
 void mu::ui::window::CCharacterInfoWindow::BuildTableTexts()
