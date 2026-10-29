@@ -47,7 +47,7 @@
     <value>Endless Tower</value>
   </data>
   <data name="TowerText" xml:space="preserve">
-    <value>The Endless Tower is at Lugard, next to Jerint in Lorencia and Devias. A party of 3 to 5, each pays 5,000,000 zen. 2 runs a day, new ones at 00:00 UTC.;30 minutes of waves, a boss every 10th wave. A fast clear skips waves. If you die, you stand up again after 3 seconds.;Rewards: jewels by your height straight into the jewel bank (K), and a Box of Kundun from every boss and golden monster.;Tower points (your height + 10 a boss) buy items in Lugard's shop. The ranking counts your best wave, by week and by season, with prizes.</value>
+    <value>The Endless Tower is at Lugard: in Lorencia next to Baz's vault, in Devias next to Jerint. A party of 3 to 5, each pays 5,000,000 zen. 2 runs a day, new ones at 00:00 UTC.;30 minutes of waves, a boss every 10th wave. A fast clear skips waves. If you die, you stand up again after 3 seconds.;Rewards: jewels by your height straight into the jewel bank (K), and a Box of Kundun from every boss and golden monster.;Tower points (your height + 10 a boss) buy items in Lugard's shop. The ranking counts your best wave, by week and by season, with prizes.</value>
   </data>
   <data name="EventsLabel" xml:space="preserve">
     <value>Events and their times</value>
@@ -65,7 +65,7 @@
     <value>Battle pass</value>
   </data>
   <data name="PassText" xml:space="preserve">
-    <value>The battle pass is 50 reward levels for your whole account, 1,000 points each. Press X for its window, or type /bp.;Points: 150 for 15 minutes of play a day, 200 each for the first 3 of the 10 daily quests, plus weekly and season quests. 3, 6 and 10 dailies done give chests.;Claim rewards with /bpclaim, or /bptake if the bag is full. Swap a daily you don't like with /bpreroll and its number, once a day.;Right now, after the wipe, the pass is paused. The test season starts on Sunday, 1 November, at 18:00 UTC (20:00 in Chisinau).</value>
+    <value>The battle pass is 50 reward levels for your whole account, 1,000 points each. Press X for its window, or type /bp.;Points: 150 for 15 minutes of play a day, 200 each for the first 3 of the 10 daily quests, plus weekly and season quests. 3, 6 and 10 dailies done give chests.;Claim rewards with /bpclaim, or /bptake if the bag is full. Swap a daily you don't like with /bpreroll and its number, once a day.;The test season «Winter I» runs for 6 weeks from 1 November, 18:00 UTC (20:00 in Chisinau).</value>
   </data>
   <data name="DailyLabel" xml:space="preserve">
     <value>Daily login rewards</value>
