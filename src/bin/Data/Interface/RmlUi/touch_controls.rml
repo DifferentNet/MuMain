@@ -1,0 +1,97 @@
+<rml>
+<head>
+	<title>Touch Controls</title>
+	<link type="text/rcss" href="base.rcss"/>
+	<link type="text/rcss" href="skill_icons.rcss"/>
+	<link type="text/rcss" href="master_skill_icons.rcss"/>
+	<link type="text/rcss" href="touch_controls.rcss"/>
+</head>
+<body class="native-text" data-model="touch_controls">
+	<!-- The on-screen controls of phones and tablets (UI/HUD/TouchControls.cpp), shown only on a touch
+	     device in the world. Nothing here takes the pointer (pointer-events: none throughout): fingers
+	     reach the controls through Core::Input::Touch, which C++ answers from these elements' boxes,
+	     so the ids are the contract with C++. A finger anywhere else plays the mouse.
+
+	     Layout as MU's mobile games have it: menu and window buttons top left, potions above the
+	     joystick bottom left, the attack button bottom right with the five hotkey skills in an arc
+	     around it, pickup and auto-hunt beside it. -->
+	<!-- bound-geometry: the joystick follows the finger (its centre and knob are where the finger
+	     is, in window pixels), and a skill's cooldown wipe is the cooldown's fraction. -->
+
+	<!-- The joystick's area: a finger landing anywhere in it walks. #tc_stick_idle shows where the
+	     stick is while no finger holds it. -->
+	<div id="tc_stick">
+		<div id="tc_stick_idle" data-if="!stick_active"><div class="tc-stick-idle-knob"></div></div>
+	</div>
+	<div id="tc_stick_base" data-if="stick_active" data-style-left="stick_x + 'px'" data-style-top="stick_y + 'px'">
+		<div class="tc-stick-ring"></div>
+		<div id="tc_stick_knob" data-style-left="knob_x + 'px'" data-style-top="knob_y + 'px'"></div>
+	</div>
+
+	<!-- Along the top, right of the location bar: the menu and the windows played most. The window
+	     buttons press the keys a keyboard opens them with. -->
+	<div id="tc_quick">
+		<div id="tc_menu" class="tc-button tc-quick" data-class-open="menu_open">{{menu_label}}</div>
+		<div id="tc_inventory" class="tc-button tc-quick">{{menu_label_0}}</div>
+		<div id="tc_character" class="tc-button tc-quick">{{menu_label_1}}</div>
+		<div id="tc_chat" class="tc-button tc-quick">{{chat_label}}</div>
+		<div id="tc_move" class="tc-button tc-quick">{{menu_label_7}}</div>
+		<div id="tc_map" class="tc-button tc-quick">{{menu_label_6}}</div>
+	</div>
+
+	<!-- The menu's windows, open under the row; a tap opens one and closes the menu. -->
+	<div id="tc_menu_panel" data-if="menu_open">
+		<div id="tc_menu_0" class="tc-button tc-menu-item">{{menu_label_0}}</div>
+		<div id="tc_menu_1" class="tc-button tc-menu-item">{{menu_label_1}}</div>
+		<div id="tc_menu_2" class="tc-button tc-menu-item">{{menu_label_2}}</div>
+		<div id="tc_menu_3" class="tc-button tc-menu-item">{{menu_label_3}}</div>
+		<div id="tc_menu_4" class="tc-button tc-menu-item">{{menu_label_4}}</div>
+		<div id="tc_menu_5" class="tc-button tc-menu-item">{{menu_label_5}}</div>
+		<div id="tc_menu_6" class="tc-button tc-menu-item">{{menu_label_6}}</div>
+		<div id="tc_menu_7" class="tc-button tc-menu-item">{{menu_label_7}}</div>
+		<div id="tc_menu_8" class="tc-button tc-menu-item">{{menu_label_8}}</div>
+		<div id="tc_menu_9" class="tc-button tc-menu-item">{{menu_label_9}}</div>
+		<div id="tc_menu_10" class="tc-button tc-menu-item">{{menu_label_10}}</div>
+		<div id="tc_menu_11" class="tc-button tc-menu-item">{{menu_label_11}}</div>
+		<div id="tc_menu_12" class="tc-button tc-menu-item">{{menu_label_12}}</div>
+		<div id="tc_menu_13" class="tc-button tc-menu-item">{{menu_label_13}}</div>
+		<div id="tc_menu_14" class="tc-button tc-menu-item">{{menu_label_14}}</div>
+	</div>
+
+	<!-- The item hotkeys Q and W (the potions), above the joystick. -->
+	<div id="tc_potion_q" class="tc-button tc-potion">Q</div>
+	<div id="tc_potion_w" class="tc-button tc-potion">W</div>
+
+	<!-- Bottom right: attack (held, it fights the tapped or the nearest monster), the hotkey bar's
+	     five skills around it (a tap makes the skill current, holding casts it), pickup (held, it
+	     gathers the drops around) and auto-hunt (the MU Helper on and off). -->
+	<div id="tc_attack" class="tc-button">{{attack_label}}</div>
+	<!-- With no digit keys, a skill goes on a button either way round: a tap on an empty button (or
+	     on any while the skill list is open) lights it and opens the list, and the skill picked
+	     goes there; a skill picked first (the bar's current-skill icon opens the list) lights every
+	     button and goes on the next one tapped. -->
+	<div id="tc_bind_hint" data-if="hint_shown">{{bind_hint}}</div>
+	<div id="tc_skill_0" class="tc-button tc-skill" data-class-selected="skill_0_selected" data-class-empty="skill_0_empty" data-class-bind="skill_0_bind">
+		<div class="tc-skill-icon" data-style-decorator="skill_0_icon"></div>
+		<div class="tc-cooldown" data-style-height="skill_0_cooldown * 100 + '%'"></div>
+	</div>
+	<div id="tc_skill_1" class="tc-button tc-skill" data-class-selected="skill_1_selected" data-class-empty="skill_1_empty" data-class-bind="skill_1_bind">
+		<div class="tc-skill-icon" data-style-decorator="skill_1_icon"></div>
+		<div class="tc-cooldown" data-style-height="skill_1_cooldown * 100 + '%'"></div>
+	</div>
+	<div id="tc_skill_2" class="tc-button tc-skill" data-class-selected="skill_2_selected" data-class-empty="skill_2_empty" data-class-bind="skill_2_bind">
+		<div class="tc-skill-icon" data-style-decorator="skill_2_icon"></div>
+		<div class="tc-cooldown" data-style-height="skill_2_cooldown * 100 + '%'"></div>
+	</div>
+	<div id="tc_skill_3" class="tc-button tc-skill" data-class-selected="skill_3_selected" data-class-empty="skill_3_empty" data-class-bind="skill_3_bind">
+		<div class="tc-skill-icon" data-style-decorator="skill_3_icon"></div>
+		<div class="tc-cooldown" data-style-height="skill_3_cooldown * 100 + '%'"></div>
+	</div>
+	<div id="tc_skill_4" class="tc-button tc-skill" data-class-selected="skill_4_selected" data-class-empty="skill_4_empty" data-class-bind="skill_4_bind">
+		<div class="tc-skill-icon" data-style-decorator="skill_4_icon"></div>
+		<div class="tc-cooldown" data-style-height="skill_4_cooldown * 100 + '%'"></div>
+	</div>
+	<div id="tc_pickup" class="tc-button tc-small">{{pickup_label}}</div>
+	<div id="tc_auto" class="tc-button tc-small" data-class-on="helper_on">{{auto_label}}</div>
+</body>
+</rml>

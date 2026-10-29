@@ -43,6 +43,9 @@ constexpr DocumentPlacement Placements[] = {
     {"hud_status.rml", 1.0f, MainScene},
     // The modern theme's top-right button row: under every window, which dock over it.
     {"main_frame_top.rml", 1.05f, MainScene},
+    // The touch device's joystick and buttons: under every window and the HUD's bar, which take a
+    // finger before them (UI/HUD/TouchControls.cpp).
+    {"touch_controls.rml", 1.06f, MainScene},
     // The duel and soccer boards drew under every panel.
     {"duel_window.rml", 1.1f, MainScene},
     {"blood_castle_time.rml", 1.2f, MainScene},

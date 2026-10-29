@@ -15236,4 +15236,73 @@
   <data name="AuctionSellNoBuyout" xml:space="preserve">
     <value>No buyout: the highest bid wins.</value>
   </data>
+  <data name="TouchAttack" xml:space="preserve">
+    <value>Attack</value>
+  </data>
+  <data name="TouchPickUp" xml:space="preserve">
+    <value>Pick up</value>
+  </data>
+  <data name="TouchAuto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="TouchMenu" xml:space="preserve">
+    <value>Menu</value>
+  </data>
+  <data name="TouchChat" xml:space="preserve">
+    <value>Chat</value>
+  </data>
+  <data name="TouchMenuInventory" xml:space="preserve">
+    <value>Inventory</value>
+  </data>
+  <data name="TouchMenuCharacter" xml:space="preserve">
+    <value>Character</value>
+  </data>
+  <data name="TouchMenuParty" xml:space="preserve">
+    <value>Party</value>
+  </data>
+  <data name="TouchMenuGuild" xml:space="preserve">
+    <value>Guild</value>
+  </data>
+  <data name="TouchMenuFriends" xml:space="preserve">
+    <value>Friends</value>
+  </data>
+  <data name="TouchMenuQuests" xml:space="preserve">
+    <value>Quests</value>
+  </data>
+  <data name="TouchMenuMap" xml:space="preserve">
+    <value>Map</value>
+  </data>
+  <data name="TouchMenuMove" xml:space="preserve">
+    <value>Teleport</value>
+  </data>
+  <data name="TouchMenuBattlePass" xml:space="preserve">
+    <value>Battle pass</value>
+  </data>
+  <data name="TouchMenuDaily" xml:space="preserve">
+    <value>Daily rewards</value>
+  </data>
+  <data name="TouchMenuEvents" xml:space="preserve">
+    <value>Events</value>
+  </data>
+  <data name="TouchMenuHelper" xml:space="preserve">
+    <value>MU Helper</value>
+  </data>
+  <data name="TouchMenuCommands" xml:space="preserve">
+    <value>Commands</value>
+  </data>
+  <data name="TouchMenuHelp" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="TouchMenuSystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="TouchBindPick" xml:space="preserve">
+    <value>Pick a skill, then tap a skill button on the right to put it there</value>
+  </data>
+  <data name="TouchBindPlace" xml:space="preserve">
+    <value>Tap a lit button to put the skill there</value>
+  </data>
+  <data name="TouchBindPickFor" xml:space="preserve">
+    <value>Pick a skill for the lit button</value>
+  </data>
 </root>

@@ -1,0 +1,212 @@
+/* Modern theme for the on-screen controls of phones and tablets (touch_controls.rml). C++ reads the
+   buttons' boxes to know which a finger landed on, so where a rule puts a button is where it
+   answers. Nothing takes the pointer: the fingers come through Core::Input::Touch. */
+
+#tc_stick, #tc_stick_idle, #tc_stick_base, #tc_quick, #tc_menu_panel, .tc-button, .tc-button * {
+	pointer-events: none;
+}
+
+.tc-button {
+	position: absolute;
+	box-sizing: border-box;
+	border: 2dp rgba(214, 210, 198, 70);
+	background-color: rgba(6, 7, 6, 120);
+	color: token(text-primary);
+	font-family: "token(font-body)";
+	font-size: 12dp;
+	font-effect: shadow(0dp 1dp #000000);
+	text-align: center;
+}
+
+/* The joystick's area: the bottom-left corner, under the potions. */
+#tc_stick {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	width: 36%;
+	height: 64%;
+}
+#tc_stick_idle {
+	position: absolute;
+	left: 44dp;
+	bottom: 44dp;
+	width: 128dp;
+	height: 128dp;
+	border: 2dp rgba(214, 210, 198, 50);
+	border-radius: 64dp;
+	background-color: rgba(6, 7, 6, 50);
+}
+.tc-stick-idle-knob {
+	position: absolute;
+	left: 34dp;
+	top: 34dp;
+	width: 56dp;
+	height: 56dp;
+	border-radius: 28dp;
+	background-color: rgba(214, 210, 198, 50);
+}
+/* A point at the finger's landing place; the ring centres on it, the knob is offset from it. */
+#tc_stick_base {
+	position: absolute;
+	width: 0;
+	height: 0;
+}
+.tc-stick-ring {
+	position: absolute;
+	left: -64dp;
+	top: -64dp;
+	width: 128dp;
+	height: 128dp;
+	box-sizing: border-box;
+	border: 2dp rgba(196, 154, 60, 140);
+	border-radius: 64dp;
+	background-color: rgba(6, 7, 6, 70);
+}
+#tc_stick_knob {
+	position: absolute;
+	width: 56dp;
+	height: 56dp;
+	margin-left: -28dp;
+	margin-top: -28dp;
+	border-radius: 28dp;
+	background-color: rgba(196, 154, 60, 170);
+}
+
+/* One row along the top, right of the location bar (207dp): the chat log's lines start at the
+   top left on a phone and are drawn over the controls. */
+#tc_quick {
+	position: absolute;
+	left: 214dp;
+	top: 4dp;
+	display: flex;
+	gap: 4dp;
+}
+.tc-quick {
+	position: relative;
+	width: 66dp;
+	height: 30dp;
+	line-height: 26dp;
+	font-size: 11dp;
+	border-radius: 6dp;
+}
+#tc_menu.open {
+	border-color: token(accent-gold);
+}
+
+/* Under the row, kept right of the chat log's lines and left of the party list (top right):
+   five columns of three. */
+#tc_menu_panel {
+	position: absolute;
+	right: 110dp;
+	top: 40dp;
+	width: 548dp;
+	padding: 8dp;
+	box-sizing: border-box;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6dp;
+	border: 1dp token(border-frame);
+	border-radius: 6dp;
+	background-color: rgba(6, 7, 6, 215);
+}
+.tc-menu-item {
+	position: relative;
+	width: 100dp;
+	height: 34dp;
+	line-height: 30dp;
+	border-radius: 4dp;
+}
+
+.tc-potion {
+	width: 48dp;
+	height: 48dp;
+	bottom: 196dp;
+	line-height: 44dp;
+	font-size: 16dp;
+	border-radius: 24dp;
+}
+#tc_potion_q { left: 24dp; }
+#tc_potion_w { left: 84dp; }
+
+#tc_attack {
+	right: 24dp;
+	bottom: 24dp;
+	width: 84dp;
+	height: 84dp;
+	line-height: 80dp;
+	font-size: 15dp;
+	border-color: rgba(195, 74, 45, 200);
+	border-radius: 42dp;
+	background-color: rgba(125, 25, 15, 150);
+}
+
+/* The five skills on an arc 145dp from the attack button's centre, from a little above its left round
+   to a little left of above: the first stays clear of the HUD's bar (640dp centred, 51dp high). */
+.tc-skill {
+	width: 50dp;
+	height: 50dp;
+	border-radius: 10dp;
+}
+#tc_skill_0 { right: 185dp; bottom: 56dp; }
+#tc_skill_1 { right: 168dp; bottom: 110dp; }
+#tc_skill_2 { right: 132dp; bottom: 154dp; }
+#tc_skill_3 { right: 82dp; bottom: 180dp; }
+#tc_skill_4 { right: 26dp; bottom: 185dp; }
+.tc-skill.selected {
+	border-color: token(accent-gold-hover);
+}
+/* Dim, yet in sight: a tap on one opens the skill list to fill it. */
+.tc-skill.empty {
+	opacity: 0.6;
+}
+/* A picked skill waits for a button: every one lights up to take it. */
+.tc-skill.bind {
+	opacity: 1;
+	border-color: token(accent-gold-hover);
+	background-color: rgba(196, 154, 60, 70);
+}
+#tc_bind_hint {
+	position: absolute;
+	right: 24dp;
+	bottom: 246dp;
+	max-width: 300dp;
+	padding: 4dp 8dp;
+	border-radius: 4dp;
+	background-color: rgba(6, 7, 6, 215);
+	color: token(text-primary);
+	font-family: "token(font-body)";
+	font-size: 11dp;
+	font-effect: shadow(0dp 1dp #000000);
+	text-align: right;
+	pointer-events: none;
+}
+/* The 20x28 icon at 1.3 times its size. */
+.tc-skill-icon {
+	position: absolute;
+	left: 10dp;
+	top: 5dp;
+	width: 26dp;
+	height: 36dp;
+}
+/* Shrinks from the top down as the cooldown runs out (height bound to its fraction). */
+.tc-cooldown {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	width: 100%;
+	background-color: rgba(0, 0, 0, 150);
+}
+
+.tc-small {
+	width: 44dp;
+	height: 44dp;
+	line-height: 40dp;
+	font-size: 10dp;
+	border-radius: 22dp;
+}
+#tc_pickup { right: 8dp; bottom: 124dp; }
+#tc_auto { right: 124dp; bottom: 8dp; }
+#tc_auto.on {
+	border-color: token(accent-gold-hover);
+	background-color: rgba(196, 154, 60, 120);
+}

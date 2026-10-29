@@ -4,6 +4,7 @@
 #include "Core/Input/KeyState.h"
 #include "Core/Utilities/FrameProfiler.h"
 #include "Core/Input/SyntheticInput.h"
+#include "Core/Input/TouchInput.h"
 #include "Core/Platform/GameWindow.h"
 #include "Core/Input/UiInputRouter.h"
 #include "App/Control/ControlServer.h"
@@ -1717,6 +1718,13 @@ MSG MainLoop()
                 RouteActionInput(event, false, propagates);
                 break;
             }
+            case SDL_EVENT_FINGER_DOWN:
+            case SDL_EVENT_FINGER_MOTION:
+            case SDL_EVENT_FINGER_UP:
+            case SDL_EVENT_FINGER_CANCELED:
+                // On a phone or tablet the fingers drive the touch controls and the pointer (TouchInput.h).
+                Core::Input::Touch::ProcessEvent(event, g_sdlWindow);
+                break;
             case SDL_EVENT_MOUSE_WHEEL:
                 if (Core::Input::RouteToUi(event, g_sdlWindow))
                 {
@@ -1743,6 +1751,8 @@ MSG MainLoop()
                 break;
 #endif
             case SDL_EVENT_WINDOW_FOCUS_LOST:
+                // A finger's touch never ends once the page loses focus: let go of what fingers hold.
+                Core::Input::Touch::Reset();
                 HandleFocusChange(false);
                 break;
             case SDL_EVENT_WINDOW_MINIMIZED:
@@ -2284,6 +2294,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     MuWebStartAtPageSize();
     mu::log::Get("platform")->info("Browser device: {}{}", mu::web::DeviceName(mu::web::GetDevice()),
                                    mu::web::IsTouchDevice() ? ", played by touch" : "");
+    // Phones and tablets: fingers drive the on-screen controls (joystick, buttons) and the pointer.
+    Core::Input::Touch::SetEnabled(mu::web::IsTouchDevice());
 #endif
 
     // Apply audio settings from INI — volume 0 = off, >0 = on

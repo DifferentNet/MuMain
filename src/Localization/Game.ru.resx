@@ -14859,4 +14859,73 @@
   <data name="AuctionSellNoBuyout" xml:space="preserve">
     <value>Без выкупа: побеждает высшая ставка.</value>
   </data>
+  <data name="TouchAttack" xml:space="preserve">
+    <value>Атака</value>
+  </data>
+  <data name="TouchPickUp" xml:space="preserve">
+    <value>Поднять</value>
+  </data>
+  <data name="TouchAuto" xml:space="preserve">
+    <value>Авто</value>
+  </data>
+  <data name="TouchMenu" xml:space="preserve">
+    <value>Меню</value>
+  </data>
+  <data name="TouchChat" xml:space="preserve">
+    <value>Чат</value>
+  </data>
+  <data name="TouchMenuInventory" xml:space="preserve">
+    <value>Инвентарь</value>
+  </data>
+  <data name="TouchMenuCharacter" xml:space="preserve">
+    <value>Персонаж</value>
+  </data>
+  <data name="TouchMenuParty" xml:space="preserve">
+    <value>Группа</value>
+  </data>
+  <data name="TouchMenuGuild" xml:space="preserve">
+    <value>Гильдия</value>
+  </data>
+  <data name="TouchMenuFriends" xml:space="preserve">
+    <value>Друзья</value>
+  </data>
+  <data name="TouchMenuQuests" xml:space="preserve">
+    <value>Квесты</value>
+  </data>
+  <data name="TouchMenuMap" xml:space="preserve">
+    <value>Карта</value>
+  </data>
+  <data name="TouchMenuMove" xml:space="preserve">
+    <value>Телепорт</value>
+  </data>
+  <data name="TouchMenuBattlePass" xml:space="preserve">
+    <value>Боевой пропуск</value>
+  </data>
+  <data name="TouchMenuDaily" xml:space="preserve">
+    <value>Награды дня</value>
+  </data>
+  <data name="TouchMenuEvents" xml:space="preserve">
+    <value>Ивенты</value>
+  </data>
+  <data name="TouchMenuHelper" xml:space="preserve">
+    <value>MU Helper</value>
+  </data>
+  <data name="TouchMenuCommands" xml:space="preserve">
+    <value>Команды</value>
+  </data>
+  <data name="TouchMenuHelp" xml:space="preserve">
+    <value>Помощь</value>
+  </data>
+  <data name="TouchMenuSystem" xml:space="preserve">
+    <value>Система</value>
+  </data>
+  <data name="TouchBindPick" xml:space="preserve">
+    <value>Выберите навык, потом нажмите кнопку навыка справа, куда его поставить</value>
+  </data>
+  <data name="TouchBindPlace" xml:space="preserve">
+    <value>Нажмите подсвеченную кнопку, куда поставить навык</value>
+  </data>
+  <data name="TouchBindPickFor" xml:space="preserve">
+    <value>Выберите навык для подсвеченной кнопки</value>
+  </data>
 </root>
