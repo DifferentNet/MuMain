@@ -50,6 +50,7 @@
 #include <SDL3/SDL.h>
 
 #ifdef __EMSCRIPTEN__
+#include "Core/Platform/web/WebDisplay.h"
 extern EGameScene SceneFlag; // read by WaitForBrowserFrame()
 #endif
 #include "Render/Models/ZzzBMD.h"
@@ -1045,6 +1046,13 @@ struct WindowScaleMetrics
     float contentScale = 1.0f;
 };
 
+#ifdef __EMSCRIPTEN__
+// Browser build: the window is in device pixels (no SDL pixel density there), so the interface's
+// content scale is how many of them a CSS pixel has, as on a desktop display set to 125 or 150 %.
+// "Auto" (MuWebFollowPageSize) sets it from the page; a size picked in Options keeps 1.
+float g_webContentScale = 1.0f;
+#endif
+
 WindowScaleMetrics ReadWindowScaleMetrics()
 {
     WindowScaleMetrics metrics;
@@ -1056,6 +1064,9 @@ WindowScaleMetrics ReadWindowScaleMetrics()
     metrics.pixelDensity = SDL_GetWindowPixelDensity(g_sdlWindow);
     metrics.displayScale = SDL_GetWindowDisplayScale(g_sdlWindow);
     metrics.contentScale = UI::Scaling::ContentScaleFromMetrics(metrics.displayScale, metrics.pixelDensity);
+#ifdef __EMSCRIPTEN__
+    metrics.contentScale = g_webContentScale;
+#endif
     return metrics;
 }
 
@@ -1348,7 +1359,7 @@ EM_JS(int, MuWeb_PagePixels, (int which), {
 // SDL reports a single display mode in the browser, the screen's size in CSS pixels, so the options
 // offered little above 1024x768. The page scales the canvas to fit its window (index.html), so any
 // size works: the usual ones up to the screen's real pixels, the one that fills the game area
-// exactly, and the current one.
+// exactly, and the current one unless it's "Auto"'s (Options lists "Auto" first, OptionWindow.cpp).
 static std::vector<std::pair<int, int>> MuWebDisplayResolutions()
 {
     static constexpr std::pair<int, int> kCommon[] = {
@@ -1365,7 +1376,7 @@ static std::vector<std::pair<int, int>> MuWebDisplayResolutions()
     }
     resolutions.emplace_back(MuWeb_PagePixels(0), MuWeb_PagePixels(1));
     int currentW = 0, currentH = 0;
-    if (g_sdlWindow && SDL_GetWindowSize(g_sdlWindow, &currentW, &currentH))
+    if (!mu::web::IsAutoDisplay() && g_sdlWindow && SDL_GetWindowSize(g_sdlWindow, &currentW, &currentH))
         resolutions.emplace_back(currentW, currentH);
     return resolutions;
 }
@@ -1492,6 +1503,81 @@ void MuApplyWindowResolution(unsigned int width, unsigned int height, bool windo
     HandleWindowResize(actualW, actualH);
     MuReapplyVSyncPreference();
 }
+
+#ifdef __EMSCRIPTEN__
+namespace
+{
+// Below half a device pixel per CSS pixel, the interface's ceiling (UI::Scaling::ViewportFitScale:
+// MaximumPanelScale x content scale) would drop under its floor of 1.
+constexpr float kMinimumWebContentScale = 0.5f;
+int g_webDisplaySerial = -1;
+
+void SetWebContentScale(float scale)
+{
+    g_webContentScale = std::max(scale, kMinimumWebContentScale);
+    HandleContentScaleChange();
+}
+
+// MuApplyWindowResolution without its window centering, which the browser doesn't have.
+void ResizeWebWindow(int width, int height)
+{
+    int currentW = 0, currentH = 0;
+    SDL_GetWindowSize(g_sdlWindow, &currentW, &currentH);
+    if (width <= 0 || height <= 0 || (width == currentW && height == currentH))
+        return;
+
+    SDL_SetWindowSize(g_sdlWindow, width, height);
+    SDL_SyncWindow(g_sdlWindow);
+    int actualW = width, actualH = height;
+    SDL_GetWindowSize(g_sdlWindow, &actualW, &actualH);
+    HandleWindowResize(actualW, actualH);
+    MuReapplyVSyncPreference();
+}
+} // namespace
+
+// Browser build, once a frame: while Options has "Auto", the game takes the size the page works out
+// for it (Core/Platform/web/WebDisplay.h). Between frames, rather than from the page's resize event,
+// which can come in the middle of one.
+void MuWebFollowPageSize()
+{
+    if (g_sdlWindow == nullptr)
+        return;
+    const auto display = mu::web::GetAutoDisplay();
+    if (!display || display->serial == g_webDisplaySerial)
+        return;
+
+    g_webDisplaySerial = display->serial;
+    SetWebContentScale(display->pixelRatio);
+    ResizeWebWindow(display->width, display->height);
+    mu::log::Get("render")->info("Browser size: {}x{}, {:.2f} device pixels per CSS pixel", display->width,
+                                 display->height, display->pixelRatio);
+}
+
+// Options: "Auto" follows the page from now on; a size of the player's own is drawn at content
+// scale 1, as before "Auto" existed (the caller then applies that size).
+void MuWebSetAutoResolution(bool enabled)
+{
+    mu::web::SetAutoDisplay(enabled);
+    g_webDisplaySerial = -1;
+    if (enabled)
+        MuWebFollowPageSize();
+    else
+        SetWebContentScale(1.0f);
+}
+
+// Before the window exists: "Auto" starts at the page's size instead of config.ini's.
+static void MuWebStartAtPageSize()
+{
+    const auto display = mu::web::GetAutoDisplay();
+    if (!display)
+        return;
+
+    g_webDisplaySerial = display->serial;
+    WindowWidth = static_cast<unsigned int>(display->width);
+    WindowHeight = static_cast<unsigned int>(display->height);
+    g_webContentScale = std::max(display->pixelRatio, kMinimumWebContentScale);
+}
+#endif
 
 // Inspect only the active SDL union member, including for synthetic events.
 SDL_WindowID ActionWindowId(const SDL_Event& event)
@@ -1742,6 +1828,9 @@ MSG MainLoop()
                 // The player's Mood strength, at most one map light rebuild per frame however often
                 // it moved (options open or closed).
                 Render::Look::ApplyPendingTuning();
+#ifdef __EMSCRIPTEN__
+                MuWebFollowPageSize();
+#endif
                 RenderProfiledFrame();
 #ifdef __EMSCRIPTEN__
                 WaitForBrowserFrame();
@@ -2184,6 +2273,9 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     WindowHeight = GameConfig::GetInstance().GetWindowHeight();
     g_bUseWindowMode = GameConfig::GetInstance().GetWindowMode() ? TRUE : FALSE;
     g_bUseFullscreenMode = !g_bUseWindowMode;
+#ifdef __EMSCRIPTEN__
+    MuWebStartAtPageSize();
+#endif
 
     // Apply audio settings from INI — volume 0 = off, >0 = on
     m_SoundOnOff = (GameConfig::GetInstance().GetSoundVolume() > 0) ? 1 : 0;
@@ -2260,7 +2352,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     SetWorkingDirectoryToBasePath();
 #endif
 
-    const SDL_WindowFlags windowFlags = Core::Platform::BuildSDLWindowFlags(g_bUseWindowMode != TRUE, false);
+    SDL_WindowFlags windowFlags = Core::Platform::BuildSDLWindowFlags(g_bUseWindowMode != TRUE, false);
+#ifdef __EMSCRIPTEN__
+    // Browser build: the game's size is in device pixels already (index.html works it out). SDL's
+    // pixel density on top multiplied the canvas by the screen's ratio a second time.
+    windowFlags &= ~SDL_WINDOW_HIGH_PIXEL_DENSITY;
+#endif
 
     g_sdlWindow =
         SDL_CreateWindow("MU Online", static_cast<int>(WindowWidth), static_cast<int>(WindowHeight), windowFlags);

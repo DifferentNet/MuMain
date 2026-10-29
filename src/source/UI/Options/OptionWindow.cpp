@@ -34,6 +34,9 @@
 #include <optional>
 #include <cstring>
 #include "I18N/All.h"
+#ifdef __EMSCRIPTEN__
+#include "Core/Platform/web/WebDisplay.h"
+#endif
 
 #include <RmlUi/Core/DataModelHandle.h>
 #include <RmlUi/Core/ElementDocument.h>
@@ -50,6 +53,12 @@ extern BOOL g_bUseWindowMode;
 void ReinitializeFonts();
 std::vector<std::pair<int, int>> MuGetSupportedDisplayResolutions();
 void MuApplyWindowResolution(unsigned int width, unsigned int height, bool windowed);
+#ifdef __EMSCRIPTEN__
+void MuWebSetAutoResolution(bool enabled);
+// Browser build: the first resolution entry is "Auto", the game area's own size in the screen's
+// real pixels (Winmain.cpp MuWebFollowPageSize). It's listed as this size.
+static constexpr UI::Options::DisplayResolution kWebAutoResolution{0, 0};
+#endif
 float ConvertX(float x);
 float ConvertY(float y);
 
@@ -624,6 +633,15 @@ void mu::ui::window::COptionWindow::BuildRmlUi()
     m_RmlView.Ensure();
 }
 
+static std::wstring ResolutionLabel(const UI::Options::DisplayResolution& resolution)
+{
+#ifdef __EMSCRIPTEN__
+    if (resolution == kWebAutoResolution)
+        return I18N::Game::ResolutionAuto;
+#endif
+    return std::to_wstring(resolution.first) + L" x " + std::to_wstring(resolution.second);
+}
+
 void mu::ui::window::COptionWindow::InitResolutionCombo()
 {
     m_resolutions = UI::Options::NormalizeDisplayResolutions(MuGetSupportedDisplayResolutions());
@@ -634,13 +652,16 @@ void mu::ui::window::COptionWindow::InitResolutionCombo()
             WindowHeight > 0 ? static_cast<int>(WindowHeight) : CfgDefaults::CfgDefaultWindowHeight;
         m_resolutions.emplace_back(fallbackWidth, fallbackHeight);
     }
+#ifdef __EMSCRIPTEN__
+    m_resolutions.insert(m_resolutions.begin(), kWebAutoResolution);
+#endif
 
     m_iResolutionIndex = FindCurrentResolutionIndex();
     m_resolutionLabels.clear();
     m_resolutionLabels.reserve(m_resolutions.size());
-    for (const auto& [width, height] : m_resolutions)
+    for (const auto& resolution : m_resolutions)
     {
-        m_resolutionLabels.push_back(std::to_wstring(width) + L" x " + std::to_wstring(height));
+        m_resolutionLabels.push_back(ResolutionLabel(resolution));
     }
 }
 
@@ -1478,8 +1499,17 @@ bool mu::ui::window::COptionWindow::GetRenderAllEffects()
 
 int mu::ui::window::COptionWindow::FindCurrentResolutionIndex()
 {
+#ifdef __EMSCRIPTEN__
+    if (mu::web::IsAutoDisplay())
+        return 0;
+    // Among the sizes after "Auto": as {0, 0} it would be the closest to a window smaller than all.
+    const std::vector<UI::Options::DisplayResolution> sizes(m_resolutions.begin() + 1, m_resolutions.end());
+    return 1 + UI::Options::FindClosestDisplayResolutionIndex(sizes, static_cast<int>(WindowWidth),
+                                                              static_cast<int>(WindowHeight));
+#else
     return UI::Options::FindClosestDisplayResolutionIndex(m_resolutions, static_cast<int>(WindowWidth),
                                                           static_cast<int>(WindowHeight));
+#endif
 }
 
 int mu::ui::window::COptionWindow::FindCurrentLanguageIndex()
@@ -1582,6 +1612,14 @@ void mu::ui::window::COptionWindow::ApplyResolution()
     }
 
     const auto [newWidth, newHeight] = m_resolutions[m_iResolutionIndex];
+#ifdef __EMSCRIPTEN__
+    // "Auto" follows the page from now on, without a size in config.ini; any other entry stops that
+    // first, then applies as on the desktop.
+    const bool automatic = m_resolutions[m_iResolutionIndex] == kWebAutoResolution;
+    MuWebSetAutoResolution(automatic);
+    if (automatic)
+        return;
+#endif
 
     // Resize through SDL (MuApplyWindowResolution), not raw Win32 SetWindowPos -- SDL clamps a
     // non-resizable window straight back to its current size otherwise.
@@ -1599,6 +1637,13 @@ void mu::ui::window::COptionWindow::ApplyResolution()
 // current selection (config still records the real size).
 void mu::ui::window::COptionWindow::SyncResolutionComboToWindow()
 {
+#ifdef __EMSCRIPTEN__
+    if (mu::web::IsAutoDisplay())
+    {
+        m_iResolutionIndex = 0;
+        return;
+    }
+#endif
     const int listed = UI::Options::FindExactDisplayResolutionIndex(m_resolutions, static_cast<int>(WindowWidth),
                                                                     static_cast<int>(WindowHeight));
     if (listed < 0)
