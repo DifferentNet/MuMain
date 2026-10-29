@@ -21,6 +21,9 @@
 #ifdef _EDITOR
 #include "Core/Utilities/WorldClearing.h"
 #endif
+#ifdef __EMSCRIPTEN__
+#include "Core/Platform/web/WebFileSystem.h"
+#endif
 
 CMapManager gMapManager;
 
@@ -1198,8 +1201,6 @@ void CMapManager::LoadWorld(int Map)
     g_Direction.m_CKanturu.m_iMayaState = 0;
     g_Direction.m_CKanturu.m_iNightmareState = 0;
 
-    this->Load();
-
     wchar_t FileName[64];
     wchar_t WorldName[32];
     int  iMapWorld = this->WorldActive + 1;
@@ -1220,6 +1221,12 @@ void CMapManager::LoadWorld(int Map)
     {
         iMapWorld = WD_45CURSEDTEMPLE_LV1 + 2;
     }
+
+#ifdef __EMSCRIPTEN__
+    // In the browser: the map's files (Data/WorldN, Data/ObjectN) in one download before Load() reads them.
+    mu::web::LoadWorldFiles(iMapWorld);
+#endif
+    this->Load();
 
     battleCastle::Init();
 

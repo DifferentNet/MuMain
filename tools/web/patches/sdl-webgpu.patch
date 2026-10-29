@@ -1,5 +1,5 @@
 diff --git a/src/gpu/webgpu/SDL_gpu_webgpu.c b/src/gpu/webgpu/SDL_gpu_webgpu.c
-index cd585cca2..25afb94dc 100644
+index cd585cca2..63e9371c8 100644
 --- a/src/gpu/webgpu/SDL_gpu_webgpu.c
 +++ b/src/gpu/webgpu/SDL_gpu_webgpu.c
 @@ -14,8 +14,11 @@
@@ -85,7 +85,52 @@ index cd585cca2..25afb94dc 100644
  };
  
  // FIXME: This has a really bad name.
-@@ -1377,9 +1431,15 @@ typedef struct WebGPUCommandBuffer
+@@ -1181,16 +1235,6 @@ typedef struct WebGPUQueuedResourceBindIndexBuffer
+     Uint32 offset;
+ } WebGPUQueuedResourceBindIndexBuffer;
+ 
+-typedef struct WebGPUQueuedUniformDataUpload
+-{
+-    void *data;
+-
+-    Uint64 offset;
+-    Uint32 length;
+-    // This doesn't care about stage visibility. It's the raw index of the uniform buffer it'll write to.
+-    Uint32 slot;
+-} WebGPUQueuedUniformDataUpload;
+-
+ typedef struct WebGPUQueuedDestroy
+ {
+     WebGPUQueuedDestroyType type;
+@@ -1297,11 +1341,22 @@ typedef struct WebGPUCommandBuffer
+ 
+     WebGPUSubmittedCommandBuffer submitted;
+ 
+-    // These'll run right before the command buffer is submitted.
+-    WebGPUQueuedUniformDataUpload *queuedUniformUploads;
+-
+-    Uint32 numQueuedUniformUploads;
+-    Uint32 queuedUniformUploadCapacity;
++    // The uniform data pushed into this command buffer, one array per uniform buffer (4 vertex, 4
++    // fragment, then 4 compute slots), each starting at offset 0. Submit writes each array with one
++    // call: a write per push meant hundreds of calls into the page per frame.
++    Uint8 *uniformStaging[12];
++    Uint32 uniformStagingLength[12];
++    Uint32 uniformStagingCapacity[12];
++
++    // What the current render pass has already set: setting the same bind group, vertex buffer or
++    // index buffer again is a call into the page each, and the game draws hundreds of times a frame.
++    WGPUBindGroup passBindGroups[4];
++    Uint32 passUniformOffsets[2][4];
++    WGPUBuffer passVertexBuffers[MAX_VERTEX_BUFFERS];
++    Uint32 passVertexOffsets[MAX_VERTEX_BUFFERS];
++    WGPUBuffer passIndexBuffer;
++    Uint32 passIndexOffset;
++    WGPUIndexFormat passIndexFormat;
+ 
+     size_t totalUniformDataLen;
+ 
+@@ -1377,9 +1432,15 @@ typedef struct WebGPUCommandBuffer
  static void
  WEBGPU_INTERNAL_FenceCallback(WGPUQueueWorkDoneStatus status, WGPUStringView message, void *fence, void *unused)
  {
@@ -104,7 +149,18 @@ index cd585cca2..25afb94dc 100644
  }
  
  static void
-@@ -1876,21 +1936,6 @@ static WebGPUFence *WEBGPU_INTERNAL_CreateFenceFromFuture(WGPUFuture future)
+@@ -1845,7 +1906,9 @@ static void WEBGPU_INTERNAL_FreeCommandBuffer(WebGPUCommandBuffer *cmdBuf)
+ {
+     SDL_free(cmdBuf->surfaces);
+     SDL_free(cmdBuf->acquiredSwapchainTextures);
+-    SDL_free(cmdBuf->queuedUniformUploads);
++    for (int i = 0; i < 12; i++) {
++        SDL_free(cmdBuf->uniformStaging[i]);
++    }
+     SDL_free(cmdBuf);
+ }
+ 
+@@ -1876,21 +1939,6 @@ static WebGPUFence *WEBGPU_INTERNAL_CreateFenceFromFuture(WGPUFuture future)
      return fence;
  }
  
@@ -126,7 +182,7 @@ index cd585cca2..25afb94dc 100644
  
  static bool WEBGPU_INTERNAL_QueryFence(WebGPURenderer *renderer, WebGPUFence *fence)
  {
-@@ -1917,18 +1962,23 @@ static bool WEBGPU_QueryFence(SDL_GPURenderer *device, SDL_GPUFence *fence)
+@@ -1917,18 +1965,23 @@ static bool WEBGPU_QueryFence(SDL_GPURenderer *device, SDL_GPUFence *fence)
  
  static bool WEBGPU_INTERNAL_WaitForFences(WebGPURenderer *renderer, bool waitAll, WebGPUFence *const *fences, Uint32 num_fences)
  {
@@ -156,7 +212,7 @@ index cd585cca2..25afb94dc 100644
      }
  
      // TODO: Timeout functionality?
-@@ -1942,7 +1992,14 @@ static bool WEBGPU_WaitForFences(SDL_GPURenderer *device, bool waitAll, SDL_GPUF
+@@ -1942,7 +1995,14 @@ static bool WEBGPU_WaitForFences(SDL_GPURenderer *device, bool waitAll, SDL_GPUF
  
  static bool WEBGPU_Wait(SDL_GPURenderer *driverData)
  {
@@ -172,7 +228,7 @@ index cd585cca2..25afb94dc 100644
  }
  
  static inline size_t WEBGPU_INTERNAL_GetTokenBindGroup(const char *token)
-@@ -3277,6 +3334,14 @@ static void WEBGPU_INTERNAL_ConfigureSurfaceIfNeeded(WebGPURenderer *renderer, W
+@@ -3277,6 +3337,14 @@ static void WEBGPU_INTERNAL_ConfigureSurfaceIfNeeded(WebGPURenderer *renderer, W
          return;
      }
  
@@ -187,7 +243,7 @@ index cd585cca2..25afb94dc 100644
      wgpuSurfaceConfigure(windowData->surface, &config);
      windowData->surfaceWidth = config.width;
      windowData->surfaceHeight = config.height;
-@@ -3311,6 +3376,65 @@ static bool WEBGPU_ClaimWindow(SDL_GPURenderer *renderer, SDL_Window *window)
+@@ -3311,6 +3379,65 @@ static bool WEBGPU_ClaimWindow(SDL_GPURenderer *renderer, SDL_Window *window)
      return true;
  }
  
@@ -253,7 +309,7 @@ index cd585cca2..25afb94dc 100644
  static bool WEBGPU_AcquireSwapchainTexture(SDL_GPUCommandBuffer *commandBuffer, SDL_Window *window, SDL_GPUTexture **swapchainTexture, Uint32 *width, Uint32 *height)
  {
      WebGPUCommandBuffer *cmdBuf = (WebGPUCommandBuffer *)commandBuffer;
-@@ -3345,7 +3469,24 @@ static bool WEBGPU_AcquireSwapchainTexture(SDL_GPUCommandBuffer *commandBuffer,
+@@ -3345,7 +3472,24 @@ static bool WEBGPU_AcquireSwapchainTexture(SDL_GPUCommandBuffer *commandBuffer,
      }
  
      WEBGPU_INTERNAL_ConfigureSurfaceIfNeeded(cmdBuf->renderer, windowData);
@@ -278,7 +334,7 @@ index cd585cca2..25afb94dc 100644
  
      switch (surfaceTexture.status) {
      case WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal:
-@@ -4094,7 +4235,9 @@ static void WEBGPU_GenerateMipmaps(SDL_GPUCommandBuffer *commandBuffer, SDL_GPUT
+@@ -4094,7 +4238,9 @@ static void WEBGPU_GenerateMipmaps(SDL_GPUCommandBuffer *commandBuffer, SDL_GPUT
          }
      }
  
@@ -289,7 +345,19 @@ index cd585cca2..25afb94dc 100644
  }
  
  static SDL_GPUBuffer *WEBGPU_CreateBuffer(
-@@ -4319,18 +4462,28 @@ static void WEBGPU_UploadToBuffer(SDL_GPUCommandBuffer *copyPass, const SDL_GPUT
+@@ -4209,9 +4355,8 @@ static void *WEBGPU_MapTransferBuffer(SDL_GPURenderer *device, SDL_GPUTransferBu
+             SDL_memset(((WebGPUBufferContainer *)transferBuffer)->pseudoMappedRange, 0, ((WebGPUBufferContainer *)transferBuffer)->size);
+         }
+ 
+-        if (cycle) {
+-            SDL_memset(((WebGPUBufferContainer *)transferBuffer)->pseudoMappedRange, 0, ((WebGPUBufferContainer *)transferBuffer)->size);
+-        }
++        // No clearing on cycle: a cycled buffer's contents are undefined, and an upload sends only the
++        // range the caller wrote. Clearing the whole buffer on every map cost a few per cent of each frame.
+ 
+         // Mapped on CPU.
+         ((WebGPUBufferContainer *)transferBuffer)->mapState = MAP_STATE_MAPPED_CPU;
+@@ -4319,18 +4464,28 @@ static void WEBGPU_UploadToBuffer(SDL_GPUCommandBuffer *copyPass, const SDL_GPUT
  }
  
  // This'll eventually become a public function, but until PR #16249 is merged it'll be internal.
@@ -323,7 +391,7 @@ index cd585cca2..25afb94dc 100644
  
      if (cycle) {
          WEBGPU_INTERNAL_CycleTextureContainer(cmdBuf->renderer, (WebGPUTextureContainer *)destination->texture);
-@@ -4344,19 +4497,20 @@ static void WEBGPU_INTERNAL_CopyBufferToTexture(SDL_GPUCommandBuffer *copyPass,
+@@ -4344,19 +4499,20 @@ static void WEBGPU_INTERNAL_CopyBufferToTexture(SDL_GPUCommandBuffer *copyPass,
          }
  
          wgpuQueueWriteBuffer(cmdBuf->queue, sourceBuffer->activeBuffer->buffer, source->offset,
@@ -348,7 +416,7 @@ index cd585cca2..25afb94dc 100644
          // BytesPerRow isn't a multiple of 256! This is a Bad Thing!
          // WebGPU inherits D3D12's horrible 256-byte alignment requirement for BPR, so we'll need to do something about this.
          // To do this, we'll create an interim buffer which'll be 256-byte aligned, and then we'll issue some GPU copies to
-@@ -4366,20 +4520,23 @@ static void WEBGPU_INTERNAL_CopyBufferToTexture(SDL_GPUCommandBuffer *copyPass,
+@@ -4366,20 +4522,23 @@ static void WEBGPU_INTERNAL_CopyBufferToTexture(SDL_GPUCommandBuffer *copyPass,
  
          // HACK: We need to add blockWidth since for some reason 1x1 texture uploads require 260 bytes of data
          // despite WebGPU's very strong insistance on 256-byte alignment? Am I tweaking?
@@ -377,7 +445,7 @@ index cd585cca2..25afb94dc 100644
                  .offset = 0,
              },
          };
-@@ -4417,6 +4574,7 @@ static void WEBGPU_UploadToTexture(SDL_GPUCommandBuffer *copyPass, const SDL_GPU
+@@ -4417,6 +4576,7 @@ static void WEBGPU_UploadToTexture(SDL_GPUCommandBuffer *copyPass, const SDL_GPU
                                              .buffer = (SDL_GPUBuffer *)source->transfer_buffer,
                                              .offset = source->offset,
                                          },
@@ -385,7 +453,99 @@ index cd585cca2..25afb94dc 100644
                                          destination, cycle);
  }
  
-@@ -4633,9 +4791,13 @@ static void WEBGPU_SetScissor(SDL_GPUCommandBuffer *commandBuffer, const SDL_Rec
+@@ -4544,6 +4704,11 @@ static void WEBGPU_BeginRenderPass(SDL_GPUCommandBuffer *commandBuffer, const SD
+     wrapper->boundGraphicsPipeline = NULL;
+     wrapper->hasBoundGraphicsPipeline = false;
+ 
++    // A new pass has nothing set yet.
++    SDL_zeroa(wrapper->passBindGroups);
++    SDL_zeroa(wrapper->passVertexBuffers);
++    wrapper->passIndexBuffer = NULL;
++
+     SDL_free(colorAttachments);
+     SDL_free(depthStencilAttachment);
+ }
+@@ -4553,20 +4718,33 @@ static void WEBGPU_SetViewport(SDL_GPUCommandBuffer *renderPass, const SDL_GPUVi
+     wgpuRenderPassEncoderSetViewport(((WebGPUCommandBuffer *)renderPass)->renderPassEncoder, viewport->x, viewport->y, viewport->w, viewport->h, viewport->min_depth, viewport->max_depth);
+ }
+ 
++// Copies pushed uniform data into the command buffer's array for that uniform buffer, at the offset
++// the draws will read it from. Submit writes the arrays (WEBGPU_INTERNAL_UploadQueuedUniformData).
++static void WEBGPU_INTERNAL_StageUniformData(WebGPUCommandBuffer *cmdBuf, Uint32 bufferIndex, Uint32 offset, const void *data, Uint32 length)
++{
++    Uint32 alignedLength = ALIGN_VALUE(length, 256);
++    Uint32 end = offset + alignedLength;
++
++    if (end > cmdBuf->uniformStagingCapacity[bufferIndex]) {
++        Uint32 capacity = SDL_max(SDL_max(cmdBuf->uniformStagingCapacity[bufferIndex] * 2, end), 16384);
++        Uint8 *grown = SDL_realloc(cmdBuf->uniformStaging[bufferIndex], capacity);
++        if (grown == NULL) {
++            return;
++        }
++        cmdBuf->uniformStaging[bufferIndex] = grown;
++        cmdBuf->uniformStagingCapacity[bufferIndex] = capacity;
++    }
++
++    SDL_memcpy(cmdBuf->uniformStaging[bufferIndex] + offset, data, length);
++    SDL_memset(cmdBuf->uniformStaging[bufferIndex] + offset + length, 0, alignedLength - length);
++    cmdBuf->uniformStagingLength[bufferIndex] = SDL_max(cmdBuf->uniformStagingLength[bufferIndex], end);
++}
++
+ static void WEBGPU_PushVertexUniformData(SDL_GPUCommandBuffer *commandBuffer, Uint32 slotIndex, const void *data, uint32_t length)
+ {
+     WebGPUCommandBuffer *cmdBuf = (WebGPUCommandBuffer *)commandBuffer;
+ 
+-    WebGPUQueuedUniformDataUpload upload = {
+-        .data = SDL_malloc(ALIGN_VALUE(length, 256)),
+-        .length = ALIGN_VALUE(length, 256),
+-        .offset = cmdBuf->vertexStageBinds.currentUniformWriteOffsets[slotIndex],
+-        .slot = slotIndex,
+-    };
+-    SDL_memcpy(upload.data, data, length);
+-
+-    WEBGPU_INTERNAL_InsertElementIntoArray(cmdBuf->queuedUniformUploads, cmdBuf->queuedUniformUploadCapacity,
+-                                           cmdBuf->numQueuedUniformUploads, WebGPUQueuedUniformDataUpload, upload);
++    WEBGPU_INTERNAL_StageUniformData(cmdBuf, slotIndex, cmdBuf->vertexStageBinds.currentUniformWriteOffsets[slotIndex], data, length);
+ 
+     // jank and gross but it works
+     cmdBuf->vertexStageBinds.currentUniformReadOffsets[slotIndex] = cmdBuf->vertexStageBinds.currentUniformWriteOffsets[slotIndex];
+@@ -4578,16 +4756,7 @@ static void WEBGPU_PushFragmentUniformData(SDL_GPUCommandBuffer *commandBuffer,
+ {
+     WebGPUCommandBuffer *cmdBuf = (WebGPUCommandBuffer *)commandBuffer;
+ 
+-    WebGPUQueuedUniformDataUpload upload = {
+-        .data = SDL_malloc(ALIGN_VALUE(length, 256)),
+-        .length = ALIGN_VALUE(length, 256),
+-        .offset = cmdBuf->fragmentStageBinds.currentUniformWriteOffsets[slotIndex],
+-        .slot = 4 + slotIndex,
+-    };
+-    SDL_memcpy(upload.data, data, length);
+-
+-    WEBGPU_INTERNAL_InsertElementIntoArray(cmdBuf->queuedUniformUploads, cmdBuf->queuedUniformUploadCapacity,
+-                                           cmdBuf->numQueuedUniformUploads, WebGPUQueuedUniformDataUpload, upload);
++    WEBGPU_INTERNAL_StageUniformData(cmdBuf, 4 + slotIndex, cmdBuf->fragmentStageBinds.currentUniformWriteOffsets[slotIndex], data, length);
+ 
+     cmdBuf->fragmentStageBinds.currentUniformReadOffsets[slotIndex] = cmdBuf->fragmentStageBinds.currentUniformWriteOffsets[slotIndex];
+     cmdBuf->fragmentStageBinds.currentUniformWriteOffsets[slotIndex] += ALIGN_VALUE(length, 256);
+@@ -4598,16 +4767,7 @@ static void WEBGPU_PushComputeUniformData(SDL_GPUCommandBuffer *commandBuffer, U
+ {
+     WebGPUCommandBuffer *cmdBuf = (WebGPUCommandBuffer *)commandBuffer;
+ 
+-    WebGPUQueuedUniformDataUpload upload = {
+-        .data = SDL_malloc(ALIGN_VALUE(length, 256)),
+-        .length = ALIGN_VALUE(length, 256),
+-        .offset = cmdBuf->computeStageBinds.currentUniformWriteOffsets[slotIndex],
+-        .slot = 8 + slotIndex,
+-    };
+-    SDL_memcpy(upload.data, data, length);
+-
+-    WEBGPU_INTERNAL_InsertElementIntoArray(cmdBuf->queuedUniformUploads, cmdBuf->queuedUniformUploadCapacity,
+-                                           cmdBuf->numQueuedUniformUploads, WebGPUQueuedUniformDataUpload, upload);
++    WEBGPU_INTERNAL_StageUniformData(cmdBuf, 8 + slotIndex, cmdBuf->computeStageBinds.currentUniformWriteOffsets[slotIndex], data, length);
+ 
+     cmdBuf->computeStageBinds.currentUniformReadOffsets[slotIndex] = cmdBuf->computeStageBinds.currentUniformWriteOffsets[slotIndex];
+     cmdBuf->computeStageBinds.currentUniformWriteOffsets[slotIndex] += ALIGN_VALUE(length, 256);
+@@ -4633,9 +4793,13 @@ static void WEBGPU_SetScissor(SDL_GPUCommandBuffer *commandBuffer, const SDL_Rec
  
  static bool WEBGPU_WaitAndAcquireSwapchainTexture(SDL_GPUCommandBuffer *command_buffer, SDL_Window *window, SDL_GPUTexture **swapchain_texture, Uint32 *swapchain_texture_width, Uint32 *swapchain_texture_height)
  {
@@ -400,7 +560,131 @@ index cd585cca2..25afb94dc 100644
          WEBGPU_INTERNAL_Spin();
  
          result = WEBGPU_AcquireSwapchainTexture(command_buffer, window, swapchain_texture, swapchain_texture_width, swapchain_texture_height);
-@@ -5186,6 +5348,14 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
+@@ -4823,48 +4987,80 @@ static void WEBGPU_BindComputeStorageTextures(SDL_GPUCommandBuffer *commandBuffe
+ 
+ static void WEBGPU_INTERNAL_BindQueuedGraphicsResources(WebGPUCommandBuffer *cmdBuf)
+ {
+-    WGPUBindGroup bindGroups[4] = {
+-        WEBGPU_INTERNAL_GetBindGroup(cmdBuf, WEBGPU_BINDGROUP_VERTEXSAMPLERSTORAGE),
+-        WEBGPU_INTERNAL_GetBindGroup(cmdBuf, WEBGPU_BINDGROUP_VERTEXUNIFORMS),
+-        WEBGPU_INTERNAL_GetBindGroup(cmdBuf, WEBGPU_BINDGROUP_FRAGMENTSAMPLERSTORAGE),
+-        WEBGPU_INTERNAL_GetBindGroup(cmdBuf, WEBGPU_BINDGROUP_FRAGMENTUNIFORMS),
++    // Only the groups whose bindings changed since the last draw (binding a pipeline marks all of
++    // them), and of those only the ones that differ from what this pass has set: WebGPU keeps bind
++    // groups and buffers across draws and pipeline changes within a pass.
++    const bool outdated[4] = {
++        cmdBuf->vertexStageBinds.samplerStorageBindGroupOutdated,
++        cmdBuf->vertexStageBinds.uniformBindGroupOutdated,
++        cmdBuf->fragmentStageBinds.samplerStorageBindGroupOutdated,
++        cmdBuf->fragmentStageBinds.uniformBindGroupOutdated,
++    };
++    const WebGPUBindGroupType types[4] = {
++        WEBGPU_BINDGROUP_VERTEXSAMPLERSTORAGE,
++        WEBGPU_BINDGROUP_VERTEXUNIFORMS,
++        WEBGPU_BINDGROUP_FRAGMENTSAMPLERSTORAGE,
++        WEBGPU_BINDGROUP_FRAGMENTUNIFORMS,
++    };
++    const Uint32 *uniformOffsets[4] = {
++        NULL,
++        cmdBuf->vertexStageBinds.currentUniformReadOffsets,
++        NULL,
++        cmdBuf->fragmentStageBinds.currentUniformReadOffsets,
+     };
+ 
+     for (int i = 0; i < 4; i++) {
+-        if (bindGroups[i] != NULL) {
+-            if (i == 1) {
+-                // vert uniform
+-                wgpuRenderPassEncoderSetBindGroup(cmdBuf->renderPassEncoder, i, bindGroups[i], 4,
+-                                                  cmdBuf->vertexStageBinds.currentUniformReadOffsets);
+-            } else if (i == 3) {
+-                // frag uniform
+-                wgpuRenderPassEncoderSetBindGroup(cmdBuf->renderPassEncoder, i, bindGroups[i], 4,
+-                                                  cmdBuf->fragmentStageBinds.currentUniformReadOffsets);
+-            } else {
+-                wgpuRenderPassEncoderSetBindGroup(cmdBuf->renderPassEncoder, i, bindGroups[i], 0, NULL);
+-            }
++        if (!outdated[i]) {
++            continue;
++        }
++
++        WGPUBindGroup bindGroup = WEBGPU_INTERNAL_GetBindGroup(cmdBuf, types[i]);
++        if (bindGroup == NULL) {
++            continue;
++        }
++
++        const Uint32 *offsets = uniformOffsets[i];
++        Uint32 *passOffsets = offsets ? cmdBuf->passUniformOffsets[i / 2] : NULL;
++        if (bindGroup == cmdBuf->passBindGroups[i] && (offsets == NULL || SDL_memcmp(offsets, passOffsets, 4 * sizeof(Uint32)) == 0)) {
++            continue;
++        }
++
++        wgpuRenderPassEncoderSetBindGroup(cmdBuf->renderPassEncoder, i, bindGroup, offsets ? 4 : 0, offsets);
++        cmdBuf->passBindGroups[i] = bindGroup;
++        if (offsets) {
++            SDL_memcpy(passOffsets, offsets, 4 * sizeof(Uint32));
+         }
+     }
+ 
+     if (cmdBuf->vertexStageBinds.shouldBindVertexBuffers) {
+         for (int i = 0; i < MAX_VERTEX_BUFFERS; i++) {
+-            if (cmdBuf->vertexStageBinds.boundVertexBuffers[i].buffer == NULL) {
++            const WebGPUOffsetBufferBinding *binding = &cmdBuf->vertexStageBinds.boundVertexBuffers[i];
++            if (binding->buffer == NULL) {
++                continue;
++            }
++            if (binding->buffer->buffer == cmdBuf->passVertexBuffers[i] && binding->offset == cmdBuf->passVertexOffsets[i]) {
+                 continue;
+             }
+ 
+-            wgpuRenderPassEncoderSetVertexBuffer(cmdBuf->renderPassEncoder,
+-                                                 i, cmdBuf->vertexStageBinds.boundVertexBuffers[i].buffer->buffer,
+-                                                 cmdBuf->vertexStageBinds.boundVertexBuffers[i].offset, WGPU_WHOLE_SIZE);
++            wgpuRenderPassEncoderSetVertexBuffer(cmdBuf->renderPassEncoder, i, binding->buffer->buffer, binding->offset, WGPU_WHOLE_SIZE);
++            cmdBuf->passVertexBuffers[i] = binding->buffer->buffer;
++            cmdBuf->passVertexOffsets[i] = binding->offset;
+         }
+     }
+ 
+     if (cmdBuf->vertexStageBinds.shouldBindIndexBuffer) {
+-        if (cmdBuf->vertexStageBinds.boundIndexBuffer.buffer) {
++        const WebGPUOffsetBufferBinding *binding = &cmdBuf->vertexStageBinds.boundIndexBuffer;
++        if (binding->buffer &&
++            (binding->buffer->buffer != cmdBuf->passIndexBuffer || binding->offset != cmdBuf->passIndexOffset ||
++             cmdBuf->vertexStageBinds.indexFormat != cmdBuf->passIndexFormat)) {
+             wgpuRenderPassEncoderSetIndexBuffer(cmdBuf->renderPassEncoder,
+-                                                cmdBuf->vertexStageBinds.boundIndexBuffer.buffer->buffer,
++                                                binding->buffer->buffer,
+                                                 cmdBuf->vertexStageBinds.indexFormat,
+-                                                cmdBuf->vertexStageBinds.boundIndexBuffer.offset,
+-                                                cmdBuf->vertexStageBinds.boundIndexBuffer.buffer->size);
++                                                binding->offset,
++                                                binding->buffer->size);
++            cmdBuf->passIndexBuffer = binding->buffer->buffer;
++            cmdBuf->passIndexOffset = binding->offset;
++            cmdBuf->passIndexFormat = cmdBuf->vertexStageBinds.indexFormat;
+         }
+     }
+ 
+@@ -5168,11 +5364,13 @@ static void WEBGPU_DispatchComputeIndirect(SDL_GPUCommandBuffer *commandBuffer,
+ 
+ static void WEBGPU_INTERNAL_UploadQueuedUniformData(WebGPUCommandBuffer *cmdBuf)
+ {
+-    for (int i = 0; i < cmdBuf->numQueuedUniformUploads; i++) {
+-        WebGPUQueuedUniformDataUpload upload = cmdBuf->queuedUniformUploads[i];
++    for (int i = 0; i < 12; i++) {
++        WebGPUBuffer *buffer = cmdBuf->renderer->uniformBuffers[i]->activeBuffer;
++        Uint32 length = (Uint32)SDL_min((Uint64)cmdBuf->uniformStagingLength[i], buffer->size);
+ 
+-        wgpuQueueWriteBuffer(cmdBuf->queue, cmdBuf->renderer->uniformBuffers[upload.slot]->activeBuffer->buffer, upload.offset, upload.data, upload.length);
+-        SDL_free(upload.data);
++        if (length > 0) {
++            wgpuQueueWriteBuffer(cmdBuf->queue, buffer->buffer, 0, cmdBuf->uniformStaging[i], length);
++        }
+     }
+ }
+ 
+@@ -5186,6 +5384,14 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
  
      WEBGPU_INTERNAL_UploadQueuedUniformData(wrapper);
  
@@ -415,7 +699,7 @@ index cd585cca2..25afb94dc 100644
  #ifdef _MSC_VER
      WGPUCommandBuffer cmdBuf = wgpuCommandEncoderFinish((((WebGPUCommandBuffer *)commandBuffer)->encoder), &(WGPUCommandBufferDescriptor)WGPU_COMMAND_BUFFER_DESCRIPTOR_INIT);
  #else
-@@ -5197,13 +5367,11 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
+@@ -5197,13 +5403,11 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
          return false;
      }
  
@@ -433,7 +717,7 @@ index cd585cca2..25afb94dc 100644
      wrapper->submitted.fence = WEBGPU_INTERNAL_CreateFence(wrapper->queue);
  
      submitted = SDL_calloc(1, sizeof(*submitted));
-@@ -5212,12 +5380,18 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
+@@ -5212,12 +5416,18 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
      WEBGPU_INTERNAL_InsertElementIntoArray(wrapper->renderer->submittedCommandBuffers, wrapper->renderer->submittedCommandBufferCapacity,
                                             wrapper->renderer->submittedCommandBufferCount, WebGPUSubmittedCommandBuffer *, submitted);
  
@@ -454,7 +738,7 @@ index cd585cca2..25afb94dc 100644
  #endif
      for (int i = 0; i < wrapper->swapchainTextureCount; i++) {
          WebGPUTextureContainer *container = wrapper->acquiredSwapchainTextures[i];
-@@ -5248,9 +5422,14 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
+@@ -5248,9 +5458,14 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
  
  static SDL_GPUFence *WEBGPU_SubmitAndAcquireFence(SDL_GPUCommandBuffer *commandBuffer)
  {
@@ -470,7 +754,7 @@ index cd585cca2..25afb94dc 100644
  }
  
  static void WEBGPU_DestroyDevice(SDL_GPUDevice *device)
-@@ -5302,6 +5481,12 @@ static void WEBGPU_ReleaseWindow(SDL_GPURenderer *driverData, SDL_Window *window
+@@ -5302,6 +5517,12 @@ static void WEBGPU_ReleaseWindow(SDL_GPURenderer *driverData, SDL_Window *window
          return;
      }
  
@@ -483,7 +767,7 @@ index cd585cca2..25afb94dc 100644
      // FIXME: This should be done in the video subsystem!
      wgpuSurfaceUnconfigure(windowData->surface);
      wgpuSurfaceRelease(windowData->surface);
-@@ -5392,18 +5577,24 @@ static bool WEBGPU_SupportsSwapchainComposition(SDL_GPURenderer *driverData, SDL
+@@ -5392,18 +5613,24 @@ static bool WEBGPU_SupportsSwapchainComposition(SDL_GPURenderer *driverData, SDL
          return false;
      }
  
@@ -518,7 +802,7 @@ index cd585cca2..25afb94dc 100644
      }
  
      wgpuSurfaceCapabilitiesFreeMembers(caps);
-@@ -5570,9 +5761,28 @@ static bool WEBGPU_WaitForSwapchain(SDL_GPURenderer *driverData, SDL_Window *win
+@@ -5570,9 +5797,28 @@ static bool WEBGPU_WaitForSwapchain(SDL_GPURenderer *driverData, SDL_Window *win
      return true;
  }
  

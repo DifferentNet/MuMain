@@ -78,6 +78,14 @@ node tools/web/wgsl-soft-clip.mjs src/shaders/compiled
 - A window without area (a hidden page laid out at 0x0) skips frames instead of creating 0x0
   textures, and `WaitAndAcquireSwapchainTexture` no longer waits forever for one.
 - A key event claims keyboard focus when SDL lost it, or typed text was dropped.
+- Fewer calls into the page per frame (each WebGPU call costs; a phone feels it most). Measured in Lorencia on
+  2026-10-29: 915 draws a frame set 4 bind groups each (3,660 calls) and wrote 736 uniform blocks one call each.
+  - A draw sets only the bind groups whose bindings changed, and not when the same group and offsets are
+    already set in the pass; the same for vertex and index buffers.
+  - Uniform data pushed into a command buffer is collected per uniform buffer and written with one call each
+    at submit, instead of a `malloc` and a `writeBuffer` per push.
+  - Mapping a transfer buffer with `cycle` no longer clears the whole buffer: the game maps one with `cycle`
+    for each upload, and the clearing took a few per cent of every frame.
 - Fences (Enhanced graphics crashed or froze the tab, 2026-10-22; found with AddressSanitizer, see below):
   - `SubmitAndAcquireFence` read the queue from the command buffer that Submit had just freed.
   - `GenerateMipmaps` freed its temporary texture while the command buffer still tracked it.

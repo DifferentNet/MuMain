@@ -1053,7 +1053,8 @@ struct WindowScaleMetrics
 #ifdef __EMSCRIPTEN__
 // Browser build: the window is in device pixels (no SDL pixel density there), so the interface's
 // content scale is how many of them a CSS pixel has, as on a desktop display set to 125 or 150 %.
-// "Auto" (MuWebFollowPageSize) sets it from the page; a size picked in Options keeps 1.
+// "Auto" (MuWebFollowPageSize) sets it from the page, at most what the original's screen fits
+// (WebContentScale); a size picked in Options keeps 1.
 float g_webContentScale = 1.0f;
 #endif
 
@@ -1516,6 +1517,18 @@ namespace
 constexpr float kMinimumWebContentScale = 0.5f;
 int g_webDisplaySerial = -1;
 
+// The interface's scale for the page's size: its pixel density, but no larger than the original
+// 640x480 screen fits into the game's size. The interface is laid out on that screen, so text drawn
+// at the density alone outgrew its places on a low window: a phone in landscape under the browser's
+// address bar (821x294 CSS px at 2.5, 2026-10-29) drew it 1.6 times too large, and the notices, the
+// name plates and the boxes in the corners ran into each other.
+float WebContentScale(const mu::web::PageDisplay& display)
+{
+    const float fits = std::min(static_cast<float>(display.width) / REFERENCE_WIDTH,
+                                static_cast<float>(display.height) / REFERENCE_HEIGHT);
+    return std::min(display.pixelRatio, std::max(fits, 1.0f));
+}
+
 void SetWebContentScale(float scale)
 {
     g_webContentScale = std::max(scale, kMinimumWebContentScale);
@@ -1551,10 +1564,10 @@ void MuWebFollowPageSize()
         return;
 
     g_webDisplaySerial = display->serial;
-    SetWebContentScale(display->pixelRatio);
+    SetWebContentScale(WebContentScale(*display));
     ResizeWebWindow(display->width, display->height);
-    mu::log::Get("render")->info("Browser size: {}x{}, {:.2f} device pixels per CSS pixel", display->width,
-                                 display->height, display->pixelRatio);
+    mu::log::Get("render")->info("Browser size: {}x{}, {:.2f} device pixels per CSS pixel, interface at {:.2f}",
+                                 display->width, display->height, display->pixelRatio, g_webContentScale);
 }
 
 // Options: "Auto" follows the page from now on; a size of the player's own is drawn at content
@@ -1579,7 +1592,7 @@ static void MuWebStartAtPageSize()
     g_webDisplaySerial = display->serial;
     WindowWidth = static_cast<unsigned int>(display->width);
     WindowHeight = static_cast<unsigned int>(display->height);
-    g_webContentScale = std::max(display->pixelRatio, kMinimumWebContentScale);
+    g_webContentScale = std::max(WebContentScale(*display), kMinimumWebContentScale);
 }
 #endif
 

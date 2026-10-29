@@ -16,18 +16,28 @@ page downloads instead and unpacks itself: the web server sends files as they ar
 slow line waits for every megabyte. The page keeps the pack in the browser's storage under its hash
 and downloads it again only when the hash changes. An unchanged pack keeps its file, so a rebuild
 doesn't compress it again and scripts/publish-web.py doesn't upload it again.
+
+And writes a pack per map: packs/worldN.pack.gz with the files of Data/WorldN and Data/ObjectN (the
+map's ground and objects) that aren't in startup.pack, and packs/worldN.json, their paths and sizes
+and a hash. Entering Lorencia opened about 250 of them one after another, a minute on a phone
+(2026-10-29); the page now downloads the map's pack when the game enters it and keeps it like
+startup.pack (WebFileSystem.cpp LoadWorldFiles).
 """
 import argparse
 import gzip
 import hashlib
 import json
 import os
+import re
 import shutil
 import sys
 
 # The page asks for "<name>.gz" first and takes the file itself where there is none.
 GZIP_COPIES = ["startup.pack", "Main.wasm"]
 CHUNK = 1 << 20
+# A map's folders: Data/World1 and Data/Object1 are Lorencia's (MapManager.cpp LoadWorld).
+MAP_FOLDER = re.compile(r"(World|Object)(\d+)")
+PACKS = "packs"
 
 
 def gzip_copy(path):
@@ -51,6 +61,64 @@ def read_json(path):
             return json.load(f)
     except (OSError, ValueError):
         return None
+
+
+def write_map_pack(root, name, files):
+    """Writes packs/<name>.pack.gz and packs/<name>.json for files ([path, size], relative to root)
+    unless they hold them already. Returns whether it wrote them."""
+    digest = hashlib.sha256(json.dumps(files).encode())
+    for path, _ in files:
+        with open(os.path.join(root, path), "rb") as f:
+            for block in iter(lambda: f.read(CHUNK), b""):
+                digest.update(block)
+    index = {"files": files, "hash": digest.hexdigest()[:16]}
+    pack_path = os.path.join(root, PACKS, name + ".pack.gz")
+    index_path = os.path.join(root, PACKS, name + ".json")
+    if read_json(index_path) == index and os.path.isfile(pack_path):
+        return False
+    with open(pack_path + ".tmp", "wb") as raw:
+        with gzip.GzipFile(filename="", mode="wb", compresslevel=9, fileobj=raw, mtime=0) as out:
+            for path, _ in files:
+                with open(os.path.join(root, path), "rb") as source:
+                    shutil.copyfileobj(source, out, CHUNK)
+    with open(index_path + ".tmp", "w", encoding="utf-8") as out:
+        json.dump(index, out, separators=(",", ":"))
+    os.replace(pack_path + ".tmp", pack_path)
+    os.replace(index_path + ".tmp", index_path)
+    return True
+
+
+def write_map_packs(root, in_startup_pack):
+    """Writes a pack per map (the module's docstring) and removes the packs of maps no longer there.
+    Returns (packs, written, megabytes in them)."""
+    folders = {}
+    data = os.path.join(root, "Data")
+    for entry in sorted(os.listdir(data)) if os.path.isdir(data) else []:
+        match = MAP_FOLDER.fullmatch(entry)
+        if match and os.path.isdir(os.path.join(data, entry)):
+            folders.setdefault(int(match.group(2)), []).append(entry)
+    os.makedirs(os.path.join(root, PACKS), exist_ok=True)
+    kept, written, total = set(), 0, 0
+    for world, names in sorted(folders.items()):
+        files = []
+        for folder in names:
+            for path_dir, subfolders, file_names in os.walk(os.path.join(data, folder)):
+                subfolders.sort()
+                for file_name in sorted(file_names):
+                    full = os.path.join(path_dir, file_name)
+                    path = os.path.relpath(full, root).replace(os.sep, "/")
+                    if path not in in_startup_pack:
+                        files.append([path, os.path.getsize(full)])
+        if not files:
+            continue
+        name = f"world{world}"
+        written += write_map_pack(root, name, files)
+        kept.update((name + ".pack.gz", name + ".json"))
+        total += sum(size for _, size in files)
+    for leftover in os.listdir(os.path.join(root, PACKS)):
+        if leftover not in kept:
+            os.remove(os.path.join(root, PACKS, leftover))
+    return len(kept) // 2, written, total / 1e6
 
 
 def main():
@@ -102,6 +170,9 @@ def main():
     for name in compressed:
         size = os.path.getsize(os.path.join(args.root, name + ".gz"))
         print(f"{name}.gz: {size / 1e6:.1f} MB")
+
+    packs, written, megabytes = write_map_packs(args.root, {path for path, _ in files})
+    print(f"Map packs: {packs}, {megabytes:.0f} MB in them, {written} written")
     return 0
 
 

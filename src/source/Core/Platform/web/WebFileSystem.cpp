@@ -34,6 +34,8 @@ constexpr unsigned ChunkSize = 1u << 20;
 // config.ini, they were downloaded again at every start (120 MB in 1 MB pieces), which left a phone
 // at a black screen (a Pixel 9 Pro XL, 2026-10-29).
 constexpr std::string_view PageCopySuffix = ".gz";
+// The map packs (packs/worldN.json and .pack.gz): the page reads them for LoadWorldFiles.
+constexpr std::string_view PagePacksFolder = "packs/";
 
 // 0 while the mount is being set up, 1 when it is ready, -1 when it failed.
 std::atomic<int> g_mountState{0};
@@ -78,6 +80,41 @@ EM_ASYNC_JS(int, MuWeb_InstallStartupPack, (), {
         offset += size;
     }
     return written;
+});
+
+// The page downloads a map's pack (index.html: Module.muMapPack(world), a promise of the same shape as
+// the startup pack's, or of null where the map has none); this writes its files into /game in place of
+// their links to /server, and turns the previous map's files back into links, so only one map's pack
+// takes memory. Returns how many files it wrote, 0 without a pack, -1 when they are in place already.
+EM_ASYNC_JS(int, MuWeb_InstallMapPack, (int world), {
+    if (Module["muMapPackWorld"] === world) {
+        return -1;
+    }
+    let pack = null;
+    try {
+        pack = Module["muMapPack"] ? await Module["muMapPack"](world) : null;
+    } catch (e) {
+        err("Map pack " + world + ": " + e + "; the game downloads the map's files one by one instead");
+    }
+    for (const path of Module["muMapPackFiles"] || []) {
+        FS.unlink("/game/" + path);
+        FS.symlink("/server/" + path, "/game/" + path);
+    }
+    const written = [];
+    let offset = 0;
+    for (const [path, size] of pack ? pack.files : []) {
+        const full = "/game/" + path;
+        FS.unlink(full);
+        if (FS.writeFile(full, pack.bytes.subarray(offset, offset + size)) >= 0) {
+            written.push(path);
+        } else {
+            FS.symlink("/server/" + path, full);
+        }
+        offset += size;
+    }
+    Module["muMapPackFiles"] = written;
+    Module["muMapPackWorld"] = pack ? world : null;
+    return written.length;
 });
 
 // Creates the folders above `path` (a path below /game), remembering the ones made.
@@ -172,7 +209,7 @@ void SetUpMount()
         {
             line.pop_back();
         }
-        if (line.empty() || line == "files.txt" || line.ends_with(PageCopySuffix))
+        if (line.empty() || line == "files.txt" || line.ends_with(PageCopySuffix) || line.starts_with(PagePacksFolder))
         {
             continue;
         }
@@ -290,4 +327,13 @@ bool mu::web::MountGameFiles()
         }
     }
     return ::chdir(GameDir) == 0;
+}
+
+void mu::web::LoadWorldFiles(int world)
+{
+    const int written = MuWeb_InstallMapPack(world);
+    if (written >= 0)
+    {
+        std::printf("Web file system: map folder %d, %d files from its pack\n", world, written);
+    }
 }
