@@ -25,6 +25,9 @@
   <data name="FirstTopics" xml:space="preserve">
     <value>First topics</value>
   </data>
+  <data name="Buff" xml:space="preserve">
+    <value>Receive damage and defense increase buff.</value>
+  </data>
   <data name="Overhead" xml:space="preserve">
     <value>New here? Ask me, I'll tell you about this world!</value>
   </data>
