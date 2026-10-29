@@ -101,11 +101,11 @@
 .tt-row.worn, .tt-row.worn:hover { background-color: rgba(255, 200, 90, 40); }
 .tt-row.none .tt-row-name { color: token(text-primary); }
 .tt-row.r0 .tt-row-name { color: rgb(200, 205, 215); }
-.tt-row.r1 .tt-row-name { color: rgb(130, 200, 255); }
+.tt-row.r1 .tt-row-name { color: rgb(190, 145, 255); }
 .tt-row.r2 .tt-row-name { color: rgb(110, 230, 150); }
-.tt-row.r3 .tt-row-name { color: rgb(255, 210, 90); }
+.tt-row.r3 .tt-row-name { color: rgb(120, 175, 255); }
 .tt-row.r4 .tt-row-name { color: rgb(255, 110, 90); }
-.tt-row.r5 .tt-row-name { color: rgb(200, 150, 255); }
+.tt-row.r5 .tt-row-name { color: rgb(255, 205, 95); }
 .tt-row-detail { color: token(text-muted); }
 .tt-row.owned .tt-row-detail { color: token(text-secondary); }
 .tt-row-mark { color: token(accent-gold); }
