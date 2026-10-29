@@ -44,4 +44,8 @@ void SetControlChoice(ControlChoice choice);
 // touch controls.
 // Once the RmlUi runtime exists (Winmain.cpp), and again by the setters.
 void Apply();
+
+// Browser build, once a frame between frames: takes the view the page's own View item picked
+// (Core/Platform/web/WebPageView.h). Does nothing elsewhere.
+void FollowPage();
 } // namespace UI::Mobile

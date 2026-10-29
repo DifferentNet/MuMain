@@ -1857,6 +1857,7 @@ MSG MainLoop()
                 Render::Look::ApplyPendingTuning();
 #ifdef __EMSCRIPTEN__
                 MuWebFollowPageSize();
+                UI::Mobile::FollowPage();
                 if (const Rml::Element* field = RmlUiRuntime::Instance().GetFocusedTextField())
                     mu::web::SyncKeyboard(true, field->GetAttribute<Rml::String>("type", "") == "password");
                 else

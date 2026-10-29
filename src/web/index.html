@@ -113,6 +113,7 @@
   <button id="toggle-log" type="button">Log</button>
   <button id="fullscreen" type="button">Fullscreen</button>
   <button id="install-menu" type="button" hidden>Install</button>
+  <button id="view" type="button" hidden title="The game's layout, as in its Options → Interface">View</button>
   <label title="How many pixels the game draws while Options has Auto resolution">Quality
     <select id="quality">
       <option value="high">High</option>
@@ -290,6 +291,33 @@
   };
   document.getElementById("menu").onclick = () => footer.classList.toggle("open");
   canvas.addEventListener("pointerdown", () => footer.classList.remove("open"));
+
+  // View: the game's layout, Auto / PC / Phone, the same choice as its Options → Interface (Auto is
+  // the phone layout on a phone or tablet, detectDevice). The game takes muView.request between
+  // frames (Core/Platform/web/WebPageView.h) and calls show() with the choice in force, which also
+  // shows the item once the game runs.
+  const viewButton = document.getElementById("view");
+  const VIEW_NAMES = [["Auto", "авто"], ["PC", "ПК"], ["Phone", "телефон"]];
+  window.muView = {
+    request: null,
+    choice: 0,
+    show(choice, phoneView) {
+      if (!VIEW_NAMES[choice]) return;
+      this.choice = choice;
+      let [en, ru] = VIEW_NAMES[choice];
+      if (choice === 0) {
+        en += phoneView ? " (phone)" : " (PC)";
+        ru += phoneView ? " (телефон)" : " (ПК)";
+      }
+      viewButton.textContent = "View: " + en + " · Вид: " + ru;
+      viewButton.hidden = false;
+    },
+  };
+  viewButton.onclick = () => {
+    window.muView.request = (window.muView.choice + 1) % VIEW_NAMES.length;
+    footer.classList.remove("open");
+    canvas.focus();
+  };
 
   // Phones: Play opens the game fullscreen; "Stay in the browser" keeps the address bar (the menu's
   // Fullscreen does it later); Install (below) puts it on the home screen. Not where the page already

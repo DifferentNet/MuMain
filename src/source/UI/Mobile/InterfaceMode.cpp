@@ -8,6 +8,7 @@
 
 #ifdef __EMSCRIPTEN__
 #include "Core/Platform/web/WebDevice.h"
+#include "Core/Platform/web/WebPageView.h"
 #endif
 
 #include <RmlUi/Core/Context.h>
@@ -119,4 +120,16 @@ void UI::Mobile::Apply()
     }
     // The flags move workspace regions (workspace.rcss): the windows on them follow next frame.
     UI::Placement::Invalidate();
+#ifdef __EMSCRIPTEN__
+    mu::web::ShowPageView(static_cast<int>(view), g_phoneView);
+#endif
+}
+
+void UI::Mobile::FollowPage()
+{
+#ifdef __EMSCRIPTEN__
+    const int request = mu::web::TakePageViewRequest();
+    if (request >= 0 && request < ViewChoiceCount)
+        SetViewChoice(static_cast<ViewChoice>(request));
+#endif
 }

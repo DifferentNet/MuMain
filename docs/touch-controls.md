@@ -13,7 +13,10 @@ config.ini `[UI]`:
 Auto means the phone view and touch controls on a touch device (`mu::web::IsTouchDevice()`), the PC
 view and the mouse elsewhere. A desktop build or a computer's browser is unchanged unless the player
 picks Phone or Touch (a Windows touch screen works with Touch). The touch menu's View item switches
-between the PC and phone views at once.
+between the PC and phone views at once. In the browser the page's own menu (⋮ on a phone, the
+footer on a computer) has a View item too: it steps Auto → PC → Phone and shows the choice in force
+(`Core/Platform/web/WebPageView.{h,cpp}`, `window.muView` in `src/web/index.html`; the game takes
+the page's request between frames, `UI::Mobile::FollowPage`).
 
 ## What the player gets
 
