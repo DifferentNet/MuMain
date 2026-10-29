@@ -1593,6 +1593,74 @@ static void MuWebStartAtPageSize()
     WindowHeight = static_cast<unsigned int>(display->height);
     g_webContentScale = std::max(WebContentScale(*display), kMinimumWebContentScale);
 }
+
+namespace
+{
+// Options' six effect and shadow settings (Graphics tab), one bit each in this order: set = off.
+constexpr int kEffectSettingCount = 6;
+constexpr int kAllEffectSettingsOff = (1 << kEffectSettingCount) - 1;
+
+int EffectSettingBits()
+{
+    const GameConfig& cfg = GameConfig::GetInstance();
+    const bool off[kEffectSettingCount] = {cfg.GetDisableEffects(),           cfg.GetDisableParticles(),
+                                           cfg.GetDisableSkillEffectModels(), cfg.GetDisableBoids(),
+                                           cfg.GetDisableWingShadow(),        cfg.GetDisableBodyShadows()};
+    int bits = 0;
+    for (int i = 0; i < kEffectSettingCount; ++i)
+    {
+        if (off[i])
+            bits |= 1 << i;
+    }
+    return bits;
+}
+
+// Sets, applies and saves them, as their checkboxes in Options do.
+void ApplyEffectSettingBits(int bits)
+{
+    const auto off = [bits](int index) { return (bits & (1 << index)) != 0; };
+    GameConfig& cfg = GameConfig::GetInstance();
+    cfg.SetDisableEffects(off(0));
+    cfg.SetDisableParticles(off(1));
+    cfg.SetDisableSkillEffectModels(off(2));
+    cfg.SetDisableBoids(off(3));
+    cfg.SetDisableWingShadow(off(4));
+    cfg.SetDisableBodyShadows(off(5));
+    cfg.Save();
+    SetDisableEffects(off(0));
+    SetDisableParticles(off(1));
+    SetDisableSkillEffectModels(off(2));
+    SetDisableBoids(off(3));
+    SetDisableWingShadow(off(4));
+    SetDisableBodyShadows(off(5));
+}
+} // namespace
+
+// Browser build, once a frame: the footer's Quality "Lowest" (index.html) turns every effect and
+// shadow off, keeping the player's own settings on the page; another quality brings them back.
+// Options can still change them meanwhile, and a later visit at Lowest keeps those changes.
+static void MuWebFollowLowestQuality()
+{
+    static int s_lastLowest = -1; // not looked at yet
+    const int lowest = mu::web::IsLowestQuality() ? 1 : 0;
+    if (lowest == s_lastLowest)
+        return;
+    s_lastLowest = lowest;
+
+    const int before = mu::web::GetEffectsBeforeLowest();
+    if (lowest == 1 && before < 0)
+    {
+        mu::web::SetEffectsBeforeLowest(EffectSettingBits());
+        ApplyEffectSettingBits(kAllEffectSettingsOff);
+        mu::log::Get("render")->info("Quality Lowest: effects and shadows off");
+    }
+    else if (lowest == 0 && before >= 0)
+    {
+        ApplyEffectSettingBits(before);
+        mu::web::SetEffectsBeforeLowest(-1);
+        mu::log::Get("render")->info("Quality above Lowest: the player's effect and shadow settings back");
+    }
+}
 #endif
 
 // Inspect only the active SDL union member, including for synthetic events.
@@ -1846,6 +1914,7 @@ MSG MainLoop()
                 Render::Look::ApplyPendingTuning();
 #ifdef __EMSCRIPTEN__
                 MuWebFollowPageSize();
+                MuWebFollowLowestQuality();
                 if (const Rml::Element* field = RmlUiRuntime::Instance().GetFocusedTextField())
                     mu::web::SyncKeyboard(true, field->GetAttribute<Rml::String>("type", "") == "password");
                 else
