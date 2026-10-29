@@ -15,9 +15,10 @@
 	align-items: flex-start;
 }
 
+/* A message wider than the panel wraps inside it, as in legacy/system_log.rcss. */
 .syslog-line {
 	display: block;
-	white-space: nowrap;
+	white-space: normal;
 	padding: 0 4dp;
 	border-left: 2dp transparent;
 	border-radius: token(radius-sm)px;
