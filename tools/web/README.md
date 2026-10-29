@@ -43,6 +43,8 @@ container behind Caddy (`server/README.md`, "Browser client").
 
 The renderer's SPIR-V blobs become WGSL with naga; the SDL WebGPU backend's binding layout differs
 from SDL's SPIR-V one, so `wgsl-convert.mjs` renumbers the bindings first and drops naga's Y flip.
+It also declares storage buffers as plain arrays instead of naga's one-member struct around the
+array: Safari couldn't compile the bone shaders with that struct (Safari 27, Mac, 2026-10-29).
 
 ```bash
 node tools/web/spirv-to-wgsl.mjs <naga-wasm folder> src/shaders/compiled src/shaders/compiled/*.spv

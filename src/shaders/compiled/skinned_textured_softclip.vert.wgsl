@@ -14,10 +14,6 @@ struct Skinning {
     vertexToWorldRows: array<vec4<f32>, 3>,
 }
 
-struct boneRows {
-    u0040_data: array<vec4<f32>>,
-}
-
 struct VertexOutput {
     @builtin(position) member: vec4<f32>,
     @location(0) member_1: vec2<f32>,
@@ -35,7 +31,7 @@ struct VertexOutput {
 @group(1) @binding(0) 
 var<uniform> unnamed: Skinning;
 @group(0) @binding(0) 
-var<storage, read> boneRows_1: boneRows;
+var<storage, read> boneRows_1: array<vec4<f32>>;
 var<private> input_u002e_pos_1: vec3<f32>;
 var<private> input_u002e_normal_1: vec3<f32>;
 var<private> input_u002e_uv_1: vec2<f32>;
@@ -78,9 +74,9 @@ fn main_1() {
             }
             let _e72 = unnamed.palette[0u];
             let _e75 = (_e72 + (bitcast<u32>(_e60) * 3u));
-            let _e78 = boneRows_1.u0040_data[_e75];
-            let _e82 = boneRows_1.u0040_data[(_e75 + 1u)];
-            let _e86 = boneRows_1.u0040_data[(_e75 + 2u)];
+            let _e78 = boneRows_1[_e75];
+            let _e82 = boneRows_1[(_e75 + 1u)];
+            let _e86 = boneRows_1[(_e75 + 2u)];
             let _e89 = unnamed.boneScaleAndRestPoseScale[0u];
             if (_e89 == 1f) {
                 let _e93 = unnamed.boneScaleAndRestPoseScale[1u];
@@ -115,9 +111,9 @@ fn main_1() {
             }
             let _e152 = unnamed.palette[0u];
             let _e155 = (_e152 + (bitcast<u32>(_e61) * 3u));
-            let _e158 = boneRows_1.u0040_data[_e155];
-            let _e164 = boneRows_1.u0040_data[(_e155 + 1u)];
-            let _e170 = boneRows_1.u0040_data[(_e155 + 2u)];
+            let _e158 = boneRows_1[_e155];
+            let _e164 = boneRows_1[(_e155 + 1u)];
+            let _e170 = boneRows_1[(_e155 + 2u)];
             phi_1522_ = vec3<f32>(dot(_e158.xyz, _e57), dot(_e164.xyz, _e57), dot(_e170.xyz, _e57));
             break;
         }

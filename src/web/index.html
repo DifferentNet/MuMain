@@ -132,14 +132,107 @@
     statusEl.classList.toggle("bad", !!bad);
     if (bad) playCard.classList.remove("show");
   }
-  function appendLog(text, isError) {
+  // The log keeps its last LOG_LINES lines and, for good, the first KEPT_ERRORS error lines. A line
+  // equal to the one before it only counts up. Past ERRORS_PER_SECOND error lines in a second the rest
+  // are only counted, and a line says how many. A browser that can't compile a shader can repeat the
+  // error on every frame: on a Mac's Safari that pushed the first error out of the log and froze the
+  // page (2026-10-29). Returns false for a line left out.
+  const LOG_LINES = 3000, KEPT_ERRORS = 200, ERRORS_PER_SECOND = 50;
+  let errorLines = 0, errorsThisSecond = 0, errorsLeftOut = 0, errorSecondTimer = 0, logScroll = 0;
+  function newErrorSecond() {
+    errorSecondTimer = 0;
+    errorsThisSecond = 0;
+    if (errorsLeftOut) {
+      const count = errorsLeftOut;
+      errorsLeftOut = 0;
+      addLogLine(`(${count} more error lines left out)`, true);
+    }
+  }
+  function addLogLine(text, isError) {
     const line = document.createElement("div");
-    if (isError) line.className = "err";
+    if (isError) {
+      line.className = "err";
+      if (errorLines++ < KEPT_ERRORS) line.dataset.keep = "1";
+    }
+    line.dataset.text = text;
     line.textContent = text;
     logEl.appendChild(line);
-    if (logEl.childElementCount > 3000) logEl.firstChild.remove();
-    logEl.scrollTop = logEl.scrollHeight;
+    if (logEl.childElementCount > LOG_LINES) {
+      let oldest = logEl.firstElementChild;
+      while (oldest && oldest.dataset.keep) oldest = oldest.nextElementSibling;
+      if (oldest) oldest.remove();
+    }
+    if (!logScroll) logScroll = requestAnimationFrame(() => { logScroll = 0; logEl.scrollTop = logEl.scrollHeight; });
+    return line;
   }
+  function appendLog(text, isError) {
+    const last = logEl.lastElementChild;
+    if (last && last.dataset.text === text) {
+      last.dataset.count = String(Number(last.dataset.count || 1) + 1);
+      last.textContent = `${text} (×${last.dataset.count})`;
+      return true;
+    }
+    if (isError) {
+      if (!errorSecondTimer) errorSecondTimer = setTimeout(newErrorSecond, 1000);
+      if (++errorsThisSecond > ERRORS_PER_SECOND && errorLines >= KEPT_ERRORS) {
+        errorsLeftOut++;
+        return false;
+      }
+    }
+    addLogLine(text, isError);
+    return true;
+  }
+  // WebGPU errors whole, each different one once. SDL prints an error as many log lines, and WebKit's
+  // shader errors carry the whole generated Metal code with the reason last: with a long shader the
+  // reason fell past the kept error lines and the per-second limit (Safari, 2026-10-29). The page
+  // listens on the game's device itself: one kept line per different error, reason included, a count
+  // for repeats, and the lines SDL prints for it left out. muGpuErrors() in the browser console gives
+  // the errors whole: copy(muGpuErrors()).
+  const GPU_ERRORS_KEPT = 20, GPU_ECHO_MS = 1000;
+  const gpuErrors = new Map();   // message -> { count, summary, line }
+  let gpuErrorText = "", gpuEchoUntil = 0;
+  function gpuErrorSummary(message) {
+    // WebKit: "Failed to compile the shader source, generated metal:\n<Metal code> - error <reason>"
+    const reasonAt = message.lastIndexOf(" - error ");
+    const firstLineEnd = message.indexOf("\n");
+    const text = reasonAt >= 0 && firstLineEnd >= 0
+      ? `${message.slice(0, firstLineEnd)} … ${message.slice(reasonAt + 3)}` : message;
+    return "WebGPU error: " + text.replace(/\s+/g, " ").trim().slice(0, 1500);
+  }
+  function onGpuError(event) {
+    const message = String((event.error && event.error.message) || "unknown");
+    const seen = gpuErrors.get(message);
+    if (!seen && gpuErrors.size >= GPU_ERRORS_KEPT) return;   // SDL's lines go to the log as before
+    gpuErrorText = message;
+    gpuEchoUntil = performance.now() + GPU_ECHO_MS;
+    if (seen) {
+      seen.count++;
+      seen.line.textContent = `${seen.summary} (×${seen.count})`;
+      return;
+    }
+    const summary = gpuErrorSummary(message);
+    const line = addLogLine(summary, true);
+    line.dataset.keep = "1";
+    gpuErrors.set(message, { count: 1, summary, line });
+    console.error(message);
+  }
+  // A line SDL prints for the error onGpuError just took: "ERROR: WebGPU uncaptured error!", then the
+  // message line by line (the [sdl] log the same way).
+  function gpuErrorEcho(text) {
+    if (performance.now() > gpuEchoUntil) return false;
+    return /WebGPU uncaptured error!$/.test(text) || gpuErrorText.includes(text.replace(/^ERROR: /, ""));
+  }
+  if (self.GPUAdapter) {
+    const requestDevice = GPUAdapter.prototype.requestDevice;
+    GPUAdapter.prototype.requestDevice = function (...args) {
+      return requestDevice.apply(this, args).then((gpuDevice) => {
+        gpuDevice.addEventListener("uncapturederror", onGpuError);
+        return gpuDevice;
+      });
+    };
+  }
+  window.muGpuErrors = () =>
+    [...gpuErrors].map(([message, e]) => `(×${e.count}) ${message}`).join("\n\n") || "no WebGPU errors";
   document.getElementById("toggle-log").onclick = () => { logEl.hidden = !logEl.hidden; };
   appendLog(`Device: ${device.kind} (${device.reason}); screen ${screen.width}x${screen.height} CSS px, ` +
             `${devicePixelRatio} device px each, ${navigator.maxTouchPoints} touch points`);
@@ -640,6 +733,61 @@
     const tokens = navigator.userAgent.match(/(YaBrowser|OPR|Edg|Vivaldi|Firefox)\/[\d.]+/g) || [];
     return brands.concat(tokens).join(", ") || navigator.userAgent;
   }
+  // Safari 27.0.1 (WebKit 7625; ghinzuro's MacBook Air M4, 2026-10-29) reports clip-distances, but
+  // the Metal code it writes for basic_textured.vert and skinned_*.vert doesn't compile: the clip
+  // distances member becomes a C array, and the shader returns the whole array as one value. The
+  // pipeline is then invalid and every frame fails ("encoder state is not valid"). This shader has
+  // the same output struct and the same return, so where it doesn't build, the game takes its soft
+  // clip shaders. Returns why it failed, or "" where it builds.
+  const CLIP_TEST_SHADER = `enable clip_distances;
+struct VertexOutput {
+    @builtin(position) member: vec4<f32>,
+    @location(0) member_1: vec2<f32>,
+    @location(1) member_2: vec4<f32>,
+    @location(2) member_3: f32,
+    @location(3) member_4: f32,
+    @builtin(clip_distances) member_5: array<f32, 1>,
+}
+var<private> clipDist: array<f32, 1> = array<f32, 1>();
+@vertex
+fn vs(@location(0) pos: vec3<f32>) -> VertexOutput {
+    let position = vec4<f32>(pos, 1f);
+    clipDist[0i] = position.w - 1f;
+    let clip = clipDist;
+    return VertexOutput(position, pos.xy, position, pos.z, position.w, clip);
+}
+@fragment
+fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
+    return vec4<f32>(uv, 0f, 1f);
+}`;
+  async function clipDistancesBroken(adapter) {
+    let device = null;
+    const test = (async () => {
+      device = await adapter.requestDevice({ requiredFeatures: [CLIP_DISTANCES] });
+      device.pushErrorScope("internal");
+      device.pushErrorScope("validation");
+      const module = device.createShaderModule({ code: CLIP_TEST_SHADER });
+      device.createRenderPipeline({
+        layout: "auto",
+        vertex: { module, entryPoint: "vs",
+                  buffers: [{ arrayStride: 12, attributes: [{ shaderLocation: 0, offset: 0, format: "float32x3" }] }] },
+        fragment: { module, entryPoint: "fs", targets: [{ format: "rgba8unorm" }] },
+      });
+      const errors = [await device.popErrorScope(), await device.popErrorScope()].filter(Boolean);
+      if (!errors.length) return "";
+      // WebKit: "Failed to compile the shader source, generated metal:\n<Metal code> - error <reason>"
+      return String(errors[0].message).split(" - error ").pop().replace(/\s+/g, " ").trim().slice(0, 300) || "error";
+    })();
+    const timeout = new Promise((resolve) => setTimeout(() => resolve("no answer in 5 s"), 5000));
+    try {
+      return await Promise.race([test, timeout]);
+    } catch (e) {
+      return String((e && e.message) || e).slice(0, 300) || "error";
+    } finally {
+      // A device that arrives after the timeout is destroyed once the test ends.
+      test.finally(() => { if (device) device.destroy(); }).catch(() => {});
+    }
+  }
   async function checkGpu() {
     const params = new URLSearchParams(location.search);
     const needed = NEEDED_FEATURES.concat(params.getAll("needfeature"));
@@ -662,9 +810,17 @@
     const info = adapter.info || {};
     const gpu = [info.vendor, info.architecture, info.device, info.description].filter(Boolean).join(" / ") || "unknown";
     const missing = needed.filter((name) => !adapter.features.has(name));
-    const clipDistances = adapter.features.has(CLIP_DISTANCES) && !params.has("softclip");
+    let clipDistances = adapter.features.has(CLIP_DISTANCES) && !params.has("softclip");
+    let clipNote = clipDistances ? "yes" : "no, soft clip shaders";
+    if (clipDistances && missing.length === 0) {
+      const broken = await clipDistancesBroken(adapter);
+      if (broken) {
+        clipDistances = false;
+        clipNote = `no, this browser can't build them (${broken}), soft clip shaders`;
+      }
+    }
     appendLog(`WebGPU adapter: ${gpu} (${tried.join(", ")}); missing features: ${missing.join(", ") || "none"}; ` +
-              `clip distances: ${clipDistances ? "yes" : "no, soft clip shaders"}; browser: ${browser}`,
+              `clip distances: ${clipNote}; browser: ${browser}`,
               missing.length > 0);
     return { ok: missing.length === 0, gpu, browser, missing, clipDistances };
   }
@@ -929,8 +1085,8 @@
       muClipDistances: gpuCheck.clipDistances,
       muKeyboard: phone ? phoneKeyboard : undefined,
       muDevice: device.kind,
-      print: (text) => { console.log(text); appendLog(text, false); },
-      printErr: (text) => { console.error(text); appendLog(text, true); },
+      print: (text) => { if (gpuErrorEcho(text)) return; console.log(text); appendLog(text, false); },
+      printErr: (text) => { if (!gpuErrorEcho(text) && appendLog(text, true)) console.error(text); },
       setStatus: (text) => { if (packDone || text) setStatus(text); },
       onRuntimeInitialized: () => {
         if (packDone) setStatus("");

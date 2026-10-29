@@ -31,14 +31,6 @@ struct Shadow {
     shadowProjection: vec4<f32>,
 }
 
-struct boneRows {
-    u0040_data: array<vec4<f32>>,
-}
-
-struct terrainWords {
-    u0040_data: array<u32>,
-}
-
 struct VertexOutput {
     @builtin(position) member: vec4<f32>,
     @location(0) member_1: vec2<f32>,
@@ -52,9 +44,9 @@ var<uniform> unnamed: Skinning;
 @group(1) @binding(1) 
 var<uniform> unnamed_1: Shadow;
 @group(0) @binding(0) 
-var<storage, read> boneRows_1: boneRows;
+var<storage, read> boneRows_1: array<vec4<f32>>;
 @group(0) @binding(1) 
-var<storage, read> terrainWords_1: terrainWords;
+var<storage, read> terrainWords_1: array<u32>;
 var<private> input_u002e_pos_1: vec3<f32>;
 var<private> input_u002e_color_1: vec4<f32>;
 var<private> input_u002e_positionBoneIndex_1: i32;
@@ -72,7 +64,7 @@ fn clipPosition_u0028_vf3_u003b(position: ptr<function, vec3<f32>>) -> vec4<f32>
 
 fn loadTerrainWord_u0028_u1_u003b(word: ptr<function, u32>) -> u32 {
     let _e34 = (*word);
-    let _e37 = terrainWords_1.u0040_data[_e34];
+    let _e37 = terrainWords_1[_e34];
     return _e37;
 }
 
@@ -201,7 +193,7 @@ fn shearShadow_u0028_vf3_u003b(position_1: ptr<function, vec3<f32>>) -> vec3<f32
 
 fn loadBoneRow_u0028_u1_u003b(row: ptr<function, u32>) -> vec4<f32> {
     let _e34 = (*row);
-    let _e37 = boneRows_1.u0040_data[_e34];
+    let _e37 = boneRows_1[_e34];
     return _e37;
 }
 
