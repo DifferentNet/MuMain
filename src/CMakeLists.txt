@@ -588,6 +588,12 @@ if (EMSCRIPTEN)
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
       "${CMAKE_CURRENT_SOURCE_DIR}/web/index.html"
       "$<TARGET_FILE_DIR:Main>/index.html"
+    # Phones: "Add to home screen" opens the game fullscreen and sideways.
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+      "${CMAKE_CURRENT_SOURCE_DIR}/web/manifest.webmanifest"
+      "${CMAKE_CURRENT_SOURCE_DIR}/web/icon-192.png"
+      "${CMAKE_CURRENT_SOURCE_DIR}/web/icon-512.png"
+      "$<TARGET_FILE_DIR:Main>"
     ${_mu_web_extra_copy}
     COMMAND "${CMAKE_COMMAND}"
       "-DOUTPUT_DIR=$<TARGET_FILE_DIR:Main>"

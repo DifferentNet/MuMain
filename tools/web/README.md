@@ -23,7 +23,7 @@ container behind Caddy (`server/README.md`, "Browser client").
 
 | Piece | Where | What it does |
 | --- | --- | --- |
-| Page | `src/web/index.html` | Checks WebGPU, JSPI and cross-origin isolation; downloads `startup.pack` while the code loads; log panel. `?profile` samples the page's code (`muProfileTop()` in the console), `?heartbeat` logs whether the browser gets idle time, `?packets` logs every packet sent and received, unencrypted (`WebNetwork.cpp`). |
+| Page | `src/web/index.html` | Checks WebGPU, JSPI and cross-origin isolation; downloads `startup.pack` while the code loads; log panel. `?profile` samples the page's code (`muProfileTop()` in the console), `?heartbeat` logs whether the browser gets idle time, `?packets` logs every packet sent and received, unencrypted (`WebNetwork.cpp`). Phones (`?phone` on a PC): the game fills the screen, the footer's buttons open from the ⋮ button, Play opens it fullscreen and locks landscape ("Stay in the browser" keeps the address bar), held upright it asks to turn the phone, nothing zooms or scrolls; `manifest.webmanifest` and `icon-192/512.png` make "Add to home screen" open it fullscreen and sideways. |
 | Files | `Core/Platform/web/WebFileSystem.*` | `/game` in memory: the startup pack's files, links to a WasmFS fetch mount (`/server`) for the rest, which download on first read, and writable copies of `config.ini` and friends. |
 | Startup pack | `tools/web/make_startup_pack.py`, `src/web/startup-files.txt` | The ~3,800 files the game reads up to character selection, in one download (164 MB) instead of thousands of requests. Regenerate the list from a run of `serve-web.py --access-log`. |
 | File list | `cmake/WriteWebFileList.cmake` | `files.txt`, every file the browser may read. |
@@ -141,8 +141,9 @@ answer (a lost network); OpenMU itself drops a client that stops sending its hea
   `UI/Social/SocialWindowManager.cpp`), which MU Moldova's bridge doesn't relay; they don't open in
   the browser. Whispers and the normal chat use the game server and work.
 - Phones: iOS browsers all use WebKit, which has no JSPI, so iPhones can't run it. Android Chrome
-  has what the game needs but was never tried; it has no touch controls (right-click, hotkeys) and
-  the interface is drawn for 1024x768.
+  has what the game needs (Mali cards through the soft clip shaders) and the page is laid out for
+  phones in landscape, but there are no touch controls yet (right-click, hotkeys) and the interface
+  is drawn for 1024x768.
 - Files outside the startup pack (other maps, monsters) still download one by one when first read.
 - Saved passwords and the in-game downloader are off in the browser.
 - A synthetic click (down and up in the same frame) doesn't walk; a real mouse press does.

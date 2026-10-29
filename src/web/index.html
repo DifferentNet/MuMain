@@ -2,8 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0d0e12">
+<link rel="manifest" href="manifest.webmanifest">
 <title>MU Online (web)</title>
+<script>
+  // Phones (index.html?phone on a PC): the game fills the screen in landscape and the footer opens
+  // from the menu button. Set before the page is drawn, so it doesn't jump.
+  const phone = new URLSearchParams(location.search).has("phone") ||
+    (navigator.userAgentData ? navigator.userAgentData.mobile : /Android|iPhone|iPad/.test(navigator.userAgent));
+  document.documentElement.classList.toggle("phone", phone);
+</script>
 <style>
   :root { --bg: #0d0e12; --panel: #16181f; --line: rgba(255,255,255,.12); --ink: #f2eee6; --muted: #a0a5b1; --gold: #e5b95c; --bad: #f2766a; color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -27,12 +36,40 @@
   #log { position: fixed; left: 0; right: 0; bottom: 2.5rem; height: 40%; margin: 0; padding: .5rem 1rem; overflow: auto; background: rgba(13,14,18,.96); border-top: 1px solid var(--line); font: 12px/1.4 ui-monospace, Consolas, monospace; white-space: pre-wrap; }
   #log[hidden] { display: none; }
   .err { color: var(--bad); }
+  /* Phones: no footer line; the menu button in the corner opens its buttons as a panel, and nothing
+     scrolls, zooms, selects or flashes under the player's fingers. */
+  #menu, #play, #rotate { display: none; }
+  html.phone, html.phone body { height: 100dvh; overflow: hidden; overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  html.phone #stage { height: 100%; }
+  html.phone #canvas { touch-action: none; }
+  html.phone #status { inset: 0; }
+  html.phone #log { bottom: 0; }
+  html.phone #menu { display: block; position: fixed; top: .5rem; right: .5rem; z-index: 2; width: 3rem; height: 3rem; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: rgba(22,24,31,.6); color: var(--ink); font-size: 1.25rem; line-height: 1; cursor: pointer; }
+  html.phone footer { position: fixed; top: .5rem; right: 4rem; z-index: 2; height: auto; flex-direction: column; align-items: stretch; gap: .5rem; padding: .75rem; border: 1px solid var(--line); border-radius: 6px; }
+  html.phone footer:not(.open), html.phone footer > span { display: none; }
+  html.phone footer button, html.phone footer select { padding: .45rem .9rem; }
+  /* Phones, before the game: Play opens it fullscreen and sideways. */
+  html.phone #play.show { display: flex; position: fixed; left: 50%; bottom: 1rem; transform: translateX(-50%); z-index: 3; flex-direction: column; align-items: center; gap: .35rem; padding: .75rem 1.25rem; border: 1px solid var(--line); border-radius: 8px; background: rgba(22,24,31,.94); }
+  #play-fullscreen { font: inherit; font-size: 1.125rem; font-weight: 600; color: #1b1406; background: var(--gold); border: 0; border-radius: 6px; padding: .6rem 2.25rem; cursor: pointer; }
+  #play-here { font: inherit; font-size: .8125rem; color: var(--muted); background: none; border: 0; padding: .25rem; text-decoration: underline; cursor: pointer; }
+  /* Phones held upright: the game is played sideways. */
+  #rotate { position: fixed; inset: 0; z-index: 4; align-items: center; justify-content: center; padding: 1rem; text-align: center; background: var(--bg); }
+  @media (orientation: portrait) { html.phone #rotate { display: flex; } }
+  #rotate-icon { width: 2.5rem; height: 4.25rem; margin: 0 auto 1.25rem; border: 3px solid var(--gold); border-radius: .5rem; animation: turn-phone 2s ease-in-out infinite; }
+  @keyframes turn-phone { 0%, 25% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+  @media (prefers-reduced-motion: reduce) { #rotate-icon { animation: none; transform: rotate(-90deg); } }
 </style>
 </head>
 <body>
 <div id="stage"><canvas id="canvas" tabindex="0" oncontextmenu="event.preventDefault()"></canvas></div>
 <div id="status">Loading…</div>
 <pre id="log" hidden></pre>
+<button id="menu" type="button" aria-label="Menu" title="Menu">⋮</button>
+<div id="play">
+  <button id="play-fullscreen" type="button">Play</button>
+  <button id="play-here" type="button">Stay in the browser · Остаться в браузере</button>
+</div>
+<div id="rotate"><div><div id="rotate-icon"></div>Turn your phone sideways<br>Поверните телефон горизонтально</div></div>
 <footer>
   <span>MU Online in the browser</span>
   <button id="toggle-log" type="button">Log</button>
@@ -49,10 +86,12 @@
   const statusEl = document.getElementById("status");
   const logEl = document.getElementById("log");
   const canvas = document.getElementById("canvas");
+  const playCard = document.getElementById("play");
   function setStatus(text, bad) {
     statusEl.hidden = !text;
     statusEl.textContent = text || "";
     statusEl.classList.toggle("bad", !!bad);
+    if (bad) playCard.classList.remove("show");
   }
   function appendLog(text, isError) {
     const line = document.createElement("div");
@@ -64,7 +103,29 @@
   }
   document.getElementById("toggle-log").onclick = () => { logEl.hidden = !logEl.hidden; };
   const stage = document.getElementById("stage");
-  document.getElementById("fullscreen").onclick = () => { stage.requestFullscreen?.().catch(() => {}); canvas.focus(); };
+  const footer = document.querySelector("footer");
+  // Phones put the whole page on the screen, the menu button too, and turn it sideways: browsers lock
+  // the orientation only in fullscreen. Called from a tap, as fullscreen needs one.
+  function enterFullscreen() {
+    const target = phone ? document.documentElement : stage;
+    if (!target.requestFullscreen) return;
+    target.requestFullscreen({ navigationUI: "hide" }).then(() => {
+      if (phone && screen.orientation && screen.orientation.lock) screen.orientation.lock("landscape").catch(() => {});
+    }, () => {});
+  }
+  document.getElementById("fullscreen").onclick = () => { enterFullscreen(); footer.classList.remove("open"); canvas.focus(); };
+  document.getElementById("menu").onclick = () => footer.classList.toggle("open");
+  canvas.addEventListener("pointerdown", () => footer.classList.remove("open"));
+
+  // Phones: Play opens the game fullscreen; "Stay in the browser" keeps the address bar (the menu's
+  // Fullscreen does it later). Not where the page already fills the screen (opened from the home
+  // screen, manifest.webmanifest) or can't (iPhone).
+  const homeScreenApp = matchMedia("(display-mode: fullscreen), (display-mode: standalone)").matches;
+  if (phone && !homeScreenApp && document.documentElement.requestFullscreen) {
+    playCard.classList.add("show");
+    document.getElementById("play-fullscreen").onclick = () => { playCard.classList.remove("show"); enterFullscreen(); canvas.focus(); };
+    document.getElementById("play-here").onclick = () => { playCard.classList.remove("show"); canvas.focus(); };
+  }
 
   function stored(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
   function store(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* no storage */ } }
@@ -82,7 +143,12 @@
   const MIN_GAME_SIZE = [640, 480];
   const MIN_PIXEL_RATIO = 0.5;
   const MAX_TEXTURE_SIZE = 8192; // WebGPU's default maxTextureDimension2D
-  const phone = navigator.userAgentData ? navigator.userAgentData.mobile : /Android|iPhone|iPad/.test(navigator.userAgent);
+  // Phones resize the page several times in a row (turning it, the address bar coming and going):
+  // the canvas follows at once, the game's size once it settles, as each new size makes the game
+  // rebuild its frame buffers.
+  const PHONE_RESIZE_DELAY_MS = 200;
+  // A phone held upright shows "Turn your phone sideways" (#rotate) over the game, which keeps its size.
+  const portrait = matchMedia("(orientation: portrait)");
   if (pageParams.has("reset")) {
     try { localStorage.removeItem("mu-web/resolution"); localStorage.removeItem("mu-web/quality"); } catch (e) {}
   }
@@ -109,6 +175,7 @@
   function updateDisplay() {
     const area = stage.getBoundingClientRect();
     if (area.width < 1 || area.height < 1) return; // hidden: keep the last size
+    if (phone && portrait.matches) return;
     const screenRatio = Number(pageParams.get("dpr")) || window.devicePixelRatio || 1;
     const budget = QUALITY_BUDGETS[display.quality][phone ? 1 : 0];
     let ratio = Math.min(screenRatio, Math.sqrt(budget / (area.width * area.height)));
@@ -151,10 +218,20 @@
     if (canvas.style.height !== cssH) canvas.style.height = cssH;
   }
 
+  let displayTimer = 0;
+  function stageResized() {
+    if (!phone) {
+      updateDisplay();
+      return;
+    }
+    fitCanvas();
+    clearTimeout(displayTimer);
+    displayTimer = setTimeout(updateDisplay, PHONE_RESIZE_DELAY_MS);
+  }
   const stageObserver = new ResizeObserver((entries) => {
     const box = entries[0].devicePixelContentBoxSize && entries[0].devicePixelContentBoxSize[0];
     stageDevicePixels = box ? [box.inlineSize, box.blockSize] : null;
-    updateDisplay();
+    stageResized();
   });
   try {
     stageObserver.observe(stage, { box: "device-pixel-content-box" });
@@ -195,6 +272,7 @@
   function gameCrashed(error) {
     if (crashed) return;
     crashed = true;
+    playCard.classList.remove("show");
     for (const socket of openSockets) {
       socket.onmessage = socket.onclose = socket.onerror = null;
       try { socket.close(); } catch (e) {}

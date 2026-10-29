@@ -11,7 +11,8 @@ file(GLOB_RECURSE files LIST_DIRECTORIES FALSE RELATIVE "${OUTPUT_DIR}"
   "${OUTPUT_DIR}/Data/*"
   "${OUTPUT_DIR}/fonts/*"
   "${OUTPUT_DIR}/shaders/*")
-foreach(single IN ITEMS config.ini MuMainIcon.png)
+# The page's manifest and icons ride along, so scripts/publish-web.py uploads them with the rest.
+foreach(single IN ITEMS config.ini MuMainIcon.png manifest.webmanifest icon-192.png icon-512.png)
   if(EXISTS "${OUTPUT_DIR}/${single}")
     list(APPEND files "${single}")
   endif()
