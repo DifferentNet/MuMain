@@ -151,12 +151,20 @@ namespace UI::Scaling
     // login/character scene buttons) grows in the legacy theme: as much as the native dialog text
     // (NativeTextPixelSize()) has grown against its size at 1024x768, never
     // below 1 -- the original's own size up to 1280x720, larger only where the text is larger.
+    // In the browser both sizes are in the page's pixels (LayoutPixelRatio()).
     float SceneWindowScale(int windowWidth, int windowHeight);
     // The rule behind SceneWindowScale() for any text size: textPx / referenceTextPx, not below 1.
     float TextGrowthScale(float textPx, float referenceTextPx);
     // How the original scaled its character scene button bar (laid out for 800x600): by
-    // min(W/800, H/600), clamped to [1, 2] (UI::CharacterSelection::CalculateLayout()).
+    // min(W/800, H/600), clamped to [1, 2] (UI::CharacterSelection::CalculateLayout()). In the
+    // browser 800x600 and the ceiling are in the page's pixels (LayoutPixelRatio()).
     float SceneBarScale(int windowWidth, int windowHeight);
+    // Window pixels per pixel of the scenes' fixed reference sizes above. The browser build's
+    // window is in device pixels and its content scale is the page's device pixels per CSS pixel,
+    // so there it is the content scale: the login and character scenes keep their size on a
+    // high-density screen and only get sharper. 1 on the desktop, where the content scale only
+    // lifts the interface's ceiling (ViewportFitScale()).
+    float LayoutPixelRatio();
     // The same for a box with a height too (RenderText() with a box height the text is taller than,
     // e.g. the Devil Square rank headers' height of 3): the smaller of the two fits, down to the minimum.
     float NativeTextPixelSizeInBounds(FontRole role, int windowWidth, int windowHeight, float measuredWidth,

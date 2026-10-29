@@ -22,4 +22,5 @@ void UI::RmlBridge::ApplyScaleInputs(Rml::Context* context)
     set("--dock-scale", UI::Scaling::DockRightTransform(size.x, size.y).scaleX);
     set("--overlay-scale-x", overlay.scaleX);
     set("--overlay-scale-y", overlay.scaleY);
+    set("--layout-pixel", UI::Scaling::LayoutPixelRatio());
 }

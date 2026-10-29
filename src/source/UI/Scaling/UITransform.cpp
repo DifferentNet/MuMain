@@ -25,6 +25,19 @@ constexpr int kBigFontPointSize = 22;
 constexpr int kMaximumBigFontPointSize = 32;
 constexpr int kFixedFontPointSize = 13;
 constexpr int kMaximumFixedFontPointSize = 18;
+// The legacy theme's login/character windows keep the original's size up to this window
+// (SceneWindowScale()); its character scene button bar was laid out for 800x600 (SceneBarScale()).
+constexpr int kSceneReferenceWidth = 1024;
+constexpr int kSceneReferenceHeight = 768;
+constexpr float kSceneBarReferenceWidth = 800.0f;
+constexpr float kSceneBarReferenceHeight = 600.0f;
+constexpr float kMaximumSceneBarScale = 2.0f;
+
+int ScaledLength(int length, float ratio)
+{
+    return static_cast<int>(std::lround(static_cast<float>(length) * ratio));
+}
+
 // ponytail: one gameplay window; move scale into a window context if multi-window rendering is added.
 float g_windowContentScale = 1.0f;
 
@@ -340,8 +353,11 @@ float UI::Scaling::FitTextPixelSizeToWidth(float textPx, float measuredWidth, fl
 
 float UI::Scaling::SceneWindowScale(int windowWidth, int windowHeight)
 {
+    const float ratio = LayoutPixelRatio();
     const float textPx = NativeTextPixelSize(FontRole::Normal, windowWidth, windowHeight);
-    const float referenceTextPx = NativeTextPixelSize(FontRole::Normal, 1024, 768);
+    const int referenceWidth = ScaledLength(kSceneReferenceWidth, ratio);
+    const int referenceHeight = ScaledLength(kSceneReferenceHeight, ratio);
+    const float referenceTextPx = NativeTextPixelSize(FontRole::Normal, referenceWidth, referenceHeight) / ratio;
     return TextGrowthScale(textPx, referenceTextPx);
 }
 
@@ -355,8 +371,19 @@ float UI::Scaling::TextGrowthScale(float textPx, float referenceTextPx)
 
 float UI::Scaling::SceneBarScale(int windowWidth, int windowHeight)
 {
-    return std::clamp(std::min(static_cast<float>(windowWidth) / 800.0f, static_cast<float>(windowHeight) / 600.0f),
-                      1.0f, 2.0f);
+    const float ratio = LayoutPixelRatio();
+    const float fit = std::min(static_cast<float>(windowWidth) / (kSceneBarReferenceWidth * ratio),
+                               static_cast<float>(windowHeight) / (kSceneBarReferenceHeight * ratio));
+    return std::clamp(fit * ratio, 1.0f, kMaximumSceneBarScale * ratio);
+}
+
+float UI::Scaling::LayoutPixelRatio()
+{
+#ifdef __EMSCRIPTEN__
+    return GetWindowContentScale();
+#else
+    return 1.0f;
+#endif
 }
 
 float UI::Scaling::NativeTextPixelSizeInBounds(FontRole role, int windowWidth, int windowHeight, float measuredWidth,

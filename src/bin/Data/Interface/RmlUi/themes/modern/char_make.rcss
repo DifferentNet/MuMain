@@ -7,13 +7,15 @@
    panel's real screen position also drives the live 3D character-preview viewport, which reads
    unscaled pixel bounds separately, so scaling #panel via dp without also rescaling that viewport
    would desync the 2D chrome from the 3D preview. Documented non-scaling exception, same class as
-   main_frame's HUD band and char_info_balloon's live-projected position. */
+   main_frame's HUD band and char_info_balloon's live-projected position. Every length is that px
+   times --layout-pixel (1 on the desktop, the page's pixel density in the browser), so the panel
+   keeps its size and gets sharper on a high-density screen; the preview follows #preview's size. */
 #panel {
 	position: absolute;
-	width: 454px;
-	height: 406px;
+	width: calc(454px * var(--layout-pixel, 1));
+	height: calc(406px * var(--layout-pixel, 1));
 	font-family: "token(font-body)";
-	font-size: 12px;
+	font-size: calc(12px * var(--layout-pixel, 1));
 	color: token(text-primary);
 }
 
@@ -21,11 +23,11 @@
 #backdrop { background-color: rgba(0, 0, 0, 128); }
 
 /* The 3D preview's viewport, under every other child of the panel. */
-#preview { position: absolute; left: 0px; top: 0px; width: 410px; height: 335px; }
+#preview { position: absolute; left: 0px; top: 0px; width: calc(410px * var(--layout-pixel, 1)); height: calc(335px * var(--layout-pixel, 1)); }
 #preview.awaiting-frame { visibility: hidden; }
 
-#stat_panel  { left: 346px; top: 24px;  }
-#desc_panel  { left: 0px;   top: 355px; }
+#stat_panel  { left: calc(346px * var(--layout-pixel, 1)); top: calc(24px * var(--layout-pixel, 1));  }
+#desc_panel  { left: 0px;   top: calc(355px * var(--layout-pixel, 1)); }
 
 /* Carved-iron backdrop for the attributes/class/identity areas -- this build has no ::before/
    ::after support, so the inset-highlight is a box-shadow layer on this same element instead of a
@@ -47,31 +49,31 @@
 /* left:338 = #stat_panel/.job-btn's own left (346) minus 8px, so the backdrop reads as a real
    margin around them, flush against #panel's right edge (338+116=454). height:98 clears the
    tallest (dark-lord) row's text with a few px to spare. */
-#attributes_panel { left: 338px; top: 14px;  width: 116px; height: 98px; }
+#attributes_panel { left: calc(338px * var(--layout-pixel, 1)); top: calc(14px * var(--layout-pixel, 1));  width: calc(116px * var(--layout-pixel, 1)); height: calc(98px * var(--layout-pixel, 1)); }
 /* top:116 leaves a ~12px gap for the "Class" kicker before the first job button. height:214
    covers the last button's bottom (298+26=324) plus padding. */
-#class_panel      { left: 338px; top: 116px; width: 116px; height: 214px; }
+#class_panel      { left: calc(338px * var(--layout-pixel, 1)); top: calc(116px * var(--layout-pixel, 1)); width: calc(116px * var(--layout-pixel, 1)); height: calc(214px * var(--layout-pixel, 1)); }
 /* Fills exactly the gap between the job-button column's bottom (324) and #desc_panel's top (355)
    -- zero overlap on either side. */
-#identity_strip   { left: 0px;   top: 324px; width: 454px; height: 31px; }
+#identity_strip   { left: 0px;   top: calc(324px * var(--layout-pixel, 1)); width: calc(454px * var(--layout-pixel, 1)); height: calc(31px * var(--layout-pixel, 1)); }
 
 .panel-kicker {
 	position: absolute;
 	color: token(text-muted);
-	font-size: 8px;
+	font-size: calc(8px * var(--layout-pixel, 1));
 	letter-spacing: 0.4px;
 	text-transform: uppercase;
 	font-family: "token(font-body)";
 	pointer-events: none;
 }
-.panel-kicker-attributes { left: 346px; top: 18px;  }
-.panel-kicker-class      { left: 346px; top: 119px; }
+.panel-kicker-attributes { left: calc(346px * var(--layout-pixel, 1)); top: calc(18px * var(--layout-pixel, 1));  }
+.panel-kicker-class      { left: calc(346px * var(--layout-pixel, 1)); top: calc(119px * var(--layout-pixel, 1)); }
 
 /* Row inside #identity_strip -- top:327 = strip's own 324 + 3px top padding, leaving a matching
    ~3px below the row's 327+25=352 bottom before the strip's 355 bottom edge. */
-#input_frame { left: 68px;  top: 327px; }
-#btn_ok      { left: 322px; top: 327px; }
-#btn_cancel  { left: 386px; top: 327px; }
+#input_frame { left: calc(68px * var(--layout-pixel, 1));  top: calc(327px * var(--layout-pixel, 1)); }
+#btn_ok      { left: calc(322px * var(--layout-pixel, 1)); top: calc(327px * var(--layout-pixel, 1)); }
+#btn_cancel  { left: calc(386px * var(--layout-pixel, 1)); top: calc(327px * var(--layout-pixel, 1)); }
 
 /* width:93 + the 7px left padding = 100px total rendered footprint (content-box: padding adds to
    width, not subtracted from it) -- fits inside #class_panel's 116px width with an equal 8px
@@ -79,12 +81,12 @@
    C++-pushed via job.rel_left/rel_top) is untouched -- this is visual-only. */
 .job-btn {
 	position: absolute;
-	width: 93px;
-	height: 24px;
-	padding: 0 0 0 7px;
+	width: calc(93px * var(--layout-pixel, 1));
+	height: calc(24px * var(--layout-pixel, 1));
+	padding: 0 0 0 calc(7px * var(--layout-pixel, 1));
 	text-align: left;
 	vertical-align: middle;
-	line-height: 24px;
+	line-height: calc(24px * var(--layout-pixel, 1));
 	cursor: pointer;
 	pointer-events: auto;
 	color: token(text-secondary);
@@ -94,7 +96,7 @@
 	border: 1px token(border-frame);
 	border-radius: token(radius-sm)px;
 	font-family: "token(font-body)";
-	font-size: 9px;
+	font-size: calc(9px * var(--layout-pixel, 1));
 }
 .job-btn:hover {
 	color: token(accent-gold-hover);
@@ -105,14 +107,14 @@
 /* Every job button sits in one column; the tops are the original's own, in CLASS_* order:
    The pitch is the original's, not this theme's own 24px buttons -- retune if that is ever wanted.
    wizard/knight/elf/summoner run at a 26px pitch, then a gap, then rage-fighter/dark/dark-lord. */
-.job-btn { left: 346px; }
-.job-btn[job="wizard"]       { top: 131px; }
-.job-btn[job="knight"]       { top: 157px; }
-.job-btn[job="elf"]          { top: 183px; }
-.job-btn[job="summoner"]     { top: 209px; }
-.job-btn[job="rage-fighter"] { top: 246px; }
-.job-btn[job="dark"]         { top: 272px; }
-.job-btn[job="dark-lord"]    { top: 298px; }
+.job-btn { left: calc(346px * var(--layout-pixel, 1)); }
+.job-btn[job="wizard"]       { top: calc(131px * var(--layout-pixel, 1)); }
+.job-btn[job="knight"]       { top: calc(157px * var(--layout-pixel, 1)); }
+.job-btn[job="elf"]          { top: calc(183px * var(--layout-pixel, 1)); }
+.job-btn[job="summoner"]     { top: calc(209px * var(--layout-pixel, 1)); }
+.job-btn[job="rage-fighter"] { top: calc(246px * var(--layout-pixel, 1)); }
+.job-btn[job="dark"]         { top: calc(272px * var(--layout-pixel, 1)); }
+.job-btn[job="dark-lord"]    { top: calc(298px * var(--layout-pixel, 1)); }
 .job-btn.checked {
 	color: token(text-warm);
 	border-color: token(accent-gold-hover);
@@ -138,12 +140,12 @@
 	position: absolute;
 	left: 0;
 	top: 0;
-	width: 108px;
-	height: 80px;
+	width: calc(108px * var(--layout-pixel, 1));
+	height: calc(80px * var(--layout-pixel, 1));
 	background-color: transparent;
 }
 .stat-bg.tall {
-	height: 96px;
+	height: calc(96px * var(--layout-pixel, 1));
 }
 /* Full bordered-panel treatment directly on this fill (no separate backdrop sibling, unlike
    attributes/class/identity above -- one element is enough here). rgba throughout, not opaque hex
@@ -153,8 +155,8 @@
 	position: absolute;
 	left: 0;
 	top: 0;
-	width: 454px;
-	height: 51px;
+	width: calc(454px * var(--layout-pixel, 1));
+	height: calc(51px * var(--layout-pixel, 1));
 	background-color: rgba(11, 13, 11, 200);
 	decorator: linear-gradient(to bottom, rgba(255, 255, 255, 6), transparent 30%),
 		linear-gradient(to bottom, rgba(16, 18, 16, 200), rgba(9, 10, 8, 210) 60%, rgba(6, 7, 6, 215));
@@ -164,19 +166,19 @@
 
 .stat-row {
 	position: absolute;
-	left: 22px;
-	width: 84px;
-	padding-bottom: 3px;
+	left: calc(22px * var(--layout-pixel, 1));
+	width: calc(84px * var(--layout-pixel, 1));
+	padding-bottom: calc(3px * var(--layout-pixel, 1));
 	border-bottom: 1px token(border-recessed);
 }
 .stat-label {
 	color: token(text-secondary);
-	font-size: 9px;
+	font-size: calc(9px * var(--layout-pixel, 1));
 	font-family: "token(font-body)";
 }
 .stat-value {
 	position: absolute;
-	left: 54px;
+	left: calc(54px * var(--layout-pixel, 1));
 	color: token(accent-gold);
 	font-weight: bold;
 	font-family: "token(font-body)";
@@ -186,29 +188,29 @@
    "Dark Knight") wraps onto a second line and collides with .desc-line-1's text below it. */
 .desc-title {
 	position: absolute;
-	left: 10px;
-	top: 4px;
+	left: calc(10px * var(--layout-pixel, 1));
+	top: calc(4px * var(--layout-pixel, 1));
 	white-space: nowrap;
 	color: token(accent-gold);
 	font-weight: bold;
-	font-size: 10px;
+	font-size: calc(10px * var(--layout-pixel, 1));
 	font-family: "token(font-body)";
 }
 .desc-line {
 	position: absolute;
-	left: 10px;
+	left: calc(10px * var(--layout-pixel, 1));
 	white-space: nowrap;
 	font-family: "token(font-body)";
 }
-.desc-line-1 { top: 17px; }
-.desc-line-2 { top: 33px; }
+.desc-line-1 { top: calc(17px * var(--layout-pixel, 1)); }
+.desc-line-2 { top: calc(33px * var(--layout-pixel, 1)); }
 
 /* Row inside #identity_strip -- width narrowed to fit beside the OK/Cancel buttons in the same
    31px-tall strip; height:25 leaves ~3px top/bottom padding within the strip. */
 .input-frame {
 	position: absolute;
-	width: 246px;
-	height: 25px;
+	width: calc(246px * var(--layout-pixel, 1));
+	height: calc(25px * var(--layout-pixel, 1));
 	background-color: #080a08;
 	border: 1px token(border-frame);
 	border-radius: token(radius-sm)px;
@@ -216,16 +218,16 @@
 	pointer-events: none;
 }
 
-#input_label { left: 6px; top: 327px; }
+#input_label { left: calc(6px * var(--layout-pixel, 1)); top: calc(327px * var(--layout-pixel, 1)); }
 .input-label {
 	position: absolute;
-	width: 58px;
-	height: 25px;
-	line-height: 25px;
+	width: calc(58px * var(--layout-pixel, 1));
+	height: calc(25px * var(--layout-pixel, 1));
+	line-height: calc(25px * var(--layout-pixel, 1));
 	text-align: center;
 	color: token(text-secondary);
 	font-family: "token(font-body)";
-	font-size: 10px;
+	font-size: calc(10px * var(--layout-pixel, 1));
 }
 
 /* Name field: placement/size only -- appearance comes from base.rcss's shared .text-field, with the
@@ -234,13 +236,13 @@
    #input_text_anchor used, so the caret starts exactly where the native text did. */
 .char-make-name-field {
 	position: absolute;
-	left: 68px;
-	top: 327px;
-	width: 246px;
-	height: 25px;
-	padding: 0 6px;
-	line-height: 25px;
-	font-size: 11px;
+	left: calc(68px * var(--layout-pixel, 1));
+	top: calc(327px * var(--layout-pixel, 1));
+	width: calc(246px * var(--layout-pixel, 1));
+	height: calc(25px * var(--layout-pixel, 1));
+	padding: 0 calc(6px * var(--layout-pixel, 1));
+	line-height: calc(25px * var(--layout-pixel, 1));
+	font-size: calc(11px * var(--layout-pixel, 1));
 	background-color: transparent;
 	decorator: none;
 	border-width: 0;
@@ -257,19 +259,19 @@
    scale ratio other than 1.0. height:25 (not base's 30) matches #identity_strip's row height. */
 .btn {
 	position: absolute;
-	width: 54px;
-	height: 25px;
+	width: calc(54px * var(--layout-pixel, 1));
+	height: calc(25px * var(--layout-pixel, 1));
 	text-align: center;
 	vertical-align: middle;
-	line-height: 25px;
+	line-height: calc(25px * var(--layout-pixel, 1));
 	cursor: pointer;
 	pointer-events: auto;
 }
 
 /* The stat rows' own places, so a theme can move them -- they were style attributes, which are
    inline properties no theme can override. */
-.stat-row-0 { top: 10px; }
-.stat-row-1 { top: 27px; }
-.stat-row-2 { top: 44px; }
-.stat-row-3 { top: 61px; }
-.stat-row-4 { top: 78px; }
+.stat-row-0 { top: calc(10px * var(--layout-pixel, 1)); }
+.stat-row-1 { top: calc(27px * var(--layout-pixel, 1)); }
+.stat-row-2 { top: calc(44px * var(--layout-pixel, 1)); }
+.stat-row-3 { top: calc(61px * var(--layout-pixel, 1)); }
+.stat-row-4 { top: calc(78px * var(--layout-pixel, 1)); }

@@ -7,10 +7,16 @@
 	charballoon-bg-image: 0px 0px 118px 54px;
 }
 
+/* The balloon's sizes are pixels of the original screen times --layout-pixel (1 on the desktop,
+   the page's pixel density in the browser), so it keeps its size on a high-density screen and its
+   text is rasterised sharp. C++ places the top-left at the anchor (bottom centre, 59x54) minus
+   (59, 54); the margins move it by the rest, so the anchor stays put at any ratio. */
 .balloon {
 	position: absolute;
-	width: 118px;
-	height: 54px;
+	width: calc(118px * var(--layout-pixel, 1));
+	height: calc(54px * var(--layout-pixel, 1));
+	margin-left: calc(59px - 59px * var(--layout-pixel, 1));
+	margin-top: calc(54px - 54px * var(--layout-pixel, 1));
 	pointer-events: none;
 	/* The original drew the three lines in the fixed font (g_hFixFont). */
 	font-family: Cousine;
@@ -20,29 +26,29 @@
 	position: absolute;
 	left: 0;
 	top: 0;
-	width: 118px;
-	height: 54px;
+	width: calc(118px * var(--layout-pixel, 1));
+	height: calc(54px * var(--layout-pixel, 1));
 	decorator: image(charballoon-bg-image);
 }
 
 .balloon-name, .balloon-guild, .balloon-class {
 	position: absolute;
 	left: 0;
-	width: 118px;
+	width: calc(118px * var(--layout-pixel, 1));
 	text-align: center;
 	white-space: nowrap;
-	font-size: 12px;
+	font-size: calc(12px * var(--layout-pixel, 1));
 }
 .balloon-name {
-	top: 6px;
+	top: calc(6px * var(--layout-pixel, 1));
 	color: token(text-primary);
 }
 .balloon-guild {
-	top: 22px;
+	top: calc(22px * var(--layout-pixel, 1));
 	color: token(text-primary);
 }
 .balloon-class {
-	top: 38px;
+	top: calc(38px * var(--layout-pixel, 1));
 	color: #ffd927;
 }
 
