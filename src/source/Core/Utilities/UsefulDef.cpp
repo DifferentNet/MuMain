@@ -45,16 +45,17 @@ int DivideStringByPixel(wchar_t* alpszDst, int nDstRow, int nDstColumn, const wc
     wchar_t* context = nullptr;
     wchar_t* pszToken = wcstok_s(&szWorkSrc[0], szNewlineDelimiters, &context);
 
-    while (pszToken != nullptr)
+    // Each paragraph gets only the rows left: with all nDstRow a long text wrote past the end of alpszDst.
+    while (pszToken != nullptr && nLine < nDstRow)
     {
         if (bSpaceInsert)
         {
             mu_swprintf(szWorkToken, L" %ls", pszToken);
-            nLine += CutText3(szWorkToken, alpszDst + nLine * nDstColumn, nPixelPerLine, nDstRow, nDstColumn);
+            nLine += CutText3(szWorkToken, alpszDst + nLine * nDstColumn, nPixelPerLine, nDstRow - nLine, nDstColumn);
         }
         else
         {
-            nLine += CutText3(pszToken, alpszDst + nLine * nDstColumn, nPixelPerLine, nDstRow, nDstColumn);
+            nLine += CutText3(pszToken, alpszDst + nLine * nDstColumn, nPixelPerLine, nDstRow - nLine, nDstColumn);
         }
 
         pszToken = wcstok_s(nullptr, szNewlineDelimiters, &context);
