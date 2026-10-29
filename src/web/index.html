@@ -113,11 +113,12 @@
   <button id="toggle-log" type="button">Log</button>
   <button id="fullscreen" type="button">Fullscreen</button>
   <button id="install-menu" type="button" hidden>Install</button>
-  <label title="How many pixels the game draws while Options has Auto resolution">Quality
+  <label title="How many pixels the game draws while Options has Auto resolution; Lowest also turns effects and shadows off">Quality
     <select id="quality">
       <option value="high">High</option>
       <option value="medium">Medium</option>
       <option value="low">Low</option>
+      <option value="lowest">Lowest</option>
     </select>
   </label>
 </footer>
@@ -503,9 +504,12 @@
   // "Auto" off. The game follows muDisplay once a frame (Winmain.cpp MuWebFollowPageSize) and draws
   // its interface `ratio` times larger, as on a desktop display set to 125 or 150 %, but no larger
   // than the original's 640x480 screen fits (a low phone window: Winmain.cpp WebContentScale).
-  // index.html?q=high|medium|low picks the quality (kept, like the footer's choice); ?dpr=N stands
-  // in for the screen's ratio.
-  const QUALITY_BUDGETS = { high: [2560 * 1440, 1.5e6], medium: [1920 * 1080, 0.75e6], low: [1280 * 720, 0.4e6] };
+  // Lowest has Low's pixels and turns every effect and shadow off as well (Winmain.cpp
+  // MuWebFollowLowestQuality); weak phones start with it (weakPhoneGpu). index.html?q=high|medium|
+  // low|lowest picks the quality (kept, like the footer's choice); ?dpr=N stands in for the screen's
+  // ratio.
+  const QUALITY_BUDGETS = { high: [2560 * 1440, 1.5e6], medium: [1920 * 1080, 0.75e6], low: [1280 * 720, 0.4e6],
+                            lowest: [1280 * 720, 0.4e6] };
   const MIN_GAME_SIZE = [640, 480];
   const MIN_PIXEL_RATIO = 0.5;
   const MAX_TEXTURE_SIZE = 8192; // WebGPU's default maxTextureDimension2D
@@ -516,8 +520,11 @@
   // A phone held upright shows "Turn your phone sideways" (#rotate) over the game, which keeps its size.
   const portrait = matchMedia("(orientation: portrait)");
   if (pageParams.has("reset")) {
-    try { localStorage.removeItem("mu-web/resolution"); localStorage.removeItem("mu-web/quality"); } catch (e) {}
+    try {
+      for (const key of ["mu-web/resolution", "mu-web/quality", "mu-web/effects-before-lowest"]) localStorage.removeItem(key);
+    } catch (e) {}
   }
+  const effectsBeforeLowest = parseInt(stored("mu-web/effects-before-lowest"), 10);
   if (QUALITY_BUDGETS[pageParams.get("q")]) store("mu-web/quality", pageParams.get("q"));
   const display = window.muDisplay = {
     auto: stored("mu-web/resolution") !== "manual",
@@ -533,6 +540,13 @@
       this.quality = quality;
       store("mu-web/quality", quality);
       updateDisplay();
+    },
+    // The game's effect and shadow settings from before Lowest turned them off (bits, -1: none), so
+    // another quality brings them back. Kept beside the quality; ?reset forgets it with config.ini.
+    effectsBeforeLowest: Number.isInteger(effectsBeforeLowest) ? effectsBeforeLowest : -1,
+    setEffectsBeforeLowest(bits) {
+      this.effectsBeforeLowest = bits;
+      store("mu-web/effects-before-lowest", String(bits));
     },
   };
   // The stage's exact size in device pixels, where the browser tells it (Chrome, Edge, Firefox).
@@ -828,7 +842,17 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
               `clip distances: ${clipNote}; depth clamp: ${depthClamp ? "yes" : "no, depth clipped"}; ` +
               `browser: ${browser}`,
               missing.length > 0);
-    return { ok: missing.length === 0, gpu, browser, missing, clipDistances, depthClamp };
+    return { ok: missing.length === 0, gpu, browser, missing, clipDistances, depthClamp, weak: weakPhoneGpu(info) };
+  }
+  // Phone graphics too slow for the game's effects and shadows: ARM Mali Bifrost or Midgard (the
+  // Galaxy Note 10 Lite's Mali-G72 played at Low "a bit smoother, not smooth", 2026-10-30), Adreno 5xx
+  // or older, PowerVR, or 2 GB of memory or less. Such phones start at Quality Lowest.
+  function weakPhoneGpu(info) {
+    const vendor = (info.vendor || "").toLowerCase(), architecture = (info.architecture || "").toLowerCase();
+    return (vendor === "arm" && /bifrost|midgard/.test(architecture)) ||
+           (vendor === "qualcomm" && /adreno-?[2-5]/.test(architecture)) ||
+           /img-tec|imagination|powervr/.test(vendor) ||
+           (navigator.deviceMemory || 8) <= 2;
   }
   function showGpuProblem(gpu, browser, missingFeatures) {
     const lines = missingFeatures.length
@@ -863,6 +887,13 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     if (!gpuCheck.ok) {
       showGpuProblem(gpuCheck.gpu, gpuCheck.browser, gpuCheck.missing);
       return;
+    }
+    // Until the player picks a quality (?weakphone tries it on any device).
+    const weakPhone = (phone && gpuCheck.weak) || new URLSearchParams(location.search).has("weakphone");
+    if (weakPhone && !QUALITY_BUDGETS[stored("mu-web/quality")]) {
+      display.quality = qualitySelect.value = "lowest";
+      updateDisplay();
+      appendLog("Quality: Lowest (a weak phone), effects and shadows off; the footer's Quality changes it");
     }
     // index.html?profile samples the page's code (JS Self-Profiling API; the server must send
     // "Document-Policy: js-profiling", as scripts/serve-web.py does). muProfileTop() in the console
