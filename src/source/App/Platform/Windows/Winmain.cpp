@@ -51,6 +51,8 @@
 
 #ifdef __EMSCRIPTEN__
 #include "Core/Platform/web/WebDisplay.h"
+#include "Core/Platform/web/WebKeyboard.h"
+#include <RmlUi/Core/Element.h>
 extern EGameScene SceneFlag; // read by WaitForBrowserFrame()
 #endif
 #include "Render/Models/ZzzBMD.h"
@@ -1830,6 +1832,10 @@ MSG MainLoop()
                 Render::Look::ApplyPendingTuning();
 #ifdef __EMSCRIPTEN__
                 MuWebFollowPageSize();
+                if (const Rml::Element* field = RmlUiRuntime::Instance().GetFocusedTextField())
+                    mu::web::SyncKeyboard(true, field->GetAttribute<Rml::String>("type", "") == "password");
+                else
+                    mu::web::SyncKeyboard(false, false);
 #endif
                 RenderProfiledFrame();
 #ifdef __EMSCRIPTEN__

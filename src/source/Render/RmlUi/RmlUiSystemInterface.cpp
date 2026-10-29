@@ -5,10 +5,34 @@
 #include <SDL3/SDL.h>
 #include <chrono>
 
+#ifdef __EMSCRIPTEN__
+#include "Core/Platform/web/WebKeyboard.h"
+#include <RmlUi/Core/Context.h>
+#include <RmlUi/Core/Core.h>
+#include <RmlUi/Core/Element.h>
+#endif
+
 namespace
 {
     // RmlUi animation and double-click timing must advance independently of game pause/ticks.
     const std::chrono::steady_clock::time_point g_StartTime = std::chrono::steady_clock::now();
+
+#ifdef __EMSCRIPTEN__
+    // A phone has no keys until its own keyboard comes up (Core/Platform/web/WebKeyboard.h). RmlUi
+    // focuses the field before it activates the keyboard, and gives its line in the context's pixels.
+    void ShowPhoneKeyboard(float lineTop, float lineHeight)
+    {
+        Rml::Context* context = Rml::GetContext("main");
+        if (!context)
+            return;
+
+        const Rml::Element* focused = context->GetFocusElement();
+        const bool password = focused && focused->GetAttribute<Rml::String>("type", "") == "password";
+        const int height = context->GetDimensions().y;
+        const float scale = height > 0 ? 1.0f / static_cast<float>(height) : 0.0f;
+        mu::web::ShowKeyboard(password, lineTop * scale, (lineTop + lineHeight) * scale);
+    }
+#endif
 }
 
 RmlUiSystemInterface::RmlUiSystemInterface(SDL_Window* window) : m_Window(window)
@@ -57,11 +81,17 @@ void RmlUiSystemInterface::ActivateKeyboard(Rml::Vector2f caret_position, float 
     const SDL_Rect rect = {static_cast<int>(caret_position.x), static_cast<int>(caret_position.y), 1, static_cast<int>(line_height)};
     SDL_SetTextInputArea(m_Window, &rect, 0);
     SDL_StartTextInput(m_Window);
+#ifdef __EMSCRIPTEN__
+    ShowPhoneKeyboard(caret_position.y, line_height);
+#endif
 }
 
 void RmlUiSystemInterface::DeactivateKeyboard()
 {
     m_TextInputActive = false;
+#ifdef __EMSCRIPTEN__
+    mu::web::HideKeyboard();
+#endif
     if (!m_Window) return;
     SDL_StopTextInput(m_Window);
 }

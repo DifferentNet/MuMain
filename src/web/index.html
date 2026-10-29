@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-visual">
 <meta name="theme-color" content="#0d0e12">
 <link rel="manifest" href="manifest.webmanifest">
 <title>MU Online (web)</title>
@@ -58,10 +58,14 @@
   #rotate-icon { width: 2.5rem; height: 4.25rem; margin: 0 auto 1.25rem; border: 3px solid var(--gold); border-radius: .5rem; animation: turn-phone 2s ease-in-out infinite; }
   @keyframes turn-phone { 0%, 25% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
   @media (prefers-reduced-motion: reduce) { #rotate-icon { animation: none; transform: rotate(-90deg); } }
+  /* Phones: the unseen field that brings up the phone's keyboard for the game's text fields
+     (phoneKeyboard below). 16px, or an iPhone zooms in on it. */
+  #keyboard { position: fixed; left: 0; top: 0; width: 1px; height: 1px; padding: 0; border: 0; opacity: 0; font-size: 16px; pointer-events: none; caret-color: transparent; -webkit-user-select: text; user-select: text; }
 </style>
 </head>
 <body>
 <div id="stage"><canvas id="canvas" tabindex="0" oncontextmenu="event.preventDefault()"></canvas></div>
+<input id="keyboard" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" tabindex="-1" aria-hidden="true">
 <div id="status">Loading…</div>
 <pre id="log" hidden></pre>
 <button id="menu" type="button" aria-label="Menu" title="Menu">⋮</button>
@@ -126,6 +130,111 @@
     document.getElementById("play-fullscreen").onclick = () => { playCard.classList.remove("show"); enterFullscreen(); canvas.focus(); };
     document.getElementById("play-here").onclick = () => { playCard.classList.remove("show"); canvas.focus(); };
   }
+
+  // Phones: their own keyboard for the game's text fields (Module.muKeyboard, called from
+  // Core/Platform/web/WebKeyboard.cpp). A canvas can't bring it up, so while a field has the keys the
+  // unseen #keyboard field has the page's focus, and what is typed there goes to the game as key
+  // presses on the window, where SDL listens. A phone's keyboard gives no key codes, which SDL needs,
+  // so the field's value says what changed. It starts with two zero-width spaces, so a Backspace
+  // always has something to delete there, also when it is meant for text the game's field had before.
+  // While the keyboard covers the game's field, the game moves up above it.
+  const KEYBOARD_FILL = "​​";
+  const KEYBOARD_MAX_LENGTH = 64;       // longer, and the field starts over between words
+  const ENTER_HOLD_MS = 100;            // the login window reads Enter as a key held down
+  const KEYBOARD_GAP = 12;              // CSS pixels between the game's field and the keyboard
+  const KEYBOARD_HIDE_DELAY_MS = 100;   // from one field to the next the game hides it, then shows it
+  const keyboardInput = document.getElementById("keyboard");
+  let keyboardSent = KEYBOARD_FILL;     // the value the game has been sent
+  let keyboardComposing = false;        // the keyboard is still writing a word (suggestions)
+  let keyboardWanted = false;
+  let keyboardHideTimer = 0;
+  let keyboardLine = null;              // the game's field, [top, bottom] as fractions of its height
+  let keyboardShift = 0;                // CSS pixels the game is moved up
+  let tappedSinceKeyboard = false;      // a tap on the game since it last asked for the keyboard
+
+  function pressKey(key, code, keyCode, holdMs) {
+    const send = (type) => window.dispatchEvent(new KeyboardEvent(type, { key, code, keyCode, which: keyCode, bubbles: true, cancelable: true }));
+    send("keydown");
+    if (holdMs) setTimeout(() => send("keyup"), holdMs);
+    else send("keyup");
+  }
+  function typeText(text) {
+    for (const ch of text) {
+      if (ch === "​") continue;
+      const charCode = ch.codePointAt(0);
+      window.dispatchEvent(new KeyboardEvent("keypress", { key: ch, charCode, keyCode: charCode, which: charCode, bubbles: true, cancelable: true }));
+    }
+  }
+  function restartKeyboardValue(always) {
+    if (keyboardComposing) return;
+    const value = keyboardInput.value;
+    if (!always && value.startsWith(KEYBOARD_FILL) && value.length <= KEYBOARD_MAX_LENGTH) return;
+    keyboardInput.value = keyboardSent = KEYBOARD_FILL;
+    keyboardInput.setSelectionRange(KEYBOARD_FILL.length, KEYBOARD_FILL.length);
+  }
+  keyboardInput.addEventListener("input", (event) => {
+    keyboardComposing = event.isComposing;
+    const now = Array.from(keyboardInput.value), before = Array.from(keyboardSent);
+    let same = 0;
+    while (same < now.length && same < before.length && now[same] === before[same]) same++;
+    for (let i = same; i < before.length; i++) pressKey("Backspace", "Backspace", 8, 0);
+    typeText(now.slice(same).join(""));
+    keyboardSent = keyboardInput.value;
+    restartKeyboardValue(false);
+  });
+  keyboardInput.addEventListener("compositionstart", () => { keyboardComposing = true; });
+  keyboardInput.addEventListener("compositionend", () => { keyboardComposing = false; restartKeyboardValue(false); });
+  // A phone's Enter ("Go"): a PC's keys have a code and reach the game as they are.
+  keyboardInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.code && !event.isComposing) {
+      event.preventDefault();
+      pressKey("Enter", "Enter", 13, ENTER_HOLD_MS);
+    }
+  });
+  // A tap on the game leaves the focus in the field: the game says when the keyboard goes.
+  canvas.addEventListener("mousedown", (event) => { if (document.activeElement === keyboardInput) event.preventDefault(); });
+  canvas.addEventListener("pointerdown", () => { tappedSinceKeyboard = true; });
+
+  function moveAboveKeyboard() {
+    const view = window.visualViewport;
+    let shift = 0;
+    if (keyboardWanted && keyboardLine && view) {
+      const rect = canvas.getBoundingClientRect();
+      const top = rect.top + keyboardShift; // where the game is when not moved
+      const lineTop = top + keyboardLine[0] * rect.height, lineBottom = top + keyboardLine[1] * rect.height;
+      shift = Math.max(0, Math.min(lineBottom + KEYBOARD_GAP - (view.offsetTop + view.height), lineTop));
+    }
+    shift = Math.round(shift);
+    if (shift === keyboardShift) return;
+    keyboardShift = shift;
+    stage.style.transform = shift ? `translateY(${-shift}px)` : "";
+  }
+  if (window.visualViewport) visualViewport.addEventListener("resize", moveAboveKeyboard);
+
+  const phoneKeyboard = {
+    // "fresh": a field that just took the keys. A tap on the field it has brings the keyboard back
+    // when the phone's Back button put it away: focus() on the focused field does that in Chrome.
+    show(password, lineTop, lineBottom, fresh) {
+      clearTimeout(keyboardHideTimer);
+      keyboardWanted = true;
+      keyboardLine = [lineTop, lineBottom];
+      const type = password ? "password" : "text";
+      if (keyboardInput.type !== type) keyboardInput.type = type;
+      if (fresh) restartKeyboardValue(true);
+      if (fresh || tappedSinceKeyboard || document.activeElement !== keyboardInput) keyboardInput.focus({ preventScroll: true });
+      tappedSinceKeyboard = false;
+      moveAboveKeyboard();
+    },
+    hide() {
+      keyboardWanted = false;
+      clearTimeout(keyboardHideTimer);
+      keyboardHideTimer = setTimeout(() => {
+        if (document.activeElement === keyboardInput) canvas.focus({ preventScroll: true });
+        keyboardLine = null;
+        moveAboveKeyboard();
+      }, KEYBOARD_HIDE_DELAY_MS);
+    },
+  };
 
   function stored(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
   function store(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* no storage */ } }
@@ -499,6 +608,7 @@
       canvas,
       muStartupPack: startupPack,
       muClipDistances: gpuCheck.clipDistances,
+      muKeyboard: phone ? phoneKeyboard : undefined,
       print: (text) => { console.log(text); appendLog(text, false); },
       printErr: (text) => { console.error(text); appendLog(text, true); },
       setStatus: (text) => { if (packDone || text) setStatus(text); },

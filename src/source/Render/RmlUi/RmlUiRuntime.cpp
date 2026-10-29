@@ -157,6 +157,12 @@ void RmlUiRuntime::Create(int windowWidth, int windowHeight)
     // Every window keeps its document loaded and hidden; only the shown ones need a per-frame update.
     if (m_Context)
         m_Context->SetSkipHiddenDocuments(true);
+#ifdef __EMSCRIPTEN__
+    // The browser build: styles under `@media (theme: web)` apply (a phone's screen is far wider
+    // than the original's 4:3, so its full-screen images keep their shape there).
+    if (m_Context)
+        m_Context->ActivateTheme("web", true);
+#endif
     m_DebugContext = Rml::CreateContext("debug", Rml::Vector2i(windowWidth, windowHeight));
     if (m_DebugContext)
         m_DebugContext->SetSkipHiddenDocuments(true);
