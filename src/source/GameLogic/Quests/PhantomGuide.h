@@ -18,8 +18,8 @@ void AddTo(NPCDialogueMap& dialogues);
 // The guide's words for a QuestWords index, nullptr for any other index.
 const wchar_t* Words(int wordsIndex);
 
-// The line she says over her head now and then: Webzen's «I'll be your strength…» and the guide's invitation in
-// turn, each copy of her (by character key) on its own (ghinzuro, 2026-10-29: «можно сделать новую про вики и
-// ротировать»).
+// The line over her head: Webzen's «I'll be your strength…» and the guide's invitation in turn (ghinzuro,
+// 2026-10-29: «можно сделать новую про вики и ротировать»), each for 10 s, by the clock, not per call (2026-10-30:
+// «фразы у эльфа слишком быстро меняются»). Each copy of her (by character key) switches at its own moment.
 const wchar_t* OverheadLine(int characterKey);
 } // namespace PhantomGuide

@@ -25,6 +25,9 @@
   <data name="FirstTopics" xml:space="preserve">
     <value>Первые темы</value>
   </data>
+  <data name="Buff" xml:space="preserve">
+    <value>Получить усиление атаки и защиты.</value>
+  </data>
   <data name="Overhead" xml:space="preserve">
     <value>Впервые здесь? Спроси меня, я расскажу об этом мире!</value>
   </data>

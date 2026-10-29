@@ -3,7 +3,7 @@
 
 #include "I18N/All.h"
 
-#include <unordered_map>
+#include <chrono>
 
 namespace PhantomGuide
 {
@@ -16,6 +16,12 @@ constexpr DWORD kGreetingState = 0;
 constexpr DWORD kFirstListState = 700;
 constexpr DWORD kListStateStep = 10;
 constexpr DWORD kFirstTopicState = 801;
+
+// The greeting's buff answer (CNPCDialogue::ProcessSelTextResult sends the buff request for it).
+constexpr int kBuffResult = 902;
+
+// How long each of her two overhead lines stays before the other one comes.
+constexpr long long kOverheadLineMs = 10000;
 
 // The guide's QuestWords indexes start far above Webzen's (QuestWords_*.bmd ends at 20999).
 constexpr int kWordsBase = 900000;
@@ -59,6 +65,7 @@ enum Word : int
     kWordBack,
     kWordMoreTopics,
     kWordFirstTopics,
+    kWordBuff,
     kWordFirstTopic, // then a label and a text per topic
 };
 
@@ -110,6 +117,12 @@ void AddTo(NPCDialogueMap& dialogues)
     // The greeting keeps its answers (the buff) and gets the guide after them.
     SNPCDialogue& greeting = dialogues.try_emplace(DialogIndex(kGreetingState), NewState(0)).first->second;
     greeting.m_nNPCWords = kWordGreeting;
+    // Webzen's buff answer has only an English text (QuestWords): the guide's own string speaks both languages.
+    for (int i = 0; i < QM_MAX_ND_ANSWER; ++i)
+    {
+        if (greeting.m_anAnswer[i * 2] != 0 && greeting.m_anAnswer[i * 2 + 1] == kBuffResult)
+            greeting.m_anAnswer[i * 2] = kWordBuff;
+    }
     AddAnswer(greeting, kWordGuide, ListState(0));
 
     for (int list = 0; list < kListCount; ++list)
@@ -154,6 +167,8 @@ const wchar_t* Words(int wordsIndex)
         return I18N::PhantomGuide::MoreTopics;
     case kWordFirstTopics:
         return I18N::PhantomGuide::FirstTopics;
+    case kWordBuff:
+        return I18N::PhantomGuide::Buff;
     default:
         break;
     }
@@ -168,10 +183,12 @@ const wchar_t* Words(int wordsIndex)
 
 const wchar_t* OverheadLine(int characterKey)
 {
-    // Only her copies ask, so the map stays small.
-    static std::unordered_map<int, bool> saysInvitation;
-    bool& invitation = saysInvitation[characterKey];
-    invitation = !invitation;
+    // The game asks many times a second (OnlyNpcChatProcess), so the line follows the clock: each one stays
+    // kOverheadLineMs, and each copy switches at its own moment (an offset from its key), not all of them at once.
+    const auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    const auto offset = static_cast<long long>((static_cast<unsigned>(characterKey) * 2654435761u) % kOverheadLineMs);
+    const bool invitation = ((now + offset) / kOverheadLineMs) % 2 == 0;
     return invitation ? I18N::PhantomGuide::Overhead : I18N::Game::ILlBeYourStrengthForTheJourneyToBecomeAWarrior;
 }
 } // namespace PhantomGuide
