@@ -42,6 +42,7 @@
 #include "SdlGpuReplayState.h"
 #include "SdlGpuValidation.h"
 #include "SingleSampleTwins.h"
+#include "SoftClipShaders.h"
 #include "WorldPipelineSet.h"
 #include "Core/Utilities/FrameProfiler.h"
 #include "Core/Utilities/Log/MuLogger.h"
@@ -51,6 +52,9 @@
 #include "Render/Text/SdlTtfFontSet.h"
 #ifdef _EDITOR
 #include "Core/MuEditorCore.h"
+#endif
+#ifdef __EMSCRIPTEN__
+#include "Core/Platform/web/WebGpuFeatures.h"
 #endif
 
 #include <algorithm>
@@ -1190,6 +1194,9 @@ static SDL_GPUShader* s_vertShaderPostFullscreen = nullptr; // post_fullscreen.v
 static SDL_GPUShader* s_fragShaderBloomDown = nullptr;      // post_bloom_down.frag
 static SDL_GPUShader* s_fragShaderBloomUp = nullptr;        // post_bloom_up.frag
 static SDL_GPUShader* s_fragShaderComposite = nullptr;      // post_composite.frag
+// Browser on a card without clip distances (ARM Mali): LoadShaders() takes the soft clip copies
+// (SoftClipShaders.h), which drop the same pixels in the fragment shader.
+static bool s_softClipShaders = false;
 
 // Depth buffer texture for correct 3D depth testing.
 // Created in Init() at swapchain dimensions, recreated on window resize.
@@ -1813,10 +1820,15 @@ public:
 #ifdef __EMSCRIPTEN__
         // Browser build: the WebGPU backend (libsdl-org/SDL#16020) takes WGSL, and the vertex
         // shaders write clip distances, an optional WebGPU feature it only requests when asked.
+        // Cards without it (ARM Mali phones) get the soft clip shaders instead.
         {
+            const bool clipDistances = mu::web::HasClipDistances();
+            s_softClipShaders = !clipDistances;
+            mu::log::Get("render")->info("SDL_gpu -- clip distances: {}",
+                                         clipDistances ? "yes" : "no, soft clip shaders");
             const SDL_PropertiesID props = SDL_CreateProperties();
             SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_SHADERS_WGSL_BOOLEAN, true);
-            SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_FEATURE_CLIP_DISTANCE_BOOLEAN, true);
+            SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_FEATURE_CLIP_DISTANCE_BOOLEAN, clipDistances);
             SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_DEBUGMODE_BOOLEAN, Render::kGpuValidationEnabled);
             // Transfer buffers up to this size are written through the queue instead of mapped. A
             // mapped one waits for the GPU each time it's mapped again, and the vertex stream's is
@@ -5450,7 +5462,8 @@ private:
         auto createShader = [&](const char* name, const char* stage, SDL_GPUShaderStage shaderStage, Uint32 numSamplers,
                                 Uint32 numStorageBuffers, Uint32 numUniformBuffers, bool fatal) -> SDL_GPUShader*
         {
-            std::vector<Uint8> blob = LoadShaderBlob(name, stage, driverName);
+            const std::string blobName = Render::SoftClip::BlobName(name, stage, s_softClipShaders);
+            std::vector<Uint8> blob = LoadShaderBlob(blobName.c_str(), stage, driverName);
             size_t codeSize = blob.size();
 #ifdef __EMSCRIPTEN__
             // The WebGPU backend also reads WGSL as a C string (to find the bindings): end it with NUL.

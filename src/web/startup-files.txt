@@ -14,6 +14,12 @@ shaders/post_fullscreen.vert.wgsl
 shaders/post_bloom_down.frag.wgsl
 shaders/post_bloom_up.frag.wgsl
 shaders/post_composite.frag.wgsl
+shaders/basic_textured_softclip.vert.wgsl
+shaders/skinned_textured_softclip.vert.wgsl
+shaders/skinned_shadow_softclip.vert.wgsl
+shaders/basic_textured_softclip.frag.wgsl
+shaders/basic_textured_fog_softclip.frag.wgsl
+shaders/skinned_lit_softclip.frag.wgsl
 fonts/DejaVuSans.ttf
 fonts/DejaVuSans-Bold.ttf
 fonts/Cousine-Regular.ttf

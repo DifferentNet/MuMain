@@ -271,13 +271,16 @@
   if (!navigator.gpu) missing.push("WebGPU");
   if (!("Suspending" in WebAssembly)) missing.push("WebAssembly JSPI");
   if (!self.crossOriginIsolated) missing.push("cross-origin isolation (serve with scripts/serve-web.py)");
-  // The graphics adapter and the optional WebGPU features the game's renderer requests (SDL's WebGPU
-  // backend requires the first six, the game's shaders the clip distances). Without one of them the
-  // game only said "SDL_gpu Renderer Error. Install the latest graphics card driver." (an AMD
-  // Radeon RX 9070 XT, 2026-10-24; its browser then gave no adapter at all). index.html?needfeature=<name>
-  // adds a feature and ?noadapter drops the adapter, to see the messages.
+  // The graphics adapter and the optional WebGPU features SDL's WebGPU backend requires. Without one
+  // of them the game only said "SDL_gpu Renderer Error. Install the latest graphics card driver." (an
+  // AMD Radeon RX 9070 XT, 2026-10-24; its browser then gave no adapter at all).
+  // index.html?needfeature=<name> adds a feature and ?noadapter drops the adapter, to see the messages.
   const NEEDED_FEATURES = ["depth32float-stencil8", "rg11b10ufloat-renderable", "indirect-first-instance",
-                           "depth-clip-control", "bgra8unorm-storage", "float32-filterable", "clip-distances"];
+                           "depth-clip-control", "bgra8unorm-storage", "float32-filterable"];
+  // The game's shaders use clip distances where the card has them. ARM Mali phones (a Pixel 9 Pro XL,
+  // 2026-10-29) don't, and the game takes its soft clip shaders instead (Module.muClipDistances,
+  // Core/Platform/web/WebGpuFeatures.cpp). index.html?softclip takes them on any card, to try them.
+  const CLIP_DISTANCES = "clip-distances";
   // The browser and its version, for the message: Yandex, Opera and Brave are Chromium too, and some
   // give pages navigator.gpu but no adapter.
   function browserName() {
@@ -308,9 +311,11 @@
     const info = adapter.info || {};
     const gpu = [info.vendor, info.architecture, info.device, info.description].filter(Boolean).join(" / ") || "unknown";
     const missing = needed.filter((name) => !adapter.features.has(name));
-    appendLog(`WebGPU adapter: ${gpu} (${tried.join(", ")}); missing features: ${missing.join(", ") || "none"}; browser: ${browser}`,
+    const clipDistances = adapter.features.has(CLIP_DISTANCES) && !params.has("softclip");
+    appendLog(`WebGPU adapter: ${gpu} (${tried.join(", ")}); missing features: ${missing.join(", ") || "none"}; ` +
+              `clip distances: ${clipDistances ? "yes" : "no, soft clip shaders"}; browser: ${browser}`,
               missing.length > 0);
-    return { ok: missing.length === 0, gpu, browser, missing };
+    return { ok: missing.length === 0, gpu, browser, missing, clipDistances };
   }
   function showGpuProblem(gpu, browser, missingFeatures) {
     const lines = missingFeatures.length
@@ -415,6 +420,7 @@
     window.Module = {
       canvas,
       muStartupPack: startupPack,
+      muClipDistances: gpuCheck.clipDistances,
       print: (text) => { console.log(text); appendLog(text, false); },
       printErr: (text) => { console.error(text); appendLog(text, true); },
       setStatus: (text) => { if (packDone || text) setStatus(text); },

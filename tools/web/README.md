@@ -49,6 +49,19 @@ node tools/web/rmlui-shaders-to-wgsl.mjs <naga-wasm folder>   # writes RmlUiShad
 
 RmlUi's blur shaders use array varyings naga rejects; `rmlui-wgsl/` holds hand-written versions.
 
+Soft clip: the world shaders cut off what is nearer than one unit with a clip distance, a WebGPU
+feature ARM Mali phones (the Pixel 9) don't have. `spirv-to-wgsl.mjs` also writes a `*_softclip`
+copy of the three vertex shaders that write it and of the three fragment shaders paired with them
+(`wgsl-soft-clip.mjs`): the vertex shader hands the clip value on as a varying and the fragment shader
+drops the pixel where it's below zero. The page tells the game whether the card has the feature
+(`Module.muClipDistances`), and the renderer loads the copies without it (`SoftClipShaders.*`,
+the log says "clip distances: no, soft clip shaders"). `index.html?softclip` takes them on any card.
+To rewrite only the copies from the checked-in WGSL:
+
+```bash
+node tools/web/wgsl-soft-clip.mjs src/shaders/compiled
+```
+
 ## The SDL patch
 
 `patches/sdl-webgpu.patch` (MU Moldova changes to the fork; each is commented in place):
