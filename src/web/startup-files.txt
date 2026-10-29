@@ -3837,3 +3837,6 @@ Data/Interface/lo_back_s5_im06.OZJ
 # Added 2026-10-24: the GM panel window (key Y; the workspace loads it at the start)
 Data/Interface/RmlUi/themes/legacy/gm_panel.rcss
 Data/Interface/RmlUi/gm_panel.rml
+# Added 2026-10-28: the Endless Tower window of Lugard (Lorencia, Devias)
+Data/Interface/RmlUi/themes/legacy/endless_tower.rcss
+Data/Interface/RmlUi/endless_tower.rml

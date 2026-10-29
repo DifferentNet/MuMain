@@ -91,6 +91,7 @@ CSystem::CSystem()
     m_pNewDailyRewardsWindow = nullptr;
     m_pNewBattlePassWindow = nullptr;
     m_pNewTierMapsWindow = nullptr;
+    m_pNewEndlessTowerWindow = nullptr;
     m_pNewJewelBankWindow = nullptr;
     m_pNewAuctionWindow = nullptr;
     m_pNewGmPanelWindow = nullptr;
@@ -401,6 +402,12 @@ bool CSystem::LoadMainSceneInterface()
         return false;
     }
 
+    m_pNewEndlessTowerWindow = new CEndlessTowerWindow;
+    if (m_pNewEndlessTowerWindow->Create(m_pNewUIMng) == false)
+    {
+        return false;
+    }
+
     m_pNewJewelBankWindow = new CJewelBankWindow;
     if (m_pNewJewelBankWindow->Create(m_pNewUIMng) == false)
     {
@@ -621,6 +628,7 @@ bool CSystem::LoadMainSceneInterface()
     slot(INTERFACE_DAILY_REWARDS, "daily_rewards", m_pNewDailyRewardsWindow, "daily_rewards.rml");
     slot(INTERFACE_BATTLE_PASS, "battle_pass", m_pNewBattlePassWindow, "battle_pass.rml");
     slot(INTERFACE_TIER_MAPS, "tier_maps", m_pNewTierMapsWindow, "tier_maps.rml");
+    slot(INTERFACE_ENDLESS_TOWER, "endless_tower", m_pNewEndlessTowerWindow, "endless_tower.rml");
     slot(INTERFACE_GM_PANEL, "gm_panel", m_pNewGmPanelWindow, "gm_panel.rml");
     slot(INTERFACE_TITLES, "titles", m_pNewTitlesWindow, "titles.rml");
     slot(INTERFACE_GOLD_BOWMAN, "gold_bowman", m_pNewGoldBowman, "gold_bowman.rml");
@@ -704,6 +712,7 @@ void CSystem::UnloadMainSceneInterface()
     SAFE_DELETE(m_pNewDailyRewardsWindow);
     SAFE_DELETE(m_pNewBattlePassWindow);
     SAFE_DELETE(m_pNewTierMapsWindow);
+    SAFE_DELETE(m_pNewEndlessTowerWindow);
     SAFE_DELETE(m_pNewJewelBankWindow);
     SAFE_DELETE(m_pNewAuctionWindow);
     SAFE_DELETE(m_pNewGmPanelWindow);
@@ -1003,6 +1012,11 @@ void CSystem::Show(DWORD dwKey)
     {
         HideAllGroupA();
         m_pNewTierMapsWindow->OpenningProcess();
+    }
+    else if (dwKey == INTERFACE_ENDLESS_TOWER)
+    {
+        HideAllGroupA();
+        m_pNewEndlessTowerWindow->OpenningProcess();
     }
     else if (dwKey == INTERFACE_GM_PANEL)
     {
@@ -1484,6 +1498,10 @@ void CSystem::Hide(DWORD dwKey)
     {
         m_pNewTierMapsWindow->ClosingProcess();
     }
+    else if (dwKey == INTERFACE_ENDLESS_TOWER)
+    {
+        m_pNewEndlessTowerWindow->ClosingProcess();
+    }
     else if (dwKey == INTERFACE_GM_PANEL)
     {
         m_pNewGmPanelWindow->ClosingProcess();
@@ -1721,6 +1739,7 @@ void CSystem::HideAllGroupA()
         INTERFACE_DAILY_REWARDS,
         INTERFACE_BATTLE_PASS,
         INTERFACE_TIER_MAPS,
+        INTERFACE_ENDLESS_TOWER,
         INTERFACE_GM_PANEL,
         INTERFACE_TITLES,
         INTERFACE_JEWEL_BANK,
@@ -1778,6 +1797,7 @@ void CSystem::HideAllGroupB()
         INTERFACE_DAILY_REWARDS,
         INTERFACE_BATTLE_PASS,
         INTERFACE_TIER_MAPS,
+        INTERFACE_ENDLESS_TOWER,
         INTERFACE_GM_PANEL,
         INTERFACE_TITLES,
         INTERFACE_JEWEL_BANK,
@@ -2406,6 +2426,11 @@ CBattlePassWindow* CSystem::GetUI_NewBattlePassWindow() const
 CTierMapsWindow* CSystem::GetUI_NewTierMapsWindow() const
 {
     return m_pNewTierMapsWindow;
+}
+
+CEndlessTowerWindow* CSystem::GetUI_NewEndlessTowerWindow() const
+{
+    return m_pNewEndlessTowerWindow;
 }
 
 CJewelBankWindow* CSystem::GetUI_NewJewelBankWindow() const
