@@ -1077,11 +1077,25 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       }
     }
 
+    // The game's files not in a pack download when it first reads them (fetch-backend.js), from a
+    // worker in Chromium. Safari and every iPhone browser (all WebKit) start a worker's download on
+    // the page's thread, which the game holds while it waits for the file: it waited forever (Safari
+    // 27, 2026-10-29: the login screen's "remember password" box). There the page's thread downloads
+    // the files itself. Only Chromium has navigator.userAgentData. index.html?pagefetch or
+    // ?workerfetch decides it on any browser.
+    const fetchParams = new URLSearchParams(location.search);
+    const filesOnPageThread = fetchParams.has("pagefetch") ||
+      (!fetchParams.has("workerfetch") && !navigator.userAgentData);
+    appendLog(`Game files read later: downloaded by ${filesOnPageThread ? "the page's thread" : "a worker"} (` +
+              (fetchParams.has("pagefetch") ? "?pagefetch" : fetchParams.has("workerfetch") ? "?workerfetch"
+                : navigator.userAgentData ? "Chromium" : "not Chromium") + ")");
+
     // Global for Main.js, which picks up an existing Module object.
     window.Module = {
       canvas,
       muStartupPack: startupParts,
       muMapPack: mapPack,
+      muFilesOnPageThread: filesOnPageThread,
       muClipDistances: gpuCheck.clipDistances,
       muKeyboard: phone ? phoneKeyboard : undefined,
       muDevice: device.kind,

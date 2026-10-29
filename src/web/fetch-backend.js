@@ -14,12 +14,53 @@
  * path?v=<hash>: the page's service worker (sw.js) keeps it on the device under that URL and goes to
  * the server again only when a release changes the file, and so its hash. Without startup.json or a
  * hash, the plain URL.
+ *
+ * The downloads run in the mount's worker, except where the page decides (index.html,
+ * MuWeb_FilesOnPageThread in WebFileSystem.cpp) that the page's thread runs them: WebKit (Safari,
+ * every iPhone browser) starts a worker's download on the page's thread, and the game, which runs
+ * there, holds it while it waits for this worker, so the download never started (Safari 27,
+ * 2026-10-29). While it waits, the page's thread runs work other threads send it (Emscripten's
+ * emscripten_futex_wait.c), and a synchronous request needs no event loop: the worker sends it
+ * downloadOnPageThread.
  */
 addToLibrary({
+  // On the page's thread: bytes start..end of the file at `url` (a C string) go to `buffer` when they
+  // fit in `capacity`; the answer's status and the file's size (from Content-Range, -1 without) go to
+  // `info` (two doubles). Returns how many bytes the answer has, -1 when none came.
+  $downloadOnPageThread__proxy: 'sync',
+  $downloadOnPageThread__deps: ['$UTF8ToString'],
+  $downloadOnPageThread: function(url, start, end, buffer, capacity, info) {
+    var request = new XMLHttpRequest();
+    try {
+      request.open('GET', UTF8ToString(url), false);
+      request.setRequestHeader('Range', `bytes=${start}-${end}`);
+      // A synchronous request can't ask for bytes: one character per byte instead.
+      request.overrideMimeType('text/plain; charset=x-user-defined');
+      request.send();
+    } catch (_e) {
+      return -1;
+    }
+    var text = request.responseText;
+    var total = /\/(\d+)$/.exec(request.getResponseHeader('Content-Range') || '');
+    {{{ makeSetValue('info', 0, 'request.status', 'double') }}};
+    {{{ makeSetValue('info', 8, 'total ? parseInt(total[1], 10) : -1', 'double') }}};
+    if (text.length <= capacity) {
+      for (var i = 0; i < text.length; i++) {
+        HEAPU8[buffer + i] = text.charCodeAt(i) & 0xff;
+      }
+    }
+    return text.length;
+  },
+
   _wasmfs_create_fetch_backend_js__deps: [
     '$wasmFS$backends',
     '$wasmFS$JSMemoryRanges',
     '$UTF8ToString',
+    '$stringToNewUTF8',
+    '$downloadOnPageThread',
+    'malloc',
+    'free',
+    'MuWeb_FilesOnPageThread',
     '_wasmfs_fetch_get_file_url',
     '_wasmfs_fetch_get_chunk_size',
   ],
@@ -55,21 +96,69 @@ addToLibrary({
       return pageFolder + path + (hash ? `?v=${hash}` : '');
     }
 
+    // See downloadOnPageThread: {status, size, bytes}, or {status: 0} without an answer.
+    function askPageThread(url, start, end) {
+      var urlText = stringToNewUTF8(url);
+      var info = _malloc(16);
+      var capacity = end - start + 1;
+      var buffer = _malloc(capacity);
+      try {
+        var length = buffer ? downloadOnPageThread(urlText, start, end, buffer, capacity, info) : -1;
+        if (length > capacity) {
+          // A server that ignores ranges sent the whole file: once more with room for it.
+          _free(buffer);
+          capacity = length;
+          buffer = _malloc(capacity);
+          length = buffer ? downloadOnPageThread(urlText, start, end, buffer, capacity, info) : -1;
+        }
+        if (length < 0 || length > capacity) {
+          return {status: 0};
+        }
+        return {
+          status: {{{ makeGetValue('info', 0, 'double') }}},
+          size: {{{ makeGetValue('info', 8, 'double') }}},
+          bytes: HEAPU8.slice(buffer, buffer + length),
+        };
+      } finally {
+        _free(urlText);
+        _free(info);
+        _free(buffer);
+      }
+    }
+
+    // Bytes start..end of a file: {status, size (the whole file's, from Content-Range; -1 without),
+    // bytes (where the status is a success)}.
+    async function download(url, start, end) {
+      if (_MuWeb_FilesOnPageThread()) {
+        return askPageThread(url, start, end);
+      }
+      var response = await fetch(url, {headers: {'Range': `bytes=${start}-${end}`}});
+      var total = /\/(\d+)$/.exec(response.headers.get('Content-Range') || '');
+      return {
+        status: response.status,
+        size: total ? parseInt(total[1], 10) : -1,
+        bytes: response.ok ? new Uint8Array(await response.arrayBuffer()) : null,
+      };
+    }
+
+    function succeeded(answer) {
+      return answer.status >= 200 && answer.status < 300;
+    }
+
     // The file's size and its first two chunks (or all of it), in one request.
     async function fetchStart(file, url, chunkSize) {
-      var response = await fetch(url, {headers: {'Range': `bytes=0-${2 * chunkSize - 1}`}});
-      if (response.status == 416) {
+      var answer = await download(url, 0, 2 * chunkSize - 1);
+      if (answer.status == 416) {
         // Nothing to give from byte 0 on: an empty file.
         wasmFS$JSMemoryRanges[file] = {size: 0, chunks: [], chunkSize: chunkSize};
         return;
       }
-      if (!response.ok) {
-        throw response;
+      if (!succeeded(answer)) {
+        throw answer;
       }
-      var bytes = new Uint8Array(await response.arrayBuffer());
+      var bytes = answer.bytes;
       // A 200 is the whole file (a server that ignores ranges); a 206 says the size after the slash.
-      var total = /\/(\d+)$/.exec(response.headers.get('Content-Range') || '');
-      var size = response.status == 206 && total ? parseInt(total[1], 10) : bytes.length;
+      var size = answer.status == 206 && answer.size >= 0 ? answer.size : bytes.length;
       if (size <= bytes.length) {
         wasmFS$JSMemoryRanges[file] = {size: bytes.length, chunks: [bytes], chunkSize: Math.max(bytes.length, 1)};
         return;
@@ -108,11 +197,11 @@ addToLibrary({
       // One request for all the chunks needed, up to the last byte of the last one.
       var start = firstChunk * chunkSize;
       var end = Math.min((lastChunk + 1) * chunkSize, info.size);
-      var response = await fetch(url, {headers: {'Range': `bytes=${start}-${end - 1}`}});
-      if (!response.ok) {
-        throw response;
+      var answer = await download(url, start, end - 1);
+      if (!succeeded(answer)) {
+        throw answer;
       }
-      var bytes = new Uint8Array(await response.arrayBuffer());
+      var bytes = answer.bytes;
       for (var i = firstChunk; i <= lastChunk; i++) {
         info.chunks[i] = bytes.slice(i * chunkSize - start, (i + 1) * chunkSize - start);
       }
