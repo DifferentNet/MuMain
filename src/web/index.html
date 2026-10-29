@@ -1060,11 +1060,13 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     }
     let packDone = false;
     const startupParts = startupPack();
-    startupParts.then((parts) => Promise.allSettled(parts || []), () => {})
+    const startupPackSettled = startupParts.then((parts) => Promise.allSettled(parts || []), () => {})
       .finally(() => { packDone = true; setStatus(""); });
+    let mapPacksLoading = 0;
     // WebFileSystem.cpp LoadWorldFiles: the files of the map folder the game enters (Data/WorldN,
     // ObjectN), or null where the map has no pack.
     async function mapPack(world) {
+      mapPacksLoading++;
       try {
         const indexResponse = await fetch(`packs/world${world}.json`, { cache: "no-cache" });
         if (!indexResponse.ok) return null;
@@ -1073,6 +1075,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         const kept = store ? await store.match(packKey(entry)).catch(() => undefined) : undefined;
         return await loadPack(`Map pack ${world}`, entry, store, kept, downloadProgress("the map", entry.packed || 0));
       } finally {
+        mapPacksLoading--;
         setStatus("");
       }
     }
@@ -1089,6 +1092,91 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     appendLog(`Game files read later: downloaded by ${filesOnPageThread ? "the page's thread" : "a worker"} (` +
               (fetchParams.has("pagefetch") ? "?pagefetch" : fetchParams.has("workerfetch") ? "?workerfetch"
                 : navigator.userAgentData ? "Chromium" : "not Chromium") + ")");
+
+    // On a computer the game's other files (startup.json "versions": models, textures, sounds, music,
+    // 402 MB on 2026-10-30) download in the background while it is played. A file the game reads for
+    // the first time holds it until it is here: a monster coming into sight reads ~26 files, ~45 ms
+    // each from the server, and froze the game for over a second; kept on the device, 0.08 s
+    // (2026-10-30). The service worker keeps them (sw.js), so it is needed, as are the game's reads
+    // going through it (a worker's, not Safari's page thread). A file already kept is left alone, a
+    // map pack downloading goes first, and the game's own downloads come before these. Not on phones
+    // and tablets (their data plans and storage); with sound or music off in Options, not those
+    // files. index.html?prefetch downloads them on any device, ?noprefetch on none.
+    const backgroundDownloads = pageParams.has("prefetch") ||
+      (!pageParams.has("noprefetch") && !phone && !filesOnPageThread);
+    const BACKGROUND_DOWNLOADS = 4;   // files downloading at once
+    // The ones a game reads most often first: what comes into sight (monsters, NPCs, armour,
+    // weapons, skill effects), then windows, sounds, music, then the rest.
+    const BACKGROUND_ORDER = ["shaders/", "Data/Monster/", "Data/NPC/", "Data/Player/", "Data/Item/", "Data/Effect/",
+                              "Data/Skill/", "Data/Interface/", "Data/Local/", "Data/Sound/", "Data/Music/"];
+    const backgroundRank = (path) => {
+      const at = BACKGROUND_ORDER.findIndex((folder) => path.startsWith(folder));
+      return at < 0 ? BACKGROUND_ORDER.length : at;
+    };
+    function gameConfig() {
+      try {
+        return new TextDecoder().decode(Module.FS.readFile("/game/config.ini"));
+      } catch (e) {
+        return stored("mu-web/config.ini") || "";
+      }
+    }
+    // Downloads one file through the service worker, which keeps it whole and answers its first
+    // byte: the file's size, from Content-Range.
+    async function downloadInBackground(url) {
+      const response = await fetch(url, { headers: { "Range": "bytes=0-0", "X-Mu-Background": "1" } });
+      await response.arrayBuffer();
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const size = /\/(\d+)$/.exec(response.headers.get("Content-Range") || "");
+      return size ? Number(size[1]) : 0;
+    }
+    async function downloadRestInBackground() {
+      const versions = releaseIndex && releaseIndex.versions;
+      if (!versions || !self.caches || !(navigator.serviceWorker && navigator.serviceWorker.controller)) {
+        appendLog("Game files in the background: not downloaded (no service worker on this page)");
+        return;
+      }
+      const config = gameConfig();
+      const off = (setting) => new RegExp(`^${setting}=0\\s*$`, "m").test(config);
+      const leftOut = [off("SoundVolume") && "Data/Sound/", off("MusicVolume") && "Data/Music/"].filter(Boolean);
+      let kept;
+      try {
+        kept = new Set((await (await caches.open("mu-web/files")).keys()).map((request) => request.url));
+      } catch (e) {
+        appendLog(`Game files in the background: not downloaded (no storage: ${e})`);
+        return;
+      }
+      const files = Object.keys(versions)
+        .filter((path) => !leftOut.some((folder) => path.startsWith(folder)))
+        .sort((a, b) => backgroundRank(a) - backgroundRank(b))
+        .map((path) => new URL(`${path}?v=${versions[path]}`, location.href).href)
+        .filter((url) => !kept.has(url));
+      if (!files.length) return;
+      appendLog(`Game files in the background: downloading ${files.length} of ${Object.keys(versions).length}` +
+                (leftOut.length ? ` (sound or music off: not ${leftOut.join(", ")})` : ""));
+      const started = performance.now();
+      const queue = taskQueue(BACKGROUND_DOWNLOADS);
+      let downloaded = 0, bytes = 0, failed = 0, failedInRow = 0;
+      await Promise.all(files.map((url) => queue(async () => {
+        // A server that answers nothing 20 times in a row: the rest is left for the game to read.
+        if (failedInRow >= 20) return;
+        while (mapPacksLoading) await new Promise((resume) => setTimeout(resume, 250));
+        try {
+          // Not "bytes += await …": that reads bytes before the wait, and the other downloads'
+          // sums made meanwhile would be lost.
+          const size = await downloadInBackground(url);
+          bytes += size;
+          downloaded++;
+          failedInRow = 0;
+        } catch (e) {
+          failed++;
+          failedInRow++;
+        }
+      })));
+      const skipped = files.length - downloaded - failed;
+      appendLog(`Game files in the background: ${downloaded} downloaded, ${Math.round(bytes / 1e6)} MB in ` +
+                `${Math.round((performance.now() - started) / 1000)} s` + (failed ? `, ${failed} failed` : "") +
+                (skipped ? `, ${skipped} left for the game to read` : ""), failed > 0);
+    }
 
     // Global for Main.js, which picks up an existing Module object.
     window.Module = {
@@ -1107,6 +1195,10 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         canvas.focus();
         setInterval(saveConfig, 3000);
         addEventListener("pagehide", saveConfig);
+        if (backgroundDownloads) {
+          startupPackSettled.then(downloadRestInBackground)
+            .catch((e) => appendLog(`Game files in the background: stopped (${e})`, true));
+        }
       },
       onAbort: (what) => gameCrashed(what),
       // Main.js calls this instead of fetching Main.wasm itself: the gzip copy where there is one
