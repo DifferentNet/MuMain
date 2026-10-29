@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <set>
 #include <string>
+#include <string_view>
 #include <sys/stat.h>
 #include <thread>
 #include <unistd.h>
@@ -28,6 +29,11 @@ namespace
 constexpr const char* GameDir = "/game";
 constexpr const char* ServerDir = "/server";
 constexpr unsigned ChunkSize = 1u << 20;
+// The page's gzip copies of startup.pack and Main.wasm (tools/web/make_startup_pack.py). files.txt
+// lists them so scripts/publish-web.py uploads them, but only the page reads them. Copied like
+// config.ini, they were downloaded again at every start (120 MB in 1 MB pieces), which left a phone
+// at a black screen (a Pixel 9 Pro XL, 2026-10-29).
+constexpr std::string_view PageCopySuffix = ".gz";
 
 // 0 while the mount is being set up, 1 when it is ready, -1 when it failed.
 std::atomic<int> g_mountState{0};
@@ -166,7 +172,7 @@ void SetUpMount()
         {
             line.pop_back();
         }
-        if (line.empty() || line == "files.txt")
+        if (line.empty() || line == "files.txt" || line.ends_with(PageCopySuffix))
         {
             continue;
         }
