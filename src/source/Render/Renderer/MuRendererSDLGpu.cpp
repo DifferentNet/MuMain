@@ -1826,9 +1826,14 @@ public:
             s_softClipShaders = !clipDistances;
             mu::log::Get("render")->info("SDL_gpu -- clip distances: {}",
                                          clipDistances ? "yes" : "no, soft clip shaders");
+            // Depth clamping is optional in WebGPU too (ARM Mali Bifrost phones lack it): without
+            // it the pipelines ask to clip depth, as SDL requires then.
+            const bool depthClamp = mu::web::HasDepthClamp();
+            mu::log::Get("render")->info("SDL_gpu -- depth clamp: {}", depthClamp ? "yes" : "no, depth clipped");
             const SDL_PropertiesID props = SDL_CreateProperties();
             SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_SHADERS_WGSL_BOOLEAN, true);
             SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_FEATURE_CLIP_DISTANCE_BOOLEAN, clipDistances);
+            SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_FEATURE_DEPTH_CLAMPING_BOOLEAN, depthClamp);
             SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_DEBUGMODE_BOOLEAN, Render::kGpuValidationEnabled);
             // Transfer buffers up to this size are written through the queue instead of mapped. A
             // mapped one waits for the GPU each time it's mapped again, and the vertex stream's is
@@ -5877,6 +5882,10 @@ private:
         rasterState.fill_mode = SDL_GPU_FILLMODE_FILL;
         rasterState.cull_mode = description.cullFaceEnabled ? SDL_GPU_CULLMODE_BACK : SDL_GPU_CULLMODE_NONE;
         rasterState.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE;
+#ifdef __EMSCRIPTEN__
+        // Clamped depth (false) wherever the card can (see mu::web::HasDepthClamp).
+        rasterState.enable_depth_clip = !mu::web::HasDepthClamp();
+#endif
 
         SDL_GPUGraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.vertex_shader = description.vertexLayout == VertexLayout::Skinned         ? s_vertShaderSkinned

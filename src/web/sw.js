@@ -11,6 +11,7 @@
  *
  * index.html?nosw removes it from the browser, with the files it kept.
  */
+// The game's file system reads kept files from here itself (fetch-backend.js, readKept): keep the name.
 const FILES = "mu-web/files";
 
 self.addEventListener("install", () => self.skipWaiting());
@@ -41,9 +42,10 @@ async function openPage(event) {
   }
 }
 
-// Byte ranges of files downloading now. The game reads a file range after range (fetch-backend.js):
-// the first range downloads the whole file, and the next ones wait for it instead of downloading it
-// again.
+// Files downloading now, by URL. The game reads a file range after range (fetch-backend.js): the
+// first range downloads the whole file, and the next ones wait for it instead of downloading it
+// again; so do the page's background downloads (index.html, "X-Mu-Background"). A file stays here
+// until it is kept, so a range asked for in between doesn't download it once more.
 const downloads = new Map();
 
 // The file from the device, else from the server (the whole file, which is then kept). The game's
@@ -62,23 +64,25 @@ async function versionedFile(event) {
   if (kept) return byteRange(await kept.blob(), kept.headers, range);
   let download = downloads.get(request.url);
   if (!download) {
-    download = downloadWhole(cache, request.url).finally(() => downloads.delete(request.url));
+    download = downloadWhole(request.url, request.headers.has("X-Mu-Background"));
     downloads.set(request.url, download);
+    // The game gets its range as soon as the file is here; keeping it on the device takes a while
+    // longer (11 ms a file, 2026-10-30), and the game waited for that too.
+    event.waitUntil(download.then((whole) => whole.blob && cache && keep(cache, request.url, whole.response))
+      .catch(() => {}).finally(() => downloads.delete(request.url)));
   }
-  event.waitUntil(download.catch(() => {}));
   const whole = await download;
   // An error, or an answer that isn't the whole file: passed on as the server gave it.
-  return whole.blob ? byteRange(whole.blob, whole.headers, range) : whole.response.clone();
+  return whole.blob ? byteRange(whole.blob, whole.response.headers, range) : whole.response.clone();
 }
 
-// Downloads a whole file and keeps it: {blob, headers}, or {response} where the server's answer
-// isn't the whole file.
-async function downloadWhole(cache, url) {
-  const response = await fetch(url, { credentials: "same-origin" });
+// Downloads a whole file: {blob, response (to keep, with the blob as its body)}, or {response}
+// where the server's answer isn't the whole file. A background download gives way to the game's.
+async function downloadWhole(url, background) {
+  const response = await fetch(url, { credentials: "same-origin", priority: background ? "low" : "auto" });
   if (response.status !== 200) return { response };
   const blob = await response.blob();
-  if (cache) await keep(cache, url, new Response(blob, { status: 200, statusText: response.statusText, headers: response.headers }));
-  return { blob, headers: response.headers };
+  return { blob, response: new Response(blob, { status: 200, statusText: response.statusText, headers: response.headers }) };
 }
 
 // Keeps a file and drops its other versions.

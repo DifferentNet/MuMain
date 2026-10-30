@@ -35,7 +35,7 @@ container behind Caddy (`server/README.md`, "Browser client").
 | Shaders | `src/shaders/compiled/*.wgsl`, `Core/Platform/web/RmlUiShadersWgsl.h` | WGSL from the SPIR-V blobs (see below). |
 | RmlUi shaders | `Core/Platform/web/RmlUiGpuShaders.cpp` | RmlUi's SDL_GPU renderer asks for SPIR-V; the build redirects its two calls here, which hand out the WGSL version by the SPIR-V's hash. |
 | Desktop-only libraries | `Core/Platform/web/include`, `TurboJpegShim.cpp`, `CurlFileDownloaderWeb.cpp`, `PlatformCryptoWeb.cpp` | libjpeg-turbo through SDL_image; no downloads and no saved passwords in the browser. |
-| Resolution | `index.html` `muDisplay`, `Core/Platform/web/WebDisplay.*`, `Winmain.cpp` `MuWebFollowPageSize`, `MuWebDisplayResolutions` | Options has "Auto" first, the default: the game takes the game area's size in the screen's real pixels (devicePixelRatio), so the picture is drawn 1:1, and draws its interface that many times larger (the content scale, as on a desktop display at 125 or 150 %). It follows window resizes, Fullscreen and browser zoom. The footer's Quality caps the pixels: High 2560x1440 (phones 1.5 million), Medium 1920x1080 (0.75 M), Low 1280x720 (0.4 M); never below 640x480. `?q=high\|medium\|low` sets it, `?dpr=N` stands in for the screen's ratio, `?reset` forgets both. A size picked in Options (the usual sizes up to the screen's pixels, plus the one that fills the window exactly) turns "Auto" off and is scaled to the window, keeping its shape; the browser keeps the choice (`mu-web/resolution`, `mu-web/quality`). |
+| Resolution | `index.html` `muDisplay`, `Core/Platform/web/WebDisplay.*`, `Winmain.cpp` `MuWebFollowPageSize`, `MuWebDisplayResolutions` | Options has "Auto" first, the default: the game takes the game area's size in the screen's real pixels (devicePixelRatio), so the picture is drawn 1:1, and draws its interface that many times larger (the content scale, as on a desktop display at 125 or 150 %). It follows window resizes, Fullscreen and browser zoom. The footer's Quality caps the pixels: High 2560x1440 (phones 1.5 million), Medium 1920x1080 (0.75 M), Low 1280x720 (0.4 M); never below 640x480. Lowest has Low's pixels and also turns Options' six effect and shadow settings off (`Winmain.cpp` `MuWebFollowLowestQuality`); the player's own come back with another quality (kept meanwhile in `mu-web/effects-before-lowest`). Weak phones start at Lowest until a quality is picked: ARM Mali Bifrost or Midgard, Adreno 5xx or older, PowerVR, or 2 GB of memory or less (`index.html` `weakPhoneGpu`; `?weakphone` tries it anywhere). `?q=high\|medium\|low\|lowest` sets it, `?dpr=N` stands in for the screen's ratio, `?reset` forgets both. A size picked in Options (the usual sizes up to the screen's pixels, plus the one that fills the window exactly) turns "Auto" off and is scaled to the window, keeping its shape; the browser keeps the choice (`mu-web/resolution`, `mu-web/quality`). |
 | Settings | `index.html` `saveConfig`, `WebFileSystem.cpp` `MuWeb_MergeSavedConfig` | config.ini (resolution, volume, …) is kept in the browser's storage (`mu-web/config.ini`) and comes back on the next visit, with the server copy's `[CONNECTION SETTINGS]`. |
 | Frame pacing | `Winmain.cpp` `WaitForBrowserFrame`, `SceneCore.cpp` `WaitForNextActivity` | After each frame the game hands the browser a turn and keeps to about 60 frames a second (no cap while loading). `sleep_for` and `yield` would spin without letting the browser deliver network messages. |
 
@@ -66,6 +66,11 @@ To rewrite only the copies from the checked-in WGSL:
 node tools/web/wgsl-soft-clip.mjs src/shaders/compiled
 ```
 
+Depth clamp: the pipelines clamp depth, as on every other platform, where the card has WebGPU's
+`depth-clip-control`. ARM Mali Bifrost phones (a Galaxy Note 10 Lite, 2026-10-30) don't, and the game clips
+depth there instead, as the original OpenGL game did (`Module.muDepthClamp`; the log says "depth clamp: no,
+depth clipped"). `index.html?nodepthclamp` clips it on any card.
+
 ## The SDL patch
 
 `patches/sdl-webgpu.patch` (MU Moldova changes to the fork; each is commented in place):
@@ -81,6 +86,8 @@ node tools/web/wgsl-soft-clip.mjs src/shaders/compiled
 - A window without area (a hidden page laid out at 0x0) skips frames instead of creating 0x0
   textures, and `WaitAndAcquireSwapchainTexture` no longer waits forever for one.
 - A key event claims keyboard focus when SDL lost it, or typed text was dropped.
+- `DepthClipControl` is optional: requested where the adapter has it and the app leaves
+  `FEATURE_DEPTH_CLAMPING` on; without it pipelines clip depth (ARM Mali Bifrost phones lack it).
 - Fewer calls into the page per frame (each WebGPU call costs; a phone feels it most). Measured in Lorencia on
   2026-10-29: 915 draws a frame set 4 bind groups each (3,660 calls) and wrote 736 uniform blocks one call each.
   - A draw sets only the bind groups whose bindings changed, and not when the same group and offsets are

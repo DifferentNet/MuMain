@@ -114,11 +114,12 @@
   <button id="fullscreen" type="button">Fullscreen</button>
   <button id="install-menu" type="button" hidden>Install</button>
   <button id="view" type="button" hidden title="The game's layout, as in its Options → Interface">View</button>
-  <label title="How many pixels the game draws while Options has Auto resolution">Quality
+  <label title="How many pixels the game draws while Options has Auto resolution; Lowest also turns effects and shadows off">Quality
     <select id="quality">
       <option value="high">High</option>
       <option value="medium">Medium</option>
       <option value="low">Low</option>
+      <option value="lowest">Lowest</option>
     </select>
   </label>
 </footer>
@@ -531,9 +532,12 @@
   // "Auto" off. The game follows muDisplay once a frame (Winmain.cpp MuWebFollowPageSize) and draws
   // its interface `ratio` times larger, as on a desktop display set to 125 or 150 %, but no larger
   // than the original's 640x480 screen fits (a low phone window: Winmain.cpp WebContentScale).
-  // index.html?q=high|medium|low picks the quality (kept, like the footer's choice); ?dpr=N stands
-  // in for the screen's ratio.
-  const QUALITY_BUDGETS = { high: [2560 * 1440, 1.5e6], medium: [1920 * 1080, 0.75e6], low: [1280 * 720, 0.4e6] };
+  // Lowest has Low's pixels and turns every effect and shadow off as well (Winmain.cpp
+  // MuWebFollowLowestQuality); weak phones start with it (weakPhoneGpu). index.html?q=high|medium|
+  // low|lowest picks the quality (kept, like the footer's choice); ?dpr=N stands in for the screen's
+  // ratio.
+  const QUALITY_BUDGETS = { high: [2560 * 1440, 1.5e6], medium: [1920 * 1080, 0.75e6], low: [1280 * 720, 0.4e6],
+                            lowest: [1280 * 720, 0.4e6] };
   const MIN_GAME_SIZE = [640, 480];
   const MIN_PIXEL_RATIO = 0.5;
   const MAX_TEXTURE_SIZE = 8192; // WebGPU's default maxTextureDimension2D
@@ -544,8 +548,11 @@
   // A phone held upright shows "Turn your phone sideways" (#rotate) over the game, which keeps its size.
   const portrait = matchMedia("(orientation: portrait)");
   if (pageParams.has("reset")) {
-    try { localStorage.removeItem("mu-web/resolution"); localStorage.removeItem("mu-web/quality"); } catch (e) {}
+    try {
+      for (const key of ["mu-web/resolution", "mu-web/quality", "mu-web/effects-before-lowest"]) localStorage.removeItem(key);
+    } catch (e) {}
   }
+  const effectsBeforeLowest = parseInt(stored("mu-web/effects-before-lowest"), 10);
   if (QUALITY_BUDGETS[pageParams.get("q")]) store("mu-web/quality", pageParams.get("q"));
   const display = window.muDisplay = {
     auto: stored("mu-web/resolution") !== "manual",
@@ -561,6 +568,13 @@
       this.quality = quality;
       store("mu-web/quality", quality);
       updateDisplay();
+    },
+    // The game's effect and shadow settings from before Lowest turned them off (bits, -1: none), so
+    // another quality brings them back. Kept beside the quality; ?reset forgets it with config.ini.
+    effectsBeforeLowest: Number.isInteger(effectsBeforeLowest) ? effectsBeforeLowest : -1,
+    setEffectsBeforeLowest(bits) {
+      this.effectsBeforeLowest = bits;
+      store("mu-web/effects-before-lowest", String(bits));
     },
   };
   // The stage's exact size in device pixels, where the browser tells it (Chrome, Edge, Firefox).
@@ -748,7 +762,11 @@
   // AMD Radeon RX 9070 XT, 2026-10-24; its browser then gave no adapter at all).
   // index.html?needfeature=<name> adds a feature and ?noadapter drops the adapter, to see the messages.
   const NEEDED_FEATURES = ["depth32float-stencil8", "rg11b10ufloat-renderable", "indirect-first-instance",
-                           "depth-clip-control", "bgra8unorm-storage", "float32-filterable"];
+                           "bgra8unorm-storage", "float32-filterable"];
+  // The game clamps depth where the card can. ARM Mali Bifrost phones (a Galaxy Note 10 Lite in
+  // Chrome 156, 2026-10-30) can't, and the game clips it instead, as the original OpenGL game did
+  // (Module.muDepthClamp). index.html?nodepthclamp clips it on any card, to try it.
+  const DEPTH_CLAMP = "depth-clip-control";
   // The game's shaders use clip distances where the card has them. ARM Mali phones (a Pixel 9 Pro XL,
   // 2026-10-29) don't, and the game takes its soft clip shaders instead (Module.muClipDistances,
   // Core/Platform/web/WebGpuFeatures.cpp). index.html?softclip takes them on any card, to try them.
@@ -847,10 +865,22 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         clipNote = `no, this browser can't build them (${broken}), soft clip shaders`;
       }
     }
+    const depthClamp = adapter.features.has(DEPTH_CLAMP) && !params.has("nodepthclamp");
     appendLog(`WebGPU adapter: ${gpu} (${tried.join(", ")}); missing features: ${missing.join(", ") || "none"}; ` +
-              `clip distances: ${clipNote}; browser: ${browser}`,
+              `clip distances: ${clipNote}; depth clamp: ${depthClamp ? "yes" : "no, depth clipped"}; ` +
+              `browser: ${browser}`,
               missing.length > 0);
-    return { ok: missing.length === 0, gpu, browser, missing, clipDistances };
+    return { ok: missing.length === 0, gpu, browser, missing, clipDistances, depthClamp, weak: weakPhoneGpu(info) };
+  }
+  // Phone graphics too slow for the game's effects and shadows: ARM Mali Bifrost or Midgard (the
+  // Galaxy Note 10 Lite's Mali-G72 played at Low "a bit smoother, not smooth", 2026-10-30), Adreno 5xx
+  // or older, PowerVR, or 2 GB of memory or less. Such phones start at Quality Lowest.
+  function weakPhoneGpu(info) {
+    const vendor = (info.vendor || "").toLowerCase(), architecture = (info.architecture || "").toLowerCase();
+    return (vendor === "arm" && /bifrost|midgard/.test(architecture)) ||
+           (vendor === "qualcomm" && /adreno-?[2-5]/.test(architecture)) ||
+           /img-tec|imagination|powervr/.test(vendor) ||
+           (navigator.deviceMemory || 8) <= 2;
   }
   function showGpuProblem(gpu, browser, missingFeatures) {
     const lines = missingFeatures.length
@@ -885,6 +915,13 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     if (!gpuCheck.ok) {
       showGpuProblem(gpuCheck.gpu, gpuCheck.browser, gpuCheck.missing);
       return;
+    }
+    // Until the player picks a quality (?weakphone tries it on any device).
+    const weakPhone = (phone && gpuCheck.weak) || new URLSearchParams(location.search).has("weakphone");
+    if (weakPhone && !QUALITY_BUDGETS[stored("mu-web/quality")]) {
+      display.quality = qualitySelect.value = "lowest";
+      updateDisplay();
+      appendLog("Quality: Lowest (a weak phone), effects and shadows off; the footer's Quality changes it");
     }
     // index.html?profile samples the page's code (JS Self-Profiling API; the server must send
     // "Document-Policy: js-profiling", as scripts/serve-web.py does). muProfileTop() in the console
@@ -1088,11 +1125,13 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     }
     let packDone = false;
     const startupParts = startupPack();
-    startupParts.then((parts) => Promise.allSettled(parts || []), () => {})
+    const startupPackSettled = startupParts.then((parts) => Promise.allSettled(parts || []), () => {})
       .finally(() => { packDone = true; setStatus(""); });
+    let mapPacksLoading = 0;
     // WebFileSystem.cpp LoadWorldFiles: the files of the map folder the game enters (Data/WorldN,
     // ObjectN), or null where the map has no pack.
     async function mapPack(world) {
+      mapPacksLoading++;
       try {
         const indexResponse = await fetch(`packs/world${world}.json`, { cache: "no-cache" });
         if (!indexResponse.ok) return null;
@@ -1101,8 +1140,107 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         const kept = store ? await store.match(packKey(entry)).catch(() => undefined) : undefined;
         return await loadPack(`Map pack ${world}`, entry, store, kept, downloadProgress("the map", entry.packed || 0));
       } finally {
+        mapPacksLoading--;
         setStatus("");
       }
+    }
+
+    // The game's files not in a pack download when it first reads them (fetch-backend.js), from a
+    // worker in Chromium. Safari and every iPhone browser (all WebKit) start a worker's download on
+    // the page's thread, which the game holds while it waits for the file: it waited forever (Safari
+    // 27, 2026-10-29: the login screen's "remember password" box). There the page's thread downloads
+    // the files itself. Only Chromium has navigator.userAgentData. index.html?pagefetch or
+    // ?workerfetch decides it on any browser.
+    const fetchParams = new URLSearchParams(location.search);
+    const filesOnPageThread = fetchParams.has("pagefetch") ||
+      (!fetchParams.has("workerfetch") && !navigator.userAgentData);
+    appendLog(`Game files read later: downloaded by ${filesOnPageThread ? "the page's thread" : "a worker"} (` +
+              (fetchParams.has("pagefetch") ? "?pagefetch" : fetchParams.has("workerfetch") ? "?workerfetch"
+                : navigator.userAgentData ? "Chromium" : "not Chromium") + ")");
+
+    // On a computer the game's other files (startup.json "versions": models, textures, sounds, music,
+    // 402 MB on 2026-10-30) download in the background while it is played. A file the game reads for
+    // the first time holds it until it is here: a monster coming into sight reads ~26 files, ~45 ms
+    // each from the server, and froze the game for over a second; kept on the device, 0.08 s
+    // (2026-10-30). The service worker keeps them (sw.js), so it is needed, as are the game's reads
+    // going through it (a worker's, not Safari's page thread). A file already kept is left alone, a
+    // map pack downloading goes first, and the game's own downloads come before these. Not on phones
+    // and tablets (their data plans and storage); with sound or music off in Options, not those
+    // files. index.html?prefetch downloads them on any device, ?noprefetch on none.
+    const backgroundDownloads = pageParams.has("prefetch") ||
+      (!pageParams.has("noprefetch") && !phone && !filesOnPageThread);
+    const BACKGROUND_DOWNLOADS = 4;   // files downloading at once
+    // The ones a game reads most often first: what comes into sight (monsters, NPCs, armour,
+    // weapons, skill effects), then windows, sounds, music, then the rest.
+    const BACKGROUND_ORDER = ["shaders/", "Data/Monster/", "Data/NPC/", "Data/Player/", "Data/Item/", "Data/Effect/",
+                              "Data/Skill/", "Data/Interface/", "Data/Local/", "Data/Sound/", "Data/Music/"];
+    const backgroundRank = (path) => {
+      const at = BACKGROUND_ORDER.findIndex((folder) => path.startsWith(folder));
+      return at < 0 ? BACKGROUND_ORDER.length : at;
+    };
+    function gameConfig() {
+      try {
+        return new TextDecoder().decode(Module.FS.readFile("/game/config.ini"));
+      } catch (e) {
+        return stored("mu-web/config.ini") || "";
+      }
+    }
+    // Downloads one file through the service worker, which keeps it whole and answers its first
+    // byte: the file's size, from Content-Range.
+    async function downloadInBackground(url) {
+      const response = await fetch(url, { headers: { "Range": "bytes=0-0", "X-Mu-Background": "1" } });
+      await response.arrayBuffer();
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const size = /\/(\d+)$/.exec(response.headers.get("Content-Range") || "");
+      return size ? Number(size[1]) : 0;
+    }
+    async function downloadRestInBackground() {
+      const versions = releaseIndex && releaseIndex.versions;
+      if (!versions || !self.caches || !(navigator.serviceWorker && navigator.serviceWorker.controller)) {
+        appendLog("Game files in the background: not downloaded (no service worker on this page)");
+        return;
+      }
+      const config = gameConfig();
+      const off = (setting) => new RegExp(`^${setting}=0\\s*$`, "m").test(config);
+      const leftOut = [off("SoundVolume") && "Data/Sound/", off("MusicVolume") && "Data/Music/"].filter(Boolean);
+      let kept;
+      try {
+        kept = new Set((await (await caches.open("mu-web/files")).keys()).map((request) => request.url));
+      } catch (e) {
+        appendLog(`Game files in the background: not downloaded (no storage: ${e})`);
+        return;
+      }
+      const files = Object.keys(versions)
+        .filter((path) => !leftOut.some((folder) => path.startsWith(folder)))
+        .sort((a, b) => backgroundRank(a) - backgroundRank(b))
+        .map((path) => new URL(`${path}?v=${versions[path]}`, location.href).href)
+        .filter((url) => !kept.has(url));
+      if (!files.length) return;
+      appendLog(`Game files in the background: downloading ${files.length} of ${Object.keys(versions).length}` +
+                (leftOut.length ? ` (sound or music off: not ${leftOut.join(", ")})` : ""));
+      const started = performance.now();
+      const queue = taskQueue(BACKGROUND_DOWNLOADS);
+      let downloaded = 0, bytes = 0, failed = 0, failedInRow = 0;
+      await Promise.all(files.map((url) => queue(async () => {
+        // A server that answers nothing 20 times in a row: the rest is left for the game to read.
+        if (failedInRow >= 20) return;
+        while (mapPacksLoading) await new Promise((resume) => setTimeout(resume, 250));
+        try {
+          // Not "bytes += await …": that reads bytes before the wait, and the other downloads'
+          // sums made meanwhile would be lost.
+          const size = await downloadInBackground(url);
+          bytes += size;
+          downloaded++;
+          failedInRow = 0;
+        } catch (e) {
+          failed++;
+          failedInRow++;
+        }
+      })));
+      const skipped = files.length - downloaded - failed;
+      appendLog(`Game files in the background: ${downloaded} downloaded, ${Math.round(bytes / 1e6)} MB in ` +
+                `${Math.round((performance.now() - started) / 1000)} s` + (failed ? `, ${failed} failed` : "") +
+                (skipped ? `, ${skipped} left for the game to read` : ""), failed > 0);
     }
 
     // Global for Main.js, which picks up an existing Module object.
@@ -1110,7 +1248,9 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       canvas,
       muStartupPack: startupParts,
       muMapPack: mapPack,
+      muFilesOnPageThread: filesOnPageThread,
       muClipDistances: gpuCheck.clipDistances,
+      muDepthClamp: gpuCheck.depthClamp,
       muKeyboard: phone ? phoneKeyboard : undefined,
       muDevice: device.kind,
       print: (text) => { if (gpuErrorEcho(text)) return; console.log(text); appendLog(text, false); },
@@ -1121,6 +1261,10 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         canvas.focus();
         setInterval(saveConfig, 3000);
         addEventListener("pagehide", saveConfig);
+        if (backgroundDownloads) {
+          startupPackSettled.then(downloadRestInBackground)
+            .catch((e) => appendLog(`Game files in the background: stopped (${e})`, true));
+        }
       },
       onAbort: (what) => gameCrashed(what),
       // Main.js calls this instead of fetching Main.wasm itself: the gzip copy where there is one

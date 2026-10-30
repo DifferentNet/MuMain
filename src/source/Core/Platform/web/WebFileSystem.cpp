@@ -49,6 +49,12 @@ bool IsPageFile(std::string_view path)
 // 0 while the mount is being set up, 1 when it is ready, -1 when it failed.
 std::atomic<int> g_mountState{0};
 
+// 1 where the page's thread downloads the mount's files, 0 where the mount's worker does
+// (fetch-backend.js asks MuWeb_FilesOnPageThread). The page decides: Module.muFilesOnPageThread.
+std::atomic<int> g_filesOnPageThread{0};
+
+EM_JS(int, MuWeb_PageWantsFilesOnPageThread, (), { return Module["muFilesOnPageThread"] ? 1 : 0; });
+
 // The folder the page came from, as an absolute URL without the last slash. Emscripten's fetch
 // backend resolves a relative base against the site's root, so with "." a page at
 // https://skynet-mu.net/play/ fetched its files from /Data/... instead of /play/Data/...
@@ -303,6 +309,11 @@ EM_JS(char*, MuWeb_MergeSavedConfig, (const char* serverText), {
 });
 } // namespace
 
+extern "C" EMSCRIPTEN_KEEPALIVE int MuWeb_FilesOnPageThread()
+{
+    return g_filesOnPageThread.load();
+}
+
 bool mu::web::MountGameFiles()
 {
     if (::mkdir(GameDir, 0777) != 0)
@@ -320,6 +331,7 @@ bool mu::web::MountGameFiles()
     g_pageFolderUrl = pageFolder;
     std::free(pageFolder);
 
+    g_filesOnPageThread = MuWeb_PageWantsFilesOnPageThread();
     std::thread worker(SetUpMount);
     while (g_mountState.load() == 0)
     {

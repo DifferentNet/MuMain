@@ -21,4 +21,10 @@ std::optional<PageDisplay> GetAutoDisplay();
 bool IsAutoDisplay();
 // Options: "Auto" (true) or a size of the player's own (false). The page remembers it.
 void SetAutoDisplay(bool enabled);
+
+// The footer's Quality "Lowest": every effect and shadow off as well. The player's own settings from
+// before wait on the page meanwhile, as bits (-1: none).
+bool IsLowestQuality();
+int GetEffectsBeforeLowest();
+void SetEffectsBeforeLowest(int bits);
 } // namespace mu::web
