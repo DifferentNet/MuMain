@@ -113,6 +113,7 @@ protected:
 private:
     void OnRmlReloaded();
     void ApplyNameLimit();
+    void KeepNameFieldFocus();
 
     struct JobButtonEntry
     {

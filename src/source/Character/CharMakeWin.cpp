@@ -31,6 +31,7 @@
 
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/RmlBridge/RmlTheme.h"
+#include "UI/Mobile/InterfaceMode.h"
 #include "Core/Utilities/StringUtils.h"
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Element.h>
@@ -217,6 +218,8 @@ void CCharMakeWin::BindRmlModel(Rml::DataModelConstructor& c, CharMakeRmlModel& 
             if (arguments.size() == 1)
                 RmlClickJob(arguments[0].Get<int>(-1));
         });
+    c.BindEventCallback("charmake_job_press",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { KeepNameFieldFocus(); });
     c.BindEventCallback("charmake_ok_click",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickOk(); });
     c.BindEventCallback("charmake_cancel_click",
@@ -237,6 +240,18 @@ void CCharMakeWin::ApplyNameLimit()
 
     if (Rml::Element* field = m_RmlView.Document()->GetElementById("char_name"))
         field->SetAttribute("maxlength", kCharNameMaxLength);
+}
+
+// RmlUi hands the focus to whatever the mouse presses, so a class button takes it from the name field
+// and the keys typed next go nowhere. With the mouse and keyboard the field takes it straight back. With
+// touch or a gamepad it stays off: their on-screen keyboards would come up again after every class picked.
+void CCharMakeWin::KeepNameFieldFocus()
+{
+    if (UI::Mobile::IsTouchControls() || UI::Mobile::IsGamepadInUse()) return;
+    if (!m_RmlView.Document()) return;
+
+    if (Rml::Element* field = m_RmlView.Document()->GetElementById("char_name"))
+        field->Focus();
 }
 
 void CCharMakeWin::Release()
