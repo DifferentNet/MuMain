@@ -127,3 +127,16 @@
 /* The grid's clicks are native (CInventoryCtrl), so the placed panel takes no pointer events; its
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode), as the legacy theme
+   lays it out: the full 432 height of the dock, 42 px cells, 8 of the 15 rows on view
+   (item_grid.rcss pages them), the ▲▼ and the exit button down the right side. */
+@media (theme: mobile) {
+	#panel { --item-cell: 42px; width: 420px; height: 432px; }
+	.bg-panel { width: 100%; height: 432px; }
+	/* The grid's first cell at (16, 42). */
+	#grid_viewport { left: 10px; top: 36px; }
+	.grid-scroll-up { left: 364px; top: 42px; }
+	.grid-scroll-down { left: 364px; top: calc(42px + 8 * var(--item-cell) - 44px); }
+	.storext-btn-exit { left: 364px; top: 98px; }
+}

@@ -307,3 +307,39 @@
 /* The grid's clicks are native (CInventoryCtrl), so the placed panel takes no pointer events; its
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode), as the legacy theme
+   lays it out: the full 432 height of the dock, both grids down the right side in 42 px cells (the
+   partner's above yours), each side's name, gold and confirm in the left column with the divider
+   between them, the notice in reach of the eye (9 px, a line may wrap), your buttons and confirm 44
+   x 36 / 36 round. 552 wide: with the bag-only inventory beside it, a phone's width (19.5:9 and
+   wider). */
+@media (theme: mobile) {
+	#panel { --item-cell: 42px; width: 552px; height: 432px; }
+	.bg-panel { width: 100%; height: 432px; }
+	#item_view { width: calc(100% + 40px); height: 472px; }
+	#partner_grid, #partner_grid_counts { left: 200px; top: 44px; }
+	#item_grid, #item_grid_counts { left: 200px; top: 236px; }
+
+	/* The partner's side, above the divider. */
+	.trade-gold-your { top: 70px; width: 170px; }
+	.trade-gold-your-value { left: 67px; right: auto; top: 75px; }
+	.warning-label { left: 15px; top: 100px; font-size: 10px; }
+	.notice-line { left: 15px; width: 168px; font-size: 9px; line-height: 10px; white-space: normal; }
+	.notice-line1 { left: 15px; top: 114px; }
+	.notice-line2 { top: 136px; }
+	.notice-line3 { top: 158px; }
+	.trade-confirm-btn { width: 36px; height: 36px; line-height: 36px; }
+	.confirm-glyph { font-size: 18px; }
+	.confirm-your { left: 147px; top: 180px; }
+	.trade-divider { top: 224px; }
+
+	/* Yours, below it. */
+	.id-text-my { left: 15px; top: 236px; }
+	.trade-gold-my { top: 262px; width: 170px; }
+	.trade-gold-my-value { left: 67px; right: auto; top: 267px; }
+	.trade-btn-exit, .trade-btn-zen { top: 300px; }
+	.trade-btn-exit { left: 15px; }
+	.trade-btn-zen { left: 71px; }
+	.confirm-my { left: 147px; top: 300px; }
+}

@@ -197,3 +197,68 @@
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
 
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode), the full 432 height of
+   the dock with finger-sized cells, as the legacy theme lays it out. Alone, the inventory spreads out:
+   the equipment on the left in 70 px slots (rings and amulet 40) with the gold and the buttons under
+   it, the bag on the right in 44 px cells. Beside another window of its column (#panel.beside, set
+   by CMyInventory::SyncBesideNeighbour()) it keeps the bag alone in 42 px cells, the gold above it and
+   the buttons down its right side, so the two fit a phone's width. --bag-x is the bag's left edge;
+   the panel's width follows from it. Equipped items in hidden slots are not drawn. */
+@media (theme: mobile) {
+	#panel {
+		--bag-x: 344px;
+		--bag-right: 16px;
+		--item-cell: 44px;
+		width: calc(var(--bag-x) + 8 * var(--item-cell) + var(--bag-right));
+		height: 432px;
+	}
+	#panel.beside { --bag-x: 16px; --bag-right: 68px; --item-cell: 42px; }
+	.bg-panel { width: 100%; height: 432px; }
+	#item_view { width: calc(100% + 40px); height: 472px; }
+
+	/* The equipment: three columns of 70 px slots, the amulet and rings in the gaps between them. */
+	#slot_helper { left: 20px; top: 72px; width: 70px; height: 70px; }
+	#slot_helm { left: 135px; top: 72px; width: 70px; height: 70px; }
+	#slot_wing { left: 220px; top: 72px; width: 100px; height: 70px; }
+	#slot_weapon_right { left: 20px; top: 152px; width: 70px; height: 100px; }
+	#slot_amulet { left: 93px; top: 152px; width: 40px; height: 40px; }
+	#slot_armor { left: 135px; top: 152px; width: 70px; height: 100px; }
+	#slot_weapon_left { left: 250px; top: 152px; width: 70px; height: 100px; }
+	#slot_gloves { left: 20px; top: 262px; width: 70px; height: 70px; }
+	#slot_ring_right { left: 93px; top: 262px; width: 40px; height: 40px; }
+	#slot_pants { left: 135px; top: 262px; width: 70px; height: 70px; }
+	#slot_ring_left { left: 208px; top: 262px; width: 40px; height: 40px; }
+	#slot_boots { left: 250px; top: 262px; width: 70px; height: 70px; }
+
+	.option-label { top: 48px; width: 150px; height: 16px; font-size: 12px; }
+	.option-label-set { left: 20px; }
+	.option-label-socket { left: 170px; }
+	#option_tooltip_anchor { left: 170px; top: 64px; }
+
+	/* The bag from the top; the gold and a row of 60 x 48 buttons under the equipment. */
+	#item_grid, #item_grid_counts { left: var(--bag-x); top: 50px; }
+	#gold_bg { left: 20px; top: 340px; width: 300px; }
+	#gold_text { left: 202px; right: auto; top: 345px; }
+	#panel .modern-icon-btn-px { top: 372px; width: 60px; height: 48px; line-height: 48px; }
+	.inv-btn-exit { left: 20px; }
+	.inv-btn-repair { left: 100px; }
+	.inv-btn-myshop { left: 180px; }
+	.inv-btn-jewel-bank { left: 260px; }
+
+	/* Beside another window: the bag alone under the gold, the buttons down its right side, 44 x 36. */
+	#panel.beside .equip-slot, #panel.beside .option-label { display: none; }
+	#panel.beside #gold_bg { left: var(--bag-x); top: 46px; width: calc(8 * var(--item-cell)); }
+	#panel.beside #gold_text { left: calc(var(--bag-x) + 8 * var(--item-cell) - 118px); top: 51px; }
+	#panel.beside #item_grid, #panel.beside #item_grid_counts { top: 78px; }
+	#panel.beside .modern-icon-btn-px {
+		left: calc(var(--bag-x) + 8 * var(--item-cell) + 12px);
+		width: 44px;
+		height: 36px;
+		line-height: 36px;
+	}
+	#panel.beside .inv-btn-exit { top: 78px; }
+	#panel.beside .inv-btn-repair { top: 124px; }
+	#panel.beside .inv-btn-myshop { top: 170px; }
+	#panel.beside .inv-btn-jewel-bank { top: 216px; }
+}

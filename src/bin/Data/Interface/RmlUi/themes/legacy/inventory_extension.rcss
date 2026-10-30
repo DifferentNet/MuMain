@@ -112,3 +112,50 @@
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
 #panel { font-size: calc(var(--text-px, 12px) / var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): the full 432 height of
+   the dock, 42 px cells, the four grids stacked in #grid_viewport two at a time (item_grid.rcss
+   pages them, a whole page of two grids per tap: data-grid-rows-kept="0"), a locked page standing
+   in its grid's place; the paging and exit buttons down the right side. */
+@spritesheet invext-phone-top-sheet    { src: "../../../newui_item_back04.tga"; invext-phone-top-l: 0px 0px 60px 64px; invext-phone-top-c: 90px 0px 10px 64px; invext-phone-top-r: 130px 0px 60px 64px; }
+@spritesheet invext-phone-bottom-sheet { src: "../../../newui_item_back03.tga"; invext-phone-bottom-l: 0px 0px 50px 45px; invext-phone-bottom-c: 90px 0px 10px 45px; invext-phone-bottom-r: 140px 0px 50px 45px; }
+
+@media (theme: mobile) {
+	#panel { --item-cell: 42px; width: 420px; height: 432px; }
+
+	.bg-fill { width: 100%; height: 432px; }
+	.bg-top { width: 100%; decorator: tiled-horizontal(invext-phone-top-l, invext-phone-top-c, invext-phone-top-r); }
+	.bg-left { height: 323px; }
+	.bg-right { left: auto; right: 0; height: 323px; }
+	.bg-bottom { top: 387px; width: 100%; decorator: tiled-horizontal(invext-phone-bottom-l, invext-phone-bottom-c, invext-phone-bottom-r); }
+
+	/* The first grid's first cell at (16, 40); the grids flow one under the other. */
+	#grid_viewport { left: 10px; top: 34px; }
+	#grid_viewport .item-grid { position: relative; left: 0; top: 0; }
+	#grid_viewport #item_view { height: calc(16 * var(--item-cell) + 12px); }
+	#grid_viewport #item_grid_1_counts { left: 6px; top: 6px; }
+	#grid_viewport #item_grid_2_counts { left: 6px; top: calc(6px + 4 * var(--item-cell)); }
+	#grid_viewport #item_grid_3_counts { left: 6px; top: calc(6px + 8 * var(--item-cell)); }
+	#grid_viewport #item_grid_4_counts { left: 6px; top: calc(6px + 12 * var(--item-cell)); }
+
+	/* A locked page: a grid's height, its table art a little wider than the cells. */
+	#grid_viewport .ext-locked-page {
+		position: relative;
+		left: 0;
+		top: 0;
+		margin-left: -6px;
+		width: calc(8 * var(--item-cell) + 12px);
+		height: calc(4 * var(--item-cell));
+	}
+	#grid_viewport .ext-locked-empty { left: 6px; top: 0; width: calc(8 * var(--item-cell)); height: calc(4 * var(--item-cell)); }
+	#grid_viewport .ext-locked-icon {
+		left: calc(6px + 4 * var(--item-cell) - 23px);
+		top: calc(2 * var(--item-cell) - 25px);
+		width: 46px;
+		height: 50px;
+	}
+
+	.grid-scroll-up { left: 364px; top: 40px; }
+	.grid-scroll-down { left: 364px; top: calc(40px + 8 * var(--item-cell) - 44px); }
+	.ext-btn { left: 364px; top: 96px; width: 44px; height: 36px; }
+}

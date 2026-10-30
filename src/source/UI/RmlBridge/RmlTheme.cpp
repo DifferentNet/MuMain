@@ -7,6 +7,7 @@
 #include "Data/GameConfig/GameConfig.h"
 #include "Core/Platform/WinIni.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
+#include "UI/Inventory/ItemGridScroll.h"
 
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/Core.h>
@@ -194,9 +195,13 @@ namespace UI::RmlBridge
     // A DocumentScene::Every document's depths, in and outside the main scene.
     constexpr const char* MainSceneDepthAttribute = "data-main-scene-depth";
     constexpr const char* OtherSceneDepthAttribute = "data-other-scene-depth";
+    // A document with a depth of its own in the phone view (PhoneViewStackingDepth()): its depths in
+    // the PC and phone views.
+    constexpr const char* PcViewDepthAttribute = "data-pc-view-depth";
+    constexpr const char* PhoneViewDepthAttribute = "data-phone-view-depth";
     bool s_mainSceneDocumentsSuspended = false;
 
-    template <typename Visit> void ForEachMainSceneDocument(Visit&& visit)
+    template <typename Visit> void ForEachDocumentWith(const char* attribute, Visit&& visit)
     {
         for (int contextIndex = 0; contextIndex < Rml::GetNumContexts(); ++contextIndex)
         {
@@ -204,10 +209,24 @@ namespace UI::RmlBridge
             for (int documentIndex = 0; documentIndex < context->GetNumDocuments(); ++documentIndex)
             {
                 Rml::ElementDocument* document = context->GetDocument(documentIndex);
-                if (document->HasAttribute(MainSceneDocumentAttribute))
+                if (document->HasAttribute(attribute))
                     visit(document);
             }
         }
+    }
+
+    template <typename Visit> void ForEachMainSceneDocument(Visit&& visit)
+    {
+        ForEachDocumentWith(MainSceneDocumentAttribute, std::forward<Visit>(visit));
+    }
+
+    // Sets the document's z-index to the depth stored in its `attribute`, when it differs.
+    void TakeStackingDepthFrom(Rml::ElementDocument* document, const char* attribute)
+    {
+        const float depth = document->GetAttribute<float>(attribute, 0.f);
+        const Rml::Property* current = document->GetLocalProperty(Rml::PropertyId::ZIndex);
+        if (current == nullptr || current->Get<float>() != depth)
+            document->SetProperty(Rml::PropertyId::ZIndex, Rml::Property(depth, Rml::Unit::NUMBER));
     }
     } // namespace
 
@@ -265,6 +284,7 @@ namespace UI::RmlBridge
         ApplyModelName(rmlText, modelPlaceholder, modelName);
 
         Rml::ElementDocument* doc = context->LoadDocumentFromMemory(rmlText, sourceUrl);
+        UI::Items::GridScroll::Attach(doc);
         ApplyNativeTextSize(doc);
         ApplyStackingDepth(doc, documentName);
         ApplyDocumentScene(doc, documentName);
@@ -287,6 +307,11 @@ namespace UI::RmlBridge
             return;
         }
         document->SetProperty(Rml::PropertyId::ZIndex, Rml::Property(*depth, Rml::Unit::NUMBER));
+        if (const std::optional<float> phoneDepth = PhoneViewStackingDepth(documentName))
+        {
+            document->SetAttribute(PcViewDepthAttribute, *depth);
+            document->SetAttribute(PhoneViewDepthAttribute, *phoneDepth);
+        }
     }
 
     void ApplyDocumentScene(Rml::ElementDocument* document, const std::string& documentName)
@@ -306,20 +331,15 @@ namespace UI::RmlBridge
     void ApplySceneStackingDepths()
     {
         const char* attribute = SceneFlag == MAIN_SCENE ? MainSceneDepthAttribute : OtherSceneDepthAttribute;
-        for (int contextIndex = 0; contextIndex < Rml::GetNumContexts(); ++contextIndex)
-        {
-            Rml::Context* context = Rml::GetContext(contextIndex);
-            for (int documentIndex = 0; documentIndex < context->GetNumDocuments(); ++documentIndex)
-            {
-                Rml::ElementDocument* document = context->GetDocument(documentIndex);
-                if (!document->HasAttribute(attribute))
-                    continue;
-                const float depth = document->GetAttribute<float>(attribute, 0.f);
-                const Rml::Property* current = document->GetLocalProperty(Rml::PropertyId::ZIndex);
-                if (current == nullptr || current->Get<float>() != depth)
-                    document->SetProperty(Rml::PropertyId::ZIndex, Rml::Property(depth, Rml::Unit::NUMBER));
-            }
-        }
+        ForEachDocumentWith(attribute, [attribute](Rml::ElementDocument* document)
+                            { TakeStackingDepthFrom(document, attribute); });
+    }
+
+    void ApplyViewStackingDepths(bool phoneView)
+    {
+        const char* attribute = phoneView ? PhoneViewDepthAttribute : PcViewDepthAttribute;
+        ForEachDocumentWith(attribute, [attribute](Rml::ElementDocument* document)
+                            { TakeStackingDepthFrom(document, attribute); });
     }
 
     void SuspendMainSceneDocumentsOutsideMainScene()

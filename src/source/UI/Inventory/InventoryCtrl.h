@@ -99,6 +99,11 @@ namespace mu::ui::window
         void GetRect(RECT& rcBox);
         // The item's top-left in `grid`'s space, with the pointer at (pointerX, pointerY) there.
         POINT TopLeftIn(const CInventoryCtrl* grid, int pointerX, int pointerY) const;
+        // The point whose cell the item's top-left cell goes to: the middle of that cell as the item
+        // is drawn, so it lands in the cell nearest to where it is drawn. A finger, which hides the
+        // item it holds, then puts it where it taps: with the item held by the middle of a cell, the
+        // top-left alone could fall in the cell before.
+        POINT DropPointIn(const CInventoryCtrl* grid, int pointerX, int pointerY) const;
         // The item's size in `grid`'s cells.
         SIZE SizeIn(const CInventoryCtrl* grid) const;
 

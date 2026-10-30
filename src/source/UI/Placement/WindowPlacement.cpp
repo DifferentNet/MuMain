@@ -20,6 +20,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 
 namespace UI::Placement
 {
@@ -47,6 +48,11 @@ std::unordered_map<std::string, Entry> g_windows;
 bool g_namesChecked = false;
 UI::Scaling::Transform g_lastDock{};
 bool g_dirty = true;
+// A theme flag changed: the next arrangement lays open windows out again first (InvalidateStyles()).
+bool g_stylesChanged = false;
+// Set only while Update() arranges, outside any RmlUi event dispatch: laying out a document that is
+// dispatching an event could rebuild the elements the event holds.
+bool g_relayoutOpenDocuments = false;
 // Regions the theme capped below their reference height, and the factor that makes them fit.
 std::unordered_map<Rml::Element*, float> g_regionFit;
 unsigned int g_lastWidth = 0;
@@ -161,8 +167,9 @@ Rml::Vector2f PanelSize(const Entry& entry)
         };
         Rml::Vector2f size = panelSize();
         // The context leaves hidden documents out of its update: a window about to open may still be laid
-        // out as it was when hidden (before a resize or a content change), or never laid out at all.
-        if (!document->IsVisible() || size.x <= 0.f || size.y <= 0.f)
+        // out as it was when hidden (before a resize or a content change), or never laid out at all. An open
+        // one is laid out for the old styles until the context's next update after a theme flag changed.
+        if (g_relayoutOpenDocuments || !document->IsVisible() || size.x <= 0.f || size.y <= 0.f)
         {
             {
                 FRAME_PROFILE(UILayout);
@@ -179,6 +186,12 @@ Rml::Vector2f PanelSize(const Entry& entry)
 
 void Invalidate()
 {
+    g_dirty = true;
+}
+
+void InvalidateStyles()
+{
+    g_stylesChanged = true;
     g_dirty = true;
 }
 
@@ -532,7 +545,11 @@ void Update()
     }
     if (g_dirty || WindowWidth != g_lastWidth || WindowHeight != g_lastHeight || dock.scaleX != g_lastDock.scaleX ||
         dock.offsetY != g_lastDock.offsetY)
+    {
+        g_relayoutOpenDocuments = std::exchange(g_stylesChanged, false);
         ArrangeNow();
+        g_relayoutOpenDocuments = false;
+    }
     for (const auto& [name, entry] : g_windows)
     {
         if (const mu::ui::window::CObject* window = entry.getWindow ? entry.getWindow() : nullptr)
@@ -541,6 +558,23 @@ void Update()
             window->SyncSlotPlacement();
         }
     }
+}
+
+bool HasOpenNeighbour(std::string_view slotName)
+{
+    Rml::ElementDocument* workspace = Workspace();
+    if (workspace == nullptr)
+        return false;
+
+    Rml::ElementList slots;
+    workspace->QuerySelectorAll(slots, ".slot");
+    const auto own = std::find_if(slots.begin(), slots.end(), [slotName](Rml::Element* slot)
+                                  { return slot->GetAttribute<Rml::String>("data-window", "") == slotName; });
+    if (own == slots.end())
+        return false;
+    Rml::Element* region = (*own)->GetParentNode();
+    return std::any_of(slots.begin(), slots.end(), [own, region](Rml::Element* slot)
+                       { return slot != *own && slot->GetParentNode() == region && slot->IsClassSet("open"); });
 }
 
 float UncoveredWorldLeft()

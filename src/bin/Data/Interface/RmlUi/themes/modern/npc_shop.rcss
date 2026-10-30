@@ -156,3 +156,24 @@
 /* The grid's clicks are native (CInventoryCtrl), so the placed panel takes no pointer events; its
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode), as the legacy theme
+   lays it out: the full 432 height of the dock, 42 px cells, 8 of the 15 rows on view
+   (item_grid.rcss pages them), the ▲▼ and the repair buttons down the right side, the repair money
+   under the grid. 420 wide, so the bag-only inventory fits beside it on a phone. */
+@media (theme: mobile) {
+	#panel { --item-cell: 42px; width: 420px; height: 432px; }
+	.bg-panel { width: 100%; height: 432px; }
+	.shop-header-text-px { width: 100%; }
+
+	/* The grid's first cell at (16, 56). */
+	#grid_viewport { left: 10px; top: 50px; }
+	.grid-scroll-up { left: 364px; top: 56px; }
+	.grid-scroll-down { left: 364px; top: calc(56px + 8 * var(--item-cell) - 44px); }
+	.shop-btn-repair, .shop-btn-repair-all { left: 364px; }
+	.shop-btn-repair { top: 156px; }
+	.shop-btn-repair-all { top: 202px; }
+
+	.shop-repair-wallet { left: 16px; top: 402px; width: 336px; height: 24px; }
+	.shop-repair-value { left: 234px; right: auto; top: 407px; }
+}

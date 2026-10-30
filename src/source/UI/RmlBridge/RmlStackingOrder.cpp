@@ -16,6 +16,12 @@ constexpr float OverSceneWindowsDepth = 30.5f; // a main-scene window opened ove
 constexpr float SceneMessageBoxDepth = 31.0f; // the login scene's g_MessageBox, after CUIMng
 constexpr float LoadingScreenDepth = 40.0f;   // the loading scene draws nothing else
 constexpr float ReconnectDialogDepth = 50.0f; // after the whole scene
+// The phone view's HUD overlays: under every window (the lowest, trade.rml, is 2.1), still over the
+// touch controls (1.06).
+constexpr float UnderPhoneWindowsDepth = 1.95f;
+
+// The HUD overlays in the corners the phone view's windows fill.
+constexpr std::string_view UnderPhoneWindows[] = {"system_log.rml", "chat_log.rml", "item_endurance.rml"};
 
 constexpr DocumentScene MainScene = DocumentScene::Main;
 constexpr DocumentScene AnyScene = DocumentScene::Any;
@@ -206,6 +212,16 @@ std::optional<float> StackingDepthOutsideMainScene(std::string_view documentName
     if (placement == nullptr || placement->scene != DocumentScene::Every)
         return std::nullopt;
     return OverSceneWindowsDepth;
+}
+
+std::optional<float> PhoneViewStackingDepth(std::string_view documentName)
+{
+    for (const std::string_view name : UnderPhoneWindows)
+    {
+        if (name == documentName)
+            return UnderPhoneWindowsDepth;
+    }
+    return std::nullopt;
 }
 
 } // namespace UI::RmlBridge

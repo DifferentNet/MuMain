@@ -140,3 +140,42 @@
 .stor-page-next { left: 140px; decorator: image(stor-page-right-up); }
 .stor-page-next:hover { decorator: image(stor-page-right-over); }
 .stor-page-next:active { decorator: image(stor-page-right-down); }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): the full 432 height of
+   the dock, 42 px cells, 8 of the 15 rows on view (item_grid.rcss pages them), the ▲▼ and the four
+   buttons down the right side, the money under the grid, bigger page arrows. 420 wide, so the
+   bag-only inventory fits beside it on a phone. */
+@spritesheet stor-phone-top-sheet    { src: "../../../newui_item_back01.tga"; stor-phone-top-l: 0px 0px 60px 64px; stor-phone-top-c: 90px 0px 10px 64px; stor-phone-top-r: 130px 0px 60px 64px; }
+@spritesheet stor-phone-bottom-sheet { src: "../../../newui_item_back03.tga"; stor-phone-bottom-l: 0px 0px 50px 45px; stor-phone-bottom-c: 90px 0px 10px 45px; stor-phone-bottom-r: 140px 0px 50px 45px; }
+
+@media (theme: mobile) {
+	#panel { --item-cell: 42px; width: 420px; height: 432px; }
+
+	.bg-fill { width: 100%; height: 432px; }
+	.bg-top { width: 100%; decorator: tiled-horizontal(stor-phone-top-l, stor-phone-top-c, stor-phone-top-r); }
+	.bg-left { height: 323px; }
+	.bg-right { left: auto; right: 0; height: 323px; }
+	.bg-bottom { top: 387px; width: 100%; decorator: tiled-horizontal(stor-phone-bottom-l, stor-phone-bottom-c, stor-phone-bottom-r); }
+
+	/* The grid's first cell at (16, 40). */
+	#grid_viewport { left: 10px; top: 34px; }
+	.grid-scroll-up { left: 364px; top: 40px; }
+	.grid-scroll-down { left: 364px; top: calc(40px + 8 * var(--item-cell) - 44px); }
+
+	.stor-btn { left: 364px; width: 44px; height: 36px; }
+	.stor-btn-insert { top: 96px; }
+	.stor-btn-take { top: 142px; }
+	.stor-btn-lock { top: 188px; }
+	.stor-btn-expand { top: 234px; }
+
+	/* The money strip under the grid; its texts keep their places on it. */
+	#money_bg { left: 56px; top: 384px; }
+	#zen_text { right: 206px; top: 392px; }
+	#fee_label { left: 71px; top: 413px; }
+	#fee_value { right: 206px; top: 413px; }
+
+	/* The vault page arrows, 30 x 33, either side of the title and clear of the corner close. */
+	.stor-page-btn { top: 2px; width: 30px; height: 33px; }
+	.stor-page-prev { left: 60px; }
+	.stor-page-next { left: 330px; }
+}

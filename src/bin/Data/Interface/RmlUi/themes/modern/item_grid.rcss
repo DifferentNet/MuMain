@@ -52,3 +52,45 @@ body { --item-cell: 20px; }
 
 /* The window's live items: the panel and a margin round it, for a model reaching past its slot. */
 .item-view { position: absolute; left: -20px; top: -20px; width: 230px; height: 469px; pointer-events: none; }
+
+/* A tall grid's viewport (npc_shop, storage, storage_ext, inventory_extension: #grid_viewport round
+   the grids, their items and counts): the whole panel on a PC, so nothing moves; a page of rows where
+   the theme pages the grid (the phone view below). Its paging buttons (UI/Inventory/ItemGridScroll.h)
+   show only there. */
+.item-grid-viewport { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.item-grid-scroll { display: none; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode). Item windows are laid
+   out full height with finger-sized cells by their own sheets; here the parts they share: a corner
+   close a finger can hit, the 15-row grids shown 8 rows at a time with ▲▼ paging (7 rows a page, one
+   kept in sight), icon buttons 44 x 36 and the money and titles a size up. The viewport's 6px padding
+   shows the grid's frame; the grid flows in it, so its height is what scrolls. Hit tests stop at the
+   viewport's edge (DrawnGridGeometry()). Every window gives its buttons a top here. */
+@media (theme: mobile) {
+	#frame_corner_close { top: 0; right: 0; width: 44px; height: 40px; }
+
+	.item-grid-viewport {
+		overflow: hidden;
+		padding: 6px;
+		width: calc(8 * var(--item-cell));
+		height: calc(8 * var(--item-cell));
+	}
+	/* A div is inline unless told otherwise; inline, the grid would ignore its width and height. */
+	.item-grid-viewport #item_grid { display: block; position: relative; left: 0; top: 0; }
+	.item-grid-viewport #item_grid_counts { left: 6px; top: 6px; }
+	.item-grid-viewport #item_view {
+		left: 0;
+		top: 0;
+		width: calc(8 * var(--item-cell) + 12px);
+		height: calc(15 * var(--item-cell) + 12px);
+	}
+
+	.modern-icon-btn-px { bottom: auto; width: 44px; height: 36px; line-height: 36px; }
+	.modern-icon-btn-glyph-px { font-size: 16px; }
+	.item-grid-scroll { display: block; height: 44px; line-height: 44px; }
+
+	.modern-header-title-px { font-size: 15px; }
+	.modern-wallet-px { height: 24px; }
+	.modern-wallet-label-px { font-size: 9px; }
+	.modern-wallet-value-px { font-size: 12px; }
+}

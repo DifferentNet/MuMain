@@ -165,6 +165,9 @@ namespace mu::ui::window
 
         // Moves the equipment slots and item grid to where the theme draws their anchors.
         void SyncNativeLayout();
+        // Marks #panel "beside" while another window of its column is open, for a theme that then
+        // draws the bag alone (the phone view, my_inventory.rcss).
+        void SyncBesideNeighbour();
 
         void SetRepairMode(bool bRepair);
 

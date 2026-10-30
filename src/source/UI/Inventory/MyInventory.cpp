@@ -50,6 +50,7 @@ extern bool SelectFlag;
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlNativeTextSize.h"
 #include "UI/RmlBridge/RmlTooltip.h"
+#include "UI/Placement/WindowPlacement.h"
 #include "UI/Tooltip/LegacyTextListTooltip.h"
 #include "UI/Inventory/ItemOptionTooltipModel.h"
 #include "Core/Utilities/StringUtils.h"
@@ -91,6 +92,18 @@ constexpr SlotAnchor SlotAnchors[] = {
     {EQUIPMENT_AMULET, "slot_amulet"},
     {EQUIPMENT_RING_RIGHT, "slot_ring_right"},
 };
+// This window's slot in the workspace (WindowSystem.cpp), and #panel's class beside a neighbour there.
+constexpr const char* PlacementSlotName = "inventory";
+constexpr const char* BesideClass = "beside";
+
+// An element's drawn border box, or an empty one while it is hidden: RmlUi keeps a hidden element's
+// last box, so a slot the theme hides would still take clicks and draw its item there.
+void ShownBox(Rml::Element* element, Rml::Vector2f& offset, Rml::Vector2f& size)
+{
+    if (element == nullptr || !element->IsVisible(true) ||
+        !UI::RmlBridge::DrawnBox(*element, Rml::BoxArea::Border, offset, size))
+        offset = size = Rml::Vector2f(0.f, 0.f);
+}
 } // namespace
 
 CMyInventory::CMyInventory()
@@ -566,17 +579,15 @@ void CMyInventory::SyncNativeLayout()
         Rml::Element* box = document != nullptr ? document->GetElementById(anchor.id) : nullptr;
         Rml::Vector2f offset;
         Rml::Vector2f size;
-        if (box == nullptr || !UI::RmlBridge::DrawnBox(*box, Rml::BoxArea::Border, offset, size))
-            offset = size = Rml::Vector2f(0.f, 0.f);
+        ShownBox(box, offset, size);
         slot.x = offset.x;
         slot.y = offset.y;
         slot.width = size.x;
         slot.height = size.y;
 
+        // A slot the theme hides (the phone view's bag-only inventory) takes no click and draws no item.
         const std::string itemId = std::string(anchor.id) + "_item";
-        Rml::Element* item = document != nullptr ? document->GetElementById(itemId) : nullptr;
-        if (item == nullptr || !UI::RmlBridge::DrawnBox(*item, Rml::BoxArea::Border, offset, size))
-            continue;
+        ShownBox(document != nullptr ? document->GetElementById(itemId) : nullptr, offset, size);
         slot.itemX = offset.x;
         slot.itemY = offset.y;
         slot.itemWidth = size.x;
@@ -585,6 +596,19 @@ void CMyInventory::SyncNativeLayout()
 
     if (m_pNewInventoryCtrl)
         m_pNewInventoryCtrl->FollowGridPx(document, "item_grid");
+}
+
+void CMyInventory::SyncBesideNeighbour()
+{
+    Rml::ElementDocument* document = m_RmlView.Document();
+    Rml::Element* panel = document != nullptr ? document->GetElementById("panel") : nullptr;
+    const bool beside = UI::Placement::HasOpenNeighbour(PlacementSlotName);
+    if (panel == nullptr || panel->IsClassSet(BesideClass) == beside)
+        return;
+    panel->SetClass(BesideClass, beside);
+    // The panel's size may change with it: lay it out now, then let the workspace re-place it.
+    document->UpdateDocument();
+    UI::Placement::Invalidate();
 }
 
 bool CMyInventory::GetEquipmentSlotCenter(int slot, POINT& center) const
@@ -882,6 +906,7 @@ void CMyInventory::SyncRmlModel()
     }
 
     UI::RmlBridge::SyncNativeTextSize(m_RmlView.Binder());
+    SyncBesideNeighbour();
     SyncNativeLayout();
     SyncSlotStates();
 
@@ -1031,7 +1056,7 @@ void CMyInventory::Render3D()
     for (int i = 0; i < MAX_EQUIPMENT_INDEX; i++)
     {
         const ITEM* pEquippedItem = &CharacterMachine->Equipment[i];
-        if (pEquippedItem->Type >= 0)
+        if (pEquippedItem->Type >= 0 && m_EquipmentSlots[i].itemWidth > 0.f)
         {
             float y = 0.f;
             if (i == EQUIPMENT_ARMOR)

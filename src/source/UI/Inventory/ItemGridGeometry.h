@@ -11,6 +11,8 @@ struct GridRect
     float y = 0.f;
     float width = 0.f;
     float height = 0.f;
+
+    bool operator==(const GridRect&) const = default;
 };
 
 class GridGeometry
@@ -28,6 +30,9 @@ public:
     int Columns() const { return m_Columns; }
     int Rows() const { return m_Rows; }
     GridRect Bounds() const { return {m_Left, m_Top, m_Columns * m_PitchX, m_Rows * m_PitchY}; }
+    // The part of the grid on view, in window pixels, where a theme shows only some of its rows
+    // (a .item-grid-viewport): a point outside it misses the grid.
+    void SetVisibleRect(const GridRect& visible);
 
     bool Contains(float x, float y) const;
     // The cell holding (x, y); false outside the grid.
@@ -47,6 +52,8 @@ private:
     float m_PitchY = DefaultPitch;
     int m_Columns = 0;
     int m_Rows = 0;
+    bool m_HasVisibleRect = false;
+    GridRect m_VisibleRect;
 };
 
 // Where the pointer holds a dragged item, in cells from its top-left, so a drag keeps its hold

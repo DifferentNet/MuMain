@@ -118,8 +118,8 @@ void UI::Mobile::Apply()
         context->ActivateTheme(MobileThemeFlag, g_phoneView);
         context->ActivateTheme(MobileHudThemeFlag, ReplacesPcHud());
     }
-    // The flags move workspace regions (workspace.rcss): the windows on them follow next frame.
-    UI::Placement::Invalidate();
+    // The flags move workspace regions (workspace.rcss) and resize windows: they follow next frame.
+    UI::Placement::InvalidateStyles();
 #ifdef __EMSCRIPTEN__
     mu::web::ShowPageView(static_cast<int>(view), g_phoneView);
 #endif

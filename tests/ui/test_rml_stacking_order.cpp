@@ -10,6 +10,7 @@
 #include <string>
 
 using UI::RmlBridge::DocumentScene;
+using UI::RmlBridge::PhoneViewStackingDepth;
 using UI::RmlBridge::SceneForDocument;
 using UI::RmlBridge::StackingDepthForDocument;
 using UI::RmlBridge::StackingDepthOutsideMainScene;
@@ -129,6 +130,25 @@ TEST_CASE("documents stack as the original's windows did [ui][stacking]")
     CHECK(Depth("reconnect_dialog.rml") > Depth("loading.rml"));
     // The master skill tree's band shares its depth.
     CHECK(Depth("master_level_band.rml") == Depth("master_level.rml"));
+}
+
+TEST_CASE("the phone view's HUD overlays go under every window [ui][stacking]")
+{
+    // The phone's windows fill the screen: the logs and the pets' column no longer draw over them.
+    for (const char* overlay : {"system_log.rml", "chat_log.rml", "item_endurance.rml"})
+    {
+        const std::optional<float> phone = PhoneViewStackingDepth(overlay);
+        REQUIRE_MESSAGE(phone.has_value(), overlay);
+        for (const char* window : {"trade.rml", "storage.rml", "mix_inventory.rml", "my_inventory.rml", "npc_shop.rml",
+                                   "character_info.rml", "party_info.rml", "friend_shell.rml"})
+            CHECK_MESSAGE(*phone < Depth(window), overlay, " under ", window);
+        // Still over the touch controls, whose joystick and buttons share no ground with them.
+        CHECK_MESSAGE(*phone > Depth("touch_controls.rml"), overlay);
+        CHECK_MESSAGE(SceneForDocument(overlay) != DocumentScene::Every, overlay);
+    }
+    // Every other document keeps its one depth; the chat input stays over the windows it types beside.
+    for (const char* other : {"chat_input.rml", "my_inventory.rml", "touch_controls.rml", "option_window.rml"})
+        CHECK_FALSE_MESSAGE(PhoneViewStackingDepth(other).has_value(), other);
 }
 
 TEST_CASE("scene messages cover scene windows and remain below blocking overlays [ui][stacking]")

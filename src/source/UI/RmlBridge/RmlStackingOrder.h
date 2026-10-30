@@ -38,4 +38,10 @@ std::optional<DocumentScene> SceneForDocument(std::string_view documentName);
 
 // Depth outside the main scene for a DocumentScene::Every document; none for any other.
 std::optional<float> StackingDepthOutsideMainScene(std::string_view documentName);
+
+// Depth in the phone view (UI::Mobile::IsPhoneView()) for a HUD overlay the phone's windows reach
+// over (the logs, the pets' column): under every window, where on a PC it drew over the few that
+// shared its corner. None for every other document, which keeps one depth in both views. Never a
+// DocumentScene::Every document.
+std::optional<float> PhoneViewStackingDepth(std::string_view documentName);
 } // namespace UI::RmlBridge

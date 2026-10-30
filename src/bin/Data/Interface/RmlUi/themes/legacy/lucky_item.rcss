@@ -100,3 +100,25 @@
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
 #panel { font-size: calc(var(--text-px, 12px) / var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): the full 432 height of
+   the dock, the grid down the right side in 42 px cells with a big Mix button under it, the result
+   text in the native column on the left from the top. 552 wide: with the bag-only inventory beside
+   it, a phone's width (19.5:9 and wider). */
+@spritesheet lucky-phone-top-sheet    { src: "../../../newui_item_back04.tga"; lucky-phone-top-l: 0px 0px 60px 64px; lucky-phone-top-c: 90px 0px 10px 64px; lucky-phone-top-r: 130px 0px 60px 64px; }
+@spritesheet lucky-phone-bottom-sheet { src: "../../../newui_item_back03.tga"; lucky-phone-bottom-l: 0px 0px 50px 45px; lucky-phone-bottom-c: 90px 0px 10px 45px; lucky-phone-bottom-r: 140px 0px 50px 45px; }
+
+@media (theme: mobile) {
+	#panel { --item-cell: 42px; width: 552px; height: 432px; }
+
+	.bg-fill { width: 100%; height: 432px; }
+	.bg-top { width: 100%; decorator: tiled-horizontal(lucky-phone-top-l, lucky-phone-top-c, lucky-phone-top-r); }
+	.bg-left { height: 323px; }
+	.bg-right { left: auto; right: 0; height: 323px; }
+	.bg-bottom { top: 387px; width: 100%; decorator: tiled-horizontal(lucky-phone-bottom-l, lucky-phone-bottom-c, lucky-phone-bottom-r); }
+	#item_view { width: calc(100% + 40px); height: 472px; }
+
+	#item_grid, #item_grid_counts { left: 200px; top: 50px; }
+	#text_lines { top: 50px; right: 372px; }
+	.mix-btn { left: 324px; margin-left: 0; top: 236px; width: 88px; height: 70px; }
+}
