@@ -12,7 +12,7 @@ body {
 }
 
 #tc_stick, #tc_stick_idle, #tc_stick_base, #tc_quick, #tc_menu_backdrop, #tc_menu_panel, .tc-button, .tc-button *,
-#tc_menu_legend, #tc_menu_legend * {
+#tc_menu_legend, #tc_menu_legend *, #tc_picker_backdrop, #tc_picker, #tc_picker * {
 	pointer-events: none;
 }
 
@@ -186,6 +186,207 @@ body.pad #tc_menu_legend {
 	line-height: 20rem;
 }
 
+/* The skill picker (where the skill buttons are set): a panel over the left of the dimmed screen,
+   the skill buttons lit right of it over the backdrop, the one being set in gold, the pad's
+   highlight white. C++ measures the grid and its first entry for how many skills a page holds:
+   the grid's gap is PickGapUnits in TouchControls.cpp. */
+#tc_picker_backdrop {
+	position: absolute;
+	z-index: 1;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 120);
+}
+body.picking #tc_quick {
+	z-index: 0;
+}
+body.picking #tc_bind_hint {
+	display: none;
+}
+body.picking .tc-skill {
+	z-index: 2;
+	opacity: 1;
+}
+body.picking .tc-skill.selected {
+	border-color: rgba(255, 255, 255, 70);
+}
+body.picking .tc-skill.target {
+	border-color: token(accent-gold);
+	background-color: rgba(255, 210, 60, 110);
+	box-shadow: 0 0 10rem 2rem rgba(255, 210, 60, 200);
+}
+body.picking .tc-skill.focused {
+	border-color: rgba(255, 255, 255, 235);
+}
+#tc_picker {
+	position: absolute;
+	z-index: 3;
+	left: 8rem;
+	top: 8rem;
+	right: 244rem;
+	bottom: 8rem;
+	padding: 8rem;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	border: 1rem token(border-control);
+	border-radius: 6rem;
+	background-color: rgba(0, 0, 0, 225);
+	color: token(text-primary);
+	font-family: "token(font-body)";
+	font-size: 13rem;
+	font-effect: shadow(0rem 1rem #000000);
+}
+#tc_pick_head, #tc_pick_hint_row, #tc_pick_pager {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 6rem;
+}
+#tc_pick_head {
+	flex-shrink: 0;
+	height: 34rem;
+}
+#tc_pick_title {
+	flex: 1 1 0;
+	font-size: 15rem;
+	color: token(accent-gold);
+	white-space: nowrap;
+	overflow: hidden;
+}
+.tc-pick-button {
+	position: relative;
+	flex-shrink: 0;
+	width: 84rem;
+	height: 32rem;
+	line-height: 28rem;
+	border-radius: 6rem;
+	white-space: nowrap;
+	overflow: hidden;
+}
+#tc_pick_done {
+	border-color: token(accent-gold);
+	background-color: rgba(255, 210, 60, 90);
+}
+#tc_pick_hint_row {
+	flex-shrink: 0;
+	min-height: 34rem;
+}
+#tc_pick_hint {
+	flex: 1 1 0;
+	font-size: 12rem;
+	line-height: 15rem;
+}
+#tc_pick_pager {
+	flex-shrink: 0;
+	gap: 4rem;
+}
+.tc-pick-page {
+	position: relative;
+	width: 36rem;
+	height: 32rem;
+	line-height: 28rem;
+	font-size: 15rem;
+	border-radius: 6rem;
+}
+#tc_pick_page {
+	min-width: 38rem;
+	font-size: 12rem;
+	text-align: center;
+}
+#tc_pick_grid {
+	flex: 1 1 0;
+	min-height: 0;
+	margin-top: 4rem;
+	display: flex;
+	flex-wrap: wrap;
+	align-content: flex-start;
+	gap: 6rem;
+	overflow: hidden;
+}
+.tc-pick {
+	position: relative;
+	width: 112rem;
+	height: 48rem;
+	border-width: 1rem;
+	border-radius: 6rem;
+	text-align: left;
+}
+.tc-pick-icon {
+	left: 6rem;
+	top: 5rem;
+}
+/* Up to three lines right of the icon: a long name breaks inside its words. */
+.tc-pick-name {
+	position: absolute;
+	left: 36rem;
+	right: 4rem;
+	top: 1rem;
+	bottom: 1rem;
+	display: flex;
+	align-items: center;
+	font-size: 11rem;
+	line-height: 13rem;
+	word-break: break-word;
+	overflow: hidden;
+}
+/* On one of the skill buttons already: a gold dot in the corner. */
+.tc-pick-mark {
+	display: none;
+	position: absolute;
+	right: 3rem;
+	bottom: 3rem;
+	width: 7rem;
+	height: 7rem;
+	border-radius: 4rem;
+	background-color: token(accent-gold);
+}
+.tc-pick.on {
+	border-color: rgba(255, 210, 60, 150);
+}
+.tc-pick.on .tc-pick-mark {
+	display: block;
+}
+/* On the button being set. */
+.tc-pick.here {
+	border-color: token(accent-gold);
+	background-color: rgba(255, 210, 60, 110);
+}
+.tc-pick.focused, .tc-pick-button.focused, .tc-pick-page.focused {
+	border-color: rgba(255, 255, 255, 235);
+	background-color: rgba(255, 255, 255, 40);
+}
+#tc_pick_none {
+	width: 100%;
+	padding-top: 40rem;
+	color: token(text-secondary);
+	text-align: center;
+}
+#tc_pick_tip {
+	flex-shrink: 0;
+	padding-top: 4rem;
+	color: token(text-secondary);
+	font-size: 11rem;
+	line-height: 14rem;
+}
+#tc_pick_legend {
+	display: none;
+	flex-shrink: 0;
+	height: 22rem;
+	padding-top: 2rem;
+	flex-direction: row;
+	align-items: center;
+	font-size: 12rem;
+}
+body.pad #tc_pick_legend {
+	display: flex;
+}
+#tc_pick_legend .pad-glyph {
+	position: relative;
+}
+
 .tc-potion {
 	width: 48rem;
 	height: 48rem;
@@ -224,15 +425,43 @@ body.pad #tc_menu_legend {
 .tc-skill.selected {
 	border-color: token(accent-gold);
 }
-/* Dim, yet in sight: a tap on one opens the skill list to fill it. */
+/* Dim, yet in sight, with a plus: a tap on one opens the skill picker to fill it. */
 .tc-skill.empty {
-	opacity: 0.6;
+	opacity: 0.85;
 }
 /* A picked skill waits for a button: every one lights up to take it. */
 .tc-skill.bind {
 	opacity: 1;
 	border-color: token(accent-gold);
 	background-color: rgba(255, 210, 60, 60);
+}
+.tc-skill-plus {
+	display: none;
+	position: absolute;
+	left: 12rem;
+	top: 12rem;
+	width: 22rem;
+	height: 22rem;
+}
+.tc-skill.empty .tc-skill-plus {
+	display: block;
+}
+.tc-plus-h, .tc-plus-v {
+	position: absolute;
+	border-radius: 2rem;
+	background-color: rgba(255, 220, 100, 230);
+}
+.tc-plus-h {
+	left: 0;
+	top: 9rem;
+	width: 22rem;
+	height: 4rem;
+}
+.tc-plus-v {
+	left: 9rem;
+	top: 0;
+	width: 4rem;
+	height: 22rem;
 }
 #tc_bind_hint {
 	position: absolute;
@@ -274,6 +503,18 @@ body.pad #tc_menu_legend {
 	border-radius: 22rem;
 }
 #tc_pickup { right: 8rem; bottom: 124rem; }
+/* Opens the skill picker: left of the arc's second button, above the first. */
+#tc_skill_edit {
+	right: 230rem;
+	bottom: 118rem;
+	width: 60rem;
+	height: 30rem;
+	line-height: 26rem;
+	font-size: 11rem;
+	border-radius: 15rem;
+	border-color: rgba(255, 210, 60, 150);
+	white-space: nowrap;
+}
 #tc_auto { right: 124rem; bottom: 8rem; }
 #tc_auto.on {
 	border-color: token(accent-gold);
@@ -401,3 +642,4 @@ body.pad #tc_back, body.pad #tc_menu, body.pad #tc_map {
 .tc-potion .pad-glyph { right: -8rem; top: -8rem; }
 #tc_pickup .pad-glyph { left: -12rem; top: -10rem; }
 #tc_auto .pad-glyph { left: -8rem; top: -8rem; }
+#tc_skill_edit .pad-glyph { left: -10rem; top: -10rem; }
