@@ -761,6 +761,11 @@ int mu::ui::window::CMainFrameWindow::GetItemHotKeyLevel(int iHotKey)
     return m_ItemHotKey.GetHotKeyLevel(iHotKey);
 }
 
+int mu::ui::window::CMainFrameWindow::PutItemOnFreeHotKey(int iItemType, int iItemLevel, bool& bAlreadyThere)
+{
+    return m_ItemHotKey.PutOnFreeHotKey(iItemType, iItemLevel, bAlreadyThere);
+}
+
 int mu::ui::window::CMainFrameWindow::GetItemHotKeyCount(int iHotKey)
 {
     return m_ItemHotKey.GetSlotItemCount(iHotKey);
