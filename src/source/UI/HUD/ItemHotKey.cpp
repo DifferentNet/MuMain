@@ -292,6 +292,49 @@ void mu::ui::window::CItemHotKey::SetHotKey(int iHotKey, int iItemType, int iIte
     }
 }
 
+int mu::ui::window::CItemHotKey::PutOnFreeHotKey(int iItemType, int iItemLevel, bool& bAlreadyThere)
+{
+    // As GetHotKeyItemIndex() looks: healing potions of any level, other items at the hotkey's level.
+    const bool anyLevel = GameLogic::Items::IsHealingPotionType(iItemType);
+    for (int i = 0; i < HOTKEY_COUNT; ++i)
+    {
+        for (const int type : GetHotKeyItemTypes(i, m_iHotKeyItemType[i], m_iHotKeyItemLevel[i]))
+        {
+            if (type == iItemType && (anyLevel || m_iHotKeyItemLevel[i] == iItemLevel))
+            {
+                bAlreadyThere = true;
+                return i;
+            }
+        }
+    }
+
+    bAlreadyThere = false;
+    for (int i = 0; i < HOTKEY_COUNT; ++i)
+    {
+        if (GetSlotItem(i) == nullptr || RepeatsEarlierHotKey(i))
+        {
+            SetHotKey(i, iItemType, iItemLevel);
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool mu::ui::window::CItemHotKey::RepeatsEarlierHotKey(int iHotKey)
+{
+    const HotKeyItemTypes types = GetHotKeyItemTypes(iHotKey, m_iHotKeyItemType[iHotKey], m_iHotKeyItemLevel[iHotKey]);
+    for (int i = 0; i < iHotKey; ++i)
+    {
+        const HotKeyItemTypes earlier = GetHotKeyItemTypes(i, m_iHotKeyItemType[i], m_iHotKeyItemLevel[i]);
+        if (m_iHotKeyItemLevel[i] == m_iHotKeyItemLevel[iHotKey]
+            && std::equal(types.begin(), types.end(), earlier.begin(), earlier.end()))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 int mu::ui::window::CItemHotKey::GetHotKey(int iHotKey)
 {
     if (iHotKey != -1)

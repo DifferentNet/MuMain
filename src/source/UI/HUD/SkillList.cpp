@@ -338,58 +338,50 @@ bool mu::ui::window::CSkillList::Update()
     return true;
 }
 
-bool mu::ui::window::CSkillList::IsHotKeySlotCurrentSkill(int iSlotIndex)
+int mu::ui::window::CSkillList::SlotHotKey(int iSlotIndex) const
 {
-    // The hotkey row shows hotkeys 1-5 or 6-9,0 (wraparound), skipping empty slots and pet
-    // commands without a pet.
+    // The hotkey row shows hotkeys 1-5 or 6-9,0 (wraparound).
     if (iSlotIndex < 0 || iSlotIndex >= 5)
+        return -1;
+
+    const int iHotKey = (m_bHotKeySkillListUp ? 6 : 1) + iSlotIndex;
+    return iHotKey == 10 ? 0 : iHotKey;
+}
+
+bool mu::ui::window::CSkillList::IsHotKeyShown(int iHotKey)
+{
+    // Empty hotkeys and pet commands without a pet show nothing.
+    if (iHotKey < 0 || iHotKey >= SKILLHOTKEY_COUNT)
         return false;
 
     if (CharacterAttribute->SkillNumber == 0)
         return false;
 
-    int iStartSkillIndex = m_bHotKeySkillListUp ? 6 : 1;
-    int iIndex = iStartSkillIndex + iSlotIndex;
-    if (iIndex == 10)
-        iIndex = 0;
-
-    if (m_iHotKeySkillType[iIndex] == -1)
+    const int iSkillType = m_iHotKeySkillType[iHotKey];
+    if (iSkillType == -1)
         return false;
 
-    if (m_iHotKeySkillType[iIndex] >= AT_PET_COMMAND_DEFAULT && m_iHotKeySkillType[iIndex] < AT_PET_COMMAND_END)
-    {
-        if (Hero->m_pPet == NULL)
-            return false;
-    }
+    if (iSkillType >= AT_PET_COMMAND_DEFAULT && iSkillType < AT_PET_COMMAND_END && Hero->m_pPet == NULL)
+        return false;
 
-    return Hero->CurrentSkill == m_iHotKeySkillType[iIndex];
+    return true;
+}
+
+bool mu::ui::window::CSkillList::IsHotKeyCurrentSkill(int iHotKey)
+{
+    return IsHotKeyShown(iHotKey) && Hero->CurrentSkill == m_iHotKeySkillType[iHotKey];
+}
+
+bool mu::ui::window::CSkillList::IsHotKeySlotCurrentSkill(int iSlotIndex)
+{
+    return IsHotKeyCurrentSkill(SlotHotKey(iSlotIndex));
 }
 
 int mu::ui::window::CSkillList::GetHotKeySlotNumber(int iSlotIndex)
 {
-    // Same loop as IsHotKeySlotCurrentSkill(), but doesn't check Hero->CurrentSkill -- the number
-    // shows for every occupied slot, not just the active one.
-    if (iSlotIndex < 0 || iSlotIndex >= 5)
-        return -1;
-
-    if (CharacterAttribute->SkillNumber == 0)
-        return -1;
-
-    int iStartSkillIndex = m_bHotKeySkillListUp ? 6 : 1;
-    int iIndex = iStartSkillIndex + iSlotIndex;
-    if (iIndex == 10)
-        iIndex = 0;
-
-    if (m_iHotKeySkillType[iIndex] == -1)
-        return -1;
-
-    if (m_iHotKeySkillType[iIndex] >= AT_PET_COMMAND_DEFAULT && m_iHotKeySkillType[iIndex] < AT_PET_COMMAND_END)
-    {
-        if (Hero->m_pPet == NULL)
-            return -1;
-    }
-
-    return iIndex;
+    // The number shows for every occupied slot, not just the active one.
+    const int iHotKey = SlotHotKey(iSlotIndex);
+    return IsHotKeyShown(iHotKey) ? iHotKey : -1;
 }
 
 bool mu::ui::window::CSkillList::Render()
@@ -649,8 +641,12 @@ Rml::String mu::ui::window::CSkillList::GetSkillIconDecorator(int iIndex)
 
 Rml::String mu::ui::window::CSkillList::GetHotKeySlotIconDecorator(int iSlotIndex)
 {
-    const int iHotKey = GetHotKeySlotNumber(iSlotIndex);
-    return iHotKey >= 0 ? GetSkillIconDecorator(m_iHotKeySkillType[iHotKey]) : Rml::String("none");
+    return GetHotKeyIconDecorator(SlotHotKey(iSlotIndex));
+}
+
+Rml::String mu::ui::window::CSkillList::GetHotKeyIconDecorator(int iHotKey)
+{
+    return IsHotKeyShown(iHotKey) ? GetSkillIconDecorator(m_iHotKeySkillType[iHotKey]) : Rml::String("none");
 }
 
 Rml::String mu::ui::window::CSkillList::GetCurrentSkillIconDecorator()
@@ -793,26 +789,12 @@ void mu::ui::window::CSkillList::QueueTooltip(int iSkillIndex, float x, float y)
 
 float mu::ui::window::CSkillList::GetHotKeySlotCooldownFraction(int iSlotIndex)
 {
-    if (iSlotIndex < 0 || iSlotIndex >= 5)
-        return 0.f;
-    if (CharacterAttribute->SkillNumber == 0)
-        return 0.f;
+    return GetHotKeyCooldownFraction(SlotHotKey(iSlotIndex));
+}
 
-    int iStartSkillIndex = m_bHotKeySkillListUp ? 6 : 1;
-    int iIndex = iStartSkillIndex + iSlotIndex;
-    if (iIndex == 10)
-        iIndex = 0;
-
-    if (m_iHotKeySkillType[iIndex] == -1)
-        return 0.f;
-
-    if (m_iHotKeySkillType[iIndex] >= AT_PET_COMMAND_DEFAULT && m_iHotKeySkillType[iIndex] < AT_PET_COMMAND_END)
-    {
-        if (Hero->m_pPet == NULL)
-            return 0.f;
-    }
-
-    return ComputeSkillCooldownFraction(m_iHotKeySkillType[iIndex]);
+float mu::ui::window::CSkillList::GetHotKeyCooldownFraction(int iHotKey)
+{
+    return IsHotKeyShown(iHotKey) ? ComputeSkillCooldownFraction(m_iHotKeySkillType[iHotKey]) : 0.f;
 }
 
 float mu::ui::window::CSkillList::GetCurrentSkillCooldownFraction()
@@ -823,30 +805,30 @@ float mu::ui::window::CSkillList::GetCurrentSkillCooldownFraction()
 // Click/hover entry points bound from main_frame.rml's data-event-click/mouseover/mouseout (CMainFrameWindow::BuildRmlUi()).
 void mu::ui::window::CSkillList::OnHotkeySlotClick(int iSlotIndex)
 {
-    if (iSlotIndex < 0 || iSlotIndex >= 5)
+    SelectHotKey(SlotHotKey(iSlotIndex));
+}
+
+void mu::ui::window::CSkillList::SelectHotKey(int iHotKey)
+{
+    if (iHotKey < 0 || iHotKey >= SKILLHOTKEY_COUNT)
         return;
     if (CharacterAttribute->SkillNumber == 0)
         return;
 
-    int iStartSkillIndex = m_bHotKeySkillListUp ? 6 : 1;
-    int iIndex = iStartSkillIndex + iSlotIndex;
-    if (iIndex == 10)
-        iIndex = 0;
-
-    if (m_iHotKeySkillType[iIndex] == -1)
+    if (m_iHotKeySkillType[iHotKey] == -1)
         return;
 
     // Mirrors the legacy mouse-click branch, deliberately NOT UseHotKey() -- the original mouse
     // click never went through it either (only the keyboard 0-9 press does), so its pet-check/
     // auto-attack-cancel rule doesn't apply here.
-    WORD bySkillType = CharacterAttribute->Skill[m_iHotKeySkillType[iIndex]];
+    WORD bySkillType = CharacterAttribute->Skill[m_iHotKeySkillType[iHotKey]];
     if (bySkillType == 0 || (bySkillType >= AT_SKILL_STUN && bySkillType <= AT_SKILL_REMOVAL_BUFF))
         return;
     if (SkillAttribute[bySkillType].SkillUseType == SKILL_USE_TYPE_MASTERLEVEL)
         return;
 
     m_wHeroPriorSkill = CharacterAttribute->Skill[Hero->CurrentSkill];
-    Hero->CurrentSkill = m_iHotKeySkillType[iIndex];
+    Hero->CurrentSkill = m_iHotKeySkillType[iHotKey];
     PlayBuffer(SOUND_CLICK01);
 }
 

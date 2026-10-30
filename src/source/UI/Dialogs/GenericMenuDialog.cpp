@@ -15,6 +15,7 @@
 #include "UI/RmlBridge/RmlColor.h"
 #include "UI/RmlBridge/RmlDialogCanvas.h"
 #include "UI/RmlBridge/RmlDraggable.h"
+#include "UI/RmlBridge/RmlPointer.h"
 #include "UI/RmlBridge/RmlTheme.h"
 
 #include <RmlUi/Core/DataModelHandle.h>
@@ -23,6 +24,23 @@
 
 namespace mu::ui::window
 {
+namespace
+{
+// The edge's name in the menu's markup (data-class-gmd-edge-*).
+const char* EdgeName(GenericMenuConfig::Edge edge)
+{
+    switch (edge)
+    {
+    case GenericMenuConfig::Edge::Left:
+        return "left";
+    case GenericMenuConfig::Edge::Right:
+        return "right";
+    case GenericMenuConfig::Edge::Usual:
+        break;
+    }
+    return "";
+}
+} // namespace
 
 CGenericMenuDialog* g_pGenericMenuDialog = nullptr;
 
@@ -65,6 +83,7 @@ void CGenericMenuDialog::BindRmlModel(Rml::DataModelConstructor& c, GenericMenuR
     c.Bind("highlight_title", &model.highlightTitle);
     c.Bind("is_system_menu", &model.isSystemMenu);
     c.Bind("kind", &model.kind);
+    c.Bind("edge", &model.edge);
     c.Bind("canvas_top", &model.canvasTop);
     c.Bind("title", &model.title);
     c.Bind("system_menu_label", &model.systemMenuLabel);
@@ -206,6 +225,11 @@ bool CGenericMenuDialog::Update()
     return true;
 }
 
+bool CGenericMenuDialog::IsPointerOnWindow() const
+{
+    return UI::RmlBridge::IsPointerOver(m_RmlView.Document());
+}
+
 bool CGenericMenuDialog::UpdateKeyEvent()
 {
     if (!m_bActive)
@@ -280,6 +304,7 @@ void CGenericMenuDialog::SyncRmlModel()
     syncLabel(model.systemMenuLabel, "system_menu_label", I18N::Game::SystemMenu);
     syncLabel(model.closeLabel, "close_label", I18N::Game::Close);
     SyncField(m_RmlView.Binder(), &GenericMenuRmlModel::kind, "kind", Rml::String(m_Active.kind));
+    SyncField(m_RmlView.Binder(), &GenericMenuRmlModel::edge, "edge", Rml::String(EdgeName(m_Active.edge)));
     const std::string title = StringUtils::WideToNarrow(m_Active.title.c_str());
     if (model.title != title)
     {

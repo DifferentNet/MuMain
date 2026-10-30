@@ -54,9 +54,14 @@ extern bool SelectFlag;
 #include "UI/Tooltip/LegacyTextListTooltip.h"
 #include "UI/Inventory/ItemOptionTooltipModel.h"
 #include "Core/Utilities/StringUtils.h"
+#include "Core/Input/TouchInput.h"
+#include "UI/Mobile/ItemCard.h"
+#include "Engine/Object/ZzzOpenData.h"
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Event.h>
+#include <SDL3/SDL_mouse.h>
 #include <cmath>
+#include <utility>
 
 namespace
 {
@@ -104,6 +109,12 @@ void ShownBox(Rml::Element* element, Rml::Vector2f& offset, Rml::Vector2f& size)
         !UI::RmlBridge::DrawnBox(*element, Rml::BoxArea::Border, offset, size))
         offset = size = Rml::Vector2f(0.f, 0.f);
 }
+
+// Core::Input::Touch's question: an item on the mouse turns no finger held still into a right click.
+bool IsCarryingItem()
+{
+    return CInventoryCtrl::GetPickedItem() != nullptr;
+}
 } // namespace
 
 CMyInventory::CMyInventory()
@@ -143,6 +154,7 @@ bool CMyInventory::Create(CManager* pNewUIMng)
     }
 
     m_ActionController.SetContext(this);
+    Core::Input::Touch::SetCarryQuery(&IsCarryingItem);
     LoadImages();
     SetEquipmentSlotInfo();
 
@@ -253,6 +265,7 @@ void CMyInventory::BuildRmlUi()
 
 void CMyInventory::Release()
 {
+    Core::Input::Touch::SetCarryQuery(nullptr);
     m_ItemTarget.Disable();
     UnequipAllItems();
     DeleteAllItems();
@@ -651,6 +664,8 @@ void CMyInventory::SetRepairMode(bool bRepair)
 
 bool CMyInventory::UpdateMouseEvent()
 {
+    if (PutClickedItemOnHotKey())
+        return false;
     if (m_pNewInventoryCtrl && !m_pNewInventoryCtrl->UpdateMouseEvent())
         return false;
 
@@ -749,6 +764,46 @@ bool CMyInventory::UpdateMouseEvent()
     if (WindowProcess())
         return false;
 
+    return true;
+}
+
+// Ctrl + click on a potion puts it on the first quick slot (Q, W, E, R) that shows no item, as hovering
+// it and pressing Ctrl+Q does on Q (2026-10-30, ghinzuro). The grid picks an item up when the button comes
+// up, so this takes that release before the grid sees it.
+bool CMyInventory::PutClickedItemOnHotKey()
+{
+    if (!IsVisible() || m_pNewInventoryCtrl == nullptr || !IsRepeat(VK_CONTROL) || !IsRelease(VK_LBUTTON)
+        || CInventoryCtrl::GetPickedItem() != nullptr || m_RepairMode == SEASON3B::REPAIR_MODE_ON
+        || m_pNewInventoryCtrl->IsLocked())
+    {
+        return false;
+    }
+
+    const ITEM* pItem = m_pNewInventoryCtrl->FindItemAtPointer();
+    if (pItem == nullptr || !CanRegisterItemHotKey(pItem->Type))
+    {
+        return false;
+    }
+
+    bool bAlreadyThere = false;
+    const int iHotKey = g_pMainFrame->PutItemOnFreeHotKey(pItem->Type, pItem->Level, bAlreadyThere);
+    if (iHotKey == -1)
+    {
+        g_pSystemLogBox->AddText(I18N::Game::InventoryNoFreeQuickSlot, TYPE_ERROR_MESSAGE);
+    }
+    else if (bAlreadyThere)
+    {
+        wchar_t text[128];
+        mu_swprintf_s(text, I18N::Game::InventoryAlreadyOnQuickSlot, L"QWER"[iHotKey]);
+        g_pSystemLogBox->AddText(text, TYPE_SYSTEM_MESSAGE);
+    }
+    else
+    {
+        SaveOptions(); // as Ctrl+Q does
+        PlayBuffer(SOUND_CLICK01);
+    }
+
+    ResetMouseLButton();
     return true;
 }
 
@@ -855,6 +910,9 @@ bool CMyInventory::UpdateKeyEvent()
             {
                 const int iItemLevel = pItem->Level;
                 g_pMainFrame->SetItemHotKey(iHotKey, pItem->Type, iItemLevel);
+                // Saved now: the game saves them on a map change or its own exit, never when a
+                // browser tab closes.
+                SaveOptions();
                 return false;
             }
         }
@@ -873,7 +931,10 @@ bool CMyInventory::Update()
     if (IsVisible())
     {
         m_iPointedSlot = -1;
-        Rml::ElementDocument* document = m_RmlView.Document();
+        // No slot is pointed under a window that holds the pointer on top of the inventory
+        // (UpdateMouseEvent() ran just before) -- the help on a phone's screen: the worn item's
+        // tooltip showed through it.
+        Rml::ElementDocument* document = g_pNewUIMng->IsPointerOnOtherWindow(this) ? nullptr : m_RmlView.Document();
         for (const SlotAnchor& anchor : SlotAnchors)
         {
             const std::string itemId = std::string(anchor.id) + "_item";
@@ -1570,42 +1631,89 @@ bool CMyInventory::EquipmentWindowProcess()
         }
     }
 
+    if (IsPress(VK_RBUTTON))
+    {
+        // A finger's long press (Core::Input::Touch) on worn gear shows the item card, as on the bag's
+        // items, and lifting the finger takes nothing off.
+        m_bFingerRightPress = Core::Input::Touch::IsMouseButtonHeld(SDL_BUTTON_RIGHT);
+        if (m_bFingerRightPress && ShowWornItemCard())
+            return true;
+    }
+
     if (IsRelease(VK_RBUTTON))
     {
-        const CPickedItem* pPickedItem = CInventoryCtrl::GetPickedItem();
+        if (std::exchange(m_bFingerRightPress, false))
+            return false;
 
         const int iSourceIndex = m_iPointedSlot;
-        if (GetRepairMode() != SEASON3B::REPAIR_MODE_ON && EquipmentItem == false
-            && pPickedItem == nullptr
-            && iSourceIndex != -1
-            && !g_pNewUISystem->IsVisible(INTERFACE_NPCSHOP))  // Don't unequip when NPC shop is open
+        if (iSourceIndex != -1 && CanTakeOffToBagNow())
         {
             ResetMouseRButton();
-
-            ITEM* pEquippedItem = &CharacterMachine->Equipment[iSourceIndex];
-
-            if (pEquippedItem->Type >= 0 && CheckTakeOff(iSourceIndex))
-            {
-                const int emptySlotIndex = FindEmptySlot(pEquippedItem);
-
-                // Simulates picking the item up and putting it into the free
-                // inventory slot. Without the pick-up nothing is sent, so the
-                // server and the local equipment stay the same.
-                if (emptySlotIndex != -1 && CInventoryCtrl::CreatePickedItem(nullptr, pEquippedItem))
-                {
-                    CPickedItem* pPickedItem = CInventoryCtrl::GetPickedItem();
-                    UnequipItem(iSourceIndex);
-                    pPickedItem->HidePickedItem();
-                    // UnequipItem cleared the slot; the picked item has the item's data.
-                    SendRequestEquipmentItem(STORAGE_TYPE::INVENTORY, iSourceIndex, pPickedItem->GetItem(),
-                                             STORAGE_TYPE::INVENTORY, emptySlotIndex);
-                    return true;
-                }
-            }
+            if (TakeOffToBag(iSourceIndex))
+                return true;
         }
     }
 
     return false;
+}
+
+bool CMyInventory::CanTakeOffToBagNow() const
+{
+    return GetRepairMode() != SEASON3B::REPAIR_MODE_ON && EquipmentItem == false &&
+           CInventoryCtrl::GetPickedItem() == nullptr &&
+           !g_pNewUISystem->IsVisible(INTERFACE_NPCSHOP); // Don't unequip when NPC shop is open
+}
+
+bool CMyInventory::TakeOffToBag(int equipmentSlot)
+{
+    ITEM* pEquippedItem = &CharacterMachine->Equipment[equipmentSlot];
+    if (pEquippedItem->Type < 0 || !CheckTakeOff(equipmentSlot))
+        return false;
+
+    // Simulates picking the item up and putting it into the free
+    // inventory slot. Without the pick-up nothing is sent, so the
+    // server and the local equipment stay the same.
+    const int emptySlotIndex = FindEmptySlot(pEquippedItem);
+    if (emptySlotIndex == -1 || !CInventoryCtrl::CreatePickedItem(nullptr, pEquippedItem))
+        return false;
+
+    CPickedItem* pPickedItem = CInventoryCtrl::GetPickedItem();
+    UnequipItem(equipmentSlot);
+    pPickedItem->HidePickedItem();
+    // UnequipItem cleared the slot; the picked item has the item's data.
+    SendRequestEquipmentItem(STORAGE_TYPE::INVENTORY, equipmentSlot, pPickedItem->GetItem(), STORAGE_TYPE::INVENTORY,
+                             emptySlotIndex);
+    return true;
+}
+
+bool CMyInventory::ShowWornItemCard()
+{
+    const int equipmentSlot = m_iPointedSlot;
+    if (equipmentSlot == -1 || !CanTakeOffToBagNow())
+        return false;
+    const ITEM& worn = CharacterMachine->Equipment[equipmentSlot];
+    if (worn.Type < 0)
+        return false;
+
+    ResetMouseRButton();
+    UI::Mobile::ItemCard::Content card;
+    card.item = worn;
+    card.primaryLabel = I18N::Game::TouchItemUnequip;
+    card.primary = [this, equipmentSlot, itemKey = worn.Key]
+    {
+        // Unless the gear changed, or a repair, a shop or a picked-up item came, while the card was open.
+        ITEM* pWorn = &CharacterMachine->Equipment[equipmentSlot];
+        if (pWorn->Type < 0 || pWorn->Key != itemKey || !CanTakeOffToBagNow())
+            return;
+        if (FindEmptySlot(pWorn) == -1)
+        {
+            g_pSystemLogBox->AddText(I18N::Game::InventoryIsFull, TYPE_ERROR_MESSAGE);
+            return;
+        }
+        TakeOffToBag(equipmentSlot);
+    };
+    UI::Mobile::ItemCard::Show(std::move(card));
+    return true;
 }
 
 bool CMyInventory::CheckTakeOff(int equipmentSlot) const

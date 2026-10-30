@@ -11,22 +11,28 @@ struct SDL_Window;
 
 namespace Core::Input::Touch::Pointer
 {
-// A finger that landed on no control, at a window pixel. Ignored while another gesture is under way,
-// unless it is the second finger of a pinch.
+// A finger that landed on no control, at a window pixel. A second finger pinches with the first
+// (Gesture::OnLanding()); one landing while another gesture is under way is ignored.
 void Down(SDL_FingerID finger, float x, float y, SDL_Window* window);
 void Move(SDL_FingerID finger, float x, float y, SDL_Window* window);
-// `cancelled`: the system took the finger away (a gesture of the browser's): no click.
+// `cancelled`: the system took the finger away (a gesture of the browser's): no click, no drop.
 void Up(SDL_FingerID finger, float x, float y, bool cancelled, SDL_Window* window);
 
-// Once a frame: a finger held still long enough turns into the right button.
-void Tick(SDL_Window* window);
+// Once a pass of the main loop, before its events: a drag's pointer catches up with the finger, and
+// a finger held still long enough turns into the right button, unless the mouse carries an item.
+void Tick(SDL_Window* window, bool carryingItem);
 
 // Releases the buttons the finger holds and forgets the gesture.
 void Reset(SDL_Window* window);
 
-// Takes the pointer off the window while no finger plays the mouse, so nothing shows a hover for a
-// finger that has lifted: a window opening where the last tap was shows no tooltip of its own.
-void Rest(SDL_Window* window);
+// Takes the pointer a lifted finger left behind off the window, so nothing shows a hover for it: a
+// window opening where the last tap was shows no tooltip of its own. False while a finger still plays
+// the mouse: call again once it lifts. A pointer the mouse or the pad pressed with since is theirs and
+// stays.
+bool Rest(SDL_Window* window);
+
+// The mouse or the pad's pointer pressed a button: the pointer is no longer where a finger left it.
+void ForgetFinger();
 
 [[nodiscard]] bool IsButtonHeld(int sdlButton);
 } // namespace Core::Input::Touch::Pointer

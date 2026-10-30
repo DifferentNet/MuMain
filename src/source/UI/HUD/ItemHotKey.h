@@ -59,6 +59,12 @@ namespace mu::ui::window
         int GetHotKey(int iHotKey);
         int GetHotKeyLevel(int iHotKey);
 
+        // Ctrl + click on an item in the inventory: the hotkey (Q, W, E, R) that already takes it
+        // (bAlreadyThere), or else the first free one, which it binds to the item: one that shows no
+        // item, or takes the same items as one before it. The server keeps 0 for a hotkey never set,
+        // the apple, so all four take healing potions until the player sets them. -1 when none is free.
+        int PutOnFreeHotKey(int iItemType, int iItemLevel, bool& bAlreadyThere);
+
         // Each icon is a render target its slot's .item-icon shows, so RCSS places it like the rest
         // of the slot. Once a frame from SyncRmlModel(): sizes each target to its icon's on-screen
         // box and points the icon at it.
@@ -80,6 +86,8 @@ namespace mu::ui::window
         int GetHotKeyItemIndex(int iType, bool bItemCount = false);
         int GetHotKeyItemCount(int iType);
         ITEM* GetSlotItem(int iSlotIndex);
+        // Whether the hotkey takes the same items as one before it.
+        bool RepeatsEarlierHotKey(int iHotKey);
         // A target's drawer: one frame of the slot's item, framed for `width` x `height`.
         void RenderSlot(int iSlotIndex, const Rml::Vector2f& offset, const Rml::Vector2f& size);
 

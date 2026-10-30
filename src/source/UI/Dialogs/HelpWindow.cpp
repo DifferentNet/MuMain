@@ -3,6 +3,7 @@
 #include "UI/Dialogs/HelpWindow.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/HelpPages.h"
+#include "UI/HUD/TouchControls.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "Audio/DSPlaySound.h"
 
@@ -11,6 +12,7 @@
 #include "Render/Text/CUIRenderTextSDLTtf.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlNativeTextSize.h"
+#include "UI/RmlBridge/RmlPointer.h"
 #include "UI/RmlBridge/RmlTheme.h"
 #include "Render/Text/CUIRenderText.h"
 
@@ -20,6 +22,19 @@
 
 using namespace SEASON3B;
 using namespace mu::ui::window;
+
+namespace
+{
+UI::Help::Devices DevicesInHand()
+{
+    return {UI::Mobile::IsTouchControls(), UI::Mobile::IsGamepadInUse()};
+}
+
+int PageCount()
+{
+    return static_cast<int>(UI::Help::Pages(DevicesInHand()).size());
+}
+} // namespace
 
 mu::ui::window::CHelpWindow::CHelpWindow()
 {
@@ -62,7 +77,15 @@ void mu::ui::window::CHelpWindow::Release()
 
 bool mu::ui::window::CHelpWindow::UpdateMouseEvent()
 {
-    return true;
+    // The hint row takes the pointer: a click on it turns the page and stays out of the world. The
+    // other rows let the pointer through to the world, as the original's help did (the themes give
+    // them no pointer events), but not to a window under them: on a phone's screen the box lies over
+    // the inventory, and a tap on its text took off the worn weapon there.
+    Rml::ElementDocument* document = m_RmlView.Document();
+    if (UI::RmlBridge::IsPointerOver(document))
+        return false;
+    const bool onBox = document != nullptr && UI::RmlBridge::IsPointerWithin(document->GetElementById("help_panel"));
+    return !(onBox && m_pNewUIMng != nullptr && m_pNewUIMng->IsPointerOnWindowUnder(this));
 }
 
 bool mu::ui::window::CHelpWindow::UpdateKeyEvent()
@@ -71,12 +94,7 @@ bool mu::ui::window::CHelpWindow::UpdateKeyEvent()
     {
         if (IsPress(VK_F1) == true)
         {
-            if (++m_iIndex >= UI::Help::PageCount)
-            {
-                g_pNewUISystem->Hide(mu::ui::window::INTERFACE_HELP);
-                PlayBuffer(SOUND_CLICK01);
-            }
-
+            TurnPage(1);
             return false;
         }
 
@@ -118,6 +136,20 @@ void mu::ui::window::CHelpWindow::BindRmlModel(Rml::DataModelConstructor& c, Hel
     line.RegisterMember("hint", &HelpLineEntry::hint);
     c.RegisterArray<std::vector<HelpLineEntry>>();
     c.Bind("lines", &model.lines);
+
+    // The hint row turns the page: a phone has no F1, and the menu's Help is two taps away. The
+    // other rows let the pointer through to the world (the themes give only the hint row pointer
+    // events); the flag keeps them inert in a theme that does not.
+    c.BindEventCallback("help_line_click",
+                        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& arguments)
+                        {
+                            if (arguments.empty() || !arguments[0].Get<bool>())
+                                return;
+                            // On a phone the page often lies over the inventory: the finger's pointer
+                            // would show the tooltip of the item under the hint row.
+                            UI::HUD::TouchControls::RestPointerOnLift();
+                            TurnPage(1);
+                        });
 }
 
 void mu::ui::window::CHelpWindow::OnRmlReloaded()
@@ -148,7 +180,9 @@ void mu::ui::window::CHelpWindow::SyncRmlModel()
 void mu::ui::window::CHelpWindow::RebuildPageModel()
 {
     const float textPx = UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Normal);
-    const UI::Help::Devices devices{UI::Mobile::IsTouchControls(), UI::Mobile::IsGamepadInUse()};
+    const UI::Help::Devices devices = DevicesInHand();
+    // A pad put down or picked up while the window is open changes how many pages there are.
+    m_iIndex = std::min(m_iIndex, PageCount() - 1);
     if (m_BuiltPage == m_iIndex && m_BuiltTextPx == textPx && m_BuiltTouchControls == devices.touchControls &&
         m_BuiltGamepad == devices.gamepad)
         return;
@@ -196,15 +230,24 @@ float mu::ui::window::CHelpWindow::GetKeyEventOrder()
 
 void mu::ui::window::CHelpWindow::OpenningProcess()
 {
-    m_iIndex = UI::Help::KeyFunctionPage;
+    m_iIndex = 0;
 }
 
 void mu::ui::window::CHelpWindow::ClosingProcess() {}
 
 void mu::ui::window::CHelpWindow::AutoUpdateIndex()
 {
-    if (++m_iIndex >= UI::Help::PageCount)
+    TurnPage(1);
+}
+
+void mu::ui::window::CHelpWindow::TurnPage(int step)
+{
+    const int page = std::max(m_iIndex + step, 0);
+    if (page < PageCount())
     {
-        g_pNewUISystem->Hide(mu::ui::window::INTERFACE_HELP);
+        m_iIndex = page;
+        return;
     }
+    g_pNewUISystem->Hide(mu::ui::window::INTERFACE_HELP);
+    PlayBuffer(SOUND_CLICK01);
 }

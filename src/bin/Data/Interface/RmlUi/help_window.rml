@@ -4,18 +4,20 @@
 	<link type="text/rcss" href="base.rcss"/>
 	<link type="text/rcss" href="help_window.rcss"/>
 </head>
-<!-- The F1 help window (CHelpWindow): the key page, then the chat page, as RenderTipTextList()
-     laid them out. #panel is the original's screen (.stage); the box, its rows and their text are one
-     counter-scaled layer at the native text size, so the box is as wide as its widest line. -->
+<!-- The F1 help window (CHelpWindow): the device or key page, then the chat page, as
+     RenderTipTextList() laid them out. #panel is the original's screen (.stage); #help_layer is one
+     counter-scaled layer at the native text size, as wide as the screen, and the box inside it
+     (#help_panel, an inline block) is as wide as its widest line up to that width: a longer line
+     wraps. The hint row turns the page on a click or a tap. -->
 <body data-model="help_window">
 	<div id="panel" class="stage">
-		<div id="help_panel" class="sharp-text"
+		<div id="help_layer" class="sharp-text"><div id="help_panel"
 		     data-style---line-height="line_height + 'px'" data-style---bold-line-height="bold_line_height + 'px'">
 			<div class="help-line" data-for="line : lines"
 			     data-class-heading="line.heading" data-class-half-spacer="line.half_spacer"
-			     data-class-hint="line.hint"><span class="help-text" data-if="!line.half_spacer"
+			     data-class-hint="line.hint" data-event-click="help_line_click(line.hint)"><span class="help-text" data-if="!line.half_spacer"
 			       data-style-font-size="(line.heading ? bold_text_px : text_px) + 'px'">{{line.text}}</span></div>
-		</div>
+		</div></div>
 	</div>
 </body>
 </rml>

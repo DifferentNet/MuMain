@@ -2,6 +2,9 @@
 #include "UI/Core/WindowManager.h"
 #include "UI/Scaling/UITransform.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
+#include "UI/RmlBridge/RmlPointer.h"
+
+#include <RmlUi/Core/ElementDocument.h>
 
 using namespace SEASON3B;
 using namespace mu::ui::window;
@@ -119,10 +122,30 @@ CObject* mu::ui::window::CManager::FindUIObjByRelatedWnd(HWND hWnd) const
     return result != m_vecUI.end() ? *result : nullptr;
 }
 
+// The left button's release belongs to the window that took its press. When that window has closed
+// since -- the help's last hint row, a menu's Close -- the release acts nowhere: the window now under
+// the pointer never had the press (CMyInventory took worn gear off on the help's close tap, with a
+// finger and with the mouse). Returns whether this frame has a new left press, whose taker
+// UpdateMouseEvent() keeps.
+bool mu::ui::window::CManager::TrackLeftPress()
+{
+    if (IsRelease(VK_LBUTTON) && m_pLeftPressOwner != nullptr && !HoldsShownWindow(m_pLeftPressOwner))
+        g_pNewKeyInput->SetKeyState(VK_LBUTTON, CNewKeyInput::KEY_NONE);
+    if (!IsRepeat(VK_LBUTTON))
+        m_pLeftPressOwner = nullptr;
+    return IsPress(VK_LBUTTON);
+}
+
+bool mu::ui::window::CManager::HoldsShownWindow(const CObject* pUIObj) const
+{
+    return std::find(m_vecUI.begin(), m_vecUI.end(), pUIObj) != m_vecUI.end() && pUIObj->IsVisible();
+}
+
 bool mu::ui::window::CManager::UpdateMouseEvent()
 {
     const UI::Scaling::ScopedActiveTransform units(MeasuringUnits());
     m_pActiveMouseUIObj = NULL;
+    const bool leftPress = TrackLeftPress();
 
     std::sort(m_vecUI.begin(), m_vecUI.end(), CompareLayerDepthReverse);
     auto vecUI = m_vecUI;
@@ -149,6 +172,8 @@ bool mu::ui::window::CManager::UpdateMouseEvent()
             if (bResult == false)
             {
                 m_pActiveMouseUIObj = *vi;
+                if (leftPress)
+                    m_pLeftPressOwner = *vi;
                 return false;
             }
         }
@@ -254,6 +279,25 @@ void mu::ui::window::CManager::ResetActiveUIObj()
 {
     m_pActiveMouseUIObj = NULL;
     m_pActiveKeyUIObj = NULL;
+}
+
+bool mu::ui::window::CManager::IsPointerOnOtherWindow(const CObject* pUIObj) const
+{
+    return m_pActiveMouseUIObj != nullptr && m_pActiveMouseUIObj != pUIObj && m_pActiveMouseUIObj->IsPointerOnWindow();
+}
+
+bool mu::ui::window::CManager::IsPointerOnWindowUnder(CObject* pUIObj) const
+{
+    const float depth = pUIObj->GetLayerDepth();
+    for (CObject* other : m_vecUI)
+    {
+        if (other == pUIObj || !other->IsVisible() || other->GetLayerDepth() >= depth)
+            continue;
+        Rml::ElementDocument* document = other->GetPlacedDocument();
+        if (document != nullptr && UI::RmlBridge::IsPointerWithin(document->GetElementById(other->PlacedRootId())))
+            return true;
+    }
+    return false;
 }
 
 bool mu::ui::window::CManager::IsInterfaceVisible(DWORD dwKey)

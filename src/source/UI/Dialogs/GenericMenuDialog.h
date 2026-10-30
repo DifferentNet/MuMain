@@ -83,6 +83,15 @@ namespace mu::ui::window
         std::string kind;
         // The in-game system menu (native CSystemMenuMsgBox): a theme may lay it out like native.
         bool systemMenu = false;
+        // A theme may show the menu at one edge of the screen instead of its usual place: the item
+        // card (UI/Mobile/ItemCard.cpp) keeps clear of the tooltip of the item it was opened on.
+        enum class Edge
+        {
+            Usual,
+            Left,
+            Right,
+        };
+        Edge edge = Edge::Usual;
 
         // Optional, fires on Esc. Decoupled from `buttons` (not "whichever button is last") so a
         // caller can't accidentally rely on button order for cancel semantics.
@@ -110,6 +119,8 @@ namespace mu::ui::window
         // Unconditionally claims input while shown -- a true modal, matching CMessageBoxMng's own
         // "return false while any box is open" contract.
         bool UpdateMouseEvent() override { return !IsVisible(); }
+        // The item card opens beside the item it names: the item's tooltip stays shown.
+        bool IsPointerOnWindow() const override;
         bool UpdateKeyEvent() override;
         bool IsVisible() const override { return m_bActive; }
         // Same layer as CGenericConfirmDialog -- these dialogs are never shown simultaneously in
@@ -159,6 +170,7 @@ namespace mu::ui::window
             Rml::String closeLabel;
             bool highlightTitle = false;
             Rml::String kind;      // GenericMenuConfig::kind
+            Rml::String edge;      // GenericMenuConfig::edge: "", "left" or "right"
             float canvasTop = 0.f; // UI::RmlBridge::DialogCanvasTop, in dp
             Rml::String title;
             std::vector<LineEntry> lines;

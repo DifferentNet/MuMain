@@ -22,6 +22,11 @@ namespace mu::ui::window
         type_map_uibase		m_mapUI;		//. for managing
 
         CObject* m_pActiveMouseUIObj, * m_pActiveKeyUIObj;
+        // The window that took the left press held now (UpdateMouseEvent()), or null.
+        CObject* m_pLeftPressOwner = nullptr;
+
+        bool TrackLeftPress();
+        bool HoldsShownWindow(const CObject* pUIObj) const;
 
     public:
         using UnitsFor = UI::Scaling::Transform (*)(int windowWidth, int windowHeight);
@@ -56,6 +61,12 @@ namespace mu::ui::window
         CObject* GetActiveMouseUIObj();
         CObject* GetActiveKeyUIObj();
         void ResetActiveUIObj();
+
+        // After UpdateMouseEvent(): whether the pointer lies on another window than pUIObj, the one
+        // that kept the pointer on top of it -- pUIObj then shows no tooltip under it.
+        bool IsPointerOnOtherWindow(const CObject* pUIObj) const;
+        // Whether the pointer lies on a shown window drawn under pUIObj (the box the workspace places).
+        bool IsPointerOnWindowUnder(CObject* pUIObj) const;
 
         bool IsInterfaceVisible(DWORD dwKey);
         bool IsInterfaceEnabled(DWORD dwKey);

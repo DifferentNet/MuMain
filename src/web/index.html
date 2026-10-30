@@ -588,13 +588,28 @@
   });
   keyboardInput.addEventListener("compositionstart", () => { keyboardComposing = true; });
   keyboardInput.addEventListener("compositionend", () => { keyboardComposing = false; restartKeyboardValue(false); });
-  // A phone's Enter ("Go"): a PC's keys have a code and reach the game as they are.
+  // Every Enter on the field goes to the game held a moment, the phone keyboard's ("Go") as well as
+  // a keyboard plugged into the phone: the game reads Enter as a key held down, and a quick press
+  // could fall between two of its frames. The key's own events stop here, so the game gets it once.
+  let enterHeld = false;                // the page holds Enter down for the game (holdEnter)
+  function holdEnter() {
+    if (enterHeld) return;
+    enterHeld = true;
+    pressKey("Enter", "Enter", 13, ENTER_HOLD_MS);
+    setTimeout(() => { enterHeld = false; }, ENTER_HOLD_MS);
+  }
   keyboardInput.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" && !event.code && !event.isComposing) {
-      event.preventDefault();
-      pressKey("Enter", "Enter", 13, ENTER_HOLD_MS);
-    }
+    if (event.key !== "Enter") return;
+    event.stopPropagation();
+    if (event.isComposing) return;      // it ends a word the keyboard is writing
+    event.preventDefault();
+    if (!event.repeat) holdEnter();
   });
+  // A real Enter let go during that hold would cut it short. Only then: the keyup of an Enter the
+  // game had straight (the one that opened the chat lands on this field) must reach it.
+  addEventListener("keyup", (event) => {
+    if (enterHeld && event.key === "Enter" && event.isTrusted) event.stopPropagation();
+  }, true);
   // A tap on the game leaves the focus in the field: the game says when the keyboard goes.
   canvas.addEventListener("mousedown", (event) => { if (document.activeElement === keyboardInput) event.preventDefault(); });
   canvas.addEventListener("pointerdown", () => { tappedSinceKeyboard = true; });
@@ -813,9 +828,22 @@
                       "visibilitychange", "contextmenu"]) {
     window.addEventListener(type, blockAfterCrash, true);
   }
+  // While a character is in the world, closing the tab or the window or leaving the page asks first (the
+  // browser's own "Leave site?"): in browsers on Windows Ctrl+W closes the tab, and a page can't keep that
+  // key. The game says when its character enters and leaves the world (Core/Platform/web/WebPageView.h).
+  // Not once the game stopped, where Reload just reloads.
+  function askBeforeLeaving(event) {
+    event.preventDefault();
+    event.returnValue = "";
+  }
+  window.muInWorld = (inWorld) => {
+    if (inWorld && !crashed) addEventListener("beforeunload", askBeforeLeaving);
+    else removeEventListener("beforeunload", askBeforeLeaving);
+  };
   function gameCrashed(error) {
     if (crashed) return;
     crashed = true;
+    removeEventListener("beforeunload", askBeforeLeaving);
     playCard.classList.remove("show");
     for (const socket of openSockets) {
       socket.onmessage = socket.onclose = socket.onerror = null;
@@ -924,12 +952,20 @@
   if (!navigator.gpu) missing.push("WebGPU");
   if (!("Suspending" in WebAssembly)) missing.push("WebAssembly JSPI");
   if (!self.crossOriginIsolated) missing.push("cross-origin isolation (serve with scripts/serve-web.py)");
+  // iPhones and iPads (an iPad's Safari calls itself a Mac): every browser there is Safari's WebKit, and
+  // the game runs from iOS 27 (JSPI came with Safari 27). Their Safari says "iPhone OS 18_7" in the user
+  // agent even on iOS 27.2, so the messages below tell them to update iOS by what the browser lacks.
+  const appleMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+                      (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  const UPDATE_IOS = ["Update iOS: Settings → General → Software Update (iOS 27 or later), then reload this page.",
+                      "Обновите iOS: Настройки → Основные → Обновление ПО (iOS 27 или новее), затем обновите страницу."];
   // The graphics adapter and the optional WebGPU features SDL's WebGPU backend requires. Without one
   // of them the game only said "SDL_gpu Renderer Error. Install the latest graphics card driver." (an
-  // AMD Radeon RX 9070 XT, 2026-10-24; its browser then gave no adapter at all).
+  // AMD Radeon RX 9070 XT, 2026-10-24; its browser then gave no adapter at all). float32-filterable is
+  // not here: iPhones lack it (an iPhone 13 on iOS 27.2, 2026-10-30) and the game doesn't use it.
   // index.html?needfeature=<name> adds a feature and ?noadapter drops the adapter, to see the messages.
   const NEEDED_FEATURES = ["depth32float-stencil8", "rg11b10ufloat-renderable", "indirect-first-instance",
-                           "bgra8unorm-storage", "float32-filterable"];
+                           "bgra8unorm-storage"];
   // The game clamps depth where the card can. ARM Mali Bifrost phones (a Galaxy Note 10 Lite in
   // Chrome 156, 2026-10-30) can't, and the game clips it instead, as the original OpenGL game did
   // (Module.muDepthClamp). index.html?nodepthclamp clips it on any card, to try it.
@@ -1050,7 +1086,12 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
            (navigator.deviceMemory || 8) <= 2;
   }
   function showGpuProblem(gpu, browser, missingFeatures) {
-    const lines = missingFeatures.length
+    const lines = appleMobile
+      ? [missingFeatures.length
+           ? "This iPhone or iPad can't run the game yet. Missing WebGPU features: " + missingFeatures.join(", ")
+           : "Safari gives this page no graphics (WebGPU).",
+         UPDATE_IOS[0], "", "Этот iPhone или iPad пока не может запустить игру.", UPDATE_IOS[1]]
+      : missingFeatures.length
       ? ["Your graphics card can't run the game in this browser yet.",
          "Missing WebGPU features: " + missingFeatures.join(", "),
          "Update the graphics driver and Chrome or Edge, then reload this page.",
@@ -1076,7 +1117,11 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     setStatus(lines.join("\n"), true);
   }
 
-  if (missing.length) {
+  if (missing.length && appleMobile) {
+    statusEl.style.whiteSpace = "pre-line";
+    setStatus(["This iPhone or iPad can't run the game yet: no " + missing.join(", ") + ".", UPDATE_IOS[0], "",
+               "Этот iPhone или iPad пока не может запустить игру.", UPDATE_IOS[1]].join("\n"), true);
+  } else if (missing.length) {
     setStatus("This browser can't run the game: no " + missing.join(", ") + ". Use a current Chrome or Edge.", true);
   } else checkGpu().then(async (gpuCheck) => {
     if (!gpuCheck.ok) {

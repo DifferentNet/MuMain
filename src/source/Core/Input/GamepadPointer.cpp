@@ -37,6 +37,10 @@ struct State
     float x = 0.f;
     float y = 0.f;
     bool placed = false;
+    // The window's size when the pointer was last placed in it: a resize or a turned phone moves it
+    // to the same share of the new size.
+    float windowWidth = 0.f;
+    float windowHeight = 0.f;
     // Where another device (the mouse) last put the pointer: the browser repeats it now and then.
     float otherX = 0.f;
     float otherY = 0.f;
@@ -90,6 +94,27 @@ void FollowOtherDevices(SDL_Window* window)
     RememberOtherDevice(x, y);
 }
 
+// Keeps the pointer in the window after a resize or a turn of the phone, at the same share of its
+// width and height as before (over the same part of the screen, as the windows scale with it). Before
+// FollowOtherDevices(): SDL's mouse is still where the pad left it, in the old size.
+void FitWindow(SDL_Window* window, float width, float height)
+{
+    const float oldWidth = g_state.windowWidth;
+    const float oldHeight = g_state.windowHeight;
+    g_state.windowWidth = width;
+    g_state.windowHeight = height;
+    if (!g_state.placed || (oldWidth == width && oldHeight == height))
+        return;
+    if (oldWidth > 0.f && oldHeight > 0.f)
+    {
+        g_state.x *= width / oldWidth;
+        g_state.y *= height / oldHeight;
+    }
+    g_state.x = std::clamp(g_state.x, 0.f, width - 1.f);
+    g_state.y = std::clamp(g_state.y, 0.f, height - 1.f);
+    SDL_WarpMouseInWindow(window, g_state.x, g_state.y);
+}
+
 Uint8 Clicks(int sdlButton, float windowHeight)
 {
     if (sdlButton != SDL_BUTTON_LEFT)
@@ -124,13 +149,14 @@ void Move(SDL_Window* window, float x, float y, float seconds, bool precise)
 {
     if (window == nullptr)
         return;
+    float width = 0.f;
+    float height = 0.f;
+    WindowSize(window, width, height);
+    FitWindow(window, width, height);
     FollowOtherDevices(window);
     const float lean = std::hypot(x, y);
     if (lean <= 0.f)
         return;
-    float width = 0.f;
-    float height = 0.f;
-    WindowSize(window, width, height);
     const float speed = TopSpeed * height * lean * (precise ? PreciseShare : 1.f);
     g_state.x = std::clamp(g_state.x + x * speed * seconds, 0.f, width - 1.f);
     g_state.y = std::clamp(g_state.y + y * speed * seconds, 0.f, height - 1.f);
@@ -148,11 +174,14 @@ void Centre(SDL_Window* window)
     float width = 0.f;
     float height = 0.f;
     WindowSize(window, width, height);
-    // A pixel off the exact centre: SDL takes two warps there in a row, with the cursor hidden,
-    // for a game that locks the mouse, and would switch to relative mode.
+    // A pixel off the exact centre: SDL takes two warps there in a row, with the cursor hidden, for a
+    // game that locks the mouse and may switch to relative mode (Gamepad::Init() turns that off, this
+    // keeps a build without the hint safe).
     g_state.x = width / 2.f + CentreOffset;
     g_state.y = height / 2.f + CentreOffset;
     g_state.placed = true;
+    g_state.windowWidth = width;
+    g_state.windowHeight = height;
     SDL_WarpMouseInWindow(window, g_state.x, g_state.y);
 }
 
@@ -160,10 +189,11 @@ void SetButton(SDL_Window* window, int sdlButton, bool down)
 {
     if (window == nullptr || sdlButton < 0 || sdlButton >= ButtonSlots || g_state.buttons[sdlButton] == down)
         return;
-    FollowOtherDevices(window);
     float width = 0.f;
     float height = 0.f;
     WindowSize(window, width, height);
+    FitWindow(window, width, height);
+    FollowOtherDevices(window);
     const Uint8 clicks = down ? Clicks(sdlButton, height) : 1;
     g_state.buttons[sdlButton] = down;
     PushButton(window, sdlButton, down, clicks);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -13,18 +14,10 @@ struct PageLine
     std::wstring text;
     bool heading = false;    // TEXT_COLOR_BLUE and bold
     bool halfSpacer = false; // the "\n" row: half a text height, no text
-    bool hint = false;       // the last row, "F1 : ...": what the next F1 press does
+    bool hint = false;       // the last row: what turns the page ("F1 : ...", LB and RB, a tap on it)
 };
 
-// F1 opens the key page and turns to the chat page; one more press closes the window. The
-// original also built two further pages (clock, event times) that no key or menu ever reached.
-// MU Skynet adds its own keys under the key page and its chat commands under the chat page, then a
-// hint row on each.
-constexpr int KeyFunctionPage = 0;
-constexpr int ChattingPage = 1;
-constexpr int PageCount = 2;
-
-// The devices the player has in hand, which the key page is about.
+// The devices the player has in hand, which the first pages are about.
 struct Devices
 {
     // Touch controls on (UI::Mobile::IsTouchControls()): a phone has no F keys to read about.
@@ -33,7 +26,27 @@ struct Devices
     bool gamepad = false;
 };
 
-// The key page lists the touch controls, then the gamepad's buttons, for the devices in hand; the
-// keyboard's keys with neither.
-std::vector<PageLine> BuildPage(int page, Devices devices);
+// F1 opens the first page and turns to the next; past the last page it closes the window. The
+// original had the key page and the chat page (and built two more, clock and event times, that no
+// key or menu ever reached). MU Skynet adds its own keys under the key page and its chat commands
+// under the chat page, the touch controls and the gamepad's buttons each on a page of their own in
+// place of the keys (both on one page are too tall for a phone), and a hint row on each page. With
+// touch controls or a gamepad the chat commands get a page of their own as well: the chat page and
+// its commands are too tall for a phone too.
+enum class Page : std::uint8_t
+{
+    Keys,
+    Touch,
+    Gamepad,
+    Chatting,
+    Commands,
+};
+
+// The pages in the order F1 turns them, for the devices in hand: the touch controls, then the
+// gamepad, or the keys with neither; then the chat page, and the chat commands' page after it with
+// touch controls or a gamepad.
+[[nodiscard]] std::vector<Page> Pages(Devices devices);
+
+// The rows of the page at `index` among Pages(devices); past the last, the last.
+[[nodiscard]] std::vector<PageLine> BuildPage(int index, Devices devices);
 } // namespace UI::Help
