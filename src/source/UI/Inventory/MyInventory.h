@@ -88,6 +88,9 @@ namespace mu::ui::window
         bool m_bRepairEnableLevel;
         bool m_bMyShopOpen;
         bool m_bMyShopLocked = false;
+        // The right button's last press came from a finger's long press: its release takes no worn
+        // gear off (the item card does).
+        bool m_bFingerRightPress = false;
 
         // The whole window is RmlUi: the equipped and the grid's items are live 3D, drawn into the
         // document's #item_view (m_ItemTarget).
@@ -246,6 +249,15 @@ namespace mu::ui::window
         // Whether the item in equipmentSlot may be taken off here; tells the
         // player why not.
         bool CheckTakeOff(int equipmentSlot) const;
+        // Whether worn gear may go to the bag now: no repair, no reply awaited, no item on the mouse,
+        // no NPC shop open.
+        bool CanTakeOffToBagNow() const;
+        // Takes the worn item off into the first free place in the bag, as the right click does.
+        // False when nothing is worn there, it may not come off, or the bag has no room.
+        bool TakeOffToBag(int equipmentSlot);
+        // A finger's long press on worn gear: the item card, with Take off. False when there is no
+        // card to show.
+        bool ShowWornItemCard();
         bool InventoryProcess() const;
         bool WindowProcess();
 

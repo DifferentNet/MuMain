@@ -32,6 +32,11 @@ namespace MUHelper
 		void TriggerStart();
 		void TriggerStop();
 		bool IsActive() { return m_bActive; }
+		// The player walks the character by hand (the phone's joystick, the pad's stick) while the helper
+		// runs: meanwhile it only drinks its potions, as the stick and the helper pulled the character
+		// two ways; afterwards it hunts around where the walk ended, and goes back there, not to where
+		// it started.
+		void SetSteered(bool bSteered);
 		void AddCost(int iCost) { m_iTotalCost += iCost; }
 		int GetTotalCost() { return m_iTotalCost; }
 
@@ -137,6 +142,7 @@ namespace MUHelper
 		static constexpr std::chrono::milliseconds RoundInterval{ 250 };
 		std::chrono::steady_clock::time_point m_nextRound{};
 		bool m_bAttackBetweenRounds = false;
+		bool m_bSteered = false;                                             // SetSteered
 
 		// The second (m_iSecondsElapsed) in which each skill slot last went off on its timer: once per due
 		// second, now that the attack runs more often than four times a second.

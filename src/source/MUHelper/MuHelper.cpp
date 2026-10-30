@@ -153,6 +153,27 @@ namespace MUHelper
         g_ConsoleDebug->Write(MCD_NORMAL, L"[MU Helper] Stopped");
     }
 
+    void CMuHelper::SetSteered(bool bSteered)
+    {
+        if (m_bSteered == bSteered)
+        {
+            return;
+        }
+
+        m_bSteered = bSteered;
+        m_iCurrentTarget = -1;
+        m_iCurrentItem = MAX_ITEMS;
+        m_iComboState = 0;
+        m_bAttackBetweenRounds = false;
+        m_walkWatchSince = {};
+        m_noTargetInReachSince = {};
+        if (!bSteered)
+        {
+            m_posOriginal = { Hero->PositionX, Hero->PositionY };
+            m_iSecondsAway = 0;
+        }
+    }
+
     void CMuHelper::WorkLoop(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
     {
         if (!m_bActive)
@@ -164,6 +185,17 @@ namespace MUHelper
         {
             g_ConsoleDebug->Write(MCD_NORMAL, L"[MU Helper] Entered safezone. Stopping.");
             TriggerStop();
+            return;
+        }
+
+        if (m_bSteered)
+        {
+            const auto now = std::chrono::steady_clock::now();
+            if (now >= m_nextRound)
+            {
+                m_nextRound = now + RoundInterval;
+                ConsumePotion();
+            }
             return;
         }
 

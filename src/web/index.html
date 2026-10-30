@@ -578,13 +578,28 @@
   });
   keyboardInput.addEventListener("compositionstart", () => { keyboardComposing = true; });
   keyboardInput.addEventListener("compositionend", () => { keyboardComposing = false; restartKeyboardValue(false); });
-  // A phone's Enter ("Go"): a PC's keys have a code and reach the game as they are.
+  // Every Enter on the field goes to the game held a moment, the phone keyboard's ("Go") as well as
+  // a keyboard plugged into the phone: the game reads Enter as a key held down, and a quick press
+  // could fall between two of its frames. The key's own events stop here, so the game gets it once.
+  let enterHeld = false;                // the page holds Enter down for the game (holdEnter)
+  function holdEnter() {
+    if (enterHeld) return;
+    enterHeld = true;
+    pressKey("Enter", "Enter", 13, ENTER_HOLD_MS);
+    setTimeout(() => { enterHeld = false; }, ENTER_HOLD_MS);
+  }
   keyboardInput.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" && !event.code && !event.isComposing) {
-      event.preventDefault();
-      pressKey("Enter", "Enter", 13, ENTER_HOLD_MS);
-    }
+    if (event.key !== "Enter") return;
+    event.stopPropagation();
+    if (event.isComposing) return;      // it ends a word the keyboard is writing
+    event.preventDefault();
+    if (!event.repeat) holdEnter();
   });
+  // A real Enter let go during that hold would cut it short. Only then: the keyup of an Enter the
+  // game had straight (the one that opened the chat lands on this field) must reach it.
+  addEventListener("keyup", (event) => {
+    if (enterHeld && event.key === "Enter" && event.isTrusted) event.stopPropagation();
+  }, true);
   // A tap on the game leaves the focus in the field: the game says when the keyboard goes.
   canvas.addEventListener("mousedown", (event) => { if (document.activeElement === keyboardInput) event.preventDefault(); });
   canvas.addEventListener("pointerdown", () => { tappedSinceKeyboard = true; });

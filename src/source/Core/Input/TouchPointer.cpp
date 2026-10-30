@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Core/Input/TouchPointer.h"
 
+#include "Core/Input/TouchGesture.h"
 #include "Core/Input/UiInputRouter.h"
 
 #include <SDL3/SDL.h>
@@ -15,10 +16,8 @@ namespace Core::Input::Touch::Pointer
 namespace
 {
 using Clock = std::chrono::steady_clock;
+using Gesture::Phase;
 
-// A finger held still this long clicks the right button (as Remote Desktop and Android's mouse
-// emulation do), and holds it until the finger lifts.
-constexpr auto LongPressTime = std::chrono::milliseconds(500);
 // A second tap this soon after the first, close to it, is a double click.
 constexpr auto DoubleTapTime = std::chrono::milliseconds(350);
 
@@ -34,24 +33,8 @@ constexpr float PinchStep = 0.06f;
 constexpr float VelocitySmoothingSeconds = 0.05f;
 // A scrolling finger held still this long before it lifts flicks nothing.
 constexpr auto FlickHoldTime = std::chrono::milliseconds(80);
-
-enum class Phase : std::uint8_t
-{
-    // No finger plays the mouse.
-    None,
-    // Down, not yet a tap, a drag or a long press.
-    Pending,
-    // Moved: the left button is held and follows the finger.
-    Dragging,
-    // Moved over a scrollable list of the UI: the list follows the finger, no button is held.
-    Scrolling,
-    // Held still: the right button is held.
-    LongPress,
-    // Two fingers: the wheel turns as they spread or close.
-    Pinch,
-    // The pinch's fingers are lifting: nothing more until both are up.
-    Ending,
-};
+// Above and left of the window, in window pixels: its UI hovers nothing there.
+constexpr float OffWindow = -1.f;
 
 constexpr int ButtonSlots = 4; // SDL_BUTTON_LEFT, _MIDDLE and _RIGHT index it
 
@@ -77,6 +60,9 @@ struct State
     float velocityY = 0.f;
     // The finger stopped a gliding list as it landed: lifting it clicks nothing.
     bool stoppedGlide = false;
+    // A drag has just pressed the left button where the finger landed. The pointer stays there
+    // until the next Tick, so the game's frame sees the press at that point, then follows the finger.
+    bool heldAtLanding = false;
     Clock::time_point lastTapTime;
     float lastTapX = 0.f;
     float lastTapY = 0.f;
@@ -84,6 +70,9 @@ struct State
 };
 
 State g_state;
+// The pointer is where a finger left it (and not taken off the window since, nor pressed with by the
+// mouse or the pad).
+bool g_fingerPlaced = false;
 
 float WindowHeight(SDL_Window* window)
 {
@@ -105,7 +94,30 @@ void MovePointer(SDL_Window* window, float x, float y)
     SDL_WarpMouseInWindow(window, x, y);
 }
 
-void PushButton(SDL_Window* window, Uint8 button, bool down, Uint8 clicks)
+// A motion only the window's UI and the game see. SDL keeps a warped pointer inside the window,
+// so a pointer taken off it is told this way.
+void PushMotion(SDL_Window* window, float x, float y)
+{
+    SDL_Event event{};
+    event.type = SDL_EVENT_MOUSE_MOTION;
+    event.motion.timestamp = SDL_GetTicksNS();
+    event.motion.windowID = SDL_GetWindowID(window);
+    event.motion.which = SDL_TOUCH_MOUSEID;
+    event.motion.x = x;
+    event.motion.y = y;
+    SDL_PushEvent(&event);
+}
+
+// Takes the pointer off the window: SDL's own pointer goes to the corner, the UI and the game see
+// it outside, where nothing shows a hover or takes a click.
+void LeaveWindow(SDL_Window* window)
+{
+    MovePointer(window, OffWindow, OffWindow);
+    PushMotion(window, OffWindow, OffWindow);
+}
+
+// The button event goes at (x, y), where the UI and the game take the press or the release.
+void PushButton(SDL_Window* window, Uint8 button, bool down, Uint8 clicks, float x, float y)
 {
     SDL_Event event{};
     event.type = down ? SDL_EVENT_MOUSE_BUTTON_DOWN : SDL_EVENT_MOUSE_BUTTON_UP;
@@ -115,8 +127,8 @@ void PushButton(SDL_Window* window, Uint8 button, bool down, Uint8 clicks)
     event.button.button = button;
     event.button.down = down;
     event.button.clicks = clicks;
-    event.button.x = g_state.x;
-    event.button.y = g_state.y;
+    event.button.x = x;
+    event.button.y = y;
     SDL_PushEvent(&event);
     if (button < ButtonSlots)
         g_state.buttons[button] = down;
@@ -137,13 +149,37 @@ void PushWheel(SDL_Window* window, int steps)
     SDL_PushEvent(&event);
 }
 
+bool HoldsAnyButton()
+{
+    for (const bool held : g_state.buttons)
+    {
+        if (held)
+            return true;
+    }
+    return false;
+}
+
+// Lets go of the buttons the finger holds off the window: a gesture broken off (the page hidden, the
+// screen turned) drops and clicks nothing.
 void ReleaseButtons(SDL_Window* window)
 {
+    if (!HoldsAnyButton())
+        return;
+    LeaveWindow(window);
     for (Uint8 button = 0; button < ButtonSlots; ++button)
     {
         if (g_state.buttons[button])
-            PushButton(window, button, false, 1);
+            PushButton(window, button, false, 1, OffWindow, OffWindow);
     }
+}
+
+// A drag called off (the system took the finger, or a second finger turned it into a pinch): the
+// left button is let go off the window, so nothing under the finger takes it as a drop or a click.
+void CancelDrag(SDL_Window* window)
+{
+    g_state.heldAtLanding = false;
+    LeaveWindow(window);
+    PushButton(window, SDL_BUTTON_LEFT, false, 1, OffWindow, OffWindow);
 }
 
 Uint8 TapClicks(float x, float y, float height)
@@ -160,8 +196,8 @@ Uint8 TapClicks(float x, float y, float height)
 void Tap(SDL_Window* window)
 {
     const Uint8 clicks = TapClicks(g_state.x, g_state.y, WindowHeight(window));
-    PushButton(window, SDL_BUTTON_LEFT, true, clicks);
-    PushButton(window, SDL_BUTTON_LEFT, false, clicks);
+    PushButton(window, SDL_BUTTON_LEFT, true, clicks, g_state.x, g_state.y);
+    PushButton(window, SDL_BUTTON_LEFT, false, clicks, g_state.x, g_state.y);
 }
 
 // Smooths the scrolling finger's speed from its move by (dx, dy) since the last.
@@ -187,6 +223,20 @@ void StartPinch(SDL_FingerID finger, float x, float y)
     g_state.phase = Phase::Pinch;
 }
 
+// A finger lands while one finger of a pinch is still down: that one becomes the first again and the
+// pair pinches on, as when a finger lifts and lands again in a map.
+void ResumePinch(SDL_FingerID finger, float x, float y)
+{
+    if (!g_state.firstDown)
+    {
+        g_state.first = g_state.second;
+        g_state.firstDown = true;
+        g_state.x = g_state.secondX;
+        g_state.y = g_state.secondY;
+    }
+    StartPinch(finger, x, y);
+}
+
 void TurnWheelByPinch(SDL_Window* window)
 {
     const float step = PinchStep * WindowHeight(window);
@@ -199,7 +249,8 @@ void TurnWheelByPinch(SDL_Window* window)
 }
 
 // A finger moving off the point it landed on: a list under that point scrolls with it, anything else
-// is dragged with the left button, as a mouse's press there and a move from it.
+// is dragged with the left button, as a mouse's press there and a move from it. The pointer is still
+// where the finger landed (Down); it follows the finger from the next Tick on.
 void StartDrag(SDL_Window* window)
 {
     if (BeginUiTouchScroll(g_state.downX, g_state.downY))
@@ -211,8 +262,8 @@ void StartDrag(SDL_Window* window)
         return;
     }
     g_state.phase = Phase::Dragging;
-    PushButton(window, SDL_BUTTON_LEFT, true, 1);
-    MovePointer(window, g_state.x, g_state.y);
+    g_state.heldAtLanding = true;
+    PushButton(window, SDL_BUTTON_LEFT, true, 1, g_state.downX, g_state.downY);
 }
 
 void Scroll(float fromX, float fromY)
@@ -250,6 +301,9 @@ void MoveFirst(float x, float y, SDL_Window* window)
         Scroll(fromX, fromY);
         return;
     case Phase::Dragging:
+        if (!g_state.heldAtLanding)
+            MovePointer(window, x, y);
+        return;
     case Phase::LongPress:
         MovePointer(window, x, y);
         return;
@@ -268,50 +322,42 @@ void LiftFirst(float x, float y, bool cancelled, SDL_Window* window)
     g_state.firstDown = false;
     g_state.x = x;
     g_state.y = y;
-    switch (g_state.phase)
+    switch (Gesture::OnLift(g_state.phase, cancelled, g_state.stoppedGlide))
     {
-    case Phase::Pending:
-        if (!cancelled && !g_state.stoppedGlide)
-        {
-            MovePointer(window, x, y);
-            Tap(window);
-        }
+    case Gesture::Lift::Click:
+        MovePointer(window, x, y);
+        Tap(window);
         break;
-    case Phase::Scrolling:
+    case Gesture::Lift::EndScroll:
         // A lift where the last move left the finger is no move: it must not count as a fresh one.
         if (x != fromX || y != fromY)
             Scroll(fromX, fromY);
         EndScroll(cancelled);
         break;
-    case Phase::Dragging:
+    case Gesture::Lift::Drop:
         MovePointer(window, x, y);
-        PushButton(window, SDL_BUTTON_LEFT, false, 1);
+        PushButton(window, SDL_BUTTON_LEFT, false, 1, x, y);
         break;
-    case Phase::LongPress:
-        PushButton(window, SDL_BUTTON_RIGHT, false, 1);
+    case Gesture::Lift::CancelDrag:
+        CancelDrag(window);
         break;
-    case Phase::Pinch:
+    case Gesture::Lift::ReleaseRight:
+        PushButton(window, SDL_BUTTON_RIGHT, false, 1, x, y);
+        break;
+    case Gesture::Lift::EndPinch:
         g_state.phase = Phase::Ending;
         break;
-    default:
+    case Gesture::Lift::Nothing:
         break;
     }
+    g_state.heldAtLanding = false;
     if (g_state.phase != Phase::Ending)
         g_state.phase = g_state.secondDown ? Phase::Ending : Phase::None;
     FinishIfLifted();
 }
-} // namespace
 
-void Down(SDL_FingerID finger, float x, float y, SDL_Window* window)
+void StartTouch(SDL_FingerID finger, float x, float y, SDL_Window* window)
 {
-    if (g_state.phase == Phase::Pending && !g_state.secondDown)
-    {
-        StartPinch(finger, x, y);
-        return;
-    }
-    if (g_state.phase != Phase::None)
-        return;
-
     g_state = State{.lastTapTime = g_state.lastTapTime, .lastTapX = g_state.lastTapX, .lastTapY = g_state.lastTapY};
     g_state.phase = Phase::Pending;
     g_state.first = finger;
@@ -322,6 +368,30 @@ void Down(SDL_FingerID finger, float x, float y, SDL_Window* window)
     g_state.stoppedGlide = StopUiTouchScrollGlide();
     // The pointer goes where the finger is at once: what is under it shows its hover (an item's tooltip).
     MovePointer(window, x, y);
+    g_fingerPlaced = true;
+}
+} // namespace
+
+void Down(SDL_FingerID finger, float x, float y, SDL_Window* window)
+{
+    switch (Gesture::OnLanding(g_state.phase))
+    {
+    case Gesture::Landing::Start:
+        StartTouch(finger, x, y, window);
+        return;
+    case Gesture::Landing::Pinch:
+        StartPinch(finger, x, y);
+        return;
+    case Gesture::Landing::CancelDragThenPinch:
+        CancelDrag(window);
+        StartPinch(finger, x, y);
+        return;
+    case Gesture::Landing::ResumePinch:
+        ResumePinch(finger, x, y);
+        return;
+    case Gesture::Landing::Ignore:
+        return;
+    }
 }
 
 void Move(SDL_FingerID finger, float x, float y, SDL_Window* window)
@@ -356,12 +426,19 @@ void Up(SDL_FingerID finger, float x, float y, bool cancelled, SDL_Window* windo
     }
 }
 
-void Tick(SDL_Window* window)
+void Tick(SDL_Window* window, bool carryingItem)
 {
-    if (g_state.phase != Phase::Pending || Clock::now() - g_state.downTime < LongPressTime)
+    if (g_state.heldAtLanding)
+    {
+        g_state.heldAtLanding = false;
+        MovePointer(window, g_state.x, g_state.y);
+    }
+    const auto held = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - g_state.downTime);
+    if (!Gesture::IsLongPressDue(g_state.phase, held, carryingItem))
         return;
     g_state.phase = Phase::LongPress;
-    PushButton(window, SDL_BUTTON_RIGHT, true, 1);
+    // Where the pointer is: a still finger has not moved it from where it landed.
+    PushButton(window, SDL_BUTTON_RIGHT, true, 1, g_state.downX, g_state.downY);
 }
 
 void Reset(SDL_Window* window)
@@ -373,12 +450,19 @@ void Reset(SDL_Window* window)
     g_state = State{};
 }
 
-void Rest(SDL_Window* window)
+bool Rest(SDL_Window* window)
 {
-    if (window == nullptr || g_state.phase != Phase::None)
-        return;
-    // Above and left of the window: its UI hovers nothing there.
-    MovePointer(window, -1.f, -1.f);
+    if (g_state.phase != Phase::None)
+        return false;
+    if (window != nullptr && g_fingerPlaced)
+        LeaveWindow(window);
+    g_fingerPlaced = false;
+    return true;
+}
+
+void ForgetFinger()
+{
+    g_fingerPlaced = false;
 }
 
 bool IsButtonHeld(int sdlButton)

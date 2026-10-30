@@ -5,22 +5,37 @@
 #include "Camera/CameraState.h"
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInfomation.h"
+#include "Engine/Object/ZzzInterface.h"
 #include "Engine/Object/ZzzObject.h"
 #include "Engine/Object/ZzzOpenData.h"
 #include "GameLogic/Automation/Attack.h"
 #include "GameLogic/Automation/Movement.h"
 #include "GameLogic/Automation/Pickup.h"
 #include "GameLogic/Automation/Skill.h"
+#include "GameLogic/Combat/SkillExecution.h"
+#include "GameLogic/Skills/SkillManager.h"
+#include "GameLogic/Touch/SteerHold.h"
+#include "I18N/All.h"
+#include "MUHelper/MuHelper.h"
+#include "UI/Chat/ChatMessages.h"
 #include "UI/Core/WindowSystem.h"
+#include "World/MapInfra/MapManager.h"
 
 #include <algorithm>
 #include <array>
 #include <chrono>
 #include <cmath>
 #include <map>
+#include <mutex>
 
 // Defined in ZzzInterface.cpp: the character under the pointer, which a tap on a monster leaves there.
 extern int SelectedCharacter;
+
+namespace
+{
+// The keyboard's ten skill hotkeys, 1-9 and 0 (CSkillList keeps its count to itself).
+constexpr int HotKeyCount = 10;
+} // namespace
 
 namespace GameLogic::Touch
 {
@@ -33,6 +48,17 @@ constexpr auto WalkRepeat = std::chrono::milliseconds(300);
 constexpr auto ActionRepeat = std::chrono::milliseconds(250);
 // How long a monster that could not be fought (behind a wall, out of reach) is passed over.
 constexpr auto ForgetTime = std::chrono::seconds(3);
+// How long a cast where the character stands holds the joystick's walk off while it stops, and how
+// soon it may stop the walk again when that cast still did not go off.
+constexpr auto StandTime = std::chrono::milliseconds(600);
+constexpr auto StandAgainTime = std::chrono::milliseconds(1500);
+// How long the joystick waits after a swing went off, before the swing's own pose holds it.
+constexpr auto SwingStartTime = std::chrono::milliseconds(200);
+// How long a drop asked for is passed over while the server answers, and one no walk reaches.
+constexpr auto AskedDropTime = std::chrono::milliseconds(1500);
+constexpr auto UnreachableDropTime = std::chrono::seconds(3);
+// How often the pickup button says the bag is full.
+constexpr auto FullBagRepeat = std::chrono::seconds(3);
 
 // How far ahead the joystick walks, in tiles, and the shorter walk tried along a wall.
 constexpr int StickTiles = 4;
@@ -50,33 +76,107 @@ constexpr int HuntingDistance = 8;
 constexpr int PickupRange = 6;
 
 constexpr int NoTarget = -1;
+constexpr int NoDrop = -1;
 
 struct Steering
 {
+    // A walk of the joystick's is under way.
     bool active = false;
     // The direction of the walk under way, on the map (tiles).
     float dirX = 0.f;
     float dirY = 0.f;
     Clock::time_point lastWalk;
+    // Where the character was when the walk was sent.
+    HeroPlace from;
 };
 
 Steering g_steering;
+SteerHold g_hold;
+// Until when a button's cast holds the joystick's walk off, and before when it may not stop the
+// walk again.
+Clock::time_point g_standUntil;
+Clock::time_point g_standAgainAt;
+bool g_pointerAims = false;
 int g_targetKey = NoTarget;
 std::map<int, Clock::time_point> g_forgottenUntil;
-Clock::time_point g_lastAction;
+Clock::time_point g_nextAction;
+// The drops passed over (asked for, or out of a walk's reach), by their slot, until when.
+std::map<int, Clock::time_point> g_skippedDrops;
+// The drop the pickup button walks to, and when the bag was last said to be full.
+int g_dropWalkedTo = NoDrop;
+Clock::time_point g_fullBagSaidAt;
 
 bool InWorld()
 {
     return Hero != nullptr && Hero->Object.Live && Hero->Dead == 0;
 }
 
+// An action may go out: the last one went out long enough ago. Asking spends the turn: an attempt
+// that was refused may have sent a packet of its own (a mana potion the cast asked for).
 bool ActionDue()
 {
     const auto now = Clock::now();
-    if (now - g_lastAction < ActionRepeat)
+    if (now < g_nextAction)
         return false;
-    g_lastAction = now;
+    g_nextAction = now + ActionRepeat;
     return true;
+}
+
+double Seconds(Clock::time_point time)
+{
+    return std::chrono::duration<double>(time.time_since_epoch()).count();
+}
+
+HeroPlace HerePlace()
+{
+    return {static_cast<int>(gMapManager.WorldActive), Hero->PositionX, Hero->PositionY, Seconds(Clock::now())};
+}
+
+// Whether the character stands within `range` tiles of the tile's centre, measured as the engine's
+// CheckTile measures it.
+bool HeroWithin(int tileX, int tileY, float range)
+{
+    const float dx = Hero->Object.Position[0] - (static_cast<float>(tileX) + 0.5f) * TERRAIN_SCALE;
+    const float dy = Hero->Object.Position[1] - (static_cast<float>(tileY) + 0.5f) * TERRAIN_SCALE;
+    const float reach = range * TERRAIN_SCALE;
+    return dx * dx + dy * dy <= reach * reach;
+}
+
+int TileOf(float position)
+{
+    return static_cast<int>(position / TERRAIN_SCALE);
+}
+
+// The walk under way is forgotten where the client keeps it, with nothing sent: the server put the
+// character elsewhere (a gate, a map change), where a stop on the old walk's tiles means nothing.
+void ForgetWalk()
+{
+    {
+        std::lock_guard<SpinLock> guard(Hero->Path.Lock);
+        Hero->Path.PathNum = 0;
+        Hero->Path.CurrentPath = 0;
+        Hero->Path.CurrentPathFloat = 0;
+    }
+    if (Hero->Movement)
+    {
+        Hero->Movement = false;
+        SetPlayerStop(Hero);
+    }
+}
+
+// Ends the joystick's walk: on the same ground the character finishes its step and the server is
+// told where it stands; past a gate the walk is only forgotten.
+void EndWalk()
+{
+    if (!g_steering.active)
+        return;
+    g_steering.active = false;
+    const HeroPlace here = HerePlace();
+    if (here.world == g_steering.from.world && !IsJump(g_steering.from, here))
+        // Clearing the path alone left it walking straight on for good (a Pixel 9 Pro XL, 2026-10-30).
+        Automation::StopAtNextTile();
+    else
+        ForgetWalk();
 }
 
 // The joystick's direction on the map: the screen directions of the map's two axes at the
@@ -116,8 +216,11 @@ bool ScreenToMap(float screenX, float screenY, float& mapX, float& mapY)
     return true;
 }
 
+// Steps left of the walk under way; none once the character stands, whatever path it kept.
 int StepsLeft()
 {
+    if (!Hero->Movement)
+        return 0;
     return Hero->Path.PathNum > 0 ? Hero->Path.PathNum - 1 - Hero->Path.CurrentPath : 0;
 }
 
@@ -144,6 +247,50 @@ bool WalkToward(float dirX, float dirY)
     return false;
 }
 
+// The joystick walks away from the fight: the engine's own auto-attack (Attacking, kept by a tap on
+// a monster or a button's swing) would chase the monster again against it, and the next press of
+// the attack button looks for the nearest monster again.
+void BreakOffFight()
+{
+    Attacking = -1;
+    SelectedCharacter = -1;
+    g_targetKey = NoTarget;
+    g_dropWalkedTo = NoDrop;
+}
+
+// A button's swing or cast holds the joystick's walk: the swing plays to its end (a walk would cut
+// it short), and a cast where the character stands waits for it to stop.
+bool ButtonHoldsHero()
+{
+    return Automation::IsSwingInProgress() || Clock::now() < g_standUntil;
+}
+
+// Whether the character stands, so a cast where it stands can go off (GameLogic::Combat::ExecuteSkill
+// casts from a standing pose only). A walk under way is ended for it, at most once in a while: a
+// cast that still does not go off then lets the walk run on.
+bool HeroStands()
+{
+    if (!Hero->Movement)
+        return true;
+    const auto now = Clock::now();
+    if (now < g_standUntil || now < g_standAgainAt)
+        return false;
+    g_standUntil = now + StandTime;
+    g_standAgainAt = now + StandAgainTime;
+    g_steering.active = false;
+    Automation::StopAtNextTile();
+    return false;
+}
+
+// A swing or a cast went off: the next cast may stop the walk at once, and the joystick waits for
+// the swing to take its pose.
+void ActionWentOff()
+{
+    const auto now = Clock::now();
+    g_standAgainAt = now;
+    g_standUntil = now + SwingStartTime;
+}
+
 bool IsHuntable(const CHARACTER* character)
 {
     return character != nullptr && character->Object.Live && character->Dead == 0 && character != Hero &&
@@ -157,6 +304,12 @@ int TilesTo(const CHARACTER* character)
     const auto distance = [](int dx, int dy) { return static_cast<int>(std::ceil(std::hypot(dx, dy))); };
     return std::min(distance(Hero->PositionX - character->PositionX, Hero->PositionY - character->PositionY),
                     distance(Hero->PositionX - character->TargetX, Hero->PositionY - character->TargetY));
+}
+
+// Whether the monster stands within `range` tiles, as the attack and the cast measure it.
+bool InReach(const CHARACTER* character, float range)
+{
+    return HeroWithin(TileOf(character->Object.Position[0]), TileOf(character->Object.Position[1]), range);
 }
 
 CHARACTER* FindByKey(int key)
@@ -183,10 +336,13 @@ bool IsGoodTarget(const CHARACTER* character)
     return IsHuntable(character) && !IsForgotten(character->Key) && TilesTo(character) <= TargetRange;
 }
 
-// The monster the player tapped (the pointer stays on it), else the one fought last, else the nearest.
+// The monster the player is fighting (one tapped, the engine's auto-attack on it) or the pad's
+// pointer is on, else the one fought last, else the nearest. A finger's pointer stays where it last
+// tapped, so a monster that walks under it later is no aim.
 int ChooseTarget()
 {
-    if (SelectedCharacter >= 0 && SelectedCharacter < MAX_CHARACTERS_CLIENT &&
+    const bool aimed = Attacking != -1 || g_pointerAims;
+    if (aimed && SelectedCharacter >= 0 && SelectedCharacter < MAX_CHARACTERS_CLIENT &&
         IsGoodTarget(&CharactersClient[SelectedCharacter]))
         return g_targetKey = CharactersClient[SelectedCharacter].Key;
 
@@ -218,7 +374,7 @@ void Forget(int key)
 }
 
 // Whether a skill helps the character instead of hurting a monster, and whether it is aimed at the
-// character (the MU Helper's buff table, CMuHelper::BuffTarget, and the heals).
+// character (the MU Helper's buff table, CMuHelper::BuffTarget, the heals and the summons).
 enum class SkillAim
 {
     Monster,
@@ -228,8 +384,13 @@ enum class SkillAim
     Pointer,
 };
 
+// The Elf's summons: Goblin, Stone Golem, Assassin, Elite Yeti, Dark Knight, Bali, Soldier.
+constexpr int SummonCount = 7;
+
 SkillAim AimOf(ActionSkillType skill)
 {
+    if (skill >= AT_SKILL_SUMMON && skill < AT_SKILL_SUMMON + SummonCount)
+        return SkillAim::Around;
     switch (skill)
     {
     case AT_SKILL_ATTACK:
@@ -243,6 +404,7 @@ SkillAim AimOf(ActionSkillType skill)
     case AT_SKILL_SOUL_BARRIER_PROFICIENCY:
     case AT_SKILL_HEALING:
     case AT_SKILL_HEALING_STR:
+    case AT_SKILL_RECOVER:
         return SkillAim::Self;
     case AT_SKILL_INFINITY_ARROW:
     case AT_SKILL_INFINITY_ARROW_STR:
@@ -265,6 +427,8 @@ SkillAim AimOf(ActionSkillType skill)
     case AT_SKILL_DEF_UP_OURFORCES:
     case AT_SKILL_DEF_UP_OURFORCES_STR:
     case AT_SKILL_DEF_UP_OURFORCES_MASTERY:
+    case AT_SKILL_IMPROVE_AG:
+    case AT_SKILL_PARTY_TELEPORT:
         return SkillAim::Around;
     case AT_SKILL_TELEPORT:
     case AT_SKILL_TELEPORT_ALLY:
@@ -274,31 +438,131 @@ SkillAim AimOf(ActionSkillType skill)
     }
 }
 
-// The skill-list index in a hotkey slot of the bar, or -1 for an empty slot.
-int HotKeySlotSkillIndex(int slot)
+// The skill-list index (or pet command) a hotkey holds for the character now, or -1.
+int HotKeySkillIndex(int hotKey)
 {
-    const int hotKey = g_pSkillList->GetHotKeySlotNumber(slot);
-    return hotKey < 0 ? -1 : g_pSkillList->GetHotKey(hotKey);
+    if (!g_pSkillList->IsHotKeyShown(hotKey))
+        return -1;
+    const int index = g_pSkillList->GetHotKey(hotKey);
+    if (index >= AT_PET_COMMAND_DEFAULT && index < AT_PET_COMMAND_END)
+        return index;
+    // A skill the character no longer has (another character's hotkeys, a skill taken back).
+    return index >= 0 && index < MAX_SKILLS && CharacterAttribute->Skill[index] != 0 ? index : -1;
 }
 
-void CastAtMonster(ActionSkillType skill)
+Progress OutcomeOf(Automation::SkillResult result)
+{
+    switch (result)
+    {
+    case Automation::SkillResult::Cast:
+        ActionWentOff();
+        return Progress::Done;
+    case Automation::SkillResult::NoTarget:
+    case Automation::SkillResult::Refused:
+        return Progress::Done;
+    default:
+        // On its way, a swing still playing, not ready yet, or a target dropped for another.
+        return Progress::Pending;
+    }
+}
+
+// A cast where the character stands: a buff or a heal on itself, one around it, an area skill with
+// no monster about. A cast that cannot go off yet (cooldown, mana) leaves the walk alone.
+Progress CastWhereHeroStands(ActionSkillType skill, bool onSelf)
+{
+    if (!GameLogic::Combat::CanExecuteSkill(Hero, skill, gSkillManager.GetSkillDistance(skill, Hero)))
+        return Progress::Pending;
+    if (!HeroStands())
+        return Progress::Pending;
+    return OutcomeOf(onSelf ? Automation::CastSkill(skill, true, Hero->Key, true, HuntingDistance)
+                            : Automation::CastSkill(skill, false, NoTarget, true, HuntingDistance));
+}
+
+Progress CastAtMonster(ActionSkillType skill)
 {
     const int target = ChooseTarget();
     if (target == NoTarget)
     {
-        // No monster around: an area skill still goes off where the character stands.
-        Automation::CastSkill(skill, false, NoTarget, false, HuntingDistance);
-        return;
+        // No monster around: an area skill still goes off where the character stands, but not by
+        // stopping the joystick's walk for nothing.
+        return IsSteering() ? Progress::Done : CastWhereHeroStands(skill, false);
     }
+
+    const bool inReach = Automation::IsSelfPositionSkill(skill) ||
+                         InReach(FindByKey(target), gSkillManager.GetSkillDistance(skill, Hero));
+    // While the joystick walks, the buttons fight what is in reach: walking off towards a monster
+    // would fight the joystick.
+    if (!inReach && IsSteering())
+        return Progress::Pending;
+    if (inReach)
+    {
+        if (!GameLogic::Combat::CanExecuteSkill(Hero, skill, gSkillManager.GetSkillDistance(skill, Hero)))
+            return Progress::Pending;
+        if (!HeroStands())
+            return Progress::Pending;
+    }
+
     const Automation::SkillResult result = Automation::CastSkill(skill, true, target, false, HuntingDistance);
     if (Automation::ShouldForgetTarget(result) && result != Automation::SkillResult::Refused)
         Forget(target);
+    return OutcomeOf(result);
+}
+
+bool IsSkipped(int drop)
+{
+    const auto it = g_skippedDrops.find(drop);
+    if (it == g_skippedDrops.end())
+        return false;
+    if (Clock::now() < it->second)
+        return true;
+    g_skippedDrops.erase(it);
+    return false;
+}
+
+void Skip(int drop, Clock::duration time)
+{
+    g_skippedDrops[drop] = Clock::now() + time;
+}
+
+bool FitsTheBag(ITEM_t& drop)
+{
+    return drop.Item.Type == ITEM_ZEN || g_pMyInventory->FindEmptySlotIncludingExtensions(&drop.Item) != -1;
+}
+
+void SayBagFull()
+{
+    const auto now = Clock::now();
+    if (now - g_fullBagSaidAt < FullBagRepeat)
+        return;
+    g_fullBagSaidAt = now;
+    UI::Chat::PostSystem(I18N::Game::InventoryIsFull, mu::ui::window::TYPE_ERROR_MESSAGE);
 }
 } // namespace
+
+// Whether the MU Helper was told the stick walks the character (CMuHelper::SetSteered).
+bool g_helperSteered = false;
+
+void SteerHelper(bool steered)
+{
+    if (g_helperSteered == steered)
+        return;
+    g_helperSteered = steered;
+    MUHelper::g_MuHelper.SetSteered(steered);
+}
 
 void Steer(float screenX, float screenY)
 {
     if (!InWorld())
+        return;
+    if (!g_hold.MayWalk(HerePlace()))
+    {
+        // Past a gate, or the controls went away: the push waits to be let go.
+        EndWalk();
+        SteerHelper(false);
+        return;
+    }
+    SteerHelper(true);
+    if (ButtonHoldsHero())
         return;
     float dirX = 0.f;
     float dirY = 0.f;
@@ -313,82 +577,124 @@ void Steer(float screenX, float screenY)
         return;
 
     g_steering.lastWalk = now;
+    const HeroPlace from = HerePlace();
     if (WalkToward(dirX, dirY))
     {
+        BreakOffFight();
         g_steering.active = true;
         g_steering.dirX = dirX;
         g_steering.dirY = dirY;
+        g_steering.from = from;
     }
 }
 
 void StopSteering()
 {
-    if (!g_steering.active)
-        return;
-    g_steering.active = false;
-    // The character finishes the step it is taking and stands; the server is told where. Clearing the
-    // path alone left it walking straight on for good (a Pixel 9 Pro XL, 2026-10-30).
-    Automation::StopAtNextTile();
+    g_hold.Release();
+    SteerHelper(false);
+    if (InWorld())
+        EndWalk();
+    else
+        g_steering.active = false;
 }
 
-void Attack()
+void PauseSteering()
 {
-    if (!InWorld() || !ActionDue())
-        return;
+    g_hold.Pause();
+    SteerHelper(false);
+    if (InWorld())
+        EndWalk();
+    else
+        g_steering.active = false;
+}
+
+bool IsSteeringOnHold()
+{
+    return g_hold.IsWaiting();
+}
+
+bool IsSteering()
+{
+    return g_hold.IsHeld() && !g_hold.IsWaiting();
+}
+
+void SetPointerAims(bool aims)
+{
+    g_pointerAims = aims;
+}
+
+Progress Attack()
+{
+    // A safe zone refuses attacks: no walk out of town towards a monster either.
+    if (!InWorld() || Hero->SafeZone)
+        return Progress::Done;
+    // A press during a swing goes off as the swing ends.
+    if (Automation::IsSwingInProgress() || !ActionDue())
+        return Progress::Pending;
     const int target = ChooseTarget();
     if (target == NoTarget)
-        return;
+        return Progress::Done;
+    if (IsSteering() && !InReach(FindByKey(target), Automation::EquippedAttackRange()))
+        return Progress::Pending;
+
     const Automation::AttackResult result = Automation::AttackObject(target, false, HuntingDistance);
     if (Automation::ShouldForgetTarget(result))
         Forget(target);
-}
-
-void SelectHotKeySlot(int slot)
-{
-    if (InWorld() && HotKeySlotSkillIndex(slot) >= 0)
-        g_pSkillList->OnHotkeySlotClick(slot);
-}
-
-void CastHotKeySlot(int slot)
-{
-    if (!InWorld())
-        return;
-    const int index = HotKeySlotSkillIndex(slot);
-    // Pet commands only switch the pet's behaviour, as the slot's click does.
-    if (index < 0 || index >= AT_PET_COMMAND_DEFAULT || index >= MAX_SKILLS)
-        return;
-    const auto skill = static_cast<ActionSkillType>(CharacterAttribute->Skill[index]);
-    if (skill == 0 || !ActionDue())
-        return;
-
-    switch (AimOf(skill))
+    switch (result)
     {
-    case SkillAim::Self:
-        Automation::CastSkill(skill, true, Hero->Key, true, HuntingDistance);
-        break;
-    case SkillAim::Around:
-        Automation::CastSkill(skill, false, NoTarget, true, HuntingDistance);
-        break;
-    case SkillAim::Pointer:
-        break;
-    case SkillAim::Monster:
-        CastAtMonster(skill);
-        break;
+    case Automation::AttackResult::Attacked:
+        ActionWentOff();
+        return Progress::Done;
+    case Automation::AttackResult::NoTarget:
+    case Automation::AttackResult::NoArrows:
+    case Automation::AttackResult::SafeZone:
+        return Progress::Done;
+    default:
+        return Progress::Pending;
     }
 }
 
-bool BindHotKeySlot(int slot)
+void SelectHotKey(int hotKey)
 {
-    if (!InWorld() || slot < 0 || slot >= 5)
+    if (InWorld() && HotKeySkillIndex(hotKey) >= 0)
+        g_pSkillList->SelectHotKey(hotKey);
+}
+
+Progress CastHotKey(int hotKey)
+{
+    if (!InWorld())
+        return Progress::Done;
+    const int index = HotKeySkillIndex(hotKey);
+    // Pet commands only switch the pet's behaviour, as the slot's click does.
+    if (index < 0 || index >= AT_PET_COMMAND_DEFAULT)
+        return Progress::Done;
+    const auto skill = static_cast<ActionSkillType>(CharacterAttribute->Skill[index]);
+    const SkillAim aim = AimOf(skill);
+    // A safe zone refuses every skill (GameLogic::Combat::CanExecuteSkill).
+    if (aim == SkillAim::Pointer || Hero->SafeZone)
+        return Progress::Done;
+    if (Automation::IsSwingInProgress() || !ActionDue())
+        return Progress::Pending;
+
+    switch (aim)
+    {
+    case SkillAim::Self:
+        return CastWhereHeroStands(skill, true);
+    case SkillAim::Around:
+        return CastWhereHeroStands(skill, false);
+    default:
+        return CastAtMonster(skill);
+    }
+}
+
+bool BindHotKey(int hotKey)
+{
+    if (!InWorld() || hotKey < 0 || hotKey >= HotKeyCount)
         return false;
     const int skill = Hero->CurrentSkill;
     const bool petCommand = skill >= AT_PET_COMMAND_DEFAULT && skill < AT_PET_COMMAND_END;
     if (!petCommand && (skill >= MAX_SKILLS || CharacterAttribute->Skill[skill] == 0))
         return false;
-    // The bar shows the hotkeys 1-5, or 6-9 and 0 when switched up (CSkillList::GetHotKeySlotNumber).
-    int hotKey = (g_pSkillList->IsSkillListUp() ? 6 : 1) + slot;
-    if (hotKey == 10)
-        hotKey = 0;
     if (g_pSkillList->GetHotKey(hotKey) == skill)
         return false;
     g_pSkillList->SetHotKey(hotKey, skill);
@@ -396,34 +702,91 @@ bool BindHotKeySlot(int slot)
     return true;
 }
 
-void PickUpNearest()
+bool HotKeyHoldsSkill(int hotKey)
 {
-    if (!InWorld() || !ActionDue())
-        return;
-    int nearest = -1;
+    return HotKeySkillIndex(hotKey) >= 0;
+}
+
+Progress PickUpNearest()
+{
+    if (!InWorld())
+        return Progress::Done;
+    if (!ActionDue())
+        return Progress::Pending;
+
+    int nearest = NoDrop;
     int nearestTiles = PickupRange + 1;
+    bool unfit = false;
     for (int i = 0; i < MAX_ITEMS; ++i)
     {
-        const ITEM_t& drop = Items[i];
-        if (!drop.Object.Live)
+        ITEM_t& drop = Items[i];
+        if (!drop.Object.Live || IsSkipped(i))
             continue;
-        const int dx = Hero->PositionX - static_cast<int>(drop.Object.Position[0] / TERRAIN_SCALE);
-        const int dy = Hero->PositionY - static_cast<int>(drop.Object.Position[1] / TERRAIN_SCALE);
+        const int dx = Hero->PositionX - TileOf(drop.Object.Position[0]);
+        const int dy = Hero->PositionY - TileOf(drop.Object.Position[1]);
         const int tiles = static_cast<int>(std::ceil(std::hypot(dx, dy)));
-        if (tiles < nearestTiles)
+        if (tiles >= nearestTiles)
+            continue;
+        if (!FitsTheBag(drop))
         {
-            nearestTiles = tiles;
-            nearest = i;
+            unfit = true;
+            continue;
         }
+        nearestTiles = tiles;
+        nearest = i;
     }
-    if (nearest >= 0)
-        Automation::PickUpItem(nearest, PickupRange);
+    if (nearest == NoDrop)
+    {
+        if (unfit)
+            SayBagFull();
+        g_dropWalkedTo = NoDrop;
+        return Progress::Done;
+    }
+
+    const OBJECT& dropObject = Items[nearest].Object;
+    const bool inReach =
+        HeroWithin(TileOf(dropObject.Position[0]), TileOf(dropObject.Position[1]), Automation::PickupReach);
+    // While the joystick walks, the button takes what is in reach.
+    if (!inReach && IsSteering())
+        return Progress::Pending;
+    // On its way already: a new walk each turn only sends the same path again.
+    if (!inReach && Hero->Movement && g_dropWalkedTo == nearest)
+        return Progress::Pending;
+
+    switch (Automation::PickUpItem(nearest, PickupRange))
+    {
+    case Automation::PickupResult::Requested:
+        // Passed over while the server answers: a tap gathers what lies around, on to the next drop
+        // until none is left.
+        Skip(nearest, AskedDropTime);
+        g_dropWalkedTo = NoDrop;
+        return Progress::Pending;
+    case Automation::PickupResult::Approaching:
+        g_dropWalkedTo = nearest;
+        return Progress::Pending;
+    case Automation::PickupResult::NoPath:
+        Skip(nearest, UnreachableDropTime);
+        return Progress::Pending;
+    case Automation::PickupResult::Busy:
+        // The answer for the drop before is still on its way.
+        return Progress::Pending;
+    case Automation::PickupResult::TooFar:
+    case Automation::PickupResult::Gone:
+        break;
+    }
+    return Progress::Done;
 }
 
 void Reset()
 {
     g_targetKey = NoTarget;
     g_forgottenUntil.clear();
-    g_steering = Steering{};
+    g_skippedDrops.clear();
+    g_dropWalkedTo = NoDrop;
+    g_standUntil = {};
+    g_standAgainAt = {};
+    g_steering.active = false;
+    g_hold.Pause();
+    SteerHelper(false);
 }
 } // namespace GameLogic::Touch

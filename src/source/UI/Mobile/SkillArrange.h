@@ -14,8 +14,8 @@ inline constexpr int HotKeyCount = 10;
 inline constexpr int NoSkill = -1;
 using HotKeys = std::array<int, HotKeyCount>;
 
-// The skill buttons stand for the bar's five hotkey slots: hotkeys 1-5, or 6-9 and 0 while the bar
-// is switched to its upper set (CSkillList::IsSkillListUp).
+// The skill buttons stand for five hotkeys: 1-5, or 6-9 and 0 as the upper set (the touch controls
+// keep their own set, which the current skill does not switch).
 inline constexpr int SlotCount = 5;
 
 [[nodiscard]] constexpr int HotKeyOfSlot(int slot, bool upperSet)

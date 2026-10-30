@@ -25,6 +25,9 @@
 	color: token(text-primary);
 }
 #panel.window-shell-positioned { margin-left: 0; }
+/* MU Moldova: a menu at one edge of the screen (GenericMenuConfig::edge), at the usual height. */
+#panel.gmd-edge-left { left: 16dp; margin-left: 0; }
+#panel.gmd-edge-right { left: auto; right: 16dp; margin-left: 0; }
 /* Below the dialog canvas offset (RmlDialogCanvas.h). */
 #panel { margin-top: var(--canvas-top, 0dp); }
 /* A menu that names the native box it replaces (GenericMenuConfig::kind) gets that box's top edge
@@ -301,4 +304,7 @@
 /* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode) draws menus larger, from their top edge, for fingers. */
 @media (theme: mobile) {
 	#panel { transform: scale(1.3); transform-origin: 50% 0; }
+	/* Grown from the edge it keeps to, so it stays on the screen. */
+	#panel.gmd-edge-left { transform-origin: 0 0; }
+	#panel.gmd-edge-right { transform-origin: 100% 0; }
 }
