@@ -181,6 +181,13 @@ mu::ui::window::CNewKeyInput* mu::ui::window::CNewKeyInput::GetInstance()
 
 void mu::ui::window::CNewKeyInput::ScanAsyncKeyState()
 {
+    // The key presses recorded since the last scan (Core::Input::RecordKeyPressEdge) are this scan's,
+    // whichever way it returns.
+    struct ClearPressEdges
+    {
+        ~ClearPressEdges() { Core::Input::ClearKeyPressEdges(); }
+    } clearPressEdges;
+
 #ifdef ASG_FIX_ACTIVATE_APP_INPUT
     if (!g_bWndActive)
         return;

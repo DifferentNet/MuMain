@@ -6,11 +6,15 @@
 
 #include <SDL3/SDL.h>
 
+#include <algorithm>
+#include <iterator>
+
 namespace Core::Input
 {
     namespace
     {
         bool g_leftMouseButtonPressEdge = false;
+        bool g_keyPressEdges[SDL_SCANCODE_COUNT] = {};
 
 #ifdef _EDITOR
         OtherWindowQuery g_otherWindowQuery = nullptr;
@@ -71,6 +75,19 @@ namespace Core::Input
         g_leftMouseButtonPressEdge = false;
     }
 
+    void RecordKeyPressEdge(SDL_Scancode scancode)
+    {
+        if (scancode > SDL_SCANCODE_UNKNOWN && scancode < SDL_SCANCODE_COUNT)
+        {
+            g_keyPressEdges[scancode] = true;
+        }
+    }
+
+    void ClearKeyPressEdges()
+    {
+        std::fill(std::begin(g_keyPressEdges), std::end(g_keyPressEdges), false);
+    }
+
     bool IsKeyDown(int virtualKey)
     {
         // A scripted press (control socket) counts as down for the frame it
@@ -119,7 +136,7 @@ namespace Core::Input
         if (sc == SDL_SCANCODE_UNKNOWN) return false;
 
         const bool* state = SDL_GetKeyboardState(nullptr);
-        return state != nullptr && state[sc];
+        return g_keyPressEdges[sc] || (state != nullptr && state[sc]);
     }
 
 #ifdef _EDITOR
