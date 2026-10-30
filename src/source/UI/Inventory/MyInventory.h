@@ -244,6 +244,8 @@ namespace mu::ui::window
         bool EquipmentWindowProcess();
         // The pointer over the drawn panel.
         bool IsPointerOverPanel() const;
+        // Ctrl + click on a potion: on a free quick slot instead of in the hand. Whether it took the click.
+        bool PutClickedItemOnHotKey();
         // Whether the item in equipmentSlot may be taken off here; tells the
         // player why not.
         bool CheckTakeOff(int equipmentSlot) const;

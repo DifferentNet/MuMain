@@ -56,6 +56,7 @@ extern bool SelectFlag;
 #include "Core/Utilities/StringUtils.h"
 #include "Core/Input/TouchInput.h"
 #include "UI/Mobile/ItemCard.h"
+#include "Engine/Object/ZzzOpenData.h"
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Event.h>
 #include <SDL3/SDL_mouse.h>
@@ -663,6 +664,8 @@ void CMyInventory::SetRepairMode(bool bRepair)
 
 bool CMyInventory::UpdateMouseEvent()
 {
+    if (PutClickedItemOnHotKey())
+        return false;
     if (m_pNewInventoryCtrl && !m_pNewInventoryCtrl->UpdateMouseEvent())
         return false;
 
@@ -761,6 +764,46 @@ bool CMyInventory::UpdateMouseEvent()
     if (WindowProcess())
         return false;
 
+    return true;
+}
+
+// Ctrl + click on a potion puts it on the first quick slot (Q, W, E, R) that shows no item, as hovering
+// it and pressing Ctrl+Q does on Q (2026-10-30, ghinzuro). The grid picks an item up when the button comes
+// up, so this takes that release before the grid sees it.
+bool CMyInventory::PutClickedItemOnHotKey()
+{
+    if (!IsVisible() || m_pNewInventoryCtrl == nullptr || !IsRepeat(VK_CONTROL) || !IsRelease(VK_LBUTTON)
+        || CInventoryCtrl::GetPickedItem() != nullptr || m_RepairMode == SEASON3B::REPAIR_MODE_ON
+        || m_pNewInventoryCtrl->IsLocked())
+    {
+        return false;
+    }
+
+    const ITEM* pItem = m_pNewInventoryCtrl->FindItemAtPointer();
+    if (pItem == nullptr || !CanRegisterItemHotKey(pItem->Type))
+    {
+        return false;
+    }
+
+    bool bAlreadyThere = false;
+    const int iHotKey = g_pMainFrame->PutItemOnFreeHotKey(pItem->Type, pItem->Level, bAlreadyThere);
+    if (iHotKey == -1)
+    {
+        g_pSystemLogBox->AddText(I18N::Game::InventoryNoFreeQuickSlot, TYPE_ERROR_MESSAGE);
+    }
+    else if (bAlreadyThere)
+    {
+        wchar_t text[128];
+        mu_swprintf_s(text, I18N::Game::InventoryAlreadyOnQuickSlot, L"QWER"[iHotKey]);
+        g_pSystemLogBox->AddText(text, TYPE_SYSTEM_MESSAGE);
+    }
+    else
+    {
+        SaveOptions(); // as Ctrl+Q does
+        PlayBuffer(SOUND_CLICK01);
+    }
+
+    ResetMouseLButton();
     return true;
 }
 
@@ -867,6 +910,9 @@ bool CMyInventory::UpdateKeyEvent()
             {
                 const int iItemLevel = pItem->Level;
                 g_pMainFrame->SetItemHotKey(iHotKey, pItem->Type, iItemLevel);
+                // Saved now: the game saves them on a map change or its own exit, never when a
+                // browser tab closes.
+                SaveOptions();
                 return false;
             }
         }
