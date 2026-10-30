@@ -90,3 +90,24 @@
 .cc-cell.cc-template-label { width: calc(131px * var(--root-scale)); }
 .cc-remove-mark { width: calc(15px * var(--root-scale)); }
 .cc-label { width: calc(64px * var(--root-scale)); }
+
+/* The phone view: the command and template lists hold every row (CChatCommandWindow::VisibleRows())
+   and scroll by finger, rows a finger can hit, a slim bar showing where the list is. */
+@media (theme: mobile) {
+	.cc-rows { height: 306px; }
+	.cc-rows .cc-row {
+		height: 25px;
+		border-bottom-width: 1px;
+		border-bottom-color: rgba(255, 255, 255, 28);
+	}
+	.cc-rows .cc-cell, .cc-rows .cc-remove-mark { line-height: calc(25px * var(--root-scale)); }
+	.cc-rows scrollbarvertical { width: 4px; }
+	.cc-rows scrollbarvertical slidertrack { decorator: none; background-color: rgba(255, 255, 255, 20); }
+	.cc-rows scrollbarvertical sliderbar { decorator: none; height: auto; min-height: 24px; background-color: rgba(255, 220, 120, 150); }
+	.cc-rows scrollbarvertical sliderarrowdec, .cc-rows scrollbarvertical sliderarrowinc { height: 0; }
+	/* The remove cell keeps clear of the bar at the row's right. */
+	.cc-template-hit { width: 112px; height: 25px; }
+	.cc-template-remove { left: auto; right: 4px; width: 26px; height: 25px; }
+	.cc-cell.cc-template-label { width: calc(112px * var(--root-scale)); }
+	.cc-remove-mark { width: calc(26px * var(--root-scale)); }
+}

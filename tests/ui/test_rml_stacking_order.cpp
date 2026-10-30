@@ -151,6 +151,28 @@ TEST_CASE("the phone view's HUD overlays go under every window [ui][stacking]")
         CHECK_FALSE_MESSAGE(PhoneViewStackingDepth(other).has_value(), other);
 }
 
+TEST_CASE("the phone view's full-screen map goes under the touch controls, over the HUD [ui][stacking]")
+{
+    // The top bar's Back closes the map and the stick steers over it.
+    const std::optional<float> map = PhoneViewStackingDepth("mini_map.rml");
+    REQUIRE(map.has_value());
+    CHECK(*map < Depth("touch_controls.rml"));
+    CHECK(*map > Depth("main_frame_top.rml"));
+    CHECK(*map > Depth("hud_status.rml"));
+    CHECK(SceneForDocument("mini_map.rml") != DocumentScene::Every);
+}
+
+TEST_CASE("the open touch menu stands over every window and under the dialogs [ui][stacking]")
+{
+    using UI::RmlBridge::OpenTouchMenuDepth;
+    for (const char* window : {"my_inventory.rml", "character_info.rml", "move_command.rml", "mini_map.rml",
+                               "help_window.rml", "main_frame.rml", "command_window.rml", "battle_pass.rml"})
+        CHECK_MESSAGE(OpenTouchMenuDepth > Depth(window), window);
+    for (const char* dialog : {"option_window.rml", "tooltip.rml", "message_box_view.rml", "generic_confirm_dialog.rml",
+                               "generic_menu_dialog.rml"})
+        CHECK_MESSAGE(OpenTouchMenuDepth < Depth(dialog), dialog);
+}
+
 TEST_CASE("scene messages cover scene windows and remain below blocking overlays [ui][stacking]")
 {
     for (const char* window : {"login.rml", "char_make.rml", "char_sel_main.rml", "sys_menu.rml"})

@@ -153,3 +153,10 @@ body { pointer-events: none; }
 .edges .edge-top:nth-child(23), .edges .edge-bottom:nth-child(23) { left: 770px; }
 .edges .edge-top:nth-child(24), .edges .edge-bottom:nth-child(24) { left: 805px; }
 .edges .edge-top:nth-child(25), .edges .edge-bottom:nth-child(25) { left: 840px; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): the close button below
+   the page's own menu button in the top right corner, with room round it for a finger (the touch
+   controls' Back closes the map too). */
+@media (theme: mobile) {
+	.close { left: 596px; top: 44px; margin: -8px; padding: 8px; decorator: image(mm-close) content-box; }
+}

@@ -15359,4 +15359,40 @@
   <data name="TouchHeroMasterLevel" xml:space="preserve">
     <value>Lv. %d | Master %d</value>
   </data>
+  <data name="TouchHelpTitle" xml:space="preserve">
+    <value>Touch controls</value>
+  </data>
+  <data name="TouchHelpWorld" xml:space="preserve">
+    <value>Tap the world: walk there, talk to an NPC, attack a monster</value>
+  </data>
+  <data name="TouchHelpStick" xml:space="preserve">
+    <value>Left of the screen: drag to walk</value>
+  </data>
+  <data name="TouchHelpAttack" xml:space="preserve">
+    <value>Attack: hold to attack</value>
+  </data>
+  <data name="TouchHelpSkills" xml:space="preserve">
+    <value>Skill buttons: tap to use one, an empty one picks a skill</value>
+  </data>
+  <data name="TouchHelpPickUp" xml:space="preserve">
+    <value>Pick up: lifts the items nearby</value>
+  </data>
+  <data name="TouchHelpAuto" xml:space="preserve">
+    <value>Auto: MU Helper on and off</value>
+  </data>
+  <data name="TouchHelpPotions" xml:space="preserve">
+    <value>Q and W: drink the potions</value>
+  </data>
+  <data name="TouchHelpMenu" xml:space="preserve">
+    <value>Menu: every window. Back: closes the window on top</value>
+  </data>
+  <data name="TouchHelpItem" xml:space="preserve">
+    <value>Hold an item: its card with what you can do</value>
+  </data>
+  <data name="TouchHelpDrag" xml:space="preserve">
+    <value>Drag an item to move it, drag a list to scroll it</value>
+  </data>
+  <data name="TouchHelpView" xml:space="preserve">
+    <value>Menu, PC / phone view: the PC layout and back</value>
+  </data>
 </root>

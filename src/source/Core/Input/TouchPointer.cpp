@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "Core/Input/TouchPointer.h"
 
+#include "Core/Input/UiInputRouter.h"
+
 #include <SDL3/SDL.h>
 
 #include <array>
@@ -28,6 +30,10 @@ constexpr float TapSlop = 0.03f;
 constexpr float DoubleTapSlop = 0.06f;
 // How much the pinching fingers' distance changes for one step of the mouse wheel.
 constexpr float PinchStep = 0.06f;
+// A scrolling finger's speed is smoothed over about this long (seconds): the last moves before it lifts.
+constexpr float VelocitySmoothingSeconds = 0.05f;
+// A scrolling finger held still this long before it lifts flicks nothing.
+constexpr auto FlickHoldTime = std::chrono::milliseconds(80);
 
 enum class Phase : std::uint8_t
 {
@@ -37,6 +43,8 @@ enum class Phase : std::uint8_t
     Pending,
     // Moved: the left button is held and follows the finger.
     Dragging,
+    // Moved over a scrollable list of the UI: the list follows the finger, no button is held.
+    Scrolling,
     // Held still: the right button is held.
     LongPress,
     // Two fingers: the wheel turns as they spread or close.
@@ -63,6 +71,12 @@ struct State
     // The fingers' distance at the last wheel step.
     float pinchDistance = 0.f;
     Clock::time_point downTime;
+    // A scrolling finger's last move and its smoothed speed, window pixels a second.
+    Clock::time_point moveTime;
+    float velocityX = 0.f;
+    float velocityY = 0.f;
+    // The finger stopped a gliding list as it landed: lifting it clicks nothing.
+    bool stoppedGlide = false;
     Clock::time_point lastTapTime;
     float lastTapX = 0.f;
     float lastTapY = 0.f;
@@ -150,6 +164,19 @@ void Tap(SDL_Window* window)
     PushButton(window, SDL_BUTTON_LEFT, false, clicks);
 }
 
+// Smooths the scrolling finger's speed from its move by (dx, dy) since the last.
+void TrackVelocity(float dx, float dy)
+{
+    const auto now = Clock::now();
+    const float seconds = std::chrono::duration<float>(now - g_state.moveTime).count();
+    g_state.moveTime = now;
+    if (seconds <= 0.f)
+        return;
+    const float weight = 1.f - std::exp(-seconds / VelocitySmoothingSeconds);
+    g_state.velocityX += (dx / seconds - g_state.velocityX) * weight;
+    g_state.velocityY += (dy / seconds - g_state.velocityY) * weight;
+}
+
 void StartPinch(SDL_FingerID finger, float x, float y)
 {
     g_state.second = finger;
@@ -171,6 +198,36 @@ void TurnWheelByPinch(SDL_Window* window)
     PushWheel(window, steps);
 }
 
+// A finger moving off the point it landed on: a list under that point scrolls with it, anything else
+// is dragged with the left button, as a mouse's press there and a move from it.
+void StartDrag(SDL_Window* window)
+{
+    if (BeginUiTouchScroll(g_state.downX, g_state.downY))
+    {
+        g_state.phase = Phase::Scrolling;
+        g_state.moveTime = g_state.downTime;
+        TrackVelocity(g_state.x - g_state.downX, g_state.y - g_state.downY);
+        MoveUiTouchScroll(g_state.downX, g_state.downY, g_state.x, g_state.y);
+        return;
+    }
+    g_state.phase = Phase::Dragging;
+    PushButton(window, SDL_BUTTON_LEFT, true, 1);
+    MovePointer(window, g_state.x, g_state.y);
+}
+
+void Scroll(float fromX, float fromY)
+{
+    TrackVelocity(g_state.x - fromX, g_state.y - fromY);
+    MoveUiTouchScroll(fromX, fromY, g_state.x, g_state.y);
+}
+
+// A flick lifts the finger while it still moves: the list glides on at its speed.
+void EndScroll(bool cancelled)
+{
+    const bool flick = !cancelled && Clock::now() - g_state.moveTime < FlickHoldTime;
+    EndUiTouchScroll(g_state.x, g_state.y, flick ? g_state.velocityX : 0.f, flick ? g_state.velocityY : 0.f);
+}
+
 void FinishIfLifted()
 {
     if (!g_state.firstDown && !g_state.secondDown)
@@ -179,17 +236,18 @@ void FinishIfLifted()
 
 void MoveFirst(float x, float y, SDL_Window* window)
 {
+    const float fromX = g_state.x;
+    const float fromY = g_state.y;
     g_state.x = x;
     g_state.y = y;
     switch (g_state.phase)
     {
     case Phase::Pending:
-        if (Distance(x, y, g_state.downX, g_state.downY) <= TapSlop * WindowHeight(window))
-            return;
-        // The drag starts where the finger landed, as a mouse's press there and a move from it.
-        g_state.phase = Phase::Dragging;
-        PushButton(window, SDL_BUTTON_LEFT, true, 1);
-        MovePointer(window, x, y);
+        if (Distance(x, y, g_state.downX, g_state.downY) > TapSlop * WindowHeight(window))
+            StartDrag(window);
+        return;
+    case Phase::Scrolling:
+        Scroll(fromX, fromY);
         return;
     case Phase::Dragging:
     case Phase::LongPress:
@@ -205,17 +263,25 @@ void MoveFirst(float x, float y, SDL_Window* window)
 
 void LiftFirst(float x, float y, bool cancelled, SDL_Window* window)
 {
+    const float fromX = g_state.x;
+    const float fromY = g_state.y;
     g_state.firstDown = false;
     g_state.x = x;
     g_state.y = y;
     switch (g_state.phase)
     {
     case Phase::Pending:
-        if (!cancelled)
+        if (!cancelled && !g_state.stoppedGlide)
         {
             MovePointer(window, x, y);
             Tap(window);
         }
+        break;
+    case Phase::Scrolling:
+        // A lift where the last move left the finger is no move: it must not count as a fresh one.
+        if (x != fromX || y != fromY)
+            Scroll(fromX, fromY);
+        EndScroll(cancelled);
         break;
     case Phase::Dragging:
         MovePointer(window, x, y);
@@ -253,6 +319,7 @@ void Down(SDL_FingerID finger, float x, float y, SDL_Window* window)
     g_state.downX = g_state.x = x;
     g_state.downY = g_state.y = y;
     g_state.downTime = Clock::now();
+    g_state.stoppedGlide = StopUiTouchScrollGlide();
     // The pointer goes where the finger is at once: what is under it shows its hover (an item's tooltip).
     MovePointer(window, x, y);
 }
@@ -299,6 +366,8 @@ void Tick(SDL_Window* window)
 
 void Reset(SDL_Window* window)
 {
+    if (g_state.phase == Phase::Scrolling)
+        EndScroll(true);
     if (window != nullptr)
         ReleaseButtons(window);
     g_state = State{};

@@ -228,3 +228,18 @@
 	pointer-events: auto;
 }
 .mh-extra-row.selected { background-color: rgb(255, 255, 255); color: #000000; }
+
+/* MU Moldova: the phone view (UI::Mobile::IsPhoneView()): the check boxes, radio buttons and range
+   buttons take a finger from a little round their sprite; native's rows are 15 units apart, so the room
+   grows sideways. The sprites stay where they were and paint their content box alone. */
+@media (theme: mobile) {
+	.mh-check .checkbox-box { margin: -1px -6px; padding: 1px 6px; decorator: image(mh-check-off) content-box; }
+	.mh-check .checkbox-box.checked { decorator: image(mh-check-on) content-box; }
+	.mh-check.mh-radio .checkbox-box { decorator: image(mh-radio-off) content-box; }
+	.mh-check.mh-radio .checkbox-box.checked { decorator: image(mh-radio-on) content-box; }
+	.mh-btn-plus, .mh-btn-minus { margin: -2px -8px; padding: 2px 8px; }
+	.mh-btn-plus         { decorator: image(mh-plus-up) content-box; }
+	.mh-btn-plus:active  { decorator: image(mh-plus-down) content-box; }
+	.mh-btn-minus        { decorator: image(mh-minus-up) content-box; }
+	.mh-btn-minus:active { decorator: image(mh-minus-down) content-box; }
+}

@@ -69,6 +69,9 @@
 		<div id="tc_map" class="tc-button tc-quick">{{menu_label_6}}</div>
 	</div>
 
+	<!-- The screen around the open menu, dimmed: a tap there closes the menu. While it is open the
+	     document stands over every window (UI::RmlBridge::OpenTouchMenuDepth). -->
+	<div id="tc_menu_backdrop" data-if="menu_open"></div>
 	<!-- The menu's windows, open under the row; a tap opens one and closes the menu. -->
 	<div id="tc_menu_panel" data-if="menu_open">
 		<div id="tc_menu_0" class="tc-button tc-menu-item">{{menu_label_0}}</div>

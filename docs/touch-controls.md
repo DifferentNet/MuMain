@@ -61,6 +61,27 @@ joystick's corner and the top row).
 Every action keeps the MU Helper's pace (walk packets 300 ms apart, attacks and skills 250 ms):
 the server reads a burst of walk packets as a speed hack.
 
+## Windows in the phone view
+
+Each window restyles itself under `@media (theme: mobile)` in both themes; on a PC nothing changes.
+
+| Windows | What the phone view does |
+|---|---|
+| Inventory, storage, shops, trade, chaos machine, personal shops | The inventory alone fills the screen (equipment left, bag right, cells about 40 CSS px). Beside another window `#panel` gets the class `beside`: the bag only. The 15-row grids show part of the grid in an `.item-grid-viewport` paged by ▲▼ (`data-grid-scroll`); a drop outside the shown rows is refused. The 4-row windows put the grid right, text and big buttons left. |
+| Character, quests, party, friends, battle pass, help, options, teleport, commands, MU Helper | Wider panels (`docked_panel_frame.rcss` repeats the frame's middle so the art stays undistorted), bigger tabs, rows and buttons, a corner close a finger hits (44 × 40 px). The commands window holds every row and scrolls by finger instead of by page. |
+| Skill list (menu → Skills) | Rows of eight finger-sized cells on a dark plate above the controls. Back closes it (Esc would open the system menu over it). |
+| Map (Tab) | Full screen, under the touch controls so their Back closes it. |
+| Touch menu | Drawn over every window while open (`OpenTouchMenuDepth`); a tap on the dimmed screen around it shuts it, and it shuts while a dialog waits for an answer. |
+
+A finger that moves on a scrollable list scrolls it, as on a phone, rows and buttons included (they
+click only on a tap); a flick glides on and a tap on a gliding list only stops it. Item grids,
+scrollbars, sliders (RmlUi's `drag` property other than `block`) and text fields keep the drag
+(`Render/RmlUi/RmlTouchScroll.{h,cpp}`, reached from `Touch::Pointer` through
+`Core::Input::BeginUiTouchScroll` and the other `IUiInputConsumer` touch-scroll calls).
+
+With touch controls on, Help's key page lists the touch controls instead of the F keys
+(`HelpPages::BuildPage(page, touchControls)`).
+
 ## How it is built
 
 | Piece | File | Role |

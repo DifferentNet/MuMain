@@ -22,6 +22,10 @@ constexpr float UnderPhoneWindowsDepth = 1.95f;
 
 // The HUD overlays in the corners the phone view's windows fill.
 constexpr std::string_view UnderPhoneWindows[] = {"system_log.rml", "chat_log.rml", "item_endurance.rml"};
+// The phone view's full-screen map: under the touch controls (1.06), so their top bar's Back closes it
+// and their stick still steers, over the HUD's bars (main_frame_top.rml, 1.05).
+constexpr float UnderTouchControlsDepth = 1.055f;
+constexpr std::string_view UnderTouchControls[] = {"mini_map.rml"};
 
 constexpr DocumentScene MainScene = DocumentScene::Main;
 constexpr DocumentScene AnyScene = DocumentScene::Any;
@@ -220,6 +224,11 @@ std::optional<float> PhoneViewStackingDepth(std::string_view documentName)
     {
         if (name == documentName)
             return UnderPhoneWindowsDepth;
+    }
+    for (const std::string_view name : UnderTouchControls)
+    {
+        if (name == documentName)
+            return UnderTouchControlsDepth;
     }
     return std::nullopt;
 }

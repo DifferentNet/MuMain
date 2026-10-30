@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "Core/Input/UiInputRouter.h"
+#include "Render/RmlUi/RmlTouchScroll.h"
 #include <RmlUi/Core/Context.h>
 #include <functional>
 #include <memory>
@@ -97,6 +98,12 @@ public:
     bool IsMouseOverUI() const override;
     void CancelSyntheticMousePress(unsigned char button, SDL_Window* window) override;
 
+    // A finger dragged over a scrollable list of the main context scrolls it (Render::RmlUi::RmlTouchScroll).
+    bool BeginTouchScroll(float x, float y) override;
+    void MoveTouchScroll(float fromX, float fromY, float toX, float toY) override;
+    void EndTouchScroll(float x, float y, float velocityX, float velocityY) override;
+    bool StopTouchScrollGlide() override;
+
     Rml::Context* GetContext() const { return m_Context; }
     // The debug overlay's context: updated and drawn in the Overlay pass, so the RmlUi passes it
     // reports measure only the game's UI.
@@ -139,6 +146,7 @@ private:
     void AfterUpdate(Rml::Context* context);
 
     RmlUiRuntimeHooks m_Hooks;
+    Render::RmlUi::RmlTouchScroll m_TouchScroll;
 
     RmlUiRuntime(const RmlUiRuntime&) = delete;
     RmlUiRuntime& operator=(const RmlUiRuntime&) = delete;

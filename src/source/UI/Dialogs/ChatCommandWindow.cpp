@@ -11,6 +11,7 @@
 #include "GameLogic/Commands/ChatCommandFavourites.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Core/WindowGeometry.h"
+#include "UI/Mobile/InterfaceMode.h"
 
 #include "Core/Utilities/StringUtils.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
@@ -431,6 +432,11 @@ int mu::ui::window::CChatCommandWindow::GetScrollableRowCount() const
     return static_cast<int>(m_commandOrder.size());
 }
 
+int mu::ui::window::CChatCommandWindow::VisibleRows() const
+{
+    return UI::Mobile::IsPhoneView() ? GetScrollableRowCount() : VISIBLE_ROWS;
+}
+
 void mu::ui::window::CChatCommandWindow::WrapDescriptionOfSelected()
 {
     m_descriptionLines.clear();
@@ -467,7 +473,7 @@ bool mu::ui::window::CChatCommandWindow::UpdateMouseEvent()
     if (!UI::RmlBridge::IsPointerOver(m_RmlView.Document()))
         return true;
 
-    const auto hiddenRows = GetScrollableRowCount() - VISIBLE_ROWS;
+    const auto hiddenRows = GetScrollableRowCount() - VisibleRows();
     if (MouseWheel != 0 && hiddenRows > 0)
     {
         // MouseWheel counts notches, one row per notch.
@@ -528,7 +534,7 @@ void mu::ui::window::CChatCommandWindow::HandleHit(ChatCommandAction action, int
         {
             GameLogic::Commands::Templates::RemoveAt(static_cast<size_t>(listIndex));
             m_templates = GameLogic::Commands::Templates::GetAll();
-            m_scrollOffset = std::max(0, std::min(m_scrollOffset, GetScrollableRowCount() - VISIBLE_ROWS));
+            m_scrollOffset = std::max(0, std::min(m_scrollOffset, GetScrollableRowCount() - VisibleRows()));
             PlayBuffer(SOUND_CLICK01);
         }
         break;
@@ -574,7 +580,7 @@ bool mu::ui::window::CChatCommandWindow::UpdateKeyEvent()
         return true;
     }
 
-    const auto hiddenRows = GetScrollableRowCount() - VISIBLE_ROWS;
+    const auto hiddenRows = GetScrollableRowCount() - VisibleRows();
     if (IsPress(VK_DOWN) && m_scrollOffset < hiddenRows)
     {
         ++m_scrollOffset;
@@ -775,6 +781,8 @@ void mu::ui::window::CChatCommandWindow::SyncValueField()
 
 void mu::ui::window::CChatCommandWindow::SyncContent()
 {
+    // The view may have changed since the list scrolled: the rows shown still end at the list's end.
+    m_scrollOffset = std::clamp(m_scrollOffset, 0, std::max(0, GetScrollableRowCount() - VisibleRows()));
 
     // One of the window's own lines: the document places it, so only what it says and the size the
     // native renderer would have shrunk it to for its box travel through the model.
@@ -809,7 +817,8 @@ void mu::ui::window::CChatCommandWindow::SyncContent()
         // The original's RenderCommandPage() and UpdateCommandPageMouseEvent().
         if (m_commandOrder.empty())
             emptyMessage = line(I18N::Game::ChatCommandsNotSupported, CONTENT_WIDTH);
-        for (int row = 0; row < VISIBLE_ROWS; ++row)
+        const int visibleRows = VisibleRows();
+        for (int row = 0; row < visibleRows; ++row)
         {
             const auto* command = GetCommandAt(m_scrollOffset + row);
             if (command == nullptr)
@@ -874,7 +883,8 @@ void mu::ui::window::CChatCommandWindow::SyncContent()
         // The original's RenderTemplatePage() and UpdateTemplatePageMouseEvent().
         if (m_templates.empty())
             emptyMessage = line(I18N::Game::ChatCommandsNoTemplates, CONTENT_WIDTH);
-        for (int row = 0; row < VISIBLE_ROWS; ++row)
+        const int visibleRows = VisibleRows();
+        for (int row = 0; row < visibleRows; ++row)
         {
             const auto index = static_cast<size_t>(m_scrollOffset + row);
             if (index >= m_templates.size())

@@ -14982,4 +14982,40 @@
   <data name="TouchHeroMasterLevel" xml:space="preserve">
     <value>Ур. %d | Мастер %d</value>
   </data>
+  <data name="TouchHelpTitle" xml:space="preserve">
+    <value>Сенсорное управление</value>
+  </data>
+  <data name="TouchHelpWorld" xml:space="preserve">
+    <value>Нажатие в мире: идти туда, говорить с NPC, бить монстра</value>
+  </data>
+  <data name="TouchHelpStick" xml:space="preserve">
+    <value>Левая часть экрана: ведите пальцем, чтобы идти</value>
+  </data>
+  <data name="TouchHelpAttack" xml:space="preserve">
+    <value>Атака: удерживайте, чтобы атаковать</value>
+  </data>
+  <data name="TouchHelpSkills" xml:space="preserve">
+    <value>Кнопки умений: нажмите, чтобы применить, пустая выбирает умение</value>
+  </data>
+  <data name="TouchHelpPickUp" xml:space="preserve">
+    <value>Подобрать: поднимает вещи рядом</value>
+  </data>
+  <data name="TouchHelpAuto" xml:space="preserve">
+    <value>Авто: включает и выключает MU Helper</value>
+  </data>
+  <data name="TouchHelpPotions" xml:space="preserve">
+    <value>Q и W: выпить зелья</value>
+  </data>
+  <data name="TouchHelpMenu" xml:space="preserve">
+    <value>Меню: все окна. Назад: закрывает верхнее окно</value>
+  </data>
+  <data name="TouchHelpItem" xml:space="preserve">
+    <value>Удерживайте вещь: её карточка с действиями</value>
+  </data>
+  <data name="TouchHelpDrag" xml:space="preserve">
+    <value>Перетащите вещь, чтобы переложить, а список листайте пальцем</value>
+  </data>
+  <data name="TouchHelpView" xml:space="preserve">
+    <value>Меню, «Вид ПК / телефон»: раскладка ПК и обратно</value>
+  </data>
 </root>

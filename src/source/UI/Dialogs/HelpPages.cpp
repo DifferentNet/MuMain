@@ -42,14 +42,32 @@ void AddKeyFunctionLines(std::vector<UI::Help::PageLine>& lines)
     for (int i = kFunctionKeyTextsBeforeExtras; i < kShippedKeyTextCount; ++i)
         AddText(lines, I18N::Game::Lookup(kFirstFunctionKeyText + i));
 }
+
+void AddTouchControlLines(std::vector<UI::Help::PageLine>& lines)
+{
+    const wchar_t* const touchLines[] = {
+        I18N::Game::TouchHelpWorld,   I18N::Game::TouchHelpStick,  I18N::Game::TouchHelpAttack,
+        I18N::Game::TouchHelpSkills,  I18N::Game::TouchHelpPickUp, I18N::Game::TouchHelpAuto,
+        I18N::Game::TouchHelpPotions, I18N::Game::TouchHelpMenu,   I18N::Game::TouchHelpItem,
+        I18N::Game::TouchHelpDrag,    I18N::Game::TouchHelpView,
+    };
+    for (const wchar_t* line : touchLines)
+        AddText(lines, line);
+}
 } // namespace
 
-std::vector<UI::Help::PageLine> UI::Help::BuildPage(int page)
+std::vector<UI::Help::PageLine> UI::Help::BuildPage(int page, bool touchControls)
 {
     std::vector<PageLine> lines;
     AddHalfSpacer(lines);
 
-    if (page == KeyFunctionPage)
+    if (page == KeyFunctionPage && touchControls)
+    {
+        AddText(lines, I18N::Game::TouchHelpTitle, true);
+        AddHalfSpacer(lines);
+        AddTouchControlLines(lines);
+    }
+    else if (page == KeyFunctionPage)
     {
         AddText(lines, I18N::Game::KeyFunction, true);
         AddHalfSpacer(lines);

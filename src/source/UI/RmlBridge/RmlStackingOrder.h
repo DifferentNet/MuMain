@@ -13,6 +13,9 @@ namespace UI::RmlBridge
 {
 // The panels that stand over the HUD and its logs (the command windows).
 inline constexpr float ForegroundPanelLayerDepth = 10.65f;
+// The touch controls (touch_controls.rml) while their menu is open: over every window, so the menu
+// is seen whole and takes the fingers, under the options window, the tooltips and the message boxes.
+inline constexpr float OpenTouchMenuDepth = 10.66f;
 
 // The scene whose windows a document belongs to. The original drew CNewUIManager's windows only in
 // the main scene, a document renders in every scene: outside the main scene the main-scene
@@ -41,7 +44,8 @@ std::optional<float> StackingDepthOutsideMainScene(std::string_view documentName
 
 // Depth in the phone view (UI::Mobile::IsPhoneView()) for a HUD overlay the phone's windows reach
 // over (the logs, the pets' column): under every window, where on a PC it drew over the few that
-// shared its corner. None for every other document, which keeps one depth in both views. Never a
+// shared its corner; and for the full-screen map: under the touch controls, whose Back closes it.
+// None for every other document, which keeps one depth in both views. Never a
 // DocumentScene::Every document.
 std::optional<float> PhoneViewStackingDepth(std::string_view documentName);
 } // namespace UI::RmlBridge

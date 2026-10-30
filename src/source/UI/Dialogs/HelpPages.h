@@ -21,5 +21,7 @@ constexpr int KeyFunctionPage = 0;
 constexpr int ChattingPage = 1;
 constexpr int PageCount = 2;
 
-std::vector<PageLine> BuildPage(int page);
+// With touch controls on (UI::Mobile::IsTouchControls()) the key page shows the touch controls instead:
+// the phone has no F keys to read about.
+std::vector<PageLine> BuildPage(int page, bool touchControls);
 } // namespace UI::Help

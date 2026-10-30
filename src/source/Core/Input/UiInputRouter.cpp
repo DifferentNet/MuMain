@@ -33,4 +33,26 @@ namespace Core::Input
     {
         return g_pUiInputConsumer && g_pUiInputConsumer->IsMouseOverUI();
     }
+
+    bool BeginUiTouchScroll(float x, float y)
+    {
+        return g_pUiInputConsumer && g_pUiInputConsumer->BeginTouchScroll(x, y);
+    }
+
+    void MoveUiTouchScroll(float fromX, float fromY, float toX, float toY)
+    {
+        if (g_pUiInputConsumer)
+            g_pUiInputConsumer->MoveTouchScroll(fromX, fromY, toX, toY);
+    }
+
+    void EndUiTouchScroll(float x, float y, float velocityX, float velocityY)
+    {
+        if (g_pUiInputConsumer)
+            g_pUiInputConsumer->EndTouchScroll(x, y, velocityX, velocityY);
+    }
+
+    bool StopUiTouchScrollGlide()
+    {
+        return g_pUiInputConsumer && g_pUiInputConsumer->StopTouchScrollGlide();
+    }
 }

@@ -91,3 +91,22 @@
 .cc-cell.cc-template-label { width: calc(131px * var(--root-scale)); }
 .cc-remove-mark { width: calc(15px * var(--root-scale)); }
 .cc-label { width: calc(64px * var(--root-scale)); }
+
+/* The phone view: the command and template lists hold every row (CChatCommandWindow::VisibleRows())
+   and scroll by finger, rows a finger can hit, a slim bar showing where the list is. */
+@media (theme: mobile) {
+	.cc-rows { height: 306px; }
+	.cc-rows .cc-row {
+		height: 25px;
+		border-bottom-width: 1px;
+		border-bottom-color: token(border-inner);
+	}
+	.cc-rows .cc-cell, .cc-rows .cc-remove-mark { line-height: calc(25px * var(--root-scale)); }
+	.cc-rows scrollbarvertical { width: 4px; }
+	.cc-rows scrollbarvertical sliderbar { min-height: 24px; }
+	/* The remove cell keeps clear of the bar at the row's right. */
+	.cc-template-hit { width: 112px; height: 25px; }
+	.cc-template-remove { left: auto; right: 4px; width: 26px; height: 25px; }
+	.cc-cell.cc-template-label { width: calc(112px * var(--root-scale)); }
+	.cc-remove-mark { width: calc(26px * var(--root-scale)); }
+}

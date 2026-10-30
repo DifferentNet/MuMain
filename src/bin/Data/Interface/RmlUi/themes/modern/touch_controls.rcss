@@ -2,7 +2,7 @@
    buttons' boxes to know which a finger landed on, so where a rule puts a button is where it
    answers. Nothing takes the pointer: the fingers come through Core::Input::Touch. */
 
-#tc_stick, #tc_stick_idle, #tc_stick_base, #tc_quick, #tc_menu_panel, .tc-button, .tc-button * {
+#tc_stick, #tc_stick_idle, #tc_stick_base, #tc_quick, #tc_menu_backdrop, #tc_menu_panel, .tc-button, .tc-button * {
 	pointer-events: none;
 }
 
@@ -76,6 +76,7 @@
    top left on a phone and are drawn over the controls. */
 #tc_quick {
 	position: absolute;
+	z-index: 2;
 	left: 214dp;
 	top: 4dp;
 	display: flex;
@@ -95,8 +96,21 @@
 
 /* Under the row, kept right of the chat log's lines and left of the party list (top right):
    six columns of three. */
+/* The screen around the open menu, dimmed; a tap there closes it. Over the other controls, which
+   take no finger while the menu is open, under the top row and the menu. */
+#tc_menu_backdrop {
+	position: absolute;
+	z-index: 1;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 90);
+}
+
 #tc_menu_panel {
 	position: absolute;
+	z-index: 2;
 	right: 110dp;
 	top: 40dp;
 	width: 646dp;
@@ -299,4 +313,19 @@
 	bottom: -15dp;
 	line-height: 13dp;
 	font-size: 11dp;
+}
+
+/* The phone HUD centres the skill list's grid over the screen (main_frame.rcss), where the hint by the
+   skill buttons would sit under it: the hint goes to the top, under the top row. */
+@media (theme: mobile-hud) {
+	#tc_bind_hint {
+		top: 42dp;
+		right: auto;
+		bottom: auto;
+		left: 50%;
+		width: 360dp;
+		max-width: 360dp;
+		margin-left: -180dp;
+		text-align: center;
+	}
 }

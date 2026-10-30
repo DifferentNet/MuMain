@@ -29,6 +29,26 @@ namespace Core::Input
 
         // True while the mouse is hovering/pressed over any element the registered consumer owns.
         virtual bool IsMouseOverUI() const = 0;
+
+        // Touch scrolling, as on a phone: a finger dragged over a scrollable list scrolls it instead
+        // of dragging the mouse (Touch::Pointer). Points are window pixels. A UI that keeps these
+        // defaults scrolls nothing by touch: the finger drags the mouse there too.
+        // @return true if a scrollable box lies under the point where the finger landed; that box
+        // then follows MoveTouchScroll() until EndTouchScroll().
+        virtual bool BeginTouchScroll(float /*x*/, float /*y*/)
+        {
+            return false;
+        }
+        // The finger moved from one point to another.
+        virtual void MoveTouchScroll(float /*fromX*/, float /*fromY*/, float /*toX*/, float /*toY*/) {}
+        // The finger lifted at (x, y), moving at (velocityX, velocityY) pixels a second: a flick
+        // glides on.
+        virtual void EndTouchScroll(float /*x*/, float /*y*/, float /*velocityX*/, float /*velocityY*/) {}
+        // A finger landed: a box still gliding stops where it is. @return true if one was.
+        virtual bool StopTouchScrollGlide()
+        {
+            return false;
+        }
     };
 
     // Registers the single active UI input consumer. Set once at startup (RmlUiRuntime::Create())
@@ -44,4 +64,11 @@ namespace Core::Input
 
     // True if the registered UI consumer reports the mouse is over UI. False if none registered.
     bool IsMouseOverUI();
+
+    // The registered consumer's touch scrolling (IUiInputConsumer::BeginTouchScroll() and the
+    // rest); with none registered nothing scrolls.
+    bool BeginUiTouchScroll(float x, float y);
+    void MoveUiTouchScroll(float fromX, float fromY, float toX, float toY);
+    void EndUiTouchScroll(float x, float y, float velocityX, float velocityY);
+    bool StopUiTouchScrollGlide();
 }

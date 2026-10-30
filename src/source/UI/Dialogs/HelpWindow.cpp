@@ -3,6 +3,7 @@
 #include "UI/Dialogs/HelpWindow.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/HelpPages.h"
+#include "UI/Mobile/InterfaceMode.h"
 #include "Audio/DSPlaySound.h"
 
 #include "Core/Utilities/StringUtils.h"
@@ -146,13 +147,15 @@ void mu::ui::window::CHelpWindow::SyncRmlModel()
 void mu::ui::window::CHelpWindow::RebuildPageModel()
 {
     const float textPx = UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Normal);
-    if (m_BuiltPage == m_iIndex && m_BuiltTextPx == textPx)
+    const bool touchControls = UI::Mobile::IsTouchControls();
+    if (m_BuiltPage == m_iIndex && m_BuiltTextPx == textPx && m_BuiltTouchControls == touchControls)
         return;
 
     m_BuiltPage = m_iIndex;
     m_BuiltTextPx = textPx;
+    m_BuiltTouchControls = touchControls;
 
-    const std::vector<UI::Help::PageLine> page = UI::Help::BuildPage(m_iIndex);
+    const std::vector<UI::Help::PageLine> page = UI::Help::BuildPage(m_iIndex, touchControls);
 
     HelpWindowRmlModel& model = m_RmlView.GetModel();
     model.lines.clear();

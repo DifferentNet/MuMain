@@ -237,6 +237,12 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME rml_touch_scroll_tests
+    SOURCES test_rml_touch_scroll.cpp
+    LINK_LIBS MuClient
+)
+
+mu_add_test(
     NAME window_placement_layout_tests
     SOURCES test_window_placement_layout.cpp
     LINK_LIBS MuClient

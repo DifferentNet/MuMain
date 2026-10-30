@@ -1,6 +1,8 @@
 // The finger that plays the mouse (TouchInput.h): a tap clicks, a long press clicks the right button,
 // a moving finger drags with the left button held, and a second finger turns the pair into a pinch
-// that turns the mouse wheel.
+// that turns the mouse wheel. A finger moving over a scrollable list of the UI scrolls it instead, as
+// on a phone (Core::Input::BeginUiTouchScroll()): a flick glides on, and a tap on a gliding list only
+// stops it.
 #pragma once
 
 #include <SDL3/SDL_touch.h>

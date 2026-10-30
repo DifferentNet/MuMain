@@ -146,3 +146,23 @@
 #head { width: calc(100% * var(--root-scale) - 22px * var(--root-scale)); }
 #list { width: calc(100% * var(--root-scale)); height: calc(100% * var(--root-scale)); }
 .mc-row { width: calc(100% - 17px * var(--root-scale)); padding-bottom: calc(2px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (UI::Mobile::IsPhoneView()): a wider list with finger-tall rows, each
+   text centred in its row, and a taller close bar. Lengths inside the counter-scaled list are reference px
+   times --root-scale, as above. */
+@media (theme: mobile) {
+	#panel { width: 360px; }
+	#list_box { bottom: 42px; }
+	#close_bar { height: 32px; }
+	/* The text keeps its native size, so the columns move in until the headers clear the panel's edge. */
+	.col-strife { left: 12%; }
+	.col-map { left: 35%; }
+	.col-level { left: 62%; }
+	.col-zen { left: 83%; }
+	.mc-row, .mc-row .col { line-height: calc(30px * var(--root-scale)); }
+	.mc-row {
+		padding-bottom: 0px;
+		border-bottom-width: calc(1px * var(--root-scale));
+		border-bottom-color: rgba(255, 255, 255, 28);
+	}
+}

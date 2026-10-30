@@ -13,6 +13,9 @@
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "Scenes/SceneCore.h"
 #include "UI/Core/WindowSystem.h"
+#include "UI/Dialogs/GenericConfirmDialog.h"
+#include "UI/Dialogs/GenericMenuDialog.h"
+#include "UI/Dialogs/MessageBox.h"
 #include "UI/HUD/SkillList.h"
 #include "UI/Mobile/HeroFrame.h"
 #include "UI/Mobile/InterfaceMode.h"
@@ -42,6 +45,18 @@ namespace Touch = Core::Input::Touch;
 constexpr std::string_view DocumentName = "touch_controls.rml";
 constexpr int SkillButtons = 5;
 
+// Back: the skill list's grid first, which Esc does not close (it would open the system menu over it),
+// else Esc as a keyboard presses it.
+void Back()
+{
+    if (g_pSkillList->IsSkillGridOpen())
+    {
+        g_pSkillList->OnCurrentSkillClick();
+        return;
+    }
+    Touch::TapKey(VK_ESCAPE);
+}
+
 // Buttons that press a key, as a keyboard would: the potions drink the item hotkeys Q and W, the chat
 // button opens the chat field (Enter), Back closes the window on top or, with none open, opens the
 // system menu (Esc, as a phone has none), and the rest open their windows (UI/HUD/HotKey.cpp).
@@ -49,11 +64,13 @@ struct KeyButton
 {
     const char* element;
     int key;
+    // Done instead of the key, when set.
+    void (*action)() = nullptr;
 };
 
 constexpr KeyButton KeyButtons[] = {
-    {"tc_potion_q", 'Q'}, {"tc_potion_w", 'W'}, {"tc_chat", VK_RETURN}, {"tc_inventory", 'I'},
-    {"tc_character", 'C'}, {"tc_move", 'M'},     {"tc_map", VK_TAB},       {"tc_back", VK_ESCAPE},
+    {"tc_potion_q", 'Q'},  {"tc_potion_w", 'W'}, {"tc_chat", VK_RETURN}, {"tc_inventory", 'I'},
+    {"tc_character", 'C'}, {"tc_move", 'M'},     {"tc_map", VK_TAB},     {"tc_back", VK_ESCAPE, &Back},
 };
 constexpr int KeyButtonCount = static_cast<int>(std::size(KeyButtons));
 
@@ -112,7 +129,9 @@ enum ControlId : int
     MenuControl,
     FirstKeyControl,
     FirstMenuItemControl = FirstKeyControl + KeyButtonCount,
-    ControlCount = FirstMenuItemControl + MenuItemCount,
+    // The screen around the open menu: a tap there shuts it.
+    MenuBackdropControl = FirstMenuItemControl + MenuItemCount,
+    ControlCount,
 };
 static_assert(ControlCount <= Touch::MaxControls);
 
@@ -147,6 +166,8 @@ const char* ControlElement(int control)
         return "tc_auto";
     case MenuControl:
         return "tc_menu";
+    case MenuBackdropControl:
+        return "tc_menu_backdrop";
     default:
         break;
     }
@@ -304,9 +325,19 @@ std::string_view FileName(const Rml::String& url)
     return slash == std::string_view::npos ? path : path.substr(slash + 1);
 }
 
+// The depth a document is drawn at now: its z-index, which differs from the table's for a few (the
+// phone view's HUD overlays, these controls while their menu is open).
+std::optional<float> CurrentDepth(Rml::ElementDocument* document)
+{
+    const Rml::Property* depth = document->GetLocalProperty(Rml::PropertyId::ZIndex);
+    if (depth != nullptr && depth->unit == Rml::Unit::NUMBER)
+        return depth->Get<float>();
+    return UI::RmlBridge::StackingDepthForDocument(FileName(document->GetSourceURL()));
+}
+
 // Whether a document is drawn over the controls and keeps the fingers it covers (all but the
 // pass-through ones).
-bool IsDrawnOver(const Rml::ElementDocument* owner, const Rml::ElementDocument* controls)
+bool IsDrawnOver(Rml::ElementDocument* owner, Rml::ElementDocument* controls)
 {
     if (owner == nullptr || owner == controls)
         return false;
@@ -316,14 +347,14 @@ bool IsDrawnOver(const Rml::ElementDocument* owner, const Rml::ElementDocument* 
         if (name == passThrough)
             return false;
     }
-    const std::optional<float> depth = UI::RmlBridge::StackingDepthForDocument(name);
-    const std::optional<float> ownDepth = UI::RmlBridge::StackingDepthForDocument(DocumentName);
+    const std::optional<float> depth = CurrentDepth(owner);
+    const std::optional<float> ownDepth = CurrentDepth(controls);
     return !depth || !ownDepth || *depth > *ownDepth;
 }
 
 // Whether the element a finger landed on is a window over the controls (a document drawn above
 // them, but for its empty body): that window takes the finger.
-bool IsWindowOver(Rml::Element* hit, const Rml::ElementDocument* controls)
+bool IsWindowOver(Rml::Element* hit, Rml::ElementDocument* controls)
 {
     if (hit == nullptr)
         return false;
@@ -334,7 +365,7 @@ bool IsWindowOver(Rml::Element* hit, const Rml::ElementDocument* controls)
 // Whether a window a workspace slot placed covers the point. Such a panel may take no pointer
 // events (the inventory's item grid is clicked by its native code), so RmlUi's hit test looks
 // through it to the controls below.
-bool IsPlacedWindowAt(Rml::Context* context, const Rml::ElementDocument* controls, Rml::Vector2f point)
+bool IsPlacedWindowAt(Rml::Context* context, Rml::ElementDocument* controls, Rml::Vector2f point)
 {
     for (int index = 0; index < context->GetNumDocuments(); ++index)
     {
@@ -351,6 +382,20 @@ bool IsPlacedWindowAt(Rml::Context* context, const Rml::ElementDocument* control
     return false;
 }
 
+// While the menu is open only it takes fingers: its items, the menu button that shuts it, and the
+// screen around it, which shuts it too (a tap meant to close it walks nowhere).
+int MenuHitTest(float x, float y, float slop)
+{
+    for (int control = FirstMenuItemControl; control < FirstMenuItemControl + MenuItemCount; ++control)
+    {
+        if (Inside(g_boxes[control], x, y, slop))
+            return control;
+    }
+    if (Inside(g_boxes[MenuControl], x, y, slop))
+        return MenuControl;
+    return Inside(g_boxes[MenuBackdropControl], x, y, 0.f) ? MenuBackdropControl : Touch::NoControl;
+}
+
 // Which control a finger landing at a window pixel belongs to.
 int HitTest(float x, float y)
 {
@@ -363,9 +408,10 @@ int HitTest(float x, float y)
         return Touch::NoControl;
 
     const float slop = TouchSlopDp * Dp();
-    // The buttons before the joystick's area, which they stand in; the menu's items, drawn over the
-    // rest, first.
-    for (int control = ControlCount - 1; control > StickControl; --control)
+    if (g_View.GetModel().menuOpen)
+        return MenuHitTest(x, y, slop);
+    // The buttons before the joystick's area, which they stand in.
+    for (int control = FirstMenuItemControl - 1; control > StickControl; --control)
     {
         if (Inside(g_boxes[control], x, y, slop))
             return control;
@@ -480,6 +526,14 @@ void UpdateBinding(ControlsModel& model)
     SyncLabel(model.bindHint, hint, "bind_hint");
 }
 
+// A dialog that waits for an answer (the system menu, a confirmation, a message box): the menu
+// shuts and stays shut while one is up, where its items would take the taps meant for the dialog.
+bool IsDialogOpen()
+{
+    return !g_MessageBox->IsEmpty() || mu::ui::window::g_pGenericConfirmDialog->IsVisible() ||
+           mu::ui::window::g_pGenericMenuDialog->IsVisible();
+}
+
 // Whether a finger landed on the control since the last frame; reading forgets it.
 bool TakePress(int control)
 {
@@ -540,6 +594,30 @@ void UpdateStick(ControlsModel& model)
         GameLogic::Touch::Steer(dx, dy);
 }
 
+// The menu button opens and shuts the menu, a tap beside it shuts it, an item opens its window and
+// shuts it.
+void UpdateMenu(ControlsModel& model)
+{
+    const bool dialogOpen = IsDialogOpen();
+    if (TakePress(MenuControl) && !dialogOpen)
+    {
+        SetField(model.menuOpen, !model.menuOpen, "menu_open");
+        PlayBuffer(SOUND_CLICK01);
+    }
+    if (TakePress(MenuBackdropControl) || dialogOpen)
+        SetField(model.menuOpen, false, "menu_open");
+    for (int item = 0; item < MenuItemCount; ++item)
+    {
+        if (!TakePress(FirstMenuItemControl + item) || !model.menuOpen)
+            continue;
+        SetField(model.menuOpen, false, "menu_open");
+        if (MenuItems[item].action != nullptr)
+            MenuItems[item].action();
+        else
+            Touch::TapKey(MenuItems[item].key);
+    }
+}
+
 void UpdateButtons(ControlsModel& model)
 {
     TakePress(AttackControl);
@@ -590,27 +668,28 @@ void UpdateButtons(ControlsModel& model)
 
     for (int button = 0; button < KeyButtonCount; ++button)
     {
-        if (TakePress(FirstKeyControl + button))
+        if (!TakePress(FirstKeyControl + button))
+            continue;
+        if (KeyButtons[button].action != nullptr)
+            KeyButtons[button].action();
+        else
             Touch::TapKey(KeyButtons[button].key);
     }
 
-    if (TakePress(MenuControl))
-    {
-        SetField(model.menuOpen, !model.menuOpen, "menu_open");
-        PlayBuffer(SOUND_CLICK01);
-    }
-    for (int item = 0; item < MenuItemCount; ++item)
-    {
-        if (!TakePress(FirstMenuItemControl + item) || !model.menuOpen)
-            continue;
-        SetField(model.menuOpen, false, "menu_open");
-        if (MenuItems[item].action != nullptr)
-            MenuItems[item].action();
-        else
-            Touch::TapKey(MenuItems[item].key);
-    }
+    UpdateMenu(model);
 
     SetField(model.helperOn, MUHelper::g_MuHelper.IsActive(), "helper_on");
+}
+
+// Over every window while the menu is open (UI::RmlBridge::OpenTouchMenuDepth), so its panel is seen
+// whole and takes the fingers; under them otherwise.
+void SyncDepth(Rml::ElementDocument* document, bool menuOpen)
+{
+    const float depth = menuOpen ? UI::RmlBridge::OpenTouchMenuDepth
+                                 : UI::RmlBridge::StackingDepthForDocument(DocumentName).value_or(0.f);
+    const Rml::Property* current = document->GetLocalProperty(Rml::PropertyId::ZIndex);
+    if (current == nullptr || current->Get<float>() != depth)
+        document->SetProperty(Rml::PropertyId::ZIndex, Rml::Property(depth, Rml::Unit::NUMBER));
 }
 
 void Hide()
@@ -668,6 +747,7 @@ void Update()
     UpdateBinding(model);
     UpdateStick(model);
     UpdateButtons(model);
+    SyncDepth(document, model.menuOpen);
     UI::Mobile::HeroFrame::Sync(model.hero, [](const char* field) { g_View.MarkDirty(field); });
     // The boxes the next fingers are tested against: where this frame lays the controls out.
     MeasureBoxes();

@@ -123,6 +123,9 @@ private:
     bool AreRequiredValuesSet() const;
 
     int GetScrollableRowCount() const;
+    // How many list rows the document holds: a page of them, or every row in the phone view, whose list
+    // scrolls by finger instead (chat_command.rcss).
+    int VisibleRows() const;
     // Wrapped once on page entry; measuring against the font every frame would be wasteful.
     void WrapDescriptionOfSelected();
     // How many wrapped description lines fit; a long description yields space to the parameters.

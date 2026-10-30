@@ -193,3 +193,24 @@
 .quest-content-row.row-requirement-unmet, .quest-content-row.row-requirement-unmet.clickable:hover { color: #ff1e1e; }
 .quest-content-row.row-reward, .quest-content-row.row-reward.clickable:hover { color: #dfbf67; }
 .quest-content-row.row-random-reward, .quest-content-row.row-random-reward.clickable:hover { color: #6767df; }
+
+/* The phone view: the window widens so its tabs and lines fit their text; the quest rows and the
+   buttons grow to finger size. */
+@media (theme: mobile) {
+	#panel { width: 280px; }
+	.tab-row { left: 12px; top: 26px; width: 256px; height: 28px; }
+	.tab-btn { height: 28px; line-height: 28px; }
+	.tab-btn-quest { left: 0; width: 80px; }
+	.tab-btn-jobchange { left: 80px; width: 80px; }
+	.tab-btn-castletemple { left: 160px; width: 96px; }
+	.quest-tab, .jobchange-tab, .castletemple-tab { width: 262px; }
+	.quest-empty-msg { width: 230px; }
+	.quest-list, .quest-divider, .quest-contents { width: 262px; }
+	.quest-row { height: 26px; line-height: 26px; border-bottom-width: 1px; border-bottom-color: token(border-inner); }
+	#reward_popup_anchor { left: 140px; }
+	.jobchange-title, .jobchange-contents, .jobchange-state, .castle-title, .castle-line, .temple-title,
+	.temple-line { width: 262px; }
+	.quest-btn { margin: -6px; padding: 6px; }
+	.quest-btn-open { left: 64px; decorator: image(myquest-btn-open) content-box; }
+	.quest-btn-giveup { left: 114px; decorator: image(myquest-btn-giveup) content-box; }
+}
