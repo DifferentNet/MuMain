@@ -25,11 +25,9 @@
 #include "I18N/All.h"
 #include "GameLogic/Items/ShopRestrictions.h"
 #include "GameLogic/Items/TradeRestrictions.h"
-#include "Core/Input/TouchInput.h"
 #include "UI/HUD/ItemHotKey.h"
+#include "UI/Mobile/ClickSource.h"
 #include "UI/Mobile/ItemCard.h"
-
-#include <SDL3/SDL_mouse.h>
 
 #include <utility>
 
@@ -38,10 +36,110 @@ namespace mu::ui::window
 
 namespace
 {
-// A finger's long press, which holds the right button (Core::Input::Touch), and not the mouse's.
-bool IsFingerRightClick()
+// The Box of Luck's levels the server opens into prizes: 0 to 13 but 4 (its item drop groups,
+// config."ItemDropItemGroup"). Level 14 is used instead (TryConsumeItem).
+constexpr int BoxOfLuckLastPrizeLevel = 13;
+constexpr int BoxOfLuckLevelWithoutPrizes = 4;
+// The chocolate boxes open at levels 0 and 1.
+constexpr int ChocolateBoxLastPrizeLevel = 1;
+
+// The potions, food, scrolls and talismans the right click uses at once (TryConsumeItem).
+bool IsTakenAtOnce(const ITEM* pItem)
 {
-    return Core::Input::Touch::IsMouseButtonHeld(SDL_BUTTON_RIGHT);
+    const bool isPotion = (pItem->Type >= ITEM_APPLE && pItem->Type <= ITEM_ALE) ||
+                          (pItem->Type >= ITEM_SMALL_SHIELD_POTION && pItem->Type <= ITEM_LARGE_COMPLEX_POTION);
+    return isPotion || (pItem->Type == ITEM_REMEDY_OF_LOVE && pItem->Level == 0) ||
+           (pItem->Type >= ITEM_JACK_OLANTERN_BLESSINGS && pItem->Type <= ITEM_JACK_OLANTERN_DRINK) ||
+           (pItem->Type == ITEM_BOX_OF_LUCK && pItem->Level == 14) || GameLogic::Items::IsElitePotion(pItem) ||
+           GameLogic::Items::IsBuffScroll(pItem) || pItem->Type == ITEM_INDULGENCE ||
+           pItem->Type == ITEM_MEDIUM_ELITE_HEALING_POTION ||
+           (pItem->Type >= ITEM_CHERRY_BLOSSOM_WINE && pItem->Type <= ITEM_CHERRY_BLOSSOM_FLOWER_PETAL) ||
+           GameLogic::Items::IsBattleOrStrengthScroll(pItem) || pItem->Type == ITEM_TALISMAN_OF_GUARDIAN ||
+           pItem->Type == ITEM_TALISMAN_OF_ITEM_PROTECTION || pItem->Type == ITEM_ELITE_SD_POTION;
+}
+
+// The skill books, orbs, scrolls and crystals the right click reads (TryConsumeItem).
+bool IsSkillBook(const ITEM* pItem)
+{
+    return (pItem->Type >= ITEM_SCROLL_OF_POISON && pItem->Type < ITEM_ETC + MAX_ITEM_INDEX) ||
+           (pItem->Type >= ITEM_ORB_OF_TWISTING_SLASH && pItem->Type <= ITEM_ORB_OF_GREATER_FORTITUDE) ||
+           (pItem->Type >= ITEM_ORB_OF_FIRE_SLASH && pItem->Type <= ITEM_ORB_OF_DEATH_STAB) ||
+           (pItem->Type == ITEM_WING + 20) ||
+           (pItem->Type >= ITEM_SCROLL_OF_FIREBURST && pItem->Type <= ITEM_SCROLL_OF_ELECTRIC_SPARK) ||
+           (pItem->Type == ITEM_SCROLL_OF_FIRE_SCREAM) || (pItem->Type == ITEM_CRYSTAL_OF_DESTRUCTION) ||
+           (pItem->Type == ITEM_CRYSTAL_OF_FLAME_STRIKE) || (pItem->Type == ITEM_CRYSTAL_OF_RECOVERY) ||
+           (pItem->Type == ITEM_CRYSTAL_OF_MULTI_SHOT) || (pItem->Type == ITEM_SCROLL_OF_CHAOTIC_DISEIER) ||
+           (pItem->Type == ITEM_SCROLL_OF_GIGANTIC_STORM) || (pItem->Type == ITEM_SCROLL_OF_WIZARDRY_ENHANCE);
+}
+
+// Every item the right click in the bag uses, the ones TryConsumeItem takes: the item card offers Use
+// for these only, as for the rest it would do nothing.
+bool IsUsedFromBag(const ITEM* pItem)
+{
+    switch (pItem->Type)
+    {
+    case ITEM_TOWN_PORTAL_SCROLL:
+    case ITEM_SEAL_OF_ASCENSION:
+    case ITEM_RESET_FRUIT_CONTROL:
+    case ITEM_ARMOR_OF_GUARDSMAN:
+    case ITEM_DEVIL_SQUARE_TICKET:
+    case ITEM_BLOOD_CASTLE_TICKET:
+    case ITEM_KALIMA_TICKET:
+    case ITEM_ILLUSION_TEMPLE_TICKET:
+    case ITEM_OPEN_ACCESS_TICKET_TO_CHAOS_CASTLE:
+    case ITEM_SCROLL_OF_BLOOD:
+    case ITEM_DEVILS_INVITATION:
+    case ITEM_INVISIBILITY_CLOAK:
+    case ITEM_FRUITS:
+    case ITEM_LIFE_STONE_ITEM:
+    case ITEM_TALISMAN_OF_RESURRECTION:
+    case ITEM_TALISMAN_OF_MOBILITY:
+    case ITEM_INVITATION_TO_SANTA_VILLAGE:
+        return true;
+    default:
+        return IsTakenAtOnce(pItem) || GameLogic::Items::IsElixir(pItem) ||
+               (pItem->Type >= ITEM_RESET_FRUIT_STRENGTH && pItem->Type <= ITEM_RESET_FRUIT_ENERGY) ||
+               IsSkillBook(pItem);
+    }
+}
+
+// The jewels let go onto an item in the bag to work on it (ApplyJewels).
+// MU Moldova: 14:160 and 14:161 (Jewels of Extension and Elevation in Season 6) are the Jewels of Ancient and Fate,
+// used in the chaos machine only, so they are no longer dropped onto items.
+bool IsJewelForItems(const ITEM* pItem)
+{
+    return pItem->Type == ITEM_JEWEL_OF_BLESS || pItem->Type == ITEM_JEWEL_OF_SOUL ||
+           pItem->Type == ITEM_JEWEL_OF_LIFE || pItem->Type == ITEM_JEWEL_OF_HARMONY ||
+           GameLogic::Items::IsRefineStone(pItem);
+}
+
+// The boxes the server opens where they are dropped: the items with an item drop group
+// (config."ItemDropItemGroup"), and MU Moldova's SkyNet Box (add-on SkyNetBox.cs). The right click drops
+// them (TryDropItem), so on the item card it is Open.
+bool OpensWhenDropped(const ITEM* pItem)
+{
+    switch (pItem->Type)
+    {
+    case ITEM_BOX_OF_LUCK:
+        return pItem->Level <= BoxOfLuckLastPrizeLevel && pItem->Level != BoxOfLuckLevelWithoutPrizes;
+    case ITEM_PINK_CHOCOLATE_BOX:
+    case ITEM_RED_CHOCOLATE_BOX:
+    case ITEM_BLUE_CHOCOLATE_BOX:
+        return pItem->Level <= ChocolateBoxLastPrizeLevel;
+    case ITEM_RED_RIBBON_BOX:
+    case ITEM_GREEN_RIBBON_BOX:
+    case ITEM_BLUE_RIBBON_BOX:
+    case ITEM_PUMPKIN_OF_LUCK:
+    case ITEM_CHRISTMAS_STAR:
+    case ITEM_FIRECRACKER:
+    case ITEM_CHERRY_BLOSSOM_PLAYBOX:
+    case ITEM_CHRISTMAS_FIRECRACKER:
+        return pItem->Level == 0;
+    case ITEM_GOLDEN_BOX:
+        return true;
+    default:
+        return false;
+    }
 }
 
 // Puts the pointer back where a long press was for the actions that take the item under it, and
@@ -77,6 +175,19 @@ bool CanBeDropped(const ITEM* pItem)
 {
     return Hero->Dead == 0 && !GameLogic::Items::IsHighValueItem(pItem) && !GameLogic::Items::IsDropBan(pItem);
 }
+
+// Lifts the jewel onto the pointer, as a tap on it does, so that the next tap on an item in the bag
+// applies it there (ApplyJewels): a finger has no drag that both lifts and aims it.
+void LiftJewel(CInventoryCtrl* targetControl, DWORD itemKey)
+{
+    if (CInventoryCtrl::GetPickedItem() != nullptr)
+        return;
+    ITEM* pJewel = targetControl->FindItemByKey(itemKey);
+    if (pJewel == nullptr || !CInventoryCtrl::CreatePickedItem(targetControl, pJewel))
+        return;
+    targetControl->RemoveItem(pJewel);
+    g_pSystemLogBox->AddText(I18N::Game::TouchItemApplyHint, TYPE_SYSTEM_MESSAGE);
+}
 } // namespace
 
 CInventoryActionController::CInventoryActionController() : m_pContext(nullptr) {}
@@ -106,7 +217,7 @@ bool CInventoryActionController::HandleInventoryActions(CInventoryCtrl* targetCo
 
     if (m_pContext->GetRepairMode() == SEASON3B::REPAIR_MODE_OFF && IsPress(VK_RBUTTON))
     {
-        if (IsFingerRightClick() && ShowTouchItemCard(targetControl))
+        if (AsksWithItemCard(FindRightClickTarget()) && ShowTouchItemCard(targetControl))
         {
             return true;
         }
@@ -265,6 +376,14 @@ bool CInventoryActionController::RunRightClickAction(CInventoryCtrl* targetContr
     return false;
 }
 
+bool CInventoryActionController::AsksWithItemCard(RightClickTarget target)
+{
+    if (UI::Mobile::ClickSource::IsFingerLongPress())
+        return true;
+    return UI::Mobile::ClickSource::IsPadRightClick() && target != RightClickTarget::Storage &&
+           target != RightClickTarget::Mix;
+}
+
 bool CInventoryActionController::ShowTouchItemCard(CInventoryCtrl* targetControl) const
 {
     if (CInventoryCtrl::GetPickedItem() != nullptr)
@@ -290,21 +409,7 @@ bool CInventoryActionController::ShowTouchItemCard(CInventoryCtrl* targetControl
     card.item = *pItem;
 
     // The right click's own action, unless the windows changed while the card was open.
-    if (target == RightClickTarget::Shop)
-    {
-        card.primaryLabel = I18N::Game::TouchItemSell;
-    }
-    else if (target != RightClickTarget::Inventory || g_pNewUISystem->IsVisible(INTERFACE_INVENTORY_EXT))
-    {
-        card.primaryLabel = I18N::Game::TouchItemMove;
-    }
-    else
-    {
-        const int equipmentSlot = ItemAttribute[itemType].m_byItemSlot;
-        const bool canBeWorn = equipmentSlot >= 0 && equipmentSlot < MAX_EQUIPMENT_INDEX;
-        card.primaryLabel = canBeWorn ? I18N::Game::TouchItemEquip : I18N::Game::Use;
-    }
-    card.primary = [this, targetControl, pointer, itemKey, target]
+    auto runRightClick = [this, targetControl, pointer, itemKey, target]
     {
         const PointerAt at(pointer);
         if (FindRightClickTarget() == target && IsItemAtPointer(targetControl, itemKey))
@@ -312,6 +417,20 @@ bool CInventoryActionController::ShowTouchItemCard(CInventoryCtrl* targetControl
             RunRightClickAction(targetControl, target, false);
         }
     };
+    if (target == RightClickTarget::Shop)
+    {
+        card.primaryLabel = I18N::Game::TouchItemSell;
+        card.primary = std::move(runRightClick);
+    }
+    else if (target != RightClickTarget::Inventory || g_pNewUISystem->IsVisible(INTERFACE_INVENTORY_EXT))
+    {
+        card.primaryLabel = I18N::Game::TouchItemMove;
+        card.primary = std::move(runRightClick);
+    }
+    else
+    {
+        SetBagItemAction(targetControl, *pItem, std::move(runRightClick), card);
+    }
 
     if (CMyInventory::CanRegisterItemHotKey(itemType))
     {
@@ -319,7 +438,8 @@ bool CInventoryActionController::ShowTouchItemCard(CInventoryCtrl* targetControl
         card.putOnW = [itemType, itemLevel] { g_pMainFrame->SetItemHotKey(HOTKEY_W, itemType, itemLevel); };
     }
 
-    if (target == RightClickTarget::Inventory && CanBeDropped(pItem))
+    // A box opens where it is dropped, which its Open does already.
+    if (target == RightClickTarget::Inventory && CanBeDropped(pItem) && !OpensWhenDropped(pItem))
     {
         card.drop = [this, targetControl, itemKey]
         {
@@ -332,6 +452,45 @@ bool CInventoryActionController::ShowTouchItemCard(CInventoryCtrl* targetControl
 
     UI::Mobile::ItemCard::Show(std::move(card));
     return true;
+}
+
+void CInventoryActionController::SetBagItemAction(CInventoryCtrl* targetControl, const ITEM& item,
+                                                  std::function<void()> runRightClick,
+                                                  UI::Mobile::ItemCard::Content& card) const
+{
+    // Used before worn, in the order the right click tries them (HandleInventoryRightClickActions).
+    const int equipmentSlot = ItemAttribute[item.Type].m_byItemSlot;
+    const bool canBeWorn = equipmentSlot >= 0 && equipmentSlot < MAX_EQUIPMENT_INDEX;
+    const bool isUsed = IsUsedFromBag(&item);
+    if (isUsed || canBeWorn)
+    {
+        card.primaryLabel = isUsed ? I18N::Game::Use : I18N::Game::TouchItemEquip;
+        card.primary = std::move(runRightClick);
+        return;
+    }
+
+    const DWORD itemKey = item.Key;
+    if (IsJewelForItems(&item))
+    {
+        card.primaryLabel = I18N::Game::TouchItemApply;
+        card.primary = [this, targetControl, itemKey]
+        {
+            if (FindRightClickTarget() == RightClickTarget::Inventory)
+                LiftJewel(targetControl, itemKey);
+        };
+        return;
+    }
+
+    if (OpensWhenDropped(&item))
+    {
+        card.primaryLabel = I18N::Game::TouchItemOpen;
+        card.primary = [this, targetControl, itemKey]
+        {
+            ITEM* pBox = targetControl->FindItemByKey(itemKey);
+            if (pBox != nullptr && FindRightClickTarget() == RightClickTarget::Inventory)
+                TryDropItem(targetControl, pBox);
+        };
+    }
 }
 
 bool CInventoryActionController::HandleStorageAutoMove(CInventoryCtrl* targetControl) const
@@ -671,13 +830,7 @@ bool CInventoryActionController::RepairItemAtMousePoint(CInventoryCtrl* targetCo
 bool CInventoryActionController::ApplyJewels(CInventoryCtrl* targetControl, CPickedItem* pPickedItem,
                                                   ITEM* pPickItem, int iSourceIndex, int iTargetIndex) const
 {
-    // MU Moldova: 14:160 and 14:161 (Jewels of Extension and Elevation in Season 6) are the Jewels of Ancient and Fate,
-    // used in the chaos machine only, so they are no longer dropped onto items.
-    const bool bIsJewelType = pPickItem->Type == ITEM_JEWEL_OF_BLESS || pPickItem->Type == ITEM_JEWEL_OF_SOUL ||
-                              pPickItem->Type == ITEM_JEWEL_OF_LIFE || pPickItem->Type == ITEM_JEWEL_OF_HARMONY ||
-                              GameLogic::Items::IsRefineStone(pPickItem);
-
-    if (!bIsJewelType)
+    if (!IsJewelForItems(pPickItem))
     {
         return false;
     }
@@ -794,6 +947,8 @@ bool CInventoryActionController::TryStackItems(CInventoryCtrl* targetControl, IT
     return false;
 }
 
+// IsUsedFromBag names every item this takes: an item added here goes there too, or the phone's item card
+// offers no Use for it.
 bool CInventoryActionController::TryConsumeItem(CInventoryCtrl* targetControl, ITEM* pItem, int iIndex) const
 {
     if (pItem == nullptr)
@@ -812,15 +967,7 @@ bool CInventoryActionController::TryConsumeItem(CInventoryCtrl* targetControl, I
     const auto isPotion = (pItem->Type >= ITEM_APPLE && pItem->Type <= ITEM_ALE) ||
                           (pItem->Type >= ITEM_SMALL_SHIELD_POTION && pItem->Type <= ITEM_LARGE_COMPLEX_POTION);
 
-    if (isApple || isPotion || (pItem->Type == ITEM_REMEDY_OF_LOVE && pItem->Level == 0) ||
-        (pItem->Type >= ITEM_JACK_OLANTERN_BLESSINGS && pItem->Type <= ITEM_JACK_OLANTERN_DRINK) ||
-        (pItem->Type == ITEM_BOX_OF_LUCK && pItem->Level == 14) ||
-        GameLogic::Items::IsElitePotion(pItem) ||
-        GameLogic::Items::IsBuffScroll(pItem) || pItem->Type == ITEM_INDULGENCE ||
-        pItem->Type == ITEM_MEDIUM_ELITE_HEALING_POTION ||
-        (pItem->Type >= ITEM_CHERRY_BLOSSOM_WINE && pItem->Type <= ITEM_CHERRY_BLOSSOM_FLOWER_PETAL) ||
-        GameLogic::Items::IsBattleOrStrengthScroll(pItem) || pItem->Type == ITEM_TALISMAN_OF_GUARDIAN ||
-        pItem->Type == ITEM_TALISMAN_OF_ITEM_PROTECTION || pItem->Type == ITEM_ELITE_SD_POTION)
+    if (IsTakenAtOnce(pItem))
     {
         SendRequestUse(iIndex, 0);
         if (isApple)
@@ -1011,15 +1158,7 @@ bool CInventoryActionController::TryConsumeItem(CInventoryCtrl* targetControl, I
         return true;
     }
 
-    if ((pItem->Type >= ITEM_SCROLL_OF_POISON && pItem->Type < ITEM_ETC + MAX_ITEM_INDEX) ||
-        (pItem->Type >= ITEM_ORB_OF_TWISTING_SLASH && pItem->Type <= ITEM_ORB_OF_GREATER_FORTITUDE) ||
-        (pItem->Type >= ITEM_ORB_OF_FIRE_SLASH && pItem->Type <= ITEM_ORB_OF_DEATH_STAB) ||
-        (pItem->Type == ITEM_WING + 20) ||
-        (pItem->Type >= ITEM_SCROLL_OF_FIREBURST && pItem->Type <= ITEM_SCROLL_OF_ELECTRIC_SPARK) ||
-        (pItem->Type == ITEM_SCROLL_OF_FIRE_SCREAM) || (pItem->Type == ITEM_CRYSTAL_OF_DESTRUCTION) ||
-        (pItem->Type == ITEM_CRYSTAL_OF_FLAME_STRIKE) || (pItem->Type == ITEM_CRYSTAL_OF_RECOVERY) ||
-        (pItem->Type == ITEM_CRYSTAL_OF_MULTI_SHOT) || (pItem->Type == ITEM_SCROLL_OF_CHAOTIC_DISEIER) ||
-        (pItem->Type == ITEM_SCROLL_OF_GIGANTIC_STORM) || (pItem->Type == ITEM_SCROLL_OF_WIZARDRY_ENHANCE))
+    if (IsSkillBook(pItem))
     {
         bool bReadBookGem = true;
 

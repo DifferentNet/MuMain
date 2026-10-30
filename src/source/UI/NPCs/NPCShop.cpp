@@ -5,6 +5,7 @@
 
 #include "Audio/DSPlaySound.h"
 #include "UI/Core/WindowSystem.h"
+#include "UI/Mobile/ClickSource.h"
 #include "UI/RmlBridge/RmlPointer.h"
 #include "UI/RmlBridge/RmlWindowClose.h"
 #include "UI/Dialogs/CommonMessageBox.h"
@@ -25,10 +26,35 @@
 #include "Core/Utilities/StringUtils.h"
 #include <RmlUi/Core/ElementDocument.h>
 
+#include <cstddef>
+#include <utility>
+
 using namespace SEASON3B;
 using namespace mu::ui::window;
 
 extern int BuyCost;
+
+namespace
+{
+namespace TapToBuy = UI::Shop::TapToBuy;
+
+// The item a finger's first tap chose lights up as one the window acts on (item_grid.rcss).
+constexpr const char* ChosenCellClass = "drop-valid";
+
+void LightUp(UI::Items::ItemGridCells& cells, int columns, const ITEM& item)
+{
+    const ITEM_ATTRIBUTE& attribute = ItemAttribute[item.Type];
+    for (int row = item.y; row < item.y + attribute.Height; ++row)
+    {
+        for (int column = item.x; column < item.x + attribute.Width && column < columns; ++column)
+        {
+            const auto cell = static_cast<std::size_t>(row * columns + column);
+            if (cell < cells.size() && cells[cell].drop.empty())
+                cells[cell].drop = ChosenCellClass;
+        }
+    }
+}
+} // namespace
 
 mu::ui::window::CNPCShop::CNPCShop()
 {
@@ -156,6 +182,11 @@ bool mu::ui::window::CNPCShop::UpdateMouseEvent()
                 int iIndex = (pItem->y * m_pNewInventoryCtrl->GetNumberOfColumn()) + pItem->x;
                 GambleSystem& _gambleSys = GambleSystem::Instance();
 
+                if (!IsBuyRelease(*pItem, _gambleSys.IsGambleShop()))
+                {
+                    return false;
+                }
+
                 if (_gambleSys.IsGambleShop())
                 {
                     _gambleSys.SetBuyItemInfo(iIndex, ItemValue(pItem, 0));
@@ -205,6 +236,58 @@ bool mu::ui::window::CNPCShop::UpdateMouseEvent()
         return false;
 
     return true;
+}
+
+// Whether this release of the left button on the shop's item buys it. A mouse's click does, as it
+// always has. A finger's drag that ends here never does: it was a swipe, not a choice. A finger's tap
+// buys only as the second on the item the first one chose, unless the shop asks before it sells
+// anyway (`asksFirst`: the gamble shop's question).
+bool mu::ui::window::CNPCShop::IsBuyRelease(const ITEM& item, bool asksFirst)
+{
+    if (UI::Mobile::ClickSource::IsFingerDrag())
+        return false;
+    if (asksFirst || !UI::Mobile::ClickSource::IsFingerTap())
+        return true;
+    if (TapToBuy::Tap(m_TapChoice, item.Key, TapToBuy::Clock::now()) == TapToBuy::Action::Buy)
+        return true;
+    ShowTapAgainHint();
+    return false;
+}
+
+void mu::ui::window::CNPCShop::ShowTapAgainHint()
+{
+    if (std::exchange(m_bTapAgainHintShown, true))
+        return;
+    g_pSystemLogBox->AddText(I18N::Game::TouchShopTapAgainToBuy, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+}
+
+// The item a finger's second tap would buy now, while it is still in the shop.
+ITEM* mu::ui::window::CNPCShop::ChosenItem()
+{
+    const std::optional<std::uint32_t> key = TapToBuy::Chosen(m_TapChoice, TapToBuy::Clock::now());
+    return key ? m_pNewInventoryCtrl->FindItemByKey(*key) : nullptr;
+}
+
+// The grid as its control draws it, with the item a finger chose lit up while a second tap buys it.
+void mu::ui::window::CNPCShop::SyncGridCells()
+{
+    const ITEM* chosen = ChosenItem();
+    if (chosen == nullptr)
+    {
+        SetGridCells(m_pNewInventoryCtrl->Cells());
+        return;
+    }
+    UI::Items::ItemGridCells lit = m_pNewInventoryCtrl->Cells();
+    LightUp(lit, m_pNewInventoryCtrl->GetNumberOfColumn(), *chosen);
+    SetGridCells(lit);
+}
+
+void mu::ui::window::CNPCShop::SetGridCells(const UI::Items::ItemGridCells& cells)
+{
+    if (m_RmlView.GetModel().gridCells == cells)
+        return;
+    m_RmlView.GetModel().gridCells = cells;
+    m_RmlView.MarkDirty("grid_cells");
 }
 
 bool mu::ui::window::CNPCShop::WindowProcess()
@@ -285,11 +368,9 @@ void mu::ui::window::CNPCShop::SyncRmlModel()
         return;
 
     if (m_pNewInventoryCtrl)
-        m_pNewInventoryCtrl->FollowGridPx(m_RmlView.Document(), "item_grid");
-    if (m_pNewInventoryCtrl && m_RmlView.GetModel().gridCells != m_pNewInventoryCtrl->Cells())
     {
-        m_RmlView.GetModel().gridCells = m_pNewInventoryCtrl->Cells();
-        m_RmlView.MarkDirty("grid_cells");
+        m_pNewInventoryCtrl->FollowGridPx(m_RmlView.Document(), "item_grid");
+        SyncGridCells();
     }
     UI::RmlBridge::SyncNativeTextSize(m_RmlView.Binder());
 
@@ -459,6 +540,8 @@ void mu::ui::window::CNPCShop::ClosingProcess()
     m_iTaxRate = 0;
     m_bRepairShop = false;
     m_dwStandbyItemKey = 0;
+    m_TapChoice = {};
+    m_bTapAgainHintShown = false;
 
     m_bIsNPCShopOpen = false;
 

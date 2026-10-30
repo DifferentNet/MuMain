@@ -10,7 +10,7 @@
 	     list's bottom-left corner; the first name on top). Its workspace slot places #panel
 	     there at the bottom HUD's scale; the names take their native size and cancel it. Takes no pointer events (C++ keeps the pointer over the boxes from the world). -->
 	<div class="screen">
-		<div id="panel" class="anchor">
+		<div id="panel" class="anchor touch-through">
 			<div class="stack">
 				<div class="slot" data-for="name : spectators">
 					<div class="box"></div>

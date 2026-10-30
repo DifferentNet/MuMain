@@ -3,6 +3,7 @@
 #include "UI/Character/WorldLabelLayer.h"
 
 #include "Render/RmlUi/RmlUiRuntime.h"
+#include "UI/Mobile/PhoneHudLayout.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlTheme.h"
 
@@ -23,6 +24,9 @@
 
 namespace
 {
+// A label the phone's HUD lies over is drawn this faint: the labels draw under every window, and the
+// two texts would mix (a balloon under the top row's buttons, a name under a skill button).
+constexpr float CoveredOpacity = 0.25f;
 
 Rml::Colourb ColourFromAbgr(std::uint32_t abgr)
 {
@@ -243,6 +247,21 @@ void UI::Character::WorldLabelLayer::SetBox(Slot& slot, const Rect& rect, std::u
         slot.boxColor = abgr;
         slot.box->SetProperty(Rml::PropertyId::BackgroundColor, Rml::Property(ColourFromAbgr(abgr), Rml::Unit::COLOUR));
     }
+    SetCovered(slot, rect);
+}
+
+// Every label passes here through SetBox(). Never covered with the PC's HUD.
+void UI::Character::WorldLabelLayer::SetCovered(Slot& slot, const Rect& rect)
+{
+    const bool covered =
+        UI::Mobile::PhoneHudLayout::CoversLabel({true, rect.x, rect.y, rect.x + rect.width, rect.y + rect.height});
+    if (slot.covered == covered)
+        return;
+    slot.covered = covered;
+    if (covered)
+        slot.box->SetProperty(Rml::PropertyId::Opacity, Rml::Property(CoveredOpacity, Rml::Unit::NUMBER));
+    else
+        slot.box->RemoveProperty(Rml::PropertyId::Opacity);
 }
 
 void UI::Character::WorldLabelLayer::RecordText(const Render::Renderer::RecordedText& text)
@@ -363,9 +382,11 @@ void UI::Character::WorldLabelLayer::RecordBitmap(const Render::Renderer::Record
                       bitmap.sourceHeight);
         slot.image->SetAttribute("rect", Rml::String(rect));
     }
-    if (slot.imageAlpha != bitmap.alpha)
+    // The image's own opacity replaces the box's (RmlUi inherits opacity, it does not multiply it).
+    const float alpha = slot.covered ? bitmap.alpha * CoveredOpacity : bitmap.alpha;
+    if (slot.imageAlpha != alpha)
     {
-        slot.imageAlpha = bitmap.alpha;
-        slot.image->SetProperty(Rml::PropertyId::Opacity, Rml::Property(bitmap.alpha, Rml::Unit::NUMBER));
+        slot.imageAlpha = alpha;
+        slot.image->SetProperty(Rml::PropertyId::Opacity, Rml::Property(alpha, Rml::Unit::NUMBER));
     }
 }

@@ -56,6 +56,7 @@
 #include "UI/Scaling/UITransform.h"
 #include "World/MapInfra/w_MapHeaders.h"
 #include "GameLogic/Combat/DuelMgr.h"
+#include "GameLogic/Touch/TouchActions.h"
 #include "GameLogic/Items/ChangeRingManager.h"
 #include "UI/HUD/GensRanking.h"
 #include "GameLogic/Items/ItemCategories.h"
@@ -527,6 +528,15 @@ bool CheckWall(int sx1, int sy1, int sx2, int sy2)
     return true;
 }
 
+// Ctrl held, or the PK switch of the touch and pad controls on (GameLogic/Touch/TouchActions.h), which
+// spares the party: an attack on a character who is no enemy here.
+static bool ForceAttackOn(int index)
+{
+    return Core::Input::IsKeyDown(VK_CONTROL) ||
+           (GameLogic::Touch::IsForceAttack() && index >= 0 && index < MAX_CHARACTERS_CLIENT &&
+            !g_pPartyManager->IsPartyMember(index));
+}
+
 bool CheckAttack_Fenrir(CHARACTER* c)
 {
     if (mu::ui::window::CInventoryCtrl::GetPickedItem())
@@ -540,7 +550,7 @@ bool CheckAttack_Fenrir(CHARACTER* c)
     }
     else if (::IsStrifeMap(gMapManager.WorldActive) && c != Hero && c->m_byGensInfluence != Hero->m_byGensInfluence)
     {
-        if (((wcscmp(GuildMark[Hero->GuildMarkIndex].GuildName, GuildMark[c->GuildMarkIndex].GuildName) == 0) || (g_pPartyManager->IsPartyMember(SelectedCharacter))) && (Core::Input::IsKeyDown(VK_CONTROL)))
+        if (((wcscmp(GuildMark[Hero->GuildMarkIndex].GuildName, GuildMark[c->GuildMarkIndex].GuildName) == 0) || (g_pPartyManager->IsPartyMember(SelectedCharacter))) && (ForceAttackOn(SelectedCharacter)))
         {
             return true;
         }
@@ -667,7 +677,7 @@ bool CheckAttack_Fenrir(CHARACTER* c)
                 return false;
             }
         }
-        else if (c->PK >= PVP_MURDERER2 || (Core::Input::IsKeyDown(VK_CONTROL) && c != Hero))
+        else if (c->PK >= PVP_MURDERER2 || (ForceAttackOn(SelectedCharacter) && c != Hero))
         {
             return true;
         }
@@ -695,7 +705,12 @@ bool CheckAttack()
         return false;
     }
 
-    if (SelectedCharacter < 0 || SelectedCharacter >= MAX_CHARACTERS_CLIENT)
+    return CanAttackCharacter(SelectedCharacter, ForceAttackOn(SelectedCharacter));
+}
+
+bool CanAttackCharacter(int index, bool forceAttack)
+{
+    if (index < 0 || index >= MAX_CHARACTERS_CLIENT)
     {
         return false;
     }
@@ -705,7 +720,7 @@ bool CheckAttack()
         return false;
     }
 
-    CHARACTER* c = &CharactersClient[SelectedCharacter];
+    CHARACTER* c = &CharactersClient[index];
 
     if (c->Dead > 0)
     {
@@ -727,7 +742,7 @@ bool CheckAttack()
             return false;
         }
 
-        if (Core::Input::IsKeyDown(VK_CONTROL))
+        if (forceAttack)
         {
             if (EnableGuildWar)
             {
@@ -741,7 +756,7 @@ bool CheckAttack()
         }
         else if (wcscmp(GuildMark[Hero->GuildMarkIndex].GuildName, GuildMark[c->GuildMarkIndex].GuildName) == 0)
         {
-            if (g_pPartyManager->IsPartyMember(SelectedCharacter))
+            if (g_pPartyManager->IsPartyMember(index))
             {
                 return false;
             }
@@ -768,7 +783,7 @@ bool CheckAttack()
             else/* if(c->GuildRelationShip == GR_NONE)*/
                 return false;
         }
-        else if (g_pPartyManager->IsPartyMember(SelectedCharacter))
+        else if (g_pPartyManager->IsPartyMember(index))
         {
             if ((c->GuildRelationShip == GR_RIVAL) || (c->GuildRelationShip == GR_RIVALUNION))
             {
@@ -906,11 +921,11 @@ bool CheckAttack()
                 return false;
             }
         }
-        else if (c->PK >= PVP_MURDERER2 || (Core::Input::IsKeyDown(VK_CONTROL) && c != Hero))
+        else if (c->PK >= PVP_MURDERER2 || (forceAttack && c != Hero))
         {
             return true;
         }
-        else if (gMapManager.IsCursedTemple() && !g_CursedTemple->IsPartyMember(SelectedCharacter))
+        else if (gMapManager.IsCursedTemple() && !g_CursedTemple->IsPartyMember(index))
         {
             return true;
         }
@@ -991,7 +1006,7 @@ int	getTargetCharacterKey(CHARACTER* c, int selected)
         if ((wcscmp(GuildMark[Hero->GuildMarkIndex].GuildName, GuildMark[c->GuildMarkIndex].GuildName) == 0) ||
             g_pPartyManager->IsPartyMember(SelectedCharacter))
         {
-            if (Core::Input::IsKeyDown(VK_CONTROL))
+            if (ForceAttackOn(selected))
             {
                 return sc->Key;
             }
@@ -1000,7 +1015,7 @@ int	getTargetCharacterKey(CHARACTER* c, int selected)
         }
     }
 
-    if ((sc->PK >= PVP_MURDERER2 && sc->Object.Kind == KIND_PLAYER) || (Core::Input::IsKeyDown(VK_CONTROL) && sc != Hero))
+    if ((sc->PK >= PVP_MURDERER2 && sc->Object.Kind == KIND_PLAYER) || (ForceAttackOn(selected) && sc != Hero))
     {
         return sc->Key;
     }

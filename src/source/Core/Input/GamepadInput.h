@@ -60,8 +60,13 @@ void Init();
 // The player's switch (Options -> Interface -> Gamepad, on unless config.ini says off): off closes
 // the pads and leaves their buttons and sticks unread, for a pad that Steam Input or the handheld's
 // own software already turns into a mouse and keys. On opens the pads plugged in. On to start with.
+// Off while the pad is the device in use (the player turned it off with the pad itself) waits until
+// a key, a mouse button or a finger is pressed, so the player is never left with nothing to press.
 void SetEnabled(bool enabled);
+// The player's choice: false from the moment they turned the pad off, even while it waits.
 [[nodiscard]] bool IsEnabled();
+// Turned off, but still playing until another device is pressed.
+[[nodiscard]] bool TurnsOffWhenPutDown();
 
 // Every event from the main loop: pads coming and going, their buttons and sticks, and the other
 // devices' presses (a key, a mouse button or a finger makes the pad no longer the device used last).

@@ -8,6 +8,7 @@
 #include "Data/GameConfig/GameConfig.h"
 #include "Data/GameConfig/GameConfigConstants.h"
 #include "Core/Input/GamepadInput.h"
+#include "UI/Chat/MessageType.h"
 #include "Render/Look/LookPresetSetting.h"
 #include "Render/Look/LookProfileSetting.h"
 #include "Render/Look/TuningSetting.h"
@@ -1503,6 +1504,9 @@ void mu::ui::window::COptionWindow::ApplyPendingInterfaceMode()
         Core::Input::Gamepad::SetEnabled(enabled);
         GameConfig::GetInstance().SetGamepad(enabled);
         GameConfig::GetInstance().Save();
+        // Turned off with the pad itself: it plays on until a key, a mouse button or the screen is pressed.
+        if (Core::Input::Gamepad::TurnsOffWhenPutDown())
+            g_pSystemLogBox->AddText(I18N::Game::GamepadOffLater, mu::ui::window::TYPE_SYSTEM_MESSAGE);
     }
     if (touchButtons >= 0)
         UI::Mobile::TouchUnit::SetPercent(UI::Mobile::ButtonSize::Percents[touchButtons]);

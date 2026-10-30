@@ -8,6 +8,7 @@
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "Engine/Object/ZzzOpenData.h"
+#include "GameLogic/Commands/GmPanel.h"
 #include "GameLogic/Touch/TouchActions.h"
 #include "I18N/All.h"
 #include "MUHelper/MuHelper.h"
@@ -99,6 +100,14 @@ void OpenSystemMenu()
     PlayBuffer(SOUND_CLICK01);
 }
 
+// The PK switch (GameLogic/Touch/TouchActions.h): the attack button and the skills go for players
+// too, as Ctrl held does on a keyboard. The party stays spared.
+void TogglePk()
+{
+    GameLogic::Touch::SetForceAttack(!GameLogic::Touch::IsForceAttack());
+    PlayBuffer(SOUND_CLICK01);
+}
+
 // Between the phone and the PC layout, saved as a choice of its own (Options -> Interface shows it).
 void ToggleView()
 {
@@ -136,8 +145,21 @@ const MenuItem MenuItems[] = {
     {&I18N::Game::TouchMenuSystem, 0, &OpenSystemMenu},
     // The chat line: with a pad, its keyboard (UI/HUD/PadKeyboard) comes up for it.
     {&I18N::Game::TouchChat, VK_RETURN},
+    // The player commands (trade, party, whisper, duel...): one is picked, then a tap on the player.
+    {&I18N::Game::TouchMenuPlayer, 'D'},
+    // Its label says whether the switch is on (MenuLabel()).
+    {&I18N::Game::TouchMenuPkOff, 0, &TogglePk},
+    // Shown to game masters only (menu_gm in the markup).
+    {&I18N::Game::TouchMenuGm, 'Y'},
 };
 constexpr int MenuItemCount = static_cast<int>(std::size(MenuItems));
+
+const wchar_t* MenuLabel(int item)
+{
+    if (MenuItems[item].action == &TogglePk)
+        return GameLogic::Touch::IsForceAttack() ? I18N::Game::TouchMenuPkOn : I18N::Game::TouchMenuPkOff;
+    return *MenuItems[item].label;
+}
 
 // The controls' ids for Core::Input::Touch.
 enum ControlId : int
@@ -282,6 +304,10 @@ struct ControlsModel
     Rml::String bindHint;
     bool helperOn = false;
     bool menuOpen = false;
+    // The PK switch on: the attack button reads PK and the menu's switch is lit.
+    bool pkOn = false;
+    // A game master's character: the menu has the GM panel.
+    bool gmMenu = false;
     Rml::String attackLabel;
     Rml::String pickupLabel;
     Rml::String autoLabel;
@@ -355,6 +381,8 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     c.Bind("bind_hint", &model.bindHint);
     c.Bind("helper_on", &model.helperOn);
     c.Bind("menu_open", &model.menuOpen);
+    c.Bind("pk_on", &model.pkOn);
+    c.Bind("menu_gm", &model.gmMenu);
     c.Bind("attack_label", &model.attackLabel);
     c.Bind("pickup_label", &model.pickupLabel);
     c.Bind("auto_label", &model.autoLabel);
@@ -539,7 +567,8 @@ bool IsWindowOver(Rml::Element* hit, Rml::ElementDocument* controls)
 
 // Whether a window a workspace slot placed covers the point. Such a panel may take no pointer
 // events (the inventory's item grid is clicked by its native code), so RmlUi's hit test looks
-// through it to the controls below.
+// through it to the controls below. A panel marked "touch-through" (an event's timer or score
+// frame, which takes no taps) leaves the point to the controls.
 bool IsPlacedWindowAt(Rml::Context* context, Rml::ElementDocument* controls, Rml::Vector2f point)
 {
     for (int index = 0; index < context->GetNumDocuments(); ++index)
@@ -550,7 +579,8 @@ bool IsPlacedWindowAt(Rml::Context* context, Rml::ElementDocument* controls, Rml
         for (const char* rootId : {"panel", "content_root"})
         {
             Rml::Element* root = other->GetElementById(rootId);
-            if (root != nullptr && root->IsClassSet("slot-placed") && UI::RmlBridge::IsPointWithin(root, point))
+            if (root != nullptr && root->IsClassSet("slot-placed") && !root->IsClassSet("touch-through") &&
+                UI::RmlBridge::IsPointWithin(root, point))
                 return true;
         }
     }
@@ -675,6 +705,7 @@ void FollowNeighbours(Rml::ElementDocument* document)
 
     UI::Mobile::PhoneHudLayout::Edges edges;
     edges.topRowBottom = topRow.bottom;
+    edges.topRowRight = topRow.right;
     edges.heroLeft = hero.left;
     edges.heroRight = hero.right;
     edges.heroBottom = hero.bottom;
@@ -685,6 +716,7 @@ void FollowNeighbours(Rml::ElementDocument* document)
         const ControlBox box = BoxOf(document, potion);
         if (!box.shown)
             continue;
+        edges.KeepClearOf(box);
         edges.potionsTop = std::min(edges.potionsTop, box.top);
         edges.potionsRight = std::max(edges.potionsRight, box.right);
     }
@@ -698,6 +730,13 @@ void FollowNeighbours(Rml::ElementDocument* document)
     for (int slot = 0; slot < SkillButtons; ++slot)
         keepLeftOf(g_boxes[FirstSkillControl + slot]);
     keepLeftOf(g_boxes[SkillEditControl]);
+    // The buttons the party's cards, the chat and the world labels keep clear of (MeasureBoxes() laid
+    // them out this frame): 2 potions + 4 + the skill buttons, within Edges::MaxControls.
+    static_assert(2 + 4 + SkillButtons <= UI::Mobile::PhoneHudLayout::Edges::MaxControls);
+    for (int control : {AttackControl, PickupControl, AutoControl, SkillEditControl})
+        edges.KeepClearOf(g_boxes[control]);
+    for (int slot = 0; slot < SkillButtons; ++slot)
+        edges.KeepClearOf(g_boxes[FirstSkillControl + slot]);
     UI::Mobile::PhoneHudLayout::Follow(edges);
 }
 
@@ -716,7 +755,10 @@ void SyncLabel(Rml::String& field, const wchar_t* text, const char* name)
 
 void SyncLabels(ControlsModel& model)
 {
-    SyncLabel(model.attackLabel, I18N::Game::TouchAttack, "attack_label");
+    const bool pk = GameLogic::Touch::IsForceAttack();
+    SetField(model.pkOn, pk, "pk_on");
+    SetField(model.gmMenu, GameLogic::GmPanel::Panel().IsGm(), "menu_gm");
+    SyncLabel(model.attackLabel, pk ? I18N::Game::TouchAttackPk : I18N::Game::TouchAttack, "attack_label");
     SyncLabel(model.pickupLabel, I18N::Game::TouchPickUp, "pickup_label");
     SyncLabel(model.autoLabel, I18N::Game::TouchAuto, "auto_label");
     SyncLabel(model.menuLabel, I18N::Game::TouchMenu, "menu_label");
@@ -731,7 +773,7 @@ void SyncLabels(ControlsModel& model)
     SyncLabel(model.pickerDoneLabel, I18N::Game::TouchPickerDone, "picker_done_label");
     SyncLabel(model.pickerNoSkillsLabel, I18N::Game::TouchPickerNoSkills, "picker_no_skills_label");
     for (int item = 0; item < MenuItemCount; ++item)
-        SyncLabel(model.menuLabels[item], *MenuItems[item].label, MenuLabelFields[item].c_str());
+        SyncLabel(model.menuLabels[item], MenuLabel(item), MenuLabelFields[item].c_str());
 }
 
 // The devices the controls show for: the joystick's area for fingers, the glyphs for a pad.
@@ -1357,6 +1399,10 @@ void UpdateMenu(ControlsModel& model)
         // The menu over the buttons: a tapped action no longer goes off behind it.
         if (model.menuOpen)
             g_follow.Drop();
+        // Whether the GM panel belongs in it: the server says once asked (Y asks it on a keyboard).
+        auto& gm = GameLogic::GmPanel::Panel();
+        if (model.menuOpen && gm.GetRole() == GameLogic::GmPanel::Role::Unknown)
+            gm.Hello(false);
     }
     if (TakePress(MenuBackdropControl) || dialogOpen)
         SetField(model.menuOpen, false, "menu_open");
@@ -1466,10 +1512,6 @@ void UpdateButtons(ControlsModel& model)
     if (TakePress(SkillEditControl))
         OpenPicker(model, SlotToSet());
 
-    TakePress(PickupControl);
-    if (IsHeld(PickupControl))
-        GameLogic::Touch::PickUpNearest();
-
     if (TakePress(AutoControl))
     {
         MUHelper::g_MuHelper.Toggle();
@@ -1531,6 +1573,9 @@ void Update()
 {
     if (!UI::Mobile::ShowsControls())
     {
+        // The PK switch belongs to these controls: with them gone (a mouse or a pad took over) a click
+        // on a player must not attack them unasked.
+        GameLogic::Touch::SetForceAttack(false);
         Hide();
         return;
     }
@@ -1569,6 +1614,8 @@ void Update()
     ControlsModel& model = g_View.GetModel();
     g_upperSet = ChooseUpperSet();
     GameLogic::Touch::SetPointerAims(UI::Mobile::IsGamepadInUse());
+    // A player the pointer or a tap went for stays the attack button's target.
+    GameLogic::Touch::TrackAim();
     RestPointerAfterDialog();
     SyncLabels(model);
     SyncDevices(model);

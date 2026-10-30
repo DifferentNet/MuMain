@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "GameLogic/Touch/TouchActions.h"
 
+#include "Audio/DSPlaySound.h"
 #include "Camera/CameraProjection.h"
 #include "Camera/CameraState.h"
 #include "Engine/Object/ZzzCharacter.h"
@@ -12,13 +13,17 @@
 #include "GameLogic/Automation/Movement.h"
 #include "GameLogic/Automation/Pickup.h"
 #include "GameLogic/Automation/Skill.h"
+#include "GameLogic/Combat/DuelMgr.h"
 #include "GameLogic/Combat/SkillExecution.h"
+#include "GameLogic/Pets/GIPetManager.h"
 #include "GameLogic/Skills/SkillManager.h"
+#include "GameLogic/Social/PartyManager.h"
 #include "GameLogic/Touch/SteerHold.h"
 #include "I18N/All.h"
 #include "MUHelper/MuHelper.h"
 #include "UI/Chat/ChatMessages.h"
 #include "UI/Core/WindowSystem.h"
+#include "World/GameMaps/GMBattleCastle.h"
 #include "World/MapInfra/MapManager.h"
 
 #include <algorithm>
@@ -30,6 +35,8 @@
 
 // Defined in ZzzInterface.cpp: the character under the pointer, which a tap on a monster leaves there.
 extern int SelectedCharacter;
+// Defined in WSclient.cpp: a guild war is on.
+extern bool EnableGuildWar;
 
 namespace
 {
@@ -59,6 +66,10 @@ constexpr auto AskedDropTime = std::chrono::milliseconds(1500);
 constexpr auto UnreachableDropTime = std::chrono::seconds(3);
 // How often the pickup button says the bag is full.
 constexpr auto FullBagRepeat = std::chrono::seconds(3);
+// How often a skill button short of mana or AG asks for a mana potion and says so.
+constexpr auto ShortOfManaRepeat = std::chrono::milliseconds(1500);
+// How often a held pet command button sends its command again.
+constexpr auto PetCommandRepeat = std::chrono::seconds(1);
 
 // How far ahead the joystick walks, in tiles, and the shorter walk tried along a wall.
 constexpr int StickTiles = 4;
@@ -74,6 +85,9 @@ constexpr int TargetRange = 8;
 constexpr int HuntingDistance = 8;
 // Drops within this many tiles are gathered by the pickup button.
 constexpr int PickupRange = 6;
+// How far from the character Hellfire's and Inferno's fire reaches, in tiles: cast where the
+// character stands, they hit nothing farther away.
+constexpr float FireRingTiles = 3.f;
 
 constexpr int NoTarget = -1;
 constexpr int NoDrop = -1;
@@ -105,6 +119,13 @@ std::map<int, Clock::time_point> g_skippedDrops;
 // The drop the pickup button walks to, and when the bag was last said to be full.
 int g_dropWalkedTo = NoDrop;
 Clock::time_point g_fullBagSaidAt;
+// The PK switch (SetForceAttack) and the party member the heals and buffs go to (ToggleFriend).
+bool g_forceAttack = false;
+int g_friendKey = NoTarget;
+// When a skill short of mana or AG may ask and say so again, and when a held pet command may go out
+// again.
+Clock::time_point g_shortOfManaAt;
+Clock::time_point g_petCommandAt;
 
 bool InWorld()
 {
@@ -291,10 +312,36 @@ void ActionWentOff()
     g_standUntil = now + SwingStartTime;
 }
 
-bool IsHuntable(const CHARACTER* character)
+int IndexOf(const CHARACTER* character)
 {
-    return character != nullptr && character->Object.Live && character->Dead == 0 && character != Hero &&
-           IsMonster(const_cast<CHARACTER*>(character));
+    return static_cast<int>(character - CharactersClient);
+}
+
+// The places where the game itself sets players against each other: a duel, Chaos Castle, a Gens
+// fight, a guild war, the castle siege, the Illusion Temple. Elsewhere a player is fought only when
+// aimed at (an outlaw, a rival guild's member, anyone with the PK switch on).
+bool PlayersFightHere()
+{
+    return g_DuelMgr.IsDuelEnabled() || gMapManager.InChaosCastle() || IsStrifeMap(gMapManager.WorldActive) ||
+           EnableGuildWar || (gMapManager.InBattleCastle() && battleCastle::IsBattleCastleStart()) ||
+           gMapManager.IsCursedTemple();
+}
+
+// Whether the buttons may fight the character, as a click may (CanAttackCharacter): a monster, or a
+// player who is an enemy here. A player the player did not aim at only where players fight, and never
+// by the PK switch alone; never a member of the party.
+bool IsFoe(const CHARACTER* character, bool aimed)
+{
+    if (character == nullptr || !character->Object.Live || character->Dead != 0 || character == Hero)
+        return false;
+    const int index = IndexOf(character);
+    if (IsMonster(const_cast<CHARACTER*>(character)))
+        return CanAttackCharacter(index, false);
+    if (character->Object.Kind != KIND_PLAYER || g_pPartyManager->IsPartyMember(index))
+        return false;
+    if (!aimed && !PlayersFightHere())
+        return false;
+    return CanAttackCharacter(index, aimed && g_forceAttack);
 }
 
 // Tiles to the monster, where it stands or where it is walking to, whichever is nearer: as the MU
@@ -331,22 +378,35 @@ bool IsForgotten(int key)
     return false;
 }
 
-bool IsGoodTarget(const CHARACTER* character)
+bool IsGoodTarget(const CHARACTER* character, bool aimed)
 {
-    return IsHuntable(character) && !IsForgotten(character->Key) && TilesTo(character) <= TargetRange;
+    return IsFoe(character, aimed) && !IsForgotten(character->Key) && TilesTo(character) <= TargetRange;
 }
 
-// The monster the player is fighting (one tapped, the engine's auto-attack on it) or the pad's
-// pointer is on, else the one fought last, else the nearest. A finger's pointer stays where it last
-// tapped, so a monster that walks under it later is no aim.
+// The character the player aims at: the one the pad's pointer is on, else the one the engine fights
+// (a tap on it, or the buttons' own attack: ActionTarget). A finger's pointer stays where it last
+// tapped, so a character that walks under it later is no aim.
+CHARACTER* AimedCharacter()
+{
+    int index = -1;
+    if (g_pointerAims && SelectedCharacter >= 0)
+        index = SelectedCharacter;
+    else if (Attacking != -1)
+        index = ActionTarget;
+    if (index < 0 || index >= MAX_CHARACTERS_CLIENT)
+        return nullptr;
+    return &CharactersClient[index];
+}
+
+// The monster or player aimed at, else the one fought last (a player aimed at once stays the target),
+// else the nearest monster, or the nearest enemy player where players fight.
 int ChooseTarget()
 {
-    const bool aimed = Attacking != -1 || g_pointerAims;
-    if (aimed && SelectedCharacter >= 0 && SelectedCharacter < MAX_CHARACTERS_CLIENT &&
-        IsGoodTarget(&CharactersClient[SelectedCharacter]))
-        return g_targetKey = CharactersClient[SelectedCharacter].Key;
+    const CHARACTER* aimed = AimedCharacter();
+    if (IsGoodTarget(aimed, true))
+        return g_targetKey = aimed->Key;
 
-    if (IsGoodTarget(FindByKey(g_targetKey)))
+    if (IsGoodTarget(FindByKey(g_targetKey), true))
         return g_targetKey;
 
     int nearestKey = NoTarget;
@@ -354,7 +414,7 @@ int ChooseTarget()
     for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
     {
         const CHARACTER* character = &CharactersClient[i];
-        if (!IsGoodTarget(character))
+        if (!IsGoodTarget(character, false))
             continue;
         const int tiles = TilesTo(character);
         if (tiles < nearestTiles)
@@ -438,6 +498,59 @@ SkillAim AimOf(ActionSkillType skill)
     }
 }
 
+// The heals and buffs a party member may take as well: a right click on them, or on their party
+// card, casts these on them (CPartyListWindow::SelectCharacterInPartyList).
+bool GoesOnFriend(ActionSkillType skill)
+{
+    switch (skill)
+    {
+    case AT_SKILL_HEALING:
+    case AT_SKILL_HEALING_STR:
+    case AT_SKILL_DEFENSE:
+    case AT_SKILL_DEFENSE_STR:
+    case AT_SKILL_DEFENSE_MASTERY:
+    case AT_SKILL_ATTACK:
+    case AT_SKILL_ATTACK_STR:
+    case AT_SKILL_ATTACK_MASTERY:
+    case AT_SKILL_SOUL_BARRIER:
+    case AT_SKILL_SOUL_BARRIER_STR:
+    case AT_SKILL_SOUL_BARRIER_PROFICIENCY:
+    case AT_SKILL_ALICE_THORNS:
+    case AT_SKILL_RECOVER:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool IsFriend(const CHARACTER* character)
+{
+    return character != nullptr && character != Hero && character->Object.Live && character->Dead == 0 &&
+           character->Object.Kind == KIND_PLAYER && g_pPartyManager->IsPartyMember(IndexOf(character)) &&
+           TilesTo(character) <= TargetRange;
+}
+
+// The party member a heal or a buff goes to: the one the pad's pointer is on, else the one whose
+// party card a tap chose, while near; none for the character itself.
+const CHARACTER* ChosenFriend()
+{
+    if (g_pointerAims && SelectedCharacter >= 0 && SelectedCharacter < MAX_CHARACTERS_CLIENT &&
+        IsFriend(&CharactersClient[SelectedCharacter]))
+        return &CharactersClient[SelectedCharacter];
+    const CHARACTER* chosen = FindByKey(g_friendKey);
+    return IsFriend(chosen) ? chosen : nullptr;
+}
+
+// Whether the character has the mana and the AG for the skill, as GameLogic::Combat::CheckMana weighs
+// them, without the potion it asks for.
+bool HasManaFor(ActionSkillType skill)
+{
+    int mana = 0;
+    int skillMana = 0;
+    gSkillManager.GetSkillInformation(skill, 1, nullptr, &mana, nullptr, &skillMana);
+    return CharacterAttribute->Mana >= mana && CharacterAttribute->SkillMana >= skillMana;
+}
+
 // The skill-list index (or pet command) a hotkey holds for the character now, or -1.
 int HotKeySkillIndex(int hotKey)
 {
@@ -488,12 +601,30 @@ Progress CastAtMonster(ActionSkillType skill)
         return IsSteering() ? Progress::Done : CastWhereHeroStands(skill, false);
     }
 
-    const bool inReach = Automation::IsSelfPositionSkill(skill) ||
-                         InReach(FindByKey(target), gSkillManager.GetSkillDistance(skill, Hero));
+    const CHARACTER* targetCharacter = FindByKey(target);
+    const bool fireRing = skill == AT_SKILL_HELL_FIRE || skill == AT_SKILL_HELL_FIRE_STR ||
+                          skill == AT_SKILL_INFERNO || skill == AT_SKILL_INFERNO_STR || skill == AT_SKILL_INFERNO_STR_MG;
+    // Hellfire and Inferno go off where the character stands: the monster has to be inside the
+    // fire. Nova's charge takes it wherever the monster stands.
+    const bool inReach = fireRing ? InReach(targetCharacter, FireRingTiles)
+                                  : Automation::IsSelfPositionSkill(skill) ||
+                                        InReach(targetCharacter, gSkillManager.GetSkillDistance(skill, Hero));
     // While the joystick walks, the buttons fight what is in reach: walking off towards a monster
     // would fight the joystick.
     if (!inReach && IsSteering())
         return Progress::Pending;
+    if (!inReach && fireRing)
+    {
+        // A cast where the character stands would walk nowhere: a walk towards the monster first. A
+        // monster with no way to it (behind a wall) is left for another.
+        if (Automation::WalkTo(TileOf(targetCharacter->Object.Position[0]), TileOf(targetCharacter->Object.Position[1])) ==
+            Automation::MoveResult::NoPath)
+        {
+            Forget(target);
+            return Progress::Done;
+        }
+        return Progress::Pending;
+    }
     if (inReach)
     {
         if (!GameLogic::Combat::CanExecuteSkill(Hero, skill, gSkillManager.GetSkillDistance(skill, Hero)))
@@ -502,10 +633,67 @@ Progress CastAtMonster(ActionSkillType skill)
             return Progress::Pending;
     }
 
-    const Automation::SkillResult result = Automation::CastSkill(skill, true, target, false, HuntingDistance);
+    const Automation::SkillResult result = Automation::CastSkill(skill, true, target, true, HuntingDistance);
     if (Automation::ShouldForgetTarget(result) && result != Automation::SkillResult::Refused)
         Forget(target);
     return OutcomeOf(result);
+}
+
+// A heal or a buff on a party member, walking up to them when out of reach as a cast at a monster
+// does.
+Progress CastAtFriend(ActionSkillType skill, const CHARACTER* friendCharacter)
+{
+    const float distance = gSkillManager.GetSkillDistance(skill, Hero);
+    const bool inReach = InReach(friendCharacter, distance);
+    if (!inReach && IsSteering())
+        return Progress::Pending;
+    if (inReach)
+    {
+        if (!GameLogic::Combat::CanExecuteSkill(Hero, skill, distance))
+            return Progress::Pending;
+        if (!HeroStands())
+            return Progress::Pending;
+    }
+    return OutcomeOf(Automation::CastSkill(skill, true, friendCharacter->Key, true, HuntingDistance));
+}
+
+// A skill the character lacks the mana or the AG for: once in a while the cast is tried, which asks
+// for a mana potion (GameLogic::Combat::CheckMana), and the player is told. The action's turn stays
+// the attack button's, and a tap is done: a tap again casts once the mana is back.
+Progress ShortOfMana(ActionSkillType skill)
+{
+    const auto now = Clock::now();
+    if (now < g_shortOfManaAt)
+        return Progress::Done;
+    g_shortOfManaAt = now + ShortOfManaRepeat;
+    int mana = 0;
+    gSkillManager.GetSkillInformation(skill, 1, nullptr, &mana, nullptr);
+    const bool manaShort = CharacterAttribute->Mana < mana;
+    GameLogic::Combat::CheckMana(Hero, skill);
+    UI::Chat::PostSystem(manaShort ? I18N::Game::TouchNoMana : I18N::Game::TouchNoAg,
+                         mu::ui::window::TYPE_ERROR_MESSAGE);
+    return Progress::Done;
+}
+
+// A pet command on a skill button: the Dark Lord's raven takes it at once, as a right click in the
+// world sends the current one; the attack command at what the attack button would fight. Chaos Castle
+// refuses them (ClassAttack.cpp). A held button sends it again once a second.
+Progress CommandPet(int index)
+{
+    if (Hero->m_pPet == nullptr || gMapManager.InChaosCastle())
+        return Progress::Done;
+    const auto now = Clock::now();
+    if (now < g_petCommandAt)
+        return Progress::Done;
+    const int target = index == AT_PET_COMMAND_TARGET ? ChooseTarget() : NoTarget;
+    if (index == AT_PET_COMMAND_TARGET && target == NoTarget)
+        return Progress::Done;
+    if (giPetManager::SendPetCommandTo(Hero, index, target))
+    {
+        g_petCommandAt = now + PetCommandRepeat;
+        PlayBuffer(SOUND_CLICK01);
+    }
+    return Progress::Done;
 }
 
 bool IsSkipped(int drop)
@@ -637,7 +825,8 @@ Progress Attack()
     if (IsSteering() && !InReach(FindByKey(target), Automation::EquippedAttackRange()))
         return Progress::Pending;
 
-    const Automation::AttackResult result = Automation::AttackObject(target, false, HuntingDistance);
+    // The target is a monster or an enemy player (IsFoe).
+    const Automation::AttackResult result = Automation::AttackObject(target, true, HuntingDistance);
     if (Automation::ShouldForgetTarget(result))
         Forget(target);
     switch (result)
@@ -665,17 +854,24 @@ Progress CastHotKey(int hotKey)
     if (!InWorld())
         return Progress::Done;
     const int index = HotKeySkillIndex(hotKey);
-    // Pet commands only switch the pet's behaviour, as the slot's click does.
-    if (index < 0 || index >= AT_PET_COMMAND_DEFAULT)
+    if (index < 0)
         return Progress::Done;
+    if (index >= AT_PET_COMMAND_DEFAULT)
+        return CommandPet(index);
     const auto skill = static_cast<ActionSkillType>(CharacterAttribute->Skill[index]);
     const SkillAim aim = AimOf(skill);
     // A safe zone refuses every skill (GameLogic::Combat::CanExecuteSkill).
     if (aim == SkillAim::Pointer || Hero->SafeZone)
         return Progress::Done;
+    // Before the turn: a skill held without mana would take every turn from a held attack button.
+    if (!HasManaFor(skill))
+        return ShortOfMana(skill);
     if (Automation::IsSwingInProgress() || !ActionDue())
         return Progress::Pending;
 
+    const CHARACTER* friendCharacter = GoesOnFriend(skill) ? ChosenFriend() : nullptr;
+    if (friendCharacter != nullptr)
+        return CastAtFriend(skill, friendCharacter);
     switch (aim)
     {
     case SkillAim::Self:
@@ -777,9 +973,41 @@ Progress PickUpNearest()
     return Progress::Done;
 }
 
+void SetForceAttack(bool on)
+{
+    g_forceAttack = on;
+}
+
+bool IsForceAttack()
+{
+    return g_forceAttack;
+}
+
+void ToggleFriend(int characterKey)
+{
+    const bool own = Hero != nullptr && characterKey == Hero->Key;
+    g_friendKey = own || characterKey == g_friendKey ? NoTarget : characterKey;
+}
+
+int FriendKey()
+{
+    return IsFriend(FindByKey(g_friendKey)) ? g_friendKey : NoTarget;
+}
+
+void TrackAim()
+{
+    if (!InWorld())
+        return;
+    const CHARACTER* aimed = AimedCharacter();
+    if (aimed != nullptr && aimed->Object.Kind == KIND_PLAYER && IsGoodTarget(aimed, true))
+        g_targetKey = aimed->Key;
+}
+
 void Reset()
 {
     g_targetKey = NoTarget;
+    g_forceAttack = false;
+    g_friendKey = NoTarget;
     g_forgottenUntil.clear();
     g_skippedDrops.clear();
     g_dropWalkedTo = NoDrop;

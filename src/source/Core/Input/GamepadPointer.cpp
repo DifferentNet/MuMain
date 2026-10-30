@@ -199,6 +199,28 @@ void SetButton(SDL_Window* window, int sdlButton, bool down)
     PushButton(window, sdlButton, down, clicks);
 }
 
+void TurnWheel(SDL_Window* window, int steps)
+{
+    if (window == nullptr || steps == 0)
+        return;
+    float width = 0.f;
+    float height = 0.f;
+    WindowSize(window, width, height);
+    FitWindow(window, width, height);
+    FollowOtherDevices(window);
+    SDL_Event event{};
+    event.type = SDL_EVENT_MOUSE_WHEEL;
+    event.wheel.timestamp = SDL_GetTicksNS();
+    event.wheel.windowID = SDL_GetWindowID(window);
+    event.wheel.which = MouseId;
+    event.wheel.y = static_cast<float>(steps);
+    event.wheel.integer_y = steps;
+    event.wheel.direction = SDL_MOUSEWHEEL_NORMAL;
+    event.wheel.mouse_x = g_state.x;
+    event.wheel.mouse_y = g_state.y;
+    SDL_PushEvent(&event);
+}
+
 bool IsButtonHeld(int sdlButton)
 {
     return sdlButton >= 0 && sdlButton < ButtonSlots && g_state.buttons[sdlButton];

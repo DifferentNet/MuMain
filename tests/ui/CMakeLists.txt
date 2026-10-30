@@ -150,6 +150,13 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME stat_points_menu_tests
+    SOURCES
+        test_stat_points_menu.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Character/StatPointsMenu.cpp
+)
+
+mu_add_test(
     NAME rml_stacking_order_tests
     SOURCES
         test_rml_stacking_order.cpp
@@ -431,4 +438,25 @@ mu_add_test(
 target_compile_definitions(rml_styling_regression_tests PRIVATE
     MU_RMLUI_DIR="${CMAKE_SOURCE_DIR}/src/bin/Data/Interface/RmlUi"
     MU_FONT_DIR="${CMAKE_SOURCE_DIR}/src/bin/fonts"
+)
+
+mu_add_test(
+    NAME compact_number_tests
+    SOURCES
+        test_compact_number.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Mobile/CompactNumber.cpp
+)
+
+mu_add_test(
+    NAME shop_tap_to_buy_tests
+    SOURCES
+        test_shop_tap_to_buy.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/NPCs/ShopTapToBuy.cpp
+)
+
+mu_add_test(
+    NAME phone_hud_fit_tests
+    SOURCES
+        test_phone_hud_fit.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Mobile/PhoneHudFit.cpp
 )

@@ -15,7 +15,7 @@
 	     background context, behind its other documents (the original drew it under every panel). Takes
 	     no pointer events. -->
 	<div class="screen">
-		<div id="panel">
+		<div id="panel" class="touch-through">
 			<div id="back"></div>
 			<!-- The three lines, each placed and coloured by the theme; the monsters-passed line
 			     says how many got through. -->

@@ -1404,7 +1404,7 @@
     <comment>legacy_id=383</comment>
   </data>
   <data name="Option385" xml:space="preserve">
-    <value>Вариант</value>
+    <value>Настройки</value>
     <comment>legacy_id=385,2343</comment>
   </data>
   <data name="Automatic Attack" xml:space="preserve">
@@ -15043,7 +15043,7 @@
     <value>Меню: все окна. Назад: закрывает верхнее окно</value>
   </data>
   <data name="TouchHelpItem" xml:space="preserve">
-    <value>Удерживайте вещь: её карточка с действиями</value>
+    <value>Удерживайте вещь: её карточка с действиями. Удерживайте + у стата: много очков сразу</value>
   </data>
   <data name="TouchHelpDrag" xml:space="preserve">
     <value>Перетащите вещь, чтобы переложить, а список листайте пальцем</value>
@@ -15094,7 +15094,7 @@
     <value>LB: нажмите — поднять ближайшую вещь, держите — собирать дальше</value>
   </data>
   <data name="PadHelpPotions" xml:space="preserve">
-    <value>Крестовина влево и вправо: зелья Q и W</value>
+    <value>Крестовина влево и вправо: зелья Q и W. Вверх и вниз над списком: прокрутка</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
     <value>RT: клик по курсору (разговор с NPC, идти туда), держите — перетащить</value>
@@ -15121,10 +15121,10 @@
     <value>Крестовина вверх: MU Helper вкл/выкл (левый стик меняет место охоты). View: карта</value>
   </data>
   <data name="PadHelpRightClick" xml:space="preserve">
-    <value>RS (нажмите правый стик, не наклоняя): правый клик по курсору</value>
+    <value>RS (нажмите правый стик, не наклоняя): правый клик по курсору, на + у стата — много очков</value>
   </data>
   <data name="PadHelpDialog" xml:space="preserve">
-    <value>Вопрос (обмен, группа): A или Menu — да (через секунду), B — нет</value>
+    <value>Вопрос (обмен, группа): через секунду Menu — да, A — да, если секунду не нажимали. B — нет</value>
   </data>
   <data name="PadHelpPagesHint" xml:space="preserve">
     <value>LB, RB: листать страницы. B: закрыть</value>
@@ -15431,5 +15431,95 @@
   </data>
   <data name="InventoryAlreadyOnQuickSlot" xml:space="preserve">
     <value>Это уже стоит на быстром слоте %lc.</value>
+  </data>
+  <data name="TouchNoMana" xml:space="preserve">
+    <value>Не хватает маны</value>
+  </data>
+  <data name="TouchNoAg" xml:space="preserve">
+    <value>Не хватает AG</value>
+  </data>
+  <data name="StatPointsMenuTitle" xml:space="preserve">
+    <value>%ls (очков: %d)</value>
+  </data>
+  <data name="StatPointsMenuAll" xml:space="preserve">
+    <value>Все: +%d</value>
+  </data>
+  <data name="TouchMenuPlayer" xml:space="preserve">
+    <value>Действия с игроком</value>
+  </data>
+  <data name="TouchMenuPkOff" xml:space="preserve">
+    <value>PK: выкл.</value>
+  </data>
+  <data name="TouchMenuPkOn" xml:space="preserve">
+    <value>PK: вкл.</value>
+  </data>
+  <data name="TouchMenuGm" xml:space="preserve">
+    <value>GM-панель</value>
+  </data>
+  <data name="TouchAttackPk" xml:space="preserve">
+    <value>PK</value>
+  </data>
+  <data name="TouchHelpParty" xml:space="preserve">
+    <value>Нажмите карточку члена группы: лечение и баффы пойдут на него, ещё раз — отменить</value>
+  </data>
+  <data name="TouchHelpPk" xml:space="preserve">
+    <value>PK (меню): нажмите на игрока, чтобы напасть, дальше атака и умения бьют его. Группу не трогают</value>
+  </data>
+  <data name="PadHelpPk" xml:space="preserve">
+    <value>PK (меню): наведите на игрока, A атакует, группу не трогают. A на карточке группы: баффы на него</value>
+  </data>
+  <data name="GamepadOffLater" xml:space="preserve">
+    <value>Геймпад выключится, когда вы нажмёте клавишу, кнопку мыши или экран</value>
+  </data>
+  <data name="ChatCommandsTitle" xml:space="preserve">
+    <value>Команды</value>
+  </data>
+  <data name="ChatCommandsNotSupported" xml:space="preserve">
+    <value>Этот сервер не даёт списка команд.</value>
+  </data>
+  <data name="ChatCommandsExecute" xml:space="preserve">
+    <value>Выполнить</value>
+  </data>
+  <data name="SpecialCommands" xml:space="preserve">
+    <value>Особые</value>
+  </data>
+  <data name="ChatCommandsBack" xml:space="preserve">
+    <value>Назад</value>
+  </data>
+  <data name="ChatCommandsTemplates" xml:space="preserve">
+    <value>Шаблоны</value>
+  </data>
+  <data name="ChatCommandsNoTemplates" xml:space="preserve">
+    <value>Сохранённых шаблонов пока нет.</value>
+  </data>
+  <data name="ChatCommandsSaveTemplate" xml:space="preserve">
+    <value>Сохранить как шаблон</value>
+  </data>
+  <data name="ChatCommandsAddFavourite" xml:space="preserve">
+    <value>В избранное</value>
+  </data>
+  <data name="ChatCommandsRemoveFavourite" xml:space="preserve">
+    <value>Убрать из избранного</value>
+  </data>
+  <data name="ChatCommandsFillRequired" xml:space="preserve">
+    <value>Сначала заполните обязательные поля.</value>
+  </data>
+  <data name="ChatCommandsUnknownCommand" xml:space="preserve">
+    <value>Этой команды больше нет.</value>
+  </data>
+  <data name="TouchShopTapAgainToBuy" xml:space="preserve">
+    <value>Коснитесь предмета ещё раз, чтобы купить его.</value>
+  </data>
+  <data name="TouchItemOpen" xml:space="preserve">
+    <value>Открыть</value>
+  </data>
+  <data name="TouchItemApply" xml:space="preserve">
+    <value>Применить…</value>
+  </data>
+  <data name="TouchItemApplyHint" xml:space="preserve">
+    <value>Коснитесь предмета, к которому применить камень.</value>
+  </data>
+  <data name="TouchItemMoveToBag" xml:space="preserve">
+    <value>В инвентарь</value>
   </data>
 </root>

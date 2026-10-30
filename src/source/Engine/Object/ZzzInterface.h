@@ -99,6 +99,10 @@ void SendMove(CHARACTER* c, OBJECT* o);
 void SetCharacterPos(CHARACTER* c, BYTE posX, BYTE posY, vec3_t position);
 
 bool CheckAttack();
+// CheckAttack's rules for any character, not just the one under the pointer: whether the hero may
+// hit CharactersClient[index] here. forceAttack stands for Ctrl held (the touch and pad attack
+// buttons pass their own PK switch).
+bool CanAttackCharacter(int index, bool forceAttack);
 bool CheckAttack_Fenrir(CHARACTER* c);
 int	 getTargetCharacterKey(CHARACTER* c, int selected);
 

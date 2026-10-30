@@ -60,6 +60,22 @@ EM_JS(void, MuWeb_KeepScreenOn, (int on), {
         wake.drop();
 });
 
+// Module.muInput: the page's input events counted, seen first by the window (capture) and never held
+// up (passive), so the game's own handlers get them as before.
+EM_JS(int, MuWeb_TakePageInputs, (), {
+    let input = Module.muInput;
+    if (!input)
+    {
+        input = Module.muInput = {count : 0};
+        const count = function() { input.count++; };
+        for (const type of ["pointerdown", "pointermove", "touchstart", "keydown", "wheel"])
+            window.addEventListener(type, count, {capture : true, passive : true});
+    }
+    const count = input.count;
+    input.count = 0;
+    return count;
+});
+
 // Module.muBack: the entry the page keeps on top of its history while armed, and the presses counted.
 // Stepping back from it fires popstate on the same page: a press, and the entry goes on top again.
 EM_JS(void, MuWeb_ArmBack, (int armed), {
@@ -116,6 +132,11 @@ bool mu::web::MeasureCanvas(CanvasOnPage& out)
 void mu::web::KeepScreenOn(bool on)
 {
     MuWeb_KeepScreenOn(on ? 1 : 0);
+}
+
+int mu::web::TakePageInputs()
+{
+    return MuWeb_TakePageInputs();
 }
 
 void mu::web::ArmBackGesture(bool armed)
