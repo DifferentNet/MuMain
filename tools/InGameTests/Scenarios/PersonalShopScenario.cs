@@ -92,14 +92,15 @@ internal sealed class PersonalShopScenario : Scenario
             $"The dialog closes and the jewel lies in the shop with the price {price} zen.",
             async () =>
             {
-                await seller.SendAsync("type", new { text = Price.ToString(CultureInfo.InvariantCulture) });
-                // Enter closes the dialog at once; the jewel goes into the shop
-                // with the server's answer, so it is waited for, not pressed for.
-                await Keys.PressUntilAsync(
-                    context,
-                    seller,
-                    "enter",
+                // The dialog focuses its field a frame after it shows.
+                await Expect.EventuallyAsync(seller.IsTypingAsync, ServerAnswer, "the price dialog's field does not take the keys");
+                // Enter goes with the text: the focused field keeps a separate Enter key to itself, and the dialog
+                // reads it from the key state. It closes the dialog at once; the jewel goes into the shop with the
+                // server's answer, so it is waited for.
+                await seller.SendAsync("type", new { text = Price.ToString(CultureInfo.InvariantCulture), enter = true });
+                await Expect.EventuallyAsync(
                     async () => !(await seller.OpenWindowsAsync()).Contains("message_box"),
+                    ServerAnswer,
                     "the price dialog does not take Enter");
                 await Expect.EventuallyAsync(
                     async () => MyShopItems(await seller.StateAsync()).Any(item => item.Name == JewelName && item.Price == Price),
