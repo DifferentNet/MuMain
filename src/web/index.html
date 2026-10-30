@@ -629,14 +629,20 @@
   let keyboardTapTimer = 0;
   let fingersDown = 0;
   let keyboardShownUnderFinger = false; // the game gave a field the keys while a finger was down
+  let stageMoveHeld = false;            // the game was to move while a finger was on it (moveAboveKeyboard)
   function keyboardOnScreen() {
     const view = window.visualViewport;
     return !!view && window.innerHeight - view.height > KEYBOARD_MIN_HEIGHT;
   }
-  canvas.addEventListener("touchstart", (event) => { fingersDown = event.touches.length; }, { passive: true });
-  canvas.addEventListener("touchcancel", (event) => { fingersDown = event.touches.length; }, { passive: true });
-  canvas.addEventListener("touchend", (event) => {
+  function fingersChanged(event) {
     fingersDown = event.touches.length;
+    // Once the game's own touchend has read where the finger was lifted.
+    if (!fingersDown && stageMoveHeld) setTimeout(moveAboveKeyboard, 0);
+  }
+  canvas.addEventListener("touchstart", fingersChanged, { passive: true });
+  canvas.addEventListener("touchcancel", fingersChanged, { passive: true });
+  canvas.addEventListener("touchend", (event) => {
+    fingersChanged(event);
     if (!appleMobile) return;           // Android's keyboard comes up for the game's own focus
     const shownUnderFinger = keyboardShownUnderFinger && keyboardWanted;
     keyboardShownUnderFinger = false;
@@ -651,7 +657,11 @@
     }, KEYBOARD_TAP_WAIT_MS);
   }, { passive: true });
 
+  // Not while a finger is on the game: moved under the finger, a tap there turns into a drag and
+  // clicks nothing (the keyboard going away as OK is tapped). It moves once the fingers are off.
   function moveAboveKeyboard() {
+    stageMoveHeld = fingersDown > 0;
+    if (stageMoveHeld) return;
     const view = window.visualViewport;
     let shift = 0;
     if (keyboardWanted && keyboardLine && view) {
