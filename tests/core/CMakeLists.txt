@@ -138,3 +138,20 @@ mu_add_test(
         test_gold_amount_tier.cpp
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/GoldAmountTier.cpp
 )
+
+# The gamepad sticks: the dead zone, a push, a stick click on purpose.
+mu_add_test(
+    NAME gamepad_stick_tests
+    SOURCES
+        test_gamepad_stick.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Input/GamepadStick.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Input/GamepadStickClick.cpp
+)
+
+# The finger that plays the mouse: what a finger landing or lifting does, when a long press comes.
+mu_add_test(
+    NAME touch_gesture_tests
+    SOURCES
+        test_touch_gesture.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Input/TouchGesture.cpp
+)

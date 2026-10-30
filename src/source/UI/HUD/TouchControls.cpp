@@ -13,16 +13,17 @@
 #include "MUHelper/MuHelper.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "Scenes/SceneCore.h"
+#include "UI/Core/WindowCommon.h"
 #include "UI/Core/WindowSystem.h"
-#include "UI/Dialogs/GenericConfirmDialog.h"
-#include "UI/Dialogs/GenericMenuDialog.h"
-#include "UI/Dialogs/MessageBox.h"
+#include "UI/Dialogs/ModalDialogs.h"
 #include "UI/HUD/SkillList.h"
 #include "UI/HUD/Skills/SkillTooltip.h"
+#include "UI/Mobile/FollowThrough.h"
 #include "UI/Mobile/HeroFrame.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Mobile/PhoneHudLayout.h"
 #include "UI/Mobile/SkillArrange.h"
+#include "UI/Mobile/TouchTarget.h"
 #include "UI/Mobile/TouchUnit.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlPointer.h"
@@ -90,6 +91,14 @@ constexpr int KeyButtonCount = static_cast<int>(std::size(KeyButtons));
 // The skill picker, on the first empty skill button (defined with the picker below).
 void OpenPickerOnFreeButton();
 
+// The system menu (options, character select, log out). Not Esc: with a window open, Esc shuts the
+// window instead.
+void OpenSystemMenu()
+{
+    mu::ui::window::ShowSystemMenuDialog();
+    PlayBuffer(SOUND_CLICK01);
+}
+
 // Between the phone and the PC layout, saved as a choice of its own (Options -> Interface shows it).
 void ToggleView()
 {
@@ -124,7 +133,7 @@ const MenuItem MenuItems[] = {
     {&I18N::Game::TouchMenuHelp, VK_F1},
     {&I18N::Game::TouchMenuSkills, 0, &OpenPickerOnFreeButton},
     {&I18N::Game::TouchMenuView, 0, &ToggleView},
-    {&I18N::Game::TouchMenuSystem, VK_ESCAPE},
+    {&I18N::Game::TouchMenuSystem, 0, &OpenSystemMenu},
     // The chat line: with a pad, its keyboard (UI/HUD/PadKeyboard) comes up for it.
     {&I18N::Game::TouchChat, VK_RETURN},
 };
@@ -391,14 +400,7 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
 UI::RmlBridge::ThemedView<ControlsModel> g_View{
     "touch_controls", BindModel, {{"Data/Interface/RmlUi/touch_controls.rml"}}};
 
-struct ControlBox
-{
-    bool shown = false;
-    float left = 0.f;
-    float top = 0.f;
-    float right = 0.f;
-    float bottom = 0.f;
-};
+using ControlBox = UI::Mobile::TouchTarget::Box;
 
 std::array<ControlBox, ControlCount> g_boxes{};
 // Each control's press counter when last read: a press since shows as a difference.
@@ -453,9 +455,42 @@ struct SkillPicker
 };
 SkillPicker g_picker;
 
+// A tap on an action button owes its action until it went off (UI/Mobile/FollowThrough).
+UI::Mobile::FollowThrough g_follow;
+// Whether the joystick (or the pad's stick) walked last frame: a walk it starts takes over from a
+// tapped action.
+bool g_wasSteering = false;
+// Whether the skill buttons stand for hotkeys 6-9 and 0 (ChooseUpperSet).
+bool g_upperSet = false;
+// Whether a dialog was up last frame, and whether the finger's pointer is still to leave the window
+// once the finger is up: a dialog went, or a window asked (RestPointerOnLift).
+bool g_dialogWasOpen = false;
+bool g_restOnLift = false;
+
 bool Inside(const ControlBox& box, float x, float y, float slop)
 {
     return box.shown && x >= box.left - slop && x <= box.right + slop && y >= box.top - slop && y <= box.bottom + slop;
+}
+
+// Of `controls`, in order of preference, the one a finger at (x, y) is on: one it lands inside, else
+// the closest within `slop` (UI/Mobile/TouchTarget).
+template <size_t Count> int ClosestControl(const std::array<int, Count>& controls, float x, float y, float slop)
+{
+    std::array<ControlBox, Count> boxes;
+    for (size_t i = 0; i < Count; ++i)
+        boxes[i] = g_boxes[controls[i]];
+    const int index = UI::Mobile::TouchTarget::Closest(boxes, x, y, slop);
+    return index == UI::Mobile::TouchTarget::NoBox ? Touch::NoControl : controls[index];
+}
+
+// The controls from `first` to `last`, both in, in that order (`last` may come before `first`).
+template <int First, int Last> constexpr auto ControlRange()
+{
+    constexpr int step = First <= Last ? 1 : -1;
+    std::array<int, (Last - First) * step + 1> controls{};
+    for (int i = 0; i < static_cast<int>(controls.size()); ++i)
+        controls[i] = First + i * step;
+    return controls;
 }
 
 std::string_view FileName(const Rml::String& url)
@@ -526,11 +561,9 @@ bool IsPlacedWindowAt(Rml::Context* context, Rml::ElementDocument* controls, Rml
 // screen around it, which shuts it too (a tap meant to close it walks nowhere).
 int MenuHitTest(float x, float y, float slop)
 {
-    for (int control = FirstMenuItemControl; control < FirstMenuItemControl + MenuItemCount; ++control)
-    {
-        if (Inside(g_boxes[control], x, y, slop))
-            return control;
-    }
+    static constexpr auto Items = ControlRange<FirstMenuItemControl, FirstMenuItemControl + MenuItemCount - 1>();
+    if (const int item = ClosestControl(Items, x, y, slop); item != Touch::NoControl)
+        return item;
     if (Inside(g_boxes[MenuControl], x, y, slop))
         return MenuControl;
     return Inside(g_boxes[MenuBackdropControl], x, y, 0.f) ? MenuBackdropControl : Touch::NoControl;
@@ -553,11 +586,9 @@ int PickerHitTest(float x, float y, float slop)
     }
     if (Inside(g_boxes[PickerPanelControl], x, y, 0.f))
         return PickerPanelControl;
-    for (int control = FirstSkillControl; control < FirstSkillControl + SkillButtons; ++control)
-    {
-        if (Inside(g_boxes[control], x, y, slop))
-            return control;
-    }
+    static constexpr auto Skills = ControlRange<FirstSkillControl, FirstSkillControl + SkillButtons - 1>();
+    if (const int skill = ClosestControl(Skills, x, y, slop); skill != Touch::NoControl)
+        return skill;
     return Inside(g_boxes[PickerBackdropControl], x, y, 0.f) ? PickerBackdropControl : Touch::NoControl;
 }
 
@@ -577,15 +608,16 @@ int HitTest(float x, float y)
         return PickerHitTest(x, y, slop);
     if (g_View.GetModel().menuOpen)
         return MenuHitTest(x, y, slop);
-    // The buttons before the joystick's area, which they stand in; the Skills button after the skill
-    // buttons it lies beside, so a thumb between them casts.
-    for (int control = FirstMenuItemControl - 1; control > StickControl; --control)
+    // The buttons before the joystick's area, which they stand in. The Skills button takes a finger
+    // inside it, but a thumb between it and the skill buttons it lies beside casts.
+    static constexpr auto Buttons = ControlRange<FirstMenuItemControl - 1, AttackControl>();
+    for (const float margin : {0.f, slop})
     {
-        if (Inside(g_boxes[control], x, y, slop))
-            return control;
+        if (const int button = ClosestControl(Buttons, x, y, margin); button != Touch::NoControl)
+            return button;
+        if (Inside(g_boxes[SkillEditControl], x, y, margin))
+            return SkillEditControl;
     }
-    if (Inside(g_boxes[SkillEditControl], x, y, slop))
-        return SkillEditControl;
     return Inside(g_boxes[StickControl], x, y, 0.f) ? StickControl : Touch::NoControl;
 }
 
@@ -602,8 +634,18 @@ ControlBox BoxOf(Rml::ElementDocument* document, const char* id)
 void MeasureBoxes()
 {
     Rml::ElementDocument* document = g_View.Document();
+    const ControlsModel& model = g_View.GetModel();
     for (int control = 0; control < ControlCount; ++control)
-        g_boxes[control] = BoxOf(document, ControlElement(control));
+    {
+        // The menu and the picker are not in the document while shut (data-if): no search for their
+        // sixty pieces through the whole of it every frame.
+        const bool menuPiece = control >= FirstMenuItemControl && control <= MenuBackdropControl;
+        const bool pickerPiece = control >= PickerBackdropControl;
+        const bool shut = (menuPiece && !model.menuOpen) || (pickerPiece && !model.pickerOpen);
+        g_boxes[control] = shut ? ControlBox{} : BoxOf(document, ControlElement(control));
+    }
+    if (!model.pickerOpen)
+        return;
 
     // A picker entry the grid cuts off (a page laid out before the grid was measured) takes no finger.
     const ControlBox grid = BoxOf(document, "tc_pick_grid");
@@ -699,6 +741,31 @@ void SyncDevices(ControlsModel& model)
     SetField(model.fingers, Touch::IsEnabled(), "fingers");
 }
 
+// Whether a skill button set holds anything: the hotkeys 1-5, or 6-9 and 0.
+bool AnySkillOn(bool upper)
+{
+    for (int slot = 0; slot < SkillButtons; ++slot)
+    {
+        if (GameLogic::Touch::HotKeyHoldsSkill(SkillArrange::HotKeyOfSlot(slot, upper)))
+            return true;
+    }
+    return false;
+}
+
+// The skill buttons stand for the hotkeys 1-5, or for 6-9 and 0 while 1-5 hold nothing and those do.
+// The PC bar's set follows the current skill instead, and a cast of the MU Helper's turned the
+// buttons over under the player's thumb.
+bool ChooseUpperSet()
+{
+    return !AnySkillOn(false) && AnySkillOn(true);
+}
+
+// The hotkey a skill button stands for.
+int SlotHotKey(int slot)
+{
+    return SkillArrange::HotKeyOfSlot(slot, g_upperSet);
+}
+
 void SyncSkills(ControlsModel& model)
 {
     static constexpr const char* IconFields[SkillButtons] = {"skill_0_icon", "skill_1_icon", "skill_2_icon",
@@ -711,16 +778,16 @@ void SyncSkills(ControlsModel& model)
                                                               "skill_3_empty", "skill_4_empty"};
     for (int slot = 0; slot < SkillButtons; ++slot)
     {
-        const bool empty = g_pSkillList->GetHotKeySlotNumber(slot) < 0;
+        const int hotKey = SlotHotKey(slot);
+        const bool empty = !GameLogic::Touch::HotKeyHoldsSkill(hotKey);
         SetField(model.skillEmpty[slot], empty, EmptyFields[slot]);
-        SetField(model.skillIcons[slot], empty ? Rml::String("none") : g_pSkillList->GetHotKeySlotIconDecorator(slot),
+        SetField(model.skillIcons[slot], empty ? Rml::String("none") : g_pSkillList->GetHotKeyIconDecorator(hotKey),
                  IconFields[slot]);
         // Whole percents: the wipe redraws only when it moves.
         const float cooldown =
-            empty ? 0.f : std::round(g_pSkillList->GetHotKeySlotCooldownFraction(slot) * 100.f) / 100.f;
+            empty ? 0.f : std::round(g_pSkillList->GetHotKeyCooldownFraction(hotKey) * 100.f) / 100.f;
         SetField(model.skillCooldowns[slot], cooldown, CooldownFields[slot]);
-        SetField(model.skillSelected[slot], !empty && g_pSkillList->IsHotKeySlotCurrentSkill(slot),
-                 SelectedFields[slot]);
+        SetField(model.skillSelected[slot], !empty && g_pSkillList->IsHotKeyCurrentSkill(hotKey), SelectedFields[slot]);
     }
 }
 
@@ -751,7 +818,7 @@ void UpdateBinding(ControlsModel& model)
     if (picked && g_binding.pendingSlot >= 0)
     {
         // The pick made it the current skill (the list clicked already).
-        GameLogic::Touch::BindHotKeySlot(g_binding.pendingSlot);
+        GameLogic::Touch::BindHotKey(SlotHotKey(g_binding.pendingSlot));
         g_binding.pendingSlot = -1;
     }
     else if (picked)
@@ -775,8 +842,7 @@ void UpdateBinding(ControlsModel& model)
 // shuts and stays shut while one is up, where its items would take the taps meant for the dialog.
 bool IsDialogOpen()
 {
-    return !g_MessageBox->IsEmpty() || mu::ui::window::g_pGenericConfirmDialog->IsVisible() ||
-           mu::ui::window::g_pGenericMenuDialog->IsVisible();
+    return UI::Dialogs::Modal::IsOpen();
 }
 
 // Whether a finger landed on the control or the pad pressed it since the last frame; reading forgets it.
@@ -946,9 +1012,12 @@ void UpdateStick(ControlsModel& model)
 
     const float unit = UI::Mobile::TouchUnit::Pixels();
     const float reach = StickReachUnits * unit;
-    const bool fresh = landed || !model.stickActive;
-    float centerX = fresh ? finger.downX : model.stickX;
-    float centerY = fresh ? finger.downY : model.stickY;
+    // A finger that stayed down while the stick was away (the controls hidden), or a push that waits
+    // to be let go (past a gate), starts again where the finger is: the character stands until it
+    // moves, rather than walking on the far side of the gate back into it.
+    const bool fresh = landed || !model.stickActive || GameLogic::Touch::IsSteeringOnHold();
+    float centerX = landed ? finger.downX : (fresh ? finger.x : model.stickX);
+    float centerY = landed ? finger.downY : (fresh ? finger.y : model.stickY);
     float dx = finger.x - centerX;
     float dy = finger.y - centerY;
     const float distance = std::hypot(dx, dy);
@@ -980,12 +1049,31 @@ void RestFingerPointer()
         Touch::RestPointer();
 }
 
-// The hotkeys as the skill list holds them.
+// A dialog that waits for an answer (an item card, a question, the system menu) went: the spot the
+// tap on its button left the pointer on now shows the tooltip of whatever lies under it, an item
+// nobody tapped. The pointer leaves once the finger is up. One that opens keeps it: a long press on an
+// item opens its card with the item's own tooltip beside it.
+void RestPointerAfterDialog()
+{
+    const bool open = IsDialogOpen();
+    if (g_dialogWasOpen && !open)
+        g_restOnLift = true;
+    g_dialogWasOpen = open;
+    if (g_restOnLift)
+        g_restOnLift = !UI::Mobile::IsGamepadInUse() && !Touch::RestPointer();
+}
+
+// The hotkeys as the skill list holds them; one that holds a skill the character no longer has
+// counts as empty, as its button shows it. A pet command stays, pet or none: it is the player's.
 SkillArrange::HotKeys ReadHotKeys()
 {
     SkillArrange::HotKeys keys{};
     for (int hotKey = 0; hotKey < SkillArrange::HotKeyCount; ++hotKey)
-        keys[hotKey] = g_pSkillList->GetHotKey(hotKey);
+    {
+        const int skill = g_pSkillList->GetHotKey(hotKey);
+        const bool petCommand = skill >= AT_PET_COMMAND_DEFAULT && skill < AT_PET_COMMAND_END;
+        keys[hotKey] = petCommand || GameLogic::Touch::HotKeyHoldsSkill(hotKey) ? skill : SkillArrange::NoSkill;
+    }
     return keys;
 }
 
@@ -1006,10 +1094,9 @@ void WriteHotKeys(const SkillArrange::HotKeys& before, const SkillArrange::HotKe
 int SlotToSet()
 {
     const SkillArrange::HotKeys keys = ReadHotKeys();
-    const bool upper = g_pSkillList->IsSkillListUp();
-    if (keys[SkillArrange::HotKeyOfSlot(0, upper)] == SkillArrange::NoSkill)
+    if (keys[SlotHotKey(0)] == SkillArrange::NoSkill)
         return 0;
-    return SkillArrange::NextEmptySlot(keys, upper, 0);
+    return SkillArrange::NextEmptySlot(keys, g_upperSet, 0);
 }
 
 // A skill's or pet command's name, as its tooltip heads it; looked up once a showing.
@@ -1042,6 +1129,7 @@ void OpenPicker(ControlsModel& model, int slot)
         g_pSkillList->OnCurrentSkillClick();
     g_binding.pendingSlot = -1;
     g_binding.until = {};
+    g_follow.Drop();
     g_picker.names.clear();
     g_picker.pageFollowsSlot = true;
     g_picker.focus = Touch::NoControl;
@@ -1192,7 +1280,7 @@ void UpdatePicker(ControlsModel& model)
         return;
     }
 
-    const bool upper = g_pSkillList->IsSkillListUp();
+    const bool upper = g_upperSet;
     SkillArrange::HotKeys keys = ReadHotKeys();
     const auto put = [&keys](int hotKey, int skill)
     {
@@ -1266,6 +1354,9 @@ void UpdateMenu(ControlsModel& model)
     {
         SetField(model.menuOpen, !model.menuOpen, "menu_open");
         PlayBuffer(SOUND_CLICK01);
+        // The menu over the buttons: a tapped action no longer goes off behind it.
+        if (model.menuOpen)
+            g_follow.Drop();
     }
     if (TakePress(MenuBackdropControl) || dialogOpen)
         SetField(model.menuOpen, false, "menu_open");
@@ -1284,47 +1375,94 @@ void UpdateMenu(ControlsModel& model)
     }
 }
 
-void UpdateButtons(ControlsModel& model)
+double Now()
 {
-    TakePress(AttackControl);
-    if (IsHeld(AttackControl))
-        GameLogic::Touch::Attack();
+    return std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
+// An action button's action, once: the attack, a skill button's cast, the pickup.
+GameLogic::Touch::Progress Act(int control)
+{
+    if (control == AttackControl)
+        return GameLogic::Touch::Attack();
+    if (control == PickupControl)
+        return GameLogic::Touch::PickUpNearest();
+    return GameLogic::Touch::CastHotKey(SlotHotKey(control - FirstSkillControl));
+}
+
+// The action buttons. A tap owes its action until it went off (a monster out of reach walked to,
+// the swing before it played out, a cooldown run down), and goes first; the buttons held act every
+// frame after it, while it is not waiting.
+void UpdateActions(ControlsModel& model)
+{
+    using GameLogic::Touch::Progress;
+    const double now = Now();
+    if (TakePress(AttackControl))
+        g_follow.Press(AttackControl, now);
 
     for (int slot = 0; slot < SkillButtons; ++slot)
     {
         const int control = FirstSkillControl + slot;
-        if (TakePress(control))
+        if (!TakePress(control))
+            continue;
+        const int hotKey = SlotHotKey(slot);
+        if (WaitingForButton() && GameLogic::Touch::BindHotKey(hotKey))
         {
-            const bool gridOpen = g_pSkillList->IsSkillGridOpen();
-            if (WaitingForButton() && GameLogic::Touch::BindHotKeySlot(slot))
-            {
-                PlayBuffer(SOUND_CLICK01);
-                g_binding.until = {};
-                g_binding.noCast[slot] = true;
-            }
-            else if (gridOpen)
-            {
-                // The skill picked in the list next goes here.
-                g_binding.pendingSlot = slot;
-                g_binding.until = {};
-                g_binding.noCast[slot] = true;
-            }
-            else if (model.skillEmpty[slot])
-            {
-                // Nothing to cast: the picker opens to fill it.
-                g_binding.noCast[slot] = true;
-                OpenPicker(model, slot);
-            }
-            else
-            {
-                GameLogic::Touch::SelectHotKeySlot(slot);
-            }
+            PlayBuffer(SOUND_CLICK01);
+            g_binding.until = {};
+            g_binding.noCast[slot] = true;
         }
+        else if (g_pSkillList->IsSkillGridOpen())
+        {
+            // The skill picked in the list next goes here.
+            g_binding.pendingSlot = slot;
+            g_binding.until = {};
+            g_binding.noCast[slot] = true;
+        }
+        else if (model.skillEmpty[slot])
+        {
+            // Nothing to cast: the picker opens to fill it.
+            g_binding.noCast[slot] = true;
+            OpenPicker(model, slot);
+        }
+        else
+        {
+            GameLogic::Touch::SelectHotKey(hotKey);
+            g_follow.Press(control, now);
+        }
+    }
+
+    if (TakePress(PickupControl))
+        g_follow.Press(PickupControl, now);
+
+    const int owed = g_follow.Owed(now);
+    bool owedWaits = false;
+    if (owed != UI::Mobile::FollowThrough::None)
+    {
+        if (Act(owed) == Progress::Done)
+            g_follow.Settle(owed);
+        else
+            owedWaits = true;
+    }
+
+    for (int slot = 0; slot < SkillButtons; ++slot)
+    {
+        const int control = FirstSkillControl + slot;
         if (!IsHeld(control))
             g_binding.noCast[slot] = false;
-        else if (!g_binding.noCast[slot])
-            GameLogic::Touch::CastHotKeySlot(slot);
+        else if (!owedWaits && control != owed && !g_binding.noCast[slot])
+            Act(control);
     }
+    for (const int control : {AttackControl, PickupControl})
+    {
+        if (!owedWaits && control != owed && IsHeld(control))
+            Act(control);
+    }
+}
+
+void UpdateButtons(ControlsModel& model)
+{
+    UpdateActions(model);
     if (TakePress(SkillEditControl))
         OpenPicker(model, SlotToSet());
 
@@ -1370,8 +1508,17 @@ void Hide()
     if (!g_shown)
         return;
     g_shown = false;
-    GameLogic::Touch::StopSteering();
-    ClosePicker(g_View.GetModel());
+    // A finger or the pad's stick still pushing waits to be let go: the walk does not go on through a
+    // map change, a death or a window over the world.
+    GameLogic::Touch::PauseSteering();
+    g_follow.Drop();
+    ControlsModel& model = g_View.GetModel();
+    ClosePicker(model);
+    SetField(model.menuOpen, false, "menu_open");
+    SetField(model.menuFocus, -1, "menu_focus");
+    SetField(model.stickActive, false, "stick_active");
+    SetField(model.knobX, 0.f, "knob_x");
+    SetField(model.knobY, 0.f, "knob_y");
     g_boxes.fill(ControlBox{});
     UI::Mobile::PhoneHudLayout::Release();
     UI::RmlBridge::SyncDocumentVisibility(g_View.Document(), false);
@@ -1420,15 +1567,23 @@ void Update()
     }
 
     ControlsModel& model = g_View.GetModel();
+    g_upperSet = ChooseUpperSet();
+    GameLogic::Touch::SetPointerAims(UI::Mobile::IsGamepadInUse());
+    RestPointerAfterDialog();
     SyncLabels(model);
     SyncDevices(model);
     SyncSkills(model);
     UpdateBinding(model);
-    UpdateStick(model);
+    const bool steering = GameLogic::Touch::IsSteering();
+    if (steering && !g_wasSteering)
+        g_follow.Drop();
+    g_wasSteering = steering;
+    // The buttons before the stick: a cast that stands the character holds this frame's walk off.
     if (model.pickerOpen)
         UpdatePicker(model);
     else
         UpdateButtons(model);
+    UpdateStick(model);
     SyncDepth(document, model.menuOpen || model.pickerOpen);
     UI::Mobile::HeroFrame::Sync(model.hero, [](const char* field) { g_View.MarkDirty(field); });
     // The boxes the next fingers are tested against: where this frame lays the controls out.
@@ -1523,5 +1678,10 @@ void PressBack()
         CloseMenu();
     else
         Back();
+}
+
+void RestPointerOnLift()
+{
+    g_restOnLift = true;
 }
 } // namespace UI::HUD::TouchControls

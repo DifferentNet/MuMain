@@ -79,3 +79,10 @@ mu_add_test(
     SOURCES
         test_walk_stop.cpp
 )
+
+mu_add_test(
+    NAME test_steer_hold
+    SOURCES
+        test_steer_hold.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Touch/SteerHold.cpp
+)

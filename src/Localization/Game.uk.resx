@@ -968,7 +968,7 @@
     <comment>legacy_id=240</comment>
   </data>
   <data name="close" xml:space="preserve">
-    <value>закрити</value>
+    <value>Закрити</value>
     <comment>legacy_id=241</comment>
   </data>
   <data name="Warehouse Lock/Unlock" xml:space="preserve">

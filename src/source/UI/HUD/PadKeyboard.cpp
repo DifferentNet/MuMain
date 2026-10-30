@@ -9,6 +9,7 @@
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "Scenes/SceneCore.h"
 #include "UI/Core/WindowSystem.h"
+#include "UI/HUD/ChatInputBox.h"
 #include "UI/HUD/PadKeyboardLayout.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlNumericInputFilter.h"
@@ -224,10 +225,20 @@ void Enter()
     Core::Input::Touch::TapKey(VK_RETURN);
 }
 
+// Whether the field is the chat's line. The chat stays open while another field has the keys (a
+// dialog's amount, a window's search), and Esc would go to that one's window instead.
+bool IsChatField(const Rml::Element* field)
+{
+    if (SceneFlag != MAIN_SCENE || !g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_CHATINPUTBOX))
+        return false;
+    const mu::ui::window::CChatInputBox* chat = g_pChatInputBox;
+    return chat != nullptr && chat->TakesTypingFrom(field->GetOwnerDocument());
+}
+
 // The chat closes as with Esc; any other field just lets go of the keys.
 void Close(Rml::Element* field)
 {
-    if (SceneFlag == MAIN_SCENE && g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_CHATINPUTBOX))
+    if (IsChatField(field))
     {
         Core::Input::Touch::TapKey(VK_ESCAPE);
         return;

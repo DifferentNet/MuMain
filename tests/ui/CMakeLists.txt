@@ -136,6 +136,20 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME follow_through_tests
+    SOURCES
+        test_follow_through.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Mobile/FollowThrough.cpp
+)
+
+mu_add_test(
+    NAME touch_target_tests
+    SOURCES
+        test_touch_target.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Mobile/TouchTarget.cpp
+)
+
+mu_add_test(
     NAME rml_stacking_order_tests
     SOURCES
         test_rml_stacking_order.cpp

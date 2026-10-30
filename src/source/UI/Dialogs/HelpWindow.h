@@ -37,6 +37,9 @@ public:
     void ClosingProcess();
 
     void AutoUpdateIndex();
+    // Turns `step` pages on (1) or back (-1): back from the first page stays there, on from the last
+    // closes the window. F1, the menu's Help, the pad's LB and RB, a click or tap on the hint row.
+    void TurnPage(int step);
 
 private:
     void BuildRmlUi();

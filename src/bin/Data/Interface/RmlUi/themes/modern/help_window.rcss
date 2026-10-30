@@ -4,10 +4,15 @@
 
 #panel { pointer-events: none; }
 
-#help_panel {
+/* The layer reaches the screen's right edge, so the box is never wider than the screen. */
+#help_layer {
 	position: absolute;
 	left: 0px;
 	top: 1px;
+	width: calc(640px * var(--root-scale));
+}
+#help_panel {
+	display: inline-block;
 	padding: calc(3px * var(--root-scale)) calc(6px * var(--root-scale));
 	border-width: calc(1px * var(--root-scale));
 	border-color: token(border-frame);
@@ -16,31 +21,42 @@
 }
 
 /* RenderTipTextList()'s rows: one line height, the next row 1.1 of them below; a half spacer
-   takes half of that advance. Physical px, in the counter-scaled box. */
+   takes half of that advance. A row too wide for the screen wraps and grows by whole lines.
+   Physical px, in the counter-scaled box. */
 .help-line {
 	display: block;
-	height: calc(var(--line-height, 0px) * var(--root-scale));
+	min-height: calc(var(--line-height, 0px) * var(--root-scale));
 	margin-bottom: calc(var(--line-height, 0px) * 0.1 * var(--root-scale));
 }
 .help-line.heading {
-	height: calc(var(--bold-line-height, 0px) * var(--root-scale));
+	min-height: calc(var(--bold-line-height, 0px) * var(--root-scale));
 	margin-bottom: calc(var(--bold-line-height, 0px) * 0.1 * var(--root-scale));
 }
 .help-line.half-spacer {
 	height: calc(var(--line-height, 0px) * 0.55 * var(--root-scale));
+	min-height: 0px;
 	margin-bottom: 0px;
 }
 .help-text {
 	display: block;
-	white-space: nowrap;
+	white-space: normal;
 	line-height: calc(var(--line-height, 0px) * var(--root-scale));
 	text-align: center;
 	color: token(text-primary);
 	font-family: "token(font-body)";
 }
-/* MU Skynet's last row, "F1 : next page" or "F1 : close". */
+/* MU Skynet's last row, what turns the page ("F1 : next page", "LB, RB: ...", "Tap here: ..."). It
+   takes the pointer (the other rows let it through to the world), so a click or a tap on it turns
+   the page. */
+.help-line.hint {
+	pointer-events: auto;
+	cursor: pointer;
+}
 .help-line.hint .help-text {
 	color: token(text-secondary);
+}
+.help-line.hint:hover .help-text {
+	color: token(text-primary);
 }
 .help-line.heading .help-text {
 	line-height: calc(var(--bold-line-height, 0px) * var(--root-scale));
@@ -49,7 +65,10 @@
 }
 
 /* MU Moldova: the phone view (UI::Mobile::IsPhoneView()): below the touch controls' top bar, whose Back
-   closes it, and clear of the left edge's rounded corners. */
+   closes it, and clear of both edges' rounded corners; the hint row a finger's height. */
 @media (theme: mobile) {
-	#help_panel { left: 8px; top: 44px; }
+	#help_layer { left: 8px; top: 44px; width: calc(624px * var(--root-scale)); }
+	.help-line.hint {
+		padding: calc(var(--line-height, 0px) * 0.5 * var(--root-scale)) 0px;
+	}
 }
