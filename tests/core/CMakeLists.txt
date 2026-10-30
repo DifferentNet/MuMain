@@ -64,6 +64,14 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME test_decoded_sound_store
+    SOURCES
+        test_decoded_sound_store.cpp
+    LINK_LIBS
+        MuClient
+)
+
+mu_add_test(
     NAME test_platform_crypto
     SOURCES
         test_platform_crypto.cpp

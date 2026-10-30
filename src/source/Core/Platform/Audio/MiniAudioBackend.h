@@ -15,6 +15,7 @@
 // Do NOT add #include "miniaudio.h" to callers of MiniAudioBackend.h.
 
 #include "Core/Platform/IPlatformAudio.h"
+#include "Core/Platform/Audio/DecodedSoundStore.h"
 
 // miniaudio.h required for ma_engine and ma_sound full type definitions.
 // See isolation note above — this include is the known limitation tracked for 5.2.x.
@@ -70,6 +71,8 @@ private:
     bool HasFailedMusicTrack(const char* name) const;
     bool StartMusicStream(const std::string& identity);
     void ReleaseMusicStream();
+    void UnloadSlot(int buf);
+    void ReleaseDecodedSound(int buf);
 
     ma_engine m_engine{};
 
@@ -84,6 +87,11 @@ private:
     // iterating all MAX_CHANNEL slots when numChannels < MAX_CHANNEL calls miniaudio
     // APIs on uninitialized ma_sound handles (UB).
     std::array<int, MAX_BUFFER> m_loadedChannels{};
+
+    // The slots' sounds as 16-bit samples, and the file each slot holds there (empty where
+    // miniaudio decoded the file itself).
+    DecodedSoundStore m_decodedSounds;
+    std::array<std::string, MAX_BUFFER> m_decodedSoundPaths{};
 
     // Per-slot object pointer for per-frame 3D position updates (Story 5.2.2).
     // Stores the most recent pObject passed to PlaySound() for each 3D-enabled buffer slot.
