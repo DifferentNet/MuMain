@@ -36,6 +36,10 @@ namespace mu::ui::window
         bool Create(CManager* pNewUIMng);
         void Release();
 
+        // MU Moldova: the window has only Dark Horse and Dark Raven, which only the Dark Lord and the Lord
+        // Emperor use (ghinzuro 2026-10-30), so other classes neither see its button in C nor open it.
+        static bool IsAvailable();
+
         void Show(bool bShow) override;
         Rml::ElementDocument* GetFillDocument() const override { return m_RmlView.Document(); }
         Rml::ElementDocument* GetPlacedDocument() const override { return m_RmlView.Document(); }
