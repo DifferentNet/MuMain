@@ -19,6 +19,11 @@ EM_JS(void, MuWeb_ShowView, (int choice, int phoneView), {
     if (window.muView && window.muView.show)
         window.muView.show(choice, !!phoneView);
 });
+
+EM_JS(void, MuWeb_ShowInWorld, (int inWorld), {
+    if (window.muInWorld)
+        window.muInWorld(!!inWorld);
+});
 } // namespace
 
 int mu::web::TakePageViewRequest()
@@ -29,4 +34,13 @@ int mu::web::TakePageViewRequest()
 void mu::web::ShowPageView(int choice, bool phoneView)
 {
     MuWeb_ShowView(choice, phoneView ? 1 : 0);
+}
+
+void mu::web::ShowInWorld(bool inWorld)
+{
+    static bool shown = false;
+    if (inWorld == shown)
+        return;
+    shown = inWorld;
+    MuWeb_ShowInWorld(inWorld ? 1 : 0);
 }

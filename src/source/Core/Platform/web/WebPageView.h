@@ -11,4 +11,9 @@ int TakePageViewRequest();
 
 // The choice in force and whether it came to the phone view.
 void ShowPageView(int choice, bool phoneView);
+
+// Whether a character is in the world. While one is, the page asks before it is closed or left
+// (window.muInWorld): Ctrl+W closes a tab in browsers on Windows. Call it every frame; the page hears
+// only the changes.
+void ShowInWorld(bool inWorld);
 } // namespace mu::web

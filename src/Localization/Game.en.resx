@@ -15746,4 +15746,10 @@
   <data name="HelpCloseHint" xml:space="preserve">
     <value>F1 : Close</value>
   </data>
+  <data name="InventoryNoFreeQuickSlot" xml:space="preserve">
+    <value>No free quick slot: point at the potion and press Ctrl+Q, W, E or R to put it there.</value>
+  </data>
+  <data name="InventoryAlreadyOnQuickSlot" xml:space="preserve">
+    <value>It is already on quick slot %lc.</value>
+  </data>
 </root>

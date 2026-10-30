@@ -15372,4 +15372,10 @@
   <data name="JToggleChatCommands" xml:space="preserve">
     <value>J : Список команд вкл/выкл</value>
   </data>
+  <data name="InventoryNoFreeQuickSlot" xml:space="preserve">
+    <value>Нет свободного быстрого слота: наведите на банку и нажмите Ctrl+Q, W, E или R, чтобы поставить её туда.</value>
+  </data>
+  <data name="InventoryAlreadyOnQuickSlot" xml:space="preserve">
+    <value>Это уже стоит на быстром слоте %lc.</value>
+  </data>
 </root>
