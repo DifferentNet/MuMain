@@ -19,6 +19,11 @@ void HideKeyboard();
 // keyboard while it still moves the focus to the field.
 void SyncKeyboard(bool textFieldFocused, bool password);
 
+// Once a frame: whether the finger on the screen would tap a text field when it lifts, and whether
+// that is a password field. An iPhone brings its keyboard up only for a focus made as the finger
+// lifts, and the game's frame sees the tap after that, so the page focuses its own field then.
+void SyncTapOnTextField(bool onTextField, bool password);
+
 // While a gamepad is in use its own on-screen keyboard types (UI/HUD/PadKeyboard): the phone's stays
 // down, and comes up for the field that has the keys once the pad is put down.
 void HoldBackKeyboard(bool heldBack);

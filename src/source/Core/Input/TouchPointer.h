@@ -5,7 +5,10 @@
 // stops it.
 #pragma once
 
+#include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_touch.h>
+
+#include <optional>
 
 struct SDL_Window;
 
@@ -35,4 +38,8 @@ bool Rest(SDL_Window* window);
 void ForgetFinger();
 
 [[nodiscard]] bool IsButtonHeld(int sdlButton);
+
+// Where the finger is that, lifted now, would tap (a left click there): one that landed and has not
+// moved off, been held long or stopped a gliding list since. Window pixels.
+[[nodiscard]] std::optional<SDL_FPoint> TapPoint();
 } // namespace Core::Input::Touch::Pointer

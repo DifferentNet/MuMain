@@ -469,4 +469,11 @@ bool IsButtonHeld(int sdlButton)
 {
     return sdlButton >= 0 && sdlButton < ButtonSlots && g_state.buttons[sdlButton];
 }
+
+std::optional<SDL_FPoint> TapPoint()
+{
+    if (!g_state.firstDown || Gesture::OnLift(g_state.phase, false, g_state.stoppedGlide) != Gesture::Lift::Click)
+        return std::nullopt;
+    return SDL_FPoint{g_state.x, g_state.y};
+}
 } // namespace Core::Input::Touch::Pointer

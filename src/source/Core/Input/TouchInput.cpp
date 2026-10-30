@@ -288,4 +288,9 @@ bool IsMouseButtonHeld(int sdlButton)
 {
     return Pointer::IsButtonHeld(sdlButton);
 }
+
+std::optional<SDL_FPoint> TapPoint()
+{
+    return g_enabled ? Pointer::TapPoint() : std::nullopt;
+}
 } // namespace Core::Input::Touch

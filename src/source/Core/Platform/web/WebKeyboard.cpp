@@ -15,6 +15,15 @@ float g_lineBottom = 0.0f;
 bool g_heldBack = false;
 bool g_wanted = false;
 
+// What the page was last told about the field under a tapping finger (SyncTapOnTextField).
+enum class TapField : int
+{
+    None = 0,
+    Text = 1,
+    Password = 2,
+};
+TapField g_tapField = TapField::None;
+
 // "fresh": a field that just took the keys, so the page starts its own input over.
 EM_JS(void, MuWeb_ShowKeyboard, (int password, float lineTop, float lineBottom, int fresh), {
     if (Module.muKeyboard)
@@ -24,6 +33,12 @@ EM_JS(void, MuWeb_ShowKeyboard, (int password, float lineTop, float lineBottom, 
 EM_JS(void, MuWeb_HideKeyboard, (), {
     if (Module.muKeyboard)
         Module.muKeyboard.hide();
+});
+
+// field: a TapField. (Loose ==: clang-format splits "===".)
+EM_JS(void, MuWeb_TapOnTextField, (int field), {
+    if (Module.muKeyboard)
+        Module.muKeyboard.tapOnField(field == 2 ? "password" : field == 1 ? "text" : null);
 });
 } // namespace
 
@@ -59,6 +74,17 @@ void mu::web::SyncKeyboard(bool textFieldFocused, bool password)
         ShowKeyboard(password, g_lineTop, g_lineBottom);
     else if (g_keyboardShown && password != g_password)
         ShowKeyboard(password, g_lineTop, g_lineBottom);
+}
+
+void mu::web::SyncTapOnTextField(bool onTextField, bool password)
+{
+    TapField field = TapField::None;
+    if (onTextField && !g_heldBack)
+        field = password ? TapField::Password : TapField::Text;
+    if (field == g_tapField)
+        return;
+    g_tapField = field;
+    MuWeb_TapOnTextField(static_cast<int>(field));
 }
 
 void mu::web::HoldBackKeyboard(bool heldBack)

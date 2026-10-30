@@ -1331,6 +1331,24 @@ EM_ASYNC_JS(void, WaitForBrowserFrameJs, (int capFrames), {
     Module["muLastFrameEnd"] = performance.now();
 });
 
+bool IsPasswordField(const Rml::Element& field)
+{
+    return field.GetAttribute<Rml::String>("type", "") == "password";
+}
+
+// The phone's keyboard follows the game's text fields: the focused one, and the one a finger on the
+// screen would tap (mu::web::SyncTapOnTextField()).
+void SyncPhoneKeyboard()
+{
+    RmlUiRuntime& ui = RmlUiRuntime::Instance();
+    const Rml::Element* focused = ui.GetFocusedTextField();
+    mu::web::SyncKeyboard(focused != nullptr, focused != nullptr && IsPasswordField(*focused));
+
+    const std::optional<SDL_FPoint> tap = Core::Input::Touch::TapPoint();
+    const Rml::Element* tapped = tap ? ui.GetTextFieldAt(tap->x, tap->y) : nullptr;
+    mu::web::SyncTapOnTextField(tapped != nullptr, tapped != nullptr && IsPasswordField(*tapped));
+}
+
 void WaitForBrowserFrame()
 {
     const bool loading = SceneFlag == WEBZEN_SCENE || SceneFlag == LOADING_SCENE;
@@ -2031,10 +2049,7 @@ MSG MainLoop()
                 mu::web::ShowInWorld(SceneFlag == MAIN_SCENE);
                 UI::Mobile::PhonePage::Update();
                 MuWebFollowLowestQuality();
-                if (const Rml::Element* field = RmlUiRuntime::Instance().GetFocusedTextField())
-                    mu::web::SyncKeyboard(true, field->GetAttribute<Rml::String>("type", "") == "password");
-                else
-                    mu::web::SyncKeyboard(false, false);
+                SyncPhoneKeyboard();
 #endif
                 RenderProfiledFrame();
 #ifdef __EMSCRIPTEN__

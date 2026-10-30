@@ -123,6 +123,10 @@ public:
     // <textarea> of the main context, or null. CManager::UpdateKeyEvent() gives keys only to the
     // window that claims the document (CObject::TakesTypingFrom()).
     Rml::Element* GetFocusedTextField() const;
+    // The text field a click at window pixel (x, y) would type in: a text or password <input> or a
+    // <textarea> of the main context, enabled and writable, or null. The phone's keyboard comes up
+    // for it before the click lands (Winmain.cpp, mu::web::SyncTapOnTextField()).
+    Rml::Element* GetTextFieldAt(float x, float y) const;
     Rml::ElementDocument* GetTypingDocument() const;
     // The document whose focused control takes the keys: the typing document, or one with a visible
     // focused element marked data-takes-keys (a slider stepped by arrows). Only the window that
