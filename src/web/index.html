@@ -1194,6 +1194,42 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       const size = /\/(\d+)$/.exec(response.headers.get("Content-Range") || "");
       return size ? Number(size[1]) : 0;
     }
+    // Earlier releases' versions of the files the service worker keeps, which it no longer drops
+    // itself (sw.js, keep). Once a release, on any device: from the URLs of the kept files (`kept`, or
+    // listed here), the versioned ones in this page's folder that this release has none of, one at a
+    // time, so the game's reads don't wait long behind them.
+    const OLD_VERSIONS_DROPPED = "mu-web/old-versions-dropped";   // the release they were dropped for
+    async function dropOldVersions(kept) {
+      const versions = releaseIndex && releaseIndex.versions;
+      if (!versions || !self.caches) return;
+      const current = Object.keys(versions).map((path) => `${path}?v=${versions[path]}`);
+      if (code["Main.js"]) current.push(`Main.js?v=${code["Main.js"]}`);
+      if (code["Main.wasm"]) current.push(`Main.wasm?v=${code["Main.wasm"]}`, `Main.wasm.gz?v=${code["Main.wasm"]}`);
+      let release = 0x811c9dc5;   // FNV-1a of the file URLs: names this release's set of files
+      for (const url of current) {
+        for (let i = 0; i < url.length; i++) release = Math.imul(release ^ url.charCodeAt(i), 0x01000193);
+        release = Math.imul(release ^ 10, 0x01000193);
+      }
+      release = (release >>> 0).toString(16);
+      if (stored(OLD_VERSIONS_DROPPED) === release) return;
+      try {
+        const files = await caches.open("mu-web/files");
+        if (!kept) kept = (await files.keys()).map((request) => request.url);
+        const folder = new URL(".", location.href).href;
+        const currentUrls = new Set(current.map((url) => new URL(url, location.href).href));
+        let dropped = 0;
+        for (const url of kept) {
+          if (url.startsWith(folder) && new URL(url).searchParams.has("v") && !currentUrls.has(url)) {
+            await files.delete(url);
+            dropped++;
+          }
+        }
+        store(OLD_VERSIONS_DROPPED, release);
+        if (dropped) appendLog(`Game files of earlier releases: ${dropped} dropped from this device`);
+      } catch (e) {
+        // Tried again at the next visit.
+      }
+    }
     async function downloadRestInBackground() {
       const versions = releaseIndex && releaseIndex.versions;
       if (!versions || !self.caches || !(navigator.serviceWorker && navigator.serviceWorker.controller)) {
@@ -1215,7 +1251,10 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         .sort((a, b) => backgroundRank(a) - backgroundRank(b))
         .map((path) => new URL(`${path}?v=${versions[path]}`, location.href).href)
         .filter((url) => !kept.has(url));
-      if (!files.length) return;
+      if (!files.length) {
+        await dropOldVersions(kept);
+        return;
+      }
       appendLog(`Game files in the background: downloading ${files.length} of ${Object.keys(versions).length}` +
                 (leftOut.length ? ` (sound or music off: not ${leftOut.join(", ")})` : ""));
       const started = performance.now();
@@ -1241,6 +1280,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       appendLog(`Game files in the background: ${downloaded} downloaded, ${Math.round(bytes / 1e6)} MB in ` +
                 `${Math.round((performance.now() - started) / 1000)} s` + (failed ? `, ${failed} failed` : "") +
                 (skipped ? `, ${skipped} left for the game to read` : ""), failed > 0);
+      await dropOldVersions(kept);
     }
 
     // Global for Main.js, which picks up an existing Module object.
@@ -1264,6 +1304,10 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         if (backgroundDownloads) {
           startupPackSettled.then(downloadRestInBackground)
             .catch((e) => appendLog(`Game files in the background: stopped (${e})`, true));
+        } else if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+          // A minute after the start, away from the game's first reads.
+          startupPackSettled.then(() => new Promise((resume) => setTimeout(resume, 60000)))
+            .then(() => dropOldVersions()).catch(() => {});
         }
       },
       onAbort: (what) => gameCrashed(what),

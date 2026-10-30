@@ -4,10 +4,12 @@
 #include "Core/Text/Utf8.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "Engine/Object/ZzzCharacter.h"
+#include "Engine/Object/ZzzInfomation.h"
 #include "I18N/All.h"
 #include "Network/Server/HiddenChatLines.h"
 #include "Network/Server/WSclient.h"
 #include "Render/Sprites/GlobalBitmap.h"
+#include "Scenes/SceneCore.h"
 
 #include "json.hpp"
 
@@ -22,7 +24,12 @@ namespace GameLogic::SeasonMarks
 namespace
 {
 constexpr std::wstring_view Line = L"#BPM|";
-constexpr const wchar_t* MarksCommand = L"/bpmarks";
+// "#BPF|name|season": the season of the seasonal Fenrir a character rides, 0 for none.
+constexpr std::wstring_view FenrirLine = L"#BPF|";
+// Version 2 of the marks: the #BPM lines and the #BPF lines. A server before the season themes ignores the "2".
+constexpr const wchar_t* MarksCommand = L"/bpmarks 2";
+// The gold Horn of Fenrir's excellent option (the seasonal Fenrir).
+constexpr int GoldFenrirOption = 0x04;
 
 // Splits "a|b|c" into its fields.
 std::vector<std::wstring> Split(std::wstring_view text)
@@ -87,10 +94,10 @@ std::wstring Widen(const std::string& text)
     return Core::Text::FromUtf8(text);
 }
 
-// Reads "name": "Winter" (every language) or {"en": "Winter", "ru": "Зима"}.
-void ReadNames(const nlohmann::json& entry, std::map<std::wstring, std::wstring>& names)
+// Reads "name": "Winter I" (every language) or {"en": "Winter I", "ru": "Зима I"}; the same for "hero".
+void ReadNames(const nlohmann::json& entry, const char* key, std::map<std::wstring, std::wstring>& names)
 {
-    const auto it = entry.find("name");
+    const auto it = entry.find(key);
     if (it == entry.end())
         return;
 
@@ -129,18 +136,28 @@ void ReadFenrir(const nlohmann::json& entry, FenrirLook& fenrir)
     ReadLight(*it, "pawLightning", fenrir.PawLightning);
     ReadLight(*it, "sparks", fenrir.Sparks);
 }
+// A text in the game's UI language, else in English, else in any; empty when there is none.
+std::wstring InUILanguage(const std::map<std::wstring, std::wstring>& texts)
+{
+    if (texts.empty())
+        return {};
+
+    const auto it = texts.find(GameConfig::GetInstance().GetUILocale());
+    if (it != texts.end())
+        return it->second;
+    const auto english = texts.find(L"en");
+    return english != texts.end() ? english->second : texts.begin()->second;
+}
 } // namespace
 
 std::wstring SeasonLook::Name() const
 {
-    if (Names.empty())
-        return {};
+    return InUILanguage(Names);
+}
 
-    const auto it = Names.find(GameConfig::GetInstance().GetUILocale());
-    if (it != Names.end())
-        return it->second;
-    const auto english = Names.find(L"en");
-    return english != Names.end() ? english->second : Names.begin()->second;
+std::wstring SeasonLook::HeroName() const
+{
+    return InUILanguage(HeroNames);
 }
 
 Store& Store::Instance()
@@ -152,6 +169,11 @@ Store& Store::Instance()
 bool Store::TakeMessage(const std::wstring& text)
 {
     const std::wstring_view view(text);
+    if (view.starts_with(FenrirLine))
+    {
+        TakeFenrir(view.substr(FenrirLine.size()));
+        return true;
+    }
     if (!view.starts_with(Line))
         return false;
 
@@ -174,6 +196,20 @@ bool Store::TakeMessage(const std::wstring& text)
 
     Recompute(name);
     return true;
+}
+
+// "name|season" of a #BPF line: a season above 0 replaces what is known of that rider, 0 forgets it.
+void Store::TakeFenrir(std::wstring_view line)
+{
+    const auto fields = Split(line);
+    if (fields.size() < 2 || fields[0].empty())
+        return;
+
+    const int season = ToInt(fields[1]);
+    if (season > 0)
+        m_fenrirs[fields[0]] = season;
+    else
+        m_fenrirs.erase(fields[0]);
 }
 
 void Store::Recompute(const std::wstring& name)
@@ -215,6 +251,7 @@ void Store::Reset()
 {
     m_marks.clear();
     m_worn.clear();
+    m_fenrirs.clear();
 }
 
 Worn Store::Of(std::wstring_view name) const
@@ -266,7 +303,8 @@ void Store::LoadLooks()
 
         SeasonLook look;
         look.Season = entry["season"].get<int>();
-        ReadNames(entry, look.Names);
+        ReadNames(entry, "name", look.Names);
+        ReadNames(entry, "hero", look.HeroNames);
 
         if (const auto title = entry.find("title"); title != entry.end() && title->is_object())
         {
@@ -306,21 +344,72 @@ const SeasonLook* Store::FenrirSeason()
     return newest;
 }
 
-unsigned int Store::FenrirTexture()
+int Store::FenrirSeasonOf(std::wstring_view name) const
 {
-    // Loaded once; the game frees its textures only when it closes.
-    if (m_fenrirTextureTried)
-        return m_fenrirTexture;
+    if (m_fenrirs.empty())
+        return 0;
 
-    m_fenrirTextureTried = true;
-    const SeasonLook* look = FenrirSeason();
-    if (look == nullptr || look->Fenrir.Texture.empty())
-        return m_fenrirTexture = 0;
+    const auto it = m_fenrirs.find(name);
+    return it == m_fenrirs.end() ? 0 : it->second;
+}
 
-    // As the models' own textures load (Data/DataHandler/LoadData.cpp: GL_NEAREST, GL_REPEAT).
-    const GLuint index = Bitmaps.LoadImage(L"Data\\" + look->Fenrir.Texture, GL_NEAREST, GL_REPEAT);
-    m_fenrirTexture = index == BITMAP_UNKNOWN ? 0 : index;
-    return m_fenrirTexture;
+int Store::RiderFenrirSeason(const OBJECT* mount) const
+{
+    if (mount == nullptr || mount->Owner == nullptr || SceneFlag != MAIN_SCENE)
+        return 0;
+
+    // The own horn's level is its season, known before the server's line comes.
+    if (Hero != nullptr && mount->Owner == &Hero->Object && CharacterMachine != nullptr)
+    {
+        const ITEM& horn = CharacterMachine->Equipment[EQUIPMENT_HELPER];
+        if (horn.Type == ITEM_HORN_OF_FENRIR && (horn.ExcellentFlags & 63) == GoldFenrirOption && horn.Level > 0)
+            return horn.Level;
+    }
+
+    if (m_fenrirs.empty() || CharactersClient == nullptr)
+        return 0;
+
+    for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
+    {
+        const CHARACTER& rider = CharactersClient[i];
+        if (&rider.Object == mount->Owner)
+            return FenrirSeasonOf(rider.ID);
+    }
+    return 0;
+}
+
+const SeasonLook* Store::FenrirLookOf(int season)
+{
+    if (!m_looksLoaded)
+        LoadLooks();
+
+    const SeasonLook* best = nullptr;
+    if (season > 0)
+    {
+        for (const SeasonLook& look : m_looks)
+        {
+            if (look.Fenrir.Present && look.Season <= season && (best == nullptr || look.Season > best->Season))
+                best = &look;
+        }
+    }
+    return best != nullptr ? best : FenrirSeason();
+}
+
+unsigned int Store::FenrirTexture(const SeasonLook& look)
+{
+    // Loaded once a season; the game frees its textures only when it closes.
+    if (const auto known = m_fenrirTextures.find(look.Season); known != m_fenrirTextures.end())
+        return known->second;
+
+    unsigned int texture = 0;
+    if (!look.Fenrir.Texture.empty())
+    {
+        // As the models' own textures load (Data/DataHandler/LoadData.cpp: GL_NEAREST, GL_REPEAT).
+        const GLuint index = Bitmaps.LoadImage(L"Data\\" + look.Fenrir.Texture, GL_NEAREST, GL_REPEAT);
+        texture = index == BITMAP_UNKNOWN ? 0 : index;
+    }
+    m_fenrirTextures.emplace(look.Season, texture);
+    return texture;
 }
 
 std::wstring Store::NameOf(int season)
@@ -329,10 +418,20 @@ std::wstring Store::NameOf(int season)
     return look.Season == season ? look.Name() : std::wstring{};
 }
 
+std::wstring Store::HeroNameOf(int season)
+{
+    const SeasonLook& look = Look(season);
+    return look.Season == season ? look.HeroName() : std::wstring{};
+}
+
 std::wstring TrophyName(int season)
 {
-    wchar_t text[128] = {};
-    mu_swprintf_s(text, I18N::Game::SeasonTrophyName, season);
+    wchar_t text[160] = {};
+    const std::wstring name = Marks().NameOf(season);
+    if (name.empty())
+        mu_swprintf_s(text, I18N::Game::SeasonTrophyName, season);
+    else
+        mu_swprintf_s(text, I18N::Game::SeasonTrophyNamed, name.c_str());
     return text;
 }
 
@@ -343,7 +442,7 @@ std::wstring FenrirName(int season)
     if (name.empty())
         mu_swprintf_s(text, I18N::Game::SeasonFenrirName, season);
     else
-        mu_swprintf_s(text, I18N::Game::SeasonFenrirNamed, season, name.c_str());
+        mu_swprintf_s(text, I18N::Game::SeasonFenrirNamed, name.c_str());
     return text;
 }
 
@@ -356,10 +455,11 @@ void ForgetAndAsk()
     Marks().Request();
 }
 
-// The battle pass' auras and titles lines stay out of the chat (Network/Server/HiddenChatLines.h).
+// The battle pass' auras and titles lines and the seasonal Fenrirs' lines stay out of the chat
+// (Network/Server/HiddenChatLines.h).
 [[maybe_unused]] const bool Registered = Network::HiddenChatLines::Register({
     .name = L"SeasonMarks",
-    .prefixes = {Line},
+    .prefixes = {Line, FenrirLine},
     .take = [](const std::wstring& text) { return Marks().TakeMessage(text); },
     .enteredWorld = ForgetAndAsk,
 });

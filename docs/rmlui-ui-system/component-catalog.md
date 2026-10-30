@@ -117,6 +117,10 @@ the MU Helper config labels. Prose that can grow should wrap or scroll instead.
 Use `.native-fit` for legacy-compatible shrink-to-fit text. The theme sets a one-line box and
 inherited font size; the shared pass shrinks text to fit within the native minimum. It applies
 only under the `NativeTextSize` capability and requires physical-pixel text geometry.
+The text may be split into child spans that inherit the font size (for example a label on the
+left and a value on the right): they shrink together by one factor and keep their margins. Add
+`.native-fit-small` where a fixed box is crowded and the text may go below the native minimum, down
+to three quarters of it (the Character window's rows).
 See [`RmlNativeTextFit.h`](../../src/source/UI/RmlBridge/RmlNativeTextFit.h) and
 `generic_menu_dialog.rml`. This is distinct from marquee or wrapping.
 

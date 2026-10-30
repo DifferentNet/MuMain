@@ -115,6 +115,7 @@ void mu::ui::window::CHelpWindow::BindRmlModel(Rml::DataModelConstructor& c, Hel
     line.RegisterMember("text", &HelpLineEntry::text);
     line.RegisterMember("heading", &HelpLineEntry::heading);
     line.RegisterMember("half_spacer", &HelpLineEntry::halfSpacer);
+    line.RegisterMember("hint", &HelpLineEntry::hint);
     c.RegisterArray<std::vector<HelpLineEntry>>();
     c.Bind("lines", &model.lines);
 }
@@ -168,6 +169,7 @@ void mu::ui::window::CHelpWindow::RebuildPageModel()
         HelpLineEntry entry;
         entry.heading = pageLine.heading;
         entry.halfSpacer = pageLine.halfSpacer;
+        entry.hint = pageLine.hint;
         if (!pageLine.halfSpacer)
             entry.text = StringUtils::WideToNarrow(pageLine.text.c_str());
         model.lines.push_back(std::move(entry));

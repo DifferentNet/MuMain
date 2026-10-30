@@ -870,18 +870,17 @@ void Draw_RenderObject(OBJECT* o, bool Translate, int Select, int ExtraMon)
                 b->BodyLight[1] = 1.0f;
                 b->BodyLight[2] = 1.0f;
 
-                // The gold Fenrir is the battle pass' seasonal Fenrir (stage 7): it wears the newest season's Fenrir
-                // look in Data/Seasons.json (GameLogic/Events/SeasonMarks.h), the gold one when there is none.
-                const GameLogic::SeasonMarks::FenrirLook* seasonFenrir = nullptr;
-                if (o->Type == MODEL_FENRIR_GOLD)
-                {
-                    if (const auto* season = GameLogic::SeasonMarks::Marks().FenrirSeason())
-                        seasonFenrir = &season->Fenrir;
-                }
+                // The gold Fenrir is the battle pass' seasonal Fenrir (stage 7): it wears its rider's season's Fenrir
+                // look in Data/Seasons.json, the newest season's when that isn't known, the gold one when there is
+                // none (GameLogic/Events/SeasonMarks.h).
+                auto& seasonMarks = GameLogic::SeasonMarks::Marks();
+                const GameLogic::SeasonMarks::SeasonLook* seasonLook =
+                    o->Type == MODEL_FENRIR_GOLD ? seasonMarks.FenrirLookOf(seasonMarks.RiderFenrirSeason(o)) : nullptr;
+                const GameLogic::SeasonMarks::FenrirLook* seasonFenrir = seasonLook != nullptr ? &seasonLook->Fenrir : nullptr;
 
                 if (o->Type == MODEL_FENRIR_GOLD)
                 {
-                    const unsigned int seasonTexture = seasonFenrir != nullptr ? GameLogic::SeasonMarks::Marks().FenrirTexture() : 0;
+                    const unsigned int seasonTexture = seasonLook != nullptr ? seasonMarks.FenrirTexture(*seasonLook) : 0;
                     const int bodyTexture = seasonTexture != 0 ? static_cast<int>(seasonTexture) : -1;
 
                     b->StreamMesh = 0;

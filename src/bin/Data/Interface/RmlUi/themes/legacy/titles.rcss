@@ -84,7 +84,8 @@
 	pointer-events: none;
 }
 
-/* The event timer's colours: gold title, light text, blue detail. A title's name is its plate's colour; one not
+/* The event timer's colours: gold title, light text, blue detail. A title's name is its plate's colour (the drawn plates of
+   2026-10-29: silver, ice purple, jade green, gold blue, crimson red, violet the gold of its laurels); one not
    owned yet is dimmed, with how to get it in grey. The worn one on a gold band. */
 .tt-title { color: rgb(255, 220, 120); }
 #tt_status { color: rgb(240, 240, 240); }
@@ -97,11 +98,11 @@
 .tt-row.worn, .tt-row.worn:hover { background-color: rgba(255, 210, 100, 48); }
 .tt-row.none .tt-row-name { color: rgb(225, 225, 225); }
 .tt-row.r0 .tt-row-name { color: rgb(200, 205, 215); }
-.tt-row.r1 .tt-row-name { color: rgb(130, 200, 255); }
+.tt-row.r1 .tt-row-name { color: rgb(190, 145, 255); }
 .tt-row.r2 .tt-row-name { color: rgb(110, 230, 150); }
-.tt-row.r3 .tt-row-name { color: rgb(255, 210, 90); }
+.tt-row.r3 .tt-row-name { color: rgb(120, 175, 255); }
 .tt-row.r4 .tt-row-name { color: rgb(255, 110, 90); }
-.tt-row.r5 .tt-row-name { color: rgb(200, 150, 255); }
+.tt-row.r5 .tt-row-name { color: rgb(255, 205, 95); }
 .tt-row-detail { color: rgb(130, 130, 130); }
 .tt-row.owned .tt-row-detail { color: rgb(200, 220, 255); }
 .tt-row-mark { color: rgb(255, 220, 120); }

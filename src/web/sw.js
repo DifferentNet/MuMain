@@ -85,13 +85,12 @@ async function downloadWhole(url, background) {
   return { blob, response: new Response(blob, { status: 200, statusText: response.statusText, headers: response.headers }) };
 }
 
-// Keeps a file and drops its other versions.
+// Keeps a file. The page drops its earlier versions, once a release (index.html, dropOldVersions):
+// looking for them here read through the whole store after every file (1.5 s with 3,359 files kept),
+// and the game's reads waited behind that, 25-40 s on a window's first open (2026-10-30).
 async function keep(cache, url, response) {
   try {
     await cache.put(url, response);
-    for (const old of await cache.keys(url, { ignoreSearch: true })) {
-      if (old.url !== url) await cache.delete(old);
-    }
   } catch (e) {
     // The device is full or keeps nothing for this site: the file comes from the server next time.
   }

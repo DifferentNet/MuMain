@@ -7,6 +7,8 @@
 #include "I18N/All.h"
 
 #include <codecvt>
+#include <algorithm>
+#include <limits>
 #include <sstream>
 
 #include "Render/Models/ZzzBMD.h"
@@ -19,6 +21,7 @@
 #include "Render/Textures/ZzzOpenglUtil.h"
 
 #include "Render/Terrain/ZzzLodTerrain.h"
+#include "GameLogic/Items/AncientAura.h"
 #include "GameLogic/Items/CSItemOption.h"
 #include "GameLogic/Pets/GIPetManager.h"
 #include "GameLogic/Items/CComGem.h"
@@ -3446,6 +3449,32 @@ void CHARACTER_MACHINE::getAllAddStateOnlyExValues(int& iAddStrengthExValues, in
     iAddEnergyExValues += g_SocketItemMgr.m_StatusBonus.m_iEnergyBonus;
 }
 
+namespace
+{
+// Adds a tier's share of a total stat (the base and every bonus) to the stat's bonus, without overflowing the WORD.
+void AddAncientTierStat(WORD base, WORD& add, int tier)
+{
+    const int total = base + add;
+    const int room = std::max(0, static_cast<int>(std::numeric_limits<WORD>::max()) - total);
+    add = static_cast<WORD>(add + std::min(GameLogic::AncientAura::StatBonus(total, tier), room));
+}
+
+// The +14/+15 ancient tier (GameLogic/Items/AncientAura.h): the server multiplies the total strength, agility,
+// vitality, energy and command by 1.05 / 1.10; the character window shows the same.
+void AddAncientTierStats(CHARACTER_ATTRIBUTE& character)
+{
+    const int tier = GameLogic::AncientAura::OwnTier();
+    if (tier == GameLogic::AncientAura::None)
+        return;
+
+    AddAncientTierStat(character.Strength, character.AddStrength, tier);
+    AddAncientTierStat(character.Dexterity, character.AddDexterity, tier);
+    AddAncientTierStat(character.Vitality, character.AddVitality, tier);
+    AddAncientTierStat(character.Energy, character.AddEnergy, tier);
+    AddAncientTierStat(character.Charisma, character.AddCharisma, tier);
+}
+} // namespace
+
 void CHARACTER_MACHINE::CalculateAll()
 {
     CalculateBasicState();
@@ -3488,6 +3517,8 @@ void CHARACTER_MACHINE::CalculateAll()
     {
         PlusSpecial(&Character.AddCharisma, AT_SET_OPTION_IMPROVE_CHARISMA, &CharacterMachine->Equipment[EQUIPMENT_WING]);
     }
+
+    AddAncientTierStats(Character);
 
     CalculateBasicState();
     CalculateDamage();
