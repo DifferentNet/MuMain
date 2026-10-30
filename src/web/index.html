@@ -852,6 +852,37 @@
   });
   addEventListener("pageshow", (event) => { if (event.persisted) location.reload(); });
 
+  // The game's loop waits for promises (JSPI: Main.js wraps its waiting imports in
+  // WebAssembly.Suspending). A page left during a wait, which is any reload, left the game's stack
+  // suspended, and V8 keeps a suspended stack, and the game's memory with it, while the tab's process
+  // lives: each reload added ~650 MB (2026-10-30). When the page goes, every wait ends with "unwind",
+  // Emscripten's own way out of the program, so the stack runs out and the memory can go.
+  const gameWaits = new Set();
+  let pageGone = false;
+  addEventListener("pagehide", () => {
+    pageGone = true;
+    for (const stop of gameWaits) stop();
+    gameWaits.clear();
+  });
+  // A wait that also ends when the page goes. Not Promise.race with one promise for the page: each
+  // race stayed listed on that promise, one a frame, 60 MB an hour (2026-10-30).
+  const untilPageGoes = (wait) => new Promise((resolve, reject) => {
+    const stop = () => reject("unwind");
+    if (pageGone) return stop();
+    gameWaits.add(stop);
+    wait.then((value) => { gameWaits.delete(stop); resolve(value); },
+              (error) => { gameWaits.delete(stop); reject(error); });
+  });
+  if (WebAssembly.Suspending) {
+    const PageSuspending = WebAssembly.Suspending;
+    WebAssembly.Suspending = function (original) {
+      return new PageSuspending(function (...args) {
+        const result = original.apply(this, args);
+        return result && typeof result.then === "function" ? untilPageGoes(result) : result;
+      });
+    };
+  }
+
   const isGameError = (error) => error instanceof WebAssembly.RuntimeError || /Main\.wasm/.test(String(error && error.stack));
   addEventListener("error", (event) => { if (isGameError(event.error)) gameCrashed(event.error); });
   addEventListener("unhandledrejection", (event) => { if (isGameError(event.reason)) gameCrashed(event.reason); });
@@ -1261,7 +1292,10 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     }
     let packDone = false;
     const startupParts = startupPack();
-    const startupPackSettled = startupParts.then((parts) => Promise.allSettled(parts || []), () => {})
+    // Settles with nothing once every part has come or failed. The parts' bytes (166 MB) are copied
+    // into the game's memory (WebFileSystem.cpp) and must go then: a result holding the parts held
+    // them all game long (2026-10-30).
+    const startupPackSettled = startupParts.then((parts) => Promise.allSettled(parts || []).then(() => {}), () => {})
       .finally(() => { packDone = true; setStatus(""); });
     let mapPacksLoading = 0;
     // WebFileSystem.cpp LoadWorldFiles: the files of the map folder the game enters (Data/WorldN,
