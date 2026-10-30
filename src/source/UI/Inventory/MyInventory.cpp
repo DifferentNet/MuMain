@@ -55,11 +55,11 @@ extern bool SelectFlag;
 #include "UI/Inventory/ItemOptionTooltipModel.h"
 #include "Core/Utilities/StringUtils.h"
 #include "Core/Input/TouchInput.h"
+#include "UI/Mobile/ClickSource.h"
 #include "UI/Mobile/ItemCard.h"
 #include "Engine/Object/ZzzOpenData.h"
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Event.h>
-#include <SDL3/SDL_mouse.h>
 #include <cmath>
 #include <utility>
 
@@ -114,6 +114,18 @@ void ShownBox(Rml::Element* element, Rml::Vector2f& offset, Rml::Vector2f& size)
 bool IsCarryingItem()
 {
     return CInventoryCtrl::GetPickedItem() != nullptr;
+}
+
+// A window that takes the item on the mouse (a shop, the storage, a trade, the chaos machine...): an
+// item let go over the world is meant for it, not for the ground, and worn gear tapped is lifted for it.
+bool IsWindowTakingHeldItemOpen()
+{
+    return g_pNewUISystem->IsVisible(INTERFACE_NPCSHOP) || g_pNewUISystem->IsVisible(INTERFACE_TRADE) ||
+           g_pNewUISystem->IsVisible(INTERFACE_DEVILSQUARE) || g_pNewUISystem->IsVisible(INTERFACE_BLOODCASTLE) ||
+           g_pNewUISystem->IsVisible(INTERFACE_MIXINVENTORY) || g_pNewUISystem->IsVisible(INTERFACE_STORAGE) ||
+           g_pNewUISystem->IsVisible(INTERFACE_MYSHOP_INVENTORY) ||
+           g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_LUCKYITEMWND) ||
+           g_pNewUISystem->IsVisible(INTERFACE_PURCHASESHOP_INVENTORY);
 }
 } // namespace
 
@@ -678,15 +690,7 @@ bool CMyInventory::UpdateMouseEvent()
     if (pPickedItem && IsPress(VK_LBUTTON)
         && !(g_pMainFrame != nullptr && g_pMainFrame->IsMouseOverHud()))
     {
-        if (g_pNewUISystem->IsVisible(INTERFACE_NPCSHOP) == true
-            || g_pNewUISystem->IsVisible(INTERFACE_TRADE) == true
-            || g_pNewUISystem->IsVisible(INTERFACE_DEVILSQUARE) == true
-            || g_pNewUISystem->IsVisible(INTERFACE_BLOODCASTLE) == true
-            || g_pNewUISystem->IsVisible(INTERFACE_MIXINVENTORY) == true
-            || g_pNewUISystem->IsVisible(INTERFACE_STORAGE) == true
-            || g_pNewUISystem->IsVisible(INTERFACE_MYSHOP_INVENTORY) == true
-            || g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_LUCKYITEMWND) == true
-            || g_pNewUISystem->IsVisible(INTERFACE_PURCHASESHOP_INVENTORY) == true)
+        if (IsWindowTakingHeldItemOpen())
         {
             // Not a ground-drop -- one of these other windows is the real target, and dispatched
             // after us, so `true` (not `false`) lets CManager keep going instead of eating its drop.
@@ -1620,6 +1624,9 @@ bool CMyInventory::EquipmentWindowProcess()
                 return true;
             }
 
+            if (HandleFingerReleaseOnWorn())
+                return true;
+
             ITEM* pEquippedItem = &CharacterMachine->Equipment[m_iPointedSlot];
             if (pEquippedItem->Type >= 0 && CheckTakeOff(m_iPointedSlot))
             {
@@ -1633,16 +1640,16 @@ bool CMyInventory::EquipmentWindowProcess()
 
     if (IsPress(VK_RBUTTON))
     {
-        // A finger's long press (Core::Input::Touch) on worn gear shows the item card, as on the bag's
-        // items, and lifting the finger takes nothing off.
-        m_bFingerRightPress = Core::Input::Touch::IsMouseButtonHeld(SDL_BUTTON_RIGHT);
-        if (m_bFingerRightPress && ShowWornItemCard())
+        // A finger's long press (Core::Input::Touch) or the pad's R3 on worn gear shows the item card,
+        // as on the bag's items, and letting go takes nothing off.
+        m_bCardRightPress = UI::Mobile::ClickSource::IsFingerLongPress() || UI::Mobile::ClickSource::IsPadRightClick();
+        if (m_bCardRightPress && ShowWornItemCard())
             return true;
     }
 
     if (IsRelease(VK_RBUTTON))
     {
-        if (std::exchange(m_bFingerRightPress, false))
+        if (std::exchange(m_bCardRightPress, false))
             return false;
 
         const int iSourceIndex = m_iPointedSlot;
@@ -1684,6 +1691,15 @@ bool CMyInventory::TakeOffToBag(int equipmentSlot)
     SendRequestEquipmentItem(STORAGE_TYPE::INVENTORY, equipmentSlot, pPickedItem->GetItem(), STORAGE_TYPE::INVENTORY,
                              emptySlotIndex);
     return true;
+}
+
+bool CMyInventory::HandleFingerReleaseOnWorn()
+{
+    if (UI::Mobile::ClickSource::IsFingerDrag())
+        return true;
+    if (!UI::Mobile::ClickSource::IsFingerTap() || IsWindowTakingHeldItemOpen())
+        return false;
+    return ShowWornItemCard();
 }
 
 bool CMyInventory::ShowWornItemCard()

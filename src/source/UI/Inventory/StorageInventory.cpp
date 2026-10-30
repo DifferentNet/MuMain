@@ -27,6 +27,8 @@
 #include "UI/RmlBridge/RmlNativeTextSize.h"
 #include "UI/Scaling/UITransform.h"
 #include "Core/Utilities/StringUtils.h"
+#include "UI/Mobile/ClickSource.h"
+#include "UI/Mobile/ItemCard.h"
 #include <RmlUi/Core/ElementDocument.h>
 
 using namespace SEASON3B;
@@ -662,11 +664,37 @@ void CStorageInventory::ProcessInventoryCtrl()
     }
     else if (IsPress(VK_RBUTTON))
     {
+        if (UI::Mobile::ClickSource::IsFingerLongPress() && ShowItemCard())
+            return;
         ProcessStorageItemAutoMove();
     }
 }
 
+bool CStorageInventory::ShowItemCard()
+{
+    const ITEM* pItemObj = m_pNewInventoryCtrl->FindItemAtPointer();
+    if (pItemObj == nullptr || CInventoryCtrl::GetPickedItem() != nullptr)
+        return false;
+
+    UI::Mobile::ItemCard::Content card;
+    card.item = *pItemObj;
+    card.primaryLabel = I18N::Game::TouchItemMoveToBag;
+    card.primary = [this, itemKey = pItemObj->Key]
+    {
+        // Unless the vault closed, or turned the page, while the card was open.
+        if (IsVisible() && m_pNewInventoryCtrl != nullptr)
+            MoveToBag(m_pNewInventoryCtrl->FindItemByKey(itemKey));
+    };
+    UI::Mobile::ItemCard::Show(std::move(card));
+    return true;
+}
+
 void CStorageInventory::ProcessStorageItemAutoMove()
+{
+    MoveToBag(m_pNewInventoryCtrl->FindItemAtPointer());
+}
+
+void CStorageInventory::MoveToBag(ITEM* pItemObj)
 {
     if (g_pPickedItem)
         if (g_pPickedItem->GetItem())
@@ -675,7 +703,6 @@ void CStorageInventory::ProcessStorageItemAutoMove()
     if (IsItemAutoMove())
         return;
 
-    ITEM* pItemObj = m_pNewInventoryCtrl->FindItemAtPointer();
     if (pItemObj)
     {
         int nDstIndex = g_pMyInventory->FindEmptySlotIncludingExtensions(pItemObj);

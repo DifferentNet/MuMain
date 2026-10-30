@@ -10,6 +10,7 @@
 #include "UI/Core/WindowObject.h"
 #include "UI/Inventory/InventoryCtrl.h"
 #include "UI/Inventory/MyInventory.h"
+#include "UI/NPCs/ShopTapToBuy.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 #include <span>
 
@@ -42,6 +43,11 @@ namespace mu::ui::window
         DWORD m_dwStandbyItemKey;
 
         bool m_bSellingItem;
+
+        // A finger buys with a second tap on the item its first tap chose (UI::Shop::TapToBuy).
+        UI::Shop::TapToBuy::Choice m_TapChoice;
+        // The hint to tap again shows once each time the shop opens.
+        bool m_bTapAgainHintShown = false;
 
         // Window frame/title/tax-rate line/repair buttons/repair-money strip are RmlUi; the
         // inventory grid stays native since its icons are live 3D model renders (same reasoning
@@ -125,6 +131,11 @@ namespace mu::ui::window
 
         bool InventoryProcess();
         bool WindowProcess();
+        bool IsBuyRelease(const ITEM& item, bool asksFirst);
+        void ShowTapAgainHint();
+        ITEM* ChosenItem();
+        void SyncGridCells();
+        void SetGridCells(const UI::Items::ItemGridCells& cells);
     };
 }
 

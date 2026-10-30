@@ -55,4 +55,9 @@ namespace Core::Input
     {
         return g_pUiInputConsumer && g_pUiInputConsumer->StopTouchScrollGlide();
     }
+
+    bool UiScrollsAt(float x, float y)
+    {
+        return g_pUiInputConsumer && g_pUiInputConsumer->ScrollsAt(x, y);
+    }
 }

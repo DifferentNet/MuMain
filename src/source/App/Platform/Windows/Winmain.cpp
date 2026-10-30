@@ -60,6 +60,7 @@
 #include "Core/Platform/web/WebDisplay.h"
 #include "Core/Platform/web/WebKeyboard.h"
 #include "Core/Platform/web/WebPageView.h"
+#include "UI/RmlBridge/RmlNumericInputFilter.h"
 #include <RmlUi/Core/Element.h>
 extern EGameScene SceneFlag; // read by WaitForBrowserFrame()
 #endif
@@ -1331,6 +1332,28 @@ EM_ASYNC_JS(void, WaitForBrowserFrameJs, (int capFrames), {
     Module["muLastFrameEnd"] = performance.now();
 });
 
+mu::web::FieldKeys PhoneKeysFor(const Rml::Element* field)
+{
+    if (field == nullptr)
+        return mu::web::FieldKeys::None;
+    if (field->GetAttribute<Rml::String>("type", "") == "password")
+        return mu::web::FieldKeys::Password;
+    if (field->IsClassSet(UI::RmlBridge::NumericFieldClass))
+        return mu::web::FieldKeys::Digits;
+    return mu::web::FieldKeys::Text;
+}
+
+// The phone's keyboard follows the game's text fields: the focused one, and the one a finger on the
+// screen would tap (mu::web::SyncTapOnTextField()).
+void SyncPhoneKeyboard()
+{
+    RmlUiRuntime& ui = RmlUiRuntime::Instance();
+    mu::web::SyncKeyboard(PhoneKeysFor(ui.GetFocusedTextField()));
+
+    const std::optional<SDL_FPoint> tap = Core::Input::Touch::TapPoint();
+    mu::web::SyncTapOnTextField(PhoneKeysFor(tap ? ui.GetTextFieldAt(tap->x, tap->y) : nullptr));
+}
+
 void WaitForBrowserFrame()
 {
     const bool loading = SceneFlag == WEBZEN_SCENE || SceneFlag == LOADING_SCENE;
@@ -2031,13 +2054,11 @@ MSG MainLoop()
                 mu::web::ShowInWorld(SceneFlag == MAIN_SCENE);
                 UI::Mobile::PhonePage::Update();
                 MuWebFollowLowestQuality();
-                if (const Rml::Element* field = RmlUiRuntime::Instance().GetFocusedTextField())
-                    mu::web::SyncKeyboard(true, field->GetAttribute<Rml::String>("type", "") == "password");
-                else
-                    mu::web::SyncKeyboard(false, false);
 #endif
                 RenderProfiledFrame();
 #ifdef __EMSCRIPTEN__
+                // After the frame's own focus changes, so the page gets the field's keys before it runs.
+                SyncPhoneKeyboard();
                 WaitForBrowserFrame();
 #endif
 #ifdef _EDITOR

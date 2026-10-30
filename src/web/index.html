@@ -37,6 +37,9 @@
   }
   const device = detectDevice();
   const phone = device.kind !== "desktop";   // phones and tablets: the touch page
+  // iPhones and iPads (an iPad's Safari calls itself a Mac): every browser there is Safari's WebKit.
+  const appleMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+                      (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
   document.documentElement.classList.toggle("phone", phone);
 </script>
 <style>
@@ -398,13 +401,23 @@
     }
     Promise.resolve(result).then(() => {
       if (phone && screen.orientation && screen.orientation.lock) screen.orientation.lock("landscape").catch(() => {});
+      keepEscapeForGame();
     }, fullscreenRefused);
+  }
+  // Esc closes the game's windows, but in fullscreen the browser takes it to leave fullscreen. Chrome
+  // and Edge give it to the game when asked; holding Esc still leaves, as the browser's note says.
+  // Other browsers leave on Esc, as before.
+  function keepEscapeForGame() {
+    if (!navigator.keyboard || !navigator.keyboard.lock) return;
+    navigator.keyboard.lock(["Escape"]).then(() => appendLog("Esc goes to the game; hold it to leave fullscreen"),
+                                            () => {});
   }
   function leaveFullscreen() {
     const exit = document.exitFullscreen || document.webkitExitFullscreen;
     if (exit) Promise.resolve(exit.call(document)).catch(fullscreenRefused);
   }
   function showFullscreenState() {
+    if (!inFullscreen() && navigator.keyboard && navigator.keyboard.unlock) navigator.keyboard.unlock();
     fullscreenButton.textContent = inFullscreen() ? "Leave fullscreen" : "Fullscreen";
     appendLog(inFullscreen() ? "Fullscreen" : "Fullscreen left");
   }
@@ -477,7 +490,7 @@
   }
   function installSteps() {
     const ua = navigator.userAgent;
-    if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) {
+    if (appleMobile) {
       return "Tap Share (the square with an arrow), then “Add to Home Screen”.\n" +
              "Нажмите «Поделиться» (квадрат со стрелкой), затем «На экран „Домой“».";
     }
@@ -537,6 +550,8 @@
   const ENTER_HOLD_MS = 100;            // the login window reads Enter as a key held down
   const KEYBOARD_GAP = 12;              // CSS pixels between the game's field and the keyboard
   const KEYBOARD_HIDE_DELAY_MS = 100;   // from one field to the next the game hides it, then shows it
+  const KEYBOARD_MIN_HEIGHT = 100;      // CSS pixels: a phone's keyboard covers more of the page
+  const KEYBOARD_TAP_WAIT_MS = 1000;    // a tap on a field the game doesn't take by then lets the keyboard go
   const keyboardInput = document.getElementById("keyboard");
   let keyboardSent = KEYBOARD_FILL;     // the value the game has been sent
   let keyboardComposing = false;        // the keyboard is still writing a word (suggestions)
@@ -545,6 +560,24 @@
   let keyboardLine = null;              // the game's field, [top, bottom] as fractions of its height
   let keyboardShift = 0;                // CSS pixels the game is moved up
   let tappedSinceKeyboard = false;      // a tap on the game since it last asked for the keyboard
+  // The keys of the game's field, numbered as WebKeyboard.h's FieldKeys: a password field gets a
+  // keyboard without suggestions, a number field (zen, counts) the phone's number keys.
+  const FIELD_KEYS = [null, "text", "password", "digits"];
+  let keyboardKeys = "text";            // the keys #keyboard has
+  let keyboardKeysAsked = null;         // the keys the game's frame asked for last (askKeyboardKeys)
+  function setKeyboardKeys(keys) {
+    keyboardKeys = keys;
+    const type = keys === "password" ? "password" : "text";
+    if (keyboardInput.type !== type) keyboardInput.type = type;
+    const mode = keys === "digits" ? "numeric" : "text";
+    if (keyboardInput.inputMode !== mode) keyboardInput.inputMode = mode;
+  }
+  // A frame of the game may ask twice: a guess as a field takes the keys, then the field's own keys
+  // at the frame's end. The phone redraws its keyboard for each change, so only the last ask is made.
+  function askKeyboardKeys(keys) {
+    if (!keyboardKeysAsked) queueMicrotask(() => { setKeyboardKeys(keyboardKeysAsked); keyboardKeysAsked = null; });
+    keyboardKeysAsked = keys;
+  }
 
   function pressKey(key, code, keyCode, holdMs) {
     const send = (type) => window.dispatchEvent(new KeyboardEvent(type, { key, code, keyCode, which: keyCode, bubbles: true, cancelable: true }));
@@ -604,7 +637,50 @@
   canvas.addEventListener("mousedown", (event) => { if (document.activeElement === keyboardInput) event.preventDefault(); });
   canvas.addEventListener("pointerdown", () => { tappedSinceKeyboard = true; });
 
+  // An iPhone brings its keyboard up only for a focus() made as a finger lifts (touchend), and the
+  // game focuses its fields in its frame: a field it focuses then gets no keyboard. So there the page
+  // focuses its own field again as a finger lifts, when the finger taps a text field (the game says
+  // so while the finger is down: tapOnField), or when the game gave a field the keys while the finger
+  // was down (the chat button opens the chat line as it is pressed). A tap the game then doesn't take
+  // for a field (the window closed meanwhile) lets the keyboard go again.
+  let keyboardTapField = null;          // the keys of the field a finger lifted now taps (FIELD_KEYS)
+  let keyboardTapTimer = 0;
+  let fingersDown = 0;
+  let keyboardShownUnderFinger = false; // the game gave a field the keys while a finger was down
+  let stageMoveHeld = false;            // the game was to move while a finger was on it (moveAboveKeyboard)
+  function keyboardOnScreen() {
+    const view = window.visualViewport;
+    return !!view && window.innerHeight - view.height > KEYBOARD_MIN_HEIGHT;
+  }
+  function fingersChanged(event) {
+    fingersDown = event.touches.length;
+    // Once the game's own touchend has read where the finger was lifted.
+    if (!fingersDown && stageMoveHeld) setTimeout(moveAboveKeyboard, 0);
+  }
+  canvas.addEventListener("touchstart", fingersChanged, { passive: true });
+  canvas.addEventListener("touchcancel", fingersChanged, { passive: true });
+  canvas.addEventListener("touchend", (event) => {
+    fingersChanged(event);
+    if (!appleMobile) return;           // Android's keyboard comes up for the game's own focus
+    const shownUnderFinger = keyboardShownUnderFinger && keyboardWanted;
+    keyboardShownUnderFinger = false;
+    const keys = keyboardTapField || (shownUnderFinger ? keyboardKeys : null);
+    // Up already: only from a field to one with other keys (text to a number field).
+    if (!keys || (keyboardOnScreen() && keys === keyboardKeys)) return;
+    setKeyboardKeys(keys);
+    keyboardInput.blur();               // a focus() on the focused field brings nothing up
+    keyboardInput.focus({ preventScroll: true });
+    clearTimeout(keyboardTapTimer);
+    keyboardTapTimer = setTimeout(() => {
+      if (!keyboardWanted && document.activeElement === keyboardInput) canvas.focus({ preventScroll: true });
+    }, KEYBOARD_TAP_WAIT_MS);
+  }, { passive: true });
+
+  // Not while a finger is on the game: moved under the finger, a tap there turns into a drag and
+  // clicks nothing (the keyboard going away as OK is tapped). It moves once the fingers are off.
   function moveAboveKeyboard() {
+    stageMoveHeld = fingersDown > 0;
+    if (stageMoveHeld) return;
     const view = window.visualViewport;
     let shift = 0;
     if (keyboardWanted && keyboardLine && view) {
@@ -623,17 +699,19 @@
   const phoneKeyboard = {
     // "fresh": a field that just took the keys. A tap on the field it has brings the keyboard back
     // when the phone's Back button put it away: focus() on the focused field does that in Chrome.
-    show(password, lineTop, lineBottom, fresh) {
+    show(keys, lineTop, lineBottom, fresh) {
       clearTimeout(keyboardHideTimer);
       keyboardWanted = true;
       keyboardLine = [lineTop, lineBottom];
-      const type = password ? "password" : "text";
-      if (keyboardInput.type !== type) keyboardInput.type = type;
+      askKeyboardKeys(FIELD_KEYS[keys] || "text");
       if (fresh) restartKeyboardValue(true);
       if (fresh || tappedSinceKeyboard || document.activeElement !== keyboardInput) keyboardInput.focus({ preventScroll: true });
+      if (fresh && fingersDown) keyboardShownUnderFinger = true;
       tappedSinceKeyboard = false;
       moveAboveKeyboard();
     },
+    // The keys of the field a finger lifted now would tap, as FIELD_KEYS numbers them (WebKeyboard.cpp).
+    tapOnField(keys) { keyboardTapField = FIELD_KEYS[keys] || null; },
     hide() {
       keyboardWanted = false;
       clearTimeout(keyboardHideTimer);
@@ -644,6 +722,47 @@
       }, KEYBOARD_HIDE_DELAY_MS);
     },
   };
+
+  // Sound on phones and tablets. Safari plays a page's sound as "ambient", which an iPhone's ring/silent
+  // switch mutes, and most iPhones stay on silent: "playback" plays it as a video's sound is played.
+  // It pauses the phone's own music while the game plays, so not when the game's sound and music are
+  // both off. A phone that leaves the page (another app, the screen off) gets no game sound meanwhile.
+  const AUDIO_SESSION_TYPE = "playback";
+  const SOUND_RESUME_EVENTS = ["touchend", "click", "keydown"];
+  function gameSoundOff(config) {
+    return ["SoundVolume", "MusicVolume"].every((setting) => new RegExp(`^${setting}=0\\s*$`, "m").test(config));
+  }
+  function gameAudioContexts() {
+    const devices = (window.miniaudio && window.miniaudio.devices) || [];
+    return devices.filter((device) => device && device.webaudio).map((device) => device.webaudio);
+  }
+  if (phone && navigator.audioSession && !gameSoundOff(stored("mu-web/config.ini") || "")) {
+    try { navigator.audioSession.type = AUDIO_SESSION_TYPE; } catch (e) { /* an older Safari */ }
+  }
+  if (phone) {
+    let pausedSound = [];               // the game's audio the page paused when it was hidden
+    // Safari may refuse a resume() outside a tap: then the next tap, click or key does it.
+    const resumeSound = () => {
+      pausedSound = pausedSound.filter((context) => context.state !== "running" && context.state !== "closed");
+      for (const context of pausedSound) context.resume().catch(() => {});
+      if (!pausedSound.length) {
+        for (const type of SOUND_RESUME_EVENTS) removeEventListener(type, resumeSound, true);
+      }
+    };
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") {
+        for (const context of gameAudioContexts()) {
+          if (context.state !== "running") continue;
+          context.suspend().catch(() => {});
+          if (!pausedSound.includes(context)) pausedSound.push(context);
+        }
+        return;
+      }
+      if (!pausedSound.length) return;
+      for (const type of SOUND_RESUME_EVENTS) addEventListener(type, resumeSound, true);
+      resumeSound();
+    });
+  }
 
   function stored(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
   function store(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* no storage */ } }
@@ -870,6 +989,37 @@
   });
   addEventListener("pageshow", (event) => { if (event.persisted) location.reload(); });
 
+  // The game's loop waits for promises (JSPI: Main.js wraps its waiting imports in
+  // WebAssembly.Suspending). A page left during a wait, which is any reload, left the game's stack
+  // suspended, and V8 keeps a suspended stack, and the game's memory with it, while the tab's process
+  // lives: each reload added ~650 MB (2026-10-30). When the page goes, every wait ends with "unwind",
+  // Emscripten's own way out of the program, so the stack runs out and the memory can go.
+  const gameWaits = new Set();
+  let pageGone = false;
+  addEventListener("pagehide", () => {
+    pageGone = true;
+    for (const stop of gameWaits) stop();
+    gameWaits.clear();
+  });
+  // A wait that also ends when the page goes. Not Promise.race with one promise for the page: each
+  // race stayed listed on that promise, one a frame, 60 MB an hour (2026-10-30).
+  const untilPageGoes = (wait) => new Promise((resolve, reject) => {
+    const stop = () => reject("unwind");
+    if (pageGone) return stop();
+    gameWaits.add(stop);
+    wait.then((value) => { gameWaits.delete(stop); resolve(value); },
+              (error) => { gameWaits.delete(stop); reject(error); });
+  });
+  if (WebAssembly.Suspending) {
+    const PageSuspending = WebAssembly.Suspending;
+    WebAssembly.Suspending = function (original) {
+      return new PageSuspending(function (...args) {
+        const result = original.apply(this, args);
+        return result && typeof result.then === "function" ? untilPageGoes(result) : result;
+      });
+    };
+  }
+
   const isGameError = (error) => error instanceof WebAssembly.RuntimeError || /Main\.wasm/.test(String(error && error.stack));
   addEventListener("error", (event) => { if (isGameError(event.error)) gameCrashed(event.error); });
   addEventListener("unhandledrejection", (event) => { if (isGameError(event.reason)) gameCrashed(event.reason); });
@@ -911,11 +1061,9 @@
   if (!navigator.gpu) missing.push("WebGPU");
   if (!("Suspending" in WebAssembly)) missing.push("WebAssembly JSPI");
   if (!self.crossOriginIsolated) missing.push("cross-origin isolation (serve with scripts/serve-web.py)");
-  // iPhones and iPads (an iPad's Safari calls itself a Mac): every browser there is Safari's WebKit, and
-  // the game runs from iOS 27 (JSPI came with Safari 27). Their Safari says "iPhone OS 18_7" in the user
-  // agent even on iOS 27.2, so the messages below tell them to update iOS by what the browser lacks.
-  const appleMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
-                      (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  // iPhones and iPads (appleMobile): the game runs from iOS 27 (JSPI came with Safari 27). Their Safari
+  // says "iPhone OS 18_7" in the user agent even on iOS 27.2, so the messages below tell them to update
+  // iOS by what the browser lacks.
   const UPDATE_IOS = ["Update iOS: Settings → General → Software Update (iOS 27 or later), then reload this page.",
                       "Обновите iOS: Настройки → Основные → Обновление ПО (iOS 27 или новее), затем обновите страницу."];
   // The graphics adapter and the optional WebGPU features SDL's WebGPU backend requires. Without one
@@ -1296,7 +1444,10 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     }
     let packDone = false;
     const startupParts = startupPack();
-    const startupPackSettled = startupParts.then((parts) => Promise.allSettled(parts || []), () => {})
+    // Settles with nothing once every part has come or failed. The parts' bytes (166 MB) are copied
+    // into the game's memory (WebFileSystem.cpp) and must go then: a result holding the parts held
+    // them all game long (2026-10-30).
+    const startupPackSettled = startupParts.then((parts) => Promise.allSettled(parts || []).then(() => {}), () => {})
       .finally(() => { packDone = true; setStatus(""); });
     let mapPacksLoading = 0;
     // WebFileSystem.cpp LoadWorldFiles: the files of the map folder the game enters (Data/WorldN,

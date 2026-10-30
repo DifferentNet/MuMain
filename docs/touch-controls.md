@@ -26,8 +26,10 @@ the page's request between frames, `UI::Mobile::FollowPage`).
 |---|---|---|
 | Bottom left | Joystick (floating: it appears where the thumb lands) | Walks the way it points, a few tiles ahead, re-planning as the walk runs out or the thumb turns. Letting go cuts the planned walk short at the next tile (`Automation::StopAtNextTile`, tested in `tests/gamelogic/test_walk_stop.cpp`): the hero stops within a step instead of finishing the tiles planned ahead. The page going out of sight (`SDL_EVENT_WINDOW_HIDDEN`) lets go of every finger, as a phone sends no lift for a thumb still down when the app is switched. |
 | Above the joystick | Q, W | The item hotkeys Q and W (potions). |
-| Along the top, right of the location bar | Back, Menu, Inventory, Character, Chat, Teleport, Map | Back is Esc: it closes the top window (or opens the system menu with none open). Menu opens a panel of 18 items under the row: windows, Skills (the skill picker, below), View (PC / phone) and Chat (for a pad, which has no Chat button of its own). The others press the window's key (I, C, Enter, M, Tab). |
-| Bottom right | Attack (held) | Plain attack on the monster tapped last, else the one fought last, else the nearest within 8 tiles. |
+| Along the top, right of the location bar | Back, Menu, Inventory, Character, Chat, Teleport, Map | Back is Esc: it closes the top window (or opens the system menu with none open). Menu opens a panel of 21 items under the row (20 for a player who is not a GM): windows, Skills (the skill picker, below), View (PC / phone), Chat (for a pad, which has no Chat button of its own), Player actions (D, the commands for the character under the pointer), the PK switch (below) and the GM panel (Y, GMs only). The others press the window's key (I, C, Enter, M, Tab). |
+| Bottom right | Attack (held) | Plain attack on the monster tapped last, else the one fought last, else the nearest within 8 tiles. Where players fight (a duel, Chaos Castle, a Gens enemy on the strife maps) a player tapped or fought counts as a monster does, and the nearest enemy player too. |
+| Menu | PK switch | Ctrl for a finger: while on, Attack reads "PK" in red, a tap on a player attacks and the buttons fight the player tapped last, as Ctrl and a click do on a PC (`TouchActions::SetForceAttack`, the engine's `CanAttackCharacter`). Never a member of the party; off again on a new map or at death. |
+| Party cards | A tap on a member's card | The skill buttons' heals and buffs go to that member while they are near, and the card stays lit; a tap on it again (or on the character's own) gives them back to the character (`TouchActions::ToggleFriend`). The card's leave button is no pick. |
 | Around Attack | The hotkey bar's five skills | A tap makes the skill current (as a click on its slot). Held, it casts: buffs and heals on the character, area buffs around it, the rest at a monster as Attack picks one. Teleport only selects (aim it with a long press). |
 | Around Attack | Putting a skill on a button | The skill picker: a panel on the left of the dimmed screen lists the skills (icon and name, as many to a page as fit, < > turn the pages), the five skill buttons stay lit right of it. The button being set glows gold; a tap on another button chooses that one. A tap on a skill puts it there and the next empty button is chosen, so a new character fills the five with five taps. A skill already on another button swaps places with the one it replaces (each skill is on one button at most; a gold dot marks the skills on a button, the chosen button's skill is lit). Remove empties the chosen button, Done, Back or a tap beside the panel close it. It opens from the Skills button beside the arc, from Menu → Skills, or from a tap on an empty skill button (which shows a plus). The hotkeys are saved to the server at once (`SaveOptions`), as a closed tab never logs out. The rules (which hotkey a button is, swapping, the next empty button, how many skills a page holds) are `UI/Mobile/SkillArrange.{h,cpp}`, tested in `tests/ui/test_skill_arrange.cpp`. The game's own skill list (the PC bar's current-skill icon) still binds as before: with it open, a tap on a button and then a skill, or a skill and then a button within 8 s. |
 | Left of the skill buttons | Skills | Opens the skill picker on the first empty button (else the first). |
@@ -38,17 +40,44 @@ the page's request between frames, `UI::Mobile::FollowPage`).
 ## Item card
 
 A finger held on an item in the bag opens a card in place of the PC's right click, which would use,
-equip, sell or drop the item at once: the item's name, then Use / Equip (Move with the storage, trade
-or chaos machine open, Sell in a shop), Put on button Q / W (for items the hotkeys take), Drop (only
-with the bag alone open, for items that may be dropped; it asks first) and Close. Each button checks
-that the same item still lies there before it acts. A mouse's right click is unchanged. The card
+equip, sell or drop the item at once: the item's name, then the right click's action (Move with the
+storage, trade or chaos machine open, Sell in a shop), Put on button Q / W (for items the hotkeys
+take), Drop (only with the bag alone open, for items that may be dropped; it asks first) and Close.
+With the bag alone open the action is what the right click does to that item: Use only for the items
+it uses (potions, scrolls, tickets, skill books and the like: `IsUsedFromBag`, kept in step with
+`TryConsumeItem`), Equip for gear, Apply… for a jewel worked onto items (it lifts the jewel, and the
+next tap on an item in the bag applies it there), Open for a box the server opens where it is dropped
+(Box of Luck, the Boxes of Kundun, the event boxes, the SkyNet Box; no Drop beside it), and nothing
+for the rest. Each button checks that the same item still lies there before it acts. The pad's R3
+opens the same card, except with the storage or the chaos machine open, where it moves the item at
+once as before (`CInventoryActionController::AsksWithItemCard`). A mouse's right click is
+unchanged. The card
 opens at the edge of the screen away from the item, so the item's tooltip beside it stays in view
 (`GenericMenuConfig::edge`, the `gmd-edge-left` / `gmd-edge-right` classes of
 `generic_menu_dialog.rcss`).
 
+A finger held on a "+" of the character window (a right click, R3 on a pad) opens a menu of bigger
+steps for the free points: +10, +100, +1000 while there are more, then all of them, spent through
+the server's `/addstr` and the like, which stop at a stat's maximum
+(`UI/Character/StatPointsMenu.{h,cpp}`, tested in `tests/ui/test_stat_points_menu.cpp`). A plain tap
+still adds one point.
+
 On worn gear (the character's equipment slots) the card has Take off: the item goes to the first
 free place in the bag, as a mouse's right click there does, or the system messages say the bag is
-full. Lifting the finger takes nothing off by itself (`CMyInventory::ShowWornItemCard`).
+full. Lifting the finger takes nothing off by itself (`CMyInventory::ShowWornItemCard`). A tap on worn
+gear opens the same card rather than lifting the item onto the finger, unless a window that takes a
+held item is open (a shop, the storage, a trade, the chaos machine, a personal shop), where it lifts
+it as a click does; a drag lifted over worn gear takes nothing (`HandleFingerReleaseOnWorn`). R3 on
+worn gear opens the card too.
+
+In the storage and the extended storage a finger held on an item opens a card with Move to bag (a
+right click moves it at once). The chaos machine's long press still moves the item back at once.
+
+In an NPC shop a tap selects an item: its cells light up, its tooltip shows and, once a shop opening,
+a line says to tap it again; a second tap on the same item within 1.5 s buys it. A tap on another
+item selects that one, and a drag lifted on the grid buys nothing. The mouse and the pad buy with one
+click, as before; a gamble shop asks first anyway (`UI/NPCs/ShopTapToBuy.{h,cpp}`, tested in
+`tests/ui/test_shop_tap_to_buy.cpp`).
 
 ## Phone view
 
@@ -66,8 +95,9 @@ Windows, the HUD bar and tooltips take a finger before the controls: a finger on
 plays the mouse there even where a button lies under it. A window a workspace slot placed counts by
 its panel's box (`#panel.slot-placed`), as the inventory, shops, storage and trade panels take no
 pointer events themselves (their item grids are clicked natively) and RmlUi's hit test looks through
-them. The chat log and the scrolling notice do not take the finger (they only show text, over the
-joystick's corner and the top row).
+them. The chat log, the scrolling notice and the events' timers and scores (Blood and Chaos Castle,
+Kanturu, Doppelganger, Empire Guardian, duels, Battle Soccer: class `touch-through` on their root) do
+not take the finger: they only show text, over the joystick's corner, the top row and the fight.
 
 The pointer stays where the last tap lifted, so a monster tapped stays Attack's target and an item
 tapped shows its tooltip. A tap on a top-row button or a menu item takes it off the window
@@ -102,6 +132,26 @@ just left of the skill buttons; the hint for putting a skill on a button stays o
 wider than the room right of the list. The themes' `@media (theme: mobile-hud)` places are the first guess
 until then; leaving the phone's HUD gives the themes' places back.
 
+The party's cards go under the top row's right end (short of the page's ⋮), the first column on the
+right: up to 1.4 times the dock's size so a finger can pick one, in one column or two (a party of
+five), smaller in steps down to the dock's size where a column would reach a control round Attack
+(`UI/Mobile/PhoneHudFit.{h,cpp}`, tested in `tests/ui/test_phone_hud_fit.cpp`; `party_list.rcss`
+wraps the cards). The chat moves left until it clears the skill buttons beside it (on a phone 640
+CSS px wide it would reach the first one), never past the screen's left edge. World labels (names,
+chat balloons, shop titles) under the top row's band, the hero frame with the location bar, or a
+control draw at a quarter of their strength (`PhoneHudLayout::CoversLabel`, used by
+`UI/Character/WorldLabelLayer`): they draw under every window, and their text would mix with the
+buttons'. The notices go under the open menu and skill picker, dimmed by the backdrop, and back over
+every window once they shut (`UI/Mobile/NoticesUnderPanel`). The PC's HUD shows both as before.
+
+In the phone's HUD the top row's buttons are as wide as their labels, 44 to 72 units (a wide phone
+looks as before), and the labels get smaller, not under 9 units, where the row is too short for them
+at 12 units: Russian's on a phone 640 CSS px wide. Pick up is a pill 62 units wide for "Поднять";
+the skill picker's Remove, Done and page buttons are 44 units tall; no text is under 12 units. The
+hero frame's SD and AG show their numbers short from 10 000 on ("12k/32k", `UI/Mobile/CompactNumber`,
+tested in `tests/ui/test_compact_number.cpp`), HP and MP in full. A PC with a touch screen or a pad
+keeps the controls' own sizes.
+
 The phone view also raises the chat's and the system messages' text to at least 12 units at 100 %
 (`TouchUnit::ReadableTextPx`), with their lines and rows; the chat's well keeps its height and shows
 fewer rows.
@@ -114,7 +164,9 @@ page's side):
 - The screen stays on in the world while the game is played by hand (the phone view or touch
   controls): the browser's screen wake lock, taken again when the page shows after being hidden and
   asked for every 5 s while wanted (a battery saver may refuse it for a while). A phone's screen would
-  otherwise dim while the MU Helper hunts.
+  otherwise dim while the MU Helper hunts. With the helper off, it lets the screen dim after 5 minutes
+  with no touch, key, wheel or pad press (`Module.muInput` counts the page's input), as a phone left on
+  a table should; the next touch keeps it on again.
 - The back gesture (or Android's back button) is the game's Back instead of leaving the page: the page
   keeps a history entry of its own on top (`Module.muBack`), and stepping back from it counts a press
   and puts it back. A press closes the touch menu if it is open, else does what Back does
@@ -137,7 +189,9 @@ Each window restyles itself under `@media (theme: mobile)` in both themes; on a 
 
 A finger that moves on a scrollable list scrolls it, as on a phone, rows and buttons included (they
 click only on a tap); a flick glides on and a tap on a gliding list only stops it. Item grids,
-scrollbars, sliders (RmlUi's `drag` property other than `block`) and text fields keep the drag
+scrollbars, sliders (RmlUi's `drag` property other than `block`) and text fields keep the drag;
+a slider inside a list that scrolls up and down (Options) takes the finger only when it starts
+sideways, and an up or down swipe over it scrolls the list (`TouchGesture::IsMostlyVertical`)
 (`Render/RmlUi/RmlTouchScroll.{h,cpp}`, reached from `Touch::Pointer` through
 `Core::Input::BeginUiTouchScroll` and the other `IUiInputConsumer` touch-scroll calls).
 
@@ -160,7 +214,9 @@ that began with it from the next press.
 Options -> Interface -> Gamepad (`[UI] Gamepad` in config.ini, on by default) switches it off: the
 game then opens no pad and reads none of its buttons (`Core::Input::Gamepad::SetEnabled`). It is for
 a pad that Steam Input or a handheld's own software (Armoury Crate, Legion Space) already turns into
-a mouse and keys, so a press does not count twice.
+a mouse and keys, so a press does not count twice. Turned off with the pad itself, the pad plays on
+until a key, a mouse button or the screen is pressed (or the pad is unplugged), and the system log
+says so: the player is never left with nothing to press (`Gamepad::TurnsOffWhenPutDown`).
 
 While the pad is in use, the touch controls show in the world (in the PC view too, over the PC bar)
 with the pad button that presses each one drawn on its corner: the Xbox glyphs (A green, B red,
@@ -177,16 +233,20 @@ the pad replaces the PC bar as touch does (style flag `mobile-hud`). Without tou
 | X, Y, RB, LT, D-pad down | The five hotkey skills: a tap makes one current, held it casts |
 | LB | Pick up (held) |
 | D-pad up | MU Helper on and off |
+| D-pad up, down over a list that scrolls | Scroll it (the mouse wheel there, repeating while held): a shop, the commands, the quests |
 | D-pad left, right | The potions Q and W |
 | RT | A left click at the pointer (talk to an NPC, walk there, use a window); held, a drag |
-| R3 | A right click at the pointer |
+| R3 | A right click at the pointer; on an item in the bag or worn gear it opens the item card (above), except with the storage or the chaos machine open |
 | L3 | The skill picker: the stick or the d-pad move its highlight over the skills, the panel's buttons and the skill buttons on its right; A on a skill button chooses it, A on a skill puts it there; B closes. Without the controls on the screen, the game's skill list |
 | View | The map |
 | Menu | The menu of windows: the stick or the d-pad move its highlight, A opens, B or Menu closes; its legend shows the keys. Its Chat item opens the chat line, and the pad's keyboard with it |
 
 On the login, server and character screens both sticks move the pointer, A or RT click, B is Esc and
-Menu is Enter. The pointer starts at the screen's centre when the pad takes over, so A attacks at
-once. A button still held when the menu closes acts only once released, so the B that closed it does
+Menu is Enter. The pointer starts at the screen's centre the first time the pad takes over, so A
+attacks at once; later it stays where the mouse left it, so a window under it stays under it (a
+lifted finger leaves it off the window: then the centre again). A question (trade, party) takes Menu
+as yes after a second, and A only once A has rested a second, so A tapped in a fight goes on
+attacking. A button still held when the menu closes acts only once released, so the B that closed it does
 not also press Back. The first time a pad is used, the system log says how it plays; Help lists
 every button on a page of its own while the pad is in use (after the touch page with touch on too),
 and LB and RB turn the pages.
@@ -194,7 +254,7 @@ and LB and RB turn the pages.
 | Piece | File | Role |
 |---|---|---|
 | Device | `Core/Input/GamepadInput.{h,cpp}` | SDL gamepad events → held buttons, presses since the last frame and the sticks (radial dead zone, triggers as buttons), across up to four pads; which device the player used last. The sticks are also polled once a frame (`Poll`): SDL keeps the first value an axis reports as its rest and sends no event for it. |
-| Pointer | `Core/Input/GamepadPointer.{h,cpp}` | The stick moves the SDL pointer (warped), buttons as pushed SDL mouse events with their own `which`; held buttons ORed into `IsKeyDown(VK_LBUTTON/VK_RBUTTON)`. A real mouse moving it is followed; a browser repeating a resting mouse's place (it does on layout changes) is not. |
+| Pointer | `Core/Input/GamepadPointer.{h,cpp}` | The stick moves the SDL pointer (warped), buttons as pushed SDL mouse events with their own `which`; held buttons ORed into `IsKeyDown(VK_LBUTTON/VK_RBUTTON)`, the wheel too (`TurnWheel`, for the d-pad over a list; `Core::Input::UiScrollsAt` says whether a list there scrolls). A real mouse moving it is followed; a browser repeating a resting mouse's place (it does on layout changes) is not. |
 | Mapping | `UI/HUD/GamepadControls.{h,cpp}` | Once a frame before the touch controls: presses their controls (`TouchControls::SetPadHeld`), steers (`GameLogic::Touch::Steer`), moves the menu's highlight; off the world, the plain pointer; with a text field focused, hands the pad to the keyboard. |
 
 A DualSense plays with the same buttons (cross = A, circle = B, square = X, triangle = Y); its own
@@ -243,11 +303,12 @@ the keyboard closes act only once released, so the B that closed it does not als
 | World actions | `GameLogic/Touch/TouchActions.{h,cpp}` | Steer, Attack, Select/Cast/BindHotKeySlot, PickUpNearest, on `GameLogic::Automation` (the helper's and control socket's primitives). |
 | Controls | `UI/HUD/TouchControls.{h,cpp}` + `touch_controls.rml` + `themes/{legacy,modern}/touch_controls.rcss` | Draws the controls, answers the router's hit test from the elements' boxes, acts once a frame (`SceneManager.cpp`, after the scene). Depth 1.06 in `RmlStackingOrder.cpp`: under every window. |
 | View and controls choice | `UI/Mobile/InterfaceMode.{h,cpp}` | Reads the two Options rows, turns the touch layer on or off and sets the style flags `mobile` (phone view) and `mobile-hud` (phone view with touch controls). RCSS restyles a document for them with `@media (theme: mobile)` / `@media (theme: mobile-hud)`. |
-| Hero frame | `UI/Mobile/HeroFrame.{h,cpp}`, `UI/HUD/HeroGauges.{h,cpp}` | Fills the hero frame's part of the touch controls' model; HeroGauges reads HP/MP/AG/SD and EXP for it and for the PC bar alike. |
-| Item card | `UI/Mobile/ItemCard.{h,cpp}`, `UI/Inventory/InventoryActionController.cpp`, `UI/Inventory/MyInventory.cpp` | The card (a generic menu dialog); the controller opens it for a finger's right click on a bag item, the inventory for one on worn gear. |
+| Hero frame | `UI/Mobile/HeroFrame.{h,cpp}`, `UI/HUD/HeroGauges.{h,cpp}`, `UI/Mobile/CompactNumber.{h,cpp}` | Fills the hero frame's part of the touch controls' model, writing only what changed (the potions are counted four times a second); HeroGauges reads HP/MP/AG/SD and EXP for it and for the PC bar alike. |
+| Item card | `UI/Mobile/ItemCard.{h,cpp}`, `UI/Inventory/InventoryActionController.cpp`, `UI/Inventory/MyInventory.cpp`, `UI/Inventory/StorageInventory.cpp`, `UI/Inventory/StorageInventoryExt.cpp` | The card (a generic menu dialog); the controller opens it for a finger's long press or R3 on a bag item, the inventory for a tap, a long press or R3 on worn gear, the storages for a long press on theirs. |
+| Click source | `UI/Mobile/ClickSource.{h,cpp}` | Whether a window's click came from a finger's tap, drag or long press, or from the pad's R3 (`Touch::Pointer::LastLeftPress`), so that a window can ask first only for those. |
 | Finger unit | `UI/Mobile/TouchUnit.{h,cpp}`, `UI/Mobile/ButtonSize.{h,cpp}` | The unit the controls are sized in and the Button size option (Options → Interface, `OptionWindow.cpp`). |
-| Neighbours | `UI/Mobile/PhoneHudLayout.{h,cpp}` | Moves the buffs, pets' frames, system messages and skill list beside the controls. |
-| Page | `UI/Mobile/PhonePage.{h,cpp}`, `Core/Platform/web/WebScreen.{h,cpp}` | Screen wake lock and the back gesture (browser only). |
+| Neighbours | `UI/Mobile/PhoneHudLayout.{h,cpp}`, sums in `UI/Mobile/PhoneHudFit.{h,cpp}` | Moves the buffs, pets' frames, system messages, skill list, party cards and chat beside the controls; tells the world labels where the HUD lies over them; puts the notices under the open menu (`UI/Mobile/NoticesUnderPanel.{h,cpp}`, writes only on a change). Finds each document once (again every 250 ms while missing) and places a piece only when the controls, the screen or the piece's size changed, or every 250 ms. |
+| Page | `UI/Mobile/PhonePage.{h,cpp}`, `Core/Platform/web/WebScreen.{h,cpp}` | Screen wake lock (let go after 5 idle minutes) and the back gesture (browser only). |
 
 The element ids in `touch_controls.rml` are the contract with C++ (`ControlElement()`): a theme may
 move and restyle a control, and where it puts it is where the control answers.

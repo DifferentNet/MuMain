@@ -9,13 +9,15 @@
 	<!-- The party HUD list (CPartyListWindow): one card per member down the right side, left of
 	     the docked panels. The theme places #panel against the uncovered world's right edge
 	     (--world-right) at the dock's scale; cards are reference px, one below the other. C++
-	     keeps Party[], the hovered card (the skill target, `selected`, from party_hover) and the
-	     leave request (party_leave). The names are .sharp-text leaves at the native size, shrunk
-	     to their box like the original's (name_text_px). -->
+	     keeps Party[], the skill target (`selected`: the hovered card, party_hover, or with the
+	     on-screen controls the tapped one, party_pick) and the leave request (party_leave). The
+	     names are .sharp-text leaves at the native size, shrunk to their box like the original's
+	     (name_text_px). -->
 	<div id="panel" data-model="party_list">
 		<div class="card" data-for="card : cards" data-class-leader="card.leader" data-class-absent="card.absent"
 		     data-class-defense="card.defense_buff" data-class-selected="card.selected"
-		     data-event-mouseover="party_hover(card.index)" data-event-mouseout="party_unhover">
+		     data-event-mouseover="party_hover(card.index)" data-event-mouseout="party_unhover"
+		     data-event-click="party_pick(card.index)">
 			<div class="card-fill"></div>
 			<div class="card-tint"></div>
 			<div class="card-select"></div>

@@ -68,3 +68,11 @@ add_test(
     COMMAND "${CMAKE_COMMAND}"
         -P "${CMAKE_SOURCE_DIR}/tests/test_copy_runtime_assets.cmake"
 )
+
+# The web build's packs hold version 12 models decrypted (tools/web/make_startup_pack.py).
+add_test(
+    NAME startup_pack_models
+    COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/test_startup_pack_models.py"
+            "${CMAKE_SOURCE_DIR}"
+)

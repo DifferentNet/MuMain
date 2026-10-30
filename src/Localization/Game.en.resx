@@ -15420,7 +15420,7 @@
     <value>Menu: every window. Back: closes the window on top</value>
   </data>
   <data name="TouchHelpItem" xml:space="preserve">
-    <value>Hold an item: its card with what you can do</value>
+    <value>Hold an item: its card with what you can do. Hold a stat's +: many points at once</value>
   </data>
   <data name="TouchHelpDrag" xml:space="preserve">
     <value>Drag an item to move it, drag a list to scroll it</value>
@@ -15471,7 +15471,7 @@
     <value>LB: tap to pick up the nearest item, hold to keep picking up</value>
   </data>
   <data name="PadHelpPotions" xml:space="preserve">
-    <value>D-pad left and right: potions Q and W</value>
+    <value>D-pad left and right: potions Q and W. Up and down over a list: scroll it</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
     <value>RT: click at the pointer (talk to an NPC, walk there), hold to drag</value>
@@ -15498,10 +15498,10 @@
     <value>D-pad up: MU Helper on and off (the left stick moves where it hunts). View: the map</value>
   </data>
   <data name="PadHelpRightClick" xml:space="preserve">
-    <value>RS (click the right stick in, centred): right click at the pointer</value>
+    <value>RS (click the right stick in, centred): right click at the pointer, on a stat's + many points</value>
   </data>
   <data name="PadHelpDialog" xml:space="preserve">
-    <value>A question (trade, party): A or Menu is Yes after a second, B is No</value>
+    <value>A question (trade, party): after a second Menu is Yes, A too once it rested a second. B is No</value>
   </data>
   <data name="PadHelpPagesHint" xml:space="preserve">
     <value>LB, RB: turn the pages. B: close</value>
@@ -15805,5 +15805,59 @@
   </data>
   <data name="InventoryAlreadyOnQuickSlot" xml:space="preserve">
     <value>It is already on quick slot %lc.</value>
+  </data>
+  <data name="TouchNoMana" xml:space="preserve">
+    <value>Not enough mana</value>
+  </data>
+  <data name="TouchNoAg" xml:space="preserve">
+    <value>Not enough AG</value>
+  </data>
+  <data name="StatPointsMenuTitle" xml:space="preserve">
+    <value>%ls (points: %d)</value>
+  </data>
+  <data name="StatPointsMenuAll" xml:space="preserve">
+    <value>All: +%d</value>
+  </data>
+  <data name="TouchMenuPlayer" xml:space="preserve">
+    <value>Player actions</value>
+  </data>
+  <data name="TouchMenuPkOff" xml:space="preserve">
+    <value>PK: off</value>
+  </data>
+  <data name="TouchMenuPkOn" xml:space="preserve">
+    <value>PK: on</value>
+  </data>
+  <data name="TouchMenuGm" xml:space="preserve">
+    <value>GM panel</value>
+  </data>
+  <data name="TouchAttackPk" xml:space="preserve">
+    <value>PK</value>
+  </data>
+  <data name="TouchHelpParty" xml:space="preserve">
+    <value>Tap a party member's card: your heals and buffs go to them, tap it again to stop</value>
+  </data>
+  <data name="TouchHelpPk" xml:space="preserve">
+    <value>PK (menu): tap a player to fight them, then Attack and skills keep at them. Your party is spared</value>
+  </data>
+  <data name="PadHelpPk" xml:space="preserve">
+    <value>PK (menu): point at a player, A fights them, your party is spared. A on a party card: buffs go to them</value>
+  </data>
+  <data name="GamepadOffLater" xml:space="preserve">
+    <value>The gamepad turns off when you next press a key, a mouse button or the screen</value>
+  </data>
+  <data name="TouchShopTapAgainToBuy" xml:space="preserve">
+    <value>Tap the item again to buy it.</value>
+  </data>
+  <data name="TouchItemOpen" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="TouchItemApply" xml:space="preserve">
+    <value>Apply…</value>
+  </data>
+  <data name="TouchItemApplyHint" xml:space="preserve">
+    <value>Tap the item to apply the jewel to.</value>
+  </data>
+  <data name="TouchItemMoveToBag" xml:space="preserve">
+    <value>Move to bag</value>
   </data>
 </root>

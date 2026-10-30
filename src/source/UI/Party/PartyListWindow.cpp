@@ -9,6 +9,9 @@
 #include "Character/CharacterManager.h"
 #include "GameLogic/Skills/SkillManager.h"
 #include "Engine/Object/ZzzInterface.h"
+#include "Audio/DSPlaySound.h"
+#include "GameLogic/Touch/TouchActions.h"
+#include "UI/Mobile/InterfaceMode.h"
 #include "Camera/CameraProjection.h"
 
 #include "Core/Utilities/StringUtils.h"
@@ -208,6 +211,29 @@ void CPartyListWindow::BindRmlModel(Rml::DataModelConstructor& c, PartyListRmlMo
     c.BindEventCallback("party_hover",
                         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& arguments)
                         { m_HoveredCard = arguments.size() == 1 ? arguments[0].Get<int>(-1) : -1; });
+    // A tap on a card while the on-screen controls show: that member takes the heals and buffs of the
+    // skill buttons, a tap on it again gives them back to the character (GameLogic/Touch/TouchActions.h).
+    // The card's leave button is no pick.
+    c.BindEventCallback("party_pick",
+                        [](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList& arguments)
+                        {
+                            if (!UI::Mobile::ShowsControls() || arguments.size() != 1)
+                                return;
+                            for (Rml::Element* part = event.GetTargetElement();
+                                 part != nullptr && part != event.GetCurrentElement(); part = part->GetParentNode())
+                            {
+                                if (part->IsClassSet("card-leave"))
+                                    return;
+                            }
+                            const int card = arguments[0].Get<int>(-1);
+                            if (card < 0 || card >= PartyNumber)
+                                return;
+                            const int index = Party[card].index;
+                            if (index < 0 || index >= MAX_CHARACTERS_CLIENT)
+                                return;
+                            GameLogic::Touch::ToggleFriend(CharactersClient[index].Key);
+                            PlayBuffer(SOUND_CLICK01);
+                        });
     // Only the card's own mouseout: one bubbling up from a part of it leaves the card hovered.
     c.BindEventCallback("party_unhover",
                         [this](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList&)
@@ -252,7 +278,10 @@ void CPartyListWindow::SyncCards()
         card.name = StringUtils::WideToNarrow(member.Name);
         card.leader = i == 0;
         card.absent = member.index == -1;
-        card.selected = !card.absent && m_iSelectedCharacter == i;
+        // Under the pointer, or the member a tap on the card chose for the heals and buffs.
+        const bool chosen = !card.absent && member.index >= 0 && member.index < MAX_CHARACTERS_CLIENT &&
+                            CharactersClient[member.index].Key == GameLogic::Touch::FriendKey();
+        card.selected = !card.absent && (m_iSelectedCharacter == i || chosen);
         card.showLeave = CanLeave(i);
         card.healthLength = HealthBarLength(member.stepHP);
         if (member.index >= 0 && member.index < MAX_CHARACTERS_CLIENT)

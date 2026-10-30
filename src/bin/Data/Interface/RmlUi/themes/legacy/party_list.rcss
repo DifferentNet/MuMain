@@ -82,3 +82,18 @@
 }
 /* A card takes the pointer: its hover is the skill target, and a click on it never walks. */
 .card { pointer-events: auto; }
+
+/* The phone HUD (UI/Mobile/PhoneHudLayout.cpp): the cards bigger than the dock's scale so a finger
+   can pick one, in one or two columns under the top row of buttons, the first column on the right.
+   The layout sets the panel's height to end a column after so many cards, its width to hold the
+   columns (the space between them is the panel's), its place and its scale; until it does, the cards
+   stand in one column as above. */
+@media (theme: mobile-hud) {
+	#panel {
+		display: flex;
+		flex-direction: column;
+		flex-wrap: wrap-reverse;
+		align-content: space-between;
+	}
+	.card { flex: 0 0 auto; }
+}

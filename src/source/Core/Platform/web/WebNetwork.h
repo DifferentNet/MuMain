@@ -9,6 +9,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace mu::web
@@ -24,6 +25,9 @@ void* FindNetworkSymbol(const char* name);
 
 // The generated Send<Packet> functions (WebPacketFunctions.generated.cpp).
 const std::vector<NetworkSymbol>& GeneratedPacketFunctions();
+
+// The page bridge's WebSocket address for a game server port: ws/<port> beside the page.
+std::string BridgeUrl(std::uint16_t port);
 
 // Sends complete client packets on a connection, encrypted when the connection is.
 void SendPacket(std::int32_t handle, const std::uint8_t* data, std::size_t size);

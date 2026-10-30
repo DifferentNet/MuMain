@@ -73,6 +73,8 @@ State g_state;
 // The pointer is where a finger left it (and not taken off the window since, nor pressed with by the
 // mouse or the pad).
 bool g_fingerPlaced = false;
+// Outside State: a tap's press and release reach the game's windows after the finger has lifted.
+LeftPress g_lastLeftPress = LeftPress::NotFinger;
 
 float WindowHeight(SDL_Window* window)
 {
@@ -196,6 +198,7 @@ Uint8 TapClicks(float x, float y, float height)
 void Tap(SDL_Window* window)
 {
     const Uint8 clicks = TapClicks(g_state.x, g_state.y, WindowHeight(window));
+    g_lastLeftPress = LeftPress::Tap;
     PushButton(window, SDL_BUTTON_LEFT, true, clicks, g_state.x, g_state.y);
     PushButton(window, SDL_BUTTON_LEFT, false, clicks, g_state.x, g_state.y);
 }
@@ -263,6 +266,7 @@ void StartDrag(SDL_Window* window)
     }
     g_state.phase = Phase::Dragging;
     g_state.heldAtLanding = true;
+    g_lastLeftPress = LeftPress::Drag;
     PushButton(window, SDL_BUTTON_LEFT, true, 1, g_state.downX, g_state.downY);
 }
 
@@ -448,6 +452,7 @@ void Reset(SDL_Window* window)
     if (window != nullptr)
         ReleaseButtons(window);
     g_state = State{};
+    g_lastLeftPress = LeftPress::NotFinger;
 }
 
 bool Rest(SDL_Window* window)
@@ -463,10 +468,28 @@ bool Rest(SDL_Window* window)
 void ForgetFinger()
 {
     g_fingerPlaced = false;
+    g_lastLeftPress = LeftPress::NotFinger;
 }
 
 bool IsButtonHeld(int sdlButton)
 {
     return sdlButton >= 0 && sdlButton < ButtonSlots && g_state.buttons[sdlButton];
+}
+
+std::optional<SDL_FPoint> TapPoint()
+{
+    if (!g_state.firstDown || Gesture::OnLift(g_state.phase, false, g_state.stoppedGlide) != Gesture::Lift::Click)
+        return std::nullopt;
+    return SDL_FPoint{g_state.x, g_state.y};
+}
+
+LeftPress LastLeftPress()
+{
+    return g_lastLeftPress;
+}
+
+SDL_FPoint MoveFromLanding()
+{
+    return {g_state.x - g_state.downX, g_state.y - g_state.downY};
 }
 } // namespace Core::Input::Touch::Pointer

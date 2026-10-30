@@ -9,6 +9,13 @@
 #include "UI/Inventory/InventoryCtrl.h"
 #include "GameLogic/Items/IInventoryActionContext.h"
 
+#include <functional>
+
+namespace UI::Mobile::ItemCard
+{
+struct Content;
+}
+
 namespace mu::ui::window
 {
 
@@ -47,9 +54,17 @@ private:
     // The right click's action on the item under the pointer; without mayDrop an item with no other
     // use stays where it is.
     bool RunRightClickAction(CInventoryCtrl* targetControl, RightClickTarget target, bool mayDrop) const;
-    // MU Moldova: a finger's long press is a right click; on an item it opens the item's card
-    // (UI::Mobile::ItemCard) instead. False when there is no item to show.
+    // MU Moldova: whether this right click opens the item's card (UI::Mobile::ItemCard) instead of
+    // acting: a finger's long press always does; the pad's R3 too, but for the storage and the chaos
+    // machine, where it moves the item at once as the mouse does, to shift many in a row.
+    static bool AsksWithItemCard(RightClickTarget target);
+    // The item card for the item under the pointer. False when there is no item to show.
     bool ShowTouchItemCard(CInventoryCtrl* targetControl) const;
+    // The card's first button with the bag alone open: Use or Equip as the right click does, Apply...
+    // for a jewel (lifts it, to be tapped onto an item), Open for a box the server opens when dropped.
+    // None for an item the right click would only drop: the card's Drop asks first.
+    void SetBagItemAction(CInventoryCtrl* targetControl, const ITEM& item, std::function<void()> runRightClick,
+                          UI::Mobile::ItemCard::Content& card) const;
     bool HandleStorageAutoMove(CInventoryCtrl* targetControl) const;
     bool HandleMixAutoMove(CInventoryCtrl* targetControl) const;
     bool HandleSellToNPC(CInventoryCtrl* targetControl) const;

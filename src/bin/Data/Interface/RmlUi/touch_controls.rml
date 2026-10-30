@@ -102,6 +102,11 @@
 		<div id="tc_menu_15" class="tc-button tc-menu-item" data-class-focused="menu_focus == 15"><span class="tc-menu-label">{{menu_label_15}}</span></div>
 		<div id="tc_menu_16" class="tc-button tc-menu-item" data-class-focused="menu_focus == 16"><span class="tc-menu-label">{{menu_label_16}}</span></div>
 		<div id="tc_menu_17" class="tc-button tc-menu-item" data-class-focused="menu_focus == 17"><span class="tc-menu-label">{{menu_label_17}}</span></div>
+		<div id="tc_menu_18" class="tc-button tc-menu-item" data-class-focused="menu_focus == 18"><span class="tc-menu-label">{{menu_label_18}}</span></div>
+		<!-- The PK switch: lit while on. -->
+		<div id="tc_menu_19" class="tc-button tc-menu-item" data-class-focused="menu_focus == 19" data-class-on="pk_on"><span class="tc-menu-label">{{menu_label_19}}</span></div>
+		<!-- The GM panel, for game masters only. -->
+		<div id="tc_menu_20" class="tc-button tc-menu-item" data-if="menu_gm" data-class-focused="menu_focus == 20"><span class="tc-menu-label">{{menu_label_20}}</span></div>
 		<!-- With a pad, its keys for the menu: the stick or the d-pad move the highlight. -->
 		<div id="tc_menu_legend">
 			<div class="pad-glyph pad-face pad-a">A</div><div class="pad-legend-label">{{pad_open_label}}</div>
@@ -158,7 +163,7 @@
 	<!-- Bottom right: attack (held, it fights the tapped or the nearest monster), the hotkey bar's
 	     five skills around it (a tap makes the skill current, holding casts it), pickup (held, it
 	     gathers the drops around) and auto-hunt (the MU Helper on and off). -->
-	<div id="tc_attack" class="tc-button">{{attack_label}}<div class="pad-glyph pad-face pad-a">A</div></div>
+	<div id="tc_attack" class="tc-button" data-class-pk="pk_on">{{attack_label}}<div class="pad-glyph pad-face pad-a">A</div></div>
 	<!-- An empty skill button shows a plus: a tap on it opens the skill picker for it. While the
 	     picker is open the buttons stand lit over the dimmed screen, the one being set in gold
 	     ("target"), the pad's highlight white ("focused"). The game's own skill list, where the

@@ -1,7 +1,11 @@
 #include "stdafx.h"
 #include "ReconnectManager.h"
 
+#ifdef __EMSCRIPTEN__
+#include "Core/Platform/web/WebServerProbe.h"  // the browser's reachability probe
+#else
 #include "Core/Platform/WinSock.h"  // GetAddrInfoW + BSD-socket shims for the reachability probe
+#endif
 
 #include <cmath>
 #include <cwchar>
@@ -20,7 +24,13 @@
 namespace
 {
     constexpr double PROBE_INTERVAL_MS = 5000.0;    // gap between reachability probes
+#ifdef __EMSCRIPTEN__
+    // A browser's probe is a WebSocket through the page's bridge (TLS, then the bridge dials the
+    // server): on a phone's mobile data that takes longer than a bare TCP connect.
+    constexpr double PROBE_TIMEOUT_MS = 8000.0;
+#else
     constexpr double PROBE_TIMEOUT_MS = 2000.0;     // allow a probe this long to connect
+#endif
     constexpr double CONNECT_TIMEOUT_MS = 10000.0;  // wait for the server hello
     constexpr double LOGIN_TIMEOUT_MS = 10000.0;    // login -> character list
     constexpr double RETRY_INTERVAL_MS = 5000.0;    // gap between re-login retries
@@ -218,6 +228,48 @@ void ReconnectManager::UpdateProbing()
     PollProbe();
 }
 
+#ifdef __EMSCRIPTEN__
+void ReconnectManager::StartProbe()
+{
+    const std::int32_t probe = mu::web::StartServerProbe(m_serverPort);
+    if (probe == 0)
+    {
+        EnterPhase(Phase::Probing);  // reset the interval timer and retry later
+        return;
+    }
+
+    m_probeSocket = static_cast<uintptr_t>(probe);
+    m_probeStartTime = WorldTime;
+}
+
+void ReconnectManager::PollProbe()
+{
+    const mu::web::ServerProbeResult result = mu::web::PollServerProbe(static_cast<std::int32_t>(m_probeSocket));
+    if (result == mu::web::ServerProbeResult::Up)
+    {
+        CloseProbe();
+        // Server is up - defer to Begin() (called by the main loop each frame) to tear down and
+        // re-login between frames.
+        m_beginPending = true;
+        return;
+    }
+
+    if (result == mu::web::ServerProbeResult::Down || (WorldTime - m_probeStartTime) > PROBE_TIMEOUT_MS)
+    {
+        CloseProbe();
+        EnterPhase(Phase::Probing);
+    }
+}
+
+void ReconnectManager::CloseProbe()
+{
+    if (m_probeSocket != NO_PROBE)
+    {
+        mu::web::CloseServerProbe(static_cast<std::int32_t>(m_probeSocket));
+        m_probeSocket = NO_PROBE;
+    }
+}
+#else
 void ReconnectManager::StartProbe()
 {
     static bool s_wsaInitialised = false;
@@ -312,6 +364,7 @@ void ReconnectManager::CloseProbe()
         m_probeSocket = NO_PROBE;
     }
 }
+#endif
 
 void ReconnectManager::UpdateConnecting()
 {

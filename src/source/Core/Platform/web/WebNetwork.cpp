@@ -234,9 +234,7 @@ std::int32_t ConnectionManager_Connect(const char16_t* host, std::int32_t port, 
 
     // The bridge connects to the game server itself: the host the client asks for (often a
     // loopback address in the connect server's reply) isn't reachable from the browser anyway.
-    char* base = MuWeb_BridgeBaseUrl();
-    const std::string url = std::string(base) + std::to_string(port);
-    std::free(base);
+    const std::string url = mu::web::BridgeUrl(static_cast<std::uint16_t>(port));
 
     EmscriptenWebSocketCreateAttributes attributes;
     emscripten_websocket_init_create_attributes(&attributes);
@@ -433,6 +431,14 @@ void mu::web::SendPacket(std::int32_t handle, const std::uint8_t* data, std::siz
         }
         offset += length;
     }
+}
+
+std::string mu::web::BridgeUrl(std::uint16_t port)
+{
+    char* base = MuWeb_BridgeBaseUrl();
+    std::string url = std::string(base) + std::to_string(port);
+    std::free(base);
+    return url;
 }
 
 void* mu::web::FindNetworkSymbol(const char* name)

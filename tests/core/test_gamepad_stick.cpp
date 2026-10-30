@@ -14,9 +14,10 @@ using std::chrono::milliseconds;
 
 // A frame of a slow phone.
 constexpr milliseconds SlowFrame{50};
-// The stick's lean past its dead zone: at rest, a slight lean (aiming the pointer), at its rim.
+// The stick's lean past its dead zone: at rest, a slight lean, a quick aim of the pointer, at its rim.
 constexpr float Rest = 0.f;
 constexpr float Aiming = 0.3f;
+constexpr float QuickAim = 0.6f;
 constexpr float Rim = 1.f;
 } // namespace
 
@@ -111,4 +112,59 @@ TEST_CASE("a click right after the stick swung back from its rim is ignored, a l
     click.Update(Aiming, true, true, start + 4 * SlowFrame);
     CHECK(click.Pressed());
     CHECK(click.Held());
+}
+
+TEST_CASE("a click right after a quick aim of the pointer counts [core][gamepad]")
+{
+    Pad::StickClick click;
+    const Clock::time_point start = Clock::now();
+
+    click.Update(QuickAim, false, false, start);
+    click.Update(Rest, true, true, start + SlowFrame);
+    CHECK(click.Pressed());
+    CHECK(click.Held());
+}
+
+TEST_CASE("a click just after the stick swung back from its rim, held on, counts once the stick stood still [core][gamepad]")
+{
+    Pad::StickClick click;
+    const Clock::time_point start = Clock::now();
+
+    click.Update(Rim, false, false, start);
+    click.Update(Rest, true, true, start + SlowFrame);
+    CHECK_FALSE(click.Pressed());
+    CHECK_FALSE(click.Held());
+
+    click.Update(Rest, false, true, start + 3 * SlowFrame);
+    CHECK(click.Pressed());
+    CHECK(click.Held());
+
+    // Once only.
+    click.Update(Rest, false, true, start + 4 * SlowFrame);
+    CHECK_FALSE(click.Pressed());
+    CHECK(click.Held());
+}
+
+TEST_CASE("a held click swung out to the rim again while it waited stays ignored [core][gamepad]")
+{
+    Pad::StickClick click;
+    const Clock::time_point start = Clock::now();
+
+    click.Update(Rim, false, false, start);
+    click.Update(Rest, true, true, start + SlowFrame);
+    click.Update(Rim, false, true, start + 2 * SlowFrame);
+    click.Update(Rest, false, true, start + 6 * SlowFrame);
+    CHECK_FALSE(click.Pressed());
+    CHECK_FALSE(click.Held());
+}
+
+TEST_CASE("a click pressed at the rim stays ignored however long it is held [core][gamepad]")
+{
+    Pad::StickClick click;
+    const Clock::time_point start = Clock::now();
+
+    click.Update(Rim, true, true, start);
+    click.Update(Rest, false, true, start + 6 * SlowFrame);
+    CHECK_FALSE(click.Pressed());
+    CHECK_FALSE(click.Held());
 }

@@ -83,6 +83,8 @@ namespace mu::ui::window
 
         // Invoked directly from RmlUi data-event-click bindings (see Create()), not polled.
         void RmlClickIncreaseStat(int stat);
+        // A right click on a stat's "+": a menu of +10, +100, +1000 and all the free points.
+        void RmlOpenStatMenu(int stat);
         void RmlClickQuest();
         void RmlClickPet();
         void RmlClickMasterLevel();
@@ -92,6 +94,8 @@ namespace mu::ui::window
         void RmlClickTitles();
 
     private:
+        // The stats with a "+": the Dark Lord's command too.
+        static int StatCount();
         // Populates the shared IMAGE_LIST texture slots sibling windows alias onto (see IMAGE_LIST above).
         void LoadImages();
         void UnloadImages();

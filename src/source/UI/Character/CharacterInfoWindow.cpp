@@ -26,6 +26,9 @@
 #include "UI/RmlBridge/RmlWindowClose.h"
 #include "UI/RmlBridge/RmlNativeTextSize.h"
 #include "UI/RmlBridge/RmlTheme.h"
+#include "UI/Character/StatPointsMenu.h"
+#include "UI/Dialogs/GenericMenuDialog.h"
+#include "Network/Server/WSclient.h"
 
 #include <RmlUi/Core/DataModelHandle.h>
 #include <RmlUi/Core/ElementDocument.h>
@@ -210,6 +213,14 @@ void mu::ui::window::CCharacterInfoWindow::BindRmlModel(Rml::DataModelConstructo
             if (arguments.size() == 1)
                 RmlClickIncreaseStat(arguments[0].Get<int>(-1));
         });
+    // RmlUi clicks only for the left button: the right one (a finger's long press, R3 on a pad) comes
+    // as a mouseup with "button" 1.
+    c.BindEventCallback("chainfo_stat_menu",
+        [this](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList& arguments)
+        {
+            if (event.GetParameter<int>("button", -1) == 1 && arguments.size() == 1)
+                RmlOpenStatMenu(arguments[0].Get<int>(-1));
+        });
     UI::RmlBridge::BindWindowClose(c, mu::ui::window::INTERFACE_CHARACTER);
     c.BindEventCallback("chainfo_click_quest",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickQuest(); });
@@ -340,17 +351,61 @@ void mu::ui::window::CCharacterInfoWindow::OpenningProcess()
     }
 }
 
+int mu::ui::window::CCharacterInfoWindow::StatCount()
+{
+    return gCharacterManager.GetBaseClass(Hero->Class) == CLASS_DARK_LORD ? 5 : 4;
+}
+
 void mu::ui::window::CCharacterInfoWindow::RmlClickIncreaseStat(int stat)
 {
     if (CharacterAttribute->LevelUpPoint <= 0)
         return;
 
-    const int iBaseClass = gCharacterManager.GetBaseClass(Hero->Class);
-    const int iCount = (iBaseClass == CLASS_DARK_LORD) ? 5 : 4;
-    if (stat < 0 || stat >= iCount)
+    if (stat < 0 || stat >= StatCount())
         return;
 
     SocketClient->ToGameServer()->SendIncreaseCharacterStatPoint(static_cast<CharacterStatAttribute>(stat));
+    PlayBuffer(SOUND_CLICK01);
+}
+
+void mu::ui::window::CCharacterInfoWindow::RmlOpenStatMenu(int stat)
+{
+    const int freePoints = CharacterAttribute->LevelUpPoint;
+    if (freePoints <= 0 || stat < 0 || stat >= StatCount() || g_pGenericMenuDialog == nullptr)
+        return;
+
+    const wchar_t* const names[] = {I18N::Game::Strength, I18N::Game::Agility, I18N::Game::Vitality,
+                                    I18N::Game::Energy, I18N::Game::Command};
+    wchar_t title[256];
+    mu_swprintf(title, I18N::Game::StatPointsMenuTitle, names[stat], freePoints);
+
+    GenericMenuConfig menu;
+    menu.title = title;
+    for (const int amount : UI::Character::StatPoints::MenuAmounts(freePoints))
+    {
+        wchar_t label[64];
+        if (amount == freePoints)
+            mu_swprintf(label, I18N::Game::StatPointsMenuAll, amount);
+        else
+            mu_swprintf(label, L"+%d", amount);
+
+        GenericMenuConfig::MenuButton button;
+        button.label = label;
+        button.onClick = [command = UI::Character::StatPoints::Command(stat, amount)]
+        {
+            if (SocketClient != nullptr && Hero != nullptr && !command.empty())
+                SocketClient->ToGameServer()->SendPublicChatMessage(MU_C16(Hero->ID), MU_C16(command.c_str()));
+        };
+        menu.buttons.push_back(std::move(button));
+    }
+
+    GenericMenuConfig::MenuButton close;
+    close.label = I18N::Game::Close;
+    close.compact = true;
+    close.dismiss = true;
+    menu.buttons.push_back(std::move(close));
+
+    g_pGenericMenuDialog->Show(std::move(menu));
     PlayBuffer(SOUND_CLICK01);
 }
 

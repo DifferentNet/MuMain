@@ -14,7 +14,10 @@
 // in Core::Input::IsKeyDown, so every hotkey works as from a keyboard.
 #pragma once
 
+#include <SDL3/SDL_rect.h>
+
 #include <cstdint>
+#include <optional>
 
 union SDL_Event;
 struct SDL_Window;
@@ -90,4 +93,7 @@ void TapKey(int virtualKey);
 
 // Whether the mouse-playing finger holds this SDL mouse button (SDL_BUTTON_LEFT, SDL_BUTTON_RIGHT).
 [[nodiscard]] bool IsMouseButtonHeld(int sdlButton);
+
+// Where the finger playing the mouse is while lifting it would tap there (Pointer::TapPoint()).
+[[nodiscard]] std::optional<SDL_FPoint> TapPoint();
 } // namespace Core::Input::Touch

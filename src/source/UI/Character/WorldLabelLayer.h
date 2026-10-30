@@ -70,6 +70,7 @@ private:
         std::uint32_t boxColor = 1;
         bool additive = false;           // the box adds its colour (an additive-fill decorator)
         std::uint32_t additiveColor = 0; // ABGR of that fill
+        bool covered = false;            // under the phone's HUD, so drawn faint (SetCovered())
 
         float textOffset = -1.0f, textPixelSize = -1.0f, lineHeight = -1.0f;
         bool bold = false;
@@ -95,6 +96,7 @@ private:
     void SetBox(Slot& slot, const Rect& rect, std::uint32_t abgr);
     void SetFill(Slot& slot, const Rect& rect, std::uint32_t abgr, Render::Renderer::RecordedBlend blend);
     void SetAdditive(Slot& slot, bool additive, std::uint32_t abgr);
+    void SetCovered(Slot& slot, const Rect& rect);
 
     std::vector<Slot> m_slots;
     // This frame: the slots shown last frame and not taken yet, by content key, and the hidden ones.

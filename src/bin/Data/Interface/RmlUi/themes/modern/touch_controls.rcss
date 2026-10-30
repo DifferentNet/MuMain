@@ -156,6 +156,11 @@ body {
 	line-height: 15rem;
 	text-align: center;
 }
+/* A switch that is on (PK): lit like Auto while the helper runs. */
+.tc-menu-item.on {
+	border-color: token(accent-gold-hover);
+	background-color: rgba(196, 154, 60, 120);
+}
 /* The window a pad points at (its stick or d-pad move it, A opens it). */
 .tc-menu-item.focused {
 	border-color: token(accent-gold-hover);
@@ -408,6 +413,12 @@ body.pad #tc_pick_legend {
 	border-radius: 42rem;
 	background-color: rgba(125, 25, 15, 150);
 }
+/* PK on (the menu's switch): attacks hit players too, so the button glows red and reads "PK". */
+#tc_attack.pk {
+	border-color: rgba(230, 60, 40, 255);
+	background-color: rgba(175, 20, 12, 200);
+	box-shadow: 0 0 10rem 2rem rgba(230, 60, 40, 160);
+}
 
 /* The five skills on an arc 145rem from the attack button's centre, from a little above its left round
    to a little left of above: the first stays clear of the HUD's bar (640rem centred, 51rem high). */
@@ -611,11 +622,69 @@ body.pad #tc_pick_legend {
 	font-size: 12rem;
 }
 
-/* The phone HUD puts the skill list just left of the skill buttons (PhoneHudLayout.cpp): the hint stays
-   over the buttons, no wider than the room right of the list, clear of the pets' frame at the top. */
+/* The phone HUD (theme flag "mobile-hud"). The controls also show on a PC with a touch screen or a pad,
+   which keeps the rules above as they are. */
 @media (theme: mobile-hud) {
+	/* The skill list goes just left of the skill buttons (PhoneHudLayout.cpp): the hint stays over the
+	   buttons, no wider than the room right of the list, clear of the pets' frame at the top. */
 	#tc_bind_hint {
 		max-width: 194rem;
+	}
+
+	/* The top row: each button as wide as its label, from 44 up to 72 units, the row's room shared
+	   out up to 72 units a button (a wide phone looks as before). Where the row is too short for the
+	   labels at 12 units, they get smaller: the three long ones (Russian "Инвентарь", "Персонаж",
+	   "Телепорт": 14.1 times the font size together in Liberation Sans, 4 % more here for other
+	   fonts) get what the four short ones (44 units each), the gaps and the borders leave. */
+	.tc-quick {
+		width: auto;
+		flex: 1 1 auto;
+		max-width: 72rem;
+		font-size: clamp(9rem, (100vw - 214dp - 284rem) / 14.6, 12rem);
+	}
+	/* With a pad, Back, Menu and Map carry its glyph (22 units) beside their short labels. */
+	body.pad .tc-quick {
+		font-size: clamp(9rem, (100vw - 214dp - 230rem) / 23.3, 12rem);
+	}
+
+	/* Pick up as a pill as tall as Auto: "Поднять" needs 48 units at 12. */
+	#tc_pickup {
+		width: 62rem;
+	}
+
+	/* No text under 12 units on a phone, and the skill picker's buttons a finger tall. */
+	.tc-small, #tc_skill_edit {
+		font-size: 12rem;
+	}
+	#tc_pick_head {
+		height: 44rem;
+	}
+	#tc_pick_hint_row {
+		min-height: 44rem;
+	}
+	.tc-pick-button {
+		height: 44rem;
+		line-height: 40rem;
+	}
+	.tc-pick-page {
+		width: 44rem;
+		height: 44rem;
+		line-height: 40rem;
+	}
+	.tc-pick-name {
+		font-size: 12rem;
+		line-height: 14rem;
+	}
+	#tc_pick_tip {
+		font-size: 12rem;
+		line-height: 15rem;
+	}
+	.tc-gauge-small {
+		height: 16rem;
+	}
+	.tc-gauge-small .tc-gauge-text {
+		line-height: 14rem;
+		font-size: 12rem;
 	}
 }
 

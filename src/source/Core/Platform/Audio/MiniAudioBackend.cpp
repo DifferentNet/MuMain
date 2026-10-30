@@ -115,6 +115,7 @@ bool MiniAudioBackend::Initialize()
         return false;
     }
 
+    m_decodedSounds.Attach(&m_engine);
     m_initialized = true;
     return true;
 }
@@ -132,16 +133,7 @@ void MiniAudioBackend::Shutdown()
     // Release all loaded sound effect slots
     for (int buf = 0; buf < static_cast<int>(MAX_BUFFER); ++buf)
     {
-        if (m_soundLoaded[buf])
-        {
-            // Uninit only the channels actually initialised by LoadSound().
-            for (int ch = 0; ch < m_loadedChannels[buf]; ++ch)
-            {
-                ma_sound_uninit(&m_sounds[buf][ch]);
-            }
-            m_soundLoaded[buf] = false;
-            m_loadedChannels[buf] = 0;
-        }
+        UnloadSlot(buf);
         // Clear per-slot OBJECT* tracking to prevent dangling
         // pointers if the backend is restarted. Safe even if slot was never loaded.
         m_soundObjects[buf] = nullptr;
@@ -149,6 +141,7 @@ void MiniAudioBackend::Shutdown()
 
     ReleaseMusicStream();
     m_failedMusicNames.clear();
+    m_decodedSounds.ReleaseAll();
 
     ma_engine_uninit(&m_engine);
     m_initialized = false;
@@ -179,18 +172,9 @@ void MiniAudioBackend::LoadSound(ESound buffer, const wchar_t* filename, int cha
     m_activeChannel[bufIdx] = 0;
     m_sound3DEnabled[bufIdx] = false;
 
-    // Unload previously loaded sound at this slot
-    if (m_soundLoaded[bufIdx])
-    {
-        for (int ch = 0; ch < m_loadedChannels[bufIdx]; ++ch)
-        {
-            ma_sound_uninit(&m_sounds[bufIdx][ch]);
-        }
-        m_soundLoaded[bufIdx] = false;
-        // Clear stale object pointer on reload so Set3DSoundPosition()
-        // cannot dereference a pointer that belonged to the previous load lifetime.
-        m_soundObjects[bufIdx] = nullptr;
-    }
+    // Unload previously loaded sound at this slot; this also clears its object pointer, so
+    // Set3DSoundPosition() cannot dereference one that belonged to the previous load lifetime.
+    UnloadSlot(bufIdx);
 
     // Convert wchar_t filename to UTF-8 for miniaudio (which uses narrow char*)
     std::string utf8Path = AudioPathToUtf8(filename);
@@ -203,6 +187,11 @@ void MiniAudioBackend::LoadSound(ESound buffer, const wchar_t* filename, int cha
 #ifndef _WIN32
     utf8Path = MuResolvePath(utf8Path.c_str());
 #endif
+
+    if (m_decodedSounds.Acquire(utf8Path))
+    {
+        m_decodedSoundPaths[bufIdx] = utf8Path;
+    }
 
     // Clamp channels to the array dimension
     const int numChannels = (channels > 0 && channels <= MAX_CHANNEL) ? channels : MAX_CHANNEL;
@@ -225,6 +214,7 @@ void MiniAudioBackend::LoadSound(ESound buffer, const wchar_t* filename, int cha
             {
                 ma_sound_uninit(&m_sounds[bufIdx][prev]);
             }
+            ReleaseDecodedSound(bufIdx);
             return;
         }
 
@@ -415,6 +405,15 @@ void MiniAudioBackend::ReleaseSound(ESound buffer)
         return;
     }
 
+    UnloadSlot(buf);
+}
+
+// ---------------------------------------------------------------------------
+// UnloadSlot -- uninit a loaded slot's channels (only those LoadSound() initialised), let its
+// samples go and reset the slot. Nothing for a slot that isn't loaded.
+// ---------------------------------------------------------------------------
+void MiniAudioBackend::UnloadSlot(int buf)
+{
     if (!m_soundLoaded[buf])
     {
         return;
@@ -424,12 +423,24 @@ void MiniAudioBackend::ReleaseSound(ESound buffer)
     {
         ma_sound_uninit(&m_sounds[buf][ch]);
     }
+    ReleaseDecodedSound(buf);
 
     m_soundLoaded[buf] = false;
     m_activeChannel[buf] = 0;
     m_sound3DEnabled[buf] = false;
     m_loadedChannels[buf] = 0;
     m_soundObjects[buf] = nullptr;
+}
+
+void MiniAudioBackend::ReleaseDecodedSound(int buf)
+{
+    std::string& path = m_decodedSoundPaths[buf];
+    if (path.empty())
+    {
+        return;
+    }
+    m_decodedSounds.Release(path);
+    path.clear();
 }
 
 // ---------------------------------------------------------------------------

@@ -1,7 +1,9 @@
 // A stick's own button (LS, RS: the stick pushed down) pressed on purpose. A thumb pushing the stick
 // hard to its rim clicks it now and then without meaning to, so a click counts only when the stick
-// stood near its centre as it went down and a moment before. A frame can be long on a slow phone: a
-// thumb that swung the stick out and let it spring back within one frame still swung it.
+// stood away from its rim as it went down and a moment before. A frame can be long on a slow phone: a
+// thumb that swung the stick out and let it spring back within one frame still swung it. A press
+// made with the stick back from its rim that is still held once the stick stood there a moment
+// counts then: a click right after aiming the pointer.
 #pragma once
 
 #include <chrono>
@@ -30,6 +32,8 @@ public:
 private:
     bool m_Swung = false;
     Clock::time_point m_LastSwing{};
+    // Pressed too soon after a swing, with the stick back from its rim: counts if still held later.
+    bool m_Waiting = false;
     bool m_Accepted = false;
     bool m_Pressed = false;
     bool m_HeldNow = false;

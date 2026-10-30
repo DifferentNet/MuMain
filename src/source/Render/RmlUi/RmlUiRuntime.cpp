@@ -28,6 +28,20 @@ namespace
     {
         return IsTextEntry(element) || element->HasAttribute("data-takes-keys");
     }
+
+    // A field a click types in: a text or password <input> or a <textarea>, neither disabled nor
+    // read-only. Other inputs (a checkbox, a slider) take no text.
+    bool IsTypingField(const Rml::Element* element)
+    {
+        if (element->HasAttribute("disabled") || element->HasAttribute("readonly"))
+            return false;
+        if (element->GetTagName() == "textarea")
+            return true;
+        if (element->GetTagName() != "input")
+            return false;
+        const Rml::String type = element->GetAttribute<Rml::String>("type", "text");
+        return type == "text" || type == "password";
+    }
 }
 
 // SetDensityIndependentPixelRatio() sets an absolute ratio, so re-applying it on every resize
@@ -363,6 +377,11 @@ bool RmlUiRuntime::StopTouchScrollGlide()
     return m_TouchScroll.StopGlide();
 }
 
+bool RmlUiRuntime::ScrollsAt(float x, float y) const
+{
+    return Render::RmlUi::ScrollsVerticallyAt(m_Context, {x, y});
+}
+
 bool RmlUiRuntime::IsMouseOverUI() const
 {
     return m_Context && m_Context->IsMouseInteracting();
@@ -388,6 +407,18 @@ Rml::Element* RmlUiRuntime::GetFocusedTextField() const
     if (!focused || !IsTextEntry(focused) || !focused->IsVisible(true))
         return nullptr;
     return focused;
+}
+
+Rml::Element* RmlUiRuntime::GetTextFieldAt(float x, float y) const
+{
+    // The point hits the field's own text or caret: the field is the first such ancestor.
+    Rml::Element* element = m_Context ? m_Context->GetElementAtPoint({x, y}) : nullptr;
+    for (; element != nullptr; element = element->GetParentNode())
+    {
+        if (IsTypingField(element))
+            return element;
+    }
+    return nullptr;
 }
 
 bool RmlUiRuntime::IsTextInputActive() const
