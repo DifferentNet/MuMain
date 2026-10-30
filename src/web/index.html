@@ -398,13 +398,23 @@
     }
     Promise.resolve(result).then(() => {
       if (phone && screen.orientation && screen.orientation.lock) screen.orientation.lock("landscape").catch(() => {});
+      keepEscapeForGame();
     }, fullscreenRefused);
+  }
+  // Esc closes the game's windows, but in fullscreen the browser takes it to leave fullscreen. Chrome
+  // and Edge give it to the game when asked; holding Esc still leaves, as the browser's note says.
+  // Other browsers leave on Esc, as before.
+  function keepEscapeForGame() {
+    if (!navigator.keyboard || !navigator.keyboard.lock) return;
+    navigator.keyboard.lock(["Escape"]).then(() => appendLog("Esc goes to the game; hold it to leave fullscreen"),
+                                            () => {});
   }
   function leaveFullscreen() {
     const exit = document.exitFullscreen || document.webkitExitFullscreen;
     if (exit) Promise.resolve(exit.call(document)).catch(fullscreenRefused);
   }
   function showFullscreenState() {
+    if (!inFullscreen() && navigator.keyboard && navigator.keyboard.unlock) navigator.keyboard.unlock();
     fullscreenButton.textContent = inFullscreen() ? "Leave fullscreen" : "Fullscreen";
     appendLog(inFullscreen() ? "Fullscreen" : "Fullscreen left");
   }
