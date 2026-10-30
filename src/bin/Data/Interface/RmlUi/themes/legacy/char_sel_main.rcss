@@ -140,9 +140,10 @@
 	padding: 0 2rem;
 }
 
-/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode) gives the four buttons more room, for fingers. */
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode) draws the four buttons
+   at twice the art's size, for fingers: about 36 CSS pixels tall on a phone 360 pixels high. */
 @media (theme: mobile) {
-	.btn-icon { width: 81rem; height: 45rem; }
-	#btn_menu { left: 109rem; }
-	#btn_connect { right: 109rem; }
+	.btn-icon { width: 108rem; height: 60rem; }
+	#btn_menu { left: 140rem; }
+	#btn_connect { right: 140rem; }
 }

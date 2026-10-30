@@ -14,7 +14,9 @@
 #include "Render/Lighting/EnhancedLightingSetting.h"
 #include "Render/Lighting/LightMoodScales.h"
 #include "Render/PostProcessing/PostProcessingSetting.h"
+#include "UI/Mobile/ButtonSize.h"
 #include "UI/Mobile/InterfaceMode.h"
+#include "UI/Mobile/TouchUnit.h"
 #include "UI/Options/TuningRows.h"
 #include "Audio/AudioPlayer.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
@@ -74,7 +76,8 @@ static constexpr int kRmlSelectSettleFrames = 5;
 // The custom dropdowns' ids, 0 .. kLastDropdownId (see RmlToggleDropdown()).
 static constexpr int kInterfaceViewDropdown = 8;
 static constexpr int kControlsDropdown = 9;
-static constexpr int kLastDropdownId = kControlsDropdown;
+static constexpr int kTouchButtonsDropdown = 10;
+static constexpr int kLastDropdownId = kTouchButtonsDropdown;
 
 std::vector<UI::Options::DisplayResolution>
 UI::Options::NormalizeDisplayResolutions(std::vector<DisplayResolution> resolutions)
@@ -527,6 +530,11 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("controls_index", &model.controlsIndex);
     c.Bind("controls_row_label", &model.controlsRowLabel);
     c.Bind("controls_value_label", &model.controlsValueLabel);
+    c.Bind("touch_buttons_shown", &model.touchButtonsShown);
+    c.Bind("touch_buttons_labels", &model.touchButtonsLabels);
+    c.Bind("touch_buttons_index", &model.touchButtonsIndex);
+    c.Bind("touch_buttons_row_label", &model.touchButtonsRowLabel);
+    c.Bind("touch_buttons_value_label", &model.touchButtonsValueLabel);
 
     c.BindEventCallback("option_click_close",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickClose(); });
@@ -919,6 +927,9 @@ void mu::ui::window::COptionWindow::RmlDropdownOptionClick(int dropdownId, int o
         break;
     case kControlsDropdown:
         RmlControlsChanged(optionIndex);
+        break;
+    case kTouchButtonsDropdown:
+        RmlTouchButtonsChanged(optionIndex);
         break;
     default:
         break;
@@ -1455,10 +1466,20 @@ void mu::ui::window::COptionWindow::RmlControlsChanged(int index)
         m_iPendingControls = index;
 }
 
+void mu::ui::window::COptionWindow::RmlTouchButtonsChanged(int index)
+{
+    if (m_rmlSyncCount >= kRmlSelectSettleFrames && index >= 0 &&
+        index < static_cast<int>(UI::Mobile::ButtonSize::Percents.size()))
+        m_iPendingTouchButtons = index;
+}
+
 void mu::ui::window::COptionWindow::ApplyPendingInterfaceMode()
 {
     const int view = std::exchange(m_iPendingInterfaceView, -1);
     const int controls = std::exchange(m_iPendingControls, -1);
+    const int touchButtons = std::exchange(m_iPendingTouchButtons, -1);
+    if (touchButtons >= 0)
+        UI::Mobile::TouchUnit::SetPercent(UI::Mobile::ButtonSize::Percents[touchButtons]);
     if (view >= 0 && view != static_cast<int>(UI::Mobile::GetViewChoice()))
         UI::Mobile::SetViewChoice(static_cast<UI::Mobile::ViewChoice>(view));
     if (controls >= 0 && controls != static_cast<int>(UI::Mobile::GetControlChoice()))
@@ -1811,6 +1832,7 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.uiScaleTooltip, "ui_scale_tooltip", I18N::Game::UIScaleTooltip);
     syncLabel(model.interfaceViewRowLabel, "interface_view_row_label", I18N::Game::InterfaceViewRow);
     syncLabel(model.controlsRowLabel, "controls_row_label", I18N::Game::ControlsRow);
+    syncLabel(model.touchButtonsRowLabel, "touch_buttons_row_label", I18N::Game::TouchButtonSizeRow);
 
     // positioned/root_x/root_y stay at their model defaults (false/0/0, see OptionRmlModel's own
     // comment): window_shell's `.center-both` CSS places the window, a drag moves it.
@@ -1948,6 +1970,19 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
                       model.controlsValueLabel, "controls_value_label",
                       NarrowLabels({I18N::Game::ChoiceAuto, I18N::Game::ControlsMouseKeyboard, I18N::Game::ControlsTouch}),
                       static_cast<int>(UI::Mobile::GetControlChoice()));
+    // The on-screen controls' size: shown while they are (touch on, or a pad in use).
+    std::vector<Rml::String> touchButtonLabels;
+    for (const int percent : UI::Mobile::ButtonSize::Percents)
+        touchButtonLabels.push_back(std::to_string(percent) + " %");
+    syncMultiplierRow(model.touchButtonsLabels, "touch_buttons_labels", model.touchButtonsIndex, "touch_buttons_index",
+                      model.touchButtonsValueLabel, "touch_buttons_value_label", std::move(touchButtonLabels),
+                      UI::Mobile::ButtonSize::NearestIndex(UI::Mobile::TouchUnit::GetPercent()));
+    const bool touchButtonsShown = UI::Mobile::ShowsControls();
+    if (model.touchButtonsShown != touchButtonsShown)
+    {
+        model.touchButtonsShown = touchButtonsShown;
+        m_RmlView.MarkDirty("touch_buttons_shown");
+    }
 
     const bool showFpsCounter = GetShowFpsCounter();
     const bool showDebugInfo = GetShowDebugInfo();

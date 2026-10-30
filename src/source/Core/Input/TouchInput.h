@@ -58,6 +58,10 @@ void BeginFrame(SDL_Window* window);
 // Lets go of every finger: the mouse buttons they held, the controls, the pinch.
 void Reset();
 
+// Takes the pointer a lifted finger left behind off the window (Pointer::Rest): for a control that
+// opens or shuts a window, where the old spot would show a tooltip nobody asked for.
+void RestPointer();
+
 [[nodiscard]] const ControlFinger& Control(int controlId);
 
 // A key a control holds down, as a virtual-key code (VK_*, or an ASCII letter or digit).

@@ -19,6 +19,8 @@
 #include "UI/HUD/SkillList.h"
 #include "UI/Mobile/HeroFrame.h"
 #include "UI/Mobile/InterfaceMode.h"
+#include "UI/Mobile/PhoneHudLayout.h"
+#include "UI/Mobile/TouchUnit.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlPointer.h"
 #include "UI/RmlBridge/RmlStackingOrder.h"
@@ -180,13 +182,14 @@ const char* ControlElement(int control)
     return MenuItemElements[control - FirstMenuItemControl].c_str();
 }
 
-// How far outside its box a finger still presses a button, in dp: a thumb is wider than its aim.
-constexpr float TouchSlopDp = 6.f;
-// The knob goes no further from the stick's centre than this, in dp; a finger further out drags the
-// centre along.
-constexpr float StickReachDp = 48.f;
-// A finger closer than this to the stick's centre, in dp, does not walk.
-constexpr float StickDeadZoneDp = 10.f;
+// How far outside its box a finger still presses a button, in finger units (UI::Mobile::TouchUnit,
+// the unit touch_controls.rcss sizes the controls in): a thumb is wider than its aim.
+constexpr float TouchSlopUnits = 6.f;
+// The knob goes no further from the stick's centre than this, in finger units; a finger further out
+// drags the centre along.
+constexpr float StickReachUnits = 48.f;
+// A finger closer than this to the stick's centre, in finger units, does not walk.
+constexpr float StickDeadZoneUnits = 10.f;
 
 // Documents over the controls that still leave them the finger, as they only show text: the chat's
 // log lies over the joystick's corner, the scrolling notice's band across the top row.
@@ -330,13 +333,6 @@ struct SkillBinding
 };
 SkillBinding g_binding;
 
-float Dp()
-{
-    const Rml::Context* context = RmlUiRuntime::Instance().GetContext();
-    const float ratio = context != nullptr ? context->GetDensityIndependentPixelRatio() : 1.f;
-    return ratio > 0.f ? ratio : 1.f;
-}
-
 bool Inside(const ControlBox& box, float x, float y, float slop)
 {
     return box.shown && x >= box.left - slop && x <= box.right + slop && y >= box.top - slop && y <= box.bottom + slop;
@@ -431,7 +427,7 @@ int HitTest(float x, float y)
     if (IsWindowOver(context->GetElementAtPoint(point), document) || IsPlacedWindowAt(context, document, point))
         return Touch::NoControl;
 
-    const float slop = TouchSlopDp * Dp();
+    const float slop = TouchSlopUnits * UI::Mobile::TouchUnit::Pixels();
     if (g_View.GetModel().menuOpen)
         return MenuHitTest(x, y, slop);
     // The buttons before the joystick's area, which they stand in.
@@ -443,22 +439,62 @@ int HitTest(float x, float y)
     return Inside(g_boxes[StickControl], x, y, 0.f) ? StickControl : Touch::NoControl;
 }
 
+ControlBox BoxOf(Rml::ElementDocument* document, const char* id)
+{
+    Rml::Element* element = document != nullptr ? document->GetElementById(id) : nullptr;
+    if (element == nullptr || !element->IsVisible(true))
+        return ControlBox{};
+    const Rml::Vector2f offset = element->GetAbsoluteOffset(Rml::BoxArea::Border);
+    const Rml::Vector2f size = element->GetBox().GetSize(Rml::BoxArea::Border);
+    return ControlBox{true, offset.x, offset.y, offset.x + size.x, offset.y + size.y};
+}
+
 void MeasureBoxes()
 {
     Rml::ElementDocument* document = g_View.Document();
     for (int control = 0; control < ControlCount; ++control)
+        g_boxes[control] = BoxOf(document, ControlElement(control));
+}
+
+// The phone's HUD pieces in other documents (the buffs, the pets' frames, the system messages, the
+// skill list) go beside the controls as this frame lays them out.
+void FollowNeighbours(Rml::ElementDocument* document)
+{
+    if (!UI::Mobile::ReplacesPcHud())
     {
-        ControlBox& box = g_boxes[control];
-        Rml::Element* element = document != nullptr ? document->GetElementById(ControlElement(control)) : nullptr;
-        if (element == nullptr || !element->IsVisible(true))
-        {
-            box = ControlBox{};
-            continue;
-        }
-        const Rml::Vector2f offset = element->GetAbsoluteOffset(Rml::BoxArea::Border);
-        const Rml::Vector2f size = element->GetBox().GetSize(Rml::BoxArea::Border);
-        box = ControlBox{true, offset.x, offset.y, offset.x + size.x, offset.y + size.y};
+        UI::Mobile::PhoneHudLayout::Release();
+        return;
     }
+    const ControlBox topRow = BoxOf(document, "tc_quick");
+    const ControlBox hero = BoxOf(document, "tc_hero");
+    if (!topRow.shown || !hero.shown)
+        return;
+    const float screenWidth = document->GetBox().GetSize(Rml::BoxArea::Border).x;
+    const float screenHeight = document->GetBox().GetSize(Rml::BoxArea::Border).y;
+
+    UI::Mobile::PhoneHudLayout::Edges edges;
+    edges.topRowBottom = topRow.bottom;
+    edges.heroLeft = hero.left;
+    edges.heroRight = hero.right;
+    edges.heroBottom = hero.bottom;
+    edges.potionsTop = screenHeight;
+    edges.potionsRight = hero.left;
+    for (const char* potion : {"tc_potion_q", "tc_potion_w"})
+    {
+        const ControlBox box = BoxOf(document, potion);
+        if (!box.shown)
+            continue;
+        edges.potionsTop = std::min(edges.potionsTop, box.top);
+        edges.potionsRight = std::max(edges.potionsRight, box.right);
+    }
+    edges.skillsLeft = screenWidth;
+    for (int slot = 0; slot < SkillButtons; ++slot)
+    {
+        const ControlBox& box = g_boxes[FirstSkillControl + slot];
+        if (box.shown)
+            edges.skillsLeft = std::min(edges.skillsLeft, box.left);
+    }
+    UI::Mobile::PhoneHudLayout::Follow(edges);
 }
 
 template <typename T> void SetField(T& field, const T& value, const char* name)
@@ -714,8 +750,8 @@ void UpdateStick(ControlsModel& model)
         return;
     }
 
-    const float dp = Dp();
-    const float reach = StickReachDp * dp;
+    const float unit = UI::Mobile::TouchUnit::Pixels();
+    const float reach = StickReachUnits * unit;
     const bool fresh = landed || !model.stickActive;
     float centerX = fresh ? finger.downX : model.stickX;
     float centerY = fresh ? finger.downY : model.stickY;
@@ -735,10 +771,19 @@ void UpdateStick(ControlsModel& model)
     SetField(model.knobX, dx, "knob_x");
     SetField(model.knobY, dy, "knob_y");
 
-    if (std::hypot(dx, dy) < StickDeadZoneDp * dp)
+    if (std::hypot(dx, dy) < StickDeadZoneUnits * unit)
         GameLogic::Touch::StopSteering();
     else
         GameLogic::Touch::Steer(dx, dy);
+}
+
+// A button that opens or shuts a window takes the pointer the last tap left off the window: a window
+// opening there would show the tooltip of whatever lies under it. The pad's pointer is the player's own
+// and stays.
+void RestFingerPointer()
+{
+    if (!UI::Mobile::IsGamepadInUse())
+        Touch::RestPointer();
 }
 
 // The menu button opens and shuts the menu, a tap beside it shuts it, an item opens its window and
@@ -760,6 +805,7 @@ void UpdateMenu(ControlsModel& model)
         if (!TakePress(FirstMenuItemControl + item) || !model.menuOpen)
             continue;
         SetField(model.menuOpen, false, "menu_open");
+        RestFingerPointer();
         if (MenuItems[item].action != nullptr)
             MenuItems[item].action();
         else
@@ -819,6 +865,7 @@ void UpdateButtons(ControlsModel& model)
     {
         if (!TakePress(FirstKeyControl + button))
             continue;
+        RestFingerPointer();
         if (KeyButtons[button].action != nullptr)
             KeyButtons[button].action();
         else
@@ -848,6 +895,7 @@ void Hide()
     g_shown = false;
     GameLogic::Touch::StopSteering();
     g_boxes.fill(ControlBox{});
+    UI::Mobile::PhoneHudLayout::Release();
     UI::RmlBridge::SyncDocumentVisibility(g_View.Document(), false);
 }
 } // namespace
@@ -879,6 +927,8 @@ void Update()
     Rml::ElementDocument* document = g_View.Document();
     if (document == nullptr)
         return;
+    // Sized for fingers on this screen before it is first laid out, and as the screen changes.
+    UI::Mobile::TouchUnit::Apply(document);
     // Shown again after a theme switch rebuilt the document, too.
     if (!g_shown || !document->IsVisible())
     {
@@ -902,6 +952,7 @@ void Update()
     UI::Mobile::HeroFrame::Sync(model.hero, [](const char* field) { g_View.MarkDirty(field); });
     // The boxes the next fingers are tested against: where this frame lays the controls out.
     MeasureBoxes();
+    FollowNeighbours(document);
 }
 
 void SetPadHeld(PadButton button, bool held)
@@ -957,5 +1008,15 @@ void ActivateMenuFocus()
     const int focus = g_View.GetModel().menuFocus;
     if (IsMenuOpen() && focus >= 0 && focus < MenuItemCount)
         ++g_pad.presses[FirstMenuItemControl + focus];
+}
+
+void PressBack()
+{
+    if (!g_shown)
+        Touch::TapKey(VK_ESCAPE);
+    else if (IsMenuOpen())
+        CloseMenu();
+    else
+        Back();
 }
 } // namespace UI::HUD::TouchControls

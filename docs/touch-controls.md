@@ -9,6 +9,7 @@ config.ini `[UI]`:
 |---|---|---|
 | Interface view | `InterfaceView` | Auto, PC, Phone |
 | Controls | `Controls` | Auto, Mouse and keyboard, Touch |
+| Button size (only while the on-screen controls show) | `TouchButtonSize` | 80, 90, 100, 115, 130 % |
 
 Auto means the phone view and touch controls on a touch device (`mu::web::IsTouchDevice()`), the PC
 view and the mouse elsewhere. A desktop build or a computer's browser is unchanged unless the player
@@ -49,7 +50,8 @@ opens) and the top-right buttons hide; the system messages move under the hero f
 HP frames right of it, the buffs under the top row and the chat right of the joystick's area. Without touch controls the phone view keeps the PC bar.
 
 The phone view also draws the login box, server list, character select buttons, system menu and
-menus larger, for fingers.
+menus larger, for fingers (the character select buttons at twice their art, about 36 CSS px tall on a
+phone 360 px high).
 
 Windows, the HUD bar and tooltips take a finger before the controls: a finger on an open window
 plays the mouse there even where a button lies under it. A window a workspace slot placed counts by
@@ -58,8 +60,57 @@ pointer events themselves (their item grids are clicked natively) and RmlUi's hi
 them. The chat log and the scrolling notice do not take the finger (they only show text, over the
 joystick's corner and the top row).
 
+The pointer stays where the last tap lifted, so a monster tapped stays Attack's target and an item
+tapped shows its tooltip. A tap on a top-row button or a menu item takes it off the window
+(`Touch::RestPointer`): a window opening where the last tap was would show the tooltip of whatever
+lies there. A pad's pointer is the player's own and stays.
+
 Every action keeps the MU Helper's pace (walk packets 300 ms apart, attacks and skills 250 ms):
 the server reads a burst of walk packets as a speed hack.
+
+## Sizes: finger units
+
+The controls are sized for the finger, not for the game's resolution: `touch_controls.rcss` (both
+themes) and the pad glyphs it shows (`gamepad_glyphs.rcss`) write their sizes in `rem`, and C++ sets the
+document's font size to one *finger unit* (`UI/Mobile/TouchUnit.{h,cpp}`). In the browser a unit is
+one CSS pixel on a phone (a 50-unit skill button is 50 CSS px, Google's and Apple's smallest touch
+target being 44–48), up to 1.15 on a tablet (the short side over 412 CSS px), times the player's Button
+size, but never more than the screen's height holds (the left column of top row, hero frame and
+potions over the joystick is 345 units tall): `UI/Mobile/ButtonSize.{h,cpp}`, tested in
+`tests/ui/test_button_size.cpp`. It follows the canvas's size on the page, measured again when the window
+or the percent changes and every second (the browser's zoom changes it alone). Off the web a unit is
+RmlUi's dp at the player's percent. The finger's slop, the stick's reach and its dead zone are in units
+too.
+
+Only what lines up with the PC's own HUD stays in dp: the top row starts right of the location bar
+(214dp), and the hero frame sits under it (4dp, 26dp, 200dp wide).
+
+The phone's HUD pieces in other documents, which their themes draw in dp, follow the controls'
+boxes instead (`UI/Mobile/PhoneHudLayout.{h,cpp}`, from `TouchControls::Update`): the buffs and the
+pets' frames under the top row (the pets right of the hero frame), the system messages under the hero
+frame (right of the potions where six lines would reach them), and the skill list with its right edge
+just left of the skill buttons; the hint for putting a skill on a button stays over the buttons, no
+wider than the room right of the list. The themes' `@media (theme: mobile-hud)` places are the first guess
+until then; leaving the phone's HUD gives the themes' places back.
+
+The phone view also raises the chat's and the system messages' text to at least 12 units at 100 %
+(`TouchUnit::ReadableTextPx`), with their lines and rows; the chat's well keeps its height and shows
+fewer rows.
+
+## The page on a phone
+
+`UI/Mobile/PhonePage.{h,cpp}` (browser build only; `Core/Platform/web/WebScreen.{h,cpp}` holds the
+page's side):
+
+- The screen stays on in the world while the game is played by hand (the phone view or touch
+  controls): the browser's screen wake lock, taken again when the page shows after being hidden and
+  asked for every 5 s while wanted (a battery saver may refuse it for a while). A phone's screen would
+  otherwise dim while the MU Helper hunts.
+- The back gesture (or Android's back button) is the game's Back instead of leaving the page: the page
+  keeps a history entry of its own on top (`Module.muBack`), and stepping back from it counts a press
+  and puts it back. A press closes the touch menu if it is open, else does what Back does
+  (`TouchControls::PressBack`); out of the world it is Esc. Chrome may let a back gesture skip an entry
+  pushed without a tap; the next tap on the page restores it.
 
 ## Windows in the phone view
 
@@ -167,12 +218,15 @@ the keyboard closes act only once released, so the B that closed it does not als
 | Piece | File | Role |
 |---|---|---|
 | Finger router | `Core/Input/TouchInput.{h,cpp}` | SDL finger events → controls (hit-tested first) or the pointer. Virtual keys (`TapKey`, `SetKeyHeld`) that `Core::Input::IsKeyDown` ORs in, so every hotkey works unchanged. |
-| Pointer gestures | `Core/Input/TouchPointer.{h,cpp}` | Tap, double tap, drag, long press, pinch → warped SDL mouse + pushed button and wheel events. Held buttons are ORed into `IsKeyDown(VK_LBUTTON/VK_RBUTTON)`. |
+| Pointer gestures | `Core/Input/TouchPointer.{h,cpp}` | Tap, double tap, drag, long press, pinch → warped SDL mouse + pushed button and wheel events. Held buttons are ORed into `IsKeyDown(VK_LBUTTON/VK_RBUTTON)`. `Rest` takes a lifted finger's pointer off the window. |
 | World actions | `GameLogic/Touch/TouchActions.{h,cpp}` | Steer, Attack, Select/Cast/BindHotKeySlot, PickUpNearest, on `GameLogic::Automation` (the helper's and control socket's primitives). |
 | Controls | `UI/HUD/TouchControls.{h,cpp}` + `touch_controls.rml` + `themes/{legacy,modern}/touch_controls.rcss` | Draws the controls, answers the router's hit test from the elements' boxes, acts once a frame (`SceneManager.cpp`, after the scene). Depth 1.06 in `RmlStackingOrder.cpp`: under every window. |
 | View and controls choice | `UI/Mobile/InterfaceMode.{h,cpp}` | Reads the two Options rows, turns the touch layer on or off and sets the style flags `mobile` (phone view) and `mobile-hud` (phone view with touch controls). RCSS restyles a document for them with `@media (theme: mobile)` / `@media (theme: mobile-hud)`. |
 | Hero frame | `UI/Mobile/HeroFrame.{h,cpp}`, `UI/HUD/HeroGauges.{h,cpp}` | Fills the hero frame's part of the touch controls' model; HeroGauges reads HP/MP/AG/SD and EXP for it and for the PC bar alike. |
 | Item card | `UI/Mobile/ItemCard.{h,cpp}`, `UI/Inventory/InventoryActionController.cpp` | The card (a generic menu dialog); the controller opens it for a finger's right click on a bag item. |
+| Finger unit | `UI/Mobile/TouchUnit.{h,cpp}`, `UI/Mobile/ButtonSize.{h,cpp}` | The unit the controls are sized in and the Button size option (Options → Interface, `OptionWindow.cpp`). |
+| Neighbours | `UI/Mobile/PhoneHudLayout.{h,cpp}` | Moves the buffs, pets' frames, system messages and skill list beside the controls. |
+| Page | `UI/Mobile/PhonePage.{h,cpp}`, `Core/Platform/web/WebScreen.{h,cpp}` | Screen wake lock and the back gesture (browser only). |
 
 The element ids in `touch_controls.rml` are the contract with C++ (`ControlElement()`): a theme may
 move and restyle a control, and where it puts it is where the control answers.

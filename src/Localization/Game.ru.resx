@@ -14946,6 +14946,9 @@
   <data name="ControlsMouseKeyboard" xml:space="preserve">
     <value>Мышь и клавиатура</value>
   </data>
+  <data name="TouchButtonSizeRow" xml:space="preserve">
+    <value>Размер кнопок</value>
+  </data>
   <data name="ControlsTouch" xml:space="preserve">
     <value>Сенсорный экран</value>
   </data>

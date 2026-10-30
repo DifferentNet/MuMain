@@ -373,6 +373,14 @@ void Reset(SDL_Window* window)
     g_state = State{};
 }
 
+void Rest(SDL_Window* window)
+{
+    if (window == nullptr || g_state.phase != Phase::None)
+        return;
+    // Above and left of the window: its UI hovers nothing there.
+    MovePointer(window, -1.f, -1.f);
+}
+
 bool IsButtonHeld(int sdlButton)
 {
     return sdlButton >= 0 && sdlButton < ButtonSlots && g_state.buttons[sdlButton];

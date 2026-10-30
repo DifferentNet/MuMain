@@ -122,6 +122,13 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME button_size_tests
+    SOURCES
+        test_button_size.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Mobile/ButtonSize.cpp
+)
+
+mu_add_test(
     NAME rml_stacking_order_tests
     SOURCES
         test_rml_stacking_order.cpp

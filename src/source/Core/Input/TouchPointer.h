@@ -24,5 +24,9 @@ void Tick(SDL_Window* window);
 // Releases the buttons the finger holds and forgets the gesture.
 void Reset(SDL_Window* window);
 
+// Takes the pointer off the window while no finger plays the mouse, so nothing shows a hover for a
+// finger that has lifted: a window opening where the last tap was shows no tooltip of its own.
+void Rest(SDL_Window* window);
+
 [[nodiscard]] bool IsButtonHeld(int sdlButton);
 } // namespace Core::Input::Touch::Pointer

@@ -84,24 +84,24 @@
 	<div id="tc_menu_backdrop" data-if="menu_open"></div>
 	<!-- The menu's windows, open under the row; a tap opens one and closes the menu. -->
 	<div id="tc_menu_panel" data-if="menu_open">
-		<div id="tc_menu_0" class="tc-button tc-menu-item" data-class-focused="menu_focus == 0">{{menu_label_0}}</div>
-		<div id="tc_menu_1" class="tc-button tc-menu-item" data-class-focused="menu_focus == 1">{{menu_label_1}}</div>
-		<div id="tc_menu_2" class="tc-button tc-menu-item" data-class-focused="menu_focus == 2">{{menu_label_2}}</div>
-		<div id="tc_menu_3" class="tc-button tc-menu-item" data-class-focused="menu_focus == 3">{{menu_label_3}}</div>
-		<div id="tc_menu_4" class="tc-button tc-menu-item" data-class-focused="menu_focus == 4">{{menu_label_4}}</div>
-		<div id="tc_menu_5" class="tc-button tc-menu-item" data-class-focused="menu_focus == 5">{{menu_label_5}}</div>
-		<div id="tc_menu_6" class="tc-button tc-menu-item" data-class-focused="menu_focus == 6">{{menu_label_6}}</div>
-		<div id="tc_menu_7" class="tc-button tc-menu-item" data-class-focused="menu_focus == 7">{{menu_label_7}}</div>
-		<div id="tc_menu_8" class="tc-button tc-menu-item" data-class-focused="menu_focus == 8">{{menu_label_8}}</div>
-		<div id="tc_menu_9" class="tc-button tc-menu-item" data-class-focused="menu_focus == 9">{{menu_label_9}}</div>
-		<div id="tc_menu_10" class="tc-button tc-menu-item" data-class-focused="menu_focus == 10">{{menu_label_10}}</div>
-		<div id="tc_menu_11" class="tc-button tc-menu-item" data-class-focused="menu_focus == 11">{{menu_label_11}}</div>
-		<div id="tc_menu_12" class="tc-button tc-menu-item" data-class-focused="menu_focus == 12">{{menu_label_12}}</div>
-		<div id="tc_menu_13" class="tc-button tc-menu-item" data-class-focused="menu_focus == 13">{{menu_label_13}}</div>
-		<div id="tc_menu_14" class="tc-button tc-menu-item" data-class-focused="menu_focus == 14">{{menu_label_14}}</div>
-		<div id="tc_menu_15" class="tc-button tc-menu-item" data-class-focused="menu_focus == 15">{{menu_label_15}}</div>
-		<div id="tc_menu_16" class="tc-button tc-menu-item" data-class-focused="menu_focus == 16">{{menu_label_16}}</div>
-		<div id="tc_menu_17" class="tc-button tc-menu-item" data-class-focused="menu_focus == 17">{{menu_label_17}}</div>
+		<div id="tc_menu_0" class="tc-button tc-menu-item" data-class-focused="menu_focus == 0"><span class="tc-menu-label">{{menu_label_0}}</span></div>
+		<div id="tc_menu_1" class="tc-button tc-menu-item" data-class-focused="menu_focus == 1"><span class="tc-menu-label">{{menu_label_1}}</span></div>
+		<div id="tc_menu_2" class="tc-button tc-menu-item" data-class-focused="menu_focus == 2"><span class="tc-menu-label">{{menu_label_2}}</span></div>
+		<div id="tc_menu_3" class="tc-button tc-menu-item" data-class-focused="menu_focus == 3"><span class="tc-menu-label">{{menu_label_3}}</span></div>
+		<div id="tc_menu_4" class="tc-button tc-menu-item" data-class-focused="menu_focus == 4"><span class="tc-menu-label">{{menu_label_4}}</span></div>
+		<div id="tc_menu_5" class="tc-button tc-menu-item" data-class-focused="menu_focus == 5"><span class="tc-menu-label">{{menu_label_5}}</span></div>
+		<div id="tc_menu_6" class="tc-button tc-menu-item" data-class-focused="menu_focus == 6"><span class="tc-menu-label">{{menu_label_6}}</span></div>
+		<div id="tc_menu_7" class="tc-button tc-menu-item" data-class-focused="menu_focus == 7"><span class="tc-menu-label">{{menu_label_7}}</span></div>
+		<div id="tc_menu_8" class="tc-button tc-menu-item" data-class-focused="menu_focus == 8"><span class="tc-menu-label">{{menu_label_8}}</span></div>
+		<div id="tc_menu_9" class="tc-button tc-menu-item" data-class-focused="menu_focus == 9"><span class="tc-menu-label">{{menu_label_9}}</span></div>
+		<div id="tc_menu_10" class="tc-button tc-menu-item" data-class-focused="menu_focus == 10"><span class="tc-menu-label">{{menu_label_10}}</span></div>
+		<div id="tc_menu_11" class="tc-button tc-menu-item" data-class-focused="menu_focus == 11"><span class="tc-menu-label">{{menu_label_11}}</span></div>
+		<div id="tc_menu_12" class="tc-button tc-menu-item" data-class-focused="menu_focus == 12"><span class="tc-menu-label">{{menu_label_12}}</span></div>
+		<div id="tc_menu_13" class="tc-button tc-menu-item" data-class-focused="menu_focus == 13"><span class="tc-menu-label">{{menu_label_13}}</span></div>
+		<div id="tc_menu_14" class="tc-button tc-menu-item" data-class-focused="menu_focus == 14"><span class="tc-menu-label">{{menu_label_14}}</span></div>
+		<div id="tc_menu_15" class="tc-button tc-menu-item" data-class-focused="menu_focus == 15"><span class="tc-menu-label">{{menu_label_15}}</span></div>
+		<div id="tc_menu_16" class="tc-button tc-menu-item" data-class-focused="menu_focus == 16"><span class="tc-menu-label">{{menu_label_16}}</span></div>
+		<div id="tc_menu_17" class="tc-button tc-menu-item" data-class-focused="menu_focus == 17"><span class="tc-menu-label">{{menu_label_17}}</span></div>
 		<!-- With a pad, its keys for the menu: the stick or the d-pad move the highlight. -->
 		<div id="tc_menu_legend">
 			<div class="pad-glyph pad-face pad-a">A</div><div class="pad-legend-label">{{pad_open_label}}</div>

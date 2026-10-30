@@ -3,6 +3,14 @@
    landed on, so where a rule puts a button is where it answers. Nothing takes the pointer: the
    fingers come through Core::Input::Touch. */
 
+/* One rem is one finger unit (UI::Mobile::TouchUnit, which sets the document's font size to it):
+   the controls are as big as a thumb needs on any screen, whatever the game's resolution. Only
+   what lines up with the PC-sized HUD stays in dp: the top row starts right of the location bar,
+   the hero frame lies under it. 1dp until C++ sets the unit. */
+body {
+	font-size: 1dp;
+}
+
 #tc_stick, #tc_stick_idle, #tc_stick_base, #tc_quick, #tc_menu_backdrop, #tc_menu_panel, .tc-button, .tc-button *,
 #tc_menu_legend, #tc_menu_legend * {
 	pointer-events: none;
@@ -11,12 +19,12 @@
 .tc-button {
 	position: absolute;
 	box-sizing: border-box;
-	border: 2dp rgba(255, 255, 255, 70);
+	border: 2rem rgba(255, 255, 255, 70);
 	background-color: rgba(0, 0, 0, 120);
 	color: token(text-primary);
 	font-family: "token(font-body)";
-	font-size: 12dp;
-	font-effect: shadow(0dp 1dp #000000);
+	font-size: 13rem;
+	font-effect: shadow(0rem 1rem #000000);
 	text-align: center;
 }
 
@@ -30,21 +38,21 @@
 }
 #tc_stick_idle {
 	position: absolute;
-	left: 44dp;
-	bottom: 44dp;
-	width: 128dp;
-	height: 128dp;
-	border: 2dp rgba(255, 255, 255, 50);
-	border-radius: 64dp;
+	left: 44rem;
+	bottom: 44rem;
+	width: 128rem;
+	height: 128rem;
+	border: 2rem rgba(255, 255, 255, 50);
+	border-radius: 64rem;
 	background-color: rgba(0, 0, 0, 50);
 }
 .tc-stick-idle-knob {
 	position: absolute;
-	left: 34dp;
-	top: 34dp;
-	width: 56dp;
-	height: 56dp;
-	border-radius: 28dp;
+	left: 34rem;
+	top: 34rem;
+	width: 56rem;
+	height: 56rem;
+	border-radius: 28rem;
 	background-color: rgba(255, 255, 255, 50);
 }
 /* A point at the finger's landing place; the ring centres on it, the knob is offset from it. */
@@ -55,49 +63,54 @@
 }
 .tc-stick-ring {
 	position: absolute;
-	left: -64dp;
-	top: -64dp;
-	width: 128dp;
-	height: 128dp;
+	left: -64rem;
+	top: -64rem;
+	width: 128rem;
+	height: 128rem;
 	box-sizing: border-box;
-	border: 2dp rgba(255, 210, 60, 140);
-	border-radius: 64dp;
+	border: 2rem rgba(255, 210, 60, 140);
+	border-radius: 64rem;
 	background-color: rgba(0, 0, 0, 70);
 }
 #tc_stick_knob {
 	position: absolute;
-	width: 56dp;
-	height: 56dp;
-	margin-left: -28dp;
-	margin-top: -28dp;
-	border-radius: 28dp;
+	width: 56rem;
+	height: 56rem;
+	margin-left: -28rem;
+	margin-top: -28rem;
+	border-radius: 28rem;
 	background-color: rgba(255, 210, 60, 170);
 }
 
 /* One row along the top, right of the location bar (207dp): the chat log's lines start at the
-   top left on a phone and are drawn over the controls. */
+   top left on a phone and are drawn over the controls. It ends short of the page's own menu button
+   (index.html's ⋮, 56 CSS pixels from the right); where the screen is too narrow for the row, its
+   buttons narrow. */
 #tc_quick {
 	position: absolute;
 	z-index: 2;
 	left: 214dp;
-	top: 4dp;
+	right: 72rem;
+	top: 4rem;
 	display: flex;
-	gap: 4dp;
+	gap: 4rem;
 }
 .tc-quick {
 	position: relative;
-	width: 66dp;
-	height: 30dp;
-	line-height: 26dp;
-	font-size: 11dp;
-	border-radius: 6dp;
+	width: 72rem;
+	min-width: 44rem;
+	flex-shrink: 1;
+	height: 36rem;
+	line-height: 32rem;
+	font-size: 12rem;
+	border-radius: 6rem;
+	overflow: hidden;
+	white-space: nowrap;
 }
 #tc_menu.open {
 	border-color: token(accent-gold);
 }
 
-/* Under the row, kept right of the chat log's lines and left of the party list (top right):
-   six columns of three. */
 /* The screen around the open menu, dimmed; a tap there closes it. Over the other controls, which
    take no finger while the menu is open, under the top row and the menu. */
 #tc_menu_backdrop {
@@ -110,27 +123,39 @@
 	background-color: rgba(0, 0, 0, 90);
 }
 
+/* Under the row, centred: six columns of three, fewer where the screen is narrow. */
 #tc_menu_panel {
 	position: absolute;
 	z-index: 2;
-	right: 110dp;
-	top: 40dp;
-	width: 646dp;
-	padding: 8dp;
+	left: 0;
+	right: 0;
+	top: 46rem;
+	width: 652rem;
+	max-width: 96%;
+	margin: 0 auto;
+	padding: 8rem;
 	box-sizing: border-box;
 	display: flex;
 	flex-wrap: wrap;
-	gap: 6dp;
-	border: 1dp token(border-control);
-	border-radius: 6dp;
+	gap: 6rem;
+	border: 1rem token(border-control);
+	border-radius: 6rem;
 	background-color: rgba(0, 0, 0, 215);
 }
 .tc-menu-item {
 	position: relative;
-	width: 100dp;
-	height: 34dp;
-	line-height: 30dp;
-	border-radius: 4dp;
+	width: 100rem;
+	height: 38rem;
+	padding: 0 4rem;
+	border-radius: 4rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+/* A long label (Russian "Боевой пропуск", "Вид ПК / телефон") takes two lines inside its button. */
+.tc-menu-label {
+	line-height: 15rem;
+	text-align: center;
 }
 /* The window a pad points at (its stick or d-pad move it, A opens it). */
 .tc-menu-item.focused {
@@ -141,14 +166,14 @@
 #tc_menu_legend {
 	display: none;
 	width: 100%;
-	height: 22dp;
-	padding-top: 2dp;
+	height: 22rem;
+	padding-top: 2rem;
 	flex-direction: row;
 	align-items: center;
 	color: token(text-primary);
 	font-family: "token(font-body)";
-	font-size: 11dp;
-	font-effect: shadow(0dp 1dp #000000);
+	font-size: 12rem;
+	font-effect: shadow(0rem 1rem #000000);
 }
 body.pad #tc_menu_legend {
 	display: flex;
@@ -157,45 +182,45 @@ body.pad #tc_menu_legend {
 	position: relative;
 }
 .pad-legend-label {
-	margin: 0 14dp 0 6dp;
-	line-height: 20dp;
+	margin: 0 14rem 0 6rem;
+	line-height: 20rem;
 }
 
 .tc-potion {
-	width: 48dp;
-	height: 48dp;
-	bottom: 196dp;
-	line-height: 44dp;
-	font-size: 16dp;
-	border-radius: 24dp;
+	width: 48rem;
+	height: 48rem;
+	bottom: 196rem;
+	line-height: 44rem;
+	font-size: 16rem;
+	border-radius: 24rem;
 }
-#tc_potion_q { left: 24dp; }
-#tc_potion_w { left: 84dp; }
+#tc_potion_q { left: 24rem; }
+#tc_potion_w { left: 84rem; }
 
 #tc_attack {
-	right: 24dp;
-	bottom: 24dp;
-	width: 84dp;
-	height: 84dp;
-	line-height: 80dp;
-	font-size: 15dp;
+	right: 24rem;
+	bottom: 24rem;
+	width: 84rem;
+	height: 84rem;
+	line-height: 80rem;
+	font-size: 15rem;
 	border-color: rgba(255, 90, 60, 200);
-	border-radius: 42dp;
+	border-radius: 42rem;
 	background-color: rgba(140, 20, 10, 150);
 }
 
-/* The five skills on an arc 145dp from the attack button's centre, from a little above its left round
-   to a little left of above: the first stays clear of the HUD's bar (640dp centred, 51dp high). */
+/* The five skills on an arc 145rem from the attack button's centre, from a little above its left round
+   to a little left of above: the first stays clear of the HUD's bar (640rem centred, 51rem high). */
 .tc-skill {
-	width: 50dp;
-	height: 50dp;
-	border-radius: 10dp;
+	width: 50rem;
+	height: 50rem;
+	border-radius: 10rem;
 }
-#tc_skill_0 { right: 185dp; bottom: 56dp; }
-#tc_skill_1 { right: 168dp; bottom: 110dp; }
-#tc_skill_2 { right: 132dp; bottom: 154dp; }
-#tc_skill_3 { right: 82dp; bottom: 180dp; }
-#tc_skill_4 { right: 26dp; bottom: 185dp; }
+#tc_skill_0 { right: 185rem; bottom: 56rem; }
+#tc_skill_1 { right: 168rem; bottom: 110rem; }
+#tc_skill_2 { right: 132rem; bottom: 154rem; }
+#tc_skill_3 { right: 82rem; bottom: 180rem; }
+#tc_skill_4 { right: 26rem; bottom: 185rem; }
 .tc-skill.selected {
 	border-color: token(accent-gold);
 }
@@ -211,26 +236,26 @@ body.pad #tc_menu_legend {
 }
 #tc_bind_hint {
 	position: absolute;
-	right: 24dp;
-	bottom: 246dp;
-	max-width: 300dp;
-	padding: 4dp 8dp;
-	border-radius: 4dp;
+	right: 24rem;
+	bottom: 246rem;
+	max-width: 300rem;
+	padding: 4rem 8rem;
+	border-radius: 4rem;
 	background-color: rgba(0, 0, 0, 215);
 	color: token(text-primary);
 	font-family: "token(font-body)";
-	font-size: 11dp;
-	font-effect: shadow(0dp 1dp #000000);
+	font-size: 12rem;
+	font-effect: shadow(0rem 1rem #000000);
 	text-align: right;
 	pointer-events: none;
 }
 /* The 20x28 icon at 1.3 times its size. */
 .tc-skill-icon {
 	position: absolute;
-	left: 10dp;
-	top: 5dp;
-	width: 26dp;
-	height: 36dp;
+	left: 10rem;
+	top: 5rem;
+	width: 26rem;
+	height: 36rem;
 }
 /* Shrinks from the top down as the cooldown runs out (height bound to its fraction). */
 .tc-cooldown {
@@ -242,21 +267,22 @@ body.pad #tc_menu_legend {
 }
 
 .tc-small {
-	width: 44dp;
-	height: 44dp;
-	line-height: 40dp;
-	font-size: 10dp;
-	border-radius: 22dp;
+	width: 44rem;
+	height: 44rem;
+	line-height: 40rem;
+	font-size: 11rem;
+	border-radius: 22rem;
 }
-#tc_pickup { right: 8dp; bottom: 124dp; }
-#tc_auto { right: 124dp; bottom: 8dp; }
+#tc_pickup { right: 8rem; bottom: 124rem; }
+#tc_auto { right: 124rem; bottom: 8rem; }
 #tc_auto.on {
 	border-color: token(accent-gold);
 	background-color: rgba(255, 210, 60, 110);
 }
 
 /* The phone view's hero frame (theme flag "mobile", UI::Mobile::InterfaceMode) in the PC bar's
-   place: under the location bar, the chat log's lines below it; the EXP line along the bottom. */
+   place: under the location bar and as wide (dp), its text in finger units, the chat log's lines
+   below it; the EXP line along the bottom. */
 #tc_hero, #tc_exp {
 	display: none;
 	pointer-events: none;
@@ -273,23 +299,23 @@ body.pad #tc_menu_legend {
 	width: 200dp;
 	font-family: "token(font-body)";
 	color: token(text-primary);
-	font-effect: shadow(0dp 1dp #000000);
+	font-effect: shadow(0rem 1rem #000000);
 }
 #tc_hero * {
 	pointer-events: none;
 }
 #tc_hero_level {
-	height: 14dp;
-	line-height: 14dp;
-	font-size: 11dp;
+	height: 16rem;
+	line-height: 16rem;
+	font-size: 13rem;
 }
 .tc-gauge {
 	position: relative;
-	height: 16dp;
-	margin-top: 2dp;
+	height: 18rem;
+	margin-top: 2rem;
 	box-sizing: border-box;
-	border: 1dp rgba(255, 255, 255, 60);
-	border-radius: 3dp;
+	border: 1rem rgba(255, 255, 255, 60);
+	border-radius: 3rem;
 	background-color: rgba(0, 0, 0, 150);
 	overflow: hidden;
 }
@@ -302,21 +328,21 @@ body.pad #tc_menu_legend {
 .tc-gauge-text {
 	position: relative;
 	height: 100%;
-	line-height: 14dp;
-	font-size: 10dp;
+	line-height: 16rem;
+	font-size: 12rem;
 	text-align: center;
 }
 #tc_hero_small {
 	display: flex;
-	gap: 4dp;
+	gap: 4rem;
 }
 .tc-gauge-small {
 	flex: 1 1 0;
-	height: 13dp;
+	height: 15rem;
 }
 .tc-gauge-small .tc-gauge-text {
-	line-height: 11dp;
-	font-size: 9dp;
+	line-height: 13rem;
+	font-size: 11rem;
 }
 #tc_hero_hp .tc-gauge-fill { background-color: rgba(200, 30, 30, 220); }
 #tc_hero_mp .tc-gauge-fill { background-color: rgba(40, 80, 220, 220); }
@@ -327,7 +353,7 @@ body.pad #tc_menu_legend {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	height: 3dp;
+	height: 3rem;
 	background-color: rgba(0, 0, 0, 150);
 }
 #tc_exp_fill {
@@ -340,23 +366,16 @@ body.pad #tc_menu_legend {
 	position: absolute;
 	left: 0;
 	right: 0;
-	bottom: -15dp;
-	line-height: 13dp;
-	font-size: 11dp;
+	bottom: -16rem;
+	line-height: 14rem;
+	font-size: 12rem;
 }
 
-/* The phone HUD centres the skill list's grid over the screen (main_frame.rcss), where the hint by the
-   skill buttons would sit under it: the hint goes to the top, under the top row. */
+/* The phone HUD puts the skill list just left of the skill buttons (PhoneHudLayout.cpp): the hint stays
+   over the buttons, no wider than the room right of the list, clear of the pets' frame at the top. */
 @media (theme: mobile-hud) {
 	#tc_bind_hint {
-		top: 42dp;
-		right: auto;
-		bottom: auto;
-		left: 50%;
-		width: 360dp;
-		max-width: 360dp;
-		margin-left: -180dp;
-		text-align: center;
+		max-width: 194rem;
 	}
 }
 
@@ -367,18 +386,18 @@ body.no-touch #tc_stick {
 	display: none;
 }
 body.pad #tc_back, body.pad #tc_menu, body.pad #tc_map {
-	padding-left: 22dp;
+	padding-left: 22rem;
 }
-.tc-quick .pad-glyph { left: 1dp; top: 3dp; }
-#tc_attack .pad-glyph { right: 2dp; top: 2dp; }
+.tc-quick .pad-glyph { left: 1rem; top: 6rem; }
+#tc_attack .pad-glyph { right: 2rem; top: 2rem; }
 #tc_attack .pad-face {
-	width: 26dp;
-	height: 26dp;
-	border-radius: 13dp;
-	font-size: 15dp;
-	line-height: 22dp;
+	width: 26rem;
+	height: 26rem;
+	border-radius: 13rem;
+	font-size: 15rem;
+	line-height: 22rem;
 }
-.tc-skill .pad-glyph { left: -8dp; top: -8dp; }
-.tc-potion .pad-glyph { right: -8dp; top: -8dp; }
-#tc_pickup .pad-glyph { left: -12dp; top: -10dp; }
-#tc_auto .pad-glyph { left: -8dp; top: -8dp; }
+.tc-skill .pad-glyph { left: -8rem; top: -8rem; }
+.tc-potion .pad-glyph { right: -8rem; top: -8rem; }
+#tc_pickup .pad-glyph { left: -12rem; top: -10rem; }
+#tc_auto .pad-glyph { left: -8rem; top: -8rem; }

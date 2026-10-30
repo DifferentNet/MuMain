@@ -74,13 +74,14 @@
 	font-family: "token(font-body)";
 }
 
-/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode) gives the four buttons more room, for fingers. */
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode) draws the four buttons
+   at twice their size, for fingers; each caption stays centred under its button. */
 @media (theme: mobile) {
-	.btn-icon { width: 81dp; height: 45dp; line-height: 45dp; }
-	#btn_menu { left: 109dp; }
-	#btn_connect { right: 109dp; }
-	#btn_create_item .btn-icon-caption  { left: 26dp; }
-	#btn_menu_item .btn-icon-caption    { left: 113dp; }
-	#btn_connect_item .btn-icon-caption { right: 113dp; }
-	#btn_delete_item .btn-icon-caption  { right: 26dp; }
+	.btn-icon { width: 108dp; height: 60dp; line-height: 60dp; }
+	#btn_menu { left: 140dp; }
+	#btn_connect { right: 140dp; }
+	#btn_create_item .btn-icon-caption  { left: 40dp; }
+	#btn_menu_item .btn-icon-caption    { left: 158dp; }
+	#btn_connect_item .btn-icon-caption { right: 158dp; }
+	#btn_delete_item .btn-icon-caption  { right: 40dp; }
 }

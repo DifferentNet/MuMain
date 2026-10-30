@@ -231,6 +231,12 @@ void Reset()
     g_tappedKeys.fill(0);
 }
 
+void RestPointer()
+{
+    if (g_enabled)
+        Pointer::Rest(g_window);
+}
+
 const ControlFinger& Control(int controlId)
 {
     return IsControl(controlId) ? g_controls[controlId] : g_noControl;

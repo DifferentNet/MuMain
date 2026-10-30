@@ -102,6 +102,9 @@ public:
     void SetInterfaceView(const std::wstring& view) { m_interfaceView = view; }
     const std::wstring& GetControls() const { return m_controls; }
     void SetControls(const std::wstring& controls) { m_controls = controls; }
+    // The on-screen controls' size in percent (UI::Mobile::TouchUnit).
+    int GetTouchButtonSize() const { return m_touchButtonSize; }
+    void SetTouchButtonSize(int percent);
 
     // Chat commands - the favourites and the named templates of the command
     // window. They belong to the installation, not to a character.
@@ -229,6 +232,7 @@ private:
     bool m_overheadTitles = true;
     std::wstring m_interfaceView;
     std::wstring m_controls;
+    int m_touchButtonSize = 100;
     bool m_enableAnimationTaskPool;
 
     int m_zoom;

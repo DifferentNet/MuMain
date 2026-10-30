@@ -196,6 +196,7 @@ namespace mu::ui::window
         // MU Moldova: the phone or PC layout and the controls (UI::Mobile::InterfaceMode).
         void RmlInterfaceViewChanged(int index);
         void RmlControlsChanged(int index);
+        void RmlTouchButtonsChanged(int index);
         void RmlClickClose();
 
         // One tuning slider (UI::Options::TuningRow) as the RmlUi model binds it.
@@ -396,6 +397,12 @@ namespace mu::ui::window
             int controlsIndex = 0;
             Rml::String controlsRowLabel;
             Rml::String controlsValueLabel;
+            // The on-screen controls' size (UI::Mobile::ButtonSize::Percents), shown while they are.
+            bool touchButtonsShown = false;
+            std::vector<Rml::String> touchButtonsLabels;
+            int touchButtonsIndex = 0;
+            Rml::String touchButtonsRowLabel;
+            Rml::String touchButtonsValueLabel;
         };
         void BindRmlModel(Rml::DataModelConstructor& c, OptionRmlModel& model);
         void SyncImpliedEffectRows(OptionRmlModel& model);
@@ -493,6 +500,7 @@ namespace mu::ui::window
         // picked the row.
         int m_iPendingInterfaceView = -1;
         int m_iPendingControls = -1;
+        int m_iPendingTouchButtons = -1;
 
         // Counts SyncRmlModel() calls since BuildRmlUi(). Acts as a harmless no-op-this-early
         // guard on RmlDropdownOptionClick()'s own callers -- real user input can't land in this

@@ -15323,6 +15323,9 @@
   <data name="ControlsMouseKeyboard" xml:space="preserve">
     <value>Mouse and keyboard</value>
   </data>
+  <data name="TouchButtonSizeRow" xml:space="preserve">
+    <value>Button size</value>
+  </data>
   <data name="ControlsTouch" xml:space="preserve">
     <value>Touch screen</value>
   </data>

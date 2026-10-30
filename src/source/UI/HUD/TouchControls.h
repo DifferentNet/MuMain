@@ -55,4 +55,9 @@ void ReleasePad();
 void CloseMenu();
 void MoveMenuFocus(int dx, int dy);
 void ActivateMenuFocus();
+
+// The Back button's press from elsewhere (the phone's back gesture, UI::Mobile::PhonePage): the open
+// menu shuts, else the window on top closes or, with none open, the system menu opens. Off the world
+// it is Esc.
+void PressBack();
 } // namespace UI::HUD::TouchControls

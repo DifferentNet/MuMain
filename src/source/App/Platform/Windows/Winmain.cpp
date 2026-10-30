@@ -41,6 +41,7 @@
 #include "Render/Look/TuningSetting.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/Mobile/InterfaceMode.h"
+#include "UI/Mobile/PhonePage.h"
 #include "UI/RmlBridge/RmlRuntimeHooks.h"
 #include "Engine/Object/ZzzOpenData.h"
 #include "Scenes/SceneCore.h"
@@ -1933,6 +1934,7 @@ MSG MainLoop()
 #ifdef __EMSCRIPTEN__
                 MuWebFollowPageSize();
                 UI::Mobile::FollowPage();
+                UI::Mobile::PhonePage::Update();
                 MuWebFollowLowestQuality();
                 if (const Rml::Element* field = RmlUiRuntime::Instance().GetFocusedTextField())
                     mu::web::SyncKeyboard(true, field->GetAttribute<Rml::String>("type", "") == "password");
