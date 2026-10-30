@@ -2455,6 +2455,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     }
     // Game controllers (an Xbox pad, a Steam Deck): UI/HUD/GamepadControls plays them.
     Core::Input::Gamepad::Init();
+    Core::Input::Gamepad::SetEnabled(GameConfig::GetInstance().GetGamepad());
 
 #ifndef _WIN32
     // Install POSIX crash-diagnostic signal handlers. After SDL_Init (R8

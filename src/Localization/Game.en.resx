@@ -15344,6 +15344,15 @@
   <data name="TouchButtonSizeRow" xml:space="preserve">
     <value>Button size</value>
   </data>
+  <data name="GamepadRow" xml:space="preserve">
+    <value>Gamepad</value>
+  </data>
+  <data name="GamepadOn" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="GamepadOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
   <data name="ControlsTouch" xml:space="preserve">
     <value>Touch screen</value>
   </data>

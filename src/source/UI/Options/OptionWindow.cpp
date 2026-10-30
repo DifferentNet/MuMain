@@ -7,6 +7,7 @@
 #include "Audio/DSPlaySound.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "Data/GameConfig/GameConfigConstants.h"
+#include "Core/Input/GamepadInput.h"
 #include "Render/Look/LookPresetSetting.h"
 #include "Render/Look/LookProfileSetting.h"
 #include "Render/Look/TuningSetting.h"
@@ -77,7 +78,11 @@ static constexpr int kRmlSelectSettleFrames = 5;
 static constexpr int kInterfaceViewDropdown = 8;
 static constexpr int kControlsDropdown = 9;
 static constexpr int kTouchButtonsDropdown = 10;
-static constexpr int kLastDropdownId = kTouchButtonsDropdown;
+static constexpr int kGamepadDropdown = 11;
+static constexpr int kLastDropdownId = kGamepadDropdown;
+// The gamepad row's choices, in its labels' order.
+static constexpr int kGamepadOnIndex = 0;
+static constexpr int kGamepadOffIndex = 1;
 
 std::vector<UI::Options::DisplayResolution>
 UI::Options::NormalizeDisplayResolutions(std::vector<DisplayResolution> resolutions)
@@ -535,6 +540,10 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("touch_buttons_index", &model.touchButtonsIndex);
     c.Bind("touch_buttons_row_label", &model.touchButtonsRowLabel);
     c.Bind("touch_buttons_value_label", &model.touchButtonsValueLabel);
+    c.Bind("gamepad_labels", &model.gamepadLabels);
+    c.Bind("gamepad_index", &model.gamepadIndex);
+    c.Bind("gamepad_row_label", &model.gamepadRowLabel);
+    c.Bind("gamepad_value_label", &model.gamepadValueLabel);
 
     c.BindEventCallback("option_click_close",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickClose(); });
@@ -930,6 +939,9 @@ void mu::ui::window::COptionWindow::RmlDropdownOptionClick(int dropdownId, int o
         break;
     case kTouchButtonsDropdown:
         RmlTouchButtonsChanged(optionIndex);
+        break;
+    case kGamepadDropdown:
+        RmlGamepadChanged(optionIndex);
         break;
     default:
         break;
@@ -1473,11 +1485,25 @@ void mu::ui::window::COptionWindow::RmlTouchButtonsChanged(int index)
         m_iPendingTouchButtons = index;
 }
 
+void mu::ui::window::COptionWindow::RmlGamepadChanged(int index)
+{
+    if (m_rmlSyncCount >= kRmlSelectSettleFrames && (index == kGamepadOnIndex || index == kGamepadOffIndex))
+        m_iPendingGamepad = index;
+}
+
 void mu::ui::window::COptionWindow::ApplyPendingInterfaceMode()
 {
     const int view = std::exchange(m_iPendingInterfaceView, -1);
     const int controls = std::exchange(m_iPendingControls, -1);
     const int touchButtons = std::exchange(m_iPendingTouchButtons, -1);
+    const int gamepad = std::exchange(m_iPendingGamepad, -1);
+    if (gamepad >= 0)
+    {
+        const bool enabled = gamepad == kGamepadOnIndex;
+        Core::Input::Gamepad::SetEnabled(enabled);
+        GameConfig::GetInstance().SetGamepad(enabled);
+        GameConfig::GetInstance().Save();
+    }
     if (touchButtons >= 0)
         UI::Mobile::TouchUnit::SetPercent(UI::Mobile::ButtonSize::Percents[touchButtons]);
     if (view >= 0 && view != static_cast<int>(UI::Mobile::GetViewChoice()))
@@ -1833,6 +1859,7 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.interfaceViewRowLabel, "interface_view_row_label", I18N::Game::InterfaceViewRow);
     syncLabel(model.controlsRowLabel, "controls_row_label", I18N::Game::ControlsRow);
     syncLabel(model.touchButtonsRowLabel, "touch_buttons_row_label", I18N::Game::TouchButtonSizeRow);
+    syncLabel(model.gamepadRowLabel, "gamepad_row_label", I18N::Game::GamepadRow);
 
     // positioned/root_x/root_y stay at their model defaults (false/0/0, see OptionRmlModel's own
     // comment): window_shell's `.center-both` CSS places the window, a drag moves it.
@@ -1977,6 +2004,10 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncMultiplierRow(model.touchButtonsLabels, "touch_buttons_labels", model.touchButtonsIndex, "touch_buttons_index",
                       model.touchButtonsValueLabel, "touch_buttons_value_label", std::move(touchButtonLabels),
                       UI::Mobile::ButtonSize::NearestIndex(UI::Mobile::TouchUnit::GetPercent()));
+    syncMultiplierRow(model.gamepadLabels, "gamepad_labels", model.gamepadIndex, "gamepad_index",
+                      model.gamepadValueLabel, "gamepad_value_label",
+                      NarrowLabels({I18N::Game::GamepadOn, I18N::Game::GamepadOff}),
+                      Core::Input::Gamepad::IsEnabled() ? kGamepadOnIndex : kGamepadOffIndex);
     const bool touchButtonsShown = UI::Mobile::ShowsControls();
     if (model.touchButtonsShown != touchButtonsShown)
     {

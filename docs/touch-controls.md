@@ -10,6 +10,7 @@ config.ini `[UI]`:
 | Interface view | `InterfaceView` | Auto, PC, Phone |
 | Controls | `Controls` | Auto, Mouse and keyboard, Touch |
 | Button size (only while the on-screen controls show) | `TouchButtonSize` | 80, 90, 100, 115, 130 % |
+| Gamepad ([below](#gamepad-xbox-layout)) | `Gamepad` | On, Off |
 
 Auto means the phone view and touch controls on a touch device (`mu::web::IsTouchDevice()`), the PC
 view and the mouse elsewhere. A desktop build or a computer's browser is unchanged unless the player
@@ -139,9 +140,14 @@ With touch controls on, Help's key page lists the touch controls instead of the 
 
 A gamepad plays the game in the browser and the desktop build alike (Windows, a Steam Deck's own
 pad): SDL's gamepad layer names the buttons by position, so any pad SDL knows plays as an Xbox pad.
-It needs no setting: the first button pressed or stick pushed makes the pad the device in use, and
+It is on by default: the first button pressed or stick pushed makes the pad the device in use, and
 a key, a click or a finger hands the game back. In a browser a pad shows only after its first button
 press (the Gamepad API's rule).
+
+Options -> Interface -> Gamepad (`[UI] Gamepad` in config.ini, on by default) switches it off: the
+game then opens no pad and reads none of its buttons (`Core::Input::Gamepad::SetEnabled`). It is for
+a pad that Steam Input or a handheld's own software (Armoury Crate, Legion Space) already turns into
+a mouse and keys, so a press does not count twice.
 
 While the pad is in use, the touch controls show in the world (in the PC view too, over the PC bar)
 with the pad button that presses each one drawn on its corner: the Xbox glyphs (A green, B red,
@@ -248,3 +254,7 @@ and an `id`) and dispatch a `gamepadconnected` event carrying it; SDL polls the 
 so changing the buttons' and axes' values plays it. The input that wakes the pad is lost (it comes before
 SDL opens it), and a trigger's first full pull in one frame is lost too: SDL takes the first value an axis
 reports as its rest. A real trigger passes through several values on the way down; a fake one should too.
+
+On the desktop, a developer build's control socket has `pad` ([control-socket.md](control-socket.md)):
+`{"cmd":"pad","action":"attach"}` plugs in SDL's virtual gamepad, `down`/`up` with a `button` and
+`axis` with an `axis` and a `value` play it through SDL's own gamepad events, as a real pad.

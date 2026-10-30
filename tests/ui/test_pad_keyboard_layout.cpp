@@ -3,6 +3,8 @@
 #include "UI/HUD/PadKeyboardLayout.h"
 
 #include <cmath>
+// doctest prints a failed string_view comparison through operator<<, which MSVC declares in <ostream>.
+#include <ostream>
 #include <string_view>
 
 namespace Layout = UI::HUD::PadKeyboardLayout;

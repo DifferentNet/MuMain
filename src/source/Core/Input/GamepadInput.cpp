@@ -43,6 +43,9 @@ struct Pad
 std::array<Pad, MaxPads> g_pads{};
 std::array<ButtonState, ButtonCount> g_buttons{};
 bool g_usedLast = false;
+// Off: no pad is opened and the pads' events go unread (Options -> Interface -> Gamepad).
+bool g_enabled = true;
+bool g_started = false;
 
 std::optional<Button> FromSdlButton(int button)
 {
@@ -159,7 +162,7 @@ void ReleasePad(Pad& pad)
 
 void AddPad(SDL_JoystickID id)
 {
-    if (FindPad(id) != nullptr)
+    if (!g_enabled || FindPad(id) != nullptr)
         return;
     auto free = std::find_if(g_pads.begin(), g_pads.end(), [](const Pad& pad) { return pad.handle == nullptr; });
     if (free == g_pads.end())
@@ -177,17 +180,34 @@ void AddPad(SDL_JoystickID id)
     mu::log::Get("input")->info("Gamepad connected: {}", name != nullptr ? name : "unnamed");
 }
 
+void ClosePad(Pad& pad)
+{
+    ReleasePad(pad);
+    SDL_CloseGamepad(pad.handle);
+    pad = Pad{};
+    if (!IsConnected())
+        g_usedLast = false;
+}
+
 void RemovePad(SDL_JoystickID id)
 {
     Pad* pad = FindPad(id);
     if (pad == nullptr)
         return;
-    ReleasePad(*pad);
-    SDL_CloseGamepad(pad->handle);
-    *pad = Pad{};
+    ClosePad(*pad);
     mu::log::Get("input")->info("Gamepad disconnected");
-    if (!IsConnected())
-        g_usedLast = false;
+}
+
+// The pads plugged in now: SDL reports them as added only once, when its gamepad support opens.
+void AddPluggedPads()
+{
+    int count = 0;
+    SDL_JoystickID* ids = SDL_GetGamepads(&count);
+    if (ids == nullptr)
+        return;
+    for (int i = 0; i < count; ++i)
+        AddPad(ids[i]);
+    SDL_free(ids);
 }
 
 // A press of another device: the pad is no longer the one in use. The pad's own pointer clicks
@@ -211,8 +231,35 @@ bool IsOtherDevicePress(const SDL_Event& event)
 
 void Init()
 {
-    if (!SDL_InitSubSystem(SDL_INIT_GAMEPAD))
+    g_started = SDL_InitSubSystem(SDL_INIT_GAMEPAD);
+    if (!g_started)
         mu::log::Get("input")->warn("Gamepads unavailable: {}", SDL_GetError());
+}
+
+void SetEnabled(bool enabled)
+{
+    if (enabled == g_enabled)
+        return;
+    g_enabled = enabled;
+    if (enabled)
+    {
+        if (g_started)
+            AddPluggedPads();
+    }
+    else
+    {
+        for (Pad& pad : g_pads)
+        {
+            if (pad.handle != nullptr)
+                ClosePad(pad);
+        }
+    }
+    mu::log::Get("input")->info("Gamepad {}", enabled ? "on" : "off");
+}
+
+bool IsEnabled()
+{
+    return g_enabled;
 }
 
 void ProcessEvent(const SDL_Event& event)
