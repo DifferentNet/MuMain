@@ -491,6 +491,9 @@ if (EMSCRIPTEN)
     "-sEXPORTED_RUNTIME_METHODS=['FS']"
     # The game's fetch mount with one request per file instead of Emscripten's two.
     "--js-library=${CMAKE_CURRENT_SOURCE_DIR}/web/fetch-backend.js"
+    # fopen reads a downloaded game file whole in one go (source/Core/Platform/web/WebFileSystem.cpp,
+    # __wrap_fopen) instead of piece by piece.
+    "-Wl,--wrap=fopen"
     # Function names in stack traces while the port is being brought up.
     "--profiling-funcs")
   set_property(TARGET Main APPEND PROPERTY LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/web/fetch-backend.js")
