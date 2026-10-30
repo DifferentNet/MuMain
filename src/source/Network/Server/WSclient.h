@@ -190,16 +190,18 @@ typedef struct
 {
     PBMSG_HEADER Header;
     BYTE         SubCode;
-    BYTE         MaxClass;
+    BYTE         CreationUnlockFlags; // the CLASS_*_CARD classes this account has unlocked
     BYTE		 MoveCount;
     BYTE         CharacterCount;
     BYTE		 IsVaultExtended;
 } PHEADER_DEFAULT_CHARACTER_LIST, * LPPHEADER_DEFAULT_CHARACTER_LIST;
 
+// The classes an account unlocks before it may create them, as OpenMU's CharacterCreationUnlockFlags.
 #define CLASS_SUMMONER_CARD		0x01
 #define CLASS_DARK_LORD_CARD	0x02
 #define CLASS_DARK_CARD			0x04
-#define CLASS_CHARACTERCARD_TOTALCNT	3
+#define CLASS_RAGEFIGHTER_CARD	0x08
+#define CLASS_CHARACTERCARD_TOTALCNT	4
 
 typedef struct
 {
@@ -208,6 +210,8 @@ typedef struct
     BYTE			CharacterCard;
 } PHEADER_CHARACTERCARD, * LPPHEADER_CHARACTERCARD;
 
+// Whether each locked class may be created, in CLASS_DARK, CLASS_DARK_LORD, CLASS_SUMMONER,
+// CLASS_RAGEFIGHTER order (CCharMakeWin::UpdateDisplay).
 typedef struct
 {
     bool bCharacterEnable[CLASS_CHARACTERCARD_TOTALCNT];
