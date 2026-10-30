@@ -11,7 +11,7 @@
 	     its bound colour, centred on the theme's box and shrunk to it like the original's, and cancels
 	     the scale. Takes no pointer events. -->
 	<div class="screen">
-		<div id="panel">
+		<div id="panel" class="touch-through">
 			<div id="back"></div>
 			<span class="timer-text counter-scaled" id="kills" data-if="kills_text != ''" data-class-plain="kills_state == 'plain'" data-class-standby="kills_state == 'standby'" data-class-normal="kills_state == 'normal'" data-class-closing="kills_state == 'closing'" data-class-imminent="kills_state == 'imminent'" data-class-expiring="kills_state == 'expiring'"
 			      data-style-font-size="text_px + 'px'"><span class="native-fit">{{kills_text}}</span></span>

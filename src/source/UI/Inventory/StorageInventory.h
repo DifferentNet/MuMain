@@ -148,7 +148,13 @@ namespace mu::ui::window
         int GetBackupInvenIndex() { return m_nBackupInvenIndex; }
 
         void ProcessInventoryCtrl();
+        // A finger's long press on a vault item: the item card, with Move to bag, where the right click
+        // moves it at once. False when no item lies there or one hangs on the pointer.
+        bool ShowItemCard();
         void ProcessStorageItemAutoMove();
+        // Moves the vault's item to the first free place in the bag, as the right click does; nothing
+        // while an item hangs on the pointer or another move waits for the server.
+        void MoveToBag(ITEM* pItemObj);
     };
 }
 

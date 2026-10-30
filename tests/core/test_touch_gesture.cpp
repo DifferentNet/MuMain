@@ -86,3 +86,18 @@ TEST_CASE("only a finger that has not moved yet becomes a long press [core][touc
     CHECK_FALSE(Gesture::IsLongPressDue(Phase::LongPress, milliseconds(5000), false));
     CHECK_FALSE(Gesture::IsLongPressDue(Phase::None, milliseconds(5000), false));
 }
+
+TEST_CASE("a move more up or down than sideways is vertical, whichever way it goes [core][touch]")
+{
+    CHECK(Gesture::IsMostlyVertical(0.f, 12.f));
+    CHECK(Gesture::IsMostlyVertical(3.f, -12.f));
+    CHECK(Gesture::IsMostlyVertical(-11.f, 12.f));
+}
+
+TEST_CASE("a sideways move, or one as much sideways as up or down, is not vertical [core][touch]")
+{
+    CHECK_FALSE(Gesture::IsMostlyVertical(12.f, 0.f));
+    CHECK_FALSE(Gesture::IsMostlyVertical(-12.f, 3.f));
+    CHECK_FALSE(Gesture::IsMostlyVertical(12.f, -12.f));
+    CHECK_FALSE(Gesture::IsMostlyVertical(0.f, 0.f));
+}

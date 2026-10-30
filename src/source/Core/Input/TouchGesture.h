@@ -74,4 +74,9 @@ enum class Lift : std::uint8_t
 // Whether a finger held still `held` long has become a long press. Not while the mouse carries an
 // item: the right button would put it back in the bag, and the finger could no longer drag it.
 [[nodiscard]] bool IsLongPressDue(Phase phase, std::chrono::milliseconds held, bool carryingItem);
+
+// Whether a finger's move by (dx, dy) goes more up or down than sideways: a slider in a list that
+// scrolls up and down takes only a sideways drag, the list the rest. A move as much sideways as up
+// or down is the slider's.
+[[nodiscard]] bool IsMostlyVertical(float dx, float dy);
 } // namespace Core::Input::Touch::Gesture

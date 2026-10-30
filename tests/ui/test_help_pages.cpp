@@ -114,8 +114,8 @@ TEST_CASE("help with touch controls: the touch page instead of the keys, the sam
 {
     const auto lines = UI::Help::BuildPage(0, kTouch);
 
-    // Spacer, heading, spacer, 16 touch rows, spacer, the tap hint, spacer.
-    REQUIRE(lines.size() == 22);
+    // Spacer, heading, spacer, 18 touch rows, spacer, the tap hint, spacer.
+    REQUIRE(lines.size() == 24);
     CHECK(lines[1].heading);
     CHECK(lines[1].text == I18N::Game::TouchHelpTitle);
     CHECK(CountHeadings(lines) == 1);
@@ -123,8 +123,10 @@ TEST_CASE("help with touch controls: the touch page instead of the keys, the sam
     CHECK(lines[3].text == I18N::Game::TouchHelpWorld);
     CHECK(lines[5].text == I18N::Game::HelpControlsWalkHit);
     CHECK(lines[7].text == I18N::Game::TouchHelpAttack);
-    CHECK(lines[12].text == I18N::Game::TouchHelpPickUp);
-    CHECK(lines[18].text == I18N::Game::TouchHelpView);
+    CHECK(lines[9].text == I18N::Game::TouchHelpPk);
+    CHECK(lines[13].text == I18N::Game::TouchHelpParty);
+    CHECK(lines[14].text == I18N::Game::TouchHelpPickUp);
+    CHECK(lines[20].text == I18N::Game::TouchHelpView);
     CHECK(Hint(lines).hint);
     CHECK(Hint(lines).text == I18N::Game::TouchHelpNextHint);
     CHECK(lines.back().halfSpacer);
@@ -162,17 +164,18 @@ TEST_CASE("help with a gamepad: the pad's buttons instead of the keys, LB and RB
 {
     const auto lines = UI::Help::BuildPage(0, kPad);
 
-    // Spacer, heading, spacer, 23 pad rows, spacer, the LB/RB hint, spacer.
-    REQUIRE(lines.size() == 29);
+    // Spacer, heading, spacer, 24 pad rows, spacer, the LB/RB hint, spacer.
+    REQUIRE(lines.size() == 30);
     CHECK(lines[1].heading);
     CHECK(lines[1].text == I18N::Game::PadHelpTitle);
     CHECK(CountHeadings(lines) == 1);
     CHECK(CountHints(lines) == 1);
     CHECK(lines[3].text == I18N::Game::PadHelpSticks);
     CHECK(lines[6].text == I18N::Game::PadHelpAttack);
-    CHECK(lines[12].text == I18N::Game::PadHelpSkillList);
-    CHECK(lines[21].text == I18N::Game::PadHelpKeyboard);
-    CHECK(lines[25].text == I18N::Game::PadHelpScreensKeys);
+    CHECK(lines[8].text == I18N::Game::PadHelpPk);
+    CHECK(lines[13].text == I18N::Game::PadHelpSkillList);
+    CHECK(lines[22].text == I18N::Game::PadHelpKeyboard);
+    CHECK(lines[26].text == I18N::Game::PadHelpScreensKeys);
     CHECK(Hint(lines).text == I18N::Game::PadHelpPagesHint);
 
     CHECK(Hint(UI::Help::BuildPage(1, kPad)).text == I18N::Game::PadHelpPagesHint);

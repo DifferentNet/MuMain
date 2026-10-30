@@ -32,6 +32,22 @@
 using namespace SEASON3B;
 using namespace mu::ui::window;
 
+namespace
+{
+// New text or a turned page starts both text areas at their first line: in the phone view they scroll
+// by finger (npc_dialogue.rcss), and would keep showing where the last page was scrolled to.
+void ScrollTextsToTop(Rml::ElementDocument* document)
+{
+    if (document == nullptr)
+        return;
+    for (const char* id : {"npc_lines_container", "answers_container"})
+    {
+        if (Rml::Element* area = document->GetElementById(id))
+            area->SetScrollTop(0.f);
+    }
+}
+} // namespace
+
 CNPCDialogue::CNPCDialogue()
 {
     m_pNewUIMng = NULL;
@@ -226,6 +242,7 @@ void CNPCDialogue::SetContents(DWORD dwDlgIndex)
     m_dwCurDlgIndex = dwDlgIndex;
     SetCurNPCWords();
     SetCurSelTexts();
+    ScrollTextsToTop(m_RmlView.Document());
     m_bCanClick = true;
     m_nSelSelText = 0;
 }
@@ -405,7 +422,12 @@ void CNPCDialogue::CalculateSelTextMaxPage(int nSelTextCount, int nMaxLinePerPag
             --m_anSelTextCountPerPage[m_nMaxSelTextPage];
             m_anSelTextLinePerPage[m_nMaxSelTextPage] -= m_anSelTextLine[i];
             if (ND_SEL_TEXT_PAGE_LIMIT == ++m_nMaxSelTextPage)
+            {
+                // The answers that would need a page past the arrays' last are left out; the last page
+                // stays one that exists, as SyncRmlModel() and the next arrow index by it.
+                m_nMaxSelTextPage = ND_SEL_TEXT_PAGE_LIMIT - 1;
                 break;
+            }
             ++m_anSelTextCountPerPage[m_nMaxSelTextPage];
             m_anSelTextLinePerPage[m_nMaxSelTextPage] += m_anSelTextLine[i];
         }
@@ -463,6 +485,7 @@ void CNPCDialogue::SetQuestListText(std::span<const std::uint32_t> questIndices)
     }
 
     CalculateSelTextMaxPage(i, answerLinesPerPage);
+    ScrollTextsToTop(m_RmlView.Document());
 }
 
 void CNPCDialogue::SetContributePoint(DWORD dwContributePoint)
@@ -633,6 +656,7 @@ void CNPCDialogue::RmlClickNpcPrevPage()
         return; // already at the first page -- native L button was already locked here.
 
     --m_nSelNPCPage;
+    ScrollTextsToTop(m_RmlView.Document());
     ::PlayBuffer(SOUND_CLICK01);
 }
 
@@ -653,6 +677,7 @@ void CNPCDialogue::RmlClickNpcNextPage()
         return; // last page already reached -- native R button was already locked here.
     }
 
+    ScrollTextsToTop(m_RmlView.Document());
     ::PlayBuffer(SOUND_CLICK01);
 }
 
@@ -662,6 +687,7 @@ void CNPCDialogue::RmlClickAnsPrevPage()
         return;
 
     --m_nSelSelTextPage;
+    ScrollTextsToTop(m_RmlView.Document());
     ::PlayBuffer(SOUND_CLICK01);
 }
 
@@ -671,6 +697,7 @@ void CNPCDialogue::RmlClickAnsNextPage()
         return;
 
     ++m_nSelSelTextPage;
+    ScrollTextsToTop(m_RmlView.Document());
     ::PlayBuffer(SOUND_CLICK01);
 }
 

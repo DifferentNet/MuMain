@@ -11,7 +11,7 @@
 	     cancels the scale. In the background context, behind its other documents (the original drew it
 	     under every panel). Takes no pointer events. -->
 	<div class="screen">
-		<div id="panel">
+		<div id="panel" class="touch-through">
 			<div id="back"></div>
 			<span class="info-text counter-scaled" id="users" data-style-font-size="bold_text_px + 'px'">{{users_text}}</span>
 			<span class="info-text counter-scaled" id="monsters" data-style-font-size="bold_text_px + 'px'">{{monsters_text}}</span>

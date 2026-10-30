@@ -88,9 +88,9 @@ namespace mu::ui::window
         bool m_bRepairEnableLevel;
         bool m_bMyShopOpen;
         bool m_bMyShopLocked = false;
-        // The right button's last press came from a finger's long press: its release takes no worn
-        // gear off (the item card does).
-        bool m_bFingerRightPress = false;
+        // The right button's last press came from a finger's long press or the pad's R3: its release
+        // takes no worn gear off (the item card does).
+        bool m_bCardRightPress = false;
 
         // The whole window is RmlUi: the equipped and the grid's items are live 3D, drawn into the
         // document's #item_view (m_ItemTarget).
@@ -255,9 +255,15 @@ namespace mu::ui::window
         // Takes the worn item off into the first free place in the bag, as the right click does.
         // False when nothing is worn there, it may not come off, or the bag has no room.
         bool TakeOffToBag(int equipmentSlot);
-        // A finger's long press on worn gear: the item card, with Take off. False when there is no
-        // card to show.
+        // A finger's long press or the pad's R3 on worn gear: the item card, with Take off. False when
+        // there is no card to show.
         bool ShowWornItemCard();
+        // A finger let go over worn gear with nothing on the pointer. A tap shows the item card instead
+        // of lifting the item onto the finger, where the next tap anywhere would put it down or drop
+        // it; with a window open that takes items, or when there is no card, the tap lifts it as a
+        // click does. A drag lifted there takes nothing: a finger that moved off where it landed
+        // clicked no gear. Whether it took the release.
+        bool HandleFingerReleaseOnWorn();
         bool InventoryProcess() const;
         bool WindowProcess();
 

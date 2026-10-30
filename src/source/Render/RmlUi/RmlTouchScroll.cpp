@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "Render/RmlUi/RmlTouchScroll.h"
 
+#include "Core/Input/TouchGesture.h"
+#include "Core/Input/TouchPointer.h"
+
 #include <RmlUi/Core/ComputedValues.h>
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/Element.h>
@@ -36,28 +39,42 @@ bool CanScrollY(Rml::Element* box)
     return IsScrollable(box->GetComputedValues().overflow_y()) && box->GetScrollHeight() > box->GetClientHeight();
 }
 
-// Whether a drag starting on the element means something of its own: an item cell, a scrollbar, a
-// slider's parts (RmlUi's drag property), a text field. `drag: block`, which base.rcss gives every
-// clickable element, only keeps the window from moving with it: a list's rows scroll as on a phone.
-bool KeepsDrag(const Rml::Element* element)
+// Whether a drag starting on the element means something of its own whichever way it goes: an item
+// cell, a scrollbar, a text field.
+bool KeepsEveryDrag(const Rml::Element* element)
 {
-    const Rml::Style::Drag drag = element->GetComputedValues().drag();
-    if (element->IsClassSet(ItemGridClass) || (drag != Rml::Style::Drag::None && drag != Rml::Style::Drag::Block))
+    if (element->IsClassSet(ItemGridClass))
         return true;
     const Rml::String& tag = element->GetTagName();
     return tag == "scrollbarvertical" || tag == "scrollbarhorizontal" || tag == "input" || tag == "textarea";
 }
 
-bool KeepsDragBetween(const Rml::Element* hit, const Rml::Element* box)
+// A slider's parts (RmlUi's drag property: Options' and the MU Helper's level gauges). `drag: block`,
+// which base.rcss gives every clickable element, only keeps the window from moving with it: a list's
+// rows scroll as on a phone.
+bool HasOwnDrag(const Rml::Element* element)
+{
+    const Rml::Style::Drag drag = element->GetComputedValues().drag();
+    return drag != Rml::Style::Drag::None && drag != Rml::Style::Drag::Block;
+}
+
+// `upOrDown`: the finger set off up or down in a box that scrolls that way. A slider lets such a drag
+// scroll the box: the sliders move sideways, and a page of them would otherwise not scroll at all.
+bool KeepsDragBetween(const Rml::Element* hit, const Rml::Element* box, bool upOrDown)
 {
     for (const Rml::Element* element = hit; element != nullptr; element = element->GetParentNode())
     {
-        if (KeepsDrag(element))
+        if (KeepsEveryDrag(element) || (HasOwnDrag(element) && !upOrDown))
             return true;
         if (element == box)
             return false;
     }
     return false;
+}
+
+bool SetsOffUpOrDown(Rml::Element* box, Rml::Vector2f firstMove)
+{
+    return CanScrollY(box) && Core::Input::Touch::Gesture::IsMostlyVertical(firstMove.x, firstMove.y);
 }
 
 // A move between two window points in the box's own pixels: a scaled window moves its lists by the
@@ -86,17 +103,35 @@ Rml::Vector2f ScrolledBy(Rml::Element* box, Rml::Vector2f delta)
 }
 } // namespace
 
-bool RmlTouchScroll::Begin(Rml::Context* context, Rml::Vector2f point)
+bool ScrollsVerticallyAt(Rml::Context* context, Rml::Vector2f point)
+{
+    for (Rml::Element* element = context != nullptr ? context->GetElementAtPoint(point) : nullptr;
+         element != nullptr; element = element->GetParentNode())
+    {
+        if (CanScrollY(element))
+            return true;
+    }
+    return false;
+}
+
+bool RmlTouchScroll::Begin(Rml::Context* context, Rml::Vector2f point, Rml::Vector2f firstMove)
 {
     m_Held.reset();
     Rml::Element* hit = context != nullptr ? context->GetElementAtPoint(point) : nullptr;
     if (hit == nullptr)
         return false;
     Rml::Element* box = hit->GetClosestScrollableContainer();
-    if (box == nullptr || (!CanScrollX(box) && !CanScrollY(box)) || KeepsDragBetween(hit, box))
+    if (box == nullptr || (!CanScrollX(box) && !CanScrollY(box)) ||
+        KeepsDragBetween(hit, box, SetsOffUpOrDown(box, firstMove)))
         return false;
     m_Held = box->GetObserverPtr();
     return true;
+}
+
+bool RmlTouchScroll::Begin(Rml::Context* context, Rml::Vector2f point)
+{
+    const SDL_FPoint move = Core::Input::Touch::Pointer::MoveFromLanding();
+    return Begin(context, point, {move.x, move.y});
 }
 
 void RmlTouchScroll::Move(Rml::Vector2f from, Rml::Vector2f to)

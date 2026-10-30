@@ -94,6 +94,13 @@ namespace mu::ui::window
         void DeleteAllItems() const;
 
         void ProcessInventoryCtrl();
+        // A finger's long press on an item of the extended vault: the item card, with Move to bag, where
+        // the right click moves it at once (CStorageInventory::ShowItemCard). False when no item lies
+        // there or one hangs on the pointer.
+        bool ShowItemCard();
         void ProcessStorageItemAutoMove();
+        // Moves the item to the first free place in the bag, as the right click does; nothing while an
+        // item hangs on the pointer or another move waits for the server.
+        void MoveToBag(ITEM* pItemObj);
     };
 }

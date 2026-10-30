@@ -103,6 +103,8 @@ public:
     void MoveTouchScroll(float fromX, float fromY, float toX, float toY) override;
     void EndTouchScroll(float x, float y, float velocityX, float velocityY) override;
     bool StopTouchScrollGlide() override;
+    // A box of the main context under the point that scrolls up and down (Render::RmlUi::ScrollsVerticallyAt).
+    bool ScrollsAt(float x, float y) const override;
 
     Rml::Context* GetContext() const { return m_Context; }
     // The debug overlay's context: updated and drawn in the Overlay pass, so the RmlUi passes it

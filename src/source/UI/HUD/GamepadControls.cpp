@@ -35,6 +35,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <optional>
 
 namespace
 {
@@ -53,9 +54,13 @@ constexpr auto MenuRepeat = std::chrono::milliseconds(150);
 constexpr float LongestFrame = 0.1f;
 // GameLogic::Touch::Steer reads a direction in screen pixels: the stick's -1 .. 1, scaled up.
 constexpr float StickToScreen = 100.f;
-// A dialog takes the pad's answer (A, Menu) once it has been up this long: a press meant for the
-// fight as a trade or party request came up does not accept it.
+// A dialog takes the pad's answer (A, Menu) once it has been up this long, and A once it has rested
+// this long too: a press meant for the fight as a trade or party request came up does not accept it.
 constexpr auto DialogAnswerDelay = std::chrono::milliseconds(1000);
+// The d-pad over a list that scrolls turns the wheel at once, again after this while held, then at
+// the second pace.
+constexpr auto WheelFirstRepeat = std::chrono::milliseconds(400);
+constexpr auto WheelRepeat = std::chrono::milliseconds(110);
 
 // The pad buttons that press a control as long as they are held.
 struct Mapping
@@ -96,9 +101,20 @@ struct PointerPress
     int control = -1;
 };
 
+// D-pad up or down pressed over a list that scrolls: the wheel there, as long as it is held.
+struct DpadWheel
+{
+    Button button;
+    int steps;
+    bool turning = false;
+    Pad::RepeatButton repeat{WheelFirstRepeat, WheelRepeat};
+};
+
 struct State
 {
     bool inUse = false;
+    // The pad had the pointer before: it takes it again where the mouse left it.
+    bool pointerTaken = false;
     bool inWorld = false;
     // The hint on how to play with a pad, once a session.
     bool told = false;
@@ -108,6 +124,9 @@ struct State
     std::array<bool, Pad::ButtonCount> waitForRelease{};
     PointerPress a;
     PointerPress rightTrigger;
+    // When A was last pressed or held: a dialog takes A as its answer only once it has rested.
+    Clock::time_point aActive{};
+    std::array<DpadWheel, 2> wheels{{{Button::DpadUp, 1}, {Button::DpadDown, -1}}};
     // The sticks' own buttons, pressed on purpose (Core/Input/GamepadStickClick.h).
     Pad::StickClick leftStickClick;
     Pad::StickClick rightStickClick;
@@ -391,7 +410,8 @@ bool IsPointerOnButton()
 }
 
 // A dialog's answer: Menu, and A off its buttons, press Enter (yes, OK). B is Esc already (Back).
-void AnswerDialog(Presses& presses)
+// A answers only once it rested: A tapped over and over in a fight goes on attacking.
+void AnswerDialog(Presses& presses, bool aRested)
 {
     if (Take(presses, Button::Menu))
     {
@@ -399,7 +419,7 @@ void AnswerDialog(Presses& presses)
         // Still held as the dialog goes, it does not go on to open the menu.
         g_state.waitForRelease[static_cast<int>(Button::Menu)] = true;
     }
-    if (Pressed(presses, Button::A) && g_state.a.mode == Hold::None && !IsPointerOnButton())
+    if (aRested && Pressed(presses, Button::A) && g_state.a.mode == Hold::None && !IsPointerOnButton())
     {
         Take(presses, Button::A);
         Core::Input::Touch::TapKey(VK_RETURN);
@@ -423,6 +443,38 @@ void TurnHelpPages(Presses& presses)
         g_pHelp->TurnPage(1);
 }
 
+// Over a list that scrolls (a shop, the quests, the chat's scrollbar), d-pad up and down turn the mouse
+// wheel there instead of pressing Auto and the fifth skill: at once, and on while held. A press that
+// began off such a list goes on pressing its control.
+void TurnWheelWithDpad(SDL_Window* window, Presses& presses, Clock::time_point now)
+{
+    std::optional<bool> overList;
+    for (DpadWheel& wheel : g_state.wheels)
+    {
+        const bool pressed = Pressed(presses, wheel.button);
+        if (pressed)
+        {
+            if (!overList)
+            {
+                float x = 0.f;
+                float y = 0.f;
+                PointerPosition(x, y);
+                overList = Core::Input::UiScrollsAt(x, y);
+            }
+            wheel.turning = *overList;
+        }
+        if (!wheel.turning)
+            continue;
+        Take(presses, wheel.button);
+        const bool held = Held(wheel.button);
+        // Its control acts again only once the button is let go.
+        g_state.waitForRelease[static_cast<int>(wheel.button)] = held;
+        if (wheel.repeat.Take(pressed, held, now))
+            Pointer::TurnWheel(window, wheel.steps);
+        wheel.turning = held;
+    }
+}
+
 // The buttons that press a control hold it while held. A tap shorter than a frame (a quick one on a
 // slow phone, the press that woke the pad in a browser) still presses it once.
 void HoldMappedControls(const Presses& presses)
@@ -439,6 +491,9 @@ void HoldMappedControls(const Presses& presses)
 void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_point now)
 {
     const bool dialogAnswers = DialogTakesAnswers(now);
+    const bool aRested = now - g_state.aActive >= DialogAnswerDelay;
+    if (Pressed(presses, Button::A) || Held(Button::A))
+        g_state.aActive = now;
     if (Controls::IsMenuOpen())
     {
         PlayMenu(window, presses, now);
@@ -449,7 +504,8 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
     Walk(Pad::LeftStick());
     TurnHelpPages(presses);
     if (dialogAnswers)
-        AnswerDialog(presses);
+        AnswerDialog(presses, aRested);
+    TurnWheelWithDpad(window, presses, now);
     FollowPress(window, g_state.a, g_state.rightTrigger, Take(presses, Button::A), Held(Button::A), true);
     HoldMappedControls(presses);
     // The skill picker sets the skill buttons; without the controls on the screen, the game's list.
@@ -476,12 +532,31 @@ void PlayScreens(SDL_Window* window, const Presses& presses, float seconds)
         Core::Input::Touch::TapKey(VK_RETURN);
 }
 
+// The pad takes the pointer where the mouse left it, so the window or the item under it stays under
+// it. The first time, and with the pointer off the window (a finger lifted moves it off), it starts
+// in the middle, over the character.
+void TakePointer(SDL_Window* window)
+{
+    float x = 0.f;
+    float y = 0.f;
+    PointerPosition(x, y);
+    int width = 0;
+    int height = 0;
+    SDL_GetWindowSize(window, &width, &height);
+    // SDL may keep a warp off the window at its corner.
+    const bool offWindow = (x <= 0.f && y <= 0.f) || x < 0.f || y < 0.f || x >= static_cast<float>(width) ||
+                           y >= static_cast<float>(height);
+    if (!g_state.pointerTaken || offWindow)
+        Pointer::Centre(window);
+    g_state.pointerTaken = true;
+}
+
 void SwitchUse(SDL_Window* window, bool inUse)
 {
     g_state.inUse = inUse;
-    if (inUse)
-        Pointer::Centre(window);
-    else
+    if (inUse && window != nullptr)
+        TakePointer(window);
+    else if (!inUse)
         ReleaseAll(window);
     UI::Mobile::SetGamepadInUse(inUse);
 #ifdef __EMSCRIPTEN__

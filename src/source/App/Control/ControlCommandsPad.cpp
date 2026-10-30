@@ -112,6 +112,7 @@ std::string StateResult(const Request& request)
 {
     json result;
     result["enabled"] = Core::Input::Gamepad::IsEnabled();
+    result["off_when_put_down"] = Core::Input::Gamepad::TurnsOffWhenPutDown();
     result["connected"] = Core::Input::Gamepad::IsConnected();
     result["used_last"] = Core::Input::Gamepad::WasUsedLast();
     result["in_use"] = UI::Mobile::IsGamepadInUse();

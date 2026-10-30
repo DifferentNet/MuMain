@@ -1,6 +1,7 @@
 // What the on-screen controls of phones and tablets do in the world (UI/HUD/TouchControls), and the
-// gamepad's buttons with them: the joystick walks, the attack button fights the nearest monster, a
-// skill button casts its hotkey's skill, the pickup button gathers the drops around. Built on
+// gamepad's buttons with them: the joystick walks, the attack button fights the nearest monster (or a
+// player, where players fight or when aimed at), a skill button casts its hotkey's skill, the pickup
+// button gathers the drops around. Built on
 // GameLogic::Automation, the same primitives the MU Helper and the control socket use, at the
 // helper's own pace: the server reads a walk packet every frame as a speed hack.
 //
@@ -41,16 +42,38 @@ void PauseSteering();
 // tap leaves the pointer on whatever it touched last, which is no aim.
 void SetPointerAims(bool aims);
 
-// A plain attack on the monster aimed at, else the one fought last, else the nearest. Called every
-// frame while the attack button is held, and after a tap until it is done.
+// The PK switch of the menu: while on, the buttons fight a player a tap or the pad's pointer aimed
+// at, and a tap on a player attacks, as Ctrl held lets a click (CheckAttack). A duel, Chaos Castle and
+// the other places where players fight need no switch. Never a member of the party. Off again on a
+// new map.
+void SetForceAttack(bool on);
+[[nodiscard]] bool IsForceAttack();
+
+// The party member a tap on their party card chose (CPartyListWindow): the heal and buff buttons
+// cast on them while they are near, else on the character. A tap on the same card again, or on the
+// character's own, goes back to the character. FriendKey is NoTarget (-1) while none is chosen or
+// the one chosen is away.
+void ToggleFriend(int characterKey);
+[[nodiscard]] int FriendKey();
+
+// Keeps the player the engine fights (a tap on them) as the buttons' target before the finger moves
+// on to a button, where the selection under the pointer goes. Called every frame.
+void TrackAim();
+
+// A plain attack on the monster or player aimed at, else the one fought last, else the nearest
+// monster (or enemy player where players fight). Called every frame while the attack button is held,
+// and after a tap until it is done.
 Progress Attack();
 
 // A press on a skill button: its hotkey's (0-9) skill becomes the current skill, as a click on the
 // bar's slot makes it.
 void SelectHotKey(int hotKey);
 // Casts the hotkey's skill, at a monster as Attack() picks one, or on the character itself when it
-// is a buff, a heal or a summon. Skills aimed where the player points only become the current
-// skill (SelectHotKey). Called every frame while a skill button is held, and after a tap until done.
+// is a buff, a heal or a summon (a heal or a buff on the party member chosen, ToggleFriend). Hellfire
+// and Inferno walk up to the monster first. A skill short of mana or AG tells so and asks for a mana
+// potion, leaving the turn to the attack button. A pet command goes to the raven at once. Skills
+// aimed where the player points only become the current skill (SelectHotKey). Called every frame
+// while a skill button is held, and after a tap until done.
 Progress CastHotKey(int hotKey);
 // Puts the current skill (the bar's current-skill icon, picked in the skill list) on a hotkey, as
 // Ctrl and the digit do on a keyboard, and saves the hotkeys at once: a closed browser tab is a
@@ -65,7 +88,7 @@ bool BindHotKey(int hotKey);
 // pickup button is held, and after a tap until done.
 Progress PickUpNearest();
 
-// Forgets the monster being fought and the drops passed over, and makes a pushed joystick wait:
-// a new map, the character's death, the controls hidden.
+// Forgets the monster being fought, the drops passed over, the PK switch and the party member chosen,
+// and makes a pushed joystick wait: a new map, the character's death, the controls hidden.
 void Reset();
 } // namespace GameLogic::Touch

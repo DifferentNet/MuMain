@@ -8,6 +8,7 @@
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_touch.h>
 
+#include <cstdint>
 #include <optional>
 
 struct SDL_Window;
@@ -34,7 +35,8 @@ void Reset(SDL_Window* window);
 // stays.
 bool Rest(SDL_Window* window);
 
-// The mouse or the pad's pointer pressed a button: the pointer is no longer where a finger left it.
+// The mouse or the pad's pointer pressed a button: the pointer is no longer where a finger left it,
+// and the buttons are no longer a finger's (LastLeftPress()).
 void ForgetFinger();
 
 [[nodiscard]] bool IsButtonHeld(int sdlButton);
@@ -42,4 +44,21 @@ void ForgetFinger();
 // Where the finger is that, lifted now, would tap (a left click there): one that landed and has not
 // moved off, been held long or stopped a gliding list since. Window pixels.
 [[nodiscard]] std::optional<SDL_FPoint> TapPoint();
+
+// How the last press of the left button came: a window that takes a mouse's click at once can ask a
+// finger to tap twice, or let a finger's drag that only scrolled the view do nothing.
+enum class LeftPress : std::uint8_t
+{
+    // The mouse or the pad pressed it last, or no finger has.
+    NotFinger,
+    // A finger tapped: pressed and let go where it lifted.
+    Tap,
+    // A finger moved off where it landed: pressed there, let go where it lifts.
+    Drag,
+};
+[[nodiscard]] LeftPress LastLeftPress();
+
+// How far the finger playing the mouse is from where it landed, in window pixels: which way a drag
+// set off when it began.
+[[nodiscard]] SDL_FPoint MoveFromLanding();
 } // namespace Core::Input::Touch::Pointer

@@ -377,6 +377,11 @@ bool RmlUiRuntime::StopTouchScrollGlide()
     return m_TouchScroll.StopGlide();
 }
 
+bool RmlUiRuntime::ScrollsAt(float x, float y) const
+{
+    return Render::RmlUi::ScrollsVerticallyAt(m_Context, {x, y});
+}
+
 bool RmlUiRuntime::IsMouseOverUI() const
 {
     return m_Context && m_Context->IsMouseInteracting();

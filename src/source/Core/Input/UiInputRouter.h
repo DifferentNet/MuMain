@@ -49,6 +49,12 @@ namespace Core::Input
         {
             return false;
         }
+        // Whether a list or a box under the window point scrolls up and down: the mouse wheel there
+        // moves it, so the pad's d-pad turns the wheel instead of pressing its controls.
+        virtual bool ScrollsAt(float /*x*/, float /*y*/) const
+        {
+            return false;
+        }
     };
 
     // Registers the single active UI input consumer. Set once at startup (RmlUiRuntime::Create())
@@ -71,4 +77,6 @@ namespace Core::Input
     void MoveUiTouchScroll(float fromX, float fromY, float toX, float toY);
     void EndUiTouchScroll(float x, float y, float velocityX, float velocityY);
     bool StopUiTouchScrollGlide();
+    // The registered consumer's IUiInputConsumer::ScrollsAt(); with none registered nothing scrolls.
+    bool UiScrollsAt(float x, float y);
 }

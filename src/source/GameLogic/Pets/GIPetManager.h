@@ -36,6 +36,10 @@ namespace giPetManager
     bool    SelectPetCommand(void);
     void    MovePetCommand(CHARACTER* c);
     bool    SendPetCommand(CHARACTER* c, int Index);
+    // The command of skill Index (AT_PET_COMMAND_*) to c's pet, with no right click needed: the
+    // touch and pad buttons. targetKey is the character the attack command goes for (a
+    // CHARACTER::Key); below 0 that command sends nothing. False with no pet or no such command.
+    bool    SendPetCommandTo(CHARACTER* c, int Index, int targetKey);
     void    SetPetCommand(CHARACTER* c, int Key, std::uint8_t Cmd);
     void    SetAttack(CHARACTER* c, int Key, int attackType);
 

@@ -133,6 +133,25 @@ TEST_CASE("a list's buttons scroll with the finger; a slider's parts keep it [ui
     CHECK_FALSE(fixture.scroll.Begin(fixture.context, {50.f, 90.f}));
 }
 
+TEST_CASE("a finger setting off up or down over a slider scrolls its list; sideways it drags the slider [ui][touch-scroll]")
+{
+    Fixture fixture;
+    // The slider's part (80 to 120 px), the finger moving up from it, then down a little aslant.
+    CHECK(fixture.scroll.Begin(fixture.context, {50.f, 90.f}, {0.f, -12.f}));
+    CHECK(fixture.scroll.Begin(fixture.context, {50.f, 90.f}, {4.f, 12.f}));
+    // Sideways, or as much sideways as down: the slider's.
+    CHECK_FALSE(fixture.scroll.Begin(fixture.context, {50.f, 90.f}, {12.f, 2.f}));
+    CHECK_FALSE(fixture.scroll.Begin(fixture.context, {50.f, 90.f}, {-12.f, 12.f}));
+}
+
+TEST_CASE("item cells and the scrollbar keep the finger whichever way it sets off [ui][touch-scroll]")
+{
+    Fixture fixture;
+    // An item grid's cell (row 4: 120 to 160 px), the scrollbar.
+    CHECK_FALSE(fixture.scroll.Begin(fixture.context, {50.f, 130.f}, {0.f, -12.f}));
+    CHECK_FALSE(fixture.scroll.Begin(fixture.context, {95.f, 50.f}, {0.f, -12.f}));
+}
+
 TEST_CASE("a scaled window's list moves by the finger's distance on screen [ui][touch-scroll]")
 {
     // Drawn at half size from its top left corner: 10 px on screen are 20 of the list's own.

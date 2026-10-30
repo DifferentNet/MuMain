@@ -79,3 +79,59 @@
    13px left quest_progress.rcss's own .qp-btn-exit uses, matching the legacy #btn_exit box exactly. */
 .nd-btn-exit { left: 13px; }
 
+/* MU Moldova: the phone view (theme flag "mobile"): the window is 300 units wide with 16-unit text, the
+   answers are rows a finger can hit, and the page arrows and the exit grow to finger size (legacy's
+   layout, themes/legacy/npc_dialogue.rcss). The text areas take the lines' size, as NPCDialogue.cpp
+   wraps at their width at their own text size. It counts the lines a page holds from the line height and
+   the room above each area's next arrow, not the answer rows' padding, so a page of answers can be taller
+   than its area: both areas scroll by finger, with a slim bar showing where they are. */
+@media (theme: mobile) {
+	#panel { width: 300px; }
+	.nd-contribute { left: 66px; }
+
+	/* --- The NPC's text: five 22-unit lines under the header, then its arrows beside the divider --- */
+	.nd-npc-lines { top: 50px; height: 110px; }
+	.nd-btn-npc { top: 162px; }
+	.nd-divider { top: 182px; width: 188px; }
+
+	/* --- The answers: four 44-unit rows, then their arrows level with the exit --- */
+	.nd-answers { top: 206px; height: 176px; }
+	.nd-btn-ans { top: 384px; }
+	.nd-btn-exit { width: 42px; height: 38px; bottom: 5px; line-height: 38px; }
+
+	/* --- The arrows: 43 x 40 boxes at the right, the sprite in the middle (the decorator paints the
+	   content box alone) --- */
+	.nd-btn-l, .nd-btn-r { padding: 11px 13px; }
+	.nd-btn-l { left: 192px; decorator: image(nd-btn-l) content-box; }
+	.nd-btn-r { left: 236px; decorator: image(nd-btn-r) content-box; }
+
+	.nd-npc-lines, .nd-answers {
+		width: 256px;
+		padding-right: 8px;
+		font-size: 16px;
+		line-height: 22px;
+		overflow: hidden auto;
+		pointer-events: auto;
+	}
+	.nd-line, .nd-answer-row { font-size: 16px; }
+	/* NPCDialogue.cpp has already broken an answer into its lines, so the row keeps them as they are. */
+	.nd-answer-row {
+		width: 256px;
+		padding: 9px 0;
+		border-bottom-width: 1px;
+		border-bottom-color: token(border-inner);
+		margin-bottom: 3px;
+		white-space: pre;
+	}
+	.nd-npc-lines scrollbarvertical, .nd-answers scrollbarvertical { width: 4px; }
+	.nd-npc-lines scrollbarvertical slidertrack, .nd-answers scrollbarvertical slidertrack {
+		background-color: token(metal-rail-dark);
+	}
+	.nd-npc-lines scrollbarvertical sliderbar, .nd-answers scrollbarvertical sliderbar {
+		min-height: 24px;
+		background-color: token(metal-edge);
+	}
+	.nd-npc-lines scrollbarvertical sliderarrowdec, .nd-npc-lines scrollbarvertical sliderarrowinc,
+	.nd-answers scrollbarvertical sliderarrowdec, .nd-answers scrollbarvertical sliderarrowinc { height: 0; }
+}
+

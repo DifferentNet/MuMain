@@ -51,6 +51,8 @@ std::array<ButtonState, ButtonCount> g_buttons{};
 bool g_usedLast = false;
 // Off: no pad is opened and the pads' events go unread (Options -> Interface -> Gamepad).
 bool g_enabled = true;
+// Turned off with the pad itself: it plays on until another device is pressed (SetEnabled()).
+bool g_offWhenPutDown = false;
 bool g_started = false;
 
 std::optional<Button> FromSdlButton(int button)
@@ -300,6 +302,13 @@ void Init()
 
 void SetEnabled(bool enabled)
 {
+    g_offWhenPutDown = false;
+    if (!enabled && g_enabled && g_usedLast && IsConnected())
+    {
+        g_offWhenPutDown = true;
+        mu::log::Get("input")->info("Gamepad off once another device is pressed");
+        return;
+    }
     if (enabled == g_enabled)
         return;
     g_enabled = enabled;
@@ -321,7 +330,12 @@ void SetEnabled(bool enabled)
 
 bool IsEnabled()
 {
-    return g_enabled;
+    return g_enabled && !g_offWhenPutDown;
+}
+
+bool TurnsOffWhenPutDown()
+{
+    return g_offWhenPutDown;
 }
 
 void ProcessEvent(const SDL_Event& event)
@@ -329,6 +343,8 @@ void ProcessEvent(const SDL_Event& event)
     if (IsOtherDevicePress(event))
     {
         g_usedLast = false;
+        if (g_offWhenPutDown)
+            SetEnabled(false);
         return;
     }
     switch (event.type)
@@ -338,6 +354,9 @@ void ProcessEvent(const SDL_Event& event)
         break;
     case SDL_EVENT_GAMEPAD_REMOVED:
         RemovePad(event.gdevice.which);
+        // The last pad unplugged: nothing is left to play, so the off it waited for comes now.
+        if (g_offWhenPutDown && !IsConnected())
+            SetEnabled(false);
         break;
     case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
     case SDL_EVENT_GAMEPAD_BUTTON_UP:

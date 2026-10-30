@@ -305,24 +305,39 @@ static std::uint8_t g_tabBar = 0;
             return false;
         }
 
-        const auto petCommand = static_cast<PetCommandMode>(Index - AT_PET_COMMAND_DEFAULT);
-        if (Index == AT_PET_COMMAND_TARGET)
+        int targetKey = -1;
+        if (Index == AT_PET_COMMAND_TARGET && CheckAttack() && SelectedCharacter != -1)
         {
-            if (CheckAttack() && SelectedCharacter != -1)
+            const CHARACTER* targetCharacter = &CharactersClient[SelectedCharacter];
+            if (targetCharacter->Object.Kind == KIND_MONSTER || targetCharacter->Object.Kind == KIND_PLAYER)
             {
-                CHARACTER* targetCharacter = &CharactersClient[SelectedCharacter];
-                if (targetCharacter->Object.Kind == KIND_MONSTER || targetCharacter->Object.Kind == KIND_PLAYER)
-                {
-                    SocketClient->ToGameServer()->SendPetCommandRequest(static_cast<PetType>(petSystem->GetPetType()), petCommand, targetCharacter->Key);
-                }
+                targetKey = targetCharacter->Key;
             }
         }
-        else
-        {
-            SocketClient->ToGameServer()->SendPetCommandRequest(static_cast<PetType>(petSystem->GetPetType()), petCommand, kInvalidTargetKey);
-        }
+        SendPetCommandTo(c, Index, targetKey);
 
         ClearRightMouseInputState();
+        return true;
+    }
+
+    bool SendPetCommandTo(CHARACTER* c, int Index, int targetKey)
+    {
+        auto* petSystem = ResolvePetSystem(c);
+        if (petSystem == nullptr || Index < AT_PET_COMMAND_DEFAULT || Index >= AT_PET_COMMAND_END)
+        {
+            return false;
+        }
+
+        const auto petCommand = static_cast<PetCommandMode>(Index - AT_PET_COMMAND_DEFAULT);
+        const auto petType = static_cast<PetType>(petSystem->GetPetType());
+        if (Index != AT_PET_COMMAND_TARGET)
+        {
+            SocketClient->ToGameServer()->SendPetCommandRequest(petType, petCommand, kInvalidTargetKey);
+        }
+        else if (targetKey >= 0)
+        {
+            SocketClient->ToGameServer()->SendPetCommandRequest(petType, petCommand, static_cast<std::uint16_t>(targetKey));
+        }
         return true;
     }
 

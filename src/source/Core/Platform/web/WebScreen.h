@@ -21,6 +21,10 @@ struct CanvasOnPage
 // page comes back into view. Nothing where the browser has no wake lock. Cheap to call again.
 void KeepScreenOn(bool on);
 
+// Touches, pointer moves, keys and wheel turns on the page since the last call; the first call starts
+// counting. A pad's buttons are no page events (Core::Input::Gamepad has them).
+[[nodiscard]] int TakePageInputs();
+
 // While armed, the page keeps a history entry of its own on top for the back gesture (or a phone's
 // back button) to step back from: the page stays, and the step counts as a press.
 void ArmBackGesture(bool armed);

@@ -1,5 +1,7 @@
 #include "Core/Input/TouchGesture.h"
 
+#include <cmath>
+
 namespace Core::Input::Touch::Gesture
 {
 Landing OnLanding(Phase phase)
@@ -41,5 +43,10 @@ Lift OnLift(Phase phase, bool cancelled, bool stoppedGlide)
 bool IsLongPressDue(Phase phase, std::chrono::milliseconds held, bool carryingItem)
 {
     return phase == Phase::Pending && held >= LongPressTime && !carryingItem;
+}
+
+bool IsMostlyVertical(float dx, float dy)
+{
+    return std::fabs(dy) > std::fabs(dx);
 }
 } // namespace Core::Input::Touch::Gesture

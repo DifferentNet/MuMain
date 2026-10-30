@@ -108,3 +108,68 @@
 
 /* The native text size, counter-scaled out of the placed root's scale. */
 #panel { font-size: calc(var(--text-px) / var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the window is 300 units wide with 16-unit text, the
+   answers are rows a finger can hit and the page arrows grow to finger size; the frame's ends keep their
+   art while its plain middle repeats (docked_panel_frame.rcss). The model binds the native text size on
+   the two text areas and this engine has no !important, so the lines set their own size instead: the
+   areas keep a 176-unit width at the native size, which NPCDialogue.cpp wraps at, and the larger text
+   then fills 256 units. NPCDialogue.cpp counts the lines a page holds from the line height and the room
+   above each area's next arrow, not the answer rows' padding, so a page of answers can be taller than its
+   area: both areas scroll by finger, with a slim bar showing where they are. */
+@spritesheet nd-phone-top-a-sheet { src: "../../../newui_item_back04.tga"; nd-phone-top-a-l: 0px 0px 60px 64px; nd-phone-top-a-c: 90px 0px 10px 64px; nd-phone-top-a-r: 130px 0px 60px 64px; }
+@media (theme: mobile) {
+	#panel { width: 300px; }
+	.frame-top { decorator: tiled-horizontal(nd-phone-top-a-l, nd-phone-top-a-c, nd-phone-top-a-r); }
+	.frame-bottom { decorator: tiled-horizontal(docked-phone-bottom-l, docked-phone-bottom-c, docked-phone-bottom-r); }
+	.nd-contribute { left: 66px; }
+
+	/* --- The NPC's text: five 22-unit lines under the title, then its arrows beside the divider --- */
+	.nd-npc-lines { top: 48px; }
+	.nd-btn-npc { top: 160px; }
+	.nd-divider { top: 169.5px; }
+
+	/* --- The answers: four 44-unit rows, then their arrows level with the exit --- */
+	.nd-answers { top: 204.5px; }
+	.nd-btn-ans { top: 386px; }
+
+	/* --- The arrows: 43 x 40 boxes at the right, the sprite in the middle (the decorator paints the
+	   content box alone) --- */
+	.nd-btn-l, .nd-btn-r { padding: 11px 13px; }
+	.nd-btn-l { left: 192px; decorator: image(nd-btn-l) content-box; }
+	.nd-btn-r { left: 236px; decorator: image(nd-btn-r) content-box; }
+	/* A locked arrow stays laid out, only unseen and not hit: NPCDialogue.cpp measures the room above it,
+	   and without it falls back to the PC's 7 and 11 lines a page, too many for these areas. */
+	.nd-btn-l.locked, .nd-btn-r.locked { display: block; visibility: hidden; }
+
+	/* --- Lengths inside counter-scaled layers --- */
+	#npc_lines_container, #answers_container {
+		width: calc(176px * var(--root-scale));
+		padding-right: calc(88px * var(--root-scale));
+		line-height: calc(22px * var(--root-scale));
+		overflow: hidden auto;
+		pointer-events: auto;
+	}
+	#npc_lines_container { height: calc(110px * var(--root-scale)); }
+	#answers_container { height: calc(176px * var(--root-scale)); }
+	.nd-line, .nd-answer-row { font-size: calc(16px * var(--root-scale)); }
+	/* NPCDialogue.cpp has already broken an answer into its lines, so the row keeps them as they are. */
+	.nd-answer-row {
+		width: calc(256px * var(--root-scale));
+		padding: calc(9px * var(--root-scale)) 0;
+		border-bottom-width: calc(1px * var(--root-scale));
+		border-bottom-color: rgba(255, 255, 255, 28);
+		margin-bottom: calc(3px * var(--root-scale));
+		white-space: pre;
+	}
+	#npc_lines_container scrollbarvertical, #answers_container scrollbarvertical { width: calc(4px * var(--root-scale)); }
+	#npc_lines_container scrollbarvertical slidertrack, #answers_container scrollbarvertical slidertrack {
+		background-color: rgba(255, 255, 255, 20);
+	}
+	#npc_lines_container scrollbarvertical sliderbar, #answers_container scrollbarvertical sliderbar {
+		min-height: calc(24px * var(--root-scale));
+		background-color: rgba(255, 220, 120, 150);
+	}
+	#npc_lines_container scrollbarvertical sliderarrowdec, #npc_lines_container scrollbarvertical sliderarrowinc,
+	#answers_container scrollbarvertical sliderarrowdec, #answers_container scrollbarvertical sliderarrowinc { height: 0; }
+}
