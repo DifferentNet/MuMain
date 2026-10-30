@@ -60,6 +60,17 @@ void SetNameColor(CHARACTER* c, bool gameMaster)
     UI::Chat::SetPlayerColor(c->PK);
 }
 
+// No strip behind the name (ghinzuro, 2026-10-28): the text gets a 1 px black shadow instead, so it stays readable
+// on bright ground. The colour must be set before the call.
+void RenderShadowed(int x, int y, const wchar_t* text, int width, int height)
+{
+    const DWORD color = g_pRenderText->GetTextColor();
+    g_pRenderText->SetTextColor(0, 0, 0, 255);
+    g_pRenderText->RenderText(x + 1, y + 1, text, width, height, RT3_SORT_LEFT);
+    g_pRenderText->SetTextColor(color);
+    g_pRenderText->RenderText(x, y, text, width, height, RT3_SORT_LEFT);
+}
+
 bool IsShown(CHARACTER* c, bool players, bool npcs)
 {
     OBJECT* o = &c->Object;
@@ -192,10 +203,7 @@ void Render()
         int x = found[n].x - width / 2;
         const int y = found[n].y - lineHeight;
 
-        if (gameMaster)
-            g_pRenderText->SetBgColor(30, 30, 30, 150);
-        else
-            g_pRenderText->SetBgColor(0, 0, 0, 110);
+        g_pRenderText->SetBgColor(0, 0, 0, 0);
 
         if (guild[0])
         {
@@ -204,13 +212,13 @@ void Render()
                 g_pRenderText->SetTextColor(GetGuildRelationShipTextColor(GR_UNION));
             else
                 g_pRenderText->SetTextColor(GetGuildRelationShipTextColor(c->GuildRelationShip));
-            g_pRenderText->RenderText(x, y, guild, guildSize.cx, lineHeight, RT3_SORT_LEFT);
+            RenderShadowed(x, y, guild, guildSize.cx, lineHeight);
             x += guildSize.cx;
         }
 
         g_pRenderText->SetFont(gameMaster ? g_hFontBold : g_hFont);
         SetNameColor(c, gameMaster);
-        g_pRenderText->RenderText(x, y, c->ID, nameSize.cx, lineHeight, RT3_SORT_LEFT);
+        RenderShadowed(x, y, c->ID, nameSize.cx, lineHeight);
 
         if (title != nullptr)
             UI::TitlePlates::Render(*title, *c, found[n].x, y - 1);

@@ -124,6 +124,9 @@ namespace UI::RmlBridge
     // Every frame before RmlUi updates: a DocumentScene::Every document takes its depth for the
     // running scene.
     void ApplySceneStackingDepths();
+    // Every frame before RmlUi updates: a document with a phone-view depth (PhoneViewStackingDepth(),
+    // the HUD overlays the phone's windows reach over) takes its depth for the view on screen.
+    void ApplyViewStackingDepths(bool phoneView);
 
     // Following theme switches belongs to ThemedView too: only ThemedDocuments may register.
     class ThemeReloadRegistry

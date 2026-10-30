@@ -228,3 +228,9 @@
 	atlas2-88: 160px 224px 20px 28px;
 	atlas2-89: 180px 224px 20px 28px;
 }
+
+/* MU Moldova: the phone's own HUD (theme flag "mobile-hud", UI::Mobile::InterfaceMode) has the
+   touch controls' top row here (touch_controls.rcss #tc_quick, down to 34dp): buffs go under it. */
+@media (theme: mobile-hud) {
+	#panel { top: 40dp; }
+}

@@ -310,3 +310,57 @@
 #bp_title { width: calc(100% * var(--root-scale)); }
 #bp_status { width: calc(166px * var(--root-scale)); white-space: normal; }
 #bp_levels, #bp_quests { height: calc(281px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): a wider window with
+   finger-sized parts. The season and its time get room side by side, the tabs and the claim button
+   grow, a level's row holds 36 px item boxes, and the quests' bars, chests and replace buttons grow
+   with it. The frame's and the tab strip's ornaments keep their size and their plain middles stretch. */
+@spritesheet bp-phone-top-sheet { src: "../../../newui_item_back01.tga"; bp-phone-top-l: 0px 0px 60px 64px; bp-phone-top-c: 90px 0px 10px 64px; bp-phone-top-r: 130px 0px 60px 64px; }
+@spritesheet bp-phone-tab-back-sheet { src: "../../../Quest_tab01.tga"; bp-phone-tab-back: 0px 0px 166px 22px; bp-phone-tab-back-inner: 6px 4px 154px 14px; }
+@spritesheet bp-phone-tab-active-sheet { src: "../../../Quest_tab03.tga"; bp-phone-tab-active: 0px 0px 72px 22px; bp-phone-tab-active-inner: 4px 4px 64px 14px; }
+@spritesheet bp-phone-bottom-sheet { src: "../../../newui_item_back03.tga"; bp-phone-bottom-l: 0px 0px 50px 45px; bp-phone-bottom-c: 90px 0px 10px 45px; bp-phone-bottom-r: 140px 0px 50px 45px; }
+
+@media (theme: mobile) {
+	#panel { width: 320px; }
+	.frame-top { decorator: tiled-horizontal(bp-phone-top-l, bp-phone-top-c, bp-phone-top-r); }
+	.frame-bottom { decorator: tiled-horizontal(bp-phone-bottom-l, bp-phone-bottom-c, bp-phone-bottom-r); }
+
+	#bp_season, #bp_level { left: 18px; }
+	#bp_time, #bp_points { right: 18px; }
+	#bp_level, #bp_points { top: 47px; }
+	#bp_gauge { left: 18px; top: 65px; width: 284px; height: 15px; }
+
+	#bp_tabs { left: 16px; top: 85px; width: 288px; height: 30px; decorator: ninepatch(bp-phone-tab-back, bp-phone-tab-back-inner); }
+	.bp-tab { width: 144px; height: 30px; }
+	.bp-tab-right { left: 144px; }
+	.bp-tab.active { decorator: ninepatch(bp-phone-tab-active, bp-phone-tab-active-inner); }
+
+	#bp_status { top: 124px; width: calc(284px * var(--root-scale)); }
+	.bp-items, #bp_levels, #bp_quests { left: 12px; top: 121px; }
+	.bp-items { width: 296px; height: 262px; }
+	#bp_levels, #bp_quests { --flow-w: 296px; height: calc(262px * var(--root-scale)); }
+
+	.bp-row { height: calc(42px * var(--root-scale)); margin-bottom: calc(2px * var(--root-scale)); }
+	.bp-lv { width: calc(32px * var(--root-scale)); }
+	.bp-icon {
+		width: calc(36px * var(--root-scale));
+		height: calc(38px * var(--root-scale));
+		margin-right: calc(3px * var(--root-scale));
+	}
+	.bp-sign { line-height: calc(36px * var(--root-scale)); }
+
+	.bp-q { margin-bottom: calc(4px * var(--root-scale)); padding: calc(4px * var(--root-scale)); }
+	.bp-q-bar, .bp-day-bar { height: calc(18px * var(--root-scale)); }
+	.bp-q-progress, .bp-day-count { line-height: calc(16px * var(--root-scale)); }
+	.bp-q-reroll { width: calc(70px * var(--root-scale)); height: calc(32px * var(--root-scale)); }
+	.bp-day-chests, .bp-chest { height: calc(26px * var(--root-scale)); }
+	.bp-chest { min-width: calc(32px * var(--root-scale)); }
+	.bp-day-chests .bp-chest { width: calc(32px * var(--root-scale)); margin-left: calc(-16px * var(--root-scale)); }
+	.bp-chest-label { line-height: calc(24px * var(--root-scale)); }
+	.bp-day { padding: 0 calc(16px * var(--root-scale)); }
+	#bp_take { height: calc(38px * var(--root-scale)); }
+
+	#bp_claim { left: 122px; top: 390px; width: 180px; height: 34px; decorator: image(bp-btn-big-up); }
+	#bp_claim:hover { decorator: image(bp-btn-big-over); }
+	#bp_claim:active { decorator: image(bp-btn-big-down); }
+}

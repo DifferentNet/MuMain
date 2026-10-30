@@ -60,3 +60,7 @@
 	pointer-events: none;
 }
 
+/* MU Moldova: the phone's own HUD (theme flag "mobile-hud") has the touch menu instead. */
+@media (theme: mobile-hud) {
+	#top_right_row { display: none; }
+}

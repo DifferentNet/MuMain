@@ -5,6 +5,7 @@
 #include "Data/GameConfig/GameConfig.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/Diagnostics/DiagnosticsOverlay.h"
+#include "UI/Mobile/InterfaceMode.h"
 #include "UI/RmlBridge/RmlDocumentHints.h"
 #include "UI/RmlBridge/RmlMarquee.h"
 #include "UI/RmlBridge/RmlNativeText.h"
@@ -45,6 +46,7 @@ void InstallRuntimeHooks()
     {
         SuspendMainSceneDocumentsOutsideMainScene();
         ApplySceneStackingDepths();
+        ApplyViewStackingDepths(UI::Mobile::IsPhoneView());
         Tooltip::ExpireUnrefreshed();
         if (Rml::Context* context = RmlUiRuntime::Instance().GetContext())
             DocumentHints::Update(*context);

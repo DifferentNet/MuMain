@@ -129,6 +129,12 @@
 			<span id="extension_used" class="sharp-text mh-text marquee" data-style-font-size="text_px + 'px'">{{labels.extension_used}}</span>
 			<span id="extension_none" class="sharp-text mh-text marquee mh-orange" data-style-font-size="text_px + 'px'">{{labels.extension_none}}</span>
 		</div>
+		<!-- The phone view's line on clearing a skill slot (a long press is the right click), where the
+		     other tabs show the extension note; the stylesheet hides it elsewhere. -->
+		<div class="mhc-tab" data-class-hidden="active_tab != 0">
+			<div id="box_slot_hint" class="mh-box"><div class="b b-fill"></div><div class="b b-tl"></div><div class="b b-tr"></div><div class="b b-bl"></div><div class="b b-br"></div><div class="b b-top"></div><div class="b b-right"></div><div class="b b-bottom"></div><div class="b b-left"></div></div>
+			<span id="mh_slot_hint" class="sharp-text mh-text marquee" data-style-font-size="text_px + 'px'">{{labels.slot_hint}}</span>
+		</div>
 
 		<div id="btn_save" class="mh-btn-igs" data-event-click="muhelper_button('save')"></div><span id="btn_save_label" class="sharp-text mh-text marquee mh-center mh-btn-label mh-btn-label-igs" data-style-font-size="text_px + 'px'">{{labels.save}}</span>
 		<div id="btn_init" class="mh-btn-igs" data-event-click="muhelper_button('init')"></div><span id="btn_init_label" class="sharp-text mh-text marquee mh-center mh-btn-label mh-btn-label-igs" data-style-font-size="text_px + 'px'">{{labels.init}}</span>

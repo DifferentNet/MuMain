@@ -89,6 +89,9 @@ void GameConfig::Load()
     m_overheadPlayerNames = ReadBool(CfgSectionUI, CfgKeyOverheadPlayerNames, CfgDefaultOverheadPlayerNames);
     m_overheadNpcNames = ReadBool(CfgSectionUI, CfgKeyOverheadNpcNames, CfgDefaultOverheadNpcNames);
     m_overheadTitles = ReadBool(CfgSectionUI, CfgKeyOverheadTitles, CfgDefaultOverheadTitles);
+    m_interfaceView = ReadString(CfgSectionUI, CfgKeyInterfaceView, CfgDefaultInterfaceView);
+    m_controls = ReadString(CfgSectionUI, CfgKeyControls, CfgDefaultControls);
+    SetTouchButtonSize(ReadInt(CfgSectionUI, CfgKeyTouchButtonSize, CfgDefaultTouchButtonSize));
     m_enableAnimationTaskPool =
         ReadBool(CfgSectionUI, CfgKeyEnableAnimationTaskPool, CfgDefaultEnableAnimationTaskPool);
 
@@ -163,6 +166,9 @@ void GameConfig::Save()
     WriteBool(CfgSectionUI, CfgKeyOverheadPlayerNames, m_overheadPlayerNames);
     WriteBool(CfgSectionUI, CfgKeyOverheadNpcNames, m_overheadNpcNames);
     WriteBool(CfgSectionUI, CfgKeyOverheadTitles, m_overheadTitles);
+    WriteString(CfgSectionUI, CfgKeyInterfaceView, m_interfaceView);
+    WriteString(CfgSectionUI, CfgKeyControls, m_controls);
+    WriteInt(CfgSectionUI, CfgKeyTouchButtonSize, m_touchButtonSize);
 
     WriteInt(CfgSectionCamera, CfgKeyZoom, m_zoom);
     WriteBool(CfgSectionRender, CfgKeyVSync, m_vsyncEnabled);
@@ -354,6 +360,11 @@ void GameConfig::SetUIScalePercent(int percent)
     // console command) is a user-facing dial, and silently keeping the previous value would look
     // like the control did nothing. See CfgMinUIScalePercent's own comment for the bounds.
     m_uiScalePercent = std::clamp(percent, CfgDefaults::CfgMinUIScalePercent, CfgDefaults::CfgMaxUIScalePercent);
+}
+
+void GameConfig::SetTouchButtonSize(int percent)
+{
+    m_touchButtonSize = std::clamp(percent, CfgDefaults::CfgMinTouchButtonSize, CfgDefaults::CfgMaxTouchButtonSize);
 }
 
 void GameConfig::SetEncryptedUsername(const std::wstring& encryptedUsername)

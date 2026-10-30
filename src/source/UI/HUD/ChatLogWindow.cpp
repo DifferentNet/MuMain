@@ -4,6 +4,7 @@
 #include "Render/Text/CUIRenderTextSDLTtf.h"
 #include "UI/RmlBridge/RmlNativeTextSize.h"
 #include "UI/HUD/ChatLogWindow.h"
+#include "UI/Mobile/TouchUnit.h"
 #include "UI/Core/WindowManager.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Core/WindowGeometry.h"
@@ -749,9 +750,15 @@ void mu::ui::window::CChatLogWindow::SyncNativeLineGeometry()
             m_RmlView.MarkDirty(name);
         }
     };
-    syncFloat(&ChatLogRmlModel::textPx, "text_px", UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Normal));
-    syncFloat(&ChatLogRmlModel::linePx, "line_px", CUIRenderTextSDLTtf::LineHeightPx(UI::Scaling::FontRole::Normal));
-    syncFloat(&ChatLogRmlModel::rowPx, "row_px", SCROLL_MIDDLE_PART_HEIGHT * dpRatio);
+    // The phone view raises a text too small to read on a phone, and its line and row with it; the
+    // well keeps its height and shows fewer rows.
+    const float nativeTextPx = UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Normal);
+    const float textPx = UI::Mobile::TouchUnit::ReadableTextPx(nativeTextPx);
+    const float growth = nativeTextPx > 0.f ? textPx / nativeTextPx : 1.f;
+    syncFloat(&ChatLogRmlModel::textPx, "text_px", textPx);
+    syncFloat(&ChatLogRmlModel::linePx, "line_px",
+              CUIRenderTextSDLTtf::LineHeightPx(UI::Scaling::FontRole::Normal) * growth);
+    syncFloat(&ChatLogRmlModel::rowPx, "row_px", SCROLL_MIDDLE_PART_HEIGHT * dpRatio * growth);
 }
 
 void mu::ui::window::CChatLogWindow::RebuildLineModel()
@@ -1298,6 +1305,10 @@ void mu::ui::window::CSystemLogWindow::SyncNativeGeometry()
         g_pRenderText->SetFont(g_hFont);
         textHeight = static_cast<float>(g_pRenderText->MeasureText(L"Q", 1).cy);
     }
+    // The phone view raises a text too small to read on a phone, and its line and row with it.
+    const float nativeTextPx = UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Normal);
+    const float textPx = UI::Mobile::TouchUnit::ReadableTextPx(nativeTextPx);
+    textHeight *= nativeTextPx > 0.f ? textPx / nativeTextPx : 1.f;
     const float rowHeight = std::max(1.f, textHeight * 1.2f);
 
     SystemLogRmlModel& model = m_RmlView.GetModel();
@@ -1312,7 +1323,7 @@ void mu::ui::window::CSystemLogWindow::SyncNativeGeometry()
     };
     syncFloat(&SystemLogRmlModel::rowPx, "row_px", rowHeight);
     syncFloat(&SystemLogRmlModel::linePx, "line_px", textHeight);
-    syncFloat(&SystemLogRmlModel::textPx, "text_px", UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Normal));
+    syncFloat(&SystemLogRmlModel::textPx, "text_px", textPx);
 }
 
 void mu::ui::window::CSystemLogWindow::RebuildLineModel()

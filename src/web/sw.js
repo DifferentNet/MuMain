@@ -42,11 +42,10 @@ async function openPage(event) {
   }
 }
 
-// Files downloading now, by URL: {whole (downloadWhole's promise), kept (settles once the file is
-// kept)}. The game reads a file range after range (fetch-backend.js): the first range downloads the
-// whole file, and the next ones wait for it instead of downloading it again; so do the page's
-// background downloads (index.html, "X-Mu-Background"). A file stays here until it is kept, so a
-// range asked for in between doesn't download it once more.
+// Files downloading now, by URL. The game reads a file range after range (fetch-backend.js): the
+// first range downloads the whole file, and the next ones wait for it instead of downloading it
+// again; so do the page's background downloads (index.html, "X-Mu-Background"). A file stays here
+// until it is kept, so a range asked for in between doesn't download it once more.
 const downloads = new Map();
 
 // The file from the device, else from the server (the whole file, which is then kept). The game's
@@ -59,30 +58,20 @@ async function versionedFile(event) {
   if (!range) {
     if (kept) return kept;
     const response = await fetch(request.url, { credentials: "same-origin" });
-    if (response.status === 200 && cache) event.waitUntil(keep(cache, request.url, response.clone(), true));
+    if (response.status === 200 && cache) event.waitUntil(keep(cache, request.url, response.clone()));
     return response;
   }
   if (kept) return byteRange(await kept.blob(), kept.headers, range);
-  const background = request.headers.has("X-Mu-Background");
   let download = downloads.get(request.url);
   if (!download) {
-    const whole = downloadWhole(request.url, background);
-    // The page drops the old versions of the files it downloads in the background (index.html,
-    // dropOldVersions), all in one go: looking through every kept file for each of them took the
-    // device's storage minutes.
-    download = { whole, kept: whole.then((w) => w.blob && cache && keep(cache, request.url, w.response, !background))
-      .catch(() => {}) };
+    download = downloadWhole(request.url, request.headers.has("X-Mu-Background"));
     downloads.set(request.url, download);
-    event.waitUntil(download.kept.finally(() => downloads.delete(request.url)));
+    // The game gets its range as soon as the file is here; keeping it on the device takes a while
+    // longer (11 ms a file, 2026-10-30), and the game waited for that too.
+    event.waitUntil(download.then((whole) => whole.blob && cache && keep(cache, request.url, whole.response))
+      .catch(() => {}).finally(() => downloads.delete(request.url)));
   }
-  const whole = await download.whole;
-  // The game gets its range as soon as the file is here; keeping it on the device takes a while
-  // longer (11 ms a file, 2026-10-30), and the game waited for that too. A background download is
-  // answered once its file is kept, so the page's next one starts only then. Answered on arrival,
-  // 3348 files downloaded in 12 s and queued up to be kept, and the game's reads of kept files
-  // (fetch-backend.js, readKept) waited behind them: logging in cold, Devias loaded in 3 minutes
-  // instead of a second (Edge, 2026-10-30).
-  if (background) await download.kept;
+  const whole = await download;
   // An error, or an answer that isn't the whole file: passed on as the server gave it.
   return whole.blob ? byteRange(whole.blob, whole.response.headers, range) : whole.response.clone();
 }
@@ -96,14 +85,12 @@ async function downloadWhole(url, background) {
   return { blob, response: new Response(blob, { status: 200, statusText: response.statusText, headers: response.headers }) };
 }
 
-// Keeps a file and, with dropOld, drops its other versions.
-async function keep(cache, url, response, dropOld) {
+// Keeps a file. The page drops its earlier versions, once a release (index.html, dropOldVersions):
+// looking for them here read through the whole store after every file (1.5 s with 3,359 files kept),
+// and the game's reads waited behind that, 25-40 s on a window's first open (2026-10-30).
+async function keep(cache, url, response) {
   try {
     await cache.put(url, response);
-    if (!dropOld) return;
-    for (const old of await cache.keys(url, { ignoreSearch: true })) {
-      if (old.url !== url) await cache.delete(old);
-    }
   } catch (e) {
     // The device is full or keeps nothing for this site: the file comes from the server next time.
   }

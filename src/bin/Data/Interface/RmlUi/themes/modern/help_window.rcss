@@ -38,8 +38,18 @@
 	color: token(text-primary);
 	font-family: "token(font-body)";
 }
+/* MU Skynet's last row, "F1 : next page" or "F1 : close". */
+.help-line.hint .help-text {
+	color: token(text-secondary);
+}
 .help-line.heading .help-text {
 	line-height: calc(var(--bold-line-height, 0px) * var(--root-scale));
 	color: token(text-warm);
 	font-weight: bold;
+}
+
+/* MU Moldova: the phone view (UI::Mobile::IsPhoneView()): below the touch controls' top bar, whose Back
+   closes it, and clear of the left edge's rounded corners. */
+@media (theme: mobile) {
+	#help_panel { left: 8px; top: 44px; }
 }

@@ -21,12 +21,13 @@
 		<div class="frame-piece frame-right"></div>
 		<div class="frame-piece frame-bottom"></div>
 
-		<!-- The header leaves centre in a box as wide as #panel: counter-scaled, it must be
-		     --root-scale times wider and shifted back by half the growth (character_info.rcss), or a
-		     long server name wraps instead of staying centred on one line. -->
-		<span class="counter-scaled" id="name" data-class-pk-0="pk_level == 0" data-class-pk-1="pk_level == 1" data-class-pk-2="pk_level == 2" data-class-pk-3="pk_level == 3" data-class-pk-4="pk_level == 4" data-class-pk-5="pk_level == 5" data-class-pk-6="pk_level >= 6" data-style-font-size="text_px + 'px'">{{name_text}}</span>
-		<!-- Class name and server name crossfade in place (legacy's sine-wave alpha blend
-		     between the two, RenderSubjectTexts()) -- two stacked spans, opacity-driven. -->
+		<!-- The name stands in the plate of the window's top, centred on it (character_info.rcss); a name wider
+		     than the plate shrinks to it (.native-fit-small). -->
+		<div class="counter-scaled" id="name" data-class-pk-0="pk_level == 0" data-class-pk-1="pk_level == 1" data-class-pk-2="pk_level == 2" data-class-pk-3="pk_level == 3" data-class-pk-4="pk_level == 4" data-class-pk-5="pk_level == 5" data-class-pk-6="pk_level >= 6" data-style-font-size="text_px + 'px'"><span class="native-fit native-fit-small">{{name_text}}</span></div>
+		<!-- Class name and server name take turns in one place (CharacterInfoWindow.cpp, SubjectLineOpacity()):
+		     two stacked spans, opacity-driven, never both shown at once. They centre in a box as wide as
+		     #panel: counter-scaled, it must be --root-scale times wider and shifted back by half the growth
+		     (character_info.rcss), or a long server name wraps instead of staying centred on one line. -->
 		<span class="counter-scaled" id="classname" data-style-opacity="classname_opacity" data-style-font-size="text_px + 'px'">{{classname_text}}</span>
 		<span class="counter-scaled" id="servername" data-style-opacity="servername_opacity" data-style-font-size="text_px + 'px'">{{servername_text}}</span>
 
@@ -44,18 +45,23 @@
 		<div class="summary-edge edge-separator"></div>
 		<div class="summary-edge edge-left"></div>
 		<div class="summary-edge edge-right"></div>
-		<span class="level-text counter-scaled" data-style-font-size="text_px + 'px'">{{level_text}}</span>
-		<span class="levelup-point-text counter-scaled" data-class-hidden="!can_level_up" data-style-font-size="text_px + 'px'">{{levelup_point_text}}</span>
-		<span class="exp-text counter-scaled" data-style-font-size="text_px + 'px'">{{exp_text}}</span>
-		<span class="point-probability-text counter-scaled" data-style-font-size="text_px + 'px'">{{point_probability_text}}</span>
-		<span class="point-text counter-scaled" data-style-font-size="text_px + 'px'">{{point_text}}</span>
+		<!-- Each row is a box as wide as the summary box's inside; the text in it shrinks to the box
+		     when wider (.native-fit, RmlNativeTextFit.h), below the native minimum if it must
+		     (.native-fit-small), so no row overlaps another or leaves the frame at any UI scale. The
+		     level line and the points to spend share one row and shrink together: the level on the
+		     left, the points on the right (MU Moldova's "| Resets: N" made it too long for the
+		     original's fixed points column). -->
+		<div class="level-row counter-scaled" data-style-font-size="text_px + 'px'"><div class="native-fit native-fit-small level-row-fit"><span class="level-text">{{level_text}}</span><span class="levelup-point-text" data-class-hidden="!can_level_up">{{levelup_point_text}}</span></div></div>
+		<div class="summary-row exp-text counter-scaled" data-style-font-size="text_px + 'px'"><span class="native-fit native-fit-small">{{exp_text}}</span></div>
+		<div class="summary-row point-probability-text counter-scaled" data-style-font-size="text_px + 'px'"><span class="native-fit native-fit-small">{{point_probability_text}}</span></div>
+		<div class="summary-row point-text counter-scaled" data-style-font-size="text_px + 'px'"><span class="native-fit native-fit-small">{{point_text}}</span></div>
 
 		<!-- STR row -->
 		<div class="attr-textbox attr-textbox-str"></div>
 		<span class="attr-label attr-label-str counter-scaled" data-class-attr-potion="str_value_source == 'potion'" data-class-attr-boosted="str_value_source == 'boosted'" data-style-font-size="text_px + 'px'">{{str_label}}</span>
 		<span class="attr-value attr-value-str counter-scaled" data-class-attr-potion="str_value_source == 'potion'" data-class-attr-boosted="str_value_source == 'boosted'" data-style-font-size="text_px + 'px'">{{str_value_text}}</span>
 		<div class="attr-lines attr-lines-str counter-scaled" data-style-font-size="text_px + 'px'">
-			<span data-for="line : str_lines" data-class-boosted="line.source == 'boosted'" data-class-buffed="line.source == 'buffed'">{{line.text}}</span>
+			<span class="native-fit native-fit-small" data-for="line : str_lines" data-class-boosted="line.source == 'boosted'" data-class-buffed="line.source == 'buffed'">{{line.text}}</span>
 		</div>
 		<div id="btn_stat_str" class="stat-btn stat-btn-str" data-class-hidden="!can_level_up"
 		     data-event-click="chainfo_increase_stat(0)"></div>
@@ -65,7 +71,7 @@
 		<span class="attr-label attr-label-agi counter-scaled" data-class-attr-potion="agi_value_source == 'potion'" data-class-attr-boosted="agi_value_source == 'boosted'" data-style-font-size="text_px + 'px'">{{agi_label}}</span>
 		<span class="attr-value attr-value-agi counter-scaled" data-class-attr-potion="agi_value_source == 'potion'" data-class-attr-boosted="agi_value_source == 'boosted'" data-style-font-size="text_px + 'px'">{{agi_value_text}}</span>
 		<div class="attr-lines attr-lines-agi counter-scaled" data-style-font-size="text_px + 'px'">
-			<span data-for="line : agi_lines" data-class-boosted="line.source == 'boosted'" data-class-buffed="line.source == 'buffed'">{{line.text}}</span>
+			<span class="native-fit native-fit-small" data-for="line : agi_lines" data-class-boosted="line.source == 'boosted'" data-class-buffed="line.source == 'buffed'">{{line.text}}</span>
 		</div>
 		<div id="btn_stat_agi" class="stat-btn stat-btn-agi" data-class-hidden="!can_level_up"
 		     data-event-click="chainfo_increase_stat(1)"></div>
@@ -75,7 +81,7 @@
 		<span class="attr-label attr-label-vit counter-scaled" data-class-attr-potion="vit_value_source == 'potion'" data-class-attr-boosted="vit_value_source == 'boosted'" data-style-font-size="text_px + 'px'">{{vit_label}}</span>
 		<span class="attr-value attr-value-vit counter-scaled" data-class-attr-potion="vit_value_source == 'potion'" data-class-attr-boosted="vit_value_source == 'boosted'" data-style-font-size="text_px + 'px'">{{vit_value_text}}</span>
 		<div class="attr-lines attr-lines-vit counter-scaled" data-style-font-size="text_px + 'px'">
-			<span data-for="line : vit_lines" data-class-boosted="line.source == 'boosted'" data-class-buffed="line.source == 'buffed'">{{line.text}}</span>
+			<span class="native-fit native-fit-small" data-for="line : vit_lines" data-class-boosted="line.source == 'boosted'" data-class-buffed="line.source == 'buffed'">{{line.text}}</span>
 		</div>
 		<div id="btn_stat_vit" class="stat-btn stat-btn-vit" data-class-hidden="!can_level_up"
 		     data-event-click="chainfo_increase_stat(2)"></div>
@@ -85,7 +91,7 @@
 		<span class="attr-label attr-label-ene counter-scaled" data-class-attr-potion="ene_value_source == 'potion'" data-class-attr-boosted="ene_value_source == 'boosted'" data-style-font-size="text_px + 'px'">{{ene_label}}</span>
 		<span class="attr-value attr-value-ene counter-scaled" data-class-attr-potion="ene_value_source == 'potion'" data-class-attr-boosted="ene_value_source == 'boosted'" data-style-font-size="text_px + 'px'">{{ene_value_text}}</span>
 		<div class="attr-lines attr-lines-ene counter-scaled" data-style-font-size="text_px + 'px'">
-			<span data-for="line : ene_lines" data-class-boosted="line.source == 'boosted'" data-class-buffed="line.source == 'buffed'">{{line.text}}</span>
+			<span class="native-fit native-fit-small" data-for="line : ene_lines" data-class-boosted="line.source == 'boosted'" data-class-buffed="line.source == 'buffed'">{{line.text}}</span>
 		</div>
 		<div id="btn_stat_ene" class="stat-btn stat-btn-ene" data-class-hidden="!can_level_up"
 		     data-event-click="chainfo_increase_stat(3)"></div>
@@ -110,9 +116,9 @@
 		<div class="adv summary-edge adv-edge-separator-1"></div>
 		<div class="adv summary-edge adv-edge-left-1"></div>
 		<div class="adv summary-edge adv-edge-right-1"></div>
-		<span class="adv adv-title adv-title-1 counter-scaled" data-style-font-size="text_px + 'px'">{{advanced_attack_title}}</span>
+		<div class="adv adv-title adv-title-1 counter-scaled" data-style-font-size="text_px + 'px'"><span class="native-fit native-fit-small">{{advanced_attack_title}}</span></div>
 		<div class="adv adv-lines adv-lines-1 counter-scaled" data-style-font-size="text_px + 'px'">
-			<span data-for="line : advanced_attack_lines" data-class-boosted="line.source == 'boosted'">{{line.text}}</span>
+			<span class="native-fit native-fit-small" data-for="line : advanced_attack_lines" data-class-boosted="line.source == 'boosted'">{{line.text}}</span>
 		</div>
 		<div class="adv adv-fill adv-fill-2"></div>
 		<div class="adv summary-corner adv-corner-tl-2"></div>
@@ -124,9 +130,9 @@
 		<div class="adv summary-edge adv-edge-separator-2"></div>
 		<div class="adv summary-edge adv-edge-left-2"></div>
 		<div class="adv summary-edge adv-edge-right-2"></div>
-		<span class="adv adv-title adv-title-2 counter-scaled" data-style-font-size="text_px + 'px'">{{advanced_defense_title}}</span>
+		<div class="adv adv-title adv-title-2 counter-scaled" data-style-font-size="text_px + 'px'"><span class="native-fit native-fit-small">{{advanced_defense_title}}</span></div>
 		<div class="adv adv-lines adv-lines-2 counter-scaled" data-style-font-size="text_px + 'px'">
-			<span data-for="line : advanced_defense_lines" data-class-boosted="line.source == 'boosted'">{{line.text}}</span>
+			<span class="native-fit native-fit-small" data-for="line : advanced_defense_lines" data-class-boosted="line.source == 'boosted'">{{line.text}}</span>
 		</div>
 
 		<!-- Bottom action row: shared close button plus Quest/Pet/Master-Level/advanced stats/titles shortcuts. -->

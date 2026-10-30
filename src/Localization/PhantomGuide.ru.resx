@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Greeting" xml:space="preserve">
+    <value>Привет, воин! Пока у тебя нет ни одного ресета, я усилю твою атаку и защиту. А ещё могу рассказать, как всё устроено в этом мире.</value>
+  </data>
+  <data name="Guide" xml:space="preserve">
+    <value>Расскажи об этом мире.</value>
+  </data>
+  <data name="TopicsIntro" xml:space="preserve">
+    <value>О чём тебе рассказать?</value>
+  </data>
+  <data name="OtherTopics" xml:space="preserve">
+    <value>Другие темы</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Назад</value>
+  </data>
+  <data name="MoreTopics" xml:space="preserve">
+    <value>Ещё темы</value>
+  </data>
+  <data name="FirstTopics" xml:space="preserve">
+    <value>Первые темы</value>
+  </data>
+  <data name="Buff" xml:space="preserve">
+    <value>Получить усиление атаки и защиты.</value>
+  </data>
+  <data name="Overhead" xml:space="preserve">
+    <value>Впервые здесь? Спроси меня, я расскажу об этом мире!</value>
+  </data>
+  <data name="ResetsLabel" xml:space="preserve">
+    <value>Ресеты и опыт</value>
+  </data>
+  <data name="ResetsText" xml:space="preserve">
+    <value>Ресет — с 400 уровня за 100 млн зен. Пиши /reset или кликни Лео в Лоренсии и кликни ещё раз для подтверждения. Ты остаёшься в игре: 10 уровень, родной город, шмот, скиллы и квесты при тебе.;Статы сбрасываются к стартовым, а свободных очков — 500 за каждый сделанный ресет: на 10-м ресете 5 000. Уровни до 400 добавят свои очки сверху.;Опыт x500 до 10 ресетов, x400 с 11-го, x300 с 21-го, x250 с 31-го. Happy Hour нет. За одно убийство — максимум один уровень. Свой рейт смотри в /rate.;/resetstats вернёт все очки за 1 млн зен, в безопасной зоне. Лимита ресетов нет.</value>
+  </data>
+  <data name="TiersLabel" xml:space="preserve">
+    <value>Тир-карты</value>
+  </data>
+  <data name="TiersText" xml:space="preserve">
+    <value>Тир-карты — эндгейм: 20 минут в крепости, волны стражи и босс в конце. Вход у Джеринта в Лоренсии и Девиасе.;Билет — Gaion's Order: его складывают 5 обрывков Suspicious Scrap of Paper с БК, ДС, Калимы и боссов. Тратит его лидер пати.;3 захода в день на персонажа. Средняя боевая мощь пати — не ниже отметки тира (тир 1 — 10 000, тир 6 — 32 000), у каждого минимум 70 % от неё и HP тира. Вдвоём нужно на 15 % больше, соло — на 30 %.;С боссов — анциенты, Jewel of Ancient (тиры 4-6), Flame of Condor и много опыта. /cp покажет, до какого тира хватает HP.</value>
+  </data>
+  <data name="TowerLabel" xml:space="preserve">
+    <value>Бесконечная башня</value>
+  </data>
+  <data name="TowerText" xml:space="preserve">
+    <value>Бесконечная башня — у Лугарда: в Лоренсии у склада База, в Девиасе рядом с Джеринтом. Пати от 3 до 5 человек, каждый платит 5 млн зен. 2 захода в день, новые в 00:00 UTC.;30 минут волна за волной, каждая 10-я — босс. Быстрая зачистка пропускает волны. Умер — через 3 секунды снова на ногах.;Награда: камни по твоей высоте сразу в банк камней (K) и Box of Kundun с каждого босса и золотого монстра.;Очки башни (высота + 10 за босса) тратятся в лавке Лугарда. Рейтинг по лучшей волне — за неделю и за сезон, с призами.</value>
+  </data>
+  <data name="EventsLabel" xml:space="preserve">
+    <value>Ивенты и расписание</value>
+  </data>
+  <data name="EventsText" xml:space="preserve">
+    <value>Нажми O — таймер всех ивентов, или пиши /events. Время — UTC: в Молдове зимой +2 часа, летом +3.;Blood Castle каждый час в :00, Devil Square в :30, Chaos Castle в 02, 06, 10, 14, 18 и 22. С БК и ДС бывают обрывки для Тир-карт.;Golden Invasion каждые 4 часа с 00:00: с каждого золотого монстра падает бокс. White Wizard каждые 2 часа с 12:00 до 22:00, Red Dragon в 02, 08, 14 и 20.;Kanturu с Nightmare в 18:00, Crywolf по средам и субботам в 20:45.</value>
+  </data>
+  <data name="PvpLabel" xml:space="preserve">
+    <value>PvP, мировой босс, разломы</value>
+  </data>
+  <data name="PvpText" xml:space="preserve">
+    <value>PvP-ивенты идут на арене Vulcanus, с 50 уровня или ресета. Там бьёшь без Ctrl и не становишься ПК.;Корона (/crown) в 13:40 и 19:40: держи кольцо, за 1-е место Box of Kundun +3. Командный бой (/tdm) в 18:40: победителям Box +3. Трон гильдий (/throne) по выходным в 19:10.;Открытие Vulcanus (с 150 уровня или ресета) с Fire Lord бывает, когда сервер наполнит шкалу искр. В Неделе гильдий топ-3 гильдии получают боксы.;Ранговые дуэли: /duelstart, рейтинг и ставки камней (/duelbet).;Мировой босс в 16:45 в Лоренсии. На охоте может открыться разлом: закрой его пати за 3 минуты и получи сундук.</value>
+  </data>
+  <data name="PassLabel" xml:space="preserve">
+    <value>Боевой пропуск</value>
+  </data>
+  <data name="PassText" xml:space="preserve">
+    <value>Боевой пропуск — 50 уровней наград на весь аккаунт, по 1 000 очков на уровень. Окно — X, или пиши /bp.;Очки: 150 за 15 минут игры в день, по 200 за первые 3 из 10 дневных заданий, плюс недельные и сезонные задания. За 3, 6 и 10 заданий в день — сундуки.;Награды забирай через /bpclaim, если сумка полна — /bptake. Неудобное задание меняй через /bpreroll и номер, раз в день.;Тестовый сезон «Зима I» — с 1 ноября, 20:00 по Кишинёву (18:00 UTC), 6 недель.</value>
+  </data>
+  <data name="DailyLabel" xml:space="preserve">
+    <value>Награды за вход</value>
+  </data>
+  <data name="DailyText" xml:space="preserve">
+    <value>Нажми N — ежедневные награды. Играй 15 минут в день на любом персонаже аккаунта, минуты за день складываются.;Серия из 7 дней: от Jewel of Bless до Box of Kundun +4. Награда за день сразу падает в инвентарь.;Пропустил день — серия начнётся заново с 1-го дня. После 7-го дня всё идёт по кругу.;Сумка полна — награда подождёт. Освободи место и нажми «Забрать» в окне N или напиши /daily. День меняется в 00:00 UTC.</value>
+  </data>
+  <data name="TradeLabel" xml:space="preserve">
+    <value>Аукцион, банк камней, склад</value>
+  </data>
+  <data name="TradeText" xml:space="preserve">
+    <value>Личных магазинов нет — вместо них аукцион у Рауля в Лоренсии и в Девиасе рядом с Базом.;Цена только в камнях, не в зене: выкуп до 3 видов камней или ставки, каждая на 5 % выше прошлой. Платишь из банка камней.;Лот висит 1, 3 или 7 дней, до 10 лотов на аккаунт. Сбор — 10 млн зен за день, не возвращается.;Банк камней — K при открытом инвентаре, до 1 млн каждого камня на аккаунт. Склад у База в любом городе: 8 страниц бесплатно, общий для всех персонажей.</value>
+  </data>
+  <data name="GearLabel" xml:space="preserve">
+    <value>Откуда берётся шмот</value>
+  </data>
+  <data name="GearText" xml:space="preserve">
+    <value>Excellent падают с 1 % мобов, с 1-4 опциями. Box of Kundun от +1 до +4 с золотых монстров — всегда excellent. Box +5 — excellent с 2-3 опциями или анциент, плюс камни в банк.;Анциенты дают боссы Калимы 6 и 7 (Lost Map из 5 Symbol of Kundun), боссы Тир-карт и Nightmare.;Jewel of Ancient (тиры 4-6, Nightmare) поднимает анциент до +14 и +15 у Chaos Goblin. Весь сет +14 — статы +5 % и золотое свечение, +15 — +10 %.;Jewel of Fate делает заточку от +10 до +15 стопроцентной. Он из пропуска и призов рейтингов.</value>
+  </data>
+  <data name="HelperLabel" xml:space="preserve">
+    <value>MU Helper и боевая мощь</value>
+  </data>
+  <data name="HelperText" xml:space="preserve">
+    <value>MU Helper бесплатный для всех. Z — настройки: радиус охоты, скиллы, баффы, банки и подбор. Home — старт и стоп, вне безопасной зоны.;Хелпер сам бьёт, бафает, пьёт банки и собирает лут, пока игра открыта, даже свёрнутая. Оффлайн-кача нет.;Боевая мощь (CP) — одно число твоей силы: статы, вещи, анциент-сеты, крылья и петы. Пиши /cp или нажми C и четвёртую кнопку.;В подсказке вещи — её CP и что изменится, если надеть. CP открывает Тир-карты, а на сайте по ней рейтинг сильнейших.</value>
+  </data>
+  <data name="KeysLabel" xml:space="preserve">
+    <value>Клавиши, команды и сайт</value>
+  </data>
+  <data name="KeysText" xml:space="preserve">
+    <value>J — список команд, O — таймер ивентов, N — награды за вход, X — боевой пропуск, K — банк камней при открытом инвентаре, C — персонаж, M — телепорт.;MU Helper бесплатный: Z — настройки, Home — старт и стоп.;Камера: F10 — зум колесом мыши, F9 — орбитальная камера, F11 — сброс камеры.;/cp — твоя боевая мощь. На сайте skynet-mu.net рейтинги, аукцион и вики со всеми правилами: skynet-mu.net/wiki.</value>
+  </data>
+</root>

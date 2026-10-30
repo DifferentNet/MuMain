@@ -1,0 +1,114 @@
+/* Modern theme for CEndlessTowerWindow (Lugard's Endless Tower): docked_panel_frame.rcss's forged panel (linked
+   first) at the full dock height, the modern exit button and the event entry's forged button (event_entry.rcss, also
+   the shop's two buy buttons), in the Tier Maps window's look (tier_maps.rcss). Geometry is the legacy one: reference px inside #panel, physical px
+   (reference px times --root-scale) inside the panes. */
+
+#panel { height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; transform-origin: left top; }
+
+#btn_exit {
+	position: absolute;
+	left: 13px;
+	top: 392px;
+	width: 36px;
+	height: 28px;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+	pointer-events: auto;
+}
+#btn_exit:hover { border-color: token(accent-steel-hover); }
+
+.et-title { left: 0; top: 12px; text-align: center; font-weight: bold; pointer-events: none; }
+#et_entry { left: 12px; top: 34px; font-weight: bold; pointer-events: none; }
+#et_party { left: 12px; top: 49px; pointer-events: none; }
+#et_reset { left: 12px; top: 63px; pointer-events: none; }
+#et_best { left: 12px; top: 77px; pointer-events: none; }
+
+#et_list { left: 12px; top: 94px; --flow-w: 166px; line-height: 1.12; }
+.et-tabs { display: flex; margin-bottom: calc(3px * var(--root-scale)); }
+.et-tab {
+	display: block;
+	width: calc(31px * var(--root-scale));
+	margin-right: calc(2px * var(--root-scale));
+	padding: calc(2px * var(--root-scale)) 0;
+	text-align: center;
+	border-radius: token(radius-sm)px;
+	cursor: pointer;
+	pointer-events: auto;
+	background-color: token(surface-raised);
+}
+.et-tab-label { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+.et-row { display: block; white-space: nowrap; }
+.et-row.title { margin-top: calc(2px * var(--root-scale)); font-weight: bold; }
+.et-row.name { margin-top: calc(3px * var(--root-scale)); font-weight: bold; }
+.et-row.good, .et-row.bad { padding-left: calc(4px * var(--root-scale)); }
+.et-row.more { padding-left: calc(8px * var(--root-scale)); }
+.et-row.pick { cursor: pointer; pointer-events: auto; }
+
+#et_foot { left: 12px; top: 336px; --flow-w: 166px; line-height: 1.12; }
+.et-hint { display: block; white-space: nowrap; }
+
+#et_enter {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	margin-top: calc(4px * var(--root-scale));
+	height: calc(29px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+#et_enter:hover { border-color: token(accent-steel-hover); }
+#et_enter:active { background-color: token(surface-recessed); }
+#et_enter.off { opacity: 0.45; cursor: arrow; }
+#et_enter.off:hover { border-color: token(border-frame); }
+.et-enter-label { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+
+#et_buy { display: flex; justify-content: space-between; margin-top: calc(4px * var(--root-scale)); }
+.et-buy-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	width: calc(81px * var(--root-scale));
+	height: calc(29px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+.et-buy-btn:hover { border-color: token(accent-steel-hover); }
+.et-buy-btn:active { background-color: token(surface-recessed); }
+.et-buy-btn.off { opacity: 0.45; cursor: arrow; }
+.et-buy-btn.off:hover { border-color: token(border-frame); }
+
+.et-title { color: token(accent-gold); }
+#et_entry { color: token(text-primary); }
+#et_party { color: token(semantic-danger); }
+#et_party.ok { color: token(semantic-success); }
+#et_reset { color: token(text-muted); }
+#et_best { color: token(text-secondary); }
+.et-tab { color: token(text-muted); }
+.et-tab:hover { border-color: token(accent-steel-hover); background-color: rgba(255, 255, 255, 20); }
+.et-tab.selected { color: token(accent-gold); background-color: rgba(255, 200, 90, 40); }
+.et-row { color: token(text-secondary); }
+.et-row.title { color: token(text-primary); }
+.et-row.good { color: token(semantic-success); }
+.et-row.bad { color: token(semantic-danger); }
+.et-row.name { color: token(accent-gold); }
+.et-row.dim { color: token(text-muted); }
+.et-row.pick:hover { background-color: rgba(255, 255, 255, 14); }
+.et-row.selected { background-color: rgba(255, 200, 90, 40); }
+.et-hint { color: token(text-secondary); }
+.et-hint.bad { color: token(semantic-danger); }
+.et-enter-label { color: token(text-primary); }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+#et_title { width: calc(100% * var(--root-scale)); }
+#et_entry, #et_party, #et_reset, #et_best { width: calc(166px * var(--root-scale)); }

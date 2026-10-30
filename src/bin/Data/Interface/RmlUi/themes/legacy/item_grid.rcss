@@ -67,3 +67,57 @@ body { --item-cell: 20px; }
 
 /* The window's live items: the panel and a margin round it, for a model reaching past its slot. */
 .item-view { position: absolute; left: -20px; top: -20px; width: 230px; height: 469px; pointer-events: none; }
+
+/* A tall grid's viewport (npc_shop, storage, storage_ext: #grid_viewport round the grid, its items and
+   counts): the whole panel on a PC, so nothing moves; a page of rows where the theme pages the grid
+   (the phone view below). Its paging buttons (UI/Inventory/ItemGridScroll.h) show only there. */
+.item-grid-viewport { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.item-grid-scroll { display: none; }
+
+@spritesheet grid-scroll-up-sheet { src: "../../../newui_Bt_scroll_up.jpg"; grid-scroll-up: 0px 0px 15px 13px; grid-scroll-up-over: 0px 13px 15px 13px; grid-scroll-up-down: 0px 26px 15px 13px; }
+@spritesheet grid-scroll-dn-sheet { src: "../../../newui_Bt_scroll_dn.jpg"; grid-scroll-dn: 0px 0px 15px 13px; grid-scroll-dn-over: 0px 13px 15px 13px; grid-scroll-dn-down: 0px 26px 15px 13px; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode). Item windows are laid
+   out full height with finger-sized cells by their own sheets; here the parts they share: a corner
+   close a finger can hit, and the 15-row grids shown 8 rows at a time with ▲▼ paging (7 rows a
+   page, one kept in sight). The viewport's 6px padding shows the grid's frame; the grid flows in
+   it, so its height is what scrolls. Hit tests stop at the viewport's edge (DrawnGridGeometry()). */
+@media (theme: mobile) {
+	#frame_corner_close { top: 0; right: 0; width: 44px; height: 40px; }
+
+	.item-grid-viewport {
+		overflow: hidden;
+		padding: 6px;
+		width: calc(8 * var(--item-cell));
+		height: calc(8 * var(--item-cell));
+	}
+	/* A div is inline unless told otherwise; inline, the grid would ignore its width and height. */
+	.item-grid-viewport #item_grid { display: block; position: relative; left: 0; top: 0; }
+	.item-grid-viewport #item_grid_counts { left: 6px; top: 6px; }
+	.item-grid-viewport #item_view {
+		left: 0;
+		top: 0;
+		width: calc(8 * var(--item-cell) + 12px);
+		height: calc(15 * var(--item-cell) + 12px);
+	}
+
+	.item-grid-scroll {
+		display: block;
+		position: absolute;
+		/* 44 x 44 with the border; the arrow art fills the content box. */
+		width: 26px;
+		height: 26px;
+		padding: 8px;
+		border: 1px #5a5a5a;
+		border-radius: 4px;
+		background-color: rgba(0, 0, 0, 170);
+		cursor: pointer;
+		pointer-events: auto;
+	}
+	.grid-scroll-up { decorator: image(grid-scroll-up contain) content-box; }
+	.grid-scroll-up:hover { decorator: image(grid-scroll-up-over contain) content-box; }
+	.grid-scroll-up:active { decorator: image(grid-scroll-up-down contain) content-box; }
+	.grid-scroll-down { decorator: image(grid-scroll-dn contain) content-box; }
+	.grid-scroll-down:hover { decorator: image(grid-scroll-dn-over contain) content-box; }
+	.grid-scroll-down:active { decorator: image(grid-scroll-dn-down contain) content-box; }
+}

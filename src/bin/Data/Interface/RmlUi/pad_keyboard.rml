@@ -1,0 +1,43 @@
+<rml>
+<head>
+	<title>Pad Keyboard</title>
+	<link type="text/rcss" href="base.rcss"/>
+	<link type="text/rcss" href="gamepad_glyphs.rcss"/>
+	<link type="text/rcss" href="pad_keyboard.rcss"/>
+</head>
+<body class="pad" data-model="pad_keyboard" data-class-pk-top="top" data-class-pk-digits="digits">
+	<!-- The gamepad's on-screen keyboard (UI/HUD/PadKeyboard.cpp): shown while a pad is in use and
+	     a text field has the keys. Only the pad works it, so nothing here takes the pointer or the
+	     focus: the field keeps both. The body always has the class "pad", so the pad's glyphs
+	     (gamepad_glyphs.rcss) show.
+
+	     #pk_line is the field's text with the cursor between "before" and "after" (dots for a
+	     password); the rows are the page's keys (PadKeyboardLayout.cpp), each as wide as its share
+	     of the row, the highlighted one the pad's. A key a pad button also presses carries that
+	     button's glyph. "top" puts the keyboard at the screen's top (the field is low), "digits"
+	     makes it the narrow number pad. -->
+	<!-- bound-geometry: a key's width is its share of the row, from the layout's key widths. -->
+	<div id="pk_panel">
+		<div id="pk_line"><div class="pk-text">{{before}}</div><div id="pk_caret"></div><div class="pk-text">{{after}}</div></div>
+		<div class="pk-row" data-for="row, row_index : rows">
+			<div class="pk-key" data-for="key, key_index : row.keys" data-style-width="key.width"
+			     data-class-focused="row_index == focus_row && key_index == focus_column"
+			     data-class-pk-action="key.action" data-class-pk-on="key.on" data-class-pk-locked="key.locked"
+			     data-class-pk-icon="key.icon">
+				<div class="pk-cap">{{key.label}}</div>
+				<div class="pad-glyph pad-face pad-x pk-glyph" data-if="key.glyph == 'x'">X</div>
+				<div class="pad-glyph pad-face pad-y pk-glyph" data-if="key.glyph == 'y'">Y</div>
+				<div class="pad-glyph pad-trigger pk-glyph" data-if="key.glyph == 'lt'">LT</div>
+				<div class="pad-glyph pad-trigger pk-glyph" data-if="key.glyph == 'rt'">RT</div>
+				<div class="pad-glyph pad-round pad-view pk-glyph" data-if="key.glyph == 'view'"><div class="pad-view-back"></div><div class="pad-view-front"></div></div>
+				<div class="pad-glyph pad-round pad-menu pk-glyph" data-if="key.glyph == 'menu'"><div class="pad-menu-line pad-menu-line-1"></div><div class="pad-menu-line pad-menu-line-2"></div><div class="pad-menu-line pad-menu-line-3"></div></div>
+			</div>
+		</div>
+		<div id="pk_legend">
+			<div class="pad-glyph pad-face pad-a">A</div><div class="pk-legend-label">{{type_label}}</div>
+			<div class="pad-glyph pad-bumper">LB</div><div class="pad-glyph pad-bumper pk-legend-pair">RB</div><div class="pk-legend-label">{{caret_label}}</div>
+			<div class="pad-glyph pad-face pad-b">B</div><div class="pk-legend-label">{{close_label}}</div>
+		</div>
+	</div>
+</body>
+</rml>

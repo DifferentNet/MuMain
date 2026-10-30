@@ -13638,6 +13638,21 @@
   <data name="BattlePassExcellentLuck" xml:space="preserve">
     <value>Excellent item, %d options and Luck</value>
   </data>
+  <data name="BattlePassMarkTitleNamed" xml:space="preserve">
+    <value>Title «%ls»</value>
+  </data>
+  <data name="BattlePassMarkAuraNamed" xml:space="preserve">
+    <value>Aura «%ls»</value>
+  </data>
+  <data name="BattlePassMarkTrophyNamed" xml:space="preserve">
+    <value>Trophy «%ls»</value>
+  </data>
+  <data name="BattlePassMarkFenrirNamed" xml:space="preserve">
+    <value>Fenrir «%ls»</value>
+  </data>
+  <data name="BattlePassMarkOtherNamed" xml:space="preserve">
+    <value>Mark «%ls»</value>
+  </data>
   <data name="BattlePassMarkTitle" xml:space="preserve">
     <value>Season %d title</value>
   </data>
@@ -14285,8 +14300,11 @@
   <data name="SeasonFenrirName" xml:space="preserve">
     <value>Seasonal Fenrir · Season %d</value>
   </data>
+  <data name="SeasonTrophyNamed" xml:space="preserve">
+    <value>Trophy «%ls»</value>
+  </data>
   <data name="SeasonFenrirNamed" xml:space="preserve">
-    <value>Seasonal Fenrir · Season %d "%ls"</value>
+    <value>Seasonal Fenrir «%ls»</value>
   </data>
   <data name="SeasonPassReward" xml:space="preserve">
     <value>Battle pass reward · Season %d</value>
@@ -15235,5 +15253,461 @@
   </data>
   <data name="AuctionSellNoBuyout" xml:space="preserve">
     <value>No buyout: the highest bid wins.</value>
+  </data>
+  <data name="TouchAttack" xml:space="preserve">
+    <value>Attack</value>
+  </data>
+  <data name="TouchPickUp" xml:space="preserve">
+    <value>Pick up</value>
+  </data>
+  <data name="TouchAuto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="TouchMenu" xml:space="preserve">
+    <value>Menu</value>
+  </data>
+  <data name="TouchChat" xml:space="preserve">
+    <value>Chat</value>
+  </data>
+  <data name="TouchMenuInventory" xml:space="preserve">
+    <value>Inventory</value>
+  </data>
+  <data name="TouchMenuCharacter" xml:space="preserve">
+    <value>Character</value>
+  </data>
+  <data name="TouchMenuParty" xml:space="preserve">
+    <value>Party</value>
+  </data>
+  <data name="TouchMenuGuild" xml:space="preserve">
+    <value>Guild</value>
+  </data>
+  <data name="TouchMenuFriends" xml:space="preserve">
+    <value>Friends</value>
+  </data>
+  <data name="TouchMenuQuests" xml:space="preserve">
+    <value>Quests</value>
+  </data>
+  <data name="TouchMenuMap" xml:space="preserve">
+    <value>Map</value>
+  </data>
+  <data name="TouchMenuMove" xml:space="preserve">
+    <value>Teleport</value>
+  </data>
+  <data name="TouchMenuBattlePass" xml:space="preserve">
+    <value>Battle pass</value>
+  </data>
+  <data name="TouchMenuDaily" xml:space="preserve">
+    <value>Daily rewards</value>
+  </data>
+  <data name="TouchMenuEvents" xml:space="preserve">
+    <value>Events</value>
+  </data>
+  <data name="TouchMenuHelper" xml:space="preserve">
+    <value>MU Helper</value>
+  </data>
+  <data name="TouchMenuCommands" xml:space="preserve">
+    <value>Commands</value>
+  </data>
+  <data name="TouchMenuHelp" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="TouchMenuSystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="TouchBindPick" xml:space="preserve">
+    <value>Pick a skill, then tap a skill button on the right to put it there</value>
+  </data>
+  <data name="TouchBindPlace" xml:space="preserve">
+    <value>Tap a lit button to put the skill there</value>
+  </data>
+  <data name="TouchBindPickFor" xml:space="preserve">
+    <value>Pick a skill for the lit button</value>
+  </data>
+  <data name="InterfaceViewRow" xml:space="preserve">
+    <value>Interface view</value>
+  </data>
+  <data name="ChoiceAuto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="InterfaceViewPc" xml:space="preserve">
+    <value>PC</value>
+  </data>
+  <data name="InterfaceViewPhone" xml:space="preserve">
+    <value>Phone</value>
+  </data>
+  <data name="ControlsRow" xml:space="preserve">
+    <value>Controls</value>
+  </data>
+  <data name="ControlsMouseKeyboard" xml:space="preserve">
+    <value>Mouse and keyboard</value>
+  </data>
+  <data name="TouchButtonSizeRow" xml:space="preserve">
+    <value>Button size</value>
+  </data>
+  <data name="ControlsTouch" xml:space="preserve">
+    <value>Touch screen</value>
+  </data>
+  <data name="TouchMenuSkills" xml:space="preserve">
+    <value>Skills</value>
+  </data>
+  <data name="TouchMenuView" xml:space="preserve">
+    <value>PC / phone view</value>
+  </data>
+  <data name="TouchItemEquip" xml:space="preserve">
+    <value>Equip</value>
+  </data>
+  <data name="TouchItemMove" xml:space="preserve">
+    <value>Move</value>
+  </data>
+  <data name="TouchItemSell" xml:space="preserve">
+    <value>Sell</value>
+  </data>
+  <data name="TouchItemHotkeyQ" xml:space="preserve">
+    <value>Put on button Q</value>
+  </data>
+  <data name="TouchItemHotkeyW" xml:space="preserve">
+    <value>Put on button W</value>
+  </data>
+  <data name="TouchItemDrop" xml:space="preserve">
+    <value>Drop</value>
+  </data>
+  <data name="TouchItemDropAsk" xml:space="preserve">
+    <value>Drop it on the ground?</value>
+  </data>
+  <data name="TouchHeroLevel" xml:space="preserve">
+    <value>Lv. %d</value>
+  </data>
+  <data name="TouchHeroMasterLevel" xml:space="preserve">
+    <value>Lv. %d | Master %d</value>
+  </data>
+  <data name="TouchHelpTitle" xml:space="preserve">
+    <value>Touch controls</value>
+  </data>
+  <data name="TouchHelpWorld" xml:space="preserve">
+    <value>Tap the world: walk there, talk to an NPC, attack a monster</value>
+  </data>
+  <data name="TouchHelpStick" xml:space="preserve">
+    <value>Left of the screen: drag to walk</value>
+  </data>
+  <data name="TouchHelpAttack" xml:space="preserve">
+    <value>Attack: hold to attack</value>
+  </data>
+  <data name="TouchHelpSkills" xml:space="preserve">
+    <value>Skill buttons: tap to use one, an empty one picks a skill</value>
+  </data>
+  <data name="TouchHelpPickUp" xml:space="preserve">
+    <value>Pick up: lifts the items nearby</value>
+  </data>
+  <data name="TouchHelpAuto" xml:space="preserve">
+    <value>Auto: MU Helper on and off</value>
+  </data>
+  <data name="TouchHelpPotions" xml:space="preserve">
+    <value>Q and W: drink the potions</value>
+  </data>
+  <data name="TouchHelpMenu" xml:space="preserve">
+    <value>Menu: every window. Back: closes the window on top</value>
+  </data>
+  <data name="TouchHelpItem" xml:space="preserve">
+    <value>Hold an item: its card with what you can do</value>
+  </data>
+  <data name="TouchHelpDrag" xml:space="preserve">
+    <value>Drag an item to move it, drag a list to scroll it</value>
+  </data>
+  <data name="TouchHelpView" xml:space="preserve">
+    <value>Menu, PC / phone view: the PC layout and back</value>
+  </data>
+  <data name="PadHelpTitle" xml:space="preserve">
+    <value>Gamepad (Xbox layout)</value>
+  </data>
+  <data name="PadHelpSticks" xml:space="preserve">
+    <value>Left stick: walk. Right stick: the pointer, slower over a window</value>
+  </data>
+  <data name="PadHelpAttack" xml:space="preserve">
+    <value>A: hold to attack; with the pointer on a window or a button, A clicks it</value>
+  </data>
+  <data name="PadHelpSkills" xml:space="preserve">
+    <value>X, Y, RB, LT, D-pad down: the five skill buttons (tap: pick, hold: cast)</value>
+  </data>
+  <data name="PadHelpSkillList" xml:space="preserve">
+    <value>L3 (press the left stick): the skill list; pick a skill with the pointer and A, then press a skill button to put it there</value>
+  </data>
+  <data name="PadHelpBack" xml:space="preserve">
+    <value>B: back, closes the window on top (with none open, the system menu)</value>
+  </data>
+  <data name="PadHelpPickUp" xml:space="preserve">
+    <value>LB: hold to pick up. D-pad up: MU Helper on and off</value>
+  </data>
+  <data name="PadHelpPotions" xml:space="preserve">
+    <value>D-pad left and right: potions Q and W</value>
+  </data>
+  <data name="PadHelpClick" xml:space="preserve">
+    <value>RT: click at the pointer (talk to an NPC, walk there), hold to drag. R3: right click</value>
+  </data>
+  <data name="PadHelpMenu" xml:space="preserve">
+    <value>Menu: every window (stick or D-pad to choose, A opens, B closes). View: the map</value>
+  </data>
+  <data name="PadHelpScreens" xml:space="preserve">
+    <value>Login and character screens: the sticks move the pointer, A clicks, B is Esc, Menu is Enter</value>
+  </data>
+  <data name="PadOpen" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="PadClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="PadConnected" xml:space="preserve">
+    <value>Gamepad: A attacks, X, Y, RB, LT and D-pad down cast skills, Menu opens every window (its Help lists all the buttons)</value>
+  </data>
+  <data name="PadBindPick" xml:space="preserve">
+    <value>Pick a skill with the pointer and A, then press X, Y, RB, LT or D-pad down to put it there</value>
+  </data>
+  <data name="PadBindPlace" xml:space="preserve">
+    <value>Press X, Y, RB, LT or D-pad down to put the skill there</value>
+  </data>
+  <data name="PadKeyboardType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="PadKeyboardCaret" xml:space="preserve">
+    <value>Cursor</value>
+  </data>
+  <data name="PadKeyboardSpace" xml:space="preserve">
+    <value>space</value>
+  </data>
+  <data name="PadHelpKeyboard" xml:space="preserve">
+    <value>Text fields (chat, login): an on-screen keyboard opens. D-pad or stick: keys, A: press, X: erase, Y: space, LT: shift, RT: symbols, View: English/Russian, LB/RB: cursor, Menu: Enter, B: close</value>
+  </data>
+  <data name="MuHelperSlotClearHint" xml:space="preserve">
+    <value>Hold a skill slot to clear it (R3 on a gamepad)</value>
+  </data>
+  <data name="EndlessTowerTitle" xml:space="preserve">
+    <value>Endless Tower</value>
+  </data>
+  <data name="EndlessTowerAsking" xml:space="preserve">
+    <value>Asking the server...</value>
+  </data>
+  <data name="EndlessTowerNoAnswer" xml:space="preserve">
+    <value>The server sends no tower data.</value>
+  </data>
+  <data name="EndlessTowerEntry" xml:space="preserve">
+    <value>Entry: %ls zen, %d a day</value>
+  </data>
+  <data name="EndlessTowerParty" xml:space="preserve">
+    <value>Party: %d (%d–%d needed)</value>
+  </data>
+  <data name="EndlessTowerReset" xml:space="preserve">
+    <value>Runs back in %ls</value>
+  </data>
+  <data name="EndlessTowerBest" xml:space="preserve">
+    <value>Best wave: %ls, top: %ls</value>
+  </data>
+  <data name="EndlessTowerWave" xml:space="preserve">
+    <value>%d</value>
+  </data>
+  <data name="EndlessTowerNone" xml:space="preserve">
+    <value>none</value>
+  </data>
+  <data name="EndlessTowerTabParty" xml:space="preserve">
+    <value>Party</value>
+  </data>
+  <data name="EndlessTowerTabBosses" xml:space="preserve">
+    <value>Bosses</value>
+  </data>
+  <data name="EndlessTowerTabRewards" xml:space="preserve">
+    <value>Rewards</value>
+  </data>
+  <data name="EndlessTowerTabTop" xml:space="preserve">
+    <value>Top</value>
+  </data>
+  <data name="EndlessTowerPayNote" xml:space="preserve">
+    <value>Each pays %ls zen and a run</value>
+  </data>
+  <data name="EndlessTowerMember" xml:space="preserve">
+    <value>%ls · runs %d/%d · best %d</value>
+  </data>
+  <data name="EndlessTowerMemberNew" xml:space="preserve">
+    <value>%ls · runs %d/%d</value>
+  </data>
+  <data name="EndlessTowerMemberAway" xml:space="preserve">
+    <value>%ls: not at Lugard</value>
+  </data>
+  <data name="EndlessTowerMemberNoZen" xml:space="preserve">
+    <value>%ls: no %ls zen</value>
+  </data>
+  <data name="EndlessTowerMemberNoRuns" xml:space="preserve">
+    <value>%ls: no runs left today</value>
+  </data>
+  <data name="EndlessTowerBossTitle" xml:space="preserve">
+    <value>Boss gives everyone alive:</value>
+  </data>
+  <data name="EndlessTowerHeightTitle" xml:space="preserve">
+    <value>At the end, by wave reached:</value>
+  </data>
+  <data name="EndlessTowerFromWave" xml:space="preserve">
+    <value>Wave %d+: %ls</value>
+  </data>
+  <data name="EndlessTowerNoRewards" xml:space="preserve">
+    <value>None set.</value>
+  </data>
+  <data name="EndlessTowerTopTitle" xml:space="preserve">
+    <value>Best climbs:</value>
+  </data>
+  <data name="EndlessTowerTopName" xml:space="preserve">
+    <value>%d. %ls (%ls)</value>
+  </data>
+  <data name="EndlessTowerTopDetail" xml:space="preserve">
+    <value>Wave %d · %ls · party of %d</value>
+  </data>
+  <data name="EndlessTowerTopEmpty" xml:space="preserve">
+    <value>Nobody has climbed yet.</value>
+  </data>
+  <data name="EndlessTowerInRun" xml:space="preserve">
+    <value>Your party is in the tower.</value>
+  </data>
+  <data name="EndlessTowerComeToNpc" xml:space="preserve">
+    <value>Come to Lugard in Lorencia/Devias.</value>
+  </data>
+  <data name="EndlessTowerLeaderOnly" xml:space="preserve">
+    <value>Only the party leader goes in.</value>
+  </data>
+  <data name="EndlessTowerPartySize" xml:space="preserve">
+    <value>Parties of %d to %d only.</value>
+  </data>
+  <data name="EndlessTowerNotNear" xml:space="preserve">
+    <value>Everyone has to stand at Lugard.</value>
+  </data>
+  <data name="EndlessTowerNoRuns" xml:space="preserve">
+    <value>Someone has no runs left today.</value>
+  </data>
+  <data name="EndlessTowerNoZen" xml:space="preserve">
+    <value>Everyone needs %ls zen.</value>
+  </data>
+  <data name="EndlessTowerEntering" xml:space="preserve">
+    <value>Going in...</value>
+  </data>
+  <data name="EndlessTowerEnter" xml:space="preserve">
+    <value>Enter (%ls zen)</value>
+  </data>
+  <data name="EndlessTowerWaveTimer" xml:space="preserve">
+    <value>Tower · Wave %d</value>
+  </data>
+  <data name="EndlessTowerTabShop" xml:space="preserve">
+    <value>Shop</value>
+  </data>
+  <data name="EndlessTowerShopAsking" xml:space="preserve">
+    <value>Asking Lugard for the shop...</value>
+  </data>
+  <data name="EndlessTowerShopNoAnswer" xml:space="preserve">
+    <value>The server sends no shop.</value>
+  </data>
+  <data name="EndlessTowerShopBalance" xml:space="preserve">
+    <value>Tower points: %ls</value>
+  </data>
+  <data name="EndlessTowerShopEarn" xml:space="preserve">
+    <value>%d per wave, +%d per boss</value>
+  </data>
+  <data name="EndlessTowerShopRenewDays" xml:space="preserve">
+    <value>Limits renew in %d d %d h</value>
+  </data>
+  <data name="EndlessTowerShopRenew" xml:space="preserve">
+    <value>Limits renew in %ls</value>
+  </data>
+  <data name="EndlessTowerShopWaiting" xml:space="preserve">
+    <value>%lld waiting: make room in the bag</value>
+  </data>
+  <data name="EndlessTowerShopItem" xml:space="preserve">
+    <value>%ls · %ls pts</value>
+  </data>
+  <data name="EndlessTowerShopItemLimit" xml:space="preserve">
+    <value>%ls · %ls pts · %d/%d</value>
+  </data>
+  <data name="EndlessTowerShopPick" xml:space="preserve">
+    <value>Pick an item to buy it.</value>
+  </data>
+  <data name="EndlessTowerShopInfo" xml:space="preserve">
+    <value>%ls: %ls pts each, %d left this month.</value>
+  </data>
+  <data name="EndlessTowerShopInfoNoLimit" xml:space="preserve">
+    <value>%ls: %ls pts each.</value>
+  </data>
+  <data name="EndlessTowerShopToBank" xml:space="preserve">
+    <value>Goes to the jewel bank.</value>
+  </data>
+  <data name="EndlessTowerShopToBag" xml:space="preserve">
+    <value>Goes to the bag.</value>
+  </data>
+  <data name="EndlessTowerShopLimitReached" xml:space="preserve">
+    <value>Bought out this month.</value>
+  </data>
+  <data name="EndlessTowerShopNoPoints" xml:space="preserve">
+    <value>Not enough tower points.</value>
+  </data>
+  <data name="EndlessTowerShopBuying" xml:space="preserve">
+    <value>Buying...</value>
+  </data>
+  <data name="EndlessTowerShopBuy" xml:space="preserve">
+    <value>Buy %d</value>
+  </data>
+  <data name="EndlessTowerShopEmpty" xml:space="preserve">
+    <value>Nothing for sale.</value>
+  </data>
+  <data name="HelpSkynetKeysHeading" xml:space="preserve">
+    <value>MU Skynet</value>
+  </data>
+  <data name="HelpSkynetKeysEvents" xml:space="preserve">
+    <value>O : Event timer  ·  N : Daily rewards</value>
+  </data>
+  <data name="HelpSkynetKeysPass" xml:space="preserve">
+    <value>X : Battle pass  ·  I + K : Jewel bank</value>
+  </data>
+  <data name="HelpSkynetKeysMap" xml:space="preserve">
+    <value>M : Warp map  ·  Tab : Mini map  ·  T : Quests</value>
+  </data>
+  <data name="HelpSkynetKeysHelper" xml:space="preserve">
+    <value>Z : MU Helper settings  ·  F : Friends</value>
+  </data>
+  <data name="HelpSkynetKeysCommand" xml:space="preserve">
+    <value>D : Command window  ·  Space : Pick up an item</value>
+  </data>
+  <data name="HelpNextPageHint" xml:space="preserve">
+    <value>F1 : Next page, chat and commands</value>
+  </data>
+  <data name="HelpSkynetCommandsHeading" xml:space="preserve">
+    <value>MU Skynet commands</value>
+  </data>
+  <data name="HelpSkynetCommandList" xml:space="preserve">
+    <value>J : Every command with its description</value>
+  </data>
+  <data name="HelpSkynetCommandReset" xml:space="preserve">
+    <value>/reset : Reset (/resetinfo : what it needs)</value>
+  </data>
+  <data name="HelpSkynetCommandResetStats" xml:space="preserve">
+    <value>/resetstats : Take back spent stat points</value>
+  </data>
+  <data name="HelpSkynetCommandAddPoints" xml:space="preserve">
+    <value>/addstr /addagi /addvit /addene &lt;n&gt; : Add points</value>
+  </data>
+  <data name="HelpSkynetCommandCp" xml:space="preserve">
+    <value>/cp : Your Combat Power</value>
+  </data>
+  <data name="HelpSkynetCommandEvents" xml:space="preserve">
+    <value>/events : Next events and runs left today</value>
+  </data>
+  <data name="HelpSkynetCommandPass" xml:space="preserve">
+    <value>/bp : Battle pass level and quests</value>
+  </data>
+  <data name="HelpSkynetCommandPvp" xml:space="preserve">
+    <value>/crown /tdm /throne /vulcanus : Join an event</value>
+  </data>
+  <data name="HelpSkynetCommandDuels" xml:space="preserve">
+    <value>/duelbet /duelrank : Ranked duels</value>
+  </data>
+  <data name="HelpSkynetCommandTier" xml:space="preserve">
+    <value>/tiertop : Tier Maps ranking</value>
+  </data>
+  <data name="HelpSkynetCommandStuck" xml:space="preserve">
+    <value>/stuck : Stuck in the Endless Tower</value>
+  </data>
+  <data name="HelpCloseHint" xml:space="preserve">
+    <value>F1 : Close</value>
   </data>
 </root>

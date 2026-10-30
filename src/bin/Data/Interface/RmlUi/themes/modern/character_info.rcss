@@ -198,3 +198,32 @@
 .adv-lines span.boosted { color: rgb(100, 150, 255); }
 .adv-lines-1 { top: 141px; }
 .adv-lines-2 { top: 281px; }
+
+/* MU Moldova: the phone view (UI::Mobile::IsPhoneView()): the panel shrinks to the phone's height, so the
+   window is 290 wide here with larger text, the "+" and the bottom buttons at finger size (legacy's layout,
+   themes/legacy/character_info.rcss). The pieces pinned to the edges follow. */
+@media (theme: mobile) {
+	#panel { width: 290px; }
+	#name { font-size: 15px; }
+	#classname, #servername { font-size: 13px; }
+	.level-text, .levelup-point-text, .exp-text, .point-probability-text, .point-text { font-size: 12px; }
+	.levelup-point-text { top: 51px; left: auto; right: 20px; }
+	.attr-label, .attr-value { font-size: 14px; }
+	.attr-label { width: 110px; }
+	.attr-value { left: 122px; right: 44px; }
+	.attr-lines, .adv-lines { width: 250px; }
+	.attr-lines span { font-size: 13px; }
+	.stat-btn { width: 24px; height: 21px; line-height: 19px; font-size: 15px; }
+	.stat-btn-str { top: 120px; }
+	.stat-btn-agi { top: 175px; }
+	.stat-btn-vit { top: 240px; }
+	.stat-btn-ene { top: 295px; }
+	.stat-btn-cmd { top: 350px; }
+	#panel .chainfo-btn-exit, #panel .chainfo-btn-quest, #panel .chainfo-btn-pet, #panel .chainfo-btn-advstats,
+	#panel .chainfo-btn-titles { width: 44px; height: 32px; bottom: 7px; line-height: 32px; }
+	#panel .chainfo-btn-exit { left: 23px; }
+	#panel .chainfo-btn-quest { left: 73px; }
+	#panel .chainfo-btn-pet { left: 123px; }
+	#panel .chainfo-btn-advstats { left: 173px; }
+	#panel .chainfo-btn-titles { left: 223px; }
+}

@@ -37,7 +37,7 @@
 		<div class="nd-divider"></div>
 
 		<div id="answers_container" class="nd-answers" data-class-hidden="!show_answers">
-			<div class="nd-answer-row" data-for="a : answers"
+			<div class="nd-answer-row" data-for="a : answers" data-attr-data-answer="a.index"
 			     data-event-click="npcdialogue_select_answer(a.index)">{{a.text}}</div>
 		</div>
 

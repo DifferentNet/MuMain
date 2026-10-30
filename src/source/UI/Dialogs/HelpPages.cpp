@@ -26,6 +26,48 @@ void AddText(std::vector<UI::Help::PageLine>& lines, const wchar_t* text, bool h
     lines.push_back(std::move(line));
 }
 
+void AddHint(std::vector<UI::Help::PageLine>& lines, const wchar_t* text)
+{
+    AddHalfSpacer(lines);
+    UI::Help::PageLine line;
+    line.text = text;
+    line.hint = true;
+    lines.push_back(std::move(line));
+}
+
+// MU Skynet's windows and the keys the original list left out. Two or three keys a row: the key
+// page has to stay above the bottom bar on a 1024x768 screen.
+void AddSkynetKeyLines(std::vector<UI::Help::PageLine>& lines)
+{
+    AddHalfSpacer(lines);
+    AddText(lines, I18N::Game::HelpSkynetKeysHeading, true);
+
+    const wchar_t* const keyLines[] = {
+        I18N::Game::HelpSkynetKeysEvents, I18N::Game::HelpSkynetKeysPass,    I18N::Game::HelpSkynetKeysMap,
+        I18N::Game::HelpSkynetKeysHelper, I18N::Game::HelpSkynetKeysCommand,
+    };
+    for (const wchar_t* line : keyLines)
+        AddText(lines, line);
+}
+
+// The server commands players use most; J lists all of them with their descriptions.
+void AddSkynetCommandLines(std::vector<UI::Help::PageLine>& lines)
+{
+    AddHalfSpacer(lines);
+    AddText(lines, I18N::Game::HelpSkynetCommandsHeading, true);
+
+    const wchar_t* const commandLines[] = {
+        I18N::Game::HelpSkynetCommandList,       I18N::Game::HelpSkynetCommandReset,
+        I18N::Game::HelpSkynetCommandResetStats, I18N::Game::HelpSkynetCommandAddPoints,
+        I18N::Game::HelpSkynetCommandCp,         I18N::Game::HelpSkynetCommandEvents,
+        I18N::Game::HelpSkynetCommandPass,       I18N::Game::HelpSkynetCommandPvp,
+        I18N::Game::HelpSkynetCommandDuels,      I18N::Game::HelpSkynetCommandTier,
+        I18N::Game::HelpSkynetCommandStuck,
+    };
+    for (const wchar_t* line : commandLines)
+        AddText(lines, line);
+}
+
 void AddKeyFunctionLines(std::vector<UI::Help::PageLine>& lines)
 {
     for (int i = 0; i < kFunctionKeyTextsBeforeExtras; ++i)
@@ -42,18 +84,66 @@ void AddKeyFunctionLines(std::vector<UI::Help::PageLine>& lines)
     for (int i = kFunctionKeyTextsBeforeExtras; i < kShippedKeyTextCount; ++i)
         AddText(lines, I18N::Game::Lookup(kFirstFunctionKeyText + i));
 }
+
+void AddTouchControlLines(std::vector<UI::Help::PageLine>& lines)
+{
+    const wchar_t* const touchLines[] = {
+        I18N::Game::TouchHelpWorld,   I18N::Game::TouchHelpStick,  I18N::Game::TouchHelpAttack,
+        I18N::Game::TouchHelpSkills,  I18N::Game::TouchHelpPickUp, I18N::Game::TouchHelpAuto,
+        I18N::Game::TouchHelpPotions, I18N::Game::TouchHelpMenu,   I18N::Game::TouchHelpItem,
+        I18N::Game::TouchHelpDrag,    I18N::Game::TouchHelpView,
+    };
+    for (const wchar_t* line : touchLines)
+        AddText(lines, line);
+}
+
+void AddGamepadLines(std::vector<UI::Help::PageLine>& lines)
+{
+    const wchar_t* const padLines[] = {
+        I18N::Game::PadHelpSticks,    I18N::Game::PadHelpAttack,  I18N::Game::PadHelpSkills,
+        I18N::Game::PadHelpSkillList, I18N::Game::PadHelpBack,    I18N::Game::PadHelpPickUp,
+        I18N::Game::PadHelpPotions,   I18N::Game::PadHelpClick,   I18N::Game::PadHelpMenu,
+        I18N::Game::PadHelpKeyboard,  I18N::Game::PadHelpScreens,
+    };
+    for (const wchar_t* line : padLines)
+        AddText(lines, line);
+}
+
+void AddDeviceSections(std::vector<UI::Help::PageLine>& lines, UI::Help::Devices devices)
+{
+    if (devices.touchControls)
+    {
+        AddText(lines, I18N::Game::TouchHelpTitle, true);
+        AddHalfSpacer(lines);
+        AddTouchControlLines(lines);
+    }
+    if (devices.touchControls && devices.gamepad)
+        AddHalfSpacer(lines);
+    if (devices.gamepad)
+    {
+        AddText(lines, I18N::Game::PadHelpTitle, true);
+        AddHalfSpacer(lines);
+        AddGamepadLines(lines);
+    }
+}
 } // namespace
 
-std::vector<UI::Help::PageLine> UI::Help::BuildPage(int page)
+std::vector<UI::Help::PageLine> UI::Help::BuildPage(int page, Devices devices)
 {
     std::vector<PageLine> lines;
     AddHalfSpacer(lines);
 
-    if (page == KeyFunctionPage)
+    if (page == KeyFunctionPage && (devices.touchControls || devices.gamepad))
+    {
+        AddDeviceSections(lines, devices);
+    }
+    else if (page == KeyFunctionPage)
     {
         AddText(lines, I18N::Game::KeyFunction, true);
         AddHalfSpacer(lines);
         AddKeyFunctionLines(lines);
+        AddSkynetKeyLines(lines);
+        AddHint(lines, I18N::Game::HelpNextPageHint);
     }
     else
     {
@@ -61,6 +151,8 @@ std::vector<UI::Help::PageLine> UI::Help::BuildPage(int page)
         AddHalfSpacer(lines);
         for (int i = 0; i < kChattingTextCount; ++i)
             AddText(lines, I18N::Game::Lookup(kFirstChattingText + i));
+        AddSkynetCommandLines(lines);
+        AddHint(lines, I18N::Game::HelpCloseHint);
     }
 
     AddHalfSpacer(lines);

@@ -73,3 +73,9 @@
 .btn-icon-caption {
 	display: none;
 }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode) gives the Menu and Credits buttons more room, growing up from the bar, for fingers. */
+@media (theme: mobile) {
+	.btn-icon, .btn-credit-icon { width: 81rem; height: 45rem; }
+	.btn-icon-menu, .btn-icon-credit { top: auto; bottom: 0; }
+}

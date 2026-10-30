@@ -583,6 +583,7 @@ void CMuHelperConfigWindow::BindRmlModel(Rml::DataModelConstructor& c, MuHelperC
     labels.RegisterMember("seconds", &MuHelperConfigLabels::seconds);
     labels.RegisterMember("extension_used", &MuHelperConfigLabels::extensionUsed);
     labels.RegisterMember("extension_none", &MuHelperConfigLabels::extensionNone);
+    labels.RegisterMember("slot_hint", &MuHelperConfigLabels::slotHint);
     labels.RegisterMember("potion", &MuHelperConfigLabels::potion);
     labels.RegisterMember("long_distance", &MuHelperConfigLabels::longDistance);
     labels.RegisterMember("orig_position", &MuHelperConfigLabels::origPosition);
@@ -682,6 +683,7 @@ void CMuHelperConfigWindow::BindRmlModel(Rml::DataModelConstructor& c, MuHelperC
     l.seconds = "s";
     l.extensionUsed = Narrow(I18N::Game::UsedExtensionFunction);
     l.extensionNone = Narrow(I18N::Game::NoExtensionFunctionBeingUsed);
+    l.slotHint = Narrow(I18N::Game::MuHelperSlotClearHint);
     l.potion = Narrow(I18N::Game::Potion);
     l.longDistance = Narrow(I18N::Game::LongDistanceCounterAttack);
     l.origPosition = Narrow(I18N::Game::OriginalPosition);
