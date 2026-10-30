@@ -4,6 +4,7 @@
 #include "Core/Text/Utf8.h"
 #include "Core/Utilities/Log/muConsoleDebug.h"
 #include "GameLogic/Events/BattlePass.h"
+#include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/Core/WindowAccess.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
@@ -65,6 +66,7 @@ constexpr NamedWindow Windows[] = {
     {"auction", mu::ui::window::INTERFACE_AUCTION},
     {"gm_panel", mu::ui::window::INTERFACE_GM_PANEL},
     {"titles", mu::ui::window::INTERFACE_TITLES},
+    {"pet", mu::ui::window::INTERFACE_PET},
 };
 
 json Pixel(float x, float y)
@@ -122,6 +124,12 @@ constexpr NamedElement Buttons[] = {
     {"character.stat.vitality", mu::ui::window::INTERFACE_CHARACTER, "#btn_stat_vit"},
     {"character.stat.energy", mu::ui::window::INTERFACE_CHARACTER, "#btn_stat_ene"},
     {"character.stat.command", mu::ui::window::INTERFACE_CHARACTER, "#btn_stat_cmd"},
+    // The bottom row; pet for a Dark Lord only.
+    {"character.close", mu::ui::window::INTERFACE_CHARACTER, "#btn_exit"},
+    {"character.quest", mu::ui::window::INTERFACE_CHARACTER, "#btn_quest"},
+    {"character.pet", mu::ui::window::INTERFACE_CHARACTER, "#btn_pet"},
+    {"character.advstats", mu::ui::window::INTERFACE_CHARACTER, "#btn_advstats"},
+    {"character.titles", mu::ui::window::INTERFACE_CHARACTER, "#btn_titles"},
     {"npc_shop.repair", mu::ui::window::INTERFACE_NPCSHOP, "#btn_repair"},
     {"npc_shop.repair_all", mu::ui::window::INTERFACE_NPCSHOP, "#btn_repair_all"},
     {"battle_pass.claim", mu::ui::window::INTERFACE_BATTLE_PASS, "#bp_claim"},
@@ -311,6 +319,9 @@ std::string Ui(const Request& request, std::unique_ptr<Act>&)
     json result;
     result["windows"] = windows;
     result["elements"] = Elements();
+    // Whether a text field has the keys. A dialog focuses its field a frame after it shows, and
+    // `type` before that goes nowhere.
+    result["typing"] = RmlUiRuntime::Instance().IsTextInputActive();
     return EncodeResult(request.EncodedId(), result.dump());
 }
 

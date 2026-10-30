@@ -259,6 +259,21 @@
 #panel .info-btn-advstats { left: 109px; }
 #panel .info-btn-titles { left: 141px; }
 
+/* The Pet button is the Dark Lord's only (pet_enabled = CPetInfoWindow::IsAvailable(), ghinzuro 2026-10-30): the
+   other classes have four buttons, the original row's sprites and places, 36 wide at 13, 50, 87, 124. The phone
+   view (feature/web-touch) keeps its finger-size buttons 50 apart: 23, 73, 123, 173. */
+#panel.no-pet #btn_pet { display: none; }
+#panel.no-pet #btn_exit, #panel.no-pet .info-btn { width: 36px; }
+#panel.no-pet .info-btn-quest { left: 50px; }
+#panel.no-pet .info-btn-advstats { left: 87px; }
+#panel.no-pet .info-btn-titles { left: 124px; }
+@media (theme: mobile) {
+	#panel.no-pet #btn_exit, #panel.no-pet .info-btn { width: 44px; }
+	#panel.no-pet .info-btn-quest { left: 73px; }
+	#panel.no-pet .info-btn-advstats { left: 123px; }
+	#panel.no-pet .info-btn-titles { left: 173px; }
+}
+
 .adv { display: none; }
 #panel.adv-view .adv { display: block; }
 #panel.adv-view .attr-textbox, #panel.adv-view .attr-label, #panel.adv-view .attr-value,

@@ -105,6 +105,9 @@ public:
     // The on-screen controls' size in percent (UI::Mobile::TouchUnit).
     int GetTouchButtonSize() const { return m_touchButtonSize; }
     void SetTouchButtonSize(int percent);
+    // Whether the game reads a gamepad (Core::Input::Gamepad::SetEnabled).
+    bool GetGamepad() const { return m_gamepad; }
+    void SetGamepad(bool enabled) { m_gamepad = enabled; }
 
     // Chat commands - the favourites and the named templates of the command
     // window. They belong to the installation, not to a character.
@@ -233,6 +236,7 @@ private:
     std::wstring m_interfaceView;
     std::wstring m_controls;
     int m_touchButtonSize = 100;
+    bool m_gamepad = true;
     bool m_enableAnimationTaskPool;
 
     int m_zoom;

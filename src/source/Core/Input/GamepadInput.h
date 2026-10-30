@@ -57,6 +57,12 @@ struct StickPosition
 // its buttons is pressed (the page may not see it before), and that press counts as a tap.
 void Init();
 
+// The player's switch (Options -> Interface -> Gamepad, on unless config.ini says off): off closes
+// the pads and leaves their buttons and sticks unread, for a pad that Steam Input or the handheld's
+// own software already turns into a mouse and keys. On opens the pads plugged in. On to start with.
+void SetEnabled(bool enabled);
+[[nodiscard]] bool IsEnabled();
+
 // Every event from the main loop: pads coming and going, their buttons and sticks, and the other
 // devices' presses (a key, a mouse button or a finger makes the pad no longer the device used last).
 void ProcessEvent(const SDL_Event& event);

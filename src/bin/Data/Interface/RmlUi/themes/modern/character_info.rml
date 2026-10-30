@@ -18,7 +18,7 @@
 	     CMyInventory, this window has no live-3D icon to paint behind, so the whole forged-dialog
 	     look lives directly in this one foreground document instead of a separate background
 	     context. Keep ids/data-model/event-callback names in sync with ../../character_info.rml. -->
-	<div id="panel" data-model="character_info" data-class-adv-view="advanced_view">
+	<div id="panel" data-model="character_info" data-class-adv-view="advanced_view" data-class-no-pet="!pet_enabled">
 		<div class="modern-shell-edge"></div>
 		<div class="modern-groove"></div>
 

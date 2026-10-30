@@ -11,26 +11,37 @@
 #include "Core/Platform/web/WebFileSystem.h"
 
 #include <emscripten.h>
+#include <emscripten/threading.h>
 #include <emscripten/wasmfs.h>
 
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <cerrno>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <climits>
 #include <fcntl.h>
+#include <mutex>
 #include <set>
 #include <string>
 #include <string_view>
 #include <sys/stat.h>
 #include <thread>
 #include <unistd.h>
+#include <utility>
 
 namespace
 {
 constexpr const char* GameDir = "/game";
 constexpr const char* ServerDir = "/server";
 constexpr unsigned ChunkSize = 1u << 20;
+// What a link in /game to a file of the mount points at starts with (SetUpMount).
+constexpr std::string_view ServerLinkPrefix = "/server/";
+// The biggest file OpenWholeInMemory reads: the most the mount downloads on a file's first read
+// (fetch-backend.js, fetchStart), every file but music and long ambient sounds.
+constexpr off_t WholeReadMostBytes = 2 * ChunkSize;
 // files.txt also lists the page's own files, so scripts/publish-web.py uploads them, but only the page
 // reads them. Copied like config.ini, they were downloaded again at every start: the gzip copy of the
 // startup pack took 120 MB in 1 MB pieces and left a phone at a black screen (a Pixel 9 Pro XL,
@@ -54,6 +65,101 @@ std::atomic<int> g_mountState{0};
 std::atomic<int> g_filesOnPageThread{0};
 
 EM_JS(int, MuWeb_PageWantsFilesOnPageThread, (), { return Module["muFilesOnPageThread"] ? 1 : 0; });
+
+// false where the page's address has ?nowholeread: fopen then reads the mount's files piece by piece, as
+// before OpenWholeInMemory (to compare, or where it misbehaves).
+std::atomic<bool> g_wholeReads{true};
+
+EM_JS(int, MuWeb_PageWantsWholeReads, (), { return new URLSearchParams(location.search).has("nowholeread") ? 0 : 1; });
+
+// Where the page's thread downloads the mount's files (g_filesOnPageThread: Safari, every iPhone
+// browser), each one the game read was a synchronous request on the page's thread, the game's own:
+// the game, its picture and its connection to the server stood still until the file came, at least
+// a trip to the server each (~50 ms), and a monster seen for the first time reads some twenty. The
+// service worker never sees a synchronous request (sw.js), so none was kept on the device and every
+// visit downloaded them again: on a Mac in Safari, a long wait to enter the world, freezes on every
+// walk and the character pulled back a few metres after them (2026-10-30). Where this is true, the
+// page's thread asks for a file of the mount the game opens whole (OpenWholeInMemory) like any other
+// download (MuWeb_ReadWholeAsync), through the service worker, and the game waits for it the way it
+// waits for the next frame (JSPI): meanwhile the page runs, and the file is kept for the next time.
+// index.html?syncreads reads as before.
+std::atomic<bool> g_pageReads{false};
+
+// Sets the reads up where the page wants them (no ?syncreads) and says whether it does. The game may
+// wait for a file only where it waits for nothing else: what runs while it waits (the browser's
+// events, SDL's handlers of them among them) can't wait itself. Every wait of the game goes through
+// Asyncify.handleAsync (EM_ASYNC_JS, emscripten_sleep), so its waits are counted (muWaits).
+EM_JS(int, MuWeb_SetUpPageReads, (), {
+    if (new URLSearchParams(location.search).has("syncreads")) {
+        return 0;
+    }
+    if (!Module["muWaits"]) {
+        Module["muWaits"] = {count: 0};
+        const handleAsync = Asyncify.handleAsync;
+        Asyncify.handleAsync = async (startAsync) => {
+            Module["muWaits"].count++;
+            try {
+                return await handleAsync(startAsync);
+            } finally {
+                Module["muWaits"].count--;
+            }
+        };
+    }
+    // The files' hashes (startup.json "versions", as fetch-backend.js reads them), asked for now.
+    Module["muFileVersions"] = fetch(new URL("startup.json", location.href), {cache: "no-cache"})
+        .then((response) => response.ok ? response.json() : {})
+        .then((index) => index.versions || {}, () => ({}));
+    return 1;
+});
+
+EM_JS(int, MuWeb_GameWaitsForNothing, (), { return Module["muWaits"] && Module["muWaits"].count == 0 ? 1 : 0; });
+
+// The whole file at `path` (below the page's folder) in a new allocation of `headerBytes` and then the
+// file's bytes, its size in *size; or null where it has no hash in startup.json (so the service worker
+// wouldn't keep it), is bigger than `mostBytes` or doesn't come, for the mount to read as before. A
+// file the service worker keeps is read from its store directly (as fetch-backend.js readKept does).
+EM_ASYNC_JS(void*, MuWeb_ReadWholeAsync, (const char* path, int headerBytes, int mostBytes, int* size), {
+    const file = UTF8ToString(path);
+    const hash = (await Module["muFileVersions"])[file];
+    if (!hash) {
+        return 0;
+    }
+    const url = new URL(`${file}?v=${hash}`, location.href).href;
+    let blob = null;
+    try {
+        const kept = self.caches && await (await caches.open("mu-web/files")).match(url);
+        blob = kept ? await kept.blob() : null;
+    } catch (e) {
+    }
+    try {
+        if (!blob) {
+            const response = await fetch(url, {credentials: "same-origin"});
+            if (response.status != 200 || Number(response.headers.get("Content-Length") || 0) > mostBytes) {
+                response.body && response.body.cancel().catch(() => {});
+                return 0;
+            }
+            blob = await response.blob();
+        }
+        if (blob.size > mostBytes) {
+            return 0;
+        }
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        // Unsigned: the game's memory may pass 2 GB.
+        const memory = _malloc(headerBytes + bytes.length) >>> 0;
+        if (!memory) {
+            return 0;
+        }
+        HEAPU8.set(bytes, memory + headerBytes);
+        HEAP32[(size >>> 0) >>> 2] = bytes.length;
+        return memory;
+    } catch (e) {
+        return 0;
+    }
+});
+
+// The biggest file MuWeb_ReadWholeAsync reads: music too, which the mount otherwise reads 1 MB at a
+// time while it plays, each piece another synchronous request.
+constexpr int PageReadMostBytes = 32 << 20;
 
 // The folder the page came from, as an absolute URL without the last slash. Emscripten's fetch
 // backend resolves a relative base against the site's root, so with "." a page at
@@ -192,6 +298,176 @@ bool ReadWholeFile(const std::string& path, std::string& content)
     return n == 0;
 }
 
+// A file of the mount read into memory (OpenWholeInMemory): this header, then the file's bytes, in
+// one allocation that the FILE frees when it closes.
+struct MemoryFile
+{
+    std::size_t size;
+    std::size_t at;
+};
+
+ssize_t ReadMemoryFile(void* cookie, char* out, std::size_t length)
+{
+    auto* file = static_cast<MemoryFile*>(cookie);
+    if (file->at >= file->size)
+    {
+        return 0;
+    }
+    const std::size_t count = std::min(length, file->size - file->at);
+    std::memcpy(out, reinterpret_cast<const char*>(file + 1) + file->at, count);
+    file->at += count;
+    return static_cast<ssize_t>(count);
+}
+
+int SeekMemoryFile(void* cookie, off_t* offset, int whence)
+{
+    auto* file = static_cast<MemoryFile*>(cookie);
+    off_t base = 0;
+    if (whence == SEEK_CUR)
+    {
+        base = static_cast<off_t>(file->at);
+    }
+    else if (whence == SEEK_END)
+    {
+        base = static_cast<off_t>(file->size);
+    }
+    else if (whence != SEEK_SET)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+    if (base + *offset < 0)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+    *offset += base;
+    file->at = static_cast<std::size_t>(*offset);
+    return 0;
+}
+
+int CloseMemoryFile(void* cookie)
+{
+    std::free(cookie);
+    return 0;
+}
+
+// The file's bytes in memory, read with one read call, or null where `fd` isn't a file of up to
+// WholeReadMostBytes or the read fails.
+MemoryFile* ReadIntoMemory(int fd)
+{
+    struct stat info;
+    if (::fstat(fd, &info) != 0 || info.st_size <= 0 || info.st_size > WholeReadMostBytes)
+    {
+        return nullptr;
+    }
+    const auto size = static_cast<std::size_t>(info.st_size);
+    auto* file = static_cast<MemoryFile*>(std::malloc(sizeof(MemoryFile) + size));
+    if (!file)
+    {
+        return nullptr;
+    }
+    if (::read(fd, file + 1, size) != static_cast<ssize_t>(size))
+    {
+        std::free(file);
+        return nullptr;
+    }
+    file->size = size;
+    file->at = 0;
+    return file;
+}
+
+// The page's thread downloads the file (g_pageReads) while the game waits, or null where it can't.
+MemoryFile* ReadIntoMemoryOnPage(const char* fileInMount)
+{
+    if (!g_pageReads.load(std::memory_order_relaxed) || !emscripten_is_main_browser_thread() || !MuWeb_GameWaitsForNothing())
+    {
+        return nullptr;
+    }
+    int size = 0;
+    auto* file = static_cast<MemoryFile*>(MuWeb_ReadWholeAsync(fileInMount, sizeof(MemoryFile), PageReadMostBytes, &size));
+    if (file)
+    {
+        file->size = static_cast<std::size_t>(size);
+        file->at = 0;
+    }
+    return file;
+}
+
+// The file of the mount that `path`, a link in /game, points to: its path in the mount, in `target`; null
+// where `path` isn't such a link.
+const char* FileInMount(const char* path, char (&target)[PATH_MAX])
+{
+    const ssize_t targetLength = ::readlink(path, target, sizeof(target) - 1);
+    if (targetLength <= static_cast<ssize_t>(ServerLinkPrefix.size())
+        || std::string_view(target, ServerLinkPrefix.size()) != ServerLinkPrefix)
+    {
+        return nullptr;
+    }
+    target[targetLength] = '\0';
+    return target + ServerLinkPrefix.size();
+}
+
+// The file read ahead (mu::web::ReadWholeAhead) for the next fopen of it, on any thread: its path in the
+// mount and its bytes. One at a time.
+std::mutex g_readAheadLock;
+std::string g_readAheadFile;
+MemoryFile* g_readAhead = nullptr;
+
+MemoryFile* TakeReadAhead(const char* fileInMount)
+{
+    std::lock_guard lock(g_readAheadLock);
+    if (!g_readAhead || g_readAheadFile != fileInMount)
+    {
+        return nullptr;
+    }
+    g_readAheadFile.clear();
+    return std::exchange(g_readAhead, nullptr);
+}
+
+// For __wrap_fopen: a FILE reading the whole file from memory where `path` is a link in /game to a file
+// of the mount, opened to read, of up to WholeReadMostBytes (PageReadMostBytes where the page reads it,
+// or read ahead); otherwise null, and fopen opens it as usual.
+FILE* OpenWholeInMemory(const char* path, const char* mode)
+{
+    if (!g_wholeReads.load(std::memory_order_relaxed) || !path || !mode || mode[0] != 'r' || std::strchr(mode, '+'))
+    {
+        return nullptr;
+    }
+    char target[PATH_MAX];
+    const char* fileInMount = FileInMount(path, target);
+    if (!fileInMount)
+    {
+        return nullptr;
+    }
+    MemoryFile* memory = TakeReadAhead(fileInMount);
+    if (!memory)
+    {
+        memory = ReadIntoMemoryOnPage(fileInMount);
+    }
+    if (!memory)
+    {
+        const int fd = ::open(path, O_RDONLY);
+        if (fd < 0)
+        {
+            return nullptr;
+        }
+        memory = ReadIntoMemory(fd);
+        ::close(fd);
+    }
+    if (!memory)
+    {
+        return nullptr;
+    }
+    FILE* file = ::fopencookie(memory, "rb",
+                               {.read = ReadMemoryFile, .write = nullptr, .seek = SeekMemoryFile, .close = CloseMemoryFile});
+    if (!file)
+    {
+        std::free(memory);
+    }
+    return file;
+}
+
 bool WriteWholeFile(const std::string& path, const std::string& content)
 {
     const int fd = ::open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0666);
@@ -314,6 +590,43 @@ extern "C" EMSCRIPTEN_KEEPALIVE int MuWeb_FilesOnPageThread()
     return g_filesOnPageThread.load();
 }
 
+extern "C" FILE* __real_fopen(const char* path, const char* mode);
+
+// Every fopen of the program comes here (src/CMakeLists.txt links with -Wl,--wrap=fopen), std::ifstream's
+// and miniaudio's among them. Each read of a file of the mount is a round trip to the thread that runs it
+// (fetch-backend.js), tens of microseconds even with the file in memory there, and the game reads in
+// small pieces: stdio 1 KB at a time, std::ifstream 4 KB (a .jpg or .tga texture is read through
+// istreambuf_iterator), miniaudio seeking around a .wav. Read whole in one (OpenWholeInMemory), the rest
+// comes from memory: when monsters came into sight on a walk out of Lorencia, the page thread waited
+// for files in 1 and 9 profile samples instead of 9 and 11 (Edge, 2026-10-30).
+extern "C" FILE* __wrap_fopen(const char* path, const char* mode)
+{
+    if (FILE* inMemory = OpenWholeInMemory(path, mode))
+    {
+        return inMemory;
+    }
+    return __real_fopen(path, mode);
+}
+
+bool mu::web::ReadWholeAhead(const char* path)
+{
+    char target[PATH_MAX];
+    const char* fileInMount = path && g_wholeReads.load(std::memory_order_relaxed) ? FileInMount(path, target) : nullptr;
+    MemoryFile* file = fileInMount ? ReadIntoMemoryOnPage(fileInMount) : nullptr;
+    if (!file)
+    {
+        return false;
+    }
+    MemoryFile* earlier;
+    {
+        std::lock_guard lock(g_readAheadLock);
+        earlier = std::exchange(g_readAhead, file);
+        g_readAheadFile = fileInMount;
+    }
+    std::free(earlier);
+    return true;
+}
+
 bool mu::web::MountGameFiles()
 {
     if (::mkdir(GameDir, 0777) != 0)
@@ -332,6 +645,14 @@ bool mu::web::MountGameFiles()
     std::free(pageFolder);
 
     g_filesOnPageThread = MuWeb_PageWantsFilesOnPageThread();
+    g_wholeReads = MuWeb_PageWantsWholeReads() != 0;
+    if (g_filesOnPageThread && g_wholeReads)
+    {
+        g_pageReads = MuWeb_SetUpPageReads() != 0;
+        std::printf("Web file system: files the game opens whole come %s\n",
+                    g_pageReads ? "through the service worker while the page runs"
+                                : "by synchronous requests (?syncreads)");
+    }
     std::thread worker(SetUpMount);
     while (g_mountState.load() == 0)
     {

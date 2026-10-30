@@ -130,8 +130,17 @@ void CPetInfoWindow::Release()
     }
 }
 
+bool CPetInfoWindow::IsAvailable()
+{
+    return Hero != nullptr && gCharacterManager.GetBaseClass(Hero->Class) == CLASS_DARK_LORD;
+}
+
 void CPetInfoWindow::Show(bool bShow)
 {
+    // Every way in (C's button, CSystem::Show, the debug console's "$win pet") ends here.
+    if (bShow && !IsAvailable())
+        bShow = false;
+
     mu::ui::window::CObject::Show(bShow);
     if (m_RmlView.Document())
     {

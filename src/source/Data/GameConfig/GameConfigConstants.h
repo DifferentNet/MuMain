@@ -55,6 +55,8 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyControls[] = L"Controls";
     // MU Moldova: the on-screen controls' size in percent (Options -> Interface, Button size).
     inline constexpr wchar_t CfgKeyTouchButtonSize[] = L"TouchButtonSize";
+    // MU Moldova: whether the game reads a gamepad (Options -> Interface, Gamepad).
+    inline constexpr wchar_t CfgKeyGamepad[] = L"Gamepad";
     // Animates characters on worker threads when many are in view. Off unless set here or
     // started with --enable-taskpool; manual config.ini edit only.
     inline constexpr wchar_t CfgKeyEnableAnimationTaskPool[] = L"EnableAnimationTaskPool";
@@ -145,6 +147,9 @@ namespace CfgDefaults
     inline constexpr int CfgDefaultTouchButtonSize = 100;
     inline constexpr int CfgMinTouchButtonSize = 70;
     inline constexpr int CfgMaxTouchButtonSize = 150;
+    // On: a pad plugged in plays. Off for a pad that Steam Input or the handheld's own software
+    // already turns into a mouse and keys, which would otherwise press twice.
+    inline constexpr bool CfgDefaultGamepad = true;
 
     // Bounds GameConfig clamps to, on load and on set. Below 75% text gets too small to read;
     // above 150% a docked panel no longer fits a small window.

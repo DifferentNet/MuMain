@@ -479,6 +479,19 @@
 							</div>
 						</div>
 					</div>
+					<div class="opt-row">
+						<span class="opt-label">{{gamepad_row_label}}</span>
+						<div class="opt-control">
+							<div class="option-dropdown">
+								<div class="option-dropdown-value" data-class-open="open_dropdown == 11" data-event-click="option_toggle_dropdown(11)">{{gamepad_value_label}}<div class="opt-caret"></div></div>
+								<div class="option-dropdown-list" data-class-hidden="open_dropdown != 11">
+									<div class="option-dropdown-option" data-for="label : gamepad_labels"
+									     data-class-selected="it_index == gamepad_index"
+									     data-event-click="option_dropdown_option_click(11, it_index)">{{label}}</div>
+								</div>
+							</div>
+						</div>
+					</div>
 					<div class="opt-row opt-toggle-row" data-event-click="option_toggle_overhead_player_names">
 						<span class="opt-label">{{overhead_player_names_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="overhead_player_names"><div class="opt-toggle-knob"></div></div></div>

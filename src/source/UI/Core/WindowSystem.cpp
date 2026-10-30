@@ -823,6 +823,12 @@ void CSystem::Show(DWORD dwKey)
         return;
     }
 
+    // MU Moldova: the pet window is the Dark Lord's only; without this it would still open C and close neighbours.
+    if (dwKey == INTERFACE_PET && !CPetInfoWindow::IsAvailable())
+    {
+        return;
+    }
+
     UI::Placement::CloseForOpening(dwKey);
 
     if (dwKey == INTERFACE_FRIEND)

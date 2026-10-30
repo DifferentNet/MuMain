@@ -250,6 +250,65 @@
     const configure = GPUCanvasContext.prototype.configure;
     const unconfigure = GPUCanvasContext.prototype.unconfigure;
     const getCurrentTexture = GPUCanvasContext.prototype.getCurrentTexture;
+    // Picture checks: the screen stayed black until a tap on the game even with the setup above (the
+    // same Pixel, 2026-10-30). Every 5 s for the first minute after the game first sets the picture up,
+    // and at the first tap on the game, the log says how many frames the game drew, how bright the
+    // last one is (0 is black) and how long the browser took to its next frame: a black frame means
+    // the game draws black; a bright one, while the screen is black, means the browser doesn't show it.
+    const PICTURE_CHECK_MS = 5000;
+    const PICTURE_CHECKS = 12;
+    const BROWSER_FRAME_WAIT_MS = 2000;
+    const probe = document.createElement("canvas");
+    probe.width = 16;
+    probe.height = 8;
+    const probeContext = probe.getContext("2d", { willReadFrequently: true });
+    let gameFrames = 0;
+    let pictureCheck = null;          // the check under way: { when, frames, brightness, browserFrame }
+    let pictureChecksStarted = 0;     // performance.now() of the game's first picture setup
+    function pictureBrightness(source) {
+      try {
+        probeContext.clearRect(0, 0, probe.width, probe.height);
+        probeContext.drawImage(source, 0, 0, probe.width, probe.height);
+        const pixels = probeContext.getImageData(0, 0, probe.width, probe.height).data;
+        let sum = 0;
+        for (let i = 0; i < pixels.length; i += 4) sum += pixels[i] + pixels[i + 1] + pixels[i + 2];
+        return String(Math.round(sum / (pixels.length / 4) / 3));
+      } catch (e) {
+        return "unknown (" + (e && e.message || e) + ")";
+      }
+    }
+    function finishPictureCheck(check) {
+      if (pictureCheck !== check || check.brightness === undefined || check.browserFrame === undefined) return;
+      pictureCheck = null;
+      appendLog(`Picture check (${check.when}): the game drew ${check.frames} frames, the last ${check.brightness} ` +
+                `bright of 255; the browser's next frame ${check.browserFrame}; page ${document.visibilityState}` +
+                (document.hasFocus() ? ", focused" : ", not focused"));
+    }
+    function startPictureCheck(when) {
+      if (pictureCheck) return false;
+      const check = pictureCheck = { when, frames: gameFrames };
+      gameFrames = 0;
+      const started = performance.now();
+      requestAnimationFrame(() => {
+        if (check.browserFrame !== undefined) return;
+        check.browserFrame = `after ${Math.round(performance.now() - started)} ms`;
+        finishPictureCheck(check);
+      });
+      setTimeout(() => {
+        if (check.browserFrame === undefined) check.browserFrame = `none in ${BROWSER_FRAME_WAIT_MS / 1000} s`;
+        if (check.brightness === undefined) check.brightness = "unknown (no frame)";
+        finishPictureCheck(check);
+      }, BROWSER_FRAME_WAIT_MS);
+      return true;
+    }
+    function secondsAfterTheGame() {
+      return `${Math.round((performance.now() - pictureChecksStarted) / 1000)} s after the game`;
+    }
+    let tapChecked = false;
+    canvas.addEventListener("pointerdown", () => {
+      if (tapChecked || !pictureChecksStarted) return;
+      if (startPictureCheck(`first tap on the game, ${secondsAfterTheGame()}`)) tapChecked = true;
+    });
     GPUCanvasContext.prototype.configure = function (configuration) {
       configure.call(this, configuration);
       canvasSetups.set(this, configuration);
@@ -257,6 +316,10 @@
       appendLog(`Picture set up by the game: ${this.canvas.width}x${this.canvas.height}`);
       setUpAgainTimers.forEach(clearTimeout);
       setUpAgainTimers = PICTURE_SETUP_AGAIN_MS.map((ms) => setTimeout(() => setUpPictureAgain(`${ms / 1000} s after the game`), ms));
+      if (!pictureChecksStarted) {
+        pictureChecksStarted = performance.now();
+        for (let i = 1; i <= PICTURE_CHECKS; i++) setTimeout(() => startPictureCheck(secondsAfterTheGame()), i * PICTURE_CHECK_MS);
+      }
     };
     if (unconfigure) {
       GPUCanvasContext.prototype.unconfigure = function () {
@@ -275,6 +338,16 @@
         } catch (e) {
           appendLog(`Picture not set up again (${reason}): ${e && e.message || e}`, true);
         }
+      }
+      gameFrames++;
+      const check = pictureCheck;
+      if (check && check.brightness === undefined && !check.measuring) {
+        check.measuring = true;
+        // Once the game's turn ends, so with its frame drawn into this texture and handed over.
+        queueMicrotask(() => {
+          check.brightness = pictureBrightness(this.canvas);
+          finishPictureCheck(check);
+        });
       }
       return getCurrentTexture.call(this);
     };
@@ -1231,12 +1304,13 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     // the first time holds it until it is here: a monster coming into sight reads ~26 files, ~45 ms
     // each from the server, and froze the game for over a second; kept on the device, 0.08 s
     // (2026-10-30). The service worker keeps them (sw.js), so it is needed, as are the game's reads
-    // going through it (a worker's, not Safari's page thread). A file already kept is left alone, a
+    // going through it (a worker's, and the page thread's in Safari, WebFileSystem.cpp g_pageReads, not
+    // with ?syncreads). A file already kept is left alone, a
     // map pack downloading goes first, and the game's own downloads come before these. Not on phones
     // and tablets (their data plans and storage); with sound or music off in Options, not those
     // files. index.html?prefetch downloads them on any device, ?noprefetch on none.
     const backgroundDownloads = pageParams.has("prefetch") ||
-      (!pageParams.has("noprefetch") && !phone && !filesOnPageThread);
+      (!pageParams.has("noprefetch") && !phone && !(filesOnPageThread && pageParams.has("syncreads")));
     const BACKGROUND_DOWNLOADS = 4;   // files downloading at once
     // The ones a game reads most often first: what comes into sight (monsters, NPCs, armour,
     // weapons, skill effects), then windows, sounds, music, then the rest.

@@ -14967,6 +14967,15 @@
   <data name="TouchButtonSizeRow" xml:space="preserve">
     <value>Размер кнопок</value>
   </data>
+  <data name="GamepadRow" xml:space="preserve">
+    <value>Геймпад</value>
+  </data>
+  <data name="GamepadOn" xml:space="preserve">
+    <value>Вкл.</value>
+  </data>
+  <data name="GamepadOff" xml:space="preserve">
+    <value>Выкл.</value>
+  </data>
   <data name="ControlsTouch" xml:space="preserve">
     <value>Сенсорный экран</value>
   </data>

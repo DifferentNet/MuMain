@@ -141,6 +141,10 @@ internal sealed class GameClient : IAsyncDisposable
         return ui.GetProperty("windows").EnumerateArray().Select(window => window.GetString()!).ToList();
     }
 
+    /// <summary>Whether a text field has the keys, so <c>type</c> reaches it.</summary>
+    public async Task<bool> IsTypingAsync()
+        => (await this.SendAsync("ui")).TryGetProperty("typing", out var typing) && typing.GetBoolean();
+
     /// <summary>Whether <c>ui</c> reports the element <paramref name="name"/>, i.e. it is shown now.</summary>
     public async Task<bool> HasElementAsync(string name)
         => (await this.SendAsync("ui")).GetProperty("elements").TryGetProperty(name, out _);

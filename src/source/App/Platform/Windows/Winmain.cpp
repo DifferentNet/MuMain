@@ -1790,6 +1790,8 @@ bool RouteActionInput(SDL_Event& event, bool synthetic, bool& propagates)
         propagates = Core::Input::RouteToUi(event, g_sdlWindow);
         return true;
     case SDL_EVENT_KEY_DOWN:
+        if (!synthetic && !event.key.repeat)
+            Core::Input::RecordKeyPressEdge(event.key.scancode);
         propagates = Core::Input::RouteToUi(event, g_sdlWindow);
 #if !defined(_WIN32)
         // Physical Windows messages already handle these keys; SDL-only paths
@@ -2546,6 +2548,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     }
     // Game controllers (an Xbox pad, a Steam Deck): UI/HUD/GamepadControls plays them.
     Core::Input::Gamepad::Init();
+    Core::Input::Gamepad::SetEnabled(GameConfig::GetInstance().GetGamepad());
 
 #ifndef _WIN32
     // Install POSIX crash-diagnostic signal handlers. After SDL_Init (R8
