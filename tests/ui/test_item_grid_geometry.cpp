@@ -1,6 +1,9 @@
 #include "doctest.h"
 #include "UI/Inventory/ItemGridGeometry.h"
 
+#include <cmath>
+
+using UI::Items::AnchoredTargetPoint;
 using UI::Items::AnchoredTopLeft;
 using UI::Items::GridGeometry;
 using UI::Items::PickupAnchor;
@@ -95,4 +98,47 @@ TEST_CASE("a dragged item keeps its hold across grid pitches")
         CHECK(left == 1000 - offset);
         CHECK(top == 1000 - offset);
     }
+}
+
+TEST_CASE("a dragged item goes to the cell its top-left square covers the most")
+{
+    // A grid laid out off whole pixels, 32 px cells (20 at 1.6x), like the trade window's.
+    const GridGeometry grid{418.7f, 260.3f, 32.f, 32.f, 8, 4};
+    int x = 0;
+    int y = 0;
+    int column = -1;
+    int row = -1;
+
+    // Held by its middle and put down with the pointer on the middle of each cell: that cell, the
+    // first row and column included. The item's top-left corner lies on the cell border then, a
+    // pixel outside the grid on its first column.
+    const float holds[] = {15.f / 32.f, 0.5f, 17.f / 32.f};
+    for (const float hold : holds)
+    {
+        const PickupAnchor anchor{hold, hold};
+        for (int cell = 0; cell < 4; ++cell)
+        {
+            const auto square = grid.CellsRect(cell, cell, 1, 1);
+            AnchoredTargetPoint(std::floor(square.x + square.width / 2.f), std::floor(square.y + square.height / 2.f),
+                                anchor, grid.PitchX(), grid.PitchY(), x, y);
+            REQUIRE(grid.CellAt(static_cast<float>(x), static_cast<float>(y), column, row));
+            CHECK(column == cell);
+            CHECK(row == cell);
+        }
+    }
+
+    // Held by its top-left corner, an item a third of a cell right of cell 2 still covers cell 2 the most.
+    const PickupAnchor corner{0.f, 0.f};
+    AnchoredTargetPoint(418.7f + 2 * 32.f + 10.f, 260.3f + 5.f, corner, 32.f, 32.f, x, y);
+    REQUIRE(grid.CellAt(static_cast<float>(x), static_cast<float>(y), column, row));
+    CHECK(column == 2);
+    CHECK(row == 0);
+
+    // A 2 x 2 item held by its middle (the original's equipment pickup): its top-left square is the
+    // cell up and left of the pointer, as the original's MouseX - (Width - 1) * 20 / 2.
+    const PickupAnchor middle{1.f, 1.f};
+    AnchoredTargetPoint(418.7f + 3 * 32.f + 1.f, 260.3f + 2 * 32.f + 1.f, middle, 32.f, 32.f, x, y);
+    REQUIRE(grid.CellAt(static_cast<float>(x), static_cast<float>(y), column, row));
+    CHECK(column == 2);
+    CHECK(row == 1);
 }

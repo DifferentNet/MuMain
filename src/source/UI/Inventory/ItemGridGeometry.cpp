@@ -50,4 +50,11 @@ void AnchoredTopLeft(float pointerX, float pointerY, const PickupAnchor& anchor,
     left = static_cast<int>(std::lround(pointerX - anchor.column * pitchX));
     top = static_cast<int>(std::lround(pointerY - anchor.row * pitchY));
 }
+
+void AnchoredTargetPoint(float pointerX, float pointerY, const PickupAnchor& anchor, float pitchX, float pitchY,
+                         int& x, int& y)
+{
+    x = static_cast<int>(std::floor(pointerX + (0.5f - anchor.column) * pitchX));
+    y = static_cast<int>(std::floor(pointerY + (0.5f - anchor.row) * pitchY));
+}
 } // namespace UI::Items

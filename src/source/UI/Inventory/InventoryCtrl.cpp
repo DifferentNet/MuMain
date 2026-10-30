@@ -177,6 +177,16 @@ POINT mu::ui::window::CPickedItem::TopLeftIn(const CInventoryCtrl* grid, int poi
     return {left, top};
 }
 
+POINT mu::ui::window::CPickedItem::TargetPointIn(const CInventoryCtrl* grid, int pointerX, int pointerY) const
+{
+    const UI::Items::GridGeometry geometry = grid ? grid->Geometry() : UI::Items::GridGeometry{};
+    int x = 0;
+    int y = 0;
+    UI::Items::AnchoredTargetPoint(static_cast<float>(pointerX), static_cast<float>(pointerY), m_Anchor,
+                                   geometry.PitchX(), geometry.PitchY(), x, y);
+    return {x, y};
+}
+
 SIZE mu::ui::window::CPickedItem::SizeIn(const CInventoryCtrl* grid) const
 {
     if (m_pPickedItem == nullptr)
@@ -214,9 +224,9 @@ bool mu::ui::window::CPickedItem::GetTargetPos(CInventoryCtrl* pDest, int& iTarg
     if (pDest != nullptr)
     {
         const POINT pointer = pDest->PointerPos();
-        const POINT itemTopLeft = TopLeftIn(pDest, pointer.x, pointer.y);
+        const POINT target = TargetPointIn(pDest, pointer.x, pointer.y);
 
-        return pDest->GetSquarePosAtPt(itemTopLeft.x, itemTopLeft.y, iTargetColumnX, iTargetRowY);
+        return pDest->GetSquarePosAtPt(target.x, target.y, iTargetColumnX, iTargetRowY);
     }
     return false;
 }
@@ -1134,7 +1144,9 @@ void mu::ui::window::CInventoryCtrl::UpdateCells()
     const ITEM_ATTRIBUTE* pItemAttr = &ItemAttribute[pPickItem->Type];
     int iColumnX = 0, iRowY = 0;
     int nItemColumn = pItemAttr->Width, nItemRow = pItemAttr->Height;
-    m_Geometry.CellOf(static_cast<float>(itemTopLeft.x), static_cast<float>(itemTopLeft.y), iColumnX, iRowY);
+    // The same cell as the drop (CPickedItem::GetTargetPos).
+    const POINT target = ms_pPickedItem->TargetPointIn(this, pointer.x, pointer.y);
+    m_Geometry.CellOf(static_cast<float>(target.x), static_cast<float>(target.y), iColumnX, iRowY);
 
     bool bWarning = false;
     if (iColumnX < 0 && iColumnX >= -nItemColumn)
