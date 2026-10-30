@@ -68,4 +68,9 @@ bool OpenSkillPicker();
 // menu or skill picker shuts, else the window on top closes or, with none open, the system menu
 // opens. Off the world it is Esc.
 void PressBack();
+
+// A tap on a window drawn over another changed what lies under the pointer the tap left (the help's
+// page turned over the inventory): that pointer leaves the window once the finger is up, so the window
+// beneath shows no tooltip for an item nobody tapped. A pointer the mouse or the pad moved stays.
+void RestPointerOnLift();
 } // namespace UI::HUD::TouchControls

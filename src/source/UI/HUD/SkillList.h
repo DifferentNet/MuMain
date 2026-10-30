@@ -95,6 +95,16 @@ namespace mu::ui::window
         float GetHotKeySlotCooldownFraction(int iSlotIndex);
         float GetCurrentSkillCooldownFraction();
 
+        // The slot helpers follow the bar's set, which switches with the current skill (a cast from
+        // the MU Helper, too). The touch controls' skill buttons keep their set, so they ask by the
+        // hotkey itself (0-9): whether it shows a skill (an empty one or a pet command without a pet
+        // does not), its icon, its cooldown, whether it is the current skill, and the slot's click.
+        bool IsHotKeyShown(int iHotKey);
+        Rml::String GetHotKeyIconDecorator(int iHotKey);
+        float GetHotKeyCooldownFraction(int iHotKey);
+        bool IsHotKeyCurrentSkill(int iHotKey);
+        void SelectHotKey(int iHotKey);
+
         // Naming trap: despite the name, this is whether the compact hotkey row shows its "upper"
         // set (6-9,0 vs 1-5), NOT whether the grid popup is open. Use IsSkillGridOpen() for that --
         // binding grid visibility to this method is the bug to avoid.
@@ -145,6 +155,8 @@ namespace mu::ui::window
         void LoadImages();
         void UnloadImages();
         bool IsArrayUp(BYTE bySkill);
+        // The hotkey (0-9) the row's slot (0-4) shows in the bar's set, or -1.
+        int SlotHotKey(int iSlotIndex) const;
         bool IsArrayIn(BYTE bySkill);
         void UseHotKey(int iHotKey);
 

@@ -968,7 +968,7 @@
     <comment>legacy_id=240</comment>
   </data>
   <data name="close" xml:space="preserve">
-    <value>close</value>
+    <value>Close</value>
     <comment>legacy_id=241</comment>
   </data>
   <data name="Warehouse Lock/Unlock" xml:space="preserve">
@@ -15356,6 +15356,9 @@
   <data name="TouchItemEquip" xml:space="preserve">
     <value>Equip</value>
   </data>
+  <data name="TouchItemUnequip" xml:space="preserve">
+    <value>Take off</value>
+  </data>
   <data name="TouchItemMove" xml:space="preserve">
     <value>Move</value>
   </data>
@@ -15387,19 +15390,19 @@
     <value>Tap the world: walk there, talk to an NPC, attack a monster</value>
   </data>
   <data name="TouchHelpStick" xml:space="preserve">
-    <value>Left of the screen: drag to walk</value>
+    <value>Left of the screen: drag to walk (this breaks off a fight)</value>
   </data>
   <data name="TouchHelpAttack" xml:space="preserve">
-    <value>Attack: hold to attack</value>
+    <value>Attack: tap to hit the nearest monster once, hold to keep fighting</value>
   </data>
   <data name="TouchHelpSkills" xml:space="preserve">
-    <value>Skill buttons: tap to use one; the Skills button sets them</value>
+    <value>Skill buttons: tap to use a skill once, hold to repeat it</value>
   </data>
   <data name="TouchHelpPickUp" xml:space="preserve">
-    <value>Pick up: lifts the items nearby</value>
+    <value>Pick up: tap for the nearest item, hold to keep picking up</value>
   </data>
   <data name="TouchHelpAuto" xml:space="preserve">
-    <value>Auto: MU Helper on and off</value>
+    <value>Auto: MU Helper on and off; walking with the stick moves where it hunts</value>
   </data>
   <data name="TouchHelpPotions" xml:space="preserve">
     <value>Q and W: drink the potions</value>
@@ -15416,38 +15419,83 @@
   <data name="TouchHelpView" xml:space="preserve">
     <value>Menu, PC / phone view: the PC layout and back</value>
   </data>
+  <data name="HelpControlsWalkHit" xml:space="preserve">
+    <value>Attack or a skill on the move: the hero stops to hit, then walks on</value>
+  </data>
+  <data name="HelpControlsAutoAttack" xml:space="preserve">
+    <value>A tap walks up to the target; with Auto Attack on, it keeps fighting</value>
+  </data>
+  <data name="HelpControlsSkillsSelf" xml:space="preserve">
+    <value>Buffs and heals go on you, summons appear beside you</value>
+  </data>
+  <data name="TouchHelpStickGate" xml:space="preserve">
+    <value>After a gate or a map change, lift your finger to walk again</value>
+  </data>
+  <data name="TouchHelpSkillsSet" xml:space="preserve">
+    <value>The Skills button puts skills on the buttons</value>
+  </data>
+  <data name="TouchHelpNextHint" xml:space="preserve">
+    <value>Tap here: next page</value>
+  </data>
+  <data name="TouchHelpCloseHint" xml:space="preserve">
+    <value>Tap here: close</value>
+  </data>
   <data name="PadHelpTitle" xml:space="preserve">
     <value>Gamepad (Xbox layout)</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Left stick: walk. Right stick: the pointer, slower over a window</value>
+    <value>Left stick: walk (this breaks off a fight). Right stick: the pointer</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
-    <value>A: hold to attack; with the pointer on a window or a button, A clicks it</value>
+    <value>A: tap to hit the nearest monster once, hold to keep fighting</value>
   </data>
   <data name="PadHelpSkills" xml:space="preserve">
-    <value>X, Y, RB, LT, D-pad down: the five skill buttons (tap: pick, hold: cast)</value>
+    <value>X, Y, RB, LT, D-pad down: the five skill buttons</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>L3 (press the left stick): set the skill buttons</value>
+    <value>LS (click the left stick in, centred): put skills on the buttons</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>B: back, closes the window on top (with none open, the system menu)</value>
   </data>
   <data name="PadHelpPickUp" xml:space="preserve">
-    <value>LB: hold to pick up. D-pad up: MU Helper on and off</value>
+    <value>LB: tap to pick up the nearest item, hold to keep picking up</value>
   </data>
   <data name="PadHelpPotions" xml:space="preserve">
     <value>D-pad left and right: potions Q and W</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>RT: click at the pointer (talk to an NPC, walk there), hold to drag. R3: right click</value>
+    <value>RT: click at the pointer (talk to an NPC, walk there), hold to drag</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
-    <value>Menu: every window (stick or D-pad to choose, A opens, B closes). View: the map</value>
+    <value>Menu: every window (stick or D-pad to choose, A opens, B closes)</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
-    <value>Login and character screens: the sticks move the pointer, A clicks, B is Esc, Menu is Enter</value>
+    <value>Login and character screens: the sticks move the pointer</value>
+  </data>
+  <data name="PadHelpScreensKeys" xml:space="preserve">
+    <value>There A clicks, B is Esc, Menu is Enter</value>
+  </data>
+  <data name="PadHelpStickGate" xml:space="preserve">
+    <value>After a gate or a map change, let go of the stick to walk again</value>
+  </data>
+  <data name="PadHelpClickA" xml:space="preserve">
+    <value>With the pointer on a window or a button, A clicks it</value>
+  </data>
+  <data name="PadHelpSkillsUse" xml:space="preserve">
+    <value>Tap to use a skill once, hold to repeat it</value>
+  </data>
+  <data name="PadHelpAuto" xml:space="preserve">
+    <value>D-pad up: MU Helper on and off (the left stick moves where it hunts). View: the map</value>
+  </data>
+  <data name="PadHelpRightClick" xml:space="preserve">
+    <value>RS (click the right stick in, centred): right click at the pointer</value>
+  </data>
+  <data name="PadHelpDialog" xml:space="preserve">
+    <value>A question (trade, party): A or Menu is Yes after a second, B is No</value>
+  </data>
+  <data name="PadHelpPagesHint" xml:space="preserve">
+    <value>LB, RB: turn the pages. B: close</value>
   </data>
   <data name="PadOpen" xml:space="preserve">
     <value>Open</value>
@@ -15483,7 +15531,7 @@
     <value>Choose</value>
   </data>
   <data name="PadConnected" xml:space="preserve">
-    <value>Gamepad: A attacks, X, Y, RB, LT and D-pad down cast skills, L3 sets them, Menu opens every window (its Help lists all the buttons)</value>
+    <value>Gamepad: A attacks, X, Y, RB, LT and D-pad down cast skills, LS sets them, Menu opens every window (its Help lists all the buttons)</value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
     <value>Pick a skill with the pointer and A, then press X, Y, RB, LT or D-pad down to put it there</value>
@@ -15501,7 +15549,13 @@
     <value>space</value>
   </data>
   <data name="PadHelpKeyboard" xml:space="preserve">
-    <value>Text fields (chat, login): an on-screen keyboard opens. D-pad or stick: keys, A: press, X: erase, Y: space, LT: shift, RT: symbols, View: English/Russian, LB/RB: cursor, Menu: Enter, B: close</value>
+    <value>Text fields (chat, login): an on-screen keyboard opens</value>
+  </data>
+  <data name="PadHelpKeyboardKeys" xml:space="preserve">
+    <value>D-pad or stick: keys. A: press, X: erase, Y: space, Menu: Enter</value>
+  </data>
+  <data name="PadHelpKeyboardMore" xml:space="preserve">
+    <value>LT: shift, RT: symbols, View: English/Russian, LB/RB: cursor, B: close</value>
   </data>
   <data name="MuHelperSlotClearHint" xml:space="preserve">
     <value>Hold a skill slot to clear it (R3 on a gamepad)</value>

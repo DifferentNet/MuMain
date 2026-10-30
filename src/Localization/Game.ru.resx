@@ -968,7 +968,7 @@
     <comment>legacy_id=240</comment>
   </data>
   <data name="close" xml:space="preserve">
-    <value>закрывать</value>
+    <value>Закрыть</value>
     <comment>legacy_id=241</comment>
   </data>
   <data name="Warehouse Lock/Unlock" xml:space="preserve">
@@ -14979,6 +14979,9 @@
   <data name="TouchItemEquip" xml:space="preserve">
     <value>Надеть</value>
   </data>
+  <data name="TouchItemUnequip" xml:space="preserve">
+    <value>Снять</value>
+  </data>
   <data name="TouchItemMove" xml:space="preserve">
     <value>Переложить</value>
   </data>
@@ -15010,19 +15013,19 @@
     <value>Нажатие в мире: идти туда, говорить с NPC, бить монстра</value>
   </data>
   <data name="TouchHelpStick" xml:space="preserve">
-    <value>Левая часть экрана: ведите пальцем, чтобы идти</value>
+    <value>Левая часть экрана: ведите пальцем, чтобы идти (бой прервётся)</value>
   </data>
   <data name="TouchHelpAttack" xml:space="preserve">
-    <value>Атака: удерживайте, чтобы атаковать</value>
+    <value>Атака: нажмите — ударить ближайшего монстра, держите — продолжать бой</value>
   </data>
   <data name="TouchHelpSkills" xml:space="preserve">
-    <value>Кнопки умений: нажмите, чтобы применить; «Умения» расставляет их</value>
+    <value>Кнопки умений: нажмите — применить один раз, держите — повторять</value>
   </data>
   <data name="TouchHelpPickUp" xml:space="preserve">
-    <value>Подобрать: поднимает вещи рядом</value>
+    <value>Поднять: нажмите — ближайшая вещь, держите — собирать дальше</value>
   </data>
   <data name="TouchHelpAuto" xml:space="preserve">
-    <value>Авто: включает и выключает MU Helper</value>
+    <value>Авто: включает и выключает MU Helper; стик меняет место его охоты</value>
   </data>
   <data name="TouchHelpPotions" xml:space="preserve">
     <value>Q и W: выпить зелья</value>
@@ -15039,38 +15042,83 @@
   <data name="TouchHelpView" xml:space="preserve">
     <value>Меню, «Вид ПК / телефон»: раскладка ПК и обратно</value>
   </data>
+  <data name="HelpControlsWalkHit" xml:space="preserve">
+    <value>Атака или умение на ходу: герой остановится для удара и пойдёт дальше</value>
+  </data>
+  <data name="HelpControlsAutoAttack" xml:space="preserve">
+    <value>Герой сам подойдёт к цели; с автоатакой нажатие продолжает бой</value>
+  </data>
+  <data name="HelpControlsSkillsSelf" xml:space="preserve">
+    <value>Баффы и лечение — на себя, призванные появляются рядом с вами</value>
+  </data>
+  <data name="TouchHelpStickGate" xml:space="preserve">
+    <value>После ворот или смены карты отпустите палец, чтобы снова идти</value>
+  </data>
+  <data name="TouchHelpSkillsSet" xml:space="preserve">
+    <value>Кнопка «Умения» расставляет умения по кнопкам</value>
+  </data>
+  <data name="TouchHelpNextHint" xml:space="preserve">
+    <value>Нажмите сюда: следующая страница</value>
+  </data>
+  <data name="TouchHelpCloseHint" xml:space="preserve">
+    <value>Нажмите сюда: закрыть</value>
+  </data>
   <data name="PadHelpTitle" xml:space="preserve">
     <value>Геймпад (раскладка Xbox)</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Левый стик: ходьба. Правый стик: курсор, над окном медленнее</value>
+    <value>Левый стик: идти (бой прервётся). Правый стик: курсор</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
-    <value>A: удерживайте для атаки; если курсор на окне или кнопке, A нажимает её</value>
+    <value>A: нажмите — ударить ближайшего монстра, держите — продолжать бой</value>
   </data>
   <data name="PadHelpSkills" xml:space="preserve">
-    <value>X, Y, RB, LT, крестовина вниз: пять кнопок умений (нажатие: выбрать, удержание: применять)</value>
+    <value>X, Y, RB, LT, крестовина вниз: пять кнопок умений</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>L3 (нажатие левого стика): расстановка умений по кнопкам</value>
+    <value>LS (нажмите левый стик, не наклоняя): расставить умения по кнопкам</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>B: назад, закрывает верхнее окно (если окон нет, системное меню)</value>
   </data>
   <data name="PadHelpPickUp" xml:space="preserve">
-    <value>LB: удерживайте, чтобы подбирать. Крестовина вверх: MU Helper вкл/выкл</value>
+    <value>LB: нажмите — поднять ближайшую вещь, держите — собирать дальше</value>
   </data>
   <data name="PadHelpPotions" xml:space="preserve">
     <value>Крестовина влево и вправо: зелья Q и W</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>RT: клик по курсору (разговор с NPC, идти туда), удерживайте, чтобы перетащить. R3: правый клик</value>
+    <value>RT: клик по курсору (разговор с NPC, идти туда), держите — перетащить</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
-    <value>Menu: все окна (стик или крестовина выбирают, A открывает, B закрывает). View: карта</value>
+    <value>Menu: все окна (стик или крестовина выбирают, A открывает, B закрывает)</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
-    <value>Экраны входа и выбора персонажа: стики двигают курсор, A кликает, B = Esc, Menu = Enter</value>
+    <value>Экраны входа и выбора персонажа: стики двигают курсор</value>
+  </data>
+  <data name="PadHelpScreensKeys" xml:space="preserve">
+    <value>Там A кликает, B = Esc, Menu = Enter</value>
+  </data>
+  <data name="PadHelpStickGate" xml:space="preserve">
+    <value>После ворот или смены карты отпустите стик, чтобы снова идти</value>
+  </data>
+  <data name="PadHelpClickA" xml:space="preserve">
+    <value>Если курсор на окне или кнопке, A нажимает её</value>
+  </data>
+  <data name="PadHelpSkillsUse" xml:space="preserve">
+    <value>Нажмите — применить один раз, держите — повторять</value>
+  </data>
+  <data name="PadHelpAuto" xml:space="preserve">
+    <value>Крестовина вверх: MU Helper вкл/выкл (левый стик меняет место охоты). View: карта</value>
+  </data>
+  <data name="PadHelpRightClick" xml:space="preserve">
+    <value>RS (нажмите правый стик, не наклоняя): правый клик по курсору</value>
+  </data>
+  <data name="PadHelpDialog" xml:space="preserve">
+    <value>Вопрос (обмен, группа): A или Menu — да (через секунду), B — нет</value>
+  </data>
+  <data name="PadHelpPagesHint" xml:space="preserve">
+    <value>LB, RB: листать страницы. B: закрыть</value>
   </data>
   <data name="PadOpen" xml:space="preserve">
     <value>Открыть</value>
@@ -15106,7 +15154,7 @@
     <value>Выбрать</value>
   </data>
   <data name="PadConnected" xml:space="preserve">
-    <value>Геймпад: A атакует, X, Y, RB, LT и крестовина вниз применяют умения, L3 расставляет их, Menu открывает все окна (там «Помощь» со всеми кнопками)</value>
+    <value>Геймпад: A атакует, X, Y, RB, LT и крестовина вниз применяют умения, LS расставляет их, Menu открывает все окна (там «Помощь» со всеми кнопками)</value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
     <value>Выберите умение курсором и A, потом нажмите X, Y, RB, LT или крестовину вниз, куда его поставить</value>
@@ -15124,7 +15172,13 @@
     <value>пробел</value>
   </data>
   <data name="PadHelpKeyboard" xml:space="preserve">
-    <value>Поля ввода (чат, вход): открывается экранная клавиатура. Крестовина или стик: клавиши, A: нажать, X: стереть, Y: пробел, LT: заглавные, RT: символы, View: английский/русский, LB/RB: курсор, Menu: Enter, B: закрыть</value>
+    <value>Поля ввода (чат, вход): открывается экранная клавиатура</value>
+  </data>
+  <data name="PadHelpKeyboardKeys" xml:space="preserve">
+    <value>Крестовина или стик: клавиши. A: нажать, X: стереть, Y: пробел, Menu: Enter</value>
+  </data>
+  <data name="PadHelpKeyboardMore" xml:space="preserve">
+    <value>LT: заглавные, RT: символы, View: англ./рус., LB/RB: курсор, B: закрыть</value>
   </data>
   <data name="MuHelperSlotClearHint" xml:space="preserve">
     <value>Чтобы очистить ячейку навыка, удерживайте её (R3 на геймпаде)</value>

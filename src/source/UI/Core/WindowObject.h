@@ -49,6 +49,10 @@ namespace mu::ui::window
         // While the player types in a RmlUi field, keys go only to the window that claims the
         // field's document; every other window's keys and hotkeys wait (CManager::UpdateKeyEvent()).
         virtual bool TakesTypingFrom(const Rml::ElementDocument* document) const { return false; }
+        // Whether the pointer lies on this window. CManager gives the pointer to the topmost window
+        // whose UpdateMouseEvent() keeps it, so that window covers what is under the pointer; a modal
+        // dialog keeps the pointer wherever it is, and tells here whether it really covers that spot.
+        virtual bool IsPointerOnWindow() const { return true; }
         // A window drawn wholly by RmlUi whose hit box reads its #panel returns that document: a
         // theme's data-fit="fill" slot then sizes the #panel. How the content fills it is the theme's.
         virtual Rml::ElementDocument* GetFillDocument() const { return nullptr; }

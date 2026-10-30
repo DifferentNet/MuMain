@@ -44,8 +44,8 @@ struct ButtonState
     std::uint32_t presses = 0;
 };
 
-// A stick's position past its dead zone, each axis -1 .. 1, x to the right and y down; (0, 0) inside
-// the dead zone. The length grows from 0 at the dead zone's edge to 1 at the rim.
+// A stick's position past its dead zone (GamepadStick.h), each axis -1 .. 1, x to the right and y
+// down; (0, 0) inside the dead zone. The length grows from 0 at the dead zone's edge to 1 at the rim.
 struct StickPosition
 {
     float x = 0.f;
@@ -54,7 +54,7 @@ struct StickPosition
 
 // Opens SDL's gamepad support, once SDL's video is up. A failure leaves the game without pads.
 // SDL then reports the pads already plugged in as added; in a browser a pad shows only once one of
-// its buttons is pressed (the page may not see it before).
+// its buttons is pressed (the page may not see it before), and that press counts as a tap.
 void Init();
 
 // Every event from the main loop: pads coming and going, their buttons and sticks, and the other
@@ -67,7 +67,8 @@ void ProcessEvent(const SDL_Event& event);
 void Poll();
 
 [[nodiscard]] bool IsConnected();
-// Whether a pad pressed a button or moved a stick since the last key, mouse button or finger press.
+// Whether a pad pressed a button or pushed a stick half way out since the last key, mouse button or
+// finger press. A worn stick drifting near its centre does not take the game from the mouse.
 [[nodiscard]] bool WasUsedLast();
 
 [[nodiscard]] const ButtonState& GetButton(Button button);

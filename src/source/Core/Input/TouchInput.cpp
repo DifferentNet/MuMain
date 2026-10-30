@@ -29,6 +29,8 @@ struct FingerSlot
 
 bool g_enabled = false;
 HitTest g_hitTest = nullptr;
+CarryQuery g_isCarrying = nullptr;
+EndTyping g_endTyping = nullptr;
 SDL_Window* g_window = nullptr;
 std::array<FingerSlot, MaxFingers> g_fingers{};
 std::array<ControlFinger, MaxControls> g_controls{};
@@ -83,9 +85,7 @@ void ReleaseControl(int controlId, float x, float y)
 
 void FingerDown(SDL_FingerID id, float x, float y, SDL_Window* window)
 {
-    FingerSlot* slot = FindFinger(id);
-    if (slot == nullptr)
-        slot = FreeFinger();
+    FingerSlot* slot = FreeFinger();
     if (slot == nullptr)
         return;
 
@@ -167,6 +167,16 @@ void SetHitTest(HitTest hitTest)
     g_hitTest = hitTest;
 }
 
+void SetCarryQuery(CarryQuery isCarrying)
+{
+    g_isCarrying = isCarrying;
+}
+
+void SetEndTyping(EndTyping endTyping)
+{
+    g_endTyping = endTyping;
+}
+
 bool ProcessEvent(const SDL_Event& event, SDL_Window* window)
 {
     switch (event.type)
@@ -176,6 +186,11 @@ bool ProcessEvent(const SDL_Event& event, SDL_Window* window)
     case SDL_EVENT_FINGER_UP:
     case SDL_EVENT_FINGER_CANCELED:
         break;
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        // A real mouse, or the pad's pointer: the pointer is theirs now, not where a finger left it.
+        if (event.button.which != SDL_TOUCH_MOUSEID)
+            Pointer::ForgetFinger();
+        return false;
     default:
         return false;
     }
@@ -195,6 +210,10 @@ bool ProcessEvent(const SDL_Event& event, SDL_Window* window)
     switch (event.type)
     {
     case SDL_EVENT_FINGER_DOWN:
+        // A finger id still in a slot lost its lift: let go of what it held before the slot is
+        // used again, or a control would stay held and the gesture wait for that finger forever.
+        if (FindFinger(id) != nullptr)
+            FingerUp(id, x, y, true, window);
         FingerDown(id, x, y, window);
         break;
     case SDL_EVENT_FINGER_MOTION:
@@ -210,15 +229,19 @@ bool ProcessEvent(const SDL_Event& event, SDL_Window* window)
     return true;
 }
 
-void BeginFrame(SDL_Window* window)
+void Tick(SDL_Window* window)
+{
+    if (g_enabled && window != nullptr)
+        Pointer::Tick(window, g_isCarrying != nullptr && g_isCarrying());
+}
+
+void BeginFrame(SDL_Window* /*window*/)
 {
     for (std::uint8_t& frames : g_tappedKeys)
     {
         if (frames > 0)
             --frames;
     }
-    if (g_enabled && window != nullptr)
-        Pointer::Tick(window);
 }
 
 void Reset()
@@ -231,10 +254,9 @@ void Reset()
     g_tappedKeys.fill(0);
 }
 
-void RestPointer()
+bool RestPointer()
 {
-    if (g_enabled)
-        Pointer::Rest(g_window);
+    return !g_enabled || Pointer::Rest(g_window);
 }
 
 const ControlFinger& Control(int controlId)
@@ -250,8 +272,11 @@ void SetKeyHeld(int virtualKey, bool held)
 
 void TapKey(int virtualKey)
 {
-    if (IsKeyIndex(virtualKey))
-        g_tappedKeys[virtualKey] = TapFrames;
+    if (!IsKeyIndex(virtualKey))
+        return;
+    if (g_endTyping != nullptr && virtualKey != VK_RETURN && virtualKey != VK_ESCAPE)
+        g_endTyping();
+    g_tappedKeys[virtualKey] = TapFrames;
 }
 
 bool IsKeyHeld(int virtualKey)

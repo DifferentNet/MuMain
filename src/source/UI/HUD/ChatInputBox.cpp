@@ -304,6 +304,16 @@ bool mu::ui::window::CChatInputBox::UpdateKeyEvent()
         return false;
     }
 
+    // The chat line open but let go of (a finger's tap on the world, a click on another window):
+    // Enter, and the phone's Chat button with it, types in it again; not from another text field.
+    if (IsVisible() && !HaveFocus() && !RmlUiRuntime::Instance().IsTextInputActive()
+        && mu::ui::window::IsPress(VK_RETURN))
+    {
+        FocusField("chat_field");
+        RestoreIMEStatus();
+        return false;
+    }
+
     const uint64_t currentTickCount = GetTickCount64();
     if (IsVisible() && HaveFocus() && mu::ui::window::IsPress(VK_RETURN)
         && m_lastChatTime < currentTickCount - ChatCooldownMs)

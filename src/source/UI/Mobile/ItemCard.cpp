@@ -38,6 +38,14 @@ void AskToDrop(const ITEM& item, std::function<void()> drop)
     mu::ui::window::g_pGenericConfirmDialog->Show(std::move(cfg));
 }
 
+// The card opens on the item the finger pressed, whose tooltip shows around it: the card goes to the
+// edge of the screen away from it, so the tooltip stays in view.
+GenericMenuConfig::Edge EdgeAwayFromPointer()
+{
+    const bool pointerOnRight = g_fWindowMouseX * 2.f >= static_cast<float>(WindowWidth);
+    return pointerOnRight ? GenericMenuConfig::Edge::Left : GenericMenuConfig::Edge::Right;
+}
+
 void AddButton(GenericMenuConfig& cfg, std::wstring label, std::function<void()> onClick)
 {
     if (!onClick)
@@ -53,6 +61,7 @@ void Show(Content content)
 {
     GenericMenuConfig cfg;
     cfg.title = ItemName(content.item);
+    cfg.edge = EdgeAwayFromPointer();
 
     AddButton(cfg, std::move(content.primaryLabel), std::move(content.primary));
     AddButton(cfg, I18N::Game::TouchItemHotkeyQ, std::move(content.putOnQ));

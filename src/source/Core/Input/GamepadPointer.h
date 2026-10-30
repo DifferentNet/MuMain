@@ -18,7 +18,8 @@ inline constexpr std::uint32_t MouseId = 0xFFFFFFFDu;
 
 // Once a frame while a stick plays the pointer: x and y (-1 .. 1, past the stick's dead zone) push
 // it that way, faster the further the stick leans; `precise` slows it (over a window's small
-// buttons). `seconds` is the frame's length.
+// buttons). `seconds` is the frame's length. After a resize or a turn of the phone it first puts the
+// pointer at the same share of the new size (SetButton() too, so a click lands in the window).
 void Move(SDL_Window* window, float x, float y, float seconds, bool precise);
 
 // Puts the pointer in the middle of the window: over the character, clear of the windows.

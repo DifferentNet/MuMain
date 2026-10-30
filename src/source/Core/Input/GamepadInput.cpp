@@ -2,13 +2,19 @@
 #include "Core/Input/GamepadInput.h"
 
 #include "Core/Input/GamepadPointer.h"
+#include "Core/Input/GamepadStick.h"
 #include "Core/Utilities/Log/MuLogger.h"
 
 #include <SDL3/SDL.h>
 
+#ifdef __EMSCRIPTEN__
+#include "Core/Platform/web/WebGamepad.h"
+#endif
+
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <optional>
 
 namespace Core::Input::Gamepad
@@ -17,8 +23,9 @@ namespace
 {
 // Pads served at once; a fifth is ignored until one goes.
 constexpr int MaxPads = 4;
-// A stick this close to its centre, as a share of its throw, is at rest: worn sticks drift.
-constexpr float StickDeadZone = 0.2f;
+// A stick moved this far from its centre, as a share of its throw, takes the game back from the
+// mouse: a drifting one wanders well short of it.
+constexpr float TakeOverLean = 0.5f;
 // A trigger presses past this share of its pull and lets go under the second: no chatter at the edge.
 constexpr float TriggerPressPull = 0.5f;
 constexpr float TriggerReleasePull = 0.3f;
@@ -35,8 +42,7 @@ struct Pad
     std::array<bool, ButtonCount> held{};
     std::array<float, SDL_GAMEPAD_AXIS_COUNT> axes{};
     // SDL's axis values at the last poll: only a change since then counts, so a stick held when the
-    // window lost the focus stays let go, and a worn one resting past the dead zone does not take
-    // the game back from the mouse.
+    // window lost the focus stays let go.
     std::array<Sint16, SDL_GAMEPAD_AXIS_COUNT> polled{};
 };
 
@@ -122,13 +128,18 @@ void OnTrigger(Pad& pad, Button trigger, float pull)
         SetPadButton(pad, trigger, false);
 }
 
-StickPosition PastDeadZone(float x, float y)
+bool IsLeftStickAxis(int axis)
 {
-    const float length = std::hypot(x, y);
-    if (length <= StickDeadZone)
-        return {};
-    const float scaled = std::min(1.f, (length - StickDeadZone) / (1.f - StickDeadZone));
-    return {x * scaled / length, y * scaled / length};
+    return axis == SDL_GAMEPAD_AXIS_LEFTX || axis == SDL_GAMEPAD_AXIS_LEFTY;
+}
+
+// How far the stick an axis belongs to leans from its centre, before any dead zone (0 .. 1 and a
+// little more on a diagonal).
+float RawLean(const Pad& pad, int axis)
+{
+    if (IsLeftStickAxis(axis))
+        return std::hypot(pad.axes[SDL_GAMEPAD_AXIS_LEFTX], pad.axes[SDL_GAMEPAD_AXIS_LEFTY]);
+    return std::hypot(pad.axes[SDL_GAMEPAD_AXIS_RIGHTX], pad.axes[SDL_GAMEPAD_AXIS_RIGHTY]);
 }
 
 // An axis's new place: a stick -1 .. 1, a trigger 0 .. 1.
@@ -141,7 +152,7 @@ void SetAxis(Pad& pad, int axis, float position)
         OnTrigger(pad, Button::LeftTrigger, position);
     else if (axis == SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)
         OnTrigger(pad, Button::RightTrigger, position);
-    else if (std::abs(position) > StickDeadZone)
+    else if (RawLean(pad, axis) > TakeOverLean)
         g_usedLast = true;
 }
 
@@ -156,6 +167,50 @@ void ReleasePad(Pad& pad)
         SetPadButton(pad, static_cast<Button>(button), false);
     pad.axes.fill(0.f);
 }
+
+// A press and its release at once, of a button no pad holds: the reader sees one tap.
+void Tap(Button button)
+{
+    ButtonState& state = g_buttons[static_cast<int>(button)];
+    if (state.held)
+        return;
+    ++state.presses;
+    g_usedLast = true;
+}
+
+#ifdef __EMSCRIPTEN__
+// The buttons of the browser's "standard" layout, in its order (mu::web::HeldStandardButtons()).
+constexpr Button StandardButtons[] = {
+    Button::A,
+    Button::B,
+    Button::X,
+    Button::Y,
+    Button::LeftShoulder,
+    Button::RightShoulder,
+    Button::LeftTrigger,
+    Button::RightTrigger,
+    Button::View,
+    Button::Menu,
+    Button::LeftStick,
+    Button::RightStick,
+    Button::DpadUp,
+    Button::DpadDown,
+    Button::DpadLeft,
+    Button::DpadRight,
+};
+
+// The press that woke a pad in the browser came with it (see WebGamepad.h): it counts as a tap. A
+// hold that began with it is seen from the next press.
+void TapWakingPress()
+{
+    const std::uint32_t held = mu::web::HeldStandardButtons(TriggerPressPull);
+    for (std::size_t index = 0; index < std::size(StandardButtons); ++index)
+    {
+        if ((held & (1u << index)) != 0)
+            Tap(StandardButtons[index]);
+    }
+}
+#endif
 
 void AddPad(SDL_JoystickID id)
 {
@@ -175,6 +230,9 @@ void AddPad(SDL_JoystickID id)
     free->id = id;
     const char* name = SDL_GetGamepadName(handle);
     mu::log::Get("input")->info("Gamepad connected: {}", name != nullptr ? name : "unnamed");
+#ifdef __EMSCRIPTEN__
+    TapWakingPress();
+#endif
 }
 
 void RemovePad(SDL_JoystickID id)
@@ -211,6 +269,10 @@ bool IsOtherDevicePress(const SDL_Event& event)
 
 void Init()
 {
+    // The pad's pointer moves the mouse by warping it (GamepadPointer). With the cursor hidden, SDL
+    // would take a few warps in a row for a game that locks the mouse, switch to relative mode and,
+    // in a browser, ask for the pointer lock.
+    SDL_SetHint(SDL_HINT_MOUSE_EMULATE_WARP_WITH_RELATIVE, "0");
     if (!SDL_InitSubSystem(SDL_INIT_GAMEPAD))
         mu::log::Get("input")->warn("Gamepads unavailable: {}", SDL_GetError());
 }
@@ -291,7 +353,7 @@ StickPosition Stick(SDL_GamepadAxis xAxis, SDL_GamepadAxis yAxis)
         if (pad.handle == nullptr)
             continue;
         const StickPosition position = PastDeadZone(pad.axes[xAxis], pad.axes[yAxis]);
-        const float length = std::hypot(position.x, position.y);
+        const float length = Lean(position);
         if (length > furthestLength)
         {
             furthest = position;

@@ -40,6 +40,7 @@
 #include "Render/Look/LookProfileSetting.h"
 #include "Render/Look/TuningSetting.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
+#include <RmlUi/Core/Element.h>
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Mobile/PhonePage.h"
 #include "UI/RmlBridge/RmlRuntimeHooks.h"
@@ -1192,6 +1193,89 @@ void HandleMouseButton(const SDL_Event& e)
     }
 }
 
+// Whether the game holds this SDL mouse button down (its legacy flag).
+bool IsLegacyMouseButtonDown(Uint8 button)
+{
+    switch (button)
+    {
+    case SDL_BUTTON_LEFT:
+        return MouseLButton;
+    case SDL_BUTTON_RIGHT:
+        return MouseRButton;
+    case SDL_BUTTON_MIDDLE:
+        return MouseMButton;
+    default:
+        return false;
+    }
+}
+
+// Lets go of every mouse button the game holds, with no release of its own, and of a wheel turn not
+// yet read: for a window that loses the mouse (its focus, the page hidden), after which no release
+// may ever come.
+void ReleaseLegacyMouseButtons()
+{
+    MouseLButton = false;
+    MouseLButtonPop = false;
+    MouseLButtonPush = false;
+    MouseRButton = false;
+    MouseRButtonPop = false;
+    MouseRButtonPush = false;
+    MouseLButtonDBClick = false;
+    MouseMButton = false;
+    MouseMButtonPop = false;
+    MouseMButtonPush = false;
+    MouseWheel = 0;
+    Core::Input::ClearLeftMouseButtonPressEdge();
+}
+
+// Once a pass of the main loop, after its events: a button the game holds that nothing holds any
+// more (a release lost on the way) is let go as a release would, or the hero walks or attacks on.
+// Real buttons, fingers, the pad and scripted clicks all count (Core::Input::IsKeyDown()).
+void ReleaseUnheldMouseButtons()
+{
+    if (MouseLButton && !Core::Input::IsKeyDown(VK_LBUTTON))
+    {
+        MouseLButton = false;
+        MouseLButtonPop = true;
+        g_iMousePopPosition_x = MouseX;
+        g_iMousePopPosition_y = MouseY;
+        ReleaseCapture();
+    }
+    if (MouseRButton && !Core::Input::IsKeyDown(VK_RBUTTON))
+    {
+        MouseRButton = false;
+        MouseRButtonPop = true;
+        ReleaseCapture();
+    }
+    if (MouseMButton && !Core::Input::IsKeyDown(VK_MBUTTON))
+    {
+        MouseMButton = false;
+        MouseMButtonPop = true;
+        ReleaseCapture();
+    }
+}
+
+// A finger tapping the game, or a touch control's key (Touch::TapKey()), is done typing: the focused
+// text field lets go of the keys, and the phone's keyboard goes with it. A real mouse's click in the
+// game leaves the field focused, as it always has.
+void EndTyping()
+{
+    if (Rml::Element* field = RmlUiRuntime::Instance().GetFocusedTextField())
+        field->Blur();
+}
+
+// A real button (or a finger's) after the window's UI had it. A press the UI took stays the UI's,
+// but a release reaches the game whenever the game holds that button: a finger lifted, or a drag let
+// go, over a window of the UI must not leave the hero walking.
+void HandlePhysicalMouseButton(const SDL_Event& event, bool propagates)
+{
+    const bool down = event.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
+    if (down && propagates && event.button.which == SDL_TOUCH_MOUSEID)
+        EndTyping();
+    if (propagates || (!down && IsLegacyMouseButtonDown(event.button.button)))
+        HandleMouseButton(event);
+}
+
 // The OS content scale feeds native font sizes, RmlUi's dp ratio and every scale the theme's
 // window placement and the login/character scenes derive from it. The window keeps its size.
 void HandleContentScaleChange()
@@ -1275,20 +1359,7 @@ void HandleFocusChange(bool active)
             g_HasInactiveFpsOverride = true;
         }
         if (g_bUseWindowMode == TRUE)
-        {
-            MouseLButton = false;
-            MouseLButtonPop = false;
-            MouseLButtonPush = false;
-            MouseRButton = false;
-            MouseRButtonPop = false;
-            MouseRButtonPush = false;
-            MouseLButtonDBClick = false;
-            MouseMButton = false;
-            MouseMButtonPop = false;
-            MouseMButtonPush = false;
-            MouseWheel = 0;
-            Core::Input::ClearLeftMouseButtonPressEdge();
-        }
+            ReleaseLegacyMouseButtons();
     }
     else
     {
@@ -1708,8 +1779,8 @@ bool RouteActionInput(SDL_Event& event, bool synthetic, bool& propagates)
         if (!synthetic && event.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
             Core::Input::Synthetic::CancelForPhysicalButton(event.button.button);
         propagates = Core::Input::RouteToUi(event, g_sdlWindow);
-        if (propagates && !synthetic)
-            HandleMouseButton(event);
+        if (!synthetic)
+            HandlePhysicalMouseButton(event, propagates);
         return true;
     case SDL_EVENT_TEXT_INPUT:
         propagates = Core::Input::RouteToUi(event, g_sdlWindow);
@@ -1749,6 +1820,7 @@ MSG MainLoop()
     HandleFocusChange(Core::Platform::HasSDLWindowInputFocus(SDL_GetWindowFlags(g_sdlWindow)));
     Core::Input::Synthetic::SetEventDelivery([](SDL_Event& event, bool& propagates)
                                              { return RouteActionInput(event, true, propagates); }, g_sdlWindow);
+    Core::Input::Touch::SetEndTyping(EndTyping);
 
     while (!Destroy)
     {
@@ -1760,6 +1832,10 @@ MSG MainLoop()
         MouseLButtonDBClick = false;
         if (MouseLButtonPop && (g_iMousePopPosition_x != MouseX || g_iMousePopPosition_y != MouseY))
             MouseLButtonPop = false;
+
+        // A finger's long press and a drag's pointer push their events now, so the events below
+        // carry them to the UI and the game in the frame the key-state scan sees them.
+        Core::Input::Touch::Tick(g_sdlWindow);
 
         // Pumping SDL also drives the Win32 message hook (-> WndProc) for the
         // input still on it (IME, the legacy EDIT text boxes); mouse and window
@@ -1801,6 +1877,8 @@ MSG MainLoop()
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
             case SDL_EVENT_MOUSE_BUTTON_UP:
             {
+                // A real mouse's press takes the pointer from the finger that left it (TouchInput.h).
+                Core::Input::Touch::ProcessEvent(event, g_sdlWindow);
                 bool propagates = true;
                 RouteActionInput(event, false, propagates);
                 break;
@@ -1821,6 +1899,9 @@ MSG MainLoop()
                 }
                 break;
             case SDL_EVENT_WINDOW_RESIZED:
+                // A phone turned, or the page's fullscreen: the touch controls move, so a finger held
+                // would steer or drag from a place that is no longer under it.
+                Core::Input::Touch::Reset();
                 HandleWindowResize(event.window.data1, event.window.data2);
                 break;
             case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED:
@@ -1842,6 +1923,7 @@ MSG MainLoop()
                 // losing focus first: a finger held then never gets its release, and a held joystick would
                 // walk on.
                 Core::Input::Touch::Reset();
+                ReleaseLegacyMouseButtons();
                 break;
             case SDL_EVENT_WINDOW_FOCUS_LOST:
                 // A finger's touch never ends once the page loses focus, nor does a pad's press: let go
@@ -1850,6 +1932,7 @@ MSG MainLoop()
                 Core::Input::Gamepad::Reset();
                 Core::Input::Gamepad::Pointer::Release(g_sdlWindow);
                 HandleFocusChange(false);
+                ReleaseLegacyMouseButtons();
                 break;
             case SDL_EVENT_WINDOW_MINIMIZED:
                 HandleMinimizedChange(true);
@@ -1882,6 +1965,8 @@ MSG MainLoop()
                 break;
             }
         }
+
+        ReleaseUnheldMouseButtons();
 
         // Process server packets handed over from the network thread. Replaces
         // the old WM_RECEIVE_BUFFER message round-trip; runs on the main thread.

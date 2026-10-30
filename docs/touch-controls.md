@@ -32,7 +32,7 @@ the page's request between frames, `UI::Mobile::FollowPage`).
 | Left of the skill buttons | Skills | Opens the skill picker on the first empty button (else the first). |
 | Right edge | Pick up (held) | Walks to the nearest drop within 6 tiles and takes it. |
 | Under the skills | Auto | MU Helper on/off (the Home key); lit while it runs. |
-| Anywhere else | One finger = the mouse | Tap = left click (double tap = double click), drag = left button held, hold 0.5 s = right click (on an item in the bag it opens the item card instead, below), two fingers = pinch zoom (mouse wheel). The camera's zoom lock (F10 on a computer, on by default against a stray wheel) is lifted whenever the controls show, as a phone has no F10. |
+| Anywhere else | One finger = the mouse | Tap = left click (double tap = double click), drag = left button held from where the finger landed, hold 0.5 s = right click (on an item in the bag or worn gear it opens the item card instead, below; not while an item hangs on the pointer, so it can still be dragged), two fingers = pinch zoom (mouse wheel; a second finger that lands while the first drags calls the drag off, and a finger landing again while one of the pinch's is still down pinches on). A tap on the game ends typing (the chat lets go of the keys), as does any key button but Enter and Esc. A drag the browser takes away, or a turn of the screen, drops and clicks nothing. The camera's zoom lock (F10 on a computer, on by default against a stray wheel) is lifted whenever the controls show, as a phone has no F10. |
 
 ## Item card
 
@@ -40,7 +40,14 @@ A finger held on an item in the bag opens a card in place of the PC's right clic
 equip, sell or drop the item at once: the item's name, then Use / Equip (Move with the storage, trade
 or chaos machine open, Sell in a shop), Put on button Q / W (for items the hotkeys take), Drop (only
 with the bag alone open, for items that may be dropped; it asks first) and Close. Each button checks
-that the same item still lies there before it acts. A mouse's right click is unchanged.
+that the same item still lies there before it acts. A mouse's right click is unchanged. The card
+opens at the edge of the screen away from the item, so the item's tooltip beside it stays in view
+(`GenericMenuConfig::edge`, the `gmd-edge-left` / `gmd-edge-right` classes of
+`generic_menu_dialog.rcss`).
+
+On worn gear (the character's equipment slots) the card has Take off: the item goes to the first
+free place in the bag, as a mouse's right click there does, or the system messages say the bag is
+full. Lifting the finger takes nothing off by itself (`CMyInventory::ShowWornItemCard`).
 
 ## Phone view
 
@@ -133,8 +140,12 @@ scrollbars, sliders (RmlUi's `drag` property other than `block`) and text fields
 (`Render/RmlUi/RmlTouchScroll.{h,cpp}`, reached from `Touch::Pointer` through
 `Core::Input::BeginUiTouchScroll` and the other `IUiInputConsumer` touch-scroll calls).
 
-With touch controls on, Help's key page lists the touch controls instead of the F keys
-(`HelpPages::BuildPage(page, touchControls)`).
+With touch controls on, Help's first page lists the touch controls instead of the F keys, and MU
+Skynet's chat commands get a page of their own after the chat page: with them under the chat rows
+the page ran past a phone's screen (`UI::Help::Pages(devices)`, `UI::Help::BuildPage(page, devices)`).
+A tap on the hint row turns the page; the finger's pointer then leaves the window
+(`TouchControls::RestPointerOnLift`), so an inventory under the page shows no tooltip for an item
+nobody tapped.
 
 ## Gamepad (Xbox layout)
 
@@ -169,8 +180,9 @@ the pad replaces the PC bar as touch does (style flag `mobile-hud`). Without tou
 On the login, server and character screens both sticks move the pointer, A or RT click, B is Esc and
 Menu is Enter. The pointer starts at the screen's centre when the pad takes over, so A attacks at
 once. A button still held when the menu closes acts only once released, so the B that closed it does
-not also press Back. The first time a pad is used, the system log says how it plays; Help's first
-page lists every button while the pad is in use (with touch on too, under the touch section).
+not also press Back. The first time a pad is used, the system log says how it plays; Help lists
+every button on a page of its own while the pad is in use (after the touch page with touch on too),
+and LB and RB turn the pages.
 
 | Piece | File | Role |
 |---|---|---|
@@ -219,12 +231,13 @@ the keyboard closes act only once released, so the B that closed it does not als
 | Piece | File | Role |
 |---|---|---|
 | Finger router | `Core/Input/TouchInput.{h,cpp}` | SDL finger events → controls (hit-tested first) or the pointer. Virtual keys (`TapKey`, `SetKeyHeld`) that `Core::Input::IsKeyDown` ORs in, so every hotkey works unchanged. |
-| Pointer gestures | `Core/Input/TouchPointer.{h,cpp}` | Tap, double tap, drag, long press, pinch → warped SDL mouse + pushed button and wheel events. Held buttons are ORed into `IsKeyDown(VK_LBUTTON/VK_RBUTTON)`. `Rest` takes a lifted finger's pointer off the window. |
+| Pointer gestures | `Core/Input/TouchPointer.{h,cpp}`, rules in `Core/Input/TouchGesture.{h,cpp}` | Tap, double tap, drag, long press, pinch → warped SDL mouse + pushed button and wheel events. Held buttons are ORed into `IsKeyDown(VK_LBUTTON/VK_RBUTTON)`. `Rest` takes a lifted finger's pointer off the window. `Touch::Tick` runs at the top of each main-loop pass, so a long press's right button is among that pass's events. What a landing or lifting finger does in each phase, and when a long press is due, is `TouchGesture`, tested in `tests/core/test_touch_gesture.cpp`. |
+| Lost releases | `App/Platform/Windows/Winmain.cpp` (`HandlePhysicalMouseButton`, `ReleaseUnheldMouseButtons`) | A release over a window of the UI still reaches the game when the game holds that button, and after each pass's events a button the game holds that nothing holds any more is let go, so the hero never walks on. |
 | World actions | `GameLogic/Touch/TouchActions.{h,cpp}` | Steer, Attack, Select/Cast/BindHotKeySlot, PickUpNearest, on `GameLogic::Automation` (the helper's and control socket's primitives). |
 | Controls | `UI/HUD/TouchControls.{h,cpp}` + `touch_controls.rml` + `themes/{legacy,modern}/touch_controls.rcss` | Draws the controls, answers the router's hit test from the elements' boxes, acts once a frame (`SceneManager.cpp`, after the scene). Depth 1.06 in `RmlStackingOrder.cpp`: under every window. |
 | View and controls choice | `UI/Mobile/InterfaceMode.{h,cpp}` | Reads the two Options rows, turns the touch layer on or off and sets the style flags `mobile` (phone view) and `mobile-hud` (phone view with touch controls). RCSS restyles a document for them with `@media (theme: mobile)` / `@media (theme: mobile-hud)`. |
 | Hero frame | `UI/Mobile/HeroFrame.{h,cpp}`, `UI/HUD/HeroGauges.{h,cpp}` | Fills the hero frame's part of the touch controls' model; HeroGauges reads HP/MP/AG/SD and EXP for it and for the PC bar alike. |
-| Item card | `UI/Mobile/ItemCard.{h,cpp}`, `UI/Inventory/InventoryActionController.cpp` | The card (a generic menu dialog); the controller opens it for a finger's right click on a bag item. |
+| Item card | `UI/Mobile/ItemCard.{h,cpp}`, `UI/Inventory/InventoryActionController.cpp`, `UI/Inventory/MyInventory.cpp` | The card (a generic menu dialog); the controller opens it for a finger's right click on a bag item, the inventory for one on worn gear. |
 | Finger unit | `UI/Mobile/TouchUnit.{h,cpp}`, `UI/Mobile/ButtonSize.{h,cpp}` | The unit the controls are sized in and the Button size option (Options → Interface, `OptionWindow.cpp`). |
 | Neighbours | `UI/Mobile/PhoneHudLayout.{h,cpp}` | Moves the buffs, pets' frames, system messages and skill list beside the controls. |
 | Page | `UI/Mobile/PhonePage.{h,cpp}`, `Core/Platform/web/WebScreen.{h,cpp}` | Screen wake lock and the back gesture (browser only). |
