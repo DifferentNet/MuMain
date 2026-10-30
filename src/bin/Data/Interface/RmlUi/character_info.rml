@@ -15,7 +15,7 @@
 	     being enlarged. Positions and box
 	     widths stay in reference px; each leaf's transform-origin (character_info.rcss) keeps it
 	     anchored to the edge or centre its text is aligned to. -->
-	<div id="panel" data-model="character_info" data-class-adv-view="advanced_view">
+	<div id="panel" data-model="character_info" data-class-adv-view="advanced_view" data-class-no-pet="!pet_enabled">
 		<div class="frame-piece frame-top"></div>
 		<div class="frame-piece frame-left"></div>
 		<div class="frame-piece frame-right"></div>
