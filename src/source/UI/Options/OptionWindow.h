@@ -116,13 +116,16 @@ namespace mu::ui::window
         void ApplyPendingFont();
         // Same deferral for the UI-scale row -- see m_bPendingUIScaleApply's own comment.
         void ApplyPendingUIScale();
+        // Same deferral for the phone/PC layout and controls rows -- see m_iPendingInterfaceView's.
+        void ApplyPendingInterfaceMode();
 
         // Invoked directly from RmlUi data-event-click/-change bindings (see BindRmlModel()), not
         // polled. RmlClickSelectTab first, matching MyQuestInfoWindow's own tab-callback ordering.
         void RmlClickSelectTab(int nTab);
         // Custom-dropdown mechanism (option_window.rml's own .option-dropdown family; RmlUi's
         // native <select> isn't used here) -- dropdownId is 0=resolution,1=fpsCap,2=theme,
-        // 3=language,4=font,5=uiScale,6=antialiasing,7=anisotropy, matching model.openDropdown's
+        // 3=language,4=font,5=uiScale,6=antialiasing,7=anisotropy,8=interfaceView,9=controls,
+        // 10=touchButtons,11=gamepad, matching model.openDropdown's
         // own comment (OptionWindow.h).
         // RmlDropdownOptionClick dispatches to RmlResolutionChanged()/RmlFpsCapChanged()/etc. per
         // dropdownId.
@@ -190,6 +193,12 @@ namespace mu::ui::window
         void RmlToggleOverheadTitles();
         void RmlThemeChanged(int index);
         void RmlUIScaleChanged(int index);
+        // MU Moldova: the phone or PC layout and the controls (UI::Mobile::InterfaceMode).
+        void RmlInterfaceViewChanged(int index);
+        void RmlControlsChanged(int index);
+        void RmlTouchButtonsChanged(int index);
+        // MU Moldova: whether the game reads a gamepad (Core::Input::Gamepad::SetEnabled).
+        void RmlGamepadChanged(int index);
         void RmlClickClose();
 
         // One tuning slider (UI::Options::TuningRow) as the RmlUi model binds it.
@@ -240,7 +249,7 @@ namespace mu::ui::window
             // field rather than one bool per dropdown gives exclusivity for free -- opening one
             // overwrites whichever other id was here, no separate "close the others" step needed.
             // 0=resolution, 1=fpsCap, 2=theme, 3=language, 4=font, 5=uiScale, 6=antialiasing,
-            // 7=anisotropy (RmlToggleDropdown()/
+            // 7=anisotropy, 8=interfaceView, 9=controls, 10=touchButtons, 11=gamepad (RmlToggleDropdown()/
             // RmlDropdownOptionClick()'s own ids). Replaces RmlUi's native <select>/<option>
             // (WidgetDropDown) entirely -- see option_window.rml's own history for why: that
             // widget's own generated selectbox/selectvalue/selectarrow sub-elements need CSS this
@@ -380,6 +389,27 @@ namespace mu::ui::window
             // hover, purely in RCSS, the same `:hover` mechanism main_frame.rcss's own gauge
             // tooltips use).
             Rml::String uiScaleTooltip;
+            // MU Moldova: the phone or PC layout and the controls, indexed as UI::Mobile::ViewChoice
+            // and UI::Mobile::ControlChoice.
+            std::vector<Rml::String> interfaceViewLabels;
+            int interfaceViewIndex = 0;
+            Rml::String interfaceViewRowLabel;
+            Rml::String interfaceViewValueLabel;
+            std::vector<Rml::String> controlsLabels;
+            int controlsIndex = 0;
+            Rml::String controlsRowLabel;
+            Rml::String controlsValueLabel;
+            // The on-screen controls' size (UI::Mobile::ButtonSize::Percents), shown while they are.
+            bool touchButtonsShown = false;
+            std::vector<Rml::String> touchButtonsLabels;
+            int touchButtonsIndex = 0;
+            Rml::String touchButtonsRowLabel;
+            Rml::String touchButtonsValueLabel;
+            // The gamepad: 0 = on, 1 = off.
+            std::vector<Rml::String> gamepadLabels;
+            int gamepadIndex = 0;
+            Rml::String gamepadRowLabel;
+            Rml::String gamepadValueLabel;
         };
         void BindRmlModel(Rml::DataModelConstructor& c, OptionRmlModel& model);
         void SyncImpliedEffectRows(OptionRmlModel& model);
@@ -472,6 +502,15 @@ namespace mu::ui::window
         // theme switch) does not itself destroy the document.
         bool m_bPendingUIScaleApply = false;
         int m_iPendingUIScalePercent = 0;
+        // The phone/PC layout and controls rows' picks (-1 = none), applied in Update(): switching the
+        // touch controls off lets go of every finger, and one of them may be the very click that
+        // picked the row.
+        int m_iPendingInterfaceView = -1;
+        int m_iPendingControls = -1;
+        int m_iPendingTouchButtons = -1;
+        // Same for the gamepad row: switching the pad off lets go of its pointer, whose click may be
+        // the one that picked the row.
+        int m_iPendingGamepad = -1;
 
         // Counts SyncRmlModel() calls since BuildRmlUi(). Acts as a harmless no-op-this-early
         // guard on RmlDropdownOptionClick()'s own callers -- real user input can't land in this

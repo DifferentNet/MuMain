@@ -49,6 +49,14 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyOverheadNpcNames[] = L"OverheadNpcNames";
     // MU Moldova: title plates over the players (UI::TitlePlates).
     inline constexpr wchar_t CfgKeyOverheadTitles[] = L"OverheadTitles";
+    // MU Moldova: the phone or PC layout ("auto", "pc", "phone") and the controls ("auto", "mouse",
+    // "touch"), set in the options window's Interface tab. See UI::Mobile::InterfaceMode.
+    inline constexpr wchar_t CfgKeyInterfaceView[] = L"InterfaceView";
+    inline constexpr wchar_t CfgKeyControls[] = L"Controls";
+    // MU Moldova: the on-screen controls' size in percent (Options -> Interface, Button size).
+    inline constexpr wchar_t CfgKeyTouchButtonSize[] = L"TouchButtonSize";
+    // MU Moldova: whether the game reads a gamepad (Options -> Interface, Gamepad).
+    inline constexpr wchar_t CfgKeyGamepad[] = L"Gamepad";
     // Animates characters on worker threads when many are in view. Off unless set here or
     // started with --enable-taskpool; manual config.ini edit only.
     inline constexpr wchar_t CfgKeyEnableAnimationTaskPool[] = L"EnableAnimationTaskPool";
@@ -132,6 +140,16 @@ namespace CfgDefaults
     inline constexpr bool CfgDefaultOverheadPlayerNames = true;
     inline constexpr bool CfgDefaultOverheadNpcNames = false;
     inline constexpr bool CfgDefaultOverheadTitles = true;
+
+    // "auto" follows the device: a phone or tablet in the browser gets the phone layout and touch.
+    inline constexpr wchar_t CfgDefaultInterfaceView[] = L"auto";
+    inline constexpr wchar_t CfgDefaultControls[] = L"auto";
+    inline constexpr int CfgDefaultTouchButtonSize = 100;
+    inline constexpr int CfgMinTouchButtonSize = 70;
+    inline constexpr int CfgMaxTouchButtonSize = 150;
+    // On: a pad plugged in plays. Off for a pad that Steam Input or the handheld's own software
+    // already turns into a mouse and keys, which would otherwise press twice.
+    inline constexpr bool CfgDefaultGamepad = true;
 
     // Bounds GameConfig clamps to, on load and on set. Below 75% text gets too small to read;
     // above 150% a docked panel no longer fits a small window.

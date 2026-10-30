@@ -96,6 +96,7 @@ Error codes: `bad_request`, `unknown_command`, `wrong_scene`, `busy`,
 | `trade` (`action`, `target`) | `request` a trade with another player at most one tile away (`not_allowed` otherwise), or `cancel` the open one; the partner accepts with the Enter key, and items go in with `click-ui` |
 | `halt` | stop the walk or repeated attack in progress |
 | `pet` (`mode`, `target`) | the Dark Lord's raven command, as Shift+1..4 and a right click send it: `normal`, `random`, `owner` (attack the owner's targets) or `target` (with `target`) |
+| `pad` (`action`, `button`, `axis`, `value`) | a virtual gamepad, for testing the pad controls ([touch-controls.md](touch-controls.md#gamepad-xbox-layout)) without one: `attach` plugs in SDL's virtual pad, `detach` unplugs it; `down` and `up` press and let go of a `button` (`a`, `b`, `x`, `y`, `lb`, `rb`, `lt`, `rt`, `view`, `menu`, `ls`, `rs`, `up`, `down`, `left`, `right`); `axis` sets `leftx`, `lefty`, `rightx`, `righty` (-1 to 1, y down) or `lt`, `rt` (0 to 1) to `value`; `enable` and `disable` are the Options switch, not saved; `state` (the default) answers `enabled`, `connected`, `used_last`, `in_use` and `virtual`, as every action does. The pad goes through SDL's own gamepad events, so it plays as a plugged-in pad does, a frame after the call |
 
 `state` reports the scene and account on every screen, and in the world adds:
 character name, class, level, experience, zen, HP/mana/SD/AG with their

@@ -1427,6 +1427,9 @@
   <data name="Resolution" xml:space="preserve">
     <value>Resolusi</value>
   </data>
+  <data name="ResolutionAuto" xml:space="preserve">
+    <value>Otomatis (sesuai jendela)</value>
+  </data>
   <data name="Language" xml:space="preserve">
     <value>Bahasa</value>
   </data>

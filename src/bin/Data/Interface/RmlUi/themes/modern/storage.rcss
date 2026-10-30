@@ -184,3 +184,32 @@
 	font-size: 9px;
 	pointer-events: none;
 }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode), as the legacy theme
+   lays it out: the full 432 height of the dock, 42 px cells, 8 of the 15 rows on view
+   (item_grid.rcss pages them), the ▲▼ and the buttons down the right side, the money and the fee
+   under the grid, the vault page arrows a finger wide in the header. 420 wide, so the bag-only
+   inventory fits beside it on a phone. */
+@media (theme: mobile) {
+	#panel { --item-cell: 42px; width: 420px; height: 432px; }
+	.bg-panel { width: 100%; height: 432px; }
+	.stor-page-btn { top: 6px; width: 32px; height: 28px; line-height: 28px; }
+	.stor-page-prev { left: 296px; }
+	.stor-page-next { left: 334px; }
+	.stor-page-glyph { font-size: 13px; }
+
+	/* The grid's first cell at (16, 42). */
+	#grid_viewport { left: 10px; top: 36px; }
+	.grid-scroll-up { left: 364px; top: 42px; }
+	.grid-scroll-down { left: 364px; top: calc(42px + 8 * var(--item-cell) - 44px); }
+	.stor-btn-insert, .stor-btn-take, .stor-btn-lock, .stor-btn-expand { left: 364px; }
+	.stor-btn-insert { top: 98px; }
+	.stor-btn-take { top: 144px; }
+	.stor-btn-lock { top: 190px; }
+	.stor-btn-expand { top: 236px; }
+
+	.stor-wallet-px { left: 16px; top: 388px; width: 336px; height: 40px; }
+	#zen_text { left: 234px; right: auto; top: 392px; }
+	.stor-fee-label-px { left: 26px; top: 410px; font-size: 10px; }
+	#fee_value { left: 234px; right: auto; top: 410px; }
+}

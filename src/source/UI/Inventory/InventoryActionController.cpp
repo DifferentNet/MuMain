@@ -25,9 +25,59 @@
 #include "I18N/All.h"
 #include "GameLogic/Items/ShopRestrictions.h"
 #include "GameLogic/Items/TradeRestrictions.h"
+#include "Core/Input/TouchInput.h"
+#include "UI/HUD/ItemHotKey.h"
+#include "UI/Mobile/ItemCard.h"
+
+#include <SDL3/SDL_mouse.h>
+
+#include <utility>
 
 namespace mu::ui::window
 {
+
+namespace
+{
+// A finger's long press, which holds the right button (Core::Input::Touch), and not the mouse's.
+bool IsFingerRightClick()
+{
+    return Core::Input::Touch::IsMouseButtonHeld(SDL_BUTTON_RIGHT);
+}
+
+// Puts the pointer back where a long press was for the actions that take the item under it, and
+// returns it afterwards: the item card runs them later, wherever the finger is by then.
+class PointerAt
+{
+public:
+    explicit PointerAt(POINT pointer) : m_savedX(g_fWindowMouseX), m_savedY(g_fWindowMouseY)
+    {
+        g_fWindowMouseX = static_cast<float>(pointer.x);
+        g_fWindowMouseY = static_cast<float>(pointer.y);
+    }
+    ~PointerAt()
+    {
+        g_fWindowMouseX = m_savedX;
+        g_fWindowMouseY = m_savedY;
+    }
+    PointerAt(const PointerAt&) = delete;
+    PointerAt& operator=(const PointerAt&) = delete;
+
+private:
+    float m_savedX;
+    float m_savedY;
+};
+
+bool IsItemAtPointer(CInventoryCtrl* targetControl, DWORD itemKey)
+{
+    const ITEM* pItem = targetControl->FindItemAtPointer();
+    return pItem != nullptr && pItem->Key == itemKey;
+}
+
+bool CanBeDropped(const ITEM* pItem)
+{
+    return Hero->Dead == 0 && !GameLogic::Items::IsHighValueItem(pItem) && !GameLogic::Items::IsDropBan(pItem);
+}
+} // namespace
 
 CInventoryActionController::CInventoryActionController() : m_pContext(nullptr) {}
 
@@ -56,6 +106,10 @@ bool CInventoryActionController::HandleInventoryActions(CInventoryCtrl* targetCo
 
     if (m_pContext->GetRepairMode() == SEASON3B::REPAIR_MODE_OFF && IsPress(VK_RBUTTON))
     {
+        if (IsFingerRightClick() && ShowTouchItemCard(targetControl))
+        {
+            return true;
+        }
         return HandleRightClick(targetControl);
     }
 
@@ -146,28 +200,26 @@ bool CInventoryActionController::HandleRepairClick(CInventoryCtrl* targetControl
     return RepairItemAtMousePoint(targetControl);
 }
 
-bool CInventoryActionController::HandleRightClick(CInventoryCtrl* targetControl) const
+CInventoryActionController::RightClickTarget CInventoryActionController::FindRightClickTarget() const
 {
-    m_pContext->ResetMouseRButton();
-
     if (g_pNewUISystem->IsVisible(INTERFACE_STORAGE))
     {
-        return HandleStorageAutoMove(targetControl);
+        return RightClickTarget::Storage;
     }
 
     if (g_pNewUISystem->IsVisible(INTERFACE_NPCSHOP) && g_pNewUISystem->IsVisible(INTERFACE_INVENTORY))
     {
-        return HandleSellToNPC(targetControl);
+        return RightClickTarget::Shop;
     }
 
     if (g_pNewUISystem->IsVisible(INTERFACE_MIXINVENTORY) && g_pNewUISystem->IsVisible(INTERFACE_INVENTORY))
     {
-        return HandleMixAutoMove(targetControl);
+        return RightClickTarget::Mix;
     }
 
     if (g_pNewUISystem->IsVisible(INTERFACE_TRADE) && g_pNewUISystem->IsVisible(INTERFACE_INVENTORY))
     {
-        return g_pTrade->ProcessMyInvenItemAutoMove(targetControl);
+        return RightClickTarget::Trade;
     }
 
     if (g_pNewUISystem->IsVisible(INTERFACE_INVENTORY)
@@ -179,10 +231,107 @@ bool CInventoryActionController::HandleRightClick(CInventoryCtrl* targetControl)
         && !g_pNewUISystem->IsVisible(INTERFACE_MIXINVENTORY)
         && !g_pNewUISystem->IsVisible(INTERFACE_MYSHOP_INVENTORY))
     {
-        return HandleInventoryRightClickActions(targetControl);
+        return RightClickTarget::Inventory;
+    }
+
+    return RightClickTarget::None;
+}
+
+bool CInventoryActionController::HandleRightClick(CInventoryCtrl* targetControl) const
+{
+    m_pContext->ResetMouseRButton();
+    return RunRightClickAction(targetControl, FindRightClickTarget(), true);
+}
+
+bool CInventoryActionController::RunRightClickAction(CInventoryCtrl* targetControl, RightClickTarget target,
+                                                     bool mayDrop) const
+{
+    switch (target)
+    {
+    case RightClickTarget::Storage:
+        return HandleStorageAutoMove(targetControl);
+    case RightClickTarget::Shop:
+        return HandleSellToNPC(targetControl);
+    case RightClickTarget::Mix:
+        return HandleMixAutoMove(targetControl);
+    case RightClickTarget::Trade:
+        return g_pTrade->ProcessMyInvenItemAutoMove(targetControl);
+    case RightClickTarget::Inventory:
+        return HandleInventoryRightClickActions(targetControl, mayDrop);
+    case RightClickTarget::None:
+        break;
     }
 
     return false;
+}
+
+bool CInventoryActionController::ShowTouchItemCard(CInventoryCtrl* targetControl) const
+{
+    if (CInventoryCtrl::GetPickedItem() != nullptr)
+    {
+        return false;
+    }
+
+    const ITEM* pItem = targetControl->FindItemAtPointer();
+    const RightClickTarget target = FindRightClickTarget();
+    if (pItem == nullptr || target == RightClickTarget::None)
+    {
+        return false;
+    }
+
+    m_pContext->ResetMouseRButton();
+
+    const POINT pointer = CInventoryCtrl::PointerPos();
+    const DWORD itemKey = pItem->Key;
+    const int itemType = pItem->Type;
+    const int itemLevel = pItem->Level;
+
+    UI::Mobile::ItemCard::Content card;
+    card.item = *pItem;
+
+    // The right click's own action, unless the windows changed while the card was open.
+    if (target == RightClickTarget::Shop)
+    {
+        card.primaryLabel = I18N::Game::TouchItemSell;
+    }
+    else if (target != RightClickTarget::Inventory || g_pNewUISystem->IsVisible(INTERFACE_INVENTORY_EXT))
+    {
+        card.primaryLabel = I18N::Game::TouchItemMove;
+    }
+    else
+    {
+        const int equipmentSlot = ItemAttribute[itemType].m_byItemSlot;
+        const bool canBeWorn = equipmentSlot >= 0 && equipmentSlot < MAX_EQUIPMENT_INDEX;
+        card.primaryLabel = canBeWorn ? I18N::Game::TouchItemEquip : I18N::Game::Use;
+    }
+    card.primary = [this, targetControl, pointer, itemKey, target]
+    {
+        const PointerAt at(pointer);
+        if (FindRightClickTarget() == target && IsItemAtPointer(targetControl, itemKey))
+        {
+            RunRightClickAction(targetControl, target, false);
+        }
+    };
+
+    if (CMyInventory::CanRegisterItemHotKey(itemType))
+    {
+        card.putOnQ = [itemType, itemLevel] { g_pMainFrame->SetItemHotKey(HOTKEY_Q, itemType, itemLevel); };
+        card.putOnW = [itemType, itemLevel] { g_pMainFrame->SetItemHotKey(HOTKEY_W, itemType, itemLevel); };
+    }
+
+    if (target == RightClickTarget::Inventory && CanBeDropped(pItem))
+    {
+        card.drop = [this, targetControl, itemKey]
+        {
+            if (ITEM* pDropItem = targetControl->FindItemByKey(itemKey))
+            {
+                TryDropItem(targetControl, pDropItem);
+            }
+        };
+    }
+
+    UI::Mobile::ItemCard::Show(std::move(card));
+    return true;
 }
 
 bool CInventoryActionController::HandleStorageAutoMove(CInventoryCtrl* targetControl) const
@@ -307,7 +456,7 @@ bool CInventoryActionController::HandleSellToNPC(CInventoryCtrl* targetControl) 
     return true;
 }
 
-bool CInventoryActionController::HandleInventoryRightClickActions(CInventoryCtrl* targetControl) const
+bool CInventoryActionController::HandleInventoryRightClickActions(CInventoryCtrl* targetControl, bool mayDrop) const
 {
     if (g_pNewUISystem->IsVisible(INTERFACE_INVENTORY_EXT))
     {
@@ -356,7 +505,7 @@ bool CInventoryActionController::HandleInventoryRightClickActions(CInventoryCtrl
         }
     }
 
-    if (TryDropItem(targetControl, pItem))
+    if (mayDrop && TryDropItem(targetControl, pItem))
     {
         return true;
     }

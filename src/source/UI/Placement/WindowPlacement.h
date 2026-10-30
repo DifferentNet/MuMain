@@ -25,6 +25,9 @@ void RegisterParticipant(std::string_view name, PlacementParticipant participant
 void UnregisterParticipant(std::string_view name);
 // Marks placement stale; the next Update() re-places once (a theme reload, a measured size change).
 void Invalidate();
+// Invalidate(), after a theme flag changed (the phone view): open windows are laid out for the new styles
+// before they are measured, rather than at the context's next update.
+void InvalidateStyles();
 // Last resolved slot rectangle in screen pixels; false for a closed or absent slot.
 bool SlotBox(std::string_view name, PlacementParticipant::Box& box);
 
@@ -50,6 +53,10 @@ bool InitialPosition(std::string_view slotName, float width, float height, float
 // document's root (CObject::GetPlacedDocument()) there at the HUD's scale. Without a slot the theme's
 // own placement for the document holds.
 void RegisterHudWindow(std::string_view name, std::uint32_t windowId, GetWindow getWindow, float width, float height);
+
+// Whether another slot of the same region as `slotName` holds an open window, as last arranged:
+// a window that draws itself smaller beside a neighbour (the phone view's bag-only inventory).
+bool HasOpenNeighbour(std::string_view slotName);
 
 // Re-places every open component now. Call after a window opens or closes.
 void Arrange();

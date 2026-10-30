@@ -489,8 +489,11 @@ if (EMSCRIPTEN)
     "-sEXIT_RUNTIME=0"
     "-sENVIRONMENT=web,worker"
     "-sEXPORTED_RUNTIME_METHODS=['FS']"
+    # The game's fetch mount with one request per file instead of Emscripten's two.
+    "--js-library=${CMAKE_CURRENT_SOURCE_DIR}/web/fetch-backend.js"
     # Function names in stack traces while the port is being brought up.
     "--profiling-funcs")
+  set_property(TARGET Main APPEND PROPERTY LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/web/fetch-backend.js")
 elseif (NOT MSVC)
   set(MU_MAIN_MAP_FILE "${CMAKE_CURRENT_BINARY_DIR}/Main.map")
   if (APPLE)
@@ -588,11 +591,21 @@ if (EMSCRIPTEN)
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different
       "${CMAKE_CURRENT_SOURCE_DIR}/web/index.html"
       "$<TARGET_FILE_DIR:Main>/index.html"
+    # Phones: "Install" or "Add to home screen" opens the game fullscreen and sideways; the service
+    # worker keeps the game's files on the device.
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+      "${CMAKE_CURRENT_SOURCE_DIR}/web/manifest.webmanifest"
+      "${CMAKE_CURRENT_SOURCE_DIR}/web/icon-192.png"
+      "${CMAKE_CURRENT_SOURCE_DIR}/web/icon-512.png"
+      "${CMAKE_CURRENT_SOURCE_DIR}/web/sw.js"
+      "$<TARGET_FILE_DIR:Main>"
     ${_mu_web_extra_copy}
     COMMAND "${CMAKE_COMMAND}"
       "-DOUTPUT_DIR=$<TARGET_FILE_DIR:Main>"
       "-P" "${REPO_ROOT}/cmake/WriteWebFileList.cmake"
-    # startup.pack: the files the game reads before it can be played, in one download.
+    # The startup pack in parts (the files the game reads before it can be played), a pack per map,
+    # the gzip copy of Main.wasm and startup.json, the index the page reads first. After files.txt,
+    # which it reads and adds its files to.
     COMMAND "${Python3_EXECUTABLE}" "${REPO_ROOT}/tools/web/make_startup_pack.py"
       --root "$<TARGET_FILE_DIR:Main>"
       --list "${CMAKE_CURRENT_SOURCE_DIR}/web/startup-files.txt"

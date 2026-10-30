@@ -23,17 +23,19 @@ container behind Caddy (`server/README.md`, "Browser client").
 
 | Piece | Where | What it does |
 | --- | --- | --- |
-| Page | `src/web/index.html` | Checks WebGPU, JSPI and cross-origin isolation; downloads `startup.pack` while the code loads; log panel. `?profile` samples the page's code (`muProfileTop()` in the console), `?heartbeat` logs whether the browser gets idle time, `?packets` logs every packet sent and received, unencrypted (`WebNetwork.cpp`). |
-| Files | `Core/Platform/web/WebFileSystem.*` | `/game` in memory: the startup pack's files, links to a WasmFS fetch mount (`/server`) for the rest, which download on first read, and writable copies of `config.ini` and friends. |
-| Startup pack | `tools/web/make_startup_pack.py`, `src/web/startup-files.txt` | The ~3,800 files the game reads up to character selection, in one download (164 MB) instead of thousands of requests. Regenerate the list from a run of `serve-web.py --access-log`. |
-| File list | `cmake/WriteWebFileList.cmake` | `files.txt`, every file the browser may read. |
+| Page | `src/web/index.html` | Checks WebGPU, JSPI and cross-origin isolation; reads `startup.json` and downloads the startup pack's parts while the code loads (both as gzip copies it unpacks itself); log panel. `?profile` samples the page's code (`muProfileTop()` in the console), `?heartbeat` logs whether the browser gets idle time, `?packets` logs every packet sent and received, unencrypted (`WebNetwork.cpp`). Phones and tablets (Device, below): the game fills the screen, the footer's buttons open from the ⋮ button, Play opens it fullscreen and locks landscape ("Stay in the browser" keeps the address bar), held upright it asks to turn the phone, nothing zooms or scrolls; `manifest.webmanifest` and `icon-192/512.png` make the installed game open fullscreen and sideways. Install (the Play card and the ⋮ menu on phones, the footer on a computer whose browser offers it) asks Chrome or Edge to install it (`beforeinstallprompt`); where the browser offers nothing (iPhone, Firefox, Samsung Internet) it shows the steps in the browser's own menu. Hidden once the game runs installed. |
+| Files | `Core/Platform/web/WebFileSystem.*`, `src/web/fetch-backend.js` | `/game` in memory: the startup pack's files, links to a WasmFS fetch mount (`/server`) for the rest, which download on first read (one request each, `?v=<hash>` where `startup.json` has one), and writable copies of `config.ini` and friends. |
+| Startup pack | `tools/web/make_startup_pack.py`, `src/web/startup-files.txt` | The ~3,900 files the game reads up to character selection, in one download (166 MB, 115 packed) instead of thousands of requests. Regenerate the list from a run of `serve-web.py --access-log`. The pack comes in parts, one per folder (`packs/startup-data-player.pack.gz` …, small folders share `startup-misc`), three downloading at once; the game writes each into `/game` as it arrives. The browser keeps each part in its storage (`mu-web/startup-pack`) under its hash in `startup.json`, so the next visit loads it from the device and a release downloads only the parts that changed; `?nostore` skips that. Map packs (`packs/worldN.pack.gz` and `.json`) come the same way when the game enters a map (`mu-web/map-packs`). Packs and `Main.wasm.gz` (5 MB instead of 21) are gzip files the page unpacks itself: the web server sends files as they are. `startup.json` also holds the hashes of Main.js and Main.wasm and of every file the game downloads one by one (`versions`). |
+| Service worker | `src/web/sw.js` | Keeps the game's files on the device: Main.js, Main.wasm and the files the game downloads one by one are asked for as `path?v=<hash>` (the page, `fetch-backend.js`), which it answers from the browser's storage (`mu-web/files`) once downloaded, cutting the game's byte ranges from the whole file; a release that changes a file changes its URL. Packs and everything else go to the network as they would without it. With no connection the page shows a short note. `?nosw` removes it and its files. |
+| Device | `index.html` `detectDevice`, `Core/Platform/web/WebDevice.*` | Phone, tablet or computer, decided before the page is drawn: the browser's own word (client hints "mobile"), the user agent (iPhone, Android with or without "Mobile", iPad), an iPad that calls itself a Mac, or a touch screen with no mouse (a phone below 600 CSS px on the short side). Phones and tablets get the touch page and the game reads `Module.muDevice` from its first frame (`mu::web::IsTouchDevice()`), for its touch controls. Both logs say which and why ("Device: phone (…)", "Browser device: phone, played by touch"). `?phone`, `?tablet` or `?desktop` decides it on any device. |
+| File list | `cmake/WriteWebFileList.cmake` | `files.txt`, every file the browser may read; `make_startup_pack.py` adds the packs it writes. |
 | Network | `Core/Platform/web/WebNetwork.*`, `WebPacketWriting.h` | The C# ClientLibrary's exports in C++: WebSocket connections to `ws/<port>` beside the page (`/play/ws/<port>` for a page at `/play/`), the hand-written sends, and the `Send<Packet>` functions generated by `tools/web/gen_web_packets.py` from OpenMU's packet XML (checked against `source/Dotnet/PacketBindings_*.h`). `PlatformLibrary.cpp` hands them out for "MUnique.Client.Library". |
 | Encryption | `Core/Platform/web/MuPacketCrypto.*` | Xor32 and SimpleModulus as OpenMU's network library does them; `crypto-test/` checks it byte for byte. |
 | Packet test | `tools/web/packet-test/` | Checks every generated `Send<Packet>` byte for byte against the desktop library's (`run.sh`, about 15 s; see its README). |
 | Shaders | `src/shaders/compiled/*.wgsl`, `Core/Platform/web/RmlUiShadersWgsl.h` | WGSL from the SPIR-V blobs (see below). |
 | RmlUi shaders | `Core/Platform/web/RmlUiGpuShaders.cpp` | RmlUi's SDL_GPU renderer asks for SPIR-V; the build redirects its two calls here, which hand out the WGSL version by the SPIR-V's hash. |
 | Desktop-only libraries | `Core/Platform/web/include`, `TurboJpegShim.cpp`, `CurlFileDownloaderWeb.cpp`, `PlatformCryptoWeb.cpp` | libjpeg-turbo through SDL_image; no downloads and no saved passwords in the browser. |
-| Resolution | `Winmain.cpp` `MuWebDisplayResolutions`, `index.html` `fitCanvas` | SDL reports one display mode in the browser, so Options lists the usual sizes up to the screen's pixels plus the size that fills the window exactly. The page scales the canvas to its window, keeping its shape; Fullscreen applies to the game area. |
+| Resolution | `index.html` `muDisplay`, `Core/Platform/web/WebDisplay.*`, `Winmain.cpp` `MuWebFollowPageSize`, `MuWebDisplayResolutions` | Options has "Auto" first, the default: the game takes the game area's size in the screen's real pixels (devicePixelRatio), so the picture is drawn 1:1, and draws its interface that many times larger (the content scale, as on a desktop display at 125 or 150 %). It follows window resizes, Fullscreen and browser zoom. The footer's Quality caps the pixels: High 2560x1440 (phones 1.5 million), Medium 1920x1080 (0.75 M), Low 1280x720 (0.4 M); never below 640x480. Lowest has Low's pixels and also turns Options' six effect and shadow settings off (`Winmain.cpp` `MuWebFollowLowestQuality`); the player's own come back with another quality (kept meanwhile in `mu-web/effects-before-lowest`). Weak phones start at Lowest until a quality is picked: ARM Mali Bifrost or Midgard, Adreno 5xx or older, PowerVR, or 2 GB of memory or less (`index.html` `weakPhoneGpu`; `?weakphone` tries it anywhere). `?q=high\|medium\|low\|lowest` sets it, `?dpr=N` stands in for the screen's ratio, `?reset` forgets both. A size picked in Options (the usual sizes up to the screen's pixels, plus the one that fills the window exactly) turns "Auto" off and is scaled to the window, keeping its shape; the browser keeps the choice (`mu-web/resolution`, `mu-web/quality`). |
 | Settings | `index.html` `saveConfig`, `WebFileSystem.cpp` `MuWeb_MergeSavedConfig` | config.ini (resolution, volume, …) is kept in the browser's storage (`mu-web/config.ini`) and comes back on the next visit, with the server copy's `[CONNECTION SETTINGS]`. |
 | Frame pacing | `Winmain.cpp` `WaitForBrowserFrame`, `SceneCore.cpp` `WaitForNextActivity` | After each frame the game hands the browser a turn and keeps to about 60 frames a second (no cap while loading). `sleep_for` and `yield` would spin without letting the browser deliver network messages. |
 
@@ -41,6 +43,8 @@ container behind Caddy (`server/README.md`, "Browser client").
 
 The renderer's SPIR-V blobs become WGSL with naga; the SDL WebGPU backend's binding layout differs
 from SDL's SPIR-V one, so `wgsl-convert.mjs` renumbers the bindings first and drops naga's Y flip.
+It also declares storage buffers as plain arrays instead of naga's one-member struct around the
+array: Safari couldn't compile the bone shaders with that struct (Safari 27, Mac, 2026-10-29).
 
 ```bash
 node tools/web/spirv-to-wgsl.mjs <naga-wasm folder> src/shaders/compiled src/shaders/compiled/*.spv
@@ -48,6 +52,24 @@ node tools/web/rmlui-shaders-to-wgsl.mjs <naga-wasm folder>   # writes RmlUiShad
 ```
 
 RmlUi's blur shaders use array varyings naga rejects; `rmlui-wgsl/` holds hand-written versions.
+
+Soft clip: the world shaders cut off what is nearer than one unit with a clip distance, a WebGPU
+feature ARM Mali phones (the Pixel 9) don't have. `spirv-to-wgsl.mjs` also writes a `*_softclip`
+copy of the three vertex shaders that write it and of the three fragment shaders paired with them
+(`wgsl-soft-clip.mjs`): the vertex shader hands the clip value on as a varying and the fragment shader
+drops the pixel where it's below zero. The page tells the game whether the card has the feature
+(`Module.muClipDistances`), and the renderer loads the copies without it (`SoftClipShaders.*`,
+the log says "clip distances: no, soft clip shaders"). `index.html?softclip` takes them on any card.
+To rewrite only the copies from the checked-in WGSL:
+
+```bash
+node tools/web/wgsl-soft-clip.mjs src/shaders/compiled
+```
+
+Depth clamp: the pipelines clamp depth, as on every other platform, where the card has WebGPU's
+`depth-clip-control`. ARM Mali Bifrost phones (a Galaxy Note 10 Lite, 2026-10-30) don't, and the game clips
+depth there instead, as the original OpenGL game did (`Module.muDepthClamp`; the log says "depth clamp: no,
+depth clipped"). `index.html?nodepthclamp` clips it on any card.
 
 ## The SDL patch
 
@@ -64,6 +86,16 @@ RmlUi's blur shaders use array varyings naga rejects; `rmlui-wgsl/` holds hand-w
 - A window without area (a hidden page laid out at 0x0) skips frames instead of creating 0x0
   textures, and `WaitAndAcquireSwapchainTexture` no longer waits forever for one.
 - A key event claims keyboard focus when SDL lost it, or typed text was dropped.
+- `DepthClipControl` is optional: requested where the adapter has it and the app leaves
+  `FEATURE_DEPTH_CLAMPING` on; without it pipelines clip depth (ARM Mali Bifrost phones lack it).
+- Fewer calls into the page per frame (each WebGPU call costs; a phone feels it most). Measured in Lorencia on
+  2026-10-29: 915 draws a frame set 4 bind groups each (3,660 calls) and wrote 736 uniform blocks one call each.
+  - A draw sets only the bind groups whose bindings changed, and not when the same group and offsets are
+    already set in the pass; the same for vertex and index buffers.
+  - Uniform data pushed into a command buffer is collected per uniform buffer and written with one call each
+    at submit, instead of a `malloc` and a `writeBuffer` per push.
+  - Mapping a transfer buffer with `cycle` no longer clears the whole buffer: the game maps one with `cycle`
+    for each upload, and the clearing took a few per cent of every frame.
 - Fences (Enhanced graphics crashed or froze the tab, 2026-10-22; found with AddressSanitizer, see below):
   - `SubmitAndAcquireFence` read the queue from the command buffer that Submit had just freed.
   - `GenerateMipmaps` freed its temporary texture while the command buffer still tracked it.
@@ -128,8 +160,10 @@ answer (a lost network); OpenMU itself drops a client that stops sending its hea
   `UI/Social/SocialWindowManager.cpp`), which MU Moldova's bridge doesn't relay; they don't open in
   the browser. Whispers and the normal chat use the game server and work.
 - Phones: iOS browsers all use WebKit, which has no JSPI, so iPhones can't run it. Android Chrome
-  has what the game needs but was never tried; it has no touch controls (right-click, hotkeys) and
-  the interface is drawn for 1024x768.
-- Files outside the startup pack (other maps, monsters) still download one by one when first read.
+  has what the game needs (Mali cards through the soft clip shaders) and the page is laid out for
+  phones in landscape, but there are no touch controls yet (right-click, hotkeys) and the interface
+  is drawn for 1024x768.
+- Files outside the packs (monsters, sounds) still download one by one when first read; the service
+  worker keeps them on the device afterwards.
 - Saved passwords and the in-game downloader are off in the browser.
 - A synthetic click (down and up in the same frame) doesn't walk; a real mouse press does.

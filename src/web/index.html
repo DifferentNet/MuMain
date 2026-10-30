@@ -2,71 +2,787 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-visual">
+<meta name="theme-color" content="#0d0e12">
+<link rel="manifest" href="manifest.webmanifest">
 <title>MU Online (web)</title>
+<script>
+  // What the game runs on, decided before the page is drawn, so nothing jumps: a phone, a tablet or a
+  // computer. Phones and tablets are played with the fingers: they get the touch page (html.phone: the
+  // game fills the screen in landscape, the footer opens from the menu button, the device's own
+  // keyboard for text fields), and the game knows it from its first frame (Module.muDevice,
+  // Core/Platform/web/WebDevice.cpp) for its touch controls. index.html?phone, ?tablet or ?desktop
+  // decides it on any device. "reason" goes to the log.
+  // A tablet's or a "desktop site" phone's browser may call itself a computer; a touch screen with
+  // no mouse at all gives it away, and the screen's short side tells a phone from a tablet.
+  const TABLET_SHORT_SIDE = 600;   // CSS pixels: below it, a phone
+  function detectDevice() {
+    const params = new URLSearchParams(location.search);
+    for (const kind of ["phone", "tablet", "desktop"]) {
+      if (params.has(kind)) return { kind, reason: "?" + kind };
+    }
+    const ua = navigator.userAgent;
+    if (navigator.userAgentData && navigator.userAgentData.mobile) return { kind: "phone", reason: "the browser says mobile" };
+    if (/iPhone|iPod|Android.+Mobile/.test(ua)) return { kind: "phone", reason: "user agent" };
+    if (/iPad|Android/.test(ua)) return { kind: "tablet", reason: "user agent" };
+    // iPadOS Safari calls itself a Mac, and Macs have no touch screens.
+    if (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) return { kind: "tablet", reason: "a Mac with a touch screen" };
+    const touchOnly = navigator.maxTouchPoints > 0 && matchMedia("(any-pointer: coarse)").matches &&
+      !matchMedia("(any-pointer: fine)").matches && !matchMedia("(any-hover: hover)").matches;
+    if (touchOnly) {
+      const kind = Math.min(screen.width, screen.height) < TABLET_SHORT_SIDE ? "phone" : "tablet";
+      return { kind, reason: "a touch screen and no mouse" };
+    }
+    return { kind: "desktop", reason: "a mouse, or no touch screen" };
+  }
+  const device = detectDevice();
+  const phone = device.kind !== "desktop";   // phones and tablets: the touch page
+  document.documentElement.classList.toggle("phone", phone);
+</script>
 <style>
   :root { --bg: #0d0e12; --panel: #16181f; --line: rgba(255,255,255,.12); --ink: #f2eee6; --muted: #a0a5b1; --gold: #e5b95c; --bad: #f2766a; color-scheme: dark; }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 14px/1.5 "Segoe UI", system-ui, sans-serif; }
   #stage { display: flex; align-items: center; justify-content: center; height: calc(100% - 2.5rem); overflow: hidden; }
   #stage:fullscreen { height: 100%; background: #000; }
-  /* fitCanvas() below sizes the canvas to the stage; the game picks its resolution (Options). */
-  #canvas { display: block; background: #000; outline: none; }
+  /* "Auto": the canvas is the stage's size to the device pixel; at its corner, half a pixel off would blur it. */
+  #stage.auto { align-items: flex-start; justify-content: flex-start; }
+  /* fitCanvas() below sizes the canvas to the stage; the game picks its resolution (Options, "Auto" by default). */
+  #canvas { display: block; flex: none; background: #000; outline: none; }
   #status { position: absolute; inset: 0 0 2.5rem 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 1rem; pointer-events: none; }
   #status.bad { color: var(--bad); }
   #status[hidden] { display: none; }
   footer { height: 2.5rem; display: flex; gap: 1rem; align-items: center; padding: 0 1rem; border-top: 1px solid var(--line); background: var(--panel); color: var(--muted); font-size: .8125rem; }
   footer button { font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 4px; padding: .15rem .6rem; cursor: pointer; }
-  footer button:focus-visible { outline: 2px solid var(--gold); }
+  footer select { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: .1rem .3rem; }
+  footer label { white-space: nowrap; }
+  /* Phones: the buttons and the quality choice fit on one line without the title. */
+  @media (max-width: 520px) { footer { gap: .5rem; padding: 0 .5rem; } footer > span { display: none; } }
+  footer button:focus-visible, footer select:focus-visible { outline: 2px solid var(--gold); }
   #log { position: fixed; left: 0; right: 0; bottom: 2.5rem; height: 40%; margin: 0; padding: .5rem 1rem; overflow: auto; background: rgba(13,14,18,.96); border-top: 1px solid var(--line); font: 12px/1.4 ui-monospace, Consolas, monospace; white-space: pre-wrap; }
   #log[hidden] { display: none; }
   .err { color: var(--bad); }
+  /* Phones: no footer line; the menu button in the corner opens its buttons as a panel, and nothing
+     scrolls, zooms, selects or flashes under the player's fingers. */
+  #menu, #play, #rotate { display: none; }
+  html.phone, html.phone body { height: 100dvh; overflow: hidden; overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  html.phone #stage { height: 100%; }
+  html.phone #canvas { touch-action: none; }
+  html.phone #status { inset: 0; }
+  html.phone #log { bottom: 0; }
+  html.phone #menu { display: block; position: fixed; top: .5rem; right: .5rem; z-index: 2; width: 3rem; height: 3rem; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: rgba(22,24,31,.6); color: var(--ink); font-size: 1.25rem; line-height: 1; cursor: pointer; }
+  html.phone footer { position: fixed; top: .5rem; right: 4rem; z-index: 2; height: auto; flex-direction: column; align-items: stretch; gap: .5rem; padding: .75rem; border: 1px solid var(--line); border-radius: 6px; }
+  html.phone footer:not(.open), html.phone footer > span { display: none; }
+  html.phone footer button, html.phone footer select { padding: .45rem .9rem; }
+  /* Phones, before the game: Play opens it fullscreen and sideways. */
+  html.phone #play.show { display: flex; position: fixed; left: 50%; bottom: 1rem; transform: translateX(-50%); z-index: 3; flex-direction: column; align-items: center; gap: .35rem; padding: .75rem 1.25rem; border: 1px solid var(--line); border-radius: 8px; background: rgba(22,24,31,.94); }
+  #play-fullscreen { font: inherit; font-size: 1.125rem; font-weight: 600; color: #1b1406; background: var(--gold); border: 0; border-radius: 6px; padding: .6rem 2.25rem; cursor: pointer; }
+  #play-here { font: inherit; font-size: .8125rem; color: var(--muted); background: none; border: 0; padding: .25rem; text-decoration: underline; cursor: pointer; }
+  #install { font: inherit; font-size: 1rem; font-weight: 600; color: var(--gold); background: transparent; border: 1px solid var(--gold); border-radius: 6px; padding: .45rem 1.5rem; cursor: pointer; }
+  #play-fullscreen[hidden], #install[hidden], footer button[hidden], #install-hint[hidden] { display: none; }
+  /* Where the browser has no Install of its own to offer: the steps in its menu. */
+  #install-hint { position: fixed; left: 50%; bottom: 1rem; transform: translateX(-50%); z-index: 5; width: min(28rem, calc(100% - 2rem)); padding: .9rem 1.1rem; border: 1px solid var(--gold); border-radius: 8px; background: rgba(22,24,31,.97); text-align: center; white-space: pre-line; }
+  #install-hint p { margin: 0 0 .6rem; }
+  #install-hint button { font: inherit; font-weight: 600; color: #1b1406; background: var(--gold); border: 0; border-radius: 6px; padding: .35rem 1.75rem; cursor: pointer; }
+  /* Phones held upright: the game is played sideways. */
+  #rotate { position: fixed; inset: 0; z-index: 4; align-items: center; justify-content: center; padding: 1rem; text-align: center; background: var(--bg); }
+  @media (orientation: portrait) { html.phone #rotate { display: flex; } }
+  #rotate-icon { width: 2.5rem; height: 4.25rem; margin: 0 auto 1.25rem; border: 3px solid var(--gold); border-radius: .5rem; animation: turn-phone 2s ease-in-out infinite; }
+  @keyframes turn-phone { 0%, 25% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+  @media (prefers-reduced-motion: reduce) { #rotate-icon { animation: none; transform: rotate(-90deg); } }
+  /* Phones: the unseen field that brings up the phone's keyboard for the game's text fields
+     (phoneKeyboard below). 16px, or an iPhone zooms in on it. */
+  #keyboard { position: fixed; left: 0; top: 0; width: 1px; height: 1px; padding: 0; border: 0; opacity: 0; font-size: 16px; pointer-events: none; caret-color: transparent; -webkit-user-select: text; user-select: text; }
 </style>
 </head>
 <body>
 <div id="stage"><canvas id="canvas" tabindex="0" oncontextmenu="event.preventDefault()"></canvas></div>
+<input id="keyboard" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" tabindex="-1" aria-hidden="true">
 <div id="status">Loading…</div>
 <pre id="log" hidden></pre>
+<button id="menu" type="button" aria-label="Menu" title="Menu">⋮</button>
+<div id="play">
+  <button id="play-fullscreen" type="button">Play</button>
+  <button id="install" type="button" hidden>Install the game · Установить игру</button>
+  <button id="play-here" type="button">Stay in the browser · Остаться в браузере</button>
+</div>
+<div id="install-hint" role="dialog" aria-label="Install" hidden><p></p><button type="button">OK</button></div>
+<div id="rotate"><div><div id="rotate-icon"></div>Turn your phone sideways<br>Поверните телефон горизонтально</div></div>
 <footer>
   <span>MU Online in the browser</span>
   <button id="toggle-log" type="button">Log</button>
   <button id="fullscreen" type="button">Fullscreen</button>
+  <button id="install-menu" type="button" hidden>Install</button>
+  <button id="view" type="button" hidden title="The game's layout, as in its Options → Interface">View</button>
+  <label title="How many pixels the game draws while Options has Auto resolution; Lowest also turns effects and shadows off">Quality
+    <select id="quality">
+      <option value="high">High</option>
+      <option value="medium">Medium</option>
+      <option value="low">Low</option>
+      <option value="lowest">Lowest</option>
+    </select>
+  </label>
 </footer>
 <script>
   const statusEl = document.getElementById("status");
   const logEl = document.getElementById("log");
   const canvas = document.getElementById("canvas");
+  const playCard = document.getElementById("play");
   function setStatus(text, bad) {
     statusEl.hidden = !text;
     statusEl.textContent = text || "";
     statusEl.classList.toggle("bad", !!bad);
+    if (bad) playCard.classList.remove("show");
   }
-  function appendLog(text, isError) {
+  // The log keeps its last LOG_LINES lines and, for good, the first KEPT_ERRORS error lines. A line
+  // equal to the one before it only counts up. Past ERRORS_PER_SECOND error lines in a second the rest
+  // are only counted, and a line says how many. A browser that can't compile a shader can repeat the
+  // error on every frame: on a Mac's Safari that pushed the first error out of the log and froze the
+  // page (2026-10-29). Returns false for a line left out.
+  const LOG_LINES = 3000, KEPT_ERRORS = 200, ERRORS_PER_SECOND = 50;
+  let errorLines = 0, errorsThisSecond = 0, errorsLeftOut = 0, errorSecondTimer = 0, logScroll = 0;
+  function newErrorSecond() {
+    errorSecondTimer = 0;
+    errorsThisSecond = 0;
+    if (errorsLeftOut) {
+      const count = errorsLeftOut;
+      errorsLeftOut = 0;
+      addLogLine(`(${count} more error lines left out)`, true);
+    }
+  }
+  function addLogLine(text, isError) {
     const line = document.createElement("div");
-    if (isError) line.className = "err";
+    if (isError) {
+      line.className = "err";
+      if (errorLines++ < KEPT_ERRORS) line.dataset.keep = "1";
+    }
+    line.dataset.text = text;
     line.textContent = text;
     logEl.appendChild(line);
-    if (logEl.childElementCount > 3000) logEl.firstChild.remove();
-    logEl.scrollTop = logEl.scrollHeight;
+    if (logEl.childElementCount > LOG_LINES) {
+      let oldest = logEl.firstElementChild;
+      while (oldest && oldest.dataset.keep) oldest = oldest.nextElementSibling;
+      if (oldest) oldest.remove();
+    }
+    if (!logScroll) logScroll = requestAnimationFrame(() => { logScroll = 0; logEl.scrollTop = logEl.scrollHeight; });
+    return line;
   }
+  function appendLog(text, isError) {
+    const last = logEl.lastElementChild;
+    if (last && last.dataset.text === text) {
+      last.dataset.count = String(Number(last.dataset.count || 1) + 1);
+      last.textContent = `${text} (×${last.dataset.count})`;
+      return true;
+    }
+    if (isError) {
+      if (!errorSecondTimer) errorSecondTimer = setTimeout(newErrorSecond, 1000);
+      if (++errorsThisSecond > ERRORS_PER_SECOND && errorLines >= KEPT_ERRORS) {
+        errorsLeftOut++;
+        return false;
+      }
+    }
+    addLogLine(text, isError);
+    return true;
+  }
+  // WebGPU errors whole, each different one once. SDL prints an error as many log lines, and WebKit's
+  // shader errors carry the whole generated Metal code with the reason last: with a long shader the
+  // reason fell past the kept error lines and the per-second limit (Safari, 2026-10-29). The page
+  // listens on the game's device itself: one kept line per different error, reason included, a count
+  // for repeats, and the lines SDL prints for it left out. muGpuErrors() in the browser console gives
+  // the errors whole: copy(muGpuErrors()).
+  const GPU_ERRORS_KEPT = 20, GPU_ECHO_MS = 1000;
+  const gpuErrors = new Map();   // message -> { count, summary, line }
+  let gpuErrorText = "", gpuEchoUntil = 0;
+  function gpuErrorSummary(message) {
+    // WebKit: "Failed to compile the shader source, generated metal:\n<Metal code> - error <reason>"
+    const reasonAt = message.lastIndexOf(" - error ");
+    const firstLineEnd = message.indexOf("\n");
+    const text = reasonAt >= 0 && firstLineEnd >= 0
+      ? `${message.slice(0, firstLineEnd)} … ${message.slice(reasonAt + 3)}` : message;
+    return "WebGPU error: " + text.replace(/\s+/g, " ").trim().slice(0, 1500);
+  }
+  function onGpuError(event) {
+    const message = String((event.error && event.error.message) || "unknown");
+    const seen = gpuErrors.get(message);
+    if (!seen && gpuErrors.size >= GPU_ERRORS_KEPT) return;   // SDL's lines go to the log as before
+    gpuErrorText = message;
+    gpuEchoUntil = performance.now() + GPU_ECHO_MS;
+    if (seen) {
+      seen.count++;
+      seen.line.textContent = `${seen.summary} (×${seen.count})`;
+      return;
+    }
+    const summary = gpuErrorSummary(message);
+    const line = addLogLine(summary, true);
+    line.dataset.keep = "1";
+    gpuErrors.set(message, { count: 1, summary, line });
+    console.error(message);
+  }
+  // A line SDL prints for the error onGpuError just took: "ERROR: WebGPU uncaptured error!", then the
+  // message line by line (the [sdl] log the same way).
+  function gpuErrorEcho(text) {
+    if (performance.now() > gpuEchoUntil) return false;
+    return /WebGPU uncaptured error!$/.test(text) || gpuErrorText.includes(text.replace(/^ERROR: /, ""));
+  }
+  if (self.GPUAdapter) {
+    const requestDevice = GPUAdapter.prototype.requestDevice;
+    GPUAdapter.prototype.requestDevice = function (...args) {
+      return requestDevice.apply(this, args).then((gpuDevice) => {
+        gpuDevice.addEventListener("uncapturederror", onGpuError);
+        return gpuDevice;
+      });
+    };
+  }
+  // Phones and tablets: the game's picture set up once more after the game sets it up. On a Pixel 9 Pro
+  // XL (Edge 156) opened from the home screen, the game ran and played sound but the screen stayed
+  // black until leaving fullscreen set the canvas up again (2026-10-30). So the page sets it up again
+  // with the game's own settings 1 s and 5 s after each time the game does, and when the page comes
+  // back on screen: right before the game's next frame takes the canvas texture, so no frame is lost.
+  const PICTURE_SETUP_AGAIN_MS = [1000, 5000];
+  const PAGE_SHOWN_SETUP_MS = 300;
+  const canvasSetups = new Map();   // GPUCanvasContext -> the game's configuration
+  const setUpAgain = new Map();     // GPUCanvasContext -> why it is set up again before its next frame
+  let setUpAgainTimers = [];
+  function setUpPictureAgain(reason) {
+    for (const context of canvasSetups.keys()) setUpAgain.set(context, reason);
+  }
+  if (self.GPUCanvasContext && device.kind !== "desktop") {
+    const configure = GPUCanvasContext.prototype.configure;
+    const unconfigure = GPUCanvasContext.prototype.unconfigure;
+    const getCurrentTexture = GPUCanvasContext.prototype.getCurrentTexture;
+    // Picture checks: the screen stayed black until a tap on the game even with the setup above (the
+    // same Pixel, 2026-10-30). Every 5 s for the first minute after the game first sets the picture up,
+    // and at the first tap on the game, the log says how many frames the game drew, how bright the
+    // last one is (0 is black) and how long the browser took to its next frame: a black frame means
+    // the game draws black; a bright one, while the screen is black, means the browser doesn't show it.
+    const PICTURE_CHECK_MS = 5000;
+    const PICTURE_CHECKS = 12;
+    const BROWSER_FRAME_WAIT_MS = 2000;
+    const probe = document.createElement("canvas");
+    probe.width = 16;
+    probe.height = 8;
+    const probeContext = probe.getContext("2d", { willReadFrequently: true });
+    let gameFrames = 0;
+    let pictureCheck = null;          // the check under way: { when, frames, brightness, browserFrame }
+    let pictureChecksStarted = 0;     // performance.now() of the game's first picture setup
+    function pictureBrightness(source) {
+      try {
+        probeContext.clearRect(0, 0, probe.width, probe.height);
+        probeContext.drawImage(source, 0, 0, probe.width, probe.height);
+        const pixels = probeContext.getImageData(0, 0, probe.width, probe.height).data;
+        let sum = 0;
+        for (let i = 0; i < pixels.length; i += 4) sum += pixels[i] + pixels[i + 1] + pixels[i + 2];
+        return String(Math.round(sum / (pixels.length / 4) / 3));
+      } catch (e) {
+        return "unknown (" + (e && e.message || e) + ")";
+      }
+    }
+    function finishPictureCheck(check) {
+      if (pictureCheck !== check || check.brightness === undefined || check.browserFrame === undefined) return;
+      pictureCheck = null;
+      appendLog(`Picture check (${check.when}): the game drew ${check.frames} frames, the last ${check.brightness} ` +
+                `bright of 255; the browser's next frame ${check.browserFrame}; page ${document.visibilityState}` +
+                (document.hasFocus() ? ", focused" : ", not focused"));
+    }
+    function startPictureCheck(when) {
+      if (pictureCheck) return false;
+      const check = pictureCheck = { when, frames: gameFrames };
+      gameFrames = 0;
+      const started = performance.now();
+      requestAnimationFrame(() => {
+        if (check.browserFrame !== undefined) return;
+        check.browserFrame = `after ${Math.round(performance.now() - started)} ms`;
+        finishPictureCheck(check);
+      });
+      setTimeout(() => {
+        if (check.browserFrame === undefined) check.browserFrame = `none in ${BROWSER_FRAME_WAIT_MS / 1000} s`;
+        if (check.brightness === undefined) check.brightness = "unknown (no frame)";
+        finishPictureCheck(check);
+      }, BROWSER_FRAME_WAIT_MS);
+      return true;
+    }
+    function secondsAfterTheGame() {
+      return `${Math.round((performance.now() - pictureChecksStarted) / 1000)} s after the game`;
+    }
+    let tapChecked = false;
+    canvas.addEventListener("pointerdown", () => {
+      if (tapChecked || !pictureChecksStarted) return;
+      if (startPictureCheck(`first tap on the game, ${secondsAfterTheGame()}`)) tapChecked = true;
+    });
+    GPUCanvasContext.prototype.configure = function (configuration) {
+      configure.call(this, configuration);
+      canvasSetups.set(this, configuration);
+      setUpAgain.delete(this);
+      appendLog(`Picture set up by the game: ${this.canvas.width}x${this.canvas.height}`);
+      setUpAgainTimers.forEach(clearTimeout);
+      setUpAgainTimers = PICTURE_SETUP_AGAIN_MS.map((ms) => setTimeout(() => setUpPictureAgain(`${ms / 1000} s after the game`), ms));
+      if (!pictureChecksStarted) {
+        pictureChecksStarted = performance.now();
+        for (let i = 1; i <= PICTURE_CHECKS; i++) setTimeout(() => startPictureCheck(secondsAfterTheGame()), i * PICTURE_CHECK_MS);
+      }
+    };
+    if (unconfigure) {
+      GPUCanvasContext.prototype.unconfigure = function () {
+        canvasSetups.delete(this);
+        setUpAgain.delete(this);
+        return unconfigure.call(this);
+      };
+    }
+    GPUCanvasContext.prototype.getCurrentTexture = function () {
+      const reason = setUpAgain.get(this);
+      if (reason !== undefined) {
+        setUpAgain.delete(this);
+        try {
+          configure.call(this, canvasSetups.get(this));
+          appendLog(`Picture set up again (${reason}): ${this.canvas.width}x${this.canvas.height}`);
+        } catch (e) {
+          appendLog(`Picture not set up again (${reason}): ${e && e.message || e}`, true);
+        }
+      }
+      gameFrames++;
+      const check = pictureCheck;
+      if (check && check.brightness === undefined && !check.measuring) {
+        check.measuring = true;
+        // Once the game's turn ends, so with its frame drawn into this texture and handed over.
+        queueMicrotask(() => {
+          check.brightness = pictureBrightness(this.canvas);
+          finishPictureCheck(check);
+        });
+      }
+      return getCurrentTexture.call(this);
+    };
+    document.addEventListener("visibilitychange", () => {
+      appendLog(`Page ${document.visibilityState}`);
+      if (document.visibilityState === "visible") setTimeout(() => setUpPictureAgain("page shown"), PAGE_SHOWN_SETUP_MS);
+    });
+  }
+  window.muGpuErrors = () =>
+    [...gpuErrors].map(([message, e]) => `(×${e.count}) ${message}`).join("\n\n") || "no WebGPU errors";
   document.getElementById("toggle-log").onclick = () => { logEl.hidden = !logEl.hidden; };
+  const displayMode = ["fullscreen", "standalone", "minimal-ui", "browser"]
+    .find((mode) => matchMedia(`(display-mode: ${mode})`).matches) || "unknown";
+  appendLog(`Device: ${device.kind} (${device.reason}); screen ${screen.width}x${screen.height} CSS px, ` +
+            `${devicePixelRatio} device px each, ${navigator.maxTouchPoints} touch points; ` +
+            `display ${displayMode}, page ${document.visibilityState}`);
   const stage = document.getElementById("stage");
-  document.getElementById("fullscreen").onclick = () => { stage.requestFullscreen?.().catch(() => {}); canvas.focus(); };
+  const footer = document.querySelector("footer");
+  // Phones put the whole page on the screen, the menu button too, and turn it sideways: browsers lock
+  // the orientation only in fullscreen. Called from a tap, as fullscreen needs one. The footer's
+  // button also leaves fullscreen. A browser that refuses says why in the log and for a moment on the
+  // screen: on a Pixel's Edge the button did nothing at all (2026-10-29).
+  const FULLSCREEN_NOTE_MS = 4000;
+  const fullscreenButton = document.getElementById("fullscreen");
+  let fullscreenNoteTimer = 0;
+  function inFullscreen() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  function fullscreenRefused(reason) {
+    const text = "Fullscreen refused: " + (reason && reason.message ? reason.message : String(reason));
+    appendLog(text, true);
+    if (!statusEl.hidden && !fullscreenNoteTimer) return; // "Loading…" and the like stay
+    setStatus(text);
+    clearTimeout(fullscreenNoteTimer);
+    fullscreenNoteTimer = setTimeout(() => { fullscreenNoteTimer = 0; setStatus(""); }, FULLSCREEN_NOTE_MS);
+  }
+  function enterFullscreen() {
+    const target = phone ? document.documentElement : stage;
+    const request = target.requestFullscreen || target.webkitRequestFullscreen;
+    if (!request) {
+      fullscreenRefused("this browser has no fullscreen for pages");
+      return;
+    }
+    let result;
+    try {
+      result = request.call(target, { navigationUI: "hide" });
+    } catch (e) {
+      fullscreenRefused(e);
+      return;
+    }
+    Promise.resolve(result).then(() => {
+      if (phone && screen.orientation && screen.orientation.lock) screen.orientation.lock("landscape").catch(() => {});
+    }, fullscreenRefused);
+  }
+  function leaveFullscreen() {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen;
+    if (exit) Promise.resolve(exit.call(document)).catch(fullscreenRefused);
+  }
+  function showFullscreenState() {
+    fullscreenButton.textContent = inFullscreen() ? "Leave fullscreen" : "Fullscreen";
+    appendLog(inFullscreen() ? "Fullscreen" : "Fullscreen left");
+  }
+  document.addEventListener("fullscreenchange", showFullscreenState);
+  document.addEventListener("webkitfullscreenchange", showFullscreenState);
+  fullscreenButton.onclick = () => {
+    if (inFullscreen()) leaveFullscreen();
+    else enterFullscreen();
+    footer.classList.remove("open");
+    canvas.focus();
+  };
+  document.getElementById("menu").onclick = () => footer.classList.toggle("open");
+  canvas.addEventListener("pointerdown", () => footer.classList.remove("open"));
 
-  // The canvas has the game's resolution (Options; its width and height attributes) and is shown
-  // as large as the stage allows, keeping its shape. Only the CSS size changes, which SDL takes into
-  // account for the mouse. Not before the game has sized the canvas (away from the HTML default of
-  // 300x150): SDL treats a canvas the page already sized as one it may not resize.
+  // View: the game's layout, Auto / PC / Phone, the same choice as its Options → Interface (Auto is
+  // the phone layout on a phone or tablet, detectDevice). The game takes muView.request between
+  // frames (Core/Platform/web/WebPageView.h) and calls show() with the choice in force, which also
+  // shows the item once the game runs.
+  const viewButton = document.getElementById("view");
+  const VIEW_NAMES = [["Auto", "авто"], ["PC", "ПК"], ["Phone", "телефон"]];
+  window.muView = {
+    request: null,
+    choice: 0,
+    show(choice, phoneView) {
+      if (!VIEW_NAMES[choice]) return;
+      this.choice = choice;
+      let [en, ru] = VIEW_NAMES[choice];
+      if (choice === 0) {
+        en += phoneView ? " (phone)" : " (PC)";
+        ru += phoneView ? " (телефон)" : " (ПК)";
+      }
+      viewButton.textContent = "View: " + en + " · Вид: " + ru;
+      viewButton.hidden = false;
+    },
+  };
+  viewButton.onclick = () => {
+    window.muView.request = (window.muView.choice + 1) % VIEW_NAMES.length;
+    footer.classList.remove("open");
+    canvas.focus();
+  };
+
+  // Phones: Play opens the game fullscreen; "Stay in the browser" keeps the address bar (the menu's
+  // Fullscreen does it later); Install (below) puts it on the home screen. Not where the page already
+  // fills the screen (opened from the home screen, manifest.webmanifest). An iPhone has no fullscreen
+  // for pages: there the card offers Install, or playing in the browser.
+  const homeScreenApp = matchMedia("(display-mode: fullscreen), (display-mode: standalone), (display-mode: minimal-ui)").matches;
+  if (phone && !homeScreenApp) {
+    const playButton = document.getElementById("play-fullscreen");
+    const stayButton = document.getElementById("play-here");
+    playButton.hidden = !(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+    if (playButton.hidden) stayButton.textContent = "Play in the browser · Играть в браузере";
+    playCard.classList.add("show");
+    playButton.onclick = () => { playCard.classList.remove("show"); enterFullscreen(); canvas.focus(); };
+    stayButton.onclick = () => { playCard.classList.remove("show"); canvas.focus(); };
+  }
+
+  // Install: the game as an app on the home screen (or a computer's start menu), which opens it
+  // fullscreen and sideways without the browser around it (manifest.webmanifest). Chrome and Edge
+  // offer it to the page (beforeinstallprompt), and the Install buttons (the Play card, the menu) ask
+  // the browser for it; where the browser offers nothing (an iPhone, Firefox, Samsung Internet, or
+  // Chrome before it decided to), they show where the browser's own menu has it. Phones always show
+  // them, computers only when the browser offers it, and nobody once the game runs as the app.
+  const installButtons = [document.getElementById("install"), document.getElementById("install-menu")];
+  const installHint = document.getElementById("install-hint");
+  let installOffer = null;
+  let installed = homeScreenApp;
+  function showInstallButtons() {
+    const shown = !installed && (phone || installOffer !== null);
+    for (const button of installButtons) button.hidden = !shown;
+  }
+  function installSteps() {
+    const ua = navigator.userAgent;
+    if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) {
+      return "Tap Share (the square with an arrow), then “Add to Home Screen”.\n" +
+             "Нажмите «Поделиться» (квадрат со стрелкой), затем «На экран „Домой“».";
+    }
+    if (/SamsungBrowser/.test(ua)) {
+      return "Open the menu ≡, then “Add page to” → “Home screen”.\n" +
+             "Откройте меню ≡, затем «Добавить страницу на» → «Главный экран».";
+    }
+    if (/Firefox/.test(ua)) {
+      return "Open the menu ⋮, then “Install” or “Add to Home screen”.\n" +
+             "Откройте меню ⋮, затем «Установить» или «Добавить на главный экран».";
+    }
+    return "Open the browser's menu (⋮ or …), then “Install app” or “Add to Home screen”.\n" +
+           "Откройте меню браузера (⋮ или …), затем «Установить приложение» или «Добавить на главный экран».";
+  }
+  async function install() {
+    footer.classList.remove("open");
+    const offer = installOffer;
+    if (!offer) {
+      installHint.firstChild.textContent = installSteps();
+      installHint.hidden = false;
+      return;
+    }
+    installOffer = null;   // the browser's offer is good for one question
+    try {
+      await offer.prompt();
+      appendLog(`Install: ${(await offer.userChoice).outcome}`);
+    } catch (e) {
+      appendLog(`Install: ${e}`, true);
+    }
+    showInstallButtons();
+  }
+  for (const button of installButtons) button.onclick = install;
+  installHint.lastChild.onclick = () => { installHint.hidden = true; canvas.focus(); };
+  addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();   // the page's own buttons instead of the browser's bar
+    installOffer = event;
+    showInstallButtons();
+  });
+  addEventListener("appinstalled", () => {
+    installed = true;
+    installOffer = null;
+    installHint.hidden = true;
+    showInstallButtons();
+    appendLog("Installed: the game opens from the home screen now");
+  });
+  showInstallButtons();
+
+  // Phones: their own keyboard for the game's text fields (Module.muKeyboard, called from
+  // Core/Platform/web/WebKeyboard.cpp). A canvas can't bring it up, so while a field has the keys the
+  // unseen #keyboard field has the page's focus, and what is typed there goes to the game as key
+  // presses on the window, where SDL listens. A phone's keyboard gives no key codes, which SDL needs,
+  // so the field's value says what changed. It starts with two zero-width spaces, so a Backspace
+  // always has something to delete there, also when it is meant for text the game's field had before.
+  // While the keyboard covers the game's field, the game moves up above it.
+  const KEYBOARD_FILL = "​​";
+  const KEYBOARD_MAX_LENGTH = 64;       // longer, and the field starts over between words
+  const ENTER_HOLD_MS = 100;            // the login window reads Enter as a key held down
+  const KEYBOARD_GAP = 12;              // CSS pixels between the game's field and the keyboard
+  const KEYBOARD_HIDE_DELAY_MS = 100;   // from one field to the next the game hides it, then shows it
+  const keyboardInput = document.getElementById("keyboard");
+  let keyboardSent = KEYBOARD_FILL;     // the value the game has been sent
+  let keyboardComposing = false;        // the keyboard is still writing a word (suggestions)
+  let keyboardWanted = false;
+  let keyboardHideTimer = 0;
+  let keyboardLine = null;              // the game's field, [top, bottom] as fractions of its height
+  let keyboardShift = 0;                // CSS pixels the game is moved up
+  let tappedSinceKeyboard = false;      // a tap on the game since it last asked for the keyboard
+
+  function pressKey(key, code, keyCode, holdMs) {
+    const send = (type) => window.dispatchEvent(new KeyboardEvent(type, { key, code, keyCode, which: keyCode, bubbles: true, cancelable: true }));
+    send("keydown");
+    if (holdMs) setTimeout(() => send("keyup"), holdMs);
+    else send("keyup");
+  }
+  function typeText(text) {
+    for (const ch of text) {
+      if (ch === "​") continue;
+      const charCode = ch.codePointAt(0);
+      window.dispatchEvent(new KeyboardEvent("keypress", { key: ch, charCode, keyCode: charCode, which: charCode, bubbles: true, cancelable: true }));
+    }
+  }
+  function restartKeyboardValue(always) {
+    if (keyboardComposing) return;
+    const value = keyboardInput.value;
+    if (!always && value.startsWith(KEYBOARD_FILL) && value.length <= KEYBOARD_MAX_LENGTH) return;
+    keyboardInput.value = keyboardSent = KEYBOARD_FILL;
+    keyboardInput.setSelectionRange(KEYBOARD_FILL.length, KEYBOARD_FILL.length);
+  }
+  keyboardInput.addEventListener("input", (event) => {
+    keyboardComposing = event.isComposing;
+    const now = Array.from(keyboardInput.value), before = Array.from(keyboardSent);
+    let same = 0;
+    while (same < now.length && same < before.length && now[same] === before[same]) same++;
+    for (let i = same; i < before.length; i++) pressKey("Backspace", "Backspace", 8, 0);
+    typeText(now.slice(same).join(""));
+    keyboardSent = keyboardInput.value;
+    restartKeyboardValue(false);
+  });
+  keyboardInput.addEventListener("compositionstart", () => { keyboardComposing = true; });
+  keyboardInput.addEventListener("compositionend", () => { keyboardComposing = false; restartKeyboardValue(false); });
+  // A phone's Enter ("Go"): a PC's keys have a code and reach the game as they are.
+  keyboardInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.code && !event.isComposing) {
+      event.preventDefault();
+      pressKey("Enter", "Enter", 13, ENTER_HOLD_MS);
+    }
+  });
+  // A tap on the game leaves the focus in the field: the game says when the keyboard goes.
+  canvas.addEventListener("mousedown", (event) => { if (document.activeElement === keyboardInput) event.preventDefault(); });
+  canvas.addEventListener("pointerdown", () => { tappedSinceKeyboard = true; });
+
+  function moveAboveKeyboard() {
+    const view = window.visualViewport;
+    let shift = 0;
+    if (keyboardWanted && keyboardLine && view) {
+      const rect = canvas.getBoundingClientRect();
+      const top = rect.top + keyboardShift; // where the game is when not moved
+      const lineTop = top + keyboardLine[0] * rect.height, lineBottom = top + keyboardLine[1] * rect.height;
+      shift = Math.max(0, Math.min(lineBottom + KEYBOARD_GAP - (view.offsetTop + view.height), lineTop));
+    }
+    shift = Math.round(shift);
+    if (shift === keyboardShift) return;
+    keyboardShift = shift;
+    stage.style.transform = shift ? `translateY(${-shift}px)` : "";
+  }
+  if (window.visualViewport) visualViewport.addEventListener("resize", moveAboveKeyboard);
+
+  const phoneKeyboard = {
+    // "fresh": a field that just took the keys. A tap on the field it has brings the keyboard back
+    // when the phone's Back button put it away: focus() on the focused field does that in Chrome.
+    show(password, lineTop, lineBottom, fresh) {
+      clearTimeout(keyboardHideTimer);
+      keyboardWanted = true;
+      keyboardLine = [lineTop, lineBottom];
+      const type = password ? "password" : "text";
+      if (keyboardInput.type !== type) keyboardInput.type = type;
+      if (fresh) restartKeyboardValue(true);
+      if (fresh || tappedSinceKeyboard || document.activeElement !== keyboardInput) keyboardInput.focus({ preventScroll: true });
+      tappedSinceKeyboard = false;
+      moveAboveKeyboard();
+    },
+    hide() {
+      keyboardWanted = false;
+      clearTimeout(keyboardHideTimer);
+      keyboardHideTimer = setTimeout(() => {
+        if (document.activeElement === keyboardInput) canvas.focus({ preventScroll: true });
+        keyboardLine = null;
+        moveAboveKeyboard();
+      }, KEYBOARD_HIDE_DELAY_MS);
+    },
+  };
+
+  function stored(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+  function store(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* no storage */ } }
+  const pageParams = new URLSearchParams(location.search);
+
+  // startup.json (tools/web/make_startup_pack.py): the startup pack's parts and the hashes of Main.js
+  // and Main.wasm. Asked for at once, while the page checks the graphics card.
+  const releaseIndexLoad = fetch("startup.json", { cache: "no-cache" })
+    .then((response) => response.ok ? response.json() : null).catch(() => null);
+
+  // The service worker (sw.js) keeps the game's files on the device and shows a note of its own when
+  // there is no connection. index.html?nosw removes it and the files it kept (its "mu-web/files"), to
+  // see the page without it.
+  if ("serviceWorker" in navigator) {
+    if (pageParams.has("nosw")) {
+      navigator.serviceWorker.getRegistrations().then((all) => all.forEach((registration) => registration.unregister()));
+      if (self.caches) caches.delete("mu-web/files");
+    } else {
+      navigator.serviceWorker.register("sw.js").catch((e) => appendLog(`Service worker: ${e}`, true));
+    }
+  }
+
+  // The game's size. Options has "Auto" by default (also for players who picked a size before it
+  // existed): the game area in the screen's real pixels (devicePixelRatio), so the picture is drawn
+  // 1:1 instead of stretched, at most the quality's pixel budget (PC, phones). Never below 640x480,
+  // the game's smallest screen, nor below half a pixel per CSS pixel. Picking a size in Options turns
+  // "Auto" off. The game follows muDisplay once a frame (Winmain.cpp MuWebFollowPageSize) and draws
+  // its interface `ratio` times larger, as on a desktop display set to 125 or 150 %, but no larger
+  // than the original's 640x480 screen fits (a low phone window: Winmain.cpp WebContentScale).
+  // Lowest has Low's pixels and turns every effect and shadow off as well (Winmain.cpp
+  // MuWebFollowLowestQuality); weak phones start with it (weakPhoneGpu). index.html?q=high|medium|
+  // low|lowest picks the quality (kept, like the footer's choice); ?dpr=N stands in for the screen's
+  // ratio.
+  const QUALITY_BUDGETS = { high: [2560 * 1440, 1.5e6], medium: [1920 * 1080, 0.75e6], low: [1280 * 720, 0.4e6],
+                            lowest: [1280 * 720, 0.4e6] };
+  const MIN_GAME_SIZE = [640, 480];
+  const MIN_PIXEL_RATIO = 0.5;
+  const MAX_TEXTURE_SIZE = 8192; // WebGPU's default maxTextureDimension2D
+  // Phones resize the page several times in a row (turning it, the address bar coming and going):
+  // the canvas follows at once, the game's size once it settles, as each new size makes the game
+  // rebuild its frame buffers.
+  const PHONE_RESIZE_DELAY_MS = 200;
+  // A phone held upright shows "Turn your phone sideways" (#rotate) over the game, which keeps its size.
+  const portrait = matchMedia("(orientation: portrait)");
+  if (pageParams.has("reset")) {
+    try {
+      for (const key of ["mu-web/resolution", "mu-web/quality", "mu-web/effects-before-lowest"]) localStorage.removeItem(key);
+    } catch (e) {}
+  }
+  const effectsBeforeLowest = parseInt(stored("mu-web/effects-before-lowest"), 10);
+  if (QUALITY_BUDGETS[pageParams.get("q")]) store("mu-web/quality", pageParams.get("q"));
+  const display = window.muDisplay = {
+    auto: stored("mu-web/resolution") !== "manual",
+    quality: QUALITY_BUDGETS[stored("mu-web/quality")] ? stored("mu-web/quality") : "high",
+    width: 0, height: 0, ratio: 1, serial: 0,
+    setAuto(enabled) {
+      this.auto = enabled;
+      store("mu-web/resolution", enabled ? "auto" : "manual");
+      updateDisplay();
+    },
+    setQuality(quality) {
+      if (!QUALITY_BUDGETS[quality]) return;
+      this.quality = quality;
+      store("mu-web/quality", quality);
+      updateDisplay();
+    },
+    // The game's effect and shadow settings from before Lowest turned them off (bits, -1: none), so
+    // another quality brings them back. Kept beside the quality; ?reset forgets it with config.ini.
+    effectsBeforeLowest: Number.isInteger(effectsBeforeLowest) ? effectsBeforeLowest : -1,
+    setEffectsBeforeLowest(bits) {
+      this.effectsBeforeLowest = bits;
+      store("mu-web/effects-before-lowest", String(bits));
+    },
+  };
+  // The stage's exact size in device pixels, where the browser tells it (Chrome, Edge, Firefox).
+  let stageDevicePixels = null;
+
+  function updateDisplay() {
+    const area = stage.getBoundingClientRect();
+    if (area.width < 1 || area.height < 1) return; // hidden: keep the last size
+    if (phone && portrait.matches) return;
+    const screenRatio = Number(pageParams.get("dpr")) || window.devicePixelRatio || 1;
+    const budget = QUALITY_BUDGETS[display.quality][phone ? 1 : 0];
+    let ratio = Math.min(screenRatio, Math.sqrt(budget / (area.width * area.height)));
+    ratio = Math.max(ratio, MIN_PIXEL_RATIO, MIN_GAME_SIZE[0] / area.width, MIN_GAME_SIZE[1] / area.height);
+    ratio = Math.min(ratio, MAX_TEXTURE_SIZE / area.width, MAX_TEXTURE_SIZE / area.height);
+    let width = Math.round(area.width * ratio), height = Math.round(area.height * ratio);
+    if (ratio === window.devicePixelRatio && stageDevicePixels) [width, height] = stageDevicePixels;
+    width = Math.max(width, MIN_GAME_SIZE[0]);
+    height = Math.max(height, MIN_GAME_SIZE[1]);
+    if (width !== display.width || height !== display.height || ratio !== display.ratio) {
+      Object.assign(display, { width, height, ratio, serial: display.serial + 1 });
+    }
+    fitCanvas();
+  }
+
+  // The canvas has the game's resolution (its width and height attributes) and is shown as large as
+  // the stage allows, keeping its shape. Only the CSS size changes, which SDL takes into account for
+  // the mouse. With "Auto" it is exactly width / ratio CSS pixels: a size rounded to whole CSS pixels
+  // would stretch it by a fraction and blur it again. Not before the game has sized the canvas (away
+  // from the HTML default of 300x150): SDL treats a canvas the page already sized as one it may not
+  // resize.
   function fitCanvas() {
     const w = canvas.width, h = canvas.height;
     if (w <= 1 || h <= 1 || (w === 300 && h === 150) || !stage.clientWidth || !stage.clientHeight) return;
-    const scale = Math.min(stage.clientWidth / w, stage.clientHeight / h);
-    const cssW = Math.floor(w * scale) + "px", cssH = Math.floor(h * scale) + "px";
+    const area = stage.getBoundingClientRect();
+    const exact = display.auto && w === display.width && h === display.height;
+    stage.classList.toggle("auto", exact);
+    let cssW, cssH;
+    if (exact) {
+      // Smaller only where the 640x480 floor made the game bigger than the stage.
+      const fit = Math.min(1, (area.width * display.ratio + 1) / w, (area.height * display.ratio + 1) / h);
+      cssW = w / display.ratio * fit + "px";
+      cssH = h / display.ratio * fit + "px";
+    } else {
+      const scale = Math.min(stage.clientWidth / w, stage.clientHeight / h);
+      cssW = Math.floor(w * scale) + "px";
+      cssH = Math.floor(h * scale) + "px";
+    }
     if (canvas.style.width !== cssW) canvas.style.width = cssW;
     if (canvas.style.height !== cssH) canvas.style.height = cssH;
   }
-  new ResizeObserver(fitCanvas).observe(stage);
+
+  let displayTimer = 0;
+  function stageResized() {
+    if (!phone) {
+      updateDisplay();
+      return;
+    }
+    fitCanvas();
+    clearTimeout(displayTimer);
+    displayTimer = setTimeout(updateDisplay, PHONE_RESIZE_DELAY_MS);
+  }
+  const stageObserver = new ResizeObserver((entries) => {
+    const box = entries[0].devicePixelContentBoxSize && entries[0].devicePixelContentBoxSize[0];
+    stageDevicePixels = box ? [box.inlineSize, box.blockSize] : null;
+    stageResized();
+  });
+  try {
+    stageObserver.observe(stage, { box: "device-pixel-content-box" });
+  } catch (e) {
+    stageObserver.observe(stage);
+  }
+  // Browser zoom and moving the window to another screen change devicePixelRatio.
+  (function watchPixelRatio() {
+    matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`)
+      .addEventListener("change", () => { updateDisplay(); watchPixelRatio(); }, { once: true });
+  })();
   new MutationObserver(fitCanvas).observe(canvas, { attributes: true, attributeFilter: ["width", "height", "style"] });
+  updateDisplay();
+
+  const qualitySelect = document.getElementById("quality");
+  qualitySelect.value = display.quality;
+  qualitySelect.onchange = () => { display.setQuality(qualitySelect.value); canvas.focus(); };
 
   // When the game's code fails (a WebAssembly error), say so and stop calling into it. The failure
   // can leave a lock taken (inside malloc, say), and the next call from the page (saving settings,
@@ -90,6 +806,7 @@
   function gameCrashed(error) {
     if (crashed) return;
     crashed = true;
+    playCard.classList.remove("show");
     for (const socket of openSockets) {
       socket.onmessage = socket.onclose = socket.onerror = null;
       try { socket.close(); } catch (e) {}
@@ -131,7 +848,8 @@
 
   // config.ini (resolution, volume, the remembered user name ...) lives in the page's memory; keep
   // a copy in the browser so the next visit starts with it (WebFileSystem.cpp merges it back).
-  // index.html?reset forgets it, for a setting that keeps the game from starting.
+  // index.html?reset forgets it (and the resolution and quality choices, above), for a setting that
+  // keeps the game from starting.
   if (new URLSearchParams(location.search).has("reset")) {
     try { localStorage.removeItem("mu-web/config.ini"); } catch (e) {}
   }
@@ -165,13 +883,20 @@
   if (!navigator.gpu) missing.push("WebGPU");
   if (!("Suspending" in WebAssembly)) missing.push("WebAssembly JSPI");
   if (!self.crossOriginIsolated) missing.push("cross-origin isolation (serve with scripts/serve-web.py)");
-  // The graphics adapter and the optional WebGPU features the game's renderer requests (SDL's WebGPU
-  // backend requires the first six, the game's shaders the clip distances). Without one of them the
-  // game only said "SDL_gpu Renderer Error. Install the latest graphics card driver." (an AMD
-  // Radeon RX 9070 XT, 2026-10-24; its browser then gave no adapter at all). index.html?needfeature=<name>
-  // adds a feature and ?noadapter drops the adapter, to see the messages.
+  // The graphics adapter and the optional WebGPU features SDL's WebGPU backend requires. Without one
+  // of them the game only said "SDL_gpu Renderer Error. Install the latest graphics card driver." (an
+  // AMD Radeon RX 9070 XT, 2026-10-24; its browser then gave no adapter at all).
+  // index.html?needfeature=<name> adds a feature and ?noadapter drops the adapter, to see the messages.
   const NEEDED_FEATURES = ["depth32float-stencil8", "rg11b10ufloat-renderable", "indirect-first-instance",
-                           "depth-clip-control", "bgra8unorm-storage", "float32-filterable", "clip-distances"];
+                           "bgra8unorm-storage", "float32-filterable"];
+  // The game clamps depth where the card can. ARM Mali Bifrost phones (a Galaxy Note 10 Lite in
+  // Chrome 156, 2026-10-30) can't, and the game clips it instead, as the original OpenGL game did
+  // (Module.muDepthClamp). index.html?nodepthclamp clips it on any card, to try it.
+  const DEPTH_CLAMP = "depth-clip-control";
+  // The game's shaders use clip distances where the card has them. ARM Mali phones (a Pixel 9 Pro XL,
+  // 2026-10-29) don't, and the game takes its soft clip shaders instead (Module.muClipDistances,
+  // Core/Platform/web/WebGpuFeatures.cpp). index.html?softclip takes them on any card, to try them.
+  const CLIP_DISTANCES = "clip-distances";
   // The browser and its version, for the message: Yandex, Opera and Brave are Chromium too, and some
   // give pages navigator.gpu but no adapter.
   function browserName() {
@@ -179,6 +904,61 @@
       .filter((b) => !/brand|chromium/i.test(b.brand)).map((b) => b.brand + " " + b.version);
     const tokens = navigator.userAgent.match(/(YaBrowser|OPR|Edg|Vivaldi|Firefox)\/[\d.]+/g) || [];
     return brands.concat(tokens).join(", ") || navigator.userAgent;
+  }
+  // Safari 27.0.1 (WebKit 7625; ghinzuro's MacBook Air M4, 2026-10-29) reports clip-distances, but
+  // the Metal code it writes for basic_textured.vert and skinned_*.vert doesn't compile: the clip
+  // distances member becomes a C array, and the shader returns the whole array as one value. The
+  // pipeline is then invalid and every frame fails ("encoder state is not valid"). This shader has
+  // the same output struct and the same return, so where it doesn't build, the game takes its soft
+  // clip shaders. Returns why it failed, or "" where it builds.
+  const CLIP_TEST_SHADER = `enable clip_distances;
+struct VertexOutput {
+    @builtin(position) member: vec4<f32>,
+    @location(0) member_1: vec2<f32>,
+    @location(1) member_2: vec4<f32>,
+    @location(2) member_3: f32,
+    @location(3) member_4: f32,
+    @builtin(clip_distances) member_5: array<f32, 1>,
+}
+var<private> clipDist: array<f32, 1> = array<f32, 1>();
+@vertex
+fn vs(@location(0) pos: vec3<f32>) -> VertexOutput {
+    let position = vec4<f32>(pos, 1f);
+    clipDist[0i] = position.w - 1f;
+    let clip = clipDist;
+    return VertexOutput(position, pos.xy, position, pos.z, position.w, clip);
+}
+@fragment
+fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
+    return vec4<f32>(uv, 0f, 1f);
+}`;
+  async function clipDistancesBroken(adapter) {
+    let device = null;
+    const test = (async () => {
+      device = await adapter.requestDevice({ requiredFeatures: [CLIP_DISTANCES] });
+      device.pushErrorScope("internal");
+      device.pushErrorScope("validation");
+      const module = device.createShaderModule({ code: CLIP_TEST_SHADER });
+      device.createRenderPipeline({
+        layout: "auto",
+        vertex: { module, entryPoint: "vs",
+                  buffers: [{ arrayStride: 12, attributes: [{ shaderLocation: 0, offset: 0, format: "float32x3" }] }] },
+        fragment: { module, entryPoint: "fs", targets: [{ format: "rgba8unorm" }] },
+      });
+      const errors = [await device.popErrorScope(), await device.popErrorScope()].filter(Boolean);
+      if (!errors.length) return "";
+      // WebKit: "Failed to compile the shader source, generated metal:\n<Metal code> - error <reason>"
+      return String(errors[0].message).split(" - error ").pop().replace(/\s+/g, " ").trim().slice(0, 300) || "error";
+    })();
+    const timeout = new Promise((resolve) => setTimeout(() => resolve("no answer in 5 s"), 5000));
+    try {
+      return await Promise.race([test, timeout]);
+    } catch (e) {
+      return String((e && e.message) || e).slice(0, 300) || "error";
+    } finally {
+      // A device that arrives after the timeout is destroyed once the test ends.
+      test.finally(() => { if (device) device.destroy(); }).catch(() => {});
+    }
   }
   async function checkGpu() {
     const params = new URLSearchParams(location.search);
@@ -202,9 +982,31 @@
     const info = adapter.info || {};
     const gpu = [info.vendor, info.architecture, info.device, info.description].filter(Boolean).join(" / ") || "unknown";
     const missing = needed.filter((name) => !adapter.features.has(name));
-    appendLog(`WebGPU adapter: ${gpu} (${tried.join(", ")}); missing features: ${missing.join(", ") || "none"}; browser: ${browser}`,
+    let clipDistances = adapter.features.has(CLIP_DISTANCES) && !params.has("softclip");
+    let clipNote = clipDistances ? "yes" : "no, soft clip shaders";
+    if (clipDistances && missing.length === 0) {
+      const broken = await clipDistancesBroken(adapter);
+      if (broken) {
+        clipDistances = false;
+        clipNote = `no, this browser can't build them (${broken}), soft clip shaders`;
+      }
+    }
+    const depthClamp = adapter.features.has(DEPTH_CLAMP) && !params.has("nodepthclamp");
+    appendLog(`WebGPU adapter: ${gpu} (${tried.join(", ")}); missing features: ${missing.join(", ") || "none"}; ` +
+              `clip distances: ${clipNote}; depth clamp: ${depthClamp ? "yes" : "no, depth clipped"}; ` +
+              `browser: ${browser}`,
               missing.length > 0);
-    return { ok: missing.length === 0, gpu, browser, missing };
+    return { ok: missing.length === 0, gpu, browser, missing, clipDistances, depthClamp, weak: weakPhoneGpu(info) };
+  }
+  // Phone graphics too slow for the game's effects and shadows: ARM Mali Bifrost or Midgard (the
+  // Galaxy Note 10 Lite's Mali-G72 played at Low "a bit smoother, not smooth", 2026-10-30), Adreno 5xx
+  // or older, PowerVR, or 2 GB of memory or less. Such phones start at Quality Lowest.
+  function weakPhoneGpu(info) {
+    const vendor = (info.vendor || "").toLowerCase(), architecture = (info.architecture || "").toLowerCase();
+    return (vendor === "arm" && /bifrost|midgard/.test(architecture)) ||
+           (vendor === "qualcomm" && /adreno-?[2-5]/.test(architecture)) ||
+           /img-tec|imagination|powervr/.test(vendor) ||
+           (navigator.deviceMemory || 8) <= 2;
   }
   function showGpuProblem(gpu, browser, missingFeatures) {
     const lines = missingFeatures.length
@@ -235,10 +1037,17 @@
 
   if (missing.length) {
     setStatus("This browser can't run the game: no " + missing.join(", ") + ". Use a current Chrome or Edge.", true);
-  } else checkGpu().then((gpuCheck) => {
+  } else checkGpu().then(async (gpuCheck) => {
     if (!gpuCheck.ok) {
       showGpuProblem(gpuCheck.gpu, gpuCheck.browser, gpuCheck.missing);
       return;
+    }
+    // Until the player picks a quality (?weakphone tries it on any device).
+    const weakPhone = (phone && gpuCheck.weak) || new URLSearchParams(location.search).has("weakphone");
+    if (weakPhone && !QUALITY_BUDGETS[stored("mu-web/quality")]) {
+      display.quality = qualitySelect.value = "lowest";
+      updateDisplay();
+      appendLog("Quality: Lowest (a weak phone), effects and shadows off; the footer's Quality changes it");
     }
     // index.html?profile samples the page's code (JS Self-Profiling API; the server must send
     // "Document-Policy: js-profiling", as scripts/serve-web.py does). muProfileTop() in the console
@@ -275,53 +1084,379 @@
       }, 2000);
     }
 
-    // The files the game reads before it can be played come in one download (startup.pack, listed in
-    // startup.json), fetched while the game's code loads. WebFileSystem.cpp waits for it; without it
-    // the game fetches each file when it first opens it.
-    let packDone = false;
-    const startupPack = (async () => {
-      const indexResponse = await fetch("startup.json", { cache: "no-cache" });
-      if (!indexResponse.ok) return null;
-      const index = await indexResponse.json();
-      const total = index.files.reduce((sum, file) => sum + file[1], 0);
-      const response = await fetch("startup.pack", { cache: "no-cache" });
-      if (!response.ok) return null;
+    const releaseIndex = await releaseIndexLoad;
+    // Main.js?v=<hash>: one version of the file, which the service worker keeps (sw.js).
+    const code = (releaseIndex && releaseIndex.code) || {};
+    const versioned = (name) => code[name] ? `${name}?v=${code[name]}` : name;
+
+    // Main.wasm and the packs come as gzip copies (Main.wasm.gz, packs/*.pack.gz, written by
+    // tools/web/make_startup_pack.py), which the page unpacks itself: the web server sends files as
+    // they are, and a phone on a slow line waits for every megabyte (186 MB as they are, 120 packed,
+    // 2026-10-29). A browser without DecompressionStream gets Main.wasm itself, and the game's files
+    // one by one. Gives the response as it came over the network and whether its body is still packed
+    // (a server that marks the copy as gzip has the browser unpack it already).
+    async function fetchPacked(name, init, version) {
+      const query = version ? `?v=${version}` : "";
+      if (self.DecompressionStream) {
+        const response = await fetch(name + ".gz" + query, init).catch(() => null);
+        if (response && response.ok) {
+          return { response, packed: !/gzip/i.test(response.headers.get("Content-Encoding") || "") };
+        }
+      }
+      const response = await fetch(name + query, init);
+      if (!response.ok) throw new Error(`${name}: HTTP ${response.status}`);
+      return { response, packed: false };
+    }
+    function unpacked(body, packed) {
+      return packed ? body.pipeThrough(new DecompressionStream("gzip")) : body;
+    }
+    // A stream that tells onBytes about every chunk passing through it.
+    function counted(body, onBytes) {
+      return body.pipeThrough(new TransformStream({ transform(chunk, out) { onBytes(chunk.length); out.enqueue(chunk); } }));
+    }
+    // "Downloading <what>… X of Y MB" as the bytes come (a total of 0: not known).
+    function downloadProgress(what, total) {
+      let received = 0;
+      let shownMb = -1;
+      return (bytes) => {
+        received += bytes;
+        const mb = Math.floor(received / 1e6);
+        if (mb === shownMb) return;
+        shownMb = mb;
+        setStatus(total ? `Downloading ${what}… ${Math.min(mb, Math.round(total / 1e6))} of ${Math.round(total / 1e6)} MB`
+                        : `Downloading ${what}… ${mb} MB`);
+      };
+    }
+
+    // The files the game reads before it can be played come in one download, the startup pack,
+    // fetched while the game's code loads; WebFileSystem.cpp waits for it, and without it the game
+    // fetches each file when it first opens it. The pack comes in parts, a folder or a few each
+    // (startup.json "parts"), a few downloading at once. A map's files come the same way when the game
+    // enters it (packs/worldN.pack and .json, Module.muMapPack below): entering Lorencia file by file
+    // took a minute on a phone (2026-10-29).
+    // The browser keeps each pack as it came (packed) in its own storage, under the hash in its index,
+    // so the next visit loads it from the device, and a release downloads only the packs that changed:
+    // a phone's browser cache drops files this big. index.html?nostore neither uses nor fills that
+    // storage.
+    const STARTUP_STORE = "mu-web/startup-pack";
+    const MAP_PACK_STORE = "mu-web/map-packs";
+    const PACK_DOWNLOADS = 3;   // packs downloading at once
+    async function openStore(name) {
+      if (!self.caches || pageParams.has("nostore")) return null;
+      try {
+        return await caches.open(name);
+      } catch (e) {
+        return null;   // no storage in this browser (a private window, say)
+      }
+    }
+    const packKey = (entry) => new URL(`${entry.name}?v=${entry.hash}`, location.href).href;
+    const packPath = (key) => key.split("?")[0];
+    // Keeps a pack's second stream (a tee of the download) for the next visit, and drops its older copies.
+    function keepPack(label, store, entry, body, packed) {
+      const key = packKey(entry);
+      store.put(key, new Response(body, { headers: { "X-Mu-Packed": packed ? "1" : "0" } })).then(async () => {
+        for (const request of await store.keys()) {
+          if (request.url !== key && packPath(request.url) === packPath(key)) store.delete(request);
+        }
+        if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+        console.log(`${label} kept on this device (${entry.hash})`);
+      }).catch((e) => console.warn(`${label} not kept on this device: ${e}`));
+    }
+    // Reads a pack ({name, hash, files: [[path, size], ...]}) into one array: from its copy on the
+    // device (kept) or from the server, telling onNetworkBytes about each downloaded byte.
+    async function readPack(label, entry, store, kept, onNetworkBytes) {
+      let body, packed;
+      if (kept) {
+        body = kept.body;
+        packed = kept.headers.get("X-Mu-Packed") === "1";
+      } else {
+        const source = await fetchPacked(entry.name, { cache: "no-store" });
+        body = counted(source.response.body, onNetworkBytes);
+        packed = source.packed;
+        if (store) {
+          const [forGame, forStore] = body.tee();
+          body = forGame;
+          keepPack(label, store, entry, forStore, packed);
+        }
+      }
+      const total = entry.files.reduce((sum, file) => sum + file[1], 0);
       const bytes = new Uint8Array(total);
-      const reader = response.body.getReader();
-      let received = 0, shownMb = -1;
+      const reader = unpacked(body, packed).getReader();
+      let received = 0;
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
-        if (received + value.length > total) throw new Error("startup.pack is bigger than startup.json says");
+        if (received + value.length > total) throw new Error(`${entry.name} is bigger than its index says`);
         bytes.set(value, received);
         received += value.length;
-        const mb = Math.floor(received / 1e6);
-        if (mb !== shownMb) {
-          shownMb = mb;
-          setStatus(`Downloading game data… ${mb} of ${Math.round(total / 1e6)} MB`);
+      }
+      if (received !== total) throw new Error(`${entry.name} is incomplete`);
+      return { files: entry.files, bytes };
+    }
+    // A pack's files and bytes: from the device where it is kept and reads, else from the server.
+    async function loadPack(label, entry, store, kept, onNetworkBytes) {
+      if (kept) {
+        try {
+          const pack = await readPack(label, entry, null, kept, null);
+          console.log(`${label} from this device (${entry.hash})`);
+          return pack;
+        } catch (e) {
+          console.warn(`${label} on this device didn't read, downloading it again: ${e}`);
+          await store.delete(packKey(entry)).catch(() => {});
         }
       }
-      if (received !== total) throw new Error("startup.pack is incomplete");
-      return { files: index.files, bytes };
-    })().finally(() => { packDone = true; setStatus(""); });
+      return readPack(label, entry, store, null, onNetworkBytes);
+    }
+    // Runs the tasks given to it at most `count` at a time, in the order given.
+    function taskQueue(count) {
+      let running = 0;
+      const waiting = [];
+      const finished = () => {
+        running--;
+        if (waiting.length) waiting.shift()();
+      };
+      return (task) => new Promise((resolve, reject) => {
+        const start = () => {
+          running++;
+          task().then(resolve, reject).finally(finished);
+        };
+        if (running < count) start();
+        else waiting.push(start);
+      });
+    }
+    // The startup pack's parts, each a promise of its files and bytes (WebFileSystem.cpp takes them in
+    // order as they come), or null where startup.json has none.
+    async function startupPack() {
+      const parts = releaseIndex && releaseIndex.parts;
+      if (!parts) return null;
+      const store = await openStore(STARTUP_STORE);
+      const kept = await Promise.all(parts.map((part) => store && store.match(packKey(part)).catch(() => undefined)));
+      if (store) {
+        // Parts this release no longer has, the single pack of earlier releases among them.
+        const current = new Set(parts.map((part) => packPath(packKey(part))));
+        for (const request of await store.keys()) {
+          if (!current.has(packPath(request.url))) store.delete(request);
+        }
+      }
+      const toDownload = parts.reduce((sum, part, i) => sum + (kept[i] ? 0 : part.packed), 0);
+      const onNetworkBytes = downloadProgress("game data", toDownload);
+      if (toDownload) onNetworkBytes(0);
+      else setStatus("Loading game data…");
+      const queue = taskQueue(PACK_DOWNLOADS);
+      return parts.map((part, i) => {
+        const loading = queue(() => loadPack(`Startup pack part ${part.name}`, part, store, kept[i], onNetworkBytes));
+        loading.catch(() => {});   // WebFileSystem.cpp says which part failed
+        return loading;
+      });
+    }
+    let packDone = false;
+    const startupParts = startupPack();
+    const startupPackSettled = startupParts.then((parts) => Promise.allSettled(parts || []), () => {})
+      .finally(() => { packDone = true; setStatus(""); });
+    let mapPacksLoading = 0;
+    // WebFileSystem.cpp LoadWorldFiles: the files of the map folder the game enters (Data/WorldN,
+    // ObjectN), or null where the map has no pack.
+    async function mapPack(world) {
+      mapPacksLoading++;
+      try {
+        const indexResponse = await fetch(`packs/world${world}.json`, { cache: "no-cache" });
+        if (!indexResponse.ok) return null;
+        const entry = Object.assign({ name: `packs/world${world}.pack` }, await indexResponse.json());
+        const store = await openStore(MAP_PACK_STORE);
+        const kept = store ? await store.match(packKey(entry)).catch(() => undefined) : undefined;
+        return await loadPack(`Map pack ${world}`, entry, store, kept, downloadProgress("the map", entry.packed || 0));
+      } finally {
+        mapPacksLoading--;
+        setStatus("");
+      }
+    }
+
+    // The game's files not in a pack download when it first reads them (fetch-backend.js), from a
+    // worker in Chromium. Safari and every iPhone browser (all WebKit) start a worker's download on
+    // the page's thread, which the game holds while it waits for the file: it waited forever (Safari
+    // 27, 2026-10-29: the login screen's "remember password" box). There the page's thread downloads
+    // the files itself. Only Chromium has navigator.userAgentData. index.html?pagefetch or
+    // ?workerfetch decides it on any browser.
+    const fetchParams = new URLSearchParams(location.search);
+    const filesOnPageThread = fetchParams.has("pagefetch") ||
+      (!fetchParams.has("workerfetch") && !navigator.userAgentData);
+    appendLog(`Game files read later: downloaded by ${filesOnPageThread ? "the page's thread" : "a worker"} (` +
+              (fetchParams.has("pagefetch") ? "?pagefetch" : fetchParams.has("workerfetch") ? "?workerfetch"
+                : navigator.userAgentData ? "Chromium" : "not Chromium") + ")");
+
+    // On a computer the game's other files (startup.json "versions": models, textures, sounds, music,
+    // 402 MB on 2026-10-30) download in the background while it is played. A file the game reads for
+    // the first time holds it until it is here: a monster coming into sight reads ~26 files, ~45 ms
+    // each from the server, and froze the game for over a second; kept on the device, 0.08 s
+    // (2026-10-30). The service worker keeps them (sw.js), so it is needed, as are the game's reads
+    // going through it (a worker's, not Safari's page thread). A file already kept is left alone, a
+    // map pack downloading goes first, and the game's own downloads come before these. Not on phones
+    // and tablets (their data plans and storage); with sound or music off in Options, not those
+    // files. index.html?prefetch downloads them on any device, ?noprefetch on none.
+    const backgroundDownloads = pageParams.has("prefetch") ||
+      (!pageParams.has("noprefetch") && !phone && !filesOnPageThread);
+    const BACKGROUND_DOWNLOADS = 4;   // files downloading at once
+    // The ones a game reads most often first: what comes into sight (monsters, NPCs, armour,
+    // weapons, skill effects), then windows, sounds, music, then the rest.
+    const BACKGROUND_ORDER = ["shaders/", "Data/Monster/", "Data/NPC/", "Data/Player/", "Data/Item/", "Data/Effect/",
+                              "Data/Skill/", "Data/Interface/", "Data/Local/", "Data/Sound/", "Data/Music/"];
+    const backgroundRank = (path) => {
+      const at = BACKGROUND_ORDER.findIndex((folder) => path.startsWith(folder));
+      return at < 0 ? BACKGROUND_ORDER.length : at;
+    };
+    function gameConfig() {
+      try {
+        return new TextDecoder().decode(Module.FS.readFile("/game/config.ini"));
+      } catch (e) {
+        return stored("mu-web/config.ini") || "";
+      }
+    }
+    // Downloads one file through the service worker, which keeps it whole and answers its first
+    // byte: the file's size, from Content-Range.
+    async function downloadInBackground(url) {
+      const response = await fetch(url, { headers: { "Range": "bytes=0-0", "X-Mu-Background": "1" } });
+      await response.arrayBuffer();
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const size = /\/(\d+)$/.exec(response.headers.get("Content-Range") || "");
+      return size ? Number(size[1]) : 0;
+    }
+    // Earlier releases' versions of the files the service worker keeps, which it no longer drops
+    // itself (sw.js, keep). Once a release, on any device: from the URLs of the kept files (`kept`, or
+    // listed here), the versioned ones in this page's folder that this release has none of, one at a
+    // time, so the game's reads don't wait long behind them.
+    const OLD_VERSIONS_DROPPED = "mu-web/old-versions-dropped";   // the release they were dropped for
+    async function dropOldVersions(kept) {
+      const versions = releaseIndex && releaseIndex.versions;
+      if (!versions || !self.caches) return;
+      const current = Object.keys(versions).map((path) => `${path}?v=${versions[path]}`);
+      if (code["Main.js"]) current.push(`Main.js?v=${code["Main.js"]}`);
+      if (code["Main.wasm"]) current.push(`Main.wasm?v=${code["Main.wasm"]}`, `Main.wasm.gz?v=${code["Main.wasm"]}`);
+      let release = 0x811c9dc5;   // FNV-1a of the file URLs: names this release's set of files
+      for (const url of current) {
+        for (let i = 0; i < url.length; i++) release = Math.imul(release ^ url.charCodeAt(i), 0x01000193);
+        release = Math.imul(release ^ 10, 0x01000193);
+      }
+      release = (release >>> 0).toString(16);
+      if (stored(OLD_VERSIONS_DROPPED) === release) return;
+      try {
+        const files = await caches.open("mu-web/files");
+        if (!kept) kept = (await files.keys()).map((request) => request.url);
+        const folder = new URL(".", location.href).href;
+        const currentUrls = new Set(current.map((url) => new URL(url, location.href).href));
+        let dropped = 0;
+        for (const url of kept) {
+          if (url.startsWith(folder) && new URL(url).searchParams.has("v") && !currentUrls.has(url)) {
+            await files.delete(url);
+            dropped++;
+          }
+        }
+        store(OLD_VERSIONS_DROPPED, release);
+        if (dropped) appendLog(`Game files of earlier releases: ${dropped} dropped from this device`);
+      } catch (e) {
+        // Tried again at the next visit.
+      }
+    }
+    async function downloadRestInBackground() {
+      const versions = releaseIndex && releaseIndex.versions;
+      if (!versions || !self.caches || !(navigator.serviceWorker && navigator.serviceWorker.controller)) {
+        appendLog("Game files in the background: not downloaded (no service worker on this page)");
+        return;
+      }
+      const config = gameConfig();
+      const off = (setting) => new RegExp(`^${setting}=0\\s*$`, "m").test(config);
+      const leftOut = [off("SoundVolume") && "Data/Sound/", off("MusicVolume") && "Data/Music/"].filter(Boolean);
+      let kept;
+      try {
+        kept = new Set((await (await caches.open("mu-web/files")).keys()).map((request) => request.url));
+      } catch (e) {
+        appendLog(`Game files in the background: not downloaded (no storage: ${e})`);
+        return;
+      }
+      const files = Object.keys(versions)
+        .filter((path) => !leftOut.some((folder) => path.startsWith(folder)))
+        .sort((a, b) => backgroundRank(a) - backgroundRank(b))
+        .map((path) => new URL(`${path}?v=${versions[path]}`, location.href).href)
+        .filter((url) => !kept.has(url));
+      if (!files.length) {
+        await dropOldVersions(kept);
+        return;
+      }
+      appendLog(`Game files in the background: downloading ${files.length} of ${Object.keys(versions).length}` +
+                (leftOut.length ? ` (sound or music off: not ${leftOut.join(", ")})` : ""));
+      const started = performance.now();
+      const queue = taskQueue(BACKGROUND_DOWNLOADS);
+      let downloaded = 0, bytes = 0, failed = 0, failedInRow = 0;
+      await Promise.all(files.map((url) => queue(async () => {
+        // A server that answers nothing 20 times in a row: the rest is left for the game to read.
+        if (failedInRow >= 20) return;
+        while (mapPacksLoading) await new Promise((resume) => setTimeout(resume, 250));
+        try {
+          // Not "bytes += await …": that reads bytes before the wait, and the other downloads'
+          // sums made meanwhile would be lost.
+          const size = await downloadInBackground(url);
+          bytes += size;
+          downloaded++;
+          failedInRow = 0;
+        } catch (e) {
+          failed++;
+          failedInRow++;
+        }
+      })));
+      const skipped = files.length - downloaded - failed;
+      appendLog(`Game files in the background: ${downloaded} downloaded, ${Math.round(bytes / 1e6)} MB in ` +
+                `${Math.round((performance.now() - started) / 1000)} s` + (failed ? `, ${failed} failed` : "") +
+                (skipped ? `, ${skipped} left for the game to read` : ""), failed > 0);
+      await dropOldVersions(kept);
+    }
 
     // Global for Main.js, which picks up an existing Module object.
     window.Module = {
       canvas,
-      muStartupPack: startupPack,
-      print: (text) => { console.log(text); appendLog(text, false); },
-      printErr: (text) => { console.error(text); appendLog(text, true); },
+      muStartupPack: startupParts,
+      muMapPack: mapPack,
+      muFilesOnPageThread: filesOnPageThread,
+      muClipDistances: gpuCheck.clipDistances,
+      muDepthClamp: gpuCheck.depthClamp,
+      muKeyboard: phone ? phoneKeyboard : undefined,
+      muDevice: device.kind,
+      print: (text) => { if (gpuErrorEcho(text)) return; console.log(text); appendLog(text, false); },
+      printErr: (text) => { if (!gpuErrorEcho(text) && appendLog(text, true)) console.error(text); },
       setStatus: (text) => { if (packDone || text) setStatus(text); },
       onRuntimeInitialized: () => {
         if (packDone) setStatus("");
         canvas.focus();
         setInterval(saveConfig, 3000);
         addEventListener("pagehide", saveConfig);
+        if (backgroundDownloads) {
+          startupPackSettled.then(downloadRestInBackground)
+            .catch((e) => appendLog(`Game files in the background: stopped (${e})`, true));
+        } else if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+          // A minute after the start, away from the game's first reads.
+          startupPackSettled.then(() => new Promise((resume) => setTimeout(resume, 60000)))
+            .then(() => dropOldVersions()).catch(() => {});
+        }
       },
       onAbort: (what) => gameCrashed(what),
+      // Main.js calls this instead of fetching Main.wasm itself: the gzip copy where there is one
+      // (fetchPacked), Main.wasm where that fails.
+      instantiateWasm: (imports, done) => {
+        (async () => {
+          let result;
+          try {
+            const source = await fetchPacked("Main.wasm", { credentials: "same-origin" }, code["Main.wasm"]);
+            const wasm = new Response(unpacked(source.response.body, source.packed), { headers: { "Content-Type": "application/wasm" } });
+            result = await WebAssembly.instantiateStreaming(wasm, imports);
+          } catch (e) {
+            appendLog(`Main.wasm.gz didn't load (${e}), taking Main.wasm`, true);
+            result = await WebAssembly.instantiateStreaming(fetch(versioned("Main.wasm"), { credentials: "same-origin" }), imports);
+          }
+          done(result.instance, result.module);
+        })().catch((e) => gameCrashed("Main.wasm: " + e));
+        return {};
+      },
     };
     const script = document.createElement("script");
-    script.src = "Main.js";
+    script.src = versioned("Main.js");
     script.onerror = () => setStatus("Main.js didn't load: is the web build in this folder?", true);
     document.body.appendChild(script);
   });

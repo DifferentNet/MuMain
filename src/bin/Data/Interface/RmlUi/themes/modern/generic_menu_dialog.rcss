@@ -337,3 +337,10 @@
 	#panel.system-menu .gmd-btn { height: 36dp; line-height: 36dp; font-size: 13dp; }
 	.gmd-sys-footer { height: 36dp; }
 }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode) draws menus larger, for fingers. */
+@media (theme: mobile) {
+	#panel.center-both { transform: translate(-50%, -50%) scale(1.3); }
+	#panel.center-both.dragged, #panel.window-shell-positioned { transform: scale(1.3); transform-origin: 0 0; }
+	#panel.system-menu { transform: none; }
+}

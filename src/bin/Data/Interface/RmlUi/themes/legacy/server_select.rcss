@@ -109,3 +109,18 @@
 	color: token(text-secondary);
 	white-space: normal;
 }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode) gives the server buttons more room, for fingers. */
+@media (theme: mobile) {
+	#panel { width: 470rem; }
+	#group_col { width: 170rem; gap: 8rem; }
+	#server_col { width: 280rem; gap: 8rem; }
+	.group-btn { width: 160rem; height: 44rem; line-height: 44rem; }
+	.server-row { width: 260rem; height: 44rem; line-height: 44rem; }
+	/* Server names a phone shows clearly: larger letters with a dark outline over the dark frames, and
+	   a lighter orange (ghinzuro 2026-10-30: the server's name could not be made out). */
+	.group-btn, .server-row { font-size: 16rem; font-effect: outline(1px #000000); }
+	.server-option-btn.orange { color: #ffcc40; }
+	.server-option-btn.orange:hover { color: #ffe680; }
+	.server-option-btn.orange:active { color: #ffcc40; }
+}

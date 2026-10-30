@@ -10,10 +10,25 @@ GridGeometry::GridGeometry(float left, float top, float pitchX, float pitchY, in
 {
 }
 
+namespace
+{
+bool IsWithin(const GridRect& box, float x, float y)
+{
+    return x >= box.x && x < box.x + box.width && y >= box.y && y < box.y + box.height;
+}
+} // namespace
+
+void GridGeometry::SetVisibleRect(const GridRect& visible)
+{
+    m_HasVisibleRect = true;
+    m_VisibleRect = visible;
+}
+
 bool GridGeometry::Contains(float x, float y) const
 {
-    const GridRect box = Bounds();
-    return x >= box.x && x < box.x + box.width && y >= box.y && y < box.y + box.height;
+    if (m_HasVisibleRect && !IsWithin(m_VisibleRect, x, y))
+        return false;
+    return IsWithin(Bounds(), x, y);
 }
 
 bool GridGeometry::CellAt(float x, float y, int& column, int& row) const

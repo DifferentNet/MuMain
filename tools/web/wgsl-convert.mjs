@@ -1,7 +1,7 @@
 // SPIR-V to WGSL for the web build's WebGPU backend (libsdl-org/SDL#16020), shared by
 // spirv-to-wgsl.mjs (the game's shaders) and rmlui-shaders-to-wgsl.mjs (RmlUi's).
 //
-// naga (wgpu's shader translator, npm package naga-wasm) does the translation. Two adjustments:
+// naga (wgpu's shader translator, npm package naga-wasm) does the translation. Three adjustments:
 //
 // 1. Bindings. SDL's SPIR-V and the backend's WGSL number the texture/storage groups (0: vertex,
 //    2: fragment) differently:
@@ -11,6 +11,12 @@
 //    before parsing. Uniform buffers (groups 1 and 3) keep theirs.
 // 2. Clip space. naga's SPIR-V reader flips Y in vertex outputs (Vulkan to WebGPU convention), but
 //    SDL already gives every backend the same clip space, so the flip it adds is taken out again.
+// 3. Storage buffers. naga wraps a storage buffer's array in a struct of its own
+//    (struct boneRows { u0040_data: array<vec4<f32>>, } and var<storage, read> boneRows_1: boneRows),
+//    which Safari doesn't compile: its translation to Metal fails on that struct ("no matching
+//    constructor" for it, Safari 27.0.1 on an M4 Mac, 2026-10-29), and every character, monster and
+//    NPC is drawn with such a buffer (the skinned shaders' bones). The buffer is declared as the array
+//    itself instead, which means the same to WebGPU (unwrapStorageArrays).
 //
 // The backend reads the bindings back out of the WGSL text with a simple parser: it must not see
 // @group or var in comments, and it only treats a storage buffer as read-only if it says "read".
@@ -65,6 +71,38 @@ export function remapBindings(input) {
 // naga's reader appends "let _eN = <position>.y; <position>.y = -(_eN);" to vertex entry points.
 const yFlip = /^[ \t]*let (_e\d+) = ([\w.]+)\.y;\r?\n[ \t]*\2\.y = -\(\1\);\r?\n/m;
 
+// A struct with one runtime-sized array member, used only as the type of storage buffers: those
+// buffers become the array itself (adjustment 3 above), "buffer.member" becomes "buffer", and the
+// struct goes.
+const arrayStruct = /^struct (\w+) \{\n {4}(\w+): (array<[^\n]+>),\n\}\n\n?/gm;
+
+function isRuntimeSized(arrayType) {
+  // array<T> has no length; array<T, N> has one after a comma outside T's own angle brackets.
+  let depth = 0;
+  for (const c of arrayType.slice("array<".length, -1)) {
+    if (c === "<") depth++;
+    else if (c === ">") depth--;
+    else if (c === "," && depth === 0) return false;
+  }
+  return true;
+}
+
+export function unwrapStorageArrays(wgsl) {
+  const text = wgsl.replaceAll("\r\n", "\n");
+  let out = text;
+  for (const [definition, struct, member, arrayType] of text.matchAll(arrayStruct)) {
+    if (!isRuntimeSized(arrayType)) continue;
+    const declaration = new RegExp(String.raw`(var<storage[^>]*> (\w+)): ${struct};`, "g");
+    const buffers = [...out.matchAll(declaration)].map((match) => match[2]);
+    // The struct named anywhere else (a function's parameter, another struct): leave it.
+    const uses = out.match(new RegExp(String.raw`\b${struct}\b`, "g")).length;
+    if (buffers.length === 0 || uses !== 1 + buffers.length) continue;
+    out = out.replace(definition, "").replace(declaration, `$1: ${arrayType};`);
+    for (const buffer of buffers) out = out.replaceAll(`${buffer}.${member}`, buffer);
+  }
+  return out;
+}
+
 // Converts SPIR-V (bytes or words) to WGSL; name only labels errors.
 export function convert(naga, spirv, name) {
   const words = spirv instanceof Uint32Array ? spirv
@@ -75,5 +113,5 @@ export function convert(naga, spirv, name) {
     wgsl = wgsl.replace(yFlip, "");
     if (/\.y = -\(/.test(wgsl)) throw new Error(`${name}: unexpected Y flip left in the WGSL`);
   }
-  return wgsl.replaceAll("var<storage>", "var<storage, read>");
+  return unwrapStorageArrays(wgsl.replaceAll("var<storage>", "var<storage, read>"));
 }

@@ -157,3 +157,17 @@
 /* The grid's clicks are native (CInventoryCtrl), so the placed panel takes no pointer events; its
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode), as the legacy theme
+   lays it out: the full 432 height of the dock, the grid down the right side in 42 px cells with a
+   big Mix button under it, the result text in the left column from the top. 552 wide: with the
+   bag-only inventory beside it, a phone's width (19.5:9 and wider). */
+@media (theme: mobile) {
+	#panel { --item-cell: 42px; width: 552px; height: 432px; }
+	.bg-panel { width: 100%; height: 432px; }
+	#item_view { width: calc(100% + 40px); height: 472px; }
+	#item_grid, #item_grid_counts { left: 200px; top: 52px; }
+	#text_lines { left: 15px; right: 372px; top: 52px; }
+	.lucky-btn-mix { left: 324px; margin-left: 0; top: 238px; width: 88px; height: 70px; line-height: 70px; }
+	.lucky-btn-mix .modern-icon-btn-glyph-px { font-size: 28px; }
+}

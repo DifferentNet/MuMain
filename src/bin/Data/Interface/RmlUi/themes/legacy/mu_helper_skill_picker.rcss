@@ -73,3 +73,31 @@ body {
 #panel.attack .mhsp-entry:nth-child(n+51):nth-child(-n+60) { left: -192px; }
 #panel.attack .mhsp-entry:nth-child(n+61):nth-child(-n+70) { left: -224px; }
 #panel.attack .mhsp-entry:nth-child(n+71):nth-child(-n+80) { left: -256px; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode). Native's 32x38 entries
+   touching each other were small for a finger, so here each is 40x46 units with 4 between the
+   columns, eight to a column from top to bottom (368 units, inside the config window's height), the
+   columns right to left from its left edge -- the same for an attack slot and a buff slot. Each rule
+   has the weight of the computer rule it replaces (the attack ones the more). */
+@media (theme: mobile) {
+	.mhsp-entry { width: 40px; height: 46px; }
+	.mhsp-icon { left: 8px; top: 6px; width: 24px; height: 34px; }
+	#panel .mhsp-entry:nth-child(8n+1), #panel.attack .mhsp-entry:nth-child(8n+1) { top: 30px; }
+	#panel .mhsp-entry:nth-child(8n+2), #panel.attack .mhsp-entry:nth-child(8n+2) { top: 76px; }
+	#panel .mhsp-entry:nth-child(8n+3), #panel.attack .mhsp-entry:nth-child(8n+3) { top: 122px; }
+	#panel .mhsp-entry:nth-child(8n+4), #panel.attack .mhsp-entry:nth-child(8n+4) { top: 168px; }
+	#panel .mhsp-entry:nth-child(8n+5), #panel.attack .mhsp-entry:nth-child(8n+5) { top: 214px; }
+	#panel .mhsp-entry:nth-child(8n+6), #panel.attack .mhsp-entry:nth-child(8n+6) { top: 260px; }
+	#panel .mhsp-entry:nth-child(8n+7), #panel.attack .mhsp-entry:nth-child(8n+7) { top: 306px; }
+	#panel .mhsp-entry:nth-child(8n+8), #panel.attack .mhsp-entry:nth-child(8n+8) { top: 352px; }
+	#panel .mhsp-entry:nth-child(n+1):nth-child(-n+8), #panel.attack .mhsp-entry:nth-child(n+1):nth-child(-n+8) { left: -44px; }
+	#panel .mhsp-entry:nth-child(n+9):nth-child(-n+16), #panel.attack .mhsp-entry:nth-child(n+9):nth-child(-n+16) { left: -88px; }
+	#panel .mhsp-entry:nth-child(n+17):nth-child(-n+24), #panel.attack .mhsp-entry:nth-child(n+17):nth-child(-n+24) { left: -132px; }
+	#panel .mhsp-entry:nth-child(n+25):nth-child(-n+32), #panel.attack .mhsp-entry:nth-child(n+25):nth-child(-n+32) { left: -176px; }
+	#panel .mhsp-entry:nth-child(n+33):nth-child(-n+40), #panel.attack .mhsp-entry:nth-child(n+33):nth-child(-n+40) { left: -220px; }
+	#panel .mhsp-entry:nth-child(n+41):nth-child(-n+48), #panel.attack .mhsp-entry:nth-child(n+41):nth-child(-n+48) { left: -264px; }
+	#panel .mhsp-entry:nth-child(n+49):nth-child(-n+56), #panel.attack .mhsp-entry:nth-child(n+49):nth-child(-n+56) { left: -308px; }
+	#panel .mhsp-entry:nth-child(n+57):nth-child(-n+64), #panel.attack .mhsp-entry:nth-child(n+57):nth-child(-n+64) { left: -352px; }
+	#panel .mhsp-entry:nth-child(n+65):nth-child(-n+72), #panel.attack .mhsp-entry:nth-child(n+65):nth-child(-n+72) { left: -396px; }
+	#panel .mhsp-entry:nth-child(n+73):nth-child(-n+80), #panel.attack .mhsp-entry:nth-child(n+73):nth-child(-n+80) { left: -440px; }
+}

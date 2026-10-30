@@ -1427,6 +1427,9 @@
   <data name="Resolution" xml:space="preserve">
     <value>Resolusyon</value>
   </data>
+  <data name="ResolutionAuto" xml:space="preserve">
+    <value>Awtomatiko (akma sa window)</value>
+  </data>
   <data name="Language" xml:space="preserve">
     <value>Wika</value>
   </data>

@@ -26,6 +26,8 @@
 #include "Network/Server/ServerListManager.h"
 #include "UI/Scaling/UITransform.h"
 
+#include <cmath>
+
 CSceneUICoordinator::CSceneUICoordinator()
 {
     // The login and character scenes' windows measure and draw as the original did there: the
@@ -174,7 +176,11 @@ void CSceneUICoordinator::RepositionCharacterWindows()
     g_MsgWin.SetPosition((width - messageWidth) / 2, (height - messageHeight) / 2);
     g_ServerMsgWin.SetPosition(noticeMargin, static_cast<int>(noticeBaseline * height) + noticeMargin);
     g_CharSelMainWin.RefreshLayout();
-    g_CharMakeWin.SetPosition((width - creationWidth) / 2, (height - creationHeight) / 2);
+    // char_make.rcss sizes the panel in the original's px times --layout-pixel.
+    const float layoutPixel = UI::Scaling::LayoutPixelRatio();
+    const int shownCreationWidth = static_cast<int>(std::lround(creationWidth * layoutPixel));
+    const int shownCreationHeight = static_cast<int>(std::lround(creationHeight * layoutPixel));
+    g_CharMakeWin.SetPosition((width - shownCreationWidth) / 2, (height - shownCreationHeight) / 2);
 }
 
 void CSceneUICoordinator::Update(double dDeltaTick)

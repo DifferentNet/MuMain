@@ -13,12 +13,15 @@
 #include <emscripten.h>
 #include <emscripten/wasmfs.h>
 
+#include <algorithm>
+#include <array>
 #include <atomic>
 #include <cstdio>
 #include <cstdlib>
 #include <fcntl.h>
 #include <set>
 #include <string>
+#include <string_view>
 #include <sys/stat.h>
 #include <thread>
 #include <unistd.h>
@@ -28,9 +31,29 @@ namespace
 constexpr const char* GameDir = "/game";
 constexpr const char* ServerDir = "/server";
 constexpr unsigned ChunkSize = 1u << 20;
+// files.txt also lists the page's own files, so scripts/publish-web.py uploads them, but only the page
+// reads them. Copied like config.ini, they were downloaded again at every start: the gzip copy of the
+// startup pack took 120 MB in 1 MB pieces and left a phone at a black screen (a Pixel 9 Pro XL,
+// 2026-10-29). They are the gzip copies (Main.wasm.gz), the packs (packs/, tools/web/make_startup_pack.py:
+// the startup pack's parts and the map packs, for LoadWorldFiles) and these.
+constexpr std::string_view PageCopySuffix = ".gz";
+constexpr std::string_view PagePacksFolder = "packs/";
+constexpr std::array<std::string_view, 4> PageFiles = {"manifest.webmanifest", "icon-192.png", "icon-512.png", "sw.js"};
+
+bool IsPageFile(std::string_view path)
+{
+    return path.ends_with(PageCopySuffix) || path.starts_with(PagePacksFolder)
+           || std::find(PageFiles.begin(), PageFiles.end(), path) != PageFiles.end();
+}
 
 // 0 while the mount is being set up, 1 when it is ready, -1 when it failed.
 std::atomic<int> g_mountState{0};
+
+// 1 where the page's thread downloads the mount's files, 0 where the mount's worker does
+// (fetch-backend.js asks MuWeb_FilesOnPageThread). The page decides: Module.muFilesOnPageThread.
+std::atomic<int> g_filesOnPageThread{0};
+
+EM_JS(int, MuWeb_PageWantsFilesOnPageThread, (), { return Module["muFilesOnPageThread"] ? 1 : 0; });
 
 // The folder the page came from, as an absolute URL without the last slash. Emscripten's fetch
 // backend resolves a relative base against the site's root, so with "." a page at
@@ -43,35 +66,78 @@ EM_JS(char*, MuWeb_PageFolderUrl, (), {
 });
 
 // The page starts downloading the startup pack as it loads (index.html: Module.muStartupPack, a
-// promise of {files: [[path, size], ...], bytes}); this waits for it and writes its files into /game.
-// Returns how many it wrote, 0 without a pack.
+// promise of its parts, each a promise of {files: [[path, size], ...], bytes}); this writes each
+// part's files into /game as it arrives and lets go of it, so the page never holds the whole pack.
+// A part that fails leaves its files to download one by one. Returns how many files it wrote, 0
+// without a pack.
 EM_ASYNC_JS(int, MuWeb_InstallStartupPack, (), {
-    let pack = null;
+    let parts = null;
     try {
-        pack = await Module["muStartupPack"];
+        parts = await Module["muStartupPack"];
     } catch (e) {
         err("Startup pack: " + e + "; the game downloads its files one by one instead");
     }
     Module["muStartupPack"] = null;
-    if (!pack) {
-        return 0;
-    }
     const folders = new Set();
-    let offset = 0;
     let written = 0;
-    for (const [path, size] of pack.files) {
-        const full = "/game/" + path;
-        const folder = full.substring(0, full.lastIndexOf("/"));
-        if (!folders.has(folder)) {
-            FS.mkdirTree(folder);
-            folders.add(folder);
+    for (let i = 0; parts && i < parts.length; i++) {
+        let pack = null;
+        try {
+            pack = await parts[i];
+        } catch (e) {
+            err("Startup pack part " + (i + 1) + ": " + e + "; the game downloads its files one by one instead");
         }
+        parts[i] = null;
+        let offset = 0;
+        for (const [path, size] of pack ? pack.files : []) {
+            const full = "/game/" + path;
+            const folder = full.substring(0, full.lastIndexOf("/"));
+            if (!folders.has(folder)) {
+                FS.mkdirTree(folder);
+                folders.add(folder);
+            }
+            if (FS.writeFile(full, pack.bytes.subarray(offset, offset + size)) >= 0) {
+                ++written;
+            }
+            offset += size;
+        }
+    }
+    return written;
+});
+
+// The page downloads a map's pack (index.html: Module.muMapPack(world), a promise of the same shape as
+// the startup pack's, or of null where the map has none); this writes its files into /game in place of
+// their links to /server, and turns the previous map's files back into links, so only one map's pack
+// takes memory. Returns how many files it wrote, 0 without a pack, -1 when they are in place already.
+EM_ASYNC_JS(int, MuWeb_InstallMapPack, (int world), {
+    if (Module["muMapPackWorld"] === world) {
+        return -1;
+    }
+    let pack = null;
+    try {
+        pack = Module["muMapPack"] ? await Module["muMapPack"](world) : null;
+    } catch (e) {
+        err("Map pack " + world + ": " + e + "; the game downloads the map's files one by one instead");
+    }
+    for (const path of Module["muMapPackFiles"] || []) {
+        FS.unlink("/game/" + path);
+        FS.symlink("/server/" + path, "/game/" + path);
+    }
+    const written = [];
+    let offset = 0;
+    for (const [path, size] of pack ? pack.files : []) {
+        const full = "/game/" + path;
+        FS.unlink(full);
         if (FS.writeFile(full, pack.bytes.subarray(offset, offset + size)) >= 0) {
-            ++written;
+            written.push(path);
+        } else {
+            FS.symlink("/server/" + path, full);
         }
         offset += size;
     }
-    return written;
+    Module["muMapPackFiles"] = written;
+    Module["muMapPackWorld"] = pack ? world : null;
+    return written.length;
 });
 
 // Creates the folders above `path` (a path below /game), remembering the ones made.
@@ -166,7 +232,7 @@ void SetUpMount()
         {
             line.pop_back();
         }
-        if (line.empty() || line == "files.txt")
+        if (line.empty() || line == "files.txt" || IsPageFile(line))
         {
             continue;
         }
@@ -243,6 +309,11 @@ EM_JS(char*, MuWeb_MergeSavedConfig, (const char* serverText), {
 });
 } // namespace
 
+extern "C" EMSCRIPTEN_KEEPALIVE int MuWeb_FilesOnPageThread()
+{
+    return g_filesOnPageThread.load();
+}
+
 bool mu::web::MountGameFiles()
 {
     if (::mkdir(GameDir, 0777) != 0)
@@ -260,6 +331,7 @@ bool mu::web::MountGameFiles()
     g_pageFolderUrl = pageFolder;
     std::free(pageFolder);
 
+    g_filesOnPageThread = MuWeb_PageWantsFilesOnPageThread();
     std::thread worker(SetUpMount);
     while (g_mountState.load() == 0)
     {
@@ -284,4 +356,13 @@ bool mu::web::MountGameFiles()
         }
     }
     return ::chdir(GameDir) == 0;
+}
+
+void mu::web::LoadWorldFiles(int world)
+{
+    const int written = MuWeb_InstallMapPack(world);
+    if (written >= 0)
+    {
+        std::printf("Web file system: map folder %d, %d files from its pack\n", world, written);
+    }
 }

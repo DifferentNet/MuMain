@@ -97,6 +97,18 @@ public:
     bool GetOverheadTitles() const { return m_overheadTitles; }
     void SetOverheadTitles(bool shown) { m_overheadTitles = shown; }
 
+    // The phone or PC layout and the controls, as config.ini words (UI::Mobile::InterfaceMode).
+    const std::wstring& GetInterfaceView() const { return m_interfaceView; }
+    void SetInterfaceView(const std::wstring& view) { m_interfaceView = view; }
+    const std::wstring& GetControls() const { return m_controls; }
+    void SetControls(const std::wstring& controls) { m_controls = controls; }
+    // The on-screen controls' size in percent (UI::Mobile::TouchUnit).
+    int GetTouchButtonSize() const { return m_touchButtonSize; }
+    void SetTouchButtonSize(int percent);
+    // Whether the game reads a gamepad (Core::Input::Gamepad::SetEnabled).
+    bool GetGamepad() const { return m_gamepad; }
+    void SetGamepad(bool enabled) { m_gamepad = enabled; }
+
     // Chat commands - the favourites and the named templates of the command
     // window. They belong to the installation, not to a character.
     // A template is stored as "name|command|value|value|...".
@@ -221,6 +233,10 @@ private:
     bool m_overheadPlayerNames = true;
     bool m_overheadNpcNames = false;
     bool m_overheadTitles = true;
+    std::wstring m_interfaceView;
+    std::wstring m_controls;
+    int m_touchButtonSize = 100;
+    bool m_gamepad = true;
     bool m_enableAnimationTaskPool;
 
     int m_zoom;

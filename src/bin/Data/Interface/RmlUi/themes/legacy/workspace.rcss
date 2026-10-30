@@ -121,3 +121,11 @@ body {
 }
 /* The performance overlays start at the top-left corner, over the HUD's corner widgets. */
 .diagnostics-corner { left: 0; top: 0; }
+
+/* MU Moldova: the phone's own HUD (phone view with touch controls, theme flag "mobile-hud",
+   UI::Mobile::InterfaceMode). The message area moves under the hero frame (touch_controls.rcss),
+   and the chat moves right of the joystick's area (#tc_stick, the left 36 %). */
+@media (theme: mobile-hud) {
+	.system-log-stack { top: 100dp; }
+	.chat-stack { left: 36%; }
+}

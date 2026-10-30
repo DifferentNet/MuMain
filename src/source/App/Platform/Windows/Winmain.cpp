@@ -1,9 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
+#include "Core/Input/GamepadInput.h"
+#include "Core/Input/GamepadPointer.h"
 #include "Core/Input/KeyState.h"
 #include "Core/Utilities/FrameProfiler.h"
 #include "Core/Input/SyntheticInput.h"
+#include "Core/Input/TouchInput.h"
 #include "Core/Platform/GameWindow.h"
 #include "Core/Input/UiInputRouter.h"
 #include "App/Control/ControlServer.h"
@@ -37,6 +40,8 @@
 #include "Render/Look/LookProfileSetting.h"
 #include "Render/Look/TuningSetting.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
+#include "UI/Mobile/InterfaceMode.h"
+#include "UI/Mobile/PhonePage.h"
 #include "UI/RmlBridge/RmlRuntimeHooks.h"
 #include "Engine/Object/ZzzOpenData.h"
 #include "Scenes/SceneCore.h"
@@ -50,6 +55,10 @@
 #include <SDL3/SDL.h>
 
 #ifdef __EMSCRIPTEN__
+#include "Core/Platform/web/WebDevice.h"
+#include "Core/Platform/web/WebDisplay.h"
+#include "Core/Platform/web/WebKeyboard.h"
+#include <RmlUi/Core/Element.h>
 extern EGameScene SceneFlag; // read by WaitForBrowserFrame()
 #endif
 #include "Render/Models/ZzzBMD.h"
@@ -1045,6 +1054,14 @@ struct WindowScaleMetrics
     float contentScale = 1.0f;
 };
 
+#ifdef __EMSCRIPTEN__
+// Browser build: the window is in device pixels (no SDL pixel density there), so the interface's
+// content scale is how many of them a CSS pixel has, as on a desktop display set to 125 or 150 %.
+// "Auto" (MuWebFollowPageSize) sets it from the page, at most what the original's screen fits
+// (WebContentScale); a size picked in Options keeps 1.
+float g_webContentScale = 1.0f;
+#endif
+
 WindowScaleMetrics ReadWindowScaleMetrics()
 {
     WindowScaleMetrics metrics;
@@ -1056,6 +1073,9 @@ WindowScaleMetrics ReadWindowScaleMetrics()
     metrics.pixelDensity = SDL_GetWindowPixelDensity(g_sdlWindow);
     metrics.displayScale = SDL_GetWindowDisplayScale(g_sdlWindow);
     metrics.contentScale = UI::Scaling::ContentScaleFromMetrics(metrics.displayScale, metrics.pixelDensity);
+#ifdef __EMSCRIPTEN__
+    metrics.contentScale = g_webContentScale;
+#endif
     return metrics;
 }
 
@@ -1348,7 +1368,7 @@ EM_JS(int, MuWeb_PagePixels, (int which), {
 // SDL reports a single display mode in the browser, the screen's size in CSS pixels, so the options
 // offered little above 1024x768. The page scales the canvas to fit its window (index.html), so any
 // size works: the usual ones up to the screen's real pixels, the one that fills the game area
-// exactly, and the current one.
+// exactly, and the current one unless it's "Auto"'s (Options lists "Auto" first, OptionWindow.cpp).
 static std::vector<std::pair<int, int>> MuWebDisplayResolutions()
 {
     static constexpr std::pair<int, int> kCommon[] = {
@@ -1365,7 +1385,7 @@ static std::vector<std::pair<int, int>> MuWebDisplayResolutions()
     }
     resolutions.emplace_back(MuWeb_PagePixels(0), MuWeb_PagePixels(1));
     int currentW = 0, currentH = 0;
-    if (g_sdlWindow && SDL_GetWindowSize(g_sdlWindow, &currentW, &currentH))
+    if (!mu::web::IsAutoDisplay() && g_sdlWindow && SDL_GetWindowSize(g_sdlWindow, &currentW, &currentH))
         resolutions.emplace_back(currentW, currentH);
     return resolutions;
 }
@@ -1493,6 +1513,161 @@ void MuApplyWindowResolution(unsigned int width, unsigned int height, bool windo
     MuReapplyVSyncPreference();
 }
 
+#ifdef __EMSCRIPTEN__
+namespace
+{
+// Below half a device pixel per CSS pixel, the interface's ceiling (UI::Scaling::ViewportFitScale:
+// MaximumPanelScale x content scale) would drop under its floor of 1.
+constexpr float kMinimumWebContentScale = 0.5f;
+int g_webDisplaySerial = -1;
+
+// The interface's scale for the page's size: its pixel density, but no larger than the original
+// 640x480 screen fits into the game's size. The interface is laid out on that screen, so text drawn
+// at the density alone outgrew its places on a low window: a phone in landscape under the browser's
+// address bar (821x294 CSS px at 2.5, 2026-10-29) drew it 1.6 times too large, and the notices, the
+// name plates and the boxes in the corners ran into each other.
+float WebContentScale(const mu::web::PageDisplay& display)
+{
+    const float fits = std::min(static_cast<float>(display.width) / REFERENCE_WIDTH,
+                                static_cast<float>(display.height) / REFERENCE_HEIGHT);
+    return std::min(display.pixelRatio, std::max(fits, 1.0f));
+}
+
+void SetWebContentScale(float scale)
+{
+    g_webContentScale = std::max(scale, kMinimumWebContentScale);
+    HandleContentScaleChange();
+}
+
+// MuApplyWindowResolution without its window centering, which the browser doesn't have.
+void ResizeWebWindow(int width, int height)
+{
+    int currentW = 0, currentH = 0;
+    SDL_GetWindowSize(g_sdlWindow, &currentW, &currentH);
+    if (width <= 0 || height <= 0 || (width == currentW && height == currentH))
+        return;
+
+    SDL_SetWindowSize(g_sdlWindow, width, height);
+    SDL_SyncWindow(g_sdlWindow);
+    int actualW = width, actualH = height;
+    SDL_GetWindowSize(g_sdlWindow, &actualW, &actualH);
+    HandleWindowResize(actualW, actualH);
+    MuReapplyVSyncPreference();
+}
+} // namespace
+
+// Browser build, once a frame: while Options has "Auto", the game takes the size the page works out
+// for it (Core/Platform/web/WebDisplay.h). Between frames, rather than from the page's resize event,
+// which can come in the middle of one.
+void MuWebFollowPageSize()
+{
+    if (g_sdlWindow == nullptr)
+        return;
+    const auto display = mu::web::GetAutoDisplay();
+    if (!display || display->serial == g_webDisplaySerial)
+        return;
+
+    g_webDisplaySerial = display->serial;
+    SetWebContentScale(WebContentScale(*display));
+    ResizeWebWindow(display->width, display->height);
+    mu::log::Get("render")->info("Browser size: {}x{}, {:.2f} device pixels per CSS pixel, interface at {:.2f}",
+                                 display->width, display->height, display->pixelRatio, g_webContentScale);
+}
+
+// Options: "Auto" follows the page from now on; a size of the player's own is drawn at content
+// scale 1, as before "Auto" existed (the caller then applies that size).
+void MuWebSetAutoResolution(bool enabled)
+{
+    mu::web::SetAutoDisplay(enabled);
+    g_webDisplaySerial = -1;
+    if (enabled)
+        MuWebFollowPageSize();
+    else
+        SetWebContentScale(1.0f);
+}
+
+// Before the window exists: "Auto" starts at the page's size instead of config.ini's.
+static void MuWebStartAtPageSize()
+{
+    const auto display = mu::web::GetAutoDisplay();
+    if (!display)
+        return;
+
+    g_webDisplaySerial = display->serial;
+    WindowWidth = static_cast<unsigned int>(display->width);
+    WindowHeight = static_cast<unsigned int>(display->height);
+    g_webContentScale = std::max(WebContentScale(*display), kMinimumWebContentScale);
+}
+
+namespace
+{
+// Options' six effect and shadow settings (Graphics tab), one bit each in this order: set = off.
+constexpr int kEffectSettingCount = 6;
+constexpr int kAllEffectSettingsOff = (1 << kEffectSettingCount) - 1;
+
+int EffectSettingBits()
+{
+    const GameConfig& cfg = GameConfig::GetInstance();
+    const bool off[kEffectSettingCount] = {cfg.GetDisableEffects(),           cfg.GetDisableParticles(),
+                                           cfg.GetDisableSkillEffectModels(), cfg.GetDisableBoids(),
+                                           cfg.GetDisableWingShadow(),        cfg.GetDisableBodyShadows()};
+    int bits = 0;
+    for (int i = 0; i < kEffectSettingCount; ++i)
+    {
+        if (off[i])
+            bits |= 1 << i;
+    }
+    return bits;
+}
+
+// Sets, applies and saves them, as their checkboxes in Options do.
+void ApplyEffectSettingBits(int bits)
+{
+    const auto off = [bits](int index) { return (bits & (1 << index)) != 0; };
+    GameConfig& cfg = GameConfig::GetInstance();
+    cfg.SetDisableEffects(off(0));
+    cfg.SetDisableParticles(off(1));
+    cfg.SetDisableSkillEffectModels(off(2));
+    cfg.SetDisableBoids(off(3));
+    cfg.SetDisableWingShadow(off(4));
+    cfg.SetDisableBodyShadows(off(5));
+    cfg.Save();
+    SetDisableEffects(off(0));
+    SetDisableParticles(off(1));
+    SetDisableSkillEffectModels(off(2));
+    SetDisableBoids(off(3));
+    SetDisableWingShadow(off(4));
+    SetDisableBodyShadows(off(5));
+}
+} // namespace
+
+// Browser build, once a frame: the footer's Quality "Lowest" (index.html) turns every effect and
+// shadow off, keeping the player's own settings on the page; another quality brings them back.
+// Options can still change them meanwhile, and a later visit at Lowest keeps those changes.
+static void MuWebFollowLowestQuality()
+{
+    static int s_lastLowest = -1; // not looked at yet
+    const int lowest = mu::web::IsLowestQuality() ? 1 : 0;
+    if (lowest == s_lastLowest)
+        return;
+    s_lastLowest = lowest;
+
+    const int before = mu::web::GetEffectsBeforeLowest();
+    if (lowest == 1 && before < 0)
+    {
+        mu::web::SetEffectsBeforeLowest(EffectSettingBits());
+        ApplyEffectSettingBits(kAllEffectSettingsOff);
+        mu::log::Get("render")->info("Quality Lowest: effects and shadows off");
+    }
+    else if (lowest == 0 && before >= 0)
+    {
+        ApplyEffectSettingBits(before);
+        mu::web::SetEffectsBeforeLowest(-1);
+        mu::log::Get("render")->info("Quality above Lowest: the player's effect and shadow settings back");
+    }
+}
+#endif
+
 // Inspect only the active SDL union member, including for synthetic events.
 SDL_WindowID ActionWindowId(const SDL_Event& event)
 {
@@ -1608,6 +1783,8 @@ MSG MainLoop()
                 continue;
             }
 #endif
+            // Pads coming and going, their buttons and sticks, and which device was used last.
+            Core::Input::Gamepad::ProcessEvent(event);
             switch (event.type)
             {
             case SDL_EVENT_QUIT:
@@ -1628,6 +1805,13 @@ MSG MainLoop()
                 RouteActionInput(event, false, propagates);
                 break;
             }
+            case SDL_EVENT_FINGER_DOWN:
+            case SDL_EVENT_FINGER_MOTION:
+            case SDL_EVENT_FINGER_UP:
+            case SDL_EVENT_FINGER_CANCELED:
+                // On a phone or tablet the fingers drive the touch controls and the pointer (TouchInput.h).
+                Core::Input::Touch::ProcessEvent(event, g_sdlWindow);
+                break;
             case SDL_EVENT_MOUSE_WHEEL:
                 if (Core::Input::RouteToUi(event, g_sdlWindow))
                 {
@@ -1653,7 +1837,18 @@ MSG MainLoop()
                 MuApplyCursorVisibility();
                 break;
 #endif
+            case SDL_EVENT_WINDOW_HIDDEN:
+                // The page went to the background (the phone's app switcher, its screen off) without always
+                // losing focus first: a finger held then never gets its release, and a held joystick would
+                // walk on.
+                Core::Input::Touch::Reset();
+                break;
             case SDL_EVENT_WINDOW_FOCUS_LOST:
+                // A finger's touch never ends once the page loses focus, nor does a pad's press: let go
+                // of what fingers and the pad hold.
+                Core::Input::Touch::Reset();
+                Core::Input::Gamepad::Reset();
+                Core::Input::Gamepad::Pointer::Release(g_sdlWindow);
                 HandleFocusChange(false);
                 break;
             case SDL_EVENT_WINDOW_MINIMIZED:
@@ -1742,6 +1937,16 @@ MSG MainLoop()
                 // The player's Mood strength, at most one map light rebuild per frame however often
                 // it moved (options open or closed).
                 Render::Look::ApplyPendingTuning();
+#ifdef __EMSCRIPTEN__
+                MuWebFollowPageSize();
+                UI::Mobile::FollowPage();
+                UI::Mobile::PhonePage::Update();
+                MuWebFollowLowestQuality();
+                if (const Rml::Element* field = RmlUiRuntime::Instance().GetFocusedTextField())
+                    mu::web::SyncKeyboard(true, field->GetAttribute<Rml::String>("type", "") == "password");
+                else
+                    mu::web::SyncKeyboard(false, false);
+#endif
                 RenderProfiledFrame();
 #ifdef __EMSCRIPTEN__
                 WaitForBrowserFrame();
@@ -2184,6 +2389,11 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     WindowHeight = GameConfig::GetInstance().GetWindowHeight();
     g_bUseWindowMode = GameConfig::GetInstance().GetWindowMode() ? TRUE : FALSE;
     g_bUseFullscreenMode = !g_bUseWindowMode;
+#ifdef __EMSCRIPTEN__
+    MuWebStartAtPageSize();
+    mu::log::Get("platform")->info("Browser device: {}{}", mu::web::DeviceName(mu::web::GetDevice()),
+                                   mu::web::IsTouchDevice() ? ", played by touch" : "");
+#endif
 
     // Apply audio settings from INI — volume 0 = off, >0 = on
     m_SoundOnOff = (GameConfig::GetInstance().GetSoundVolume() > 0) ? 1 : 0;
@@ -2249,6 +2459,9 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
         MessageBox(nullptr, L"Windows aplication error!", L"Aplication Error", MB_ICONERROR);
         return 0;
     }
+    // Game controllers (an Xbox pad, a Steam Deck): UI/HUD/GamepadControls plays them.
+    Core::Input::Gamepad::Init();
+    Core::Input::Gamepad::SetEnabled(GameConfig::GetInstance().GetGamepad());
 
 #ifndef _WIN32
     // Install POSIX crash-diagnostic signal handlers. After SDL_Init (R8
@@ -2260,7 +2473,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     SetWorkingDirectoryToBasePath();
 #endif
 
-    const SDL_WindowFlags windowFlags = Core::Platform::BuildSDLWindowFlags(g_bUseWindowMode != TRUE, false);
+    SDL_WindowFlags windowFlags = Core::Platform::BuildSDLWindowFlags(g_bUseWindowMode != TRUE, false);
+#ifdef __EMSCRIPTEN__
+    // Browser build: the game's size is in device pixels already (index.html works it out). SDL's
+    // pixel density on top multiplied the canvas by the screen's ratio a second time.
+    windowFlags &= ~SDL_WINDOW_HIGH_PIXEL_DENSITY;
+#endif
 
     g_sdlWindow =
         SDL_CreateWindow("MU Online", static_cast<int>(WindowWidth), static_cast<int>(WindowHeight), windowFlags);
@@ -2345,6 +2563,9 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     // SDL_GPUDevice/SDL_Window from mu::GetRenderer() (GetDevice()/GetWindow()).
     UI::RmlBridge::InstallRuntimeHooks();
     RmlUiRuntime::Instance().Create(WindowWidth, WindowHeight);
+    // The phone or PC layout and the controls (Options -> Interface; by default a phone or tablet gets
+    // the phone layout, and its fingers drive the on-screen controls and the pointer).
+    UI::Mobile::Apply();
 
     // Content that must always sit visually on top of RmlUi, regardless of theme: the game
     // cursor, and (login/character scenes specifically) CLoginWin's, CCharMakeWin's, and

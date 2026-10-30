@@ -1,10 +1,16 @@
 /* Modern theme for the character-select scene's per-character name/guild/level tags -- flat,
    semi-transparent rounded backing instead of legacy sprite art. */
 
+/* The balloon's sizes are pixels of the original screen times --layout-pixel (1 on the desktop,
+   the page's pixel density in the browser), so it keeps its size on a high-density screen and its
+   text is rasterised sharp. C++ places the top-left at the anchor (bottom centre, 59x54) minus
+   (59, 54); the margins move it by the rest, so the anchor stays put at any ratio. */
 .balloon {
 	position: absolute;
-	width: 118px;
-	height: 54px;
+	width: calc(118px * var(--layout-pixel, 1));
+	height: calc(54px * var(--layout-pixel, 1));
+	margin-left: calc(59px - 59px * var(--layout-pixel, 1));
+	margin-top: calc(54px - 54px * var(--layout-pixel, 1));
 	pointer-events: none;
 	font-family: "token(font-body)";
 	color: token(text-primary);
@@ -13,8 +19,8 @@
 	position: absolute;
 	left: 0;
 	top: 0;
-	width: 118px;
-	height: 54px;
+	width: calc(118px * var(--layout-pixel, 1));
+	height: calc(54px * var(--layout-pixel, 1));
 	background-color: rgba(0, 0, 0, 110);
 	border: 1px token(border-frame);
 	border-radius: 2px;
@@ -23,23 +29,23 @@
 .balloon-name, .balloon-guild, .balloon-class {
 	position: absolute;
 	left: 0;
-	width: 118px;
+	width: calc(118px * var(--layout-pixel, 1));
 	text-align: center;
 	white-space: nowrap;
-	font-size: 12px;
+	font-size: calc(12px * var(--layout-pixel, 1));
 	font-family: "token(font-body)";
 }
 .balloon-name {
-	top: 6px;
+	top: calc(6px * var(--layout-pixel, 1));
 	font-weight: bold;
 	color: token(text-primary);
 }
 .balloon-guild {
-	top: 22px;
+	top: calc(22px * var(--layout-pixel, 1));
 	color: token(text-primary);
 }
 .balloon-class {
-	top: 38px;
+	top: calc(38px * var(--layout-pixel, 1));
 	color: token(accent-gold);
 }
 

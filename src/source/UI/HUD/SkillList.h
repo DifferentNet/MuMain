@@ -104,6 +104,15 @@ namespace mu::ui::window
         // method that is NOT this.
         bool IsSkillGridOpen() const { return m_bSkillList; }
 
+        // How many skills were picked in the grid or its pet row so far (the same one again, too):
+        // the touch controls put a picked skill on the skill button the player chose.
+        int GetGridPickCount() const { return m_iGridPickCount; }
+
+        // The skills the grid offers, in its order, then the pet's commands while there is a pet:
+        // CharacterAttribute->Skill[] indexes and AT_PET_COMMAND_* values, as the hotkeys hold
+        // them. The touch controls' skill picker lists the same.
+        std::vector<int> GetListedSkills() const;
+
         // Click/hover entry points bound from main_frame.rml's data-event-click/mouseover/mouseout.
         // Mouse-click behavior mirrors the legacy click branches, which never went through
         // UseHotKey() (so pet-check/auto-attack-cancel rules don't apply here either -- preserved
@@ -155,6 +164,7 @@ namespace mu::ui::window
         int m_iHotKeySkillType[SKILLHOTKEY_COUNT];
 
         bool m_bSkillList;
+        int m_iGridPickCount = 0;
 
         WORD m_wHeroPriorSkill;
 

@@ -146,9 +146,17 @@ else()
 endif()
 
 # Web build: WGSL for the WebGPU backend, generated from the SPIR-V blobs by
-# tools/web/spirv-to-wgsl.mjs and checked in beside them.
+# tools/web/spirv-to-wgsl.mjs and checked in beside them, plus the soft clip copies
+# (tools/web/wgsl-soft-clip.mjs) for cards without clip distances.
 if(EMSCRIPTEN)
-    foreach(shader_stage IN LISTS MU_SHADER_STAGE_NAMES)
+    set(MU_WEB_SOFT_CLIP_SHADER_STAGE_NAMES
+        basic_textured_softclip.vert
+        skinned_textured_softclip.vert
+        skinned_shadow_softclip.vert
+        basic_textured_softclip.frag
+        basic_textured_fog_softclip.frag
+        skinned_lit_softclip.frag)
+    foreach(shader_stage IN LISTS MU_SHADER_STAGE_NAMES MU_WEB_SOFT_CLIP_SHADER_STAGE_NAMES)
         configure_file("${MU_SHADER_COMPILED_DIR}/${shader_stage}.wgsl"
                        "${MU_SHADER_OUTPUT_DIR}/${shader_stage}.wgsl" COPYONLY)
     endforeach()

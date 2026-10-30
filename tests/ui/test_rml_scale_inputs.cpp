@@ -146,3 +146,34 @@ body { width: 100%; height: 100%; }
     fixture.context->Update();
     CHECK(strip->GetAbsoluteLeft() == doctest::Approx(1160.f - 100.f * hud));
 }
+
+TEST_CASE("a fixed-size scene window grows by the layout pixel around its anchor [ui][scale-inputs]")
+{
+    // char_info_balloon.rcss's rule: C++ places the top-left at the bottom-centre anchor minus
+    // (59, 54), and the margins keep that anchor where it is at any --layout-pixel.
+    Fixture fixture({1024, 768});
+    Rml::ElementDocument* document = fixture.context->LoadDocumentFromMemory(R"(<rml><head><style>
+body { width: 100%; height: 100%; }
+#balloon { position: absolute; left: 300px; top: 200px;
+           width: calc(118px * var(--layout-pixel, 1)); height: calc(54px * var(--layout-pixel, 1));
+           margin-left: calc(59px - 59px * var(--layout-pixel, 1));
+           margin-top: calc(54px - 54px * var(--layout-pixel, 1)); }
+</style></head><body><div id="balloon"/></body></rml>)");
+    REQUIRE(document != nullptr);
+    document->Show();
+    fixture.context->Update();
+
+    // The desktop: the original's own px.
+    Rml::Element* balloon = document->GetElementById("balloon");
+    CHECK(UI::Scaling::LayoutPixelRatio() == doctest::Approx(1.f));
+    CHECK(balloon->GetBox().GetSize().x == doctest::Approx(118.f));
+    CHECK(balloon->GetAbsoluteLeft() == doctest::Approx(300.f));
+    CHECK(balloon->GetAbsoluteTop() == doctest::Approx(200.f));
+
+    // A browser page at two device pixels per CSS pixel: twice the size, the anchor kept.
+    fixture.context->GetRootElement()->SetProperty("--layout-pixel", "2");
+    fixture.context->Update();
+    CHECK(balloon->GetBox().GetSize().x == doctest::Approx(236.f));
+    CHECK(balloon->GetAbsoluteLeft() + 118.f == doctest::Approx(300.f + 59.f));
+    CHECK(balloon->GetAbsoluteTop() + 108.f == doctest::Approx(200.f + 54.f));
+}

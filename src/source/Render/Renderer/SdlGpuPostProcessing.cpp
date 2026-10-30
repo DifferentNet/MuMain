@@ -2,6 +2,9 @@
 
 #include "Core/Utilities/Log/MuLogger.h"
 #include "Render/PostProcessing/BloomComposite.h"
+#ifdef __EMSCRIPTEN__
+#include "Core/Platform/web/WebGpuFeatures.h"
+#endif
 
 #include <algorithm>
 #include <cstring>
@@ -53,6 +56,10 @@ SDL_GPUGraphicsPipeline* BuildPipeline(SDL_GPUDevice* device, SDL_GPUShader* ver
     info.rasterizer_state.fill_mode = SDL_GPU_FILLMODE_FILL;
     info.rasterizer_state.cull_mode = SDL_GPU_CULLMODE_NONE;
     info.rasterizer_state.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE;
+#ifdef __EMSCRIPTEN__
+    // Clamped depth (false) wherever the card can (see mu::web::HasDepthClamp).
+    info.rasterizer_state.enable_depth_clip = !web::HasDepthClamp();
+#endif
     info.multisample_state.sample_count = description.sampleCount;
     info.target_info.color_target_descriptions = &colorTarget;
     info.target_info.num_color_targets = 1;

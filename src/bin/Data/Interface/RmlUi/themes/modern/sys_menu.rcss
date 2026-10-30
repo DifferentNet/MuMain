@@ -37,3 +37,8 @@
 #btn_select_server{ left: 52dp; top: 94dp; }
 #btn_option       { left: 52dp; bottom: 56dp; }
 #btn_close        { left: 52dp; bottom: 20dp; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode) draws the menu larger, for fingers. */
+@media (theme: mobile) {
+	#panel { transform: translate(-50%, -50%) scale(1.5); }
+}

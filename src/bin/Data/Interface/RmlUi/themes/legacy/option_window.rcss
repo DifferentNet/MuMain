@@ -506,3 +506,35 @@
 	margin-bottom: 8dp;
 	color: token(semantic-danger);
 }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): the window nearly fills
+   the screen with larger text, and its tabs, rows, boxes, gauges, dropdowns and close cross are
+   finger-sized. The settings area scrolls under a finger (Render::RmlUi::RmlTouchScroll). */
+@media (theme: mobile) {
+	#panel { width: 640dp; max-width: 96%; height: 96%; font-size: 1.3rem; }
+	#content { left: 22dp; right: 22dp; top: 36dp; }
+	.option-tab-row, .option-tab-btn { height: 36dp; }
+	.option-tab-btn { padding: 0 10dp; line-height: 36dp; font-size: 1.3rem; }
+	.option-tab-scroll { top: 44dp; }
+	.option-tab-panel { padding: 2dp 14dp 0 4dp; }
+	.option-row { min-height: 40dp; margin-bottom: 4dp; }
+	.checkbox-box { width: 26dp; height: 26dp; }
+	.option-gauge { width: 186dp; height: 24dp; }
+	.option-gauge.effect-gauge { width: 105dp; height: 22dp; }
+	.option-dropdown { max-width: none; height: 34dp; }
+	.option-dropdown-value { padding: 0 8dp; line-height: 34dp; }
+	.option-dropdown-list { max-height: 200dp; }
+	.option-dropdown-list scrollbarvertical { width: 12dp; }
+	.option-dropdown-option { padding: 9dp 8dp; }
+	.option-tuning-reset { padding: 6dp 10dp; }
+	.option-tuning-chevron { width: 8dp; height: 8dp; }
+	/* The cross keeps a visible 24 dp; the box round it takes the finger. */
+	.option-close-btn {
+		right: -16dp;
+		top: -36dp;
+		width: 24dp;
+		height: 24dp;
+		padding: 10dp;
+		decorator: ninepatch(option-close, option-close-inner) content-box;
+	}
+}

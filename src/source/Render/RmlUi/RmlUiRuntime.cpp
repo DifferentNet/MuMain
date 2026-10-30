@@ -157,6 +157,12 @@ void RmlUiRuntime::Create(int windowWidth, int windowHeight)
     // Every window keeps its document loaded and hidden; only the shown ones need a per-frame update.
     if (m_Context)
         m_Context->SetSkipHiddenDocuments(true);
+#ifdef __EMSCRIPTEN__
+    // The browser build: styles under `@media (theme: web)` apply (a phone's screen is far wider
+    // than the original's 4:3, so its full-screen images keep their shape there).
+    if (m_Context)
+        m_Context->ActivateTheme("web", true);
+#endif
     m_DebugContext = Rml::CreateContext("debug", Rml::Vector2i(windowWidth, windowHeight));
     if (m_DebugContext)
         m_DebugContext->SetSkipHiddenDocuments(true);
@@ -185,6 +191,7 @@ void RmlUiRuntime::Destroy()
         m_Hooks.beforeDestroy();
     Core::Input::Synthetic::CancelDelivery();
     Core::Input::SetUiInputConsumer(nullptr);
+    m_TouchScroll.Reset();
     mu::GetRenderer().SetPreSubmitCallback(nullptr);
 
     // Clears RmlUi's global registration before Shutdown() tears down contexts/documents/elements
@@ -334,6 +341,26 @@ void RmlUiRuntime::CancelSyntheticMousePress(unsigned char button, SDL_Window* w
         SDL_GetMouseState(&x, &y);
         m_Context->ProcessMouseMove(static_cast<int>(x), static_cast<int>(y), RmlSDL::GetKeyModifierState());
     }
+}
+
+bool RmlUiRuntime::BeginTouchScroll(float x, float y)
+{
+    return m_TouchScroll.Begin(m_Context, {x, y});
+}
+
+void RmlUiRuntime::MoveTouchScroll(float fromX, float fromY, float toX, float toY)
+{
+    m_TouchScroll.Move({fromX, fromY}, {toX, toY});
+}
+
+void RmlUiRuntime::EndTouchScroll(float x, float y, float velocityX, float velocityY)
+{
+    m_TouchScroll.End({x, y}, {velocityX, velocityY});
+}
+
+bool RmlUiRuntime::StopTouchScrollGlide()
+{
+    return m_TouchScroll.StopGlide();
 }
 
 bool RmlUiRuntime::IsMouseOverUI() const

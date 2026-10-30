@@ -162,6 +162,13 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME soft_clip_shaders_tests
+    SOURCES
+        test_soft_clip_shaders.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Renderer/SoftClipShaders.cpp
+)
+
+mu_add_test(
     NAME scene_lighting_tests
     SOURCES
         test_scene_lighting.cpp

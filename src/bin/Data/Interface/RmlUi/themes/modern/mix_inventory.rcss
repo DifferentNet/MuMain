@@ -190,3 +190,20 @@
 /* The grid's clicks are native (CInventoryCtrl), so the placed panel takes no pointer events; its
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode), as the legacy theme
+   lays it out: the full 432 height of the dock, the grid down the right side in 42 px cells with a
+   big Mix button under it, the tax rate, recipe text and socket list in the left column. 552 wide:
+   with the bag-only inventory beside it, a phone's width (19.5:9 and wider). */
+@media (theme: mobile) {
+	#panel { --item-cell: 42px; width: 552px; height: 432px; }
+	.bg-panel { width: 100%; height: 432px; }
+	#item_view { width: calc(100% + 40px); height: 472px; }
+	#item_grid, #item_grid_counts { left: 200px; top: 50px; }
+	.mix-tax-rate { width: 170px; }
+	.mix-content { width: 170px; bottom: 24px; }
+	.socket-list-box { left: 14px; top: 330px; width: 172px; }
+	#socket_list { left: 15px; top: 331px; }
+	.mix-btn-mix { left: 324px; top: 236px; width: 88px; height: 70px; line-height: 70px; }
+	.mix-btn-mix .modern-icon-btn-glyph-px { font-size: 28px; }
+}

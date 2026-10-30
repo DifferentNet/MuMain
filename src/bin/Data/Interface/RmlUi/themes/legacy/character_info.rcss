@@ -309,3 +309,38 @@
 .adv-lines-2 { top: 287px; }
 .adv-lines span { display: block; white-space: nowrap; color: #ffffff; height: calc(13px * var(--root-scale)); }
 .adv-lines span.boosted { color: rgb(100, 150, 255); }
+
+/* MU Moldova: the phone view (UI::Mobile::IsPhoneView()): the text keeps the native text size while the
+   panel shrinks to the phone's height, so the 190-wide window cut its lines off. It is 290 wide here; the
+   pieces pinned to the edges follow, the frame's and the text boxes' ornaments keep their size and their
+   plain middles stretch (the battle pass's tiles, battle_pass.rcss). The level-up points move to the right
+   end of the level line, and the "+" and the bottom buttons grow to finger size. */
+@spritesheet chainfo-phone-textbox-sheet { src: "../../../newui_cha_textbox02.tga"; chainfo-phone-textbox: 0px 0px 170px 21px; chainfo-phone-textbox-inner: 10px 4px 150px 13px; }
+@media (theme: mobile) {
+	#panel { width: 290px; }
+	.frame-top { decorator: tiled-horizontal(docked-phone-top-b-l, docked-phone-top-b-c, docked-phone-top-b-r); }
+	.frame-bottom { decorator: tiled-horizontal(docked-phone-bottom-l, docked-phone-bottom-c, docked-phone-bottom-r); }
+	.levelup-point-text { left: auto; right: 22px; transform-origin: right top; }
+	.attr-textbox { decorator: ninepatch(chainfo-phone-textbox, chainfo-phone-textbox-inner); }
+	.attr-label { width: 110px; }
+	.attr-value { left: 122px; right: 44px; }
+	.stat-btn {
+		right: 14px;
+		width: 24px;
+		height: 21px;
+		margin: -6px;
+		padding: 6px;
+		decorator: image(chainfo-stat-btn) content-box;
+	}
+	.stat-btn-str { top: 120px; }
+	.stat-btn-agi { top: 175px; }
+	.stat-btn-vit { top: 240px; }
+	.stat-btn-ene { top: 295px; }
+	.stat-btn-cmd { top: 350px; }
+	#panel #btn_exit, #panel .info-btn { width: 44px; height: 34px; bottom: 6px; }
+	#panel #btn_exit { left: 23px; decorator: image(docked-exit-btn) content-box; }
+	#panel .info-btn-quest { left: 73px; }
+	#panel .info-btn-pet { left: 123px; }
+	#panel .info-btn-advstats { left: 173px; }
+	#panel .info-btn-titles { left: 223px; }
+}

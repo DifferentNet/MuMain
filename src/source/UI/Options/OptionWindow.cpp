@@ -7,6 +7,7 @@
 #include "Audio/DSPlaySound.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "Data/GameConfig/GameConfigConstants.h"
+#include "Core/Input/GamepadInput.h"
 #include "Render/Look/LookPresetSetting.h"
 #include "Render/Look/LookProfileSetting.h"
 #include "Render/Look/TuningSetting.h"
@@ -14,6 +15,9 @@
 #include "Render/Lighting/EnhancedLightingSetting.h"
 #include "Render/Lighting/LightMoodScales.h"
 #include "Render/PostProcessing/PostProcessingSetting.h"
+#include "UI/Mobile/ButtonSize.h"
+#include "UI/Mobile/InterfaceMode.h"
+#include "UI/Mobile/TouchUnit.h"
 #include "UI/Options/TuningRows.h"
 #include "Audio/AudioPlayer.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
@@ -31,9 +35,13 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <initializer_list>
 #include <optional>
 #include <cstring>
 #include "I18N/All.h"
+#ifdef __EMSCRIPTEN__
+#include "Core/Platform/web/WebDisplay.h"
+#endif
 
 #include <RmlUi/Core/DataModelHandle.h>
 #include <RmlUi/Core/ElementDocument.h>
@@ -50,6 +58,12 @@ extern BOOL g_bUseWindowMode;
 void ReinitializeFonts();
 std::vector<std::pair<int, int>> MuGetSupportedDisplayResolutions();
 void MuApplyWindowResolution(unsigned int width, unsigned int height, bool windowed);
+#ifdef __EMSCRIPTEN__
+void MuWebSetAutoResolution(bool enabled);
+// Browser build: the first resolution entry is "Auto", the game area's own size in the screen's
+// real pixels (Winmain.cpp MuWebFollowPageSize). It's listed as this size.
+static constexpr UI::Options::DisplayResolution kWebAutoResolution{0, 0};
+#endif
 float ConvertX(float x);
 float ConvertY(float y);
 
@@ -60,6 +74,15 @@ using namespace mu::ui::window;
 // resolution/language/font <select> change callbacks are ignored -- see m_rmlSyncCount's own
 // comment in OptionWindow.h.
 static constexpr int kRmlSelectSettleFrames = 5;
+// The custom dropdowns' ids, 0 .. kLastDropdownId (see RmlToggleDropdown()).
+static constexpr int kInterfaceViewDropdown = 8;
+static constexpr int kControlsDropdown = 9;
+static constexpr int kTouchButtonsDropdown = 10;
+static constexpr int kGamepadDropdown = 11;
+static constexpr int kLastDropdownId = kGamepadDropdown;
+// The gamepad row's choices, in its labels' order.
+static constexpr int kGamepadOnIndex = 0;
+static constexpr int kGamepadOffIndex = 1;
 
 std::vector<UI::Options::DisplayResolution>
 UI::Options::NormalizeDisplayResolutions(std::vector<DisplayResolution> resolutions)
@@ -210,6 +233,16 @@ template <std::size_t N> std::vector<Rml::String> MultiplierLabels(const int (&v
     labels.push_back(StringUtils::WideToNarrow(I18N::Game::Off));
     for (std::size_t i = 1; i < N; ++i)
         labels.push_back(std::to_string(values[i]) + "x");
+    return labels;
+}
+
+// A row's localized entries, in order.
+std::vector<Rml::String> NarrowLabels(std::initializer_list<const wchar_t*> texts)
+{
+    std::vector<Rml::String> labels;
+    labels.reserve(texts.size());
+    for (const wchar_t* text : texts)
+        labels.push_back(StringUtils::WideToNarrow(text));
     return labels;
 }
 
@@ -494,6 +527,23 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("ui_scale_row_label", &model.uiScaleRowLabel);
     c.Bind("ui_scale_value_label", &model.uiScaleValueLabel);
     c.Bind("ui_scale_tooltip", &model.uiScaleTooltip);
+    c.Bind("interface_view_labels", &model.interfaceViewLabels);
+    c.Bind("interface_view_index", &model.interfaceViewIndex);
+    c.Bind("interface_view_row_label", &model.interfaceViewRowLabel);
+    c.Bind("interface_view_value_label", &model.interfaceViewValueLabel);
+    c.Bind("controls_labels", &model.controlsLabels);
+    c.Bind("controls_index", &model.controlsIndex);
+    c.Bind("controls_row_label", &model.controlsRowLabel);
+    c.Bind("controls_value_label", &model.controlsValueLabel);
+    c.Bind("touch_buttons_shown", &model.touchButtonsShown);
+    c.Bind("touch_buttons_labels", &model.touchButtonsLabels);
+    c.Bind("touch_buttons_index", &model.touchButtonsIndex);
+    c.Bind("touch_buttons_row_label", &model.touchButtonsRowLabel);
+    c.Bind("touch_buttons_value_label", &model.touchButtonsValueLabel);
+    c.Bind("gamepad_labels", &model.gamepadLabels);
+    c.Bind("gamepad_index", &model.gamepadIndex);
+    c.Bind("gamepad_row_label", &model.gamepadRowLabel);
+    c.Bind("gamepad_value_label", &model.gamepadValueLabel);
 
     c.BindEventCallback("option_click_close",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickClose(); });
@@ -624,6 +674,15 @@ void mu::ui::window::COptionWindow::BuildRmlUi()
     m_RmlView.Ensure();
 }
 
+static std::wstring ResolutionLabel(const UI::Options::DisplayResolution& resolution)
+{
+#ifdef __EMSCRIPTEN__
+    if (resolution == kWebAutoResolution)
+        return I18N::Game::ResolutionAuto;
+#endif
+    return std::to_wstring(resolution.first) + L" x " + std::to_wstring(resolution.second);
+}
+
 void mu::ui::window::COptionWindow::InitResolutionCombo()
 {
     m_resolutions = UI::Options::NormalizeDisplayResolutions(MuGetSupportedDisplayResolutions());
@@ -634,13 +693,16 @@ void mu::ui::window::COptionWindow::InitResolutionCombo()
             WindowHeight > 0 ? static_cast<int>(WindowHeight) : CfgDefaults::CfgDefaultWindowHeight;
         m_resolutions.emplace_back(fallbackWidth, fallbackHeight);
     }
+#ifdef __EMSCRIPTEN__
+    m_resolutions.insert(m_resolutions.begin(), kWebAutoResolution);
+#endif
 
     m_iResolutionIndex = FindCurrentResolutionIndex();
     m_resolutionLabels.clear();
     m_resolutionLabels.reserve(m_resolutions.size());
-    for (const auto& [width, height] : m_resolutions)
+    for (const auto& resolution : m_resolutions)
     {
-        m_resolutionLabels.push_back(std::to_wstring(width) + L" x " + std::to_wstring(height));
+        m_resolutionLabels.push_back(ResolutionLabel(resolution));
     }
 }
 
@@ -718,6 +780,7 @@ bool mu::ui::window::COptionWindow::Update()
     ApplyPendingThemeSwitch();
     ApplyPendingFont();
     ApplyPendingUIScale();
+    ApplyPendingInterfaceMode();
     SyncRmlModel();
     ScrollOpenDropdownToSelection();
     return true;
@@ -829,7 +892,7 @@ void mu::ui::window::COptionWindow::SyncImpliedEffectRows(OptionRmlModel& model)
 
 void mu::ui::window::COptionWindow::RmlToggleDropdown(int dropdownId)
 {
-    if (dropdownId < 0 || dropdownId > 7)
+    if (dropdownId < 0 || dropdownId > kLastDropdownId)
         return;
     // Toggle: clicking the currently-open one's own value box closes it; clicking any other
     // (including a different dropdown's) overwrites m_iOpenDropdown, which closes whatever else
@@ -867,6 +930,18 @@ void mu::ui::window::COptionWindow::RmlDropdownOptionClick(int dropdownId, int o
         break;
     case 7:
         RmlAnisotropyChanged(optionIndex);
+        break;
+    case kInterfaceViewDropdown:
+        RmlInterfaceViewChanged(optionIndex);
+        break;
+    case kControlsDropdown:
+        RmlControlsChanged(optionIndex);
+        break;
+    case kTouchButtonsDropdown:
+        RmlTouchButtonsChanged(optionIndex);
+        break;
+    case kGamepadDropdown:
+        RmlGamepadChanged(optionIndex);
         break;
     default:
         break;
@@ -1390,6 +1465,53 @@ void mu::ui::window::COptionWindow::ApplyPendingUIScale()
     m_iUIScaleIndex = FindCurrentUIScaleIndex();
 }
 
+void mu::ui::window::COptionWindow::RmlInterfaceViewChanged(int index)
+{
+    // See RmlResolutionChanged's own comment -- same settle-frame guard applies here.
+    if (m_rmlSyncCount >= kRmlSelectSettleFrames && index >= 0 && index < UI::Mobile::ViewChoiceCount)
+        m_iPendingInterfaceView = index;
+}
+
+void mu::ui::window::COptionWindow::RmlControlsChanged(int index)
+{
+    if (m_rmlSyncCount >= kRmlSelectSettleFrames && index >= 0 && index < UI::Mobile::ControlChoiceCount)
+        m_iPendingControls = index;
+}
+
+void mu::ui::window::COptionWindow::RmlTouchButtonsChanged(int index)
+{
+    if (m_rmlSyncCount >= kRmlSelectSettleFrames && index >= 0 &&
+        index < static_cast<int>(UI::Mobile::ButtonSize::Percents.size()))
+        m_iPendingTouchButtons = index;
+}
+
+void mu::ui::window::COptionWindow::RmlGamepadChanged(int index)
+{
+    if (m_rmlSyncCount >= kRmlSelectSettleFrames && (index == kGamepadOnIndex || index == kGamepadOffIndex))
+        m_iPendingGamepad = index;
+}
+
+void mu::ui::window::COptionWindow::ApplyPendingInterfaceMode()
+{
+    const int view = std::exchange(m_iPendingInterfaceView, -1);
+    const int controls = std::exchange(m_iPendingControls, -1);
+    const int touchButtons = std::exchange(m_iPendingTouchButtons, -1);
+    const int gamepad = std::exchange(m_iPendingGamepad, -1);
+    if (gamepad >= 0)
+    {
+        const bool enabled = gamepad == kGamepadOnIndex;
+        Core::Input::Gamepad::SetEnabled(enabled);
+        GameConfig::GetInstance().SetGamepad(enabled);
+        GameConfig::GetInstance().Save();
+    }
+    if (touchButtons >= 0)
+        UI::Mobile::TouchUnit::SetPercent(UI::Mobile::ButtonSize::Percents[touchButtons]);
+    if (view >= 0 && view != static_cast<int>(UI::Mobile::GetViewChoice()))
+        UI::Mobile::SetViewChoice(static_cast<UI::Mobile::ViewChoice>(view));
+    if (controls >= 0 && controls != static_cast<int>(UI::Mobile::GetControlChoice()))
+        UI::Mobile::SetControlChoice(static_cast<UI::Mobile::ControlChoice>(controls));
+}
+
 void mu::ui::window::COptionWindow::RmlClickClose()
 {
     g_pNewUISystem->Hide(mu::ui::window::INTERFACE_OPTION);
@@ -1478,8 +1600,17 @@ bool mu::ui::window::COptionWindow::GetRenderAllEffects()
 
 int mu::ui::window::COptionWindow::FindCurrentResolutionIndex()
 {
+#ifdef __EMSCRIPTEN__
+    if (mu::web::IsAutoDisplay())
+        return 0;
+    // Among the sizes after "Auto": as {0, 0} it would be the closest to a window smaller than all.
+    const std::vector<UI::Options::DisplayResolution> sizes(m_resolutions.begin() + 1, m_resolutions.end());
+    return 1 + UI::Options::FindClosestDisplayResolutionIndex(sizes, static_cast<int>(WindowWidth),
+                                                              static_cast<int>(WindowHeight));
+#else
     return UI::Options::FindClosestDisplayResolutionIndex(m_resolutions, static_cast<int>(WindowWidth),
                                                           static_cast<int>(WindowHeight));
+#endif
 }
 
 int mu::ui::window::COptionWindow::FindCurrentLanguageIndex()
@@ -1582,6 +1713,14 @@ void mu::ui::window::COptionWindow::ApplyResolution()
     }
 
     const auto [newWidth, newHeight] = m_resolutions[m_iResolutionIndex];
+#ifdef __EMSCRIPTEN__
+    // "Auto" follows the page from now on, without a size in config.ini; any other entry stops that
+    // first, then applies as on the desktop.
+    const bool automatic = m_resolutions[m_iResolutionIndex] == kWebAutoResolution;
+    MuWebSetAutoResolution(automatic);
+    if (automatic)
+        return;
+#endif
 
     // Resize through SDL (MuApplyWindowResolution), not raw Win32 SetWindowPos -- SDL clamps a
     // non-resizable window straight back to its current size otherwise.
@@ -1599,6 +1738,13 @@ void mu::ui::window::COptionWindow::ApplyResolution()
 // current selection (config still records the real size).
 void mu::ui::window::COptionWindow::SyncResolutionComboToWindow()
 {
+#ifdef __EMSCRIPTEN__
+    if (mu::web::IsAutoDisplay())
+    {
+        m_iResolutionIndex = 0;
+        return;
+    }
+#endif
     const int listed = UI::Options::FindExactDisplayResolutionIndex(m_resolutions, static_cast<int>(WindowWidth),
                                                                     static_cast<int>(WindowHeight));
     if (listed < 0)
@@ -1710,6 +1856,10 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.themeRowLabel, "theme_row_label", I18N::Game::UITheme);
     syncLabel(model.uiScaleRowLabel, "ui_scale_row_label", I18N::Game::UIScale);
     syncLabel(model.uiScaleTooltip, "ui_scale_tooltip", I18N::Game::UIScaleTooltip);
+    syncLabel(model.interfaceViewRowLabel, "interface_view_row_label", I18N::Game::InterfaceViewRow);
+    syncLabel(model.controlsRowLabel, "controls_row_label", I18N::Game::ControlsRow);
+    syncLabel(model.touchButtonsRowLabel, "touch_buttons_row_label", I18N::Game::TouchButtonSizeRow);
+    syncLabel(model.gamepadRowLabel, "gamepad_row_label", I18N::Game::GamepadRow);
 
     // positioned/root_x/root_y stay at their model defaults (false/0/0, see OptionRmlModel's own
     // comment): window_shell's `.center-both` CSS places the window, a drag moves it.
@@ -1838,6 +1988,32 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncMultiplierRow(model.anisotropyLabels, "anisotropy_labels", model.anisotropyIndex, "anisotropy_index",
                       model.anisotropyValueLabel, "anisotropy_value_label", MultiplierLabels(s_AnisotropyValues),
                       FindValueIndex(s_AnisotropyValues, GameConfig::GetInstance().GetAnisotropy()));
+    // Rebuilt every sync for a live language switch, as the rows above.
+    syncMultiplierRow(model.interfaceViewLabels, "interface_view_labels", model.interfaceViewIndex,
+                      "interface_view_index", model.interfaceViewValueLabel, "interface_view_value_label",
+                      NarrowLabels({I18N::Game::ChoiceAuto, I18N::Game::InterfaceViewPc, I18N::Game::InterfaceViewPhone}),
+                      static_cast<int>(UI::Mobile::GetViewChoice()));
+    syncMultiplierRow(model.controlsLabels, "controls_labels", model.controlsIndex, "controls_index",
+                      model.controlsValueLabel, "controls_value_label",
+                      NarrowLabels({I18N::Game::ChoiceAuto, I18N::Game::ControlsMouseKeyboard, I18N::Game::ControlsTouch}),
+                      static_cast<int>(UI::Mobile::GetControlChoice()));
+    // The on-screen controls' size: shown while they are (touch on, or a pad in use).
+    std::vector<Rml::String> touchButtonLabels;
+    for (const int percent : UI::Mobile::ButtonSize::Percents)
+        touchButtonLabels.push_back(std::to_string(percent) + " %");
+    syncMultiplierRow(model.touchButtonsLabels, "touch_buttons_labels", model.touchButtonsIndex, "touch_buttons_index",
+                      model.touchButtonsValueLabel, "touch_buttons_value_label", std::move(touchButtonLabels),
+                      UI::Mobile::ButtonSize::NearestIndex(UI::Mobile::TouchUnit::GetPercent()));
+    syncMultiplierRow(model.gamepadLabels, "gamepad_labels", model.gamepadIndex, "gamepad_index",
+                      model.gamepadValueLabel, "gamepad_value_label",
+                      NarrowLabels({I18N::Game::GamepadOn, I18N::Game::GamepadOff}),
+                      Core::Input::Gamepad::IsEnabled() ? kGamepadOnIndex : kGamepadOffIndex);
+    const bool touchButtonsShown = UI::Mobile::ShowsControls();
+    if (model.touchButtonsShown != touchButtonsShown)
+    {
+        model.touchButtonsShown = touchButtonsShown;
+        m_RmlView.MarkDirty("touch_buttons_shown");
+    }
 
     const bool showFpsCounter = GetShowFpsCounter();
     const bool showDebugInfo = GetShowDebugInfo();

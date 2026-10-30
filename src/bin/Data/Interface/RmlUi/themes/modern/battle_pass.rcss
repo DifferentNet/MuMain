@@ -312,3 +312,46 @@
 #bp_title { width: calc(100% * var(--root-scale)); }
 #bp_status { width: calc(166px * var(--root-scale)); white-space: normal; }
 #bp_levels, #bp_quests { height: calc(281px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): the legacy theme's wider
+   window with finger-sized parts (legacy/battle_pass.rcss). */
+@media (theme: mobile) {
+	#panel { width: 320px; }
+
+	#bp_season, #bp_level { left: 18px; }
+	#bp_time, #bp_points { right: 18px; }
+	#bp_level, #bp_points { top: 47px; }
+	#bp_gauge { left: 18px; top: 65px; width: 284px; height: 15px; }
+
+	#bp_tabs { left: 16px; top: 85px; width: 288px; height: 30px; }
+	.bp-tab { width: 144px; height: 30px; }
+	.bp-tab-right { left: 144px; }
+
+	#bp_status { top: 124px; width: calc(284px * var(--root-scale)); }
+	.bp-items, #bp_levels, #bp_quests { left: 12px; top: 121px; }
+	.bp-items { width: 296px; height: 262px; }
+	#bp_levels, #bp_quests { --flow-w: 296px; height: calc(262px * var(--root-scale)); }
+
+	.bp-row { height: calc(42px * var(--root-scale)); margin-bottom: calc(2px * var(--root-scale)); }
+	.bp-lv { width: calc(32px * var(--root-scale)); }
+	.bp-icon {
+		width: calc(36px * var(--root-scale));
+		height: calc(38px * var(--root-scale));
+		margin-right: calc(3px * var(--root-scale));
+	}
+	.bp-sign { line-height: calc(36px * var(--root-scale)); }
+
+	.bp-q { margin-bottom: calc(4px * var(--root-scale)); padding: calc(4px * var(--root-scale)); }
+	.bp-q-bar, .bp-day-bar { height: calc(18px * var(--root-scale)); }
+	.bp-q-progress, .bp-day-count { line-height: calc(16px * var(--root-scale)); }
+	.bp-q-reroll { width: calc(70px * var(--root-scale)); height: calc(32px * var(--root-scale)); }
+	.bp-day-chests, .bp-chest { height: calc(26px * var(--root-scale)); }
+	.bp-chest { min-width: calc(32px * var(--root-scale)); }
+	.bp-day-chests .bp-chest { width: calc(32px * var(--root-scale)); margin-left: calc(-16px * var(--root-scale)); }
+	.bp-chest-label { line-height: calc(24px * var(--root-scale)); }
+	.bp-day { padding: 0 calc(16px * var(--root-scale)); }
+	#bp_take { height: calc(38px * var(--root-scale)); }
+
+	#btn_exit { top: 388px; width: 44px; height: 36px; }
+	#bp_claim { left: 122px; top: 388px; width: 180px; height: 36px; }
+}

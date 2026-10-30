@@ -139,3 +139,29 @@ button { font-family: "token(font-body)"; font-size: 1rem; color: token(text-pri
 /* Reaches back out to the panel's own bottom-right corner, over the bottom cap. */
 #resize { display: block; position: absolute; right: -4dp; bottom: -14dp; width: 9dp; height: 9dp; z-index: 10; pointer-events: auto; decorator: image(fs-resize-grip); cursor: resize; }
 
+
+/* MU Moldova: the phone view (UI::Mobile::IsPhoneView()): the window opens tall and wide, with
+   finger-sized tabs, rows and buttons; the window buttons keep their 12-unit sprites and take a finger
+   from round them (the sprite paints the content box alone). */
+@media (theme: mobile) {
+	#panel { width: 480dp; height: 430dp; }
+	#window_controls { top: 2dp; right: -8dp; }
+	#window_controls button { width: 26dp; height: 26dp; padding: 7dp; margin-left: 0; }
+	#btn_minimize { decorator: image(fs-minimize) content-box; }
+	#btn_maximize { decorator: image(fs-maximize) content-box; }
+	#btn_maximize.restore { decorator: image(fs-restore) content-box; }
+	#btn_close { decorator: image(fs-close) content-box; }
+	#tabs, #reject { top: 30dp; }
+	.btn, #reject { height: 28dp; line-height: 28dp; }
+	.btn { padding: 0 6dp; }
+	.check { width: 12dp; height: 12dp; margin-top: 8dp; }
+	.page { top: 64dp; }
+	.headers, .headers button { height: 22dp; line-height: 22dp; }
+	.scroll-pane { top: 23dp; bottom: 34dp; }
+	.row { height: 30dp; line-height: 30dp; }
+	.row .check { margin-top: 9dp; }
+	.row .read_state { height: 14dp; margin-top: 8dp; }
+	.mail_columns .check_column { height: 30dp; }
+	.actions { height: 30dp; }
+	#resize { width: 16dp; height: 16dp; right: -8dp; bottom: -20dp; }
+}

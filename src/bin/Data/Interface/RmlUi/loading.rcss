@@ -20,6 +20,12 @@ body {
 	position: absolute;
 }
 
+/* The browser (RmlUiRuntime's "web" theme): a phone's screen is far wider than 4:3, so the picture
+   keeps its shape there, the window's height, centred on black. */
+@media (theme: web) {
+	#bg { left: 50%; width: 133.3333vh; margin-left: -66.6667vh; }
+}
+
 .tile-top-left     { left: 0%;  top: 0%;       width: 50%; height: 85.3333%; }
 .tile-top-right    { left: 50%; top: 0%;       width: 50%; height: 85.3333%; }
 .tile-bottom-left  { left: 0%;  top: 85.3333%; width: 50%; height: 14.6667%; }

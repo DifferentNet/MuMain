@@ -18,10 +18,29 @@
 #include "UI/RmlBridge/RmlTooltip.h"
 #include "UI/Tooltip/LegacyTextListTooltip.h"
 
+#include <RmlUi/Core/ComputedValues.h>
 #include <RmlUi/Core/ElementDocument.h>
 
 using namespace SEASON3B;
 using namespace mu::ui::window;
+
+namespace
+{
+// A theme's box around a grid that may show only some of its rows (the phone view's 15-row shop).
+constexpr const char* GridViewportClass = "item-grid-viewport";
+
+// The grid's viewport when it clips (any overflow but visible), else null.
+Rml::Element* ClippingViewport(Rml::Element& grid)
+{
+    for (Rml::Element* ancestor = grid.GetParentNode(); ancestor != nullptr; ancestor = ancestor->GetParentNode())
+    {
+        if (!ancestor->IsClassSet(GridViewportClass))
+            continue;
+        return ancestor->GetComputedValues().overflow_y() != Rml::Style::Overflow::Visible ? ancestor : nullptr;
+    }
+    return nullptr;
+}
+} // namespace
 
 POINT UI::Items::Drag::PickupOffset(int itemLeft, int itemTop, int itemWidth, int itemHeight,
                                     int pointerX, int pointerY, bool preserveAnchor)
@@ -1229,6 +1248,11 @@ bool UI::Items::DrawnGridGeometry(Rml::Element* grid, int columns, int rows, flo
         }
     }
     geometry = {offset.x, offset.y, pitchX, pitchY, columns, rows};
+    Rml::Vector2f visibleOffset;
+    Rml::Vector2f visibleSize;
+    if (Rml::Element* viewport = ClippingViewport(*grid);
+        viewport != nullptr && UI::RmlBridge::DrawnBox(*viewport, Rml::BoxArea::Padding, visibleOffset, visibleSize))
+        geometry.SetVisibleRect({visibleOffset.x, visibleOffset.y, visibleSize.x, visibleSize.y});
     return true;
 }
 

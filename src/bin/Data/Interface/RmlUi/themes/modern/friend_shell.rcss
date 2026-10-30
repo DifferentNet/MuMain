@@ -105,3 +105,24 @@ button { font-family: "token(font-body)"; font-size: 10dp; color: token(text-sec
 #resize { display: block; position: absolute; right: -2dp; bottom: -8dp; width: 10dp; height: 10dp; z-index: 10; pointer-events: auto; box-sizing: border-box; background-color: token(surface-control); border-right: 2dp token(accent-steel); border-bottom: 2dp token(accent-steel); cursor: resize; }
 #resize:hover { border-right-color: token(accent-steel-hover); border-bottom-color: token(accent-steel-hover); }
 
+
+/* MU Moldova: the phone view (UI::Mobile::IsPhoneView()): the window opens tall and wide, with
+   finger-sized tabs, rows, buttons and window buttons (themes/legacy/friend_shell.rcss). */
+@media (theme: mobile) {
+	#panel { width: 480dp; height: 430dp; font-size: 12dp; }
+	#window_controls { top: 10dp; }
+	#window_controls button { width: 28dp; height: 28dp; line-height: 26dp; font-size: 16dp; margin-left: 6dp; }
+	#tabs, #reject { top: 44dp; }
+	.btn, #reject { height: 28dp; line-height: 26dp; }
+	#reject, .headers button, .actions .btn { font-size: 11dp; }
+	.check { width: 12dp; height: 12dp; margin-top: 8dp; }
+	.page { top: 78dp; }
+	.headers { height: 24dp; line-height: 24dp; }
+	.headers button { height: 23dp; line-height: 23dp; }
+	.scroll-pane { top: 25dp; bottom: 36dp; }
+	.row { height: 30dp; line-height: 30dp; }
+	.row .check { margin-top: 9dp; }
+	.row .read_state { width: 10dp; height: 10dp; margin-top: 10dp; }
+	.mail_columns .check_column { height: 30dp; }
+	.actions { height: 32dp; }
+}

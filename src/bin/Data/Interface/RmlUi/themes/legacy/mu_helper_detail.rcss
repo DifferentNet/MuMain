@@ -56,3 +56,88 @@
 #buff_interval_elf { width: calc(17px * var(--root-scale)); height: calc(12px * var(--root-scale)); }
 #btn_save_label { width: calc(52px * var(--root-scale)); height: calc(26px * var(--root-scale)); line-height: calc(26px * var(--root-scale)); }
 #btn_init_label { width: calc(52px * var(--root-scale)); height: calc(26px * var(--root-scale)); line-height: calc(26px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode). Native's 190 units cut
+   the Russian labels short, and its 15-unit boxes and 124-unit gauges were small for a finger. Here
+   the panel is 300 units wide beside the 640-unit config window: each pane runs the panel's width
+   under a header tab long enough for its name, the condition radios stand in one column, a long label
+   wraps onto a second line, and Save and Initialization run the panel's width. The gauges are half as
+   large again: the level follows the drawn bar (ApplyLevelGaugeEvent), so the scale keeps the
+   reading true, and the hit area grows above and below the rail. A pane that holds more on a page
+   (the conditions' four radios, the party page's buff options) is the tall one (.mh-pane-tall). The
+   pieces (boxes, buttons, number plate, frame) come from mu_helper_common.rcss's phone block. */
+@media (theme: mobile) {
+	#panel { width: 300px; }
+	.mh-text.mh-center.mh-bold.mh-title { width: calc(300px * var(--root-scale)); }
+
+	/* --- Panes: 264 wide and 96 tall (140 when tall), the header tab 180 wide --- */
+	#pane_top, #pane_heal_support { left: 18px; top: 44px; }
+	#pane_lower { left: 18px; top: 146px; }
+	#pane_buff_support_elf { left: 18px; top: 190px; }
+	.mh-pane { width: 264px; }
+	.mh-pane .p-fill-tab { width: 173px; }
+	.mh-pane .p-tab-tr, .mh-pane .p-tab-right { left: 166px; }
+	.mh-pane .p-tab-top { width: 168px; }
+	.mh-pane .p-fill-body { width: 257px; height: 71px; }
+	.mh-pane .p-box-tr, .mh-pane .p-box-br, .mh-pane .p-box-right { left: 250px; }
+	.mh-pane .p-box-top, .mh-pane .p-box-bottom { width: 252px; }
+	.mh-pane .p-box-bl, .mh-pane .p-box-br, .mh-pane .p-box-bottom { top: 82px; }
+	.mh-pane .p-box-right { height: 64px; }
+	.mh-pane .p-left { height: 78px; }
+	.mh-pane-tall .p-fill-body, .mh-pane-h70 .p-fill-body { height: 115px; }
+	.mh-pane-tall .p-box-bl, .mh-pane-tall .p-box-br, .mh-pane-tall .p-box-bottom,
+	.mh-pane-h70 .p-box-bl, .mh-pane-h70 .p-box-br, .mh-pane-h70 .p-box-bottom { top: 126px; }
+	.mh-pane-tall .p-box-right, .mh-pane-h70 .p-box-right { height: 108px; }
+	.mh-pane-tall .p-left, .mh-pane-h70 .p-left { height: 122px; }
+	.mh-pane .mh-text { width: calc(160px * var(--root-scale)); }
+
+	/* --- Check rows: the box a third larger, its finger area over the whole label --- */
+	.mh-check { width: 20px; height: 20px; }
+	.mh-check .checkbox-box { padding-right: 196px; }
+	.mh-check .checkbox-label { width: calc(216px * var(--root-scale)); }
+	#party_heal .checkbox-label, #party_duration .checkbox-label, #party_duration_elf .checkbox-label,
+	#time_space, #time_space_elf { white-space: normal; }
+
+	/* --- Activation condition: the two monster rows, then the four counts in one column --- */
+	#precon_range     { left: 30px; top: 74px; }
+	#precon_attacking { left: 30px; top: 104px; }
+	#subcon_two       { left: 30px; top: 176px; }
+	#subcon_three     { left: 30px; top: 204px; }
+	#subcon_four      { left: 30px; top: 232px; }
+	#subcon_five      { left: 30px; top: 260px; }
+
+	/* --- Gauges: bar and fill scaled together from their shared origin, the label under them --- */
+	.mh-gauge, .mh-gauge-fill { transform: scale(1.5); transform-origin: left top; }
+	.mh-gauge-hit { top: -6px; bottom: -6px; }
+	#gauge_potion, #gauge_potion_fill { left: 36px; top: 76px; }
+	#gauge_potion_label               { left: 36px; top: 106px; }
+	#gauge_heal, #gauge_heal_fill     { left: 36px; top: 178px; }
+	#gauge_heal_label                 { left: 36px; top: 208px; }
+	#gauge_party_heal, #gauge_party_heal_fill { left: 36px; top: 114px; }
+	#gauge_party_heal_label                   { left: 36px; top: 144px; }
+	#gauge_potion_label, #gauge_heal_label, #gauge_party_heal_label { width: calc(186px * var(--root-scale)); }
+
+	/* --- Party support: the check over two lines, the interval's name, then its field --- */
+	#party_duration { left: 30px; top: 72px; }
+	#time_space     { left: 56px; top: 114px; }
+	#buff_plate     { left: 56px; top: 150px; }
+	#buff_interval  { left: 58px; top: 153px; }
+	#buff_unit      { left: 92px; top: 155px; }
+	#party_heal         { left: 30px; top: 72px; }
+	#party_duration_elf { left: 30px; top: 218px; }
+	#time_space_elf     { left: 56px; top: 260px; }
+	#buff_plate_elf     { left: 56px; top: 296px; }
+	#buff_interval_elf  { left: 58px; top: 299px; }
+	#buff_unit_elf      { left: 92px; top: 301px; }
+	#time_space, #time_space_elf { width: calc(216px * var(--root-scale)); }
+	#buff_interval, #buff_interval_elf { width: calc(26px * var(--root-scale)); height: calc(16px * var(--root-scale)); }
+
+	/* --- Footer: Save the panel's width, Initialization beside the close button --- */
+	#btn_save, #btn_save_label { left: 18px; top: 346px; }
+	#btn_init, #btn_init_label { left: 54px; top: 384px; }
+	#btn_save { width: 264px; }
+	#btn_init { width: 228px; }
+	#btn_save_label, #btn_init_label { height: calc(30px * var(--root-scale)); line-height: calc(30px * var(--root-scale)); }
+	#btn_save_label { width: calc(264px * var(--root-scale)); }
+	#btn_init_label { width: calc(228px * var(--root-scale)); }
+}

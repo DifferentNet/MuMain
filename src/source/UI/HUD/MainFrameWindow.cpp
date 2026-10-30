@@ -19,6 +19,7 @@
 #include "GameLogic/Events/CSChaosCastle.h"
 #include "World/MapInfra/MapManager.h"
 #include "Character/CharacterManager.h"
+#include "UI/HUD/HeroGauges.h"
 #include "GameLogic/Skills/SkillManager.h"
 #include "UI/HUD/Skills/SkillIconAtlas.h"
 #include "UI/HUD/Skills/SkillTooltip.h"
@@ -502,21 +503,12 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
     m_ItemHotKey.SyncSlotIcons(m_RmlView.Document());
 
     // HP/MP -- legacy RenderLifeMana(). fLife/fMana there are the EMPTY fraction; store filled.
-    DWORD wLifeMax, wLife, wManaMax, wMana;
-    if (gCharacterManager.IsMasterLevel(Hero->Class) == true)
-    {
-        wLifeMax = Master_Level_Data.wMaxLife;
-        wLife = std::min<int>(std::max<int>(0, CharacterAttribute->Life), wLifeMax);
-        wManaMax = Master_Level_Data.wMaxMana;
-        wMana = std::min<int>(std::max<int>(0, CharacterAttribute->Mana), wManaMax);
-    }
-    else
-    {
-        wLifeMax = CharacterAttribute->LifeMax;
-        wLife = std::min<int>(std::max<int>(0, CharacterAttribute->Life), wLifeMax);
-        wManaMax = CharacterAttribute->ManaMax;
-        wMana = std::min<int>(std::max<int>(0, CharacterAttribute->Mana), wManaMax);
-    }
+    const UI::HUD::HeroGauges::Gauge life = UI::HUD::HeroGauges::Life();
+    const UI::HUD::HeroGauges::Gauge mana = UI::HUD::HeroGauges::Mana();
+    const DWORD wLifeMax = life.max;
+    const DWORD wLife = life.current;
+    const DWORD wManaMax = mana.max;
+    const DWORD wMana = mana.current;
     if (wLifeMax > 0 && wLife > 0 && (wLife / (float)wLifeMax) < 0.2f)
         PlayBuffer(SOUND_HEART);
 
@@ -542,17 +534,9 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
     syncWide(&MainFrameRmlModel::mpTooltip, "mp_tooltip", szTip);
 
     // AG (stamina/skill-mana) -- legacy RenderGuageAG().
-    DWORD dwMaxSkillMana, dwSkillMana;
-    if (gCharacterManager.IsMasterLevel(Hero->Class) == true)
-    {
-        dwMaxSkillMana = std::max<int>(1, Master_Level_Data.wMaxBP);
-        dwSkillMana = std::min<int>(dwMaxSkillMana, CharacterAttribute->SkillMana);
-    }
-    else
-    {
-        dwMaxSkillMana = std::max<int>(1, CharacterAttribute->SkillManaMax);
-        dwSkillMana = std::min<int>(dwMaxSkillMana, CharacterAttribute->SkillMana);
-    }
+    const UI::HUD::HeroGauges::Gauge skillMana = UI::HUD::HeroGauges::SkillMana();
+    const DWORD dwMaxSkillMana = skillMana.max;
+    const DWORD dwSkillMana = skillMana.current;
     syncFloat(&MainFrameRmlModel::agFraction, "ag_fraction", dwSkillMana / (float)dwMaxSkillMana);
     mu_swprintf(szNum, L"%d / %d", dwSkillMana, dwMaxSkillMana);
     syncWide(&MainFrameRmlModel::agText, "ag_text", szNum);
@@ -562,17 +546,9 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
     syncWide(&MainFrameRmlModel::agTooltip, "ag_tooltip", szTip);
 
     // SD (shield) -- legacy RenderGuageSD().
-    DWORD wMaxShield, wShield;
-    if (gCharacterManager.IsMasterLevel(Hero->Class) == true)
-    {
-        wMaxShield = std::max<int>(1, Master_Level_Data.wMaxShield);
-        wShield = std::min<int>(wMaxShield, CharacterAttribute->Shield);
-    }
-    else
-    {
-        wMaxShield = std::max<int>(1, CharacterAttribute->ShieldMax);
-        wShield = std::min<int>(wMaxShield, CharacterAttribute->Shield);
-    }
+    const UI::HUD::HeroGauges::Gauge shield = UI::HUD::HeroGauges::Shield();
+    const DWORD wMaxShield = shield.max;
+    const DWORD wShield = shield.current;
     syncFloat(&MainFrameRmlModel::sdFraction, "sd_fraction", wShield / (float)wMaxShield);
     mu_swprintf(szNum, L"%d / %d", wShield, wMaxShield);
     syncWide(&MainFrameRmlModel::sdText, "sd_text", szNum);
@@ -585,54 +561,10 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
     // this class's header comment). expFraction is progress *within* the current decile, matching
     // buildExpSegment()'s original digit/fraction split.
     {
-        __int64 wLevel, dwNexExperience, dwExperience;
-        const bool masterActive = gCharacterManager.IsMasterExperienceActive(CharacterAttribute->Class, CharacterAttribute->Level);
-        if (masterActive)
-        {
-            wLevel = (__int64)Master_Level_Data.nMLevel;
-            dwNexExperience = (__int64)Master_Level_Data.lNext_MasterLevel_Experince;
-            dwExperience = (__int64)Master_Level_Data.lMasterLevel_Experince;
-        }
-        else
-        {
-            wLevel = CharacterAttribute->Level;
-            dwNexExperience = CharacterAttribute->NextExperience;
-            dwExperience = CharacterAttribute->Experience;
-        }
-
-        __int64 lowerBound;
-        if (masterActive)
-        {
-            const __int64 iTotalLevel = wLevel + 400;
-            const __int64 iTOverLevel = iTotalLevel - 255;
-            const __int64 iData_Master =
-                (((__int64)9 + iTotalLevel) * iTotalLevel * iTotalLevel * (__int64)10)
-                + (((__int64)9 + iTOverLevel) * iTOverLevel * iTOverLevel * (__int64)1000);
-            lowerBound = (iData_Master - (__int64)3892250000) / (__int64)2;
-        }
-        else
-        {
-            const __int64 iPriorLevel = wLevel - 1;
-            __int64 iPriorExperience = 0;
-            if (iPriorLevel > 0)
-            {
-                iPriorExperience = (9 + iPriorLevel) * iPriorLevel * iPriorLevel * 10;
-                if (iPriorLevel > 255)
-                {
-                    const __int64 iLevelOverN = iPriorLevel - 255;
-                    iPriorExperience += (9 + iLevelOverN) * iLevelOverN * iLevelOverN * 1000;
-                }
-            }
-            lowerBound = iPriorExperience;
-        }
-
-        __int64 upperBound = dwNexExperience;
-        if (upperBound < lowerBound)
-            upperBound = lowerBound;
-
-        const double fNeedExp = static_cast<double>(upperBound - lowerBound);
-        const double fClampedExp = std::clamp(static_cast<double>(dwExperience), static_cast<double>(lowerBound), static_cast<double>(upperBound));
-        const double fRatio = (fNeedExp > 0.0) ? std::clamp((fClampedExp - static_cast<double>(lowerBound)) / fNeedExp, 0.0, 1.0) : 0.0;
+        const UI::HUD::HeroGauges::Experience experience = UI::HUD::HeroGauges::ReadExperience();
+        const __int64 dwNexExperience = experience.next;
+        const __int64 dwExperience = experience.current;
+        const double fRatio = experience.progress;
 
         const double scaled = std::clamp(fRatio, 0.0, 1.0) * 10.0;
         int iExp = std::clamp(static_cast<int>(scaled), 0, 9);
@@ -827,6 +759,11 @@ int mu::ui::window::CMainFrameWindow::GetItemHotKey(int iHotKey)
 int mu::ui::window::CMainFrameWindow::GetItemHotKeyLevel(int iHotKey)
 {
     return m_ItemHotKey.GetHotKeyLevel(iHotKey);
+}
+
+int mu::ui::window::CMainFrameWindow::GetItemHotKeyCount(int iHotKey)
+{
+    return m_ItemHotKey.GetSlotItemCount(iHotKey);
 }
 
 void mu::ui::window::CMainFrameWindow::UpdateItemHotKey()

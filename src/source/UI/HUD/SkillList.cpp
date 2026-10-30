@@ -720,15 +720,12 @@ Rml::String HotKeyText(int hotkey)
 }
 } // namespace
 
-void mu::ui::window::CSkillList::RebuildGridSnapshot()
+std::vector<int> mu::ui::window::CSkillList::GetListedSkills() const
 {
-    // The skills the legacy grid loop drew, in its order; the theme lays them out (the original's
-    // zig-zag in legacy).
-    m_GridSnapshot.clear();
-    m_PetSnapshot.clear();
-
+    // The skills the legacy grid loop drew, in its order.
+    std::vector<int> skills;
     if (CharacterAttribute->SkillNumber == 0)
-        return;
+        return skills;
 
     for (int i = 0; i < MAX_MAGIC; ++i)
     {
@@ -741,31 +738,35 @@ void mu::ui::window::CSkillList::RebuildGridSnapshot()
         if (bySkillUseType == SKILL_USE_TYPE_MASTER || bySkillUseType == SKILL_USE_TYPE_MASTERLEVEL)
             continue;
 
-        SkillCellEntry entry;
-        entry.skillIndex = i;
-        entry.isPet = false;
-        entry.isCurrent = (i == Hero->CurrentSkill);
-        entry.cooldownFraction = ComputeSkillCooldownFraction(i);
-        entry.icon = GetSkillIconDecorator(i);
-        entry.hotkey = HotKeyText(GetSkillHotKeyNumber(i));
-        m_GridSnapshot.push_back(entry);
+        skills.push_back(i);
     }
 
     if (Hero->m_pPet != NULL)
     {
-        // The four commands are always all four, so the theme puts each on its own cell; only the
-        // zig-zag grid above needs a computed position.
         for (int i = AT_PET_COMMAND_DEFAULT; i < AT_PET_COMMAND_END; ++i)
-        {
-            SkillCellEntry entry;
-            entry.skillIndex = i;
-            entry.isPet = true;
-            entry.isCurrent = (i == Hero->CurrentSkill);
-            entry.cooldownFraction = ComputeSkillCooldownFraction(i);
-            entry.icon = GetSkillIconDecorator(i);
-            entry.hotkey = HotKeyText(GetSkillHotKeyNumber(i));
-            m_PetSnapshot.push_back(entry);
-        }
+            skills.push_back(i);
+    }
+    return skills;
+}
+
+void mu::ui::window::CSkillList::RebuildGridSnapshot()
+{
+    // The theme lays the grid out (the original's zig-zag in legacy). The four pet commands are
+    // always all four, so the theme puts each on its own cell; only the grid needs a computed
+    // position.
+    m_GridSnapshot.clear();
+    m_PetSnapshot.clear();
+
+    for (const int i : GetListedSkills())
+    {
+        SkillCellEntry entry;
+        entry.skillIndex = i;
+        entry.isPet = i >= AT_PET_COMMAND_DEFAULT;
+        entry.isCurrent = (i == Hero->CurrentSkill);
+        entry.cooldownFraction = ComputeSkillCooldownFraction(i);
+        entry.icon = GetSkillIconDecorator(i);
+        entry.hotkey = HotKeyText(GetSkillHotKeyNumber(i));
+        (entry.isPet ? m_PetSnapshot : m_GridSnapshot).push_back(entry);
     }
 }
 
@@ -890,6 +891,7 @@ void mu::ui::window::CSkillList::OnGridCellClick(int iSkillIndex)
     m_wHeroPriorSkill = CharacterAttribute->Skill[Hero->CurrentSkill];
     Hero->CurrentSkill = iSkillIndex;
     m_bSkillList = false;
+    ++m_iGridPickCount;
     PlayBuffer(SOUND_CLICK01);
 }
 
@@ -904,6 +906,7 @@ void mu::ui::window::CSkillList::OnPetCellClick(int iSkillIndex)
     m_wHeroPriorSkill = CharacterAttribute->Skill[Hero->CurrentSkill];
     Hero->CurrentSkill = iSkillIndex;
     m_bSkillList = false;
+    ++m_iGridPickCount;
     PlayBuffer(SOUND_CLICK01);
 }
 

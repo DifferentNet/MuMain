@@ -101,3 +101,34 @@
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
 #panel { font-size: calc(var(--text-px, 12px) / var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): the full 432 height of
+   the dock, 42 px cells, 8 of the 15 rows on view (item_grid.rcss pages them), the ▲▼ and the repair
+   buttons down the right side, the repair money under the grid. 420 wide, so the bag-only inventory
+   fits beside it on a phone. */
+@spritesheet shop-phone-top-sheet    { src: "../../../newui_item_back04.tga"; shop-phone-top-l: 0px 0px 60px 64px; shop-phone-top-c: 90px 0px 10px 64px; shop-phone-top-r: 130px 0px 60px 64px; }
+@spritesheet shop-phone-bottom-sheet { src: "../../../newui_item_back03.tga"; shop-phone-bottom-l: 0px 0px 50px 45px; shop-phone-bottom-c: 90px 0px 10px 45px; shop-phone-bottom-r: 140px 0px 50px 45px; }
+
+@media (theme: mobile) {
+	#panel { --item-cell: 42px; width: 420px; height: 432px; }
+
+	.bg-fill { width: 100%; height: 432px; }
+	.bg-top { width: 100%; decorator: tiled-horizontal(shop-phone-top-l, shop-phone-top-c, shop-phone-top-r); }
+	.bg-left { height: 323px; }
+	.bg-right { left: auto; right: 0; height: 323px; }
+	.bg-bottom { top: 387px; width: 100%; decorator: tiled-horizontal(shop-phone-bottom-l, shop-phone-bottom-c, shop-phone-bottom-r); }
+
+	/* The grid's first cell at (16, 50). */
+	#grid_viewport { left: 10px; top: 44px; }
+	.grid-scroll-up { left: 364px; top: 50px; }
+	.grid-scroll-down { left: 364px; top: calc(50px + 8 * var(--item-cell) - 44px); }
+
+	.shop-btn { left: 364px; width: 44px; height: 36px; }
+	.shop-btn-repair { top: 150px; }
+	.shop-btn-repair-all { top: 196px; }
+
+	.repair-money { left: 56px; top: 398px; }
+	.repair-money-label, .repair-money-value { top: 405px; }
+	.repair-money-label { left: 66px; }
+	.repair-money-value { left: 146px; }
+}

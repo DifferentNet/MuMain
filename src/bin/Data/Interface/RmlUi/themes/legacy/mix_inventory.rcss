@@ -221,3 +221,34 @@
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
 #panel { font-size: calc(var(--text-px, 12px) / var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): the full 432 height of
+   the dock, the grid down the right side in 42 px cells with a big Mix button under it, the recipe
+   text in the native column on the left, closed up where the grid was (90 px). 552 wide: with the
+   bag-only inventory beside it, a phone's width (19.5:9 and wider). */
+@spritesheet mix-phone-top-sheet    { src: "../../../newui_item_back04.tga"; mix-phone-top-l: 0px 0px 60px 64px; mix-phone-top-c: 90px 0px 10px 64px; mix-phone-top-r: 130px 0px 60px 64px; }
+@spritesheet mix-phone-bottom-sheet { src: "../../../newui_item_back03.tga"; mix-phone-bottom-l: 0px 0px 50px 45px; mix-phone-bottom-c: 90px 0px 10px 45px; mix-phone-bottom-r: 140px 0px 50px 45px; }
+
+@media (theme: mobile) {
+	#panel { --item-cell: 42px; width: 552px; height: 432px; }
+
+	.bg-fill { width: 100%; height: 432px; }
+	.bg-top { width: 100%; decorator: tiled-horizontal(mix-phone-top-l, mix-phone-top-c, mix-phone-top-r); }
+	.bg-left { height: 323px; }
+	.bg-right { left: auto; right: 0; height: 323px; }
+	.bg-bottom { top: 387px; width: 100%; decorator: tiled-horizontal(mix-phone-bottom-l, mix-phone-bottom-c, mix-phone-bottom-r); }
+	#item_view { width: calc(100% + 40px); height: 472px; }
+
+	#item_grid, #item_grid_counts { left: 200px; top: 50px; }
+	.mix-tax-rate { width: calc(522px * var(--root-scale)); }
+
+	/* The whole column to the grid, and the status and advice lines wrap there rather than run past it. */
+	.mix-list { top: 113px; width: calc(176px * var(--root-scale)); }
+	.mix-unwrapped { white-space: normal; }
+	.mix-descriptions { top: -90px; }
+	.mix-socket-prompt { top: 190px; }
+	.socket-list-box { top: 204px; }
+	#socket_list { top: 205px; }
+
+	.mix-btn { left: 324px; top: 236px; width: 88px; height: 70px; }
+}

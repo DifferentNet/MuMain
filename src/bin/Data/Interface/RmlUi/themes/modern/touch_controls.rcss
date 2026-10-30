@@ -1,0 +1,644 @@
+/* Modern theme for the on-screen controls of phones and tablets (touch_controls.rml). C++ reads the
+   buttons' boxes to know which a finger landed on, so where a rule puts a button is where it
+   answers. Nothing takes the pointer: the fingers come through Core::Input::Touch. */
+
+/* One rem is one finger unit (UI::Mobile::TouchUnit, which sets the document's font size to it):
+   the controls are as big as a thumb needs on any screen, whatever the game's resolution. Only
+   what lines up with the PC-sized HUD stays in dp: the top row starts right of the location bar,
+   the hero frame lies under it. 1dp until C++ sets the unit. */
+body {
+	font-size: 1dp;
+}
+
+#tc_stick, #tc_stick_idle, #tc_stick_base, #tc_quick, #tc_menu_backdrop, #tc_menu_panel, .tc-button, .tc-button *,
+#tc_menu_legend, #tc_menu_legend *, #tc_picker_backdrop, #tc_picker, #tc_picker * {
+	pointer-events: none;
+}
+
+.tc-button {
+	position: absolute;
+	box-sizing: border-box;
+	border: 2rem rgba(214, 210, 198, 70);
+	background-color: rgba(6, 7, 6, 120);
+	color: token(text-primary);
+	font-family: "token(font-body)";
+	font-size: 13rem;
+	font-effect: shadow(0rem 1rem #000000);
+	text-align: center;
+}
+
+/* The joystick's area: the bottom-left corner, under the potions. */
+#tc_stick {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	width: 36%;
+	height: 64%;
+}
+#tc_stick_idle {
+	position: absolute;
+	left: 44rem;
+	bottom: 44rem;
+	width: 128rem;
+	height: 128rem;
+	border: 2rem rgba(214, 210, 198, 50);
+	border-radius: 64rem;
+	background-color: rgba(6, 7, 6, 50);
+}
+.tc-stick-idle-knob {
+	position: absolute;
+	left: 34rem;
+	top: 34rem;
+	width: 56rem;
+	height: 56rem;
+	border-radius: 28rem;
+	background-color: rgba(214, 210, 198, 50);
+}
+/* A point at the finger's landing place; the ring centres on it, the knob is offset from it. */
+#tc_stick_base {
+	position: absolute;
+	width: 0;
+	height: 0;
+}
+.tc-stick-ring {
+	position: absolute;
+	left: -64rem;
+	top: -64rem;
+	width: 128rem;
+	height: 128rem;
+	box-sizing: border-box;
+	border: 2rem rgba(196, 154, 60, 140);
+	border-radius: 64rem;
+	background-color: rgba(6, 7, 6, 70);
+}
+#tc_stick_knob {
+	position: absolute;
+	width: 56rem;
+	height: 56rem;
+	margin-left: -28rem;
+	margin-top: -28rem;
+	border-radius: 28rem;
+	background-color: rgba(196, 154, 60, 170);
+}
+
+/* One row along the top, right of the location bar (207dp): the chat log's lines start at the
+   top left on a phone and are drawn over the controls. It ends short of the page's own menu button
+   (index.html's ⋮, 56 CSS pixels from the right); where the screen is too narrow for the row, its
+   buttons narrow. */
+#tc_quick {
+	position: absolute;
+	z-index: 2;
+	left: 214dp;
+	right: 72rem;
+	top: 4rem;
+	display: flex;
+	gap: 4rem;
+}
+.tc-quick {
+	position: relative;
+	width: 72rem;
+	min-width: 44rem;
+	flex-shrink: 1;
+	height: 36rem;
+	line-height: 32rem;
+	font-size: 12rem;
+	border-radius: 6rem;
+	overflow: hidden;
+	white-space: nowrap;
+}
+#tc_menu.open {
+	border-color: token(accent-gold);
+}
+
+/* The screen around the open menu, dimmed; a tap there closes it. Over the other controls, which
+   take no finger while the menu is open, under the top row and the menu. */
+#tc_menu_backdrop {
+	position: absolute;
+	z-index: 1;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 90);
+}
+
+/* Under the row, centred: six columns of three, fewer where the screen is narrow. */
+#tc_menu_panel {
+	position: absolute;
+	z-index: 2;
+	left: 0;
+	right: 0;
+	top: 46rem;
+	width: 652rem;
+	max-width: 96%;
+	margin: 0 auto;
+	padding: 8rem;
+	box-sizing: border-box;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6rem;
+	border: 1rem token(border-frame);
+	border-radius: 6rem;
+	background-color: rgba(6, 7, 6, 215);
+}
+.tc-menu-item {
+	position: relative;
+	width: 100rem;
+	height: 38rem;
+	padding: 0 4rem;
+	border-radius: 4rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+/* A long label (Russian "Боевой пропуск", "Вид ПК / телефон") takes two lines inside its button. */
+.tc-menu-label {
+	line-height: 15rem;
+	text-align: center;
+}
+/* The window a pad points at (its stick or d-pad move it, A opens it). */
+.tc-menu-item.focused {
+	border-color: token(accent-gold-hover);
+	background-color: rgba(196, 154, 60, 80);
+}
+/* With a pad, its keys for the menu along the panel's foot. */
+#tc_menu_legend {
+	display: none;
+	width: 100%;
+	height: 22rem;
+	padding-top: 2rem;
+	flex-direction: row;
+	align-items: center;
+	color: token(text-primary);
+	font-family: "token(font-body)";
+	font-size: 12rem;
+	font-effect: shadow(0rem 1rem #000000);
+}
+body.pad #tc_menu_legend {
+	display: flex;
+}
+#tc_menu_legend .pad-glyph {
+	position: relative;
+}
+.pad-legend-label {
+	margin: 0 14rem 0 6rem;
+	line-height: 20rem;
+}
+
+/* The skill picker (where the skill buttons are set): a panel over the left of the dimmed screen,
+   the skill buttons lit right of it over the backdrop, the one being set in gold, the pad's
+   highlight white. C++ measures the grid and its first entry for how many skills a page holds:
+   the grid's gap is PickGapUnits in TouchControls.cpp. */
+#tc_picker_backdrop {
+	position: absolute;
+	z-index: 1;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 120);
+}
+body.picking #tc_quick {
+	z-index: 0;
+}
+body.picking #tc_bind_hint {
+	display: none;
+}
+body.picking .tc-skill {
+	z-index: 2;
+	opacity: 1;
+}
+body.picking .tc-skill.selected {
+	border-color: rgba(214, 210, 198, 70);
+}
+body.picking .tc-skill.target {
+	border-color: token(accent-gold-hover);
+	background-color: rgba(196, 154, 60, 110);
+	box-shadow: 0 0 10rem 2rem rgba(196, 154, 60, 200);
+}
+body.picking .tc-skill.focused {
+	border-color: rgba(255, 255, 255, 235);
+}
+#tc_picker {
+	position: absolute;
+	z-index: 3;
+	left: 8rem;
+	top: 8rem;
+	right: 244rem;
+	bottom: 8rem;
+	padding: 8rem;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	border: 1rem token(border-frame);
+	border-radius: 6rem;
+	background-color: rgba(6, 7, 6, 225);
+	color: token(text-primary);
+	font-family: "token(font-body)";
+	font-size: 13rem;
+	font-effect: shadow(0rem 1rem #000000);
+}
+#tc_pick_head, #tc_pick_hint_row, #tc_pick_pager {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 6rem;
+}
+#tc_pick_head {
+	flex-shrink: 0;
+	height: 34rem;
+}
+#tc_pick_title {
+	flex: 1 1 0;
+	font-size: 15rem;
+	color: token(accent-gold-hover);
+	white-space: nowrap;
+	overflow: hidden;
+}
+.tc-pick-button {
+	position: relative;
+	flex-shrink: 0;
+	width: 84rem;
+	height: 32rem;
+	line-height: 28rem;
+	border-radius: 6rem;
+	white-space: nowrap;
+	overflow: hidden;
+}
+#tc_pick_done {
+	border-color: token(accent-gold-hover);
+	background-color: rgba(196, 154, 60, 90);
+}
+#tc_pick_hint_row {
+	flex-shrink: 0;
+	min-height: 34rem;
+}
+#tc_pick_hint {
+	flex: 1 1 0;
+	font-size: 12rem;
+	line-height: 15rem;
+}
+#tc_pick_pager {
+	flex-shrink: 0;
+	gap: 4rem;
+}
+.tc-pick-page {
+	position: relative;
+	width: 36rem;
+	height: 32rem;
+	line-height: 28rem;
+	font-size: 15rem;
+	border-radius: 6rem;
+}
+#tc_pick_page {
+	min-width: 38rem;
+	font-size: 12rem;
+	text-align: center;
+}
+#tc_pick_grid {
+	flex: 1 1 0;
+	min-height: 0;
+	margin-top: 4rem;
+	display: flex;
+	flex-wrap: wrap;
+	align-content: flex-start;
+	gap: 6rem;
+	overflow: hidden;
+}
+.tc-pick {
+	position: relative;
+	width: 112rem;
+	height: 48rem;
+	border-width: 1rem;
+	border-radius: 6rem;
+	text-align: left;
+}
+.tc-pick-icon {
+	left: 6rem;
+	top: 5rem;
+}
+/* Up to three lines right of the icon: a long name breaks inside its words. */
+.tc-pick-name {
+	position: absolute;
+	left: 36rem;
+	right: 4rem;
+	top: 1rem;
+	bottom: 1rem;
+	display: flex;
+	align-items: center;
+	font-size: 11rem;
+	line-height: 13rem;
+	word-break: break-word;
+	overflow: hidden;
+}
+/* On one of the skill buttons already: a gold dot in the corner. */
+.tc-pick-mark {
+	display: none;
+	position: absolute;
+	right: 3rem;
+	bottom: 3rem;
+	width: 7rem;
+	height: 7rem;
+	border-radius: 4rem;
+	background-color: token(accent-gold-hover);
+}
+.tc-pick.on {
+	border-color: rgba(196, 154, 60, 150);
+}
+.tc-pick.on .tc-pick-mark {
+	display: block;
+}
+/* On the button being set. */
+.tc-pick.here {
+	border-color: token(accent-gold-hover);
+	background-color: rgba(196, 154, 60, 110);
+}
+.tc-pick.focused, .tc-pick-button.focused, .tc-pick-page.focused {
+	border-color: rgba(255, 255, 255, 235);
+	background-color: rgba(255, 255, 255, 40);
+}
+#tc_pick_none {
+	width: 100%;
+	padding-top: 40rem;
+	color: token(text-secondary);
+	text-align: center;
+}
+#tc_pick_tip {
+	flex-shrink: 0;
+	padding-top: 4rem;
+	color: token(text-secondary);
+	font-size: 11rem;
+	line-height: 14rem;
+}
+#tc_pick_legend {
+	display: none;
+	flex-shrink: 0;
+	height: 22rem;
+	padding-top: 2rem;
+	flex-direction: row;
+	align-items: center;
+	font-size: 12rem;
+}
+body.pad #tc_pick_legend {
+	display: flex;
+}
+#tc_pick_legend .pad-glyph {
+	position: relative;
+}
+
+.tc-potion {
+	width: 48rem;
+	height: 48rem;
+	bottom: 196rem;
+	line-height: 44rem;
+	font-size: 16rem;
+	border-radius: 24rem;
+}
+#tc_potion_q { left: 24rem; }
+#tc_potion_w { left: 84rem; }
+
+#tc_attack {
+	right: 24rem;
+	bottom: 24rem;
+	width: 84rem;
+	height: 84rem;
+	line-height: 80rem;
+	font-size: 15rem;
+	border-color: rgba(195, 74, 45, 200);
+	border-radius: 42rem;
+	background-color: rgba(125, 25, 15, 150);
+}
+
+/* The five skills on an arc 145rem from the attack button's centre, from a little above its left round
+   to a little left of above: the first stays clear of the HUD's bar (640rem centred, 51rem high). */
+.tc-skill {
+	width: 50rem;
+	height: 50rem;
+	border-radius: 10rem;
+}
+#tc_skill_0 { right: 185rem; bottom: 56rem; }
+#tc_skill_1 { right: 168rem; bottom: 110rem; }
+#tc_skill_2 { right: 132rem; bottom: 154rem; }
+#tc_skill_3 { right: 82rem; bottom: 180rem; }
+#tc_skill_4 { right: 26rem; bottom: 185rem; }
+.tc-skill.selected {
+	border-color: token(accent-gold-hover);
+}
+/* Dim, yet in sight, with a plus: a tap on one opens the skill picker to fill it. */
+.tc-skill.empty {
+	opacity: 0.85;
+}
+/* A picked skill waits for a button: every one lights up to take it. */
+.tc-skill.bind {
+	opacity: 1;
+	border-color: token(accent-gold-hover);
+	background-color: rgba(196, 154, 60, 70);
+}
+.tc-skill-plus {
+	display: none;
+	position: absolute;
+	left: 12rem;
+	top: 12rem;
+	width: 22rem;
+	height: 22rem;
+}
+.tc-skill.empty .tc-skill-plus {
+	display: block;
+}
+.tc-plus-h, .tc-plus-v {
+	position: absolute;
+	border-radius: 2rem;
+	background-color: rgba(214, 190, 120, 230);
+}
+.tc-plus-h {
+	left: 0;
+	top: 9rem;
+	width: 22rem;
+	height: 4rem;
+}
+.tc-plus-v {
+	left: 9rem;
+	top: 0;
+	width: 4rem;
+	height: 22rem;
+}
+#tc_bind_hint {
+	position: absolute;
+	right: 24rem;
+	bottom: 246rem;
+	max-width: 300rem;
+	padding: 4rem 8rem;
+	border-radius: 4rem;
+	background-color: rgba(6, 7, 6, 215);
+	color: token(text-primary);
+	font-family: "token(font-body)";
+	font-size: 12rem;
+	font-effect: shadow(0rem 1rem #000000);
+	text-align: right;
+	pointer-events: none;
+}
+/* The 20x28 icon at 1.3 times its size. */
+.tc-skill-icon {
+	position: absolute;
+	left: 10rem;
+	top: 5rem;
+	width: 26rem;
+	height: 36rem;
+}
+/* Shrinks from the top down as the cooldown runs out (height bound to its fraction). */
+.tc-cooldown {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	width: 100%;
+	background-color: rgba(0, 0, 0, 150);
+}
+
+.tc-small {
+	width: 44rem;
+	height: 44rem;
+	line-height: 40rem;
+	font-size: 11rem;
+	border-radius: 22rem;
+}
+#tc_pickup { right: 8rem; bottom: 124rem; }
+/* Opens the skill picker: left of the arc's second button, above the first. */
+#tc_skill_edit {
+	right: 230rem;
+	bottom: 118rem;
+	width: 60rem;
+	height: 30rem;
+	line-height: 26rem;
+	font-size: 11rem;
+	border-radius: 15rem;
+	border-color: rgba(196, 154, 60, 150);
+	white-space: nowrap;
+}
+#tc_auto { right: 124rem; bottom: 8rem; }
+#tc_auto.on {
+	border-color: token(accent-gold-hover);
+	background-color: rgba(196, 154, 60, 120);
+}
+
+/* The phone view's hero frame (theme flag "mobile", UI::Mobile::InterfaceMode) in the PC bar's
+   place: under the location bar and as wide (dp), its text in finger units, the chat log's lines
+   below it; the EXP line along the bottom. */
+#tc_hero, #tc_exp {
+	display: none;
+	pointer-events: none;
+}
+@media (theme: mobile) {
+	#tc_hero, #tc_exp {
+		display: block;
+	}
+}
+#tc_hero {
+	position: absolute;
+	left: 4dp;
+	top: 26dp;
+	width: 200dp;
+	font-family: "token(font-body)";
+	color: token(text-primary);
+	font-effect: shadow(0rem 1rem #000000);
+}
+#tc_hero * {
+	pointer-events: none;
+}
+#tc_hero_level {
+	height: 16rem;
+	line-height: 16rem;
+	font-size: 13rem;
+}
+.tc-gauge {
+	position: relative;
+	height: 18rem;
+	margin-top: 2rem;
+	box-sizing: border-box;
+	border: 1rem rgba(214, 210, 198, 60);
+	border-radius: 3rem;
+	background-color: rgba(6, 7, 6, 150);
+	overflow: hidden;
+}
+.tc-gauge-fill {
+	position: absolute;
+	left: 0;
+	top: 0;
+	height: 100%;
+}
+.tc-gauge-text {
+	position: relative;
+	height: 100%;
+	line-height: 16rem;
+	font-size: 12rem;
+	text-align: center;
+}
+#tc_hero_small {
+	display: flex;
+	gap: 4rem;
+}
+.tc-gauge-small {
+	flex: 1 1 0;
+	height: 15rem;
+}
+.tc-gauge-small .tc-gauge-text {
+	line-height: 13rem;
+	font-size: 11rem;
+}
+#tc_hero_hp .tc-gauge-fill { background-color: rgba(170, 40, 30, 220); }
+#tc_hero_mp .tc-gauge-fill { background-color: rgba(40, 80, 170, 220); }
+#tc_hero_sd .tc-gauge-fill { background-color: rgba(190, 160, 50, 220); }
+#tc_hero_ag .tc-gauge-fill { background-color: rgba(70, 150, 60, 220); }
+#tc_exp {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 3rem;
+	background-color: rgba(6, 7, 6, 150);
+}
+#tc_exp_fill {
+	height: 100%;
+	background-color: rgba(196, 154, 60, 220);
+}
+
+/* How many potions the button has left, under it. */
+.tc-potion-count {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: -16rem;
+	line-height: 14rem;
+	font-size: 12rem;
+}
+
+/* The phone HUD puts the skill list just left of the skill buttons (PhoneHudLayout.cpp): the hint stays
+   over the buttons, no wider than the room right of the list, clear of the pets' frame at the top. */
+@media (theme: mobile-hud) {
+	#tc_bind_hint {
+		max-width: 194rem;
+	}
+}
+
+/* A pad: each control shows the pad button that presses it (gamepad_glyphs.rcss draws them) on its
+   top corner, away from its neighbours on the arc; inside the left end of a top-row button, whose
+   label then starts right of it. Without touch the left stick walks: no joystick on the screen. */
+body.no-touch #tc_stick {
+	display: none;
+}
+body.pad #tc_back, body.pad #tc_menu, body.pad #tc_map {
+	padding-left: 22rem;
+}
+.tc-quick .pad-glyph { left: 1rem; top: 6rem; }
+#tc_attack .pad-glyph { right: 2rem; top: 2rem; }
+#tc_attack .pad-face {
+	width: 26rem;
+	height: 26rem;
+	border-radius: 13rem;
+	font-size: 15rem;
+	line-height: 22rem;
+}
+.tc-skill .pad-glyph { left: -8rem; top: -8rem; }
+.tc-potion .pad-glyph { right: -8rem; top: -8rem; }
+#tc_pickup .pad-glyph { left: -12rem; top: -10rem; }
+#tc_auto .pad-glyph { left: -8rem; top: -8rem; }
+#tc_skill_edit .pad-glyph { left: -10rem; top: -10rem; }

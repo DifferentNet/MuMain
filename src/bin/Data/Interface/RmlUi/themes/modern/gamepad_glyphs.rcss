@@ -1,0 +1,113 @@
+/* The Xbox pad's button glyphs, drawn from boxes (no images). The legacy and the modern theme carry
+   the same file: the colours are the pad's own. touch_controls.rml puts one on each control the pad
+   presses and shows them only while a pad is in use (its body has the class "pad"); where each sits
+   on its control is touch_controls.rcss's. Sizes are in rem: a document showing them sets its font
+   size to its own unit (touch_controls: the finger unit, pad_keyboard: 1dp).
+
+   .pad-face.pad-a / -b / -x / -y   a dark disc with the letter in the button's colour
+   .pad-bumper (LB, RB)             a flat key rounded on top
+   .pad-trigger (LT, RT)            a tall key rounded on top
+   .pad-round.pad-view              a disc with two overlapping windows (View)
+   .pad-round.pad-menu              a disc with three lines (Menu)
+   .pad-round.pad-stick             a disc with the stick's letters (LS: the left stick pressed)
+   .pad-dpad.pad-dpad-up / -down / -left / -right
+                                    the d-pad's cross with the pressed arm lit */
+
+.pad-glyph {
+	display: none;
+	position: absolute;
+	box-sizing: border-box;
+	background-color: rgba(22, 22, 24, 235);
+	color: #f2f2f2;
+	font-family: "token(font-body)";
+	font-weight: bold;
+	font-effect: none;
+	text-align: center;
+	pointer-events: none;
+}
+body.pad .pad-glyph {
+	display: block;
+}
+.pad-glyph * {
+	pointer-events: none;
+}
+
+.pad-face {
+	width: 20rem;
+	height: 20rem;
+	border: 2rem #f2f2f2;
+	border-radius: 10rem;
+	font-size: 12rem;
+	line-height: 16rem;
+}
+.pad-a { border-color: #6cc24a; color: #6cc24a; }
+.pad-b { border-color: #e0443e; color: #e0443e; }
+.pad-x { border-color: #3b8eea; color: #3b8eea; }
+.pad-y { border-color: #f2c230; color: #f2c230; }
+
+.pad-bumper {
+	width: 26rem;
+	height: 15rem;
+	border: 1rem rgba(242, 242, 242, 210);
+	border-radius: 7rem 7rem 3rem 3rem;
+	font-size: 9rem;
+	line-height: 13rem;
+}
+.pad-trigger {
+	width: 20rem;
+	height: 22rem;
+	border: 1rem rgba(242, 242, 242, 210);
+	border-radius: 10rem 10rem 4rem 4rem;
+	font-size: 9rem;
+	line-height: 22rem;
+}
+
+.pad-round {
+	width: 20rem;
+	height: 20rem;
+	border: 1rem rgba(242, 242, 242, 210);
+	border-radius: 10rem;
+}
+.pad-stick {
+	font-size: 8rem;
+	line-height: 18rem;
+}
+.pad-view-back, .pad-view-front {
+	position: absolute;
+	box-sizing: border-box;
+	width: 8rem;
+	height: 6rem;
+	border: 1rem #f2f2f2;
+	border-radius: 1rem;
+}
+.pad-view-back { left: 3rem; top: 4rem; }
+.pad-view-front { left: 7rem; top: 8rem; background-color: rgba(22, 22, 24, 255); }
+.pad-menu-line {
+	position: absolute;
+	left: 5rem;
+	width: 8rem;
+	height: 2rem;
+	background-color: #f2f2f2;
+}
+.pad-menu-line-1 { top: 5rem; }
+.pad-menu-line-2 { top: 8rem; }
+.pad-menu-line-3 { top: 11rem; }
+
+.pad-dpad {
+	width: 20rem;
+	height: 20rem;
+	border: 1rem rgba(242, 242, 242, 120);
+	border-radius: 10rem;
+}
+.pad-dpad-v, .pad-dpad-h, .pad-dpad-lit {
+	position: absolute;
+	border-radius: 1rem;
+	background-color: rgba(140, 140, 146, 255);
+}
+.pad-dpad-v { left: 6rem; top: 2rem; width: 6rem; height: 14rem; }
+.pad-dpad-h { left: 2rem; top: 6rem; width: 14rem; height: 6rem; }
+.pad-dpad-lit { background-color: #f2f2f2; }
+.pad-dpad-up .pad-dpad-lit { left: 6rem; top: 2rem; width: 6rem; height: 5rem; }
+.pad-dpad-down .pad-dpad-lit { left: 6rem; top: 11rem; width: 6rem; height: 5rem; }
+.pad-dpad-left .pad-dpad-lit { left: 2rem; top: 6rem; width: 5rem; height: 6rem; }
+.pad-dpad-right .pad-dpad-lit { left: 11rem; top: 6rem; width: 5rem; height: 6rem; }
