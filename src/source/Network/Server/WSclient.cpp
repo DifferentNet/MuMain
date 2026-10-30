@@ -100,6 +100,7 @@ using namespace mu::ui::window;
 #ifdef PBG_ADD_SECRETBUFF
 #include "FatigueTimeSystem.h"
 #endif // PBG_ADD_SECRETBUFF
+#include <array>
 #include <codecvt>
 #include <limits>
 
@@ -690,6 +691,68 @@ void ReceiveChangePassword(const BYTE* ReceiveBuffer)
     }
 }
 
+CHARACTER_ENABLE g_CharCardEnable;
+
+namespace
+{
+// Where a character of each account slot stands in the character select scene.
+struct CharacterSlotPlacement
+{
+    float X = 0.0f;
+    float Y = 0.0f;
+    float Angle = 0.0f;
+};
+
+constexpr std::array<CharacterSlotPlacement, MAX_CHARACTERS_PER_ACCOUNT> kCharacterSlotPlacements = {{
+    {8008.0f, 18885.0f, 115.0f},
+    {7986.0f, 19145.0f, 90.0f},
+    {8046.0f, 19400.0f, 75.0f},
+    {8133.0f, 19645.0f, 60.0f},
+    {8282.0f, 19845.0f, 35.0f},
+}};
+
+// @return nullptr for an index past the last slot.
+const CharacterSlotPlacement* FindCharacterSlotPlacement(BYTE slotIndex)
+{
+    return slotIndex < kCharacterSlotPlacements.size() ? &kCharacterSlotPlacements[slotIndex] : nullptr;
+}
+
+// The unlock bit of each g_CharCardEnable entry, in its order.
+constexpr std::array<BYTE, CLASS_CHARACTERCARD_TOTALCNT> kCreationUnlockBits = {
+    CLASS_DARK_CARD, CLASS_DARK_LORD_CARD, CLASS_SUMMONER_CARD, CLASS_RAGEFIGHTER_CARD};
+
+// The classes the character creation window offers. OpenMU sends the unlocks with the character list; a
+// server that sends the 0xDE card packet instead gets the same.
+void ApplyCreationUnlocks(BYTE unlockFlags)
+{
+    for (std::size_t i = 0; i < kCreationUnlockBits.size(); ++i)
+        g_CharCardEnable.bCharacterEnable[i] = (unlockFlags & kCreationUnlockBits[i]) != 0;
+
+    mu::log::Get("network")->info("[CreationUnlocks] 0x{:02X}", unlockFlags);
+}
+
+void AddCreatedCharacter(const PRECEIVE_CREATE_CHARACTER& data)
+{
+    const CharacterSlotPlacement* slot = FindCharacterSlotPlacement(data.Index);
+    const CharacterSlotPlacement placement = slot ? *slot : CharacterSlotPlacement{};
+
+    DeleteCharacter(data.Index);
+    CreateHero(data.Index, CharacterView.Class, CharacterView.Skin, placement.X, placement.Y, placement.Angle);
+
+    CHARACTER& created = CharactersClient[data.Index];
+    created.Level = data.Level;
+    const auto serverClass = static_cast<SERVER_CLASS_TYPE>(data.Class >> 3);
+    const auto clientClass = gCharacterManager.ChangeServerClassTypeToClientClassType(serverClass);
+    mu::log::Get("network")->info("[CreateCharacter] success index={} level={} serverClass={} clientClass={}",
+                                  data.Index, data.Level, static_cast<int>(serverClass), static_cast<int>(clientClass));
+
+    created.Class = clientClass;
+    created.SkinIndex = gCharacterManager.GetSkinModelIndex(clientClass);
+    CMultiLanguage::ConvertFromUtf8(created.ID, data.ID, MAX_USERNAME_SIZE);
+    created.ID[MAX_USERNAME_SIZE] = L'\0';
+}
+} // namespace
+
 void ReceiveCharacterListExtended(const BYTE* ReceiveBuffer)
 {
     InitGuildWar();
@@ -706,51 +769,24 @@ void ReceiveCharacterListExtended(const BYTE* ReceiveBuffer)
     int Offset = sizeof(PHEADER_DEFAULT_CHARACTER_LIST);
 
 #ifdef _DEBUG
-    g_ConsoleDebug->Write(MCD_RECEIVE, L"[ReceiveList Count %d Max class %d]", Data->CharacterCount, Data->MaxClass);
+    g_ConsoleDebug->Write(MCD_RECEIVE, L"[ReceiveList Count %d Unlocks %d]", Data->CharacterCount,
+                          Data->CreationUnlockFlags);
 #else
-    g_ErrorReport.Write(L"[ReceiveList Count %d Max class %d]", Data->CharacterCount, Data->MaxClass);
+    g_ErrorReport.Write(L"[ReceiveList Count %d Unlocks %d]", Data->CharacterCount, Data->CreationUnlockFlags);
 #endif
 
+    ApplyCreationUnlocks(Data->CreationUnlockFlags);
     CharacterAttribute->IsVaultExtended = Data->IsVaultExtended;
     for (int i = 0; i < Data->CharacterCount; i++)
     {
         auto Data2 = (LPPRECEIVE_CHARACTER_LIST_EXTENDED)(ReceiveBuffer + Offset);
 
         auto iClass = gCharacterManager.ChangeServerClassTypeToClientClassType(Data2->Class);
-        float fPos[2], fAngle = 0.0f;
-
-        switch (Data2->Index)
-        {
-        case 0:
-            fPos[0] = 8008.0f;
-            fPos[1] = 18885.0f;
-            fAngle = 115.0f;
-            break;
-        case 1:
-            fPos[0] = 7986.0f;
-            fPos[1] = 19145.0f;
-            fAngle = 90.0f;
-            break;
-        case 2:
-            fPos[0] = 8046.0f;
-            fPos[1] = 19400.0f;
-            fAngle = 75.0f;
-            break;
-        case 3:
-            fPos[0] = 8133.0f;
-            fPos[1] = 19645.0f;
-            fAngle = 60.0f;
-            break;
-        case 4:
-            fPos[0] = 8282.0f;
-            fPos[1] = 19845.0f;
-            fAngle = 35.0f;
-            break;
-        default:
+        const CharacterSlotPlacement* slot = FindCharacterSlotPlacement(Data2->Index);
+        if (!slot)
             return;
-        }
 
-        CHARACTER* c = CreateHero(Data2->Index, iClass, 0, fPos[0], fPos[1], fAngle);
+        CHARACTER* c = CreateHero(Data2->Index, iClass, 0, slot->X, slot->Y, slot->Angle);
 
         c->Level = Data2->Level;
         c->CtlCode = Data2->CtlCode;
@@ -768,82 +804,20 @@ void ReceiveCharacterListExtended(const BYTE* ReceiveBuffer)
     CurrentProtocolState = RECEIVE_CHARACTERS_LIST;
 }
 
-CHARACTER_ENABLE g_CharCardEnable;
-
 void ReceiveCharacterCard_New(const BYTE* ReceiveBuffer)
 {
     auto Data = (LPPHEADER_CHARACTERCARD)ReceiveBuffer;
-    g_CharCardEnable.bCharacterEnable[0] = false;
-    g_CharCardEnable.bCharacterEnable[1] = false;
-    g_CharCardEnable.bCharacterEnable[2] = false;
-
-    if ((Data->CharacterCard & CLASS_DARK_CARD) == CLASS_DARK_CARD)
-        g_CharCardEnable.bCharacterEnable[0] = true;
-
-    if ((Data->CharacterCard & CLASS_DARK_LORD_CARD) == CLASS_DARK_LORD_CARD)
-        g_CharCardEnable.bCharacterEnable[1] = true;
-
-    if ((Data->CharacterCard & CLASS_SUMMONER_CARD) == CLASS_SUMMONER_CARD)
-        g_CharCardEnable.bCharacterEnable[2] = true;
-
-    g_ConsoleDebug->Write(MCD_NORMAL, L"[BOTH MESSAGE] CharacterCard Recv %d = %d %d %d", Data->CharacterCard,
-                          g_CharCardEnable.bCharacterEnable[0], g_CharCardEnable.bCharacterEnable[1],
-                          g_CharCardEnable.bCharacterEnable[2]);
+    ApplyCreationUnlocks(Data->CharacterCard);
 }
 
 void ReceiveCreateCharacter(const BYTE* ReceiveBuffer)
 {
     auto Data = (LPPRECEIVE_CREATE_CHARACTER)ReceiveBuffer;
-    mu::log::Get("network")->info("[CreateCharacter] response result={} index={} classRaw={} level={}", Data->Result,
-                                  Data->Index, static_cast<int>(Data->Class), Data->Level);
+    // A refusal is the result alone: the name, slot and class follow only on success.
+    mu::log::Get("network")->info("[CreateCharacter] response result={}", Data->Result);
     if (Data->Result == 1)
     {
-        float fPos[2] = {0.0f, 0.0f}, fAngle = 0.0f;
-
-        switch (Data->Index)
-        {
-        case 0:
-            fPos[0] = 8008.0f;
-            fPos[1] = 18885.0f;
-            fAngle = 115.0f;
-            break;
-        case 1:
-            fPos[0] = 7986.0f;
-            fPos[1] = 19145.0f;
-            fAngle = 90.0f;
-            break;
-        case 2:
-            fPos[0] = 8046.0f;
-            fPos[1] = 19400.0f;
-            fAngle = 75.0f;
-            break;
-        case 3:
-            fPos[0] = 8133.0f;
-            fPos[1] = 19645.0f;
-            fAngle = 60.0f;
-            break;
-        case 4:
-            fPos[0] = 8282.0f;
-            fPos[1] = 19845.0f;
-            fAngle = 35.0f;
-            break;
-        }
-
-        INT iCharacterKey;
-        iCharacterKey = Data->Index;
-        DeleteCharacter(iCharacterKey);
-
-        CreateHero(Data->Index, CharacterView.Class, CharacterView.Skin, fPos[0], fPos[1], fAngle);
-        CharactersClient[Data->Index].Level = Data->Level;
-        auto serverClass = (SERVER_CLASS_TYPE)(Data->Class >> 3);
-        auto iClass = gCharacterManager.ChangeServerClassTypeToClientClassType(serverClass);
-        mu::log::Get("network")->info("[CreateCharacter] success serverClass={} clientClass={}",
-                                      static_cast<int>(serverClass), static_cast<int>(iClass));
-
-        CharactersClient[Data->Index].Class = iClass;
-        CharactersClient[Data->Index].SkinIndex = gCharacterManager.GetSkinModelIndex(iClass);
-        CMultiLanguage::ConvertFromUtf8(CharactersClient[Data->Index].ID, Data->ID, MAX_USERNAME_SIZE);
-        CharactersClient[Data->Index].ID[MAX_USERNAME_SIZE] = L'\0';
+        AddCreatedCharacter(*Data);
         CurrentProtocolState = RECEIVE_CREATE_CHARACTER_SUCCESS;
         UI::LoginScene::CharacterCreated();
     }
