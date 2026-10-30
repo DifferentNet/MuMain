@@ -129,6 +129,13 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME skill_arrange_tests
+    SOURCES
+        test_skill_arrange.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Mobile/SkillArrange.cpp
+)
+
+mu_add_test(
     NAME rml_stacking_order_tests
     SOURCES
         test_rml_stacking_order.cpp

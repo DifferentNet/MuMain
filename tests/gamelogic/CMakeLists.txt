@@ -73,3 +73,9 @@ mu_add_test(
     LINK_LIBS
         MuClient
 )
+
+mu_add_test(
+    NAME test_walk_stop
+    SOURCES
+        test_walk_stop.cpp
+)
