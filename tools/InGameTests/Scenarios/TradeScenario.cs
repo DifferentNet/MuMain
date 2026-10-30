@@ -10,8 +10,6 @@ internal sealed class TradeScenario : Scenario
 {
     private const string Seller = "seller";
     private const string Buyer = "buyer";
-    private const string TradeGrid = "trade";
-    private const int FirstTradeSlot = 0;
 
     // A free spot in Lorencia's town; the trade partner has to stand at most one tile away.
     private const string LorenciaGate = "Lorencia";
@@ -91,39 +89,12 @@ internal sealed class TradeScenario : Scenario
             $"The seller puts '{offer.Name}' into the trade window with two clicks",
             $"The first click picks '{offer.Name}' up from inventory slot {offer.Slot}, the second puts it into the first square of the "
             + $"seller's offer. {buyerCharacter.Name} then sees it in the seller's half of the trade window (sven-n/MuMain#588).",
-            async () =>
-            {
-                await seller.OpenInventoryAsync();
-                await seller.MoveItemAsync("inventory", offer.Slot, TradeGrid, FirstTradeSlot);
-                await Expect.EventuallyAsync(
-                    async () => ItemSlots.OfTrade(await buyer.StateAsync(), "partner_items").Any(item => item.Name == offer.Name),
-                    ServerAnswer,
-                    $"the buyer does not see '{offer.Name}' in the seller's offer");
-            });
+            () => Trading.OfferItemAsync(seller, buyer, offer));
         await context.StepAsync(
             $"The buyer offers {ZenOffer:N0} zen",
             $"The buyer clicks the zen button of the trade window, types {ZenOffer} into the box that opens and confirms with "
             + $"Enter. The seller sees {ZenOffer:N0} zen in the buyer's half of the trade window.",
-            async () =>
-            {
-                await buyer.ClickElementAsync("trade.zen");
-                await Expect.EventuallyAsync(
-                    async () => (await buyer.OpenWindowsAsync()).Contains("message_box"),
-                    ServerAnswer,
-                    "the zen box does not open");
-                await buyer.SendAsync("type", new { text = ZenOffer.ToString(System.Globalization.CultureInfo.InvariantCulture) });
-                await Keys.PressUntilAsync(
-                    context,
-                    buyer,
-                    "enter",
-                    async () => !(await buyer.OpenWindowsAsync()).Contains("message_box"),
-                    "the zen box does not take Enter");
-                var seen = 0;
-                await Expect.EventuallyAsync(
-                    async () => (seen = Trading.Zen(await seller.StateAsync(), "partner_zen")) == ZenOffer,
-                    ServerAnswer,
-                    () => $"the seller sees {seen} zen in the buyer's offer, not {ZenOffer}");
-            });
+            () => Trading.OfferZenAsync(buyer, seller, ZenOffer));
         await context.StepAsync(
             "The seller presses the confirm button",
             "The seller's confirm button stays pressed. Right after the offer changed it ignores clicks for a moment, so it is "

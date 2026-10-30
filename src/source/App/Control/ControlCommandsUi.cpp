@@ -4,6 +4,7 @@
 #include "Core/Text/Utf8.h"
 #include "Core/Utilities/Log/muConsoleDebug.h"
 #include "GameLogic/Events/BattlePass.h"
+#include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/Core/WindowAccess.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
@@ -311,6 +312,9 @@ std::string Ui(const Request& request, std::unique_ptr<Act>&)
     json result;
     result["windows"] = windows;
     result["elements"] = Elements();
+    // Whether a text field has the keys. A dialog focuses its field a frame after it shows, and
+    // `type` before that goes nowhere.
+    result["typing"] = RmlUiRuntime::Instance().IsTextInputActive();
     return EncodeResult(request.EncodedId(), result.dump());
 }
 

@@ -196,12 +196,14 @@ POINT mu::ui::window::CPickedItem::TopLeftIn(const CInventoryCtrl* grid, int poi
     return {left, top};
 }
 
-POINT mu::ui::window::CPickedItem::DropPointIn(const CInventoryCtrl* grid, int pointerX, int pointerY) const
+POINT mu::ui::window::CPickedItem::TargetPointIn(const CInventoryCtrl* grid, int pointerX, int pointerY) const
 {
     const UI::Items::GridGeometry geometry = grid ? grid->Geometry() : UI::Items::GridGeometry{};
-    const POINT topLeft = TopLeftIn(grid, pointerX, pointerY);
-    return {topLeft.x + static_cast<LONG>(geometry.PitchX() / 2.f),
-            topLeft.y + static_cast<LONG>(geometry.PitchY() / 2.f)};
+    int x = 0;
+    int y = 0;
+    UI::Items::AnchoredTargetPoint(static_cast<float>(pointerX), static_cast<float>(pointerY), m_Anchor,
+                                   geometry.PitchX(), geometry.PitchY(), x, y);
+    return {x, y};
 }
 
 SIZE mu::ui::window::CPickedItem::SizeIn(const CInventoryCtrl* grid) const
@@ -241,9 +243,9 @@ bool mu::ui::window::CPickedItem::GetTargetPos(CInventoryCtrl* pDest, int& iTarg
     if (pDest != nullptr)
     {
         const POINT pointer = pDest->PointerPos();
-        const POINT dropPoint = DropPointIn(pDest, pointer.x, pointer.y);
+        const POINT target = TargetPointIn(pDest, pointer.x, pointer.y);
 
-        return pDest->GetSquarePosAtPt(dropPoint.x, dropPoint.y, iTargetColumnX, iTargetRowY);
+        return pDest->GetSquarePosAtPt(target.x, target.y, iTargetColumnX, iTargetRowY);
     }
     return false;
 }
@@ -1161,8 +1163,9 @@ void mu::ui::window::CInventoryCtrl::UpdateCells()
     const ITEM_ATTRIBUTE* pItemAttr = &ItemAttribute[pPickItem->Type];
     int iColumnX = 0, iRowY = 0;
     int nItemColumn = pItemAttr->Width, nItemRow = pItemAttr->Height;
-    const POINT dropPoint = ms_pPickedItem->DropPointIn(this, pointer.x, pointer.y);
-    m_Geometry.CellOf(static_cast<float>(dropPoint.x), static_cast<float>(dropPoint.y), iColumnX, iRowY);
+    // The same cell as the drop (CPickedItem::GetTargetPos).
+    const POINT target = ms_pPickedItem->TargetPointIn(this, pointer.x, pointer.y);
+    m_Geometry.CellOf(static_cast<float>(target.x), static_cast<float>(target.y), iColumnX, iRowY);
 
     bool bWarning = false;
     if (iColumnX < 0 && iColumnX >= -nItemColumn)

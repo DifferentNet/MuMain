@@ -19,6 +19,7 @@ internal static class Program
     [
         new TradeScenario(),
         new TradeInventoryFullScenario(),
+        new TradeCancelScenario(),
         new ChatScenario(),
         new PartyScenario(),
         new PersonalShopScenario(),
