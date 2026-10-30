@@ -1719,6 +1719,8 @@ bool RouteActionInput(SDL_Event& event, bool synthetic, bool& propagates)
         propagates = Core::Input::RouteToUi(event, g_sdlWindow);
         return true;
     case SDL_EVENT_KEY_DOWN:
+        if (!synthetic && !event.key.repeat)
+            Core::Input::RecordKeyPressEdge(event.key.scancode);
         propagates = Core::Input::RouteToUi(event, g_sdlWindow);
 #if !defined(_WIN32)
         // Physical Windows messages already handle these keys; SDL-only paths

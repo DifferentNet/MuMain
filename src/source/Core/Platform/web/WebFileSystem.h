@@ -16,4 +16,13 @@ bool MountGameFiles();
 // a request per file. Call it before loading a map; blocks until done, yielding to the browser meanwhile.
 // Without a pack the files still download one by one as the game opens them.
 void LoadWorldFiles(int world);
+
+// Where the page's thread downloads the game's files (Safari), reads the file at `path` whole now, the
+// game waiting for it the way it waits for a frame, through the service worker, which keeps it on the
+// device; the next fopen of it, on any thread, gets it from memory. For a file another thread opens:
+// miniaudio opens a music stream on its own, and there the file came by synchronous requests on the
+// page's thread, a stat's 2 MB and then 1 MB parts as it played, each one stopping the game. One such
+// file waits at a time. False where it didn't read it (other browsers, a file not in the mount, a failed
+// download): open it as usual.
+bool ReadWholeAhead(const char* path);
 } // namespace mu::web
