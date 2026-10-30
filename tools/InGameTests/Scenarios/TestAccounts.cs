@@ -57,6 +57,12 @@ internal static class TestAccounts
     /// <inheritdoc cref="FullTraderFirst"/>
     public static readonly TestCharacter FullTraderSecond = new("test8", "test8", "test8Dw");
 
+    /// <summary><c>trade-cancel</c>: Dark Lord with Jewels of Bless to offer.</summary>
+    public static readonly TestCharacter CancelTraderFirst = new("test8", "test8", "test8Dl");
+
+    /// <summary><c>trade-cancel</c>: Dark Lord with 10,000,000 zen to offer.</summary>
+    public static readonly TestCharacter CancelTraderSecond = new("test9", "test9", "test9Dl");
+
     /// <summary>
     /// <c>personal-shop</c> seller: level 150 Dark Lord with 100,000,000 zen and Jewels of Bless;
     /// the quest accounts all start on one tile in Devias. The Dark Lords take no class change

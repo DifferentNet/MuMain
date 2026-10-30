@@ -233,11 +233,137 @@
       });
     };
   }
+  // Phones and tablets: the game's picture set up once more after the game sets it up. On a Pixel 9 Pro
+  // XL (Edge 156) opened from the home screen, the game ran and played sound but the screen stayed
+  // black until leaving fullscreen set the canvas up again (2026-10-30). So the page sets it up again
+  // with the game's own settings 1 s and 5 s after each time the game does, and when the page comes
+  // back on screen: right before the game's next frame takes the canvas texture, so no frame is lost.
+  const PICTURE_SETUP_AGAIN_MS = [1000, 5000];
+  const PAGE_SHOWN_SETUP_MS = 300;
+  const canvasSetups = new Map();   // GPUCanvasContext -> the game's configuration
+  const setUpAgain = new Map();     // GPUCanvasContext -> why it is set up again before its next frame
+  let setUpAgainTimers = [];
+  function setUpPictureAgain(reason) {
+    for (const context of canvasSetups.keys()) setUpAgain.set(context, reason);
+  }
+  if (self.GPUCanvasContext && device.kind !== "desktop") {
+    const configure = GPUCanvasContext.prototype.configure;
+    const unconfigure = GPUCanvasContext.prototype.unconfigure;
+    const getCurrentTexture = GPUCanvasContext.prototype.getCurrentTexture;
+    // Picture checks: the screen stayed black until a tap on the game even with the setup above (the
+    // same Pixel, 2026-10-30). Every 5 s for the first minute after the game first sets the picture up,
+    // and at the first tap on the game, the log says how many frames the game drew, how bright the
+    // last one is (0 is black) and how long the browser took to its next frame: a black frame means
+    // the game draws black; a bright one, while the screen is black, means the browser doesn't show it.
+    const PICTURE_CHECK_MS = 5000;
+    const PICTURE_CHECKS = 12;
+    const BROWSER_FRAME_WAIT_MS = 2000;
+    const probe = document.createElement("canvas");
+    probe.width = 16;
+    probe.height = 8;
+    const probeContext = probe.getContext("2d", { willReadFrequently: true });
+    let gameFrames = 0;
+    let pictureCheck = null;          // the check under way: { when, frames, brightness, browserFrame }
+    let pictureChecksStarted = 0;     // performance.now() of the game's first picture setup
+    function pictureBrightness(source) {
+      try {
+        probeContext.clearRect(0, 0, probe.width, probe.height);
+        probeContext.drawImage(source, 0, 0, probe.width, probe.height);
+        const pixels = probeContext.getImageData(0, 0, probe.width, probe.height).data;
+        let sum = 0;
+        for (let i = 0; i < pixels.length; i += 4) sum += pixels[i] + pixels[i + 1] + pixels[i + 2];
+        return String(Math.round(sum / (pixels.length / 4) / 3));
+      } catch (e) {
+        return "unknown (" + (e && e.message || e) + ")";
+      }
+    }
+    function finishPictureCheck(check) {
+      if (pictureCheck !== check || check.brightness === undefined || check.browserFrame === undefined) return;
+      pictureCheck = null;
+      appendLog(`Picture check (${check.when}): the game drew ${check.frames} frames, the last ${check.brightness} ` +
+                `bright of 255; the browser's next frame ${check.browserFrame}; page ${document.visibilityState}` +
+                (document.hasFocus() ? ", focused" : ", not focused"));
+    }
+    function startPictureCheck(when) {
+      if (pictureCheck) return false;
+      const check = pictureCheck = { when, frames: gameFrames };
+      gameFrames = 0;
+      const started = performance.now();
+      requestAnimationFrame(() => {
+        if (check.browserFrame !== undefined) return;
+        check.browserFrame = `after ${Math.round(performance.now() - started)} ms`;
+        finishPictureCheck(check);
+      });
+      setTimeout(() => {
+        if (check.browserFrame === undefined) check.browserFrame = `none in ${BROWSER_FRAME_WAIT_MS / 1000} s`;
+        if (check.brightness === undefined) check.brightness = "unknown (no frame)";
+        finishPictureCheck(check);
+      }, BROWSER_FRAME_WAIT_MS);
+      return true;
+    }
+    function secondsAfterTheGame() {
+      return `${Math.round((performance.now() - pictureChecksStarted) / 1000)} s after the game`;
+    }
+    let tapChecked = false;
+    canvas.addEventListener("pointerdown", () => {
+      if (tapChecked || !pictureChecksStarted) return;
+      if (startPictureCheck(`first tap on the game, ${secondsAfterTheGame()}`)) tapChecked = true;
+    });
+    GPUCanvasContext.prototype.configure = function (configuration) {
+      configure.call(this, configuration);
+      canvasSetups.set(this, configuration);
+      setUpAgain.delete(this);
+      appendLog(`Picture set up by the game: ${this.canvas.width}x${this.canvas.height}`);
+      setUpAgainTimers.forEach(clearTimeout);
+      setUpAgainTimers = PICTURE_SETUP_AGAIN_MS.map((ms) => setTimeout(() => setUpPictureAgain(`${ms / 1000} s after the game`), ms));
+      if (!pictureChecksStarted) {
+        pictureChecksStarted = performance.now();
+        for (let i = 1; i <= PICTURE_CHECKS; i++) setTimeout(() => startPictureCheck(secondsAfterTheGame()), i * PICTURE_CHECK_MS);
+      }
+    };
+    if (unconfigure) {
+      GPUCanvasContext.prototype.unconfigure = function () {
+        canvasSetups.delete(this);
+        setUpAgain.delete(this);
+        return unconfigure.call(this);
+      };
+    }
+    GPUCanvasContext.prototype.getCurrentTexture = function () {
+      const reason = setUpAgain.get(this);
+      if (reason !== undefined) {
+        setUpAgain.delete(this);
+        try {
+          configure.call(this, canvasSetups.get(this));
+          appendLog(`Picture set up again (${reason}): ${this.canvas.width}x${this.canvas.height}`);
+        } catch (e) {
+          appendLog(`Picture not set up again (${reason}): ${e && e.message || e}`, true);
+        }
+      }
+      gameFrames++;
+      const check = pictureCheck;
+      if (check && check.brightness === undefined && !check.measuring) {
+        check.measuring = true;
+        // Once the game's turn ends, so with its frame drawn into this texture and handed over.
+        queueMicrotask(() => {
+          check.brightness = pictureBrightness(this.canvas);
+          finishPictureCheck(check);
+        });
+      }
+      return getCurrentTexture.call(this);
+    };
+    document.addEventListener("visibilitychange", () => {
+      appendLog(`Page ${document.visibilityState}`);
+      if (document.visibilityState === "visible") setTimeout(() => setUpPictureAgain("page shown"), PAGE_SHOWN_SETUP_MS);
+    });
+  }
   window.muGpuErrors = () =>
     [...gpuErrors].map(([message, e]) => `(×${e.count}) ${message}`).join("\n\n") || "no WebGPU errors";
   document.getElementById("toggle-log").onclick = () => { logEl.hidden = !logEl.hidden; };
+  const displayMode = ["fullscreen", "standalone", "minimal-ui", "browser"]
+    .find((mode) => matchMedia(`(display-mode: ${mode})`).matches) || "unknown";
   appendLog(`Device: ${device.kind} (${device.reason}); screen ${screen.width}x${screen.height} CSS px, ` +
-            `${devicePixelRatio} device px each, ${navigator.maxTouchPoints} touch points`);
+            `${devicePixelRatio} device px each, ${navigator.maxTouchPoints} touch points; ` +
+            `display ${displayMode}, page ${document.visibilityState}`);
   const stage = document.getElementById("stage");
   const footer = document.querySelector("footer");
   // Phones put the whole page on the screen, the menu button too, and turn it sideways: browsers lock

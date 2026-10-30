@@ -1840,6 +1840,12 @@ MSG MainLoop()
                 MuApplyCursorVisibility();
                 break;
 #endif
+            case SDL_EVENT_WINDOW_HIDDEN:
+                // The page went to the background (the phone's app switcher, its screen off) without always
+                // losing focus first: a finger held then never gets its release, and a held joystick would
+                // walk on.
+                Core::Input::Touch::Reset();
+                break;
             case SDL_EVENT_WINDOW_FOCUS_LOST:
                 // A finger's touch never ends once the page loses focus, nor does a pad's press: let go
                 // of what fingers and the pad hold.
@@ -2459,6 +2465,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     }
     // Game controllers (an Xbox pad, a Steam Deck): UI/HUD/GamepadControls plays them.
     Core::Input::Gamepad::Init();
+    Core::Input::Gamepad::SetEnabled(GameConfig::GetInstance().GetGamepad());
 
 #ifndef _WIN32
     // Install POSIX crash-diagnostic signal handlers. After SDL_Init (R8

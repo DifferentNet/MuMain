@@ -68,4 +68,7 @@ std::string Halt(const Request& request, std::unique_ptr<Act>& act);
 
 // Trade family.
 std::string Trade(const Request& request, std::unique_ptr<Act>& act);
+
+// Pad family: a virtual gamepad (ControlCommandsPad.cpp).
+std::string Pad(const Request& request, std::unique_ptr<Act>& act);
 } // namespace App::Control::Commands

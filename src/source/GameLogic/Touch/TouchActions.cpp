@@ -326,14 +326,9 @@ void StopSteering()
     if (!g_steering.active)
         return;
     g_steering.active = false;
-    if (Hero == nullptr)
-        return;
-    // As releasing the mouse: the character stops at the tile it reached, the server is told nothing.
-    Hero->Path.Lock.lock();
-    Hero->Path.PathNum = 0;
-    Hero->Path.CurrentPath = 0;
-    Hero->Path.CurrentPathFloat = 0;
-    Hero->Path.Lock.unlock();
+    // The character finishes the step it is taking and stands; the server is told where. Clearing the
+    // path alone left it walking straight on for good (a Pixel 9 Pro XL, 2026-10-30).
+    Automation::StopAtNextTile();
 }
 
 void Attack()

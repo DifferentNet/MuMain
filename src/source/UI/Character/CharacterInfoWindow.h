@@ -124,6 +124,7 @@ namespace mu::ui::window
 
             bool canLevelUp = false;   // CharacterAttribute->LevelUpPoint > 0
             bool showCharisma = false; // base class == CLASS_DARK_LORD
+            bool petEnabled = false;   // CPetInfoWindow::IsAvailable(): the Pet button shows only then
 
             // CHARACTER::PK, not a colour: the theme decides what each outlaw level looks like.
             Rml::String nameText;

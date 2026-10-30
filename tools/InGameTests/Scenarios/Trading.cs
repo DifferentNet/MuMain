@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using MuMain.Tools.InGameTests.Clients;
 using MuMain.Tools.InGameTests.Control;
@@ -81,6 +82,58 @@ internal static class Trading
             },
             ConfirmWait,
             $"the {client.Role}'s confirm button does not stay pressed");
+    }
+
+    /// <summary>
+    /// Puts the item of an inventory slot into the first square of <paramref name="offerer"/>'s offer with two clicks;
+    /// waits until <paramref name="partner"/> sees it in the partner's half.
+    /// </summary>
+    public static async Task OfferItemAsync(GameClient offerer, GameClient partner, ItemSlot item)
+    {
+        await offerer.OpenInventoryAsync();
+        await offerer.MoveItemAsync("inventory", item.Slot, "trade", 0);
+        await Expect.EventuallyAsync(
+            async () => ItemSlots.OfTrade(await partner.StateAsync(), "partner_items").Any(offered => offered.Name == item.Name),
+            ServerAnswer,
+            $"the {partner.Role} does not see '{item.Name}' in the {offerer.Role}'s offer");
+    }
+
+    /// <summary>
+    /// Clicks the zen button of the trade window, types <paramref name="zen"/> into the box that opens and confirms it
+    /// with Enter; waits until <paramref name="partner"/> sees that zen in the partner's half.
+    /// </summary>
+    public static async Task OfferZenAsync(GameClient offerer, GameClient partner, int zen)
+    {
+        await offerer.ClickElementAsync("trade.zen");
+        await Expect.EventuallyAsync(
+            async () => (await offerer.OpenWindowsAsync()).Contains("message_box"),
+            ServerAnswer,
+            $"the {offerer.Role}'s zen box does not open");
+        // The box focuses its field a frame after it shows.
+        await Expect.EventuallyAsync(offerer.IsTypingAsync, ServerAnswer, $"the {offerer.Role}'s zen box's field does not take the keys");
+        // Enter goes with the text: the focused field keeps a separate Enter key to itself, and the box reads it from
+        // the key state.
+        await offerer.SendAsync("type", new { text = zen.ToString(CultureInfo.InvariantCulture), enter = true });
+        await Expect.EventuallyAsync(
+            async () => !(await offerer.OpenWindowsAsync()).Contains("message_box"),
+            ServerAnswer,
+            $"the {offerer.Role}'s zen box does not take Enter");
+        var seen = 0;
+        await Expect.EventuallyAsync(
+            async () => (seen = Zen(await partner.StateAsync(), "partner_zen")) == zen,
+            ServerAnswer,
+            () => $"the {partner.Role} sees {seen} zen in the {offerer.Role}'s offer, not {zen}");
+    }
+
+    /// <summary><paramref name="canceller"/> cancels the open trade; it closes as cancelled on both sides.</summary>
+    public static async Task CancelAsync(GameClient canceller, GameClient partner)
+    {
+        var cancellerSequence = await canceller.LastEventSequenceAsync();
+        var partnerSequence = await partner.LastEventSequenceAsync();
+        await canceller.SendAsync("trade", new { action = "cancel" });
+        var cancelled = new Dictionary<string, string> { ["change"] = "closed", ["result"] = "cancelled" };
+        await canceller.WaitForEventAsync("trade", cancelled, cancellerSequence, ServerAnswer);
+        await partner.WaitForEventAsync("trade", cancelled, partnerSequence, ServerAnswer);
     }
 
     /// <summary>The zen of one side of the open trade (<c>my_zen</c> or <c>partner_zen</c>); 0 without a trade.</summary>

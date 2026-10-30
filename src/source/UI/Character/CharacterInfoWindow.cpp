@@ -149,6 +149,7 @@ void mu::ui::window::CCharacterInfoWindow::BindRmlModel(Rml::DataModelConstructo
 
     c.Bind("can_level_up", &model.canLevelUp);
     c.Bind("show_charisma", &model.showCharisma);
+    c.Bind("pet_enabled", &model.petEnabled);
 
     c.Bind("name_text", &model.nameText);
     c.Bind("pk_level", &model.pkLevel);
@@ -464,6 +465,7 @@ void mu::ui::window::CCharacterInfoWindow::SyncRmlModel()
     SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::canLevelUp, "can_level_up", CharacterAttribute->LevelUpPoint > 0);
     SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::showCharisma, "show_charisma",
               gCharacterManager.GetBaseClass(Hero->Class) == CLASS_DARK_LORD);
+    SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::petEnabled, "pet_enabled", CPetInfoWindow::IsAvailable());
 
     BuildSubjectTexts();
     BuildTableTexts();
