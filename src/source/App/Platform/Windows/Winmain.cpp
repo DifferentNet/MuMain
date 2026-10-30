@@ -58,6 +58,7 @@
 #include "Core/Platform/web/WebDevice.h"
 #include "Core/Platform/web/WebDisplay.h"
 #include "Core/Platform/web/WebKeyboard.h"
+#include "Core/Platform/web/WebPageView.h"
 #include <RmlUi/Core/Element.h>
 extern EGameScene SceneFlag; // read by WaitForBrowserFrame()
 #endif
@@ -1936,6 +1937,7 @@ MSG MainLoop()
 #ifdef __EMSCRIPTEN__
                 MuWebFollowPageSize();
                 UI::Mobile::FollowPage();
+                mu::web::ShowInWorld(SceneFlag == MAIN_SCENE);
                 UI::Mobile::PhonePage::Update();
                 MuWebFollowLowestQuality();
                 if (const Rml::Element* field = RmlUiRuntime::Instance().GetFocusedTextField())

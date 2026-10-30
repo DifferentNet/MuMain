@@ -677,9 +677,22 @@
                       "visibilitychange", "contextmenu"]) {
     window.addEventListener(type, blockAfterCrash, true);
   }
+  // While a character is in the world, closing the tab or the window or leaving the page asks first (the
+  // browser's own "Leave site?"): in browsers on Windows Ctrl+W closes the tab, and a page can't keep that
+  // key. The game says when its character enters and leaves the world (Core/Platform/web/WebPageView.h).
+  // Not once the game stopped, where Reload just reloads.
+  function askBeforeLeaving(event) {
+    event.preventDefault();
+    event.returnValue = "";
+  }
+  window.muInWorld = (inWorld) => {
+    if (inWorld && !crashed) addEventListener("beforeunload", askBeforeLeaving);
+    else removeEventListener("beforeunload", askBeforeLeaving);
+  };
   function gameCrashed(error) {
     if (crashed) return;
     crashed = true;
+    removeEventListener("beforeunload", askBeforeLeaving);
     playCard.classList.remove("show");
     for (const socket of openSockets) {
       socket.onmessage = socket.onclose = socket.onerror = null;
