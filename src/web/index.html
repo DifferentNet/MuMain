@@ -896,12 +896,20 @@
   if (!navigator.gpu) missing.push("WebGPU");
   if (!("Suspending" in WebAssembly)) missing.push("WebAssembly JSPI");
   if (!self.crossOriginIsolated) missing.push("cross-origin isolation (serve with scripts/serve-web.py)");
+  // iPhones and iPads (an iPad's Safari calls itself a Mac): every browser there is Safari's WebKit, and
+  // the game runs from iOS 27 (JSPI came with Safari 27). Their Safari says "iPhone OS 18_7" in the user
+  // agent even on iOS 27.2, so the messages below tell them to update iOS by what the browser lacks.
+  const appleMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+                      (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  const UPDATE_IOS = ["Update iOS: Settings → General → Software Update (iOS 27 or later), then reload this page.",
+                      "Обновите iOS: Настройки → Основные → Обновление ПО (iOS 27 или новее), затем обновите страницу."];
   // The graphics adapter and the optional WebGPU features SDL's WebGPU backend requires. Without one
   // of them the game only said "SDL_gpu Renderer Error. Install the latest graphics card driver." (an
-  // AMD Radeon RX 9070 XT, 2026-10-24; its browser then gave no adapter at all).
+  // AMD Radeon RX 9070 XT, 2026-10-24; its browser then gave no adapter at all). float32-filterable is
+  // not here: iPhones lack it (an iPhone 13 on iOS 27.2, 2026-10-30) and the game doesn't use it.
   // index.html?needfeature=<name> adds a feature and ?noadapter drops the adapter, to see the messages.
   const NEEDED_FEATURES = ["depth32float-stencil8", "rg11b10ufloat-renderable", "indirect-first-instance",
-                           "bgra8unorm-storage", "float32-filterable"];
+                           "bgra8unorm-storage"];
   // The game clamps depth where the card can. ARM Mali Bifrost phones (a Galaxy Note 10 Lite in
   // Chrome 156, 2026-10-30) can't, and the game clips it instead, as the original OpenGL game did
   // (Module.muDepthClamp). index.html?nodepthclamp clips it on any card, to try it.
@@ -1022,7 +1030,12 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
            (navigator.deviceMemory || 8) <= 2;
   }
   function showGpuProblem(gpu, browser, missingFeatures) {
-    const lines = missingFeatures.length
+    const lines = appleMobile
+      ? [missingFeatures.length
+           ? "This iPhone or iPad can't run the game yet. Missing WebGPU features: " + missingFeatures.join(", ")
+           : "Safari gives this page no graphics (WebGPU).",
+         UPDATE_IOS[0], "", "Этот iPhone или iPad пока не может запустить игру.", UPDATE_IOS[1]]
+      : missingFeatures.length
       ? ["Your graphics card can't run the game in this browser yet.",
          "Missing WebGPU features: " + missingFeatures.join(", "),
          "Update the graphics driver and Chrome or Edge, then reload this page.",
@@ -1048,7 +1061,11 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     setStatus(lines.join("\n"), true);
   }
 
-  if (missing.length) {
+  if (missing.length && appleMobile) {
+    statusEl.style.whiteSpace = "pre-line";
+    setStatus(["This iPhone or iPad can't run the game yet: no " + missing.join(", ") + ".", UPDATE_IOS[0], "",
+               "Этот iPhone или iPad пока не может запустить игру.", UPDATE_IOS[1]].join("\n"), true);
+  } else if (missing.length) {
     setStatus("This browser can't run the game: no " + missing.join(", ") + ". Use a current Chrome or Edge.", true);
   } else checkGpu().then(async (gpuCheck) => {
     if (!gpuCheck.ok) {

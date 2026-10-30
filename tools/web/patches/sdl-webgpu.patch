@@ -1,5 +1,5 @@
 diff --git a/src/gpu/webgpu/SDL_gpu_webgpu.c b/src/gpu/webgpu/SDL_gpu_webgpu.c
-index cd585cca2..53d582240 100644
+index cd585cca2..f2fc9f9bb 100644
 --- a/src/gpu/webgpu/SDL_gpu_webgpu.c
 +++ b/src/gpu/webgpu/SDL_gpu_webgpu.c
 @@ -14,8 +14,11 @@
@@ -69,7 +69,7 @@ index cd585cca2..53d582240 100644
  
  // WebGPU is bad and stinky
  #define ALIGN_VALUE(value, alignment) (value % alignment != 0 ? value + (alignment - (value % alignment)) : value)
-@@ -198,13 +243,15 @@ fn main(@location(0) tex: vec2<f32>) -> @location(0) vec4<f32> {\n\
+@@ -198,21 +243,24 @@ fn main(@location(0) tex: vec2<f32>) -> @location(0) vec4<f32> {\n\
  // Also, note that while Firefox's documentation *claims* that a lot of features are unsupported,
  // I've been able to use a lot of them just fine (on Linux nonetheless), so I'm not sure what's up with that.
  
@@ -78,7 +78,7 @@ index cd585cca2..53d582240 100644
 +// SDL_PROP_GPU_DEVICE_CREATE_FEATURE_DEPTH_CLAMPING_BOOLEAN off, and only where the adapter has it.
 +// Without it every pipeline clips depth instead (MU Moldova: ARM Mali Bifrost phones, such as a
 +// Galaxy Note 10 Lite in Chrome 156, have no such feature, 2026-10-30).
-+const WGPUFeatureName WEBGPU_INTERNAL_RequiredFeatures[5] = {
++const WGPUFeatureName WEBGPU_INTERNAL_RequiredFeatures[4] = {
      // These three all have 99.98% coverage on WebGPU devices.
      WGPUFeatureName_Depth32FloatStencil8,
      WGPUFeatureName_RG11B10UfloatRenderable,
@@ -87,8 +87,20 @@ index cd585cca2..53d582240 100644
 -    WGPUFeatureName_DepthClipControl,
      // This one has 95%, blame Samsung.
      WGPUFeatureName_BGRA8UnormStorage,
-     // This one has 90%.
-@@ -883,6 +930,8 @@ typedef struct WebGPURenderer
+-    // This one has 90%.
+-    WGPUFeatureName_Float32Filterable,
+ };
+ 
+ // These are features which we don't *need*, but they'd be really nice to have.
+-const WGPUFeatureName WEBGPU_INTERNAL_OptionalFeatures[7] = {
++const WGPUFeatureName WEBGPU_INTERNAL_OptionalFeatures[8] = {
++    // This one has 90%. MU Moldova: optional, iPhones have none (an iPhone 13 on iOS 27.2, 2026-10-30)
++    // and the game makes no 32-bit float texture; without it RGBA32Float can't be filtered or blended.
++    WGPUFeatureName_Float32Filterable,
+     // This one has 85%.
+     WGPUFeatureName_Float32Blendable,
+ 
+@@ -883,6 +931,8 @@ typedef struct WebGPURenderer
      bool debugMode;
      bool destroyingSelf;
      bool preferLowPower;
@@ -97,7 +109,7 @@ index cd585cca2..53d582240 100644
  } WebGPURenderer;
  
  // TODO: Ooooh, I hate the windowing stuff in this backend.
-@@ -901,6 +950,15 @@ struct WebGPUWindowData
+@@ -901,6 +951,15 @@ struct WebGPUWindowData
  
      bool surfaceDirty;
      bool shouldUseFallbackFormat;
@@ -113,7 +125,7 @@ index cd585cca2..53d582240 100644
  };
  
  // FIXME: This has a really bad name.
-@@ -1181,16 +1239,6 @@ typedef struct WebGPUQueuedResourceBindIndexBuffer
+@@ -1181,16 +1240,6 @@ typedef struct WebGPUQueuedResourceBindIndexBuffer
      Uint32 offset;
  } WebGPUQueuedResourceBindIndexBuffer;
  
@@ -130,7 +142,7 @@ index cd585cca2..53d582240 100644
  typedef struct WebGPUQueuedDestroy
  {
      WebGPUQueuedDestroyType type;
-@@ -1297,11 +1345,22 @@ typedef struct WebGPUCommandBuffer
+@@ -1297,11 +1346,22 @@ typedef struct WebGPUCommandBuffer
  
      WebGPUSubmittedCommandBuffer submitted;
  
@@ -158,7 +170,7 @@ index cd585cca2..53d582240 100644
  
      size_t totalUniformDataLen;
  
-@@ -1377,9 +1436,15 @@ typedef struct WebGPUCommandBuffer
+@@ -1377,9 +1437,15 @@ typedef struct WebGPUCommandBuffer
  static void
  WEBGPU_INTERNAL_FenceCallback(WGPUQueueWorkDoneStatus status, WGPUStringView message, void *fence, void *unused)
  {
@@ -177,7 +189,7 @@ index cd585cca2..53d582240 100644
  }
  
  static void
-@@ -1642,7 +1707,7 @@ static void WEBGPU_INTERNAL_RequestDevice(WebGPURenderer *renderer, bool *succes
+@@ -1642,7 +1708,7 @@ static void WEBGPU_INTERNAL_RequestDevice(WebGPURenderer *renderer, bool *succes
  
      bool clipDistance = SDL_GetBooleanProperty(renderer->props, SDL_PROP_GPU_DEVICE_CREATE_FEATURE_CLIP_DISTANCE_BOOLEAN, false);
      Uint32 numFeaturesEnabled = 0;
@@ -186,7 +198,7 @@ index cd585cca2..53d582240 100644
  
      WGPUFeatureName *features = SDL_calloc(featureCapacity, sizeof(WGPUFeatureName));
      WGPUSupportedFeatures supportedFeatures = { 0 };
-@@ -1653,6 +1718,21 @@ static void WEBGPU_INTERNAL_RequestDevice(WebGPURenderer *renderer, bool *succes
+@@ -1653,6 +1719,21 @@ static void WEBGPU_INTERNAL_RequestDevice(WebGPURenderer *renderer, bool *succes
          WEBGPU_INTERNAL_InsertElementIntoArray(features, featureCapacity, numFeaturesEnabled, WGPUFeatureName, WGPUFeatureName_ClipDistances);
      }
  
@@ -208,7 +220,7 @@ index cd585cca2..53d582240 100644
      // This code is horrible.
      for (int i = 0; i < SDL_arraysize(WEBGPU_INTERNAL_RequiredFeatures); i++) {
          bool supported = false;
-@@ -1845,7 +1925,9 @@ static void WEBGPU_INTERNAL_FreeCommandBuffer(WebGPUCommandBuffer *cmdBuf)
+@@ -1845,7 +1926,9 @@ static void WEBGPU_INTERNAL_FreeCommandBuffer(WebGPUCommandBuffer *cmdBuf)
  {
      SDL_free(cmdBuf->surfaces);
      SDL_free(cmdBuf->acquiredSwapchainTextures);
@@ -219,7 +231,7 @@ index cd585cca2..53d582240 100644
      SDL_free(cmdBuf);
  }
  
-@@ -1876,21 +1958,6 @@ static WebGPUFence *WEBGPU_INTERNAL_CreateFenceFromFuture(WGPUFuture future)
+@@ -1876,21 +1959,6 @@ static WebGPUFence *WEBGPU_INTERNAL_CreateFenceFromFuture(WGPUFuture future)
      return fence;
  }
  
@@ -241,7 +253,7 @@ index cd585cca2..53d582240 100644
  
  static bool WEBGPU_INTERNAL_QueryFence(WebGPURenderer *renderer, WebGPUFence *fence)
  {
-@@ -1917,18 +1984,23 @@ static bool WEBGPU_QueryFence(SDL_GPURenderer *device, SDL_GPUFence *fence)
+@@ -1917,18 +1985,23 @@ static bool WEBGPU_QueryFence(SDL_GPURenderer *device, SDL_GPUFence *fence)
  
  static bool WEBGPU_INTERNAL_WaitForFences(WebGPURenderer *renderer, bool waitAll, WebGPUFence *const *fences, Uint32 num_fences)
  {
@@ -271,7 +283,7 @@ index cd585cca2..53d582240 100644
      }
  
      // TODO: Timeout functionality?
-@@ -1942,7 +2014,14 @@ static bool WEBGPU_WaitForFences(SDL_GPURenderer *device, bool waitAll, SDL_GPUF
+@@ -1942,7 +2015,14 @@ static bool WEBGPU_WaitForFences(SDL_GPURenderer *device, bool waitAll, SDL_GPUF
  
  static bool WEBGPU_Wait(SDL_GPURenderer *driverData)
  {
@@ -287,7 +299,7 @@ index cd585cca2..53d582240 100644
  }
  
  static inline size_t WEBGPU_INTERNAL_GetTokenBindGroup(const char *token)
-@@ -3277,6 +3356,14 @@ static void WEBGPU_INTERNAL_ConfigureSurfaceIfNeeded(WebGPURenderer *renderer, W
+@@ -3277,6 +3357,14 @@ static void WEBGPU_INTERNAL_ConfigureSurfaceIfNeeded(WebGPURenderer *renderer, W
          return;
      }
  
@@ -302,7 +314,7 @@ index cd585cca2..53d582240 100644
      wgpuSurfaceConfigure(windowData->surface, &config);
      windowData->surfaceWidth = config.width;
      windowData->surfaceHeight = config.height;
-@@ -3311,6 +3398,65 @@ static bool WEBGPU_ClaimWindow(SDL_GPURenderer *renderer, SDL_Window *window)
+@@ -3311,6 +3399,65 @@ static bool WEBGPU_ClaimWindow(SDL_GPURenderer *renderer, SDL_Window *window)
      return true;
  }
  
@@ -368,7 +380,7 @@ index cd585cca2..53d582240 100644
  static bool WEBGPU_AcquireSwapchainTexture(SDL_GPUCommandBuffer *commandBuffer, SDL_Window *window, SDL_GPUTexture **swapchainTexture, Uint32 *width, Uint32 *height)
  {
      WebGPUCommandBuffer *cmdBuf = (WebGPUCommandBuffer *)commandBuffer;
-@@ -3345,7 +3491,24 @@ static bool WEBGPU_AcquireSwapchainTexture(SDL_GPUCommandBuffer *commandBuffer,
+@@ -3345,7 +3492,24 @@ static bool WEBGPU_AcquireSwapchainTexture(SDL_GPUCommandBuffer *commandBuffer,
      }
  
      WEBGPU_INTERNAL_ConfigureSurfaceIfNeeded(cmdBuf->renderer, windowData);
@@ -393,7 +405,7 @@ index cd585cca2..53d582240 100644
  
      switch (surfaceTexture.status) {
      case WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal:
-@@ -3608,7 +3771,8 @@ static SDL_GPUGraphicsPipeline *WEBGPU_CreateGraphicsPipeline(SDL_GPURenderer *d
+@@ -3608,7 +3772,8 @@ static SDL_GPUGraphicsPipeline *WEBGPU_CreateGraphicsPipeline(SDL_GPURenderer *d
          .frontFace = SDLToWebGPU_FrontFace[createInfo->rasterizer_state.front_face],
          .stripIndexFormat = (createInfo->primitive_type == SDL_GPU_PRIMITIVETYPE_TRIANGLESTRIP) ? WGPUIndexFormat_Uint32 : WGPUIndexFormat_Undefined,
          .topology = SDLToWebGPU_PrimitiveType[createInfo->primitive_type],
@@ -403,7 +415,7 @@ index cd585cca2..53d582240 100644
          .nextInChain = NULL,
      };
  
-@@ -4094,7 +4258,9 @@ static void WEBGPU_GenerateMipmaps(SDL_GPUCommandBuffer *commandBuffer, SDL_GPUT
+@@ -4094,7 +4259,9 @@ static void WEBGPU_GenerateMipmaps(SDL_GPUCommandBuffer *commandBuffer, SDL_GPUT
          }
      }
  
@@ -414,7 +426,7 @@ index cd585cca2..53d582240 100644
  }
  
  static SDL_GPUBuffer *WEBGPU_CreateBuffer(
-@@ -4209,9 +4375,8 @@ static void *WEBGPU_MapTransferBuffer(SDL_GPURenderer *device, SDL_GPUTransferBu
+@@ -4209,9 +4376,8 @@ static void *WEBGPU_MapTransferBuffer(SDL_GPURenderer *device, SDL_GPUTransferBu
              SDL_memset(((WebGPUBufferContainer *)transferBuffer)->pseudoMappedRange, 0, ((WebGPUBufferContainer *)transferBuffer)->size);
          }
  
@@ -426,7 +438,7 @@ index cd585cca2..53d582240 100644
  
          // Mapped on CPU.
          ((WebGPUBufferContainer *)transferBuffer)->mapState = MAP_STATE_MAPPED_CPU;
-@@ -4319,18 +4484,28 @@ static void WEBGPU_UploadToBuffer(SDL_GPUCommandBuffer *copyPass, const SDL_GPUT
+@@ -4319,18 +4485,28 @@ static void WEBGPU_UploadToBuffer(SDL_GPUCommandBuffer *copyPass, const SDL_GPUT
  }
  
  // This'll eventually become a public function, but until PR #16249 is merged it'll be internal.
@@ -460,7 +472,7 @@ index cd585cca2..53d582240 100644
  
      if (cycle) {
          WEBGPU_INTERNAL_CycleTextureContainer(cmdBuf->renderer, (WebGPUTextureContainer *)destination->texture);
-@@ -4344,19 +4519,20 @@ static void WEBGPU_INTERNAL_CopyBufferToTexture(SDL_GPUCommandBuffer *copyPass,
+@@ -4344,19 +4520,20 @@ static void WEBGPU_INTERNAL_CopyBufferToTexture(SDL_GPUCommandBuffer *copyPass,
          }
  
          wgpuQueueWriteBuffer(cmdBuf->queue, sourceBuffer->activeBuffer->buffer, source->offset,
@@ -485,7 +497,7 @@ index cd585cca2..53d582240 100644
          // BytesPerRow isn't a multiple of 256! This is a Bad Thing!
          // WebGPU inherits D3D12's horrible 256-byte alignment requirement for BPR, so we'll need to do something about this.
          // To do this, we'll create an interim buffer which'll be 256-byte aligned, and then we'll issue some GPU copies to
-@@ -4366,20 +4542,23 @@ static void WEBGPU_INTERNAL_CopyBufferToTexture(SDL_GPUCommandBuffer *copyPass,
+@@ -4366,20 +4543,23 @@ static void WEBGPU_INTERNAL_CopyBufferToTexture(SDL_GPUCommandBuffer *copyPass,
  
          // HACK: We need to add blockWidth since for some reason 1x1 texture uploads require 260 bytes of data
          // despite WebGPU's very strong insistance on 256-byte alignment? Am I tweaking?
@@ -514,7 +526,7 @@ index cd585cca2..53d582240 100644
                  .offset = 0,
              },
          };
-@@ -4417,6 +4596,7 @@ static void WEBGPU_UploadToTexture(SDL_GPUCommandBuffer *copyPass, const SDL_GPU
+@@ -4417,6 +4597,7 @@ static void WEBGPU_UploadToTexture(SDL_GPUCommandBuffer *copyPass, const SDL_GPU
                                              .buffer = (SDL_GPUBuffer *)source->transfer_buffer,
                                              .offset = source->offset,
                                          },
@@ -522,7 +534,7 @@ index cd585cca2..53d582240 100644
                                          destination, cycle);
  }
  
-@@ -4544,6 +4724,11 @@ static void WEBGPU_BeginRenderPass(SDL_GPUCommandBuffer *commandBuffer, const SD
+@@ -4544,6 +4725,11 @@ static void WEBGPU_BeginRenderPass(SDL_GPUCommandBuffer *commandBuffer, const SD
      wrapper->boundGraphicsPipeline = NULL;
      wrapper->hasBoundGraphicsPipeline = false;
  
@@ -534,7 +546,7 @@ index cd585cca2..53d582240 100644
      SDL_free(colorAttachments);
      SDL_free(depthStencilAttachment);
  }
-@@ -4553,20 +4738,33 @@ static void WEBGPU_SetViewport(SDL_GPUCommandBuffer *renderPass, const SDL_GPUVi
+@@ -4553,20 +4739,33 @@ static void WEBGPU_SetViewport(SDL_GPUCommandBuffer *renderPass, const SDL_GPUVi
      wgpuRenderPassEncoderSetViewport(((WebGPUCommandBuffer *)renderPass)->renderPassEncoder, viewport->x, viewport->y, viewport->w, viewport->h, viewport->min_depth, viewport->max_depth);
  }
  
@@ -578,7 +590,7 @@ index cd585cca2..53d582240 100644
  
      // jank and gross but it works
      cmdBuf->vertexStageBinds.currentUniformReadOffsets[slotIndex] = cmdBuf->vertexStageBinds.currentUniformWriteOffsets[slotIndex];
-@@ -4578,16 +4776,7 @@ static void WEBGPU_PushFragmentUniformData(SDL_GPUCommandBuffer *commandBuffer,
+@@ -4578,16 +4777,7 @@ static void WEBGPU_PushFragmentUniformData(SDL_GPUCommandBuffer *commandBuffer,
  {
      WebGPUCommandBuffer *cmdBuf = (WebGPUCommandBuffer *)commandBuffer;
  
@@ -596,7 +608,7 @@ index cd585cca2..53d582240 100644
  
      cmdBuf->fragmentStageBinds.currentUniformReadOffsets[slotIndex] = cmdBuf->fragmentStageBinds.currentUniformWriteOffsets[slotIndex];
      cmdBuf->fragmentStageBinds.currentUniformWriteOffsets[slotIndex] += ALIGN_VALUE(length, 256);
-@@ -4598,16 +4787,7 @@ static void WEBGPU_PushComputeUniformData(SDL_GPUCommandBuffer *commandBuffer, U
+@@ -4598,16 +4788,7 @@ static void WEBGPU_PushComputeUniformData(SDL_GPUCommandBuffer *commandBuffer, U
  {
      WebGPUCommandBuffer *cmdBuf = (WebGPUCommandBuffer *)commandBuffer;
  
@@ -614,7 +626,7 @@ index cd585cca2..53d582240 100644
  
      cmdBuf->computeStageBinds.currentUniformReadOffsets[slotIndex] = cmdBuf->computeStageBinds.currentUniformWriteOffsets[slotIndex];
      cmdBuf->computeStageBinds.currentUniformWriteOffsets[slotIndex] += ALIGN_VALUE(length, 256);
-@@ -4633,9 +4813,13 @@ static void WEBGPU_SetScissor(SDL_GPUCommandBuffer *commandBuffer, const SDL_Rec
+@@ -4633,9 +4814,13 @@ static void WEBGPU_SetScissor(SDL_GPUCommandBuffer *commandBuffer, const SDL_Rec
  
  static bool WEBGPU_WaitAndAcquireSwapchainTexture(SDL_GPUCommandBuffer *command_buffer, SDL_Window *window, SDL_GPUTexture **swapchain_texture, Uint32 *swapchain_texture_width, Uint32 *swapchain_texture_height)
  {
@@ -629,7 +641,7 @@ index cd585cca2..53d582240 100644
          WEBGPU_INTERNAL_Spin();
  
          result = WEBGPU_AcquireSwapchainTexture(command_buffer, window, swapchain_texture, swapchain_texture_width, swapchain_texture_height);
-@@ -4823,48 +5007,80 @@ static void WEBGPU_BindComputeStorageTextures(SDL_GPUCommandBuffer *commandBuffe
+@@ -4823,48 +5008,80 @@ static void WEBGPU_BindComputeStorageTextures(SDL_GPUCommandBuffer *commandBuffe
  
  static void WEBGPU_INTERNAL_BindQueuedGraphicsResources(WebGPUCommandBuffer *cmdBuf)
  {
@@ -735,7 +747,7 @@ index cd585cca2..53d582240 100644
          }
      }
  
-@@ -5168,11 +5384,13 @@ static void WEBGPU_DispatchComputeIndirect(SDL_GPUCommandBuffer *commandBuffer,
+@@ -5168,11 +5385,13 @@ static void WEBGPU_DispatchComputeIndirect(SDL_GPUCommandBuffer *commandBuffer,
  
  static void WEBGPU_INTERNAL_UploadQueuedUniformData(WebGPUCommandBuffer *cmdBuf)
  {
@@ -753,7 +765,7 @@ index cd585cca2..53d582240 100644
      }
  }
  
-@@ -5186,6 +5404,14 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
+@@ -5186,6 +5405,14 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
  
      WEBGPU_INTERNAL_UploadQueuedUniformData(wrapper);
  
@@ -768,7 +780,7 @@ index cd585cca2..53d582240 100644
  #ifdef _MSC_VER
      WGPUCommandBuffer cmdBuf = wgpuCommandEncoderFinish((((WebGPUCommandBuffer *)commandBuffer)->encoder), &(WGPUCommandBufferDescriptor)WGPU_COMMAND_BUFFER_DESCRIPTOR_INIT);
  #else
-@@ -5197,13 +5423,11 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
+@@ -5197,13 +5424,11 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
          return false;
      }
  
@@ -786,7 +798,7 @@ index cd585cca2..53d582240 100644
      wrapper->submitted.fence = WEBGPU_INTERNAL_CreateFence(wrapper->queue);
  
      submitted = SDL_calloc(1, sizeof(*submitted));
-@@ -5212,12 +5436,18 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
+@@ -5212,12 +5437,18 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
      WEBGPU_INTERNAL_InsertElementIntoArray(wrapper->renderer->submittedCommandBuffers, wrapper->renderer->submittedCommandBufferCapacity,
                                             wrapper->renderer->submittedCommandBufferCount, WebGPUSubmittedCommandBuffer *, submitted);
  
@@ -807,7 +819,7 @@ index cd585cca2..53d582240 100644
  #endif
      for (int i = 0; i < wrapper->swapchainTextureCount; i++) {
          WebGPUTextureContainer *container = wrapper->acquiredSwapchainTextures[i];
-@@ -5248,9 +5478,14 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
+@@ -5248,9 +5479,14 @@ static bool WEBGPU_Submit(SDL_GPUCommandBuffer *commandBuffer)
  
  static SDL_GPUFence *WEBGPU_SubmitAndAcquireFence(SDL_GPUCommandBuffer *commandBuffer)
  {
@@ -823,7 +835,7 @@ index cd585cca2..53d582240 100644
  }
  
  static void WEBGPU_DestroyDevice(SDL_GPUDevice *device)
-@@ -5302,6 +5537,12 @@ static void WEBGPU_ReleaseWindow(SDL_GPURenderer *driverData, SDL_Window *window
+@@ -5302,6 +5538,12 @@ static void WEBGPU_ReleaseWindow(SDL_GPURenderer *driverData, SDL_Window *window
          return;
      }
  
@@ -836,7 +848,7 @@ index cd585cca2..53d582240 100644
      // FIXME: This should be done in the video subsystem!
      wgpuSurfaceUnconfigure(windowData->surface);
      wgpuSurfaceRelease(windowData->surface);
-@@ -5392,18 +5633,24 @@ static bool WEBGPU_SupportsSwapchainComposition(SDL_GPURenderer *driverData, SDL
+@@ -5392,18 +5634,24 @@ static bool WEBGPU_SupportsSwapchainComposition(SDL_GPURenderer *driverData, SDL
          return false;
      }
  
@@ -871,7 +883,7 @@ index cd585cca2..53d582240 100644
      }
  
      wgpuSurfaceCapabilitiesFreeMembers(caps);
-@@ -5570,9 +5817,28 @@ static bool WEBGPU_WaitForSwapchain(SDL_GPURenderer *driverData, SDL_Window *win
+@@ -5570,9 +5818,28 @@ static bool WEBGPU_WaitForSwapchain(SDL_GPURenderer *driverData, SDL_Window *win
      return true;
  }
  
