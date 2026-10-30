@@ -12,8 +12,8 @@
  *
  * A file with a hash in startup.json ("versions", tools/web/make_startup_pack.py) is asked for as
  * path?v=<hash>: the page's service worker (sw.js) keeps it on the device under that URL and goes to
- * the server again only when a release changes the file, and so its hash. Without startup.json or a
- * hash, the plain URL.
+ * the server again only when a release changes the file, and so its hash. A file it already keeps is
+ * read from there directly (readKept). Without startup.json or a hash, the plain URL.
  *
  * The downloads run in the mount's worker, except where the page decides (index.html,
  * MuWeb_FilesOnPageThread in WebFileSystem.cpp) that the page's thread runs them: WebKit (Safari,
@@ -126,11 +126,52 @@ addToLibrary({
       }
     }
 
+    // The files the page's service worker keeps on the device (sw.js, FILES): a kept file is read from
+    // there without asking the service worker, which took 1.4 ms a file against 0.65 (Edge, 2026-10-30).
+    // A monster seen for the first time opens some twenty files one after another, and the game's frame
+    // waited for all of them. null where the browser keeps nothing for this page.
+    var keptFiles;
+    function keptFileStore() {
+      if (keptFiles === undefined) {
+        keptFiles = self.caches ? caches.open('mu-web/files').catch(() => null) : Promise.resolve(null);
+      }
+      return keptFiles;
+    }
+
+    // Bytes start..end of a file kept on the device, as download answers them (sw.js byteRange); null
+    // where it isn't kept (yet: the service worker keeps a file a moment after it arrives).
+    async function readKept(url, start, end) {
+      if (url.indexOf('?v=') === -1) {
+        return null;
+      }
+      try {
+        var store = await keptFileStore();
+        var kept = store && await store.match(url);
+        if (!kept) {
+          return null;
+        }
+        var blob = await kept.blob();
+        var size = blob.size;
+        if (start >= size) {
+          return {status: 416, size: size, bytes: null};
+        }
+        var whole = start == 0 && end >= size - 1;
+        var bytes = await (whole ? blob : blob.slice(start, end + 1)).arrayBuffer();
+        return {status: 206, size: size, bytes: new Uint8Array(bytes)};
+      } catch (_e) {
+        return null;
+      }
+    }
+
     // Bytes start..end of a file: {status, size (the whole file's, from Content-Range; -1 without),
     // bytes (where the status is a success)}.
     async function download(url, start, end) {
       if (_MuWeb_FilesOnPageThread()) {
         return askPageThread(url, start, end);
+      }
+      var kept = await readKept(url, start, end);
+      if (kept) {
+        return kept;
       }
       var response = await fetch(url, {headers: {'Range': `bytes=${start}-${end}`}});
       var total = /\/(\d+)$/.exec(response.headers.get('Content-Range') || '');

@@ -11,6 +11,7 @@
  *
  * index.html?nosw removes it from the browser, with the files it kept.
  */
+// The game's file system reads kept files from here itself (fetch-backend.js, readKept): keep the name.
 const FILES = "mu-web/files";
 
 self.addEventListener("install", () => self.skipWaiting());
