@@ -233,11 +233,64 @@
       });
     };
   }
+  // Phones and tablets: the game's picture set up once more after the game sets it up. On a Pixel 9 Pro
+  // XL (Edge 156) opened from the home screen, the game ran and played sound but the screen stayed
+  // black until leaving fullscreen set the canvas up again (2026-10-30). So the page sets it up again
+  // with the game's own settings 1 s and 5 s after each time the game does, and when the page comes
+  // back on screen: right before the game's next frame takes the canvas texture, so no frame is lost.
+  const PICTURE_SETUP_AGAIN_MS = [1000, 5000];
+  const PAGE_SHOWN_SETUP_MS = 300;
+  const canvasSetups = new Map();   // GPUCanvasContext -> the game's configuration
+  const setUpAgain = new Map();     // GPUCanvasContext -> why it is set up again before its next frame
+  let setUpAgainTimers = [];
+  function setUpPictureAgain(reason) {
+    for (const context of canvasSetups.keys()) setUpAgain.set(context, reason);
+  }
+  if (self.GPUCanvasContext && device.kind !== "desktop") {
+    const configure = GPUCanvasContext.prototype.configure;
+    const unconfigure = GPUCanvasContext.prototype.unconfigure;
+    const getCurrentTexture = GPUCanvasContext.prototype.getCurrentTexture;
+    GPUCanvasContext.prototype.configure = function (configuration) {
+      configure.call(this, configuration);
+      canvasSetups.set(this, configuration);
+      setUpAgain.delete(this);
+      appendLog(`Picture set up by the game: ${this.canvas.width}x${this.canvas.height}`);
+      setUpAgainTimers.forEach(clearTimeout);
+      setUpAgainTimers = PICTURE_SETUP_AGAIN_MS.map((ms) => setTimeout(() => setUpPictureAgain(`${ms / 1000} s after the game`), ms));
+    };
+    if (unconfigure) {
+      GPUCanvasContext.prototype.unconfigure = function () {
+        canvasSetups.delete(this);
+        setUpAgain.delete(this);
+        return unconfigure.call(this);
+      };
+    }
+    GPUCanvasContext.prototype.getCurrentTexture = function () {
+      const reason = setUpAgain.get(this);
+      if (reason !== undefined) {
+        setUpAgain.delete(this);
+        try {
+          configure.call(this, canvasSetups.get(this));
+          appendLog(`Picture set up again (${reason}): ${this.canvas.width}x${this.canvas.height}`);
+        } catch (e) {
+          appendLog(`Picture not set up again (${reason}): ${e && e.message || e}`, true);
+        }
+      }
+      return getCurrentTexture.call(this);
+    };
+    document.addEventListener("visibilitychange", () => {
+      appendLog(`Page ${document.visibilityState}`);
+      if (document.visibilityState === "visible") setTimeout(() => setUpPictureAgain("page shown"), PAGE_SHOWN_SETUP_MS);
+    });
+  }
   window.muGpuErrors = () =>
     [...gpuErrors].map(([message, e]) => `(×${e.count}) ${message}`).join("\n\n") || "no WebGPU errors";
   document.getElementById("toggle-log").onclick = () => { logEl.hidden = !logEl.hidden; };
+  const displayMode = ["fullscreen", "standalone", "minimal-ui", "browser"]
+    .find((mode) => matchMedia(`(display-mode: ${mode})`).matches) || "unknown";
   appendLog(`Device: ${device.kind} (${device.reason}); screen ${screen.width}x${screen.height} CSS px, ` +
-            `${devicePixelRatio} device px each, ${navigator.maxTouchPoints} touch points`);
+            `${devicePixelRatio} device px each, ${navigator.maxTouchPoints} touch points; ` +
+            `display ${displayMode}, page ${document.visibilityState}`);
   const stage = document.getElementById("stage");
   const footer = document.querySelector("footer");
   // Phones put the whole page on the screen, the menu button too, and turn it sideways: browsers lock
