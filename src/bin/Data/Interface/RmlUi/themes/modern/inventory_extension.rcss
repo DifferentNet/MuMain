@@ -182,3 +182,44 @@
 /* The grid's clicks are native (CInventoryCtrl), so the placed panel takes no pointer events; its
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode), as the legacy theme
+   lays it out: the full 432 height of the dock, 42 px cells, the four grids stacked in
+   #grid_viewport two at a time (item_grid.rcss pages them, a whole page of two grids per tap:
+   data-grid-rows-kept="0"), a locked page standing in its grid's place; the paging and exit buttons
+   down the right side. */
+@media (theme: mobile) {
+	#panel { --item-cell: 42px; width: 420px; height: 432px; }
+	.bg-panel { width: 100%; height: 432px; }
+	/* The first grid's first cell at (16, 48); the grids flow one under the other. */
+	#grid_viewport { left: 10px; top: 42px; }
+	#grid_viewport .item-grid { position: relative; left: 0; top: 0; }
+	#grid_viewport #item_view { height: calc(16 * var(--item-cell) + 12px); }
+	#grid_viewport #item_grid_1_counts { left: 6px; top: 6px; }
+	#grid_viewport #item_grid_2_counts { left: 6px; top: calc(6px + 4 * var(--item-cell)); }
+	#grid_viewport #item_grid_3_counts { left: 6px; top: calc(6px + 8 * var(--item-cell)); }
+	#grid_viewport #item_grid_4_counts { left: 6px; top: calc(6px + 12 * var(--item-cell)); }
+
+	/* A locked page: a grid's height, its table art a little wider than the cells, its number big. */
+	#grid_viewport .ext-locked-page {
+		position: relative;
+		left: 0;
+		top: 0;
+		margin-left: -6px;
+		width: calc(8 * var(--item-cell) + 12px);
+		height: calc(4 * var(--item-cell));
+	}
+	#grid_viewport .ext-locked-empty { left: 6px; top: 0; width: calc(8 * var(--item-cell)); height: calc(4 * var(--item-cell)); }
+	#grid_viewport .ext-locked-badge {
+		left: calc(6px + 4 * var(--item-cell) - 22px);
+		top: calc(2 * var(--item-cell) - 24px);
+		width: 44px;
+		height: 48px;
+		line-height: 48px;
+		font-size: 22px;
+	}
+
+	.grid-scroll-up { left: 364px; top: 48px; }
+	.grid-scroll-down { left: 364px; top: calc(48px + 8 * var(--item-cell) - 44px); }
+	.ext-btn-exit { left: 364px; top: 104px; }
+}

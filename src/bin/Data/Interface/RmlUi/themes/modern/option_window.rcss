@@ -694,3 +694,35 @@
 	font-size: 12dp;
 	color: token(semantic-warning);
 }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): after the short-screen
+   rules above, the screen keeps narrow margins and gets larger text, finger-sized rows, rail entries,
+   toggles, slider thumbs, dropdowns and close cross. The page scrolls under a finger
+   (Render::RmlUi::RmlTouchScroll). */
+@media (theme: mobile) {
+	.opt-shell { left: 2%; right: 2%; top: 3%; bottom: 3%; }
+	.opt-header { height: 44dp; }
+	.opt-close { width: 48dp; height: 44dp; }
+	.opt-close-bar { left: 12dp; top: 21dp; width: 24dp; height: 3dp; }
+	.opt-body { margin-top: 8dp; }
+	.opt-nav { width: 160dp; margin-right: 12dp; }
+	.opt-nav-item { height: 46dp; line-height: 46dp; padding-left: 12dp; font-size: 15dp; letter-spacing: 1dp; }
+	.opt-scroll { padding: 10dp 14dp; }
+	.opt-row { height: 52dp; }
+	.opt-label { font-size: 15dp; line-height: 18dp; }
+	.opt-value { width: 58dp; font-size: 15dp; }
+	.opt-section { font-size: 14dp; }
+	.opt-toggle { width: 52dp; height: 28dp; border-radius: 15dp; }
+	.opt-toggle-knob { width: 22dp; height: 22dp; border-radius: 11dp; }
+	.opt-toggle.checked .opt-toggle-knob { left: 26dp; }
+	.opt-slider { height: 8dp; border-radius: 4dp; }
+	.opt-slider-thumb { right: -12dp; top: -8dp; width: 24dp; height: 24dp; border-radius: 12dp; }
+	.opt-slider-hit { top: -18dp; bottom: -18dp; }
+	.option-dropdown, .option-dropdown-value { height: 40dp; }
+	.option-dropdown-value { line-height: 38dp; font-size: 15dp; }
+	.option-dropdown-option { height: 40dp; line-height: 40dp; font-size: 15dp; }
+	.opt-row-tip { font-size: 13dp; }
+	.opt-footer { height: 40dp; margin-top: 6dp; }
+	.opt-footer-action { padding: 8dp 14dp; }
+	.opt-footer-label { font-size: 15dp; }
+}

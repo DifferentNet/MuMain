@@ -552,3 +552,9 @@ input, select, textarea, .btn, [data-event-click] { drag: block; }
 	pointer-events: auto;
 	z-index: 1;
 }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): the corner close a
+   finger can hit, over the frame's whole corner. */
+@media (theme: mobile) {
+	#frame_corner_close { top: 0; right: 0; width: 44px; height: 40px; }
+}

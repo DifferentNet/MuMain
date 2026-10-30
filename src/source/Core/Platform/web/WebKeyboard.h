@@ -18,4 +18,8 @@ void HideKeyboard();
 // password keyboard when the field is one. ShowKeyboard can't always tell: RmlUi activates the
 // keyboard while it still moves the focus to the field.
 void SyncKeyboard(bool textFieldFocused, bool password);
+
+// While a gamepad is in use its own on-screen keyboard types (UI/HUD/PadKeyboard): the phone's stays
+// down, and comes up for the field that has the keys once the pad is put down.
+void HoldBackKeyboard(bool heldBack);
 } // namespace mu::web

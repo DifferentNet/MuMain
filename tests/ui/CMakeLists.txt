@@ -115,6 +115,13 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME pad_keyboard_layout_tests
+    SOURCES
+        test_pad_keyboard_layout.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/HUD/PadKeyboardLayout.cpp
+)
+
+mu_add_test(
     NAME rml_stacking_order_tests
     SOURCES
         test_rml_stacking_order.cpp
@@ -233,6 +240,12 @@ mu_add_test(
 mu_add_test(
     NAME rml_draggable_tests
     SOURCES test_rml_draggable.cpp
+    LINK_LIBS MuClient
+)
+
+mu_add_test(
+    NAME rml_touch_scroll_tests
+    SOURCES test_rml_touch_scroll.cpp
     LINK_LIBS MuClient
 )
 

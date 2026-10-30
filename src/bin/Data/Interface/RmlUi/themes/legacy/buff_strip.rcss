@@ -233,3 +233,9 @@
 	pointer-events: auto;
 	/* decorator set per-instance via data-style-decorator (buff_strip.rml). */
 }
+
+/* MU Moldova: the phone's own HUD (theme flag "mobile-hud", UI::Mobile::InterfaceMode) has the
+   touch controls' top row here (touch_controls.rcss #tc_quick, down to 34dp): buffs go under it. */
+@media (theme: mobile-hud) {
+	#panel { top: 40dp; }
+}

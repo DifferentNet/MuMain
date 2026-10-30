@@ -46,3 +46,77 @@
 /* Footer. Labels centred on their button (mu_helper_common.rcss lifts them one unit). */
 #btn_save, #btn_save_label { left: 120px; top: 388px; }
 #btn_init, #btn_init_label { left: 65px;  top: 388px; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode), the legacy theme's
+   phone layout in this theme's pieces: the panel 300 units wide beside the 640-unit config window
+   with 13 px text, each pane the panel's width (taller where it holds more, .mh-pane-tall), the
+   condition radios in one column, long labels on two lines, a whole check row a finger's target (the
+   row carries the click), the gauges half as large again (the level follows the drawn bar, so the
+   scale keeps the reading true), and Save and Initialization the panel's width. */
+@media (theme: mobile) {
+	#panel { width: 300px; }
+	#panel .mh-text { font-size: 13px; }
+	#panel .mh-title { width: 300px; font-size: 15px; }
+
+	/* --- Panes: 264 wide and 96 tall (140 when tall), the header tab 180 wide --- */
+	#pane_top, #pane_heal_support { left: 18px; top: 44px; }
+	#pane_lower { left: 18px; top: 146px; }
+	#pane_buff_support_elf { left: 18px; top: 190px; }
+	.mh-pane { width: 264px; }
+	.mh-pane .p-tab { width: 180px; }
+	.mh-pane .p-body { width: 264px; height: 78px; }
+	.mh-pane-tall .p-body, .mh-pane-h70 .p-body { height: 122px; }
+	.mh-pane .mh-text { width: 166px; }
+
+	/* --- Check rows: a bigger box, the whole row a finger's target --- */
+	#panel .mh-check { width: 236px; height: 24px; cursor: pointer; }
+	#panel .mh-check .checkbox-box { left: 2px; top: 2px; width: 18px; height: 18px; }
+	#panel .mh-check.mh-radio .checkbox-box { border-radius: 9px; }
+	#panel .mh-check .checkbox-label { left: 26px; top: 3px; width: 210px; }
+	#panel #party_heal, #panel #party_duration, #panel #party_duration_elf { height: 36px; }
+	#party_heal .checkbox-label, #party_duration .checkbox-label, #party_duration_elf .checkbox-label,
+	#time_space, #time_space_elf { white-space: normal; }
+
+	/* --- Activation condition: the two monster rows, then the four counts in one column --- */
+	#precon_range     { left: 30px; top: 74px; }
+	#precon_attacking { left: 30px; top: 104px; }
+	#subcon_two       { left: 30px; top: 176px; }
+	#subcon_three     { left: 30px; top: 204px; }
+	#subcon_four      { left: 30px; top: 232px; }
+	#subcon_five      { left: 30px; top: 260px; }
+
+	/* --- Gauges: bar and fill scaled together from their shared origin, the label under them --- */
+	.mh-gauge, .mh-gauge-fill { transform: scale(1.5); transform-origin: left top; }
+	.mh-gauge-hit { top: -6px; bottom: -6px; }
+	#gauge_potion, #gauge_potion_fill { left: 36px; top: 76px; }
+	#gauge_potion_label               { left: 36px; top: 106px; }
+	#gauge_heal, #gauge_heal_fill     { left: 36px; top: 178px; }
+	#gauge_heal_label                 { left: 36px; top: 208px; }
+	#gauge_party_heal, #gauge_party_heal_fill { left: 36px; top: 114px; }
+	#gauge_party_heal_label                   { left: 36px; top: 144px; }
+	#gauge_potion_label, #gauge_heal_label, #gauge_party_heal_label { width: 186px; }
+
+	/* --- Party support: the check over two lines, the interval's name, then its field --- */
+	#party_duration { left: 30px; top: 72px; }
+	#time_space     { left: 56px; top: 114px; }
+	#buff_plate     { left: 56px; top: 150px; }
+	#buff_interval  { left: 60px; top: 152px; }
+	#buff_unit      { left: 92px; top: 154px; }
+	#party_heal         { left: 30px; top: 72px; }
+	#party_duration_elf { left: 30px; top: 218px; }
+	#time_space_elf     { left: 56px; top: 260px; }
+	#buff_plate_elf     { left: 56px; top: 296px; }
+	#buff_interval_elf  { left: 60px; top: 298px; }
+	#buff_unit_elf      { left: 92px; top: 300px; }
+	#time_space, #time_space_elf { width: 216px; }
+	.mh-number-plate { width: 30px; height: 22px; }
+	#panel .mh-field { width: 24px; height: 18px; font-size: 13px; }
+
+	/* --- Footer: Save the panel's width, Initialization beside the close button --- */
+	#btn_save, #btn_save_label { left: 18px; top: 346px; }
+	#btn_init, #btn_init_label { left: 54px; top: 384px; }
+	.mh-btn-igs, .mh-btn-label-igs { height: 30px; line-height: 30px; }
+	#btn_save, #btn_save_label { width: 264px; }
+	#btn_init, #btn_init_label { width: 228px; }
+	#btn_exit { left: 18px; top: 384px; width: 30px; height: 30px; line-height: 30px; }
+}

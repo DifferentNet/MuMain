@@ -5,6 +5,8 @@
 #include "stdafx.h"
 #include "Core/Input/KeyState.h"
 #include "Core/Input/SyntheticInput.h"
+#include "Core/Input/TouchInput.h"
+#include "Core/Platform/GameWindow.h"
 #include <cstdio>
 #include <string>
 #include <vector>
@@ -55,7 +57,9 @@ FrameTimingState g_frameTiming;
 #include "Network/Server/ServerListManager.h"
 #include "UI/Core/WindowSystem.h"
 #include "Engine/Object/ZzzInterface.h"
+#include "UI/HUD/GamepadControls.h"
 #include "UI/HUD/Notices.h"
+#include "UI/HUD/TouchControls.h"
 #include "I18N/All.h"
 #include "Engine/AI/ZzzAI.h"
 #include "App/Platform/Windows/Winmain.h"
@@ -498,10 +502,16 @@ void UpdateSceneState()
     // Scripted input advances here, once per rendered frame, so the scan
     // below sees an injected key or click exactly as it sees a device.
     Core::Input::Synthetic::BeginFrame();
+    // Likewise a key a touch control tapped, and a finger held still long enough for a right click.
+    Core::Input::Touch::BeginFrame(Core::Platform::GameWindow());
     g_pNewKeyInput->ScanAsyncKeyState();
     g_dwMouseUseUIID = 0;
 
     UpdateActiveScene();
+    // A gamepad presses the on-screen controls' buttons and plays the mouse; then the joystick and
+    // buttons of phones and tablets (and the pad's presses) act on what the scene just moved.
+    UI::HUD::GamepadControls::Update();
+    UI::HUD::TouchControls::Update();
     UI::Notices::Move();
     Scenes::LoginOverlay::HideOutsideLoginScene();
     HandleScreenshotCapture();

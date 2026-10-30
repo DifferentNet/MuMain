@@ -242,3 +242,52 @@
 
 /* The native text size, counter-scaled out of the panel's scale. */
 #panel { font-size: calc(var(--text-px) / var(--root-scale)); }
+
+/* The phone view: the window widens so its tabs and lines read at the native text size (which does not
+   shrink with the panel); the frame tiles (docked_panel_frame.rcss), each tab is its own piece of the
+   tab art (ninepatch), the quest rows and the buttons grow to finger size. */
+@spritesheet myquest-phone-tab-sheet { src: "../../../Quest_tab01.tga"; myquest-phone-tab: 0px 0px 48px 22px; myquest-phone-tab-inner: 8px 6px 32px 10px; }
+@spritesheet myquest-phone-tab-on-sheet { src: "../../../Quest_tab02.tga"; myquest-phone-tab-on: 0px 0px 48px 22px; myquest-phone-tab-on-inner: 8px 6px 32px 10px; }
+@media (theme: mobile) {
+	#panel { width: 280px; }
+	.frame-top { decorator: tiled-horizontal(docked-phone-top-b-l, docked-phone-top-b-c, docked-phone-top-b-r); }
+	.frame-bottom { decorator: tiled-horizontal(docked-phone-bottom-l, docked-phone-bottom-c, docked-phone-bottom-r); }
+	#title { width: calc(280px * var(--root-scale)); }
+
+	.tab-row { left: 12px; top: 26px; width: 256px; height: 28px; decorator: none; }
+	.tab-btn-quest { left: 0; }
+	.tab-btn-jobchange { left: 78px; }
+	.tab-btn-castletemple { left: 156px; }
+	.tab-btn, .tab-btn-quest.active, .tab-btn-jobchange.active, .tab-btn-castletemple.active {
+		decorator: ninepatch(myquest-phone-tab, myquest-phone-tab-inner);
+	}
+	.tab-btn-quest.active, .tab-btn-jobchange.active, .tab-btn-castletemple.active {
+		decorator: ninepatch(myquest-phone-tab-on, myquest-phone-tab-on-inner);
+	}
+	#tab_quest, #tab_jobchange { width: calc(76px * var(--root-scale)); }
+	#tab_castletemple { width: calc(100px * var(--root-scale)); }
+	#tab_quest, #tab_jobchange, #tab_castletemple {
+		height: calc(28px * var(--root-scale));
+		line-height: calc(28px * var(--root-scale));
+	}
+
+	.quest-tab, .jobchange-tab, .castletemple-tab { width: 262px; }
+	.quest-empty-msg { width: calc(247px * var(--root-scale)); }
+	.quest-list { width: calc(262px * var(--root-scale)); }
+	.quest-row {
+		height: calc(26px * var(--root-scale));
+		line-height: calc(26px * var(--root-scale));
+		border-bottom-width: calc(1px * var(--root-scale));
+		border-bottom-color: rgba(255, 255, 255, 28);
+	}
+	.quest-divider { width: 262px; }
+	.quest-contents { width: calc(262px * var(--root-scale)); }
+	#reward_popup_anchor { left: 140px; }
+	.jobchange-title, .jobchange-contents, .castle-block, .temple-block { width: calc(262px * var(--root-scale)); }
+	.jobchange-state { width: calc(248px * var(--root-scale)); }
+
+	/* The buttons spread out so their larger hit areas do not overlap. */
+	.quest-btn { margin: -6px; padding: 6px; }
+	.quest-btn-open { left: 64px; decorator: image(myquest-btn-open) content-box; }
+	.quest-btn-giveup { left: 114px; decorator: image(myquest-btn-giveup) content-box; }
+}

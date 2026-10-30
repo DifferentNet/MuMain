@@ -18,10 +18,29 @@
 #include "UI/RmlBridge/RmlTooltip.h"
 #include "UI/Tooltip/LegacyTextListTooltip.h"
 
+#include <RmlUi/Core/ComputedValues.h>
 #include <RmlUi/Core/ElementDocument.h>
 
 using namespace SEASON3B;
 using namespace mu::ui::window;
+
+namespace
+{
+// A theme's box around a grid that may show only some of its rows (the phone view's 15-row shop).
+constexpr const char* GridViewportClass = "item-grid-viewport";
+
+// The grid's viewport when it clips (any overflow but visible), else null.
+Rml::Element* ClippingViewport(Rml::Element& grid)
+{
+    for (Rml::Element* ancestor = grid.GetParentNode(); ancestor != nullptr; ancestor = ancestor->GetParentNode())
+    {
+        if (!ancestor->IsClassSet(GridViewportClass))
+            continue;
+        return ancestor->GetComputedValues().overflow_y() != Rml::Style::Overflow::Visible ? ancestor : nullptr;
+    }
+    return nullptr;
+}
+} // namespace
 
 POINT UI::Items::Drag::PickupOffset(int itemLeft, int itemTop, int itemWidth, int itemHeight,
                                     int pointerX, int pointerY, bool preserveAnchor)
@@ -177,6 +196,14 @@ POINT mu::ui::window::CPickedItem::TopLeftIn(const CInventoryCtrl* grid, int poi
     return {left, top};
 }
 
+POINT mu::ui::window::CPickedItem::DropPointIn(const CInventoryCtrl* grid, int pointerX, int pointerY) const
+{
+    const UI::Items::GridGeometry geometry = grid ? grid->Geometry() : UI::Items::GridGeometry{};
+    const POINT topLeft = TopLeftIn(grid, pointerX, pointerY);
+    return {topLeft.x + static_cast<LONG>(geometry.PitchX() / 2.f),
+            topLeft.y + static_cast<LONG>(geometry.PitchY() / 2.f)};
+}
+
 SIZE mu::ui::window::CPickedItem::SizeIn(const CInventoryCtrl* grid) const
 {
     if (m_pPickedItem == nullptr)
@@ -214,9 +241,9 @@ bool mu::ui::window::CPickedItem::GetTargetPos(CInventoryCtrl* pDest, int& iTarg
     if (pDest != nullptr)
     {
         const POINT pointer = pDest->PointerPos();
-        const POINT itemTopLeft = TopLeftIn(pDest, pointer.x, pointer.y);
+        const POINT dropPoint = DropPointIn(pDest, pointer.x, pointer.y);
 
-        return pDest->GetSquarePosAtPt(itemTopLeft.x, itemTopLeft.y, iTargetColumnX, iTargetRowY);
+        return pDest->GetSquarePosAtPt(dropPoint.x, dropPoint.y, iTargetColumnX, iTargetRowY);
     }
     return false;
 }
@@ -1134,7 +1161,8 @@ void mu::ui::window::CInventoryCtrl::UpdateCells()
     const ITEM_ATTRIBUTE* pItemAttr = &ItemAttribute[pPickItem->Type];
     int iColumnX = 0, iRowY = 0;
     int nItemColumn = pItemAttr->Width, nItemRow = pItemAttr->Height;
-    m_Geometry.CellOf(static_cast<float>(itemTopLeft.x), static_cast<float>(itemTopLeft.y), iColumnX, iRowY);
+    const POINT dropPoint = ms_pPickedItem->DropPointIn(this, pointer.x, pointer.y);
+    m_Geometry.CellOf(static_cast<float>(dropPoint.x), static_cast<float>(dropPoint.y), iColumnX, iRowY);
 
     bool bWarning = false;
     if (iColumnX < 0 && iColumnX >= -nItemColumn)
@@ -1217,6 +1245,11 @@ bool UI::Items::DrawnGridGeometry(Rml::Element* grid, int columns, int rows, flo
         }
     }
     geometry = {offset.x, offset.y, pitchX, pitchY, columns, rows};
+    Rml::Vector2f visibleOffset;
+    Rml::Vector2f visibleSize;
+    if (Rml::Element* viewport = ClippingViewport(*grid);
+        viewport != nullptr && UI::RmlBridge::DrawnBox(*viewport, Rml::BoxArea::Padding, visibleOffset, visibleSize))
+        geometry.SetVisibleRect({visibleOffset.x, visibleOffset.y, visibleSize.x, visibleSize.y});
     return true;
 }
 

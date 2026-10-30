@@ -42,14 +42,60 @@ void AddKeyFunctionLines(std::vector<UI::Help::PageLine>& lines)
     for (int i = kFunctionKeyTextsBeforeExtras; i < kShippedKeyTextCount; ++i)
         AddText(lines, I18N::Game::Lookup(kFirstFunctionKeyText + i));
 }
+
+void AddTouchControlLines(std::vector<UI::Help::PageLine>& lines)
+{
+    const wchar_t* const touchLines[] = {
+        I18N::Game::TouchHelpWorld,   I18N::Game::TouchHelpStick,  I18N::Game::TouchHelpAttack,
+        I18N::Game::TouchHelpSkills,  I18N::Game::TouchHelpPickUp, I18N::Game::TouchHelpAuto,
+        I18N::Game::TouchHelpPotions, I18N::Game::TouchHelpMenu,   I18N::Game::TouchHelpItem,
+        I18N::Game::TouchHelpDrag,    I18N::Game::TouchHelpView,
+    };
+    for (const wchar_t* line : touchLines)
+        AddText(lines, line);
+}
+
+void AddGamepadLines(std::vector<UI::Help::PageLine>& lines)
+{
+    const wchar_t* const padLines[] = {
+        I18N::Game::PadHelpSticks,    I18N::Game::PadHelpAttack,  I18N::Game::PadHelpSkills,
+        I18N::Game::PadHelpSkillList, I18N::Game::PadHelpBack,    I18N::Game::PadHelpPickUp,
+        I18N::Game::PadHelpPotions,   I18N::Game::PadHelpClick,   I18N::Game::PadHelpMenu,
+        I18N::Game::PadHelpKeyboard,  I18N::Game::PadHelpScreens,
+    };
+    for (const wchar_t* line : padLines)
+        AddText(lines, line);
+}
+
+void AddDeviceSections(std::vector<UI::Help::PageLine>& lines, UI::Help::Devices devices)
+{
+    if (devices.touchControls)
+    {
+        AddText(lines, I18N::Game::TouchHelpTitle, true);
+        AddHalfSpacer(lines);
+        AddTouchControlLines(lines);
+    }
+    if (devices.touchControls && devices.gamepad)
+        AddHalfSpacer(lines);
+    if (devices.gamepad)
+    {
+        AddText(lines, I18N::Game::PadHelpTitle, true);
+        AddHalfSpacer(lines);
+        AddGamepadLines(lines);
+    }
+}
 } // namespace
 
-std::vector<UI::Help::PageLine> UI::Help::BuildPage(int page)
+std::vector<UI::Help::PageLine> UI::Help::BuildPage(int page, Devices devices)
 {
     std::vector<PageLine> lines;
     AddHalfSpacer(lines);
 
-    if (page == KeyFunctionPage)
+    if (page == KeyFunctionPage && (devices.touchControls || devices.gamepad))
+    {
+        AddDeviceSections(lines, devices);
+    }
+    else if (page == KeyFunctionPage)
     {
         AddText(lines, I18N::Game::KeyFunction, true);
         AddHalfSpacer(lines);

@@ -85,3 +85,19 @@
 
 /* A theme's data-fit="fill" slot sizes #panel (class fill-placement), its border included. */
 #panel.fill-placement { box-sizing: border-box; }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the exit button a finger can hit. The sprite stays
+   where every window puts it (the negative margin takes back the padding) and only the box round it
+   grows; the decorator paints the content box alone. */
+/* The phone view's wider docked windows (character, quests, party): the frame's ends keep their art and
+   its plain middle repeats (tiled-horizontal), so the frame stays undistorted at any width. A window's
+   phone block widens #panel and puts these on .frame-top / .frame-bottom. */
+@spritesheet docked-phone-top-b-sheet { src: "../../../newui_item_back01.tga"; docked-phone-top-b-l: 0px 0px 60px 64px; docked-phone-top-b-c: 90px 0px 10px 64px; docked-phone-top-b-r: 130px 0px 60px 64px; }
+@spritesheet docked-phone-bottom-sheet { src: "../../../newui_item_back03.tga"; docked-phone-bottom-l: 0px 0px 50px 45px; docked-phone-bottom-c: 90px 0px 10px 45px; docked-phone-bottom-r: 140px 0px 50px 45px; }
+@media (theme: mobile) {
+	#btn_exit {
+		margin: -8px;
+		padding: 8px;
+		decorator: image(docked-exit-btn) content-box;
+	}
+}

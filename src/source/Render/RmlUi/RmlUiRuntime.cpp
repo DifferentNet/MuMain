@@ -191,6 +191,7 @@ void RmlUiRuntime::Destroy()
         m_Hooks.beforeDestroy();
     Core::Input::Synthetic::CancelDelivery();
     Core::Input::SetUiInputConsumer(nullptr);
+    m_TouchScroll.Reset();
     mu::GetRenderer().SetPreSubmitCallback(nullptr);
 
     // Clears RmlUi's global registration before Shutdown() tears down contexts/documents/elements
@@ -340,6 +341,26 @@ void RmlUiRuntime::CancelSyntheticMousePress(unsigned char button, SDL_Window* w
         SDL_GetMouseState(&x, &y);
         m_Context->ProcessMouseMove(static_cast<int>(x), static_cast<int>(y), RmlSDL::GetKeyModifierState());
     }
+}
+
+bool RmlUiRuntime::BeginTouchScroll(float x, float y)
+{
+    return m_TouchScroll.Begin(m_Context, {x, y});
+}
+
+void RmlUiRuntime::MoveTouchScroll(float fromX, float fromY, float toX, float toY)
+{
+    m_TouchScroll.Move({fromX, fromY}, {toX, toY});
+}
+
+void RmlUiRuntime::EndTouchScroll(float x, float y, float velocityX, float velocityY)
+{
+    m_TouchScroll.End({x, y}, {velocityX, velocityY});
+}
+
+bool RmlUiRuntime::StopTouchScrollGlide()
+{
+    return m_TouchScroll.StopGlide();
 }
 
 bool RmlUiRuntime::IsMouseOverUI() const

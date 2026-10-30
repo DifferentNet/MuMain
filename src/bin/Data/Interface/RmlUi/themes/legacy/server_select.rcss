@@ -109,3 +109,12 @@
 	color: token(text-secondary);
 	white-space: normal;
 }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode) gives the server buttons more room, for fingers. */
+@media (theme: mobile) {
+	#panel { width: 470rem; }
+	#group_col { width: 170rem; gap: 8rem; }
+	#server_col { width: 280rem; gap: 8rem; }
+	.group-btn { width: 160rem; height: 44rem; line-height: 44rem; }
+	.server-row { width: 260rem; height: 44rem; line-height: 44rem; }
+}

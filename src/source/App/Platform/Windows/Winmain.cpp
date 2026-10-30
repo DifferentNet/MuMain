@@ -1,9 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
+#include "Core/Input/GamepadInput.h"
+#include "Core/Input/GamepadPointer.h"
 #include "Core/Input/KeyState.h"
 #include "Core/Utilities/FrameProfiler.h"
 #include "Core/Input/SyntheticInput.h"
+#include "Core/Input/TouchInput.h"
 #include "Core/Platform/GameWindow.h"
 #include "Core/Input/UiInputRouter.h"
 #include "App/Control/ControlServer.h"
@@ -37,6 +40,7 @@
 #include "Render/Look/LookProfileSetting.h"
 #include "Render/Look/TuningSetting.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
+#include "UI/Mobile/InterfaceMode.h"
 #include "UI/RmlBridge/RmlRuntimeHooks.h"
 #include "Engine/Object/ZzzOpenData.h"
 #include "Scenes/SceneCore.h"
@@ -1778,6 +1782,8 @@ MSG MainLoop()
                 continue;
             }
 #endif
+            // Pads coming and going, their buttons and sticks, and which device was used last.
+            Core::Input::Gamepad::ProcessEvent(event);
             switch (event.type)
             {
             case SDL_EVENT_QUIT:
@@ -1798,6 +1804,13 @@ MSG MainLoop()
                 RouteActionInput(event, false, propagates);
                 break;
             }
+            case SDL_EVENT_FINGER_DOWN:
+            case SDL_EVENT_FINGER_MOTION:
+            case SDL_EVENT_FINGER_UP:
+            case SDL_EVENT_FINGER_CANCELED:
+                // On a phone or tablet the fingers drive the touch controls and the pointer (TouchInput.h).
+                Core::Input::Touch::ProcessEvent(event, g_sdlWindow);
+                break;
             case SDL_EVENT_MOUSE_WHEEL:
                 if (Core::Input::RouteToUi(event, g_sdlWindow))
                 {
@@ -1824,6 +1837,11 @@ MSG MainLoop()
                 break;
 #endif
             case SDL_EVENT_WINDOW_FOCUS_LOST:
+                // A finger's touch never ends once the page loses focus, nor does a pad's press: let go
+                // of what fingers and the pad hold.
+                Core::Input::Touch::Reset();
+                Core::Input::Gamepad::Reset();
+                Core::Input::Gamepad::Pointer::Release(g_sdlWindow);
                 HandleFocusChange(false);
                 break;
             case SDL_EVENT_WINDOW_MINIMIZED:
@@ -1914,6 +1932,7 @@ MSG MainLoop()
                 Render::Look::ApplyPendingTuning();
 #ifdef __EMSCRIPTEN__
                 MuWebFollowPageSize();
+                UI::Mobile::FollowPage();
                 MuWebFollowLowestQuality();
                 if (const Rml::Element* field = RmlUiRuntime::Instance().GetFocusedTextField())
                     mu::web::SyncKeyboard(true, field->GetAttribute<Rml::String>("type", "") == "password");
@@ -2432,6 +2451,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
         MessageBox(nullptr, L"Windows aplication error!", L"Aplication Error", MB_ICONERROR);
         return 0;
     }
+    // Game controllers (an Xbox pad, a Steam Deck): UI/HUD/GamepadControls plays them.
+    Core::Input::Gamepad::Init();
 
 #ifndef _WIN32
     // Install POSIX crash-diagnostic signal handlers. After SDL_Init (R8
@@ -2533,6 +2554,9 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     // SDL_GPUDevice/SDL_Window from mu::GetRenderer() (GetDevice()/GetWindow()).
     UI::RmlBridge::InstallRuntimeHooks();
     RmlUiRuntime::Instance().Create(WindowWidth, WindowHeight);
+    // The phone or PC layout and the controls (Options -> Interface; by default a phone or tablet gets
+    // the phone layout, and its fingers drive the on-screen controls and the pointer).
+    UI::Mobile::Apply();
 
     // Content that must always sit visually on top of RmlUi, regardless of theme: the game
     // cursor, and (login/character scenes specifically) CLoginWin's, CCharMakeWin's, and

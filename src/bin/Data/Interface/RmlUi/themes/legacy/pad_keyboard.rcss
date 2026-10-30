@@ -1,0 +1,132 @@
+/* Legacy theme for the gamepad's on-screen keyboard (pad_keyboard.rml): a dark panel at the screen's
+   foot (its top with .pk-top), the field's text over the keys, the key the pad is on in gold. Only
+   the pad works it: nothing here takes the pointer. */
+
+#pk_panel, #pk_panel * {
+	pointer-events: none;
+}
+
+#pk_panel {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 8dp;
+	width: 700dp;
+	max-width: 98%;
+	margin: 0 auto;
+	padding: 8dp;
+	box-sizing: border-box;
+	border: 1dp token(border-control);
+	border-radius: 6dp;
+	background-color: rgba(0, 0, 0, 242);
+	color: token(text-primary);
+	font-family: "token(font-body)";
+	font-effect: shadow(0dp 1dp #000000);
+}
+body.pk-top #pk_panel {
+	top: 8dp;
+	bottom: auto;
+}
+/* The number pad. */
+body.pk-digits #pk_panel {
+	width: 340dp;
+}
+
+/* The field's text, the cursor between its two halves. */
+#pk_line {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	height: 32dp;
+	margin-bottom: 6dp;
+	padding: 0 8dp;
+	box-sizing: border-box;
+	overflow: hidden;
+	border: 1dp token(border-control);
+	border-radius: 4dp;
+	background-color: rgba(255, 255, 255, 16);
+	font-size: 16dp;
+}
+.pk-text {
+	white-space: pre;
+	line-height: 30dp;
+}
+#pk_caret {
+	width: 2dp;
+	height: 20dp;
+	margin: 0 1dp;
+	background-color: token(accent-gold);
+}
+
+.pk-row {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	height: 42dp;
+}
+.pk-key {
+	position: relative;
+	height: 42dp;
+	padding: 2dp;
+	box-sizing: border-box;
+}
+/* RmlUi has no default display: a div is inline until it is told otherwise. */
+.pk-cap {
+	display: block;
+	height: 38dp;
+	box-sizing: border-box;
+	border: 1dp rgba(255, 255, 255, 60);
+	border-radius: 4dp;
+	background-color: rgba(255, 255, 255, 24);
+	text-align: center;
+	font-size: 17dp;
+	line-height: 36dp;
+	white-space: nowrap;
+}
+/* Shift, Backspace, the page keys and the rest. */
+.pk-key.pk-action .pk-cap {
+	background-color: rgba(255, 255, 255, 10);
+	font-size: 14dp;
+}
+.pk-key.pk-icon .pk-cap {
+	font-family: "DejaVu Sans";
+	font-size: 19dp;
+}
+.pk-key.pk-on .pk-cap {
+	color: token(accent-gold);
+}
+.pk-key.pk-locked .pk-cap {
+	border-color: rgba(255, 210, 60, 160);
+}
+/* The key the pad is on. */
+.pk-key.focused .pk-cap {
+	border: 2dp token(accent-gold);
+	background-color: rgba(255, 210, 60, 90);
+	line-height: 34dp;
+}
+
+/* A pad button that presses the key too, at its left. */
+.pk-glyph {
+	left: 7dp;
+	top: 11dp;
+}
+
+/* The pad's other buttons, along the panel's foot. */
+#pk_legend {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	height: 24dp;
+	margin-top: 4dp;
+	font-size: 12dp;
+}
+#pk_legend .pad-glyph {
+	position: relative;
+}
+.pk-legend-pair {
+	margin-left: 3dp;
+}
+.pk-legend-label {
+	margin: 0 14dp 0 6dp;
+	line-height: 22dp;
+}

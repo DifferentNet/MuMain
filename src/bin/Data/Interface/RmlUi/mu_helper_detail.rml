@@ -18,7 +18,8 @@
 
 	     The four tabbed panes are laid out once by geometry rather than once per page -- each carries
 	     the header of every page it appears on, and shows only the current one's. The gauges draw
-	     here and receive input through their own RmlUi hit areas. -->
+	     here and receive input through their own RmlUi hit areas. A pane holding more on a page
+	     than the others (.mh-pane-tall) is the taller one in the phone view. -->
 	<div id="panel" data-model="mu_helper_detail">
 		<div class="frame-piece frame-top"></div>
 		<div class="frame-piece frame-left"></div>
@@ -29,7 +30,7 @@
 		<span class="sharp-text mh-text mh-center mh-bold mh-title" data-class-hidden="!(page == 4 || page == 5 || page == 6)" data-style-font-size="text_px + 'px'">{{labels.title_recovery}}</span>
 		<span class="sharp-text mh-text mh-center mh-bold mh-title" data-class-hidden="page != 7 &amp;&amp; page != 8" data-style-font-size="text_px + 'px'">{{labels.title_party}}</span>
 
-		<div id="pane_top" class="mh-pane" data-class-hidden="!(page == 2 || page == 3 || page == 4 || page == 5 || page == 6 || page == 7)">
+		<div id="pane_top" class="mh-pane" data-class-hidden="!(page == 2 || page == 3 || page == 4 || page == 5 || page == 6 || page == 7)" data-class-mh-pane-tall="page == 7">
 			<div class="p p-fill-tab"></div>
 			<div class="p p-fill-body"></div>
 			<div class="p p-tab-tl"></div>
@@ -47,7 +48,7 @@
 			<span class="sharp-text mh-text" data-class-hidden="!(page == 4 || page == 5 || page == 6)" data-style-font-size="text_px + 'px'">{{labels.pane_auto_potion}}</span>
 			<span class="sharp-text mh-text" data-class-hidden="page != 7" data-style-font-size="text_px + 'px'">{{labels.pane_buff_support}}</span>
 		</div>
-		<div id="pane_lower" class="mh-pane" data-class-hidden="!(page == 2 || page == 3 || page == 4 || page == 5)">
+		<div id="pane_lower" class="mh-pane" data-class-hidden="!(page == 2 || page == 3 || page == 4 || page == 5)" data-class-mh-pane-tall="page == 2 || page == 3">
 			<div class="p p-fill-tab"></div>
 			<div class="p p-fill-body"></div>
 			<div class="p p-tab-tl"></div>
@@ -81,7 +82,7 @@
 			<div class="p p-left"></div>
 			<span class="sharp-text mh-text" data-style-font-size="text_px + 'px'">{{labels.pane_heal_support}}</span>
 		</div>
-		<div id="pane_buff_support_elf" class="mh-pane" data-class-hidden="page != 8">
+		<div id="pane_buff_support_elf" class="mh-pane mh-pane-tall" data-class-hidden="page != 8">
 			<div class="p p-fill-tab"></div>
 			<div class="p p-fill-body"></div>
 			<div class="p p-tab-tl"></div>

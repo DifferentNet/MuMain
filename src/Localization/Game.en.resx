@@ -15236,4 +15236,226 @@
   <data name="AuctionSellNoBuyout" xml:space="preserve">
     <value>No buyout: the highest bid wins.</value>
   </data>
+  <data name="TouchAttack" xml:space="preserve">
+    <value>Attack</value>
+  </data>
+  <data name="TouchPickUp" xml:space="preserve">
+    <value>Pick up</value>
+  </data>
+  <data name="TouchAuto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="TouchMenu" xml:space="preserve">
+    <value>Menu</value>
+  </data>
+  <data name="TouchChat" xml:space="preserve">
+    <value>Chat</value>
+  </data>
+  <data name="TouchMenuInventory" xml:space="preserve">
+    <value>Inventory</value>
+  </data>
+  <data name="TouchMenuCharacter" xml:space="preserve">
+    <value>Character</value>
+  </data>
+  <data name="TouchMenuParty" xml:space="preserve">
+    <value>Party</value>
+  </data>
+  <data name="TouchMenuGuild" xml:space="preserve">
+    <value>Guild</value>
+  </data>
+  <data name="TouchMenuFriends" xml:space="preserve">
+    <value>Friends</value>
+  </data>
+  <data name="TouchMenuQuests" xml:space="preserve">
+    <value>Quests</value>
+  </data>
+  <data name="TouchMenuMap" xml:space="preserve">
+    <value>Map</value>
+  </data>
+  <data name="TouchMenuMove" xml:space="preserve">
+    <value>Teleport</value>
+  </data>
+  <data name="TouchMenuBattlePass" xml:space="preserve">
+    <value>Battle pass</value>
+  </data>
+  <data name="TouchMenuDaily" xml:space="preserve">
+    <value>Daily rewards</value>
+  </data>
+  <data name="TouchMenuEvents" xml:space="preserve">
+    <value>Events</value>
+  </data>
+  <data name="TouchMenuHelper" xml:space="preserve">
+    <value>MU Helper</value>
+  </data>
+  <data name="TouchMenuCommands" xml:space="preserve">
+    <value>Commands</value>
+  </data>
+  <data name="TouchMenuHelp" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="TouchMenuSystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="TouchBindPick" xml:space="preserve">
+    <value>Pick a skill, then tap a skill button on the right to put it there</value>
+  </data>
+  <data name="TouchBindPlace" xml:space="preserve">
+    <value>Tap a lit button to put the skill there</value>
+  </data>
+  <data name="TouchBindPickFor" xml:space="preserve">
+    <value>Pick a skill for the lit button</value>
+  </data>
+  <data name="InterfaceViewRow" xml:space="preserve">
+    <value>Interface view</value>
+  </data>
+  <data name="ChoiceAuto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="InterfaceViewPc" xml:space="preserve">
+    <value>PC</value>
+  </data>
+  <data name="InterfaceViewPhone" xml:space="preserve">
+    <value>Phone</value>
+  </data>
+  <data name="ControlsRow" xml:space="preserve">
+    <value>Controls</value>
+  </data>
+  <data name="ControlsMouseKeyboard" xml:space="preserve">
+    <value>Mouse and keyboard</value>
+  </data>
+  <data name="ControlsTouch" xml:space="preserve">
+    <value>Touch screen</value>
+  </data>
+  <data name="TouchMenuSkills" xml:space="preserve">
+    <value>Skills</value>
+  </data>
+  <data name="TouchMenuView" xml:space="preserve">
+    <value>PC / phone view</value>
+  </data>
+  <data name="TouchItemEquip" xml:space="preserve">
+    <value>Equip</value>
+  </data>
+  <data name="TouchItemMove" xml:space="preserve">
+    <value>Move</value>
+  </data>
+  <data name="TouchItemSell" xml:space="preserve">
+    <value>Sell</value>
+  </data>
+  <data name="TouchItemHotkeyQ" xml:space="preserve">
+    <value>Put on button Q</value>
+  </data>
+  <data name="TouchItemHotkeyW" xml:space="preserve">
+    <value>Put on button W</value>
+  </data>
+  <data name="TouchItemDrop" xml:space="preserve">
+    <value>Drop</value>
+  </data>
+  <data name="TouchItemDropAsk" xml:space="preserve">
+    <value>Drop it on the ground?</value>
+  </data>
+  <data name="TouchHeroLevel" xml:space="preserve">
+    <value>Lv. %d</value>
+  </data>
+  <data name="TouchHeroMasterLevel" xml:space="preserve">
+    <value>Lv. %d | Master %d</value>
+  </data>
+  <data name="TouchHelpTitle" xml:space="preserve">
+    <value>Touch controls</value>
+  </data>
+  <data name="TouchHelpWorld" xml:space="preserve">
+    <value>Tap the world: walk there, talk to an NPC, attack a monster</value>
+  </data>
+  <data name="TouchHelpStick" xml:space="preserve">
+    <value>Left of the screen: drag to walk</value>
+  </data>
+  <data name="TouchHelpAttack" xml:space="preserve">
+    <value>Attack: hold to attack</value>
+  </data>
+  <data name="TouchHelpSkills" xml:space="preserve">
+    <value>Skill buttons: tap to use one, an empty one picks a skill</value>
+  </data>
+  <data name="TouchHelpPickUp" xml:space="preserve">
+    <value>Pick up: lifts the items nearby</value>
+  </data>
+  <data name="TouchHelpAuto" xml:space="preserve">
+    <value>Auto: MU Helper on and off</value>
+  </data>
+  <data name="TouchHelpPotions" xml:space="preserve">
+    <value>Q and W: drink the potions</value>
+  </data>
+  <data name="TouchHelpMenu" xml:space="preserve">
+    <value>Menu: every window. Back: closes the window on top</value>
+  </data>
+  <data name="TouchHelpItem" xml:space="preserve">
+    <value>Hold an item: its card with what you can do</value>
+  </data>
+  <data name="TouchHelpDrag" xml:space="preserve">
+    <value>Drag an item to move it, drag a list to scroll it</value>
+  </data>
+  <data name="TouchHelpView" xml:space="preserve">
+    <value>Menu, PC / phone view: the PC layout and back</value>
+  </data>
+  <data name="PadHelpTitle" xml:space="preserve">
+    <value>Gamepad (Xbox layout)</value>
+  </data>
+  <data name="PadHelpSticks" xml:space="preserve">
+    <value>Left stick: walk. Right stick: the pointer, slower over a window</value>
+  </data>
+  <data name="PadHelpAttack" xml:space="preserve">
+    <value>A: hold to attack; with the pointer on a window or a button, A clicks it</value>
+  </data>
+  <data name="PadHelpSkills" xml:space="preserve">
+    <value>X, Y, RB, LT, D-pad down: the five skill buttons (tap: pick, hold: cast)</value>
+  </data>
+  <data name="PadHelpSkillList" xml:space="preserve">
+    <value>L3 (press the left stick): the skill list; pick a skill with the pointer and A, then press a skill button to put it there</value>
+  </data>
+  <data name="PadHelpBack" xml:space="preserve">
+    <value>B: back, closes the window on top (with none open, the system menu)</value>
+  </data>
+  <data name="PadHelpPickUp" xml:space="preserve">
+    <value>LB: hold to pick up. D-pad up: MU Helper on and off</value>
+  </data>
+  <data name="PadHelpPotions" xml:space="preserve">
+    <value>D-pad left and right: potions Q and W</value>
+  </data>
+  <data name="PadHelpClick" xml:space="preserve">
+    <value>RT: click at the pointer (talk to an NPC, walk there), hold to drag. R3: right click</value>
+  </data>
+  <data name="PadHelpMenu" xml:space="preserve">
+    <value>Menu: every window (stick or D-pad to choose, A opens, B closes). View: the map</value>
+  </data>
+  <data name="PadHelpScreens" xml:space="preserve">
+    <value>Login and character screens: the sticks move the pointer, A clicks, B is Esc, Menu is Enter</value>
+  </data>
+  <data name="PadOpen" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="PadClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="PadConnected" xml:space="preserve">
+    <value>Gamepad: A attacks, X, Y, RB, LT and D-pad down cast skills, Menu opens every window (its Help lists all the buttons)</value>
+  </data>
+  <data name="PadBindPick" xml:space="preserve">
+    <value>Pick a skill with the pointer and A, then press X, Y, RB, LT or D-pad down to put it there</value>
+  </data>
+  <data name="PadBindPlace" xml:space="preserve">
+    <value>Press X, Y, RB, LT or D-pad down to put the skill there</value>
+  </data>
+  <data name="PadKeyboardType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="PadKeyboardCaret" xml:space="preserve">
+    <value>Cursor</value>
+  </data>
+  <data name="PadKeyboardSpace" xml:space="preserve">
+    <value>space</value>
+  </data>
+  <data name="PadHelpKeyboard" xml:space="preserve">
+    <value>Text fields (chat, login): an on-screen keyboard opens. D-pad or stick: keys, A: press, X: erase, Y: space, LT: shift, RT: symbols, View: English/Russian, LB/RB: cursor, Menu: Enter, B: close</value>
+  </data>
+  <data name="MuHelperSlotClearHint" xml:space="preserve">
+    <value>Hold a skill slot to clear it (R3 on a gamepad)</value>
+  </data>
 </root>

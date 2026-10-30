@@ -228,3 +228,46 @@
 	pointer-events: auto;
 }
 .mh-extra-row.selected { background-color: rgb(255, 255, 255); color: #000000; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): the pieces both windows
+   share, a third larger. Each window's own file widens its panel (the config window to 640 units, the
+   detail panel to 300) and places them. The frame's ornaments and the buttons' ends keep their size
+   while their plain middles stretch, and the parchment repeats. A check box's finger area runs on
+   over its label, and the range steppers take a finger from a little round them; their sprites paint
+   their content box alone. */
+@spritesheet mh-phone-top-sheet { src: "../../../newui_item_back01.tga"; mh-phone-top-l: 0px 0px 60px 64px; mh-phone-top-c: 90px 0px 10px 64px; mh-phone-top-r: 130px 0px 60px 64px; }
+@spritesheet mh-phone-bottom-sheet { src: "../../../newui_item_back03.tga"; mh-phone-bottom-l: 0px 0px 50px 45px; mh-phone-bottom-c: 90px 0px 10px 45px; mh-phone-bottom-r: 140px 0px 50px 45px; }
+@spritesheet mh-phone-igs-sheet {
+	src: "../../../InGameShop/Ingame_Bt03.tga";
+	mh-phone-igs-up: 0px 0px 52px 26px; mh-phone-igs-up-inner: 8px 6px 36px 14px;
+	mh-phone-igs-over: 0px 26px 52px 26px; mh-phone-igs-over-inner: 8px 32px 36px 14px;
+	mh-phone-igs-down: 0px 52px 52px 26px; mh-phone-igs-down-inner: 8px 58px 36px 14px;
+}
+@media (theme: mobile) {
+	#panel { decorator: image(docked-bg-fill repeat left top); }
+	.frame-top { decorator: tiled-horizontal(mh-phone-top-l, mh-phone-top-c, mh-phone-top-r); }
+	.frame-bottom { decorator: tiled-horizontal(mh-phone-bottom-l, mh-phone-bottom-c, mh-phone-bottom-r); }
+
+	.mh-check .checkbox-box {
+		width: 20px;
+		height: 20px;
+		margin: -5px;
+		padding: 5px 100px 5px 5px;
+		decorator: image(mh-check-off) content-box;
+	}
+	.mh-check .checkbox-box.checked { decorator: image(mh-check-on) content-box; }
+	.mh-check.mh-radio .checkbox-box { decorator: image(mh-radio-off) content-box; }
+	.mh-check.mh-radio .checkbox-box.checked { decorator: image(mh-radio-on) content-box; }
+	.mh-check .checkbox-label { left: 26px; top: 4px; }
+
+	.mh-btn-plus, .mh-btn-minus { margin: -2px -8px; padding: 2px 8px; }
+	.mh-btn-plus         { decorator: image(mh-plus-up) content-box; }
+	.mh-btn-plus:active  { decorator: image(mh-plus-down) content-box; }
+	.mh-btn-minus        { decorator: image(mh-minus-up) content-box; }
+	.mh-btn-minus:active { decorator: image(mh-minus-down) content-box; }
+
+	.mh-btn-igs { height: 30px; decorator: ninepatch(mh-phone-igs-up, mh-phone-igs-up-inner); }
+	.mh-btn-igs:hover { decorator: ninepatch(mh-phone-igs-over, mh-phone-igs-over-inner); }
+	.mh-btn-igs:active { decorator: ninepatch(mh-phone-igs-down, mh-phone-igs-down-inner); }
+	.mh-number-plate { width: 30px; height: 22px; }
+}

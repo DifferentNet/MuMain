@@ -221,3 +221,40 @@
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
 #panel { font-size: calc(var(--text-px, 12px) / var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): the full 432 height of
+   the dock, both grids down the right side in 42 px cells (the partner's above yours), each side's
+   name, gold and notes in the native column on the left with a divider between them, the buttons
+   and your confirm box 44 x 36 under yours. 552 wide: with the bag-only inventory beside it, a
+   phone's width (19.5:9 and wider). */
+@spritesheet trade-phone-top-sheet    { src: "../../../newui_item_back01.tga"; trade-phone-top-l: 0px 0px 60px 64px; trade-phone-top-c: 90px 0px 10px 64px; trade-phone-top-r: 130px 0px 60px 64px; }
+@spritesheet trade-phone-bottom-sheet { src: "../../../newui_item_back03.tga"; trade-phone-bottom-l: 0px 0px 50px 45px; trade-phone-bottom-c: 90px 0px 10px 45px; trade-phone-bottom-r: 140px 0px 50px 45px; }
+
+@media (theme: mobile) {
+	#panel { --item-cell: 42px; width: 552px; height: 432px; }
+
+	.bg-fill { width: 100%; height: 432px; }
+	.bg-top { width: 100%; decorator: tiled-horizontal(trade-phone-top-l, trade-phone-top-c, trade-phone-top-r); }
+	.bg-left { height: 323px; }
+	.bg-right { left: auto; right: 0; height: 323px; }
+	.bg-bottom { top: 387px; width: 100%; decorator: tiled-horizontal(trade-phone-bottom-l, trade-phone-bottom-c, trade-phone-bottom-r); }
+	#item_view { width: calc(100% + 40px); height: 472px; }
+
+	#partner_grid, #partner_grid_counts { left: 200px; top: 44px; }
+	#item_grid, #item_grid_counts { left: 200px; top: 234px; }
+
+	.gold-bg-your { top: 70px; }
+	.gold-text-your { top: 78px; }
+	#trade_help { top: 104px; }
+	#divider { top: 222px; width: calc(100% - 2px); }
+	.nick-bg-my { top: 228px; }
+	.id-text-my { top: 238px; }
+	.gold-bg-my { top: 262px; }
+	.gold-text-my { top: 270px; }
+
+	.trade-btn { top: 302px; width: 44px; height: 36px; }
+	.trade-btn-exit { left: 16px; }
+	.trade-btn-zen { left: 72px; }
+	.confirm-my { left: 128px; top: 302px; width: 44px; height: 36px; }
+	.confirm-my .checkbox-box { width: 44px; height: 36px; }
+}

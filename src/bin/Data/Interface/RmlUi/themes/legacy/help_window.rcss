@@ -45,3 +45,9 @@
 	color: #80b3ff;
 	font-weight: bold;
 }
+
+/* MU Moldova: the phone view (UI::Mobile::IsPhoneView()): below the touch controls' top bar, whose Back
+   closes it, and clear of the left edge's rounded corners. */
+@media (theme: mobile) {
+	#help_panel { left: 8px; top: 44px; }
+}

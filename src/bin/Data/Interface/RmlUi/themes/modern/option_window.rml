@@ -439,6 +439,33 @@
 							</div>
 						</div>
 					</div>
+					<!-- MU Moldova: the phone or PC layout and the controls (UI::Mobile::InterfaceMode). -->
+					<div class="opt-row">
+						<span class="opt-label">{{interface_view_row_label}}</span>
+						<div class="opt-control">
+							<div class="option-dropdown">
+								<div class="option-dropdown-value" data-class-open="open_dropdown == 8" data-event-click="option_toggle_dropdown(8)">{{interface_view_value_label}}<div class="opt-caret"></div></div>
+								<div class="option-dropdown-list" data-class-hidden="open_dropdown != 8">
+									<div class="option-dropdown-option" data-for="label : interface_view_labels"
+									     data-class-selected="it_index == interface_view_index"
+									     data-event-click="option_dropdown_option_click(8, it_index)">{{label}}</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="opt-row">
+						<span class="opt-label">{{controls_row_label}}</span>
+						<div class="opt-control">
+							<div class="option-dropdown">
+								<div class="option-dropdown-value" data-class-open="open_dropdown == 9" data-event-click="option_toggle_dropdown(9)">{{controls_value_label}}<div class="opt-caret"></div></div>
+								<div class="option-dropdown-list" data-class-hidden="open_dropdown != 9">
+									<div class="option-dropdown-option" data-for="label : controls_labels"
+									     data-class-selected="it_index == controls_index"
+									     data-event-click="option_dropdown_option_click(9, it_index)">{{label}}</div>
+								</div>
+							</div>
+						</div>
+					</div>
 					<div class="opt-row opt-toggle-row" data-event-click="option_toggle_overhead_player_names">
 						<span class="opt-label">{{overhead_player_names_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="overhead_player_names"><div class="opt-toggle-knob"></div></div></div>

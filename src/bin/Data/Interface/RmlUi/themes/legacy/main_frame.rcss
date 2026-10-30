@@ -321,3 +321,34 @@
 #pet_skill_row .skill-cell:nth-child(2) { left: 0dp; }
 #pet_skill_row .skill-cell:nth-child(3) { left: 32dp; }
 #pet_skill_row .skill-cell:nth-child(4) { left: 64dp; }
+
+/* MU Moldova: the phone's own HUD (phone view with touch controls, theme flag "mobile-hud",
+   UI::Mobile::InterfaceMode) shows the hero in touch_controls.rml. Of this bar only the skill list
+   stays, for the touch menu's Skills; the root takes no height, so the workspace keeps no room for
+   the bar. */
+@media (theme: mobile-hud) {
+	#hud_layout { height: 0; }
+	#hud_strip, #gauges_left, #gauges_right, #buttons, #exp, #item_slots, #skill_slots { display: none; }
+}
+
+/* MU Moldova: the touch menu's skill list in the phone's HUD: rows of finger-sized cells on a dark plate,
+   centred above the touch controls, instead of the original's fan of small boxes round the PC bar's
+   current-skill slot (hidden there). The learned skills fill rows of eight upwards from the list's line,
+   the pet's commands a row below it. */
+@media (theme: mobile-hud) {
+	#skill_list { margin-left: -234dp; bottom: 118dp; width: 468dp; height: 0; }
+	#skill_grid, #pet_skill_row { left: 0; width: 456dp; padding: 0 6dp; }
+	#skill_grid { top: auto; bottom: 0; padding-top: 6dp; padding-bottom: 6dp; background-color: rgba(0, 0, 0, 170); }
+	#pet_skill_row { top: 4dp; }
+	#skill_grid .skill-cell:nth-child(n):nth-child(n), #pet_skill_row .skill-cell:nth-child(n):nth-child(n) {
+		position: relative;
+		float: left;
+		left: 0dp;
+		top: 0dp;
+		width: 52dp;
+		height: 62dp;
+		margin: 2dp;
+	}
+	.skill-cell .skill-icon { left: 10dp; top: 10dp; width: 32dp; height: 45dp; }
+	.skill-cell .skill-hotkey-label { right: 4dp; bottom: 3dp; font-size: 16dp; line-height: 16dp; }
+}

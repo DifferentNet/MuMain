@@ -28,7 +28,7 @@
 
 		<!-- The commands. A favourite's marker is in the text the command list builds; the colour
 		     that goes with it is this row's class. -->
-		<div class="cc-rows" data-if="page == 0">
+		<div class="cc-rows scroll-pane" data-if="page == 0">
 			<div class="cc-row" data-for="r, i : command_rows" data-class-favourite="r.favourite"
 			     data-event-click="chat_command_hit(1, i)">
 				<span class="sharp-text cc-cell"
@@ -68,7 +68,7 @@
 
 		<!-- The saved templates: the label runs a row's width less the remove cell, which the
 		     theme sizes. -->
-		<div class="cc-rows" data-if="page == 2">
+		<div class="cc-rows scroll-pane" data-if="page == 2">
 			<div class="cc-row" data-for="r, i : template_rows">
 				<div class="cc-template-hit" data-event-click="chat_command_hit(5, i)"></div>
 				<span class="sharp-text cc-cell cc-template-label"
@@ -89,7 +89,10 @@
 			      data-style-line-height="label_line_px + 'px'">{{right_text}}</span>
 		</div>
 
-		<div id="btn_exit" data-event-click="chat_command_exit" data-attr-data-hint="exit_tooltip"></div>
+		<!-- The exit's mark: the legacy theme's exit art draws its own and hides this one. -->
+		<div id="btn_exit" data-event-click="chat_command_exit" data-attr-data-hint="exit_tooltip">
+			<span class="cc-exit-glyph">&#215;</span>
+		</div>
 		<div id="frame_corner_close" data-event-click="chat_command_exit"></div>
 	</div>
 </body>

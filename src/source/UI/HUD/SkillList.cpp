@@ -890,6 +890,7 @@ void mu::ui::window::CSkillList::OnGridCellClick(int iSkillIndex)
     m_wHeroPriorSkill = CharacterAttribute->Skill[Hero->CurrentSkill];
     Hero->CurrentSkill = iSkillIndex;
     m_bSkillList = false;
+    ++m_iGridPickCount;
     PlayBuffer(SOUND_CLICK01);
 }
 
@@ -904,6 +905,7 @@ void mu::ui::window::CSkillList::OnPetCellClick(int iSkillIndex)
     m_wHeroPriorSkill = CharacterAttribute->Skill[Hero->CurrentSkill];
     Hero->CurrentSkill = iSkillIndex;
     m_bSkillList = false;
+    ++m_iGridPickCount;
     PlayBuffer(SOUND_CLICK01);
 }
 

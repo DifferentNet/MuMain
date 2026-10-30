@@ -100,3 +100,32 @@
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
 #panel { font-size: calc(var(--text-px, 12px) / var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): the full 432 height of
+   the dock, the grid down the right side in 42 px cells, the shop name, notes and buttons (44 x 36)
+   in the native column on the left, the notes taking the grid's old place. 552 wide: with the
+   bag-only inventory beside it, a phone's width (19.5:9 and wider). shop_notice.rcss comes after
+   this sheet, so its boxes are named through #panel here. */
+@spritesheet myshop-phone-top-sheet    { src: "../../../newui_item_back01.tga"; myshop-phone-top-l: 0px 0px 60px 64px; myshop-phone-top-c: 90px 0px 10px 64px; myshop-phone-top-r: 130px 0px 60px 64px; }
+@spritesheet myshop-phone-bottom-sheet { src: "../../../newui_item_back03.tga"; myshop-phone-bottom-l: 0px 0px 50px 45px; myshop-phone-bottom-c: 90px 0px 10px 45px; myshop-phone-bottom-r: 140px 0px 50px 45px; }
+
+@media (theme: mobile) {
+	#panel { --item-cell: 42px; width: 552px; height: 432px; }
+
+	.bg-fill { width: 100%; height: 432px; }
+	.bg-top { width: 100%; decorator: tiled-horizontal(myshop-phone-top-l, myshop-phone-top-c, myshop-phone-top-r); }
+	.bg-left { height: 323px; }
+	.bg-right { left: auto; right: 0; height: 323px; }
+	.bg-bottom { top: 387px; width: 100%; decorator: tiled-horizontal(myshop-phone-bottom-l, myshop-phone-bottom-c, myshop-phone-bottom-r); }
+	#item_view { width: calc(100% + 40px); height: 472px; }
+
+	#title { width: calc(496px * var(--root-scale)); }
+	#item_grid, #item_grid_counts { left: 200px; top: 50px; }
+	#panel .shop-still-opening { top: 84px; }
+	#panel .shop-notice { top: 128px; height: calc(248px * var(--root-scale)); }
+
+	.shop-btn { top: 384px; width: 44px; height: 36px; }
+	.shop-btn-exit { left: 16px; }
+	.shop-btn-open { left: 70px; }
+	.shop-btn-close { left: 124px; }
+}

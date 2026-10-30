@@ -57,6 +57,8 @@ private:
         {{"Data/Interface/RmlUi/help_window.rml"}}, {.afterReload = [this] { OnRmlReloaded(); }}};
     int m_BuiltPage = -1;
     float m_BuiltTextPx = 0.f;
+    bool m_BuiltTouchControls = false;
+    bool m_BuiltGamepad = false;
 };
 } // namespace mu::ui::window
 

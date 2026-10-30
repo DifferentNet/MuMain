@@ -188,3 +188,74 @@
    controls take their own. */
 #panel.slot-placed { pointer-events: none; }
 
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode), the full 432 height of
+   the dock with finger-sized cells. Alone, the inventory spreads out: the equipment on the left in
+   70 px slots (rings and amulet 40) with its buttons under it, the bag on the right in 44 px cells
+   with the gold above it. Beside another window of its column (#panel.beside, set by
+   CMyInventory::SyncBesideNeighbour()) it keeps the bag alone in 42 px cells, the gold above it and
+   the buttons down its right side, so the two fit a phone's width. --bag-x is the bag's left edge;
+   the panel's width follows from it. Equipped items in hidden slots are not drawn. */
+@spritesheet inv-phone-top-sheet    { src: "../../../newui_item_back04.tga"; inv-phone-top-l: 0px 0px 60px 64px; inv-phone-top-c: 90px 0px 10px 64px; inv-phone-top-r: 130px 0px 60px 64px; }
+@spritesheet inv-phone-bottom-sheet { src: "../../../newui_item_back03.tga"; inv-phone-bottom-l: 0px 0px 50px 45px; inv-phone-bottom-c: 90px 0px 10px 45px; inv-phone-bottom-r: 140px 0px 50px 45px; }
+
+@media (theme: mobile) {
+	#panel {
+		--bag-x: 344px;
+		--bag-right: 16px;
+		--item-cell: 44px;
+		width: calc(var(--bag-x) + 8 * var(--item-cell) + var(--bag-right));
+		height: 432px;
+	}
+	#panel.beside { --bag-x: 16px; --bag-right: 68px; --item-cell: 42px; }
+
+	/* The frame across the wider panel: the ornaments keep their size, the plain middles stretch. */
+	.bg-fill { width: 100%; height: 432px; }
+	.bg-top { width: 100%; decorator: tiled-horizontal(inv-phone-top-l, inv-phone-top-c, inv-phone-top-r); }
+	.bg-left { height: 323px; }
+	.bg-right { left: auto; right: 0; height: 323px; }
+	.bg-bottom { top: 387px; width: 100%; decorator: tiled-horizontal(inv-phone-bottom-l, inv-phone-bottom-c, inv-phone-bottom-r); }
+
+	#title, .title-text { width: 100%; }
+	#item_view { width: calc(100% + 40px); height: 472px; }
+
+	/* The equipment: three columns of 70 px slots, the amulet and rings in the gaps between them. */
+	#slot_helper { left: 20px; top: 72px; width: 70px; height: 70px; }
+	#slot_helm { left: 135px; top: 72px; width: 70px; height: 70px; }
+	#slot_wing { left: 220px; top: 72px; width: 100px; height: 70px; }
+	#slot_weapon_right { left: 20px; top: 152px; width: 70px; height: 100px; }
+	#slot_amulet { left: 93px; top: 152px; width: 40px; height: 40px; }
+	#slot_armor { left: 135px; top: 152px; width: 70px; height: 100px; }
+	#slot_weapon_left { left: 250px; top: 152px; width: 70px; height: 100px; }
+	#slot_gloves { left: 20px; top: 262px; width: 70px; height: 70px; }
+	#slot_ring_right { left: 93px; top: 262px; width: 40px; height: 40px; }
+	#slot_pants { left: 135px; top: 262px; width: 70px; height: 70px; }
+	#slot_ring_left { left: 208px; top: 262px; width: 40px; height: 40px; }
+	#slot_boots { left: 250px; top: 262px; width: 70px; height: 70px; }
+
+	.option-labels { left: 20px; top: 42px; width: 300px; }
+	.option-hover { top: 38px; width: 150px; height: 22px; }
+	.option-hover-set { left: 20px; }
+	.option-hover-socket { left: 170px; }
+	#option_tooltip_anchor { left: 170px; top: 62px; }
+
+	/* The gold above the bag, then the bag. */
+	#gold_bg { left: var(--bag-x); top: 34px; width: 200px; height: 30px; }
+	#gold_text { left: calc(var(--bag-x) + 46px); top: 42px; }
+	#item_grid, #item_grid_counts { left: var(--bag-x); top: 70px; }
+
+	/* The buttons in a row under the equipment, 60 x 48. */
+	.inv-btn { top: 352px; width: 60px; height: 48px; }
+	.inv-btn-exit { left: 20px; }
+	.inv-btn-repair { left: 100px; }
+	.inv-btn-myshop { left: 180px; }
+	.inv-btn-jewel-bank { left: 260px; }
+
+	/* Beside another window: the bag alone, the buttons down its right side, 44 x 36. */
+	#panel.beside .equip-slot, #panel.beside .option-labels, #panel.beside .option-hover { display: none; }
+	#panel.beside .inv-btn { left: calc(var(--bag-x) + 8 * var(--item-cell) + 12px); width: 44px; height: 36px; }
+	#panel.beside .inv-btn-exit { top: 70px; }
+	#panel.beside .inv-btn-repair { top: 116px; }
+	#panel.beside .inv-btn-myshop { top: 162px; }
+	#panel.beside .inv-btn-jewel-bank { top: 208px; }
+}
