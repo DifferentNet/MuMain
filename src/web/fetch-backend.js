@@ -15,6 +15,11 @@
  * the server again only when a release changes the file, and so its hash. A file it already keeps is
  * read from there directly (readKept). Without startup.json or a hash, the plain URL.
  *
+ * Files the game read together on an earlier visit (a monster's models, textures and sounds, the first
+ * time it is seen) are read together again: when the first of them is read, the rest start too
+ * (readGroups), instead of one after another as the game asks for them; and while the game reads
+ * nothing new, the groups' files are read from the device ahead of time (warmUp).
+ *
  * The downloads run in the mount's worker, except where the page decides (index.html,
  * MuWeb_FilesOnPageThread in WebFileSystem.cpp) that the page's thread runs them: WebKit (Safari,
  * every iPhone browser) starts a worker's download on the page's thread, and the game, which runs
@@ -186,9 +191,252 @@ addToLibrary({
       return answer.status >= 200 && answer.status < 300;
     }
 
+    // Read groups. A monster seen for the first time opens some twenty files one after another, each
+    // a trip to the device's storage (readKept) that the game's frame waits for: 20 ms of a 67 ms
+    // frame (Edge, 2026-10-30), while twenty read at once take 6. The game doesn't say which files
+    // come next, so this learns it: the files first read close together on a visit (a burst) are a
+    // group, named by the first of them, and the groups are kept on the device (readGroupsUrl). On the
+    // next visit, reading a group's first file starts reading the others (readEarly), and the game's
+    // own reads of them find them done or under way (takeEarly). Not where the page's thread
+    // downloads (askPageThread): there the reads would only queue up behind each other.
+    var readGroupsUrl = pageFolder + 'mu-web-read-groups.json';
+    var READ_GROUPS_VERSION = 1;
+    // Reads further apart than this start a new burst. A frame is 16.7 ms; between two of a model's
+    // files the game spends a few ms decoding the first.
+    var BURST_GAP_MS = 30;
+    // The most files in a group, its first one included (a map's loading reads hundreds: they are cut
+    // into groups of this size); and the most groups kept, the oldest dropped.
+    var GROUP_MOST_FILES = 48;
+    var MOST_GROUPS = 4000;
+    // A file read early that the game hasn't asked for by then is let go.
+    var EARLY_KEEP_MS = 10000;
+    var SAVE_AFTER_MS = 3000;
+    // Early reads at once, in the group's order (four at a time made the game wait longer for them).
+    var EARLY_AT_ONCE = 16;
+    // Warm-up (warmUp): once the game has read its first file of the visit, after WARM_AFTER_MS and then
+    // whenever it has read nothing new for WARM_QUIET_MS, the files of the groups learned before are read
+    // from the device one at a time, the newest groups first, up to WARM_MOST_BYTES in all. A monster's
+    // files are then here before it shows, its first one included, which a group's early reads can't
+    // help with: the frame that shows it waited 2.5 ms for that file alone.
+    var WARM_AFTER_MS = 15000;
+    var WARM_QUIET_MS = 1000;
+    var WARM_MOST_BYTES = 8 << 20;
+
+    var readGroups = new Map(); // first file's path -> the other files' paths
+    var readThisVisit = new Set(); // paths
+    var burst = null; // {paths, last}
+    var saveTimer = 0;
+    var groupsChanged = false;
+    // url -> {end, waiting (true until its read starts), answer (a promise of download's answer, or of
+    // null), settle (gives the answer), timer}; the warm-up's have no settle or timer.
+    var early = new Map();
+    var earlyWaiting = []; // urls, in order
+    var earlyReading = 0;
+    var lastFirstRead = 0; // performance.now() of the game's last first read of a file
+    var firstReadEnd = 0; // the last byte of a first read (fetchStart's end)
+    var warmTimer = 0;
+
+    function loadReadGroups() {
+      keptFileStore()
+        .then((store) => store && store.match(readGroupsUrl))
+        .then((kept) => kept && kept.json())
+        .then((saved) => {
+          if (!saved || saved.version !== READ_GROUPS_VERSION || !saved.groups) {
+            return;
+          }
+          // Those learned on this visit meanwhile are newer.
+          var learned = readGroups;
+          readGroups = new Map(Object.entries(saved.groups));
+          for (var [first, rest] of learned) {
+            readGroups.delete(first);
+            readGroups.set(first, rest);
+          }
+        })
+        .catch(() => {});
+    }
+
+    function saveReadGroups() {
+      saveTimer = 0;
+      if (burst && performance.now() - burst.last > BURST_GAP_MS) {
+        endBurst();
+      }
+      if (!groupsChanged) {
+        return;
+      }
+      groupsChanged = false;
+      var text = JSON.stringify({version: READ_GROUPS_VERSION, groups: Object.fromEntries(readGroups)});
+      keptFileStore()
+        .then((store) => store && store.put(readGroupsUrl, new Response(text, {headers: {'Content-Type': 'application/json'}})))
+        .catch(() => {});
+    }
+
+    function endBurst() {
+      var paths = burst.paths;
+      burst = null;
+      if (paths.length < 2) {
+        return;
+      }
+      var first = paths[0];
+      var rest = paths.slice(1);
+      var before = readGroups.get(first);
+      if (before && before.length == rest.length && before.every((path, i) => path == rest[i])) {
+        return;
+      }
+      readGroups.delete(first);
+      readGroups.set(first, rest);
+      while (readGroups.size > MOST_GROUPS) {
+        readGroups.delete(readGroups.keys().next().value);
+      }
+      groupsChanged = true;
+    }
+
+    // The file's path below the page's folder ("Data/..."), or null for a file from elsewhere.
+    function pagePath(url) {
+      return url.startsWith(pageFolder) ? url.slice(pageFolder.length).split('?')[0] : null;
+    }
+
+    // A file read for the first time on this visit (its first `end` + 1 bytes): learns the bursts, and
+    // starts reading the rest of the group this file begins.
+    function noteFirstRead(url, end) {
+      var path = pagePath(url);
+      if (!path || _MuWeb_FilesOnPageThread()) {
+        return;
+      }
+      readThisVisit.add(path);
+      var now = performance.now();
+      lastFirstRead = now;
+      firstReadEnd = end;
+      if (!warmTimer) {
+        warmTimer = setTimeout(warmUp, WARM_AFTER_MS);
+      }
+      if (burst && (now - burst.last > BURST_GAP_MS || burst.paths.length >= GROUP_MOST_FILES)) {
+        endBurst();
+      }
+      if (burst) {
+        burst.paths.push(path);
+        burst.last = now;
+      } else {
+        burst = {paths: [path], last: now};
+      }
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveReadGroups, SAVE_AFTER_MS);
+      var rest = readGroups.get(path);
+      if (rest) {
+        readEarly(rest, end);
+      }
+    }
+
+    async function readEarly(paths, end) {
+      var hashes = await fileVersions();
+      var listed = Object.keys(hashes).length > 0;
+      for (var path of paths) {
+        if (readThisVisit.has(path)) {
+          continue;
+        }
+        var hash = hashes[path];
+        if (listed && !hash) {
+          continue; // gone in a newer release
+        }
+        var url = pageFolder + path + (hash ? `?v=${hash}` : '');
+        if (early.has(url)) {
+          continue;
+        }
+        var read = {end: end, waiting: true};
+        read.answer = new Promise((settle) => (read.settle = settle));
+        read.timer = setTimeout(forgetEarly, EARLY_KEEP_MS, url, read);
+        early.set(url, read);
+        earlyWaiting.push(url);
+      }
+      startEarlyReads();
+    }
+
+    function forgetEarly(url, read) {
+      if (early.get(url) === read) {
+        early.delete(url);
+      }
+    }
+
+    function startEarlyReads() {
+      while (earlyReading < EARLY_AT_ONCE && earlyWaiting.length) {
+        var url = earlyWaiting.shift();
+        var read = early.get(url);
+        if (!read || !read.waiting) {
+          continue; // let go, or taken by the game before its turn
+        }
+        read.waiting = false;
+        readEarlyNow(url, read);
+      }
+    }
+
+    async function readEarlyNow(url, read) {
+      earlyReading++;
+      var answer = await download(url, 0, read.end).catch(() => null);
+      earlyReading--;
+      read.settle(answer);
+      startEarlyReads();
+    }
+
+    // A promise of the answer for bytes 0..end from an early read of the file (read again if that
+    // failed), or null without one. One the game asks for before its turn comes is left to the game's
+    // own read, which starts at once.
+    function takeEarly(url, end) {
+      var read = early.get(url);
+      if (!read || read.end != end) {
+        return null;
+      }
+      early.delete(url);
+      clearTimeout(read.timer);
+      if (read.waiting) {
+        read.waiting = false;
+        return null;
+      }
+      return read.answer.then((answer) =>
+        answer && (succeeded(answer) || answer.status == 416) ? answer : download(url, 0, end));
+    }
+
+    // See WARM_AFTER_MS. A file read on this visit already, or being read early, is left out, and so is
+    // one the device doesn't keep (readKept answers null): nothing is downloaded from here.
+    async function warmUp() {
+      var hashes = await fileVersions();
+      var bytes = 0;
+      for (var [first, rest] of Array.from(readGroups).reverse()) {
+        for (var path of [first].concat(rest)) {
+          var hash = hashes[path];
+          var url = pageFolder + path + `?v=${hash}`;
+          if (!hash || readThisVisit.has(path) || early.has(url)) {
+            continue;
+          }
+          while (performance.now() - lastFirstRead < WARM_QUIET_MS) {
+            await new Promise((wake) => setTimeout(wake, WARM_QUIET_MS));
+          }
+          if (readThisVisit.has(path) || early.has(url)) {
+            continue; // the game read it meanwhile
+          }
+          var read = {end: firstReadEnd, waiting: false, answer: readKept(url, 0, firstReadEnd)};
+          early.set(url, read);
+          var answer = await read.answer;
+          if (!answer) {
+            forgetEarly(url, read);
+            continue;
+          }
+          bytes += answer.bytes ? answer.bytes.length : 0;
+          if (bytes >= WARM_MOST_BYTES) {
+            return;
+          }
+        }
+      }
+    }
+
+    loadReadGroups();
+
     // The file's size and its first two chunks (or all of it), in one request.
     async function fetchStart(file, url, chunkSize) {
-      var answer = await download(url, 0, 2 * chunkSize - 1);
+      var end = 2 * chunkSize - 1;
+      // This file's read starts before the early reads of the group it begins (started after it arrived,
+      // they made the frame longer: 54 ms against 50, Edge, 2026-10-30).
+      var reading = takeEarly(url, end) || download(url, 0, end);
+      noteFirstRead(url, end);
+      var answer = await reading;
       if (answer.status == 416) {
         // Nothing to give from byte 0 on: an empty file.
         wasmFS$JSMemoryRanges[file] = {size: 0, chunks: [], chunkSize: chunkSize};
