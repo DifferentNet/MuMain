@@ -15443,4 +15443,19 @@
   <data name="PadBindPlace" xml:space="preserve">
     <value>Press X, Y, RB, LT or D-pad down to put the skill there</value>
   </data>
+  <data name="PadKeyboardType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="PadKeyboardCaret" xml:space="preserve">
+    <value>Cursor</value>
+  </data>
+  <data name="PadKeyboardSpace" xml:space="preserve">
+    <value>space</value>
+  </data>
+  <data name="PadHelpKeyboard" xml:space="preserve">
+    <value>Text fields (chat, login): an on-screen keyboard opens. D-pad or stick: keys, A: press, X: erase, Y: space, LT: shift, RT: symbols, View: English/Russian, LB/RB: cursor, Menu: Enter, B: close</value>
+  </data>
+  <data name="MuHelperSlotClearHint" xml:space="preserve">
+    <value>Hold a skill slot to clear it (R3 on a gamepad)</value>
+  </data>
 </root>

@@ -75,13 +75,14 @@ TEST_CASE("help with a gamepad: the pad's buttons instead of the keys [ui][help]
 {
     const auto lines = UI::Help::BuildPage(UI::Help::KeyFunctionPage, kPad);
 
-    // Spacer, heading, spacer, 10 pad rows, spacer.
-    REQUIRE(lines.size() == 14);
+    // Spacer, heading, spacer, 11 pad rows, spacer.
+    REQUIRE(lines.size() == 15);
     CHECK(lines[1].heading);
     CHECK(lines[1].text == I18N::Game::PadHelpTitle);
     CHECK(CountHeadings(lines) == 1);
     CHECK(lines[3].text == I18N::Game::PadHelpSticks);
-    CHECK(lines[12].text == I18N::Game::PadHelpScreens);
+    CHECK(lines[12].text == I18N::Game::PadHelpKeyboard);
+    CHECK(lines[13].text == I18N::Game::PadHelpScreens);
     CHECK(lines.back().halfSpacer);
 }
 
@@ -89,8 +90,8 @@ TEST_CASE("help with touch and a gamepad: the touch section, then the pad sectio
 {
     const auto lines = UI::Help::BuildPage(UI::Help::KeyFunctionPage, kTouchAndPad);
 
-    // The touch page without its closing spacer, a spacer, the pad heading, a spacer, 10 rows, a spacer.
-    REQUIRE(lines.size() == 28);
+    // The touch page without its closing spacer, a spacer, the pad heading, a spacer, 11 rows, a spacer.
+    REQUIRE(lines.size() == 29);
     CHECK(CountHeadings(lines) == 2);
     CHECK(lines[1].text == I18N::Game::TouchHelpTitle);
     CHECK(lines[13].text == I18N::Game::TouchHelpView);

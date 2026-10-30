@@ -89,7 +89,10 @@
 			      data-style-line-height="label_line_px + 'px'">{{right_text}}</span>
 		</div>
 
-		<div id="btn_exit" data-event-click="chat_command_exit" data-attr-data-hint="exit_tooltip"></div>
+		<!-- The exit's mark: the legacy theme's exit art draws its own and hides this one. -->
+		<div id="btn_exit" data-event-click="chat_command_exit" data-attr-data-hint="exit_tooltip">
+			<span class="cc-exit-glyph">&#215;</span>
+		</div>
 		<div id="frame_corner_close" data-event-click="chat_command_exit"></div>
 	</div>
 </body>

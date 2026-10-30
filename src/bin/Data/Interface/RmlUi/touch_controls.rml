@@ -101,6 +101,7 @@
 		<div id="tc_menu_14" class="tc-button tc-menu-item" data-class-focused="menu_focus == 14">{{menu_label_14}}</div>
 		<div id="tc_menu_15" class="tc-button tc-menu-item" data-class-focused="menu_focus == 15">{{menu_label_15}}</div>
 		<div id="tc_menu_16" class="tc-button tc-menu-item" data-class-focused="menu_focus == 16">{{menu_label_16}}</div>
+		<div id="tc_menu_17" class="tc-button tc-menu-item" data-class-focused="menu_focus == 17">{{menu_label_17}}</div>
 		<!-- With a pad, its keys for the menu: the stick or the d-pad move the highlight. -->
 		<div id="tc_menu_legend">
 			<div class="pad-glyph pad-face pad-a">A</div><div class="pad-legend-label">{{pad_open_label}}</div>

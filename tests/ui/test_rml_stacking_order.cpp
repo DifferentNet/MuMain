@@ -180,3 +180,13 @@ TEST_CASE("scene messages cover scene windows and remain below blocking overlays
     CHECK(Depth("msg_win.rml") < Depth("loading.rml"));
     CHECK(Depth("msg_win.rml") < Depth("reconnect_dialog.rml"));
 }
+
+TEST_CASE("the pad's keyboard stands over the windows and messages it types into [ui][stacking]")
+{
+    for (const char* below : {"login.rml", "msg_win.rml", "notices.rml", "chat_command.rml", "message_box_view.rml",
+                              "remember_password_prompt.rml"})
+        CHECK_MESSAGE(Depth("pad_keyboard.rml") > Depth(below), below);
+    CHECK(Depth("pad_keyboard.rml") < Depth("loading.rml"));
+    CHECK(Depth("pad_keyboard.rml") < Depth("reconnect_dialog.rml"));
+    CHECK(SceneForDocument("pad_keyboard.rml") == DocumentScene::Any);
+}

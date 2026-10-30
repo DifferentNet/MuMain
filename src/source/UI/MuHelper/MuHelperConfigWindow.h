@@ -67,7 +67,7 @@ namespace mu::ui::window
     {
         Rml::String title, tabHunting, tabObtaining, tabOther;
         Rml::String range, distance, basicSkill, activationSkill1, activationSkill2, seconds;
-        Rml::String extensionUsed, extensionNone;
+        Rml::String extensionUsed, extensionNone, slotHint;
         Rml::String potion, longDistance, origPosition, delay, condition, combo, fallback, buffDuration;
         Rml::String usePet, party, autoHeal, drainLife, ravenCease, ravenAuto, ravenTogether;
         Rml::String repair, pickAll, pickSelected, pickJewel, pickAncient, pickZen, pickExcellent, pickExtra;

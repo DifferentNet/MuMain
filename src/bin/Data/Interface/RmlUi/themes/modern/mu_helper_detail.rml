@@ -11,7 +11,9 @@
 	<!-- Modern theme's own copy of CMuHelperDetailWindow's panel -- the forged-dialog shell and
 	     header rail its right-dock neighbours use (party_info, character_info), with plain px text
 	     that scales with the panel like theirs. Same layout, ids, model fields and event names as
-	     ../../mu_helper_detail.rml; keep them in step. -->
+	     ../../mu_helper_detail.rml; keep them in step. A check row carries its click (the box's
+	     bubbles to it), so the phone view can make the whole row a finger's target, and a pane
+	     holding more on a page than the others (.mh-pane-tall) is the taller one there. -->
 	<div id="panel" data-model="mu_helper_detail">
 		<div class="modern-shell-edge"></div>
 		<div class="modern-groove"></div>
@@ -24,14 +26,14 @@
 		<span class="mh-text mh-center mh-bold mh-title" data-class-hidden="!(page == 4 || page == 5 || page == 6)">{{labels.title_recovery}}</span>
 		<span class="mh-text mh-center mh-bold mh-title" data-class-hidden="page != 7 &amp;&amp; page != 8">{{labels.title_party}}</span>
 
-		<div id="pane_top" class="mh-pane" data-class-hidden="!(page == 2 || page == 3 || page == 4 || page == 5 || page == 6 || page == 7)">
+		<div id="pane_top" class="mh-pane" data-class-hidden="!(page == 2 || page == 3 || page == 4 || page == 5 || page == 6 || page == 7)" data-class-mh-pane-tall="page == 7">
 			<div class="p p-tab"></div>
 			<div class="p p-body"></div>
 			<span class="mh-text" data-class-hidden="!(page == 2 || page == 3)">{{labels.pane_precon}}</span>
 			<span class="mh-text" data-class-hidden="!(page == 4 || page == 5 || page == 6)">{{labels.pane_auto_potion}}</span>
 			<span class="mh-text" data-class-hidden="page != 7">{{labels.pane_buff_support}}</span>
 		</div>
-		<div id="pane_lower" class="mh-pane" data-class-hidden="!(page == 2 || page == 3 || page == 4 || page == 5)">
+		<div id="pane_lower" class="mh-pane" data-class-hidden="!(page == 2 || page == 3 || page == 4 || page == 5)" data-class-mh-pane-tall="page == 2 || page == 3">
 			<div class="p p-tab"></div>
 			<div class="p p-body"></div>
 			<span class="mh-text" data-class-hidden="!(page == 2 || page == 3)">{{labels.pane_subcon}}</span>
@@ -43,7 +45,7 @@
 			<div class="p p-body"></div>
 			<span class="mh-text">{{labels.pane_heal_support}}</span>
 		</div>
-		<div id="pane_buff_support_elf" class="mh-pane" data-class-hidden="page != 8">
+		<div id="pane_buff_support_elf" class="mh-pane mh-pane-tall" data-class-hidden="page != 8">
 			<div class="p p-tab"></div>
 			<div class="p p-body"></div>
 			<span class="mh-text">{{labels.pane_buff_support}}</span>
@@ -51,28 +53,28 @@
 
 		<!-- Activation condition: which monsters trigger the skill, and how many. Radios. -->
 		<div class="mhd-page" data-class-hidden="!(page == 2 || page == 3)">
-			<div id="precon_range" class="mh-check mh-radio">
-				<div class="checkbox-box modern-checkbox-px" data-class-checked="precon == 0" data-event-click="muhelper_detail_precon(0)"></div>
+			<div id="precon_range" class="mh-check mh-radio" data-event-click="muhelper_detail_precon(0)">
+				<div class="checkbox-box modern-checkbox-px" data-class-checked="precon == 0"></div>
 				<span class="mh-text checkbox-label">{{labels.precon_hunt_range}}</span>
 			</div>
-			<div id="precon_attacking" class="mh-check mh-radio">
-				<div class="checkbox-box modern-checkbox-px" data-class-checked="precon == 1" data-event-click="muhelper_detail_precon(1)"></div>
+			<div id="precon_attacking" class="mh-check mh-radio" data-event-click="muhelper_detail_precon(1)">
+				<div class="checkbox-box modern-checkbox-px" data-class-checked="precon == 1"></div>
 				<span class="mh-text checkbox-label">{{labels.precon_attacking}}</span>
 			</div>
-			<div id="subcon_two" class="mh-check mh-radio">
-				<div class="checkbox-box modern-checkbox-px" data-class-checked="subcon == 0" data-event-click="muhelper_detail_subcon(0)"></div>
+			<div id="subcon_two" class="mh-check mh-radio" data-event-click="muhelper_detail_subcon(0)">
+				<div class="checkbox-box modern-checkbox-px" data-class-checked="subcon == 0"></div>
 				<span class="mh-text checkbox-label">{{labels.subcon_two}}</span>
 			</div>
-			<div id="subcon_three" class="mh-check mh-radio">
-				<div class="checkbox-box modern-checkbox-px" data-class-checked="subcon == 1" data-event-click="muhelper_detail_subcon(1)"></div>
+			<div id="subcon_three" class="mh-check mh-radio" data-event-click="muhelper_detail_subcon(1)">
+				<div class="checkbox-box modern-checkbox-px" data-class-checked="subcon == 1"></div>
 				<span class="mh-text checkbox-label">{{labels.subcon_three}}</span>
 			</div>
-			<div id="subcon_four" class="mh-check mh-radio">
-				<div class="checkbox-box modern-checkbox-px" data-class-checked="subcon == 2" data-event-click="muhelper_detail_subcon(2)"></div>
+			<div id="subcon_four" class="mh-check mh-radio" data-event-click="muhelper_detail_subcon(2)">
+				<div class="checkbox-box modern-checkbox-px" data-class-checked="subcon == 2"></div>
 				<span class="mh-text checkbox-label">{{labels.subcon_four}}</span>
 			</div>
-			<div id="subcon_five" class="mh-check mh-radio">
-				<div class="checkbox-box modern-checkbox-px" data-class-checked="subcon == 3" data-event-click="muhelper_detail_subcon(3)"></div>
+			<div id="subcon_five" class="mh-check mh-radio" data-event-click="muhelper_detail_subcon(3)">
+				<div class="checkbox-box modern-checkbox-px" data-class-checked="subcon == 3"></div>
 				<span class="mh-text checkbox-label">{{labels.subcon_five}}</span>
 			</div>
 		</div>
@@ -101,8 +103,8 @@
 
 		<!-- Party support, standard classes. -->
 		<div class="mhd-page" data-class-hidden="page != 7">
-			<div id="party_duration" class="mh-check">
-				<div class="checkbox-box modern-checkbox-px" data-class-checked="party_duration" data-event-click="muhelper_detail_party_duration"></div>
+			<div id="party_duration" class="mh-check" data-event-click="muhelper_detail_party_duration">
+				<div class="checkbox-box modern-checkbox-px" data-class-checked="party_duration"></div>
 				<span class="mh-text checkbox-label">{{labels.party_duration}}</span>
 			</div>
 			<span class="mh-text" id="time_space">{{labels.time_space}}</span>
@@ -114,8 +116,8 @@
 
 		<!-- Party support, elf: heal preference and its threshold above the same buff options. -->
 		<div class="mhd-page" data-class-hidden="page != 8">
-			<div id="party_heal" class="mh-check">
-				<div class="checkbox-box modern-checkbox-px" data-class-checked="party_heal" data-event-click="muhelper_detail_party_heal"></div>
+			<div id="party_heal" class="mh-check" data-event-click="muhelper_detail_party_heal">
+				<div class="checkbox-box modern-checkbox-px" data-class-checked="party_heal"></div>
 				<span class="mh-text checkbox-label">{{labels.party_heal}}</span>
 			</div>
 			<div id="gauge_party_heal" class="level-gauge mh-gauge">
@@ -126,8 +128,8 @@
 			<div id="gauge_party_heal_fill" class="level-gauge-fill mh-gauge-fill" data-class-hidden="party_heal_level == 0"
 			     data-style-width="(party_heal_level * 12.4) + 'px'"></div>
 			<span class="mh-text mh-center" id="gauge_party_heal_label">{{labels.hp_status_party}}</span>
-			<div id="party_duration_elf" class="mh-check">
-				<div class="checkbox-box modern-checkbox-px" data-class-checked="party_duration" data-event-click="muhelper_detail_party_duration"></div>
+			<div id="party_duration_elf" class="mh-check" data-event-click="muhelper_detail_party_duration">
+				<div class="checkbox-box modern-checkbox-px" data-class-checked="party_duration"></div>
 				<span class="mh-text checkbox-label">{{labels.party_duration}}</span>
 			</div>
 			<span class="mh-text" id="time_space_elf">{{labels.time_space}}</span>

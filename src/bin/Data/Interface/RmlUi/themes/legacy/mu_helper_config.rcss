@@ -160,137 +160,193 @@
 #cb_pick_extra .checkbox-label { width: calc(94px * var(--root-scale)); }
 #extension_used, #extension_none { width: calc(151px * var(--root-scale)); }
 
-/* MU Moldova: the phone view (UI::Mobile::IsPhoneView()): the labels keep the native text size while the
-   panel shrinks to the phone's height, so in 190 units they ended in "..". The panel is 300 wide here and
-   native's x positions stretch by 5/3 from the boxes' left edge (12), so the 165-wide content is 275 wide:
-   boxes and label room grow, check boxes and text keep their left edge, the fixed sprites (buttons,
-   plates, skill slots) their centre. Heights stay native's: the dock is the screen's height. The frame's
-   ornaments and the tabs' ends keep their size and their plain middles stretch (battle_pass.rcss). */
-@spritesheet mh-phone-top-sheet { src: "../../../newui_item_back01.tga"; mh-phone-top-l: 0px 0px 60px 64px; mh-phone-top-c: 90px 0px 10px 64px; mh-phone-top-r: 130px 0px 60px 64px; }
-@spritesheet mh-phone-bottom-sheet { src: "../../../newui_item_back03.tga"; mh-phone-bottom-l: 0px 0px 50px 45px; mh-phone-bottom-c: 90px 0px 10px 45px; mh-phone-bottom-r: 140px 0px 50px 45px; }
+/* The hunting page's line on clearing a skill slot shows in the phone view only (below). */
+#mh_slot_hint, #box_slot_hint { display: none; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode). Native's 190 units at the
+   native text size cut most labels short, and its 15-unit boxes were too small for a finger. Here the
+   window is 640 units wide: native's groups in two columns (the skills, the extra-item list and the
+   defence group on the right), every label with room for its Russian text, the boxes, steppers, plates,
+   slots and buttons a third larger (the shared pieces, the frame and the parchment from
+   mu_helper_common.rcss's phone block), and a check box's finger area running on over its label. The
+   tabs' and buttons' ends keep their size while their plain middles stretch. Under the hunting page's groups, where the other pages show the extension note, a
+   line says how to clear a skill slot: a long press is the right button, which clears it. */
 @spritesheet mh-phone-tab-sheet {
 	src: "../../../newui_guild_tab04.tga";
 	mh-phone-tab-up: 0px 0px 56px 22px; mh-phone-tab-up-inner: 8px 4px 40px 14px;
 	mh-phone-tab-on: 0px 22px 56px 22px; mh-phone-tab-on-inner: 8px 26px 40px 14px;
 }
+@spritesheet mh-phone-setting-sheet {
+	src: "../../../newui_Bt_clearness_illusion.jpg";
+	mh-phone-setting-up: 0px 0px 38px 24px; mh-phone-setting-up-inner: 6px 5px 26px 14px;
+	mh-phone-setting-over: 0px 24px 38px 24px; mh-phone-setting-over-inner: 6px 29px 26px 14px;
+	mh-phone-setting-down: 0px 48px 38px 24px; mh-phone-setting-down-inner: 6px 53px 26px 14px;
+}
 @media (theme: mobile) {
-	#panel { width: 300px; }
-	.frame-top { decorator: tiled-horizontal(mh-phone-top-l, mh-phone-top-c, mh-phone-top-r); }
-	.frame-bottom { decorator: tiled-horizontal(mh-phone-bottom-l, mh-phone-bottom-c, mh-phone-bottom-r); }
-	#title { width: calc(244px * var(--root-scale)); }
-	.mh-tab { width: 92px; decorator: ninepatch(mh-phone-tab-up, mh-phone-tab-up-inner); }
+	#panel { width: 640px; }
+	#title { width: calc(584px * var(--root-scale)); }
+
+	/* --- Tabs --- */
+	.mh-tab { top: 44px; width: 140px; height: 28px; decorator: ninepatch(mh-phone-tab-up, mh-phone-tab-up-inner); }
 	.mh-tab.active { decorator: ninepatch(mh-phone-tab-on, mh-phone-tab-on-inner); }
-	#tab_0, #tab_0_label { left: 12px; }
-	#tab_1, #tab_1_label { left: 104px; }
-	#tab_2, #tab_2_label { left: 196px; }
-	#tab_0_label, #tab_1_label, #tab_2_label { width: calc(92px * var(--root-scale)); }
-	#btn_init, #btn_save { top: 386px; width: 84px; height: 30px; }
-	#btn_init, #btn_init_label { left: 98px; }
-	#btn_save, #btn_save_label { left: 188px; }
-	#btn_init_label, #btn_save_label {
-		top: 386px;
-		width: calc(84px * var(--root-scale));
+	.mh-tab-label { top: 44px; }
+	#tab_0, #tab_0_label { left: 24px; }
+	#tab_1, #tab_1_label { left: 164px; }
+	#tab_2, #tab_2_label { left: 304px; }
+	#tab_0_label, #tab_1_label, #tab_2_label {
+		width: calc(140px * var(--root-scale));
+		height: calc(28px * var(--root-scale));
+		line-height: calc(28px * var(--root-scale));
+	}
+
+	/* --- The pieces, a third larger; the steppers' decorators paint their content box --- */
+	.mh-check { width: 20px; height: 20px; }
+	.mh-btn-plus, .mh-btn-minus { width: 24px; height: 22px; margin: -4px; padding: 4px; }
+	.mh-btn-setting { width: 58px; height: 30px; decorator: ninepatch(mh-phone-setting-up, mh-phone-setting-up-inner); }
+	.mh-btn-setting:hover { decorator: ninepatch(mh-phone-setting-over, mh-phone-setting-over-inner); }
+	.mh-btn-setting:active { decorator: ninepatch(mh-phone-setting-down, mh-phone-setting-down-inner); }
+	.mh-string-plate { width: 196px; height: 22px; }
+	.mh-range-digit { width: 20px; height: 25px; }
+	.mh-slot { width: 36px; height: 42px; }
+	.mh-slot-icon { left: 7px; top: 7px; width: 22px; height: 31px; }
+	#btn_potion_setting_label, #btn_skill2_setting_label, #btn_skill3_setting_label, #btn_party_setting_label,
+	#btn_add_item_label, #btn_delete_item_label {
+		width: calc(58px * var(--root-scale));
 		height: calc(30px * var(--root-scale));
 		line-height: calc(30px * var(--root-scale));
 	}
-	#box_h_range { width: 113px; }
-	#box_h_recovery { left: 117px; width: 170px; }
-	#box_h_movement { width: 275px; }
-	#box_h_skills { width: 275px; }
-	#box_h_buffs { width: 275px; }
-	#h_range_label { left: 22px; }
-	#h_range_rule { left: 22px; }
-	#h_range_digit { left: 45px; }
-	#btn_hunt_add { left: 91px; }
-	#btn_hunt_minus { left: 91px; }
-	#cb_potion { left: 124px; }
-	#cb_auto_heal { left: 124px; }
-	#cb_drain_life { left: 124px; }
-	#btn_potion_setting, #btn_potion_setting_label { left: 225px; }
-	#cb_long_distance { left: 22px; }
-	#cb_orig_position { left: 22px; }
-	#distance_label { left: 175px; }
-	#distance_plate { left: 232px; }
-	#distance_unit { left: 262px; }
-	#basic_skill_label { left: 22px; width: calc(68px * var(--root-scale)); }
-	#activation1_label { left: 90px; }
-	#slot_0 { left: 31px; }
-	#slot_1 { left: 104px; }
-	#cb_skill2_delay { left: 149px; }
-	#skill2_plate { left: 232px; }
-	#skill2_unit { left: 262px; }
-	#cb_skill2_condition { left: 149px; }
-	#btn_skill2_setting, #btn_skill2_setting_label { left: 225px; }
-	#activation2_label { left: 90px; }
-	#slot_2 { left: 104px; }
-	#cb_skill3_delay { left: 149px; }
-	#skill3_plate { left: 232px; }
-	#skill3_unit { left: 262px; }
-	#cb_skill3_condition { left: 149px; }
-	#btn_skill3_setting, #btn_skill3_setting_label { left: 225px; }
-	#cb_combo { left: 22px; }
-	#cb_fallback { left: 22px; }
-	#cb_use_pet { left: 22px; }
-	#rb_raven_cease { left: 149px; }
-	#rb_raven_auto { left: 42px; }
-	#rb_raven_together { left: 42px; }
-	#cb_party { left: 22px; }
-	#btn_party_setting, #btn_party_setting_label { left: 33px; }
-	#cb_buff_duration { left: 22px; }
-	#slot_3 { left: 38px; }
-	#slot_4 { left: 94px; }
-	#slot_5 { left: 151px; }
-	#box_o_range { width: 113px; }
-	#box_o_repair { left: 117px; width: 170px; }
-	#box_o_mode { width: 275px; }
-	#box_o_items { width: 275px; }
-	#box_o_list { left: 19px; width: 263px; }
-	#o_range_label { left: 22px; }
-	#o_range_rule { left: 22px; }
-	#o_range_digit { left: 45px; }
-	#btn_pick_add { left: 91px; }
-	#btn_pick_minus { left: 91px; }
-	#cb_repair { left: 124px; }
-	#cb_pick_all { left: 20px; }
-	#cb_pick_selected { left: 20px; }
-	#cb_pick_jewel { left: 29px; }
-	#cb_pick_ancient { left: 134px; }
-	#cb_pick_zen { left: 29px; }
-	#cb_pick_excellent { left: 134px; }
-	#cb_pick_extra { left: 29px; }
-	#item_plate { left: 49px; }
-	#item_name { left: 52px; }
-	#btn_add_item, #btn_add_item_label { left: 225px; }
-	#extra_list { left: 25px; width: calc(257px * var(--root-scale)); }
-	#btn_delete_item, #btn_delete_item_label { left: 225px; }
-	#box_x_accept { width: 275px; }
-	#box_x_defend { width: 275px; }
-	#cb_auto_friend { left: 22px; }
-	#cb_auto_guild { left: 22px; }
-	#cb_auto_defend { left: 22px; }
-	#box_extension { width: 275px; }
-	#extension_used { left: 25px; }
-	#extension_none { left: 25px; }
-	#h_range_label, #o_range_label { width: calc(63px * var(--root-scale)); }
-	#cb_potion .checkbox-label, #cb_auto_heal .checkbox-label, #cb_drain_life .checkbox-label { width: calc(62px * var(--root-scale)); }
-	#cb_long_distance .checkbox-label, #cb_use_pet .checkbox-label, #cb_fallback .checkbox-label,
-	#cb_buff_duration .checkbox-label, #cb_auto_friend .checkbox-label, #cb_auto_guild .checkbox-label,
-	#cb_auto_defend .checkbox-label { width: calc(228px * var(--root-scale)); }
-	#cb_orig_position .checkbox-label, #cb_repair .checkbox-label { width: calc(127px * var(--root-scale)); }
-	#distance_label, #cb_skill2_delay .checkbox-label, #cb_skill3_delay .checkbox-label { width: calc(50px * var(--root-scale)); }
+	#distance_time, #skill2_delay, #skill3_delay { width: calc(26px * var(--root-scale)); height: calc(16px * var(--root-scale)); }
+
+	/* --- Hunting, left: range and recovery, movement, buffs (the pick-up page's range and repair alike) --- */
+	#box_h_range, #box_o_range { left: 24px; top: 73px; width: 110px; height: 78px; }
+	#box_h_recovery, #box_o_repair { left: 130px; top: 73px; width: 188px; height: 78px; }
+	#box_h_movement { left: 24px; top: 148px; width: 294px; height: 100px; }
+	#box_h_buffs { left: 24px; top: 245px; width: 294px; height: 94px; }
+	#h_range_label, #o_range_label { left: 34px; top: 80px; width: calc(60px * var(--root-scale)); }
+	#h_range_rule, #o_range_rule { left: 34px; top: 85px; }
+	#h_range_digit, #o_range_digit { left: 54px; top: 106px; }
+	#btn_hunt_add, #btn_pick_add { left: 100px; top: 82px; }
+	#btn_hunt_minus, #btn_pick_minus { left: 100px; top: 116px; }
+
+	#cb_potion { left: 142px; top: 84px; }
+	#cb_auto_heal, #cb_drain_life { left: 142px; top: 118px; }
+	/* Beside the potion, whatever the class: the second row is the heal's or the drain's alone. */
+	#btn_potion_setting, #btn_potion_setting_label,
+	#btn_potion_setting.summoner, #btn_potion_setting_label.summoner { left: 254px; top: 79px; }
+
+	#cb_long_distance { left: 34px; top: 158px; }
+	#cb_orig_position { left: 34px; top: 188px; }
+	#distance_label { left: 60px; top: 223px; width: calc(100px * var(--root-scale)); }
+	#distance_plate { left: 168px; top: 218px; }
+	#distance_time { left: 170px; top: 221px; }
+	#distance_unit { left: 204px; top: 223px; }
+
+	#cb_buff_duration { left: 34px; top: 255px; }
+	#slot_3 { left: 40px; top: 284px; }
+	#slot_4 { left: 88px; top: 284px; }
+	#slot_5 { left: 136px; top: 284px; }
+
+	/* --- Hunting, right: the skills, each slot with its label and options beside it --- */
+	#box_h_skills { left: 322px; top: 73px; width: 294px; height: 266px; }
+	#slot_0 { left: 334px; top: 82px; }
+	#basic_skill_label { left: 380px; top: 97px; }
+	#activation1_label { left: 380px; top: 128px; }
+	#slot_1 { left: 334px; top: 140px; }
+	#cb_skill2_delay { left: 380px; top: 146px; }
+	#skill2_plate { left: 484px; top: 145px; }
+	#skill2_delay { left: 486px; top: 148px; }
+	#skill2_unit { left: 518px; top: 150px; }
+	#cb_skill2_condition { left: 380px; top: 172px; }
+	#btn_skill2_setting, #btn_skill2_setting_label { left: 548px; top: 157px; }
+	#activation2_label { left: 380px; top: 208px; }
+	#slot_2 { left: 334px; top: 220px; }
+	#cb_skill3_delay { left: 380px; top: 226px; }
+	#skill3_plate { left: 484px; top: 225px; }
+	#skill3_delay { left: 486px; top: 228px; }
+	#skill3_unit { left: 518px; top: 230px; }
+	#cb_skill3_condition { left: 380px; top: 252px; }
+	#btn_skill3_setting, #btn_skill3_setting_label { left: 548px; top: 237px; }
+	/* A delay's finger area stops short of its number field. */
+	#cb_skill2_delay .checkbox-box, #cb_skill3_delay .checkbox-box { padding-right: 76px; }
+
+	/* The Dark Lord has no third skill, so his raven takes its rows; the other classes' combo or party row
+	   is under them. */
+	#cb_use_pet { left: 332px; top: 206px; }
+	#rb_raven_auto { left: 346px; top: 232px; }
+	#rb_raven_cease { left: 480px; top: 232px; }
+	#rb_raven_together { left: 346px; top: 258px; }
+	#cb_combo, #cb_party { left: 332px; top: 286px; }
+	#btn_party_setting, #btn_party_setting_label { left: 548px; top: 281px; }
+	#cb_fallback { left: 332px; top: 314px; }
+
+	/* --- Item pick-up: the mode and the kinds on the left, the extra-item list on the right --- */
+	#box_o_mode { left: 24px; top: 148px; width: 294px; height: 44px; }
+	#box_o_items { left: 24px; top: 189px; width: 294px; height: 150px; }
+	#box_o_list { left: 322px; top: 73px; width: 294px; height: 266px; }
+	#cb_repair { left: 142px; top: 102px; }
+	#cb_pick_all { left: 34px; top: 160px; }
+	#cb_pick_selected { left: 34px; top: 200px; }
+	#cb_pick_jewel { left: 48px; top: 226px; }
+	#cb_pick_ancient { left: 48px; top: 252px; }
+	#cb_pick_zen { left: 48px; top: 278px; }
+	#cb_pick_excellent { left: 48px; top: 304px; }
+	#cb_pick_extra { left: 332px; top: 84px; }
+	#item_plate { left: 334px; top: 113px; }
+	#item_name {
+		left: 338px;
+		top: 116px;
+		width: calc(188px * var(--root-scale));
+		height: calc(16px * var(--root-scale));
+	}
+	#btn_add_item, #btn_add_item_label { left: 546px; top: 109px; }
+	#extra_list {
+		left: 334px;
+		top: 148px;
+		width: calc(270px * var(--root-scale));
+		height: calc(144px * var(--root-scale));
+	}
+	.mh-extra-row { height: calc(24px * var(--root-scale)); padding: calc(6px * var(--root-scale)) 0 0 calc(8px * var(--root-scale)); }
+	#btn_delete_item, #btn_delete_item_label { left: 546px; top: 300px; }
+
+	/* --- Other --- */
+	#box_x_accept { left: 24px; top: 73px; width: 294px; height: 266px; }
+	#box_x_defend { left: 322px; top: 73px; width: 294px; height: 266px; }
+	#cb_auto_friend { left: 34px; top: 84px; }
+	#cb_auto_guild { left: 34px; top: 112px; }
+	#cb_auto_defend { left: 332px; top: 84px; }
+
+	/* --- Under the groups: the extension note (second and third tabs) or the slot line (first) --- */
+	#box_extension { left: 24px; top: 336px; width: 592px; height: 48px; }
+	#extension_used { left: 36px; top: 344px; }
+	#extension_none { left: 36px; top: 362px; }
+	#box_slot_hint { display: block; left: 24px; top: 336px; width: 592px; height: 48px; }
+	#mh_slot_hint { display: block; left: 36px; top: 354px; color: token(text-muted); }
+
+	/* --- Footer --- */
+	#btn_init, #btn_init_label { left: 358px; top: 386px; }
+	#btn_save, #btn_save_label { left: 480px; top: 386px; }
+	#btn_init { width: 116px; }
+	#btn_save { width: 136px; }
+	#btn_init_label, #btn_save_label { height: calc(30px * var(--root-scale)); line-height: calc(30px * var(--root-scale)); }
+	#btn_init_label { width: calc(116px * var(--root-scale)); }
+	#btn_save_label { width: calc(136px * var(--root-scale)); }
+
+	/* --- Each label's room, to the next control or its group's inner edge --- */
+	#cb_potion .checkbox-label { width: calc(80px * var(--root-scale)); }
+	#cb_auto_heal .checkbox-label, #cb_drain_life .checkbox-label, #cb_repair .checkbox-label { width: calc(144px * var(--root-scale)); }
+	#cb_long_distance .checkbox-label, #cb_orig_position .checkbox-label, #cb_buff_duration .checkbox-label,
+	#cb_pick_all .checkbox-label, #cb_pick_selected .checkbox-label, #cb_auto_friend .checkbox-label,
+	#cb_auto_guild .checkbox-label { width: calc(250px * var(--root-scale)); }
+	#cb_pick_jewel .checkbox-label, #cb_pick_ancient .checkbox-label, #cb_pick_zen .checkbox-label,
+	#cb_pick_excellent .checkbox-label { width: calc(236px * var(--root-scale)); }
+	#basic_skill_label, #activation1_label, #activation2_label { width: calc(226px * var(--root-scale)); }
+	#cb_skill2_delay .checkbox-label, #cb_skill3_delay .checkbox-label { width: calc(74px * var(--root-scale)); }
 	#distance_unit, #skill2_unit, #skill3_unit { width: calc(20px * var(--root-scale)); }
-	#cb_skill2_condition .checkbox-label, #cb_skill3_condition .checkbox-label { width: calc(37px * var(--root-scale)); }
-	#activation1_label, #activation2_label { width: calc(58px * var(--root-scale)); }
-	#cb_combo .checkbox-label, #cb_party .checkbox-label { width: calc(45px * var(--root-scale)); }
-	#rb_raven_cease .checkbox-label { width: calc(102px * var(--root-scale)); }
-	#rb_raven_auto .checkbox-label { width: calc(80px * var(--root-scale)); }
-	#rb_raven_together .checkbox-label { width: calc(208px * var(--root-scale)); }
-	#cb_pick_all .checkbox-label, #cb_pick_selected .checkbox-label { width: calc(230px * var(--root-scale)); }
-	#cb_pick_jewel .checkbox-label, #cb_pick_zen .checkbox-label { width: calc(78px * var(--root-scale)); }
-	#cb_pick_ancient .checkbox-label, #cb_pick_excellent .checkbox-label { width: calc(117px * var(--root-scale)); }
-	#cb_pick_extra .checkbox-label { width: calc(157px * var(--root-scale)); }
-	#extension_used, #extension_none { width: calc(252px * var(--root-scale)); }
-	#distance_time { left: 234px; }
-	#skill2_delay { left: 234px; }
-	#skill3_delay { left: 234px; }
+	#cb_skill2_condition .checkbox-label, #cb_skill3_condition .checkbox-label { width: calc(134px * var(--root-scale)); }
+	#cb_combo .checkbox-label, #cb_party .checkbox-label { width: calc(180px * var(--root-scale)); }
+	#rb_raven_auto .checkbox-label { width: calc(104px * var(--root-scale)); }
+	#rb_raven_cease .checkbox-label { width: calc(100px * var(--root-scale)); }
+	#cb_use_pet .checkbox-label, #cb_fallback .checkbox-label, #cb_pick_extra .checkbox-label,
+	#cb_auto_defend .checkbox-label, #rb_raven_together .checkbox-label { width: calc(234px * var(--root-scale)); }
+	#extension_used, #extension_none, #mh_slot_hint { width: calc(568px * var(--root-scale)); }
 }

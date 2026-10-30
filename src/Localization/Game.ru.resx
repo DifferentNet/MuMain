@@ -15066,4 +15066,19 @@
   <data name="PadBindPlace" xml:space="preserve">
     <value>Нажмите X, Y, RB, LT или крестовину вниз, куда поставить навык</value>
   </data>
+  <data name="PadKeyboardType" xml:space="preserve">
+    <value>Ввести</value>
+  </data>
+  <data name="PadKeyboardCaret" xml:space="preserve">
+    <value>Курсор</value>
+  </data>
+  <data name="PadKeyboardSpace" xml:space="preserve">
+    <value>пробел</value>
+  </data>
+  <data name="PadHelpKeyboard" xml:space="preserve">
+    <value>Поля ввода (чат, вход): открывается экранная клавиатура. Крестовина или стик: клавиши, A: нажать, X: стереть, Y: пробел, LT: заглавные, RT: символы, View: английский/русский, LB/RB: курсор, Menu: Enter, B: закрыть</value>
+  </data>
+  <data name="MuHelperSlotClearHint" xml:space="preserve">
+    <value>Чтобы очистить ячейку навыка, удерживайте её (R3 на геймпаде)</value>
+  </data>
 </root>

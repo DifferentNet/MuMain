@@ -34,6 +34,17 @@
 	pointer-events: auto;
 }
 #btn_exit:hover { border-color: token(accent-steel-hover); }
+/* The exit's mark, as on the other modern windows' exits (base.rcss's .modern-icon-btn-glyph-px). */
+.cc-exit-glyph {
+	display: block;
+	text-align: center;
+	line-height: 28px;
+	color: token(text-secondary);
+	font-weight: bold;
+	font-family: "DejaVu Sans";
+	pointer-events: none;
+}
+#btn_exit:hover .cc-exit-glyph { color: token(accent-gold-hover); }
 
 /* The original's grid: the rows start at CONTENT_TOP, one ROW_HEIGHT apart; on the parameter page a
    blank row comes before the parameters (35 apart: name, value box, gap) and before the actions. */
@@ -92,21 +103,56 @@
 .cc-remove-mark { width: calc(15px * var(--root-scale)); }
 .cc-label { width: calc(64px * var(--root-scale)); }
 
-/* The phone view: the command and template lists hold every row (CChatCommandWindow::VisibleRows())
-   and scroll by finger, rows a finger can hit, a slim bar showing where the list is. */
+/* MU Moldova: the phone view (theme flag "mobile"): a side panel down the screen's right edge, 300 units
+   wide, so a command's name and its parameters fit on one line while the game and the chat stay in view
+   on the left. The command and template lists hold every row (CChatCommandWindow::VisibleRows()) and
+   scroll by finger, rows a finger can hit, a slim bar showing where the list is; the parameter boxes, the
+   left and right buttons, the exit and a template's remove cell are finger-sized. The buttons' labels
+   take their line height from the model (29 units), so they sit lower in the taller button. */
 @media (theme: mobile) {
-	.cc-rows { height: 306px; }
+	#panel { width: 300px; }
+
+	/* --- The lists: rows 34 units tall from under the title to the buttons --- */
+	.cc-page, .cc-rows { left: 22px; top: 40px; width: 256px; }
+	.cc-rows { height: 300px; }
 	.cc-rows .cc-row {
-		height: 25px;
+		height: 34px;
 		border-bottom-width: 1px;
 		border-bottom-color: token(border-inner);
 	}
-	.cc-rows .cc-cell, .cc-rows .cc-remove-mark { line-height: calc(25px * var(--root-scale)); }
+	.cc-rows .cc-cell { left: 6px; }
+	.cc-rows .cc-cell, .cc-rows .cc-remove-mark { line-height: calc(34px * var(--root-scale)); }
 	.cc-rows scrollbarvertical { width: 4px; }
 	.cc-rows scrollbarvertical sliderbar { min-height: 24px; }
-	/* The remove cell keeps clear of the bar at the row's right. */
-	.cc-template-hit { width: 112px; height: 25px; }
-	.cc-template-remove { left: auto; right: 4px; width: 26px; height: 25px; }
-	.cc-cell.cc-template-label { width: calc(112px * var(--root-scale)); }
-	.cc-remove-mark { width: calc(26px * var(--root-scale)); }
+
+	/* --- A command's page: its description, then each parameter's name over a box a finger hits --- */
+	.cc-line-box { height: 17px; }
+	.cc-parameter { height: 54px; }
+	.cc-value-box { top: 17px; width: 256px; height: 30px; border-radius: token(radius-sm)px; }
+	.cc-param-value, .cc-value-field { left: 6px; top: 17px; }
+	.cc-param-value { line-height: calc(30px * var(--root-scale)); }
+	.cc-value-field { height: calc(30px * var(--root-scale)); line-height: calc(30px * var(--root-scale)); }
+	.cc-actions .cc-row { height: 34px; }
+	.cc-actions .cc-cell { line-height: calc(34px * var(--root-scale)); }
+
+	/* --- A template row: its label, then the remove cell clear of the bar --- */
+	.cc-template-hit { width: 214px; height: 34px; }
+	.cc-template-remove { left: auto; right: 4px; width: 36px; height: 34px; }
+
+	/* --- The left and right buttons, and the exit under them --- */
+	.cc-btn { top: 346px; width: 124px; height: 36px; }
+	#btn_left { left: 22px; }
+	#btn_right { left: 154px; }
+	.cc-label { top: 4px; }
+	#btn_exit { left: 22px; top: 388px; width: 48px; height: 34px; }
+	.cc-exit-glyph { line-height: 34px; font-size: 18px; }
+
+	/* --- Lengths inside counter-scaled layers --- */
+	#cc_empty { top: 40px; width: calc(256px * var(--root-scale)); }
+	.cc-cell, .cc-row-line, .cc-param-label { width: calc(256px * var(--root-scale)); }
+	.cc-rows .cc-cell { width: calc(244px * var(--root-scale)); }
+	.cc-param-value, .cc-value-field { width: calc(244px * var(--root-scale)); }
+	.cc-cell.cc-template-label { width: calc(208px * var(--root-scale)); }
+	.cc-remove-mark { width: calc(36px * var(--root-scale)); }
+	.cc-label { width: calc(124px * var(--root-scale)); }
 }

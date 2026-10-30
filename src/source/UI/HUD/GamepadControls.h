@@ -17,9 +17,12 @@
 // | R3 | A right click at the pointer |
 // | L3 | The skill list, to put a skill on a button |
 // | View | The map |
-// | Menu | The menu of windows: the stick or the d-pad move its highlight, A opens, B or Menu closes |
+// | Menu | The menu of windows: the stick or d-pad moves the highlight, A opens, B or Menu closes; Chat = chat |
 //
 // Off the world: the sticks move the pointer, A or RT click, B is Esc and Menu is Enter.
+//
+// While a text field has the keys (the chat, the login), the on-screen keyboard (UI/HUD/PadKeyboard)
+// has the pad and nothing else acts.
 #pragma once
 
 namespace UI::HUD::GamepadControls

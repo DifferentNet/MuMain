@@ -3,6 +3,7 @@
 
 #include "Core/Input/GamepadInput.h"
 #include "Core/Input/GamepadPointer.h"
+#include "Core/Input/GamepadStepper.h"
 #include "Core/Input/TouchInput.h"
 #include "Core/Input/UiInputRouter.h"
 #include "Core/Platform/GameWindow.h"
@@ -14,11 +15,16 @@
 #include "UI/Chat/MessageType.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/HUD/MainFrameWindow.h"
+#include "UI/HUD/PadKeyboard.h"
 #include "UI/HUD/SkillList.h"
 #include "UI/HUD/TouchControls.h"
 #include "UI/Mobile/InterfaceMode.h"
 
 #include <SDL3/SDL.h>
+
+#ifdef __EMSCRIPTEN__
+#include "Core/Platform/web/WebKeyboard.h"
+#endif
 
 #include <algorithm>
 #include <array>
@@ -38,8 +44,6 @@ using Clock = std::chrono::steady_clock;
 // held, then at the second pace.
 constexpr auto MenuFirstRepeat = std::chrono::milliseconds(400);
 constexpr auto MenuRepeat = std::chrono::milliseconds(150);
-// How far the stick leans before it moves the menu's highlight.
-constexpr float MenuStickLean = 0.5f;
 // A frame longer than this (a hitch, a hidden tab) moves the pointer no further.
 constexpr float LongestFrame = 0.1f;
 // GameLogic::Touch::Steer reads a direction in screen pixels: the stick's -1 .. 1, scaled up.
@@ -84,12 +88,6 @@ struct PointerPress
     int control = -1;
 };
 
-struct MenuStep
-{
-    int dx = 0;
-    int dy = 0;
-};
-
 struct State
 {
     bool inUse = false;
@@ -103,13 +101,14 @@ struct State
     PointerPress a;
     PointerPress rightTrigger;
     bool steering = false;
+    // The on-screen keyboard has the pad (UI/HUD/PadKeyboard).
+    bool typing = false;
     Clock::time_point lastFrame{};
-    MenuStep menuStep;
-    Clock::time_point nextMenuStep{};
+    Pad::Stepper menuStepper{MenuFirstRepeat, MenuRepeat};
 };
 State g_state;
 
-using Presses = std::array<bool, Pad::ButtonCount>;
+using Pad::Presses;
 
 bool Held(Button button)
 {
@@ -263,7 +262,7 @@ void ReleaseAll(SDL_Window* window)
     Controls::ReleasePad();
     Core::Input::Gamepad::Pointer::Release(window);
     StopWalking();
-    g_state.menuStep = {};
+    g_state.menuStepper.Reset();
 }
 
 void TellOnce()
@@ -272,64 +271,6 @@ void TellOnce()
         return;
     g_state.told = true;
     g_pSystemLogBox->AddText(I18N::Game::PadConnected, mu::ui::window::TYPE_SYSTEM_MESSAGE);
-}
-
-// The way the d-pad or the left stick points, a step on one axis.
-MenuStep CurrentMenuStep()
-{
-    if (Held(Button::DpadLeft))
-        return {-1, 0};
-    if (Held(Button::DpadRight))
-        return {1, 0};
-    if (Held(Button::DpadUp))
-        return {0, -1};
-    if (Held(Button::DpadDown))
-        return {0, 1};
-    const Pad::StickPosition stick = Pad::LeftStick();
-    if (std::max(std::abs(stick.x), std::abs(stick.y)) < MenuStickLean)
-        return {};
-    if (std::abs(stick.x) >= std::abs(stick.y))
-        return {stick.x < 0.f ? -1 : 1, 0};
-    return {0, stick.y < 0.f ? -1 : 1};
-}
-
-// A d-pad tap that began and ended between two frames (a slow phone): the way it pointed.
-MenuStep TappedMenuStep(const Presses& presses)
-{
-    if (Pressed(presses, Button::DpadLeft))
-        return {-1, 0};
-    if (Pressed(presses, Button::DpadRight))
-        return {1, 0};
-    if (Pressed(presses, Button::DpadUp))
-        return {0, -1};
-    if (Pressed(presses, Button::DpadDown))
-        return {0, 1};
-    return {};
-}
-
-void StepMenuHighlight(const Presses& presses, Clock::time_point now)
-{
-    const MenuStep step = CurrentMenuStep();
-    const bool moving = step.dx != 0 || step.dy != 0;
-    const bool turned = step.dx != g_state.menuStep.dx || step.dy != g_state.menuStep.dy;
-    g_state.menuStep = step;
-    if (!moving)
-    {
-        const MenuStep tap = TappedMenuStep(presses);
-        if (tap.dx != 0 || tap.dy != 0)
-            Controls::MoveMenuFocus(tap.dx, tap.dy);
-        return;
-    }
-    if (turned)
-    {
-        Controls::MoveMenuFocus(step.dx, step.dy);
-        g_state.nextMenuStep = now + MenuFirstRepeat;
-    }
-    else if (now >= g_state.nextMenuStep)
-    {
-        Controls::MoveMenuFocus(step.dx, step.dy);
-        g_state.nextMenuStep = now + MenuRepeat;
-    }
 }
 
 // The menu open: the stick and the d-pad move its highlight, A opens the item, B closes the menu,
@@ -343,7 +284,9 @@ void PlayMenu(SDL_Window* window, const Presses& presses, Clock::time_point now)
     WaitForRelease();
 
     Controls::MoveMenuFocus(0, 0);
-    StepMenuHighlight(presses, now);
+    const Pad::Step step = g_state.menuStepper.Take(presses, now);
+    if (step.dx != 0 || step.dy != 0)
+        Controls::MoveMenuFocus(step.dx, step.dy);
     if (Pressed(presses, Button::A))
         Controls::ActivateMenuFocus();
     if (Pressed(presses, Button::B))
@@ -363,7 +306,7 @@ void PlayWorld(SDL_Window* window, const Presses& presses, float seconds, Clock:
         PlayMenu(window, presses, now);
         return;
     }
-    g_state.menuStep = {};
+    g_state.menuStepper.Reset();
     Walk(Pad::LeftStick());
     FollowPress(window, g_state.a, g_state.rightTrigger, Pressed(presses, Button::A), Held(Button::A), true);
     for (const Mapping& mapping : Mappings)
@@ -380,7 +323,8 @@ void PlayScreens(SDL_Window* window, const Presses& presses, float seconds)
     const bool leftFurther = std::hypot(left.x, left.y) >= std::hypot(right.x, right.y);
     const Pad::StickPosition stick = leftFurther ? left : right;
     Core::Input::Gamepad::Pointer::Move(window, stick.x, stick.y, seconds, false);
-    Core::Input::Gamepad::Pointer::SetButton(window, SDL_BUTTON_LEFT, Held(Button::A) || Held(Button::RightTrigger));
+    Core::Input::Gamepad::Pointer::SetButton(window, SDL_BUTTON_LEFT,
+                                             HoldsControl(Button::A) || HoldsControl(Button::RightTrigger));
     if (Pressed(presses, Button::B))
         Core::Input::Touch::TapKey(VK_ESCAPE);
     if (Pressed(presses, Button::Menu))
@@ -395,6 +339,20 @@ void SwitchUse(SDL_Window* window, bool inUse)
     else
         ReleaseAll(window);
     UI::Mobile::SetGamepadInUse(inUse);
+#ifdef __EMSCRIPTEN__
+    // The pad's own keyboard types (UI/HUD/PadKeyboard): the phone's stays down meanwhile.
+    mu::web::HoldBackKeyboard(inUse);
+#endif
+}
+
+// The on-screen keyboard has the pad: nothing else acts, and what was held acts again only once let
+// go, so the B that closed it does not go on to press Back.
+void HandToKeyboard(SDL_Window* window)
+{
+    if (!g_state.typing)
+        ReleaseAll(window);
+    g_state.typing = true;
+    WaitForRelease();
 }
 } // namespace
 
@@ -410,8 +368,15 @@ void Update()
     if (inUse != g_state.inUse)
         SwitchUse(window, inUse);
     const Presses presses = TakePresses();
+    const bool typing = UI::HUD::PadKeyboard::Update(inUse && window != nullptr, presses);
     if (!inUse || window == nullptr)
         return;
+    if (typing)
+    {
+        HandToKeyboard(window);
+        return;
+    }
+    g_state.typing = false;
 
     const bool inWorld = IsInWorld();
     if (inWorld != g_state.inWorld)

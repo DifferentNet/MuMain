@@ -24,7 +24,7 @@ the page's request between frames, `UI::Mobile::FollowPage`).
 |---|---|---|
 | Bottom left | Joystick (floating: it appears where the thumb lands) | Walks the way it points, a few tiles ahead, re-planning as the walk runs out or the thumb turns. Letting go stops at the tile reached. |
 | Above the joystick | Q, W | The item hotkeys Q and W (potions). |
-| Along the top, right of the location bar | Back, Menu, Inventory, Character, Chat, Teleport, Map | Back is Esc: it closes the top window (or opens the system menu with none open). Menu opens a panel of 17 items under the row: windows, Skills (the skill list, to put a skill on a button) and View (PC / phone). The others press the window's key (I, C, Enter, M, Tab). |
+| Along the top, right of the location bar | Back, Menu, Inventory, Character, Chat, Teleport, Map | Back is Esc: it closes the top window (or opens the system menu with none open). Menu opens a panel of 18 items under the row: windows, Skills (the skill list, to put a skill on a button), View (PC / phone) and Chat (for a pad, which has no Chat button of its own). The others press the window's key (I, C, Enter, M, Tab). |
 | Bottom right | Attack (held) | Plain attack on the monster tapped last, else the one fought last, else the nearest within 8 tiles. |
 | Around Attack | The hotkey bar's five skills | A tap makes the skill current (as a click on its slot). Held, it casts: buffs and heals on the character, area buffs around it, the rest at a monster as Attack picks one. Teleport only selects (aim it with a long press). |
 | Around Attack | Putting a skill on a button | No digit keys, so either way round: a tap on an empty button (or on any while the skill list is open) lights it and opens the list, and the skill picked there goes on it; or open the list with the bar's current-skill icon, pick a skill, and the five buttons light up for 8 s for a tap on one. A hint above them says what to do. The list counts its picks (`CSkillList::GetGridPickCount`), so picking the current skill again counts too. Either way the hotkeys are saved to the server at once (`SaveOptions`), as a closed tab never logs out. |
@@ -68,7 +68,9 @@ Each window restyles itself under `@media (theme: mobile)` in both themes; on a 
 | Windows | What the phone view does |
 |---|---|
 | Inventory, storage, shops, trade, chaos machine, personal shops | The inventory alone fills the screen (equipment left, bag right, cells about 40 CSS px). Beside another window `#panel` gets the class `beside`: the bag only. The 15-row grids show part of the grid in an `.item-grid-viewport` paged by ▲▼ (`data-grid-scroll`); a drop outside the shown rows is refused. The 4-row windows put the grid right, text and big buttons left. |
-| Character, quests, party, friends, battle pass, help, options, teleport, commands, MU Helper | Wider panels (`docked_panel_frame.rcss` repeats the frame's middle so the art stays undistorted), bigger tabs, rows and buttons, a corner close a finger hits (44 × 40 px). The commands window holds every row and scrolls by finger instead of by page. |
+| Character, quests, party, friends, battle pass, help, options, teleport | Wider panels (`docked_panel_frame.rcss` repeats the frame's middle so the art stays undistorted), bigger tabs, rows and buttons, a corner close a finger hits (44 × 40 px). |
+| MU Helper | The settings 640 units wide in two columns, the pieces a third larger, a check box's finger area running on over its label, and a line saying how to clear a skill slot (hold it; R3 on a pad). Its Setting panel beside it, 300 units wide: each pane the panel's width, the condition radios in one column, long labels on two lines, a whole check row a target, the gauges half as large again, Save and Initialization the panel's width. The skill picker's entries 40 × 46 in columns of eight. The pieces both windows share are in `mu_helper_common.rcss`'s phone block. |
+| Commands | A side panel 300 units wide (`chat_command.rcss`): rows 34 units tall, every command listed and scrolled by finger instead of by page; a command's page fits its description, each parameter's name over a 30-unit box, and the actions to the panel (`CChatCommandWindow::CurrentPage`, re-wrapped when the view changes). |
 | Skill list (menu → Skills) | Rows of eight finger-sized cells on a dark plate above the controls. Back closes it (Esc would open the system menu over it). |
 | Map (Tab) | Full screen, under the touch controls so their Back closes it. |
 | Touch menu | Drawn over every window while open (`OpenTouchMenuDepth`); a tap on the dimmed screen around it shuts it, and it shuts while a dialog waits for an answer. |
@@ -110,7 +112,7 @@ bar as touch does (style flag `mobile-hud`). Without touch the joystick is not d
 | R3 | A right click at the pointer |
 | L3 | The skill list, to put a skill on a button (pick it with the pointer and A, then press the button) |
 | View | The map |
-| Menu | The menu of windows: the stick or the d-pad move its highlight, A opens, B or Menu closes; its legend shows the keys |
+| Menu | The menu of windows: the stick or the d-pad move its highlight, A opens, B or Menu closes; its legend shows the keys. Its Chat item opens the chat line, and the pad's keyboard with it |
 
 On the login, server and character screens both sticks move the pointer, A or RT click, B is Esc and
 Menu is Enter. The pointer starts at the screen's centre when the pad takes over, so A attacks at
@@ -122,10 +124,43 @@ page lists every button while the pad is in use (with touch on too, under the to
 |---|---|---|
 | Device | `Core/Input/GamepadInput.{h,cpp}` | SDL gamepad events → held buttons, presses since the last frame and the sticks (radial dead zone, triggers as buttons), across up to four pads; which device the player used last. The sticks are also polled once a frame (`Poll`): SDL keeps the first value an axis reports as its rest and sends no event for it. |
 | Pointer | `Core/Input/GamepadPointer.{h,cpp}` | The stick moves the SDL pointer (warped), buttons as pushed SDL mouse events with their own `which`; held buttons ORed into `IsKeyDown(VK_LBUTTON/VK_RBUTTON)`. A real mouse moving it is followed; a browser repeating a resting mouse's place (it does on layout changes) is not. |
-| Mapping | `UI/HUD/GamepadControls.{h,cpp}` | Once a frame before the touch controls: presses their controls (`TouchControls::SetPadHeld`), steers (`GameLogic::Touch::Steer`), moves the menu's highlight; off the world, the plain pointer. |
+| Mapping | `UI/HUD/GamepadControls.{h,cpp}` | Once a frame before the touch controls: presses their controls (`TouchControls::SetPadHeld`), steers (`GameLogic::Touch::Steer`), moves the menu's highlight; off the world, the plain pointer; with a text field focused, hands the pad to the keyboard. |
 
 A DualSense plays with the same buttons (cross = A, circle = B, square = X, triangle = Y); its own
-glyphs are still to draw.
+glyphs are put off (ghinzuro, 2026-10-30). No pad-only view for a Steam Deck either: its pad plays
+as any other.
+
+### The pad's keyboard
+
+While the pad is in use and a text field has the keys (the chat line, the login's account and
+password, a search or amount field), an on-screen keyboard comes up and the pad types on it; nothing
+else acts until it closes. It stands at the screen's foot, at its top when the field is low (the
+chat line), and shows the field's text with its cursor in a line of its own, dots for a password.
+The phone's own keyboard stays down while the pad types and comes back if a finger takes over.
+
+| Pad | On the keyboard |
+|---|---|
+| D-pad, left stick | Move between the keys (held, it repeats); the rows wrap round |
+| A | Press the highlighted key |
+| B | Close it: the chat closes as with Esc, another field lets go of the keys |
+| X | Backspace (held, it repeats) |
+| Y | Space |
+| LT | Shift: once for one capital, twice to stay |
+| RT | The symbols page, and back to the letters |
+| View | English or Russian letters |
+| LB, RB | Move the cursor (held, it repeats) |
+| Menu | Enter: send the chat line, log in |
+
+A key a pad button also presses carries that button's glyph. A password field gets English letters
+only; a field that takes digits (`text-field--numeric`) gets a number pad. Buttons still held when
+the keyboard closes act only once released, so the B that closed it does not also press Back.
+
+| Piece | File | Role |
+|---|---|---|
+| Layout | `UI/HUD/PadKeyboardLayout.{h,cpp}` | The pages (English, Russian, symbols, digits), their keys and widths, and moving between keys (rows centred, up and down to the nearest key's middle). Tests: `tests/ui/test_pad_keyboard_layout.cpp`. |
+| Keyboard | `UI/HUD/PadKeyboard.{h,cpp}` + `pad_keyboard.rml` + `themes/{legacy,modern}/pad_keyboard.rcss` | Shows itself for the focused field (`GetFocusedTextField`), types into it through RmlUi's own SDL path (`Core::Input::RouteToUi`: text input and key events, as a real keyboard), Enter and Esc also as game keys (`Touch::TapKey`). Depth 35 in `RmlStackingOrder.cpp`: over the windows and messages of any scene, under the loading screen. |
+| Repeats | `Core/Input/GamepadStepper.{h,cpp}` | The d-pad's and stick's steps with a first pause and a repeat, shared with the menu's highlight; a held button's repeat. |
+| Phone keyboard | `Core/Platform/web/WebKeyboard.{h,cpp}` | `HoldBackKeyboard` keeps the phone's keyboard down while the pad is in use. |
 
 ## How it is built
 

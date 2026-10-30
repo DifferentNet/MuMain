@@ -14,6 +14,9 @@ constexpr float SceneBalloonDepth = 29.0f; // CUIMng::Render(): balloons, then i
 constexpr float SceneWindowDepth = 30.0f;
 constexpr float OverSceneWindowsDepth = 30.5f; // a main-scene window opened over CUIMng's windows
 constexpr float SceneMessageBoxDepth = 31.0f; // the login scene's g_MessageBox, after CUIMng
+// The pad's on-screen keyboard: over every window and message of any scene (it types into them),
+// under the loading screen and the reconnect dialog, which end the typing.
+constexpr float PadKeyboardDepth = 35.0f;
 constexpr float LoadingScreenDepth = 40.0f;   // the loading scene draws nothing else
 constexpr float ReconnectDialogDepth = 50.0f; // after the whole scene
 // The phone view's HUD overlays: under every window (the lowest, trade.rml, is 2.1), still over the
@@ -174,6 +177,7 @@ constexpr DocumentPlacement Placements[] = {
     {"msg_win.rml", SceneMessageBoxDepth, AnyScene},
     {"sys_menu.rml", SceneWindowDepth, AnyScene},
     {"remember_password_prompt.rml", SceneMessageBoxDepth, AnyScene},
+    {"pad_keyboard.rml", PadKeyboardDepth, AnyScene},
     {"loading.rml", LoadingScreenDepth, AnyScene},
     {"title_scene.rml", LoadingScreenDepth, AnyScene},
     {"reconnect_dialog.rml", ReconnectDialogDepth, AnyScene},

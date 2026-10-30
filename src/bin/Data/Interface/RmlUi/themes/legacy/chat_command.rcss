@@ -32,6 +32,9 @@
 #btn_right { left: 104px; }
 .cc-label { left: 0; text-align: center; color: #ffffff; }
 
+/* The exit art (docked_panel_frame.rcss) draws its own X. */
+.cc-exit-glyph { display: none; }
+
 /* The original's grid: the rows start at CONTENT_TOP, one ROW_HEIGHT apart; on the parameter page a
    blank row comes before the parameters (35 apart: name, value box, gap) and before the actions. */
 .cc-page, .cc-rows { display: block; position: absolute; left: 22px; top: 36px; width: 146px; }
@@ -91,23 +94,68 @@
 .cc-remove-mark { width: calc(15px * var(--root-scale)); }
 .cc-label { width: calc(64px * var(--root-scale)); }
 
-/* The phone view: the command and template lists hold every row (CChatCommandWindow::VisibleRows())
-   and scroll by finger, rows a finger can hit, a slim bar showing where the list is. */
+/* MU Moldova: the phone view (theme flag "mobile"): a side panel down the screen's right edge, 300 units
+   wide, so a command's name and its parameters fit on one line while the game and the chat stay in view
+   on the left. The command and template lists hold every row (CChatCommandWindow::VisibleRows()) and
+   scroll by finger, rows a finger can hit, a slim bar showing where the list is; the parameter boxes, the
+   left and right buttons and a template's remove cell are finger-sized. The frame's ends keep their art
+   while its plain middle repeats (docked_panel_frame.rcss), and the parchment repeats. The buttons' labels
+   take their line height from the model (29 units), so they sit lower in the taller button. */
+@spritesheet cc-phone-btn-sheet
+{
+	src: "../../../newui_btn_empty_small.tga";
+	cc-phone-btn-up: 0px 0px 64px 29px; cc-phone-btn-up-inner: 10px 7px 44px 15px;
+	cc-phone-btn-over: 0px 29px 64px 29px; cc-phone-btn-over-inner: 10px 36px 44px 15px;
+	cc-phone-btn-down: 0px 58px 64px 29px; cc-phone-btn-down-inner: 10px 65px 44px 15px;
+}
 @media (theme: mobile) {
-	.cc-rows { height: 306px; }
+	#panel { width: 300px; decorator: image(docked-bg-fill repeat left top); }
+	.frame-top { decorator: tiled-horizontal(docked-phone-top-b-l, docked-phone-top-b-c, docked-phone-top-b-r); }
+	.frame-bottom { decorator: tiled-horizontal(docked-phone-bottom-l, docked-phone-bottom-c, docked-phone-bottom-r); }
+
+	/* --- The lists: rows 34 units tall from under the title to the buttons --- */
+	.cc-page, .cc-rows { left: 22px; top: 40px; width: 256px; }
+	.cc-rows { height: 300px; }
 	.cc-rows .cc-row {
-		height: 25px;
+		height: 34px;
 		border-bottom-width: 1px;
 		border-bottom-color: rgba(255, 255, 255, 28);
 	}
-	.cc-rows .cc-cell, .cc-rows .cc-remove-mark { line-height: calc(25px * var(--root-scale)); }
+	.cc-rows .cc-cell { left: 6px; }
+	.cc-rows .cc-cell, .cc-rows .cc-remove-mark { line-height: calc(34px * var(--root-scale)); }
 	.cc-rows scrollbarvertical { width: 4px; }
 	.cc-rows scrollbarvertical slidertrack { decorator: none; background-color: rgba(255, 255, 255, 20); }
 	.cc-rows scrollbarvertical sliderbar { decorator: none; height: auto; min-height: 24px; background-color: rgba(255, 220, 120, 150); }
 	.cc-rows scrollbarvertical sliderarrowdec, .cc-rows scrollbarvertical sliderarrowinc { height: 0; }
-	/* The remove cell keeps clear of the bar at the row's right. */
-	.cc-template-hit { width: 112px; height: 25px; }
-	.cc-template-remove { left: auto; right: 4px; width: 26px; height: 25px; }
-	.cc-cell.cc-template-label { width: calc(112px * var(--root-scale)); }
-	.cc-remove-mark { width: calc(26px * var(--root-scale)); }
+
+	/* --- A command's page: its description, then each parameter's name over a box a finger hits --- */
+	.cc-line-box { height: 17px; }
+	.cc-parameter { height: 54px; }
+	.cc-value-box { top: 17px; width: 256px; height: 30px; }
+	.cc-param-value, .cc-value-field { left: 6px; top: 17px; }
+	.cc-param-value { line-height: calc(30px * var(--root-scale)); }
+	.cc-value-field { height: calc(30px * var(--root-scale)); line-height: calc(30px * var(--root-scale)); }
+	.cc-actions .cc-row { height: 34px; }
+	.cc-actions .cc-cell { line-height: calc(34px * var(--root-scale)); }
+
+	/* --- A template row: its label, then the remove cell clear of the bar --- */
+	.cc-template-hit { width: 214px; height: 34px; }
+	.cc-template-remove { left: auto; right: 4px; width: 36px; height: 34px; }
+
+	/* --- The left and right buttons --- */
+	.cc-btn { top: 346px; width: 124px; height: 36px; decorator: ninepatch(cc-phone-btn-up, cc-phone-btn-up-inner); }
+	.cc-btn:hover { decorator: ninepatch(cc-phone-btn-over, cc-phone-btn-over-inner); }
+	.cc-btn:active { decorator: ninepatch(cc-phone-btn-down, cc-phone-btn-down-inner); }
+	#btn_left { left: 22px; }
+	#btn_right { left: 154px; }
+	.cc-label { top: 4px; }
+
+	/* --- Lengths inside counter-scaled layers --- */
+	#cc_empty { top: 40px; width: calc(256px * var(--root-scale)); }
+	.cc-cell, .cc-row-line, .cc-param-label { width: calc(256px * var(--root-scale)); }
+	.cc-rows .cc-cell { width: calc(244px * var(--root-scale)); }
+	.cc-param-value, .cc-value-field { width: calc(244px * var(--root-scale)); }
+	.cc-cell.cc-template-label { width: calc(208px * var(--root-scale)); }
+	.cc-remove-mark { width: calc(36px * var(--root-scale)); }
+	.cc-label { width: calc(124px * var(--root-scale)); }
 }

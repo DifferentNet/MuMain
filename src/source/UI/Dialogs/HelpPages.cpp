@@ -58,9 +58,10 @@ void AddTouchControlLines(std::vector<UI::Help::PageLine>& lines)
 void AddGamepadLines(std::vector<UI::Help::PageLine>& lines)
 {
     const wchar_t* const padLines[] = {
-        I18N::Game::PadHelpSticks, I18N::Game::PadHelpAttack,  I18N::Game::PadHelpSkills,  I18N::Game::PadHelpSkillList,
-        I18N::Game::PadHelpBack,   I18N::Game::PadHelpPickUp,  I18N::Game::PadHelpPotions, I18N::Game::PadHelpClick,
-        I18N::Game::PadHelpMenu,   I18N::Game::PadHelpScreens,
+        I18N::Game::PadHelpSticks,    I18N::Game::PadHelpAttack,  I18N::Game::PadHelpSkills,
+        I18N::Game::PadHelpSkillList, I18N::Game::PadHelpBack,    I18N::Game::PadHelpPickUp,
+        I18N::Game::PadHelpPotions,   I18N::Game::PadHelpClick,   I18N::Game::PadHelpMenu,
+        I18N::Game::PadHelpKeyboard,  I18N::Game::PadHelpScreens,
     };
     for (const wchar_t* line : padLines)
         AddText(lines, line);

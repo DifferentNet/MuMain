@@ -206,3 +206,88 @@
 
 /* --- Piece offsets ----------------------------------------------------------------------------- */
 #mhc_body .mh-check .checkbox-box { margin: 1px; }
+
+/* The hunting page's line on clearing a skill slot shows in the phone view only (below). */
+#mhc_body .mhc-hint-page { display: none; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode). 240 units at 11 px text
+   were too small for a finger and the eye, so here the window is 640 units wide with 13 px text: each
+   page in two columns (the skills, the item kinds with the extra-item list, and the defence group on the
+   right, filling the page's height), bigger boxes, steppers, fields, slots and buttons, and a whole
+   check row taking the finger. The extension note, or on the hunting page the slot line, sits at the
+   left column's foot; the close button joins the footer's row. */
+@media (theme: mobile) {
+	#panel { width: 640px; }
+	#mhc_main { left: 12px; top: 44px; width: 616px; height: 374px; }
+	#panel .mh-text { font-size: 13px; }
+	#panel #title { width: 640px; font-size: 15px; }
+
+	/* --- Tabs --- */
+	#mhc_tabs { margin-bottom: 4px; }
+	#mhc_tabs .mhc-tab-cell { min-height: 32px; }
+	#mhc_tabs .mh-tab-label { font-size: 14px; }
+
+	/* --- Two columns: the page fills the pane; its right-hand group spans the page's height --- */
+	#mhc_body .mhc-columns { min-height: 100%; }
+	#mhc_body .mhc-columns > * { margin-right: 310px; }
+	#mhc_body #box_h_skills, #mhc_body #box_o_items, #mhc_body #box_x_defend {
+		position: absolute;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		width: 306px;
+		margin: 0;
+	}
+	#mhc_body .mhc-note { position: absolute; left: 0; bottom: 0; width: 306px; }
+	#mhc_body .mhc-hint-page { display: block; }
+	#mh_slot_hint { color: token(text-muted); }
+
+	/* --- Groups --- */
+	.mhc-content { padding: 6px 10px 8px 10px; }
+	.mhc-content > * + * { margin-top: 4px; }
+	.mhc-pair > .mhc-range { flex: 0 0 104px; }
+
+	/* --- Check rows: a bigger box, the whole row a finger's target --- */
+	#mhc_body .mh-check { min-height: 28px; pointer-events: auto; cursor: pointer; }
+	#mhc_body .mh-check .checkbox-box { width: 20px; height: 20px; margin: 4px; }
+	#mhc_body .mh-check.mh-radio .checkbox-box { border-radius: 10px; }
+	#mhc_body .mh-check .checkbox-label { margin-left: 4px; }
+	.mhc-radios { padding-left: 16px; }
+	.mhc-radios > .mh-check { margin-right: 10px; }
+
+	/* --- Buttons and steppers --- */
+	#panel .mhc-btn { min-width: 68px; min-height: 32px; }
+	#panel .mhc-btn-igs { min-height: 34px; }
+	#panel .mhc-btn .mh-btn-label { padding: 0 8px; }
+	.mh-btn-plus, .mh-btn-minus { width: 30px; height: 26px; line-height: 24px; }
+	.mh-glyph { font-size: 16px; }
+	.mhc-steps > * + * { margin-top: 8px; }
+	#mhc_body .mhc-range-value .mh-range-digit { width: 24px; height: 28px; line-height: 28px; font-size: 22px; margin-top: 6px; }
+
+	/* --- Fields --- */
+	.mhc-number { width: 34px; height: 24px; }
+	.mhc-string { height: 24px; margin-right: 8px; }
+	#panel .mh-field { font-size: 13px; }
+	#mhc_body .mhc-number .mh-field, #mhc_body .mhc-string .mh-field { padding: 4px 2px 0 4px; }
+
+	/* --- Skill slots --- */
+	#mhc_body .mh-slot { width: 40px; height: 46px; }
+	#mhc_body .mh-slot-icon { left: 7px; top: 5px; width: 24px; height: 34px; }
+	.mhc-slot-col { min-width: 50px; }
+	.mhc-skill-row + .mhc-skill-row { margin-top: 8px; }
+	.mhc-skill-row > * + * { margin-left: 6px; }
+	.mhc-opts { padding-top: 14px; }
+	.mhc-slot-row > * + * { margin-left: 8px; }
+
+	/* --- Extra-item list: three rows a finger picks --- */
+	#box_o_list { min-height: 0; }
+	#extra_list { height: 76px; }
+	#panel .mh-extra-row { min-height: 24px; padding: 4px 0 2px 8px; font-size: 13px; }
+	.mhc-entry { padding-left: 0; }
+	#cb_pick_extra { margin-left: 0; }
+
+	/* --- Footer: Initialization and Save on the right, the close button at the left --- */
+	#mhc_footer { margin: 4px 0 0 320px; }
+	#mhc_footer .mhc-btn + .mhc-btn { margin-left: 8px; }
+	#btn_exit { top: auto; bottom: 11px; width: 48px; height: 34px; line-height: 34px; }
+}

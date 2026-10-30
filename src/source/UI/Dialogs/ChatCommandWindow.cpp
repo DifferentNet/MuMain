@@ -437,9 +437,33 @@ int mu::ui::window::CChatCommandWindow::VisibleRows() const
     return UI::Mobile::IsPhoneView() ? GetScrollableRowCount() : VISIBLE_ROWS;
 }
 
+const mu::ui::window::CChatCommandWindow::PageMetrics& mu::ui::window::CChatCommandWindow::CurrentPage()
+{
+    static constexpr PageMetrics Computer{.contentWidth = CONTENT_WIDTH,
+                                          .valueWidth = CONTENT_WIDTH - 4,
+                                          .templateLabelWidth = CONTENT_WIDTH - ROW_HEIGHT,
+                                          .pageHeight = BUTTON_ROW_Y - CONTENT_TOP,
+                                          .lineHeight = ROW_HEIGHT,
+                                          .parameterHeight = PARAMETER_HEIGHT,
+                                          .actionHeight = ROW_HEIGHT,
+                                          .sectionGap = ROW_HEIGHT};
+    // The side panel: 256 units of content, values and labels inset from their boxes, the description's
+    // lines 17 tall and a finger's rows 34, all in the 300 units above the buttons.
+    static constexpr PageMetrics Phone{.contentWidth = 256,
+                                       .valueWidth = 244,
+                                       .templateLabelWidth = 208,
+                                       .pageHeight = 300,
+                                       .lineHeight = 17,
+                                       .parameterHeight = 54,
+                                       .actionHeight = 34,
+                                       .sectionGap = 15};
+    return UI::Mobile::IsPhoneView() ? Phone : Computer;
+}
+
 void mu::ui::window::CChatCommandWindow::WrapDescriptionOfSelected()
 {
     m_descriptionLines.clear();
+    m_descriptionWidth = CurrentPage().contentWidth;
 
     const auto* command = GetSelectedCommand();
     if (command == nullptr)
@@ -448,7 +472,7 @@ void mu::ui::window::CChatCommandWindow::WrapDescriptionOfSelected()
     }
 
     g_pRenderText->SetFont(g_hFont);
-    m_descriptionLines = WrapTextToWidth(command->Description, CONTENT_WIDTH, MeasureInReferenceUnits);
+    m_descriptionLines = WrapTextToWidth(command->Description, m_descriptionWidth, MeasureInReferenceUnits);
 }
 
 int mu::ui::window::CChatCommandWindow::GetVisibleDescriptionLineCount() const
@@ -459,10 +483,11 @@ int mu::ui::window::CChatCommandWindow::GetVisibleDescriptionLineCount() const
         return 0;
     }
 
-    // Space needed for the parameters, the two actions below them, and the gap before them.
-    const auto reserved = static_cast<int>(command->Parameters.size()) * PARAMETER_HEIGHT + 3 * ROW_HEIGHT;
-    const auto available = CONTENT_BOTTOM - CONTENT_TOP - reserved;
-    const auto fitting = std::max(0, available / ROW_HEIGHT);
+    // Space needed for the parameters, the two actions below them, and the gaps before each.
+    const auto& page = CurrentPage();
+    const auto parameterCount = static_cast<int>(command->Parameters.size());
+    const auto reserved = parameterCount * page.parameterHeight + 2 * page.sectionGap + 2 * page.actionHeight;
+    const auto fitting = std::max(0, (page.pageHeight - reserved) / page.lineHeight);
     return std::min(fitting, static_cast<int>(m_descriptionLines.size()));
 }
 
@@ -804,6 +829,7 @@ void mu::ui::window::CChatCommandWindow::SyncContent()
     else if (m_page == PAGE_PARAMETERS && GetSelectedCommand() != nullptr)
         titleText = GetSelectedCommand()->Command.c_str();
     ChatCommandLine title = line(titleText, WINDOW_WIDTH, true);
+    const auto& page = CurrentPage();
 
     ChatCommandLine emptyMessage;
     std::vector<ChatCommandRow> commandRows;
@@ -816,7 +842,7 @@ void mu::ui::window::CChatCommandWindow::SyncContent()
     {
         // The original's RenderCommandPage() and UpdateCommandPageMouseEvent().
         if (m_commandOrder.empty())
-            emptyMessage = line(I18N::Game::ChatCommandsNotSupported, CONTENT_WIDTH);
+            emptyMessage = line(I18N::Game::ChatCommandsNotSupported, page.contentWidth);
         const int visibleRows = VisibleRows();
         for (int row = 0; row < visibleRows; ++row)
         {
@@ -831,7 +857,7 @@ void mu::ui::window::CChatCommandWindow::SyncContent()
             if (!command->Parameters.empty())
                 text += ParameterMarker;
 
-            const ChatCommandLine row_line = line(text.c_str(), CONTENT_WIDTH);
+            const ChatCommandLine row_line = line(text.c_str(), page.contentWidth);
             commandRows.push_back({row_line.text, row_line.textPx, isFavourite});
         }
     }
@@ -841,9 +867,11 @@ void mu::ui::window::CChatCommandWindow::SyncContent()
         // UpdateParameterPageMouseEvent().
         if (const auto* command = GetSelectedCommand())
         {
+            if (m_descriptionWidth != page.contentWidth)
+                WrapDescriptionOfSelected();
             const auto descriptionCount = GetVisibleDescriptionLineCount();
             for (int index = 0; index < descriptionCount; ++index)
-                descriptionLines.push_back(line(m_descriptionLines[index].c_str(), CONTENT_WIDTH));
+                descriptionLines.push_back(line(m_descriptionLines[index].c_str(), page.contentWidth));
 
             for (size_t i = 0; i < command->Parameters.size(); ++i)
             {
@@ -855,7 +883,7 @@ void mu::ui::window::CChatCommandWindow::SyncContent()
                 if (parameter.IsRequired)
                     label += L" *";
                 ChatCommandParameterRow entry;
-                const ChatCommandLine labelLine = line(label.c_str(), CONTENT_WIDTH);
+                const ChatCommandLine labelLine = line(label.c_str(), page.contentWidth);
                 entry.label = labelLine.text;
                 entry.labelTextPx = labelLine.textPx;
                 entry.missing = parameter.IsRequired && value.empty();
@@ -864,7 +892,7 @@ void mu::ui::window::CChatCommandWindow::SyncContent()
                 {
                     entry.placeholder = value.empty();
                     const ChatCommandLine valueLine =
-                        line(value.empty() ? parameter.ValidValues.c_str() : value.c_str(), CONTENT_WIDTH - 4);
+                        line(value.empty() ? parameter.ValidValues.c_str() : value.c_str(), page.valueWidth);
                     entry.value = valueLine.text;
                     entry.valueTextPx = valueLine.textPx;
                 }
@@ -872,24 +900,24 @@ void mu::ui::window::CChatCommandWindow::SyncContent()
             }
 
             const bool isFavourite = GameLogic::Commands::Favourites::Contains(command->Command);
-            favouriteAction = line(isFavourite ? I18N::Game::ChatCommandsRemoveFavourite
-                                               : I18N::Game::ChatCommandsAddFavourite,
-                                   CONTENT_WIDTH);
-            saveAction = line(I18N::Game::ChatCommandsSaveTemplate, CONTENT_WIDTH);
+            favouriteAction =
+                line(isFavourite ? I18N::Game::ChatCommandsRemoveFavourite : I18N::Game::ChatCommandsAddFavourite,
+                     page.contentWidth);
+            saveAction = line(I18N::Game::ChatCommandsSaveTemplate, page.contentWidth);
         }
     }
     else
     {
         // The original's RenderTemplatePage() and UpdateTemplatePageMouseEvent().
         if (m_templates.empty())
-            emptyMessage = line(I18N::Game::ChatCommandsNoTemplates, CONTENT_WIDTH);
+            emptyMessage = line(I18N::Game::ChatCommandsNoTemplates, page.contentWidth);
         const int visibleRows = VisibleRows();
         for (int row = 0; row < visibleRows; ++row)
         {
             const auto index = static_cast<size_t>(m_scrollOffset + row);
             if (index >= m_templates.size())
                 break;
-            templateRows.push_back(line(m_templates[index].Label.c_str(), CONTENT_WIDTH - ROW_HEIGHT));
+            templateRows.push_back(line(m_templates[index].Label.c_str(), page.templateLabelWidth));
         }
     }
 

@@ -56,11 +56,26 @@ class CChatCommandWindow : public CObject
         EXIT_BUTTON_Y = 392,
         EXIT_BUTTON_WIDTH = 36,
         EXIT_BUTTON_HEIGHT = 29,
-        // Where rows must stop to avoid overlapping the buttons below.
-        CONTENT_BOTTOM = BUTTON_ROW_Y - ROW_HEIGHT,
         VALUE_HEIGHT = 16,
         // A parameter takes its name, the box with its value, and a gap.
         PARAMETER_HEIGHT = ROW_HEIGHT + VALUE_HEIGHT + 4,
+    };
+
+    // The sizes a page's text and rows are fitted to, each matching chat_command.rcss: the computer
+    // window's, or the phone view's side panel (its mobile block).
+    struct PageMetrics
+    {
+        int contentWidth;
+        // A value inside its box, and a template's label beside its remove cell.
+        int valueWidth;
+        int templateLabelWidth;
+        // From the description's first line to where the actions must end.
+        int pageHeight;
+        int lineHeight;
+        int parameterHeight;
+        int actionHeight;
+        // Above the parameters, and again above the actions.
+        int sectionGap;
     };
 
     // What the window shows; each page owns the whole content area (no scrolling between pages).
@@ -126,7 +141,9 @@ private:
     // How many list rows the document holds: a page of them, or every row in the phone view, whose list
     // scrolls by finger instead (chat_command.rcss).
     int VisibleRows() const;
-    // Wrapped once on page entry; measuring against the font every frame would be wasteful.
+    static const PageMetrics& CurrentPage();
+    // Wrapped on page entry, and again if the view changes; measuring against the font every frame
+    // would be wasteful.
     void WrapDescriptionOfSelected();
     // How many wrapped description lines fit; a long description yields space to the parameters.
     int GetVisibleDescriptionLineCount() const;
@@ -161,6 +178,8 @@ private:
     // The value of every parameter of the selected command, in its order.
     std::vector<std::wstring> m_parameterValues;
     std::vector<std::wstring> m_descriptionLines;
+    // The width m_descriptionLines were wrapped to.
+    int m_descriptionWidth = 0;
     // One field is enough: it is moved onto whichever parameter is edited.
     int m_editedParameter;
     bool m_valueFieldFocusPending = false;

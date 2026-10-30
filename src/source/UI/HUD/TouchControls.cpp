@@ -115,6 +115,8 @@ const MenuItem MenuItems[] = {
     {&I18N::Game::TouchMenuSkills, 0, &ToggleSkillList},
     {&I18N::Game::TouchMenuView, 0, &ToggleView},
     {&I18N::Game::TouchMenuSystem, VK_ESCAPE},
+    // The chat line: with a pad, its keyboard (UI/HUD/PadKeyboard) comes up for it.
+    {&I18N::Game::TouchChat, VK_RETURN},
 };
 constexpr int MenuItemCount = static_cast<int>(std::size(MenuItems));
 
