@@ -60,4 +60,11 @@ struct PickupAnchor
 // The item's top-left under the pointer, in a grid of the given pitch.
 void AnchoredTopLeft(float pointerX, float pointerY, const PickupAnchor& anchor, float pitchX, float pitchY,
                      int& left, int& top);
+
+// The middle of the item's top-left square under the pointer: the cell under it is where the item
+// goes, as in the original (which held items by their middle). The item then lands where it covers
+// the most; its top-left corner lies on a cell border when it is held by its middle, so a drop that
+// looks at the corner lands a cell short, or outside the grid on its first row or column.
+void AnchoredTargetPoint(float pointerX, float pointerY, const PickupAnchor& anchor, float pitchX, float pitchY,
+                         int& x, int& y);
 } // namespace UI::Items

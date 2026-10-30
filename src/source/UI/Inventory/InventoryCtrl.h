@@ -99,6 +99,8 @@ namespace mu::ui::window
         void GetRect(RECT& rcBox);
         // The item's top-left in `grid`'s space, with the pointer at (pointerX, pointerY) there.
         POINT TopLeftIn(const CInventoryCtrl* grid, int pointerX, int pointerY) const;
+        // The point in `grid`'s space whose cell is where the item goes (the middle of its top-left square).
+        POINT TargetPointIn(const CInventoryCtrl* grid, int pointerX, int pointerY) const;
         // The item's size in `grid`'s cells.
         SIZE SizeIn(const CInventoryCtrl* grid) const;
 
