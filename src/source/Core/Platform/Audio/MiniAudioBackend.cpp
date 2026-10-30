@@ -9,6 +9,9 @@
 #include "Core/Utilities/Log/MuLogger.h"
 #include "Core/Platform/WinCompat.h"
 #include "Core/Globals/_struct.h" // OBJECT forward decl — needed for void* → OBJECT* casts
+#ifdef __EMSCRIPTEN__
+#include "Core/Platform/web/WebFileSystem.h"
+#endif
 
 #include <algorithm>
 #include <cmath>
@@ -566,8 +569,15 @@ bool MiniAudioBackend::StartMusicStream(const std::string& identity)
 #else
     const std::string filePath = MuResolvePath(identity.c_str());
 #endif
+#ifdef __EMSCRIPTEN__
+    // miniaudio opens the stream on its job thread; in Safari the track is read here instead (see
+    // ReadWholeAhead), and is then known to be there without a stat, which downloads its first 2 MB.
+    const bool readAhead = mu::web::ReadWholeAhead(filePath.c_str());
+#else
+    const bool readAhead = false;
+#endif
     std::error_code error;
-    if (!std::filesystem::is_regular_file(std::filesystem::u8path(filePath), error))
+    if (!readAhead && !std::filesystem::is_regular_file(std::filesystem::u8path(filePath), error))
     {
         mu::log::Get("audio")->error("AUDIO: MiniAudioBackend::PlayMusic -- unavailable music file '{}' ({})",
             filePath, error ? error.message() : "not a regular file");

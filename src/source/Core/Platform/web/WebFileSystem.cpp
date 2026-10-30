@@ -23,12 +23,14 @@
 #include <cstring>
 #include <climits>
 #include <fcntl.h>
+#include <mutex>
 #include <set>
 #include <string>
 #include <string_view>
 #include <sys/stat.h>
 #include <thread>
 #include <unistd.h>
+#include <utility>
 
 namespace
 {
@@ -392,16 +394,10 @@ MemoryFile* ReadIntoMemoryOnPage(const char* fileInMount)
     return file;
 }
 
-// For __wrap_fopen: a FILE reading the whole file from memory where `path` is a link in /game to a file
-// of the mount, opened to read, of up to WholeReadMostBytes (PageReadMostBytes where the page reads it);
-// otherwise null, and fopen opens it as usual.
-FILE* OpenWholeInMemory(const char* path, const char* mode)
+// The file of the mount that `path`, a link in /game, points to: its path in the mount, in `target`; null
+// where `path` isn't such a link.
+const char* FileInMount(const char* path, char (&target)[PATH_MAX])
 {
-    if (!g_wholeReads.load(std::memory_order_relaxed) || !path || !mode || mode[0] != 'r' || std::strchr(mode, '+'))
-    {
-        return nullptr;
-    }
-    char target[PATH_MAX];
     const ssize_t targetLength = ::readlink(path, target, sizeof(target) - 1);
     if (targetLength <= static_cast<ssize_t>(ServerLinkPrefix.size())
         || std::string_view(target, ServerLinkPrefix.size()) != ServerLinkPrefix)
@@ -409,7 +405,46 @@ FILE* OpenWholeInMemory(const char* path, const char* mode)
         return nullptr;
     }
     target[targetLength] = '\0';
-    MemoryFile* memory = ReadIntoMemoryOnPage(target + ServerLinkPrefix.size());
+    return target + ServerLinkPrefix.size();
+}
+
+// The file read ahead (mu::web::ReadWholeAhead) for the next fopen of it, on any thread: its path in the
+// mount and its bytes. One at a time.
+std::mutex g_readAheadLock;
+std::string g_readAheadFile;
+MemoryFile* g_readAhead = nullptr;
+
+MemoryFile* TakeReadAhead(const char* fileInMount)
+{
+    std::lock_guard lock(g_readAheadLock);
+    if (!g_readAhead || g_readAheadFile != fileInMount)
+    {
+        return nullptr;
+    }
+    g_readAheadFile.clear();
+    return std::exchange(g_readAhead, nullptr);
+}
+
+// For __wrap_fopen: a FILE reading the whole file from memory where `path` is a link in /game to a file
+// of the mount, opened to read, of up to WholeReadMostBytes (PageReadMostBytes where the page reads it,
+// or read ahead); otherwise null, and fopen opens it as usual.
+FILE* OpenWholeInMemory(const char* path, const char* mode)
+{
+    if (!g_wholeReads.load(std::memory_order_relaxed) || !path || !mode || mode[0] != 'r' || std::strchr(mode, '+'))
+    {
+        return nullptr;
+    }
+    char target[PATH_MAX];
+    const char* fileInMount = FileInMount(path, target);
+    if (!fileInMount)
+    {
+        return nullptr;
+    }
+    MemoryFile* memory = TakeReadAhead(fileInMount);
+    if (!memory)
+    {
+        memory = ReadIntoMemoryOnPage(fileInMount);
+    }
     if (!memory)
     {
         const int fd = ::open(path, O_RDONLY);
@@ -571,6 +606,25 @@ extern "C" FILE* __wrap_fopen(const char* path, const char* mode)
         return inMemory;
     }
     return __real_fopen(path, mode);
+}
+
+bool mu::web::ReadWholeAhead(const char* path)
+{
+    char target[PATH_MAX];
+    const char* fileInMount = path && g_wholeReads.load(std::memory_order_relaxed) ? FileInMount(path, target) : nullptr;
+    MemoryFile* file = fileInMount ? ReadIntoMemoryOnPage(fileInMount) : nullptr;
+    if (!file)
+    {
+        return false;
+    }
+    MemoryFile* earlier;
+    {
+        std::lock_guard lock(g_readAheadLock);
+        earlier = std::exchange(g_readAhead, file);
+        g_readAheadFile = fileInMount;
+    }
+    std::free(earlier);
+    return true;
 }
 
 bool mu::web::MountGameFiles()
