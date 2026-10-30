@@ -38,6 +38,10 @@
 	color: token(text-primary);
 	font-family: "token(font-body)";
 }
+/* MU Skynet's last row, "F1 : next page" or "F1 : close". */
+.help-line.hint .help-text {
+	color: token(text-secondary);
+}
 .help-line.heading .help-text {
 	line-height: calc(var(--bold-line-height, 0px) * var(--root-scale));
 	color: token(text-warm);

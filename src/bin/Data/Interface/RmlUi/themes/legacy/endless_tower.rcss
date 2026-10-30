@@ -1,0 +1,113 @@
+/* Legacy theme for CEndlessTowerWindow (Lugard's Endless Tower), in the Tier Maps window's look (tier_maps.rcss): the
+   docked_panel_frame.rcss frame (linked first; newui_item_back01 top) stretched to the full dock height (432), the
+   title bold and centred, four status lines, then one counter-scaled pane with the tabs and the shown tab's lines, a
+   second one at the foot with the hint and the enter button in the event entry's button art (event_entry.rcss), or on
+   the shop the two buy buttons in the battle pass' medium button art (battle_pass.rcss); and the exit button. Reference px inside #panel; inside the panes, physical px (reference px times --root-scale). */
+
+@spritesheet et-btn-sheet {
+	src: "../../../newui_btn_empty_big.tga";
+	et-btn-up: 0px 0px 180px 29px;
+	et-btn-over: 0px 29px 180px 29px;
+	et-btn-down: 0px 58px 180px 29px;
+}
+
+@spritesheet et-buy-sheet {
+	src: "../../../newui_btn_empty.tga";
+	et-buy-up: 0px 0px 108px 29px;
+	et-buy-over: 0px 29px 108px 29px;
+	et-buy-down: 0px 58px 108px 29px;
+}
+
+.frame-top { decorator: image(docked-bg-top-b); }
+#panel { height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; }
+
+.et-title { left: 0; top: 12px; text-align: center; font-weight: bold; pointer-events: none; }
+#et_entry { left: 12px; top: 34px; font-weight: bold; pointer-events: none; }
+#et_party { left: 12px; top: 49px; pointer-events: none; }
+#et_reset { left: 12px; top: 63px; pointer-events: none; }
+#et_best { left: 12px; top: 77px; pointer-events: none; }
+
+#et_list { left: 12px; top: 94px; --flow-w: 166px; line-height: 1.12; }
+.et-tabs { display: flex; margin-bottom: calc(3px * var(--root-scale)); }
+.et-tab {
+	display: block;
+	width: calc(31px * var(--root-scale));
+	margin-right: calc(2px * var(--root-scale));
+	padding: calc(2px * var(--root-scale)) 0;
+	text-align: center;
+	cursor: pointer;
+	pointer-events: auto;
+	background-color: rgba(255, 255, 255, 10);
+}
+.et-tab-label { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+.et-row { display: block; white-space: nowrap; }
+.et-row.title { margin-top: calc(2px * var(--root-scale)); font-weight: bold; }
+.et-row.name { margin-top: calc(3px * var(--root-scale)); font-weight: bold; }
+.et-row.good, .et-row.bad { padding-left: calc(4px * var(--root-scale)); }
+.et-row.more { padding-left: calc(8px * var(--root-scale)); }
+.et-row.pick { cursor: pointer; pointer-events: auto; }
+
+#et_foot { left: 12px; top: 336px; --flow-w: 166px; line-height: 1.12; }
+.et-hint { display: block; white-space: nowrap; }
+
+#et_enter {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-top: calc(4px * var(--root-scale));
+	height: calc(29px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	decorator: image(et-btn-up);
+}
+#et_enter:hover { decorator: image(et-btn-over); }
+#et_enter:active { decorator: image(et-btn-down); }
+#et_enter.off { opacity: 0.45; cursor: arrow; }
+#et_enter.off:hover, #et_enter.off:active { decorator: image(et-btn-up); }
+.et-enter-label { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+
+#et_buy { display: flex; justify-content: space-between; margin-top: calc(4px * var(--root-scale)); }
+.et-buy-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: calc(81px * var(--root-scale));
+	height: calc(29px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	decorator: image(et-buy-up);
+}
+.et-buy-btn:hover { decorator: image(et-buy-over); }
+.et-buy-btn:active { decorator: image(et-buy-down); }
+.et-buy-btn.off { opacity: 0.45; cursor: arrow; }
+.et-buy-btn.off:hover, .et-buy-btn.off:active { decorator: image(et-buy-up); }
+
+/* The Tier Maps window's colours: gold title, light text, blue detail. A party of the right size green, otherwise
+   red; the shown tab on a gold band. Ready members green, the others red; a bad hint red. On the shop, a bought-out
+   item red, one out of the points' reach grey, the picked one on a gold band. */
+.et-title { color: rgb(255, 220, 120); }
+#et_entry { color: rgb(240, 240, 240); }
+#et_party { color: rgb(255, 120, 110); }
+#et_party.ok { color: rgb(150, 255, 150); }
+#et_reset { color: rgb(170, 170, 170); }
+#et_best { color: rgb(200, 220, 255); }
+.et-tab { color: rgb(170, 170, 170); }
+.et-tab:hover { background-color: rgba(255, 255, 255, 24); }
+.et-tab.selected { color: rgb(255, 220, 120); background-color: rgba(255, 210, 100, 48); }
+.et-row { color: rgb(200, 220, 255); }
+.et-row.title { color: rgb(225, 225, 225); }
+.et-row.good { color: rgb(150, 255, 150); }
+.et-row.bad { color: rgb(255, 120, 110); }
+.et-row.name { color: rgb(255, 220, 120); }
+.et-row.dim { color: rgb(130, 130, 130); }
+.et-row.pick:hover { background-color: rgba(255, 255, 255, 18); }
+.et-row.selected { background-color: rgba(255, 210, 100, 48); }
+.et-hint { color: rgb(200, 220, 255); }
+.et-hint.bad { color: rgb(255, 150, 120); }
+.et-enter-label { color: #ffffff; }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+#et_title { width: calc(100% * var(--root-scale)); }
+#et_entry, #et_party, #et_reset, #et_best { width: calc(166px * var(--root-scale)); }

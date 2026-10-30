@@ -13,6 +13,7 @@
 #include <RmlUi/Core/Property.h>
 #include <RmlUi/Core/TextShapingContext.h>
 
+#include <algorithm>
 #include <functional>
 #include <string_view>
 #include <unordered_map>
@@ -22,6 +23,10 @@ namespace UI::RmlBridge
 namespace
 {
 const Rml::String kNativeFitClass = "native-fit";
+const Rml::String kNativeFitSmallClass = "native-fit-small";
+
+// How far below the renderer's smallest size a .native-fit-small element may shrink.
+constexpr float kSmallFitFloor = 0.75f;
 
 // What an element was last fitted for; unchanged inputs skip the measurement.
 struct FitState
@@ -39,36 +44,60 @@ std::unordered_map<Rml::Element*, FitState>& FitStates()
     return states;
 }
 
-size_t HashText(Rml::Element* element)
+bool IsHidden(Rml::Element* element)
 {
-    size_t hash = 0;
-    for (int i = 0; i < element->GetNumChildren(); ++i)
-    {
-        if (const auto* text = dynamic_cast<const Rml::ElementText*>(element->GetChild(i)))
-            hash = hash * 31 + std::hash<std::string_view>{}(text->GetText());
-    }
-    return hash;
+    return element->GetComputedValues().display() == Rml::Style::Display::None;
 }
 
-// The width of the element's text at `nativePx`, its size without the fit.
-float MeasureTextWidth(Rml::Element* element, float nativePx)
+// The text of the element and of its shown child elements, and which of those are shown.
+void HashText(Rml::Element* element, size_t& hash)
+{
+    for (int i = 0; i < element->GetNumChildren(); ++i)
+    {
+        Rml::Element* child = element->GetChild(i);
+        if (const auto* text = dynamic_cast<const Rml::ElementText*>(child))
+            hash = hash * 31 + std::hash<std::string_view>{}(text->GetText());
+        else if (IsHidden(child))
+            hash = hash * 31 + 1;
+        else
+        {
+            hash = hash * 31 + 2;
+            HashText(child, hash);
+        }
+    }
+}
+
+// The element's text at `nativePx`, its size without the fit, and the horizontal margins, borders and padding of
+// the child elements it is split into (a row of differently coloured parts), which the fit does not shrink.
+struct TextWidth
+{
+    float text = 0.f;
+    float frames = 0.f;
+};
+
+void MeasureTextWidth(Rml::Element* element, float nativePx, TextWidth& width)
 {
     const auto& values = element->GetComputedValues();
     Rml::FontEngineInterface* fonts = Rml::GetFontEngineInterface();
     const Rml::FontFaceHandle face = fonts->GetFontFaceHandle(values.font_family(), values.font_style(),
                                                               values.font_weight(), static_cast<int>(nativePx));
-    if (face == 0)
-        return 0.f;
-
     const Rml::TextShapingContext shaping{values.language(), values.direction(), values.font_kerning(),
                                           values.letter_spacing()};
-    int width = 0;
     for (int i = 0; i < element->GetNumChildren(); ++i)
     {
-        if (const auto* text = dynamic_cast<const Rml::ElementText*>(element->GetChild(i)))
-            width += fonts->GetStringWidth(face, text->GetText(), shaping);
+        Rml::Element* child = element->GetChild(i);
+        if (const auto* text = dynamic_cast<const Rml::ElementText*>(child))
+        {
+            if (face != 0)
+                width.text += static_cast<float>(fonts->GetStringWidth(face, text->GetText(), shaping));
+        }
+        else if (!IsHidden(child))
+        {
+            width.frames += child->GetBox().GetSizeAcross(Rml::BoxDirection::Horizontal, Rml::BoxArea::Margin,
+                                                          Rml::BoxArea::Padding);
+            MeasureTextWidth(child, nativePx, width);
+        }
     }
-    return static_cast<float>(width);
 }
 
 // Returns whether the element's font-size changed.
@@ -80,16 +109,21 @@ bool FitElement(Rml::Element* element)
         return false;
 
     const float nativePx = parent->GetComputedValues().font_size();
-    const size_t textHash = HashText(element);
+    size_t textHash = 0;
+    HashText(element, textHash);
     FitState& state = FitStates()[element];
     const bool sameElement = state.element.get() == element;
     if (sameElement && state.textHash == textHash && state.boxWidth == boxWidth && state.nativePx == nativePx)
         return false;
 
     const float previousScale = sameElement ? state.scale : 1.f;
-    const float fittedPx =
-        UI::Scaling::FitTextPixelSizeToWidth(nativePx, MeasureTextWidth(element, nativePx), boxWidth,
-                                             UI::Scaling::MinimumTextPixelSize(UI::Scaling::FontRole::Normal));
+    TextWidth width;
+    MeasureTextWidth(element, nativePx, width);
+    float minimumPx = UI::Scaling::MinimumTextPixelSize(UI::Scaling::FontRole::Normal);
+    if (element->IsClassSet(kNativeFitSmallClass))
+        minimumPx *= kSmallFitFloor;
+    const float fittedPx = UI::Scaling::FitTextPixelSizeToWidth(nativePx, width.text,
+                                                                std::max(boxWidth - width.frames, 1.f), minimumPx);
     const float scale = nativePx > 0.f ? fittedPx / nativePx : 1.f;
     state = {element->GetObserverPtr(), textHash, boxWidth, nativePx, scale};
 

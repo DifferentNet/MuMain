@@ -1,288 +1,184 @@
-# MU Moldova: draws the title plates' texture, src/bin/Data/Interface/newui_titles.OZT (512 x 512).
+# MU Moldova: packs the title plates' art into src/bin/Data/Interface/newui_titles.OZT and writes where each plate
+# lies in it to src/source/UI/Character/TitlePlatesArt.h (UI/Character/TitlePlates.cpp reads both).
 #
-# One row per rarity (silver, ice, jade, gold, crimson, violet; GameLogic::Titles::Rarity), in the colours of the
-# titles concept (ghinzuro, 2026-10-27):
-#   - the ribbon every title wears, x 0-87, rows of 52 from y 0: its left end with the gem (48 wide), a middle
-#     column the game stretches under the text (8), its right end (24); 48 high with a 4 px glow above and under;
-#   - the banner of the gold and crimson titles, x 96-447, rows of 84 from y 0: the left wing and the right wing
-#     (96 x 80 each), the frame's left end, middle and right end (32, 8, 32; 64 high), the gem over the frame
-#     (28 x 28). Every rarity has one, so a catalogue entry could ask for it.
-# UI/Character/TitlePlates.cpp reads the pieces at these places; change both together.
+# The art: six drawn plates, one per rarity, by ghinzuro and his wife (2026-10-29, "titles.zip"); the five ranks get
+# ever richer plates and the unique violet titles (tester, streamer) the laurels. The originals are large (up to
+# 2452 x 439) and are kept outside this public repository, in E:\Mu Online Server\art\title-plates-2026-10-29:
+#   silver 5.png, ice 4.png, jade 3.png, gold 2.png, crimson 1.png, violet "6 premium.png".
+#
+# The field of every plate (the coloured rectangle the text sits on) is drawn the same size, about 1420 x 185 of the
+# originals' pixels, and the game shows each plate whole, never squeezed or stretched (his wife, 2026-10-29: the
+# central rectangles must be the same size on all six plates, nothing may be squeezed or distorted). So all
+# plates are scaled by the same PlateScale and stacked one under another in a 1024 x 1024 atlas. The file is marked as
+# twice its original size (MUX 2, see Render/Textures/UpscaleMarker.h), so the game builds its mipmaps and the plates
+# stay smooth when drawn small.
+#
+# The numbers below are each field's edges in the original's pixels (left, top, right, bottom), measured inside the
+# frame's bevel: across the middle row for left and right, down a column at 30 % of the width for top and bottom.
 #
 # Run from anywhere with Windows PowerShell 5.1 (System.Drawing):
-#   powershell -ExecutionPolicy Bypass -File tools/make_title_plates.ps1 [-Out path] [-Png path]
+#   powershell -ExecutionPolicy Bypass -File tools/make_title_plates.ps1 [-Src folder] [-Out ozt] [-Header h] [-Png png] [-Json json]
 param(
+    [string]$Src = 'E:\Mu Online Server\art\title-plates-2026-10-29',
     [string]$Out = (Join-Path $PSScriptRoot '..\src\bin\Data\Interface\newui_titles.OZT'),
-    [string]$Png = ''
+    [string]$Header = (Join-Path $PSScriptRoot '..\src\source\UI\Character\TitlePlatesArt.h'),
+    [string]$Png = '',
+    [string]$Json = ''
 )
 
 Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @'
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
+using System.Text;
 
-public static class TitlePlates
+public class PlateSpec
 {
-    // hi, mid, lo, edge, glow (alpha in the glow).
-    static readonly Color[][] Rarities =
+    public string Rarity, File;
+    public int FieldLeft, FieldTop, FieldRight, FieldBottom;
+    public PlateSpec(string rarity, string file, int fieldLeft, int fieldTop, int fieldRight, int fieldBottom)
     {
-        new[] { C(0xf4f7fa), C(0xa9b3bf), C(0x3d4550), C(0xe3e9f0), Color.FromArgb(90, 225, 235, 245) },
-        new[] { C(0xe2f6ff), C(0x5fb4e6), C(0x0c355c), C(0xa5e1ff), Color.FromArgb(128, 120, 200, 255) },
-        new[] { C(0xdcffe2), C(0x3fbf68), C(0x0b4224), C(0x8dffb0), Color.FromArgb(102, 110, 255, 150) },
-        new[] { C(0xfff4c8), C(0xe3aa2b), C(0x5e3a05), C(0xffd23c), Color.FromArgb(140, 255, 200, 60) },
-        new[] { C(0xffe0d6), C(0xe2442f), C(0x520b07), C(0xff8466), Color.FromArgb(140, 255, 90, 60) },
-        new[] { C(0xf1e3ff), C(0xa26ae6), C(0x33115e), C(0xd1a8ff), Color.FromArgb(128, 190, 140, 255) },
+        Rarity = rarity; File = file;
+        FieldLeft = fieldLeft; FieldTop = fieldTop; FieldRight = fieldRight; FieldBottom = fieldBottom;
+    }
+}
+
+// Where a plate lies in the atlas and its field, in atlas pixels from the plate's top left corner.
+public class PlateArt
+{
+    public string Rarity;
+    public int X, Y, Width, Height;
+    public float FieldLeft, FieldTop, FieldRight, FieldBottom;
+}
+
+public static class TitlePlateAtlas
+{
+    public const int Size = 1024, Margin = 8, Gap = 16, Scale = 2;
+    // The originals' size in the atlas, the same for every plate: the crimson one (2452 wide) just fits.
+    public const float PlateScale = 0.4f;
+
+    // In the order of GameLogic::Titles::Rarity.
+    public static readonly PlateSpec[] Specs =
+    {
+        new PlateSpec("silver", "5.png", 71, 56, 1491, 243),
+        new PlateSpec("ice", "4.png", 68, 83, 1494, 274),
+        new PlateSpec("jade", "3.png", 295, 134, 1710, 318),
+        new PlateSpec("gold", "2.png", 373, 131, 1790, 310),
+        new PlateSpec("crimson", "1.png", 523, 202, 1931, 383),
+        new PlateSpec("violet", "6 premium.png", 162, 124, 1574, 304),
     };
 
-    public const int Size = 512;
-    public const int RibbonRow = 52, RibbonHeight = 48, RibbonLeft = 48, RibbonMiddle = 8, RibbonRight = 24;
-    public const int BannerX = 96, BannerRow = 84, WingWidth = 96, WingHeight = 80;
-    public const int FrameEnd = 32, FrameMiddle = 8, FrameHeight = 64, GemSize = 28;
-
-    static Color C(int rgb) { return Color.FromArgb(255, (rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255); }
-    static Color A(Color c, int alpha) { return Color.FromArgb(alpha, c.R, c.G, c.B); }
-
-    public static Bitmap Draw()
+    public static Bitmap Pack(string folder, List<PlateArt> arts)
     {
         var atlas = new Bitmap(Size, Size, PixelFormat.Format32bppArgb);
         using (var g = Graphics.FromImage(atlas))
         {
             g.Clear(Color.Transparent);
             g.CompositingMode = CompositingMode.SourceCopy;
-            for (int r = 0; r < Rarities.Length; ++r)
+            int y = Margin;
+            foreach (var spec in Specs)
             {
-                var c = Rarities[r];
-                using (var ribbon = Ribbon(c))
+                using (var source = new Bitmap(Path.Combine(folder, spec.File)))
                 {
-                    int y = r * RibbonRow;
-                    Put(g, ribbon, 0, 0, RibbonLeft, RibbonHeight, 0, y);
-                    Put(g, ribbon, ribbon.Width / 2 - RibbonMiddle / 2, 0, RibbonMiddle, RibbonHeight, RibbonLeft + 4, y);
-                    Put(g, ribbon, ribbon.Width - RibbonRight, 0, RibbonRight, RibbonHeight, RibbonLeft + 4 + RibbonMiddle + 4, y);
-                }
+                    int w = (int)Math.Round(source.Width * PlateScale), h = (int)Math.Round(source.Height * PlateScale);
+                    if (Margin + w > Size - Margin || y + h > Size - Margin)
+                        throw new InvalidOperationException(spec.File + " does not fit in the atlas");
 
-                int by = r * BannerRow;
-                using (var wing = Wing(c))
-                {
-                    Put(g, wing, 0, 0, WingWidth, WingHeight, BannerX, by);
-                    wing.RotateFlip(RotateFlipType.RotateNoneFlipX);
-                    Put(g, wing, 0, 0, WingWidth, WingHeight, BannerX + WingWidth + 4, by);
-                }
-                using (var frame = Frame(c))
-                {
-                    int fx = BannerX + 2 * (WingWidth + 4);
-                    Put(g, frame, 0, 0, FrameEnd, FrameHeight, fx, by);
-                    Put(g, frame, frame.Width / 2 - FrameMiddle / 2, 0, FrameMiddle, FrameHeight, fx + FrameEnd + 4, by);
-                    Put(g, frame, frame.Width - FrameEnd, 0, FrameEnd, FrameHeight, fx + FrameEnd + 4 + FrameMiddle + 4, by);
-                    using (var gem = Gem(c))
-                        Put(g, gem, 0, 0, GemSize, GemSize, fx + 2 * FrameEnd + FrameMiddle + 12, by);
+                    using (var plate = Resize(source, w, h))
+                    {
+                        g.DrawImage(plate, Margin, y, w, h);
+                        float sx = (float)w / source.Width, sy = (float)h / source.Height;
+                        // The field's edges are the pixels' outer sides: right and bottom are the last pixels.
+                        arts.Add(new PlateArt
+                        {
+                            Rarity = spec.Rarity, X = Margin, Y = y, Width = w, Height = h,
+                            FieldLeft = spec.FieldLeft * sx, FieldTop = spec.FieldTop * sy,
+                            FieldRight = (spec.FieldRight + 1) * sx, FieldBottom = (spec.FieldBottom + 1) * sy,
+                        });
+                    }
+                    y += h + Gap;
+                    y = (y + 7) / 8 * 8;
                 }
             }
         }
         return atlas;
     }
 
-    static void Put(Graphics g, Bitmap from, int sx, int sy, int w, int h, int dx, int dy)
+    static Bitmap Resize(Bitmap source, int w, int h)
     {
-        g.DrawImage(from, new Rectangle(dx, dy, w, h), new Rectangle(sx, sy, w, h), GraphicsUnit.Pixel);
-    }
-
-    static Graphics Smooth(Bitmap b)
-    {
-        var g = Graphics.FromImage(b);
-        g.Clear(Color.Transparent);
-        g.SmoothingMode = SmoothingMode.AntiAlias;
-        g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-        return g;
-    }
-
-    // A long hexagon: points at both ends, flat top and bottom.
-    static GraphicsPath Hexagon(float x, float y, float w, float h, float point)
-    {
-        var path = new GraphicsPath();
-        path.AddPolygon(new[]
+        var plate = new Bitmap(w, h, PixelFormat.Format32bppArgb);
+        using (var g = Graphics.FromImage(plate))
+        using (var attributes = new ImageAttributes())
         {
-            new PointF(x, y + h / 2), new PointF(x + point, y), new PointF(x + w - point, y),
-            new PointF(x + w, y + h / 2), new PointF(x + w - point, y + h), new PointF(x + point, y + h),
-        });
-        return path;
-    }
-
-    static void Glow(Graphics g, GraphicsPath path, Color glow, float reach)
-    {
-        // A soft halo: wide faint strokes under narrower stronger ones.
-        for (int i = 4; i >= 1; --i)
-        {
-            using (var pen = new Pen(A(glow, glow.A * (5 - i) / 10), reach * i / 2f))
-            {
-                pen.LineJoin = LineJoin.Round;
-                g.DrawPath(pen, path);
-            }
+            g.Clear(Color.Transparent);
+            g.CompositingMode = CompositingMode.SourceCopy;
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            g.SmoothingMode = SmoothingMode.HighQuality;
+            // Without it the bicubic filter fades the picture's outer rows into nothing.
+            attributes.SetWrapMode(WrapMode.TileFlipXY);
+            g.DrawImage(source, new Rectangle(0, 0, w, h), 0, 0, source.Width, source.Height, GraphicsUnit.Pixel, attributes);
         }
+        return plate;
     }
 
-    static Bitmap Ribbon(Color[] c)
+    static string F(float value) { return value.ToString("0.##", CultureInfo.InvariantCulture) + "f"; }
+
+    public static string HeaderText(List<PlateArt> arts)
     {
-        const int w = 160;
-        var b = new Bitmap(w, RibbonHeight, PixelFormat.Format32bppArgb);
-        using (var g = Smooth(b))
+        float fieldWidth = 0, fieldHeight = 0;
+        foreach (var a in arts)
         {
-            float top = 5, h = RibbonHeight - 10, point = 19;
-            using (var outer = Hexagon(1.5f, top, w - 3, h, point))
-            {
-                Glow(g, outer, c[4], 3.5f);
-                using (var edge = new SolidBrush(c[3])) g.FillPath(edge, outer);
-            }
-            using (var inner = Hexagon(4.5f, top + 2.5f, w - 9, h - 5, point - 2.5f))
-            using (var fill = new LinearGradientBrush(new PointF(0, top + 2), new PointF(0, top + h - 2), c[1], Color.Black))
-            {
-                var blend = new ColorBlend();
-                blend.Colors = new[] { c[1], c[2], C(0x07090c) };
-                blend.Positions = new[] { 0f, 0.62f, 1f };
-                fill.InterpolationColors = blend;
-                fill.WrapMode = WrapMode.TileFlipXY;
-                g.FillPath(fill, inner);
-            }
-            // A thin light line under the top edge.
-            using (var shine = new Pen(A(c[0], 70), 1.2f))
-                g.DrawLine(shine, point + 3, top + 4, w - point - 3, top + 4);
-            DrawGem(g, point + 11, RibbonHeight / 2f, 8.5f, c, false);
+            fieldWidth += (a.FieldRight - a.FieldLeft) / arts.Count;
+            fieldHeight += (a.FieldBottom - a.FieldTop) / arts.Count;
         }
-        return b;
-    }
 
-    static Bitmap Frame(Color[] c)
-    {
-        const int w = 200;
-        var b = new Bitmap(w, FrameHeight, PixelFormat.Format32bppArgb);
-        using (var g = Smooth(b))
+        var sb = new StringBuilder();
+        sb.Append("#pragma once\n\n");
+        sb.Append("// Written by tools/make_title_plates.ps1 together with Data/Interface/newui_titles.OZT; change the tool, not this file.\n");
+        sb.Append("// Where each rarity's plate lies in the atlas and its field (the coloured rectangle the text sits on), in atlas\n");
+        sb.Append("// pixels: the plate's place, then its field's left, top, right and bottom from the plate's top left corner. All\n");
+        sb.Append("// plates have the same scale, so their fields are the same size: FieldWidth x FieldHeight on average.\n");
+        sb.Append("namespace UI::TitlePlates::Art\n{\n");
+        sb.AppendFormat("inline constexpr float AtlasSize = {0}.f;\n", Size);
+        sb.AppendFormat("inline constexpr float FieldWidth = {0};\n", F(fieldWidth));
+        sb.AppendFormat("inline constexpr float FieldHeight = {0};\n\n", F(fieldHeight));
+        sb.Append("struct Plate\n{\n");
+        sb.Append("    float x, y, width, height;\n");
+        sb.Append("    float fieldLeft, fieldTop, fieldRight, fieldBottom;\n");
+        sb.Append("};\n\n");
+        sb.AppendFormat("inline constexpr Plate Plates[{0}] = {{\n", arts.Count);
+        foreach (var a in arts)
         {
-            float top = 7, h = FrameHeight - 14, point = 22;
-            using (var outer = Hexagon(2, top, w - 4, h, point))
-            {
-                Glow(g, outer, c[4], 4.5f);
-                using (var frame = new LinearGradientBrush(new PointF(0, top), new PointF(0, top + h), c[0], c[1]))
-                {
-                    var blend = new ColorBlend();
-                    blend.Colors = new[] { c[0], c[3], c[1] };
-                    blend.Positions = new[] { 0f, 0.4f, 1f };
-                    frame.InterpolationColors = blend;
-                    frame.WrapMode = WrapMode.TileFlipXY;
-                    g.FillPath(frame, outer);
-                }
-            }
-            using (var core = Hexagon(6.5f, top + 4.5f, w - 13, h - 9, point - 4))
-            {
-                using (var fill = new LinearGradientBrush(new PointF(0, top + 4), new PointF(0, top + h - 4), c[2], C(0x07080b)))
-                {
-                    fill.WrapMode = WrapMode.TileFlipXY;
-                    g.FillPath(fill, core);
-                }
-                // The light from above, the core's top half.
-                using (var light = new LinearGradientBrush(new PointF(0, top), new PointF(0, top + h), A(c[1], 150), A(c[1], 0)))
-                {
-                    var fade = new ColorBlend();
-                    fade.Colors = new[] { A(c[1], 150), A(c[1], 0), A(c[1], 0) };
-                    fade.Positions = new[] { 0f, 0.6f, 1f };
-                    light.InterpolationColors = fade;
-                    light.WrapMode = WrapMode.TileFlipXY;
-                    g.FillPath(light, core);
-                }
-                using (var line = new Pen(A(c[2], 255), 1.2f))
-                    g.DrawPath(line, core);
-            }
+            sb.AppendFormat("    // {0}\n", a.Rarity);
+            sb.AppendFormat("    {{{0}.f, {1}.f, {2}.f, {3}.f, {4}, {5}, {6}, {7}}},\n", a.X, a.Y, a.Width, a.Height,
+                F(a.FieldLeft), F(a.FieldTop), F(a.FieldRight), F(a.FieldBottom));
         }
-        return b;
+        sb.Append("};\n");
+        sb.Append("} // namespace UI::TitlePlates::Art\n");
+        return sb.ToString();
     }
 
-    static Bitmap Gem(Color[] c)
+    public static string JsonText(List<PlateArt> arts)
     {
-        var b = new Bitmap(GemSize, GemSize, PixelFormat.Format32bppArgb);
-        using (var g = Smooth(b))
-            DrawGem(g, GemSize / 2f, GemSize / 2f, 10f, c, true);
-        return b;
-    }
-
-    // A diamond lit from its top left.
-    static void DrawGem(Graphics g, float cx, float cy, float r, Color[] c, bool border)
-    {
-        var points = new[] { new PointF(cx, cy - r), new PointF(cx + r, cy), new PointF(cx, cy + r), new PointF(cx - r, cy) };
-        using (var path = new GraphicsPath())
+        var sb = new StringBuilder("[\n");
+        for (int i = 0; i < arts.Count; ++i)
         {
-            path.AddPolygon(points);
-            Glow(g, path, c[4], 2.5f);
-            using (var brush = new PathGradientBrush(path))
-            {
-                brush.CenterPoint = new PointF(cx - r * 0.3f, cy - r * 0.3f);
-                var blend = new ColorBlend();
-                blend.Colors = new[] { c[2], c[1], border ? c[3] : c[0], Color.White };
-                blend.Positions = new[] { 0f, 0.4f, 0.75f, 1f };
-                brush.InterpolationColors = blend;
-                g.FillPath(brush, path);
-            }
-            using (var pen = new Pen(border ? c[2] : A(c[2], 200), border ? 1.4f : 1f))
-                g.DrawPath(pen, path);
+            var a = arts[i];
+            sb.AppendFormat(CultureInfo.InvariantCulture,
+                "  {{\"rarity\":\"{0}\",\"x\":{1},\"y\":{2},\"width\":{3},\"height\":{4},\"fieldLeft\":{5},\"fieldTop\":{6},\"fieldRight\":{7},\"fieldBottom\":{8}}}{9}\n",
+                a.Rarity, a.X, a.Y, a.Width, a.Height, a.FieldLeft, a.FieldTop, a.FieldRight, a.FieldBottom,
+                i + 1 < arts.Count ? "," : "");
         }
+        return sb.Append("]\n").ToString();
     }
 
-    // Five feathers fanned from one root on the right, like the concept's SVG wing
-    // (M58 21 C 42 16, 20 9, 2 6 C 14 13, 32 20, 58 26 Z in the box -4 -14 66 60).
-    static Bitmap Wing(Color[] c)
-    {
-        var b = new Bitmap(WingWidth, WingHeight, PixelFormat.Format32bppArgb);
-        using (var g = Smooth(b))
-        {
-            float scale = Math.Min((WingWidth - 8) / 66f, (WingHeight - 2) / 60f);
-            float ox = (WingWidth - 66 * scale) / 2f + 4 * scale, oy = (WingHeight - 60 * scale) / 2f + 14 * scale;
-            float[] angles = { -34, -18, -3, 12, 26 };
-            using (var halo = new GraphicsPath())
-            {
-                for (int i = 0; i < angles.Length; ++i)
-                    halo.AddPath(Feather(angles[i], 1 - i * 0.1f, scale, ox, oy), false);
-                using (var pen = new Pen(A(c[4], c[4].A / 2), 5f)) { pen.LineJoin = LineJoin.Round; g.DrawPath(pen, halo); }
-            }
-            for (int i = angles.Length - 1; i >= 0; --i)
-            {
-                using (var feather = Feather(angles[i], 1 - i * 0.1f, scale, ox, oy))
-                {
-                    var bounds = feather.GetBounds();
-                    int alpha = (int)(255 * (1 - i * 0.08f));
-                    using (var fill = new LinearGradientBrush(new RectangleF(bounds.X - 1, bounds.Y - 1, bounds.Width + 2, bounds.Height + 2), c[2], c[0], LinearGradientMode.Horizontal))
-                    {
-                        var blend = new ColorBlend();
-                        blend.Colors = new[] { A(c[2], alpha), A(c[1], alpha), A(c[0], alpha) };
-                        blend.Positions = new[] { 0f, 0.6f, 1f };
-                        fill.InterpolationColors = blend;
-                        g.FillPath(fill, feather);
-                    }
-                    using (var pen = new Pen(A(c[2], 160), 0.8f))
-                        g.DrawPath(pen, feather);
-                }
-            }
-        }
-        return b;
-    }
-
-    static GraphicsPath Feather(float angle, float s, float scale, float ox, float oy)
-    {
-        var path = new GraphicsPath();
-        path.AddBezier(58, 21, 42, 16, 20, 9, 2, 6);
-        path.AddBezier(2, 6, 14, 13, 32, 20, 58, 26);
-        path.CloseFigure();
-        // SVG: rotate(a 58 23) translate(58 - 58 s, 0) scale(s, 1), then the box into the bitmap.
-        var m = new Matrix();
-        m.Translate(ox, oy, MatrixOrder.Append);
-        m.Scale(scale, scale, MatrixOrder.Prepend);
-        m.RotateAt(angle, new PointF(58, 23), MatrixOrder.Prepend);
-        m.Translate(58 - 58 * s, 0, MatrixOrder.Prepend);
-        m.Scale(s, 1, MatrixOrder.Prepend);
-        path.Transform(m);
-        return path;
-    }
-
-    // The game's OZT: 4 bytes, an 18 byte TGA header (uncompressed, 32 bit, bottom row first), BGRA pixels.
+    // The game's OZT: 4 bytes (here the MUX marker and the scale), an 18 byte TGA header (uncompressed, 32 bit,
+    // bottom row first), BGRA pixels.
     public static void SaveOzt(Bitmap bitmap, string path)
     {
         int w = bitmap.Width, h = bitmap.Height;
@@ -297,7 +193,7 @@ public static class TitlePlates
 
         using (var file = new BinaryWriter(File.Create(path)))
         {
-            file.Write(new byte[] { 0, 0, 2, 0 });
+            file.Write(new byte[] { (byte)'M', (byte)'U', (byte)'X', (byte)Scale });
             file.Write(new byte[] { 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
             file.Write((ushort)w);
             file.Write((ushort)h);
@@ -310,14 +206,22 @@ public static class TitlePlates
 }
 '@
 
-$atlas = [TitlePlates]::Draw()
+$arts = New-Object 'System.Collections.Generic.List[PlateArt]'
+$atlas = [TitlePlateAtlas]::Pack([System.IO.Path]::GetFullPath($Src), $arts)
 try {
     $full = [System.IO.Path]::GetFullPath($Out)
-    [TitlePlates]::SaveOzt($atlas, $full)
+    [TitlePlateAtlas]::SaveOzt($atlas, $full)
     Write-Output "Wrote $full"
+    $headerFull = [System.IO.Path]::GetFullPath($Header)
+    [System.IO.File]::WriteAllText($headerFull, [TitlePlateAtlas]::HeaderText($arts), (New-Object System.Text.UTF8Encoding $false))
+    Write-Output "Wrote $headerFull"
     if ($Png) {
         $atlas.Save([System.IO.Path]::GetFullPath($Png), [System.Drawing.Imaging.ImageFormat]::Png)
         Write-Output "Wrote $Png"
+    }
+    if ($Json) {
+        [System.IO.File]::WriteAllText([System.IO.Path]::GetFullPath($Json), [TitlePlateAtlas]::JsonText($arts))
+        Write-Output "Wrote $Json"
     }
 }
 finally {

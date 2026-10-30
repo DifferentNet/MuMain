@@ -41,6 +41,7 @@
 #include "Engine/Physics/PhysicsManager.h"
 #include "Engine/AI/GOBoid.h"
 #include "GameLogic/Items/CSItemOption.h"
+#include "GameLogic/Quests/PhantomGuide.h"
 
 // Phase 5: Camera system includes for 3D frustum culling
 #include "Camera/CameraManager.h"
@@ -132,6 +133,7 @@ namespace
 #include "GameLogic/Social/MonkSystem.h"
 #include "UI/Core/WindowSystem.h"
 #include "Render/Lighting/LightMoodSetting.h"
+#include "Render/Effects/FullSetGlow.h"
 #include "Render/Effects/SeasonAura.h"
 
 CHARACTER* CharactersClient;
@@ -3346,8 +3348,8 @@ void OnlyNpcChatProcess(CHARACTER* c, OBJECT* o)
             UI::Chat::CreateChat(c->ID, I18N::Game::CrywolfIsAskingForYourHelpOnlyYouCanSaveThisContinent, c);
             break;
         case MODEL_PLAYER:
-            if (c->MonsterIndex == MONSTER_ELF_SOLDIER)
-                UI::Chat::CreateChat(c->ID, I18N::Game::ILlBeYourStrengthForTheJourneyToBecomeAWarrior, c);
+            if (c->MonsterIndex == MONSTER_ELF_SOLDIER) // her old line and the guide's invitation in turn
+                UI::Chat::CreateChat(c->ID, PhantomGuide::OverheadLine(c->Key), c);
             break;
         }
     }
@@ -9249,14 +9251,14 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
         }
     }
 
-    bool fullset = false;
-    if (o->Type == MODEL_PLAYER)
+    // The full set's glow: a whole armour set of one kind at +9 or higher, or the +14/+15 ancient tier in gold.
+    Render::Effects::FullSetGlow fullSetGlow;
+    if (o->Type == MODEL_PLAYER && c->HideShadow == false)
     {
-        if (c->HideShadow == false)
-        {
-            fullset = CheckFullSet(c);
-        }
+        const bool sameKindSet = CheckFullSet(c);
+        fullSetGlow = Render::Effects::FullSetGlowOf(c, sameKindSet, EquipmentLevelSet);
     }
+    const bool fullset = fullSetGlow.Draw;
 
     bool bCloak = false;
 
@@ -11085,7 +11087,7 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
 
             if (fullset && g_pOption->GetRenderLevel() >= 2)
             {
-                PartObjectColor(c->BodyPart[5].Type, o->Alpha, 0.5f, Light);
+                Render::Effects::FullSetHandLight(c, o, fullSetGlow, Light);
 
                 if (!g_isCharacterBuff(o, eBuff_Cloaking))
                 {
@@ -11102,7 +11104,7 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                 if ((c->BodyPart[BODYPART_BOOTS].Type >= MODEL_DRAGON_KNIGHT_BOOTS && c->BodyPart[BODYPART_BOOTS].Type <= MODEL_SUNLIGHT_BOOTS)
                     || c->BodyPart[BODYPART_BOOTS].Type == MODEL_AURA_BOOTS)
                 {
-                    if (EquipmentLevelSet > 9)
+                    if (fullSetGlow.Level > 9)
                     {
                         VectorCopy(o->Light, Light);
 
@@ -11112,7 +11114,8 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                         if (c->BodyPart[BODYPART_BOOTS].Type == MODEL_VOLCANO_BOOTS) Vector(0.5f, 0.24f, 0.8f, o->Light);
                         if (c->BodyPart[BODYPART_BOOTS].Type == MODEL_SUNLIGHT_BOOTS) Vector(0.6f, 0.4f, 0.0f, o->Light);
                         if (c->BodyPart[BODYPART_BOOTS].Type == MODEL_AURA_BOOTS) Vector(0.6f, 0.3f, 0.4f, o->Light);
-                        if (EquipmentLevelSet == 10 && rand_fps_check(4))
+                        Render::Effects::FullSetBootsLight(fullSetGlow, o->Light);
+                        if (fullSetGlow.Level == 10 && rand_fps_check(4))
                         {
                             Vector(0.0f, -18.0f, 50.0f, p);
                             b->TransformPosition(o->BoneTransform[0], p, Position, true);
@@ -11124,7 +11127,7 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                             b->TransformPosition(o->BoneTransform[0], p, Position, true);
                             CreateParticle(BITMAP_WATERFALL_2, Position, o->Angle, o->Light, 3);
                         }
-                        else if (EquipmentLevelSet == 11 && rand_fps_check(3))
+                        else if (fullSetGlow.Level == 11 && rand_fps_check(3))
                         {
                             Vector(0.0f, -18.0f, 50.0f, p);
                             b->TransformPosition(o->BoneTransform[0], p, Position, true);
@@ -11136,7 +11139,7 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                             b->TransformPosition(o->BoneTransform[0], p, Position, true);
                             CreateParticle(BITMAP_WATERFALL_2, Position, o->Angle, o->Light, 3);
                         }
-                        else if (EquipmentLevelSet == 12 && rand_fps_check(2))
+                        else if (fullSetGlow.Level == 12 && rand_fps_check(2))
                         {
                             Vector(0.0f, -18.0f, 50.0f, p);
                             b->TransformPosition(o->BoneTransform[0], p, Position, true);
@@ -11148,7 +11151,7 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                             b->TransformPosition(o->BoneTransform[0], p, Position, true);
                             CreateParticle(BITMAP_WATERFALL_2, Position, o->Angle, o->Light, 3);
                         }
-                        else if (EquipmentLevelSet == 13 && rand_fps_check(1))
+                        else if (fullSetGlow.Level == 13 && rand_fps_check(1))
                         {
                             Vector(0.0f, -20.0f, 50.0f, p);
                             b->TransformPosition(o->BoneTransform[0], p, Position, true);
@@ -11160,7 +11163,7 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                             b->TransformPosition(o->BoneTransform[0], p, Position, true);
                             CreateParticle(BITMAP_WATERFALL_2, Position, o->Angle, o->Light, 3);
                         }
-                        else if (EquipmentLevelSet == 14 && rand_fps_check(1))
+                        else if (fullSetGlow.Level == 14 && rand_fps_check(1))
                         {
                             Vector(0.0f, -20.0f, 50.0f, p);
                             b->TransformPosition(o->BoneTransform[0], p, Position, true);
@@ -11172,7 +11175,7 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                             b->TransformPosition(o->BoneTransform[0], p, Position, true);
                             CreateParticle(BITMAP_WATERFALL_2, Position, o->Angle, o->Light, 3);
                         }
-                        else if (EquipmentLevelSet == 15 && rand_fps_check(1))
+                        else if (fullSetGlow.Level == 15 && rand_fps_check(1))
                         {
                             Vector(0.0f, -20.0f, 50.0f, p);
                             b->TransformPosition(o->BoneTransform[0], p, Position, true);
@@ -11189,18 +11192,18 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                     }
                 }
 
-                if (EquipmentLevelSet > 9)
+                if (fullSetGlow.Level > 9)
                 {
                     if (rand_fps_check(20))//(o->CurrentAction<PLAYER_WALK_MALE || o->CurrentAction>PLAYER_RUN_RIDE_WEAPON) && rand_fps_check(6))
                     {
                         VectorCopy(o->Light, Light);
-                        Vector(1.f, 1.f, 1.f, o->Light);
+                        Render::Effects::FullSetFlareLight(fullSetGlow, o->Light);
 
-                        if (EquipmentLevelSet == 10)
+                        if (fullSetGlow.Level == 10)
                         {
                             CreateParticle(BITMAP_FLARE, o->Position, o->Angle, o->Light, 0, 0.19f, o);
                         }
-                        else if (EquipmentLevelSet == 11)
+                        else if (fullSetGlow.Level == 11)
                         {
                             if (rand() % 8 == 0)
                             {
@@ -11211,7 +11214,7 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                                 CreateParticle(BITMAP_FLARE, o->Position, o->Angle, o->Light, 0, 0.19f, o);
                             }
                         }
-                        else if (EquipmentLevelSet == 12)
+                        else if (fullSetGlow.Level == 12)
                         {
                             if (rand() % 6 == 0)
                             {
@@ -11223,7 +11226,7 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                                 CreateParticle(BITMAP_FLARE, o->Position, o->Angle, o->Light, 0, 0.19f, o);
                             }
                         }
-                        else if (EquipmentLevelSet == 13)
+                        else if (fullSetGlow.Level == 13)
                         {
                             if (rand() % 6 == 0)
                             {
@@ -11237,7 +11240,7 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                                 CreateJoint(BITMAP_FLARE + 1, o->Position, o->Position, o->Angle, 7, o, 20, 40, 1);
                             }
                         }
-                        else if (EquipmentLevelSet == 14)
+                        else if (fullSetGlow.Level == 14)
                         {
                             if (rand() % 6 == 0)
                             {
@@ -11251,7 +11254,7 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                                 CreateJoint(BITMAP_FLARE + 1, o->Position, o->Position, o->Angle, 7, o, 20, 40, 1);
                             }
                         }
-                        else if (EquipmentLevelSet == 15)
+                        else if (fullSetGlow.Level == 15)
                         {
                             if (rand() % 6 == 0)
                             {
@@ -11268,42 +11271,9 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                         VectorCopy(Light, o->Light);
                     }
 
-                    if (EquipmentLevelSet == 15 && g_pOption->GetRenderLevel() >= 4)
+                    if (fullSetGlow.Level == 15 && g_pOption->GetRenderLevel() >= 4)
                     {
-                        //left
-                        const bool spawnTrails = rand_fps_check(1);
-                        vec3_t vColor;
-                        Vector(13.0f, 10.0f, 3.0f, p);
-                        b->TransformPosition(o->BoneTransform[20], p, Position, true);
-                        VectorCopy(Position, o->EyeLeft);
-
-                        Vector(0.09f, 0.09f, 0.8f, vColor);
-                        // Sprites draw every frame; the trail joint spawns at the reference rate.
-                        if (spawnTrails)
-                            CreateJoint(BITMAP_JOINT_ENERGY, Position, o->Position, o->Angle, 55, o, 6.0f, -1, 0, 0, -1,
-                                        vColor);
-                        auto fRad = (float)sinf((WorldTime) * 0.002f);
-                        Vector(0.2f, 0.4f, 0.8f, vColor);
-                        CreateSprite(BITMAP_SHINY + 6, Position, 0.5f * fRad, vColor, o);
-
-                        Vector(0.1f, 0.15f, 1.0f, vColor);
-                        CreateSprite(BITMAP_PIN_LIGHT, Position, 1.3f * fRad + 0.5f, vColor, o, 100.0f);
-
-                        // right
-                        Vector(13.0f, 10.0f, -3.0f, p);
-                        b->TransformPosition(o->BoneTransform[20], p, Position, true);
-                        VectorCopy(Position, o->EyeRight);
-
-                        Vector(0.09f, 0.09f, 0.8f, vColor);
-                        if (spawnTrails)
-                            CreateJoint(BITMAP_JOINT_ENERGY, Position, o->Position, o->Angle, 56, o, 6.0f, -1, 0, 0, -1,
-                                        vColor);
-
-                        Vector(0.2f, 0.4f, 0.8f, vColor);
-                        CreateSprite(BITMAP_SHINY + 6, Position, 0.5f * fRad, vColor, o);
-
-                        Vector(0.1f, 0.15f, 1.0f, vColor);
-                        CreateSprite(BITMAP_PIN_LIGHT, Position, 1.3f * fRad + 0.5f, vColor, o, 80.0f);
+                        Render::Effects::RenderFullSetEyes(o, b, fullSetGlow.Gold);
                     }
                 }
             }

@@ -3892,3 +3892,6 @@ Data/Interface/partCharge1/newui_menu_Bt05.OZJ
 Data/Item/hawkstatue.bmd
 Data/Item/hawkstatue.ozj
 Data/Item/hawkstatueb.ozj
+# Added 2026-10-28: the Endless Tower window of Lugard (Lorencia, Devias)
+Data/Interface/RmlUi/themes/legacy/endless_tower.rcss
+Data/Interface/RmlUi/endless_tower.rml

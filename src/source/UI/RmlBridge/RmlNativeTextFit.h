@@ -16,6 +16,12 @@ class Context;
 // wide. Its px must be window px (a native-text document, or a label counter-scaled out of its
 // panel), as the minimum size is. Inert unless the theme sizes text like the original
 // (theme.ini [Capabilities] NativeTextSize=1, RmlNativeText.h).
+//
+// The text may be split into child elements (a row of differently coloured parts, laid out by the
+// theme): all of it shrinks by one factor, and the children's horizontal margins, borders and
+// padding stay as they are. A child must inherit its font size. `native-fit-small` lets a text
+// that must never leave its box at any UI scale (character_info.rml) go below the renderer's
+// smallest size, down to three quarters of it.
 namespace UI::RmlBridge
 {
 // Fits every opted-in element of the context's visible documents to its box. Call after the

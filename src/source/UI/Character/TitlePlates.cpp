@@ -2,6 +2,7 @@
 #include "UI/Character/TitlePlates.h"
 
 #include <algorithm>
+#include <cmath>
 
 #include "App/Platform/Windows/Winmain.h"
 #include "Camera/CameraProjection.h"
@@ -12,59 +13,49 @@
 #include "Render/Sprites/GlobalBitmap.h"
 #include "Render/Text/CUIRenderText.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
+#include "UI/Character/TitlePlatesArt.h"
+#include "UI/Scaling/UITransform.h"
 
 namespace UI::TitlePlates
 {
 namespace
 {
-using GameLogic::Titles::Rarity;
+using Art::Plate;
 
-// Where tools/make_title_plates.ps1 puts the pieces, in texture pixels.
-constexpr float AtlasSize = 512.f;
-constexpr float RibbonRow = 52.f;
-constexpr float RibbonHeight = 48.f;
-constexpr float RibbonLeft = 48.f;
-constexpr float RibbonMiddle = 8.f;
-constexpr float RibbonRight = 24.f;
-// The ribbon's body inside its 48 rows (the rest is glow), the point of each end, where the text may start (after
-// the gem) and the flat part of the right end.
-constexpr float RibbonBodyTop = 5.f;
-constexpr float RibbonBody = 38.f;
-constexpr float RibbonTextStart = 41.f;
-constexpr float RibbonRightFlat = 4.f;
+// At scale 1 the field (the coloured rectangle the text sits on) is the font's height and this much more. Every title
+// and every rarity gets the same field, so every plate keeps one size whatever its text.
+constexpr float FieldPadding = 5.f;
+// The plates' size, the text's with them (as far as the font may shrink); see Scale(). 70 %: at full size they took
+// too much of the screen, so ghinzuro picked 70 % from shots at 1024 x 768 to 1920 x 1080 (2026-10-29).
+constexpr float DefaultScale = 0.7f;
+float PlateScale = DefaultScale;
+// The field's ends are points: at the text's top and bottom they are about this much of the text's height in.
+constexpr float TipInset = 0.55f;
+// The room the text keeps on each side, inside the points.
+constexpr float TextMargin = 3.f;
 
-constexpr float BannerX = 96.f;
-constexpr float BannerRow = 84.f;
-constexpr float WingWidth = 96.f;
-constexpr float WingHeight = 80.f;
-constexpr float FrameEnd = 32.f;
-constexpr float FrameMiddle = 8.f;
-constexpr float FrameHeight = 64.f;
-constexpr float GemSize = 28.f;
-// The frame's body inside its 64 rows, its core (where the text sits) and where the text may start.
-constexpr float FrameBodyTop = 7.f;
-constexpr float FrameBody = 50.f;
-constexpr float FrameCore = 41.f;
-constexpr float FrameTextStart = 27.f;
-// The wings' root (where the feathers meet) in the left wing's piece; the right wing is its mirror.
-constexpr float WingRootX = 85.7f;
-constexpr float WingRootY = 49.f;
-// The gem's diamond across, in its piece.
-constexpr float GemAcross = 20.f;
+// The widest titles there are (the server's Titles/TitlesConfiguration.cs and the battle pass' season titles, both
+// languages, 2026-10-29). Every field is made wide enough for the widest of them in the regular font: on small
+// windows, where the text can't shrink as far as the plate, all plates grow together and keep one size (ghinzuro,
+// 2026-10-29). Add a title here when a wider one comes; until then that one alone gets a larger plate.
+constexpr const wchar_t* WidestTitles[] = {
+    L"Рыцарь Кровавого замка", L"Защитник Крайвульфа", L"Masters of the Throne",
+    L"Gladiator of the Week",  L"Blood Castle Knight",
+};
 
-// The text's colour on each rarity's plate (the concept's "hi" colours).
+// The text's colour on each rarity's plate (light tints of the plate's colours).
 constexpr unsigned char TextColor[GameLogic::Titles::RarityCount][3] = {
-    {244, 247, 250}, // silver
-    {226, 246, 255}, // ice
-    {220, 255, 226}, // jade
-    {255, 236, 170}, // gold
-    {255, 214, 200}, // crimson
-    {241, 227, 255}, // violet
+    {244, 247, 250}, // silver: the plain silver plate
+    {241, 227, 255}, // ice: the purple plate
+    {220, 255, 226}, // jade: the green plate
+    {226, 246, 255}, // gold: the blue plate with silver wings
+    {255, 214, 200}, // crimson: the red plate with the crown
+    {255, 236, 170}, // violet: the laurels
 };
 
 GLuint Texture()
 {
-    // Its own entry (not shared with RmlUi's copy of the same file); loaded once, kept until the game ends.
+    // Its own entry; loaded once, kept until the game ends.
     static GLuint texture = 0;
     static bool tried = false;
     if (!tried)
@@ -77,18 +68,12 @@ GLuint Texture()
     return texture;
 }
 
-void Piece(GLuint texture, float x, float y, float width, float height, float sx, float sy, float sw, float sh)
+SIZE Measure(const std::wstring& text, HFONT font)
 {
-    if (width <= 0.f || height <= 0.f)
-        return;
-    RenderBitmap(static_cast<int>(texture), x, y, width, height, sx / AtlasSize, sy / AtlasSize, sw / AtlasSize,
-                 sh / AtlasSize, true, true, 0.f);
-}
-
-// A stretched middle piece samples only its centre column, so no neighbour bleeds in under the filter.
-void Middle(GLuint texture, float x, float y, float width, float height, float sx, float sy, float sh)
-{
-    Piece(texture, x, y, width, height, sx + 2.f, sy, 4.f, sh);
+    g_pRenderText->SetFont(font);
+    SIZE size = g_pRenderText->MeasureText(text.c_str(), static_cast<int>(text.size()));
+    size.cx += 2;
+    return size;
 }
 
 // The party HP bar's top over a party member (as RenderPartyHP places it: 100 over the head), else bottomY.
@@ -115,93 +100,44 @@ int OverPartyBar(const CHARACTER& owner, int bottomY)
     return bottomY;
 }
 
-void Text(const GameLogic::Titles::Worn& title, int x, int y, const SIZE& size)
+// The title in its rarity's colour over a 1 px dark shadow, so it reads on the plate's glints too; size is its box,
+// the measured size times the text's scale (the renderer shrinks the text into it).
+void Text(const GameLogic::Titles::Worn& title, HFONT font, int x, int y, const SIZE& size)
 {
     const auto* color = TextColor[static_cast<int>(title.Color)];
-    g_pRenderText->SetFont(g_hFontBold);
+    g_pRenderText->SetFont(font);
     g_pRenderText->SetBgColor(0, 0, 0, 0);
+    g_pRenderText->SetTextColor(0, 0, 0, 255);
+    g_pRenderText->RenderText(x + 1, y + 1, title.Text().c_str(), size.cx, size.cy, RT3_SORT_LEFT);
     g_pRenderText->SetTextColor(color[0], color[1], color[2], 255);
     g_pRenderText->RenderText(x, y, title.Text().c_str(), size.cx, size.cy, RT3_SORT_LEFT);
 }
 
-int RenderRibbon(GLuint texture, const GameLogic::Titles::Worn& title, const SIZE& text, int centerX, int bottomY)
+SIZE Scaled(const SIZE& size, float scale)
 {
-    // The body is the text's height and a little; k turns texture pixels into screen ones.
-    const float body = static_cast<float>(text.cy) + 3.f;
-    const float k = body / RibbonBody;
-    const float height = RibbonHeight * k;
-    const float pad = 3.f * k;
-
-    // left end (gem) | middle under the text | right end
-    const float middle = std::max(0.f, static_cast<float>(text.cx) + pad - (RibbonLeft - RibbonTextStart) * k -
-                                           RibbonRightFlat * k);
-    const float width = (RibbonLeft + RibbonRight) * k + middle;
-    const float x = static_cast<float>(centerX) - width / 2.f;
-    const float y = static_cast<float>(bottomY) - height;
-    const float row = static_cast<float>(static_cast<int>(title.Color)) * RibbonRow;
-
-    Piece(texture, x, y, RibbonLeft * k, height, 0.f, row, RibbonLeft, RibbonHeight);
-    Middle(texture, x + RibbonLeft * k, y, middle, height, RibbonLeft + 4.f, row, RibbonHeight);
-    Piece(texture, x + RibbonLeft * k + middle, y, RibbonRight * k, height, RibbonLeft + RibbonMiddle + 8.f, row,
-          RibbonRight, RibbonHeight);
-
-    // The text between the gem and the right end, in the middle of the body.
-    const float room = width - RibbonTextStart * k - (RibbonRight - RibbonRightFlat) * k;
-    const int textX = static_cast<int>(x + RibbonTextStart * k + std::max(0.f, (room - text.cx) / 2.f) + 0.5f);
-    const int textY = static_cast<int>(y + (RibbonBodyTop + RibbonBody / 2.f) * k - text.cy / 2.f + 0.5f);
-    Text(title, textX, textY, text);
-    return static_cast<int>(height + 0.5f);
+    return SIZE{static_cast<LONG>(std::ceil(static_cast<float>(size.cx) * scale)),
+                static_cast<LONG>(std::ceil(static_cast<float>(size.cy) * scale))};
 }
 
-int RenderBanner(GLuint texture, const GameLogic::Titles::Worn& title, const SIZE& text, int centerX, int bottomY)
+// The widest of WidestTitles in the regular font, unscaled; measured again when the font's size changes.
+LONG WidestTitleWidth(float fontPx)
 {
-    const float core = static_cast<float>(text.cy) + 6.f;
-    const float k = core / FrameCore;
-    const float height = FrameHeight * k;
-    const float pad = 8.f * k;
+    static float measuredAt = -1.f;
+    static LONG width = 0;
+    if (fontPx != measuredAt)
+    {
+        measuredAt = fontPx;
+        width = 0;
+        for (const wchar_t* text : WidestTitles)
+            width = std::max(width, Measure(text, g_hFont).cx);
+    }
+    return width;
+}
 
-    const float middle =
-        std::max(0.f, static_cast<float>(text.cx) + 2.f * (FrameTextStart * k + pad) - 2.f * FrameEnd * k);
-    const float width = 2.f * FrameEnd * k + middle;
-    const float x = static_cast<float>(centerX) - width / 2.f;
-    const float bodyHeight = FrameBody * k;
-
-    // The wings are 1.3 times the frame's height and hang a little under it; the plate's bottom is theirs.
-    const float wk = 1.3f * bodyHeight / (WingHeight - 2.f);
-    const float wingHeight = WingHeight * wk;
-    const float wingWidth = WingWidth * wk;
-    const float centerY = static_cast<float>(bottomY) - (wingHeight - WingRootY * wk) - 0.15f * bodyHeight + 2.f * wk;
-    const float y = centerY - (FrameBodyTop + FrameBody / 2.f) * k;
-    const float rootY = centerY + 0.15f * bodyHeight;
-    const float rootInside = 0.2f * bodyHeight;
-
-    const float row = static_cast<float>(static_cast<int>(title.Color)) * BannerRow;
-    const float leftRootX = x + 2.f * k + rootInside;
-    const float rightRootX = x + width - 2.f * k - rootInside;
-    Piece(texture, leftRootX - WingRootX * wk, rootY - WingRootY * wk, wingWidth, wingHeight, BannerX, row, WingWidth,
-          WingHeight);
-    Piece(texture, rightRootX - (WingWidth - WingRootX) * wk, rootY - WingRootY * wk, wingWidth, wingHeight,
-          BannerX + WingWidth + 4.f, row, WingWidth, WingHeight);
-
-    const float frameX = BannerX + 2.f * (WingWidth + 4.f);
-    Piece(texture, x, y, FrameEnd * k, height, frameX, row, FrameEnd, FrameHeight);
-    Middle(texture, x + FrameEnd * k, y, middle, height, frameX + FrameEnd + 4.f, row, FrameHeight);
-    Piece(texture, x + FrameEnd * k + middle, y, FrameEnd * k, height, frameX + FrameEnd + FrameMiddle + 8.f, row,
-          FrameEnd, FrameHeight);
-
-    // The gem sits on the frame's top edge, as wide as half the frame is high.
-    const float gk = 0.55f * bodyHeight / GemAcross;
-    const float gem = GemSize * gk;
-    const float bodyTop = y + FrameBodyTop * k;
-    Piece(texture, static_cast<float>(centerX) - gem / 2.f, bodyTop - gem / 2.f, gem, gem,
-          frameX + 2.f * FrameEnd + FrameMiddle + 12.f, row, GemSize, GemSize);
-
-    const int textX = static_cast<int>(static_cast<float>(centerX) - text.cx / 2.f + 0.5f);
-    const int textY = static_cast<int>(centerY - text.cy / 2.f + 0.5f);
-    Text(title, textX, textY, text);
-
-    const float top = std::min(rootY - WingRootY * wk, bodyTop - gem / 2.f);
-    return static_cast<int>(static_cast<float>(bottomY) - top + 0.5f);
+// How much the plate is scaled (atlas pixels to screen) for a field that holds a text of textWidth x textHeight.
+float ScaleForWidth(float textWidth, float textHeight)
+{
+    return (textWidth + 2.f * (TipInset * textHeight + TextMargin * PlateScale)) / Art::FieldWidth;
 }
 } // namespace
 
@@ -210,9 +146,14 @@ bool Enabled()
     return GameConfig::GetInstance().GetOverheadTitles();
 }
 
-bool IsBanner(Rarity rarity)
+float Scale()
 {
-    return rarity == Rarity::Gold || rarity == Rarity::Crimson;
+    return PlateScale;
+}
+
+void SetScale(float scale)
+{
+    PlateScale = std::clamp(scale, 0.3f, 1.5f);
 }
 
 int Render(const GameLogic::Titles::Worn& title, const CHARACTER& owner, int centerX, int bottomY)
@@ -223,13 +164,45 @@ int Render(const GameLogic::Titles::Worn& title, const CHARACTER& owner, int cen
     if (text.empty() || texture == 0)
         return 0;
 
-    g_pRenderText->SetFont(g_hFontBold);
-    SIZE size = g_pRenderText->MeasureText(text.c_str(), static_cast<int>(text.size()));
-    size.cx += 2;
+    // One scale for every plate (the atlas keeps the drawn plates' sizes), set by the font and PlateScale: the same
+    // field for all. The text shrinks with the plate as far as the renderer lets a font shrink; where it can't, the
+    // field stays high enough for it and wide enough for the widest title.
+    HFONT font = g_hFontBold;
+    using UI::Scaling::FontRole;
+    const float fontPx =
+        UI::Scaling::NativeTextPixelSize(FontRole::Bold, static_cast<int>(WindowWidth), static_cast<int>(WindowHeight));
+    const float smallest = UI::Scaling::MinimumTextPixelSize(FontRole::Bold) / std::max(fontPx, 1.f);
+    const float textScale = std::max(PlateScale, std::min(smallest, 1.f));
+    const SIZE natural = Measure(text, font);
+    SIZE size = Scaled(natural, textScale);
+    const float fieldHeight =
+        std::max((static_cast<float>(natural.cy) + FieldPadding) * PlateScale, static_cast<float>(size.cy) + 2.f);
+    const float textHeight = static_cast<float>(size.cy);
+    const float widest = static_cast<float>(WidestTitleWidth(fontPx)) * textScale;
+    float k = std::max(fieldHeight / Art::FieldHeight, ScaleForWidth(widest, textHeight));
+    if (ScaleForWidth(static_cast<float>(size.cx), textHeight) > k)
+    {
+        // A title too long for the field in bold gets the regular font; the plate keeps its size, unless the title is
+        // wider than all of WidestTitles.
+        font = g_hFont;
+        size = Scaled(Measure(text, font), textScale);
+        k = std::max(k, ScaleForWidth(static_cast<float>(size.cx), textHeight));
+    }
 
-    const int height = IsBanner(title.Color) ? RenderBanner(texture, title, size, centerX, bottomY)
-                                             : RenderRibbon(texture, title, size, centerX, bottomY);
+    const Plate& plate = Art::Plates[static_cast<int>(title.Color)];
+    const float height = plate.height * k;
+    const float top = static_cast<float>(bottomY) - height;
+    const float left = static_cast<float>(centerX) - (plate.fieldLeft + plate.fieldRight) / 2.f * k;
+    RenderBitmap(static_cast<int>(texture), left, top, plate.width * k, height, plate.x / Art::AtlasSize,
+                 plate.y / Art::AtlasSize, plate.width / Art::AtlasSize, plate.height / Art::AtlasSize, true, true,
+                 0.f);
+
+    const float fieldMiddle = top + (plate.fieldTop + plate.fieldBottom) / 2.f * k;
+    const int textX = static_cast<int>(static_cast<float>(centerX) - static_cast<float>(size.cx) / 2.f + 0.5f);
+    const int textY = static_cast<int>(fieldMiddle - static_cast<float>(size.cy) / 2.f + 0.5f);
+    Text(title, font, textX, textY, size);
+
     g_pRenderText->SetFont(g_hFont);
-    return height;
+    return static_cast<int>(height + 0.5f);
 }
 } // namespace UI::TitlePlates

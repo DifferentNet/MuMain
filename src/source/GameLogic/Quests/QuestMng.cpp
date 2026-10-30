@@ -4,6 +4,7 @@
 
 #include "stdafx.h"
 #include "QuestMng.h"
+#include "PhantomGuide.h"
 #include "I18N/All.h"
 
 
@@ -37,6 +38,31 @@ void CQuestMng::LoadQuestScript()
     LoadQuestWordsScript();
 }
 
+namespace
+{
+constexpr DWORD kShadowPhantomSoldier = PhantomGuide::kNpc;
+constexpr int kAnswerQuestList = 901;
+
+// Takes the answers leading to `result` out of a dialog state; the others keep their order.
+void DropAnswers(SNPCDialogue& dialogue, int result)
+{
+    int kept = 0;
+    for (int i = 0; i < QM_MAX_ND_ANSWER && dialogue.m_anAnswer[i * 2] != 0; ++i)
+    {
+        if (dialogue.m_anAnswer[i * 2 + 1] == result)
+            continue;
+        dialogue.m_anAnswer[kept * 2] = dialogue.m_anAnswer[i * 2];
+        dialogue.m_anAnswer[kept * 2 + 1] = dialogue.m_anAnswer[i * 2 + 1];
+        ++kept;
+    }
+    for (int i = kept; i < QM_MAX_ND_ANSWER; ++i)
+    {
+        dialogue.m_anAnswer[i * 2] = 0;
+        dialogue.m_anAnswer[i * 2 + 1] = 0;
+    }
+}
+} // namespace
+
 void CQuestMng::LoadNPCDialogueScript()
 {
     FILE* fp = ::_wfopen(QM_NPCDIALOGUE_FILE, L"rb");
@@ -62,10 +88,18 @@ void CQuestMng::LoadNPCDialogueScript()
         ::memcpy(&dwIndex, abyBuffer, sizeof(DWORD));
         ::memcpy(&sNPCDialogue, abyBuffer + sizeof(DWORD), sizeof(SNPCDialogue));
 
+        // The Shadow Phantom Soldier gives no quests here (ghinzuro, 2026-10-29): "Accept a quest." listed
+        // Season 6 quests that never started. The server has unlinked them (server/trim/phantom-soldier.sql).
+        if ((dwIndex >> 16) == kShadowPhantomSoldier)
+            DropAnswers(sNPCDialogue, kAnswerQuestList);
+
         m_mapNPCDialogue.insert(std::make_pair(dwIndex, sNPCDialogue));
     }
 
     ::fclose(fp);
+
+    // Her guide to this server (ghinzuro, 2026-10-29): topics in her dialog, next to her buff.
+    PhantomGuide::AddTo(m_mapNPCDialogue);
 }
 
 void CQuestMng::LoadQuestProgressScript()
@@ -304,6 +338,9 @@ void CQuestMng::SetCurQuestProgress(DWORD dwQuestIndex)
 
 const wchar_t* CQuestMng::GetWords(int nWordsIndex)
 {
+    if (const wchar_t* guideWords = PhantomGuide::Words(nWordsIndex))
+        return guideWords;
+
     QuestWordsMap::const_iterator iter = m_mapQuestWords.find(nWordsIndex);
     if (iter == m_mapQuestWords.end())
         return NULL;

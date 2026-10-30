@@ -41,7 +41,7 @@
 		<!-- id read live by NPCDialogue.cpp's ResolveDialogueWrapGeometry() -- same reasoning as
 		     #npc_lines_container above, using #btn_ans_next as this area's lower boundary. -->
 		<div id="answers_container" class="nd-answers sharp-text" data-class-hidden="!show_answers" data-style-font-size="text_px + 'px'">
-			<div class="nd-answer-row" data-for="a : answers"
+			<div class="nd-answer-row" data-for="a : answers" data-attr-data-answer="a.index"
 			     data-event-click="npcdialogue_select_answer(a.index)">{{a.text}}</div>
 		</div>
 

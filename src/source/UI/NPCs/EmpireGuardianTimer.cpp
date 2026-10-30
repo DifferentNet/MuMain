@@ -3,6 +3,7 @@
 #include "UI/NPCs/EmpireGuardianTimer.h"
 #include "I18N/All.h"
 #include "UI/RmlBridge/RmlTheme.h"
+#include "World/MapInfra/MapManager.h"
 
 using namespace SEASON3B;
 using namespace mu::ui::window;
@@ -85,7 +86,11 @@ void CEmpireGuardianTimer::SyncView()
     if (IsVisible())
     {
         wchar_t szText[256] = {};
-        mu_swprintf(szText, I18N::Game::RoundDZoneD, m_iDay, m_iZone);
+        // Our server's Endless Tower (map 65, Doppelganger's) borrows this timer and sends the wave as the zone.
+        if (gMapManager.WorldActive == WD_65DOPPLEGANGER1)
+            mu_swprintf(szText, I18N::Game::EndlessTowerWaveTimer, m_iZone);
+        else
+            mu_swprintf(szText, I18N::Game::RoundDZoneD, m_iDay, m_iZone);
         // The original set no colour for the round: it took whatever the text renderer was left
         // in by the window drawn before it, white in every capture (the windows drawn before it
         // reset to white). Plain here.

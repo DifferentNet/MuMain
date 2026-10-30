@@ -12,6 +12,7 @@ struct HelpLineEntry
     Rml::String text;
     bool heading = false;
     bool halfSpacer = false;
+    bool hint = false;
 };
 
 // The page sits on the theme's .stage: the text sizes are physical px, the line heights the native
