@@ -71,6 +71,11 @@ Depth clamp: the pipelines clamp depth, as on every other platform, where the ca
 depth there instead, as the original OpenGL game did (`Module.muDepthClamp`; the log says "depth clamp: no,
 depth clipped"). `index.html?nodepthclamp` clips it on any card.
 
+iPhone and iPad: every browser there is Safari's WebKit, and the game needs iOS 27 or later (JSPI came with
+Safari 27; WebGPU with iOS 26). Their Safari still says "iPhone OS 18_…" in the user agent on iOS 27, so the
+page tells iOS users to update by what the browser lacks, not by that number. iPhones have no WebGPU
+`float32-filterable` (an iPhone 13 on iOS 27.2, 2026-10-30), which the game doesn't need (the SDL patch below).
+
 ## The SDL patch
 
 `patches/sdl-webgpu.patch` (MU Moldova changes to the fork; each is commented in place):
@@ -88,6 +93,9 @@ depth clipped"). `index.html?nodepthclamp` clips it on any card.
 - A key event claims keyboard focus when SDL lost it, or typed text was dropped.
 - `DepthClipControl` is optional: requested where the adapter has it and the app leaves
   `FEATURE_DEPTH_CLAMPING` on; without it pipelines clip depth (ARM Mali Bifrost phones lack it).
+- `Float32Filterable` is optional too: iPhones don't have it (an iPhone 13 on iOS 27.2, 2026-10-30), and the
+  game makes no 32-bit float texture (bloom is 16-bit float, which every card filters). Without it SDL
+  can't filter or blend RGBA32Float, which the game never asks for.
 - Fewer calls into the page per frame (each WebGPU call costs; a phone feels it most). Measured in Lorencia on
   2026-10-29: 915 draws a frame set 4 bind groups each (3,660 calls) and wrote 736 uniform blocks one call each.
   - A draw sets only the bind groups whose bindings changed, and not when the same group and offsets are
