@@ -1187,7 +1187,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         .sort((a, b) => backgroundRank(a) - backgroundRank(b))
         .map((path) => new URL(`${path}?v=${versions[path]}`, location.href).href)
         .filter((url) => !kept.has(url));
-      if (!files.length) return;
+      if (!files.length) return dropOldVersions(versions, kept);
       appendLog(`Game files in the background: downloading ${files.length} of ${Object.keys(versions).length}` +
                 (leftOut.length ? ` (sound or music off: not ${leftOut.join(", ")})` : ""));
       const started = performance.now();
@@ -1213,6 +1213,25 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       appendLog(`Game files in the background: ${downloaded} downloaded, ${Math.round(bytes / 1e6)} MB in ` +
                 `${Math.round((performance.now() - started) / 1000)} s` + (failed ? `, ${failed} failed` : "") +
                 (skipped ? `, ${skipped} left for the game to read` : ""), failed > 0);
+      await dropOldVersions(versions, kept);
+    }
+    // The service worker keeps a background download without dropping the file's older versions
+    // (sw.js, keep): this drops those of an earlier release, from the list of kept files taken before.
+    async function dropOldVersions(versions, kept) {
+      const current = new Map(Object.entries(versions).map(([path, hash]) => {
+        const url = new URL(`${path}?v=${hash}`, location.href);
+        return [url.origin + url.pathname, url.href];
+      }));
+      try {
+        const cache = await caches.open("mu-web/files");
+        for (const url of kept) {
+          const file = new URL(url);
+          const now = current.get(file.origin + file.pathname);
+          if (now && now !== url) await cache.delete(url);
+        }
+      } catch (e) {
+        // Left for the next visit.
+      }
     }
 
     // Global for Main.js, which picks up an existing Module object.
