@@ -21,7 +21,16 @@ constexpr int KeyFunctionPage = 0;
 constexpr int ChattingPage = 1;
 constexpr int PageCount = 2;
 
-// With touch controls on (UI::Mobile::IsTouchControls()) the key page shows the touch controls instead:
-// the phone has no F keys to read about.
-std::vector<PageLine> BuildPage(int page, bool touchControls);
+// The devices the player has in hand, which the key page is about.
+struct Devices
+{
+    // Touch controls on (UI::Mobile::IsTouchControls()): a phone has no F keys to read about.
+    bool touchControls = false;
+    // A gamepad in use (UI::Mobile::IsGamepadInUse()).
+    bool gamepad = false;
+};
+
+// The key page lists the touch controls, then the gamepad's buttons, for the devices in hand; the
+// keyboard's keys with neither.
+std::vector<PageLine> BuildPage(int page, Devices devices);
 } // namespace UI::Help

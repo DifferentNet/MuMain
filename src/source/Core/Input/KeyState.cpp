@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Core/Input/KeyState.h"
+#include "Core/Input/GamepadPointer.h"
 #include "Core/Input/SyntheticInput.h"
 #include "Core/Input/TouchInput.h"
 
@@ -99,13 +100,16 @@ namespace Core::Input
         switch (virtualKey)
         {
         case VK_LBUTTON:
-            return g_leftMouseButtonPressEdge || Touch::IsMouseButtonHeld(SDL_BUTTON_LEFT)
-                || (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)) != 0;
+            return g_leftMouseButtonPressEdge || Touch::IsMouseButtonHeld(SDL_BUTTON_LEFT) ||
+                   Gamepad::Pointer::IsButtonHeld(SDL_BUTTON_LEFT) ||
+                   (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)) != 0;
         case VK_RBUTTON:
-            return Touch::IsMouseButtonHeld(SDL_BUTTON_RIGHT)
-                || (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(SDL_BUTTON_RIGHT)) != 0;
-        case VK_MBUTTON: return (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(SDL_BUTTON_MIDDLE)) != 0;
-        case VK_SHIFT:   return (SDL_GetModState() & SDL_KMOD_SHIFT) != 0;
+            return Touch::IsMouseButtonHeld(SDL_BUTTON_RIGHT) || Gamepad::Pointer::IsButtonHeld(SDL_BUTTON_RIGHT) ||
+                   (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(SDL_BUTTON_RIGHT)) != 0;
+        case VK_MBUTTON:
+            return (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(SDL_BUTTON_MIDDLE)) != 0;
+        case VK_SHIFT:
+            return (SDL_GetModState() & SDL_KMOD_SHIFT) != 0;
         case VK_CONTROL: return (SDL_GetModState() & SDL_KMOD_CTRL) != 0;
         case VK_MENU:    return (SDL_GetModState() & SDL_KMOD_ALT) != 0;
         default: break;

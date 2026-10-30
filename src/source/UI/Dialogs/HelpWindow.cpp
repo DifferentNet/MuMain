@@ -147,15 +147,17 @@ void mu::ui::window::CHelpWindow::SyncRmlModel()
 void mu::ui::window::CHelpWindow::RebuildPageModel()
 {
     const float textPx = UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Normal);
-    const bool touchControls = UI::Mobile::IsTouchControls();
-    if (m_BuiltPage == m_iIndex && m_BuiltTextPx == textPx && m_BuiltTouchControls == touchControls)
+    const UI::Help::Devices devices{UI::Mobile::IsTouchControls(), UI::Mobile::IsGamepadInUse()};
+    if (m_BuiltPage == m_iIndex && m_BuiltTextPx == textPx && m_BuiltTouchControls == devices.touchControls &&
+        m_BuiltGamepad == devices.gamepad)
         return;
 
     m_BuiltPage = m_iIndex;
     m_BuiltTextPx = textPx;
-    m_BuiltTouchControls = touchControls;
+    m_BuiltTouchControls = devices.touchControls;
+    m_BuiltGamepad = devices.gamepad;
 
-    const std::vector<UI::Help::PageLine> page = UI::Help::BuildPage(m_iIndex, touchControls);
+    const std::vector<UI::Help::PageLine> page = UI::Help::BuildPage(m_iIndex, devices);
 
     HelpWindowRmlModel& model = m_RmlView.GetModel();
     model.lines.clear();

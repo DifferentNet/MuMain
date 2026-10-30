@@ -218,6 +218,14 @@ struct ControlsModel
     Rml::String chatLabel;
     Rml::String backLabel;
     std::array<Rml::String, MenuItemCount> menuLabels;
+    // A gamepad in use: its buttons' glyphs show on the controls, and the menu's highlighted item
+    // (-1 none) with its legend.
+    bool pad = false;
+    // Fingers drive the controls: the joystick's area shows.
+    bool fingers = false;
+    int menuFocus = -1;
+    Rml::String padOpenLabel;
+    Rml::String padCloseLabel;
     // The phone view's hero frame.
     UI::Mobile::HeroFrame::Model hero;
 };
@@ -266,13 +274,18 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     c.Bind("back_label", &model.backLabel);
     for (int item = 0; item < MenuItemCount; ++item)
         c.Bind(MenuLabelFields[item], &model.menuLabels[item]);
+    c.Bind("pad", &model.pad);
+    c.Bind("fingers", &model.fingers);
+    c.Bind("menu_focus", &model.menuFocus);
+    c.Bind("pad_open_label", &model.padOpenLabel);
+    c.Bind("pad_close_label", &model.padCloseLabel);
     UI::Mobile::HeroFrame::Bind(c, model.hero);
 }
 
 // Under every window and the HUD's bar, over the world's labels (RmlStackingOrder.cpp); shown
 // without focus, so an open chat field keeps it.
-UI::RmlBridge::ThemedView<ControlsModel> g_View{"touch_controls", BindModel,
-                                                {{"Data/Interface/RmlUi/touch_controls.rml"}}};
+UI::RmlBridge::ThemedView<ControlsModel> g_View{
+    "touch_controls", BindModel, {{"Data/Interface/RmlUi/touch_controls.rml"}}};
 
 struct ControlBox
 {
@@ -287,6 +300,16 @@ std::array<ControlBox, ControlCount> g_boxes{};
 // Each control's press counter when last read: a press since shows as a difference.
 std::array<std::uint32_t, ControlCount> g_seenPresses{};
 bool g_shown = false;
+
+// What a gamepad holds on the controls (UI/HUD/GamepadControls), beside the fingers: a control is
+// held while a finger or the pad holds it, and pressed by either.
+struct PadPresses
+{
+    std::array<bool, ControlCount> held{};
+    std::array<std::uint32_t, ControlCount> presses{};
+    std::array<std::uint32_t, ControlCount> seen{};
+};
+PadPresses g_pad;
 
 // Putting a skill on a button, with no digit keys to bind it, either way round: a tap on an empty
 // button (or on any while the skill list is open) opens the list and the skill picked there goes on
@@ -314,8 +337,7 @@ float Dp()
 
 bool Inside(const ControlBox& box, float x, float y, float slop)
 {
-    return box.shown && x >= box.left - slop && x <= box.right + slop && y >= box.top - slop &&
-           y <= box.bottom + slop;
+    return box.shown && x >= box.left - slop && x <= box.right + slop && y >= box.top - slop && y <= box.bottom + slop;
 }
 
 std::string_view FileName(const Rml::String& url)
@@ -458,8 +480,17 @@ void SyncLabels(ControlsModel& model)
     SyncLabel(model.menuLabel, I18N::Game::TouchMenu, "menu_label");
     SyncLabel(model.chatLabel, I18N::Game::TouchChat, "chat_label");
     SyncLabel(model.backLabel, I18N::Game::Back, "back_label");
+    SyncLabel(model.padOpenLabel, I18N::Game::PadOpen, "pad_open_label");
+    SyncLabel(model.padCloseLabel, I18N::Game::PadClose, "pad_close_label");
     for (int item = 0; item < MenuItemCount; ++item)
         SyncLabel(model.menuLabels[item], *MenuItems[item].label, MenuLabelFields[item].c_str());
+}
+
+// The devices the controls show for: the joystick's area for fingers, the glyphs for a pad.
+void SyncDevices(ControlsModel& model)
+{
+    SetField(model.pad, UI::Mobile::IsGamepadInUse(), "pad");
+    SetField(model.fingers, Touch::IsEnabled(), "fingers");
 }
 
 void SyncSkills(ControlsModel& model)
@@ -492,6 +523,17 @@ bool WaitingForButton()
     return std::chrono::steady_clock::now() < g_binding.until;
 }
 
+// The line over the skill buttons while one is being set, in the words of the device in use.
+const wchar_t* BindHint(bool gridOpen)
+{
+    if (g_binding.pendingSlot >= 0)
+        return I18N::Game::TouchBindPickFor;
+    const bool pad = UI::Mobile::IsGamepadInUse();
+    if (gridOpen)
+        return pad ? I18N::Game::PadBindPick : I18N::Game::TouchBindPick;
+    return pad ? I18N::Game::PadBindPlace : I18N::Game::TouchBindPlace;
+}
+
 void UpdateBinding(ControlsModel& model)
 {
     static constexpr const char* BindFields[SkillButtons] = {"skill_0_bind", "skill_1_bind", "skill_2_bind",
@@ -520,10 +562,7 @@ void UpdateBinding(ControlsModel& model)
     for (int slot = 0; slot < SkillButtons; ++slot)
         SetField(model.skillBind[slot], waiting || slot == g_binding.pendingSlot, BindFields[slot]);
     SetField(model.hintShown, gridOpen || waiting, "hint_shown");
-    const wchar_t* hint = g_binding.pendingSlot >= 0 ? I18N::Game::TouchBindPickFor
-                          : gridOpen                 ? I18N::Game::TouchBindPick
-                                                     : I18N::Game::TouchBindPlace;
-    SyncLabel(model.bindHint, hint, "bind_hint");
+    SyncLabel(model.bindHint, BindHint(gridOpen), "bind_hint");
 }
 
 // A dialog that waits for an answer (the system menu, a confirmation, a message box): the menu
@@ -534,19 +573,125 @@ bool IsDialogOpen()
            mu::ui::window::g_pGenericMenuDialog->IsVisible();
 }
 
-// Whether a finger landed on the control since the last frame; reading forgets it.
+// Whether a finger landed on the control or the pad pressed it since the last frame; reading forgets it.
 bool TakePress(int control)
 {
     const std::uint32_t presses = Touch::Control(control).presses;
-    const bool pressed = presses != g_seenPresses[control];
+    const bool pressed = presses != g_seenPresses[control] || g_pad.presses[control] != g_pad.seen[control];
     g_seenPresses[control] = presses;
+    g_pad.seen[control] = g_pad.presses[control];
     return pressed;
 }
 
+// Whether a finger or the pad holds the control.
+bool IsHeld(int control)
+{
+    return Touch::Control(control).held || g_pad.held[control];
+}
+
+void HoldForPad(int control, bool held)
+{
+    if (control < 0 || control >= ControlCount || g_pad.held[control] == held)
+        return;
+    g_pad.held[control] = held;
+    if (held)
+        ++g_pad.presses[control];
+}
+
+// The control of a button that presses a key (KeyButtons), by its element.
+int KeyControl(std::string_view element)
+{
+    for (int button = 0; button < KeyButtonCount; ++button)
+    {
+        if (element == KeyButtons[button].element)
+            return FirstKeyControl + button;
+    }
+    return Touch::NoControl;
+}
+
+int PadControl(UI::HUD::TouchControls::PadButton button)
+{
+    using UI::HUD::TouchControls::PadButton;
+    switch (button)
+    {
+    case PadButton::Attack:
+        return AttackControl;
+    case PadButton::PickUp:
+        return PickupControl;
+    case PadButton::Auto:
+        return AutoControl;
+    case PadButton::Menu:
+        return MenuControl;
+    case PadButton::PotionQ:
+        return KeyControl("tc_potion_q");
+    case PadButton::PotionW:
+        return KeyControl("tc_potion_w");
+    case PadButton::Map:
+        return KeyControl("tc_map");
+    case PadButton::Back:
+        return KeyControl("tc_back");
+    default:
+        break;
+    }
+    const int skill = static_cast<int>(button) - static_cast<int>(PadButton::Skill0);
+    return skill >= 0 && skill < SkillButtons ? FirstSkillControl + skill : Touch::NoControl;
+}
+
+struct BoxCentre
+{
+    float x = 0.f;
+    float y = 0.f;
+};
+
+BoxCentre CentreOf(const ControlBox& box)
+{
+    return {(box.left + box.right) / 2.f, (box.top + box.bottom) / 2.f};
+}
+
+// The menu item next to `from` the way (dx, dy) points: the nearest along that way, a step to
+// either side counting double. `from` itself when none lies that way.
+int NextMenuItem(int from, int dx, int dy)
+{
+    const ControlBox& origin = g_boxes[FirstMenuItemControl + from];
+    if (!origin.shown)
+        return from;
+    const BoxCentre start = CentreOf(origin);
+    int best = from;
+    float bestScore = 0.f;
+    for (int item = 0; item < MenuItemCount; ++item)
+    {
+        const ControlBox& box = g_boxes[FirstMenuItemControl + item];
+        if (item == from || !box.shown)
+            continue;
+        const BoxCentre centre = CentreOf(box);
+        const float along =
+            (centre.x - start.x) * static_cast<float>(dx) + (centre.y - start.y) * static_cast<float>(dy);
+        if (along < 1.f)
+            continue;
+        const float across = dx != 0 ? std::abs(centre.y - start.y) : std::abs(centre.x - start.x);
+        const float score = along + 2.f * across;
+        if (best == from || score < bestScore)
+        {
+            best = item;
+            bestScore = score;
+        }
+    }
+    return best;
+}
+
+// Drops the finger presses made while the controls were away. The pad's stay: when a pad press is
+// what brought the controls up, it acts.
 void ForgetFingers()
 {
     for (int control = 0; control < ControlCount; ++control)
-        TakePress(control);
+        g_seenPresses[control] = Touch::Control(control).presses;
+}
+
+// Lets go of the pad's holds and drops its presses: off the world nothing waits for them.
+void ForgetPad()
+{
+    g_pad.held.fill(false);
+    g_pad.seen = g_pad.presses;
 }
 
 // The floating stick: its centre is where the finger landed; a finger beyond the knob's reach drags
@@ -606,6 +751,8 @@ void UpdateMenu(ControlsModel& model)
     }
     if (TakePress(MenuBackdropControl) || dialogOpen)
         SetField(model.menuOpen, false, "menu_open");
+    if (!model.menuOpen)
+        SetField(model.menuFocus, -1, "menu_focus");
     for (int item = 0; item < MenuItemCount; ++item)
     {
         if (!TakePress(FirstMenuItemControl + item) || !model.menuOpen)
@@ -621,7 +768,7 @@ void UpdateMenu(ControlsModel& model)
 void UpdateButtons(ControlsModel& model)
 {
     TakePress(AttackControl);
-    if (Touch::Control(AttackControl).held)
+    if (IsHeld(AttackControl))
         GameLogic::Touch::Attack();
 
     for (int slot = 0; slot < SkillButtons; ++slot)
@@ -650,14 +797,14 @@ void UpdateButtons(ControlsModel& model)
                 GameLogic::Touch::SelectHotKeySlot(slot);
             }
         }
-        if (!Touch::Control(control).held)
+        if (!IsHeld(control))
             g_binding.noCast[slot] = false;
         else if (!g_binding.noCast[slot])
             GameLogic::Touch::CastHotKeySlot(slot);
     }
 
     TakePress(PickupControl);
-    if (Touch::Control(PickupControl).held)
+    if (IsHeld(PickupControl))
         GameLogic::Touch::PickUpNearest();
 
     if (TakePress(AutoControl))
@@ -707,7 +854,7 @@ namespace UI::HUD::TouchControls
 {
 void Update()
 {
-    if (!Touch::IsEnabled())
+    if (!UI::Mobile::ShowsControls())
     {
         Hide();
         return;
@@ -719,6 +866,7 @@ void Update()
         Hide();
         GameLogic::Touch::Reset();
         ForgetFingers();
+        ForgetPad();
         g_binding = SkillBinding{};
         return;
     }
@@ -743,6 +891,7 @@ void Update()
 
     ControlsModel& model = g_View.GetModel();
     SyncLabels(model);
+    SyncDevices(model);
     SyncSkills(model);
     UpdateBinding(model);
     UpdateStick(model);
@@ -751,5 +900,60 @@ void Update()
     UI::Mobile::HeroFrame::Sync(model.hero, [](const char* field) { g_View.MarkDirty(field); });
     // The boxes the next fingers are tested against: where this frame lays the controls out.
     MeasureBoxes();
+}
+
+void SetPadHeld(PadButton button, bool held)
+{
+    HoldForPad(PadControl(button), held);
+}
+
+int ControlAt(float x, float y)
+{
+    const int control = HitTest(x, y);
+    return control == StickControl ? Touch::NoControl : control;
+}
+
+void SetControlHeld(int control, bool held)
+{
+    HoldForPad(control, held);
+}
+
+void ReleasePad()
+{
+    g_pad.held.fill(false);
+}
+
+bool IsMenuOpen()
+{
+    return g_shown && g_View.GetModel().menuOpen;
+}
+
+void CloseMenu()
+{
+    ControlsModel& model = g_View.GetModel();
+    SetField(model.menuOpen, false, "menu_open");
+    SetField(model.menuFocus, -1, "menu_focus");
+}
+
+void MoveMenuFocus(int dx, int dy)
+{
+    if (!IsMenuOpen())
+        return;
+    ControlsModel& model = g_View.GetModel();
+    // The first item lights as the menu opens, without a click of its own: the menu's was heard.
+    const bool first = model.menuFocus < 0;
+    const int focus = first ? 0 : NextMenuItem(model.menuFocus, dx, dy);
+    if (focus == model.menuFocus)
+        return;
+    if (!first)
+        PlayBuffer(SOUND_CLICK01);
+    SetField(model.menuFocus, focus, "menu_focus");
+}
+
+void ActivateMenuFocus()
+{
+    const int focus = g_View.GetModel().menuFocus;
+    if (IsMenuOpen() && focus >= 0 && focus < MenuItemCount)
+        ++g_pad.presses[FirstMenuItemControl + focus];
 }
 } // namespace UI::HUD::TouchControls

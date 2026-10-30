@@ -36,8 +36,14 @@ void SetControlChoice(ControlChoice choice);
 // What the choices come to on this device (as last applied).
 [[nodiscard]] bool IsPhoneView();
 [[nodiscard]] bool IsTouchControls();
-// The phone layout with the touch controls: their buttons and the hero frame take the place of the
-// PC's bottom bar.
+// A gamepad played last (UI/HUD/GamepadControls): the on-screen controls show for it, with its
+// buttons' glyphs, as they do for touch.
+void SetGamepadInUse(bool inUse);
+[[nodiscard]] bool IsGamepadInUse();
+// Whether the on-screen controls show (UI/HUD/TouchControls): touch controls on, or a gamepad in use.
+[[nodiscard]] bool ShowsControls();
+// The phone layout with the on-screen controls: their buttons and the hero frame take the place of
+// the PC's bottom bar.
 [[nodiscard]] bool ReplacesPcHud();
 
 // Applies the saved choices: the `mobile` and `mobile-hud` style flags and whether fingers drive the

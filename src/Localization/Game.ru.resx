@@ -15018,4 +15018,52 @@
   <data name="TouchHelpView" xml:space="preserve">
     <value>Меню, «Вид ПК / телефон»: раскладка ПК и обратно</value>
   </data>
+  <data name="PadHelpTitle" xml:space="preserve">
+    <value>Геймпад (раскладка Xbox)</value>
+  </data>
+  <data name="PadHelpSticks" xml:space="preserve">
+    <value>Левый стик: ходьба. Правый стик: курсор, над окном медленнее</value>
+  </data>
+  <data name="PadHelpAttack" xml:space="preserve">
+    <value>A: удерживайте для атаки; если курсор на окне или кнопке, A нажимает её</value>
+  </data>
+  <data name="PadHelpSkills" xml:space="preserve">
+    <value>X, Y, RB, LT, крестовина вниз: пять кнопок навыков (нажатие: выбрать, удержание: применять)</value>
+  </data>
+  <data name="PadHelpSkillList" xml:space="preserve">
+    <value>L3 (нажатие левого стика): список навыков; выберите навык курсором и A, затем нажмите кнопку навыка, чтобы поставить его туда</value>
+  </data>
+  <data name="PadHelpBack" xml:space="preserve">
+    <value>B: назад, закрывает верхнее окно (если окон нет, системное меню)</value>
+  </data>
+  <data name="PadHelpPickUp" xml:space="preserve">
+    <value>LB: удерживайте, чтобы подбирать. Крестовина вверх: MU Helper вкл/выкл</value>
+  </data>
+  <data name="PadHelpPotions" xml:space="preserve">
+    <value>Крестовина влево и вправо: зелья Q и W</value>
+  </data>
+  <data name="PadHelpClick" xml:space="preserve">
+    <value>RT: клик по курсору (разговор с NPC, идти туда), удерживайте, чтобы перетащить. R3: правый клик</value>
+  </data>
+  <data name="PadHelpMenu" xml:space="preserve">
+    <value>Menu: все окна (стик или крестовина выбирают, A открывает, B закрывает). View: карта</value>
+  </data>
+  <data name="PadHelpScreens" xml:space="preserve">
+    <value>Экраны входа и выбора персонажа: стики двигают курсор, A кликает, B = Esc, Menu = Enter</value>
+  </data>
+  <data name="PadOpen" xml:space="preserve">
+    <value>Открыть</value>
+  </data>
+  <data name="PadClose" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
+  <data name="PadConnected" xml:space="preserve">
+    <value>Геймпад: A атакует, X, Y, RB, LT и крестовина вниз применяют навыки, Menu открывает все окна (там «Помощь» со всеми кнопками)</value>
+  </data>
+  <data name="PadBindPick" xml:space="preserve">
+    <value>Выберите навык курсором и A, потом нажмите X, Y, RB, LT или крестовину вниз, куда его поставить</value>
+  </data>
+  <data name="PadBindPlace" xml:space="preserve">
+    <value>Нажмите X, Y, RB, LT или крестовину вниз, куда поставить навык</value>
+  </data>
 </root>

@@ -4,9 +4,10 @@
 	<link type="text/rcss" href="base.rcss"/>
 	<link type="text/rcss" href="skill_icons.rcss"/>
 	<link type="text/rcss" href="master_skill_icons.rcss"/>
+	<link type="text/rcss" href="gamepad_glyphs.rcss"/>
 	<link type="text/rcss" href="touch_controls.rcss"/>
 </head>
-<body class="native-text" data-model="touch_controls">
+<body class="native-text" data-model="touch_controls" data-class-pad="pad" data-class-no-touch="!fingers">
 	<!-- The on-screen controls of phones and tablets (UI/HUD/TouchControls.cpp), shown only on a touch
 	     device in the world. Nothing here takes the pointer (pointer-events: none throughout): fingers
 	     reach the controls through Core::Input::Touch, which C++ answers from these elements' boxes,
@@ -14,7 +15,12 @@
 
 	     Layout as MU's mobile games have it: menu and window buttons top left, potions above the
 	     joystick bottom left, the attack button bottom right with the five hotkey skills in an arc
-	     around it, pickup and auto-hunt beside it. -->
+	     around it, pickup and auto-hunt beside it.
+
+	     A gamepad presses the same controls (UI/HUD/GamepadControls.cpp): while one is in use the
+	     body has the class "pad", each control shows the pad button that presses it (.pad-glyph,
+	     drawn by gamepad_glyphs.rcss) and the menu shows which of its windows the pad points at.
+	     Without touch ("no-touch") the joystick's area is not drawn: the left stick walks. -->
 	<!-- bound-geometry: the joystick follows the finger (its centre and knob are where the finger
 	     is, in window pixels), a skill's cooldown wipe is the cooldown's fraction, and a hero
 	     gauge's fill is the gauge's. -->
@@ -60,13 +66,17 @@
 	     keyboard opens them with. Back comes first: the windows docked on the right cover the row's
 	     end. -->
 	<div id="tc_quick">
-		<div id="tc_back" class="tc-button tc-quick">{{back_label}}</div>
-		<div id="tc_menu" class="tc-button tc-quick" data-class-open="menu_open">{{menu_label}}</div>
+		<div id="tc_back" class="tc-button tc-quick">{{back_label}}<div class="pad-glyph pad-face pad-b">B</div></div>
+		<div id="tc_menu" class="tc-button tc-quick" data-class-open="menu_open">{{menu_label}}
+			<div class="pad-glyph pad-round pad-menu"><div class="pad-menu-line pad-menu-line-1"></div><div class="pad-menu-line pad-menu-line-2"></div><div class="pad-menu-line pad-menu-line-3"></div></div>
+		</div>
 		<div id="tc_inventory" class="tc-button tc-quick">{{menu_label_0}}</div>
 		<div id="tc_character" class="tc-button tc-quick">{{menu_label_1}}</div>
 		<div id="tc_chat" class="tc-button tc-quick">{{chat_label}}</div>
 		<div id="tc_move" class="tc-button tc-quick">{{menu_label_7}}</div>
-		<div id="tc_map" class="tc-button tc-quick">{{menu_label_6}}</div>
+		<div id="tc_map" class="tc-button tc-quick">{{menu_label_6}}
+			<div class="pad-glyph pad-round pad-view"><div class="pad-view-back"></div><div class="pad-view-front"></div></div>
+		</div>
 	</div>
 
 	<!-- The screen around the open menu, dimmed: a tap there closes the menu. While it is open the
@@ -74,33 +84,42 @@
 	<div id="tc_menu_backdrop" data-if="menu_open"></div>
 	<!-- The menu's windows, open under the row; a tap opens one and closes the menu. -->
 	<div id="tc_menu_panel" data-if="menu_open">
-		<div id="tc_menu_0" class="tc-button tc-menu-item">{{menu_label_0}}</div>
-		<div id="tc_menu_1" class="tc-button tc-menu-item">{{menu_label_1}}</div>
-		<div id="tc_menu_2" class="tc-button tc-menu-item">{{menu_label_2}}</div>
-		<div id="tc_menu_3" class="tc-button tc-menu-item">{{menu_label_3}}</div>
-		<div id="tc_menu_4" class="tc-button tc-menu-item">{{menu_label_4}}</div>
-		<div id="tc_menu_5" class="tc-button tc-menu-item">{{menu_label_5}}</div>
-		<div id="tc_menu_6" class="tc-button tc-menu-item">{{menu_label_6}}</div>
-		<div id="tc_menu_7" class="tc-button tc-menu-item">{{menu_label_7}}</div>
-		<div id="tc_menu_8" class="tc-button tc-menu-item">{{menu_label_8}}</div>
-		<div id="tc_menu_9" class="tc-button tc-menu-item">{{menu_label_9}}</div>
-		<div id="tc_menu_10" class="tc-button tc-menu-item">{{menu_label_10}}</div>
-		<div id="tc_menu_11" class="tc-button tc-menu-item">{{menu_label_11}}</div>
-		<div id="tc_menu_12" class="tc-button tc-menu-item">{{menu_label_12}}</div>
-		<div id="tc_menu_13" class="tc-button tc-menu-item">{{menu_label_13}}</div>
-		<div id="tc_menu_14" class="tc-button tc-menu-item">{{menu_label_14}}</div>
-		<div id="tc_menu_15" class="tc-button tc-menu-item">{{menu_label_15}}</div>
-		<div id="tc_menu_16" class="tc-button tc-menu-item">{{menu_label_16}}</div>
+		<div id="tc_menu_0" class="tc-button tc-menu-item" data-class-focused="menu_focus == 0">{{menu_label_0}}</div>
+		<div id="tc_menu_1" class="tc-button tc-menu-item" data-class-focused="menu_focus == 1">{{menu_label_1}}</div>
+		<div id="tc_menu_2" class="tc-button tc-menu-item" data-class-focused="menu_focus == 2">{{menu_label_2}}</div>
+		<div id="tc_menu_3" class="tc-button tc-menu-item" data-class-focused="menu_focus == 3">{{menu_label_3}}</div>
+		<div id="tc_menu_4" class="tc-button tc-menu-item" data-class-focused="menu_focus == 4">{{menu_label_4}}</div>
+		<div id="tc_menu_5" class="tc-button tc-menu-item" data-class-focused="menu_focus == 5">{{menu_label_5}}</div>
+		<div id="tc_menu_6" class="tc-button tc-menu-item" data-class-focused="menu_focus == 6">{{menu_label_6}}</div>
+		<div id="tc_menu_7" class="tc-button tc-menu-item" data-class-focused="menu_focus == 7">{{menu_label_7}}</div>
+		<div id="tc_menu_8" class="tc-button tc-menu-item" data-class-focused="menu_focus == 8">{{menu_label_8}}</div>
+		<div id="tc_menu_9" class="tc-button tc-menu-item" data-class-focused="menu_focus == 9">{{menu_label_9}}</div>
+		<div id="tc_menu_10" class="tc-button tc-menu-item" data-class-focused="menu_focus == 10">{{menu_label_10}}</div>
+		<div id="tc_menu_11" class="tc-button tc-menu-item" data-class-focused="menu_focus == 11">{{menu_label_11}}</div>
+		<div id="tc_menu_12" class="tc-button tc-menu-item" data-class-focused="menu_focus == 12">{{menu_label_12}}</div>
+		<div id="tc_menu_13" class="tc-button tc-menu-item" data-class-focused="menu_focus == 13">{{menu_label_13}}</div>
+		<div id="tc_menu_14" class="tc-button tc-menu-item" data-class-focused="menu_focus == 14">{{menu_label_14}}</div>
+		<div id="tc_menu_15" class="tc-button tc-menu-item" data-class-focused="menu_focus == 15">{{menu_label_15}}</div>
+		<div id="tc_menu_16" class="tc-button tc-menu-item" data-class-focused="menu_focus == 16">{{menu_label_16}}</div>
+		<!-- With a pad, its keys for the menu: the stick or the d-pad move the highlight. -->
+		<div id="tc_menu_legend">
+			<div class="pad-glyph pad-face pad-a">A</div><div class="pad-legend-label">{{pad_open_label}}</div>
+			<div class="pad-glyph pad-face pad-b">B</div><div class="pad-legend-label">{{pad_close_label}}</div>
+		</div>
 	</div>
 
 	<!-- The item hotkeys Q and W (the potions), above the joystick, with how many are left. -->
-	<div id="tc_potion_q" class="tc-button tc-potion">Q<div class="tc-potion-count">{{potion_q_count}}</div></div>
-	<div id="tc_potion_w" class="tc-button tc-potion">W<div class="tc-potion-count">{{potion_w_count}}</div></div>
+	<div id="tc_potion_q" class="tc-button tc-potion">Q<div class="tc-potion-count">{{potion_q_count}}</div>
+		<div class="pad-glyph pad-dpad pad-dpad-left"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
+	</div>
+	<div id="tc_potion_w" class="tc-button tc-potion">W<div class="tc-potion-count">{{potion_w_count}}</div>
+		<div class="pad-glyph pad-dpad pad-dpad-right"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
+	</div>
 
 	<!-- Bottom right: attack (held, it fights the tapped or the nearest monster), the hotkey bar's
 	     five skills around it (a tap makes the skill current, holding casts it), pickup (held, it
 	     gathers the drops around) and auto-hunt (the MU Helper on and off). -->
-	<div id="tc_attack" class="tc-button">{{attack_label}}</div>
+	<div id="tc_attack" class="tc-button">{{attack_label}}<div class="pad-glyph pad-face pad-a">A</div></div>
 	<!-- With no digit keys, a skill goes on a button either way round: a tap on an empty button (or
 	     on any while the skill list is open) lights it and opens the list, and the skill picked
 	     goes there; a skill picked first (the bar's current-skill icon opens the list) lights every
@@ -109,24 +128,31 @@
 	<div id="tc_skill_0" class="tc-button tc-skill" data-class-selected="skill_0_selected" data-class-empty="skill_0_empty" data-class-bind="skill_0_bind">
 		<div class="tc-skill-icon" data-style-decorator="skill_0_icon"></div>
 		<div class="tc-cooldown" data-style-height="skill_0_cooldown * 100 + '%'"></div>
+		<div class="pad-glyph pad-face pad-x">X</div>
 	</div>
 	<div id="tc_skill_1" class="tc-button tc-skill" data-class-selected="skill_1_selected" data-class-empty="skill_1_empty" data-class-bind="skill_1_bind">
 		<div class="tc-skill-icon" data-style-decorator="skill_1_icon"></div>
 		<div class="tc-cooldown" data-style-height="skill_1_cooldown * 100 + '%'"></div>
+		<div class="pad-glyph pad-face pad-y">Y</div>
 	</div>
 	<div id="tc_skill_2" class="tc-button tc-skill" data-class-selected="skill_2_selected" data-class-empty="skill_2_empty" data-class-bind="skill_2_bind">
 		<div class="tc-skill-icon" data-style-decorator="skill_2_icon"></div>
 		<div class="tc-cooldown" data-style-height="skill_2_cooldown * 100 + '%'"></div>
+		<div class="pad-glyph pad-bumper">RB</div>
 	</div>
 	<div id="tc_skill_3" class="tc-button tc-skill" data-class-selected="skill_3_selected" data-class-empty="skill_3_empty" data-class-bind="skill_3_bind">
 		<div class="tc-skill-icon" data-style-decorator="skill_3_icon"></div>
 		<div class="tc-cooldown" data-style-height="skill_3_cooldown * 100 + '%'"></div>
+		<div class="pad-glyph pad-trigger">LT</div>
 	</div>
 	<div id="tc_skill_4" class="tc-button tc-skill" data-class-selected="skill_4_selected" data-class-empty="skill_4_empty" data-class-bind="skill_4_bind">
 		<div class="tc-skill-icon" data-style-decorator="skill_4_icon"></div>
 		<div class="tc-cooldown" data-style-height="skill_4_cooldown * 100 + '%'"></div>
+		<div class="pad-glyph pad-dpad pad-dpad-down"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
 	</div>
-	<div id="tc_pickup" class="tc-button tc-small">{{pickup_label}}</div>
-	<div id="tc_auto" class="tc-button tc-small" data-class-on="helper_on">{{auto_label}}</div>
+	<div id="tc_pickup" class="tc-button tc-small">{{pickup_label}}<div class="pad-glyph pad-bumper">LB</div></div>
+	<div id="tc_auto" class="tc-button tc-small" data-class-on="helper_on">{{auto_label}}
+		<div class="pad-glyph pad-dpad pad-dpad-up"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
+	</div>
 </body>
 </rml>

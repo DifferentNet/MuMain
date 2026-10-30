@@ -3,7 +3,8 @@
    landed on, so where a rule puts a button is where it answers. Nothing takes the pointer: the
    fingers come through Core::Input::Touch. */
 
-#tc_stick, #tc_stick_idle, #tc_stick_base, #tc_quick, #tc_menu_backdrop, #tc_menu_panel, .tc-button, .tc-button * {
+#tc_stick, #tc_stick_idle, #tc_stick_base, #tc_quick, #tc_menu_backdrop, #tc_menu_panel, .tc-button, .tc-button *,
+#tc_menu_legend, #tc_menu_legend * {
 	pointer-events: none;
 }
 
@@ -130,6 +131,34 @@
 	height: 34dp;
 	line-height: 30dp;
 	border-radius: 4dp;
+}
+/* The window a pad points at (its stick or d-pad move it, A opens it). */
+.tc-menu-item.focused {
+	border-color: token(accent-gold);
+	background-color: rgba(255, 210, 60, 70);
+}
+/* With a pad, its keys for the menu along the panel's foot. */
+#tc_menu_legend {
+	display: none;
+	width: 100%;
+	height: 22dp;
+	padding-top: 2dp;
+	flex-direction: row;
+	align-items: center;
+	color: token(text-primary);
+	font-family: "token(font-body)";
+	font-size: 11dp;
+	font-effect: shadow(0dp 1dp #000000);
+}
+body.pad #tc_menu_legend {
+	display: flex;
+}
+#tc_menu_legend .pad-glyph {
+	position: relative;
+}
+.pad-legend-label {
+	margin: 0 14dp 0 6dp;
+	line-height: 20dp;
 }
 
 .tc-potion {
@@ -330,3 +359,26 @@
 		text-align: center;
 	}
 }
+
+/* A pad: each control shows the pad button that presses it (gamepad_glyphs.rcss draws them) on its
+   top corner, away from its neighbours on the arc; inside the left end of a top-row button, whose
+   label then starts right of it. Without touch the left stick walks: no joystick on the screen. */
+body.no-touch #tc_stick {
+	display: none;
+}
+body.pad #tc_back, body.pad #tc_menu, body.pad #tc_map {
+	padding-left: 22dp;
+}
+.tc-quick .pad-glyph { left: 1dp; top: 3dp; }
+#tc_attack .pad-glyph { right: 2dp; top: 2dp; }
+#tc_attack .pad-face {
+	width: 26dp;
+	height: 26dp;
+	border-radius: 13dp;
+	font-size: 15dp;
+	line-height: 22dp;
+}
+.tc-skill .pad-glyph { left: -8dp; top: -8dp; }
+.tc-potion .pad-glyph { right: -8dp; top: -8dp; }
+#tc_pickup .pad-glyph { left: -12dp; top: -10dp; }
+#tc_auto .pad-glyph { left: -8dp; top: -8dp; }

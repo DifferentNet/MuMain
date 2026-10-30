@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
+#include "Core/Input/GamepadInput.h"
+#include "Core/Input/GamepadPointer.h"
 #include "Core/Input/KeyState.h"
 #include "Core/Utilities/FrameProfiler.h"
 #include "Core/Input/SyntheticInput.h"
@@ -1712,6 +1714,8 @@ MSG MainLoop()
                 continue;
             }
 #endif
+            // Pads coming and going, their buttons and sticks, and which device was used last.
+            Core::Input::Gamepad::ProcessEvent(event);
             switch (event.type)
             {
             case SDL_EVENT_QUIT:
@@ -1765,8 +1769,11 @@ MSG MainLoop()
                 break;
 #endif
             case SDL_EVENT_WINDOW_FOCUS_LOST:
-                // A finger's touch never ends once the page loses focus: let go of what fingers hold.
+                // A finger's touch never ends once the page loses focus, nor does a pad's press: let go
+                // of what fingers and the pad hold.
                 Core::Input::Touch::Reset();
+                Core::Input::Gamepad::Reset();
+                Core::Input::Gamepad::Pointer::Release(g_sdlWindow);
                 HandleFocusChange(false);
                 break;
             case SDL_EVENT_WINDOW_MINIMIZED:
@@ -2375,6 +2382,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
         MessageBox(nullptr, L"Windows aplication error!", L"Aplication Error", MB_ICONERROR);
         return 0;
     }
+    // Game controllers (an Xbox pad, a Steam Deck): UI/HUD/GamepadControls plays them.
+    Core::Input::Gamepad::Init();
 
 #ifndef _WIN32
     // Install POSIX crash-diagnostic signal handlers. After SDL_Init (R8

@@ -54,18 +54,45 @@ void AddTouchControlLines(std::vector<UI::Help::PageLine>& lines)
     for (const wchar_t* line : touchLines)
         AddText(lines, line);
 }
-} // namespace
 
-std::vector<UI::Help::PageLine> UI::Help::BuildPage(int page, bool touchControls)
+void AddGamepadLines(std::vector<UI::Help::PageLine>& lines)
 {
-    std::vector<PageLine> lines;
-    AddHalfSpacer(lines);
+    const wchar_t* const padLines[] = {
+        I18N::Game::PadHelpSticks, I18N::Game::PadHelpAttack,  I18N::Game::PadHelpSkills,  I18N::Game::PadHelpSkillList,
+        I18N::Game::PadHelpBack,   I18N::Game::PadHelpPickUp,  I18N::Game::PadHelpPotions, I18N::Game::PadHelpClick,
+        I18N::Game::PadHelpMenu,   I18N::Game::PadHelpScreens,
+    };
+    for (const wchar_t* line : padLines)
+        AddText(lines, line);
+}
 
-    if (page == KeyFunctionPage && touchControls)
+void AddDeviceSections(std::vector<UI::Help::PageLine>& lines, UI::Help::Devices devices)
+{
+    if (devices.touchControls)
     {
         AddText(lines, I18N::Game::TouchHelpTitle, true);
         AddHalfSpacer(lines);
         AddTouchControlLines(lines);
+    }
+    if (devices.touchControls && devices.gamepad)
+        AddHalfSpacer(lines);
+    if (devices.gamepad)
+    {
+        AddText(lines, I18N::Game::PadHelpTitle, true);
+        AddHalfSpacer(lines);
+        AddGamepadLines(lines);
+    }
+}
+} // namespace
+
+std::vector<UI::Help::PageLine> UI::Help::BuildPage(int page, Devices devices)
+{
+    std::vector<PageLine> lines;
+    AddHalfSpacer(lines);
+
+    if (page == KeyFunctionPage && (devices.touchControls || devices.gamepad))
+    {
+        AddDeviceSections(lines, devices);
     }
     else if (page == KeyFunctionPage)
     {

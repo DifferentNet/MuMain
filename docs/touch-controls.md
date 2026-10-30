@@ -82,6 +82,51 @@ scrollbars, sliders (RmlUi's `drag` property other than `block`) and text fields
 With touch controls on, Help's key page lists the touch controls instead of the F keys
 (`HelpPages::BuildPage(page, touchControls)`).
 
+## Gamepad (Xbox layout)
+
+A gamepad plays the game in the browser and the desktop build alike (Windows, a Steam Deck's own
+pad): SDL's gamepad layer names the buttons by position, so any pad SDL knows plays as an Xbox pad.
+It needs no setting: the first button pressed or stick pushed makes the pad the device in use, and
+a key, a click or a finger hands the game back. In a browser a pad shows only after its first button
+press (the Gamepad API's rule).
+
+While the pad is in use, the touch controls show in the world (in the PC view too, over the PC bar)
+with the pad button that presses each one drawn on its corner: the Xbox glyphs (A green, B red,
+X blue, Y yellow, the bumpers, triggers, View, Menu and the d-pad's arms), drawn from boxes in
+`themes/{legacy,modern}/gamepad_glyphs.rcss`, no images. In the phone view the pad replaces the PC
+bar as touch does (style flag `mobile-hud`). Without touch the joystick is not drawn.
+
+| Pad | In the world |
+|---|---|
+| Left stick | Walks the way it points (as the joystick) |
+| Right stick | The mouse pointer; at half speed over a window, to hit small buttons |
+| A | Held: attack (as the Attack button). With the pointer on a window or a control, a left click there instead |
+| B | Back: closes the window on top (with none open, the system menu) |
+| X, Y, RB, LT, D-pad down | The five hotkey skills: a tap makes one current, held it casts |
+| LB | Pick up (held) |
+| D-pad up | MU Helper on and off |
+| D-pad left, right | The potions Q and W |
+| RT | A left click at the pointer (talk to an NPC, walk there, use a window); held, a drag |
+| R3 | A right click at the pointer |
+| L3 | The skill list, to put a skill on a button (pick it with the pointer and A, then press the button) |
+| View | The map |
+| Menu | The menu of windows: the stick or the d-pad move its highlight, A opens, B or Menu closes; its legend shows the keys |
+
+On the login, server and character screens both sticks move the pointer, A or RT click, B is Esc and
+Menu is Enter. The pointer starts at the screen's centre when the pad takes over, so A attacks at
+once. A button still held when the menu closes acts only once released, so the B that closed it does
+not also press Back. The first time a pad is used, the system log says how it plays; Help's first
+page lists every button while the pad is in use (with touch on too, under the touch section).
+
+| Piece | File | Role |
+|---|---|---|
+| Device | `Core/Input/GamepadInput.{h,cpp}` | SDL gamepad events → held buttons, presses since the last frame and the sticks (radial dead zone, triggers as buttons), across up to four pads; which device the player used last. The sticks are also polled once a frame (`Poll`): SDL keeps the first value an axis reports as its rest and sends no event for it. |
+| Pointer | `Core/Input/GamepadPointer.{h,cpp}` | The stick moves the SDL pointer (warped), buttons as pushed SDL mouse events with their own `which`; held buttons ORed into `IsKeyDown(VK_LBUTTON/VK_RBUTTON)`. A real mouse moving it is followed; a browser repeating a resting mouse's place (it does on layout changes) is not. |
+| Mapping | `UI/HUD/GamepadControls.{h,cpp}` | Once a frame before the touch controls: presses their controls (`TouchControls::SetPadHeld`), steers (`GameLogic::Touch::Steer`), moves the menu's highlight; off the world, the plain pointer. |
+
+A DualSense plays with the same buttons (cross = A, circle = B, square = X, triangle = Y); its own
+glyphs are still to draw.
+
 ## How it is built
 
 | Piece | File | Role |
@@ -107,3 +152,10 @@ distinct `pointerId`s on the canvas (SDL's emscripten backend turns them into fi
 Give `pointermove` `button: -1` as browsers do: SDL reads a move with `button: 0` and a held button
 as a new touch, so the finger lifts and lands again where it moved (the joystick then re-centres
 under it and never walks).
+
+A gamepad without a gamepad: in the page, replace `navigator.getGamepads` with a function returning a pad
+(`mapping: "standard"`, 17 buttons with `pressed` and `value`, 4 axes, `connected: true`, an `index`
+and an `id`) and dispatch a `gamepadconnected` event carrying it; SDL polls the function each frame,
+so changing the buttons' and axes' values plays it. The input that wakes the pad is lost (it comes before
+SDL opens it), and a trigger's first full pull in one frame is lost too: SDL takes the first value an axis
+reports as its rest. A real trigger passes through several values on the way down; a fake one should too.

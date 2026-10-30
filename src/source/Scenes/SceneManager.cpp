@@ -57,6 +57,7 @@ FrameTimingState g_frameTiming;
 #include "Network/Server/ServerListManager.h"
 #include "UI/Core/WindowSystem.h"
 #include "Engine/Object/ZzzInterface.h"
+#include "UI/HUD/GamepadControls.h"
 #include "UI/HUD/Notices.h"
 #include "UI/HUD/TouchControls.h"
 #include "I18N/All.h"
@@ -507,7 +508,9 @@ void UpdateSceneState()
     g_dwMouseUseUIID = 0;
 
     UpdateActiveScene();
-    // The on-screen joystick and buttons of phones and tablets act on what the scene just moved.
+    // A gamepad presses the on-screen controls' buttons and plays the mouse; then the joystick and
+    // buttons of phones and tablets (and the pad's presses) act on what the scene just moved.
+    UI::HUD::GamepadControls::Update();
     UI::HUD::TouchControls::Update();
     UI::Notices::Move();
     Scenes::LoginOverlay::HideOutsideLoginScene();

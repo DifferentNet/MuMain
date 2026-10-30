@@ -31,6 +31,7 @@ constexpr std::array<std::wstring_view, UI::Mobile::ControlChoiceCount> ControlW
 
 bool g_phoneView = false;
 bool g_touchControls = false;
+bool g_gamepadInUse = false;
 
 // A word config.ini does not know (a hand edit) reads as the first, "auto".
 template <typename Choice, std::size_t Count>
@@ -42,6 +43,18 @@ Choice FromWord(const std::wstring& word, const std::array<std::wstring_view, Co
             return static_cast<Choice>(index);
     }
     return static_cast<Choice>(0);
+}
+
+// The style flags every document sees; the layout follows next frame (workspace regions move,
+// windows resize).
+void ApplyThemeFlags()
+{
+    if (Rml::Context* context = RmlUiRuntime::Instance().GetContext())
+    {
+        context->ActivateTheme(MobileThemeFlag, g_phoneView);
+        context->ActivateTheme(MobileHudThemeFlag, UI::Mobile::ReplacesPcHud());
+    }
+    UI::Placement::InvalidateStyles();
 }
 
 template <typename Choice, std::size_t Count>
@@ -99,9 +112,27 @@ bool UI::Mobile::IsTouchControls()
     return g_touchControls;
 }
 
+void UI::Mobile::SetGamepadInUse(bool inUse)
+{
+    if (inUse == g_gamepadInUse)
+        return;
+    g_gamepadInUse = inUse;
+    ApplyThemeFlags();
+}
+
+bool UI::Mobile::IsGamepadInUse()
+{
+    return g_gamepadInUse;
+}
+
+bool UI::Mobile::ShowsControls()
+{
+    return g_touchControls || g_gamepadInUse;
+}
+
 bool UI::Mobile::ReplacesPcHud()
 {
-    return g_phoneView && g_touchControls;
+    return g_phoneView && ShowsControls();
 }
 
 void UI::Mobile::Apply()
@@ -113,13 +144,7 @@ void UI::Mobile::Apply()
     g_touchControls = controls == ControlChoice::Touch || (controls == ControlChoice::Auto && handheld);
 
     Core::Input::Touch::SetEnabled(g_touchControls);
-    if (Rml::Context* context = RmlUiRuntime::Instance().GetContext())
-    {
-        context->ActivateTheme(MobileThemeFlag, g_phoneView);
-        context->ActivateTheme(MobileHudThemeFlag, ReplacesPcHud());
-    }
-    // The flags move workspace regions (workspace.rcss) and resize windows: they follow next frame.
-    UI::Placement::InvalidateStyles();
+    ApplyThemeFlags();
 #ifdef __EMSCRIPTEN__
     mu::web::ShowPageView(static_cast<int>(view), g_phoneView);
 #endif
