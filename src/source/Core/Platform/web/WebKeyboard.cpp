@@ -6,9 +6,11 @@
 
 namespace
 {
+using mu::web::FieldKeys;
+
 // Whether the page was asked to show the keyboard and not to hide it since, and for which field.
 bool g_keyboardShown = false;
-bool g_password = false;
+FieldKeys g_keys = FieldKeys::Text;
 float g_lineTop = 0.0f;
 float g_lineBottom = 0.0f;
 // A gamepad is in use (HoldBackKeyboard), and whether a field wants the keyboard meanwhile.
@@ -16,18 +18,12 @@ bool g_heldBack = false;
 bool g_wanted = false;
 
 // What the page was last told about the field under a tapping finger (SyncTapOnTextField).
-enum class TapField : int
-{
-    None = 0,
-    Text = 1,
-    Password = 2,
-};
-TapField g_tapField = TapField::None;
+FieldKeys g_tapKeys = FieldKeys::None;
 
-// "fresh": a field that just took the keys, so the page starts its own input over.
-EM_JS(void, MuWeb_ShowKeyboard, (int password, float lineTop, float lineBottom, int fresh), {
+// keys: a FieldKeys. "fresh": a field that just took the keys, so the page starts its own input over.
+EM_JS(void, MuWeb_ShowKeyboard, (int keys, float lineTop, float lineBottom, int fresh), {
     if (Module.muKeyboard)
-        Module.muKeyboard.show(password != 0, lineTop, lineBottom, fresh != 0);
+        Module.muKeyboard.show(keys, lineTop, lineBottom, fresh != 0);
 });
 
 EM_JS(void, MuWeb_HideKeyboard, (), {
@@ -35,16 +31,15 @@ EM_JS(void, MuWeb_HideKeyboard, (), {
         Module.muKeyboard.hide();
 });
 
-// field: a TapField. (Loose ==: clang-format splits "===".)
-EM_JS(void, MuWeb_TapOnTextField, (int field), {
+// keys: a FieldKeys.
+EM_JS(void, MuWeb_TapOnTextField, (int keys), {
     if (Module.muKeyboard)
-        Module.muKeyboard.tapOnField(field == 2 ? "password" : field == 1 ? "text" : null);
+        Module.muKeyboard.tapOnField(keys);
 });
-} // namespace
 
-void mu::web::ShowKeyboard(bool password, float lineTop, float lineBottom)
+void ShowFieldKeyboard(FieldKeys keys, float lineTop, float lineBottom)
 {
-    g_password = password;
+    g_keys = keys;
     g_lineTop = lineTop;
     g_lineBottom = lineBottom;
     if (g_heldBack)
@@ -52,8 +47,20 @@ void mu::web::ShowKeyboard(bool password, float lineTop, float lineBottom)
         g_wanted = true;
         return;
     }
-    MuWeb_ShowKeyboard(password ? 1 : 0, lineTop, lineBottom, g_keyboardShown ? 0 : 1);
+    MuWeb_ShowKeyboard(static_cast<int>(keys), lineTop, lineBottom, g_keyboardShown ? 0 : 1);
     g_keyboardShown = true;
+}
+} // namespace
+
+void mu::web::ShowKeyboard(bool password, float lineTop, float lineBottom)
+{
+    // Not text keys for a number field as its caret moves, to be put right at the end of the frame.
+    FieldKeys keys = g_keys;
+    if (password)
+        keys = FieldKeys::Password;
+    else if (keys == FieldKeys::Password)
+        keys = FieldKeys::Text;
+    ShowFieldKeyboard(keys, lineTop, lineBottom);
 }
 
 void mu::web::HideKeyboard()
@@ -66,25 +73,23 @@ void mu::web::HideKeyboard()
     MuWeb_HideKeyboard();
 }
 
-void mu::web::SyncKeyboard(bool textFieldFocused, bool password)
+void mu::web::SyncKeyboard(FieldKeys focused)
 {
-    if (!textFieldFocused)
+    if (focused == FieldKeys::None)
         HideKeyboard();
     else if (!g_heldBack && g_wanted && !g_keyboardShown)
-        ShowKeyboard(password, g_lineTop, g_lineBottom);
-    else if (g_keyboardShown && password != g_password)
-        ShowKeyboard(password, g_lineTop, g_lineBottom);
+        ShowFieldKeyboard(focused, g_lineTop, g_lineBottom);
+    else if (g_keyboardShown && focused != g_keys)
+        ShowFieldKeyboard(focused, g_lineTop, g_lineBottom);
 }
 
-void mu::web::SyncTapOnTextField(bool onTextField, bool password)
+void mu::web::SyncTapOnTextField(FieldKeys tapped)
 {
-    TapField field = TapField::None;
-    if (onTextField && !g_heldBack)
-        field = password ? TapField::Password : TapField::Text;
-    if (field == g_tapField)
+    const FieldKeys keys = g_heldBack ? FieldKeys::None : tapped;
+    if (keys == g_tapKeys)
         return;
-    g_tapField = field;
-    MuWeb_TapOnTextField(static_cast<int>(field));
+    g_tapKeys = keys;
+    MuWeb_TapOnTextField(static_cast<int>(keys));
 }
 
 void mu::web::HoldBackKeyboard(bool heldBack)

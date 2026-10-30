@@ -560,6 +560,24 @@
   let keyboardLine = null;              // the game's field, [top, bottom] as fractions of its height
   let keyboardShift = 0;                // CSS pixels the game is moved up
   let tappedSinceKeyboard = false;      // a tap on the game since it last asked for the keyboard
+  // The keys of the game's field, numbered as WebKeyboard.h's FieldKeys: a password field gets a
+  // keyboard without suggestions, a number field (zen, counts) the phone's number keys.
+  const FIELD_KEYS = [null, "text", "password", "digits"];
+  let keyboardKeys = "text";            // the keys #keyboard has
+  let keyboardKeysAsked = null;         // the keys the game's frame asked for last (askKeyboardKeys)
+  function setKeyboardKeys(keys) {
+    keyboardKeys = keys;
+    const type = keys === "password" ? "password" : "text";
+    if (keyboardInput.type !== type) keyboardInput.type = type;
+    const mode = keys === "digits" ? "numeric" : "text";
+    if (keyboardInput.inputMode !== mode) keyboardInput.inputMode = mode;
+  }
+  // A frame of the game may ask twice: a guess as a field takes the keys, then the field's own keys
+  // at the frame's end. The phone redraws its keyboard for each change, so only the last ask is made.
+  function askKeyboardKeys(keys) {
+    if (!keyboardKeysAsked) queueMicrotask(() => { setKeyboardKeys(keyboardKeysAsked); keyboardKeysAsked = null; });
+    keyboardKeysAsked = keys;
+  }
 
   function pressKey(key, code, keyCode, holdMs) {
     const send = (type) => window.dispatchEvent(new KeyboardEvent(type, { key, code, keyCode, which: keyCode, bubbles: true, cancelable: true }));
@@ -625,7 +643,7 @@
   // so while the finger is down: tapOnField), or when the game gave a field the keys while the finger
   // was down (the chat button opens the chat line as it is pressed). A tap the game then doesn't take
   // for a field (the window closed meanwhile) lets the keyboard go again.
-  let keyboardTapField = null;          // "text" or "password": the field type a finger lifted now taps
+  let keyboardTapField = null;          // the keys of the field a finger lifted now taps (FIELD_KEYS)
   let keyboardTapTimer = 0;
   let fingersDown = 0;
   let keyboardShownUnderFinger = false; // the game gave a field the keys while a finger was down
@@ -646,9 +664,10 @@
     if (!appleMobile) return;           // Android's keyboard comes up for the game's own focus
     const shownUnderFinger = keyboardShownUnderFinger && keyboardWanted;
     keyboardShownUnderFinger = false;
-    const type = keyboardTapField || (shownUnderFinger ? keyboardInput.type : null);
-    if (!type || keyboardOnScreen()) return;
-    if (keyboardInput.type !== type) keyboardInput.type = type;
+    const keys = keyboardTapField || (shownUnderFinger ? keyboardKeys : null);
+    // Up already: only from a field to one with other keys (text to a number field).
+    if (!keys || (keyboardOnScreen() && keys === keyboardKeys)) return;
+    setKeyboardKeys(keys);
     keyboardInput.blur();               // a focus() on the focused field brings nothing up
     keyboardInput.focus({ preventScroll: true });
     clearTimeout(keyboardTapTimer);
@@ -680,20 +699,19 @@
   const phoneKeyboard = {
     // "fresh": a field that just took the keys. A tap on the field it has brings the keyboard back
     // when the phone's Back button put it away: focus() on the focused field does that in Chrome.
-    show(password, lineTop, lineBottom, fresh) {
+    show(keys, lineTop, lineBottom, fresh) {
       clearTimeout(keyboardHideTimer);
       keyboardWanted = true;
       keyboardLine = [lineTop, lineBottom];
-      const type = password ? "password" : "text";
-      if (keyboardInput.type !== type) keyboardInput.type = type;
+      askKeyboardKeys(FIELD_KEYS[keys] || "text");
       if (fresh) restartKeyboardValue(true);
       if (fresh || tappedSinceKeyboard || document.activeElement !== keyboardInput) keyboardInput.focus({ preventScroll: true });
       if (fresh && fingersDown) keyboardShownUnderFinger = true;
       tappedSinceKeyboard = false;
       moveAboveKeyboard();
     },
-    // The field a finger lifted now would tap: "text", "password" or null (WebKeyboard.cpp).
-    tapOnField(type) { keyboardTapField = type; },
+    // The keys of the field a finger lifted now would tap, as FIELD_KEYS numbers them (WebKeyboard.cpp).
+    tapOnField(keys) { keyboardTapField = FIELD_KEYS[keys] || null; },
     hide() {
       keyboardWanted = false;
       clearTimeout(keyboardHideTimer);
