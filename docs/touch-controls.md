@@ -24,12 +24,13 @@ the page's request between frames, `UI::Mobile::FollowPage`).
 
 | Where | Control | What it does |
 |---|---|---|
-| Bottom left | Joystick (floating: it appears where the thumb lands) | Walks the way it points, a few tiles ahead, re-planning as the walk runs out or the thumb turns. Letting go stops at the tile reached. |
+| Bottom left | Joystick (floating: it appears where the thumb lands) | Walks the way it points, a few tiles ahead, re-planning as the walk runs out or the thumb turns. Letting go cuts the planned walk short at the next tile (`Automation::StopAtNextTile`, tested in `tests/gamelogic/test_walk_stop.cpp`): the hero stops within a step instead of finishing the tiles planned ahead. The page going out of sight (`SDL_EVENT_WINDOW_HIDDEN`) lets go of every finger, as a phone sends no lift for a thumb still down when the app is switched. |
 | Above the joystick | Q, W | The item hotkeys Q and W (potions). |
-| Along the top, right of the location bar | Back, Menu, Inventory, Character, Chat, Teleport, Map | Back is Esc: it closes the top window (or opens the system menu with none open). Menu opens a panel of 18 items under the row: windows, Skills (the skill list, to put a skill on a button), View (PC / phone) and Chat (for a pad, which has no Chat button of its own). The others press the window's key (I, C, Enter, M, Tab). |
+| Along the top, right of the location bar | Back, Menu, Inventory, Character, Chat, Teleport, Map | Back is Esc: it closes the top window (or opens the system menu with none open). Menu opens a panel of 18 items under the row: windows, Skills (the skill picker, below), View (PC / phone) and Chat (for a pad, which has no Chat button of its own). The others press the window's key (I, C, Enter, M, Tab). |
 | Bottom right | Attack (held) | Plain attack on the monster tapped last, else the one fought last, else the nearest within 8 tiles. |
 | Around Attack | The hotkey bar's five skills | A tap makes the skill current (as a click on its slot). Held, it casts: buffs and heals on the character, area buffs around it, the rest at a monster as Attack picks one. Teleport only selects (aim it with a long press). |
-| Around Attack | Putting a skill on a button | No digit keys, so either way round: a tap on an empty button (or on any while the skill list is open) lights it and opens the list, and the skill picked there goes on it; or open the list with the bar's current-skill icon, pick a skill, and the five buttons light up for 8 s for a tap on one. A hint above them says what to do. The list counts its picks (`CSkillList::GetGridPickCount`), so picking the current skill again counts too. Either way the hotkeys are saved to the server at once (`SaveOptions`), as a closed tab never logs out. |
+| Around Attack | Putting a skill on a button | The skill picker: a panel on the left of the dimmed screen lists the skills (icon and name, as many to a page as fit, < > turn the pages), the five skill buttons stay lit right of it. The button being set glows gold; a tap on another button chooses that one. A tap on a skill puts it there and the next empty button is chosen, so a new character fills the five with five taps. A skill already on another button swaps places with the one it replaces (each skill is on one button at most; a gold dot marks the skills on a button, the chosen button's skill is lit). Remove empties the chosen button, Done, Back or a tap beside the panel close it. It opens from the Skills button beside the arc, from Menu → Skills, or from a tap on an empty skill button (which shows a plus). The hotkeys are saved to the server at once (`SaveOptions`), as a closed tab never logs out. The rules (which hotkey a button is, swapping, the next empty button, how many skills a page holds) are `UI/Mobile/SkillArrange.{h,cpp}`, tested in `tests/ui/test_skill_arrange.cpp`. The game's own skill list (the PC bar's current-skill icon) still binds as before: with it open, a tap on a button and then a skill, or a skill and then a button within 8 s. |
+| Left of the skill buttons | Skills | Opens the skill picker on the first empty button (else the first). |
 | Right edge | Pick up (held) | Walks to the nearest drop within 6 tiles and takes it. |
 | Under the skills | Auto | MU Helper on/off (the Home key); lit while it runs. |
 | Anywhere else | One finger = the mouse | Tap = left click (double tap = double click), drag = left button held, hold 0.5 s = right click (on an item in the bag it opens the item card instead, below), two fingers = pinch zoom (mouse wheel). The camera's zoom lock (F10 on a computer, on by default against a stray wheel) is lifted whenever the controls show, as a phone has no F10. |
@@ -46,8 +47,8 @@ that the same item still lies there before it acts. A mouse's right click is unc
 
 The phone view replaces the PC's bottom bar while the touch controls show: a hero frame top left
 (level, HP and MP with their numbers, SD and AG), a thin EXP line along the bottom edge, and how many
-potions Q and W hold under the buttons. The PC bar (but its skill list, which the menu's Skills
-opens) and the top-right buttons hide; the system messages move under the hero frame, the pets'
+potions Q and W hold under the buttons. The PC bar and the top-right buttons hide (the skill picker
+stands in for its skill list); the system messages move under the hero frame, the pets'
 HP frames right of it, the buffs under the top row and the chat right of the joystick's area. Without touch controls the phone view keeps the PC bar.
 
 The phone view also draws the login box, server list, character select buttons, system menu and
@@ -123,7 +124,7 @@ Each window restyles itself under `@media (theme: mobile)` in both themes; on a 
 | Character, quests, party, friends, battle pass, help, options, teleport | Wider panels (`docked_panel_frame.rcss` repeats the frame's middle so the art stays undistorted), bigger tabs, rows and buttons, a corner close a finger hits (44 × 40 px). |
 | MU Helper | The settings 640 units wide in two columns, the pieces a third larger, a check box's finger area running on over its label, and a line saying how to clear a skill slot (hold it; R3 on a pad). Its Setting panel beside it, 300 units wide: each pane the panel's width, the condition radios in one column, long labels on two lines, a whole check row a target, the gauges half as large again, Save and Initialization the panel's width. The skill picker's entries 40 × 46 in columns of eight. The pieces both windows share are in `mu_helper_common.rcss`'s phone block. |
 | Commands | A side panel 300 units wide (`chat_command.rcss`): rows 34 units tall, every command listed and scrolled by finger instead of by page; a command's page fits its description, each parameter's name over a 30-unit box, and the actions to the panel (`CChatCommandWindow::CurrentPage`, re-wrapped when the view changes). |
-| Skill list (menu → Skills) | Rows of eight finger-sized cells on a dark plate above the controls. Back closes it (Esc would open the system menu over it). |
+| Skill list (the PC bar's current-skill icon) | Rows of eight finger-sized cells on a dark plate above the controls. Back closes it (Esc would open the system menu over it). |
 | Map (Tab) | Full screen, under the touch controls so their Back closes it. |
 | Touch menu | Drawn over every window while open (`OpenTouchMenuDepth`); a tap on the dimmed screen around it shuts it, and it shuts while a dialog waits for an answer. |
 
@@ -151,9 +152,9 @@ a mouse and keys, so a press does not count twice.
 
 While the pad is in use, the touch controls show in the world (in the PC view too, over the PC bar)
 with the pad button that presses each one drawn on its corner: the Xbox glyphs (A green, B red,
-X blue, Y yellow, the bumpers, triggers, View, Menu and the d-pad's arms), drawn from boxes in
-`themes/{legacy,modern}/gamepad_glyphs.rcss`, no images. In the phone view the pad replaces the PC
-bar as touch does (style flag `mobile-hud`). Without touch the joystick is not drawn.
+X blue, Y yellow, the bumpers, triggers, View, Menu, LS for the left stick pressed and the d-pad's
+arms), drawn from boxes in `themes/{legacy,modern}/gamepad_glyphs.rcss`, no images. In the phone view
+the pad replaces the PC bar as touch does (style flag `mobile-hud`). Without touch the joystick is not drawn.
 
 | Pad | In the world |
 |---|---|
@@ -167,7 +168,7 @@ bar as touch does (style flag `mobile-hud`). Without touch the joystick is not d
 | D-pad left, right | The potions Q and W |
 | RT | A left click at the pointer (talk to an NPC, walk there, use a window); held, a drag |
 | R3 | A right click at the pointer |
-| L3 | The skill list, to put a skill on a button (pick it with the pointer and A, then press the button) |
+| L3 | The skill picker: the stick or the d-pad move its highlight over the skills, the panel's buttons and the skill buttons on its right; A on a skill button chooses it, A on a skill puts it there; B closes. Without the controls on the screen, the game's skill list |
 | View | The map |
 | Menu | The menu of windows: the stick or the d-pad move its highlight, A opens, B or Menu closes; its legend shows the keys. Its Chat item opens the chat line, and the pad's keyboard with it |
 

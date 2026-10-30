@@ -11,7 +11,8 @@ namespace GameLogic::Touch
 // direction turns. The direction is on the screen (x right, y down); the camera's turn is taken
 // into account. Called every frame while the joystick is held.
 void Steer(float screenX, float screenY);
-// The joystick let go: the character stops at the tile it reached.
+// The joystick let go (or back in its centre): the character finishes its step and stands on the
+// tile it was stepping onto.
 void StopSteering();
 
 // Called every frame while the attack button is held: a plain attack on the monster the player

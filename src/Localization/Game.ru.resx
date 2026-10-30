@@ -14938,13 +14938,13 @@
     <value>Система</value>
   </data>
   <data name="TouchBindPick" xml:space="preserve">
-    <value>Выберите навык, потом нажмите кнопку навыка справа, куда его поставить</value>
+    <value>Выберите умение, потом нажмите кнопку умения справа, куда его поставить</value>
   </data>
   <data name="TouchBindPlace" xml:space="preserve">
-    <value>Нажмите подсвеченную кнопку, куда поставить навык</value>
+    <value>Нажмите подсвеченную кнопку, куда поставить умение</value>
   </data>
   <data name="TouchBindPickFor" xml:space="preserve">
-    <value>Выберите навык для подсвеченной кнопки</value>
+    <value>Выберите умение для подсвеченной кнопки</value>
   </data>
   <data name="InterfaceViewRow" xml:space="preserve">
     <value>Вид интерфейса</value>
@@ -15025,7 +15025,7 @@
     <value>Атака: удерживайте, чтобы атаковать</value>
   </data>
   <data name="TouchHelpSkills" xml:space="preserve">
-    <value>Кнопки умений: нажмите, чтобы применить, пустая выбирает умение</value>
+    <value>Кнопки умений: нажмите, чтобы применить; «Умения» расставляет их</value>
   </data>
   <data name="TouchHelpPickUp" xml:space="preserve">
     <value>Подобрать: поднимает вещи рядом</value>
@@ -15058,10 +15058,10 @@
     <value>A: удерживайте для атаки; если курсор на окне или кнопке, A нажимает её</value>
   </data>
   <data name="PadHelpSkills" xml:space="preserve">
-    <value>X, Y, RB, LT, крестовина вниз: пять кнопок навыков (нажатие: выбрать, удержание: применять)</value>
+    <value>X, Y, RB, LT, крестовина вниз: пять кнопок умений (нажатие: выбрать, удержание: применять)</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>L3 (нажатие левого стика): список навыков; выберите навык курсором и A, затем нажмите кнопку навыка, чтобы поставить его туда</value>
+    <value>L3 (нажатие левого стика): расстановка умений по кнопкам</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>B: назад, закрывает верхнее окно (если окон нет, системное меню)</value>
@@ -15087,14 +15087,41 @@
   <data name="PadClose" xml:space="preserve">
     <value>Закрыть</value>
   </data>
+  <data name="TouchPickerTitle" xml:space="preserve">
+    <value>Кнопки умений</value>
+  </data>
+  <data name="TouchPickerPickFor" xml:space="preserve">
+    <value>Выберите умение для подсвеченной кнопки</value>
+  </data>
+  <data name="TouchPickerOnButton" xml:space="preserve">
+    <value>На подсвеченной кнопке: %ls. Выберите другое умение, чтобы заменить его</value>
+  </data>
+  <data name="TouchPickerTip" xml:space="preserve">
+    <value>Нажмите кнопку справа, чтобы выбрать её. Умение с другой кнопки поменяется с ней местами</value>
+  </data>
+  <data name="PadPickerTip" xml:space="preserve">
+    <value>Стиком вправо на кнопку и A, чтобы выбрать её. Умение с другой кнопки поменяется с ней местами</value>
+  </data>
+  <data name="TouchPickerClear" xml:space="preserve">
+    <value>Убрать</value>
+  </data>
+  <data name="TouchPickerDone" xml:space="preserve">
+    <value>Готово</value>
+  </data>
+  <data name="TouchPickerNoSkills" xml:space="preserve">
+    <value>Умений пока нет</value>
+  </data>
+  <data name="PadChoose" xml:space="preserve">
+    <value>Выбрать</value>
+  </data>
   <data name="PadConnected" xml:space="preserve">
-    <value>Геймпад: A атакует, X, Y, RB, LT и крестовина вниз применяют навыки, Menu открывает все окна (там «Помощь» со всеми кнопками)</value>
+    <value>Геймпад: A атакует, X, Y, RB, LT и крестовина вниз применяют умения, L3 расставляет их, Menu открывает все окна (там «Помощь» со всеми кнопками)</value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Выберите навык курсором и A, потом нажмите X, Y, RB, LT или крестовину вниз, куда его поставить</value>
+    <value>Выберите умение курсором и A, потом нажмите X, Y, RB, LT или крестовину вниз, куда его поставить</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Нажмите X, Y, RB, LT или крестовину вниз, куда поставить навык</value>
+    <value>Нажмите X, Y, RB, LT или крестовину вниз, куда поставить умение</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>Ввести</value>

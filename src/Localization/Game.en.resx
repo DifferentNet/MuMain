@@ -15402,7 +15402,7 @@
     <value>Attack: hold to attack</value>
   </data>
   <data name="TouchHelpSkills" xml:space="preserve">
-    <value>Skill buttons: tap to use one, an empty one picks a skill</value>
+    <value>Skill buttons: tap to use one; the Skills button sets them</value>
   </data>
   <data name="TouchHelpPickUp" xml:space="preserve">
     <value>Pick up: lifts the items nearby</value>
@@ -15438,7 +15438,7 @@
     <value>X, Y, RB, LT, D-pad down: the five skill buttons (tap: pick, hold: cast)</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>L3 (press the left stick): the skill list; pick a skill with the pointer and A, then press a skill button to put it there</value>
+    <value>L3 (press the left stick): set the skill buttons</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>B: back, closes the window on top (with none open, the system menu)</value>
@@ -15464,8 +15464,35 @@
   <data name="PadClose" xml:space="preserve">
     <value>Close</value>
   </data>
+  <data name="TouchPickerTitle" xml:space="preserve">
+    <value>Skill buttons</value>
+  </data>
+  <data name="TouchPickerPickFor" xml:space="preserve">
+    <value>Choose a skill for the lit button</value>
+  </data>
+  <data name="TouchPickerOnButton" xml:space="preserve">
+    <value>On the lit button: %ls. Choose another skill to put it there instead</value>
+  </data>
+  <data name="TouchPickerTip" xml:space="preserve">
+    <value>Tap a button on the right to set it. A skill already on a button swaps places</value>
+  </data>
+  <data name="PadPickerTip" xml:space="preserve">
+    <value>Move right onto a button and press A to set it. A skill already on a button swaps places</value>
+  </data>
+  <data name="TouchPickerClear" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="TouchPickerDone" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="TouchPickerNoSkills" xml:space="preserve">
+    <value>No skills yet</value>
+  </data>
+  <data name="PadChoose" xml:space="preserve">
+    <value>Choose</value>
+  </data>
   <data name="PadConnected" xml:space="preserve">
-    <value>Gamepad: A attacks, X, Y, RB, LT and D-pad down cast skills, Menu opens every window (its Help lists all the buttons)</value>
+    <value>Gamepad: A attacks, X, Y, RB, LT and D-pad down cast skills, L3 sets them, Menu opens every window (its Help lists all the buttons)</value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
     <value>Pick a skill with the pointer and A, then press X, Y, RB, LT or D-pad down to put it there</value>

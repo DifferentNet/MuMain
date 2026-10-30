@@ -5,6 +5,8 @@
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInterface.h"
 
+#include <mutex>
+
 // Movement globals are defined in ZzzInterface.cpp.
 extern int TargetX;
 extern int TargetY;
@@ -33,5 +35,48 @@ MoveResult WalkTo(int tileX, int tileY)
     Hero->MovementType = MOVEMENT_MOVE;
     SendMove(Hero, &Hero->Object);
     return MoveResult::Walking;
+}
+
+void StopAtNextTile()
+{
+    if (Hero == nullptr || !Hero->Movement)
+    {
+        return;
+    }
+
+    BYTE stopX = Hero->PositionX;
+    BYTE stopY = Hero->PositionY;
+    bool shortened = false;
+    bool walkable = false;
+    {
+        std::lock_guard<SpinLock> guard(Hero->Path.Lock);
+        PATH_t& path = Hero->Path;
+        const int length = StopPathLength(path.CurrentPath, path.PathNum);
+        // A path of one tile has no step left to finish.
+        walkable = length >= 2;
+        if (walkable)
+        {
+            shortened = length < path.PathNum;
+            path.PathNum = static_cast<unsigned char>(length);
+            stopX = path.PathX[length - 1];
+            stopY = path.PathY[length - 1];
+        }
+    }
+
+    if (!walkable)
+    {
+        // Moving with no path to follow (another stop cleared it): stand still at once.
+        Hero->Movement = false;
+        SetPlayerStop(Hero);
+    }
+    else if (!shortened)
+    {
+        // The walk ends on that tile anyway, where the server already expects it.
+        return;
+    }
+
+    // The tile lies on the walk the server was sent, so it stops the character
+    // there too (a stop elsewhere would be refused and the walk kept).
+    SendCharacterMove(Hero->Key, Hero->Object.Angle[2], 1, &stopX, &stopY, stopX, stopY);
 }
 } // namespace GameLogic::Automation

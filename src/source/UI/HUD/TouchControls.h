@@ -1,7 +1,9 @@
 // The on-screen controls of phones and tablets (the browser client played by touch), as MU's mobile
 // games lay them out: a floating joystick on the left, a big attack button in the bottom right corner
 // with the five hotkey skills around it, pickup and auto-hunt (the MU Helper) buttons, the two
-// potion hotkeys, the chat, and a menu of the windows a keyboard opens with its letters.
+// potion hotkeys, the chat, and a menu of the windows a keyboard opens with its letters. The skill
+// picker sets which skill each skill button casts (the Skills button, Menu -> Skills, or a tap on an
+// empty skill button opens it).
 //
 // The document is touch_controls.rml. Fingers reach the controls through Core::Input::Touch (the
 // controls answer its hit test from their boxes); what they do in the world is GameLogic::Touch.
@@ -49,15 +51,21 @@ void SetControlHeld(int control, bool held);
 // Lets go of everything the pad holds (the pad is put down, or leaves the world).
 void ReleasePad();
 
-// The menu for a pad: whether it is open, a highlighted item the stick moves (dx, dy: -1, 0 or 1 a
-// step; 0, 0 highlights the first item when none is), and opening the highlighted one.
+// The menu, or the skill picker (where the skill buttons are set), for a pad: whether one is open, a
+// highlighted item the stick moves (dx, dy: -1, 0 or 1 a step; 0, 0 highlights the first item when
+// none is), and pressing the highlighted one. The picker's highlight goes over its skills and buttons
+// and the skill buttons it sets.
 [[nodiscard]] bool IsMenuOpen();
 void CloseMenu();
 void MoveMenuFocus(int dx, int dy);
 void ActivateMenuFocus();
 
+// Opens the skill picker on the first empty skill button (the pad's L3). False with the controls not
+// shown, where there is no picker.
+bool OpenSkillPicker();
+
 // The Back button's press from elsewhere (the phone's back gesture, UI::Mobile::PhonePage): the open
-// menu shuts, else the window on top closes or, with none open, the system menu opens. Off the world
-// it is Esc.
+// menu or skill picker shuts, else the window on top closes or, with none open, the system menu
+// opens. Off the world it is Esc.
 void PressBack();
 } // namespace UI::HUD::TouchControls

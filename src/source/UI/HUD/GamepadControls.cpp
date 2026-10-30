@@ -311,7 +311,8 @@ void PlayWorld(SDL_Window* window, const Presses& presses, float seconds, Clock:
     FollowPress(window, g_state.a, g_state.rightTrigger, Pressed(presses, Button::A), Held(Button::A), true);
     for (const Mapping& mapping : Mappings)
         Controls::SetPadHeld(mapping.control, HoldsControl(mapping.pad));
-    if (Pressed(presses, Button::LeftStick))
+    // The skill picker sets the skill buttons; without the controls on the screen, the game's list.
+    if (Pressed(presses, Button::LeftStick) && !Controls::OpenSkillPicker())
         g_pSkillList->OnCurrentSkillClick();
 }
 
