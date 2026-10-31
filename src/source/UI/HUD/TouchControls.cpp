@@ -17,6 +17,7 @@
 #include "UI/Core/WindowCommon.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/ModalDialogs.h"
+#include "UI/HUD/GamepadControls.h"
 #include "UI/HUD/SkillList.h"
 #include "UI/HUD/Skills/SkillTooltip.h"
 #include "UI/Mobile/FollowThrough.h"
@@ -86,6 +87,7 @@ struct KeyButton
 constexpr KeyButton KeyButtons[] = {
     {"tc_potion_q", 'Q'},  {"tc_potion_w", 'W'}, {"tc_chat", VK_RETURN}, {"tc_inventory", 'I'},
     {"tc_character", 'C'}, {"tc_move", 'M'},     {"tc_map", VK_TAB},     {"tc_back", VK_ESCAPE, &Back},
+    {"tc_potion_e", 'E'},  {"tc_potion_r", 'R'},
 };
 constexpr int KeyButtonCount = static_cast<int>(std::size(KeyButtons));
 
@@ -113,6 +115,16 @@ void ToggleView()
 {
     using UI::Mobile::ViewChoice;
     UI::Mobile::SetViewChoice(UI::Mobile::IsPhoneView() ? ViewChoice::Pc : ViewChoice::Phone);
+}
+
+// The chat line, as Enter opens it (CChatInputBox); Enter again types in it when it is open but let go of.
+// A tapped Enter alone did not open it while a pad played.
+void OpenChat()
+{
+    if (g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_CHATINPUTBOX))
+        Touch::TapKey(VK_RETURN);
+    else
+        g_pNewUISystem->Show(mu::ui::window::INTERFACE_CHATINPUTBOX);
 }
 
 // The menu's items: windows by the key that opens them, or an action of their own. Their labels are
@@ -144,7 +156,7 @@ const MenuItem MenuItems[] = {
     {&I18N::Game::TouchMenuView, 0, &ToggleView},
     {&I18N::Game::TouchMenuSystem, 0, &OpenSystemMenu},
     // The chat line: with a pad, its keyboard (UI/HUD/PadKeyboard) comes up for it.
-    {&I18N::Game::TouchChat, VK_RETURN},
+    {&I18N::Game::TouchChat, 0, &OpenChat},
     // The player commands (trade, party, whisper, duel...): one is picked, then a tap on the player.
     {&I18N::Game::TouchMenuPlayer, 'D'},
     // Its label says whether the switch is on (MenuLabel()).
@@ -968,6 +980,10 @@ int PadControl(UI::HUD::TouchControls::PadButton button)
         return KeyControl("tc_potion_q");
     case PadButton::PotionW:
         return KeyControl("tc_potion_w");
+    case PadButton::PotionE:
+        return KeyControl("tc_potion_e");
+    case PadButton::PotionR:
+        return KeyControl("tc_potion_r");
     case PadButton::Map:
         return KeyControl("tc_map");
     case PadButton::Back:
@@ -1663,7 +1679,9 @@ void Update()
 
     ControlsModel& model = g_View.GetModel();
     g_upperSet = ChooseUpperSet();
-    GameLogic::Touch::SetPointerAims(UI::Mobile::IsGamepadInUse());
+    // The pad's pointer aims only while it plays the pointer (a window open); in the world the right
+    // stick picks the target instead (UI/HUD/GamepadControls).
+    GameLogic::Touch::SetPointerAims(UI::Mobile::IsGamepadInUse() && UI::HUD::GamepadControls::PlaysPointer());
     // A player the pointer or a tap went for stays the attack button's target.
     GameLogic::Touch::TrackAim();
     RestPointerAfterDialog();

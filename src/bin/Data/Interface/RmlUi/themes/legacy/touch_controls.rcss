@@ -719,3 +719,80 @@ body.pad #tc_back, body.pad #tc_menu, body.pad #tc_map {
 #tc_pickup .pad-glyph { left: -12rem; top: -10rem; }
 #tc_auto .pad-glyph { left: -8rem; top: -8rem; }
 #tc_skill_edit .pad-glyph { left: -10rem; top: -10rem; }
+
+/* The potions E and R: only a pad drinks them (its d-pad), beside its row below. */
+#tc_potion_e, #tc_potion_r {
+	display: none;
+}
+
+/* A pad with no finger on the screen (UI/HUD/GamepadControls.h): Diablo's row along the bottom,
+   centred, just over the HUD's bar (640rem centred, 51rem high): the potions LB and LT on its left,
+   then attack (A), the skills X, Y, B, RB and RT, the potions E and R (the d-pad's arms) and MU Helper
+   (d-pad up) on its right. No top row (Menu opens the windows, View the map), no pickup button (d-pad
+   down), no Skills button (LS). */
+body.pad.no-touch #tc_quick, body.pad.no-touch #tc_pickup, body.pad.no-touch #tc_skill_edit {
+	display: none;
+}
+body.pad.no-touch #tc_potion_e, body.pad.no-touch #tc_potion_r {
+	display: block;
+}
+body.pad.no-touch #tc_attack, body.pad.no-touch #tc_skill_0, body.pad.no-touch #tc_skill_1, body.pad.no-touch #tc_skill_2, body.pad.no-touch #tc_skill_3, body.pad.no-touch #tc_skill_4 {
+	left: 50%;
+	right: auto;
+	bottom: 60rem;
+	width: 54rem;
+	height: 54rem;
+}
+body.pad.no-touch #tc_potion_q, body.pad.no-touch #tc_potion_w, body.pad.no-touch #tc_potion_e, body.pad.no-touch #tc_potion_r, body.pad.no-touch #tc_auto {
+	left: 50%;
+	right: auto;
+	bottom: 65rem;
+	width: 44rem;
+	height: 44rem;
+	line-height: 40rem;
+}
+body.pad.no-touch #tc_potion_q { margin-left: -300rem; }
+body.pad.no-touch #tc_potion_w { margin-left: -248rem; }
+body.pad.no-touch #tc_attack {
+	margin-left: -192rem;
+	line-height: 50rem;
+	font-size: 12rem;
+	border-radius: 27rem;
+}
+body.pad.no-touch #tc_skill_0 { margin-left: -128rem; }
+body.pad.no-touch #tc_skill_1 { margin-left: -64rem; }
+body.pad.no-touch #tc_skill_2 { margin-left: 0; }
+body.pad.no-touch #tc_skill_3 { margin-left: 64rem; }
+body.pad.no-touch #tc_skill_4 { margin-left: 128rem; }
+body.pad.no-touch .tc-skill .tc-skill-icon { left: 12rem; top: 7rem; }
+body.pad.no-touch #tc_potion_e { margin-left: 196rem; }
+body.pad.no-touch #tc_potion_r { margin-left: 248rem; }
+body.pad.no-touch #tc_auto { margin-left: 300rem; }
+body.pad.no-touch #tc_attack .pad-glyph { right: auto; left: -8rem; top: -8rem; }
+body.pad.no-touch .tc-potion .pad-glyph, body.pad.no-touch #tc_auto .pad-glyph { left: -8rem; right: auto; top: -8rem; }
+body.pad.no-touch #tc_bind_hint {
+	left: 50%;
+	right: auto;
+	margin-left: -192rem;
+	bottom: 126rem;
+}
+
+/* The phone view has no HUD bar: the row sits near the bottom edge, over the EXP line. */
+@media (theme: mobile-hud) {
+	body.pad.no-touch #tc_attack, body.pad.no-touch #tc_skill_0, body.pad.no-touch #tc_skill_1, body.pad.no-touch #tc_skill_2, body.pad.no-touch #tc_skill_3, body.pad.no-touch #tc_skill_4 {
+		bottom: 14rem;
+	}
+	body.pad.no-touch #tc_potion_q, body.pad.no-touch #tc_potion_w, body.pad.no-touch #tc_potion_e, body.pad.no-touch #tc_potion_r, body.pad.no-touch #tc_auto {
+		bottom: 19rem;
+	}
+	body.pad.no-touch #tc_bind_hint {
+		bottom: 80rem;
+	}
+}
+
+/* The pad row sits just over the HUD bar: the count goes inside its button, on the lower edge. */
+body.pad.no-touch .tc-potion-count {
+	bottom: 2rem;
+	line-height: 11rem;
+	font-size: 10rem;
+}

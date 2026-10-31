@@ -34,6 +34,9 @@ struct Sources
     const wchar_t* levelFormat = nullptr;
     int potionsQ = 0;
     int potionsW = 0;
+    // E and R: the pad's d-pad drinks them (UI/HUD/GamepadControls).
+    int potionsE = 0;
+    int potionsR = 0;
     std::chrono::steady_clock::time_point potionsCountedAt{};
 };
 
@@ -51,6 +54,8 @@ struct Model
     Rml::String levelText;
     Rml::String potionQCount;
     Rml::String potionWCount;
+    Rml::String potionECount;
+    Rml::String potionRCount;
     Sources seen;
 };
 

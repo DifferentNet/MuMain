@@ -163,6 +163,21 @@ void Move(SDL_Window* window, float x, float y, float seconds, bool precise)
     SDL_WarpMouseInWindow(window, g_state.x, g_state.y);
 }
 
+void MoveTo(SDL_Window* window, float x, float y)
+{
+    if (window == nullptr)
+        return;
+    float width = 0.f;
+    float height = 0.f;
+    WindowSize(window, width, height);
+    FitWindow(window, width, height);
+    FollowOtherDevices(window);
+    g_state.x = std::clamp(x, 0.f, width - 1.f);
+    g_state.y = std::clamp(y, 0.f, height - 1.f);
+    g_state.placed = true;
+    SDL_WarpMouseInWindow(window, g_state.x, g_state.y);
+}
+
 void Centre(SDL_Window* window)
 {
     if (window == nullptr)

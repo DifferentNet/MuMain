@@ -1,28 +1,31 @@
-// A gamepad laid out as an Xbox pad plays the game (the device is Core::Input::Gamepad). In the world
-// it presses the on-screen controls' buttons (UI/HUD/TouchControls, shown with the pad's glyphs while
-// it is in use) and plays the mouse with the right stick; on the login and character screens both
-// sticks play the mouse.
+// A gamepad laid out as an Xbox pad plays the game (the device is Core::Input::Gamepad), as Diablo's
+// pads do: a row of six action buttons, the potions on the bumper, trigger and d-pad, no pointer in
+// the world. It presses the on-screen controls' buttons (UI/HUD/TouchControls, shown with the pad's
+// glyphs while it is in use); on the login and character screens both sticks play the mouse.
 //
-// | Pad | In the world |
+// | Pad | In the world (no window open) |
 // |---|---|
 // | Left stick | Walks. Pushed through a gate or a map change, it waits until let go or centred |
-// | Right stick | The pointer, slower over a window |
-// | A | Attack: a tap fights the nearest monster once, held it goes on. On a window or a control it clicks there |
-// | B | Back: closes the window on top (with none open, the system menu) |
-// | X, Y, RB, LT, D-pad down | The five skill buttons: a tap uses the skill once, held it goes on |
-// | LB | Pick up: a tap takes the nearest item, held it goes on |
+// | Right stick | A flick picks the next target: right or down the next further, left or up the next nearer |
+// | RS (the right stick pressed) | Back to the nearest target |
+// | A | Attack: a tap fights the target once, held it goes on |
+// | X, Y, B, RB, RT | The five skill buttons: a tap uses the skill once, held it goes on |
+// | LB, LT | The potions Q and W |
+// | D-pad left, right | The potions E and R |
 // | D-pad up | MU Helper on and off |
-// | D-pad left, right | The potions Q and W |
-// | RT | A left click at the pointer (talk to an NPC, walk there); held, the button stays down (drag) |
-// | RS (the right stick pressed) | A right click at the pointer, held as long as the stick |
+// | D-pad down | Pick up: held, it gathers the drops around; with none, a press talks to the nearest NPC |
 // | LS (the left stick pressed) | Puts skills on the skill buttons |
 // | View | The map |
-// | Menu | The menu of windows: the stick or d-pad moves the highlight, A opens, B or Menu closes; Chat = chat |
+// | Menu | A tap: the menu of windows (the stick or d-pad move the highlight, A opens, B or Menu closes). Held: the chat |
 //
-// A stick's own button counts only with the stick near its centre: one pushed hard clicks by accident.
-// With the menu open, only the menu acts. A dialog waiting for an answer (a trade or party request, a
+// With a window open (a game window, a dialog, the skill list) the right stick plays the pointer: A
+// clicks there (or presses the control there, or attacks off the windows), X and RS right-click, B
+// goes back (closes the window on top). The rest act as in the world, and d-pad up and down over a
+// list that scrolls turn the wheel. A dialog waiting for an answer (a trade or party request, a
 // question) takes A and Menu as Enter, B as Esc, after its first second; A on one of its buttons
 // clicks that one. The help window (F1) turns its pages with LB and RB.
+//
+// A stick's own button counts only with the stick near its centre: one pushed hard clicks by accident.
 //
 // Off the world: the sticks move the pointer, A or RT click, B is Esc and Menu is Enter.
 //
@@ -34,4 +37,8 @@ namespace UI::HUD::GamepadControls
 {
 // Once a frame after the scene moved, before the touch controls act on what it pressed.
 void Update();
+
+// Whether the pad plays the pointer now (a window open, or off the world): only then does a monster
+// under it count as aimed at.
+[[nodiscard]] bool PlaysPointer();
 } // namespace UI::HUD::GamepadControls

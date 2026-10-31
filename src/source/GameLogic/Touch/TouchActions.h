@@ -99,6 +99,20 @@ bool BindHotKey(int hotKey);
 // pickup button is held, and after a tap until done.
 Progress PickUpNearest();
 
+// The pad's right stick picks the target (UI/HUD/GamepadControls): the next monster (or enemy player
+// where players fight) by distance, step 1 the next further, -1 the next nearer, going round. The one
+// chosen stays the buttons' target while it lives and stays near, over the one under the engine's own
+// attack. ClearChosenTarget goes back to the nearest.
+void CycleTarget(int step);
+void ClearChosenTarget();
+
+// Whether a drop the pickup button would take lies around.
+[[nodiscard]] bool HasDropToPick();
+// The nearest NPC within `tiles` tiles, -1 for none; and where it shows on the screen, in the
+// camera's window pixels (its middle, a little above the feet). False when it is behind the camera.
+[[nodiscard]] int NearestNpc(int tiles);
+[[nodiscard]] bool NpcOnScreen(int index, float& x, float& y);
+
 // Forgets the monster being fought, the drops passed over, the PK switch and the party member chosen,
 // and makes a pushed joystick wait: a new map, the character's death, the controls hidden.
 void Reset();

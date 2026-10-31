@@ -25,6 +25,9 @@ void Move(SDL_Window* window, float x, float y, float seconds, bool precise);
 // Puts the pointer in the middle of the window: over the character, clear of the windows.
 void Centre(SDL_Window* window);
 
+// Puts the pointer at a window point (an NPC the pad talks to), kept inside the window.
+void MoveTo(SDL_Window* window, float x, float y);
+
 // Presses or lets go of an SDL mouse button (SDL_BUTTON_LEFT, SDL_BUTTON_RIGHT) where the pointer is.
 // A second left press soon after the first, close to it, is a double click.
 void SetButton(SDL_Window* window, int sdlButton, bool down);

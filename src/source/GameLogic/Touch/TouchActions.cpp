@@ -32,6 +32,8 @@
 #include <cmath>
 #include <map>
 #include <mutex>
+#include <utility>
+#include <vector>
 
 // Defined in ZzzInterface.cpp: the character under the pointer, which a tap on a monster leaves there.
 extern int SelectedCharacter;
@@ -118,6 +120,8 @@ Clock::time_point g_standUntil;
 Clock::time_point g_standAgainAt;
 bool g_pointerAims = false;
 int g_targetKey = NoTarget;
+// The target the pad's right stick chose (CycleTarget): the buttons' target while it is a good one.
+int g_chosenKey = NoTarget;
 std::map<int, Clock::time_point> g_forgottenUntil;
 Clock::time_point g_nextAction;
 // g_nextAction before the last ActionDue() took the turn (GiveTurnBack()).
@@ -437,6 +441,12 @@ CHARACTER* AimedCharacter()
 // else the nearest monster, or the nearest enemy player where players fight.
 int ChooseTarget()
 {
+    if (g_chosenKey != NoTarget)
+    {
+        if (IsGoodTarget(FindByKey(g_chosenKey), true))
+            return g_targetKey = g_chosenKey;
+        g_chosenKey = NoTarget;
+    }
     const CHARACTER* aimed = AimedCharacter();
     if (IsGoodTarget(aimed, true))
         return g_targetKey = aimed->Key;
@@ -1087,6 +1097,7 @@ void TrackAim()
 void Reset()
 {
     g_targetKey = NoTarget;
+    g_chosenKey = NoTarget;
     g_forceAttack = false;
     g_friendKey = NoTarget;
     g_forgottenUntil.clear();
@@ -1098,6 +1109,90 @@ void Reset()
     g_hold.Pause();
     g_buttonsHoldHelperUntil = {};
     SteerHelper(false);
+}
+
+void CycleTarget(int step)
+{
+    if (!InWorld())
+        return;
+    // By distance, then by key: two at the same distance keep their order between presses.
+    std::vector<std::pair<int, int>> foes;
+    for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
+    {
+        const CHARACTER* character = &CharactersClient[i];
+        // With the PK switch on, players too (as a tap on one would aim at them).
+        if (IsGoodTarget(character, g_forceAttack))
+            foes.emplace_back(TilesTo(character), character->Key);
+    }
+    if (foes.empty())
+        return;
+    std::sort(foes.begin(), foes.end());
+    int current = g_chosenKey;
+    if (current == NoTarget && TargetIndex() >= 0)
+        current = CharactersClient[TargetIndex()].Key;
+    const auto found = std::find_if(foes.begin(), foes.end(), [current](const auto& foe) { return foe.second == current; });
+    const int count = static_cast<int>(foes.size());
+    int next = 0;
+    if (found == foes.end())
+        next = step >= 0 ? 0 : count - 1;
+    else
+        next = ((static_cast<int>(found - foes.begin()) + step) % count + count) % count;
+    g_chosenKey = g_targetKey = foes[next].second;
+}
+
+void ClearChosenTarget()
+{
+    g_chosenKey = NoTarget;
+    g_targetKey = NoTarget;
+}
+
+bool HasDropToPick()
+{
+    if (!InWorld())
+        return false;
+    for (int i = 0; i < MAX_ITEMS; ++i)
+    {
+        ITEM_t& drop = Items[i];
+        if (!drop.Object.Live || IsSkipped(i))
+            continue;
+        const int dx = Hero->PositionX - TileOf(drop.Object.Position[0]);
+        const int dy = Hero->PositionY - TileOf(drop.Object.Position[1]);
+        if (std::ceil(std::hypot(dx, dy)) <= PickupRange && FitsTheBag(drop))
+            return true;
+    }
+    return false;
+}
+
+int NearestNpc(int tiles)
+{
+    if (!InWorld())
+        return -1;
+    int nearest = -1;
+    int nearestTiles = tiles + 1;
+    for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
+    {
+        const CHARACTER* character = &CharactersClient[i];
+        if (!character->Object.Live || character->Object.Kind != KIND_NPC || character->Dead != 0)
+            continue;
+        const int distance = TilesTo(character);
+        if (distance < nearestTiles)
+        {
+            nearestTiles = distance;
+            nearest = i;
+        }
+    }
+    return nearest;
+}
+
+bool NpcOnScreen(int index, float& x, float& y)
+{
+    if (index < 0 || index >= MAX_CHARACTERS_CLIENT)
+        return false;
+    vec3_t position;
+    VectorCopy(CharactersClient[index].Object.Position, position);
+    // Its body, not its feet: the click's ray picks the model's box.
+    position[2] += 80.f;
+    return CameraProjection::WorldToWindowPixel(g_Camera, position, &x, &y);
 }
 
 int TargetIndex()

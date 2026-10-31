@@ -15076,31 +15076,31 @@
     <value>Геймпад (раскладка Xbox)</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Левый стик: идти (бой прервётся). Правый стик: курсор</value>
+    <value>Левый стик: идти. Правый стик: толкните — следующая цель (вправо дальше, влево ближе); при открытом окне — курсор</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
-    <value>A: нажмите — ударить ближайшего монстра, держите — продолжать бой</value>
+    <value>A: нажмите — ударить цель, держите — продолжать бой</value>
   </data>
   <data name="PadHelpSkills" xml:space="preserve">
-    <value>X, Y, RB, LT, крестовина вниз: пять кнопок умений</value>
+    <value>X, Y, B, RB, RT: пять кнопок умений</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
     <value>LS (нажмите левый стик, не наклоняя): расставить умения по кнопкам</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
-    <value>B: назад, закрывает верхнее окно (если окон нет, системное меню)</value>
+    <value>B при открытом окне: назад, закрывает верхнее окно</value>
   </data>
   <data name="PadHelpPickUp" xml:space="preserve">
-    <value>LB: нажмите — поднять ближайшую вещь, держите — собирать дальше</value>
+    <value>Крестовина вниз: поднять ближайшую вещь, держите — собирать дальше; если поднимать нечего — поговорить с ближайшим NPC</value>
   </data>
   <data name="PadHelpPotions" xml:space="preserve">
-    <value>Крестовина влево и вправо: зелья Q и W. Вверх и вниз над списком: прокрутка</value>
+    <value>LB и LT: зелья Q и W. Крестовина влево и вправо: зелья E и R</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>RT: клик по курсору (разговор с NPC, идти туда), держите — перетащить</value>
+    <value>RS (нажмите правый стик, не наклоняя): снова ближайшая цель</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
-    <value>Menu: все окна (стик или крестовина выбирают, A открывает, B закрывает)</value>
+    <value>Menu: все окна (стик или крестовина выбирают, A открывает, B закрывает). Держите Menu — чат</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
     <value>Экраны входа и выбора персонажа: стики двигают курсор</value>
@@ -15112,7 +15112,7 @@
     <value>После ворот или смены карты отпустите стик, чтобы снова идти</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>Если курсор на окне или кнопке, A нажимает её</value>
+    <value>При открытом окне: правый стик двигает курсор, A — клик, X — правый клик (надеть вещь). Вверх и вниз над списком: прокрутка</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
     <value>Нажмите — применить один раз, держите — повторять</value>
@@ -15121,7 +15121,7 @@
     <value>Крестовина вверх: MU Helper вкл/выкл (левый стик меняет место охоты). View: карта</value>
   </data>
   <data name="PadHelpRightClick" xml:space="preserve">
-    <value>RS (нажмите правый стик, не наклоняя): правый клик по курсору, на + у стата — много очков</value>
+    <value>RS над окном: правый клик по курсору, на + у стата — много очков</value>
   </data>
   <data name="PadHelpDialog" xml:space="preserve">
     <value>Вопрос (обмен, группа): через секунду Menu — да, A — да, если секунду не нажимали. B — нет</value>
@@ -15163,7 +15163,7 @@
     <value>Выбрать</value>
   </data>
   <data name="PadConnected" xml:space="preserve">
-    <value>Геймпад: A атакует, X, Y, RB, LT и крестовина вниз применяют умения, LS расставляет их, Menu открывает все окна (там «Помощь» со всеми кнопками)</value>
+    <value>Геймпад: A атакует, X, Y, B, RB и RT применяют умения, LB и LT пьют зелья, правый стик выбирает цель, Menu открывает все окна (там «Помощь» со всеми кнопками)</value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
     <value>Выберите умение курсором и A, потом нажмите X, Y, RB, LT или крестовину вниз, куда его поставить</value>
@@ -15466,7 +15466,7 @@
     <value>PK (меню): нажмите на игрока, чтобы напасть, дальше атака и умения бьют его. Группу не трогают</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK (меню): наведите на игрока, A атакует, группу не трогают. A на карточке группы: баффы на него</value>
+    <value>PK (меню): правый стик выбирает и игроков, A атакует, группу не трогают</value>
   </data>
   <data name="GamepadOffLater" xml:space="preserve">
     <value>Геймпад выключится, когда вы нажмёте клавишу, кнопку мыши или экран</value>

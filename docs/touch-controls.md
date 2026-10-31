@@ -231,22 +231,30 @@ X blue, Y yellow, the bumpers, triggers, View, Menu, LS for the left stick press
 arms), drawn from boxes in `themes/{legacy,modern}/gamepad_glyphs.rcss`, no images. In the phone view
 the pad replaces the PC bar as touch does (style flag `mobile-hud`). Without touch the joystick is not drawn.
 
-| Pad | In the world |
+In the world the pad plays as Diablo's pads do (layout A of 2026-10-31): no pointer, a row of six
+action buttons along the bottom with the potions at its ends. The quick row, the pickup button and the
+skill edit button are not drawn for a pad without touch (`body.pad.no-touch`).
+
+| Pad | In the world (no window open) |
 |---|---|
 | Left stick | Walks the way it points (as the joystick) |
-| Right stick | The mouse pointer; at half speed over a window, to hit small buttons |
-| A | Held: attack (as the Attack button). With the pointer on a window or a control, a left click there instead |
-| B | Back: closes the window on top (with none open, the system menu) |
-| X, Y, RB, LT, D-pad down | The five hotkey skills: a tap makes one current, held it casts |
-| LB | Pick up (held) |
+| Right stick | A flick picks the next target: right or down the next further, left or up the next nearer |
+| RS (the right stick pressed) | Back to the nearest target |
+| A | Attack: a tap fights the target once, held it goes on |
+| X, Y, B, RB, RT | The five skill buttons: a tap uses the skill once, held it goes on |
+| LB, LT | The potions Q and W |
+| D-pad left, right | The potions E and R |
 | D-pad up | MU Helper on and off |
-| D-pad up, down over a list that scrolls | Scroll it (the mouse wheel there, repeating while held): a shop, the commands, the quests |
-| D-pad left, right | The potions Q and W |
-| RT | A left click at the pointer (talk to an NPC, walk there, use a window); held, a drag |
-| R3 | A right click at the pointer; on an item in the bag or worn gear it opens the item card (above), except with the storage or the chaos machine open |
+| D-pad down | Pick up: held, it gathers the drops around; with none near, a press talks to the nearest NPC |
 | L3 | The skill picker: the stick or the d-pad move its highlight over the skills, the panel's buttons and the skill buttons on its right; A on a skill button chooses it, A on a skill puts it there; B closes. Without the controls on the screen, the game's skill list |
 | View | The map |
-| Menu | The menu of windows: the stick or the d-pad move its highlight, A opens, B or Menu closes; its legend shows the keys. Its Chat item opens the chat line, and the pad's keyboard with it |
+| Menu | A tap: the menu of windows (the stick or the d-pad move its highlight, A opens, B or Menu closes; its legend shows the keys). Held half a second: the chat line, with the pad's keyboard |
+
+With a window open (a game window, a dialog, the skill list) the right stick plays the mouse pointer,
+at half speed over a window: A clicks there (or presses the control there), X and RS right-click (on
+an item in the bag or worn gear RS opens the item card, above, except with the storage or the chaos
+machine open; on a stat's "+" the menu of bigger steps), B goes back (closes the window on top), and
+d-pad up and down over a list that scrolls turn the wheel. The rest act as in the world.
 
 On the login, server and character screens both sticks move the pointer, A or RT click, B is Esc and
 Menu is Enter. The pointer starts at the screen's centre the first time the pad takes over, so A
