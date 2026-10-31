@@ -15869,6 +15869,9 @@
   <data name="PadTake" xml:space="preserve">
     <value>Take</value>
   </data>
+  <data name="PadBuy" xml:space="preserve">
+    <value>Buy</value>
+  </data>
   <data name="PadCard" xml:space="preserve">
     <value>Card</value>
   </data>

@@ -10,6 +10,7 @@
 
 #include <optional>
 #include <span>
+#include <string_view>
 
 namespace UI::HUD::PadTargets
 {
@@ -20,4 +21,6 @@ namespace UI::HUD::PadTargets
 // Where the windows the workspace places start from the left after the last Collect, in context
 // pixels; none while only dialogs and screens are open.
 [[nodiscard]] std::optional<float> WindowsLeft();
+// Whether the target is in the document of this file name (npc_shop.rml).
+[[nodiscard]] bool IsIn(const PadTargetPick::Target& target, std::string_view fileName);
 } // namespace UI::HUD::PadTargets

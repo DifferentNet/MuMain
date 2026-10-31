@@ -265,14 +265,16 @@ button); when its target goes away, it
 goes to the nearest one. While a message box or a menu over the windows is up (the item card),
 the frame rests only on it. The right stick still moves the pointer (shown while off every target, at
 half speed over a window) and snaps it onto a target near when let go. A legend under the hub's tabs
-says what the buttons do there (on an item: Take, Equip, Card, Close; with an item on the cursor: Put
-down, Drop, Put back; on a button: Press, Close); both keep left of the windows, wrapping when the room is
+says what the buttons do there (on an item: Take, Equip, Card, Close, with X named for what it does
+there: Take off on worn gear, Sell while a shop is open, Move while the storage, the trade or the chaos
+machine takes it; on a shop's goods: Buy, Close; with an item on the cursor: Put down, Drop, Put back;
+on a button: Press, Close); both keep left of the windows, wrapping when the room is
 short. On the Skills tab the legend gives way to the skill picker's own, and the picker sits under the
 tabs:
 
 | Pad | Over a window |
 |---|---|
-| A | Click at the frame: take an item, put it down, press a button |
+| A | Click at the frame: take an item, put it down, press a button, buy a shop's item |
 | X | The item's own action at once: put on, use, move to the trade; on worn gear, take it off (the legend then says Take off). Never throws an item down. When it can't, it says why: the item's requirements, the slot already taken, no room in the bag. In a shop it asks with the card first |
 | Y | The item card (above), except with the storage or the chaos machine open |
 | RS | Right-click at the frame (on a stat's "+" the menu of bigger steps) |

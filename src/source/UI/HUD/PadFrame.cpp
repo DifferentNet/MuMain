@@ -11,6 +11,7 @@
 #include <SDL3/SDL.h>
 
 #include <limits>
+#include <string_view>
 
 namespace
 {
@@ -26,6 +27,8 @@ constexpr auto Repeat = std::chrono::milliseconds(130);
 constexpr float SnapReachShare = 0.04f;
 constexpr float Anywhere = std::numeric_limits<float>::max();
 constexpr int SnapDelayFrames = 2;
+// The NPC shop's window: its cells are goods, A buys them.
+constexpr std::string_view ShopDocument = "npc_shop.rml";
 
 struct Point
 {
@@ -49,6 +52,7 @@ struct State
     bool onTarget = false;
     bool onItemPlace = false;
     bool onWornPlace = false;
+    bool onGoods = false;
     Pick::Box box;
     // The frame's target went away (a card opened over it, a dialog closed): it moves on a frame later,
     // with A up, so the release that closed a dialog does not land on the next target (the game reads
@@ -201,6 +205,7 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
     g_state.onTarget = current != Pick::None;
     g_state.onItemPlace = g_state.onTarget && (targets[current].cell || targets[current].slot);
     g_state.onWornPlace = g_state.onTarget && targets[current].slot;
+    g_state.onGoods = g_state.onItemPlace && UI::HUD::PadTargets::IsIn(targets[current], ShopDocument);
     if (g_state.onTarget)
         g_state.box = targets[current].box;
     if (g_state.onTarget && !onDialog)
@@ -224,6 +229,7 @@ void Reset()
     g_state.onTarget = false;
     g_state.onItemPlace = false;
     g_state.onWornPlace = false;
+    g_state.onGoods = false;
     g_state.stickPushed = false;
     g_state.lostFrames = 0;
     g_state.onDialog = false;
@@ -248,5 +254,10 @@ bool OnItemPlace()
 bool OnWornPlace()
 {
     return g_state.onWornPlace;
+}
+
+bool OnGoods()
+{
+    return g_state.onGoods;
 }
 } // namespace UI::HUD::PadFrame

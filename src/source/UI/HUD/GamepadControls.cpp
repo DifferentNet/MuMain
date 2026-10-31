@@ -919,6 +919,17 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
         view.legendSays = Legend::Button;
     else if (view.frame && UI::HUD::PadFrame::OnWornPlace())
         view.legendSays = Legend::Worn;
+    else if (view.frame && UI::HUD::PadFrame::OnGoods())
+        view.legendSays = Legend::Goods;
+    else if (view.frame)
+    {
+        using Does = mu::ui::window::CInventoryActionController::BagRightClick;
+        const Does does = mu::ui::window::CInventoryActionController::WhatBagRightClickDoes();
+        if (does == Does::Sells)
+            view.legendSays = Legend::Sell;
+        else if (does == Does::Moves)
+            view.legendSays = Legend::Move;
+    }
     float x = 0.f;
     float y = 0.f;
     const Rml::Context* context = RmlUiRuntime::Instance().GetContext();

@@ -311,7 +311,18 @@ bool CInventoryActionController::HandleRepairClick(CInventoryCtrl* targetControl
     return RepairItemAtMousePoint(targetControl);
 }
 
-CInventoryActionController::RightClickTarget CInventoryActionController::FindRightClickTarget() const
+CInventoryActionController::BagRightClick CInventoryActionController::WhatBagRightClickDoes()
+{
+    // As the item card names it (ShowTouchItemCard).
+    const RightClickTarget target = FindRightClickTarget();
+    if (target == RightClickTarget::Shop)
+        return BagRightClick::Sells;
+    if (target != RightClickTarget::Inventory || g_pNewUISystem->IsVisible(INTERFACE_INVENTORY_EXT))
+        return BagRightClick::Moves;
+    return BagRightClick::Acts;
+}
+
+CInventoryActionController::RightClickTarget CInventoryActionController::FindRightClickTarget()
 {
     if (g_pNewUISystem->IsVisible(INTERFACE_STORAGE))
     {

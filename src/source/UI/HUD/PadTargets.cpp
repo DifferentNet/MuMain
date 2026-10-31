@@ -290,4 +290,13 @@ std::optional<float> WindowsLeft()
         return std::nullopt;
     return left;
 }
+
+bool IsIn(const PadTargetPick::Target& target, std::string_view fileName)
+{
+    Rml::Context* context = RmlUiRuntime::Instance().GetContext();
+    if (context == nullptr || target.window < 0 || target.window >= context->GetNumDocuments())
+        return false;
+    Rml::ElementDocument* document = context->GetDocument(target.window);
+    return document != nullptr && FileName(document->GetSourceURL()) == fileName;
+}
 } // namespace UI::HUD::PadTargets

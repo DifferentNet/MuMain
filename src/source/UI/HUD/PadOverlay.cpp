@@ -165,15 +165,21 @@ void SyncLegend(OverlayModel& model, const View& view)
     if (!view.legend)
         return;
     using Legend = View::Legend;
-    const bool onItem = view.legendSays == Legend::Item || view.legendSays == Legend::Worn;
+    const Legend says = view.legendSays;
+    const bool onItem = says == Legend::Item || says == Legend::Worn || says == Legend::Sell || says == Legend::Move;
     SyncBool(model.legendItem, onItem, "legend_item");
-    SyncBool(model.legendY, view.legendSays != Legend::Button, "legend_y");
-    const auto* aLabel = onItem                               ? &I18N::Game::PadTake
-                         : view.legendSays == Legend::Holding ? &I18N::Game::PadPutDown
-                                                              : &I18N::Game::PadPress;
+    // The shop's goods have no card and nothing for X: A buys them.
+    SyncBool(model.legendY, says != Legend::Button && says != Legend::Goods, "legend_y");
+    const auto* aLabel = onItem                    ? &I18N::Game::PadTake
+                         : says == Legend::Goods   ? &I18N::Game::PadBuy
+                         : says == Legend::Holding ? &I18N::Game::PadPutDown
+                                                   : &I18N::Game::PadPress;
     SyncLabel(model.takeLabel, *aLabel, "take_label");
-    SyncLabel(model.equipLabel, view.legendSays == Legend::Worn ? I18N::Game::TouchItemUnequip : I18N::Game::TouchItemEquip,
-              "equip_label");
+    const auto* xLabel = says == Legend::Worn   ? &I18N::Game::TouchItemUnequip
+                         : says == Legend::Sell ? &I18N::Game::TouchItemSell
+                         : says == Legend::Move ? &I18N::Game::TouchItemMove
+                                                : &I18N::Game::TouchItemEquip;
+    SyncLabel(model.equipLabel, *xLabel, "equip_label");
     SyncLabel(model.cardLabel, view.legendSays == Legend::Holding ? I18N::Game::TouchItemDrop : I18N::Game::PadCard,
               "card_label");
     SyncLabel(model.closeLabel, view.legendSays == Legend::Holding ? I18N::Game::PadPutBack : I18N::Game::PadClose,

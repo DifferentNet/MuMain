@@ -31,4 +31,6 @@ void Reset();
 [[nodiscard]] bool OnItemPlace();
 // Whether that target is an equipment slot: the pad's X takes off what is worn there.
 [[nodiscard]] bool OnWornPlace();
+// Whether that target is a cell of the NPC shop: A buys what is there.
+[[nodiscard]] bool OnGoods();
 } // namespace UI::HUD::PadFrame
