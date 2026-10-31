@@ -123,4 +123,10 @@
 	.server-option-btn.orange { color: #ffcc40; }
 	.server-option-btn.orange:hover { color: #ffe680; }
 	.server-option-btn.orange:active { color: #ffcc40; }
+	/* The connect row's frame, stretched to a finger's size, reads as a black plate (ghinzuro 2026-10-31):
+	   a phone shows the lighter hover frame, and the population gauge keeps its place in the stretched
+	   frame (16, 19 and 160 of 193x26 above). */
+	.server-option-btn { decorator: image(legacy-server-option-hover); }
+	.server-option-btn:active { decorator: image(legacy-server-option-pressed); }
+	.server-gauge-slot { left: 22rem; top: 32rem; width: 215rem; height: 6rem; }
 }
