@@ -16,6 +16,7 @@
 #include "Camera/CameraProjection.h"
 #include "Camera/CameraState.h"
 #include "UI/Combat/MonsterHealthBar.h"
+#include "UI/HUD/GamepadControls.h"
 #include "UI/HUD/HudStatus.h"
 #include "World/GameMaps/GMBattleCastle.h"
 #include "World/GameMaps/GMHellas.h"
@@ -309,7 +310,13 @@ void mu::ui::window::CNameWindow::RenderName()
                 }
             }
         }
+        return;
     }
+
+    // The drop the pad's d-pad down would pick up shows its name, under its prompt (UI/HUD/PadOverlay).
+    const int padDrop = UI::HUD::GamepadControls::PromptDrop();
+    if (padDrop >= 0 && padDrop != SelectedItem && Items[padDrop].Object.Live && Items[padDrop].Object.Visible)
+        RenderItemName(padDrop, &Items[padDrop].Object, &Items[padDrop].Item, true);
 }
 
 void mu::ui::window::CNameWindow::RenderMonsterHealthBars()

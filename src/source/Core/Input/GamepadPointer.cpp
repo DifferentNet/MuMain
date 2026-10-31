@@ -49,6 +49,8 @@ struct State
     Clock::time_point lastLeftPress{};
     float lastLeftX = 0.f;
     float lastLeftY = 0.f;
+    // The right button held asks for the item card (the pad's Y), not the item's own action (X).
+    bool cardClick = false;
 };
 State g_state;
 
@@ -234,6 +236,16 @@ void TurnWheel(SDL_Window* window, int steps)
     event.wheel.mouse_x = g_state.x;
     event.wheel.mouse_y = g_state.y;
     SDL_PushEvent(&event);
+}
+
+void SetCardClick(bool card)
+{
+    g_state.cardClick = card;
+}
+
+bool IsCardClick()
+{
+    return g_state.cardClick;
 }
 
 bool IsButtonHeld(int sdlButton)

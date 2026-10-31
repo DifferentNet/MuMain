@@ -15076,7 +15076,7 @@
     <value>Геймпад (раскладка Xbox)</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Левый стик: идти. Правый стик: толкните — следующая цель (вправо дальше, влево ближе); при открытом окне — курсор</value>
+    <value>Левый стик: идти. Правый стик: толкните — следующая цель (вправо дальше, влево ближе); в окне — свободный курсор</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
     <value>A: нажмите — ударить цель, держите — продолжать бой</value>
@@ -15091,7 +15091,7 @@
     <value>B при открытом окне: назад, закрывает верхнее окно</value>
   </data>
   <data name="PadHelpPickUp" xml:space="preserve">
-    <value>Крестовина вниз: поднять ближайшую вещь, держите — собирать дальше; если поднимать нечего — поговорить с ближайшим NPC</value>
+    <value>Крестовина вниз: поднять вещь, чьё имя показано, держите — собирать дальше; если поднимать нечего — поговорить с ближайшим NPC</value>
   </data>
   <data name="PadHelpPotions" xml:space="preserve">
     <value>LB и LT: зелья Q и W. Крестовина влево и вправо: зелья E и R</value>
@@ -15100,7 +15100,7 @@
     <value>RS (нажмите правый стик, не наклоняя): снова ближайшая цель</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
-    <value>Menu: все окна (стик или крестовина выбирают, A открывает, B закрывает). Держите Menu — чат</value>
+    <value>Menu: центр героя (инвентарь, персонаж, навыки, квесты, гильдия, настройки), LB и RB листают вкладки. Ещё раз: все окна. Держите Menu — чат</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
     <value>Экраны входа и выбора персонажа: стики двигают курсор</value>
@@ -15112,7 +15112,7 @@
     <value>После ворот или смены карты отпустите стик, чтобы снова идти</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>При открытом окне: правый стик двигает курсор, A — клик, X — правый клик (надеть вещь). Вверх и вниз над списком: прокрутка</value>
+    <value>В окне вместо курсора рамка. Крестовина или левый стик: к следующей ячейке или кнопке (за последним рядом список прокручивается). A: взять, положить, нажать. X: надеть, использовать. Y: карточка вещи. Правый стик: свободный курсор</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
     <value>Нажмите — применить один раз, держите — повторять</value>
@@ -15521,5 +15521,20 @@
   </data>
   <data name="TouchItemMoveToBag" xml:space="preserve">
     <value>В инвентарь</value>
+  </data>
+  <data name="PadHubSettings" xml:space="preserve">
+    <value>Настройки</value>
+  </data>
+  <data name="PadPickUpPrompt" xml:space="preserve">
+    <value>Подобрать</value>
+  </data>
+  <data name="PadTake" xml:space="preserve">
+    <value>Взять</value>
+  </data>
+  <data name="PadCard" xml:space="preserve">
+    <value>Карточка</value>
+  </data>
+  <data name="PadAllWindows" xml:space="preserve">
+    <value>Все окна</value>
   </data>
 </root>

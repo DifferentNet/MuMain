@@ -13,6 +13,7 @@
 #include "Engine/Object/ZzzInterface.h"
 #include "GameLogic/Touch/TouchActions.h"
 #include "I18N/All.h"
+#include "Render/RmlUi/RmlUiRuntime.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
 #include "Scenes/SceneCore.h"
 #include "UI/Chat/MessageType.h"
@@ -20,11 +21,16 @@
 #include "UI/Dialogs/HelpWindow.h"
 #include "UI/Dialogs/ModalDialogs.h"
 #include "UI/HUD/MainFrameWindow.h"
+#include "UI/HUD/PadFrame.h"
+#include "UI/HUD/PadHub.h"
 #include "UI/HUD/PadKeyboard.h"
+#include "UI/HUD/PadOverlay.h"
+#include "UI/HUD/PadTargets.h"
 #include "UI/HUD/SkillList.h"
 #include "UI/HUD/TouchControls.h"
 #include "UI/Mobile/InterfaceMode.h"
 
+#include <RmlUi/Core/Context.h>
 #include <SDL3/SDL.h>
 
 #ifdef __EMSCRIPTEN__
@@ -72,12 +78,14 @@ constexpr float FlickLean = 0.6f;
 constexpr float FlickRest = 0.3f;
 
 // When a pad button presses its control: always, only in the world (no window open: the right stick
-// picks targets) or only while a window is open (the right stick plays the pointer).
+// picks targets), only while a window is open (the right stick plays the pointer), or anywhere but over
+// a game window (the d-pad hops the frame there, UI/HUD/PadFrame).
 enum class When : std::uint8_t
 {
     Always,
     World,
     Window,
+    NoFrame,
 };
 
 // The pad buttons that press a control as long as they are held, laid out as Diablo's pads: A attacks,
@@ -98,15 +106,25 @@ constexpr Mapping Mappings[] = {
     {Button::RightTrigger, PadButton::Skill4, When::Always},
     {Button::LeftShoulder, PadButton::PotionQ, When::Always},
     {Button::LeftTrigger, PadButton::PotionW, When::Always},
-    {Button::DpadLeft, PadButton::PotionE, When::Always},
-    {Button::DpadRight, PadButton::PotionR, When::Always},
-    {Button::DpadUp, PadButton::Auto, When::Always},
+    {Button::DpadLeft, PadButton::PotionE, When::NoFrame},
+    {Button::DpadRight, PadButton::PotionR, When::NoFrame},
+    {Button::DpadUp, PadButton::Auto, When::NoFrame},
     {Button::View, PadButton::Map, When::Always},
 };
 
-bool Applies(const Mapping& mapping, bool windowOpen)
+bool Applies(const Mapping& mapping, bool windowOpen, bool frameOpen)
 {
-    return mapping.when == When::Always || (mapping.when == When::Window) == windowOpen;
+    switch (mapping.when)
+    {
+    case When::Always:
+        return true;
+    case When::NoFrame:
+        return !frameOpen;
+    case When::Window:
+        return windowOpen;
+    default:
+        return !windowOpen;
+    }
 }
 
 // What A does while held with a window open, decided as it is pressed.
@@ -151,6 +169,10 @@ struct State
     PointerPress a;
     // A window is open: the right stick plays the pointer, A clicks, X right-clicks, B goes back.
     bool windowOpen = false;
+    // A game window (not only a dialog) is open: the d-pad and the left stick hop the frame.
+    bool frameOpen = false;
+    // The drop d-pad down would pick up, prompted under it; -1 for none.
+    int promptDrop = -1;
     // Menu held: since when, and whether it opened the chat (then its release opens no menu).
     bool menuHeld = false;
     bool menuOpenedChat = false;
@@ -377,6 +399,30 @@ void TellOnce()
     g_pSystemLogBox->AddText(I18N::Game::PadConnected, mu::ui::window::TYPE_SYSTEM_MESSAGE);
 }
 
+// Presses the Menu control once: the menu of windows opens (or shuts).
+void TapMenuControl()
+{
+    Controls::SetPadHeld(PadButton::Menu, true);
+    Controls::SetPadHeld(PadButton::Menu, false);
+}
+
+// The hub on its skill picker tab: LB and RB turn its tabs, B closes it, Menu goes to the full menu.
+void PlayHubOnSkills(const Presses& presses, Clock::time_point now)
+{
+    if (Pressed(presses, Button::LeftShoulder))
+        UI::HUD::PadHub::Turn(-1, now);
+    else if (Pressed(presses, Button::RightShoulder))
+        UI::HUD::PadHub::Turn(1, now);
+    else if (Pressed(presses, Button::B))
+        UI::HUD::PadHub::Close();
+    else if (Pressed(presses, Button::Menu))
+    {
+        UI::HUD::PadHub::Close();
+        TapMenuControl();
+    }
+    UI::HUD::PadFrame::SnapSoon();
+}
+
 // The menu open: the stick and the d-pad move its highlight, A opens the item, B or Menu closes it.
 // Nothing else acts: the pointer and its buttons rest too.
 void PlayMenu(SDL_Window* window, const Presses& presses, Clock::time_point now)
@@ -394,6 +440,11 @@ void PlayMenu(SDL_Window* window, const Presses& presses, Clock::time_point now)
         Controls::MoveMenuFocus(step.dx, step.dy);
     if (Pressed(presses, Button::A))
         Controls::ActivateMenuFocus();
+    if (UI::HUD::PadHub::IsOnSkills())
+    {
+        PlayHubOnSkills(presses, now);
+        return;
+    }
     if (Pressed(presses, Button::B) || Pressed(presses, Button::Menu))
         Controls::CloseMenu();
 }
@@ -407,14 +458,20 @@ void UpdateStickClicks(const Presses& presses, Clock::time_point now)
                                    Held(Button::RightStick), now);
 }
 
-// With a window open, X and RS are the right mouse button at the pointer (an item put on, a skill held
-// on a monster), down as long as they are; a click shorter than a frame still clicks once.
+// With a window open, X, Y and RS are the right mouse button at the pointer (an item put on, a skill
+// held on a monster), down as long as they are; a click shorter than a frame still clicks once. Y asks
+// with the item card first (UI::Mobile::ClickSource::IsPadCardClick), X and RS act at once.
 void PressRightButton(SDL_Window* window, const Presses& presses)
 {
     const Pad::StickClick& click = g_state.rightStickClick;
     const bool xWaits = g_state.waitForRelease[static_cast<int>(Button::X)];
-    const bool held = (click.Held() && HoldsControl(Button::RightStick)) || HoldsControl(Button::X);
-    const bool tapped = click.Pressed() || (Pressed(presses, Button::X) && !xWaits);
+    const bool yWaits = g_state.waitForRelease[static_cast<int>(Button::Y)];
+    const bool yHeld = HoldsControl(Button::Y);
+    const bool yTapped = Pressed(presses, Button::Y) && !yWaits;
+    const bool held = (click.Held() && HoldsControl(Button::RightStick)) || HoldsControl(Button::X) || yHeld;
+    const bool tapped = click.Pressed() || (Pressed(presses, Button::X) && !xWaits) || yTapped;
+    if ((tapped || held) && !Pointer::IsButtonHeld(SDL_BUTTON_RIGHT))
+        Pointer::SetCardClick(yHeld || yTapped);
     if (tapped && !held)
         Pointer::SetButton(window, SDL_BUTTON_RIGHT, true);
     Pointer::SetButton(window, SDL_BUTTON_RIGHT, held);
@@ -502,6 +559,27 @@ void TurnHelpPages(Presses& presses)
         g_pHelp->TurnPage(1);
 }
 
+// The hero hub open: LB and RB turn its tabs, instead of drinking and casting.
+void TurnHubTabs(Presses& presses, Clock::time_point now)
+{
+    if (!UI::HUD::PadHub::IsOpen())
+        return;
+    for (const Button button : {Button::LeftShoulder, Button::RightShoulder})
+    {
+        if (Held(button))
+            g_state.waitForRelease[static_cast<int>(button)] = true;
+    }
+    int step = 0;
+    if (Take(presses, Button::LeftShoulder))
+        step = -1;
+    else if (Take(presses, Button::RightShoulder))
+        step = 1;
+    if (step == 0)
+        return;
+    UI::HUD::PadHub::Turn(step, now);
+    UI::HUD::PadFrame::SnapSoon();
+}
+
 // Over a list that scrolls (a shop, the quests, the chat's scrollbar), d-pad up and down turn the mouse
 // wheel there instead of pressing Auto and the fifth skill: at once, and on while held. A press that
 // began off such a list goes on pressing its control.
@@ -542,7 +620,7 @@ void HoldMappedControls(const Presses& presses)
     std::array<bool, static_cast<int>(PadButton::Count)> held{};
     for (const Mapping& mapping : Mappings)
     {
-        if (!Applies(mapping, g_state.windowOpen))
+        if (!Applies(mapping, g_state.windowOpen, g_state.frameOpen))
             continue;
         const bool holds = HoldsControl(mapping.pad);
         if (!holds && Pressed(presses, mapping.pad))
@@ -558,11 +636,11 @@ void HoldMappedControls(const Presses& presses)
     }
 }
 
-// Whether a window the pad plays with the pointer is open: one of the game's windows (not the HUD's
-// parts), a dialog, or the skill list's grid.
-bool IsWindowOpen()
+// Whether one of the game's windows (not the HUD's parts) or the skill list's grid is open: the pad's
+// frame hops over it.
+bool IsGameWindowOpen()
 {
-    if (UI::Dialogs::Modal::IsOpen() || g_pSkillList->IsSkillGridOpen())
+    if (g_pSkillList->IsSkillGridOpen())
         return true;
     for (int window = mu::ui::window::INTERFACE_BEGIN + 1; window < mu::ui::window::INTERFACE_END; ++window)
     {
@@ -572,7 +650,22 @@ bool IsWindowOpen()
     return false;
 }
 
-// Menu: a tap opens the menu of windows, held it opens the chat line (and the pad's keyboard with it).
+// Menu tapped: with no window open the hero hub opens; in the hub, or over another window, the menu of
+// every window.
+void TapMenu(Clock::time_point now)
+{
+    if (UI::HUD::PadHub::IsOpen())
+        UI::HUD::PadHub::Close();
+    else if (!g_state.windowOpen)
+    {
+        UI::HUD::PadHub::Open(now);
+        return;
+    }
+    TapMenuControl();
+}
+
+// Menu: a tap opens the hero hub or the menu of windows (TapMenu), held it opens the chat line (and the
+// pad's keyboard with it).
 void PlayMenuButton(const Presses& presses, Clock::time_point now)
 {
     const bool waiting = g_state.waitForRelease[static_cast<int>(Button::Menu)];
@@ -592,10 +685,7 @@ void PlayMenuButton(const Presses& presses, Clock::time_point now)
     }
     const bool tapped = !held && !g_state.menuHeld && !waiting && Pressed(presses, Button::Menu);
     if ((!held && g_state.menuHeld && !g_state.menuOpenedChat) || tapped)
-    {
-        Controls::SetPadHeld(PadButton::Menu, true);
-        Controls::SetPadHeld(PadButton::Menu, false);
-    }
+        TapMenu(now);
     if (!held)
         g_state.menuHeld = false;
 }
@@ -656,9 +746,14 @@ void PlayDpadDown(SDL_Window* window, const Presses& presses)
 
 // A window opened or closed: what was held lets go and acts again only once let go, as the buttons
 // change their meaning.
-void SwitchWindowMode(SDL_Window* window, bool windowOpen)
+void SwitchWindowMode(SDL_Window* window, bool windowOpen, bool frameOpen)
 {
+    if (frameOpen && !g_state.frameOpen)
+        UI::HUD::PadFrame::SnapSoon();
+    else if (!frameOpen)
+        UI::HUD::PadFrame::Reset();
     g_state.windowOpen = windowOpen;
+    g_state.frameOpen = frameOpen;
     EndPress(window, g_state.a, {});
     Pointer::Release(window);
     ReleaseControls();
@@ -674,31 +769,44 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
     const bool aRested = now - g_state.aActive >= DialogAnswerDelay;
     if (Pressed(presses, Button::A) || Held(Button::A))
         g_state.aActive = now;
+    UI::HUD::PadHub::Update(now);
+    g_state.promptDrop = -1;
     if (Controls::IsMenuOpen())
     {
         PlayMenu(window, presses, now);
         return;
     }
     g_state.menuStepper.Reset();
-    const bool windowOpen = IsWindowOpen();
-    if (windowOpen != g_state.windowOpen)
-        SwitchWindowMode(window, windowOpen);
-    Walk(Pad::LeftStick());
+    const bool frameOpen = IsGameWindowOpen();
+    const bool windowOpen = frameOpen || UI::Dialogs::Modal::IsOpen();
+    if (windowOpen != g_state.windowOpen || frameOpen != g_state.frameOpen)
+        SwitchWindowMode(window, windowOpen, frameOpen);
+    // Over a game window the left stick hops the frame: the character stands.
+    if (frameOpen)
+        StopWalking();
+    else
+        Walk(Pad::LeftStick());
     FollowNpcClick(window);
     if (dialogAnswers)
         AnswerDialog(presses, aRested);
     if (windowOpen)
     {
         TurnHelpPages(presses);
-        TurnWheelWithDpad(window, presses, now);
+        TurnHubTabs(presses, now);
+        if (!frameOpen)
+            TurnWheelWithDpad(window, presses, now);
         PlayPointer(window, presses, seconds);
+        if (frameOpen)
+            UI::HUD::PadFrame::Update(window, presses, now);
     }
     else
     {
         PickTargets();
+        g_state.promptDrop = GameLogic::Touch::NearestDropToPick();
     }
     HoldMappedControls(presses);
-    PlayDpadDown(window, presses);
+    if (!frameOpen)
+        PlayDpadDown(window, presses);
     PlayMenuButton(presses, now);
     // The skill picker sets the skill buttons; without the controls on the screen, the game's list.
     if (g_state.leftStickClick.Pressed() && !Controls::OpenSkillPicker())
@@ -766,6 +874,38 @@ void HandToKeyboard(SDL_Window* window)
     g_state.typing = true;
     WaitForRelease();
 }
+// The pad's frame of play: reads the pad and acts (below).
+void Play();
+
+// What the overlay shows this frame: the frame, the hub's tabs, the legend over a game window, the
+// pickup prompt under the drop d-pad down would take.
+UI::HUD::PadOverlay::View OverlayView(bool playing)
+{
+    UI::HUD::PadOverlay::View view;
+    if (!playing)
+        return view;
+    // A dialog over the windows says its own answers: the tabs and the legend make room for it.
+    const bool dialog = g_state.frameOpen && UI::HUD::PadTargets::OnDialog();
+    view.hub = UI::HUD::PadHub::IsOpen() && !dialog;
+    view.legend = g_state.frameOpen && !dialog;
+    view.frame = g_state.frameOpen && UI::HUD::PadFrame::Box(view.frameBox);
+    float x = 0.f;
+    float y = 0.f;
+    const Rml::Context* context = RmlUiRuntime::Instance().GetContext();
+    const std::optional<float> windowsLeft = UI::HUD::PadTargets::WindowsLeft();
+    if (g_state.frameOpen && windowsLeft && context != nullptr)
+        view.topRight = std::max(static_cast<float>(context->GetDimensions().x) - *windowsLeft, 0.f);
+    if (g_state.promptDrop >= 0 && context != nullptr && WindowWidth > 0 &&
+        GameLogic::Touch::DropOnScreen(g_state.promptDrop, x, y))
+    {
+        // The camera's point is in the game's window pixels, the overlay's in the context's.
+        const float scale = static_cast<float>(context->GetDimensions().x) / static_cast<float>(WindowWidth);
+        view.prompt = true;
+        view.promptX = x * scale;
+        view.promptY = y * scale;
+    }
+    return view;
+}
 } // namespace
 
 namespace UI::HUD::GamepadControls
@@ -775,7 +915,30 @@ bool PlaysPointer()
     return g_state.inUse && (!g_state.inWorld || g_state.windowOpen);
 }
 
+bool HidesPointer()
+{
+    if (!g_state.inUse || !g_state.inWorld || g_state.typing)
+        return false;
+    PadTargetPick::Box box;
+    return !g_state.windowOpen || (g_state.frameOpen && UI::HUD::PadFrame::Box(box));
+}
+
+int PromptDrop()
+{
+    return g_state.inUse && g_state.inWorld ? g_state.promptDrop : -1;
+}
+
 void Update()
+{
+    Play();
+    const bool playing = g_state.inUse && g_state.inWorld && !g_state.typing;
+    UI::HUD::PadOverlay::Update(OverlayView(playing));
+}
+} // namespace UI::HUD::GamepadControls
+
+namespace
+{
+void Play()
 {
     SDL_Window* window = Core::Platform::GameWindow();
     const Clock::time_point now = Clock::now();
@@ -811,4 +974,4 @@ void Update()
     TellOnce();
     PlayWorld(window, presses, seconds, now);
 }
-} // namespace UI::HUD::GamepadControls
+} // namespace

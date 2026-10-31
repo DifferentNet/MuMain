@@ -1640,9 +1640,9 @@ bool CMyInventory::EquipmentWindowProcess()
 
     if (IsPress(VK_RBUTTON))
     {
-        // A finger's long press (Core::Input::Touch) or the pad's R3 on worn gear shows the item card,
-        // as on the bag's items, and letting go takes nothing off.
-        m_bCardRightPress = UI::Mobile::ClickSource::IsFingerLongPress() || UI::Mobile::ClickSource::IsPadRightClick();
+        // A finger's long press (Core::Input::Touch) or the pad's Y on worn gear shows the item card,
+        // as on the bag's items, and letting go takes nothing off; the pad's X takes it off.
+        m_bCardRightPress = UI::Mobile::ClickSource::IsFingerLongPress() || UI::Mobile::ClickSource::IsPadCardClick();
         if (m_bCardRightPress && ShowWornItemCard())
             return true;
     }

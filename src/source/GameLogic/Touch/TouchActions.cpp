@@ -788,6 +788,44 @@ void SayBagFull()
     g_fullBagSaidAt = now;
     UI::Chat::PostSystem(I18N::Game::InventoryIsFull, mu::ui::window::TYPE_ERROR_MESSAGE);
 }
+
+// Taken or gone: a new drop under the same key is not the refused one.
+void ForgetGoneDrops()
+{
+    for (int i = 0; i < MAX_ITEMS; ++i)
+    {
+        if (!Items[i].Object.Live)
+            g_skippedDrops.erase(i);
+    }
+}
+
+// The nearest drop within reach that fits the bag and was not passed over, NoDrop for none; `unfit`
+// says whether a nearer one did not fit.
+int NearestFittingDrop(bool* unfit)
+{
+    int nearest = NoDrop;
+    int nearestTiles = PickupRange + 1;
+    for (int i = 0; i < MAX_ITEMS; ++i)
+    {
+        ITEM_t& drop = Items[i];
+        if (!drop.Object.Live || IsSkipped(i))
+            continue;
+        const int dx = Hero->PositionX - TileOf(drop.Object.Position[0]);
+        const int dy = Hero->PositionY - TileOf(drop.Object.Position[1]);
+        const int tiles = static_cast<int>(std::ceil(std::hypot(dx, dy)));
+        if (tiles >= nearestTiles)
+            continue;
+        if (!FitsTheBag(drop))
+        {
+            if (unfit != nullptr)
+                *unfit = true;
+            continue;
+        }
+        nearestTiles = tiles;
+        nearest = i;
+    }
+    return nearest;
+}
 } // namespace
 
 // Whether the MU Helper was told the player steers the character (CMuHelper::SetSteered): the stick
@@ -995,33 +1033,9 @@ Progress PickUpNearest()
     if (!ActionDue())
         return Progress::Pending;
 
-    int nearest = NoDrop;
-    int nearestTiles = PickupRange + 1;
+    ForgetGoneDrops();
     bool unfit = false;
-    for (int i = 0; i < MAX_ITEMS; ++i)
-    {
-        ITEM_t& drop = Items[i];
-        if (!drop.Object.Live)
-        {
-            // Taken or gone: a new drop under the same key is not the refused one.
-            g_skippedDrops.erase(i);
-            continue;
-        }
-        if (IsSkipped(i))
-            continue;
-        const int dx = Hero->PositionX - TileOf(drop.Object.Position[0]);
-        const int dy = Hero->PositionY - TileOf(drop.Object.Position[1]);
-        const int tiles = static_cast<int>(std::ceil(std::hypot(dx, dy)));
-        if (tiles >= nearestTiles)
-            continue;
-        if (!FitsTheBag(drop))
-        {
-            unfit = true;
-            continue;
-        }
-        nearestTiles = tiles;
-        nearest = i;
-    }
+    const int nearest = NearestFittingDrop(&unfit);
     if (nearest == NoDrop)
     {
         if (unfit)
@@ -1148,19 +1162,22 @@ void ClearChosenTarget()
 
 bool HasDropToPick()
 {
+    return NearestDropToPick() >= 0;
+}
+
+int NearestDropToPick()
+{
     if (!InWorld())
+        return -1;
+    const int nearest = NearestFittingDrop(nullptr);
+    return nearest == NoDrop ? -1 : nearest;
+}
+
+bool DropOnScreen(int index, float& x, float& y)
+{
+    if (index < 0 || index >= MAX_ITEMS || !Items[index].Object.Live)
         return false;
-    for (int i = 0; i < MAX_ITEMS; ++i)
-    {
-        ITEM_t& drop = Items[i];
-        if (!drop.Object.Live || IsSkipped(i))
-            continue;
-        const int dx = Hero->PositionX - TileOf(drop.Object.Position[0]);
-        const int dy = Hero->PositionY - TileOf(drop.Object.Position[1]);
-        if (std::ceil(std::hypot(dx, dy)) <= PickupRange && FitsTheBag(drop))
-            return true;
-    }
-    return false;
+    return CameraProjection::WorldToWindowPixel(g_Camera, Items[index].Object.Position, &x, &y);
 }
 
 int NearestNpc(int tiles)

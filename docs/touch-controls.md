@@ -231,7 +231,7 @@ X blue, Y yellow, the bumpers, triggers, View, Menu, LS for the left stick press
 arms), drawn from boxes in `themes/{legacy,modern}/gamepad_glyphs.rcss`, no images. In the phone view
 the pad replaces the PC bar as touch does (style flag `mobile-hud`). Without touch the joystick is not drawn.
 
-In the world the pad plays as Diablo's pads do (layout A of 2026-10-31): no pointer, a row of six
+In the world the pad plays as Diablo's pads do (layout A of 2026-10-31): no pointer (none is drawn), a row of six
 action buttons along the bottom with the potions at its ends. The quick row, the pickup button and the
 skill edit button are not drawn for a pad without touch (`body.pad.no-touch`).
 
@@ -245,16 +245,38 @@ skill edit button are not drawn for a pad without touch (`body.pad.no-touch`).
 | LB, LT | The potions Q and W |
 | D-pad left, right | The potions E and R |
 | D-pad up | MU Helper on and off |
-| D-pad down | Pick up: held, it gathers the drops around; with none near, a press talks to the nearest NPC |
+| D-pad down | Pick up: held, it gathers the drops around; with none near, a press talks to the nearest NPC. The drop it would take first shows its name and, under it, the d-pad glyph with "Pick up" |
 | L3 | The skill picker: the stick or the d-pad move its highlight over the skills, the panel's buttons and the skill buttons on its right; A on a skill button chooses it, A on a skill puts it there; B closes. Without the controls on the screen, the game's skill list |
 | View | The map |
-| Menu | A tap: the menu of windows (the stick or the d-pad move its highlight, A opens, B or Menu closes; its legend shows the keys). Held half a second: the chat line, with the pad's keyboard |
+| Menu | A tap: the hero hub (below). In the hub, or over another window, the menu of windows (the stick or the d-pad move its highlight, A opens, B or Menu closes; its legend shows the keys). Held half a second: the chat line, with the pad's keyboard |
 
-With a window open (a game window, a dialog, the skill list) the right stick plays the mouse pointer,
-at half speed over a window: A clicks there (or presses the control there), X and RS right-click (on
-an item in the bag or worn gear RS opens the item card, above, except with the storage or the chaos
-machine open; on a stat's "+" the menu of bigger steps), B goes back (closes the window on top), and
-d-pad up and down over a list that scrolls turn the wheel. The rest act as in the world.
+**The hero hub.** Menu with no window open opens the character's windows as tabs: Inventory,
+Character, Skills (the skill picker), Quests, Guild, Settings. The strip of tabs stands at the top
+with LB and RB on its ends, and LB and RB turn the tabs (round the ends); the hub opens on the tab it
+was last on. Closing its window (B) ends it; Menu in it goes to the full menu of windows.
+
+**Windows without a mouse.** Over a game window (not a dialog alone) no pointer is drawn: a gold frame
+rests on an item cell, an equipment slot or a button (any element that binds a click, a field or a
+list too), and the d-pad and the left stick hop it to the next one that way (in line before aside,
+the same window before the next window); the character stands meanwhile. On a list's last row on
+view, a step further scrolls the list. The frame goes to the nearest target as a window opens, a tab
+turns or its target goes away. While a message box or a menu over the windows is up (the item card),
+the frame rests only on it. The right stick still moves the pointer (shown while off every target, at
+half speed over a window) and snaps it onto a target near when let go. A legend under the hub's tabs
+says what the buttons do; both keep left of the windows, wrapping when the room is short:
+
+| Pad | Over a window |
+|---|---|
+| A | Click at the frame: take an item, put it down, press a button |
+| X | The item's own action at once: put on, use, move to the trade; on worn gear, take it off. Never throws an item down. In a shop it asks with the card first |
+| Y | The item card (above), except with the storage or the chaos machine open |
+| RS | Right-click at the frame (on a stat's "+" the menu of bigger steps) |
+| B | Back: closes the window on top |
+| LB, RB | The hub's tabs (the help's pages with the help open) |
+| Menu | The menu of every window |
+
+A dialog alone (a trade or party request) keeps the free pointer, and d-pad up and down over a list
+that scrolls turn the wheel. The other buttons act as in the world.
 
 On the login, server and character screens both sticks move the pointer, A or RT click, B is Esc and
 Menu is Enter. The pointer starts at the screen's centre the first time the pad takes over, so A
@@ -270,7 +292,11 @@ and LB and RB turn the pages.
 |---|---|---|
 | Device | `Core/Input/GamepadInput.{h,cpp}` | SDL gamepad events → held buttons, presses since the last frame and the sticks (radial dead zone, triggers as buttons), across up to four pads; which device the player used last. The sticks are also polled once a frame (`Poll`): SDL keeps the first value an axis reports as its rest and sends no event for it. |
 | Pointer | `Core/Input/GamepadPointer.{h,cpp}` | The stick moves the SDL pointer (warped), buttons as pushed SDL mouse events with their own `which`; held buttons ORed into `IsKeyDown(VK_LBUTTON/VK_RBUTTON)`, the wheel too (`TurnWheel`, for the d-pad over a list; `Core::Input::UiScrollsAt` says whether a list there scrolls). A real mouse moving it is followed; a browser repeating a resting mouse's place (it does on layout changes) is not. |
-| Mapping | `UI/HUD/GamepadControls.{h,cpp}` | Once a frame before the touch controls: presses their controls (`TouchControls::SetPadHeld`), steers (`GameLogic::Touch::Steer`), moves the menu's highlight; off the world, the plain pointer; with a text field focused, hands the pad to the keyboard. |
+| Mapping | `UI/HUD/GamepadControls.{h,cpp}` | Once a frame before the touch controls: presses their controls (`TouchControls::SetPadHeld`), steers (`GameLogic::Touch::Steer`), moves the menu's highlight; off the world, the plain pointer; with a text field focused, hands the pad to the keyboard. `HidesPointer` keeps `RenderCursor` from drawing the game's pointer. |
+| Frame | `UI/HUD/PadFrame.{h,cpp}`, `PadTargets.{h,cpp}`, `PadTargetPick.{h,cpp}` | The targets are the visible elements of the game's windows (a workspace-placed document, or one drawn between depth 8 and the message boxes) that a click works (`drag: block` in base.rcss), `.item-cell` and `.equip-slot`, with the list that scrolls each; `PadTargetPick` chooses the one under the pointer, the nearest, and the next one a step points at. Tests: `tests/ui/test_pad_target_pick.cpp`. |
+| Hub | `UI/HUD/PadHub.{h,cpp}` | The tabs and their windows (`g_pNewUISystem->Show/Hide`, the skill picker through `TouchControls::OpenSkillPicker`). |
+| Overlay | `UI/HUD/PadOverlay.{h,cpp}` + `pad_overlay.rml` + `themes/{legacy,modern}/pad_overlay.rcss` | The frame, the hub's tabs and legend, the pickup prompt (`GameLogic::Touch::NearestDropToPick`, `DropOnScreen`; its name drawn by `NameWindow`). Depth 10.72: over the windows and message boxes, under the item on the cursor. |
+| Card or action | `UI/Mobile/ClickSource.{h,cpp}` | `IsPadCardClick`: the pad's right button came from Y (`Pointer::SetCardClick`). |
 
 A DualSense plays with the same buttons (cross = A, circle = B, square = X, triangle = Y); its own
 glyphs are put off (ghinzuro, 2026-10-30). No pad-only view for a Steam Deck either: its pad plays

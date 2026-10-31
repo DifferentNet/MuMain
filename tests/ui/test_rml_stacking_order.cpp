@@ -190,3 +190,12 @@ TEST_CASE("the pad's keyboard stands over the windows and messages it types into
     CHECK(Depth("pad_keyboard.rml") < Depth("reconnect_dialog.rml"));
     CHECK(SceneForDocument("pad_keyboard.rml") == DocumentScene::Any);
 }
+
+TEST_CASE("the pad's frame stands over every window and message box it rests on [ui][stacking]")
+{
+    for (const char* below : {"my_inventory.rml", "option_window.rml", "touch_controls.rml", "message_box_view.rml",
+                              "generic_confirm_dialog.rml", "main_frame.rml"})
+        CHECK_MESSAGE(Depth("pad_overlay.rml") > Depth(below), below);
+    CHECK(Depth("pad_overlay.rml") < Depth("cursor_item.rml"));
+    CHECK(Depth("pad_overlay.rml") < Depth("pad_keyboard.rml"));
+}

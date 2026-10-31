@@ -15453,7 +15453,7 @@
     <value>Gamepad (Xbox layout)</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Left stick: walk. Right stick: flick it for the next target (right further, left nearer); with a window open, the pointer</value>
+    <value>Left stick: walk. Right stick: flick it for the next target (right further, left nearer); in a window, a free pointer</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
     <value>A: tap to hit the target once, hold to keep fighting</value>
@@ -15468,7 +15468,7 @@
     <value>B with a window open: back, closes the window on top</value>
   </data>
   <data name="PadHelpPickUp" xml:space="preserve">
-    <value>D-pad down: pick up the nearest item, hold to keep picking up; with nothing to pick up, talk to the nearest NPC</value>
+    <value>D-pad down: pick up the item whose name shows, hold to keep picking up; with nothing to pick up, talk to the nearest NPC</value>
   </data>
   <data name="PadHelpPotions" xml:space="preserve">
     <value>LB and LT: potions Q and W. D-pad left and right: potions E and R</value>
@@ -15477,7 +15477,7 @@
     <value>RS (click the right stick in, centred): back to the nearest target</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
-    <value>Menu: every window (stick or D-pad to choose, A opens, B closes). Hold Menu: the chat</value>
+    <value>Menu: the hero hub (inventory, character, skills, quests, guild, settings), LB and RB turn its tabs. Again: every window. Hold Menu: the chat</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
     <value>Login and character screens: the sticks move the pointer</value>
@@ -15489,7 +15489,7 @@
     <value>After a gate or a map change, let go of the stick to walk again</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>With a window open: the right stick moves the pointer, A clicks, X right-clicks (puts an item on). Up and down over a list: scroll it</value>
+    <value>In a window: a frame instead of the pointer. D-pad or left stick: to the next cell or button (past the last row, the list scrolls). A: take, put down, press. X: put on, use. Y: the item card. Right stick: free pointer</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
     <value>Tap to use a skill once, hold to repeat it</value>
@@ -15859,5 +15859,20 @@
   </data>
   <data name="TouchItemMoveToBag" xml:space="preserve">
     <value>Move to bag</value>
+  </data>
+  <data name="PadHubSettings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="PadPickUpPrompt" xml:space="preserve">
+    <value>Pick up</value>
+  </data>
+  <data name="PadTake" xml:space="preserve">
+    <value>Take</value>
+  </data>
+  <data name="PadCard" xml:space="preserve">
+    <value>Card</value>
+  </data>
+  <data name="PadAllWindows" xml:space="preserve">
+    <value>All windows</value>
   </data>
 </root>

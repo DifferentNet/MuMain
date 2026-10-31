@@ -35,6 +35,11 @@ void SetButton(SDL_Window* window, int sdlButton, bool down);
 // Turns the mouse wheel where the pointer is: `steps` notches up (positive) or down (negative).
 void TurnWheel(SDL_Window* window, int steps);
 
+// Whether the right button the pad presses asks for the item card (UI::Mobile::ItemCard) rather than
+// the item's own action: set before the press, read while it is held.
+void SetCardClick(bool card);
+[[nodiscard]] bool IsCardClick();
+
 // Whether the pad holds this SDL mouse button: ORed into Core::Input::IsKeyDown(VK_LBUTTON/VK_RBUTTON),
 // as pushed events leave SDL's own button state alone.
 [[nodiscard]] bool IsButtonHeld(int sdlButton);

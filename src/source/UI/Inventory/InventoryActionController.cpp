@@ -350,8 +350,10 @@ CInventoryActionController::RightClickTarget CInventoryActionController::FindRig
 
 bool CInventoryActionController::HandleRightClick(CInventoryCtrl* targetControl) const
 {
+    // The pad's X puts on or uses an item, never throws it down: an item with nothing else to do stays.
+    const bool mayDrop = !UI::Mobile::ClickSource::IsPadRightClick();
     m_pContext->ResetMouseRButton();
-    return RunRightClickAction(targetControl, FindRightClickTarget(), true);
+    return RunRightClickAction(targetControl, FindRightClickTarget(), mayDrop);
 }
 
 bool CInventoryActionController::RunRightClickAction(CInventoryCtrl* targetControl, RightClickTarget target,
@@ -380,8 +382,10 @@ bool CInventoryActionController::AsksWithItemCard(RightClickTarget target)
 {
     if (UI::Mobile::ClickSource::IsFingerLongPress())
         return true;
-    return UI::Mobile::ClickSource::IsPadRightClick() && target != RightClickTarget::Storage &&
-           target != RightClickTarget::Mix;
+    // The pad's Y asks everywhere the card has an answer; its X acts at once, but for a sale.
+    if (UI::Mobile::ClickSource::IsPadCardClick())
+        return target != RightClickTarget::Storage && target != RightClickTarget::Mix;
+    return UI::Mobile::ClickSource::IsPadRightClick() && target == RightClickTarget::Shop;
 }
 
 bool CInventoryActionController::ShowTouchItemCard(CInventoryCtrl* targetControl) const

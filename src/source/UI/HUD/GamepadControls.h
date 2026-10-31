@@ -13,15 +13,18 @@
 // | LB, LT | The potions Q and W |
 // | D-pad left, right | The potions E and R |
 // | D-pad up | MU Helper on and off |
-// | D-pad down | Pick up: held, it gathers the drops around; with none, a press talks to the nearest NPC |
+// | D-pad down | Pick up: held, it gathers the drops around; with none, a press talks to the nearest NPC. The drop it would take shows its name and a prompt (UI/HUD/PadOverlay) |
 // | LS (the left stick pressed) | Puts skills on the skill buttons |
 // | View | The map |
-// | Menu | A tap: the menu of windows (the stick or d-pad move the highlight, A opens, B or Menu closes). Held: the chat |
+// | Menu | A tap: the hero hub (UI/HUD/PadHub: the inventory, character, skills, quests, guild and settings as tabs, LB and RB turn them); a second tap, or one over another window, the menu of windows (the stick or d-pad move the highlight, A opens, B or Menu closes). Held: the chat |
 //
-// With a window open (a game window, a dialog, the skill list) the right stick plays the pointer: A
-// clicks there (or presses the control there, or attacks off the windows), X and RS right-click, B
-// goes back (closes the window on top). The rest act as in the world, and d-pad up and down over a
-// list that scrolls turn the wheel. A dialog waiting for an answer (a trade or party request, a
+// The world has no pointer: none is drawn. Over a game window (UI/HUD/PadFrame) there is no mouse
+// either: a frame rests on a cell, a slot or a button, and the d-pad and the left stick hop it (the
+// character stands), scrolling a list past its last row on view. The right stick still moves the
+// pointer freely and snaps onto the nearest target when let go. A clicks at the frame (or presses the
+// control there, or attacks off the windows), X puts an item on or uses it, Y shows its card first,
+// RS right-clicks, B goes back (closes the window on top). The other buttons act as in the world. A
+// dialog alone keeps the pointer, and d-pad up and down over a list that scrolls turn the wheel. A dialog waiting for an answer (a trade or party request, a
 // question) takes A and Menu as Enter, B as Esc, after its first second; A on one of its buttons
 // clicks that one. The help window (F1) turns its pages with LB and RB.
 //
@@ -41,4 +44,10 @@ void Update();
 // Whether the pad plays the pointer now (a window open, or off the world): only then does a monster
 // under it count as aimed at.
 [[nodiscard]] bool PlaysPointer();
+
+// Whether the game's pointer is not drawn: the pad plays the world, or its frame rests on a target.
+[[nodiscard]] bool HidesPointer();
+
+// The drop d-pad down would pick up (an index into Items), its name shown; -1 for none.
+[[nodiscard]] int PromptDrop();
 } // namespace UI::HUD::GamepadControls

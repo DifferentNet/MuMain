@@ -108,6 +108,10 @@ void ClearChosenTarget();
 
 // Whether a drop the pickup button would take lies around.
 [[nodiscard]] bool HasDropToPick();
+// The drop the pickup button takes next (an index in Items), -1 for none; and where it lies on the
+// screen, in the camera's window pixels. False when it is behind the camera.
+[[nodiscard]] int NearestDropToPick();
+[[nodiscard]] bool DropOnScreen(int index, float& x, float& y);
 // The nearest NPC within `tiles` tiles, -1 for none; and where it shows on the screen, in the
 // camera's window pixels (its middle, a little above the feet). False when it is behind the camera.
 [[nodiscard]] int NearestNpc(int tiles);
