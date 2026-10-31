@@ -718,6 +718,12 @@ void CStorageInventory::MoveToBag(ITEM* pItemObj)
 
             PlayBuffer(SOUND_GET_ITEM01);
         }
+        else
+        {
+            // The pad's X and the card's Move have no dragging to show the bag is full: it says so.
+            g_pSystemLogBox->AddText(I18N::Game::NotEnoughSpacePleaseCheckFreeSpaceInYourInventory,
+                                     TYPE_ERROR_MESSAGE);
+        }
     }
 }
 

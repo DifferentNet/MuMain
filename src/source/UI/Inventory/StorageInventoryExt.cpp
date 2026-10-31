@@ -346,6 +346,12 @@ void CStorageInventoryExt::MoveToBag(ITEM* pItemObj)
 
             PlayBuffer(SOUND_GET_ITEM01);
         }
+        else
+        {
+            // As the vault's own (CStorageInventory::MoveToBag).
+            g_pSystemLogBox->AddText(I18N::Game::NotEnoughSpacePleaseCheckFreeSpaceInYourInventory,
+                                     TYPE_ERROR_MESSAGE);
+        }
     }
 }
 
