@@ -121,6 +121,7 @@
   <button id="toggle-log" type="button">Log</button>
   <button id="fullscreen" type="button">Fullscreen</button>
   <button id="install-menu" type="button" hidden>Install</button>
+  <button id="download-game" type="button" hidden>Download game</button>
   <button id="view" type="button" hidden title="The game's layout, as in its Options → Interface">View</button>
   <label title="How many pixels the game draws while Options has Auto resolution; Lowest also turns effects and shadows off">Quality
     <select id="quality">
@@ -1602,6 +1603,9 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     // downloads them all on any device, ?noprefetch none on any.
     const connection = navigator.connection;
     const onWifi = () => !!connection && !connection.saveData && (connection.type === "wifi" || connection.type === "ethernet");
+    // The footer's "Download game" (downloadButton below): the player asked for the whole game on this
+    // device, on any network; kept for later visits, so a release's new files come at the start.
+    const FULL_DOWNLOAD = "mu-web/full-download";
     const phoneDownloads = phone && !pageParams.has("prefetch");
     const backgroundDownloads = pageParams.has("prefetch") ||
       (!pageParams.has("noprefetch") && (!phone || onWifi()) && !(filesOnPageThread && pageParams.has("syncreads")));
@@ -1670,42 +1674,65 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         // Tried again at the next visit.
       }
     }
-    async function downloadRestInBackground() {
+    // The versioned files' URLs (startup.json "versions") and the ones of them this device keeps.
+    async function keptFiles() {
       const versions = releaseIndex && releaseIndex.versions;
-      if (!versions || !self.caches || !(navigator.serviceWorker && navigator.serviceWorker.controller)) {
-        appendLog("Game files in the background: not downloaded (no service worker on this page)");
-        return;
-      }
-      const config = gameConfig();
-      const off = (setting) => new RegExp(`^${setting}=0\\s*$`, "m").test(config);
-      const leftOut = [off("SoundVolume") && "Data/Sound/", off("MusicVolume") && "Data/Music/"].filter(Boolean);
-      let kept;
+      if (!versions || !self.caches || !(navigator.serviceWorker && navigator.serviceWorker.controller)) return null;
+      const kept = new Set((await (await caches.open("mu-web/files")).keys()).map((request) => request.url));
+      const urls = Object.keys(versions).map((path) => [path, new URL(`${path}?v=${versions[path]}`, location.href).href]);
+      return { kept, urls };
+    }
+    // One download at a time: the automatic one, or the whole game the player asked for (full), which
+    // takes every file on any network. Setting stopped ends it after the files on their way.
+    let downloadJob = null;
+    function startDownload(full) {
+      const job = { full, stopped: false };
+      job.done = downloadRestInBackground(job)
+        .catch((e) => appendLog(`Game files in the background: stopped (${e})`, true))
+        .finally(() => { if (downloadJob === job) downloadJob = null; downloadButton.update(); });
+      downloadJob = job;
+      downloadButton.update();
+      return job;
+    }
+    async function downloadRestInBackground(job) {
+      const full = job.full;
+      let list;
       try {
-        kept = new Set((await (await caches.open("mu-web/files")).keys()).map((request) => request.url));
+        list = await keptFiles();
       } catch (e) {
         appendLog(`Game files in the background: not downloaded (no storage: ${e})`);
         return;
       }
-      const files = Object.keys(versions)
-        .filter((path) => !leftOut.some((folder) => path.startsWith(folder)))
-        .filter((path) => !phoneDownloads || PHONE_BACKGROUND_FOLDERS.some((folder) => path.startsWith(folder)))
-        .sort((a, b) => backgroundRank(a) - backgroundRank(b))
-        .map((path) => new URL(`${path}?v=${versions[path]}`, location.href).href)
-        .filter((url) => !kept.has(url));
-      if (!files.length) {
-        await dropOldVersions(kept);
+      if (!list) {
+        appendLog("Game files in the background: not downloaded (no service worker on this page)");
         return;
       }
-      appendLog(`Game files in the background: downloading ${files.length} of ${Object.keys(versions).length}` +
-                (phoneDownloads ? " (a phone on Wi-Fi: what comes into sight)" : "") +
+      const { kept, urls } = list;
+      const config = gameConfig();
+      const off = (setting) => new RegExp(`^${setting}=0\\s*$`, "m").test(config);
+      const leftOut = full ? [] : [off("SoundVolume") && "Data/Sound/", off("MusicVolume") && "Data/Music/"].filter(Boolean);
+      const files = urls
+        .filter(([path]) => !leftOut.some((folder) => path.startsWith(folder)))
+        .filter(([path]) => full || !phoneDownloads || PHONE_BACKGROUND_FOLDERS.some((folder) => path.startsWith(folder)))
+        .sort(([a], [b]) => backgroundRank(a) - backgroundRank(b))
+        .map(([, url]) => url)
+        .filter((url) => !kept.has(url));
+      downloadButton.progress(urls.filter(([, url]) => kept.has(url)).length, urls.length);
+      if (!files.length) {
+        await dropOldVersions([...kept]);
+        return;
+      }
+      appendLog(`Game files in the background: downloading ${files.length} of ${urls.length}` +
+                (full ? " (the whole game, asked for with Download game)"
+                      : phoneDownloads ? " (a phone on Wi-Fi: what comes into sight)" : "") +
                 (leftOut.length ? ` (sound or music off: not ${leftOut.join(", ")})` : ""));
       const started = performance.now();
-      const queue = taskQueue(BACKGROUND_DOWNLOADS);
+      const queue = taskQueue(full && phone ? 3 : BACKGROUND_DOWNLOADS);
       let downloaded = 0, bytes = 0, failed = 0, failedInRow = 0, leftWifi = false;
       await Promise.all(files.map((url) => queue(async () => {
         // A server that answers nothing 20 times in a row: the rest is left for the game to read.
-        if (failedInRow >= 20 || leftWifi) return;
-        if (phoneDownloads && !onWifi()) {
+        if (failedInRow >= 20 || leftWifi || job.stopped) return;
+        if (!full && phoneDownloads && !onWifi()) {
           leftWifi = true;
           appendLog("Game files in the background: stopped, the phone left Wi-Fi");
           return;
@@ -1718,6 +1745,8 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
           bytes += size;
           downloaded++;
           failedInRow = 0;
+          kept.add(url);
+          downloadButton.progress(null, null, size);
         } catch (e) {
           failed++;
           failedInRow++;
@@ -1726,9 +1755,77 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       const skipped = files.length - downloaded - failed;
       appendLog(`Game files in the background: ${downloaded} downloaded, ${Math.round(bytes / 1e6)} MB in ` +
                 `${Math.round((performance.now() - started) / 1000)} s` + (failed ? `, ${failed} failed` : "") +
-                (skipped ? `, ${skipped} left for the game to read` : ""), failed > 0);
-      await dropOldVersions(kept);
+                (skipped ? (job.stopped ? `, ${skipped} not downloaded (stopped)` : `, ${skipped} left for the game to read`) : ""),
+                failed > 0);
+      await dropOldVersions([...kept]);
     }
+
+    // The footer's "Download game" (in the ⋮ menu on phones): how much of the game is on this device,
+    // and a tap downloads the rest now, on any network. On Android the automatic download takes only
+    // Wi-Fi and only what comes into sight, an iPhone's Safari doesn't say its network so it takes none,
+    // and an installed app can't be opened with ?prefetch (ghinzuro asked for the button, 2026-10-31).
+    // The choice is kept (FULL_DOWNLOAD): later visits download a release's new files at the start.
+    // A tap while it downloads stops it and forgets the choice.
+    const downloadButton = (() => {
+      const button = document.getElementById("download-game");
+      let have = 0, total = 0, megabytes = 0;
+      const percent = () => (total ? Math.floor(100 * have / total) : 0);
+      const update = () => {
+        if (!total) return;
+        button.hidden = false;
+        const running = downloadJob && downloadJob.full && !downloadJob.stopped;
+        if (have >= total) {
+          button.textContent = "Game downloaded ✓";
+          button.title = "The whole game is on this device · Вся игра на этом устройстве";
+        } else if (running) {
+          button.textContent = `Downloading ${percent()} %`;
+          button.title = `${have} of ${total} files, ${Math.round(megabytes)} MB so far; tap to stop · ` +
+                         `${have} из ${total} файлов, скачано ${Math.round(megabytes)} МБ; нажмите, чтобы остановить`;
+        } else {
+          button.textContent = `Download game · ${percent()} %`;
+          button.title = "Download the whole game to this device now, so nothing in the game waits for the network · " +
+                         "Скачать всю игру на это устройство сейчас, чтобы в игре ничего не ждало сети";
+        }
+      };
+      button.onclick = async () => {
+        if (downloadJob && downloadJob.full && !downloadJob.stopped) {
+          downloadJob.stopped = true;
+          store(FULL_DOWNLOAD, "0");
+          update();
+          return;
+        }
+        if (total && have >= total) return;
+        store(FULL_DOWNLOAD, "1");
+        // Asks the browser not to clear the game's files when the device runs short of space.
+        try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {}
+        const earlier = downloadJob;
+        if (earlier) {
+          earlier.stopped = true;
+          await earlier.done;
+        }
+        if (!downloadJob) startDownload(true);
+      };
+      return {
+        update,
+        progress(kept, all, size) {
+          if (all != null) {
+            have = kept;
+            total = all;
+          } else {
+            have = Math.min(total, have + 1);
+            megabytes += (size || 0) / 1e6;
+          }
+          update();
+        },
+        // How much is on the device, for the button before any download starts.
+        async show() {
+          try {
+            const list = await keptFiles();
+            if (list && !total) this.progress(list.urls.filter(([, url]) => list.kept.has(url)).length, list.urls.length);
+          } catch (e) { /* no storage: no button */ }
+        },
+      };
+    })();
 
     // The game's code through the service worker, which keeps it unpacked, so the browser keeps its
     // compiled code and the next start doesn't compile it again (sw.js, unpackedCode). Only from a
@@ -1773,15 +1870,18 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         setInterval(saveConfig, 3000);
         addEventListener("pagehide", saveConfig);
         const minuteAfterStart = startupPackSettled.then(() => new Promise((resume) => setTimeout(resume, 60000)));
-        if (backgroundDownloads) {
-          (phoneDownloads ? minuteAfterStart : startupPackSettled).then(downloadRestInBackground)
-            .catch((e) => appendLog(`Game files in the background: stopped (${e})`, true));
+        const fullAsked = stored(FULL_DOWNLOAD) === "1" && !pageParams.has("noprefetch");
+        if (fullAsked) {
+          startupPackSettled.then(() => { if (!downloadJob) startDownload(true); });
+        } else if (backgroundDownloads) {
+          (phoneDownloads ? minuteAfterStart : startupPackSettled).then(() => { if (!downloadJob) startDownload(false); });
         } else if (navigator.serviceWorker && navigator.serviceWorker.controller) {
           // A minute after the start, away from the game's first reads.
           minuteAfterStart.then(() => dropOldVersions()).catch(() => {});
         }
         // The page unpacked the game's code itself (the service worker didn't answer this visit yet):
         // the worker unpacks and keeps it for the next start, away from the game's first reads.
+        startupPackSettled.then(() => downloadButton.show());
         if (!codeFromWorker) minuteAfterStart.then(keepCodeForNextStart).catch(() => {});
         if (phone && !pageParams.has("noautoquality")) {
           setInterval(() => autoQuality.tick(gameConfig(), !!mapPacksLoading), 5000);
