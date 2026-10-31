@@ -42,6 +42,9 @@ constexpr const char* BareSlotClass = "bare";
 // A grid whose items are only to look at (the partner's offer in a trade): its tooltip shows them,
 // the pad offers nothing to do there.
 constexpr const char* LookOnlySelector = ".look-only";
+// How far right of the middle (a share of the width) a window's centre lies at least to count as docked
+// on the right; a screen centred over the windows lies nearer.
+constexpr float CentredShare = 0.03f;
 constexpr std::array<const char*, 2> ClickAttributes = {"data-event-click", "onclick"};
 // The cross in a window's corner: B closes the window already, the frame does not stop on it.
 constexpr const char* CornerCloseId = "frame_corner_close";
@@ -168,13 +171,16 @@ public:
         Walk(document);
     }
 
-    // The windows docked on the right (the game's own column), not the screens centred over them.
+    // The windows docked on the right (the game's own column), not the screens centred over them. A
+    // window docked beside two others (the auction, the trade by the inventory) starts left of the
+    // middle: its centre is still right of it.
     void NoteWindow(Rml::ElementDocument& document)
     {
         if (!IsPlaced(document) && !UI::Placement::IsWindowDocument(FileName(document.GetSourceURL())))
             return;
         Box placed;
-        if (PlacedBox(document, placed) && Area(placed) > 0.f && placed.left >= m_Width * 0.5f)
+        if (PlacedBox(document, placed) && Area(placed) > 0.f
+            && placed.CentreX() >= m_Width * (0.5f + CentredShare))
             m_WindowsLeft = std::min(m_WindowsLeft, placed.left);
     }
 

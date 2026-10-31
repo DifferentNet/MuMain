@@ -65,6 +65,15 @@ TEST_CASE("The d-pad keeps to the row before it turns aside")
     CHECK(Pick::NextThatWay(targets, 0, 1, 0) == 2);
 }
 
+TEST_CASE("The d-pad goes down onto a wide row under a button at its end")
+{
+    // A tab at the right, a list's row spanning the window below it, a button straight under further down.
+    const std::vector<Target> targets{{{150.f, 0.f, 190.f, 20.f}}, {{0.f, 40.f, 190.f, 52.f}},
+                                      {{150.f, 200.f, 190.f, 220.f}}};
+    CHECK(Pick::NextThatWay(targets, 0, 0, 1) == 1);
+    CHECK(Pick::NextThatWay(targets, 1, 0, 1) == 2);
+}
+
 TEST_CASE("The d-pad leaves a window only with nothing more that way in it")
 {
     std::vector<Target> targets = Grid(100.f, 0.f, 2, 1, 0);

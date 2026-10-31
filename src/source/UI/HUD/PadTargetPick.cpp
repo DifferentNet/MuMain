@@ -37,7 +37,10 @@ float Score(const Box& from, const Box& to, int dx, int dy)
     const float size = dx != 0 ? from.right - from.left : from.bottom - from.top;
     if (ahead <= size * AheadShare)
         return -1.f;
-    const float aside = dx != 0 ? std::abs(to.CentreY() - from.CentreY()) : std::abs(to.CentreX() - from.CentreX());
+    // Aside: how far the start's centre lies past the target's side, none when the target spans it (a
+    // list's wide row under a button at its right end).
+    const float aside = dx != 0 ? std::max({to.top - from.CentreY(), 0.f, from.CentreY() - to.bottom})
+                                : std::max({to.left - from.CentreX(), 0.f, from.CentreX() - to.right});
     return ahead + aside * AsideWeight;
 }
 
