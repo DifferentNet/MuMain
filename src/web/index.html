@@ -914,6 +914,42 @@
   new MutationObserver(fitCanvas).observe(canvas, { attributes: true, attributeFilter: ["width", "height", "style"] });
   updateDisplay();
 
+  // Phones and tablets: a game that never sets its picture up. On a Pixel 9 Pro XL opened from the
+  // home screen (Edge 156, 2026-10-31) the game ran and played sound, but the screen stayed black and
+  // the log had no "Picture set up by the game" until a swipe from the top changed the page's size.
+  // The same happens when the canvas has no size at the moment the game makes its window: SDL takes
+  // that size (0x0) and draws nothing until it is resized. So, as that swipe does, the page gives the
+  // game a size 2 px smaller and then its own again, if the game hasn't set the picture up 3 s after
+  // making its window, and again every 3 s while it still hasn't (at most 5 times).
+  // index.html?nopicturewake turns it off.
+  const PICTURE_WAKE_MS = 3000;
+  const PICTURE_WAKES = 5;
+  const PICTURE_WAKE_BACK_MS = 300;
+  if (phone && self.GPUCanvasContext && !pageParams.has("nopicturewake")) {
+    let wakes = 0;
+    const wakePicture = () => {
+      if (canvasSetups.size > 0 || wakes >= PICTURE_WAKES) return;
+      setTimeout(wakePicture, PICTURE_WAKE_MS);
+      if (document.visibilityState !== "visible") return;
+      wakes++;
+      const area = stage.getBoundingClientRect();
+      appendLog(`Picture missing ${wakes * PICTURE_WAKE_MS / 1000} s after the game made its window: canvas ` +
+                `${canvas.width}x${canvas.height}, shown ${Math.round(area.width)}x${Math.round(area.height)} CSS px, ` +
+                `window ${innerWidth}x${innerHeight}, game size ${display.width}x${display.height}; resized to wake it`);
+      updateDisplay();
+      if (display.width > 2 && display.height > 2) {
+        Object.assign(display, { width: display.width - 2, height: display.height - 2, serial: display.serial + 1 });
+        setTimeout(updateDisplay, PICTURE_WAKE_BACK_MS);
+      }
+    };
+    // SDL gives the canvas its size when it makes the game's window.
+    const windowMade = new MutationObserver(() => {
+      windowMade.disconnect();
+      setTimeout(wakePicture, PICTURE_WAKE_MS);
+    });
+    windowMade.observe(canvas, { attributes: true, attributeFilter: ["width", "height"] });
+  }
+
   const qualitySelect = document.getElementById("quality");
   qualitySelect.value = display.quality;
   qualitySelect.onchange = () => { display.setQuality(qualitySelect.value); canvas.focus(); };
