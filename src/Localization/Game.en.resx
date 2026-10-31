@@ -15875,4 +15875,13 @@
   <data name="PadAllWindows" xml:space="preserve">
     <value>All windows</value>
   </data>
+  <data name="PadPutDown" xml:space="preserve">
+    <value>Put down</value>
+  </data>
+  <data name="PadPutBack" xml:space="preserve">
+    <value>Put back</value>
+  </data>
+  <data name="PadPress" xml:space="preserve">
+    <value>Press</value>
+  </data>
 </root>

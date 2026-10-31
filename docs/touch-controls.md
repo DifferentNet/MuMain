@@ -257,13 +257,18 @@ was last on. Closing its window (B) ends it; Menu in it goes to the full menu of
 
 **Windows without a mouse.** Over a game window (not a dialog alone) no pointer is drawn: a gold frame
 rests on an item cell, an equipment slot or a button (any element that binds a click, a field or a
-list too), and the d-pad and the left stick hop it to the next one that way (in line before aside,
+list too; not the cross in a window's corner, as B closes the window), and the d-pad and the left stick hop it to the next one that way (in line before aside,
 the same window before the next window); the character stands meanwhile. On a list's last row on
-view, a step further scrolls the list. The frame goes to the nearest target as a window opens, a tab
-turns or its target goes away. While a message box or a menu over the windows is up (the item card),
+view, a step further scrolls the list. As a window opens or a tab turns, the frame starts on its item
+cell nearest the top-left corner, or without cells on the target nearest it (a tab before the close
+button); when its target goes away, it
+goes to the nearest one. While a message box or a menu over the windows is up (the item card),
 the frame rests only on it. The right stick still moves the pointer (shown while off every target, at
 half speed over a window) and snaps it onto a target near when let go. A legend under the hub's tabs
-says what the buttons do; both keep left of the windows, wrapping when the room is short:
+says what the buttons do there (on an item: Take, Equip, Card, Close; with an item on the cursor: Put
+down, Put back; on a button: Press, Close); both keep left of the windows, wrapping when the room is
+short. On the Skills tab the legend gives way to the skill picker's own, and the picker sits under the
+tabs:
 
 | Pad | Over a window |
 |---|---|
@@ -271,7 +276,7 @@ says what the buttons do; both keep left of the windows, wrapping when the room 
 | X | The item's own action at once: put on, use, move to the trade; on worn gear, take it off. Never throws an item down. In a shop it asks with the card first |
 | Y | The item card (above), except with the storage or the chaos machine open |
 | RS | Right-click at the frame (on a stat's "+" the menu of bigger steps) |
-| B | Back: closes the window on top |
+| B | Back: closes the window on top; with an item on the cursor, puts it back where it was taken from instead |
 | LB, RB | The hub's tabs (the help's pages with the help open) |
 | Menu | The menu of every window |
 

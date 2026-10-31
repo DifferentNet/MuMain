@@ -27,4 +27,6 @@ void Reset();
 
 // Whether the frame rests on a target, and its box in the RmlUi context's pixels.
 [[nodiscard]] bool Box(PadTargetPick::Box& box);
+// Whether that target is an item's place (a cell, an equipment slot), not a button.
+[[nodiscard]] bool OnItemPlace();
 } // namespace UI::HUD::PadFrame

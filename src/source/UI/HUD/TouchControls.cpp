@@ -18,6 +18,7 @@
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/ModalDialogs.h"
 #include "UI/HUD/GamepadControls.h"
+#include "UI/HUD/PadHub.h"
 #include "UI/HUD/SkillList.h"
 #include "UI/HUD/Skills/SkillTooltip.h"
 #include "UI/Mobile/FollowThrough.h"
@@ -333,6 +334,8 @@ struct ControlsModel
     bool pad = false;
     // Fingers drive the controls: the joystick's area shows.
     bool fingers = false;
+    // The pad's hero hub is open on its Skills tab: the picker sits under the hub's tabs.
+    bool underHub = false;
     int menuFocus = -1;
     Rml::String padOpenLabel;
     Rml::String padCloseLabel;
@@ -410,6 +413,7 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     for (int item = 0; item < MenuItemCount; ++item)
         c.Bind(MenuLabelFields[item], &model.menuLabels[item]);
     c.Bind("pad", &model.pad);
+    c.Bind("under_hub", &model.underHub);
     c.Bind("fingers", &model.fingers);
     c.Bind("menu_focus", &model.menuFocus);
     c.Bind("pad_open_label", &model.padOpenLabel);
@@ -817,6 +821,7 @@ void SyncDevices(ControlsModel& model)
 {
     SetField(model.pad, UI::Mobile::IsGamepadInUse(), "pad");
     SetField(model.fingers, Touch::IsEnabled(), "fingers");
+    SetField(model.underHub, UI::HUD::PadHub::IsOnSkills(), "under_hub");
 }
 
 // Whether a skill button set holds anything: the hotkeys 1-5, or 6-9 and 0.

@@ -41,6 +41,8 @@ struct OverlayModel
     bool hubOpen = false;
     std::vector<TabView> tabs;
     bool legendShown = false;
+    // The legend on an item's place: X and Y too.
+    bool legendItem = true;
     Rml::String pickupLabel;
     Rml::String takeLabel;
     Rml::String equipLabel;
@@ -68,6 +70,7 @@ void BindModel(Rml::DataModelConstructor& c, OverlayModel& model)
     c.Bind("hub_open", &model.hubOpen);
     c.Bind("tabs", &model.tabs);
     c.Bind("legend_shown", &model.legendShown);
+    c.Bind("legend_item", &model.legendItem);
     c.Bind("pickup_label", &model.pickupLabel);
     c.Bind("take_label", &model.takeLabel);
     c.Bind("equip_label", &model.equipLabel);
@@ -159,10 +162,16 @@ void SyncLegend(OverlayModel& model, const View& view)
     SyncBool(model.legendShown, view.legend, "legend_shown");
     if (!view.legend)
         return;
-    SyncLabel(model.takeLabel, I18N::Game::PadTake, "take_label");
+    using Legend = View::Legend;
+    SyncBool(model.legendItem, view.legendSays == Legend::Item, "legend_item");
+    const auto* aLabel = view.legendSays == Legend::Item      ? &I18N::Game::PadTake
+                         : view.legendSays == Legend::Holding ? &I18N::Game::PadPutDown
+                                                              : &I18N::Game::PadPress;
+    SyncLabel(model.takeLabel, *aLabel, "take_label");
     SyncLabel(model.equipLabel, I18N::Game::TouchItemEquip, "equip_label");
     SyncLabel(model.cardLabel, I18N::Game::PadCard, "card_label");
-    SyncLabel(model.closeLabel, I18N::Game::PadClose, "close_label");
+    SyncLabel(model.closeLabel, view.legendSays == Legend::Holding ? I18N::Game::PadPutBack : I18N::Game::PadClose,
+              "close_label");
     SyncLabel(model.windowsLabel, I18N::Game::PadAllWindows, "windows_label");
 }
 } // namespace

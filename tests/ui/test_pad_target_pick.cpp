@@ -82,3 +82,19 @@ TEST_CASE("No step from nowhere or without a way")
     CHECK(Pick::NextThatWay(grid, Pick::None, 1, 0) == Pick::None);
     CHECK(Pick::NextThatWay(grid, 0, 0, 0) == Pick::None);
 }
+
+TEST_CASE("A window starts on its first cell, else its first target")
+{
+    // A close button above and right of a bag's grid: the grid's top-left cell comes first.
+    std::vector<Target> targets{{{100.f, 0.f, 120.f, 10.f}}};
+    for (Target cell : Grid(0.f, 20.f, 3, 2))
+    {
+        cell.cell = true;
+        targets.push_back(cell);
+    }
+    CHECK(Pick::First(targets) == 1);
+    // No cells: the one nearest the top-left corner, not a close button higher up on the right.
+    const std::vector<Target> buttons{{{90.f, 0.f, 100.f, 10.f}}, {{10.f, 6.f, 30.f, 26.f}}, {{0.f, 40.f, 20.f, 60.f}}};
+    CHECK(Pick::First(buttons) == 1);
+    CHECK(Pick::First(std::vector<Target>{}) == Pick::None);
+}

@@ -32,6 +32,10 @@ struct Target
     int list = None;
     bool listScrollsUp = false;
     bool listScrollsDown = false;
+    // An item cell (a bag's, a shop's): a window opening starts on its first one.
+    bool cell = false;
+    // An equipment slot: with the cells, an item's place (the legend says Take, Equip, Card there).
+    bool slot = false;
 };
 
 // The smallest target holding the point (a button over its panel), None for none.
@@ -39,6 +43,10 @@ struct Target
 
 // The target whose box is nearest the point, if within `reach` of it, None for none.
 [[nodiscard]] int Nearest(std::span<const Target> targets, float x, float y, float reach);
+
+// Where the frame starts in a window just opened: the item cell nearest the cells' top-left corner, or
+// without cells the target nearest the targets' top-left corner; None for none.
+[[nodiscard]] int First(std::span<const Target> targets);
 
 // The next target from `from` the way (dx, dy) points (one of -1, 0, 1 on one axis): the nearest in
 // that direction, one in line before one aside; one in the same window before one in another. None

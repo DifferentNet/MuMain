@@ -243,6 +243,10 @@ body.picking .tc-skill.focused {
 	font-size: 13rem;
 	font-effect: shadow(0rem 1rem #000000);
 }
+/* The pad's hero hub on its Skills tab: its tabs stand over the top of the screen. */
+body.under-hub #tc_picker {
+	top: 48dp;
+}
 #tc_pick_head, #tc_pick_hint_row, #tc_pick_pager {
 	display: flex;
 	flex-direction: row;

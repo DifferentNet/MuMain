@@ -25,6 +25,7 @@ constexpr auto Repeat = std::chrono::milliseconds(130);
 // The right stick let go snaps the pointer onto a target this near, as a share of the screen's height.
 constexpr float SnapReachShare = 0.04f;
 constexpr float Anywhere = std::numeric_limits<float>::max();
+constexpr int SnapDelayFrames = 2;
 
 struct Point
 {
@@ -36,6 +37,9 @@ struct State
 {
     Pad::Stepper stepper{FirstRepeat, Repeat};
     bool snapPending = false;
+    // Frames since the snap was asked for: a window opened or a tab turned shows its targets a frame
+    // or two later, the old window's may still be there before.
+    int snapFrames = 0;
     // The right stick moved the pointer last frame.
     bool stickPushed = false;
     // Where the frame put the pointer, in context pixels: the pointer's own place catches up a frame
@@ -43,6 +47,7 @@ struct State
     bool placed = false;
     Point place;
     bool onTarget = false;
+    bool onItemPlace = false;
     Pick::Box box;
     // The frame's target went away (a card opened over it, a dialog closed): it moves on a frame later,
     // with A up, so the release that closed a dialog does not land on the next target (the game reads
@@ -160,20 +165,26 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
     if (g_state.goBack)
         ++g_state.goBackFrames;
     const bool backNow = g_state.goBack && g_state.goBackFrames >= 2 && buttonUp;
-    if ((g_state.snapPending || lost || backNow) && !targets.empty())
+    if (g_state.snapPending)
+        ++g_state.snapFrames;
+    const bool snapNow = g_state.snapPending && g_state.snapFrames >= SnapDelayFrames;
+    if ((snapNow || lost || backNow) && !targets.empty())
     {
-        g_state.snapPending = false;
         g_state.lostFrames = 0;
-        if (current == Pick::None || backNow)
+        // A window just opened (or a hub tab turned) starts on its first cell or its first target.
+        const bool opened = snapNow && !backNow && !lost;
+        if (current == Pick::None || backNow || opened)
         {
             // After a dialog, back to the target nearest where the frame was before it.
             const Point from = g_state.goBack ? g_state.windowPlace : PointerPlace(scale);
-            const int nearest = Pick::Nearest(targets, from.x, from.y, Anywhere);
-            if (nearest != Pick::None)
-                MoveOnto(window, targets[nearest], scale);
+            const int pick = opened ? Pick::First(targets) : Pick::Nearest(targets, from.x, from.y, Anywhere);
+            if (pick != Pick::None)
+                MoveOnto(window, targets[pick], scale);
             here = PointerPlace(scale);
             current = Pick::At(targets, here.x, here.y);
         }
+        if (snapNow)
+            g_state.snapPending = false;
         g_state.goBack = false;
     }
     const Pad::Step step = g_state.stepper.Take(presses, now);
@@ -187,6 +198,7 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
     here = PointerPlace(scale);
     current = Pick::At(targets, here.x, here.y);
     g_state.onTarget = current != Pick::None;
+    g_state.onItemPlace = g_state.onTarget && (targets[current].cell || targets[current].slot);
     if (g_state.onTarget)
         g_state.box = targets[current].box;
     if (g_state.onTarget && !onDialog)
@@ -199,13 +211,16 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
 void SnapSoon()
 {
     g_state.snapPending = true;
+    g_state.snapFrames = 0;
 }
 
 void Reset()
 {
     g_state.snapPending = false;
+    g_state.snapFrames = 0;
     g_state.placed = false;
     g_state.onTarget = false;
+    g_state.onItemPlace = false;
     g_state.stickPushed = false;
     g_state.lostFrames = 0;
     g_state.onDialog = false;
@@ -220,5 +235,10 @@ bool Box(PadTargetPick::Box& box)
         return false;
     box = g_state.box;
     return true;
+}
+
+bool OnItemPlace()
+{
+    return g_state.onItemPlace;
 }
 } // namespace UI::HUD::PadFrame

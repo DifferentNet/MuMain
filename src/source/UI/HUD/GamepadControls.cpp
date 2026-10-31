@@ -28,6 +28,7 @@
 #include "UI/HUD/PadTargets.h"
 #include "UI/HUD/SkillList.h"
 #include "UI/HUD/TouchControls.h"
+#include "UI/Inventory/InventoryContents.h"
 #include "UI/Mobile/InterfaceMode.h"
 
 #include <RmlUi/Core/Context.h>
@@ -559,6 +560,16 @@ void TurnHelpPages(Presses& presses)
         g_pHelp->TurnPage(1);
 }
 
+// An item on the cursor over a window: B puts it back where it was taken from, the window stays.
+void PutBackHeldItem(Presses& presses)
+{
+    if (!UI::Inventory::HasPickedItem() || !Pressed(presses, Button::B))
+        return;
+    Take(presses, Button::B);
+    g_state.waitForRelease[static_cast<int>(Button::B)] = true;
+    UI::Inventory::RestorePickedItem();
+}
+
 // The hero hub open: LB and RB turn its tabs, instead of drinking and casting.
 void TurnHubTabs(Presses& presses, Clock::time_point now)
 {
@@ -793,6 +804,8 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
     {
         TurnHelpPages(presses);
         TurnHubTabs(presses, now);
+        if (frameOpen)
+            PutBackHeldItem(presses);
         if (!frameOpen)
             TurnWheelWithDpad(window, presses, now);
         PlayPointer(window, presses, seconds);
@@ -887,8 +900,14 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
     // A dialog over the windows says its own answers: the tabs and the legend make room for it.
     const bool dialog = g_state.frameOpen && UI::HUD::PadTargets::OnDialog();
     view.hub = UI::HUD::PadHub::IsOpen() && !dialog;
-    view.legend = g_state.frameOpen && !dialog;
+    // The skill picker says its own keys too.
+    view.legend = g_state.frameOpen && !dialog && !UI::HUD::PadHub::IsOnSkills();
     view.frame = g_state.frameOpen && UI::HUD::PadFrame::Box(view.frameBox);
+    using Legend = UI::HUD::PadOverlay::View::Legend;
+    if (UI::Inventory::HasPickedItem())
+        view.legendSays = Legend::Holding;
+    else if (view.frame && !UI::HUD::PadFrame::OnItemPlace())
+        view.legendSays = Legend::Button;
     float x = 0.f;
     float y = 0.f;
     const Rml::Context* context = RmlUiRuntime::Instance().GetContext();

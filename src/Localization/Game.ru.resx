@@ -15537,4 +15537,13 @@
   <data name="PadAllWindows" xml:space="preserve">
     <value>Все окна</value>
   </data>
+  <data name="PadPutDown" xml:space="preserve">
+    <value>Положить</value>
+  </data>
+  <data name="PadPutBack" xml:space="preserve">
+    <value>Вернуть</value>
+  </data>
+  <data name="PadPress" xml:space="preserve">
+    <value>Нажать</value>
+  </data>
 </root>

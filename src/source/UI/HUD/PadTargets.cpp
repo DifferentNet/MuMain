@@ -36,6 +36,8 @@ constexpr const char* PlacedClass = "slot-placed";
 constexpr const char* CellClass = "item-cell";
 constexpr const char* SlotClass = "equip-slot";
 constexpr std::array<const char*, 2> ClickAttributes = {"data-event-click", "onclick"};
+// The cross in a window's corner: B closes the window already, the frame does not stop on it.
+constexpr const char* CornerCloseId = "frame_corner_close";
 // A box this much of the screen or more is a panel, not a control.
 constexpr float LargestShare = 0.25f;
 // A target in a list less than this share on view is left out: the list scrolls to it first.
@@ -91,6 +93,8 @@ bool IsWindow(Rml::ElementDocument& document)
 
 bool IsTarget(Rml::Element& element)
 {
+    if (element.GetId() == CornerCloseId)
+        return false;
     if (element.IsClassSet(CellClass) || element.IsClassSet(SlotClass))
         return true;
     const Rml::String& tag = element.GetTagName();
@@ -188,6 +192,8 @@ private:
     void Add(Rml::Element& element)
     {
         Target target{{}, m_Window};
+        target.cell = element.IsClassSet(CellClass);
+        target.slot = element.IsClassSet(SlotClass);
         if (!DrawnBox(element, target.box) || Area(target.box) <= 0.f || Area(target.box) >= m_LargestArea)
             return;
         Rml::Element* list = ScrollingList(element);

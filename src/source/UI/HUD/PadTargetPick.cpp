@@ -88,6 +88,37 @@ int Nearest(std::span<const Target> targets, float x, float y, float reach)
     return found;
 }
 
+int First(std::span<const Target> targets)
+{
+    const bool anyCell = std::any_of(targets.begin(), targets.end(), [](const Target& t) { return t.cell; });
+    const auto counts = [anyCell](const Target& t) { return !anyCell || t.cell; };
+    float left = std::numeric_limits<float>::max();
+    float top = std::numeric_limits<float>::max();
+    for (const Target& target : targets)
+    {
+        if (!counts(target))
+            continue;
+        left = std::min(left, target.box.left);
+        top = std::min(top, target.box.top);
+    }
+    // The one nearest the top-left corner of them all, along the axes: a window's first tab or cell
+    // before its close button up in the right corner.
+    int found = None;
+    float nearest = std::numeric_limits<float>::max();
+    for (int i = 0; i < static_cast<int>(targets.size()); ++i)
+    {
+        if (!counts(targets[i]))
+            continue;
+        const float distance = (targets[i].box.left - left) + (targets[i].box.top - top);
+        if (distance < nearest)
+        {
+            nearest = distance;
+            found = i;
+        }
+    }
+    return found;
+}
+
 int NextThatWay(std::span<const Target> targets, int from, int dx, int dy)
 {
     if (from < 0 || from >= static_cast<int>(targets.size()) || (dx == 0 && dy == 0))

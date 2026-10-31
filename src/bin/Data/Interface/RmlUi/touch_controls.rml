@@ -7,7 +7,7 @@
 	<link type="text/rcss" href="gamepad_glyphs.rcss"/>
 	<link type="text/rcss" href="touch_controls.rcss"/>
 </head>
-<body class="native-text" data-model="touch_controls" data-class-pad="pad" data-class-no-touch="!fingers" data-class-picking="picker_open">
+<body class="native-text" data-model="touch_controls" data-class-pad="pad" data-class-no-touch="!fingers" data-class-picking="picker_open" data-class-under-hub="under_hub">
 	<!-- The on-screen controls of phones and tablets (UI/HUD/TouchControls.cpp), shown only on a touch
 	     device in the world. Nothing here takes the pointer (pointer-events: none throughout): fingers
 	     reach the controls through Core::Input::Touch, which C++ answers from these elements' boxes,
