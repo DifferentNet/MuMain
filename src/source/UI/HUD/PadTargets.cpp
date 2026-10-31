@@ -39,6 +39,9 @@ constexpr const char* SlotClass = "equip-slot";
 constexpr std::string_view TintPrefix = "tint-";
 // A worn slot with nothing in it (MyInventory's slot_states).
 constexpr const char* BareSlotClass = "bare";
+// A grid whose items are only to look at (the partner's offer in a trade): its tooltip shows them,
+// the pad offers nothing to do there.
+constexpr const char* LookOnlySelector = ".look-only";
 constexpr std::array<const char*, 2> ClickAttributes = {"data-event-click", "onclick"};
 // The cross in a window's corner: B closes the window already, the frame does not stop on it.
 constexpr const char* CornerCloseId = "frame_corner_close";
@@ -198,8 +201,9 @@ private:
         Target target{{}, m_Window};
         target.cell = element.IsClassSet(CellClass);
         target.slot = element.IsClassSet(SlotClass);
-    target.empty = (target.cell && element.GetClassNames().find(TintPrefix) == Rml::String::npos)
-                   || (target.slot && element.IsClassSet(BareSlotClass));
+        target.empty = (target.cell && element.GetClassNames().find(TintPrefix) == Rml::String::npos)
+                       || (target.slot && element.IsClassSet(BareSlotClass))
+                       || (target.cell && element.Closest(LookOnlySelector) != nullptr);
         if (!DrawnBox(element, target.box) || Area(target.box) <= 0.f || Area(target.box) >= m_LargestArea)
             return;
         Rml::Element* list = ScrollingList(element);

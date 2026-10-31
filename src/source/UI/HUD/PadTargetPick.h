@@ -36,7 +36,8 @@ struct Target
     bool cell = false;
     // An equipment slot: with the cells, an item's place (the legend says Take, Equip, Card there).
     bool slot = false;
-    // A cell or a worn slot with no item in it: the legend offers nothing to take there.
+    // A cell or a worn slot with no item in it, or a cell only to look at (the partner's offer in a
+    // trade): the legend offers nothing to take there.
     bool empty = false;
 };
 

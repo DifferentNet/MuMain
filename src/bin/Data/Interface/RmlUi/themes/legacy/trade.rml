@@ -23,7 +23,7 @@
 		<div class="bg-bottom"></div>
 		<!-- Where the native item grids go: invisible boxes the theme places; the window reads them each frame. -->
 		<!-- The partner_grid grid: its cells, then its frame (UI/Inventory/ItemGridModel.h). -->
-		<div id="partner_grid" class="native-anchor item-grid">
+		<div id="partner_grid" class="native-anchor item-grid look-only">
 			<div class="item-grid-cells">
 				<div data-for="c : partner_cells" data-attr-class="'item-cell ' + c.tint + ' ' + c.drop">
 					<div class="item-cell-art"></div><div class="item-cell-drop"></div>
