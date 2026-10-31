@@ -29,4 +29,6 @@ void Reset();
 [[nodiscard]] bool Box(PadTargetPick::Box& box);
 // Whether that target is an item's place (a cell, an equipment slot), not a button.
 [[nodiscard]] bool OnItemPlace();
+// Whether that target is an equipment slot: the pad's X takes off what is worn there.
+[[nodiscard]] bool OnWornPlace();
 } // namespace UI::HUD::PadFrame

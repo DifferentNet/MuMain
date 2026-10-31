@@ -719,8 +719,12 @@ bool CInventoryActionController::TryEquipItem(CInventoryCtrl* targetControl, ITE
         return false;
     }
 
+    // The pad's X puts an item on at once: it says why not, as there is no dragging to show it.
+    const bool says = UI::Mobile::ClickSource::IsPadRightClick();
     if (!m_pContext->IsEquipable(nDstIndex, pItem))
     {
+        if (says)
+            g_pSystemLogBox->AddText(I18N::Game::PadCannotEquip, TYPE_ERROR_MESSAGE);
         return true;
     }
 
@@ -734,12 +738,16 @@ bool CInventoryActionController::TryEquipItem(CInventoryCtrl* targetControl, ITE
         }
         else
         {
+            if (says)
+                g_pSystemLogBox->AddText(I18N::Game::PadSlotTaken, TYPE_ERROR_MESSAGE);
             return true;
         }
     }
 
     if (!m_pContext->IsEquipable(nDstIndex, pItem))
     {
+        if (says)
+            g_pSystemLogBox->AddText(I18N::Game::PadCannotEquip, TYPE_ERROR_MESSAGE);
         return true;
     }
 

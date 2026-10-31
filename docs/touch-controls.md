@@ -273,7 +273,7 @@ tabs:
 | Pad | Over a window |
 |---|---|
 | A | Click at the frame: take an item, put it down, press a button |
-| X | The item's own action at once: put on, use, move to the trade; on worn gear, take it off. Never throws an item down. In a shop it asks with the card first |
+| X | The item's own action at once: put on, use, move to the trade; on worn gear, take it off (the legend then says Take off). Never throws an item down. When it can't, it says why: the item's requirements, the slot already taken, no room in the bag. In a shop it asks with the card first |
 | Y | The item card (above), except with the storage or the chaos machine open |
 | RS | Right-click at the frame (on a stat's "+" the menu of bigger steps) |
 | B | Back: closes the window on top; with an item on the cursor, puts it back where it was taken from instead |

@@ -165,13 +165,15 @@ void SyncLegend(OverlayModel& model, const View& view)
     if (!view.legend)
         return;
     using Legend = View::Legend;
-    SyncBool(model.legendItem, view.legendSays == Legend::Item, "legend_item");
+    const bool onItem = view.legendSays == Legend::Item || view.legendSays == Legend::Worn;
+    SyncBool(model.legendItem, onItem, "legend_item");
     SyncBool(model.legendY, view.legendSays != Legend::Button, "legend_y");
-    const auto* aLabel = view.legendSays == Legend::Item      ? &I18N::Game::PadTake
+    const auto* aLabel = onItem                               ? &I18N::Game::PadTake
                          : view.legendSays == Legend::Holding ? &I18N::Game::PadPutDown
                                                               : &I18N::Game::PadPress;
     SyncLabel(model.takeLabel, *aLabel, "take_label");
-    SyncLabel(model.equipLabel, I18N::Game::TouchItemEquip, "equip_label");
+    SyncLabel(model.equipLabel, view.legendSays == Legend::Worn ? I18N::Game::TouchItemUnequip : I18N::Game::TouchItemEquip,
+              "equip_label");
     SyncLabel(model.cardLabel, view.legendSays == Legend::Holding ? I18N::Game::TouchItemDrop : I18N::Game::PadCard,
               "card_label");
     SyncLabel(model.closeLabel, view.legendSays == Legend::Holding ? I18N::Game::PadPutBack : I18N::Game::PadClose,

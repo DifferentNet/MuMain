@@ -917,6 +917,8 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
         view.legendSays = Legend::Holding;
     else if (view.frame && !UI::HUD::PadFrame::OnItemPlace())
         view.legendSays = Legend::Button;
+    else if (view.frame && UI::HUD::PadFrame::OnWornPlace())
+        view.legendSays = Legend::Worn;
     float x = 0.f;
     float y = 0.f;
     const Rml::Context* context = RmlUiRuntime::Instance().GetContext();

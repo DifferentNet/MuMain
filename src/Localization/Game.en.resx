@@ -15884,4 +15884,10 @@
   <data name="PadPress" xml:space="preserve">
     <value>Press</value>
   </data>
+  <data name="PadCannotEquip" xml:space="preserve">
+    <value>This item can't be put on: see its requirements</value>
+  </data>
+  <data name="PadSlotTaken" xml:space="preserve">
+    <value>Take off the item worn there first</value>
+  </data>
 </root>

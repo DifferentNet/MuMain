@@ -1663,6 +1663,7 @@ bool CMyInventory::EquipmentWindowProcess()
         // A finger's long press (Core::Input::Touch) or the pad's Y on worn gear shows the item card,
         // as on the bag's items, and letting go takes nothing off; the pad's X takes it off.
         m_bCardRightPress = UI::Mobile::ClickSource::IsFingerLongPress() || UI::Mobile::ClickSource::IsPadCardClick();
+        m_bPadRightPress = UI::Mobile::ClickSource::IsPadRightClick() && !m_bCardRightPress;
         if (m_bCardRightPress && ShowWornItemCard())
             return true;
     }
@@ -1671,12 +1672,14 @@ bool CMyInventory::EquipmentWindowProcess()
     {
         if (std::exchange(m_bCardRightPress, false))
             return false;
+        // The pad has let go by now: whether its X pressed was noted on the press.
+        const bool padPressed = std::exchange(m_bPadRightPress, false);
 
         const int iSourceIndex = m_iPointedSlot;
         if (iSourceIndex != -1 && CanTakeOffToBagNow())
         {
             ResetMouseRButton();
-            if (TakeOffToBag(iSourceIndex))
+            if (TakeOffToBag(iSourceIndex, padPressed))
                 return true;
         }
     }
@@ -1691,7 +1694,7 @@ bool CMyInventory::CanTakeOffToBagNow() const
            !g_pNewUISystem->IsVisible(INTERFACE_NPCSHOP); // Don't unequip when NPC shop is open
 }
 
-bool CMyInventory::TakeOffToBag(int equipmentSlot)
+bool CMyInventory::TakeOffToBag(int equipmentSlot, bool saysWhenFull)
 {
     ITEM* pEquippedItem = &CharacterMachine->Equipment[equipmentSlot];
     if (pEquippedItem->Type < 0 || !CheckTakeOff(equipmentSlot))
@@ -1701,7 +1704,14 @@ bool CMyInventory::TakeOffToBag(int equipmentSlot)
     // inventory slot. Without the pick-up nothing is sent, so the
     // server and the local equipment stay the same.
     const int emptySlotIndex = FindEmptySlot(pEquippedItem);
-    if (emptySlotIndex == -1 || !CInventoryCtrl::CreatePickedItem(nullptr, pEquippedItem))
+    if (emptySlotIndex == -1)
+    {
+        // The pad's X has no dragging to show the bag is full: it says so.
+        if (saysWhenFull)
+            g_pSystemLogBox->AddText(I18N::Game::NotEnoughSpacePleaseCheckFreeSpaceInYourInventory, TYPE_ERROR_MESSAGE);
+        return false;
+    }
+    if (!CInventoryCtrl::CreatePickedItem(nullptr, pEquippedItem))
         return false;
 
     CPickedItem* pPickedItem = CInventoryCtrl::GetPickedItem();
