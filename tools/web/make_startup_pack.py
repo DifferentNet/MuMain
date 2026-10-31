@@ -34,6 +34,10 @@ startup.json, which the page reads first:
   code      the hashes of Main.js and Main.wasm: the page asks for Main.js?v=<hash> ...
   versions  {path: hash} of the files the game downloads one by one when it first reads them
             (fetch-backend.js asks for path?v=<hash>)
+  maps      {world: {hash, packed}} of the map packs (packs/world<N>.json has their files), for the
+            page to download the ones it hasn't kept yet before the game enters them
+  fileBytes the bytes of the "versions" files: "all", and of FILE_BYTES_FOLDERS (left out where the
+            game's sound or music is off), for the page to say how much "Download all" takes
 A URL with ?v=<hash> names one version of a file, so the page's service worker (sw.js) keeps it on
 the device and asks the server again only when the hash changes. Files beside Main.js get none:
 scripts/publish-web.py rewrites config.ini for the server it publishes to.
@@ -58,6 +62,7 @@ HASH_LENGTH = 16
 # maps' folders are lower case (Data/world55).
 MAP_FOLDER = re.compile(r"(World|Object)(\d+)", re.IGNORECASE)
 PACKS = "packs"
+FILE_BYTES_FOLDERS = ["Data/Sound/", "Data/Music/"]
 # Folders with less of the startup pack than this share one part.
 PART_MIN_BYTES = 2_000_000
 # Changes every pack's hash when what the packs hold changes, not only the files.
@@ -213,15 +218,15 @@ def write_startup_parts(root, files, previous_index):
 
 
 def write_map_packs(root, listed, in_startup_pack):
-    """Writes a pack per map (the module's docstring). Returns (the packs' names, the paths in them,
-    how many were written, megabytes in them)."""
+    """Writes a pack per map (the module's docstring). Returns ({world: {hash, packed}}, the paths in
+    them, how many were written, megabytes in them)."""
     maps = {}
     for path in listed:
         folders = path.split("/")
         match = MAP_FOLDER.fullmatch(folders[1]) if len(folders) > 2 and folders[0] == "Data" else None
         if match and path not in in_startup_pack:
             maps.setdefault(int(match.group(2)), []).append([path, packed_size(os.path.join(root, path))])
-    names, packed, written, total = [], set(), 0, 0
+    names, packed, written, total = {}, set(), 0, 0
     for world, files in sorted(maps.items()):
         name = f"world{world}"
         index_path = os.path.join(root, PACKS, name + ".json")
@@ -231,7 +236,7 @@ def write_map_packs(root, listed, in_startup_pack):
             with open(index_path + ".tmp", "w", encoding="utf-8") as out:
                 json.dump(entry, out, separators=(",", ":"))
             os.replace(index_path + ".tmp", index_path)
-        names.append(name)
+        names[str(world)] = {"hash": entry["hash"], "packed": entry["packed"]}
         packed.update(path for path, _ in files)
         written += wrote
         total += sum(size for _, size in files)
@@ -267,7 +272,7 @@ def main():
     maps, in_map_packs, maps_written, map_megabytes = write_map_packs(args.root, listed, in_startup_pack)
 
     kept = {os.path.basename(part["name"]) + ".gz" for part in parts}
-    kept.update(name + suffix for name in maps for suffix in (".pack.gz", ".json"))
+    kept.update(f"world{world}{suffix}" for world in maps for suffix in (".pack.gz", ".json"))
     for leftover in os.listdir(os.path.join(args.root, PACKS)):
         if leftover not in kept:
             os.remove(os.path.join(args.root, PACKS, leftover))
@@ -279,10 +284,17 @@ def main():
     in_packs = in_startup_pack | in_map_packs
     versions = {path: file_hash(os.path.join(args.root, path)) for path in listed
                 if "/" in path and path not in in_packs and not path.startswith(PACKS + "/")}
+    file_bytes = {"all": 0}
+    for path in versions:
+        size = os.path.getsize(os.path.join(args.root, path))
+        file_bytes["all"] += size
+        for folder in FILE_BYTES_FOLDERS:
+            if path.startswith(folder):
+                file_bytes[folder] = file_bytes.get(folder, 0) + size
     code = {name: file_hash(os.path.join(args.root, name)) for name in CODE
             if os.path.isfile(os.path.join(args.root, name))}
     with open(index_path + ".tmp", "w", encoding="utf-8") as out:
-        json.dump({"parts": parts, "code": code, "versions": versions}, out, separators=(",", ":"))
+        json.dump({"parts": parts, "code": code, "versions": versions, "maps": maps, "fileBytes": file_bytes}, out, separators=(",", ":"))
     os.replace(index_path + ".tmp", index_path)
 
     written_files = sorted(f"{PACKS}/{name}" for name in kept) + [name + ".gz" for name in GZIP_COPIES]
