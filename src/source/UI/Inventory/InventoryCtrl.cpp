@@ -21,6 +21,8 @@
 #include <RmlUi/Core/ComputedValues.h>
 #include <RmlUi/Core/ElementDocument.h>
 
+#include <utility>
+
 using namespace SEASON3B;
 using namespace mu::ui::window;
 
@@ -308,6 +310,7 @@ void mu::ui::window::CInventoryCtrl::Init()
     m_pdwItemCheckBox = nullptr;
     m_EventState = EVENT_NONE;
     m_iPointedSquareIndex = -1;
+    m_bPressSeen = false;
     m_bShow = true;
     m_bLock = false;
     m_ToolTipType = TOOLTIP_TYPE_INVENTORY;
@@ -964,12 +967,17 @@ int mu::ui::window::CInventoryCtrl::GetEmptySlotCount()
 
 bool mu::ui::window::CInventoryCtrl::UpdateMouseEvent()
 {
+    if (mu::ui::window::IsPress(VK_LBUTTON))
+        m_bPressSeen = m_iPointedSquareIndex != -1;
+    else if (mu::ui::window::IsNone(VK_LBUTTON))
+        m_bPressSeen = false;
+
     if (m_EventState == EVENT_NONE && mu::ui::window::IsNone(VK_LBUTTON) && m_iPointedSquareIndex != -1)
     {
         m_EventState = EVENT_HOVER;
     }
     else if (m_EventState == EVENT_HOVER && mu::ui::window::IsRelease(VK_LBUTTON) && m_iPointedSquareIndex != -1 &&
-             nullptr == GetPickedItem() && false == IsLocked() && m_bRepairMode == false)
+             std::exchange(m_bPressSeen, false) && nullptr == GetPickedItem() && false == IsLocked() && m_bRepairMode == false)
     {
         m_EventState = EVENT_PICKING;
         ITEM* pItem = this->FindItem(m_iPointedSquareIndex);
