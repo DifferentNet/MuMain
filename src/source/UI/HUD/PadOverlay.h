@@ -21,6 +21,9 @@ struct View
     enum class Legend
     {
         Item,
+        // A bag item X uses (a potion), one X does nothing to (a jewel: A takes it onto an item).
+        Use,
+        Keep,
         Worn,
         Sell,
         Move,

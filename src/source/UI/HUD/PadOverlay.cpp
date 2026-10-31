@@ -169,9 +169,9 @@ void SyncLegend(OverlayModel& model, const View& view)
     using Legend = View::Legend;
     const Legend says = view.legendSays;
     const bool onItem = says == Legend::Item || says == Legend::Worn || says == Legend::Sell || says == Legend::Move
-                        || says == Legend::Crafting;
+                        || says == Legend::Crafting || says == Legend::Use || says == Legend::Keep;
     SyncBool(model.legendA, says != Legend::Empty, "legend_a");
-    SyncBool(model.legendItem, onItem, "legend_item");
+    SyncBool(model.legendItem, onItem && says != Legend::Keep, "legend_item");
     // The shop's goods have no card and nothing for X: A buys them. The crafting box's items have no card.
     SyncBool(model.legendY,
              says != Legend::Button && says != Legend::Goods && says != Legend::Empty && says != Legend::Crafting,
@@ -183,6 +183,7 @@ void SyncLegend(OverlayModel& model, const View& view)
     SyncLabel(model.takeLabel, *aLabel, "take_label");
     const auto* xLabel = says == Legend::Worn   ? &I18N::Game::TouchItemUnequip
                          : says == Legend::Sell ? &I18N::Game::TouchItemSell
+                         : says == Legend::Use  ? &I18N::Game::Use
                          : says == Legend::Move || says == Legend::Crafting ? &I18N::Game::TouchItemMove
                                                 : &I18N::Game::TouchItemEquip;
     SyncLabel(model.equipLabel, *xLabel, "equip_label");

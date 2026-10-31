@@ -319,7 +319,18 @@ CInventoryActionController::BagRightClick CInventoryActionController::WhatBagRig
         return BagRightClick::Sells;
     if (target != RightClickTarget::Inventory || g_pNewUISystem->IsVisible(INTERFACE_INVENTORY_EXT))
         return BagRightClick::Moves;
-    return BagRightClick::Acts;
+    CInventoryCtrl* bag = g_pMyInventory != nullptr ? g_pMyInventory->GetInventoryCtrl() : nullptr;
+    const ITEM* item = bag != nullptr ? bag->FindItemAtPointer() : nullptr;
+    if (item == nullptr)
+        return BagRightClick::Equips;
+    if (IsUsedFromBag(item))
+        return BagRightClick::Uses;
+#ifdef LJH_ADD_SYSTEM_OF_EQUIPPING_ITEM_FROM_INVENTORY
+    if (g_pMyInventory->IsInvenItem(item->Type))
+        return BagRightClick::Uses;
+#endif
+    const int equipmentSlot = ItemAttribute[item->Type].m_byItemSlot;
+    return equipmentSlot >= 0 && equipmentSlot < MAX_EQUIPMENT_INDEX ? BagRightClick::Equips : BagRightClick::Keeps;
 }
 
 CInventoryActionController::RightClickTarget CInventoryActionController::FindRightClickTarget()

@@ -933,6 +933,10 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
             view.legendSays = Legend::Sell;
         else if (does == Does::Moves)
             view.legendSays = Legend::Move;
+        else if (does == Does::Uses)
+            view.legendSays = Legend::Use;
+        else if (does == Does::Keeps)
+            view.legendSays = Legend::Keep;
     }
     float x = 0.f;
     float y = 0.f;

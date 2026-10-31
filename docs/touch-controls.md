@@ -266,7 +266,7 @@ goes to the nearest one. While a message box or a menu over the windows is up (t
 the frame rests only on it. The right stick still moves the pointer (shown while off every target, at
 half speed over a window) and snaps it onto a target near when let go. A legend under the hub's tabs
 says what the buttons do there (on an item: Take, Equip, Card, Close, with X named for what it does
-there: Take off on worn gear, Sell while a shop is open, Move while the storage, the trade or the chaos
+there: Use on a potion or a scroll, none on a jewel or anything else X does nothing to, Take off on worn gear, Sell while a shop is open, Move while the storage, the trade or the chaos
 machine takes it; on an item in the chaos machine's box: Take, Move, Close; on a shop's goods: Buy,
 Close; on an empty cell or a worn slot with nothing in it: Close alone; with an item on the cursor: Put down, Drop, Put back;
 on a button: Press, Close); both keep left of the windows, wrapping when the room is

@@ -30,9 +30,13 @@ public:
 
     // MU Moldova: what a right click on a bag item does now, by the windows open with the bag (the pad's
     // legend names X by it).
+    // With the bag alone, by the item under the pointer as HandleInventoryRightClickActions takes it:
+    // Uses (a potion, a scroll), Equips (gear), Keeps (a jewel, a box: the right click does nothing).
     enum class BagRightClick
     {
-        Acts,
+        Equips,
+        Uses,
+        Keeps,
         Sells,
         Moves,
     };
