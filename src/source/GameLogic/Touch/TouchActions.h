@@ -14,12 +14,15 @@
 namespace GameLogic::Touch
 {
 // Whether a button's action is done (it went off, or cannot: no monster around, a safe zone, a
-// refusal) or still pending (out of reach and on its way, the swing before it still playing, a
-// cooldown). A tap carries a pending action on (UI::Mobile::FollowThrough).
+// refusal), pending (out of reach and on its way, the swing before it still playing) or only waiting
+// with nothing under way (the skill not castable yet, the joystick's walk in the way). A tap carries a
+// pending or waiting action on (UI::Mobile::FollowThrough); a waiting one gives the turn back, so
+// another button held may act meanwhile.
 enum class Progress
 {
     Done,
     Pending,
+    Waiting,
 };
 
 // Walks the way the joystick points, a few tiles ahead, re-planning as the walk runs out or the
@@ -47,6 +50,12 @@ void SetPointerAims(bool aims);
 // the other places where players fight need no switch. Never a member of the party. Off again on a
 // new map.
 void SetForceAttack(bool on);
+// Once a frame: whether an action button is held or a tapped action is owed. The MU Helper stands
+// down while they act, and a second after (its own attacks would go for another monster).
+void HoldHelperForButtons(bool buttonsAct);
+// The character the attack button fights now (the aim, else the last one fought), for the world to
+// light it as the mouse lights one under it; -1 for none. A phone has no mouse over the monster.
+[[nodiscard]] int TargetIndex();
 [[nodiscard]] bool IsForceAttack();
 
 // The party member a tap on their party card chose (CPartyListWindow): the heal and buff buttons
@@ -82,6 +91,8 @@ bool BindHotKey(int hotKey);
 // Whether a hotkey holds a skill or a pet command the character can use now: not an empty one, a
 // pet command without a pet, or a skill the character no longer has (another character's hotkeys).
 [[nodiscard]] bool HotKeyHoldsSkill(int hotKey);
+// Whether the hotkey's skill wants more mana or AG than the character has: its button shows it.
+[[nodiscard]] bool HotKeyShortOfMana(int hotKey);
 
 // Walks to the nearest drop that fits the bag and takes it, then the next, until none is left; says
 // so once in a while when only drops that do not fit lie around. Called every frame while the

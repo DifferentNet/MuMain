@@ -430,7 +430,7 @@ void Up(SDL_FingerID finger, float x, float y, bool cancelled, SDL_Window* windo
     }
 }
 
-void Tick(SDL_Window* window, bool carryingItem)
+void Tick(SDL_Window* window, bool carryingItem, bool overWorld)
 {
     if (g_state.heldAtLanding)
     {
@@ -438,7 +438,7 @@ void Tick(SDL_Window* window, bool carryingItem)
         MovePointer(window, g_state.x, g_state.y);
     }
     const auto held = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - g_state.downTime);
-    if (!Gesture::IsLongPressDue(g_state.phase, held, carryingItem))
+    if (!Gesture::IsLongPressDue(g_state.phase, held, carryingItem, overWorld))
         return;
     g_state.phase = Phase::LongPress;
     // Where the pointer is: a still finger has not moved it from where it landed.

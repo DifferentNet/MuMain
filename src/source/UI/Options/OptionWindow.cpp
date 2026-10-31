@@ -1093,7 +1093,10 @@ void mu::ui::window::COptionWindow::RmlFpsCapChanged(int index)
     // Unconditional, same as the console-only `$fps <N>` diagnostic this replaces -- it doesn't
     // check VSync state either; if VSync is on, this can transiently override it until the next
     // VSync toggle re-asserts -1 (a pre-existing characteristic of SetTargetFps, not new here).
+#ifndef __EMSCRIPTEN__
     SetTargetFps(fps);
+#endif
+    // The browser build paces its frames on the page (WaitForBrowserFrame reads the cap each frame).
     GameConfig::GetInstance().SetFpsCap(fps);
     GameConfig::GetInstance().Save();
 }

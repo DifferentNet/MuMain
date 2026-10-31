@@ -439,6 +439,13 @@ body.pad #tc_pick_legend {
 .tc-skill.empty {
 	opacity: 0.85;
 }
+/* Short of mana or AG: a blue veil over a faded icon (it would only say so in the chat). */
+.tc-skill.nomana {
+	background-color: rgba(40, 70, 160, 150);
+}
+.tc-skill.nomana .tc-skill-icon {
+	opacity: 0.45;
+}
 /* A picked skill waits for a button: every one lights up to take it. */
 .tc-skill.bind {
 	opacity: 1;

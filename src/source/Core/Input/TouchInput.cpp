@@ -30,12 +30,15 @@ struct FingerSlot
 bool g_enabled = false;
 HitTest g_hitTest = nullptr;
 CarryQuery g_isCarrying = nullptr;
+WorldQuery g_isOverWorld = nullptr;
 EndTyping g_endTyping = nullptr;
 SDL_Window* g_window = nullptr;
 std::array<FingerSlot, MaxFingers> g_fingers{};
 std::array<ControlFinger, MaxControls> g_controls{};
 std::array<bool, KeyCount> g_heldKeys{};
 std::array<std::uint8_t, KeyCount> g_tappedKeys{};
+// How many times Reset() ran (Resets()).
+std::uint32_t g_resets = 0;
 const ControlFinger g_noControl{};
 
 FingerSlot* FindFinger(SDL_FingerID id)
@@ -172,6 +175,11 @@ void SetCarryQuery(CarryQuery isCarrying)
     g_isCarrying = isCarrying;
 }
 
+void SetWorldQuery(WorldQuery isOverWorld)
+{
+    g_isOverWorld = isOverWorld;
+}
+
 void SetEndTyping(EndTyping endTyping)
 {
     g_endTyping = endTyping;
@@ -232,7 +240,8 @@ bool ProcessEvent(const SDL_Event& event, SDL_Window* window)
 void Tick(SDL_Window* window)
 {
     if (g_enabled && window != nullptr)
-        Pointer::Tick(window, g_isCarrying != nullptr && g_isCarrying());
+        Pointer::Tick(window, g_isCarrying != nullptr && g_isCarrying(),
+                      g_isOverWorld != nullptr && g_isOverWorld());
 }
 
 void BeginFrame(SDL_Window* /*window*/)
@@ -252,6 +261,12 @@ void Reset()
     g_fingers.fill(FingerSlot{});
     g_heldKeys.fill(false);
     g_tappedKeys.fill(0);
+    ++g_resets;
+}
+
+std::uint32_t Resets()
+{
+    return g_resets;
 }
 
 bool RestPointer()

@@ -170,35 +170,35 @@
 	     PC layout's bar opens it, still binds too: with it open, a tap on a button and then a skill
 	     puts the skill there, a skill picked first goes on the next button tapped. -->
 	<div id="tc_bind_hint" data-if="hint_shown">{{bind_hint}}</div>
-	<div id="tc_skill_0" class="tc-button tc-skill" data-class-selected="skill_0_selected" data-class-empty="skill_0_empty" data-class-bind="skill_0_bind"
+	<div id="tc_skill_0" class="tc-button tc-skill" data-class-selected="skill_0_selected" data-class-empty="skill_0_empty" data-class-nomana="skill_0_nomana" data-class-bind="skill_0_bind"
 	     data-class-target="picker_open &amp;&amp; picker_slot == 0" data-class-focused="picker_focus == 'tc_skill_0'">
 		<div class="tc-skill-icon" data-style-decorator="skill_0_icon"></div>
 		<div class="tc-skill-plus"><div class="tc-plus-h"></div><div class="tc-plus-v"></div></div>
 		<div class="tc-cooldown" data-style-height="skill_0_cooldown * 100 + '%'"></div>
 		<div class="pad-glyph pad-face pad-x">X</div>
 	</div>
-	<div id="tc_skill_1" class="tc-button tc-skill" data-class-selected="skill_1_selected" data-class-empty="skill_1_empty" data-class-bind="skill_1_bind"
+	<div id="tc_skill_1" class="tc-button tc-skill" data-class-selected="skill_1_selected" data-class-empty="skill_1_empty" data-class-nomana="skill_1_nomana" data-class-bind="skill_1_bind"
 	     data-class-target="picker_open &amp;&amp; picker_slot == 1" data-class-focused="picker_focus == 'tc_skill_1'">
 		<div class="tc-skill-icon" data-style-decorator="skill_1_icon"></div>
 		<div class="tc-skill-plus"><div class="tc-plus-h"></div><div class="tc-plus-v"></div></div>
 		<div class="tc-cooldown" data-style-height="skill_1_cooldown * 100 + '%'"></div>
 		<div class="pad-glyph pad-face pad-y">Y</div>
 	</div>
-	<div id="tc_skill_2" class="tc-button tc-skill" data-class-selected="skill_2_selected" data-class-empty="skill_2_empty" data-class-bind="skill_2_bind"
+	<div id="tc_skill_2" class="tc-button tc-skill" data-class-selected="skill_2_selected" data-class-empty="skill_2_empty" data-class-nomana="skill_2_nomana" data-class-bind="skill_2_bind"
 	     data-class-target="picker_open &amp;&amp; picker_slot == 2" data-class-focused="picker_focus == 'tc_skill_2'">
 		<div class="tc-skill-icon" data-style-decorator="skill_2_icon"></div>
 		<div class="tc-skill-plus"><div class="tc-plus-h"></div><div class="tc-plus-v"></div></div>
 		<div class="tc-cooldown" data-style-height="skill_2_cooldown * 100 + '%'"></div>
 		<div class="pad-glyph pad-bumper">RB</div>
 	</div>
-	<div id="tc_skill_3" class="tc-button tc-skill" data-class-selected="skill_3_selected" data-class-empty="skill_3_empty" data-class-bind="skill_3_bind"
+	<div id="tc_skill_3" class="tc-button tc-skill" data-class-selected="skill_3_selected" data-class-empty="skill_3_empty" data-class-nomana="skill_3_nomana" data-class-bind="skill_3_bind"
 	     data-class-target="picker_open &amp;&amp; picker_slot == 3" data-class-focused="picker_focus == 'tc_skill_3'">
 		<div class="tc-skill-icon" data-style-decorator="skill_3_icon"></div>
 		<div class="tc-skill-plus"><div class="tc-plus-h"></div><div class="tc-plus-v"></div></div>
 		<div class="tc-cooldown" data-style-height="skill_3_cooldown * 100 + '%'"></div>
 		<div class="pad-glyph pad-trigger">LT</div>
 	</div>
-	<div id="tc_skill_4" class="tc-button tc-skill" data-class-selected="skill_4_selected" data-class-empty="skill_4_empty" data-class-bind="skill_4_bind"
+	<div id="tc_skill_4" class="tc-button tc-skill" data-class-selected="skill_4_selected" data-class-empty="skill_4_empty" data-class-nomana="skill_4_nomana" data-class-bind="skill_4_bind"
 	     data-class-target="picker_open &amp;&amp; picker_slot == 4" data-class-focused="picker_focus == 'tc_skill_4'">
 		<div class="tc-skill-icon" data-style-decorator="skill_4_icon"></div>
 		<div class="tc-skill-plus"><div class="tc-plus-h"></div><div class="tc-plus-v"></div></div>

@@ -135,6 +135,7 @@ namespace
 #include "Render/Lighting/LightMoodSetting.h"
 #include "Render/Effects/FullSetGlow.h"
 #include "Render/Effects/SeasonAura.h"
+#include "GameLogic/Touch/TouchActions.h"
 
 CHARACTER* CharactersClient;
 CHARACTER CharacterView;
@@ -11495,6 +11496,8 @@ void RenderCharactersClient()
     // Characters keep their Classic look with post-processing on: their bodies,
     // equipment, wings and glow parts never feed the bloom.
     const mu::ScopedBloomExclusion classicCharacters;
+    // The touch buttons' target is lit as the mouse lights the one under it.
+    const int touchTarget = GameLogic::Touch::TargetIndex();
     for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
     {
         CHARACTER* c = &CharactersClient[i];
@@ -11552,7 +11555,7 @@ void RenderCharactersClient()
         {
             if (o->Visible)
             {
-                if (i != SelectedCharacter && i != SelectedNpc)
+                if (i != SelectedCharacter && i != SelectedNpc && i != touchTarget)
                     RenderCharacter(c, o);
                 else
                     RenderCharacter(c, o, true);
