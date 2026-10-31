@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-visual">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-visual, viewport-fit=cover">
 <meta name="theme-color" content="#0d0e12">
 <link rel="manifest" href="manifest.webmanifest">
 <title>MU Online (web)</title>
@@ -69,22 +69,27 @@
      scrolls, zooms, selects or flashes under the player's fingers. */
   #menu, #play, #rotate { display: none; }
   html.phone, html.phone body { height: 100dvh; overflow: hidden; overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
-  html.phone #stage { height: 100%; }
+  /* The page reaches under an iPhone's notch and home bar and a phone's camera cutout
+     (viewport-fit=cover); the game and the page's buttons stay in the safe area beside them, so no
+     control lies under the home bar, whose swipe leaves the game. The bars beside the game are black. */
+  html.phone, html.phone body { background: #000; }
+  html.phone #stage { position: fixed; top: env(safe-area-inset-top, 0px); right: env(safe-area-inset-right, 0px);
+                      bottom: env(safe-area-inset-bottom, 0px); left: env(safe-area-inset-left, 0px); height: auto; }
   html.phone #canvas { touch-action: none; }
-  html.phone #status { inset: 0; }
+  html.phone #status { inset: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
   html.phone #log { bottom: 0; }
-  html.phone #menu { display: block; position: fixed; top: .5rem; right: .5rem; z-index: 2; width: 3rem; height: 3rem; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: rgba(22,24,31,.6); color: var(--ink); font-size: 1.25rem; line-height: 1; cursor: pointer; }
-  html.phone footer { position: fixed; top: .5rem; right: 4rem; z-index: 2; height: auto; flex-direction: column; align-items: stretch; gap: .5rem; padding: .75rem; border: 1px solid var(--line); border-radius: 6px; }
+  html.phone #menu { display: block; position: fixed; top: calc(.5rem + env(safe-area-inset-top, 0px)); right: calc(.5rem + env(safe-area-inset-right, 0px)); z-index: 2; width: 3rem; height: 3rem; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: rgba(22,24,31,.6); color: var(--ink); font-size: 1.25rem; line-height: 1; cursor: pointer; }
+  html.phone footer { position: fixed; top: calc(.5rem + env(safe-area-inset-top, 0px)); right: calc(4rem + env(safe-area-inset-right, 0px)); z-index: 2; height: auto; flex-direction: column; align-items: stretch; gap: .5rem; padding: .75rem; border: 1px solid var(--line); border-radius: 6px; }
   html.phone footer:not(.open), html.phone footer > span { display: none; }
   html.phone footer button, html.phone footer select { padding: .45rem .9rem; }
   /* Phones, before the game: Play opens it fullscreen and sideways. */
-  html.phone #play.show { display: flex; position: fixed; left: 50%; bottom: 1rem; transform: translateX(-50%); z-index: 3; flex-direction: column; align-items: center; gap: .35rem; padding: .75rem 1.25rem; border: 1px solid var(--line); border-radius: 8px; background: rgba(22,24,31,.94); }
+  html.phone #play.show { display: flex; position: fixed; left: 50%; bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 3; flex-direction: column; align-items: center; gap: .35rem; padding: .75rem 1.25rem; border: 1px solid var(--line); border-radius: 8px; background: rgba(22,24,31,.94); }
   #play-fullscreen { font: inherit; font-size: 1.125rem; font-weight: 600; color: #1b1406; background: var(--gold); border: 0; border-radius: 6px; padding: .6rem 2.25rem; cursor: pointer; }
   #play-here { font: inherit; font-size: .8125rem; color: var(--muted); background: none; border: 0; padding: .25rem; text-decoration: underline; cursor: pointer; }
   #install { font: inherit; font-size: 1rem; font-weight: 600; color: var(--gold); background: transparent; border: 1px solid var(--gold); border-radius: 6px; padding: .45rem 1.5rem; cursor: pointer; }
   #play-fullscreen[hidden], #install[hidden], footer button[hidden], #install-hint[hidden] { display: none; }
   /* Where the browser has no Install of its own to offer: the steps in its menu. */
-  #install-hint { position: fixed; left: 50%; bottom: 1rem; transform: translateX(-50%); z-index: 5; width: min(28rem, calc(100% - 2rem)); padding: .9rem 1.1rem; border: 1px solid var(--gold); border-radius: 8px; background: rgba(22,24,31,.97); text-align: center; white-space: pre-line; }
+  #install-hint { position: fixed; left: 50%; bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 5; width: min(28rem, calc(100% - 2rem)); padding: .9rem 1.1rem; border: 1px solid var(--gold); border-radius: 8px; background: rgba(22,24,31,.97); text-align: center; white-space: pre-line; }
   #install-hint p { margin: 0 0 .6rem; }
   #install-hint button { font: inherit; font-weight: 600; color: #1b1406; background: var(--gold); border: 0; border-radius: 6px; padding: .35rem 1.75rem; cursor: pointer; }
   /* Phones held upright: the game is played sideways. */
@@ -246,6 +251,8 @@
   const canvasSetups = new Map();   // GPUCanvasContext -> the game's configuration
   const setUpAgain = new Map();     // GPUCanvasContext -> why it is set up again before its next frame
   let setUpAgainTimers = [];
+  // Frames the game has drawn on a phone or tablet (Quality steps down by itself, autoQuality).
+  let framesDrawn = 0;
   function setUpPictureAgain(reason) {
     for (const context of canvasSetups.keys()) setUpAgain.set(context, reason);
   }
@@ -343,6 +350,7 @@
         }
       }
       gameFrames++;
+      framesDrawn++;
       const check = pictureCheck;
       if (check && check.brightness === undefined && !check.measuring) {
         check.measuring = true;
@@ -809,7 +817,9 @@
   const portrait = matchMedia("(orientation: portrait)");
   if (pageParams.has("reset")) {
     try {
-      for (const key of ["mu-web/resolution", "mu-web/quality", "mu-web/effects-before-lowest"]) localStorage.removeItem(key);
+      for (const key of ["mu-web/resolution", "mu-web/quality", "mu-web/quality-auto", "mu-web/effects-before-lowest"]) {
+        localStorage.removeItem(key);
+      }
     } catch (e) {}
   }
   const effectsBeforeLowest = parseInt(stored("mu-web/effects-before-lowest"), 10);
@@ -952,7 +962,67 @@
 
   const qualitySelect = document.getElementById("quality");
   qualitySelect.value = display.quality;
-  qualitySelect.onchange = () => { display.setQuality(qualitySelect.value); canvas.focus(); };
+  // A quality the page picked by itself (autoQuality) rather than the player: "1".
+  const QUALITY_AUTO = "mu-web/quality-auto";
+  qualitySelect.onchange = () => {
+    store(QUALITY_AUTO, "0");
+    display.setQuality(qualitySelect.value);
+    canvas.focus();
+  };
+
+  // Phones and tablets: Quality steps down by itself, High to Medium to Low, while the game draws
+  // fewer than 40 frames a second in the world. A phone the GPU check doesn't know as weak (an Adreno
+  // 610 or 619, a Mali-G57, an older iPhone) starts at High, up to 1.5 million pixels a frame, and Low
+  // draws a quarter of that. Never to Lowest (it turns the effects off) and never back up; only while
+  // the player hasn't picked a quality in the footer. Measured over 20 s while the page is shown, from
+  // 45 s after the character enters the world and 20 s after a step, not while a map loads; two slow
+  // measures in a row step down. A player who capped the game below 50 frames (Options, FPS Limit)
+  // gets 70 % of the cap as the bar. index.html?noautoquality turns it off.
+  const AUTO_QUALITY = { afterWorldMs: 45000, afterStepMs: 20000, windowMs: 20000, minFps: 40, slowInRow: 2 };
+  const LOWER_QUALITY = { high: "medium", medium: "low" };
+  const QUALITY_NAMES = { high: "High", medium: "Medium", low: "Low", lowest: "Lowest" };
+  let worldEnteredAt = 0;      // performance.now() the character entered the world, 0: not in it
+  const autoQuality = {
+    windowStart: 0, windowFrames: 0, slow: 0, quietUntil: 0,
+    playerPicked() {
+      return QUALITY_BUDGETS[stored("mu-web/quality")] && stored(QUALITY_AUTO) !== "1";
+    },
+    // The bar the game's frame rate is measured against (config.ini's [Render] FpsCap, -1: none).
+    minFps(config) {
+      const cap = /^FpsCap=(-?\d+)\s*$/m.exec(config || "");
+      const fps = cap ? Number(cap[1]) : -1;
+      return fps > 0 && fps < 50 ? fps * 0.7 : AUTO_QUALITY.minFps;
+    },
+    restart(now) {
+      this.windowStart = now;
+      this.windowFrames = framesDrawn;
+    },
+    // Every few seconds; config is config.ini's text, busy whether a map is loading.
+    tick(config, busy) {
+      const now = performance.now();
+      const lower = LOWER_QUALITY[display.quality];
+      if (!lower || this.playerPicked()) return;
+      if (busy || document.visibilityState !== "visible" || !worldEnteredAt ||
+          now < worldEnteredAt + AUTO_QUALITY.afterWorldMs || now < this.quietUntil) {
+        this.restart(now);
+        this.slow = 0;
+        return;
+      }
+      if (now - this.windowStart < AUTO_QUALITY.windowMs) return;
+      const fps = (framesDrawn - this.windowFrames) * 1000 / (now - this.windowStart);
+      this.restart(now);
+      const bar = this.minFps(config);
+      this.slow = fps < bar ? this.slow + 1 : 0;
+      if (this.slow < AUTO_QUALITY.slowInRow) return;
+      this.slow = 0;
+      this.quietUntil = now + AUTO_QUALITY.afterStepMs;
+      appendLog(`Quality: ${QUALITY_NAMES[lower]} by itself (the game drew ${Math.round(fps)} frames a second ` +
+                `at ${QUALITY_NAMES[display.quality]}, under ${Math.round(bar)}); the footer's Quality picks one for good`);
+      qualitySelect.value = lower;
+      display.setQuality(lower);
+      store(QUALITY_AUTO, "1");
+    },
+  };
 
   // When the game's code fails (a WebAssembly error), say so and stop calling into it. The failure
   // can leave a lock taken (inside malloc, say), and the next call from the page (saving settings,
@@ -984,6 +1054,7 @@
   window.muInWorld = (inWorld) => {
     if (inWorld && !crashed) addEventListener("beforeunload", askBeforeLeaving);
     else removeEventListener("beforeunload", askBeforeLeaving);
+    worldEnteredAt = inWorld ? worldEnteredAt || performance.now() : 0;
   };
   function gameCrashed(error) {
     if (crashed) return;
@@ -1523,12 +1594,22 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     // (2026-10-30). The service worker keeps them (sw.js), so it is needed, as are the game's reads
     // going through it (a worker's, and the page thread's in Safari, WebFileSystem.cpp g_pageReads, not
     // with ?syncreads). A file already kept is left alone, a
-    // map pack downloading goes first, and the game's own downloads come before these. Not on phones
-    // and tablets (their data plans and storage); with sound or music off in Options, not those
-    // files. index.html?prefetch downloads them on any device, ?noprefetch on none.
+    // map pack downloading goes first, and the game's own downloads come before these. Phones and
+    // tablets only on Wi-Fi (or a cable) with the browser's data saver off, and only what comes into
+    // sight (PHONE_BACKGROUND_FOLDERS, about 200 MB of the 400), stopping when the phone leaves Wi-Fi:
+    // the browser says which network it is on (Chrome and Edge on Android; Safari doesn't, so iPhones
+    // download none). With sound or music off in Options, not those files. index.html?prefetch
+    // downloads them all on any device, ?noprefetch none on any.
+    const connection = navigator.connection;
+    const onWifi = () => !!connection && !connection.saveData && (connection.type === "wifi" || connection.type === "ethernet");
+    const phoneDownloads = phone && !pageParams.has("prefetch");
     const backgroundDownloads = pageParams.has("prefetch") ||
-      (!pageParams.has("noprefetch") && !phone && !(filesOnPageThread && pageParams.has("syncreads")));
-    const BACKGROUND_DOWNLOADS = 4;   // files downloading at once
+      (!pageParams.has("noprefetch") && (!phone || onWifi()) && !(filesOnPageThread && pageParams.has("syncreads")));
+    const PHONE_BACKGROUND_FOLDERS = ["shaders/", "Data/Monster/", "Data/NPC/", "Data/Player/", "Data/Item/",
+                                      "Data/Effect/", "Data/Skill/"];
+    // Files downloading at once; a phone's fewer and from a minute after the start, its small cores
+    // busy with the game.
+    const BACKGROUND_DOWNLOADS = phoneDownloads ? 2 : 4;
     // The ones a game reads most often first: what comes into sight (monsters, NPCs, armour,
     // weapons, skill effects), then windows, sounds, music, then the rest.
     const BACKGROUND_ORDER = ["shaders/", "Data/Monster/", "Data/NPC/", "Data/Player/", "Data/Item/", "Data/Effect/",
@@ -1607,6 +1688,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       }
       const files = Object.keys(versions)
         .filter((path) => !leftOut.some((folder) => path.startsWith(folder)))
+        .filter((path) => !phoneDownloads || PHONE_BACKGROUND_FOLDERS.some((folder) => path.startsWith(folder)))
         .sort((a, b) => backgroundRank(a) - backgroundRank(b))
         .map((path) => new URL(`${path}?v=${versions[path]}`, location.href).href)
         .filter((url) => !kept.has(url));
@@ -1615,13 +1697,19 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         return;
       }
       appendLog(`Game files in the background: downloading ${files.length} of ${Object.keys(versions).length}` +
+                (phoneDownloads ? " (a phone on Wi-Fi: what comes into sight)" : "") +
                 (leftOut.length ? ` (sound or music off: not ${leftOut.join(", ")})` : ""));
       const started = performance.now();
       const queue = taskQueue(BACKGROUND_DOWNLOADS);
-      let downloaded = 0, bytes = 0, failed = 0, failedInRow = 0;
+      let downloaded = 0, bytes = 0, failed = 0, failedInRow = 0, leftWifi = false;
       await Promise.all(files.map((url) => queue(async () => {
         // A server that answers nothing 20 times in a row: the rest is left for the game to read.
-        if (failedInRow >= 20) return;
+        if (failedInRow >= 20 || leftWifi) return;
+        if (phoneDownloads && !onWifi()) {
+          leftWifi = true;
+          appendLog("Game files in the background: stopped, the phone left Wi-Fi");
+          return;
+        }
         while (mapPacksLoading) await new Promise((resume) => setTimeout(resume, 250));
         try {
           // Not "bytes += await …": that reads bytes before the wait, and the other downloads'
@@ -1642,6 +1730,30 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       await dropOldVersions(kept);
     }
 
+    // The game's code through the service worker, which keeps it unpacked, so the browser keeps its
+    // compiled code and the next start doesn't compile it again (sw.js, unpackedCode). Only from a
+    // worker that does that: a release's first visit is answered by the one before it, which would
+    // download Main.wasm unpacked. index.html?nocodecache (or ?nostore) unpacks it in the page.
+    let codeFromWorker = false;
+    const unpackedCodeUrl = (keep) => `Main.wasm?v=${code["Main.wasm"]}&unpacked${keep ? "&keep" : ""}`;
+    async function workerKeepsCode() {
+      if (!code["Main.wasm"] || !self.caches || !(navigator.serviceWorker && navigator.serviceWorker.controller) ||
+          pageParams.has("nocodecache") || pageParams.has("nostore")) {
+        return false;
+      }
+      try {
+        const features = await fetch("sw-features", { cache: "no-store" });
+        return features.ok && (await features.json()).unpackedCode === true;
+      } catch (e) {
+        return false;
+      }
+    }
+    async function keepCodeForNextStart() {
+      if (!(await workerKeepsCode())) return;
+      const response = await fetch(unpackedCodeUrl(true), { credentials: "same-origin", priority: "low" });
+      if (response.status === 204) appendLog("Game code kept on this device for the next start");
+    }
+
     // Global for Main.js, which picks up an existing Module object.
     window.Module = {
       canvas,
@@ -1660,13 +1772,19 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         canvas.focus();
         setInterval(saveConfig, 3000);
         addEventListener("pagehide", saveConfig);
+        const minuteAfterStart = startupPackSettled.then(() => new Promise((resume) => setTimeout(resume, 60000)));
         if (backgroundDownloads) {
-          startupPackSettled.then(downloadRestInBackground)
+          (phoneDownloads ? minuteAfterStart : startupPackSettled).then(downloadRestInBackground)
             .catch((e) => appendLog(`Game files in the background: stopped (${e})`, true));
         } else if (navigator.serviceWorker && navigator.serviceWorker.controller) {
           // A minute after the start, away from the game's first reads.
-          startupPackSettled.then(() => new Promise((resume) => setTimeout(resume, 60000)))
-            .then(() => dropOldVersions()).catch(() => {});
+          minuteAfterStart.then(() => dropOldVersions()).catch(() => {});
+        }
+        // The page unpacked the game's code itself (the service worker didn't answer this visit yet):
+        // the worker unpacks and keeps it for the next start, away from the game's first reads.
+        if (!codeFromWorker) minuteAfterStart.then(keepCodeForNextStart).catch(() => {});
+        if (phone && !pageParams.has("noautoquality")) {
+          setInterval(() => autoQuality.tick(gameConfig(), !!mapPacksLoading), 5000);
         }
       },
       onAbort: (what) => gameCrashed(what),
@@ -1674,15 +1792,30 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       // (fetchPacked), Main.wasm where that fails.
       instantiateWasm: (imports, done) => {
         (async () => {
-          let result;
-          try {
-            const source = await fetchPacked("Main.wasm", { credentials: "same-origin" }, code["Main.wasm"]);
-            const wasm = new Response(unpacked(source.response.body, source.packed), { headers: { "Content-Type": "application/wasm" } });
-            result = await WebAssembly.instantiateStreaming(wasm, imports);
-          } catch (e) {
-            appendLog(`Main.wasm.gz didn't load (${e}), taking Main.wasm`, true);
-            result = await WebAssembly.instantiateStreaming(fetch(versioned("Main.wasm"), { credentials: "same-origin" }), imports);
+          const started = performance.now();
+          let result, how;
+          if (await workerKeepsCode()) {
+            try {
+              result = await WebAssembly.instantiateStreaming(fetch(unpackedCodeUrl(), { credentials: "same-origin" }), imports);
+              codeFromWorker = true;
+              how = "kept on this device unpacked, its compiled code too where the browser keeps it";
+            } catch (e) {
+              appendLog(`Main.wasm from the service worker didn't load (${e}), taking Main.wasm.gz`, true);
+            }
           }
+          if (!result) {
+            try {
+              const source = await fetchPacked("Main.wasm", { credentials: "same-origin" }, code["Main.wasm"]);
+              const wasm = new Response(unpacked(source.response.body, source.packed), { headers: { "Content-Type": "application/wasm" } });
+              result = await WebAssembly.instantiateStreaming(wasm, imports);
+              how = "unpacked by the page";
+            } catch (e) {
+              appendLog(`Main.wasm.gz didn't load (${e}), taking Main.wasm`, true);
+              result = await WebAssembly.instantiateStreaming(fetch(versioned("Main.wasm"), { credentials: "same-origin" }), imports);
+              how = "Main.wasm";
+            }
+          }
+          appendLog(`Game code ready in ${((performance.now() - started) / 1000).toFixed(1)} s (${how})`);
           done(result.instance, result.module);
         })().catch((e) => gameCrashed("Main.wasm: " + e));
         return {};

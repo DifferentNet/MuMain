@@ -5,7 +5,8 @@
  * answered from the browser's storage, and a release that changes the file changes its URL. The
  * server answers those with "Cache-Control: no-cache", and the game asks for byte ranges, which the
  * browser's own cache doesn't keep: before this, a phone downloaded them again at every visit.
- * The packs aren't here: the page keeps them itself (index.html). Everything else goes to the network
+ * The packs aren't here: the page keeps them itself (index.html). Main.wasm is also kept unpacked
+ * (unpackedCode below), so the browser can keep its compiled code. Everything else goes to the network
  * as it would without this file. With no connection, opening the page shows a short note instead of
  * the browser's error page.
  *
@@ -13,6 +14,11 @@
  */
 // The game's file system reads kept files from here itself (fetch-backend.js, readKept): keep the name.
 const FILES = "mu-web/files";
+// Main.wasm unpacked, the current release's only (unpackedCode).
+const CODE = "mu-web/code";
+// What this worker does that an older one didn't: the page asks before relying on it (a release's first
+// visit is still answered by the worker before it).
+const FEATURES = { unpackedCode: true };
 
 self.addEventListener("install", () => self.skipWaiting());
 
@@ -27,9 +33,14 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return;
+  const url = new URL(request.url);
   if (request.mode === "navigate") {
     event.respondWith(openPage(event));
-  } else if (new URL(request.url).searchParams.has("v")) {
+  } else if (url.pathname.endsWith("/sw-features")) {
+    event.respondWith(new Response(JSON.stringify(FEATURES), { headers: { "Content-Type": "application/json" } }));
+  } else if (url.pathname.endsWith("/Main.wasm") && url.searchParams.has("unpacked")) {
+    event.respondWith(unpackedCode(event, url));
+  } else if (url.searchParams.has("v")) {
     event.respondWith(versionedFile(event));
   }
 });
@@ -83,6 +94,51 @@ async function downloadWhole(url, background) {
   if (response.status !== 200) return { response };
   const blob = await response.blob();
   return { blob, response: new Response(blob, { status: 200, statusText: response.statusText, headers: response.headers }) };
+}
+
+// The game's code, Main.wasm?v=<hash>&unpacked: unpacked and kept whole on the device. It comes
+// packed (Main.wasm.gz), and the page used to unpack it into a response of its own, whose compiled
+// code the browser never keeps: every start compiled the 21 MB of code again, seconds of a phone's
+// processor. A response from this store is one the browser keeps the compiled code of (Chrome, Edge),
+// and the next start skips compiling. The first time it is unpacked here as it downloads, the page
+// compiling it meanwhile. "&keep" only fills the store and answers 204 (the page's first visit, before
+// this worker answered it). The earlier release's copy is dropped once this one is kept.
+async function unpackedCode(event, url) {
+  const version = url.searchParams.get("v") || "";
+  const key = new URL(`Main.wasm?v=${version}&unpacked`, url).href;
+  const fillOnly = url.searchParams.has("keep");
+  const cache = await caches.open(CODE).catch(() => null);
+  const kept = cache ? await cache.match(key).catch(() => undefined) : undefined;
+  if (kept) return fillOnly ? new Response(null, { status: 204 }) : kept;
+  let body = null;
+  if (self.DecompressionStream) {
+    const packed = await fetch(new URL(`Main.wasm.gz?v=${version}`, url), { credentials: "same-origin" }).catch(() => null);
+    if (packed && packed.ok) {
+      // A server that marks the copy as gzip has the browser unpack it already.
+      body = /gzip/i.test(packed.headers.get("Content-Encoding") || "")
+        ? packed.body : packed.body.pipeThrough(new DecompressionStream("gzip"));
+    }
+  }
+  if (!body) {
+    const plain = await fetch(new URL(`Main.wasm?v=${version}`, url), { credentials: "same-origin" });
+    if (!plain.ok) return plain;
+    body = plain.body;
+  }
+  const headers = { "Content-Type": "application/wasm" };
+  if (!cache) return fillOnly ? new Response(null, { status: 204 }) : new Response(body, { headers });
+  let forPage = null;
+  if (!fillOnly) [body, forPage] = body.tee();
+  const keeping = cache.put(key, new Response(body, { headers })).then(async () => {
+    for (const request of await cache.keys()) {
+      if (request.url !== key) await cache.delete(request);
+    }
+  }).catch(() => {});   // the device is full: unpacked by the page next time
+  if (fillOnly) {
+    await keeping;
+    return new Response(null, { status: 204 });
+  }
+  event.waitUntil(keeping);
+  return new Response(forPage, { headers });
 }
 
 // Keeps a file. The page drops its earlier versions, once a release (index.html, dropOldVersions):
