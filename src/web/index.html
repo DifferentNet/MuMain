@@ -87,7 +87,14 @@
   #play-fullscreen { font: inherit; font-size: 1.125rem; font-weight: 600; color: #1b1406; background: var(--gold); border: 0; border-radius: 6px; padding: .6rem 2.25rem; cursor: pointer; }
   #play-here { font: inherit; font-size: .8125rem; color: var(--muted); background: none; border: 0; padding: .25rem; text-decoration: underline; cursor: pointer; }
   #install { font: inherit; font-size: 1rem; font-weight: 600; color: var(--gold); background: transparent; border: 1px solid var(--gold); border-radius: 6px; padding: .45rem 1.5rem; cursor: pointer; }
-  #play-fullscreen[hidden], #install[hidden], footer button[hidden], #install-hint[hidden] { display: none; }
+  #play-fullscreen[hidden], #install[hidden], footer button[hidden], #install-hint[hidden], #play-here[hidden] { display: none; }
+  /* The Play card's choice of how the game's files come: Lite (as it is played) or Full (all now). */
+  #download-choice { display: flex; flex-direction: column; align-items: center; gap: .3rem; margin-top: .2rem; font-size: .8125rem; color: var(--muted); text-align: center; }
+  #download-choice > div { display: flex; gap: .4rem; }
+  #download-choice button { font: inherit; font-size: .875rem; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: .35rem .9rem; cursor: pointer; }
+  #download-choice button[aria-pressed="true"] { color: var(--gold); border-color: var(--gold); font-weight: 600; }
+  #download-choice button:focus-visible { outline: 2px solid var(--gold); }
+  #download-choice small { max-width: 22rem; font-size: .75rem; }
   /* Where the browser has no Install of its own to offer: the steps in its menu. */
   #install-hint { position: fixed; left: 50%; bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 5; width: min(28rem, calc(100% - 2rem)); padding: .9rem 1.1rem; border: 1px solid var(--gold); border-radius: 8px; background: rgba(22,24,31,.97); text-align: center; white-space: pre-line; }
   #install-hint p { margin: 0 0 .6rem; }
@@ -113,6 +120,14 @@
   <button id="play-fullscreen" type="button">Play</button>
   <button id="install" type="button" hidden>Install the game · Установить игру</button>
   <button id="play-here" type="button">Stay in the browser · Остаться в браузере</button>
+  <div id="download-choice" role="group" aria-label="Game files">
+    <span>Game files · Файлы игры</span>
+    <div>
+      <button type="button" data-full="0" aria-pressed="false">Lite · Лёгкая</button>
+      <button type="button" data-full="1" aria-pressed="false">Full · Полная</button>
+    </div>
+    <small></small>
+  </div>
 </div>
 <div id="install-hint" role="dialog" aria-label="Install" hidden><p></p><button type="button">OK</button></div>
 <div id="rotate"><div><div id="rotate-icon"></div>Turn your phone sideways<br>Поверните телефон горизонтально</div></div>
@@ -473,6 +488,49 @@
   // fills the screen (opened from the home screen, manifest.webmanifest). An iPhone has no fullscreen
   // for pages: there the card offers Install, or playing in the browser.
   const homeScreenApp = matchMedia("(display-mode: fullscreen), (display-mode: standalone), (display-mode: minimal-ui)").matches;
+
+  // How the game's other files come (ghinzuro, 2026-10-31: beside Install, for the browser and the
+  // installed app alike). Lite: as before, each file when the game first reads it, plus the automatic
+  // download of what comes into sight on a phone's Wi-Fi. Full: everything now, on any network: the
+  // files and every map's pack (downloadRestInBackground). Kept in the browser (FULL_DOWNLOAD: "1" Full,
+  // "0" Lite); the footer's "Download game" shows the progress and changes it too. Phones and tablets
+  // see it on the Play card, the installed app once, until a choice is made; a computer downloads
+  // everything in the background anyway.
+  const FULL_DOWNLOAD = "mu-web/full-download";
+  let applyDownloadChoice = null;   // starts or stops the download once the page can (downloadButton)
+  const downloadChoice = document.getElementById("download-choice");
+  const DOWNLOAD_NOTES = [
+    "Lite: files download as you play, the first visit to a place loads a little longer · " +
+      "Лёгкая: файлы качаются по ходу игры, первый заход в новое место чуть дольше",
+    "Full: the whole game now, about 800 MB, best on Wi-Fi · " +
+      "Полная: вся игра сразу, около 800 МБ, лучше по Wi-Fi",
+  ];
+  function showDownloadChoice() {
+    const full = stored(FULL_DOWNLOAD) === "1";
+    for (const button of downloadChoice.querySelectorAll("button")) {
+      button.setAttribute("aria-pressed", String((button.dataset.full === "1") === full));
+    }
+    downloadChoice.querySelector("small").textContent = DOWNLOAD_NOTES[full ? 1 : 0];
+  }
+  function chooseDownload(full) {
+    store(FULL_DOWNLOAD, full ? "1" : "0");
+    showDownloadChoice();
+    if (applyDownloadChoice) applyDownloadChoice(full);
+  }
+  for (const button of downloadChoice.querySelectorAll("button")) {
+    button.onclick = () => {
+      chooseDownload(button.dataset.full === "1");
+      // The installed app's card holds only this choice: made, it goes.
+      if (homeScreenApp) { playCard.classList.remove("show"); canvas.focus(); }
+    };
+  }
+  showDownloadChoice();
+  if (phone && homeScreenApp && stored(FULL_DOWNLOAD) === null &&
+      !new URLSearchParams(location.search).has("noprefetch")) {
+    document.getElementById("play-fullscreen").hidden = true;
+    document.getElementById("play-here").hidden = true;
+    playCard.classList.add("show");
+  }
   if (phone && !homeScreenApp) {
     const playButton = document.getElementById("play-fullscreen");
     const stayButton = document.getElementById("play-here");
@@ -1603,9 +1661,6 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     // downloads them all on any device, ?noprefetch none on any.
     const connection = navigator.connection;
     const onWifi = () => !!connection && !connection.saveData && (connection.type === "wifi" || connection.type === "ethernet");
-    // The footer's "Download game" (downloadButton below): the player asked for the whole game on this
-    // device, on any network; kept for later visits, so a release's new files come at the start.
-    const FULL_DOWNLOAD = "mu-web/full-download";
     const phoneDownloads = phone && !pageParams.has("prefetch");
     const backgroundDownloads = pageParams.has("prefetch") ||
       (!pageParams.has("noprefetch") && (!phone || onWifi()) && !(filesOnPageThread && pageParams.has("syncreads")));
@@ -1694,6 +1749,45 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       downloadButton.update();
       return job;
     }
+    // Every map's pack (packs/worldN.json in files.txt) not kept on this device yet, as
+    // [world, index entry]; for the full download.
+    async function mapPacksToKeep() {
+      const store = await openStore(MAP_PACK_STORE);
+      if (!store) return { store: null, packs: [], worlds: 0 };
+      const list = await (await fetch("files.txt", { cache: "no-cache" })).text();
+      const worlds = [...list.matchAll(/^packs\/world(\d+)\.json\r?$/gm)].map((match) => Number(match[1]));
+      const packs = [];
+      for (const world of worlds) {
+        try {
+          const response = await fetch(`packs/world${world}.json`, { cache: "no-cache" });
+          if (!response.ok) continue;
+          const entry = Object.assign({ name: `packs/world${world}.pack` }, await response.json());
+          if (!(await store.match(packKey(entry)))) packs.push([world, entry]);
+        } catch (e) { /* that map downloads when entered */ }
+      }
+      return { store, packs, worlds: worlds.length };
+    }
+    // How many maps have a pack and how many of them this device keeps (any release's copy), for the
+    // button's share of the game on the device.
+    async function mapPackCounts() {
+      const store = await openStore(MAP_PACK_STORE);
+      if (!store) return { worlds: 0, kept: 0 };
+      const list = await (await fetch("files.txt", { cache: "no-cache" })).text();
+      const worlds = (list.match(/^packs\/world\d+\.json\r?$/gm) || []).length;
+      const kept = new Set((await store.keys()).map((request) => packPath(request.url))).size;
+      return { worlds, kept: Math.min(kept, worlds) };
+    }
+    // Downloads a map's pack into its storage as the game would keep it on entering the map (mapPack).
+    async function keepMapPack(store, entry) {
+      const source = await fetchPacked(entry.name, { cache: "no-store" });
+      const key = packKey(entry);
+      await store.put(key, new Response(await source.response.arrayBuffer(),
+                                        { headers: { "X-Mu-Packed": source.packed ? "1" : "0" } }));
+      for (const request of await store.keys()) {
+        if (request.url !== key && packPath(request.url) === packPath(key)) await store.delete(request);
+      }
+      return entry.packed || 0;
+    }
     async function downloadRestInBackground(job) {
       const full = job.full;
       let list;
@@ -1717,8 +1811,42 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         .sort(([a], [b]) => backgroundRank(a) - backgroundRank(b))
         .map(([, url]) => url)
         .filter((url) => !kept.has(url));
-      downloadButton.progress(urls.filter(([, url]) => kept.has(url)).length, urls.length);
-      if (!files.length) {
+      let maps = { store: null, packs: [], worlds: 0 };
+      let mapsKept = 0;
+      try {
+        if (full) {
+          maps = await mapPacksToKeep();
+          mapsKept = maps.worlds - maps.packs.length;
+        } else {
+          const counts = await mapPackCounts();
+          maps.worlds = counts.worlds;
+          mapsKept = counts.kept;
+        }
+      } catch (e) {
+        if (full) appendLog(`Map packs: not downloaded (${e})`, true);
+      }
+      const filesKept = urls.filter(([, url]) => kept.has(url)).length;
+      downloadButton.progress(filesKept + mapsKept, urls.length + maps.worlds);
+      if (full && maps.packs.length) {
+        const started = performance.now();
+        const queue = taskQueue(2);
+        let done = 0, bytes = 0, failed = 0;
+        await Promise.all(maps.packs.map(([world, entry]) => queue(async () => {
+          if (job.stopped) return;
+          while (mapPacksLoading) await new Promise((resume) => setTimeout(resume, 250));
+          try {
+            const size = await keepMapPack(maps.store, entry);
+            bytes += size;
+            done++;
+            downloadButton.progress(null, null, size);
+          } catch (e) {
+            failed++;
+          }
+        })));
+        appendLog(`Map packs: ${done} of ${maps.packs.length} kept on this device, ${Math.round(bytes / 1e6)} MB in ` +
+                  `${Math.round((performance.now() - started) / 1000)} s` + (failed ? `, ${failed} failed` : "") + (job.stopped ? " (stopped)" : ""), failed > 0);
+      }
+      if (!files.length || job.stopped) {
         await dropOldVersions([...kept]);
         return;
       }
@@ -1787,23 +1915,28 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
                          "Скачать всю игру на это устройство сейчас, чтобы в игре ничего не ждало сети";
         }
       };
-      button.onclick = async () => {
-        if (downloadJob && downloadJob.full && !downloadJob.stopped) {
-          downloadJob.stopped = true;
-          store(FULL_DOWNLOAD, "0");
+      button.onclick = () => {
+        if (downloadJob && downloadJob.full && !downloadJob.stopped) chooseDownload(false);
+        else if (!(total && have >= total)) chooseDownload(true);
+      };
+      // Full: stops the automatic download and starts the whole game's, after the startup pack;
+      // Lite: stops the whole game's.
+      applyDownloadChoice = async (full) => {
+        if (!full) {
+          if (downloadJob && downloadJob.full) downloadJob.stopped = true;
           update();
           return;
         }
-        if (total && have >= total) return;
-        store(FULL_DOWNLOAD, "1");
         // Asks the browser not to clear the game's files when the device runs short of space.
         try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {}
+        await startupPackSettled;
         const earlier = downloadJob;
+        if (earlier && earlier.full && !earlier.stopped) return;
         if (earlier) {
           earlier.stopped = true;
           await earlier.done;
         }
-        if (!downloadJob) startDownload(true);
+        if (!downloadJob && stored(FULL_DOWNLOAD) === "1") startDownload(true);
       };
       return {
         update,
