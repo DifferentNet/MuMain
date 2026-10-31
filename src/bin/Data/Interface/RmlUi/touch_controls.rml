@@ -7,7 +7,7 @@
 	<link type="text/rcss" href="gamepad_glyphs.rcss"/>
 	<link type="text/rcss" href="touch_controls.rcss"/>
 </head>
-<body class="native-text" data-model="touch_controls" data-class-pad="pad" data-class-no-touch="!fingers" data-class-picking="picker_open">
+<body class="native-text" data-model="touch_controls" data-class-pad="pad" data-class-no-touch="!fingers" data-class-picking="picker_open" data-class-under-hub="under_hub">
 	<!-- The on-screen controls of phones and tablets (UI/HUD/TouchControls.cpp), shown only on a touch
 	     device in the world. Nothing here takes the pointer (pointer-events: none throughout): fingers
 	     reach the controls through Core::Input::Touch, which C++ answers from these elements' boxes,
@@ -152,11 +152,14 @@
 		</div>
 	</div>
 
-	<!-- The item hotkeys Q and W (the potions), above the joystick, with how many are left. -->
-	<div id="tc_potion_q" class="tc-button tc-potion">Q<div class="tc-potion-count">{{potion_q_count}}</div>
+	<!-- The item hotkeys Q and W (the potions), above the joystick, with how many are left. E and R
+	     show only with a pad, beside the pad's row (its d-pad drinks them). -->
+	<div id="tc_potion_q" class="tc-button tc-potion">Q<div class="tc-potion-count">{{potion_q_count}}</div><div class="pad-glyph pad-bumper">LB</div></div>
+	<div id="tc_potion_w" class="tc-button tc-potion">W<div class="tc-potion-count">{{potion_w_count}}</div><div class="pad-glyph pad-trigger">LT</div></div>
+	<div id="tc_potion_e" class="tc-button tc-potion">E<div class="tc-potion-count">{{potion_e_count}}</div>
 		<div class="pad-glyph pad-dpad pad-dpad-left"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
 	</div>
-	<div id="tc_potion_w" class="tc-button tc-potion">W<div class="tc-potion-count">{{potion_w_count}}</div>
+	<div id="tc_potion_r" class="tc-button tc-potion">R<div class="tc-potion-count">{{potion_r_count}}</div>
 		<div class="pad-glyph pad-dpad pad-dpad-right"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
 	</div>
 
@@ -170,44 +173,46 @@
 	     PC layout's bar opens it, still binds too: with it open, a tap on a button and then a skill
 	     puts the skill there, a skill picked first goes on the next button tapped. -->
 	<div id="tc_bind_hint" data-if="hint_shown">{{bind_hint}}</div>
-	<div id="tc_skill_0" class="tc-button tc-skill" data-class-selected="skill_0_selected" data-class-empty="skill_0_empty" data-class-bind="skill_0_bind"
+	<div id="tc_skill_0" class="tc-button tc-skill" data-class-selected="skill_0_selected" data-class-empty="skill_0_empty" data-class-nomana="skill_0_nomana" data-class-bind="skill_0_bind"
 	     data-class-target="picker_open &amp;&amp; picker_slot == 0" data-class-focused="picker_focus == 'tc_skill_0'">
 		<div class="tc-skill-icon" data-style-decorator="skill_0_icon"></div>
 		<div class="tc-skill-plus"><div class="tc-plus-h"></div><div class="tc-plus-v"></div></div>
 		<div class="tc-cooldown" data-style-height="skill_0_cooldown * 100 + '%'"></div>
 		<div class="pad-glyph pad-face pad-x">X</div>
 	</div>
-	<div id="tc_skill_1" class="tc-button tc-skill" data-class-selected="skill_1_selected" data-class-empty="skill_1_empty" data-class-bind="skill_1_bind"
+	<div id="tc_skill_1" class="tc-button tc-skill" data-class-selected="skill_1_selected" data-class-empty="skill_1_empty" data-class-nomana="skill_1_nomana" data-class-bind="skill_1_bind"
 	     data-class-target="picker_open &amp;&amp; picker_slot == 1" data-class-focused="picker_focus == 'tc_skill_1'">
 		<div class="tc-skill-icon" data-style-decorator="skill_1_icon"></div>
 		<div class="tc-skill-plus"><div class="tc-plus-h"></div><div class="tc-plus-v"></div></div>
 		<div class="tc-cooldown" data-style-height="skill_1_cooldown * 100 + '%'"></div>
 		<div class="pad-glyph pad-face pad-y">Y</div>
 	</div>
-	<div id="tc_skill_2" class="tc-button tc-skill" data-class-selected="skill_2_selected" data-class-empty="skill_2_empty" data-class-bind="skill_2_bind"
+	<div id="tc_skill_2" class="tc-button tc-skill" data-class-selected="skill_2_selected" data-class-empty="skill_2_empty" data-class-nomana="skill_2_nomana" data-class-bind="skill_2_bind"
 	     data-class-target="picker_open &amp;&amp; picker_slot == 2" data-class-focused="picker_focus == 'tc_skill_2'">
 		<div class="tc-skill-icon" data-style-decorator="skill_2_icon"></div>
 		<div class="tc-skill-plus"><div class="tc-plus-h"></div><div class="tc-plus-v"></div></div>
 		<div class="tc-cooldown" data-style-height="skill_2_cooldown * 100 + '%'"></div>
-		<div class="pad-glyph pad-bumper">RB</div>
+		<div class="pad-glyph pad-face pad-b">B</div>
 	</div>
-	<div id="tc_skill_3" class="tc-button tc-skill" data-class-selected="skill_3_selected" data-class-empty="skill_3_empty" data-class-bind="skill_3_bind"
+	<div id="tc_skill_3" class="tc-button tc-skill" data-class-selected="skill_3_selected" data-class-empty="skill_3_empty" data-class-nomana="skill_3_nomana" data-class-bind="skill_3_bind"
 	     data-class-target="picker_open &amp;&amp; picker_slot == 3" data-class-focused="picker_focus == 'tc_skill_3'">
 		<div class="tc-skill-icon" data-style-decorator="skill_3_icon"></div>
 		<div class="tc-skill-plus"><div class="tc-plus-h"></div><div class="tc-plus-v"></div></div>
 		<div class="tc-cooldown" data-style-height="skill_3_cooldown * 100 + '%'"></div>
-		<div class="pad-glyph pad-trigger">LT</div>
+		<div class="pad-glyph pad-bumper">RB</div>
 	</div>
-	<div id="tc_skill_4" class="tc-button tc-skill" data-class-selected="skill_4_selected" data-class-empty="skill_4_empty" data-class-bind="skill_4_bind"
+	<div id="tc_skill_4" class="tc-button tc-skill" data-class-selected="skill_4_selected" data-class-empty="skill_4_empty" data-class-nomana="skill_4_nomana" data-class-bind="skill_4_bind"
 	     data-class-target="picker_open &amp;&amp; picker_slot == 4" data-class-focused="picker_focus == 'tc_skill_4'">
 		<div class="tc-skill-icon" data-style-decorator="skill_4_icon"></div>
 		<div class="tc-skill-plus"><div class="tc-plus-h"></div><div class="tc-plus-v"></div></div>
 		<div class="tc-cooldown" data-style-height="skill_4_cooldown * 100 + '%'"></div>
-		<div class="pad-glyph pad-dpad pad-dpad-down"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
+		<div class="pad-glyph pad-trigger">RT</div>
 	</div>
 	<!-- Beside the skill buttons: opens the skill picker, which sets them. -->
 	<div id="tc_skill_edit" class="tc-button">{{skills_label}}<div class="pad-glyph pad-round pad-stick">LS</div></div>
-	<div id="tc_pickup" class="tc-button tc-small">{{pickup_label}}<div class="pad-glyph pad-bumper">LB</div></div>
+	<div id="tc_pickup" class="tc-button tc-small">{{pickup_label}}
+		<div class="pad-glyph pad-dpad pad-dpad-down"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
+	</div>
 	<div id="tc_auto" class="tc-button tc-small" data-class-on="helper_on">{{auto_label}}
 		<div class="pad-glyph pad-dpad pad-dpad-up"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
 	</div>

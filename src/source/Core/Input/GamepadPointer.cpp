@@ -49,6 +49,8 @@ struct State
     Clock::time_point lastLeftPress{};
     float lastLeftX = 0.f;
     float lastLeftY = 0.f;
+    // The right button held asks for the item card (the pad's Y), not the item's own action (X).
+    bool cardClick = false;
 };
 State g_state;
 
@@ -163,6 +165,21 @@ void Move(SDL_Window* window, float x, float y, float seconds, bool precise)
     SDL_WarpMouseInWindow(window, g_state.x, g_state.y);
 }
 
+void MoveTo(SDL_Window* window, float x, float y)
+{
+    if (window == nullptr)
+        return;
+    float width = 0.f;
+    float height = 0.f;
+    WindowSize(window, width, height);
+    FitWindow(window, width, height);
+    FollowOtherDevices(window);
+    g_state.x = std::clamp(x, 0.f, width - 1.f);
+    g_state.y = std::clamp(y, 0.f, height - 1.f);
+    g_state.placed = true;
+    SDL_WarpMouseInWindow(window, g_state.x, g_state.y);
+}
+
 void Centre(SDL_Window* window)
 {
     if (window == nullptr)
@@ -219,6 +236,16 @@ void TurnWheel(SDL_Window* window, int steps)
     event.wheel.mouse_x = g_state.x;
     event.wheel.mouse_y = g_state.y;
     SDL_PushEvent(&event);
+}
+
+void SetCardClick(bool card)
+{
+    g_state.cardClick = card;
+}
+
+bool IsCardClick()
+{
+    return g_state.cardClick;
 }
 
 bool IsButtonHeld(int sdlButton)

@@ -38,6 +38,8 @@ using GetWindow = std::function<mu::ui::window::CObject*()>;
 // windows' size. A window with no slot in the workspace keeps the theme's own placement.
 void RegisterWindow(std::uint32_t windowId, std::string_view slotName, GetWindow getWindow,
                     const char* document = nullptr);
+// Whether `documentName` (for example "character_info.rml") is a registered window's document.
+[[nodiscard]] bool IsWindowDocument(std::string_view documentName);
 // A window that can only be named in data-closes.
 void RegisterName(std::uint32_t windowId, std::string_view name);
 

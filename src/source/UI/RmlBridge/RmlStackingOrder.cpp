@@ -9,6 +9,9 @@ namespace
 constexpr float BeforeWindowsDepth = 0.5f; // RenderObjectDescription(), RenderInterface()
 constexpr float TooltipDepth = 10.69f;     // just under the message boxes, see below
 constexpr float MessageBoxDepth = 10.7f;   // CNewUIMessageBoxMng
+// The pad's frame, its hub's tabs and its pickup prompt: over the windows and the message boxes its
+// frame rests on, under the item on the cursor.
+constexpr float PadOverlayDepth = 10.72f;
 constexpr float NoticesDepth = 20.0f;      // UI::Notices::Render(), after every window
 constexpr float SceneBalloonDepth = 29.0f; // CUIMng::Render(): balloons, then its windows
 constexpr float SceneWindowDepth = 30.0f;
@@ -164,6 +167,7 @@ constexpr DocumentPlacement Placements[] = {
     // New-only dialogs that replace message boxes.
     {"generic_confirm_dialog.rml", MessageBoxDepth, MainScene},
     {"generic_menu_dialog.rml", MessageBoxDepth, MainScene},
+    {"pad_overlay.rml", PadOverlayDepth, MainScene},
     // The item on the cursor: the original's camera at 10.9, over the windows and message boxes.
     {"cursor_item.rml", 10.9f, MainScene},
     {"notices.rml", NoticesDepth, AnyScene},

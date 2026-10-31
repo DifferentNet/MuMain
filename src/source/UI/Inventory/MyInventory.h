@@ -91,6 +91,13 @@ namespace mu::ui::window
         // The right button's last press came from a finger's long press or the pad's R3: its release
         // takes no worn gear off (the item card does).
         bool m_bCardRightPress = false;
+        // The right press came from the pad's X: on release it says why nothing came off.
+        bool m_bPadRightPress = false;
+        // The worn slot the left button was pressed on (-1 none): a release takes worn gear off only
+        // where its press was. The pad lets go of an NPC's click as the windows it opened appear,
+        // over the slot pointed before they closed: that release took the weapon onto the cursor,
+        // and the opening vault put it away.
+        int m_iLeftPressSlot = -1;
 
         // The whole window is RmlUi: the equipped and the grid's items are live 3D, drawn into the
         // document's #item_view (m_ItemTarget).
@@ -179,6 +186,9 @@ namespace mu::ui::window
 #endif
 
         bool UpdateMouseEvent();
+        // The gamepad's drop: the item on the cursor goes to the ground under the hero, with the same
+        // refusals as a click on the ground. False with no item on the cursor.
+        bool DropHeldItemAtFeet();
         bool UpdateKeyEvent();
         bool Update();
         bool Render();
@@ -186,6 +196,14 @@ namespace mu::ui::window
         void Render3D();
 
         bool IsVisible() const;
+
+    private:
+        // The refusals of a drop to the ground (a reinforced, expensive or bound item); an expensive
+        // or bound one goes back to its place.
+        bool MayDropPickedItem(CPickedItem* pPickedItem) const;
+        void SendPickedItemDrop(CPickedItem* pPickedItem, int tx, int ty) const;
+
+    public:
 
         void OpenningProcess();
         void ClosingProcess();
@@ -253,8 +271,9 @@ namespace mu::ui::window
         // no NPC shop open.
         bool CanTakeOffToBagNow() const;
         // Takes the worn item off into the first free place in the bag, as the right click does.
-        // False when nothing is worn there, it may not come off, or the bag has no room.
-        bool TakeOffToBag(int equipmentSlot);
+        // False when nothing is worn there, it may not come off, or the bag has no room; `saysWhenFull`
+        // tells the player the bag has no room.
+        bool TakeOffToBag(int equipmentSlot, bool saysWhenFull = false);
         // A finger's long press or the pad's R3 on worn gear: the item card, with Take off. False when
         // there is no card to show.
         bool ShowWornItemCard();

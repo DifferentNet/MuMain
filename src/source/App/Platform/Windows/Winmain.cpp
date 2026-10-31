@@ -354,6 +354,13 @@ double EffectiveOffVSyncTargetFps()
 
 void ApplyVSyncPreferenceNow(bool enabled)
 {
+#ifdef __EMSCRIPTEN__
+    // The browser shows a frame when it likes: the page paces the frames (WaitForBrowserFrame(), with
+    // the Options FPS limit), so the game's own pacing stays off.
+    (void)enabled;
+    SetTargetFps(-1);
+    return;
+#endif
     if (!IsVSyncAvailable())
     {
         SetTargetFps(EffectiveOffVSyncTargetFps());
@@ -1266,6 +1273,14 @@ void EndTyping()
         field->Blur();
 }
 
+// Whether the pointer is over the world in play, no window of either UI under it: a still finger there
+// takes longer to right-click (cast the current skill) than over a window (Touch::SetWorldQuery()).
+bool IsPointerOverWorld()
+{
+    return SceneFlag == MAIN_SCENE && !MouseOnWindow && g_pNewUISystem != nullptr &&
+           !g_pNewUISystem->CheckMouseUse() && !Core::Input::IsMouseOverUI();
+}
+
 // A real button (or a finger's) after the window's UI had it. A press the UI took stays the UI's,
 // but a release reaches the game whenever the game holds that button: a finger lifted, or a drag let
 // go, over a window of the UI must not leave the hero walking.
@@ -1307,16 +1322,33 @@ void HandleWindowResize(int width, int height)
 
 #ifdef __EMSCRIPTEN__
 // Browser build: after a frame, hands the browser a turn, so it shows the canvas and delivers input
-// and network messages, and keeps frames at most about 60 a second, so drawing more often than a
-// screen shows doesn't burn a whole core. Not tied to animation frames: Chrome gives a tab that isn't
-// on screen none. While loading (capFrames 0) there's no cap: loading draws a frame between steps.
-EM_ASYNC_JS(void, WaitForBrowserFrameJs, (int capFrames), {
-    const minimumFrameMs = capFrames ? 16 : 0;
+// and network messages, and keeps frames to at most `capFps` a second (0: no cap, while loading draws
+// a frame between steps), so drawing more often than needed doesn't burn a core and heat a phone.
+// - On screen it waits for the screen's own refresh (requestAnimationFrame), as many as the cap needs:
+//   frames land on the refresh instead of being drawn and never shown, and the phone's battery saver
+//   (which slows the refresh) slows the game too. A refresh that doesn't come (a window over the page:
+//   Chrome gives such a tab none) is not waited for past a short while.
+// - A page in the background asks for the game's reference rate (25), as a minimized window runs: the
+//   game and its connection go on, at a fraction of the work (loading goes on at full speed). Browsers
+//   run a background tab's timers about once a second, so in practice it is slower still.
+// - A device that can't keep up with the cap (a frame's own work above about 24 ms, on average) is
+//   held to 30 frames a second, evenly, instead of an uneven 30-40; it goes back above once frames
+//   are quick again (below about 16 ms).
+EM_ASYNC_JS(void, WaitForBrowserFrameJs, (int capFps), {
+    const state = Module["muFramePace"] || (Module["muFramePace"] = { cost: 0, slow: false });
+    const start = Module["muLastFrameEnd"] || 0;
     const now = performance.now();
-    const rest = minimumFrameMs - (now - (Module["muLastFrameEnd"] || 0));
-    if (rest > 1) {
-        await new Promise((resolve) => setTimeout(resolve, rest));
-    } else {
+    // Loading's frames are no measure of the world's.
+    if (start > 0 && capFps) {
+        const cost = now - start;
+        state.cost = state.cost ? state.cost * 0.9 + cost * 0.1 : cost;
+        if (!state.slow && state.cost > 24) state.slow = true;
+        else if (state.slow && state.cost < 16) state.slow = false;
+    }
+    let fps = capFps;
+    if (document.hidden && fps) fps = 25;
+    else if (fps > 30 && state.slow) fps = 30;
+    if (!fps) {
         if (!Module["muYieldChannel"]) {
             const channel = new MessageChannel();
             const waiting = [];
@@ -1328,6 +1360,25 @@ EM_ASYNC_JS(void, WaitForBrowserFrameJs, (int capFrames), {
             yielder.waiting.push(resolve);
             yielder.channel.port2.postMessage(0);
         });
+    } else {
+        // A refresh up to 2 ms early counts: a 60 Hz screen's frames come every 16.7 ms.
+        const frameMs = 1000 / fps - 2;
+        const giveUpAt = now + 1000 / fps + 50;
+        if (document.hidden) {
+            const rest = start + frameMs - now;
+            await new Promise((resolve) => setTimeout(resolve, Math.max(rest, 1)));
+        } else {
+            for (;;) {
+                const refreshed = await new Promise((resolve) => {
+                    let request = 0;
+                    const timer = setTimeout(() => { cancelAnimationFrame(request); resolve(false); },
+                                             Math.max(giveUpAt - performance.now(), 1));
+                    request = requestAnimationFrame(() => { clearTimeout(timer); resolve(true); });
+                });
+                const at = performance.now();
+                if (!refreshed || at - start >= frameMs || at >= giveUpAt) break;
+            }
+        }
     }
     Module["muLastFrameEnd"] = performance.now();
 });
@@ -1354,10 +1405,21 @@ void SyncPhoneKeyboard()
     mu::web::SyncTapOnTextField(PhoneKeysFor(tap ? ui.GetTextFieldAt(tap->x, tap->y) : nullptr));
 }
 
+// The frame cap: none while loading; 30 on the login and character screens, where nothing moves fast;
+// in the world the Options FPS limit, 60 when it has none (a phone's 90-120 Hz screen gains nothing
+// the game's 25-step logic shows, and costs heat).
 void WaitForBrowserFrame()
 {
-    const bool loading = SceneFlag == WEBZEN_SCENE || SceneFlag == LOADING_SCENE;
-    WaitForBrowserFrameJs(loading ? 0 : 1);
+    constexpr int WorldFps = 60;
+    constexpr int MenuFps = 30;
+    if (SceneFlag == WEBZEN_SCENE || SceneFlag == LOADING_SCENE)
+    {
+        WaitForBrowserFrameJs(0);
+        return;
+    }
+    const int limit = GameConfig::GetInstance().GetFpsCap();
+    const int worldFps = limit > 0 ? std::min(limit, WorldFps) : WorldFps;
+    WaitForBrowserFrameJs(SceneFlag == MAIN_SCENE ? worldFps : std::min(worldFps, MenuFps));
 }
 #endif
 
@@ -1847,6 +1909,7 @@ MSG MainLoop()
     Core::Input::Synthetic::SetEventDelivery([](SDL_Event& event, bool& propagates)
                                              { return RouteActionInput(event, true, propagates); }, g_sdlWindow);
     Core::Input::Touch::SetEndTyping(EndTyping);
+    Core::Input::Touch::SetWorldQuery(IsPointerOverWorld);
 
     while (!Destroy)
     {
@@ -2873,7 +2936,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     g_pUIMapName = new CUIMapName; // rozy
 
     g_BuffSystem = BuffStateSystem::Make();
-    AnimationTaskPool::Instance().Initialize();
+#ifdef __EMSCRIPTEN__
+    // A browser's workers are few (a phone's cores are slow too): the pool's threads only start when it
+    // is on (off by default, g_bDisableAnimationTaskPool).
+    if (!g_bDisableAnimationTaskPool)
+#endif
+        AnimationTaskPool::Instance().Initialize();
 
     g_MapProcess = MapProcess::Make();
 
@@ -2904,7 +2972,13 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     // Opened only when the launcher set the path; silent otherwise.
     App::Control::ControlServer::Instance().Start(Core::Text::ToUtf8(lpszExeVersion));
 
+#ifdef __EMSCRIPTEN__
+    // A browser tells a page nothing of the CPU's load: a thread waking 60 times a second would only
+    // measure nothing on a phone's few cores.
+    std::thread cpuUsageRecorder;
+#else
     std::thread cpuUsageRecorder(RecordCpuUsage);
+#endif
     const MSG msg = MainLoop();
     ShutdownRuntime(cpuUsageRecorder, sdlLogOutput);
 

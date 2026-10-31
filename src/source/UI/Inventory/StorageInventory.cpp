@@ -664,7 +664,8 @@ void CStorageInventory::ProcessInventoryCtrl()
     }
     else if (IsPress(VK_RBUTTON))
     {
-        if (UI::Mobile::ClickSource::IsFingerLongPress() && ShowItemCard())
+        if ((UI::Mobile::ClickSource::IsFingerLongPress() || UI::Mobile::ClickSource::IsPadCardClick())
+            && ShowItemCard())
             return;
         ProcessStorageItemAutoMove();
     }
@@ -717,6 +718,12 @@ void CStorageInventory::MoveToBag(ITEM* pItemObj)
 
             PlayBuffer(SOUND_GET_ITEM01);
         }
+        else
+        {
+            // The pad's X and the card's Move have no dragging to show the bag is full: it says so.
+            g_pSystemLogBox->AddText(I18N::Game::NotEnoughSpacePleaseCheckFreeSpaceInYourInventory,
+                                     TYPE_ERROR_MESSAGE);
+        }
     }
 }
 
@@ -761,6 +768,9 @@ bool CStorageInventory::ProcessMyInvenItemAutoMove(CInventoryCtrl* sourceCtrl)
             PlayBuffer(SOUND_GET_ITEM01);
             return true;
         }
+        // With the extension open it is tried next, and says so itself.
+        if (!g_pNewUISystem->IsVisible(INTERFACE_STORAGE_EXT))
+            g_pSystemLogBox->AddText(I18N::Game::VaultHasNoRoom, TYPE_ERROR_MESSAGE);
     }
 
     return false;

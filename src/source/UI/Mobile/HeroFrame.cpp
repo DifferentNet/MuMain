@@ -115,6 +115,10 @@ void SyncPotions(Model& model, bool force, MarkDirty markDirty)
                "potion_q_count", markDirty);
     SetPotions(model.potionWCount, seen.potionsW, g_pMainFrame->GetItemHotKeyCount(mu::ui::window::HOTKEY_W), force,
                "potion_w_count", markDirty);
+    SetPotions(model.potionECount, seen.potionsE, g_pMainFrame->GetItemHotKeyCount(mu::ui::window::HOTKEY_E), force,
+               "potion_e_count", markDirty);
+    SetPotions(model.potionRCount, seen.potionsR, g_pMainFrame->GetItemHotKeyCount(mu::ui::window::HOTKEY_R), force,
+               "potion_r_count", markDirty);
 }
 } // namespace
 
@@ -132,6 +136,8 @@ void Bind(Rml::DataModelConstructor& constructor, Model& model)
     constructor.Bind("hero_level", &model.levelText);
     constructor.Bind("potion_q_count", &model.potionQCount);
     constructor.Bind("potion_w_count", &model.potionWCount);
+    constructor.Bind("potion_e_count", &model.potionECount);
+    constructor.Bind("potion_r_count", &model.potionRCount);
 }
 
 void Sync(Model& model, MarkDirty markDirty)

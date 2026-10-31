@@ -24,7 +24,7 @@ void Up(SDL_FingerID finger, float x, float y, bool cancelled, SDL_Window* windo
 
 // Once a pass of the main loop, before its events: a drag's pointer catches up with the finger, and
 // a finger held still long enough turns into the right button, unless the mouse carries an item.
-void Tick(SDL_Window* window, bool carryingItem);
+void Tick(SDL_Window* window, bool carryingItem, bool overWorld = false);
 
 // Releases the buttons the finger holds and forgets the gesture.
 void Reset(SDL_Window* window);

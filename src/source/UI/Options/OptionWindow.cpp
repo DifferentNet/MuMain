@@ -764,6 +764,13 @@ bool mu::ui::window::COptionWindow::UpdateKeyEvent()
     {
         if (mu::ui::window::IsPress(VK_ESCAPE) == true)
         {
+            // An open dropdown closes first, the window on the next Esc (the gamepad's B too).
+            if (m_iOpenDropdown >= 0)
+            {
+                m_iOpenDropdown = -1;
+                PlayBuffer(SOUND_CLICK01);
+                return false;
+            }
             g_pNewUISystem->Hide(mu::ui::window::INTERFACE_OPTION);
             PlayBuffer(SOUND_CLICK01);
             return false;
@@ -1093,7 +1100,10 @@ void mu::ui::window::COptionWindow::RmlFpsCapChanged(int index)
     // Unconditional, same as the console-only `$fps <N>` diagnostic this replaces -- it doesn't
     // check VSync state either; if VSync is on, this can transiently override it until the next
     // VSync toggle re-asserts -1 (a pre-existing characteristic of SetTargetFps, not new here).
+#ifndef __EMSCRIPTEN__
     SetTargetFps(fps);
+#endif
+    // The browser build paces its frames on the page (WaitForBrowserFrame reads the cap each frame).
     GameConfig::GetInstance().SetFpsCap(fps);
     GameConfig::GetInstance().Save();
 }

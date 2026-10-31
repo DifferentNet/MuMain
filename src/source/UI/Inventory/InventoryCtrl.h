@@ -163,6 +163,10 @@ namespace mu::ui::window
         DWORD* m_pdwItemCheckBox;
         EVENT_STATE	m_EventState;
         int	m_iPointedSquareIndex; // has m_nIndexOffset included
+        // The button went down over a square here: only then does its release pick the item up. A
+        // window that opens under a held button (the pad's click on an NPC opens the inventory beside
+        // the NPC's window) sees the release alone, and its pointer may still rest on a square.
+        bool m_bPressSeen = false;
         bool m_bShow, m_bLock;
 
         TOOLTIP_TYPE	m_ToolTipType;

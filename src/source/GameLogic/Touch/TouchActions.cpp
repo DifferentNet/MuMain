@@ -32,6 +32,8 @@
 #include <cmath>
 #include <map>
 #include <mutex>
+#include <utility>
+#include <vector>
 
 // Defined in ZzzInterface.cpp: the character under the pointer, which a tap on a monster leaves there.
 extern int SelectedCharacter;
@@ -64,10 +66,16 @@ constexpr auto SwingStartTime = std::chrono::milliseconds(200);
 // How long a drop asked for is passed over while the server answers, and one no walk reaches.
 constexpr auto AskedDropTime = std::chrono::milliseconds(1500);
 constexpr auto UnreachableDropTime = std::chrono::seconds(3);
+// A drop still lying there after this many asks is not ours to take (another's, a refusal): it is
+// passed over this long instead.
+constexpr int RefusedDropAsks = 2;
+constexpr auto RefusedDropTime = std::chrono::seconds(30);
 // How often the pickup button says the bag is full.
 constexpr auto FullBagRepeat = std::chrono::seconds(3);
 // How often a skill button short of mana or AG asks for a mana potion and says so.
 constexpr auto ShortOfManaRepeat = std::chrono::milliseconds(1500);
+// How often it says so in the chat, while held: a line every 1.5 s buried the chat.
+constexpr auto ShortOfManaSayRepeat = std::chrono::seconds(6);
 // How often a held pet command button sends its command again.
 constexpr auto PetCommandRepeat = std::chrono::seconds(1);
 
@@ -112,10 +120,23 @@ Clock::time_point g_standUntil;
 Clock::time_point g_standAgainAt;
 bool g_pointerAims = false;
 int g_targetKey = NoTarget;
+// The target the pad's right stick chose (CycleTarget): the buttons' target while it is a good one.
+int g_chosenKey = NoTarget;
 std::map<int, Clock::time_point> g_forgottenUntil;
 Clock::time_point g_nextAction;
-// The drops passed over (asked for, or out of a walk's reach), by their slot, until when.
-std::map<int, Clock::time_point> g_skippedDrops;
+// g_nextAction before the last ActionDue() took the turn (GiveTurnBack()).
+Clock::time_point g_turnTakenFrom;
+// The drops passed over (asked for, or out of a walk's reach), by their slot: until when, and which
+// drop it was (a slot is used again for another drop) and how often it was asked for.
+struct SkippedDrop
+{
+    Clock::time_point until;
+    int type = 0;
+    int tileX = 0;
+    int tileY = 0;
+    int asks = 0;
+};
+std::map<int, SkippedDrop> g_skippedDrops;
 // The drop the pickup button walks to, and when the bag was last said to be full.
 int g_dropWalkedTo = NoDrop;
 Clock::time_point g_fullBagSaidAt;
@@ -125,6 +146,7 @@ int g_friendKey = NoTarget;
 // When a skill short of mana or AG may ask and say so again, and when a held pet command may go out
 // again.
 Clock::time_point g_shortOfManaAt;
+Clock::time_point g_shortOfManaSaidAt;
 Clock::time_point g_petCommandAt;
 
 bool InWorld()
@@ -139,8 +161,25 @@ bool ActionDue()
     const auto now = Clock::now();
     if (now < g_nextAction)
         return false;
+    g_turnTakenFrom = g_nextAction;
     g_nextAction = now + ActionRepeat;
     return true;
+}
+
+// An action that took the turn but found it could not go off yet, with nothing sent: another button
+// held may have the turn.
+Progress GiveTurnBack()
+{
+    g_nextAction = g_turnTakenFrom;
+    return Progress::Waiting;
+}
+
+// An action that took the turn and found nothing to do (no monster, no drop): it is over, and the
+// turn goes to another button held.
+Progress NothingToDo()
+{
+    g_nextAction = g_turnTakenFrom;
+    return Progress::Done;
 }
 
 double Seconds(Clock::time_point time)
@@ -402,6 +441,12 @@ CHARACTER* AimedCharacter()
 // else the nearest monster, or the nearest enemy player where players fight.
 int ChooseTarget()
 {
+    if (g_chosenKey != NoTarget)
+    {
+        if (IsGoodTarget(FindByKey(g_chosenKey), true))
+            return g_targetKey = g_chosenKey;
+        g_chosenKey = NoTarget;
+    }
     const CHARACTER* aimed = AimedCharacter();
     if (IsGoodTarget(aimed, true))
         return g_targetKey = aimed->Key;
@@ -584,7 +629,7 @@ Progress OutcomeOf(Automation::SkillResult result)
 Progress CastWhereHeroStands(ActionSkillType skill, bool onSelf)
 {
     if (!GameLogic::Combat::CanExecuteSkill(Hero, skill, gSkillManager.GetSkillDistance(skill, Hero)))
-        return Progress::Pending;
+        return GiveTurnBack();
     if (!HeroStands())
         return Progress::Pending;
     return OutcomeOf(onSelf ? Automation::CastSkill(skill, true, Hero->Key, true, HuntingDistance)
@@ -598,7 +643,7 @@ Progress CastAtMonster(ActionSkillType skill)
     {
         // No monster around: an area skill still goes off where the character stands, but not by
         // stopping the joystick's walk for nothing.
-        return IsSteering() ? Progress::Done : CastWhereHeroStands(skill, false);
+        return IsSteering() ? NothingToDo() : CastWhereHeroStands(skill, false);
     }
 
     const CHARACTER* targetCharacter = FindByKey(target);
@@ -612,7 +657,7 @@ Progress CastAtMonster(ActionSkillType skill)
     // While the joystick walks, the buttons fight what is in reach: walking off towards a monster
     // would fight the joystick.
     if (!inReach && IsSteering())
-        return Progress::Pending;
+        return GiveTurnBack();
     if (!inReach && fireRing)
     {
         // A cast where the character stands would walk nowhere: a walk towards the monster first. A
@@ -628,7 +673,7 @@ Progress CastAtMonster(ActionSkillType skill)
     if (inReach)
     {
         if (!GameLogic::Combat::CanExecuteSkill(Hero, skill, gSkillManager.GetSkillDistance(skill, Hero)))
-            return Progress::Pending;
+            return GiveTurnBack();
         if (!HeroStands())
             return Progress::Pending;
     }
@@ -646,11 +691,11 @@ Progress CastAtFriend(ActionSkillType skill, const CHARACTER* friendCharacter)
     const float distance = gSkillManager.GetSkillDistance(skill, Hero);
     const bool inReach = InReach(friendCharacter, distance);
     if (!inReach && IsSteering())
-        return Progress::Pending;
+        return GiveTurnBack();
     if (inReach)
     {
         if (!GameLogic::Combat::CanExecuteSkill(Hero, skill, distance))
-            return Progress::Pending;
+            return GiveTurnBack();
         if (!HeroStands())
             return Progress::Pending;
     }
@@ -670,8 +715,12 @@ Progress ShortOfMana(ActionSkillType skill)
     gSkillManager.GetSkillInformation(skill, 1, nullptr, &mana, nullptr);
     const bool manaShort = CharacterAttribute->Mana < mana;
     GameLogic::Combat::CheckMana(Hero, skill);
-    UI::Chat::PostSystem(manaShort ? I18N::Game::TouchNoMana : I18N::Game::TouchNoAg,
-                         mu::ui::window::TYPE_ERROR_MESSAGE);
+    if (now >= g_shortOfManaSaidAt)
+    {
+        g_shortOfManaSaidAt = now + ShortOfManaSayRepeat;
+        UI::Chat::PostSystem(manaShort ? I18N::Game::TouchNoMana : I18N::Game::TouchNoAg,
+                             mu::ui::window::TYPE_ERROR_MESSAGE);
+    }
     return Progress::Done;
 }
 
@@ -701,15 +750,29 @@ bool IsSkipped(int drop)
     const auto it = g_skippedDrops.find(drop);
     if (it == g_skippedDrops.end())
         return false;
-    if (Clock::now() < it->second)
-        return true;
-    g_skippedDrops.erase(it);
-    return false;
+    // Kept past its time, to count the asks for the same drop; another drop in the slot starts anew.
+    const ITEM_t& item = Items[drop];
+    const SkippedDrop& skipped = it->second;
+    return Clock::now() < skipped.until && skipped.type == item.Item.Type &&
+           skipped.tileX == TileOf(item.Object.Position[0]) && skipped.tileY == TileOf(item.Object.Position[1]);
 }
 
-void Skip(int drop, Clock::duration time)
+void Skip(int drop, Clock::duration time, bool asked)
 {
-    g_skippedDrops[drop] = Clock::now() + time;
+    const ITEM_t& item = Items[drop];
+    const int type = item.Item.Type;
+    const int tileX = TileOf(item.Object.Position[0]);
+    const int tileY = TileOf(item.Object.Position[1]);
+    SkippedDrop& skipped = g_skippedDrops[drop];
+    // Another drop in the slot (the server hands a freed key on), or the last ask long ago: the count
+    // starts anew, so only a drop refused twice in a row is passed over for long.
+    const auto now = Clock::now();
+    if (skipped.type != type || skipped.tileX != tileX || skipped.tileY != tileY ||
+        now > skipped.until + RefusedDropTime)
+        skipped = SkippedDrop{{}, type, tileX, tileY, 0};
+    if (asked)
+        ++skipped.asks;
+    skipped.until = now + (skipped.asks >= RefusedDropAsks ? Clock::duration(RefusedDropTime) : time);
 }
 
 bool FitsTheBag(ITEM_t& drop)
@@ -725,17 +788,67 @@ void SayBagFull()
     g_fullBagSaidAt = now;
     UI::Chat::PostSystem(I18N::Game::InventoryIsFull, mu::ui::window::TYPE_ERROR_MESSAGE);
 }
+
+// Taken or gone: a new drop under the same key is not the refused one.
+void ForgetGoneDrops()
+{
+    for (int i = 0; i < MAX_ITEMS; ++i)
+    {
+        if (!Items[i].Object.Live)
+            g_skippedDrops.erase(i);
+    }
+}
+
+// The nearest drop within reach that fits the bag and was not passed over, NoDrop for none; `unfit`
+// says whether a nearer one did not fit.
+int NearestFittingDrop(bool* unfit)
+{
+    int nearest = NoDrop;
+    int nearestTiles = PickupRange + 1;
+    for (int i = 0; i < MAX_ITEMS; ++i)
+    {
+        ITEM_t& drop = Items[i];
+        if (!drop.Object.Live || IsSkipped(i))
+            continue;
+        const int dx = Hero->PositionX - TileOf(drop.Object.Position[0]);
+        const int dy = Hero->PositionY - TileOf(drop.Object.Position[1]);
+        const int tiles = static_cast<int>(std::ceil(std::hypot(dx, dy)));
+        if (tiles >= nearestTiles)
+            continue;
+        if (!FitsTheBag(drop))
+        {
+            if (unfit != nullptr)
+                *unfit = true;
+            continue;
+        }
+        nearestTiles = tiles;
+        nearest = i;
+    }
+    return nearest;
+}
 } // namespace
 
-// Whether the MU Helper was told the stick walks the character (CMuHelper::SetSteered).
+// Whether the MU Helper was told the player steers the character (CMuHelper::SetSteered): the stick
+// walks it, or an action button was held or owed less than a second ago. The helper's own attacks
+// at another monster would fight the button's.
 bool g_helperSteered = false;
+bool g_stickSteersHelper = false;
+Clock::time_point g_buttonsHoldHelperUntil;
+constexpr auto ButtonsHoldHelperTime = std::chrono::seconds(1);
 
-void SteerHelper(bool steered)
+void ApplyHelperSteer()
 {
+    const bool steered = g_stickSteersHelper || Clock::now() < g_buttonsHoldHelperUntil;
     if (g_helperSteered == steered)
         return;
     g_helperSteered = steered;
     MUHelper::g_MuHelper.SetSteered(steered);
+}
+
+void SteerHelper(bool steered)
+{
+    g_stickSteersHelper = steered;
+    ApplyHelperSteer();
 }
 
 void Steer(float screenX, float screenY)
@@ -821,9 +934,9 @@ Progress Attack()
         return Progress::Pending;
     const int target = ChooseTarget();
     if (target == NoTarget)
-        return Progress::Done;
+        return NothingToDo();
     if (IsSteering() && !InReach(FindByKey(target), Automation::EquippedAttackRange()))
-        return Progress::Pending;
+        return GiveTurnBack();
 
     // The target is a monster or an enemy player (IsFoe).
     const Automation::AttackResult result = Automation::AttackObject(target, true, HuntingDistance);
@@ -903,6 +1016,16 @@ bool HotKeyHoldsSkill(int hotKey)
     return HotKeySkillIndex(hotKey) >= 0;
 }
 
+bool HotKeyShortOfMana(int hotKey)
+{
+    if (!InWorld())
+        return false;
+    const int index = HotKeySkillIndex(hotKey);
+    if (index < 0 || index >= AT_PET_COMMAND_DEFAULT)
+        return false;
+    return !HasManaFor(static_cast<ActionSkillType>(CharacterAttribute->Skill[index]));
+}
+
 Progress PickUpNearest()
 {
     if (!InWorld())
@@ -910,33 +1033,15 @@ Progress PickUpNearest()
     if (!ActionDue())
         return Progress::Pending;
 
-    int nearest = NoDrop;
-    int nearestTiles = PickupRange + 1;
+    ForgetGoneDrops();
     bool unfit = false;
-    for (int i = 0; i < MAX_ITEMS; ++i)
-    {
-        ITEM_t& drop = Items[i];
-        if (!drop.Object.Live || IsSkipped(i))
-            continue;
-        const int dx = Hero->PositionX - TileOf(drop.Object.Position[0]);
-        const int dy = Hero->PositionY - TileOf(drop.Object.Position[1]);
-        const int tiles = static_cast<int>(std::ceil(std::hypot(dx, dy)));
-        if (tiles >= nearestTiles)
-            continue;
-        if (!FitsTheBag(drop))
-        {
-            unfit = true;
-            continue;
-        }
-        nearestTiles = tiles;
-        nearest = i;
-    }
+    const int nearest = NearestFittingDrop(&unfit);
     if (nearest == NoDrop)
     {
         if (unfit)
             SayBagFull();
         g_dropWalkedTo = NoDrop;
-        return Progress::Done;
+        return NothingToDo();
     }
 
     const OBJECT& dropObject = Items[nearest].Object;
@@ -944,7 +1049,7 @@ Progress PickUpNearest()
         HeroWithin(TileOf(dropObject.Position[0]), TileOf(dropObject.Position[1]), Automation::PickupReach);
     // While the joystick walks, the button takes what is in reach.
     if (!inReach && IsSteering())
-        return Progress::Pending;
+        return GiveTurnBack();
     // On its way already: a new walk each turn only sends the same path again.
     if (!inReach && Hero->Movement && g_dropWalkedTo == nearest)
         return Progress::Pending;
@@ -954,14 +1059,14 @@ Progress PickUpNearest()
     case Automation::PickupResult::Requested:
         // Passed over while the server answers: a tap gathers what lies around, on to the next drop
         // until none is left.
-        Skip(nearest, AskedDropTime);
+        Skip(nearest, AskedDropTime, true);
         g_dropWalkedTo = NoDrop;
         return Progress::Pending;
     case Automation::PickupResult::Approaching:
         g_dropWalkedTo = nearest;
         return Progress::Pending;
     case Automation::PickupResult::NoPath:
-        Skip(nearest, UnreachableDropTime);
+        Skip(nearest, UnreachableDropTime, false);
         return Progress::Pending;
     case Automation::PickupResult::Busy:
         // The answer for the drop before is still on its way.
@@ -1006,6 +1111,7 @@ void TrackAim()
 void Reset()
 {
     g_targetKey = NoTarget;
+    g_chosenKey = NoTarget;
     g_forceAttack = false;
     g_friendKey = NoTarget;
     g_forgottenUntil.clear();
@@ -1015,6 +1121,111 @@ void Reset()
     g_standAgainAt = {};
     g_steering.active = false;
     g_hold.Pause();
+    g_buttonsHoldHelperUntil = {};
     SteerHelper(false);
+}
+
+void CycleTarget(int step)
+{
+    if (!InWorld())
+        return;
+    // By distance, then by key: two at the same distance keep their order between presses.
+    std::vector<std::pair<int, int>> foes;
+    for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
+    {
+        const CHARACTER* character = &CharactersClient[i];
+        // With the PK switch on, players too (as a tap on one would aim at them).
+        if (IsGoodTarget(character, g_forceAttack))
+            foes.emplace_back(TilesTo(character), character->Key);
+    }
+    if (foes.empty())
+        return;
+    std::sort(foes.begin(), foes.end());
+    int current = g_chosenKey;
+    if (current == NoTarget && TargetIndex() >= 0)
+        current = CharactersClient[TargetIndex()].Key;
+    const auto found = std::find_if(foes.begin(), foes.end(), [current](const auto& foe) { return foe.second == current; });
+    const int count = static_cast<int>(foes.size());
+    int next = 0;
+    if (found == foes.end())
+        next = step >= 0 ? 0 : count - 1;
+    else
+        next = ((static_cast<int>(found - foes.begin()) + step) % count + count) % count;
+    g_chosenKey = g_targetKey = foes[next].second;
+}
+
+void ClearChosenTarget()
+{
+    g_chosenKey = NoTarget;
+    g_targetKey = NoTarget;
+}
+
+bool HasDropToPick()
+{
+    return NearestDropToPick() >= 0;
+}
+
+int NearestDropToPick()
+{
+    if (!InWorld())
+        return -1;
+    const int nearest = NearestFittingDrop(nullptr);
+    return nearest == NoDrop ? -1 : nearest;
+}
+
+bool DropOnScreen(int index, float& x, float& y)
+{
+    if (index < 0 || index >= MAX_ITEMS || !Items[index].Object.Live)
+        return false;
+    return CameraProjection::WorldToWindowPixel(g_Camera, Items[index].Object.Position, &x, &y);
+}
+
+int NearestNpc(int tiles)
+{
+    if (!InWorld())
+        return -1;
+    int nearest = -1;
+    int nearestTiles = tiles + 1;
+    for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
+    {
+        const CHARACTER* character = &CharactersClient[i];
+        if (!character->Object.Live || character->Object.Kind != KIND_NPC || character->Dead != 0)
+            continue;
+        const int distance = TilesTo(character);
+        if (distance < nearestTiles)
+        {
+            nearestTiles = distance;
+            nearest = i;
+        }
+    }
+    return nearest;
+}
+
+bool NpcOnScreen(int index, float& x, float& y)
+{
+    if (index < 0 || index >= MAX_CHARACTERS_CLIENT)
+        return false;
+    vec3_t position;
+    VectorCopy(CharactersClient[index].Object.Position, position);
+    // Its body, not its feet: the click's ray picks the model's box.
+    position[2] += 80.f;
+    return CameraProjection::WorldToWindowPixel(g_Camera, position, &x, &y);
+}
+
+int TargetIndex()
+{
+    if (!InWorld() || g_targetKey == NoTarget)
+        return -1;
+    const CHARACTER* target = FindByKey(g_targetKey);
+    if (target == nullptr || !IsGoodTarget(target, true))
+        return -1;
+    return static_cast<int>(target - CharactersClient);
+}
+
+void HoldHelperForButtons(bool buttonsAct)
+{
+    if (buttonsAct)
+        g_buttonsHoldHelperUntil = Clock::now() + ButtonsHoldHelperTime;
+    ApplyHelperSteer();
 }
 } // namespace GameLogic::Touch

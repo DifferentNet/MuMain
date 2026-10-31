@@ -31,4 +31,9 @@ bool IsPadRightClick()
 {
     return Core::Input::Gamepad::WasUsedLast() && Core::Input::Gamepad::Pointer::IsButtonHeld(SDL_BUTTON_RIGHT);
 }
+
+bool IsPadCardClick()
+{
+    return IsPadRightClick() && Core::Input::Gamepad::Pointer::IsCardClick();
+}
 } // namespace UI::Mobile::ClickSource

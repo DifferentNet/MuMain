@@ -247,6 +247,12 @@ void RegisterWindow(std::uint32_t windowId, std::string_view slotName, GetWindow
     entry.document = document != nullptr ? document : "";
 }
 
+bool IsWindowDocument(std::string_view documentName)
+{
+    return std::any_of(g_windows.begin(), g_windows.end(),
+                       [documentName](const auto& item) { return item.second.document == documentName; });
+}
+
 void RegisterName(std::uint32_t windowId, std::string_view name)
 {
     Entry& entry = g_windows[std::string(name)];

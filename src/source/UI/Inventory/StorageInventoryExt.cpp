@@ -294,7 +294,8 @@ void CStorageInventoryExt::ProcessInventoryCtrl()
     }
     else if (IsPress(VK_RBUTTON))
     {
-        if (UI::Mobile::ClickSource::IsFingerLongPress() && ShowItemCard())
+        if ((UI::Mobile::ClickSource::IsFingerLongPress() || UI::Mobile::ClickSource::IsPadCardClick())
+            && ShowItemCard())
             return;
         ProcessStorageItemAutoMove();
     }
@@ -345,6 +346,12 @@ void CStorageInventoryExt::MoveToBag(ITEM* pItemObj)
 
             PlayBuffer(SOUND_GET_ITEM01);
         }
+        else
+        {
+            // As the vault's own (CStorageInventory::MoveToBag).
+            g_pSystemLogBox->AddText(I18N::Game::NotEnoughSpacePleaseCheckFreeSpaceInYourInventory,
+                                     TYPE_ERROR_MESSAGE);
+        }
     }
 }
 
@@ -389,6 +396,8 @@ bool CStorageInventoryExt::ProcessMyInvenItemAutoMove(CInventoryCtrl* sourceCtrl
             PlayBuffer(SOUND_GET_ITEM01);
             return true;
         }
+        // The vault was full too (CInventoryActionController::HandleStorageAutoMove tried it first).
+        g_pSystemLogBox->AddText(I18N::Game::VaultHasNoRoom, TYPE_ERROR_MESSAGE);
     }
 
     return false;

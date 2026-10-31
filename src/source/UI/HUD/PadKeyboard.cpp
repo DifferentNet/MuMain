@@ -240,7 +240,8 @@ void Close(Rml::Element* field)
 {
     if (IsChatField(field))
     {
-        Core::Input::Touch::TapKey(VK_ESCAPE);
+        // As the chat's own Esc does (CChatInputBox): a tapped Esc did not reach it.
+        g_pNewUISystem->Hide(mu::ui::window::INTERFACE_CHATINPUTBOX);
         return;
     }
     field->Blur();

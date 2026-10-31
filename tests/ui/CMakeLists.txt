@@ -460,3 +460,10 @@ mu_add_test(
         test_phone_hud_fit.cpp
         ${CMAKE_SOURCE_DIR}/src/source/UI/Mobile/PhoneHudFit.cpp
 )
+
+mu_add_test(
+    NAME pad_target_pick_tests
+    SOURCES
+        test_pad_target_pick.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/HUD/PadTargetPick.cpp
+)

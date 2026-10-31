@@ -1,5 +1,5 @@
 // Which device a click on an item came from. A mouse's click acts at once, as it always has; a
-// finger's tap, a finger's long press and the pad's right stick button first show what the click
+// finger's tap, a finger's long press and the pad's Y first show what the click
 // will do (UI::Mobile::ItemCard) or wait for a second tap, as on a phone, where a finger brushing
 // past must not sell, buy or take off anything.
 //
@@ -14,6 +14,8 @@ namespace UI::Mobile::ClickSource
 [[nodiscard]] bool IsFingerDrag();
 // The right button comes from a finger held still (the long press).
 [[nodiscard]] bool IsFingerLongPress();
-// The right button comes from the pad's right stick button while the pad plays the game.
+// The right button comes from the pad (X, Y or the right stick's button) while the pad plays the game.
 [[nodiscard]] bool IsPadRightClick();
+// The pad's right button asks for the item card (Y) rather than the item's own action (X).
+[[nodiscard]] bool IsPadCardClick();
 } // namespace UI::Mobile::ClickSource

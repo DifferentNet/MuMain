@@ -73,6 +73,14 @@ TEST_CASE("a finger held still becomes a long press after the long press time [c
     CHECK(Gesture::IsLongPressDue(Phase::Pending, Gesture::LongPressTime, false));
 }
 
+TEST_CASE("over the world a still finger takes longer to right-click, so a resting thumb casts nothing [core][touch]")
+{
+    CHECK_FALSE(Gesture::IsLongPressDue(Phase::Pending, Gesture::LongPressTime, false, true));
+    CHECK_FALSE(Gesture::IsLongPressDue(Phase::Pending, Gesture::WorldLongPressTime - milliseconds(1), false, true));
+    CHECK(Gesture::IsLongPressDue(Phase::Pending, Gesture::WorldLongPressTime, false, true));
+    CHECK_FALSE(Gesture::IsLongPressDue(Phase::Pending, milliseconds(5000), true, true));
+}
+
 TEST_CASE("no long press while the mouse carries an item, so the finger can still drag it [core][touch]")
 {
     CHECK_FALSE(Gesture::IsLongPressDue(Phase::Pending, Gesture::LongPressTime, true));
