@@ -396,6 +396,8 @@ bool CStorageInventoryExt::ProcessMyInvenItemAutoMove(CInventoryCtrl* sourceCtrl
             PlayBuffer(SOUND_GET_ITEM01);
             return true;
         }
+        // The vault was full too (CInventoryActionController::HandleStorageAutoMove tried it first).
+        g_pSystemLogBox->AddText(I18N::Game::VaultHasNoRoom, TYPE_ERROR_MESSAGE);
     }
 
     return false;

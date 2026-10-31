@@ -15519,6 +15519,9 @@
   <data name="TouchItemApplyHint" xml:space="preserve">
     <value>Коснитесь предмета, к которому применить камень.</value>
   </data>
+  <data name="VaultHasNoRoom" xml:space="preserve">
+    <value>В хранилище нет места для этой вещи.</value>
+  </data>
   <data name="TouchItemMoveToBag" xml:space="preserve">
     <value>В инвентарь</value>
   </data>

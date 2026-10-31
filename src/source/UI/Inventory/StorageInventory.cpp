@@ -768,6 +768,9 @@ bool CStorageInventory::ProcessMyInvenItemAutoMove(CInventoryCtrl* sourceCtrl)
             PlayBuffer(SOUND_GET_ITEM01);
             return true;
         }
+        // With the extension open it is tried next, and says so itself.
+        if (!g_pNewUISystem->IsVisible(INTERFACE_STORAGE_EXT))
+            g_pSystemLogBox->AddText(I18N::Game::VaultHasNoRoom, TYPE_ERROR_MESSAGE);
     }
 
     return false;

@@ -15857,6 +15857,9 @@
   <data name="TouchItemApplyHint" xml:space="preserve">
     <value>Tap the item to apply the jewel to.</value>
   </data>
+  <data name="VaultHasNoRoom" xml:space="preserve">
+    <value>There is no room in the vault for this item.</value>
+  </data>
   <data name="TouchItemMoveToBag" xml:space="preserve">
     <value>Move to bag</value>
   </data>
