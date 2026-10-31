@@ -120,7 +120,7 @@ void Hop(SDL_Window* window, std::span<const Pick::Target> targets, int from, Pa
     }
     const int next = Pick::NextThatWay(targets, from, step.dx, step.dy);
     if (ScrollsInstead(targets, from, next, step.dy))
-        Pad::Pointer::TurnWheel(window, -step.dy);
+        UI::HUD::PadTargets::ScrollList(targets[from].list, step.dy);
     else if (next != Pick::None)
         MoveOnto(window, targets[next], scale);
 }

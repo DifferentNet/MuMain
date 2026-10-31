@@ -52,6 +52,10 @@ constexpr const char* CornerCloseId = "frame_corner_close";
 constexpr float LargestShare = 0.25f;
 // A target in a list less than this share on view is left out: the list scrolls to it first.
 constexpr float LeastShown = 0.5f;
+// An open dropdown's list (the settings window's): while one is open, the frame rests only on it.
+constexpr const char* PopupClass = "option-dropdown-list";
+// How much of what a list shows one d-pad step past its end scrolls it by.
+constexpr float ListStepShare = 1.f / 3.f;
 // A window's lists the d-pad can scroll; more are left as they are.
 constexpr int MostLists = 32;
 
@@ -158,6 +162,8 @@ public:
     void Begin(Rml::Context& context)
     {
         m_Targets.clear();
+        m_Elements.clear();
+        m_Popup = nullptr;
         m_ListCount = 0;
         m_WindowsLeft = std::numeric_limits<float>::max();
         const Rml::Vector2i size = context.GetDimensions();
@@ -186,6 +192,28 @@ public:
 
     float WindowsLeft() const { return m_WindowsLeft; }
 
+    // With a dropdown open, only its options stay: the rows under it take no clicks.
+    void KeepToPopup()
+    {
+        if (m_Popup == nullptr)
+            return;
+        std::size_t kept = 0;
+        for (std::size_t i = 0; i < m_Targets.size(); ++i)
+        {
+            if (!IsInside(*m_Elements[i], *m_Popup))
+                continue;
+            m_Targets[kept] = m_Targets[i];
+            m_Elements[kept] = m_Elements[i];
+            ++kept;
+        }
+        if (kept == 0)
+            return;
+        m_Targets.resize(kept);
+        m_Elements.resize(kept);
+    }
+
+    Rml::Element* List(int index) const { return index >= 0 && index < m_ListCount ? m_Lists[index] : nullptr; }
+
     std::span<const Target> Targets() const { return m_Targets; }
 
 private:
@@ -196,6 +224,8 @@ private:
             Rml::Element* child = element.GetChild(i);
             if (child == nullptr || !child->IsVisible())
                 continue;
+            if (child->IsClassSet(PopupClass))
+                m_Popup = child;
             if (IsTarget(*child))
                 Add(*child);
             Walk(*child);
@@ -216,6 +246,7 @@ private:
         if (list != nullptr && !PlaceInList(*list, target))
             return;
         m_Targets.push_back(target);
+        m_Elements.push_back(&element);
     }
 
     // Marks the target with its list, false when the list shows too little of it.
@@ -230,7 +261,7 @@ private:
         return true;
     }
 
-    int ListIndex(const Rml::Element& list)
+    int ListIndex(Rml::Element& list)
     {
         for (int i = 0; i < m_ListCount; ++i)
         {
@@ -243,8 +274,20 @@ private:
         return m_ListCount++;
     }
 
+    static bool IsInside(Rml::Element& element, const Rml::Element& outer)
+    {
+        for (const Rml::Element* at = &element; at != nullptr; at = at->GetParentNode())
+        {
+            if (at == &outer)
+                return true;
+        }
+        return false;
+    }
+
     std::vector<Target> m_Targets;
-    std::array<const Rml::Element*, MostLists> m_Lists{};
+    std::vector<Rml::Element*> m_Elements;
+    Rml::Element* m_Popup = nullptr;
+    std::array<Rml::Element*, MostLists> m_Lists{};
     int m_ListCount = 0;
     int m_Window = 0;
     float m_LargestArea = 0.f;
@@ -291,6 +334,7 @@ std::span<const PadTargetPick::Target> Collect()
         if (document != nullptr && IsWindow(*document))
             g_collector.AddDocument(*document, i);
     }
+    g_collector.KeepToPopup();
     return g_collector.Targets();
 }
 
@@ -305,6 +349,16 @@ std::optional<float> WindowsLeft()
     if (left == std::numeric_limits<float>::max())
         return std::nullopt;
     return left;
+}
+
+void ScrollList(int list, int dy)
+{
+    Rml::Element* element = g_collector.List(list);
+    if (element == nullptr || dy == 0)
+        return;
+    const float most = std::max(element->GetScrollHeight() - element->GetClientHeight(), 0.f);
+    const float step = element->GetClientHeight() * ListStepShare * (dy < 0 ? -1.f : 1.f);
+    element->SetScrollTop(std::clamp(element->GetScrollTop() + step, 0.f, most));
 }
 
 bool IsIn(const PadTargetPick::Target& target, std::string_view fileName)
