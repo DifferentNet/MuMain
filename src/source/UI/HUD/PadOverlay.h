@@ -14,7 +14,7 @@ struct View
     // The legend of the pad's buttons in a window.
     bool legend = false;
     // What the legend says: on an item's place Take, Equip, Card and Close; with an item on the cursor
-    // Put down and Put back; on a button Press and Close.
+    // Put down, Drop and Put back; on a button Press and Close.
     enum class Legend
     {
         Item,

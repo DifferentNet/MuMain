@@ -179,6 +179,9 @@ namespace mu::ui::window
 #endif
 
         bool UpdateMouseEvent();
+        // The gamepad's drop: the item on the cursor goes to the ground under the hero, with the same
+        // refusals as a click on the ground. False with no item on the cursor.
+        bool DropHeldItemAtFeet();
         bool UpdateKeyEvent();
         bool Update();
         bool Render();
@@ -186,6 +189,14 @@ namespace mu::ui::window
         void Render3D();
 
         bool IsVisible() const;
+
+    private:
+        // The refusals of a drop to the ground (a reinforced, expensive or bound item); an expensive
+        // or bound one goes back to its place.
+        bool MayDropPickedItem(CPickedItem* pPickedItem) const;
+        void SendPickedItemDrop(CPickedItem* pPickedItem, int tx, int ty) const;
+
+    public:
 
         void OpenningProcess();
         void ClosingProcess();

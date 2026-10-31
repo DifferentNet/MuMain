@@ -698,31 +698,7 @@ bool CMyInventory::UpdateMouseEvent()
             return true;
         }
 
-        ITEM* pItemObj = pPickedItem->GetItem();
-        if (pItemObj && pItemObj->Jewel_Of_Harmony_Option != 0)
-        {
-            g_pSystemLogBox->AddText(I18N::Game::ReinforcedItemCanTBeDropped, TYPE_ERROR_MESSAGE);
-
-            ResetMouseLButton();
-            return false;
-        }
-        if (pItemObj && GameLogic::Items::IsHighValueItem(pItemObj) == true)
-        {
-            g_pSystemLogBox->AddText(I18N::Game::YouAreNotAllowedToDropThisExpensiveItem, TYPE_ERROR_MESSAGE);
-            CInventoryCtrl::BackupPickedItem();
-
-            ResetMouseLButton();
-            return false;
-        }
-        if (pItemObj && GameLogic::Items::IsDropBan(pItemObj))
-        {
-            g_pSystemLogBox->AddText(I18N::Game::ThisItemCannotBeDropped, TYPE_ERROR_MESSAGE);
-            CInventoryCtrl::BackupPickedItem();
-
-            ResetMouseLButton();
-            return false;
-        }
-        if (pItemObj && pItemObj->Type == ITEM_LOST_MAP && gMapManager.IsCursedTemple() == true)
+        if (!MayDropPickedItem(pPickedItem))
         {
             ResetMouseLButton();
             return false;
@@ -740,23 +716,8 @@ bool CMyInventory::UpdateMouseEvent()
 #endif
         if (SelectFlag)
         {
-            const int iSourceIndex = pPickedItem->GetSourceLinealPos();
-            const int tx = (int)(CollisionPosition[0] / TERRAIN_SCALE);
-            const int ty = (int)(CollisionPosition[1] / TERRAIN_SCALE);
-            if (pPickedItem->GetOwnerInventory() == m_pNewInventoryCtrl
-                || g_pMyInventoryExt->GetOwnerOf(pPickedItem) != nullptr)
-            {
-                if (Hero->Dead == 0)
-                {
-                    SocketClient->ToGameServer()->SendDropItemRequest(tx, ty, iSourceIndex);
-                    SendDropItem = iSourceIndex;
-                }
-            }
-            else if (pItemObj && pItemObj->ex_src_type == ITEM_EX_SRC_EQUIPMENT)
-            {
-                SocketClient->ToGameServer()->SendDropItemRequest(tx, ty, iSourceIndex);
-                SendDropItem = iSourceIndex;
-            }
+            SendPickedItemDrop(pPickedItem, (int)(CollisionPosition[0] / TERRAIN_SCALE),
+                               (int)(CollisionPosition[1] / TERRAIN_SCALE));
             MouseUpdateTime = 0;
             MouseUpdateTimeMax = 6;
 
@@ -768,6 +729,65 @@ bool CMyInventory::UpdateMouseEvent()
     if (WindowProcess())
         return false;
 
+    return true;
+}
+
+bool CMyInventory::MayDropPickedItem(CPickedItem* pPickedItem) const
+{
+    ITEM* pItemObj = pPickedItem->GetItem();
+    if (pItemObj && pItemObj->Jewel_Of_Harmony_Option != 0)
+    {
+        g_pSystemLogBox->AddText(I18N::Game::ReinforcedItemCanTBeDropped, TYPE_ERROR_MESSAGE);
+
+        return false;
+    }
+    if (pItemObj && GameLogic::Items::IsHighValueItem(pItemObj) == true)
+    {
+        g_pSystemLogBox->AddText(I18N::Game::YouAreNotAllowedToDropThisExpensiveItem, TYPE_ERROR_MESSAGE);
+        CInventoryCtrl::BackupPickedItem();
+
+        return false;
+    }
+    if (pItemObj && GameLogic::Items::IsDropBan(pItemObj))
+    {
+        g_pSystemLogBox->AddText(I18N::Game::ThisItemCannotBeDropped, TYPE_ERROR_MESSAGE);
+        CInventoryCtrl::BackupPickedItem();
+
+        return false;
+    }
+    if (pItemObj && pItemObj->Type == ITEM_LOST_MAP && gMapManager.IsCursedTemple() == true)
+    {
+        return false;
+    }
+    return true;
+}
+
+void CMyInventory::SendPickedItemDrop(CPickedItem* pPickedItem, int tx, int ty) const
+{
+    const ITEM* pItemObj = pPickedItem->GetItem();
+    const int iSourceIndex = pPickedItem->GetSourceLinealPos();
+    if (pPickedItem->GetOwnerInventory() == m_pNewInventoryCtrl || g_pMyInventoryExt->GetOwnerOf(pPickedItem) != nullptr)
+    {
+        if (Hero->Dead == 0)
+        {
+            SocketClient->ToGameServer()->SendDropItemRequest(tx, ty, iSourceIndex);
+            SendDropItem = iSourceIndex;
+        }
+    }
+    else if (pItemObj && pItemObj->ex_src_type == ITEM_EX_SRC_EQUIPMENT)
+    {
+        SocketClient->ToGameServer()->SendDropItemRequest(tx, ty, iSourceIndex);
+        SendDropItem = iSourceIndex;
+    }
+}
+
+bool CMyInventory::DropHeldItemAtFeet()
+{
+    CPickedItem* pPickedItem = CInventoryCtrl::GetPickedItem();
+    if (pPickedItem == nullptr || Hero == nullptr)
+        return false;
+    if (MayDropPickedItem(pPickedItem))
+        SendPickedItemDrop(pPickedItem, Hero->PositionX, Hero->PositionY);
     return true;
 }
 

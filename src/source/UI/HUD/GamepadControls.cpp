@@ -29,6 +29,7 @@
 #include "UI/HUD/SkillList.h"
 #include "UI/HUD/TouchControls.h"
 #include "UI/Inventory/InventoryContents.h"
+#include "UI/Inventory/MyInventory.h"
 #include "UI/Mobile/InterfaceMode.h"
 
 #include <RmlUi/Core/Context.h>
@@ -560,14 +561,22 @@ void TurnHelpPages(Presses& presses)
         g_pHelp->TurnPage(1);
 }
 
-// An item on the cursor over a window: B puts it back where it was taken from, the window stays.
-void PutBackHeldItem(Presses& presses)
+// An item on the cursor over a window: B puts it back where it was taken from, the window stays; Y
+// drops it to the ground under the hero, as a click on the ground would.
+void PlayHeldItem(Presses& presses)
 {
-    if (!UI::Inventory::HasPickedItem() || !Pressed(presses, Button::B))
+    if (!UI::Inventory::HasPickedItem())
         return;
-    Take(presses, Button::B);
-    g_state.waitForRelease[static_cast<int>(Button::B)] = true;
-    UI::Inventory::RestorePickedItem();
+    if (Take(presses, Button::B))
+    {
+        g_state.waitForRelease[static_cast<int>(Button::B)] = true;
+        UI::Inventory::RestorePickedItem();
+    }
+    else if (Take(presses, Button::Y))
+    {
+        g_state.waitForRelease[static_cast<int>(Button::Y)] = true;
+        g_pMyInventory->DropHeldItemAtFeet();
+    }
 }
 
 // The hero hub open: LB and RB turn its tabs, instead of drinking and casting.
@@ -805,7 +814,7 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
         TurnHelpPages(presses);
         TurnHubTabs(presses, now);
         if (frameOpen)
-            PutBackHeldItem(presses);
+            PlayHeldItem(presses);
         if (!frameOpen)
             TurnWheelWithDpad(window, presses, now);
         PlayPointer(window, presses, seconds);
