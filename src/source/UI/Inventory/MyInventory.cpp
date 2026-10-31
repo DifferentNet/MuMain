@@ -1206,6 +1206,9 @@ void CMyInventory::OpenningProcess()
 
 void CMyInventory::ClosingProcess()
 {
+    // Update() points a slot only while the window shows: the last one would stay pointed.
+    m_iPointedSlot = -1;
+    m_iLeftPressSlot = -1;
     m_pNewInventoryCtrl->BackupPickedItem();
     RepairEnable = 0;
     SetRepairMode(false);
@@ -1537,6 +1540,9 @@ void CMyInventory::SyncSlotStates()
         }
 
         Rml::String value = state;
+        // Nothing worn there: the pad's frame offers nothing to take (UI/HUD/PadTargets).
+        if (CharacterMachine->Equipment[i].Type == -1)
+            value += value.empty() ? "bare" : " bare";
         if (i == m_iPointedSlot && CInventoryCtrl::GetPickedItem())
         {
             ITEM* pItemObj = CInventoryCtrl::GetPickedItem()->GetItem();
@@ -1564,6 +1570,10 @@ void CMyInventory::SyncSlotStates()
 
 bool CMyInventory::EquipmentWindowProcess()
 {
+    if (IsPress(VK_LBUTTON))
+        m_iLeftPressSlot = m_iPointedSlot;
+    const int leftPressSlot = IsRelease(VK_LBUTTON) ? std::exchange(m_iLeftPressSlot, -1) : m_iLeftPressSlot;
+
     if (m_iPointedSlot != -1 && IsRelease(VK_LBUTTON))
     {
         if (CPickedItem* pPickedItem = CInventoryCtrl::GetPickedItem())
@@ -1618,6 +1628,9 @@ bool CMyInventory::EquipmentWindowProcess()
         }
         else // pPickedItem == NULL
         {
+            if (leftPressSlot != m_iPointedSlot)
+                return false;
+
             if (GetRepairMode() == SEASON3B::REPAIR_MODE_ON)
             {
                 ITEM* pEquippedItem = &CharacterMachine->Equipment[m_iPointedSlot];

@@ -923,6 +923,8 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
         view.legendSays = Legend::Worn;
     else if (view.frame && UI::HUD::PadFrame::OnGoods())
         view.legendSays = Legend::Goods;
+    else if (view.frame && UI::HUD::PadFrame::OnMixItem())
+        view.legendSays = Legend::Crafting;
     else if (view.frame)
     {
         using Does = mu::ui::window::CInventoryActionController::BagRightClick;

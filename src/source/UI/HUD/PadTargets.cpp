@@ -37,6 +37,8 @@ constexpr const char* CellClass = "item-cell";
 constexpr const char* SlotClass = "equip-slot";
 // A cell under an item carries its tint (ItemGridCell::tint), an empty one none.
 constexpr std::string_view TintPrefix = "tint-";
+// A worn slot with nothing in it (MyInventory's slot_states).
+constexpr const char* BareSlotClass = "bare";
 constexpr std::array<const char*, 2> ClickAttributes = {"data-event-click", "onclick"};
 // The cross in a window's corner: B closes the window already, the frame does not stop on it.
 constexpr const char* CornerCloseId = "frame_corner_close";
@@ -196,7 +198,8 @@ private:
         Target target{{}, m_Window};
         target.cell = element.IsClassSet(CellClass);
         target.slot = element.IsClassSet(SlotClass);
-    target.empty = target.cell && element.GetClassNames().find(TintPrefix) == Rml::String::npos;
+    target.empty = (target.cell && element.GetClassNames().find(TintPrefix) == Rml::String::npos)
+                   || (target.slot && element.IsClassSet(BareSlotClass));
         if (!DrawnBox(element, target.box) || Area(target.box) <= 0.f || Area(target.box) >= m_LargestArea)
             return;
         Rml::Element* list = ScrollingList(element);

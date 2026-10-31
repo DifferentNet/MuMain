@@ -168,11 +168,14 @@ void SyncLegend(OverlayModel& model, const View& view)
         return;
     using Legend = View::Legend;
     const Legend says = view.legendSays;
-    const bool onItem = says == Legend::Item || says == Legend::Worn || says == Legend::Sell || says == Legend::Move;
+    const bool onItem = says == Legend::Item || says == Legend::Worn || says == Legend::Sell || says == Legend::Move
+                        || says == Legend::Crafting;
     SyncBool(model.legendA, says != Legend::Empty, "legend_a");
     SyncBool(model.legendItem, onItem, "legend_item");
-    // The shop's goods have no card and nothing for X: A buys them.
-    SyncBool(model.legendY, says != Legend::Button && says != Legend::Goods && says != Legend::Empty, "legend_y");
+    // The shop's goods have no card and nothing for X: A buys them. The crafting box's items have no card.
+    SyncBool(model.legendY,
+             says != Legend::Button && says != Legend::Goods && says != Legend::Empty && says != Legend::Crafting,
+             "legend_y");
     const auto* aLabel = onItem                    ? &I18N::Game::PadTake
                          : says == Legend::Goods   ? &I18N::Game::PadBuy
                          : says == Legend::Holding ? &I18N::Game::PadPutDown
@@ -180,7 +183,7 @@ void SyncLegend(OverlayModel& model, const View& view)
     SyncLabel(model.takeLabel, *aLabel, "take_label");
     const auto* xLabel = says == Legend::Worn   ? &I18N::Game::TouchItemUnequip
                          : says == Legend::Sell ? &I18N::Game::TouchItemSell
-                         : says == Legend::Move ? &I18N::Game::TouchItemMove
+                         : says == Legend::Move || says == Legend::Crafting ? &I18N::Game::TouchItemMove
                                                 : &I18N::Game::TouchItemEquip;
     SyncLabel(model.equipLabel, *xLabel, "equip_label");
     SyncLabel(model.cardLabel, view.legendSays == Legend::Holding ? I18N::Game::TouchItemDrop : I18N::Game::PadCard,

@@ -267,7 +267,8 @@ the frame rests only on it. The right stick still moves the pointer (shown while
 half speed over a window) and snaps it onto a target near when let go. A legend under the hub's tabs
 says what the buttons do there (on an item: Take, Equip, Card, Close, with X named for what it does
 there: Take off on worn gear, Sell while a shop is open, Move while the storage, the trade or the chaos
-machine takes it; on a shop's goods: Buy, Close; on an empty cell: Close alone; with an item on the cursor: Put down, Drop, Put back;
+machine takes it; on an item in the chaos machine's box: Take, Move, Close; on a shop's goods: Buy,
+Close; on an empty cell or a worn slot with nothing in it: Close alone; with an item on the cursor: Put down, Drop, Put back;
 on a button: Press, Close); both keep left of the windows, wrapping when the room is
 short. On the Skills tab the legend gives way to the skill picker's own, and the picker sits under the
 tabs:
@@ -276,7 +277,7 @@ tabs:
 |---|---|
 | A | Click at the frame: take an item, put it down, press a button, buy a shop's item |
 | X | The item's own action at once: put on, use, move to the trade; on worn gear, take it off (the legend then says Take off). Never throws an item down. When it can't, it says why: the item's requirements, the slot already taken, no room in the bag. In a shop it asks with the card first |
-| Y | The item card (above), except with the storage or the chaos machine open |
+| Y | The item card (above; by the storage or the chaos machine its answer is Move); nothing on the chaos machine's own items, which have no card |
 | RS | Right-click at the frame (on a stat's "+" the menu of bigger steps) |
 | B | Back: closes the window on top; with an item on the cursor, puts it back where it was taken from instead |
 | Y with an item on the cursor | Drops it to the ground under the hero (refused, as with the mouse, for expensive, bound and reinforced items) |
@@ -353,7 +354,7 @@ the keyboard closes act only once released, so the B that closed it does not als
 | Controls | `UI/HUD/TouchControls.{h,cpp}` + `touch_controls.rml` + `themes/{legacy,modern}/touch_controls.rcss` | Draws the controls, answers the router's hit test from the elements' boxes, acts once a frame (`SceneManager.cpp`, after the scene). Depth 1.06 in `RmlStackingOrder.cpp`: under every window. |
 | View and controls choice | `UI/Mobile/InterfaceMode.{h,cpp}` | Reads the two Options rows, turns the touch layer on or off and sets the style flags `mobile` (phone view) and `mobile-hud` (phone view with touch controls). RCSS restyles a document for them with `@media (theme: mobile)` / `@media (theme: mobile-hud)`. |
 | Hero frame | `UI/Mobile/HeroFrame.{h,cpp}`, `UI/HUD/HeroGauges.{h,cpp}`, `UI/Mobile/CompactNumber.{h,cpp}` | Fills the hero frame's part of the touch controls' model, writing only what changed (the potions are counted four times a second); HeroGauges reads HP/MP/AG/SD and EXP for it and for the PC bar alike. |
-| Item card | `UI/Mobile/ItemCard.{h,cpp}`, `UI/Inventory/InventoryActionController.cpp`, `UI/Inventory/MyInventory.cpp`, `UI/Inventory/StorageInventory.cpp`, `UI/Inventory/StorageInventoryExt.cpp` | The card (a generic menu dialog); the controller opens it for a finger's long press or R3 on a bag item, the inventory for a tap, a long press or R3 on worn gear, the storages for a long press on theirs. |
+| Item card | `UI/Mobile/ItemCard.{h,cpp}`, `UI/Inventory/InventoryActionController.cpp`, `UI/Inventory/MyInventory.cpp`, `UI/Inventory/StorageInventory.cpp`, `UI/Inventory/StorageInventoryExt.cpp` | The card (a generic menu dialog); the controller opens it for a finger's long press or R3 on a bag item, the inventory for a tap, a long press or R3 on worn gear, the storages for a long press or the pad's Y on theirs. |
 | Click source | `UI/Mobile/ClickSource.{h,cpp}` | Whether a window's click came from a finger's tap, drag or long press, or from the pad's R3 (`Touch::Pointer::LastLeftPress`), so that a window can ask first only for those. |
 | Finger unit | `UI/Mobile/TouchUnit.{h,cpp}`, `UI/Mobile/ButtonSize.{h,cpp}` | The unit the controls are sized in and the Button size option (Options → Interface, `OptionWindow.cpp`). |
 | Neighbours | `UI/Mobile/PhoneHudLayout.{h,cpp}`, sums in `UI/Mobile/PhoneHudFit.{h,cpp}` | Moves the buffs, pets' frames, system messages, skill list, party cards and chat beside the controls; tells the world labels where the HUD lies over them; puts the notices under the open menu (`UI/Mobile/NoticesUnderPanel.{h,cpp}`, writes only on a change). Finds each document once (again every 250 ms while missing) and places a piece only when the controls, the screen or the piece's size changed, or every 250 ms. |

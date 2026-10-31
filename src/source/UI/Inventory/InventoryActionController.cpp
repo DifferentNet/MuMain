@@ -393,9 +393,10 @@ bool CInventoryActionController::AsksWithItemCard(RightClickTarget target)
 {
     if (UI::Mobile::ClickSource::IsFingerLongPress())
         return true;
-    // The pad's Y asks everywhere the card has an answer; its X acts at once, but for a sale.
+    // The pad's Y asks everywhere (by the vault or the mix the card's answer is Move); its X acts at
+    // once, but for a sale.
     if (UI::Mobile::ClickSource::IsPadCardClick())
-        return target != RightClickTarget::Storage && target != RightClickTarget::Mix;
+        return true;
     return UI::Mobile::ClickSource::IsPadRightClick() && target == RightClickTarget::Shop;
 }
 

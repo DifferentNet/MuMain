@@ -29,6 +29,8 @@ constexpr float Anywhere = std::numeric_limits<float>::max();
 constexpr int SnapDelayFrames = 2;
 // The NPC shop's window: its cells are goods, A buys them.
 constexpr std::string_view ShopDocument = "npc_shop.rml";
+// The crafting box: its items have no card.
+constexpr std::string_view MixDocument = "mix_inventory.rml";
 
 struct Point
 {
@@ -53,6 +55,7 @@ struct State
     bool onItemPlace = false;
     bool onWornPlace = false;
     bool onGoods = false;
+    bool onMixItem = false;
     bool onEmptyCell = false;
     Pick::Box box;
     // The frame's target went away (a card opened over it, a dialog closed): it moves on a frame later,
@@ -207,6 +210,7 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
     g_state.onItemPlace = g_state.onTarget && (targets[current].cell || targets[current].slot);
     g_state.onWornPlace = g_state.onTarget && targets[current].slot;
     g_state.onGoods = g_state.onItemPlace && UI::HUD::PadTargets::IsIn(targets[current], ShopDocument);
+    g_state.onMixItem = g_state.onItemPlace && UI::HUD::PadTargets::IsIn(targets[current], MixDocument);
     g_state.onEmptyCell = g_state.onTarget && targets[current].empty;
     if (g_state.onTarget)
         g_state.box = targets[current].box;
@@ -232,6 +236,7 @@ void Reset()
     g_state.onItemPlace = false;
     g_state.onWornPlace = false;
     g_state.onGoods = false;
+    g_state.onMixItem = false;
     g_state.onEmptyCell = false;
     g_state.stickPushed = false;
     g_state.lostFrames = 0;
@@ -262,6 +267,11 @@ bool OnWornPlace()
 bool OnGoods()
 {
     return g_state.onGoods;
+}
+
+bool OnMixItem()
+{
+    return g_state.onMixItem;
 }
 
 bool OnEmptyCell()

@@ -294,7 +294,8 @@ void CStorageInventoryExt::ProcessInventoryCtrl()
     }
     else if (IsPress(VK_RBUTTON))
     {
-        if (UI::Mobile::ClickSource::IsFingerLongPress() && ShowItemCard())
+        if ((UI::Mobile::ClickSource::IsFingerLongPress() || UI::Mobile::ClickSource::IsPadCardClick())
+            && ShowItemCard())
             return;
         ProcessStorageItemAutoMove();
     }

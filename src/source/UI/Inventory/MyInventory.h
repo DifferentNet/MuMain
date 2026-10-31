@@ -93,6 +93,11 @@ namespace mu::ui::window
         bool m_bCardRightPress = false;
         // The right press came from the pad's X: on release it says why nothing came off.
         bool m_bPadRightPress = false;
+        // The worn slot the left button was pressed on (-1 none): a release takes worn gear off only
+        // where its press was. The pad lets go of an NPC's click as the windows it opened appear,
+        // over the slot pointed before they closed: that release took the weapon onto the cursor,
+        // and the opening vault put it away.
+        int m_iLeftPressSlot = -1;
 
         // The whole window is RmlUi: the equipped and the grid's items are live 3D, drawn into the
         // document's #item_view (m_ItemTarget).

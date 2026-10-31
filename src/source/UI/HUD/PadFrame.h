@@ -33,6 +33,8 @@ void Reset();
 [[nodiscard]] bool OnWornPlace();
 // Whether that target is a cell of the NPC shop: A buys what is there.
 [[nodiscard]] bool OnGoods();
+// Whether that target is a cell of the crafting box: its items have no card.
+[[nodiscard]] bool OnMixItem();
 // Whether that target is a cell with no item in it.
 [[nodiscard]] bool OnEmptyCell();
 } // namespace UI::HUD::PadFrame

@@ -6,6 +6,7 @@
 #include "UI/RmlBridge/RmlElementBox.h"
 #include "UI/RmlBridge/RmlPointer.h"
 #include "UI/RmlBridge/RmlWindowClose.h"
+#include "UI/Mobile/ClickSource.h"
 #include "UI/Dialogs/CustomMessageBox.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
 #include "UI/Core/WindowCommon.h" // ShowChaosMixMenuDialog
@@ -307,8 +308,10 @@ bool CMixInventory::UpdateMouseEvent()
     {
         if (mu::ui::window::IsPress(VK_RBUTTON))
         {
-            // Right-click sends a craft-box item back to the inventory.
-            ProcessMixItemAutoMoveToInventory();
+            // Right-click sends a craft-box item back to the inventory; the pad's Y asks for a card,
+            // which the box's items have not.
+            if (!UI::Mobile::ClickSource::IsPadCardClick())
+                ProcessMixItemAutoMoveToInventory();
             MouseRButton = false;
             MouseRButtonPop = false;
             MouseRButtonPush = false;
