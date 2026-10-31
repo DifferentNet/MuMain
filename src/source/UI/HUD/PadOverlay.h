@@ -15,8 +15,8 @@ struct View
     bool legend = false;
     // What the legend says: on an item's place Take, Equip, Card and Close (on worn gear Take off for
     // Equip, on a bag item Sell while a shop is open, Move while the storage or another window takes
-    // it); on a shop's goods Buy and Close; with an item on the cursor Put down, Drop and Put back; on
-    // a button Press and Close.
+    // it); on a shop's goods Buy and Close; on an empty cell Close alone; with an item on the cursor
+    // Put down, Drop and Put back; on a button Press and Close.
     enum class Legend
     {
         Item,
@@ -24,6 +24,7 @@ struct View
         Sell,
         Move,
         Goods,
+        Empty,
         Holding,
         Button,
     };

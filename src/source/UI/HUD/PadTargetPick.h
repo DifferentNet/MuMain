@@ -36,6 +36,8 @@ struct Target
     bool cell = false;
     // An equipment slot: with the cells, an item's place (the legend says Take, Equip, Card there).
     bool slot = false;
+    // A cell with no item in it: the legend offers nothing to take there.
+    bool empty = false;
 };
 
 // The smallest target holding the point (a button over its panel), None for none.

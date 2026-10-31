@@ -26,7 +26,7 @@
 			<div class="pad-glyph pad-bumper">RB</div>
 		</div>
 		<div id="po_legend" data-if="legend_shown">
-			<div class="pad-glyph pad-face pad-a">A</div><div class="po-label">{{take_label}}</div>
+			<div class="pad-glyph pad-face pad-a" data-if="legend_a">A</div><div class="po-label" data-if="legend_a">{{take_label}}</div>
 			<div class="pad-glyph pad-face pad-x" data-if="legend_item">X</div><div class="po-label" data-if="legend_item">{{equip_label}}</div>
 			<div class="pad-glyph pad-face pad-y" data-if="legend_y">Y</div><div class="po-label" data-if="legend_y">{{card_label}}</div>
 			<div class="pad-glyph pad-face pad-b">B</div><div class="po-label">{{close_label}}</div>

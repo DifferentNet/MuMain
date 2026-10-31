@@ -42,6 +42,7 @@ struct OverlayModel
     std::vector<TabView> tabs;
     bool legendShown = false;
     // The legend on an item's place: X and Y too; with an item on the cursor Y (drop) too.
+    bool legendA = true;
     bool legendItem = true;
     bool legendY = true;
     Rml::String pickupLabel;
@@ -71,6 +72,7 @@ void BindModel(Rml::DataModelConstructor& c, OverlayModel& model)
     c.Bind("hub_open", &model.hubOpen);
     c.Bind("tabs", &model.tabs);
     c.Bind("legend_shown", &model.legendShown);
+    c.Bind("legend_a", &model.legendA);
     c.Bind("legend_item", &model.legendItem);
     c.Bind("legend_y", &model.legendY);
     c.Bind("pickup_label", &model.pickupLabel);
@@ -167,9 +169,10 @@ void SyncLegend(OverlayModel& model, const View& view)
     using Legend = View::Legend;
     const Legend says = view.legendSays;
     const bool onItem = says == Legend::Item || says == Legend::Worn || says == Legend::Sell || says == Legend::Move;
+    SyncBool(model.legendA, says != Legend::Empty, "legend_a");
     SyncBool(model.legendItem, onItem, "legend_item");
     // The shop's goods have no card and nothing for X: A buys them.
-    SyncBool(model.legendY, says != Legend::Button && says != Legend::Goods, "legend_y");
+    SyncBool(model.legendY, says != Legend::Button && says != Legend::Goods && says != Legend::Empty, "legend_y");
     const auto* aLabel = onItem                    ? &I18N::Game::PadTake
                          : says == Legend::Goods   ? &I18N::Game::PadBuy
                          : says == Legend::Holding ? &I18N::Game::PadPutDown

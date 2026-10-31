@@ -267,7 +267,7 @@ the frame rests only on it. The right stick still moves the pointer (shown while
 half speed over a window) and snaps it onto a target near when let go. A legend under the hub's tabs
 says what the buttons do there (on an item: Take, Equip, Card, Close, with X named for what it does
 there: Take off on worn gear, Sell while a shop is open, Move while the storage, the trade or the chaos
-machine takes it; on a shop's goods: Buy, Close; with an item on the cursor: Put down, Drop, Put back;
+machine takes it; on a shop's goods: Buy, Close; on an empty cell: Close alone; with an item on the cursor: Put down, Drop, Put back;
 on a button: Press, Close); both keep left of the windows, wrapping when the room is
 short. On the Skills tab the legend gives way to the skill picker's own, and the picker sits under the
 tabs:

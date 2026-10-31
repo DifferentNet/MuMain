@@ -53,6 +53,7 @@ struct State
     bool onItemPlace = false;
     bool onWornPlace = false;
     bool onGoods = false;
+    bool onEmptyCell = false;
     Pick::Box box;
     // The frame's target went away (a card opened over it, a dialog closed): it moves on a frame later,
     // with A up, so the release that closed a dialog does not land on the next target (the game reads
@@ -206,6 +207,7 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
     g_state.onItemPlace = g_state.onTarget && (targets[current].cell || targets[current].slot);
     g_state.onWornPlace = g_state.onTarget && targets[current].slot;
     g_state.onGoods = g_state.onItemPlace && UI::HUD::PadTargets::IsIn(targets[current], ShopDocument);
+    g_state.onEmptyCell = g_state.onTarget && targets[current].empty;
     if (g_state.onTarget)
         g_state.box = targets[current].box;
     if (g_state.onTarget && !onDialog)
@@ -230,6 +232,7 @@ void Reset()
     g_state.onItemPlace = false;
     g_state.onWornPlace = false;
     g_state.onGoods = false;
+    g_state.onEmptyCell = false;
     g_state.stickPushed = false;
     g_state.lostFrames = 0;
     g_state.onDialog = false;
@@ -259,5 +262,10 @@ bool OnWornPlace()
 bool OnGoods()
 {
     return g_state.onGoods;
+}
+
+bool OnEmptyCell()
+{
+    return g_state.onEmptyCell;
 }
 } // namespace UI::HUD::PadFrame

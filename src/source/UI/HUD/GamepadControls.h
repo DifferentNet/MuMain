@@ -45,7 +45,8 @@ void Update();
 // under it count as aimed at.
 [[nodiscard]] bool PlaysPointer();
 
-// Whether the game's pointer is not drawn: the pad plays the world, or its frame rests on a target.
+// Whether the game's pointer is not drawn: the pad plays the world, its frame rests on a target, or
+// its keyboard is up.
 [[nodiscard]] bool HidesPointer();
 
 // The drop d-pad down would pick up (an index into Items), its name shown; -1 for none.

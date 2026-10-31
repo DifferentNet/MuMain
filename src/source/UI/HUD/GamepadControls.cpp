@@ -917,6 +917,8 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
         view.legendSays = Legend::Holding;
     else if (view.frame && !UI::HUD::PadFrame::OnItemPlace())
         view.legendSays = Legend::Button;
+    else if (view.frame && UI::HUD::PadFrame::OnEmptyCell())
+        view.legendSays = Legend::Empty;
     else if (view.frame && UI::HUD::PadFrame::OnWornPlace())
         view.legendSays = Legend::Worn;
     else if (view.frame && UI::HUD::PadFrame::OnGoods())
@@ -958,7 +960,13 @@ bool PlaysPointer()
 
 bool HidesPointer()
 {
-    if (!g_state.inUse || !g_state.inWorld || g_state.typing)
+    if (!g_state.inUse)
+        return false;
+    // The pad's keyboard has the pad: the pointer, left where the field's window was pressed, would sit
+    // on its keys.
+    if (g_state.typing)
+        return true;
+    if (!g_state.inWorld)
         return false;
     PadTargetPick::Box box;
     return !g_state.windowOpen || (g_state.frameOpen && UI::HUD::PadFrame::Box(box));
