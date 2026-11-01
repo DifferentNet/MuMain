@@ -297,10 +297,10 @@
       "weaponKind": "staff",
       "level": 104,
       "magicDurability": 182,
-      "damageMin": 153,
-      "damageMax": 165,
+      "damageMin": 73,
+      "damageMax": 81,
       "attackSpeed": 30,
-      "magicPower": 156,
+      "magicPower": 144,
       "requirements": {
         "strength": 36,
         "dexterity": 4
@@ -775,10 +775,10 @@
       "weaponKind": "staff",
       "level": 104,
       "magicDurability": 182,
-      "damageMin": 153,
-      "damageMax": 165,
+      "damageMin": 73,
+      "damageMax": 81,
       "attackSpeed": 30,
-      "magicPower": 146,
+      "magicPower": 144,
       "requirements": {
         "strength": 55,
         "dexterity": 13
