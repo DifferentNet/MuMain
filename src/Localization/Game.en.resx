@@ -1873,7 +1873,7 @@
     <comment>legacy_id=427</comment>
   </data>
   <data name="Please enter your WEBZEN.COM password." xml:space="preserve">
-    <value>Please enter your WEBZEN.COM password.</value>
+    <value>Please enter your account password.</value>
     <comment>legacy_id=428,444,1713</comment>
   </data>
   <data name="You have received an offer to join a guild." xml:space="preserve">
@@ -2909,7 +2909,7 @@
     <comment>legacy_id=690</comment>
   </data>
   <data name="Enter your WEBZEN.COM password." xml:space="preserve">
-    <value>Enter your WEBZEN.COM password.</value>
+    <value>Enter your account password.</value>
     <comment>legacy_id=691</comment>
   </data>
   <data name="Unlock Vault" xml:space="preserve">
@@ -2933,7 +2933,7 @@
     <comment>legacy_id=696</comment>
   </data>
   <data name="EnterYourWEBZENCOMPassword697" xml:space="preserve">
-    <value>Enter your WEBZEN.COM password</value>
+    <value>Enter your account password</value>
     <comment>legacy_id=697</comment>
   </data>
   <data name="Charisma Requirement: %d" xml:space="preserve">
@@ -13554,6 +13554,9 @@
   <data name="MuHelperSkillPaused" xml:space="preserve">
     <value>MU Helper: %ls doesn't cast. Trying again in %d s.</value>
   </data>
+  <data name="MuHelperMPStatus" xml:space="preserve">
+    <value>MP Status</value>
+  </data>
   <data name="MuHelperNoManaPotions" xml:space="preserve">
     <value>MU Helper: out of mana potions.</value>
   </data>
@@ -13738,7 +13741,7 @@
     <value>Make %d resets</value>
   </data>
   <data name="BattlePassQuestEvents" xml:space="preserve">
-    <value>Take part in %d events: Blood Castle, Devil Square or Chaos Castle</value>
+    <value>Take part in %d events: Blood Castle, Devil Square, Chaos Castle, a PvP event, a rift, the world boss or a ranked duel</value>
   </data>
   <data name="BattlePassQuestMap" xml:space="preserve">
     <value>Kill %d monsters in %ls</value>
@@ -13804,7 +13807,7 @@
     <value>Play %d days of the season</value>
   </data>
   <data name="BattlePassQuestEventOne" xml:space="preserve">
-    <value>Take part in an event: Blood Castle, Devil Square or Chaos Castle</value>
+    <value>Take part in an event: Blood Castle, Devil Square, Chaos Castle, a PvP event, a rift, the world boss or a ranked duel</value>
   </data>
   <data name="BattlePassQuestMixOne" xml:space="preserve">
     <value>Make a successful Chaos Machine mix</value>
@@ -15495,7 +15498,7 @@
     <value>Tap to use a skill once, hold to repeat it</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
-    <value>D-pad up: MU Helper on and off (the left stick moves where it hunts). View: the map</value>
+    <value>D-pad up: MU Helper on and off (the left stick moves where it hunts). View: Social (players around: trade, party, guild...); the map is in the menu</value>
   </data>
   <data name="PadHelpRightClick" xml:space="preserve">
     <value>RS over a window: right click at the pointer, on a stat's + many points</value>
@@ -15863,6 +15866,27 @@
   <data name="TouchItemMoveToBag" xml:space="preserve">
     <value>Move to bag</value>
   </data>
+  <data name="TouchSocial" xml:space="preserve">
+    <value>Social</value>
+  </data>
+  <data name="TouchSocialTitle" xml:space="preserve">
+    <value>Players nearby</value>
+  </data>
+  <data name="TouchSocialNone" xml:space="preserve">
+    <value>No players nearby</value>
+  </data>
+  <data name="TouchSocialChosen" xml:space="preserve">
+    <value>%ls: what to do?</value>
+  </data>
+  <data name="TouchSocialJoinGuild" xml:space="preserve">
+    <value>Join guild</value>
+  </data>
+  <data name="TouchSocialOutOfReach" xml:space="preserve">
+    <value>Could not reach %ls</value>
+  </data>
+  <data name="TouchSocialWindows" xml:space="preserve">
+    <value>Windows</value>
+  </data>
   <data name="PadHubSettings" xml:space="preserve">
     <value>Settings</value>
   </data>
@@ -15913,5 +15937,12 @@
   </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Take off the item worn there first</value>
+  </data>
+  <data name="HelperPickBoxes" xml:space="preserve">
+    <value>Boxes &amp; medals</value>
+  </data>
+  <!-- Title effects -->
+  <data name="TitleEffects" xml:space="preserve">
+    <value>Title effects</value>
   </data>
 </root>

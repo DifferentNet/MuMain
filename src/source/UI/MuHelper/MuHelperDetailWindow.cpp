@@ -135,6 +135,11 @@ void CMuHelperDetailWindow::HandleGaugeEvent(Rml::Event& event, int gauge)
         if (m_iCurrentPage == SUB_PAGE_PARTY_CONFIG_ELF)
             level = &m_iCurrentPartyHealThreshold;
         break;
+    case 3:
+        // MU Skynet: the mana potions' threshold (2026-11-02), under the HP one on every class.
+        if (IsPotionPage(m_iCurrentPage))
+            level = &m_iCurrentManaPotionThreshold;
+        break;
     }
     if (!level)
         return;
@@ -205,6 +210,7 @@ void CMuHelperDetailWindow::Toggle(int iPage)
     else if (IsPotionPage(m_iCurrentPage))
     {
         m_iCurrentPotionThreshold = config.iPotionThreshold / 10;
+        m_iCurrentManaPotionThreshold = config.iManaPotionThreshold / 10;
         m_iCurrentHealThreshold = config.iHealThreshold / 10;
     }
     else if (IsPartyPage(m_iCurrentPage))
@@ -231,6 +237,7 @@ void CMuHelperDetailWindow::Save()
     config.iBuffCastInterval = UI::MuHelper::ParseIntInput(interval.c_str());
 
     config.iPotionThreshold = m_iCurrentPotionThreshold * 10;
+    config.iManaPotionThreshold = m_iCurrentManaPotionThreshold * 10;
     config.iHealThreshold = m_iCurrentHealThreshold * 10;
     config.iHealPartyThreshold = m_iCurrentPartyHealThreshold * 10;
 }
@@ -239,6 +246,7 @@ void CMuHelperDetailWindow::ApplySavedConfig()
 {
     const ConfigData& config = UI::MuHelper::StagedConfig();
     m_iCurrentPotionThreshold = config.iPotionThreshold / 10;
+    m_iCurrentManaPotionThreshold = config.iManaPotionThreshold / 10;
     m_iCurrentHealThreshold = config.iHealThreshold / 10;
     m_iCurrentPartyHealThreshold = config.iHealPartyThreshold / 10;
 
@@ -254,6 +262,7 @@ void CMuHelperDetailWindow::InitConfig()
 {
     ConfigData& config = UI::MuHelper::StagedConfig();
     config.iPotionThreshold = 40;
+    config.iManaPotionThreshold = ConfigData::DefaultManaPotionThreshold;
     config.iHealThreshold = 60;
     config.iBuffCastInterval = 0;
     config.iHealPartyThreshold = 60;
@@ -277,8 +286,10 @@ void CMuHelperDetailWindow::Reset()
     else if (IsPotionPage(m_iCurrentPage))
     {
         config.iPotionThreshold = 0;
+        config.iManaPotionThreshold = 0;
         config.iHealThreshold = 0;
         m_iCurrentPotionThreshold = 0;
+        m_iCurrentManaPotionThreshold = 0;
         m_iCurrentHealThreshold = 0;
     }
 }
@@ -310,6 +321,7 @@ void CMuHelperDetailWindow::BindRmlModel(Rml::DataModelConstructor& c, MuHelperD
     c.Bind("precon", &model.precon);
     c.Bind("subcon", &model.subcon);
     c.Bind("potion_level", &model.potionLevel);
+    c.Bind("mana_potion_level", &model.manaPotionLevel);
     c.Bind("heal_level", &model.healLevel);
     c.Bind("party_heal_level", &model.partyHealLevel);
     c.Bind("party_heal", &model.partyHeal);
@@ -329,6 +341,7 @@ void CMuHelperDetailWindow::BindRmlModel(Rml::DataModelConstructor& c, MuHelperD
     labels.RegisterMember("pane_heal_support", &MuHelperDetailLabels::paneHealSupport);
     labels.RegisterMember("hp_status", &MuHelperDetailLabels::hpStatus);
     labels.RegisterMember("hp_status_party", &MuHelperDetailLabels::hpStatusParty);
+    labels.RegisterMember("mp_status", &MuHelperDetailLabels::mpStatus);
     labels.RegisterMember("precon_hunt_range", &MuHelperDetailLabels::preconHuntRange);
     labels.RegisterMember("precon_attacking", &MuHelperDetailLabels::preconAttacking);
     labels.RegisterMember("subcon_two", &MuHelperDetailLabels::subconTwo);
@@ -400,6 +413,7 @@ void CMuHelperDetailWindow::BindRmlModel(Rml::DataModelConstructor& c, MuHelperD
     l.paneHealSupport = Narrow(I18N::Game::HealSupport);
     l.hpStatus = Narrow(I18N::Game::HPStatus);
     l.hpStatusParty = Narrow(I18N::Game::HPStatusOfPartyMembers);
+    l.mpStatus = Narrow(I18N::Game::MuHelperMPStatus);
     l.preconHuntRange = Narrow(I18N::Game::MonsterWithinHuntingRange);
     l.preconAttacking = Narrow(I18N::Game::MonsterAttackingMe);
     l.subconTwo = Narrow(I18N::Game::MoreThan2Mobs);
@@ -471,6 +485,7 @@ void CMuHelperDetailWindow::SyncRmlModel()
     SyncField(m_RmlView.Binder(), &MuHelperDetailRmlModel::subcon, "subcon", subcon);
 
     SyncField(m_RmlView.Binder(), &MuHelperDetailRmlModel::potionLevel, "potion_level", m_iCurrentPotionThreshold);
+    SyncField(m_RmlView.Binder(), &MuHelperDetailRmlModel::manaPotionLevel, "mana_potion_level", m_iCurrentManaPotionThreshold);
     SyncField(m_RmlView.Binder(), &MuHelperDetailRmlModel::healLevel, "heal_level", m_iCurrentHealThreshold);
     SyncField(m_RmlView.Binder(), &MuHelperDetailRmlModel::partyHealLevel, "party_heal_level", m_iCurrentPartyHealThreshold);
     SyncField(m_RmlView.Binder(), &MuHelperDetailRmlModel::partyHeal, "party_heal", config.bAutoHealParty);

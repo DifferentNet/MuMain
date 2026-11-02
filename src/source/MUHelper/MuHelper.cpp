@@ -115,7 +115,6 @@ namespace MUHelper
         m_iComboState = 0;
         m_iCurrentBuffIndex = 0;
         m_iCurrentBuffPartyIndex = 0;
-        m_iCurrentHealPartyIndex = 0;
         m_iCurrentTarget = -1;
         m_iCurrentSkill = (ActionSkillType)m_config.aiSkill[0];
         m_iCurrentItem = MAX_ITEMS;
@@ -137,7 +136,9 @@ namespace MUHelper
         m_iTimedSkillSlot = -1;
         m_mapSupportFailures.clear();
         m_mapSuspendedUntil.clear();
+        m_mapHealSkipUntil.clear();
         m_bManaShort = false;
+        m_bLastPotionWasMana = false;
         m_setNotified.clear();
         m_mapForgottenUntil.clear();
         m_noTargetInReachSince = {};
@@ -741,43 +742,61 @@ namespace MUHelper
 
     int CMuHelper::ConsumePotion()
     {
-        int64_t iLife = CharacterAttribute->Life;
-        int64_t iLifeMax = CharacterAttribute->LifeMax;
-        bool bDrank = false;
-
-        if (m_config.bUseHealPotion && iLifeMax > 0 && iLife > 0)
+        // One potion a round: the client sends no item use while the last one waits for the server's answer
+        // (SendRequestUse, EnableUse). While it waits, nothing is decided and a skill's lack of mana stays noted.
+        if (!m_config.bUseHealPotion || EnableUse > 0)
         {
-            int64_t iRemaining = (iLife * 100 + iLifeMax - 1) / iLifeMax;
-            if (iRemaining <= m_config.iPotionThreshold)
-            {
-                int iPotionIndex = g_pMyInventory->FindHealingItemIndex();
-                if (iPotionIndex != -1)
-                {
-                    SendRequestUse(iPotionIndex, 0);
-                    bDrank = true;
-                }
-            }
+            return 1;
         }
 
-        // Mana potions, under the same "potion" switch, one potion a round with healing first (2026-10-23). The
-        // client's own cast drinks one only after a cast failed for mana, and the helper's skills and buffs, now
-        // up to 17 casts a second, emptied the mana faster than that kept up.
-        const bool bManaShort = m_bManaShort;
-        m_bManaShort = false;
+        const int64_t iLife = CharacterAttribute->Life;
+        const int64_t iLifeMax = CharacterAttribute->LifeMax;
+        int iLifePercent = 100;
+        bool bNeedHeal = false;
+        if (iLifeMax > 0 && iLife > 0)
+        {
+            iLifePercent = static_cast<int>((iLife * 100 + iLifeMax - 1) / iLifeMax);
+            bNeedHeal = iLifePercent <= m_config.iPotionThreshold;
+        }
+
+        // Mana potions, under the same "potion" switch (2026-10-23): the client's own cast drinks one only after a
+        // cast failed for mana, and the helper's skills and buffs, now up to 17 casts a second, emptied the mana
+        // faster than that kept up. Below the window's MP threshold, or when a skill lacked mana.
         const int64_t iMana = CharacterAttribute->Mana;
         const int64_t iManaMax = CharacterAttribute->ManaMax;
-        if (m_config.bUseHealPotion && !bDrank && iManaMax > 0
-            && (bManaShort || iMana * 100 <= iManaMax * ManaPotionPercent))
+        const bool bNeedMana = iManaMax > 0
+            && (m_bManaShort || iMana * 100 <= iManaMax * m_config.iManaPotionThreshold);
+
+        const int iHealIndex = bNeedHeal ? g_pMyInventory->FindHealingItemIndex() : -1;
+        const int iManaIndex = bNeedMana ? g_pMyInventory->FindManaItemIndex() : -1;
+        if (bNeedMana && iManaIndex == -1 && m_bManaShort)
         {
-            const int iPotionIndex = g_pMyInventory->FindManaItemIndex();
-            if (iPotionIndex != -1)
-            {
-                SendRequestUse(iPotionIndex, 0);
-            }
-            else if (bManaShort)
-            {
-                NotifyOnce(-1, I18N::Game::MuHelperNoManaPotions);
-            }
+            NotifyOnce(-1, I18N::Game::MuHelperNoManaPotions);
+        }
+
+        // Both needed: they take turns (2026-11-02, ghinzuro: the knight stopped drinking mana; in a crowd he is
+        // under his HP threshold every round, and with healing always first the mana never came). Healing keeps
+        // the turn while health is under half its threshold.
+        bool bDrinkMana = iManaIndex != -1;
+        if (iHealIndex != -1 && bDrinkMana)
+        {
+            bDrinkMana = !m_bLastPotionWasMana && iLifePercent * 2 > m_config.iPotionThreshold;
+        }
+
+        if (bDrinkMana)
+        {
+            SendRequestUse(iManaIndex, 0);
+            m_bLastPotionWasMana = true;
+            m_bManaShort = false;
+        }
+        else if (iHealIndex != -1)
+        {
+            SendRequestUse(iHealIndex, 0);
+            m_bLastPotionWasMana = false;
+        }
+        else if (bNeedMana)
+        {
+            m_bManaShort = false;   // no mana potion to drink: told once above
         }
 
         return 1;
@@ -975,7 +994,10 @@ namespace MUHelper
 
     int CMuHelper::Heal()
     {
-        if (!m_config.bAutoHeal)
+        // The party heal works by itself: an elf with only "Heal party members" ticked never healed anyone, as the
+        // self heal's switch ended this before the party was looked at (players, 2026-11-02).
+        const bool bHealParty = m_config.bAutoHealParty && g_pPartyManager->IsPartyActive();
+        if (!m_config.bAutoHeal && !bHealParty)
         {
             return 1;
         }
@@ -986,38 +1008,74 @@ namespace MUHelper
             return 1;
         }
 
-        if (m_config.bAutoHealParty && g_pPartyManager->IsPartyActive())
+        if (!bHealParty)
         {
-            m_iCurrentHealPartyIndex %= PartyNumber;
-
-            PARTY_t* pMember = &Party[m_iCurrentHealPartyIndex];
-            CHARACTER* pChar = g_pPartyManager->GetPartyMemberChar(pMember);
-            int iHealResult = 1;
-
-            if (pChar != NULL)
-            {
-                if (pChar == Hero)
-                {
-                    iHealResult = HealSelf(iHealingSkill);
-                }
-                else if (pMember->stepHP * 10 <= m_config.iHealPartyThreshold
-                    && ComputeDistanceFromTarget(pChar) <= MAX_ACTIONABLE_DISTANCE)
-                {
-                    iHealResult = CastSupport(iHealingSkill, true, pChar->Key);
-                }
-            }
-
-            m_iCurrentHealPartyIndex = (m_iCurrentHealPartyIndex + 1) % PartyNumber;
-
-            return iHealResult;
-        }
-        else
-        {
-            m_iCurrentHealPartyIndex = 0;
             return HealSelf(iHealingSkill);
         }
 
-        return 1;
+        // The most hurt one in reach gets the heal, every round: the hero by the self heal's threshold (when it is
+        // ticked), the others by the party threshold. Before, one member was looked at per round, in turn.
+        CHARACTER* pTarget = nullptr;
+        int iLowest = 101;
+        if (m_config.bAutoHeal && CharacterAttribute->LifeMax > 0)
+        {
+            const int64_t iLifeMax = CharacterAttribute->LifeMax;
+            const int iRemaining = static_cast<int>((static_cast<int64_t>(CharacterAttribute->Life) * 100 + iLifeMax - 1) / iLifeMax);
+            if (iRemaining <= m_config.iHealThreshold)
+            {
+                pTarget = Hero;
+                iLowest = iRemaining;
+            }
+        }
+
+        for (int i = 0; i < PartyNumber; ++i)
+        {
+            PARTY_t* pMember = &Party[i];
+            const int iRemaining = pMember->stepHP * 10;
+            if (iRemaining > m_config.iHealPartyThreshold || iRemaining >= iLowest)
+            {
+                continue;
+            }
+
+            CHARACTER* pChar = g_pPartyManager->GetPartyMemberChar(pMember);
+            if (pChar == nullptr || pChar == Hero || pChar->Dead > 0 || !pChar->Object.Live
+                || ComputeDistanceFromTarget(pChar) > MAX_ACTIONABLE_DISTANCE)
+            {
+                continue;
+            }
+
+            const auto skip = m_mapHealSkipUntil.find(pChar->Key);
+            if (skip != m_mapHealSkipUntil.end() && std::chrono::steady_clock::now() < skip->second)
+            {
+                continue;
+            }
+
+            pTarget = pChar;
+            iLowest = iRemaining;
+        }
+
+        if (pTarget == nullptr)
+        {
+            return 1;
+        }
+
+        if (pTarget == Hero)
+        {
+            return CastSupport(iHealingSkill, true, HeroKey);
+        }
+
+        // A member the heal can't reach (behind a wall, no path) is passed over for a while, and his refusals don't
+        // pause the heal skill: otherwise the most hurt one, picked every round, paused it for the whole party.
+        using GameLogic::Automation::SkillResult;
+        m_lastSkillResult = SkillResult::NotReady;
+        const int iResult = CastSupport(iHealingSkill, true, pTarget->Key);
+        if (m_lastSkillResult == SkillResult::NoPath || m_lastSkillResult == SkillResult::Blocked
+            || m_lastSkillResult == SkillResult::NotInView || m_lastSkillResult == SkillResult::NotAttackable)
+        {
+            m_mapHealSkipUntil[pTarget->Key] = std::chrono::steady_clock::now() + HealSkipTime;
+            m_mapSupportFailures.erase(iHealingSkill);
+        }
+        return iResult;
     }
 
     int CMuHelper::HealSelf(ActionSkillType iHealingSkill)
@@ -1210,7 +1268,7 @@ namespace MUHelper
     bool CMuHelper::PicksUpItems() const
     {
         return m_config.bPickAllItems || m_config.bPickZen || m_config.bPickJewel || m_config.bPickAncient
-            || m_config.bPickExcellent || m_config.bPickExtraItems;
+            || m_config.bPickExcellent || m_config.bPickExtraItems || m_config.bPickContainers;
     }
 
     bool CMuHelper::IsWithinReach(int iTargetId, float fReach) const
@@ -1611,7 +1669,8 @@ namespace MUHelper
         if ((m_config.bPickZen && IsMoneyItem(pItem))
             || (m_config.bPickJewel && GameLogic::Items::IsJewelItem(pItem))
             || (m_config.bPickAncient && IsAncientItem(pItem))
-            || (m_config.bPickExcellent && IsExcellentItem(pItem)))
+            || (m_config.bPickExcellent && IsExcellentItem(pItem))
+            || (m_config.bPickContainers && GameLogic::Items::IsContainerItem(pItem)))
         {
             return true;
         }

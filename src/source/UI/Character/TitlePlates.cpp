@@ -2,6 +2,7 @@
 #include "UI/Character/TitlePlates.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 
 #include "App/Platform/Windows/Winmain.h"
@@ -13,6 +14,7 @@
 #include "Render/Sprites/GlobalBitmap.h"
 #include "Render/Text/CUIRenderText.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
+#include "UI/Character/TitlePlateEffects.h"
 #include "UI/Character/TitlePlatesArt.h"
 #include "UI/Scaling/UITransform.h"
 
@@ -102,9 +104,9 @@ int OverPartyBar(const CHARACTER& owner, int bottomY)
 
 // The title in its rarity's colour over a 1 px dark shadow, so it reads on the plate's glints too; size is its box,
 // the measured size times the text's scale (the renderer shrinks the text into it).
-void Text(const GameLogic::Titles::Worn& title, HFONT font, int x, int y, const SIZE& size)
+void Text(const GameLogic::Titles::Worn& title, const std::array<unsigned char, 3>& color, HFONT font, int x, int y,
+          const SIZE& size)
 {
-    const auto* color = TextColor[static_cast<int>(title.Color)];
     g_pRenderText->SetFont(font);
     g_pRenderText->SetBgColor(0, 0, 0, 0);
     g_pRenderText->SetTextColor(0, 0, 0, 255);
@@ -156,7 +158,7 @@ void SetScale(float scale)
     PlateScale = std::clamp(scale, 0.3f, 1.5f);
 }
 
-int Render(const GameLogic::Titles::Worn& title, const CHARACTER& owner, int centerX, int bottomY)
+int Render(const GameLogic::Titles::Worn& title, const CHARACTER& owner, int centerX, int bottomY, bool effects)
 {
     bottomY = OverPartyBar(owner, bottomY);
     const std::wstring& text = title.Text();
@@ -193,14 +195,23 @@ int Render(const GameLogic::Titles::Worn& title, const CHARACTER& owner, int cen
     const float height = plate.height * k;
     const float top = static_cast<float>(bottomY) - height;
     const float left = static_cast<float>(centerX) - (plate.fieldLeft + plate.fieldRight) / 2.f * k;
+    effects = effects && Effects::Enabled();
+    const Effects::Placement at{left, top, k};
+    if (effects)
+        Effects::RenderUnder(title, owner, at);
     RenderBitmap(static_cast<int>(texture), left, top, plate.width * k, height, plate.x / Art::AtlasSize,
                  plate.y / Art::AtlasSize, plate.width / Art::AtlasSize, plate.height / Art::AtlasSize, true, true,
                  0.f);
+    if (effects)
+        Effects::RenderOver(title, owner, at);
 
     const float fieldMiddle = top + (plate.fieldTop + plate.fieldBottom) / 2.f * k;
     const int textX = static_cast<int>(static_cast<float>(centerX) - static_cast<float>(size.cx) / 2.f + 0.5f);
     const int textY = static_cast<int>(fieldMiddle - static_cast<float>(size.cy) / 2.f + 0.5f);
-    Text(title, font, textX, textY, size);
+    const auto& base = TextColor[static_cast<int>(title.Color)];
+    const std::array<unsigned char, 3> color =
+        effects ? Effects::TextColor(title, owner, base) : std::array<unsigned char, 3>{base[0], base[1], base[2]};
+    Text(title, color, font, textX, textY, size);
 
     g_pRenderText->SetFont(g_hFont);
     return static_cast<int>(height + 0.5f);

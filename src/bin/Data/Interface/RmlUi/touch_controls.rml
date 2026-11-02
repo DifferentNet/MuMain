@@ -7,7 +7,7 @@
 	<link type="text/rcss" href="gamepad_glyphs.rcss"/>
 	<link type="text/rcss" href="touch_controls.rcss"/>
 </head>
-<body class="native-text" data-model="touch_controls" data-class-pad="pad" data-class-no-touch="!fingers" data-class-picking="picker_open" data-class-under-hub="under_hub">
+<body class="native-text" data-model="touch_controls" data-class-pad="pad" data-class-no-touch="!fingers" data-class-picking="picker_open" data-class-socialising="social_open" data-class-under-hub="under_hub">
 	<!-- The on-screen controls of phones and tablets (UI/HUD/TouchControls.cpp), shown only on a touch
 	     device in the world. Nothing here takes the pointer (pointer-events: none throughout): fingers
 	     reach the controls through Core::Input::Touch, which C++ answers from these elements' boxes,
@@ -73,10 +73,12 @@
 		<div id="tc_inventory" class="tc-button tc-quick">{{menu_label_0}}</div>
 		<div id="tc_character" class="tc-button tc-quick">{{menu_label_1}}</div>
 		<div id="tc_chat" class="tc-button tc-quick">{{chat_label}}</div>
-		<div id="tc_move" class="tc-button tc-quick">{{menu_label_7}}</div>
-		<div id="tc_map" class="tc-button tc-quick">{{menu_label_6}}
+		<!-- The players around and what to do with them (the Social panel below). -->
+		<div id="tc_social" class="tc-button tc-quick" data-class-open="social_open">{{social_label}}
 			<div class="pad-glyph pad-round pad-view"><div class="pad-view-back"></div><div class="pad-view-front"></div></div>
 		</div>
+		<div id="tc_move" class="tc-button tc-quick">{{menu_label_7}}</div>
+		<div id="tc_map" class="tc-button tc-quick">{{menu_label_6}}</div>
 	</div>
 
 	<!-- The screen around the open menu, dimmed: a tap there closes the menu. While it is open the
@@ -147,6 +149,50 @@
 		<!-- With a pad, its keys for the picker: the stick or the d-pad move the highlight, over the
 		     skill buttons on the right too. -->
 		<div id="tc_pick_legend">
+			<div class="pad-glyph pad-face pad-a">A</div><div class="pad-legend-label">{{pad_choose_label}}</div>
+			<div class="pad-glyph pad-face pad-b">B</div><div class="pad-legend-label">{{pad_close_label}}</div>
+		</div>
+	</div>
+
+	<!-- The Social panel (UI/HUD/TouchControls.cpp, UI/Mobile/SocialActions.cpp): the players around,
+	     nearest first, and what to do with the one chosen (gold): trade, party, whisper, friend, duel,
+	     follow, and the guild's. The nearest is chosen until a tap chooses another. An action goes to
+	     the chosen player (one further than two tiles is walked up to first) and closes the panel.
+	     The party, guild and friends windows lie along its foot. Close, the Social button or a tap
+	     beside the panel closes it. The ids are the contract with C++ like the rest. -->
+	<div id="tc_social_backdrop" data-if="social_open"></div>
+	<div id="tc_social_panel" data-if="social_open">
+		<div id="tc_soc_head">
+			<div id="tc_soc_title">{{social_title}}</div>
+			<div id="tc_soc_close" class="tc-button tc-pick-button" data-class-focused="social_focus == 'tc_soc_close'">{{social_close_label}}</div>
+		</div>
+		<div id="tc_soc_players" data-if="!social_none">
+			<div class="tc-button tc-soc-player" data-for="p : social_players" data-attr-id="p.id" data-class-chosen="p.chosen" data-class-focused="p.id == social_focus">
+				<div class="tc-soc-name">{{p.name}}</div>
+				<div class="tc-soc-guild" data-if="p.guild != ''">{{p.guild}}</div>
+			</div>
+		</div>
+		<div id="tc_soc_hint">{{social_hint}}</div>
+		<div id="tc_soc_actions" data-class-off="social_no_choice">
+			<div id="tc_soc_act_0" class="tc-button tc-soc-act" data-if="soc_act_shown_0" data-class-focused="social_focus == 'tc_soc_act_0'">{{soc_act_label_0}}</div>
+			<div id="tc_soc_act_1" class="tc-button tc-soc-act" data-if="soc_act_shown_1" data-class-focused="social_focus == 'tc_soc_act_1'">{{soc_act_label_1}}</div>
+			<div id="tc_soc_act_2" class="tc-button tc-soc-act" data-if="soc_act_shown_2" data-class-focused="social_focus == 'tc_soc_act_2'">{{soc_act_label_2}}</div>
+			<div id="tc_soc_act_3" class="tc-button tc-soc-act" data-if="soc_act_shown_3" data-class-focused="social_focus == 'tc_soc_act_3'">{{soc_act_label_3}}</div>
+			<div id="tc_soc_act_4" class="tc-button tc-soc-act" data-if="soc_act_shown_4" data-class-focused="social_focus == 'tc_soc_act_4'">{{soc_act_label_4}}</div>
+			<div id="tc_soc_act_5" class="tc-button tc-soc-act" data-if="soc_act_shown_5" data-class-focused="social_focus == 'tc_soc_act_5'">{{soc_act_label_5}}</div>
+			<div id="tc_soc_act_6" class="tc-button tc-soc-act" data-if="soc_act_shown_6" data-class-focused="social_focus == 'tc_soc_act_6'">{{soc_act_label_6}}</div>
+			<div id="tc_soc_act_7" class="tc-button tc-soc-act" data-if="soc_act_shown_7" data-class-focused="social_focus == 'tc_soc_act_7'">{{soc_act_label_7}}</div>
+			<div id="tc_soc_act_8" class="tc-button tc-soc-act" data-if="soc_act_shown_8" data-class-focused="social_focus == 'tc_soc_act_8'">{{soc_act_label_8}}</div>
+			<div id="tc_soc_act_9" class="tc-button tc-soc-act" data-if="soc_act_shown_9" data-class-focused="social_focus == 'tc_soc_act_9'">{{soc_act_label_9}}</div>
+		</div>
+		<div id="tc_soc_windows">
+			<div id="tc_soc_windows_label">{{social_windows_label}}</div>
+			<div id="tc_soc_win_0" class="tc-button tc-soc-act" data-class-focused="social_focus == 'tc_soc_win_0'">{{soc_win_label_0}}</div>
+			<div id="tc_soc_win_1" class="tc-button tc-soc-act" data-class-focused="social_focus == 'tc_soc_win_1'">{{soc_win_label_1}}</div>
+			<div id="tc_soc_win_2" class="tc-button tc-soc-act" data-class-focused="social_focus == 'tc_soc_win_2'">{{soc_win_label_2}}</div>
+		</div>
+		<!-- With a pad, its keys for the panel. -->
+		<div id="tc_soc_legend">
 			<div class="pad-glyph pad-face pad-a">A</div><div class="pad-legend-label">{{pad_choose_label}}</div>
 			<div class="pad-glyph pad-face pad-b">B</div><div class="pad-legend-label">{{pad_close_label}}</div>
 		</div>

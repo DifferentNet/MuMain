@@ -38,7 +38,8 @@ enum class PadButton : std::uint8_t
     // The item hotkeys E and R: shown only while a pad is in use (its d-pad drinks them).
     PotionE,
     PotionR,
-    Map,
+    // The Social panel (the pad's View button): the players around and what to do with them.
+    Social,
     Back,
     Count,
 };
@@ -54,7 +55,7 @@ void SetControlHeld(int control, bool held);
 // Lets go of everything the pad holds (the pad is put down, or leaves the world).
 void ReleasePad();
 
-// The menu, or the skill picker (where the skill buttons are set), for a pad: whether one is open, a
+// The menu, the skill picker (where the skill buttons are set) or the Social panel, for a pad: whether one is open, a
 // highlighted item the stick moves (dx, dy: -1, 0 or 1 a step; 0, 0 highlights the first item when
 // none is), and pressing the highlighted one. The picker's highlight goes over its skills and buttons
 // and the skill buttons it sets.

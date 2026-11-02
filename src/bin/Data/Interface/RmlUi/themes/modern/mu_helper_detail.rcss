@@ -22,9 +22,13 @@
 /* Gauges: bar, its fill at the same origin, and the label 18 below. */
 #gauge_potion, #gauge_potion_fill { left: 32px; top: 80px; }
 #gauge_potion_label               { left: 32px; top: 98px; }
-#gauge_potion_label, #gauge_heal_label, #gauge_party_heal_label { width: 124px; }
-#gauge_heal, #gauge_heal_fill     { left: 32px; top: 145px; }
-#gauge_heal_label                 { left: 32px; top: 163px; }
+#gauge_potion_label, #gauge_mana_label, #gauge_heal_label, #gauge_party_heal_label { width: 124px; }
+#gauge_mana, #gauge_mana_fill     { left: 32px; top: 111px; }
+#gauge_mana_label                 { left: 32px; top: 128px; }
+/* MU Skynet: under the taller top pane (MP gauge) the lower pane and the heal gauge sit 25 lower. */
+#pane_lower.mhd-below-mp          { top: 145px; }
+#gauge_heal, #gauge_heal_fill     { left: 32px; top: 170px; }
+#gauge_heal_label                 { left: 32px; top: 188px; }
 #gauge_party_heal, #gauge_party_heal_fill { left: 32px; top: 100px; }
 #gauge_party_heal_label                   { left: 32px; top: 118px; }
 
@@ -90,11 +94,14 @@
 	.mh-gauge-hit { top: -6px; bottom: -6px; }
 	#gauge_potion, #gauge_potion_fill { left: 36px; top: 76px; }
 	#gauge_potion_label               { left: 36px; top: 106px; }
-	#gauge_heal, #gauge_heal_fill     { left: 36px; top: 178px; }
-	#gauge_heal_label                 { left: 36px; top: 208px; }
+	#gauge_mana, #gauge_mana_fill     { left: 36px; top: 126px; }
+	#gauge_mana_label                 { left: 36px; top: 156px; }
+	#pane_lower.mhd-below-mp          { top: 190px; }
+	#gauge_heal, #gauge_heal_fill     { left: 36px; top: 222px; }
+	#gauge_heal_label                 { left: 36px; top: 252px; }
 	#gauge_party_heal, #gauge_party_heal_fill { left: 36px; top: 114px; }
 	#gauge_party_heal_label                   { left: 36px; top: 144px; }
-	#gauge_potion_label, #gauge_heal_label, #gauge_party_heal_label { width: 186px; }
+	#gauge_potion_label, #gauge_mana_label, #gauge_heal_label, #gauge_party_heal_label { width: 186px; }
 
 	/* --- Party support: the check over two lines, the interval's name, then its field --- */
 	#party_duration { left: 30px; top: 72px; }

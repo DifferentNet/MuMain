@@ -117,8 +117,10 @@ constexpr DocumentPlacement Placements[] = {
     {"duel_watch_frame.rml", 5.0f, MainScene},
     {"duel_watch_spectators.rml", 5.0f, MainScene},
     {"character_info.rml", 5.1f, MainScene},
-    {"mu_helper_skill_picker.rml", 5.2f, MainScene},
     {"party_list.rml", 5.4f, MainScene},
+    // Over the party list: its member cards sit beside the docked config window, on the icon columns
+    // (the original drew the list at 5.2, under them).
+    {"mu_helper_skill_picker.rml", 5.45f, MainScene},
     {"friend_shell.rml", 6.0f, MainScene},
     {"chat_room.rml", 6.0f, MainScene},
     {"letter_read.rml", 6.0f, MainScene},

@@ -96,6 +96,9 @@ public:
     // Title plates over the players (UI::TitlePlates).
     bool GetOverheadTitles() const { return m_overheadTitles; }
     void SetOverheadTitles(bool shown) { m_overheadTitles = shown; }
+    // The title plates' effects (UI::TitlePlates::Effects).
+    bool GetTitleEffects() const { return m_titleEffects; }
+    void SetTitleEffects(bool shown) { m_titleEffects = shown; }
 
     // The phone or PC layout and the controls, as config.ini words (UI::Mobile::InterfaceMode).
     const std::wstring& GetInterfaceView() const { return m_interfaceView; }
@@ -233,6 +236,7 @@ private:
     bool m_overheadPlayerNames = true;
     bool m_overheadNpcNames = false;
     bool m_overheadTitles = true;
+    bool m_titleEffects = true;
     std::wstring m_interfaceView;
     std::wstring m_controls;
     int m_touchButtonSize = 100;

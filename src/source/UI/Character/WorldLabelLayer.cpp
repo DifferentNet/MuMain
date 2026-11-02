@@ -2,6 +2,7 @@
 
 #include "UI/Character/WorldLabelLayer.h"
 
+#include "Render/RmlUi/RmlAdditiveMeshElement.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/Mobile/PhoneHudLayout.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
@@ -216,6 +217,12 @@ void UI::Character::WorldLabelLayer::SetKind(Slot& slot, SlotKind kind)
         slot.text = slot.box->AppendChild(std::move(text));
         slot.textNode = static_cast<Rml::ElementText*>(slot.text->AppendChild(m_view.Document()->CreateTextNode("")));
     }
+    if (kind == SlotKind::Mesh && slot.mesh == nullptr)
+    {
+        Rml::ElementPtr mesh = m_view.Document()->CreateElement("additive-mesh");
+        mesh->SetClass("label-mesh", true);
+        slot.mesh = slot.box->AppendChild(std::move(mesh));
+    }
     if (kind == SlotKind::Bitmap && slot.image == nullptr)
     {
         Rml::ElementPtr image = m_view.Document()->CreateElement("img");
@@ -228,6 +235,8 @@ void UI::Character::WorldLabelLayer::SetKind(Slot& slot, SlotKind kind)
         SetDisplay(slot.text, kind == SlotKind::Text);
     if (slot.image != nullptr)
         SetDisplay(slot.image, kind == SlotKind::Bitmap);
+    if (slot.mesh != nullptr)
+        SetDisplay(slot.mesh, kind == SlotKind::Mesh);
     if (kind != SlotKind::Hidden)
     {
         // A box turns transparent for a bitmap and is set again by the next text or quad.
@@ -389,4 +398,37 @@ void UI::Character::WorldLabelLayer::RecordBitmap(const Render::Renderer::Record
         slot.imageAlpha = alpha;
         slot.image->SetProperty(Rml::PropertyId::Opacity, Rml::Property(alpha, Rml::Unit::NUMBER));
     }
+}
+
+// The quads go into the box around them, their positions relative to it. They change every frame (the effects move),
+// so the slot keeps nothing but its kind.
+void UI::Character::WorldLabelLayer::RecordAdditiveMesh(const Render::Renderer::RecordedAdditiveMesh& mesh)
+{
+    if (mesh.vertices.empty() || mesh.fileName == nullptr)
+        return;
+
+    float left = mesh.vertices.front().x;
+    float top = mesh.vertices.front().y;
+    float right = left;
+    float bottom = top;
+    for (const Render::Renderer::RecordedVertex& v : mesh.vertices)
+    {
+        left = std::min(left, v.x);
+        top = std::min(top, v.y);
+        right = std::max(right, v.x);
+        bottom = std::max(bottom, v.y);
+    }
+
+    Slot& slot = NextSlot(SlotKind::Mesh, 0, [](const Slot&) { return true; });
+    SetBox(slot, {left, top, right - left, bottom - top}, 0u);
+    SetAdditive(slot, false, 0u);
+
+    m_meshVertices.assign(mesh.vertices.begin(), mesh.vertices.end());
+    for (Render::Renderer::RecordedVertex& v : m_meshVertices)
+    {
+        v.x -= left;
+        v.y -= top;
+    }
+    static_cast<Render::RmlUi::AdditiveMeshElement*>(slot.mesh)
+        ->SetMesh(ImageSource(mesh.fileName), m_meshVertices, slot.covered ? CoveredOpacity : 1.0f);
 }

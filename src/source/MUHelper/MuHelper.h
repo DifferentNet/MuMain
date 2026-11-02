@@ -125,7 +125,6 @@ namespace MUHelper
 		int m_iCurrentTarget;
 		int m_iCurrentBuffIndex;
 		int m_iCurrentBuffPartyIndex;
-		int m_iCurrentHealPartyIndex;
 		int m_iComboState;
 		ActionSkillType m_iCurrentSkill;
 		int m_iHuntingDistance;
@@ -156,10 +155,11 @@ namespace MUHelper
 		static constexpr std::chrono::seconds SupportSuspendTime{ 10 };
 		std::map<int, int> m_mapSupportFailures;                             // skill -> failed rounds in a row
 		std::map<int, std::chrono::steady_clock::time_point> m_mapSuspendedUntil;
+		std::map<int, std::chrono::steady_clock::time_point> m_mapHealSkipUntil;  // party member key -> skipped by the heal until
+		static constexpr std::chrono::seconds HealSkipTime{ 3 };
 		GameLogic::Automation::SkillResult m_lastSkillResult = GameLogic::Automation::SkillResult::NotReady;
-		// Mana potions: below ManaPotionPercent, or when a skill found too little mana since the last round.
-		static constexpr int ManaPotionPercent = 30;
 		bool m_bManaShort = false;
+		bool m_bLastPotionWasMana = false;                                  // alternates when both are needed
 		std::set<int> m_setNotified;                                         // chat notices given this run
 		static constexpr std::chrono::milliseconds StandStillPatience{ 1000 };
 		static constexpr std::chrono::milliseconds StuckWalkLimit{ 1200 };

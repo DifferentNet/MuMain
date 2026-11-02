@@ -26,3 +26,9 @@ body {
 	width: 100%;
 	height: 100%;
 }
+/* A title plate's effects (UI::TitlePlates): additive quads placed from the box's top left corner. */
+.label-mesh {
+	position: absolute;
+	left: 0;
+	top: 0;
+}

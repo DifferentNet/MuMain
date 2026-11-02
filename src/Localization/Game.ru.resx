@@ -1597,7 +1597,7 @@
     <comment>legacy_id=427</comment>
   </data>
   <data name="Please enter your WEBZEN.COM password." xml:space="preserve">
-    <value>Пожалуйста, введите свой пароль WEBZEN.COM.</value>
+    <value>Введите пароль от аккаунта.</value>
     <comment>legacy_id=428,444,1713</comment>
   </data>
   <data name="You have received an offer to join a guild." xml:space="preserve">
@@ -2613,7 +2613,7 @@
     <comment>legacy_id=690</comment>
   </data>
   <data name="Enter your WEBZEN.COM password." xml:space="preserve">
-    <value>Введите свой пароль WEBZEN.COM.</value>
+    <value>Введите пароль от аккаунта.</value>
     <comment>legacy_id=691</comment>
   </data>
   <data name="Unlock Vault" xml:space="preserve">
@@ -2637,7 +2637,7 @@
     <comment>legacy_id=696</comment>
   </data>
   <data name="EnterYourWEBZENCOMPassword697" xml:space="preserve">
-    <value>Введите свой пароль WEBZEN.COM</value>
+    <value>Введите пароль от аккаунта</value>
     <comment>legacy_id=697</comment>
   </data>
   <data name="Charisma Requirement: %d" xml:space="preserve">
@@ -13177,6 +13177,9 @@
   <data name="MuHelperSkillPaused" xml:space="preserve">
     <value>MU Helper: %ls не кастуется. Попробую снова через %d с.</value>
   </data>
+  <data name="MuHelperMPStatus" xml:space="preserve">
+    <value>Статус MP</value>
+  </data>
   <data name="MuHelperNoManaPotions" xml:space="preserve">
     <value>MU Helper: банки маны закончились.</value>
   </data>
@@ -13361,7 +13364,7 @@
     <value>Сделать ресетов: %d</value>
   </data>
   <data name="BattlePassQuestEvents" xml:space="preserve">
-    <value>Сходить на ивенты Blood Castle, Devil Square или Chaos Castle: %d</value>
+    <value>Сходить на ивенты (Blood Castle, Devil Square, Chaos Castle, PvP-ивент, разлом, мировой босс или рейтинговая дуэль): %d</value>
   </data>
   <data name="BattlePassQuestMap" xml:space="preserve">
     <value>Убить %d монстров в %ls</value>
@@ -13427,7 +13430,7 @@
     <value>Играть дней за сезон: %d</value>
   </data>
   <data name="BattlePassQuestEventOne" xml:space="preserve">
-    <value>Сходить на ивент Blood Castle, Devil Square или Chaos Castle</value>
+    <value>Сходить на ивент: Blood Castle, Devil Square, Chaos Castle, PvP-ивент, разлом, мировой босс или рейтинговая дуэль</value>
   </data>
   <data name="BattlePassQuestMixOne" xml:space="preserve">
     <value>Сделать удачный микс в Chaos Machine</value>
@@ -15118,7 +15121,7 @@
     <value>Нажмите — применить один раз, держите — повторять</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
-    <value>Крестовина вверх: MU Helper вкл/выкл (левый стик меняет место охоты). View: карта</value>
+    <value>Крестовина вверх: MU Helper вкл/выкл (левый стик меняет место охоты). View: «Общение» (игроки рядом: трейд, пати, гильдия...); карта в меню</value>
   </data>
   <data name="PadHelpRightClick" xml:space="preserve">
     <value>RS над окном: правый клик по курсору, на + у стата — много очков</value>
@@ -15525,6 +15528,27 @@
   <data name="TouchItemMoveToBag" xml:space="preserve">
     <value>В инвентарь</value>
   </data>
+  <data name="TouchSocial" xml:space="preserve">
+    <value>Общение</value>
+  </data>
+  <data name="TouchSocialTitle" xml:space="preserve">
+    <value>Игроки рядом</value>
+  </data>
+  <data name="TouchSocialNone" xml:space="preserve">
+    <value>Рядом нет игроков</value>
+  </data>
+  <data name="TouchSocialChosen" xml:space="preserve">
+    <value>%ls: что сделать?</value>
+  </data>
+  <data name="TouchSocialJoinGuild" xml:space="preserve">
+    <value>В гильдию</value>
+  </data>
+  <data name="TouchSocialOutOfReach" xml:space="preserve">
+    <value>Не удалось подойти к %ls</value>
+  </data>
+  <data name="TouchSocialWindows" xml:space="preserve">
+    <value>Окна</value>
+  </data>
   <data name="PadHubSettings" xml:space="preserve">
     <value>Настройки</value>
   </data>
@@ -15575,5 +15599,12 @@
   </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Сначала снимите то, что там надето</value>
+  </data>
+  <data name="HelperPickBoxes" xml:space="preserve">
+    <value>Коробки и медали</value>
+  </data>
+  <!-- Title effects -->
+  <data name="TitleEffects" xml:space="preserve">
+    <value>Эффекты титулов</value>
   </data>
 </root>

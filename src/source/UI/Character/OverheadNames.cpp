@@ -182,7 +182,7 @@ void Render()
         if (player && !names)
         {
             if (title != nullptr)
-                UI::TitlePlates::Render(*title, *c, found[n].x, found[n].y);
+                UI::TitlePlates::Render(*title, *c, found[n].x, found[n].y, n < MaxEffectPlates);
             continue;
         }
 
@@ -221,7 +221,7 @@ void Render()
         RenderShadowed(x, y, c->ID, nameSize.cx, lineHeight);
 
         if (title != nullptr)
-            UI::TitlePlates::Render(*title, *c, found[n].x, y - 1);
+            UI::TitlePlates::Render(*title, *c, found[n].x, y - 1, n < MaxEffectPlates);
     }
 
     g_pRenderText->SetFont(g_hFont);

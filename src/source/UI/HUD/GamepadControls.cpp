@@ -119,7 +119,7 @@ constexpr Mapping Mappings[] = {
     {Button::DpadLeft, PadButton::PotionE, When::NoFrame},
     {Button::DpadRight, PadButton::PotionR, When::NoFrame},
     {Button::DpadUp, PadButton::Auto, When::NoFrame},
-    {Button::View, PadButton::Map, When::Always},
+    {Button::View, PadButton::Social, When::Always},
 };
 
 bool Applies(const Mapping& mapping, bool windowOpen, bool frameOpen)
@@ -444,7 +444,8 @@ void PlayHubOnSkills(const Presses& presses, Clock::time_point now)
     UI::HUD::PadFrame::SnapSoon();
 }
 
-// The menu open: the stick and the d-pad move its highlight, A opens the item, B or Menu closes it.
+// The menu (or the skill picker, or the Social panel) open: the stick and the d-pad move its
+// highlight, A opens the item, B or Menu closes it (View too, as it opened the Social panel).
 // Nothing else acts: the pointer and its buttons rest too.
 void PlayMenu(SDL_Window* window, const Presses& presses, Clock::time_point now)
 {
@@ -470,7 +471,7 @@ void PlayMenu(SDL_Window* window, const Presses& presses, Clock::time_point now)
         PlayHubOnSkills(presses, now);
         return;
     }
-    if (Pressed(presses, Button::B) || Pressed(presses, Button::Menu))
+    if (Pressed(presses, Button::B) || Pressed(presses, Button::Menu) || Pressed(presses, Button::View))
         Controls::CloseMenu();
 }
 

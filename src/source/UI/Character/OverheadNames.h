@@ -8,6 +8,8 @@ namespace UI::OverheadNames
 {
 // At most this many names a frame, the nearest to the hero first.
 inline constexpr int MaxNames = 40;
+// Of those, the nearest this many title plates get their effects (UI::TitlePlates::Effects); the rest are drawn still.
+inline constexpr int MaxEffectPlates = 8;
 
 void Render();
 } // namespace UI::OverheadNames
