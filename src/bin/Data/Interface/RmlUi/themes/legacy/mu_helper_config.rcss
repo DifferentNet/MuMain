@@ -340,7 +340,8 @@
 	#cb_pick_all .checkbox-label, #cb_pick_selected .checkbox-label, #cb_auto_friend .checkbox-label,
 	#cb_auto_guild .checkbox-label { width: calc(250px * var(--root-scale)); }
 	#cb_pick_jewel .checkbox-label, #cb_pick_ancient .checkbox-label, #cb_pick_zen .checkbox-label,
-	#cb_pick_excellent .checkbox-label, #cb_pick_boxes .checkbox-label { width: calc(120px * var(--root-scale)); }
+	#cb_pick_excellent .checkbox-label { width: calc(120px * var(--root-scale)); }
+	#cb_pick_boxes .checkbox-label { width: calc(108px * var(--root-scale)); }
 	#basic_skill_label, #activation1_label, #activation2_label { width: calc(226px * var(--root-scale)); }
 	#cb_skill2_delay .checkbox-label, #cb_skill3_delay .checkbox-label { width: calc(74px * var(--root-scale)); }
 	#distance_unit, #skill2_unit, #skill3_unit { width: calc(20px * var(--root-scale)); }
