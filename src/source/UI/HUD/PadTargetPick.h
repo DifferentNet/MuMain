@@ -39,6 +39,9 @@ struct Target
     // A cell or a worn slot with no item in it, or a cell only to look at (the partner's offer in a
     // trade): the legend offers nothing to take there.
     bool empty = false;
+    // Where the frame starts when its window opens, before any cell (the Cancel of a question that
+    // deletes something).
+    bool start = false;
 };
 
 // The smallest target holding the point (a button over its panel), None for none.
@@ -47,8 +50,9 @@ struct Target
 // The target whose box is nearest the point, if within `reach` of it, None for none.
 [[nodiscard]] int Nearest(std::span<const Target> targets, float x, float y, float reach);
 
-// Where the frame starts in a window just opened: the item cell nearest the cells' top-left corner, or
-// without cells the target nearest the targets' top-left corner; None for none.
+// Where the frame starts in a window just opened: the target marked to start on, else the item cell
+// nearest the cells' top-left corner, or without cells the target nearest the targets' top-left
+// corner; None for none.
 [[nodiscard]] int First(std::span<const Target> targets);
 
 // The next target from `from` the way (dx, dy) points (one of -1, 0, 1 on one axis): the nearest in

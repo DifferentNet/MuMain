@@ -238,9 +238,9 @@ skill edit button are not drawn for a pad without touch (`body.pad.no-touch`).
 | Pad | In the world (no window open) |
 |---|---|
 | Left stick | Walks the way it points (as the joystick) |
-| Right stick | A flick picks the next target: right or down the next further, left or up the next nearer |
-| RS (the right stick pressed) | Back to the nearest target |
-| A | Attack: a tap fights the target once, held it goes on |
+| Right stick | A flick picks the next target: right or down the next further, left or up the next nearer. With no monster (or enemy player) within 8 tiles, as in a town, it picks the NPCs and the other players on the screen the same way: the one chosen is lit, its name shown as under the mouse, with "A Talk" (an NPC) or "A Menu" (a player) under its feet |
+| RS (the right stick pressed) | Back to the nearest target; in a town, no NPC or player chosen |
+| A | Attack: a tap fights the target once, held it goes on. On an NPC chosen: walks there and talks (as a click on it). On a player chosen: walks up to them and opens the player menu (Trade, Buy, Party, Follow, Duel, as Alt and a right click open it): the frame rests on its rows, the d-pad moves it, A runs the row, B closes |
 | X, Y, B, RB, RT | The five skill buttons: a tap uses the skill once, held it goes on |
 | LB, LT | The potions Q and W |
 | D-pad left, right | The potions E and R |
@@ -261,7 +261,8 @@ list too; not the cross in a window's corner, as B closes the window), and the d
 the same window before the next window); the character stands meanwhile. On a list's last row on
 view, a step further scrolls the list. As a window opens or a tab turns, the frame starts on its item
 cell nearest the top-left corner, or without cells on the target nearest it (a tab before the close
-button); when its target goes away, it
+button); a window that opens within a moment after, before the frame moved (an NPC shop, its goods
+sent by the server after the inventory opened), takes it on the same way; when its target goes away, it
 goes to the nearest one. While a message box or a menu over the windows is up (the item card),
 the frame rests only on it. The right stick still moves the pointer (shown while off every target, at
 half speed over a window) and snaps it onto a target near when let go. A legend under the hub's tabs
@@ -287,8 +288,12 @@ tabs:
 A dialog alone (a trade or party request) keeps the free pointer, and d-pad up and down over a list
 that scrolls turn the wheel. The other buttons act as in the world.
 
-On the login, server and character screens both sticks move the pointer, A or RT click, B is Esc and
-Menu is Enter. The pointer starts at the screen's centre the first time the pad takes over, so A
+On the login, server and character screens the gold frame rests on their controls as on the windows:
+the d-pad and the left stick hop it, A presses there (a text field brings up the pad's keyboard), B
+is Esc and Menu Enter; a screen's message box takes the frame alone. On the bare character screen a
+legend at the top says the keys: LB and RB (or the d-pad left and right) choose the character, A
+plays, X creates one, Y deletes the chosen one, Menu opens the menu (the server list is there), B is Esc.
+With no control on view both sticks move the pointer and A or RT click. The pointer starts at the screen's centre the first time the pad takes over, so A
 attacks at once; later it stays where the mouse left it, so a window under it stays under it (a
 lifted finger leaves it off the window: then the centre again). A question (trade, party) takes Menu
 as yes after a second, and A only once A has rested a second, so A tapped in a fight goes on

@@ -26,15 +26,26 @@ using PadTargetPick::Target;
 // the tooltips.
 constexpr std::array<std::string_view, 5> NotWindows = {"main_frame.rml", "pad_overlay.rml", "tooltip.rml",
                                                         "cursor_item.rml", "item_explanation.rml"};
+// The menu on a player (trade, party, follow, duel): drawn low, yet a menu over the world the pad
+// answers as a dialog: the frame rests only on its rows, B closes it.
+constexpr std::string_view PlayerMenu = "quick_command.rml";
+// Out of the world (the login, server and character screens) every document is a screen the frame
+// works, but the character screen's bar: the pad's face buttons work that (GamepadControls).
+constexpr std::string_view CharacterBar = "char_sel_main.rml";
+bool g_screens = false;
 // Documents drawn this deep or deeper, up to the message boxes, are screens and dialogs over the
 // windows (the help, the move list, the options, the message boxes) even without a workspace slot.
 constexpr float FloatingDepth = 8.f;
 constexpr float MessageBoxDepth = 10.7f;
+// The login and character scenes' message boxes (RmlStackingOrder's SceneMessageBoxDepth).
+constexpr float ScreenMessageBoxDepth = 31.f;
 // The roots a window the workspace places carries the class "slot-placed" on.
 constexpr std::array<const char*, 2> PlacedRoots = {"panel", "content_root"};
 constexpr const char* PlacedClass = "slot-placed";
 constexpr const char* CellClass = "item-cell";
 constexpr const char* SlotClass = "equip-slot";
+// The control a window marks for the frame to start on (PadTargetPick::Target::start).
+constexpr const char* StartClass = "pad-start";
 // A cell under an item carries its tint (ItemGridCell::tint), an empty one none.
 constexpr std::string_view TintPrefix = "tint-";
 // A worn slot with nothing in it (MyInventory's slot_states).
@@ -84,9 +95,13 @@ bool PlacedBox(Rml::ElementDocument& document, Box& box);
 // rests only on it, as the windows under it take no clicks.
 bool IsDialog(Rml::ElementDocument& document)
 {
+    if (FileName(document.GetSourceURL()) == PlayerMenu)
+        return true;
     const std::optional<float> depth =
         UI::RmlBridge::StackingDepthForDocument(FileName(document.GetSourceURL()));
-    return depth && *depth >= MessageBoxDepth;
+    // Out of the world every screen lies deeper than the main scene's message boxes: only the
+    // screens' own message boxes are dialogs there.
+    return depth && *depth >= (g_screens ? ScreenMessageBoxDepth : MessageBoxDepth);
 }
 
 bool IsWindow(Rml::ElementDocument& document)
@@ -99,7 +114,9 @@ bool IsWindow(Rml::ElementDocument& document)
         if (name == excluded)
             return false;
     }
-    if (IsPlaced(document) || UI::Placement::IsWindowDocument(name))
+    if (g_screens)
+        return name != CharacterBar;
+    if (IsPlaced(document) || UI::Placement::IsWindowDocument(name) || name == PlayerMenu)
         return true;
     const std::optional<float> depth = UI::RmlBridge::StackingDepthForDocument(name);
     return depth && *depth >= FloatingDepth && *depth <= MessageBoxDepth;
@@ -237,6 +254,7 @@ private:
         Target target{{}, m_Window};
         target.cell = element.IsClassSet(CellClass);
         target.slot = element.IsClassSet(SlotClass);
+        target.start = element.IsClassSet(StartClass);
         target.empty = (target.cell && element.GetClassNames().find(TintPrefix) == Rml::String::npos)
                        || (target.slot && element.IsClassSet(BareSlotClass))
                        || (target.cell && element.Closest(LookOnlySelector) != nullptr);
@@ -341,6 +359,11 @@ std::span<const PadTargetPick::Target> Collect()
 bool OnDialog()
 {
     return g_onDialog;
+}
+
+void SetScreens(bool screens)
+{
+    g_screens = screens;
 }
 
 std::optional<float> WindowsLeft()

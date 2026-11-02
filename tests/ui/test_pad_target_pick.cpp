@@ -107,3 +107,14 @@ TEST_CASE("A window starts on its first cell, else its first target")
     CHECK(Pick::First(buttons) == 1);
     CHECK(Pick::First(std::vector<Target>{}) == Pick::None);
 }
+
+TEST_CASE("A window starts on the target it marks, before its cells")
+{
+    // A question's OK and Cancel: marked, Cancel comes first though OK lies further left.
+    std::vector<Target> answers{{{0.f, 0.f, 50.f, 30.f}}, {{60.f, 0.f, 110.f, 30.f}}};
+    answers[1].start = true;
+    CHECK(Pick::First(answers) == 1);
+    answers.push_back({{0.f, 40.f, 20.f, 60.f}});
+    answers.back().cell = true;
+    CHECK(Pick::First(answers) == 1);
+}

@@ -6,7 +6,9 @@
 #include "I18N/All.h"
 
 #include "Core/Utilities/StringUtils.h"
+#include "Engine/Object/ZzzInventory.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
+#include "World/MapInfra/MapManager.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlPointer.h"
 #include "UI/RmlBridge/RmlNativeTextSize.h"
@@ -241,6 +243,11 @@ void mu::ui::window::CQuickCommandWindow::ClosingProcess()
 
 void mu::ui::window::CQuickCommandWindow::OpenQuickCommand(const wchar_t* strID, int iIndex)
 {
+    OpenQuickCommandAt(strID, iIndex, g_fWindowMouseX, g_fWindowMouseY);
+}
+
+void mu::ui::window::CQuickCommandWindow::OpenQuickCommandAt(const wchar_t* strID, int iIndex, float x, float y)
+{
     g_pNewUISystem->Show(mu::ui::window::INTERFACE_QUICK_COMMAND);
 
     SetID(strID);
@@ -248,7 +255,22 @@ void mu::ui::window::CQuickCommandWindow::OpenQuickCommand(const wchar_t* strID,
 
     // Beside the pointer, as the original: 10 units right of it and 50 above, never off the top.
     const float scale = UI::Scaling::TypographyScale(static_cast<int>(WindowWidth), static_cast<int>(WindowHeight));
-    PlaceDocument(g_fWindowMouseX + 10.f * scale, (std::max)(g_fWindowMouseY - 50.f * scale, 0.f), scale);
+    PlaceDocument(x + 10.f * scale, (std::max)(y - 50.f * scale, 0.f), scale);
+}
+
+bool mu::ui::window::CQuickCommandWindow::IsMenuAllowedFor(const CHARACTER* character)
+{
+    if (character == nullptr || character->Object.Kind != KIND_PLAYER)
+        return false;
+    if (gMapManager.InChaosCastle() || gMapManager.IsCursedTemple())
+        return false;
+    if (g_isCharacterBuff((&Hero->Object), eBuff_DuelWatch))
+        return false;
+    const auto subType = character->Object.SubType;
+    if (subType == MODEL_XMAS_EVENT_CHA_DEER || subType == MODEL_XMAS_EVENT_CHA_SNOWMAN
+        || subType == MODEL_XMAS_EVENT_CHA_SSANTA)
+        return false;
+    return !(::IsStrifeMap(gMapManager.WorldActive) && Hero->m_byGensInfluence != character->m_byGensInfluence);
 }
 
 void mu::ui::window::CQuickCommandWindow::CloseQuickCommand()

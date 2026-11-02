@@ -103,8 +103,15 @@ Progress PickUpNearest();
 // where players fight) by distance, step 1 the next further, -1 the next nearer, going round. The one
 // chosen stays the buttons' target while it lives and stays near, over the one under the engine's own
 // attack. ClearChosenTarget goes back to the nearest.
+// Where no foe is near (a town), it picks the NPCs and the other players around instead, by distance
+// the same way: MeetIndex is the one chosen (an index in CharactersClient), -1 for none, for the pad's
+// A to talk to the NPC or open the player's menu, and for the world to light it.
 void CycleTarget(int step);
 void ClearChosenTarget();
+[[nodiscard]] int MeetIndex();
+// Walks the character up to that one: true once within `distance` (the world's units, a tile is
+// 100), else sends the walk again now and then. Called every frame until it says true.
+bool WalkUpTo(int index, float distance);
 
 // Whether a drop the pickup button would take lies around.
 [[nodiscard]] bool HasDropToPick();
@@ -116,6 +123,8 @@ void ClearChosenTarget();
 // camera's window pixels (its middle, a little above the feet). False when it is behind the camera.
 [[nodiscard]] int NearestNpc(int tiles);
 [[nodiscard]] bool NpcOnScreen(int index, float& x, float& y);
+// Where a character's feet show on the screen, in the camera's window pixels; false behind the camera.
+[[nodiscard]] bool FeetOnScreen(int index, float& x, float& y);
 
 // Forgets the monster being fought, the drops passed over, the PK switch and the party member chosen,
 // and makes a pushed joystick wait: a new map, the character's death, the controls hidden.
