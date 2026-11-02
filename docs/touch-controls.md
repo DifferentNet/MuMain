@@ -287,8 +287,12 @@ tabs:
 A dialog alone (a trade or party request) keeps the free pointer, and d-pad up and down over a list
 that scrolls turn the wheel. The other buttons act as in the world.
 
-On the login, server and character screens both sticks move the pointer, A or RT click, B is Esc and
-Menu is Enter. The pointer starts at the screen's centre the first time the pad takes over, so A
+On the login, server and character screens the gold frame rests on their controls as on the windows:
+the d-pad and the left stick hop it, A presses there (a text field brings up the pad's keyboard), B
+is Esc and Menu Enter; a screen's message box takes the frame alone. On the bare character screen a
+legend at the top says the keys: LB and RB (or the d-pad left and right) choose the character, A
+plays, X creates one, Y deletes the chosen one, Menu opens the menu, View the server list, B is Esc.
+With no control on view both sticks move the pointer and A or RT click. The pointer starts at the screen's centre the first time the pad takes over, so A
 attacks at once; later it stays where the mouse left it, so a window under it stays under it (a
 lifted finger leaves it off the window: then the centre again). A question (trade, party) takes Menu
 as yes after a second, and A only once A has rested a second, so A tapped in a fight goes on

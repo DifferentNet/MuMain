@@ -15531,6 +15531,18 @@
   <data name="PadPickUpPrompt" xml:space="preserve">
     <value>Подобрать</value>
   </data>
+  <data name="PadCharacter" xml:space="preserve">
+    <value>Персонаж</value>
+  </data>
+  <data name="PadPlay" xml:space="preserve">
+    <value>Играть</value>
+  </data>
+  <data name="PadCreate" xml:space="preserve">
+    <value>Создать</value>
+  </data>
+  <data name="PadDelete" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
   <data name="PadTalkPrompt" xml:space="preserve">
     <value>Говорить</value>
   </data>

@@ -45,6 +45,8 @@ struct View
         Menu,
     };
     Prompt promptSays = Prompt::PickUp;
+    // The character screen's keys: LB RB the character, A play, X create, Y delete, Menu.
+    bool characters = false;
     bool prompt = false;
     float promptX = 0.f;
     float promptY = 0.f;

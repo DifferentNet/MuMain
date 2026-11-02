@@ -48,6 +48,12 @@ struct OverlayModel
     Rml::String pickupLabel;
     // The prompt's button: A (an NPC or a player chosen), else d-pad down (a drop).
     bool promptA = false;
+    bool charactersShown = false;
+    Rml::String characterLabel;
+    Rml::String playLabel;
+    Rml::String createLabel;
+    Rml::String deleteLabel;
+    Rml::String menuLabel;
     Rml::String takeLabel;
     Rml::String equipLabel;
     Rml::String cardLabel;
@@ -79,6 +85,12 @@ void BindModel(Rml::DataModelConstructor& c, OverlayModel& model)
     c.Bind("legend_y", &model.legendY);
     c.Bind("pickup_label", &model.pickupLabel);
     c.Bind("prompt_a", &model.promptA);
+    c.Bind("characters_shown", &model.charactersShown);
+    c.Bind("character_label", &model.characterLabel);
+    c.Bind("play_label", &model.playLabel);
+    c.Bind("create_label", &model.createLabel);
+    c.Bind("delete_label", &model.deleteLabel);
+    c.Bind("menu_label", &model.menuLabel);
     c.Bind("take_label", &model.takeLabel);
     c.Bind("equip_label", &model.equipLabel);
     c.Bind("card_label", &model.cardLabel);
@@ -170,6 +182,18 @@ void SyncTabs(OverlayModel& model, const View& view)
         g_View.MarkDirty("tabs");
 }
 
+void SyncCharacters(OverlayModel& model, const View& view)
+{
+    SyncBool(model.charactersShown, view.characters, "characters_shown");
+    if (!view.characters)
+        return;
+    SyncLabel(model.characterLabel, I18N::Game::PadCharacter, "character_label");
+    SyncLabel(model.playLabel, I18N::Game::PadPlay, "play_label");
+    SyncLabel(model.createLabel, I18N::Game::PadCreate, "create_label");
+    SyncLabel(model.deleteLabel, I18N::Game::PadDelete, "delete_label");
+    SyncLabel(model.menuLabel, I18N::Game::PadMenuPrompt, "menu_label");
+}
+
 void SyncLegend(OverlayModel& model, const View& view)
 {
     SyncBool(model.legendShown, view.legend, "legend_shown");
@@ -208,7 +232,7 @@ namespace UI::HUD::PadOverlay
 {
 void Update(const View& view)
 {
-    const bool shown = view.hub || view.legend || view.frame || view.prompt;
+    const bool shown = view.hub || view.legend || view.frame || view.prompt || view.characters;
     if (!shown)
     {
         UI::RmlBridge::SyncDocumentVisibility(g_View.Document(), false);
@@ -224,6 +248,7 @@ void Update(const View& view)
     SyncPrompt(model, view);
     SyncTabs(model, view);
     SyncLegend(model, view);
+    SyncCharacters(model, view);
     // Shown again after a theme switch rebuilt the document, too.
     if (!document->IsVisible())
         document->Show(Rml::ModalFlag::None, Rml::FocusFlag::None);

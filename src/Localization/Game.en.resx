@@ -15869,6 +15869,18 @@
   <data name="PadPickUpPrompt" xml:space="preserve">
     <value>Pick up</value>
   </data>
+  <data name="PadCharacter" xml:space="preserve">
+    <value>Character</value>
+  </data>
+  <data name="PadPlay" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="PadCreate" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="PadDelete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
   <data name="PadTalkPrompt" xml:space="preserve">
     <value>Talk</value>
   </data>

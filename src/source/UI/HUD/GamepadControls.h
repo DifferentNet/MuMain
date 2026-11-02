@@ -1,7 +1,8 @@
 // A gamepad laid out as an Xbox pad plays the game (the device is Core::Input::Gamepad), as Diablo's
 // pads do: a row of six action buttons, the potions on the bumper, trigger and d-pad, no pointer in
 // the world. It presses the on-screen controls' buttons (UI/HUD/TouchControls, shown with the pad's
-// glyphs while it is in use); on the login and character screens both sticks play the mouse.
+// glyphs while it is in use); on the login and character screens the frame hops over their controls
+// and the face buttons choose and start the character (docs/touch-controls.md).
 //
 // | Pad | In the world (no window open) |
 // |---|---|
