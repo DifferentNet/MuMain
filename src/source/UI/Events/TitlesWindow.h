@@ -46,7 +46,10 @@ public:
     void Release();
 
     bool UpdateMouseEvent() override;
-    Rml::ElementDocument* GetPlacedDocument() const override { return m_RmlView.Document(); }
+    Rml::ElementDocument* GetPlacedDocument() const override
+    {
+        return m_RmlView.Document();
+    }
     bool UpdateKeyEvent() override;
     bool Update() override;
     bool Render() override;
@@ -87,10 +90,12 @@ private:
     int m_previewRarity = -2;
     float m_previewWidth = -1.f;
     float m_previewHeight = -1.f;
+    float m_previewScale = -1.f;
     std::vector<Render::Renderer::RecordedVertex> m_previewVertices;
 
     UI::RmlBridge::ThemedView<TitlesRmlModel> m_RmlView{"titles",
-        [this](Rml::DataModelConstructor& c, TitlesRmlModel& model) { BindRmlModel(c, model); },
-        {{"Data/Interface/RmlUi/titles.rml"}}};
+                                                        [this](Rml::DataModelConstructor& c, TitlesRmlModel& model)
+                                                        { BindRmlModel(c, model); },
+                                                        {{"Data/Interface/RmlUi/titles.rml"}}};
 };
 } // namespace mu::ui::window

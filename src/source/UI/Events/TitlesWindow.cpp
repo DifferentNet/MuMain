@@ -573,8 +573,14 @@ void mu::ui::window::CTitlesWindow::SyncPreview()
     const float fieldWidth = (plate.fieldRight - plate.fieldLeft) * k;
     const float fieldHeight = (plate.fieldBottom - plate.fieldTop) * k;
 
+    // The panel's scale (transform: scale(--root-scale)): two screen points 100 px apart, brought into the box.
+    Rml::Vector2f origin(0.f, 0.f), across(100.f, 0.f);
+    const float projected = box->Project(origin) && box->Project(across) ? across.x - origin.x : 0.f;
+    const float rootScale = projected > 0.f ? 100.f / projected : 1.f;
+
     const auto px = [](float value) { return Rml::Property(value, Rml::Unit::PX); };
-    if (m_previewId != title->Id || m_previewRarity != rarity || m_previewWidth != size.x || m_previewHeight != size.y)
+    if (m_previewId != title->Id || m_previewRarity != rarity || m_previewWidth != size.x ||
+        m_previewHeight != size.y || std::abs(m_previewScale - rootScale) > 0.001f)
     {
         if (m_previewRarity < 0)
             box->SetProperty("visibility", "visible");
@@ -582,6 +588,7 @@ void mu::ui::window::CTitlesWindow::SyncPreview()
         m_previewRarity = rarity;
         m_previewWidth = size.x;
         m_previewHeight = size.y;
+        m_previewScale = rootScale;
 
         // The art as a quad of its atlas (an <img rect> would take the rectangle in the document's dp, not the file's).
         const float right = left + plate.width * k;
@@ -597,14 +604,15 @@ void mu::ui::window::CTitlesWindow::SyncPreview()
         static_cast<Render::RmlUi::AdditiveMeshElement*>(plateImage)
             ->SetMesh(UI::TitlePlates::AtlasSource, quad, 1.f, false);
 
-        // The text in bold, as large as the field lets it be (a long title in the regular font).
+        // The text in bold, as large as the field lets it be (a long title in the regular font), sharp: a .sharp-text
+        // layer, so its place is in the panel's px and its size, line and font in the screen's.
         const std::wstring& name = title->Text();
         g_pRenderText->SetFont(g_hFontBold);
         const float boldWidth = static_cast<float>(MeasureInReferenceUnits(name));
         g_pRenderText->SetFont(g_hFont);
         const float regularWidth = static_cast<float>(MeasureInReferenceUnits(name));
         const float room = fieldWidth * 0.86f;
-        const float fieldPx = fieldHeight * 0.62f;
+        const float fieldPx = fieldHeight * 0.62f * rootScale;
         float textPx =
             std::min(fieldPx, UI::RmlBridge::NativeTextPxInBox(UI::Scaling::FontRole::Bold, boldWidth, room));
         bool bold = textPx >= fieldPx * 0.85f;
@@ -618,9 +626,9 @@ void mu::ui::window::CTitlesWindow::SyncPreview()
         text->SetInnerRML(Rml::StringUtilities::EncodeRml(StringUtils::WideToNarrow(name.c_str())));
         text->SetProperty(Rml::PropertyId::Left, px(fieldLeft));
         text->SetProperty(Rml::PropertyId::Top, px(fieldTop));
-        text->SetProperty(Rml::PropertyId::Width, px(fieldWidth));
-        text->SetProperty(Rml::PropertyId::Height, px(fieldHeight));
-        text->SetProperty(Rml::PropertyId::LineHeight, px(fieldHeight));
+        text->SetProperty(Rml::PropertyId::Width, px(fieldWidth * rootScale));
+        text->SetProperty(Rml::PropertyId::Height, px(fieldHeight * rootScale));
+        text->SetProperty(Rml::PropertyId::LineHeight, px(fieldHeight * rootScale));
         text->SetProperty(Rml::PropertyId::FontSize, px(textPx));
         text->SetProperty("font-weight", bold ? "bold" : "normal");
     }

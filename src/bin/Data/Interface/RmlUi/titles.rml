@@ -28,7 +28,7 @@
 			<additive-mesh id="tt_preview_glow" class="tt-preview-layer"/>
 			<additive-mesh id="tt_preview_plate" class="tt-preview-layer"/>
 			<additive-mesh id="tt_preview_fx" class="tt-preview-layer"/>
-			<span id="tt_preview_text" class="tt-preview-layer"></span>
+			<span id="tt_preview_text" class="sharp-text tt-preview-layer"></span>
 		</div>
 
 		<span id="tt_status" class="sharp-text tt-status"
