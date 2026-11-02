@@ -151,7 +151,8 @@
    text centred in its row, and a taller close bar. Lengths inside the counter-scaled list are reference px
    times --root-scale, as above. */
 @media (theme: mobile) {
-	#panel { width: 360px; }
+	/* Nearly opaque: the chat and the hero frame under the list read through 0xCC and mix with its rows. */
+	#panel { width: 360px; background-color: rgba(0, 0, 0, 240); }
 	#list_box { bottom: 42px; }
 	#close_bar { height: 32px; }
 	/* The text keeps its native size, so the columns move in until the headers clear the panel's edge. */
