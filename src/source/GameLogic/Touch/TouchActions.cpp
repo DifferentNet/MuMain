@@ -426,9 +426,6 @@ bool IsGoodTarget(const CHARACTER* character, bool aimed)
     return IsFoe(character, aimed) && !IsForgotten(character->Key) && TilesTo(character) <= TargetRange;
 }
 
-// The character the player aims at: the one the pad's pointer is on, else the one the engine fights
-// (a tap on it, or the buttons' own attack: ActionTarget). A finger's pointer stays where it last
-// tapped, so a character that walks under it later is no aim.
 // An NPC or another player near, for the right stick to choose where no foe is near.
 bool IsGoodMeet(const CHARACTER* character)
 {
@@ -460,6 +457,9 @@ int NextInRound(const std::vector<std::pair<int, int>>& keys, int current, int s
     return keys[next].second;
 }
 
+// The character the player aims at: the one the pad's pointer is on, else the one the engine fights
+// (a tap on it, or the buttons' own attack: ActionTarget). A finger's pointer stays where it last
+// tapped, so a character that walks under it later is no aim.
 CHARACTER* AimedCharacter()
 {
     int index = -1;
@@ -1210,6 +1210,15 @@ int MeetIndex()
 {
     if (!InWorld() || g_meetKey == NoTarget || g_chosenKey != NoTarget)
         return -1;
+    // A foe come near takes the place of the one chosen to meet: A attacks again.
+    for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
+    {
+        if (IsGoodTarget(&CharactersClient[i], g_forceAttack))
+        {
+            g_meetKey = NoTarget;
+            return -1;
+        }
+    }
     const CHARACTER* meet = FindByKey(g_meetKey);
     if (!IsGoodMeet(meet))
         return -1;

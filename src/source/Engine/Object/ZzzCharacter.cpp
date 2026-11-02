@@ -136,6 +136,7 @@ namespace
 #include "Render/Effects/FullSetGlow.h"
 #include "Render/Effects/SeasonAura.h"
 #include "GameLogic/Touch/TouchActions.h"
+#include "UI/HUD/GamepadControls.h"
 
 CHARACTER* CharactersClient;
 CHARACTER CharacterView;
@@ -11498,8 +11499,8 @@ void RenderCharactersClient()
     const mu::ScopedBloomExclusion classicCharacters;
     // The touch buttons' target is lit as the mouse lights the one under it.
     const int touchTarget = GameLogic::Touch::TargetIndex();
-    // And the NPC or player the pad's right stick chose in a town.
-    const int touchMeet = GameLogic::Touch::MeetIndex();
+    // And the NPC or player the pad's right stick chose in a town, while the pad plays.
+    const int touchMeet = UI::HUD::GamepadControls::PromptMeet();
     for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
     {
         CHARACTER* c = &CharactersClient[i];

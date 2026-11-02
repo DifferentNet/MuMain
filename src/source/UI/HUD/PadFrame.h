@@ -22,6 +22,9 @@ void Update(SDL_Window* window, Core::Input::Gamepad::Presses& presses, Clock::t
 // The windows opened or changed (a hub tab turned): the frame goes to the nearest target as soon as
 // there is one.
 void SnapSoon();
+// A menu item pressed: the window it opens takes the frame on its first target; with nothing new open
+// the frame stays where it was.
+void SnapOnNewWindow();
 // The windows closed: the frame is gone.
 void Reset();
 

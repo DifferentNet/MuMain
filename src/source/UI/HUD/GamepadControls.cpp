@@ -405,6 +405,11 @@ void ReleaseForWorldChange(SDL_Window* window)
 {
     ReleaseButtons(window);
     PauseWalking();
+    // The frame starts anew on the other side: on the screen's first control, or the first window opened.
+    UI::HUD::PadFrame::Reset();
+    g_state.frameOpen = false;
+    g_state.windowOpen = false;
+    g_state.onCharacters = false;
 }
 
 void TellOnce()
@@ -458,7 +463,7 @@ void PlayMenu(SDL_Window* window, const Presses& presses, Clock::time_point now)
     {
         Controls::ActivateMenuFocus();
         // The window the item opens starts the frame on its first target, not by the last window's place.
-        UI::HUD::PadFrame::SnapSoon();
+        UI::HUD::PadFrame::SnapOnNewWindow();
     }
     if (UI::HUD::PadHub::IsOnSkills())
     {
