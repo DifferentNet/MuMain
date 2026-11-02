@@ -238,7 +238,7 @@ skill edit button are not drawn for a pad without touch (`body.pad.no-touch`).
 | Pad | In the world (no window open) |
 |---|---|
 | Left stick | Walks the way it points (as the joystick) |
-| Right stick | A flick picks the next target: right or down the next further, left or up the next nearer. With no monster (or enemy player) within 8 tiles, as in a town, it picks the NPCs and the other players around the same way: the one chosen is lit, with "A Talk" (an NPC) or "A Menu" (a player) under its feet |
+| Right stick | A flick picks the next target: right or down the next further, left or up the next nearer. With no monster (or enemy player) within 8 tiles, as in a town, it picks the NPCs and the other players on the screen the same way: the one chosen is lit, its name shown as under the mouse, with "A Talk" (an NPC) or "A Menu" (a player) under its feet |
 | RS (the right stick pressed) | Back to the nearest target; in a town, no NPC or player chosen |
 | A | Attack: a tap fights the target once, held it goes on. On an NPC chosen: walks there and talks (as a click on it). On a player chosen: walks up to them and opens the player menu (Trade, Buy, Party, Follow, Duel, as Alt and a right click open it): the frame rests on its rows, the d-pad moves it, A runs the row, B closes |
 | X, Y, B, RB, RT | The five skill buttons: a tap uses the skill once, held it goes on |

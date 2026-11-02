@@ -52,4 +52,7 @@ void Update();
 
 // The drop d-pad down would pick up (an index into Items), its name shown; -1 for none.
 [[nodiscard]] int PromptDrop();
+// The NPC or player the right stick chose (an index into CharactersClient), its name shown as under
+// the mouse; -1 for none.
+[[nodiscard]] int PromptMeet();
 } // namespace UI::HUD::GamepadControls

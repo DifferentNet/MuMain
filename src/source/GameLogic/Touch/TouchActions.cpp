@@ -436,7 +436,14 @@ bool IsGoodMeet(const CHARACTER* character)
         return false;
     if (character->Object.Kind != KIND_NPC && character->Object.Kind != KIND_PLAYER)
         return false;
-    return TilesTo(character) <= TargetRange;
+    if (TilesTo(character) > TargetRange)
+        return false;
+    // Only one on view: one past the screen's edge would be chosen unseen, its name and
+    // prompt nowhere.
+    float x = 0.f;
+    float y = 0.f;
+    return CameraProjection::WorldToWindowPixel(g_Camera, character->Object.Position, &x, &y) && x >= 0.f
+           && y >= 0.f && x < static_cast<float>(WindowWidth) && y < static_cast<float>(WindowHeight);
 }
 
 // The next key in a list sorted by (tiles, key) after `current`, step 1 the next further, -1 the next

@@ -1143,6 +1143,11 @@ int PromptDrop()
     return g_state.inUse && g_state.inWorld ? g_state.promptDrop : -1;
 }
 
+int PromptMeet()
+{
+    return g_state.inUse && g_state.inWorld && !g_state.windowOpen ? GameLogic::Touch::MeetIndex() : -1;
+}
+
 void Update()
 {
     Play();
