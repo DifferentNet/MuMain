@@ -136,6 +136,7 @@ namespace MUHelper
         m_iTimedSkillSlot = -1;
         m_mapSupportFailures.clear();
         m_mapSuspendedUntil.clear();
+        m_mapHealSkipUntil.clear();
         m_bManaShort = false;
         m_bLastPotionWasMana = false;
         m_setNotified.clear();
@@ -1043,6 +1044,12 @@ namespace MUHelper
                 continue;
             }
 
+            const auto skip = m_mapHealSkipUntil.find(pChar->Key);
+            if (skip != m_mapHealSkipUntil.end() && std::chrono::steady_clock::now() < skip->second)
+            {
+                continue;
+            }
+
             pTarget = pChar;
             iLowest = iRemaining;
         }
@@ -1052,7 +1059,23 @@ namespace MUHelper
             return 1;
         }
 
-        return CastSupport(iHealingSkill, true, pTarget == Hero ? HeroKey : pTarget->Key);
+        if (pTarget == Hero)
+        {
+            return CastSupport(iHealingSkill, true, HeroKey);
+        }
+
+        // A member the heal can't reach (behind a wall, no path) is passed over for a while, and his refusals don't
+        // pause the heal skill: otherwise the most hurt one, picked every round, paused it for the whole party.
+        using GameLogic::Automation::SkillResult;
+        m_lastSkillResult = SkillResult::NotReady;
+        const int iResult = CastSupport(iHealingSkill, true, pTarget->Key);
+        if (m_lastSkillResult == SkillResult::NoPath || m_lastSkillResult == SkillResult::Blocked
+            || m_lastSkillResult == SkillResult::NotInView || m_lastSkillResult == SkillResult::NotAttackable)
+        {
+            m_mapHealSkipUntil[pTarget->Key] = std::chrono::steady_clock::now() + HealSkipTime;
+            m_mapSupportFailures.erase(iHealingSkill);
+        }
+        return iResult;
     }
 
     int CMuHelper::HealSelf(ActionSkillType iHealingSkill)

@@ -155,6 +155,8 @@ namespace MUHelper
 		static constexpr std::chrono::seconds SupportSuspendTime{ 10 };
 		std::map<int, int> m_mapSupportFailures;                             // skill -> failed rounds in a row
 		std::map<int, std::chrono::steady_clock::time_point> m_mapSuspendedUntil;
+		std::map<int, std::chrono::steady_clock::time_point> m_mapHealSkipUntil;  // party member key -> skipped by the heal until
+		static constexpr std::chrono::seconds HealSkipTime{ 3 };
 		GameLogic::Automation::SkillResult m_lastSkillResult = GameLogic::Automation::SkillResult::NotReady;
 		bool m_bManaShort = false;
 		bool m_bLastPotionWasMana = false;                                  // alternates when both are needed
