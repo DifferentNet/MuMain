@@ -203,8 +203,9 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
     if ((snapNow || lost || backNow) && !targets.empty())
     {
         g_state.lostFrames = 0;
-        // A window just opened (or a hub tab turned) starts on its first cell or its first target.
-        const bool opened = snapNow && !backNow && !lost;
+        // A window just opened (or a hub tab turned) starts on its first cell or its first target, also
+        // when the last window's target went away in the same frame (a window opened from the menu).
+        const bool opened = snapNow && !backNow;
         if (current == Pick::None || backNow || opened)
         {
             // After a dialog, back to the target nearest where the frame was before it.

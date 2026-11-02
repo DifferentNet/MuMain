@@ -455,7 +455,11 @@ void PlayMenu(SDL_Window* window, const Presses& presses, Clock::time_point now)
     if (step.dx != 0 || step.dy != 0)
         Controls::MoveMenuFocus(step.dx, step.dy);
     if (Pressed(presses, Button::A))
+    {
         Controls::ActivateMenuFocus();
+        // The window the item opens starts the frame on its first target, not by the last window's place.
+        UI::HUD::PadFrame::SnapSoon();
+    }
     if (UI::HUD::PadHub::IsOnSkills())
     {
         PlayHubOnSkills(presses, now);
@@ -1058,10 +1062,12 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
     }
     // A dialog over the windows says its own answers: the tabs and the legend make room for it.
     const bool dialog = g_state.frameOpen && UI::HUD::PadTargets::OnDialog();
+    // The menu of windows says its own keys and has its own highlight: the frame and the legend wait under it.
+    const bool menu = Controls::IsMenuOpen();
     view.hub = UI::HUD::PadHub::IsOpen() && !dialog;
     // The skill picker says its own keys too.
-    view.legend = g_state.frameOpen && !dialog && !UI::HUD::PadHub::IsOnSkills();
-    view.frame = g_state.frameOpen && UI::HUD::PadFrame::Box(view.frameBox);
+    view.legend = g_state.frameOpen && !dialog && !menu && !UI::HUD::PadHub::IsOnSkills();
+    view.frame = g_state.frameOpen && !menu && UI::HUD::PadFrame::Box(view.frameBox);
     using Legend = UI::HUD::PadOverlay::View::Legend;
     if (UI::Inventory::HasPickedItem())
         view.legendSays = Legend::Holding;
