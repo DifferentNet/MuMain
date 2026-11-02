@@ -15,6 +15,7 @@ struct CountingRecorder final : Render::Renderer::IOverlay2DRecorder
     }
     void RecordQuad(const Render::Renderer::RecordedQuad&) override {}
     void RecordBitmap(const Render::Renderer::RecordedBitmap&) override {}
+    void RecordAdditiveMesh(const Render::Renderer::RecordedAdditiveMesh&) override {}
 };
 
 // A native label routine that returns early while its caller's scope is active.
@@ -82,6 +83,7 @@ TEST_CASE("a recorded text borrows its UTF-8 for the call [render][overlay2d]")
         }
         void RecordQuad(const Render::Renderer::RecordedQuad&) override {}
         void RecordBitmap(const Render::Renderer::RecordedBitmap&) override {}
+        void RecordAdditiveMesh(const Render::Renderer::RecordedAdditiveMesh&) override {}
     } recorder;
     std::string scratch = "Cheap potions here";
     Render::Renderer::RecordedText text;
