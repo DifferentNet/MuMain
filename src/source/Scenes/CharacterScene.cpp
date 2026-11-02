@@ -88,13 +88,14 @@ void StartGame()
 
 namespace Scenes
 {
-// A slot holds a character when the list filled its name in.
+// A slot holds a character when the list filled its name in and it was not deleted since (a deletion
+// only puts the character out, the name stays until the next list).
 static bool HasCharacter(int slot)
 {
     if (slot < 0 || slot >= MAX_CHARACTERS_PER_ACCOUNT)
         return false;
 
-    return CharactersClient[slot].ID[0] != L'\0';
+    return CharactersClient[slot].ID[0] != L'\0' && CharactersClient[slot].Object.Live;
 }
 
 const wchar_t* CharacterNameInSlot(int slot)
