@@ -22,6 +22,7 @@ UIScalePercent=100
 OverheadPlayerNames=1
 OverheadNpcNames=0
 OverheadTitles=1
+TitleEffects=1
 [Camera]
 Zoom=1735
 [Render]

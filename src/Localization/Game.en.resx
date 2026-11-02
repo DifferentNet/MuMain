@@ -14888,6 +14888,9 @@
   <data name="OverheadTitles" xml:space="preserve">
     <value>Titles over players</value>
   </data>
+  <data name="TitleEffects" xml:space="preserve">
+    <value>Title effects</value>
+  </data>
   <data name="TitlesTitle" xml:space="preserve">
     <value>Titles</value>
   </data>
