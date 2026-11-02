@@ -13361,7 +13361,7 @@
     <value>Сделать ресетов: %d</value>
   </data>
   <data name="BattlePassQuestEvents" xml:space="preserve">
-    <value>Сходить на ивенты Blood Castle, Devil Square или Chaos Castle: %d</value>
+    <value>Сходить на ивенты (Blood Castle, Devil Square, Chaos Castle, PvP-ивент, разлом, мировой босс или рейтинговая дуэль): %d</value>
   </data>
   <data name="BattlePassQuestMap" xml:space="preserve">
     <value>Убить %d монстров в %ls</value>
@@ -13427,7 +13427,7 @@
     <value>Играть дней за сезон: %d</value>
   </data>
   <data name="BattlePassQuestEventOne" xml:space="preserve">
-    <value>Сходить на ивент Blood Castle, Devil Square или Chaos Castle</value>
+    <value>Сходить на ивент: Blood Castle, Devil Square, Chaos Castle, PvP-ивент, разлом, мировой босс или рейтинговая дуэль</value>
   </data>
   <data name="BattlePassQuestMixOne" xml:space="preserve">
     <value>Сделать удачный микс в Chaos Machine</value>

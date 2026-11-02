@@ -13738,7 +13738,7 @@
     <value>Make %d resets</value>
   </data>
   <data name="BattlePassQuestEvents" xml:space="preserve">
-    <value>Take part in %d events: Blood Castle, Devil Square or Chaos Castle</value>
+    <value>Take part in %d events: Blood Castle, Devil Square, Chaos Castle, a PvP event, a rift, the world boss or a ranked duel</value>
   </data>
   <data name="BattlePassQuestMap" xml:space="preserve">
     <value>Kill %d monsters in %ls</value>
@@ -13804,7 +13804,7 @@
     <value>Play %d days of the season</value>
   </data>
   <data name="BattlePassQuestEventOne" xml:space="preserve">
-    <value>Take part in an event: Blood Castle, Devil Square or Chaos Castle</value>
+    <value>Take part in an event: Blood Castle, Devil Square, Chaos Castle, a PvP event, a rift, the world boss or a ranked duel</value>
   </data>
   <data name="BattlePassQuestMixOne" xml:space="preserve">
     <value>Make a successful Chaos Machine mix</value>
