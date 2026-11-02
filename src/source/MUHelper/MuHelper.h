@@ -157,8 +157,6 @@ namespace MUHelper
 		std::map<int, int> m_mapSupportFailures;                             // skill -> failed rounds in a row
 		std::map<int, std::chrono::steady_clock::time_point> m_mapSuspendedUntil;
 		GameLogic::Automation::SkillResult m_lastSkillResult = GameLogic::Automation::SkillResult::NotReady;
-		// Mana potions: below ManaPotionPercent, or when a skill found too little mana since the last round.
-		static constexpr int ManaPotionPercent = 30;
 		bool m_bManaShort = false;
 		std::set<int> m_setNotified;                                         // chat notices given this run
 		static constexpr std::chrono::milliseconds StandStillPatience{ 1000 };

@@ -447,6 +447,7 @@ void CMuHelperConfigWindow::Reset()
     c.bUseDrainLife = false;
     c.bUseHealPotion = false;
     c.iPotionThreshold = 40;
+    c.iManaPotionThreshold = ConfigData::DefaultManaPotionThreshold;
     c.bSupportParty = false;
     c.bAutoHealParty = false;
     c.iHealPartyThreshold = 60;

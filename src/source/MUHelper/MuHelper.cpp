@@ -743,7 +743,6 @@ namespace MUHelper
     {
         int64_t iLife = CharacterAttribute->Life;
         int64_t iLifeMax = CharacterAttribute->LifeMax;
-        bool bDrank = false;
 
         if (m_config.bUseHealPotion && iLifeMax > 0 && iLife > 0)
         {
@@ -754,20 +753,21 @@ namespace MUHelper
                 if (iPotionIndex != -1)
                 {
                     SendRequestUse(iPotionIndex, 0);
-                    bDrank = true;
                 }
             }
         }
 
-        // Mana potions, under the same "potion" switch, one potion a round with healing first (2026-10-23). The
-        // client's own cast drinks one only after a cast failed for mana, and the helper's skills and buffs, now
-        // up to 17 casts a second, emptied the mana faster than that kept up.
+        // Mana potions, under the same "potion" switch (2026-10-23): the client's own cast drinks one only after a
+        // cast failed for mana, and the helper's skills and buffs, now up to 17 casts a second, emptied the mana
+        // faster than that kept up. Below the window's MP threshold, or when a skill lacked mana. In the same round
+        // as a healing potion too (2026-11-02): a knight in a crowd is below his HP threshold every round, and with
+        // one potion a round he never got to the mana.
         const bool bManaShort = m_bManaShort;
         m_bManaShort = false;
         const int64_t iMana = CharacterAttribute->Mana;
         const int64_t iManaMax = CharacterAttribute->ManaMax;
-        if (m_config.bUseHealPotion && !bDrank && iManaMax > 0
-            && (bManaShort || iMana * 100 <= iManaMax * ManaPotionPercent))
+        if (m_config.bUseHealPotion && iManaMax > 0
+            && (bManaShort || iMana * 100 <= iManaMax * m_config.iManaPotionThreshold))
         {
             const int iPotionIndex = g_pMyInventory->FindManaItemIndex();
             if (iPotionIndex != -1)
