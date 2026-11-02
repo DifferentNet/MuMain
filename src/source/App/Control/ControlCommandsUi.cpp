@@ -13,7 +13,9 @@
 #include "UI/Inventory/InventoryExtension.h"
 #include "UI/RmlBridge/RmlElementBox.h"
 
+#include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/Element.h>
+#include <RmlUi/Core/ElementDocument.h>
 
 #include "json.hpp"
 
@@ -68,6 +70,7 @@ constexpr NamedWindow Windows[] = {
     {"titles", mu::ui::window::INTERFACE_TITLES},
     {"pet", mu::ui::window::INTERFACE_PET},
     {"mu_helper", mu::ui::window::INTERFACE_MUHELPER},
+    {"mu_helper_skill_list", mu::ui::window::INTERFACE_MUHELPER_SKILL_LIST},
 };
 
 json Pixel(float x, float y)
@@ -78,11 +81,10 @@ json Pixel(float x, float y)
     return pixel;
 }
 
-// Adds the element `selector` finds in a window under `name`, with its drawn rectangle in window
-// pixels, its transforms included, while it and its window are shown.
-void AddElement(json& elements, const std::string& name, UI::Windows::WindowId window, const std::string& selector)
+// Adds `element` under `name`, with its drawn rectangle in window pixels, its transforms included,
+// while it is shown.
+void AddFoundElement(json& elements, const std::string& name, Rml::Element* element)
 {
-    Rml::Element* element = UI::Windows::FindElement(window, selector.c_str());
     Rml::Vector2f offset;
     Rml::Vector2f size;
     if (element == nullptr || !element->IsVisible(true) ||
@@ -94,6 +96,31 @@ void AddElement(json& elements, const std::string& name, UI::Windows::WindowId w
     rect["width"] = size.x;
     rect["height"] = size.y;
     elements[name] = std::move(rect);
+}
+
+// The element `selector` finds in a window the workspace places, while the window is shown.
+void AddElement(json& elements, const std::string& name, UI::Windows::WindowId window, const std::string& selector)
+{
+    AddFoundElement(elements, name, UI::Windows::FindElement(window, selector.c_str()));
+}
+
+// The same for a window the workspace doesn't place (a flyout, the party cards): its document is found by its
+// file name in the RmlUi context.
+void AddDocumentElement(json& elements, const std::string& name, UI::Windows::WindowId window,
+                        std::string_view documentFile, const std::string& selector)
+{
+    Rml::Context* context = RmlUiRuntime::Instance().GetContext();
+    if (context == nullptr || !g_pNewUISystem->IsVisible(window))
+        return;
+    for (int i = 0; i < context->GetNumDocuments(); ++i)
+    {
+        Rml::ElementDocument* document = context->GetDocument(i);
+        if (document->IsVisible() && document->GetSourceURL().ends_with(documentFile))
+        {
+            AddFoundElement(elements, name, document->QuerySelector(selector));
+            return;
+        }
+    }
 }
 
 struct NamedElement
@@ -179,6 +206,25 @@ json Elements()
     {
         AddElement(elements, "npc_dialogue.answer." + std::to_string(answer), mu::ui::window::INTERFACE_NPC_DIALOGUE,
                    ".nd-answer-row[data-answer=\"" + std::to_string(answer) + "\"]");
+    }
+    // The MU Helper's skill slots (0-2 attack, 3-5 buffs; one opens the skill list), the list's icons by their place,
+    // and the party member cards beside the screen's edge.
+    for (int slot = 0; slot < 6; ++slot)
+    {
+        AddElement(elements, "mu_helper.slot." + std::to_string(slot), mu::ui::window::INTERFACE_MUHELPER,
+                   "#slot_" + std::to_string(slot));
+    }
+    for (int entry = 0; entry < MAX_MAGIC; ++entry)
+    {
+        AddDocumentElement(elements, "mu_helper_skill_list.entry." + std::to_string(entry),
+                           mu::ui::window::INTERFACE_MUHELPER_SKILL_LIST, "/mu_helper_skill_picker.rml",
+                           ".mhsp-entry:nth-child(" + std::to_string(entry + 1) + ")");
+    }
+    for (int card = 0; card < MAX_PARTYS; ++card)
+    {
+        AddDocumentElement(elements, "party_list.card." + std::to_string(card),
+                           mu::ui::window::INTERFACE_PARTY_INFO_WINDOW, "/party_list.rml",
+                           ".card:nth-child(" + std::to_string(card + 1) + ")");
     }
     // The battle pass' level rows (scrolled into the pane or not, they are reported while drawn), the daily
     // quests' replace buttons, by the quest's slot, and the daily quests' chests (1-3 the day's, "w" the week's).
