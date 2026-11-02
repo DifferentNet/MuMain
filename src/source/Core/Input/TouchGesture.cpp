@@ -40,9 +40,9 @@ Lift OnLift(Phase phase, bool cancelled, bool stoppedGlide)
     }
 }
 
-bool IsLongPressDue(Phase phase, std::chrono::milliseconds held, bool carryingItem)
+bool IsLongPressDue(Phase phase, std::chrono::milliseconds held, bool carryingItem, bool overWorld)
 {
-    return phase == Phase::Pending && held >= LongPressTime && !carryingItem;
+    return phase == Phase::Pending && held >= (overWorld ? WorldLongPressTime : LongPressTime) && !carryingItem;
 }
 
 bool IsMostlyVertical(float dx, float dy)

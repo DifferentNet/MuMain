@@ -17,6 +17,8 @@
 #include "UI/Core/WindowCommon.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/ModalDialogs.h"
+#include "UI/HUD/GamepadControls.h"
+#include "UI/HUD/PadHub.h"
 #include "UI/HUD/SkillList.h"
 #include "UI/HUD/Skills/SkillTooltip.h"
 #include "UI/Mobile/FollowThrough.h"
@@ -87,6 +89,7 @@ struct KeyButton
 constexpr KeyButton KeyButtons[] = {
     {"tc_potion_q", 'Q'},  {"tc_potion_w", 'W'}, {"tc_chat", VK_RETURN}, {"tc_inventory", 'I'},
     {"tc_character", 'C'}, {"tc_move", 'M'},     {"tc_map", VK_TAB},     {"tc_back", VK_ESCAPE, &Back},
+    {"tc_potion_e", 'E'},  {"tc_potion_r", 'R'},
 };
 constexpr int KeyButtonCount = static_cast<int>(std::size(KeyButtons));
 
@@ -119,6 +122,16 @@ void ToggleView()
     UI::Mobile::SetViewChoice(UI::Mobile::IsPhoneView() ? ViewChoice::Pc : ViewChoice::Phone);
 }
 
+// The chat line, as Enter opens it (CChatInputBox); Enter again types in it when it is open but let go of.
+// A tapped Enter alone did not open it while a pad played.
+void OpenChat()
+{
+    if (g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_CHATINPUTBOX))
+        Touch::TapKey(VK_RETURN);
+    else
+        g_pNewUISystem->Show(mu::ui::window::INTERFACE_CHATINPUTBOX);
+}
+
 // The menu's items: windows by the key that opens them, or an action of their own. Their labels are
 // menu_label_0.. in the markup.
 struct MenuItem
@@ -148,7 +161,7 @@ const MenuItem MenuItems[] = {
     {&I18N::Game::TouchMenuView, 0, &ToggleView},
     {&I18N::Game::TouchMenuSystem, 0, &OpenSystemMenu},
     // The chat line: with a pad, its keyboard (UI/HUD/PadKeyboard) comes up for it.
-    {&I18N::Game::TouchChat, VK_RETURN},
+    {&I18N::Game::TouchChat, 0, &OpenChat},
     // The Social panel, as its own button opens it: trade, party, whisper, duel... with a player around.
     {&I18N::Game::TouchSocial, 0, &OpenSocialPanel},
     // Its label says whether the switch is on (MenuLabel()).
@@ -366,6 +379,7 @@ struct ControlsModel
     std::array<float, SkillButtons> skillCooldowns{};
     std::array<bool, SkillButtons> skillSelected{};
     std::array<bool, SkillButtons> skillEmpty{true, true, true, true, true};
+    std::array<bool, SkillButtons> skillNoMana{};
     // The buttons a skill picked in the skill list can go on: the one chosen, else all for a while.
     std::array<bool, SkillButtons> skillBind{};
     bool hintShown = false;
@@ -388,6 +402,8 @@ struct ControlsModel
     bool pad = false;
     // Fingers drive the controls: the joystick's area shows.
     bool fingers = false;
+    // The pad's hero hub is open on its Skills tab: the picker sits under the hub's tabs.
+    bool underHub = false;
     int menuFocus = -1;
     Rml::String padOpenLabel;
     Rml::String padCloseLabel;
@@ -455,6 +471,11 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     c.Bind("skill_2_empty", &model.skillEmpty[2]);
     c.Bind("skill_3_empty", &model.skillEmpty[3]);
     c.Bind("skill_4_empty", &model.skillEmpty[4]);
+    c.Bind("skill_0_nomana", &model.skillNoMana[0]);
+    c.Bind("skill_1_nomana", &model.skillNoMana[1]);
+    c.Bind("skill_2_nomana", &model.skillNoMana[2]);
+    c.Bind("skill_3_nomana", &model.skillNoMana[3]);
+    c.Bind("skill_4_nomana", &model.skillNoMana[4]);
     c.Bind("skill_0_bind", &model.skillBind[0]);
     c.Bind("skill_1_bind", &model.skillBind[1]);
     c.Bind("skill_2_bind", &model.skillBind[2]);
@@ -475,6 +496,7 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     for (int item = 0; item < MenuItemCount; ++item)
         c.Bind(MenuLabelFields[item], &model.menuLabels[item]);
     c.Bind("pad", &model.pad);
+    c.Bind("under_hub", &model.underHub);
     c.Bind("fingers", &model.fingers);
     c.Bind("menu_focus", &model.menuFocus);
     c.Bind("pad_open_label", &model.padOpenLabel);
@@ -595,6 +617,10 @@ UI::Mobile::FollowThrough g_follow;
 // Whether the joystick (or the pad's stick) walked last frame: a walk it starts takes over from a
 // tapped action.
 bool g_wasSteering = false;
+// Touch::Resets() as last seen.
+std::uint32_t g_touchResetsSeen = 0;
+// When each action button was last pressed: of the buttons held, the newest press gets the turn.
+std::array<double, ControlCount> g_pressedAt{};
 // Whether the skill buttons stand for hotkeys 6-9 and 0 (ChooseUpperSet).
 bool g_upperSet = false;
 // Whether a dialog was up last frame, and whether the finger's pointer is still to leave the window
@@ -871,6 +897,11 @@ void FollowNeighbours(Rml::ElementDocument* document)
     UI::Mobile::PhoneHudLayout::Follow(edges);
 }
 
+double Now()
+{
+    return std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
 template <typename T> void SetField(T& field, const T& value, const char* name)
 {
     if (field == value)
@@ -884,11 +915,20 @@ void SyncLabel(Rml::String& field, const wchar_t* text, const char* name)
     SetField(field, StringUtils::WideToNarrow(text), name);
 }
 
+// The labels follow the language a few times a second, and the PK switch at once: some thirty
+// conversions a frame were work a slow phone's frame could do without.
 void SyncLabels(ControlsModel& model)
 {
+    constexpr double LabelSeconds = 0.25;
+    static double s_labelsAt = -1.0;
     const bool pk = GameLogic::Touch::IsForceAttack();
+    const bool pkChanged = model.pkOn != pk;
     SetField(model.pkOn, pk, "pk_on");
     SetField(model.gmMenu, GameLogic::GmPanel::Panel().IsGm(), "menu_gm");
+    const double now = Now();
+    if (!pkChanged && s_labelsAt >= 0.0 && now >= s_labelsAt && now - s_labelsAt < LabelSeconds)
+        return;
+    s_labelsAt = now;
     SyncLabel(model.attackLabel, pk ? I18N::Game::TouchAttackPk : I18N::Game::TouchAttack, "attack_label");
     SyncLabel(model.pickupLabel, I18N::Game::TouchPickUp, "pickup_label");
     SyncLabel(model.autoLabel, I18N::Game::TouchAuto, "auto_label");
@@ -924,6 +964,7 @@ void SyncDevices(ControlsModel& model)
 {
     SetField(model.pad, UI::Mobile::IsGamepadInUse(), "pad");
     SetField(model.fingers, Touch::IsEnabled(), "fingers");
+    SetField(model.underHub, UI::HUD::PadHub::IsOnSkills(), "under_hub");
 }
 
 // Whether a skill button set holds anything: the hotkeys 1-5, or 6-9 and 0.
@@ -961,11 +1002,15 @@ void SyncSkills(ControlsModel& model)
         "skill_0_selected", "skill_1_selected", "skill_2_selected", "skill_3_selected", "skill_4_selected"};
     static constexpr const char* EmptyFields[SkillButtons] = {"skill_0_empty", "skill_1_empty", "skill_2_empty",
                                                               "skill_3_empty", "skill_4_empty"};
+    static constexpr const char* NoManaFields[SkillButtons] = {"skill_0_nomana", "skill_1_nomana", "skill_2_nomana",
+                                                               "skill_3_nomana", "skill_4_nomana"};
     for (int slot = 0; slot < SkillButtons; ++slot)
     {
         const int hotKey = SlotHotKey(slot);
         const bool empty = !GameLogic::Touch::HotKeyHoldsSkill(hotKey);
         SetField(model.skillEmpty[slot], empty, EmptyFields[slot]);
+        // Not enough mana or AG shows on the button itself, not only once in the chat.
+        SetField(model.skillNoMana[slot], !empty && GameLogic::Touch::HotKeyShortOfMana(hotKey), NoManaFields[slot]);
         SetField(model.skillIcons[slot], empty ? Rml::String("none") : g_pSkillList->GetHotKeyIconDecorator(hotKey),
                  IconFields[slot]);
         // Whole percents: the wipe redraws only when it moves.
@@ -1083,6 +1128,10 @@ int PadControl(UI::HUD::TouchControls::PadButton button)
         return KeyControl("tc_potion_q");
     case PadButton::PotionW:
         return KeyControl("tc_potion_w");
+    case PadButton::PotionE:
+        return KeyControl("tc_potion_e");
+    case PadButton::PotionR:
+        return KeyControl("tc_potion_r");
     case PadButton::Social:
         return SocialControl;
     case PadButton::Back:
@@ -1753,11 +1802,6 @@ void UpdateSocial(ControlsModel& model)
     ShowSocial(model);
 }
 
-double Now()
-{
-    return std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
-}
-
 // An action button's action, once: the attack, a skill button's cast, the pickup.
 GameLogic::Touch::Progress Act(int control)
 {
@@ -1776,13 +1820,17 @@ void UpdateActions(ControlsModel& model)
     using GameLogic::Touch::Progress;
     const double now = Now();
     if (TakePress(AttackControl))
+    {
         g_follow.Press(AttackControl, now);
+        g_pressedAt[AttackControl] = now;
+    }
 
     for (int slot = 0; slot < SkillButtons; ++slot)
     {
         const int control = FirstSkillControl + slot;
         if (!TakePress(control))
             continue;
+        g_pressedAt[control] = now;
         const int hotKey = SlotHotKey(slot);
         if (WaitingForButton() && GameLogic::Touch::BindHotKey(hotKey))
         {
@@ -1811,30 +1859,50 @@ void UpdateActions(ControlsModel& model)
     }
 
     if (TakePress(PickupControl))
+    {
         g_follow.Press(PickupControl, now);
+        g_pressedAt[PickupControl] = now;
+    }
 
+    // A tapped action under way (a walk to the monster, a swing) keeps the turn; one only waiting (a
+    // cooldown, the mana, the joystick's walk) lets the buttons held act meanwhile.
     const int owed = g_follow.Owed(now);
     bool owedWaits = false;
     if (owed != UI::Mobile::FollowThrough::None)
     {
-        if (Act(owed) == Progress::Done)
+        const Progress progress = Act(owed);
+        if (progress == Progress::Done)
             g_follow.Settle(owed);
         else
-            owedWaits = true;
+            owedWaits = progress == Progress::Pending;
     }
 
+    std::array<int, SkillButtons + 2> held{};
+    int heldCount = 0;
     for (int slot = 0; slot < SkillButtons; ++slot)
     {
         const int control = FirstSkillControl + slot;
         if (!IsHeld(control))
             g_binding.noCast[slot] = false;
-        else if (!owedWaits && control != owed && !g_binding.noCast[slot])
-            Act(control);
+        else if (!g_binding.noCast[slot])
+            held[heldCount++] = control;
     }
     for (const int control : {AttackControl, PickupControl})
     {
-        if (!owedWaits && control != owed && IsHeld(control))
-            Act(control);
+        if (IsHeld(control))
+            held[heldCount++] = control;
+    }
+    GameLogic::Touch::HoldHelperForButtons(owed != UI::Mobile::FollowThrough::None || heldCount > 0);
+    if (owedWaits)
+        return;
+    // The newest press first: the actions share one turn (GameLogic::Touch), so a button held
+    // earlier would otherwise take every turn from one held after it.
+    std::stable_sort(held.begin(), held.begin() + heldCount,
+                     [](int a, int b) { return g_pressedAt[a] > g_pressedAt[b]; });
+    for (int i = 0; i < heldCount; ++i)
+    {
+        if (held[i] != owed)
+            Act(held[i]);
     }
 }
 
@@ -1908,6 +1976,9 @@ namespace UI::HUD::TouchControls
 {
 void Update()
 {
+    // The MU Helper's stand-down for the action buttons runs out a second after they stop, however
+    // the controls went (UpdateActions() renews it while they act).
+    GameLogic::Touch::HoldHelperForButtons(false);
     if (!UI::Mobile::ShowsControls())
     {
         // The PK switch belongs to these controls: with them gone (a mouse or a pad took over) a click
@@ -1951,7 +2022,9 @@ void Update()
 
     ControlsModel& model = g_View.GetModel();
     g_upperSet = ChooseUpperSet();
-    GameLogic::Touch::SetPointerAims(UI::Mobile::IsGamepadInUse());
+    // The pad's pointer aims only while it plays the pointer (a window open); in the world the right
+    // stick picks the target instead (UI/HUD/GamepadControls).
+    GameLogic::Touch::SetPointerAims(UI::Mobile::IsGamepadInUse() && UI::HUD::GamepadControls::PlaysPointer());
     // A player the pointer or a tap went for stays the attack button's target.
     GameLogic::Touch::TrackAim();
     RestPointerAfterDialog();
@@ -1960,8 +2033,13 @@ void Update()
     SyncSkills(model);
     UpdateBinding(model);
     const bool steering = GameLogic::Touch::IsSteering();
-    if (steering && !g_wasSteering)
+    // A walk the stick starts takes over from a tapped action, and one tapped while it walked (a
+    // monster out of reach) is not walked to once the stick is let go. Fingers let go of by the page
+    // (background, a turn of the phone) leave nothing owed either.
+    const std::uint32_t touchResets = Touch::Resets();
+    if (steering != g_wasSteering || touchResets != g_touchResetsSeen)
         g_follow.Drop();
+    g_touchResetsSeen = touchResets;
     g_wasSteering = steering;
     // The buttons before the stick: a cast that stands the character holds this frame's walk off.
     if (model.pickerOpen)

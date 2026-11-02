@@ -1,0 +1,91 @@
+/* Legacy theme for what the gamepad shows over the world and its windows (pad_overlay.rml): a gold
+   frame on the target the pad is on, the hero hub's tabs and the pad's buttons at the screen's top,
+   and the pickup prompt under a drop. Only the pad works it: nothing here takes the pointer. */
+
+body, body * {
+	pointer-events: none;
+}
+
+/* The pad glyphs (gamepad_glyphs.rcss) are sized in rem: here one is one dp. */
+body {
+	font-size: 1dp;
+	font-family: "token(font-body)";
+	color: token(text-primary);
+	font-effect: shadow(0dp 1dp #000000);
+}
+
+#po_frame {
+	position: absolute;
+	box-sizing: border-box;
+	border: 2dp token(accent-gold);
+	border-radius: 3dp;
+	background-color: rgba(242, 194, 48, 28);
+}
+
+/* The prompt's point is the drop's foot: the prompt stands centred just under it. */
+#po_prompt {
+	position: absolute;
+	width: 0;
+	height: 0;
+}
+#po_prompt_inner {
+	position: absolute;
+	left: -80dp;
+	top: 6dp;
+	width: 160dp;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	font-size: 13dp;
+}
+#po_prompt_inner .pad-glyph {
+	position: relative;
+}
+
+#po_top {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 6dp;
+	padding: 0 6dp;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+#po_tabs, #po_legend {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	max-width: 100%;
+	padding: 4dp 10dp;
+	border: 1dp token(border-control);
+	border-radius: 6dp;
+	background-color: rgba(0, 0, 0, 230);
+}
+#po_tabs {
+	margin-bottom: 4dp;
+	font-size: 13dp;
+}
+#po_legend {
+	font-size: 12dp;
+}
+#po_top .pad-glyph {
+	position: relative;
+}
+.po-tab {
+	margin: 0 5dp;
+	padding: 2dp 4dp;
+	color: token(text-secondary);
+	line-height: 20dp;
+}
+.po-tab.active {
+	color: token(accent-gold);
+	border-bottom: 2dp token(accent-gold);
+}
+.po-label {
+	margin: 0 12dp 0 5dp;
+	line-height: 22dp;
+}

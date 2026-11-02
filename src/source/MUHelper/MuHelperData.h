@@ -78,6 +78,9 @@ namespace MUHelper
 
 		bool bUseHealPotion = false;
 		int iPotionThreshold = 0;
+		// Mana potions below this percent of mana (2026-11-02, ghinzuro: the DK stopped drinking them).
+		int iManaPotionThreshold = DefaultManaPotionThreshold;
+		static constexpr int DefaultManaPotionThreshold = 30;
 
 		bool bUseDrainLife = false;
 		bool bUseDarkRaven = false;
@@ -92,6 +95,7 @@ namespace MUHelper
 		bool bPickZen = false;
 		bool bPickAncient = false;
 		bool bPickExcellent = false;
+		bool bPickContainers = false; // saved in byte 33 bit 4; 0 in blobs from older clients = off
 		bool bPickExtraItems = false;
 		std::set<std::wstring> aExtraItems;
 

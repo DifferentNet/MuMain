@@ -100,6 +100,7 @@ namespace MUHelper
 
 		netData.AutoHeal = gameData.bAutoHeal ? 1 : 0;
 		netData.HPStatusAutoPotion = static_cast<BYTE>((gameData.iPotionThreshold / 10) & 0x0F);
+		netData.MPStatusAutoPotion = static_cast<BYTE>((gameData.iManaPotionThreshold / 10 + 1) & 0x0F);
 		netData.HPStatusAutoHeal = static_cast<BYTE>((gameData.iHealThreshold / 10) & 0x0F);
 		netData.AutoPotion = gameData.bUseHealPotion ? 1 : 0;
 		netData.DrainLife = gameData.bUseDrainLife ? 1 : 0;
@@ -144,6 +145,7 @@ namespace MUHelper
 		netData.bAutoAcceptFriend = gameData.bAutoAcceptFriend ? 1 : 0;
 		netData.bAutoAcceptGuild = gameData.bAutoAcceptGuild ? 1 : 0;
 		netData.bFallbackBasicAttack = gameData.bFallbackBasicAttack ? 1 : 0;
+		netData.bPickContainers = gameData.bPickContainers ? 1 : 0;
 	}
 
 	void ConfigDataSerDe::Deserialize(const PRECEIVE_MUHELPER_DATA& netData, ConfigData& gameData)
@@ -197,6 +199,9 @@ namespace MUHelper
 		gameData.bUseDrainLife = static_cast<int>(netData.DrainLife);
 		gameData.bUseHealPotion = (bool)netData.AutoPotion;
 		gameData.iPotionThreshold = static_cast<int>(netData.HPStatusAutoPotion) * 10;
+		gameData.iManaPotionThreshold = netData.MPStatusAutoPotion == 0
+			? ConfigData::DefaultManaPotionThreshold
+			: (static_cast<int>(netData.MPStatusAutoPotion) - 1) * 10;
 		gameData.bSupportParty = (bool)netData.Party;
 		gameData.bAutoHealParty = (bool)netData.PreferenceOfPartyHeal;
 		gameData.iHealPartyThreshold = static_cast<int>(netData.HPStatusOfPartyMembers) * 10;
@@ -235,6 +240,7 @@ namespace MUHelper
 		gameData.bAutoAcceptFriend = (bool)netData.bAutoAcceptFriend;
 		gameData.bAutoAcceptGuild = (bool)netData.bAutoAcceptGuild;
 		gameData.bFallbackBasicAttack = (bool)netData.bFallbackBasicAttack;
+		gameData.bPickContainers = (bool)netData.bPickContainers;
 	}
 
 }

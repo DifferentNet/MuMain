@@ -40,6 +40,7 @@
 #include "GameLogic/NPCs/npcBreeder.h"
 #include "GameLogic/Pets/GIPetManager.h"
 #include "Character/CSParts.h"
+#include "UI/HUD/GamepadControls.h"
 #include "UI/HUD/UIMapName.h"	// rozy
 #include "GameLogic/Events/Cinematic/CDirection.h"
 #include "World/MapInfra/MapManager.h"
@@ -3935,7 +3936,8 @@ extern int g_iKeyPadEnable;
 
 void RenderCursor()
 {
-    if (!g_bRenderGameCursor)
+    // The pad plays the world without a pointer, and over a window it shows its frame instead.
+    if (!g_bRenderGameCursor || UI::HUD::GamepadControls::HidesPointer())
         return;
 
     // The sprites below are placed in units around the pointer; drawn at one scale, not stretched to the window.

@@ -311,7 +311,29 @@ bool CInventoryActionController::HandleRepairClick(CInventoryCtrl* targetControl
     return RepairItemAtMousePoint(targetControl);
 }
 
-CInventoryActionController::RightClickTarget CInventoryActionController::FindRightClickTarget() const
+CInventoryActionController::BagRightClick CInventoryActionController::WhatBagRightClickDoes()
+{
+    // As the item card names it (ShowTouchItemCard).
+    const RightClickTarget target = FindRightClickTarget();
+    if (target == RightClickTarget::Shop)
+        return BagRightClick::Sells;
+    if (target != RightClickTarget::Inventory || g_pNewUISystem->IsVisible(INTERFACE_INVENTORY_EXT))
+        return BagRightClick::Moves;
+    CInventoryCtrl* bag = g_pMyInventory != nullptr ? g_pMyInventory->GetInventoryCtrl() : nullptr;
+    const ITEM* item = bag != nullptr ? bag->FindItemAtPointer() : nullptr;
+    if (item == nullptr)
+        return BagRightClick::Equips;
+    if (IsUsedFromBag(item))
+        return BagRightClick::Uses;
+#ifdef LJH_ADD_SYSTEM_OF_EQUIPPING_ITEM_FROM_INVENTORY
+    if (g_pMyInventory->IsInvenItem(item->Type))
+        return BagRightClick::Uses;
+#endif
+    const int equipmentSlot = ItemAttribute[item->Type].m_byItemSlot;
+    return equipmentSlot >= 0 && equipmentSlot < MAX_EQUIPMENT_INDEX ? BagRightClick::Equips : BagRightClick::Keeps;
+}
+
+CInventoryActionController::RightClickTarget CInventoryActionController::FindRightClickTarget()
 {
     if (g_pNewUISystem->IsVisible(INTERFACE_STORAGE))
     {
@@ -350,8 +372,10 @@ CInventoryActionController::RightClickTarget CInventoryActionController::FindRig
 
 bool CInventoryActionController::HandleRightClick(CInventoryCtrl* targetControl) const
 {
+    // The pad's X puts on or uses an item, never throws it down: an item with nothing else to do stays.
+    const bool mayDrop = !UI::Mobile::ClickSource::IsPadRightClick();
     m_pContext->ResetMouseRButton();
-    return RunRightClickAction(targetControl, FindRightClickTarget(), true);
+    return RunRightClickAction(targetControl, FindRightClickTarget(), mayDrop);
 }
 
 bool CInventoryActionController::RunRightClickAction(CInventoryCtrl* targetControl, RightClickTarget target,
@@ -380,8 +404,11 @@ bool CInventoryActionController::AsksWithItemCard(RightClickTarget target)
 {
     if (UI::Mobile::ClickSource::IsFingerLongPress())
         return true;
-    return UI::Mobile::ClickSource::IsPadRightClick() && target != RightClickTarget::Storage &&
-           target != RightClickTarget::Mix;
+    // The pad's Y asks everywhere (by the vault or the mix the card's answer is Move); its X acts at
+    // once, but for a sale.
+    if (UI::Mobile::ClickSource::IsPadCardClick())
+        return true;
+    return UI::Mobile::ClickSource::IsPadRightClick() && target == RightClickTarget::Shop;
 }
 
 bool CInventoryActionController::ShowTouchItemCard(CInventoryCtrl* targetControl) const
@@ -715,8 +742,12 @@ bool CInventoryActionController::TryEquipItem(CInventoryCtrl* targetControl, ITE
         return false;
     }
 
+    // The pad's X puts an item on at once: it says why not, as there is no dragging to show it.
+    const bool says = UI::Mobile::ClickSource::IsPadRightClick();
     if (!m_pContext->IsEquipable(nDstIndex, pItem))
     {
+        if (says)
+            g_pSystemLogBox->AddText(I18N::Game::PadCannotEquip, TYPE_ERROR_MESSAGE);
         return true;
     }
 
@@ -730,12 +761,16 @@ bool CInventoryActionController::TryEquipItem(CInventoryCtrl* targetControl, ITE
         }
         else
         {
+            if (says)
+                g_pSystemLogBox->AddText(I18N::Game::PadSlotTaken, TYPE_ERROR_MESSAGE);
             return true;
         }
     }
 
     if (!m_pContext->IsEquipable(nDstIndex, pItem))
     {
+        if (says)
+            g_pSystemLogBox->AddText(I18N::Game::PadCannotEquip, TYPE_ERROR_MESSAGE);
         return true;
     }
 

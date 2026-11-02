@@ -21,7 +21,7 @@ namespace mu::ui::window
         Rml::String titleActivation, titleRecovery, titleParty;
         Rml::String panePreCon, paneSubCon, paneAutoPotion, paneAutoHeal, paneDrainLife;
         Rml::String paneBuffSupport, paneHealSupport;
-        Rml::String hpStatus, hpStatusParty;
+        Rml::String hpStatus, hpStatusParty, mpStatus;
         Rml::String preconHuntRange, preconAttacking;
         Rml::String subconTwo, subconThree, subconFour, subconFive;
         Rml::String partyHeal, partyDuration, timeSpace;
@@ -38,6 +38,7 @@ namespace mu::ui::window
 
         // 0..10, the gauges' fill in tenths.
         int potionLevel = 0;
+        int manaPotionLevel = 0;
         int healLevel = 0;
         int partyHealLevel = 0;
 
@@ -107,6 +108,7 @@ namespace mu::ui::window
 
         int m_iCurrentPage = -1;
         int m_iCurrentPotionThreshold = 0;
+        int m_iCurrentManaPotionThreshold = 0;
         int m_iCurrentHealThreshold = 0;
         int m_iCurrentPartyHealThreshold = 0;
 

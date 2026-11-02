@@ -58,6 +58,11 @@ void SetHitTest(HitTest hitTest);
 // While the mouse carries an item a finger held still does not click the right button: that would put
 // the item back in the bag, and the finger could no longer drag it.
 void SetCarryQuery(CarryQuery isCarrying);
+
+// Whether the pointer is over the world, no window under it: a still finger there takes longer to
+// become a right click (Gesture::WorldLongPressTime). Unset: never over the world.
+using WorldQuery = bool (*)();
+void SetWorldQuery(WorldQuery isOverWorld);
 // TapKey() ends typing first, so a control's key works while a text field (the chat) is focused.
 void SetEndTyping(EndTyping endTyping);
 
@@ -76,6 +81,9 @@ void BeginFrame(SDL_Window* window);
 // Lets go of every finger: the mouse buttons they held (released off the window, so nothing takes a
 // drop), the controls, the pinch.
 void Reset();
+
+// How many times Reset() ran: a change tells the controls that what was pressed before is gone.
+[[nodiscard]] std::uint32_t Resets();
 
 // Takes the pointer a lifted finger left behind off the window (Pointer::Rest): for a control that
 // opens or shuts a window, where the old spot would show a tooltip nobody asked for. False while a

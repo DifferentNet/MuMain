@@ -1873,7 +1873,7 @@
     <comment>legacy_id=427</comment>
   </data>
   <data name="Please enter your WEBZEN.COM password." xml:space="preserve">
-    <value>Please enter your WEBZEN.COM password.</value>
+    <value>Please enter your account password.</value>
     <comment>legacy_id=428,444,1713</comment>
   </data>
   <data name="You have received an offer to join a guild." xml:space="preserve">
@@ -2909,7 +2909,7 @@
     <comment>legacy_id=690</comment>
   </data>
   <data name="Enter your WEBZEN.COM password." xml:space="preserve">
-    <value>Enter your WEBZEN.COM password.</value>
+    <value>Enter your account password.</value>
     <comment>legacy_id=691</comment>
   </data>
   <data name="Unlock Vault" xml:space="preserve">
@@ -2933,7 +2933,7 @@
     <comment>legacy_id=696</comment>
   </data>
   <data name="EnterYourWEBZENCOMPassword697" xml:space="preserve">
-    <value>Enter your WEBZEN.COM password</value>
+    <value>Enter your account password</value>
     <comment>legacy_id=697</comment>
   </data>
   <data name="Charisma Requirement: %d" xml:space="preserve">
@@ -13554,6 +13554,9 @@
   <data name="MuHelperSkillPaused" xml:space="preserve">
     <value>MU Helper: %ls doesn't cast. Trying again in %d s.</value>
   </data>
+  <data name="MuHelperMPStatus" xml:space="preserve">
+    <value>MP Status</value>
+  </data>
   <data name="MuHelperNoManaPotions" xml:space="preserve">
     <value>MU Helper: out of mana potions.</value>
   </data>
@@ -13738,7 +13741,7 @@
     <value>Make %d resets</value>
   </data>
   <data name="BattlePassQuestEvents" xml:space="preserve">
-    <value>Take part in %d events: Blood Castle, Devil Square or Chaos Castle</value>
+    <value>Take part in %d events: Blood Castle, Devil Square, Chaos Castle, a PvP event, a rift, the world boss or a ranked duel</value>
   </data>
   <data name="BattlePassQuestMap" xml:space="preserve">
     <value>Kill %d monsters in %ls</value>
@@ -13804,7 +13807,7 @@
     <value>Play %d days of the season</value>
   </data>
   <data name="BattlePassQuestEventOne" xml:space="preserve">
-    <value>Take part in an event: Blood Castle, Devil Square or Chaos Castle</value>
+    <value>Take part in an event: Blood Castle, Devil Square, Chaos Castle, a PvP event, a rift, the world boss or a ranked duel</value>
   </data>
   <data name="BattlePassQuestMixOne" xml:space="preserve">
     <value>Make a successful Chaos Machine mix</value>
@@ -15453,31 +15456,31 @@
     <value>Gamepad (Xbox layout)</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Left stick: walk (this breaks off a fight). Right stick: the pointer</value>
+    <value>Left stick: walk. Right stick: flick it for the next target (right further, left nearer); in a window, a free pointer</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
-    <value>A: tap to hit the nearest monster once, hold to keep fighting</value>
+    <value>A: tap to hit the target once, hold to keep fighting</value>
   </data>
   <data name="PadHelpSkills" xml:space="preserve">
-    <value>X, Y, RB, LT, D-pad down: the five skill buttons</value>
+    <value>X, Y, B, RB, RT: the five skill buttons</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
     <value>LS (click the left stick in, centred): put skills on the buttons</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
-    <value>B: back, closes the window on top (with none open, the system menu)</value>
+    <value>B with a window open: back, closes the window on top</value>
   </data>
   <data name="PadHelpPickUp" xml:space="preserve">
-    <value>LB: tap to pick up the nearest item, hold to keep picking up</value>
+    <value>D-pad down: pick up the item whose name shows, hold to keep picking up; with nothing to pick up, talk to the nearest NPC</value>
   </data>
   <data name="PadHelpPotions" xml:space="preserve">
-    <value>D-pad left and right: potions Q and W. Up and down over a list: scroll it</value>
+    <value>LB and LT: potions Q and W. D-pad left and right: potions E and R</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>RT: click at the pointer (talk to an NPC, walk there), hold to drag</value>
+    <value>RS (click the right stick in, centred): back to the nearest target</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
-    <value>Menu: every window (stick or D-pad to choose, A opens, B closes)</value>
+    <value>Menu: the hero hub (inventory, character, skills, quests, guild, settings), LB and RB turn its tabs. Again: every window. Hold Menu: the chat</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
     <value>Login and character screens: the sticks move the pointer</value>
@@ -15489,7 +15492,7 @@
     <value>After a gate or a map change, let go of the stick to walk again</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>With the pointer on a window or a button, A clicks it</value>
+    <value>In a window: a frame instead of the pointer. D-pad or left stick: to the next cell or button (past the last row, the list scrolls). A: take, put down, press. X: put on, use. Y: the item card. Right stick: free pointer</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
     <value>Tap to use a skill once, hold to repeat it</value>
@@ -15498,7 +15501,7 @@
     <value>D-pad up: MU Helper on and off (the left stick moves where it hunts). View: Social (players around: trade, party, guild...); the map is in the menu</value>
   </data>
   <data name="PadHelpRightClick" xml:space="preserve">
-    <value>RS (click the right stick in, centred): right click at the pointer, on a stat's + many points</value>
+    <value>RS over a window: right click at the pointer, on a stat's + many points</value>
   </data>
   <data name="PadHelpDialog" xml:space="preserve">
     <value>A question (trade, party): after a second Menu is Yes, A too once it rested a second. B is No</value>
@@ -15540,7 +15543,7 @@
     <value>Choose</value>
   </data>
   <data name="PadConnected" xml:space="preserve">
-    <value>Gamepad: A attacks, X, Y, RB, LT and D-pad down cast skills, LS sets them, Menu opens every window (its Help lists all the buttons)</value>
+    <value>Gamepad: A attacks, X, Y, B, RB and RT cast skills, LB and LT drink potions, the right stick picks the target, Menu opens every window (its Help lists all the buttons)</value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
     <value>Pick a skill with the pointer and A, then press X, Y, RB, LT or D-pad down to put it there</value>
@@ -15840,7 +15843,7 @@
     <value>PK (menu): tap a player to fight them, then Attack and skills keep at them. Your party is spared</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK (menu): point at a player, A fights them, your party is spared. A on a party card: buffs go to them</value>
+    <value>PK (menu): the right stick picks players too, A fights them, your party is spared</value>
   </data>
   <data name="GamepadOffLater" xml:space="preserve">
     <value>The gamepad turns off when you next press a key, a mouse button or the screen</value>
@@ -15856,6 +15859,9 @@
   </data>
   <data name="TouchItemApplyHint" xml:space="preserve">
     <value>Tap the item to apply the jewel to.</value>
+  </data>
+  <data name="VaultHasNoRoom" xml:space="preserve">
+    <value>There is no room in the vault for this item.</value>
   </data>
   <data name="TouchItemMoveToBag" xml:space="preserve">
     <value>Move to bag</value>
@@ -15880,5 +15886,41 @@
   </data>
   <data name="TouchSocialWindows" xml:space="preserve">
     <value>Windows</value>
+  </data>
+  <data name="PadHubSettings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="PadPickUpPrompt" xml:space="preserve">
+    <value>Pick up</value>
+  </data>
+  <data name="PadTake" xml:space="preserve">
+    <value>Take</value>
+  </data>
+  <data name="PadBuy" xml:space="preserve">
+    <value>Buy</value>
+  </data>
+  <data name="PadCard" xml:space="preserve">
+    <value>Card</value>
+  </data>
+  <data name="PadAllWindows" xml:space="preserve">
+    <value>All windows</value>
+  </data>
+  <data name="PadPutDown" xml:space="preserve">
+    <value>Put down</value>
+  </data>
+  <data name="PadPutBack" xml:space="preserve">
+    <value>Put back</value>
+  </data>
+  <data name="PadPress" xml:space="preserve">
+    <value>Press</value>
+  </data>
+  <data name="PadCannotEquip" xml:space="preserve">
+    <value>This item can't be put on: see its requirements</value>
+  </data>
+  <data name="PadSlotTaken" xml:space="preserve">
+    <value>Take off the item worn there first</value>
+  </data>
+  <data name="HelperPickBoxes" xml:space="preserve">
+    <value>Boxes &amp; medals</value>
   </data>
 </root>

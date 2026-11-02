@@ -11,6 +11,9 @@ namespace Core::Input::Touch::Gesture
 // A finger held still this long clicks the right button (as Remote Desktop and Android's mouse
 // emulation do), and holds it until the finger lifts.
 inline constexpr auto LongPressTime = std::chrono::milliseconds(500);
+// Over the world, where the right button casts the current skill (a teleport, an area spell), a
+// longer hold: a thumb resting on the screen for half a second cast it unasked.
+inline constexpr auto WorldLongPressTime = std::chrono::milliseconds(800);
 
 enum class Phase : std::uint8_t
 {
@@ -73,7 +76,9 @@ enum class Lift : std::uint8_t
 
 // Whether a finger held still `held` long has become a long press. Not while the mouse carries an
 // item: the right button would put it back in the bag, and the finger could no longer drag it.
-[[nodiscard]] bool IsLongPressDue(Phase phase, std::chrono::milliseconds held, bool carryingItem);
+// Over the world (no window under the finger) it takes WorldLongPressTime.
+[[nodiscard]] bool IsLongPressDue(Phase phase, std::chrono::milliseconds held, bool carryingItem,
+                                  bool overWorld = false);
 
 // Whether a finger's move by (dx, dy) goes more up or down than sideways: a slider in a list that
 // scrolls up and down takes only a sideways drag, the list the rest. A move as much sideways as up

@@ -28,6 +28,20 @@ public:
     void SetContext(SEASON3B::IInventoryActionContext* pContext);
     bool HandleInventoryActions(CInventoryCtrl* targetControl) const;
 
+    // MU Moldova: what a right click on a bag item does now, by the windows open with the bag (the pad's
+    // legend names X by it).
+    // With the bag alone, by the item under the pointer as HandleInventoryRightClickActions takes it:
+    // Uses (a potion, a scroll), Equips (gear), Keeps (a jewel, a box: the right click does nothing).
+    enum class BagRightClick
+    {
+        Equips,
+        Uses,
+        Keeps,
+        Sells,
+        Moves,
+    };
+    [[nodiscard]] static BagRightClick WhatBagRightClickDoes();
+
 private:
     bool HandlePickedItemPlacement(CInventoryCtrl* targetControl) const;
     bool TryApplyJewel(CInventoryCtrl* targetControl, CPickedItem* pPickedItem, ITEM* pPickItem,
@@ -48,7 +62,7 @@ private:
         Trade,
         Inventory,
     };
-    RightClickTarget FindRightClickTarget() const;
+    static RightClickTarget FindRightClickTarget();
 
     bool HandleRightClick(CInventoryCtrl* targetControl) const;
     // The right click's action on the item under the pointer; without mayDrop an item with no other

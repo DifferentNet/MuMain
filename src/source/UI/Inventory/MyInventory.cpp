@@ -698,31 +698,7 @@ bool CMyInventory::UpdateMouseEvent()
             return true;
         }
 
-        ITEM* pItemObj = pPickedItem->GetItem();
-        if (pItemObj && pItemObj->Jewel_Of_Harmony_Option != 0)
-        {
-            g_pSystemLogBox->AddText(I18N::Game::ReinforcedItemCanTBeDropped, TYPE_ERROR_MESSAGE);
-
-            ResetMouseLButton();
-            return false;
-        }
-        if (pItemObj && GameLogic::Items::IsHighValueItem(pItemObj) == true)
-        {
-            g_pSystemLogBox->AddText(I18N::Game::YouAreNotAllowedToDropThisExpensiveItem, TYPE_ERROR_MESSAGE);
-            CInventoryCtrl::BackupPickedItem();
-
-            ResetMouseLButton();
-            return false;
-        }
-        if (pItemObj && GameLogic::Items::IsDropBan(pItemObj))
-        {
-            g_pSystemLogBox->AddText(I18N::Game::ThisItemCannotBeDropped, TYPE_ERROR_MESSAGE);
-            CInventoryCtrl::BackupPickedItem();
-
-            ResetMouseLButton();
-            return false;
-        }
-        if (pItemObj && pItemObj->Type == ITEM_LOST_MAP && gMapManager.IsCursedTemple() == true)
+        if (!MayDropPickedItem(pPickedItem))
         {
             ResetMouseLButton();
             return false;
@@ -740,23 +716,8 @@ bool CMyInventory::UpdateMouseEvent()
 #endif
         if (SelectFlag)
         {
-            const int iSourceIndex = pPickedItem->GetSourceLinealPos();
-            const int tx = (int)(CollisionPosition[0] / TERRAIN_SCALE);
-            const int ty = (int)(CollisionPosition[1] / TERRAIN_SCALE);
-            if (pPickedItem->GetOwnerInventory() == m_pNewInventoryCtrl
-                || g_pMyInventoryExt->GetOwnerOf(pPickedItem) != nullptr)
-            {
-                if (Hero->Dead == 0)
-                {
-                    SocketClient->ToGameServer()->SendDropItemRequest(tx, ty, iSourceIndex);
-                    SendDropItem = iSourceIndex;
-                }
-            }
-            else if (pItemObj && pItemObj->ex_src_type == ITEM_EX_SRC_EQUIPMENT)
-            {
-                SocketClient->ToGameServer()->SendDropItemRequest(tx, ty, iSourceIndex);
-                SendDropItem = iSourceIndex;
-            }
+            SendPickedItemDrop(pPickedItem, (int)(CollisionPosition[0] / TERRAIN_SCALE),
+                               (int)(CollisionPosition[1] / TERRAIN_SCALE));
             MouseUpdateTime = 0;
             MouseUpdateTimeMax = 6;
 
@@ -768,6 +729,65 @@ bool CMyInventory::UpdateMouseEvent()
     if (WindowProcess())
         return false;
 
+    return true;
+}
+
+bool CMyInventory::MayDropPickedItem(CPickedItem* pPickedItem) const
+{
+    ITEM* pItemObj = pPickedItem->GetItem();
+    if (pItemObj && pItemObj->Jewel_Of_Harmony_Option != 0)
+    {
+        g_pSystemLogBox->AddText(I18N::Game::ReinforcedItemCanTBeDropped, TYPE_ERROR_MESSAGE);
+
+        return false;
+    }
+    if (pItemObj && GameLogic::Items::IsHighValueItem(pItemObj) == true)
+    {
+        g_pSystemLogBox->AddText(I18N::Game::YouAreNotAllowedToDropThisExpensiveItem, TYPE_ERROR_MESSAGE);
+        CInventoryCtrl::BackupPickedItem();
+
+        return false;
+    }
+    if (pItemObj && GameLogic::Items::IsDropBan(pItemObj))
+    {
+        g_pSystemLogBox->AddText(I18N::Game::ThisItemCannotBeDropped, TYPE_ERROR_MESSAGE);
+        CInventoryCtrl::BackupPickedItem();
+
+        return false;
+    }
+    if (pItemObj && pItemObj->Type == ITEM_LOST_MAP && gMapManager.IsCursedTemple() == true)
+    {
+        return false;
+    }
+    return true;
+}
+
+void CMyInventory::SendPickedItemDrop(CPickedItem* pPickedItem, int tx, int ty) const
+{
+    const ITEM* pItemObj = pPickedItem->GetItem();
+    const int iSourceIndex = pPickedItem->GetSourceLinealPos();
+    if (pPickedItem->GetOwnerInventory() == m_pNewInventoryCtrl || g_pMyInventoryExt->GetOwnerOf(pPickedItem) != nullptr)
+    {
+        if (Hero->Dead == 0)
+        {
+            SocketClient->ToGameServer()->SendDropItemRequest(tx, ty, iSourceIndex);
+            SendDropItem = iSourceIndex;
+        }
+    }
+    else if (pItemObj && pItemObj->ex_src_type == ITEM_EX_SRC_EQUIPMENT)
+    {
+        SocketClient->ToGameServer()->SendDropItemRequest(tx, ty, iSourceIndex);
+        SendDropItem = iSourceIndex;
+    }
+}
+
+bool CMyInventory::DropHeldItemAtFeet()
+{
+    CPickedItem* pPickedItem = CInventoryCtrl::GetPickedItem();
+    if (pPickedItem == nullptr || Hero == nullptr)
+        return false;
+    if (MayDropPickedItem(pPickedItem))
+        SendPickedItemDrop(pPickedItem, Hero->PositionX, Hero->PositionY);
     return true;
 }
 
@@ -1186,6 +1206,9 @@ void CMyInventory::OpenningProcess()
 
 void CMyInventory::ClosingProcess()
 {
+    // Update() points a slot only while the window shows: the last one would stay pointed.
+    m_iPointedSlot = -1;
+    m_iLeftPressSlot = -1;
     m_pNewInventoryCtrl->BackupPickedItem();
     RepairEnable = 0;
     SetRepairMode(false);
@@ -1517,6 +1540,9 @@ void CMyInventory::SyncSlotStates()
         }
 
         Rml::String value = state;
+        // Nothing worn there: the pad's frame offers nothing to take (UI/HUD/PadTargets).
+        if (CharacterMachine->Equipment[i].Type == -1)
+            value += value.empty() ? "bare" : " bare";
         if (i == m_iPointedSlot && CInventoryCtrl::GetPickedItem())
         {
             ITEM* pItemObj = CInventoryCtrl::GetPickedItem()->GetItem();
@@ -1544,6 +1570,10 @@ void CMyInventory::SyncSlotStates()
 
 bool CMyInventory::EquipmentWindowProcess()
 {
+    if (IsPress(VK_LBUTTON))
+        m_iLeftPressSlot = m_iPointedSlot;
+    const int leftPressSlot = IsRelease(VK_LBUTTON) ? std::exchange(m_iLeftPressSlot, -1) : m_iLeftPressSlot;
+
     if (m_iPointedSlot != -1 && IsRelease(VK_LBUTTON))
     {
         if (CPickedItem* pPickedItem = CInventoryCtrl::GetPickedItem())
@@ -1598,6 +1628,9 @@ bool CMyInventory::EquipmentWindowProcess()
         }
         else // pPickedItem == NULL
         {
+            if (leftPressSlot != m_iPointedSlot)
+                return false;
+
             if (GetRepairMode() == SEASON3B::REPAIR_MODE_ON)
             {
                 ITEM* pEquippedItem = &CharacterMachine->Equipment[m_iPointedSlot];
@@ -1640,9 +1673,10 @@ bool CMyInventory::EquipmentWindowProcess()
 
     if (IsPress(VK_RBUTTON))
     {
-        // A finger's long press (Core::Input::Touch) or the pad's R3 on worn gear shows the item card,
-        // as on the bag's items, and letting go takes nothing off.
-        m_bCardRightPress = UI::Mobile::ClickSource::IsFingerLongPress() || UI::Mobile::ClickSource::IsPadRightClick();
+        // A finger's long press (Core::Input::Touch) or the pad's Y on worn gear shows the item card,
+        // as on the bag's items, and letting go takes nothing off; the pad's X takes it off.
+        m_bCardRightPress = UI::Mobile::ClickSource::IsFingerLongPress() || UI::Mobile::ClickSource::IsPadCardClick();
+        m_bPadRightPress = UI::Mobile::ClickSource::IsPadRightClick() && !m_bCardRightPress;
         if (m_bCardRightPress && ShowWornItemCard())
             return true;
     }
@@ -1651,12 +1685,14 @@ bool CMyInventory::EquipmentWindowProcess()
     {
         if (std::exchange(m_bCardRightPress, false))
             return false;
+        // The pad has let go by now: whether its X pressed was noted on the press.
+        const bool padPressed = std::exchange(m_bPadRightPress, false);
 
         const int iSourceIndex = m_iPointedSlot;
         if (iSourceIndex != -1 && CanTakeOffToBagNow())
         {
             ResetMouseRButton();
-            if (TakeOffToBag(iSourceIndex))
+            if (TakeOffToBag(iSourceIndex, padPressed))
                 return true;
         }
     }
@@ -1671,7 +1707,7 @@ bool CMyInventory::CanTakeOffToBagNow() const
            !g_pNewUISystem->IsVisible(INTERFACE_NPCSHOP); // Don't unequip when NPC shop is open
 }
 
-bool CMyInventory::TakeOffToBag(int equipmentSlot)
+bool CMyInventory::TakeOffToBag(int equipmentSlot, bool saysWhenFull)
 {
     ITEM* pEquippedItem = &CharacterMachine->Equipment[equipmentSlot];
     if (pEquippedItem->Type < 0 || !CheckTakeOff(equipmentSlot))
@@ -1681,7 +1717,14 @@ bool CMyInventory::TakeOffToBag(int equipmentSlot)
     // inventory slot. Without the pick-up nothing is sent, so the
     // server and the local equipment stay the same.
     const int emptySlotIndex = FindEmptySlot(pEquippedItem);
-    if (emptySlotIndex == -1 || !CInventoryCtrl::CreatePickedItem(nullptr, pEquippedItem))
+    if (emptySlotIndex == -1)
+    {
+        // The pad's X has no dragging to show the bag is full: it says so.
+        if (saysWhenFull)
+            g_pSystemLogBox->AddText(I18N::Game::NotEnoughSpacePleaseCheckFreeSpaceInYourInventory, TYPE_ERROR_MESSAGE);
+        return false;
+    }
+    if (!CInventoryCtrl::CreatePickedItem(nullptr, pEquippedItem))
         return false;
 
     CPickedItem* pPickedItem = CInventoryCtrl::GetPickedItem();

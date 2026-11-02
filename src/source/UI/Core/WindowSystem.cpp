@@ -1522,7 +1522,14 @@ void CSystem::Hide(DWORD dwKey)
     }
     else if (dwKey == INTERFACE_AUCTION)
     {
+        // The inventory it opened beside it closes with it, as with an NPC shop.
         m_pNewAuctionWindow->ClosingProcess();
+        if (IsVisible(INTERFACE_INVENTORY_EXT))
+        {
+            Hide(INTERFACE_INVENTORY_EXT);
+        }
+        g_pMainFrame->SetBtnState(MAINFRAME_BTN_MYINVEN, false);
+        m_pNewUIMng->ShowInterface(INTERFACE_INVENTORY, false);
     }
     else if (dwKey == INTERFACE_WINDOW_MENU)
     {
