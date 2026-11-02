@@ -159,6 +159,31 @@ namespace GameLogic::Items
         return HasTag(pItem, ItemTag::Jewel);
     }
 
+    // Items that open into loot: Box of Luck (any level, which covers Kundun boxes and medals),
+    // ribbon and chocolate boxes, pumpkin, Christmas star, firecrackers, play-box, SkyNet box.
+    bool IsContainerItem(const ITEM* pItem)
+    {
+        switch (pItem->Type)
+        {
+        case ITEM_BOX_OF_LUCK:
+        case ITEM_RED_RIBBON_BOX:
+        case ITEM_GREEN_RIBBON_BOX:
+        case ITEM_BLUE_RIBBON_BOX:
+        case ITEM_PINK_CHOCOLATE_BOX:
+        case ITEM_RED_CHOCOLATE_BOX:
+        case ITEM_BLUE_CHOCOLATE_BOX:
+        case ITEM_PUMPKIN_OF_LUCK:
+        case ITEM_CHRISTMAS_STAR:
+        case ITEM_FIRECRACKER:
+        case ITEM_CHERRY_BLOSSOM_PLAYBOX:
+        case ITEM_CHRISTMAS_FIRECRACKER:
+        case ITEM_GOLDEN_BOX:
+            return true;
+        default:
+            return false;
+        }
+    }
+
     bool IsRefineStone(const ITEM* pItem)
     {
         return HasTag(pItem, ItemTag::RefineStone);

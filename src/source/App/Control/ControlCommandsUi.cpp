@@ -67,6 +67,7 @@ constexpr NamedWindow Windows[] = {
     {"gm_panel", mu::ui::window::INTERFACE_GM_PANEL},
     {"titles", mu::ui::window::INTERFACE_TITLES},
     {"pet", mu::ui::window::INTERFACE_PET},
+    {"mu_helper", mu::ui::window::INTERFACE_MUHELPER},
 };
 
 json Pixel(float x, float y)
@@ -137,6 +138,12 @@ constexpr NamedElement Buttons[] = {
     {"battle_pass.tab_rewards", mu::ui::window::INTERFACE_BATTLE_PASS, "#bp_tab_rewards"},
     {"battle_pass.tab_quests", mu::ui::window::INTERFACE_BATTLE_PASS, "#bp_tab_quests"},
     {"battle_pass.close", mu::ui::window::INTERFACE_BATTLE_PASS, "#btn_exit"},
+    // MU Helper settings (Z): the pick-up tab, its boxes checkbox, Initialization (pick-up off, range 8), save, close.
+    {"mu_helper.tab_obtaining", mu::ui::window::INTERFACE_MUHELPER, "#tab_1"},
+    {"mu_helper.pick_boxes", mu::ui::window::INTERFACE_MUHELPER, "#cb_pick_boxes .checkbox-box"},
+    {"mu_helper.init", mu::ui::window::INTERFACE_MUHELPER, "#btn_init"},
+    {"mu_helper.save", mu::ui::window::INTERFACE_MUHELPER, "#btn_save"},
+    {"mu_helper.close", mu::ui::window::INTERFACE_MUHELPER, "#btn_exit"},
 };
 
 struct NamedCommand

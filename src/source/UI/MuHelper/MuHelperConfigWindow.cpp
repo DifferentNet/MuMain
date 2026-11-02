@@ -241,6 +241,7 @@ void CMuHelperConfigWindow::OnToggle(const Rml::String& key)
     else if (key == "pick_ancient") flip(c.bPickAncient);
     else if (key == "pick_zen") flip(c.bPickZen);
     else if (key == "pick_excellent") flip(c.bPickExcellent);
+    else if (key == "pick_boxes") flip(c.bPickContainers);
     else if (key == "pick_extra") flip(c.bPickExtraItems);
     else if (key == "auto_friend") flip(c.bAutoAcceptFriend);
     else if (key == "auto_guild") flip(c.bAutoAcceptGuild);
@@ -462,6 +463,7 @@ void CMuHelperConfigWindow::Reset()
     c.bPickZen = false;
     c.bPickJewel = false;
     c.bPickExcellent = false;
+    c.bPickContainers = false;
     c.bPickAncient = false;
     c.bPickExtraItems = false;
     c.aExtraItems.clear();
@@ -544,6 +546,7 @@ void CMuHelperConfigWindow::BindRmlModel(Rml::DataModelConstructor& c, MuHelperC
     checks.RegisterMember("pick_ancient", &MuHelperConfigChecks::pickAncient);
     checks.RegisterMember("pick_zen", &MuHelperConfigChecks::pickZen);
     checks.RegisterMember("pick_excellent", &MuHelperConfigChecks::pickExcellent);
+    checks.RegisterMember("pick_boxes", &MuHelperConfigChecks::pickBoxes);
     checks.RegisterMember("pick_extra", &MuHelperConfigChecks::pickExtra);
     checks.RegisterMember("auto_friend", &MuHelperConfigChecks::autoFriend);
     checks.RegisterMember("auto_guild", &MuHelperConfigChecks::autoGuild);
@@ -607,6 +610,7 @@ void CMuHelperConfigWindow::BindRmlModel(Rml::DataModelConstructor& c, MuHelperC
     labels.RegisterMember("pick_ancient", &MuHelperConfigLabels::pickAncient);
     labels.RegisterMember("pick_zen", &MuHelperConfigLabels::pickZen);
     labels.RegisterMember("pick_excellent", &MuHelperConfigLabels::pickExcellent);
+    labels.RegisterMember("pick_boxes", &MuHelperConfigLabels::pickBoxes);
     labels.RegisterMember("pick_extra", &MuHelperConfigLabels::pickExtra);
     labels.RegisterMember("auto_friend", &MuHelperConfigLabels::autoFriend);
     labels.RegisterMember("auto_guild", &MuHelperConfigLabels::autoGuild);
@@ -707,6 +711,7 @@ void CMuHelperConfigWindow::BindRmlModel(Rml::DataModelConstructor& c, MuHelperC
     l.pickAncient = Narrow(I18N::Game::SetItem);
     l.pickZen = Narrow(I18N::Game::Zen);
     l.pickExcellent = Narrow(I18N::Game::ExcellentItem);
+    l.pickBoxes = Narrow(I18N::Game::HelperPickBoxes);
     l.pickExtra = Narrow(I18N::Game::AddExtraItem);
     l.autoFriend = Narrow(I18N::Game::AutoAcceptFriend);
     l.autoGuild = Narrow(I18N::Game::AutoAcceptGuildMember);
@@ -813,6 +818,7 @@ void CMuHelperConfigWindow::SyncRmlModel()
     checks.pickAncient = c.bPickAncient;
     checks.pickZen = c.bPickZen;
     checks.pickExcellent = c.bPickExcellent;
+    checks.pickBoxes = c.bPickContainers;
     checks.pickExtra = c.bPickExtraItems;
     checks.autoFriend = c.bAutoAcceptFriend;
     checks.autoGuild = c.bAutoAcceptGuild;

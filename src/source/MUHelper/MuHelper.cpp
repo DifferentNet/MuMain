@@ -1229,7 +1229,7 @@ namespace MUHelper
     bool CMuHelper::PicksUpItems() const
     {
         return m_config.bPickAllItems || m_config.bPickZen || m_config.bPickJewel || m_config.bPickAncient
-            || m_config.bPickExcellent || m_config.bPickExtraItems;
+            || m_config.bPickExcellent || m_config.bPickExtraItems || m_config.bPickContainers;
     }
 
     bool CMuHelper::IsWithinReach(int iTargetId, float fReach) const
@@ -1630,7 +1630,8 @@ namespace MUHelper
         if ((m_config.bPickZen && IsMoneyItem(pItem))
             || (m_config.bPickJewel && GameLogic::Items::IsJewelItem(pItem))
             || (m_config.bPickAncient && IsAncientItem(pItem))
-            || (m_config.bPickExcellent && IsExcellentItem(pItem)))
+            || (m_config.bPickExcellent && IsExcellentItem(pItem))
+            || (m_config.bPickContainers && GameLogic::Items::IsContainerItem(pItem)))
         {
             return true;
         }

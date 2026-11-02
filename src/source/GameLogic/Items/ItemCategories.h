@@ -39,6 +39,7 @@ namespace GameLogic::Items
 
     // Crafting materials
     bool IsJewelItem(const ITEM* pItem);
+    bool IsContainerItem(const ITEM* pItem);
     bool IsRefineStone(const ITEM* pItem);
     bool IsSocketSeedOrSphere(const ITEM* pItem);
     bool IsSocketSeedOrSphereType(int itemType);
