@@ -73,6 +73,9 @@ struct State
     Point windowPlace;
     bool goBack = false;
     int goBackFrames = 0;
+    // A dialog that came up with its windows closed: no place there yet, so the frame starts on the
+    // windows' first target, as a window opening, not on the one nearest the button pressed.
+    bool goFirst = false;
     // Frames since the frame started in a window just opened, -1 once settled (it moved, or time
     // passed); the windows there were then.
     int settleFrames = -1;
@@ -185,9 +188,10 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
         g_state.lostFrames = 0;
     const bool buttonUp = !Pad::Pointer::IsButtonHeld(SDL_BUTTON_LEFT);
     const bool lost = g_state.lostFrames >= 2 && buttonUp;
-    if (dialogClosed && g_state.hasWindowPlace)
+    if (dialogClosed)
     {
         g_state.goBack = true;
+        g_state.goFirst = !g_state.hasWindowPlace;
         g_state.goBackFrames = 0;
     }
     if (g_state.goBack)
@@ -205,7 +209,8 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
         {
             // After a dialog, back to the target nearest where the frame was before it.
             const Point from = g_state.goBack ? g_state.windowPlace : PointerPlace(scale);
-            const int pick = opened ? Pick::First(targets) : Pick::Nearest(targets, from.x, from.y, Anywhere);
+            const int pick = opened || (backNow && g_state.goFirst) ? Pick::First(targets)
+                                                                    : Pick::Nearest(targets, from.x, from.y, Anywhere);
             if (pick != Pick::None)
                 MoveOnto(window, targets[pick], scale);
             here = PointerPlace(scale);
@@ -216,6 +221,7 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
         g_state.settleFrames = opened ? 0 : -1;
         g_state.settleWindows = CountWindows(targets);
         g_state.goBack = false;
+        g_state.goFirst = false;
     }
     const Pad::Step step = g_state.stepper.Take(presses, now);
     for (const Pad::Button button : {Pad::Button::DpadUp, Pad::Button::DpadDown, Pad::Button::DpadLeft,
@@ -274,6 +280,7 @@ void Reset()
     g_state.onDialog = false;
     g_state.hasWindowPlace = false;
     g_state.goBack = false;
+    g_state.goFirst = false;
     g_state.stepper.Reset();
 }
 

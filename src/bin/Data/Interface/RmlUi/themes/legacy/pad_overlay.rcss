@@ -85,6 +85,12 @@ body {
 	color: token(accent-gold);
 	border-bottom: 2dp token(accent-gold);
 }
+/* A button and its label wrap to the next line together. */
+.po-pair {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
 .po-label {
 	margin: 0 12dp 0 5dp;
 	line-height: 22dp;

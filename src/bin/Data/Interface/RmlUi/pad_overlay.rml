@@ -22,11 +22,11 @@
 	</div>
 	<div id="po_top" data-if="hub_open || legend_shown || characters_shown" data-style-right="top_right">
 		<div id="po_characters" data-if="characters_shown">
-			<div class="pad-glyph pad-bumper">LB</div><div class="pad-glyph pad-bumper">RB</div><div class="po-label">{{character_label}}</div>
-			<div class="pad-glyph pad-face pad-a">A</div><div class="po-label">{{play_label}}</div>
-			<div class="pad-glyph pad-face pad-x">X</div><div class="po-label">{{create_label}}</div>
-			<div class="pad-glyph pad-face pad-y">Y</div><div class="po-label">{{delete_label}}</div>
-			<div class="pad-glyph pad-round pad-menu"><div class="pad-menu-line pad-menu-line-1"></div><div class="pad-menu-line pad-menu-line-2"></div><div class="pad-menu-line pad-menu-line-3"></div></div><div class="po-label">{{menu_label}}</div>
+			<div class="po-pair"><div class="pad-glyph pad-bumper">LB</div><div class="pad-glyph pad-bumper">RB</div><div class="po-label">{{character_label}}</div></div>
+			<div class="po-pair"><div class="pad-glyph pad-face pad-a">A</div><div class="po-label">{{play_label}}</div></div>
+			<div class="po-pair"><div class="pad-glyph pad-face pad-x">X</div><div class="po-label">{{create_label}}</div></div>
+			<div class="po-pair"><div class="pad-glyph pad-face pad-y">Y</div><div class="po-label">{{delete_label}}</div></div>
+			<div class="po-pair"><div class="pad-glyph pad-round pad-menu"><div class="pad-menu-line pad-menu-line-1"></div><div class="pad-menu-line pad-menu-line-2"></div><div class="pad-menu-line pad-menu-line-3"></div></div><div class="po-label">{{menu_label}}</div></div>
 		</div>
 		<div id="po_tabs" data-if="hub_open">
 			<div class="pad-glyph pad-bumper">LB</div>
@@ -34,11 +34,11 @@
 			<div class="pad-glyph pad-bumper">RB</div>
 		</div>
 		<div id="po_legend" data-if="legend_shown">
-			<div class="pad-glyph pad-face pad-a" data-if="legend_a">A</div><div class="po-label" data-if="legend_a">{{take_label}}</div>
-			<div class="pad-glyph pad-face pad-x" data-if="legend_item">X</div><div class="po-label" data-if="legend_item">{{equip_label}}</div>
-			<div class="pad-glyph pad-face pad-y" data-if="legend_y">Y</div><div class="po-label" data-if="legend_y">{{card_label}}</div>
-			<div class="pad-glyph pad-face pad-b">B</div><div class="po-label">{{close_label}}</div>
-			<div class="pad-glyph pad-round pad-menu"><div class="pad-menu-line pad-menu-line-1"></div><div class="pad-menu-line pad-menu-line-2"></div><div class="pad-menu-line pad-menu-line-3"></div></div><div class="po-label">{{windows_label}}</div>
+			<div class="po-pair" data-if="legend_a"><div class="pad-glyph pad-face pad-a">A</div><div class="po-label">{{take_label}}</div></div>
+			<div class="po-pair" data-if="legend_item"><div class="pad-glyph pad-face pad-x">X</div><div class="po-label">{{equip_label}}</div></div>
+			<div class="po-pair" data-if="legend_y"><div class="pad-glyph pad-face pad-y">Y</div><div class="po-label">{{card_label}}</div></div>
+			<div class="po-pair"><div class="pad-glyph pad-face pad-b">B</div><div class="po-label">{{close_label}}</div></div>
+			<div class="po-pair"><div class="pad-glyph pad-round pad-menu"><div class="pad-menu-line pad-menu-line-1"></div><div class="pad-menu-line pad-menu-line-2"></div><div class="pad-menu-line pad-menu-line-3"></div></div><div class="po-label">{{windows_label}}</div></div>
 		</div>
 	</div>
 </body>
