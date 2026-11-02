@@ -80,9 +80,11 @@ bool CMuHelperSkillPicker::Render()
     return true;
 }
 
+// Over the party list (5.4): its member cards covered the top icons and took their clicks.
+// Keep in step with mu_helper_skill_picker.rml in UI/RmlBridge/RmlStackingOrder.cpp.
 float CMuHelperSkillPicker::GetLayerDepth()
 {
-    return 5.2f;
+    return 5.45f;
 }
 
 void CMuHelperSkillPicker::FilterByAttackSkills()
