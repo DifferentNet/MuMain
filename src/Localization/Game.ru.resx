@@ -15118,7 +15118,7 @@
     <value>Нажмите — применить один раз, держите — повторять</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
-    <value>Крестовина вверх: MU Helper вкл/выкл (левый стик меняет место охоты). View: карта</value>
+    <value>Крестовина вверх: MU Helper вкл/выкл (левый стик меняет место охоты). View: «Общение» (игроки рядом: трейд, пати, гильдия...); карта в меню</value>
   </data>
   <data name="PadHelpRightClick" xml:space="preserve">
     <value>RS (нажмите правый стик, не наклоняя): правый клик по курсору, на + у стата — много очков</value>
@@ -15521,5 +15521,26 @@
   </data>
   <data name="TouchItemMoveToBag" xml:space="preserve">
     <value>В инвентарь</value>
+  </data>
+  <data name="TouchSocial" xml:space="preserve">
+    <value>Общение</value>
+  </data>
+  <data name="TouchSocialTitle" xml:space="preserve">
+    <value>Игроки рядом</value>
+  </data>
+  <data name="TouchSocialNone" xml:space="preserve">
+    <value>Рядом нет игроков</value>
+  </data>
+  <data name="TouchSocialChosen" xml:space="preserve">
+    <value>%ls: что сделать?</value>
+  </data>
+  <data name="TouchSocialJoinGuild" xml:space="preserve">
+    <value>В гильдию</value>
+  </data>
+  <data name="TouchSocialOutOfReach" xml:space="preserve">
+    <value>Не удалось подойти к %ls</value>
+  </data>
+  <data name="TouchSocialWindows" xml:space="preserve">
+    <value>Окна</value>
   </data>
 </root>

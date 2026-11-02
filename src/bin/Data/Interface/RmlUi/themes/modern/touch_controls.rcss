@@ -11,7 +11,8 @@ body {
 }
 
 #tc_stick, #tc_stick_idle, #tc_stick_base, #tc_quick, #tc_menu_backdrop, #tc_menu_panel, .tc-button, .tc-button *,
-#tc_menu_legend, #tc_menu_legend *, #tc_picker_backdrop, #tc_picker, #tc_picker * {
+#tc_menu_legend, #tc_menu_legend *, #tc_picker_backdrop, #tc_picker, #tc_picker *, #tc_social_backdrop,
+#tc_social_panel, #tc_social_panel * {
 	pointer-events: none;
 }
 
@@ -106,7 +107,7 @@ body {
 	overflow: hidden;
 	white-space: nowrap;
 }
-#tc_menu.open {
+#tc_menu.open, #tc_social.open {
 	border-color: token(accent-gold);
 }
 
@@ -391,6 +392,150 @@ body.pad #tc_pick_legend {
 	position: relative;
 }
 
+/* The Social panel (the players around and what to do with them): under the top row, centred like
+   the menu, over the dimmed screen. The player chosen is gold, the pad's highlight white; the actions
+   dim while no player is chosen. */
+#tc_social_backdrop {
+	position: absolute;
+	z-index: 1;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 110);
+}
+body.socialising #tc_quick {
+	z-index: 0;
+}
+#tc_social_panel {
+	position: absolute;
+	z-index: 3;
+	left: 0;
+	right: 0;
+	top: 8rem;
+	width: 652rem;
+	max-width: 96%;
+	max-height: 96%;
+	margin: 0 auto;
+	padding: 8rem;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	border: 1rem token(border-frame);
+	border-radius: 6rem;
+	background-color: rgba(6, 7, 6, 245);
+	color: token(text-primary);
+	font-family: "token(font-body)";
+	font-size: 13rem;
+	font-effect: shadow(0rem 1rem #000000);
+	overflow: hidden;
+}
+#tc_soc_head, #tc_soc_windows {
+	flex-shrink: 0;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 6rem;
+}
+#tc_soc_head {
+	height: 34rem;
+}
+#tc_soc_title {
+	flex: 1 1 0;
+	font-size: 15rem;
+	color: token(accent-gold-hover);
+	white-space: nowrap;
+	overflow: hidden;
+}
+#tc_soc_players, #tc_soc_actions {
+	flex-shrink: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6rem;
+	margin-top: 4rem;
+}
+.tc-soc-player {
+	position: relative;
+	width: 150rem;
+	height: 40rem;
+	padding: 2rem 6rem;
+	border-width: 1rem;
+	border-radius: 6rem;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	text-align: left;
+}
+.tc-soc-name {
+	font-size: 13rem;
+	line-height: 16rem;
+	white-space: nowrap;
+	overflow: hidden;
+}
+.tc-soc-guild {
+	color: token(text-secondary);
+	font-size: 11rem;
+	line-height: 14rem;
+	white-space: nowrap;
+	overflow: hidden;
+}
+.tc-soc-player.chosen {
+	border-color: token(accent-gold-hover);
+	background-color: rgba(196, 154, 60, 110);
+}
+#tc_soc_hint {
+	flex-shrink: 0;
+	margin-top: 6rem;
+	font-size: 12rem;
+	line-height: 15rem;
+	white-space: nowrap;
+	overflow: hidden;
+}
+.tc-soc-act {
+	position: relative;
+	width: 100rem;
+	height: 38rem;
+	padding: 0 4rem;
+	border-radius: 4rem;
+	display: block;
+	text-align: center;
+	line-height: 38rem;
+	white-space: nowrap;
+	overflow: hidden;
+}
+#tc_soc_actions.off .tc-soc-act {
+	opacity: 0.4;
+}
+#tc_soc_windows {
+	margin-top: 8rem;
+	padding-top: 6rem;
+	border-top: 1rem rgba(214, 210, 198, 50);
+}
+#tc_soc_windows_label {
+	color: token(text-secondary);
+	font-size: 12rem;
+	margin-right: 4rem;
+}
+.tc-soc-player.focused, .tc-soc-act.focused, #tc_soc_close.focused {
+	border-color: rgba(255, 255, 255, 235);
+	background-color: rgba(255, 255, 255, 40);
+}
+#tc_soc_legend {
+	display: none;
+	flex-shrink: 0;
+	height: 22rem;
+	padding-top: 2rem;
+	flex-direction: row;
+	align-items: center;
+	font-size: 12rem;
+}
+body.pad #tc_soc_legend {
+	display: flex;
+}
+#tc_soc_legend .pad-glyph {
+	position: relative;
+}
+
 .tc-potion {
 	width: 48rem;
 	height: 48rem;
@@ -633,18 +778,18 @@ body.pad #tc_pick_legend {
 
 	/* The top row: each button as wide as its label, from 44 up to 72 units, the row's room shared
 	   out up to 72 units a button (a wide phone looks as before). Where the row is too short for the
-	   labels at 12 units, they get smaller: the three long ones (Russian "Инвентарь", "Персонаж",
-	   "Телепорт": 14.1 times the font size together in Liberation Sans, 4 % more here for other
+	   labels at 12 units, they get smaller: the four long ones (Russian "Инвентарь", "Персонаж",
+	   "Общение", "Телепорт": 18.1 times the font size together in Liberation Sans, 4 % more here for other
 	   fonts) get what the four short ones (44 units each), the gaps and the borders leave. */
 	.tc-quick {
 		width: auto;
 		flex: 1 1 auto;
 		max-width: 72rem;
-		font-size: clamp(9rem, (100vw - 214dp - 284rem) / 14.6, 12rem);
+		font-size: clamp(9rem, (100vw - 214dp - 292rem) / 18.8, 12rem);
 	}
-	/* With a pad, Back, Menu and Map carry its glyph (22 units) beside their short labels. */
+	/* With a pad, Back, Menu and Social carry its glyph (22 units) beside their short labels. */
 	body.pad .tc-quick {
-		font-size: clamp(9rem, (100vw - 214dp - 230rem) / 23.3, 12rem);
+		font-size: clamp(9rem, (100vw - 214dp - 238rem) / 27.3, 12rem);
 	}
 
 	/* Pick up as a pill as tall as Auto: "Поднять" needs 48 units at 12. */
@@ -679,6 +824,17 @@ body.pad #tc_pick_legend {
 		font-size: 12rem;
 		line-height: 15rem;
 	}
+	/* The Social panel's buttons a finger tall. */
+	#tc_soc_head {
+		height: 44rem;
+	}
+	.tc-soc-player {
+		height: 44rem;
+	}
+	.tc-soc-act {
+		height: 44rem;
+		font-size: 12rem;
+	}
 	.tc-gauge-small {
 		height: 16rem;
 	}
@@ -694,7 +850,7 @@ body.pad #tc_pick_legend {
 body.no-touch #tc_stick {
 	display: none;
 }
-body.pad #tc_back, body.pad #tc_menu, body.pad #tc_map {
+body.pad #tc_back, body.pad #tc_menu, body.pad #tc_social {
 	padding-left: 22rem;
 }
 .tc-quick .pad-glyph { left: 1rem; top: 6rem; }

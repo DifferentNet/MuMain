@@ -27,7 +27,7 @@ namespace Core::Input::Touch
 // The id the hit test answers when no control is under the point.
 inline constexpr int NoControl = -1;
 // Controls have ids 0 .. MaxControls - 1.
-inline constexpr int MaxControls = 96;
+inline constexpr int MaxControls = 128;
 
 // What a control's finger did. The counters only grow: a reader compares them with the values it saw
 // last, so a tap that pressed and released within one frame is not lost.

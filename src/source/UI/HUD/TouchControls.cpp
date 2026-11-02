@@ -23,6 +23,7 @@
 #include "UI/Mobile/HeroFrame.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Mobile/PhoneHudLayout.h"
+#include "UI/Mobile/SocialActions.h"
 #include "UI/Mobile/SkillArrange.h"
 #include "UI/Mobile/TouchTarget.h"
 #include "UI/Mobile/TouchUnit.h"
@@ -100,6 +101,9 @@ void OpenSystemMenu()
     PlayBuffer(SOUND_CLICK01);
 }
 
+// The Social panel (defined with the panel below): the players around and what to do with them.
+void OpenSocialPanel();
+
 // The PK switch (GameLogic/Touch/TouchActions.h): the attack button and the skills go for players
 // too, as Ctrl held does on a keyboard. The party stays spared.
 void TogglePk()
@@ -145,8 +149,8 @@ const MenuItem MenuItems[] = {
     {&I18N::Game::TouchMenuSystem, 0, &OpenSystemMenu},
     // The chat line: with a pad, its keyboard (UI/HUD/PadKeyboard) comes up for it.
     {&I18N::Game::TouchChat, VK_RETURN},
-    // The player commands (trade, party, whisper, duel...): one is picked, then a tap on the player.
-    {&I18N::Game::TouchMenuPlayer, 'D'},
+    // The Social panel, as its own button opens it: trade, party, whisper, duel... with a player around.
+    {&I18N::Game::TouchSocial, 0, &OpenSocialPanel},
     // Its label says whether the switch is on (MenuLabel()).
     {&I18N::Game::TouchMenuPkOff, 0, &TogglePk},
     // Shown to game masters only (menu_gm in the markup).
@@ -161,6 +165,22 @@ const wchar_t* MenuLabel(int item)
     return *MenuItems[item].label;
 }
 
+// The Social panel's players at most, and its window buttons (the party, the guild, the friends).
+constexpr int MaxSocialPlayers = 6;
+constexpr int SocialActionCount = UI::Mobile::Social::ActionCount;
+
+struct SocialWindow
+{
+    const wchar_t* const* label;
+    int key;
+};
+constexpr SocialWindow SocialWindows[] = {
+    {&I18N::Game::TouchMenuParty, 'P'},
+    {&I18N::Game::TouchMenuGuild, 'G'},
+    {&I18N::Game::TouchMenuFriends, 'F'},
+};
+constexpr int SocialWindowCount = static_cast<int>(std::size(SocialWindows));
+
 // The controls' ids for Core::Input::Touch.
 enum ControlId : int
 {
@@ -170,6 +190,8 @@ enum ControlId : int
     PickupControl = FirstSkillControl + SkillButtons,
     AutoControl,
     MenuControl,
+    // The top row's Social button: it opens the Social panel.
+    SocialControl,
     FirstKeyControl,
     FirstMenuItemControl = FirstKeyControl + KeyButtonCount,
     // The screen around the open menu: a tap there shuts it.
@@ -185,7 +207,16 @@ enum ControlId : int
     PickerPrevControl,
     PickerNextControl,
     FirstPickControl,
-    ControlCount = FirstPickControl + MaxPickEntries,
+    PickEndControl = FirstPickControl + MaxPickEntries,
+    // The Social panel: the screen around it (a tap there shuts it), its panel, its Close button, the
+    // players listed, the actions and the window buttons.
+    SocialBackdropControl = PickEndControl,
+    SocialPanelControl,
+    SocialCloseControl,
+    FirstSocialPlayerControl,
+    FirstSocialActionControl = FirstSocialPlayerControl + MaxSocialPlayers,
+    FirstSocialWindowControl = FirstSocialActionControl + SocialActionCount,
+    ControlCount = FirstSocialWindowControl + SocialWindowCount,
 };
 static_assert(ControlCount <= Touch::MaxControls);
 
@@ -206,6 +237,16 @@ const std::array<std::string, MenuItemCount> MenuItemElements = NumberedNames<Me
 const std::array<std::string, MenuItemCount> MenuLabelFields = NumberedNames<MenuItemCount>("menu_label_");
 // The picker's entries, in the order of the page's skills (their ids are bound, PickerEntry::id).
 const std::array<std::string, MaxPickEntries> PickElements = NumberedNames<MaxPickEntries>("tc_pick_");
+// The Social panel's players (bound ids, SocialEntry::id), actions and window buttons.
+const std::array<std::string, MaxSocialPlayers> SocialPlayerElements = NumberedNames<MaxSocialPlayers>("tc_soc_player_");
+const std::array<std::string, SocialActionCount> SocialActionElements = NumberedNames<SocialActionCount>("tc_soc_act_");
+const std::array<std::string, SocialActionCount> SocialActionLabelFields =
+    NumberedNames<SocialActionCount>("soc_act_label_");
+const std::array<std::string, SocialActionCount> SocialActionShownFields =
+    NumberedNames<SocialActionCount>("soc_act_shown_");
+const std::array<std::string, SocialWindowCount> SocialWindowElements = NumberedNames<SocialWindowCount>("tc_soc_win_");
+const std::array<std::string, SocialWindowCount> SocialWindowLabelFields =
+    NumberedNames<SocialWindowCount>("soc_win_label_");
 
 // Each control's element in touch_controls.rml.
 const char* ControlElement(int control)
@@ -222,6 +263,14 @@ const char* ControlElement(int control)
         return "tc_auto";
     case MenuControl:
         return "tc_menu";
+    case SocialControl:
+        return "tc_social";
+    case SocialBackdropControl:
+        return "tc_social_backdrop";
+    case SocialPanelControl:
+        return "tc_social_panel";
+    case SocialCloseControl:
+        return "tc_soc_close";
     case MenuBackdropControl:
         return "tc_menu_backdrop";
     case SkillEditControl:
@@ -245,6 +294,12 @@ const char* ControlElement(int control)
         return SkillElements[control - FirstSkillControl];
     if (control >= FirstKeyControl && control < FirstMenuItemControl)
         return KeyButtons[control - FirstKeyControl].element;
+    if (control >= FirstSocialWindowControl)
+        return SocialWindowElements[control - FirstSocialWindowControl].c_str();
+    if (control >= FirstSocialActionControl)
+        return SocialActionElements[control - FirstSocialActionControl].c_str();
+    if (control >= FirstSocialPlayerControl)
+        return SocialPlayerElements[control - FirstSocialPlayerControl].c_str();
     if (control >= FirstPickControl)
         return PickElements[control - FirstPickControl].c_str();
     return MenuItemElements[control - FirstMenuItemControl].c_str();
@@ -284,6 +339,19 @@ struct PickerEntry
     bool here = false;
 
     bool operator==(const PickerEntry&) const = default;
+};
+
+// A player the Social panel lists.
+struct SocialEntry
+{
+    // The entry's element: tc_soc_player_<n>.
+    Rml::String id;
+    Rml::String name;
+    Rml::String guild;
+    // The one the actions go to.
+    bool chosen = false;
+
+    bool operator==(const SocialEntry&) const = default;
 };
 
 struct ControlsModel
@@ -341,6 +409,21 @@ struct ControlsModel
     Rml::String pickerNoSkillsLabel;
     Rml::String padChooseLabel;
     Rml::String skillsLabel;
+    // The Social panel: open, the players around, the hint over the actions, the actions offered (off
+    // with no player chosen), the window buttons, and the pad's highlight (its element's id).
+    bool socialOpen = false;
+    std::vector<SocialEntry> socialPlayers;
+    bool socialNone = false;
+    bool socialNoChoice = true;
+    Rml::String socialLabel;
+    Rml::String socialTitle;
+    Rml::String socialHint;
+    Rml::String socialCloseLabel;
+    Rml::String socialWindowsLabel;
+    std::array<Rml::String, SocialActionCount> socialActionLabels;
+    std::array<bool, SocialActionCount> socialActionShown{};
+    std::array<Rml::String, SocialWindowCount> socialWindowLabels;
+    Rml::String socialFocus;
     // The phone view's hero frame.
     UI::Mobile::HeroFrame::Model hero;
 };
@@ -420,6 +503,30 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     c.Bind("picker_no_skills_label", &model.pickerNoSkillsLabel);
     c.Bind("pad_choose_label", &model.padChooseLabel);
     c.Bind("skills_label", &model.skillsLabel);
+
+    auto social = c.RegisterStruct<SocialEntry>();
+    social.RegisterMember("id", &SocialEntry::id);
+    social.RegisterMember("name", &SocialEntry::name);
+    social.RegisterMember("guild", &SocialEntry::guild);
+    social.RegisterMember("chosen", &SocialEntry::chosen);
+    c.RegisterArray<std::vector<SocialEntry>>();
+    c.Bind("social_open", &model.socialOpen);
+    c.Bind("social_players", &model.socialPlayers);
+    c.Bind("social_none", &model.socialNone);
+    c.Bind("social_no_choice", &model.socialNoChoice);
+    c.Bind("social_label", &model.socialLabel);
+    c.Bind("social_title", &model.socialTitle);
+    c.Bind("social_hint", &model.socialHint);
+    c.Bind("social_close_label", &model.socialCloseLabel);
+    c.Bind("social_windows_label", &model.socialWindowsLabel);
+    for (int action = 0; action < SocialActionCount; ++action)
+    {
+        c.Bind(SocialActionLabelFields[action], &model.socialActionLabels[action]);
+        c.Bind(SocialActionShownFields[action], &model.socialActionShown[action]);
+    }
+    for (int window = 0; window < SocialWindowCount; ++window)
+        c.Bind(SocialWindowLabelFields[window], &model.socialWindowLabels[window]);
+    c.Bind("social_focus", &model.socialFocus);
     UI::Mobile::HeroFrame::Bind(c, model.hero);
 }
 
@@ -603,7 +710,7 @@ int MenuHitTest(float x, float y, float slop)
 // the skill buttons it sets, and the screen around, which shuts it.
 int PickerHitTest(float x, float y, float slop)
 {
-    for (int control = FirstPickControl; control < ControlCount; ++control)
+    for (int control = FirstPickControl; control < PickEndControl; ++control)
     {
         if (Inside(g_boxes[control], x, y, 0.f))
             return control;
@@ -622,6 +729,26 @@ int PickerHitTest(float x, float y, float slop)
     return Inside(g_boxes[PickerBackdropControl], x, y, 0.f) ? PickerBackdropControl : Touch::NoControl;
 }
 
+// While the Social panel is open only it takes fingers: its players, actions and buttons, its panel
+// around them, the Social button that shuts it, and the screen around, which shuts it.
+int SocialHitTest(float x, float y, float slop)
+{
+    const float panelSlop = PickSlopUnits * UI::Mobile::TouchUnit::Pixels();
+    for (const float margin : {0.f, panelSlop})
+    {
+        for (int control = SocialCloseControl; control < ControlCount; ++control)
+        {
+            if (Inside(g_boxes[control], x, y, margin))
+                return control;
+        }
+    }
+    if (Inside(g_boxes[SocialPanelControl], x, y, 0.f))
+        return SocialPanelControl;
+    if (Inside(g_boxes[SocialControl], x, y, slop))
+        return SocialControl;
+    return Inside(g_boxes[SocialBackdropControl], x, y, 0.f) ? SocialBackdropControl : Touch::NoControl;
+}
+
 // Which control a finger landing at a window pixel belongs to.
 int HitTest(float x, float y)
 {
@@ -636,6 +763,8 @@ int HitTest(float x, float y)
     const float slop = TouchSlopUnits * UI::Mobile::TouchUnit::Pixels();
     if (g_View.GetModel().pickerOpen)
         return PickerHitTest(x, y, slop);
+    if (g_View.GetModel().socialOpen)
+        return SocialHitTest(x, y, slop);
     if (g_View.GetModel().menuOpen)
         return MenuHitTest(x, y, slop);
     // The buttons before the joystick's area, which they stand in. The Skills button takes a finger
@@ -667,11 +796,13 @@ void MeasureBoxes()
     const ControlsModel& model = g_View.GetModel();
     for (int control = 0; control < ControlCount; ++control)
     {
-        // The menu and the picker are not in the document while shut (data-if): no search for their
-        // sixty pieces through the whole of it every frame.
+        // The menu, the picker and the Social panel are not in the document while shut (data-if): no
+        // search for their eighty pieces through the whole of it every frame.
         const bool menuPiece = control >= FirstMenuItemControl && control <= MenuBackdropControl;
-        const bool pickerPiece = control >= PickerBackdropControl;
-        const bool shut = (menuPiece && !model.menuOpen) || (pickerPiece && !model.pickerOpen);
+        const bool pickerPiece = control >= PickerBackdropControl && control < PickEndControl;
+        const bool socialPiece = control >= SocialBackdropControl;
+        const bool shut = (menuPiece && !model.menuOpen) || (pickerPiece && !model.pickerOpen) ||
+                          (socialPiece && !model.socialOpen);
         g_boxes[control] = shut ? ControlBox{} : BoxOf(document, ControlElement(control));
     }
     if (!model.pickerOpen)
@@ -679,7 +810,7 @@ void MeasureBoxes()
 
     // A picker entry the grid cuts off (a page laid out before the grid was measured) takes no finger.
     const ControlBox grid = BoxOf(document, "tc_pick_grid");
-    for (int control = FirstPickControl; control < ControlCount; ++control)
+    for (int control = FirstPickControl; control < PickEndControl; ++control)
     {
         ControlBox& box = g_boxes[control];
         if (box.shown && (!grid.shown || box.right > grid.right + 1.f || box.bottom > grid.bottom + 1.f))
@@ -772,6 +903,18 @@ void SyncLabels(ControlsModel& model)
     SyncLabel(model.pickerClearLabel, I18N::Game::TouchPickerClear, "picker_clear_label");
     SyncLabel(model.pickerDoneLabel, I18N::Game::TouchPickerDone, "picker_done_label");
     SyncLabel(model.pickerNoSkillsLabel, I18N::Game::TouchPickerNoSkills, "picker_no_skills_label");
+    SyncLabel(model.socialLabel, I18N::Game::TouchSocial, "social_label");
+    SyncLabel(model.socialTitle, I18N::Game::TouchSocialTitle, "social_title");
+    SyncLabel(model.socialCloseLabel, I18N::Game::PadClose, "social_close_label");
+    SyncLabel(model.socialWindowsLabel, I18N::Game::TouchSocialWindows, "social_windows_label");
+    for (int action = 0; action < SocialActionCount; ++action)
+    {
+        SyncLabel(model.socialActionLabels[action],
+                  UI::Mobile::Social::Label(static_cast<UI::Mobile::Social::Action>(action)),
+                  SocialActionLabelFields[action].c_str());
+    }
+    for (int window = 0; window < SocialWindowCount; ++window)
+        SyncLabel(model.socialWindowLabels[window], *SocialWindows[window].label, SocialWindowLabelFields[window].c_str());
     for (int item = 0; item < MenuItemCount; ++item)
         SyncLabel(model.menuLabels[item], MenuLabel(item), MenuLabelFields[item].c_str());
 }
@@ -940,8 +1083,8 @@ int PadControl(UI::HUD::TouchControls::PadButton button)
         return KeyControl("tc_potion_q");
     case PadButton::PotionW:
         return KeyControl("tc_potion_w");
-    case PadButton::Map:
-        return KeyControl("tc_map");
+    case PadButton::Social:
+        return SocialControl;
     case PadButton::Back:
         return KeyControl("tc_back");
     default:
@@ -1421,6 +1564,195 @@ void UpdateMenu(ControlsModel& model)
     }
 }
 
+// The Social panel (the Social button, Menu -> Social, the pad's View): the players around, nearest
+// first, and what to do with the one chosen (UI/Mobile/SocialActions), with the party, guild and friends
+// windows at its foot. The nearest is chosen until a tap chooses another; an action goes to the chosen
+// player and shuts the panel.
+struct SocialPanel
+{
+    // The players listed, by entry: their keys.
+    std::array<int, MaxSocialPlayers> keys{};
+    int count = 0;
+    // The player chosen (-1 none), and whether a tap chose them (else the nearest is).
+    int chosenKey = -1;
+    bool chosenByHand = false;
+    // The pad's highlight: a control, or none.
+    int focus = Touch::NoControl;
+};
+SocialPanel g_social;
+
+void OpenSocial(ControlsModel& model)
+{
+    g_follow.Drop();
+    ClosePicker(model);
+    SetField(model.menuOpen, false, "menu_open");
+    SetField(model.menuFocus, -1, "menu_focus");
+    g_social.chosenKey = UI::Mobile::Social::AimedPlayer();
+    g_social.chosenByHand = g_social.chosenKey >= 0;
+    g_social.focus = Touch::NoControl;
+    SetField(model.socialOpen, true, "social_open");
+    PlayBuffer(SOUND_CLICK01);
+    RestFingerPointer();
+}
+
+void OpenSocialPanel()
+{
+    OpenSocial(g_View.GetModel());
+}
+
+void CloseSocial(ControlsModel& model)
+{
+    if (!model.socialOpen)
+        return;
+    SetField(model.socialOpen, false, "social_open");
+    SetField(model.socialFocus, Rml::String(), "social_focus");
+    g_social.focus = Touch::NoControl;
+    RestFingerPointer();
+}
+
+// What the pad's highlight moves over: the players, the actions offered, the window buttons, Close.
+std::vector<int> SocialFocusables(const ControlsModel& model)
+{
+    std::vector<int> controls;
+    for (int entry = 0; entry < g_social.count; ++entry)
+        controls.push_back(FirstSocialPlayerControl + entry);
+    for (int action = 0; action < SocialActionCount; ++action)
+    {
+        if (model.socialActionShown[action])
+            controls.push_back(FirstSocialActionControl + action);
+    }
+    for (int window = 0; window < SocialWindowCount; ++window)
+        controls.push_back(FirstSocialWindowControl + window);
+    controls.push_back(SocialCloseControl);
+    return controls;
+}
+
+void MoveSocialFocus(ControlsModel& model, int dx, int dy)
+{
+    if (g_social.focus == Touch::NoControl)
+    {
+        // Lit as the panel opens, without a click of its own: on the first action with a player,
+        // else on the first window button.
+        g_social.focus = g_social.count > 0 ? FirstSocialActionControl : FirstSocialWindowControl;
+    }
+    else if (dx != 0 || dy != 0)
+    {
+        const int next = NextThatWay(SocialFocusables(model), g_social.focus, dx, dy);
+        if (next == g_social.focus)
+            return;
+        g_social.focus = next;
+        PlayBuffer(SOUND_CLICK01);
+    }
+    SetField(model.socialFocus, Rml::String(ControlElement(g_social.focus)), "social_focus");
+}
+
+// The players listed, the one chosen, the hint and the actions offered.
+void ShowSocial(ControlsModel& model)
+{
+    namespace Social = UI::Mobile::Social;
+    const std::vector<Social::Player> players = Social::NearbyPlayers(MaxSocialPlayers);
+    if (g_social.chosenKey >= 0 && !Social::IsAround(g_social.chosenKey))
+    {
+        g_social.chosenKey = -1;
+        g_social.chosenByHand = false;
+    }
+    // Not chosen by a tap: the nearest, as the list orders them.
+    if (!g_social.chosenByHand)
+        g_social.chosenKey = players.empty() ? -1 : players.front().key;
+
+    g_social.count = static_cast<int>(players.size());
+    std::vector<SocialEntry> entries;
+    entries.reserve(players.size());
+    const wchar_t* chosenName = nullptr;
+    for (int entry = 0; entry < g_social.count; ++entry)
+    {
+        const Social::Player& player = players[static_cast<size_t>(entry)];
+        g_social.keys[entry] = player.key;
+        const bool chosen = player.key == g_social.chosenKey;
+        if (chosen)
+            chosenName = player.name.c_str();
+        entries.push_back({SocialPlayerElements[entry], StringUtils::WideToNarrow(player.name.c_str()),
+                           StringUtils::WideToNarrow(player.guild.c_str()), chosen});
+    }
+    if (entries != model.socialPlayers)
+    {
+        model.socialPlayers = std::move(entries);
+        g_View.MarkDirty("social_players");
+    }
+    SetField(model.socialNone, players.empty(), "social_none");
+    SetField(model.socialNoChoice, chosenName == nullptr, "social_no_choice");
+    wchar_t hint[128];
+    if (chosenName != nullptr)
+        mu_swprintf_s(hint, I18N::Game::TouchSocialChosen, chosenName);
+    else
+        mu_swprintf_s(hint, L"%ls", I18N::Game::TouchSocialNone);
+    SyncLabel(model.socialHint, hint, "social_hint");
+    for (int action = 0; action < SocialActionCount; ++action)
+    {
+        SetField(model.socialActionShown[action], Social::Offered(static_cast<Social::Action>(action)),
+                 SocialActionShownFields[action].c_str());
+    }
+
+    // A highlight on what no longer shows moves to what does.
+    int& focus = g_social.focus;
+    if (focus >= FirstSocialPlayerControl && focus < FirstSocialActionControl &&
+        focus - FirstSocialPlayerControl >= g_social.count)
+        focus = g_social.count > 0 ? FirstSocialPlayerControl + g_social.count - 1 : FirstSocialWindowControl;
+    if (focus >= FirstSocialActionControl && focus < FirstSocialWindowControl &&
+        !model.socialActionShown[focus - FirstSocialActionControl])
+        focus = FirstSocialActionControl;
+    SetField(model.socialFocus, Rml::String(focus == Touch::NoControl ? "" : ControlElement(focus)), "social_focus");
+}
+
+// The panel's taps and the pad's presses on it, then what it shows.
+void UpdateSocial(ControlsModel& model)
+{
+    namespace Social = UI::Mobile::Social;
+    const bool backdrop = TakePress(SocialBackdropControl);
+    const bool close = TakePress(SocialCloseControl);
+    // The Social button (the pad's View) shuts it as it opened it, and the pad's Menu as it shuts the
+    // menu.
+    const bool button = TakePress(SocialControl);
+    const bool menu = TakePress(MenuControl);
+    TakePress(SocialPanelControl);
+    if (close || button || menu)
+        PlayBuffer(SOUND_CLICK01);
+    if (backdrop || close || button || menu || IsDialogOpen())
+    {
+        CloseSocial(model);
+        return;
+    }
+
+    for (int entry = 0; entry < MaxSocialPlayers; ++entry)
+    {
+        if (!TakePress(FirstSocialPlayerControl + entry) || entry >= g_social.count)
+            continue;
+        g_social.chosenKey = g_social.keys[entry];
+        g_social.chosenByHand = true;
+        PlayBuffer(SOUND_CLICK01);
+    }
+    for (int action = 0; action < SocialActionCount; ++action)
+    {
+        if (!TakePress(FirstSocialActionControl + action) || !model.socialActionShown[action] ||
+            g_social.chosenKey < 0)
+            continue;
+        PlayBuffer(SOUND_CLICK01);
+        CloseSocial(model);
+        if (!Social::RefusedHere())
+            Social::Start(static_cast<Social::Action>(action), g_social.chosenKey);
+        return;
+    }
+    for (int window = 0; window < SocialWindowCount; ++window)
+    {
+        if (!TakePress(FirstSocialWindowControl + window))
+            continue;
+        CloseSocial(model);
+        Touch::TapKey(SocialWindows[window].key);
+        return;
+    }
+    ShowSocial(model);
+}
+
 double Now()
 {
     return std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
@@ -1529,6 +1861,9 @@ void UpdateButtons(ControlsModel& model)
             Touch::TapKey(KeyButtons[button].key);
     }
 
+    if (TakePress(SocialControl) && !IsDialogOpen())
+        OpenSocial(model);
+
     UpdateMenu(model);
 
     SetField(model.helperOn, MUHelper::g_MuHelper.IsActive(), "helper_on");
@@ -1556,6 +1891,8 @@ void Hide()
     g_follow.Drop();
     ControlsModel& model = g_View.GetModel();
     ClosePicker(model);
+    CloseSocial(model);
+    UI::Mobile::Social::Cancel();
     SetField(model.menuOpen, false, "menu_open");
     SetField(model.menuFocus, -1, "menu_focus");
     SetField(model.stickActive, false, "stick_active");
@@ -1585,6 +1922,7 @@ void Update()
     {
         Hide();
         GameLogic::Touch::Reset();
+        UI::Mobile::Social::Cancel();
         ForgetFingers();
         ForgetPad();
         g_binding = SkillBinding{};
@@ -1628,10 +1966,14 @@ void Update()
     // The buttons before the stick: a cast that stands the character holds this frame's walk off.
     if (model.pickerOpen)
         UpdatePicker(model);
+    else if (model.socialOpen)
+        UpdateSocial(model);
     else
         UpdateButtons(model);
     UpdateStick(model);
-    SyncDepth(document, model.menuOpen || model.pickerOpen);
+    // A walk to a player for an action of the Social panel; the stick takes over from it.
+    UI::Mobile::Social::Update(GameLogic::Touch::IsSteering());
+    SyncDepth(document, model.menuOpen || model.pickerOpen || model.socialOpen);
     UI::Mobile::HeroFrame::Sync(model.hero, [](const char* field) { g_View.MarkDirty(field); });
     // The boxes the next fingers are tested against: where this frame lays the controls out.
     MeasureBoxes();
@@ -1663,7 +2005,8 @@ void ReleasePad()
 
 bool IsMenuOpen()
 {
-    return g_shown && (g_View.GetModel().menuOpen || g_View.GetModel().pickerOpen);
+    const ControlsModel& model = g_View.GetModel();
+    return g_shown && (model.menuOpen || model.pickerOpen || model.socialOpen);
 }
 
 void CloseMenu()
@@ -1672,6 +2015,7 @@ void CloseMenu()
     SetField(model.menuOpen, false, "menu_open");
     SetField(model.menuFocus, -1, "menu_focus");
     ClosePicker(model);
+    CloseSocial(model);
 }
 
 void MoveMenuFocus(int dx, int dy)
@@ -1682,6 +2026,11 @@ void MoveMenuFocus(int dx, int dy)
     if (model.pickerOpen)
     {
         MovePickerFocus(model, dx, dy);
+        return;
+    }
+    if (model.socialOpen)
+    {
+        MoveSocialFocus(model, dx, dy);
         return;
     }
     // The first item lights as the menu opens, without a click of its own: the menu's was heard.
@@ -1702,6 +2051,12 @@ void ActivateMenuFocus()
     {
         if (g_picker.focus >= 0 && g_picker.focus < ControlCount)
             ++g_pad.presses[g_picker.focus];
+        return;
+    }
+    if (g_View.GetModel().socialOpen)
+    {
+        if (g_social.focus >= 0 && g_social.focus < ControlCount)
+            ++g_pad.presses[g_social.focus];
         return;
     }
     const int focus = g_View.GetModel().menuFocus;

@@ -79,7 +79,7 @@ constexpr Mapping Mappings[] = {
     {Button::DpadUp, PadButton::Auto},
     {Button::DpadLeft, PadButton::PotionQ},
     {Button::DpadRight, PadButton::PotionW},
-    {Button::View, PadButton::Map},
+    {Button::View, PadButton::Social},
     {Button::Menu, PadButton::Menu},
 };
 
@@ -337,8 +337,9 @@ void TellOnce()
     g_pSystemLogBox->AddText(I18N::Game::PadConnected, mu::ui::window::TYPE_SYSTEM_MESSAGE);
 }
 
-// The menu open: the stick and the d-pad move its highlight, A opens the item, B closes the menu,
-// Menu shuts it as it opened it. Nothing else acts: the pointer and its buttons rest too.
+// The menu (or the skill picker, or the Social panel) open: the stick and the d-pad move its highlight,
+// A opens the item, B closes the menu, Menu (View for the Social panel) shuts it as it opened it.
+// Nothing else acts: the pointer and its buttons rest too.
 void PlayMenu(SDL_Window* window, const Presses& presses, Clock::time_point now)
 {
     StopWalking();
@@ -346,7 +347,9 @@ void PlayMenu(SDL_Window* window, const Presses& presses, Clock::time_point now)
     EndPress(window, g_state.rightTrigger, g_state.a);
     Pointer::SetButton(window, SDL_BUTTON_RIGHT, false);
     for (const Mapping& mapping : Mappings)
-        Controls::SetPadHeld(mapping.control, mapping.control == PadButton::Menu && Held(Button::Menu));
+        // Menu and View shut what they opened.
+        Controls::SetPadHeld(mapping.control, (mapping.control == PadButton::Menu || mapping.control == PadButton::Social) &&
+                                                  Held(mapping.pad));
     WaitForRelease();
 
     Controls::MoveMenuFocus(0, 0);

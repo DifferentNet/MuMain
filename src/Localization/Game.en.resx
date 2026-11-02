@@ -15495,7 +15495,7 @@
     <value>Tap to use a skill once, hold to repeat it</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
-    <value>D-pad up: MU Helper on and off (the left stick moves where it hunts). View: the map</value>
+    <value>D-pad up: MU Helper on and off (the left stick moves where it hunts). View: Social (players around: trade, party, guild...); the map is in the menu</value>
   </data>
   <data name="PadHelpRightClick" xml:space="preserve">
     <value>RS (click the right stick in, centred): right click at the pointer, on a stat's + many points</value>
@@ -15859,5 +15859,26 @@
   </data>
   <data name="TouchItemMoveToBag" xml:space="preserve">
     <value>Move to bag</value>
+  </data>
+  <data name="TouchSocial" xml:space="preserve">
+    <value>Social</value>
+  </data>
+  <data name="TouchSocialTitle" xml:space="preserve">
+    <value>Players nearby</value>
+  </data>
+  <data name="TouchSocialNone" xml:space="preserve">
+    <value>No players nearby</value>
+  </data>
+  <data name="TouchSocialChosen" xml:space="preserve">
+    <value>%ls: what to do?</value>
+  </data>
+  <data name="TouchSocialJoinGuild" xml:space="preserve">
+    <value>Join guild</value>
+  </data>
+  <data name="TouchSocialOutOfReach" xml:space="preserve">
+    <value>Could not reach %ls</value>
+  </data>
+  <data name="TouchSocialWindows" xml:space="preserve">
+    <value>Windows</value>
   </data>
 </root>
