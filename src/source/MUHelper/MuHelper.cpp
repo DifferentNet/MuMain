@@ -138,6 +138,7 @@ namespace MUHelper
         m_mapSupportFailures.clear();
         m_mapSuspendedUntil.clear();
         m_bManaShort = false;
+        m_bLastPotionWasMana = false;
         m_setNotified.clear();
         m_mapForgottenUntil.clear();
         m_noTargetInReachSince = {};
@@ -741,43 +742,61 @@ namespace MUHelper
 
     int CMuHelper::ConsumePotion()
     {
-        int64_t iLife = CharacterAttribute->Life;
-        int64_t iLifeMax = CharacterAttribute->LifeMax;
-
-        if (m_config.bUseHealPotion && iLifeMax > 0 && iLife > 0)
+        // One potion a round: the client sends no item use while the last one waits for the server's answer
+        // (SendRequestUse, EnableUse). While it waits, nothing is decided and a skill's lack of mana stays noted.
+        if (!m_config.bUseHealPotion || EnableUse > 0)
         {
-            int64_t iRemaining = (iLife * 100 + iLifeMax - 1) / iLifeMax;
-            if (iRemaining <= m_config.iPotionThreshold)
-            {
-                int iPotionIndex = g_pMyInventory->FindHealingItemIndex();
-                if (iPotionIndex != -1)
-                {
-                    SendRequestUse(iPotionIndex, 0);
-                }
-            }
+            return 1;
+        }
+
+        const int64_t iLife = CharacterAttribute->Life;
+        const int64_t iLifeMax = CharacterAttribute->LifeMax;
+        int iLifePercent = 100;
+        bool bNeedHeal = false;
+        if (iLifeMax > 0 && iLife > 0)
+        {
+            iLifePercent = static_cast<int>((iLife * 100 + iLifeMax - 1) / iLifeMax);
+            bNeedHeal = iLifePercent <= m_config.iPotionThreshold;
         }
 
         // Mana potions, under the same "potion" switch (2026-10-23): the client's own cast drinks one only after a
         // cast failed for mana, and the helper's skills and buffs, now up to 17 casts a second, emptied the mana
-        // faster than that kept up. Below the window's MP threshold, or when a skill lacked mana. In the same round
-        // as a healing potion too (2026-11-02): a knight in a crowd is below his HP threshold every round, and with
-        // one potion a round he never got to the mana.
-        const bool bManaShort = m_bManaShort;
-        m_bManaShort = false;
+        // faster than that kept up. Below the window's MP threshold, or when a skill lacked mana.
         const int64_t iMana = CharacterAttribute->Mana;
         const int64_t iManaMax = CharacterAttribute->ManaMax;
-        if (m_config.bUseHealPotion && iManaMax > 0
-            && (bManaShort || iMana * 100 <= iManaMax * m_config.iManaPotionThreshold))
+        const bool bNeedMana = iManaMax > 0
+            && (m_bManaShort || iMana * 100 <= iManaMax * m_config.iManaPotionThreshold);
+
+        const int iHealIndex = bNeedHeal ? g_pMyInventory->FindHealingItemIndex() : -1;
+        const int iManaIndex = bNeedMana ? g_pMyInventory->FindManaItemIndex() : -1;
+        if (bNeedMana && iManaIndex == -1 && m_bManaShort)
         {
-            const int iPotionIndex = g_pMyInventory->FindManaItemIndex();
-            if (iPotionIndex != -1)
-            {
-                SendRequestUse(iPotionIndex, 0);
-            }
-            else if (bManaShort)
-            {
-                NotifyOnce(-1, I18N::Game::MuHelperNoManaPotions);
-            }
+            NotifyOnce(-1, I18N::Game::MuHelperNoManaPotions);
+        }
+
+        // Both needed: they take turns (2026-11-02, ghinzuro: the knight stopped drinking mana; in a crowd he is
+        // under his HP threshold every round, and with healing always first the mana never came). Healing keeps
+        // the turn while health is under half its threshold.
+        bool bDrinkMana = iManaIndex != -1;
+        if (iHealIndex != -1 && bDrinkMana)
+        {
+            bDrinkMana = !m_bLastPotionWasMana && iLifePercent * 2 > m_config.iPotionThreshold;
+        }
+
+        if (bDrinkMana)
+        {
+            SendRequestUse(iManaIndex, 0);
+            m_bLastPotionWasMana = true;
+            m_bManaShort = false;
+        }
+        else if (iHealIndex != -1)
+        {
+            SendRequestUse(iHealIndex, 0);
+            m_bLastPotionWasMana = false;
+        }
+        else if (bNeedMana)
+        {
+            m_bManaShort = false;   // no mana potion to drink: told once above
         }
 
         return 1;

@@ -158,6 +158,7 @@ namespace MUHelper
 		std::map<int, std::chrono::steady_clock::time_point> m_mapSuspendedUntil;
 		GameLogic::Automation::SkillResult m_lastSkillResult = GameLogic::Automation::SkillResult::NotReady;
 		bool m_bManaShort = false;
+		bool m_bLastPotionWasMana = false;                                  // alternates when both are needed
 		std::set<int> m_setNotified;                                         // chat notices given this run
 		static constexpr std::chrono::milliseconds StandStillPatience{ 1000 };
 		static constexpr std::chrono::milliseconds StuckWalkLimit{ 1200 };
