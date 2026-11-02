@@ -53,7 +53,7 @@ body {
 	flex-direction: column;
 	align-items: center;
 }
-#po_tabs, #po_legend {
+#po_tabs, #po_legend, #po_characters {
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
@@ -69,7 +69,7 @@ body {
 	margin-bottom: 4dp;
 	font-size: 13dp;
 }
-#po_legend {
+#po_legend, #po_characters {
 	font-size: 12dp;
 }
 #po_top .pad-glyph {
@@ -84,6 +84,12 @@ body {
 .po-tab.active {
 	color: token(accent-gold);
 	border-bottom: 2dp token(accent-gold);
+}
+/* A button and its label wrap to the next line together. */
+.po-pair {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
 }
 .po-label {
 	margin: 0 12dp 0 5dp;

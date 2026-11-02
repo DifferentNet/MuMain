@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <span>
 #include <string_view>
 
 // A scoped seam that turns the native 2D primitives' draws into records: while an
@@ -61,6 +62,23 @@ struct RecordedBitmap
     float alpha = 1.0f;
 };
 
+struct RecordedVertex
+{
+    float x = 0.0f; // physical window pixels, top-left origin
+    float y = 0.0f;
+    float u = 0.0f; // texture coordinates, 0 to 1
+    float v = 0.0f;
+    std::uint32_t abgr = 0;
+};
+
+// Textured quads (four vertices each, in RenderQuad2D's order) whose colour is added to what is behind them:
+// BlendMode::Additive, the texture's colour times its alpha times the vertex colour.
+struct RecordedAdditiveMesh
+{
+    const wchar_t* fileName = nullptr; // CGlobalBitmap file name, e.g. L"Data\\Interface\\x.tga"
+    std::span<const RecordedVertex> vertices; // borrowed: valid only during the RecordAdditiveMesh() call
+};
+
 class IOverlay2DRecorder
 {
 public:
@@ -68,6 +86,7 @@ public:
     virtual void RecordText(const RecordedText& text) = 0;
     virtual void RecordQuad(const RecordedQuad& quad) = 0;
     virtual void RecordBitmap(const RecordedBitmap& bitmap) = 0;
+    virtual void RecordAdditiveMesh(const RecordedAdditiveMesh& mesh) = 0;
 };
 
 // The recorder the primitives report to, or nullptr (draw normally).

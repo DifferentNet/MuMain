@@ -44,6 +44,7 @@ public:
     void RecordText(const Render::Renderer::RecordedText& text) override;
     void RecordQuad(const Render::Renderer::RecordedQuad& quad) override;
     void RecordBitmap(const Render::Renderer::RecordedBitmap& bitmap) override;
+    void RecordAdditiveMesh(const Render::Renderer::RecordedAdditiveMesh& mesh) override;
 
 private:
     enum class SlotKind
@@ -52,9 +53,10 @@ private:
         Text,
         Quad,
         Bitmap,
+        Mesh,
     };
 
-    // One pooled label: a box (text background or solid quad), its text, or an image. The cached
+    // One pooled label: a box (text background or solid quad), its text, an image, or additive quads. The cached
     // values mirror what was last written to the elements.
     struct Slot
     {
@@ -62,6 +64,7 @@ private:
         Rml::Element* text = nullptr;
         Rml::ElementText* textNode = nullptr;
         Rml::Element* image = nullptr;
+        Rml::Element* mesh = nullptr; // a Render::RmlUi::AdditiveMeshElement
         SlotKind kind = SlotKind::Hidden;
         std::size_t contentKey = 0; // hash of what it shows, see BeginFrame()
         bool drawn = false;         // taken by a label this frame
@@ -99,6 +102,7 @@ private:
     void SetCovered(Slot& slot, const Rect& rect);
 
     std::vector<Slot> m_slots;
+    std::vector<Render::Renderer::RecordedVertex> m_meshVertices; // RecordAdditiveMesh()'s, kept to reuse the memory
     // This frame: the slots shown last frame and not taken yet, by content key, and the hidden ones.
     std::unordered_multimap<std::size_t, std::size_t> m_shownByContent;
     std::vector<std::size_t> m_hiddenSlots;

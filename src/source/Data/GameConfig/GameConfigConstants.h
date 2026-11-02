@@ -49,6 +49,8 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyOverheadNpcNames[] = L"OverheadNpcNames";
     // MU Moldova: title plates over the players (UI::TitlePlates).
     inline constexpr wchar_t CfgKeyOverheadTitles[] = L"OverheadTitles";
+    // MU Moldova: the title plates' light, sparkles and glow (UI::TitlePlates::Effects).
+    inline constexpr wchar_t CfgKeyTitleEffects[] = L"TitleEffects";
     // MU Moldova: the phone or PC layout ("auto", "pc", "phone") and the controls ("auto", "mouse",
     // "touch"), set in the options window's Interface tab. See UI::Mobile::InterfaceMode.
     inline constexpr wchar_t CfgKeyInterfaceView[] = L"InterfaceView";
@@ -140,6 +142,8 @@ namespace CfgDefaults
     inline constexpr bool CfgDefaultOverheadPlayerNames = true;
     inline constexpr bool CfgDefaultOverheadNpcNames = false;
     inline constexpr bool CfgDefaultOverheadTitles = true;
+    // On by default (ghinzuro, 2026-11-03).
+    inline constexpr bool CfgDefaultTitleEffects = true;
 
     // "auto" follows the device: a phone or tablet in the browser gets the phone layout and touch.
     inline constexpr wchar_t CfgDefaultInterfaceView[] = L"auto";

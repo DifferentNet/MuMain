@@ -141,8 +141,16 @@ void CMsgWin::Show(bool bShow)
 
     if (m_RmlView.Document())
     {
-        if (bShow) { SyncRmlModel(); m_RmlView.Document()->Show(); }
-        else       m_RmlView.Document()->Hide();
+        if (bShow)
+        {
+            SyncRmlModel();
+            // A pad's frame starts on Cancel when OK would go on to delete the character.
+            if (Rml::Element* cancel = m_RmlView.Document()->GetElementById("btn_cancel"))
+                cancel->SetClass("pad-start", m_nMsgCode == MESSAGE_DELETE_CHARACTER_CONFIRM);
+            m_RmlView.Document()->Show();
+        }
+        else
+            m_RmlView.Document()->Hide();
     }
 }
 

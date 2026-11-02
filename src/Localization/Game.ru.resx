@@ -15555,6 +15555,24 @@
   <data name="PadPickUpPrompt" xml:space="preserve">
     <value>Подобрать</value>
   </data>
+  <data name="PadCharacter" xml:space="preserve">
+    <value>Персонаж</value>
+  </data>
+  <data name="PadPlay" xml:space="preserve">
+    <value>Играть</value>
+  </data>
+  <data name="PadCreate" xml:space="preserve">
+    <value>Создать</value>
+  </data>
+  <data name="PadDelete" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="PadTalkPrompt" xml:space="preserve">
+    <value>Говорить</value>
+  </data>
+  <data name="PadMenuPrompt" xml:space="preserve">
+    <value>Меню</value>
+  </data>
   <data name="PadTake" xml:space="preserve">
     <value>Взять</value>
   </data>
@@ -15584,5 +15602,9 @@
   </data>
   <data name="HelperPickBoxes" xml:space="preserve">
     <value>Коробки и медали</value>
+  </data>
+  <!-- Title effects -->
+  <data name="TitleEffects" xml:space="preserve">
+    <value>Эффекты титулов</value>
   </data>
 </root>

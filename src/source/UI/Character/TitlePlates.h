@@ -24,6 +24,8 @@ float Scale();
 void SetScale(float scale);
 
 // Draws the title of owner centred on centerX, its lowest point on bottomY, or over the owner's party HP bar
-// (Engine/Object/ZzzInterface.cpp RenderPartyHP) when that is higher. Returns how high it is (0: nothing drawn).
-int Render(const GameLogic::Titles::Worn& title, const CHARACTER& owner, int centerX, int bottomY);
+// (Engine/Object/ZzzInterface.cpp RenderPartyHP) when that is higher, with its effects (UI::TitlePlates::Effects)
+// when effects and the option allow. Returns how high it is (0: nothing drawn).
+int Render(const GameLogic::Titles::Worn& title, const CHARACTER& owner, int centerX, int bottomY,
+           bool effects = true);
 } // namespace UI::TitlePlates

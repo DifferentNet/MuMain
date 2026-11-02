@@ -5,6 +5,7 @@
 #include "RmlUiSystemInterface.h"
 #include "Render/RmlUi/RmlAdditiveFillDecorator.h"
 #include "Render/RmlUi/RmlAdditiveImageDecorator.h"
+#include "Render/RmlUi/RmlAdditiveMeshElement.h"
 
 #include <RmlUi/Core/Core.h>
 #include <RmlUi/Core/Element.h>
@@ -164,6 +165,7 @@ void RmlUiRuntime::Create(int windowWidth, int windowHeight)
 
     Render::RmlUi::RegisterAdditiveFillDecorator();
     Render::RmlUi::RegisterAdditiveImageDecorator();
+    Render::RmlUi::RegisterAdditiveMeshElement();
 
     LoadBundledFonts();
 

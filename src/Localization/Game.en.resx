@@ -15893,6 +15893,24 @@
   <data name="PadPickUpPrompt" xml:space="preserve">
     <value>Pick up</value>
   </data>
+  <data name="PadCharacter" xml:space="preserve">
+    <value>Character</value>
+  </data>
+  <data name="PadPlay" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="PadCreate" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="PadDelete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="PadTalkPrompt" xml:space="preserve">
+    <value>Talk</value>
+  </data>
+  <data name="PadMenuPrompt" xml:space="preserve">
+    <value>Menu</value>
+  </data>
   <data name="PadTake" xml:space="preserve">
     <value>Take</value>
   </data>
@@ -15922,5 +15940,9 @@
   </data>
   <data name="HelperPickBoxes" xml:space="preserve">
     <value>Boxes &amp; medals</value>
+  </data>
+  <!-- Title effects -->
+  <data name="TitleEffects" xml:space="preserve">
+    <value>Title effects</value>
   </data>
 </root>
