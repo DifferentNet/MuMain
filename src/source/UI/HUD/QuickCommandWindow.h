@@ -39,6 +39,11 @@ namespace mu::ui::window
         void ClosingProcess();
         // Opens the menu on that player, beside the pointer.
         void OpenQuickCommand(const wchar_t* strID, int iIndex);
+        // The same beside a place on the screen (window pixels): the pad's, which has no pointer there.
+        void OpenQuickCommandAt(const wchar_t* strID, int iIndex, float x, float y);
+        // Whether the menu may open on that character here: a player, not an event figure, of the
+        // same side where the sides fight, not in Chaos Castle or the Illusion Temple.
+        static bool IsMenuAllowedFor(const CHARACTER* character);
         void CloseQuickCommand();
         void SetID(const wchar_t* strID);
         void SetSelectedCharacterIndex(int iIndex);

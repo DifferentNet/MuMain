@@ -241,6 +241,15 @@ void mu::ui::window::CNameWindow::RenderName()
     }
 #endif//GUILD_WAR_EVENT
 
+    // The NPC or player the pad's right stick chose shows its name, as one under the mouse does.
+    const int padMeet = UI::HUD::GamepadControls::PromptMeet();
+    if (padMeet >= 0 && padMeet != SelectedNpc && padMeet != SelectedCharacter)
+    {
+        CHARACTER* meet = &CharactersClient[padMeet];
+        if (meet->Object.Kind == KIND_NPC || IsShopTitleVisible(meet) == false)
+            UI::Chat::CreateChat(meet->ID, L"", meet);
+    }
+
     if (SelectedItem != -1 || SelectedNpc != -1 || SelectedCharacter != -1)
     {
         if (SelectedNpc != -1)

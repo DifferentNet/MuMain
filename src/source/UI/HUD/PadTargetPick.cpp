@@ -93,6 +93,9 @@ int Nearest(std::span<const Target> targets, float x, float y, float reach)
 
 int First(std::span<const Target> targets)
 {
+    const auto marked = std::find_if(targets.begin(), targets.end(), [](const Target& t) { return t.start; });
+    if (marked != targets.end())
+        return static_cast<int>(marked - targets.begin());
     const bool anyCell = std::any_of(targets.begin(), targets.end(), [](const Target& t) { return t.cell; });
     const auto counts = [anyCell](const Target& t) { return !anyCell || t.cell; };
     float left = std::numeric_limits<float>::max();

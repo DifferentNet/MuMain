@@ -15,6 +15,10 @@
 #include "I18N/All.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
+#include "Character/CharMakeWin.h"
+#include "Character/CharSelMainWin.h"
+#include "Scenes/CharacterScene.h"
+#include "Scenes/SceneCommon.h"
 #include "Scenes/SceneCore.h"
 #include "UI/Chat/MessageType.h"
 #include "UI/Core/WindowSystem.h"
@@ -26,11 +30,14 @@
 #include "UI/HUD/PadKeyboard.h"
 #include "UI/HUD/PadOverlay.h"
 #include "UI/HUD/PadTargets.h"
+#include "UI/HUD/QuickCommandWindow.h"
 #include "UI/HUD/SkillList.h"
 #include "UI/HUD/TouchControls.h"
 #include "UI/Inventory/InventoryContents.h"
 #include "UI/Inventory/MyInventory.h"
 #include "UI/Mobile/InterfaceMode.h"
+#include "UI/Windows/MsgWin.h"
+#include "UI/Windows/SysMenuWin.h"
 
 #include <RmlUi/Core/Context.h>
 #include <SDL3/SDL.h>
@@ -75,6 +82,10 @@ constexpr auto WheelRepeat = std::chrono::milliseconds(110);
 constexpr auto ChatHold = std::chrono::milliseconds(500);
 // D-pad down talks to an NPC this near when no drop lies around.
 constexpr int NpcReach = 6;
+// A chosen player's menu opens this near (the world's units; it closes past 300), after a walk up to
+// them of at most this long.
+constexpr float PlayerMenuDistance = 250.f;
+constexpr auto PlayerMenuWalkTime = std::chrono::seconds(6);
 // The right stick picks the next target once it leans this far, and again once back under the second.
 constexpr float FlickLean = 0.6f;
 constexpr float FlickRest = 0.3f;
@@ -173,6 +184,8 @@ struct State
     bool windowOpen = false;
     // A game window (not only a dialog) is open: the d-pad and the left stick hop the frame.
     bool frameOpen = false;
+    // The character screen with nothing over it: the face buttons choose and start the character.
+    bool onCharacters = false;
     // The drop d-pad down would pick up, prompted under it; -1 for none.
     int promptDrop = -1;
     // Menu held: since when, and whether it opened the chat (then its release opens no menu).
@@ -183,6 +196,10 @@ struct State
     bool dpadDownTalks = false;
     // The NPC click: the pointer moved onto the NPC (1), the button down (2).
     int npcClickStage = 0;
+    // The player A chose (an index in CharactersClient, -1 for none), walked up to until their menu
+    // opens, and until when.
+    int menuWalk = -1;
+    Clock::time_point menuWalkUntil{};
     // The right stick leaned to pick a target, not yet back.
     bool flicked = false;
     // When A was last pressed or held: a dialog takes A as its answer only once it has rested.
@@ -391,6 +408,11 @@ void ReleaseForWorldChange(SDL_Window* window)
 {
     ReleaseButtons(window);
     PauseWalking();
+    // The frame starts anew on the other side: on the screen's first control, or the first window opened.
+    UI::HUD::PadFrame::Reset();
+    g_state.frameOpen = false;
+    g_state.windowOpen = false;
+    g_state.onCharacters = false;
 }
 
 void TellOnce()
@@ -442,7 +464,11 @@ void PlayMenu(SDL_Window* window, const Presses& presses, Clock::time_point now)
     if (step.dx != 0 || step.dy != 0)
         Controls::MoveMenuFocus(step.dx, step.dy);
     if (Pressed(presses, Button::A))
+    {
         Controls::ActivateMenuFocus();
+        // The window the item opens starts the frame on its first target, not by the last window's place.
+        UI::HUD::PadFrame::SnapOnNewWindow();
+    }
     if (UI::HUD::PadHub::IsOnSkills())
     {
         PlayHubOnSkills(presses, now);
@@ -711,11 +737,10 @@ void PlayMenuButton(const Presses& presses, Clock::time_point now)
         g_state.menuHeld = false;
 }
 
-// Puts the pad's pointer on the nearest NPC: the next frames click it, so the game walks there and
-// talks as for a mouse's click. False with none near or none on the screen.
-bool TalkToNearestNpc(SDL_Window* window)
+// Puts the pad's pointer on that NPC: the next frames click it, so the game walks there and talks as
+// for a mouse's click. False with it not on the screen.
+bool TalkToNpc(SDL_Window* window, int npc)
 {
-    const int npc = GameLogic::Touch::NearestNpc(NpcReach);
     float x = 0.f;
     float y = 0.f;
     if (npc < 0 || !GameLogic::Touch::NpcOnScreen(npc, x, y) || WindowWidth == 0 || WindowHeight == 0)
@@ -727,6 +752,56 @@ bool TalkToNearestNpc(SDL_Window* window)
                     y * static_cast<float>(height) / static_cast<float>(WindowHeight));
     g_state.npcClickStage = 1;
     return true;
+}
+
+// The same for the nearest NPC; false with none near.
+bool TalkToNearestNpc(SDL_Window* window)
+{
+    return TalkToNpc(window, GameLogic::Touch::NearestNpc(NpcReach));
+}
+
+// The menu on a player (trade, party, follow, duel) beside them, as Alt and a right click on them
+// opens it; false where it may not open (CQuickCommandWindow::IsMenuAllowedFor).
+bool OpenPlayerMenu(int player)
+{
+    const CHARACTER* character = &CharactersClient[player];
+    if (!mu::ui::window::CQuickCommandWindow::IsMenuAllowedFor(character))
+        return false;
+    float x = static_cast<float>(WindowWidth) * 0.5f;
+    float y = static_cast<float>(WindowHeight) * 0.5f;
+    (void)GameLogic::Touch::NpcOnScreen(player, x, y);
+    g_pQuickCommand->OpenQuickCommandAt(character->ID, player, x, y);
+    return true;
+}
+
+// No window open, with an NPC or a player the right stick chose: A talks to the NPC (the game walks
+// there) or walks up to the player and opens their menu. The left stick or a window stops the walk.
+void PlayMeet(SDL_Window* window, Presses& presses, Clock::time_point now)
+{
+    const int meet = GameLogic::Touch::MeetIndex();
+    if (meet >= 0 && Take(presses, Button::A))
+    {
+        g_state.waitForRelease[static_cast<int>(Button::A)] = true;
+        if (CharactersClient[meet].Object.Kind == KIND_NPC)
+            TalkToNpc(window, meet);
+        else if (mu::ui::window::CQuickCommandWindow::IsMenuAllowedFor(&CharactersClient[meet]))
+        {
+            g_state.menuWalk = meet;
+            g_state.menuWalkUntil = now + PlayerMenuWalkTime;
+        }
+    }
+    if (g_state.menuWalk < 0)
+        return;
+    if (g_state.menuWalk != meet || g_state.steering || now >= g_state.menuWalkUntil)
+    {
+        g_state.menuWalk = -1;
+        return;
+    }
+    if (GameLogic::Touch::WalkUpTo(meet, PlayerMenuDistance))
+    {
+        g_state.menuWalk = -1;
+        OpenPlayerMenu(meet);
+    }
 }
 
 // The NPC click a frame at a time: the game reads the moved pointer first, then the button.
@@ -779,6 +854,7 @@ void SwitchWindowMode(SDL_Window* window, bool windowOpen, bool frameOpen)
     Pointer::Release(window);
     ReleaseControls();
     g_state.npcClickStage = 0;
+    g_state.menuWalk = -1;
     g_state.flicked = true;
     g_state.menuHeld = false;
     WaitForRelease();
@@ -825,6 +901,7 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
     else
     {
         PickTargets();
+        PlayMeet(window, presses, now);
         g_state.promptDrop = GameLogic::Touch::NearestDropToPick();
     }
     HoldMappedControls(presses);
@@ -836,14 +913,94 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
         g_pSkillList->OnCurrentSkillClick();
 }
 
-// The login, server and character screens: the pointer, its clicks, Esc and Enter.
-void PlayScreens(SDL_Window* window, const Presses& presses, float seconds)
+// Whether the character screen shows with nothing over it (no creation, menu or message box). A
+// "Please wait" box has no buttons for the frame, and the bar stays shown under it: its keys wait too.
+bool OnCharacterBar()
 {
+    return SceneFlag == CHARACTER_SCENE && g_CharSelMainWin.IsVisible() && !g_CharMakeWin.IsVisible()
+           && !g_MsgWin.IsVisible() && !g_SysMenuWin.IsVisible();
+}
+
+// The next character on the screen from the chosen one, step 1 to the right, -1 to the left, going
+// round; the first with none chosen.
+void ChooseCharacter(int step)
+{
+    int slot = SelectedHero;
+    for (int tries = 0; tries < MAX_CHARACTERS_PER_ACCOUNT; ++tries)
+    {
+        if (slot < 0)
+            slot = step >= 0 ? 0 : MAX_CHARACTERS_PER_ACCOUNT - 1;
+        else
+            slot = (slot + step + MAX_CHARACTERS_PER_ACCOUNT) % MAX_CHARACTERS_PER_ACCOUNT;
+        const wchar_t* name = Scenes::CharacterNameInSlot(slot);
+        if (name != nullptr && name[0] != L'\0')
+        {
+            SelectedHero = slot;
+            g_CharSelMainWin.UpdateDisplay();
+            return;
+        }
+    }
+}
+
+// The character screen with nothing over it: LB and RB or the d-pad choose the character (the first
+// is chosen at once), A starts the game with it, X creates one, Y deletes the chosen one, Menu opens
+// the menu, B is Esc.
+void PlayCharacters(const Presses& presses)
+{
+    if (SelectedHero < 0)
+        ChooseCharacter(1);
+    if (Pressed(presses, Button::LeftShoulder) || Pressed(presses, Button::DpadLeft))
+        ChooseCharacter(-1);
+    if (Pressed(presses, Button::RightShoulder) || Pressed(presses, Button::DpadRight))
+        ChooseCharacter(1);
+    if (Pressed(presses, Button::A) && SelectedHero >= 0)
+        Scenes::StartGameWithSlot(SelectedHero);
+    else if (Pressed(presses, Button::X))
+        g_CharSelMainWin.RmlClickCreate();
+    else if (Pressed(presses, Button::Y))
+        g_CharSelMainWin.RmlClickDelete();
+    else if (Pressed(presses, Button::Menu))
+        g_CharSelMainWin.RmlClickMenu();
+    else if (Pressed(presses, Button::B))
+        Core::Input::Touch::TapKey(VK_ESCAPE);
+}
+
+// The login, server and character screens. Over their controls the frame works as over the windows:
+// the d-pad and the left stick hop it, A presses there; without any (the character screen bare) the
+// face buttons work the characters (PlayCharacters). B is Esc, Menu Enter.
+void PlayScreens(SDL_Window* window, Presses presses, float seconds, Clock::time_point now)
+{
+    const bool frameOpen = !UI::HUD::PadTargets::Collect().empty();
+    const bool onCharacters = !frameOpen && OnCharacterBar();
+    if (frameOpen != g_state.frameOpen || onCharacters != g_state.onCharacters)
+    {
+        if (frameOpen)
+            UI::HUD::PadFrame::SnapSoon();
+        else
+            UI::HUD::PadFrame::Reset();
+        g_state.frameOpen = frameOpen;
+        g_state.onCharacters = onCharacters;
+        Pointer::Release(window);
+        WaitForRelease();
+    }
+    if (onCharacters)
+    {
+        PlayCharacters(presses);
+        return;
+    }
     const Pad::StickPosition left = Pad::LeftStick();
     const Pad::StickPosition right = Pad::RightStick();
-    const bool leftFurther = std::hypot(left.x, left.y) >= std::hypot(right.x, right.y);
-    const Pad::StickPosition stick = leftFurther ? left : right;
-    Pointer::Move(window, stick.x, stick.y, seconds, false);
+    if (frameOpen)
+    {
+        Pointer::Move(window, right.x, right.y, seconds, true);
+        UI::HUD::PadFrame::Update(window, presses, now);
+    }
+    else
+    {
+        const bool leftFurther = std::hypot(left.x, left.y) >= std::hypot(right.x, right.y);
+        const Pad::StickPosition stick = leftFurther ? left : right;
+        Pointer::Move(window, stick.x, stick.y, seconds, false);
+    }
     const bool held = HoldsControl(Button::A) || HoldsControl(Button::RightTrigger);
     // A click shorter than a frame still clicks once.
     if (!held && (Pressed(presses, Button::A) || Pressed(presses, Button::RightTrigger)))
@@ -907,12 +1064,21 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
     UI::HUD::PadOverlay::View view;
     if (!playing)
         return view;
+    // Out of the world: the frame over the screens' controls, the character screen's keys.
+    if (!g_state.inWorld)
+    {
+        view.frame = g_state.frameOpen && UI::HUD::PadFrame::Box(view.frameBox);
+        view.characters = g_state.onCharacters;
+        return view;
+    }
     // A dialog over the windows says its own answers: the tabs and the legend make room for it.
     const bool dialog = g_state.frameOpen && UI::HUD::PadTargets::OnDialog();
+    // The menu of windows says its own keys and has its own highlight: the frame and the legend wait under it.
+    const bool menu = Controls::IsMenuOpen();
     view.hub = UI::HUD::PadHub::IsOpen() && !dialog;
     // The skill picker says its own keys too.
-    view.legend = g_state.frameOpen && !dialog && !UI::HUD::PadHub::IsOnSkills();
-    view.frame = g_state.frameOpen && UI::HUD::PadFrame::Box(view.frameBox);
+    view.legend = g_state.frameOpen && !dialog && !menu && !UI::HUD::PadHub::IsOnSkills();
+    view.frame = g_state.frameOpen && !menu && UI::HUD::PadFrame::Box(view.frameBox);
     using Legend = UI::HUD::PadOverlay::View::Legend;
     if (UI::Inventory::HasPickedItem())
         view.legendSays = Legend::Holding;
@@ -945,8 +1111,18 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
     const std::optional<float> windowsLeft = UI::HUD::PadTargets::WindowsLeft();
     if (g_state.frameOpen && windowsLeft && context != nullptr)
         view.topRight = std::max(static_cast<float>(context->GetDimensions().x) - *windowsLeft, 0.f);
-    if (g_state.promptDrop >= 0 && context != nullptr && WindowWidth > 0 &&
-        GameLogic::Touch::DropOnScreen(g_state.promptDrop, x, y))
+    using Prompt = UI::HUD::PadOverlay::View::Prompt;
+    // The NPC or player chosen says what A does, under their feet; else the drop d-pad down takes.
+    const int meet = g_state.windowOpen ? -1 : GameLogic::Touch::MeetIndex();
+    bool prompted = false;
+    if (meet >= 0 && GameLogic::Touch::FeetOnScreen(meet, x, y))
+    {
+        prompted = true;
+        view.promptSays = CharactersClient[meet].Object.Kind == KIND_NPC ? Prompt::Talk : Prompt::Menu;
+    }
+    else if (g_state.promptDrop >= 0)
+        prompted = GameLogic::Touch::DropOnScreen(g_state.promptDrop, x, y);
+    if (prompted && context != nullptr && WindowWidth > 0)
     {
         // The camera's point is in the game's window pixels, the overlay's in the context's.
         const float scale = static_cast<float>(context->GetDimensions().x) / static_cast<float>(WindowWidth);
@@ -973,9 +1149,9 @@ bool HidesPointer()
     // on its keys.
     if (g_state.typing)
         return true;
-    if (!g_state.inWorld)
-        return false;
     PadTargetPick::Box box;
+    if (!g_state.inWorld)
+        return g_state.onCharacters || (g_state.frameOpen && UI::HUD::PadFrame::Box(box));
     return !g_state.windowOpen || (g_state.frameOpen && UI::HUD::PadFrame::Box(box));
 }
 
@@ -984,10 +1160,15 @@ int PromptDrop()
     return g_state.inUse && g_state.inWorld ? g_state.promptDrop : -1;
 }
 
+int PromptMeet()
+{
+    return g_state.inUse && g_state.inWorld && !g_state.windowOpen ? GameLogic::Touch::MeetIndex() : -1;
+}
+
 void Update()
 {
     Play();
-    const bool playing = g_state.inUse && g_state.inWorld && !g_state.typing;
+    const bool playing = g_state.inUse && !g_state.typing;
     UI::HUD::PadOverlay::Update(OverlayView(playing));
 }
 } // namespace UI::HUD::GamepadControls
@@ -1017,14 +1198,23 @@ void Play()
     g_state.typing = false;
 
     const bool inWorld = IsInWorld();
+    // A map loading in the world (a gate, a warp): the pad rests, no frame over the HUD meanwhile.
+    const bool loadingMap = SceneFlag == MAIN_SCENE && !inWorld;
+    UI::HUD::PadTargets::SetScreens(!inWorld && !loadingMap);
     if (inWorld != g_state.inWorld)
     {
         ReleaseForWorldChange(window);
         g_state.inWorld = inWorld;
     }
+    if (loadingMap)
+    {
+        if (g_state.frameOpen || g_state.onCharacters)
+            ReleaseForWorldChange(window);
+        return;
+    }
     if (!inWorld)
     {
-        PlayScreens(window, presses, seconds);
+        PlayScreens(window, presses, seconds, now);
         return;
     }
     TellOnce();
