@@ -1006,6 +1006,10 @@ void PlayScreens(SDL_Window* window, Presses presses, float seconds, Clock::time
     if (!held && (Pressed(presses, Button::A) || Pressed(presses, Button::RightTrigger)))
         Pointer::SetButton(window, SDL_BUTTON_LEFT, true);
     Pointer::SetButton(window, SDL_BUTTON_LEFT, held);
+    // On the login screen a press may bring up new buttons (a group's servers, the login fields): the
+    // frame goes onto them, not stays on the button pressed.
+    if (frameOpen && SceneFlag == LOG_IN_SCENE && Pressed(presses, Button::A))
+        UI::HUD::PadFrame::SnapOnNewWindow();
     if (Pressed(presses, Button::B))
         Core::Input::Touch::TapKey(VK_ESCAPE);
     if (Pressed(presses, Button::Menu))
