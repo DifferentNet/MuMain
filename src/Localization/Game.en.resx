@@ -15899,4 +15899,7 @@
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Take off the item worn there first</value>
   </data>
+  <data name="HelperPickBoxes" xml:space="preserve">
+    <value>Boxes &amp; medals</value>
+  </data>
 </root>

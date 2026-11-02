@@ -41,7 +41,7 @@ namespace mu::ui::window
         bool combo = false, fallback = false, buffDuration = false;
         bool usePet = false, party = false, autoHeal = false, drainLife = false;
         bool repair = false, pickAll = false, pickSelected = false;
-        bool pickJewel = false, pickAncient = false, pickZen = false, pickExcellent = false, pickExtra = false;
+        bool pickJewel = false, pickAncient = false, pickZen = false, pickExcellent = false, pickExtra = false, pickBoxes = false;
         bool autoFriend = false, autoGuild = false, autoDefend = false;
 
         bool operator==(const MuHelperConfigChecks&) const = default;
@@ -70,7 +70,7 @@ namespace mu::ui::window
         Rml::String extensionUsed, extensionNone, slotHint;
         Rml::String potion, longDistance, origPosition, delay, condition, combo, fallback, buffDuration;
         Rml::String usePet, party, autoHeal, drainLife, ravenCease, ravenAuto, ravenTogether;
-        Rml::String repair, pickAll, pickSelected, pickJewel, pickAncient, pickZen, pickExcellent, pickExtra;
+        Rml::String repair, pickAll, pickSelected, pickJewel, pickAncient, pickZen, pickExcellent, pickExtra, pickBoxes;
         Rml::String autoFriend, autoGuild, autoDefend;
         Rml::String setting, add, remove, save, init, closeTip;
     };

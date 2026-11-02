@@ -3695,7 +3695,8 @@ typedef struct
     BYTE bAutoAcceptFriend : 1;              // Index: 33 (bit 1)
     BYTE bAutoAcceptGuild : 1;               // Index: 33 (bit 2)
     BYTE bFallbackBasicAttack : 1;           // Index: 33 (bit 3)
-    BYTE : 4;                                // Unused bits of Index 33
+    BYTE bPickContainers : 1;                // Index: 33 (bit 4)
+    BYTE : 3;                                // Unused bits of Index 33
 
     // MU Skynet: the mana potion threshold in tens of percent, plus 1 (0 = never saved, read as 30 %).
     BYTE MPStatusAutoPotion : 4;             // Index: 34 (bits 0-3)
