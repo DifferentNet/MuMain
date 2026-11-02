@@ -125,7 +125,6 @@ namespace MUHelper
 		int m_iCurrentTarget;
 		int m_iCurrentBuffIndex;
 		int m_iCurrentBuffPartyIndex;
-		int m_iCurrentHealPartyIndex;
 		int m_iComboState;
 		ActionSkillType m_iCurrentSkill;
 		int m_iHuntingDistance;
