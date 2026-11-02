@@ -294,9 +294,45 @@ private:
     Pass m_pass;
     std::chrono::steady_clock::time_point m_startedAt;
 };
+
+// A pass that opens once per object or per model: a clock read costs a call into JavaScript on the
+// web, and thousands a frame took a sixth of a phone's CPU (2026-11-03). Timed only while the
+// $glstats table or a benchmark reads the passes (g_CountersEnabled); the pass itself always opens,
+// so counters still go to it.
+class DetailScope
+{
+public:
+    explicit DetailScope(Pass pass)
+        : m_pass(pass), m_timed(g_CountersEnabled)
+    {
+        if (m_timed)
+            m_startedAt = std::chrono::steady_clock::now();
+        PushPass(pass);
+    }
+
+    ~DetailScope()
+    {
+        if (m_timed)
+        {
+            const auto elapsed = std::chrono::steady_clock::now() - m_startedAt;
+            AccumulatorMs(m_pass) += std::chrono::duration<float, std::milli>(elapsed).count();
+        }
+        PopPass();
+    }
+
+    DetailScope(const DetailScope&) = delete;
+    DetailScope& operator=(const DetailScope&) = delete;
+
+private:
+    Pass m_pass;
+    bool m_timed;
+    std::chrono::steady_clock::time_point m_startedAt{};
+};
 }
 
 #define FRAME_PROFILE_CAT_(left, right) left##right
 #define FRAME_PROFILE_CAT(left, right) FRAME_PROFILE_CAT_(left, right)
 #define FRAME_PROFILE(passName)                                                                                         \
     FrameProfiler::Scope FRAME_PROFILE_CAT(_frameProfilerScope_, __LINE__)(FrameProfiler::Pass::passName)
+#define FRAME_PROFILE_DETAIL(passName)                                                                                  \
+    FrameProfiler::DetailScope FRAME_PROFILE_CAT(_frameProfilerScope_, __LINE__)(FrameProfiler::Pass::passName)
