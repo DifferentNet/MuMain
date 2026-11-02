@@ -394,10 +394,10 @@
       "skill": 66,
       "level": 150,
       "durability": 90,
-      "damageMin": 200,
-      "damageMax": 223,
+      "damageMin": 143,
+      "damageMax": 168,
       "attackSpeed": 45,
-      "magicPower": 138,
+      "magicPower": 92,
       "attackType": 1,
       "requirements": {
         "strength": 75,
