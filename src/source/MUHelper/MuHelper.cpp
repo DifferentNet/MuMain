@@ -115,7 +115,6 @@ namespace MUHelper
         m_iComboState = 0;
         m_iCurrentBuffIndex = 0;
         m_iCurrentBuffPartyIndex = 0;
-        m_iCurrentHealPartyIndex = 0;
         m_iCurrentTarget = -1;
         m_iCurrentSkill = (ActionSkillType)m_config.aiSkill[0];
         m_iCurrentItem = MAX_ITEMS;
@@ -137,6 +136,7 @@ namespace MUHelper
         m_iTimedSkillSlot = -1;
         m_mapSupportFailures.clear();
         m_mapSuspendedUntil.clear();
+        m_mapHealSkipUntil.clear();
         m_bManaShort = false;
         m_bLastPotionWasMana = false;
         m_setNotified.clear();
@@ -994,7 +994,10 @@ namespace MUHelper
 
     int CMuHelper::Heal()
     {
-        if (!m_config.bAutoHeal)
+        // The party heal works by itself: an elf with only "Heal party members" ticked never healed anyone, as the
+        // self heal's switch ended this before the party was looked at (players, 2026-11-02).
+        const bool bHealParty = m_config.bAutoHealParty && g_pPartyManager->IsPartyActive();
+        if (!m_config.bAutoHeal && !bHealParty)
         {
             return 1;
         }
@@ -1005,38 +1008,74 @@ namespace MUHelper
             return 1;
         }
 
-        if (m_config.bAutoHealParty && g_pPartyManager->IsPartyActive())
+        if (!bHealParty)
         {
-            m_iCurrentHealPartyIndex %= PartyNumber;
-
-            PARTY_t* pMember = &Party[m_iCurrentHealPartyIndex];
-            CHARACTER* pChar = g_pPartyManager->GetPartyMemberChar(pMember);
-            int iHealResult = 1;
-
-            if (pChar != NULL)
-            {
-                if (pChar == Hero)
-                {
-                    iHealResult = HealSelf(iHealingSkill);
-                }
-                else if (pMember->stepHP * 10 <= m_config.iHealPartyThreshold
-                    && ComputeDistanceFromTarget(pChar) <= MAX_ACTIONABLE_DISTANCE)
-                {
-                    iHealResult = CastSupport(iHealingSkill, true, pChar->Key);
-                }
-            }
-
-            m_iCurrentHealPartyIndex = (m_iCurrentHealPartyIndex + 1) % PartyNumber;
-
-            return iHealResult;
-        }
-        else
-        {
-            m_iCurrentHealPartyIndex = 0;
             return HealSelf(iHealingSkill);
         }
 
-        return 1;
+        // The most hurt one in reach gets the heal, every round: the hero by the self heal's threshold (when it is
+        // ticked), the others by the party threshold. Before, one member was looked at per round, in turn.
+        CHARACTER* pTarget = nullptr;
+        int iLowest = 101;
+        if (m_config.bAutoHeal && CharacterAttribute->LifeMax > 0)
+        {
+            const int64_t iLifeMax = CharacterAttribute->LifeMax;
+            const int iRemaining = static_cast<int>((static_cast<int64_t>(CharacterAttribute->Life) * 100 + iLifeMax - 1) / iLifeMax);
+            if (iRemaining <= m_config.iHealThreshold)
+            {
+                pTarget = Hero;
+                iLowest = iRemaining;
+            }
+        }
+
+        for (int i = 0; i < PartyNumber; ++i)
+        {
+            PARTY_t* pMember = &Party[i];
+            const int iRemaining = pMember->stepHP * 10;
+            if (iRemaining > m_config.iHealPartyThreshold || iRemaining >= iLowest)
+            {
+                continue;
+            }
+
+            CHARACTER* pChar = g_pPartyManager->GetPartyMemberChar(pMember);
+            if (pChar == nullptr || pChar == Hero || pChar->Dead > 0 || !pChar->Object.Live
+                || ComputeDistanceFromTarget(pChar) > MAX_ACTIONABLE_DISTANCE)
+            {
+                continue;
+            }
+
+            const auto skip = m_mapHealSkipUntil.find(pChar->Key);
+            if (skip != m_mapHealSkipUntil.end() && std::chrono::steady_clock::now() < skip->second)
+            {
+                continue;
+            }
+
+            pTarget = pChar;
+            iLowest = iRemaining;
+        }
+
+        if (pTarget == nullptr)
+        {
+            return 1;
+        }
+
+        if (pTarget == Hero)
+        {
+            return CastSupport(iHealingSkill, true, HeroKey);
+        }
+
+        // A member the heal can't reach (behind a wall, no path) is passed over for a while, and his refusals don't
+        // pause the heal skill: otherwise the most hurt one, picked every round, paused it for the whole party.
+        using GameLogic::Automation::SkillResult;
+        m_lastSkillResult = SkillResult::NotReady;
+        const int iResult = CastSupport(iHealingSkill, true, pTarget->Key);
+        if (m_lastSkillResult == SkillResult::NoPath || m_lastSkillResult == SkillResult::Blocked
+            || m_lastSkillResult == SkillResult::NotInView || m_lastSkillResult == SkillResult::NotAttackable)
+        {
+            m_mapHealSkipUntil[pTarget->Key] = std::chrono::steady_clock::now() + HealSkipTime;
+            m_mapSupportFailures.erase(iHealingSkill);
+        }
+        return iResult;
     }
 
     int CMuHelper::HealSelf(ActionSkillType iHealingSkill)
