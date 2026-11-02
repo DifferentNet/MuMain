@@ -122,6 +122,10 @@ bool g_pointerAims = false;
 int g_targetKey = NoTarget;
 // The target the pad's right stick chose (CycleTarget): the buttons' target while it is a good one.
 int g_chosenKey = NoTarget;
+// The NPC or player the right stick chose where no foe is near (MeetIndex).
+int g_meetKey = NoTarget;
+// When the walk up to a player for their menu was last sent (WalkUpTo).
+Clock::time_point g_walkUpAt;
 std::map<int, Clock::time_point> g_forgottenUntil;
 Clock::time_point g_nextAction;
 // g_nextAction before the last ActionDue() took the turn (GiveTurnBack()).
@@ -425,6 +429,30 @@ bool IsGoodTarget(const CHARACTER* character, bool aimed)
 // The character the player aims at: the one the pad's pointer is on, else the one the engine fights
 // (a tap on it, or the buttons' own attack: ActionTarget). A finger's pointer stays where it last
 // tapped, so a character that walks under it later is no aim.
+// An NPC or another player near, for the right stick to choose where no foe is near.
+bool IsGoodMeet(const CHARACTER* character)
+{
+    if (character == nullptr || character == Hero || !character->Object.Live || character->Dead != 0)
+        return false;
+    if (character->Object.Kind != KIND_NPC && character->Object.Kind != KIND_PLAYER)
+        return false;
+    return TilesTo(character) <= TargetRange;
+}
+
+// The next key in a list sorted by (tiles, key) after `current`, step 1 the next further, -1 the next
+// nearer, going round; the nearest (or the furthest for -1) when `current` is not in it.
+int NextInRound(const std::vector<std::pair<int, int>>& keys, int current, int step)
+{
+    const auto found = std::find_if(keys.begin(), keys.end(), [current](const auto& key) { return key.second == current; });
+    const int count = static_cast<int>(keys.size());
+    int next = 0;
+    if (found == keys.end())
+        next = step >= 0 ? 0 : count - 1;
+    else
+        next = ((static_cast<int>(found - keys.begin()) + step) % count + count) % count;
+    return keys[next].second;
+}
+
 CHARACTER* AimedCharacter()
 {
     int index = -1;
@@ -1112,6 +1140,7 @@ void Reset()
 {
     g_targetKey = NoTarget;
     g_chosenKey = NoTarget;
+    g_meetKey = NoTarget;
     g_forceAttack = false;
     g_friendKey = NoTarget;
     g_forgottenUntil.clear();
@@ -1139,25 +1168,63 @@ void CycleTarget(int step)
             foes.emplace_back(TilesTo(character), character->Key);
     }
     if (foes.empty())
+    {
+        // No foe near (a town): the NPCs and the other players around, to talk to or to trade with.
+        std::vector<std::pair<int, int>> meets;
+        for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
+        {
+            const CHARACTER* character = &CharactersClient[i];
+            if (IsGoodMeet(character))
+                meets.emplace_back(TilesTo(character), character->Key);
+        }
+        if (meets.empty())
+            return;
+        std::sort(meets.begin(), meets.end());
+        g_meetKey = NextInRound(meets, MeetIndex() >= 0 ? g_meetKey : NoTarget, step);
+        g_chosenKey = NoTarget;
         return;
+    }
+    g_meetKey = NoTarget;
     std::sort(foes.begin(), foes.end());
     int current = g_chosenKey;
     if (current == NoTarget && TargetIndex() >= 0)
         current = CharactersClient[TargetIndex()].Key;
-    const auto found = std::find_if(foes.begin(), foes.end(), [current](const auto& foe) { return foe.second == current; });
-    const int count = static_cast<int>(foes.size());
-    int next = 0;
-    if (found == foes.end())
-        next = step >= 0 ? 0 : count - 1;
-    else
-        next = ((static_cast<int>(found - foes.begin()) + step) % count + count) % count;
-    g_chosenKey = g_targetKey = foes[next].second;
+    g_chosenKey = g_targetKey = NextInRound(foes, current, step);
 }
 
 void ClearChosenTarget()
 {
     g_chosenKey = NoTarget;
     g_targetKey = NoTarget;
+    g_meetKey = NoTarget;
+}
+
+int MeetIndex()
+{
+    if (!InWorld() || g_meetKey == NoTarget || g_chosenKey != NoTarget)
+        return -1;
+    const CHARACTER* meet = FindByKey(g_meetKey);
+    if (!IsGoodMeet(meet))
+        return -1;
+    return static_cast<int>(meet - CharactersClient);
+}
+
+bool WalkUpTo(int index, float distance)
+{
+    if (!InWorld() || index < 0 || index >= MAX_CHARACTERS_CLIENT)
+        return false;
+    const CHARACTER* character = &CharactersClient[index];
+    const float dx = character->Object.Position[0] - Hero->Object.Position[0];
+    const float dy = character->Object.Position[1] - Hero->Object.Position[1];
+    if (std::hypot(dx, dy) < distance)
+        return true;
+    const auto now = Clock::now();
+    if (now - g_walkUpAt >= WalkRepeat)
+    {
+        g_walkUpAt = now;
+        Automation::WalkTo(TileOf(character->Object.Position[0]), TileOf(character->Object.Position[1]));
+    }
+    return false;
 }
 
 bool HasDropToPick()
@@ -1210,6 +1277,13 @@ bool NpcOnScreen(int index, float& x, float& y)
     // Its body, not its feet: the click's ray picks the model's box.
     position[2] += 80.f;
     return CameraProjection::WorldToWindowPixel(g_Camera, position, &x, &y);
+}
+
+bool FeetOnScreen(int index, float& x, float& y)
+{
+    if (index < 0 || index >= MAX_CHARACTERS_CLIENT)
+        return false;
+    return CameraProjection::WorldToWindowPixel(g_Camera, CharactersClient[index].Object.Position, &x, &y);
 }
 
 int TargetIndex()

@@ -15531,6 +15531,12 @@
   <data name="PadPickUpPrompt" xml:space="preserve">
     <value>Подобрать</value>
   </data>
+  <data name="PadTalkPrompt" xml:space="preserve">
+    <value>Говорить</value>
+  </data>
+  <data name="PadMenuPrompt" xml:space="preserve">
+    <value>Меню</value>
+  </data>
   <data name="PadTake" xml:space="preserve">
     <value>Взять</value>
   </data>

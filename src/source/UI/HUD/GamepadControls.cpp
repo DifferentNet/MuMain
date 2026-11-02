@@ -26,6 +26,7 @@
 #include "UI/HUD/PadKeyboard.h"
 #include "UI/HUD/PadOverlay.h"
 #include "UI/HUD/PadTargets.h"
+#include "UI/HUD/QuickCommandWindow.h"
 #include "UI/HUD/SkillList.h"
 #include "UI/HUD/TouchControls.h"
 #include "UI/Inventory/InventoryContents.h"
@@ -75,6 +76,10 @@ constexpr auto WheelRepeat = std::chrono::milliseconds(110);
 constexpr auto ChatHold = std::chrono::milliseconds(500);
 // D-pad down talks to an NPC this near when no drop lies around.
 constexpr int NpcReach = 6;
+// A chosen player's menu opens this near (the world's units; it closes past 300), after a walk up to
+// them of at most this long.
+constexpr float PlayerMenuDistance = 250.f;
+constexpr auto PlayerMenuWalkTime = std::chrono::seconds(6);
 // The right stick picks the next target once it leans this far, and again once back under the second.
 constexpr float FlickLean = 0.6f;
 constexpr float FlickRest = 0.3f;
@@ -183,6 +188,10 @@ struct State
     bool dpadDownTalks = false;
     // The NPC click: the pointer moved onto the NPC (1), the button down (2).
     int npcClickStage = 0;
+    // The player A chose (an index in CharactersClient, -1 for none), walked up to until their menu
+    // opens, and until when.
+    int menuWalk = -1;
+    Clock::time_point menuWalkUntil{};
     // The right stick leaned to pick a target, not yet back.
     bool flicked = false;
     // When A was last pressed or held: a dialog takes A as its answer only once it has rested.
@@ -710,11 +719,10 @@ void PlayMenuButton(const Presses& presses, Clock::time_point now)
         g_state.menuHeld = false;
 }
 
-// Puts the pad's pointer on the nearest NPC: the next frames click it, so the game walks there and
-// talks as for a mouse's click. False with none near or none on the screen.
-bool TalkToNearestNpc(SDL_Window* window)
+// Puts the pad's pointer on that NPC: the next frames click it, so the game walks there and talks as
+// for a mouse's click. False with it not on the screen.
+bool TalkToNpc(SDL_Window* window, int npc)
 {
-    const int npc = GameLogic::Touch::NearestNpc(NpcReach);
     float x = 0.f;
     float y = 0.f;
     if (npc < 0 || !GameLogic::Touch::NpcOnScreen(npc, x, y) || WindowWidth == 0 || WindowHeight == 0)
@@ -726,6 +734,56 @@ bool TalkToNearestNpc(SDL_Window* window)
                     y * static_cast<float>(height) / static_cast<float>(WindowHeight));
     g_state.npcClickStage = 1;
     return true;
+}
+
+// The same for the nearest NPC; false with none near.
+bool TalkToNearestNpc(SDL_Window* window)
+{
+    return TalkToNpc(window, GameLogic::Touch::NearestNpc(NpcReach));
+}
+
+// The menu on a player (trade, party, follow, duel) beside them, as Alt and a right click on them
+// opens it; false where it may not open (CQuickCommandWindow::IsMenuAllowedFor).
+bool OpenPlayerMenu(int player)
+{
+    const CHARACTER* character = &CharactersClient[player];
+    if (!mu::ui::window::CQuickCommandWindow::IsMenuAllowedFor(character))
+        return false;
+    float x = static_cast<float>(WindowWidth) * 0.5f;
+    float y = static_cast<float>(WindowHeight) * 0.5f;
+    (void)GameLogic::Touch::NpcOnScreen(player, x, y);
+    g_pQuickCommand->OpenQuickCommandAt(character->ID, player, x, y);
+    return true;
+}
+
+// No window open, with an NPC or a player the right stick chose: A talks to the NPC (the game walks
+// there) or walks up to the player and opens their menu. The left stick or a window stops the walk.
+void PlayMeet(SDL_Window* window, Presses& presses, Clock::time_point now)
+{
+    const int meet = GameLogic::Touch::MeetIndex();
+    if (meet >= 0 && Take(presses, Button::A))
+    {
+        g_state.waitForRelease[static_cast<int>(Button::A)] = true;
+        if (CharactersClient[meet].Object.Kind == KIND_NPC)
+            TalkToNpc(window, meet);
+        else if (mu::ui::window::CQuickCommandWindow::IsMenuAllowedFor(&CharactersClient[meet]))
+        {
+            g_state.menuWalk = meet;
+            g_state.menuWalkUntil = now + PlayerMenuWalkTime;
+        }
+    }
+    if (g_state.menuWalk < 0)
+        return;
+    if (g_state.menuWalk != meet || g_state.steering || now >= g_state.menuWalkUntil)
+    {
+        g_state.menuWalk = -1;
+        return;
+    }
+    if (GameLogic::Touch::WalkUpTo(meet, PlayerMenuDistance))
+    {
+        g_state.menuWalk = -1;
+        OpenPlayerMenu(meet);
+    }
 }
 
 // The NPC click a frame at a time: the game reads the moved pointer first, then the button.
@@ -778,6 +836,7 @@ void SwitchWindowMode(SDL_Window* window, bool windowOpen, bool frameOpen)
     Pointer::Release(window);
     ReleaseControls();
     g_state.npcClickStage = 0;
+    g_state.menuWalk = -1;
     g_state.flicked = true;
     g_state.menuHeld = false;
     WaitForRelease();
@@ -824,6 +883,7 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
     else
     {
         PickTargets();
+        PlayMeet(window, presses, now);
         g_state.promptDrop = GameLogic::Touch::NearestDropToPick();
     }
     HoldMappedControls(presses);
@@ -944,8 +1004,18 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
     const std::optional<float> windowsLeft = UI::HUD::PadTargets::WindowsLeft();
     if (g_state.frameOpen && windowsLeft && context != nullptr)
         view.topRight = std::max(static_cast<float>(context->GetDimensions().x) - *windowsLeft, 0.f);
-    if (g_state.promptDrop >= 0 && context != nullptr && WindowWidth > 0 &&
-        GameLogic::Touch::DropOnScreen(g_state.promptDrop, x, y))
+    using Prompt = UI::HUD::PadOverlay::View::Prompt;
+    // The NPC or player chosen says what A does, under their feet; else the drop d-pad down takes.
+    const int meet = g_state.windowOpen ? -1 : GameLogic::Touch::MeetIndex();
+    bool prompted = false;
+    if (meet >= 0 && GameLogic::Touch::FeetOnScreen(meet, x, y))
+    {
+        prompted = true;
+        view.promptSays = CharactersClient[meet].Object.Kind == KIND_NPC ? Prompt::Talk : Prompt::Menu;
+    }
+    else if (g_state.promptDrop >= 0)
+        prompted = GameLogic::Touch::DropOnScreen(g_state.promptDrop, x, y);
+    if (prompted && context != nullptr && WindowWidth > 0)
     {
         // The camera's point is in the game's window pixels, the overlay's in the context's.
         const float scale = static_cast<float>(context->GetDimensions().x) / static_cast<float>(WindowWidth);

@@ -15,7 +15,8 @@
 	     data-style-width="frame_width" data-style-height="frame_height"></div>
 	<div id="po_prompt" data-if="prompt_shown" data-style-left="prompt_left" data-style-top="prompt_top">
 		<div id="po_prompt_inner">
-			<div class="pad-glyph pad-dpad pad-dpad-down"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
+			<div class="pad-glyph pad-dpad pad-dpad-down" data-if="!prompt_a"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
+			<div class="pad-glyph pad-face pad-a" data-if="prompt_a">A</div>
 			<div class="po-label">{{pickup_label}}</div>
 		</div>
 	</div>

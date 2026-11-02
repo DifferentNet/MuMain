@@ -36,6 +36,15 @@ struct View
     Legend legendSays = Legend::Item;
     bool frame = false;
     PadTargetPick::Box frameBox;
+    // The prompt under the drop d-pad down picks up, or under the NPC or player the right stick chose:
+    // A talks to the NPC, opens the player's menu.
+    enum class Prompt
+    {
+        PickUp,
+        Talk,
+        Menu,
+    };
+    Prompt promptSays = Prompt::PickUp;
     bool prompt = false;
     float promptX = 0.f;
     float promptY = 0.f;

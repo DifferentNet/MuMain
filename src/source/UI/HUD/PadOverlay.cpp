@@ -46,6 +46,8 @@ struct OverlayModel
     bool legendItem = true;
     bool legendY = true;
     Rml::String pickupLabel;
+    // The prompt's button: A (an NPC or a player chosen), else d-pad down (a drop).
+    bool promptA = false;
     Rml::String takeLabel;
     Rml::String equipLabel;
     Rml::String cardLabel;
@@ -76,6 +78,7 @@ void BindModel(Rml::DataModelConstructor& c, OverlayModel& model)
     c.Bind("legend_item", &model.legendItem);
     c.Bind("legend_y", &model.legendY);
     c.Bind("pickup_label", &model.pickupLabel);
+    c.Bind("prompt_a", &model.promptA);
     c.Bind("take_label", &model.takeLabel);
     c.Bind("equip_label", &model.equipLabel);
     c.Bind("card_label", &model.cardLabel);
@@ -136,7 +139,13 @@ void SyncPrompt(OverlayModel& model, const View& view)
         return;
     SyncPixels(model.promptLeft, view.promptX, "prompt_left");
     SyncPixels(model.promptTop, view.promptY, "prompt_top");
-    SyncLabel(model.pickupLabel, I18N::Game::PadPickUpPrompt, "pickup_label");
+    using Prompt = View::Prompt;
+    SyncBool(model.promptA, view.promptSays != Prompt::PickUp, "prompt_a");
+    SyncLabel(model.pickupLabel,
+              view.promptSays == Prompt::Talk   ? I18N::Game::PadTalkPrompt
+              : view.promptSays == Prompt::Menu ? I18N::Game::PadMenuPrompt
+                                                : I18N::Game::PadPickUpPrompt,
+              "pickup_label");
 }
 
 void SyncTabs(OverlayModel& model, const View& view)

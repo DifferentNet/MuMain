@@ -26,6 +26,9 @@ using PadTargetPick::Target;
 // the tooltips.
 constexpr std::array<std::string_view, 5> NotWindows = {"main_frame.rml", "pad_overlay.rml", "tooltip.rml",
                                                         "cursor_item.rml", "item_explanation.rml"};
+// The menu on a player (trade, party, follow, duel): drawn low, yet a menu over the world the pad
+// answers as a dialog: the frame rests only on its rows, B closes it.
+constexpr std::string_view PlayerMenu = "quick_command.rml";
 // Documents drawn this deep or deeper, up to the message boxes, are screens and dialogs over the
 // windows (the help, the move list, the options, the message boxes) even without a workspace slot.
 constexpr float FloatingDepth = 8.f;
@@ -84,6 +87,8 @@ bool PlacedBox(Rml::ElementDocument& document, Box& box);
 // rests only on it, as the windows under it take no clicks.
 bool IsDialog(Rml::ElementDocument& document)
 {
+    if (FileName(document.GetSourceURL()) == PlayerMenu)
+        return true;
     const std::optional<float> depth =
         UI::RmlBridge::StackingDepthForDocument(FileName(document.GetSourceURL()));
     return depth && *depth >= MessageBoxDepth;
@@ -99,7 +104,7 @@ bool IsWindow(Rml::ElementDocument& document)
         if (name == excluded)
             return false;
     }
-    if (IsPlaced(document) || UI::Placement::IsWindowDocument(name))
+    if (IsPlaced(document) || UI::Placement::IsWindowDocument(name) || name == PlayerMenu)
         return true;
     const std::optional<float> depth = UI::RmlBridge::StackingDepthForDocument(name);
     return depth && *depth >= FloatingDepth && *depth <= MessageBoxDepth;
