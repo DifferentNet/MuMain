@@ -76,3 +76,11 @@ add_test(
             "${CMAKE_CURRENT_SOURCE_DIR}/test_startup_pack_models.py"
             "${CMAKE_SOURCE_DIR}"
 )
+
+# The web build's packs hold sounds in IMA ADPCM when it keeps them clean (tools/web/ima_adpcm.py).
+add_test(
+    NAME startup_pack_sounds
+    COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/test_ima_adpcm.py"
+            "${CMAKE_SOURCE_DIR}"
+)
