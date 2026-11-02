@@ -14511,9 +14511,6 @@
   <data name="OverheadTitles" xml:space="preserve">
     <value>Титулы над игроками</value>
   </data>
-  <data name="TitleEffects" xml:space="preserve">
-    <value>Эффекты титулов</value>
-  </data>
   <data name="TitlesTitle" xml:space="preserve">
     <value>Титулы</value>
   </data>
@@ -15566,5 +15563,9 @@
   </data>
   <data name="HelperPickBoxes" xml:space="preserve">
     <value>Коробки и медали</value>
+  </data>
+  <!-- Title effects -->
+  <data name="TitleEffects" xml:space="preserve">
+    <value>Эффекты титулов</value>
   </data>
 </root>

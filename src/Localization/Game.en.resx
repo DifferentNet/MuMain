@@ -14888,9 +14888,6 @@
   <data name="OverheadTitles" xml:space="preserve">
     <value>Titles over players</value>
   </data>
-  <data name="TitleEffects" xml:space="preserve">
-    <value>Title effects</value>
-  </data>
   <data name="TitlesTitle" xml:space="preserve">
     <value>Titles</value>
   </data>
@@ -15904,5 +15901,9 @@
   </data>
   <data name="HelperPickBoxes" xml:space="preserve">
     <value>Boxes &amp; medals</value>
+  </data>
+  <!-- Title effects -->
+  <data name="TitleEffects" xml:space="preserve">
+    <value>Title effects</value>
   </data>
 </root>
