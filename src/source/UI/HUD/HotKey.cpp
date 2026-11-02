@@ -213,6 +213,19 @@ bool mu::ui::window::CHotKey::UpdateKeyEvent()
             return false;
         }
     }
+    else if (mu::ui::window::IsPress('K'))
+    {
+        // K opens the jewel bank with the closed inventory too (ghinzuro, 2026-11-01): the bank sits beside the
+        // inventory and closes with it, so both open. With the inventory open, CMyInventory handles K first.
+        if (g_pNPCShop->IsSellingItem() == false)
+        {
+            if (!g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_INVENTORY))
+                g_pNewUISystem->Show(mu::ui::window::INTERFACE_INVENTORY);
+            g_pNewUISystem->Show(mu::ui::window::INTERFACE_JEWEL_BANK);
+            PlayBuffer(SOUND_CLICK01);
+            return false;
+        }
+    }
     else if (mu::ui::window::IsPress('C'))
     {
         g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_CHARACTER);
