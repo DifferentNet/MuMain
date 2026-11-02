@@ -7,16 +7,16 @@
 // | Pad | In the world (no window open) |
 // |---|---|
 // | Left stick | Walks. Pushed through a gate or a map change, it waits until let go or centred |
-// | Right stick | A flick picks the next target: right or down the next further, left or up the next nearer |
+// | Right stick | A flick picks the next target: right or down the next further, left or up the next nearer. With no foe near (a town), it picks the NPCs and players on view instead; the one chosen shows its name and a prompt |
 // | RS (the right stick pressed) | Back to the nearest target |
-// | A | Attack: a tap fights the target once, held it goes on |
+// | A | Attack: a tap fights the target once, held it goes on. On a chosen NPC it talks; on a chosen player it walks up and opens the player menu (trade, party, duel); a foe coming near makes it attack again |
 // | X, Y, B, RB, RT | The five skill buttons: a tap uses the skill once, held it goes on |
 // | LB, LT | The potions Q and W |
 // | D-pad left, right | The potions E and R |
 // | D-pad up | MU Helper on and off |
 // | D-pad down | Pick up: held, it gathers the drops around; with none, a press talks to the nearest NPC. The drop it would take shows its name and a prompt (UI/HUD/PadOverlay) |
 // | LS (the left stick pressed) | Puts skills on the skill buttons |
-// | View | The map |
+// | View | The Social panel (the players around: trade, party, guild) |
 // | Menu | A tap: the hero hub (UI/HUD/PadHub: the inventory, character, skills, quests, guild and settings as tabs, LB and RB turn them); a second tap, or one over another window, the menu of windows (the stick or d-pad move the highlight, A opens, B or Menu closes). Held: the chat |
 //
 // The world has no pointer: none is drawn. Over a game window (UI/HUD/PadFrame) there is no mouse
@@ -31,7 +31,11 @@
 //
 // A stick's own button counts only with the stick near its centre: one pushed hard clicks by accident.
 //
-// Off the world: the sticks move the pointer, A or RT click, B is Esc and Menu is Enter.
+// Off the world (login, server and character screens): the frame hops over their controls as over the
+// windows, A presses, B is Esc and Menu Enter; with no control on view the sticks move the pointer.
+// The character screen bare has its own keys: LB, RB or the d-pad choose the character, A plays, X
+// creates, Y deletes, Menu opens the menu (they wait under a dialog). While a map loads in the world
+// the pad rests.
 //
 // While a text field has the keys (the chat, the login), the on-screen keyboard (UI/HUD/PadKeyboard)
 // has the pad and nothing else acts.
