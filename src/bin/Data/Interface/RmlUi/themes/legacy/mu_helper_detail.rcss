@@ -23,8 +23,8 @@
 /* Gauges: bar, its fill at the same origin, and the label 18 below. */
 #gauge_potion, #gauge_potion_fill { left: 32px; top: 80px; }
 #gauge_potion_label               { left: 32px; top: 98px; }
-#gauge_mana, #gauge_mana_fill     { left: 32px; top: 115px; }
-#gauge_mana_label                 { left: 32px; top: 133px; }
+#gauge_mana, #gauge_mana_fill     { left: 32px; top: 111px; }
+#gauge_mana_label                 { left: 32px; top: 128px; }
 /* MU Skynet: under the taller top pane (MP gauge) the lower pane and the heal gauge sit 25 lower. */
 #pane_lower.mhd-below-mp          { top: 145px; }
 #gauge_heal, #gauge_heal_fill     { left: 32px; top: 170px; }
