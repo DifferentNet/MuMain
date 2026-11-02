@@ -15923,4 +15923,8 @@
   <data name="HelperPickBoxes" xml:space="preserve">
     <value>Boxes &amp; medals</value>
   </data>
+  <!-- Title effects -->
+  <data name="TitleEffects" xml:space="preserve">
+    <value>Title effects</value>
+  </data>
 </root>

@@ -519,6 +519,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("overhead_npc_names_label", &model.overheadNpcNamesLabel);
     c.Bind("overhead_titles", &model.overheadTitles);
     c.Bind("overhead_titles_label", &model.overheadTitlesLabel);
+    c.Bind("title_effects", &model.titleEffects);
+    c.Bind("title_effects_label", &model.titleEffectsLabel);
     c.Bind("theme_labels", &model.themeLabels);
     c.Bind("theme_index", &model.themeIndex);
     c.Bind("theme_row_label", &model.themeRowLabel);
@@ -653,6 +655,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleOverheadNpcNames(); });
     c.BindEventCallback("option_toggle_overhead_titles",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleOverheadTitles(); });
+    c.BindEventCallback("option_toggle_title_effects",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleTitleEffects(); });
 
 }
 
@@ -1407,6 +1411,13 @@ void mu::ui::window::COptionWindow::RmlToggleOverheadTitles()
     config.Save();
 }
 
+void mu::ui::window::COptionWindow::RmlToggleTitleEffects()
+{
+    GameConfig& config = GameConfig::GetInstance();
+    config.SetTitleEffects(!config.GetTitleEffects());
+    config.Save();
+}
+
 void mu::ui::window::COptionWindow::RmlThemeChanged(int index)
 {
     // See RmlResolutionChanged's own comment -- same settle-frame guard applies here.
@@ -1867,6 +1878,7 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.overheadPlayerNamesLabel, "overhead_player_names_label", I18N::Game::OverheadPlayerNames);
     syncLabel(model.overheadNpcNamesLabel, "overhead_npc_names_label", I18N::Game::OverheadNpcNames);
     syncLabel(model.overheadTitlesLabel, "overhead_titles_label", I18N::Game::OverheadTitles);
+    syncLabel(model.titleEffectsLabel, "title_effects_label", I18N::Game::TitleEffects);
     syncLabel(model.themeRowLabel, "theme_row_label", I18N::Game::UITheme);
     syncLabel(model.uiScaleRowLabel, "ui_scale_row_label", I18N::Game::UIScale);
     syncLabel(model.uiScaleTooltip, "ui_scale_tooltip", I18N::Game::UIScaleTooltip);
@@ -2039,6 +2051,8 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     if (model.overheadNpcNames != overheadNpcNames) { model.overheadNpcNames = overheadNpcNames; m_RmlView.MarkDirty("overhead_npc_names"); }
     const bool overheadTitles = GameConfig::GetInstance().GetOverheadTitles();
     if (model.overheadTitles != overheadTitles) { model.overheadTitles = overheadTitles; m_RmlView.MarkDirty("overhead_titles"); }
+    const bool titleEffects = GameConfig::GetInstance().GetTitleEffects();
+    if (model.titleEffects != titleEffects) { model.titleEffects = titleEffects; m_RmlView.MarkDirty("title_effects"); }
 
     m_iThemeIndex = FindCurrentThemeIndex();
     if (model.themeIndex != m_iThemeIndex) { model.themeIndex = m_iThemeIndex; m_RmlView.MarkDirty("theme_index"); }

@@ -15585,4 +15585,8 @@
   <data name="HelperPickBoxes" xml:space="preserve">
     <value>Коробки и медали</value>
   </data>
+  <!-- Title effects -->
+  <data name="TitleEffects" xml:space="preserve">
+    <value>Эффекты титулов</value>
+  </data>
 </root>
