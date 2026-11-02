@@ -1,8 +1,10 @@
 #pragma once
 
 #include "GameLogic/Events/Titles.h"
+#include "Render/Renderer/Overlay2DRecorder.h"
 
 #include <array>
+#include <vector>
 
 class CHARACTER;
 
@@ -31,5 +33,17 @@ void RenderUnder(const GameLogic::Titles::Worn& title, const CHARACTER& owner, c
 void RenderOver(const GameLogic::Titles::Worn& title, const CHARACTER& owner, const Placement& at);
 // The text's colour now: base, or for crimson on its way to gold and back.
 std::array<unsigned char, 3> TextColor(const GameLogic::Titles::Worn& title, const CHARACTER& owner,
+                                       const unsigned char (&base)[3]);
+
+// The same for a window that draws a plate itself (the titles window's preview): the layers' quads (four corners each:
+// top left, bottom left, bottom right, top right) in the window's own pixels, at in them too, u and v 0 to 1 in
+// FxAtlasSource; added to out, nothing drawn. phase is PhaseOf() the owner's name, so the plate keeps its moments.
+inline constexpr const char* FxAtlasSource = "/Data/Interface/newui_titles_fx.tga";
+float PhaseOf(const wchar_t* name);
+void BuildUnder(const GameLogic::Titles::Worn& title, float phase, const Placement& at,
+                std::vector<Render::Renderer::RecordedVertex>& out);
+void BuildOver(const GameLogic::Titles::Worn& title, float phase, const Placement& at,
+               std::vector<Render::Renderer::RecordedVertex>& out);
+std::array<unsigned char, 3> TextColor(const GameLogic::Titles::Worn& title, float phase,
                                        const unsigned char (&base)[3]);
 } // namespace UI::TitlePlates::Effects

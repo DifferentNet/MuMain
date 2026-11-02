@@ -4,7 +4,12 @@
 #include "UI/Events/TitlesWindow.h"
 
 #include "Audio/DSPlaySound.h"
+#include "Engine/Object/ZzzCharacter.h"
 #include "GameLogic/Events/Titles.h"
+#include "Render/RmlUi/RmlAdditiveMeshElement.h"
+#include "UI/Character/TitlePlateEffects.h"
+#include "UI/Character/TitlePlates.h"
+#include "UI/Character/TitlePlatesArt.h"
 #include "UI/Core/WindowSystem.h"
 
 #include "Core/Utilities/StringUtils.h"
@@ -15,9 +20,15 @@
 #include "UI/RmlBridge/RmlSyncField.h"
 
 #include <RmlUi/Core/ElementDocument.h>
+#include <RmlUi/Core/StringUtilities.h>
+#include <RmlUi/Core/SystemInterface.h>
 
 #include <algorithm>
+#include <array>
 #include <cstdarg>
+#include <cstdio>
+#include <cmath>
+#include <cstdint>
 #include <cwchar>
 
 using namespace SEASON3B;
@@ -51,7 +62,8 @@ std::wstring TimeLeft(long long seconds)
 {
     const long long minutes = std::max<long long>(1, (seconds + 59) / 60);
     if (minutes >= 24 * 60)
-        return Printf(I18N::Game::TitlesLeftDays, static_cast<int>(minutes / (24 * 60)), static_cast<int>(minutes / 60 % 24));
+        return Printf(I18N::Game::TitlesLeftDays, static_cast<int>(minutes / (24 * 60)),
+                      static_cast<int>(minutes / 60 % 24));
     if (minutes >= 60)
         return Printf(I18N::Game::TitlesLeftHours, static_cast<int>(minutes / 60), static_cast<int>(minutes % 60));
     return Printf(I18N::Game::TitlesLeftMinutes, static_cast<int>(minutes));
@@ -61,7 +73,8 @@ std::wstring TimeLeft(long long seconds)
 std::wstring Percent(float value)
 {
     const int tenths = static_cast<int>(value * 10.f + 0.5f);
-    return tenths % 10 == 0 ? std::to_wstring(tenths / 10) : std::to_wstring(tenths / 10) + L"." + std::to_wstring(tenths % 10);
+    return tenths % 10 == 0 ? std::to_wstring(tenths / 10)
+                            : std::to_wstring(tenths / 10) + L"." + std::to_wstring(tenths % 10);
 }
 
 // The bonus of a title while it is worn: "+3% HP, -1% damage taken, +1% damage".
@@ -144,12 +157,12 @@ void mu::ui::window::CTitlesWindow::OpenningProcess()
     m_openedAt = std::chrono::steady_clock::now();
     m_lastRequest = m_openedAt;
     m_tab = 0;
+    m_hoverRow = -1;
+    m_pendingHover = -2;
     Titles().RequestList();
 }
 
-void mu::ui::window::CTitlesWindow::ClosingProcess()
-{
-}
+void mu::ui::window::CTitlesWindow::ClosingProcess() {}
 
 bool mu::ui::window::CTitlesWindow::UpdateMouseEvent()
 {
@@ -180,6 +193,11 @@ bool mu::ui::window::CTitlesWindow::Update()
     m_pendingExit = false;
     m_pendingTab = -1;
     m_pendingWear = -1;
+    if (m_pendingHover != -2)
+    {
+        m_hoverRow = m_pendingHover;
+        m_pendingHover = -2;
+    }
     if (IsVisible())
     {
         auto& store = Titles();
@@ -194,6 +212,7 @@ bool mu::ui::window::CTitlesWindow::Update()
             if (tab >= 0 && tab <= 1 && tab != m_tab)
             {
                 m_tab = tab;
+                m_hoverRow = -1;
                 PlayBuffer(SOUND_CLICK01);
             }
 
@@ -257,9 +276,10 @@ void mu::ui::window::CTitlesWindow::BindRmlModel(Rml::DataModelConstructor& c, T
     c.Bind("rows", &model.rows);
 
     c.Bind("exit_tooltip", &model.exitTooltip);
+    c.Bind("fx", &model.effects);
 
-    c.BindEventCallback("titles_exit", [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
-                        { m_pendingExit = true; });
+    c.BindEventCallback("titles_exit",
+                        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { m_pendingExit = true; });
     c.BindEventCallback("titles_tab",
                         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& args)
                         {
@@ -271,6 +291,12 @@ void mu::ui::window::CTitlesWindow::BindRmlModel(Rml::DataModelConstructor& c, T
                         {
                             if (args.size() == 1)
                                 m_pendingWear = args[0].Get<int>(-1);
+                        });
+    c.BindEventCallback("titles_hover",
+                        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& args)
+                        {
+                            if (args.size() == 1)
+                                m_pendingHover = args[0].Get<int>(-1);
                         });
 
     wchar_t closeText[256] = {};
@@ -323,6 +349,8 @@ void mu::ui::window::CTitlesWindow::SyncContent()
 
     std::vector<std::wstring> ids;
     std::vector<bool> owned;
+    std::vector<GameLogic::Titles::Worn> plates;
+    int wornRow = -1;
     if (!store.HasList())
     {
         updated.status = line(now - m_openedAt < AnswerTimeout ? I18N::Game::TitlesAsking : I18N::Game::TitlesNoAnswer,
@@ -336,7 +364,8 @@ void mu::ui::window::CTitlesWindow::SyncContent()
         updated.status = line(worn != list.end() ? Printf(I18N::Game::TitlesWearing, worn->Name.c_str())
                                                  : std::wstring(I18N::Game::TitlesWearingNone),
                               CONTENT_WIDTH, true);
-        updated.detail = line(store.Automatic() ? I18N::Game::TitlesAutomatic : I18N::Game::TitlesClickHint, CONTENT_WIDTH);
+        updated.detail =
+            line(store.Automatic() ? I18N::Game::TitlesAutomatic : I18N::Game::TitlesClickHint, CONTENT_WIDTH);
 
         // Seconds since the list came: the time left counts down between the answers.
         const long long elapsed = static_cast<long long>((GetTickCount64() - store.ListTime()) / 1000);
@@ -356,6 +385,7 @@ void mu::ui::window::CTitlesWindow::SyncContent()
             updated.rows.push_back(std::move(none));
             ids.emplace_back();
             owned.push_back(true);
+            plates.emplace_back();
         }
 
         int ownedCount = 0;
@@ -373,7 +403,10 @@ void mu::ui::window::CTitlesWindow::SyncContent()
             row.owned = entry.Owned;
             row.worn = entry.Owned && entry.Id == store.Wearing();
             if (row.worn)
+            {
                 row.mark = wornMark;
+                wornRow = row.index;
+            }
             if (entry.HasBonus())
                 row.bonus = wrapped(BonusText(entry));
 
@@ -392,22 +425,28 @@ void mu::ui::window::CTitlesWindow::SyncContent()
             }
             else
             {
-                row.detail = line(TimeLeft(std::max<long long>(0, entry.SecondsLeft - elapsed)), ROW_WIDTH - MARK_WIDTH);
+                row.detail =
+                    line(TimeLeft(std::max<long long>(0, entry.SecondsLeft - elapsed)), ROW_WIDTH - MARK_WIDTH);
             }
 
             updated.rows.push_back(std::move(row));
             ids.push_back(entry.Id);
             owned.push_back(entry.Owned);
+            plates.push_back({entry.Id, entry.Color, entry.Name, entry.Name});
         }
 
         if (m_tab == 0 && ownedCount == 0)
             updated.footer = wrapped(I18N::Game::TitlesEmpty);
         else if (m_tab == 1)
-            updated.footer = line(Printf(I18N::Game::TitlesOwnedCount, ownedCount, static_cast<int>(list.size())), CONTENT_WIDTH);
+            updated.footer =
+                line(Printf(I18N::Game::TitlesOwnedCount, ownedCount, static_cast<int>(list.size())), CONTENT_WIDTH);
     }
 
     m_rowIds = std::move(ids);
     m_rowOwned = std::move(owned);
+    m_rowPlates = std::move(plates);
+    m_wornRow = wornRow;
+    updated.effects = UI::TitlePlates::Effects::Enabled();
 
     auto& binder = m_RmlView.Binder();
     SyncFieldFrom(binder, &TitlesRmlModel::title, "title", updated);
@@ -416,4 +455,194 @@ void mu::ui::window::CTitlesWindow::SyncContent()
     SyncFieldFrom(binder, &TitlesRmlModel::detail, "detail", updated);
     SyncFieldFrom(binder, &TitlesRmlModel::rows, "rows", updated);
     SyncFieldFrom(binder, &TitlesRmlModel::footer, "footer", updated);
+    SyncFieldFrom(binder, &TitlesRmlModel::effects, "fx", updated);
+
+    SyncPreview();
+    SyncRowShine();
+}
+
+// The light over the worn row (the row's <additive-mesh>, there while the effects are on): a soft band crossing it in
+// a second, every five seconds. RmlUi's gradients need shaders the renderer doesn't have, so it is a mesh of one
+// white texel of the effects atlas with the light in the vertex colours.
+void mu::ui::window::CTitlesWindow::SyncRowShine()
+{
+    constexpr double Period = 5.0;
+    constexpr double Run = 1.1;
+    constexpr float BandShare = 0.35f;
+    // (255, 240, 200) at 30 %, as ABGR (the alpha unused: added).
+    constexpr std::uint32_t Peak = (60u << 16) | (72u << 8) | 77u;
+    // Inside silver's silhouette: solid white.
+    constexpr float U = 160.f / UI::TitlePlates::Art::FxAtlasWidth;
+    constexpr float V = 33.f / UI::TitlePlates::Art::FxAtlasHeight;
+
+    Rml::ElementList shines;
+    m_RmlView.Document()->GetElementsByClassName(shines, "tt-row-shine");
+    for (Rml::Element* element : shines)
+    {
+        const Rml::Vector2f size = element->GetBox().GetSize(Rml::BoxArea::Border);
+        const double now = Rml::GetSystemInterface()->GetElapsedTime();
+        const double local = std::fmod(now, Period);
+        std::vector<Render::Renderer::RecordedVertex> quads;
+        if (local < Run && size.x > 0.f && size.y > 0.f)
+        {
+            const float band = size.x * BandShare;
+            const float x0 = -band + (size.x + band) * static_cast<float>(local / Run);
+            const float xs[] = {x0, x0 + band / 2.f, x0 + band};
+            const float light[] = {0.f, 1.f, 0.f};
+            const auto colour = [](float t)
+            {
+                const auto channel = [t](int shift)
+                { return static_cast<std::uint32_t>(((Peak >> shift) & 0xFFu) * t + 0.5f) << shift; };
+                return channel(0) | channel(8) | channel(16);
+            };
+            for (int i = 0; i < 2; ++i)
+            {
+                // Cut to the row, the light carried to the cut.
+                const float a = std::clamp(xs[i], 0.f, size.x);
+                const float b = std::clamp(xs[i + 1], 0.f, size.x);
+                if (b <= a)
+                    continue;
+                const auto at = [&](float x)
+                { return light[i] + (light[i + 1] - light[i]) * (x - xs[i]) / (xs[i + 1] - xs[i]); };
+                const std::uint32_t ca = colour(at(a));
+                const std::uint32_t cb = colour(at(b));
+                quads.push_back({a, 0.f, U, V, ca});
+                quads.push_back({a, size.y, U, V, ca});
+                quads.push_back({b, size.y, U, V, cb});
+                quads.push_back({b, 0.f, U, V, cb});
+            }
+        }
+        static_cast<Render::RmlUi::AdditiveMeshElement*>(element)->SetMesh(UI::TitlePlates::Effects::FxAtlasSource,
+                                                                           quads, 1.f);
+    }
+}
+
+void mu::ui::window::CTitlesWindow::SyncPreview()
+{
+    namespace Art = UI::TitlePlates::Art;
+    namespace Effects = UI::TitlePlates::Effects;
+
+    Rml::ElementDocument* document = m_RmlView.Document();
+    Rml::Element* box = document->GetElementById("tt_preview");
+    Rml::Element* glow = document->GetElementById("tt_preview_glow");
+    Rml::Element* plateImage = document->GetElementById("tt_preview_plate");
+    Rml::Element* light = document->GetElementById("tt_preview_fx");
+    Rml::Element* text = document->GetElementById("tt_preview_text");
+    if (box == nullptr || glow == nullptr || plateImage == nullptr || light == nullptr || text == nullptr)
+        return;
+
+    // The row under the mouse ("No title": none), else the worn one.
+    const int row = m_hoverRow >= 0 && m_hoverRow < static_cast<int>(m_rowPlates.size()) ? m_hoverRow : m_wornRow;
+    const GameLogic::Titles::Worn* title =
+        row >= 0 && row < static_cast<int>(m_rowPlates.size()) && !m_rowPlates[row].Id.empty() ? &m_rowPlates[row]
+                                                                                               : nullptr;
+    const Rml::Vector2f size = box->GetBox().GetSize();
+    const int rarity = title != nullptr ? static_cast<int>(title->Color) : -1;
+    if (title == nullptr || size.x <= 0.f || size.y <= 0.f)
+    {
+        if (m_previewRarity != -1)
+        {
+            m_previewRarity = -1;
+            m_previewId.clear();
+            box->SetProperty("visibility", "hidden");
+        }
+        return;
+    }
+
+    // One scale for all six plates, the widest and tallest fitting the box, and every field's middle at one height:
+    // the plates keep their sizes against each other, as over the heads.
+    static const std::array<float, 3> bounds = []
+    {
+        float widest = 0.f, above = 0.f, below = 0.f;
+        for (const Art::Plate& p : Art::Plates)
+        {
+            const float middle = (p.fieldTop + p.fieldBottom) / 2.f;
+            widest = std::max(widest, p.width);
+            above = std::max(above, middle);
+            below = std::max(below, p.height - middle);
+        }
+        return std::array<float, 3>{widest, above, below};
+    }();
+    const float k = std::min(size.x / bounds[0], size.y / (bounds[1] + bounds[2]));
+    const float middleY = (bounds[1] * k + size.y - bounds[2] * k) / 2.f;
+    const Art::Plate& plate = Art::Plates[rarity];
+    const float left = size.x / 2.f - (plate.fieldLeft + plate.fieldRight) / 2.f * k;
+    const float top = middleY - (plate.fieldTop + plate.fieldBottom) / 2.f * k;
+    const float fieldLeft = left + plate.fieldLeft * k;
+    const float fieldTop = top + plate.fieldTop * k;
+    const float fieldWidth = (plate.fieldRight - plate.fieldLeft) * k;
+    const float fieldHeight = (plate.fieldBottom - plate.fieldTop) * k;
+
+    const auto px = [](float value) { return Rml::Property(value, Rml::Unit::PX); };
+    if (m_previewId != title->Id || m_previewRarity != rarity || m_previewWidth != size.x || m_previewHeight != size.y)
+    {
+        if (m_previewRarity < 0)
+            box->SetProperty("visibility", "visible");
+        m_previewId = title->Id;
+        m_previewRarity = rarity;
+        m_previewWidth = size.x;
+        m_previewHeight = size.y;
+
+        // The art as a quad of its atlas (an <img rect> would take the rectangle in the document's dp, not the file's).
+        const float right = left + plate.width * k;
+        const float bottom = top + plate.height * k;
+        const float u0 = plate.x / Art::AtlasSize;
+        const float v0 = plate.y / Art::AtlasSize;
+        const float u1 = (plate.x + plate.width) / Art::AtlasSize;
+        const float v1 = (plate.y + plate.height) / Art::AtlasSize;
+        const Render::Renderer::RecordedVertex quad[] = {{left, top, u0, v0, 0xFFFFFFFFu},
+                                                         {left, bottom, u0, v1, 0xFFFFFFFFu},
+                                                         {right, bottom, u1, v1, 0xFFFFFFFFu},
+                                                         {right, top, u1, v0, 0xFFFFFFFFu}};
+        static_cast<Render::RmlUi::AdditiveMeshElement*>(plateImage)
+            ->SetMesh(UI::TitlePlates::AtlasSource, quad, 1.f, false);
+
+        // The text in bold, as large as the field lets it be (a long title in the regular font).
+        const std::wstring& name = title->Text();
+        g_pRenderText->SetFont(g_hFontBold);
+        const float boldWidth = static_cast<float>(MeasureInReferenceUnits(name));
+        g_pRenderText->SetFont(g_hFont);
+        const float regularWidth = static_cast<float>(MeasureInReferenceUnits(name));
+        const float room = fieldWidth * 0.86f;
+        const float fieldPx = fieldHeight * 0.62f;
+        float textPx =
+            std::min(fieldPx, UI::RmlBridge::NativeTextPxInBox(UI::Scaling::FontRole::Bold, boldWidth, room));
+        bool bold = textPx >= fieldPx * 0.85f;
+        if (!bold)
+        {
+            const float regularPx =
+                std::min(fieldPx, UI::RmlBridge::NativeTextPxInBox(UI::Scaling::FontRole::Normal, regularWidth, room));
+            bold = regularPx <= textPx;
+            textPx = std::max(textPx, regularPx);
+        }
+        text->SetInnerRML(Rml::StringUtilities::EncodeRml(StringUtils::WideToNarrow(name.c_str())));
+        text->SetProperty(Rml::PropertyId::Left, px(fieldLeft));
+        text->SetProperty(Rml::PropertyId::Top, px(fieldTop));
+        text->SetProperty(Rml::PropertyId::Width, px(fieldWidth));
+        text->SetProperty(Rml::PropertyId::Height, px(fieldHeight));
+        text->SetProperty(Rml::PropertyId::LineHeight, px(fieldHeight));
+        text->SetProperty(Rml::PropertyId::FontSize, px(textPx));
+        text->SetProperty("font-weight", bold ? "bold" : "normal");
+    }
+
+    // The effects move every frame: the hero's own moments, so the preview flashes with the hero's plate.
+    const bool effects = Effects::Enabled();
+    const float phase = Effects::PhaseOf(Hero != nullptr ? Hero->ID : nullptr);
+    const Effects::Placement at{left, top, k};
+    const auto mesh = [](Rml::Element* element) { return static_cast<Render::RmlUi::AdditiveMeshElement*>(element); };
+    m_previewVertices.clear();
+    if (effects)
+        Effects::BuildUnder(*title, phase, at, m_previewVertices);
+    mesh(glow)->SetMesh(Effects::FxAtlasSource, m_previewVertices, 1.f);
+    m_previewVertices.clear();
+    if (effects)
+        Effects::BuildOver(*title, phase, at, m_previewVertices);
+    mesh(light)->SetMesh(Effects::FxAtlasSource, m_previewVertices, 1.f);
+
+    const auto& base = UI::TitlePlates::BaseTextColor(title->Color);
+    const std::array<unsigned char, 3> color =
+        effects ? Effects::TextColor(*title, phase, base) : std::array<unsigned char, 3>{base[0], base[1], base[2]};
+    char rgb[32];
+    std::snprintf(rgb, sizeof(rgb), "rgb(%d, %d, %d)", color[0], color[1], color[2]);
+    text->SetProperty("color", rgb);
 }

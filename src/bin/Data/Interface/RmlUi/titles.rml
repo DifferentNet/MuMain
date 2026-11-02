@@ -22,6 +22,15 @@
 
 		<span id="tt_title" class="sharp-text tt-title"
 		      data-style-font-size="title.text_px + 'px'">{{title.text}}</span>
+		<!-- The preview (ghinzuro, 2026-11-03): the plate of the row under the mouse, else of the worn title, as over
+		     the heads with its effects (the glow, the art and the light are additive-mesh layers, the art drawn plain). C++ places all four. -->
+		<div id="tt_preview">
+			<additive-mesh id="tt_preview_glow" class="tt-preview-layer"/>
+			<additive-mesh id="tt_preview_plate" class="tt-preview-layer"/>
+			<additive-mesh id="tt_preview_fx" class="tt-preview-layer"/>
+			<span id="tt_preview_text" class="tt-preview-layer"></span>
+		</div>
+
 		<span id="tt_status" class="sharp-text tt-status"
 		      data-style-font-size="status.text_px + 'px'">{{status.text}}</span>
 		<span id="tt_detail" class="sharp-text tt-detail"
@@ -38,7 +47,9 @@
 				<div class="tt-row" data-for="r : rows" data-class-owned="r.owned" data-class-worn="r.worn"
 				     data-class-none="r.rarity == -1" data-class-r0="r.rarity == 0" data-class-r1="r.rarity == 1"
 				     data-class-r2="r.rarity == 2" data-class-r3="r.rarity == 3" data-class-r4="r.rarity == 4"
-				     data-class-r5="r.rarity == 5" data-event-click="titles_wear(r.index)">
+				     data-class-r5="r.rarity == 5" data-event-click="titles_wear(r.index)"
+				     data-event-mouseover="titles_hover(r.index)" data-event-mouseout="titles_hover(-1)">
+					<additive-mesh class="tt-row-shine" data-if="r.worn &amp;&amp; fx"/>
 					<span class="tt-row-name" data-style-font-size="r.name.text_px + 'px'">{{r.name.text}}</span>
 					<div class="tt-row-line">
 						<span class="tt-row-detail" data-style-font-size="r.detail.text_px + 'px'">{{r.detail.text}}</span>
