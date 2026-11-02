@@ -261,7 +261,8 @@ list too; not the cross in a window's corner, as B closes the window), and the d
 the same window before the next window); the character stands meanwhile. On a list's last row on
 view, a step further scrolls the list. As a window opens or a tab turns, the frame starts on its item
 cell nearest the top-left corner, or without cells on the target nearest it (a tab before the close
-button); when its target goes away, it
+button); a window that opens within a moment after, before the frame moved (an NPC shop, its goods
+sent by the server after the inventory opened), takes it on the same way; when its target goes away, it
 goes to the nearest one. While a message box or a menu over the windows is up (the item card),
 the frame rests only on it. The right stick still moves the pointer (shown while off every target, at
 half speed over a window) and snaps it onto a target near when let go. A legend under the hub's tabs

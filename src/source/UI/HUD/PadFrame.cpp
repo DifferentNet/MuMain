@@ -10,8 +10,10 @@
 #include <RmlUi/Core/Context.h>
 #include <SDL3/SDL.h>
 
+#include <algorithm>
 #include <limits>
 #include <string_view>
+#include <vector>
 
 namespace
 {
@@ -27,6 +29,9 @@ constexpr auto Repeat = std::chrono::milliseconds(130);
 constexpr float SnapReachShare = 0.04f;
 constexpr float Anywhere = std::numeric_limits<float>::max();
 constexpr int SnapDelayFrames = 2;
+// A window that opens this many frames after the one the frame started in (the NPC shop after the
+// inventory, its goods come from the server) takes the frame there, while it has not moved yet.
+constexpr int SettleFrames = 45;
 // The NPC shop's window: its cells are goods, A buys them.
 constexpr std::string_view ShopDocument = "npc_shop.rml";
 // The crafting box: its items have no card.
@@ -68,6 +73,10 @@ struct State
     Point windowPlace;
     bool goBack = false;
     int goBackFrames = 0;
+    // Frames since the frame started in a window just opened, -1 once settled (it moved, or time
+    // passed); the windows there were then.
+    int settleFrames = -1;
+    int settleWindows = 0;
 };
 State g_state;
 
@@ -88,6 +97,16 @@ Point PointerPlace(float scale)
     float y = 0.f;
     SDL_GetMouseState(&x, &y);
     return {x * scale, y * scale};
+}
+
+// How many windows the targets are in.
+int CountWindows(std::span<const Pick::Target> targets)
+{
+    std::vector<int> windows;
+    for (const Pick::Target& target : targets)
+        if (std::find(windows.begin(), windows.end(), target.window) == windows.end())
+            windows.push_back(target.window);
+    return static_cast<int>(windows.size());
 }
 
 void MoveOnto(SDL_Window* window, const Pick::Target& target, float scale)
@@ -194,6 +213,8 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
         }
         if (snapNow)
             g_state.snapPending = false;
+        g_state.settleFrames = opened ? 0 : -1;
+        g_state.settleWindows = CountWindows(targets);
         g_state.goBack = false;
     }
     const Pad::Step step = g_state.stepper.Take(presses, now);
@@ -202,6 +223,14 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
         presses[static_cast<int>(button)] = false;
     if (step.dx != 0 || step.dy != 0)
         Hop(window, targets, current, step, scale);
+    if (g_state.settleFrames >= 0)
+    {
+        ++g_state.settleFrames;
+        if (step.dx != 0 || step.dy != 0 || g_state.stickPushed || g_state.settleFrames > SettleFrames)
+            g_state.settleFrames = -1;
+        else if (CountWindows(targets) > g_state.settleWindows)
+            SnapSoon();
+    }
     FollowStick(window, targets, current, scale, *context);
 
     here = PointerPlace(scale);
@@ -225,11 +254,13 @@ void SnapSoon()
 {
     g_state.snapPending = true;
     g_state.snapFrames = 0;
+    g_state.settleFrames = -1;
 }
 
 void Reset()
 {
     g_state.snapPending = false;
+    g_state.settleFrames = -1;
     g_state.snapFrames = 0;
     g_state.placed = false;
     g_state.onTarget = false;
