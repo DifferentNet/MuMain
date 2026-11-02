@@ -44,6 +44,8 @@ constexpr std::array<const char*, 2> PlacedRoots = {"panel", "content_root"};
 constexpr const char* PlacedClass = "slot-placed";
 constexpr const char* CellClass = "item-cell";
 constexpr const char* SlotClass = "equip-slot";
+// The control a window marks for the frame to start on (PadTargetPick::Target::start).
+constexpr const char* StartClass = "pad-start";
 // A cell under an item carries its tint (ItemGridCell::tint), an empty one none.
 constexpr std::string_view TintPrefix = "tint-";
 // A worn slot with nothing in it (MyInventory's slot_states).
@@ -252,6 +254,7 @@ private:
         Target target{{}, m_Window};
         target.cell = element.IsClassSet(CellClass);
         target.slot = element.IsClassSet(SlotClass);
+        target.start = element.IsClassSet(StartClass);
         target.empty = (target.cell && element.GetClassNames().find(TintPrefix) == Rml::String::npos)
                        || (target.slot && element.IsClassSet(BareSlotClass))
                        || (target.cell && element.Closest(LookOnlySelector) != nullptr);

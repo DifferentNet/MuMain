@@ -1,5 +1,5 @@
-/* Legacy theme for the character-creation dialog (CCharMakeWin) -- only idle/checked button
-   frames are reproduced. Stat/description panels were flat CSprite fills originally, so they're
+/* Legacy theme for the character-creation dialog (CCharMakeWin) -- idle/checked job button
+   frames, and the OK/Cancel sprites' idle, hover and pressed frames. Stat/description panels were flat CSprite fills originally, so they're
    plain background-color here too. */
 
 @spritesheet charmake-input-sheet
@@ -16,12 +16,16 @@
 @spritesheet charmake-ok-sheet
 {
 	src: "../../../message_ok_b_all.tga";
-	charmake-ok-idle: 0px 0px 54px 30px;
+	charmake-ok-idle:   0px  0px 54px 30px;
+	charmake-ok-hover:  0px 30px 54px 30px;
+	charmake-ok-active: 0px 60px 54px 30px;
 }
 @spritesheet charmake-cancel-sheet
 {
 	src: "../../../loding_cancel_b_all.tga";
-	charmake-cancel-idle: 0px 0px 54px 30px;
+	charmake-cancel-idle:   0px  0px 54px 30px;
+	charmake-cancel-hover:  0px 30px 54px 30px;
+	charmake-cancel-active: 0px 60px 54px 30px;
 }
 
 /* Static RCSS instead of C++-pushed for width/height and most children (except #panel's own
@@ -186,11 +190,24 @@
 	   relying on inheritance from base.rcss's .btn. */
 	color: transparent;
 }
+/* Their own hover and pressed frames, as the login's: base.rcss's .btn:hover put a blank plate there. */
 .btn-ok {
 	decorator: image(charmake-ok-idle);
 }
+.btn-ok:hover {
+	decorator: image(charmake-ok-hover);
+}
+.btn-ok:active {
+	decorator: image(charmake-ok-active);
+}
 .btn-cancel {
 	decorator: image(charmake-cancel-idle);
+}
+.btn-cancel:hover {
+	decorator: image(charmake-cancel-hover);
+}
+.btn-cancel:active {
+	decorator: image(charmake-cancel-active);
 }
 
 /* The stat rows' own places, so a theme can move them -- they were style attributes, which are

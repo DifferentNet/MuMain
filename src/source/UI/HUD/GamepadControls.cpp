@@ -929,7 +929,7 @@ void ChooseCharacter(int step)
 
 // The character screen with nothing over it: LB and RB or the d-pad choose the character (the first
 // is chosen at once), A starts the game with it, X creates one, Y deletes the chosen one, Menu opens
-// the menu, View the server list, B is Esc.
+// the menu, B is Esc.
 void PlayCharacters(const Presses& presses)
 {
     if (SelectedHero < 0)
@@ -946,8 +946,6 @@ void PlayCharacters(const Presses& presses)
         g_CharSelMainWin.RmlClickDelete();
     else if (Pressed(presses, Button::Menu))
         g_CharSelMainWin.RmlClickMenu();
-    else if (Pressed(presses, Button::View))
-        g_CharSelMainWin.RmlClickConnect();
     else if (Pressed(presses, Button::B))
         Core::Input::Touch::TapKey(VK_ESCAPE);
 }

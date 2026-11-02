@@ -291,7 +291,7 @@ On the login, server and character screens the gold frame rests on their control
 the d-pad and the left stick hop it, A presses there (a text field brings up the pad's keyboard), B
 is Esc and Menu Enter; a screen's message box takes the frame alone. On the bare character screen a
 legend at the top says the keys: LB and RB (or the d-pad left and right) choose the character, A
-plays, X creates one, Y deletes the chosen one, Menu opens the menu, View the server list, B is Esc.
+plays, X creates one, Y deletes the chosen one, Menu opens the menu (the server list is there), B is Esc.
 With no control on view both sticks move the pointer and A or RT click. The pointer starts at the screen's centre the first time the pad takes over, so A
 attacks at once; later it stays where the mouse left it, so a window under it stays under it (a
 lifted finger leaves it off the window: then the centre again). A question (trade, party) takes Menu
