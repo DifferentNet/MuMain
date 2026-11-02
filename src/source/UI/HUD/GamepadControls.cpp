@@ -15,6 +15,7 @@
 #include "I18N/All.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
+#include "Character/CharMakeWin.h"
 #include "Character/CharSelMainWin.h"
 #include "Scenes/CharacterScene.h"
 #include "Scenes/SceneCommon.h"
@@ -35,6 +36,8 @@
 #include "UI/Inventory/InventoryContents.h"
 #include "UI/Inventory/MyInventory.h"
 #include "UI/Mobile/InterfaceMode.h"
+#include "UI/Windows/MsgWin.h"
+#include "UI/Windows/SysMenuWin.h"
 
 #include <RmlUi/Core/Context.h>
 #include <SDL3/SDL.h>
@@ -910,10 +913,12 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
         g_pSkillList->OnCurrentSkillClick();
 }
 
-// Whether the character screen shows with nothing over it (no creation, menu or message box).
+// Whether the character screen shows with nothing over it (no creation, menu or message box). A
+// "Please wait" box has no buttons for the frame, and the bar stays shown under it: its keys wait too.
 bool OnCharacterBar()
 {
-    return SceneFlag == CHARACTER_SCENE && g_CharSelMainWin.IsVisible();
+    return SceneFlag == CHARACTER_SCENE && g_CharSelMainWin.IsVisible() && !g_CharMakeWin.IsVisible()
+           && !g_MsgWin.IsVisible() && !g_SysMenuWin.IsVisible();
 }
 
 // The next character on the screen from the chosen one, step 1 to the right, -1 to the left, going
@@ -1193,11 +1198,19 @@ void Play()
     g_state.typing = false;
 
     const bool inWorld = IsInWorld();
-    UI::HUD::PadTargets::SetScreens(!inWorld);
+    // A map loading in the world (a gate, a warp): the pad rests, no frame over the HUD meanwhile.
+    const bool loadingMap = SceneFlag == MAIN_SCENE && !inWorld;
+    UI::HUD::PadTargets::SetScreens(!inWorld && !loadingMap);
     if (inWorld != g_state.inWorld)
     {
         ReleaseForWorldChange(window);
         g_state.inWorld = inWorld;
+    }
+    if (loadingMap)
+    {
+        if (g_state.frameOpen || g_state.onCharacters)
+            ReleaseForWorldChange(window);
+        return;
     }
     if (!inWorld)
     {
