@@ -78,6 +78,9 @@ namespace MUHelper
 
 		bool bUseHealPotion = false;
 		int iPotionThreshold = 0;
+		// Mana potions below this percent of mana (2026-11-02, ghinzuro: the DK stopped drinking them).
+		int iManaPotionThreshold = DefaultManaPotionThreshold;
+		static constexpr int DefaultManaPotionThreshold = 30;
 
 		bool bUseDrainLife = false;
 		bool bUseDarkRaven = false;

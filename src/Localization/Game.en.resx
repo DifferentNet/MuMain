@@ -13554,6 +13554,9 @@
   <data name="MuHelperSkillPaused" xml:space="preserve">
     <value>MU Helper: %ls doesn't cast. Trying again in %d s.</value>
   </data>
+  <data name="MuHelperMPStatus" xml:space="preserve">
+    <value>MP Status</value>
+  </data>
   <data name="MuHelperNoManaPotions" xml:space="preserve">
     <value>MU Helper: out of mana potions.</value>
   </data>

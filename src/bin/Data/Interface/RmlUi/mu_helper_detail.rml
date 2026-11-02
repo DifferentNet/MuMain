@@ -1,5 +1,5 @@
 <rml>
-	<!-- bound-geometry: the three gauges' fill levels -->
+	<!-- bound-geometry: the four gauges' fill levels -->
 <head>
 	<title>MU Helper Detail</title>
 	<link type="text/rcss" href="base.rcss"/>
@@ -30,7 +30,7 @@
 		<span class="sharp-text mh-text mh-center mh-bold mh-title" data-class-hidden="!(page == 4 || page == 5 || page == 6)" data-style-font-size="text_px + 'px'">{{labels.title_recovery}}</span>
 		<span class="sharp-text mh-text mh-center mh-bold mh-title" data-class-hidden="page != 7 &amp;&amp; page != 8" data-style-font-size="text_px + 'px'">{{labels.title_party}}</span>
 
-		<div id="pane_top" class="mh-pane" data-class-hidden="!(page == 2 || page == 3 || page == 4 || page == 5 || page == 6 || page == 7)" data-class-mh-pane-tall="page == 7">
+		<div id="pane_top" class="mh-pane" data-class-hidden="!(page == 2 || page == 3 || page == 4 || page == 5 || page == 6 || page == 7)" data-class-mh-pane-tall="page == 7" data-class-mh-pane-h70="page == 4 || page == 5 || page == 6">
 			<div class="p p-fill-tab"></div>
 			<div class="p p-fill-body"></div>
 			<div class="p p-tab-tl"></div>
@@ -48,7 +48,7 @@
 			<span class="sharp-text mh-text" data-class-hidden="!(page == 4 || page == 5 || page == 6)" data-style-font-size="text_px + 'px'">{{labels.pane_auto_potion}}</span>
 			<span class="sharp-text mh-text" data-class-hidden="page != 7" data-style-font-size="text_px + 'px'">{{labels.pane_buff_support}}</span>
 		</div>
-		<div id="pane_lower" class="mh-pane" data-class-hidden="!(page == 2 || page == 3 || page == 4 || page == 5)" data-class-mh-pane-tall="page == 2 || page == 3">
+		<div id="pane_lower" class="mh-pane" data-class-hidden="!(page == 2 || page == 3 || page == 4 || page == 5)" data-class-mh-pane-tall="page == 2 || page == 3" data-class-mhd-below-mp="page == 4 || page == 5">
 			<div class="p p-fill-tab"></div>
 			<div class="p p-fill-body"></div>
 			<div class="p p-tab-tl"></div>
@@ -138,6 +138,16 @@
 			     data-style-width="(potion_level * 12.4) + 'px'"
 			     data-style-decorator="'image(level-gauge-fill-' + potion_level + ')'"></div>
 			<span class="sharp-text mh-text mh-center" id="gauge_potion_label" data-style-font-size="text_px + 'px'">{{labels.hp_status}}</span>
+			<!-- MU Skynet: the mana potions' threshold under the HP one (2026-11-02); the top pane is the taller one here. -->
+			<div id="gauge_mana" class="level-gauge mh-gauge">
+				<div class="level-gauge-hit mh-gauge-hit" data-event-mousedown="muhelper_detail_gauge(3)"
+				     data-event-drag="muhelper_detail_gauge(3)"
+				     data-event-mousescroll="muhelper_detail_gauge(3)"></div>
+			</div>
+			<div id="gauge_mana_fill" class="level-gauge-fill mh-gauge-fill" data-class-hidden="mana_potion_level == 0"
+			     data-style-width="(mana_potion_level * 12.4) + 'px'"
+			     data-style-decorator="'image(level-gauge-fill-' + mana_potion_level + ')'"></div>
+			<span class="sharp-text mh-text mh-center" id="gauge_mana_label" data-style-font-size="text_px + 'px'">{{labels.mp_status}}</span>
 		</div>
 		<div class="mhd-page" data-class-hidden="page != 4 &amp;&amp; page != 5">
 			<div id="gauge_heal" class="level-gauge mh-gauge">
