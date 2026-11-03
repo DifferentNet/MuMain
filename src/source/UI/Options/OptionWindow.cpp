@@ -83,7 +83,8 @@ static constexpr int kGamepadDropdown = 11;
 static constexpr int kLastDropdownId = kGamepadDropdown;
 // The gamepad row's choices, in its labels' order.
 static constexpr int kGamepadOnIndex = 0;
-static constexpr int kGamepadOffIndex = 1;
+static constexpr int kGamepadQuietIndex = 1;
+static constexpr int kGamepadOffIndex = 2;
 
 std::vector<UI::Options::DisplayResolution>
 UI::Options::NormalizeDisplayResolutions(std::vector<DisplayResolution> resolutions)
@@ -1509,7 +1510,7 @@ void mu::ui::window::COptionWindow::RmlTouchButtonsChanged(int index)
 
 void mu::ui::window::COptionWindow::RmlGamepadChanged(int index)
 {
-    if (m_rmlSyncCount >= kRmlSelectSettleFrames && (index == kGamepadOnIndex || index == kGamepadOffIndex))
+    if (m_rmlSyncCount >= kRmlSelectSettleFrames && index >= kGamepadOnIndex && index <= kGamepadOffIndex)
         m_iPendingGamepad = index;
 }
 
@@ -1521,9 +1522,16 @@ void mu::ui::window::COptionWindow::ApplyPendingInterfaceMode()
     const int gamepad = std::exchange(m_iPendingGamepad, -1);
     if (gamepad >= 0)
     {
-        const bool enabled = gamepad == kGamepadOnIndex;
+        const bool enabled = gamepad != kGamepadOffIndex;
         Core::Input::Gamepad::SetEnabled(enabled);
         GameConfig::GetInstance().SetGamepad(enabled);
+        // Off keeps the vibration choice for when the pad is on again.
+        if (enabled)
+        {
+            const bool rumble = gamepad == kGamepadOnIndex;
+            Core::Input::Gamepad::SetRumble(rumble);
+            GameConfig::GetInstance().SetGamepadRumble(rumble);
+        }
         GameConfig::GetInstance().Save();
         // Turned off with the pad itself: it plays on until a key, a mouse button or the screen is pressed.
         if (Core::Input::Gamepad::TurnsOffWhenPutDown())
@@ -2032,8 +2040,10 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
                       UI::Mobile::ButtonSize::NearestIndex(UI::Mobile::TouchUnit::GetPercent()));
     syncMultiplierRow(model.gamepadLabels, "gamepad_labels", model.gamepadIndex, "gamepad_index",
                       model.gamepadValueLabel, "gamepad_value_label",
-                      NarrowLabels({I18N::Game::GamepadOn, I18N::Game::GamepadOff}),
-                      Core::Input::Gamepad::IsEnabled() ? kGamepadOnIndex : kGamepadOffIndex);
+                      NarrowLabels({I18N::Game::GamepadOn, I18N::Game::GamepadOnNoRumble, I18N::Game::GamepadOff}),
+                      !Core::Input::Gamepad::IsEnabled()    ? kGamepadOffIndex
+                      : Core::Input::Gamepad::IsRumbleOn() ? kGamepadOnIndex
+                                                           : kGamepadQuietIndex);
     const bool touchButtonsShown = UI::Mobile::ShowsControls();
     if (model.touchButtonsShown != touchButtonsShown)
     {

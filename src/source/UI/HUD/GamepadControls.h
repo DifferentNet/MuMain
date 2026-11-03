@@ -39,6 +39,9 @@
 //
 // While a text field has the keys (the chat, the login), the on-screen keyboard (UI/HUD/PadKeyboard)
 // has the pad and nothing else acts.
+//
+// The pad shakes as the hero takes a hard blow (as hard as it hurt) and long on the death, unless the
+// player chose "On, no vibration" (Options -> Interface -> Gamepad).
 #pragma once
 
 namespace UI::HUD::GamepadControls

@@ -111,6 +111,9 @@ public:
     // Whether the game reads a gamepad (Core::Input::Gamepad::SetEnabled).
     bool GetGamepad() const { return m_gamepad; }
     void SetGamepad(bool enabled) { m_gamepad = enabled; }
+    // Whether the pad vibrates on hits and on death (Core::Input::Gamepad::SetRumble).
+    bool GetGamepadRumble() const { return m_gamepadRumble; }
+    void SetGamepadRumble(bool on) { m_gamepadRumble = on; }
 
     // Chat commands - the favourites and the named templates of the command
     // window. They belong to the installation, not to a character.
@@ -241,6 +244,7 @@ private:
     std::wstring m_controls;
     int m_touchButtonSize = 100;
     bool m_gamepad = true;
+    bool m_gamepadRumble = true;
     bool m_enableAnimationTaskPool;
 
     int m_zoom;
