@@ -4010,11 +4010,11 @@ void MoveCharacter(CHARACTER* c, OBJECT* o)
 {
     if (o->Type == MODEL_WARCRAFT)
     {
-        wchar_t Text[100];
-        wchar_t ID[100];
-        mu_swprintf(ID, L"%ls .", c->ID);
-        mu_swprintf(Text, I18N::Game::DToKalima, c->Level);
-        wcscat(ID, Text);
+        // "Magic stone of Xeed to Kalima 1"
+        wchar_t Text[100]{};
+        wchar_t ID[100]{};
+        _snwprintf_s(Text, std::size(Text), _TRUNCATE, I18N::Game::DToKalima, static_cast<int>(c->Level));
+        _snwprintf_s(ID, std::size(ID), _TRUNCATE, L"%ls %ls", c->ID, Text);
         AddObjectDescription(ID, o->Position);
     }
 
@@ -15201,17 +15201,31 @@ CHARACTER* CreateHellGate(char* ID, int Key, EMonsterType Index, int x, int y, i
 {
     CHARACTER* portal = CreateMonster(Index, x, y, Key);
     portal->Level = Index - 152 + 1;
-    wchar_t portalText[100];
-    wchar_t name[sizeof portal->ID];
 
-    CMultiLanguage::ConvertFromUtf8(name, ID);
+    // The owner's name fills the packet's 10 bytes without an end when it is 10 letters long.
+    wchar_t name[MAX_USERNAME_SIZE + 1]{};
+    CMultiLanguage::ConvertFromUtf8(name, ID, MAX_USERNAME_SIZE);
+    name[MAX_USERNAME_SIZE] = L'\0';
 
-    mu_swprintf(portalText, portal->ID, name);
+    // portal->ID holds the NPC name's format ("Magic stone of %s "). The text is written back
+    // into it, cut to its size: a copy of a bigger buffer ran over Level and Key behind it,
+    // so the label showed "Kalima 111" or another wrong number.
+    // The name's "%s" is a wide string only in MSVC's wide printf; "%ls" is one everywhere (the browser build).
+    std::wstring format = portal->ID;
+    if (const size_t at = format.find(L"%s"); at != std::wstring::npos)
+        format.replace(at, 2, L"%ls");
+    wchar_t portalText[std::extent_v<decltype(CHARACTER::ID)>]{};
+    _snwprintf_s(portalText, std::size(portalText), _TRUNCATE, format.c_str(), name);
+
+    // No trailing spaces, so the label can add its own separator.
+    size_t length = wcslen(portalText);
+    while (length > 0 && portalText[length - 1] == L' ')
+        portalText[--length] = L'\0';
 
     if (portal->Level == 7)
         portal->Object.SubType = 1;
 
-    memcpy(portal->ID, portalText, sizeof portalText);
+    wcscpy(portal->ID, portalText);
 
     if (CreateFlag)
     {
