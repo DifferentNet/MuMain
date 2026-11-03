@@ -38,6 +38,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <utility>
 #include <chrono>
 
 #include "GameLogic/Events/CSChaosCastle.h"
@@ -1467,18 +1468,43 @@ static bool SetGroundFaceState(int Texture)
 // alpha test RenderTerrain set for it.
 static void RenderGroundFaces(bool grass)
 {
-    // Sorts keys (texture, then face index) rather than the faces: sorting the 148-byte faces took 3 %
-    // of a frame.
-    static std::vector<std::uint64_t> order;
-    order.clear();
+    // Buckets face indices by texture in one pass (a map uses a dozen or two): sorting the 148-byte
+    // faces took 3 % of a frame, sorting keys 1 %.
+    static std::vector<int> textures;
+    static std::vector<std::uint32_t> starts;
+    static std::vector<std::uint16_t> slots;
+    static std::vector<std::uint32_t> order;
+    textures.clear();
+    starts.clear();
+    slots.resize(s_groundFaces.size());
+    std::size_t slot = 0;
     for (std::size_t i = 0; i < s_groundFaces.size(); ++i)
-        order.push_back((static_cast<std::uint64_t>(static_cast<std::uint32_t>(s_groundFaces[i].texture)) << 32) | i);
-    std::sort(order.begin(), order.end());
+    {
+        const int texture = s_groundFaces[i].texture;
+        if (slot >= textures.size() || textures[slot] != texture)
+        {
+            slot = std::find(textures.begin(), textures.end(), texture) - textures.begin();
+            if (slot == textures.size())
+            {
+                textures.push_back(texture);
+                starts.push_back(0u);
+            }
+        }
+        ++starts[slot];
+        slots[i] = static_cast<std::uint16_t>(slot);
+    }
+    std::uint32_t next = 0;
+    for (std::uint32_t& start : starts)
+        next += std::exchange(start, next);
+    order.resize(s_groundFaces.size());
+    for (std::size_t i = 0; i < s_groundFaces.size(); ++i)
+        order[starts[slots[i]]++] = static_cast<std::uint32_t>(i);
+
     int boundTexture = -1;
     bool drawn = true;
-    for (const std::uint64_t key : order)
+    for (const std::uint32_t index : order)
     {
-        const GroundFace& face = s_groundFaces[static_cast<std::uint32_t>(key)];
+        const GroundFace& face = s_groundFaces[index];
         if (face.texture != boundTexture)
         {
             boundTexture = face.texture;
