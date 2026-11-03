@@ -109,17 +109,13 @@ void LoadBundledFonts()
     Rml::LoadFontFace("fonts/LiberationSans-Regular.ttf", true);
     Rml::LoadFontFace("fonts/LiberationSans-Bold.ttf");
 
-    // Second, explicitly-named face (not a fallback_face) -- CCreditWin's scrolling credit text is
-    // the first RmlUi content to need it, matching the font family the legacy GDI path names via
-    // I18N::Game::Gulim ("NanumGothic" is this file's own internal name-table family name, not a
-    // guess -- CCreditWin.rcss's font-family must match it exactly). Broader CJK/Cyrillic RmlUi
-    // text coverage beyond this one face is a separate, pre-existing gap (every other ported
-    // window's legacy theme still hardcodes "Liberation Sans"), not something this addresses.
-    // Also a fallback face, after Liberation Sans: Hangul the chosen face lacks (text the game
-    // data still carries in Korean, such as the lucky item menu) draws from it instead of as
-    // boxes, as the native text renderer drew it. Noto Sans TC goes first so Traditional Chinese
-    // keeps its own glyphs and punctuation, as in the native text renderer's fallback order.
-    // In the browser these come after the start (BundledFonts.h IsLateFallbackFont): LoadLateFonts.
+    // Second, the CJK faces as fallback faces after Liberation Sans: Hangul the chosen face lacks
+    // (text the game data still carries in Korean, such as the lucky item menu or the credits)
+    // draws from them instead of as boxes, as the native text renderer drew it. Noto Sans TC goes
+    // first so Traditional Chinese keeps its own glyphs and punctuation, as in the native text
+    // renderer's fallback order. No window names them as its family: in the browser they come
+    // after the start (BundledFonts.h IsLateFallbackFont, RmlUiLoadLateFonts), and RmlUi draws no
+    // text for a family it doesn't have.
     g_lateFontsLoaded = false;
     LoadLateFontFaces();
 
