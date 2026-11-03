@@ -899,6 +899,15 @@ namespace MUHelper
             return 0;
         }
 
+        // No skill starts while the character walks or flinches from a hit. Among monsters that is most rounds,
+        // and each counted as a failure: Swell Life, cast fine a moment before, was paused and "doesn't cast" filled
+        // the chat (ghinzuro, 2026-11-03). Such a round is not a failure; the round goes on and the next tries again.
+        if (m_lastSkillResult == SkillResult::NotReady
+            && (Hero->Movement || !Engine::Object::IsSkillReadyAction(Hero->Object.CurrentAction)))
+        {
+            return 1;
+        }
+
         // Refused for a reason the checks above don't see (a cooldown, the weapon, the map): the round goes on to
         // the potions and the attack all the same, and the next round tries again. It used to end the round here
         // for up to SupportFailureLimit rounds (3 s), and again after every rest, with neither an attack nor a
