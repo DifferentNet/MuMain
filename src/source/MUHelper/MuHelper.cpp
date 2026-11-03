@@ -670,6 +670,11 @@ namespace MUHelper
     int CMuHelper::BuffTarget(CHARACTER* pTargetChar, ActionSkillType iBuffSkill)
     {
         OBJECT* obj = &pTargetChar->Object;
+        // Buffs that only ever land on the caster (Infinity Arrow, Berserker: target restriction Self in OpenMU's
+        // data) are looked up on the hero, whichever party member this round is about. Looked up on the member, who
+        // never has them, they were cast again on nearly every round in a party, and the elf jerked with the cast
+        // animation (players, 2026-11-03).
+        OBJECT* self = &Hero->Object;
 
         auto CastIfMissing = [&](bool bBuffActive, bool bTimerRespected, bool bNeedsTarget) -> int
         {
@@ -691,7 +696,7 @@ namespace MUHelper
 
         case AT_SKILL_INFINITY_ARROW:
         case AT_SKILL_INFINITY_ARROW_STR:
-            return CastIfMissing(g_isCharacterBuff(obj, eBuff_InfinityArrow), false, false);
+            return CastIfMissing(g_isCharacterBuff(self, eBuff_InfinityArrow), false, false);
 
         case AT_SKILL_SOUL_BARRIER:
         case AT_SKILL_SOUL_BARRIER_STR:
@@ -720,7 +725,7 @@ namespace MUHelper
 
         case AT_SKILL_ALICE_BERSERKER:
         case AT_SKILL_ALICE_BERSERKER_STR:
-            return CastIfMissing(g_isCharacterBuff(obj, eBuff_Berserker), false, false);
+            return CastIfMissing(g_isCharacterBuff(self, eBuff_Berserker), false, false);
 
         case AT_SKILL_ALICE_THORNS:
             return CastIfMissing(g_isCharacterBuff(obj, eBuff_Thorns), false, false);
