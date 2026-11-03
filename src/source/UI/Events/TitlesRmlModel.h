@@ -54,6 +54,8 @@ struct TitlesRmlModel
     std::vector<TitlesRow> rows;
     // Under the list: an empty "Mine" tab's note, or how many titles are owned.
     TitlesLine footer;
+    // The title effects are on (Options): a light runs over the worn row.
+    bool effects = false;
 
     Rml::String exitTooltip;
 };

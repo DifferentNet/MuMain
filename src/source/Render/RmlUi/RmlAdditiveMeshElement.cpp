@@ -25,13 +25,21 @@ Rml::ColourbPremultiplied Additive(std::uint32_t abgr, float opacity)
     return Rml::ColourbPremultiplied(Channel(abgr, 0, opacity), Channel(abgr, 8, opacity), Channel(abgr, 16, opacity),
                                      0);
 }
+
+// The colour of a plain image: RGB times alpha times opacity, premultiplied as RmlUi blends.
+Rml::ColourbPremultiplied Blended(std::uint32_t abgr, float opacity)
+{
+    const float alpha = static_cast<float>(abgr >> 24) / 255.f * opacity;
+    return Rml::ColourbPremultiplied(Channel(abgr, 0, alpha), Channel(abgr, 8, alpha), Channel(abgr, 16, alpha),
+                                     Channel(0xFFu, 0, alpha));
+}
 } // namespace
 
 Render::RmlUi::AdditiveMeshElement::AdditiveMeshElement(const Rml::String& tag) : Rml::Element(tag) {}
 
 void Render::RmlUi::AdditiveMeshElement::SetMesh(const Rml::String& source,
                                                  std::span<const Render::Renderer::RecordedVertex> quads,
-                                                 float opacity)
+                                                 float opacity, bool additive)
 {
     if (m_source != source)
     {
@@ -48,7 +56,9 @@ void Render::RmlUi::AdditiveMeshElement::SetMesh(const Rml::String& source,
         for (std::size_t i = 0; i < QuadVertices; ++i)
         {
             const Render::Renderer::RecordedVertex& v = quads[q * QuadVertices + i];
-            m_mesh.vertices.push_back({Rml::Vector2f(v.x, v.y), Additive(v.abgr, opacity), Rml::Vector2f(v.u, v.v)});
+            m_mesh.vertices.push_back({Rml::Vector2f(v.x, v.y),
+                                       additive ? Additive(v.abgr, opacity) : Blended(v.abgr, opacity),
+                                       Rml::Vector2f(v.u, v.v)});
         }
         for (const int index : {0, 1, 2, 0, 2, 3})
             m_mesh.indices.push_back(first + index);

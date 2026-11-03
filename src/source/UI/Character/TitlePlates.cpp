@@ -148,6 +148,11 @@ bool Enabled()
     return GameConfig::GetInstance().GetOverheadTitles();
 }
 
+const TextRgb& BaseTextColor(GameLogic::Titles::Rarity rarity)
+{
+    return TextColor[static_cast<int>(rarity)];
+}
+
 float Scale()
 {
     return PlateScale;
