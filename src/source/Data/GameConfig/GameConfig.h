@@ -99,6 +99,8 @@ public:
     // The title plates' effects (UI::TitlePlates::Effects).
     bool GetTitleEffects() const { return m_titleEffects; }
     void SetTitleEffects(bool shown) { m_titleEffects = shown; }
+    bool GetTitlesTownsOnly() const { return m_titlesTownsOnly; }
+    void SetTitlesTownsOnly(bool townsOnly) { m_titlesTownsOnly = townsOnly; }
 
     // The phone or PC layout and the controls, as config.ini words (UI::Mobile::InterfaceMode).
     const std::wstring& GetInterfaceView() const { return m_interfaceView; }
@@ -237,6 +239,7 @@ private:
     bool m_overheadNpcNames = false;
     bool m_overheadTitles = true;
     bool m_titleEffects = true;
+    bool m_titlesTownsOnly = true;
     std::wstring m_interfaceView;
     std::wstring m_controls;
     int m_touchButtonSize = 100;
