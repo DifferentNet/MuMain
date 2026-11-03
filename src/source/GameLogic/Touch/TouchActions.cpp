@@ -1233,6 +1233,9 @@ void ChooseNextFriend()
 {
     if (!InWorld())
         return;
+    // The party window clears the members' indexes each frame before the pad runs; this fills them again
+    // (only the cleared ones, so the scene's own pass later finds them filled).
+    g_pPartyManager->SearchPartyMember();
     std::vector<const CHARACTER*> near;
     for (int member = 0; member < PartyNumber; ++member)
     {
