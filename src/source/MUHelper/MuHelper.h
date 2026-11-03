@@ -83,7 +83,6 @@ namespace MUHelper
 		int ComputeDistanceByRange(int iRange);
 		int ComputeDistanceFromTarget(CHARACTER* pTarget);
 		int ComputeDistanceBetween(POINT posA, POINT posB);
-		int SimulateMove(POINT posMove);
 		int ObtainItem();
 		int CountPickupAttempt(int iItemId);
 		int SelectItemToObtain();
@@ -166,6 +165,13 @@ namespace MUHelper
 		std::chrono::steady_clock::time_point m_walkWatchSince{};
 		POINT m_posWalkWatch{};
 		std::chrono::steady_clock::time_point m_noTargetInReachSince{};
+		// The walk back to the start spot (Regroup) is put off for RegroupRest when there is no way there or it
+		// gets no closer for RegroupPatience, as with monsters all round (2026-11-03); the helper fights meanwhile.
+		static constexpr std::chrono::milliseconds RegroupPatience{ 2000 };
+		static constexpr std::chrono::seconds RegroupRest{ 3 };
+		std::chrono::steady_clock::time_point m_regroupSince{};
+		std::chrono::steady_clock::time_point m_regroupRestUntil{};
+		int m_iRegroupBestDistance = 0;
 		static constexpr std::chrono::seconds ForgottenTargetRest{ 2 };
 		std::map<int, std::chrono::steady_clock::time_point> m_mapForgottenUntil; // monster key -> back in the list
 	};

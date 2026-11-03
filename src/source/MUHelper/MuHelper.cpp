@@ -143,6 +143,8 @@ namespace MUHelper
         m_mapForgottenUntil.clear();
         m_noTargetInReachSince = {};
         m_walkWatchSince = {};
+        m_regroupSince = {};
+        m_regroupRestUntil = {};
 
         m_bActive = true;
         g_ConsoleDebug->Write(MCD_NORMAL, L"[MU Helper] Started");
@@ -168,6 +170,8 @@ namespace MUHelper
         m_bAttackBetweenRounds = false;
         m_walkWatchSince = {};
         m_noTargetInReachSince = {};
+        m_regroupSince = {};
+        m_regroupRestUntil = {};
         if (!bSteered)
         {
             m_posOriginal = { Hero->PositionX, Hero->PositionY };
@@ -1518,35 +1522,64 @@ namespace MUHelper
 
     int CMuHelper::Regroup()
     {
-        if (m_config.bReturnToOriginalPosition && m_iSecondsAway > m_config.iMaxSecondsAway)
+        using GameLogic::Automation::MoveResult;
+
+        if (!m_config.bReturnToOriginalPosition || m_iSecondsAway <= m_config.iMaxSecondsAway)
         {
-            // Let the current swing finish first: a walk started mid-swing cuts the attack
-            // animation, and what a swing fires late in it (the arrows of Triple Shot, for one)
-            // never appears. Attacking and picking up already wait for the swing.
-            if (GameLogic::Automation::IsSwingInProgress())
-            {
-                return 0;
-            }
+            m_regroupSince = {};
+            return 1;
+        }
 
-            if (!SimulateMove(m_posOriginal))
-            {
-                return 0;
-            }
+        // Monsters stand on their tiles, and the path finder walks round them. With the character ringed by
+        // monsters there is no way back to the start spot, or the walk gets no closer, and the round used to end
+        // here every time: the helper stood among them without attacking (players and ghinzuro, 2026-11-03).
+        // Now it fights while the way back is shut, and tries again after RegroupRest.
+        const auto now = std::chrono::steady_clock::now();
+        if (now < m_regroupRestUntil)
+        {
+            return 1;
+        }
 
+        // Let the current swing finish first: a walk started mid-swing cuts the attack
+        // animation, and what a swing fires late in it (the arrows of Triple Shot, for one)
+        // never appears. Attacking and picking up already wait for the swing.
+        if (GameLogic::Automation::IsSwingInProgress())
+        {
+            return 0;
+        }
+
+        const int iDistance = ComputeDistanceBetween({ Hero->PositionX, Hero->PositionY }, m_posOriginal);
+        if (m_regroupSince == std::chrono::steady_clock::time_point{} || iDistance < m_iRegroupBestDistance)
+        {
+            m_regroupSince = now;
+            m_iRegroupBestDistance = iDistance;
+        }
+
+        const MoveResult result =
+            GameLogic::Automation::WalkTo(static_cast<int>(m_posOriginal.x), static_cast<int>(m_posOriginal.y));
+        if (result == MoveResult::Arrived)
+        {
+            m_regroupSince = {};
             m_iSecondsAway = 0;
             m_iComboState = 0;
             m_iCurrentTarget = -1;
+            return 1;
         }
 
-        return 1;
-    }
+        if (GameLogic::Automation::ShouldGiveUpWalk(result,
+                std::chrono::duration_cast<std::chrono::milliseconds>(now - m_regroupSince).count(), RegroupPatience.count()))
+        {
+            // A walk under way would keep the attack waiting (it runs only while the character stands).
+            GameLogic::Automation::StopAtNextTile();
+            m_regroupSince = {};
+            m_regroupRestUntil = now + RegroupRest;
+            g_ConsoleDebug->Write(MCD_NORMAL, result == MoveResult::NoPath
+                ? L"[MU Helper] No way back to the start spot; attacking meanwhile"
+                : L"[MU Helper] The walk back gets no closer; attacking meanwhile");
+            return 1;
+        }
 
-    int CMuHelper::SimulateMove(POINT posMove)
-    {
-        const GameLogic::Automation::MoveResult result =
-            GameLogic::Automation::WalkTo(static_cast<int>(posMove.x), static_cast<int>(posMove.y));
-
-        return result == GameLogic::Automation::MoveResult::Arrived ? 1 : 0;
+        return 0;
     }
 
     bool CMuHelper::HasAssignedBuffSkill()

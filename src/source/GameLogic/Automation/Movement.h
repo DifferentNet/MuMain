@@ -38,6 +38,14 @@ inline constexpr float ArrivalTolerance = 1.5f;
     return "unknown";
 }
 
+// Whether a walk back somewhere should be given up for a while: there is no way there, or it has gone on
+// `sinceCloser` (any time unit) without getting a tile closer, for at least `patience`. Monsters stand on their
+// tiles, so a ring of them shuts every way out (MU Helper among monsters, 2026-11-03).
+[[nodiscard]] constexpr bool ShouldGiveUpWalk(MoveResult result, long long sinceCloser, long long patience)
+{
+    return result == MoveResult::NoPath || (result == MoveResult::Walking && sinceCloser >= patience);
+}
+
 // Walks towards the map tile, one path per call, exactly as a click there
 // would. Call again on later frames until it reports Arrived.
 MoveResult WalkTo(int tileX, int tileY);
