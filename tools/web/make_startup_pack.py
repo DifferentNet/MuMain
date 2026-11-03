@@ -14,6 +14,12 @@ and paths missing from the output are skipped with a note. The pack comes in par
 keeps each part in the browser's storage under its hash, so a release that changes a few files
 downloads the parts holding them, not all 115 MB again.
 
+The late pack: packs/startup-late.pack.gz with the files of --late (src/web/late-files.txt), textures the
+game lists at the start but reads only once it is played. The page downloads it after the startup pack,
+while the player logs in, and the game puts its files in place between two frames once it is here
+(WebFileSystem.cpp InstallLatePack); until then the game downloads one it needs by itself, so these
+files keep their versions too.
+
 A pack per map: packs/worldN.pack.gz with the files of Data/WorldN and Data/ObjectN (the map's ground
 and objects) that aren't in the startup pack, and packs/worldN.json, their paths and sizes and a hash.
 Entering Lorencia opened about 250 of them one after another, a minute on a phone (2026-10-29); the
@@ -34,6 +40,7 @@ output for the next build. The files' sizes in the index are the packed ones.
 
 startup.json, which the page reads first:
   parts     the startup pack's parts: [{name, hash, packed (bytes to download), files: [[path, size]]}]
+  late      the late pack, the same way (absent without one)
   code      the hashes of Main.js and Main.wasm: the page asks for Main.js?v=<hash> ...
   versions  {path: hash} of the files the game downloads one by one when it first reads them
             (fetch-backend.js asks for path?v=<hash>)
@@ -66,6 +73,7 @@ HASH_LENGTH = 16
 # maps' folders are lower case (Data/world55).
 MAP_FOLDER = re.compile(r"(World|Object)(\d+)", re.IGNORECASE)
 PACKS = "packs"
+LATE_PACK = "startup-late"
 # Folders with less of the startup pack than this share one part.
 PART_MIN_BYTES = 2_000_000
 # Changes every pack's hash when what the packs hold changes, not only the files.
@@ -290,6 +298,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--root", required=True, help="the web build's output folder")
     parser.add_argument("--list", required=True, help="the files to pack, relative to --root")
+    parser.add_argument("--late", help="the files of the late pack, relative to --root")
     args = parser.parse_args()
     global sound_cache_dir
     sound_cache_dir = os.path.join(os.path.dirname(os.path.abspath(args.root)), SOUND_CACHE)
@@ -297,26 +306,42 @@ def main():
     list_path = os.path.join(args.root, "files.txt")
     with open(list_path, encoding="utf-8") as f:
         listed = [line.strip() for line in f if line.strip()]
-    with open(args.list, encoding="utf-8") as f:
-        wanted = [line.split("#", 1)[0].strip() for line in f]
-    files, seen, missing = [], set(), 0
-    for path in wanted:
-        if not path or path in seen:
-            continue
-        seen.add(path)
-        full = os.path.join(args.root, path)
-        if os.path.isfile(full):
-            files.append([path, packed_size(full)])
-        else:
-            missing += 1
+    seen = set()
+
+    def read_list(path):
+        """[[path, packed size]] of the list's files in the output (a file only in the first list that
+        names it), and how many it names that the output lacks."""
+        with open(path, encoding="utf-8") as f:
+            wanted = [line.split("#", 1)[0].strip() for line in f]
+        found, absent = [], 0
+        for name in wanted:
+            if not name or name in seen:
+                continue
+            seen.add(name)
+            full = os.path.join(args.root, name)
+            if os.path.isfile(full):
+                found.append([name, packed_size(full)])
+            else:
+                absent += 1
+        return found, absent
+
+    files, missing = read_list(args.list)
+    late_files, late_missing = read_list(args.late) if args.late else ([], 0)
+    missing += late_missing
 
     os.makedirs(os.path.join(args.root, PACKS), exist_ok=True)
     index_path = os.path.join(args.root, "startup.json")
-    parts, parts_written = write_startup_parts(args.root, files, read_json(index_path))
+    previous_index = read_json(index_path)
+    parts, parts_written = write_startup_parts(args.root, files, previous_index)
+    late = None
+    if late_files:
+        late, late_written = write_pack(args.root, LATE_PACK, late_files,
+                                        ((previous_index or {}).get("late") or {}).get("hash"))
+        parts_written += late_written
     in_startup_pack = {path for path, _ in files}
     maps, in_map_packs, maps_written, map_megabytes = write_map_packs(args.root, listed, in_startup_pack)
 
-    kept = {os.path.basename(part["name"]) + ".gz" for part in parts}
+    kept = {os.path.basename(part["name"]) + ".gz" for part in parts + ([late] if late else [])}
     kept.update(name + suffix for name in maps for suffix in (".pack.gz", ".json"))
     for leftover in os.listdir(os.path.join(args.root, PACKS)):
         if leftover not in kept:
@@ -326,13 +351,17 @@ def main():
             os.remove(os.path.join(args.root, old))
     compressed = [name for name in GZIP_COPIES if gzip_copy(os.path.join(args.root, name))]
 
+    # The late pack's files keep theirs: the game downloads one it needs before the pack is here.
     in_packs = in_startup_pack | in_map_packs
     versions = {path: file_hash(os.path.join(args.root, path)) for path in listed
                 if "/" in path and path not in in_packs and not path.startswith(PACKS + "/")}
     code = {name: file_hash(os.path.join(args.root, name)) for name in CODE
             if os.path.isfile(os.path.join(args.root, name))}
+    index = {"parts": parts, "code": code, "versions": versions}
+    if late:
+        index["late"] = late
     with open(index_path + ".tmp", "w", encoding="utf-8") as out:
-        json.dump({"parts": parts, "code": code, "versions": versions}, out, separators=(",", ":"))
+        json.dump(index, out, separators=(",", ":"))
     os.replace(index_path + ".tmp", index_path)
 
     written_files = sorted(f"{PACKS}/{name}" for name in kept) + [name + ".gz" for name in GZIP_COPIES]
@@ -345,6 +374,9 @@ def main():
     note = f", {missing} listed files not in the output" if missing else ""
     print(f"Startup pack: {len(files)} files, {total / 1e6:.1f} MB in {len(parts)} parts "
           f"({packed / 1e6:.1f} MB packed), {parts_written} written{note}")
+    if late:
+        print(f"Late pack: {len(late_files)} files, {sum(size for _, size in late_files) / 1e6:.1f} MB "
+              f"({late['packed'] / 1e6:.1f} MB packed)")
     for name in compressed:
         size = os.path.getsize(os.path.join(args.root, name + ".gz"))
         print(f"{name}.gz: {size / 1e6:.1f} MB")

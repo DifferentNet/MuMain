@@ -19,6 +19,7 @@
 #include <array>
 #include <atomic>
 #include <cerrno>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -781,6 +782,50 @@ bool mu::web::LateFontsReady()
         std::printf("Web file system: Chinese and Korean fonts downloaded\n");
     }
     return ready;
+}
+
+// Index.html's Module.muLatePack: the late pack ({files, bytes}) once it is here, handed over once.
+// Writes its files into /game in place of their links to /server; a file that doesn't write keeps its
+// link. Returns how many it wrote, -1 while the pack isn't here.
+EM_JS(int, MuWeb_InstallLatePack, (), {
+    const pack = Module["muLatePack"] ? Module["muLatePack"]() : null;
+    if (!pack) {
+        return -1;
+    }
+    let written = 0;
+    let offset = 0;
+    for (const [path, size] of pack.files) {
+        const full = "/game/" + path;
+        try {
+            FS.unlink(full);
+        } catch (e) {
+        }
+        if (FS.writeFile(full, pack.bytes.subarray(offset, offset + size)) >= 0) {
+            ++written;
+        } else {
+            FS.symlink("/server/" + path, full);
+        }
+        offset += size;
+    }
+    return written;
+});
+
+void mu::web::InstallLatePack()
+{
+    static bool installed = false;
+    if (installed)
+    {
+        return;
+    }
+    const auto start = std::chrono::steady_clock::now();
+    const int written = MuWeb_InstallLatePack();
+    if (written < 0)
+    {
+        return;
+    }
+    installed = true;
+    const auto ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
+    std::printf("Web file system: %d files from the late pack in %.0f ms\n", written, ms);
 }
 
 void mu::web::LoadWorldFiles(int world)
