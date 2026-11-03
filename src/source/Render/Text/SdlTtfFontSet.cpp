@@ -181,6 +181,7 @@ bool SdlTtfFontSet::Load(std::string_view configuredFamily, float normalPointSiz
         return false;
 
     std::swap(m_primary, loaded.m_primary);
+    std::swap(m_primaryPaths, loaded.m_primaryPaths);
     std::swap(m_fallbacks, loaded.m_fallbacks);
     return true;
 }
@@ -205,6 +206,7 @@ bool SdlTtfFontSet::Open(std::string_view configuredFamily, const RoleSizes& poi
 {
     const BundledFont& family = ResolveBundledFont(configuredFamily);
     const char* const rolePaths[kRoleCount] = {family.regular, family.bold, family.bold, kBundledFixedFont.regular};
+    std::copy(std::begin(rolePaths), std::end(rolePaths), m_primaryPaths.begin());
     for (std::size_t role = 0; role < kRoleCount; ++role)
     {
         const bool fixed = role == RoleIndex(SdlTtfFontRole::Fixed);
@@ -217,13 +219,34 @@ bool SdlTtfFontSet::Open(std::string_view configuredFamily, const RoleSizes& poi
         SDL_SetNumberProperty(TTF_GetFontProperties(m_primary[role]), kLayoutLiftProperty, lift);
     }
 
-    // SDL_ttf tries the fallbacks in the order they were attached.
+    // SDL_ttf tries the fallbacks in the order they were attached. The late ones come after the
+    // others, so attaching them later keeps that order.
+    const bool lateReady = LateFallbackFontsReady();
     for (std::size_t i = 0; i < std::size(kBundledFallbackFonts); ++i)
     {
+        if (IsLateFallbackFont(kBundledFallbackFonts[i]) && !lateReady)
+            continue;
         if (!OpenFallbacks(kBundledFallbackFonts[i], rolePaths, m_fallbacks[i]))
             return false;
     }
     return true;
+}
+
+void SdlTtfFontSet::AttachLateFallbacks()
+{
+    if (!m_primary[0] || !LateFallbackFontsReady())
+        return;
+    const char* rolePaths[kRoleCount];
+    std::copy(m_primaryPaths.begin(), m_primaryPaths.end(), rolePaths);
+    for (std::size_t i = 0; i < std::size(kBundledFallbackFonts); ++i)
+    {
+        const bool attached = std::any_of(m_fallbacks[i].begin(), m_fallbacks[i].end(),
+                                          [](TTF_Font* font) { return font != nullptr; });
+        if (IsLateFallbackFont(kBundledFallbackFonts[i]) && !attached &&
+            !OpenFallbacks(kBundledFallbackFonts[i], rolePaths, m_fallbacks[i]))
+            mu::log::Get("render")->warn("SDL_ttf -- late fallback family='{}' not attached",
+                                         kBundledFallbackFonts[i].family);
+    }
 }
 
 bool SdlTtfFontSet::OpenFallbacks(const BundledFont& fallbackFont, const char* const (&rolePaths)[kRoleCount],

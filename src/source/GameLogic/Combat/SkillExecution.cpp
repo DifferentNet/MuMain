@@ -286,19 +286,7 @@ int ExecuteSkill(CHARACTER* c, ActionSkillType Skill, float Distance)
 
     if (o->Type == MODEL_PLAYER)
     {
-        if (o->CurrentAction < PLAYER_STOP_MALE
-            || o->CurrentAction > PLAYER_STOP_RIDE_WEAPON
-            && o->CurrentAction != PLAYER_STOP_TWO_HAND_SWORD_TWO
-            && o->CurrentAction != PLAYER_SKILL_HELL_BEGIN
-            && o->CurrentAction != PLAYER_DARKLORD_STAND
-            && o->CurrentAction != PLAYER_STOP_RIDE_HORSE
-            && o->CurrentAction != PLAYER_FENRIR_STAND
-            && o->CurrentAction != PLAYER_FENRIR_STAND_TWO_SWORD
-            && o->CurrentAction != PLAYER_FENRIR_STAND_ONE_RIGHT
-            && o->CurrentAction != PLAYER_FENRIR_STAND_ONE_LEFT
-            && !(o->CurrentAction >= PLAYER_RAGE_FENRIR_STAND && o->CurrentAction <= PLAYER_RAGE_FENRIR_STAND_ONE_LEFT)
-            && o->CurrentAction != PLAYER_RAGE_UNI_STOP_ONE_RIGHT
-            && o->CurrentAction != PLAYER_STOP_RAGEFIGHTER)
+        if (!Engine::Object::IsSkillReadyAction(o->CurrentAction))
         {
             MouseRButtonPress = 0;
             return 0;

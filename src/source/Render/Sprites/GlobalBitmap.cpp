@@ -319,6 +319,11 @@ BITMAP_t* CGlobalBitmap::GetTexture(GLuint uiBitmapIndex)
     if (false == m_BitmapCache.Find(uiBitmapIndex, &pBitmap))
     {
         auto mi = m_mapBitmap.find(uiBitmapIndex);
+        if (mi != m_mapBitmap.end() && mi->second->pendingLoad)
+        {
+            ResolvePendingLoad(uiBitmapIndex);
+            mi = m_mapBitmap.find(uiBitmapIndex);
+        }
         if (mi != m_mapBitmap.end())
             pBitmap = mi->second.get();
         m_BitmapCache.Add(uiBitmapIndex, pBitmap);
@@ -337,6 +342,11 @@ BITMAP_t* CGlobalBitmap::FindTexture(GLuint uiBitmapIndex)
     if (false == m_BitmapCache.Find(uiBitmapIndex, &pBitmap))
     {
         auto mi = m_mapBitmap.find(uiBitmapIndex);
+        if (mi != m_mapBitmap.end() && mi->second->pendingLoad)
+        {
+            ResolvePendingLoad(uiBitmapIndex);
+            mi = m_mapBitmap.find(uiBitmapIndex);
+        }
         if (mi != m_mapBitmap.end())
             pBitmap = mi->second.get();
         // Quick-cache ranges also retain misses. A later LoadImage call replaces
@@ -346,7 +356,7 @@ BITMAP_t* CGlobalBitmap::FindTexture(GLuint uiBitmapIndex)
     return pBitmap;
 }
 
-BITMAP_t* CGlobalBitmap::FindTexture(const std::wstring& filename)
+BITMAP_t* CGlobalBitmap::FindTextureEntry(const std::wstring& filename)
 {
     for (auto& pair : m_mapBitmap)
     {
@@ -357,6 +367,19 @@ BITMAP_t* CGlobalBitmap::FindTexture(const std::wstring& filename)
     return nullptr;
 }
 
+BITMAP_t* CGlobalBitmap::FindTexture(const std::wstring& filename)
+{
+    BITMAP_t* pBitmap = FindTextureEntry(filename);
+    if (pBitmap && pBitmap->pendingLoad)
+    {
+        const GLuint index = pBitmap->BitmapIndex;
+        ResolvePendingLoad(index);
+        const auto mi = m_mapBitmap.find(index);
+        pBitmap = mi != m_mapBitmap.end() ? mi->second.get() : nullptr;
+    }
+    return pBitmap;
+}
+
 BITMAP_t* CGlobalBitmap::FindTextureByName(const std::wstring& name)
 {
     for (auto& pair : m_mapBitmap)
@@ -365,7 +388,16 @@ BITMAP_t* CGlobalBitmap::FindTextureByName(const std::wstring& name)
         std::wstring texname;
         SplitFileName(pBitmap->FileName, texname, true);
         if (0 == wcsicmp(texname.c_str(), name.c_str()))
+        {
+            if (pBitmap->pendingLoad)
+            {
+                const GLuint index = pBitmap->BitmapIndex;
+                ResolvePendingLoad(index);
+                const auto mi = m_mapBitmap.find(index);
+                return mi != m_mapBitmap.end() ? mi->second.get() : nullptr;
+            }
             return pBitmap;
+        }
     }
     return nullptr;
 }
