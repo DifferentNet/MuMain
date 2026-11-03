@@ -47,6 +47,8 @@ void SetPointerAims(bool aims);
 // Whether the pad plays the world (in use, no window open): it has no pointer there, so Teleport
 // jumps the way the left stick points and Teleport Ally takes the friend RB chose.
 void SetPadPlaysWorld(bool plays);
+// The pad's left stick, in screen directions (0, 0 at rest): the way its Teleport jumps.
+void SetPadAim(float screenX, float screenY);
 
 // The PK switch of the menu: while on, the buttons fight a player a tap or the pad's pointer aimed
 // at, and a tap on a player attacks, as Ctrl held lets a click (CheckAttack). A duel, Chaos Castle and

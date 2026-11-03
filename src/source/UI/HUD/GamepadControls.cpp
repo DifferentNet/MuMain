@@ -385,9 +385,12 @@ void Walk(Pad::StickPosition stick)
 {
     if (!Pad::IsPushed(stick, g_state.steering))
     {
+        GameLogic::Touch::SetPadAim(0.f, 0.f);
         StopWalking();
         return;
     }
+    // Teleport jumps this way even where no walk goes (GameLogic::Touch::PadTeleportTile).
+    GameLogic::Touch::SetPadAim(stick.x, stick.y);
     GameLogic::Touch::Steer(stick.x * StickToScreen, stick.y * StickToScreen);
     g_state.steering = true;
 }
@@ -980,7 +983,10 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
         SwitchWindowMode(window, windowOpen, frameOpen);
     // Over a game window the left stick hops the frame: the character stands.
     if (frameOpen)
+    {
+        GameLogic::Touch::SetPadAim(0.f, 0.f);
         StopWalking();
+    }
     else
         Walk(Pad::LeftStick());
     FollowNpcClick(window);

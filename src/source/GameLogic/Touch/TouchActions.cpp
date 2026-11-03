@@ -128,6 +128,9 @@ Clock::time_point g_standUntil;
 Clock::time_point g_standAgainAt;
 bool g_pointerAims = false;
 bool g_padPlaysWorld = false;
+// The pad's left stick now, in screen directions; 0, 0 while it rests (UI/HUD/GamepadControls).
+float g_padAimX = 0.f;
+float g_padAimY = 0.f;
 int g_targetKey = NoTarget;
 // The target the pad's right stick chose (CycleTarget): the buttons' target while it is a good one.
 int g_chosenKey = NoTarget;
@@ -762,12 +765,18 @@ bool IsTeleportTile(int tileX, int tileY)
 }
 
 // Where the pad's Teleport lands: the farthest free tile within the skill's reach the way the left
-// stick points, or the way the character last walked, or up the screen before any walk.
+// stick points now (also where no walk goes: across water, over a fence), or with the stick at rest
+// the way the character last walked, or up the screen before any walk.
 bool PadTeleportTile(ActionSkillType skill, int& tileX, int& tileY)
 {
     float dirX = g_steering.dirX;
     float dirY = g_steering.dirY;
-    if (dirX == 0.f && dirY == 0.f && !ScreenToMap(0.f, -1.f, dirX, dirY))
+    if (g_padAimX != 0.f || g_padAimY != 0.f)
+    {
+        if (!ScreenToMap(g_padAimX, g_padAimY, dirX, dirY))
+            return false;
+    }
+    else if (dirX == 0.f && dirY == 0.f && !ScreenToMap(0.f, -1.f, dirX, dirY))
         return false;
     const float reach = gSkillManager.GetSkillDistance(skill, Hero);
     for (int tiles = static_cast<int>(reach); tiles >= ShortestTeleport; --tiles)
@@ -804,6 +813,10 @@ Progress PadTeleport(ActionSkillType skill)
         return Progress::Pending;
     if (result == Automation::SkillResult::Cast)
         ActionWentOff();
+    // Away from the fight, as a click on the ground: the engine's auto-attack would walk back to the
+    // monster chosen before.
+    if (result != Automation::SkillResult::Refused)
+        BreakOffFight();
     return Progress::Done;
 }
 
@@ -812,7 +825,24 @@ Progress PadTeleportAlly(ActionSkillType skill)
 {
     const CHARACTER* friendCharacter = ChosenFriend();
     if (friendCharacter != nullptr)
-        return CastAtFriend(skill, friendCharacter);
+    {
+        // Walks up to the friend first; in reach, one summon a press: the engine counts it as no cast,
+        // and a tap owed until then pulled the friend again and again.
+        const float distance = gSkillManager.GetSkillDistance(skill, Hero);
+        if (!InReach(friendCharacter, distance))
+            return CastAtFriend(skill, friendCharacter);
+        if (!GameLogic::Combat::CanExecuteSkill(Hero, skill, distance))
+            return GiveTurnBack();
+        if (!HeroStands())
+            return Progress::Pending;
+        const Automation::SkillResult result =
+            Automation::CastSkill(skill, true, friendCharacter->Key, true, HuntingDistance);
+        if (result == Automation::SkillResult::Busy)
+            return Progress::Pending;
+        if (result == Automation::SkillResult::Cast || result == Automation::SkillResult::NotReady)
+            ActionWentOff();
+        return Progress::Done;
+    }
     const auto now = Clock::now();
     if (now >= g_noFriendSaidAt)
     {
@@ -1042,6 +1072,12 @@ bool IsSteering()
 void SetPointerAims(bool aims)
 {
     g_pointerAims = aims;
+}
+
+void SetPadAim(float screenX, float screenY)
+{
+    g_padAimX = screenX;
+    g_padAimY = screenY;
 }
 
 void SetPadPlaysWorld(bool plays)
