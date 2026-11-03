@@ -7,6 +7,7 @@
 #include <array>
 #include <chrono>
 #include <cstdint>
+#include <cstdlib>
 
 namespace FrameProfiler
 {
@@ -117,6 +118,14 @@ inline constexpr const char* kCounterNames[static_cast<int>(Counter::Count_)] = 
 static_assert(kCounterNames[static_cast<int>(Counter::Count_) - 1] != nullptr, "a counter without a name");
 
 inline bool g_CountersEnabled = false;
+// The pass timings (Scope) are read besides the counters: the $details overlay (SetShowDebugInfo, on
+// from the start in a debug build) and the MU_RENDER_TIMING log.
+inline bool g_TimingWanted =
+#ifdef _DEBUG
+    true;
+#else
+    std::getenv("MU_RENDER_TIMING") != nullptr;
+#endif
 
 inline float& AccumulatorMs(Pass pass)
 {
@@ -271,13 +280,14 @@ inline void Count(Counter counter, std::uint32_t amount = 1)
     CounterValue(counter) += amount;
 }
 
-// Like DetailScope, timed only while the passes are read ($glstats, a benchmark): some sixty of these
-// open each frame, and on the web two clock reads each were about 1 % of a phone's frame.
+// Timed only while the passes are read ($glstats, a benchmark, the $details overlay, MU_RENDER_TIMING):
+// some sixty of these open each frame, and on the web two clock reads each were about 1 % of a phone's
+// frame.
 class Scope
 {
 public:
     explicit Scope(Pass pass)
-        : m_pass(pass), m_timed(g_CountersEnabled)
+        : m_pass(pass), m_timed(g_CountersEnabled || g_TimingWanted)
     {
         if (m_timed)
             m_startedAt = std::chrono::steady_clock::now();
