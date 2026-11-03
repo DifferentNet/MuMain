@@ -7,6 +7,7 @@
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzInterface.h"
+#include "Engine/Object/ZzzInventory.h"
 #include "Engine/Object/ZzzObject.h"
 #include "Engine/Object/ZzzOpenData.h"
 #include "GameLogic/Automation/Attack.h"
@@ -21,6 +22,7 @@
 #include "GameLogic/Touch/SteerHold.h"
 #include "I18N/All.h"
 #include "MUHelper/MuHelper.h"
+#include "Render/Terrain/ZzzLodTerrain.h"
 #include "UI/Chat/ChatMessages.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/HUD/QuickCommandWindow.h"
@@ -33,6 +35,7 @@
 #include <cmath>
 #include <map>
 #include <mutex>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -79,6 +82,10 @@ constexpr auto ShortOfManaRepeat = std::chrono::milliseconds(1500);
 constexpr auto ShortOfManaSayRepeat = std::chrono::seconds(6);
 // How often a held pet command button sends its command again.
 constexpr auto PetCommandRepeat = std::chrono::seconds(1);
+// How often the pad's Teleport Ally with no friend chosen says so.
+constexpr auto NoFriendSayRepeat = std::chrono::seconds(3);
+// The pad's Teleport jumps at least this many tiles, else it does not go off.
+constexpr int ShortestTeleport = 2;
 
 // How far ahead the joystick walks, in tiles, and the shorter walk tried along a wall.
 constexpr int StickTiles = 4;
@@ -120,6 +127,10 @@ SteerHold g_hold;
 Clock::time_point g_standUntil;
 Clock::time_point g_standAgainAt;
 bool g_pointerAims = false;
+bool g_padPlaysWorld = false;
+// The pad's left stick now, in screen directions; 0, 0 while it rests (UI/HUD/GamepadControls).
+float g_padAimX = 0.f;
+float g_padAimY = 0.f;
 int g_targetKey = NoTarget;
 // The target the pad's right stick chose (CycleTarget): the buttons' target while it is a good one.
 int g_chosenKey = NoTarget;
@@ -153,6 +164,7 @@ int g_friendKey = NoTarget;
 Clock::time_point g_shortOfManaAt;
 Clock::time_point g_shortOfManaSaidAt;
 Clock::time_point g_petCommandAt;
+Clock::time_point g_noFriendSaidAt;
 
 bool InWorld()
 {
@@ -742,6 +754,104 @@ Progress CastAtFriend(ActionSkillType skill, const CHARACTER* friendCharacter)
     return OutcomeOf(Automation::CastSkill(skill, true, friendCharacter->Key, true, HuntingDistance));
 }
 
+// A tile Teleport may land on: what a mouse click there allows (AttackWizard), no wall, no safe zone,
+// no water's edge.
+bool IsTeleportTile(int tileX, int tileY)
+{
+    if (tileX < 0 || tileY < 0 || tileX >= TERRAIN_SIZE || tileY >= TERRAIN_SIZE)
+        return false;
+    const int wall = TerrainWall[TERRAIN_INDEX(tileX, tileY)] & ~(TW_ACTION | TW_HEIGHT);
+    return wall == 0;
+}
+
+// Where the pad's Teleport lands: the farthest free tile within the skill's reach the way the left
+// stick points now (also where no walk goes: across water, over a fence), or with the stick at rest
+// the way the character last walked, or up the screen before any walk.
+bool PadTeleportTile(ActionSkillType skill, int& tileX, int& tileY)
+{
+    float dirX = g_steering.dirX;
+    float dirY = g_steering.dirY;
+    if (g_padAimX != 0.f || g_padAimY != 0.f)
+    {
+        if (!ScreenToMap(g_padAimX, g_padAimY, dirX, dirY))
+            return false;
+    }
+    else if (dirX == 0.f && dirY == 0.f && !ScreenToMap(0.f, -1.f, dirX, dirY))
+        return false;
+    const float reach = gSkillManager.GetSkillDistance(skill, Hero);
+    for (int tiles = static_cast<int>(reach); tiles >= ShortestTeleport; --tiles)
+    {
+        const int dx = static_cast<int>(std::lround(dirX * tiles));
+        const int dy = static_cast<int>(std::lround(dirY * tiles));
+        if (std::hypot(static_cast<float>(dx), static_cast<float>(dy)) > reach)
+            continue;
+        if (IsTeleportTile(Hero->PositionX + dx, Hero->PositionY + dy))
+        {
+            tileX = Hero->PositionX + dx;
+            tileY = Hero->PositionY + dy;
+            return true;
+        }
+    }
+    return false;
+}
+
+// The pad's Teleport (ghinzuro, 2026-11-04): the character stands, then jumps (PadTeleportTile).
+Progress PadTeleport(ActionSkillType skill)
+{
+    if (!GameLogic::Combat::CanExecuteSkill(Hero, skill, gSkillManager.GetSkillDistance(skill, Hero)))
+        return GiveTurnBack();
+    if (!HeroStands())
+        return Progress::Pending;
+    int tileX = 0;
+    int tileY = 0;
+    if (!PadTeleportTile(skill, tileX, tileY))
+        return Progress::Done;
+    // One jump a press: the engine counts a teleport as no cast gone off, and a tap owed until then
+    // jumped on and on. A held button jumps again as the skill's delay allows.
+    const Automation::SkillResult result = Automation::CastSkillAtTile(skill, tileX, tileY);
+    if (result == Automation::SkillResult::Busy)
+        return Progress::Pending;
+    if (result == Automation::SkillResult::Cast)
+        ActionWentOff();
+    // Away from the fight, as a click on the ground: the engine's auto-attack would walk back to the
+    // monster chosen before.
+    if (result != Automation::SkillResult::Refused)
+        BreakOffFight();
+    return Progress::Done;
+}
+
+// The pad's Teleport Ally: brings the friend RB chose to the character; with none, says how to choose.
+Progress PadTeleportAlly(ActionSkillType skill)
+{
+    const CHARACTER* friendCharacter = ChosenFriend();
+    if (friendCharacter != nullptr)
+    {
+        // Walks up to the friend first; in reach, one summon a press: the engine counts it as no cast,
+        // and a tap owed until then pulled the friend again and again.
+        const float distance = gSkillManager.GetSkillDistance(skill, Hero);
+        if (!InReach(friendCharacter, distance))
+            return CastAtFriend(skill, friendCharacter);
+        if (!GameLogic::Combat::CanExecuteSkill(Hero, skill, distance))
+            return GiveTurnBack();
+        if (!HeroStands())
+            return Progress::Pending;
+        const Automation::SkillResult result =
+            Automation::CastSkill(skill, true, friendCharacter->Key, true, HuntingDistance);
+        if (result == Automation::SkillResult::Busy)
+            return Progress::Pending;
+        if (result == Automation::SkillResult::Cast || result == Automation::SkillResult::NotReady)
+            ActionWentOff();
+        return Progress::Done;
+    }
+    const auto now = Clock::now();
+    if (now >= g_noFriendSaidAt)
+    {
+        g_noFriendSaidAt = now + NoFriendSayRepeat;
+        UI::Chat::PostSystem(I18N::Game::PadChooseFriendFirst, mu::ui::window::TYPE_ERROR_MESSAGE);
+    }
+    return Progress::Done;
+}
+
 // A skill the character lacks the mana or the AG for: once in a while the cast is tried, which asks
 // for a mana potion (GameLogic::Combat::CheckMana), and the player is told. The action's turn stays
 // the attack button's, and a tap is done: a tap again casts once the mana is back.
@@ -964,6 +1074,17 @@ void SetPointerAims(bool aims)
     g_pointerAims = aims;
 }
 
+void SetPadAim(float screenX, float screenY)
+{
+    g_padAimX = screenX;
+    g_padAimY = screenY;
+}
+
+void SetPadPlaysWorld(bool plays)
+{
+    g_padPlaysWorld = plays;
+}
+
 Progress Attack()
 {
     // A safe zone refuses attacks: no walk out of town towards a monster either.
@@ -1013,14 +1134,19 @@ Progress CastHotKey(int hotKey)
         return CommandPet(index);
     const auto skill = static_cast<ActionSkillType>(CharacterAttribute->Skill[index]);
     const SkillAim aim = AimOf(skill);
+    // A finger aims Teleport with a long press (the button only selects it); the pad aims it itself.
+    const bool padAims = aim == SkillAim::Pointer && g_padPlaysWorld;
     // A safe zone refuses every skill (GameLogic::Combat::CanExecuteSkill).
-    if (aim == SkillAim::Pointer || Hero->SafeZone)
+    if ((aim == SkillAim::Pointer && !padAims) || Hero->SafeZone)
         return Progress::Done;
     // Before the turn: a skill held without mana would take every turn from a held attack button.
     if (!HasManaFor(skill))
         return ShortOfMana(skill);
     if (Automation::IsSwingInProgress() || !ActionDue())
         return Progress::Pending;
+
+    if (padAims)
+        return skill == AT_SKILL_TELEPORT_ALLY ? PadTeleportAlly(skill) : PadTeleport(skill);
 
     const CHARACTER* friendCharacter = GoesOnFriend(skill) ? ChosenFriend() : nullptr;
     if (friendCharacter != nullptr)
@@ -1137,6 +1263,36 @@ void ToggleFriend(int characterKey)
 int FriendKey()
 {
     return IsFriend(FindByKey(g_friendKey)) ? g_friendKey : NoTarget;
+}
+
+void ChooseNextFriend()
+{
+    if (!InWorld())
+        return;
+    // The party window clears the members' indexes each frame before the pad runs; this fills them again
+    // (only the cleared ones, so the scene's own pass later finds them filled).
+    g_pPartyManager->SearchPartyMember();
+    std::vector<const CHARACTER*> near;
+    for (int member = 0; member < PartyNumber; ++member)
+    {
+        const int index = Party[member].index;
+        if (index >= 0 && index < MAX_CHARACTERS_CLIENT && IsFriend(&CharactersClient[index]))
+            near.push_back(&CharactersClient[index]);
+    }
+    const auto chosen = std::find_if(near.begin(), near.end(),
+                                     [](const CHARACTER* member) { return member->Key == g_friendKey; });
+    const auto next = chosen == near.end() ? near.begin() : chosen + 1;
+    if (next == near.end())
+    {
+        g_friendKey = NoTarget;
+        UI::Chat::PostSystem(near.empty() ? I18N::Game::PadNoFriendNear : I18N::Game::PadFriendSelf,
+                             mu::ui::window::TYPE_SYSTEM_MESSAGE);
+        return;
+    }
+    g_friendKey = (*next)->Key;
+    std::wstring text = I18N::Game::PadFriendChosen;
+    text += (*next)->ID;
+    UI::Chat::PostSystem(text, mu::ui::window::TYPE_SYSTEM_MESSAGE);
 }
 
 void TrackAim()

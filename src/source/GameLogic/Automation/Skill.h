@@ -83,4 +83,8 @@ enum class SkillResult : std::uint8_t
 // finder may search beyond the skill's range.
 SkillResult CastSkill(ActionSkillType skill, bool targetRequired, int targetKey, bool allowPlayers,
                       int huntingDistance);
+
+// Casts a skill aimed at the ground (Teleport) at that tile, as a mouse click there would, with
+// nothing selected. Nothing walks: the caller chose a tile in the skill's reach.
+SkillResult CastSkillAtTile(ActionSkillType skill, int tileX, int tileY);
 } // namespace GameLogic::Automation
