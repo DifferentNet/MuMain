@@ -18,6 +18,8 @@ namespace UI::HUD::PadTargets
 [[nodiscard]] std::span<const PadTargetPick::Target> Collect();
 // Whether the last Collect found a message box or a menu over the windows and took only its controls.
 [[nodiscard]] bool OnDialog();
+// Whether the last Collect found a dropdown's list open (the settings window's) and took only its options.
+[[nodiscard]] bool OnPopup();
 // Out of the world: every document but the character screen's bar is a screen whose controls the frame
 // rests on (the login, the server list, the character creation, their message boxes).
 void SetScreens(bool screens);
