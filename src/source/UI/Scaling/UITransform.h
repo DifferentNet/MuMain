@@ -153,6 +153,27 @@ namespace UI::Scaling
     // below 1 -- the original's own size up to 1280x720, larger only where the text is larger.
     // In the browser both sizes are in the page's pixels (LayoutPixelRatio()).
     float SceneWindowScale(int windowWidth, int windowHeight);
+    // How much the text over the world (names over heads, title plates) is drawn smaller than
+    // NativeTextPixelSize(): in a window smaller than 1920x1080 (narrower or lower) it takes the
+    // share of the window it takes at 1920x1080, by the smaller of the two ratios (the font itself
+    // stops shrinking at 960 lines, so at 1440x990 it was 1080p's size on a smaller screen; players'
+    // feedback 2026-11-03). 1 at 1920x1080 and above, never below 0.5. In the browser 1920x1080 is
+    // in the page's pixels (LayoutPixelRatio()).
+    float OverheadTextFit(FontRole role, int windowWidth, int windowHeight);
+    // While one lives, the renderer may shrink a text into its box `factor` times further than the
+    // role's minimum size (MinimumFontPointSize()): for the text over the world, which
+    // OverheadTextFit() makes smaller than the rest of the UI.
+    class ScopedFontFloor
+    {
+    public:
+        explicit ScopedFontFloor(float factor);
+        ~ScopedFontFloor();
+        ScopedFontFloor(const ScopedFontFloor&) = delete;
+        ScopedFontFloor& operator=(const ScopedFontFloor&) = delete;
+
+    private:
+        float m_previous;
+    };
     // The rule behind SceneWindowScale() for any text size: textPx / referenceTextPx, not below 1.
     float TextGrowthScale(float textPx, float referenceTextPx);
     // How the original scaled its character scene button bar (laid out for 800x600): by

@@ -97,4 +97,10 @@
   <data name="KeysText" xml:space="preserve">
     <value>J — список команд, O — таймер ивентов, N — награды за вход, X — боевой пропуск, K — банк камней при открытом инвентаре, C — персонаж, M — телепорт.;MU Helper бесплатный: Z — настройки, Home — старт и стоп.;Камера: F10 — зум колесом мыши, F9 — орбитальная камера, F11 — сброс камеры.;/cp — твоя боевая мощь. На сайте skynet-mu.net рейтинги, аукцион и вики со всеми правилами: skynet-mu.net/wiki.</value>
   </data>
+  <data name="ClassQuestsLabel" xml:space="preserve">
+    <value>Квесты на профу</value>
+  </data>
+  <data name="ClassQuestsText" xml:space="preserve">
+    <value>2-я профа с 150 уровня: Sevina в Девиасе. Сначала возьми квест: предмет падает только с ним, 0,1 % с монстров нужного уровня.;Scroll of Emperor, 45-60 ур.: Лост Тауэр (от Shadow до Devil), Данжен, Атланс (Vepar, Valkyrie), Девиас (Ice Queen), Калима 1-3.;Broken Sword, Soul Shard, Tear of Elf, 62-76 ур.: низ Лост Тауэра (Death Knight, Balrog), Атланс (от Bahamut до Hydra), Таркан, Аида, Калима 2-4.;3-я профа с 380: Devin. Death Beam Knight в Таркане, Hell Maine в Аиде, Dark Phoenix в Икарусе. Карты: skynet-mu.net/wiki/classes.</value>
+  </data>
 </root>

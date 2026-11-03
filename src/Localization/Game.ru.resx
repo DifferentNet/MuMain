@@ -15607,6 +15607,9 @@
   <data name="TitleEffects" xml:space="preserve">
     <value>Эффекты титулов</value>
   </data>
+  <data name="TitlesTownsOnly" xml:space="preserve">
+    <value>Титулы только в городах</value>
+  </data>
   <!-- MU Helper: quest items pick-up -->
   <data name="HelperPickQuestItems" xml:space="preserve">
     <value>Квестовые предметы</value>
