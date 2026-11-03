@@ -98,3 +98,15 @@ bool LateFontsReady();
     }
     return kBundledFonts[0];
 }
+
+// The family to open now. In the browser a player's chosen family that is a late font (Noto Sans TC)
+// isn't in the startup download: opened from its link it would be read through the network mount
+// for every role, seconds on a phone. Until it arrives the default family stands in, and the first
+// map load after the download reopens the fonts with the chosen one (MapManager.cpp).
+[[nodiscard]] inline const BundledFont& ResolveOpenableBundledFont(std::string_view configuredFamily)
+{
+    const BundledFont& font = ResolveBundledFont(configuredFamily);
+    if (IsLateFallbackFont(font) && !LateFallbackFontsReady())
+        return ResolveBundledFont(kDefaultBundledFontFamily);
+    return font;
+}

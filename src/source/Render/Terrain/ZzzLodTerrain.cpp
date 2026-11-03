@@ -2925,37 +2925,45 @@ void InitTerrainLight()
         WindSpeed1 = (int)WorldTime % 36000 * (0.008f);
     }
 #endif	// ASG_ADD_MAP_KARUTAN
-    yi = FrustrumBoundMinY;
-
-    for (; yi <= std::min<int>(FrustrumBoundMaxY + 3, TERRAIN_SIZE_MASK); yi += 1)
-    {
-        xi = FrustrumBoundMinX;
-        auto xf = (float)xi;
-        for (; xi <= std::min<int>(FrustrumBoundMaxX + 3, TERRAIN_SIZE_MASK); xi += 1, xf += 1.f)
-        {
-            int Index = TERRAIN_INDEX(xi, yi);
-            if (gMapManager.WorldActive == WD_8TARKAN)
-            {
-                TerrainGrassWind[Index] = sinf(WindSpeed + xf * 50.f) * WindScale;
-            }
+    // The grass's sway depends only on the tile's column: one sinf per column, not per tile (a phone's
+    // frame spent about 1 % of its time here, recomputing the same values row after row).
+    const int lastX = std::min<int>(FrustrumBoundMaxX + 3, TERRAIN_SIZE_MASK);
+    const int lastY = std::min<int>(FrustrumBoundMaxY + 3, TERRAIN_SIZE_MASK);
+    const int firstX = FrustrumBoundMinX;
+    if (lastX < firstX)
+        return;
+    const bool tarkan = gMapManager.WorldActive == WD_8TARKAN;
+    const bool iceCity = gMapManager.WorldActive == WD_57ICECITY || gMapManager.WorldActive == WD_58ICECITY_BOSS;
 #ifdef ASG_ADD_MAP_KARUTAN
-            else if (IsKarutanMap())
-            {
-                TerrainGrassWind[Index] = sinf(WindSpeed + xf * 50.f) * WindScale;
-                g_fTerrainGrassWind1[Index] = sinf(WindSpeed1 + xf * 50.f) * WindScale1;
-            }
-#endif	// ASG_ADD_MAP_KARUTAN
-
-            else if (gMapManager.WorldActive == WD_57ICECITY || gMapManager.WorldActive == WD_58ICECITY_BOSS)
-            {
-                WindScale = 60.f;
-                TerrainGrassWind[Index] = sinf(WindSpeed + xf * 50.f) * WindScale;
-            }
-            else
-            {
-                TerrainGrassWind[Index] = sinf(WindSpeed + xf * 5.f) * WindScale;
-            }
-        }
+    const bool karutan = IsKarutanMap();
+#else
+    constexpr bool karutan = false;
+#endif // ASG_ADD_MAP_KARUTAN
+    if (iceCity && !tarkan && !karutan)
+        WindScale = 60.f;
+    const float columnStep = (tarkan || karutan || iceCity) ? 50.f : 5.f;
+    static float columnWind[TERRAIN_SIZE];
+#ifdef ASG_ADD_MAP_KARUTAN
+    static float columnWind1[TERRAIN_SIZE];
+#endif // ASG_ADD_MAP_KARUTAN
+    auto xf = (float)firstX;
+    for (xi = firstX; xi <= lastX; ++xi, xf += 1.f)
+    {
+        columnWind[xi] = sinf(WindSpeed + xf * columnStep) * WindScale;
+#ifdef ASG_ADD_MAP_KARUTAN
+        if (karutan)
+            columnWind1[xi] = sinf(WindSpeed1 + xf * 50.f) * WindScale1;
+#endif // ASG_ADD_MAP_KARUTAN
+    }
+    const std::size_t count = static_cast<std::size_t>(lastX - firstX + 1);
+    for (yi = FrustrumBoundMinY; yi <= lastY; ++yi)
+    {
+        const int rowStart = TERRAIN_INDEX(firstX, yi);
+        std::copy_n(&columnWind[firstX], count, &TerrainGrassWind[rowStart]);
+#ifdef ASG_ADD_MAP_KARUTAN
+        if (karutan)
+            std::copy_n(&columnWind1[firstX], count, &g_fTerrainGrassWind1[rowStart]);
+#endif // ASG_ADD_MAP_KARUTAN
     }
 }
 

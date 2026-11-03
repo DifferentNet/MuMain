@@ -15,6 +15,19 @@ TEST_CASE("tips that name the mouse or a key are found [ui][desktop-tip]")
     CHECK(NeedsMouseOrKeys(L"The supplementary magic of the Elf can be used by clicking the name in the party window."));
 }
 
+TEST_CASE("Portuguese and Spanish mouse and key tips are found [ui][desktop-tip]")
+{
+    CHECK(NeedsMouseOrKeys(L"Clique na tecla de atalho T para verificar as informa\u00e7\u00f5es da miss\u00e3o."));
+    CHECK(NeedsMouseOrKeys(L"Para usar habilidades ou m\u00e1gica, clique com o bot\u00e3o direito do mouse no monstro."));
+    CHECK(NeedsMouseOrKeys(L"Pressione a barra de espa\u00e7o para coletar o saque."));
+    CHECK(NeedsMouseOrKeys(L"Para usar habilidades o magia, haz clic derecho sobre el monstruo."));
+    CHECK(NeedsMouseOrKeys(L"Presiona Q, W, E, R para usar \u00edtems."));
+    CHECK(NeedsMouseOrKeys(L"La magia suplementaria de la Elfa puede utilizarse al hacer clic en la ventana."));
+    CHECK_FALSE(NeedsMouseOrKeys(L"Voc\u00ea recebe 5 pontos de atributos a cada vez que aumenta um n\u00edvel."));
+    CHECK_FALSE(NeedsMouseOrKeys(L"Debes tener un nivel de al menos 15 para entrar en Devias"));
+    CHECK_FALSE(NeedsMouseOrKeys(L"Utiliza la funci\u00f3n de bloqueo en tu b\u00f3veda para protegerla."));
+}
+
 TEST_CASE("tips that fit any controls stay [ui][desktop-tip]")
 {
     CHECK_FALSE(NeedsMouseOrKeys(L"You must be at least level 15 to enter Devias"));
