@@ -1409,6 +1409,16 @@ static bool s_texturesInvalidated = false;
 // without requiring SDL3 headers. The actual stored type is SDL_GPUTexture*.
 // ---------------------------------------------------------------------------
 
+// Loads a texture the game recorded without loading it (CGlobalBitmap::BeginDeferredLoads), at
+// the first lookup of its number; true when it registered one.
+static bool (*s_textureMissHandler)(std::uint32_t id) = nullptr;
+static bool s_inTextureMissHandler = false;
+
+void SetTextureMissHandler(bool (*handler)(std::uint32_t id))
+{
+    s_textureMissHandler = handler;
+}
+
 [[nodiscard]] void* LookupTexture(std::uint32_t id)
 {
     if (s_textureCacheValid && s_cachedTextureId == id)
@@ -1417,6 +1427,16 @@ static bool s_texturesInvalidated = false;
     }
 
     auto it = s_textureMap.find(id);
+    if (it == s_textureMap.end() && s_textureMissHandler && !s_inTextureMissHandler)
+    {
+        s_inTextureMissHandler = true;
+        const bool loaded = s_textureMissHandler(id);
+        s_inTextureMissHandler = false;
+        if (loaded)
+        {
+            it = s_textureMap.find(id);
+        }
+    }
     s_cachedTextureId = id;
     s_cachedTexture = it != s_textureMap.end() ? it->second : nullptr;
     s_textureCacheValid = true;
