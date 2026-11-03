@@ -1,0 +1,71 @@
+<rml>
+<head>
+	<title>Golden Archer</title>
+	<link type="text/rcss" href="base.rcss"/>
+	<link type="text/rcss" href="docked_panel_frame.rcss"/>
+	<link type="text/rcss" href="rena_shop.rcss"/>
+</head>
+<body>
+	<!-- The Golden Archer's Rena shop window (CRenaShopWindow), opened by the Golden Archer (NPC 236), docked right at
+	     full dock height, built like the Endless Tower window: the title, the Rena balance and the Rena in the bag, the
+	     button that hands the bag's Rena in; then one counter-scaled pane with three tabs (shop, Golden Arrow,
+	     progress; the shown one gold) and the shown tab's lines (by kind: 1 a title, 2 green, 3 red, 4 bold gold,
+	     5 continuing the line above, 6 grey; a shop line can be picked, the picked one on a gold band); a second pane at
+	     the foot with the last answer (green or red) or why the buttons are off, and on the shop and Golden Arrow tabs
+	     the two buttons (buy 1 / 5, spin 1 / 10); and the exit button. The workspace slot places and scales #panel.
+	     C++ keeps the state and checks every click; clicks are queued with rena_shop_tab(tab), rena_shop_row(item),
+	     rena_shop_act(count), rena_shop_give and rena_shop_exit. -->
+	<div id="panel" data-model="rena_shop">
+		<div class="frame-piece frame-top"></div>
+		<div class="frame-piece frame-left"></div>
+		<div class="frame-piece frame-right"></div>
+		<div class="frame-piece frame-bottom"></div>
+
+		<span id="rs_title" class="sharp-text rs-title"
+		      data-style-font-size="title.text_px + 'px'">{{title.text}}</span>
+		<span id="rs_balance" class="sharp-text rs-balance"
+		      data-style-font-size="balance.text_px + 'px'">{{balance.text}}</span>
+		<span id="rs_bag" class="sharp-text rs-bag"
+		      data-style-font-size="bag.text_px + 'px'">{{bag.text}}</span>
+
+		<div id="rs_head" class="sharp-text sharp-flow">
+			<div id="rs_give" data-if="give_label.text != ''" data-class-off="!can_give"
+			     data-event-click="rena_shop_give">
+				<span class="rs-btn-label" data-style-font-size="give_label.text_px + 'px'">{{give_label.text}}</span>
+			</div>
+		</div>
+
+		<div id="rs_list" class="sharp-text sharp-flow">
+			<div class="rs-tabs">
+				<div class="rs-tab" data-for="t : tabs" data-class-selected="t.selected"
+				     data-event-click="rena_shop_tab(t.tab)">
+					<span class="rs-tab-label" data-style-font-size="t.label.text_px + 'px'">{{t.label.text}}</span>
+				</div>
+			</div>
+
+			<span class="rs-row" data-for="r : rows" data-class-title="r.kind == 1" data-class-good="r.kind == 2"
+			      data-class-bad="r.kind == 3" data-class-name="r.kind == 4" data-class-more="r.kind == 5"
+			      data-class-dim="r.kind == 6" data-class-pick="r.item >= 0" data-class-selected="r.selected"
+			      data-event-click="rena_shop_row(r.item)"
+			      data-style-font-size="r.text.text_px + 'px'">{{r.text.text}}</span>
+		</div>
+
+		<div id="rs_foot" class="sharp-text sharp-flow">
+			<span class="rs-hint" data-for="h : hint" data-class-good="hint_kind == 1" data-class-bad="hint_kind == 2"
+			      data-style-font-size="h.text_px + 'px'">{{h.text}}</span>
+
+			<div id="rs_buttons" data-if="show_buttons">
+				<div class="rs-act-btn" data-class-off="!can_first" data-event-click="rena_shop_act(1)">
+					<span class="rs-btn-label" data-style-font-size="first_label.text_px + 'px'">{{first_label.text}}</span>
+				</div>
+				<div class="rs-act-btn" data-class-off="!can_second" data-event-click="rena_shop_act(second_count)">
+					<span class="rs-btn-label" data-style-font-size="second_label.text_px + 'px'">{{second_label.text}}</span>
+				</div>
+			</div>
+		</div>
+
+		<div id="btn_exit" data-event-click="rena_shop_exit" data-attr-data-hint="exit_tooltip"></div>
+		<div id="frame_corner_close" data-event-click="rena_shop_exit"></div>
+	</div>
+</body>
+</rml>

@@ -3895,3 +3895,6 @@ Data/Item/hawkstatueb.ozj
 # Added 2026-10-28: the Endless Tower window of Lugard (Lorencia, Devias)
 Data/Interface/RmlUi/themes/legacy/endless_tower.rcss
 Data/Interface/RmlUi/endless_tower.rml
+# Added 2026-11-03: the Golden Archer's Rena shop window
+Data/Interface/RmlUi/themes/legacy/rena_shop.rcss
+Data/Interface/RmlUi/rena_shop.rml
