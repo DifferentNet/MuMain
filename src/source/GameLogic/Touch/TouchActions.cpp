@@ -23,6 +23,7 @@
 #include "MUHelper/MuHelper.h"
 #include "UI/Chat/ChatMessages.h"
 #include "UI/Core/WindowSystem.h"
+#include "UI/HUD/QuickCommandWindow.h"
 #include "World/GameMaps/GMBattleCastle.h"
 #include "World/MapInfra/MapManager.h"
 
@@ -432,6 +433,10 @@ bool IsGoodMeet(const CHARACTER* character)
     if (character == nullptr || character == Hero || !character->Object.Live || character->Dead != 0)
         return false;
     if (character->Object.Kind != KIND_NPC && character->Object.Kind != KIND_PLAYER)
+        return false;
+    // A player whose menu may not open here (a temple teammate, while watching a duel) is not offered:
+    // A would promise the menu and do nothing.
+    if (character->Object.Kind == KIND_PLAYER && !mu::ui::window::CQuickCommandWindow::IsMenuAllowedFor(character))
         return false;
     if (TilesTo(character) > TargetRange)
         return false;
