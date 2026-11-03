@@ -27,7 +27,10 @@ doesn't upload it again.
 
 Packs hold the models (.bmd) of version 12 decrypted, as version 10, which the game opens as they are
 (ZzzBMD.cpp Open2). Encrypted bytes hardly compress: the startup pack's models take 13.5 MB this way,
-28.5 MB as they are. The files' sizes in the index are the packed ones.
+28.5 MB as they are. They hold the sounds (.wav) in IMA ADPCM, a quarter of their size, when that
+keeps them clean enough (tools/web/ima_adpcm.py): the startup pack's sounds take 12 MB gzipped this
+way, 28 MB as they are. Encoding them takes minutes, so the results wait in pack-cache beside the web
+output for the next build. The files' sizes in the index are the packed ones.
 
 startup.json, which the page reads first:
   parts     the startup pack's parts: [{name, hash, packed (bytes to download), files: [[path, size]]}]
@@ -47,6 +50,11 @@ import re
 import shutil
 import sys
 
+# python -I leaves this folder out of the import path; the build leaves no __pycache__ in it.
+sys.dont_write_bytecode = True
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import ima_adpcm  # noqa: E402
+
 # The page asks for "<name>.gz" first and takes the file itself where there is none.
 GZIP_COPIES = ["Main.wasm"]
 CODE = ["Main.js", "Main.wasm"]
@@ -62,6 +70,9 @@ PACKS = "packs"
 PART_MIN_BYTES = 2_000_000
 # Changes every pack's hash when what the packs hold changes, not only the files.
 PACK_FORMAT = b"plain-models"
+# Added for a pack with sounds, so that the packs without any keep their hashes (and the players'
+# copies of them).
+SOUND_FORMAT = b" adpcm-sounds-%d" % ima_adpcm.MIN_SNR_DB
 
 # A model's header: "BMD", its version, and for version 12 the size of the encrypted rest (int32).
 MODEL_SUFFIX = ".bmd"
@@ -73,6 +84,13 @@ MAP_XOR_KEY = bytes([0xD1, 0x73, 0x52, 0xF6, 0xD2, 0x9A, 0xCB, 0x27, 0x3E, 0xAF,
 MAP_FIRST_KEY = 0x5E
 MAP_KEY_STEP = 0x3D
 BYTE = 0x100
+
+SOUND_SUFFIX = ".wav"
+# Beside the web output, so that the build's file list doesn't take it in (main sets it).
+SOUND_CACHE = "pack-cache"
+sound_cache_dir = SOUND_CACHE
+# A cached sound kept as it is.
+KEEP = b"keep"
 
 
 def decrypt_map_file(data):
@@ -107,14 +125,43 @@ def encrypted_model_length(path):
     return max(0, min(declared, os.path.getsize(path) - MODEL_HEADER_BYTES))
 
 
+def packed_sound(path):
+    """A sound's bytes in a pack: IMA ADPCM when it keeps the sound clean enough, else None (the file
+    as it is). The answer waits in the cache under the file's hash."""
+    if not path.lower().endswith(SOUND_SUFFIX):
+        return None
+    with open(path, "rb") as f:
+        data = f.read()
+    cache = os.path.join(sound_cache_dir, hashlib.sha256(SOUND_FORMAT + data).hexdigest()[:HASH_LENGTH * 2])
+    if os.path.isfile(cache):
+        with open(cache, "rb") as f:
+            cached = f.read()
+        return None if cached == KEEP else cached
+    result = ima_adpcm.encode(data)
+    encoded = result[0] if result and result[1] >= ima_adpcm.MIN_SNR_DB else None
+    os.makedirs(os.path.dirname(cache), exist_ok=True)
+    with open(cache + ".tmp", "wb") as f:
+        f.write(KEEP if encoded is None else encoded)
+    os.replace(cache + ".tmp", cache)
+    return encoded
+
+
 def packed_size(path):
-    """The bytes the file takes in a pack: a version 12 model loses its size field."""
+    """The bytes the file takes in a pack: a version 12 model loses its size field, a sound may be
+    smaller (packed_sound)."""
+    sound = packed_sound(path)
+    if sound is not None:
+        return len(sound)
     length = encrypted_model_length(path)
     return os.path.getsize(path) if length is None else len(MODEL_PLAIN) + length
 
 
 def copy_packed(path, out):
-    """Writes the file into a pack, a version 12 model decrypted."""
+    """Writes the file into a pack, a version 12 model decrypted, a sound perhaps in IMA ADPCM."""
+    sound = packed_sound(path)
+    if sound is not None:
+        out.write(sound)
+        return
     length = encrypted_model_length(path)
     with open(path, "rb") as source:
         if length is None:
@@ -159,7 +206,8 @@ def write_pack(root, name, files, previous_hash):
     """Writes packs/<name>.pack.gz with the contents of files ([path, size], relative to root) unless
     previous_hash, the pack's hash in the last build, still matches them. Returns (its entry in the
     index, whether it wrote it)."""
-    digest = hashlib.sha256(PACK_FORMAT + json.dumps(files).encode())
+    has_sounds = any(path.lower().endswith(SOUND_SUFFIX) for path, _ in files)
+    digest = hashlib.sha256(PACK_FORMAT + (SOUND_FORMAT if has_sounds else b"") + json.dumps(files).encode())
     for path, _ in files:
         with open(os.path.join(root, path), "rb") as f:
             for block in iter(lambda: f.read(CHUNK), b""):
@@ -243,6 +291,8 @@ def main():
     parser.add_argument("--root", required=True, help="the web build's output folder")
     parser.add_argument("--list", required=True, help="the files to pack, relative to --root")
     args = parser.parse_args()
+    global sound_cache_dir
+    sound_cache_dir = os.path.join(os.path.dirname(os.path.abspath(args.root)), SOUND_CACHE)
 
     list_path = os.path.join(args.root, "files.txt")
     with open(list_path, encoding="utf-8") as f:

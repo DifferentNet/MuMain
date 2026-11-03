@@ -126,3 +126,10 @@
 	background-color: token(surface-control);
 	color: token(text-primary);
 }
+
+/* MU Moldova: the phone HUD (theme flag "mobile-hud"). A dp follows the game's resolution, so 11dp
+   came to about 9 screen px on a phone held sideways, too small to read; legacy's lines are about 14. */
+@media (theme: mobile-hud) {
+	#lines { font-size: 15dp; }
+	.chat-line { line-height: 20dp; }
+}

@@ -35,7 +35,8 @@
 .dr-label { display: block; flex: 0 0 auto; width: calc(44px * var(--root-scale)); white-space: nowrap; font-weight: bold; }
 .dr-items { display: block; flex: 1 1 auto; }
 .dr-item { display: block; white-space: nowrap; }
-.dr-footer { display: block; margin-top: calc(8px * var(--root-scale)); padding: 0 calc(2px * var(--root-scale)); white-space: nowrap; }
+/* The footer wraps: "A missed day starts the streak over." is wider than the pane. */
+.dr-footer { display: block; margin-top: calc(8px * var(--root-scale)); padding: 0 calc(2px * var(--root-scale)); white-space: normal; }
 
 #dr_take {
 	display: flex;
