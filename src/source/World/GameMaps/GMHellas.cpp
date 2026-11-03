@@ -265,9 +265,12 @@ int RenderHellasItemInfo(ITEM* ip, int textNum)
 
 void AddObjectDescription(wchar_t* Text, vec3_t position)
 {
-    ObjectDescript QD;
+    ObjectDescript QD{};
 
-    memcpy(QD.m_strName, Text, sizeof(char) * 64);
+    // The whole label, cut to the field and always ended. The old copy took 64 bytes, which is
+    // 32 wide characters with no end: "…to Kal" and then whatever memory followed.
+    wcsncpy(QD.m_strName, Text, std::size(QD.m_strName) - 1);
+    QD.m_strName[std::size(QD.m_strName) - 1] = L'\0';
     VectorCopy(position, QD.m_vPos);
 
     g_qObjDes.push(QD);
