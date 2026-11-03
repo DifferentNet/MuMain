@@ -58,6 +58,7 @@
 #ifdef __EMSCRIPTEN__
 #include "Core/Platform/web/WebDevice.h"
 #include "Core/Platform/web/WebDisplay.h"
+#include "Core/Platform/web/WebFileSystem.h"
 #include "Core/Platform/web/WebKeyboard.h"
 #include "Core/Platform/web/WebPageView.h"
 #include "UI/RmlBridge/RmlNumericInputFilter.h"
@@ -2112,6 +2113,8 @@ MSG MainLoop()
                 // it moved (options open or closed).
                 Render::Look::ApplyPendingTuning();
 #ifdef __EMSCRIPTEN__
+                // Between frames, where no texture file is open.
+                mu::web::InstallLatePack();
                 MuWebFollowPageSize();
                 UI::Mobile::FollowPage();
                 mu::web::ShowInWorld(SceneFlag == MAIN_SCENE);
@@ -2635,6 +2638,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     // Game controllers (an Xbox pad, a Steam Deck): UI/HUD/GamepadControls plays them.
     Core::Input::Gamepad::Init();
     Core::Input::Gamepad::SetEnabled(GameConfig::GetInstance().GetGamepad());
+    Core::Input::Gamepad::SetRumble(GameConfig::GetInstance().GetGamepadRumble());
 
 #ifndef _WIN32
     // Install POSIX crash-diagnostic signal handlers. After SDL_Init (R8

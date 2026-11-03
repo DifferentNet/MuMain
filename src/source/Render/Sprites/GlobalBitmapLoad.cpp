@@ -22,6 +22,7 @@
 #include <chrono>
 #include <cstdint>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <memory>
@@ -37,6 +38,7 @@ void RegisterSampler(std::uint32_t id, void* sampler);
 void UnregisterSampler(std::uint32_t id);
 void ClearTextureRegistry();
 void ClearSamplerRegistry();
+void SetTextureMissHandler(bool (*handler)(std::uint32_t id));
 void RegisterFilteredSampler(std::uint32_t id, void* sampler);
 void MarkFilteredSamplerPending(std::uint32_t id);
 void TakeFilteredSamplerRequests(std::vector<std::uint32_t>& requests);
@@ -255,7 +257,7 @@ std::uint64_t GpuTextureBytes(const BITMAP_t& bitmap)
 
 GLuint CGlobalBitmap::LoadImage(const std::wstring& filename, GLuint uiFilter, GLuint uiWrapMode)
 {
-    BITMAP_t* pBitmap = FindTexture(filename);
+    BITMAP_t* pBitmap = FindTextureEntry(filename);
     if (pBitmap)
     {
         if (pBitmap->Ref > 0)
@@ -310,6 +312,18 @@ bool CGlobalBitmap::LoadImage(GLuint uiBitmapIndex, const std::wstring& filename
     }
 
     auto mi = m_mapBitmap.find(uiBitmapIndex);
+    // A canvas keeps its pixels, which a recorded file loads without: the record makes way for a
+    // full load below, which keeps its count.
+    std::uint8_t recordedRef = 0;
+    if (mi != m_mapBitmap.end() && keepPixels && mi->second->pendingLoad &&
+        0 == _wcsicmp(mi->second->FileName, filename.c_str()))
+    {
+        recordedRef = mi->second->Ref;
+        m_mapBitmap.erase(mi);
+        --m_pendingLoads;
+        m_BitmapCache.Remove(uiBitmapIndex);
+        mi = m_mapBitmap.end();
+    }
     if (mi != m_mapBitmap.end())
     {
         BITMAP_t* pBitmap = mi->second.get();
@@ -338,6 +352,43 @@ bool CGlobalBitmap::LoadImage(GLuint uiBitmapIndex, const std::wstring& filename
     SplitExt(filename, ext, false);
 
     const bool worldTexture = Render::Textures::IsWorldTexturePath(filename);
+    const bool jpg = 0 == _wcsicmp(ext.c_str(), L"jpg");
+    if (m_deferLoads && !keepPixels && (jpg || 0 == _wcsicmp(ext.c_str(), L"tga")))
+    {
+        // Only a file that is there: the caller tries the next folder when this one fails. A file
+        // outside the startup pack is a link to the server copy; its link is enough.
+        std::wstring packed;
+        ExchangeExt(filename, jpg ? L"OZJ" : L"OZT", packed);
+        std::error_code error;
+        const auto status = std::filesystem::symlink_status(Render::Sprites::NarrowBitmapPath(packed), error);
+        if (!error && std::filesystem::exists(status))
+        {
+            auto pending = std::make_unique<BITMAP_t>();
+            pending->BitmapIndex = uiBitmapIndex;
+            wcsncpy(pending->FileName, filename.c_str(), MAX_BITMAP_FILE_NAME - 1);
+            pending->FileName[MAX_BITMAP_FILE_NAME - 1] = L'\0';
+            pending->Ref = 1;
+            pending->TextureNumber = uiBitmapIndex;
+            pending->worldTexture = worldTexture;
+            pending->wrapRepeat = uiWrapMode == GL_REPEAT;
+            pending->pendingLoad = true;
+            pending->pendingPad = padToPowerOfTwo;
+            pending->pendingPremultiply = premultiplyAlpha;
+            pending->pendingFilter = uiFilter;
+            pending->pendingWrap = uiWrapMode;
+            if (m_mapBitmap.insert(type_bitmap_map::value_type(uiBitmapIndex, std::move(pending))).second)
+            {
+                ++m_pendingLoads;
+            }
+            m_BitmapCache.Remove(uiBitmapIndex);
+#ifdef _EDITOR
+            m_loadWorlds[uiBitmapIndex] = Core::AssetLoadWorld::Get();
+#endif
+            return true;
+        }
+        return false;
+    }
+
     const auto start = std::chrono::steady_clock::now();
     bool loaded = false;
     if (0 == _wcsicmp(ext.c_str(), L"jpg"))
@@ -347,18 +398,109 @@ bool CGlobalBitmap::LoadImage(GLuint uiBitmapIndex, const std::wstring& filename
         loaded = OpenTga(uiBitmapIndex, filename, uiFilter, uiWrapMode, worldTexture, padToPowerOfTwo,
                          premultiplyAlpha, keepPixels);
     m_textureLoadSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    if (loaded && recordedRef > 0)
+    {
+        if (const auto added = m_mapBitmap.find(uiBitmapIndex); added != m_mapBitmap.end())
+        {
+            added->second->Ref = static_cast<std::uint8_t>(added->second->Ref + recordedRef);
+        }
+    }
 #ifdef _EDITOR
     if (loaded)
         m_loadWorlds[uiBitmapIndex] = Core::AssetLoadWorld::Get();
 #endif
     return loaded;
 }
+
+namespace
+{
+CGlobalBitmap* s_deferredLoadOwner = nullptr;
+
+bool ResolvePendingBitmap(std::uint32_t id)
+{
+    return s_deferredLoadOwner != nullptr && s_deferredLoadOwner->ResolvePendingLoad(id);
+}
+} // namespace
+
+void CGlobalBitmap::BeginDeferredLoads()
+{
+    m_deferLoads = true;
+    s_deferredLoadOwner = this;
+    // A draw with a number the renderer doesn't know loads the recorded file.
+    mu::SetTextureMissHandler(&ResolvePendingBitmap);
+}
+
+void CGlobalBitmap::EndDeferredLoads()
+{
+    m_deferLoads = false;
+}
+
+bool CGlobalBitmap::ResolvePendingLoad(GLuint uiBitmapIndex)
+{
+    auto mi = m_mapBitmap.find(uiBitmapIndex);
+    if (mi == m_mapBitmap.end() || !mi->second->pendingLoad)
+    {
+        return false;
+    }
+
+    const BitmapPtr pending = std::move(mi->second);
+    m_mapBitmap.erase(mi);
+    --m_pendingLoads;
+    m_BitmapCache.Remove(uiBitmapIndex);
+
+    const std::wstring filename = pending->FileName;
+    std::wstring ext;
+    SplitExt(filename, ext, false);
+    const auto start = std::chrono::steady_clock::now();
+    bool loaded = false;
+    if (0 == _wcsicmp(ext.c_str(), L"jpg"))
+        loaded = OpenJpegTurbo(uiBitmapIndex, filename, pending->pendingFilter, pending->pendingWrap,
+                               pending->worldTexture, pending->pendingPad, false);
+    else
+        loaded = OpenTga(uiBitmapIndex, filename, pending->pendingFilter, pending->pendingWrap, pending->worldTexture,
+                         pending->pendingPad, pending->pendingPremultiply, false);
+    m_textureLoadSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+
+    mi = m_mapBitmap.find(uiBitmapIndex);
+    if (!loaded || mi == m_mapBitmap.end())
+    {
+        mu::log::Get("render")->warn("Deferred texture {} failed to load: {}", uiBitmapIndex,
+                                     mu_wchar_to_utf8(filename.c_str()));
+        return false;
+    }
+    BITMAP_t& bitmap = *mi->second;
+    bitmap.Ref = pending->Ref;
+    bitmap.IsSkin = pending->IsSkin;
+    bitmap.IsHair = pending->IsHair;
+    m_BitmapCache.Remove(uiBitmapIndex);
+    return true;
+}
+
 void CGlobalBitmap::UnloadImage(GLuint uiBitmapIndex, bool bForce)
 {
     auto mi = m_mapBitmap.find(uiBitmapIndex);
     if (mi != m_mapBitmap.end())
     {
         BITMAP_t* pBitmap = mi->second.get();
+
+        if (pBitmap->pendingLoad)
+        {
+            // Nothing is on the GPU, and the renderer never knew the number.
+            if (--pBitmap->Ref == 0 || bForce)
+            {
+                m_mapBitmap.erase(mi);
+                --m_pendingLoads;
+#ifdef _EDITOR
+                m_loadWorlds.erase(uiBitmapIndex);
+#endif
+                if (uiBitmapIndex >= BITMAP_NONAMED_TEXTURES_BEGIN && uiBitmapIndex <= BITMAP_NONAMED_TEXTURES_END)
+                {
+                    m_listNonamedIndex.remove(uiBitmapIndex);
+                }
+                m_BitmapCache.Remove(uiBitmapIndex);
+            }
+            return;
+        }
 
         if (--pBitmap->Ref == 0 || bForce)
         {
@@ -422,6 +564,10 @@ void CGlobalBitmap::UnloadAllImages()
         for (auto& pair : m_mapBitmap)
         {
             BITMAP_t* pBitmap = pair.second.get();
+            if (pBitmap->pendingLoad)
+            {
+                continue;
+            }
             mu::UnregisterTexture(pBitmap->BitmapIndex);
             mu::UnregisterSampler(pBitmap->BitmapIndex);
             pBitmap->sdlSampler = nullptr;
@@ -452,6 +598,7 @@ void CGlobalBitmap::UnloadAllImages()
     }
 
     m_mapBitmap.clear();
+    m_pendingLoads = 0;
 #ifdef _EDITOR
     m_loadWorlds.clear();
 #endif
@@ -779,7 +926,8 @@ void CGlobalBitmap::ApplyTextureFilteringSwitch()
         // the first time a world draw uses it.
         for (const auto& [index, bitmap] : m_mapBitmap)
         {
-            if (bitmap->worldTexture && bitmap->mipLevels <= 1u)
+            // A recorded file gets its chain when it loads.
+            if (bitmap->worldTexture && bitmap->mipLevels <= 1u && !bitmap->pendingLoad)
             {
                 mu::MarkFilteredSamplerPending(index);
             }
@@ -1001,6 +1149,10 @@ void CGlobalBitmap::LogTextureFilteringSummary(const char* context) const
     std::uint64_t gpuBytes = 0;
     for (const auto& [index, bitmap] : m_mapBitmap)
     {
+        if (bitmap->pendingLoad)
+        {
+            continue;
+        }
         if (bitmap->worldTexture)
         {
             ++world;
@@ -1018,9 +1170,11 @@ void CGlobalBitmap::LogTextureFilteringSummary(const char* context) const
 
     mu::log::Get("render")->info(
         "Texture filtering ({}): {}, anisotropy {}; {} world textures ({} mipmapped), {} screen-space; "
-        "{:.1f} MiB on the GPU; texture loading {:.0f} ms, of which mip chains {:.0f} ms",
+        "{:.1f} MiB on the GPU; {} more wait for their first use; texture loading {:.0f} ms, of which mip "
+        "chains {:.0f} ms",
         context, m_textureFilteringEnabled ? "Enhanced" : "Classic", m_anisotropy, world, mipmapped, screenSpace,
-        static_cast<double>(gpuBytes) / (1024.0 * 1024.0), m_textureLoadSeconds * 1000.0, m_mipChainSeconds * 1000.0);
+        static_cast<double>(gpuBytes) / (1024.0 * 1024.0), m_pendingLoads, m_textureLoadSeconds * 1000.0,
+        m_mipChainSeconds * 1000.0);
 }
 
 void CGlobalBitmap::SplitExt(IN const std::wstring& filepath, OUT std::wstring& ext, bool bIncludeDot)

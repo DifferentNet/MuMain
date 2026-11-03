@@ -612,6 +612,7 @@ if (EMSCRIPTEN)
     COMMAND "${Python3_EXECUTABLE}" "${REPO_ROOT}/tools/web/make_startup_pack.py"
       --root "$<TARGET_FILE_DIR:Main>"
       --list "${CMAKE_CURRENT_SOURCE_DIR}/web/startup-files.txt"
+      --late "${CMAKE_CURRENT_SOURCE_DIR}/web/late-files.txt"
     VERBATIM
   )
 endif()

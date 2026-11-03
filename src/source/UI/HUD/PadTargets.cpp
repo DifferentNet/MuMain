@@ -181,6 +181,7 @@ public:
         m_Targets.clear();
         m_Elements.clear();
         m_Popup = nullptr;
+        m_OnPopup = false;
         m_ListCount = 0;
         m_WindowsLeft = std::numeric_limits<float>::max();
         const Rml::Vector2i size = context.GetDimensions();
@@ -225,9 +226,12 @@ public:
         }
         if (kept == 0)
             return;
+        m_OnPopup = true;
         m_Targets.resize(kept);
         m_Elements.resize(kept);
     }
+
+    bool OnPopup() const { return m_OnPopup; }
 
     Rml::Element* List(int index) const { return index >= 0 && index < m_ListCount ? m_Lists[index] : nullptr; }
 
@@ -305,6 +309,7 @@ private:
     std::vector<Target> m_Targets;
     std::vector<Rml::Element*> m_Elements;
     Rml::Element* m_Popup = nullptr;
+    bool m_OnPopup = false;
     std::array<Rml::Element*, MostLists> m_Lists{};
     int m_ListCount = 0;
     int m_Window = 0;
@@ -359,6 +364,11 @@ std::span<const PadTargetPick::Target> Collect()
 bool OnDialog()
 {
     return g_onDialog;
+}
+
+bool OnPopup()
+{
+    return !g_onDialog && g_collector.OnPopup();
 }
 
 void SetScreens(bool screens)

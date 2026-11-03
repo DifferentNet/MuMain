@@ -1593,6 +1593,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       if (store) {
         // Parts this release no longer has, the single pack of earlier releases among them.
         const current = new Set(parts.map((part) => packPath(packKey(part))));
+        if (releaseIndex.late) current.add(packPath(packKey(releaseIndex.late)));
         for (const request of await store.keys()) {
           if (!current.has(packPath(request.url))) store.delete(request);
         }
@@ -1616,6 +1617,20 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     const startupPackSettled = startupParts.then((parts) => Promise.allSettled(parts || []).then(() => {}), () => {})
       .finally(() => { packDone = true; setStatus(""); });
     let mapPacksLoading = 0;
+    // The late pack (startup.json "late", tools/web/make_startup_pack.py): textures the game reads only
+    // once it is played, 23 MB of the 73.5 the startup download took (2026-11-03). It downloads after
+    // the startup pack, while the player logs in, a map's pack going first, and is kept like the
+    // startup pack's parts. WebFileSystem.cpp InstallLatePack takes it between two frames
+    // (Module.muLatePack); until then, or where it fails, the game downloads a file it needs by itself.
+    let latePack = null;
+    const latePackLoading = startupPackSettled.then(async () => {
+      const entry = releaseIndex && releaseIndex.late;
+      if (!entry) return;
+      while (mapPacksLoading) await new Promise((resolve) => setTimeout(resolve, 500));
+      const store = await openStore(STARTUP_STORE);
+      const kept = store ? await store.match(packKey(entry)).catch(() => undefined) : undefined;
+      latePack = await loadPack("Late pack", entry, store, kept, () => {});
+    }).catch((e) => console.warn(`Late pack: ${e}; the game downloads its files one by one instead`));
     // WebFileSystem.cpp LoadWorldFiles: the files of the map folder the game enters (Data/WorldN,
     // ObjectN), or null where the map has no pack.
     async function mapPack(world) {
@@ -1729,12 +1744,15 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         // Tried again at the next visit.
       }
     }
-    // The versioned files' URLs (startup.json "versions") and the ones of them this device keeps.
+    // The versioned files' URLs (startup.json "versions") and the ones of them this device keeps. Not
+    // the late pack's files, which come in it (latePackLoading).
     async function keptFiles() {
       const versions = releaseIndex && releaseIndex.versions;
       if (!versions || !self.caches || !(navigator.serviceWorker && navigator.serviceWorker.controller)) return null;
       const kept = new Set((await (await caches.open("mu-web/files")).keys()).map((request) => request.url));
-      const urls = Object.keys(versions).map((path) => [path, new URL(`${path}?v=${versions[path]}`, location.href).href]);
+      const inLatePack = new Set(((releaseIndex.late && releaseIndex.late.files) || []).map(([path]) => path));
+      const urls = Object.keys(versions).filter((path) => !inLatePack.has(path))
+        .map((path) => [path, new URL(`${path}?v=${versions[path]}`, location.href).href]);
       return { kept, urls };
     }
     // One download at a time: the automatic one, or the whole game the player asked for (full), which
@@ -1989,6 +2007,8 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       canvas,
       muStartupPack: startupParts,
       muMapPack: mapPack,
+      // The late pack once it is here ({files, bytes}), handed over once; else null.
+      muLatePack: () => { const pack = latePack; latePack = null; return pack; },
       muFilesOnPageThread: filesOnPageThread,
       muClipDistances: gpuCheck.clipDistances,
       muDepthClamp: gpuCheck.depthClamp,

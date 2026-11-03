@@ -9,6 +9,7 @@
 //            page closes.
 
 #include "Core/Platform/web/WebFileSystem.h"
+#include "Core/Platform/BundledFonts.h"
 
 #include <emscripten.h>
 #include <emscripten/threading.h>
@@ -18,6 +19,7 @@
 #include <array>
 #include <atomic>
 #include <cerrno>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -677,6 +679,153 @@ bool mu::web::MountGameFiles()
         }
     }
     return ::chdir(GameDir) == 0;
+}
+
+// Downloads the files (paths below the page's folder, one a line), or reads them from the service
+// worker's store, where it also keeps them for the next visit under the URL the mount asks for
+// (fetch-backend.js readKept). Their bytes wait in Module.muLateFontFiles for MuWeb_InstallLateFonts.
+// A file without a hash in startup.json is in the startup pack: nothing to do.
+// Module.muLateFonts: "loading", "ready", or unset (not started, or failed).
+EM_JS(void, MuWeb_DownloadLateFonts, (const char* paths), {
+    if (Module["muLateFonts"]) {
+        return;
+    }
+    Module["muLateFonts"] = "loading";
+    const files = UTF8ToString(paths).split("\n").filter(file => file);
+    (async () => {
+        // startup.json's hashes: asked for already where the page reads files (MuWeb_SetUpPageReads).
+        const versions = await (Module["muFileVersions"] ||
+            fetch(new URL("startup.json", location.href), {cache: "no-cache"})
+                .then((response) => response.ok ? response.json() : {})
+                .then((index) => index.versions || {}, () => ({})));
+        const store = self.caches ? await caches.open("mu-web/files").catch(() => null) : null;
+        const arrived = [];
+        for (const file of files) {
+            const hash = versions && versions[file];
+            if (!hash) {
+                continue;
+            }
+            const url = new URL(`${file}?v=${hash}`, location.href).href;
+            let response = store ? await store.match(url).catch(() => null) : null;
+            if (!response) {
+                response = await fetch(url, {credentials: "same-origin"});
+                if (!response.ok) {
+                    throw new Error(`${file}: ${response.status}`);
+                }
+                if (store) {
+                    await store.put(url, response.clone()).catch(() => {});
+                }
+            }
+            arrived.push([file, new Uint8Array(await response.arrayBuffer())]);
+        }
+        return arrived;
+    })().then(arrived => {
+        Module["muLateFontFiles"] = arrived;
+        Module["muLateFonts"] = "ready";
+    }, e => {
+        err("Late fonts: " + e + "; trying again at the next map");
+        Module["muLateFonts"] = null;
+    });
+});
+
+// Once the download finished, writes its files into /game in place of their links to /server, as the
+// startup pack's are: SDL_ttf opens Noto Sans TC four times (a size each), and each open read it whole
+// through the mount, 0.7 s on a PC (2026-11-03). Returns 1 then, else 0.
+EM_JS(int, MuWeb_InstallLateFonts, (), {
+    if (Module["muLateFonts"] !== "ready") {
+        return 0;
+    }
+    for (const [file, bytes] of Module["muLateFontFiles"] || []) {
+        const full = "/game/" + file;
+        try {
+            FS.unlink(full);
+        } catch (e) {
+        }
+        if (FS.writeFile(full, bytes) < 0) {
+            FS.symlink("/server/" + file, full);
+        }
+    }
+    Module["muLateFontFiles"] = null;
+    return 1;
+});
+
+void mu::web::DownloadLateFonts()
+{
+    static bool ready = false;
+    if (ready || (ready = LateFontsReady()))
+    {
+        return;
+    }
+    std::string paths;
+    for (const BundledFont& font : kBundledFallbackFonts)
+    {
+        if (IsLateFallbackFont(font))
+        {
+            for (const char* path : {font.regular, font.bold})
+            {
+                if (paths.find(path) == std::string::npos)
+                {
+                    paths.append(path).push_back('\n');
+                }
+            }
+        }
+    }
+    MuWeb_DownloadLateFonts(paths.c_str());
+}
+
+bool mu::web::LateFontsReady()
+{
+    static bool ready = false;
+    if (!ready && MuWeb_InstallLateFonts())
+    {
+        ready = true;
+        std::printf("Web file system: Chinese and Korean fonts downloaded\n");
+    }
+    return ready;
+}
+
+// Index.html's Module.muLatePack: the late pack ({files, bytes}) once it is here, handed over once.
+// Writes its files into /game in place of their links to /server; a file that doesn't write keeps its
+// link. Returns how many it wrote, -1 while the pack isn't here.
+EM_JS(int, MuWeb_InstallLatePack, (), {
+    const pack = Module["muLatePack"] ? Module["muLatePack"]() : null;
+    if (!pack) {
+        return -1;
+    }
+    let written = 0;
+    let offset = 0;
+    for (const [path, size] of pack.files) {
+        const full = "/game/" + path;
+        try {
+            FS.unlink(full);
+        } catch (e) {
+        }
+        if (FS.writeFile(full, pack.bytes.subarray(offset, offset + size)) >= 0) {
+            ++written;
+        } else {
+            FS.symlink("/server/" + path, full);
+        }
+        offset += size;
+    }
+    return written;
+});
+
+void mu::web::InstallLatePack()
+{
+    static bool installed = false;
+    if (installed)
+    {
+        return;
+    }
+    const auto start = std::chrono::steady_clock::now();
+    const int written = MuWeb_InstallLatePack();
+    if (written < 0)
+    {
+        return;
+    }
+    installed = true;
+    const auto ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
+    std::printf("Web file system: %d files from the late pack in %.0f ms\n", written, ms);
 }
 
 void mu::web::LoadWorldFiles(int world)
