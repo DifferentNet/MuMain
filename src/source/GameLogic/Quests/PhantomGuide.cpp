@@ -35,6 +35,7 @@ struct Topic
 // The resx strings by address: I18N points them at the chosen language's text on every locale switch. The
 // first list shows the first kTopicsPerList, the next list the rest.
 const Topic kTopics[] = {
+    {&I18N::PhantomGuide::ClassQuestsLabel, &I18N::PhantomGuide::ClassQuestsText},
     {&I18N::PhantomGuide::ResetsLabel, &I18N::PhantomGuide::ResetsText},
     {&I18N::PhantomGuide::TiersLabel, &I18N::PhantomGuide::TiersText},
     {&I18N::PhantomGuide::TowerLabel, &I18N::PhantomGuide::TowerText},
