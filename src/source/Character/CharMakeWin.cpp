@@ -347,6 +347,10 @@ void CCharMakeWin::UpdateDisplay()
 #else //PBG_ADD_CHARACTERCARD
     m_aJobState[CLASS_SUMMONER].enabled = true;
 #endif //PBG_ADD_CHARACTERCARD
+    // MU Skynet has no Summoner or Rage Fighter (ghinzuro 2026-11-03): each theme's char_make.rcss
+    // hides their buttons, and here they can't be picked by any other way either.
+    m_aJobState[CLASS_SUMMONER].enabled = false;
+    m_aJobState[CLASS_RAGEFIGHTER].enabled = false;
 
     const bool isDarkLord = (m_nSelJob == CLASS_DARK_LORD);
     m_asprBack[CMW_SPR_STAT].SetSize(0, isDarkLord ? kDarkLordStatHeight : kDefaultStatHeight, Y);

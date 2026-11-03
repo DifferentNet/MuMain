@@ -50,9 +50,9 @@
    margin around them, flush against #panel's right edge (338+116=454). height:98 clears the
    tallest (dark-lord) row's text with a few px to spare. */
 #attributes_panel { left: calc(338px * var(--layout-pixel, 1)); top: calc(14px * var(--layout-pixel, 1));  width: calc(116px * var(--layout-pixel, 1)); height: calc(98px * var(--layout-pixel, 1)); }
-/* top:116 leaves a ~12px gap for the "Class" kicker before the first job button. height:214
-   covers the last button's bottom (298+26=324) plus padding. */
-#class_panel      { left: calc(338px * var(--layout-pixel, 1)); top: calc(116px * var(--layout-pixel, 1)); width: calc(116px * var(--layout-pixel, 1)); height: calc(214px * var(--layout-pixel, 1)); }
+/* top:116 leaves a ~12px gap for the "Class" kicker before the first job button. height:151
+   covers the last button's bottom (dark-lord, 235+26=261) plus padding. */
+#class_panel      { left: calc(338px * var(--layout-pixel, 1)); top: calc(116px * var(--layout-pixel, 1)); width: calc(116px * var(--layout-pixel, 1)); height: calc(151px * var(--layout-pixel, 1)); }
 /* Fills exactly the gap between the job-button column's bottom (324) and #desc_panel's top (355)
    -- zero overlap on either side. */
 #identity_strip   { left: 0px;   top: calc(324px * var(--layout-pixel, 1)); width: calc(454px * var(--layout-pixel, 1)); height: calc(31px * var(--layout-pixel, 1)); }
@@ -111,10 +111,12 @@
 .job-btn[job="wizard"]       { top: calc(131px * var(--layout-pixel, 1)); }
 .job-btn[job="knight"]       { top: calc(157px * var(--layout-pixel, 1)); }
 .job-btn[job="elf"]          { top: calc(183px * var(--layout-pixel, 1)); }
-.job-btn[job="summoner"]     { top: calc(209px * var(--layout-pixel, 1)); }
-.job-btn[job="rage-fighter"] { top: calc(246px * var(--layout-pixel, 1)); }
-.job-btn[job="dark"]         { top: calc(272px * var(--layout-pixel, 1)); }
-.job-btn[job="dark-lord"]    { top: calc(298px * var(--layout-pixel, 1)); }
+/* MU Skynet has no Summoner or Rage Fighter (ghinzuro 2026-11-03): their buttons are hidden and
+   Magic Gladiator and Dark Lord move up under the Elf. */
+.job-btn[job="summoner"],
+.job-btn[job="rage-fighter"] { display: none; }
+.job-btn[job="dark"]         { top: calc(209px * var(--layout-pixel, 1)); }
+.job-btn[job="dark-lord"]    { top: calc(235px * var(--layout-pixel, 1)); }
 .job-btn.checked {
 	color: token(text-warm);
 	border-color: token(accent-gold-hover);
