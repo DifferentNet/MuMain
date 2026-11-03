@@ -26,4 +26,7 @@ namespace UI::HUD::PadKeyboard
 // Once a frame from UI::HUD::GamepadControls, with the pad's presses since the last frame.
 // @return whether the keyboard is up and took the pad: the game gets nothing from it this frame.
 bool Update(bool padInUse, const Core::Input::Gamepad::Presses& presses);
+
+// Whether the keyboard is up: the login window steps up out of its way (UI/Windows/LoginWin).
+[[nodiscard]] bool IsUp();
 } // namespace UI::HUD::PadKeyboard
