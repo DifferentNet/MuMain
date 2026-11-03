@@ -169,6 +169,7 @@ constexpr NamedElement Buttons[] = {
     // MU Helper settings (Z): the pick-up tab, its boxes checkbox, Initialization (pick-up off, range 8), save, close.
     {"mu_helper.tab_obtaining", mu::ui::window::INTERFACE_MUHELPER, "#tab_1"},
     {"mu_helper.pick_boxes", mu::ui::window::INTERFACE_MUHELPER, "#cb_pick_boxes .checkbox-box"},
+    {"mu_helper.pick_quest", mu::ui::window::INTERFACE_MUHELPER, "#cb_pick_quest .checkbox-box"},
     {"mu_helper.init", mu::ui::window::INTERFACE_MUHELPER, "#btn_init"},
     {"mu_helper.save", mu::ui::window::INTERFACE_MUHELPER, "#btn_save"},
     {"mu_helper.close", mu::ui::window::INTERFACE_MUHELPER, "#btn_exit"},

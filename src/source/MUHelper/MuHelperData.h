@@ -96,6 +96,7 @@ namespace MUHelper
 		bool bPickAncient = false;
 		bool bPickExcellent = false;
 		bool bPickContainers = false; // saved in byte 33 bit 4; 0 in blobs from older clients = off
+		bool bPickQuestItems = false; // saved in byte 33 bit 5; 0 in blobs from older clients = off
 		bool bPickExtraItems = false;
 		std::set<std::wstring> aExtraItems;
 
@@ -110,6 +111,14 @@ namespace MUHelper
 		bool bAutoAcceptGuild = false;
 		bool bFallbackBasicAttack = true;
 	} ConfigData;
+
+	// The saved settings hold 12 extra item names of 15 bytes (UTF-8) each.
+	constexpr size_t MaxExtraItems = 12;
+	constexpr size_t MaxExtraItemBytes = 15;
+
+	// The name as it will be saved: spaces trimmed, cut to MaxExtraItemBytes on a character boundary.
+	// Names are matched as a part of the item name, so a cut name still picks the item up.
+	std::wstring FitExtraItemName(const std::wstring& name);
 
 	class ConfigDataSerDe {
 	public:

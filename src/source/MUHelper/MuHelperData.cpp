@@ -1,8 +1,59 @@
 #include "stdafx.h"
 #include "MuHelperData.h"
 
+#include <cstdlib>
+#include <cstring>
+
+#include "Core/Utilities/StringUtils.h"
+
 namespace MUHelper
 {
+	// True when the bytes are well-formed UTF-8 (no overlong forms or surrogates).
+	static bool IsValidUtf8(const std::string& bytes)
+	{
+		size_t i = 0;
+		while (i < bytes.size())
+		{
+			const unsigned char c = static_cast<unsigned char>(bytes[i]);
+			size_t extra = 0;
+			unsigned int cp = 0;
+			if (c < 0x80) { ++i; continue; }
+			else if ((c & 0xE0) == 0xC0) { extra = 1; cp = c & 0x1F; }
+			else if ((c & 0xF0) == 0xE0) { extra = 2; cp = c & 0x0F; }
+			else if ((c & 0xF8) == 0xF0) { extra = 3; cp = c & 0x07; }
+			else return false;
+			if (i + extra >= bytes.size()) return false;
+			for (size_t k = 1; k <= extra; ++k)
+			{
+				const unsigned char cc = static_cast<unsigned char>(bytes[i + k]);
+				if ((cc & 0xC0) != 0x80) return false;
+				cp = (cp << 6) | (cc & 0x3F);
+			}
+			const unsigned int minimum[] = { 0, 0x80, 0x800, 0x10000 };
+			if (cp < minimum[extra] || cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF)) return false;
+			i += extra + 1;
+		}
+		return true;
+	}
+
+	std::wstring FitExtraItemName(const std::wstring& name)
+	{
+		const size_t first = name.find_first_not_of(L" \t");
+		if (first == std::wstring::npos)
+		{
+			return {};
+		}
+		std::wstring fitted = name.substr(first, name.find_last_not_of(L" \t") - first + 1);
+		while (!fitted.empty() && StringUtils::WideToNarrow(fitted.c_str()).size() > MaxExtraItemBytes)
+		{
+			fitted.pop_back();
+		}
+		while (!fitted.empty() && (fitted.back() == L' ' || fitted.back() == L'\t'))
+		{
+			fitted.pop_back();
+		}
+		return fitted;
+	}
 
 	void ConfigDataSerDe::Serialize(const ConfigData& gameData, PRECEIVE_MUHELPER_DATA& netData)
 	{
@@ -123,20 +174,23 @@ namespace MUHelper
 		netData.SetItem = gameData.bPickAncient ? 1 : 0;
 		netData.AddExtraItem = gameData.bPickExtraItems ? 1 : 0;
 
+		// Names of 15 bytes or more used to be dropped here, so "Symbol of Kundun" was gone after a save
+		// (ghinzuro, 2026-11-03). Now they are cut to fit.
 		memset(netData.ExtraItems, 0, sizeof(netData.ExtraItems));
-		int iItemIndex = 0;
+		size_t iItemIndex = 0;
 		for (const auto& wsItem : gameData.aExtraItems)
 		{
-			if (iItemIndex >= 12)
+			if (iItemIndex >= MaxExtraItems)
 			{
 				break;
 			}
 
-			size_t n = wcstombs(netData.ExtraItems[iItemIndex], wsItem.c_str(), 15);
-			if (n == (size_t)-1 || n == 15)
+			const std::string utf8 = StringUtils::WideToNarrow(FitExtraItemName(wsItem).c_str());
+			if (utf8.empty())
 			{
-				memset(netData.ExtraItems[iItemIndex], 0, 15);
+				continue;
 			}
+			memcpy(netData.ExtraItems[iItemIndex], utf8.data(), utf8.size());
 			iItemIndex++;
 		}
 
@@ -146,6 +200,7 @@ namespace MUHelper
 		netData.bAutoAcceptGuild = gameData.bAutoAcceptGuild ? 1 : 0;
 		netData.bFallbackBasicAttack = gameData.bFallbackBasicAttack ? 1 : 0;
 		netData.bPickContainers = gameData.bPickContainers ? 1 : 0;
+		netData.bPickQuestItems = gameData.bPickQuestItems ? 1 : 0;
 	}
 
 	void ConfigDataSerDe::Deserialize(const PRECEIVE_MUHELPER_DATA& netData, ConfigData& gameData)
@@ -219,19 +274,31 @@ namespace MUHelper
 		gameData.bPickAncient = (bool)netData.SetItem;
 		gameData.bPickExtraItems = (bool)netData.AddExtraItem;
 
-		wchar_t wsExtraItemBuffer[15 + 1];
-		for (int i = 0; i < sizeof(netData.ExtraItems) / sizeof(netData.ExtraItems[0]); i++)
+		gameData.aExtraItems.clear();
+		// Older clients saved the names in the PC code page (wcstombs), CP1251 on a Russian Windows;
+		// such a name is not valid UTF-8 and is read the old way. The next save writes it as UTF-8.
+		const auto DecodeExtraItemName = [](const std::string& bytes) -> std::wstring
 		{
-			memset(wsExtraItemBuffer, 0, sizeof(wsExtraItemBuffer));
-
-			size_t n = std::mbstowcs(wsExtraItemBuffer, &netData.ExtraItems[i][0], 15);
-			if (n > 0 && n <= 15)
+			if (IsValidUtf8(bytes))
 			{
-				wsExtraItemBuffer[n] = L'\0';
-				if (wsExtraItemBuffer[0] != L'\0')
-				{
-					gameData.aExtraItems.insert(std::wstring(wsExtraItemBuffer));
-				}
+				return StringUtils::NarrowToWide(bytes);
+			}
+			std::wstring legacy(bytes.size() + 1, L'\0');
+			const size_t length = mbstowcs(legacy.data(), bytes.c_str(), legacy.size());
+			if (length == static_cast<size_t>(-1))
+			{
+				return StringUtils::NarrowToWide(bytes);
+			}
+			legacy.resize(length);
+			return legacy;
+		};
+		for (const auto& field : netData.ExtraItems)
+		{
+			// A full 15-byte name has no terminating zero.
+			const std::string bytes(field, strnlen(field, MaxExtraItemBytes));
+			if (!bytes.empty())
+			{
+				gameData.aExtraItems.insert(DecodeExtraItemName(bytes));
 			}
 		}
 
@@ -241,6 +308,7 @@ namespace MUHelper
 		gameData.bAutoAcceptGuild = (bool)netData.bAutoAcceptGuild;
 		gameData.bFallbackBasicAttack = (bool)netData.bFallbackBasicAttack;
 		gameData.bPickContainers = (bool)netData.bPickContainers;
+		gameData.bPickQuestItems = (bool)netData.bPickQuestItems;
 	}
 
 }

@@ -16041,4 +16041,8 @@
   <data name="TitlesTownsOnly" xml:space="preserve">
     <value>Titles in towns only</value>
   </data>
+  <!-- MU Helper: quest items pick-up -->
+  <data name="HelperPickQuestItems" xml:space="preserve">
+    <value>Quest items</value>
+  </data>
 </root>
