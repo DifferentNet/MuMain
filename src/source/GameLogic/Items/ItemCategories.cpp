@@ -184,18 +184,16 @@ namespace GameLogic::Items
         }
     }
 
-    // The MU Helper's "Quest items" pick-up option (ghinzuro, 2026-11-03). Cash-shop tickets are left out.
+    // The MU Helper's "Quest items" pick-up option (ghinzuro, 2026-11-03). Cash-shop tickets are left out, and so are
+    // the Blood Castle and Devil Square ticket parts (Scroll of Archangel, Blood Bone, Devil's Eye and Key):
+    // the shops sell those tickets (ghinzuro, 2026-11-03).
     bool IsQuestItem(const ITEM* pItem)
     {
         switch (pItem->Type)
         {
         case ITEM_SYMBOL_OF_KUNDUN:
         case ITEM_LOST_MAP:
-        case ITEM_DEVILS_EYE:
-        case ITEM_DEVILS_KEY:
         case ITEM_DEVILS_INVITATION:
-        case ITEM_SCROLL_OF_ARCHANGEL:
-        case ITEM_BLOOD_BONE:
         case ITEM_INVISIBILITY_CLOAK:
         case ITEM_ARMOR_OF_GUARDSMAN:
         case ITEM_SCROLL_OF_BLOOD:
