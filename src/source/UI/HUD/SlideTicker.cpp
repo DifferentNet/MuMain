@@ -6,6 +6,10 @@
 #include "UI/Core/WindowCommon.h"
 #include "UI/Options/OptionWindow.h"
 #include "UI/Core/WindowSystem.h"
+#include "UI/Mobile/DesktopTip.h"
+#include "UI/Mobile/InterfaceMode.h"
+
+#include <vector>
 
 // Defined in UIWindows.cpp; declared per translation unit across the UI, with no header.
 void SetLineColor(int iType, float fAlphaRate = 1.0f);
@@ -559,15 +563,18 @@ const wchar_t* SlideTicker::GetSlideText(int iLevel)
     if (iHelpType == -1) return nullptr;
     if (m_iTextNumber[iHelpType] == 0) return nullptr;
 
-    int iRandom = rand() % m_iTextNumber[iHelpType];
+    // With the on-screen controls (fingers or a pad) a tip for the mouse or the keyboard is left out.
+    const bool onScreenControls = UI::Mobile::ShowsControls();
+    std::vector<const wchar_t*> tips;
+    for (const wchar_t* tip : m_SlideTextList[iHelpType])
+    {
+        if (tip != nullptr && tip[0] != L'\0'
+            && !(onScreenControls && UI::Mobile::DesktopTip::NeedsMouseOrKeys(tip)))
+            tips.push_back(tip);
+    }
+    if (tips.empty()) return nullptr;
 
-    if ((unsigned int)iRandom >= m_SlideTextList[iHelpType].size()) return nullptr;
-
-    m_SlideTextListIter = m_SlideTextList[iHelpType].begin();
-    for (int i = 0; i < iRandom; ++i)
-        ++m_SlideTextListIter;
-
-    return *m_SlideTextListIter;
+    return tips[rand() % tips.size()];
 }
 
 void SlideTicker::AddSlide(int iLoopCount, int iLoopDelay, const wchar_t* pszText, int iType, float fSpeed, DWORD dwTextColor)
