@@ -194,6 +194,7 @@ void CLoginWin::SetPosition(int x, int y)
 {
 	m_ptPos.x = x;
 	m_ptPos.y = y;
+	m_shownY = y;
 
 	// No field repositioning here: both credential fields are RmlUi elements positioned by each
 	// theme's RCSS, so moving #panel carries them along.
@@ -212,6 +213,7 @@ void CLoginWin::SetPosition(int x, int y)
 				const Rml::Context* context = m_RmlView.Document()->GetContext();
 				const int screenHeight = context != nullptr ? context->GetDimensions().y : 0;
 				y = (std::min)(y, screenHeight * LiftedTopPercent / 100);
+				m_shownY = y;
 			}
 			panel->SetProperty("left", std::to_string(x) + "px");
 			panel->SetProperty("top", std::to_string(y) + "px");
@@ -529,7 +531,7 @@ bool CLoginWin::UpdateMouseEvent()
 
     // Not modal: only claims a click within its own bounding box.
     RECT rc;
-    ::SetRect(&rc, m_ptPos.x, m_ptPos.y, m_ptPos.x + m_Size.cx, m_ptPos.y + m_Size.cy);
+    ::SetRect(&rc, m_ptPos.x, m_shownY, m_ptPos.x + m_Size.cx, m_shownY + m_Size.cy);
     if (::PtInRect(&rc, CInput::Instance().GetCursorPos()))
         return false;
 
