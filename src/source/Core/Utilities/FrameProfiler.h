@@ -271,19 +271,26 @@ inline void Count(Counter counter, std::uint32_t amount = 1)
     CounterValue(counter) += amount;
 }
 
+// Like DetailScope, timed only while the passes are read ($glstats, a benchmark): some sixty of these
+// open each frame, and on the web two clock reads each were about 1 % of a phone's frame.
 class Scope
 {
 public:
     explicit Scope(Pass pass)
-        : m_pass(pass), m_startedAt(std::chrono::steady_clock::now())
+        : m_pass(pass), m_timed(g_CountersEnabled)
     {
+        if (m_timed)
+            m_startedAt = std::chrono::steady_clock::now();
         PushPass(pass);
     }
 
     ~Scope()
     {
-        const auto elapsed = std::chrono::steady_clock::now() - m_startedAt;
-        AccumulatorMs(m_pass) += std::chrono::duration<float, std::milli>(elapsed).count();
+        if (m_timed)
+        {
+            const auto elapsed = std::chrono::steady_clock::now() - m_startedAt;
+            AccumulatorMs(m_pass) += std::chrono::duration<float, std::milli>(elapsed).count();
+        }
         PopPass();
     }
 
@@ -292,7 +299,8 @@ public:
 
 private:
     Pass m_pass;
-    std::chrono::steady_clock::time_point m_startedAt;
+    bool m_timed;
+    std::chrono::steady_clock::time_point m_startedAt{};
 };
 
 // A pass that opens once per object or per model: a clock read costs a call into JavaScript on the
