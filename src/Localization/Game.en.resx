@@ -15465,7 +15465,7 @@
     <value>A: tap to hit the target once, hold to keep fighting</value>
   </data>
   <data name="PadHelpSkills" xml:space="preserve">
-    <value>X, Y, B, RB, RT: the five skill buttons</value>
+    <value>X, Y, B: the three skill buttons. Hold RT: X and Y cast the skills 4 and 5</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
     <value>LS (click the left stick in, centred): put skills on the buttons</value>
@@ -15477,7 +15477,7 @@
     <value>D-pad down: pick up the item whose name shows, hold to keep picking up; with nothing to pick up, talk to the nearest NPC</value>
   </data>
   <data name="PadHelpPotions" xml:space="preserve">
-    <value>LB and LT: potions Q and W. D-pad left and right: potions E and R</value>
+    <value>LB and LT: potions Q and W. D-pad left: the map. D-pad right: the inventory</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
     <value>RS (click the right stick in, centred): back to the nearest target</value>
@@ -15501,7 +15501,7 @@
     <value>Tap to use a skill once, hold to repeat it</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
-    <value>D-pad up: MU Helper on and off (the left stick moves where it hunts). View: Social (players around: trade, party, guild...); the map is in the menu</value>
+    <value>D-pad up: MU Helper on and off (the left stick moves where it hunts). View: Social (players around: trade, party, guild...)</value>
   </data>
   <data name="PadHelpRightClick" xml:space="preserve">
     <value>RS over a window: right click at the pointer, on a stat's + many points</value>
@@ -15546,7 +15546,7 @@
     <value>Choose</value>
   </data>
   <data name="PadConnected" xml:space="preserve">
-    <value>Gamepad: A attacks, X, Y, B, RB and RT cast skills, LB and LT drink potions, the right stick picks the target, Menu opens every window (its Help lists all the buttons)</value>
+    <value>Gamepad: A attacks, X, Y and B cast skills (hold RT for two more), LB and LT drink potions, the right stick picks the target, d-pad left the map, right the inventory, Menu opens every window (its Help lists all the buttons)</value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
     <value>Pick a skill with the pointer and A, then press X, Y, RB, LT or D-pad down to put it there</value>
