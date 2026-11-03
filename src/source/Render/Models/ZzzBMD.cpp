@@ -581,7 +581,7 @@ void BMD::MarkCpuVerticesExternallyWritten(int mesh) const
 void BMD::Transform(float (*BoneMatrix)[3][4], vec3_t BoundingBoxMin, vec3_t BoundingBoxMax, OBB_t* OBB, bool Translate,
                     float _Scale)
 {
-    FRAME_PROFILE(Skinning); // baseline measurement
+    FRAME_PROFILE_DETAIL(Skinning); // baseline measurement
     TransformCheap(BoneMatrix, BoundingBoxMin, BoundingBoxMax, OBB, Translate, _Scale);
 
     // With the lazy-skin gate on, ordinary (EditFlag != 2) bodies defer the

@@ -104,6 +104,8 @@ page tells iOS users to update by what the browser lacks, not by that number. iP
     at submit, instead of a `malloc` and a `writeBuffer` per push.
   - Mapping a transfer buffer with `cycle` no longer clears the whole buffer: the game maps one with `cycle`
     for each upload, and the clearing took a few per cent of every frame.
+  - The bind group cache hashes its key (64 ids) a word at a time instead of a byte at a time: 512 steps per
+    lookup took 5 % of a phone's frame (2026-11-03).
 - Fences (Enhanced graphics crashed or froze the tab, 2026-10-22; found with AddressSanitizer, see below):
   - `SubmitAndAcquireFence` read the queue from the command buffer that Submit had just freed.
   - `GenerateMipmaps` freed its temporary texture while the command buffer still tracked it.

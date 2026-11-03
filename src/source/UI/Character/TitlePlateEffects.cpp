@@ -122,13 +122,9 @@ float Seconds()
     return static_cast<float>(std::fmod(elapsed.count(), 3600.0));
 }
 
-// 0 to 1 from the owner's name, so the plates around do not flash together.
 float Phase(const CHARACTER& owner)
 {
-    std::uint32_t hash = 2166136261u;
-    for (const wchar_t* c = owner.ID; *c != L'\0'; ++c)
-        hash = (hash ^ static_cast<std::uint32_t>(*c)) * 16777619u;
-    return static_cast<float>(hash % 1000u) / 1000.f;
+    return PhaseOf(owner.ID);
 }
 
 std::uint32_t Abgr(const Rgb& color, float light)
@@ -153,7 +149,8 @@ Rgb Hue(float degrees)
     return {channel(0.f), channel(8.f), channel(4.f)};
 }
 
-// The quads of one plate's layer, in the name window's space until Flush().
+// The quads of one plate's layer: in the name window's space, put on the screen by Flush(); or, for a window, in the
+// window's own pixels, added to its list.
 class Quads
 {
 public:
@@ -163,24 +160,31 @@ public:
         std::uint32_t abgr;
     };
 
+    Quads() : m_vertices(m_own), m_toScreen(true) {}
+    explicit Quads(std::vector<RecordedVertex>& out) : m_vertices(out), m_toScreen(false) {}
+    Quads(const Quads&) = delete;
+    Quads& operator=(const Quads&) = delete;
+
     // Corners top left, bottom left, bottom right, top right; u and v in the effects atlas' pixels.
     void Add(const Corner (&corners)[4])
     {
         for (const Corner& c : corners)
-            m_vertices.push_back({ConvertPositionX(c.x), ConvertPositionY(c.y), c.u / Art::FxAtlasWidth,
-                                  c.v / Art::FxAtlasHeight, c.abgr});
+            m_vertices.push_back({m_toScreen ? ConvertPositionX(c.x) : c.x, m_toScreen ? ConvertPositionY(c.y) : c.y,
+                                  c.u / Art::FxAtlasWidth, c.v / Art::FxAtlasHeight, c.abgr});
     }
 
     void Flush();
 
 private:
-    std::vector<RecordedVertex> m_vertices;
+    std::vector<RecordedVertex> m_own;
+    std::vector<RecordedVertex>& m_vertices;
+    bool m_toScreen;
 };
 
 void Quads::Flush()
 {
     const GLuint texture = Texture();
-    if (m_vertices.empty() || texture == 0)
+    if (!m_toScreen || m_vertices.empty() || texture == 0)
         return;
 
     if (Render::Renderer::IOverlay2DRecorder* recorder = Render::Renderer::ActiveOverlay2DRecorder())
@@ -314,6 +318,38 @@ void AddEmbers(Quads& quads, Rarity rarity, const Placement& at, float now, floa
         AddSprite(quads, Art::Ember, x, y, size, 0.f, Abgr(EmberColor, light));
     }
 }
+
+void AddGlow(Quads& quads, const GameLogic::Titles::Worn& title, const Placement& at, float phase)
+{
+    const int rarity = static_cast<int>(title.Color);
+    const Rgb& color = GlowColors[rarity];
+    if (color.r + color.g + color.b <= 0.f)
+        return;
+
+    const Art::Plate& plate = Art::Plates[rarity];
+    const Art::PlateFx& fx = Art::PlateEffects[rarity];
+    const float light = GlowMiddle + GlowSwing * std::sin((Seconds() + phase * 3.f) * 2.f * Pi / GlowPeriod);
+    const std::uint32_t abgr = Abgr(color, light);
+    const float pad = fx.glowPad * at.scale;
+    const float left = at.left - pad;
+    const float top = at.top - pad;
+    const float right = at.left + plate.width * at.scale + pad;
+    const float bottom = at.top + plate.height * at.scale + pad;
+    const Art::Rect& glow = fx.glow;
+    quads.Add({{left, top, glow.x, glow.y, abgr},
+               {left, bottom, glow.x, glow.y + glow.height, abgr},
+               {right, bottom, glow.x + glow.width, glow.y + glow.height, abgr},
+               {right, top, glow.x + glow.width, glow.y, abgr}});
+}
+
+void AddOver(Quads& quads, const GameLogic::Titles::Worn& title, const Placement& at, float phase)
+{
+    const float now = Seconds();
+    AddShine(quads, title, at, now, phase);
+    AddSparks(quads, title.Color, at, now, phase);
+    if (IsOneOf(title.Id, EmberTitles))
+        AddEmbers(quads, title.Color, at, now, phase);
+}
 } // namespace
 
 bool Enabled()
@@ -323,49 +359,54 @@ bool Enabled()
 
 void RenderUnder(const GameLogic::Titles::Worn& title, const CHARACTER& owner, const Placement& at)
 {
-    const int rarity = static_cast<int>(title.Color);
-    const Rgb& color = GlowColors[rarity];
-    if (color.r + color.g + color.b <= 0.f)
-        return;
-
-    const Art::Plate& plate = Art::Plates[rarity];
-    const Art::PlateFx& fx = Art::PlateEffects[rarity];
-    const float light = GlowMiddle + GlowSwing * std::sin((Seconds() + Phase(owner) * 3.f) * 2.f * Pi / GlowPeriod);
-    const std::uint32_t abgr = Abgr(color, light);
-    const float pad = fx.glowPad * at.scale;
-    const float left = at.left - pad;
-    const float top = at.top - pad;
-    const float right = at.left + plate.width * at.scale + pad;
-    const float bottom = at.top + plate.height * at.scale + pad;
-    const Art::Rect& glow = fx.glow;
     Quads quads;
-    quads.Add({{left, top, glow.x, glow.y, abgr},
-               {left, bottom, glow.x, glow.y + glow.height, abgr},
-               {right, bottom, glow.x + glow.width, glow.y + glow.height, abgr},
-               {right, top, glow.x + glow.width, glow.y, abgr}});
+    AddGlow(quads, title, at, Phase(owner));
     quads.Flush();
 }
 
 void RenderOver(const GameLogic::Titles::Worn& title, const CHARACTER& owner, const Placement& at)
 {
-    const float now = Seconds();
-    const float phase = Phase(owner);
     Quads quads;
-    AddShine(quads, title, at, now, phase);
-    AddSparks(quads, title.Color, at, now, phase);
-    if (IsOneOf(title.Id, EmberTitles))
-        AddEmbers(quads, title.Color, at, now, phase);
+    AddOver(quads, title, at, Phase(owner));
     quads.Flush();
 }
 
 std::array<unsigned char, 3> TextColor(const GameLogic::Titles::Worn& title, const CHARACTER& owner,
                                        const unsigned char (&base)[3])
 {
+    return TextColor(title, Phase(owner), base);
+}
+
+float PhaseOf(const wchar_t* name)
+{
+    std::uint32_t hash = 2166136261u;
+    for (const wchar_t* c = name; c != nullptr && *c != L'\0'; ++c)
+        hash = (hash ^ static_cast<std::uint32_t>(*c)) * 16777619u;
+    return static_cast<float>(hash % 1000u) / 1000.f;
+}
+
+void BuildUnder(const GameLogic::Titles::Worn& title, float phase, const Placement& at,
+                std::vector<Render::Renderer::RecordedVertex>& out)
+{
+    Quads quads(out);
+    AddGlow(quads, title, at, phase);
+}
+
+void BuildOver(const GameLogic::Titles::Worn& title, float phase, const Placement& at,
+               std::vector<Render::Renderer::RecordedVertex>& out)
+{
+    Quads quads(out);
+    AddOver(quads, title, at, phase);
+}
+
+std::array<unsigned char, 3> TextColor(const GameLogic::Titles::Worn& title, float phase,
+                                       const unsigned char (&base)[3])
+{
     std::array<unsigned char, 3> color = {base[0], base[1], base[2]};
     if (title.Color != Rarity::Crimson)
         return color;
 
-    const float t = 0.5f + 0.5f * std::sin(Seconds() * ShimmerSpeed + Phase(owner) * 6.f);
+    const float t = 0.5f + 0.5f * std::sin(Seconds() * ShimmerSpeed + phase * 6.f);
     for (int i = 0; i < 3; ++i)
         color[i] = static_cast<unsigned char>(base[i] + (ShimmerColor[i] - base[i]) * t + 0.5f);
     return color;

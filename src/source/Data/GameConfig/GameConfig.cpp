@@ -90,6 +90,7 @@ void GameConfig::Load()
     m_overheadNpcNames = ReadBool(CfgSectionUI, CfgKeyOverheadNpcNames, CfgDefaultOverheadNpcNames);
     m_overheadTitles = ReadBool(CfgSectionUI, CfgKeyOverheadTitles, CfgDefaultOverheadTitles);
     m_titleEffects = ReadBool(CfgSectionUI, CfgKeyTitleEffects, CfgDefaultTitleEffects);
+    m_titlesTownsOnly = ReadBool(CfgSectionUI, CfgKeyTitlesTownsOnly, CfgDefaultTitlesTownsOnly);
     m_interfaceView = ReadString(CfgSectionUI, CfgKeyInterfaceView, CfgDefaultInterfaceView);
     m_controls = ReadString(CfgSectionUI, CfgKeyControls, CfgDefaultControls);
     SetTouchButtonSize(ReadInt(CfgSectionUI, CfgKeyTouchButtonSize, CfgDefaultTouchButtonSize));
@@ -170,6 +171,7 @@ void GameConfig::Save()
     WriteBool(CfgSectionUI, CfgKeyOverheadNpcNames, m_overheadNpcNames);
     WriteBool(CfgSectionUI, CfgKeyOverheadTitles, m_overheadTitles);
     WriteBool(CfgSectionUI, CfgKeyTitleEffects, m_titleEffects);
+    WriteBool(CfgSectionUI, CfgKeyTitlesTownsOnly, m_titlesTownsOnly);
     WriteString(CfgSectionUI, CfgKeyInterfaceView, m_interfaceView);
     WriteString(CfgSectionUI, CfgKeyControls, m_controls);
     WriteInt(CfgSectionUI, CfgKeyTouchButtonSize, m_touchButtonSize);

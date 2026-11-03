@@ -23,9 +23,20 @@ bool Enabled();
 float Scale();
 void SetScale(float scale);
 
+// Whether owner's title shows where they stand: by default only in a safe zone, the towns (ghinzuro, 2026-11-03:
+// out in the field they hid the fight); Options, Interface tab, config.ini [UI] TitlesTownsOnly=0 shows them
+// everywhere. Both the name line (UI::OverheadNames) and the hover/chat plate (UI/Chat/Chat.cpp) ask this.
+bool ShownHere(const CHARACTER& owner);
+
 // Draws the title of owner centred on centerX, its lowest point on bottomY, or over the owner's party HP bar
 // (Engine/Object/ZzzInterface.cpp RenderPartyHP) when that is higher, with its effects (UI::TitlePlates::Effects)
 // when effects and the option allow. Returns how high it is (0: nothing drawn).
 int Render(const GameLogic::Titles::Worn& title, const CHARACTER& owner, int centerX, int bottomY,
            bool effects = true);
+
+// For a window that draws a plate itself (the titles window's preview): the plates' art (Art::Plates in
+// TitlePlatesArt.h, as an RmlUi image source) and the text's colour on a rarity's plate.
+inline constexpr const char* AtlasSource = "/Data/Interface/newui_titles.tga";
+using TextRgb = unsigned char[3];
+const TextRgb& BaseTextColor(GameLogic::Titles::Rarity rarity);
 } // namespace UI::TitlePlates

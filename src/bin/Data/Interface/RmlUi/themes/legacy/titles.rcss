@@ -17,10 +17,10 @@
 .sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; }
 
 .tt-title { left: 0; top: 12px; text-align: center; font-weight: bold; pointer-events: none; }
-#tt_status { left: 12px; top: 32px; font-weight: bold; pointer-events: none; }
-#tt_detail { left: 12px; top: 47px; pointer-events: none; }
+#tt_status { left: 12px; top: 70px; font-weight: bold; pointer-events: none; }
+#tt_detail { left: 12px; top: 85px; pointer-events: none; }
 
-#tt_body { left: 12px; top: 64px; --flow-w: 166px; line-height: 1.12; }
+#tt_body { left: 12px; top: 102px; --flow-w: 166px; line-height: 1.12; }
 
 /* The two tabs, side by side over the list's width. */
 .tt-tabs {
@@ -45,7 +45,7 @@
 
 /* The list; the pane stays in the flow with its own height (an absolute pane would be placed against the
    counter-scaled layer). The row leaves the pane's right lane to the scrollbar. */
-.tt-list { display: block; width: 100%; height: calc(298px * var(--root-scale)); }
+.tt-list { display: block; width: 100%; height: calc(260px * var(--root-scale)); }
 .tt-row {
 	display: block;
 	box-sizing: border-box;
@@ -114,3 +114,17 @@
 /* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
 #tt_title { width: calc(100% * var(--root-scale)); }
 #tt_status, #tt_detail { width: calc(166px * var(--root-scale)); }
+
+/* The preview of a plate (C++ places the layers in it), then the worn title and the hint under it. */
+#tt_preview { position: absolute; left: 6px; top: 27px; width: 178px; height: 40px; pointer-events: none; }
+.tt-preview-layer { position: absolute; left: 0; top: 0; pointer-events: none; }
+#tt_preview_text {
+	display: block;
+	white-space: nowrap;
+	text-align: center;
+	font-effect: outline(1px #000000);
+}
+
+/* A light running over the worn row now and then, when the title effects are on (Options); C++ draws it. */
+.tt-row { position: relative; overflow: hidden; }
+.tt-row-shine { position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none; }

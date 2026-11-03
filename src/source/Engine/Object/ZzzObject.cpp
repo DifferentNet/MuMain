@@ -2755,7 +2755,7 @@ void RenderObject(OBJECT* o, bool Translate, int Select, int ExtraMon)
     // Split only for map objects; characters' parts come through here too.
     const bool mapObject = FrameProfiler::CurrentPass() == FrameProfiler::Pass::Objects;
     {
-        std::optional<FrameProfiler::Scope> animate;
+        std::optional<FrameProfiler::DetailScope> animate;
         if (mapObject)
             animate.emplace(FrameProfiler::Pass::ObjectsAnimate);
         if (Calc_RenderObject(o, Translate, Select, ExtraMon) == false)
@@ -2763,7 +2763,7 @@ void RenderObject(OBJECT* o, bool Translate, int Select, int ExtraMon)
             return;
         }
     }
-    std::optional<FrameProfiler::Scope> draw;
+    std::optional<FrameProfiler::DetailScope> draw;
     if (mapObject)
         draw.emplace(FrameProfiler::Pass::ObjectsDraw);
     Draw_RenderObject(o, Translate, Select, ExtraMon);

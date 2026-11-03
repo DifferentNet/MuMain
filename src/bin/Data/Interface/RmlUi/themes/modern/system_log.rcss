@@ -55,3 +55,10 @@
 
 .syslog-line { min-height: 1.2em; }
 .syslog-line.empty { border-left-color: transparent; }
+
+/* MU Moldova: the phone HUD (theme flag "mobile-hud"), as in chat_log.rcss: 11dp came to about 9 screen px
+   on a phone held sideways. UI::Mobile::PhoneHudLayout moves the block right of the potions if it no longer
+   fits above them. */
+@media (theme: mobile-hud) {
+	#panel { font-size: 14dp; }
+}

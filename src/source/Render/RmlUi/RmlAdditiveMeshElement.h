@@ -14,7 +14,8 @@ namespace Render::RmlUi
 // The element <additive-mesh>: textured quads whose colour is added to what is behind them, like the native
 // BlendMode::Additive (Render::Renderer::RecordedAdditiveMesh). RmlUi blends premultiplied (ONE, ONE_MINUS_SRC_ALPHA)
 // and premultiplies the file on load, so the vertices carry the colour with zero alpha. The world labels draw the
-// title plates' effects with it (UI::Character::WorldLabelLayer).
+// title plates' effects with it (UI::Character::WorldLabelLayer). With additive off the quads are drawn as any image
+// (the vertices' alpha kept): the titles window draws a plate's art so, from its atlas coordinates.
 class AdditiveMeshElement final : public Rml::Element
 {
 public:
@@ -22,7 +23,8 @@ public:
 
     // source: the image as an <img> src names it; quads: four vertices each, positions relative to the element's
     // border box; their colours are multiplied by opacity.
-    void SetMesh(const Rml::String& source, std::span<const Render::Renderer::RecordedVertex> quads, float opacity);
+    void SetMesh(const Rml::String& source, std::span<const Render::Renderer::RecordedVertex> quads, float opacity,
+                 bool additive = true);
 
 protected:
     void OnRender() override;

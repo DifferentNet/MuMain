@@ -12,6 +12,7 @@
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInventory.h"
 #include "Render/Sprites/GlobalBitmap.h"
+#include "Render/Terrain/ZzzLodTerrain.h"
 #include "Render/Text/CUIRenderText.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
 #include "UI/Character/TitlePlateEffects.h"
@@ -31,6 +32,8 @@ constexpr float FieldPadding = 5.f;
 // too much of the screen, so ghinzuro picked 70 % from shots at 1024 x 768 to 1920 x 1080 (2026-10-29).
 constexpr float DefaultScale = 0.7f;
 float PlateScale = DefaultScale;
+// The title's text never smaller than this share of the font's minimum (about 10 px), however small the window.
+constexpr float TextFloor = 0.9f;
 // The field's ends are points: at the text's top and bottom they are about this much of the text's height in.
 constexpr float TipInset = 0.55f;
 // The room the text keeps on each side, inside the points.
@@ -137,15 +140,20 @@ LONG WidestTitleWidth(float fontPx)
 }
 
 // How much the plate is scaled (atlas pixels to screen) for a field that holds a text of textWidth x textHeight.
-float ScaleForWidth(float textWidth, float textHeight)
+float ScaleForWidth(float textWidth, float textHeight, float plateScale)
 {
-    return (textWidth + 2.f * (TipInset * textHeight + TextMargin * PlateScale)) / Art::FieldWidth;
+    return (textWidth + 2.f * (TipInset * textHeight + TextMargin * plateScale)) / Art::FieldWidth;
 }
 } // namespace
 
 bool Enabled()
 {
     return GameConfig::GetInstance().GetOverheadTitles();
+}
+
+const TextRgb& BaseTextColor(GameLogic::Titles::Rarity rarity)
+{
+    return TextColor[static_cast<int>(rarity)];
 }
 
 float Scale()
@@ -168,27 +176,33 @@ int Render(const GameLogic::Titles::Worn& title, const CHARACTER& owner, int cen
 
     // One scale for every plate (the atlas keeps the drawn plates' sizes), set by the font and PlateScale: the same
     // field for all. The text shrinks with the plate as far as the renderer lets a font shrink; where it can't, the
-    // field stays high enough for it and wide enough for the widest title.
+    // field stays high enough for it and wide enough for the widest title. Below 1080 lines plate and text both shrink
+    // by OverheadTextFit(), the text past the font's minimum too, but not below TextFloor of it (players' feedback at
+    // 1440 x 990, 2026-11-03).
     HFONT font = g_hFontBold;
     using UI::Scaling::FontRole;
-    const float fontPx =
-        UI::Scaling::NativeTextPixelSize(FontRole::Bold, static_cast<int>(WindowWidth), static_cast<int>(WindowHeight));
+    const int windowWidth = static_cast<int>(WindowWidth);
+    const int windowHeight = static_cast<int>(WindowHeight);
+    const float fontPx = UI::Scaling::NativeTextPixelSize(FontRole::Bold, windowWidth, windowHeight);
+    const float fit = UI::Scaling::OverheadTextFit(FontRole::Bold, windowWidth, windowHeight);
+    const float plateScale = PlateScale * fit;
     const float smallest = UI::Scaling::MinimumTextPixelSize(FontRole::Bold) / std::max(fontPx, 1.f);
-    const float textScale = std::max(PlateScale, std::min(smallest, 1.f));
+    const float textFloor = std::max(fit, TextFloor);
+    const float textScale = std::max(plateScale, std::min(smallest, 1.f) * textFloor);
     const SIZE natural = Measure(text, font);
     SIZE size = Scaled(natural, textScale);
     const float fieldHeight =
-        std::max((static_cast<float>(natural.cy) + FieldPadding) * PlateScale, static_cast<float>(size.cy) + 2.f);
+        std::max((static_cast<float>(natural.cy) + FieldPadding) * plateScale, static_cast<float>(size.cy) + 2.f);
     const float textHeight = static_cast<float>(size.cy);
     const float widest = static_cast<float>(WidestTitleWidth(fontPx)) * textScale;
-    float k = std::max(fieldHeight / Art::FieldHeight, ScaleForWidth(widest, textHeight));
-    if (ScaleForWidth(static_cast<float>(size.cx), textHeight) > k)
+    float k = std::max(fieldHeight / Art::FieldHeight, ScaleForWidth(widest, textHeight, plateScale));
+    if (ScaleForWidth(static_cast<float>(size.cx), textHeight, plateScale) > k)
     {
         // A title too long for the field in bold gets the regular font; the plate keeps its size, unless the title is
         // wider than all of WidestTitles.
         font = g_hFont;
         size = Scaled(Measure(text, font), textScale);
-        k = std::max(k, ScaleForWidth(static_cast<float>(size.cx), textHeight));
+        k = std::max(k, ScaleForWidth(static_cast<float>(size.cx), textHeight, plateScale));
     }
 
     const Plate& plate = Art::Plates[static_cast<int>(title.Color)];
@@ -211,9 +225,20 @@ int Render(const GameLogic::Titles::Worn& title, const CHARACTER& owner, int cen
     const auto& base = TextColor[static_cast<int>(title.Color)];
     const std::array<unsigned char, 3> color =
         effects ? Effects::TextColor(title, owner, base) : std::array<unsigned char, 3>{base[0], base[1], base[2]};
-    Text(title, color, font, textX, textY, size);
+    {
+        const UI::Scaling::ScopedFontFloor floor(textFloor);
+        Text(title, color, font, textX, textY, size);
+    }
 
     g_pRenderText->SetFont(g_hFont);
     return static_cast<int>(height + 0.5f);
+}
+bool ShownHere(const CHARACTER& owner)
+{
+    if (!GameConfig::GetInstance().GetTitlesTownsOnly())
+        return true;
+    const int x = static_cast<int>(owner.Object.Position[0] / TERRAIN_SCALE);
+    const int y = static_cast<int>(owner.Object.Position[1] / TERRAIN_SCALE);
+    return (TerrainWall[TERRAIN_INDEX_REPEAT(x, y)] & TW_SAFEZONE) == TW_SAFEZONE;
 }
 } // namespace UI::TitlePlates
