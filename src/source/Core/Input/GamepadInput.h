@@ -89,4 +89,11 @@ void Poll();
 // Lets go of every button and centres the sticks: the window lost the focus, and the pad's
 // releases go elsewhere.
 void Reset();
+
+// The player's vibration switch (Options -> Interface -> Gamepad "On, no vibration"); on to start with.
+void SetRumble(bool on);
+[[nodiscard]] bool IsRumbleOn();
+// Shakes the pads for `milliseconds`: `low` the heavy motor, `high` the light one, each 0 .. 1. Nothing
+// with vibration off, the pad off or a pad without motors (a browser without the vibration API).
+void Rumble(float low, float high, int milliseconds);
 } // namespace Core::Input::Gamepad

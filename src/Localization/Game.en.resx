@@ -15353,6 +15353,9 @@
   <data name="GamepadOn" xml:space="preserve">
     <value>On</value>
   </data>
+  <data name="GamepadOnNoRumble" xml:space="preserve">
+    <value>On, no vibration</value>
+  </data>
   <data name="GamepadOff" xml:space="preserve">
     <value>Off</value>
   </data>

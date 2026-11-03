@@ -71,11 +71,17 @@ struct State
     // Where the frame rested in the windows before a dialog took it, to go back there after.
     bool hasWindowPlace = false;
     Point windowPlace;
+    // Where goBack returns to (windowPlace as the dialog came up, or the dropdown).
+    Point backPlace;
     bool goBack = false;
     int goBackFrames = 0;
     // A dialog that came up with its windows closed: no place there yet, so the frame starts on the
     // windows' first target, as a window opening, not on the one nearest the button pressed.
     bool goFirst = false;
+    // A dropdown's list open: where the frame was on the dropdown, to go back there as the list closes
+    // (a choice made or B), not stay on the row now under the option pressed.
+    bool onPopup = false;
+    Point popupPlace;
     // Frames since the frame started in a window just opened, -1 once settled (it moved, or time
     // passed); the windows there were then.
     int settleFrames = -1;
@@ -200,6 +206,17 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
     const bool onDialog = PadTargets::OnDialog();
     const bool dialogClosed = g_state.onDialog && !onDialog;
     g_state.onDialog = onDialog;
+    const bool onPopup = PadTargets::OnPopup();
+    if (onPopup && !g_state.onPopup)
+        g_state.popupPlace = g_state.windowPlace;
+    if (!onPopup && g_state.onPopup && !onDialog && g_state.hasWindowPlace)
+    {
+        g_state.backPlace = g_state.popupPlace;
+        g_state.goBack = true;
+        g_state.goFirst = false;
+        g_state.goBackFrames = 0;
+    }
+    g_state.onPopup = onPopup;
     if (current == Pick::None && g_state.placed && (g_state.onTarget || g_state.lostFrames > 0))
         ++g_state.lostFrames;
     else
@@ -208,6 +225,7 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
     const bool lost = g_state.lostFrames >= 2 && buttonUp;
     if (dialogClosed)
     {
+        g_state.backPlace = g_state.windowPlace;
         g_state.goBack = true;
         g_state.goFirst = !g_state.hasWindowPlace;
         g_state.goBackFrames = 0;
@@ -227,7 +245,7 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
         if (current == Pick::None || backNow || opened)
         {
             // After a dialog, back to the target nearest where the frame was before it.
-            const Point from = g_state.goBack ? g_state.windowPlace : PointerPlace(scale);
+            const Point from = g_state.goBack ? g_state.backPlace : PointerPlace(scale);
             const int pick = opened || (backNow && g_state.goFirst) ? Pick::First(targets)
                                                                     : Pick::Nearest(targets, from.x, from.y, Anywhere);
             if (pick != Pick::None)
@@ -341,6 +359,7 @@ void Reset()
     g_state.stickPushed = false;
     g_state.lostFrames = 0;
     g_state.onDialog = false;
+    g_state.onPopup = false;
     g_state.hasWindowPlace = false;
     g_state.goBack = false;
     g_state.goFirst = false;
