@@ -15549,10 +15549,10 @@
     <value>Gamepad: A attacks, X, Y and B cast skills (hold RT for two more), LB and LT drink potions, the right stick picks the target, d-pad left the map, right the inventory, Menu opens every window (its Help lists all the buttons)</value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Pick a skill with the pointer and A, then press X, Y, RB, LT or D-pad down to put it there</value>
+    <value>Pick a skill with the pointer and A, then press X, Y or B (RT + X or Y for buttons 4 and 5) to put it there</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Press X, Y, RB, LT or D-pad down to put the skill there</value>
+    <value>Press X, Y or B (RT + X or Y for buttons 4 and 5) to put the skill there</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>Type</value>

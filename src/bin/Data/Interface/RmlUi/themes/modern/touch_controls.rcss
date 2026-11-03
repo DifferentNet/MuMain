@@ -937,6 +937,16 @@ body.pad.no-touch #tc_skill_1, body.pad.no-touch #tc_skill_4 { margin-left: 36re
 body.pad.no-touch #tc_skill_2 { margin-left: 100rem; }
 body.pad.no-touch .tc-skill .tc-skill-icon { left: 12rem; top: 7rem; }
 body.pad.no-touch #tc_auto { margin-left: 168rem; }
+/* The skill picker (L3) sets all five buttons: they stand in one row then, 4 and 5 where MU Helper
+   was, with RT on their corner (the picker lets RT go, so pad-alt is off while it is open). */
+body.pad.no-touch.picking #tc_skill_3, body.pad.no-touch.picking #tc_skill_4, body.pad.no-touch.picking #tc_skill_0, body.pad.no-touch.picking #tc_skill_1, body.pad.no-touch.picking #tc_skill_2 {
+	display: block;
+}
+body.pad.no-touch.picking #tc_skill_3 { margin-left: 164rem; }
+body.pad.no-touch.picking #tc_skill_4 { margin-left: 228rem; }
+body.pad.no-touch.picking #tc_auto { display: none; }
+body.pad.no-touch.picking .tc-skill .pad-trigger { display: block; }
+body.pad.no-touch.picking .tc-skill .pad-alt-key { display: none; }
 body.pad.no-touch #tc_attack .pad-glyph { right: auto; left: -8rem; top: -8rem; }
 body.pad.no-touch .tc-potion .pad-glyph, body.pad.no-touch #tc_auto .pad-glyph { left: -8rem; right: auto; top: -8rem; }
 body.pad.no-touch #tc_bind_hint {

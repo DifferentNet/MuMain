@@ -243,7 +243,7 @@ skill edit button are not drawn for a pad without touch (`body.pad.no-touch`).
 | A | Attack: a tap fights the target once, held it goes on. On an NPC chosen: walks there and talks (as a click on it). On a player chosen: walks up to them and opens the player menu (Trade, Buy, Party, Follow, Duel, as Alt and a right click open it): the frame rests on its rows, the d-pad moves it, A runs the row, B closes |
 | X, Y, B | The skill buttons 1–3: a tap uses the skill once, held it goes on. With fingers off the screen only these three show in the row (ghinzuro 2026-11-03: two or three skills carry the game) |
 | RT held + X, Y | The skill buttons 4 and 5. While RT is held (no window open) they stand in the places of X and Y (`TouchControls::SetPadAlt`, body class `pad-alt`); RT + B does nothing. RB is free |
-| LB, LT | The potions Q and W (E and R stay on the keys and the touch controls) |
+| LB, LT | The potions Q and W (E and R are on the keyboard only: no layout shows their buttons now) |
 | D-pad left | The map (Tab) |
 | D-pad right | The inventory (I) |
 | D-pad up | MU Helper on and off |

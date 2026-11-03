@@ -15172,10 +15172,10 @@
     <value>Геймпад: A атакует, X, Y и B применяют умения (с зажатым RT ещё два), LB и LT пьют зелья, правый стик выбирает цель, крестовина влево — карта, вправо — инвентарь, Menu открывает все окна (там «Помощь» со всеми кнопками)</value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Выберите умение курсором и A, потом нажмите X, Y, RB, LT или крестовину вниз, куда его поставить</value>
+    <value>Выберите умение курсором и A, потом нажмите X, Y или B (RT + X или Y для кнопок 4 и 5), куда его поставить</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Нажмите X, Y, RB, LT или крестовину вниз, куда поставить умение</value>
+    <value>Нажмите X, Y или B (RT + X или Y для кнопок 4 и 5), куда поставить умение</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>Ввести</value>
