@@ -25,6 +25,11 @@
 #include "Core/Platform/web/WebFileSystem.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
+#include "Core/Platform/BundledFonts.h"
+#include "Core/Utilities/StringUtils.h"
+#include "Data/GameConfig/GameConfig.h"
+#include "UI/RmlBridge/RmlTheme.h"
+void ReinitializeFonts();
 #endif
 
 CMapManager gMapManager;
@@ -1233,6 +1238,19 @@ void CMapManager::LoadWorld(int Map)
     {
         mu::GetRenderer().AttachLateFallbackFonts();
         RmlUiLoadLateFonts();
+        // A player who chose a late family (Noto Sans TC) got the default one at the start
+        // (ResolveOpenableBundledFont): the fonts reopen with the chosen family once, now.
+        static bool chosenLateFamilyOpened = false;
+        if (!chosenLateFamilyOpened)
+        {
+            chosenLateFamilyOpened = true;
+            const std::string family = StringUtils::WideToNarrow(GameConfig::GetInstance().GetFontSelection().c_str());
+            if (IsLateFallbackFont(ResolveBundledFont(family)))
+            {
+                ReinitializeFonts();
+                UI::RmlBridge::ApplySelectedFontFamily(family);
+            }
+        }
     }
     else if (WorldActive != WD_73NEW_LOGIN_SCENE && WorldActive != WD_74NEW_CHARACTER_SCENE &&
              WorldActive != WD_77NEW_LOGIN_SCENE && WorldActive != WD_78NEW_CHARACTER_SCENE)

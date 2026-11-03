@@ -204,7 +204,7 @@ TTF_Font* SdlTtfFontSet::Get(SdlTtfFontRole role) const
 
 bool SdlTtfFontSet::Open(std::string_view configuredFamily, const RoleSizes& pointSizes)
 {
-    const BundledFont& family = ResolveBundledFont(configuredFamily);
+    const BundledFont& family = ResolveOpenableBundledFont(configuredFamily);
     const char* const rolePaths[kRoleCount] = {family.regular, family.bold, family.bold, kBundledFixedFont.regular};
     std::copy(std::begin(rolePaths), std::end(rolePaths), m_primaryPaths.begin());
     for (std::size_t role = 0; role < kRoleCount; ++role)

@@ -2255,7 +2255,7 @@ HFONT CreateFontForFamily(int size, int weight, std::string_view family)
 HFONT CreateUIFont(int size, int weight)
 {
     const std::string configuredFamily = WideToUtf8(GameConfig::GetInstance().GetFontSelection());
-    return CreateFontForFamily(size, weight, ResolveBundledFont(configuredFamily).family);
+    return CreateFontForFamily(size, weight, ResolveOpenableBundledFont(configuredFamily).family);
 }
 
 bool CreateNewFonts(FontSizes sizes)
