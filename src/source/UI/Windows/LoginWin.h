@@ -29,6 +29,8 @@ protected:
 
     // This window's own bounding box (no shared rect facility on the CObject side).
     POINT m_ptPos = {};
+    // The pad's on-screen keyboard is up: the panel shows at the screen's top (see SetPosition()).
+    bool m_liftedForPadKeyboard = false;
     SIZE m_Size = {};
 
 public:

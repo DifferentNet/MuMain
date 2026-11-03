@@ -24,6 +24,7 @@
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/MessageBox.h"
 #include "UI/Windows/RememberPasswordPrompt.h"
+#include "UI/HUD/PadKeyboard.h"
 
 #include "Network/Server/ServerListManager.h"
 #ifdef _WIN32
@@ -183,6 +184,12 @@ void CLoginWin::RefreshLayout()
     m_Size.cy = ScaledOffset(panelHeight, uiScale);
 }
 
+namespace
+{
+// Where the panel's top goes while the pad's keyboard is up, in percent of the screen's height.
+constexpr int LiftedTopPercent = 3;
+} // namespace
+
 void CLoginWin::SetPosition(int x, int y)
 {
 	m_ptPos.x = x;
@@ -197,6 +204,15 @@ void CLoginWin::SetPosition(int x, int y)
 	{
 		if (Rml::Element* panel = m_RmlView.Document()->GetElementById("panel"))
 		{
+			// The pad's keyboard comes up at the screen's foot and is taller than the room under the
+			// panel: the panel steps up to the top meanwhile, so it covers neither field (ghinzuro,
+			// 2026-11-03). m_ptPos keeps its own place for when the keyboard goes.
+			if (m_liftedForPadKeyboard)
+			{
+				const Rml::Context* context = m_RmlView.Document()->GetContext();
+				const int screenHeight = context != nullptr ? context->GetDimensions().y : 0;
+				y = (std::min)(y, screenHeight * LiftedTopPercent / 100);
+			}
 			panel->SetProperty("left", std::to_string(x) + "px");
 			panel->SetProperty("top", std::to_string(y) + "px");
 		}
@@ -411,6 +427,13 @@ bool CLoginWin::Render()
     // no native text pass left here -- and no need for the old g_SysMenuWin guard, which existed
     // only because raw CUITextInputBox pixels ignored RmlUi's own document ordering.
     SyncRmlModel();
+
+    const bool lifted = UI::HUD::PadKeyboard::IsUp();
+    if (lifted != m_liftedForPadKeyboard)
+    {
+        m_liftedForPadKeyboard = lifted;
+        SetPosition(m_ptPos.x, m_ptPos.y);
+    }
 
     return true;
 }

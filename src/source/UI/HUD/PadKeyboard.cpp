@@ -547,9 +547,20 @@ void SyncLabels(KeyboardModel& model)
     SyncString(model.closeLabel, StringUtils::WideToNarrow(I18N::Game::PadClose), "close_label");
 }
 
+// The keyboard stays off the field: the field may move while it is up (the login window steps up).
+void SyncSide(Rml::Element* field, KeyboardModel& model)
+{
+    const bool top = IsLow(field);
+    if (top == model.top)
+        return;
+    model.top = top;
+    g_View.MarkDirty("top");
+}
+
 void Sync(Rml::Element* field)
 {
     KeyboardModel& model = g_View.GetModel();
+    SyncSide(field, model);
     SyncRows(model);
     SyncInt(model.focusRow, g_state.spot.row, "focus_row");
     SyncInt(model.focusColumn, g_state.spot.column, "focus_column");
@@ -588,5 +599,10 @@ bool Update(bool padInUse, const Core::Input::Gamepad::Presses& presses)
     Act(field, presses, Clock::now());
     Sync(field);
     return true;
+}
+
+bool IsUp()
+{
+    return g_state.field != nullptr;
 }
 } // namespace UI::HUD::PadKeyboard
