@@ -31,6 +31,12 @@ constexpr int kSceneReferenceWidth = 1024;
 constexpr int kSceneReferenceHeight = 768;
 constexpr float kSceneBarReferenceWidth = 800.0f;
 constexpr float kSceneBarReferenceHeight = 600.0f;
+// OverheadTextFit(): the window whose text over the world keeps its full size.
+constexpr int kOverheadReferenceWidth = 1920;
+constexpr int kOverheadReferenceHeight = 1080;
+constexpr float kMinimumOverheadTextFit = 0.5f;
+// ScopedFontFloor's factor on the minimum font size; 1 outside one.
+float g_fontFloorFactor = 1.0f;
 constexpr float kMaximumSceneBarScale = 2.0f;
 
 int ScaledLength(int length, float ratio)
@@ -361,6 +367,31 @@ float UI::Scaling::SceneWindowScale(int windowWidth, int windowHeight)
     return TextGrowthScale(textPx, referenceTextPx);
 }
 
+float UI::Scaling::OverheadTextFit(FontRole role, int windowWidth, int windowHeight)
+{
+    const float ratio = LayoutPixelRatio();
+    const int referenceWidth = ScaledLength(kOverheadReferenceWidth, ratio);
+    const int referenceHeight = ScaledLength(kOverheadReferenceHeight, ratio);
+    const float share = std::min(static_cast<float>(windowWidth) / static_cast<float>(referenceWidth),
+                                 static_cast<float>(windowHeight) / static_cast<float>(referenceHeight));
+    const float textPx = NativeTextPixelSize(role, windowWidth, windowHeight);
+    if (share >= 1.0f || textPx <= 0.0f)
+        return 1.0f;
+
+    const float targetPx = NativeTextPixelSize(role, referenceWidth, referenceHeight) * share;
+    return std::clamp(targetPx / textPx, kMinimumOverheadTextFit, 1.0f);
+}
+
+UI::Scaling::ScopedFontFloor::ScopedFontFloor(float factor) : m_previous(g_fontFloorFactor)
+{
+    g_fontFloorFactor = std::clamp(factor, 0.1f, 1.0f);
+}
+
+UI::Scaling::ScopedFontFloor::~ScopedFontFloor()
+{
+    g_fontFloorFactor = m_previous;
+}
+
 float UI::Scaling::TextGrowthScale(float textPx, float referenceTextPx)
 {
     if (referenceTextPx <= 0.0f)
@@ -405,7 +436,7 @@ float UI::Scaling::FontScaleForBounds(FontRole role, const Transform& transform,
                                       float measuredHeight, float boxWidth, float boxHeight)
 {
     const float maximum = static_cast<float>(MaximumFontPointSize(role));
-    const float minimumScale = static_cast<float>(MinimumFontPointSize(role)) / maximum;
+    const float minimumScale = static_cast<float>(MinimumFontPointSize(role)) / maximum * g_fontFloorFactor;
     float scale = static_cast<float>(FontPointSize(role, transform)) / maximum;
 
     if (boxWidth > 0.0f && measuredWidth > 0.0f)

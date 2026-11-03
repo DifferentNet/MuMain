@@ -15,9 +15,11 @@
 #include "GameLogic/Events/Titles.h"
 #include "GameLogic/Items/PersonalShopTitleImp.h"
 #include "Guild/GuildTypes.h"
+#include "Render/Terrain/ZzzLodTerrain.h"
 #include "Render/Text/CUIRenderText.h"
 #include "UI/Character/TitlePlates.h"
 #include "UI/Chat/Chat.h"
+#include "UI/Scaling/UITransform.h"
 #include "World/MapInfra/MapManager.h"
 
 namespace UI::OverheadNames
@@ -69,6 +71,22 @@ void RenderShadowed(int x, int y, const wchar_t* text, int width, int height)
     g_pRenderText->RenderText(x + 1, y + 1, text, width, height, RT3_SORT_LEFT);
     g_pRenderText->SetTextColor(color);
     g_pRenderText->RenderText(x, y, text, width, height, RT3_SORT_LEFT);
+}
+
+// Titles show only over players in a safe zone, the towns (ghinzuro, 2026-11-03): out in the field they hid the fight.
+bool InSafeZone(const CHARACTER& c)
+{
+    const int x = static_cast<int>(c.Object.Position[0] / TERRAIN_SCALE);
+    const int y = static_cast<int>(c.Object.Position[1] / TERRAIN_SCALE);
+    return (TerrainWall[TERRAIN_INDEX_REPEAT(x, y)] & TW_SAFEZONE) == TW_SAFEZONE;
+}
+
+// A text size measured at the native size, shrunk by fit (UI::Scaling::OverheadTextFit()).
+SIZE Fitted(SIZE size, float fit)
+{
+    size.cx = static_cast<LONG>(std::ceil(static_cast<float>(size.cx) * fit));
+    size.cy = static_cast<LONG>(std::ceil(static_cast<float>(size.cy) * fit));
+    return size;
 }
 
 bool IsShown(CHARACTER* c, bool players, bool npcs)
@@ -173,12 +191,15 @@ void Render()
                       [](const Candidate& a, const Candidate& b) { return a.distance < b.distance; });
 
     wchar_t guild[64];
+    // Below 1080 lines the names shrink with the screen, as far as the font's minimum (the renderer's floor).
+    const float fit = UI::Scaling::OverheadTextFit(UI::Scaling::FontRole::Normal, static_cast<int>(WindowWidth),
+                                                   static_cast<int>(WindowHeight));
     // Farthest first, so the nearest names end up on top.
     for (int n = shown - 1; n >= 0; --n)
     {
         CHARACTER* c = found[n].character;
         const bool player = c->Object.Kind == KIND_PLAYER;
-        const GameLogic::Titles::Worn* title = player && titles ? GameLogic::Titles::Titles().Of(c->ID) : nullptr;
+        const GameLogic::Titles::Worn* title = player && titles && InSafeZone(*c) ? GameLogic::Titles::Titles().Of(c->ID) : nullptr;
         if (player && !names)
         {
             if (title != nullptr)
@@ -193,9 +214,10 @@ void Render()
             mu_swprintf(guild, L"[%ls] ", GuildMark[c->GuildMarkIndex].GuildName);
 
         g_pRenderText->SetFont(g_hFont);
-        const SIZE guildSize = guild[0] ? g_pRenderText->MeasureText(guild, lstrlen(guild)) : SIZE{ 0, 0 };
+        const SIZE guildSize =
+            guild[0] ? Fitted(g_pRenderText->MeasureText(guild, lstrlen(guild)), fit) : SIZE{ 0, 0 };
         g_pRenderText->SetFont(gameMaster ? g_hFontBold : g_hFont);
-        SIZE nameSize = g_pRenderText->MeasureText(c->ID, lstrlen(c->ID));
+        SIZE nameSize = Fitted(g_pRenderText->MeasureText(c->ID, lstrlen(c->ID)), fit);
         nameSize.cx += 3;
 
         const int lineHeight = std::max<int>(guildSize.cy, nameSize.cy);
