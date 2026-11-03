@@ -35,7 +35,8 @@ enum class PadButton : std::uint8_t
     Menu,
     PotionQ,
     PotionW,
-    // The item hotkeys E and R: shown only while a pad is in use (its d-pad drinks them).
+    // The item hotkeys E and R: no layout shows them now (the keyboard drinks them; the pad's d-pad
+    // sides open the map and the inventory since 2026-11-03).
     PotionE,
     PotionR,
     // The Social panel (the pad's View button): the players around and what to do with them.

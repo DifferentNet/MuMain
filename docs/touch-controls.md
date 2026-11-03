@@ -231,8 +231,8 @@ X blue, Y yellow, the bumpers, triggers, View, Menu, LS for the left stick press
 arms), drawn from boxes in `themes/{legacy,modern}/gamepad_glyphs.rcss`, no images. In the phone view
 the pad replaces the PC bar as touch does (style flag `mobile-hud`). Without touch the joystick is not drawn.
 
-In the world the pad plays as Diablo's pads do (layout A of 2026-10-31): no pointer (none is drawn), a row of six
-action buttons along the bottom with the potions at its ends. The quick row, the pickup button and the
+In the world the pad plays as Diablo's pads do (layout A of 2026-10-31): no pointer (none is drawn), a row along the
+bottom: the potions LB and LT, attack, the three skills X, Y and B (RT held shows 4 and 5 in their places) and MU Helper. The quick row, the pickup button and the
 skill edit button are not drawn for a pad without touch (`body.pad.no-touch`).
 
 | Pad | In the world (no window open) |
