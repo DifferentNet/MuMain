@@ -1,12 +1,41 @@
 #include "stdafx.h"
 #include "MuHelperData.h"
 
+#include <cstdlib>
 #include <cstring>
 
 #include "Core/Utilities/StringUtils.h"
 
 namespace MUHelper
 {
+	// True when the bytes are well-formed UTF-8 (no overlong forms or surrogates).
+	static bool IsValidUtf8(const std::string& bytes)
+	{
+		size_t i = 0;
+		while (i < bytes.size())
+		{
+			const unsigned char c = static_cast<unsigned char>(bytes[i]);
+			size_t extra = 0;
+			unsigned int cp = 0;
+			if (c < 0x80) { ++i; continue; }
+			else if ((c & 0xE0) == 0xC0) { extra = 1; cp = c & 0x1F; }
+			else if ((c & 0xF0) == 0xE0) { extra = 2; cp = c & 0x0F; }
+			else if ((c & 0xF8) == 0xF0) { extra = 3; cp = c & 0x07; }
+			else return false;
+			if (i + extra >= bytes.size()) return false;
+			for (size_t k = 1; k <= extra; ++k)
+			{
+				const unsigned char cc = static_cast<unsigned char>(bytes[i + k]);
+				if ((cc & 0xC0) != 0x80) return false;
+				cp = (cp << 6) | (cc & 0x3F);
+			}
+			const unsigned int minimum[] = { 0, 0x80, 0x800, 0x10000 };
+			if (cp < minimum[extra] || cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF)) return false;
+			i += extra + 1;
+		}
+		return true;
+	}
+
 	std::wstring FitExtraItemName(const std::wstring& name)
 	{
 		const size_t first = name.find_first_not_of(L" \t");
@@ -246,13 +275,30 @@ namespace MUHelper
 		gameData.bPickExtraItems = (bool)netData.AddExtraItem;
 
 		gameData.aExtraItems.clear();
+		// Older clients saved the names in the PC code page (wcstombs), CP1251 on a Russian Windows;
+		// such a name is not valid UTF-8 and is read the old way. The next save writes it as UTF-8.
+		const auto DecodeExtraItemName = [](const std::string& bytes) -> std::wstring
+		{
+			if (IsValidUtf8(bytes))
+			{
+				return StringUtils::NarrowToWide(bytes);
+			}
+			std::wstring legacy(bytes.size() + 1, L'\0');
+			const size_t length = mbstowcs(legacy.data(), bytes.c_str(), legacy.size());
+			if (length == static_cast<size_t>(-1))
+			{
+				return StringUtils::NarrowToWide(bytes);
+			}
+			legacy.resize(length);
+			return legacy;
+		};
 		for (const auto& field : netData.ExtraItems)
 		{
 			// A full 15-byte name has no terminating zero.
-			const std::string utf8(field, strnlen(field, MaxExtraItemBytes));
-			if (!utf8.empty())
+			const std::string bytes(field, strnlen(field, MaxExtraItemBytes));
+			if (!bytes.empty())
 			{
-				gameData.aExtraItems.insert(StringUtils::NarrowToWide(utf8));
+				gameData.aExtraItems.insert(DecodeExtraItemName(bytes));
 			}
 		}
 

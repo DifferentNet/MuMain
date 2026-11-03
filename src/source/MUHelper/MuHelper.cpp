@@ -1549,15 +1549,19 @@ namespace MUHelper
             return 0;
         }
 
-        const int iDistance = ComputeDistanceBetween({ Hero->PositionX, Hero->PositionY }, m_posOriginal);
-        if (m_regroupSince == std::chrono::steady_clock::time_point{} || iDistance < m_iRegroupBestDistance)
-        {
-            m_regroupSince = now;
-            m_iRegroupBestDistance = iDistance;
-        }
-
         const MoveResult result =
             GameLogic::Automation::WalkTo(static_cast<int>(m_posOriginal.x), static_cast<int>(m_posOriginal.y));
+        if (result == MoveResult::Walking)
+        {
+            // Progress is counted in path steps, not straight-line distance, so a detour round a wall
+            // still counts as getting closer.
+            const int iStepsLeft = static_cast<int>(Hero->Path.PathNum);
+            if (m_regroupSince == std::chrono::steady_clock::time_point{} || iStepsLeft < m_iRegroupBestSteps)
+            {
+                m_regroupSince = now;
+                m_iRegroupBestSteps = iStepsLeft;
+            }
+        }
         if (result == MoveResult::Arrived)
         {
             m_regroupSince = {};

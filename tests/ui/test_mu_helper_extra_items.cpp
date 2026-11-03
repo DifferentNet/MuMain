@@ -8,6 +8,10 @@
 
 #include "MUHelper/MuHelperData.h"
 
+#include <cstdlib>
+#include <cstring>
+#include <string>
+
 using MUHelper::ConfigData;
 using MUHelper::ConfigDataSerDe;
 using MUHelper::FitExtraItemName;
@@ -84,4 +88,24 @@ TEST_CASE("the quest items switch survives a save and load and leaves the boxes 
     out = RoundTrip(c);
     CHECK_FALSE(out.bPickQuestItems);
     CHECK(out.bPickContainers);
+}
+
+TEST_CASE("a name an older client saved in the PC code page loads as the older client read it [ui][muhelper]")
+{
+    // "\u041A\u0430\u043C\u0435\u043D\u044C" in CP1251, as wcstombs wrote it on a Russian Windows before 2026-11-03.
+    // It is not UTF-8, so it must not turn into U+FFFD: it is read with mbstowcs, as the older client did.
+    const char cp1251[] = "\xCA\xE0\xEC\xE5\xED\xFC";
+    wchar_t expected[16] = {};
+    REQUIRE(std::mbstowcs(expected, cp1251, 15) == 6);
+
+    PRECEIVE_MUHELPER_DATA packet{};
+    std::memcpy(packet.ExtraItems[0], cp1251, sizeof(cp1251) - 1);
+    ConfigData out;
+    ConfigDataSerDe::Deserialize(packet, out);
+
+    REQUIRE(out.aExtraItems.size() == 1);
+    CHECK(*out.aExtraItems.begin() == std::wstring(expected));
+    CHECK(out.aExtraItems.begin()->find(L'\uFFFD') == std::wstring::npos);
+    // Saved again it is UTF-8 and loads the same.
+    CHECK(RoundTrip(out).aExtraItems.contains(std::wstring(expected)));
 }
