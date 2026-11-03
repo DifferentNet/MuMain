@@ -160,7 +160,9 @@ std::wstring ShortName(std::wstring name, int count)
 {
     ReplaceAll(name, L"Box of Kundun ", L"Box ");
     ReplaceAll(name, L"Jewel of ", L"");
-    return count > 1 ? name + L" x" + std::to_wstring(count) : name;
+    const std::wstring suffix = L" x" + std::to_wstring(count);
+    const bool named = name.size() >= suffix.size() && name.ends_with(suffix); // "Large Healing Potion +13 x50"
+    return count > 1 && !named ? name + suffix : name;
 }
 
 // "Box +4 · 3 Rena". A line's zen is what it gives (its name says so), never a price.
