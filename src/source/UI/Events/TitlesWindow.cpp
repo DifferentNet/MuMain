@@ -159,6 +159,9 @@ void mu::ui::window::CTitlesWindow::OpenningProcess()
     m_tab = 0;
     m_hoverRow = -1;
     m_pendingHover = -2;
+    // The document may be new (a theme switch), so the preview is built again.
+    m_previewRarity = -2;
+    m_previewId.clear();
     Titles().RequestList();
 }
 
@@ -579,12 +582,15 @@ void mu::ui::window::CTitlesWindow::SyncPreview()
     const float rootScale = projected > 0.f ? 100.f / projected : 1.f;
 
     const auto px = [](float value) { return Rml::Property(value, Rml::Unit::PX); };
-    if (m_previewId != title->Id || m_previewRarity != rarity || m_previewWidth != size.x ||
-        m_previewHeight != size.y || std::abs(m_previewScale - rootScale) > 0.001f)
+    if (m_previewId != title->Id || m_previewText != title->Text() || m_previewPlate != plateImage ||
+        m_previewRarity != rarity || m_previewWidth != size.x || m_previewHeight != size.y ||
+        std::abs(m_previewScale - rootScale) > 0.001f)
     {
         if (m_previewRarity < 0)
             box->SetProperty("visibility", "visible");
         m_previewId = title->Id;
+        m_previewText = title->Text();
+        m_previewPlate = plateImage;
         m_previewRarity = rarity;
         m_previewWidth = size.x;
         m_previewHeight = size.y;

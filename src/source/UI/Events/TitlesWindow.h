@@ -14,6 +14,7 @@
 
 namespace Rml
 {
+class Element;
 class ElementDocument;
 } // namespace Rml
 
@@ -85,8 +86,11 @@ private:
     int m_wornRow = -1;
     int m_hoverRow = -1;
     int m_pendingHover = -2;
-    // What the preview shows now (rarity -1: nothing), so its elements change only when it does.
+    // What the preview shows now (rarity -1: nothing; -2: build it again), and on which plate element (a theme
+    // switch makes new ones), so its elements change only when it does.
     std::wstring m_previewId;
+    std::wstring m_previewText;
+    const Rml::Element* m_previewPlate = nullptr;
     int m_previewRarity = -2;
     float m_previewWidth = -1.f;
     float m_previewHeight = -1.f;
