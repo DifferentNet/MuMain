@@ -158,6 +158,9 @@ enum INTERFACE_LIST
     // CEndlessTowerWindow (UI/Events/EndlessTowerWindow.h), the Endless Tower window of Lugard. Same reasoning as
     // INTERFACE_CREDITS above.
     INTERFACE_ENDLESS_TOWER,
+    // CRenaShopWindow (UI/Events/RenaShopWindow.h), the Rena shop of the Golden Archer. Same reasoning as
+    // INTERFACE_CREDITS above.
+    INTERFACE_RENA_SHOP,
     INTERFACE_END,
     INTERFACE_COUNT = INTERFACE_END - 2,
 };

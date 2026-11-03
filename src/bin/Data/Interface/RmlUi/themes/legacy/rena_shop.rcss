@@ -1,0 +1,108 @@
+/* Legacy theme for CRenaShopWindow (the Golden Archer's Rena shop), in the Tier Maps window's look (tier_maps.rcss): the
+   docked_panel_frame.rcss frame (linked first; newui_item_back01 top) stretched to the full dock height (432), the
+   title bold and centred, the balance and bag lines, the hand-in button, then one counter-scaled pane with the tabs and the shown tab's lines, a
+   second one at the foot with the hint and, on the shop and Golden Arrow tabs, the two buttons in the battle pass' medium button art (battle_pass.rcss); and the exit button. Reference px inside #panel; inside the panes, physical px (reference px times --root-scale). */
+
+@spritesheet rs-give-sheet {
+	src: "../../../newui_btn_empty_big.tga";
+	rs-give-up: 0px 0px 180px 29px;
+	rs-give-over: 0px 29px 180px 29px;
+	rs-give-down: 0px 58px 180px 29px;
+}
+
+@spritesheet rs-act-sheet {
+	src: "../../../newui_btn_empty.tga";
+	rs-act-up: 0px 0px 108px 29px;
+	rs-act-over: 0px 29px 108px 29px;
+	rs-act-down: 0px 58px 108px 29px;
+}
+
+.frame-top { decorator: image(docked-bg-top-b); }
+#panel { height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; }
+
+.rs-title { left: 0; top: 12px; text-align: center; font-weight: bold; pointer-events: none; }
+#rs_balance { left: 12px; top: 34px; font-weight: bold; pointer-events: none; }
+#rs_bag { left: 12px; top: 49px; pointer-events: none; }
+#rs_head { left: 12px; top: 64px; --flow-w: 166px; line-height: 1.12; }
+
+#rs_list { left: 12px; top: 94px; --flow-w: 166px; line-height: 1.12; }
+.rs-tabs { display: flex; margin-bottom: calc(3px * var(--root-scale)); }
+.rs-tab {
+	display: block;
+	width: calc(52px * var(--root-scale));
+	margin-right: calc(2px * var(--root-scale));
+	padding: calc(2px * var(--root-scale)) 0;
+	text-align: center;
+	cursor: pointer;
+	pointer-events: auto;
+	background-color: rgba(255, 255, 255, 10);
+}
+.rs-tab-label { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+.rs-row { display: block; white-space: nowrap; }
+.rs-row.title { margin-top: calc(2px * var(--root-scale)); font-weight: bold; }
+.rs-row.name { margin-top: calc(3px * var(--root-scale)); font-weight: bold; }
+.rs-row.good, .rs-row.bad { padding-left: calc(4px * var(--root-scale)); }
+.rs-row.more { padding-left: calc(8px * var(--root-scale)); }
+.rs-row.pick { cursor: pointer; pointer-events: auto; }
+
+#rs_foot { left: 12px; top: 336px; --flow-w: 166px; line-height: 1.12; }
+.rs-hint { display: block; white-space: nowrap; }
+
+#rs_give {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: calc(29px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	decorator: image(rs-give-up);
+}
+#rs_give:hover { decorator: image(rs-give-over); }
+#rs_give:active { decorator: image(rs-give-down); }
+#rs_give.off { opacity: 0.45; cursor: arrow; }
+#rs_give.off:hover, #rs_give.off:active { decorator: image(rs-give-up); }
+.rs-btn-label { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+
+#rs_buttons { display: flex; justify-content: space-between; margin-top: calc(4px * var(--root-scale)); }
+.rs-act-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: calc(81px * var(--root-scale));
+	height: calc(29px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	decorator: image(rs-act-up);
+}
+.rs-act-btn:hover { decorator: image(rs-act-over); }
+.rs-act-btn:active { decorator: image(rs-act-down); }
+.rs-act-btn.off { opacity: 0.45; cursor: arrow; }
+.rs-act-btn.off:hover, .rs-act-btn.off:active { decorator: image(rs-act-up); }
+
+/* The Tier Maps window's colours: gold title, light text, blue detail. A party of the right size green, otherwise
+   red; the shown tab on a gold band. Ready members green, the others red; a bad hint red. On the shop, a bought-out
+   item red, one out of the points' reach grey, the picked one on a gold band. */
+.rs-title { color: rgb(255, 220, 120); }
+#rs_balance { color: rgb(255, 220, 120); }
+#rs_bag { color: rgb(200, 220, 255); }
+.rs-tab { color: rgb(170, 170, 170); }
+.rs-tab:hover { background-color: rgba(255, 255, 255, 24); }
+.rs-tab.selected { color: rgb(255, 220, 120); background-color: rgba(255, 210, 100, 48); }
+.rs-row { color: rgb(200, 220, 255); }
+.rs-row.title { color: rgb(225, 225, 225); }
+.rs-row.good { color: rgb(150, 255, 150); }
+.rs-row.bad { color: rgb(255, 120, 110); }
+.rs-row.name { color: rgb(255, 220, 120); }
+.rs-row.dim { color: rgb(130, 130, 130); }
+.rs-row.pick:hover { background-color: rgba(255, 255, 255, 18); }
+.rs-row.selected { background-color: rgba(255, 210, 100, 48); }
+.rs-hint { color: rgb(200, 220, 255); }
+.rs-hint.good { color: rgb(150, 255, 150); }
+.rs-hint.bad { color: rgb(255, 150, 120); }
+.rs-btn-label { color: #ffffff; }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+#rs_title { width: calc(100% * var(--root-scale)); }
+#rs_balance, #rs_bag { width: calc(166px * var(--root-scale)); }
