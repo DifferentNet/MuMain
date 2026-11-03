@@ -9,6 +9,7 @@
 #include "GameLogic/Items/ItemCategories.h"
 
 #include <algorithm>
+#include <chrono>
 
 // Movement/target globals are defined in ZzzInterface.cpp.
 extern int SelectedCharacter;
@@ -17,13 +18,54 @@ extern int TargetY;
 
 namespace GameLogic::Automation
 {
+namespace
+{
+// How long an automated send waits for its swing to show before the next one may go. A normal attack or cast
+// starts its swing in the same frame, so this only matters when something keeps the animation from playing:
+// the caller then sends at most 4 a second instead of one per frame.
+constexpr auto SwingStartWait = std::chrono::milliseconds(250);
+std::chrono::steady_clock::time_point s_lastSend{};
+bool s_awaitingSwing = false;
+} // namespace
+
+void NoteAutomatedSend()
+{
+    s_lastSend = std::chrono::steady_clock::now();
+    s_awaitingSwing = true;
+}
+
 bool IsSwingInProgress()
 {
     // The stance animations inside the attack enum range don't count: otherwise a
     // Fenrir-mounted idle character (PLAYER_FENRIR_STAND) reads as a perpetual swing
     // and no automated action ever fires. Fenrir attack/skill actions sit below
     // PLAYER_FENRIR_RUN, so they stay gated and cadence still tracks AttackSpeed.
-    return Engine::Object::IsSwingAction(Hero->Object.CurrentAction);
+    //
+    // Stunned or asleep counts as busy: the animation stops then (CharacterAnimation returns false on every
+    // frame and the hero is put back to standing), so no swing ever shows and an automated caller sent a new
+    // attack on every frame, 60-130 a second, all refused by the server ("attacking in stunned state";
+    // Sephiroth's MU Helper in a Tier Map, 2026-11-03). A player's own attacks wait the same way (MoveHero).
+    if (g_isCharacterBuff((&Hero->Object), eDeBuff_Stun) || g_isCharacterBuff((&Hero->Object), eDeBuff_Sleep))
+    {
+        return true;
+    }
+
+    if (Engine::Object::IsSwingAction(Hero->Object.CurrentAction))
+    {
+        s_awaitingSwing = false;
+        return true;
+    }
+
+    if (s_awaitingSwing)
+    {
+        if (std::chrono::steady_clock::now() - s_lastSend < SwingStartWait)
+        {
+            return true;
+        }
+        s_awaitingSwing = false;
+    }
+
+    return false;
 }
 
 // Steps of the planned path that are walked per call. Re-planning every
@@ -145,6 +187,7 @@ AttackResult AttackObject(int targetKey, bool allowPlayers, int huntingDistance)
     ActionTarget = targetIndex;
     Attacking = 1;
     Action(Hero, &Hero->Object, true);
+    NoteAutomatedSend();
     return AttackResult::Attacked;
 }
 } // namespace GameLogic::Automation
