@@ -96,6 +96,7 @@ namespace MUHelper
 		bool bPickAncient = false;
 		bool bPickExcellent = false;
 		bool bPickContainers = false; // saved in byte 33 bit 4; 0 in blobs from older clients = off
+		bool bPickQuestItems = false; // saved in byte 33 bit 5; 0 in blobs from older clients = off
 		bool bPickExtraItems = false;
 		std::set<std::wstring> aExtraItems;
 

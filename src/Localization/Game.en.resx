@@ -15945,4 +15945,8 @@
   <data name="TitleEffects" xml:space="preserve">
     <value>Title effects</value>
   </data>
+  <!-- MU Helper: quest items pick-up -->
+  <data name="HelperPickQuestItems" xml:space="preserve">
+    <value>Quest items</value>
+  </data>
 </root>

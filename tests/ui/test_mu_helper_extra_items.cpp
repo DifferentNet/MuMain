@@ -70,3 +70,18 @@ TEST_CASE("the fitted name is trimmed [ui][muhelper]")
     // A cut that ends on a space drops the space.
     CHECK(FitExtraItemName(L"Jewel of Chaos 1") == L"Jewel of Chaos");
 }
+
+TEST_CASE("the quest items switch survives a save and load and leaves the boxes switch alone [ui][muhelper]")
+{
+    ConfigData c;
+    c.bPickQuestItems = true;
+    ConfigData out = RoundTrip(c);
+    CHECK(out.bPickQuestItems);
+    CHECK_FALSE(out.bPickContainers);
+
+    c.bPickQuestItems = false;
+    c.bPickContainers = true;
+    out = RoundTrip(c);
+    CHECK_FALSE(out.bPickQuestItems);
+    CHECK(out.bPickContainers);
+}

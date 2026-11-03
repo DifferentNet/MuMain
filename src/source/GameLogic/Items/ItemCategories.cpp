@@ -184,6 +184,36 @@ namespace GameLogic::Items
         }
     }
 
+    // The MU Helper's "Quest items" pick-up option (ghinzuro, 2026-11-03). Cash-shop tickets are left out.
+    bool IsQuestItem(const ITEM* pItem)
+    {
+        switch (pItem->Type)
+        {
+        case ITEM_SYMBOL_OF_KUNDUN:
+        case ITEM_LOST_MAP:
+        case ITEM_DEVILS_EYE:
+        case ITEM_DEVILS_KEY:
+        case ITEM_DEVILS_INVITATION:
+        case ITEM_SCROLL_OF_ARCHANGEL:
+        case ITEM_BLOOD_BONE:
+        case ITEM_INVISIBILITY_CLOAK:
+        case ITEM_ARMOR_OF_GUARDSMAN:
+        case ITEM_SCROLL_OF_BLOOD:
+        case ITEM_FIRST_SECROMICON_FRAGMENT:
+        case ITEM_SECOND_SECROMICON_FRAGMENT:
+        case ITEM_THIRD_SECROMICON_FRAGMENT:
+        case ITEM_FOURTH_SECROMICON_FRAGMENT:
+        case ITEM_FIFTH_SECROMICON_FRAGMENT:
+        case ITEM_SIXTH_SECROMICON_FRAGMENT:
+        case ITEM_FLAME_OF_CONDOR:
+        case ITEM_FEATHER_OF_CONDOR:
+        case ITEM_LOCHS_FEATHER:
+            return true;
+        default:
+            return false;
+        }
+    }
+
     bool IsRefineStone(const ITEM* pItem)
     {
         return HasTag(pItem, ItemTag::RefineStone);
