@@ -56,6 +56,14 @@ public:
     // Upscaled art: the uploaded texture is this times Width x Height, always
     // mipmapped and sampled through the shared anisotropic samplers.
     std::uint8_t scale = 1;
+
+    // Recorded by a deferred LoadImage (CGlobalBitmap::BeginDeferredLoads): only the name, the
+    // count and the load settings are set and nothing is on the GPU until the first use loads it.
+    bool pendingLoad = false;
+    bool pendingPad = true;
+    bool pendingPremultiply = false;
+    GLuint pendingFilter = 0;
+    GLuint pendingWrap = 0;
 };
 
 class CBitmapCache
@@ -140,6 +148,8 @@ class CGlobalBitmap
     std::vector<std::uint32_t> m_mipChainRequests;
     double m_textureLoadSeconds = 0.0;
     double m_mipChainSeconds = 0.0;
+    bool m_deferLoads = false;
+    std::size_t m_pendingLoads = 0;
 #ifdef DEBUG_BITMAP_CACHE
     CTimer2				m_DebugOutputTimer;
 #endif // DEBUG_BITMAP_CACHE
@@ -176,6 +186,15 @@ public:
     BITMAP_t* FindTexture(GLuint uiBitmapIndex);
     BITMAP_t* FindTexture(const std::wstring& filename);
     BITMAP_t* FindTextureByName(const std::wstring& name);
+
+    // From Begin to End, LoadImage only records a .jpg or .tga file that exists (not a canvas);
+    // the file is decoded and uploaded when the game (GetTexture, FindTexture) or the renderer
+    // (a draw with its number) first asks for it. The browser client loads every item, skill and
+    // effect texture this way at the start: most of them are never shown in a session.
+    void BeginDeferredLoads();
+    void EndDeferredLoads();
+    // Loads a recorded file now; false when the number has none or the file fails to load.
+    bool ResolvePendingLoad(GLuint uiBitmapIndex);
 #ifdef _EDITOR
     // The world that was active when the texture of this number was last
     // loaded, also when the file was loaded already (Core::AssetLoadWorld:
@@ -224,6 +243,8 @@ public:
     inline void RefreshCacheEntry(GLuint uiBitmapIndex) { m_BitmapCache.Remove(uiBitmapIndex); }
 
 protected:
+    // FindTexture(filename) without loading a recorded file.
+    BITMAP_t* FindTextureEntry(const std::wstring& filename);
     GLuint GenerateTextureIndex();
     GLuint FindAvailableTextureIndex(GLuint uiSeed);
 

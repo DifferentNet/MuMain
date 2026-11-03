@@ -40,6 +40,10 @@ public:
 
     [[nodiscard]] TTF_Font* Get(SdlTtfFontRole role) const;
 
+    // Attaches the late fallbacks (BundledFonts.h IsLateFallbackFont) left out when the fonts were
+    // opened, once LateFallbackFontsReady(). Does nothing for those attached already.
+    void AttachLateFallbacks();
+
 private:
     using RoleFonts = std::array<TTF_Font*, kRoleCount>;
     using RoleSizes = std::array<float, kRoleCount>;
@@ -49,6 +53,7 @@ private:
                                      RoleFonts& fallbacks);
 
     RoleFonts m_primary{};
+    std::array<const char*, kRoleCount> m_primaryPaths{};
     std::array<RoleFonts, std::size(kBundledFallbackFonts)> m_fallbacks{};
 };
 // SDL property of each role font: how many pixels higher its text is drawn so

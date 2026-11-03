@@ -113,6 +113,7 @@ IMuRenderer& GetRenderer()
     static TestRenderer renderer;
     return renderer;
 }
+void SetTextureMissHandler(bool (*)(std::uint32_t)) {}
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters): matches the production bridge signature.
 Render::Renderer::BitmapGpuResources::Result UploadBitmapPixels(std::span<const std::uint8_t> pixels, int width,
                                                                 int height, SDL_GPUFilter, SDL_GPUSamplerAddressMode,
