@@ -97,4 +97,10 @@
   <data name="KeysText" xml:space="preserve">
     <value>J: command list. O: event timer. N: daily rewards. X: battle pass. K: jewel bank, with the inventory open. C: character. M: warp.;The MU Helper is free: Z opens its settings, Home starts and stops it.;Camera: F10 unlocks the mouse-wheel zoom, F9 switches to the orbital camera, F11 resets it.;/cp shows your Combat Power. The website skynet-mu.net has the rankings, the auction and the wiki with every rule: skynet-mu.net/wiki.</value>
   </data>
+  <data name="ClassQuestsLabel" xml:space="preserve">
+    <value>Class quests</value>
+  </data>
+  <data name="ClassQuestsText" xml:space="preserve">
+    <value>2nd class from level 150: Sevina the Priestess in Devias. Take the quest first: its item drops only while you have it, 0.1 % from monsters of the right level.;Scroll of Emperor, level 45-60: Lost Tower (Shadow to Devil), Dungeon, Atlans (Vepar, Valkyrie), Devias (Ice Queen), Kalima 1-3.;Broken Sword, Soul Shard, Tear of Elf, level 62-76: lower Lost Tower (Death Knight, Balrog), Atlans (Bahamut to Hydra), Tarkan, Aida, Kalima 2-4.;3rd class from 380: Priest Devin. Death Beam Knight in Tarkan, Hell Maine in Aida, Dark Phoenix in Icarus. Maps: skynet-mu.net/wiki/classes.</value>
+  </data>
 </root>

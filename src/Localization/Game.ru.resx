@@ -15607,4 +15607,7 @@
   <data name="TitleEffects" xml:space="preserve">
     <value>Эффекты титулов</value>
   </data>
+  <data name="TitlesTownsOnly" xml:space="preserve">
+    <value>Титулы только в городах</value>
+  </data>
 </root>
