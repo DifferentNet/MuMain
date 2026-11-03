@@ -4381,7 +4381,7 @@
     <comment>legacy_id=1175</comment>
   </data>
   <data name="%d to Kalima" xml:space="preserve">
-    <value>%d para Kalima</value>
+    <value>para Kalima %d</value>
     <comment>legacy_id=1176</comment>
   </data>
   <data name="You want to open the way to Kalima?" xml:space="preserve">

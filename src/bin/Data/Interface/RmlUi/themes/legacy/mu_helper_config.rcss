@@ -83,8 +83,10 @@
 #btn_pick_add   { left: 56px; top: 78px; }
 #btn_pick_minus { left: 56px; top: 97px; }
 
-#cb_repair         { left: 79px; top: 80px; }
-#cb_pick_boxes     { left: 79px; top: 100px; }
+/* Three rows of 15 px, as the kinds below. */
+#cb_repair         { left: 79px; top: 78px; }
+#cb_pick_boxes     { left: 79px; top: 93px; }
+#cb_pick_quest     { left: 79px; top: 108px; }
 #cb_pick_all       { left: 17px; top: 125px; }
 #cb_pick_selected  { left: 17px; top: 152px; }
 #cb_pick_jewel     { left: 22px; top: 170px; }
@@ -145,7 +147,8 @@
 #cb_long_distance .checkbox-label, #cb_use_pet .checkbox-label, #cb_fallback .checkbox-label,
 #cb_buff_duration .checkbox-label, #cb_auto_friend .checkbox-label, #cb_auto_guild .checkbox-label,
 #cb_auto_defend .checkbox-label { width: calc(137px * var(--root-scale)); }
-#cb_orig_position .checkbox-label, #cb_repair .checkbox-label, #cb_pick_boxes .checkbox-label { width: calc(76px * var(--root-scale)); }
+#cb_orig_position .checkbox-label, #cb_repair .checkbox-label, #cb_pick_boxes .checkbox-label,
+#cb_pick_quest .checkbox-label { width: calc(76px * var(--root-scale)); }
 #distance_label, #cb_skill2_delay .checkbox-label, #cb_skill3_delay .checkbox-label { width: calc(30px * var(--root-scale)); }
 #distance_unit, #skill2_unit, #skill3_unit { width: calc(12px * var(--root-scale)); }
 #cb_skill2_condition .checkbox-label, #cb_skill3_condition .checkbox-label { width: calc(22px * var(--root-scale)); }
@@ -292,6 +295,7 @@
 	#cb_pick_zen { left: 48px; top: 278px; }
 	#cb_pick_excellent { left: 48px; top: 304px; }
 	#cb_pick_boxes { left: 180px; top: 226px; }
+	#cb_pick_quest { left: 180px; top: 252px; }
 	#cb_pick_extra { left: 332px; top: 84px; }
 	#item_plate { left: 334px; top: 113px; }
 	#item_name {
@@ -341,7 +345,7 @@
 	#cb_auto_guild .checkbox-label { width: calc(250px * var(--root-scale)); }
 	#cb_pick_jewel .checkbox-label, #cb_pick_ancient .checkbox-label, #cb_pick_zen .checkbox-label,
 	#cb_pick_excellent .checkbox-label { width: calc(120px * var(--root-scale)); }
-	#cb_pick_boxes .checkbox-label { width: calc(108px * var(--root-scale)); }
+	#cb_pick_boxes .checkbox-label, #cb_pick_quest .checkbox-label { width: calc(108px * var(--root-scale)); }
 	#basic_skill_label, #activation1_label, #activation2_label { width: calc(226px * var(--root-scale)); }
 	#cb_skill2_delay .checkbox-label, #cb_skill3_delay .checkbox-label { width: calc(74px * var(--root-scale)); }
 	#distance_unit, #skill2_unit, #skill3_unit { width: calc(20px * var(--root-scale)); }

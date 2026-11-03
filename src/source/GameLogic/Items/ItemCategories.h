@@ -40,6 +40,10 @@ namespace GameLogic::Items
     // Crafting materials
     bool IsJewelItem(const ITEM* pItem);
     bool IsContainerItem(const ITEM* pItem);
+    // Quest and event items: Symbol of Kundun, the Devil Square, Blood Castle, Chaos Castle, Kalima and
+    // Illusion Temple entries and their parts, Secromicon fragments, Condor's flame and feather, Loch's feather,
+    // the 2nd and 3rd class quest items.
+    bool IsQuestItem(const ITEM* pItem);
     bool IsRefineStone(const ITEM* pItem);
     bool IsSocketSeedOrSphere(const ITEM* pItem);
     bool IsSocketSeedOrSphereType(int itemType);
