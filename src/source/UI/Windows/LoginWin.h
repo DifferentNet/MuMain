@@ -29,6 +29,10 @@ protected:
 
     // This window's own bounding box (no shared rect facility on the CObject side).
     POINT m_ptPos = {};
+    // The pad's on-screen keyboard is up: the panel shows at the screen's top (see SetPosition()).
+    bool m_liftedForPadKeyboard = false;
+    // Where the panel is drawn: m_ptPos.y, or higher while lifted. Clicks are claimed there.
+    int m_shownY = 0;
     SIZE m_Size = {};
 
 public:

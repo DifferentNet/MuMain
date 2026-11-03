@@ -103,32 +103,44 @@ enum class When : std::uint8_t
     NoFrame,
 };
 
+// Which page of skills a mapping belongs to: the right trigger held turns X and Y to the skill
+// buttons 4 and 5 (ghinzuro, 2026-11-03: three skills on the screen, RT held for the rest).
+enum class Page : std::uint8_t
+{
+    Any,
+    Main,
+    Alt,
+};
+
 // The pad buttons that press a control as long as they are held, laid out as Diablo's pads: A attacks,
-// the other face buttons and the right bumper and trigger cast, the left ones and the d-pad drink.
+// X, Y and B cast (with RT held, X and Y the next skills), the bumper and trigger on the left drink.
 struct Mapping
 {
     Button pad;
     PadButton control;
     When when;
+    Page page = Page::Any;
 };
 constexpr Mapping Mappings[] = {
     {Button::A, PadButton::Attack, When::World},
-    {Button::X, PadButton::Skill0, When::World},
-    {Button::Y, PadButton::Skill1, When::World},
-    {Button::B, PadButton::Skill2, When::World},
+    {Button::X, PadButton::Skill0, When::World, Page::Main},
+    {Button::Y, PadButton::Skill1, When::World, Page::Main},
+    {Button::B, PadButton::Skill2, When::World, Page::Main},
+    {Button::X, PadButton::Skill3, When::World, Page::Alt},
+    {Button::Y, PadButton::Skill4, When::World, Page::Alt},
     {Button::B, PadButton::Back, When::Window},
-    {Button::RightShoulder, PadButton::Skill3, When::Always},
-    {Button::RightTrigger, PadButton::Skill4, When::Always},
     {Button::LeftShoulder, PadButton::PotionQ, When::Always},
     {Button::LeftTrigger, PadButton::PotionW, When::Always},
-    {Button::DpadLeft, PadButton::PotionE, When::NoFrame},
-    {Button::DpadRight, PadButton::PotionR, When::NoFrame},
     {Button::DpadUp, PadButton::Auto, When::NoFrame},
     {Button::View, PadButton::Social, When::Always},
 };
 
-bool Applies(const Mapping& mapping, bool windowOpen, bool frameOpen)
+bool Applies(const Mapping& mapping, bool windowOpen, bool frameOpen, bool alt)
 {
+    if (mapping.page == Page::Main && alt)
+        return false;
+    if (mapping.page == Page::Alt && !alt)
+        return false;
     switch (mapping.when)
     {
     case When::Always:
@@ -367,6 +379,7 @@ void ReleaseControls()
 {
     for (const Mapping& mapping : Mappings)
         Controls::SetPadHeld(mapping.control, false);
+    Controls::SetPadAlt(false);
     Controls::SetPadHeld(PadButton::PickUp, false);
     Controls::SetPadHeld(PadButton::Menu, false);
 }
@@ -667,9 +680,12 @@ void TurnWheelWithDpad(SDL_Window* window, Presses& presses, Clock::time_point n
 void HoldMappedControls(const Presses& presses)
 {
     std::array<bool, static_cast<int>(PadButton::Count)> held{};
+    // The second page shows only in the world: over a window X and Y act on the items.
+    const bool alt = Held(Button::RightTrigger) && !g_state.windowOpen;
+    Controls::SetPadAlt(alt);
     for (const Mapping& mapping : Mappings)
     {
-        if (!Applies(mapping, g_state.windowOpen, g_state.frameOpen))
+        if (!Applies(mapping, g_state.windowOpen, g_state.frameOpen, alt))
             continue;
         const bool holds = HoldsControl(mapping.pad);
         if (!holds && Pressed(presses, mapping.pad))
@@ -842,6 +858,16 @@ void PlayDpadDown(SDL_Window* window, const Presses& presses)
     Controls::SetPadHeld(PadButton::PickUp, holds);
 }
 
+// D-pad left and right (no window open): the map (Tab) and the inventory (I), as a keyboard
+// opens them (ghinzuro, 2026-11-03).
+void PlayDpadSides(const Presses& presses)
+{
+    if (Pressed(presses, Button::DpadLeft) && !g_state.waitForRelease[static_cast<int>(Button::DpadLeft)])
+        Core::Input::Touch::TapKey(VK_TAB);
+    if (Pressed(presses, Button::DpadRight) && !g_state.waitForRelease[static_cast<int>(Button::DpadRight)])
+        Core::Input::Touch::TapKey('I');
+}
+
 // A window opened or closed: what was held lets go and acts again only once let go, as the buttons
 // change their meaning.
 void SwitchWindowMode(SDL_Window* window, bool windowOpen, bool frameOpen)
@@ -908,7 +934,11 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
     }
     HoldMappedControls(presses);
     if (!frameOpen)
+    {
         PlayDpadDown(window, presses);
+        if (!windowOpen)
+            PlayDpadSides(presses);
+    }
     PlayMenuButton(presses, now);
     // The skill picker sets the skill buttons; without the controls on the screen, the game's list.
     if (g_state.leftStickClick.Pressed() && !Controls::OpenSkillPicker())
