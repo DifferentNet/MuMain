@@ -3794,6 +3794,13 @@ public:
 #endif
     }
 
+    void AttachLateFallbackFonts() override
+    {
+#if MU_HAS_SDL_TTF
+        s_ttfFonts.AttachLateFallbacks();
+#endif
+    }
+
     // F-7 fix: Cached window dimensions accessor (updated per-frame in BeginFrame).
     [[nodiscard]] int GetCachedWindowHeight() override
     {

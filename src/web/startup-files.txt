@@ -23,9 +23,7 @@ shaders/skinned_lit_softclip.frag.wgsl
 fonts/DejaVuSans.ttf
 fonts/DejaVuSans-Bold.ttf
 fonts/Cousine-Regular.ttf
-fonts/NotoSansTC-Regular.otf
-fonts/NotoSansTC-Bold.otf
-fonts/NanumGothic-Regular.ttf
+# The Chinese and Korean fonts come after the start (BundledFonts.h IsLateFallbackFont).
 fonts/LiberationSans-Regular.ttf
 fonts/LiberationSans-Bold.ttf
 Data/Interface/RmlUi/themes/legacy/theme.ini
