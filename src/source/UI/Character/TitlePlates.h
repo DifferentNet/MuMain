@@ -28,4 +28,10 @@ void SetScale(float scale);
 // when effects and the option allow. Returns how high it is (0: nothing drawn).
 int Render(const GameLogic::Titles::Worn& title, const CHARACTER& owner, int centerX, int bottomY,
            bool effects = true);
+
+// For a window that draws a plate itself (the titles window's preview): the plates' art (Art::Plates in
+// TitlePlatesArt.h, as an RmlUi image source) and the text's colour on a rarity's plate.
+inline constexpr const char* AtlasSource = "/Data/Interface/newui_titles.tga";
+using TextRgb = unsigned char[3];
+const TextRgb& BaseTextColor(GameLogic::Titles::Rarity rarity);
 } // namespace UI::TitlePlates
