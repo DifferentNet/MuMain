@@ -470,6 +470,13 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME desktop_tip_tests
+    SOURCES
+        test_desktop_tip.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Mobile/DesktopTip.cpp
+)
+
+mu_add_test(
     NAME pad_target_pick_tests
     SOURCES
         test_pad_target_pick.cpp

@@ -54,6 +54,7 @@ bool g_enabled = true;
 // Turned off with the pad itself: it plays on until another device is pressed (SetEnabled()).
 bool g_offWhenPutDown = false;
 bool g_started = false;
+bool g_rumble = true;
 
 std::optional<Button> FromSdlButton(int button)
 {
@@ -336,6 +337,37 @@ bool IsEnabled()
 bool TurnsOffWhenPutDown()
 {
     return g_offWhenPutDown;
+}
+
+void SetRumble(bool on)
+{
+    g_rumble = on;
+    if (on)
+        return;
+    for (const Pad& pad : g_pads)
+    {
+        if (pad.handle != nullptr)
+            SDL_RumbleGamepad(pad.handle, 0, 0, 0);
+    }
+}
+
+bool IsRumbleOn()
+{
+    return g_rumble;
+}
+
+void Rumble(float low, float high, int milliseconds)
+{
+    if (!g_rumble || !IsEnabled() || milliseconds <= 0)
+        return;
+    const auto strength = [](float share) {
+        return static_cast<Uint16>(std::clamp(share, 0.f, 1.f) * 65535.f);
+    };
+    for (const Pad& pad : g_pads)
+    {
+        if (pad.handle != nullptr)
+            SDL_RumbleGamepad(pad.handle, strength(low), strength(high), static_cast<Uint32>(milliseconds));
+    }
 }
 
 void ProcessEvent(const SDL_Event& event)

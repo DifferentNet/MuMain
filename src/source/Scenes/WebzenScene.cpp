@@ -124,8 +124,16 @@ void WebzenScene(HDC hDC)
     {
         // The game draws no cursor while it loads.
         const Core::Platform::ScopedSystemCursor cursor;
+#ifdef __EMSCRIPTEN__
+        // Phones: decoding every item, skill and effect texture took seconds before the login
+        // screen and ~115 MiB of video memory; each now loads when first shown.
+        Bitmaps.BeginDeferredLoads();
+#endif
         OpenBasicData(hDC);
         g_pNewUISystem->LoadMainSceneInterface();
+#ifdef __EMSCRIPTEN__
+        Bitmaps.EndDeferredLoads();
+#endif
         TitleSceneUI::RenderSceneUI(hDC, 11, 11);
     }
 

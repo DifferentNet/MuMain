@@ -14976,6 +14976,9 @@
   <data name="GamepadOn" xml:space="preserve">
     <value>Вкл.</value>
   </data>
+  <data name="GamepadOnNoRumble" xml:space="preserve">
+    <value>Вкл., без вибрации</value>
+  </data>
   <data name="GamepadOff" xml:space="preserve">
     <value>Выкл.</value>
   </data>

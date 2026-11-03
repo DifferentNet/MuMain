@@ -15,6 +15,10 @@ namespace Rml { class FileInterface; }
 union SDL_Event;
 struct SDL_Window;
 
+// Adds the Chinese and Korean fallback faces the browser downloads after the start
+// (BundledFonts.h IsLateFallbackFont), once they are there and RmlUi is up.
+void RmlUiLoadLateFonts();
+
 // What the game adds to the runtime. The runtime renders, updates and routes input; the UI scale
 // rule, themes, native text and the game's per-frame upkeep reach it only through these, which
 // UI::RmlBridge::InstallRuntimeHooks() sets before Create(). Any may be left empty.

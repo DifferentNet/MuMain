@@ -10,6 +10,7 @@
 #include "Core/Input/UiInputRouter.h"
 #include "Core/Platform/GameWindow.h"
 #include "Engine/Object/ZzzCharacter.h"
+#include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "GameLogic/Touch/TouchActions.h"
 #include "I18N/All.h"
@@ -52,6 +53,7 @@
 #include <cmath>
 #include <cstdint>
 #include <optional>
+#include <utility>
 
 namespace
 {
@@ -1006,6 +1008,10 @@ void PlayScreens(SDL_Window* window, Presses presses, float seconds, Clock::time
     if (!held && (Pressed(presses, Button::A) || Pressed(presses, Button::RightTrigger)))
         Pointer::SetButton(window, SDL_BUTTON_LEFT, true);
     Pointer::SetButton(window, SDL_BUTTON_LEFT, held);
+    // On the login screen a press may bring up new buttons (a group's servers, the login fields): the
+    // frame goes onto them, not stays on the button pressed.
+    if (frameOpen && SceneFlag == LOG_IN_SCENE && Pressed(presses, Button::A))
+        UI::HUD::PadFrame::SnapOnNewWindow();
     if (Pressed(presses, Button::B))
         Core::Input::Touch::TapKey(VK_ESCAPE);
     if (Pressed(presses, Button::Menu))
@@ -1056,6 +1062,56 @@ void HandToKeyboard(SDL_Window* window)
 }
 // The pad's frame of play: reads the pad and acts (below).
 void Play();
+
+// The pad shakes as the hero takes a hard blow: a share of life and shield together this big or more.
+constexpr float FeltBlowShare = 0.04f;
+// A blow of this share or more shakes at full strength.
+constexpr float FullBlowShare = 0.3f;
+constexpr int BlowMilliseconds = 160;
+constexpr int DeathMilliseconds = 600;
+
+struct Health
+{
+    bool known = false;
+    bool dead = false;
+    long long life = 0;
+    long long shield = 0;
+};
+Health g_health;
+
+// Compares the hero's life and shield with the last frame's, while the pad plays the world: a blow
+// shakes it as hard as it hurt, the death long. Out of the world (or the pad put down) it only forgets
+// them, so a heal or a map change since is no blow.
+void FeelBlows(bool playing)
+{
+    if (!playing || Hero == nullptr || CharacterAttribute == nullptr)
+    {
+        g_health.known = false;
+        return;
+    }
+    Health now;
+    now.known = true;
+    now.dead = Hero->Dead != 0;
+    now.life = CharacterAttribute->Life;
+    now.shield = CharacterAttribute->Shield;
+    const Health before = std::exchange(g_health, now);
+    if (!before.known)
+        return;
+    if (now.dead && !before.dead)
+    {
+        Pad::Rumble(1.f, 0.6f, DeathMilliseconds);
+        return;
+    }
+    const long long most = static_cast<long long>(CharacterAttribute->LifeMax) + CharacterAttribute->ShieldMax;
+    const long long lost = std::max(before.life - now.life, 0LL) + std::max(before.shield - now.shield, 0LL);
+    if (now.dead || most <= 0 || lost <= 0)
+        return;
+    const float share = static_cast<float>(lost) / static_cast<float>(most);
+    if (share < FeltBlowShare)
+        return;
+    const float strength = std::min(share / FullBlowShare, 1.f);
+    Pad::Rumble(0.25f + 0.75f * strength, 0.4f + 0.6f * strength, BlowMilliseconds);
+}
 
 // What the overlay shows this frame: the frame, the hub's tabs, the legend over a game window, the
 // pickup prompt under the drop d-pad down would take.
@@ -1169,6 +1225,7 @@ void Update()
 {
     Play();
     const bool playing = g_state.inUse && !g_state.typing;
+    FeelBlows(g_state.inUse && g_state.inWorld && IsInWorld());
     UI::HUD::PadOverlay::Update(OverlayView(playing));
 }
 } // namespace UI::HUD::GamepadControls

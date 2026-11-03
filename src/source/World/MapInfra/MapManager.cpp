@@ -23,6 +23,8 @@
 #endif
 #ifdef __EMSCRIPTEN__
 #include "Core/Platform/web/WebFileSystem.h"
+#include "Render/Renderer/MuRenderer.h"
+#include "Render/RmlUi/RmlUiRuntime.h"
 #endif
 
 CMapManager gMapManager;
@@ -1225,6 +1227,18 @@ void CMapManager::LoadWorld(int Map)
 #ifdef __EMSCRIPTEN__
     // In the browser: the map's files (Data/WorldN, Data/ObjectN) in one download before Load() reads them.
     mu::web::LoadWorldFiles(iMapWorld);
+    // Chinese and Korean fonts downloaded since the last map open now, under the loading screen. The
+    // first map in the game starts their download, so it doesn't share the line with that map's pack.
+    if (mu::web::LateFontsReady())
+    {
+        mu::GetRenderer().AttachLateFallbackFonts();
+        RmlUiLoadLateFonts();
+    }
+    else if (WorldActive != WD_73NEW_LOGIN_SCENE && WorldActive != WD_74NEW_CHARACTER_SCENE &&
+             WorldActive != WD_77NEW_LOGIN_SCENE && WorldActive != WD_78NEW_CHARACTER_SCENE)
+    {
+        mu::web::DownloadLateFonts();
+    }
 #endif
     this->Load();
 
