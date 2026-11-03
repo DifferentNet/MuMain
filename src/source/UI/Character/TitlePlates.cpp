@@ -233,8 +233,10 @@ int Render(const GameLogic::Titles::Worn& title, const CHARACTER& owner, int cen
     g_pRenderText->SetFont(g_hFont);
     return static_cast<int>(height + 0.5f);
 }
-bool InSafeZone(const CHARACTER& owner)
+bool ShownHere(const CHARACTER& owner)
 {
+    if (!GameConfig::GetInstance().GetTitlesTownsOnly())
+        return true;
     const int x = static_cast<int>(owner.Object.Position[0] / TERRAIN_SCALE);
     const int y = static_cast<int>(owner.Object.Position[1] / TERRAIN_SCALE);
     return (TerrainWall[TERRAIN_INDEX_REPEAT(x, y)] & TW_SAFEZONE) == TW_SAFEZONE;

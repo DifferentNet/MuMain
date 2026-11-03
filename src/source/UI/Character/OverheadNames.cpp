@@ -195,7 +195,7 @@ void Render()
     {
         CHARACTER* c = found[n].character;
         const bool player = c->Object.Kind == KIND_PLAYER;
-        const GameLogic::Titles::Worn* title = player && titles && UI::TitlePlates::InSafeZone(*c) ? GameLogic::Titles::Titles().Of(c->ID) : nullptr;
+        const GameLogic::Titles::Worn* title = player && titles && UI::TitlePlates::ShownHere(*c) ? GameLogic::Titles::Titles().Of(c->ID) : nullptr;
         if (player && !names)
         {
             if (title != nullptr)

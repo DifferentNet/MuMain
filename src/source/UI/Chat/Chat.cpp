@@ -244,7 +244,7 @@ void RenderBoolean(int x, int y, CHAT* c)
     // MU Moldova: the character's title over the box (UI/Character/TitlePlates.h), in safe zones only; Chaos Castle hides
     // who is who.
     if (c->Owner->Object.Kind == KIND_PLAYER && UI::TitlePlates::Enabled() && !gMapManager.InChaosCastle() &&
-        UI::TitlePlates::InSafeZone(*c->Owner))
+        UI::TitlePlates::ShownHere(*c->Owner))
     {
         if (const GameLogic::Titles::Worn* title = GameLogic::Titles::Titles().Of(c->Owner->ID))
             UI::TitlePlates::Render(*title, *c->Owner, x + c->Width / 2, y - 1);
