@@ -362,9 +362,13 @@ void CMuHelperConfigWindow::AddExtraItem()
     if (model.itemName.empty())
         return;
 
-    const std::wstring name = StringUtils::NarrowToWide(model.itemName);
-    UI::MuHelper::StagedConfig().aExtraItems.insert(name);
-    m_selectedExtraItem = model.itemName;
+    // The list shows the name as it will be saved (15 bytes at most); a 13th name would not be saved at all.
+    const std::wstring name = MUHelper::FitExtraItemName(StringUtils::NarrowToWide(model.itemName));
+    auto& items = UI::MuHelper::StagedConfig().aExtraItems;
+    if (name.empty() || (items.size() >= MUHelper::MaxExtraItems && !items.contains(name)))
+        return;
+    items.insert(name);
+    m_selectedExtraItem = StringUtils::WideToNarrow(name.c_str());
 
     model.itemName.clear();
     m_RmlView.MarkDirty("item_name");

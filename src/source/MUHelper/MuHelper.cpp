@@ -1710,12 +1710,17 @@ namespace MUHelper
 
         if (m_config.bPickExtraItems)
         {
-            std::wstring strDisplayName = GetItemDisplayName(pItem);
+            // Case does not matter: "symbol of kundun" picks up Symbol of Kundun.
+            const auto lower = [](std::wstring s) {
+                std::transform(s.begin(), s.end(), s.begin(), [](wchar_t ch) { return static_cast<wchar_t>(towlower(ch)); });
+                return s;
+            };
+            const std::wstring strDisplayName = lower(GetItemDisplayName(pItem));
 
             for (const auto& str : m_config.aExtraItems)
             {
                 // Check if the search keyword is in the item's display name
-                if (strDisplayName.find(str) != std::wstring::npos)
+                if (strDisplayName.find(lower(str)) != std::wstring::npos)
                 {
                     return true;
                 }

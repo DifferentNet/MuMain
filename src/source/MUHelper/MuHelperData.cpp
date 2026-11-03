@@ -1,8 +1,30 @@
 #include "stdafx.h"
 #include "MuHelperData.h"
 
+#include <cstring>
+
+#include "Core/Utilities/StringUtils.h"
+
 namespace MUHelper
 {
+	std::wstring FitExtraItemName(const std::wstring& name)
+	{
+		const size_t first = name.find_first_not_of(L" \t");
+		if (first == std::wstring::npos)
+		{
+			return {};
+		}
+		std::wstring fitted = name.substr(first, name.find_last_not_of(L" \t") - first + 1);
+		while (!fitted.empty() && StringUtils::WideToNarrow(fitted.c_str()).size() > MaxExtraItemBytes)
+		{
+			fitted.pop_back();
+		}
+		while (!fitted.empty() && (fitted.back() == L' ' || fitted.back() == L'\t'))
+		{
+			fitted.pop_back();
+		}
+		return fitted;
+	}
 
 	void ConfigDataSerDe::Serialize(const ConfigData& gameData, PRECEIVE_MUHELPER_DATA& netData)
 	{
@@ -123,20 +145,23 @@ namespace MUHelper
 		netData.SetItem = gameData.bPickAncient ? 1 : 0;
 		netData.AddExtraItem = gameData.bPickExtraItems ? 1 : 0;
 
+		// Names of 15 bytes or more used to be dropped here, so "Symbol of Kundun" was gone after a save
+		// (ghinzuro, 2026-11-03). Now they are cut to fit.
 		memset(netData.ExtraItems, 0, sizeof(netData.ExtraItems));
-		int iItemIndex = 0;
+		size_t iItemIndex = 0;
 		for (const auto& wsItem : gameData.aExtraItems)
 		{
-			if (iItemIndex >= 12)
+			if (iItemIndex >= MaxExtraItems)
 			{
 				break;
 			}
 
-			size_t n = wcstombs(netData.ExtraItems[iItemIndex], wsItem.c_str(), 15);
-			if (n == (size_t)-1 || n == 15)
+			const std::string utf8 = StringUtils::WideToNarrow(FitExtraItemName(wsItem).c_str());
+			if (utf8.empty())
 			{
-				memset(netData.ExtraItems[iItemIndex], 0, 15);
+				continue;
 			}
+			memcpy(netData.ExtraItems[iItemIndex], utf8.data(), utf8.size());
 			iItemIndex++;
 		}
 
@@ -219,19 +244,14 @@ namespace MUHelper
 		gameData.bPickAncient = (bool)netData.SetItem;
 		gameData.bPickExtraItems = (bool)netData.AddExtraItem;
 
-		wchar_t wsExtraItemBuffer[15 + 1];
-		for (int i = 0; i < sizeof(netData.ExtraItems) / sizeof(netData.ExtraItems[0]); i++)
+		gameData.aExtraItems.clear();
+		for (const auto& field : netData.ExtraItems)
 		{
-			memset(wsExtraItemBuffer, 0, sizeof(wsExtraItemBuffer));
-
-			size_t n = std::mbstowcs(wsExtraItemBuffer, &netData.ExtraItems[i][0], 15);
-			if (n > 0 && n <= 15)
+			// A full 15-byte name has no terminating zero.
+			const std::string utf8(field, strnlen(field, MaxExtraItemBytes));
+			if (!utf8.empty())
 			{
-				wsExtraItemBuffer[n] = L'\0';
-				if (wsExtraItemBuffer[0] != L'\0')
-				{
-					gameData.aExtraItems.insert(std::wstring(wsExtraItemBuffer));
-				}
+				gameData.aExtraItems.insert(StringUtils::NarrowToWide(utf8));
 			}
 		}
 

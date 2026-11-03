@@ -111,6 +111,14 @@ namespace MUHelper
 		bool bFallbackBasicAttack = true;
 	} ConfigData;
 
+	// The saved settings hold 12 extra item names of 15 bytes (UTF-8) each.
+	constexpr size_t MaxExtraItems = 12;
+	constexpr size_t MaxExtraItemBytes = 15;
+
+	// The name as it will be saved: spaces trimmed, cut to MaxExtraItemBytes on a character boundary.
+	// Names are matched as a part of the item name, so a cut name still picks the item up.
+	std::wstring FitExtraItemName(const std::wstring& name);
+
 	class ConfigDataSerDe {
 	public:
 		static void Serialize(const ConfigData& domain, PRECEIVE_MUHELPER_DATA& packet);
