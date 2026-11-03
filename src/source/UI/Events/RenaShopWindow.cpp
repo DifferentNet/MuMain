@@ -427,8 +427,9 @@ void mu::ui::window::CRenaShopWindow::TakeActions(bool give, int pick, int act)
     else if (act > 0 && m_tab == TAB_SHOP)
     {
         const Line* line = PickedLine();
-        const int count = line != nullptr ? (std::min)(act, store.MostBuyable(*line)) : 0;
-        if (count < 1)
+        const int most = line != nullptr ? store.MostBuyable(*line) : 0;
+        const int count = (std::min)(act, most);
+        if (count < 1 || (act > 1 && most < 2)) // the second button is off with one to buy
             return;
         m_showAnswer = false;
         store.Buy(line->Key, count);
@@ -436,8 +437,9 @@ void mu::ui::window::CRenaShopWindow::TakeActions(bool give, int pick, int act)
     }
     else if (act > 0 && m_tab == TAB_ARROW)
     {
-        const int count = (std::min)(act, store.MostSpins());
-        if (count < 1)
+        const int most = store.MostSpins();
+        const int count = (std::min)(act, most);
+        if (count < 1 || (act > 1 && most < 2)) // the second button is off with one spin
             return;
         m_showAnswer = false;
         store.Spin(count);
