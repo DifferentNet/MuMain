@@ -63,6 +63,9 @@ constexpr int SkillButtons = SkillArrange::SlotCount;
 // its grid fits.
 constexpr int MaxPickEntries = 40;
 
+// The pad's right trigger is held (SetPadAlt).
+bool g_padAlt = false;
+
 // Back: the skill list's grid first, which Esc does not close (it would open the system menu over it),
 // else Esc as a keyboard presses it.
 void Back()
@@ -400,6 +403,9 @@ struct ControlsModel
     // A gamepad in use: its buttons' glyphs show on the controls, and the menu's highlighted item
     // (-1 none) with its legend.
     bool pad = false;
+    // The pad's right trigger is held: its face buttons cast the skill buttons 4 and 5, shown in the
+    // places of the first ones.
+    bool padAlt = false;
     // Fingers drive the controls: the joystick's area shows.
     bool fingers = false;
     // The pad's hero hub is open on its Skills tab: the picker sits under the hub's tabs.
@@ -496,6 +502,7 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     for (int item = 0; item < MenuItemCount; ++item)
         c.Bind(MenuLabelFields[item], &model.menuLabels[item]);
     c.Bind("pad", &model.pad);
+    c.Bind("pad_alt", &model.padAlt);
     c.Bind("under_hub", &model.underHub);
     c.Bind("fingers", &model.fingers);
     c.Bind("menu_focus", &model.menuFocus);
@@ -963,6 +970,7 @@ void SyncLabels(ControlsModel& model)
 void SyncDevices(ControlsModel& model)
 {
     SetField(model.pad, UI::Mobile::IsGamepadInUse(), "pad");
+    SetField(model.padAlt, model.pad && g_padAlt, "pad_alt");
     SetField(model.fingers, Touch::IsEnabled(), "fingers");
     SetField(model.underHub, UI::HUD::PadHub::IsOnSkills(), "under_hub");
 }
@@ -2058,6 +2066,11 @@ void Update()
     if (model.pickerOpen)
         MeasurePickerPage(document);
     FollowNeighbours(document);
+}
+
+void SetPadAlt(bool alt)
+{
+    g_padAlt = alt;
 }
 
 void SetPadHeld(PadButton button, bool held)

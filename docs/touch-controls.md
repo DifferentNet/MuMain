@@ -231,8 +231,8 @@ X blue, Y yellow, the bumpers, triggers, View, Menu, LS for the left stick press
 arms), drawn from boxes in `themes/{legacy,modern}/gamepad_glyphs.rcss`, no images. In the phone view
 the pad replaces the PC bar as touch does (style flag `mobile-hud`). Without touch the joystick is not drawn.
 
-In the world the pad plays as Diablo's pads do (layout A of 2026-10-31): no pointer (none is drawn), a row of six
-action buttons along the bottom with the potions at its ends. The quick row, the pickup button and the
+In the world the pad plays as Diablo's pads do (layout A of 2026-10-31): no pointer (none is drawn), a row along the
+bottom: the potions LB and LT, attack, the three skills X, Y and B (RT held shows 4 and 5 in their places) and MU Helper. The quick row, the pickup button and the
 skill edit button are not drawn for a pad without touch (`body.pad.no-touch`).
 
 | Pad | In the world (no window open) |
@@ -241,13 +241,15 @@ skill edit button are not drawn for a pad without touch (`body.pad.no-touch`).
 | Right stick | A flick picks the next target: right or down the next further, left or up the next nearer. With no monster (or enemy player) within 8 tiles, as in a town, it picks the NPCs and the other players on the screen the same way: the one chosen is lit, its name shown as under the mouse, with "A Talk" (an NPC) or "A Menu" (a player) under its feet |
 | RS (the right stick pressed) | Back to the nearest target; in a town, no NPC or player chosen |
 | A | Attack: a tap fights the target once, held it goes on. On an NPC chosen: walks there and talks (as a click on it). On a player chosen: walks up to them and opens the player menu (Trade, Buy, Party, Follow, Duel, as Alt and a right click open it): the frame rests on its rows, the d-pad moves it, A runs the row, B closes |
-| X, Y, B, RB, RT | The five skill buttons: a tap uses the skill once, held it goes on |
-| LB, LT | The potions Q and W |
-| D-pad left, right | The potions E and R |
+| X, Y, B | The skill buttons 1–3: a tap uses the skill once, held it goes on. With fingers off the screen only these three show in the row (ghinzuro 2026-11-03: two or three skills carry the game) |
+| RT held + X, Y | The skill buttons 4 and 5. While RT is held (no window open) they stand in the places of X and Y (`TouchControls::SetPadAlt`, body class `pad-alt`); RT + B does nothing. RB is free |
+| LB, LT | The potions Q and W (E and R are on the keyboard only: no layout shows their buttons now) |
+| D-pad left | The map (Tab) |
+| D-pad right | The inventory (I) |
 | D-pad up | MU Helper on and off |
 | D-pad down | Pick up: held, it gathers the drops around; with none near, a press talks to the nearest NPC. The drop it would take first shows its name and, under it, the d-pad glyph with "Pick up" |
 | L3 | The skill picker: the stick or the d-pad move its highlight over the skills, the panel's buttons and the skill buttons on its right; A on a skill button chooses it, A on a skill puts it there; B closes. Without the controls on the screen, the game's skill list |
-| View | The map |
+| View | Social: trade, party, guild with the players around |
 | Menu | A tap: the hero hub (below). In the hub, or over another window, the menu of windows (the stick or the d-pad move its highlight, A opens, B or Menu closes; its legend shows the keys). Held half a second: the chat line, with the pad's keyboard |
 
 **The hero hub.** Menu with no window open opens the character's windows as tabs: Inventory,
