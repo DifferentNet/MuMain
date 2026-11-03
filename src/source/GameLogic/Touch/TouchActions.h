@@ -44,6 +44,9 @@ void PauseSteering();
 // Whether the pointer is the gamepad's: then a monster under it is the one to fight. A finger's
 // tap leaves the pointer on whatever it touched last, which is no aim.
 void SetPointerAims(bool aims);
+// Whether the pad plays the world (in use, no window open): it has no pointer there, so Teleport
+// jumps the way the left stick points and Teleport Ally takes the friend RB chose.
+void SetPadPlaysWorld(bool plays);
 
 // The PK switch of the menu: while on, the buttons fight a player a tap or the pad's pointer aimed
 // at, and a tap on a player attacks, as Ctrl held lets a click (CheckAttack). A duel, Chaos Castle and
@@ -64,6 +67,9 @@ void HoldHelperForButtons(bool buttonsAct);
 // the one chosen is away.
 void ToggleFriend(int characterKey);
 [[nodiscard]] int FriendKey();
+// The pad's RB: the next party member near the character, in the party list's order; past the last
+// one, the character itself again. Says whom the heals and buffs go to now.
+void ChooseNextFriend();
 
 // Keeps the player the engine fights (a tap on them) as the buttons' target before the finger moves
 // on to a button, where the selection under the pointer goes. Called every frame.

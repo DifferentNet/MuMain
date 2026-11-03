@@ -241,12 +241,13 @@ skill edit button are not drawn for a pad without touch (`body.pad.no-touch`).
 | Right stick | A flick picks the next target: right or down the next further, left or up the next nearer. With no monster (or enemy player) within 8 tiles, as in a town, it picks the NPCs and the other players on the screen the same way: the one chosen is lit, its name shown as under the mouse, with "A Talk" (an NPC) or "A Menu" (a player) under its feet |
 | RS (the right stick pressed) | Back to the nearest target; in a town, no NPC or player chosen |
 | A | Attack: a tap fights the target once, held it goes on. On an NPC chosen: walks there and talks (as a click on it). On a player chosen: walks up to them and opens the player menu (Trade, Buy, Party, Follow, Duel, as Alt and a right click open it): the frame rests on its rows, the d-pad moves it, A runs the row, B closes |
-| X, Y, B | The skill buttons 1–3: a tap uses the skill once, held it goes on. With fingers off the screen only these three show in the row (ghinzuro 2026-11-03: two or three skills carry the game) |
-| RT held + X, Y | The skill buttons 4 and 5. While RT is held (no window open) they stand in the places of X and Y (`TouchControls::SetPadAlt`, body class `pad-alt`); RT + B does nothing. RB is free |
+| X, Y, B | The skill buttons 1–3: a tap uses the skill once, held it goes on. With fingers off the screen only these three show in the row (ghinzuro 2026-11-03: two or three skills carry the game). Teleport (ghinzuro 2026-11-04) jumps the way the left stick points (centred: the way the character last walked, screen-up before any walk) onto the farthest free tile within the skill's reach, at least 2 tiles (`TouchActions::PadTeleportTile`, cast through `Automation::CastSkillAtTile` with `Combat::SetGroundAim`); one jump a press. Teleport Ally brings the party member chosen with RB, or says to choose one first |
+| RT held + X, Y | The skill buttons 4 and 5. While RT is held (no window open) they stand in the places of X and Y (`TouchControls::SetPadAlt`, body class `pad-alt`); RT + B does nothing |
 | LB, LT | The potions Q and W (E and R are on the keyboard only: no layout shows their buttons now) |
-| D-pad left | The map (Tab) |
+| RB | The party member heals and buffs go on (ghinzuro 2026-11-04, `TouchActions::ChooseNextFriend`): each press the next member near, their card lit and their name in the chat; past the last, back to the character itself. With no member near, it says so |
+| D-pad left | A tap: the map (Tab). Held half a second: the Teleport window (M) |
 | D-pad right | The inventory (I) |
-| D-pad up | MU Helper on and off |
+| D-pad up | A tap: MU Helper on and off. Held half a second: its settings (Z) |
 | D-pad down | Pick up: held, it gathers the drops around; with none near, a press talks to the nearest NPC. The drop it would take first shows its name and, under it, the d-pad glyph with "Pick up" |
 | L3 | The skill picker: the stick or the d-pad move its highlight over the skills, the panel's buttons and the skill buttons on its right; A on a skill button chooses it, A on a skill puts it there; B closes. Without the controls on the screen, the game's skill list |
 | View | Social: trade, party, guild with the players around |

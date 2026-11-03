@@ -50,6 +50,25 @@ extern bool SelectFlag;
 
 namespace GameLogic::Combat
 {
+namespace
+{
+bool g_groundAim = false;
+int g_groundX = 0;
+int g_groundY = 0;
+} // namespace
+
+void SetGroundAim(int tileX, int tileY)
+{
+    g_groundAim = true;
+    g_groundX = tileX;
+    g_groundY = tileY;
+}
+
+void ClearGroundAim()
+{
+    g_groundAim = false;
+}
+
 bool CheckTarget(CHARACTER* c)
 {
     if (SelectedCharacter >= 0 && SelectedCharacter < MAX_CHARACTERS_CLIENT)
@@ -57,6 +76,15 @@ bool CheckTarget(CHARACTER* c)
         TargetX = (int)(CharactersClient[SelectedCharacter].Object.Position[0] / TERRAIN_SCALE);
         TargetY = (int)(CharactersClient[SelectedCharacter].Object.Position[1] / TERRAIN_SCALE);
         VectorCopy(CharactersClient[SelectedCharacter].Object.Position, c->TargetPosition);
+        return true;
+    }
+    else if (g_groundAim)
+    {
+        TargetX = g_groundX;
+        TargetY = g_groundY;
+        c->TargetPosition[0] = (g_groundX + 0.5f) * TERRAIN_SCALE;
+        c->TargetPosition[1] = (g_groundY + 0.5f) * TERRAIN_SCALE;
+        c->TargetPosition[2] = c->Object.Position[2];
         return true;
     }
     else

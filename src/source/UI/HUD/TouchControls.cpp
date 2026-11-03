@@ -2032,7 +2032,9 @@ void Update()
     g_upperSet = ChooseUpperSet();
     // The pad's pointer aims only while it plays the pointer (a window open); in the world the right
     // stick picks the target instead (UI/HUD/GamepadControls).
-    GameLogic::Touch::SetPointerAims(UI::Mobile::IsGamepadInUse() && UI::HUD::GamepadControls::PlaysPointer());
+    const bool padInUse = UI::Mobile::IsGamepadInUse();
+    GameLogic::Touch::SetPointerAims(padInUse && UI::HUD::GamepadControls::PlaysPointer());
+    GameLogic::Touch::SetPadPlaysWorld(padInUse && !UI::HUD::GamepadControls::PlaysPointer());
     // A player the pointer or a tap went for stays the attack button's target.
     GameLogic::Touch::TrackAim();
     RestPointerAfterDialog();

@@ -82,6 +82,8 @@ constexpr auto WheelRepeat = std::chrono::milliseconds(110);
 
 // Menu held this long opens the chat line instead of the menu.
 constexpr auto ChatHold = std::chrono::milliseconds(500);
+// D-pad up or left held this long: the MU Helper's settings, the Teleport window (ghinzuro, 2026-11-04).
+constexpr auto DpadHold = std::chrono::milliseconds(500);
 // D-pad down talks to an NPC this near when no drop lies around.
 constexpr int NpcReach = 6;
 // A chosen player's menu opens this near (the world's units; it closes past 300), after a walk up to
@@ -131,7 +133,6 @@ constexpr Mapping Mappings[] = {
     {Button::B, PadButton::Back, When::Window},
     {Button::LeftShoulder, PadButton::PotionQ, When::Always},
     {Button::LeftTrigger, PadButton::PotionW, When::Always},
-    {Button::DpadUp, PadButton::Auto, When::NoFrame},
     {Button::View, PadButton::Social, When::Always},
 };
 
@@ -181,6 +182,22 @@ struct DpadWheel
     Pad::RepeatButton repeat{WheelFirstRepeat, WheelRepeat};
 };
 
+// A button that does one thing on a tap and another held: the tap acts as it is let go.
+struct LongPress
+{
+    bool down = false;
+    // The hold went off: the release does nothing more.
+    bool fired = false;
+    Clock::time_point since{};
+};
+
+enum class PressKind : std::uint8_t
+{
+    None,
+    Tap,
+    Hold,
+};
+
 struct State
 {
     bool inUse = false;
@@ -202,10 +219,10 @@ struct State
     bool onCharacters = false;
     // The drop d-pad down would pick up, prompted under it; -1 for none.
     int promptDrop = -1;
-    // Menu held: since when, and whether it opened the chat (then its release opens no menu).
-    bool menuHeld = false;
-    bool menuOpenedChat = false;
-    Clock::time_point menuSince{};
+    // Menu held (a hold opens the chat line, then its release opens no menu), d-pad up and left.
+    LongPress menuPress;
+    LongPress dpadUpPress;
+    LongPress dpadLeftPress;
     // D-pad down's press talks to an NPC (no drop around), rather than holding the pickup button.
     bool dpadDownTalks = false;
     // The NPC click: the pointer moved onto the NPC (1), the button down (2).
@@ -393,6 +410,40 @@ bool HoldsControl(Button button)
     return Held(button) && !waiting;
 }
 
+// Reads a tap-or-hold button: Hold once it was held for `hold`, Tap as it is let go sooner. A tap
+// shorter than a frame still counts.
+PressKind ReadLongPress(LongPress& press, Button button, const Presses& presses, Clock::time_point now,
+                        Clock::duration hold)
+{
+    const bool waiting = g_state.waitForRelease[static_cast<int>(button)];
+    const bool held = HoldsControl(button);
+    if (held && !press.down)
+    {
+        press.down = true;
+        press.fired = false;
+        press.since = now;
+    }
+    PressKind kind = PressKind::None;
+    if (held && !press.fired && now - press.since >= hold)
+    {
+        press.fired = true;
+        kind = PressKind::Hold;
+    }
+    const bool quick = !held && !press.down && !waiting && Pressed(presses, button);
+    if ((!held && press.down && !press.fired) || quick)
+        kind = PressKind::Tap;
+    if (!held)
+        press.down = false;
+    return kind;
+}
+
+void ForgetLongPresses()
+{
+    g_state.menuPress = {};
+    g_state.dpadUpPress = {};
+    g_state.dpadLeftPress = {};
+}
+
 void WaitForRelease()
 {
     for (int button = 0; button < Pad::ButtonCount; ++button)
@@ -405,7 +456,7 @@ void ReleaseButtons(SDL_Window* window)
     EndPress(window, g_state.a, {});
     ReleaseControls();
     g_state.npcClickStage = 0;
-    g_state.menuHeld = false;
+    ForgetLongPresses();
     Controls::ReleasePad();
     Pointer::Release(window);
     g_state.menuStepper.Reset();
@@ -472,7 +523,7 @@ void PlayMenu(SDL_Window* window, const Presses& presses, Clock::time_point now)
     Pointer::SetButton(window, SDL_BUTTON_RIGHT, false);
     ReleaseControls();
     WaitForRelease();
-    g_state.menuHeld = false;
+    ForgetLongPresses();
 
     Controls::MoveMenuFocus(0, 0);
     const Pad::Step step = g_state.menuStepper.Take(presses, now);
@@ -733,26 +784,19 @@ void TapMenu(Clock::time_point now)
 // pad's keyboard with it).
 void PlayMenuButton(const Presses& presses, Clock::time_point now)
 {
-    const bool waiting = g_state.waitForRelease[static_cast<int>(Button::Menu)];
-    const bool held = HoldsControl(Button::Menu);
-    if (held && !g_state.menuHeld)
+    switch (ReadLongPress(g_state.menuPress, Button::Menu, presses, now, ChatHold))
     {
-        g_state.menuHeld = true;
-        g_state.menuOpenedChat = false;
-        g_state.menuSince = now;
-    }
-    if (held && !g_state.menuOpenedChat && now - g_state.menuSince >= ChatHold)
-    {
-        g_state.menuOpenedChat = true;
+    case PressKind::Tap:
+        TapMenu(now);
+        break;
+    case PressKind::Hold:
         // As Enter opens it (CChatInputBox): a tapped Enter did not reach it while Menu was held.
         if (!g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_CHATINPUTBOX))
             g_pNewUISystem->Show(mu::ui::window::INTERFACE_CHATINPUTBOX);
+        break;
+    default:
+        break;
     }
-    const bool tapped = !held && !g_state.menuHeld && !waiting && Pressed(presses, Button::Menu);
-    if ((!held && g_state.menuHeld && !g_state.menuOpenedChat) || tapped)
-        TapMenu(now);
-    if (!held)
-        g_state.menuHeld = false;
 }
 
 // Puts the pad's pointer on that NPC: the next frames click it, so the game walks there and talks as
@@ -858,12 +902,40 @@ void PlayDpadDown(SDL_Window* window, const Presses& presses)
     Controls::SetPadHeld(PadButton::PickUp, holds);
 }
 
-// D-pad left and right (no window open): the map (Tab) and the inventory (I), as a keyboard
-// opens them (ghinzuro, 2026-11-03).
-void PlayDpadSides(const Presses& presses)
+// D-pad up (no game window): a tap turns the MU Helper on and off (its button, as Home), held half a
+// second it opens the helper's settings (Z) in the world.
+void PlayDpadUp(const Presses& presses, Clock::time_point now)
 {
-    if (Pressed(presses, Button::DpadLeft) && !g_state.waitForRelease[static_cast<int>(Button::DpadLeft)])
+    switch (ReadLongPress(g_state.dpadUpPress, Button::DpadUp, presses, now, DpadHold))
+    {
+    case PressKind::Tap:
+        Controls::SetPadHeld(PadButton::Auto, true);
+        Controls::SetPadHeld(PadButton::Auto, false);
+        break;
+    case PressKind::Hold:
+        if (!g_state.windowOpen)
+            Core::Input::Touch::TapKey('Z');
+        break;
+    default:
+        break;
+    }
+}
+
+// D-pad left and right (no window open): the map (Tab) and the inventory (I), as a keyboard
+// opens them (ghinzuro, 2026-11-03). Left held half a second: the Teleport window (M) instead.
+void PlayDpadSides(const Presses& presses, Clock::time_point now)
+{
+    switch (ReadLongPress(g_state.dpadLeftPress, Button::DpadLeft, presses, now, DpadHold))
+    {
+    case PressKind::Tap:
         Core::Input::Touch::TapKey(VK_TAB);
+        break;
+    case PressKind::Hold:
+        Core::Input::Touch::TapKey('M');
+        break;
+    default:
+        break;
+    }
     if (Pressed(presses, Button::DpadRight) && !g_state.waitForRelease[static_cast<int>(Button::DpadRight)])
         Core::Input::Touch::TapKey('I');
 }
@@ -884,7 +956,7 @@ void SwitchWindowMode(SDL_Window* window, bool windowOpen, bool frameOpen)
     g_state.npcClickStage = 0;
     g_state.menuWalk = -1;
     g_state.flicked = true;
-    g_state.menuHeld = false;
+    ForgetLongPresses();
     WaitForRelease();
 }
 
@@ -930,14 +1002,18 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
     {
         PickTargets();
         PlayMeet(window, presses, now);
+        // RB: whom the heals and buffs go to (ghinzuro, 2026-11-04).
+        if (Pressed(presses, Button::RightShoulder) && !g_state.waitForRelease[static_cast<int>(Button::RightShoulder)])
+            GameLogic::Touch::ChooseNextFriend();
         g_state.promptDrop = GameLogic::Touch::NearestDropToPick();
     }
     HoldMappedControls(presses);
     if (!frameOpen)
     {
         PlayDpadDown(window, presses);
+        PlayDpadUp(presses, now);
         if (!windowOpen)
-            PlayDpadSides(presses);
+            PlayDpadSides(presses, now);
     }
     PlayMenuButton(presses, now);
     // The skill picker sets the skill buttons; without the controls on the screen, the game's list.
