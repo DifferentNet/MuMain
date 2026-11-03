@@ -15746,6 +15746,96 @@
   <data name="EndlessTowerShopEmpty" xml:space="preserve">
     <value>Nothing for sale.</value>
   </data>
+  <data name="RenaShopTitle" xml:space="preserve">
+    <value>Golden Archer</value>
+  </data>
+  <data name="RenaShopAsking" xml:space="preserve">
+    <value>Asking the server...</value>
+  </data>
+  <data name="RenaShopNoAnswer" xml:space="preserve">
+    <value>The server sends no Rena shop data.</value>
+  </data>
+  <data name="RenaShopBalance" xml:space="preserve">
+    <value>Rena: %ls</value>
+  </data>
+  <data name="RenaShopBag" xml:space="preserve">
+    <value>In the bag: %ls</value>
+  </data>
+  <data name="RenaShopGive" xml:space="preserve">
+    <value>Hand in %ls Rena</value>
+  </data>
+  <data name="RenaShopTabShop" xml:space="preserve">
+    <value>Shop</value>
+  </data>
+  <data name="RenaShopTabArrow" xml:space="preserve">
+    <value>Arrow</value>
+  </data>
+  <data name="RenaShopTabProgress" xml:space="preserve">
+    <value>Progress</value>
+  </data>
+  <data name="RenaShopNotNear" xml:space="preserve">
+    <value>Stand next to the Golden Archer</value>
+  </data>
+  <data name="RenaShopWorking" xml:space="preserve">
+    <value>Waiting for the server...</value>
+  </data>
+  <data name="RenaShopWaiting" xml:space="preserve">
+    <value>%lld items wait for room in the bag</value>
+  </data>
+  <data name="RenaShopLineRena" xml:space="preserve">
+    <value>%ls · %ls Rena</value>
+  </data>
+  <data name="RenaShopPick" xml:space="preserve">
+    <value>Pick a line to buy.</value>
+  </data>
+  <data name="RenaShopNoRena" xml:space="preserve">
+    <value>Not enough Rena.</value>
+  </data>
+  <data name="RenaShopBuy" xml:space="preserve">
+    <value>Buy %d</value>
+  </data>
+  <data name="RenaShopEmpty" xml:space="preserve">
+    <value>Nothing for sale.</value>
+  </data>
+  <data name="RenaShopSpinPrice" xml:space="preserve">
+    <value>One spin: %ls Rena</value>
+  </data>
+  <data name="RenaShopPrize" xml:space="preserve">
+    <value>%ls: %ls%%</value>
+  </data>
+  <data name="RenaShopPrizeZen" xml:space="preserve">
+    <value>Zen %ls–%ls: %ls%%</value>
+  </data>
+  <data name="RenaShopAnnounced" xml:space="preserve">
+    <value>Gold prizes are announced to all.</value>
+  </data>
+  <data name="RenaShopResultsTitle" xml:space="preserve">
+    <value>Last spins</value>
+  </data>
+  <data name="RenaShopNoResults" xml:space="preserve">
+    <value>None yet.</value>
+  </data>
+  <data name="RenaShopSpin" xml:space="preserve">
+    <value>Spin x%d</value>
+  </data>
+  <data name="RenaShopHanded" xml:space="preserve">
+    <value>Rena handed in: %ls</value>
+  </data>
+  <data name="RenaShopMilestone" xml:space="preserve">
+    <value>%ls: %ls</value>
+  </data>
+  <data name="RenaShopWeek" xml:space="preserve">
+    <value>This week: %ls, place %d</value>
+  </data>
+  <data name="RenaShopWeekNoPlace" xml:space="preserve">
+    <value>This week: %ls, no place</value>
+  </data>
+  <data name="RenaShopTopLine" xml:space="preserve">
+    <value>%d. %ls: %ls</value>
+  </data>
+  <data name="RenaShopTopEmpty" xml:space="preserve">
+    <value>Nobody yet.</value>
+  </data>
   <data name="HelpSkynetKeysHeading" xml:space="preserve">
     <value>MU Skynet</value>
   </data>
