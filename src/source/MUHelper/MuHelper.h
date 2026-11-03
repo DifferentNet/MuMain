@@ -172,6 +172,7 @@ namespace MUHelper
 		std::chrono::steady_clock::time_point m_regroupSince{};
 		std::chrono::steady_clock::time_point m_regroupRestUntil{};
 		int m_iRegroupBestSteps = 0; // the fewest path steps back seen in this attempt
+		int m_iRegroupLastX = -1, m_iRegroupLastY = -1; // the hero's tile in the last round of the walk back
 		static constexpr std::chrono::seconds ForgottenTargetRest{ 2 };
 		std::map<int, std::chrono::steady_clock::time_point> m_mapForgottenUntil; // monster key -> back in the list
 	};

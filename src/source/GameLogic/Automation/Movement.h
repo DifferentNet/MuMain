@@ -46,6 +46,14 @@ inline constexpr float ArrivalTolerance = 1.5f;
     return result == MoveResult::NoPath || (result == MoveResult::Walking && sinceCloser >= patience);
 }
 
+// Whether a walk got closer this round. `stepsLeft` is the length of the path just found from the current tile,
+// `bestSteps` the shortest seen in this attempt. The path finder caps the length at `maxSteps` (MAX_PATH_FIND),
+// so while the spot is further than that, a move to another tile counts as getting closer.
+[[nodiscard]] constexpr bool IsWalkProgress(int stepsLeft, int bestSteps, int maxSteps, bool tileChanged)
+{
+    return stepsLeft < bestSteps || (stepsLeft >= maxSteps && tileChanged);
+}
+
 // Walks towards the map tile, one path per call, exactly as a click there
 // would. Call again on later frames until it reports Arrived.
 MoveResult WalkTo(int tileX, int tileY);

@@ -1556,11 +1556,15 @@ namespace MUHelper
             // Progress is counted in path steps, not straight-line distance, so a detour round a wall
             // still counts as getting closer.
             const int iStepsLeft = static_cast<int>(Hero->Path.PathNum);
-            if (m_regroupSince == std::chrono::steady_clock::time_point{} || iStepsLeft < m_iRegroupBestSteps)
+            const bool bTileChanged = Hero->PositionX != m_iRegroupLastX || Hero->PositionY != m_iRegroupLastY;
+            if (m_regroupSince == std::chrono::steady_clock::time_point{}
+                || GameLogic::Automation::IsWalkProgress(iStepsLeft, m_iRegroupBestSteps, MAX_PATH_FIND, bTileChanged))
             {
                 m_regroupSince = now;
                 m_iRegroupBestSteps = iStepsLeft;
             }
+            m_iRegroupLastX = Hero->PositionX;
+            m_iRegroupLastY = Hero->PositionY;
         }
         if (result == MoveResult::Arrived)
         {
