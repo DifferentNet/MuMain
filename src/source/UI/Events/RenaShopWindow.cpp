@@ -163,16 +163,11 @@ std::wstring ShortName(std::wstring name, int count)
     return count > 1 ? name + L" x" + std::to_wstring(count) : name;
 }
 
-// "Box +4 · 3 Rena", with the zen a line also asks for.
+// "Box +4 · 3 Rena". A line's zen is what it gives (its name says so), never a price.
 std::wstring ShopLineText(const Line& line)
 {
-    const std::wstring name = ShortName(line.Name, line.Count);
-    if (line.Price <= 0)
-        return Printf(I18N::Game::RenaShopLineZen, name.c_str(), Thousands(line.Zen).c_str());
-    if (line.Zen > 0)
-        return Printf(I18N::Game::RenaShopLineRenaZen, name.c_str(), Thousands(line.Price).c_str(),
-                      Thousands(line.Zen).c_str());
-    return Printf(I18N::Game::RenaShopLineRena, name.c_str(), Thousands(line.Price).c_str());
+    return Printf(I18N::Game::RenaShopLineRena, ShortName(line.Name, line.Count).c_str(),
+                  Thousands(line.Price).c_str());
 }
 
 // A line out of the balance's reach is grey.

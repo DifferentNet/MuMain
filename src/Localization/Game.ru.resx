@@ -15408,12 +15408,6 @@
   <data name="RenaShopLineRena" xml:space="preserve">
     <value>%ls · %ls Rena</value>
   </data>
-  <data name="RenaShopLineRenaZen" xml:space="preserve">
-    <value>%ls · %ls Rena + %ls zen</value>
-  </data>
-  <data name="RenaShopLineZen" xml:space="preserve">
-    <value>%ls · %ls zen</value>
-  </data>
   <data name="RenaShopPick" xml:space="preserve">
     <value>Выберите строку для покупки.</value>
   </data>
