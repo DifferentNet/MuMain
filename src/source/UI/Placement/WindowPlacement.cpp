@@ -7,6 +7,8 @@
 #include "Render/Textures/ZzzOpenglUtil.h"
 #include "UI/Core/WindowObject.h"
 #include "UI/Core/WindowSystem.h"
+#include "UI/Mobile/InterfaceMode.h"
+#include "UI/Mobile/TouchUnit.h"
 #include "UI/RmlBridge/RmlPanelGeometry.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 #include "UI/Scaling/UITransform.h"
@@ -138,6 +140,18 @@ float RegionScale(Rml::Element* region, const UI::Scaling::Transform& dock)
 {
     const auto fit = g_regionFit.find(region);
     return BaseRegionScale(region, dock) * (fit != g_regionFit.end() ? fit->second : 1.f);
+}
+
+// A slot's scale: its region's, raised on the phone with touch controls to at least data-touch-scale
+// finger units (UI/Mobile/TouchUnit) per layout unit, for a window whose buttons a finger must hit
+// (the chat's input bar). The rest of the region keeps its own scale.
+float SlotScale(Rml::Element* slot, const UI::Scaling::Transform& dock)
+{
+    const float scale = RegionScale(slot->GetParentNode(), dock);
+    const float touch = slot->GetAttribute<float>("data-touch-scale", 0.f);
+    if (touch <= 0.f || !UI::Mobile::IsPhoneView() || !UI::Mobile::IsTouchControls())
+        return scale;
+    return std::max(scale, touch * UI::Mobile::TouchUnit::Pixels());
 }
 
 // The window's own #panel size, in its layout units; the docked windows' size without one.
@@ -351,7 +365,7 @@ static Rml::ElementList PrepareSlots(Rml::ElementDocument* workspace, const UI::
         if (fill)
         {
             // The theme sizes a fill slot, but never below the window's content size.
-            const float scale = RegionScale(slot->GetParentNode(), dock);
+            const float scale = SlotScale(slot, dock);
             Rml::Vector2f content = PanelSize(*entry);
             window->GetFillMinimumSize(content.x, content.y);
             slot->RemoveProperty(Rml::PropertyId::Width);
@@ -361,7 +375,7 @@ static Rml::ElementList PrepareSlots(Rml::ElementDocument* workspace, const UI::
         }
         else if (open)
         {
-            const float scale = RegionScale(slot->GetParentNode(), dock);
+            const float scale = SlotScale(slot, dock);
             const Rml::Vector2f size = PanelSize(*entry);
             SetLength(slot, Rml::PropertyId::Width, size.x * scale);
             SetLength(slot, Rml::PropertyId::Height, size.y * scale);
@@ -450,7 +464,7 @@ static void PlaceSlots(const Rml::ElementList& slots, const UI::Scaling::Transfo
             continue;
         }
 
-        const float scale = RegionScale(slot->GetParentNode(), dock);
+        const float scale = SlotScale(slot, dock);
         const Rml::Vector2f offset = slot->GetAbsoluteOffset(Rml::BoxArea::Border);
         const Rml::Vector2f size = slot->GetBox().GetSize(Rml::BoxArea::Border);
         entry->box = {offset.x, offset.y, size.x, size.y, scale};
