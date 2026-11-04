@@ -250,6 +250,40 @@ void PlaceSlideLane(Rml::Element& lane, const Frame& frame)
     }
 }
 
+// The widest notice line now shown, in the board's px (before the HUD's scale); 0 with none.
+float WidestNotice(Rml::Element& board)
+{
+    Rml::ElementList lines;
+    board.GetElementsByClassName(lines, "notice-text");
+    float widest = 0.f;
+    for (Rml::Element* line : lines)
+        widest = std::max(widest, line->GetBox().GetSize(Rml::BoxArea::Border).x);
+    return widest;
+}
+
+void PlaceNotices(Rml::Element& board, const Frame& frame)
+{
+    // The notices are centred on the screen, where an open window on the phone (the inventory, the
+    // character) covers half of it and lies under their lines. They centre in the world the windows
+    // leave instead, kept whole on the screen however wide a line.
+    const float screen = static_cast<float>(frame.screen.x);
+    const float left = UI::Placement::UncoveredWorldLeft();
+    const float right = frame.worldRight;
+    float centre = screen / 2.f;
+    if (right > left && right - left < screen - 1.f)
+    {
+        const float scale = UI::Scaling::BottomHudScale(frame.screen.x, frame.screen.y);
+        const float half = WidestNotice(board) * scale / 2.f + frame.gap;
+        centre = (left + right) / 2.f;
+        if (screen - half >= half)
+            centre = std::clamp(centre, half, screen - half);
+        else
+            centre = screen / 2.f;
+    }
+    // The board is centred on its left edge (margin-left: -320px, its scale about its centre).
+    SetPx(board, Rml::PropertyId::Left, OffsetFor(board, {centre, 0.f}).x);
+}
+
 // The party's shown cards: how many, and one's size in the panel's reference px.
 struct PartyCards
 {
@@ -340,6 +374,7 @@ constexpr const char* CornerMoved[] = {"left", "top", "margin-left"};
 constexpr const char* PartyMoved[] = {"left", "top", "width", "height", "transform", "--root-scale"};
 constexpr const char* ChatMoved[] = {"margin-left"};
 constexpr const char* LaneMoved[] = {"left", "top", "width", "overflow-x", "overflow-y"};
+constexpr const char* BoardMoved[] = {"left"};
 
 constexpr Piece Pieces[] = {
     {"buff_strip.rml", "#panel", PlaceBuffs, CornerMoved, nullptr},
@@ -349,6 +384,7 @@ constexpr Piece Pieces[] = {
     {"party_list.rml", "#panel", PlaceParty, PartyMoved, ShownCards},
     {"workspace.rml", ".chat-stack", PlaceChat, ChatMoved, nullptr},
     {"slide_notice.rml", "#lane", PlaceSlideLane, LaneMoved, nullptr},
+    {"notices.rml", "#board", PlaceNotices, BoardMoved, WidestNotice},
 };
 constexpr std::size_t PieceCount = std::size(Pieces);
 
