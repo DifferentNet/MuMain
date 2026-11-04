@@ -13686,6 +13686,38 @@
     <value>Камни и zen расходуются.</value>
     <comment>legacy_id=3907</comment>
   </data>
+  <data name="ExcellentDustDistilMix" xml:space="preserve">
+    <value>Распылить в пыль экселента</value>
+    <comment>legacy_id=3908</comment>
+  </data>
+  <data name="ExcellentDustItemMix" xml:space="preserve">
+    <value>Экселент вещь из пыли</value>
+    <comment>legacy_id=3909</comment>
+  </data>
+  <data name="ExcellentDustDistilDesc1" xml:space="preserve">
+    <value>Оружие, броня, бижутерия.</value>
+    <comment>legacy_id=3910</comment>
+  </data>
+  <data name="ExcellentDustDistilDesc2" xml:space="preserve">
+    <value>Пыль = Combat Power / 100 за вещь.</value>
+    <comment>legacy_id=3911</comment>
+  </data>
+  <data name="ExcellentDustDistilDesc3" xml:space="preserve">
+    <value>1 000 пыли в неделю на аккаунт.</value>
+    <comment>legacy_id=3912</comment>
+  </data>
+  <data name="ExcellentDustItemDesc1" xml:space="preserve">
+    <value>250 пыли + Jewel of Chaos.</value>
+    <comment>legacy_id=3913</comment>
+  </data>
+  <data name="ExcellentDustItemDesc2" xml:space="preserve">
+    <value>Случайная экселент вещь Box +5.</value>
+    <comment>legacy_id=3914</comment>
+  </data>
+  <data name="ExcellentDustItemDesc3" xml:space="preserve">
+    <value>2 опции 70 %, 3 опции 30 %.</value>
+    <comment>legacy_id=3915</comment>
+  </data>
   <data name="GmPanelTitleAdmin" xml:space="preserve">
     <value>GM-панель — админ</value>
   </data>
