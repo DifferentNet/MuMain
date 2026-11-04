@@ -96,6 +96,10 @@ float EquippedAttackRange();
 // cadence of AttackSpeed instead of their own timer.
 [[nodiscard]] bool IsSwingInProgress();
 
+// Called right after an automated attack or skill was sent. Until a swing shows (or a short wait runs out)
+// IsSwingInProgress stays true, so a send that starts no animation is not repeated on every frame.
+void NoteAutomatedSend();
+
 // Attacks the object with that server-assigned id, walking into range
 // first when needed. `huntingDistance` bounds how far the path finder may
 // search beyond the weapon's reach.
