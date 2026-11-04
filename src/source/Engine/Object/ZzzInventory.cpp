@@ -619,22 +619,34 @@ void RequireClass(ITEM_ATTRIBUTE* pItem)
     TextListColor[TextNum + 2] = TextListColor[TextNum + 3] = TEXT_COLOR_WHITE;
     mu_swprintf(TextList[TextNum], L"\n"); TextNum++; SkipNum++;
 
+    // MU Skynet has no Summoner or Rage Fighter (ghinzuro 2026-11-03, 2026-11-05): their lines are never
+    // shown, and an item every playable class can wear shows no class lines at all.
+    const auto isPlayableClass = [](int classIndex)
+    {
+        return classIndex != CLASS_SUMMONER && classIndex != CLASS_RAGEFIGHTER;
+    };
+
     int iCount = 0;
+    int iPlayableCount = 0;
     for (int i = 0; i < MAX_CLASS; ++i)
     {
+        if (!isPlayableClass(i))
+            continue;
+
+        iPlayableCount++;
         if (pItem->RequireClass[i] == 1)
         {
             iCount++;
         }
     }
-    if (iCount == MAX_CLASS)
+    if (iCount == iPlayableCount)
         return;
 
     for (int i = 0; i < MAX_CLASS; ++i)
     {
         BYTE byRequireClass = pItem->RequireClass[i];
 
-        if (byRequireClass == 0)
+        if (byRequireClass == 0 || !isPlayableClass(i))
             continue;
 
         if (i == byFirstClass && byRequireClass <= byStepClass)
