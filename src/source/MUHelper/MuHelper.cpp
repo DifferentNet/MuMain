@@ -115,6 +115,7 @@ namespace MUHelper
         m_iComboState = 0;
         m_iCurrentBuffIndex = 0;
         m_iCurrentBuffPartyIndex = 0;
+        m_iBuffWaitRounds = 0;
         m_iCurrentTarget = -1;
         m_iCurrentSkill = (ActionSkillType)m_config.aiSkill[0];
         m_iCurrentItem = MAX_ITEMS;
@@ -635,13 +636,15 @@ namespace MUHelper
             }
 
             // A cast that has to wait (the hero's swing still playing, or a few steps towards the member) keeps
-            // this member and this buff for the next round. Before, the turn passed on: an elf at a spot attacks
-            // after her own turn, so the next member's turn came in the middle of her swing every time, and a
-            // member who joined her there was never buffed (ghinzuro, 2026-11-04).
-            if (iBuffResult == 0)
+            // this member and this buff for the next rounds, up to BuffWaitRoundLimit. Before, the turn passed on:
+            // an elf at a spot attacks after her own turn, so the next member's turn came in the middle of her swing
+            // every time, and a member who joined her there was never buffed (ghinzuro, 2026-11-04). The limit
+            // keeps one she can't reach from holding up the potions and the attack (review).
+            if (iBuffResult == 0 && ++m_iBuffWaitRounds <= BuffWaitRoundLimit)
             {
                 return 0;
             }
+            m_iBuffWaitRounds = 0;
 
             m_iCurrentBuffPartyIndex = (m_iCurrentBuffPartyIndex + 1) % PartyNumber;
 
@@ -662,6 +665,7 @@ namespace MUHelper
         else
         {
             m_iCurrentBuffPartyIndex = 0;
+            m_iBuffWaitRounds = 0;
 
             if (!m_config.bBuffDuration
                 && m_config.iBuffCastInterval != 0

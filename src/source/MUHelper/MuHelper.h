@@ -125,6 +125,8 @@ namespace MUHelper
 		int m_iCurrentTarget;
 		int m_iCurrentBuffIndex;
 		int m_iCurrentBuffPartyIndex;
+		int m_iBuffWaitRounds = 0;                                          // rounds the current member's buff waited
+		static constexpr int BuffWaitRoundLimit = 8;                        // rounds, about 2 seconds
 		int m_iComboState;
 		ActionSkillType m_iCurrentSkill;
 		int m_iHuntingDistance;
