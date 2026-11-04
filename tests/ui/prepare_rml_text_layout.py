@@ -63,13 +63,13 @@ def event_state(window, source, keys, localized):
     description = [translation(symbol, keys, localized) for symbol in symbols]
     blood = window == "blood_castle_enter"
     pattern = "CastleDLevelDD" if blood else "TheDSquareDDLevel"
-    master = "CastleNoDMasterLevel" if blood else "SquareNoDMasterLevel"
+    third = "CastleThirdClass" if blood else "SquareThirdClass"
     levels = re.findall(r'm_i\w+LimitLevel\[(\d+)\]\[(\d+)\] = (\d+)', source)
     limits = {(int(index), int(bound)): int(value) for index, bound, value in levels}
     count = 8 if blood else 7
     buttons = [translation(pattern, keys, localized) % (i + 1, limits[i, 0], limits[i, 1])
                for i in range(count - 1)]
-    buttons.append(translation(master, keys, localized) % count)
+    buttons.append(translation(third, keys, localized) % (count, limits[count - 1, 0], limits[count - 1, 1]))
     return {"title_text": translation(title, keys, localized)}, description, buttons
 
 
@@ -161,12 +161,23 @@ def main():
     args = parser.parse_args()
     args.repo = args.repo.resolve()
     args.output.mkdir(parents=True, exist_ok=True)
-    keys = symbol_keys((args.generated / "I18N/Game.h").read_text(encoding="utf-8"))
+    # The top Blood Castle / Devil Square button comes from the MiniGameEntry group.
+    keys = {group_key: value
+            for group in ("Game", "MiniGameEntry")
+            for group_key, value in symbol_keys(
+                (args.generated / f"I18N/{group}.h").read_text(encoding="utf-8")).items()}
     manifest = []
-    english = resources(args.repo / "src/Localization/Game.en.resx")
+    localization = args.repo / "src/Localization"
+    english = {}
+    for group in ("Game", "MiniGameEntry"):
+        english |= resources(localization / f"{group}.en.resx")
     for locale in LOCALES:
         # ResxGen also falls back to English when a locale omits a resource key.
-        localized = english | resources(args.repo / "src/Localization" / f"Game.{locale}.resx")
+        localized = dict(english)
+        for group in ("Game", "MiniGameEntry"):
+            path = localization / f"{group}.{locale}.resx"
+            if path.exists():
+                localized |= resources(path)
         for theme in THEMES:
             for window in WINDOWS:
                 path = args.output / f"{theme}-{window}-{locale}.rml"
