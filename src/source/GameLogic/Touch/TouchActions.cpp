@@ -651,11 +651,30 @@ void ForgetGoneFriend()
     g_friendName.clear();
 }
 
+// The chosen party member on the screen, found by name: their object key changes with each map they
+// enter, so the key is refreshed from what is found. None once they left the party.
+const CHARACTER* ChosenMember()
+{
+    ForgetGoneFriend();
+    if (g_friendKey == NoTarget)
+        return nullptr;
+    for (int index = 0; index < MAX_CHARACTERS_CLIENT; ++index)
+    {
+        const CHARACTER& character = CharactersClient[index];
+        if (character.Object.Live && character.Object.Kind == KIND_PLAYER && &character != Hero &&
+            g_friendName == character.ID)
+        {
+            g_friendKey = character.Key;
+            return &character;
+        }
+    }
+    return nullptr;
+}
+
 // The chosen party member while in sight, near or not: a heal walks up to them.
 const CHARACTER* FriendInSight()
 {
-    ForgetGoneFriend();
-    const CHARACTER* chosen = FindByKey(g_friendKey);
+    const CHARACTER* chosen = ChosenMember();
     return IsLiveMember(chosen) && TilesTo(chosen) <= FriendSightRange ? chosen : nullptr;
 }
 
@@ -673,23 +692,22 @@ const CHARACTER* ChosenFriend()
 // farther than FriendSightRange.
 bool FriendOutOfSight()
 {
-    ForgetGoneFriend();
+    const CHARACTER* chosen = ChosenMember();
     if (g_friendKey == NoTarget)
         return false;
-    const CHARACTER* chosen = FindByKey(g_friendKey);
-    return chosen == nullptr || !chosen->Object.Live || TilesTo(chosen) > FriendSightRange;
+    return chosen == nullptr || TilesTo(chosen) > FriendSightRange;
 }
 
 // A party member is chosen but out of sight: the player is told, every few seconds at most, rather than
 // the heal going to the character or Teleport Ally asking for a choice already made.
-Progress FriendTooFar()
+Progress FriendTooFar(const std::wstring& name)
 {
     const auto now = Clock::now();
     if (now >= g_noFriendSaidAt)
     {
         g_noFriendSaidAt = now + NoFriendSayRepeat;
         std::wstring text = I18N::Game::PadFriendTooFar;
-        text += g_friendName;
+        text += name;
         UI::Chat::PostSystem(text, mu::ui::window::TYPE_ERROR_MESSAGE);
     }
     return Progress::Done;
@@ -813,7 +831,7 @@ Progress CastAtFriend(ActionSkillType skill, const CHARACTER* friendCharacter)
     // No way to them (round a wall, across water) or gone from the view: said, rather than the press
     // waiting out its follow-through for nothing.
     if (result == Automation::SkillResult::NoPath || result == Automation::SkillResult::NotInView)
-        return FriendTooFar();
+        return FriendTooFar(friendCharacter->ID);
     return OutcomeOf(result);
 }
 
@@ -907,7 +925,7 @@ Progress PadTeleportAlly(ActionSkillType skill)
         return Progress::Done;
     }
     if (FriendOutOfSight())
-        return FriendTooFar();
+        return FriendTooFar(g_friendName);
     const auto now = Clock::now();
     if (now >= g_noFriendSaidAt)
     {
@@ -1217,7 +1235,7 @@ Progress CastHotKey(int hotKey)
     if (friendCharacter != nullptr)
         return CastAtFriend(skill, friendCharacter);
     if (GoesOnFriend(skill) && FriendOutOfSight())
-        return FriendTooFar();
+        return FriendTooFar(g_friendName);
     switch (aim)
     {
     case SkillAim::Self:
