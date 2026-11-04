@@ -115,6 +115,7 @@ namespace MUHelper
         m_iComboState = 0;
         m_iCurrentBuffIndex = 0;
         m_iCurrentBuffPartyIndex = 0;
+        m_iBuffWaitRounds = 0;
         m_iCurrentTarget = -1;
         m_iCurrentSkill = (ActionSkillType)m_config.aiSkill[0];
         m_iCurrentItem = MAX_ITEMS;
@@ -634,6 +635,18 @@ namespace MUHelper
                 iBuffResult = BuffTarget(pChar, (ActionSkillType)m_config.aiBuff[m_iCurrentBuffIndex]);
             }
 
+            // A cast that waits for the hero's swing keeps this member and this buff for the next rounds, up to
+            // BuffWaitRoundLimit. Before, the turn passed on: an elf at a spot attacks after her own turn, so the
+            // next member's turn came in the middle of her swing every time, and a member who joined her there was
+            // never buffed (ghinzuro, 2026-11-04). Only the swing: a walk towards a member passes the turn on as
+            // before, so one she can't reach doesn't hold up her potions, heals and attack (review).
+            using GameLogic::Automation::SkillResult;
+            if (iBuffResult == 0 && m_lastSkillResult == SkillResult::Busy && ++m_iBuffWaitRounds <= BuffWaitRoundLimit)
+            {
+                return 0;
+            }
+            m_iBuffWaitRounds = 0;
+
             m_iCurrentBuffPartyIndex = (m_iCurrentBuffPartyIndex + 1) % PartyNumber;
 
             if (m_iCurrentBuffPartyIndex == 0)
@@ -653,6 +666,7 @@ namespace MUHelper
         else
         {
             m_iCurrentBuffPartyIndex = 0;
+            m_iBuffWaitRounds = 0;
 
             if (!m_config.bBuffDuration
                 && m_config.iBuffCastInterval != 0
