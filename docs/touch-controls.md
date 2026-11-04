@@ -142,7 +142,16 @@ chat balloons, shop titles) under the top row's band, the hero frame with the lo
 control draw at a quarter of their strength (`PhoneHudLayout::CoversLabel`, used by
 `UI/Character/WorldLabelLayer`): they draw under every window, and their text would mix with the
 buttons'. The notices go under the open menu and skill picker, dimmed by the backdrop, and back over
-every window once they shut (`UI/Mobile/NoticesUnderPanel`). The PC's HUD shows both as before.
+every window once they shut (`UI/Mobile/NoticesUnderPanel`). While a window covers part of the
+screen (the inventory, the character), the notices centre in the world it leaves, kept whole on the
+screen. The notice ticker runs in a strip under the top row, right of the hero frame, clipped to it
+(`slide_notice.rml` `#lane`). The PC's HUD shows all of these as before.
+
+Also in the phone's HUD: the skill buttons and Skills hide until the character knows a skill (a new
+character has nothing to put on them); the MU Helper bar keeps only the position readout (its
+config, start and stop buttons are 18x13 dp, and Auto and Menu -> MU Helper do the same); the chat's
+input bar is drawn at at least 1.4 finger units per unit (its slot's `data-touch-scale`,
+`docs/rmlui-ui-system/window-placement.md`), so its type buttons and fields take a finger.
 
 In the phone's HUD the top row's buttons are as wide as their labels, 44 to 72 units (a wide phone
 looks as before), and the labels get smaller, not under 9 units, where the row is too short for them

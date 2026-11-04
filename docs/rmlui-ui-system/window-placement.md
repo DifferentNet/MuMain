@@ -180,6 +180,11 @@ the region's scale), scaled whole — RmlUi, native grids and 3D icons follow th
 Modern caps its docks below the header; legacy doesn't, so its docks reach the screen top as the
 original's did.
 
+A slot's `data-touch-scale` raises its window, in the phone view with touch controls, to at least
+that many finger units (`UI/Mobile/TouchUnit`) per layout unit; the rest of the region keeps its
+scale. The chat input's slot has 1.4, so its buttons take a finger (`WindowPlacement.cpp`
+`SlotScale`).
+
 ## 7. Arrangement rules
 
 Every rule in `CSystem::Show()`/`Hide()` is one of three kinds:

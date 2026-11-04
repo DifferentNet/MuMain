@@ -250,7 +250,8 @@ void PlaceSlideLane(Rml::Element& lane, const Frame& frame)
     }
 }
 
-// The widest notice line now shown, in the board's px (before the HUD's scale); 0 with none.
+// The widest notice line now shown, in window px (the lines are .sharp-text: counter-scaled out of
+// the board's HUD scale, they are laid out at their size on the screen); 0 with none.
 float WidestNotice(Rml::Element& board)
 {
     Rml::ElementList lines;
@@ -272,8 +273,7 @@ void PlaceNotices(Rml::Element& board, const Frame& frame)
     float centre = screen / 2.f;
     if (right > left && right - left < screen - 1.f)
     {
-        const float scale = UI::Scaling::BottomHudScale(frame.screen.x, frame.screen.y);
-        const float half = WidestNotice(board) * scale / 2.f + frame.gap;
+        const float half = WidestNotice(board) / 2.f + frame.gap;
         centre = (left + right) / 2.f;
         if (screen - half >= half)
             centre = std::clamp(centre, half, screen - half);
