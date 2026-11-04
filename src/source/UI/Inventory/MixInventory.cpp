@@ -588,7 +588,8 @@ void CMixInventory::SyncMixContentModel()
 
     // Recipe result name onward -- hidden entirely once MIX_FINISHED, mirroring RenderFrame()'s own
     // early return (nothing past that point ever rendered either).
-    const bool showRecipe = (GetMixState() != MIX_FINISHED);
+    // MU Moldova: the dust mode keeps its lines, so the counter shows the dust the mix gave.
+    const bool showRecipe = (GetMixState() != MIX_FINISHED) || GameLogic::ExcellentDust::IsDustMode();
     syncBool(&MixInventoryRmlModel::showRecipe, "show_recipe", showRecipe);
     if (!showRecipe)
         return;
