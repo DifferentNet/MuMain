@@ -683,7 +683,7 @@ bool CInventoryActionController::HandleInventoryRightClickActions(CInventoryCtrl
     }
 #endif
 
-    if (!EquipmentItem)
+    if (!IsItemMovePending())
     {
         if (TryEquipItem(targetControl, pItem, iIndex))
         {

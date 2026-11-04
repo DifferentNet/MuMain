@@ -216,7 +216,7 @@ CInventoryCtrl* CStorageInventoryExt::GetInventoryCtrl() const
 
 bool CStorageInventoryExt::ProcessClosing() const
 {
-    if (EquipmentItem)
+    if (IsItemMovePending())
         return false;
 
     CInventoryCtrl::BackupPickedItem();
