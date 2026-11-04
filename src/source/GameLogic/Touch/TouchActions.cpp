@@ -97,6 +97,8 @@ constexpr int StepsLeftToReplan = 2;
 
 // Monsters within this many tiles are fought by the attack and skill buttons.
 constexpr int TargetRange = 8;
+// A chosen party member this near is in sight: a heal or Teleport Ally walks up to them.
+constexpr int FriendSightRange = 14;
 // How far beyond its reach the path finder may look for a way to the target.
 constexpr int HuntingDistance = 8;
 // Drops within this many tiles are gathered by the pickup button.
@@ -159,6 +161,8 @@ Clock::time_point g_fullBagSaidAt;
 // The PK switch (SetForceAttack) and the party member the heals and buffs go to (ToggleFriend).
 bool g_forceAttack = false;
 int g_friendKey = NoTarget;
+// The chosen member's name, for the message when they are out of sight.
+std::wstring g_friendName;
 // When a skill short of mana or AG may ask and say so again, and when a held pet command may go out
 // again.
 Clock::time_point g_shortOfManaAt;
@@ -620,22 +624,64 @@ bool GoesOnFriend(ActionSkillType skill)
     }
 }
 
-bool IsFriend(const CHARACTER* character)
+// A live party member other than the character, however far.
+bool IsLiveMember(const CHARACTER* character)
 {
     return character != nullptr && character != Hero && character->Object.Live && character->Dead == 0 &&
-           character->Object.Kind == KIND_PLAYER && g_pPartyManager->IsPartyMember(IndexOf(character)) &&
-           TilesTo(character) <= TargetRange;
+           character->Object.Kind == KIND_PLAYER && g_pPartyManager->IsPartyMember(IndexOf(character));
 }
 
-// The party member a heal or a buff goes to: the one the pad's pointer is on, else the one whose
-// party card a tap chose, while near; none for the character itself.
+bool IsFriend(const CHARACTER* character)
+{
+    return IsLiveMember(character) && TilesTo(character) <= TargetRange;
+}
+
+// The chosen party member while in sight, near or not: a heal walks up to them. One who left the party
+// is forgotten.
+const CHARACTER* FriendInSight()
+{
+    const CHARACTER* chosen = FindByKey(g_friendKey);
+    if (chosen != nullptr && chosen->Object.Live && chosen->Object.Kind == KIND_PLAYER &&
+        !g_pPartyManager->IsPartyMember(IndexOf(chosen)))
+    {
+        g_friendKey = NoTarget;
+        return nullptr;
+    }
+    return IsLiveMember(chosen) && TilesTo(chosen) <= FriendSightRange ? chosen : nullptr;
+}
+
+// The party member a heal or a buff goes to: the one the pad's pointer is on, else the one RB or a tap
+// on their party card chose, while in sight; none for the character itself.
 const CHARACTER* ChosenFriend()
 {
     if (g_pointerAims && SelectedCharacter >= 0 && SelectedCharacter < MAX_CHARACTERS_CLIENT &&
         IsFriend(&CharactersClient[SelectedCharacter]))
         return &CharactersClient[SelectedCharacter];
+    return FriendInSight();
+}
+
+// A party member is chosen but gone from the screen or farther than FriendSightRange.
+bool FriendOutOfSight()
+{
+    if (g_friendKey == NoTarget)
+        return false;
     const CHARACTER* chosen = FindByKey(g_friendKey);
-    return IsFriend(chosen) ? chosen : nullptr;
+    return chosen == nullptr || !chosen->Object.Live || TilesTo(chosen) > FriendSightRange;
+}
+
+// A party member is chosen but out of sight: the player is told, every few seconds at most, rather than
+// the heal going to the character or Teleport Ally asking for a choice already made.
+Progress FriendTooFar()
+{
+    const auto now = Clock::now();
+    if (now >= g_noFriendSaidAt)
+    {
+        g_noFriendSaidAt = now + NoFriendSayRepeat;
+        std::wstring text = I18N::Game::PadFriendTooFar;
+        text += g_friendName;
+        UI::Chat::PostSystem(text, mu::ui::window::TYPE_ERROR_MESSAGE);
+    }
+    return Progress::Done;
 }
 
 // Whether the character has the mana and the AG for the skill, as GameLogic::Combat::CheckMana weighs
@@ -843,6 +889,8 @@ Progress PadTeleportAlly(ActionSkillType skill)
             ActionWentOff();
         return Progress::Done;
     }
+    if (FriendOutOfSight())
+        return FriendTooFar();
     const auto now = Clock::now();
     if (now >= g_noFriendSaidAt)
     {
@@ -1151,6 +1199,8 @@ Progress CastHotKey(int hotKey)
     const CHARACTER* friendCharacter = GoesOnFriend(skill) ? ChosenFriend() : nullptr;
     if (friendCharacter != nullptr)
         return CastAtFriend(skill, friendCharacter);
+    if (GoesOnFriend(skill) && FriendOutOfSight())
+        return FriendTooFar();
     switch (aim)
     {
     case SkillAim::Self:
@@ -1258,11 +1308,13 @@ void ToggleFriend(int characterKey)
 {
     const bool own = Hero != nullptr && characterKey == Hero->Key;
     g_friendKey = own || characterKey == g_friendKey ? NoTarget : characterKey;
+    const CHARACTER* chosen = FindByKey(g_friendKey);
+    g_friendName = chosen != nullptr ? chosen->ID : L"";
 }
 
 int FriendKey()
 {
-    return IsFriend(FindByKey(g_friendKey)) ? g_friendKey : NoTarget;
+    return FriendInSight() != nullptr ? g_friendKey : NoTarget;
 }
 
 void ChooseNextFriend()
@@ -1290,6 +1342,7 @@ void ChooseNextFriend()
         return;
     }
     g_friendKey = (*next)->Key;
+    g_friendName = (*next)->ID;
     std::wstring text = I18N::Game::PadFriendChosen;
     text += (*next)->ID;
     UI::Chat::PostSystem(text, mu::ui::window::TYPE_SYSTEM_MESSAGE);
