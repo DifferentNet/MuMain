@@ -74,10 +74,12 @@
 .job-btn[job="wizard"]       { top: calc(131px * var(--layout-pixel, 1)); }
 .job-btn[job="knight"]       { top: calc(157px * var(--layout-pixel, 1)); }
 .job-btn[job="elf"]          { top: calc(183px * var(--layout-pixel, 1)); }
-.job-btn[job="summoner"]     { top: calc(209px * var(--layout-pixel, 1)); }
-.job-btn[job="rage-fighter"] { top: calc(246px * var(--layout-pixel, 1)); }
-.job-btn[job="dark"]         { top: calc(272px * var(--layout-pixel, 1)); }
-.job-btn[job="dark-lord"]    { top: calc(298px * var(--layout-pixel, 1)); }
+/* MU Skynet has no Summoner or Rage Fighter (ghinzuro 2026-11-03): their buttons are hidden and
+   Magic Gladiator and Dark Lord move up under the Elf. */
+.job-btn[job="summoner"],
+.job-btn[job="rage-fighter"] { display: none; }
+.job-btn[job="dark"]         { top: calc(209px * var(--layout-pixel, 1)); }
+.job-btn[job="dark-lord"]    { top: calc(235px * var(--layout-pixel, 1)); }
 .job-btn.checked {
 	decorator: image(charmake-job-checked);
 	color: token(text-primary);

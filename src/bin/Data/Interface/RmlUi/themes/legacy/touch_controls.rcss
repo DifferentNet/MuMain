@@ -880,22 +880,36 @@ body.pad #tc_back, body.pad #tc_menu, body.pad #tc_social {
 #tc_auto .pad-glyph { left: -8rem; top: -8rem; }
 #tc_skill_edit .pad-glyph { left: -10rem; top: -10rem; }
 
-/* The potions E and R: only a pad drinks them (its d-pad), beside its row below. */
+/* The potions E and R: shown by no layout now (a pad's d-pad left and right open the map and the
+   inventory, ghinzuro 2026-11-03). */
 #tc_potion_e, #tc_potion_r {
 	display: none;
 }
+/* The skill buttons 4 and 5 are RT held with X and Y: the trigger's glyph on the left corner, the face
+   button's on the right. */
+.tc-skill .pad-alt-key { left: auto; right: -8rem; }
 
 /* A pad with no finger on the screen (UI/HUD/GamepadControls.h): Diablo's row along the bottom,
    centred, just over the HUD's bar (640rem centred, 51rem high): the potions LB and LT on its left,
-   then attack (A), the skills X, Y, B, RB and RT, the potions E and R (the d-pad's arms) and MU Helper
-   (d-pad up) on its right. No top row (Menu opens the windows, View the map), no pickup button (d-pad
-   down), no Skills button (LS). */
+   then attack (A), the three skills X, Y and B, and MU Helper (d-pad up) on its right (ghinzuro,
+   2026-11-03: three skills, RT held for the next ones). While RT is held (pad-alt), the skill buttons 4
+   and 5 stand in the places of X and Y. No top row (Menu opens the windows, View the Social panel), no
+   pickup button (d-pad down), no Skills button (LS). */
 body.pad.no-touch #tc_quick, body.pad.no-touch #tc_pickup, body.pad.no-touch #tc_skill_edit {
 	display: none;
 }
-body.pad.no-touch #tc_potion_e, body.pad.no-touch #tc_potion_r {
+body.pad.no-touch #tc_skill_3, body.pad.no-touch #tc_skill_4 {
+	display: none;
+}
+body.pad.no-touch.pad-alt #tc_skill_3, body.pad.no-touch.pad-alt #tc_skill_4 {
 	display: block;
 }
+body.pad.no-touch.pad-alt #tc_skill_0, body.pad.no-touch.pad-alt #tc_skill_1, body.pad.no-touch.pad-alt #tc_skill_2 {
+	display: none;
+}
+/* RT is already held: its glyph would only crowd the row, so the face key alone stands in its usual corner. */
+body.pad.no-touch .tc-skill .pad-trigger { display: none; }
+body.pad.no-touch .tc-skill .pad-alt-key { left: -8rem; right: auto; }
 body.pad.no-touch #tc_attack, body.pad.no-touch #tc_skill_0, body.pad.no-touch #tc_skill_1, body.pad.no-touch #tc_skill_2, body.pad.no-touch #tc_skill_3, body.pad.no-touch #tc_skill_4 {
 	left: 50%;
 	right: auto;
@@ -911,29 +925,35 @@ body.pad.no-touch #tc_potion_q, body.pad.no-touch #tc_potion_w, body.pad.no-touc
 	height: 44rem;
 	line-height: 40rem;
 }
-body.pad.no-touch #tc_potion_q { margin-left: -300rem; }
-body.pad.no-touch #tc_potion_w { margin-left: -248rem; }
+body.pad.no-touch #tc_potion_q { margin-left: -200rem; }
+body.pad.no-touch #tc_potion_w { margin-left: -148rem; }
 body.pad.no-touch #tc_attack {
-	margin-left: -192rem;
+	margin-left: -92rem;
 	line-height: 50rem;
 	font-size: 12rem;
 	border-radius: 27rem;
 }
-body.pad.no-touch #tc_skill_0 { margin-left: -128rem; }
-body.pad.no-touch #tc_skill_1 { margin-left: -64rem; }
-body.pad.no-touch #tc_skill_2 { margin-left: 0; }
-body.pad.no-touch #tc_skill_3 { margin-left: 64rem; }
-body.pad.no-touch #tc_skill_4 { margin-left: 128rem; }
+body.pad.no-touch #tc_skill_0, body.pad.no-touch #tc_skill_3 { margin-left: -28rem; }
+body.pad.no-touch #tc_skill_1, body.pad.no-touch #tc_skill_4 { margin-left: 36rem; }
+body.pad.no-touch #tc_skill_2 { margin-left: 100rem; }
 body.pad.no-touch .tc-skill .tc-skill-icon { left: 12rem; top: 7rem; }
-body.pad.no-touch #tc_potion_e { margin-left: 196rem; }
-body.pad.no-touch #tc_potion_r { margin-left: 248rem; }
-body.pad.no-touch #tc_auto { margin-left: 300rem; }
+body.pad.no-touch #tc_auto { margin-left: 168rem; }
+/* The skill picker (L3) sets all five buttons: they stand in one row then, 4 and 5 where MU Helper
+   was, with RT on their corner (the picker lets RT go, so pad-alt is off while it is open). */
+body.pad.no-touch.picking #tc_skill_3, body.pad.no-touch.picking #tc_skill_4, body.pad.no-touch.picking #tc_skill_0, body.pad.no-touch.picking #tc_skill_1, body.pad.no-touch.picking #tc_skill_2 {
+	display: block;
+}
+body.pad.no-touch.picking #tc_skill_3 { margin-left: 164rem; }
+body.pad.no-touch.picking #tc_skill_4 { margin-left: 228rem; }
+body.pad.no-touch.picking #tc_auto { display: none; }
+body.pad.no-touch.picking .tc-skill .pad-trigger { display: block; }
+body.pad.no-touch.picking .tc-skill .pad-alt-key { display: none; }
 body.pad.no-touch #tc_attack .pad-glyph { right: auto; left: -8rem; top: -8rem; }
 body.pad.no-touch .tc-potion .pad-glyph, body.pad.no-touch #tc_auto .pad-glyph { left: -8rem; right: auto; top: -8rem; }
 body.pad.no-touch #tc_bind_hint {
 	left: 50%;
 	right: auto;
-	margin-left: -192rem;
+	margin-left: -92rem;
 	bottom: 126rem;
 }
 
