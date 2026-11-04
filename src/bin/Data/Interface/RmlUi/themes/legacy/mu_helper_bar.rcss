@@ -117,3 +117,10 @@
 .dot {
 	display: none;
 }
+
+/* MU Skynet: the phone's own HUD (theme flag "mobile-hud"). Its Auto button and Menu -> MU Helper do
+   what these two 18x13 buttons do, which a finger cannot hit, only brush by mistake: the bar keeps the
+   position readout alone. */
+@media (theme: mobile-hud) {
+	#seg_c, #btn_config, #btn_start, #btn_stop { display: none; }
+}

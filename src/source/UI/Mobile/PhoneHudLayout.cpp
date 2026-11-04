@@ -235,6 +235,59 @@ void PlaceChat(Rml::Element& chat, const Frame& frame)
         UI::Placement::Invalidate();
 }
 
+// The bottom of the buff icons in window px, 0 with none shown (defined with the pieces' states).
+float BuffsBottom(Rml::Element& lane);
+
+void PlaceSlideLane(Rml::Element& lane, const Frame& frame)
+{
+    // The notice ticker runs across the screen's top, over the top row's labels: under the row here,
+    // right of the hero frame, clipped to that strip; under the buffs too, which its band would hide.
+    const Edges& edges = frame.edges;
+    const float left = edges.heroRight + frame.gap;
+    const float buffs = BuffsBottom(lane);
+    SetCorner(lane, {left, std::max(edges.topRowBottom, buffs > 0.f ? buffs + frame.gap : 0.f)});
+    SetPx(lane, Rml::PropertyId::Width, std::max(0.f, static_cast<float>(frame.screen.x) - left));
+    if (lane.GetLocalProperty(Rml::PropertyId::OverflowX) == nullptr)
+    {
+        lane.SetProperty("overflow-x", "hidden");
+        lane.SetProperty("overflow-y", "hidden");
+    }
+}
+
+// The widest notice line now shown, in window px (the lines are .sharp-text: counter-scaled out of
+// the board's HUD scale, they are laid out at their size on the screen); 0 with none.
+float WidestNotice(Rml::Element& board)
+{
+    Rml::ElementList lines;
+    board.GetElementsByClassName(lines, "notice-text");
+    float widest = 0.f;
+    for (Rml::Element* line : lines)
+        widest = std::max(widest, line->GetBox().GetSize(Rml::BoxArea::Border).x);
+    return widest;
+}
+
+void PlaceNotices(Rml::Element& board, const Frame& frame)
+{
+    // The notices are centred on the screen, where an open window on the phone (the inventory, the
+    // character) covers half of it and lies under their lines. They centre in the world the windows
+    // leave instead, kept whole on the screen however wide a line.
+    const float screen = static_cast<float>(frame.screen.x);
+    const float left = UI::Placement::UncoveredWorldLeft();
+    const float right = frame.worldRight;
+    float centre = screen / 2.f;
+    if (right > left && right - left < screen - 1.f)
+    {
+        const float half = WidestNotice(board) / 2.f + frame.gap;
+        centre = (left + right) / 2.f;
+        if (screen - half >= half)
+            centre = std::clamp(centre, half, screen - half);
+        else
+            centre = screen / 2.f;
+    }
+    // The board is centred on its left edge (margin-left: -320px, its scale about its centre).
+    SetPx(board, Rml::PropertyId::Left, OffsetFor(board, {centre, 0.f}).x);
+}
+
 // The party's shown cards: how many, and one's size in the panel's reference px.
 struct PartyCards
 {
@@ -324,6 +377,8 @@ void PlaceParty(Rml::Element& panel, const Frame& frame)
 constexpr const char* CornerMoved[] = {"left", "top", "margin-left"};
 constexpr const char* PartyMoved[] = {"left", "top", "width", "height", "transform", "--root-scale"};
 constexpr const char* ChatMoved[] = {"margin-left"};
+constexpr const char* LaneMoved[] = {"left", "top", "width", "overflow-x", "overflow-y"};
+constexpr const char* BoardMoved[] = {"left"};
 
 constexpr Piece Pieces[] = {
     {"buff_strip.rml", "#panel", PlaceBuffs, CornerMoved, nullptr},
@@ -332,10 +387,34 @@ constexpr Piece Pieces[] = {
     {"main_frame.rml", "#skill_list", PlaceSkillList, CornerMoved, nullptr},
     {"party_list.rml", "#panel", PlaceParty, PartyMoved, ShownCards},
     {"workspace.rml", ".chat-stack", PlaceChat, ChatMoved, nullptr},
+    {"slide_notice.rml", "#lane", PlaceSlideLane, LaneMoved, BuffsBottom},
+    {"notices.rml", "#board", PlaceNotices, BoardMoved, WidestNotice},
 };
 constexpr std::size_t PieceCount = std::size(Pieces);
 
 std::array<PieceState, PieceCount> g_states;
+
+float BuffsBottom(Rml::Element& /*lane*/)
+{
+    // The buff strip is the first piece. It is drawn at the HUD's scale (a scale and a shift): two
+    // window points projected onto it give the window's y of its bottom.
+    static_assert(Pieces[0].document == "buff_strip.rml");
+    Rml::Element* panel = g_states[0].element.get();
+    if (panel == nullptr || !panel->IsVisible())
+        return 0.f;
+    bool shown = false;
+    for (int i = 0; i < panel->GetNumChildren() && !shown; ++i)
+        shown = panel->GetChild(i)->IsVisible();
+    const float height = panel->GetBox().GetSize(Rml::BoxArea::Border).y;
+    if (!shown || height <= 0.f)
+        return 0.f;
+    Rml::Vector2f top{0.f, 0.f};
+    Rml::Vector2f lower{0.f, 100.f};
+    if (!panel->Project(top) || !panel->Project(lower) || lower.y <= top.y)
+        return 0.f;
+    const float bottom = panel->GetAbsoluteOffset(Rml::BoxArea::Border).y + height;
+    return (bottom - top.y) * 100.f / (lower.y - top.y);
+}
 
 Frame ReadFrame(const Edges& edges)
 {

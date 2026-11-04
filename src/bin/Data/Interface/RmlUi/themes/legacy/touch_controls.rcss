@@ -585,6 +585,10 @@ body.pad #tc_soc_legend {
 .tc-skill.selected {
 	border-color: token(accent-gold);
 }
+/* No skill known yet (a new character): no buttons to fill, nor Skills to fill them with. */
+body.no-skills .tc-skill, body.no-skills #tc_skill_edit {
+	display: none;
+}
 /* Dim, yet in sight, with a plus: a tap on one opens the skill picker to fill it. */
 .tc-skill.empty {
 	opacity: 0.85;
@@ -903,6 +907,10 @@ body.pad.no-touch #tc_skill_3, body.pad.no-touch #tc_skill_4 {
 }
 body.pad.no-touch.pad-alt #tc_skill_3, body.pad.no-touch.pad-alt #tc_skill_4 {
 	display: block;
+}
+/* With no skills learnt RT shows no empty skill buttons either. */
+body.no-skills.pad.no-touch.pad-alt #tc_skill_3, body.no-skills.pad.no-touch.pad-alt #tc_skill_4 {
+	display: none;
 }
 body.pad.no-touch.pad-alt #tc_skill_0, body.pad.no-touch.pad-alt #tc_skill_1, body.pad.no-touch.pad-alt #tc_skill_2 {
 	display: none;

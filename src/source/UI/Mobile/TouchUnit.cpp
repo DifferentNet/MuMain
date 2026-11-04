@@ -5,6 +5,7 @@
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/Mobile/ButtonSize.h"
 #include "UI/Mobile/InterfaceMode.h"
+#include "UI/Placement/WindowPlacement.h"
 
 #ifdef __EMSCRIPTEN__
 #include "Core/Platform/web/WebScreen.h"
@@ -75,6 +76,10 @@ const Measured& Current()
         const float pixels = Measure(percent, settled);
         const float fullPixels = Measure(FullSize, settled);
         const auto at = settled ? now : std::chrono::steady_clock::time_point{};
+        // A window drawn in finger units (a workspace slot's data-touch-scale) is placed again: the
+        // page's zoom changes the unit with the window's size unchanged.
+        if (g_measured.pixels > 0.f && pixels != g_measured.pixels)
+            UI::Placement::Invalidate();
         g_measured = Measured{WindowWidth, WindowHeight, percent, at, pixels, fullPixels};
     }
     return g_measured;

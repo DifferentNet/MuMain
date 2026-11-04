@@ -243,9 +243,12 @@ void SlideLane::SlideMove()
 
 void SlideLane::ComputeSpeed()
 {
-    // The pointer over the lane's band (the screen's 480-unit height) slows the text down.
+    // The pointer over the lane's band (the screen's 480-unit height) slows the text down. Not in the
+    // phone's HUD: a finger does not hover, and the band is drawn under the top row
+    // (UI/Mobile/PhoneHudLayout), where its rows here would be the row's buttons.
     const float pointerY = UI::Scaling::LogicalY(UI::Scaling::ScreenOverlayTransform(static_cast<int>(WindowWidth), static_cast<int>(WindowHeight)), g_fWindowMouseY);
-    if (!(pointerY >= static_cast<float>(m_iPos_y - 3) && pointerY < static_cast<float>(m_iPos_y + m_iFontHeight + 3)))
+    if (UI::Mobile::ReplacesPcHud() ||
+        !(pointerY >= static_cast<float>(m_iPos_y - 3) && pointerY < static_cast<float>(m_iPos_y + m_iFontHeight + 3)))
     {
         m_fMoveAccel = 1.0f;
     }
