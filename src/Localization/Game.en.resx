@@ -15592,6 +15592,9 @@
   <data name="PadChooseFriendFirst" xml:space="preserve">
     <value>Teleport Ally: choose a party member with RB first</value>
   </data>
+  <data name="PadFriendTooFar" xml:space="preserve">
+    <value>Too far away: </value>
+  </data>
   <data name="PadBindPick" xml:space="preserve">
     <value>Pick a skill with the pointer and A, then press X, Y or B (RT + X or Y for buttons 4 and 5) to put it there</value>
   </data>

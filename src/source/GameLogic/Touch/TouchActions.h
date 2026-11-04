@@ -64,9 +64,10 @@ void HoldHelperForButtons(bool buttonsAct);
 [[nodiscard]] bool IsForceAttack();
 
 // The party member a tap on their party card chose (CPartyListWindow): the heal and buff buttons
-// cast on them while they are near, else on the character. A tap on the same card again, or on the
-// character's own, goes back to the character. FriendKey is NoTarget (-1) while none is chosen or
-// the one chosen is away.
+// walk up and cast on them while they are in sight (14 tiles); out of sight the chat says "Too far
+// away" and nothing is cast. One who leaves the party is forgotten. A tap on the same card again, or
+// on the character's own, goes back to the character. FriendKey is NoTarget (-1) while none is
+// chosen or the one chosen is out of sight.
 void ToggleFriend(int characterKey);
 [[nodiscard]] int FriendKey();
 // The pad's RB: the next party member near the character, in the party list's order; past the last
