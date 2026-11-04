@@ -644,15 +644,20 @@ void RequireClass(ITEM_ATTRIBUTE* pItem)
 
     // A leftover Summoner- or Rage Fighter-only item: no playable class can wear it, so say so instead of
     // showing no class line (which would read as "anyone can wear it").
+    // Items with no class at all (jewels, potions) keep showing no class line.
     bool anyPlayable = false;
+    bool anyRemoved = false;
     for (int i = 0; i < MAX_CLASS; ++i)
     {
-        if (isPlayableClass(i) && pItem->RequireClass[i] != 0)
-        {
+        if (pItem->RequireClass[i] == 0)
+            continue;
+
+        if (isPlayableClass(i))
             anyPlayable = true;
-        }
+        else
+            anyRemoved = true;
     }
-    if (!anyPlayable)
+    if (!anyPlayable && anyRemoved)
     {
         mu_swprintf(TextList[TextNum], L"%ls", I18N::Game::CanTWearItem);
         TextListColor[TextNum] = TEXT_COLOR_DARKRED;
