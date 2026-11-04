@@ -10,6 +10,7 @@
 #include "UI/Dialogs/CustomMessageBox.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
 #include "UI/Core/WindowCommon.h" // ShowChaosMixMenuDialog
+#include "GameLogic/Items/ExcellentDust.h"
 #include "GameLogic/Items/MixMgr.h"
 #include "Render/Models/ZzzBMD.h"
 #include "Render/Effects/ZzzEffect.h"
@@ -42,6 +43,9 @@ using namespace mu::ui::window;
 
 namespace
 {
+// MU Moldova: the Excellent Dust counter's first description row in the dust mode (two rows, the machine's last).
+constexpr int DustCounterRow = 7;
+
 // Native RenderText(x, y, text, boxWidth, ...) scales a line down to fit boxWidth
 // (UI::Scaling::FontScaleForBounds). The factor for a line measured in `probe`'s font (a bold
 // 1em element of this window); 1 = fits or no probe. `probeUnitsPerLayoutUnit` converts the
@@ -208,6 +212,9 @@ void CMixInventory::SetMixState(int iMixState)
         m_pNewInventoryCtrl->UnlockInventory();
         g_pMyInventory->GetInventoryCtrl()->UnlockInventory();
     }
+    // MU Moldova: a mix in the dust mode changed the account's dust: the counter asks again.
+    if (iMixState == MIX_FINISHED && GameLogic::ExcellentDust::IsDustMode())
+        GameLogic::ExcellentDust::Request();
     // Mix button's locked look (mix_locked) is refreshed from SyncRmlModel() each Update(), same
     // as it reads GetMixState() -- no need to push it from here too.
 }
@@ -241,6 +248,7 @@ void CMixInventory::OpeningProcess()
     SocketClient->ToGameServer()->SendCrywolfChaosRateBenefitRequest();
 
     SetMixState(mu::ui::window::CMixInventory::MIX_READY);
+    GameLogic::ExcellentDust::SetDustMode(false);
 
     if (g_MixRecipeMgr.GetMixInventoryType() == SEASON3A::MIXTYPE_GOBLIN_NORMAL)
     {
@@ -384,7 +392,10 @@ void CMixInventory::SyncRmlModel()
     const wchar_t* titleText = I18N::Game::Chaos;
     switch (g_MixRecipeMgr.GetMixInventoryType())
     {
-    case SEASON3A::MIXTYPE_GOBLIN_NORMAL:    titleText = I18N::Game::RegularCombination; break;
+    case SEASON3A::MIXTYPE_GOBLIN_NORMAL:
+        titleText = GameLogic::ExcellentDust::IsDustMode() ? I18N::Game::ExcellentDustMenuButton
+                                                           : I18N::Game::RegularCombination;
+        break;
     case SEASON3A::MIXTYPE_GOBLIN_CHAOSITEM: titleText = I18N::Game::ChaosWeaponCombination; break;
     case SEASON3A::MIXTYPE_GOBLIN_ADD380:    titleText = I18N::Game::ItemOptionCombination; break;
     case SEASON3A::MIXTYPE_CASTLE_SENIOR:    titleText = I18N::Game::Store1640; break;
@@ -712,7 +723,14 @@ void CMixInventory::SyncMixContentModel()
     }
     else if (g_MixRecipeMgr.IsMixInit())
     {
-        statusLines.push_back({ StringUtils::WideToNarrow(I18N::Game::PleaseUploadTheAssemblyItems), "missing" });
+        // MU Moldova: the dust mode says what to put in instead.
+        if (GameLogic::ExcellentDust::IsDustMode())
+        {
+            statusLines.push_back({ StringUtils::WideToNarrow(I18N::Game::ExcellentDustHint), "missing" });
+            statusLines.push_back({ StringUtils::WideToNarrow(I18N::Game::ExcellentDustHintCraft), "missing" });
+        }
+        else
+            statusLines.push_back({ StringUtils::WideToNarrow(I18N::Game::PleaseUploadTheAssemblyItems), "missing" });
     }
     else
     {
@@ -807,6 +825,17 @@ void CMixInventory::SyncMixContentModel()
         describe(I18N::Game::_255GoldenCherryBlossomBranches, white, 2, true);
         describe(I18N::Game::OnlyTheSameTypeOfCherryBlossomsBranchesCanBeUploaded, white, 3, true);
         describe(I18N::Game::MoreThan2X4SpaceInInventoryIsNeeded, white, 4, true);
+        break;
+    case SEASON3A::MIXTYPE_GOBLIN_NORMAL:
+        // MU Moldova: the dust mode's counter under the machine.
+        if (GameLogic::ExcellentDust::IsDustMode())
+        {
+            const std::wstring counter = GameLogic::ExcellentDust::CounterLine();
+            describe(counter.c_str(), white, DustCounterRow, true);
+            const std::wstring week = GameLogic::ExcellentDust::WeekLine();
+            if (!week.empty())
+                describe(week.c_str(), white, DustCounterRow + 1, true);
+        }
         break;
     case SEASON3A::MIXTYPE_ATTACH_SOCKET:
         showSocketPrompt = true;

@@ -15754,4 +15754,32 @@
   <data name="HelperPickQuestItems" xml:space="preserve">
     <value>Квестовые предметы</value>
   </data>
+  <!-- MU Moldova: Excellent Dust button in the Chaos Goblin's method menu -->
+  <data name="ExcellentDustMenuButton" xml:space="preserve">
+    <value>Пыль экселента</value>
+  </data>
+  <data name="ExcellentDustCounter" xml:space="preserve">
+    <value>Пыль: %ls (вещь стоит %ls)</value>
+  </data>
+  <data name="ExcellentDustWeek" xml:space="preserve">
+    <value>За неделю %ls из %ls, сброс через %ls</value>
+  </data>
+  <data name="ExcellentDustWaiting" xml:space="preserve">
+    <value>Пыль: спрашиваем сервер...</value>
+  </data>
+  <data name="ExcellentDustUnavailable" xml:space="preserve">
+    <value>Пыль экселента сейчас недоступна.</value>
+  </data>
+  <data name="ExcellentDustHint" xml:space="preserve">
+    <value>Экселент-вещи: в пыль.</value>
+  </data>
+  <data name="ExcellentDustHintCraft" xml:space="preserve">
+    <value>Пыль + Jewel of Chaos: вещь.</value>
+  </data>
+  <data name="ExcellentDustDaysHours" xml:space="preserve">
+    <value>%d д %d ч</value>
+  </data>
+  <data name="ExcellentDustHoursMinutes" xml:space="preserve">
+    <value>%d ч %d мин</value>
+  </data>
 </root>
