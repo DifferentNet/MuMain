@@ -894,6 +894,15 @@ namespace MUHelper
         }
 
         using GameLogic::Automation::SkillResult;
+
+        // Stunned or asleep, every cast reads Busy until it wears off. Ending the round then would skip the
+        // potions too, so a stunned helper with a buff due never drank; the buff waits, the round goes on.
+        if (m_lastSkillResult == SkillResult::Busy
+            && (g_isCharacterBuff((&Hero->Object), eDeBuff_Stun) || g_isCharacterBuff((&Hero->Object), eDeBuff_Sleep)))
+        {
+            return 1;
+        }
+
         if (m_lastSkillResult == SkillResult::Busy || m_lastSkillResult == SkillResult::Approaching)
         {
             return 0;
