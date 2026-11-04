@@ -64,6 +64,7 @@
 #include <optional>
 #include <time.h>
 #include <unordered_set>
+#include <cstring>
 #include <vector>
 
 #include "World/MapInfra/MapManager.h"
@@ -7267,7 +7268,48 @@ bool IsStrifeMap(int nMapIndex)
 
 unsigned int MarkColor[16];
 
-void CreateGuildMark(int nMarkIndex, bool blend)
+namespace
+{
+// One texture per guild mark slot and blend mode, uploaded again only when its pixels change.
+struct GuildMarkTextureSlot
+{
+    std::uint32_t texture = 0;
+    std::vector<std::uint8_t> pixels;
+};
+std::vector<GuildMarkTextureSlot> s_guildMarkTextures;
+
+std::uint32_t GuildMarkTexture(int nMarkIndex, bool blend, const BYTE* pixels, std::uint32_t width,
+                               std::uint32_t height)
+{
+    if (s_guildMarkTextures.empty())
+        s_guildMarkTextures.resize(static_cast<std::size_t>(MAX_MARKS) * 2u);
+
+    GuildMarkTextureSlot& slot = s_guildMarkTextures[static_cast<std::size_t>(nMarkIndex) * 2u + (blend ? 1u : 0u)];
+    const std::size_t size = static_cast<std::size_t>(width) * height * 4u;
+    auto& renderer = mu::GetRenderer();
+    if (slot.texture != 0u && !renderer.IsTextureRegistered(slot.texture))
+    {
+        slot.texture = 0u;
+        slot.pixels.clear();
+    }
+
+    if (slot.texture == 0u)
+    {
+        slot.texture = renderer.CreateTexture(width, height, pixels);
+        if (slot.texture == 0u)
+            return 0u;
+        slot.pixels.assign(pixels, pixels + size);
+    }
+    else if (slot.pixels.size() != size || std::memcmp(slot.pixels.data(), pixels, size) != 0)
+    {
+        renderer.QueueTextureUpdate(slot.texture, pixels, width, height);
+        slot.pixels.assign(pixels, pixels + size);
+    }
+    return slot.texture;
+}
+} // namespace
+
+std::uint32_t CreateGuildMark(int nMarkIndex, bool blend)
 {
     // Callers pass Hero->GuildMarkIndex straight through, which is -1 while the
     // hero has no guild (set on dissolve, and before GetGuildMarkIndex resolves
@@ -7275,7 +7317,7 @@ void CreateGuildMark(int nMarkIndex, bool blend)
     // array and feeds garbage to the texture upload - undefined, and a crash on
     // Linux. Skip rendering when there is no valid mark.
     if (nMarkIndex < 0 || nMarkIndex >= MAX_MARKS)
-        return;
+        return 0u;
 
     BITMAP_t* b = &Bitmaps[BITMAP_GUILD];
     int Width, Height;
@@ -7285,7 +7327,7 @@ void CreateGuildMark(int nMarkIndex, bool blend)
     if (!Buffer || Width == 0 || Height == 0)
     {
         mu::log::Get("gameplay")->error("[CreateGuildMark] BITMAP_GUILD not loaded (BitmapIndex={})", b->BitmapIndex);
-        return;
+        return 0u;
     }
     int alpha = 128;
     if (blend)
@@ -7357,9 +7399,21 @@ void CreateGuildMark(int nMarkIndex, bool blend)
         }
     }
 
+    // Each mark gets its own texture. The renderer applies texture uploads once per frame, before
+    // it draws, so filling the one shared BITMAP_GUILD for every player left all marks on screen
+    // showing whichever guild was filled last.
+    const std::uint32_t texture = GuildMarkTexture(nMarkIndex, blend, b->Buffer, static_cast<std::uint32_t>(Width),
+                                                   static_cast<std::uint32_t>(Height));
+    if (texture != 0u)
+    {
+        mu::GetRenderer().BindTexture(static_cast<int>(texture));
+        return texture;
+    }
+
     mu::GetRenderer().QueueTextureUpdate(b->BitmapIndex, b->Buffer, static_cast<std::uint32_t>(Width),
                                          static_cast<std::uint32_t>(Height));
     mu::GetRenderer().BindTexture(b->BitmapIndex);
+    return static_cast<std::uint32_t>(b->BitmapIndex);
 }
 
 void CreateCastleMark(int Type, BYTE* buffer, bool blend)
