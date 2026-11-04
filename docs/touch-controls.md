@@ -147,8 +147,8 @@ screen (the inventory, the character), the notices centre in the world it leaves
 screen. The notice ticker runs in a strip under the top row, right of the hero frame, clipped to it
 (`slide_notice.rml` `#lane`). The PC's HUD shows all of these as before.
 
-Also in the phone's HUD: the skill buttons and Skills hide until the character knows a skill (a new
-character has nothing to put on them); the MU Helper bar keeps only the position readout (its
+Wherever the touch or pad controls show, the skill buttons and Skills hide until the character knows a
+skill (a new character has nothing to put on them). Also in the phone's HUD: the MU Helper bar keeps only the position readout (its
 config, start and stop buttons are 18x13 dp, and Auto and Menu -> MU Helper do the same); the chat's
 input bar is drawn at at least 1.4 finger units per unit (its slot's `data-touch-scale`,
 `docs/rmlui-ui-system/window-placement.md`), so its type buttons and fields take a finger.
