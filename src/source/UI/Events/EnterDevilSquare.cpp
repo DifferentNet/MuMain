@@ -28,7 +28,9 @@ CEnterDevilSquare::CEnterDevilSquare() : m_View("devil_square_enter", "Data/Inte
     m_iDevilSquareLimitLevel[3][0] = 231; m_iDevilSquareLimitLevel[3][1] = 280;
     m_iDevilSquareLimitLevel[4][0] = 281; m_iDevilSquareLimitLevel[4][1] = 330;
     m_iDevilSquareLimitLevel[5][0] = 331; m_iDevilSquareLimitLevel[5][1] = 400;
-    m_iDevilSquareLimitLevel[6][0] = 0; m_iDevilSquareLimitLevel[6][1] = 0;
+    // Square 7: the third class from level 331 (MU Skynet has no master levels; the server's
+    // MiniGameDefinition asks the same, trim/bc8-ds7-third-class.sql).
+    m_iDevilSquareLimitLevel[6][0] = 331; m_iDevilSquareLimitLevel[6][1] = 400;
 
     m_iDevilSquareLimitLevel[7][0] = 15; m_iDevilSquareLimitLevel[7][1] = 110;
     m_iDevilSquareLimitLevel[8][0] = 111; m_iDevilSquareLimitLevel[8][1] = 160;
@@ -36,7 +38,7 @@ CEnterDevilSquare::CEnterDevilSquare() : m_View("devil_square_enter", "Data/Inte
     m_iDevilSquareLimitLevel[10][0] = 211; m_iDevilSquareLimitLevel[10][1] = 260;
     m_iDevilSquareLimitLevel[11][0] = 261; m_iDevilSquareLimitLevel[11][1] = 310;
     m_iDevilSquareLimitLevel[12][0] = 311; m_iDevilSquareLimitLevel[12][1] = 400;
-    m_iDevilSquareLimitLevel[13][0] = 0; m_iDevilSquareLimitLevel[13][1] = 0;
+    m_iDevilSquareLimitLevel[13][0] = 311; m_iDevilSquareLimitLevel[13][1] = 400;
 }
 
 CEnterDevilSquare::~CEnterDevilSquare()
@@ -136,27 +138,23 @@ int CEnterDevilSquare::CheckLimitLV(int iIndex)
         iVal = 7;
     }
 
-    int iLevel;
-    if (gCharacterManager.IsMasterLevel(CharacterAttribute->Class) == true)
-        iLevel = Master_Level_Data.nMLevel;
-    else
-        iLevel = CharacterAttribute->Level;
-    //Master_Level_Data.nMLevel
+    const int iLevel = CharacterAttribute->Level;
 
-    if (gCharacterManager.IsMasterLevel(CharacterAttribute->Class) == false)
+    // A third class goes to square 7 from its level on; below it (after a reset) it takes the square of
+    // its level like everyone else.
+    if (gCharacterManager.IsThirdClass(CharacterAttribute->Class)
+        && iLevel >= m_iDevilSquareLimitLevel[iVal + MAX_ENTER_GRADE - 1][0])
+        return MAX_ENTER_GRADE - 1;
+
+    for (int iCastleLV = 0; iCastleLV < MAX_ENTER_GRADE - 1; ++iCastleLV)
     {
-        for (int iCastleLV = 0; iCastleLV < MAX_ENTER_GRADE - 1; ++iCastleLV)
+        if (iLevel >= m_iDevilSquareLimitLevel[iVal + iCastleLV][0]
+            && iLevel <= m_iDevilSquareLimitLevel[iVal + iCastleLV][1])
         {
-            if (iLevel >= m_iDevilSquareLimitLevel[iVal + iCastleLV][0]
-                && iLevel <= m_iDevilSquareLimitLevel[iVal + iCastleLV][1])
-            {
-                iRet = iCastleLV;
-                break;
-            }
+            iRet = iCastleLV;
+            break;
         }
     }
-    else
-        iRet = MAX_ENTER_GRADE - 1;
 
     return iRet;
 }
@@ -184,7 +182,9 @@ void CEnterDevilSquare::OpenningProcess()
                     m_iDevilSquareLimitLevel[(iLimitLVIndex * MAX_ENTER_GRADE) + i][1]);
         buttons[i].label = sztext;
     }
-    mu_swprintf(sztext, I18N::Game::SquareNoDMasterLevel, 7);
+    mu_swprintf(sztext, I18N::MiniGameEntry::SquareThirdClass, 7,
+                m_iDevilSquareLimitLevel[(iLimitLVIndex * MAX_ENTER_GRADE) + MAX_ENTER_GRADE - 1][0],
+                m_iDevilSquareLimitLevel[(iLimitLVIndex * MAX_ENTER_GRADE) + MAX_ENTER_GRADE - 1][1]);
     buttons[MAX_ENTER_GRADE - 1].label = sztext;
     buttons[m_iNumActiveBtn].enabled = true;
 

@@ -29,7 +29,9 @@ CEnterBloodCastle::CEnterBloodCastle() : m_View("blood_castle_enter", "Data/Inte
     m_iBloodCastleLimitLevel[4][0] = 231; m_iBloodCastleLimitLevel[4][1] = 280;
     m_iBloodCastleLimitLevel[5][0] = 281; m_iBloodCastleLimitLevel[5][1] = 330;
     m_iBloodCastleLimitLevel[6][0] = 331; m_iBloodCastleLimitLevel[6][1] = 400;
-    m_iBloodCastleLimitLevel[7][0] = 0;   m_iBloodCastleLimitLevel[7][1] = 0;
+    // Castle 8: the third class from level 331 (MU Skynet has no master levels; the server's
+    // MiniGameDefinition asks the same, trim/bc8-ds7-third-class.sql).
+    m_iBloodCastleLimitLevel[7][0] = 331; m_iBloodCastleLimitLevel[7][1] = 400;
 
     m_iBloodCastleLimitLevel[8][0] = 10;  m_iBloodCastleLimitLevel[8][1] = 60;
     m_iBloodCastleLimitLevel[9][0] = 61;  m_iBloodCastleLimitLevel[9][1] = 110;
@@ -38,7 +40,7 @@ CEnterBloodCastle::CEnterBloodCastle() : m_View("blood_castle_enter", "Data/Inte
     m_iBloodCastleLimitLevel[12][0] = 211; m_iBloodCastleLimitLevel[12][1] = 260;
     m_iBloodCastleLimitLevel[13][0] = 261; m_iBloodCastleLimitLevel[13][1] = 310;
     m_iBloodCastleLimitLevel[14][0] = 311; m_iBloodCastleLimitLevel[14][1] = 400;
-    m_iBloodCastleLimitLevel[15][0] = 0;   m_iBloodCastleLimitLevel[15][1] = 0;
+    m_iBloodCastleLimitLevel[15][0] = 311; m_iBloodCastleLimitLevel[15][1] = 400;
 }
 
 CEnterBloodCastle::~CEnterBloodCastle()
@@ -114,20 +116,21 @@ int CEnterBloodCastle::CheckLimitLV(int iIndex)
 
     int iLevel = CharacterAttribute->Level;
 
-    if (gCharacterManager.IsMasterLevel(CharacterAttribute->Class) == false)
+    // A third class goes to castle 8 from its level on; below it (after a reset) it takes the castle of
+    // its level like everyone else.
+    if (gCharacterManager.IsThirdClass(CharacterAttribute->Class)
+        && iLevel >= m_iBloodCastleLimitLevel[iVal + MAX_ENTER_GRADE - 1][0])
+        return MAX_ENTER_GRADE - 1;
+
+    for (int iCastleLV = 0; iCastleLV < MAX_ENTER_GRADE - 1; ++iCastleLV)
     {
-        for (int iCastleLV = 0; iCastleLV < MAX_ENTER_GRADE - 1; ++iCastleLV)
+        if (iLevel >= m_iBloodCastleLimitLevel[iVal + iCastleLV][0]
+            && iLevel <= m_iBloodCastleLimitLevel[iVal + iCastleLV][1])
         {
-            if (iLevel >= m_iBloodCastleLimitLevel[iVal + iCastleLV][0]
-                && iLevel <= m_iBloodCastleLimitLevel[iVal + iCastleLV][1])
-            {
-                iRet = iCastleLV;
-                break;
-            }
+            iRet = iCastleLV;
+            break;
         }
     }
-    else
-        iRet = MAX_ENTER_GRADE - 1;
 
     return iRet;
 }
@@ -191,7 +194,9 @@ void CEnterBloodCastle::OpenningProcess()
             , m_iBloodCastleLimitLevel[(iLimitLVIndex * MAX_ENTER_GRADE) + i][1]);
         buttons[i].label = sztext;
     }
-    mu_swprintf(sztext, I18N::Game::CastleNoDMasterLevel, 8);
+    mu_swprintf(sztext, I18N::MiniGameEntry::CastleThirdClass, 8
+        , m_iBloodCastleLimitLevel[(iLimitLVIndex * MAX_ENTER_GRADE) + MAX_ENTER_GRADE - 1][0]
+        , m_iBloodCastleLimitLevel[(iLimitLVIndex * MAX_ENTER_GRADE) + MAX_ENTER_GRADE - 1][1]);
     buttons[MAX_ENTER_GRADE - 1].label = sztext;
     buttons[m_iNumActiveBtn].enabled = true;
 
