@@ -3587,7 +3587,7 @@ void ReceiveAction(const BYTE* ReceiveBuffer, int Size)
         c->TargetCharacter = HeroIndex;
         if (IsMonster(c))
         {
-            MUHelper::g_MuHelper.AddTarget(Key, true);
+            MUHelper::g_MuHelper.AddTarget(Key, true, iTargetKey == Hero->Key);
         }
 
         AttackPlayer = Index;

@@ -40,7 +40,7 @@ namespace MUHelper
 		void AddCost(int iCost) { m_iTotalCost += iCost; }
 		int GetTotalCost() { return m_iTotalCost; }
 
-		void AddTarget(int iTargetId, bool bIsAttacking);
+		void AddTarget(int iTargetId, bool bIsAttacking, bool bAttacksHero = false);
 		void DeleteTarget(int iTargetId);
 		void DeleteAllTargets();
 
@@ -118,6 +118,7 @@ namespace MUHelper
 		std::atomic<bool> m_bActive;
 		std::set<int> m_setTargets;
 		std::set<int> m_setTargetsAttacking;
+		std::set<int> m_setAttackersOfHero;
 		std::set<int> m_setItems;
 		std::map<int, int> m_mapPickupAttempts; // drop id -> pickups requested; guarded like m_setItems
 		int m_iCurrentItem;

@@ -327,7 +327,7 @@ namespace MUHelper
         }
     }
 
-    void CMuHelper::AddTarget(int iTargetId, bool bIsAttacking)
+    void CMuHelper::AddTarget(int iTargetId, bool bIsAttacking, bool bAttacksHero)
     {
         if (!m_bActive)
         {
@@ -357,9 +357,22 @@ namespace MUHelper
             _targetsLock.unlock();
         }
 
-        if (m_config.bUseSelfDefense && IsMonster(pTarget))
+        // "PVP Counterattack" (self-defense) turns to a monster that attacks the hero, within the hunting range,
+        // unless the current target attacks the hero too. It used to switch to any monster that appeared, took a
+        // step or was hit, at any distance: with several monsters about (an elf's Triple Shot hits three) the
+        // target changed several times a second and the hero kept turning and stepping between them (players,
+        // 2026-11-03).
+        if (m_config.bUseSelfDefense && bAttacksHero && IsMonster(pTarget) && iDistance <= m_iHuntingDistance)
         {
-            m_iCurrentTarget = iTargetId;
+            _targetsLock.lock();
+            const bool bCurrentAttacksHero = m_iCurrentTarget != -1 && m_setAttackersOfHero.count(m_iCurrentTarget) > 0;
+            m_setAttackersOfHero.insert(iTargetId);
+            _targetsLock.unlock();
+
+            if (!bCurrentAttacksHero)
+            {
+                m_iCurrentTarget = iTargetId;
+            }
         }
     }
 
@@ -369,6 +382,7 @@ namespace MUHelper
 
         m_setTargets.erase(iTargetId);
         m_setTargetsAttacking.erase(iTargetId);
+        m_setAttackersOfHero.erase(iTargetId);
 
         _targetsLock.unlock();
 
@@ -384,6 +398,7 @@ namespace MUHelper
 
         m_setTargets.clear();
         m_setTargetsAttacking.clear();
+        m_setAttackersOfHero.clear();
 
         _targetsLock.unlock();
     }
@@ -670,6 +685,11 @@ namespace MUHelper
     int CMuHelper::BuffTarget(CHARACTER* pTargetChar, ActionSkillType iBuffSkill)
     {
         OBJECT* obj = &pTargetChar->Object;
+        // Buffs that only ever land on the caster (Infinity Arrow, Berserker: target restriction Self in OpenMU's
+        // data) are looked up on the hero, whichever party member this round is about. Looked up on the member, who
+        // never has them, they were cast again on nearly every round in a party, and the elf jerked with the cast
+        // animation (players, 2026-11-03).
+        OBJECT* self = &Hero->Object;
 
         auto CastIfMissing = [&](bool bBuffActive, bool bTimerRespected, bool bNeedsTarget) -> int
         {
@@ -691,7 +711,7 @@ namespace MUHelper
 
         case AT_SKILL_INFINITY_ARROW:
         case AT_SKILL_INFINITY_ARROW_STR:
-            return CastIfMissing(g_isCharacterBuff(obj, eBuff_InfinityArrow), false, false);
+            return CastIfMissing(g_isCharacterBuff(self, eBuff_InfinityArrow), false, false);
 
         case AT_SKILL_SOUL_BARRIER:
         case AT_SKILL_SOUL_BARRIER_STR:
@@ -720,7 +740,7 @@ namespace MUHelper
 
         case AT_SKILL_ALICE_BERSERKER:
         case AT_SKILL_ALICE_BERSERKER_STR:
-            return CastIfMissing(g_isCharacterBuff(obj, eBuff_Berserker), false, false);
+            return CastIfMissing(g_isCharacterBuff(self, eBuff_Berserker), false, false);
 
         case AT_SKILL_ALICE_THORNS:
             return CastIfMissing(g_isCharacterBuff(obj, eBuff_Thorns), false, false);
