@@ -17,6 +17,7 @@
 #include "UI/Windows/LoginSceneUpdates.h"
 #include "UI/Core/WindowAccess.h"
 #include "UI/Social/SocialUpdates.h"
+#include <algorithm>
 #include <memory>
 #include "Guild/GuildCache.h"
 #include "Guild/GuildTypes.h"
@@ -6677,7 +6678,12 @@ void ReceiveMixExtended(std::span<const BYTE> ReceiveBuffer)
         AddMixResultMessage(true);
 
         UI::Mix::ClearItems();
-        UI::Mix::InsertItem(0, itemData);
+        // A mix that makes no item (Excellent Dust's distilling, recipe 53) succeeds with empty item bytes:
+        // inserting them would show a Kris +0 that the server doesn't have.
+        if (std::any_of(itemData.begin(), itemData.end(), [](BYTE b) { return b != 0; }))
+        {
+            UI::Mix::InsertItem(0, itemData);
+        }
 
         PlayBuffer(SOUND_MIX01);
         PlayBuffer(SOUND_JEWEL01);
