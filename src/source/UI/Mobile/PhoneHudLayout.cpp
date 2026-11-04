@@ -406,3 +406,16 @@ bool UI::Mobile::PhoneHudLayout::CoversLabel(const TouchTarget::Box& label)
 {
     return Fit::Overlaps({g_labelZones.data(), g_labelZoneCount}, label);
 }
+
+float UI::Mobile::PhoneHudLayout::TopClearance(float left, float right)
+{
+    // The first two zones are the top row's band and the hero frame (ReadLabelZones).
+    float bottom = 0.f;
+    for (std::size_t i = 0; i < std::min<std::size_t>(g_labelZoneCount, 2); ++i)
+    {
+        const TouchTarget::Box& zone = g_labelZones[i];
+        if (right > zone.left && left < zone.right)
+            bottom = std::max(bottom, zone.bottom);
+    }
+    return bottom;
+}
