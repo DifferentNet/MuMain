@@ -162,7 +162,10 @@ EM_BOOL OnMessage(int, const EmscriptenWebSocketMessageEvent* event, void* userD
     {
         Log(LogLevel::Error, "Malformed data from the server, disconnecting (handle " + std::to_string(handle) + ")");
         connection->closed = true;
-        emscripten_websocket_close(connection->socket, 1002, "malformed data");
+        // A page may only close with 1000 or 3000-4999: WebSocket.close(1002) throws InvalidAccessError,
+        // which stopped the whole game. 4002 is our own "malformed data" code.
+        constexpr unsigned short MalformedDataClosure = 4002;
+        emscripten_websocket_close(connection->socket, MalformedDataClosure, "malformed data");
         ReportDisconnected(handle, connection);
     }
     return EM_TRUE;
