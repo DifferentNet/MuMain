@@ -32,7 +32,6 @@
 
 extern MARK_t		GuildMark[MAX_MARKS];
 extern int			SelectMarkColor;
-extern unsigned int MarkColor[16];
 
 namespace
 {
@@ -57,18 +56,15 @@ namespace
         return FALSE;
     }
 
-    // The native editor's cell: RenderColorQuadARGB() read MarkColor[] (built for the mark
-    // texture, red in the low byte) as ARGB, so the editor shows red and blue swapped -- the
-    // original's own look, kept. Index 0 is the black cell with a grey cross.
+    // An editor cell or palette swatch, in the colours the finished mark, the guild window and the
+    // cloak show. Index 0 is the black cell with a grey cross. The original read MarkColor[] (red in
+    // the low byte) as ARGB, so the editor showed red and blue swapped: a mark drawn in blue and
+    // yellow came out red and cyan (ghinzuro, 2026-11-04).
     mu::ui::window::GuildMakeCellEntry EditorCell(int index)
     {
-        if (index <= 0 || static_cast<std::size_t>(index) >= std::size(MarkColor))
+        if (index <= 0 || index >= Guild::MarkPalette::ColorCount)
             return {"#000000ff", true};
-        const unsigned int argb = MarkColor[static_cast<std::size_t>(index)];
-        char color[16] = {};
-        std::snprintf(color, sizeof(color), "#%02x%02x%02x%02x", (argb >> 16) & 0xFFu, (argb >> 8) & 0xFFu,
-                      argb & 0xFFu, (argb >> 24) & 0xFFu);
-        return {color, false};
+        return {Guild::MarkPalette::CellColor(index), false};
     }
 
     // RenderText() shrinks a text wider than its box to fit it: the size it drew `text` at.
@@ -487,8 +483,6 @@ void CGuildMakeWindow::SyncContent()
     if (m_GuildMakeState == GUILDMAKE_INFO)
         return;
 
-    // The mark: CreateGuildMark(MARK_EDIT) fills MarkColor[], which the editor's cells read.
-    CreateGuildMark(MARK_EDIT);
     GuildMakeRmlModel& model = m_RmlView.GetModel();
     std::vector<GuildMakeCellEntry> cells;
     std::vector<Rml::String> markCells;

@@ -6562,11 +6562,14 @@ void WaitCharactersAnimation()
 
 extern thread_local float  ParentMatrix[3][4];
 
-void RenderGuild(OBJECT* o, int Type, vec3_t vPos)
+void RenderGuild(OBJECT* o, std::uint32_t markTexture, int Type, vec3_t vPos)
 {
+    if (markTexture == 0u)
+        return;
+
     EnableAlphaTest();
     EnableCullFace();
-    BindTexture(BITMAP_GUILD);
+    BindTexture(static_cast<int>(markTexture));
     mu::GetRenderer().PushMatrix();
 
     float Matrix[3][4];
@@ -9826,7 +9829,7 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                 && (c->GuildMarkIndex == MARK_EDIT || g_GuildCache.IsExistGuildMark(GuildMark[c->GuildMarkIndex].Key) == TRUE)
                 && (!g_isCharacterBuff(o, eBuff_Cloaking)))
             {
-                CreateGuildMark(c->GuildMarkIndex);
+                const std::uint32_t markTexture = CreateGuildMark(c->GuildMarkIndex);
                 if (gCharacterManager.GetBaseClass(c->Class) == CLASS_RAGEFIGHTER)
                 {
                     vec3_t vPos;
@@ -9841,11 +9844,11 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                     {
                         Vector(5.0f, 0.0f, -21.0f, vPos);
                     }
-                    RenderGuild(o, c->BodyPart[BODYPART_ARMOR].Type, vPos);
+                    RenderGuild(o, markTexture, c->BodyPart[BODYPART_ARMOR].Type, vPos);
                 }
                 else
                 {
-                    RenderGuild(o, c->BodyPart[BODYPART_ARMOR].Type);
+                    RenderGuild(o, markTexture, c->BodyPart[BODYPART_ARMOR].Type);
                 }
             }
         }
