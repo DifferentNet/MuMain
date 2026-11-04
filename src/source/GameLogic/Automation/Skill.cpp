@@ -2,6 +2,7 @@
 #include "GameLogic/Automation/Skill.h"
 
 #include "GameLogic/Automation/Attack.h"
+#include "GameLogic/Combat/CombatTarget.h"
 #include "GameLogic/Combat/SkillExecution.h"
 #include "GameLogic/Skills/SkillManager.h"
 #include "Engine/AI/ZzzAI.h"
@@ -235,5 +236,32 @@ SkillResult CastSkill(ActionSkillType skill, bool targetRequired, int targetKey,
 
     NoteAutomatedSend();
     return SkillResult::Cast;
+}
+
+SkillResult CastSkillAtTile(ActionSkillType skill, int tileX, int tileY)
+{
+    if (IsSwingInProgress())
+    {
+        return SkillResult::Busy;
+    }
+
+    g_MovementSkill.m_iSkill = skill;
+    g_MovementSkill.m_bMagic = true;
+    g_MovementSkill.m_iTarget = -1;
+
+    // CheckTarget takes the selected character first: with none, the tile stands in for the ground
+    // under the pointer. The player's selection is put back afterwards.
+    const int previousSelection = SelectedCharacter;
+    SelectedCharacter = -1;
+    GameLogic::Combat::SetGroundAim(tileX, tileY);
+    const int executed = GameLogic::Combat::ExecuteSkill(Hero, skill, gSkillManager.GetSkillDistance(skill, Hero));
+    GameLogic::Combat::ClearGroundAim();
+    SelectedCharacter = previousSelection;
+
+    if (executed == SkillExecutionRefused)
+    {
+        return SkillResult::Refused;
+    }
+    return executed == SkillExecutionCast ? SkillResult::Cast : SkillResult::NotReady;
 }
 } // namespace GameLogic::Automation

@@ -1,6 +1,6 @@
 // A gamepad laid out as an Xbox pad plays the game (the device is Core::Input::Gamepad), as Diablo's
-// pads do: a row of six action buttons, the potions on the bumper, trigger and d-pad, no pointer in
-// the world. It presses the on-screen controls' buttons (UI/HUD/TouchControls, shown with the pad's
+// pads do: a row of attack and three skills, RT held for two more, the potions on the left bumper and
+// trigger, no pointer in the world (ghinzuro, 2026-11-03: the game is played with 2-3 skills). It presses the on-screen controls' buttons (UI/HUD/TouchControls, shown with the pad's
 // glyphs while it is in use); on the login and character screens the frame hops over their controls
 // and the face buttons choose and start the character (docs/touch-controls.md).
 //
@@ -10,10 +10,13 @@
 // | Right stick | A flick picks the next target: right or down the next further, left or up the next nearer. With no foe near (a town), it picks the NPCs and players on view instead; the one chosen shows its name and a prompt |
 // | RS (the right stick pressed) | Back to the nearest target |
 // | A | Attack: a tap fights the target once, held it goes on. On a chosen NPC it talks; on a chosen player it walks up and opens the player menu (trade, party, duel); a foe coming near makes it attack again |
-// | X, Y, B, RB, RT | The five skill buttons: a tap uses the skill once, held it goes on |
+// | X, Y, B | The first three skill buttons: a tap uses the skill once, held it goes on. Teleport jumps the way the left stick points (GameLogic/Touch/TouchActions) |
+// | RT held | X and Y cast the skill buttons 4 and 5, shown in their places while it is held |
 // | LB, LT | The potions Q and W |
-// | D-pad left, right | The potions E and R |
-// | D-pad up | MU Helper on and off |
+// | RB | The next party member near for heals and buffs; past the last, the character itself |
+// | D-pad left | A tap: the map (Tab); held half a second: the Teleport window (M) |
+// | D-pad right | The inventory (I) |
+// | D-pad up | A tap: MU Helper on and off; held half a second: its settings (Z) |
 // | D-pad down | Pick up: held, it gathers the drops around; with none, a press talks to the nearest NPC. The drop it would take shows its name and a prompt (UI/HUD/PadOverlay) |
 // | LS (the left stick pressed) | Puts skills on the skill buttons |
 // | View | The Social panel (the players around: trade, party, guild) |

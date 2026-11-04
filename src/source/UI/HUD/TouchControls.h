@@ -35,7 +35,8 @@ enum class PadButton : std::uint8_t
     Menu,
     PotionQ,
     PotionW,
-    // The item hotkeys E and R: shown only while a pad is in use (its d-pad drinks them).
+    // The item hotkeys E and R: no layout shows them now (the keyboard drinks them; the pad's d-pad
+    // sides open the map and the inventory since 2026-11-03).
     PotionE,
     PotionR,
     // The Social panel (the pad's View button): the players around and what to do with them.
@@ -46,6 +47,9 @@ enum class PadButton : std::uint8_t
 
 // Holds or lets go of a control as a finger on it would. A press counts once per hold.
 void SetPadHeld(PadButton button, bool held);
+// The pad's right trigger is held (its second page of skills): the skill buttons 4 and 5 show in the
+// places of the first ones while the pad plays without fingers.
+void SetPadAlt(bool alt);
 
 // The control under a window pixel (the pad's pointer), or -1. The joystick's area does not count:
 // it walks only under a finger.
