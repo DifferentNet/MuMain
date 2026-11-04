@@ -4010,11 +4010,11 @@ void MoveCharacter(CHARACTER* c, OBJECT* o)
 {
     if (o->Type == MODEL_WARCRAFT)
     {
-        wchar_t Text[100];
-        wchar_t ID[100];
-        mu_swprintf(ID, L"%ls .", c->ID);
-        mu_swprintf(Text, I18N::Game::DToKalima, c->Level);
-        wcscat(ID, Text);
+        // "Magic stone of Xeed to Kalima 1"
+        wchar_t Text[100]{};
+        wchar_t ID[100]{};
+        _snwprintf_s(Text, std::size(Text), _TRUNCATE, I18N::Game::DToKalima, static_cast<int>(c->Level));
+        _snwprintf_s(ID, std::size(ID), _TRUNCATE, L"%ls %ls", c->ID, Text);
         AddObjectDescription(ID, o->Position);
     }
 
@@ -6562,11 +6562,14 @@ void WaitCharactersAnimation()
 
 extern thread_local float  ParentMatrix[3][4];
 
-void RenderGuild(OBJECT* o, int Type, vec3_t vPos)
+void RenderGuild(OBJECT* o, std::uint32_t markTexture, int Type, vec3_t vPos)
 {
+    if (markTexture == 0u)
+        return;
+
     EnableAlphaTest();
     EnableCullFace();
-    BindTexture(BITMAP_GUILD);
+    BindTexture(static_cast<int>(markTexture));
     mu::GetRenderer().PushMatrix();
 
     float Matrix[3][4];
@@ -8536,6 +8539,61 @@ static void RenderTreasureGoblinGlitter(CHARACTER* c, OBJECT* o)
     RenderTerrainAlphaBitmap(BITMAP_MAGIC + 1, o->Position[0], o->Position[1], Size, Size, Glow, -o->Angle[2]);
 }
 
+// MU Skynet: the cloud vortex over an open rift. Three arms of cloud sprites wind up a funnel that widens with
+// height and turns faster at the bottom; a dark core, a violet glow at the foot, a turning ring on the ground and a
+// few sparks. Everything is made anew each frame, so it lasts exactly as long as the server keeps the vortex.
+static void RenderRiftVortex(OBJECT* o)
+{
+    const float Seconds = WorldTime * 0.001f;
+    const float Pulse = sinf(WorldTime * 0.003f) * 0.15f + 0.85f;
+    const float TwoPi = 6.2831853f;
+    const int Arms = 3;
+    const int Levels = 8;
+    vec3_t Position, Light;
+
+    for (int arm = 0; arm < Arms; ++arm)
+    {
+        for (int level = 0; level < Levels; ++level)
+        {
+            const float h = (float)level / (float)(Levels - 1);
+            const float Radius = 25.f + h * h * 170.f;
+            const float Angle = Seconds * (2.6f - h * 1.4f) + arm * (TwoPi / Arms) + h * 3.0f;
+            Vector(o->Position[0] + cosf(Angle) * Radius, o->Position[1] + sinf(Angle) * Radius,
+                   o->Position[2] + 30.f + h * 300.f, Position);
+
+            const float Fade = (1.f - h * 0.4f) * Pulse;
+            Vector((0.75f + h * 0.15f) * Fade, (0.3f + h * 0.1f) * Fade, 1.0f * Fade, Light);
+            CreateSprite(BITMAP_EVENT_CLOUD, Position, 0.32f + h * 0.5f, Light, o,
+                         -Seconds * (160.f - h * 80.f) + arm * 120.f + level * 45.f);
+            Vector(0.5f * Fade, 0.25f * Fade, 0.9f * Fade, Light);
+            CreateSprite(BITMAP_LIGHT, Position, 0.7f + h * 0.6f, Light, o);
+        }
+    }
+
+    // The dark eye of the funnel, then a violet glow at its foot.
+    Vector(o->Position[0], o->Position[1], o->Position[2] + 120.f, Position);
+    Vector(0.3f, 0.3f, 0.3f, Light);
+    CreateSprite(BITMAP_CLUD64, Position, 1.0f, Light, o, Seconds * 40.f, 1);
+    Vector(o->Position[0], o->Position[1], o->Position[2] + 50.f, Position);
+    Vector(0.55f * Pulse, 0.2f * Pulse, 1.0f * Pulse, Light);
+    CreateSprite(BITMAP_LIGHT, Position, 3.0f * Pulse, Light, o);
+
+    if (rand_fps_check(2))
+    {
+        const float h = (float)(rand() % 100) * 0.01f;
+        const float Angle = (float)(rand() % 628) * 0.01f;
+        const float Radius = 25.f + h * h * 170.f;
+        Vector(o->Position[0] + cosf(Angle) * Radius, o->Position[1] + sinf(Angle) * Radius,
+               o->Position[2] + 30.f + h * 300.f, Position);
+        Vector(0.7f, 0.4f, 1.0f, Light);
+        CreateParticle(BITMAP_SHINY, Position, o->Angle, Light);
+    }
+
+    EnableAlphaBlend();
+    Vector(0.45f * Pulse, 0.15f * Pulse, 0.9f * Pulse, Light);
+    RenderTerrainAlphaBitmap(BITMAP_MAGIC + 1, o->Position[0], o->Position[1], 3.2f, 3.2f, Light, -Seconds * 50.f);
+}
+
 void CreateTreasureGoblinEscape(OBJECT* o, int monsterIndex)
 {
     vec3_t Light;
@@ -8573,6 +8631,12 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
 {
     if (g_isCharacterBuff(o, eBuff_CrywolfNPCHide))
     {
+        return;
+    }
+
+    if (c->MonsterIndex == MONSTER_RIFT_VORTEX)
+    {
+        RenderRiftVortex(o);
         return;
     }
 
@@ -9765,7 +9829,7 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                 && (c->GuildMarkIndex == MARK_EDIT || g_GuildCache.IsExistGuildMark(GuildMark[c->GuildMarkIndex].Key) == TRUE)
                 && (!g_isCharacterBuff(o, eBuff_Cloaking)))
             {
-                CreateGuildMark(c->GuildMarkIndex);
+                const std::uint32_t markTexture = CreateGuildMark(c->GuildMarkIndex);
                 if (gCharacterManager.GetBaseClass(c->Class) == CLASS_RAGEFIGHTER)
                 {
                     vec3_t vPos;
@@ -9780,11 +9844,11 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                     {
                         Vector(5.0f, 0.0f, -21.0f, vPos);
                     }
-                    RenderGuild(o, c->BodyPart[BODYPART_ARMOR].Type, vPos);
+                    RenderGuild(o, markTexture, c->BodyPart[BODYPART_ARMOR].Type, vPos);
                 }
                 else
                 {
-                    RenderGuild(o, c->BodyPart[BODYPART_ARMOR].Type);
+                    RenderGuild(o, markTexture, c->BodyPart[BODYPART_ARMOR].Type);
                 }
             }
         }
@@ -13174,7 +13238,8 @@ namespace
         const int rawType = static_cast<int>(type);
 
         // Special hard overrides first.
-        if (rawType == 451)
+        // MU Skynet: the rift vortex is only an effect, so it cannot be clicked or picked by the MU Helper.
+        if (rawType == 451 || type == MONSTER_RIFT_VORTEX)
         {
             return KIND_TMP;
         }
@@ -13597,6 +13662,17 @@ CHARACTER* CreateMonster(EMonsterType Type, int PositionX, int PositionY, int Ke
         c->Weapon[0].Level = 9;
         c->Object.Scale = 0.8f;
         wcscpy(c->ID, L"고블린");
+        break;
+    case MONSTER_RIFT_VORTEX:
+        // MU Skynet: an invisible stand-in model (it has no sounds); RenderCharacter draws only the swirl.
+        OpenNpc(MODEL_NPC_CHERRYBLOSSOMTREE);
+        c = CreateCharacter(Key, MODEL_NPC_CHERRYBLOSSOMTREE, PositionX, PositionY);
+        c->Object.Scale = 1.0f;
+        c->Object.m_fEdgeScale = 0.0f;
+        c->Object.m_bRenderShadow = false;
+        c->HideShadow = true;
+        c->NotRotateOnMagicHit = true;
+        wcscpy(c->ID, L"");
         break;
     case MONSTER_TREASURE_GOBLIN:
         // MU Skynet: the Golden Goblin's model, larger and empty-handed (it never attacks); it glitters and has a gold
@@ -15201,17 +15277,31 @@ CHARACTER* CreateHellGate(char* ID, int Key, EMonsterType Index, int x, int y, i
 {
     CHARACTER* portal = CreateMonster(Index, x, y, Key);
     portal->Level = Index - 152 + 1;
-    wchar_t portalText[100];
-    wchar_t name[sizeof portal->ID];
 
-    CMultiLanguage::ConvertFromUtf8(name, ID);
+    // The owner's name fills the packet's 10 bytes without an end when it is 10 letters long.
+    wchar_t name[MAX_USERNAME_SIZE + 1]{};
+    CMultiLanguage::ConvertFromUtf8(name, ID, MAX_USERNAME_SIZE);
+    name[MAX_USERNAME_SIZE] = L'\0';
 
-    mu_swprintf(portalText, portal->ID, name);
+    // portal->ID holds the NPC name's format ("Magic stone of %s "). The text is written back
+    // into it, cut to its size: a copy of a bigger buffer ran over Level and Key behind it,
+    // so the label showed "Kalima 111" or another wrong number.
+    // The name's "%s" is a wide string only in MSVC's wide printf; "%ls" is one everywhere (the browser build).
+    std::wstring format = portal->ID;
+    if (const size_t at = format.find(L"%s"); at != std::wstring::npos)
+        format.replace(at, 2, L"%ls");
+    wchar_t portalText[std::extent_v<decltype(CHARACTER::ID)>]{};
+    _snwprintf_s(portalText, std::size(portalText), _TRUNCATE, format.c_str(), name);
+
+    // No trailing spaces, so the label can add its own separator.
+    size_t length = wcslen(portalText);
+    while (length > 0 && portalText[length - 1] == L' ')
+        portalText[--length] = L'\0';
 
     if (portal->Level == 7)
         portal->Object.SubType = 1;
 
-    memcpy(portal->ID, portalText, sizeof portalText);
+    wcscpy(portal->ID, portalText);
 
     if (CreateFlag)
     {

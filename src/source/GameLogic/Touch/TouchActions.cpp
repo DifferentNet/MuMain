@@ -1362,20 +1362,20 @@ void ChooseNextFriend()
     // The party window clears the members' indexes each frame before the pad runs; this fills them again
     // (only the cleared ones, so the scene's own pass later finds them filled).
     g_pPartyManager->SearchPartyMember();
-    std::vector<const CHARACTER*> near;
+    std::vector<const CHARACTER*> members;
     for (int member = 0; member < PartyNumber; ++member)
     {
         const int index = Party[member].index;
         if (index >= 0 && index < MAX_CHARACTERS_CLIENT && IsFriend(&CharactersClient[index]))
-            near.push_back(&CharactersClient[index]);
+            members.push_back(&CharactersClient[index]);
     }
-    const auto chosen = std::find_if(near.begin(), near.end(),
+    const auto chosen = std::find_if(members.begin(), members.end(),
                                      [](const CHARACTER* member) { return member->Key == g_friendKey; });
-    const auto next = chosen == near.end() ? near.begin() : chosen + 1;
-    if (next == near.end())
+    const auto next = chosen == members.end() ? members.begin() : chosen + 1;
+    if (next == members.end())
     {
         g_friendKey = NoTarget;
-        UI::Chat::PostSystem(near.empty() ? I18N::Game::PadNoFriendNear : I18N::Game::PadFriendSelf,
+        UI::Chat::PostSystem(members.empty() ? I18N::Game::PadNoFriendNear : I18N::Game::PadFriendSelf,
                              mu::ui::window::TYPE_SYSTEM_MESSAGE);
         return;
     }

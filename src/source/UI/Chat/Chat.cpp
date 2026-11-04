@@ -6,6 +6,7 @@
 
 // Includes mirror ZzzInterface.cpp.
 #include "Core/Platform/Imm.h"
+#include "UI/Mobile/PhoneHudLayout.h"
 #include "UI/Core/UIManager.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
 #include "Render/Models/ZzzBMD.h"
@@ -716,6 +717,16 @@ void RenderBooleans()
             if (ci->x < 0) ci->x = 0;
             if (ci->x >= (int)WindowWidth - ci->Width) ci->x = WindowWidth - ci->Width;
             if (ci->y < 0) ci->y = 0;
+            // MU Skynet: on the phone a bubble pushed up to the top stops under the HUD there, which would
+            // cover it (UI/Mobile/PhoneHudLayout). The bubble is in 640x480 units, the HUD in window pixels.
+            if (const float clearance = UI::Mobile::PhoneHudLayout::TopClearance(
+                    ConvertPositionX(static_cast<float>(ci->x)), ConvertPositionX(static_cast<float>(ci->x + ci->Width)));
+                clearance > 0.f && g_fScreenRate_y > 0.f)
+            {
+                const int top = static_cast<int>(std::ceil((clearance - g_fScreenOffset_y) / g_fScreenRate_y));
+                if (ci->y < top)
+                    ci->y = top;
+            }
             if (ci->y >= (int)WindowHeight - ci->Height) ci->y = WindowHeight - ci->Height;
             RenderBoolean(ci->x, ci->y, ci);
         }

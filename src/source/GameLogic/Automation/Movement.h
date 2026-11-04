@@ -38,6 +38,33 @@ inline constexpr float ArrivalTolerance = 1.5f;
     return "unknown";
 }
 
+// Whether a walk back somewhere should be given up for a while: there is no way there, or it has gone on
+// `sinceCloser` (any time unit) without getting a tile closer, for at least `patience`. Monsters stand on their
+// tiles, so a ring of them shuts every way out (MU Helper among monsters, 2026-11-03).
+[[nodiscard]] constexpr bool ShouldGiveUpWalk(MoveResult result, long long sinceCloser, long long patience)
+{
+    return result == MoveResult::NoPath || (result == MoveResult::Walking && sinceCloser >= patience);
+}
+
+// How far a walk back still has to go, for telling whether it gets closer. A path that ends on the spot counts its
+// steps, so a detour round a wall is getting closer too. A path that doesn't, the path finder's way to the nearest
+// free tile when monsters stand all round or the spot is beyond its look (MAX_PATH_FIND), says nothing about the
+// spot: it counts the straight line from the character's tile instead, put above any whole path. Measured by the
+// partial path's steps, a short way to a free tile among monsters looked like nearly there, so the walk never got
+// given up and the helper stood walking instead of fighting until it was restarted (players, Kanturu 2, 2026-11-04).
+inline constexpr int PartialPathGap = 1000;
+
+[[nodiscard]] constexpr int WalkGap(bool pathEndsOnSpot, int pathSteps, int straightTiles)
+{
+    return pathEndsOnSpot ? pathSteps : PartialPathGap + straightTiles;
+}
+
+// Whether a walk got closer this round: its gap (WalkGap) is the smallest seen in this attempt.
+[[nodiscard]] constexpr bool IsWalkProgress(int gap, int bestGap)
+{
+    return gap < bestGap;
+}
+
 // Walks towards the map tile, one path per call, exactly as a click there
 // would. Call again on later frames until it reports Arrived.
 MoveResult WalkTo(int tileX, int tileY);

@@ -58,6 +58,7 @@
 #ifdef __EMSCRIPTEN__
 #include "Core/Platform/web/WebDevice.h"
 #include "Core/Platform/web/WebDisplay.h"
+#include "Core/Platform/web/WebFileSystem.h"
 #include "Core/Platform/web/WebKeyboard.h"
 #include "Core/Platform/web/WebPageView.h"
 #include "UI/RmlBridge/RmlNumericInputFilter.h"
@@ -2112,6 +2113,8 @@ MSG MainLoop()
                 // it moved (options open or closed).
                 Render::Look::ApplyPendingTuning();
 #ifdef __EMSCRIPTEN__
+                // Between frames, where no texture file is open.
+                mu::web::InstallLatePack();
                 MuWebFollowPageSize();
                 UI::Mobile::FollowPage();
                 mu::web::ShowInWorld(SceneFlag == MAIN_SCENE);
@@ -2252,7 +2255,7 @@ HFONT CreateFontForFamily(int size, int weight, std::string_view family)
 HFONT CreateUIFont(int size, int weight)
 {
     const std::string configuredFamily = WideToUtf8(GameConfig::GetInstance().GetFontSelection());
-    return CreateFontForFamily(size, weight, ResolveBundledFont(configuredFamily).family);
+    return CreateFontForFamily(size, weight, ResolveOpenableBundledFont(configuredFamily).family);
 }
 
 bool CreateNewFonts(FontSizes sizes)

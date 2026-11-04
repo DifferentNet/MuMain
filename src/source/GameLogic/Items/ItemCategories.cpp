@@ -184,6 +184,45 @@ namespace GameLogic::Items
         }
     }
 
+    // The MU Helper's "Quest items" pick-up option (ghinzuro, 2026-11-03). Cash-shop tickets are left out, and so are
+    // the Blood Castle and Devil Square ticket parts (Scroll of Archangel, Blood Bone, Devil's Eye and Key):
+    // the shops sell those tickets (ghinzuro, 2026-11-03).
+    bool IsQuestItem(const ITEM* pItem)
+    {
+        switch (pItem->Type)
+        {
+        case ITEM_SYMBOL_OF_KUNDUN:
+        case ITEM_LOST_MAP:
+        case ITEM_DEVILS_INVITATION:
+        case ITEM_INVISIBILITY_CLOAK:
+        case ITEM_ARMOR_OF_GUARDSMAN:
+        case ITEM_SCROLL_OF_BLOOD:
+        case ITEM_FIRST_SECROMICON_FRAGMENT:
+        case ITEM_SECOND_SECROMICON_FRAGMENT:
+        case ITEM_THIRD_SECROMICON_FRAGMENT:
+        case ITEM_FOURTH_SECROMICON_FRAGMENT:
+        case ITEM_FIFTH_SECROMICON_FRAGMENT:
+        case ITEM_SIXTH_SECROMICON_FRAGMENT:
+        case ITEM_FLAME_OF_CONDOR:
+        case ITEM_FEATHER_OF_CONDOR:
+        case ITEM_LOCHS_FEATHER:
+        // Class quest items: 2nd class (Scroll of Emperor / Ring of Honor, Broken Sword / Dark Stone, Tear of Elf,
+        // Soul Shard of Wizard) and 3rd class (Flame of Death Beam Knight, Horn of Hell Maine, Feather of Dark
+        // Phoenix, Eye of Abyssal).
+        case ITEM_SCROLL_OF_EMPEROR_RING_OF_HONOR:
+        case ITEM_BROKEN_SWORD_DARK_STONE:
+        case ITEM_TEAR_OF_ELF:
+        case ITEM_SOUL_SHARD_OF_WIZARD:
+        case ITEM_FLAME_OF_DEATH_BEAM_KNIGHT:
+        case ITEM_HORN_OF_HELL_MAINE:
+        case ITEM_FEATHER_OF_DARK_PHOENIX:
+        case ITEM_EYE_OF_ABYSSAL:
+            return true;
+        default:
+            return false;
+        }
+    }
+
     bool IsRefineStone(const ITEM* pItem)
     {
         return HasTag(pItem, ItemTag::RefineStone);

@@ -17,6 +17,7 @@
 #include "UI/Windows/LoginSceneUpdates.h"
 #include "UI/Core/WindowAccess.h"
 #include "UI/Social/SocialUpdates.h"
+#include <algorithm>
 #include <memory>
 #include "Guild/GuildCache.h"
 #include "Guild/GuildTypes.h"
@@ -857,9 +858,15 @@ int SummonLife = 0;
 
 extern void StopMusic();
 
+extern BOOL g_bPacketAfter_EquipmentItem;
+
 void InitGame()
 {
     EnableUse = 0;
+    // A relog or a server change starts without a move waiting for its answer
+    // and without a picked item: both used to outlive Select Server.
+    ResetItemMoveState();
+    g_bPacketAfter_EquipmentItem = FALSE;
     SendGetItem = -1;
     SummonLife = 0;
     SoccerTime = 0;
@@ -1648,6 +1655,8 @@ BOOL ReceiveInventoryExtended(std::span<const BYTE> ReceiveBuffer)
     }
 
     UI::Inventory::ClearAllItems();
+    // The list is the server's whole inventory: an item move given up on before it is settled.
+    NoteInventoryListReceived();
 
     auto Data = safe_cast<PHEADER_DEFAULT_SUBCODE_WORD>(ReceiveBuffer);
     if (Data == nullptr)
@@ -3587,7 +3596,7 @@ void ReceiveAction(const BYTE* ReceiveBuffer, int Size)
         c->TargetCharacter = HeroIndex;
         if (IsMonster(c))
         {
-            MUHelper::g_MuHelper.AddTarget(Key, true);
+            MUHelper::g_MuHelper.AddTarget(Key, true, iTargetKey == Hero->Key);
         }
 
         AttackPlayer = Index;
@@ -6203,8 +6212,26 @@ BYTE g_byPacketAfter_EquipmentItem[256];
 
 void ReceiveTradeExit(const BYTE* ReceiveBuffer);
 
+// A trade exit that came while a move waited for its answer.
+static void FlushPacketAfterItemMove()
+{
+    if (!g_bPacketAfter_EquipmentItem)
+        return;
+    g_bPacketAfter_EquipmentItem = FALSE;
+    ReceiveTradeExit(g_byPacketAfter_EquipmentItem);
+}
+
 BOOL ReceiveEquipmentItemExtended(std::span<const BYTE> ReceiveBuffer)
 {
+    if (TakeLateItemMoveAnswer())
+    {
+        // The answer to a move the client gave up on (IsItemMovePending): the
+        // picked item went back already, and the inventory list asked for then
+        // follows this packet and puts every item where the server has it.
+        g_ConsoleDebug->Write(MCD_RECEIVE, L"0x24 late answer to an item move, left to the inventory list");
+        FlushPacketAfterItemMove();
+        return TRUE;
+    }
     EquipmentItem = false;
     auto Data = safe_cast<PHEADER_DEFAULT_SUBCODE_ITEM_EXTENDED>(ReceiveBuffer);
     if (Data == nullptr)
@@ -6268,11 +6295,7 @@ BOOL ReceiveEquipmentItemExtended(std::span<const BYTE> ReceiveBuffer)
         UI::Inventory::RejectTransfer();
     }
 
-    if (g_bPacketAfter_EquipmentItem)
-    {
-        ReceiveTradeExit(g_byPacketAfter_EquipmentItem);
-        g_bPacketAfter_EquipmentItem = FALSE;
-    }
+    FlushPacketAfterItemMove();
 
     g_ConsoleDebug->Write(MCD_RECEIVE, L"0x24 [ReceiveEquipmentItem(%d %d)]", Data->SubCode, Data->Index);
 
@@ -6655,7 +6678,12 @@ void ReceiveMixExtended(std::span<const BYTE> ReceiveBuffer)
         AddMixResultMessage(true);
 
         UI::Mix::ClearItems();
-        UI::Mix::InsertItem(0, itemData);
+        // A mix that makes no item (Excellent Dust's distilling, recipe 53) succeeds with empty item bytes:
+        // inserting them would show a Kris +0 that the server doesn't have.
+        if (std::any_of(itemData.begin(), itemData.end(), [](BYTE b) { return b != 0; }))
+        {
+            UI::Mix::InsertItem(0, itemData);
+        }
 
         PlayBuffer(SOUND_MIX01);
         PlayBuffer(SOUND_JEWEL01);
@@ -7199,7 +7227,7 @@ void ReceiveTradeYourResult(const BYTE* ReceiveBuffer)
 
 void ReceiveTradeExit(const BYTE* ReceiveBuffer)
 {
-    if (EquipmentItem)
+    if (IsItemMovePending())
     {
         if (!g_bPacketAfter_EquipmentItem)
         {

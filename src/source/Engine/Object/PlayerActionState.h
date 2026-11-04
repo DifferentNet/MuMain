@@ -31,6 +31,26 @@ namespace Engine::Object
                  (currentAction >= PLAYER_RAGE_FENRIR_WALK && currentAction <= PLAYER_RAGE_FENRIR_STAND_ONE_LEFT));
     }
 
+    // True when a player's action lets a skill start: one of the stand poses (on foot, mounted,
+    // two-hand sword, Fenrir, the Rage Fighter's). ExecuteSkill starts no skill from any other
+    // action: not while walking, nor while flinching from a hit.
+    inline bool IsSkillReadyAction(int currentAction)
+    {
+        return !(currentAction < PLAYER_STOP_MALE
+            || currentAction > PLAYER_STOP_RIDE_WEAPON
+            && currentAction != PLAYER_STOP_TWO_HAND_SWORD_TWO
+            && currentAction != PLAYER_SKILL_HELL_BEGIN
+            && currentAction != PLAYER_DARKLORD_STAND
+            && currentAction != PLAYER_STOP_RIDE_HORSE
+            && currentAction != PLAYER_FENRIR_STAND
+            && currentAction != PLAYER_FENRIR_STAND_TWO_SWORD
+            && currentAction != PLAYER_FENRIR_STAND_ONE_RIGHT
+            && currentAction != PLAYER_FENRIR_STAND_ONE_LEFT
+            && !(currentAction >= PLAYER_RAGE_FENRIR_STAND && currentAction <= PLAYER_RAGE_FENRIR_STAND_ONE_LEFT)
+            && currentAction != PLAYER_RAGE_UNI_STOP_ONE_RIGHT
+            && currentAction != PLAYER_STOP_RAGEFIGHTER);
+    }
+
     // True while a player is sitting or holding a pose (PLAYER_SIT1 ..
     // PLAYER_POSE_FEMALE1). Used to keep these animations from being reset to the
     // stand pose when equipment or class changes.

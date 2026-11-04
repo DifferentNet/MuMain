@@ -1,0 +1,110 @@
+/* Modern theme for CRenaShopWindow (the Golden Archer's Rena shop): docked_panel_frame.rcss's forged panel (linked
+   first) at the full dock height, the modern exit button and the event entry's forged button (event_entry.rcss, also
+   the shop's two buy buttons), in the Tier Maps window's look (tier_maps.rcss). Geometry is the legacy one: reference px inside #panel, physical px
+   (reference px times --root-scale) inside the panes. */
+
+#panel { height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; transform-origin: left top; }
+
+#btn_exit {
+	position: absolute;
+	left: 13px;
+	top: 392px;
+	width: 36px;
+	height: 28px;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+	pointer-events: auto;
+}
+#btn_exit:hover { border-color: token(accent-steel-hover); }
+
+.rs-title { left: 0; top: 12px; text-align: center; font-weight: bold; pointer-events: none; }
+#rs_balance { left: 12px; top: 34px; font-weight: bold; pointer-events: none; }
+#rs_bag { left: 12px; top: 49px; pointer-events: none; }
+#rs_head { left: 12px; top: 64px; --flow-w: 166px; line-height: 1.12; }
+
+#rs_list { left: 12px; top: 94px; --flow-w: 166px; line-height: 1.12; }
+.rs-tabs { display: flex; margin-bottom: calc(3px * var(--root-scale)); }
+.rs-tab {
+	display: block;
+	width: calc(52px * var(--root-scale));
+	margin-right: calc(2px * var(--root-scale));
+	padding: calc(2px * var(--root-scale)) 0;
+	text-align: center;
+	border-radius: token(radius-sm)px;
+	cursor: pointer;
+	pointer-events: auto;
+	background-color: token(surface-raised);
+}
+.rs-tab-label { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+.rs-row { display: block; white-space: nowrap; }
+.rs-row.title { margin-top: calc(2px * var(--root-scale)); font-weight: bold; }
+.rs-row.name { margin-top: calc(3px * var(--root-scale)); font-weight: bold; }
+.rs-row.good, .rs-row.bad { padding-left: calc(4px * var(--root-scale)); }
+.rs-row.more { padding-left: calc(8px * var(--root-scale)); }
+.rs-row.pick { cursor: pointer; pointer-events: auto; }
+
+#rs_foot { left: 12px; top: 336px; --flow-w: 166px; line-height: 1.12; }
+.rs-hint { display: block; white-space: nowrap; }
+
+#rs_give {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	height: calc(29px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+#rs_give:hover { border-color: token(accent-steel-hover); }
+#rs_give:active { background-color: token(surface-recessed); }
+#rs_give.off { opacity: 0.45; cursor: arrow; }
+#rs_give.off:hover { border-color: token(border-frame); }
+.rs-btn-label { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+
+#rs_buttons { display: flex; justify-content: space-between; margin-top: calc(4px * var(--root-scale)); }
+.rs-act-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	width: calc(81px * var(--root-scale));
+	height: calc(29px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+.rs-act-btn:hover { border-color: token(accent-steel-hover); }
+.rs-act-btn:active { background-color: token(surface-recessed); }
+.rs-act-btn.off { opacity: 0.45; cursor: arrow; }
+.rs-act-btn.off:hover { border-color: token(border-frame); }
+
+.rs-title { color: token(accent-gold); }
+#rs_balance { color: token(accent-gold); }
+#rs_bag { color: token(text-secondary); }
+.rs-tab { color: token(text-muted); }
+.rs-tab:hover { border-color: token(accent-steel-hover); background-color: rgba(255, 255, 255, 20); }
+.rs-tab.selected { color: token(accent-gold); background-color: rgba(255, 200, 90, 40); }
+.rs-row { color: token(text-secondary); }
+.rs-row.title { color: token(text-primary); }
+.rs-row.good { color: token(semantic-success); }
+.rs-row.bad { color: token(semantic-danger); }
+.rs-row.name { color: token(accent-gold); }
+.rs-row.dim { color: token(text-muted); }
+.rs-row.pick:hover { background-color: rgba(255, 255, 255, 14); }
+.rs-row.selected { background-color: rgba(255, 200, 90, 40); }
+.rs-hint { color: token(text-secondary); }
+.rs-hint.good { color: token(semantic-success); }
+.rs-hint.bad { color: token(semantic-danger); }
+.rs-btn-label { color: token(text-primary); }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+#rs_title { width: calc(100% * var(--root-scale)); }
+#rs_balance, #rs_bag { width: calc(166px * var(--root-scale)); }

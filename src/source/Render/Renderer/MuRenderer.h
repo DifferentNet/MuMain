@@ -580,6 +580,11 @@ public:
     {
         return false;
     }
+    // Attaches the Chinese and Korean fallbacks the browser downloads after the start
+    // (BundledFonts.h IsLateFallbackFont), once they are there.
+    virtual void AttachLateFallbackFonts()
+    {
+    }
 
     // Cached window height (updated per-frame in BeginFrame).
     [[nodiscard]] virtual int GetCachedWindowHeight()

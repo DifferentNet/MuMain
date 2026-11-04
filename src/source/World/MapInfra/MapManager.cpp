@@ -23,6 +23,13 @@
 #endif
 #ifdef __EMSCRIPTEN__
 #include "Core/Platform/web/WebFileSystem.h"
+#include "Render/Renderer/MuRenderer.h"
+#include "Render/RmlUi/RmlUiRuntime.h"
+#include "Core/Platform/BundledFonts.h"
+#include "Core/Utilities/StringUtils.h"
+#include "Data/GameConfig/GameConfig.h"
+#include "UI/RmlBridge/RmlTheme.h"
+void ReinitializeFonts();
 #endif
 
 CMapManager gMapManager;
@@ -1225,6 +1232,31 @@ void CMapManager::LoadWorld(int Map)
 #ifdef __EMSCRIPTEN__
     // In the browser: the map's files (Data/WorldN, Data/ObjectN) in one download before Load() reads them.
     mu::web::LoadWorldFiles(iMapWorld);
+    // Chinese and Korean fonts downloaded since the last map open now, under the loading screen. The
+    // first map in the game starts their download, so it doesn't share the line with that map's pack.
+    if (mu::web::LateFontsReady())
+    {
+        mu::GetRenderer().AttachLateFallbackFonts();
+        RmlUiLoadLateFonts();
+        // A player who chose a late family (Noto Sans TC) got the default one at the start
+        // (ResolveOpenableBundledFont): the fonts reopen with the chosen family once, now.
+        static bool chosenLateFamilyOpened = false;
+        if (!chosenLateFamilyOpened)
+        {
+            chosenLateFamilyOpened = true;
+            const std::string family = StringUtils::WideToNarrow(GameConfig::GetInstance().GetFontSelection().c_str());
+            if (IsLateFallbackFont(ResolveBundledFont(family)))
+            {
+                ReinitializeFonts();
+                UI::RmlBridge::ApplySelectedFontFamily(family);
+            }
+        }
+    }
+    else if (WorldActive != WD_73NEW_LOGIN_SCENE && WorldActive != WD_74NEW_CHARACTER_SCENE &&
+             WorldActive != WD_77NEW_LOGIN_SCENE && WorldActive != WD_78NEW_CHARACTER_SCENE)
+    {
+        mu::web::DownloadLateFonts();
+    }
 #endif
     this->Load();
 

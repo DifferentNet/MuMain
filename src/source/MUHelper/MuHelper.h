@@ -40,7 +40,7 @@ namespace MUHelper
 		void AddCost(int iCost) { m_iTotalCost += iCost; }
 		int GetTotalCost() { return m_iTotalCost; }
 
-		void AddTarget(int iTargetId, bool bIsAttacking);
+		void AddTarget(int iTargetId, bool bIsAttacking, bool bAttacksHero = false);
 		void DeleteTarget(int iTargetId);
 		void DeleteAllTargets();
 
@@ -83,7 +83,6 @@ namespace MUHelper
 		int ComputeDistanceByRange(int iRange);
 		int ComputeDistanceFromTarget(CHARACTER* pTarget);
 		int ComputeDistanceBetween(POINT posA, POINT posB);
-		int SimulateMove(POINT posMove);
 		int ObtainItem();
 		int CountPickupAttempt(int iItemId);
 		int SelectItemToObtain();
@@ -119,12 +118,15 @@ namespace MUHelper
 		std::atomic<bool> m_bActive;
 		std::set<int> m_setTargets;
 		std::set<int> m_setTargetsAttacking;
+		std::set<int> m_setAttackersOfHero;
 		std::set<int> m_setItems;
 		std::map<int, int> m_mapPickupAttempts; // drop id -> pickups requested; guarded like m_setItems
 		int m_iCurrentItem;
 		int m_iCurrentTarget;
 		int m_iCurrentBuffIndex;
 		int m_iCurrentBuffPartyIndex;
+		int m_iBuffWaitRounds = 0;                                          // rounds the current member's buff waited
+		static constexpr int BuffWaitRoundLimit = 8;                        // rounds, about 2 seconds
 		int m_iComboState;
 		ActionSkillType m_iCurrentSkill;
 		int m_iHuntingDistance;
@@ -166,6 +168,13 @@ namespace MUHelper
 		std::chrono::steady_clock::time_point m_walkWatchSince{};
 		POINT m_posWalkWatch{};
 		std::chrono::steady_clock::time_point m_noTargetInReachSince{};
+		// The walk back to the start spot (Regroup) is put off for RegroupRest when there is no way there or it
+		// gets no closer (WalkGap) for RegroupPatience, as with monsters all round (2026-11-03); the helper fights meanwhile.
+		static constexpr std::chrono::milliseconds RegroupPatience{ 2000 };
+		static constexpr std::chrono::seconds RegroupRest{ 3 };
+		std::chrono::steady_clock::time_point m_regroupSince{};
+		std::chrono::steady_clock::time_point m_regroupRestUntil{};
+		int m_iRegroupBestGap = 0; // the smallest WalkGap back seen in this attempt
 		static constexpr std::chrono::seconds ForgottenTargetRest{ 2 };
 		std::map<int, std::chrono::steady_clock::time_point> m_mapForgottenUntil; // monster key -> back in the list
 	};

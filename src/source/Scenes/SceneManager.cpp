@@ -121,6 +121,7 @@ void SetShowDebugInfo(bool enabled)
     if (enabled && !g_bShowDebugInfo)
         ResetFrameStats();
     g_bShowDebugInfo = enabled;
+    FrameProfiler::g_TimingWanted = enabled || std::getenv("MU_RENDER_TIMING") != nullptr;
     if (enabled) g_bShowFpsCounter = false;
 }
 

@@ -17,6 +17,21 @@ bool MountGameFiles();
 // Without a pack the files still download one by one as the game opens them.
 void LoadWorldFiles(int world);
 
+// Starts downloading the Chinese and Korean fallback fonts (BundledFonts.h IsLateFallbackFont) in the
+// background, into the service worker's store, so that opening them later reads the device. Call it
+// once the game is in a map, so they don't share the line with the startup pack or a map's pack. Does
+// nothing while a download runs or after one finished; a failed one starts again at the next call.
+void DownloadLateFonts();
+
+// True once DownloadLateFonts finished.
+bool LateFontsReady();
+
+// Once the page downloaded the late pack (packs/startup-late.pack, tools/web/make_startup_pack.py:
+// textures the game reads only once it is played), writes its files into /game in place of their links,
+// as the startup pack's are. Call it between frames, where no file of the game is open; it returns at
+// once until the pack is here, and does nothing after it was taken.
+void InstallLatePack();
+
 // Where the page's thread downloads the game's files (Safari), reads the file at `path` whole now, the
 // game waiting for it the way it waits for a frame, through the service worker, which keeps it on the
 // device; the next fopen of it, on any thread, gets it from memory. For a file another thread opens:

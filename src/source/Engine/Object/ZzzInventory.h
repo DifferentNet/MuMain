@@ -136,6 +136,17 @@ extern ITEM* CheckInvenParent;
 extern BYTE BuyItem[4];
 extern int  EnableUse;
 extern bool EquipmentItem;
+// Whether an item move still waits for the server's answer. A wait longer than
+// a few seconds ends here: the server never answers a move whose handler failed,
+// and the flag used to stay set for the rest of the process (no move, no drop,
+// the item stuck on the cursor even after a relog). Read this, not EquipmentItem.
+bool IsItemMovePending();
+// Takes the answer of a move that IsItemMovePending gave up on: true once, until
+// the inventory list asked for then has come (NoteInventoryListReceived).
+bool TakeLateItemMoveAnswer();
+void NoteInventoryListReceived();
+// A new game session: no move waits, nothing is on the cursor.
+void ResetItemMoveState();
 extern wchar_t	g_lpszKeyPadInput[2][MAX_KEYPADINPUT + 1];
 
 #ifdef ASG_ADD_GENS_SYSTEM
@@ -174,7 +185,8 @@ void ClosePersonalShop();
 void ClearPersonalShop();
 bool IsExistUndecidedPrice();
 
-void CreateGuildMark(int nMarkIndex, bool blend = true);
+// Fills the mark's texture (one per guild) and binds it; returns the renderer texture id, 0 if none.
+std::uint32_t CreateGuildMark(int nMarkIndex, bool blend = true);
 void CreateCastleMark(int Type, BYTE* buffer = NULL, bool blend = true);
 
 namespace UI::Items

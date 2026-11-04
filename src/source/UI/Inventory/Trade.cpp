@@ -336,8 +336,9 @@ void CTrade::RenderGuildMark()
             float scale = 1.f;
             if (!DrawnPanel(panel, scale))
                 return;
-            ::CreateGuildMark(i, false);
-            ::RenderBitmap(BITMAP_GUILD, panel.x + 15.f * scale, panel.y + 42.f * scale, 16.f * scale, 16.f * scale);
+            const std::uint32_t markTexture = ::CreateGuildMark(i, false);
+            if (markTexture != 0u)
+                ::RenderBitmap(static_cast<int>(markTexture), panel.x + 15.f * scale, panel.y + 42.f * scale, 16.f * scale, 16.f * scale);
             break;
         }
     }

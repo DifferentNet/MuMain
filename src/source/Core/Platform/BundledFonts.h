@@ -42,11 +42,40 @@ inline constexpr BundledFont kBundledFixedFont{
 //   Korean forms. It also has the Hangul jamo (ㅋ), but no Hangul syllables.
 // - Nanum Gothic: Hangul syllables.
 // ponytail: one Hangul face; SDL_ttf synthesizes bold, bundle NanumGothic-Bold if metric parity requires it.
+inline constexpr BundledFont kNanumGothicFont{"Nanum Gothic", "fonts/NanumGothic-Regular.ttf",
+                                               "fonts/NanumGothic-Regular.ttf"};
 inline constexpr BundledFont kBundledFallbackFonts[] = {
     kDejaVuSansFont,
     kNotoSansTcFont,
-    {"Nanum Gothic", "fonts/NanumGothic-Regular.ttf", "fonts/NanumGothic-Regular.ttf"},
+    kNanumGothicFont,
 };
+
+// The Chinese and Korean fallbacks. In the browser they aren't in the startup download (10.7 MB of
+// its 84 MB, 2026-11-03), since only Chinese and Korean text needs them: the page downloads them once
+// the game is in its first map (mu::web::DownloadLateFonts), and they are opened at the next map
+// load, under its loading screen. Until then such text shows boxes. On the desktop they open at start.
+[[nodiscard]] constexpr bool IsLateFallbackFont(const BundledFont& font)
+{
+    return std::string_view(font.family) == kNotoSansTcFont.family ||
+           std::string_view(font.family) == kNanumGothicFont.family;
+}
+
+#ifdef __EMSCRIPTEN__
+namespace mu::web
+{
+bool LateFontsReady();
+}
+// True once the late fallbacks open without waiting for the network.
+[[nodiscard]] inline bool LateFallbackFontsReady()
+{
+    return mu::web::LateFontsReady();
+}
+#else
+[[nodiscard]] constexpr bool LateFallbackFontsReady()
+{
+    return true;
+}
+#endif
 
 [[nodiscard]] inline std::filesystem::path ResolveBundledFontPath(const std::filesystem::path& relativePath)
 {
@@ -68,4 +97,16 @@ inline constexpr BundledFont kBundledFallbackFonts[] = {
             return font;
     }
     return kBundledFonts[0];
+}
+
+// The family to open now. In the browser a player's chosen family that is a late font (Noto Sans TC)
+// isn't in the startup download: opened from its link it would be read through the network mount
+// for every role, seconds on a phone. Until it arrives the default family stands in, and the first
+// map load after the download reopens the fonts with the chosen one (MapManager.cpp).
+[[nodiscard]] inline const BundledFont& ResolveOpenableBundledFont(std::string_view configuredFamily)
+{
+    const BundledFont& font = ResolveBundledFont(configuredFamily);
+    if (IsLateFallbackFont(font) && !LateFallbackFontsReady())
+        return ResolveBundledFont(kDefaultBundledFontFamily);
+    return font;
 }

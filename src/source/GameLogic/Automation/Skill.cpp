@@ -229,7 +229,13 @@ SkillResult CastSkill(ActionSkillType skill, bool targetRequired, int targetKey,
         return SkillResult::Refused;
     }
 
-    return executed == SkillExecutionCast ? SkillResult::Cast : SkillResult::NotReady;
+    if (executed != SkillExecutionCast)
+    {
+        return SkillResult::NotReady;
+    }
+
+    NoteAutomatedSend();
+    return SkillResult::Cast;
 }
 
 SkillResult CastSkillAtTile(ActionSkillType skill, int tileX, int tileY)

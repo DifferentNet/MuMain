@@ -115,6 +115,7 @@ namespace MUHelper
         m_iComboState = 0;
         m_iCurrentBuffIndex = 0;
         m_iCurrentBuffPartyIndex = 0;
+        m_iBuffWaitRounds = 0;
         m_iCurrentTarget = -1;
         m_iCurrentSkill = (ActionSkillType)m_config.aiSkill[0];
         m_iCurrentItem = MAX_ITEMS;
@@ -143,6 +144,8 @@ namespace MUHelper
         m_mapForgottenUntil.clear();
         m_noTargetInReachSince = {};
         m_walkWatchSince = {};
+        m_regroupSince = {};
+        m_regroupRestUntil = {};
 
         m_bActive = true;
         g_ConsoleDebug->Write(MCD_NORMAL, L"[MU Helper] Started");
@@ -168,6 +171,8 @@ namespace MUHelper
         m_bAttackBetweenRounds = false;
         m_walkWatchSince = {};
         m_noTargetInReachSince = {};
+        m_regroupSince = {};
+        m_regroupRestUntil = {};
         if (!bSteered)
         {
             m_posOriginal = { Hero->PositionX, Hero->PositionY };
@@ -323,7 +328,7 @@ namespace MUHelper
         }
     }
 
-    void CMuHelper::AddTarget(int iTargetId, bool bIsAttacking)
+    void CMuHelper::AddTarget(int iTargetId, bool bIsAttacking, bool bAttacksHero)
     {
         if (!m_bActive)
         {
@@ -353,9 +358,22 @@ namespace MUHelper
             _targetsLock.unlock();
         }
 
-        if (m_config.bUseSelfDefense && IsMonster(pTarget))
+        // "PVP Counterattack" (self-defense) turns to a monster that attacks the hero, within the hunting range,
+        // unless the current target attacks the hero too. It used to switch to any monster that appeared, took a
+        // step or was hit, at any distance: with several monsters about (an elf's Triple Shot hits three) the
+        // target changed several times a second and the hero kept turning and stepping between them (players,
+        // 2026-11-03).
+        if (m_config.bUseSelfDefense && bAttacksHero && IsMonster(pTarget) && iDistance <= m_iHuntingDistance)
         {
-            m_iCurrentTarget = iTargetId;
+            _targetsLock.lock();
+            const bool bCurrentAttacksHero = m_iCurrentTarget != -1 && m_setAttackersOfHero.count(m_iCurrentTarget) > 0;
+            m_setAttackersOfHero.insert(iTargetId);
+            _targetsLock.unlock();
+
+            if (!bCurrentAttacksHero)
+            {
+                m_iCurrentTarget = iTargetId;
+            }
         }
     }
 
@@ -365,6 +383,7 @@ namespace MUHelper
 
         m_setTargets.erase(iTargetId);
         m_setTargetsAttacking.erase(iTargetId);
+        m_setAttackersOfHero.erase(iTargetId);
 
         _targetsLock.unlock();
 
@@ -380,6 +399,7 @@ namespace MUHelper
 
         m_setTargets.clear();
         m_setTargetsAttacking.clear();
+        m_setAttackersOfHero.clear();
 
         _targetsLock.unlock();
     }
@@ -615,6 +635,18 @@ namespace MUHelper
                 iBuffResult = BuffTarget(pChar, (ActionSkillType)m_config.aiBuff[m_iCurrentBuffIndex]);
             }
 
+            // A cast that waits for the hero's swing keeps this member and this buff for the next rounds, up to
+            // BuffWaitRoundLimit. Before, the turn passed on: an elf at a spot attacks after her own turn, so the
+            // next member's turn came in the middle of her swing every time, and a member who joined her there was
+            // never buffed (ghinzuro, 2026-11-04). Only the swing: a walk towards a member passes the turn on as
+            // before, so one she can't reach doesn't hold up her potions, heals and attack (review).
+            using GameLogic::Automation::SkillResult;
+            if (iBuffResult == 0 && m_lastSkillResult == SkillResult::Busy && ++m_iBuffWaitRounds <= BuffWaitRoundLimit)
+            {
+                return 0;
+            }
+            m_iBuffWaitRounds = 0;
+
             m_iCurrentBuffPartyIndex = (m_iCurrentBuffPartyIndex + 1) % PartyNumber;
 
             if (m_iCurrentBuffPartyIndex == 0)
@@ -634,6 +666,7 @@ namespace MUHelper
         else
         {
             m_iCurrentBuffPartyIndex = 0;
+            m_iBuffWaitRounds = 0;
 
             if (!m_config.bBuffDuration
                 && m_config.iBuffCastInterval != 0
@@ -666,6 +699,11 @@ namespace MUHelper
     int CMuHelper::BuffTarget(CHARACTER* pTargetChar, ActionSkillType iBuffSkill)
     {
         OBJECT* obj = &pTargetChar->Object;
+        // Buffs that only ever land on the caster (Infinity Arrow, Berserker: target restriction Self in OpenMU's
+        // data) are looked up on the hero, whichever party member this round is about. Looked up on the member, who
+        // never has them, they were cast again on nearly every round in a party, and the elf jerked with the cast
+        // animation (players, 2026-11-03).
+        OBJECT* self = &Hero->Object;
 
         auto CastIfMissing = [&](bool bBuffActive, bool bTimerRespected, bool bNeedsTarget) -> int
         {
@@ -687,7 +725,7 @@ namespace MUHelper
 
         case AT_SKILL_INFINITY_ARROW:
         case AT_SKILL_INFINITY_ARROW_STR:
-            return CastIfMissing(g_isCharacterBuff(obj, eBuff_InfinityArrow), false, false);
+            return CastIfMissing(g_isCharacterBuff(self, eBuff_InfinityArrow), false, false);
 
         case AT_SKILL_SOUL_BARRIER:
         case AT_SKILL_SOUL_BARRIER_STR:
@@ -716,7 +754,7 @@ namespace MUHelper
 
         case AT_SKILL_ALICE_BERSERKER:
         case AT_SKILL_ALICE_BERSERKER_STR:
-            return CastIfMissing(g_isCharacterBuff(obj, eBuff_Berserker), false, false);
+            return CastIfMissing(g_isCharacterBuff(self, eBuff_Berserker), false, false);
 
         case AT_SKILL_ALICE_THORNS:
             return CastIfMissing(g_isCharacterBuff(obj, eBuff_Thorns), false, false);
@@ -890,9 +928,27 @@ namespace MUHelper
         }
 
         using GameLogic::Automation::SkillResult;
+
+        // Stunned or asleep, every cast reads Busy until it wears off. Ending the round then would skip the
+        // potions too, so a stunned helper with a buff due never drank; the buff waits, the round goes on.
+        if (m_lastSkillResult == SkillResult::Busy
+            && (g_isCharacterBuff((&Hero->Object), eDeBuff_Stun) || g_isCharacterBuff((&Hero->Object), eDeBuff_Sleep)))
+        {
+            return 1;
+        }
+
         if (m_lastSkillResult == SkillResult::Busy || m_lastSkillResult == SkillResult::Approaching)
         {
             return 0;
+        }
+
+        // No skill starts while the character walks or flinches from a hit. Among monsters that is most rounds,
+        // and each counted as a failure: Swell Life, cast fine a moment before, was paused and "doesn't cast" filled
+        // the chat (ghinzuro, 2026-11-03). Such a round is not a failure; the round goes on and the next tries again.
+        if (m_lastSkillResult == SkillResult::NotReady
+            && (Hero->Movement || !Engine::Object::IsSkillReadyAction(Hero->Object.CurrentAction)))
+        {
+            return 1;
         }
 
         // Refused for a reason the checks above don't see (a cooldown, the weapon, the map): the round goes on to
@@ -1268,7 +1324,8 @@ namespace MUHelper
     bool CMuHelper::PicksUpItems() const
     {
         return m_config.bPickAllItems || m_config.bPickZen || m_config.bPickJewel || m_config.bPickAncient
-            || m_config.bPickExcellent || m_config.bPickExtraItems || m_config.bPickContainers;
+            || m_config.bPickExcellent || m_config.bPickExtraItems || m_config.bPickContainers
+            || m_config.bPickQuestItems;
     }
 
     bool CMuHelper::IsWithinReach(int iTargetId, float fReach) const
@@ -1518,35 +1575,83 @@ namespace MUHelper
 
     int CMuHelper::Regroup()
     {
-        if (m_config.bReturnToOriginalPosition && m_iSecondsAway > m_config.iMaxSecondsAway)
+        using GameLogic::Automation::MoveResult;
+
+        if (!m_config.bReturnToOriginalPosition || m_iSecondsAway <= m_config.iMaxSecondsAway)
         {
-            // Let the current swing finish first: a walk started mid-swing cuts the attack
-            // animation, and what a swing fires late in it (the arrows of Triple Shot, for one)
-            // never appears. Attacking and picking up already wait for the swing.
-            if (GameLogic::Automation::IsSwingInProgress())
-            {
-                return 0;
-            }
+            m_regroupSince = {};
+            return 1;
+        }
 
-            if (!SimulateMove(m_posOriginal))
-            {
-                return 0;
-            }
+        // Monsters stand on their tiles, and the path finder walks round them. With the character ringed by
+        // monsters there is no way back to the start spot, or the walk gets no closer, and the round used to end
+        // here every time: the helper stood among them without attacking (players and ghinzuro, 2026-11-03).
+        // Now it fights while the way back is shut, and tries again after RegroupRest.
+        const auto now = std::chrono::steady_clock::now();
+        if (now < m_regroupRestUntil)
+        {
+            return 1;
+        }
 
+        // Let the current swing finish first: a walk started mid-swing cuts the attack
+        // animation, and what a swing fires late in it (the arrows of Triple Shot, for one)
+        // never appears. Attacking and picking up already wait for the swing.
+        if (GameLogic::Automation::IsSwingInProgress())
+        {
+            return 0;
+        }
+
+        const MoveResult result =
+            GameLogic::Automation::WalkTo(static_cast<int>(m_posOriginal.x), static_cast<int>(m_posOriginal.y));
+        if (result == MoveResult::Walking)
+        {
+            // A path that ends on the spot counts its steps (a detour round a wall is getting closer); one that
+            // only reaches the nearest free tile, among monsters, counts the straight line (WalkGap).
+            int iPathSteps = 0;
+            bool bPathEndsOnSpot = false;
+            {
+                std::lock_guard<SpinLock> guard(Hero->Path.Lock);
+                iPathSteps = static_cast<int>(Hero->Path.PathNum);
+                if (iPathSteps > 0)
+                {
+                    const int iEndX = Hero->Path.PathX[iPathSteps - 1];
+                    const int iEndY = Hero->Path.PathY[iPathSteps - 1];
+                    bPathEndsOnSpot = std::abs(iEndX - static_cast<int>(m_posOriginal.x)) <= 1
+                        && std::abs(iEndY - static_cast<int>(m_posOriginal.y)) <= 1;
+                }
+            }
+            const int iGap = GameLogic::Automation::WalkGap(bPathEndsOnSpot, iPathSteps,
+                ComputeDistanceBetween({ Hero->PositionX, Hero->PositionY }, m_posOriginal));
+            if (m_regroupSince == std::chrono::steady_clock::time_point{}
+                || GameLogic::Automation::IsWalkProgress(iGap, m_iRegroupBestGap))
+            {
+                m_regroupSince = now;
+                m_iRegroupBestGap = iGap;
+            }
+        }
+        if (result == MoveResult::Arrived)
+        {
+            m_regroupSince = {};
             m_iSecondsAway = 0;
             m_iComboState = 0;
             m_iCurrentTarget = -1;
+            return 1;
         }
 
-        return 1;
-    }
+        if (GameLogic::Automation::ShouldGiveUpWalk(result,
+                std::chrono::duration_cast<std::chrono::milliseconds>(now - m_regroupSince).count(), RegroupPatience.count()))
+        {
+            // A walk under way would keep the attack waiting (it runs only while the character stands).
+            GameLogic::Automation::StopAtNextTile();
+            m_regroupSince = {};
+            m_regroupRestUntil = now + RegroupRest;
+            g_ConsoleDebug->Write(MCD_NORMAL, result == MoveResult::NoPath
+                ? L"[MU Helper] No way back to the start spot; attacking meanwhile"
+                : L"[MU Helper] The walk back gets no closer; attacking meanwhile");
+            return 1;
+        }
 
-    int CMuHelper::SimulateMove(POINT posMove)
-    {
-        const GameLogic::Automation::MoveResult result =
-            GameLogic::Automation::WalkTo(static_cast<int>(posMove.x), static_cast<int>(posMove.y));
-
-        return result == GameLogic::Automation::MoveResult::Arrived ? 1 : 0;
+        return 0;
     }
 
     bool CMuHelper::HasAssignedBuffSkill()
@@ -1670,19 +1775,25 @@ namespace MUHelper
             || (m_config.bPickJewel && GameLogic::Items::IsJewelItem(pItem))
             || (m_config.bPickAncient && IsAncientItem(pItem))
             || (m_config.bPickExcellent && IsExcellentItem(pItem))
-            || (m_config.bPickContainers && GameLogic::Items::IsContainerItem(pItem)))
+            || (m_config.bPickContainers && GameLogic::Items::IsContainerItem(pItem))
+            || (m_config.bPickQuestItems && GameLogic::Items::IsQuestItem(pItem)))
         {
             return true;
         }
 
         if (m_config.bPickExtraItems)
         {
-            std::wstring strDisplayName = GetItemDisplayName(pItem);
+            // Case does not matter: "symbol of kundun" picks up Symbol of Kundun.
+            const auto lower = [](std::wstring s) {
+                std::transform(s.begin(), s.end(), s.begin(), [](wchar_t ch) { return static_cast<wchar_t>(towlower(ch)); });
+                return s;
+            };
+            const std::wstring strDisplayName = lower(GetItemDisplayName(pItem));
 
             for (const auto& str : m_config.aExtraItems)
             {
                 // Check if the search keyword is in the item's display name
-                if (strDisplayName.find(str) != std::wstring::npos)
+                if (strDisplayName.find(lower(str)) != std::wstring::npos)
                 {
                     return true;
                 }

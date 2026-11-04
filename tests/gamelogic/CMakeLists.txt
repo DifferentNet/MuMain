@@ -81,6 +81,12 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME test_walk_give_up
+    SOURCES
+        test_walk_give_up.cpp
+)
+
+mu_add_test(
     NAME test_steer_hold
     SOURCES
         test_steer_hold.cpp

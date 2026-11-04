@@ -4381,7 +4381,7 @@
     <comment>legacy_id=1175</comment>
   </data>
   <data name="%d to Kalima" xml:space="preserve">
-    <value>%d в Калиму</value>
+    <value>в Калиму %d</value>
     <comment>legacy_id=1176</comment>
   </data>
   <data name="You want to open the way to Kalima?" xml:space="preserve">
@@ -13686,6 +13686,38 @@
     <value>Камни и zen расходуются.</value>
     <comment>legacy_id=3907</comment>
   </data>
+  <data name="ExcellentDustDistilMix" xml:space="preserve">
+    <value>Распылить в пыль экселента</value>
+    <comment>legacy_id=3908</comment>
+  </data>
+  <data name="ExcellentDustItemMix" xml:space="preserve">
+    <value>Экселент вещь из пыли</value>
+    <comment>legacy_id=3909</comment>
+  </data>
+  <data name="ExcellentDustDistilDesc1" xml:space="preserve">
+    <value>Оружие, броня, бижутерия.</value>
+    <comment>legacy_id=3910</comment>
+  </data>
+  <data name="ExcellentDustDistilDesc2" xml:space="preserve">
+    <value>Пыль = Combat Power / 100 за вещь.</value>
+    <comment>legacy_id=3911</comment>
+  </data>
+  <data name="ExcellentDustDistilDesc3" xml:space="preserve">
+    <value>1 000 пыли в неделю на аккаунт.</value>
+    <comment>legacy_id=3912</comment>
+  </data>
+  <data name="ExcellentDustItemDesc1" xml:space="preserve">
+    <value>250 пыли + Jewel of Chaos.</value>
+    <comment>legacy_id=3913</comment>
+  </data>
+  <data name="ExcellentDustItemDesc2" xml:space="preserve">
+    <value>Случайная экселент вещь Box +5.</value>
+    <comment>legacy_id=3914</comment>
+  </data>
+  <data name="ExcellentDustItemDesc3" xml:space="preserve">
+    <value>2 опции 70 %, 3 опции 30 %.</value>
+    <comment>legacy_id=3915</comment>
+  </data>
   <data name="GmPanelTitleAdmin" xml:space="preserve">
     <value>GM-панель — админ</value>
   </data>
@@ -15384,6 +15416,96 @@
   <data name="EndlessTowerShopEmpty" xml:space="preserve">
     <value>Товаров нет.</value>
   </data>
+  <data name="RenaShopTitle" xml:space="preserve">
+    <value>Золотой лучник</value>
+  </data>
+  <data name="RenaShopAsking" xml:space="preserve">
+    <value>Спрашиваю сервер...</value>
+  </data>
+  <data name="RenaShopNoAnswer" xml:space="preserve">
+    <value>Сервер не присылает данные магазина Rena.</value>
+  </data>
+  <data name="RenaShopBalance" xml:space="preserve">
+    <value>Rena: %ls</value>
+  </data>
+  <data name="RenaShopBag" xml:space="preserve">
+    <value>В сумке: %ls</value>
+  </data>
+  <data name="RenaShopGive" xml:space="preserve">
+    <value>Сдать %ls Rena</value>
+  </data>
+  <data name="RenaShopTabShop" xml:space="preserve">
+    <value>Магазин</value>
+  </data>
+  <data name="RenaShopTabArrow" xml:space="preserve">
+    <value>Стрела</value>
+  </data>
+  <data name="RenaShopTabProgress" xml:space="preserve">
+    <value>Успехи</value>
+  </data>
+  <data name="RenaShopNotNear" xml:space="preserve">
+    <value>Подойдите к Золотому лучнику</value>
+  </data>
+  <data name="RenaShopWorking" xml:space="preserve">
+    <value>Ждём ответ сервера...</value>
+  </data>
+  <data name="RenaShopWaiting" xml:space="preserve">
+    <value>Предметов, ждущих места в сумке: %lld</value>
+  </data>
+  <data name="RenaShopLineRena" xml:space="preserve">
+    <value>%ls · %ls Rena</value>
+  </data>
+  <data name="RenaShopPick" xml:space="preserve">
+    <value>Выберите строку для покупки.</value>
+  </data>
+  <data name="RenaShopNoRena" xml:space="preserve">
+    <value>Не хватает Rena.</value>
+  </data>
+  <data name="RenaShopBuy" xml:space="preserve">
+    <value>Купить %d</value>
+  </data>
+  <data name="RenaShopEmpty" xml:space="preserve">
+    <value>Ничего не продаётся.</value>
+  </data>
+  <data name="RenaShopSpinPrice" xml:space="preserve">
+    <value>Один бросок: %ls Rena</value>
+  </data>
+  <data name="RenaShopPrize" xml:space="preserve">
+    <value>%ls: %ls%%</value>
+  </data>
+  <data name="RenaShopPrizeZen" xml:space="preserve">
+    <value>Zen %ls–%ls: %ls%%</value>
+  </data>
+  <data name="RenaShopAnnounced" xml:space="preserve">
+    <value>Золотые призы объявляются всем.</value>
+  </data>
+  <data name="RenaShopResultsTitle" xml:space="preserve">
+    <value>Последние броски</value>
+  </data>
+  <data name="RenaShopNoResults" xml:space="preserve">
+    <value>Пока нет.</value>
+  </data>
+  <data name="RenaShopSpin" xml:space="preserve">
+    <value>Бросок x%d</value>
+  </data>
+  <data name="RenaShopHanded" xml:space="preserve">
+    <value>Сдано Rena: %ls</value>
+  </data>
+  <data name="RenaShopMilestone" xml:space="preserve">
+    <value>%ls: %ls</value>
+  </data>
+  <data name="RenaShopWeek" xml:space="preserve">
+    <value>За неделю: %ls, место %d</value>
+  </data>
+  <data name="RenaShopWeekNoPlace" xml:space="preserve">
+    <value>За неделю: %ls, без места</value>
+  </data>
+  <data name="RenaShopTopLine" xml:space="preserve">
+    <value>%d. %ls: %ls</value>
+  </data>
+  <data name="RenaShopTopEmpty" xml:space="preserve">
+    <value>Пока никого.</value>
+  </data>
   <data name="HelpSkynetKeysHeading" xml:space="preserve">
     <value>MU Skynet</value>
   </data>
@@ -15627,5 +15749,9 @@
   </data>
   <data name="TitlesTownsOnly" xml:space="preserve">
     <value>Титулы только в городах</value>
+  </data>
+  <!-- MU Helper: quest items pick-up -->
+  <data name="HelperPickQuestItems" xml:space="preserve">
+    <value>Квестовые предметы</value>
   </data>
 </root>

@@ -231,6 +231,14 @@ mu_add_test(
     LINK_LIBS MuClient
 )
 
+mu_add_test(
+    NAME mu_helper_extra_items_tests
+    SOURCES
+        test_mu_helper_extra_items.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/App/Platform/Windows/Winmain.cpp
+    LINK_LIBS MuClient
+)
+
 add_test(
     NAME display_settings_contract
     COMMAND "${CMAKE_COMMAND}"
@@ -459,6 +467,13 @@ mu_add_test(
     SOURCES
         test_phone_hud_fit.cpp
         ${CMAKE_SOURCE_DIR}/src/source/UI/Mobile/PhoneHudFit.cpp
+)
+
+mu_add_test(
+    NAME desktop_tip_tests
+    SOURCES
+        test_desktop_tip.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Mobile/DesktopTip.cpp
 )
 
 mu_add_test(

@@ -5113,6 +5113,8 @@ enum EMonsterType : int
     MONSTER_JEWELER_GOBLIN = 621,
     MONSTER_ARMORER_GOBLIN = 622,
     MONSTER_RAINBOW_GOBLIN = 623,
+    // MU Skynet: the swirling cloud over an open rift (Events/Rift on the server); drawn only as an effect, never a target.
+    MONSTER_RIFT_VORTEX = 624,
     MONSTER_CURSED_STATUE = 658,
     MONSTER_CAPTURED_STONE_STATUE_1 = 659,
     MONSTER_CAPTURED_STONE_STATUE_2 = 660,
