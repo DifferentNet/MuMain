@@ -465,7 +465,7 @@ void CStorageInventory::StepPage(int step)
 {
     auto& pages = UI::Storage::Pages();
     // Not while an item is on the cursor or a move waits for the server: the item would land on the other page.
-    if (!pages.HasInfo() || pages.Pages() < 2 || pages.IsSwitching() || g_pPickedItem || EquipmentItem || m_bItemAutoMove
+    if (!pages.HasInfo() || pages.Pages() < 2 || pages.IsSwitching() || g_pPickedItem || IsItemMovePending() || m_bItemAutoMove
         || g_pStorageInventoryExt->IsItemAutoMove())
         return;
 
@@ -538,7 +538,7 @@ void CStorageInventory::SyncRmlModel()
     syncBool(&StorageRmlModel::titleLocked, "title_locked", m_bLock);
     syncBool(&StorageRmlModel::pagesVisible, "pages_visible", pages.HasInfo() && pages.Pages() > 1);
     syncBool(&StorageRmlModel::pagesBusy, "pages_busy",
-             pages.IsSwitching() || g_pPickedItem != nullptr || EquipmentItem || m_bItemAutoMove);
+             pages.IsSwitching() || g_pPickedItem != nullptr || IsItemMovePending() || m_bItemAutoMove);
 
     const int nZen = CharacterMachine->StorageGold;
     wchar_t zenBuf[256] = { 0, };
@@ -591,7 +591,7 @@ void CStorageInventory::LockStorage(bool bLock)
 
 bool CStorageInventory::ProcessClosing()
 {
-    if (EquipmentItem)
+    if (IsItemMovePending())
         return false;
 
     CInventoryCtrl::BackupPickedItem();
