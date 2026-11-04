@@ -7268,6 +7268,11 @@ bool IsStrifeMap(int nMapIndex)
 
 unsigned int MarkColor[16];
 
+namespace mu
+{
+void RegisterSampler(std::uint32_t id, void* sampler);
+}
+
 namespace
 {
 // One texture per guild mark slot and blend mode, uploaded again only when its pixels change.
@@ -7278,9 +7283,10 @@ struct GuildMarkTextureSlot
 };
 std::vector<GuildMarkTextureSlot> s_guildMarkTextures;
 
-std::uint32_t GuildMarkTexture(int nMarkIndex, bool blend, const BYTE* pixels, std::uint32_t width,
+std::uint32_t GuildMarkTexture(int nMarkIndex, bool blend, const BITMAP_t& guild, std::uint32_t width,
                                std::uint32_t height)
 {
+    const BYTE* pixels = guild.Buffer;
     if (s_guildMarkTextures.empty())
         s_guildMarkTextures.resize(static_cast<std::size_t>(MAX_MARKS) * 2u);
 
@@ -7298,6 +7304,10 @@ std::uint32_t GuildMarkTexture(int nMarkIndex, bool blend, const BYTE* pixels, s
         slot.texture = renderer.CreateTexture(width, height, pixels);
         if (slot.texture == 0u)
             return 0u;
+        // A new texture gets the renderer's default (linear) sampler; the mark's 8x8 cells stay sharp
+        // only with guild.tga's own (nearest) sampler.
+        if (guild.sdlSampler != nullptr)
+            mu::RegisterSampler(slot.texture, guild.sdlSampler);
         slot.pixels.assign(pixels, pixels + size);
     }
     else if (slot.pixels.size() != size || std::memcmp(slot.pixels.data(), pixels, size) != 0)
@@ -7402,7 +7412,7 @@ std::uint32_t CreateGuildMark(int nMarkIndex, bool blend)
     // Each mark gets its own texture. The renderer applies texture uploads once per frame, before
     // it draws, so filling the one shared BITMAP_GUILD for every player left all marks on screen
     // showing whichever guild was filled last.
-    const std::uint32_t texture = GuildMarkTexture(nMarkIndex, blend, b->Buffer, static_cast<std::uint32_t>(Width),
+    const std::uint32_t texture = GuildMarkTexture(nMarkIndex, blend, *b, static_cast<std::uint32_t>(Width),
                                                    static_cast<std::uint32_t>(Height));
     if (texture != 0u)
     {
