@@ -185,7 +185,8 @@ void ClosePersonalShop();
 void ClearPersonalShop();
 bool IsExistUndecidedPrice();
 
-void CreateGuildMark(int nMarkIndex, bool blend = true);
+// Fills the mark's texture (one per guild) and binds it; returns the renderer texture id, 0 if none.
+std::uint32_t CreateGuildMark(int nMarkIndex, bool blend = true);
 void CreateCastleMark(int Type, BYTE* buffer = NULL, bool blend = true);
 
 namespace UI::Items

@@ -1605,18 +1605,29 @@ namespace MUHelper
             GameLogic::Automation::WalkTo(static_cast<int>(m_posOriginal.x), static_cast<int>(m_posOriginal.y));
         if (result == MoveResult::Walking)
         {
-            // Progress is counted in path steps, not straight-line distance, so a detour round a wall
-            // still counts as getting closer.
-            const int iStepsLeft = static_cast<int>(Hero->Path.PathNum);
-            const bool bTileChanged = Hero->PositionX != m_iRegroupLastX || Hero->PositionY != m_iRegroupLastY;
+            // A path that ends on the spot counts its steps (a detour round a wall is getting closer); one that
+            // only reaches the nearest free tile, among monsters, counts the straight line (WalkGap).
+            int iPathSteps = 0;
+            bool bPathEndsOnSpot = false;
+            {
+                std::lock_guard<SpinLock> guard(Hero->Path.Lock);
+                iPathSteps = static_cast<int>(Hero->Path.PathNum);
+                if (iPathSteps > 0)
+                {
+                    const int iEndX = Hero->Path.PathX[iPathSteps - 1];
+                    const int iEndY = Hero->Path.PathY[iPathSteps - 1];
+                    bPathEndsOnSpot = std::abs(iEndX - static_cast<int>(m_posOriginal.x)) <= 1
+                        && std::abs(iEndY - static_cast<int>(m_posOriginal.y)) <= 1;
+                }
+            }
+            const int iGap = GameLogic::Automation::WalkGap(bPathEndsOnSpot, iPathSteps,
+                ComputeDistanceBetween({ Hero->PositionX, Hero->PositionY }, m_posOriginal));
             if (m_regroupSince == std::chrono::steady_clock::time_point{}
-                || GameLogic::Automation::IsWalkProgress(iStepsLeft, m_iRegroupBestSteps, MAX_PATH_FIND, bTileChanged))
+                || GameLogic::Automation::IsWalkProgress(iGap, m_iRegroupBestGap))
             {
                 m_regroupSince = now;
-                m_iRegroupBestSteps = iStepsLeft;
+                m_iRegroupBestGap = iGap;
             }
-            m_iRegroupLastX = Hero->PositionX;
-            m_iRegroupLastY = Hero->PositionY;
         }
         if (result == MoveResult::Arrived)
         {

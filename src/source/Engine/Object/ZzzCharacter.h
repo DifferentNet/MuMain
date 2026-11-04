@@ -106,7 +106,7 @@ bool CheckMonsterSkill(CHARACTER* c, OBJECT* o);
 bool CharacterAnimation(CHARACTER* c, OBJECT* o);
 bool AttackStage(CHARACTER* c, OBJECT* o);
 
-void RenderGuild(OBJECT* o, int Type = -1, vec3_t vPos = NULL);
+void RenderGuild(OBJECT* o, std::uint32_t markTexture, int Type = -1, vec3_t vPos = NULL);
 void RenderLight(OBJECT* o, int Texture, float Scale, int Bone, float x, float y, float z);
 void RenderProtectGuildMark(CHARACTER* c);
 

@@ -9,6 +9,7 @@
 using GameLogic::Automation::MoveResult;
 using GameLogic::Automation::IsWalkProgress;
 using GameLogic::Automation::ShouldGiveUpWalk;
+using GameLogic::Automation::WalkGap;
 
 namespace
 {
@@ -40,18 +41,40 @@ TEST_CASE("Arriving is never giving up [gamelogic][walk]")
     CHECK_FALSE(ShouldGiveUpWalk(MoveResult::Arrived, Patience * 10, Patience));
 }
 
-TEST_CASE("A shorter path is progress, the same or a longer one is not [gamelogic][walk]")
+TEST_CASE("A shorter path to the spot is progress, the same or a longer one is not [gamelogic][walk]")
 {
-    CHECK(IsWalkProgress(7, 8, MaxSteps, true));
-    CHECK(IsWalkProgress(7, 8, MaxSteps, false));
-    // Stepping back and forth among monsters near the spot: the tile changes, the path does not get shorter.
-    CHECK_FALSE(IsWalkProgress(8, 8, MaxSteps, true));
-    CHECK_FALSE(IsWalkProgress(9, 8, MaxSteps, true));
+    CHECK(IsWalkProgress(WalkGap(true, 7, 5), WalkGap(true, 8, 5)));
+    // Stepping back and forth among monsters near the spot: the path does not get shorter.
+    CHECK_FALSE(IsWalkProgress(WalkGap(true, 8, 5), WalkGap(true, 8, 5)));
+    CHECK_FALSE(IsWalkProgress(WalkGap(true, 9, 5), WalkGap(true, 8, 5)));
 }
 
-TEST_CASE("Further than the path finder looks, moving on is progress [gamelogic][walk]")
+TEST_CASE("A detour round a wall to the spot is progress while its path gets shorter [gamelogic][walk]")
 {
-    // 20 tiles away the path is 15 steps every round: walking on to another tile counts.
-    CHECK(IsWalkProgress(MaxSteps, MaxSteps, MaxSteps, true));
-    CHECK_FALSE(IsWalkProgress(MaxSteps, MaxSteps, MaxSteps, false));
+    // The straight line grows going round, the path to the spot still shrinks.
+    CHECK(IsWalkProgress(WalkGap(true, 10, 6), WalkGap(true, 11, 4)));
+}
+
+TEST_CASE("A short way to a free tile among monsters is not nearly there [gamelogic][walk]")
+{
+    // Kanturu 2, 2026-11-04: ringed by monsters 6 tiles from the spot, the path finder gives 2 or 3 steps to the
+    // nearest free tile. That used to count as getting closer every round, so the walk never got given up.
+    const int iBest = WalkGap(false, 3, 6);
+    CHECK_FALSE(IsWalkProgress(WalkGap(false, 2, 6), iBest));
+    CHECK_FALSE(IsWalkProgress(WalkGap(false, 3, 7), iBest));
+    // A step nearer the spot in a straight line is progress, whatever the partial path's length.
+    CHECK(IsWalkProgress(WalkGap(false, 4, 5), iBest));
+}
+
+TEST_CASE("Any path that reaches the spot beats one that does not [gamelogic][walk]")
+{
+    CHECK(IsWalkProgress(WalkGap(true, 14, 9), WalkGap(false, 2, 3)));
+    CHECK_FALSE(IsWalkProgress(WalkGap(false, 2, 3), WalkGap(true, 14, 9)));
+}
+
+TEST_CASE("Further than the path finder looks, only getting nearer is progress [gamelogic][walk]")
+{
+    // 20 tiles away the path is cut at 15 steps every round and ends short of the spot.
+    CHECK(IsWalkProgress(WalkGap(false, MaxSteps, 19), WalkGap(false, MaxSteps, 20)));
+    CHECK_FALSE(IsWalkProgress(WalkGap(false, MaxSteps, 20), WalkGap(false, MaxSteps, 20)));
 }
