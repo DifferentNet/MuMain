@@ -857,9 +857,15 @@ int SummonLife = 0;
 
 extern void StopMusic();
 
+extern BOOL g_bPacketAfter_EquipmentItem;
+
 void InitGame()
 {
     EnableUse = 0;
+    // A relog or a server change starts without a move waiting for its answer
+    // and without a picked item: both used to outlive Select Server.
+    ResetItemMoveState();
+    g_bPacketAfter_EquipmentItem = FALSE;
     SendGetItem = -1;
     SummonLife = 0;
     SoccerTime = 0;
@@ -1648,6 +1654,8 @@ BOOL ReceiveInventoryExtended(std::span<const BYTE> ReceiveBuffer)
     }
 
     UI::Inventory::ClearAllItems();
+    // The list is the server's whole inventory: an item move given up on before it is settled.
+    NoteInventoryListReceived();
 
     auto Data = safe_cast<PHEADER_DEFAULT_SUBCODE_WORD>(ReceiveBuffer);
     if (Data == nullptr)
@@ -6203,8 +6211,26 @@ BYTE g_byPacketAfter_EquipmentItem[256];
 
 void ReceiveTradeExit(const BYTE* ReceiveBuffer);
 
+// A trade exit that came while a move waited for its answer.
+static void FlushPacketAfterItemMove()
+{
+    if (!g_bPacketAfter_EquipmentItem)
+        return;
+    g_bPacketAfter_EquipmentItem = FALSE;
+    ReceiveTradeExit(g_byPacketAfter_EquipmentItem);
+}
+
 BOOL ReceiveEquipmentItemExtended(std::span<const BYTE> ReceiveBuffer)
 {
+    if (TakeLateItemMoveAnswer())
+    {
+        // The answer to a move the client gave up on (IsItemMovePending): the
+        // picked item went back already, and the inventory list asked for then
+        // follows this packet and puts every item where the server has it.
+        g_ConsoleDebug->Write(MCD_RECEIVE, L"0x24 late answer to an item move, left to the inventory list");
+        FlushPacketAfterItemMove();
+        return TRUE;
+    }
     EquipmentItem = false;
     auto Data = safe_cast<PHEADER_DEFAULT_SUBCODE_ITEM_EXTENDED>(ReceiveBuffer);
     if (Data == nullptr)
@@ -6268,11 +6294,7 @@ BOOL ReceiveEquipmentItemExtended(std::span<const BYTE> ReceiveBuffer)
         UI::Inventory::RejectTransfer();
     }
 
-    if (g_bPacketAfter_EquipmentItem)
-    {
-        ReceiveTradeExit(g_byPacketAfter_EquipmentItem);
-        g_bPacketAfter_EquipmentItem = FALSE;
-    }
+    FlushPacketAfterItemMove();
 
     g_ConsoleDebug->Write(MCD_RECEIVE, L"0x24 [ReceiveEquipmentItem(%d %d)]", Data->SubCode, Data->Index);
 
@@ -7199,7 +7221,7 @@ void ReceiveTradeYourResult(const BYTE* ReceiveBuffer)
 
 void ReceiveTradeExit(const BYTE* ReceiveBuffer)
 {
-    if (EquipmentItem)
+    if (IsItemMovePending())
     {
         if (!g_bPacketAfter_EquipmentItem)
         {

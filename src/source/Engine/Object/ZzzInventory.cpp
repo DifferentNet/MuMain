@@ -424,11 +424,60 @@ void SendRequestUse(int Index, int Target, bool addPoints)
     g_ConsoleDebug->Write(MCD_SEND, L"0x26 [SendRequestUse(%d)]", Index);
 }
 
+namespace
+{
+// An answer comes within a second; a map change can hold it a few more.
+constexpr DWORD kItemMoveAnswerTimeoutMs = 8000;
+DWORD g_itemMoveSentTick = 0;
+bool g_itemMoveGivenUp = false;
+} // namespace
+
+bool IsItemMovePending()
+{
+    if (!EquipmentItem)
+        return false;
+    if (GetTickCount() - g_itemMoveSentTick < kItemMoveAnswerTimeoutMs)
+        return true;
+
+    // No answer: OpenMU sends none when the move's handler throws ("Error while
+    // processing the message" in its log). The server's inventory is the truth,
+    // so ask for it; the picked item can go back to its slot meanwhile.
+    EquipmentItem = false;
+    g_itemMoveGivenUp = true;
+    g_ConsoleDebug->Write(MCD_ERROR, L"0x24 no answer to the item move; asking for the inventory");
+    if (SocketClient != nullptr && SocketClient->ToGameServer() != nullptr)
+    {
+        SocketClient->ToGameServer()->SendInventoryRequest();
+    }
+    return false;
+}
+
+bool TakeLateItemMoveAnswer()
+{
+    if (!g_itemMoveGivenUp || EquipmentItem)
+        return false;
+    g_itemMoveGivenUp = false;
+    return true;
+}
+
+void NoteInventoryListReceived()
+{
+    g_itemMoveGivenUp = false;
+}
+
+void ResetItemMoveState()
+{
+    EquipmentItem = false;
+    g_itemMoveGivenUp = false;
+    mu::ui::window::CInventoryCtrl::DeletePickedItem();
+}
+
 bool SendRequestEquipmentItem(STORAGE_TYPE iSrcType, int iSrcIndex, ITEM* pItem, STORAGE_TYPE iDstType, int iDstIndex)
 {
-    if (EquipmentItem || NULL == pItem) return false;
+    if (IsItemMovePending() || NULL == pItem) return false;
 
     EquipmentItem = true;
+    g_itemMoveSentTick = GetTickCount();
 
     BYTE splitType;
     if (pItem->option_380)

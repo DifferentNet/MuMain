@@ -1702,7 +1702,7 @@ bool CMyInventory::EquipmentWindowProcess()
 
 bool CMyInventory::CanTakeOffToBagNow() const
 {
-    return GetRepairMode() != SEASON3B::REPAIR_MODE_ON && EquipmentItem == false &&
+    return GetRepairMode() != SEASON3B::REPAIR_MODE_ON && !IsItemMovePending() &&
            CInventoryCtrl::GetPickedItem() == nullptr &&
            !g_pNewUISystem->IsVisible(INTERFACE_NPCSHOP); // Don't unequip when NPC shop is open
 }
