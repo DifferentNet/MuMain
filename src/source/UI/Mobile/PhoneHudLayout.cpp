@@ -235,6 +235,21 @@ void PlaceChat(Rml::Element& chat, const Frame& frame)
         UI::Placement::Invalidate();
 }
 
+void PlaceSlideLane(Rml::Element& lane, const Frame& frame)
+{
+    // The notice ticker runs across the screen's top, over the top row's labels: under the row here,
+    // right of the hero frame, clipped to that strip.
+    const Edges& edges = frame.edges;
+    const float left = edges.heroRight + frame.gap;
+    SetCorner(lane, {left, edges.topRowBottom});
+    SetPx(lane, Rml::PropertyId::Width, std::max(0.f, static_cast<float>(frame.screen.x) - left));
+    if (lane.GetLocalProperty(Rml::PropertyId::OverflowX) == nullptr)
+    {
+        lane.SetProperty("overflow-x", "hidden");
+        lane.SetProperty("overflow-y", "hidden");
+    }
+}
+
 // The party's shown cards: how many, and one's size in the panel's reference px.
 struct PartyCards
 {
@@ -324,6 +339,7 @@ void PlaceParty(Rml::Element& panel, const Frame& frame)
 constexpr const char* CornerMoved[] = {"left", "top", "margin-left"};
 constexpr const char* PartyMoved[] = {"left", "top", "width", "height", "transform", "--root-scale"};
 constexpr const char* ChatMoved[] = {"margin-left"};
+constexpr const char* LaneMoved[] = {"left", "top", "width", "overflow-x", "overflow-y"};
 
 constexpr Piece Pieces[] = {
     {"buff_strip.rml", "#panel", PlaceBuffs, CornerMoved, nullptr},
@@ -332,6 +348,7 @@ constexpr Piece Pieces[] = {
     {"main_frame.rml", "#skill_list", PlaceSkillList, CornerMoved, nullptr},
     {"party_list.rml", "#panel", PlaceParty, PartyMoved, ShownCards},
     {"workspace.rml", ".chat-stack", PlaceChat, ChatMoved, nullptr},
+    {"slide_notice.rml", "#lane", PlaceSlideLane, LaneMoved, nullptr},
 };
 constexpr std::size_t PieceCount = std::size(Pieces);
 

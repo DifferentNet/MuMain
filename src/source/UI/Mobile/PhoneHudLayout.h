@@ -2,11 +2,12 @@
 // pieces of other documents around it, which their themes size in the PC's dp: the buffs and the pets'
 // frames under the top row, the system messages under the hero frame, the touch menu's skill list
 // beside the skill buttons, the party's cards under the top row's right end and the chat left of the
-// skill buttons. A finger unit is not a dp (one follows the screen's size on the page, the other the
-// game's resolution), so the themes' `@media (theme: mobile-hud)` places are a first guess only: this
-// moves those pieces to the touch layer's edges as it lays them out, and gives them their themes'
-// places back when the phone's HUD goes. It also tells the world labels where the HUD lies over them,
-// and puts the notices under the open touch menu (UI/Mobile/NoticesUnderPanel).
+// skill buttons, the notice ticker under the top row right of the hero frame. A finger unit is not a
+// dp (one follows the screen's size on the page, the other the game's resolution), so the themes'
+// `@media (theme: mobile-hud)` places are a first guess only: this moves those pieces to the touch
+// layer's edges as it lays them out, and gives them their themes' places back when the phone's HUD
+// goes. It also tells the world labels where the HUD lies over them, and puts the notices under the
+// open touch menu (UI/Mobile/NoticesUnderPanel).
 #pragma once
 
 #include "UI/Mobile/TouchTarget.h"
