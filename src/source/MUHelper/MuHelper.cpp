@@ -634,6 +634,15 @@ namespace MUHelper
                 iBuffResult = BuffTarget(pChar, (ActionSkillType)m_config.aiBuff[m_iCurrentBuffIndex]);
             }
 
+            // A cast that has to wait (the hero's swing still playing, or a few steps towards the member) keeps
+            // this member and this buff for the next round. Before, the turn passed on: an elf at a spot attacks
+            // after her own turn, so the next member's turn came in the middle of her swing every time, and a
+            // member who joined her there was never buffed (ghinzuro, 2026-11-04).
+            if (iBuffResult == 0)
+            {
+                return 0;
+            }
+
             m_iCurrentBuffPartyIndex = (m_iCurrentBuffPartyIndex + 1) % PartyNumber;
 
             if (m_iCurrentBuffPartyIndex == 0)
