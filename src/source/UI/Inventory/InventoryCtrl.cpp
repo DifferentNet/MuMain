@@ -1571,7 +1571,7 @@ void mu::ui::window::CInventoryCtrl::DeletePickedItem()
 
 void mu::ui::window::CInventoryCtrl::BackupPickedItem()
 {
-    if (ms_pPickedItem && EquipmentItem == false)
+    if (ms_pPickedItem && !IsItemMovePending())
     {
         CInventoryCtrl* pOwner = ms_pPickedItem->GetOwnerInventory();
         ITEM* pItemObj = ms_pPickedItem->GetItem();
