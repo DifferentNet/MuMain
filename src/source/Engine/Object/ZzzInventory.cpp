@@ -642,6 +642,24 @@ void RequireClass(ITEM_ATTRIBUTE* pItem)
     if (iCount == iPlayableCount)
         return;
 
+    // A leftover Summoner- or Rage Fighter-only item: no playable class can wear it, so say so instead of
+    // showing no class line (which would read as "anyone can wear it").
+    bool anyPlayable = false;
+    for (int i = 0; i < MAX_CLASS; ++i)
+    {
+        if (isPlayableClass(i) && pItem->RequireClass[i] != 0)
+        {
+            anyPlayable = true;
+        }
+    }
+    if (!anyPlayable)
+    {
+        mu_swprintf(TextList[TextNum], L"%ls", I18N::Game::CanTWearItem);
+        TextListColor[TextNum] = TEXT_COLOR_DARKRED;
+        TextBold[TextNum] = false; TextNum++;
+        return;
+    }
+
     for (int i = 0; i < MAX_CLASS; ++i)
     {
         BYTE byRequireClass = pItem->RequireClass[i];
