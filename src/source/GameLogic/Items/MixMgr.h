@@ -135,8 +135,20 @@ namespace SEASON3A
         MIXID_ITEM_PLUS_15 = 50,
         MIXID_ANCIENT_JEWEL_PLUS_14 = 51,
         MIXID_ANCIENT_JEWEL_PLUS_15 = 52,
+        MIXID_EXCELLENT_DUST_DISTIL = 53,
+        MIXID_EXCELLENT_DUST_ITEM = 54,
     };
+
+    // MU Moldova: Excellent Dust (2026-11-04; server/addons/src/ExcellentDust.cs): 53 distils excellent weapons, armour
+    // and jewellery (not ancient, wings or pets) at 100,000 zen each; 54 makes a random top excellent item of 250 dust,
+    // a Jewel of Chaos and 5,000,000 zen. The dust is the account's, so the client doesn't see it here.
+    constexpr DWORD EXCELLENT_DUST_ZEN_PER_ITEM = 100000;
     constexpr int ANCIENT_JEWEL_MIN_EXCELLENT_OPTIONS = 3;
+
+    inline bool IsExcellentDustDistilMix(int iMixID)
+    {
+        return iMixID == MIXID_EXCELLENT_DUST_DISTIL;
+    }
 
     inline bool IsAncientJewelMix(int iMixID)
     {

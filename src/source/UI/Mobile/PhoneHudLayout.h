@@ -63,4 +63,9 @@ void Release();
 // the controls the pieces keep clear of. The labels draw under the HUD, so their text would mix with
 // the buttons'. Always false while the PC's HUD shows.
 [[nodiscard]] bool CoversLabel(const TouchTarget::Box& label);
+
+// How far down the phone's HUD reaches over the window's top between left and right (window pixels):
+// the top row's band, and the hero frame where the span crosses it. The speech bubbles kept on the
+// screen stop under it, where they can be read. 0 while the PC's HUD shows.
+[[nodiscard]] float TopClearance(float left, float right);
 } // namespace UI::Mobile::PhoneHudLayout

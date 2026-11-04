@@ -29,6 +29,24 @@ namespace
         }
         return false;
     }
+
+    // MU Moldova: what Excellent Dust's distilling takes (ExcellentDust.CanDistil on the server): an excellent weapon,
+    // armour, ring or pendant, not an ancient item, wings or a pet.
+    bool IsDistillableItem(const SEASON3A::CMixItem& rItem)
+    {
+        if (!(rItem.m_dwSpecialItem & SEASON3A::RCP_SP_EXCELLENT) || (rItem.m_dwSpecialItem & SEASON3A::RCP_SP_SETITEM))
+            return false;
+        if (rItem.m_bIsEquipment)
+            return true;
+        const int iType = rItem.m_sType;
+        return iType == ITEM_RING_OF_ICE || iType == ITEM_RING_OF_POISON || iType == ITEM_PENDANT_OF_LIGHTING
+            || iType == ITEM_PENDANT_OF_FIRE || (iType >= ITEM_WIZARDS_RING && iType <= ITEM_PENDANT_OF_ABILITY);
+    }
+
+    bool RefusesForExcellentDust(const SEASON3A::MIX_RECIPE* pRecipe, const SEASON3A::CMixItem& rItem)
+    {
+        return SEASON3A::IsExcellentDustDistilMix(pRecipe->m_iMixID) && !IsDistillableItem(rItem);
+    }
 }
 
 using namespace SEASON3A;
@@ -373,6 +391,14 @@ int CMixRecipes::CheckRecipe(int iNumMixItems, CMixItem* pMixItems)
             CalcCharmBonusRate(iNumMixItems, pMixItems);
             CalcMixRate(iNumMixItems, pMixItems);
             CalcMixReqZen(iNumMixItems, pMixItems);
+            if (IsExcellentDustDistilMix((*iter)->m_iMixID))
+            {
+                // MU Moldova: distilling costs 100,000 zen per item, as the server takes it.
+                DWORD dwItems = 0;
+                for (int i = 0; i < iNumMixItems; ++i)
+                    dwItems += static_cast<DWORD>(pMixItems[i].m_iCount);
+                m_dwRequiredZen = EXCELLENT_DUST_ZEN_PER_ITEM * dwItems;
+            }
             return GetCurRecipe()->m_iMixID;
         }
         else
@@ -407,6 +433,7 @@ BOOL CMixRecipes::CheckRecipeSub(std::vector<MIX_RECIPE*>::iterator iter, int iN
                 && !((*iter)->m_bMixOption == 'I' && IsSourceOfAttachSeedSphereToWeapon(pMixItems[i]))
                 && !(bAncientJewelMix && ((*iter)->m_MixSources[j].m_dwSpecialItem & RCP_SP_EXCELLENT)
                      && pMixItems[i].m_iExcellentCount < ANCIENT_JEWEL_MIN_EXCELLENT_OPTIONS)
+                && !RefusesForExcellentDust(*iter, pMixItems[i])
                 )
             {
                 if (pMixItems[i].m_iTestCount >= (*iter)->m_MixSources[j].m_iCountMax)
@@ -521,6 +548,7 @@ int CMixRecipes::CheckRecipeSimilaritySub(std::vector<MIX_RECIPE*>::iterator ite
                 && !((*iter)->m_bMixOption == 'I' && IsSourceOfAttachSeedSphereToWeapon(pMixItems[i]))
                 && !(bAncientJewelMix && ((*iter)->m_MixSources[j].m_dwSpecialItem & RCP_SP_EXCELLENT)
                      && pMixItems[i].m_iExcellentCount < ANCIENT_JEWEL_MIN_EXCELLENT_OPTIONS)
+                && !RefusesForExcellentDust(*iter, pMixItems[i])
                 )
             {
                 if (IsChaosJewel(pMixItems[i])) iFindPoint = 1;

@@ -14063,6 +14063,38 @@
     <value>The jewels and zen are used up.</value>
     <comment>legacy_id=3907</comment>
   </data>
+  <data name="ExcellentDustDistilMix" xml:space="preserve">
+    <value>Distil into Excellent Dust</value>
+    <comment>legacy_id=3908</comment>
+  </data>
+  <data name="ExcellentDustItemMix" xml:space="preserve">
+    <value>Excellent item from dust</value>
+    <comment>legacy_id=3909</comment>
+  </data>
+  <data name="ExcellentDustDistilDesc1" xml:space="preserve">
+    <value>Weapons, armour, jewellery.</value>
+    <comment>legacy_id=3910</comment>
+  </data>
+  <data name="ExcellentDustDistilDesc2" xml:space="preserve">
+    <value>Dust = Combat Power / 100 each.</value>
+    <comment>legacy_id=3911</comment>
+  </data>
+  <data name="ExcellentDustDistilDesc3" xml:space="preserve">
+    <value>1,000 dust a week per account.</value>
+    <comment>legacy_id=3912</comment>
+  </data>
+  <data name="ExcellentDustItemDesc1" xml:space="preserve">
+    <value>250 dust + Jewel of Chaos.</value>
+    <comment>legacy_id=3913</comment>
+  </data>
+  <data name="ExcellentDustItemDesc2" xml:space="preserve">
+    <value>A random Box +5 excellent item.</value>
+    <comment>legacy_id=3914</comment>
+  </data>
+  <data name="ExcellentDustItemDesc3" xml:space="preserve">
+    <value>2 options 70 %, 3 options 30 %.</value>
+    <comment>legacy_id=3915</comment>
+  </data>
   <data name="GmPanelTitleAdmin" xml:space="preserve">
     <value>GM panel - admin</value>
   </data>
