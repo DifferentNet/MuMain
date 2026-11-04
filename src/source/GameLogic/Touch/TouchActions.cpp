@@ -700,6 +700,7 @@ bool FriendOutOfSight()
 
 // A party member is chosen but out of sight: the player is told, every few seconds at most, rather than
 // the heal going to the character or Teleport Ally asking for a choice already made.
+// The turn goes back, so a held Attack keeps swinging.
 Progress FriendTooFar(const std::wstring& name)
 {
     const auto now = Clock::now();
@@ -710,7 +711,7 @@ Progress FriendTooFar(const std::wstring& name)
         text += name;
         UI::Chat::PostSystem(text, mu::ui::window::TYPE_ERROR_MESSAGE);
     }
-    return Progress::Done;
+    return NothingToDo();
 }
 
 // Whether the character has the mana and the AG for the skill, as GameLogic::Combat::CheckMana weighs
