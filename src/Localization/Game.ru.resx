@@ -15215,6 +15215,9 @@
   <data name="PadChooseFriendFirst" xml:space="preserve">
     <value>Телепорт союзника: сначала выберите члена группы кнопкой RB</value>
   </data>
+  <data name="PadFriendTooFar" xml:space="preserve">
+    <value>Слишком далеко: </value>
+  </data>
   <data name="PadBindPick" xml:space="preserve">
     <value>Выберите умение курсором и A, потом нажмите X, Y или B (RT + X или Y для кнопок 4 и 5), куда его поставить</value>
   </data>
