@@ -636,17 +636,26 @@ bool IsFriend(const CHARACTER* character)
     return IsLiveMember(character) && TilesTo(character) <= TargetRange;
 }
 
-// The chosen party member while in sight, near or not: a heal walks up to them. One who left the party
-// is forgotten.
+// Forgets the chosen party member once they are out of the party (left it, or it broke up), on the
+// screen or off it: the party list holds every member by name, wherever they are.
+void ForgetGoneFriend()
+{
+    if (g_friendKey == NoTarget)
+        return;
+    for (int member = 0; member < PartyNumber; ++member)
+    {
+        if (!g_friendName.empty() && g_friendName == Party[member].Name)
+            return;
+    }
+    g_friendKey = NoTarget;
+    g_friendName.clear();
+}
+
+// The chosen party member while in sight, near or not: a heal walks up to them.
 const CHARACTER* FriendInSight()
 {
+    ForgetGoneFriend();
     const CHARACTER* chosen = FindByKey(g_friendKey);
-    if (chosen != nullptr && chosen->Object.Live && chosen->Object.Kind == KIND_PLAYER &&
-        !g_pPartyManager->IsPartyMember(IndexOf(chosen)))
-    {
-        g_friendKey = NoTarget;
-        return nullptr;
-    }
     return IsLiveMember(chosen) && TilesTo(chosen) <= FriendSightRange ? chosen : nullptr;
 }
 
@@ -660,9 +669,11 @@ const CHARACTER* ChosenFriend()
     return FriendInSight();
 }
 
-// A party member is chosen but gone from the screen or farther than FriendSightRange.
+// A party member is chosen, still in the party, but gone from the screen (another map, far off) or
+// farther than FriendSightRange.
 bool FriendOutOfSight()
 {
+    ForgetGoneFriend();
     if (g_friendKey == NoTarget)
         return false;
     const CHARACTER* chosen = FindByKey(g_friendKey);
@@ -797,7 +808,13 @@ Progress CastAtFriend(ActionSkillType skill, const CHARACTER* friendCharacter)
         if (!HeroStands())
             return Progress::Pending;
     }
-    return OutcomeOf(Automation::CastSkill(skill, true, friendCharacter->Key, true, HuntingDistance));
+    const Automation::SkillResult result =
+        Automation::CastSkill(skill, true, friendCharacter->Key, true, HuntingDistance);
+    // No way to them (round a wall, across water) or gone from the view: said, rather than the press
+    // waiting out its follow-through for nothing.
+    if (result == Automation::SkillResult::NoPath || result == Automation::SkillResult::NotInView)
+        return FriendTooFar();
+    return OutcomeOf(result);
 }
 
 // A tile Teleport may land on: what a mouse click there allows (AttackWizard), no wall, no safe zone,
@@ -1310,6 +1327,8 @@ void ToggleFriend(int characterKey)
     g_friendKey = own || characterKey == g_friendKey ? NoTarget : characterKey;
     const CHARACTER* chosen = FindByKey(g_friendKey);
     g_friendName = chosen != nullptr ? chosen->ID : L"";
+    if (g_friendName.empty())
+        g_friendKey = NoTarget;
 }
 
 int FriendKey()
@@ -1364,6 +1383,7 @@ void Reset()
     g_meetKey = NoTarget;
     g_forceAttack = false;
     g_friendKey = NoTarget;
+    g_friendName.clear();
     g_forgottenUntil.clear();
     g_skippedDrops.clear();
     g_dropWalkedTo = NoDrop;
