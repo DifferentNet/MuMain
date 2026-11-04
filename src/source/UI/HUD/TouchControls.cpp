@@ -419,6 +419,9 @@ struct ControlsModel
     int pickerSlot = 0;
     std::vector<PickerEntry> pickerEntries;
     bool pickerNoSkills = false;
+    // The hero knows no skill yet (a new character): the skill buttons and Skills hide, five plain
+    // pluses with nothing to put on them only take room.
+    bool noSkills = false;
     bool pickerCanClear = false;
     bool pickerPages = false;
     Rml::String pickerPage;
@@ -520,6 +523,7 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     c.Bind("picker_slot", &model.pickerSlot);
     c.Bind("picker_entries", &model.pickerEntries);
     c.Bind("picker_no_skills", &model.pickerNoSkills);
+    c.Bind("no_skills", &model.noSkills);
     c.Bind("picker_can_clear", &model.pickerCanClear);
     c.Bind("picker_pages", &model.pickerPages);
     c.Bind("picker_page", &model.pickerPage);
@@ -1027,6 +1031,9 @@ void SyncSkills(ControlsModel& model)
         SetField(model.skillCooldowns[slot], cooldown, CooldownFields[slot]);
         SetField(model.skillSelected[slot], !empty && g_pSkillList->IsHotKeyCurrentSkill(hotKey), SelectedFields[slot]);
     }
+    // A skill on a button is known; only with all of them empty is the list read.
+    const bool allEmpty = std::ranges::all_of(model.skillEmpty, [](bool empty) { return empty; });
+    SetField(model.noSkills, allEmpty && g_pSkillList->GetListedSkills().empty(), "no_skills");
 }
 
 bool WaitingForButton()
