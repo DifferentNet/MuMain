@@ -310,4 +310,7 @@
 	/* Grown from the edge it keeps to, so it stays on the screen. */
 	#panel.gmd-edge-left { transform-origin: 0 0; }
 	#panel.gmd-edge-right { transform-origin: 100% 0; }
+	/* MU Moldova: the 387-tall goblin menu at 1.3 runs past a 480-tall phone screen (Close lost);
+	   60 + 387 x 1.08 = 478 keeps it on (review 2026-11-05). */
+	#panel[data-kind="chaos-mix"] { transform: scale(1.08); }
 }

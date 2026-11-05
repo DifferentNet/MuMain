@@ -596,7 +596,13 @@ void CMixInventory::SyncMixContentModel()
 
     syncBool(&MixInventoryRmlModel::recipeReady, "recipe_ready", g_MixRecipeMgr.IsReadyToMix() == TRUE);
 
-    g_MixRecipeMgr.GetCurRecipeName(szText, 1);
+    // MU Moldova: after a dust mix the machine takes nothing until it is reopened (MIX_READY), so say that
+    // instead of the recipe and the "put items in" hints (review 2026-11-05).
+    const bool dustFinished = GetMixState() == MIX_FINISHED && GameLogic::ExcellentDust::IsDustMode();
+    if (dustFinished)
+        mu_swprintf(szText, L"%ls", I18N::Game::ExcellentDustReopen);
+    else
+        g_MixRecipeMgr.GetCurRecipeName(szText, 1);
     syncWide(&MixInventoryRmlModel::recipeLine1, "recipe_line1", szText);
     szText[0] = L'\0';
     const bool showRecipeLine2 = (g_MixRecipeMgr.GetCurRecipeName(szText, 2) == TRUE);
@@ -724,8 +730,11 @@ void CMixInventory::SyncMixContentModel()
     }
     else if (g_MixRecipeMgr.IsMixInit())
     {
-        // MU Moldova: the dust mode says what to put in instead.
-        if (GameLogic::ExcellentDust::IsDustMode())
+        // MU Moldova: the dust mode says what to put in instead (nothing once mixed: see dustFinished).
+        if (dustFinished)
+        {
+        }
+        else if (GameLogic::ExcellentDust::IsDustMode())
         {
             statusLines.push_back({ StringUtils::WideToNarrow(I18N::Game::ExcellentDustHint), "missing" });
             statusLines.push_back({ StringUtils::WideToNarrow(I18N::Game::ExcellentDustHintCraft), "missing" });
