@@ -465,6 +465,9 @@ bool mu::ui::window::CBloodCastleResultMsgBox::Create(float fPriority)
     int x, y, width, height;
 
     AddCallbackFunc(mu::ui::window::CBloodCastleResultMsgBox::OkBtnDown, MSGBOX_EVENT_USER_COMMON_OK);
+    // Enter and Esc close it too, as its OK does.
+    AddCallbackFunc(mu::ui::window::CBloodCastleResultMsgBox::OkBtnDown, MSGBOX_EVENT_PRESSKEY_RETURN);
+    AddCallbackFunc(mu::ui::window::CBloodCastleResultMsgBox::OkBtnDown, MSGBOX_EVENT_PRESSKEY_ESC);
 
     width = MSGBOX_WIDTH;
     height = MSGBOX_TOP_HEIGHT + (MIDDLE_COUNT * MSGBOX_MIDDLE_HEIGHT) + MSGBOX_BOTTOM_HEIGHT;
@@ -529,6 +532,9 @@ bool mu::ui::window::CDevilSquareRankMsgBox::Create(float fPriority)
     int x, y, width, height;
 
     AddCallbackFunc(mu::ui::window::CDevilSquareRankMsgBox::OkBtnDown, MSGBOX_EVENT_USER_COMMON_OK);
+    // Enter and Esc close it too, as its OK does.
+    AddCallbackFunc(mu::ui::window::CDevilSquareRankMsgBox::OkBtnDown, MSGBOX_EVENT_PRESSKEY_RETURN);
+    AddCallbackFunc(mu::ui::window::CDevilSquareRankMsgBox::OkBtnDown, MSGBOX_EVENT_PRESSKEY_ESC);
 
     width = MSGBOX_WIDTH;
     height = MSGBOX_TOP_HEIGHT + (MIDDLE_COUNT1 * MSGBOX_MIDDLE_HEIGHT)
@@ -593,6 +599,9 @@ bool mu::ui::window::CChaosCastleResultMsgBox::Create(float fPriority)
     int x, y, width, height;
 
     AddCallbackFunc(mu::ui::window::CChaosCastleResultMsgBox::OkBtnDown, MSGBOX_EVENT_USER_COMMON_OK);
+    // Enter and Esc close it too, as its OK does.
+    AddCallbackFunc(mu::ui::window::CChaosCastleResultMsgBox::OkBtnDown, MSGBOX_EVENT_PRESSKEY_RETURN);
+    AddCallbackFunc(mu::ui::window::CChaosCastleResultMsgBox::OkBtnDown, MSGBOX_EVENT_PRESSKEY_ESC);
 
     width = MSGBOX_WIDTH;
     height = MSGBOX_TOP_HEIGHT + (MIDDLE_COUNT * MSGBOX_MIDDLE_HEIGHT) + MSGBOX_BOTTOM_HEIGHT;

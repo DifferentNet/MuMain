@@ -7,6 +7,8 @@
 #include "GameShop/InGameShop.h"
 #include "GameShop/InGameShopSystem.h"
 #include "GameLogic/Events/MatchEvent.h"
+#include "I18N/All.h"
+#include "UI/Core/WindowCommon.h"
 #include "UI/Core/WindowManager.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Events/BloodCastleTime.h"
@@ -90,6 +92,8 @@ constexpr std::array kEntries = {
           L"HUD status texts, both crown switches held (shown at the switches, Valley of Loren 150-200, "
           L"180-230), a macro cooldown and the Blood Castle entry countdown"},
     Entry{L"bcresult", Event::BloodCastleResult, kNoWindow, L"Blood Castle result box, quest completed"},
+    Entry{L"bcwin", Event::BloodCastleWin, kNoWindow,
+          L"Blood Castle winner: the server's OK box (dialog 1, 23) and then the result box, as the weapon's bearer gets them"},
     Entry{L"ccresult", Event::ChaosCastleResult, kNoWindow, L"Chaos Castle result box, quest failed"},
     Entry{L"dsrank", Event::DevilSquareRank, kNoWindow, L"Devil Square ranking box, five players, the hero third"},
     Entry{L"switchbox", Event::CrownSwitchBox, kNoWindow, L"crown switch progress box, another guild pushing it"},
@@ -308,6 +312,14 @@ void SeedBloodCastleResult()
     matchEvent::SetMatchResult(255, 0, const_cast<MatchResult*>(&result), 1);
 }
 
+// The winner of a Blood Castle gets two boxes at once: OpenMU's ShowDialog(1, 23) (an OK box, text 833) when
+// the weapon reaches the Archangel, then the result box when the event ends.
+void SeedBloodCastleWin()
+{
+    mu::ui::window::CreateOkMessageBox(I18N::Game::Lookup(833));
+    SeedBloodCastleResult();
+}
+
 void SeedChaosCastleResult()
 {
     LendMatch<SEASON3B::CNewChaosCastleSystem>();
@@ -391,6 +403,7 @@ void Seed(Event event)
     case Event::CashShop: SeedCashShop(); break;
     case Event::HudStatus: SeedHudStatus(); break;
     case Event::BloodCastleResult: SeedBloodCastleResult(); break;
+    case Event::BloodCastleWin: SeedBloodCastleWin(); break;
     case Event::ChaosCastleResult: SeedChaosCastleResult(); break;
     case Event::DevilSquareRank: SeedDevilSquareRank(); break;
     case Event::GuildWar: SeedGuildWar(); break;
@@ -439,6 +452,7 @@ void Reset(Event event)
         break;
     case Event::Notices: UI::Notices::Clear(); break;
     case Event::BloodCastleResult:
+    case Event::BloodCastleWin:
     case Event::ChaosCastleResult:
     case Event::DevilSquareRank:
     case Event::CrownSwitchBox:

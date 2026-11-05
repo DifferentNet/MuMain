@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "UI/Dialogs/MessageBox.h"	// self
 #include "UI/Core/WindowManager.h"
+#include "UI/Dialogs/MessageBoxView.h"
 #include "UI/RmlBridge/RmlPointer.h"
 #include "UI/Scaling/UITransform.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
@@ -152,7 +153,7 @@ bool mu::ui::window::CMessageBoxMng::UpdateMouseEvent()
 {
     std::sort(m_vecMsgBoxes.begin(), m_vecMsgBoxes.end(), ComparePriority);
     auto vi = m_vecMsgBoxes.begin();
-    if (vi == m_vecMsgBoxes.end())
+    if (vi == m_vecMsgBoxes.end() || IsGenericDialogOpen())
         return true;
 
     // The top box's document reports its buttons. A box that cannot move takes every press; one
@@ -169,7 +170,7 @@ bool mu::ui::window::CMessageBoxMng::UpdateKeyEvent()
 {
     std::sort(m_vecMsgBoxes.begin(), m_vecMsgBoxes.end(), ComparePriority);
     auto vi = m_vecMsgBoxes.begin();
-    if (vi == m_vecMsgBoxes.end())
+    if (vi == m_vecMsgBoxes.end() || IsGenericDialogOpen())
         return true;
 
     CMessageBoxBase* pCurMsgBox = (*vi);

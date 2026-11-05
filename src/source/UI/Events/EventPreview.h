@@ -23,6 +23,7 @@ enum class Event
     CashShop,
     HudStatus,
     BloodCastleResult,
+    BloodCastleWin,
     ChaosCastleResult,
     DevilSquareRank,
     CrownSwitchBox,
