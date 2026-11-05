@@ -88,6 +88,7 @@ private:
     // CDirection::GetCameraPosition().
     int  m_PlayerZoomLevel = 3;
     void HandleWheelZoom();
+    void SavePlayerZoomLevel() const;  // to config.ini [Camera] ZoomLevel, when it changed
 
     // These are direct copies of the static functions from CameraUtility.cpp
     // We're NOT refactoring them yet - just moving them as-is

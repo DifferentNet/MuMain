@@ -7,6 +7,7 @@
 #ifdef _EDITOR
 #include "FreeFlyCamera.h"
 #endif
+#include "Data/GameConfig/GameConfig.h"
 
 // External global camera state
 extern CameraState g_Camera;
@@ -14,6 +15,7 @@ extern CameraState g_Camera;
 CameraManager::CameraManager()
     : m_CurrentMode(CameraMode::Default)
     , m_pActiveCamera(nullptr)
+    , m_ZoomLocked(GameConfig::GetInstance().GetZoomLock())
 {
 }
 
@@ -73,6 +75,7 @@ bool CameraManager::Update()
     extern EGameScene SceneFlag;
     if (SceneFlag != MAIN_SCENE && m_CurrentMode != CameraMode::Default)
         SetCameraMode(CameraMode::Default);
+    RestoreSavedModeWhenReady();
 
 #ifdef _EDITOR
     if (m_pSpectatedCamera && m_CurrentMode == CameraMode::FreeFly)
@@ -184,7 +187,49 @@ bool CameraManager::SetCameraMode(CameraMode mode)
 void CameraManager::CycleToNextMode()
 {
     CameraMode nextMode = GetNextCameraMode(m_CurrentMode);
-    SetCameraMode(nextMode);
+    if (!SetCameraMode(nextMode))
+        return;
+    m_RestoreSavedMode = false;
+
+    // Only the player's own choice is saved, not the forced default outside MainScene.
+    // The editor's FreeFly stays out of config.ini.
+    if (m_CurrentMode != CameraMode::Default && m_CurrentMode != CameraMode::Orbital)
+        return;
+    GameConfig::GetInstance().SetCameraMode(m_CurrentMode == CameraMode::Orbital ? 1 : 0);
+    GameConfig::GetInstance().SaveCamera();
+}
+
+void CameraManager::ToggleZoomLock()
+{
+    m_ZoomLocked = !m_ZoomLocked;
+    GameConfig::GetInstance().SetZoomLock(m_ZoomLocked);
+    GameConfig::GetInstance().SaveCamera();
+}
+
+void CameraManager::RestoreSavedModeWhenReady()
+{
+    extern EGameScene SceneFlag;
+    if ((int)SceneFlag != m_LastScene)
+    {
+        m_LastScene = (int)SceneFlag;
+        m_MainSceneFrames = 0;
+        m_RestoreSavedMode = SceneFlag == MAIN_SCENE && GameConfig::GetInstance().GetCameraMode() == 1;
+    }
+    if (!m_RestoreSavedMode)
+        return;
+
+    // The orbital camera starts from the default camera's pose, so the default one first
+    // places itself behind a live Hero.
+    extern CHARACTER* Hero;
+    if (Hero == nullptr || !Hero->Object.Live)
+        return;
+    constexpr int FRAMES_BEFORE_RESTORE = 5;
+    if (++m_MainSceneFrames < FRAMES_BEFORE_RESTORE)
+        return;
+
+    m_RestoreSavedMode = false;
+    if (m_CurrentMode == CameraMode::Default)
+        SetCameraMode(CameraMode::Orbital);
 }
 
 #ifdef _EDITOR

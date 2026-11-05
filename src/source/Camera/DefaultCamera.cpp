@@ -26,6 +26,8 @@
 #include "World/MapInfra/w_MapHeaders.h"
 #include "UI/Core/UIManager.h"
 #include "CameraDebugLog.h"
+#include "Data/GameConfig/GameConfig.h"
+#include <algorithm>
 #include "Render/Text/CUIRenderText.h"
 
 // External variable declarations
@@ -96,6 +98,16 @@ DefaultCamera::DefaultCamera(CameraState& state)
     , m_Config(CameraConfig::ForMainSceneOrbitalCamera())  // Phase 1: Initialize with gameplay config
 {
     m_FrustumCache = {};
+    // The wheel step the player left last time (config.ini [Camera] ZoomLevel).
+    m_PlayerZoomLevel = std::clamp(GameConfig::GetInstance().GetZoomLevel(), 0, PLAYER_ZOOM_LEVEL_COUNT - 1);
+}
+
+void DefaultCamera::SavePlayerZoomLevel() const
+{
+    if (GameConfig::GetInstance().GetZoomLevel() == m_PlayerZoomLevel)
+        return;
+    GameConfig::GetInstance().SetZoomLevel(m_PlayerZoomLevel);
+    GameConfig::GetInstance().SaveCamera();
 }
 
 bool DefaultCamera::IsHeroValid() const
@@ -704,6 +716,7 @@ void DefaultCamera::UpdateCustomCameraDistance()
 void DefaultCamera::ResetView()
 {
     m_PlayerZoomLevel = PLAYER_ZOOM_LEVEL_DEFAULT;
+    SavePlayerZoomLevel();
 }
 
 void DefaultCamera::HandleWheelZoom()
@@ -730,6 +743,7 @@ void DefaultCamera::HandleWheelZoom()
         m_PlayerZoomLevel = 0;
     if (m_PlayerZoomLevel >= PLAYER_ZOOM_LEVEL_COUNT)
         m_PlayerZoomLevel = PLAYER_ZOOM_LEVEL_COUNT - 1;
+    SavePlayerZoomLevel();
 }
 
 void DefaultCamera::UpdateCameraDistance()

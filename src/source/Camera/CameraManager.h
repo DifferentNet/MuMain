@@ -64,9 +64,9 @@ public:
     bool IsZoomLocked() const { return m_ZoomLocked; }
 
     /**
-     * @brief Flips the zoom-lock flag (F10 key).
+     * @brief Flips the zoom-lock flag (F10 key) and saves it to config.ini.
      */
-    void ToggleZoomLock() { m_ZoomLocked = !m_ZoomLocked; }
+    void ToggleZoomLock();
 
     /**
      * @brief Resets the active camera's user-facing view (F11 key).
@@ -87,7 +87,14 @@ private:
 
     CameraMode m_CurrentMode;
     ICamera* m_pActiveCamera;
-    bool m_ZoomLocked = true;  // F10 toggles; default = locked
+    bool m_ZoomLocked = true;  // F10 toggles; config.ini [Camera] ZoomLock, default = locked
+
+    // The F9 mode leaves for the default camera outside MainScene (Update). Entering MainScene
+    // again, the saved mode comes back once the Hero has stood there a few frames.
+    int m_LastScene = -1;
+    int m_MainSceneFrames = 0;
+    bool m_RestoreSavedMode = false;
+    void RestoreSavedModeWhenReady();
 
     // Camera instances
     std::unique_ptr<ICamera> m_pDefaultCamera;
