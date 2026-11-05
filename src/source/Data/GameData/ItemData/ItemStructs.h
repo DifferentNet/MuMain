@@ -3,6 +3,9 @@
 #include "Core/Platform/WinCompat.h"
 #include "Data/Translation/MultiLanguage.h"
 
+#include <limits>
+#include <type_traits>
+
 // Forward declarations for constants
 #ifndef MAX_CLASS
 #define MAX_CLASS 7
@@ -24,7 +27,7 @@
 typedef struct
 {
     char Name[30];
-    ITEM_ATTRIBUTE_FIELDS
+    ITEM_ATTRIBUTE_FILE_FIELDS
 } ITEM_ATTRIBUTE_FILE_LEGACY;
 
 // Current file format structure with MAX_ITEM_NAME byte name
@@ -32,7 +35,7 @@ typedef struct
 typedef struct
 {
     char Name[MAX_ITEM_NAME];
-    ITEM_ATTRIBUTE_FIELDS
+    ITEM_ATTRIBUTE_FILE_FIELDS
 } ITEM_ATTRIBUTE_FILE;
 
 // Runtime structure with wide-character name
@@ -48,7 +51,21 @@ typedef struct
 // ============================================================================
 
 // Generate field copy statements from X-macro
-#define COPY_FIELD(name, type, arraySize, width, i18nName) (dest).name = (source).name;
+// A value too big for a narrower field (a WordFileByte field written to a .bmd record) is capped at its maximum.
+template<typename TDest, typename TSource>
+inline TDest ItemFieldValue(TSource value)
+{
+    if constexpr (!std::is_same_v<TDest, bool> && std::is_integral_v<TSource> && sizeof(TDest) < sizeof(TSource))
+    {
+        if (value > static_cast<TSource>((std::numeric_limits<TDest>::max)()))
+        {
+            return (std::numeric_limits<TDest>::max)();
+        }
+    }
+    return static_cast<TDest>(value);
+}
+
+#define COPY_FIELD(name, type, arraySize, width, i18nName)     (dest).name = ItemFieldValue<std::remove_reference_t<decltype((dest).name)>>((source).name);
 
 // Macro to copy all non-name fields from source to dest
 #define COPY_ITEM_ATTRIBUTE_FIELDS(dest, source) \

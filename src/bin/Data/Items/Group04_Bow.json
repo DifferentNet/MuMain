@@ -626,7 +626,7 @@
     {
       "number": 23,
       "name": {
-        "en": "Dark Stinger",
+        "en": "Stinger Bow",
         "de": "Dunkler Stachel",
         "es": "Punzón Oscuro",
         "pt": "Golpeador negro"
@@ -639,12 +639,11 @@
       "skill": 24,
       "level": 134,
       "durability": 80,
-      "damageMin": 162,
-      "damageMax": 184,
+      "damageMin": 810,
+      "damageMax": 920,
       "attackSpeed": 45,
       "attackType": 2,
       "requirements": {
-        "level": 380,
         "strength": 32,
         "dexterity": 209
       },

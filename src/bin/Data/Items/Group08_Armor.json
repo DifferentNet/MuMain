@@ -1048,7 +1048,7 @@
     {
       "number": 45,
       "name": {
-        "en": "Titan  Armor",
+        "en": "Titan Armor",
         "de": "Titanenrüstung",
         "es": "Armadura Titán",
         "pt": "Armadura do titã"
@@ -1058,9 +1058,8 @@
       "slot": "armor",
       "level": 132,
       "durability": 86,
-      "defense": 81,
+      "defense": 162,
       "requirements": {
-        "level": 380,
         "strength": 222,
         "dexterity": 32
       },
@@ -1081,9 +1080,8 @@
       "slot": "armor",
       "level": 128,
       "durability": 86,
-      "defense": 62,
+      "defense": 124,
       "requirements": {
-        "level": 380,
         "strength": 74,
         "dexterity": 162
       },
@@ -1094,19 +1092,18 @@
     {
       "number": 47,
       "name": {
-        "en": "Phantom  Armor",
-        "de": "Phantom-Rüstung",
-        "es": "Armadura Fantasma",
-        "pt": "Armadura do fantasma"
+        "en": "Destroy Armor",
+        "de": "Zerstörerrüstung",
+        "es": "Armadura Destructora",
+        "pt": "Armadura da destruição"
       },
       "width": 2,
       "height": 3,
       "slot": "armor",
       "level": 131,
       "durability": 86,
-      "defense": 80,
+      "defense": 160,
       "requirements": {
-        "level": 380,
         "strength": 212,
         "dexterity": 57
       },
@@ -1117,19 +1114,18 @@
     {
       "number": 48,
       "name": {
-        "en": "Destroy Armor",
-        "de": "Zerstörerrüstung",
-        "es": "Armadura Destructora",
-        "pt": "Armadura da destruição"
+        "en": "Phantom Armor",
+        "de": "Phantom-Rüstung",
+        "es": "Armadura Fantasma",
+        "pt": "Armadura do fantasma"
       },
       "width": 2,
       "height": 3,
       "slot": "armor",
       "level": 125,
       "durability": 86,
-      "defense": 66,
+      "defense": 132,
       "requirements": {
-        "level": 380,
         "strength": 62,
         "dexterity": 19,
         "energy": 165
@@ -1151,9 +1147,8 @@
       "slot": "armor",
       "level": 129,
       "durability": 86,
-      "defense": 60,
+      "defense": 120,
       "requirements": {
-        "level": 380,
         "strength": 55,
         "dexterity": 197
       },
@@ -1164,19 +1159,18 @@
     {
       "number": 50,
       "name": {
-        "en": "Divine Armor",
+        "en": "Faith Armor",
         "de": "Glaubensrüstung",
-        "es": "Armadura Divina",
-        "pt": "Armadura divina"
+        "es": "Armadura de Fe",
+        "pt": "Armadura da fé"
       },
       "width": 2,
       "height": 2,
       "slot": "armor",
       "level": 122,
       "durability": 86,
-      "defense": 52,
+      "defense": 104,
       "requirements": {
-        "level": 380,
         "strength": 32,
         "dexterity": 29,
         "energy": 138
@@ -1188,7 +1182,7 @@
     {
       "number": 51,
       "name": {
-        "en": "Royal Armor",
+        "en": "Paewang Armor",
         "de": "Königliche Rüstung",
         "es": "Armadura Real",
         "pt": "Armadura real"
@@ -1198,9 +1192,8 @@
       "slot": "armor",
       "level": 132,
       "durability": 86,
-      "defense": 58,
+      "defense": 116,
       "requirements": {
-        "level": 380,
         "strength": 105,
         "dexterity": 38
       },
@@ -1221,9 +1214,8 @@
       "slot": "armor",
       "level": 129,
       "durability": 86,
-      "defense": 50,
+      "defense": 100,
       "requirements": {
-        "level": 380,
         "strength": 60,
         "dexterity": 15,
         "energy": 181

@@ -476,11 +476,10 @@
       "skill": 18,
       "level": 104,
       "durability": 51,
-      "blockRate": 90,
-      "defense": 19,
+      "blockRate": 180,
+      "defense": 38,
       "attackType": 4,
       "requirements": {
-        "level": 380,
         "strength": 95,
         "dexterity": 48
       },
@@ -503,11 +502,10 @@
       "skill": 18,
       "level": 102,
       "durability": 51,
-      "blockRate": 96,
-      "defense": 20,
+      "blockRate": 192,
+      "defense": 40,
       "attackType": 4,
       "requirements": {
-        "level": 380,
         "strength": 80,
         "dexterity": 61
       },
@@ -529,11 +527,10 @@
       "weaponKind": "shield",
       "level": 99,
       "durability": 51,
-      "blockRate": 58,
-      "defense": 14,
+      "blockRate": 116,
+      "defense": 28,
       "attackType": 4,
       "requirements": {
-        "level": 380,
         "strength": 26,
         "dexterity": 53,
         "energy": 26
@@ -557,11 +554,10 @@
       "skill": 18,
       "level": 106,
       "durability": 51,
-      "blockRate": 30,
-      "defense": 12,
+      "blockRate": 60,
+      "defense": 24,
       "attackType": 4,
       "requirements": {
-        "level": 380,
         "strength": 54,
         "dexterity": 18
       },

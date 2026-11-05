@@ -923,7 +923,7 @@
     {
       "number": 45,
       "name": {
-        "en": "Titan  Helm",
+        "en": "Titan Helm",
         "de": "Titanenhelm",
         "es": "Yelmo Titán",
         "pt": "Elmo do titã"
@@ -933,9 +933,8 @@
       "slot": "helm",
       "level": 111,
       "durability": 86,
-      "defense": 63,
+      "defense": 126,
       "requirements": {
-        "level": 380,
         "strength": 222,
         "dexterity": 32
       },
@@ -956,9 +955,8 @@
       "slot": "helm",
       "level": 107,
       "durability": 86,
-      "defense": 51,
+      "defense": 102,
       "requirements": {
-        "level": 380,
         "strength": 74,
         "dexterity": 162
       },
@@ -979,9 +977,8 @@
       "slot": "helm",
       "level": 111,
       "durability": 86,
-      "defense": 50,
+      "defense": 100,
       "requirements": {
-        "level": 380,
         "strength": 55,
         "dexterity": 197
       },
@@ -992,19 +989,18 @@
     {
       "number": 50,
       "name": {
-        "en": "Divine Helm",
+        "en": "Faith Helm",
         "de": "Glaubenshelm",
-        "es": "Yelmo Divino",
-        "pt": "Elmo divino"
+        "es": "Yelmo de Fe",
+        "pt": "Elmo da fé"
       },
       "width": 2,
       "height": 2,
       "slot": "helm",
       "level": 104,
       "durability": 86,
-      "defense": 44,
+      "defense": 88,
       "requirements": {
-        "level": 380,
         "strength": 32,
         "dexterity": 29,
         "energy": 138
@@ -1016,7 +1012,7 @@
     {
       "number": 51,
       "name": {
-        "en": "Royal Mask",
+        "en": "Paewang Mask",
         "de": "Königliche Maske",
         "es": "Máscara Real",
         "pt": "Máscara real"
@@ -1026,9 +1022,8 @@
       "slot": "helm",
       "level": 111,
       "durability": 86,
-      "defense": 44,
+      "defense": 88,
       "requirements": {
-        "level": 380,
         "strength": 105,
         "dexterity": 38
       },
@@ -1049,9 +1044,8 @@
       "slot": "helm",
       "level": 109,
       "durability": 86,
-      "defense": 41,
+      "defense": 82,
       "requirements": {
-        "level": 380,
         "strength": 60,
         "dexterity": 15,
         "energy": 181

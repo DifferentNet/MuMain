@@ -1084,7 +1084,7 @@
     {
       "number": 45,
       "name": {
-        "en": "Titan  Gloves",
+        "en": "Titan Gloves",
         "de": "Titanenhandschuhe",
         "es": "Guantes Titán",
         "pt": "Luvas do titã"
@@ -1094,10 +1094,9 @@
       "slot": "gloves",
       "level": 100,
       "durability": 86,
-      "defense": 56,
+      "defense": 112,
       "attackSpeed": 7,
       "requirements": {
-        "level": 380,
         "strength": 222,
         "dexterity": 32
       },
@@ -1118,10 +1117,9 @@
       "slot": "gloves",
       "level": 97,
       "durability": 86,
-      "defense": 42,
+      "defense": 84,
       "attackSpeed": 7,
       "requirements": {
-        "level": 380,
         "strength": 74,
         "dexterity": 162
       },
@@ -1132,20 +1130,19 @@
     {
       "number": 47,
       "name": {
-        "en": "Phantom  Gloves",
-        "de": "Phantom-Handschuhe",
-        "es": "Guantes Fantasma",
-        "pt": "Luvas do fantasma"
+        "en": "Destroy Gloves",
+        "de": "Zerstörerhandschuhe",
+        "es": "Guantes Destructores",
+        "pt": "Luvas da destruição"
       },
       "width": 2,
       "height": 2,
       "slot": "gloves",
       "level": 101,
       "durability": 86,
-      "defense": 49,
+      "defense": 98,
       "attackSpeed": 7,
       "requirements": {
-        "level": 380,
         "strength": 212,
         "dexterity": 57
       },
@@ -1156,20 +1153,19 @@
     {
       "number": 48,
       "name": {
-        "en": "Destroy Gloves",
-        "de": "Zerstörerhandschuhe",
-        "es": "Guantes Destructores",
-        "pt": "Luvas da destruição"
+        "en": "Phantom Gloves",
+        "de": "Phantom-Handschuhe",
+        "es": "Guantes Fantasma",
+        "pt": "Luvas do fantasma"
       },
       "width": 2,
       "height": 2,
       "slot": "gloves",
       "level": 99,
       "durability": 86,
-      "defense": 40,
+      "defense": 80,
       "attackSpeed": 7,
       "requirements": {
-        "level": 380,
         "strength": 62,
         "dexterity": 19,
         "energy": 165
@@ -1191,10 +1187,9 @@
       "slot": "gloves",
       "level": 100,
       "durability": 86,
-      "defense": 43,
+      "defense": 86,
       "attackSpeed": 7,
       "requirements": {
-        "level": 380,
         "strength": 55,
         "dexterity": 197
       },
@@ -1205,20 +1200,19 @@
     {
       "number": 50,
       "name": {
-        "en": "Divine Gloves",
+        "en": "Faith Gloves",
         "de": "Glaubenshandschuhe",
-        "es": "Guantes Divinos",
-        "pt": "Luvas divinas"
+        "es": "Guantes de Fe",
+        "pt": "Luvas da fé"
       },
       "width": 2,
       "height": 2,
       "slot": "gloves",
       "level": 95,
       "durability": 86,
-      "defense": 36,
+      "defense": 72,
       "attackSpeed": 7,
       "requirements": {
-        "level": 380,
         "strength": 32,
         "dexterity": 29,
         "energy": 138
@@ -1230,7 +1224,7 @@
     {
       "number": 51,
       "name": {
-        "en": "Royal Gloves",
+        "en": "Paewang Gloves",
         "de": "Königliche Handschuhe",
         "es": "Guantes Reales",
         "pt": "Luvas reais"
@@ -1240,10 +1234,9 @@
       "slot": "gloves",
       "level": 101,
       "durability": 86,
-      "defense": 34,
+      "defense": 68,
       "attackSpeed": 7,
       "requirements": {
-        "level": 380,
         "strength": 105,
         "dexterity": 38
       },
@@ -1264,10 +1257,9 @@
       "slot": "gloves",
       "level": 100,
       "durability": 86,
-      "defense": 31,
+      "defense": 62,
       "attackSpeed": 7,
       "requirements": {
-        "level": 380,
         "strength": 60,
         "dexterity": 15,
         "energy": 181

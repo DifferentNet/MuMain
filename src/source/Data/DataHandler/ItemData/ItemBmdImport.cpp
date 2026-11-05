@@ -25,7 +25,10 @@ struct FieldLayout
     std::string name;
     size_t fileOffset = 0;
     size_t attributeOffset = 0;
+    // Bytes in the file record.
     size_t size = 0;
+    // Bytes in ITEM_ATTRIBUTE; more than size for a WordFileByte field (damage).
+    size_t attributeSize = 0;
 };
 
 template <typename TFileFormat> std::vector<FieldLayout> BuildFieldLayouts()
@@ -33,19 +36,19 @@ template <typename TFileFormat> std::vector<FieldLayout> BuildFieldLayouts()
     std::vector<FieldLayout> fields;
 #define ADD_ITEM_FIELD(name, type, arraySize, width, i18nName)                                                         \
     fields.push_back(                                                                                                  \
-        {#name, offsetof(TFileFormat, name), offsetof(ITEM_ATTRIBUTE, name), sizeof(ITEM_ATTRIBUTE::name)});
+        {#name, offsetof(TFileFormat, name), offsetof(ITEM_ATTRIBUTE, name), sizeof(TFileFormat::name),                        sizeof(ITEM_ATTRIBUTE::name)});
     ITEM_FIELDS_SIMPLE(ADD_ITEM_FIELD)
 #undef ADD_ITEM_FIELD
 
     for (size_t i = 0; i < MAX_CLASS; ++i)
     {
         fields.push_back({"RequireClass[" + std::to_string(i) + "]", offsetof(TFileFormat, RequireClass) + i,
-                          offsetof(ITEM_ATTRIBUTE, RequireClass) + i, 1});
+                          offsetof(ITEM_ATTRIBUTE, RequireClass) + i, 1, 1});
     }
     for (size_t i = 0; i < MAX_RESISTANCE + 1; ++i)
     {
         fields.push_back({"Resistance[" + std::to_string(i) + "]", offsetof(TFileFormat, Resistance) + i,
-                          offsetof(ITEM_ATTRIBUTE, Resistance) + i, 1});
+                          offsetof(ITEM_ATTRIBUTE, Resistance) + i, 1, 1});
     }
     return fields;
 }
@@ -234,7 +237,8 @@ const ITEM_ATTRIBUTE& GetDefaultAttribute()
 long long ReadDefaultValue(const FieldLayout& field)
 {
     unsigned long long value = 0;
-    std::memcpy(&value, reinterpret_cast<const BYTE*>(&GetDefaultAttribute()) + field.attributeOffset, field.size);
+    std::memcpy(&value, reinterpret_cast<const BYTE*>(&GetDefaultAttribute()) + field.attributeOffset,
+                field.attributeSize);
     return static_cast<long long>(value);
 }
 
@@ -242,10 +246,16 @@ void CopyField(const LanguageRecord* source, const FieldLayout& sourceField, con
                ITEM_ATTRIBUTE& target)
 {
     auto* targetBytes = reinterpret_cast<BYTE*>(&target) + targetField.attributeOffset;
-    const BYTE* sourceBytes = source != nullptr
-                                  ? source->bytes + sourceField.fileOffset
-                                  : reinterpret_cast<const BYTE*>(&GetDefaultAttribute()) + targetField.attributeOffset;
-    std::memcpy(targetBytes, sourceBytes, targetField.size);
+    if (source == nullptr)
+    {
+        std::memcpy(targetBytes,
+                    reinterpret_cast<const BYTE*>(&GetDefaultAttribute()) + targetField.attributeOffset,
+                    targetField.attributeSize);
+        return;
+    }
+    // A file field may be narrower than the attribute's (little endian: the low bytes first, the rest zero).
+    std::memset(targetBytes, 0, targetField.attributeSize);
+    std::memcpy(targetBytes, source->bytes + sourceField.fileOffset, sourceField.size);
 }
 
 // The first record that has an undamaged value for the field.
