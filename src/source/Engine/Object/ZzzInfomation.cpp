@@ -491,7 +491,8 @@ int GetExcellentAddValue(ITEM *ip)
     return 0;
 }
 
-// MagicPower and SuccessfulBlocking are BYTEs: a value past 255 shows as 255, not wrapped.
+// MagicPower is a BYTE: a value past 255 shows as 255, not wrapped. SuccessfulBlocking is a WORD (the stronger
+// Season 4 shields' doubled block rate passes 255 with the excellent and level bonuses).
 constexpr int MaxByteStat = 255;
 // Second tier wings and the Capes of Lord and Fighter grow their defense by 2 per level up to
 // +9, third tier wings by 4 (other items by 3).
@@ -610,7 +611,7 @@ void CalcSuccessfulBlocking(ITEM* ip, ITEM_ATTRIBUTE* p)
             blocking += p->SuccessfulBlocking * 25 / p->Level + 5;
     }
     blocking += GameLogic::Items::GetItemLevelBonus(ip->Level);
-    ip->SuccessfulBlocking = static_cast<BYTE>(std::min(blocking, MaxByteStat));
+    ip->SuccessfulBlocking = static_cast<WORD>(std::min(blocking, 65535));
 }
 
 void CalcDefense(ITEM* ip, ITEM_ATTRIBUTE* p)

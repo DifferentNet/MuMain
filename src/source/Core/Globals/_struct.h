@@ -177,7 +177,7 @@ typedef struct tagITEM
     bool  TwoHand;
     WORD  DamageMin;
     WORD  DamageMax;
-    BYTE  SuccessfulBlocking;
+    WORD  SuccessfulBlocking;
     WORD  Defense;
     WORD  MagicDefense;
     BYTE  MagicPower;
