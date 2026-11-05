@@ -556,7 +556,7 @@ namespace GameLogic::Items
     {
         const bool isValuable = HasTag(pItem, ItemTag::Valuable) || pItem->AncientDiscriminator > 0 ||
                                 pItem->ExcellentFlags > 0 || (pItem->Level > 6 && pItem->Type < ITEM_WING) ||
-                                (pItem->Type == ITEM_WIZARDS_RING && pItem->Level == 0);
+                                (pItem->Type == ITEM_WIZARDS_RING && pItem->Level == 0 && pItem->Durability > 0);
         if (!isValuable)
         {
             return false;
