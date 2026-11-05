@@ -107,11 +107,11 @@ void Store::Deposit(int kind)
     SendCommand(L"/jbdep " + std::to_wstring(kind + 1));
 }
 
-void Store::Withdraw(int kind, int amount)
+void Store::Withdraw(int kind, int amount, bool packs)
 {
-    if (kind < 0 || kind >= KindCount || amount < 1)
+    if (kind < 0 || kind >= KindCount || amount < 1 || (packs && !HasPacks(kind)))
         return;
-    SendCommand(L"/jbwd " + std::to_wstring(kind + 1) + L" " + std::to_wstring(amount));
+    SendCommand(std::wstring(packs ? L"/jbwdp " : L"/jbwd ") + std::to_wstring(kind + 1) + L" " + std::to_wstring(amount));
 }
 
 void Store::Reset()
