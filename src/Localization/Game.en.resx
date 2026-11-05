@@ -16115,7 +16115,7 @@
     <value>Dust + Jewel of Chaos: an item.</value>
   </data>
   <data name="ExcellentDustReopen" xml:space="preserve">
-    <value>Done. Reopen the machine for the next item.</value>
+    <value>Reopen the machine for the next item.</value>
   </data>
   <data name="ExcellentDustDaysHours" xml:space="preserve">
     <value>%dd %dh</value>

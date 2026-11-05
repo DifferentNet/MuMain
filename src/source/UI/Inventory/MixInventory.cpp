@@ -594,7 +594,7 @@ void CMixInventory::SyncMixContentModel()
     if (!showRecipe)
         return;
 
-    // MU Moldova: after a dust mix the machine takes nothing until it is reopened (MIX_READY), so say that
+    // MU Moldova: after a dust mix (done or refused) the machine takes nothing until it is reopened (MIX_READY), so say that
     // instead of the recipe and the "put items in" hints (review 2026-11-05).
     const bool dustFinished = GetMixState() == MIX_FINISHED && GameLogic::ExcellentDust::IsDustMode();
     syncBool(&MixInventoryRmlModel::recipeReady, "recipe_ready", !dustFinished && g_MixRecipeMgr.IsReadyToMix() == TRUE);

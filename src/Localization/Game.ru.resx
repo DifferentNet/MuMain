@@ -15777,7 +15777,7 @@
     <value>Пыль + Jewel of Chaos: вещь.</value>
   </data>
   <data name="ExcellentDustReopen" xml:space="preserve">
-    <value>Готово. Откройте машину заново для следующей вещи.</value>
+    <value>Откройте машину заново для следующей вещи.</value>
   </data>
   <data name="ExcellentDustDaysHours" xml:space="preserve">
     <value>%d д %d ч</value>
