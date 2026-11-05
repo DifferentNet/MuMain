@@ -509,7 +509,7 @@
       "damageMin": 570,
       "damageMax": 660,
       "attackSpeed": 40,
-      "magicPower": 138,
+      "magicPower": 92,
       "requirements": {
         "strength": 119,
         "dexterity": 24
