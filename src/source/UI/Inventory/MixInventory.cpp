@@ -594,18 +594,18 @@ void CMixInventory::SyncMixContentModel()
     if (!showRecipe)
         return;
 
-    syncBool(&MixInventoryRmlModel::recipeReady, "recipe_ready", g_MixRecipeMgr.IsReadyToMix() == TRUE);
-
     // MU Moldova: after a dust mix the machine takes nothing until it is reopened (MIX_READY), so say that
     // instead of the recipe and the "put items in" hints (review 2026-11-05).
     const bool dustFinished = GetMixState() == MIX_FINISHED && GameLogic::ExcellentDust::IsDustMode();
+    syncBool(&MixInventoryRmlModel::recipeReady, "recipe_ready", !dustFinished && g_MixRecipeMgr.IsReadyToMix() == TRUE);
+
     if (dustFinished)
         mu_swprintf(szText, L"%ls", I18N::Game::ExcellentDustReopen);
     else
         g_MixRecipeMgr.GetCurRecipeName(szText, 1);
     syncWide(&MixInventoryRmlModel::recipeLine1, "recipe_line1", szText);
     szText[0] = L'\0';
-    const bool showRecipeLine2 = (g_MixRecipeMgr.GetCurRecipeName(szText, 2) == TRUE);
+    const bool showRecipeLine2 = !dustFinished && (g_MixRecipeMgr.GetCurRecipeName(szText, 2) == TRUE);
     syncBool(&MixInventoryRmlModel::showRecipeLine2, "show_recipe_line2", showRecipeLine2);
     if (showRecipeLine2)
         syncWide(&MixInventoryRmlModel::recipeLine2, "recipe_line2", szText);
@@ -657,6 +657,10 @@ void CMixInventory::SyncMixContentModel()
     default:
         break;
     }
+    // MU Moldova: a finished dust mix shows only the reopen line and the counter: the crafted item in the box
+    // would match the distil recipe (review 2026-11-05).
+    if (dustFinished)
+        showSuccess = false;
     syncBool(&MixInventoryRmlModel::showSuccessRate, "show_success_rate", showSuccess);
     if (showSuccess)
         syncWide(&MixInventoryRmlModel::successRateText, "success_rate_text", szText);
@@ -692,6 +696,8 @@ void CMixInventory::SyncMixContentModel()
     default:
         break;
     }
+    if (dustFinished)
+        showZen = false;
     syncBool(&MixInventoryRmlModel::showRequiredZen, "show_required_zen", showZen);
     if (showZen)
         syncWide(&MixInventoryRmlModel::requiredZenText, "required_zen_text", szText);
@@ -730,11 +736,8 @@ void CMixInventory::SyncMixContentModel()
     }
     else if (g_MixRecipeMgr.IsMixInit())
     {
-        // MU Moldova: the dust mode says what to put in instead (nothing once mixed: see dustFinished).
-        if (dustFinished)
-        {
-        }
-        else if (GameLogic::ExcellentDust::IsDustMode())
+        // MU Moldova: the dust mode says what to put in instead.
+        if (GameLogic::ExcellentDust::IsDustMode())
         {
             statusLines.push_back({ StringUtils::WideToNarrow(I18N::Game::ExcellentDustHint), "missing" });
             statusLines.push_back({ StringUtils::WideToNarrow(I18N::Game::ExcellentDustHintCraft), "missing" });
@@ -749,6 +752,12 @@ void CMixInventory::SyncMixContentModel()
         statusLines.push_back({ StringUtils::WideToNarrow(I18N::Game::ImproperItemsForCombination), "missing" });
     }
 
+    if (dustFinished)
+    {
+        showPrediction = false;
+        sourceLines.clear();
+        statusLines.clear();
+    }
     syncBool(&MixInventoryRmlModel::showPrediction, "show_prediction", showPrediction);
     if (showPrediction)
         syncWide(&MixInventoryRmlModel::predictionText, "prediction_text", predictionText);
@@ -771,6 +780,8 @@ void CMixInventory::SyncMixContentModel()
         if (g_MixRecipeMgr.GetRecipeAdvice(szText, 2) == TRUE) adviceLines.push_back({ StringUtils::WideToNarrow(szText), adviceColor });
         if (g_MixRecipeMgr.GetRecipeAdvice(szText, 3) == TRUE) adviceLines.push_back({ StringUtils::WideToNarrow(szText), adviceColor });
     }
+    if (dustFinished)
+        adviceLines.clear();
     syncLines(&MixInventoryRmlModel::adviceLines, "advice_lines", adviceLines);
 
     // Former RenderMixDescriptions() -- static per-mix-type instructional text, with the native
