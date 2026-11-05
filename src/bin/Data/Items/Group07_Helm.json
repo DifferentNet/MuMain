@@ -933,7 +933,7 @@
       "slot": "helm",
       "level": 111,
       "durability": 86,
-      "defense": 63,
+      "defense": 126,
       "requirements": {
         "strength": 222,
         "dexterity": 32
@@ -955,7 +955,7 @@
       "slot": "helm",
       "level": 107,
       "durability": 86,
-      "defense": 51,
+      "defense": 102,
       "requirements": {
         "strength": 74,
         "dexterity": 162
@@ -977,7 +977,7 @@
       "slot": "helm",
       "level": 111,
       "durability": 86,
-      "defense": 50,
+      "defense": 100,
       "requirements": {
         "strength": 55,
         "dexterity": 197
@@ -999,7 +999,7 @@
       "slot": "helm",
       "level": 104,
       "durability": 86,
-      "defense": 44,
+      "defense": 88,
       "requirements": {
         "strength": 32,
         "dexterity": 29,
@@ -1022,7 +1022,7 @@
       "slot": "helm",
       "level": 111,
       "durability": 86,
-      "defense": 44,
+      "defense": 88,
       "requirements": {
         "strength": 105,
         "dexterity": 38
@@ -1044,7 +1044,7 @@
       "slot": "helm",
       "level": 109,
       "durability": 86,
-      "defense": 41,
+      "defense": 82,
       "requirements": {
         "strength": 60,
         "dexterity": 15,

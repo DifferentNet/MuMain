@@ -639,8 +639,8 @@
       "skill": 24,
       "level": 134,
       "durability": 80,
-      "damageMin": 162,
-      "damageMax": 184,
+      "damageMin": 810,
+      "damageMax": 920,
       "attackSpeed": 45,
       "attackType": 2,
       "requirements": {

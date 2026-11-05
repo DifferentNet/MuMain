@@ -1071,7 +1071,7 @@
       "slot": "boots",
       "level": 96,
       "durability": 86,
-      "defense": 57,
+      "defense": 114,
       "requirements": {
         "strength": 222,
         "dexterity": 32
@@ -1093,7 +1093,7 @@
       "slot": "boots",
       "level": 93,
       "durability": 86,
-      "defense": 45,
+      "defense": 90,
       "requirements": {
         "strength": 74,
         "dexterity": 162
@@ -1115,7 +1115,7 @@
       "slot": "boots",
       "level": 97,
       "durability": 86,
-      "defense": 54,
+      "defense": 108,
       "requirements": {
         "strength": 212,
         "dexterity": 57
@@ -1137,7 +1137,7 @@
       "slot": "boots",
       "level": 94,
       "durability": 86,
-      "defense": 44,
+      "defense": 88,
       "requirements": {
         "strength": 62,
         "dexterity": 19,
@@ -1160,7 +1160,7 @@
       "slot": "boots",
       "level": 97,
       "durability": 86,
-      "defense": 42,
+      "defense": 84,
       "requirements": {
         "strength": 55,
         "dexterity": 197
@@ -1182,7 +1182,7 @@
       "slot": "boots",
       "level": 92,
       "durability": 86,
-      "defense": 35,
+      "defense": 70,
       "requirements": {
         "strength": 32,
         "dexterity": 29,
@@ -1205,7 +1205,7 @@
       "slot": "boots",
       "level": 98,
       "durability": 86,
-      "defense": 38,
+      "defense": 76,
       "requirements": {
         "strength": 105,
         "dexterity": 38
@@ -1227,7 +1227,7 @@
       "slot": "boots",
       "level": 94,
       "durability": 86,
-      "defense": 34,
+      "defense": 68,
       "requirements": {
         "strength": 60,
         "dexterity": 15,

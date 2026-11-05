@@ -757,8 +757,8 @@
       "skill": 22,
       "level": 137,
       "durability": 90,
-      "damageMin": 115,
-      "damageMax": 126,
+      "damageMin": 575,
+      "damageMax": 630,
       "attackSpeed": 40,
       "requirements": {
         "strength": 193,
@@ -783,8 +783,8 @@
       "skill": 22,
       "level": 133,
       "durability": 90,
-      "damageMin": 91,
-      "damageMax": 99,
+      "damageMin": 455,
+      "damageMax": 495,
       "attackSpeed": 35,
       "requirements": {
         "strength": 53,
@@ -810,8 +810,8 @@
       "skill": 56,
       "level": 139,
       "durability": 90,
-      "damageMin": 98,
-      "damageMax": 122,
+      "damageMin": 490,
+      "damageMax": 610,
       "attackSpeed": 45,
       "magicPower": 109,
       "requirements": {

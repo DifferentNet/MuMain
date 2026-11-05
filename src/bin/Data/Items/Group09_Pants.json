@@ -1057,7 +1057,7 @@
       "slot": "pants",
       "level": 116,
       "durability": 86,
-      "defense": 74,
+      "defense": 148,
       "requirements": {
         "strength": 222,
         "dexterity": 32
@@ -1079,7 +1079,7 @@
       "slot": "pants",
       "level": 112,
       "durability": 86,
-      "defense": 58,
+      "defense": 116,
       "requirements": {
         "strength": 74,
         "dexterity": 162
@@ -1101,7 +1101,7 @@
       "slot": "pants",
       "level": 115,
       "durability": 86,
-      "defense": 66,
+      "defense": 132,
       "requirements": {
         "strength": 212,
         "dexterity": 57
@@ -1123,7 +1123,7 @@
       "slot": "pants",
       "level": 113,
       "durability": 86,
-      "defense": 51,
+      "defense": 102,
       "requirements": {
         "strength": 62,
         "dexterity": 19,
@@ -1146,7 +1146,7 @@
       "slot": "pants",
       "level": 116,
       "durability": 86,
-      "defense": 53,
+      "defense": 106,
       "requirements": {
         "strength": 55,
         "dexterity": 197
@@ -1168,7 +1168,7 @@
       "slot": "pants",
       "level": 109,
       "durability": 86,
-      "defense": 46,
+      "defense": 92,
       "requirements": {
         "strength": 32,
         "dexterity": 29,
@@ -1191,7 +1191,7 @@
       "slot": "pants",
       "level": 116,
       "durability": 86,
-      "defense": 46,
+      "defense": 92,
       "requirements": {
         "strength": 105,
         "dexterity": 38
@@ -1213,7 +1213,7 @@
       "slot": "pants",
       "level": 114,
       "durability": 86,
-      "defense": 44,
+      "defense": 88,
       "requirements": {
         "strength": 60,
         "dexterity": 15,

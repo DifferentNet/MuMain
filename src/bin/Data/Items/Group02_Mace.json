@@ -478,8 +478,8 @@
       "weaponKind": "mace",
       "level": 121,
       "durability": 80,
-      "damageMin": 106,
-      "damageMax": 146,
+      "damageMin": 530,
+      "damageMax": 730,
       "attackSpeed": 50,
       "attackType": 1,
       "requirements": {
@@ -506,8 +506,8 @@
       "skill": 66,
       "level": 135,
       "durability": 90,
-      "damageMin": 114,
-      "damageMax": 132,
+      "damageMin": 570,
+      "damageMax": 660,
       "attackSpeed": 40,
       "magicPower": 72,
       "requirements": {

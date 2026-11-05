@@ -1058,7 +1058,7 @@
       "slot": "armor",
       "level": 132,
       "durability": 86,
-      "defense": 81,
+      "defense": 162,
       "requirements": {
         "strength": 222,
         "dexterity": 32
@@ -1080,7 +1080,7 @@
       "slot": "armor",
       "level": 128,
       "durability": 86,
-      "defense": 62,
+      "defense": 124,
       "requirements": {
         "strength": 74,
         "dexterity": 162
@@ -1102,7 +1102,7 @@
       "slot": "armor",
       "level": 131,
       "durability": 86,
-      "defense": 80,
+      "defense": 160,
       "requirements": {
         "strength": 212,
         "dexterity": 57
@@ -1124,7 +1124,7 @@
       "slot": "armor",
       "level": 125,
       "durability": 86,
-      "defense": 66,
+      "defense": 132,
       "requirements": {
         "strength": 62,
         "dexterity": 19,
@@ -1147,7 +1147,7 @@
       "slot": "armor",
       "level": 129,
       "durability": 86,
-      "defense": 60,
+      "defense": 120,
       "requirements": {
         "strength": 55,
         "dexterity": 197
@@ -1169,7 +1169,7 @@
       "slot": "armor",
       "level": 122,
       "durability": 86,
-      "defense": 52,
+      "defense": 104,
       "requirements": {
         "strength": 32,
         "dexterity": 29,
@@ -1192,7 +1192,7 @@
       "slot": "armor",
       "level": 132,
       "durability": 86,
-      "defense": 58,
+      "defense": 116,
       "requirements": {
         "strength": 105,
         "dexterity": 38
@@ -1214,7 +1214,7 @@
       "slot": "armor",
       "level": 129,
       "durability": 86,
-      "defense": 50,
+      "defense": 100,
       "requirements": {
         "strength": 60,
         "dexterity": 15,
