@@ -35,12 +35,6 @@ bool IsCastleSiegeOnlySkill(int skillType)
 {
     switch (skillType)
     {
-    case AT_SKILL_RUSH:
-    case AT_SKILL_SPACE_SPLIT:
-    case AT_SKILL_DEEPIMPACT:
-    case AT_SKILL_JAVELIN:
-    case AT_SKILL_SPIRAL_SLASH:
-    case AT_SKILL_DEATH_CANNON:
     case AT_SKILL_OCCUPY:
         return true;
     default:

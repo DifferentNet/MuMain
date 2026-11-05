@@ -3745,7 +3745,11 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
         TextNum++;
     }
 
-    if (ip->DamageMin)
+    // The Castle Siege skill scrolls carry no damage in the item data; the line shows the skill's own damage.
+    const bool siegeSkillScroll = ip->Type == ITEM_ORB_OF_CRESCENT_MOON_SLASH || ip->Type == ITEM_SCROLL_OF_MANA_GLAIVE
+        || ip->Type == ITEM_ORB_OF_STARFALL || ip->Type == ITEM_ORB_OF_SPIRAL_SLASH
+        || ip->Type == ITEM_SCROLL_OF_MANA_RAYS || ip->Type == ITEM_SCROLL_OF_FIRE_BLAST;
+    if (ip->DamageMin || siegeSkillScroll)
     {
         int minindex = 0, maxindex = 0, magicalindex = 0;
 
@@ -3781,7 +3785,18 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
                         DamageMax = skillAtt.Damage + skillAtt.Damage / 2;
                     }
 
-                    mu_swprintf(TextList[TextNum], L"%ls: %d ~ %d", I18N::Game::WizardryDamage, DamageMin, DamageMax);
+                    const bool physicalSkillScroll = ip->Type == ITEM_ORB_OF_CRESCENT_MOON_SLASH
+                        || ip->Type == ITEM_ORB_OF_STARFALL
+                        || ip->Type == ITEM_ORB_OF_SPIRAL_SLASH
+                        || ip->Type == ITEM_SCROLL_OF_FIRE_BLAST;
+                    if (physicalSkillScroll)
+                    {
+                        mu_swprintf(TextList[TextNum], I18N::Game::SkillDamageDD, DamageMin, DamageMax);
+                    }
+                    else
+                    {
+                        mu_swprintf(TextList[TextNum], L"%ls: %d ~ %d", I18N::Game::WizardryDamage, DamageMin, DamageMax);
+                    }
                 }
                 else
                 {

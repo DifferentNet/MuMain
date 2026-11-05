@@ -242,8 +242,7 @@
     },
     {
       "number": 16,
-      "file": "Data/Item/Gem10.bmd",
-      "textureFolders": ["Item"],
+      "model": "orbGem10",
       "inventory": {
         "anchor": [0.5, 0.75],
         "scale": 0.002
@@ -272,8 +271,7 @@
     },
     {
       "number": 18,
-      "file": "Data/Item/Gem12.bmd",
-      "textureFolders": ["Item"],
+      "model": "orbGem12",
       "inventory": {
         "anchor": [0.5, 0.75],
         "scale": 0.002
@@ -287,8 +285,7 @@
     },
     {
       "number": 19,
-      "file": "Data/Item/Gem13.bmd",
-      "textureFolders": ["Item"],
+      "model": "orbGem13",
       "inventory": {
         "anchor": [0.5, 0.75],
         "scale": 0.002
