@@ -332,10 +332,12 @@ void CGenericMenuDialog::SyncRmlModel()
         MenuButtonEntry entry;
         entry.label = StringUtils::WideToNarrow(button.label.c_str());
         entry.tooltip = StringUtils::WideToNarrow(button.tooltip.c_str());
-        entry.lines.reserve(button.lines.size());
-        for (const auto& line : button.lines)
+        // A button with live lines (a counter the server answers later) reads them every frame.
+        const auto& lines = button.liveLines ? button.liveLines() : button.lines;
+        entry.lines.reserve(lines.size());
+        for (const auto& line : lines)
             entry.lines.push_back(ToLineEntry(line));
-        entry.hasLines = !button.lines.empty();
+        entry.hasLines = !lines.empty();
         entry.enabled = button.enabled;
         entry.compact = button.compact;
         entry.cols2 = (m_Active.columns == 2) && !button.compact;

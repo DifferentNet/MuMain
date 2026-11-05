@@ -235,7 +235,8 @@
 #panel[data-kind="npc-menu"], #panel[data-kind="trainer-recover"],
 #panel[data-kind="reset-points"], #panel[data-kind="delgardo"] { height: 222dp; }
 #panel[data-kind="elpis"], #panel[data-kind="elpis-about"] { height: 297dp; }
-#panel[data-kind="chaos-mix"] { height: 312dp; }
+/* MU Moldova: 387, not native's 312: a fourth block (Excellent Dust) above Close. */
+#panel[data-kind="chaos-mix"] { height: 387dp; }
 
 /* Where the box's RenderTexts() drew the lines: the first one's text top less half the line gap
    (the glyphs, 9 tall, centre in their line box), one advance apart. */
@@ -260,7 +261,7 @@
 
 /* The buttons at the box's offsets (the Close button stays 20 above the bottom edge unless given). */
 #panel[data-kind="gem-integration"] .gmd-button-cell,
-#panel[data-kind="chaos-mix"] .gmd-button-cell:nth-child(-n+3),
+#panel[data-kind="chaos-mix"] .gmd-button-cell:nth-child(-n+4),
 #panel[data-kind="npc-menu"] .gmd-button-cell:nth-child(-n+2),
 #panel[data-kind="delgardo"] .gmd-button-cell:nth-child(-n+2),
 #panel[data-kind="trainer-recover"] .gmd-button-cell:nth-child(-n+2),
@@ -294,12 +295,14 @@
 #panel[data-kind="chaos-mix"] .gmd-button-cell:nth-child(1) { top: 37dp; }
 #panel[data-kind="chaos-mix"] .gmd-button-cell:nth-child(2) { top: 122dp; }
 #panel[data-kind="chaos-mix"] .gmd-button-cell:nth-child(3) { top: 207dp; }
-#panel[data-kind="chaos-mix"] .gmd-button-cell:nth-child(-n+3) .gmd-line {
+/* MU Moldova: the Excellent Dust block, two lines and its button, 12 under the third button. */
+#panel[data-kind="chaos-mix"] .gmd-button-cell:nth-child(4) { top: 266dp; }
+#panel[data-kind="chaos-mix"] .gmd-button-cell:nth-child(-n+4) .gmd-line {
 	white-space: nowrap;
 	margin-bottom: 0;
 	line-height: 15dp;
 }
-#panel[data-kind="chaos-mix"] .gmd-button-cell:nth-child(-n+3) .gmd-btn { margin-top: 3dp; }
+#panel[data-kind="chaos-mix"] .gmd-button-cell:nth-child(-n+4) .gmd-btn { margin-top: 3dp; }
 
 /* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode) draws menus larger, from their top edge, for fingers. */
 @media (theme: mobile) {
@@ -307,4 +310,7 @@
 	/* Grown from the edge it keeps to, so it stays on the screen. */
 	#panel.gmd-edge-left { transform-origin: 0 0; }
 	#panel.gmd-edge-right { transform-origin: 100% 0; }
+	/* MU Moldova: the 387-tall goblin menu at 1.3 runs past a 480-tall phone screen (Close lost);
+	   60 + 387 x 1.08 = 478 keeps it on (review 2026-11-05). */
+	#panel[data-kind="chaos-mix"] { transform: scale(1.08); }
 }

@@ -16092,4 +16092,35 @@
   <data name="HelperPickQuestItems" xml:space="preserve">
     <value>Quest items</value>
   </data>
+  <!-- MU Moldova: Excellent Dust button in the Chaos Goblin's method menu -->
+  <data name="ExcellentDustMenuButton" xml:space="preserve">
+    <value>Excellent Dust</value>
+  </data>
+  <data name="ExcellentDustCounter" xml:space="preserve">
+    <value>Dust: %ls (an item takes %ls)</value>
+  </data>
+  <data name="ExcellentDustWeek" xml:space="preserve">
+    <value>This week %ls of %ls, resets in %ls</value>
+  </data>
+  <data name="ExcellentDustWaiting" xml:space="preserve">
+    <value>Dust: asking the server...</value>
+  </data>
+  <data name="ExcellentDustUnavailable" xml:space="preserve">
+    <value>Excellent Dust is not available now.</value>
+  </data>
+  <data name="ExcellentDustHint" xml:space="preserve">
+    <value>Excellent items: into dust.</value>
+  </data>
+  <data name="ExcellentDustHintCraft" xml:space="preserve">
+    <value>Dust + Jewel of Chaos: an item.</value>
+  </data>
+  <data name="ExcellentDustReopen" xml:space="preserve">
+    <value>Reopen the machine for the next item.</value>
+  </data>
+  <data name="ExcellentDustDaysHours" xml:space="preserve">
+    <value>%dd %dh</value>
+  </data>
+  <data name="ExcellentDustHoursMinutes" xml:space="preserve">
+    <value>%dh %dm</value>
+  </data>
 </root>

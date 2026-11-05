@@ -49,6 +49,9 @@ namespace mu::ui::window
                                             // native dialogs like CChaosMixMenuMsgBox interleave a
                                             // few lines of body text with each individual button
                                             // rather than grouping all of it above the whole list
+            // Optional: when set, read every frame instead of `lines` (MU Moldova: the chaos-mix menu's Excellent
+            // Dust counter, filled when the server answers). Returns the lines by value.
+            std::function<std::vector<Line>()> liveLines;
             bool enabled = true;            // forward-looking -- no current consumer disables a
                                             // button (the one native case that gates an action
                                             // does so server-side, not via a disabled button),

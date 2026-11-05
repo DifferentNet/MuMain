@@ -10,6 +10,7 @@
 #include "UI/Dialogs/CustomMessageBox.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
 #include "UI/Core/WindowCommon.h" // ShowChaosMixMenuDialog
+#include "GameLogic/Items/ExcellentDust.h"
 #include "GameLogic/Items/MixMgr.h"
 #include "Render/Models/ZzzBMD.h"
 #include "Render/Effects/ZzzEffect.h"
@@ -42,6 +43,9 @@ using namespace mu::ui::window;
 
 namespace
 {
+// MU Moldova: the Excellent Dust counter's first description row in the dust mode (two rows, the machine's last).
+constexpr int DustCounterRow = 7;
+
 // Native RenderText(x, y, text, boxWidth, ...) scales a line down to fit boxWidth
 // (UI::Scaling::FontScaleForBounds). The factor for a line measured in `probe`'s font (a bold
 // 1em element of this window); 1 = fits or no probe. `probeUnitsPerLayoutUnit` converts the
@@ -208,6 +212,10 @@ void CMixInventory::SetMixState(int iMixState)
         m_pNewInventoryCtrl->UnlockInventory();
         g_pMyInventory->GetInventoryCtrl()->UnlockInventory();
     }
+    // MU Moldova: a mix in the dust mode changed the account's dust: the counter asks again, past the throttle
+    // (review 2026-11-05).
+    if (iMixState == MIX_FINISHED && GameLogic::ExcellentDust::IsDustMode())
+        GameLogic::ExcellentDust::Request(true);
     // Mix button's locked look (mix_locked) is refreshed from SyncRmlModel() each Update(), same
     // as it reads GetMixState() -- no need to push it from here too.
 }
@@ -241,6 +249,7 @@ void CMixInventory::OpeningProcess()
     SocketClient->ToGameServer()->SendCrywolfChaosRateBenefitRequest();
 
     SetMixState(mu::ui::window::CMixInventory::MIX_READY);
+    GameLogic::ExcellentDust::SetDustMode(false);
 
     if (g_MixRecipeMgr.GetMixInventoryType() == SEASON3A::MIXTYPE_GOBLIN_NORMAL)
     {
@@ -384,7 +393,10 @@ void CMixInventory::SyncRmlModel()
     const wchar_t* titleText = I18N::Game::Chaos;
     switch (g_MixRecipeMgr.GetMixInventoryType())
     {
-    case SEASON3A::MIXTYPE_GOBLIN_NORMAL:    titleText = I18N::Game::RegularCombination; break;
+    case SEASON3A::MIXTYPE_GOBLIN_NORMAL:
+        titleText = GameLogic::ExcellentDust::IsDustMode() ? I18N::Game::ExcellentDustMenuButton
+                                                           : I18N::Game::RegularCombination;
+        break;
     case SEASON3A::MIXTYPE_GOBLIN_CHAOSITEM: titleText = I18N::Game::ChaosWeaponCombination; break;
     case SEASON3A::MIXTYPE_GOBLIN_ADD380:    titleText = I18N::Game::ItemOptionCombination; break;
     case SEASON3A::MIXTYPE_CASTLE_SENIOR:    titleText = I18N::Game::Store1640; break;
@@ -577,17 +589,24 @@ void CMixInventory::SyncMixContentModel()
 
     // Recipe result name onward -- hidden entirely once MIX_FINISHED, mirroring RenderFrame()'s own
     // early return (nothing past that point ever rendered either).
-    const bool showRecipe = (GetMixState() != MIX_FINISHED);
+    // MU Moldova: the dust mode keeps its lines, so the counter shows the dust the mix gave.
+    const bool showRecipe = (GetMixState() != MIX_FINISHED) || GameLogic::ExcellentDust::IsDustMode();
     syncBool(&MixInventoryRmlModel::showRecipe, "show_recipe", showRecipe);
     if (!showRecipe)
         return;
 
-    syncBool(&MixInventoryRmlModel::recipeReady, "recipe_ready", g_MixRecipeMgr.IsReadyToMix() == TRUE);
+    // MU Moldova: after a dust mix (done or refused) the machine takes nothing until it is reopened (MIX_READY), so say that
+    // instead of the recipe and the "put items in" hints (review 2026-11-05).
+    const bool dustFinished = GetMixState() == MIX_FINISHED && GameLogic::ExcellentDust::IsDustMode();
+    syncBool(&MixInventoryRmlModel::recipeReady, "recipe_ready", !dustFinished && g_MixRecipeMgr.IsReadyToMix() == TRUE);
 
-    g_MixRecipeMgr.GetCurRecipeName(szText, 1);
+    if (dustFinished)
+        mu_swprintf(szText, L"%ls", I18N::Game::ExcellentDustReopen);
+    else
+        g_MixRecipeMgr.GetCurRecipeName(szText, 1);
     syncWide(&MixInventoryRmlModel::recipeLine1, "recipe_line1", szText);
     szText[0] = L'\0';
-    const bool showRecipeLine2 = (g_MixRecipeMgr.GetCurRecipeName(szText, 2) == TRUE);
+    const bool showRecipeLine2 = !dustFinished && (g_MixRecipeMgr.GetCurRecipeName(szText, 2) == TRUE);
     syncBool(&MixInventoryRmlModel::showRecipeLine2, "show_recipe_line2", showRecipeLine2);
     if (showRecipeLine2)
         syncWide(&MixInventoryRmlModel::recipeLine2, "recipe_line2", szText);
@@ -639,6 +658,10 @@ void CMixInventory::SyncMixContentModel()
     default:
         break;
     }
+    // MU Moldova: a finished dust mix shows only the reopen line and the counter: the crafted item in the box
+    // would match the distil recipe (review 2026-11-05).
+    if (dustFinished)
+        showSuccess = false;
     syncBool(&MixInventoryRmlModel::showSuccessRate, "show_success_rate", showSuccess);
     if (showSuccess)
         syncWide(&MixInventoryRmlModel::successRateText, "success_rate_text", szText);
@@ -674,6 +697,8 @@ void CMixInventory::SyncMixContentModel()
     default:
         break;
     }
+    if (dustFinished)
+        showZen = false;
     syncBool(&MixInventoryRmlModel::showRequiredZen, "show_required_zen", showZen);
     if (showZen)
         syncWide(&MixInventoryRmlModel::requiredZenText, "required_zen_text", szText);
@@ -712,7 +737,14 @@ void CMixInventory::SyncMixContentModel()
     }
     else if (g_MixRecipeMgr.IsMixInit())
     {
-        statusLines.push_back({ StringUtils::WideToNarrow(I18N::Game::PleaseUploadTheAssemblyItems), "missing" });
+        // MU Moldova: the dust mode says what to put in instead.
+        if (GameLogic::ExcellentDust::IsDustMode())
+        {
+            statusLines.push_back({ StringUtils::WideToNarrow(I18N::Game::ExcellentDustHint), "missing" });
+            statusLines.push_back({ StringUtils::WideToNarrow(I18N::Game::ExcellentDustHintCraft), "missing" });
+        }
+        else
+            statusLines.push_back({ StringUtils::WideToNarrow(I18N::Game::PleaseUploadTheAssemblyItems), "missing" });
     }
     else
     {
@@ -721,6 +753,12 @@ void CMixInventory::SyncMixContentModel()
         statusLines.push_back({ StringUtils::WideToNarrow(I18N::Game::ImproperItemsForCombination), "missing" });
     }
 
+    if (dustFinished)
+    {
+        showPrediction = false;
+        sourceLines.clear();
+        statusLines.clear();
+    }
     syncBool(&MixInventoryRmlModel::showPrediction, "show_prediction", showPrediction);
     if (showPrediction)
         syncWide(&MixInventoryRmlModel::predictionText, "prediction_text", predictionText);
@@ -743,6 +781,8 @@ void CMixInventory::SyncMixContentModel()
         if (g_MixRecipeMgr.GetRecipeAdvice(szText, 2) == TRUE) adviceLines.push_back({ StringUtils::WideToNarrow(szText), adviceColor });
         if (g_MixRecipeMgr.GetRecipeAdvice(szText, 3) == TRUE) adviceLines.push_back({ StringUtils::WideToNarrow(szText), adviceColor });
     }
+    if (dustFinished)
+        adviceLines.clear();
     syncLines(&MixInventoryRmlModel::adviceLines, "advice_lines", adviceLines);
 
     // Former RenderMixDescriptions() -- static per-mix-type instructional text, with the native
@@ -807,6 +847,17 @@ void CMixInventory::SyncMixContentModel()
         describe(I18N::Game::_255GoldenCherryBlossomBranches, white, 2, true);
         describe(I18N::Game::OnlyTheSameTypeOfCherryBlossomsBranchesCanBeUploaded, white, 3, true);
         describe(I18N::Game::MoreThan2X4SpaceInInventoryIsNeeded, white, 4, true);
+        break;
+    case SEASON3A::MIXTYPE_GOBLIN_NORMAL:
+        // MU Moldova: the dust mode's counter under the machine.
+        if (GameLogic::ExcellentDust::IsDustMode())
+        {
+            const std::wstring counter = GameLogic::ExcellentDust::CounterLine();
+            describe(counter.c_str(), white, DustCounterRow, true);
+            const std::wstring week = GameLogic::ExcellentDust::WeekLine();
+            if (!week.empty())
+                describe(week.c_str(), white, DustCounterRow + 1, true);
+        }
         break;
     case SEASON3A::MIXTYPE_ATTACH_SOCKET:
         showSocketPrompt = true;

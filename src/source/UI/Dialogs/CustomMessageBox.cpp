@@ -14,6 +14,7 @@
 #include "GameLogic/Combat/DuelMgr.h"
 #include "GameLogic/Events/MatchEvent.h"
 #include "GameLogic/Events/w_CursedTemple.h"
+#include "GameLogic/Items/ExcellentDust.h"
 #include "GameLogic/Items/MixMgr.h"
 #include "GameLogic/Items/PersonalShopTitleImp.h"
 #include "GameLogic/NPCs/npcBreeder.h"
@@ -692,6 +693,27 @@ void mu::ui::window::ShowChaosMixMenuDialog()
     btnMix380.lines.push_back({ szText, false });
     btnMix380.onClick = [] { g_MixRecipeMgr.SetMixType(2); };
     cfg.buttons.push_back(std::move(btnMix380));
+
+    // MU Moldova: Excellent Dust (recipes 53 and 54 are regular ones; GameLogic/Items/ExcellentDust.h). The button
+    // opens the regular machine in the dust mode; its lines are the account's counter, filled when the server answers.
+    GameLogic::ExcellentDust::Request();
+    GenericMenuConfig::MenuButton btnDust;
+    btnDust.label = I18N::Game::ExcellentDustMenuButton;
+    btnDust.liveLines = []
+    {
+        // Always two lines (a blank one while the server hasn't answered), so the button doesn't jump down when
+        // the answer comes (review 2026-11-05).
+        auto week = GameLogic::ExcellentDust::WeekLine();
+        if (week.empty())
+            week = L" ";
+        return std::vector<GenericMenuConfig::Line>{{GameLogic::ExcellentDust::CounterLine(), false}, {std::move(week), false}};
+    };
+    btnDust.onClick = []
+    {
+        g_MixRecipeMgr.SetMixType(SEASON3A::MIXTYPE_GOBLIN_NORMAL);
+        GameLogic::ExcellentDust::SetDustMode(true);
+    };
+    cfg.buttons.push_back(std::move(btnDust));
 
     // Native's own CancelBtnDown side effect, mirrored onto Esc too (cfg.onCancel below) -- this
     // dialog sits on top of an already-open MixInventory, so just closing it without also
