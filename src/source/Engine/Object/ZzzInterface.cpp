@@ -3608,8 +3608,7 @@ void MoveInterface()
 
 bool IsCanBCSkill(int Type)
 {
-    if (Type == 44 || Type == 45 || Type == 46 || Type == 57 || Type == 73 || Type == 74
-        || Type == AT_SKILL_OCCUPY)
+    if (Type == AT_SKILL_OCCUPY)
     {
         if (!gMapManager.InBattleCastle() || !battleCastle::IsBattleCastleStart())
         {

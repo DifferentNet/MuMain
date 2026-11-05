@@ -169,6 +169,21 @@ TEST_CASE("Shipped item models load without problems [data][items]")
     CHECK(result.models.size() > 850);
 }
 
+TEST_CASE("The Castle Siege skill orbs and scrolls (15:37-42) reuse the models of their look-alikes [data][items]")
+{
+    const std::pair<int, const char*> expected[] = {
+        {37, "Data/Item/Gem13.bmd"}, {38, "Data/Item/Book17.bmd"}, {39, "Data/Item/Gem12.bmd"},
+        {40, "Data/Item/Gem10.bmd"}, {41, "Data/Item/Book13.bmd"}, {42, "Data/Item/Book14.bmd"},
+    };
+    for (const auto& [number, file] : expected)
+    {
+        INFO("15:" << number);
+        const ItemModelDefinition* model = FindModel(ShippedModels().models, 15, number);
+        REQUIRE(model != nullptr);
+        CHECK(model->file == file);
+    }
+}
+
 // Nothing in the client saves model files yet; this checks that the shipped
 // files are in the format the writer produces (sorted, fixed field order).
 TEST_CASE("Shipped item model files are in the written format [data][items]")
@@ -213,7 +228,7 @@ TEST_CASE("Every model file that several items use is a shared model [data][item
         INFO(shared.name << " " << shared.file);
         CHECK(sharedFiles.insert(shared.file).second);
     }
-    CHECK(ShippedModels().sharedModels.size() == 34);
+    CHECK(ShippedModels().sharedModels.size() == 40);
 
     const ItemModelDefinition* parchment = FindModel(ShippedModels().models, 15, 19);
     REQUIRE(parchment != nullptr);

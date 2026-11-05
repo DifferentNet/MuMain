@@ -64,13 +64,11 @@
     },
     {
       "number": 12,
-      "file": "Data/Item/Book13.bmd",
-      "textureFolders": ["Item"]
+      "model": "scrollBook13"
     },
     {
       "number": 13,
-      "file": "Data/Item/Book14.bmd",
-      "textureFolders": ["Item"]
+      "model": "scrollBook14"
     },
     {
       "number": 14,
@@ -84,8 +82,7 @@
     },
     {
       "number": 16,
-      "file": "Data/Item/Book17.bmd",
-      "textureFolders": ["Item"]
+      "model": "scrollBook17"
     },
     {
       "number": 17,
@@ -299,6 +296,60 @@
         "scale": 0.0023
       },
       "renderStyle": "skillParchment"
+    },
+    {
+      "number": 37,
+      "model": "orbGem13",
+      "inventory": {
+        "anchor": [0.5, 0.75],
+        "scale": 0.002
+      },
+      "ground": {
+        "rotation": [270, 0, 45]
+      },
+      "glow": {
+        "level": 9
+      }
+    },
+    {
+      "number": 38,
+      "model": "scrollBook17"
+    },
+    {
+      "number": 39,
+      "model": "orbGem12",
+      "inventory": {
+        "anchor": [0.5, 0.75],
+        "scale": 0.002
+      },
+      "ground": {
+        "rotation": [270, 0, 45]
+      },
+      "glow": {
+        "level": 9
+      }
+    },
+    {
+      "number": 40,
+      "model": "orbGem10",
+      "inventory": {
+        "anchor": [0.5, 0.75],
+        "scale": 0.002
+      },
+      "ground": {
+        "rotation": [270, 0, 45]
+      },
+      "glow": {
+        "level": 9
+      }
+    },
+    {
+      "number": 41,
+      "model": "scrollBook13"
+    },
+    {
+      "number": 42,
+      "model": "scrollBook14"
     }
   ]
 }
