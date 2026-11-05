@@ -341,6 +341,8 @@ int ExecuteSkill(CHARACTER* c, ActionSkillType Skill, float Distance)
                         case AT_SKILL_PLASMA_STORM_FENRIR:
                         case AT_SKILL_FIRE_SCREAM:
                         case AT_SKILL_FIRE_SCREAM_STR:
+                        case AT_SKILL_RUSH:
+                        case AT_SKILL_SPIRAL_SLASH:
                             bOk = true;
                             break;
                         }
