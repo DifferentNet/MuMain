@@ -815,6 +815,132 @@
       "classRequirements": {
         "rageFighter": 1
       }
+    },
+    {
+      "number": 37,
+      "name": {
+        "en": "Orb of Crescent Moon Slash",
+        "de": "Orb of Crescent Moon Slash",
+        "es": "Orb of Crescent Moon Slash",
+        "pt": "Orb of Crescent Moon Slash",
+        "ru": "Сфера: Удар полумесяца"
+      },
+      "width": 1,
+      "height": 1,
+      "level": 130,
+      "buyPrice": 300000,
+      "repairable": false,
+      "requirements": {
+        "level": 220
+      },
+      "classRequirements": {
+        "darkKnight": 1
+      }
+    },
+    {
+      "number": 38,
+      "name": {
+        "en": "Scroll of Mana Glaive",
+        "de": "Scroll of Mana Glaive",
+        "es": "Scroll of Mana Glaive",
+        "pt": "Scroll of Mana Glaive",
+        "ru": "Свиток: Клинок маны"
+      },
+      "width": 1,
+      "height": 2,
+      "level": 130,
+      "buyPrice": 300000,
+      "repairable": false,
+      "requirements": {
+        "level": 220
+      },
+      "classRequirements": {
+        "darkWizard": 2
+      }
+    },
+    {
+      "number": 39,
+      "name": {
+        "en": "Orb of Starfall",
+        "de": "Orb of Starfall",
+        "es": "Orb of Starfall",
+        "pt": "Orb of Starfall",
+        "ru": "Сфера: Звездопад"
+      },
+      "width": 1,
+      "height": 1,
+      "level": 130,
+      "buyPrice": 300000,
+      "repairable": false,
+      "requirements": {
+        "level": 220
+      },
+      "classRequirements": {
+        "fairyElf": 1
+      }
+    },
+    {
+      "number": 40,
+      "name": {
+        "en": "Orb of Spiral Slash",
+        "de": "Orb of Spiral Slash",
+        "es": "Orb of Spiral Slash",
+        "pt": "Orb of Spiral Slash",
+        "ru": "Сфера: Спиральный удар"
+      },
+      "width": 1,
+      "height": 1,
+      "level": 130,
+      "buyPrice": 300000,
+      "repairable": false,
+      "requirements": {
+        "level": 220
+      },
+      "classRequirements": {
+        "magicGladiator": 1
+      }
+    },
+    {
+      "number": 41,
+      "name": {
+        "en": "Scroll of Mana Rays",
+        "de": "Scroll of Mana Rays",
+        "es": "Scroll of Mana Rays",
+        "pt": "Scroll of Mana Rays",
+        "ru": "Свиток: Лучи маны"
+      },
+      "width": 1,
+      "height": 2,
+      "level": 130,
+      "buyPrice": 300000,
+      "repairable": false,
+      "requirements": {
+        "level": 220
+      },
+      "classRequirements": {
+        "magicGladiator": 1
+      }
+    },
+    {
+      "number": 42,
+      "name": {
+        "en": "Scroll of Fire Blast",
+        "de": "Scroll of Fire Blast",
+        "es": "Scroll of Fire Blast",
+        "pt": "Scroll of Fire Blast",
+        "ru": "Свиток: Огненный взрыв"
+      },
+      "width": 1,
+      "height": 2,
+      "level": 130,
+      "buyPrice": 300000,
+      "repairable": false,
+      "requirements": {
+        "level": 220
+      },
+      "classRequirements": {
+        "darkLord": 1
+      }
     }
   ]
 }

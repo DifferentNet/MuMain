@@ -107,9 +107,39 @@
       "textureFolders": ["Item/Ingameshop"]
     },
     {
+      "name": "orbGem10",
+      "file": "Data/Item/Gem10.bmd",
+      "textureFolders": ["Item"]
+    },
+    {
+      "name": "orbGem12",
+      "file": "Data/Item/Gem12.bmd",
+      "textureFolders": ["Item"]
+    },
+    {
+      "name": "orbGem13",
+      "file": "Data/Item/Gem13.bmd",
+      "textureFolders": ["Item"]
+    },
+    {
       "name": "packageBox",
       "file": "Data/Item/Ingameshop/package_money_item.bmd",
       "textureFolders": ["Item/Ingameshop"]
+    },
+    {
+      "name": "scrollBook13",
+      "file": "Data/Item/Book13.bmd",
+      "textureFolders": ["Item"]
+    },
+    {
+      "name": "scrollBook14",
+      "file": "Data/Item/Book14.bmd",
+      "textureFolders": ["Item"]
+    },
+    {
+      "name": "scrollBook17",
+      "file": "Data/Item/Book17.bmd",
+      "textureFolders": ["Item"]
     },
     {
       "name": "secromiconFragment",
