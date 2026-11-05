@@ -353,8 +353,13 @@ namespace Render::Effects::Behaviors
 
                 OBJECT* to = NULL;
 
-                if (o->LifeTime >= 3 && (int)o->LifeTime % 2 == 0)
+                // One volley per even LifeTime step. LifeTime drops by FPS_ANIMATION_FACTOR a frame, so above
+                // 25 fps it stays on one integer for several frames and a 144 fps client shot ~6 times as many
+                // arrows: the skill looked very long. AttackPoint[0] (0 at creation) keeps the last step + 1.
+                const int step = (int)o->LifeTime;
+                if (o->LifeTime >= 3 && step % 2 == 0 && o->AttackPoint[0] != step + 1)
                 {
+                    o->AttackPoint[0] = step + 1;
                     VectorCopy(o->Owner->Angle, Angle);
                     int Ran = -1;
                     CHARACTER* c = &CharactersClient[(int)o->PKKey];
