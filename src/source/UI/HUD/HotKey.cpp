@@ -67,6 +67,16 @@ bool mu::ui::window::CHotKey::UpdateMouseEvent()
         return true;
     }
 
+    // A wheel click in the game world turns MU Helper on or off, as Home does (ghinzuro, 2026-11-06). This object is
+    // the bottom layer, so a click over a window never gets here; a drag with the wheel held turns the orbital camera.
+    if (MouseMButtonClick && !RmlUiRuntime::Instance().IsTextInputActive())
+    {
+        MouseMButtonClick = false;
+        MUHelper::g_MuHelper.Toggle();
+        PlayBuffer(SOUND_CLICK01);
+        return false;
+    }
+
     if (SelectedCharacter >= 0)
     {
         if (mu::ui::window::IsRepeat(VK_MENU) && mu::ui::window::IsRelease(VK_RBUTTON)
