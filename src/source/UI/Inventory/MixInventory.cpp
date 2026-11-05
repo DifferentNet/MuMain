@@ -212,9 +212,10 @@ void CMixInventory::SetMixState(int iMixState)
         m_pNewInventoryCtrl->UnlockInventory();
         g_pMyInventory->GetInventoryCtrl()->UnlockInventory();
     }
-    // MU Moldova: a mix in the dust mode changed the account's dust: the counter asks again.
+    // MU Moldova: a mix in the dust mode changed the account's dust: the counter asks again, past the throttle
+    // (review 2026-11-05).
     if (iMixState == MIX_FINISHED && GameLogic::ExcellentDust::IsDustMode())
-        GameLogic::ExcellentDust::Request();
+        GameLogic::ExcellentDust::Request(true);
     // Mix button's locked look (mix_locked) is refreshed from SyncRmlModel() each Update(), same
     // as it reads GetMixState() -- no need to push it from here too.
 }

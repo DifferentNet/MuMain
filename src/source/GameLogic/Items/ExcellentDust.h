@@ -10,8 +10,9 @@
 
 namespace GameLogic::ExcellentDust
 {
-    // Asks the server for the counter (/dustinfo). Repeats within a second are dropped.
-    void Request();
+    // Asks the server for the counter (/dustinfo). Repeats within a second are dropped, unless forced (after a mix,
+    // when the dust changed).
+    void Request(bool force = false);
 
     // The machine was opened from the menu's dust button; cleared when the machine opens or closes.
     bool IsDustMode();

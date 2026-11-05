@@ -114,11 +114,11 @@ void EnteredWorld()
 });
 } // namespace
 
-void Request()
+void Request(bool force)
 {
     auto& state = Current();
     const auto now = Clock::now();
-    if (state.lastRequest != Clock::time_point{} && now - state.lastRequest < RequestInterval)
+    if (!force && state.lastRequest != Clock::time_point{} && now - state.lastRequest < RequestInterval)
         return;
     if (!EndlessTower::CanSendCommand())
         return;
