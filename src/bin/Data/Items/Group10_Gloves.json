@@ -1133,9 +1133,9 @@
       "number": 47,
       "name": {
         "en": "Destroy Gloves",
-        "de": "Phantom-Handschuhe",
-        "es": "Guantes Fantasma",
-        "pt": "Luvas do fantasma"
+        "de": "Zerstörerhandschuhe",
+        "es": "Guantes Destructores",
+        "pt": "Luvas da destruição"
       },
       "width": 2,
       "height": 2,
@@ -1157,9 +1157,9 @@
       "number": 48,
       "name": {
         "en": "Phantom Gloves",
-        "de": "Zerstörerhandschuhe",
-        "es": "Guantes Destructores",
-        "pt": "Luvas da destruição"
+        "de": "Phantom-Handschuhe",
+        "es": "Guantes Fantasma",
+        "pt": "Luvas do fantasma"
       },
       "width": 2,
       "height": 2,

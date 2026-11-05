@@ -1094,9 +1094,9 @@
       "number": 47,
       "name": {
         "en": "Destroy Pants",
-        "de": "Phantom-Hose",
-        "es": "Pantalones Fantasma",
-        "pt": "Calças do fantasma"
+        "de": "Zerstörerhose",
+        "es": "Pantalones Destructores",
+        "pt": "Calças da destruição"
       },
       "width": 2,
       "height": 2,
@@ -1117,9 +1117,9 @@
       "number": 48,
       "name": {
         "en": "Phantom Pants",
-        "de": "Zerstörerhose",
-        "es": "Pantalones Destructores",
-        "pt": "Calças da destruição"
+        "de": "Phantom-Hose",
+        "es": "Pantalones Fantasma",
+        "pt": "Calças do fantasma"
       },
       "width": 2,
       "height": 2,

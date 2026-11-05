@@ -1108,9 +1108,9 @@
       "number": 47,
       "name": {
         "en": "Destroy Boots",
-        "de": "Phantom-Stiefel",
-        "es": "Botas Fantasma",
-        "pt": "Botas do fantasma"
+        "de": "Zerstörerstiefel",
+        "es": "Botas Destructoras",
+        "pt": "Botas da destruição"
       },
       "width": 2,
       "height": 2,
@@ -1131,9 +1131,9 @@
       "number": 48,
       "name": {
         "en": "Phantom Boots",
-        "de": "Zerstörerstiefel",
-        "es": "Botas Destructoras",
-        "pt": "Botas da destruição"
+        "de": "Phantom-Stiefel",
+        "es": "Botas Fantasma",
+        "pt": "Botas do fantasma"
       },
       "width": 2,
       "height": 2,

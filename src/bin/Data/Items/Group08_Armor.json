@@ -1095,9 +1095,9 @@
       "number": 47,
       "name": {
         "en": "Destroy Armor",
-        "de": "Phantom-Rüstung",
-        "es": "Armadura Fantasma",
-        "pt": "Armadura do fantasma"
+        "de": "Zerstörerrüstung",
+        "es": "Armadura Destructora",
+        "pt": "Armadura da destruição"
       },
       "width": 2,
       "height": 3,
@@ -1118,9 +1118,9 @@
       "number": 48,
       "name": {
         "en": "Phantom Armor",
-        "de": "Zerstörerrüstung",
-        "es": "Armadura Destructora",
-        "pt": "Armadura da destruição"
+        "de": "Phantom-Rüstung",
+        "es": "Armadura Fantasma",
+        "pt": "Armadura do fantasma"
       },
       "width": 2,
       "height": 3,
