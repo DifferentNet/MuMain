@@ -4925,13 +4925,9 @@ void MoveCharacter(CHARACTER* c, OBJECT* o)
                 for (int i = 0; i < 5; i++)
                     CreateEffect(MODEL_ICE_SMALL, to->Position, o->Angle, o->Light);
 
-                if (c->SkillSuccess)
-                {
-                    if (!g_isCharacterBuff(to, eDeBuff_Freeze))
-                    {
-                        g_CharacterRegisterBuff(to, eDeBuff_Freeze);
-                    }
-                }
+                // The slow (eDeBuff_Freeze) comes only from the server's effect packet (56 on/off). OpenMU marks every
+                // monster skill hit as a success, even when the target resisted, so setting it here left players slowed
+                // with no "off" packet to follow (Ring/Pendant of Ice).
                 PlayBuffer(SOUND_ICE);
                 break;
             case AT_SKILL_SOUL_BARRIER:
