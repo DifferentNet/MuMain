@@ -672,7 +672,6 @@
       "magicPower": 126,
       "attackType": 3,
       "requirements": {
-        "level": 380,
         "strength": 47,
         "dexterity": 18
       },
@@ -699,7 +698,6 @@
       "attackSpeed": 30,
       "magicPower": 124,
       "requirements": {
-        "level": 380,
         "strength": 48,
         "dexterity": 14
       },

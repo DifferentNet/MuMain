@@ -1060,7 +1060,6 @@
       "durability": 86,
       "defense": 81,
       "requirements": {
-        "level": 380,
         "strength": 222,
         "dexterity": 32
       },
@@ -1083,7 +1082,6 @@
       "durability": 86,
       "defense": 62,
       "requirements": {
-        "level": 380,
         "strength": 74,
         "dexterity": 162
       },
@@ -1106,7 +1104,6 @@
       "durability": 86,
       "defense": 80,
       "requirements": {
-        "level": 380,
         "strength": 212,
         "dexterity": 57
       },
@@ -1129,7 +1126,6 @@
       "durability": 86,
       "defense": 66,
       "requirements": {
-        "level": 380,
         "strength": 62,
         "dexterity": 19,
         "energy": 165
@@ -1153,7 +1149,6 @@
       "durability": 86,
       "defense": 60,
       "requirements": {
-        "level": 380,
         "strength": 55,
         "dexterity": 197
       },
@@ -1176,7 +1171,6 @@
       "durability": 86,
       "defense": 52,
       "requirements": {
-        "level": 380,
         "strength": 32,
         "dexterity": 29,
         "energy": 138
@@ -1200,7 +1194,6 @@
       "durability": 86,
       "defense": 58,
       "requirements": {
-        "level": 380,
         "strength": 105,
         "dexterity": 38
       },
@@ -1223,7 +1216,6 @@
       "durability": 86,
       "defense": 50,
       "requirements": {
-        "level": 380,
         "strength": 60,
         "dexterity": 15,
         "energy": 181

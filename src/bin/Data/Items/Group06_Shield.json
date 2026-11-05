@@ -480,7 +480,6 @@
       "defense": 19,
       "attackType": 4,
       "requirements": {
-        "level": 380,
         "strength": 95,
         "dexterity": 48
       },
@@ -507,7 +506,6 @@
       "defense": 20,
       "attackType": 4,
       "requirements": {
-        "level": 380,
         "strength": 80,
         "dexterity": 61
       },
@@ -533,7 +531,6 @@
       "defense": 14,
       "attackType": 4,
       "requirements": {
-        "level": 380,
         "strength": 26,
         "dexterity": 53,
         "energy": 26
@@ -561,7 +558,6 @@
       "defense": 12,
       "attackType": 4,
       "requirements": {
-        "level": 380,
         "strength": 54,
         "dexterity": 18
       },

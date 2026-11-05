@@ -644,7 +644,6 @@
       "attackSpeed": 45,
       "attackType": 2,
       "requirements": {
-        "level": 380,
         "strength": 32,
         "dexterity": 209
       },

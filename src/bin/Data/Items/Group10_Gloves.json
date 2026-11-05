@@ -1097,7 +1097,6 @@
       "defense": 56,
       "attackSpeed": 7,
       "requirements": {
-        "level": 380,
         "strength": 222,
         "dexterity": 32
       },
@@ -1121,7 +1120,6 @@
       "defense": 42,
       "attackSpeed": 7,
       "requirements": {
-        "level": 380,
         "strength": 74,
         "dexterity": 162
       },
@@ -1145,7 +1143,6 @@
       "defense": 49,
       "attackSpeed": 7,
       "requirements": {
-        "level": 380,
         "strength": 212,
         "dexterity": 57
       },
@@ -1169,7 +1166,6 @@
       "defense": 40,
       "attackSpeed": 7,
       "requirements": {
-        "level": 380,
         "strength": 62,
         "dexterity": 19,
         "energy": 165
@@ -1194,7 +1190,6 @@
       "defense": 43,
       "attackSpeed": 7,
       "requirements": {
-        "level": 380,
         "strength": 55,
         "dexterity": 197
       },
@@ -1218,7 +1213,6 @@
       "defense": 36,
       "attackSpeed": 7,
       "requirements": {
-        "level": 380,
         "strength": 32,
         "dexterity": 29,
         "energy": 138
@@ -1243,7 +1237,6 @@
       "defense": 34,
       "attackSpeed": 7,
       "requirements": {
-        "level": 380,
         "strength": 105,
         "dexterity": 38
       },
@@ -1267,7 +1260,6 @@
       "defense": 31,
       "attackSpeed": 7,
       "requirements": {
-        "level": 380,
         "strength": 60,
         "dexterity": 15,
         "energy": 181
