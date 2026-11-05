@@ -798,9 +798,9 @@
       "number": 28,
       "name": {
         "en": "Imperial Sword",
-        "de": "Runen-Bastardschwert",
-        "es": "Espada Runa Bastarda",
-        "pt": "Espada bastarda das runas"
+        "de": "Kaiserliches Schwert",
+        "es": "Espada Imperial",
+        "pt": "Espada imperial"
       },
       "tags": ["magicSword"],
       "width": 1,
