@@ -701,10 +701,12 @@ void mu::ui::window::ShowChaosMixMenuDialog()
     btnDust.label = I18N::Game::ExcellentDustMenuButton;
     btnDust.liveLines = []
     {
-        std::vector<GenericMenuConfig::Line> lines{{GameLogic::ExcellentDust::CounterLine(), false}};
-        if (auto week = GameLogic::ExcellentDust::WeekLine(); !week.empty())
-            lines.push_back({std::move(week), false});
-        return lines;
+        // Always two lines (a blank one while the server hasn't answered), so the button doesn't jump down when
+        // the answer comes (review 2026-11-05).
+        auto week = GameLogic::ExcellentDust::WeekLine();
+        if (week.empty())
+            week = L" ";
+        return std::vector<GenericMenuConfig::Line>{{GameLogic::ExcellentDust::CounterLine(), false}, {std::move(week), false}};
     };
     btnDust.onClick = []
     {
