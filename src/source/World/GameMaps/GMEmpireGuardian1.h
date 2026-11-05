@@ -55,6 +55,8 @@ public: // Weather
     void SetWeather(int weather)
     {
         m_iWeather = weather;
+        m_dStormFlashStart = -1.0;
+        m_dStormNextFlash = 0.0;
     }
     int GetWeather()
     {
@@ -63,6 +65,10 @@ public: // Weather
 
 private:
     int m_iWeather;
+    // Storm lightning: when the current flash began and when the next one is due (WorldTime, ms).
+    double m_dStormFlashStart = -1.0;
+    double m_dStormNextFlash = 0.0;
+    float StormFlashIntensity();
 
 private:
     bool m_bCurrentIsRage_Raymond;

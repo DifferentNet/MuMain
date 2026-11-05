@@ -2344,21 +2344,65 @@ void GMEmpireGuardian1::RenderFrontSideVisual()
     break;
     case WEATHER_STORM:
     {
-        if (rand_fps_check(20))
+        // The original drew this overlay at full strength on random single frames (1 in 20), which at
+        // 60 fps reads as a strobe over the whole screen (Tier Maps, ghinzuro 2026-11-05). Now it is a
+        // rare lightning flash that fades in and out, and none indoors (the throne room, map 72).
+        const float intensity = gMapManager.IsEmpireGuardian4() ? 0.f : StormFlashIntensity();
+        if (intensity > 0.f)
         {
             EnableAlphaBlend();
+            const auto level = static_cast<unsigned char>(intensity * 255.f);
+            const unsigned int color = RGBA(level, level, level, 255);
             float WindX2 = (float)((int)WorldTime % 100000) * 0.0006f;
             float WindY2 = -(float)((int)WorldTime % 100000) * 0.0006f;
             RenderBitmapUV(BITMAP_CHROME + 2, 0.f, 0.f, (float)REFERENCE_WIDTH,
-                           UI::Scaling::ScreenOverlayFullHeight(WindowWidth, WindowHeight), WindX2, WindY2, 3.0f, 2.0f);
+                           UI::Scaling::ScreenOverlayFullHeight(WindowWidth, WindowHeight), WindX2, WindY2, 3.0f, 2.0f,
+                           color);
             WindX2 = -(float)((int)WorldTime % 100000) * 0.0006f;
             WindY2 = (float)((int)WorldTime % 100000) * 0.0006f;
             RenderBitmapUV(BITMAP_CHROME + 2, 0.f, 0.f, (float)REFERENCE_WIDTH,
-                           UI::Scaling::ScreenOverlayFullHeight(WindowWidth, WindowHeight), WindX2, WindY2, 3.0f, 2.0f);
+                           UI::Scaling::ScreenOverlayFullHeight(WindowWidth, WindowHeight), WindX2, WindY2, 3.0f, 2.0f,
+                           color);
         }
     }
     break;
     }
+}
+
+float GMEmpireGuardian1::StormFlashIntensity()
+{
+    constexpr double kRiseMs = 80.0;
+    constexpr double kFadeMs = 520.0;
+    constexpr float kPeak = 0.65f;
+
+    const double now = WorldTime;
+    if (m_dStormNextFlash <= 0.0 || m_dStormNextFlash > now + 60000.0)
+    {
+        // First frame of the storm (or the clock jumped): the first flash comes in 3-8 s.
+        m_dStormNextFlash = now + 3000.0 + (double)(rand() % 5000);
+    }
+    if (m_dStormFlashStart < 0.0 && now >= m_dStormNextFlash)
+    {
+        m_dStormFlashStart = now;
+        m_dStormNextFlash = now + 7000.0 + (double)(rand() % 9000); // next one in 7-16 s
+    }
+    if (m_dStormFlashStart < 0.0)
+    {
+        return 0.f;
+    }
+
+    const double t = now - m_dStormFlashStart;
+    if (t < 0.0 || t >= kRiseMs + kFadeMs)
+    {
+        m_dStormFlashStart = -1.0;
+        return 0.f;
+    }
+    if (t < kRiseMs)
+    {
+        return kPeak * (float)(t / kRiseMs);
+    }
+    const float fade = 1.f - (float)((t - kRiseMs) / kFadeMs);
+    return kPeak * fade * fade;
 }
 
 bool GMEmpireGuardian1::SetCurrentActionMonster(CHARACTER* c, OBJECT* o)
