@@ -13999,7 +13999,7 @@
     <value>How many %ls to take? The bank holds %ls.</value>
   </data>
   <data name="JewelBankInPacks" xml:space="preserve">
-    <value>In packs of 10</value>
+    <value>In packs</value>
   </data>
   <data name="JewelBankPacksHint" xml:space="preserve">
     <value>In packs: each 10 comes as one packed jewel, the rest as single jewels.</value>
