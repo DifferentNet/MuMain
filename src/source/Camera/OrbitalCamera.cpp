@@ -93,13 +93,35 @@ void OrbitalCamera::ResetView()
     m_Radius = DEFAULT_RADIUS;
     UpdateConfigForView();
     UpdateFrustum();
+    SaveOrbit();
+}
+
+void OrbitalCamera::LoadSavedOrbit()
+{
+    // The base yaw and pitch stay 0: the deltas are the turn and tilt from the default view.
+    const GameConfig& config = GameConfig::GetInstance();
+    m_DeltaYaw = std::fmod((float)config.GetOrbitYaw(), 360.0f);
+    m_DeltaPitch = std::clamp((float)config.GetOrbitPitch(), MIN_PITCH - m_BasePitch, MAX_PITCH - m_BasePitch);
+    m_Input.LastEffectivePitch = m_DeltaPitch;
+}
+
+void OrbitalCamera::SaveOrbit() const
+{
+    GameConfig& config = GameConfig::GetInstance();
+    const int radius = (int)m_Radius;
+    const int yaw = (int)std::lround(std::fmod(m_DeltaYaw, 360.0f));
+    const int pitch = (int)std::lround(m_DeltaPitch);
+    if (config.GetZoom() == radius && config.GetOrbitYaw() == yaw && config.GetOrbitPitch() == pitch)
+        return;
+    config.SetZoom(radius);
+    config.SetOrbit(yaw, pitch);
+    config.SaveCamera();
 }
 
 void OrbitalCamera::ResetForScene(EGameScene scene)
 {
-    // Save current zoom before scene transition
-    GameConfig::GetInstance().SetZoom((int)m_Radius);
-    GameConfig::GetInstance().Save();
+    // Save the current zoom, turn and tilt before the scene transition
+    SaveOrbit();
 
     // Phase 5: Proper scene-specific reset using switch statement
     switch (scene)
@@ -109,9 +131,12 @@ void OrbitalCamera::ResetForScene(EGameScene scene)
             LoadConfigForScene(scene);
             ApplyConfigToState();
 
-            // Reset orbital parameters for new scene
+            // Reset orbital parameters for new scene; in the game, the turn and tilt the
+            // player left (config.ini [Camera])
             m_DeltaYaw = 0.0f;
             m_DeltaPitch = 0.0f;
+            if (scene == MAIN_SCENE)
+                LoadSavedOrbit();
             m_Radius = (float)GameConfig::GetInstance().GetZoom();
             m_bInitialOffsetSet = false;
             break;
@@ -192,9 +217,12 @@ void OrbitalCamera::OnActivate(const CameraState& previousState)
         CalculateOrbitOriginForStaticScene(SceneFlag, previousState);
     }
 
-    // Step 4: Compute look-at point and initialize orbital parameters from it
+    // Step 4: Compute look-at point and initialize orbital parameters from it. In the game the
+    // turn and tilt come back as the player left them (config.ini [Camera]).
     m_DeltaYaw = 0.0f;
     m_DeltaPitch = 0.0f;
+    if (SceneFlag == MAIN_SCENE)
+        LoadSavedOrbit();
 
     vec3_t lookAtPoint;
     CalculateLookAtPoint(SceneFlag, lookAtPoint);
@@ -377,9 +405,8 @@ void OrbitalCamera::OnDeactivate()
 {
     m_Input.Rotating = false;
 
-    // Save zoom level to config.ini
-    GameConfig::GetInstance().SetZoom((int)m_Radius);
-    GameConfig::GetInstance().Save();
+    // Save zoom, turn and tilt to config.ini
+    SaveOrbit();
 }
 
 bool OrbitalCamera::Update()
@@ -488,6 +515,7 @@ void OrbitalCamera::HandleInput()
             // Update terrain culling range based on zoom level and pitch.
             UpdateConfigForView();
             UpdateFrustum();
+            SaveOrbit();
         }
     }
 
@@ -532,7 +560,9 @@ void OrbitalCamera::HandleInput()
     }
     else
     {
-        // Button released - reset rotation state
+        // Button released - reset rotation state and keep the new turn and tilt
+        if (m_Input.Rotating)
+            SaveOrbit();
         m_Input.Rotating = false;
     }
 }

@@ -100,6 +100,11 @@ void GameConfig::Load()
         ReadBool(CfgSectionUI, CfgKeyEnableAnimationTaskPool, CfgDefaultEnableAnimationTaskPool);
 
     m_zoom = ReadInt(CfgSectionCamera, CfgKeyZoom, CfgDefaultZoom);
+    m_cameraMode = ReadInt(CfgSectionCamera, CfgKeyCameraMode, CfgDefaultCameraMode);
+    m_zoomLock = ReadBool(CfgSectionCamera, CfgKeyZoomLock, CfgDefaultZoomLock);
+    m_zoomLevel = ReadInt(CfgSectionCamera, CfgKeyZoomLevel, CfgDefaultZoomLevel);
+    m_orbitYaw = ReadInt(CfgSectionCamera, CfgKeyOrbitYaw, 0);
+    m_orbitPitch = ReadInt(CfgSectionCamera, CfgKeyOrbitPitch, 0);
     m_sortParticleDraws = ReadBool(CfgSectionRender, CfgKeySortParticleDraws, CfgDefaultSortParticleDraws);
     m_vsyncEnabled = ReadBool(CfgSectionRender, CfgKeyVSync, CfgDefaultVSync);
     m_look = ReadLookPreset(m_configPath);
@@ -178,7 +183,7 @@ void GameConfig::Save()
     WriteBool(CfgSectionUI, CfgKeyGamepad, m_gamepad);
     WriteBool(CfgSectionUI, CfgKeyGamepadRumble, m_gamepadRumble);
 
-    WriteInt(CfgSectionCamera, CfgKeyZoom, m_zoom);
+    SaveCamera();
     WriteBool(CfgSectionRender, CfgKeyVSync, m_vsyncEnabled);
     WriteString(CfgSectionRender, CfgKeyLook, GameConfigValidation::FormatLook(m_look));
     WriteInt(CfgSectionRender, CfgKeyAnisotropy, m_anisotropy);
@@ -194,6 +199,19 @@ void GameConfig::Save()
     WriteBool(CfgSectionRender, CfgKeyDisableWingShadow, m_disableWingShadow);
     WriteBool(CfgSectionRender, CfgKeyDisableBodyShadows, m_disableBodyShadows);
     WriteInt(CfgSectionRender, CfgKeyFpsCap, m_fpsCap);
+}
+
+void GameConfig::SaveCamera()
+{
+    using namespace CfgSections;
+    using namespace CfgKeys;
+
+    WriteInt(CfgSectionCamera, CfgKeyZoom, m_zoom);
+    WriteInt(CfgSectionCamera, CfgKeyCameraMode, m_cameraMode);
+    WriteBool(CfgSectionCamera, CfgKeyZoomLock, m_zoomLock);
+    WriteInt(CfgSectionCamera, CfgKeyZoomLevel, m_zoomLevel);
+    WriteInt(CfgSectionCamera, CfgKeyOrbitYaw, m_orbitYaw);
+    WriteInt(CfgSectionCamera, CfgKeyOrbitPitch, m_orbitPitch);
 }
 
 LookPreset ReadLookPreset(const std::filesystem::path& configFile)

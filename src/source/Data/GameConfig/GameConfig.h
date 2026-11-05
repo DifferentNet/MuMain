@@ -140,6 +140,26 @@ public:
     // Camera
     int GetZoom() const { return m_zoom; }
     void SetZoom(int zoom);
+    // What F9, F10 and the wheel left, for the next start and the next entry into the game.
+    // 0 = the default camera, 1 = the orbital one (CameraMode).
+    int GetCameraMode() const { return m_cameraMode; }
+    void SetCameraMode(int mode) { m_cameraMode = mode; }
+    bool GetZoomLock() const { return m_zoomLock; }
+    void SetZoomLock(bool locked) { m_zoomLock = locked; }
+    // The default camera's step on its zoom ladder (DefaultCamera).
+    int GetZoomLevel() const { return m_zoomLevel; }
+    void SetZoomLevel(int level) { m_zoomLevel = level; }
+    // The orbital camera's turn and tilt from the default view, in whole degrees.
+    int GetOrbitYaw() const { return m_orbitYaw; }
+    int GetOrbitPitch() const { return m_orbitPitch; }
+    void SetOrbit(int yaw, int pitch)
+    {
+        m_orbitYaw = yaw;
+        m_orbitPitch = pitch;
+    }
+    // Writes the [Camera] section alone: cheap enough for every wheel tick. In the browser
+    // index.html copies config.ini into the page's storage a few seconds later.
+    void SaveCamera();
 
     // Render
     bool GetSortParticleDraws() const { return m_sortParticleDraws; }
@@ -251,6 +271,11 @@ private:
     bool m_enableAnimationTaskPool;
 
     int m_zoom;
+    int m_cameraMode = 0;
+    bool m_zoomLock = true;
+    int m_zoomLevel = 3;
+    int m_orbitYaw = 0;
+    int m_orbitPitch = 0;
     bool m_sortParticleDraws;
     bool m_vsyncEnabled;
     LookPreset m_look;

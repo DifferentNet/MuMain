@@ -134,6 +134,10 @@ private:
     void InitializeOrbitalFromCurrentState(const vec3_t lookAtPoint, const CameraState& previousState);
     void SyncStateToGlobalCamera();
 
+    // The zoom, turn and tilt in config.ini [Camera] (Zoom, OrbitYaw, OrbitPitch).
+    void LoadSavedOrbit();
+    void SaveOrbit() const;
+
     // Phase 5: Hero validity check (private)
     bool IsHeroValid() const;
 };

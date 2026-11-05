@@ -69,6 +69,13 @@ namespace CfgKeys
 
     // Camera
     inline constexpr wchar_t CfgKeyZoom[] = L"Zoom";
+    // MU Moldova: the camera the player left (CameraManager): F9 mode (0 default, 1 orbital),
+    // F10 wheel lock, the default camera's wheel step and the orbital camera's turn and tilt.
+    inline constexpr wchar_t CfgKeyCameraMode[] = L"Mode";
+    inline constexpr wchar_t CfgKeyZoomLock[] = L"ZoomLock";
+    inline constexpr wchar_t CfgKeyZoomLevel[] = L"ZoomLevel";
+    inline constexpr wchar_t CfgKeyOrbitYaw[] = L"OrbitYaw";
+    inline constexpr wchar_t CfgKeyOrbitPitch[] = L"OrbitPitch";
 
     // Render
     inline constexpr wchar_t CfgKeySortParticleDraws[] = L"SortParticleDraws";
@@ -123,6 +130,9 @@ namespace CfgDefaults
     inline constexpr wchar_t CfgDefaultServerIP[] = L"localhost";
     inline constexpr int CfgDefaultServerPort = 44405;
 
+    inline constexpr int CfgDefaultCameraMode = 0;    // CameraMode::Default
+    inline constexpr bool CfgDefaultZoomLock = true;  // the wheel doesn't zoom until F10
+    inline constexpr int CfgDefaultZoomLevel = 3;     // DefaultCamera PLAYER_ZOOM_LEVEL_DEFAULT
     inline constexpr int CfgDefaultZoom = 1735;  // OrbitalCamera DEFAULT_RADIUS — matches Default-cam camera-to-Hero distance
 
     // I18N locale code; "en" is the default the resx generator falls back to.
