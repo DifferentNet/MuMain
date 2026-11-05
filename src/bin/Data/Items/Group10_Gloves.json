@@ -1084,7 +1084,7 @@
     {
       "number": 45,
       "name": {
-        "en": "Titan  Gloves",
+        "en": "Titan Gloves",
         "de": "Titanenhandschuhe",
         "es": "Guantes Titán",
         "pt": "Luvas do titã"
@@ -1132,7 +1132,7 @@
     {
       "number": 47,
       "name": {
-        "en": "Phantom  Gloves",
+        "en": "Destroy Gloves",
         "de": "Phantom-Handschuhe",
         "es": "Guantes Fantasma",
         "pt": "Luvas do fantasma"
@@ -1156,7 +1156,7 @@
     {
       "number": 48,
       "name": {
-        "en": "Destroy Gloves",
+        "en": "Phantom Gloves",
         "de": "Zerstörerhandschuhe",
         "es": "Guantes Destructores",
         "pt": "Luvas da destruição"
@@ -1205,7 +1205,7 @@
     {
       "number": 50,
       "name": {
-        "en": "Divine Gloves",
+        "en": "Faith Gloves",
         "de": "Glaubenshandschuhe",
         "es": "Guantes Divinos",
         "pt": "Luvas divinas"
@@ -1230,7 +1230,7 @@
     {
       "number": 51,
       "name": {
-        "en": "Royal Gloves",
+        "en": "Paewang Gloves",
         "de": "Königliche Handschuhe",
         "es": "Guantes Reales",
         "pt": "Luvas reais"

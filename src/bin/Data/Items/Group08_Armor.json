@@ -1048,7 +1048,7 @@
     {
       "number": 45,
       "name": {
-        "en": "Titan  Armor",
+        "en": "Titan Armor",
         "de": "Titanenrüstung",
         "es": "Armadura Titán",
         "pt": "Armadura do titã"
@@ -1094,7 +1094,7 @@
     {
       "number": 47,
       "name": {
-        "en": "Phantom  Armor",
+        "en": "Destroy Armor",
         "de": "Phantom-Rüstung",
         "es": "Armadura Fantasma",
         "pt": "Armadura do fantasma"
@@ -1117,7 +1117,7 @@
     {
       "number": 48,
       "name": {
-        "en": "Destroy Armor",
+        "en": "Phantom Armor",
         "de": "Zerstörerrüstung",
         "es": "Armadura Destructora",
         "pt": "Armadura da destruição"
@@ -1164,7 +1164,7 @@
     {
       "number": 50,
       "name": {
-        "en": "Divine Armor",
+        "en": "Faith Armor",
         "de": "Glaubensrüstung",
         "es": "Armadura Divina",
         "pt": "Armadura divina"
@@ -1188,7 +1188,7 @@
     {
       "number": 51,
       "name": {
-        "en": "Royal Armor",
+        "en": "Paewang Armor",
         "de": "Königliche Rüstung",
         "es": "Armadura Real",
         "pt": "Armadura real"
