@@ -177,6 +177,27 @@ TEST_CASE("Item names longer than the bmd field are cut [data][items]")
     CHECK(std::wstring(attribute.Name).size() == MAX_ITEM_NAME - 1);
 }
 
+TEST_CASE("Item damage above 255 is kept in memory and capped in the bmd record [data][items]")
+{
+    ITEM_ATTRIBUTE attribute{};
+    attribute.DamageMin = 575;
+    attribute.DamageMax = 630;
+    attribute.Defense = 40;
+
+    ITEM_ATTRIBUTE_FILE record{};
+    CopyItemAttributeToDestination(record, attribute);
+    CHECK(record.DamageMin == 255);
+    CHECK(record.DamageMax == 255);
+    CHECK(record.Defense == 40);
+
+    ITEM_ATTRIBUTE back{};
+    CopyItemAttributeFromSource(back, record);
+    CHECK(back.DamageMin == 255);
+    CHECK(back.Defense == 40);
+    CHECK(sizeof(record.DamageMin) == 1);
+    CHECK(sizeof(attribute.DamageMin) == 2);
+}
+
 TEST_CASE("Item database finds existing items only [data][items]")
 {
     const std::vector<ItemDefinition> items = {

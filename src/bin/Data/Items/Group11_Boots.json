@@ -1071,9 +1071,8 @@
       "slot": "boots",
       "level": 96,
       "durability": 86,
-      "defense": 57,
+      "defense": 114,
       "requirements": {
-        "level": 380,
         "strength": 222,
         "dexterity": 32
       },
@@ -1094,9 +1093,8 @@
       "slot": "boots",
       "level": 93,
       "durability": 86,
-      "defense": 45,
+      "defense": 90,
       "requirements": {
-        "level": 380,
         "strength": 74,
         "dexterity": 162
       },
@@ -1107,19 +1105,18 @@
     {
       "number": 47,
       "name": {
-        "en": "Phantom Boots",
-        "de": "Phantom-Stiefel",
-        "es": "Botas Fantasma",
-        "pt": "Botas do fantasma"
+        "en": "Destroy Boots",
+        "de": "Zerstörerstiefel",
+        "es": "Botas Destructoras",
+        "pt": "Botas da destruição"
       },
       "width": 2,
       "height": 2,
       "slot": "boots",
       "level": 97,
       "durability": 86,
-      "defense": 54,
+      "defense": 108,
       "requirements": {
-        "level": 380,
         "strength": 212,
         "dexterity": 57
       },
@@ -1130,19 +1127,18 @@
     {
       "number": 48,
       "name": {
-        "en": "Destroy Boots",
-        "de": "Zerstörerstiefel",
-        "es": "Botas Destructoras",
-        "pt": "Botas da destruição"
+        "en": "Phantom Boots",
+        "de": "Phantom-Stiefel",
+        "es": "Botas Fantasma",
+        "pt": "Botas do fantasma"
       },
       "width": 2,
       "height": 2,
       "slot": "boots",
       "level": 94,
       "durability": 86,
-      "defense": 44,
+      "defense": 88,
       "requirements": {
-        "level": 380,
         "strength": 62,
         "dexterity": 19,
         "energy": 165
@@ -1164,9 +1160,8 @@
       "slot": "boots",
       "level": 97,
       "durability": 86,
-      "defense": 42,
+      "defense": 84,
       "requirements": {
-        "level": 380,
         "strength": 55,
         "dexterity": 197
       },
@@ -1177,19 +1172,18 @@
     {
       "number": 50,
       "name": {
-        "en": "Divine Boots",
+        "en": "Faith Boots",
         "de": "Glaubensstiefel",
-        "es": "Botas Divinas",
-        "pt": "Botas divinas"
+        "es": "Botas de Fe",
+        "pt": "Botas da fé"
       },
       "width": 2,
       "height": 2,
       "slot": "boots",
       "level": 92,
       "durability": 86,
-      "defense": 35,
+      "defense": 70,
       "requirements": {
-        "level": 380,
         "strength": 32,
         "dexterity": 29,
         "energy": 138
@@ -1201,7 +1195,7 @@
     {
       "number": 51,
       "name": {
-        "en": "Royal Boots",
+        "en": "Paewang Boots",
         "de": "Königliche Stiefel",
         "es": "Botas Reales",
         "pt": "Botas reais"
@@ -1211,9 +1205,8 @@
       "slot": "boots",
       "level": 98,
       "durability": 86,
-      "defense": 38,
+      "defense": 76,
       "requirements": {
-        "level": 380,
         "strength": 105,
         "dexterity": 38
       },
@@ -1234,9 +1227,8 @@
       "slot": "boots",
       "level": 94,
       "durability": 86,
-      "defense": 34,
+      "defense": 68,
       "requirements": {
-        "level": 380,
         "strength": 60,
         "dexterity": 15,
         "energy": 181

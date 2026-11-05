@@ -13,8 +13,8 @@
     X(m_wSkillIndex, Word, 1, 60.0f, Skill) \
     X(Width, Byte, 1, 60.0f, Width) \
     X(Height, Byte, 1, 60.0f, Height) \
-    X(DamageMin, Byte, 1, 70.0f, MinDamage) \
-    X(DamageMax, Byte, 1, 70.0f, MaxDamage) \
+    X(DamageMin, WordFileByte, 1, 70.0f, MinDamage) \
+    X(DamageMax, WordFileByte, 1, 70.0f, MaxDamage) \
     X(SuccessfulBlocking, Byte, 1, 70.0f, BlockRate) \
     X(Defense, Byte, 1, 70.0f, Defense) \
     X(MagicDefense, Byte, 1, 80.0f, MagicDefense) \
@@ -58,16 +58,39 @@
 #define FIELD_TYPE_Word WORD
 #define FIELD_TYPE_Int int
 #define FIELD_TYPE_DWord DWORD
+// WordFileByte: two bytes in memory (the JSON item data can hold more than 255, e.g. the stronger Season 4 top's
+// damage), one byte in the .bmd file records, whose layout stays as Webzen's.
+#define FIELD_TYPE_WordFileByte WORD
+
+// The type of a field in the .bmd file records (ITEM_ATTRIBUTE_FILE, ITEM_ATTRIBUTE_FILE_LEGACY).
+#define FILE_FIELD_TYPE_Bool bool
+#define FILE_FIELD_TYPE_Byte BYTE
+#define FILE_FIELD_TYPE_Word WORD
+#define FILE_FIELD_TYPE_Int int
+#define FILE_FIELD_TYPE_DWord DWORD
+#define FILE_FIELD_TYPE_WordFileByte BYTE
+
+// The editor's and the comparison's field type of a TypeEnum (EFieldType::META_FIELD_TYPE_##type).
+#define META_FIELD_TYPE_Bool Bool
+#define META_FIELD_TYPE_Byte Byte
+#define META_FIELD_TYPE_Word Word
+#define META_FIELD_TYPE_Int Int
+#define META_FIELD_TYPE_DWord DWord
+#define META_FIELD_TYPE_WordFileByte Word
 
 // Generate struct field declarations from X-macro. The i18nName parameter
 // only matters for descriptor generation; the struct layout ignores it.
 #define DECLARE_FIELD(name, type, arraySize, width, i18nName) FIELD_TYPE_##type name;
+#define DECLARE_FILE_FIELD(name, type, arraySize, width, i18nName) FILE_FIELD_TYPE_##type name;
 
 // Macro to generate all non-array fields for struct definition
 #define ITEM_ATTRIBUTE_FIELDS \
     ITEM_FIELDS_SIMPLE(DECLARE_FIELD) \
     BYTE RequireClass[MAX_CLASS]; \
     BYTE Resistance[MAX_RESISTANCE + 1];
+
+// The same fields as the .bmd file records store them
+#define ITEM_ATTRIBUTE_FILE_FIELDS     ITEM_FIELDS_SIMPLE(DECLARE_FILE_FIELD)     BYTE RequireClass[MAX_CLASS];     BYTE Resistance[MAX_RESISTANCE + 1];
 
 // ============================================================================
 // EDITOR METADATA - Defined in ItemFieldMetadata.h (after ITEM_ATTRIBUTE is defined)

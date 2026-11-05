@@ -666,13 +666,12 @@
       "weaponKind": "staff",
       "level": 138,
       "magicDurability": 91,
-      "damageMin": 57,
-      "damageMax": 59,
+      "damageMin": 285,
+      "damageMax": 295,
       "attackSpeed": 30,
-      "magicPower": 126,
+      "magicPower": 200,
       "attackType": 3,
       "requirements": {
-        "level": 380,
         "strength": 47,
         "dexterity": 18
       },
@@ -683,10 +682,10 @@
     {
       "number": 31,
       "name": {
-        "en": "Inberial Staff",
+        "en": "Imperial Staff",
         "de": "Kaiserlicher Stab",
-        "es": "Báculo Inberial",
-        "pt": "Bastão inberial"
+        "es": "Báculo Imperial",
+        "pt": "Bastão imperial"
       },
       "width": 1,
       "height": 4,
@@ -694,12 +693,11 @@
       "weaponKind": "staff",
       "level": 137,
       "magicDurability": 182,
-      "damageMin": 57,
-      "damageMax": 61,
+      "damageMin": 285,
+      "damageMax": 305,
       "attackSpeed": 30,
-      "magicPower": 124,
+      "magicPower": 200,
       "requirements": {
-        "level": 380,
         "strength": 48,
         "dexterity": 14
       },

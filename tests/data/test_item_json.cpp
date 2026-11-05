@@ -222,6 +222,19 @@ TEST_CASE("Item names must be texts [data][items]")
     CHECK(HasIssue(result.issues, ItemDataIssueSeverity::Error, "name.pt"));
 }
 
+TEST_CASE("Item damage above 255 loads (the stronger Season 4 top) [data][items]")
+{
+    const ReadResult result =
+        Read(GroupFile(4, R"({"number": 23, "name": "Stinger Bow", "damageMin": 810, "damageMax": 920})"));
+
+    REQUIRE(result.items.size() == 1);
+    CHECK(result.issues.empty());
+    CHECK(result.items[0].damageMin == 810);
+    CHECK(result.items[0].damageMax == 920);
+    CHECK(HasIssue(Read(GroupFile(4, R"({"number": 23, "name": "X", "damageMax": 65536})")).issues,
+                   ItemDataIssueSeverity::Error, "damageMax"));
+}
+
 TEST_CASE("Numbers too large for their field do not wrap around [data][items]")
 {
     CHECK(HasIssue(Read(GroupFile(0, R"({"number": 4294967297, "name": "X"})")).issues, ItemDataIssueSeverity::Error,

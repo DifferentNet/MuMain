@@ -20,7 +20,7 @@ using ItemFieldDescriptor = FieldDescriptor<ITEM_ATTRIBUTE>;
 
 // Macro to generate item field descriptors
 #define MAKE_SIMPLE_FIELD_DESCRIPTOR(name, type, arraySize, width, i18nName) \
-    { #name, &I18N::Metadata::i18nName, EFieldType::type, offsetof(ITEM_ATTRIBUTE, name), width },
+    { #name, &I18N::Metadata::i18nName, EFieldType::META_FIELD_TYPE_##type, offsetof(ITEM_ATTRIBUTE, name), width },
 
 #define MAKE_ARRAY_FIELD_DESCRIPTOR(nameWithIndex, baseName, index, type, width, i18nName) \
     { #nameWithIndex, &I18N::Metadata::i18nName, EFieldType::type, offsetof(ITEM_ATTRIBUTE, baseName[index]), width },

@@ -118,8 +118,8 @@ struct ItemDefinition
 
     BYTE durability = 0;
     BYTE magicDurability = 0;
-    BYTE damageMin = 0;
-    BYTE damageMax = 0;
+    WORD damageMin = 0;
+    WORD damageMax = 0;
     BYTE blockRate = 0;
     BYTE defense = 0;
     BYTE magicDefense = 0;

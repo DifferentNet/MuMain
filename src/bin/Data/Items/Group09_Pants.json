@@ -1047,7 +1047,7 @@
     {
       "number": 45,
       "name": {
-        "en": "Titan  Pants",
+        "en": "Titan Pants",
         "de": "Titanenhose",
         "es": "Pantalones Titán",
         "pt": "Calças do titã"
@@ -1057,9 +1057,8 @@
       "slot": "pants",
       "level": 116,
       "durability": 86,
-      "defense": 74,
+      "defense": 148,
       "requirements": {
-        "level": 380,
         "strength": 222,
         "dexterity": 32
       },
@@ -1080,9 +1079,8 @@
       "slot": "pants",
       "level": 112,
       "durability": 86,
-      "defense": 58,
+      "defense": 116,
       "requirements": {
-        "level": 380,
         "strength": 74,
         "dexterity": 162
       },
@@ -1093,19 +1091,18 @@
     {
       "number": 47,
       "name": {
-        "en": "Phantom  Pants",
-        "de": "Phantom-Hose",
-        "es": "Pantalones Fantasma",
-        "pt": "Calças do fantasma"
+        "en": "Destroy Pants",
+        "de": "Zerstörerhose",
+        "es": "Pantalones Destructores",
+        "pt": "Calças da destruição"
       },
       "width": 2,
       "height": 2,
       "slot": "pants",
       "level": 115,
       "durability": 86,
-      "defense": 66,
+      "defense": 132,
       "requirements": {
-        "level": 380,
         "strength": 212,
         "dexterity": 57
       },
@@ -1116,19 +1113,18 @@
     {
       "number": 48,
       "name": {
-        "en": "Destroy Pants",
-        "de": "Zerstörerhose",
-        "es": "Pantalones Destructores",
-        "pt": "Calças da destruição"
+        "en": "Phantom Pants",
+        "de": "Phantom-Hose",
+        "es": "Pantalones Fantasma",
+        "pt": "Calças do fantasma"
       },
       "width": 2,
       "height": 2,
       "slot": "pants",
       "level": 113,
       "durability": 86,
-      "defense": 51,
+      "defense": 102,
       "requirements": {
-        "level": 380,
         "strength": 62,
         "dexterity": 19,
         "energy": 165
@@ -1150,9 +1146,8 @@
       "slot": "pants",
       "level": 116,
       "durability": 86,
-      "defense": 53,
+      "defense": 106,
       "requirements": {
-        "level": 380,
         "strength": 55,
         "dexterity": 197
       },
@@ -1163,19 +1158,18 @@
     {
       "number": 50,
       "name": {
-        "en": "Divine Pants",
+        "en": "Faith Pants",
         "de": "Glaubenshose",
-        "es": "Pantalones Divinos",
-        "pt": "Calças divinas"
+        "es": "Pantalones de Fe",
+        "pt": "Calças da fé"
       },
       "width": 2,
       "height": 2,
       "slot": "pants",
       "level": 109,
       "durability": 86,
-      "defense": 46,
+      "defense": 92,
       "requirements": {
-        "level": 380,
         "strength": 32,
         "dexterity": 29,
         "energy": 138
@@ -1187,7 +1181,7 @@
     {
       "number": 51,
       "name": {
-        "en": "Royal Pants",
+        "en": "Paewang Pants",
         "de": "Königliche Hose",
         "es": "Pantalones Reales",
         "pt": "Calças reais"
@@ -1197,9 +1191,8 @@
       "slot": "pants",
       "level": 116,
       "durability": 86,
-      "defense": 46,
+      "defense": 92,
       "requirements": {
-        "level": 380,
         "strength": 105,
         "dexterity": 38
       },
@@ -1220,9 +1213,8 @@
       "slot": "pants",
       "level": 114,
       "durability": 86,
-      "defense": 44,
+      "defense": 88,
       "requirements": {
-        "level": 380,
         "strength": 60,
         "dexterity": 15,
         "energy": 181

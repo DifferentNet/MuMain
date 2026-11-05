@@ -747,7 +747,7 @@
     {
       "number": 26,
       "name": {
-        "en": "Flameberge",
+        "en": "Flamberge",
         "de": "Flamberge"
       },
       "width": 1,
@@ -757,11 +757,10 @@
       "skill": 22,
       "level": 137,
       "durability": 90,
-      "damageMin": 115,
-      "damageMax": 126,
+      "damageMin": 575,
+      "damageMax": 630,
       "attackSpeed": 40,
       "requirements": {
-        "level": 380,
         "strength": 193,
         "dexterity": 53
       },
@@ -784,11 +783,10 @@
       "skill": 22,
       "level": 133,
       "durability": 90,
-      "damageMin": 91,
-      "damageMax": 99,
+      "damageMin": 455,
+      "damageMax": 495,
       "attackSpeed": 35,
       "requirements": {
-        "level": 380,
         "strength": 53,
         "dexterity": 176
       },
@@ -799,10 +797,10 @@
     {
       "number": 28,
       "name": {
-        "en": "Rune Bastard Sword",
-        "de": "Runen-Bastardschwert",
-        "es": "Espada Runa Bastarda",
-        "pt": "Espada bastarda das runas"
+        "en": "Imperial Sword",
+        "de": "Kaiserliches Schwert",
+        "es": "Espada Imperial",
+        "pt": "Espada imperial"
       },
       "tags": ["magicSword"],
       "width": 1,
@@ -812,12 +810,11 @@
       "skill": 56,
       "level": 139,
       "durability": 90,
-      "damageMin": 98,
-      "damageMax": 122,
+      "damageMin": 490,
+      "damageMax": 610,
       "attackSpeed": 45,
       "magicPower": 109,
       "requirements": {
-        "level": 380,
         "strength": 91,
         "dexterity": 73,
         "energy": 17
