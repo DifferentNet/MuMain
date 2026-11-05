@@ -51,6 +51,13 @@ namespace GameLogic::Items
             return false;
         }
 
+        // A worn-out Wizard's Ring (durability 0) goes to a merchant: the server sells a bound
+        // item once its durability is 0, and the ring can't be repaired, traded or stored.
+        if (pItem->Type == ITEM_WIZARDS_RING && Level == 0 && !pItem->bPeriodItem && pItem->Durability == 0)
+        {
+            return false;
+        }
+
         // Rena +1 (Stone), Wizard's Ring +1 and +2, Remedy of Love +1 to +5,
         // and a Wizard's Ring +0 while it is rented.
         if ((pItem->Type == ITEM_RENA && Level == 1) ||

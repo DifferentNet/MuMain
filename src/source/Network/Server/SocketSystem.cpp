@@ -43,29 +43,13 @@ BOOL CSocketItemMgr::IsSocketItem(const OBJECT* pObject)
 
 BOOL CSocketItemMgr::IsSocketItem(int iItemType)
 {
+    // MU Skynet (2026-11-04, ghinzuro): the Season 4 socket weapons, shields and sets are excellent items without
+    // sockets on our server (trim/exc-top-sets.sql), the top of Box of Kundun +5. As socket items the client showed
+    // them violet, read their harmony byte as a socket set option, hid the harmony line and refused the Jewel of
+    // Harmony. Only the types our server doesn't have stay here.
     switch (iItemType)
     {
-    case ITEM_FLAMBERGE:
-    case ITEM_SWORD_BREAKER:
-    case ITEM_IMPERIAL_SWORD:
-    case ITEM_FROST_MACE:
-    case ITEM_ABSOLUTE_SCEPTER:
-    case ITEM_STINGER_BOW:
-    case ITEM_DEADLY_STAFF:
-    case ITEM_IMPERIAL_STAFF:
     case ITEM_STAFF + 32:
-    case ITEM_CRIMSONGLORY:
-    case ITEM_SALAMANDER_SHIELD:
-    case ITEM_FROST_BARRIER:
-    case ITEM_GUARDIAN_SHILED:
-    case ITEM_TITAN_HELM: case ITEM_TITAN_ARMOR: case ITEM_TITAN_PANTS: case ITEM_TITAN_GLOVES: case ITEM_TITAN_BOOTS:
-    case ITEM_BRAVE_HELM: case ITEM_BRAVE_ARMOR: case ITEM_BRAVE_PANTS: case ITEM_BRAVE_GLOVES: case ITEM_BRAVE_BOOTS:
-    case ITEM_HELM + 47: case ITEM_DESTORY_ARMOR: case ITEM_DESTORY_PANTS: case ITEM_DESTORY_GLOVES: case ITEM_DESTORY_BOOTS:
-    case ITEM_HELM + 48: case ITEM_PHANTOM_ARMOR: case ITEM_PHANTOM_PANTS: case ITEM_PHANTOM_GLOVES: case ITEM_PHANTOM_BOOTS:
-    case ITEM_SERAPHIM_HELM: case ITEM_SERAPHIM_ARMOR: case ITEM_SERAPHIM_PANTS: case ITEM_SERAPHIM_GLOVES: case ITEM_SERAPHIM_BOOTS:
-    case ITEM_FAITH_HELM: case ITEM_FAITH_ARMOR: case ITEM_FAITH_PANTS: case ITEM_FAITH_GLOVES: case ITEM_FAITH_BOOTS:
-    case ITEM_PAEWANG_MASK: case ITEM_PAEWANG_ARMOR: case ITEM_PAEWANG_PANTS: case ITEM_PAEWANG_GLOVES: case ITEM_PHAEWANG_BOOTS:
-    case ITEM_HADES_HELM: case ITEM_HADES_ARMOR: case ITEM_HADES_PANTS: case ITEM_HADES_GLOVES: case ITEM_HADES_BOOTS:
     case ITEM_HELM + 53: case ITEM_ARMOR + 53: case ITEM_PANTS + 53: case ITEM_GLOVES + 53: case ITEM_BOOTS + 53:
         return TRUE;
     default:

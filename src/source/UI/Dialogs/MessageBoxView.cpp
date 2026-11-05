@@ -2,6 +2,9 @@
 
 #include "UI/Dialogs/MessageBoxView.h"
 
+#include "UI/Dialogs/GenericConfirmDialog.h"
+#include "UI/Dialogs/GenericMenuDialog.h"
+
 #include "Core/Utilities/StringUtils.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "Render/Text/CUIRenderTextSDLTtf.h"
@@ -18,6 +21,12 @@
 
 using namespace mu::ui::window;
 
+
+bool mu::ui::window::IsGenericDialogOpen()
+{
+    return (g_pGenericConfirmDialog != nullptr && g_pGenericConfirmDialog->IsVisible()) ||
+           (g_pGenericMenuDialog != nullptr && g_pGenericMenuDialog->IsVisible());
+}
 
 mu::ui::window::MessageBoxView::MessageBoxView()
     // One document and model name: a second box while one is open gets no view (CreateDataModel()
@@ -143,8 +152,16 @@ void mu::ui::window::MessageBoxView::Sync(const std::vector<Line>& lines, const 
     if (!m_View.Document())
         return;
 
-    // Message boxes draw over every window: in front of the other documents.
-    UI::RmlBridge::SyncDocumentVisibilityInFront(m_View.Document(), true);
+    // Message boxes draw over every window: in front of the other documents. An open generic dialog comes first
+    // (IsGenericDialogOpen()); a click it took is not this box's.
+    const bool yield = IsGenericDialogOpen();
+    UI::RmlBridge::SyncDocumentVisibilityInFront(m_View.Document(), !yield);
+    if (yield)
+    {
+        m_PressedButton = -1;
+        m_PressedListRow = -1;
+        return;
+    }
     UI::RmlBridge::SyncNativeTextSize(m_View.Binder());
 
     MessageBoxViewRmlModel& model = m_View.GetModel();

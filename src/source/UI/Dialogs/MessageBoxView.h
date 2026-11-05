@@ -13,6 +13,12 @@ class ElementDocument;
 
 namespace mu::ui::window
 {
+// A generic confirm or menu dialog is open. They are modal RmlUi documents: RmlUi sends the pointer only to them, so a
+// message box gives way while one is open (its document hidden, the mouse and keys left to the dialog) and shows again
+// in front once it closes. Blood Castle's winner got OpenMU's OK dialog (ShowDialog 1, 23) and the result box at once;
+// the box drew over the dialog and neither could be pressed until the event moved him out.
+bool IsGenericDialogOpen();
+
 // The RmlUi side of a native message box (a CMessageBoxBase) drawn as newui_msgbox_top, 15-unit
 // middle strips and newui_msgbox_bottom over the newui_msgbox_back fill, with text lines and
 // newui_btn_empty_small or newui_button_ok buttons, or a progress bar (CGuild_ToPerson_Position, CProgressMsgBox,
