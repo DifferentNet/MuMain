@@ -13621,6 +13621,12 @@
   <data name="JewelBankHowMany" xml:space="preserve">
     <value>Сколько %ls забрать? В банке: %ls.</value>
   </data>
+  <data name="JewelBankInPacks" xml:space="preserve">
+    <value>Пачками по 10</value>
+  </data>
+  <data name="JewelBankPacksHint" xml:space="preserve">
+    <value>Пачками: каждые 10 камней придут одной пачкой, остаток отдельными камнями.</value>
+  </data>
   <data name="IncreasePhysicalDamagePercentD" xml:space="preserve">
     <value>Увеличение физического урона +%d%%</value>
   </data>
