@@ -509,7 +509,7 @@
     <value>F11 : Сбросить камеру</value>
   </data>
   <data name="Home - Toggle MU Helper" xml:space="preserve">
-    <value>Home : MU Helper вкл/выкл</value>
+    <value>Home / клик колёсиком : MU Helper вкл/выкл</value>
   </data>
   <data name="Enter: Chatting Mode" xml:space="preserve">
     <value>Enter : Написать в чат</value>
