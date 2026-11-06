@@ -59,6 +59,18 @@ inline constexpr float PickupReach = 2.0f;
     return result == PickupResult::NoPath || (result == PickupResult::Approaching && sinceCloser >= patience);
 }
 
+// Whether the helper should leave a drop on the ground for now and keep attacking: picking it up takes a walk
+// (`needsWalk`), a monster is within the attack's reach (`monsterInReach`), and the drop has been put off for less
+// than `fightWait` (`putOffFor`, any time unit). In a big pack the walk to each new drop was blocked by the monsters
+// and the character stood among them, not hitting, until the walk was given up (ghinzuro's Dark Knight, 2026-11-06).
+// A drop next to the character is still taken at once, the rest once the fight is over; one put off for `fightWait`
+// gets a walk anyway, so drops don't lie forever where monsters never stop coming.
+[[nodiscard]] constexpr bool ShouldPutOffPickup(bool needsWalk, bool monsterInReach, long long putOffFor,
+                                                long long fightWait)
+{
+    return needsWalk && monsterInReach && putOffFor < fightWait;
+}
+
 // Walks to the drop and picks it up. `itemIndex` is the client's slot in
 // the dropped-item table, `maximumDistance` the caller's own limit in
 // tiles.
