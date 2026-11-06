@@ -1385,13 +1385,24 @@ float FullSetHighTierFactor(const wchar_t* setName)
 // health +25 %, damage decrease +22 %, final damage +10 % (high-tier sets more), the set's weapon at the top's +10 %.
 int CSItemOption::RenderFullSetBonus(const std::uint8_t setNumber, int textIndex) const
 {
-    if (Hero == nullptr || setNumber == 0 || textIndex + 8 > MAX_TEXT_LIST_LINES)
+    // 7 lines here and the 2 closing lines RenderSetOptionListInItem writes after the piece list.
+    if (Hero == nullptr || setNumber == 0 || textIndex + 9 > MAX_TEXT_LIST_LINES)
     {
         return textIndex;
     }
 
-    // Green while a full ancient set is worn (Hero->ExtendState, as Power of the Ancients reads it).
-    const bool fullSetWorn = Hero->ExtendState != 0;
+    // Green while this very set is worn complete (m_SetSearchResult: the sets with two or more pieces worn).
+    bool fullSetWorn = false;
+    for (int i = 0; i < m_SetSearchResultCount; i++)
+    {
+        const auto& set = m_SetSearchResult[i];
+        if (set.SetNumber == setNumber && set.CompleteSetItemCount <= set.ItemCount)
+        {
+            fullSetWorn = true;
+            break;
+        }
+    }
+
     const int damagePercent =
         static_cast<int>(std::lround((1.10f * FullSetHighTierFactor(m_ItemSetOption[setNumber].strSetName) - 1.0f) * 100.0f));
     const auto add = [&textIndex, fullSetWorn](const wchar_t* text, const bool header)
