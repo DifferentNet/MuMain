@@ -31,13 +31,13 @@ constexpr std::uint8_t Boots = 6;
 constexpr std::uint8_t Wings = 7;
 constexpr std::uint8_t Pet = 8;
 constexpr std::uint8_t Ring = 10;
-constexpr std::uint8_t None = 255;
+constexpr std::uint8_t NoSlot = 255;
 
 // CLASS_TYPE
 constexpr int Wizard = 0;
 constexpr int Knight = 1;
 constexpr int Elf = 2;
-constexpr int RageFighter = 6;
+constexpr int RageFighterClass = 6;
 
 // Equipment indexes
 constexpr int RightHand = 0;
@@ -153,7 +153,7 @@ TEST_CASE("pets count by kind, the others nothing")
 
 TEST_CASE("items that can't be equipped have none")
 {
-    CHECK(GetItemCombatPower(Gear(14, 13, None, 0, 0)) == 0);
+    CHECK(GetItemCombatPower(Gear(14, 13, NoSlot, 0, 0)) == 0);
 }
 
 TEST_CASE("the high-tier sets and what a set adds")
@@ -255,6 +255,6 @@ TEST_CASE("the last piece of a set adds the whole set")
 
 TEST_CASE("items that can't be equipped have no change")
 {
-    CHECK_FALSE(GetCombatPowerChange(CombatPowerEquipment{}, Gear(14, 13, None, 0, 0), Wizard).has_value());
-    CHECK_FALSE(GetCombatPowerChange(CombatPowerEquipment{}, Gear(8, 3, Gloves, 10, 0), RageFighter).has_value());
+    CHECK_FALSE(GetCombatPowerChange(CombatPowerEquipment{}, Gear(14, 13, NoSlot, 0, 0), Wizard).has_value());
+    CHECK_FALSE(GetCombatPowerChange(CombatPowerEquipment{}, Gear(8, 3, Gloves, 10, 0), RageFighterClass).has_value());
 }
