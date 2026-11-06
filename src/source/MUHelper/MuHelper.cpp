@@ -1795,6 +1795,11 @@ namespace MUHelper
                 return 1;
             }
         }
+        else
+        {
+            // Not walking to it this round (a pickup answer pending, say): a later walk starts a fresh patience.
+            m_pickupSince = {};
+        }
 
         switch (result)
         {
