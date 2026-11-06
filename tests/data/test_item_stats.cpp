@@ -321,11 +321,13 @@ TEST_CASE("The + level bonus adds up above +9 [data][items]")
 
     // Magic power is halved after the bonus; staffs add 2 per level, sceptres don't (OpenMU's
     // staff and sceptre rise tables).
-    CHECK(ComputeItem(ITEM_LEGENDARY_STAFF, 15).MagicPower == 92);
-    CHECK(ComputeItem(ITEM_GREAT_LORD_SCEPTER, 15).MagicPower == 66);
-    CHECK(ComputeItem(ITEM_DIVINE_STAFF_OF_ARCHANGEL, 15).MagicPower == 141);
+    // Magic power from the excellent weapon ladder (mu-moldova exc-weapon-ladder.py, 2026-11-06): Legendary Staff 76,
+    // Great Lord Scepter 82, Divine Staff of Archangel 150.
+    CHECK(ComputeItem(ITEM_LEGENDARY_STAFF, 15).MagicPower == 101);
+    CHECK(ComputeItem(ITEM_GREAT_LORD_SCEPTER, 15).MagicPower == 74);
+    CHECK(ComputeItem(ITEM_DIVINE_STAFF_OF_ARCHANGEL, 15).MagicPower == 138);
     // With the excellent bonus the sum passes 255 before the halving.
-    CHECK(ComputeItem(ITEM_DIVINE_STAFF_OF_ARCHANGEL, 15, 0x01).MagicPower == 162);
+    CHECK(ComputeItem(ITEM_DIVINE_STAFF_OF_ARCHANGEL, 15, 0x01).MagicPower == 158);
 }
 
 TEST_CASE("Wing defense adds up above +9, from 5 for the third tier wings [data][items]")

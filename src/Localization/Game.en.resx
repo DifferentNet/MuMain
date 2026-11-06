@@ -14022,6 +14022,24 @@
   <data name="PowerOfTheAncientsRavenD" xml:space="preserve">
     <value>With the Dark Raven: final damage +%d%%</value>
   </data>
+  <data name="FullAncientSetBonus" xml:space="preserve">
+    <value>Full set bonus (this set worn complete):</value>
+  </data>
+  <data name="FullAncientSetDefense" xml:space="preserve">
+    <value>Defense: at least 110 % of the Box of Kundun +5 set</value>
+  </data>
+  <data name="FullAncientSetHealthD" xml:space="preserve">
+    <value>Maximum HP +%d%%</value>
+  </data>
+  <data name="FullAncientSetDamageDecreaseD" xml:space="preserve">
+    <value>Damage decrease +%d%%</value>
+  </data>
+  <data name="FullAncientSetDamageD" xml:space="preserve">
+    <value>Final damage +%d%%</value>
+  </data>
+  <data name="FullAncientSetWeapon" xml:space="preserve">
+    <value>The set's weapon: the top weapon +10 %</value>
+  </data>
   <data name="JewelOfAncientDesc" xml:space="preserve">
     <value>Raises an ancient item +13 to +14 and +15</value>
   </data>

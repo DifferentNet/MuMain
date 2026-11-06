@@ -13645,6 +13645,24 @@
   <data name="PowerOfTheAncientsRavenD" xml:space="preserve">
     <value>С Тёмным вороном: итоговый урон +%d%%</value>
   </data>
+  <data name="FullAncientSetBonus" xml:space="preserve">
+    <value>Бонус полного сета (весь этот сет надет):</value>
+  </data>
+  <data name="FullAncientSetDefense" xml:space="preserve">
+    <value>Защита: не меньше 110 % сета из Box of Kundun +5</value>
+  </data>
+  <data name="FullAncientSetHealthD" xml:space="preserve">
+    <value>Максимум HP +%d%%</value>
+  </data>
+  <data name="FullAncientSetDamageDecreaseD" xml:space="preserve">
+    <value>Снижение урона +%d%%</value>
+  </data>
+  <data name="FullAncientSetDamageD" xml:space="preserve">
+    <value>Итоговый урон +%d%%</value>
+  </data>
+  <data name="FullAncientSetWeapon" xml:space="preserve">
+    <value>Оружие сета: как топовое оружие +10 %</value>
+  </data>
   <data name="JewelOfAncientDesc" xml:space="preserve">
     <value>Поднимает ancient-вещь с +13 до +14 и +15</value>
   </data>

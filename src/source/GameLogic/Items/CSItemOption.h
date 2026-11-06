@@ -124,8 +124,9 @@ private:
     // grey the ones still to collect. Returns the next text line.
     int     RenderSetPieceList(std::uint8_t setNumber, int textIndex) const;
     // "Power of the Ancients" (the server's PowerOfTheAncientsPlugIn): the bonus a full ancient set gives the
-    // character's class with its weapon, gold while it applies, grey otherwise. Returns the next text line.
-    static int RenderPowerOfTheAncients(int textIndex);
+    // character's class with its weapon, green while it applies (a whole set of 4+ pieces and the weapon), grey otherwise. Returns the next text line.
+    int RenderPowerOfTheAncients(int textIndex) const;
+    int RenderFullSetBonus(std::uint8_t setNumber, int textIndex) const;
 
     bool	OpenItemSetType(const wchar_t* filename);
     bool	OpenItemSetOption(const wchar_t* filename);

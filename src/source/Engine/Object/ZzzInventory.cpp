@@ -1850,7 +1850,7 @@ static void RenderItemOwnCombatPower(const ITEM* ip, const GameLogic::Items::Com
 
     if (item.IsAncient)
     {
-        const GameLogic::Items::AncientSetCombatPower set = GameLogic::Items::GetAncientSetCombatPower(item.IsHighTierAncient);
+        const GameLogic::Items::AncientSetCombatPower set = GameLogic::Items::GetAncientSetCombatPower(item.IsHighTierAncient, item.AncientSetSize);
         wchar_t wholeSetText[32]{};
         ConvertGold(set.WholeSet, wholeSetText);
         mu_swprintf(TextList[TextNum], I18N::Game::ItemCombatPowerSetDS, set.PerFurtherPiece, wholeSetText);
