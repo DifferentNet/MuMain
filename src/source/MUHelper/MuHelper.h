@@ -175,12 +175,15 @@ namespace MUHelper
 		std::chrono::steady_clock::time_point m_regroupSince{};
 		std::chrono::steady_clock::time_point m_regroupRestUntil{};
 		int m_iRegroupBestGap = 0; // the smallest WalkGap back seen in this attempt
-		// A drop with no way to it, or whose walk gets no closer for PickupPatience (monsters on and round it), is set
-		// aside for PickupRest and the round goes on to the attack (ShouldSetAsidePickup, 2026-11-06).
+		// A drop with no way to it, or whose walk gets no closer (WalkGap) for PickupPatience (monsters on and round
+		// it), is set aside for PickupRest and the round goes on to the attack (ShouldSetAsidePickup, 2026-11-06).
+		// After such a walk the whole pickup rests for PickupStuckRest, so drop after drop can't keep the attack waiting.
 		static constexpr std::chrono::milliseconds PickupPatience{ 2000 };
 		static constexpr std::chrono::seconds PickupRest{ 5 };
+		static constexpr std::chrono::seconds PickupStuckRest{ 3 };
 		std::chrono::steady_clock::time_point m_pickupSince{};
-		int m_iPickupBestDistance = 0; // the fewest tiles to the current drop seen in this attempt
+		std::chrono::steady_clock::time_point m_pickupRestUntil{};
+		int m_iPickupBestGap = 0; // the smallest WalkGap to the current drop seen in this attempt
 		std::map<int, std::chrono::steady_clock::time_point> m_mapItemRestUntil; // drop id -> back in the choice; guarded like m_setItems
 		void SetAsideItem(int iItemId, std::chrono::steady_clock::time_point now);
 		static constexpr std::chrono::seconds ForgottenTargetRest{ 2 };

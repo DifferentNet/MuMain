@@ -50,7 +50,7 @@ inline constexpr float PickupReach = 2.0f;
 }
 
 // Whether a drop the helper walks to should be set aside for a while so it fights instead: there is no way to it,
-// or the walk has gone on `sinceCloser` (any time unit) without getting a tile closer, for at least `patience`.
+// or the walk has gone on `sinceCloser` (any time unit) without getting closer (WalkGap), for at least `patience`.
 // Monsters stand on their tiles, often on the drops of the ones just killed: the path finder then gets no further
 // than the character's own tile and the helper stood among them without attacking, for as long as they stood there
 // hitting it (ghinzuro's Dark Knight in big packs, 2026-11-06).

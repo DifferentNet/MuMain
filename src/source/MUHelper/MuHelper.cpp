@@ -147,6 +147,7 @@ namespace MUHelper
         m_regroupSince = {};
         m_regroupRestUntil = {};
         m_pickupSince = {};
+        m_pickupRestUntil = {};
         _itemsLock.lock();
         m_mapItemRestUntil.clear();
         _itemsLock.unlock();
@@ -1718,6 +1719,13 @@ namespace MUHelper
 
     int CMuHelper::ObtainItem()
     {
+        // After a walk to a drop got nowhere, the pickup as a whole rests a moment: with several drops among the
+        // monsters, each one's own patience in turn kept the attack waiting nearly all the time.
+        if (std::chrono::steady_clock::now() < m_pickupRestUntil)
+        {
+            return 1;
+        }
+
         if (m_iCurrentItem == MAX_ITEMS)
         {
             m_iCurrentItem = SelectItemToObtain();
@@ -1747,20 +1755,38 @@ namespace MUHelper
         {
             const int iDropX = static_cast<int>(Items[m_iCurrentItem].Object.Position[0] / TERRAIN_SCALE);
             const int iDropY = static_cast<int>(Items[m_iCurrentItem].Object.Position[1] / TERRAIN_SCALE);
-            const int iDistance = ComputeDistanceBetween({ Hero->PositionX, Hero->PositionY }, { iDropX, iDropY });
-            if (m_pickupSince == std::chrono::steady_clock::time_point{} || iDistance < m_iPickupBestDistance)
+            // As in Regroup: a path that ends at the drop counts its steps (a detour round a wall is getting
+            // closer), one that only reaches the nearest free tile among monsters counts the straight line.
+            int iPathSteps = 0;
+            bool bPathEndsAtDrop = false;
+            if (result == PickupResult::Approaching)
+            {
+                std::lock_guard<SpinLock> guard(Hero->Path.Lock);
+                iPathSteps = static_cast<int>(Hero->Path.PathNum);
+                if (iPathSteps > 0)
+                {
+                    bPathEndsAtDrop = std::abs(Hero->Path.PathX[iPathSteps - 1] - iDropX) <= 1
+                        && std::abs(Hero->Path.PathY[iPathSteps - 1] - iDropY) <= 1;
+                }
+            }
+            const int iGap = GameLogic::Automation::WalkGap(bPathEndsAtDrop, iPathSteps,
+                ComputeDistanceBetween({ Hero->PositionX, Hero->PositionY }, { iDropX, iDropY }));
+            if (m_pickupSince == std::chrono::steady_clock::time_point{}
+                || GameLogic::Automation::IsWalkProgress(iGap, m_iPickupBestGap))
             {
                 m_pickupSince = now;
-                m_iPickupBestDistance = iDistance;
+                m_iPickupBestGap = iGap;
             }
 
             const auto sinceCloser = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_pickupSince).count();
             if (GameLogic::Automation::ShouldSetAsidePickup(result, sinceCloser, PickupPatience.count()))
             {
+                // The walk under way, also one begun before the way got blocked, would keep the attack waiting
+                // (it runs only while the character stands); nothing happens when the character stands.
+                GameLogic::Automation::StopAtNextTile();
                 if (result == PickupResult::Approaching)
                 {
-                    // The walk under way would keep the attack waiting (it runs only while the character stands).
-                    GameLogic::Automation::StopAtNextTile();
+                    m_pickupRestUntil = now + PickupStuckRest;
                 }
                 SetAsideItem(m_iCurrentItem, now);
                 g_ConsoleDebug->Write(MCD_NORMAL, result == PickupResult::NoPath
