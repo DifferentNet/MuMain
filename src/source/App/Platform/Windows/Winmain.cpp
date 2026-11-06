@@ -1354,7 +1354,10 @@ void HandleWindowResize(int width, int height)
 //   Chrome gives such a tab none) is not waited for past a short while.
 // - A page in the background asks for the game's reference rate (25), as a minimized window runs: the
 //   game and its connection go on, at a fraction of the work (loading goes on at full speed). Browsers
-//   run a background tab's timers about once a second, so in practice it is slower still.
+//   run a background tab's timers about once a second (Chrome once a minute after 5 silent minutes),
+//   which left MU Helper standing in a pack of monsters: so the wait is timed by a small worker, whose
+//   timers browsers don't slow, and its message wakes the game. A phone freezes a background page
+//   whole, worker too, so there nothing changes.
 // - A device that can't keep up with the cap (a frame's own work above about 24 ms, on average) is
 //   held to 30 frames a second, evenly, instead of an uneven 30-40; it goes back above once frames
 //   are quick again (below about 16 ms).
@@ -1389,8 +1392,26 @@ EM_ASYNC_JS(void, WaitForBrowserFrameJs, (int capFps), {
         const frameMs = 1000 / fps - 2;
         const giveUpAt = now + 1000 / fps + 50;
         if (document.hidden) {
-            const rest = start + frameMs - now;
-            await new Promise((resolve) => setTimeout(resolve, Math.max(rest, 1)));
+            const rest = Math.max(start + frameMs - now, 1);
+            if (!("muHiddenClock" in Module)) {
+                let clock = null;
+                try {
+                    const source = "onmessage = (e) => setTimeout(() => postMessage(0), e.data);";
+                    const url = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
+                    const worker = new Worker(url);
+                    const waiting = [];
+                    worker.onmessage = () => waiting.shift()?.();
+                    worker.onerror = () => { Module["muHiddenClock"] = null; while (waiting.length) waiting.shift()(); };
+                    clock = { worker, waiting };
+                } catch (e) { /* no workers: the page's own timer */ }
+                Module["muHiddenClock"] = clock;
+            }
+            const clock = Module["muHiddenClock"];
+            await new Promise((resolve) => {
+                if (!clock) { setTimeout(resolve, rest); return; }
+                clock.waiting.push(resolve);
+                clock.worker.postMessage(rest);
+            });
         } else {
             for (;;) {
                 const refreshed = await new Promise((resolve) => {

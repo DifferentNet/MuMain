@@ -133,7 +133,7 @@
       "damageMin": 29,
       "damageMax": 32,
       "attackSpeed": 25,
-      "magicPower": 58,
+      "magicPower": 68,
       "attackType": 3,
       "requirements": {
         "strength": 50
@@ -160,7 +160,7 @@
       "damageMin": 29,
       "damageMax": 31,
       "attackSpeed": 25,
-      "magicPower": 59,
+      "magicPower": 76,
       "attackType": 3,
       "requirements": {
         "strength": 50
@@ -216,7 +216,7 @@
       "damageMin": 47,
       "damageMax": 48,
       "attackSpeed": 30,
-      "magicPower": 94,
+      "magicPower": 106,
       "requirements": {
         "strength": 60,
         "dexterity": 10
@@ -244,7 +244,7 @@
       "damageMin": 50,
       "damageMax": 54,
       "attackSpeed": 30,
-      "magicPower": 101,
+      "magicPower": 124,
       "attackType": 3,
       "requirements": {
         "strength": 60,
@@ -272,7 +272,7 @@
       "damageMin": 46,
       "damageMax": 48,
       "attackSpeed": 30,
-      "magicPower": 92,
+      "magicPower": 122,
       "attackType": 3,
       "requirements": {
         "strength": 52,
@@ -300,7 +300,7 @@
       "damageMin": 73,
       "damageMax": 81,
       "attackSpeed": 30,
-      "magicPower": 144,
+      "magicPower": 150,
       "requirements": {
         "strength": 36,
         "dexterity": 4
@@ -327,7 +327,7 @@
       "damageMin": 55,
       "damageMax": 61,
       "attackSpeed": 30,
-      "magicPower": 110,
+      "magicPower": 166,
       "requirements": {
         "strength": 45,
         "dexterity": 16
@@ -354,7 +354,7 @@
       "damageMin": 66,
       "damageMax": 74,
       "attackSpeed": 30,
-      "magicPower": 130,
+      "magicPower": 148,
       "requirements": {
         "level": 380,
         "strength": 39,
@@ -381,7 +381,7 @@
       "damageMin": 51,
       "damageMax": 53,
       "attackSpeed": 30,
-      "magicPower": 120,
+      "magicPower": 160,
       "requirements": {
         "strength": 50,
         "dexterity": 16

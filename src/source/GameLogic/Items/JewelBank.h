@@ -44,8 +44,12 @@ public:
     // Puts every jewel of a kind (index into Kinds()) from the inventory into the bank.
     void Deposit(int kind);
 
-    // Takes up to `amount` jewels of a kind out of the bank.
-    void Withdraw(int kind, int amount);
+    // Takes up to `amount` jewels of a kind out of the bank; with `packs` each 10 as one packed jewel, the rest
+    // single (the server's /jbwdp).
+    void Withdraw(int kind, int amount, bool packs = false);
+
+    // Whether a kind has a packed form (the first ten; the Jewel of Ancient and the Jewel of Fate have none).
+    static bool HasPacks(int kind) { return kind >= 0 && kind < BaseKindCount; }
 
     bool HasInfo() const { return m_hasInfo; }
     // The server answered that the bank isn't set up.

@@ -13621,6 +13621,12 @@
   <data name="JewelBankHowMany" xml:space="preserve">
     <value>Сколько %ls забрать? В банке: %ls.</value>
   </data>
+  <data name="JewelBankInPacks" xml:space="preserve">
+    <value>Пачками</value>
+  </data>
+  <data name="JewelBankPacksHint" xml:space="preserve">
+    <value>Пачками: каждые 10 камней придут одной пачкой, остаток отдельными камнями.</value>
+  </data>
   <data name="IncreasePhysicalDamagePercentD" xml:space="preserve">
     <value>Увеличение физического урона +%d%%</value>
   </data>
@@ -13638,6 +13644,30 @@
   </data>
   <data name="PowerOfTheAncientsRavenD" xml:space="preserve">
     <value>С Тёмным вороном: итоговый урон +%d%%</value>
+  </data>
+  <data name="FullAncientSetBonus" xml:space="preserve">
+    <value>Бонус полного сета (весь этот сет надет):</value>
+  </data>
+  <data name="FullAncientSetDefense" xml:space="preserve">
+    <value>Защита: 120 % сета из Box of Kundun +5 (на +13)</value>
+  </data>
+  <data name="FullAncientSetHealthD" xml:space="preserve">
+    <value>Максимум HP +%d%%</value>
+  </data>
+  <data name="FullAncientSetDamageDecreaseD" xml:space="preserve">
+    <value>Снижение урона +%d%%</value>
+  </data>
+  <data name="FullAncientSetDamageDecreaseCapD" xml:space="preserve">
+    <value>Снижение урона +%d%% (с бронёй не больше %d%%)</value>
+  </data>
+  <data name="FullAncientSetDamageD" xml:space="preserve">
+    <value>Итоговый урон +%d%%</value>
+  </data>
+  <data name="FullAncientSetWeapon" xml:space="preserve">
+    <value>Оружие сета: как топовое оружие +10 %</value>
+  </data>
+  <data name="FullExcellentSetBonusD" xml:space="preserve">
+    <value>Бонус полного экселент-сета (Box of Kundun +%d, надеты все части):</value>
   </data>
   <data name="JewelOfAncientDesc" xml:space="preserve">
     <value>Поднимает ancient-вещь с +13 до +14 и +15</value>
@@ -13969,6 +13999,9 @@
   </data>
   <data name="SeasonItemBound" xml:space="preserve">
     <value>Привязан к персонажу: нельзя передать, сложить в хранилище или продать</value>
+  </data>
+  <data name="SeasonFenrirLife" xml:space="preserve">
+    <value>Увеличение жизни +%d</value>
   </data>
   <data name="GmPanelSending" xml:space="preserve">
     <value>Отправлено: %ls</value>
@@ -15763,6 +15796,9 @@
   </data>
   <data name="ExcellentDustWeek" xml:space="preserve">
     <value>За неделю %ls из %ls, сброс через %ls</value>
+  </data>
+  <data name="ExcellentDustWeekCarried" xml:space="preserve">
+    <value>За неделю %ls из %ls, +%ls после сброса через %ls</value>
   </data>
   <data name="ExcellentDustWaiting" xml:space="preserve">
     <value>Пыль: спрашиваем сервер...</value>

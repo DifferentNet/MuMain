@@ -79,17 +79,46 @@ int GetLevelPoints(int level)
     return LevelPoints[std::clamp(level, 0, static_cast<int>(LevelPoints.size()) - 1)];
 }
 
+// The Season 4 top items count 50 drop levels more (the server's BoxOfKundun5.IsSeason4Top and
+// AncientSetBonusRules.TopDropLevelBonus, 2026-11-06), so the top is above Box of Kundun +4.
+constexpr int TopDropLevelBonus = 50;
+
+bool IsSeason4Top(int group, int number)
+{
+    if (group >= 7 && group <= 11)
+    {
+        return number >= 45 && number <= 52;
+    }
+
+    switch (group)
+    {
+    case 0:
+        return number >= 26 && number <= 28;
+    case 2:
+        return number == 16 || number == 17;
+    case 4:
+        return number == 23;
+    case 5:
+        return number == 30 || number == 31;
+    case 6:
+        return number >= 17 && number <= 20;
+    default:
+        return false;
+    }
+}
+
 int GetDropLevel(const CombatPowerItem& item)
 {
+    const int topBonus = IsSeason4Top(item.Group, item.Number) ? TopDropLevelBonus : 0;
     for (const auto& entry : DropLevelOverrides)
     {
         if (entry.Group == item.Group && entry.Number == item.Number)
         {
-            return entry.DropLevel;
+            return entry.DropLevel + topBonus;
         }
     }
 
-    return item.DropLevel;
+    return item.DropLevel + topBonus;
 }
 
 int GetWingPoints(const CombatPowerItem& item)
@@ -123,7 +152,12 @@ int GetPetPoints(const CombatPowerItem& item)
     switch (item.Number)
     {
     case FenrirNumber:
-        if ((item.ExcellentFlags & (BlackFenrirFlag | GoldFenrirFlag)) != 0)
+        if ((item.ExcellentFlags & GoldFenrirFlag) != 0)
+        {
+            return 1500; // the battle pass season Fenrir
+        }
+
+        if ((item.ExcellentFlags & BlackFenrirFlag) != 0)
         {
             return 1000;
         }
@@ -332,9 +366,14 @@ int GetItemCombatPower(const CombatPowerItem& item)
     return IsGear(item) && item.IsAncient ? points + GetAncientPiecePoints(item) : points;
 }
 
-AncientSetCombatPower GetAncientSetCombatPower(bool highTier)
+AncientSetCombatPower GetAncientSetCombatPower(bool highTier, int setSize)
 {
-    return highTier ? AncientSetCombatPower{600, 2500} : AncientSetCombatPower{300, 1000};
+    if (setSize < FullSetBonusMinPieces)
+    {
+        return highTier ? AncientSetCombatPower{600, 2500} : AncientSetCombatPower{300, 1000};
+    }
+
+    return highTier ? AncientSetCombatPower{600, 12500} : AncientSetCombatPower{300, 10000};
 }
 
 bool IsHighTierAncientSet(const wchar_t* setName)
@@ -393,13 +432,14 @@ int GetEquipmentCombatPower(const CombatPowerEquipment& equipment, int baseClass
     {
         const int worn = static_cast<int>(set.Pieces.size());
         const int size = std::max(1, set.Size);
-        const AncientSetCombatPower bonus = GetAncientSetCombatPower(set.IsHighTier);
+        const AncientSetCombatPower bonus = GetAncientSetCombatPower(set.IsHighTier, set.Size);
         points += worn * (set.IsHighTier ? HighTierAncientPiecePoints : AncientPiecePoints);
         points += std::max(0, std::min(worn, size) - 1) * bonus.PerFurtherPiece;
         if (worn >= size)
         {
             points += bonus.WholeSet;
-            isAnySetWhole = true;
+            // Power of the Ancients needs a whole set of 4 pieces or more (server HasFullAncientSet, 2026-11-06).
+            isAnySetWhole |= set.Size >= FullSetBonusMinPieces;
         }
     }
 

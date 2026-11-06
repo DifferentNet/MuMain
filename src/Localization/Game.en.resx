@@ -13998,6 +13998,12 @@
   <data name="JewelBankHowMany" xml:space="preserve">
     <value>How many %ls to take? The bank holds %ls.</value>
   </data>
+  <data name="JewelBankInPacks" xml:space="preserve">
+    <value>In packs</value>
+  </data>
+  <data name="JewelBankPacksHint" xml:space="preserve">
+    <value>In packs: each 10 comes as one packed jewel, the rest as single jewels.</value>
+  </data>
   <data name="IncreasePhysicalDamagePercentD" xml:space="preserve">
     <value>Increase physical damage +%d%%</value>
   </data>
@@ -14015,6 +14021,30 @@
   </data>
   <data name="PowerOfTheAncientsRavenD" xml:space="preserve">
     <value>With the Dark Raven: final damage +%d%%</value>
+  </data>
+  <data name="FullAncientSetBonus" xml:space="preserve">
+    <value>Full set bonus (this set worn complete):</value>
+  </data>
+  <data name="FullAncientSetDefense" xml:space="preserve">
+    <value>Defense: 120 % of the Box of Kundun +5 set (at +13)</value>
+  </data>
+  <data name="FullAncientSetHealthD" xml:space="preserve">
+    <value>Maximum HP +%d%%</value>
+  </data>
+  <data name="FullAncientSetDamageDecreaseD" xml:space="preserve">
+    <value>Damage decrease +%d%%</value>
+  </data>
+  <data name="FullAncientSetDamageDecreaseCapD" xml:space="preserve">
+    <value>Damage decrease +%d%% (with armour at most %d%%)</value>
+  </data>
+  <data name="FullAncientSetDamageD" xml:space="preserve">
+    <value>Final damage +%d%%</value>
+  </data>
+  <data name="FullAncientSetWeapon" xml:space="preserve">
+    <value>The set's weapon: the top weapon +10 %</value>
+  </data>
+  <data name="FullExcellentSetBonusD" xml:space="preserve">
+    <value>Full excellent set bonus (Box of Kundun +%d, every piece worn):</value>
   </data>
   <data name="JewelOfAncientDesc" xml:space="preserve">
     <value>Raises an ancient item +13 to +14 and +15</value>
@@ -14346,6 +14376,9 @@
   </data>
   <data name="SeasonItemBound" xml:space="preserve">
     <value>Bound to the character: can't be traded, stored or sold</value>
+  </data>
+  <data name="SeasonFenrirLife" xml:space="preserve">
+    <value>Increase Life +%d</value>
   </data>
   <data name="GmPanelSending" xml:space="preserve">
     <value>Sent: %ls</value>
@@ -16101,6 +16134,9 @@
   </data>
   <data name="ExcellentDustWeek" xml:space="preserve">
     <value>This week %ls of %ls, resets in %ls</value>
+  </data>
+  <data name="ExcellentDustWeekCarried" xml:space="preserve">
+    <value>This week %ls of %ls, +%ls at the reset in %ls</value>
   </data>
   <data name="ExcellentDustWaiting" xml:space="preserve">
     <value>Dust: asking the server...</value>

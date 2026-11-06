@@ -1850,7 +1850,7 @@ static void RenderItemOwnCombatPower(const ITEM* ip, const GameLogic::Items::Com
 
     if (item.IsAncient)
     {
-        const GameLogic::Items::AncientSetCombatPower set = GameLogic::Items::GetAncientSetCombatPower(item.IsHighTierAncient);
+        const GameLogic::Items::AncientSetCombatPower set = GameLogic::Items::GetAncientSetCombatPower(item.IsHighTierAncient, item.AncientSetSize);
         wchar_t wholeSetText[32]{};
         ConvertGold(set.WholeSet, wholeSetText);
         mu_swprintf(TextList[TextNum], I18N::Game::ItemCombatPowerSetDS, set.PerFurtherPiece, wholeSetText);
@@ -3979,6 +3979,15 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
         }
         TextBold[TextNum] = false; TextNum++;
     }
+    if (GameLogic::Items::IsTieredMedal(ip))
+    {
+        mu_swprintf(TextList[TextNum], I18N::Game::ThrowItAndYouMayReceiveSomeZenOrItems);
+        TextListColor[TextNum] = TEXT_COLOR_WHITE; TextBold[TextNum] = false; TextNum++;
+        mu_swprintf(TextList[TextNum], I18N::Game::CannotBeSold);
+        TextListColor[TextNum] = TEXT_COLOR_RED;
+        TextBold[TextNum] = false;
+        TextNum++;
+    }
     if (ip->Type == ITEM_BOX_OF_LUCK)
     {
         if (Level == 7)
@@ -5050,18 +5059,16 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
         }
         else if (ip->ExcellentFlags == 0x04)
         {
-            WORD wLevel = CharacterAttribute->Level;
-
-            mu_swprintf(TextList[TextNum], I18N::Game::AddedDOfLife, (wLevel / 2));
+            mu_swprintf(TextList[TextNum], I18N::Game::IncreaseFinalDamageD, 10);
             TextListColor[TextNum] = TEXT_COLOR_BLUE;
             TextNum++;
-            mu_swprintf(TextList[TextNum], I18N::Game::AddedDOfMana, (wLevel / 2));
+            mu_swprintf(TextList[TextNum], I18N::Game::AbsorbFinalDamageD, 10);
             TextListColor[TextNum] = TEXT_COLOR_BLUE;
             TextNum++;
-            mu_swprintf(TextList[TextNum], I18N::Game::AddedDAttack, (wLevel / 12));
+            mu_swprintf(TextList[TextNum], I18N::Game::SeasonFenrirLife, 1000);
             TextListColor[TextNum] = TEXT_COLOR_BLUE;
             TextNum++;
-            mu_swprintf(TextList[TextNum], I18N::Game::AddedDWizardry, (wLevel / 25));
+            mu_swprintf(TextList[TextNum], I18N::Game::IncreaseSpeed);
             TextListColor[TextNum] = TEXT_COLOR_BLUE;
             TextNum++;
             mu_swprintf(TextList[TextNum], L"\n");
@@ -5429,6 +5436,7 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
         (pFindItem == NULL) ? bThisisEquippedItem = true : bThisisEquippedItem = false;
 
         TextNum = g_csItemOption.RenderSetOptionListInItem(ip, TextNum, bThisisEquippedItem);
+        TextNum = g_csItemOption.RenderExcellentSetBonus(ip, TextNum);
 
         TextNum = g_SocketItemMgr.AttachToolTipForSocketItem(ip, TextNum);
 

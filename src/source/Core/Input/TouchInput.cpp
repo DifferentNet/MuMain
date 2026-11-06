@@ -218,6 +218,7 @@ bool ProcessEvent(const SDL_Event& event, SDL_Window* window)
     switch (event.type)
     {
     case SDL_EVENT_FINGER_DOWN:
+        Pointer::FingerLanded();
         // A finger id still in a slot lost its lift: let go of what it held before the slot is
         // used again, or a control would stay held and the gesture wait for that finger forever.
         if (FindFinger(id) != nullptr)

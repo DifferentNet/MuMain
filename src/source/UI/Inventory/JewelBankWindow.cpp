@@ -37,6 +37,8 @@ constexpr float IconWidth = 24.f;
 constexpr float IconHeight = 27.f;
 // The most a withdrawal can ask for: the bank keeps at most a million of a kind.
 constexpr int MaximumWithdrawDigits = 7;
+// The jewels in a packed jewel of level 0, as the server's /jbwdp gives them.
+constexpr int PackSize = 10;
 
 std::wstring ItemName(int itemType)
 {
@@ -204,14 +206,23 @@ void mu::ui::window::CJewelBankWindow::AskWithdrawAmount(int kind)
     wchar_t question[256] = {};
     mu_swprintf(question, I18N::Game::JewelBankHowMany, ItemName(kinds[kind].itemType).c_str(), Amount(Bank().Count(kind)).c_str());
 
+    // Packs of 10 (ghinzuro, 2026-11-05): a second button for the kinds with a packed form, once the bank holds 10.
+    const bool packs = GameLogic::JewelBank::Store::HasPacks(kind) && Bank().Count(kind) >= PackSize;
+
     GenericDialogConfig cfg;
     cfg.showCancel = true;
+    cfg.primaryLabel = I18N::Game::JewelBankWithdraw;
     cfg.lines = {{question, false}};
+    if (packs)
+    {
+        cfg.lines.push_back({I18N::Game::JewelBankPacksHint, false});
+        cfg.secondaryLabel = std::wstring(I18N::Game::JewelBankInPacks);
+    }
     cfg.input = GenericDialogConfig::InputField{};
     cfg.input->mode = GenericDialogConfig::InputField::Mode::Text;
     cfg.input->maxLength = MaximumWithdrawDigits;
     cfg.input->numericOnly = true;
-    cfg.onPrimary = [kind]
+    const auto take = [kind](bool inPacks)
     {
         const std::wstring text = g_pGenericConfirmDialog->GetInputText();
         const int amount = text.empty() ? 0 : _wtoi(text.c_str());
@@ -221,8 +232,11 @@ void mu::ui::window::CJewelBankWindow::AskWithdrawAmount(int kind)
             return;
         }
 
-        Bank().Withdraw(kind, std::min(amount, Bank().Count(kind)));
+        Bank().Withdraw(kind, std::min(amount, Bank().Count(kind)), inPacks);
     };
+    cfg.onPrimary = [take] { take(false); };
+    if (packs)
+        cfg.onSecondary = [take] { take(true); };
     g_pGenericConfirmDialog->Show(std::move(cfg));
 }
 
@@ -295,12 +309,13 @@ void mu::ui::window::CJewelBankWindow::SyncContent()
     JewelBankRmlModel updated;
     updated.title = StringUtils::WideToNarrow(I18N::Game::JewelBankTitle);
 
-    // A row per kind; an optional kind the server doesn't keep is left out once it has answered.
+    // A row per kind; a kind the server doesn't keep (-1: an optional one it lacks, or Harmony, Gemstone and the
+    // refine stones since the server dropped the Jewel of Harmony, 2026-11-06) is left out once it has answered.
     const auto& kinds = GameLogic::JewelBank::Kinds();
     std::vector<int> shown;
     for (int i = 0; i < static_cast<int>(kinds.size()); ++i)
     {
-        if (i >= GameLogic::JewelBank::BaseKindCount && !bank.IsAvailable(i))
+        if ((i >= GameLogic::JewelBank::BaseKindCount || bank.HasInfo()) && !bank.IsAvailable(i))
             continue;
         const auto& kind = kinds[i];
         const std::wstring name = ItemName(kind.itemType);

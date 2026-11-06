@@ -3,7 +3,8 @@
 // MU Moldova: the account's Excellent Dust for the Chaos Goblin (server/addons/src/ExcellentDust.cs). The goblin's
 // method menu has an "Excellent Dust" button: it opens the regular machine (recipes 53 and 54 are regular ones) in
 // a dust mode that shows the counter. The counter comes from the hidden /dustinfo answer
-// "#EXD|dust|earned this week|weekly limit|seconds to the reset|dust an item takes" ("#EXD!|" without the dust);
+// "#EXD|dust|earned this week|weekly limit|seconds to the reset|dust an item takes[|dust added at the reset]"
+// ("#EXD!|" without the dust);
 // that line stays out of the chat.
 
 #include <string>

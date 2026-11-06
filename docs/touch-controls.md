@@ -103,6 +103,9 @@ The pointer stays where the last tap lifted, so a monster tapped stays Attack's 
 tapped shows its tooltip. A tap on a top-row button or a menu item takes it off the window
 (`Touch::RestPointer`): a window opening where the last tap was would show the tooltip of whatever
 lies there. A pad's pointer is the player's own and stays.
+The game draws no pointer sprite for a finger (`RenderCursor`, `Touch::Pointer::FingerHasPointer`):
+none from the start, and none after a tap. A mouse button or the pad pressed since brings it back,
+and the pad's pointer shows whenever it plays one.
 
 Every action keeps the MU Helper's pace (walk packets 300 ms apart, attacks and skills 250 ms):
 the server reads a burst of walk packets as a speed hack.
@@ -182,8 +185,10 @@ page's side):
   (`TouchControls::PressBack`); out of the world it is Esc. Chrome may let a back gesture skip an entry
   pushed without a tap; the next tap on the page restores it.
 - Frame pace (`WaitForBrowserFrame` in `Winmain.cpp`): the world runs at the FPS cap of the options
-  (60 when none), the menus at 30 at most, loading with no cap; a hidden page asks for 25, though
-  browsers run a background tab's timers about once a second. A phone whose frames
+  (60 when none), the menus at 30 at most, loading with no cap; a hidden page runs at 25, its wait timed by a
+  small worker (`Module.muHiddenClock`, setTimeout if there are no workers), as browsers slow a
+  background tab's own timers to once a second (MU Helper stood still); a phone freezes the whole
+  background page anyway. A phone whose frames
   cost more than 24 ms on average drops to 30 until they cost under 16 ms again. Frames wait on the
   browser's `requestAnimationFrame`, not a timer, so they land on the display's refresh. The web build
   starts no animation thread pool and no CPU-usage thread: a phone's few cores go to the browser.

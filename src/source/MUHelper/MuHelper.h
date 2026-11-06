@@ -70,6 +70,8 @@ namespace MUHelper
 		bool MayAttackStandingStill(float fReach);
 		int GetNearestTargetNearSpot();
 		bool IsWithinReach(int iTargetId, float fReach) const;
+		// Whether a live monster among the targets is within the attack's reach, at most FightReachLimit tiles.
+		bool IsMonsterWithinAttackReach() const;
 		int RepairEquipments();
 		int Regroup();
 		ActionSkillType SelectAttackSkill();
@@ -175,9 +177,28 @@ namespace MUHelper
 		std::chrono::steady_clock::time_point m_regroupSince{};
 		std::chrono::steady_clock::time_point m_regroupRestUntil{};
 		int m_iRegroupBestGap = 0; // the smallest WalkGap back seen in this attempt
+		// A drop with no way to it, or whose walk gets no closer (WalkGap) for PickupPatience (monsters on and round
+		// it), is set aside for PickupRest and the round goes on to the attack (ShouldSetAsidePickup, 2026-11-06).
+		// After such a walk the whole pickup rests for PickupStuckRest, so drop after drop can't keep the attack waiting.
+		static constexpr std::chrono::milliseconds PickupPatience{ 2000 };
+		static constexpr std::chrono::seconds PickupRest{ 5 };
+		static constexpr std::chrono::seconds PickupStuckRest{ 3 };
+		std::chrono::steady_clock::time_point m_pickupSince{};
+		std::chrono::steady_clock::time_point m_pickupRestUntil{};
+		int m_iPickupBestGap = 0; // the smallest WalkGap to the current drop seen in this attempt
+		// While a monster is within the attack's reach, a drop that takes a walk waits (ShouldPutOffPickup), at most
+		// PickupFightWait; then one walk is tried (m_bPickupFightTry) with the patience above (2026-11-06). In a fight
+		// that never ends that is one far drop per PickupFightWait, on purpose: the attack comes first.
+		static constexpr std::chrono::seconds PickupFightWait{ 10 };
+		static constexpr float FightReachLimit = 3.0f; // tiles: a monster further away doesn't put a drop off
+		std::chrono::steady_clock::time_point m_pickupPutOffSince{};
+		bool m_bPickupFightTry = false;
+		bool m_bPickupWalking = false; // the last pickup step started or went on with a walk to the drop
+		std::map<int, std::chrono::steady_clock::time_point> m_mapItemRestUntil; // drop id -> back in the choice; guarded like m_setItems
+		void SetAsideItem(int iItemId, std::chrono::steady_clock::time_point now);
 		static constexpr std::chrono::seconds ForgottenTargetRest{ 2 };
 		std::map<int, std::chrono::steady_clock::time_point> m_mapForgottenUntil; // monster key -> back in the list
 	};
 
 	extern CMuHelper g_MuHelper;
-}
+}

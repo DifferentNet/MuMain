@@ -146,6 +146,14 @@ namespace MUHelper
         m_walkWatchSince = {};
         m_regroupSince = {};
         m_regroupRestUntil = {};
+        m_pickupSince = {};
+        m_pickupRestUntil = {};
+        m_pickupPutOffSince = {};
+        m_bPickupFightTry = false;
+        m_bPickupWalking = false;
+        _itemsLock.lock();
+        m_mapItemRestUntil.clear();
+        _itemsLock.unlock();
 
         m_bActive = true;
         g_ConsoleDebug->Write(MCD_NORMAL, L"[MU Helper] Started");
@@ -173,6 +181,9 @@ namespace MUHelper
         m_noTargetInReachSince = {};
         m_regroupSince = {};
         m_regroupRestUntil = {};
+        m_pickupPutOffSince = {};
+        m_bPickupFightTry = false;
+        m_bPickupWalking = false;
         if (!bSteered)
         {
             m_posOriginal = { Hero->PositionX, Hero->PositionY };
@@ -1344,6 +1355,35 @@ namespace MUHelper
         return fDx * fDx + fDy * fDy <= (fReach * TERRAIN_SCALE) * (fReach * TERRAIN_SCALE);
     }
 
+    bool CMuHelper::IsMonsterWithinAttackReach() const
+    {
+        // The reach of the first attack skill or of the weapon, whichever is longer, but only monsters close by
+        // (FightReachLimit): they are the ones that block a walk. A bow or a long skill has monsters within reach
+        // nearly all the time in a busy spot, and its drops would wait for the fight wait one after another.
+        float fReach = GameLogic::Automation::EquippedAttackRange();
+        if (m_config.aiSkill[0] > 0)
+        {
+            fReach = std::max(fReach, gSkillManager.GetSkillDistance((ActionSkillType)m_config.aiSkill[0], Hero));
+        }
+        fReach = std::min(fReach, FightReachLimit);
+
+        std::set<int> setTargets;
+        {
+            _targetsLock.lock();
+            setTargets = m_setTargets;
+            _targetsLock.unlock();
+        }
+        for (const int& iMonsterId : setTargets)
+        {
+            CHARACTER* pTarget = FindCharacterByKey(iMonsterId);
+            if (pTarget != nullptr && pTarget->Object.Live && IsMonster(pTarget) && IsWithinReach(iMonsterId, fReach))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool CMuHelper::MayAttackStandingStill(float fReach)
     {
         // Standing still, but not idle (ghinzuro, 2026-10-23): in the Arena the helper stood for seconds at a
@@ -1714,12 +1754,62 @@ namespace MUHelper
 
     int CMuHelper::ObtainItem()
     {
+        // After a walk to a drop got nowhere, the pickup as a whole rests a moment: with several drops among the
+        // monsters, each one's own patience in turn kept the attack waiting nearly all the time.
+        if (std::chrono::steady_clock::now() < m_pickupRestUntil)
+        {
+            return 1;
+        }
+
         if (m_iCurrentItem == MAX_ITEMS)
         {
             m_iCurrentItem = SelectItemToObtain();
             if (m_iCurrentItem == MAX_ITEMS)
             {
                 return 1;
+            }
+            m_pickupSince = {};
+        }
+
+        // Fight first, loot after (2026-11-06): while a monster is within the attack's reach, a drop that takes a
+        // walk stays on the ground, and a walk to one already under way stops, so the attack goes on. In big packs
+        // that walk was blocked by the monsters and the Dark Knight stood among them without hitting.
+        const auto now = std::chrono::steady_clock::now();
+        {
+            const int iDropX = static_cast<int>(Items[m_iCurrentItem].Object.Position[0] / TERRAIN_SCALE);
+            const int iDropY = static_cast<int>(Items[m_iCurrentItem].Object.Position[1] / TERRAIN_SCALE);
+            const bool bNeedsWalk = Items[m_iCurrentItem].Object.Live
+                && ComputeDistanceBetween({ Hero->PositionX, Hero->PositionY }, { iDropX, iDropY })
+                > static_cast<int>(GameLogic::Automation::PickupReach);
+            const bool bFighting = bNeedsWalk && IsMonsterWithinAttackReach();
+            if (!bFighting)
+            {
+                m_pickupPutOffSince = {};
+            }
+            else if (!m_bPickupFightTry)
+            {
+                if (m_pickupPutOffSince == std::chrono::steady_clock::time_point{})
+                {
+                    m_pickupPutOffSince = now;
+                }
+                const auto putOffFor =
+                    std::chrono::duration_cast<std::chrono::milliseconds>(now - m_pickupPutOffSince).count();
+                if (GameLogic::Automation::ShouldPutOffPickup(bNeedsWalk, bFighting, putOffFor,
+                        std::chrono::duration_cast<std::chrono::milliseconds>(PickupFightWait).count()))
+                {
+                    if (m_bPickupWalking)
+                    {
+                        GameLogic::Automation::StopAtNextTile();
+                        m_bPickupWalking = false;
+                    }
+                    m_pickupSince = {};
+                    // Chosen again next round: a drop next to the character is taken meanwhile.
+                    m_iCurrentItem = MAX_ITEMS;
+                    return 1;
+                }
+                // Put off long enough: one walk now, with the patience below.
+                m_bPickupFightTry = true;
+                m_pickupPutOffSince = {};
             }
         }
 
@@ -1732,6 +1822,68 @@ namespace MUHelper
 
         using GameLogic::Automation::PickupResult;
         const PickupResult result = GameLogic::Automation::PickUpItem(m_iCurrentItem, m_iObtainingDistance);
+        m_bPickupWalking = result == PickupResult::Approaching;
+        if (result != PickupResult::Approaching)
+        {
+            // The walk tried after the fight wait is over, one way or the other.
+            m_bPickupFightTry = false;
+        }
+
+        // A drop under the monsters or behind a ring of them: the walk gets no closer, or there is no way at all
+        // (the path finder gets no further than the character's own tile). That used to end the round here every
+        // time, before the attack, so the helper stood among the monsters, which stayed where they were, hitting it
+        // (ghinzuro's Dark Knight in big packs, 2026-11-06). The drop is set aside for a while and the round goes on.
+        if (result == PickupResult::Approaching || result == PickupResult::NoPath)
+        {
+            const int iDropX = static_cast<int>(Items[m_iCurrentItem].Object.Position[0] / TERRAIN_SCALE);
+            const int iDropY = static_cast<int>(Items[m_iCurrentItem].Object.Position[1] / TERRAIN_SCALE);
+            // As in Regroup: a path that ends at the drop counts its steps (a detour round a wall is getting
+            // closer), one that only reaches the nearest free tile among monsters counts the straight line.
+            int iPathSteps = 0;
+            bool bPathEndsAtDrop = false;
+            if (result == PickupResult::Approaching)
+            {
+                std::lock_guard<SpinLock> guard(Hero->Path.Lock);
+                iPathSteps = static_cast<int>(Hero->Path.PathNum);
+                if (iPathSteps > 0)
+                {
+                    bPathEndsAtDrop = std::abs(Hero->Path.PathX[iPathSteps - 1] - iDropX) <= 1
+                        && std::abs(Hero->Path.PathY[iPathSteps - 1] - iDropY) <= 1;
+                }
+            }
+            const int iGap = GameLogic::Automation::WalkGap(bPathEndsAtDrop, iPathSteps,
+                ComputeDistanceBetween({ Hero->PositionX, Hero->PositionY }, { iDropX, iDropY }));
+            if (m_pickupSince == std::chrono::steady_clock::time_point{}
+                || GameLogic::Automation::IsWalkProgress(iGap, m_iPickupBestGap))
+            {
+                m_pickupSince = now;
+                m_iPickupBestGap = iGap;
+            }
+
+            const auto sinceCloser = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_pickupSince).count();
+            if (GameLogic::Automation::ShouldSetAsidePickup(result, sinceCloser, PickupPatience.count()))
+            {
+                // The walk under way, also one begun before the way got blocked, would keep the attack waiting
+                // (it runs only while the character stands); nothing happens when the character stands.
+                GameLogic::Automation::StopAtNextTile();
+                if (result == PickupResult::Approaching)
+                {
+                    m_pickupRestUntil = now + PickupStuckRest;
+                }
+                SetAsideItem(m_iCurrentItem, now);
+                m_bPickupWalking = false;
+                m_bPickupFightTry = false;
+                g_ConsoleDebug->Write(MCD_NORMAL, result == PickupResult::NoPath
+                    ? L"[MU Helper] No way to a drop; attacking meanwhile"
+                    : L"[MU Helper] The walk to a drop gets no closer; attacking meanwhile");
+                return 1;
+            }
+        }
+        else
+        {
+            // Not walking to it this round (a pickup answer pending, say): a later walk starts a fresh patience.
+            m_pickupSince = {};
+        }
 
         switch (result)
         {
@@ -1751,9 +1903,11 @@ namespace MUHelper
             DeleteItem(m_iCurrentItem);
             return 1;
         case PickupResult::Approaching:
-        case PickupResult::NoPath:
-            // Walking towards it: the helper's other work waits a frame.
+            // Walking towards it: the helper's other work waits a round.
             return 0;
+        case PickupResult::NoPath:
+            // Set aside above.
+            return 1;
         case PickupResult::TooFar:
             // Out of reach now (the character moved on to fight): choose the closest drop again on the
             // next tick instead of waiting for this one to expire, which kept every other drop waiting.
@@ -1808,7 +1962,21 @@ namespace MUHelper
         _itemsLock.lock();
         m_setItems.insert(iItemId);
         m_mapPickupAttempts.erase(iItemId); // a new drop may reuse the id of an old one
+        m_mapItemRestUntil.erase(iItemId);
         _itemsLock.unlock();
+    }
+
+    void CMuHelper::SetAsideItem(int iItemId, std::chrono::steady_clock::time_point now)
+    {
+        _itemsLock.lock();
+        m_mapItemRestUntil[iItemId] = now + PickupRest;
+        _itemsLock.unlock();
+
+        if (iItemId == m_iCurrentItem)
+        {
+            m_iCurrentItem = MAX_ITEMS;
+        }
+        m_pickupSince = {};
     }
 
     void CMuHelper::DeleteItem(int iItemId)
@@ -1816,11 +1984,15 @@ namespace MUHelper
         _itemsLock.lock();
         m_setItems.erase(iItemId);
         m_mapPickupAttempts.erase(iItemId);
+        m_mapItemRestUntil.erase(iItemId);
         _itemsLock.unlock();
 
         if (iItemId == m_iCurrentItem)
         {
             m_iCurrentItem = MAX_ITEMS;
+            // A walk to it, or the one walk after the fight wait, ends with it.
+            m_bPickupWalking = false;
+            m_bPickupFightTry = false;
         }
     }
 
@@ -1839,8 +2011,19 @@ namespace MUHelper
 
         std::set<int> setItems;
         {
+            const auto now = std::chrono::steady_clock::now();
             _itemsLock.lock();
-            setItems = m_setItems;
+            for (auto it = m_mapItemRestUntil.begin(); it != m_mapItemRestUntil.end();)
+            {
+                it = now < it->second ? std::next(it) : m_mapItemRestUntil.erase(it);
+            }
+            for (const int iItemId : m_setItems)
+            {
+                if (!m_mapItemRestUntil.count(iItemId))
+                {
+                    setItems.insert(iItemId);
+                }
+            }
             _itemsLock.unlock();
         }
 

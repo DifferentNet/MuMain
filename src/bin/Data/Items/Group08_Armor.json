@@ -40,7 +40,7 @@
       "slot": "armor",
       "level": 59,
       "durability": 68,
-      "defense": 37,
+      "defense": 59,
       "attackType": 4,
       "requirements": {
         "strength": 120,
@@ -87,7 +87,7 @@
       "slot": "armor",
       "level": 56,
       "durability": 42,
-      "defense": 22,
+      "defense": 34,
       "attackType": 4,
       "requirements": {
         "strength": 40
@@ -231,7 +231,7 @@
       "slot": "armor",
       "level": 48,
       "durability": 50,
-      "defense": 30,
+      "defense": 32,
       "attackType": 4,
       "requirements": {
         "strength": 130
@@ -347,7 +347,7 @@
       "slot": "armor",
       "level": 57,
       "durability": 45,
-      "defense": 29,
+      "defense": 43,
       "attackType": 4,
       "requirements": {
         "strength": 40,
@@ -393,7 +393,7 @@
       "slot": "armor",
       "level": 90,
       "durability": 74,
-      "defense": 48,
+      "defense": 62,
       "attackType": 4,
       "requirements": {
         "strength": 170,
@@ -416,7 +416,7 @@
       "slot": "armor",
       "level": 100,
       "durability": 80,
-      "defense": 63,
+      "defense": 83,
       "attackType": 4,
       "requirements": {
         "strength": 214,
@@ -439,7 +439,7 @@
       "slot": "armor",
       "level": 91,
       "durability": 67,
-      "defense": 33,
+      "defense": 50,
       "attackType": 4,
       "requirements": {
         "strength": 59,
@@ -462,7 +462,7 @@
       "slot": "armor",
       "level": 92,
       "durability": 74,
-      "defense": 44,
+      "defense": 62,
       "attackType": 4,
       "requirements": {
         "strength": 50,
@@ -485,7 +485,7 @@
       "slot": "armor",
       "level": 107,
       "durability": 82,
-      "defense": 60,
+      "defense": 74,
       "attackType": 4,
       "requirements": {
         "strength": 170,
@@ -508,7 +508,7 @@
       "slot": "armor",
       "level": 126,
       "durability": 86,
-      "defense": 75,
+      "defense": 112,
       "attackType": 4,
       "requirements": {
         "strength": 200,
@@ -531,7 +531,7 @@
       "slot": "armor",
       "level": 122,
       "durability": 75,
-      "defense": 43,
+      "defense": 60,
       "attackType": 4,
       "requirements": {
         "strength": 55,
@@ -554,7 +554,7 @@
       "slot": "armor",
       "level": 128,
       "durability": 90,
-      "defense": 73,
+      "defense": 97,
       "attackType": 4,
       "requirements": {
         "strength": 162,
@@ -577,7 +577,7 @@
       "slot": "armor",
       "level": 109,
       "durability": 80,
-      "defense": 55,
+      "defense": 80,
       "attackType": 4,
       "requirements": {
         "strength": 52,
@@ -623,7 +623,7 @@
       "slot": "armor",
       "level": 78,
       "durability": 56,
-      "defense": 36,
+      "defense": 46,
       "attackType": 4,
       "requirements": {
         "strength": 77,
@@ -646,7 +646,7 @@
       "slot": "armor",
       "level": 96,
       "durability": 70,
-      "defense": 43,
+      "defense": 70,
       "attackType": 4,
       "requirements": {
         "strength": 84,
@@ -669,7 +669,7 @@
       "slot": "armor",
       "level": 117,
       "durability": 78,
-      "defense": 51,
+      "defense": 74,
       "attackType": 4,
       "requirements": {
         "strength": 80,
@@ -692,7 +692,7 @@
       "slot": "armor",
       "level": 140,
       "durability": 90,
-      "defense": 88,
+      "defense": 115,
       "requirements": {
         "level": 380,
         "strength": 170,
@@ -715,7 +715,7 @@
       "slot": "armor",
       "level": 146,
       "durability": 86,
-      "defense": 57,
+      "defense": 61,
       "requirements": {
         "level": 380,
         "strength": 44,
@@ -738,7 +738,7 @@
       "slot": "armor",
       "level": 146,
       "durability": 86,
-      "defense": 68,
+      "defense": 82,
       "requirements": {
         "level": 380,
         "strength": 38,
@@ -761,7 +761,7 @@
       "slot": "armor",
       "level": 147,
       "durability": 95,
-      "defense": 86,
+      "defense": 104,
       "requirements": {
         "level": 380,
         "strength": 145,
@@ -784,7 +784,7 @@
       "slot": "armor",
       "level": 147,
       "durability": 82,
-      "defense": 64,
+      "defense": 81,
       "requirements": {
         "level": 380,
         "strength": 62,
@@ -807,7 +807,7 @@
       "slot": "armor",
       "level": 75,
       "durability": 72,
-      "defense": 42,
+      "defense": 110,
       "requirements": {
         "strength": 160,
         "dexterity": 50
@@ -829,7 +829,7 @@
       "slot": "armor",
       "level": 75,
       "durability": 54,
-      "defense": 27,
+      "defense": 59,
       "attackType": 3,
       "requirements": {
         "strength": 53,
@@ -852,7 +852,7 @@
       "slot": "armor",
       "level": 75,
       "durability": 59,
-      "defense": 36,
+      "defense": 73,
       "attackType": 2,
       "requirements": {
         "strength": 50,
@@ -875,7 +875,7 @@
       "slot": "armor",
       "level": 105,
       "durability": 81,
-      "defense": 52,
+      "defense": 88,
       "attackType": 1,
       "requirements": {
         "strength": 155,
@@ -898,7 +898,7 @@
       "slot": "armor",
       "level": 105,
       "durability": 74,
-      "defense": 47,
+      "defense": 72,
       "attackType": 1,
       "requirements": {
         "strength": 80,

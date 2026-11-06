@@ -41,7 +41,7 @@
       "slot": "gloves",
       "level": 52,
       "durability": 68,
-      "defense": 14,
+      "defense": 22,
       "attackSpeed": 6,
       "attackType": 4,
       "requirements": {
@@ -89,7 +89,7 @@
       "slot": "gloves",
       "level": 44,
       "durability": 42,
-      "defense": 11,
+      "defense": 17,
       "attackType": 4,
       "requirements": {
         "strength": 20
@@ -233,7 +233,7 @@
       "slot": "gloves",
       "level": 42,
       "durability": 50,
-      "defense": 12,
+      "defense": 13,
       "attackSpeed": 4,
       "attackType": 4,
       "requirements": {
@@ -353,7 +353,7 @@
       "slot": "gloves",
       "level": 50,
       "durability": 45,
-      "defense": 15,
+      "defense": 22,
       "attackSpeed": 6,
       "attackType": 4,
       "requirements": {
@@ -401,7 +401,7 @@
       "slot": "gloves",
       "level": 76,
       "durability": 74,
-      "defense": 22,
+      "defense": 28,
       "attackSpeed": 6,
       "attackType": 4,
       "requirements": {
@@ -425,7 +425,7 @@
       "slot": "gloves",
       "level": 86,
       "durability": 80,
-      "defense": 37,
+      "defense": 49,
       "attackSpeed": 6,
       "attackType": 4,
       "requirements": {
@@ -449,7 +449,7 @@
       "slot": "gloves",
       "level": 70,
       "durability": 67,
-      "defense": 20,
+      "defense": 30,
       "attackSpeed": 5,
       "attackType": 4,
       "requirements": {
@@ -473,7 +473,7 @@
       "slot": "gloves",
       "level": 72,
       "durability": 74,
-      "defense": 29,
+      "defense": 41,
       "attackSpeed": 6,
       "attackType": 4,
       "requirements": {
@@ -497,7 +497,7 @@
       "slot": "gloves",
       "level": 88,
       "durability": 82,
-      "defense": 34,
+      "defense": 42,
       "attackSpeed": 7,
       "attackType": 4,
       "requirements": {
@@ -521,7 +521,7 @@
       "slot": "gloves",
       "level": 94,
       "durability": 86,
-      "defense": 48,
+      "defense": 72,
       "attackSpeed": 6,
       "attackType": 4,
       "requirements": {
@@ -545,7 +545,7 @@
       "slot": "gloves",
       "level": 87,
       "durability": 75,
-      "defense": 30,
+      "defense": 42,
       "attackSpeed": 6,
       "attackType": 4,
       "requirements": {
@@ -569,7 +569,7 @@
       "slot": "gloves",
       "level": 102,
       "durability": 90,
-      "defense": 45,
+      "defense": 60,
       "attackSpeed": 7,
       "attackType": 4,
       "requirements": {
@@ -593,7 +593,7 @@
       "slot": "gloves",
       "level": 84,
       "durability": 80,
-      "defense": 38,
+      "defense": 55,
       "attackSpeed": 6,
       "attackType": 4,
       "requirements": {
@@ -641,7 +641,7 @@
       "slot": "gloves",
       "level": 57,
       "durability": 56,
-      "defense": 18,
+      "defense": 23,
       "attackSpeed": 6,
       "attackType": 4,
       "requirements": {
@@ -665,7 +665,7 @@
       "slot": "gloves",
       "level": 75,
       "durability": 70,
-      "defense": 21,
+      "defense": 34,
       "attackSpeed": 5,
       "attackType": 4,
       "requirements": {
@@ -689,7 +689,7 @@
       "slot": "gloves",
       "level": 89,
       "durability": 78,
-      "defense": 29,
+      "defense": 42,
       "attackSpeed": 4,
       "attackType": 4,
       "requirements": {
@@ -713,7 +713,7 @@
       "slot": "gloves",
       "level": 114,
       "durability": 90,
-      "defense": 60,
+      "defense": 78,
       "attackSpeed": 7,
       "requirements": {
         "level": 380,
@@ -737,7 +737,7 @@
       "slot": "gloves",
       "level": 111,
       "durability": 86,
-      "defense": 44,
+      "defense": 47,
       "attackSpeed": 7,
       "requirements": {
         "level": 380,
@@ -761,7 +761,7 @@
       "slot": "gloves",
       "level": 111,
       "durability": 86,
-      "defense": 50,
+      "defense": 61,
       "attackSpeed": 7,
       "requirements": {
         "level": 380,
@@ -785,7 +785,7 @@
       "slot": "gloves",
       "level": 127,
       "durability": 95,
-      "defense": 55,
+      "defense": 67,
       "attackSpeed": 7,
       "requirements": {
         "level": 380,
@@ -809,7 +809,7 @@
       "slot": "gloves",
       "level": 110,
       "durability": 82,
-      "defense": 40,
+      "defense": 50,
       "attackSpeed": 5,
       "requirements": {
         "level": 380,
@@ -833,7 +833,7 @@
       "slot": "gloves",
       "level": 61,
       "durability": 72,
-      "defense": 18,
+      "defense": 47,
       "attackSpeed": 6,
       "requirements": {
         "strength": 160,
@@ -856,7 +856,7 @@
       "slot": "gloves",
       "level": 61,
       "durability": 54,
-      "defense": 15,
+      "defense": 33,
       "attackSpeed": 6,
       "attackType": 3,
       "requirements": {
@@ -880,7 +880,7 @@
       "slot": "gloves",
       "level": 61,
       "durability": 59,
-      "defense": 22,
+      "defense": 44,
       "attackSpeed": 6,
       "attackType": 2,
       "requirements": {
@@ -904,7 +904,7 @@
       "slot": "gloves",
       "level": 91,
       "durability": 81,
-      "defense": 27,
+      "defense": 46,
       "attackSpeed": 7,
       "attackType": 1,
       "requirements": {
@@ -928,7 +928,7 @@
       "slot": "gloves",
       "level": 91,
       "durability": 74,
-      "defense": 25,
+      "defense": 38,
       "attackSpeed": 5,
       "attackType": 1,
       "requirements": {

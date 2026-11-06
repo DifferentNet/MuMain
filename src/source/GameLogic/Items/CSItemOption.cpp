@@ -15,11 +15,14 @@
 #include "UI/Core/WindowSystem.h"
 #include "GameLogic/Skills/SkillManager.h"
 #include "GameLogic/Items/CSItemOption.h"
+#include "GameLogic/Items/ItemCombatPower.h"
+#include "Data/GameData/ItemData/ItemDatabase.h"
 #include "I18N/All.h"
 #include "Render/Text/CUIRenderText.h"
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -1216,6 +1219,7 @@ int CSItemOption::RenderSetOptionListInItem(const ITEM* ip, int TextNum, bool bI
     }
 
     TNum = RenderPowerOfTheAncients(TNum);
+    TNum = RenderFullSetBonus(m_bySelectedItemOption, TNum);
     TNum = RenderSetPieceList(m_bySelectedItemOption, TNum);
 
     mu_swprintf(TextList[TNum], L"\n"); TNum++;
@@ -1265,7 +1269,7 @@ bool HasSetPiece(const int type, const int ancientDiscriminator)
 }
 } // namespace
 
-int CSItemOption::RenderPowerOfTheAncients(int textIndex)
+int CSItemOption::RenderPowerOfTheAncients(int textIndex) const
 {
     if (Hero == nullptr || CharacterMachine == nullptr)
     {
@@ -1328,8 +1332,15 @@ int CSItemOption::RenderPowerOfTheAncients(int textIndex)
         return textIndex;
     }
 
-    // Hero->ExtendState is 1 while any ancient set is worn complete (calcSetOptionList).
-    const bool fullSetWorn = Hero->ExtendState != 0;
+    // The server's HasFullAncientSet: a set of 4 pieces or more worn complete (since 2026-11-06).
+    // Hero->ExtendState (the set glow) stays on for the small 2- and 3-piece sets too.
+    bool fullSetWorn = false;
+    for (int i = 0; i < m_SetSearchResultCount; ++i)
+    {
+        const SET_SEARCH_RESULT_OPT& set = m_SetSearchResult[i];
+        fullSetWorn |= set.CompleteSetItemCount <= set.ItemCount
+                       && set.CompleteSetItemCount >= GameLogic::Items::FullSetBonusMinPieces;
+    }
     mu_swprintf(TextList[textIndex], L"%ls", I18N::Game::PowerOfTheAncients);
     TextListColor[textIndex] = TEXT_COLOR_YELLOW;
     TextBold[textIndex] = false;
@@ -1344,6 +1355,175 @@ int CSItemOption::RenderPowerOfTheAncients(int textIndex)
 
     mu_swprintf(TextList[textIndex], L"\n");
     textIndex++;
+    return textIndex;
+}
+
+namespace
+{
+// The final damage factor of a high-tier set on top of the 1.10 every full set gets (the server's
+// AncientSetBonusRules.HighTierFactors, 2026-11-06); 1 for a classic set.
+float FullSetHighTierFactor(const wchar_t* setName)
+{
+    struct Factor
+    {
+        const wchar_t* name;
+        float factor;
+    };
+
+    static constexpr Factor Factors[] = {{L"Bragi", 1.10f}, {L"Mahes", 1.20f}, {L"Alvis", 1.24f}, {L"Bes", 1.25f},
+                                         {L"Frigg", 1.15f}, {L"Serket", 1.14f}, {L"Apis", 1.07f}, {L"Tyr", 1.10f},
+                                         {L"Khone", 1.44f}, {L"Surt", 1.34f}};
+    if (setName == nullptr)
+    {
+        return 1.0f;
+    }
+
+    for (const auto& entry : Factors)
+    {
+        if (std::wcscmp(entry.name, setName) == 0)
+        {
+            return entry.factor;
+        }
+    }
+
+    return 1.0f;
+}
+} // namespace
+
+// The full set bonus of the server's FullAncientSetBonusPlugIn (2026-11-06): defense 120 % of the class's Box +5 set
+// (110 % until the audit, which OpenMU's kind bonus made 132 %), health +45 %, damage decrease +26 % with the armour's
+// own at most 30 % (AncientSetBonusRules.DamageDecreaseCap; before the box bonus +25 % and +22 %),
+// final damage +10 % (high-tier sets more), the set's weapon at the top's +10 %.
+int CSItemOption::RenderFullSetBonus(const std::uint8_t setNumber, int textIndex) const
+{
+    // 7 lines here and the 2 closing lines RenderSetOptionListInItem writes after the piece list.
+    // Sets of 2 or 3 pieces get no full set bonus (the server's AncientSetBonusRules.MinPieces).
+    if (Hero == nullptr || setNumber == 0 || textIndex + 9 > MAX_TEXT_LIST_LINES
+        || GetAncientSetItemCount(setNumber) < GameLogic::Items::FullSetBonusMinPieces)
+    {
+        return textIndex;
+    }
+
+    // Green while this very set is worn complete (m_SetSearchResult: the sets with two or more pieces worn).
+    bool fullSetWorn = false;
+    for (int i = 0; i < m_SetSearchResultCount; i++)
+    {
+        const auto& set = m_SetSearchResult[i];
+        if (set.SetNumber == setNumber && set.CompleteSetItemCount <= set.ItemCount)
+        {
+            fullSetWorn = true;
+            break;
+        }
+    }
+
+    const int damagePercent =
+        static_cast<int>(std::lround((1.10f * FullSetHighTierFactor(m_ItemSetOption[setNumber].strSetName) - 1.0f) * 100.0f));
+    const auto add = [&textIndex, fullSetWorn](const wchar_t* text, const bool header)
+    {
+        mu_swprintf(TextList[textIndex], L"%ls", text);
+        TextListColor[textIndex] = header ? TEXT_COLOR_YELLOW : (fullSetWorn ? TEXT_COLOR_GREEN : TEXT_COLOR_GRAY);
+        TextBold[textIndex] = false;
+        textIndex++;
+    };
+
+    wchar_t line[128];
+    add(I18N::Game::FullAncientSetBonus, true);
+    add(I18N::Game::FullAncientSetDefense, false);
+    mu_swprintf(line, I18N::Game::FullAncientSetHealthD, 45);
+    add(line, false);
+    mu_swprintf(line, I18N::Game::FullAncientSetDamageDecreaseCapD, 26, 30);
+    add(line, false);
+    mu_swprintf(line, I18N::Game::FullAncientSetDamageD, damagePercent);
+    add(line, false);
+    add(I18N::Game::FullAncientSetWeapon, false);
+    mu_swprintf(TextList[textIndex], L"\n");
+    textIndex++;
+    return textIndex;
+}
+
+namespace
+{
+constexpr std::uint8_t ExcellentOptionMask = 0x3F;
+
+// The lowest Box of Kundun of an excellent armour kind (item number in groups 7-11), 0 for none: the server's
+// ExcellentSetBonusRules.KindBox (2026-11-06), keep both the same.
+int ExcellentKindBox(const int number)
+{
+    switch (number)
+    {
+    case 4: case 6: case 7: case 8: case 12: case 13: case 25:
+        return 1;
+    case 1: case 3: case 9: case 14: case 15: case 26:
+        return 2;
+    case 16: case 17: case 18: case 19: case 20: case 27:
+        return 3;
+    case 21: case 22: case 23: case 24: case 28: case 29: case 30: case 31:
+    case 32: case 33: case 34: case 35: case 36: case 37: case 38:
+        return 4;
+    case 45: case 46: case 47: case 48: case 49: case 50: case 51: case 52:
+        return 5;
+    default:
+        return 0;
+    }
+}
+
+bool IsExcellentArmour(const ITEM& item)
+{
+    const int group = item.Type / MAX_ITEM_INDEX;
+    return item.Type >= 0 && group >= ITEM_GROUP_HELM && group <= ITEM_GROUP_HELM + 4
+           && (item.ExcellentFlags & ExcellentOptionMask) != 0;
+}
+} // namespace
+
+// The box bonus of a full excellent armour set (the server's FullExcellentSetBonusPlugIn, 2026-11-06): Box of Kundun
+// +2 health +4 % and damage decrease +1 %, each box above +4 % and +1 % more (+5: +16 % and +4 %). Shown on an
+// excellent armour piece of a kind from Box +2 up; green while every piece of that kind is worn, excellent and whole.
+int CSItemOption::RenderExcellentSetBonus(const ITEM* item, int textIndex) const
+{
+    if (item == nullptr || !IsExcellentArmour(*item) || textIndex + 4 > MAX_TEXT_LIST_LINES)
+    {
+        return textIndex;
+    }
+
+    const int number = item->Type % MAX_ITEM_INDEX;
+    const int box = ExcellentKindBox(number);
+    if (box < 2)
+    {
+        return textIndex;
+    }
+
+    // Full: each group 7-11 that has this kind is worn with this kind, excellent, not broken (the MG kinds have no helm).
+    bool fullSetWorn = Hero != nullptr && CharacterMachine != nullptr;
+    for (int group = ITEM_GROUP_HELM; fullSetWorn && group <= ITEM_GROUP_HELM + 4; ++group)
+    {
+        if (g_ItemDatabase.Find(group * MAX_ITEM_INDEX + number) == nullptr)
+        {
+            continue;
+        }
+
+        const ITEM& worn = CharacterMachine->Equipment[EQUIPMENT_HELM + group - ITEM_GROUP_HELM];
+        fullSetWorn = worn.Type == group * MAX_ITEM_INDEX + number && IsExcellentArmour(worn) && worn.Durability > 0;
+    }
+
+    const int steps = box - 1;
+    const auto add = [&textIndex](const wchar_t* text, const DWORD color)
+    {
+        mu_swprintf(TextList[textIndex], L"%ls", text);
+        TextListColor[textIndex] = color;
+        TextBold[textIndex] = false;
+        textIndex++;
+    };
+
+    wchar_t line[128];
+    mu_swprintf(TextList[textIndex], L"\n");
+    textIndex++;
+    mu_swprintf(line, I18N::Game::FullExcellentSetBonusD, box);
+    add(line, TEXT_COLOR_YELLOW);
+    const DWORD color = fullSetWorn ? TEXT_COLOR_GREEN : TEXT_COLOR_GRAY;
+    mu_swprintf(line, I18N::Game::FullAncientSetHealthD, 4 * steps);
+    add(line, color);
+    mu_swprintf(line, I18N::Game::FullAncientSetDamageDecreaseD, steps);
+    add(line, color);
     return textIndex;
 }
 

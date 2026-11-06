@@ -40,7 +40,7 @@
       "slot": "pants",
       "level": 55,
       "durability": 68,
-      "defense": 26,
+      "defense": 42,
       "attackType": 4,
       "requirements": {
         "strength": 120,
@@ -87,7 +87,7 @@
       "slot": "pants",
       "level": 53,
       "durability": 42,
-      "defense": 20,
+      "defense": 31,
       "attackType": 4,
       "requirements": {
         "strength": 40
@@ -231,7 +231,7 @@
       "slot": "pants",
       "level": 45,
       "durability": 50,
-      "defense": 22,
+      "defense": 23,
       "attackType": 4,
       "requirements": {
         "strength": 130
@@ -347,7 +347,7 @@
       "slot": "pants",
       "level": 54,
       "durability": 45,
-      "defense": 25,
+      "defense": 37,
       "attackType": 4,
       "requirements": {
         "strength": 40,
@@ -393,7 +393,7 @@
       "slot": "pants",
       "level": 84,
       "durability": 74,
-      "defense": 40,
+      "defense": 51,
       "attackType": 4,
       "requirements": {
         "strength": 170,
@@ -416,7 +416,7 @@
       "slot": "pants",
       "level": 96,
       "durability": 80,
-      "defense": 54,
+      "defense": 72,
       "attackType": 4,
       "requirements": {
         "strength": 207,
@@ -439,7 +439,7 @@
       "slot": "pants",
       "level": 86,
       "durability": 67,
-      "defense": 30,
+      "defense": 45,
       "attackType": 4,
       "requirements": {
         "strength": 59,
@@ -462,7 +462,7 @@
       "slot": "pants",
       "level": 88,
       "durability": 74,
-      "defense": 39,
+      "defense": 55,
       "attackType": 4,
       "requirements": {
         "strength": 50,
@@ -485,7 +485,7 @@
       "slot": "pants",
       "level": 99,
       "durability": 82,
-      "defense": 49,
+      "defense": 60,
       "attackType": 4,
       "requirements": {
         "strength": 150,
@@ -508,7 +508,7 @@
       "slot": "pants",
       "level": 113,
       "durability": 86,
-      "defense": 65,
+      "defense": 98,
       "attackType": 4,
       "requirements": {
         "strength": 200,
@@ -531,7 +531,7 @@
       "slot": "pants",
       "level": 117,
       "durability": 75,
-      "defense": 39,
+      "defense": 55,
       "attackType": 4,
       "requirements": {
         "strength": 55,
@@ -554,7 +554,7 @@
       "slot": "pants",
       "level": 122,
       "durability": 90,
-      "defense": 61,
+      "defense": 81,
       "attackType": 4,
       "requirements": {
         "strength": 162,
@@ -577,7 +577,7 @@
       "slot": "pants",
       "level": 100,
       "durability": 80,
-      "defense": 48,
+      "defense": 69,
       "attackType": 4,
       "requirements": {
         "strength": 52,
@@ -623,7 +623,7 @@
       "slot": "pants",
       "level": 70,
       "durability": 56,
-      "defense": 26,
+      "defense": 33,
       "attackType": 4,
       "requirements": {
         "strength": 77,
@@ -646,7 +646,7 @@
       "slot": "pants",
       "level": 92,
       "durability": 70,
-      "defense": 31,
+      "defense": 51,
       "attackType": 4,
       "requirements": {
         "strength": 84,
@@ -669,7 +669,7 @@
       "slot": "pants",
       "level": 110,
       "durability": 78,
-      "defense": 39,
+      "defense": 56,
       "attackType": 4,
       "requirements": {
         "strength": 80,
@@ -692,7 +692,7 @@
       "slot": "pants",
       "level": 134,
       "durability": 90,
-      "defense": 78,
+      "defense": 102,
       "requirements": {
         "level": 380,
         "strength": 170,
@@ -715,7 +715,7 @@
       "slot": "pants",
       "level": 135,
       "durability": 86,
-      "defense": 55,
+      "defense": 59,
       "requirements": {
         "level": 380,
         "strength": 44,
@@ -738,7 +738,7 @@
       "slot": "pants",
       "level": 135,
       "durability": 86,
-      "defense": 61,
+      "defense": 74,
       "requirements": {
         "level": 380,
         "strength": 38,
@@ -761,7 +761,7 @@
       "slot": "pants",
       "level": 135,
       "durability": 95,
-      "defense": 74,
+      "defense": 89,
       "requirements": {
         "level": 380,
         "strength": 145,
@@ -784,7 +784,7 @@
       "slot": "pants",
       "level": 140,
       "durability": 82,
-      "defense": 52,
+      "defense": 66,
       "requirements": {
         "level": 380,
         "strength": 62,
@@ -807,7 +807,7 @@
       "slot": "pants",
       "level": 69,
       "durability": 72,
-      "defense": 33,
+      "defense": 86,
       "requirements": {
         "strength": 160,
         "dexterity": 50
@@ -829,7 +829,7 @@
       "slot": "pants",
       "level": 69,
       "durability": 54,
-      "defense": 25,
+      "defense": 54,
       "attackType": 3,
       "requirements": {
         "strength": 53,
@@ -852,7 +852,7 @@
       "slot": "pants",
       "level": 69,
       "durability": 59,
-      "defense": 32,
+      "defense": 65,
       "attackType": 2,
       "requirements": {
         "strength": 50,
@@ -875,7 +875,7 @@
       "slot": "pants",
       "level": 101,
       "durability": 81,
-      "defense": 41,
+      "defense": 69,
       "attackType": 1,
       "requirements": {
         "strength": 155,
@@ -898,7 +898,7 @@
       "slot": "pants",
       "level": 101,
       "durability": 74,
-      "defense": 35,
+      "defense": 54,
       "requirements": {
         "strength": 80,
         "dexterity": 21

@@ -3029,6 +3029,16 @@ enum
     // MU Moldova: Season 6's unused Jewel of Elevation model, the battle pass's Jewel of Fate (a +10…+15 upgrade and
     // the Jewel of Ancient's recipes at 100 %, MixMgr).
     ITEM_JEWEL_OF_FATE = ITEM_POTION + 161,
+    // MU Moldova: higher tiers of the medals (copies of Box of Luck +5, +6, +2, +3 in blue and crimson); thrown on
+    // the ground they open like the Box of Luck. See GameLogic::Items::IsTieredMedalType.
+    ITEM_SILVER_MEDAL_II = ITEM_POTION + 170,
+    ITEM_SILVER_MEDAL_III = ITEM_POTION + 171,
+    ITEM_GOLD_MEDAL_II = ITEM_POTION + 172,
+    ITEM_GOLD_MEDAL_III = ITEM_POTION + 173,
+    ITEM_FIRECRACKER_II = ITEM_POTION + 174,
+    ITEM_FIRECRACKER_III = ITEM_POTION + 175,
+    ITEM_HEART_OF_LOVE_II = ITEM_POTION + 176,
+    ITEM_HEART_OF_LOVE_III = ITEM_POTION + 177,
     ITEM_SCROLL_OF_POISON = ITEM_ETC + 0,
     ITEM_SCROLL_OF_METEORITE = ITEM_ETC + 1,
     ITEM_SCROLL_OF_LIGHTING = ITEM_ETC + 2,

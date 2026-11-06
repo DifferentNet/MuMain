@@ -1099,6 +1099,14 @@ Data/Item/MagicBox05.bmd
 Data/Item/Beer02.bmd
 Data/Item/MagicBox06.bmd
 Data/Item/MagicBox07.bmd
+Data/Item/MedalTier2/MagicBox03.bmd
+Data/Item/MedalTier2/MagicBox05.bmd
+Data/Item/MedalTier2/MagicBox06.bmd
+Data/Item/MedalTier2/MagicBox07.bmd
+Data/Item/MedalTier3/MagicBox03.bmd
+Data/Item/MedalTier3/MagicBox05.bmd
+Data/Item/MedalTier3/MagicBox06.bmd
+Data/Item/MedalTier3/MagicBox07.bmd
 Data/Item/MagicBox08.bmd
 Data/Item/MagicBox03.bmd
 Data/Item/Event02.bmd
