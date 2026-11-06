@@ -1919,6 +1919,132 @@
         "rotation": [90, 0, -45],
         "scale": 0.2
       }
+    },
+    {
+      "number": 170,
+      "file": "Data/Item/MedalTier2/MagicBox06.bmd",
+      "textureFolders": ["Item/MedalTier2", "Item"],
+      "inventory": {
+        "anchor": [0.5, 0.95],
+        "scale": 0.0015
+      },
+      "ground": {
+        "rotation": [270, 0, 45]
+      },
+      "glow": {
+        "level": 0,
+        "color": "blue"
+      }
+    },
+    {
+      "number": 171,
+      "file": "Data/Item/MedalTier3/MagicBox06.bmd",
+      "textureFolders": ["Item/MedalTier3", "Item"],
+      "inventory": {
+        "anchor": [0.5, 0.95],
+        "scale": 0.0015
+      },
+      "ground": {
+        "rotation": [270, 0, 45]
+      },
+      "glow": {
+        "level": 0,
+        "color": "crimson"
+      }
+    },
+    {
+      "number": 172,
+      "file": "Data/Item/MedalTier2/MagicBox07.bmd",
+      "textureFolders": ["Item/MedalTier2", "Item"],
+      "noneBlendMeshes": [1],
+      "inventory": {
+        "anchor": [0.5, 0.95],
+        "scale": 0.0019
+      },
+      "ground": {
+        "rotation": [270, 0, 45]
+      },
+      "glow": {
+        "level": 8,
+        "color": "blue"
+      }
+    },
+    {
+      "number": 173,
+      "file": "Data/Item/MedalTier3/MagicBox07.bmd",
+      "textureFolders": ["Item/MedalTier3", "Item"],
+      "noneBlendMeshes": [1],
+      "inventory": {
+        "anchor": [0.5, 0.95],
+        "scale": 0.0019
+      },
+      "ground": {
+        "rotation": [270, 0, 45]
+      },
+      "glow": {
+        "level": 8,
+        "color": "crimson"
+      }
+    },
+    {
+      "number": 174,
+      "file": "Data/Item/MedalTier2/MagicBox03.bmd",
+      "textureFolders": ["Item/MedalTier2", "Item"],
+      "inventory": {
+        "anchor": [0.5, 0.95],
+        "rotation": [270, 180, 0]
+      },
+      "ground": {
+        "rotation": [90, 0, -45]
+      },
+      "glow": {
+        "level": 0,
+        "color": "blue"
+      }
+    },
+    {
+      "number": 175,
+      "file": "Data/Item/MedalTier3/MagicBox03.bmd",
+      "textureFolders": ["Item/MedalTier3", "Item"],
+      "inventory": {
+        "anchor": [0.5, 0.95],
+        "rotation": [270, 180, 0]
+      },
+      "ground": {
+        "rotation": [90, 0, -45]
+      },
+      "glow": {
+        "level": 0,
+        "color": "crimson"
+      }
+    },
+    {
+      "number": 176,
+      "file": "Data/Item/MedalTier2/MagicBox05.bmd",
+      "textureFolders": ["Item/MedalTier2", "Item"],
+      "inventory": {
+        "anchor": [0.5, 0.5],
+        "rotation": [270, 90, 0],
+        "scale": 0.0039
+      },
+      "glow": {
+        "level": 9,
+        "color": "blue"
+      }
+    },
+    {
+      "number": 177,
+      "file": "Data/Item/MedalTier3/MagicBox05.bmd",
+      "textureFolders": ["Item/MedalTier3", "Item"],
+      "inventory": {
+        "anchor": [0.5, 0.5],
+        "rotation": [270, 90, 0],
+        "scale": 0.0039
+      },
+      "glow": {
+        "level": 9,
+        "color": "crimson"
+      }
     }
   ]
 }

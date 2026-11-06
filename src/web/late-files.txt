@@ -1198,6 +1198,14 @@ Data/Item/firecracker.OZJ
 Data/Item/olive.OZJ
 Data/Item/medal2.OZJ
 Data/Item/medal1.OZJ
+Data/Item/MedalTier2/medal2.OZJ
+Data/Item/MedalTier2/medal1.OZJ
+Data/Item/MedalTier2/firecracker.OZJ
+Data/Item/MedalTier2/hhj.OZJ
+Data/Item/MedalTier3/medal2.OZJ
+Data/Item/MedalTier3/medal1.OZJ
+Data/Item/MedalTier3/firecracker.OZJ
+Data/Item/MedalTier3/hhj.OZJ
 Data/Item/Eldobox.OZJ
 Data/Item/DarkLordSleeve.OZT
 Data/Item/items.OZJ

@@ -159,10 +159,29 @@ namespace GameLogic::Items
         return HasTag(pItem, ItemTag::Jewel);
     }
 
-    // Items that open into loot: Box of Luck (any level, which covers Kundun boxes and medals),
+    // Items that open into loot: Box of Luck (any level, which covers Kundun boxes and medals), the tiered medals,
     // ribbon and chocolate boxes, pumpkin, Christmas star, firecrackers, play-box, SkyNet box.
+    bool IsTieredMedalType(int itemType)
+    {
+        return itemType >= ITEM_SILVER_MEDAL_II && itemType <= ITEM_HEART_OF_LOVE_III;
+    }
+
+    bool IsTieredMedal(const ITEM* pItem)
+    {
+        return IsTieredMedalType(pItem->Type);
+    }
+
+    bool IsTieredSilverOrGoldMedalType(int itemType)
+    {
+        return itemType >= ITEM_SILVER_MEDAL_II && itemType <= ITEM_GOLD_MEDAL_III;
+    }
+
     bool IsContainerItem(const ITEM* pItem)
     {
+        if (IsTieredMedal(pItem))
+        {
+            return true;
+        }
         switch (pItem->Type)
         {
         case ITEM_BOX_OF_LUCK:

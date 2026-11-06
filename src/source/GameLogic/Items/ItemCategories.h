@@ -40,6 +40,11 @@ namespace GameLogic::Items
     // Crafting materials
     bool IsJewelItem(const ITEM* pItem);
     bool IsContainerItem(const ITEM* pItem);
+    // The tiered medals 14:170-177 (Silver and Gold Medal, Firecracker and Heart of Love, II and III).
+    bool IsTieredMedalType(int itemType);
+    bool IsTieredMedal(const ITEM* pItem);
+    // The tiered Silver and Gold Medals (14:170-173): they drop with the medal effect.
+    bool IsTieredSilverOrGoldMedalType(int itemType);
     // Quest and event items: Symbol of Kundun, the Devil Square, Blood Castle, Chaos Castle, Kalima and
     // Illusion Temple entries and their parts, Secromicon fragments, Condor's flame and feather, Loch's feather,
     // the 2nd and 3rd class quest items.

@@ -2387,6 +2387,110 @@
       "width": 1,
       "height": 1,
       "repairable": false
+    },
+    {
+      "number": 170,
+      "name": {
+        "en": "Silver Medal II",
+        "de": "Silver Medal II",
+        "es": "Silver Medal II",
+        "pt": "Silver Medal II"
+      },
+      "width": 1,
+      "height": 1,
+      "sellable": false,
+      "repairable": false
+    },
+    {
+      "number": 171,
+      "name": {
+        "en": "Silver Medal III",
+        "de": "Silver Medal III",
+        "es": "Silver Medal III",
+        "pt": "Silver Medal III"
+      },
+      "width": 1,
+      "height": 1,
+      "sellable": false,
+      "repairable": false
+    },
+    {
+      "number": 172,
+      "name": {
+        "en": "Gold Medal II",
+        "de": "Gold Medal II",
+        "es": "Gold Medal II",
+        "pt": "Gold Medal II"
+      },
+      "width": 1,
+      "height": 1,
+      "sellable": false,
+      "repairable": false
+    },
+    {
+      "number": 173,
+      "name": {
+        "en": "Gold Medal III",
+        "de": "Gold Medal III",
+        "es": "Gold Medal III",
+        "pt": "Gold Medal III"
+      },
+      "width": 1,
+      "height": 1,
+      "sellable": false,
+      "repairable": false
+    },
+    {
+      "number": 174,
+      "name": {
+        "en": "Firecracker II",
+        "de": "Firecracker II",
+        "es": "Firecracker II",
+        "pt": "Firecracker II"
+      },
+      "width": 1,
+      "height": 1,
+      "sellable": false,
+      "repairable": false
+    },
+    {
+      "number": 175,
+      "name": {
+        "en": "Firecracker III",
+        "de": "Firecracker III",
+        "es": "Firecracker III",
+        "pt": "Firecracker III"
+      },
+      "width": 1,
+      "height": 1,
+      "sellable": false,
+      "repairable": false
+    },
+    {
+      "number": 176,
+      "name": {
+        "en": "Heart of Love II",
+        "de": "Heart of Love II",
+        "es": "Heart of Love II",
+        "pt": "Heart of Love II"
+      },
+      "width": 1,
+      "height": 1,
+      "sellable": false,
+      "repairable": false
+    },
+    {
+      "number": 177,
+      "name": {
+        "en": "Heart of Love III",
+        "de": "Heart of Love III",
+        "es": "Heart of Love III",
+        "pt": "Heart of Love III"
+      },
+      "width": 1,
+      "height": 1,
+      "sellable": false,
+      "repairable": false
     }
   ]
 }
