@@ -148,6 +148,9 @@ namespace MUHelper
         m_regroupRestUntil = {};
         m_pickupSince = {};
         m_pickupRestUntil = {};
+        m_pickupPutOffSince = {};
+        m_bPickupFightTry = false;
+        m_bPickupWalking = false;
         _itemsLock.lock();
         m_mapItemRestUntil.clear();
         _itemsLock.unlock();
@@ -1349,6 +1352,32 @@ namespace MUHelper
         return fDx * fDx + fDy * fDy <= (fReach * TERRAIN_SCALE) * (fReach * TERRAIN_SCALE);
     }
 
+    bool CMuHelper::IsMonsterWithinAttackReach() const
+    {
+        // The reach of the first attack skill or of the weapon, whichever is longer.
+        float fReach = GameLogic::Automation::EquippedAttackRange();
+        if (m_config.aiSkill[0] > 0)
+        {
+            fReach = std::max(fReach, gSkillManager.GetSkillDistance((ActionSkillType)m_config.aiSkill[0], Hero));
+        }
+
+        std::set<int> setTargets;
+        {
+            _targetsLock.lock();
+            setTargets = m_setTargets;
+            _targetsLock.unlock();
+        }
+        for (const int& iMonsterId : setTargets)
+        {
+            CHARACTER* pTarget = FindCharacterByKey(iMonsterId);
+            if (pTarget != nullptr && pTarget->Object.Live && IsMonster(pTarget) && IsWithinReach(iMonsterId, fReach))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool CMuHelper::MayAttackStandingStill(float fReach)
     {
         // Standing still, but not idle (ghinzuro, 2026-10-23): in the Arena the helper stood for seconds at a
@@ -1736,6 +1765,48 @@ namespace MUHelper
             m_pickupSince = {};
         }
 
+        // Fight first, loot after (2026-11-06): while a monster is within the attack's reach, a drop that takes a
+        // walk stays on the ground, and a walk to one already under way stops, so the attack goes on. In big packs
+        // that walk was blocked by the monsters and the Dark Knight stood among them without hitting.
+        const auto now = std::chrono::steady_clock::now();
+        {
+            const int iDropX = static_cast<int>(Items[m_iCurrentItem].Object.Position[0] / TERRAIN_SCALE);
+            const int iDropY = static_cast<int>(Items[m_iCurrentItem].Object.Position[1] / TERRAIN_SCALE);
+            const bool bNeedsWalk = Items[m_iCurrentItem].Object.Live
+                && ComputeDistanceBetween({ Hero->PositionX, Hero->PositionY }, { iDropX, iDropY })
+                > static_cast<int>(GameLogic::Automation::PickupReach);
+            const bool bFighting = bNeedsWalk && IsMonsterWithinAttackReach();
+            if (!bFighting)
+            {
+                m_pickupPutOffSince = {};
+            }
+            else if (!m_bPickupFightTry)
+            {
+                if (m_pickupPutOffSince == std::chrono::steady_clock::time_point{})
+                {
+                    m_pickupPutOffSince = now;
+                }
+                const auto putOffFor =
+                    std::chrono::duration_cast<std::chrono::milliseconds>(now - m_pickupPutOffSince).count();
+                if (GameLogic::Automation::ShouldPutOffPickup(bNeedsWalk, bFighting, putOffFor,
+                        std::chrono::duration_cast<std::chrono::milliseconds>(PickupFightWait).count()))
+                {
+                    if (m_bPickupWalking)
+                    {
+                        GameLogic::Automation::StopAtNextTile();
+                        m_bPickupWalking = false;
+                    }
+                    m_pickupSince = {};
+                    // Chosen again next round: a drop next to the character is taken meanwhile.
+                    m_iCurrentItem = MAX_ITEMS;
+                    return 1;
+                }
+                // Put off long enough: one walk now, with the patience below.
+                m_bPickupFightTry = true;
+                m_pickupPutOffSince = {};
+            }
+        }
+
         // The walk to a drop would cut the current swing short, like the walk back in Regroup:
         // finish the attack first, then go for the drop.
         if (GameLogic::Automation::IsSwingInProgress())
@@ -1745,12 +1816,17 @@ namespace MUHelper
 
         using GameLogic::Automation::PickupResult;
         const PickupResult result = GameLogic::Automation::PickUpItem(m_iCurrentItem, m_iObtainingDistance);
+        m_bPickupWalking = result == PickupResult::Approaching;
+        if (result != PickupResult::Approaching)
+        {
+            // The walk tried after the fight wait is over, one way or the other.
+            m_bPickupFightTry = false;
+        }
 
         // A drop under the monsters or behind a ring of them: the walk gets no closer, or there is no way at all
         // (the path finder gets no further than the character's own tile). That used to end the round here every
         // time, before the attack, so the helper stood among the monsters, which stayed where they were, hitting it
         // (ghinzuro's Dark Knight in big packs, 2026-11-06). The drop is set aside for a while and the round goes on.
-        const auto now = std::chrono::steady_clock::now();
         if (result == PickupResult::Approaching || result == PickupResult::NoPath)
         {
             const int iDropX = static_cast<int>(Items[m_iCurrentItem].Object.Position[0] / TERRAIN_SCALE);
@@ -1789,6 +1865,8 @@ namespace MUHelper
                     m_pickupRestUntil = now + PickupStuckRest;
                 }
                 SetAsideItem(m_iCurrentItem, now);
+                m_bPickupWalking = false;
+                m_bPickupFightTry = false;
                 g_ConsoleDebug->Write(MCD_NORMAL, result == PickupResult::NoPath
                     ? L"[MU Helper] No way to a drop; attacking meanwhile"
                     : L"[MU Helper] The walk to a drop gets no closer; attacking meanwhile");

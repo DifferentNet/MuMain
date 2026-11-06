@@ -8,6 +8,7 @@
 #include "GameLogic/Automation/Pickup.h"
 
 using GameLogic::Automation::PickupResult;
+using GameLogic::Automation::ShouldPutOffPickup;
 using GameLogic::Automation::ShouldSetAsidePickup;
 
 namespace
@@ -40,4 +41,26 @@ TEST_CASE("A pickup sent, waiting, gone or too far is never set aside [gamelogic
         CHECK_FALSE(ShouldSetAsidePickup(result, 0, Patience));
         CHECK_FALSE(ShouldSetAsidePickup(result, Patience * 10, Patience));
     }
+}
+
+TEST_CASE("While a monster is within reach a drop that takes a walk waits [gamelogic][pickup]")
+{
+    constexpr long long FightWait = 10000;
+    CHECK(ShouldPutOffPickup(true, true, 0, FightWait));
+    CHECK(ShouldPutOffPickup(true, true, FightWait - 1, FightWait));
+}
+
+TEST_CASE("A drop next to the character, or with no monster in reach, is taken at once [gamelogic][pickup]")
+{
+    constexpr long long FightWait = 10000;
+    CHECK_FALSE(ShouldPutOffPickup(false, true, 0, FightWait));
+    CHECK_FALSE(ShouldPutOffPickup(true, false, 0, FightWait));
+    CHECK_FALSE(ShouldPutOffPickup(false, false, 0, FightWait));
+}
+
+TEST_CASE("A drop put off for the whole fight wait gets a walk anyway [gamelogic][pickup]")
+{
+    constexpr long long FightWait = 10000;
+    CHECK_FALSE(ShouldPutOffPickup(true, true, FightWait, FightWait));
+    CHECK_FALSE(ShouldPutOffPickup(true, true, FightWait * 5, FightWait));
 }

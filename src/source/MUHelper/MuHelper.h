@@ -70,6 +70,8 @@ namespace MUHelper
 		bool MayAttackStandingStill(float fReach);
 		int GetNearestTargetNearSpot();
 		bool IsWithinReach(int iTargetId, float fReach) const;
+		// Whether a live monster among the targets is within the reach (tiles) of the attack.
+		bool IsMonsterWithinAttackReach() const;
 		int RepairEquipments();
 		int Regroup();
 		ActionSkillType SelectAttackSkill();
@@ -184,6 +186,12 @@ namespace MUHelper
 		std::chrono::steady_clock::time_point m_pickupSince{};
 		std::chrono::steady_clock::time_point m_pickupRestUntil{};
 		int m_iPickupBestGap = 0; // the smallest WalkGap to the current drop seen in this attempt
+		// While a monster is within the attack's reach, a drop that takes a walk waits (ShouldPutOffPickup), at most
+		// PickupFightWait; then one walk is tried (m_bPickupFightTry) with the patience above (2026-11-06).
+		static constexpr std::chrono::seconds PickupFightWait{ 10 };
+		std::chrono::steady_clock::time_point m_pickupPutOffSince{};
+		bool m_bPickupFightTry = false;
+		bool m_bPickupWalking = false; // the last pickup step started or went on with a walk to the drop
 		std::map<int, std::chrono::steady_clock::time_point> m_mapItemRestUntil; // drop id -> back in the choice; guarded like m_setItems
 		void SetAsideItem(int iItemId, std::chrono::steady_clock::time_point now);
 		static constexpr std::chrono::seconds ForgottenTargetRest{ 2 };
@@ -191,4 +199,4 @@ namespace MUHelper
 	};
 
 	extern CMuHelper g_MuHelper;
-}
+}
