@@ -13649,7 +13649,7 @@
     <value>Бонус полного сета (весь этот сет надет):</value>
   </data>
   <data name="FullAncientSetDefense" xml:space="preserve">
-    <value>Защита: не меньше 110 % сета из Box of Kundun +5</value>
+    <value>Защита: 120 % сета из Box of Kundun +5 (на +13)</value>
   </data>
   <data name="FullAncientSetHealthD" xml:space="preserve">
     <value>Максимум HP +%d%%</value>
@@ -13657,11 +13657,17 @@
   <data name="FullAncientSetDamageDecreaseD" xml:space="preserve">
     <value>Снижение урона +%d%%</value>
   </data>
+  <data name="FullAncientSetDamageDecreaseCapD" xml:space="preserve">
+    <value>Снижение урона +%d%% (с бронёй не больше %d%%)</value>
+  </data>
   <data name="FullAncientSetDamageD" xml:space="preserve">
     <value>Итоговый урон +%d%%</value>
   </data>
   <data name="FullAncientSetWeapon" xml:space="preserve">
     <value>Оружие сета: как топовое оружие +10 %</value>
+  </data>
+  <data name="FullExcellentSetBonusD" xml:space="preserve">
+    <value>Бонус полного экселент-сета (Box of Kundun +%d, надеты все части):</value>
   </data>
   <data name="JewelOfAncientDesc" xml:space="preserve">
     <value>Поднимает ancient-вещь с +13 до +14 и +15</value>

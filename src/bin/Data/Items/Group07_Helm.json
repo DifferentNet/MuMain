@@ -39,7 +39,7 @@
       "slot": "helm",
       "level": 57,
       "durability": 68,
-      "defense": 24,
+      "defense": 39,
       "attackType": 4,
       "requirements": {
         "strength": 120,
@@ -84,7 +84,7 @@
       "slot": "helm",
       "level": 50,
       "durability": 42,
-      "defense": 18,
+      "defense": 28,
       "attackType": 4,
       "requirements": {
         "strength": 30
@@ -222,7 +222,7 @@
       "slot": "helm",
       "level": 46,
       "durability": 50,
-      "defense": 20,
+      "defense": 21,
       "attackType": 4,
       "requirements": {
         "strength": 130
@@ -337,7 +337,7 @@
       "slot": "helm",
       "level": 53,
       "durability": 45,
-      "defense": 23,
+      "defense": 34,
       "attackType": 4,
       "requirements": {
         "strength": 40,
@@ -360,7 +360,7 @@
       "slot": "helm",
       "level": 82,
       "durability": 74,
-      "defense": 30,
+      "defense": 39,
       "attackType": 4,
       "requirements": {
         "strength": 170,
@@ -383,7 +383,7 @@
       "slot": "helm",
       "level": 92,
       "durability": 80,
-      "defense": 43,
+      "defense": 57,
       "attackType": 4,
       "requirements": {
         "strength": 205,
@@ -406,7 +406,7 @@
       "slot": "helm",
       "level": 81,
       "durability": 67,
-      "defense": 27,
+      "defense": 41,
       "attackType": 4,
       "requirements": {
         "strength": 59,
@@ -429,7 +429,7 @@
       "slot": "helm",
       "level": 85,
       "durability": 74,
-      "defense": 37,
+      "defense": 52,
       "attackType": 4,
       "requirements": {
         "strength": 50,
@@ -452,7 +452,7 @@
       "slot": "helm",
       "level": 104,
       "durability": 86,
-      "defense": 53,
+      "defense": 80,
       "attackType": 4,
       "requirements": {
         "strength": 200,
@@ -475,7 +475,7 @@
       "slot": "helm",
       "level": 110,
       "durability": 75,
-      "defense": 36,
+      "defense": 51,
       "attackType": 4,
       "requirements": {
         "strength": 55,
@@ -498,7 +498,7 @@
       "slot": "helm",
       "level": 93,
       "durability": 80,
-      "defense": 46,
+      "defense": 66,
       "attackType": 4,
       "requirements": {
         "strength": 52,
@@ -544,7 +544,7 @@
       "slot": "helm",
       "level": 66,
       "durability": 56,
-      "defense": 24,
+      "defense": 31,
       "attackType": 4,
       "requirements": {
         "strength": 77,
@@ -567,7 +567,7 @@
       "slot": "helm",
       "level": 86,
       "durability": 70,
-      "defense": 26,
+      "defense": 42,
       "attackType": 4,
       "requirements": {
         "strength": 84,
@@ -590,7 +590,7 @@
       "slot": "helm",
       "level": 106,
       "durability": 78,
-      "defense": 34,
+      "defense": 49,
       "attackType": 4,
       "requirements": {
         "strength": 80,
@@ -613,7 +613,7 @@
       "slot": "helm",
       "level": 130,
       "durability": 90,
-      "defense": 66,
+      "defense": 86,
       "requirements": {
         "level": 380,
         "strength": 170,
@@ -636,7 +636,7 @@
       "slot": "helm",
       "level": 126,
       "durability": 86,
-      "defense": 48,
+      "defense": 52,
       "requirements": {
         "level": 380,
         "strength": 44,
@@ -659,7 +659,7 @@
       "slot": "helm",
       "level": 126,
       "durability": 86,
-      "defense": 57,
+      "defense": 69,
       "requirements": {
         "level": 380,
         "strength": 38,
@@ -682,7 +682,7 @@
       "slot": "helm",
       "level": 130,
       "durability": 82,
-      "defense": 46,
+      "defense": 58,
       "requirements": {
         "level": 380,
         "strength": 62,
@@ -705,7 +705,7 @@
       "slot": "helm",
       "level": 67,
       "durability": 72,
-      "defense": 27,
+      "defense": 70,
       "requirements": {
         "strength": 160,
         "dexterity": 50
@@ -727,7 +727,7 @@
       "slot": "helm",
       "level": 67,
       "durability": 54,
-      "defense": 22,
+      "defense": 48,
       "attackType": 3,
       "requirements": {
         "strength": 53,
@@ -750,7 +750,7 @@
       "slot": "helm",
       "level": 67,
       "durability": 59,
-      "defense": 30,
+      "defense": 61,
       "attackType": 2,
       "requirements": {
         "strength": 50,
@@ -773,7 +773,7 @@
       "slot": "helm",
       "level": 97,
       "durability": 74,
-      "defense": 30,
+      "defense": 46,
       "attackType": 1,
       "requirements": {
         "strength": 80,

@@ -5436,6 +5436,7 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
         (pFindItem == NULL) ? bThisisEquippedItem = true : bThisisEquippedItem = false;
 
         TextNum = g_csItemOption.RenderSetOptionListInItem(ip, TextNum, bThisisEquippedItem);
+        TextNum = g_csItemOption.RenderExcellentSetBonus(ip, TextNum);
 
         TextNum = g_SocketItemMgr.AttachToolTipForSocketItem(ip, TextNum);
 

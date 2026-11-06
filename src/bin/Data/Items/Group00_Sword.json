@@ -810,8 +810,8 @@
       "skill": 56,
       "level": 139,
       "durability": 90,
-      "damageMin": 490,
-      "damageMax": 610,
+      "damageMin": 589,
+      "damageMax": 734,
       "attackSpeed": 45,
       "magicPower": 109,
       "requirements": {
