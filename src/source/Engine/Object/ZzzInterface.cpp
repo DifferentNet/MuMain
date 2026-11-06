@@ -42,6 +42,7 @@
 #include "Character/CSParts.h"
 #include "UI/HUD/GamepadControls.h"
 #include "UI/Mobile/InterfaceMode.h"
+#include "Core/Input/TouchPointer.h"
 #include "UI/HUD/UIMapName.h"	// rozy
 #include "GameLogic/Events/Cinematic/CDirection.h"
 #include "World/MapInfra/MapManager.h"
@@ -3938,8 +3939,12 @@ extern int g_iKeyPadEnable;
 void RenderCursor()
 {
     // The pad plays the world without a pointer, and over a window it shows its frame instead. Fingers
-    // have no pointer either: on a phone it would only sit where the last tap was and cover the screen.
-    if (!g_bRenderGameCursor || UI::HUD::GamepadControls::HidesPointer() || UI::Mobile::IsTouchControls())
+    // have no pointer either: on a phone it would only stand where the last tap was and cover the
+    // picture. A mouse or the pad that pressed since gets it back.
+    if (!g_bRenderGameCursor || UI::HUD::GamepadControls::HidesPointer())
+        return;
+    if (UI::Mobile::IsTouchControls() && Core::Input::Touch::Pointer::FingerHasPointer() &&
+        !UI::HUD::GamepadControls::PlaysPointer())
         return;
 
     // The sprites below are placed in units around the pointer; drawn at one scale, not stretched to the window.
