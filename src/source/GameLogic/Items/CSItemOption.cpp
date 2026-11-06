@@ -1390,8 +1390,9 @@ float FullSetHighTierFactor(const wchar_t* setName)
 }
 } // namespace
 
-// The full set bonus of the server's FullAncientSetBonusPlugIn (2026-11-06): defense up to the class's target,
-// health +45 %, damage decrease +26 % (since the excellent sets' box bonus, 2026-11-06; before +25 % and +22 %),
+// The full set bonus of the server's FullAncientSetBonusPlugIn (2026-11-06): defense 120 % of the class's Box +5 set
+// (110 % until the audit, which OpenMU's kind bonus made 132 %), health +45 %, damage decrease +26 % with the armour's
+// own at most 30 % (AncientSetBonusRules.DamageDecreaseCap; before the box bonus +25 % and +22 %),
 // final damage +10 % (high-tier sets more), the set's weapon at the top's +10 %.
 int CSItemOption::RenderFullSetBonus(const std::uint8_t setNumber, int textIndex) const
 {
@@ -1430,7 +1431,7 @@ int CSItemOption::RenderFullSetBonus(const std::uint8_t setNumber, int textIndex
     add(I18N::Game::FullAncientSetDefense, false);
     mu_swprintf(line, I18N::Game::FullAncientSetHealthD, 45);
     add(line, false);
-    mu_swprintf(line, I18N::Game::FullAncientSetDamageDecreaseD, 26);
+    mu_swprintf(line, I18N::Game::FullAncientSetDamageDecreaseCapD, 26, 30);
     add(line, false);
     mu_swprintf(line, I18N::Game::FullAncientSetDamageD, damagePercent);
     add(line, false);

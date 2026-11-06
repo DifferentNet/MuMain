@@ -14026,13 +14026,16 @@
     <value>Full set bonus (this set worn complete):</value>
   </data>
   <data name="FullAncientSetDefense" xml:space="preserve">
-    <value>Defense: at least 110 % of the Box of Kundun +5 set</value>
+    <value>Defense: 120 % of the Box of Kundun +5 set (at +13)</value>
   </data>
   <data name="FullAncientSetHealthD" xml:space="preserve">
     <value>Maximum HP +%d%%</value>
   </data>
   <data name="FullAncientSetDamageDecreaseD" xml:space="preserve">
     <value>Damage decrease +%d%%</value>
+  </data>
+  <data name="FullAncientSetDamageDecreaseCapD" xml:space="preserve">
+    <value>Damage decrease +%d%% (with armour at most %d%%)</value>
   </data>
   <data name="FullAncientSetDamageD" xml:space="preserve">
     <value>Final damage +%d%%</value>

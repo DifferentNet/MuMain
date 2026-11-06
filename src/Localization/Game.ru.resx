@@ -13649,13 +13649,16 @@
     <value>Бонус полного сета (весь этот сет надет):</value>
   </data>
   <data name="FullAncientSetDefense" xml:space="preserve">
-    <value>Защита: не меньше 110 % сета из Box of Kundun +5</value>
+    <value>Защита: 120 % сета из Box of Kundun +5 (на +13)</value>
   </data>
   <data name="FullAncientSetHealthD" xml:space="preserve">
     <value>Максимум HP +%d%%</value>
   </data>
   <data name="FullAncientSetDamageDecreaseD" xml:space="preserve">
     <value>Снижение урона +%d%%</value>
+  </data>
+  <data name="FullAncientSetDamageDecreaseCapD" xml:space="preserve">
+    <value>Снижение урона +%d%% (с бронёй не больше %d%%)</value>
   </data>
   <data name="FullAncientSetDamageD" xml:space="preserve">
     <value>Итоговый урон +%d%%</value>
