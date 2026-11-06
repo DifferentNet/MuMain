@@ -309,12 +309,13 @@ void mu::ui::window::CJewelBankWindow::SyncContent()
     JewelBankRmlModel updated;
     updated.title = StringUtils::WideToNarrow(I18N::Game::JewelBankTitle);
 
-    // A row per kind; an optional kind the server doesn't keep is left out once it has answered.
+    // A row per kind; a kind the server doesn't keep (-1: an optional one it lacks, or Harmony, Gemstone and the
+    // refine stones since the server dropped the Jewel of Harmony, 2026-11-06) is left out once it has answered.
     const auto& kinds = GameLogic::JewelBank::Kinds();
     std::vector<int> shown;
     for (int i = 0; i < static_cast<int>(kinds.size()); ++i)
     {
-        if (i >= GameLogic::JewelBank::BaseKindCount && !bank.IsAvailable(i))
+        if ((i >= GameLogic::JewelBank::BaseKindCount || bank.HasInfo()) && !bank.IsAvailable(i))
             continue;
         const auto& kind = kinds[i];
         const std::wstring name = ItemName(kind.itemType);
