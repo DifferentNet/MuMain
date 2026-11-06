@@ -69,7 +69,11 @@ bool mu::ui::window::CHotKey::UpdateMouseEvent()
 
     // A wheel click in the game world turns MU Helper on or off, as Home does (ghinzuro, 2026-11-06). This object is
     // the bottom layer, so a click over a window never gets here; a drag with the wheel held turns the orbital camera.
-    if (MouseMButtonClick && !RmlUiRuntime::Instance().IsTextInputActive())
+    // Only where Home would work: not after game over, nor with the mini map, a trade, the vault, a shop, the chaos
+    // machine or an NPC dialog open (UpdateKeyEvent's checks; CanUpdateKeyEvent also covers text input).
+    if (MouseMButtonClick && !RmlUiRuntime::Instance().IsTextInputActive() && !m_bStateGameOver
+        && !g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_MINI_MAP) && !CanUpdateKeyEventRelatedMyInventory()
+        && CanUpdateKeyEvent())
     {
         MouseMButtonClick = false;
         MUHelper::g_MuHelper.Toggle();
