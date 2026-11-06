@@ -10,6 +10,7 @@
 using GameLogic::Automation::PickupResult;
 using GameLogic::Automation::ShouldPutOffPickup;
 using GameLogic::Automation::ShouldSetAsidePickup;
+using GameLogic::Automation::ShouldUnstickFight;
 
 namespace
 {
@@ -63,4 +64,19 @@ TEST_CASE("A drop put off for the whole fight wait gets a walk anyway [gamelogic
     constexpr long long FightWait = 10000;
     CHECK_FALSE(ShouldPutOffPickup(true, true, FightWait, FightWait));
     CHECK_FALSE(ShouldPutOffPickup(true, true, FightWait * 5, FightWait));
+}
+
+TEST_CASE("Standing among monsters without a hit for the stall limit starts the fight over [gamelogic][pickup]")
+{
+    constexpr long long StallLimit = 4000;
+    CHECK(ShouldUnstickFight(true, true, StallLimit, StallLimit));
+    CHECK(ShouldUnstickFight(true, true, StallLimit * 3, StallLimit));
+    CHECK_FALSE(ShouldUnstickFight(true, true, StallLimit - 1, StallLimit));
+}
+
+TEST_CASE("A walking character, or one with no monster close by, is left alone [gamelogic][pickup]")
+{
+    constexpr long long StallLimit = 4000;
+    CHECK_FALSE(ShouldUnstickFight(false, true, StallLimit * 3, StallLimit));
+    CHECK_FALSE(ShouldUnstickFight(true, false, StallLimit * 3, StallLimit));
 }
