@@ -831,6 +831,101 @@
     });
   }
 
+  // Sound through a stall. The game's sound (miniaudio) comes from a ScriptProcessorNode that the page's
+  // main thread fills block by block. While a load holds that thread, the browser plays the last block
+  // again and again: one note stuck in a loop. So every block the game fills bumps a shared counter,
+  // and a small AudioWorklet between that node and the speakers fades the sound out once no new block
+  // came for three blocks' time, and back in a little after blocks come again (the stale block still
+  // in the browser's queue goes out silent). Needs shared memory (cross-origin isolation, which the
+  // game's threads need anyway); without it the sound goes straight out as before.
+  const STALL_GATE = "mu-stall-gate";
+  const STALL_GATE_SOURCE = `
+    class StallGate extends AudioWorkletProcessor {
+      constructor(options) {
+        super();
+        const settings = options.processorOptions;
+        this.blocks = settings.blocks;
+        this.seen = Atomics.load(this.blocks, 0);
+        this.limit = settings.blockFrames * 3;   // frames without a new block that count as a stall
+        this.hold = settings.blockFrames * 2;    // frames of new blocks before the sound comes back
+        this.quiet = 0;
+        this.live = this.hold;
+        this.gain = 1;
+        this.step = 1 / (0.02 * sampleRate);     // a 20 ms fade either way
+      }
+      process(inputs, outputs) {
+        const frames = outputs[0][0] ? outputs[0][0].length : 128;
+        const count = Atomics.load(this.blocks, 0);
+        if (count !== this.seen) { this.seen = count; this.quiet = 0; } else { this.quiet += frames; }
+        if (this.quiet > this.limit) this.live = 0; else this.live += frames;
+        const target = this.live >= this.hold ? 1 : 0;
+        const input = inputs[0];
+        let gain = this.gain;
+        for (let channel = 0; channel < outputs[0].length; ++channel) {
+          const source = input[channel] || input[0];
+          const out = outputs[0][channel];
+          gain = this.gain;
+          for (let i = 0; i < out.length; ++i) {
+            gain += gain < target ? Math.min(this.step, target - gain) : -Math.min(this.step, gain - target);
+            out[i] = source ? source[i] * gain : 0;
+          }
+        }
+        this.gain = gain;
+        return true;
+      }
+    }
+    registerProcessor("${STALL_GATE}", StallGate);
+  `;
+  (function gateGameSoundThroughStalls() {
+    const Context = window.AudioContext || window.webkitAudioContext;
+    if (!Context || !Context.prototype.createScriptProcessor || typeof AudioWorkletNode === "undefined" ||
+        !self.crossOriginIsolated || typeof SharedArrayBuffer === "undefined") return;
+    let moduleUrl = null;
+    const modules = new WeakMap();           // context -> the gate's module, added once per context
+    const createScriptProcessor = Context.prototype.createScriptProcessor;
+    Context.prototype.createScriptProcessor = function (bufferSize, inputs, outputs) {
+      const node = createScriptProcessor.apply(this, arguments);
+      const context = this;
+      const channels = outputs === undefined ? 2 : outputs;
+      const blocks = new Int32Array(new SharedArrayBuffer(4));
+      node.addEventListener("audioprocess", () => Atomics.add(blocks, 0, 1));
+      const connect = node.connect;
+      const disconnect = node.disconnect;
+      let parts = [];                         // what stands between the node and the speakers
+      node.connect = function (target) {
+        if (target !== context.destination || !context.audioWorklet) return connect.apply(this, arguments);
+        // Straight through until the gate's module is in, then through the gate.
+        const direct = context.createGain();
+        connect.call(node, direct);
+        direct.connect(target);
+        parts = [direct];
+        if (!moduleUrl) moduleUrl = URL.createObjectURL(new Blob([STALL_GATE_SOURCE], { type: "text/javascript" }));
+        if (!modules.has(context)) modules.set(context, context.audioWorklet.addModule(moduleUrl));
+        modules.get(context).then(() => {
+          if (!parts.includes(direct)) return;          // disconnected meanwhile
+          const gate = new AudioWorkletNode(context, STALL_GATE, {
+            numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [channels],
+            processorOptions: { blocks, blockFrames: node.bufferSize },
+          });
+          connect.call(node, gate);
+          gate.connect(target);
+          disconnect.call(node, direct);
+          direct.disconnect();
+          parts = [gate];
+        }).catch(() => { /* no worklet: the sound stays straight through */ });
+        return target;
+      };
+      node.disconnect = function () {
+        if (arguments.length === 0) {
+          for (const part of parts) part.disconnect();
+          parts = [];
+        }
+        return disconnect.apply(this, arguments);
+      };
+      return node;
+    };
+  })();
+
   function stored(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
   function store(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* no storage */ } }
   const pageParams = new URLSearchParams(location.search);

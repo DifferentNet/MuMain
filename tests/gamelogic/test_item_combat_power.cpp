@@ -144,7 +144,7 @@ TEST_CASE("pets count by kind, the others nothing")
     CHECK(GetItemCombatPower(Misc(13, 37, Pet)) == 500);
     CHECK(GetItemCombatPower(Misc(13, 37, Pet, 0x02)) == 800);
     CHECK(GetItemCombatPower(Misc(13, 37, Pet, 0x01)) == 1000);
-    CHECK(GetItemCombatPower(Misc(13, 37, Pet, 0x04)) == 1000);
+    CHECK(GetItemCombatPower(Misc(13, 37, Pet, 0x04)) == 1500);
     CHECK(GetItemCombatPower(Misc(13, 3, Pet)) == 200);
     CHECK(GetItemCombatPower(Misc(13, 4, Pet)) == 700);
     CHECK(GetItemCombatPower(Misc(13, 0, Pet)) == 0);
