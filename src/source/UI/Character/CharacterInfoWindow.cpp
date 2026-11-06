@@ -997,12 +997,6 @@ void mu::ui::window::CCharacterInfoWindow::BuildAttributeLines()
     ITEM* pItemHelper = &CharacterMachine->Equipment[EQUIPMENT_HELPER];
     if (pItemHelper)
     {
-        if (pItemHelper->Type == ITEM_HORN_OF_FENRIR && pItemHelper->ExcellentFlags == 0x04)
-        {
-            WORD wLevel = CharacterAttribute->Level;
-            iAttackDamageMin += (wLevel / 12);
-            iAttackDamageMax += (wLevel / 12);
-        }
         if (pItemHelper->Type == ITEM_DEMON)
         {
             if (false == pItemHelper->bExpiredPeriod)
@@ -1518,13 +1512,6 @@ void mu::ui::window::CCharacterInfoWindow::BuildAttributeLines()
         pItemHelper = &CharacterMachine->Equipment[EQUIPMENT_HELPER];
         if (pItemHelper)
         {
-            if (pItemHelper->Type == ITEM_HORN_OF_FENRIR && pItemHelper->ExcellentFlags == 0x04)
-            {
-                WORD wLevel = CharacterAttribute->Level;
-                iMagicDamageMin += (wLevel / 25);
-                iMagicDamageMax += (wLevel / 25);
-            }
-
             if (pItemHelper->Type == ITEM_DEMON)
             {
                 if (false == pItemHelper->bExpiredPeriod)

@@ -123,7 +123,12 @@ int GetPetPoints(const CombatPowerItem& item)
     switch (item.Number)
     {
     case FenrirNumber:
-        if ((item.ExcellentFlags & (BlackFenrirFlag | GoldFenrirFlag)) != 0)
+        if ((item.ExcellentFlags & GoldFenrirFlag) != 0)
+        {
+            return 1500; // the battle pass season Fenrir
+        }
+
+        if ((item.ExcellentFlags & BlackFenrirFlag) != 0)
         {
             return 1000;
         }

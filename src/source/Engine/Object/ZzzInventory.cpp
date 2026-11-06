@@ -5050,18 +5050,16 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
         }
         else if (ip->ExcellentFlags == 0x04)
         {
-            WORD wLevel = CharacterAttribute->Level;
-
-            mu_swprintf(TextList[TextNum], I18N::Game::AddedDOfLife, (wLevel / 2));
+            mu_swprintf(TextList[TextNum], I18N::Game::IncreaseFinalDamageD, 10);
             TextListColor[TextNum] = TEXT_COLOR_BLUE;
             TextNum++;
-            mu_swprintf(TextList[TextNum], I18N::Game::AddedDOfMana, (wLevel / 2));
+            mu_swprintf(TextList[TextNum], I18N::Game::AbsorbFinalDamageD, 10);
             TextListColor[TextNum] = TEXT_COLOR_BLUE;
             TextNum++;
-            mu_swprintf(TextList[TextNum], I18N::Game::AddedDAttack, (wLevel / 12));
+            mu_swprintf(TextList[TextNum], I18N::Game::SeasonFenrirLife, 1000);
             TextListColor[TextNum] = TEXT_COLOR_BLUE;
             TextNum++;
-            mu_swprintf(TextList[TextNum], I18N::Game::AddedDWizardry, (wLevel / 25));
+            mu_swprintf(TextList[TextNum], I18N::Game::IncreaseSpeed);
             TextListColor[TextNum] = TEXT_COLOR_BLUE;
             TextNum++;
             mu_swprintf(TextList[TextNum], L"\n");
