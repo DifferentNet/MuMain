@@ -13976,6 +13976,9 @@
   <data name="SeasonItemBound" xml:space="preserve">
     <value>Привязан к персонажу: нельзя передать, сложить в хранилище или продать</value>
   </data>
+  <data name="SeasonFenrirLife" xml:space="preserve">
+    <value>Увеличение жизни +%d</value>
+  </data>
   <data name="GmPanelSending" xml:space="preserve">
     <value>Отправлено: %ls</value>
   </data>
