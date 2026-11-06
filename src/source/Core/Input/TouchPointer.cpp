@@ -75,6 +75,8 @@ State g_state;
 bool g_fingerPlaced = false;
 // Outside State: a tap's press and release reach the game's windows after the finger has lifted.
 LeftPress g_lastLeftPress = LeftPress::NotFinger;
+// No mouse or pad press since a finger last landed (FingerHasPointer).
+bool g_fingerHasPointer = true;
 
 float WindowHeight(SDL_Window* window)
 {
@@ -469,6 +471,17 @@ void ForgetFinger()
 {
     g_fingerPlaced = false;
     g_lastLeftPress = LeftPress::NotFinger;
+    g_fingerHasPointer = false;
+}
+
+void FingerLanded()
+{
+    g_fingerHasPointer = true;
+}
+
+bool FingerHasPointer()
+{
+    return g_fingerHasPointer;
 }
 
 bool IsButtonHeld(int sdlButton)

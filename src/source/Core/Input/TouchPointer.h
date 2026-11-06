@@ -39,6 +39,13 @@ bool Rest(SDL_Window* window);
 // and the buttons are no longer a finger's (LastLeftPress()).
 void ForgetFinger();
 
+// A finger landed on the window (on the game or on a touch control).
+void FingerLanded();
+// Whether a finger landed after the last press of the mouse or the pad: the game draws no pointer
+// then (RenderCursor), since on a phone it would only stand where the last tap was. True before
+// anything pressed, so a phone shows none from the start.
+[[nodiscard]] bool FingerHasPointer();
+
 [[nodiscard]] bool IsButtonHeld(int sdlButton);
 
 // Where the finger is that, lifted now, would tap (a left click there): one that landed and has not

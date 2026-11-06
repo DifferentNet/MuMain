@@ -103,6 +103,9 @@ The pointer stays where the last tap lifted, so a monster tapped stays Attack's 
 tapped shows its tooltip. A tap on a top-row button or a menu item takes it off the window
 (`Touch::RestPointer`): a window opening where the last tap was would show the tooltip of whatever
 lies there. A pad's pointer is the player's own and stays.
+The game draws no pointer sprite for a finger (`RenderCursor`, `Touch::Pointer::FingerHasPointer`):
+none from the start, and none after a tap. A mouse button or the pad pressed since brings it back,
+and the pad's pointer shows whenever it plays one.
 
 Every action keeps the MU Helper's pace (walk packets 300 ms apart, attacks and skills 250 ms):
 the server reads a burst of walk packets as a speed hack.
