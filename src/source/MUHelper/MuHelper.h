@@ -174,6 +174,7 @@ namespace MUHelper
 		// FightStallLimit is started over (UnstickFight, 2026-11-06).
 		static constexpr std::chrono::milliseconds FightStallLimit{ 4000 };
 		std::chrono::steady_clock::time_point m_lastHitAt{};
+		bool m_bStallLogged = false; // the stall since the last hit is in MuError.log
 		const char* m_pszRoundStop = ""; // the step the last round got to (for the stall log)
 		GameLogic::Automation::AttackResult m_lastAttackResult = GameLogic::Automation::AttackResult::NoTarget;
 		std::chrono::steady_clock::time_point m_walkWatchSince{};

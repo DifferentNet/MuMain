@@ -328,14 +328,20 @@ namespace MUHelper
         }
 
         const int iAction = Hero->Object.CurrentAction;
-        MU_LOG_INFO(mu::log::Get("core"),
-            "[MU Helper] Stuck {} ms among monsters; starting over. action={} frame={:.1f} swing={} skillReady={} "
-            "movement={} path={} target={} item={} skill={} attack={} skillSuccess={} betweenRounds={} round={} away={}s",
-            sinceLastHit, iAction, Hero->Object.AnimationFrame, Engine::Object::IsSwingAction(iAction),
-            Engine::Object::IsSkillReadyAction(iAction), Hero->Movement, static_cast<int>(Hero->Path.PathNum),
-            m_iCurrentTarget, m_iCurrentItem, GameLogic::Automation::ResultName(m_lastSkillResult),
-            GameLogic::Automation::ResultName(m_lastAttackResult), Hero->SkillSuccess, m_bAttackBetweenRounds,
-            m_pszRoundStop, m_iSecondsAway);
+        // Once per stall: a helper that can't hit at all (a combo with an empty slot, a skill the weapon refuses)
+        // would write a line every FightStallLimit.
+        if (!m_bStallLogged)
+        {
+            m_bStallLogged = true;
+            MU_LOG_INFO(mu::log::Get("core"),
+                "[MU Helper] Stuck {} ms among monsters; starting over. action={} frame={:.1f} swing={} skillReady={} "
+                "movement={} path={} target={} item={} skill={} attack={} skillSuccess={} betweenRounds={} round={} away={}s",
+                sinceLastHit, iAction, Hero->Object.AnimationFrame, Engine::Object::IsSwingAction(iAction),
+                Engine::Object::IsSkillReadyAction(iAction), static_cast<int>(Hero->Movement), static_cast<int>(Hero->Path.PathNum),
+                m_iCurrentTarget, m_iCurrentItem, GameLogic::Automation::ResultName(m_lastSkillResult),
+                GameLogic::Automation::ResultName(m_lastAttackResult), Hero->SkillSuccess, m_bAttackBetweenRounds,
+                m_pszRoundStop, m_iSecondsAway);
+        }
 
         Hero->Path.Lock.lock();
         Hero->Path.PathNum = 0;
@@ -1657,6 +1663,7 @@ namespace MUHelper
         if (result == SkillResult::Cast)
         {
             m_lastHitAt = std::chrono::steady_clock::now();
+            m_bStallLogged = false;
         }
 
         if (iTarget != -1)
@@ -1683,6 +1690,7 @@ namespace MUHelper
         if (result == AttackResult::Attacked)
         {
             m_lastHitAt = std::chrono::steady_clock::now();
+            m_bStallLogged = false;
         }
 
         if (GameLogic::Automation::ShouldForgetTarget(result))
