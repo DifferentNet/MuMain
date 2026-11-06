@@ -206,6 +206,18 @@ TEST_CASE("Power of the Ancients needs a whole set and the class's weapon")
     CHECK(GetEquipmentCombatPower(equipment, Wizard) == set + 1000);
 }
 
+TEST_CASE("Power of the Ancients needs a whole set of 4 pieces or more")
+{
+    CombatPowerItem helm = Piece(9, 7, Helm);
+    CombatPowerItem armor = Piece(9, 8, Armor);
+    helm.AncientSetSize = 2;
+    armor.AncientSetSize = 2;
+    CombatPowerEquipment equipment = Wearing({{2, helm}, {3, armor}});
+    equipment[RightHand] = TwoHanded(Gear(0, 17, MainHand, 100, 0));
+    const int set = 2 * 500 + 2 * 250 + 1 * 300 + 1000;
+    CHECK(GetEquipmentCombatPower(equipment, Knight) == set + 1000);
+}
+
 TEST_CASE("the Season 4 top items count 50 drop levels more")
 {
     CHECK(GetItemCombatPower(Gear(8, 45, Armor, 100, 0)) == 10 * 150);

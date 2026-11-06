@@ -433,7 +433,8 @@ int GetEquipmentCombatPower(const CombatPowerEquipment& equipment, int baseClass
         if (worn >= size)
         {
             points += bonus.WholeSet;
-            isAnySetWhole = true;
+            // Power of the Ancients needs a whole set of 4 pieces or more (server HasFullAncientSet, 2026-11-06).
+            isAnySetWhole |= set.Size >= FullSetBonusMinPieces;
         }
     }
 

@@ -1331,8 +1331,15 @@ int CSItemOption::RenderPowerOfTheAncients(int textIndex)
         return textIndex;
     }
 
-    // Hero->ExtendState is 1 while any ancient set is worn complete (calcSetOptionList).
-    const bool fullSetWorn = Hero->ExtendState != 0;
+    // The server's HasFullAncientSet: a set of 4 pieces or more worn complete (since 2026-11-06).
+    // Hero->ExtendState (the set glow) stays on for the small 2- and 3-piece sets too.
+    bool fullSetWorn = false;
+    for (int i = 0; i < m_SetSearchResultCount; ++i)
+    {
+        const SET_SEARCH_RESULT_OPT& set = m_SetSearchResult[i];
+        fullSetWorn |= set.CompleteSetItemCount <= set.ItemCount
+                       && set.CompleteSetItemCount >= GameLogic::Items::FullSetBonusMinPieces;
+    }
     mu_swprintf(TextList[textIndex], L"%ls", I18N::Game::PowerOfTheAncients);
     TextListColor[textIndex] = TEXT_COLOR_YELLOW;
     TextBold[textIndex] = false;
@@ -1363,7 +1370,7 @@ float FullSetHighTierFactor(const wchar_t* setName)
     };
 
     static constexpr Factor Factors[] = {{L"Bragi", 1.10f}, {L"Mahes", 1.20f}, {L"Alvis", 1.24f}, {L"Bes", 1.25f},
-                                         {L"Frigg", 1.15f}, {L"Serket", 1.14f}, {L"Apis", 1.04f}, {L"Tyr", 1.05f},
+                                         {L"Frigg", 1.15f}, {L"Serket", 1.14f}, {L"Apis", 1.07f}, {L"Tyr", 1.10f},
                                          {L"Khone", 1.44f}, {L"Surt", 1.34f}};
     if (setName == nullptr)
     {
