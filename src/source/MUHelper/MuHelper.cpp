@@ -16,6 +16,7 @@
 #include "Engine/Object/PlayerActionState.h"
 #include "UI/Core/WindowSystem.h"
 #include "Core/Utilities/Log/muConsoleDebug.h"
+#include "Core/Utilities/Log/MuLogger.h"
 #include "Character/CharacterManager.h"
 #include "GameLogic/Skills/SkillManager.h"
 #include "GameLogic/Social/PartyManager.h"
@@ -151,6 +152,7 @@ namespace MUHelper
         m_pickupPutOffSince = {};
         m_bPickupFightTry = false;
         m_bPickupWalking = false;
+        m_lastHitAt = std::chrono::steady_clock::now();
         _itemsLock.lock();
         m_mapItemRestUntil.clear();
         _itemsLock.unlock();
@@ -184,6 +186,7 @@ namespace MUHelper
         m_pickupPutOffSince = {};
         m_bPickupFightTry = false;
         m_bPickupWalking = false;
+        m_lastHitAt = std::chrono::steady_clock::now();
         if (!bSteered)
         {
             m_posOriginal = { Hero->PositionX, Hero->PositionY };
@@ -245,6 +248,7 @@ namespace MUHelper
 
         StopStuckWalk(now);
         Work();
+        UnstickFight(now);
 
         if (m_iLoopCounter++ == 4)
         {
@@ -296,38 +300,112 @@ namespace MUHelper
         g_ConsoleDebug->Write(MCD_NORMAL, L"[MU Helper] Stopped a walk that went nowhere");
     }
 
+    void CMuHelper::UnstickFight(std::chrono::steady_clock::time_point now)
+    {
+        // ghinzuro, 2026-11-06: in big packs the helper still stuck now and then, the character standing among the
+        // monsters without hitting, and a click of the player's set it going again. A click starts the helper over
+        // (SetSteered): no target, no drop, no combo step, the walk and the swing given up. When the character
+        // stands with a monster close by and nothing was hit or cast for FightStallLimit, do the same, and write the
+        // state it stuck in to MuError.log, so the cause can be found from a player's log.
+        // A helper set up without an attack (a buffer or healer) never hits, and isn't stuck for it.
+        const bool bAttacks = m_config.aiSkill[0] > 0 || m_config.bUseCombo || m_config.bFallbackBasicAttack;
+        if (!bAttacks || Hero->Dead > 0 || g_isCharacterBuff((&Hero->Object), eDeBuff_Stun)
+            || g_isCharacterBuff((&Hero->Object), eDeBuff_Sleep))
+        {
+            m_lastHitAt = now;
+            return;
+        }
+        const auto sinceLastHit = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_lastHitAt).count();
+        if (!GameLogic::Automation::ShouldUnstickFight(!Hero->Movement, IsMonsterWithinAttackReach(), sinceLastHit,
+                FightStallLimit.count()))
+        {
+            if (Hero->Movement)
+            {
+                // Walking is not standing: the stall is counted from when the character stops.
+                m_lastHitAt = now;
+            }
+            return;
+        }
+
+        const int iAction = Hero->Object.CurrentAction;
+        // Once per stall: a helper that can't hit at all (a combo with an empty slot, a skill the weapon refuses)
+        // would write a line every FightStallLimit.
+        if (!m_bStallLogged)
+        {
+            m_bStallLogged = true;
+            MU_LOG_INFO(mu::log::Get("core"),
+                "[MU Helper] Stuck {} ms among monsters; starting over. action={} frame={:.1f} swing={} skillReady={} "
+                "movement={} path={} target={} item={} skill={} attack={} skillSuccess={} betweenRounds={} round={} away={}s",
+                sinceLastHit, iAction, Hero->Object.AnimationFrame, Engine::Object::IsSwingAction(iAction),
+                Engine::Object::IsSkillReadyAction(iAction), static_cast<int>(Hero->Movement), static_cast<int>(Hero->Path.PathNum),
+                m_iCurrentTarget, m_iCurrentItem, GameLogic::Automation::ResultName(m_lastSkillResult),
+                GameLogic::Automation::ResultName(m_lastAttackResult), Hero->SkillSuccess, m_bAttackBetweenRounds,
+                m_pszRoundStop, m_iSecondsAway);
+        }
+
+        Hero->Path.Lock.lock();
+        Hero->Path.PathNum = 0;
+        Hero->Path.CurrentPath = 0;
+        Hero->Path.CurrentPathFloat = 0;
+        Hero->Path.Lock.unlock();
+        if (!Engine::Object::IsSkillReadyAction(iAction))
+        {
+            // A swing or a step that never ends keeps every cast from starting (ExecuteSkill): stand.
+            SetPlayerStop(Hero);
+        }
+        GameLogic::Automation::ForgetAutomatedSend();
+
+        m_iCurrentTarget = -1;
+        m_iCurrentItem = MAX_ITEMS;
+        m_iComboState = 0;
+        m_walkWatchSince = {};
+        m_noTargetInReachSince = {};
+        // m_pickupPutOffSince stays: the fight wait for a far drop (PickupFightWait) still runs out.
+        m_pickupSince = {};
+        m_bPickupFightTry = false;
+        m_bPickupWalking = false;
+        m_lastHitAt = now;
+    }
+
     void CMuHelper::Work()
     {
         m_bAttackBetweenRounds = false;
+        m_pszRoundStop = "exception";
         try
         {
             RefreshTargets();
 
+            m_pszRoundStop = "pet";
             if (!ActivatePet())
             {
                 return;
             }
 
+            m_pszRoundStop = "buff";
             if (!Buff())
             {
                 return;
             }
 
+            m_pszRoundStop = "potion";
             if (!RecoverHealth())
             {
                 return;
             }
 
+            m_pszRoundStop = "pickup";
             if (!ObtainItem())
             {
                 return;
             }
 
+            m_pszRoundStop = "regroup";
             if (!Regroup())
             {
                 return;
             }
 
+            m_pszRoundStop = "attack";
             m_bAttackBetweenRounds = true;
             Attack();
 
@@ -1582,6 +1660,11 @@ namespace MUHelper
         const SkillResult result =
             GameLogic::Automation::CastSkill(iSkill, bTargetRequired, iTarget, true, m_iHuntingDistance);
         m_lastSkillResult = result;
+        if (result == SkillResult::Cast)
+        {
+            m_lastHitAt = std::chrono::steady_clock::now();
+            m_bStallLogged = false;
+        }
 
         if (iTarget != -1)
         {
@@ -1603,6 +1686,12 @@ namespace MUHelper
         }
 
         const AttackResult result = GameLogic::Automation::AttackObject(iTarget, false, m_iHuntingDistance);
+        m_lastAttackResult = result;
+        if (result == AttackResult::Attacked)
+        {
+            m_lastHitAt = std::chrono::steady_clock::now();
+            m_bStallLogged = false;
+        }
 
         if (GameLogic::Automation::ShouldForgetTarget(result))
         {

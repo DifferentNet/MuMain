@@ -10,6 +10,7 @@
 #include <atomic>
 
 #include "MuHelperData.h"
+#include "GameLogic/Automation/Attack.h"
 #include "GameLogic/Automation/Skill.h"
 
 namespace MUHelper
@@ -50,6 +51,8 @@ namespace MUHelper
 	private:
 		void WorkLoop(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 		void StopStuckWalk(std::chrono::steady_clock::time_point now);
+		// Starts the fight over when the character stood among monsters without hitting for FightStallLimit.
+		void UnstickFight(std::chrono::steady_clock::time_point now);
 		void Work();
 		int ActivatePet();
 		int Buff();
@@ -167,6 +170,13 @@ namespace MUHelper
 		std::set<int> m_setNotified;                                         // chat notices given this run
 		static constexpr std::chrono::milliseconds StandStillPatience{ 1000 };
 		static constexpr std::chrono::milliseconds StuckWalkLimit{ 1200 };
+		// The last hit or cast that went out; a standing character with a monster close by and none for
+		// FightStallLimit is started over (UnstickFight, 2026-11-06).
+		static constexpr std::chrono::milliseconds FightStallLimit{ 4000 };
+		std::chrono::steady_clock::time_point m_lastHitAt{};
+		bool m_bStallLogged = false; // the stall since the last hit is in MuError.log
+		const char* m_pszRoundStop = ""; // the step the last round got to (for the stall log)
+		GameLogic::Automation::AttackResult m_lastAttackResult = GameLogic::Automation::AttackResult::NoTarget;
 		std::chrono::steady_clock::time_point m_walkWatchSince{};
 		POINT m_posWalkWatch{};
 		std::chrono::steady_clock::time_point m_noTargetInReachSince{};
@@ -201,4 +211,4 @@ namespace MUHelper
 	};
 
 	extern CMuHelper g_MuHelper;
-}
+}

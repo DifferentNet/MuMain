@@ -34,6 +34,11 @@ void NoteAutomatedSend()
     s_awaitingSwing = true;
 }
 
+void ForgetAutomatedSend()
+{
+    s_awaitingSwing = false;
+}
+
 bool IsSwingInProgress()
 {
     // The stance animations inside the attack enum range don't count: otherwise a

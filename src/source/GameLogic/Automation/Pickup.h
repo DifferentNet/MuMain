@@ -71,6 +71,16 @@ inline constexpr float PickupReach = 2.0f;
     return needsWalk && monsterInReach && putOffFor < fightWait;
 }
 
+// Whether the MU Helper has stood among monsters without hitting for too long and should start over, as a click
+// of the player's does (ghinzuro, 2026-11-06: "it sticks, then I click and it comes unstuck"): the character stands
+// (`standing`), a monster is close by (`monsterNear`), and nothing was hit or cast for `stallLimit` (`sinceLastHit`,
+// any time unit). Walks are not counted: a walk that goes nowhere has its own limit.
+[[nodiscard]] constexpr bool ShouldUnstickFight(bool standing, bool monsterNear, long long sinceLastHit,
+                                                long long stallLimit)
+{
+    return standing && monsterNear && sinceLastHit >= stallLimit;
+}
+
 // Walks to the drop and picks it up. `itemIndex` is the client's slot in
 // the dropped-item table, `maximumDistance` the caller's own limit in
 // tiles.

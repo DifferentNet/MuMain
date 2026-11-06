@@ -100,6 +100,9 @@ float EquippedAttackRange();
 // IsSwingInProgress stays true, so a send that starts no animation is not repeated on every frame.
 void NoteAutomatedSend();
 
+// Forgets the last automated send, so IsSwingInProgress no longer waits for its swing to show.
+void ForgetAutomatedSend();
+
 // Attacks the object with that server-assigned id, walking into range
 // first when needed. `huntingDistance` bounds how far the path finder may
 // search beyond the weapon's reach.
