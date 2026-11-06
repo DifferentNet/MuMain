@@ -18,6 +18,8 @@ constexpr std::wstring_view InfoLine = L"#EXD|";
 constexpr std::wstring_view MissingLine = L"#EXD!|";
 constexpr std::wstring_view InfoCommand = L"/dustinfo";
 constexpr size_t InfoFields = 6;
+// Field 6, the dust added at the reset, came with the carry-over (server 2026-11-06); older servers send 6 fields.
+constexpr size_t CarriedField = 6;
 // Repeated requests within this time are dropped (the menu and the machine both ask).
 constexpr auto RequestInterval = std::chrono::seconds(1);
 constexpr long long SecondsPerMinute = 60;
@@ -32,6 +34,7 @@ struct State
     long long earned = 0;
     long long limit = 0;
     long long cost = 0;
+    long long carried = 0;
     Clock::time_point resetAt{};
     Clock::time_point lastRequest{};
     bool dustMode = false;
@@ -96,6 +99,7 @@ bool TakeMessage(const std::wstring& text)
     state.limit = EndlessTower::ToLong(fields[3]);
     state.resetAt = Clock::now() + std::chrono::seconds(EndlessTower::ToLong(fields[4]));
     state.cost = EndlessTower::ToLong(fields[5]);
+    state.carried = fields.size() > CarriedField ? EndlessTower::ToLong(fields[CarriedField]) : 0;
     return true;
 }
 
@@ -146,6 +150,9 @@ std::wstring WeekLine()
     if (!state.known || !state.available)
         return {};
     const auto left = std::chrono::duration_cast<std::chrono::seconds>(state.resetAt - Clock::now()).count();
+    if (state.carried > 0)
+        return Printf(I18N::Game::ExcellentDustWeekCarried, Thousands(state.earned).c_str(), Thousands(state.limit).c_str(),
+                      Thousands(state.carried).c_str(), TimeLeft(left).c_str());
     return Printf(I18N::Game::ExcellentDustWeek, Thousands(state.earned).c_str(), Thousands(state.limit).c_str(),
                   TimeLeft(left).c_str());
 }
