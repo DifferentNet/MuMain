@@ -16132,6 +16132,9 @@
   <data name="ExcellentDustWeek" xml:space="preserve">
     <value>This week %ls of %ls, resets in %ls</value>
   </data>
+  <data name="ExcellentDustWeekCarried" xml:space="preserve">
+    <value>This week %ls of %ls, +%ls at the reset in %ls</value>
+  </data>
   <data name="ExcellentDustWaiting" xml:space="preserve">
     <value>Dust: asking the server...</value>
   </data>

@@ -15794,6 +15794,9 @@
   <data name="ExcellentDustWeek" xml:space="preserve">
     <value>За неделю %ls из %ls, сброс через %ls</value>
   </data>
+  <data name="ExcellentDustWeekCarried" xml:space="preserve">
+    <value>За неделю %ls из %ls, +%ls после сброса через %ls</value>
+  </data>
   <data name="ExcellentDustWaiting" xml:space="preserve">
     <value>Пыль: спрашиваем сервер...</value>
   </data>
