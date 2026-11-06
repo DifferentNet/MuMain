@@ -163,9 +163,9 @@ TEST_CASE("the high-tier sets and what a set adds")
     CHECK_FALSE(IsHighTierAncientSet(L"Enis"));
     CHECK_FALSE(IsHighTierAncientSet(nullptr));
     CHECK(GetAncientSetCombatPower(false).PerFurtherPiece == 300);
-    CHECK(GetAncientSetCombatPower(false).WholeSet == 1000);
+    CHECK(GetAncientSetCombatPower(false).WholeSet == 10000);
     CHECK(GetAncientSetCombatPower(true).PerFurtherPiece == 600);
-    CHECK(GetAncientSetCombatPower(true).WholeSet == 2500);
+    CHECK(GetAncientSetCombatPower(true).WholeSet == 12500);
 }
 
 TEST_CASE("the equipment counts each piece, every further piece of a set and the whole set")
@@ -175,7 +175,7 @@ TEST_CASE("the equipment counts each piece, every further piece of a set and the
 
     const CombatPowerEquipment wholeSet = Wearing({{2, Piece(9, 7, Helm)}, {3, Piece(9, 8, Armor)}, {4, Piece(9, 9, Pants)},
                                                    {5, Piece(9, 10, Gloves)}, {6, Piece(9, 11, Boots)}});
-    CHECK(GetEquipmentCombatPower(wholeSet, Wizard) == 5 * 500 + 5 * 250 + 4 * 300 + 1000);
+    CHECK(GetEquipmentCombatPower(wholeSet, Wizard) == 5 * 500 + 5 * 250 + 4 * 300 + 10000);
 }
 
 TEST_CASE("a high-tier set counts twice")
@@ -196,10 +196,19 @@ TEST_CASE("Power of the Ancients needs a whole set and the class's weapon")
 {
     CombatPowerEquipment equipment = Wearing({{2, Piece(9, 7, Helm)}, {3, Piece(9, 8, Armor)}, {4, Piece(9, 9, Pants)},
                                               {5, Piece(9, 10, Gloves)}, {6, Piece(9, 11, Boots)}});
-    const int set = 5 * 500 + 5 * 250 + 4 * 300 + 1000;
+    const int set = 5 * 500 + 5 * 250 + 4 * 300 + 10000;
     equipment[RightHand] = TwoHanded(Gear(0, 17, MainHand, 100, 0));
     CHECK(GetEquipmentCombatPower(equipment, Knight) == set + 1000 + 1500);
     CHECK(GetEquipmentCombatPower(equipment, Wizard) == set + 1000);
+}
+
+TEST_CASE("the Season 4 top items count 50 drop levels more")
+{
+    CHECK(GetItemCombatPower(Gear(8, 45, Armor, 100, 0)) == 10 * 150);
+    CHECK(GetItemCombatPower(Gear(0, 26, MainHand, 100, 0)) == 10 * 150);
+    CHECK(GetItemCombatPower(Gear(6, 17, OffHand, 100, 0)) == 10 * 150);
+    CHECK(GetItemCombatPower(Gear(8, 43, Armor, 100, 0)) == 10 * 100);
+    CHECK(GetItemCombatPower(Gear(0, 25, MainHand, 100, 0)) == 10 * 100);
 }
 
 TEST_CASE("broken items count nothing")
@@ -250,7 +259,7 @@ TEST_CASE("the last piece of a set adds the whole set")
 {
     const CombatPowerEquipment fourPieces = Wearing({{2, Piece(9, 7, Helm)}, {3, Piece(9, 8, Armor)},
                                                      {4, Piece(9, 9, Pants)}, {5, Piece(9, 10, Gloves)}});
-    CHECK(GetCombatPowerChange(fourPieces, Piece(9, 11, Boots), Wizard) == 500 + 250 + 300 + 1000);
+    CHECK(GetCombatPowerChange(fourPieces, Piece(9, 11, Boots), Wizard) == 500 + 250 + 300 + 10000);
 }
 
 TEST_CASE("items that can't be equipped have no change")

@@ -79,17 +79,46 @@ int GetLevelPoints(int level)
     return LevelPoints[std::clamp(level, 0, static_cast<int>(LevelPoints.size()) - 1)];
 }
 
+// The Season 4 top items count 50 drop levels more (the server's BoxOfKundun5.IsSeason4Top and
+// AncientSetBonusRules.TopDropLevelBonus, 2026-11-06), so the top is above Box of Kundun +4.
+constexpr int TopDropLevelBonus = 50;
+
+bool IsSeason4Top(int group, int number)
+{
+    if (group >= 7 && group <= 11)
+    {
+        return number >= 45 && number <= 52;
+    }
+
+    switch (group)
+    {
+    case 0:
+        return number >= 26 && number <= 28;
+    case 2:
+        return number == 16 || number == 17;
+    case 4:
+        return number == 23;
+    case 5:
+        return number == 30 || number == 31;
+    case 6:
+        return number >= 17 && number <= 20;
+    default:
+        return false;
+    }
+}
+
 int GetDropLevel(const CombatPowerItem& item)
 {
+    const int topBonus = IsSeason4Top(item.Group, item.Number) ? TopDropLevelBonus : 0;
     for (const auto& entry : DropLevelOverrides)
     {
         if (entry.Group == item.Group && entry.Number == item.Number)
         {
-            return entry.DropLevel;
+            return entry.DropLevel + topBonus;
         }
     }
 
-    return item.DropLevel;
+    return item.DropLevel + topBonus;
 }
 
 int GetWingPoints(const CombatPowerItem& item)
@@ -334,7 +363,7 @@ int GetItemCombatPower(const CombatPowerItem& item)
 
 AncientSetCombatPower GetAncientSetCombatPower(bool highTier)
 {
-    return highTier ? AncientSetCombatPower{600, 2500} : AncientSetCombatPower{300, 1000};
+    return highTier ? AncientSetCombatPower{600, 12500} : AncientSetCombatPower{300, 10000};
 }
 
 bool IsHighTierAncientSet(const wchar_t* setName)

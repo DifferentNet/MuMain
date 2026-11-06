@@ -126,6 +126,7 @@ private:
     // "Power of the Ancients" (the server's PowerOfTheAncientsPlugIn): the bonus a full ancient set gives the
     // character's class with its weapon, gold while it applies, grey otherwise. Returns the next text line.
     static int RenderPowerOfTheAncients(int textIndex);
+    int RenderFullSetBonus(std::uint8_t setNumber, int textIndex) const;
 
     bool	OpenItemSetType(const wchar_t* filename);
     bool	OpenItemSetOption(const wchar_t* filename);
