@@ -14040,6 +14040,9 @@
   <data name="FullAncientSetWeapon" xml:space="preserve">
     <value>The set's weapon: the top weapon +10 %</value>
   </data>
+  <data name="FullExcellentSetBonusD" xml:space="preserve">
+    <value>Full excellent set bonus (Box of Kundun +%d, every piece worn):</value>
+  </data>
   <data name="JewelOfAncientDesc" xml:space="preserve">
     <value>Raises an ancient item +13 to +14 and +15</value>
   </data>

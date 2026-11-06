@@ -195,6 +195,8 @@ public:
     bool    BuildSetOptionTooltipModel(UI::Inventory::Tooltip::Model& outModel);
 
     int     RenderSetOptionListInItem(const ITEM* ip, int TextNum, bool bIsEquippedItem = false);
+    // Full excellent set bonus (server ExcellentSetBonus.cs) under an excellent armour piece of Box +2 and up; returns the next line.
+    int     RenderExcellentSetBonus(const ITEM* item, int textIndex) const;
 
     void    ClearOptionHelper(void) { m_byRenderOptionList = 0; }
     void    CheckRenderOptionHelper(const wchar_t* FilterName);

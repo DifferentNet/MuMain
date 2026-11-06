@@ -13663,6 +13663,9 @@
   <data name="FullAncientSetWeapon" xml:space="preserve">
     <value>Оружие сета: как топовое оружие +10 %</value>
   </data>
+  <data name="FullExcellentSetBonusD" xml:space="preserve">
+    <value>Бонус полного экселент-сета (Box of Kundun +%d, надеты все части):</value>
+  </data>
   <data name="JewelOfAncientDesc" xml:space="preserve">
     <value>Поднимает ancient-вещь с +13 до +14 и +15</value>
   </data>
