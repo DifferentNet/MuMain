@@ -27,6 +27,8 @@
 
 #include "MUHelper/MuHelper.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
+#include "Core/Input/UiInputRouter.h"
+#include "UI/HUD/MainFrameWindow.h"
 
 using namespace SEASON3B;
 using namespace mu::ui::window;
@@ -68,12 +70,14 @@ bool mu::ui::window::CHotKey::UpdateMouseEvent()
     }
 
     // A wheel click in the game world turns MU Helper on or off, as Home does (ghinzuro, 2026-11-06). This object is
-    // the bottom layer, so a click over a window never gets here; a drag with the wheel held turns the orbital camera.
+    // the bottom layer, but RmlUi windows (HUD bar, chat, helper bar, buffs) pass the mouse on, so the click must be
+    // over no UI at all (as world clicks in ZzzInterface/Selection); a drag with the wheel held turns the orbital camera.
     // Only where Home would work: not after game over, nor with the mini map, a trade, the vault, a shop, the chaos
     // machine or an NPC dialog open (UpdateKeyEvent's checks; CanUpdateKeyEvent also covers text input).
     if (MouseMButtonClick && !RmlUiRuntime::Instance().IsTextInputActive() && !m_bStateGameOver
         && !g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_MINI_MAP) && !CanUpdateKeyEventRelatedMyInventory()
-        && CanUpdateKeyEvent())
+        && CanUpdateKeyEvent() && !MouseOnWindow && !Core::Input::IsMouseOverUI()
+        && !(g_pMainFrame != nullptr && g_pMainFrame->IsMouseOverHud()))
     {
         MouseMButtonClick = false;
         MUHelper::g_MuHelper.Toggle();
