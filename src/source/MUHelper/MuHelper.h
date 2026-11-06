@@ -70,7 +70,7 @@ namespace MUHelper
 		bool MayAttackStandingStill(float fReach);
 		int GetNearestTargetNearSpot();
 		bool IsWithinReach(int iTargetId, float fReach) const;
-		// Whether a live monster among the targets is within the reach (tiles) of the attack.
+		// Whether a live monster among the targets is within the attack's reach, at most FightReachLimit tiles.
 		bool IsMonsterWithinAttackReach() const;
 		int RepairEquipments();
 		int Regroup();
@@ -187,8 +187,10 @@ namespace MUHelper
 		std::chrono::steady_clock::time_point m_pickupRestUntil{};
 		int m_iPickupBestGap = 0; // the smallest WalkGap to the current drop seen in this attempt
 		// While a monster is within the attack's reach, a drop that takes a walk waits (ShouldPutOffPickup), at most
-		// PickupFightWait; then one walk is tried (m_bPickupFightTry) with the patience above (2026-11-06).
+		// PickupFightWait; then one walk is tried (m_bPickupFightTry) with the patience above (2026-11-06). In a fight
+		// that never ends that is one far drop per PickupFightWait, on purpose: the attack comes first.
 		static constexpr std::chrono::seconds PickupFightWait{ 10 };
+		static constexpr float FightReachLimit = 3.0f; // tiles: a monster further away doesn't put a drop off
 		std::chrono::steady_clock::time_point m_pickupPutOffSince{};
 		bool m_bPickupFightTry = false;
 		bool m_bPickupWalking = false; // the last pickup step started or went on with a walk to the drop

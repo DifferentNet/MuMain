@@ -181,6 +181,9 @@ namespace MUHelper
         m_noTargetInReachSince = {};
         m_regroupSince = {};
         m_regroupRestUntil = {};
+        m_pickupPutOffSince = {};
+        m_bPickupFightTry = false;
+        m_bPickupWalking = false;
         if (!bSteered)
         {
             m_posOriginal = { Hero->PositionX, Hero->PositionY };
@@ -1354,12 +1357,15 @@ namespace MUHelper
 
     bool CMuHelper::IsMonsterWithinAttackReach() const
     {
-        // The reach of the first attack skill or of the weapon, whichever is longer.
+        // The reach of the first attack skill or of the weapon, whichever is longer, but only monsters close by
+        // (FightReachLimit): they are the ones that block a walk. A bow or a long skill has monsters within reach
+        // nearly all the time in a busy spot, and its drops would wait for the fight wait one after another.
         float fReach = GameLogic::Automation::EquippedAttackRange();
         if (m_config.aiSkill[0] > 0)
         {
             fReach = std::max(fReach, gSkillManager.GetSkillDistance((ActionSkillType)m_config.aiSkill[0], Hero));
         }
+        fReach = std::min(fReach, FightReachLimit);
 
         std::set<int> setTargets;
         {
@@ -1984,6 +1990,9 @@ namespace MUHelper
         if (iItemId == m_iCurrentItem)
         {
             m_iCurrentItem = MAX_ITEMS;
+            // A walk to it, or the one walk after the fight wait, ends with it.
+            m_bPickupWalking = false;
+            m_bPickupFightTry = false;
         }
     }
 
