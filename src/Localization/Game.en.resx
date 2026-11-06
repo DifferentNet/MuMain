@@ -509,7 +509,7 @@
     <value>F11 - Reset Camera View</value>
   </data>
   <data name="Home - Toggle MU Helper" xml:space="preserve">
-    <value>Home - Toggle MU Helper</value>
+    <value>Home / wheel click - Toggle MU Helper</value>
   </data>
   <data name="Enter: Chatting Mode" xml:space="preserve">
     <value>Enter: Chatting Mode</value>

@@ -58,6 +58,7 @@ bool 	   	 MouseLButtonDBClick;
 bool         MouseMButton;
 bool         MouseMButtonPop;
 bool         MouseMButtonPush;
+bool         MouseMButtonClick;
 int          MouseWheel;
 DWORD		 MouseRButtonPress = 0;
 

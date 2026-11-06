@@ -1127,6 +1127,17 @@ void HandleMouseMotion(float winX, float winY)
     }
 }
 
+// Where and when the middle button went down: its release near there soon after is a click (MouseMButtonClick),
+// which turns MU Helper on or off; a press the mouse moves away from is the orbital camera's turn.
+namespace
+{
+    int g_middlePressX = 0;
+    int g_middlePressY = 0;
+    Uint64 g_middlePressTicks = 0;
+    constexpr int MiddleClickMaxMove = 4;          // logical pixels, either way
+    constexpr Uint64 MiddleClickMaxTicks = 500;    // milliseconds
+}
+
 void HandleMouseButton(const SDL_Event& e)
 {
     HandleMouseMotion(e.button.x, e.button.y);
@@ -1188,14 +1199,25 @@ void HandleMouseButton(const SDL_Event& e)
         {
             MouseMButtonPop = false;
             if (!MouseMButton)
+            {
                 MouseMButtonPush = true;
+                g_middlePressX = MouseX;
+                g_middlePressY = MouseY;
+                g_middlePressTicks = SDL_GetTicks();
+            }
             MouseMButton = true;
             SetCapture(g_hWnd);
         }
         else
         {
             if (MouseMButton)
+            {
                 MouseMButtonPop = true;
+                if (std::abs(MouseX - g_middlePressX) <= MiddleClickMaxMove
+                    && std::abs(MouseY - g_middlePressY) <= MiddleClickMaxMove
+                    && SDL_GetTicks() - g_middlePressTicks <= MiddleClickMaxTicks)
+                    MouseMButtonClick = true;
+            }
             MouseMButton = false;
             ReleaseCapture();
         }
@@ -1234,6 +1256,7 @@ void ReleaseLegacyMouseButtons()
     MouseMButton = false;
     MouseMButtonPop = false;
     MouseMButtonPush = false;
+    MouseMButtonClick = false;
     MouseWheel = 0;
     Core::Input::ClearLeftMouseButtonPressEdge();
 }

@@ -36,6 +36,8 @@ extern bool 		MouseLButtonDBClick;
 extern bool         MouseMButton;
 extern bool 		MouseMButtonPop;
 extern bool 		MouseMButtonPush;
+// One frame: the middle button (the wheel) was clicked -- let go soon, the mouse not moved (a drag turns the camera).
+extern bool         MouseMButtonClick;
 extern int          MouseWheel;
 extern DWORD		MouseRButtonPress;
 extern wchar_t         GrabFileName[];
