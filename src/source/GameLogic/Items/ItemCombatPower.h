@@ -60,7 +60,11 @@ CombatPowerItem DescribeForCombatPower(const ITEM& item);
 // items the formula leaves out (Guardian Angel, Imp, Uniria, Dark Raven, other pets and wings).
 int GetItemCombatPower(const CombatPowerItem& item);
 
-AncientSetCombatPower GetAncientSetCombatPower(bool highTier);
+// The fewest pieces a set needs for the full set bonus (the server's AncientSetBonusRules.MinPieces, ghinzuro
+// 2026-11-06); smaller sets keep the old whole-set points.
+constexpr int FullSetBonusMinPieces = 4;
+
+AncientSetCombatPower GetAncientSetCombatPower(bool highTier, int setSize);
 
 // Whether the ancient set of that name is one of the high-tier sets.
 bool IsHighTierAncientSet(const wchar_t* setName);

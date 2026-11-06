@@ -361,8 +361,13 @@ int GetItemCombatPower(const CombatPowerItem& item)
     return IsGear(item) && item.IsAncient ? points + GetAncientPiecePoints(item) : points;
 }
 
-AncientSetCombatPower GetAncientSetCombatPower(bool highTier)
+AncientSetCombatPower GetAncientSetCombatPower(bool highTier, int setSize)
 {
+    if (setSize < FullSetBonusMinPieces)
+    {
+        return highTier ? AncientSetCombatPower{600, 2500} : AncientSetCombatPower{300, 1000};
+    }
+
     return highTier ? AncientSetCombatPower{600, 12500} : AncientSetCombatPower{300, 10000};
 }
 
@@ -422,7 +427,7 @@ int GetEquipmentCombatPower(const CombatPowerEquipment& equipment, int baseClass
     {
         const int worn = static_cast<int>(set.Pieces.size());
         const int size = std::max(1, set.Size);
-        const AncientSetCombatPower bonus = GetAncientSetCombatPower(set.IsHighTier);
+        const AncientSetCombatPower bonus = GetAncientSetCombatPower(set.IsHighTier, set.Size);
         points += worn * (set.IsHighTier ? HighTierAncientPiecePoints : AncientPiecePoints);
         points += std::max(0, std::min(worn, size) - 1) * bonus.PerFurtherPiece;
         if (worn >= size)

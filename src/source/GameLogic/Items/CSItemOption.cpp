@@ -15,6 +15,7 @@
 #include "UI/Core/WindowSystem.h"
 #include "GameLogic/Skills/SkillManager.h"
 #include "GameLogic/Items/CSItemOption.h"
+#include "GameLogic/Items/ItemCombatPower.h"
 #include "I18N/All.h"
 #include "Render/Text/CUIRenderText.h"
 
@@ -1386,7 +1387,9 @@ float FullSetHighTierFactor(const wchar_t* setName)
 int CSItemOption::RenderFullSetBonus(const std::uint8_t setNumber, int textIndex) const
 {
     // 7 lines here and the 2 closing lines RenderSetOptionListInItem writes after the piece list.
-    if (Hero == nullptr || setNumber == 0 || textIndex + 9 > MAX_TEXT_LIST_LINES)
+    // Sets of 2 or 3 pieces get no full set bonus (the server's AncientSetBonusRules.MinPieces).
+    if (Hero == nullptr || setNumber == 0 || textIndex + 9 > MAX_TEXT_LIST_LINES
+        || GetAncientSetItemCount(setNumber) < GameLogic::Items::FullSetBonusMinPieces)
     {
         return textIndex;
     }

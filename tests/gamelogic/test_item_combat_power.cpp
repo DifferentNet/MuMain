@@ -162,10 +162,14 @@ TEST_CASE("the high-tier sets and what a set adds")
     CHECK(IsHighTierAncientSet(L"Surt"));
     CHECK_FALSE(IsHighTierAncientSet(L"Enis"));
     CHECK_FALSE(IsHighTierAncientSet(nullptr));
-    CHECK(GetAncientSetCombatPower(false).PerFurtherPiece == 300);
-    CHECK(GetAncientSetCombatPower(false).WholeSet == 10000);
-    CHECK(GetAncientSetCombatPower(true).PerFurtherPiece == 600);
-    CHECK(GetAncientSetCombatPower(true).WholeSet == 12500);
+    CHECK(GetAncientSetCombatPower(false, 5).PerFurtherPiece == 300);
+    CHECK(GetAncientSetCombatPower(false, 5).WholeSet == 10000);
+    CHECK(GetAncientSetCombatPower(true, 5).PerFurtherPiece == 600);
+    CHECK(GetAncientSetCombatPower(true, 5).WholeSet == 12500);
+    // Sets of 2 or 3 pieces get no full set bonus and keep the old whole-set points.
+    CHECK(GetAncientSetCombatPower(false, 2).WholeSet == 1000);
+    CHECK(GetAncientSetCombatPower(false, 3).WholeSet == 1000);
+    CHECK(GetAncientSetCombatPower(false, 4).WholeSet == 10000);
 }
 
 TEST_CASE("the equipment counts each piece, every further piece of a set and the whole set")
