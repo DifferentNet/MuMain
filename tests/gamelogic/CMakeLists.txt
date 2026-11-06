@@ -88,6 +88,12 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME test_pickup_set_aside
+    SOURCES
+        test_pickup_set_aside.cpp
+)
+
+mu_add_test(
     NAME test_steer_hold
     SOURCES
         test_steer_hold.cpp
