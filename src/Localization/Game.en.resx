@@ -14353,6 +14353,9 @@
   <data name="SeasonItemBound" xml:space="preserve">
     <value>Bound to the character: can't be traded, stored or sold</value>
   </data>
+  <data name="SeasonFenrirLife" xml:space="preserve">
+    <value>Increase Life +%d</value>
+  </data>
   <data name="GmPanelSending" xml:space="preserve">
     <value>Sent: %ls</value>
   </data>
