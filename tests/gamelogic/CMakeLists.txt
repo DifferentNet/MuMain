@@ -61,6 +61,7 @@ mu_add_test(
     NAME test_item_combat_power
     SOURCES
         test_item_combat_power.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/App/Platform/Windows/Winmain.cpp
     LINK_LIBS
         MuClient
 )
