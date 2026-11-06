@@ -3979,6 +3979,15 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
         }
         TextBold[TextNum] = false; TextNum++;
     }
+    if (GameLogic::Items::IsTieredMedal(ip))
+    {
+        mu_swprintf(TextList[TextNum], I18N::Game::ThrowItAndYouMayReceiveSomeZenOrItems);
+        TextListColor[TextNum] = TEXT_COLOR_WHITE; TextBold[TextNum] = false; TextNum++;
+        mu_swprintf(TextList[TextNum], I18N::Game::CannotBeSold);
+        TextListColor[TextNum] = TEXT_COLOR_RED;
+        TextBold[TextNum] = false;
+        TextNum++;
+    }
     if (ip->Type == ITEM_BOX_OF_LUCK)
     {
         if (Level == 7)

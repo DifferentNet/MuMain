@@ -171,6 +171,25 @@ TEST_CASE("Item level variants have their own rules [data][items][rules]")
     CHECK(PersonalShopBan(ITEM_BOX_OF_LUCK, {13}));
     CHECK(SellingBan(ITEM_BOX_OF_LUCK));
 
+    // The tiered medals (14:170-177) are Box of Luck look-alikes: tradable and storable, not sellable.
+    for (int itemType = ITEM_SILVER_MEDAL_II; itemType <= ITEM_HEART_OF_LOVE_III; ++itemType)
+    {
+        INFO("type " << itemType);
+        CHECK(IsTieredMedalType(itemType));
+        CHECK_FALSE(TradeBan(itemType));
+        CHECK_FALSE(StoreBan(itemType));
+        CHECK_FALSE(PersonalShopBan(itemType));
+        CHECK(SellingBan(itemType));
+        CHECK_FALSE(DropBan(itemType));
+        const ITEM item = MakeItem(itemType);
+        CHECK(IsContainerItem(&item));
+        CHECK(IsTieredMedal(&item));
+    }
+    CHECK(IsTieredSilverOrGoldMedalType(ITEM_GOLD_MEDAL_III));
+    CHECK_FALSE(IsTieredSilverOrGoldMedalType(ITEM_FIRECRACKER_II));
+    CHECK_FALSE(IsTieredMedalType(ITEM_JEWEL_OF_FATE));
+    CHECK_FALSE(IsTieredMedalType(ITEM_POTION + 178));
+
     // The Wizard's Ring is bound to the character on the server (OpenMU), so it
     // can't be traded, stored or sold at any level; it can still be dropped.
     for (int level : {0, 1, 2})

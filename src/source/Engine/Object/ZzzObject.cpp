@@ -5683,7 +5683,8 @@ void CreateItemDrop(ITEM_t* ip, ItemCreationParams params, vec3_t position, bool
     VectorCopy(position, o->Position);
     if (isFreshDrop)
     {
-        if (o->Type == MODEL_EVENT + 8 || o->Type == MODEL_EVENT + 9)
+        if (o->Type == MODEL_EVENT + 8 || o->Type == MODEL_EVENT + 9 ||
+            GameLogic::Items::IsTieredSilverOrGoldMedalType(Type))
         {
             short  scale = 55;
             vec3_t Angle;

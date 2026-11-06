@@ -118,6 +118,10 @@ bool IsJewelForItems(const ITEM* pItem)
 // them (TryDropItem), so on the item card it is Open.
 bool OpensWhenDropped(const ITEM* pItem)
 {
+    if (GameLogic::Items::IsTieredMedal(pItem))
+    {
+        return true;
+    }
     switch (pItem->Type)
     {
     case ITEM_BOX_OF_LUCK:
