@@ -1268,7 +1268,7 @@ bool HasSetPiece(const int type, const int ancientDiscriminator)
 }
 } // namespace
 
-int CSItemOption::RenderPowerOfTheAncients(int textIndex)
+int CSItemOption::RenderPowerOfTheAncients(int textIndex) const
 {
     if (Hero == nullptr || CharacterMachine == nullptr)
     {
