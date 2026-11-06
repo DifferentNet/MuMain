@@ -307,7 +307,9 @@ namespace MUHelper
         // (SetSteered): no target, no drop, no combo step, the walk and the swing given up. When the character
         // stands with a monster close by and nothing was hit or cast for FightStallLimit, do the same, and write the
         // state it stuck in to MuError.log, so the cause can be found from a player's log.
-        if (Hero->Dead > 0 || g_isCharacterBuff((&Hero->Object), eDeBuff_Stun)
+        // A helper set up without an attack (a buffer or healer) never hits, and isn't stuck for it.
+        const bool bAttacks = m_config.aiSkill[0] > 0 || m_config.bUseCombo || m_config.bFallbackBasicAttack;
+        if (!bAttacks || Hero->Dead > 0 || g_isCharacterBuff((&Hero->Object), eDeBuff_Stun)
             || g_isCharacterBuff((&Hero->Object), eDeBuff_Sleep))
         {
             m_lastHitAt = now;
@@ -352,8 +354,8 @@ namespace MUHelper
         m_iComboState = 0;
         m_walkWatchSince = {};
         m_noTargetInReachSince = {};
+        // m_pickupPutOffSince stays: the fight wait for a far drop (PickupFightWait) still runs out.
         m_pickupSince = {};
-        m_pickupPutOffSince = {};
         m_bPickupFightTry = false;
         m_bPickupWalking = false;
         m_lastHitAt = now;
