@@ -18,6 +18,7 @@
 #include "Core/Utilities/StringUtils.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/HUD/MiniMapLayout.h"
+#include "UI/HUD/MiniMapLive.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlNativeTextSize.h"
 #include "UI/RmlBridge/RmlTheme.h"
@@ -44,6 +45,11 @@ constexpr float kMonsterSize = 12.f;
 constexpr float kBossSize = 18.f;
 // A boss label's box, physical px: wide enough for any name, the text centred under the skull.
 constexpr float kLabelWidth = 240.f;
+// A live event monster's icon, physical px (the world boss bigger), and its circle's radius in squares: a bit
+// more than half a square's diagonal, so the whole square is inside.
+constexpr float kLiveSize = 18.f;
+constexpr float kWorldBossSize = 24.f;
+constexpr float kLiveRadiusInCells = 0.75f;
 // The side border tiles: 35 x 6 reference units, 20 down each side, turned a quarter.
 constexpr float kTileWidth = 35.f;
 constexpr float kTileHeight = 6.f;
@@ -314,6 +320,19 @@ void mu::ui::window::CMiniMap::BindRmlModel(Rml::DataModelConstructor& c, MiniMa
     c.RegisterArray<std::vector<MiniMapLabelEntry>>();
     c.Bind("labels", &model.labels);
 
+    auto live = c.RegisterStruct<MiniMapLiveEntry>();
+    live.RegisterMember("gold", &MiniMapLiveEntry::gold);
+    live.RegisterMember("wizard", &MiniMapLiveEntry::wizard);
+    live.RegisterMember("wboss", &MiniMapLiveEntry::wboss);
+    live.RegisterMember("left", &MiniMapLiveEntry::left);
+    live.RegisterMember("top", &MiniMapLiveEntry::top);
+    live.RegisterMember("size", &MiniMapLiveEntry::size);
+    live.RegisterMember("area_left", &MiniMapLiveEntry::areaLeft);
+    live.RegisterMember("area_top", &MiniMapLiveEntry::areaTop);
+    live.RegisterMember("area_size", &MiniMapLiveEntry::areaSize);
+    c.RegisterArray<std::vector<MiniMapLiveEntry>>();
+    c.Bind("lives", &model.lives);
+
     c.RegisterArray<std::vector<Rml::String>>();
     c.Bind("side_lines", &model.sideLines);
     c.RegisterArray<std::vector<float>>();
@@ -345,8 +364,19 @@ void mu::ui::window::CMiniMap::SyncRmlModel()
     // (UI/RmlBridge/RmlStackingOrder.cpp) orders it as the original's layer depths did.
     UI::RmlBridge::SyncDocumentVisibilityInFront(m_RmlView.Document(), visible);
 
+    // MU Moldova: the live event monsters are asked while the map shows and forgotten when it closes.
+    if (visible != m_WasVisible)
+    {
+        m_WasVisible = visible;
+        if (!visible)
+        {
+            UI::MiniMapLive::Live().Reset();
+            m_LiveHints.clear();
+        }
+    }
     if (!visible)
         return;
+    UI::MiniMapLive::Live().Request();
 
     SyncScreen();
     SyncClips();
@@ -487,10 +517,73 @@ void mu::ui::window::CMiniMap::SyncMap()
         model.markers = std::move(markers);
         m_RmlView.MarkDirty("markers");
     }
+    SyncLive(screen, heroX, heroY, length, labels);
     if (model.labels != labels)
     {
         model.labels = std::move(labels);
         m_RmlView.MarkDirty("labels");
+    }
+}
+
+void mu::ui::window::CMiniMap::SyncLive(const UI::MiniMap::Screen& screen, float heroX, float heroY, float length,
+                                       std::vector<MiniMapLabelEntry>& labels)
+{
+    std::vector<MiniMapLiveEntry> lives;
+    m_LiveHints.clear();
+    const UI::MiniMapLive::Store& store = UI::MiniMapLive::Live();
+    if (const auto* entries = store.EntriesFor(gMapManager.WorldActive))
+    {
+        const UI::Scaling::Transform overlay = OverlayTransform();
+        // Physical px per tile; the circle takes the average of the two stretches.
+        const float pixelsPerTile = (screen.scaleX + screen.scaleY) * 0.5f * length / 256.f;
+        const float radius = static_cast<float>(store.Cell()) * kLiveRadiusInCells * pixelsPerTile;
+        for (const UI::MiniMapLive::Entry& entry : *entries)
+        {
+            const bool wboss = entry.kind == L'b';
+            const float size = wboss ? kWorldBossSize : kLiveSize;
+            // As the markers: the tile x goes into the map's y, the tile y into its x.
+            const float pointY = (static_cast<float>(entry.x) / 256.f) * length;
+            const float pointX = (static_cast<float>(entry.y) / 256.f) * length;
+            const UI::MiniMap::Marker marker = UI::MiniMap::MarkerQuad(screen, heroX, heroY, pointX, pointY, size, 0.f,
+                                                                       length, UI::MiniMap::MapRotation, false);
+            const float centreX = (marker.quad.topRight.x + marker.quad.bottomLeft.x) * 0.5f;
+            const float centreY = (marker.quad.topRight.y + marker.quad.bottomLeft.y) * 0.5f;
+
+            MiniMapLiveEntry live;
+            live.gold = entry.kind == L'g';
+            live.wizard = entry.kind == L'w';
+            live.wboss = wboss;
+            live.size = size;
+            live.left = centreX - size * 0.5f;
+            live.top = centreY - size * 0.5f;
+            live.areaSize = radius * 2.f;
+            live.areaLeft = centreX - radius;
+            live.areaTop = centreY - radius;
+            lives.push_back(live);
+
+            std::wstring text = entry.name;
+            if (entry.count > 1)
+                text += L" x" + std::to_wstring(entry.count);
+            // The White Wizard and the world boss are named under the icon; goldens show only a count.
+            if (!live.gold)
+                labels.push_back({StringUtils::WideToNarrow(text.c_str()), centreX - kLabelWidth * 0.5f,
+                                  centreY + size * 0.5f});
+            else if (entry.count > 1)
+                labels.push_back({"x" + std::to_string(entry.count), centreX - kLabelWidth * 0.5f, centreY + size * 0.5f});
+
+            const float halfX = size * 0.5f / overlay.scaleX;
+            const float halfY = size * 0.5f / overlay.scaleY;
+            m_LiveHints.push_back({{UI::Scaling::LogicalX(overlay, centreX) - halfX,
+                                    UI::Scaling::LogicalY(overlay, centreY) - halfY, halfX * 2.f, halfY * 2.f},
+                                   std::move(text)});
+        }
+    }
+
+    MiniMapRmlModel& model = m_RmlView.GetModel();
+    if (model.lives != lives)
+    {
+        model.lives = std::move(lives);
+        m_RmlView.MarkDirty("lives");
     }
 }
 
@@ -507,26 +600,42 @@ void mu::ui::window::CMiniMap::SyncHint()
     const UI::Scaling::ScopedScreenStretch screen(static_cast<int>(WindowWidth), static_cast<int>(WindowHeight));
     const float pointerX = UI::Scaling::LogicalX(transform, g_fWindowMouseX);
     const float pointerY = UI::Scaling::LogicalY(transform, g_fWindowMouseY);
-    for (int i = 0; i < MAX_MINI_MAP_DATA && !found; i++)
+    const auto holds = [&](const float* box)
+    { return pointerX > box[0] && pointerX < (box[0] + box[2]) && pointerY > box[1] && pointerY < (box[1] + box[3]); };
+    // The live event monsters first (MU Moldova, UI/HUD/MiniMapLive.h): they may stand on a spot's dot.
+    const float* box = nullptr;
+    for (const LiveHint& hint : m_LiveHints)
+    {
+        if (holds(hint.box))
+        {
+            box = hint.box;
+            name = hint.text;
+            break;
+        }
+    }
+    for (int i = 0; i < MAX_MINI_MAP_DATA && box == nullptr; i++)
     {
         if (m_Mini_Map_Data[i].Kind <= 0)
             break;
-        const float* box = m_Btn_Loc[i];
-        if (pointerX > box[0] && pointerX < (box[0] + box[2]) && pointerY > box[1] && pointerY < (box[1] + box[3]))
+        if (holds(m_Btn_Loc[i]))
         {
-            found = true;
+            box = m_Btn_Loc[i];
             name = m_Mini_Map_Data[i].Name;
             std::replace(name.begin(), name.end(), L'\t', L' '); // a boss's name and details
-            g_pRenderText->SetFont(g_hFont);
-            const SIZE size = g_pRenderText->MeasureText(name.c_str(), static_cast<int>(name.size()));
-            // The original's int / float mix: the text half-width in whole units.
-            const int x = static_cast<int>(box[0] + ((box[2] / 2) - static_cast<float>(size.cx / 2)));
-            const int y = static_cast<int>(box[1] - static_cast<float>(size.cy + 2));
-            left = UI::Scaling::PositionX(transform, static_cast<float>(x));
-            top = UI::Scaling::PositionY(transform, static_cast<float>(y));
-            width = UI::Scaling::SizeX(transform, static_cast<float>(size.cx + 6));
-            height = UI::Scaling::SizeY(transform, static_cast<float>(size.cy));
         }
+    }
+    if (box != nullptr)
+    {
+        found = true;
+        g_pRenderText->SetFont(g_hFont);
+        const SIZE size = g_pRenderText->MeasureText(name.c_str(), static_cast<int>(name.size()));
+        // The original's int / float mix: the text half-width in whole units.
+        const int x = static_cast<int>(box[0] + ((box[2] / 2) - static_cast<float>(size.cx / 2)));
+        const int y = static_cast<int>(box[1] - static_cast<float>(size.cy + 2));
+        left = UI::Scaling::PositionX(transform, static_cast<float>(x));
+        top = UI::Scaling::PositionY(transform, static_cast<float>(y));
+        width = UI::Scaling::SizeX(transform, static_cast<float>(size.cx + 6));
+        height = UI::Scaling::SizeY(transform, static_cast<float>(size.cy));
     }
 
     Sync(m_RmlView.Binder(), &MiniMapRmlModel::hintVisible, "hint_visible", found);

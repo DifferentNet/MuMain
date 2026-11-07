@@ -34,6 +34,17 @@ struct MiniMapLabelEntry
     bool operator==(const MiniMapLabelEntry&) const = default;
 };
 
+// A live event monster (MU Moldova, UI/HUD/MiniMapLive.h): its icon at the middle of the square it is in and a
+// circle around that square, physical px.
+struct MiniMapLiveEntry
+{
+    bool gold = false, wizard = false, wboss = false;
+    float left = 0.f, top = 0.f, size = 0.f;
+    float areaLeft = 0.f, areaTop = 0.f, areaSize = 0.f;
+
+    bool operator==(const MiniMapLiveEntry&) const = default;
+};
+
 struct MiniMapRmlModel
 {
     float textPx = 0.f; // native text size in physical px (RmlNativeTextSize.h)
@@ -44,6 +55,7 @@ struct MiniMapRmlModel
     Rml::String mapTransform; // CSS matrix() placing the 800x800 map element
     std::vector<MiniMapMarkerEntry> markers;
     std::vector<MiniMapLabelEntry> labels;
+    std::vector<MiniMapLiveEntry> lives;
     std::vector<Rml::String> sideLines; // CSS matrix() of each left/right border tile
     Rml::String closeHint;
 
