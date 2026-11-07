@@ -9,6 +9,7 @@
 #include "Data/GameConfig/GameConfigConstants.h"
 #include "Core/Input/GamepadInput.h"
 #include "UI/Chat/MessageType.h"
+#include "Render/Lighting/SunShadowSetting.h"
 #include "Render/Look/GraphicsPresetSetting.h"
 #include "Render/Look/LookPresetSetting.h"
 #include "Render/Look/LookProfileSetting.h"
@@ -83,7 +84,8 @@ static constexpr int kTouchButtonsDropdown = 10;
 static constexpr int kGamepadDropdown = 11;
 static constexpr int kGraphicsPresetDropdown = 12;
 static constexpr int kSharpenDropdown = 13;
-static constexpr int kLastDropdownId = kSharpenDropdown;
+static constexpr int kSunShadowsDropdown = 14;
+static constexpr int kLastDropdownId = kSunShadowsDropdown;
 // The gamepad row's choices, in its labels' order.
 static constexpr int kGamepadOnIndex = 0;
 static constexpr int kGamepadQuietIndex = 1;
@@ -216,6 +218,8 @@ static const int s_NumFpsCapValues = sizeof(s_FpsCapValues) / sizeof(s_FpsCapVal
 // ([Render] Antialiasing, Anisotropy); the first entry of each is "Off".
 static constexpr int s_AntialiasingValues[] = {0, 2, 4, 8};
 static constexpr int s_AnisotropyValues[] = {1, 2, 4, 8, 16};
+// The Sun shadows row: [Render] SunShadows, 0 off, 1 medium (2048 map), 2 high (4096 map).
+static constexpr int s_SunShadowsValues[] = {0, 1, 2};
 // The graphics preset row's presets, in its labels' order (the Custom entry is shown, never picked), and
 // the Sharpening row's percentages ([Render] Sharpen); the first entry of the latter is "Off".
 static constexpr GraphicsPreset s_GraphicsPresets[] = {GraphicsPreset::Low, GraphicsPreset::Medium,
@@ -521,6 +525,18 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     model.hdTexturesAvailable = true;
 #endif
     c.Bind("hd_textures_available", &model.hdTexturesAvailable);
+    c.Bind("sun_shadows_labels", &model.sunShadowsLabels);
+    c.Bind("sun_shadows_index", &model.sunShadowsIndex);
+    c.Bind("sun_shadows_row_label", &model.sunShadowsRowLabel);
+    c.Bind("sun_shadows_value_label", &model.sunShadowsValueLabel);
+    c.Bind("sun_shadows_tooltip", &model.sunShadowsTooltip);
+    // The browser build has no sun shadows: the row stays hidden there.
+#ifdef __EMSCRIPTEN__
+    model.sunShadowsAvailable = false;
+#else
+    model.sunShadowsAvailable = true;
+#endif
+    c.Bind("sun_shadows_available", &model.sunShadowsAvailable);
     c.Bind("sharpen_labels", &model.sharpenLabels);
     c.Bind("sharpen_index", &model.sharpenIndex);
     c.Bind("sharpen_row_label", &model.sharpenRowLabel);
@@ -988,6 +1004,9 @@ void mu::ui::window::COptionWindow::RmlDropdownOptionClick(int dropdownId, int o
         break;
     case kSharpenDropdown:
         RmlSharpenChanged(optionIndex);
+        break;
+    case kSunShadowsDropdown:
+        RmlSunShadowsChanged(optionIndex);
         break;
     case kInterfaceViewDropdown:
         RmlInterfaceViewChanged(optionIndex);
@@ -1459,6 +1478,18 @@ void mu::ui::window::COptionWindow::RmlAnisotropyChanged(int index)
     if (index < 0 || index >= static_cast<int>(std::size(s_AnisotropyValues)))
         return;
     MuSetAnisotropyPreference(s_AnisotropyValues[index]);
+    Render::Look::RefreshGraphicsPreset();
+}
+
+void mu::ui::window::COptionWindow::RmlSunShadowsChanged(int index)
+{
+    // See RmlResolutionChanged's own comment -- same settle-frame guard applies here.
+    if (m_rmlSyncCount < kRmlSelectSettleFrames)
+        return;
+    if (index < 0 || index >= static_cast<int>(std::size(s_SunShadowsValues)))
+        return;
+    GameConfig::GetInstance().SetSunShadows(s_SunShadowsValues[index]);
+    Render::Lighting::SunShadow::SetLevel(GameConfig::GetInstance().GetSunShadows());
     Render::Look::RefreshGraphicsPreset();
 }
 
@@ -1987,6 +2018,8 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.antialiasingTooltip, "antialiasing_tooltip", I18N::Game::AntiAliasingTooltip);
     syncLabel(model.anisotropyRowLabel, "anisotropy_row_label", I18N::Game::AnisotropicFiltering);
     syncLabel(model.anisotropyTooltip, "anisotropy_tooltip", I18N::Game::AnisotropicFilteringTooltip);
+    syncLabel(model.sunShadowsRowLabel, "sun_shadows_row_label", I18N::Game::SunShadowsRow);
+    syncLabel(model.sunShadowsTooltip, "sun_shadows_tooltip", I18N::Game::SunShadowsTooltip);
     syncLabel(model.showFpsCounterLabel, "show_fps_counter_label", I18N::Game::ShowFPSCounter);
     syncLabel(model.showDebugInfoLabel, "show_debug_info_label", I18N::Game::ShowDebugInfo);
     syncLabel(model.overheadPlayerNamesLabel, "overhead_player_names_label", I18N::Game::OverheadPlayerNames);
@@ -2174,6 +2207,10 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncMultiplierRow(model.anisotropyLabels, "anisotropy_labels", model.anisotropyIndex, "anisotropy_index",
                       model.anisotropyValueLabel, "anisotropy_value_label", MultiplierLabels(s_AnisotropyValues),
                       FindValueIndex(s_AnisotropyValues, GameConfig::GetInstance().GetAnisotropy()));
+    syncMultiplierRow(model.sunShadowsLabels, "sun_shadows_labels", model.sunShadowsIndex, "sun_shadows_index",
+                      model.sunShadowsValueLabel, "sun_shadows_value_label",
+                      NarrowLabels({I18N::Game::Off, I18N::Game::SunShadowsMedium, I18N::Game::SunShadowsHigh}),
+                      FindValueIndex(s_SunShadowsValues, GameConfig::GetInstance().GetSunShadows()));
     // Rebuilt every sync for a live language switch, as the rows above.
     syncMultiplierRow(model.interfaceViewLabels, "interface_view_labels", model.interfaceViewIndex,
                       "interface_view_index", model.interfaceViewValueLabel, "interface_view_value_label",

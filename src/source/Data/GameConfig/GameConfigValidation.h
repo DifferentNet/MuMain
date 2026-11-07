@@ -52,6 +52,8 @@ const wchar_t* FormatGraphicsPreset(GraphicsPreset preset);
 GraphicsPreset ValidateGraphicsPreset(std::wstring_view text);
 // [Render] Sharpen in whole percent: 0 (off) to 100.
 int ValidateSharpen(int value);
+// [Render] SunShadows: 0 (off), 1 (medium) or 2 (high).
+int ValidateSunShadows(int value);
 
 // The window size for a new installation ([Window] Width and Height 0): the largest of `modes` (width,
 // height) that fits the usable area of the screen, or a share of the usable area when none fits.

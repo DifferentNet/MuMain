@@ -139,6 +139,11 @@ int ValidateSharpen(int value)
     return std::clamp(value, CfgDefaults::CfgMinSharpen, CfgDefaults::CfgMaxSharpen);
 }
 
+int ValidateSunShadows(int value)
+{
+    return std::clamp(value, CfgDefaults::CfgMinSunShadows, CfgDefaults::CfgMaxSunShadows);
+}
+
 std::pair<int, int> ChooseWindowSize(const std::vector<std::pair<int, int>>& modes, int usableWidth, int usableHeight)
 {
     std::pair<int, int> best{0, 0};

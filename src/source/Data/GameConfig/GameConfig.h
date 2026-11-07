@@ -192,6 +192,9 @@ public:
     // [Render] HdTextures: load the upscaled copies from Data/HD where there is one (after a restart).
     bool GetHdTextures() const { return m_hdTextures; }
     void SetHdTextures(bool enabled) { m_hdTextures = enabled; }
+    // [Render] SunShadows: 0 off, 1 medium, 2 high (clamped).
+    int GetSunShadows() const { return m_sunShadows; }
+    void SetSunShadows(int level);
     int GetSharpen() const { return m_sharpen; }
     void SetSharpen(int percent);
     bool GetEnhancedLighting() const { return m_enhancedLighting; }
@@ -301,6 +304,7 @@ private:
     GraphicsPreset m_graphicsPreset = GraphicsPreset::Auto;
     bool m_fxaa = false;
     bool m_hdTextures = false;
+    int m_sunShadows = 0;
     int m_sharpen = 0;
     std::wstring m_renderBackend;
     bool m_disableEffects;

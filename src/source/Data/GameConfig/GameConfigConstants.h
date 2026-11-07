@@ -101,6 +101,8 @@ namespace CfgKeys
     // Screen filters of the finished 3D scene: FXAA (0/1) and sharpening in percent (0 to 100).
     inline constexpr wchar_t CfgKeyFxaa[] = L"Fxaa";
     inline constexpr wchar_t CfgKeyHdTextures[] = L"HdTextures";
+    // Sun shadows of the Enhanced look: 0 off, 1 medium (2048 map), 2 high (4096 map).
+    inline constexpr wchar_t CfgKeySunShadows[] = L"SunShadows";
     inline constexpr wchar_t CfgKeySharpen[] = L"Sharpen";
 
     inline constexpr wchar_t CfgKeyRenderBackend[] = L"Backend";
@@ -209,6 +211,9 @@ namespace CfgDefaults
     inline constexpr wchar_t CfgDefaultGraphicsPreset[] = L"Auto";
     inline constexpr bool CfgDefaultFxaa = false;
     inline constexpr bool CfgDefaultHdTextures = false;
+    inline constexpr int CfgDefaultSunShadows = 0;
+    inline constexpr int CfgMinSunShadows = 0;
+    inline constexpr int CfgMaxSunShadows = 2;
     inline constexpr int CfgDefaultSharpen = 0;
     inline constexpr int CfgMinSharpen = 0;
     inline constexpr int CfgMaxSharpen = 100;

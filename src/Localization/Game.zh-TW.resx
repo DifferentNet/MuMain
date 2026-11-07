@@ -13037,4 +13037,16 @@
   <data name="HdTexturesRow" xml:space="preserve">
     <value>HD 貼圖（重新啟動後生效）</value>
   </data>
+  <data name="SunShadowsRow" xml:space="preserve">
+    <value>太陽陰影</value>
+  </data>
+  <data name="SunShadowsMedium" xml:space="preserve">
+    <value>中</value>
+  </data>
+  <data name="SunShadowsHigh" xml:space="preserve">
+    <value>高</value>
+  </data>
+  <data name="SunShadowsTooltip" xml:space="preserve">
+    <value>為角色、怪物和物件投射來自太陽的真實陰影（Enhanced 外觀）。中：2048 貼圖，高：4096。關閉則維持舊的平面陰影。</value>
+  </data>
 </root>

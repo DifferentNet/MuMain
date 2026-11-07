@@ -27,6 +27,8 @@ public:
     bool SelectIndexBuffer(SDL_GPUBuffer* buffer, Uint32 offset, SDL_GPUIndexElementSize elementSize);
     bool SelectViewport(const SDL_GPUViewport& viewport);
     bool SelectScissor(const SDL_Rect& scissor);
+    // True once per pass: the sun shadow map must be bound at fragment sampler slot 1.
+    bool SelectSunShadowMap();
     void Invalidate();
 
 private:
@@ -63,5 +65,6 @@ private:
     bool m_indexBufferValid = false;
     bool m_viewportValid = false;
     bool m_scissorValid = false;
+    bool m_sunShadowMapValid = false;
 };
 }

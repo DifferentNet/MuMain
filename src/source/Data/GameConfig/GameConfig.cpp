@@ -121,6 +121,8 @@ void GameConfig::Load()
         ReadString(CfgSectionRender, CfgKeyGraphicsPreset, CfgDefaultGraphicsPreset));
     m_fxaa = ReadBool(CfgSectionRender, CfgKeyFxaa, CfgDefaultFxaa);
     m_hdTextures = ReadBool(CfgSectionRender, CfgKeyHdTextures, CfgDefaultHdTextures);
+    m_sunShadows = GameConfigValidation::ValidateSunShadows(
+        ReadInt(CfgSectionRender, CfgKeySunShadows, CfgDefaultSunShadows));
     m_sharpen = GameConfigValidation::ValidateSharpen(ReadInt(CfgSectionRender, CfgKeySharpen, CfgDefaultSharpen));
 
     m_renderBackend = GameConfigValidation::ValidateRenderBackend(
@@ -202,6 +204,7 @@ void GameConfig::Save()
     WriteString(CfgSectionRender, CfgKeyGraphicsPreset, GameConfigValidation::FormatGraphicsPreset(m_graphicsPreset));
     WriteBool(CfgSectionRender, CfgKeyFxaa, m_fxaa);
     WriteBool(CfgSectionRender, CfgKeyHdTextures, m_hdTextures);
+    WriteInt(CfgSectionRender, CfgKeySunShadows, m_sunShadows);
     WriteInt(CfgSectionRender, CfgKeySharpen, m_sharpen);
     WriteBool(CfgSectionRender, CfgKeyDisableEffects, m_disableEffects);
     WriteBool(CfgSectionRender, CfgKeyDisableParticles, m_disableParticles);
@@ -311,6 +314,11 @@ void GameConfig::SetLook(LookPreset look)
 void GameConfig::SetAnisotropy(int anisotropy)
 {
     m_anisotropy = GameConfigValidation::ValidateAnisotropy(anisotropy);
+}
+
+void GameConfig::SetSunShadows(int level)
+{
+    m_sunShadows = GameConfigValidation::ValidateSunShadows(level);
 }
 
 void GameConfig::SetAntialiasing(int samples)

@@ -11,6 +11,7 @@
 
 #include "FramePixelReadback.h"
 #include "SceneLighting.h"
+#include "SunShadow.h"
 
 #include <cstdint>
 #include <functional>
@@ -323,6 +324,20 @@ public:
     // The frame's point lights for Enhanced-lit draws (Enhanced dynamic lights). The last set in a
     // frame is the one all of that frame's draws use; set an empty block to turn them off.
     virtual void SetDynamicLights(const DynamicLightsUniform& /*lights*/) {}
+
+    // The sun's shadow for this frame (SunShadow.h). The scene sets it right after its scene
+    // lighting; a frame that does not set it has none. Only draws recorded between
+    // BeginSunShadowScope and EndSunShadowScope cast and receive it (terrain, objects, characters);
+    // see ScopedSunShadowScope.
+    virtual void SetSunShadow(const SunShadowFrame& /*frame*/) {}
+    virtual void BeginSunShadowScope() {}
+    virtual void EndSunShadowScope() {}
+    // True when this frame's sun shadow is drawn: the scene then leaves out the Classic flat
+    // shadows it would draw instead.
+    [[nodiscard]] virtual bool IsSunShadowActive() const
+    {
+        return false;
+    }
 
     // Select Enhanced (per-pixel lighting and fog) or Classic pipelines for the following frames.
     // Returns false when Enhanced lighting was requested but this backend could not build it; the
@@ -778,6 +793,21 @@ public:
     }
     ScopedScreenSpaceSampling(const ScopedScreenSpaceSampling&) = delete;
     ScopedScreenSpaceSampling& operator=(const ScopedScreenSpaceSampling&) = delete;
+};
+// The draws recorded in its lifetime cast and receive the frame's sun shadow.
+class ScopedSunShadowScope
+{
+public:
+    ScopedSunShadowScope()
+    {
+        GetRenderer().BeginSunShadowScope();
+    }
+    ~ScopedSunShadowScope()
+    {
+        GetRenderer().EndSunShadowScope();
+    }
+    ScopedSunShadowScope(const ScopedSunShadowScope&) = delete;
+    ScopedSunShadowScope& operator=(const ScopedSunShadowScope&) = delete;
 };
 class ScopedBloomExclusion
 {

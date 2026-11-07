@@ -13037,4 +13037,16 @@
   <data name="HdTexturesRow" xml:space="preserve">
     <value>HD-текстури (після перезапуску)</value>
   </data>
+  <data name="SunShadowsRow" xml:space="preserve">
+    <value>Тіні від сонця</value>
+  </data>
+  <data name="SunShadowsMedium" xml:space="preserve">
+    <value>Середні</value>
+  </data>
+  <data name="SunShadowsHigh" xml:space="preserve">
+    <value>Високі</value>
+  </data>
+  <data name="SunShadowsTooltip" xml:space="preserve">
+    <value>Справжні тіні від сонця у персонажів, монстрів і об’єктів (вигляд Enhanced). Середні: карта 2048, високі: 4096. Вимк. — старі пласкі тіні.</value>
+  </data>
 </root>

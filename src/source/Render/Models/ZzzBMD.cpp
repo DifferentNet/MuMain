@@ -39,6 +39,7 @@
 #include "Core/Utilities/FrameProfiler.h"
 #include "Scenes/MainScene.h"
 #include "Render/Lighting/LightMoodSetting.h"
+#include "Render/Lighting/SunShadowSetting.h"
 
 using mu::PackABGR;
 
@@ -2935,7 +2936,8 @@ bool BMD::RenderGpuMeshShadow(const int blendMesh, const int hiddenMesh, const i
 void BMD::RenderBodyShadow(const int blendMesh, const int hiddenMesh, const int startMeshNumber,
     const int endMeshNumber, void* pClothes, const int clothesCount, const float alpha)
 {
-    if (!g_pOption->GetRenderAllEffects() || IsBodyShadowsDisabledDebug())
+    // The sun shadow casts the real shape instead of the flat Classic one.
+    if (!g_pOption->GetRenderAllEffects() || IsBodyShadowsDisabledDebug() || Render::Lighting::SunShadow::Active())
     {
         return;
     }

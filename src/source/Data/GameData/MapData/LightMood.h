@@ -31,6 +31,15 @@
 //   brightScale  optional, 0.3 to 1 (default, Classic): the scale places at the
 //                shadow keep get, never below base (figures: never below the
 //                figure scale); only with a shadow keep.
+//   sunAzimuth   optional, 0 to 360 degrees (default 315, the Classic terrain
+//                light): where the sun of the sun shadows stands, counted from
+//                the map's +X axis towards +Y.
+//   sunElevation optional, 20 to 85 degrees (default 40): its height above the
+//                horizon; low suns cast long shadows.
+//   sunShadow    optional, 0 to 1 (default 0.45): the share of the light a
+//                place in full sun shadow loses; 0 casts none on the map.
+//   sunSoftness  optional, 0.5 to 4 (default 1.5): the soft edge of the
+//                shadows, in shadow map texels.
 // "default" has all five and applies to every map without an entry. A map
 // entry names its world number and overrides any of them; "name" is for the
 // reader only.
@@ -46,6 +55,10 @@ struct LightMood
     double shadowKeep = 0.0;
     double shadeCool = 0.0;
     double brightScale = 1.0;
+    double sunAzimuth = 315.0;
+    double sunElevation = 40.0;
+    double sunShadow = 0.45;
+    double sunSoftness = 1.5;
 
     bool operator==(const LightMood&) const = default;
 };
@@ -88,7 +101,7 @@ struct LightMoodValueInfo
     double max;
 };
 
-constexpr std::size_t LightMoodValueCount = 8;
+constexpr std::size_t LightMoodValueCount = 12;
 [[nodiscard]] const std::array<LightMoodValueInfo, LightMoodValueCount>& LightMoodValueInfos();
 // The value with that key in the file, if there is one.
 [[nodiscard]] const LightMoodValueInfo* FindLightMoodValue(std::string_view key);

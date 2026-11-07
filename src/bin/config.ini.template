@@ -33,6 +33,7 @@ Look=Enhanced
 GraphicsPreset=Auto
 Fxaa=0
 HdTextures=0
+SunShadows=0
 Sharpen=0
 Anisotropy=8
 Antialiasing=4

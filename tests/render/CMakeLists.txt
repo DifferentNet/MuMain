@@ -135,6 +135,16 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/HdTexturePath.cpp
 )
 
+# The sun shadow's box, uniform and the frame a map's mood gives.
+mu_add_test(
+    NAME sun_shadow_tests
+    SOURCES
+        test_sun_shadow.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/App/Platform/Windows/Winmain.cpp
+    LINK_LIBS
+        MuClient
+)
+
 mu_add_test(
     NAME sdl_gpu_validation_tests
     SOURCES

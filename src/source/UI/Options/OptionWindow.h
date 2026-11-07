@@ -125,7 +125,7 @@ namespace mu::ui::window
         // Custom-dropdown mechanism (option_window.rml's own .option-dropdown family; RmlUi's
         // native <select> isn't used here) -- dropdownId is 0=resolution,1=fpsCap,2=theme,
         // 3=language,4=font,5=uiScale,6=antialiasing,7=anisotropy,8=interfaceView,9=controls,
-        // 10=touchButtons,11=gamepad, matching model.openDropdown's
+        // 10=touchButtons,11=gamepad,12=graphicsPreset,13=sharpen,14=sunShadows, matching model.openDropdown's
         // own comment (OptionWindow.h).
         // RmlDropdownOptionClick dispatches to RmlResolutionChanged()/RmlFpsCapChanged()/etc. per
         // dropdownId.
@@ -189,6 +189,8 @@ namespace mu::ui::window
         void RmlToggleHdTextures();
         void RmlSharpenChanged(int index);
         void RmlAnisotropyChanged(int index);
+        // [Render] SunShadows (dropdown 14): applied at once, part of the graphics presets.
+        void RmlSunShadowsChanged(int index);
         // Interface/UI tab -- Show FPS Counter/Show Debug Info stay ephemeral (SceneManager.h
         // globals, no GameConfig persistence), matching $fpscounter/$details today.
         void RmlToggleShowFpsCounter();
@@ -258,7 +260,7 @@ namespace mu::ui::window
             // field rather than one bool per dropdown gives exclusivity for free -- opening one
             // overwrites whichever other id was here, no separate "close the others" step needed.
             // 0=resolution, 1=fpsCap, 2=theme, 3=language, 4=font, 5=uiScale, 6=antialiasing,
-            // 7=anisotropy, 8=interfaceView, 9=controls, 10=touchButtons, 11=gamepad (RmlToggleDropdown()/
+            // 7=anisotropy, 8=interfaceView, 9=controls, 10=touchButtons, 11=gamepad, 12=graphicsPreset, 13=sharpen, 14=sunShadows (RmlToggleDropdown()/
             // RmlDropdownOptionClick()'s own ids). Replaces RmlUi's native <select>/<option>
             // (WidgetDropDown) entirely -- see option_window.rml's own history for why: that
             // widget's own generated selectbox/selectvalue/selectarrow sub-elements need CSS this
@@ -389,6 +391,13 @@ namespace mu::ui::window
             Rml::String anisotropyRowLabel;
             Rml::String anisotropyValueLabel;
             Rml::String anisotropyTooltip;
+            // [Render] SunShadows: Off / Medium / High; no row in the browser build.
+            std::vector<Rml::String> sunShadowsLabels;
+            int sunShadowsIndex = 0;
+            bool sunShadowsAvailable = true;
+            Rml::String sunShadowsRowLabel;
+            Rml::String sunShadowsValueLabel;
+            Rml::String sunShadowsTooltip;
 
             // Interface/UI tab.
             bool showFpsCounter = false;

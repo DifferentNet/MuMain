@@ -15,12 +15,12 @@ struct PresetRow
     GraphicsSettings settings;
 };
 
-// look, lighting, dynamic lights, light mood, post-processing, anti-aliasing, FXAA, sharpen, anisotropy.
+// look, lighting, dynamic lights, light mood, post-processing, anti-aliasing, FXAA, sharpen, anisotropy, sun shadows.
 constexpr std::array<PresetRow, 4> PresetRows{{
-    {GraphicsPreset::Low, {LookPreset::Classic, false, false, false, false, 0, false, 0, 1}},
-    {GraphicsPreset::Medium, {LookPreset::Enhanced, true, false, true, true, 0, true, 30, 4}},
-    {GraphicsPreset::High, {LookPreset::Enhanced, true, true, true, true, 4, false, 30, 8}},
-    {GraphicsPreset::Ultra, {LookPreset::Enhanced, true, true, true, true, 8, false, 30, 16}},
+    {GraphicsPreset::Low, {LookPreset::Classic, false, false, false, false, 0, false, 0, 1, 0}},
+    {GraphicsPreset::Medium, {LookPreset::Enhanced, true, false, true, true, 0, true, 30, 4, 0}},
+    {GraphicsPreset::High, {LookPreset::Enhanced, true, true, true, true, 4, false, 30, 8, 1}},
+    {GraphicsPreset::Ultra, {LookPreset::Enhanced, true, true, true, true, 8, false, 30, 16, 2}},
 }};
 
 std::string Lowercase(std::string_view text)

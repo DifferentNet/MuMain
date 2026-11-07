@@ -273,6 +273,10 @@ set(shader_specs
     "post_bloom_down.frag|frag||1|0|1"
     "post_bloom_up.frag|frag||1|0|1"
     "post_composite.frag|frag||3|0|1"
+    "basic_textured_world.vert|vert|0,1,2|0|0|2"
+    "basic_textured_fog_shadow.frag|frag||2|0|2"
+    "skinned_lit_shadow.frag|frag||2|0|3"
+    "shadow_caster.frag|frag||1|0|1"
 )
 
 foreach(shader_spec IN LISTS shader_specs)

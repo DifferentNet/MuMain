@@ -13037,4 +13037,16 @@
   <data name="HdTexturesRow" xml:space="preserve">
     <value>Texturas HD (tras reiniciar)</value>
   </data>
+  <data name="SunShadowsRow" xml:space="preserve">
+    <value>Sombras del sol</value>
+  </data>
+  <data name="SunShadowsMedium" xml:space="preserve">
+    <value>Medias</value>
+  </data>
+  <data name="SunShadowsHigh" xml:space="preserve">
+    <value>Altas</value>
+  </data>
+  <data name="SunShadowsTooltip" xml:space="preserve">
+    <value>Sombras reales del sol en personajes, monstruos y objetos (aspecto Enhanced). Medias: mapa de 2048, altas: 4096. Desactivado mantiene las sombras planas clásicas.</value>
+  </data>
 </root>

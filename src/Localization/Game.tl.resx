@@ -13037,4 +13037,16 @@
   <data name="HdTexturesRow" xml:space="preserve">
     <value>HD textures (pagkatapos mag-restart)</value>
   </data>
+  <data name="SunShadowsRow" xml:space="preserve">
+    <value>Anino ng araw</value>
+  </data>
+  <data name="SunShadowsMedium" xml:space="preserve">
+    <value>Katamtaman</value>
+  </data>
+  <data name="SunShadowsHigh" xml:space="preserve">
+    <value>Mataas</value>
+  </data>
+  <data name="SunShadowsTooltip" xml:space="preserve">
+    <value>Totoong anino mula sa araw sa mga karakter, halimaw at bagay (Enhanced look). Katamtaman: 2048 na mapa, Mataas: 4096. Ang Off ay nagpapanatili ng dating patag na anino.</value>
+  </data>
 </root>

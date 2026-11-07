@@ -11112,4 +11112,16 @@
   <data name="HdTexturesRow" xml:space="preserve">
     <value>HDテクスチャ（再起動後）</value>
   </data>
+  <data name="SunShadowsRow" xml:space="preserve">
+    <value>太陽の影</value>
+  </data>
+  <data name="SunShadowsMedium" xml:space="preserve">
+    <value>中</value>
+  </data>
+  <data name="SunShadowsHigh" xml:space="preserve">
+    <value>高</value>
+  </data>
+  <data name="SunShadowsTooltip" xml:space="preserve">
+    <value>キャラクター、モンスター、オブジェクトに太陽からのリアルな影を落とします（Enhanced ルック）。中：2048 マップ、高：4096。オフの場合は従来の平面的な影になります。</value>
+  </data>
 </root>
