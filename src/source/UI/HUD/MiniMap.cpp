@@ -1,5 +1,6 @@
 
 #include "stdafx.h"
+#include <algorithm>
 #include "UI/Placement/WindowPlacement.h"
 #include "I18N/All.h"
 
@@ -40,6 +41,9 @@ constexpr int kMapAreaHeight = 430;
 constexpr float kNpcSize = 15.f;
 constexpr float kPortalSize = 30.f;
 constexpr float kMonsterSize = 12.f;
+constexpr float kBossSize = 18.f;
+// A boss label's box, physical px: wide enough for any name, the text centred under the skull.
+constexpr float kLabelWidth = 240.f;
 // The side border tiles: 35 x 6 reference units, 20 down each side, turned a quarter.
 constexpr float kTileWidth = 35.f;
 constexpr float kTileHeight = 6.f;
@@ -83,11 +87,13 @@ UI::MiniMap::Screen CurrentScreen()
 }
 
 // The marker the original drew: Kind 1 an NPC (hidden in Crywolf while it is occupied, but the
-// one at 228/48), Kind 2 a gate. Kind 3 is ours: where monsters of one kind live (MU Moldova's
-// Minimap_*.bmd files, written by scripts/minimap-spots.py in DifferentNet/mu-moldova).
+// one at 228/48), Kind 2 a gate. Kinds 3 and 4 are ours: where monsters of one kind live, and a boss
+// (MU Moldova's Minimap_*.bmd files, written by scripts/minimap-spots.py in DifferentNet/mu-moldova).
+// A boss's name is "<name>, a tab, <level and respawn>": the label shows the part before the tab, the
+// hint all of it.
 bool MarkerDrawn(const MINI_MAP& data)
 {
-    if (data.Kind == 2 || data.Kind == 3)
+    if (data.Kind == 2 || data.Kind == 3 || data.Kind == 4)
         return true;
     return !(gMapManager.WorldActive == WD_34CRYWOLF_1ST && m_OccupationState > 0) ||
            (data.Location[0] == 228 && data.Location[1] == 48 && gMapManager.WorldActive == WD_34CRYWOLF_1ST);
@@ -295,10 +301,18 @@ void mu::ui::window::CMiniMap::BindRmlModel(Rml::DataModelConstructor& c, MiniMa
     auto marker = c.RegisterStruct<MiniMapMarkerEntry>();
     marker.RegisterMember("portal", &MiniMapMarkerEntry::portal);
     marker.RegisterMember("monster", &MiniMapMarkerEntry::monster);
+    marker.RegisterMember("boss", &MiniMapMarkerEntry::boss);
     marker.RegisterMember("size", &MiniMapMarkerEntry::size);
     marker.RegisterMember("transform", &MiniMapMarkerEntry::transform);
     c.RegisterArray<std::vector<MiniMapMarkerEntry>>();
     c.Bind("markers", &model.markers);
+
+    auto label = c.RegisterStruct<MiniMapLabelEntry>();
+    label.RegisterMember("text", &MiniMapLabelEntry::text);
+    label.RegisterMember("left", &MiniMapLabelEntry::left);
+    label.RegisterMember("top", &MiniMapLabelEntry::top);
+    c.RegisterArray<std::vector<MiniMapLabelEntry>>();
+    c.Bind("labels", &model.labels);
 
     c.RegisterArray<std::vector<Rml::String>>();
     c.Bind("side_lines", &model.sideLines);
@@ -417,18 +431,21 @@ void mu::ui::window::CMiniMap::SyncMap()
          MatrixText(UI::MiniMap::ElementToQuad(
              UI::MiniMap::MapQuad(screen, heroX, heroY, length, UI::MiniMap::MapRotation), length, length)));
 
+    const UI::Scaling::Transform overlay = OverlayTransform();
     std::vector<MiniMapMarkerEntry> markers;
+    std::vector<MiniMapLabelEntry> labels;
     for (int i = 0; i < MAX_MINI_MAP_DATA; i++)
     {
         const MINI_MAP& data = m_Mini_Map_Data[i];
         if (data.Kind <= 0)
             break;
-        if (data.Kind != 1 && data.Kind != 2 && data.Kind != 3)
+        if (data.Kind > 4)
             continue;
 
         const bool portal = data.Kind == 2;
         const bool monster = data.Kind == 3;
-        const float size = portal ? kPortalSize : monster ? kMonsterSize : kNpcSize;
+        const bool boss = data.Kind == 4;
+        const float size = portal ? kPortalSize : monster ? kMonsterSize : boss ? kBossSize : kNpcSize;
         const float pointY = (static_cast<float>(data.Location[0]) / 256.f) * length;
         const float pointX = (static_cast<float>(data.Location[1]) / 256.f) * length;
         const UI::MiniMap::Marker marker =
@@ -436,21 +453,44 @@ void mu::ui::window::CMiniMap::SyncMap()
                                     length, UI::MiniMap::MapRotation, portal);
         if (!MarkerDrawn(data))
             continue;
-        // The original stored the name hint's box of every marker it drew.
-        SetBtnPos(i, marker.hitBox[0], marker.hitBox[1], marker.hitBox[2], marker.hitBox[3]);
-        markers.push_back({portal, monster, size, MatrixText(UI::MiniMap::ElementToQuad(marker.quad, size, size))});
+        if (boss)
+        {
+            // The skull stays upright, so its centre is halfway between two opposite corners. Its hint
+            // box is the whole icon (the original's boxes start at a corner), in reference units.
+            const float centreX = (marker.quad.topRight.x + marker.quad.bottomLeft.x) * 0.5f;
+            const float centreY = (marker.quad.topRight.y + marker.quad.bottomLeft.y) * 0.5f;
+            const float halfX = size * 0.5f / overlay.scaleX;
+            const float halfY = size * 0.5f / overlay.scaleY;
+            SetBtnPos(i, UI::Scaling::LogicalX(overlay, centreX) - halfX,
+                      UI::Scaling::LogicalY(overlay, centreY) - halfY, halfX * 2.f, halfY * 2.f);
+            const std::wstring name(data.Name);
+            labels.push_back({StringUtils::WideToNarrow(name.substr(0, name.find(L'\t')).c_str()),
+                              centreX - kLabelWidth * 0.5f, centreY + size * 0.5f});
+        }
+        else
+        {
+            // The original stored the name hint's box of every marker it drew.
+            SetBtnPos(i, marker.hitBox[0], marker.hitBox[1], marker.hitBox[2], marker.hitBox[3]);
+        }
+        markers.push_back(
+            {portal, monster, boss, size, MatrixText(UI::MiniMap::ElementToQuad(marker.quad, size, size))});
     }
 
     MiniMapRmlModel& model = m_RmlView.GetModel();
     const bool same = model.markers.size() == markers.size() &&
                       std::equal(markers.begin(), markers.end(), model.markers.begin(),
                                  [](const MiniMapMarkerEntry& a, const MiniMapMarkerEntry& b)
-                                 { return a.portal == b.portal && a.monster == b.monster && a.size == b.size &&
-                                          a.transform == b.transform; });
+                                 { return a.portal == b.portal && a.monster == b.monster && a.boss == b.boss &&
+                                          a.size == b.size && a.transform == b.transform; });
     if (!same)
     {
         model.markers = std::move(markers);
         m_RmlView.MarkDirty("markers");
+    }
+    if (model.labels != labels)
+    {
+        model.labels = std::move(labels);
+        m_RmlView.MarkDirty("labels");
     }
 }
 
@@ -476,6 +516,7 @@ void mu::ui::window::CMiniMap::SyncHint()
         {
             found = true;
             name = m_Mini_Map_Data[i].Name;
+            std::replace(name.begin(), name.end(), L'\t', L' '); // a boss's name and details
             g_pRenderText->SetFont(g_hFont);
             const SIZE size = g_pRenderText->MeasureText(name.c_str(), static_cast<int>(name.size()));
             // The original's int / float mix: the text half-width in whole units.

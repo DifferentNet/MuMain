@@ -20,8 +20,18 @@ struct MiniMapMarkerEntry
 {
     bool portal = false;   // MINI_MAP::Kind 2 (a gate), else an NPC
     bool monster = false;  // MINI_MAP::Kind 3 (where monsters of one kind live, MU Moldova)
+    bool boss = false;     // MINI_MAP::Kind 4 (a boss on its own spot, MU Moldova): a skull
     float size = 15.f;     // the icon's side, physical px (the original never scaled it)
     Rml::String transform; // CSS matrix() placing the icon element
+};
+
+// A boss marker's name, always shown under its skull (MU Moldova), physical px.
+struct MiniMapLabelEntry
+{
+    Rml::String text;
+    float left = 0.f, top = 0.f;
+
+    bool operator==(const MiniMapLabelEntry&) const = default;
 };
 
 struct MiniMapRmlModel
@@ -33,6 +43,7 @@ struct MiniMapRmlModel
     Rml::String mapSource;    // the world's mini_map texture, relative to the document
     Rml::String mapTransform; // CSS matrix() placing the 800x800 map element
     std::vector<MiniMapMarkerEntry> markers;
+    std::vector<MiniMapLabelEntry> labels;
     std::vector<Rml::String> sideLines; // CSS matrix() of each left/right border tile
     Rml::String closeHint;
 
