@@ -59,6 +59,9 @@ using Clock = std::chrono::steady_clock;
 
 // The pace of the walk packets and of the other actions: the control socket's and the MU Helper's.
 constexpr auto WalkRepeat = std::chrono::milliseconds(300);
+// A turn of the joystick, or a fresh push, sends its walk sooner: at 300 ms a turn lagged behind the
+// thumb. The server charges a walk the tiles walked, not the packets (the walk budget).
+constexpr auto TurnRepeat = std::chrono::milliseconds(120);
 constexpr auto ActionRepeat = std::chrono::milliseconds(250);
 // How long a monster that could not be fought (behind a wall, out of reach) is passed over.
 constexpr auto ForgetTime = std::chrono::seconds(3);
@@ -94,7 +97,7 @@ constexpr int ShortestTeleport = 2;
 constexpr int StickTiles = 4;
 constexpr int ShortStickTiles = 2;
 // The joystick turned this far (radians) from the walk under way: a new walk at once.
-constexpr float TurnToReplan = 0.5f;
+constexpr float TurnToReplan = 0.35f;
 // A walk with this many steps left is extended before the character stops.
 constexpr int StepsLeftToReplan = 2;
 
@@ -1114,9 +1117,9 @@ void Steer(float screenX, float screenY)
         return;
 
     const auto now = Clock::now();
-    if (now - g_steering.lastWalk < WalkRepeat)
-        return;
     const bool turned = !g_steering.active || dirX * g_steering.dirX + dirY * g_steering.dirY < std::cos(TurnToReplan);
+    if (now - g_steering.lastWalk < (turned ? TurnRepeat : WalkRepeat))
+        return;
     if (!turned && StepsLeft() > StepsLeftToReplan)
         return;
 
@@ -1468,10 +1471,10 @@ void Reset()
     SteerHelper(false);
 }
 
-void CycleTarget(int step)
+bool CycleTarget(int step)
 {
     if (!InWorld())
-        return;
+        return false;
     // By distance, then by key: two at the same distance keep their order between presses.
     std::vector<std::pair<int, int>> foes;
     for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
@@ -1492,11 +1495,11 @@ void CycleTarget(int step)
                 meets.emplace_back(TilesTo(character), character->Key);
         }
         if (meets.empty())
-            return;
+            return false;
         std::sort(meets.begin(), meets.end());
         g_meetKey = NextInRound(meets, MeetIndex() >= 0 ? g_meetKey : NoTarget, step);
         g_chosenKey = NoTarget;
-        return;
+        return true;
     }
     g_meetKey = NoTarget;
     std::sort(foes.begin(), foes.end());
@@ -1504,6 +1507,7 @@ void CycleTarget(int step)
     if (current == NoTarget && TargetIndex() >= 0)
         current = CharactersClient[TargetIndex()].Key;
     g_chosenKey = g_targetKey = NextInRound(foes, current, step);
+    return true;
 }
 
 void ClearChosenTarget()

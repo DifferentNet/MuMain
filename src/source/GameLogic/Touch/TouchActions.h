@@ -120,8 +120,9 @@ Progress PickUpNearest();
 // attack. ClearChosenTarget goes back to the nearest.
 // Where no foe is near (a town), it picks the NPCs and the other players around instead, by distance
 // the same way: MeetIndex is the one chosen (an index in CharactersClient), -1 for none, for the pad's
-// A to talk to the NPC or open the player's menu, and for the world to light it.
-void CycleTarget(int step);
+// A to talk to the NPC or open the player's menu, and for the world to light it. False when there was
+// none to pick.
+bool CycleTarget(int step);
 void ClearChosenTarget();
 [[nodiscard]] int MeetIndex();
 // Walks the character up to that one: true once within `distance` (the world's units, a tile is
