@@ -4128,6 +4128,10 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
         TextListColor[TextNum] = TEXT_COLOR_WHITE; TextBold[TextNum] = false; TextNum++;
         mu_swprintf(TextList[TextNum], I18N::Game::JewelOfAncientDescMix);
         TextListColor[TextNum] = TEXT_COLOR_WHITE; TextBold[TextNum] = false; TextNum++;
+        mu_swprintf(TextList[TextNum], I18N::Game::JewelOfAncientDescFail);
+        TextListColor[TextNum] = TEXT_COLOR_WHITE; TextBold[TextNum] = false; TextNum++;
+        mu_swprintf(TextList[TextNum], I18N::Game::JewelOfAncientDescHigh);
+        TextListColor[TextNum] = TEXT_COLOR_WHITE; TextBold[TextNum] = false; TextNum++;
     }
     else if (ip->Type == ITEM_JEWEL_OF_FATE)
     {
