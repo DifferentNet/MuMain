@@ -191,6 +191,20 @@ public:
     {
         return (m_oOwner);
     }
+    // The cloth's two textures, for drawing it in another colour for a while (ancient sets, ZzzObject.cpp).
+    int GetTexFront() const
+    {
+        return m_iTexFront;
+    }
+    int GetTexBack() const
+    {
+        return m_iTexBack;
+    }
+    void SetTextures(int iTexFront, int iTexBack)
+    {
+        m_iTexFront = iTexFront;
+        m_iTexBack = iTexBack;
+    }
 
 protected:
     float m_fUnitWidth, m_fUnitHeight;

@@ -7386,7 +7386,13 @@ void RenderPartObject(OBJECT* o, int Type, void* p2, vec3_t Light, float Alpha, 
                     }
                     else
                     {
+                        // An ancient set's cloth takes the set's colour too (Grand Soul pants: Alvis).
+                        const int front = pCloth->GetTexFront();
+                        const int back = pCloth->GetTexBack();
+                        pCloth->SetTextures(static_cast<int>(Render::Items::AncientColors::PartTexture(front)),
+                                            static_cast<int>(Render::Items::AncientColors::PartTexture(back)));
                         pCloth->Render();
+                        pCloth->SetTextures(front, back);
                     }
                 }
             }

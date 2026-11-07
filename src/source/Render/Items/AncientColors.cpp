@@ -80,6 +80,22 @@ GLuint CopyOf(const BMD& model, int mesh, const SetColor& color)
     g_copies.emplace(key, copy);
     return copy;
 }
+
+// The recoloured copy of a texture that belongs to no mesh (a cloth's); BITMAP_UNKNOWN when it keeps its look.
+GLuint CopyOfTexture(GLuint texture, const SetColor& color)
+{
+    const std::uint64_t key = KeyOf(texture, color.set);
+    if (const auto known = g_copies.find(key); known != g_copies.end())
+        return known->second;
+
+    const BITMAP_t* bitmap = Bitmaps.FindTexture(texture);
+    // A copy made earlier (a cloth created while its model was recoloured) is not copied again.
+    const bool keeps = bitmap == nullptr || bitmap->IsSkin || bitmap->IsHair || KeepsTexture(bitmap->FileName) ||
+                       std::wstring_view(bitmap->FileName).find(L"|ancient") != std::wstring_view::npos;
+    const GLuint copy = keeps ? BITMAP_UNKNOWN : MakeCopy(*bitmap, color);
+    g_copies.emplace(key, copy);
+    return copy;
+}
 } // namespace
 
 int SetOfBodyPart(const CHARACTER* c, int bodyPart)
@@ -135,6 +151,14 @@ ScopedSetTextures::~ScopedSetTextures()
         m_model->IndexTexture[mesh] = texture;
     g_drawnColor = static_cast<const SetColor*>(m_previousColor);
     g_partSet = m_partSet;
+}
+
+std::uint32_t PartTexture(std::uint32_t texture)
+{
+    if (g_drawnColor == nullptr)
+        return texture;
+    const GLuint copy = CopyOfTexture(texture, *g_drawnColor);
+    return copy == BITMAP_UNKNOWN ? texture : copy;
 }
 
 bool PulseColor(float color[3])
