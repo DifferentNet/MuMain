@@ -137,6 +137,10 @@ namespace SEASON3A
         MIXID_ANCIENT_JEWEL_PLUS_15 = 52,
         MIXID_EXCELLENT_DUST_DISTIL = 53,
         MIXID_EXCELLENT_DUST_ITEM = 54,
+        MIXID_ANCIENT_JEWEL_PLUS_10 = 55,
+        MIXID_ANCIENT_JEWEL_PLUS_11 = 56,
+        MIXID_ANCIENT_JEWEL_PLUS_12 = 57,
+        MIXID_ANCIENT_JEWEL_PLUS_13 = 58,
     };
 
     // MU Moldova: Excellent Dust (2026-11-04; server/addons/src/ExcellentDust.cs): 53 distils excellent weapons, armour
@@ -165,6 +169,8 @@ namespace SEASON3A
         case MIXID_ITEM_PLUS_10: case MIXID_ITEM_PLUS_11: case MIXID_ITEM_PLUS_12: case MIXID_ITEM_PLUS_13:
         case MIXID_ITEM_PLUS_14: case MIXID_ITEM_PLUS_15:
         case MIXID_ANCIENT_JEWEL_PLUS_14: case MIXID_ANCIENT_JEWEL_PLUS_15:
+        case MIXID_ANCIENT_JEWEL_PLUS_10: case MIXID_ANCIENT_JEWEL_PLUS_11:
+        case MIXID_ANCIENT_JEWEL_PLUS_12: case MIXID_ANCIENT_JEWEL_PLUS_13:
             return true;
         default:
             return false;

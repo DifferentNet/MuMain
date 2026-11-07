@@ -14047,7 +14047,7 @@
     <value>Full excellent set bonus (Box of Kundun +%d, every piece worn):</value>
   </data>
   <data name="JewelOfAncientDesc" xml:space="preserve">
-    <value>Raises an ancient item +13 to +14 and +15</value>
+    <value>Raises an ancient item from +9 to +15</value>
   </data>
   <data name="JewelOfAncientDescMix" xml:space="preserve">
     <value>in the Chaos Machine (Chaos Goblin).</value>
@@ -14059,7 +14059,7 @@
     <value>in the Chaos Machine, one jewel per attempt.</value>
   </data>
   <data name="JewelOfFateDescAncient" xml:space="preserve">
-    <value>With a Jewel of Ancient: ancient +14 and +15.</value>
+    <value>With a Jewel of Ancient: ancient +10 to +15.</value>
   </data>
   <data name="JewelOfAncientMix14" xml:space="preserve">
     <value>+14 with Jewel of Ancient</value>
@@ -14124,6 +14124,34 @@
   <data name="ExcellentDustItemDesc3" xml:space="preserve">
     <value>2 options 70 %, 3 options 30 %.</value>
     <comment>legacy_id=3915</comment>
+  </data>
+  <data name="AncientJoaUpgradeName10" xml:space="preserve">
+    <value>Ancient +10 with Jewel of Ancient</value>
+    <comment>legacy_id=3916</comment>
+  </data>
+  <data name="AncientJoaUpgradeName11" xml:space="preserve">
+    <value>Ancient +11 with Jewel of Ancient</value>
+    <comment>legacy_id=3917</comment>
+  </data>
+  <data name="AncientJoaUpgradeName12" xml:space="preserve">
+    <value>Ancient +12 with Jewel of Ancient</value>
+    <comment>legacy_id=3918</comment>
+  </data>
+  <data name="AncientJoaUpgradeName13" xml:space="preserve">
+    <value>Ancient +13 with Jewel of Ancient</value>
+    <comment>legacy_id=3919</comment>
+  </data>
+  <data name="AncientJoaUpgradeDesc1" xml:space="preserve">
+    <value>On failure the ancient item</value>
+    <comment>legacy_id=3920</comment>
+  </data>
+  <data name="AncientJoaUpgradeDesc2" xml:space="preserve">
+    <value>loses 1 level, doesn't burn.</value>
+    <comment>legacy_id=3921</comment>
+  </data>
+  <data name="AncientJoaUpgradeDesc3" xml:space="preserve">
+    <value>Fate 100 %; jewels, zen used up.</value>
+    <comment>legacy_id=3922</comment>
   </data>
   <data name="GmPanelTitleAdmin" xml:space="preserve">
     <value>GM panel - admin</value>

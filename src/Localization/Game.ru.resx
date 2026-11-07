@@ -13670,7 +13670,7 @@
     <value>Бонус полного экселент-сета (Box of Kundun +%d, надеты все части):</value>
   </data>
   <data name="JewelOfAncientDesc" xml:space="preserve">
-    <value>Поднимает ancient-вещь с +13 до +14 и +15</value>
+    <value>Поднимает ancient-вещь с +9 до +15</value>
   </data>
   <data name="JewelOfAncientDescMix" xml:space="preserve">
     <value>в Chaos Machine (Chaos Goblin).</value>
@@ -13682,7 +13682,7 @@
     <value>в Chaos Machine, один камень на попытку.</value>
   </data>
   <data name="JewelOfFateDescAncient" xml:space="preserve">
-    <value>С Jewel of Ancient: ancient +14 и +15.</value>
+    <value>С Jewel of Ancient: ancient с +10 до +15.</value>
   </data>
   <data name="JewelOfAncientMix14" xml:space="preserve">
     <value>+14 с Jewel of Ancient</value>
@@ -13747,6 +13747,34 @@
   <data name="ExcellentDustItemDesc3" xml:space="preserve">
     <value>2 опции 70 %, 3 опции 30 %.</value>
     <comment>legacy_id=3915</comment>
+  </data>
+  <data name="AncientJoaUpgradeName10" xml:space="preserve">
+    <value>Ancient +10 с Jewel of Ancient</value>
+    <comment>legacy_id=3916</comment>
+  </data>
+  <data name="AncientJoaUpgradeName11" xml:space="preserve">
+    <value>Ancient +11 с Jewel of Ancient</value>
+    <comment>legacy_id=3917</comment>
+  </data>
+  <data name="AncientJoaUpgradeName12" xml:space="preserve">
+    <value>Ancient +12 с Jewel of Ancient</value>
+    <comment>legacy_id=3918</comment>
+  </data>
+  <data name="AncientJoaUpgradeName13" xml:space="preserve">
+    <value>Ancient +13 с Jewel of Ancient</value>
+    <comment>legacy_id=3919</comment>
+  </data>
+  <data name="AncientJoaUpgradeDesc1" xml:space="preserve">
+    <value>При провале ancient-вещь</value>
+    <comment>legacy_id=3920</comment>
+  </data>
+  <data name="AncientJoaUpgradeDesc2" xml:space="preserve">
+    <value>теряет 1 уровень, не сгорает.</value>
+    <comment>legacy_id=3921</comment>
+  </data>
+  <data name="AncientJoaUpgradeDesc3" xml:space="preserve">
+    <value>Fate 100 %; камни и zen уходят.</value>
+    <comment>legacy_id=3922</comment>
   </data>
   <data name="GmPanelTitleAdmin" xml:space="preserve">
     <value>GM-панель — админ</value>
