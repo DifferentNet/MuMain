@@ -13166,6 +13166,12 @@
   <data name="TouchHelpAuto" xml:space="preserve">
     <value>Auto: MU Helper nyala dan mati; berjalan dengan stik memindahkan tempat ia berburu</value>
   </data>
+  <data name="TouchHelpTarget" xml:space="preserve">
+    <value>Target: pindah ke monster berikutnya menurut jarak; monster yang akan dipukul Serang disorot</value>
+  </data>
+  <data name="TouchHelpNova" xml:space="preserve">
+    <value>Nova: tahan tombolnya untuk mengisi, lepas untuk melepaskan (lepas sendiri setelah 5 detik)</value>
+  </data>
   <data name="TouchHelpPotions" xml:space="preserve">
     <value>Q dan W: minum potion</value>
   </data>

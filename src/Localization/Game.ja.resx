@@ -11241,6 +11241,12 @@
   <data name="TouchHelpAuto" xml:space="preserve">
     <value>オート：MU Helperのオン/オフ。スティックで歩くと狩りの場所が移動します</value>
   </data>
+  <data name="TouchHelpTarget" xml:space="preserve">
+    <value>ターゲット：距離順で次のモンスターに切り替え。攻撃する相手はハイライト表示されます</value>
+  </data>
+  <data name="TouchHelpNova" xml:space="preserve">
+    <value>Nova：ボタン長押しでチャージ、離すと発動（5秒で自動発動）</value>
+  </data>
   <data name="TouchHelpPotions" xml:space="preserve">
     <value>QとW：ポーションを飲む</value>
   </data>

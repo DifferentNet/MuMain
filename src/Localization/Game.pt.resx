@@ -13166,6 +13166,12 @@
   <data name="TouchHelpAuto" xml:space="preserve">
     <value>Auto: liga e desliga o MU Helper; andar com o analógico muda onde ele caça</value>
   </data>
+  <data name="TouchHelpTarget" xml:space="preserve">
+    <value>Alvo: muda para o próximo monstro por distância; o que Atacar vai acertar fica destacado</value>
+  </data>
+  <data name="TouchHelpNova" xml:space="preserve">
+    <value>Nova: segure o botão para carregar, solte para lançar (dispara sozinha após 5 segundos)</value>
+  </data>
   <data name="TouchHelpPotions" xml:space="preserve">
     <value>Q e W: beber as poções</value>
   </data>

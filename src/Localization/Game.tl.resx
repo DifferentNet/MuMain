@@ -13166,6 +13166,12 @@
   <data name="TouchHelpAuto" xml:space="preserve">
     <value>Auto: pagbukas at pagpatay ng MU Helper; ang paglakad gamit ang stick ay naglilipat ng lugar ng pangangaso nito</value>
   </data>
+  <data name="TouchHelpTarget" xml:space="preserve">
+    <value>Target: lumipat sa susunod na halimaw ayon sa layo; naka-highlight ang tatamaan ng Atake</value>
+  </data>
+  <data name="TouchHelpNova" xml:space="preserve">
+    <value>Nova: pindutin nang matagal para mag-charge, bitawan para ilabas (kusang lalabas pagkalipas ng 5 segundo)</value>
+  </data>
   <data name="TouchHelpPotions" xml:space="preserve">
     <value>Q at W: uminom ng potion</value>
   </data>

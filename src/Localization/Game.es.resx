@@ -13166,6 +13166,12 @@
   <data name="TouchHelpAuto" xml:space="preserve">
     <value>Auto: activa y desactiva el MU Helper; caminar con el stick cambia dónde caza</value>
   </data>
+  <data name="TouchHelpTarget" xml:space="preserve">
+    <value>Blanco: cambia al siguiente monstruo por distancia; el que golpeará Atacar está resaltado</value>
+  </data>
+  <data name="TouchHelpNova" xml:space="preserve">
+    <value>Nova: mantén su botón para cargar, suelta para lanzarla (se lanza sola a los 5 segundos)</value>
+  </data>
   <data name="TouchHelpPotions" xml:space="preserve">
     <value>Q y W: beber las pociones</value>
   </data>

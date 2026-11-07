@@ -13187,6 +13187,12 @@
   <data name="TouchHelpAuto" xml:space="preserve">
     <value>Auto: włącza i wyłącza MU Helper; chodzenie gałką zmienia miejsce jego polowania</value>
   </data>
+  <data name="TouchHelpTarget" xml:space="preserve">
+    <value>Cel: przełącza na kolejnego potwora według odległości; potwór, którego trafi Atak, jest podświetlony</value>
+  </data>
+  <data name="TouchHelpNova" xml:space="preserve">
+    <value>Nova: przytrzymaj jej przycisk, aby ładować, puść, aby rzucić (sama wybucha po 5 sekundach)</value>
+  </data>
   <data name="TouchHelpPotions" xml:space="preserve">
     <value>Q i W: wypij mikstury</value>
   </data>

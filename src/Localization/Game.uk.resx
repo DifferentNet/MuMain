@@ -13166,6 +13166,12 @@
   <data name="TouchHelpAuto" xml:space="preserve">
     <value>Авто: вмикає й вимикає MU Helper; ходьба стіком змінює місце, де він полює</value>
   </data>
+  <data name="TouchHelpTarget" xml:space="preserve">
+    <value>Ціль: перемкнутися на наступного монстра за відстанню; того, кого б'є Атака, підсвічено</value>
+  </data>
+  <data name="TouchHelpNova" xml:space="preserve">
+    <value>Nova: утримуй кнопку — заряд, відпусти — удар (спрацює сама через 5 секунд)</value>
+  </data>
   <data name="TouchHelpPotions" xml:space="preserve">
     <value>Q і W: випити зілля</value>
   </data>

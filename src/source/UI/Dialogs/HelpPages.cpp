@@ -116,9 +116,10 @@ void AddTouchPage(std::vector<UI::Help::PageLine>& lines)
     const wchar_t* const touchLines[] = {
         I18N::Game::TouchHelpWorld,     I18N::Game::TouchHelpStick,         I18N::Game::HelpControlsWalkHit,
         I18N::Game::TouchHelpStickGate, I18N::Game::TouchHelpAttack,        I18N::Game::HelpControlsAutoAttack,
-        I18N::Game::TouchHelpPk,        I18N::Game::TouchHelpSkills,        I18N::Game::HelpControlsSkillsSelf,
-        I18N::Game::TouchHelpSkillsSet, I18N::Game::TouchHelpParty,         I18N::Game::TouchHelpPickUp,
-        I18N::Game::TouchHelpAuto,      I18N::Game::TouchHelpPotions,       I18N::Game::TouchHelpMenu,
+        I18N::Game::TouchHelpPk,        I18N::Game::TouchHelpTarget,        I18N::Game::TouchHelpSkills,
+        I18N::Game::TouchHelpNova,      I18N::Game::HelpControlsSkillsSelf, I18N::Game::TouchHelpSkillsSet,
+        I18N::Game::TouchHelpParty,     I18N::Game::TouchHelpPickUp,        I18N::Game::TouchHelpAuto,
+        I18N::Game::TouchHelpPotions,   I18N::Game::TouchHelpMenu,
         I18N::Game::TouchHelpItem,      I18N::Game::TouchHelpDrag,          I18N::Game::TouchHelpView,
     };
     for (const wchar_t* line : touchLines)

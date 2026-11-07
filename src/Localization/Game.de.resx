@@ -13264,6 +13264,12 @@
   <data name="TouchHelpAuto" xml:space="preserve">
     <value>Auto: MU Helper an und aus; Laufen mit dem Stick verschiebt, wo er jagt</value>
   </data>
+  <data name="TouchHelpTarget" xml:space="preserve">
+    <value>Ziel: zum nächsten Monster nach Entfernung wechseln; das Monster, das Angriff trifft, ist hervorgehoben</value>
+  </data>
+  <data name="TouchHelpNova" xml:space="preserve">
+    <value>Nova: Knopf halten lädt auf, loslassen wirkt sie (nach 5 Sekunden von selbst)</value>
+  </data>
   <data name="TouchHelpPotions" xml:space="preserve">
     <value>Q und W: Tränke trinken</value>
   </data>

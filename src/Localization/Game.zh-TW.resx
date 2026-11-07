@@ -13166,6 +13166,12 @@
   <data name="TouchHelpAuto" xml:space="preserve">
     <value>自動：開關 MU Helper；用搖桿行走可改變它的狩獵位置</value>
   </data>
+  <data name="TouchHelpTarget" xml:space="preserve">
+    <value>目標：依距離切換到下一隻怪物；攻擊將打的怪物會高亮顯示</value>
+  </data>
+  <data name="TouchHelpNova" xml:space="preserve">
+    <value>Nova：按住按鈕蓄力，放開施放（5 秒後自動施放）</value>
+  </data>
   <data name="TouchHelpPotions" xml:space="preserve">
     <value>Q 和 W：喝藥水</value>
   </data>

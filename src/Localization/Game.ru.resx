@@ -15126,6 +15126,12 @@
   <data name="TouchHelpAuto" xml:space="preserve">
     <value>Авто: включает и выключает MU Helper; стик меняет место его охоты</value>
   </data>
+  <data name="TouchHelpTarget" xml:space="preserve">
+    <value>Цель: переключиться на следующего монстра по расстоянию; тот, кого бьёт Атака, подсвечен</value>
+  </data>
+  <data name="TouchHelpNova" xml:space="preserve">
+    <value>Nova: держите кнопку — заряд, отпустите — удар (сработает сама через 5 секунд)</value>
+  </data>
   <data name="TouchHelpPotions" xml:space="preserve">
     <value>Q и W: выпить зелья</value>
   </data>
