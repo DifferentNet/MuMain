@@ -13284,7 +13284,7 @@
     <value>Gamepad: A menyerang, X, Y, dan B memakai skill (tahan RT untuk dua lagi), LB dan LT minum potion, stik kanan memilih target, D-pad kiri peta, kanan inventaris, Menu membuka semua jendela (Bantuannya mencantumkan semua tombol)</value>
   </data>
   <data name="PadFriendChosen" xml:space="preserve">
-    <value>Heal dan buff pergi ke:</value>
+    <value>Heal dan buff pergi ke: </value>
   </data>
   <data name="PadFriendSelf" xml:space="preserve">
     <value>Heal dan buff pergi ke kamu</value>
@@ -13296,7 +13296,7 @@
     <value>Teleport Ally: pilih dulu anggota party dengan RB</value>
   </data>
   <data name="PadFriendTooFar" xml:space="preserve">
-    <value>Terlalu jauh:</value>
+    <value>Terlalu jauh: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
     <value>Pilih skill dengan penunjuk dan A, lalu tekan X, Y, atau B (RT + X atau Y untuk tombol 4 dan 5) untuk menaruhnya di sana</value>

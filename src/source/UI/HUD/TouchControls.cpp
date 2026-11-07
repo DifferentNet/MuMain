@@ -1914,17 +1914,6 @@ void UpdateActions(ControlsModel& model)
             owedWaits = progress == Progress::Pending;
     }
 
-    // A Nova charging goes off once its button is let go.
-    const int charging = GameLogic::Touch::ChargingHotKey();
-    if (charging >= 0)
-    {
-        bool chargeHeld = false;
-        for (int slot = 0; slot < SkillButtons; ++slot)
-            chargeHeld = chargeHeld || (SlotHotKey(slot) == charging && IsHeld(FirstSkillControl + slot));
-        if (!chargeHeld)
-            GameLogic::Touch::ReleaseCharge();
-    }
-
     std::array<int, SkillButtons + 2> held{};
     int heldCount = 0;
     for (int slot = 0; slot < SkillButtons; ++slot)
@@ -1952,6 +1941,22 @@ void UpdateActions(ControlsModel& model)
         if (held[i] != owed)
             Act(held[i]);
     }
+}
+
+// A Nova charging goes off once its button is let go, and by itself after a while
+// (ChargingHotKey). Checked every frame, a panel open or the controls hidden too: the button is
+// then let go of as far as the charge goes.
+void ReleaseChargeLetGo()
+{
+    const int charging = GameLogic::Touch::ChargingHotKey();
+    if (charging < 0)
+        return;
+    const bool open = g_shown && !g_View.GetModel().pickerOpen && !g_View.GetModel().socialOpen;
+    bool held = false;
+    for (int slot = 0; open && slot < SkillButtons; ++slot)
+        held = held || (SlotHotKey(slot) == charging && IsHeld(FirstSkillControl + slot));
+    if (!held)
+        GameLogic::Touch::ReleaseCharge();
 }
 
 void UpdateButtons(ControlsModel& model)
@@ -2027,6 +2032,7 @@ void Update()
     // The MU Helper's stand-down for the action buttons runs out a second after they stop, however
     // the controls went (UpdateActions() renews it while they act).
     GameLogic::Touch::HoldHelperForButtons(false);
+    ReleaseChargeLetGo();
     if (!UI::Mobile::ShowsControls())
     {
         // The PK switch belongs to these controls: with them gone (a mouse or a pad took over) a click

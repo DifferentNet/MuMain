@@ -13284,7 +13284,7 @@
     <value>Mando: A ataca, X, Y y B lanzan habilidades (mantén RT para dos más), LB y LT beben pociones, el stick derecho elige el objetivo, D-pad izquierda el mapa, derecha el inventario, Menu abre todas las ventanas (su Ayuda lista todos los botones)</value>
   </data>
   <data name="PadFriendChosen" xml:space="preserve">
-    <value>Curaciones y mejoras van a:</value>
+    <value>Curaciones y mejoras van a: </value>
   </data>
   <data name="PadFriendSelf" xml:space="preserve">
     <value>Curaciones y mejoras van a ti</value>
@@ -13296,7 +13296,7 @@
     <value>Teleport Ally: elige primero un miembro del grupo con RB</value>
   </data>
   <data name="PadFriendTooFar" xml:space="preserve">
-    <value>Demasiado lejos:</value>
+    <value>Demasiado lejos: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
     <value>Elige una habilidad con el puntero y A, luego pulsa X, Y o B (RT + X o Y para los botones 4 y 5) para colocarla ahí</value>

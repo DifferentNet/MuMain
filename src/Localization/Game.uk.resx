@@ -13284,7 +13284,7 @@
     <value>Геймпад: A атакує, X, Y і B застосовують навички (утримуй RT для ще двох), LB і LT п'ють зілля, правий стік обирає ціль, D-pad вліво мапа, вправо інвентар, Menu відкриває всі вікна (його Довідка перелічує всі кнопки)</value>
   </data>
   <data name="PadFriendChosen" xml:space="preserve">
-    <value>Лікування й бафи йдуть до:</value>
+    <value>Лікування й бафи йдуть до: </value>
   </data>
   <data name="PadFriendSelf" xml:space="preserve">
     <value>Лікування й бафи йдуть тобі</value>
@@ -13296,7 +13296,7 @@
     <value>Teleport Ally: спершу обери учасника групи кнопкою RB</value>
   </data>
   <data name="PadFriendTooFar" xml:space="preserve">
-    <value>Занадто далеко:</value>
+    <value>Занадто далеко: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
     <value>Обери навичку вказівником і A, потім натисни X, Y або B (RT + X або Y для кнопок 4 і 5), щоб поставити її туди</value>

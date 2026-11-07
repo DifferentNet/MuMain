@@ -13284,7 +13284,7 @@
     <value>Gamepad: A ay atake, X, Y at B ay gumagamit ng skill (hawakan ang RT para sa dalawa pa), LB at LT ay umiinom ng potion, kanang stick ang pumipili ng target, D-pad kaliwa ang mapa, kanan ang inventory, binubuksan ng Menu ang lahat ng window (nakalista sa Tulong nito ang lahat ng button)</value>
   </data>
   <data name="PadFriendChosen" xml:space="preserve">
-    <value>Ang heal at buff ay mapupunta kay:</value>
+    <value>Ang heal at buff ay mapupunta kay: </value>
   </data>
   <data name="PadFriendSelf" xml:space="preserve">
     <value>Ang heal at buff ay mapupunta sa iyo</value>
@@ -13296,7 +13296,7 @@
     <value>Teleport Ally: pumili muna ng party member gamit ang RB</value>
   </data>
   <data name="PadFriendTooFar" xml:space="preserve">
-    <value>Masyadong malayo:</value>
+    <value>Masyadong malayo: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
     <value>Pumili ng skill gamit ang pointer at A, tapos pindutin ang X, Y o B (RT + X o Y para sa button 4 at 5) para ilagay ito roon</value>

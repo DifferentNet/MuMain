@@ -13382,7 +13382,7 @@
     <value>Gamepad: A greift an, X, Y und B wirken Fähigkeiten (RT halten für zwei weitere), LB und LT trinken Tränke, der rechte Stick wählt das Ziel, D-pad links die Karte, rechts das Inventar, Menu öffnet alle Fenster (seine Hilfe listet alle Tasten)</value>
   </data>
   <data name="PadFriendChosen" xml:space="preserve">
-    <value>Heilung und Buffs gehen an:</value>
+    <value>Heilung und Buffs gehen an: </value>
   </data>
   <data name="PadFriendSelf" xml:space="preserve">
     <value>Heilung und Buffs gehen an dich</value>
@@ -13394,7 +13394,7 @@
     <value>Teleport Ally: wähle zuerst mit RB ein Gruppenmitglied</value>
   </data>
   <data name="PadFriendTooFar" xml:space="preserve">
-    <value>Zu weit weg:</value>
+    <value>Zu weit weg: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
     <value>Wähle mit dem Zeiger und A eine Fähigkeit, drücke dann X, Y oder B (RT + X oder Y für Knöpfe 4 und 5), um sie dort zu platzieren</value>

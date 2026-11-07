@@ -13305,7 +13305,7 @@
     <value>Pad: A atakuje, X, Y i B rzucają umiejętności (przytrzymaj RT dla dwóch kolejnych), LB i LT piją mikstury, prawa gałka wybiera cel, D-pad w lewo mapa, w prawo ekwipunek, Menu otwiera wszystkie okna (jego Pomoc wymienia wszystkie przyciski)</value>
   </data>
   <data name="PadFriendChosen" xml:space="preserve">
-    <value>Leczenie i bufy idą do:</value>
+    <value>Leczenie i bufy idą do: </value>
   </data>
   <data name="PadFriendSelf" xml:space="preserve">
     <value>Leczenie i bufy idą do ciebie</value>
@@ -13317,7 +13317,7 @@
     <value>Teleport Ally: najpierw wybierz członka drużyny przyciskiem RB</value>
   </data>
   <data name="PadFriendTooFar" xml:space="preserve">
-    <value>Za daleko:</value>
+    <value>Za daleko: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
     <value>Wybierz umiejętność wskaźnikiem i A, potem naciśnij X, Y lub B (RT + X lub Y dla przycisków 4 i 5), aby ją tam położyć</value>

@@ -1229,13 +1229,14 @@ static Progress BeginCharge(int hotKey)
     if (CharacterAttribute->Energy + CharacterAttribute->AddEnergy < energy)
         return Progress::Done;
     const Progress progress = CastWhereHeroStands(AT_SKILL_NOVA_BEGIN, false);
-    if (progress == Progress::Done && Hero->Object.CurrentAction == PLAYER_SKILL_HELL_BEGIN)
-    {
-        Hero->Object.m_bySkillCount = 0;
-        g_chargeHotKey = hotKey;
-        g_chargeStart = Clock::now();
-    }
-    return progress;
+    // The charge pose says it began: the cast's own result is not set for the Nova's start
+    // (ClassAttack.cpp, AttackWizard returns before SkillSuccess).
+    if (Hero->Object.CurrentAction != PLAYER_SKILL_HELL_BEGIN)
+        return progress;
+    Hero->Object.m_bySkillCount = 0;
+    g_chargeHotKey = hotKey;
+    g_chargeStart = Clock::now();
+    return Progress::Done;
 }
 
 int ChargingHotKey()
