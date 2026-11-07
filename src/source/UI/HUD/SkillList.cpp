@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "UI/HUD/SkillList.h"
+#include "Engine/Object/ZzzOpenData.h"
 #include "GameLogic/Items/ItemCategories.h"
 #include <algorithm>
 #include "I18N/All.h"
@@ -167,6 +168,7 @@ bool mu::ui::window::CSkillList::UpdateKeyEvent()
                 if (mu::ui::window::IsPress('1' + i))
                 {
                     SetHotKey(i + 1, m_iHoveredGridSkillIndex);
+                    SaveOptionsIfChanged();
 
                     return false;
                 }
@@ -175,6 +177,7 @@ bool mu::ui::window::CSkillList::UpdateKeyEvent()
             if (mu::ui::window::IsPress('0'))
             {
                 SetHotKey(0, m_iHoveredGridSkillIndex);
+                SaveOptionsIfChanged();
 
                 return false;
             }

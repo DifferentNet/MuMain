@@ -2187,6 +2187,16 @@ MSG MainLoop()
 
     } // while (!Destroy)
 
+#ifndef __EMSCRIPTEN__
+    // Closing the window (X, Alt+F4) skips the menu exit that saves the hotkey layout. A change made in
+    // the last half second is sent here; the send is flushed by a background thread, so give it a moment
+    // before the process goes.
+    if (SaveOptionsIfChanged())
+    {
+        SDL_Delay(300);
+    }
+#endif
+
     Core::Input::Synthetic::SetEventDelivery(nullptr, nullptr);
     if (precise == TIMERR_NOERROR)
     {
