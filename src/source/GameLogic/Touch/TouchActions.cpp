@@ -4,6 +4,7 @@
 #include "Audio/DSPlaySound.h"
 #include "Camera/CameraProjection.h"
 #include "Camera/CameraState.h"
+#include "Engine/AI/ZzzAI.h"
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzInterface.h"
@@ -84,6 +85,8 @@ constexpr auto ShortOfManaSayRepeat = std::chrono::seconds(6);
 constexpr auto PetCommandRepeat = std::chrono::seconds(1);
 // How often the pad's Teleport Ally with no friend chosen says so.
 constexpr auto NoFriendSayRepeat = std::chrono::seconds(3);
+// A Nova held this long goes off by itself: the server's charge is full well before.
+constexpr auto LongestCharge = std::chrono::seconds(5);
 // The pad's Teleport jumps at least this many tiles, else it does not go off.
 constexpr int ShortestTeleport = 2;
 
@@ -109,6 +112,12 @@ constexpr float FireRingTiles = 3.f;
 
 constexpr int NoTarget = -1;
 constexpr int NoDrop = -1;
+constexpr int NoHotKey = -1;
+
+// The Nova charging (the server grows its damage until it is let go, and a Nova sent without its
+// start does nothing): its hotkey, and when it began.
+int g_chargeHotKey = NoHotKey;
+Clock::time_point g_chargeStart{};
 
 struct Steering
 {
@@ -1207,6 +1216,48 @@ void SelectHotKey(int hotKey)
         g_pSkillList->SelectHotKey(hotKey);
 }
 
+// Starts the Nova's charge, as the PC's right mouse button does (ZzzInterface.cpp, Attack).
+static Progress BeginCharge(int hotKey)
+{
+    if (g_chargeHotKey != NoHotKey)
+        return Progress::Done;
+    int energy = 0;
+    gSkillManager.GetSkillInformation_Energy(AT_SKILL_NOVA, &energy);
+    if (CharacterAttribute->Energy + CharacterAttribute->AddEnergy < energy)
+        return Progress::Done;
+    const Progress progress = CastWhereHeroStands(AT_SKILL_NOVA_BEGIN, false);
+    if (progress == Progress::Done && Hero->Object.CurrentAction == PLAYER_SKILL_HELL_BEGIN)
+    {
+        Hero->Object.m_bySkillCount = 0;
+        g_chargeHotKey = hotKey;
+        g_chargeStart = Clock::now();
+    }
+    return progress;
+}
+
+int ChargingHotKey()
+{
+    if (g_chargeHotKey != NoHotKey && Clock::now() - g_chargeStart >= LongestCharge)
+        ReleaseCharge();
+    return g_chargeHotKey;
+}
+
+void ReleaseCharge()
+{
+    if (g_chargeHotKey == NoHotKey)
+        return;
+    g_chargeHotKey = NoHotKey;
+    if (!InWorld())
+        return;
+    // What the PC's release casts (ClassAttack.cpp, AT_SKILL_NOVA), sent whatever the character does
+    // now: a charge the server keeps running would go off on its own later.
+    SendRequestMagic(AT_SKILL_NOVA, HeroKey);
+    SetAttackSpeed();
+    SetAction(&Hero->Object, PLAYER_SKILL_HELL_START);
+    Hero->Movement = 0;
+    ActionWentOff();
+}
+
 Progress CastHotKey(int hotKey)
 {
     if (!InWorld())
@@ -1231,6 +1282,8 @@ Progress CastHotKey(int hotKey)
 
     if (padAims)
         return skill == AT_SKILL_TELEPORT_ALLY ? PadTeleportAlly(skill) : PadTeleport(skill);
+    if (skill == AT_SKILL_NOVA)
+        return BeginCharge(hotKey);
 
     const CHARACTER* friendCharacter = GoesOnFriend(skill) ? ChosenFriend() : nullptr;
     if (friendCharacter != nullptr)
@@ -1405,6 +1458,7 @@ void Reset()
     g_friendName.clear();
     g_forgottenUntil.clear();
     g_skippedDrops.clear();
+    g_chargeHotKey = NoHotKey;
     g_dropWalkedTo = NoDrop;
     g_standUntil = {};
     g_standAgainAt = {};

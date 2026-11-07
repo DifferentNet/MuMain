@@ -551,6 +551,8 @@ body.pad #tc_soc_legend {
 }
 #tc_potion_q { left: 24rem; }
 #tc_potion_w { left: 84rem; }
+/* None left: dimmed, so an empty hotkey is not pressed in a fight. */
+.tc-potion.empty { opacity: 0.4; }
 
 #tc_attack {
 	right: 24rem;

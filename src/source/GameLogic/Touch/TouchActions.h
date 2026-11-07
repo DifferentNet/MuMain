@@ -92,7 +92,13 @@ void SelectHotKey(int hotKey);
 // potion, leaving the turn to the attack button. A pet command goes to the raven at once. Skills
 // aimed where the player points only become the current skill (SelectHotKey). Called every frame
 // while a skill button is held, and after a tap until done.
+// Nova charges while its button is held and goes off as it is let go (ReleaseCharge), as the right
+// mouse button holds it on a PC.
 Progress CastHotKey(int hotKey);
+// The hotkey whose Nova is charging, or -1.
+[[nodiscard]] int ChargingHotKey();
+// Lets the charging Nova go off: its button was let go.
+void ReleaseCharge();
 // Puts the current skill (the bar's current-skill icon, picked in the skill list) on a hotkey, as
 // Ctrl and the digit do on a keyboard, and saves the hotkeys at once: a closed browser tab is a
 // logout the client never sees. False when there is no skill to put or it is there already.

@@ -50,6 +50,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 namespace
@@ -817,9 +818,30 @@ int HitTest(float x, float y)
     return Inside(g_boxes[StickControl], x, y, 0.f) ? StickControl : Touch::NoControl;
 }
 
+// The controls' elements found once, by their ids (pointers to strings that last): a search through
+// the whole document for each of them, every frame, was a good part of the controls' own time. An element
+// destroyed (a panel shut, the theme's document built anew) leaves its pointer empty, and is looked
+// for again.
+std::unordered_map<const char*, Rml::ObserverPtr<Rml::Element>> g_elements;
+
+Rml::Element* FindElement(Rml::ElementDocument* document, const char* id)
+{
+    if (document == nullptr)
+        return nullptr;
+    Rml::ObserverPtr<Rml::Element>& kept = g_elements[id];
+    // The picker's and the Social panel's entries take their ids from the data: an element kept may
+    // have been given another.
+    if (Rml::Element* element = kept.get();
+        element != nullptr && element->GetOwnerDocument() == document && element->GetId() == id)
+        return element;
+    Rml::Element* element = document->GetElementById(id);
+    kept = element != nullptr ? element->GetObserverPtr() : Rml::ObserverPtr<Rml::Element>{};
+    return element;
+}
+
 ControlBox BoxOf(Rml::ElementDocument* document, const char* id)
 {
-    Rml::Element* element = document != nullptr ? document->GetElementById(id) : nullptr;
+    Rml::Element* element = FindElement(document, id);
     if (element == nullptr || !element->IsVisible(true))
         return ControlBox{};
     const Rml::Vector2f offset = element->GetAbsoluteOffset(Rml::BoxArea::Border);
@@ -1890,6 +1912,17 @@ void UpdateActions(ControlsModel& model)
             g_follow.Settle(owed);
         else
             owedWaits = progress == Progress::Pending;
+    }
+
+    // A Nova charging goes off once its button is let go.
+    const int charging = GameLogic::Touch::ChargingHotKey();
+    if (charging >= 0)
+    {
+        bool chargeHeld = false;
+        for (int slot = 0; slot < SkillButtons; ++slot)
+            chargeHeld = chargeHeld || (SlotHotKey(slot) == charging && IsHeld(FirstSkillControl + slot));
+        if (!chargeHeld)
+            GameLogic::Touch::ReleaseCharge();
     }
 
     std::array<int, SkillButtons + 2> held{};

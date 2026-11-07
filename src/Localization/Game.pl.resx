@@ -13055,4 +13055,409 @@
   <data name="QuestRequirementBuff" xml:space="preserve">
     <value>Bonus: %ls</value>
   </data>
+  <data name="TouchAttack" xml:space="preserve">
+    <value>Atak</value>
+  </data>
+  <data name="TouchPickUp" xml:space="preserve">
+    <value>Podnieś</value>
+  </data>
+  <data name="TouchAuto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="TouchMenu" xml:space="preserve">
+    <value>Menu</value>
+  </data>
+  <data name="TouchChat" xml:space="preserve">
+    <value>Czat</value>
+  </data>
+  <data name="TouchMenuInventory" xml:space="preserve">
+    <value>Ekwipunek</value>
+  </data>
+  <data name="TouchMenuCharacter" xml:space="preserve">
+    <value>Postać</value>
+  </data>
+  <data name="TouchMenuParty" xml:space="preserve">
+    <value>Drużyna</value>
+  </data>
+  <data name="TouchMenuGuild" xml:space="preserve">
+    <value>Gildia</value>
+  </data>
+  <data name="TouchMenuFriends" xml:space="preserve">
+    <value>Znajomi</value>
+  </data>
+  <data name="TouchMenuQuests" xml:space="preserve">
+    <value>Zadania</value>
+  </data>
+  <data name="TouchMenuMap" xml:space="preserve">
+    <value>Mapa</value>
+  </data>
+  <data name="TouchMenuMove" xml:space="preserve">
+    <value>Teleport</value>
+  </data>
+  <data name="TouchMenuBattlePass" xml:space="preserve">
+    <value>Przepustka bojowa</value>
+  </data>
+  <data name="TouchMenuDaily" xml:space="preserve">
+    <value>Nagrody dzienne</value>
+  </data>
+  <data name="TouchMenuEvents" xml:space="preserve">
+    <value>Wydarzenia</value>
+  </data>
+  <data name="TouchMenuHelper" xml:space="preserve">
+    <value>MU Helper</value>
+  </data>
+  <data name="TouchMenuCommands" xml:space="preserve">
+    <value>Komendy</value>
+  </data>
+  <data name="TouchMenuHelp" xml:space="preserve">
+    <value>Pomoc</value>
+  </data>
+  <data name="TouchMenuSystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="TouchBindPick" xml:space="preserve">
+    <value>Wybierz umiejętność, potem stuknij przycisk umiejętności po prawej, aby ją tam położyć</value>
+  </data>
+  <data name="TouchBindPlace" xml:space="preserve">
+    <value>Stuknij podświetlony przycisk, aby położyć tam umiejętność</value>
+  </data>
+  <data name="TouchBindPickFor" xml:space="preserve">
+    <value>Wybierz umiejętność dla podświetlonego przycisku</value>
+  </data>
+  <data name="TouchButtonSizeRow" xml:space="preserve">
+    <value>Rozmiar przycisków</value>
+  </data>
+  <data name="TouchMenuSkills" xml:space="preserve">
+    <value>Umiejętności</value>
+  </data>
+  <data name="TouchMenuView" xml:space="preserve">
+    <value>Widok PC / telefon</value>
+  </data>
+  <data name="TouchItemEquip" xml:space="preserve">
+    <value>Załóż</value>
+  </data>
+  <data name="TouchItemUnequip" xml:space="preserve">
+    <value>Zdejmij</value>
+  </data>
+  <data name="TouchItemMove" xml:space="preserve">
+    <value>Przenieś</value>
+  </data>
+  <data name="TouchItemSell" xml:space="preserve">
+    <value>Sprzedaj</value>
+  </data>
+  <data name="TouchItemHotkeyQ" xml:space="preserve">
+    <value>Na przycisk Q</value>
+  </data>
+  <data name="TouchItemHotkeyW" xml:space="preserve">
+    <value>Na przycisk W</value>
+  </data>
+  <data name="TouchItemDrop" xml:space="preserve">
+    <value>Upuść</value>
+  </data>
+  <data name="TouchItemDropAsk" xml:space="preserve">
+    <value>Upuścić na ziemię?</value>
+  </data>
+  <data name="TouchHeroLevel" xml:space="preserve">
+    <value>Poz. %d</value>
+  </data>
+  <data name="TouchHeroMasterLevel" xml:space="preserve">
+    <value>Poz. %d | Mistrz %d</value>
+  </data>
+  <data name="TouchHelpTitle" xml:space="preserve">
+    <value>Sterowanie dotykiem</value>
+  </data>
+  <data name="TouchHelpWorld" xml:space="preserve">
+    <value>Stuknij w świat: idziesz tam, rozmawiasz z NPC, atakujesz potwora</value>
+  </data>
+  <data name="TouchHelpStick" xml:space="preserve">
+    <value>Lewa strona ekranu: przeciągnij, aby iść (przerywa to walkę)</value>
+  </data>
+  <data name="TouchHelpAttack" xml:space="preserve">
+    <value>Atak: stuknij, aby raz uderzyć najbliższego potwora, przytrzymaj, aby walczyć dalej</value>
+  </data>
+  <data name="TouchHelpSkills" xml:space="preserve">
+    <value>Przyciski umiejętności: stuknij, aby użyć umiejętności raz, przytrzymaj, aby powtarzać</value>
+  </data>
+  <data name="TouchHelpPickUp" xml:space="preserve">
+    <value>Podnieś: stuknij dla najbliższego przedmiotu, przytrzymaj, aby podnosić dalej</value>
+  </data>
+  <data name="TouchHelpAuto" xml:space="preserve">
+    <value>Auto: włącza i wyłącza MU Helper; chodzenie gałką zmienia miejsce jego polowania</value>
+  </data>
+  <data name="TouchHelpPotions" xml:space="preserve">
+    <value>Q i W: wypij mikstury</value>
+  </data>
+  <data name="TouchHelpMenu" xml:space="preserve">
+    <value>Menu: wszystkie okna. Wstecz: zamyka górne okno</value>
+  </data>
+  <data name="TouchHelpItem" xml:space="preserve">
+    <value>Przytrzymaj przedmiot: jego karta z dostępnymi akcjami. Przytrzymaj + przy statystyce: wiele punktów naraz</value>
+  </data>
+  <data name="TouchHelpDrag" xml:space="preserve">
+    <value>Przeciągnij przedmiot, aby go przenieść, przeciągnij listę, aby ją przewinąć</value>
+  </data>
+  <data name="TouchHelpView" xml:space="preserve">
+    <value>Menu, widok PC / telefon: układ PC i powrót</value>
+  </data>
+  <data name="TouchHelpStickGate" xml:space="preserve">
+    <value>Po bramie lub zmianie mapy unieś palec, aby znów iść</value>
+  </data>
+  <data name="TouchHelpSkillsSet" xml:space="preserve">
+    <value>Przycisk Umiejętności układa umiejętności na przyciskach</value>
+  </data>
+  <data name="TouchHelpNextHint" xml:space="preserve">
+    <value>Stuknij tu: następna strona</value>
+  </data>
+  <data name="TouchHelpCloseHint" xml:space="preserve">
+    <value>Stuknij tu: zamknij</value>
+  </data>
+  <data name="PadHelpTitle" xml:space="preserve">
+    <value>Pad (układ Xbox)</value>
+  </data>
+  <data name="PadHelpSticks" xml:space="preserve">
+    <value>Lewa gałka: chodzenie. Prawa gałka: szturchnij ją po następny cel (w prawo dalszy, w lewo bliższy); w oknie wolny wskaźnik</value>
+  </data>
+  <data name="PadHelpAttack" xml:space="preserve">
+    <value>A: stuknij, aby raz uderzyć cel, przytrzymaj, aby walczyć dalej</value>
+  </data>
+  <data name="PadHelpSkills" xml:space="preserve">
+    <value>X, Y, B: trzy przyciski umiejętności. Przytrzymaj RT: X i Y rzucają umiejętności 4 i 5. RB: członek drużyny, który dostaje twoje leczenie i bufy</value>
+  </data>
+  <data name="PadHelpSkillList" xml:space="preserve">
+    <value>LS (wciśnij lewą gałkę, w środku): układanie umiejętności na przyciskach</value>
+  </data>
+  <data name="PadHelpBack" xml:space="preserve">
+    <value>B przy otwartym oknie: wstecz, zamyka górne okno</value>
+  </data>
+  <data name="PadHelpPickUp" xml:space="preserve">
+    <value>D-pad w dół: podnieś przedmiot z widoczną nazwą, przytrzymaj, aby podnosić dalej; gdy nie ma czego podnieść, rozmowa z najbliższym NPC</value>
+  </data>
+  <data name="PadHelpPotions" xml:space="preserve">
+    <value>LB i LT: mikstury Q i W. D-pad w lewo: mapa (przytrzymany: okno Teleportu). D-pad w prawo: ekwipunek</value>
+  </data>
+  <data name="PadHelpClick" xml:space="preserve">
+    <value>RS (wciśnij prawą gałkę, w środku): wróć do najbliższego celu</value>
+  </data>
+  <data name="PadHelpMenu" xml:space="preserve">
+    <value>Menu: centrum bohatera (ekwipunek, postać, umiejętności, zadania, gildia, ustawienia), LB i RB zmieniają jego karty. Ponownie: wszystkie okna. Przytrzymaj Menu: czat</value>
+  </data>
+  <data name="PadHelpScreens" xml:space="preserve">
+    <value>Ekrany logowania i postaci: gałki ruszają wskaźnikiem</value>
+  </data>
+  <data name="PadHelpScreensKeys" xml:space="preserve">
+    <value>Tam A klika, B to Esc, Menu to Enter</value>
+  </data>
+  <data name="PadHelpStickGate" xml:space="preserve">
+    <value>Po bramie lub zmianie mapy puść gałkę, aby znów iść</value>
+  </data>
+  <data name="PadHelpClickA" xml:space="preserve">
+    <value>W oknie: ramka zamiast wskaźnika. D-pad lub lewa gałka: do następnej komórki lub przycisku (za ostatnim rzędem lista się przewija). A: weź, odłóż, naciśnij. X: załóż, użyj. Y: karta przedmiotu. Prawa gałka: wolny wskaźnik</value>
+  </data>
+  <data name="PadHelpSkillsUse" xml:space="preserve">
+    <value>Stuknij, aby użyć umiejętności raz, przytrzymaj, aby powtarzać. Teleport skacze tam, gdzie wskazuje lewa gałka</value>
+  </data>
+  <data name="PadHelpAuto" xml:space="preserve">
+    <value>D-pad w górę: MU Helper wł. i wył., przytrzymany: jego ustawienia. View: Social (gracze wokół: handel, drużyna, gildia...)</value>
+  </data>
+  <data name="PadHelpRightClick" xml:space="preserve">
+    <value>RS nad oknem: prawy klik we wskaźniku, na + przy statystyce wiele punktów</value>
+  </data>
+  <data name="PadHelpDialog" xml:space="preserve">
+    <value>Pytanie (handel, drużyna): po drugim Menu to Tak, A też, gdy odpoczywał sekundę. B to Nie</value>
+  </data>
+  <data name="PadHelpPagesHint" xml:space="preserve">
+    <value>LB, RB: przewracanie stron. B: zamknij</value>
+  </data>
+  <data name="PadOpen" xml:space="preserve">
+    <value>Otwórz</value>
+  </data>
+  <data name="PadClose" xml:space="preserve">
+    <value>Zamknij</value>
+  </data>
+  <data name="TouchPickerTitle" xml:space="preserve">
+    <value>Przyciski umiejętności</value>
+  </data>
+  <data name="TouchPickerPickFor" xml:space="preserve">
+    <value>Wybierz umiejętność dla podświetlonego przycisku</value>
+  </data>
+  <data name="TouchPickerOnButton" xml:space="preserve">
+    <value>Na podświetlonym przycisku: %ls. Wybierz inną umiejętność, aby położyć ją w to miejsce</value>
+  </data>
+  <data name="TouchPickerTip" xml:space="preserve">
+    <value>Stuknij przycisk po prawej, aby go ustawić. Umiejętność, która już jest na przycisku, zamienia się miejscami</value>
+  </data>
+  <data name="PadPickerTip" xml:space="preserve">
+    <value>Przesuń wskaźnik w prawo na przycisk i naciśnij A, aby go ustawić. Umiejętność, która już jest na przycisku, zamienia się miejscami</value>
+  </data>
+  <data name="TouchPickerClear" xml:space="preserve">
+    <value>Usuń</value>
+  </data>
+  <data name="TouchPickerDone" xml:space="preserve">
+    <value>Gotowe</value>
+  </data>
+  <data name="TouchPickerNoSkills" xml:space="preserve">
+    <value>Brak umiejętności</value>
+  </data>
+  <data name="PadChoose" xml:space="preserve">
+    <value>Wybierz</value>
+  </data>
+  <data name="PadConnected" xml:space="preserve">
+    <value>Pad: A atakuje, X, Y i B rzucają umiejętności (przytrzymaj RT dla dwóch kolejnych), LB i LT piją mikstury, prawa gałka wybiera cel, D-pad w lewo mapa, w prawo ekwipunek, Menu otwiera wszystkie okna (jego Pomoc wymienia wszystkie przyciski)</value>
+  </data>
+  <data name="PadFriendChosen" xml:space="preserve">
+    <value>Leczenie i bufy idą do:</value>
+  </data>
+  <data name="PadFriendSelf" xml:space="preserve">
+    <value>Leczenie i bufy idą do ciebie</value>
+  </data>
+  <data name="PadNoFriendNear" xml:space="preserve">
+    <value>Brak członka drużyny w pobliżu: leczenie i bufy idą do ciebie</value>
+  </data>
+  <data name="PadChooseFriendFirst" xml:space="preserve">
+    <value>Teleport Ally: najpierw wybierz członka drużyny przyciskiem RB</value>
+  </data>
+  <data name="PadFriendTooFar" xml:space="preserve">
+    <value>Za daleko:</value>
+  </data>
+  <data name="PadBindPick" xml:space="preserve">
+    <value>Wybierz umiejętność wskaźnikiem i A, potem naciśnij X, Y lub B (RT + X lub Y dla przycisków 4 i 5), aby ją tam położyć</value>
+  </data>
+  <data name="PadBindPlace" xml:space="preserve">
+    <value>Naciśnij X, Y lub B (RT + X lub Y dla przycisków 4 i 5), aby położyć tam umiejętność</value>
+  </data>
+  <data name="PadKeyboardType" xml:space="preserve">
+    <value>Pisz</value>
+  </data>
+  <data name="PadKeyboardCaret" xml:space="preserve">
+    <value>Kursor</value>
+  </data>
+  <data name="PadKeyboardSpace" xml:space="preserve">
+    <value>spacja</value>
+  </data>
+  <data name="PadHelpKeyboard" xml:space="preserve">
+    <value>Pola tekstowe (czat, logowanie): otwiera się klawiatura ekranowa</value>
+  </data>
+  <data name="PadHelpKeyboardKeys" xml:space="preserve">
+    <value>D-pad lub gałka: klawisze. A: naciśnij, X: usuń, Y: spacja, Menu: Enter</value>
+  </data>
+  <data name="PadHelpKeyboardMore" xml:space="preserve">
+    <value>LT: shift, RT: symbole, View: angielski/rosyjski, LB/RB: kursor, B: zamknij</value>
+  </data>
+  <data name="TouchNoMana" xml:space="preserve">
+    <value>Za mało many</value>
+  </data>
+  <data name="TouchNoAg" xml:space="preserve">
+    <value>Za mało AG</value>
+  </data>
+  <data name="TouchMenuPlayer" xml:space="preserve">
+    <value>Akcje gracza</value>
+  </data>
+  <data name="TouchMenuPkOff" xml:space="preserve">
+    <value>PK: wył.</value>
+  </data>
+  <data name="TouchMenuPkOn" xml:space="preserve">
+    <value>PK: wł.</value>
+  </data>
+  <data name="TouchMenuGm" xml:space="preserve">
+    <value>Panel GM</value>
+  </data>
+  <data name="TouchAttackPk" xml:space="preserve">
+    <value>PK</value>
+  </data>
+  <data name="TouchHelpParty" xml:space="preserve">
+    <value>Stuknij kartę członka drużyny: twoje leczenie i bufy idą do niego, stuknij ponownie, aby przestać</value>
+  </data>
+  <data name="TouchHelpPk" xml:space="preserve">
+    <value>PK (menu): stuknij gracza, aby z nim walczyć, potem Atak i umiejętności trzymają się jego. Twoja drużyna jest oszczędzona</value>
+  </data>
+  <data name="PadHelpPk" xml:space="preserve">
+    <value>PK (menu): prawa gałka wybiera też graczy, A walczy z nimi, twoja drużyna jest oszczędzona</value>
+  </data>
+  <data name="TouchShopTapAgainToBuy" xml:space="preserve">
+    <value>Stuknij przedmiot ponownie, aby go kupić.</value>
+  </data>
+  <data name="TouchItemOpen" xml:space="preserve">
+    <value>Otwórz</value>
+  </data>
+  <data name="TouchItemApply" xml:space="preserve">
+    <value>Użyj…</value>
+  </data>
+  <data name="TouchItemApplyHint" xml:space="preserve">
+    <value>Stuknij przedmiot, na który użyć klejnotu.</value>
+  </data>
+  <data name="TouchItemMoveToBag" xml:space="preserve">
+    <value>Do torby</value>
+  </data>
+  <data name="TouchSocial" xml:space="preserve">
+    <value>Social</value>
+  </data>
+  <data name="TouchSocialTitle" xml:space="preserve">
+    <value>Gracze w pobliżu</value>
+  </data>
+  <data name="TouchSocialNone" xml:space="preserve">
+    <value>Brak graczy w pobliżu</value>
+  </data>
+  <data name="TouchSocialChosen" xml:space="preserve">
+    <value>%ls: co zrobić?</value>
+  </data>
+  <data name="TouchSocialJoinGuild" xml:space="preserve">
+    <value>Dołącz do gildii</value>
+  </data>
+  <data name="TouchSocialOutOfReach" xml:space="preserve">
+    <value>Nie można dotrzeć do %ls</value>
+  </data>
+  <data name="TouchSocialWindows" xml:space="preserve">
+    <value>Okna</value>
+  </data>
+  <data name="PadHubSettings" xml:space="preserve">
+    <value>Ustawienia</value>
+  </data>
+  <data name="PadPickUpPrompt" xml:space="preserve">
+    <value>Podnieś</value>
+  </data>
+  <data name="PadCharacter" xml:space="preserve">
+    <value>Postać</value>
+  </data>
+  <data name="PadPlay" xml:space="preserve">
+    <value>Graj</value>
+  </data>
+  <data name="PadCreate" xml:space="preserve">
+    <value>Utwórz</value>
+  </data>
+  <data name="PadDelete" xml:space="preserve">
+    <value>Usuń</value>
+  </data>
+  <data name="PadTalkPrompt" xml:space="preserve">
+    <value>Rozmawiaj</value>
+  </data>
+  <data name="PadMenuPrompt" xml:space="preserve">
+    <value>Menu</value>
+  </data>
+  <data name="PadTake" xml:space="preserve">
+    <value>Weź</value>
+  </data>
+  <data name="PadBuy" xml:space="preserve">
+    <value>Kup</value>
+  </data>
+  <data name="PadCard" xml:space="preserve">
+    <value>Karta</value>
+  </data>
+  <data name="PadAllWindows" xml:space="preserve">
+    <value>Wszystkie okna</value>
+  </data>
+  <data name="PadPutDown" xml:space="preserve">
+    <value>Odłóż</value>
+  </data>
+  <data name="PadPutBack" xml:space="preserve">
+    <value>Odłóż z powrotem</value>
+  </data>
+  <data name="PadPress" xml:space="preserve">
+    <value>Naciśnij</value>
+  </data>
+  <data name="PadCannotEquip" xml:space="preserve">
+    <value>Tego przedmiotu nie można założyć: zobacz jego wymagania</value>
+  </data>
+  <data name="PadSlotTaken" xml:space="preserve">
+    <value>Najpierw zdejmij przedmiot noszony w tym miejscu</value>
+  </data>
 </root>

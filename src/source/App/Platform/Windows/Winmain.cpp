@@ -41,6 +41,7 @@
 #include "Render/Look/TuningSetting.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include <RmlUi/Core/Element.h>
+#include "UI/Mobile/BigResize.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Mobile/PhonePage.h"
 #include "UI/RmlBridge/RmlRuntimeHooks.h"
@@ -2034,8 +2035,10 @@ MSG MainLoop()
                 break;
             case SDL_EVENT_WINDOW_RESIZED:
                 // A phone turned, or the page's fullscreen: the touch controls move, so a finger held
-                // would steer or drag from a place that is no longer under it.
-                Core::Input::Touch::Reset();
+                // would steer or drag from a place that is no longer under it. The browser's own bar
+                // sliding in or out (a few percent of the height) keeps a held stick or skill.
+                if (UI::Mobile::IsBigResize(WindowWidth, WindowHeight, event.window.data1, event.window.data2))
+                    Core::Input::Touch::Reset();
                 HandleWindowResize(event.window.data1, event.window.data2);
                 break;
             case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED:
