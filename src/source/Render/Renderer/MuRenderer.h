@@ -369,6 +369,15 @@ public:
     virtual void BeginScreenSpaceSampling() {}
     virtual void EndScreenSpaceSampling() {}
 
+    // With Enhanced lighting on the desktop, the opaque models drawn between
+    // BeginItemPreviewLighting and EndItemPreviewLighting (inventory item
+    // previews) are lit by a fixed studio light from the viewer's upper left,
+    // with a highlight and a rim, and sample their textures through the
+    // mipmapped sampler, so they look the same on every map. Scopes nest; use
+    // ScopedItemPreviewLighting.
+    virtual void BeginItemPreviewLighting() {}
+    virtual void EndItemPreviewLighting() {}
+
     // Draws between BeginBloomExclusion and EndBloomExclusion never feed the
     // post-processing bloom, even when they blend additively: a model's chrome,
     // metal or oil pass (light reflected off its surface, not emitted), and
@@ -793,6 +802,21 @@ public:
     }
     ScopedScreenSpaceSampling(const ScopedScreenSpaceSampling&) = delete;
     ScopedScreenSpaceSampling& operator=(const ScopedScreenSpaceSampling&) = delete;
+};
+// Studio light for the item previews drawn while it is alive.
+class ScopedItemPreviewLighting
+{
+public:
+    ScopedItemPreviewLighting()
+    {
+        GetRenderer().BeginItemPreviewLighting();
+    }
+    ~ScopedItemPreviewLighting()
+    {
+        GetRenderer().EndItemPreviewLighting();
+    }
+    ScopedItemPreviewLighting(const ScopedItemPreviewLighting&) = delete;
+    ScopedItemPreviewLighting& operator=(const ScopedItemPreviewLighting&) = delete;
 };
 // The draws recorded in its lifetime cast and receive the frame's sun shadow.
 class ScopedSunShadowScope

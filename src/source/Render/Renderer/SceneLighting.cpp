@@ -83,4 +83,22 @@ SceneLightingUniform PackSceneLightingUniform(const SceneLighting& lighting, con
     return uniform;
 }
 
+SceneLightingUniform ItemPreviewLightingUniform()
+{
+    SceneLighting studio{};
+    // Lit faces roll off below white instead of washing out; faces turned away keep a good share,
+    // so the icon is not darker overall than the unlit one it replaces.
+    studio.diffuseScale = 0.4f;
+    studio.ambient = 0.66f;
+    studio.diffuseFloor = 0.45f;
+    studio.highlightKnee = 0.85f;
+    studio.rimStrength = 0.2f;
+    studio.rimPower = 2.5f;
+    studio.specularScale = 1.0f;
+    studio.specularPower = 28.0f;
+    SceneLightingUniform uniform = PackSceneLightingUniform(studio, {});
+    uniform.rimParameters[2] = kUnitDiffuseFlag;
+    return uniform;
+}
+
 } // namespace mu

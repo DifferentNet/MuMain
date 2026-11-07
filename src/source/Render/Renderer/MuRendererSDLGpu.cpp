@@ -857,6 +857,9 @@ struct RenderCmd
     // Recorded inside the sun shadow scope with a pipeline that has a shadowed twin
     // (s_sunShadowReceiverPipelines): drawn through it once the frame's shadow map is ready.
     bool sunShadowReceiver{};
+    // A skinned item preview under the studio light: drawn with ItemPreviewLightingUniform() in
+    // place of the scene lighting.
+    bool itemPreviewLighting{};
     // Set once this command has been replayed into an offscreen capture (see
     // BeginOffscreenCapture/EndOffscreenCapture); the main frame's replay pass then
     // skips it instead of drawing it a second time into the frame.
@@ -1072,10 +1075,14 @@ static void PushReplayFragmentUniforms(const FogUniform& uniforms, Render::SdlGp
     ++s_dbgFragmentUniformPushesThisFrame;
 }
 
+// Which scene lighting block the pass has in fragment uniform slot 1: false for the scene's.
+static bool s_itemPreviewLightingPushed = false;
+
 // Classic fragment shaders declare one uniform buffer and never read slots 1 and 2; only
 // skinned_lit.frag reads slot 2.
 static void PushSceneLightingUniforms()
 {
+    s_itemPreviewLightingPushed = false;
 #ifdef __EMSCRIPTEN__
     SDL_PushGPUFragmentUniformData(s_cmdBuf, k_FragmentUniformSlotSceneLighting, &s_sceneLightingUniform,
                                    sizeof(s_sceneLightingUniform));
@@ -1089,6 +1096,27 @@ static void PushSceneLightingUniforms()
     SDL_PushGPUFragmentUniformData(s_cmdBuf, k_FragmentUniformSlotDynamicLights, &s_dynamicLightsUniform,
                                    sizeof(s_dynamicLightsUniform));
     s_dbgFragmentUniformPushesThisFrame += 2;
+}
+
+// Swaps slot 1 between the scene lighting and the item preview studio light, as the draws need.
+static void SelectSceneLightingBlock(bool itemPreview)
+{
+#ifndef __EMSCRIPTEN__
+    if (itemPreview == s_itemPreviewLightingPushed)
+        return;
+    if (!itemPreview)
+    {
+        PushSceneLightingUniforms();
+        return;
+    }
+    static const mu::SceneLightingUniform studio = mu::ItemPreviewLightingUniform();
+    const SceneLightingWithSunShadow block{studio, mu::SunShadowUniform{}};
+    SDL_PushGPUFragmentUniformData(s_cmdBuf, k_FragmentUniformSlotSceneLighting, &block, sizeof(block));
+    ++s_dbgFragmentUniformPushesThisFrame;
+    s_itemPreviewLightingPushed = true;
+#else
+    (void)itemPreview;
+#endif
 }
 
 static void BindReplayFragmentSampler(const RenderCmd& command, Render::SdlGpuReplayState& state)
@@ -1213,6 +1241,8 @@ static void ReplayDrawCommand(const RenderCmd& command, SDL_GPUGraphicsPipeline*
 
     BindReplayFragmentSampler(command, state);
     PushReplayFragmentUniforms(command.fogUniform, state);
+    if (skinned && !shadow)
+        SelectSceneLightingBlock(command.itemPreviewLighting);
 
     if (command.type == RenderCmdType::DrawIndexedQuads || command.type == RenderCmdType::DrawIndexedStrip)
         SDL_DrawGPUIndexedPrimitives(s_renderPass, command.idxCount, 1, firstIndex, static_cast<Sint32>(firstVertex), 0);
@@ -1687,6 +1717,8 @@ static std::vector<std::uint32_t> s_filteredSamplerRequests;
 static std::unordered_set<std::uint32_t> s_updatedTextureIds;
 static bool s_textureFilteringEnabled = false;
 static int s_screenSpaceSamplingDepth = 0;
+// Item previews drawn under the studio light (BeginItemPreviewLighting; desktop only).
+static int s_itemPreviewLightingDepth = 0;
 static std::uint32_t s_cachedWorldSamplerId = 0u;
 static void* s_cachedWorldSampler = nullptr;
 static bool s_worldSamplerCacheValid = false;
@@ -1705,9 +1737,9 @@ static void InvalidateSamplerLookupCaches()
            s_filteredSamplerMap.find(id) != s_filteredSamplerMap.end();
 }
 
-[[nodiscard]] static void* LookupWorldSampler(std::uint32_t id)
+[[nodiscard]] static void* LookupWorldSampler(std::uint32_t id, bool screenSpace)
 {
-    if (!s_textureFilteringEnabled || s_screenSpaceSamplingDepth > 0)
+    if (!s_textureFilteringEnabled || screenSpace)
     {
         return LookupSampler(id);
     }
@@ -1735,6 +1767,11 @@ static void InvalidateSamplerLookupCaches()
     s_cachedWorldSampler = sampler;
     s_worldSamplerCacheValid = true;
     return sampler;
+}
+
+[[nodiscard]] static void* LookupWorldSampler(std::uint32_t id)
+{
+    return LookupWorldSampler(id, s_screenSpaceSamplingDepth > 0);
 }
 
 void RegisterSampler(std::uint32_t id, void* pSampler)
@@ -3679,6 +3716,17 @@ public:
         }
     }
 
+    void BeginItemPreviewLighting() override
+    {
+        ++s_itemPreviewLightingDepth;
+    }
+
+    void EndItemPreviewLighting() override
+    {
+        if (s_itemPreviewLightingDepth > 0)
+            --s_itemPreviewLightingDepth;
+    }
+
     // -----------------------------------------------------------------------
     // ClearScreen — no-op on SDL_gpu.
     // SDL_gpu clears the swapchain texture at BeginFrame (LOADOP_CLEAR).
@@ -5321,7 +5369,8 @@ private:
                        : s_pipelinesSkinnedDepthReadOnly[pipelineIdx])
                 : s_pipelinesSkinnedDepthOff[pipelineIdx];
         const bool enhanced = !shadow && UsesEnhancedLighting();
-        const bool enhancedLit = enhanced && parameters.lightEnabled;
+        const bool itemPreview = enhanced && UsesItemPreviewLighting(parameters);
+        const bool enhancedLit = enhanced && (parameters.lightEnabled || itemPreview);
         if (enhanced)
         {
             const EnhancedPipelineSet& enhancedSet =
@@ -5380,7 +5429,7 @@ private:
         cmd.skinningIndex = static_cast<Uint32>(s_skinningUniforms.size() - 1u);
         cmd.pipeline = pipeline;
         cmd.texture = texture;
-        void* sampler = LookupWorldSampler(resolvedTexId);
+        void* sampler = LookupWorldSampler(resolvedTexId, s_screenSpaceSamplingDepth > 0 && !itemPreview);
         cmd.sampler = sampler ? static_cast<SDL_GPUSampler*>(sampler) : s_defaultSampler;
         cmd.vtxBuffer = frameVertices ? nullptr : s_skinnedMeshBlocks[cached.block].buffer;
         cmd.vtxOffset = vtxOffset;
@@ -5422,6 +5471,19 @@ private:
             skinningVu.eyePositionAndSpecular[2] = eyePosition.z;
             skinningVu.eyePositionAndSpecular[3] = parameters.specularStrength;
             PackVertexToWorldRows(skinningVu);
+        }
+        if (itemPreview)
+        {
+            // The studio light stays put on screen, whatever way the model is turned.
+            const glm::vec3 towardLight = glm::normalize(glm::vec3(
+                glm::inverse(m_modelViewMatrix) *
+                glm::vec4(mu::kItemPreviewLightDirection[0], mu::kItemPreviewLightDirection[1],
+                          mu::kItemPreviewLightDirection[2], 0.0f)));
+            skinningVu.lightDirection[0] = towardLight.x;
+            skinningVu.lightDirection[1] = towardLight.y;
+            skinningVu.lightDirection[2] = towardLight.z;
+            skinningVu.eyePositionAndSpecular[3] = std::max(parameters.specularStrength, mu::kItemPreviewSpecular);
+            cmd.itemPreviewLighting = true;
         }
         if (shadow)
         {
@@ -5614,6 +5676,19 @@ private:
     [[nodiscard]] static bool UsesEnhancedLighting()
     {
         return s_enhancedLightingEnabled && s_enhancedLightingAvailable;
+    }
+
+    // An item preview's own surface (not its additive glow or chrome passes) under the studio light.
+    [[nodiscard]] bool UsesItemPreviewLighting(const SkinningParameters& parameters) const
+    {
+#ifdef __EMSCRIPTEN__
+        (void)parameters;
+        return false;
+#else
+        return s_itemPreviewLightingDepth > 0 &&
+               parameters.textureCoordinates == mu::SkinningTextureCoordinates::Mesh &&
+               (!m_blendEnabled || m_activeBlendMode == BlendMode::Alpha);
+#endif
     }
 
     [[nodiscard]] SDL_GPUGraphicsPipeline* GetActive3DPipeline() const
