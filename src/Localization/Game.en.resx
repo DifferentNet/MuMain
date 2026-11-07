@@ -14047,7 +14047,7 @@
     <value>Full excellent set bonus (Box of Kundun +%d, every piece worn):</value>
   </data>
   <data name="JewelOfAncientDesc" xml:space="preserve">
-    <value>Raises an ancient item +13 to +14 and +15</value>
+    <value>Raises an ancient item from +9 to +15</value>
   </data>
   <data name="JewelOfAncientDescMix" xml:space="preserve">
     <value>in the Chaos Machine (Chaos Goblin).</value>
@@ -14059,7 +14059,7 @@
     <value>in the Chaos Machine, one jewel per attempt.</value>
   </data>
   <data name="JewelOfFateDescAncient" xml:space="preserve">
-    <value>With a Jewel of Ancient: ancient +14 and +15.</value>
+    <value>With a Jewel of Ancient: ancient +10 to +15.</value>
   </data>
   <data name="JewelOfAncientMix14" xml:space="preserve">
     <value>+14 with Jewel of Ancient</value>
@@ -14142,15 +14142,15 @@
     <comment>legacy_id=3919</comment>
   </data>
   <data name="AncientJoaUpgradeDesc1" xml:space="preserve">
-    <value>Needs a Jewel of Ancient. On failure</value>
+    <value>On failure the ancient item</value>
     <comment>legacy_id=3920</comment>
   </data>
   <data name="AncientJoaUpgradeDesc2" xml:space="preserve">
-    <value>the ancient item loses 1 level, doesn't burn.</value>
+    <value>loses 1 level, doesn't burn.</value>
     <comment>legacy_id=3921</comment>
   </data>
   <data name="AncientJoaUpgradeDesc3" xml:space="preserve">
-    <value>Jewel of Fate: 100%%. Jewels and zen go.</value>
+    <value>Fate 100 %; jewels, zen used up.</value>
     <comment>legacy_id=3922</comment>
   </data>
   <data name="GmPanelTitleAdmin" xml:space="preserve">
