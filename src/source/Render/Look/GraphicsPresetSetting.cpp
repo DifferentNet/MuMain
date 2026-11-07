@@ -23,14 +23,6 @@ void ApplyScreenFilters()
     PostProcessing::SetScreenFilters({config.GetFxaa(), static_cast<float>(config.GetSharpen()) / PercentPerUnit});
 }
 
-void ChooseEnhancedFeatures(const GraphicsSettings& settings)
-{
-    ChooseEnhancedFeature(EnhancedFeature::Lighting, settings.enhancedLighting);
-    ChooseEnhancedFeature(EnhancedFeature::DynamicLights, settings.dynamicLights);
-    ChooseEnhancedFeature(EnhancedFeature::LightMood, settings.lightMood);
-    ChooseEnhancedFeature(EnhancedFeature::PostProcessing, settings.postProcessing);
-}
-
 std::string PresetName(GraphicsPreset preset)
 {
     const std::wstring wide = GameConfigValidation::FormatGraphicsPreset(preset);
@@ -66,9 +58,9 @@ void ApplyGraphicsPreset(GraphicsPreset preset)
     MuSetAntialiasingPreference(settings.antialiasing);
     config.SetFxaa(settings.fxaa);
     config.SetSharpen(settings.sharpen);
-    // The look first: the features the player may switch off are chosen against the look just applied.
-    ApplyLookPreset(settings.look);
-    ChooseEnhancedFeatures(settings);
+    // The look and the player's feature choices together, so the features switch once.
+    ApplyLookPreset(settings.look, {settings.enhancedLighting, settings.dynamicLights, settings.lightMood,
+                                    settings.postProcessing});
     ApplyScreenFilters();
     config.SetGraphicsPreset(preset);
     config.Save();

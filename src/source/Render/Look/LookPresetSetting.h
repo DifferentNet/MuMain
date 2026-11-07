@@ -29,6 +29,15 @@ enum class EnhancedFeature
 [[nodiscard]] bool EnhancedFeatureChosen(EnhancedFeature feature);
 // Saves the choice and applies it while the Enhanced look is active.
 void ChooseEnhancedFeature(EnhancedFeature feature, bool enabled);
+// Every choice at once with the look, the features switched once (the graphics presets).
+struct EnhancedFeatureChoices
+{
+    bool lighting = true;
+    bool dynamicLights = true;
+    bool lightMood = true;
+    bool postProcessing = true;
+};
+void ApplyLookPreset(LookPreset preset, const EnhancedFeatureChoices& choices);
 // The player's light mood strength (0 to 100 percent, nothing for the full mood), saved by the
 // caller ([EnhancedTuning] mood.strengthPercent); applied while the Enhanced look is active, under
 // a developer's `$lightmood <0-100>`.
