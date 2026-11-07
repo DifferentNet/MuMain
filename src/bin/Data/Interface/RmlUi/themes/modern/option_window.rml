@@ -380,6 +380,10 @@
 							<span class="opt-value">{{music_volume * 10 | format(0)}}%</span>
 						</div>
 					</div>
+					<div class="opt-row opt-toggle-row" data-event-click="option_toggle_background_sound">
+						<span class="opt-label">{{background_sound_label}}</span>
+						<div class="opt-control"><div class="opt-toggle" data-class-checked="background_sound"><div class="opt-toggle-knob"></div></div></div>
+					</div>
 					<div class="opt-row opt-toggle-row" data-event-click="option_toggle_whisper_sound">
 						<span class="opt-label">{{whisper_sound_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="whisper_sound"><div class="opt-toggle-knob"></div></div></div>

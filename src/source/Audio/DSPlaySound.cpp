@@ -15,6 +15,7 @@
 
 #include "DSPlaySound.h"
 #include "Core/Platform/IPlatformAudio.h"
+#include "Data/GameConfig/GameConfig.h"
 #ifdef _EDITOR
 #include "Audio/EditorSoundMute.h"
 #endif
@@ -72,6 +73,22 @@ void SetVolume(int bufferId, long volume)
     {
         g_platformAudio->SetVolume(static_cast<ESound>(bufferId), volume);
     }
+}
+
+// Options "Sound in background": while the window is unfocused or minimized and the option is off,
+// the whole engine is muted through the master volume (separate from the player's Sound/Music levels).
+static bool g_windowInBackground = false;
+
+void ApplyBackgroundSound()
+{
+    const bool mute = g_windowInBackground && !GameConfig::GetInstance().GetBackgroundSound();
+    SetMasterVolume(mute ? -10000 : 0); // DirectSound scale: -10000 silent, 0 full
+}
+
+void SetWindowInBackground(bool inBackground)
+{
+    g_windowInBackground = inBackground;
+    ApplyBackgroundSound();
 }
 
 void SetMasterVolume(long volume)

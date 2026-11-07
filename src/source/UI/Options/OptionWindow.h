@@ -193,6 +193,7 @@ namespace mu::ui::window
         void RmlToggleOverheadTitles();
         void RmlToggleTitleEffects();
         void RmlToggleTitlesTownsOnly();
+        void RmlToggleBackgroundSound();
         void RmlThemeChanged(int index);
         void RmlUIScaleChanged(int index);
         // MU Moldova: the phone or PC layout and the controls (UI::Mobile::InterfaceMode).
@@ -381,6 +382,8 @@ namespace mu::ui::window
             bool titleEffects = true;
             Rml::String titleEffectsLabel;
             bool titlesTownsOnly = true;
+            bool backgroundSound = true;
+            Rml::String backgroundSoundLabel;
             Rml::String titlesTownsOnlyLabel;
             std::vector<Rml::String> themeLabels;
             int themeIndex = 0;

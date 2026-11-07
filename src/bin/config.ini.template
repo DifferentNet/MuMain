@@ -11,6 +11,7 @@ Windowed=1
 [Audio]
 SoundVolume=5
 MusicVolume=5
+BackgroundSound=1
 [CONNECTION SETTINGS]
 ServerIP=localhost
 ServerPort=44405

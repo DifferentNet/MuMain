@@ -1,4 +1,8 @@
 ﻿#include "stdafx.h"
+
+#include <chrono>
+#include <cstdint>
+#include <cstring>
 #include "Render/Models/ZzzBMD.h"
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzObject.h"
@@ -3760,10 +3764,19 @@ void OpenMacro(const wchar_t* FileName)
     fclose(fp);
 }
 
-void SaveOptions()
+namespace
+{
+constexpr int kOptionsSize = 30;
+
+// The layout the server holds for this character: set when it sends the layout on entering the world
+// (ReceiveOption) and after each send. Until it is set SaveOptionsIfChanged() sends nothing, so the empty
+// layout of a character whose layout has not arrived yet never overwrites the saved one.
+BYTE g_savedOptions[kOptionsSize]{};
+bool g_hasSavedOptions = false;
+
+void BuildOptions(BYTE (&options)[kOptionsSize])
 {
     // 0 ~ 19 skill hotkey
-    BYTE options[30]{};
 
     int iSkillType = -1;
     for (int i = 0; i < 10; ++i)
@@ -3821,8 +3834,81 @@ void SaveOptions()
     options[27] = g_pMainFrame->GetItemHotKeyLevel(mu::ui::window::HOTKEY_W);
     options[28] = g_pMainFrame->GetItemHotKeyLevel(mu::ui::window::HOTKEY_E);
     options[29] = g_pMainFrame->GetItemHotKeyLevel(mu::ui::window::HOTKEY_R);
+}
 
+bool CanSendOptions()
+{
+    return SocketClient != nullptr && SocketClient->IsConnected() && CharacterAttribute != nullptr &&
+           g_pMainFrame != nullptr;
+}
+
+void SendOptions(const BYTE (&options)[kOptionsSize])
+{
     SocketClient->ToGameServer()->SendSaveKeyConfiguration(options, sizeof options);
+    if (g_hasSavedOptions)
+    {
+        memcpy(g_savedOptions, options, sizeof options);
+    }
+}
+} // namespace
+
+void SaveOptions()
+{
+    if (!CanSendOptions())
+    {
+        return;
+    }
+
+    BYTE options[kOptionsSize]{};
+    BuildOptions(options);
+    SendOptions(options);
+}
+
+bool SaveOptionsIfChanged()
+{
+    if (!g_hasSavedOptions || !CanSendOptions())
+    {
+        return false;
+    }
+
+    BYTE options[kOptionsSize]{};
+    BuildOptions(options);
+    if (memcmp(options, g_savedOptions, sizeof options) == 0)
+    {
+        return false;
+    }
+
+    SendOptions(options);
+    return true;
+}
+
+void SaveOptionsIfChangedEvery(std::uint32_t intervalMs)
+{
+    static auto lastCheck = std::chrono::steady_clock::now();
+    const auto now = std::chrono::steady_clock::now();
+    if (now - lastCheck < std::chrono::milliseconds(intervalMs))
+    {
+        return;
+    }
+
+    lastCheck = now;
+    SaveOptionsIfChanged();
+}
+
+void MarkOptionsSaved()
+{
+    if (CharacterAttribute == nullptr || g_pMainFrame == nullptr)
+    {
+        return;
+    }
+
+    BuildOptions(g_savedOptions);
+    g_hasSavedOptions = true;
+}
+
+void ForgetSavedOptions()
+{
+    g_hasSavedOptions = false;
 }
 
 void OpenLogoSceneData()
