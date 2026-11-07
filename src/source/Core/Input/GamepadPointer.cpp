@@ -19,6 +19,12 @@ using Clock = std::chrono::steady_clock;
 constexpr float TopSpeed = 1.2f;
 // The share of that speed over a window, where the buttons are small.
 constexpr float PreciseShare = 0.5f;
+// The stick held at its rim this long speeds the pointer up, to this many times as fast over the
+// second while: a long way across the screen takes less, a slight lean aims as finely as before.
+constexpr float RimLean = 0.95f;
+constexpr float RimDelay = 0.25f;
+constexpr float RimRampTime = 0.5f;
+constexpr float RimBoost = 2.f;
 // A second left press this soon after the first, this close to it (a share of the window's
 // height), is a double click.
 constexpr auto DoubleClickTime = std::chrono::milliseconds(350);
@@ -51,6 +57,8 @@ struct State
     float lastLeftY = 0.f;
     // The right button held asks for the item card (the pad's Y), not the item's own action (X).
     bool cardClick = false;
+    // Seconds the stick has been held at its rim.
+    float atRim = 0.f;
 };
 State g_state;
 
@@ -157,9 +165,12 @@ void Move(SDL_Window* window, float x, float y, float seconds, bool precise)
     FitWindow(window, width, height);
     FollowOtherDevices(window);
     const float lean = std::hypot(x, y);
+    g_state.atRim = lean >= RimLean ? g_state.atRim + seconds : 0.f;
     if (lean <= 0.f)
         return;
-    const float speed = TopSpeed * height * lean * (precise ? PreciseShare : 1.f);
+    const float ramp = std::clamp((g_state.atRim - RimDelay) / RimRampTime, 0.f, 1.f);
+    const float boost = 1.f + (RimBoost - 1.f) * ramp;
+    const float speed = TopSpeed * height * lean * boost * (precise ? PreciseShare : 1.f);
     g_state.x = std::clamp(g_state.x + x * speed * seconds, 0.f, width - 1.f);
     g_state.y = std::clamp(g_state.y + y * speed * seconds, 0.f, height - 1.f);
     SDL_WarpMouseInWindow(window, g_state.x, g_state.y);
