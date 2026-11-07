@@ -182,6 +182,10 @@ namespace mu::ui::window
         // Video tab's Anti-aliasing and Anisotropic filtering rows; their values are read live
         // from GameConfig, since `$msaa` changes the first outside this window too.
         void RmlAntialiasingChanged(int index);
+        // The graphics preset row (Low to Ultra) and the screen filters' rows (FXAA, sharpening).
+        void RmlGraphicsPresetChanged(int index);
+        void RmlToggleFxaa();
+        void RmlSharpenChanged(int index);
         void RmlAnisotropyChanged(int index);
         // Interface/UI tab -- Show FPS Counter/Show Debug Info stay ephemeral (SceneManager.h
         // globals, no GameConfig persistence), matching $fpscounter/$details today.
@@ -356,6 +360,19 @@ namespace mu::ui::window
             Rml::String tuningResetAllLabel;
             // Shown while the last save failed; empty otherwise.
             Rml::String tuningSaveMessage;
+            // [Render] GraphicsPreset: the four presets to pick (graphicsPresetIndex -1 while the values
+            // match none); the value box reads "Custom" then. And the screen filters: FXAA and the
+            // sharpening steps (graphics_preset and sharpen are dropdown ids 12 and 13).
+            std::vector<Rml::String> graphicsPresetLabels;
+            int graphicsPresetIndex = 0;
+            Rml::String graphicsPresetRowLabel;
+            Rml::String graphicsPresetValueLabel;
+            bool fxaa = false;
+            Rml::String fxaaLabel;
+            std::vector<Rml::String> sharpenLabels;
+            int sharpenIndex = 0;
+            Rml::String sharpenRowLabel;
+            Rml::String sharpenValueLabel;
             // [Render] Antialiasing (the Enhanced look's samples) and Anisotropy.
             std::vector<Rml::String> antialiasingLabels;
             int antialiasingIndex = 0;

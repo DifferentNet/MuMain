@@ -1,58 +1,280 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+#pragma clang diagnostic ignored "-Wmissing-braces"
+
 #include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
+
+template<typename T, size_t Num>
+struct spvUnsafeArray
+{
+    T elements[Num ? Num : 1];
+    
+    thread T& operator [] (size_t pos) thread
+    {
+        return elements[pos];
+    }
+    constexpr const thread T& operator [] (size_t pos) const thread
+    {
+        return elements[pos];
+    }
+    
+    device T& operator [] (size_t pos) device
+    {
+        return elements[pos];
+    }
+    constexpr const device T& operator [] (size_t pos) const device
+    {
+        return elements[pos];
+    }
+    
+    constexpr const constant T& operator [] (size_t pos) const constant
+    {
+        return elements[pos];
+    }
+    
+    threadgroup T& operator [] (size_t pos) threadgroup
+    {
+        return elements[pos];
+    }
+    constexpr const threadgroup T& operator [] (size_t pos) const threadgroup
+    {
+        return elements[pos];
+    }
+};
+
+struct FSInput
+{
+    float4 pos;
+    float2 uv;
+};
 
 struct CompositeUniforms
 {
     float2 inverseTargetSize;
     float bloomScale;
     float gradingStrength;
+    float fxaa;
+    float sharpen;
+    float2 padding;
 };
+
+constant spvUnsafeArray<float, 8> _609 = spvUnsafeArray<float, 8>({ 1.0, 1.5, 2.0, 2.0, 2.0, 2.0, 4.0, 8.0 });
 
 struct main0_out
 {
     float4 _entryPointOutput [[color(0)]];
 };
 
-fragment main0_out main0(constant CompositeUniforms& _31 [[buffer(0)]], texture2d<float> scene [[texture(0)]], texture2d<float> bloom [[texture(1)]], texture2d<float> grading [[texture(2)]], sampler sceneSampler [[sampler(0)]], sampler bloomSampler [[sampler(1)]], sampler gradingSampler [[sampler(2)]], float4 gl_FragCoord [[position]])
+struct main0_in
+{
+    float2 input_uv [[user(locn0)]];
+};
+
+static inline __attribute__((always_inline))
+float Luma(thread const float3& color)
+{
+    return dot(color, float3(0.2989999949932098388671875, 0.58700001239776611328125, 0.114000000059604644775390625));
+}
+
+static inline __attribute__((always_inline))
+float3 SceneAt(thread const float2& uv, texture2d<float> scene, sampler sceneSampler)
+{
+    return scene.sample(sceneSampler, uv, level(0.0)).xyz;
+}
+
+static inline __attribute__((always_inline))
+float LumaAt(thread const float2& uv, texture2d<float> scene, sampler sceneSampler)
+{
+    float2 param = uv;
+    float3 param_1 = SceneAt(param, scene, sceneSampler);
+    return Luma(param_1);
+}
+
+static inline __attribute__((always_inline))
+bool Fxaa(thread const float2& uv, thread float3& color, constant CompositeUniforms& _54, texture2d<float> scene, sampler sceneSampler)
+{
+    float2 px = _54.inverseTargetSize;
+    float3 param = color;
+    float m = Luma(param);
+    float2 param_1 = uv + float2(0.0, -px.y);
+    float n = LumaAt(param_1, scene, sceneSampler);
+    float2 param_2 = uv + float2(0.0, px.y);
+    float s = LumaAt(param_2, scene, sceneSampler);
+    float2 param_3 = uv + float2(-px.x, 0.0);
+    float w = LumaAt(param_3, scene, sceneSampler);
+    float2 param_4 = uv + float2(px.x, 0.0);
+    float e = LumaAt(param_4, scene, sceneSampler);
+    float highest = fast::max(fast::max(fast::max(n, s), fast::max(w, e)), m);
+    float lowest = fast::min(fast::min(fast::min(n, s), fast::min(w, e)), m);
+    float range = highest - lowest;
+    if (range < fast::max(0.031199999153614044189453125, highest * 0.125))
+    {
+        return false;
+    }
+    float2 param_5 = uv + float2(-px.x, -px.y);
+    float nw = LumaAt(param_5, scene, sceneSampler);
+    float2 param_6 = uv + float2(px.x, -px.y);
+    float ne = LumaAt(param_6, scene, sceneSampler);
+    float2 param_7 = uv + float2(-px.x, px.y);
+    float sw = LumaAt(param_7, scene, sceneSampler);
+    float2 param_8 = uv + float2(px.x, px.y);
+    float se = LumaAt(param_8, scene, sceneSampler);
+    float subpixel = (((((2.0 * (((n + s) + w) + e)) + nw) + ne) + sw) + se) / 12.0;
+    subpixel = smoothstep(0.0, 1.0, fast::clamp(abs(subpixel - m) / range, 0.0, 1.0));
+    subpixel = (subpixel * subpixel) * 0.75;
+    float horizontal = ((2.0 * abs((n + s) - (2.0 * m))) + abs((ne + se) - (2.0 * e))) + abs((nw + sw) - (2.0 * w));
+    float vertical = ((2.0 * abs((w + e) - (2.0 * m))) + abs((nw + ne) - (2.0 * n))) + abs((sw + se) - (2.0 * s));
+    bool isHorizontal = horizontal >= vertical;
+    float2 across = select(float2(px.x, 0.0), float2(0.0, px.y), bool2(isHorizontal));
+    float positive = isHorizontal ? s : e;
+    float negative = isHorizontal ? n : w;
+    float opposite = positive;
+    float gradient = abs(positive - m);
+    if (abs(negative - m) > gradient)
+    {
+        across = -across;
+        opposite = negative;
+        gradient = abs(negative - m);
+    }
+    float2 along = select(float2(0.0, px.y), float2(px.x, 0.0), bool2(isHorizontal));
+    float2 edgeUv = uv + (across * 0.5);
+    float edgeLuma = (m + opposite) * 0.5;
+    float threshold = gradient * 0.25;
+    float2 positiveUv = edgeUv + along;
+    float2 negativeUv = edgeUv - along;
+    float2 param_9 = positiveUv;
+    float positiveDelta = LumaAt(param_9, scene, sceneSampler) - edgeLuma;
+    float2 param_10 = negativeUv;
+    float negativeDelta = LumaAt(param_10, scene, sceneSampler) - edgeLuma;
+    bool positiveEnd = abs(positiveDelta) >= threshold;
+    bool negativeEnd = abs(negativeDelta) >= threshold;
+    for (int i = 1; i < 8; i++)
+    {
+        if (!positiveEnd)
+        {
+            positiveUv += (along * _609[i]);
+            float2 param_11 = positiveUv;
+            positiveDelta = LumaAt(param_11, scene, sceneSampler) - edgeLuma;
+            positiveEnd = abs(positiveDelta) >= threshold;
+        }
+        if (!negativeEnd)
+        {
+            negativeUv -= (along * _609[i]);
+            float2 param_12 = negativeUv;
+            negativeDelta = LumaAt(param_12, scene, sceneSampler) - edgeLuma;
+            negativeEnd = abs(negativeDelta) >= threshold;
+        }
+    }
+    float positiveDistance = isHorizontal ? (positiveUv.x - uv.x) : (positiveUv.y - uv.y);
+    float negativeDistance = isHorizontal ? (uv.x - negativeUv.x) : (uv.y - negativeUv.y);
+    bool positiveNearer = positiveDistance <= negativeDistance;
+    float nearest = fast::min(positiveDistance, negativeDistance);
+    float endDelta = positiveNearer ? positiveDelta : negativeDelta;
+    float edgeBlend = 0.0;
+    if ((endDelta >= 0.0) != ((m - edgeLuma) >= 0.0))
+    {
+        edgeBlend = 0.5 - (nearest / (positiveDistance + negativeDistance));
+    }
+    float2 param_13 = uv + (across * fast::max(subpixel, edgeBlend));
+    color = SceneAt(param_13, scene, sceneSampler);
+    return true;
+}
+
+static inline __attribute__((always_inline))
+float3 Sharpen(thread const float2& uv, thread const float3& center, constant CompositeUniforms& _54, texture2d<float> scene, sampler sceneSampler)
+{
+    float2 px = _54.inverseTargetSize;
+    float2 param = uv + float2(-px.x, -px.y);
+    float3 a = SceneAt(param, scene, sceneSampler);
+    float2 param_1 = uv + float2(0.0, -px.y);
+    float3 b = SceneAt(param_1, scene, sceneSampler);
+    float2 param_2 = uv + float2(px.x, -px.y);
+    float3 c = SceneAt(param_2, scene, sceneSampler);
+    float2 param_3 = uv + float2(-px.x, 0.0);
+    float3 d = SceneAt(param_3, scene, sceneSampler);
+    float2 param_4 = uv + float2(px.x, 0.0);
+    float3 f = SceneAt(param_4, scene, sceneSampler);
+    float2 param_5 = uv + float2(-px.x, px.y);
+    float3 g = SceneAt(param_5, scene, sceneSampler);
+    float2 param_6 = uv + float2(0.0, px.y);
+    float3 h = SceneAt(param_6, scene, sceneSampler);
+    float2 param_7 = uv + float2(px.x, px.y);
+    float3 i = SceneAt(param_7, scene, sceneSampler);
+    float3 lowest = fast::min(fast::min(fast::min(d, center), fast::min(f, b)), h);
+    float3 highest = fast::max(fast::max(fast::max(d, center), fast::max(f, b)), h);
+    lowest += fast::min(lowest, fast::min(fast::min(a, c), fast::min(g, i)));
+    highest += fast::max(highest, fast::max(fast::max(a, c), fast::max(g, i)));
+    float3 amplitude = sqrt(fast::clamp(fast::min(lowest, float3(2.0) - highest) / fast::max(highest, float3(9.9999997473787516355514526367188e-05)), float3(0.0), float3(1.0)));
+    float3 weight = amplitude * ((-1.0) / mix(8.0, 5.0, fast::clamp(_54.sharpen, 0.0, 1.0)));
+    return fast::clamp((((((b + d) + f) + h) * weight) + center) / (float3(1.0) + (weight * 4.0)), float3(0.0), float3(1.0));
+}
+
+static inline __attribute__((always_inline))
+float3 Grade(thread const float3& color, texture2d<float> grading, sampler gradingSampler)
+{
+    float blue = color.z * 31.0;
+    float lowerSlice = floor(blue);
+    float upperSlice = fast::min(lowerSlice + 1.0, 31.0);
+    float sliceBlend = blue - lowerSlice;
+    float x = ((color.x * 31.0) + 0.5) / 1024.0;
+    float y = ((color.y * 31.0) + 0.5) / 32.0;
+    float3 lower = grading.sample(gradingSampler, float2(x + (lowerSlice * 0.03125), y)).xyz;
+    float3 upper = grading.sample(gradingSampler, float2(x + (upperSlice * 0.03125), y)).xyz;
+    return mix(lower, upper, float3(sliceBlend));
+}
+
+static inline __attribute__((always_inline))
+float4 _main(thread const FSInput& _input, constant CompositeUniforms& _54, texture2d<float> scene, sampler sceneSampler, texture2d<float> bloom, sampler bloomSampler, texture2d<float> grading, sampler gradingSampler)
+{
+    float2 uv = _input.pos.xy * _54.inverseTargetSize;
+    float4 color = scene.sample(sceneSampler, uv, level(0.0));
+    float2 param = uv;
+    float3 param_1 = color.xyz;
+    bool _86 = Fxaa(param, param_1, _54, scene, sceneSampler);
+    color.x = param_1.x;
+    color.y = param_1.y;
+    color.z = param_1.z;
+    bool smoothed = (_54.fxaa > 0.5) && _86;
+    if ((_54.sharpen > 0.0) && (!smoothed))
+    {
+        float2 param_2 = uv;
+        float3 param_3 = color.xyz;
+        float3 _114 = Sharpen(param_2, param_3, _54, scene, sceneSampler);
+        color.x = _114.x;
+        color.y = _114.y;
+        color.z = _114.z;
+    }
+    if (_54.bloomScale > 0.0)
+    {
+        float3 glow = fast::clamp(bloom.sample(bloomSampler, uv).xyz * _54.bloomScale, float3(0.0), float3(1.0));
+        float4 _143 = color;
+        float3 _152 = float3(1.0) - ((float3(1.0) - _143.xyz) * (float3(1.0) - glow));
+        color.x = _152.x;
+        color.y = _152.y;
+        color.z = _152.z;
+    }
+    if (_54.gradingStrength > 0.0)
+    {
+        float4 _165 = color;
+        float3 param_4 = color.xyz;
+        float3 _174 = mix(_165.xyz, Grade(param_4, grading, gradingSampler), float3(_54.gradingStrength));
+        color.x = _174.x;
+        color.y = _174.y;
+        color.z = _174.z;
+    }
+    return color;
+}
+
+fragment main0_out main0(main0_in in [[stage_in]], constant CompositeUniforms& _54 [[buffer(0)]], texture2d<float> scene [[texture(0)]], texture2d<float> bloom [[texture(1)]], texture2d<float> grading [[texture(2)]], sampler sceneSampler [[sampler(0)]], sampler bloomSampler [[sampler(1)]], sampler gradingSampler [[sampler(2)]], float4 gl_FragCoord [[position]])
 {
     main0_out out = {};
-    float2 _210 = gl_FragCoord.xy * _31.inverseTargetSize;
-    float4 _215 = scene.sample(sceneSampler, _210);
-    float4 _354;
-    if (_31.bloomScale > 0.0)
-    {
-        float3 _241 = float3(1.0) - ((float3(1.0) - _215.xyz) * (float3(1.0) - fast::clamp(bloom.sample(bloomSampler, _210).xyz * _31.bloomScale, float3(0.0), float3(1.0))));
-        float4 _337 = _215;
-        _337.x = _241.x;
-        _337.y = _241.y;
-        _337.z = _241.z;
-        _354 = _337;
-    }
-    else
-    {
-        _354 = _215;
-    }
-    float4 _355;
-    if (_31.gradingStrength > 0.0)
-    {
-        float _282 = _354.z * 31.0;
-        float _284 = floor(_282);
-        float _295 = ((_354.x * 31.0) + 0.5) * 0.0009765625;
-        float _300 = ((_354.y * 31.0) + 0.5) * 0.03125;
-        float3 _261 = mix(_354.xyz, mix(grading.sample(gradingSampler, float2(_295 + (_284 * 0.03125), _300)).xyz, grading.sample(gradingSampler, float2(_295 + (fast::min(_284 + 1.0, 31.0) * 0.03125), _300)).xyz, float3(_282 - _284)), float3(_31.gradingStrength));
-        float4 _346 = _354;
-        _346.x = _261.x;
-        _346.y = _261.y;
-        _346.z = _261.z;
-        _355 = _346;
-    }
-    else
-    {
-        _355 = _354;
-    }
-    out._entryPointOutput = _355;
+    FSInput _input;
+    _input.pos = gl_FragCoord;
+    _input.uv = in.input_uv;
+    FSInput param = _input;
+    out._entryPointOutput = _main(param, _54, scene, sceneSampler, bloom, bloomSampler, grading, gradingSampler);
     return out;
 }
 

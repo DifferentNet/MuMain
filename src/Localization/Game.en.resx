@@ -1712,6 +1712,30 @@
   <data name="Anisotropic Filtering Tooltip" xml:space="preserve">
     <value>Keeps textures sharp at a slant: world textures in the Enhanced look, upscaled textures in both looks</value>
   </data>
+  <data name="GraphicsPresetRow" xml:space="preserve">
+    <value>Graphics preset</value>
+  </data>
+  <data name="GraphicsPresetLow" xml:space="preserve">
+    <value>Low</value>
+  </data>
+  <data name="GraphicsPresetMedium" xml:space="preserve">
+    <value>Medium</value>
+  </data>
+  <data name="GraphicsPresetHigh" xml:space="preserve">
+    <value>High</value>
+  </data>
+  <data name="GraphicsPresetUltra" xml:space="preserve">
+    <value>Ultra</value>
+  </data>
+  <data name="GraphicsPresetCustom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="FxaaRow" xml:space="preserve">
+    <value>FXAA</value>
+  </data>
+  <data name="SharpenRow" xml:space="preserve">
+    <value>Sharpening</value>
+  </data>
   <data name="Close388" xml:space="preserve">
     <value>Close</value>
     <comment>legacy_id=388,1002</comment>

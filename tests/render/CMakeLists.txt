@@ -190,6 +190,7 @@ mu_add_test(
         test_look_profile.cpp
         test_look_tuning.cpp
         test_look_preset.cpp
+        test_graphics_preset.cpp
         test_tuning_controls.cpp
         test_tuning_session.cpp
         test_look_layers.cpp

@@ -68,6 +68,9 @@ struct PostProcessingLook
     float bloomStrength = 0.0f;
     float bloomLevelFalloff = 0.5f;
     float gradingStrength = 1.0f;
+    // Screen filters of the finished scene (see Render/PostProcessing/ScreenFilterSetting.h).
+    bool fxaa = false;
+    float sharpen = 0.0f; // 0..1
 };
 
 // ---------------------------------------------------------------------------

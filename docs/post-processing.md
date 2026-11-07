@@ -66,7 +66,36 @@ nothing. To make a new table, paste that strip into a screenshot of the map,
 grade the whole image in an image editor, and cut the strip out again. A
 table must never brighten a colour and must leave colours above 60 %
 brightness as they are; `scripts/grading_table.py` refuses to write one that
-does. Strong darkening belongs to the map's lighting, not its grading. The
-shipped `World2.png` (Dungeon: colder, slightly desaturated and a little deeper
-shadows, mid-tones and highlights unchanged) comes from
-`scripts/grading_table.py dungeon`.
+does. Strong darkening belongs to the map's lighting, not its grading.
+
+The shipped tables come from `scripts/grading_table.py maps src/bin/Data/Grading`
+(one preset per map in `MAP_TABLES`, each a shadow tint with a little
+saturation or desaturation and deepening; mid-tones and highlights unchanged):
+
+| Map | Files | Mood |
+|---|---|---|
+| Lorencia | World1 | warm evening shadows, a touch more colour |
+| Dungeon | World2 | colder, slightly desaturated, a little deeper |
+| Devias | World3 | blue snow-light shadows |
+| Noria | World4 | green forest shade |
+| Lost Tower | World5 | violet gloom, deeper |
+| Atlans | World8 | underwater teal |
+| Tarkan | World9 | dusty amber |
+| Icarus | World11 | cold thin air |
+| Aida | World34 | deep emerald |
+| Kanturu 1–3 | World38–40 | cold steel, desaturated |
+| Swamp of Quiet | World57 | murky olive |
+| Raklion, its boss map | World58–59 | icy blue |
+
+## Screen filters
+
+Two player settings filter the finished scene in the same pass, before the
+bloom and the grading: **FXAA** (`[Render] Fxaa`, smooths jagged edges in one
+cheap pass, meant for when multisampling is off) and **sharpening**
+(`[Render] Sharpen`, 0 to 100 %, contrast-adaptive: flat areas and full-contrast
+edges are left alone, so it does not ring or add grain). Where FXAA smoothed an
+edge the pixel is not sharpened. They are chosen by the graphics preset or one
+by one in the options window, and work in both looks: with either on and the
+look's post-processing off (Classic, or the row switched off), the pass runs
+for the filters only, with no bloom and no grading. The interface is never
+filtered, and the diagnostic `$post view` images are not either.

@@ -45,6 +45,43 @@ options window, without editing those files (see "Tuning it yourself").
   textures in Enhanced, and upscaled textures (an optional asset pack) in both
   looks, because they are always drawn smaller than they are stored.
 
+## Graphics presets and screen filters
+
+The first row of the Graphics tab is **Graphics preset**: Low, Medium, High or
+Ultra. A preset sets the look, the four Enhanced features, the anti-aliasing,
+the screen filters and the anisotropy together, applies them at once and saves
+them:
+
+| Preset | Look | Lighting | Dynamic lights | Light mood | Bloom/grading | Anti-aliasing | FXAA | Sharpening | Anisotropy |
+|---|---|---|---|---|---|---|---|---|---|
+| Low | Classic | off | off | off | off | off | off | 0 | 1 |
+| Medium | Enhanced | on | off | on | on | off | on | 30 | 4 |
+| High | Enhanced | on | on | on | on | 4x | off | 30 | 8 |
+| Ultra | Enhanced | on | on | on | on | 8x | off | 30 | 16 |
+
+Presets never touch the effect and shadow switches, VSync, the FPS limit or the
+window size. Changing any of these rows by hand (the Enhanced checkboxes,
+Anti-aliasing, FXAA, Sharpening, Anisotropic filtering) re-reads the preset:
+the values still equal a row, so its name stays or becomes that one; otherwise
+the row reads **Custom** (shown only, it cannot be picked).
+
+`config.ini`, section `[Render]`:
+
+| Key | Values | Default |
+|---|---|---|
+| `GraphicsPreset` | `Auto`, `Low`, `Medium`, `High`, `Ultra` or `Custom` | `Auto` |
+| `Fxaa` | `1` smooths edges of the 3D scene in one cheap pass (for when anti-aliasing is off), `0` off | `0` |
+| `Sharpen` | sharpening of the 3D scene in percent, `0` (off) to `100` | `0` |
+
+**Auto** (no `GraphicsPreset` key, or `Auto`) is decided once at start-up from
+the GPU's name: a software renderer (Microsoft Basic Render, WARP, llvmpipe,
+SwiftShader) gets Low; integrated graphics (Intel except Arc; AMD "Radeon
+Graphics" or Vega without "RX") and an empty or unknown name get Medium; every
+other GPU gets High. That preset is applied and written to `config.ini` by
+name, so Auto does not run again; the log has a line `Graphics preset Auto: ...
+for GPU '...'`. With any other value start-up leaves the saved values alone.
+FXAA and sharpening work in both looks; the interface is never filtered.
+
 The login and character selection scenes take the Enhanced features too,
 except the light mood. The interface is the same in both looks.
 

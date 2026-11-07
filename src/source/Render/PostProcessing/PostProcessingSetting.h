@@ -18,6 +18,10 @@ bool SetPostProcessingEnabled(bool enabled);
 // renderer. Call once per frame, before the scene's end.
 void SubmitPostProcessingLook();
 
+// Re-applies the pass after a screen filter changed: the pass runs while the
+// look's post-processing or any screen filter is on (ScreenFilterSetting.h).
+void RefreshPostProcessing();
+
 // `$post view scene|source|bloom`: for diagnosis, shows the bloom source (the
 // additive draws alone) or the blurred bloom in place of the scene. Not saved;
 // false for an unknown view name.

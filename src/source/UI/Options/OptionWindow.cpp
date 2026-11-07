@@ -9,6 +9,7 @@
 #include "Data/GameConfig/GameConfigConstants.h"
 #include "Core/Input/GamepadInput.h"
 #include "UI/Chat/MessageType.h"
+#include "Render/Look/GraphicsPresetSetting.h"
 #include "Render/Look/LookPresetSetting.h"
 #include "Render/Look/LookProfileSetting.h"
 #include "Render/Look/TuningSetting.h"
@@ -80,7 +81,9 @@ static constexpr int kInterfaceViewDropdown = 8;
 static constexpr int kControlsDropdown = 9;
 static constexpr int kTouchButtonsDropdown = 10;
 static constexpr int kGamepadDropdown = 11;
-static constexpr int kLastDropdownId = kGamepadDropdown;
+static constexpr int kGraphicsPresetDropdown = 12;
+static constexpr int kSharpenDropdown = 13;
+static constexpr int kLastDropdownId = kSharpenDropdown;
 // The gamepad row's choices, in its labels' order.
 static constexpr int kGamepadOnIndex = 0;
 static constexpr int kGamepadQuietIndex = 1;
@@ -213,6 +216,11 @@ static const int s_NumFpsCapValues = sizeof(s_FpsCapValues) / sizeof(s_FpsCapVal
 // ([Render] Antialiasing, Anisotropy); the first entry of each is "Off".
 static constexpr int s_AntialiasingValues[] = {0, 2, 4, 8};
 static constexpr int s_AnisotropyValues[] = {1, 2, 4, 8, 16};
+// The graphics preset row's presets, in its labels' order (the Custom entry is shown, never picked), and
+// the Sharpening row's percentages ([Render] Sharpen); the first entry of the latter is "Off".
+static constexpr GraphicsPreset s_GraphicsPresets[] = {GraphicsPreset::Low, GraphicsPreset::Medium,
+                                                       GraphicsPreset::High, GraphicsPreset::Ultra};
+static constexpr int s_SharpenValues[] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
 
 namespace
 {
@@ -498,6 +506,16 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("tuning_reset_group_label", &model.tuningResetGroupLabel);
     c.Bind("tuning_reset_all_label", &model.tuningResetAllLabel);
     c.Bind("tuning_save_message", &model.tuningSaveMessage);
+    c.Bind("graphics_preset_labels", &model.graphicsPresetLabels);
+    c.Bind("graphics_preset_index", &model.graphicsPresetIndex);
+    c.Bind("graphics_preset_row_label", &model.graphicsPresetRowLabel);
+    c.Bind("graphics_preset_value_label", &model.graphicsPresetValueLabel);
+    c.Bind("fxaa", &model.fxaa);
+    c.Bind("fxaa_label", &model.fxaaLabel);
+    c.Bind("sharpen_labels", &model.sharpenLabels);
+    c.Bind("sharpen_index", &model.sharpenIndex);
+    c.Bind("sharpen_row_label", &model.sharpenRowLabel);
+    c.Bind("sharpen_value_label", &model.sharpenValueLabel);
     c.Bind("antialiasing_labels", &model.antialiasingLabels);
     c.Bind("antialiasing_index", &model.antialiasingIndex);
     c.Bind("antialiasing_row_label", &model.antialiasingRowLabel);
@@ -597,6 +615,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
                 RmlDropdownOptionClick(arguments[0].Get<int>(-1), arguments[1].Get<int>(-1));
         });
 
+    c.BindEventCallback("option_toggle_fxaa",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleFxaa(); });
     c.BindEventCallback("option_toggle_vsync",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleVsync(); });
 
@@ -952,6 +972,12 @@ void mu::ui::window::COptionWindow::RmlDropdownOptionClick(int dropdownId, int o
     case 7:
         RmlAnisotropyChanged(optionIndex);
         break;
+    case kGraphicsPresetDropdown:
+        RmlGraphicsPresetChanged(optionIndex);
+        break;
+    case kSharpenDropdown:
+        RmlSharpenChanged(optionIndex);
+        break;
     case kInterfaceViewDropdown:
         RmlInterfaceViewChanged(optionIndex);
         break;
@@ -1183,6 +1209,7 @@ void mu::ui::window::COptionWindow::RmlToggleEnhancedGraphics()
 {
     const bool enhanced = Render::Look::ActiveLookPreset() == LookPreset::Enhanced;
     Render::Look::ApplyLookPreset(enhanced ? LookPreset::Classic : LookPreset::Enhanced);
+    Render::Look::RefreshGraphicsPreset();
 }
 
 void mu::ui::window::COptionWindow::RmlToggleEnhancedFeature(int feature)
@@ -1196,6 +1223,7 @@ void mu::ui::window::COptionWindow::RmlToggleEnhancedFeature(int feature)
     if (chosen == EnhancedFeature::DynamicLights && !Render::Look::EnhancedFeatureChosen(EnhancedFeature::Lighting))
         return; // dynamic lights act only with Enhanced lighting
     Render::Look::ChooseEnhancedFeature(chosen, !Render::Look::EnhancedFeatureChosen(chosen));
+    Render::Look::RefreshGraphicsPreset();
 }
 
 void mu::ui::window::COptionWindow::RmlToggleTuningGroup(int group)
@@ -1373,6 +1401,34 @@ void mu::ui::window::COptionWindow::RmlAntialiasingChanged(int index)
     if (index < 0 || index >= static_cast<int>(std::size(s_AntialiasingValues)))
         return;
     MuSetAntialiasingPreference(s_AntialiasingValues[index]);
+    Render::Look::RefreshGraphicsPreset();
+}
+
+// The preset sets every value it covers and saves config.ini (Render::Look::ApplyGraphicsPreset).
+void mu::ui::window::COptionWindow::RmlGraphicsPresetChanged(int index)
+{
+    // See RmlResolutionChanged's own comment -- same settle-frame guard applies here.
+    if (m_rmlSyncCount < kRmlSelectSettleFrames)
+        return;
+    if (index < 0 || index >= static_cast<int>(std::size(s_GraphicsPresets)))
+        return;
+    Render::Look::ApplyGraphicsPreset(s_GraphicsPresets[index]);
+}
+
+void mu::ui::window::COptionWindow::RmlToggleFxaa()
+{
+    const GameConfig& config = GameConfig::GetInstance();
+    Render::Look::ChooseScreenFilters(!config.GetFxaa(), config.GetSharpen());
+}
+
+void mu::ui::window::COptionWindow::RmlSharpenChanged(int index)
+{
+    // See RmlResolutionChanged's own comment -- same settle-frame guard applies here.
+    if (m_rmlSyncCount < kRmlSelectSettleFrames)
+        return;
+    if (index < 0 || index >= static_cast<int>(std::size(s_SharpenValues)))
+        return;
+    Render::Look::ChooseScreenFilters(GameConfig::GetInstance().GetFxaa(), s_SharpenValues[index]);
 }
 
 void mu::ui::window::COptionWindow::RmlAnisotropyChanged(int index)
@@ -1383,6 +1439,7 @@ void mu::ui::window::COptionWindow::RmlAnisotropyChanged(int index)
     if (index < 0 || index >= static_cast<int>(std::size(s_AnisotropyValues)))
         return;
     MuSetAnisotropyPreference(s_AnisotropyValues[index]);
+    Render::Look::RefreshGraphicsPreset();
 }
 
 void mu::ui::window::COptionWindow::RmlToggleShowFpsCounter()
@@ -1902,6 +1959,9 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.lookDynamicLightsLabel, "look_dynamic_lights_label", I18N::Game::DynamicLights);
     syncLabel(model.lookLightMoodLabel, "look_light_mood_label", I18N::Game::LightMood);
     syncLabel(model.lookPostProcessingLabel, "look_post_processing_label", I18N::Game::BloomAndColourGrading);
+    syncLabel(model.graphicsPresetRowLabel, "graphics_preset_row_label", I18N::Game::GraphicsPresetRow);
+    syncLabel(model.fxaaLabel, "fxaa_label", I18N::Game::FxaaRow);
+    syncLabel(model.sharpenRowLabel, "sharpen_row_label", I18N::Game::SharpenRow);
     syncLabel(model.antialiasingRowLabel, "antialiasing_row_label", I18N::Game::AntiAliasing);
     syncLabel(model.antialiasingTooltip, "antialiasing_tooltip", I18N::Game::AntiAliasingTooltip);
     syncLabel(model.anisotropyRowLabel, "anisotropy_row_label", I18N::Game::AnisotropicFiltering);
@@ -2043,6 +2103,44 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
         }
         syncDropdownValue(valueLabel, valueName, labels, index);
     };
+    {
+        const GameConfig& config = GameConfig::GetInstance();
+        const std::vector<Rml::String> presetLabels =
+            NarrowLabels({I18N::Game::GraphicsPresetLow, I18N::Game::GraphicsPresetMedium,
+                          I18N::Game::GraphicsPresetHigh, I18N::Game::GraphicsPresetUltra});
+        const auto presetEntry =
+            std::find(std::begin(s_GraphicsPresets), std::end(s_GraphicsPresets), config.GetGraphicsPreset());
+        const int presetIndex = presetEntry == std::end(s_GraphicsPresets)
+                                    ? -1
+                                    : static_cast<int>(presetEntry - std::begin(s_GraphicsPresets));
+        if (model.graphicsPresetLabels != presetLabels)
+        {
+            model.graphicsPresetLabels = presetLabels;
+            m_RmlView.MarkDirty("graphics_preset_labels");
+        }
+        if (model.graphicsPresetIndex != presetIndex)
+        {
+            model.graphicsPresetIndex = presetIndex;
+            m_RmlView.MarkDirty("graphics_preset_index");
+        }
+        // Values that match no preset read "Custom" in the value box, which the list does not offer.
+        std::vector<Rml::String> presetValues = presetLabels;
+        presetValues.push_back(StringUtils::WideToNarrow(I18N::Game::GraphicsPresetCustom));
+        syncDropdownValue(model.graphicsPresetValueLabel, "graphics_preset_value_label", presetValues,
+                          presetIndex < 0 ? static_cast<int>(presetLabels.size()) : presetIndex);
+        const bool fxaa = config.GetFxaa();
+        if (model.fxaa != fxaa)
+        {
+            model.fxaa = fxaa;
+            m_RmlView.MarkDirty("fxaa");
+        }
+        std::vector<Rml::String> sharpenLabels = MultiplierLabels(s_SharpenValues);
+        for (std::size_t i = 1; i < sharpenLabels.size(); ++i)
+            sharpenLabels[i] = std::to_string(s_SharpenValues[i]) + " %";
+        syncMultiplierRow(model.sharpenLabels, "sharpen_labels", model.sharpenIndex, "sharpen_index",
+                          model.sharpenValueLabel, "sharpen_value_label", std::move(sharpenLabels),
+                          FindValueIndex(s_SharpenValues, config.GetSharpen()));
+    }
     syncMultiplierRow(model.antialiasingLabels, "antialiasing_labels", model.antialiasingIndex, "antialiasing_index",
                       model.antialiasingValueLabel, "antialiasing_value_label", MultiplierLabels(s_AntialiasingValues),
                       FindValueIndex(s_AntialiasingValues, GameConfig::GetInstance().GetAntialiasing()));

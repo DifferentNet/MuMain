@@ -41,10 +41,15 @@ struct SdlGpuCompositeUniform
     // 0: ungraded; otherwise the blend of the graded colour with the ungraded one
     // (Render::PostProcessing::CompositeGradingStrength).
     float gradingStrength;
+    float fxaa;    // 1: FXAA on
+    float sharpen; // 0..1, 0: off
+    float padding[2];
 };
 static_assert(offsetof(SdlGpuCompositeUniform, bloomScale) == 8);
 static_assert(offsetof(SdlGpuCompositeUniform, gradingStrength) == 12);
-static_assert(sizeof(SdlGpuCompositeUniform) == 16);
+static_assert(offsetof(SdlGpuCompositeUniform, fxaa) == 16);
+static_assert(offsetof(SdlGpuCompositeUniform, sharpen) == 20);
+static_assert(sizeof(SdlGpuCompositeUniform) == 32);
 
 // The textures and passes that turn the rendered 3D scene into the processed
 // image the UI is then drawn on: the scene texture the scene pass resolves into,
@@ -82,8 +87,9 @@ public:
     // Draws the processed scene over the whole target of `pass`: the scene,
     // plus this frame's bloom scaled by the look's bloom strength when
     // RenderBloom ran (with the same level falloff), graded through the grading
-    // table at the look's grading strength when one is set. The diagnostic
-    // views show the bloom source or the bloom instead, ungraded.
+    // table at the look's grading strength when one is set, after the look's
+    // screen filters (FXAA, sharpening). The diagnostic views show the bloom
+    // source or the bloom instead, ungraded and unfiltered.
     void DrawComposite(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* pass, SdlGpuTargetSize size,
                        const PostProcessingLook& look, PostProcessingView view);
 

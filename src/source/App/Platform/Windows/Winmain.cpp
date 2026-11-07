@@ -32,10 +32,12 @@
 #include <vector>
 #include "Core/Platform/WinIni.h" // private-profile (.ini) API
 #include "Data/GameConfig/GameConfig.h"
+#include "Data/GameConfig/GameConfigConstants.h"
 #include "UI/Core/UIManager.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
 #include "Render/Textures/ZzzTexture.h"
 #include "Render/Renderer/MuRenderer.h"
+#include "Render/Look/GraphicsPresetSetting.h"
 #include "Render/Look/LookPresetSetting.h"
 #include "Render/Look/LookProfileSetting.h"
 #include "Render/Look/TuningSetting.h"
@@ -1619,6 +1621,45 @@ static std::vector<std::pair<int, int>> MuWebDisplayResolutions()
 }
 #endif
 
+#if !defined(__EMSCRIPTEN__) && !defined(_EDITOR)
+// A new installation ([Window] Width or Height 0): a window of the largest display mode of the main
+// monitor that fits its usable area (without the taskbar), saved as numbers. The browser build takes its
+// size from the page, and the Linux editor picks its video driver later.
+static void ResolveAutoWindowSize()
+{
+    GameConfig& config = GameConfig::GetInstance();
+    if (config.GetWindowWidth() > 0 && config.GetWindowHeight() > 0)
+    {
+        return;
+    }
+    std::pair<int, int> size{CfgDefaults::CfgDefaultWindowWidth, CfgDefaults::CfgDefaultWindowHeight};
+    const SDL_DisplayID display = SDL_InitSubSystem(SDL_INIT_VIDEO) ? SDL_GetPrimaryDisplay() : 0;
+    SDL_Rect usable{};
+    if (display != 0 && SDL_GetDisplayUsableBounds(display, &usable))
+    {
+        std::vector<std::pair<int, int>> modes;
+        int modeCount = 0;
+        SDL_DisplayMode** displayModes = SDL_GetFullscreenDisplayModes(display, &modeCount);
+        for (int i = 0; displayModes != nullptr && i < modeCount; ++i)
+        {
+            modes.emplace_back(displayModes[i]->w, displayModes[i]->h);
+        }
+        SDL_free(displayModes);
+        // Room for the window's title bar and frame, which the usable area does not leave.
+        constexpr int WindowFrameAllowance = 48;
+        size = GameConfigValidation::ChooseWindowSize(modes, usable.w, usable.h - WindowFrameAllowance);
+    }
+    mu::log::Get("platform")->info("Window size 0: using {}x{} windowed", size.first, size.second);
+    config.SetWindowSize(size.first, size.second);
+    config.SetWindowMode(true);
+    config.Save();
+}
+#else
+static void ResolveAutoWindowSize()
+{
+}
+#endif
+
 std::vector<std::pair<int, int>> MuGetSupportedDisplayResolutions()
 {
     std::vector<std::pair<int, int>> resolutions;
@@ -2660,6 +2701,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     g_iChatInputType = 1;
 
     // Apply window settings from INI
+    ResolveAutoWindowSize();
     WindowWidth = GameConfig::GetInstance().GetWindowWidth();
     WindowHeight = GameConfig::GetInstance().GetWindowHeight();
     g_bUseWindowMode = GameConfig::GetInstance().GetWindowMode() ? TRUE : FALSE;
@@ -2935,7 +2977,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     ApplyVSyncPreferenceNow(GameConfig::GetInstance().GetVSyncEnabled());
     Render::Look::LoadProfile();
     Render::Look::LoadPersonalTuning();
-    Render::Look::ApplyLookPreset(GameConfig::GetInstance().GetLook());
+    Render::Look::ApplyStartupGraphics();
 
     // Apply persisted DXP-23 effect-cost toggles (Options window's Graphics tab, formerly only
     // reachable via the console-only $effects ... diagnostics) at launch, same as VSync above.

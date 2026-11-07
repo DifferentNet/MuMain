@@ -117,6 +117,10 @@ void GameConfig::Load()
     m_dynamicLights = ReadBool(CfgSectionRender, CfgKeyDynamicLights, CfgDefaultDynamicLights);
     m_lightMood = ReadBool(CfgSectionRender, CfgKeyLightMood, CfgDefaultLightMood);
     m_postProcessing = ReadBool(CfgSectionRender, CfgKeyPostProcessing, CfgDefaultPostProcessing);
+    m_graphicsPreset = GameConfigValidation::ValidateGraphicsPreset(
+        ReadString(CfgSectionRender, CfgKeyGraphicsPreset, CfgDefaultGraphicsPreset));
+    m_fxaa = ReadBool(CfgSectionRender, CfgKeyFxaa, CfgDefaultFxaa);
+    m_sharpen = GameConfigValidation::ValidateSharpen(ReadInt(CfgSectionRender, CfgKeySharpen, CfgDefaultSharpen));
 
     m_renderBackend = GameConfigValidation::ValidateRenderBackend(
         ReadString(CfgSectionRender, CfgKeyRenderBackend, CfgDefaultRenderBackend), CfgDefaultRenderBackend);
@@ -194,6 +198,9 @@ void GameConfig::Save()
     WriteBool(CfgSectionRender, CfgKeyDynamicLights, m_dynamicLights);
     WriteBool(CfgSectionRender, CfgKeyLightMood, m_lightMood);
     WriteBool(CfgSectionRender, CfgKeyPostProcessing, m_postProcessing);
+    WriteString(CfgSectionRender, CfgKeyGraphicsPreset, GameConfigValidation::FormatGraphicsPreset(m_graphicsPreset));
+    WriteBool(CfgSectionRender, CfgKeyFxaa, m_fxaa);
+    WriteInt(CfgSectionRender, CfgKeySharpen, m_sharpen);
     WriteBool(CfgSectionRender, CfgKeyDisableEffects, m_disableEffects);
     WriteBool(CfgSectionRender, CfgKeyDisableParticles, m_disableParticles);
     WriteBool(CfgSectionRender, CfgKeyDisableSkillEffectModels, m_disableSkillEffectModels);
@@ -307,6 +314,11 @@ void GameConfig::SetAnisotropy(int anisotropy)
 void GameConfig::SetAntialiasing(int samples)
 {
     m_antialiasing = GameConfigValidation::ValidateAntialiasing(samples);
+}
+
+void GameConfig::SetSharpen(int percent)
+{
+    m_sharpen = GameConfigValidation::ValidateSharpen(percent);
 }
 
 void GameConfig::SetDisableEffects(bool disabled)

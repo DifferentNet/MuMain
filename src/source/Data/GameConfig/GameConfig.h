@@ -184,6 +184,13 @@ public:
         return m_antialiasing;
     }
     void SetAntialiasing(int samples);
+    // [Render] GraphicsPreset, Fxaa (on/off) and Sharpen (0 to 100 percent).
+    GraphicsPreset GetGraphicsPreset() const { return m_graphicsPreset; }
+    void SetGraphicsPreset(GraphicsPreset preset) { m_graphicsPreset = preset; }
+    bool GetFxaa() const { return m_fxaa; }
+    void SetFxaa(bool enabled) { m_fxaa = enabled; }
+    int GetSharpen() const { return m_sharpen; }
+    void SetSharpen(int percent);
     bool GetEnhancedLighting() const { return m_enhancedLighting; }
     void SetEnhancedLighting(bool enabled) { m_enhancedLighting = enabled; }
     bool GetDynamicLights() const { return m_dynamicLights; }
@@ -288,6 +295,9 @@ private:
     bool m_dynamicLights;
     bool m_lightMood;
     bool m_postProcessing;
+    GraphicsPreset m_graphicsPreset = GraphicsPreset::Auto;
+    bool m_fxaa = false;
+    int m_sharpen = 0;
     std::wstring m_renderBackend;
     bool m_disableEffects;
     bool m_disableParticles;
