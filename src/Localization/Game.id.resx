@@ -13034,4 +13034,418 @@
   <data name="QuestRequirementBuff" xml:space="preserve">
     <value>Bonus: %ls</value>
   </data>
+  <data name="TouchAttack" xml:space="preserve">
+    <value>Serang</value>
+  </data>
+  <data name="TouchPickUp" xml:space="preserve">
+    <value>Ambil</value>
+  </data>
+  <data name="TouchAuto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="TouchNextTarget" xml:space="preserve">
+    <value>Target</value>
+  </data>
+  <data name="TouchMenu" xml:space="preserve">
+    <value>Menu</value>
+  </data>
+  <data name="TouchChat" xml:space="preserve">
+    <value>Obrolan</value>
+  </data>
+  <data name="TouchMenuInventory" xml:space="preserve">
+    <value>Inventaris</value>
+  </data>
+  <data name="TouchMenuCharacter" xml:space="preserve">
+    <value>Karakter</value>
+  </data>
+  <data name="TouchMenuParty" xml:space="preserve">
+    <value>Party</value>
+  </data>
+  <data name="TouchMenuGuild" xml:space="preserve">
+    <value>Guild</value>
+  </data>
+  <data name="TouchMenuFriends" xml:space="preserve">
+    <value>Teman</value>
+  </data>
+  <data name="TouchMenuQuests" xml:space="preserve">
+    <value>Misi</value>
+  </data>
+  <data name="TouchMenuMap" xml:space="preserve">
+    <value>Peta</value>
+  </data>
+  <data name="TouchMenuMove" xml:space="preserve">
+    <value>Teleportasi</value>
+  </data>
+  <data name="TouchMenuBattlePass" xml:space="preserve">
+    <value>Battle pass</value>
+  </data>
+  <data name="TouchMenuDaily" xml:space="preserve">
+    <value>Hadiah harian</value>
+  </data>
+  <data name="TouchMenuEvents" xml:space="preserve">
+    <value>Event</value>
+  </data>
+  <data name="TouchMenuHelper" xml:space="preserve">
+    <value>MU Helper</value>
+  </data>
+  <data name="TouchMenuCommands" xml:space="preserve">
+    <value>Perintah</value>
+  </data>
+  <data name="TouchMenuHelp" xml:space="preserve">
+    <value>Bantuan</value>
+  </data>
+  <data name="TouchMenuSystem" xml:space="preserve">
+    <value>Sistem</value>
+  </data>
+  <data name="TouchBindPick" xml:space="preserve">
+    <value>Pilih skill, lalu ketuk tombol skill di kanan untuk menaruhnya di sana</value>
+  </data>
+  <data name="TouchBindPlace" xml:space="preserve">
+    <value>Ketuk tombol yang menyala untuk menaruh skill di sana</value>
+  </data>
+  <data name="TouchBindPickFor" xml:space="preserve">
+    <value>Pilih skill untuk tombol yang menyala</value>
+  </data>
+  <data name="TouchButtonSizeRow" xml:space="preserve">
+    <value>Ukuran tombol</value>
+  </data>
+  <data name="TouchMenuSkills" xml:space="preserve">
+    <value>Skill</value>
+  </data>
+  <data name="TouchMenuView" xml:space="preserve">
+    <value>Tampilan PC / ponsel</value>
+  </data>
+  <data name="TouchItemEquip" xml:space="preserve">
+    <value>Pakai</value>
+  </data>
+  <data name="TouchItemUnequip" xml:space="preserve">
+    <value>Lepas</value>
+  </data>
+  <data name="TouchItemMove" xml:space="preserve">
+    <value>Pindah</value>
+  </data>
+  <data name="TouchItemSell" xml:space="preserve">
+    <value>Jual</value>
+  </data>
+  <data name="TouchItemHotkeyQ" xml:space="preserve">
+    <value>Taruh di tombol Q</value>
+  </data>
+  <data name="TouchItemHotkeyW" xml:space="preserve">
+    <value>Taruh di tombol W</value>
+  </data>
+  <data name="TouchItemDrop" xml:space="preserve">
+    <value>Buang</value>
+  </data>
+  <data name="TouchItemDropAsk" xml:space="preserve">
+    <value>Buang ke tanah?</value>
+  </data>
+  <data name="TouchHeroLevel" xml:space="preserve">
+    <value>Lv. %d</value>
+  </data>
+  <data name="TouchHeroMasterLevel" xml:space="preserve">
+    <value>Lv. %d | Master %d</value>
+  </data>
+  <data name="TouchHelpTitle" xml:space="preserve">
+    <value>Kontrol sentuh</value>
+  </data>
+  <data name="TouchHelpWorld" xml:space="preserve">
+    <value>Ketuk dunia: jalan ke sana, bicara dengan NPC, serang monster</value>
+  </data>
+  <data name="TouchHelpStick" xml:space="preserve">
+    <value>Sisi kiri layar: seret untuk berjalan (ini menghentikan pertarungan)</value>
+  </data>
+  <data name="TouchHelpAttack" xml:space="preserve">
+    <value>Serang: ketuk untuk memukul monster terdekat sekali, tahan untuk terus bertarung</value>
+  </data>
+  <data name="TouchHelpSkills" xml:space="preserve">
+    <value>Tombol skill: ketuk untuk memakai skill sekali, tahan untuk mengulang</value>
+  </data>
+  <data name="TouchHelpPickUp" xml:space="preserve">
+    <value>Ambil: ketuk untuk item terdekat, tahan untuk terus mengambil</value>
+  </data>
+  <data name="TouchHelpAuto" xml:space="preserve">
+    <value>Auto: MU Helper nyala dan mati; berjalan dengan stik memindahkan tempat ia berburu</value>
+  </data>
+  <data name="TouchHelpTarget" xml:space="preserve">
+    <value>Target: pindah ke monster berikutnya menurut jarak; monster yang akan dipukul Serang disorot</value>
+  </data>
+  <data name="TouchHelpNova" xml:space="preserve">
+    <value>Nova: tahan tombolnya untuk mengisi, lepas untuk melepaskan (lepas sendiri setelah 5 detik)</value>
+  </data>
+  <data name="TouchHelpPotions" xml:space="preserve">
+    <value>Q dan W: minum potion</value>
+  </data>
+  <data name="TouchHelpMenu" xml:space="preserve">
+    <value>Menu: semua jendela. Kembali: menutup jendela paling atas</value>
+  </data>
+  <data name="TouchHelpItem" xml:space="preserve">
+    <value>Tahan item: kartunya dengan hal yang bisa dilakukan. Tahan + pada statistik: banyak poin sekaligus</value>
+  </data>
+  <data name="TouchHelpDrag" xml:space="preserve">
+    <value>Seret item untuk memindahkannya, seret daftar untuk menggulir</value>
+  </data>
+  <data name="TouchHelpView" xml:space="preserve">
+    <value>Menu, tampilan PC / ponsel: tata letak PC dan kembali</value>
+  </data>
+  <data name="TouchHelpStickGate" xml:space="preserve">
+    <value>Setelah gerbang atau pindah peta, angkat jari untuk berjalan lagi</value>
+  </data>
+  <data name="TouchHelpSkillsSet" xml:space="preserve">
+    <value>Tombol Skill menaruh skill di tombol-tombol</value>
+  </data>
+  <data name="TouchHelpNextHint" xml:space="preserve">
+    <value>Ketuk di sini: halaman berikutnya</value>
+  </data>
+  <data name="TouchHelpCloseHint" xml:space="preserve">
+    <value>Ketuk di sini: tutup</value>
+  </data>
+  <data name="PadHelpTitle" xml:space="preserve">
+    <value>Gamepad (tata letak Xbox)</value>
+  </data>
+  <data name="PadHelpSticks" xml:space="preserve">
+    <value>Stik kiri: berjalan. Stik kanan: sentil untuk target berikutnya (kanan lebih jauh, kiri lebih dekat); di jendela, penunjuk bebas</value>
+  </data>
+  <data name="PadHelpAttack" xml:space="preserve">
+    <value>A: ketuk untuk memukul target sekali, tahan untuk terus bertarung</value>
+  </data>
+  <data name="PadHelpSkills" xml:space="preserve">
+    <value>X, Y, B: tiga tombol skill. Tahan RT: X dan Y memakai skill 4 dan 5. RB: anggota party yang menerima heal dan buff-mu</value>
+  </data>
+  <data name="PadHelpSkillList" xml:space="preserve">
+    <value>LS (tekan stik kiri, di tengah): taruh skill di tombol</value>
+  </data>
+  <data name="PadHelpBack" xml:space="preserve">
+    <value>B saat jendela terbuka: kembali, menutup jendela paling atas</value>
+  </data>
+  <data name="PadHelpPickUp" xml:space="preserve">
+    <value>D-pad bawah: ambil item yang namanya tampil, tahan untuk terus mengambil; jika tak ada yang diambil, bicara dengan NPC terdekat</value>
+  </data>
+  <data name="PadHelpPotions" xml:space="preserve">
+    <value>LB dan LT: potion Q dan W. D-pad kiri: peta (ditahan: jendela Teleportasi). D-pad kanan: inventaris</value>
+  </data>
+  <data name="PadHelpClick" xml:space="preserve">
+    <value>RS (tekan stik kanan, di tengah): kembali ke target terdekat</value>
+  </data>
+  <data name="PadHelpMenu" xml:space="preserve">
+    <value>Menu: pusat hero (inventaris, karakter, skill, misi, guild, pengaturan), LB dan RB mengganti tab-nya. Lagi: semua jendela. Tahan Menu: obrolan</value>
+  </data>
+  <data name="PadHelpScreens" xml:space="preserve">
+    <value>Layar login dan karakter: stik menggerakkan penunjuk</value>
+  </data>
+  <data name="PadHelpScreensKeys" xml:space="preserve">
+    <value>Di sana A mengklik, B adalah Esc, Menu adalah Enter</value>
+  </data>
+  <data name="PadHelpStickGate" xml:space="preserve">
+    <value>Setelah gerbang atau pindah peta, lepas stik untuk berjalan lagi</value>
+  </data>
+  <data name="PadHelpClickA" xml:space="preserve">
+    <value>Di jendela: bingkai sebagai ganti penunjuk. D-pad atau stik kiri: ke sel atau tombol berikutnya (lewat baris terakhir, daftar menggulir). A: ambil, taruh, tekan. X: pakai, gunakan. Y: kartu item. Stik kanan: penunjuk bebas</value>
+  </data>
+  <data name="PadHelpSkillsUse" xml:space="preserve">
+    <value>Ketuk untuk memakai skill sekali, tahan untuk mengulang. Teleportasi melompat ke arah yang ditunjuk stik kiri</value>
+  </data>
+  <data name="PadHelpAuto" xml:space="preserve">
+    <value>D-pad atas: MU Helper nyala dan mati, ditahan: pengaturannya. View: Social (pemain di sekitar: dagang, party, guild...)</value>
+  </data>
+  <data name="PadHelpRightClick" xml:space="preserve">
+    <value>RS di atas jendela: klik kanan di penunjuk, pada + statistik banyak poin</value>
+  </data>
+  <data name="PadHelpDialog" xml:space="preserve">
+    <value>Pertanyaan (dagang, party): setelah Menu kedua berarti Ya, A juga setelah diam satu detik. B berarti Tidak</value>
+  </data>
+  <data name="PadHelpPagesHint" xml:space="preserve">
+    <value>LB, RB: balik halaman. B: tutup</value>
+  </data>
+  <data name="PadOpen" xml:space="preserve">
+    <value>Buka</value>
+  </data>
+  <data name="PadClose" xml:space="preserve">
+    <value>Tutup</value>
+  </data>
+  <data name="TouchPickerTitle" xml:space="preserve">
+    <value>Tombol skill</value>
+  </data>
+  <data name="TouchPickerPickFor" xml:space="preserve">
+    <value>Pilih skill untuk tombol yang menyala</value>
+  </data>
+  <data name="TouchPickerOnButton" xml:space="preserve">
+    <value>Di tombol yang menyala: %ls. Pilih skill lain untuk menaruhnya di sana</value>
+  </data>
+  <data name="TouchPickerTip" xml:space="preserve">
+    <value>Ketuk tombol di kanan untuk mengaturnya. Skill yang sudah ada di tombol bertukar tempat</value>
+  </data>
+  <data name="PadPickerTip" xml:space="preserve">
+    <value>Geser ke kanan ke sebuah tombol dan tekan A untuk mengaturnya. Skill yang sudah ada di tombol bertukar tempat</value>
+  </data>
+  <data name="TouchPickerClear" xml:space="preserve">
+    <value>Hapus</value>
+  </data>
+  <data name="TouchPickerDone" xml:space="preserve">
+    <value>Selesai</value>
+  </data>
+  <data name="TouchPickerNoSkills" xml:space="preserve">
+    <value>Belum ada skill</value>
+  </data>
+  <data name="PadChoose" xml:space="preserve">
+    <value>Pilih</value>
+  </data>
+  <data name="PadConnected" xml:space="preserve">
+    <value>Gamepad: A menyerang, X, Y, dan B memakai skill (tahan RT untuk dua lagi), LB dan LT minum potion, stik kanan memilih target, D-pad kiri peta, kanan inventaris, Menu membuka semua jendela (Bantuannya mencantumkan semua tombol)</value>
+  </data>
+  <data name="PadFriendChosen" xml:space="preserve">
+    <value>Heal dan buff pergi ke: </value>
+  </data>
+  <data name="PadFriendSelf" xml:space="preserve">
+    <value>Heal dan buff pergi ke kamu</value>
+  </data>
+  <data name="PadNoFriendNear" xml:space="preserve">
+    <value>Tak ada anggota party di dekat: heal dan buff pergi ke kamu</value>
+  </data>
+  <data name="PadChooseFriendFirst" xml:space="preserve">
+    <value>Teleport Ally: pilih dulu anggota party dengan RB</value>
+  </data>
+  <data name="PadFriendTooFar" xml:space="preserve">
+    <value>Terlalu jauh: </value>
+  </data>
+  <data name="PadBindPick" xml:space="preserve">
+    <value>Pilih skill dengan penunjuk dan A, lalu tekan X, Y, atau B (RT + X atau Y untuk tombol 4 dan 5) untuk menaruhnya di sana</value>
+  </data>
+  <data name="PadBindPlace" xml:space="preserve">
+    <value>Tekan X, Y, atau B (RT + X atau Y untuk tombol 4 dan 5) untuk menaruh skill di sana</value>
+  </data>
+  <data name="PadKeyboardType" xml:space="preserve">
+    <value>Ketik</value>
+  </data>
+  <data name="PadKeyboardCaret" xml:space="preserve">
+    <value>Kursor</value>
+  </data>
+  <data name="PadKeyboardSpace" xml:space="preserve">
+    <value>spasi</value>
+  </data>
+  <data name="PadHelpKeyboard" xml:space="preserve">
+    <value>Kolom teks (obrolan, login): papan ketik layar terbuka</value>
+  </data>
+  <data name="PadHelpKeyboardKeys" xml:space="preserve">
+    <value>D-pad atau stik: tombol. A: tekan, X: hapus, Y: spasi, Menu: Enter</value>
+  </data>
+  <data name="PadHelpKeyboardMore" xml:space="preserve">
+    <value>LT: shift, RT: simbol, View: Inggris/Rusia, LB/RB: kursor, B: tutup</value>
+  </data>
+  <data name="TouchNoMana" xml:space="preserve">
+    <value>Mana tidak cukup</value>
+  </data>
+  <data name="TouchNoAg" xml:space="preserve">
+    <value>AG tidak cukup</value>
+  </data>
+  <data name="TouchMenuPlayer" xml:space="preserve">
+    <value>Aksi pemain</value>
+  </data>
+  <data name="TouchMenuPkOff" xml:space="preserve">
+    <value>PK: mati</value>
+  </data>
+  <data name="TouchMenuPkOn" xml:space="preserve">
+    <value>PK: nyala</value>
+  </data>
+  <data name="TouchMenuGm" xml:space="preserve">
+    <value>Panel GM</value>
+  </data>
+  <data name="TouchAttackPk" xml:space="preserve">
+    <value>PK</value>
+  </data>
+  <data name="TouchHelpParty" xml:space="preserve">
+    <value>Ketuk kartu anggota party: heal dan buff-mu pergi ke dia, ketuk lagi untuk berhenti</value>
+  </data>
+  <data name="TouchHelpPk" xml:space="preserve">
+    <value>PK (menu): ketuk pemain untuk melawannya, lalu Serang dan skill tetap mengarah padanya. Party-mu aman</value>
+  </data>
+  <data name="PadHelpPk" xml:space="preserve">
+    <value>PK (menu): stik kanan juga memilih pemain, A melawan mereka, party-mu aman</value>
+  </data>
+  <data name="TouchShopTapAgainToBuy" xml:space="preserve">
+    <value>Ketuk item lagi untuk membelinya.</value>
+  </data>
+  <data name="TouchItemOpen" xml:space="preserve">
+    <value>Buka</value>
+  </data>
+  <data name="TouchItemApply" xml:space="preserve">
+    <value>Pakai…</value>
+  </data>
+  <data name="TouchItemApplyHint" xml:space="preserve">
+    <value>Ketuk item tempat jewel dipakai.</value>
+  </data>
+  <data name="TouchItemMoveToBag" xml:space="preserve">
+    <value>Pindah ke tas</value>
+  </data>
+  <data name="TouchSocial" xml:space="preserve">
+    <value>Sosial</value>
+  </data>
+  <data name="TouchSocialTitle" xml:space="preserve">
+    <value>Pemain di sekitar</value>
+  </data>
+  <data name="TouchSocialNone" xml:space="preserve">
+    <value>Tak ada pemain di sekitar</value>
+  </data>
+  <data name="TouchSocialChosen" xml:space="preserve">
+    <value>%ls: mau apa?</value>
+  </data>
+  <data name="TouchSocialJoinGuild" xml:space="preserve">
+    <value>Gabung guild</value>
+  </data>
+  <data name="TouchSocialOutOfReach" xml:space="preserve">
+    <value>Tidak bisa menjangkau %ls</value>
+  </data>
+  <data name="TouchSocialWindows" xml:space="preserve">
+    <value>Jendela</value>
+  </data>
+  <data name="PadHubSettings" xml:space="preserve">
+    <value>Pengaturan</value>
+  </data>
+  <data name="PadPickUpPrompt" xml:space="preserve">
+    <value>Ambil</value>
+  </data>
+  <data name="PadCharacter" xml:space="preserve">
+    <value>Karakter</value>
+  </data>
+  <data name="PadPlay" xml:space="preserve">
+    <value>Main</value>
+  </data>
+  <data name="PadCreate" xml:space="preserve">
+    <value>Buat</value>
+  </data>
+  <data name="PadDelete" xml:space="preserve">
+    <value>Hapus</value>
+  </data>
+  <data name="PadTalkPrompt" xml:space="preserve">
+    <value>Bicara</value>
+  </data>
+  <data name="PadMenuPrompt" xml:space="preserve">
+    <value>Menu</value>
+  </data>
+  <data name="PadTake" xml:space="preserve">
+    <value>Ambil</value>
+  </data>
+  <data name="PadBuy" xml:space="preserve">
+    <value>Beli</value>
+  </data>
+  <data name="PadCard" xml:space="preserve">
+    <value>Kartu</value>
+  </data>
+  <data name="PadAllWindows" xml:space="preserve">
+    <value>Semua jendela</value>
+  </data>
+  <data name="PadPutDown" xml:space="preserve">
+    <value>Taruh</value>
+  </data>
+  <data name="PadPutBack" xml:space="preserve">
+    <value>Kembalikan</value>
+  </data>
+  <data name="PadPress" xml:space="preserve">
+    <value>Tekan</value>
+  </data>
+  <data name="PadCannotEquip" xml:space="preserve">
+    <value>Item ini tidak bisa dipakai: lihat syaratnya</value>
+  </data>
+  <data name="PadSlotTaken" xml:space="preserve">
+    <value>Lepas dulu item yang dipakai di sana</value>
+  </data>
 </root>

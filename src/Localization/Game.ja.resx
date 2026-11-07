@@ -11109,4 +11109,418 @@
   <data name="QuestRequirementBuff" xml:space="preserve">
     <value>Bonus: %ls</value>
   </data>
+  <data name="TouchAttack" xml:space="preserve">
+    <value>攻撃</value>
+  </data>
+  <data name="TouchPickUp" xml:space="preserve">
+    <value>拾う</value>
+  </data>
+  <data name="TouchAuto" xml:space="preserve">
+    <value>オート</value>
+  </data>
+  <data name="TouchNextTarget" xml:space="preserve">
+    <value>ターゲット</value>
+  </data>
+  <data name="TouchMenu" xml:space="preserve">
+    <value>メニュー</value>
+  </data>
+  <data name="TouchChat" xml:space="preserve">
+    <value>チャット</value>
+  </data>
+  <data name="TouchMenuInventory" xml:space="preserve">
+    <value>インベントリ</value>
+  </data>
+  <data name="TouchMenuCharacter" xml:space="preserve">
+    <value>キャラクター</value>
+  </data>
+  <data name="TouchMenuParty" xml:space="preserve">
+    <value>パーティー</value>
+  </data>
+  <data name="TouchMenuGuild" xml:space="preserve">
+    <value>ギルド</value>
+  </data>
+  <data name="TouchMenuFriends" xml:space="preserve">
+    <value>フレンド</value>
+  </data>
+  <data name="TouchMenuQuests" xml:space="preserve">
+    <value>クエスト</value>
+  </data>
+  <data name="TouchMenuMap" xml:space="preserve">
+    <value>マップ</value>
+  </data>
+  <data name="TouchMenuMove" xml:space="preserve">
+    <value>テレポート</value>
+  </data>
+  <data name="TouchMenuBattlePass" xml:space="preserve">
+    <value>バトルパス</value>
+  </data>
+  <data name="TouchMenuDaily" xml:space="preserve">
+    <value>デイリー報酬</value>
+  </data>
+  <data name="TouchMenuEvents" xml:space="preserve">
+    <value>イベント</value>
+  </data>
+  <data name="TouchMenuHelper" xml:space="preserve">
+    <value>MU Helper</value>
+  </data>
+  <data name="TouchMenuCommands" xml:space="preserve">
+    <value>コマンド</value>
+  </data>
+  <data name="TouchMenuHelp" xml:space="preserve">
+    <value>ヘルプ</value>
+  </data>
+  <data name="TouchMenuSystem" xml:space="preserve">
+    <value>システム</value>
+  </data>
+  <data name="TouchBindPick" xml:space="preserve">
+    <value>スキルを選び、右のスキルボタンをタップしてそこに置きます</value>
+  </data>
+  <data name="TouchBindPlace" xml:space="preserve">
+    <value>光っているボタンをタップしてスキルを置きます</value>
+  </data>
+  <data name="TouchBindPickFor" xml:space="preserve">
+    <value>光っているボタンに置くスキルを選んでください</value>
+  </data>
+  <data name="TouchButtonSizeRow" xml:space="preserve">
+    <value>ボタンの大きさ</value>
+  </data>
+  <data name="TouchMenuSkills" xml:space="preserve">
+    <value>スキル</value>
+  </data>
+  <data name="TouchMenuView" xml:space="preserve">
+    <value>PC/スマホ表示</value>
+  </data>
+  <data name="TouchItemEquip" xml:space="preserve">
+    <value>装備</value>
+  </data>
+  <data name="TouchItemUnequip" xml:space="preserve">
+    <value>外す</value>
+  </data>
+  <data name="TouchItemMove" xml:space="preserve">
+    <value>移動</value>
+  </data>
+  <data name="TouchItemSell" xml:space="preserve">
+    <value>売る</value>
+  </data>
+  <data name="TouchItemHotkeyQ" xml:space="preserve">
+    <value>ボタンQに置く</value>
+  </data>
+  <data name="TouchItemHotkeyW" xml:space="preserve">
+    <value>ボタンWに置く</value>
+  </data>
+  <data name="TouchItemDrop" xml:space="preserve">
+    <value>捨てる</value>
+  </data>
+  <data name="TouchItemDropAsk" xml:space="preserve">
+    <value>地面に捨てますか？</value>
+  </data>
+  <data name="TouchHeroLevel" xml:space="preserve">
+    <value>Lv. %d</value>
+  </data>
+  <data name="TouchHeroMasterLevel" xml:space="preserve">
+    <value>Lv. %d | マスター %d</value>
+  </data>
+  <data name="TouchHelpTitle" xml:space="preserve">
+    <value>タッチ操作</value>
+  </data>
+  <data name="TouchHelpWorld" xml:space="preserve">
+    <value>ワールドをタップ：そこへ歩く、NPCと話す、モンスターを攻撃</value>
+  </data>
+  <data name="TouchHelpStick" xml:space="preserve">
+    <value>画面の左側：ドラッグで歩く（戦闘は中断されます）</value>
+  </data>
+  <data name="TouchHelpAttack" xml:space="preserve">
+    <value>攻撃：タップで最も近いモンスターを1回攻撃、長押しで戦い続ける</value>
+  </data>
+  <data name="TouchHelpSkills" xml:space="preserve">
+    <value>スキルボタン：タップでスキルを1回使用、長押しで繰り返し</value>
+  </data>
+  <data name="TouchHelpPickUp" xml:space="preserve">
+    <value>拾う：タップで最も近いアイテム、長押しで拾い続ける</value>
+  </data>
+  <data name="TouchHelpAuto" xml:space="preserve">
+    <value>オート：MU Helperのオン/オフ。スティックで歩くと狩りの場所が移動します</value>
+  </data>
+  <data name="TouchHelpTarget" xml:space="preserve">
+    <value>ターゲット：距離順で次のモンスターに切り替え。攻撃する相手はハイライト表示されます</value>
+  </data>
+  <data name="TouchHelpNova" xml:space="preserve">
+    <value>Nova：ボタン長押しでチャージ、離すと発動（5秒で自動発動）</value>
+  </data>
+  <data name="TouchHelpPotions" xml:space="preserve">
+    <value>QとW：ポーションを飲む</value>
+  </data>
+  <data name="TouchHelpMenu" xml:space="preserve">
+    <value>メニュー：すべてのウィンドウ。戻る：一番上のウィンドウを閉じる</value>
+  </data>
+  <data name="TouchHelpItem" xml:space="preserve">
+    <value>アイテムを長押し：できることが並ぶカード。ステータスの＋を長押し：まとめて多くのポイント</value>
+  </data>
+  <data name="TouchHelpDrag" xml:space="preserve">
+    <value>アイテムをドラッグで移動、リストをドラッグでスクロール</value>
+  </data>
+  <data name="TouchHelpView" xml:space="preserve">
+    <value>メニュー、PC/スマホ表示：PCレイアウトと元に戻す</value>
+  </data>
+  <data name="TouchHelpStickGate" xml:space="preserve">
+    <value>ゲートやマップ移動のあとは、指を離すとまた歩けます</value>
+  </data>
+  <data name="TouchHelpSkillsSet" xml:space="preserve">
+    <value>スキルボタンでスキルをボタンに置きます</value>
+  </data>
+  <data name="TouchHelpNextHint" xml:space="preserve">
+    <value>ここをタップ：次のページ</value>
+  </data>
+  <data name="TouchHelpCloseHint" xml:space="preserve">
+    <value>ここをタップ：閉じる</value>
+  </data>
+  <data name="PadHelpTitle" xml:space="preserve">
+    <value>ゲームパッド（Xbox配置）</value>
+  </data>
+  <data name="PadHelpSticks" xml:space="preserve">
+    <value>左スティック：歩く。右スティック：弾いて次のターゲット（右ほど遠く、左ほど近く）。ウィンドウ内では自由ポインター</value>
+  </data>
+  <data name="PadHelpAttack" xml:space="preserve">
+    <value>A：タップでターゲットを1回攻撃、長押しで戦い続ける</value>
+  </data>
+  <data name="PadHelpSkills" xml:space="preserve">
+    <value>X、Y、B：3つのスキルボタン。RTを押しながら：XとYでスキル4と5。RB：回復とバフを受けるパーティーメンバー</value>
+  </data>
+  <data name="PadHelpSkillList" xml:space="preserve">
+    <value>LS（左スティック押し込み、中央）：スキルをボタンに置く</value>
+  </data>
+  <data name="PadHelpBack" xml:space="preserve">
+    <value>ウィンドウを開いているときのB：戻る、一番上のウィンドウを閉じる</value>
+  </data>
+  <data name="PadHelpPickUp" xml:space="preserve">
+    <value>D-pad下：名前が表示されているアイテムを拾う、長押しで拾い続ける。拾うものがなければ最も近いNPCと話す</value>
+  </data>
+  <data name="PadHelpPotions" xml:space="preserve">
+    <value>LBとLT：ポーションQとW。D-pad左：マップ（長押し：テレポートウィンドウ）。D-pad右：インベントリ</value>
+  </data>
+  <data name="PadHelpClick" xml:space="preserve">
+    <value>RS（右スティック押し込み、中央）：最も近いターゲットに戻る</value>
+  </data>
+  <data name="PadHelpMenu" xml:space="preserve">
+    <value>Menu：ヒーローハブ（インベントリ、キャラクター、スキル、クエスト、ギルド、設定）。LBとRBでタブを切り替え。もう一度：すべてのウィンドウ。Menu長押し：チャット</value>
+  </data>
+  <data name="PadHelpScreens" xml:space="preserve">
+    <value>ログイン画面とキャラクター画面：スティックでポインターを動かす</value>
+  </data>
+  <data name="PadHelpScreensKeys" xml:space="preserve">
+    <value>ここではAがクリック、BがEsc、MenuがEnter</value>
+  </data>
+  <data name="PadHelpStickGate" xml:space="preserve">
+    <value>ゲートやマップ移動のあとは、スティックを離すとまた歩けます</value>
+  </data>
+  <data name="PadHelpClickA" xml:space="preserve">
+    <value>ウィンドウ内：ポインターの代わりに枠。D-padまたは左スティック：次のマスやボタンへ（最後の行を過ぎるとリストがスクロール）。A：取る、置く、押す。X：装備、使用。Y：アイテムカード。右スティック：自由ポインター</value>
+  </data>
+  <data name="PadHelpSkillsUse" xml:space="preserve">
+    <value>タップでスキルを1回使用、長押しで繰り返し。テレポートは左スティックの向きに跳びます</value>
+  </data>
+  <data name="PadHelpAuto" xml:space="preserve">
+    <value>D-pad上：MU Helperのオン/オフ、長押し：その設定。View：ソーシャル（周りのプレイヤー：取引、パーティー、ギルド…）</value>
+  </data>
+  <data name="PadHelpRightClick" xml:space="preserve">
+    <value>ウィンドウ上でRS：ポインター位置で右クリック、ステータスの＋でまとめて多くのポイント</value>
+  </data>
+  <data name="PadHelpDialog" xml:space="preserve">
+    <value>質問（取引、パーティー）：2回目のMenuで「はい」、Aも1秒置いたあとなら「はい」。Bは「いいえ」</value>
+  </data>
+  <data name="PadHelpPagesHint" xml:space="preserve">
+    <value>LB、RB：ページをめくる。B：閉じる</value>
+  </data>
+  <data name="PadOpen" xml:space="preserve">
+    <value>開く</value>
+  </data>
+  <data name="PadClose" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+  <data name="TouchPickerTitle" xml:space="preserve">
+    <value>スキルボタン</value>
+  </data>
+  <data name="TouchPickerPickFor" xml:space="preserve">
+    <value>光っているボタンに置くスキルを選んでください</value>
+  </data>
+  <data name="TouchPickerOnButton" xml:space="preserve">
+    <value>光っているボタン：%ls。別のスキルを選ぶと入れ替わります</value>
+  </data>
+  <data name="TouchPickerTip" xml:space="preserve">
+    <value>右のボタンをタップして設定します。すでにボタンにあるスキルは場所が入れ替わります</value>
+  </data>
+  <data name="PadPickerTip" xml:space="preserve">
+    <value>ポインターを右のボタンに動かしてAで設定します。すでにボタンにあるスキルは場所が入れ替わります</value>
+  </data>
+  <data name="TouchPickerClear" xml:space="preserve">
+    <value>外す</value>
+  </data>
+  <data name="TouchPickerDone" xml:space="preserve">
+    <value>完了</value>
+  </data>
+  <data name="TouchPickerNoSkills" xml:space="preserve">
+    <value>スキルがまだありません</value>
+  </data>
+  <data name="PadChoose" xml:space="preserve">
+    <value>選ぶ</value>
+  </data>
+  <data name="PadConnected" xml:space="preserve">
+    <value>ゲームパッド：Aで攻撃、X、Y、Bでスキル（RT長押しでさらに2つ）、LBとLTでポーション、右スティックでターゲット選択、D-pad左でマップ、右でインベントリ、Menuですべてのウィンドウ（そのヘルプに全ボタンの一覧）</value>
+  </data>
+  <data name="PadFriendChosen" xml:space="preserve">
+    <value>回復とバフの対象：</value>
+  </data>
+  <data name="PadFriendSelf" xml:space="preserve">
+    <value>回復とバフは自分に向かいます</value>
+  </data>
+  <data name="PadNoFriendNear" xml:space="preserve">
+    <value>近くにパーティーメンバーがいません：回復とバフは自分に向かいます</value>
+  </data>
+  <data name="PadChooseFriendFirst" xml:space="preserve">
+    <value>Teleport Ally：先にRBでパーティーメンバーを選んでください</value>
+  </data>
+  <data name="PadFriendTooFar" xml:space="preserve">
+    <value>遠すぎます：</value>
+  </data>
+  <data name="PadBindPick" xml:space="preserve">
+    <value>ポインターとAでスキルを選び、X、Y、B（ボタン4と5はRT＋XまたはY）を押してそこに置きます</value>
+  </data>
+  <data name="PadBindPlace" xml:space="preserve">
+    <value>X、Y、B（ボタン4と5はRT＋XまたはY）を押してスキルを置きます</value>
+  </data>
+  <data name="PadKeyboardType" xml:space="preserve">
+    <value>入力</value>
+  </data>
+  <data name="PadKeyboardCaret" xml:space="preserve">
+    <value>カーソル</value>
+  </data>
+  <data name="PadKeyboardSpace" xml:space="preserve">
+    <value>スペース</value>
+  </data>
+  <data name="PadHelpKeyboard" xml:space="preserve">
+    <value>テキスト欄（チャット、ログイン）：画面キーボードが開きます</value>
+  </data>
+  <data name="PadHelpKeyboardKeys" xml:space="preserve">
+    <value>D-padまたはスティック：キー。A：押す、X：消す、Y：スペース、Menu：Enter</value>
+  </data>
+  <data name="PadHelpKeyboardMore" xml:space="preserve">
+    <value>LT：シフト、RT：記号、View：英語/ロシア語、LB/RB：カーソル、B：閉じる</value>
+  </data>
+  <data name="TouchNoMana" xml:space="preserve">
+    <value>マナが足りません</value>
+  </data>
+  <data name="TouchNoAg" xml:space="preserve">
+    <value>AGが足りません</value>
+  </data>
+  <data name="TouchMenuPlayer" xml:space="preserve">
+    <value>プレイヤー操作</value>
+  </data>
+  <data name="TouchMenuPkOff" xml:space="preserve">
+    <value>PK：オフ</value>
+  </data>
+  <data name="TouchMenuPkOn" xml:space="preserve">
+    <value>PK：オン</value>
+  </data>
+  <data name="TouchMenuGm" xml:space="preserve">
+    <value>GMパネル</value>
+  </data>
+  <data name="TouchAttackPk" xml:space="preserve">
+    <value>PK</value>
+  </data>
+  <data name="TouchHelpParty" xml:space="preserve">
+    <value>パーティーメンバーのカードをタップ：回復とバフがその人に向かいます。もう一度タップで解除</value>
+  </data>
+  <data name="TouchHelpPk" xml:space="preserve">
+    <value>PK（メニュー）：プレイヤーをタップして戦闘開始、その後は攻撃とスキルがその相手に向かいます。パーティーは対象外です</value>
+  </data>
+  <data name="PadHelpPk" xml:space="preserve">
+    <value>PK（メニュー）：右スティックでプレイヤーも選べ、Aで戦闘。パーティーは対象外です</value>
+  </data>
+  <data name="TouchShopTapAgainToBuy" xml:space="preserve">
+    <value>もう一度アイテムをタップすると購入します。</value>
+  </data>
+  <data name="TouchItemOpen" xml:space="preserve">
+    <value>開く</value>
+  </data>
+  <data name="TouchItemApply" xml:space="preserve">
+    <value>使う…</value>
+  </data>
+  <data name="TouchItemApplyHint" xml:space="preserve">
+    <value>宝石を使うアイテムをタップしてください。</value>
+  </data>
+  <data name="TouchItemMoveToBag" xml:space="preserve">
+    <value>バッグへ移動</value>
+  </data>
+  <data name="TouchSocial" xml:space="preserve">
+    <value>ソーシャル</value>
+  </data>
+  <data name="TouchSocialTitle" xml:space="preserve">
+    <value>近くのプレイヤー</value>
+  </data>
+  <data name="TouchSocialNone" xml:space="preserve">
+    <value>近くにプレイヤーがいません</value>
+  </data>
+  <data name="TouchSocialChosen" xml:space="preserve">
+    <value>%ls：どうしますか？</value>
+  </data>
+  <data name="TouchSocialJoinGuild" xml:space="preserve">
+    <value>ギルドに加入</value>
+  </data>
+  <data name="TouchSocialOutOfReach" xml:space="preserve">
+    <value>%lsに届きませんでした</value>
+  </data>
+  <data name="TouchSocialWindows" xml:space="preserve">
+    <value>ウィンドウ</value>
+  </data>
+  <data name="PadHubSettings" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="PadPickUpPrompt" xml:space="preserve">
+    <value>拾う</value>
+  </data>
+  <data name="PadCharacter" xml:space="preserve">
+    <value>キャラクター</value>
+  </data>
+  <data name="PadPlay" xml:space="preserve">
+    <value>プレイ</value>
+  </data>
+  <data name="PadCreate" xml:space="preserve">
+    <value>作成</value>
+  </data>
+  <data name="PadDelete" xml:space="preserve">
+    <value>削除</value>
+  </data>
+  <data name="PadTalkPrompt" xml:space="preserve">
+    <value>話す</value>
+  </data>
+  <data name="PadMenuPrompt" xml:space="preserve">
+    <value>メニュー</value>
+  </data>
+  <data name="PadTake" xml:space="preserve">
+    <value>取る</value>
+  </data>
+  <data name="PadBuy" xml:space="preserve">
+    <value>買う</value>
+  </data>
+  <data name="PadCard" xml:space="preserve">
+    <value>カード</value>
+  </data>
+  <data name="PadAllWindows" xml:space="preserve">
+    <value>全ウィンドウ</value>
+  </data>
+  <data name="PadPutDown" xml:space="preserve">
+    <value>置く</value>
+  </data>
+  <data name="PadPutBack" xml:space="preserve">
+    <value>戻す</value>
+  </data>
+  <data name="PadPress" xml:space="preserve">
+    <value>押す</value>
+  </data>
+  <data name="PadCannotEquip" xml:space="preserve">
+    <value>このアイテムは装備できません：必要条件を確認してください</value>
+  </data>
+  <data name="PadSlotTaken" xml:space="preserve">
+    <value>先にそこに装備しているアイテムを外してください</value>
+  </data>
 </root>

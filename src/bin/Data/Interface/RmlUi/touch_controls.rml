@@ -198,10 +198,10 @@
 		</div>
 	</div>
 
-	<!-- The item hotkeys Q and W (the potions), above the joystick, with how many are left. E and R
+	<!-- The item hotkeys Q and W (the potions), above the joystick, with how many are left (dimmed when none are). E and R
 	     show nowhere now: the pad's d-pad left and right open the map and the inventory. -->
-	<div id="tc_potion_q" class="tc-button tc-potion">Q<div class="tc-potion-count">{{potion_q_count}}</div><div class="pad-glyph pad-bumper">LB</div></div>
-	<div id="tc_potion_w" class="tc-button tc-potion">W<div class="tc-potion-count">{{potion_w_count}}</div><div class="pad-glyph pad-trigger">LT</div></div>
+	<div id="tc_potion_q" class="tc-button tc-potion" data-class-empty="potion_q_count == ''">Q<div class="tc-potion-count">{{potion_q_count}}</div><div class="pad-glyph pad-bumper">LB</div></div>
+	<div id="tc_potion_w" class="tc-button tc-potion" data-class-empty="potion_w_count == ''">W<div class="tc-potion-count">{{potion_w_count}}</div><div class="pad-glyph pad-trigger">LT</div></div>
 	<div id="tc_potion_e" class="tc-button tc-potion">E<div class="tc-potion-count">{{potion_e_count}}</div>
 		<div class="pad-glyph pad-dpad pad-dpad-left"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
 	</div>
@@ -262,5 +262,8 @@
 	<div id="tc_auto" class="tc-button tc-small" data-class-on="helper_on">{{auto_label}}
 		<div class="pad-glyph pad-dpad pad-dpad-up"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
 	</div>
+	<!-- The next monster by distance becomes the one fought (and lit); faded with none other near. A pad
+	     has its right stick for it, so a pad alone shows none. -->
+	<div id="tc_target" class="tc-button tc-small" data-class-none="target_none">{{target_label}}</div>
 </body>
 </rml>
