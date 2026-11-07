@@ -13748,6 +13748,34 @@
     <value>2 опции 70 %, 3 опции 30 %.</value>
     <comment>legacy_id=3915</comment>
   </data>
+  <data name="AncientJoaUpgradeName10" xml:space="preserve">
+    <value>Ancient +10 с Jewel of Ancient</value>
+    <comment>legacy_id=3916</comment>
+  </data>
+  <data name="AncientJoaUpgradeName11" xml:space="preserve">
+    <value>Ancient +11 с Jewel of Ancient</value>
+    <comment>legacy_id=3917</comment>
+  </data>
+  <data name="AncientJoaUpgradeName12" xml:space="preserve">
+    <value>Ancient +12 с Jewel of Ancient</value>
+    <comment>legacy_id=3918</comment>
+  </data>
+  <data name="AncientJoaUpgradeName13" xml:space="preserve">
+    <value>Ancient +13 с Jewel of Ancient</value>
+    <comment>legacy_id=3919</comment>
+  </data>
+  <data name="AncientJoaUpgradeDesc1" xml:space="preserve">
+    <value>Нужен Jewel of Ancient. При провале</value>
+    <comment>legacy_id=3920</comment>
+  </data>
+  <data name="AncientJoaUpgradeDesc2" xml:space="preserve">
+    <value>вещь теряет 1 уровень, не сгорает.</value>
+    <comment>legacy_id=3921</comment>
+  </data>
+  <data name="AncientJoaUpgradeDesc3" xml:space="preserve">
+    <value>Jewel of Fate: 100%%. Камни и zen уходят.</value>
+    <comment>legacy_id=3922</comment>
+  </data>
   <data name="GmPanelTitleAdmin" xml:space="preserve">
     <value>GM-панель — админ</value>
   </data>

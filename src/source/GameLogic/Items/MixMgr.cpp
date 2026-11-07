@@ -16,12 +16,20 @@
 
 namespace
 {
-    // MU Moldova: ancient items take +14 and +15 only with the Jewel of Ancient, so the regular +14/+15 recipes don't
-    // apply while one is in the machine (the server's NonAncientItemUpgradeCrafting refuses them too).
+    // MU Moldova: ancient items go +10…+15 only with the Jewel of Ancient (recipes 55-58 and 51/52), so the regular
+    // +10…+15 recipes don't apply while one is in the machine (the server's ItemUpgradeCrafting and
+    // NonAncientItemUpgradeCrafting refuse them too). Their normal row (no special flags) would match an ancient item.
     bool IsClosedToAncientItems(const SEASON3A::MIX_RECIPE* pRecipe, int iNumMixItems, const SEASON3A::CMixItem* pMixItems)
     {
-        if (pRecipe->m_iMixID != SEASON3A::MIXID_ITEM_PLUS_14 && pRecipe->m_iMixID != SEASON3A::MIXID_ITEM_PLUS_15)
+        switch (pRecipe->m_iMixID)
+        {
+        case SEASON3A::MIXID_ITEM_PLUS_10: case SEASON3A::MIXID_ITEM_PLUS_11:
+        case SEASON3A::MIXID_ITEM_PLUS_12: case SEASON3A::MIXID_ITEM_PLUS_13:
+        case SEASON3A::MIXID_ITEM_PLUS_14: case SEASON3A::MIXID_ITEM_PLUS_15:
+            break;
+        default:
             return false;
+        }
         for (int i = 0; i < iNumMixItems; ++i)
         {
             if (pMixItems[i].m_dwSpecialItem & SEASON3A::RCP_SP_SETITEM)
@@ -327,7 +335,8 @@ BOOL CMixRecipes::IsMixSource(ITEM* pItem)
                 && !((*iter)->m_bMixOption == 'B' && IsChaosItem(mixitem))
                 && !((*iter)->m_bMixOption == 'C' && Is380AddedItem(mixitem))
                 && !((*iter)->m_bMixOption == 'D' && IsFenrirAddedItem(mixitem))
-                && !((*iter)->m_bMixOption == 'E' && !IsUpgradableItem(mixitem) && mixitem.m_sType != ITEM_JEWEL_OF_FATE)
+                && !((*iter)->m_bMixOption == 'E' && !IsUpgradableItem(mixitem) && mixitem.m_sType != ITEM_JEWEL_OF_FATE
+                     && mixitem.m_sType != ITEM_JEWEL_OF_ANCIENT)
                 && !((*iter)->m_bMixOption == 'G' && !IsSourceOfRefiningStone(mixitem))
                 )
             {
@@ -416,7 +425,7 @@ BOOL CMixRecipes::CheckRecipeSub(std::vector<MIX_RECIPE*>::iterator iter, int iN
     int iMixRecipeTest[MAX_MIX_SOURCES];
     memset(iMixRecipeTest, 0, sizeof(int) * MAX_MIX_SOURCES);
 
-    // MU Moldova: the regular +14/+15 are closed to ancient items, and the Jewel of Ancient's recipes give up an
+    // MU Moldova: the regular +10…+15 are closed to ancient items, and the Jewel of Ancient's recipes give up an
     // excellent item with 3 or more options (AncientJewelCrafting).
     if (IsClosedToAncientItems(*iter, iNumMixItems, pMixItems))
         return FALSE;
@@ -533,7 +542,7 @@ int CMixRecipes::CheckRecipeSimilaritySub(std::vector<MIX_RECIPE*>::iterator ite
     int iFindTotalPoint = 0;
     int iFindPoint = 0;
 
-    // MU Moldova: don't suggest the regular +14/+15 for an ancient item; the Jewel of Ancient's recipe is the one.
+    // MU Moldova: don't suggest the regular +10…+15 for an ancient item; the Jewel of Ancient's recipe is the one.
     // And an excellent item with too few options doesn't count as found in that recipe's list.
     if (IsClosedToAncientItems(*iter, iNumMixItems, pMixItems))
         return 0;
