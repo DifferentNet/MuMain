@@ -165,6 +165,8 @@ public:
     const wchar_t* GetAncientSetName(int itemType, int ancientDiscriminator) const;
     // The number of an ancient item's set; 0 when the item has no set of that type.
     int GetAncientSetNumber(int itemType, int ancientDiscriminator) const;
+    // The two set numbers of an item as itemsettype.bmd has them (0 or 0xFF: none), {} for an unknown item.
+    std::array<std::uint8_t, MAX_ITEM_SETS_PER_ITEM> GetSetsOfItem(int itemType) const;
     // How many pieces the set has (0 for no set).
     int GetAncientSetItemCount(int setNumber) const;
 

@@ -4,6 +4,7 @@
 
 #include <array>
 #include <deque>
+#include <functional>
 #include <map>
 #include <optional>
 #include <memory>
@@ -120,6 +121,11 @@ public:
 
 class CGlobalBitmap
 {
+public:
+    // Changes the pixels of a texture before its upload: `count` pixels of `components` bytes (3 RGB, 4 RGBA).
+    using PixelChange = std::function<void(std::uint8_t* pixels, std::size_t count, int components)>;
+
+private:
     using BitmapPtr = std::unique_ptr<BITMAP_t>;
     using type_bitmap_map = std::map<GLuint, BitmapPtr>;
     using type_index_list = std::list<GLuint>;
@@ -149,6 +155,8 @@ class CGlobalBitmap
     double m_textureLoadSeconds = 0.0;
     double m_mipChainSeconds = 0.0;
     bool m_deferLoads = false;
+    // Set while LoadChangedImage loads its copy: OpenJpegTurbo and OpenTga change the pixels before the upload.
+    const PixelChange* m_pixelChange = nullptr;
     std::size_t m_pendingLoads = 0;
 #ifdef DEBUG_BITMAP_CACHE
     CTimer2				m_DebugOutputTimer;
@@ -179,6 +187,11 @@ public:
     // RmlUi also blends premultiplied: premultiplyAlpha scales the colours of an image with
     // alpha (TGA/OZT) before the upload.
     GLuint LoadImageExclusive(const std::wstring& filename, GLuint uiFilter = GL_NEAREST, GLuint uiWrapMode = GL_CLAMP_TO_EDGE, bool padToPowerOfTwo = true, bool premultiplyAlpha = false);
+    // A copy of a .jpg or .tga texture with its pixels changed, under a number of its own and `name`, which no file
+    // has, so that a lookup by file name never finds the copy instead of the file. Loads now, also while loads are
+    // deferred. Asked again for a name it has, it returns the same number. BITMAP_UNKNOWN when the file fails.
+    GLuint LoadChangedImage(const std::wstring& filename, const std::wstring& name, GLuint uiFilter,
+                            GLuint uiWrapMode, const PixelChange& change);
     void UnloadImage(GLuint uiBitmapIndex, bool bForce = false);
     void UnloadAllImages();
 
