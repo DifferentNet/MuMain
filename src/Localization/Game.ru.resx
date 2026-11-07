@@ -15847,4 +15847,7 @@
   <data name="JewelOfAncientDescHigh" xml:space="preserve">
     <value>+14, +15: ещё excellent-вещь (3+ опции).</value>
   </data>
+  <data name="HdTexturesRow" xml:space="preserve">
+    <value>HD-текстуры (после перезапуска)</value>
+  </data>
 </root>

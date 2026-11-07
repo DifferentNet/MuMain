@@ -185,6 +185,8 @@ namespace mu::ui::window
         // The graphics preset row (Low to Ultra) and the screen filters' rows (FXAA, sharpening).
         void RmlGraphicsPresetChanged(int index);
         void RmlToggleFxaa();
+        // [Render] HdTextures; takes effect after a restart, not part of the presets.
+        void RmlToggleHdTextures();
         void RmlSharpenChanged(int index);
         void RmlAnisotropyChanged(int index);
         // Interface/UI tab -- Show FPS Counter/Show Debug Info stay ephemeral (SceneManager.h
@@ -369,6 +371,9 @@ namespace mu::ui::window
             Rml::String graphicsPresetValueLabel;
             bool fxaa = false;
             Rml::String fxaaLabel;
+            bool hdTextures = false;
+            bool hdTexturesAvailable = true;
+            Rml::String hdTexturesLabel;
             std::vector<Rml::String> sharpenLabels;
             int sharpenIndex = 0;
             Rml::String sharpenRowLabel;

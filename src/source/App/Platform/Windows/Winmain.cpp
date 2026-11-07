@@ -36,6 +36,7 @@
 #include "UI/Core/UIManager.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
 #include "Render/Textures/ZzzTexture.h"
+#include "Render/Textures/HdTextures.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "Render/Look/GraphicsPresetSetting.h"
 #include "Render/Look/LookPresetSetting.h"
@@ -2667,6 +2668,11 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
 
     // Load game settings from INI file first
     GameConfig::GetInstance().Load();
+
+#ifndef __EMSCRIPTEN__
+    // HD textures (Options): every texture loaded from now on takes its Data\HD copy if there is one.
+    Render::Textures::Hd::SetEnabled(GameConfig::GetInstance().GetHdTextures());
+#endif
 
     // The animation task pool is off unless config.ini or the command line turns it on.
     if (GameConfig::GetInstance().GetEnableAnimationTaskPool() || wcsstr(GetCommandLineW(), L"--enable-taskpool"))

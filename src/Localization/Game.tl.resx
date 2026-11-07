@@ -13034,4 +13034,7 @@
   <data name="QuestRequirementBuff" xml:space="preserve">
     <value>Bonus: %ls</value>
   </data>
+  <data name="HdTexturesRow" xml:space="preserve">
+    <value>HD textures (pagkatapos mag-restart)</value>
+  </data>
 </root>

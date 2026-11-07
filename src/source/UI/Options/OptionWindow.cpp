@@ -512,6 +512,15 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("graphics_preset_value_label", &model.graphicsPresetValueLabel);
     c.Bind("fxaa", &model.fxaa);
     c.Bind("fxaa_label", &model.fxaaLabel);
+    c.Bind("hd_textures", &model.hdTextures);
+    c.Bind("hd_textures_label", &model.hdTexturesLabel);
+    // The browser build has no HD copies of the textures: the row stays hidden there.
+#ifdef __EMSCRIPTEN__
+    model.hdTexturesAvailable = false;
+#else
+    model.hdTexturesAvailable = true;
+#endif
+    c.Bind("hd_textures_available", &model.hdTexturesAvailable);
     c.Bind("sharpen_labels", &model.sharpenLabels);
     c.Bind("sharpen_index", &model.sharpenIndex);
     c.Bind("sharpen_row_label", &model.sharpenRowLabel);
@@ -617,6 +626,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
 
     c.BindEventCallback("option_toggle_fxaa",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleFxaa(); });
+    c.BindEventCallback("option_toggle_hd_textures",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleHdTextures(); });
     c.BindEventCallback("option_toggle_vsync",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleVsync(); });
 
@@ -1421,6 +1432,15 @@ void mu::ui::window::COptionWindow::RmlToggleFxaa()
     Render::Look::ChooseScreenFilters(!config.GetFxaa(), config.GetSharpen());
 }
 
+void mu::ui::window::COptionWindow::RmlToggleHdTextures()
+{
+    // Not part of a graphics preset, and Hd::SetEnabled is not called: textures already loaded keep
+    // their version, so the new value takes effect after a restart (Winmain reads it once).
+    GameConfig& config = GameConfig::GetInstance();
+    config.SetHdTextures(!config.GetHdTextures());
+    config.Save();
+}
+
 void mu::ui::window::COptionWindow::RmlSharpenChanged(int index)
 {
     // See RmlResolutionChanged's own comment -- same settle-frame guard applies here.
@@ -1961,6 +1981,7 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.lookPostProcessingLabel, "look_post_processing_label", I18N::Game::BloomAndColourGrading);
     syncLabel(model.graphicsPresetRowLabel, "graphics_preset_row_label", I18N::Game::GraphicsPresetRow);
     syncLabel(model.fxaaLabel, "fxaa_label", I18N::Game::FxaaRow);
+    syncLabel(model.hdTexturesLabel, "hd_textures_label", I18N::Game::HdTexturesRow);
     syncLabel(model.sharpenRowLabel, "sharpen_row_label", I18N::Game::SharpenRow);
     syncLabel(model.antialiasingRowLabel, "antialiasing_row_label", I18N::Game::AntiAliasing);
     syncLabel(model.antialiasingTooltip, "antialiasing_tooltip", I18N::Game::AntiAliasingTooltip);
@@ -2133,6 +2154,12 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
         {
             model.fxaa = fxaa;
             m_RmlView.MarkDirty("fxaa");
+        }
+        const bool hdTextures = config.GetHdTextures();
+        if (model.hdTextures != hdTextures)
+        {
+            model.hdTextures = hdTextures;
+            m_RmlView.MarkDirty("hd_textures");
         }
         std::vector<Rml::String> sharpenLabels = MultiplierLabels(s_SharpenValues);
         for (std::size_t i = 1; i < sharpenLabels.size(); ++i)

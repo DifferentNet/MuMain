@@ -189,6 +189,9 @@ public:
     void SetGraphicsPreset(GraphicsPreset preset) { m_graphicsPreset = preset; }
     bool GetFxaa() const { return m_fxaa; }
     void SetFxaa(bool enabled) { m_fxaa = enabled; }
+    // [Render] HdTextures: load the upscaled copies from Data/HD where there is one (after a restart).
+    bool GetHdTextures() const { return m_hdTextures; }
+    void SetHdTextures(bool enabled) { m_hdTextures = enabled; }
     int GetSharpen() const { return m_sharpen; }
     void SetSharpen(int percent);
     bool GetEnhancedLighting() const { return m_enhancedLighting; }
@@ -297,6 +300,7 @@ private:
     bool m_postProcessing;
     GraphicsPreset m_graphicsPreset = GraphicsPreset::Auto;
     bool m_fxaa = false;
+    bool m_hdTextures = false;
     int m_sharpen = 0;
     std::wstring m_renderBackend;
     bool m_disableEffects;

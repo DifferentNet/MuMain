@@ -120,6 +120,7 @@ void GameConfig::Load()
     m_graphicsPreset = GameConfigValidation::ValidateGraphicsPreset(
         ReadString(CfgSectionRender, CfgKeyGraphicsPreset, CfgDefaultGraphicsPreset));
     m_fxaa = ReadBool(CfgSectionRender, CfgKeyFxaa, CfgDefaultFxaa);
+    m_hdTextures = ReadBool(CfgSectionRender, CfgKeyHdTextures, CfgDefaultHdTextures);
     m_sharpen = GameConfigValidation::ValidateSharpen(ReadInt(CfgSectionRender, CfgKeySharpen, CfgDefaultSharpen));
 
     m_renderBackend = GameConfigValidation::ValidateRenderBackend(
@@ -200,6 +201,7 @@ void GameConfig::Save()
     WriteBool(CfgSectionRender, CfgKeyPostProcessing, m_postProcessing);
     WriteString(CfgSectionRender, CfgKeyGraphicsPreset, GameConfigValidation::FormatGraphicsPreset(m_graphicsPreset));
     WriteBool(CfgSectionRender, CfgKeyFxaa, m_fxaa);
+    WriteBool(CfgSectionRender, CfgKeyHdTextures, m_hdTextures);
     WriteInt(CfgSectionRender, CfgKeySharpen, m_sharpen);
     WriteBool(CfgSectionRender, CfgKeyDisableEffects, m_disableEffects);
     WriteBool(CfgSectionRender, CfgKeyDisableParticles, m_disableParticles);

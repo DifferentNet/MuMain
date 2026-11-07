@@ -100,6 +100,7 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyGraphicsPreset[] = L"GraphicsPreset";
     // Screen filters of the finished 3D scene: FXAA (0/1) and sharpening in percent (0 to 100).
     inline constexpr wchar_t CfgKeyFxaa[] = L"Fxaa";
+    inline constexpr wchar_t CfgKeyHdTextures[] = L"HdTextures";
     inline constexpr wchar_t CfgKeySharpen[] = L"Sharpen";
 
     inline constexpr wchar_t CfgKeyRenderBackend[] = L"Backend";
@@ -207,6 +208,7 @@ namespace CfgDefaults
     // A missing or invalid [Render] GraphicsPreset: chosen from the GPU at start-up.
     inline constexpr wchar_t CfgDefaultGraphicsPreset[] = L"Auto";
     inline constexpr bool CfgDefaultFxaa = false;
+    inline constexpr bool CfgDefaultHdTextures = false;
     inline constexpr int CfgDefaultSharpen = 0;
     inline constexpr int CfgMinSharpen = 0;
     inline constexpr int CfgMaxSharpen = 100;

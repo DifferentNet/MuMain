@@ -13055,4 +13055,7 @@
   <data name="QuestRequirementBuff" xml:space="preserve">
     <value>Bonus: %ls</value>
   </data>
+  <data name="HdTexturesRow" xml:space="preserve">
+    <value>Tekstury HD (po restarcie)</value>
+  </data>
 </root>

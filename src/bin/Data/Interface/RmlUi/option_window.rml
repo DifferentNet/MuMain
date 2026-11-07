@@ -338,6 +338,12 @@
 				<div class="checkbox-tick"></div>
 			</div>
 		</div>
+		<div class="option-row option-checkbox-row" data-class-hidden="!hd_textures_available" data-event-click="option_toggle_hd_textures">
+			<span class="option-row-label">{{hd_textures_label}}</span>
+			<div class="checkbox-box" data-class-checked="hd_textures">
+				<div class="checkbox-tick"></div>
+			</div>
+		</div>
 		<div class="option-row option-select-row">
 			<span class="option-row-label">{{sharpen_row_label}}</span>
 			<div class="option-dropdown">

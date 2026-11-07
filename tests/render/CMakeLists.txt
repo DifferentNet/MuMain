@@ -127,6 +127,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/UpscaleMarker.cpp
 )
 
+# HD textures: the Data\HD path of a texture.
+mu_add_test(
+    NAME hd_textures_tests
+    SOURCES
+        test_hd_textures.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/HdTexturePath.cpp
+)
+
 mu_add_test(
     NAME sdl_gpu_validation_tests
     SOURCES

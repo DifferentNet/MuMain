@@ -11109,4 +11109,7 @@
   <data name="QuestRequirementBuff" xml:space="preserve">
     <value>Bonus: %ls</value>
   </data>
+  <data name="HdTexturesRow" xml:space="preserve">
+    <value>HDテクスチャ（再起動後）</value>
+  </data>
 </root>

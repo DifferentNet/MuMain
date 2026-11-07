@@ -13132,4 +13132,7 @@
   <data name="Other items" xml:space="preserve">
     <value>Andere Gegenstände</value>
   </data>
+  <data name="HdTexturesRow" xml:space="preserve">
+    <value>HD-Texturen (nach Neustart)</value>
+  </data>
 </root>

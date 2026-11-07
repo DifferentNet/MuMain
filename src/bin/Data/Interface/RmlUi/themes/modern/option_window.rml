@@ -312,6 +312,10 @@
 						<span class="opt-label">{{fxaa_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="fxaa"><div class="opt-toggle-knob"></div></div></div>
 					</div>
+					<div class="opt-row opt-toggle-row" data-class-hidden="!hd_textures_available" data-event-click="option_toggle_hd_textures">
+						<span class="opt-label">{{hd_textures_label}}</span>
+						<div class="opt-control"><div class="opt-toggle" data-class-checked="hd_textures"><div class="opt-toggle-knob"></div></div></div>
+					</div>
 					<div class="opt-row">
 						<span class="opt-label">{{sharpen_row_label}}</span>
 						<div class="opt-control">

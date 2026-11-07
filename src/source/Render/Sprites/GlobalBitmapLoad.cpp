@@ -12,6 +12,7 @@
 #include "Render/Textures/MipChain.h"
 #include "Render/Textures/OztFile.h"
 #include "Render/Textures/TextureFiltering.h"
+#include "Render/Textures/HdTextures.h"
 #include "Render/Textures/UpscaleMarker.h"
 #ifdef _EDITOR
 #include "Core/Utilities/AssetLoadWorld.h"
@@ -636,6 +637,12 @@ bool CGlobalBitmap::OpenJpegTurbo(GLuint uiBitmapIndex, const std::wstring& file
     std::wstring filename_ozj;
     ExchangeExt(filename, L"OZJ", filename_ozj);
 
+    // The HD copy when the player has HD textures on (Render/Textures/HdTextures.h).
+    // A texture whose pixels the game reads keeps the original.
+    if (!keepPixels)
+    {
+        filename_ozj = Render::Textures::Hd::Resolve(filename_ozj);
+    }
     std::ifstream compressedFile(Render::Sprites::NarrowBitmapPath(filename_ozj), std::ios::binary);
     if (!compressedFile)
     {
@@ -772,6 +779,10 @@ bool CGlobalBitmap::OpenTga(GLuint uiBitmapIndex, const std::wstring& filename, 
     std::wstring filename_ozt;
     ExchangeExt(filename, L"OZT", filename_ozt);
 
+    if (!keepPixels)
+    {
+        filename_ozt = Render::Textures::Hd::Resolve(filename_ozt);
+    }
     std::ifstream input(Render::Sprites::NarrowBitmapPath(filename_ozt), std::ios::binary);
     if (!input)
     {

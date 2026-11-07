@@ -16209,4 +16209,7 @@
   <data name="JewelOfAncientDescHigh" xml:space="preserve">
     <value>+14, +15: also an excellent item (3+ options).</value>
   </data>
+  <data name="HdTexturesRow" xml:space="preserve">
+    <value>HD textures (after restart)</value>
+  </data>
 </root>
