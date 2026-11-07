@@ -18,6 +18,9 @@ stopped run goes on where it stopped. Real-ESRGAN: realesrgan-ncnn-vulkan from
 https://github.com/xinntao/Real-ESRGAN (BSD-3), model realesrgan-x4plus.
 Tiles (World*/Tile*) are padded by wrapping before the upscale so their edges
 still meet without a seam; other textures are padded by repeating the edge.
+--finish (used for --ui) takes away the plastic look of a plain upscale: colours
+and texture pulled toward the original, fine grain where the upscaler smoothed
+the original's texture away, and gentle local contrast for depth.
 """
 
 import argparse
@@ -27,6 +30,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import zlib
 from pathlib import Path
 
 from PIL import Image
@@ -81,6 +85,73 @@ def _edge_pad(image: Image.Image, amount: int) -> Image.Image:
     return out
 
 
+def _float(image: Image.Image):
+    import numpy as np
+    return np.asarray(image, dtype=np.float32) / 255.0
+
+
+def _resize(array, size, method):
+    import numpy as np
+    return np.stack([np.asarray(Image.fromarray(array[..., c]).resize(size, method))
+                     for c in range(array.shape[2])], -1)
+
+
+def _blur(array, radius: float):
+    # Gaussian blur of a float image, edges repeated.
+    import numpy as np
+    reach = max(1, int(radius * 3 + 0.5))
+    x = np.arange(-reach, reach + 1, dtype=np.float32)
+    kernel = np.exp(-x * x / (2 * radius * radius))
+    kernel /= kernel.sum()
+    out = array
+    for axis in (0, 1):
+        pad = [(0, 0)] * array.ndim
+        pad[axis] = (reach, reach)
+        padded = np.pad(out, pad, mode="edge")
+        acc = np.zeros_like(out)
+        for i, weight in enumerate(kernel):
+            acc += weight * np.take(padded, range(i, i + out.shape[axis]), axis=axis)
+        out = acc
+    return out
+
+
+# Finish strengths, picked by eye at the size the interface is drawn (about 2.7x at 1296 px high).
+FIDELITY = 0.5  # how far the colours and texture go back toward the original
+GRAIN = 0.5  # fine grain where the upscaler smoothed the original's texture away
+CLARITY = 0.35  # wide local contrast: depth for engraved metal and stone
+
+
+def finish(original: Image.Image, rgb: Image.Image, alpha: Image.Image | None, seed: int) -> Image.Image:
+    """Gives an upscaled image back the hand-made feel the upscaler takes away: its colours and
+    texture pulled toward the original, grain where the original had some, and depth."""
+    import numpy as np
+    w, h = original.size
+    big = rgb.size
+    source = _float(original.convert("RGB"))
+    out = _float(rgb)
+    lost = source - _resize(out, (w, h), Image.BOX)
+    for _ in range(2):
+        out += FIDELITY * _resize(source - _resize(out, (w, h), Image.BOX), big, Image.BICUBIC)
+
+    # Grain as strong as the texture the upscaler lost there, kept off sharp edges.
+    energy = np.sqrt(_blur(np.abs(lost).mean(-1, keepdims=True) ** 2, 1.0))
+    energy = _resize(energy, big, Image.BILINEAR)
+    random = np.random.default_rng(seed)
+    fine = _blur(random.standard_normal((big[1], big[0], 1)).astype(np.float32), 0.6)
+    coarse = _blur(random.standard_normal((big[1], big[0], 1)).astype(np.float32), 1.4)
+    noise = fine / (fine.std() + 1e-6) * 0.7 + coarse / (coarse.std() + 1e-6) * 0.5
+    lum = out.mean(-1)
+    edges = np.abs(np.diff(lum, axis=1, append=lum[:, -1:])) + np.abs(np.diff(lum, axis=0, append=lum[-1:, :]))
+    edges = _blur(np.clip(edges * 6, 0, 1)[..., None], 1.0)
+    out += GRAIN * 1.6 * energy * noise * (1 - 0.8 * np.clip(edges, 0, 1))
+
+    # Local contrast around a blur that ignores transparent pixels, so cut-outs get no halo.
+    weight = _float(alpha)[..., None] if alpha is not None else np.ones_like(out[..., :1])
+    base = _blur(out * weight, 6.0) / np.maximum(_blur(weight, 6.0), 1e-3)
+    out += CLARITY * (out - base) * (weight > 0)
+    return Image.fromarray((np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8), "RGB")
+
+
 def write_ozj(path: Path, image: Image.Image) -> None:
     buffer = io.BytesIO()
     image.save(buffer, "JPEG", quality=JPEG_QUALITY, subsampling=0, optimize=True)
@@ -107,6 +178,8 @@ def main() -> int:
     ap.add_argument("--pad", type=int, default=16, help="source pixels of padding around each texture")
     ap.add_argument("--all", action="store_true", help="every world, object, player, item, monster and NPC folder")
     ap.add_argument("--ui", action="store_true", help="the interface, login screen and map name folders")
+    ap.add_argument("--finish", action="store_true",
+                    help="give the upscale back the original's colours, grain and depth (needs numpy)")
     ap.add_argument("patterns", nargs="*")
     args = ap.parse_args()
 
@@ -155,10 +228,13 @@ def main() -> int:
         for index, rel, mode, (w, h) in jobs:
             box = (p, p, p + w * SCALE, p + h * SCALE)
             rgb = Image.open(outputs / f"{index:05d}_rgb.png").convert("RGB").crop(box)
+            alpha = Image.open(outputs / f"{index:05d}_a.png").convert("L").crop(box) if mode == "RGBA" else None
+            if args.finish:
+                seed = zlib.crc32(str(rel).lower().replace("\\", "/").encode())
+                rgb = finish(read_texture(args.src / rel), rgb, alpha, seed)
             target = args.out / rel
             target.parent.mkdir(parents=True, exist_ok=True)
             if mode == "RGBA":
-                alpha = Image.open(outputs / f"{index:05d}_a.png").convert("L").crop(box)
                 rgba = rgb.copy()
                 rgba.putalpha(alpha)
                 write_ozt(target, rgba)
