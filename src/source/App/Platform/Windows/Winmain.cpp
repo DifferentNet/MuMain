@@ -1338,6 +1338,13 @@ void HandleWindowResize(int width, int height)
 {
     if (width <= 0 || height <= 0)
         return;
+    // A phone turned, or the page's fullscreen: the touch controls move, so a finger held would
+    // steer or drag from a place that is no longer under it. The browser's own bar sliding in or
+    // out (a few percent of the height) keeps a held stick or skill. Checked here, before the size
+    // changes, because /play resizes through ResizeWebWindow first and its RESIZED event then
+    // carries the size already set.
+    if (UI::Mobile::IsBigResize(WindowWidth, WindowHeight, width, height))
+        Core::Input::Touch::Reset();
     WindowWidth = width;
     WindowHeight = height;
     CInput::Instance().SetScreenSize(WindowWidth, WindowHeight);
@@ -2079,11 +2086,7 @@ MSG MainLoop()
                 }
                 break;
             case SDL_EVENT_WINDOW_RESIZED:
-                // A phone turned, or the page's fullscreen: the touch controls move, so a finger held
-                // would steer or drag from a place that is no longer under it. The browser's own bar
-                // sliding in or out (a few percent of the height) keeps a held stick or skill.
-                if (UI::Mobile::IsBigResize(WindowWidth, WindowHeight, event.window.data1, event.window.data2))
-                    Core::Input::Touch::Reset();
+                // HandleWindowResize drops held fingers on a big resize (a phone turned).
                 HandleWindowResize(event.window.data1, event.window.data2);
                 break;
             case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED:
