@@ -65,6 +65,7 @@ void GameConfig::Load()
 
     m_soundVolume  = ReadInt(CfgSectionAudio, CfgKeySoundVolume, CfgDefaultSoundVolume);
     m_musicVolume  = ReadInt(CfgSectionAudio, CfgKeyMusicVolume, CfgDefaultMusicVolume);
+    m_backgroundSound = ReadBool(CfgSectionAudio, CfgKeyBackgroundSound, CfgDefaultBackgroundSound);
 
     m_rememberMe        = ReadBool(CfgSectionLogin, CfgKeyRememberMe, CfgDefaultRememberMe);
     m_savePassword      = ReadBool(CfgSectionLogin, CfgKeySavePassword, CfgDefaultSavePassword);
@@ -154,6 +155,7 @@ void GameConfig::Save()
 
     WriteInt(CfgSectionAudio, CfgKeySoundVolume, m_soundVolume);
     WriteInt(CfgSectionAudio, CfgKeyMusicVolume, m_musicVolume);
+    WriteBool(CfgSectionAudio, CfgKeyBackgroundSound, m_backgroundSound);
 
     WriteBool(CfgSectionLogin, CfgKeyRememberMe, m_rememberMe);
     WriteBool(CfgSectionLogin, CfgKeySavePassword, m_savePassword);
