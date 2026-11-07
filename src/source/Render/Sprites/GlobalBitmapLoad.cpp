@@ -360,6 +360,8 @@ bool CGlobalBitmap::LoadImage(GLuint uiBitmapIndex, const std::wstring& filename
         // outside the startup pack is a link to the server copy; its link is enough.
         std::wstring packed;
         ExchangeExt(filename, jpg ? L"OZJ" : L"OZT", packed);
+        // A texture of the HD model pack has only its HD copy.
+        packed = Render::Textures::Hd::Resolve(packed);
         std::error_code error;
         const auto status = std::filesystem::symlink_status(Render::Sprites::NarrowBitmapPath(packed), error);
         if (!error && std::filesystem::exists(status))

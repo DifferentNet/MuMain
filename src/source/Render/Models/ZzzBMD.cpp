@@ -23,6 +23,7 @@
 #include "Engine/Object/ZzzCharacter.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
 #include "Render/Textures/ZzzTexture.h"
+#include "Render/Textures/HdTextures.h"
 #include "Engine/AI/ZzzAI.h"
 #include "SMD.h"
 #include "Render/Effects/ZzzEffect.h"
@@ -3349,8 +3350,10 @@ bool BMD::Open2(const wchar_t* DirName, const wchar_t* ModelFileName, bool bReAl
 
     wchar_t ModelPath[260] = {};
     _snwprintf(ModelPath, std::size(ModelPath), L"%ls%ls", DirName, ModelFileName);
+    // With HD textures on, a model with a copy in Data\HD (the HD model pack) loads that copy.
+    const std::wstring modelFile = Render::Textures::Hd::Resolve(ModelPath);
 
-    FILE* fp = _wfopen(ModelPath, L"rb");
+    FILE* fp = _wfopen(modelFile.c_str(), L"rb");
     if (!fp)
     {
         //// wprintf(L"[Open2] ERROR: Unable to open file: %ls\n", ModelPath);
