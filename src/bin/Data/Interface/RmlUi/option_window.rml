@@ -403,6 +403,12 @@
 				     data-event-drag="option_gauge(1)" data-event-mousescroll="option_gauge(1)"></div>
 			</div>
 		</div>
+		<div class="option-row option-checkbox-row" data-event-click="option_toggle_background_sound">
+			<span class="option-row-label">{{background_sound_label}}</span>
+			<div class="checkbox-box" data-class-checked="background_sound">
+				<div class="checkbox-tick"></div>
+			</div>
+		</div>
 		<div class="option-row option-checkbox-row" data-event-click="option_toggle_whisper_sound">
 			<span class="option-row-label">{{whisper_sound_label}}</span>
 			<div class="checkbox-box" data-class-checked="whisper_sound">

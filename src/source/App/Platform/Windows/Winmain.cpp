@@ -694,6 +694,10 @@ int g_iInactiveTime = 0;
 int g_iNoMouseTime = 0;
 int g_iInactiveWarning = 0;
 bool g_bWndActive = false;
+// True focus state in both fullscreen and window mode (g_bWndActive stays true in window mode
+// when ACTIVE_FOCUS_OUT is defined, so it cannot tell a background window apart).
+bool g_bHasInputFocus = false;
+bool g_bWindowMinimized = false;
 bool HangulDelete = false;
 int Hangul = 0;
 bool g_bEnterPressed = false;
@@ -1474,6 +1478,7 @@ void HandleFocusChange(bool active)
     {
         mu::log::Get("input")->info("[InputDiag] focus active={} previous={}", active, g_bWndActive);
     }
+    g_bHasInputFocus = active;
     if (!active)
     {
 #ifdef ACTIVE_FOCUS_OUT
@@ -1483,7 +1488,17 @@ void HandleFocusChange(bool active)
         // Release the cursor when losing focus so input can route elsewhere.
         ClipCursor(nullptr);
 
-        if (g_bUseWindowMode == FALSE && !g_HasInactiveFpsOverride)
+        // Several clients open at once: an unfocused window runs at the reference rate in window
+        // mode too, so background clients do not load the PC like the active one. Logic and MU Helper
+        // run per frame, so it never goes below REFERENCE_FPS.
+#if defined(_EDITOR) || defined(__EMSCRIPTEN__)
+        // The editor windows take the focus away from the game, and /play paces its own frames:
+        // keep the old window-mode behaviour there.
+        const bool throttleOnFocusLoss = g_bUseWindowMode == FALSE;
+#else
+        const bool throttleOnFocusLoss = true;
+#endif
+        if (throttleOnFocusLoss && !g_HasInactiveFpsOverride)
         {
             g_TargetFpsBeforeInactive = GetTargetFps();
             SetTargetFps(REFERENCE_FPS);
@@ -1502,6 +1517,9 @@ void HandleFocusChange(bool active)
         }
         UpdateCursorClip();
     }
+#ifndef __EMSCRIPTEN__
+    SetWindowInBackground(!g_bHasInputFocus || g_bWindowMinimized);
+#endif
 }
 
 // A minimized window gets no swapchain image, so the renderer skips the frame and nothing waits for
@@ -1511,6 +1529,7 @@ void HandleFocusChange(bool active)
 // game logic and MU Helper's timer keep going, only nothing is drawn.
 void HandleMinimizedChange(bool minimized)
 {
+    g_bWindowMinimized = minimized;
     if (minimized)
     {
         if (!g_HasInactiveFpsOverride)
@@ -1520,12 +1539,19 @@ void HandleMinimizedChange(bool minimized)
             g_HasInactiveFpsOverride = true;
         }
     }
+#if defined(_EDITOR) || defined(__EMSCRIPTEN__)
     else if (g_HasInactiveFpsOverride && (g_bWndActive || g_bUseWindowMode))
+#else
+    else if (g_HasInactiveFpsOverride && g_bHasInputFocus)
+#endif
     {
-        // An inactive fullscreen window keeps its cap until it gets the focus back.
+        // An unfocused window keeps its cap until it gets the focus back.
         SetTargetFps(g_TargetFpsBeforeInactive);
         g_HasInactiveFpsOverride = false;
     }
+#ifndef __EMSCRIPTEN__
+    SetWindowInBackground(!g_bHasInputFocus || g_bWindowMinimized);
+#endif
 }
 
 // UTF-8 <-> UTF-16 conversions sized to the input, so text of any length
@@ -1949,6 +1975,25 @@ MSG MainLoop()
 {
     constexpr auto target_resolution = 1;
     auto precise = timeBeginPeriod(target_resolution);
+
+#if defined(_WIN32) && !defined(__EMSCRIPTEN__)
+    // Windows 11 does not give a minimized or hidden window the 1 ms timer and may put the process
+    // into EcoQoS; without this a minimized client dropped below the 25 FPS the game logic and
+    // MU Helper need. Opt out of execution-speed throttling and of the timer-resolution ignore.
+    {
+#ifndef PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION
+#define PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION 0x4
+#endif
+        PROCESS_POWER_THROTTLING_STATE throttling{};
+        throttling.Version = PROCESS_POWER_THROTTLING_CURRENT_VERSION;
+        throttling.ControlMask = PROCESS_POWER_THROTTLING_EXECUTION_SPEED | PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION;
+        throttling.StateMask = 0;
+        if (SetProcessInformation(GetCurrentProcess(), ProcessPowerThrottling, &throttling, sizeof(throttling)))
+            mu::log::Get("platform")->info("Process power throttling disabled");
+        else
+            mu::log::Get("platform")->warn("SetProcessInformation(ProcessPowerThrottling) failed: error {}", GetLastError());
+    }
+#endif
 
     HandleFocusChange(Core::Platform::HasSDLWindowInputFocus(SDL_GetWindowFlags(g_sdlWindow)));
     Core::Input::Synthetic::SetEventDelivery([](SDL_Event& event, bool& propagates)

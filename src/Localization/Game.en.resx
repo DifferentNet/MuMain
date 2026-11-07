@@ -16134,6 +16134,9 @@
   <data name="TitleEffects" xml:space="preserve">
     <value>Title effects</value>
   </data>
+  <data name="BackgroundSound" xml:space="preserve">
+    <value>Sound in background</value>
+  </data>
   <data name="TitlesTownsOnly" xml:space="preserve">
     <value>Titles in towns only</value>
   </data>

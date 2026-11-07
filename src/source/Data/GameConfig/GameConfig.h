@@ -99,6 +99,8 @@ public:
     // The title plates' effects (UI::TitlePlates::Effects).
     bool GetTitleEffects() const { return m_titleEffects; }
     void SetTitleEffects(bool shown) { m_titleEffects = shown; }
+    bool GetBackgroundSound() const { return m_backgroundSound; }
+    void SetBackgroundSound(bool on) { m_backgroundSound = on; }
     bool GetTitlesTownsOnly() const { return m_titlesTownsOnly; }
     void SetTitlesTownsOnly(bool townsOnly) { m_titlesTownsOnly = townsOnly; }
 
@@ -263,6 +265,7 @@ private:
     bool m_overheadTitles = true;
     bool m_titleEffects = true;
     bool m_titlesTownsOnly = true;
+    bool m_backgroundSound = true;
     std::wstring m_interfaceView;
     std::wstring m_controls;
     int m_touchButtonSize = 100;
