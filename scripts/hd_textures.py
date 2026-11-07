@@ -8,9 +8,11 @@ when the player switches HD textures on in Options (Render/Textures/HdTextures.h
     python -I scripts/hd_textures.py --src <client>/Data --out <client>/Data/HD \
         --esrgan <realesrgan-ncnn-vulkan.exe> Player/Item3002_* World1/Tile*
     python -I scripts/hd_textures.py --src ... --out ... --esrgan ... --all
+    python -I scripts/hd_textures.py --src ... --out ... --esrgan ... --ui
 
 Patterns are relative to --src; --all takes every folder drawn in the world
-(World*, Object*, Player, Item, Monster, NPC), not the interface. Files that
+(World*, Object*, Player, Item, Monster, NPC); --ui takes the interface
+(Interface, Logo for the login screen, Local for the map names). Files that
 already carry the marker, or whose copy is in --out already, are skipped, so a
 stopped run goes on where it stopped. Real-ESRGAN: realesrgan-ncnn-vulkan from
 https://github.com/xinntao/Real-ESRGAN (BSD-3), model realesrgan-x4plus.
@@ -36,6 +38,8 @@ OZT_PREFIX = 4  # bytes in front of the TGA
 JPEG_QUALITY = 92
 # The folders --all takes: everything drawn in the world.
 WORLD_FOLDERS = re.compile(r"^(world|object)\d+$|^(player|item|monster|npc)$", re.IGNORECASE)
+# The folders --ui takes: windows, buttons, the login screen and the map names.
+UI_FOLDERS = re.compile(r"^(interface|logo|local)$", re.IGNORECASE)
 
 
 def is_tile(rel: Path) -> bool:
@@ -102,14 +106,17 @@ def main() -> int:
     ap.add_argument("--model", default="realesrgan-x4plus")
     ap.add_argument("--pad", type=int, default=16, help="source pixels of padding around each texture")
     ap.add_argument("--all", action="store_true", help="every world, object, player, item, monster and NPC folder")
+    ap.add_argument("--ui", action="store_true", help="the interface, login screen and map name folders")
     ap.add_argument("patterns", nargs="*")
     args = ap.parse_args()
 
     patterns = list(args.patterns)
     if args.all:
         patterns += [f"{d.name}/**/*" for d in args.src.iterdir() if d.is_dir() and WORLD_FOLDERS.match(d.name)]
+    if args.ui:
+        patterns += [f"{d.name}/**/*" for d in args.src.iterdir() if d.is_dir() and UI_FOLDERS.match(d.name)]
     if not patterns:
-        ap.error("give patterns or --all")
+        ap.error("give patterns, --all or --ui")
     matched = {p for pattern in patterns for p in args.src.glob(pattern)
                if p.is_file() and p.suffix.lower() in (".ozj", ".ozt")}
     files = sorted(p for p in matched if not (args.out / p.relative_to(args.src)).exists())
