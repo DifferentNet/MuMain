@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "App/Control/ControlTaps.h"
 #include "Engine/Object/EditObjects.h"
+#include "Engine/Object/ZzzOpenData.h"
 #include "UI/Chat/Chat.h"
 #include "MainScene.h"
 #include "SceneCommon.h"
@@ -137,6 +138,8 @@ static bool ShouldRenderLeaves()
 static void InitializeMainScene()
 {
     g_pMainFrame->ResetSkillHotKey();
+    // The empty layout until the server sends this character's one (ReceiveOption) must not be saved.
+    ForgetSavedOptions();
 
     MU_LOG_INFO(mu::log::Get("scenes"), "Character selected: slot {}", SelectedHero + 1);
 
@@ -359,6 +362,11 @@ void MoveMainScene()
         MouseOnWindow = true;
 
     UpdateUIAndInput();
+
+    // A skill put on a key (Ctrl+digit, the pad, touch), a potion on Q/W/E/R or an option changed reaches
+    // the server within half a second, not only when leaving through the menu: closing the window or the
+    // tab used to lose it (ghinzuro 2026-11-07).
+    SaveOptionsIfChangedEvery(500);
 
     if (ErrorMessage != 0)
         MouseOnWindow = true;
