@@ -66,8 +66,8 @@ using Clock = std::chrono::steady_clock;
 
 // The menu's highlight moves at once with the stick or the d-pad, again after this while it is
 // held, then at the second pace.
-constexpr auto MenuFirstRepeat = std::chrono::milliseconds(400);
-constexpr auto MenuRepeat = std::chrono::milliseconds(150);
+constexpr auto MenuFirstRepeat = std::chrono::milliseconds(300);
+constexpr auto MenuRepeat = std::chrono::milliseconds(100);
 // A frame longer than this (a hitch, a hidden tab) moves the pointer no further.
 constexpr float LongestFrame = 0.1f;
 // GameLogic::Touch::Steer reads a direction in screen pixels: the stick's -1 .. 1, scaled up.
@@ -77,8 +77,8 @@ constexpr float StickToScreen = 100.f;
 constexpr auto DialogAnswerDelay = std::chrono::milliseconds(1000);
 // The d-pad over a list that scrolls turns the wheel at once, again after this while held, then at
 // the second pace.
-constexpr auto WheelFirstRepeat = std::chrono::milliseconds(400);
-constexpr auto WheelRepeat = std::chrono::milliseconds(110);
+constexpr auto WheelFirstRepeat = std::chrono::milliseconds(300);
+constexpr auto WheelRepeat = std::chrono::milliseconds(90);
 
 // Menu held this long opens the chat line instead of the menu.
 constexpr auto ChatHold = std::chrono::milliseconds(500);
@@ -93,6 +93,13 @@ constexpr auto PlayerMenuWalkTime = std::chrono::seconds(6);
 // The right stick picks the next target once it leans this far, and again once back under the second.
 constexpr float FlickLean = 0.6f;
 constexpr float FlickRest = 0.3f;
+// Held leaned, it picks the next one again after this while, then at the second pace: a crowd is
+// stepped through without flicking over and over.
+constexpr auto FlickFirstRepeat = std::chrono::milliseconds(450);
+constexpr auto FlickRepeat = std::chrono::milliseconds(250);
+// A pick is felt as a short light tick of the pad's small motor.
+constexpr float PickTickStrength = 0.22f;
+constexpr int PickTickMilliseconds = 28;
 
 // When a pad button presses its control: always, only in the world (no window open: the right stick
 // picks targets), only while a window is open (the right stick plays the pointer), or anywhere but over
@@ -231,8 +238,10 @@ struct State
     // opens, and until when.
     int menuWalk = -1;
     Clock::time_point menuWalkUntil{};
-    // The right stick leaned to pick a target, not yet back.
+    // The right stick leaned to pick a target, not yet back, and when it picks again while held (never
+    // for a lean left over from a window: it waits to be let go).
     bool flicked = false;
+    Clock::time_point flickNext = Clock::time_point::max();
     // When A was last pressed or held: a dialog takes A as its answer only once it has rested.
     Clock::time_point aActive{};
     std::array<DpadWheel, 2> wheels{{{Button::DpadUp, 1}, {Button::DpadDown, -1}}};
@@ -591,13 +600,18 @@ void PickTargets()
 {
     const Pad::StickPosition stick = Pad::RightStick();
     const float lean = Pad::Lean(stick);
+    const auto now = Clock::now();
     if (g_state.flicked && lean < FlickRest)
         g_state.flicked = false;
-    if (!g_state.flicked && lean >= FlickLean)
+    const bool fresh = !g_state.flicked && lean >= FlickLean;
+    const bool again = g_state.flicked && lean >= FlickLean && now >= g_state.flickNext;
+    if (fresh || again)
     {
         g_state.flicked = true;
+        g_state.flickNext = now + (fresh ? FlickFirstRepeat : FlickRepeat);
         const float along = std::abs(stick.x) >= std::abs(stick.y) ? stick.x : stick.y;
-        GameLogic::Touch::CycleTarget(along >= 0.f ? 1 : -1);
+        if (GameLogic::Touch::CycleTarget(along >= 0.f ? 1 : -1))
+            Pad::Rumble(0.f, PickTickStrength, PickTickMilliseconds);
     }
     if (g_state.rightStickClick.Pressed())
         GameLogic::Touch::ClearChosenTarget();
@@ -959,6 +973,7 @@ void SwitchWindowMode(SDL_Window* window, bool windowOpen, bool frameOpen)
     g_state.npcClickStage = 0;
     g_state.menuWalk = -1;
     g_state.flicked = true;
+    g_state.flickNext = Clock::time_point::max();
     ForgetLongPresses();
     WaitForRelease();
 }
