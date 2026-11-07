@@ -129,6 +129,13 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME big_resize_tests
+    SOURCES
+        test_big_resize.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Mobile/BigResize.cpp
+)
+
+mu_add_test(
     NAME skill_arrange_tests
     SOURCES
         test_skill_arrange.cpp

@@ -47,6 +47,9 @@ void SetPointerAims(bool aims);
 // Whether the pad plays the world (in use, no window open): it has no pointer there, so Teleport
 // jumps the way the left stick points and Teleport Ally takes the friend RB chose.
 void SetPadPlaysWorld(bool plays);
+// Whether the touch or pad controls show: only then does TargetIndex() light a monster before the
+// first swing (a mouse lights the one under it).
+void SetControlsShown(bool shown);
 // The pad's left stick, in screen directions (0, 0 at rest): the way its Teleport jumps.
 void SetPadAim(float screenX, float screenY);
 
@@ -60,6 +63,8 @@ void SetForceAttack(bool on);
 void HoldHelperForButtons(bool buttonsAct);
 // The character the attack button fights now (the aim, else the last one fought), for the world to
 // light it as the mouse lights one under it; -1 for none. A phone has no mouse over the monster.
+// With none fought yet, the one the attack button would go for, lit before the first swing, while
+// the controls show and the MU Helper does not hunt (it picks its own).
 [[nodiscard]] int TargetIndex();
 [[nodiscard]] bool IsForceAttack();
 
@@ -92,7 +97,13 @@ void SelectHotKey(int hotKey);
 // potion, leaving the turn to the attack button. A pet command goes to the raven at once. Skills
 // aimed where the player points only become the current skill (SelectHotKey). Called every frame
 // while a skill button is held, and after a tap until done.
+// Nova charges while its button is held and goes off as it is let go (ReleaseCharge), as the right
+// mouse button holds it on a PC.
 Progress CastHotKey(int hotKey);
+// The hotkey whose Nova is charging, or -1.
+[[nodiscard]] int ChargingHotKey();
+// Lets the charging Nova go off: its button was let go.
+void ReleaseCharge();
 // Puts the current skill (the bar's current-skill icon, picked in the skill list) on a hotkey, as
 // Ctrl and the digit do on a keyboard, and saves the hotkeys at once: a closed browser tab is a
 // logout the client never sees. False when there is no skill to put or it is there already.
@@ -118,6 +129,11 @@ Progress PickUpNearest();
 // none to pick.
 bool CycleTarget(int step);
 void ClearChosenTarget();
+// The touch Target button: the next foe by distance after the one lit, going round, as CycleTarget(1)
+// picks one, but never an NPC or a player to meet. False when there is no other foe to go to.
+bool NextFoe();
+// Whether NextFoe() has another foe to go to than the one lit now: the Target button dims without.
+[[nodiscard]] bool HasOtherFoe();
 [[nodiscard]] int MeetIndex();
 // Walks the character up to that one: true once within `distance` (the world's units, a tile is
 // 100), else sends the walk again now and then. Called every frame until it says true.
