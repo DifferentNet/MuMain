@@ -15849,4 +15849,11 @@
   <data name="ExcellentDustHoursMinutes" xml:space="preserve">
     <value>%d ч %d мин</value>
   </data>
+  <!-- Ancient JoA upgrade (2026-11-07) -->
+  <data name="JewelOfAncientDescFail" xml:space="preserve">
+    <value>+10…+13: при провале вещь -1 уровень.</value>
+  </data>
+  <data name="JewelOfAncientDescHigh" xml:space="preserve">
+    <value>+14, +15: ещё excellent-вещь (3+ опции).</value>
+  </data>
 </root>

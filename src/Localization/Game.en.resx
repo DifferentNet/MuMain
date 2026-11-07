@@ -16187,4 +16187,11 @@
   <data name="ExcellentDustHoursMinutes" xml:space="preserve">
     <value>%dh %dm</value>
   </data>
+  <!-- Ancient JoA upgrade (2026-11-07) -->
+  <data name="JewelOfAncientDescFail" xml:space="preserve">
+    <value>+10…+13: on failure the item loses 1 level.</value>
+  </data>
+  <data name="JewelOfAncientDescHigh" xml:space="preserve">
+    <value>+14, +15: also an excellent item (3+ options).</value>
+  </data>
 </root>
