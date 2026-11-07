@@ -142,6 +142,7 @@ Clock::time_point g_standUntil;
 Clock::time_point g_standAgainAt;
 bool g_pointerAims = false;
 bool g_padPlaysWorld = false;
+bool g_controlsShown = false;
 // The pad's left stick now, in screen directions; 0, 0 while it rests (UI/HUD/GamepadControls).
 float g_padAimX = 0.f;
 float g_padAimY = 0.f;
@@ -505,19 +506,15 @@ CHARACTER* AimedCharacter()
     return &CharactersClient[index];
 }
 
-// The monster or player aimed at, else the one fought last (a player aimed at once stays the target),
-// else the nearest monster, or the nearest enemy player where players fight.
-int ChooseTarget()
+// The one chosen, else the monster or player aimed at, else the one fought last (a player aimed at
+// once stays the target), else the nearest monster, or the nearest enemy player where players fight.
+int TargetToFight()
 {
-    if (g_chosenKey != NoTarget)
-    {
-        if (IsGoodTarget(FindByKey(g_chosenKey), true))
-            return g_targetKey = g_chosenKey;
-        g_chosenKey = NoTarget;
-    }
+    if (IsGoodTarget(FindByKey(g_chosenKey), true))
+        return g_chosenKey;
     const CHARACTER* aimed = AimedCharacter();
     if (IsGoodTarget(aimed, true))
-        return g_targetKey = aimed->Key;
+        return aimed->Key;
 
     if (IsGoodTarget(FindByKey(g_targetKey), true))
         return g_targetKey;
@@ -536,7 +533,15 @@ int ChooseTarget()
             nearestKey = character->Key;
         }
     }
-    return g_targetKey = nearestKey;
+    return nearestKey;
+}
+
+// TargetToFight(), now the buttons' target; a chosen one gone is forgotten.
+int ChooseTarget()
+{
+    if (g_chosenKey != NoTarget && !IsGoodTarget(FindByKey(g_chosenKey), true))
+        g_chosenKey = NoTarget;
+    return g_targetKey = TargetToFight();
 }
 
 void Forget(int key)
@@ -1181,6 +1186,11 @@ void SetPadPlaysWorld(bool plays)
     g_padPlaysWorld = plays;
 }
 
+void SetControlsShown(bool shown)
+{
+    g_controlsShown = shown;
+}
+
 Progress Attack()
 {
     // A safe zone refuses attacks: no walk out of town towards a monster either.
@@ -1472,19 +1482,44 @@ void Reset()
     SteerHelper(false);
 }
 
-bool CycleTarget(int step)
+namespace
 {
-    if (!InWorld())
-        return false;
-    // By distance, then by key: two at the same distance keep their order between presses.
+// The foes in reach by distance, then by key: two at the same distance keep their order between
+// presses. With the PK switch on, players too (as a tap on one would aim at them).
+std::vector<std::pair<int, int>> FoesByDistance()
+{
     std::vector<std::pair<int, int>> foes;
     for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
     {
         const CHARACTER* character = &CharactersClient[i];
-        // With the PK switch on, players too (as a tap on one would aim at them).
         if (IsGoodTarget(character, g_forceAttack))
             foes.emplace_back(TilesTo(character), character->Key);
     }
+    std::sort(foes.begin(), foes.end());
+    return foes;
+}
+
+// The key of the one lit now (TargetIndex()), NoTarget for none.
+int LitKey()
+{
+    const int index = TargetIndex();
+    return index >= 0 ? CharactersClient[index].Key : NoTarget;
+}
+
+// Chooses the foe `step` on from the one lit: the one chosen while it is a good target. One chosen
+// and since dead would start from the nearest, likely the one lit already.
+void StepThrough(const std::vector<std::pair<int, int>>& foes, int step)
+{
+    g_meetKey = NoTarget;
+    g_chosenKey = g_targetKey = NextInRound(foes, LitKey(), step);
+}
+} // namespace
+
+bool CycleTarget(int step)
+{
+    if (!InWorld())
+        return false;
+    const std::vector<std::pair<int, int>> foes = FoesByDistance();
     if (foes.empty())
     {
         // No foe near (a town): the NPCs and the other players around, to talk to or to trade with.
@@ -1502,13 +1537,30 @@ bool CycleTarget(int step)
         g_chosenKey = NoTarget;
         return true;
     }
-    g_meetKey = NoTarget;
-    std::sort(foes.begin(), foes.end());
-    int current = g_chosenKey;
-    if (current == NoTarget && TargetIndex() >= 0)
-        current = CharactersClient[TargetIndex()].Key;
-    g_chosenKey = g_targetKey = NextInRound(foes, current, step);
+    StepThrough(foes, step);
     return true;
+}
+
+bool NextFoe()
+{
+    if (!InWorld() || !HasOtherFoe())
+        return false;
+    StepThrough(FoesByDistance(), 1);
+    return true;
+}
+
+bool HasOtherFoe()
+{
+    if (!InWorld())
+        return false;
+    const int lit = LitKey();
+    for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
+    {
+        const CHARACTER* character = &CharactersClient[i];
+        if (character->Key != lit && IsGoodTarget(character, g_forceAttack))
+            return true;
+    }
+    return false;
 }
 
 void ClearChosenTarget()
@@ -1616,11 +1668,17 @@ bool FeetOnScreen(int index, float& x, float& y)
 
 int TargetIndex()
 {
-    if (!InWorld() || g_targetKey == NoTarget)
+    if (!InWorld())
         return -1;
     const CHARACTER* target = FindByKey(g_targetKey);
-    if (target == nullptr || !IsGoodTarget(target, true))
-        return -1;
+    if (!IsGoodTarget(target, true))
+    {
+        if (!g_controlsShown || MUHelper::g_MuHelper.IsActive())
+            return -1;
+        target = FindByKey(TargetToFight());
+        if (!IsGoodTarget(target, true))
+            return -1;
+    }
     return static_cast<int>(target - CharactersClient);
 }
 

@@ -11118,6 +11118,9 @@
   <data name="TouchAuto" xml:space="preserve">
     <value>オート</value>
   </data>
+  <data name="TouchNextTarget" xml:space="preserve">
+    <value>ターゲット</value>
+  </data>
   <data name="TouchMenu" xml:space="preserve">
     <value>メニュー</value>
   </data>

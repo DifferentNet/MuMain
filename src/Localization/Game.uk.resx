@@ -13043,6 +13043,9 @@
   <data name="TouchAuto" xml:space="preserve">
     <value>Авто</value>
   </data>
+  <data name="TouchNextTarget" xml:space="preserve">
+    <value>Ціль</value>
+  </data>
   <data name="TouchMenu" xml:space="preserve">
     <value>Меню</value>
   </data>

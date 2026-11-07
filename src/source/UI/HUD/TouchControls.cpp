@@ -206,6 +206,8 @@ enum ControlId : int
     FirstSkillControl,
     PickupControl = FirstSkillControl + SkillButtons,
     AutoControl,
+    // Left of Auto: the next monster by distance becomes the target.
+    TargetControl,
     MenuControl,
     // The top row's Social button: it opens the Social panel.
     SocialControl,
@@ -278,6 +280,8 @@ const char* ControlElement(int control)
         return "tc_pickup";
     case AutoControl:
         return "tc_auto";
+    case TargetControl:
+        return "tc_target";
     case MenuControl:
         return "tc_menu";
     case SocialControl:
@@ -389,6 +393,8 @@ struct ControlsModel
     bool hintShown = false;
     Rml::String bindHint;
     bool helperOn = false;
+    // No other monster near to switch to: the Target button dims.
+    bool targetNone = true;
     bool menuOpen = false;
     // The PK switch on: the attack button reads PK and the menu's switch is lit.
     bool pkOn = false;
@@ -397,6 +403,7 @@ struct ControlsModel
     Rml::String attackLabel;
     Rml::String pickupLabel;
     Rml::String autoLabel;
+    Rml::String targetLabel;
     Rml::String menuLabel;
     Rml::String chatLabel;
     Rml::String backLabel;
@@ -494,12 +501,14 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     c.Bind("hint_shown", &model.hintShown);
     c.Bind("bind_hint", &model.bindHint);
     c.Bind("helper_on", &model.helperOn);
+    c.Bind("target_none", &model.targetNone);
     c.Bind("menu_open", &model.menuOpen);
     c.Bind("pk_on", &model.pkOn);
     c.Bind("menu_gm", &model.gmMenu);
     c.Bind("attack_label", &model.attackLabel);
     c.Bind("pickup_label", &model.pickupLabel);
     c.Bind("auto_label", &model.autoLabel);
+    c.Bind("target_label", &model.targetLabel);
     c.Bind("menu_label", &model.menuLabel);
     c.Bind("chat_label", &model.chatLabel);
     c.Bind("back_label", &model.backLabel);
@@ -921,9 +930,9 @@ void FollowNeighbours(Rml::ElementDocument* document)
         keepLeftOf(g_boxes[FirstSkillControl + slot]);
     keepLeftOf(g_boxes[SkillEditControl]);
     // The buttons the party's cards, the chat and the world labels keep clear of (MeasureBoxes() laid
-    // them out this frame): 2 potions + 4 + the skill buttons, within Edges::MaxControls.
-    static_assert(2 + 4 + SkillButtons <= UI::Mobile::PhoneHudLayout::Edges::MaxControls);
-    for (int control : {AttackControl, PickupControl, AutoControl, SkillEditControl})
+    // them out this frame): 2 potions + 5 + the skill buttons, within Edges::MaxControls.
+    static_assert(2 + 5 + SkillButtons <= UI::Mobile::PhoneHudLayout::Edges::MaxControls);
+    for (int control : {AttackControl, PickupControl, AutoControl, TargetControl, SkillEditControl})
         edges.KeepClearOf(g_boxes[control]);
     for (int slot = 0; slot < SkillButtons; ++slot)
         edges.KeepClearOf(g_boxes[FirstSkillControl + slot]);
@@ -965,6 +974,7 @@ void SyncLabels(ControlsModel& model)
     SyncLabel(model.attackLabel, pk ? I18N::Game::TouchAttackPk : I18N::Game::TouchAttack, "attack_label");
     SyncLabel(model.pickupLabel, I18N::Game::TouchPickUp, "pickup_label");
     SyncLabel(model.autoLabel, I18N::Game::TouchAuto, "auto_label");
+    SyncLabel(model.targetLabel, I18N::Game::TouchNextTarget, "target_label");
     SyncLabel(model.menuLabel, I18N::Game::TouchMenu, "menu_label");
     SyncLabel(model.chatLabel, I18N::Game::TouchChat, "chat_label");
     SyncLabel(model.backLabel, I18N::Game::Back, "back_label");
@@ -1971,6 +1981,10 @@ void UpdateButtons(ControlsModel& model)
         PlayBuffer(SOUND_CLICK01);
     }
 
+    // A monster in a crowd is hard to tap as it moves: the button goes through them by distance.
+    if (TakePress(TargetControl) && GameLogic::Touch::NextFoe())
+        PlayBuffer(SOUND_CLICK01);
+
     for (int button = 0; button < KeyButtonCount; ++button)
     {
         if (!TakePress(FirstKeyControl + button))
@@ -1988,6 +2002,7 @@ void UpdateButtons(ControlsModel& model)
     UpdateMenu(model);
 
     SetField(model.helperOn, MUHelper::g_MuHelper.IsActive(), "helper_on");
+    SetField(model.targetNone, !GameLogic::Touch::HasOtherFoe(), "target_none");
 }
 
 // Over every window while the menu or the skill picker is open (UI::RmlBridge::OpenTouchMenuDepth), so
@@ -2006,6 +2021,7 @@ void Hide()
     if (!g_shown)
         return;
     g_shown = false;
+    GameLogic::Touch::SetControlsShown(false);
     // A finger or the pad's stick still pushing waits to be let go: the walk does not go on through a
     // map change, a death or a window over the world.
     GameLogic::Touch::PauseSteering();
@@ -2074,6 +2090,7 @@ void Update()
             CameraManager::Instance().ToggleZoomLock();
     }
 
+    GameLogic::Touch::SetControlsShown(true);
     ControlsModel& model = g_View.GetModel();
     g_upperSet = ChooseUpperSet();
     // The pad's pointer aims only while it plays the pointer (a window open); in the world the right

@@ -14970,6 +14970,9 @@
   <data name="TouchAuto" xml:space="preserve">
     <value>Авто</value>
   </data>
+  <data name="TouchNextTarget" xml:space="preserve">
+    <value>Цель</value>
+  </data>
   <data name="TouchMenu" xml:space="preserve">
     <value>Меню</value>
   </data>

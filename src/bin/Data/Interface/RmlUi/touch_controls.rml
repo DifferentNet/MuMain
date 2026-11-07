@@ -262,5 +262,8 @@
 	<div id="tc_auto" class="tc-button tc-small" data-class-on="helper_on">{{auto_label}}
 		<div class="pad-glyph pad-dpad pad-dpad-up"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
 	</div>
+	<!-- The next monster by distance becomes the one fought (and lit); faded with none other near. A pad
+	     has its right stick for it, so a pad alone shows none. -->
+	<div id="tc_target" class="tc-button tc-small" data-class-none="target_none">{{target_label}}</div>
 </body>
 </rml>

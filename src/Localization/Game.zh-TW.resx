@@ -13043,6 +13043,9 @@
   <data name="TouchAuto" xml:space="preserve">
     <value>自動</value>
   </data>
+  <data name="TouchNextTarget" xml:space="preserve">
+    <value>目標</value>
+  </data>
   <data name="TouchMenu" xml:space="preserve">
     <value>選單</value>
   </data>

@@ -13064,6 +13064,9 @@
   <data name="TouchAuto" xml:space="preserve">
     <value>Auto</value>
   </data>
+  <data name="TouchNextTarget" xml:space="preserve">
+    <value>Cel</value>
+  </data>
   <data name="TouchMenu" xml:space="preserve">
     <value>Menu</value>
   </data>
