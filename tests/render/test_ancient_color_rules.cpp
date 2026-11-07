@@ -104,3 +104,19 @@ TEST_CASE("RGB pixels are recoloured three bytes at a time")
     CHECK(pixels[0] == pixels[3]);
     CHECK(pixels[0] > pixels[2]);  // bronze: red above blue
 }
+
+TEST_CASE("accent moves only the model's main colour; gold trims and silver stay")
+{
+    constexpr int Tyr = 57;  // Thunder Hawk: purple body, gold trims
+    REQUIRE(FindSetColor(Tyr) != nullptr);
+    CHECK(FindSetColor(Tyr)->tint == Tint::Accent);
+
+    const auto purple = RecolorOne({90, 40, 160, 255}, Tyr);  // body to storm blue
+    CHECK(purple[2] > purple[0]);
+    CHECK(purple[1] > 40);
+
+    const std::array<std::uint8_t, 4> gold{220, 170, 40, 255};
+    CHECK(RecolorOne(gold, Tyr) == gold);
+    const std::array<std::uint8_t, 4> silver{180, 180, 185, 255};
+    CHECK(RecolorOne(silver, Tyr) == silver);
+}

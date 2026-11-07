@@ -11,6 +11,7 @@ namespace
 {
 constexpr Tint C = Tint::Colorize;
 constexpr Tint H = Tint::Hue;
+constexpr Tint A = Tint::Accent;
 
 // Palette "A" (ghinzuro 2026-11-07): each ancient set apart from its normal set and from the other ancient set of
 // the same model. Numbers are the sets of itemsettype.bmd; the comment names the model.
@@ -21,8 +22,8 @@ constexpr std::array<SetColor, 46> SetColors{{
     {12, 0.45f, 1.00f, 0.35f, H},  // Vicious (Dragon), venom green
     {13, 1.00f, 0.82f, 0.35f, C},  // Apollo (Pad), sun gold
     {14, 0.75f, 0.50f, 1.00f, C},  // Barnake (Pad), amethyst
-    {19, 1.00f, 0.80f, 0.45f, H},  // Anubis (Legendary), sand gold
-    {20, 1.00f, 0.35f, 0.35f, H},  // Enis (Legendary), ruby
+    {19, 1.00f, 0.80f, 0.45f, A},  // Anubis (Legendary), sand gold
+    {20, 1.00f, 0.35f, 0.35f, A},  // Enis (Legendary), ruby
     {15, 0.35f, 0.95f, 0.95f, C},  // Evis (Bone), turquoise
     {16, 0.80f, 0.55f, 1.00f, C},  // Sylion (Bone), lilac
     {2, 0.55f, 0.58f, 0.68f, C},   // Anonymous (Leather), blued steel
@@ -49,19 +50,45 @@ constexpr std::array<SetColor, 46> SetColors{{
     {32, 0.55f, 0.85f, 1.00f, C},  // Muren (Storm Crow), ice
     {50, 1.00f, 0.35f, 0.30f, C},  // Mahes (Black Dragon), crimson
     {51, 1.00f, 0.50f, 0.20f, H},  // Bragi (Dark Phoenix), fire
-    {55, 0.35f, 1.00f, 0.60f, H},  // Alvis (Grand Soul), emerald
+    {55, 0.35f, 1.00f, 0.60f, A},  // Alvis (Grand Soul), emerald
     {53, 0.70f, 0.80f, 1.00f, H},  // Frigg (Divine), moon silver
-    {57, 0.45f, 0.80f, 1.00f, H},  // Tyr (Thunder Hawk), storm blue
+    {57, 0.45f, 0.80f, 1.00f, A},  // Tyr (Thunder Hawk), storm blue
     {33, 1.00f, 0.50f, 0.25f, C},  // Agnis (Adamantine), flame
     {34, 0.35f, 1.00f, 0.60f, C},  // Broy (Adamantine), emerald
-    {58, 1.00f, 0.82f, 0.35f, C},  // Khone (Dark Steel), gold
-    {54, 0.75f, 0.50f, 1.00f, C},  // Bes (Eclipse), amethyst
+    {58, 1.00f, 0.82f, 0.35f, A},  // Khone (Dark Steel), gold
+    {54, 0.75f, 0.50f, 1.00f, A},  // Bes (Eclipse), amethyst
     {52, 1.00f, 0.40f, 0.35f, C},  // Serket (Iris), scarlet
     {56, 0.40f, 0.60f, 1.00f, H},  // Apis (Valiant), azure
     {59, 0.45f, 0.80f, 1.00f, H},  // Surt (Glorious), ice flame
     {35, 0.50f, 0.75f, 1.00f, H},  // Chrono (Red Wing), sky
     {36, 0.35f, 1.00f, 0.60f, H},  // Semeden (Red Wing), emerald
 }};
+
+// Accent: the main colour of a model as a hue range in degrees (its centre and half width), by the set.
+struct AccentRange
+{
+    int set;
+    float centre;
+    float halfWidth;
+};
+constexpr std::array<AccentRange, 6> AccentRanges{{
+    {19, 255.0f, 40.0f},  // Anubis: Legendary's blue
+    {20, 255.0f, 40.0f},  // Enis: Legendary's blue
+    {55, 255.0f, 35.0f},  // Alvis: Grand Soul's purple
+    {57, 255.0f, 35.0f},  // Tyr: Thunder Hawk's purple
+    {58, 225.0f, 35.0f},  // Khone: Dark Steel's navy
+    {54, 40.0f, 55.0f},   // Bes: Eclipse's dark olive
+}};
+constexpr float DegreesPerTurn = 360.0f;
+// Accent: hues this far past the range blend back to their own colour.
+constexpr float AccentFeather = 0.06f;
+// How much of a pixel's hue offset from the range's centre stays (the shading keeps some of its variety).
+constexpr float AccentSpread = 0.6f;
+// Pixels below this saturation are neutral (silver, black) and stay; fully coloured above it plus the ramp.
+constexpr float AccentNeutral = 0.04f;
+constexpr float AccentRamp = 0.08f;
+constexpr float AccentMinimumSaturation = 0.55f;
+constexpr float AccentGain = 1.3f;
 
 // Colorize: how much of the grey replaces the texture's own colour, and the brightening before the colour.
 constexpr float GreyShare = 0.85f;
@@ -184,6 +211,45 @@ Rgb ShiftHue(const Rgb& c, float hue, float hueSaturation)
     return {c.r + (shifted.r - c.r) * weight, c.g + (shifted.g - c.g) * weight, c.b + (shifted.b - c.b) * weight};
 }
 
+// The distance from `from` to `to` on the hue circle (both 0..1), -0.5..0.5.
+float HueDistance(float from, float to)
+{
+    const float d = std::fmod(to - from + 1.5f, 1.0f) - 0.5f;
+    return d;
+}
+
+float HueOfPixel(const Rgb& c)
+{
+    const SetColor asColor{0, c.r, c.g, c.b, Tint::Hue};
+    return HueOf(asColor).first;
+}
+
+Rgb ShiftAccent(const Rgb& c, const AccentRange& range, float hue, float hueSaturation)
+{
+    const float high = std::max({c.r, c.g, c.b});
+    const float low = std::min({c.r, c.g, c.b});
+    const float saturation = high > 0 ? (high - low) / (high + Epsilon) : 0.0f;
+    const float offset = HueDistance(range.centre / DegreesPerTurn, HueOfPixel(c));
+    const float inRange = Clamp01((range.halfWidth / DegreesPerTurn + AccentFeather - std::abs(offset)) / AccentFeather);
+    const float weight = inRange * Clamp01((saturation - AccentNeutral) / AccentRamp);
+    if (weight <= 0)
+    {
+        return c;
+    }
+    const float newHue = std::fmod(hue + offset * AccentSpread + 1.0f, 1.0f);
+    const float newSaturation =
+        Clamp01(std::max(saturation, AccentMinimumSaturation) * (SaturationBase + SaturationFromColor * hueSaturation));
+    const Rgb shifted = HsvToRgb(newHue, newSaturation, Clamp01(high * AccentGain));
+    return {c.r + (shifted.r - c.r) * weight, c.g + (shifted.g - c.g) * weight, c.b + (shifted.b - c.b) * weight};
+}
+
+const AccentRange* FindAccentRange(int set)
+{
+    const auto found =
+        std::find_if(AccentRanges.begin(), AccentRanges.end(), [set](const AccentRange& r) { return r.set == set; });
+    return found == AccentRanges.end() ? nullptr : &*found;
+}
+
 bool StartsWith(std::wstring_view text, std::wstring_view start)
 {
     return text.size() >= start.size() &&
@@ -239,6 +305,7 @@ void Recolor(std::uint8_t* pixels, std::size_t count, int components, const SetC
         return;
     }
     const auto [hue, hueSaturation] = HueOf(color);
+    const AccentRange* range = color.tint == Tint::Accent ? FindAccentRange(color.set) : nullptr;
     for (std::size_t i = 0; i < count; ++i)
     {
         std::uint8_t* px = pixels + i * static_cast<std::size_t>(components);
@@ -247,7 +314,13 @@ void Recolor(std::uint8_t* pixels, std::size_t count, int components, const SetC
         {
             continue;
         }
-        const Rgb out = color.tint == Tint::Colorize ? Colorize(in, color) : ShiftHue(in, hue, hueSaturation);
+        Rgb out = in;
+        switch (color.tint)
+        {
+        case Tint::Colorize: out = Colorize(in, color); break;
+        case Tint::Hue: out = ShiftHue(in, hue, hueSaturation); break;
+        case Tint::Accent: out = range != nullptr ? ShiftAccent(in, *range, hue, hueSaturation) : in; break;
+        }
         px[0] = static_cast<std::uint8_t>(std::lround(Clamp01(out.r) * ByteMax));
         px[1] = static_cast<std::uint8_t>(std::lround(Clamp01(out.g) * ByteMax));
         px[2] = static_cast<std::uint8_t>(std::lround(Clamp01(out.b) * ByteMax));

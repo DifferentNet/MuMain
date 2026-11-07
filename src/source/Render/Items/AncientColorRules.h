@@ -19,6 +19,10 @@ enum class Tint : std::uint8_t
     // Only the coloured parts take the set's hue; silver, white and black trims stay: for two-tone models
     // (Dragon, Valiant, Glorious, Red Wing).
     Hue,
+    // Only the model's main colour (its hue range, AccentRange) takes the set's hue; gold trims, gems and silver
+    // keep the original look: for models with a main colour and accents (Thunder Hawk, Grand Soul, Legendary,
+    // Dark Steel, Eclipse; ghinzuro 2026-11-07: one hue all over looked like a mess).
+    Accent,
 };
 
 struct SetColor
