@@ -192,6 +192,15 @@ bool ActionDue()
 
 // An action that took the turn but found it could not go off yet, with nothing sent: another button
 // held may have the turn.
+// An attack or a cast whose swing went off: the swing paces the next one (Automation::IsSwingInProgress,
+// which also waits a while for a swing that does not show), as a held mouse button. The 250 ms turn
+// cut a fast character to 4 blows a second: a sword's swing is shorter from an attack speed of about
+// 220 on, a spell's from a magic speed of about 415.
+void SwingPaces()
+{
+    g_nextAction = Clock::now();
+}
+
 Progress GiveTurnBack()
 {
     g_nextAction = g_turnTakenFrom;
@@ -745,6 +754,7 @@ Progress OutcomeOf(Automation::SkillResult result)
     {
     case Automation::SkillResult::Cast:
         ActionWentOff();
+        SwingPaces();
         return Progress::Done;
     case Automation::SkillResult::NoTarget:
     case Automation::SkillResult::Refused:
@@ -1194,6 +1204,7 @@ Progress Attack()
     {
     case Automation::AttackResult::Attacked:
         ActionWentOff();
+        SwingPaces();
         return Progress::Done;
     case Automation::AttackResult::NoTarget:
     case Automation::AttackResult::NoArrows:
