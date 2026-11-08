@@ -26,7 +26,7 @@ struct GraphicsSettings
     int sharpen = 0;
     // Anisotropic filtering level; 1 is off.
     int anisotropy = 1;
-    // Sun shadows (desktop): 0 off, 1 medium, 2 high. The browser build has none and ignores it.
+    // Sun shadows: 0 off, 1 medium, 2 high. The browser build ignores it: there the player alone sets them.
     int sunShadows = 0;
 
     bool operator==(const GraphicsSettings&) const = default;

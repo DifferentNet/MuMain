@@ -22,15 +22,11 @@ set(MU_SHADER_STAGE_NAMES
     post_bloom_down.frag
     post_bloom_up.frag
     post_composite.frag
-)
-# Desktop only (the sun shadow): no WGSL copy for the web build.
-set(MU_DESKTOP_ONLY_SHADER_STAGE_NAMES
     basic_textured_world.vert
     basic_textured_fog_shadow.frag
     skinned_lit_shadow.frag
     shadow_caster.frag
 )
-list(APPEND MU_SHADER_STAGE_NAMES ${MU_DESKTOP_ONLY_SHADER_STAGE_NAMES})
 set(MU_SHADER_BLOB_FORMATS spv msl dxil)
 set(MU_SHADER_BLOB_NAMES)
 block(SCOPE_FOR VARIABLES)

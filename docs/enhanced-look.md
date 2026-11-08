@@ -59,7 +59,10 @@ them:
 | High | Enhanced | on | on | on | on | 4x | off | 30 | 8 | Medium |
 | Ultra | Enhanced | on | on | on | on | 8x | off | 30 | 16 | High |
 
-Sun shadows are on the desktop only; the browser build has none. Presets never
+In the browser the presets leave Sun shadows alone: the player turns them on in
+Options, and they stay off until then (a phone's GPU can't spare them). Cards
+without WebGPU clip distances (ARM Mali phones) have none: their shader writes
+them and has no soft clip copy. Presets never
 touch the effect and old shadow switches, VSync, the FPS limit or the
 window size. Changing any of these rows by hand (the Enhanced checkboxes,
 Anti-aliasing, FXAA, Sharpening, Anisotropic filtering) re-reads the preset:
@@ -73,7 +76,7 @@ the row reads **Custom** (shown only, it cannot be picked).
 | `GraphicsPreset` | `Auto`, `Low`, `Medium`, `High`, `Ultra` or `Custom` | `Auto` |
 | `Fxaa` | `1` smooths edges of the 3D scene in one cheap pass (for when anti-aliasing is off), `0` off | `0` |
 | `Sharpen` | sharpening of the 3D scene in percent, `0` (off) to `100` | `0` |
-| `SunShadows` | sun shadows of characters, monsters and objects: `0` off, `1` Medium, `2` High (desktop only) | `0` |
+| `SunShadows` | sun shadows of characters, monsters and objects: `0` off, `1` Medium, `2` High. The browser build reads `WebSunShadows` instead (older /play builds saved the presets' value here), and its presets don't set it | `0` |
 | `HdTextures` | `1` loads the upscaled textures and models from `Data\HD` where a file exists (after a restart), `0` off | `0` |
 
 Each map's light mood can also set the sun's direction and the shadows'

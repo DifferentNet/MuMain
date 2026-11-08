@@ -1094,16 +1094,11 @@ static bool s_itemPreviewLightingPushed = false;
 static void PushSceneLightingUniforms()
 {
     s_itemPreviewLightingPushed = false;
-#ifdef __EMSCRIPTEN__
-    SDL_PushGPUFragmentUniformData(s_cmdBuf, k_FragmentUniformSlotSceneLighting, &s_sceneLightingUniform,
-                                   sizeof(s_sceneLightingUniform));
-#else
     // The shadowed receivers read the sun shadow after the scene lighting; the others only the
     // scene lighting at the start of the block.
     const SceneLightingWithSunShadow block{s_sceneLightingUniform,
                                            s_sunShadowMapReady ? s_sunShadowUniform : mu::SunShadowUniform{}};
     SDL_PushGPUFragmentUniformData(s_cmdBuf, k_FragmentUniformSlotSceneLighting, &block, sizeof(block));
-#endif
     SDL_PushGPUFragmentUniformData(s_cmdBuf, k_FragmentUniformSlotDynamicLights, &s_dynamicLightsUniform,
                                    sizeof(s_dynamicLightsUniform));
     s_dbgFragmentUniformPushesThisFrame += 2;
@@ -5364,6 +5359,11 @@ public:
         return s_sunShadowFrame.enabled;
     }
 
+    [[nodiscard]] bool HasSunShadowPipelines() const override
+    {
+        return s_sunShadowCasterPipeline && !s_sunShadowReceiverPipelines.empty();
+    }
+
     [[nodiscard]] bool SetEnhancedLighting(bool enabled) override
     {
         s_enhancedLightingEnabled = enabled;
@@ -6123,20 +6123,25 @@ private:
             createShader("basic_textured_fog", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 2, /*fatal=*/false);
         // skinned_lit.frag also reads the frame's point lights, DynamicLights (b2).
         s_fragShaderLit = createShader("skinned_lit", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 3, /*fatal=*/false);
-#ifndef __EMSCRIPTEN__
-        // Sun shadow (desktop only) — non-fatal: without them the sun shadow is unavailable.
+        // Sun shadow — non-fatal: without them the sun shadow is unavailable.
         // basic_textured_world.vert: Transform (b0) and the draw's vertex-to-world rows (b1).
         // The receivers sample the shadow map (t1/s1) and read SunShadow after the scene
         // lighting in b1; the caster pass only alpha-tests (FogUniforms, b0).
-        s_vertShader3DWorld =
-            createShader("basic_textured_world", "vert", SDL_GPU_SHADERSTAGE_VERTEX, 0, 0, 2, /*fatal=*/false);
-        s_fragShaderTexFogShadow =
-            createShader("basic_textured_fog_shadow", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 2, /*fatal=*/false);
-        s_fragShaderLitShadow =
-            createShader("skinned_lit_shadow", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 3, /*fatal=*/false);
-        s_fragShaderShadowCaster =
-            createShader("shadow_caster", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 1, /*fatal=*/false);
+        // In the browser only where the card has clip distances: basic_textured_world.vert writes
+        // them and has no soft clip copy, and a shader the device can't take breaks the frame.
+#ifdef __EMSCRIPTEN__
+        if (!s_softClipShaders)
 #endif
+        {
+            s_vertShader3DWorld =
+                createShader("basic_textured_world", "vert", SDL_GPU_SHADERSTAGE_VERTEX, 0, 0, 2, /*fatal=*/false);
+            s_fragShaderTexFogShadow =
+                createShader("basic_textured_fog_shadow", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 2, /*fatal=*/false);
+            s_fragShaderLitShadow =
+                createShader("skinned_lit_shadow", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 3, /*fatal=*/false);
+            s_fragShaderShadowCaster =
+                createShader("shadow_caster", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 1, /*fatal=*/false);
+        }
 
         // Post-processing — non-fatal: without them post-processing is unavailable.
         // Bloom passes: source texture (t0) and BloomUniforms (b0); composite: scene, bloom and
@@ -7211,12 +7216,11 @@ private:
         }
     }
 
-    // The sun shadow's pipelines (desktop, Enhanced lighting): the caster pass, and a shadowed
+    // The sun shadow's pipelines (Enhanced lighting): the caster pass, and a shadowed
     // twin of each depth-tested Enhanced pipeline that blends Alpha or not at all.
     static void CreateSunShadowPipelines()
     {
         DestroySunShadowPipelines();
-#ifndef __EMSCRIPTEN__
         if (!s_enhancedLightingAvailable || !s_vertShader3DWorld || !s_fragShaderTexFogShadow ||
             !s_fragShaderLitShadow || !s_fragShaderShadowCaster)
         {
@@ -7329,7 +7333,6 @@ private:
         }
         mu::log::Get("render")->info("SDL_gpu -- sun shadow: {} of {} receiver pipelines, caster {}", built, wanted,
                                      s_sunShadowCasterPipeline ? "ready" : "missing");
-#endif
     }
 
     static void DestroySunShadowPipelines()
