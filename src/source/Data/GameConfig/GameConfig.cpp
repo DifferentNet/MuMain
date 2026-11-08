@@ -242,7 +242,7 @@ bool HasSavedLook(const std::filesystem::path& configFile)
     std::array<wchar_t, 32> buffer{};
     GetPrivateProfileStringW(CfgSections::CfgSectionRender, CfgKeys::CfgKeyLook, L"", buffer.data(),
                              static_cast<DWORD>(buffer.size()), configFile.wstring().c_str());
-    return buffer[0] != L' ';
+    return buffer[0] != L'\0';
 }
 
 std::vector<std::wstring> GameConfig::ReadStringList(const wchar_t* section, const wchar_t* keyPrefix)
