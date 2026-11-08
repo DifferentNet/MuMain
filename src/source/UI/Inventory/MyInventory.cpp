@@ -1398,6 +1398,15 @@ CInventoryCtrl* CMyInventory::GetInventoryCtrl() const
     return m_pNewInventoryCtrl;
 }
 
+CInventoryCtrl* CMyInventory::OwnedBagGrid(int i) const
+{
+    if (i == 0)
+        return m_pNewInventoryCtrl;
+    if (i < 1 || i >= OwnedBagGridCount || UI::Inventory::Bag().OwnedPages() < 2 || g_pMyInventoryExt == nullptr)
+        return nullptr;
+    return g_pMyInventoryExt->GetExtension(i - 1);
+}
+
 ITEM* CMyInventory::FindItem(int iLinealPos) const
 {
     if (m_pNewInventoryCtrl)

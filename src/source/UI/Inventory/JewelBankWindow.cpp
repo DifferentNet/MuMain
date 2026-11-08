@@ -54,23 +54,29 @@ std::wstring Amount(int count)
     return text;
 }
 
-// Jewels of a kind in the inventory's bag, packed ones counted as the jewels they hold (10 per level from +0).
+// Jewels of a kind in the inventory's bag (page 2 too, BagPages.h), packed ones counted as the jewels they hold
+// (10 per level from +0).
 int InventoryJewels(const GameLogic::JewelBank::Kind& kind)
 {
-    CInventoryCtrl* bag = g_pMyInventory != nullptr ? g_pMyInventory->GetInventoryCtrl() : nullptr;
-    if (bag == nullptr)
+    if (g_pMyInventory == nullptr)
         return 0;
 
     int count = 0;
-    for (size_t i = 0; i < bag->GetNumberOfItems(); ++i)
+    for (int g = 0; g < CMyInventory::OwnedBagGridCount; ++g)
     {
-        const ITEM* item = bag->GetItem(static_cast<int>(i));
-        if (item == nullptr)
+        CInventoryCtrl* bag = g_pMyInventory->OwnedBagGrid(g);
+        if (bag == nullptr)
             continue;
-        if (item->Type == kind.itemType)
-            count += 1;
-        else if (kind.packedType >= 0 && item->Type == kind.packedType)
-            count += 10 * (item->Level + 1);
+        for (size_t i = 0; i < bag->GetNumberOfItems(); ++i)
+        {
+            const ITEM* item = bag->GetItem(static_cast<int>(i));
+            if (item == nullptr)
+                continue;
+            if (item->Type == kind.itemType)
+                count += 1;
+            else if (kind.packedType >= 0 && item->Type == kind.packedType)
+                count += 10 * (item->Level + 1);
+        }
     }
     return count;
 }

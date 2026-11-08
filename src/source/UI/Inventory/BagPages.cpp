@@ -5,6 +5,7 @@
 #include "Network/Server/HiddenChatLines.h"
 #include "Network/Server/WSclient.h"
 
+#include <algorithm>
 #include <cwchar>
 #include <string_view>
 
@@ -38,7 +39,7 @@ BagPages& BagPages::Instance()
 int BagPages::OwnedPages() const
 {
     const int extensions = CharacterAttribute != nullptr ? CharacterAttribute->InventoryExtensions : 0;
-    return 1 + extensions / ExtensionsPerPage;
+    return (std::min)(m_maxPages > 0 ? m_maxPages : 2, 1 + (std::max)(extensions, 0) / ExtensionsPerPage);
 }
 
 bool BagPages::TakeMessage(const std::wstring& text)

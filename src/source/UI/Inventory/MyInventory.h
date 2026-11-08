@@ -237,6 +237,12 @@ namespace mu::ui::window
         float GetLayerDepth();
 
         CInventoryCtrl* GetInventoryCtrl() const;
+        // Every bag grid the character owns, whatever page shows: 0 the bag's own, 1 and 2 page 2's (BagPages.h)
+        // once bought, else null. For windows that look at the whole bag (auction, jewel bank, mix lock).
+        static constexpr int OwnedBagGridCount = 3;
+        CInventoryCtrl* OwnedBagGrid(int i) const;
+        // The shown bag grid under the pointer, else the shown page's first grid (null on a locked page).
+        CInventoryCtrl* ShownBagGridAtPointer() const { return PointedBagGrid(); }
 
         ITEM* FindItem(int iLinealPos) const;
         ITEM* FindItemByKey(DWORD dwKey) const;
