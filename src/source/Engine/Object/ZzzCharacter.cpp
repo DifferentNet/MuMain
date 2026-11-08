@@ -41,6 +41,7 @@
 #include "Engine/Physics/PhysicsManager.h"
 #include "Engine/AI/GOBoid.h"
 #include "GameLogic/Items/CSItemOption.h"
+#include "Render/Items/AncientColors.h"
 #include "GameLogic/Quests/PhantomGuide.h"
 
 // Phase 5: Camera system includes for 3D frustum culling
@@ -9738,6 +9739,9 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
                 PART_t* p = &c->BodyPart[i];
                 if (p->Type != -1)
                 {
+                    // Ancient armour in its set's colour (Render/Items/AncientColors.h).
+                    const Render::Items::AncientColors::ScopedPartSet ancientSet(
+                        Render::Items::AncientColors::SetOfBodyPart(c, i));
                     int Type = p->Type;
 
                     if (CLASS_SUMMONER == gCharacterManager.GetBaseClass(c->Class))

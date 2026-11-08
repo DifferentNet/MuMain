@@ -550,6 +550,8 @@ body.pad #tc_soc_legend {
 }
 #tc_potion_q { left: 24rem; }
 #tc_potion_w { left: 84rem; }
+/* None left: dimmed, so an empty hotkey is not pressed in a fight. */
+.tc-potion.empty { opacity: 0.4; }
 
 #tc_attack {
 	right: 24rem;
@@ -686,6 +688,16 @@ body.no-skills .tc-skill, body.no-skills #tc_skill_edit {
 	white-space: nowrap;
 }
 #tc_auto { right: 124rem; bottom: 8rem; }
+/* Target: left of Auto, under the arc's first skill; the next monster by distance becomes the one
+   fought. Faded while there is none other near. */
+#tc_target {
+	right: 178rem;
+	bottom: 8rem;
+	white-space: nowrap;
+}
+#tc_target.none {
+	opacity: 0.4;
+}
 #tc_auto.on {
 	border-color: token(accent-gold-hover);
 	background-color: rgba(196, 154, 60, 120);
@@ -811,6 +823,10 @@ body.no-skills .tc-skill, body.no-skills #tc_skill_edit {
 	#tc_pickup {
 		width: 62rem;
 	}
+	/* Target as wide: "ターゲット" needs 60 units at 12. */
+	#tc_target {
+		width: 62rem;
+	}
 
 	/* No text under 12 units on a phone, and the skill picker's buttons a finger tall. */
 	.tc-small, #tc_skill_edit {
@@ -898,7 +914,7 @@ body.pad #tc_back, body.pad #tc_menu, body.pad #tc_social {
    2026-11-03: three skills, RT held for the next ones). While RT is held (pad-alt), the skill buttons 4
    and 5 stand in the places of X and Y. No top row (Menu opens the windows, View the Social panel), no
    pickup button (d-pad down), no Skills button (LS). */
-body.pad.no-touch #tc_quick, body.pad.no-touch #tc_pickup, body.pad.no-touch #tc_skill_edit {
+body.pad.no-touch #tc_quick, body.pad.no-touch #tc_pickup, body.pad.no-touch #tc_skill_edit, body.pad.no-touch #tc_target {
 	display: none;
 }
 body.pad.no-touch #tc_skill_3, body.pad.no-touch #tc_skill_4 {
