@@ -186,6 +186,8 @@ public:
     void SetAntialiasing(int samples);
     // [Render] GraphicsPreset, Fxaa (on/off) and Sharpen (0 to 100 percent).
     GraphicsPreset GetGraphicsPreset() const { return m_graphicsPreset; }
+    // Whether config.ini already had a [Render] Look key when it was read: false on a new install only.
+    bool HadSavedLook() const { return m_hadSavedLook; }
     void SetGraphicsPreset(GraphicsPreset preset) { m_graphicsPreset = preset; }
     bool GetFxaa() const { return m_fxaa; }
     void SetFxaa(bool enabled) { m_fxaa = enabled; }
@@ -302,6 +304,7 @@ private:
     bool m_lightMood;
     bool m_postProcessing;
     GraphicsPreset m_graphicsPreset = GraphicsPreset::Auto;
+    bool m_hadSavedLook = false;
     bool m_fxaa = false;
     bool m_hdTextures = false;
     int m_sunShadows = 0;
@@ -335,3 +338,4 @@ private:
 
 // The [Render] Look of a config.ini as GameConfig::Load reads it.
 LookPreset ReadLookPreset(const std::filesystem::path& configFile);
+bool HasSavedLook(const std::filesystem::path& configFile);

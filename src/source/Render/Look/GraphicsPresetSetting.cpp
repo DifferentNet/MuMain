@@ -113,7 +113,14 @@ void ChooseScreenFilters(bool fxaa, int sharpenPercent)
 void ApplyStartupGraphics()
 {
     GameConfig& config = GameConfig::GetInstance();
-    if (config.GetGraphicsPreset() == GraphicsPreset::Auto)
+    // Auto picks a preset only on a new install (no [Render] Look yet) and only on the desktop: an existing
+    // player's choices stay as they are, and the browser's WebGPU device reports no GPU name to go by.
+#ifdef __EMSCRIPTEN__
+    const bool chooseAuto = false;
+#else
+    const bool chooseAuto = config.GetGraphicsPreset() == GraphicsPreset::Auto && !config.HadSavedLook();
+#endif
+    if (chooseAuto)
     {
         const char* reportedName = mu::GetRenderer().GetGPUDeviceName();
         const std::string gpuName = reportedName != nullptr ? reportedName : "";
@@ -125,6 +132,11 @@ void ApplyStartupGraphics()
     ApplyLookPreset(config.GetLook());
     ApplyScreenFilters();
     ApplySunShadows();
+    if (config.GetGraphicsPreset() == GraphicsPreset::Auto)
+    {
+        // Name the preset the kept settings match (Custom if none), so Auto doesn't wait for the next start.
+        RefreshGraphicsPreset();
+    }
 }
 
 } // namespace Render::Look

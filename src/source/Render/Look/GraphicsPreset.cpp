@@ -54,6 +54,11 @@ bool IsIntegratedGraphics(const std::string& lowerName)
     {
         return false;
     }
+    // Ryzen APUs call themselves "Radeon(TM) RX Vega 11 Graphics": a Vega with "graphics" is integrated.
+    if (lowerName.find("vega") != std::string::npos && lowerName.find("graphics") != std::string::npos)
+    {
+        return true;
+    }
     if (lowerName.find("rx") != std::string::npos)
     {
         return false;

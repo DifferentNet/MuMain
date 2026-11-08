@@ -109,6 +109,7 @@ void GameConfig::Load()
     m_sortParticleDraws = ReadBool(CfgSectionRender, CfgKeySortParticleDraws, CfgDefaultSortParticleDraws);
     m_vsyncEnabled = ReadBool(CfgSectionRender, CfgKeyVSync, CfgDefaultVSync);
     m_look = ReadLookPreset(m_configPath);
+    m_hadSavedLook = HasSavedLook(m_configPath);
     m_anisotropy =
         GameConfigValidation::ValidateAnisotropy(ReadInt(CfgSectionRender, CfgKeyAnisotropy, CfgDefaultAnisotropy));
     m_antialiasing = GameConfigValidation::ValidateAntialiasing(
@@ -234,6 +235,14 @@ LookPreset ReadLookPreset(const std::filesystem::path& configFile)
     GetPrivateProfileStringW(CfgSections::CfgSectionRender, CfgKeys::CfgKeyLook, L"", buffer.data(),
                              static_cast<DWORD>(buffer.size()), configFile.wstring().c_str());
     return GameConfigValidation::ValidateLook(buffer.data());
+}
+
+bool HasSavedLook(const std::filesystem::path& configFile)
+{
+    std::array<wchar_t, 32> buffer{};
+    GetPrivateProfileStringW(CfgSections::CfgSectionRender, CfgKeys::CfgKeyLook, L"", buffer.data(),
+                             static_cast<DWORD>(buffer.size()), configFile.wstring().c_str());
+    return buffer[0] != L' ';
 }
 
 std::vector<std::wstring> GameConfig::ReadStringList(const wchar_t* section, const wchar_t* keyPrefix)

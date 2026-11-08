@@ -52,14 +52,15 @@ Ultra. A preset sets the look, the four Enhanced features, the anti-aliasing,
 the screen filters and the anisotropy together, applies them at once and saves
 them:
 
-| Preset | Look | Lighting | Dynamic lights | Light mood | Bloom/grading | Anti-aliasing | FXAA | Sharpening | Anisotropy |
-|---|---|---|---|---|---|---|---|---|---|
-| Low | Classic | off | off | off | off | off | off | 0 | 1 |
-| Medium | Enhanced | on | off | on | on | off | on | 30 | 4 |
-| High | Enhanced | on | on | on | on | 4x | off | 30 | 8 |
-| Ultra | Enhanced | on | on | on | on | 8x | off | 30 | 16 |
+| Preset | Look | Lighting | Dynamic lights | Light mood | Bloom/grading | Anti-aliasing | FXAA | Sharpening | Anisotropy | Sun shadows |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Low | Classic | off | off | off | off | off | off | 0 | 1 | off |
+| Medium | Enhanced | on | off | on | on | off | on | 30 | 4 | off |
+| High | Enhanced | on | on | on | on | 4x | off | 30 | 8 | Medium |
+| Ultra | Enhanced | on | on | on | on | 8x | off | 30 | 16 | High |
 
-Presets never touch the effect and shadow switches, VSync, the FPS limit or the
+Sun shadows are on the desktop only; the browser build has none. Presets never
+touch the effect and old shadow switches, VSync, the FPS limit or the
 window size. Changing any of these rows by hand (the Enhanced checkboxes,
 Anti-aliasing, FXAA, Sharpening, Anisotropic filtering) re-reads the preset:
 the values still equal a row, so its name stays or becomes that one; otherwise
@@ -72,11 +73,21 @@ the row reads **Custom** (shown only, it cannot be picked).
 | `GraphicsPreset` | `Auto`, `Low`, `Medium`, `High`, `Ultra` or `Custom` | `Auto` |
 | `Fxaa` | `1` smooths edges of the 3D scene in one cheap pass (for when anti-aliasing is off), `0` off | `0` |
 | `Sharpen` | sharpening of the 3D scene in percent, `0` (off) to `100` | `0` |
+| `SunShadows` | sun shadows of characters, monsters and objects: `0` off, `1` Medium, `2` High (desktop only) | `0` |
+| `HdTextures` | `1` loads the upscaled textures and models from `Data\HD` where a file exists (after a restart), `0` off | `0` |
 
-**Auto** (no `GraphicsPreset` key, or `Auto`) is decided once at start-up from
-the GPU's name: a software renderer (Microsoft Basic Render, WARP, llvmpipe,
+Each map's light mood can also set the sun's direction and the shadows'
+strength and softness (`sunAzimuth`, `sunElevation`, `sunShadow`,
+`sunSoftness`; see `Render/Lighting/LightMood.h`). The item preview in the
+inventory and shops has a studio light of its own in the Enhanced look.
+
+**Auto** (no `GraphicsPreset` key, or `Auto`) is decided once at start-up, on a
+new desktop install only (`config.ini` has no `Look` key yet), from the GPU's
+name. An existing config keeps every saved value and the row shows the preset
+they match, or Custom; the browser build never picks one. The rule: a software renderer (Microsoft Basic Render, WARP, llvmpipe,
 SwiftShader) gets Low; integrated graphics (Intel except Arc; AMD "Radeon
-Graphics" or Vega without "RX") and an empty or unknown name get Medium; every
+Graphics", a Vega named "... Graphics" such as the Ryzen APUs' "RX Vega 11
+Graphics", or Vega without "RX") and an empty or unknown name get Medium; every
 other GPU gets High. That preset is applied and written to `config.ini` by
 name, so Auto does not run again; the log has a line `Graphics preset Auto: ...
 for GPU '...'`. With any other value start-up leaves the saved values alone.

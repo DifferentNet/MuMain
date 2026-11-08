@@ -161,7 +161,7 @@ endforeach()
 
 # Start-up applies the preset, with the player's Enhanced switches, through the one function the
 # options window and $look use.
-require_text(winmain_source "Render::Look::ApplyLookPreset(GameConfig::GetInstance().GetLook());"
+require_text(winmain_source "Render::Look::ApplyStartupGraphics();"
     "Winmain.cpp must apply the look preset at startup")
 foreach(forbidden_text IN ITEMS "SetEnhancedLightingEnabled(" "SetDynamicLightsEnabled(" "SetMoodSwitch("
         "SetPostProcessingEnabled(" "GetEnhancedLighting()" "GetDynamicLights()" "GetLightMood()"

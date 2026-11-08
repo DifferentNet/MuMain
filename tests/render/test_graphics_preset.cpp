@@ -71,6 +71,7 @@ TEST_CASE("Auto picks Medium for integrated graphics and unknown names [render][
     CHECK(ChooseAutoGraphicsPreset("AMD Radeon(TM) Graphics") == GraphicsPreset::Medium);
     CHECK(ChooseAutoGraphicsPreset("AMD Radeon Graphics") == GraphicsPreset::Medium);
     CHECK(ChooseAutoGraphicsPreset("AMD Radeon(TM) Vega 8 Graphics") == GraphicsPreset::Medium);
+    CHECK(ChooseAutoGraphicsPreset("AMD Radeon(TM) RX Vega 11 Graphics") == GraphicsPreset::Medium);
     CHECK(ChooseAutoGraphicsPreset("") == GraphicsPreset::Medium);
     CHECK(ChooseAutoGraphicsPreset("Unknown") == GraphicsPreset::Medium);
 }
