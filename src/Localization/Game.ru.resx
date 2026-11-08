@@ -15922,4 +15922,8 @@
   <data name="BagPageBuying" xml:space="preserve">
     <value>Открываем...</value>
   </data>
+  <!-- MU Helper: strong monsters first -->
+  <data name="HelperStrongFirst" xml:space="preserve">
+    <value>Сначала сильные монстры</value>
+  </data>
 </root>

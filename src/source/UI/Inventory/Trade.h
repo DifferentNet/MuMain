@@ -60,6 +60,9 @@ namespace mu::ui::window
         bool           m_bMyConfirm;           // My confirmation status
         int            m_nMyTradeWait;         // Delay to prevent spamming my confirm button
         bool           m_bTradeAlert;          // Trade warning alert
+        // Bumped by every trade request received and every trade close, so a request dialog left
+        // open closes itself once the server cancelled that request (a partner who opened an NPC).
+        int            m_nTradeRequestSerial = 0;
 
         // Window frame/title/both nickname displays/both gold strips/both confirm checkboxes/
         // divider/buttons are RmlUi. Both CInventoryCtrl grids stay native since their icons are
@@ -183,6 +186,7 @@ namespace mu::ui::window
         // Shows the request's dialog; false when a window that forbids trading is
         // open and the client has answered no by itself.
         bool ProcessToReceiveTradeRequest(const wchar_t* pszYourID);
+        bool IsTradeRequestCurrent(int serial) const { return serial == m_nTradeRequestSerial; }
         void ProcessToReceiveTradeResult(UI::Trade::RequestReply reply, const UI::Trade::Partner& partner);
         void ProcessToReceiveYourItemDelete(BYTE byYourInvenIndex);
         void ProcessToReceiveYourItemAdd(BYTE byYourInvenIndex, std::span<const BYTE> pbyItemPacket);

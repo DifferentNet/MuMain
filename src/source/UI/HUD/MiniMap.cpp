@@ -364,13 +364,13 @@ void mu::ui::window::CMiniMap::SyncRmlModel()
     // (UI/RmlBridge/RmlStackingOrder.cpp) orders it as the original's layer depths did.
     UI::RmlBridge::SyncDocumentVisibilityInFront(m_RmlView.Document(), visible);
 
-    // MU Moldova: the live event monsters are asked while the map shows and forgotten when it closes.
+    // MU Moldova: the live event monsters are asked while the map shows; their last list stays for the next opening.
     if (visible != m_WasVisible)
     {
         m_WasVisible = visible;
         if (!visible)
         {
-            UI::MiniMapLive::Live().Reset();
+            UI::MiniMapLive::Live().Closed();
             m_LiveHints.clear();
         }
     }

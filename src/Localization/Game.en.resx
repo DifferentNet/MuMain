@@ -16260,4 +16260,8 @@
   <data name="BagPageBuying" xml:space="preserve">
     <value>Opening...</value>
   </data>
+  <!-- MU Helper: strong monsters first -->
+  <data name="HelperStrongFirst" xml:space="preserve">
+    <value>Strong monsters first</value>
+  </data>
 </root>
