@@ -13034,6 +13034,21 @@
   <data name="QuestRequirementBuff" xml:space="preserve">
     <value>Bonus: %ls</value>
   </data>
+  <data name="HdTexturesRow" xml:space="preserve">
+    <value>Tekstur HD (setelah restart)</value>
+  </data>
+  <data name="SunShadowsRow" xml:space="preserve">
+    <value>Bayangan matahari</value>
+  </data>
+  <data name="SunShadowsMedium" xml:space="preserve">
+    <value>Sedang</value>
+  </data>
+  <data name="SunShadowsHigh" xml:space="preserve">
+    <value>Tinggi</value>
+  </data>
+  <data name="SunShadowsTooltip" xml:space="preserve">
+    <value>Bayangan nyata dari matahari pada karakter, monster, dan objek (tampilan Enhanced). Sedang: peta 2048, Tinggi: 4096. Mati mempertahankan bayangan datar klasik.</value>
+  </data>
   <data name="TouchAttack" xml:space="preserve">
     <value>Serang</value>
   </data>

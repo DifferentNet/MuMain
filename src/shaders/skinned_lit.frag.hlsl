@@ -26,7 +26,7 @@ cbuffer SceneLighting : register(b1, space3)
     float4 sceneLightDirection;
     float4 sceneLightColor;
     float4 diffuseCurve; // scale, ambient, floor, highlight knee
-    float4 rimParameters;
+    float4 rimParameters; // strength, power, unit diffuse (> 0.5: item preview studio light)
     float4 specularParameters;
     float4 sceneFogColor;
     float4 sceneFogParameters;
@@ -121,8 +121,9 @@ float4 main(FSInput input) : SV_Target
     // Neither the per-object direction nor the skinned normal is unit length in Classic. The
     // diffuse term uses both as they are, so that it is the Classic per-vertex value wherever the
     // curve is not clamped (dot() is linear in the interpolated normal) and keeps the palette.
+    // The item preview studio light (mu::ItemPreviewLightingUniform) shades by the true angle.
     const float3 light = input.lightDirectionAndSpecular.xyz;
-    const float lightDot = dot(input.normal, light);
+    const float lightDot = rimParameters.z > 0.5 ? dot(normal, SafeNormalize(light)) : dot(input.normal, light);
 
     const float luminosity = max(lightDot * diffuseCurve.x + diffuseCurve.y, diffuseCurve.z);
     const float3 dynamicLight = input.worldPositionAndDynamicLights.w > 0.5

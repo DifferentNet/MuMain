@@ -13132,6 +13132,21 @@
   <data name="Other items" xml:space="preserve">
     <value>Andere Gegenstände</value>
   </data>
+  <data name="HdTexturesRow" xml:space="preserve">
+    <value>HD-Texturen (nach Neustart)</value>
+  </data>
+  <data name="SunShadowsRow" xml:space="preserve">
+    <value>Sonnenschatten</value>
+  </data>
+  <data name="SunShadowsMedium" xml:space="preserve">
+    <value>Mittel</value>
+  </data>
+  <data name="SunShadowsHigh" xml:space="preserve">
+    <value>Hoch</value>
+  </data>
+  <data name="SunShadowsTooltip" xml:space="preserve">
+    <value>Echte Schatten der Sonne bei Charakteren, Monstern und Objekten (Enhanced-Look). Mittel: Karte 2048, Hoch: 4096. Aus behält die alten flachen Schatten.</value>
+  </data>
   <data name="TouchAttack" xml:space="preserve">
     <value>Angriff</value>
   </data>

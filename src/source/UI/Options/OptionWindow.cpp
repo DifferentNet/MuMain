@@ -9,6 +9,8 @@
 #include "Data/GameConfig/GameConfigConstants.h"
 #include "Core/Input/GamepadInput.h"
 #include "UI/Chat/MessageType.h"
+#include "Render/Lighting/SunShadowSetting.h"
+#include "Render/Look/GraphicsPresetSetting.h"
 #include "Render/Look/LookPresetSetting.h"
 #include "Render/Look/LookProfileSetting.h"
 #include "Render/Look/TuningSetting.h"
@@ -80,7 +82,10 @@ static constexpr int kInterfaceViewDropdown = 8;
 static constexpr int kControlsDropdown = 9;
 static constexpr int kTouchButtonsDropdown = 10;
 static constexpr int kGamepadDropdown = 11;
-static constexpr int kLastDropdownId = kGamepadDropdown;
+static constexpr int kGraphicsPresetDropdown = 12;
+static constexpr int kSharpenDropdown = 13;
+static constexpr int kSunShadowsDropdown = 14;
+static constexpr int kLastDropdownId = kSunShadowsDropdown;
 // The gamepad row's choices, in its labels' order.
 static constexpr int kGamepadOnIndex = 0;
 static constexpr int kGamepadQuietIndex = 1;
@@ -213,6 +218,13 @@ static const int s_NumFpsCapValues = sizeof(s_FpsCapValues) / sizeof(s_FpsCapVal
 // ([Render] Antialiasing, Anisotropy); the first entry of each is "Off".
 static constexpr int s_AntialiasingValues[] = {0, 2, 4, 8};
 static constexpr int s_AnisotropyValues[] = {1, 2, 4, 8, 16};
+// The Sun shadows row: [Render] SunShadows, 0 off, 1 medium (2048 map), 2 high (4096 map).
+static constexpr int s_SunShadowsValues[] = {0, 1, 2};
+// The graphics preset row's presets, in its labels' order (the Custom entry is shown, never picked), and
+// the Sharpening row's percentages ([Render] Sharpen); the first entry of the latter is "Off".
+static constexpr GraphicsPreset s_GraphicsPresets[] = {GraphicsPreset::Low, GraphicsPreset::Medium,
+                                                       GraphicsPreset::High, GraphicsPreset::Ultra};
+static constexpr int s_SharpenValues[] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
 
 namespace
 {
@@ -498,6 +510,37 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("tuning_reset_group_label", &model.tuningResetGroupLabel);
     c.Bind("tuning_reset_all_label", &model.tuningResetAllLabel);
     c.Bind("tuning_save_message", &model.tuningSaveMessage);
+    c.Bind("graphics_preset_labels", &model.graphicsPresetLabels);
+    c.Bind("graphics_preset_index", &model.graphicsPresetIndex);
+    c.Bind("graphics_preset_row_label", &model.graphicsPresetRowLabel);
+    c.Bind("graphics_preset_value_label", &model.graphicsPresetValueLabel);
+    c.Bind("fxaa", &model.fxaa);
+    c.Bind("fxaa_label", &model.fxaaLabel);
+    c.Bind("hd_textures", &model.hdTextures);
+    c.Bind("hd_textures_label", &model.hdTexturesLabel);
+    // The browser build has no HD copies of the textures: the row stays hidden there.
+#ifdef __EMSCRIPTEN__
+    model.hdTexturesAvailable = false;
+#else
+    model.hdTexturesAvailable = true;
+#endif
+    c.Bind("hd_textures_available", &model.hdTexturesAvailable);
+    c.Bind("sun_shadows_labels", &model.sunShadowsLabels);
+    c.Bind("sun_shadows_index", &model.sunShadowsIndex);
+    c.Bind("sun_shadows_row_label", &model.sunShadowsRowLabel);
+    c.Bind("sun_shadows_value_label", &model.sunShadowsValueLabel);
+    c.Bind("sun_shadows_tooltip", &model.sunShadowsTooltip);
+    // The browser build has no sun shadows: the row stays hidden there.
+#ifdef __EMSCRIPTEN__
+    model.sunShadowsAvailable = false;
+#else
+    model.sunShadowsAvailable = true;
+#endif
+    c.Bind("sun_shadows_available", &model.sunShadowsAvailable);
+    c.Bind("sharpen_labels", &model.sharpenLabels);
+    c.Bind("sharpen_index", &model.sharpenIndex);
+    c.Bind("sharpen_row_label", &model.sharpenRowLabel);
+    c.Bind("sharpen_value_label", &model.sharpenValueLabel);
     c.Bind("antialiasing_labels", &model.antialiasingLabels);
     c.Bind("antialiasing_index", &model.antialiasingIndex);
     c.Bind("antialiasing_row_label", &model.antialiasingRowLabel);
@@ -597,6 +640,10 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
                 RmlDropdownOptionClick(arguments[0].Get<int>(-1), arguments[1].Get<int>(-1));
         });
 
+    c.BindEventCallback("option_toggle_fxaa",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleFxaa(); });
+    c.BindEventCallback("option_toggle_hd_textures",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleHdTextures(); });
     c.BindEventCallback("option_toggle_vsync",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleVsync(); });
 
@@ -952,6 +999,15 @@ void mu::ui::window::COptionWindow::RmlDropdownOptionClick(int dropdownId, int o
     case 7:
         RmlAnisotropyChanged(optionIndex);
         break;
+    case kGraphicsPresetDropdown:
+        RmlGraphicsPresetChanged(optionIndex);
+        break;
+    case kSharpenDropdown:
+        RmlSharpenChanged(optionIndex);
+        break;
+    case kSunShadowsDropdown:
+        RmlSunShadowsChanged(optionIndex);
+        break;
     case kInterfaceViewDropdown:
         RmlInterfaceViewChanged(optionIndex);
         break;
@@ -1183,6 +1239,7 @@ void mu::ui::window::COptionWindow::RmlToggleEnhancedGraphics()
 {
     const bool enhanced = Render::Look::ActiveLookPreset() == LookPreset::Enhanced;
     Render::Look::ApplyLookPreset(enhanced ? LookPreset::Classic : LookPreset::Enhanced);
+    Render::Look::RefreshGraphicsPreset();
 }
 
 void mu::ui::window::COptionWindow::RmlToggleEnhancedFeature(int feature)
@@ -1196,6 +1253,7 @@ void mu::ui::window::COptionWindow::RmlToggleEnhancedFeature(int feature)
     if (chosen == EnhancedFeature::DynamicLights && !Render::Look::EnhancedFeatureChosen(EnhancedFeature::Lighting))
         return; // dynamic lights act only with Enhanced lighting
     Render::Look::ChooseEnhancedFeature(chosen, !Render::Look::EnhancedFeatureChosen(chosen));
+    Render::Look::RefreshGraphicsPreset();
 }
 
 void mu::ui::window::COptionWindow::RmlToggleTuningGroup(int group)
@@ -1373,6 +1431,43 @@ void mu::ui::window::COptionWindow::RmlAntialiasingChanged(int index)
     if (index < 0 || index >= static_cast<int>(std::size(s_AntialiasingValues)))
         return;
     MuSetAntialiasingPreference(s_AntialiasingValues[index]);
+    Render::Look::RefreshGraphicsPreset();
+}
+
+// The preset sets every value it covers and saves config.ini (Render::Look::ApplyGraphicsPreset).
+void mu::ui::window::COptionWindow::RmlGraphicsPresetChanged(int index)
+{
+    // See RmlResolutionChanged's own comment -- same settle-frame guard applies here.
+    if (m_rmlSyncCount < kRmlSelectSettleFrames)
+        return;
+    if (index < 0 || index >= static_cast<int>(std::size(s_GraphicsPresets)))
+        return;
+    Render::Look::ApplyGraphicsPreset(s_GraphicsPresets[index]);
+}
+
+void mu::ui::window::COptionWindow::RmlToggleFxaa()
+{
+    const GameConfig& config = GameConfig::GetInstance();
+    Render::Look::ChooseScreenFilters(!config.GetFxaa(), config.GetSharpen());
+}
+
+void mu::ui::window::COptionWindow::RmlToggleHdTextures()
+{
+    // Not part of a graphics preset, and Hd::SetEnabled is not called: textures already loaded keep
+    // their version, so the new value takes effect after a restart (Winmain reads it once).
+    GameConfig& config = GameConfig::GetInstance();
+    config.SetHdTextures(!config.GetHdTextures());
+    config.Save();
+}
+
+void mu::ui::window::COptionWindow::RmlSharpenChanged(int index)
+{
+    // See RmlResolutionChanged's own comment -- same settle-frame guard applies here.
+    if (m_rmlSyncCount < kRmlSelectSettleFrames)
+        return;
+    if (index < 0 || index >= static_cast<int>(std::size(s_SharpenValues)))
+        return;
+    Render::Look::ChooseScreenFilters(GameConfig::GetInstance().GetFxaa(), s_SharpenValues[index]);
 }
 
 void mu::ui::window::COptionWindow::RmlAnisotropyChanged(int index)
@@ -1383,6 +1478,19 @@ void mu::ui::window::COptionWindow::RmlAnisotropyChanged(int index)
     if (index < 0 || index >= static_cast<int>(std::size(s_AnisotropyValues)))
         return;
     MuSetAnisotropyPreference(s_AnisotropyValues[index]);
+    Render::Look::RefreshGraphicsPreset();
+}
+
+void mu::ui::window::COptionWindow::RmlSunShadowsChanged(int index)
+{
+    // See RmlResolutionChanged's own comment -- same settle-frame guard applies here.
+    if (m_rmlSyncCount < kRmlSelectSettleFrames)
+        return;
+    if (index < 0 || index >= static_cast<int>(std::size(s_SunShadowsValues)))
+        return;
+    GameConfig::GetInstance().SetSunShadows(s_SunShadowsValues[index]);
+    Render::Lighting::SunShadow::SetLevel(GameConfig::GetInstance().GetSunShadows());
+    Render::Look::RefreshGraphicsPreset();
 }
 
 void mu::ui::window::COptionWindow::RmlToggleShowFpsCounter()
@@ -1902,10 +2010,16 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.lookDynamicLightsLabel, "look_dynamic_lights_label", I18N::Game::DynamicLights);
     syncLabel(model.lookLightMoodLabel, "look_light_mood_label", I18N::Game::LightMood);
     syncLabel(model.lookPostProcessingLabel, "look_post_processing_label", I18N::Game::BloomAndColourGrading);
+    syncLabel(model.graphicsPresetRowLabel, "graphics_preset_row_label", I18N::Game::GraphicsPresetRow);
+    syncLabel(model.fxaaLabel, "fxaa_label", I18N::Game::FxaaRow);
+    syncLabel(model.hdTexturesLabel, "hd_textures_label", I18N::Game::HdTexturesRow);
+    syncLabel(model.sharpenRowLabel, "sharpen_row_label", I18N::Game::SharpenRow);
     syncLabel(model.antialiasingRowLabel, "antialiasing_row_label", I18N::Game::AntiAliasing);
     syncLabel(model.antialiasingTooltip, "antialiasing_tooltip", I18N::Game::AntiAliasingTooltip);
     syncLabel(model.anisotropyRowLabel, "anisotropy_row_label", I18N::Game::AnisotropicFiltering);
     syncLabel(model.anisotropyTooltip, "anisotropy_tooltip", I18N::Game::AnisotropicFilteringTooltip);
+    syncLabel(model.sunShadowsRowLabel, "sun_shadows_row_label", I18N::Game::SunShadowsRow);
+    syncLabel(model.sunShadowsTooltip, "sun_shadows_tooltip", I18N::Game::SunShadowsTooltip);
     syncLabel(model.showFpsCounterLabel, "show_fps_counter_label", I18N::Game::ShowFPSCounter);
     syncLabel(model.showDebugInfoLabel, "show_debug_info_label", I18N::Game::ShowDebugInfo);
     syncLabel(model.overheadPlayerNamesLabel, "overhead_player_names_label", I18N::Game::OverheadPlayerNames);
@@ -2043,12 +2157,60 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
         }
         syncDropdownValue(valueLabel, valueName, labels, index);
     };
+    {
+        const GameConfig& config = GameConfig::GetInstance();
+        const std::vector<Rml::String> presetLabels =
+            NarrowLabels({I18N::Game::GraphicsPresetLow, I18N::Game::GraphicsPresetMedium,
+                          I18N::Game::GraphicsPresetHigh, I18N::Game::GraphicsPresetUltra});
+        const auto presetEntry =
+            std::find(std::begin(s_GraphicsPresets), std::end(s_GraphicsPresets), config.GetGraphicsPreset());
+        const int presetIndex = presetEntry == std::end(s_GraphicsPresets)
+                                    ? -1
+                                    : static_cast<int>(presetEntry - std::begin(s_GraphicsPresets));
+        if (model.graphicsPresetLabels != presetLabels)
+        {
+            model.graphicsPresetLabels = presetLabels;
+            m_RmlView.MarkDirty("graphics_preset_labels");
+        }
+        if (model.graphicsPresetIndex != presetIndex)
+        {
+            model.graphicsPresetIndex = presetIndex;
+            m_RmlView.MarkDirty("graphics_preset_index");
+        }
+        // Values that match no preset read "Custom" in the value box, which the list does not offer.
+        std::vector<Rml::String> presetValues = presetLabels;
+        presetValues.push_back(StringUtils::WideToNarrow(I18N::Game::GraphicsPresetCustom));
+        syncDropdownValue(model.graphicsPresetValueLabel, "graphics_preset_value_label", presetValues,
+                          presetIndex < 0 ? static_cast<int>(presetLabels.size()) : presetIndex);
+        const bool fxaa = config.GetFxaa();
+        if (model.fxaa != fxaa)
+        {
+            model.fxaa = fxaa;
+            m_RmlView.MarkDirty("fxaa");
+        }
+        const bool hdTextures = config.GetHdTextures();
+        if (model.hdTextures != hdTextures)
+        {
+            model.hdTextures = hdTextures;
+            m_RmlView.MarkDirty("hd_textures");
+        }
+        std::vector<Rml::String> sharpenLabels = MultiplierLabels(s_SharpenValues);
+        for (std::size_t i = 1; i < sharpenLabels.size(); ++i)
+            sharpenLabels[i] = std::to_string(s_SharpenValues[i]) + " %";
+        syncMultiplierRow(model.sharpenLabels, "sharpen_labels", model.sharpenIndex, "sharpen_index",
+                          model.sharpenValueLabel, "sharpen_value_label", std::move(sharpenLabels),
+                          FindValueIndex(s_SharpenValues, config.GetSharpen()));
+    }
     syncMultiplierRow(model.antialiasingLabels, "antialiasing_labels", model.antialiasingIndex, "antialiasing_index",
                       model.antialiasingValueLabel, "antialiasing_value_label", MultiplierLabels(s_AntialiasingValues),
                       FindValueIndex(s_AntialiasingValues, GameConfig::GetInstance().GetAntialiasing()));
     syncMultiplierRow(model.anisotropyLabels, "anisotropy_labels", model.anisotropyIndex, "anisotropy_index",
                       model.anisotropyValueLabel, "anisotropy_value_label", MultiplierLabels(s_AnisotropyValues),
                       FindValueIndex(s_AnisotropyValues, GameConfig::GetInstance().GetAnisotropy()));
+    syncMultiplierRow(model.sunShadowsLabels, "sun_shadows_labels", model.sunShadowsIndex, "sun_shadows_index",
+                      model.sunShadowsValueLabel, "sun_shadows_value_label",
+                      NarrowLabels({I18N::Game::Off, I18N::Game::SunShadowsMedium, I18N::Game::SunShadowsHigh}),
+                      FindValueIndex(s_SunShadowsValues, GameConfig::GetInstance().GetSunShadows()));
     // Rebuilt every sync for a live language switch, as the rows above.
     syncMultiplierRow(model.interfaceViewLabels, "interface_view_labels", model.interfaceViewIndex,
                       "interface_view_index", model.interfaceViewValueLabel, "interface_view_value_label",

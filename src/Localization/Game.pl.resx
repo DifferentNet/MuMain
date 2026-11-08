@@ -13055,6 +13055,21 @@
   <data name="QuestRequirementBuff" xml:space="preserve">
     <value>Bonus: %ls</value>
   </data>
+  <data name="HdTexturesRow" xml:space="preserve">
+    <value>Tekstury HD (po restarcie)</value>
+  </data>
+  <data name="SunShadowsRow" xml:space="preserve">
+    <value>Cienie od słońca</value>
+  </data>
+  <data name="SunShadowsMedium" xml:space="preserve">
+    <value>Średnie</value>
+  </data>
+  <data name="SunShadowsHigh" xml:space="preserve">
+    <value>Wysokie</value>
+  </data>
+  <data name="SunShadowsTooltip" xml:space="preserve">
+    <value>Prawdziwe cienie od słońca na postaciach, potworach i obiektach (wygląd Enhanced). Średnie: mapa 2048, wysokie: 4096. Wyłączone zostawia stare płaskie cienie.</value>
+  </data>
   <data name="TouchAttack" xml:space="preserve">
     <value>Atak</value>
   </data>

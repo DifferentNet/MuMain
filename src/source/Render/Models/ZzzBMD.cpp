@@ -23,6 +23,7 @@
 #include "Engine/Object/ZzzCharacter.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
 #include "Render/Textures/ZzzTexture.h"
+#include "Render/Textures/HdTextures.h"
 #include "Engine/AI/ZzzAI.h"
 #include "SMD.h"
 #include "Render/Effects/ZzzEffect.h"
@@ -39,6 +40,7 @@
 #include "Core/Utilities/FrameProfiler.h"
 #include "Scenes/MainScene.h"
 #include "Render/Lighting/LightMoodSetting.h"
+#include "Render/Lighting/SunShadowSetting.h"
 
 using mu::PackABGR;
 
@@ -2935,7 +2937,8 @@ bool BMD::RenderGpuMeshShadow(const int blendMesh, const int hiddenMesh, const i
 void BMD::RenderBodyShadow(const int blendMesh, const int hiddenMesh, const int startMeshNumber,
     const int endMeshNumber, void* pClothes, const int clothesCount, const float alpha)
 {
-    if (!g_pOption->GetRenderAllEffects() || IsBodyShadowsDisabledDebug())
+    // The sun shadow casts the real shape instead of the flat Classic one.
+    if (!g_pOption->GetRenderAllEffects() || IsBodyShadowsDisabledDebug() || Render::Lighting::SunShadow::Active())
     {
         return;
     }
@@ -3347,8 +3350,10 @@ bool BMD::Open2(const wchar_t* DirName, const wchar_t* ModelFileName, bool bReAl
 
     wchar_t ModelPath[260] = {};
     _snwprintf(ModelPath, std::size(ModelPath), L"%ls%ls", DirName, ModelFileName);
+    // With HD textures on, a model with a copy in Data\HD (the HD model pack) loads that copy.
+    const std::wstring modelFile = Render::Textures::Hd::Resolve(ModelPath);
 
-    FILE* fp = _wfopen(ModelPath, L"rb");
+    FILE* fp = _wfopen(modelFile.c_str(), L"rb");
     if (!fp)
     {
         //// wprintf(L"[Open2] ERROR: Unable to open file: %ls\n", ModelPath);

@@ -11,6 +11,7 @@
 
 #include "FramePixelReadback.h"
 #include "SceneLighting.h"
+#include "SunShadow.h"
 
 #include <cstdint>
 #include <functional>
@@ -68,6 +69,9 @@ struct PostProcessingLook
     float bloomStrength = 0.0f;
     float bloomLevelFalloff = 0.5f;
     float gradingStrength = 1.0f;
+    // Screen filters of the finished scene (see Render/PostProcessing/ScreenFilterSetting.h).
+    bool fxaa = false;
+    float sharpen = 0.0f; // 0..1
 };
 
 // ---------------------------------------------------------------------------
@@ -321,6 +325,20 @@ public:
     // frame is the one all of that frame's draws use; set an empty block to turn them off.
     virtual void SetDynamicLights(const DynamicLightsUniform& /*lights*/) {}
 
+    // The sun's shadow for this frame (SunShadow.h). The scene sets it right after its scene
+    // lighting; a frame that does not set it has none. Only draws recorded between
+    // BeginSunShadowScope and EndSunShadowScope cast and receive it (terrain, objects, characters);
+    // see ScopedSunShadowScope.
+    virtual void SetSunShadow(const SunShadowFrame& /*frame*/) {}
+    virtual void BeginSunShadowScope() {}
+    virtual void EndSunShadowScope() {}
+    // True when this frame's sun shadow is drawn: the scene then leaves out the Classic flat
+    // shadows it would draw instead.
+    [[nodiscard]] virtual bool IsSunShadowActive() const
+    {
+        return false;
+    }
+
     // Select Enhanced (per-pixel lighting and fog) or Classic pipelines for the following frames.
     // Returns false when Enhanced lighting was requested but this backend could not build it; the
     // renderer then keeps drawing Classic.
@@ -350,6 +368,15 @@ public:
     // do. Scopes nest; use ScopedScreenSpaceSampling.
     virtual void BeginScreenSpaceSampling() {}
     virtual void EndScreenSpaceSampling() {}
+
+    // With Enhanced lighting on the desktop, the opaque models drawn between
+    // BeginItemPreviewLighting and EndItemPreviewLighting (inventory item
+    // previews) are lit by a fixed studio light from the viewer's upper left,
+    // with a highlight and a rim, and sample their textures through the
+    // mipmapped sampler, so they look the same on every map. Scopes nest; use
+    // ScopedItemPreviewLighting.
+    virtual void BeginItemPreviewLighting() {}
+    virtual void EndItemPreviewLighting() {}
 
     // Draws between BeginBloomExclusion and EndBloomExclusion never feed the
     // post-processing bloom, even when they blend additively: a model's chrome,
@@ -775,6 +802,36 @@ public:
     }
     ScopedScreenSpaceSampling(const ScopedScreenSpaceSampling&) = delete;
     ScopedScreenSpaceSampling& operator=(const ScopedScreenSpaceSampling&) = delete;
+};
+// Studio light for the item previews drawn while it is alive.
+class ScopedItemPreviewLighting
+{
+public:
+    ScopedItemPreviewLighting()
+    {
+        GetRenderer().BeginItemPreviewLighting();
+    }
+    ~ScopedItemPreviewLighting()
+    {
+        GetRenderer().EndItemPreviewLighting();
+    }
+    ScopedItemPreviewLighting(const ScopedItemPreviewLighting&) = delete;
+    ScopedItemPreviewLighting& operator=(const ScopedItemPreviewLighting&) = delete;
+};
+// The draws recorded in its lifetime cast and receive the frame's sun shadow.
+class ScopedSunShadowScope
+{
+public:
+    ScopedSunShadowScope()
+    {
+        GetRenderer().BeginSunShadowScope();
+    }
+    ~ScopedSunShadowScope()
+    {
+        GetRenderer().EndSunShadowScope();
+    }
+    ScopedSunShadowScope(const ScopedSunShadowScope&) = delete;
+    ScopedSunShadowScope& operator=(const ScopedSunShadowScope&) = delete;
 };
 class ScopedBloomExclusion
 {

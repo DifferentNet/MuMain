@@ -161,5 +161,15 @@ void SdlGpuReplayState::Invalidate()
     m_indexBufferValid = false;
     m_viewportValid = false;
     m_scissorValid = false;
+    m_sunShadowMapValid = false;
+}
+
+bool SdlGpuReplayState::SelectSunShadowMap()
+{
+    if (m_sunShadowMapValid)
+        return false;
+
+    m_sunShadowMapValid = true;
+    return true;
 }
 }

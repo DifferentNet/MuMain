@@ -16,7 +16,8 @@ alone (no tint above HIGHLIGHT_LUMA), so armour, glows and light pools keep
 their Classic colour. Grading may cool and deepen shadows a little; real base
 darkness belongs to the map's light, not to its grading.
 
-Usage: scripts/grading_table.py identity|dungeon <output.png>
+Usage: scripts/grading_table.py identity|<map preset> <output.png>
+       scripts/grading_table.py maps src/bin/Data/Grading   (every shipped map table)
 """
 
 import argparse
@@ -54,21 +55,31 @@ def shadow_weight(y):
     return t * t * (3.0 - 2.0 * t)
 
 
-def dungeon(color):
-    """Cold, slightly desaturated and a little deeper shadows; mid-tones and highlights untouched."""
-    shadow_tint = (-0.025, 0.004, 0.030)
-    desaturation = 0.25
-    deepening = 0.12
-    y = luma(color)
-    w = shadow_weight(y)
-    toned = [channel + (y - channel) * desaturation * w + tint * w for channel, tint in zip(color, shadow_tint)]
-    # Brightness: the shadows a little deeper, everything else where it was. Clamping a channel
-    # undoes part of the correction, so correct again until it holds.
-    target = y * (1.0 - deepening * w)
-    for _ in range(4):
-        correction = target - luma(toned)
-        toned = [clamp(channel + correction) for channel in toned]
-    return toned
+def mood(shadow_tint, desaturation=0.0, deepening=0.0, saturation=0.0):
+    """A grade that tints, (de)saturates and deepens the shadows and leaves highlights alone.
+
+    shadow_tint is added per channel at black and fades out towards HIGHLIGHT_LUMA, like the
+    other two. desaturation pulls a shadow towards its grey, saturation pushes it away from it
+    (both 0..1); deepening darkens black-side colours by that fraction of their luma.
+    """
+    def grade(color):
+        y = luma(color)
+        w = shadow_weight(y)
+        spread = (saturation - desaturation) * w
+        toned = [channel + (channel - y) * spread + tint * w for channel, tint in zip(color, shadow_tint)]
+        # Brightness: the shadows a little deeper, everything else where it was. Clamping a channel
+        # undoes part of the correction, so correct again until it holds.
+        target = y * (1.0 - deepening * w)
+        for _ in range(4):
+            correction = target - luma(toned)
+            toned = [clamp(channel + correction) for channel in toned]
+        return toned
+
+    return grade
+
+
+# Cold, slightly desaturated and a little deeper shadows; mid-tones and highlights untouched.
+dungeon = mood((-0.025, 0.004, 0.030), desaturation=0.25, deepening=0.12)
 
 
 def check(grade):
@@ -87,7 +98,35 @@ def check(grade):
     return brighter, highlight_shift
 
 
-PRESETS = {"identity": identity, "dungeon": dungeon}
+# The map tables in src/bin/Data/Grading: preset name, then the World<N>.png files it is
+# shipped as (N = map number + 1). Every mood stays within the table rules below.
+MAP_TABLES = {
+    # Lorencia: warm evening shadows, a touch more colour.
+    "lorencia": (mood((0.022, 0.008, -0.020), saturation=0.10, deepening=0.04), [1]),
+    "dungeon": (dungeon, [2]),
+    # Devias: snow light, blue shadows.
+    "devias": (mood((-0.020, 0.002, 0.028), desaturation=0.10, deepening=0.05), [3]),
+    # Noria: green forest shade, slightly richer.
+    "noria": (mood((-0.010, 0.018, -0.010), saturation=0.12, deepening=0.04), [4]),
+    # Lost Tower: violet gloom, deeper.
+    "losttower": (mood((0.014, -0.012, 0.026), desaturation=0.15, deepening=0.12), [5]),
+    # Atlans: underwater teal.
+    "atlans": (mood((-0.025, 0.012, 0.022), desaturation=0.10, deepening=0.06), [8]),
+    # Tarkan: hot dusty amber, washed a little.
+    "tarkan": (mood((0.026, 0.010, -0.028), desaturation=0.12, deepening=0.03), [9]),
+    # Icarus: thin cold air above the clouds.
+    "icarus": (mood((-0.014, 0.006, 0.022), desaturation=0.05), [11]),
+    # Aida: deep emerald woods.
+    "aida": (mood((-0.016, 0.016, 0.004), saturation=0.08, deepening=0.08), [34]),
+    # Kanturu: cold steel ruins.
+    "kanturu": (mood((-0.012, 0.000, 0.016), desaturation=0.22, deepening=0.08), [38, 39, 40]),
+    # Swamp of Quiet: murky olive.
+    "swamp": (mood((0.008, 0.012, -0.018), desaturation=0.18, deepening=0.10), [57]),
+    # Raklion: icy blue, crisp.
+    "raklion": (mood((-0.022, 0.006, 0.030), saturation=0.04, deepening=0.04), [58, 59]),
+}
+
+PRESETS = {"identity": identity, **{name: grade for name, (grade, _) in MAP_TABLES.items()}}
 
 
 def table_rows(grade):
@@ -119,16 +158,21 @@ def write_png(path, rows):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("preset", choices=sorted(PRESETS))
-    parser.add_argument("output", type=Path)
+    parser.add_argument("preset", choices=sorted(PRESETS) + ["maps"])
+    parser.add_argument("output", type=Path, help="the PNG, or for maps the Grading folder")
     arguments = parser.parse_args()
-    grade = PRESETS[arguments.preset]
-    brighter, highlight_shift = check(grade)
-    if brighter > TOLERANCE or highlight_shift > TOLERANCE:
-        print(f"refused: brightens a colour by {brighter * 255:.1f} levels, moves a highlight by "
-              f"{highlight_shift * 255:.1f} levels (at most {TOLERANCE * 255:.0f} each)", file=sys.stderr)
-        return 1
-    write_png(arguments.output, table_rows(grade))
+    if arguments.preset == "maps":
+        jobs = [(name, grade, arguments.output / f"World{number}.png")
+                for name, (grade, numbers) in MAP_TABLES.items() for number in numbers]
+    else:
+        jobs = [(arguments.preset, PRESETS[arguments.preset], arguments.output)]
+    for name, grade, output in jobs:
+        brighter, highlight_shift = check(grade)
+        if brighter > TOLERANCE or highlight_shift > TOLERANCE:
+            print(f"{name} refused: brightens a colour by {brighter * 255:.1f} levels, moves a highlight by "
+                  f"{highlight_shift * 255:.1f} levels (at most {TOLERANCE * 255:.0f} each)", file=sys.stderr)
+            return 1
+        write_png(output, table_rows(grade))
     return 0
 
 

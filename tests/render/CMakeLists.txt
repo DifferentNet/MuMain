@@ -127,6 +127,24 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/UpscaleMarker.cpp
 )
 
+# HD textures: the Data\HD path of a texture.
+mu_add_test(
+    NAME hd_textures_tests
+    SOURCES
+        test_hd_textures.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/HdTexturePath.cpp
+)
+
+# The sun shadow's box, uniform and the frame a map's mood gives.
+mu_add_test(
+    NAME sun_shadow_tests
+    SOURCES
+        test_sun_shadow.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/App/Platform/Windows/Winmain.cpp
+    LINK_LIBS
+        MuClient
+)
+
 mu_add_test(
     NAME sdl_gpu_validation_tests
     SOURCES
@@ -190,6 +208,7 @@ mu_add_test(
         test_look_profile.cpp
         test_look_tuning.cpp
         test_look_preset.cpp
+        test_graphics_preset.cpp
         test_tuning_controls.cpp
         test_tuning_session.cpp
         test_look_layers.cpp

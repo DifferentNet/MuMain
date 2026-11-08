@@ -116,6 +116,12 @@ void LookPresetController::ApplyPreset(LookPreset preset)
     }
 }
 
+void LookPresetController::ApplyPreset(LookPreset preset, const FeatureOverrides& choices)
+{
+    m_choices = choices;
+    ApplyPreset(preset);
+}
+
 void LookPresetController::Override(const FeatureOverrides& change)
 {
     m_overrides.Merge(change);

@@ -1,0 +1,55 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct FSInput
+{
+    float4 pos;
+    float2 uv;
+    float4 color;
+};
+
+struct FogUniforms
+{
+    uint fogEnabled;
+    uint alphaDiscardEnabled;
+    float alphaThreshold;
+    uint alphaToCoverage;
+    float fogStart;
+    float fogEnd;
+    float4 fogColor;
+};
+
+struct main0_in
+{
+    float2 input_uv [[user(locn0)]];
+    float4 input_color [[user(locn1)]];
+};
+
+static inline __attribute__((always_inline))
+void _main(thread const FSInput& _input, constant FogUniforms& _18, texture2d<float> tex, sampler s)
+{
+    if ((_18.alphaDiscardEnabled == 0u) && (_18.alphaToCoverage == 0u))
+    {
+        return;
+    }
+    float alpha = tex.sample(s, _input.uv).w * _input.color.w;
+    if (alpha <= fast::max(_18.alphaThreshold, 0.25))
+    {
+        discard_fragment();
+    }
+}
+
+fragment void main0(main0_in in [[stage_in]], constant FogUniforms& _18 [[buffer(0)]], texture2d<float> tex [[texture(0)]], sampler s [[sampler(0)]], float4 gl_FragCoord [[position]])
+{
+    FSInput _input;
+    _input.pos = gl_FragCoord;
+    _input.uv = in.input_uv;
+    _input.color = in.input_color;
+    FSInput param = _input;
+    _main(param, _18, tex, s);
+}
+

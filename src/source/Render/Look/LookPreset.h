@@ -77,6 +77,9 @@ public:
     // Saves the preset, clears every override and applies the preset's features: start-up, the
     // options window's checkbox and `$look classic|enhanced`.
     void ApplyPreset(LookPreset preset);
+    // The same with new player choices (SetChoices), switching the features once: the graphics
+    // presets set the look and every choice together.
+    void ApplyPreset(LookPreset preset, const FeatureOverrides& choices);
     // A developer override for the session: applied, not saved, the preset unchanged.
     void Override(const FeatureOverrides& change);
     // Every override at once, for the benchmark's segments and their restore.

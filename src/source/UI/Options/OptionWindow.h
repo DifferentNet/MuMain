@@ -125,7 +125,7 @@ namespace mu::ui::window
         // Custom-dropdown mechanism (option_window.rml's own .option-dropdown family; RmlUi's
         // native <select> isn't used here) -- dropdownId is 0=resolution,1=fpsCap,2=theme,
         // 3=language,4=font,5=uiScale,6=antialiasing,7=anisotropy,8=interfaceView,9=controls,
-        // 10=touchButtons,11=gamepad, matching model.openDropdown's
+        // 10=touchButtons,11=gamepad,12=graphicsPreset,13=sharpen,14=sunShadows, matching model.openDropdown's
         // own comment (OptionWindow.h).
         // RmlDropdownOptionClick dispatches to RmlResolutionChanged()/RmlFpsCapChanged()/etc. per
         // dropdownId.
@@ -182,7 +182,15 @@ namespace mu::ui::window
         // Video tab's Anti-aliasing and Anisotropic filtering rows; their values are read live
         // from GameConfig, since `$msaa` changes the first outside this window too.
         void RmlAntialiasingChanged(int index);
+        // The graphics preset row (Low to Ultra) and the screen filters' rows (FXAA, sharpening).
+        void RmlGraphicsPresetChanged(int index);
+        void RmlToggleFxaa();
+        // [Render] HdTextures; takes effect after a restart, not part of the presets.
+        void RmlToggleHdTextures();
+        void RmlSharpenChanged(int index);
         void RmlAnisotropyChanged(int index);
+        // [Render] SunShadows (dropdown 14): applied at once, part of the graphics presets.
+        void RmlSunShadowsChanged(int index);
         // Interface/UI tab -- Show FPS Counter/Show Debug Info stay ephemeral (SceneManager.h
         // globals, no GameConfig persistence), matching $fpscounter/$details today.
         void RmlToggleShowFpsCounter();
@@ -252,7 +260,7 @@ namespace mu::ui::window
             // field rather than one bool per dropdown gives exclusivity for free -- opening one
             // overwrites whichever other id was here, no separate "close the others" step needed.
             // 0=resolution, 1=fpsCap, 2=theme, 3=language, 4=font, 5=uiScale, 6=antialiasing,
-            // 7=anisotropy, 8=interfaceView, 9=controls, 10=touchButtons, 11=gamepad (RmlToggleDropdown()/
+            // 7=anisotropy, 8=interfaceView, 9=controls, 10=touchButtons, 11=gamepad, 12=graphicsPreset, 13=sharpen, 14=sunShadows (RmlToggleDropdown()/
             // RmlDropdownOptionClick()'s own ids). Replaces RmlUi's native <select>/<option>
             // (WidgetDropDown) entirely -- see option_window.rml's own history for why: that
             // widget's own generated selectbox/selectvalue/selectarrow sub-elements need CSS this
@@ -356,6 +364,22 @@ namespace mu::ui::window
             Rml::String tuningResetAllLabel;
             // Shown while the last save failed; empty otherwise.
             Rml::String tuningSaveMessage;
+            // [Render] GraphicsPreset: the four presets to pick (graphicsPresetIndex -1 while the values
+            // match none); the value box reads "Custom" then. And the screen filters: FXAA and the
+            // sharpening steps (graphics_preset and sharpen are dropdown ids 12 and 13).
+            std::vector<Rml::String> graphicsPresetLabels;
+            int graphicsPresetIndex = 0;
+            Rml::String graphicsPresetRowLabel;
+            Rml::String graphicsPresetValueLabel;
+            bool fxaa = false;
+            Rml::String fxaaLabel;
+            bool hdTextures = false;
+            bool hdTexturesAvailable = true;
+            Rml::String hdTexturesLabel;
+            std::vector<Rml::String> sharpenLabels;
+            int sharpenIndex = 0;
+            Rml::String sharpenRowLabel;
+            Rml::String sharpenValueLabel;
             // [Render] Antialiasing (the Enhanced look's samples) and Anisotropy.
             std::vector<Rml::String> antialiasingLabels;
             int antialiasingIndex = 0;
@@ -367,6 +391,13 @@ namespace mu::ui::window
             Rml::String anisotropyRowLabel;
             Rml::String anisotropyValueLabel;
             Rml::String anisotropyTooltip;
+            // [Render] SunShadows: Off / Medium / High; no row in the browser build.
+            std::vector<Rml::String> sunShadowsLabels;
+            int sunShadowsIndex = 0;
+            bool sunShadowsAvailable = true;
+            Rml::String sunShadowsRowLabel;
+            Rml::String sunShadowsValueLabel;
+            Rml::String sunShadowsTooltip;
 
             // Interface/UI tab.
             bool showFpsCounter = false;

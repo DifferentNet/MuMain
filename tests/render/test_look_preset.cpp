@@ -120,6 +120,21 @@ TEST_CASE("the player's Enhanced choices act on Enhanced only, survive a preset 
     CHECK(recorder.applied.back() == AllOn);
 }
 
+TEST_CASE("a preset applied with new choices switches the features once [render][look][preset]")
+{
+    Recorder recorder;
+    LookPresetController controller = recorder.Controller();
+    controller.ApplyPreset(LookPreset::Classic);
+
+    controller.ApplyPreset(LookPreset::Enhanced, PostOff());
+    CHECK(recorder.saved.size() == 2);
+    REQUIRE(recorder.applied.size() == 2);
+    LookFeatures expected = AllOn;
+    expected.postProcessing = false;
+    CHECK(recorder.applied.back() == expected);
+    CHECK(controller.Choices().postProcessing == std::optional<bool>(false));
+}
+
 TEST_CASE("the player's light mood strength applies only the mood, on Enhanced only, under a developer's strength "
           "[render][look][preset]")
 {

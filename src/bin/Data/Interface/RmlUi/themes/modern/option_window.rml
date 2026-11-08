@@ -92,6 +92,19 @@
 				<div class="opt-page" data-class-hidden="active_tab != 1">
 					<div class="opt-page-title">{{tab_graphics_label}}</div>
 					<div class="opt-section">{{section_quality_label}}</div>
+					<div class="opt-row">
+						<span class="opt-label">{{graphics_preset_row_label}}</span>
+						<div class="opt-control">
+							<div class="option-dropdown">
+								<div class="option-dropdown-value" data-class-open="open_dropdown == 12" data-event-click="option_toggle_dropdown(12)">{{graphics_preset_value_label}}<div class="opt-caret"></div></div>
+								<div class="option-dropdown-list" data-class-hidden="open_dropdown != 12">
+									<div class="option-dropdown-option" data-for="label : graphics_preset_labels"
+									     data-class-selected="it_index == graphics_preset_index"
+									     data-event-click="option_dropdown_option_click(12, it_index)">{{label}}</div>
+								</div>
+							</div>
+						</div>
+					</div>
 					<div class="opt-row opt-toggle-row" data-event-click="option_toggle_enhanced_graphics">
 						<span class="opt-label">{{enhanced_graphics_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="enhanced_graphics"><div class="opt-toggle-knob"></div></div></div>
@@ -295,6 +308,27 @@
 						</div>
 						<span class="opt-row-tip">{{antialiasing_tooltip}}</span>
 					</div>
+					<div class="opt-row opt-toggle-row" data-event-click="option_toggle_fxaa">
+						<span class="opt-label">{{fxaa_label}}</span>
+						<div class="opt-control"><div class="opt-toggle" data-class-checked="fxaa"><div class="opt-toggle-knob"></div></div></div>
+					</div>
+					<div class="opt-row opt-toggle-row" data-class-hidden="!hd_textures_available" data-event-click="option_toggle_hd_textures">
+						<span class="opt-label">{{hd_textures_label}}</span>
+						<div class="opt-control"><div class="opt-toggle" data-class-checked="hd_textures"><div class="opt-toggle-knob"></div></div></div>
+					</div>
+					<div class="opt-row">
+						<span class="opt-label">{{sharpen_row_label}}</span>
+						<div class="opt-control">
+							<div class="option-dropdown">
+								<div class="option-dropdown-value" data-class-open="open_dropdown == 13" data-event-click="option_toggle_dropdown(13)">{{sharpen_value_label}}<div class="opt-caret"></div></div>
+								<div class="option-dropdown-list" data-class-hidden="open_dropdown != 13">
+									<div class="option-dropdown-option" data-for="label : sharpen_labels"
+									     data-class-selected="it_index == sharpen_index"
+									     data-event-click="option_dropdown_option_click(13, it_index)">{{label}}</div>
+								</div>
+							</div>
+						</div>
+					</div>
 					<div class="opt-row opt-row-tipped">
 						<span class="opt-label">{{anisotropy_row_label}}</span>
 						<div class="opt-control">
@@ -308,6 +342,20 @@
 							</div>
 						</div>
 						<span class="opt-row-tip">{{anisotropy_tooltip}}</span>
+					</div>
+					<div class="opt-row opt-row-tipped" data-class-hidden="!sun_shadows_available">
+						<span class="opt-label">{{sun_shadows_row_label}}</span>
+						<div class="opt-control">
+							<div class="option-dropdown">
+								<div class="option-dropdown-value" data-class-open="open_dropdown == 14" data-event-click="option_toggle_dropdown(14)">{{sun_shadows_value_label}}<div class="opt-caret"></div></div>
+								<div class="option-dropdown-list" data-class-hidden="open_dropdown != 14">
+									<div class="option-dropdown-option" data-for="label : sun_shadows_labels"
+									     data-class-selected="it_index == sun_shadows_index"
+									     data-event-click="option_dropdown_option_click(14, it_index)">{{label}}</div>
+								</div>
+							</div>
+						</div>
+						<span class="opt-row-tip">{{sun_shadows_tooltip}}</span>
 					</div>
 					<div class="opt-row">
 						<span class="opt-label">{{render_level_label}}</span>

@@ -5,8 +5,8 @@ Language=Eng
 EncryptedUsername=
 EncryptedPassword=
 [Window]
-Width=1024
-Height=768
+Width=0
+Height=0
 Windowed=1
 [Audio]
 SoundVolume=5
@@ -29,7 +29,11 @@ TitlesTownsOnly=1
 Zoom=1735
 [Render]
 VSync=1
-Look=Classic
+GraphicsPreset=Auto
+Fxaa=0
+HdTextures=0
+SunShadows=0
+Sharpen=0
 Anisotropy=8
 Antialiasing=4
 EnhancedLighting=1

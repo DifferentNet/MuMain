@@ -41,6 +41,8 @@
 #include "Scenes/SceneLightingSetup.h"
 #include "Scenes/ScenePostProcessing.h"
 #include "Render/Lighting/DynamicLightHistory.h"
+#include "Render/Lighting/SunShadowSetting.h"
+#include <optional>
 #include "Camera/CameraManager.h"
 #include "Camera/CameraMode.h"
 #include "Core/Input/ImeInput.h"
@@ -410,6 +412,8 @@ static void SetupMainSceneViewport(int& outWidth, int& outHeight, BYTE& outByWat
         // Don't disable fog - let BeginOpengl() handle it based on FogEnable
     }
     Scenes::Lighting::SubmitSceneLighting();
+    // The sun shadow box follows the hero (after the scene lighting: the renderer's view is set).
+    Render::Lighting::SunShadow::Submit(Hero->Object.Position);
     CameraProjection::ScreenToWorldRay(g_Camera, MouseX, MouseY, MouseTarget);
     App::Control::Frames::RecordWorldCamera();
 }
@@ -540,6 +544,11 @@ static void RenderGameWorld(BYTE& byWaterMap, int width, int height)
     bool renderWeatherEffects = true;
 #endif
 
+    // Terrain, map objects, characters, monsters, NPCs, pets and items receive the sun shadow;
+    // the depth-writing models among them cast it. Joints, effects and sprites stay outside.
+    std::optional<mu::ScopedSunShadowScope> sunShadowScope;
+    sunShadowScope.emplace();
+
     if (IsWaterTerrain() == false && renderTerrain)
     {
         if (gMapManager.WorldActive == WD_39KANTURU_3RD)
@@ -602,6 +611,7 @@ static void RenderGameWorld(BYTE& byWaterMap, int width, int height)
         mu::ScopedReorderableDraws reorderable;
         RenderObjects_AfterCharacter();
     }
+    sunShadowScope.reset();
 
     { FRAME_PROFILE(Joints); RenderJoints(byWaterMap); }
 

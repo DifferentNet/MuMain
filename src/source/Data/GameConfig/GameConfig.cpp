@@ -109,6 +109,7 @@ void GameConfig::Load()
     m_sortParticleDraws = ReadBool(CfgSectionRender, CfgKeySortParticleDraws, CfgDefaultSortParticleDraws);
     m_vsyncEnabled = ReadBool(CfgSectionRender, CfgKeyVSync, CfgDefaultVSync);
     m_look = ReadLookPreset(m_configPath);
+    m_hadSavedLook = HasSavedLook(m_configPath);
     m_anisotropy =
         GameConfigValidation::ValidateAnisotropy(ReadInt(CfgSectionRender, CfgKeyAnisotropy, CfgDefaultAnisotropy));
     m_antialiasing = GameConfigValidation::ValidateAntialiasing(
@@ -117,6 +118,13 @@ void GameConfig::Load()
     m_dynamicLights = ReadBool(CfgSectionRender, CfgKeyDynamicLights, CfgDefaultDynamicLights);
     m_lightMood = ReadBool(CfgSectionRender, CfgKeyLightMood, CfgDefaultLightMood);
     m_postProcessing = ReadBool(CfgSectionRender, CfgKeyPostProcessing, CfgDefaultPostProcessing);
+    m_graphicsPreset = GameConfigValidation::ValidateGraphicsPreset(
+        ReadString(CfgSectionRender, CfgKeyGraphicsPreset, CfgDefaultGraphicsPreset));
+    m_fxaa = ReadBool(CfgSectionRender, CfgKeyFxaa, CfgDefaultFxaa);
+    m_hdTextures = ReadBool(CfgSectionRender, CfgKeyHdTextures, CfgDefaultHdTextures);
+    m_sunShadows = GameConfigValidation::ValidateSunShadows(
+        ReadInt(CfgSectionRender, CfgKeySunShadows, CfgDefaultSunShadows));
+    m_sharpen = GameConfigValidation::ValidateSharpen(ReadInt(CfgSectionRender, CfgKeySharpen, CfgDefaultSharpen));
 
     m_renderBackend = GameConfigValidation::ValidateRenderBackend(
         ReadString(CfgSectionRender, CfgKeyRenderBackend, CfgDefaultRenderBackend), CfgDefaultRenderBackend);
@@ -194,6 +202,11 @@ void GameConfig::Save()
     WriteBool(CfgSectionRender, CfgKeyDynamicLights, m_dynamicLights);
     WriteBool(CfgSectionRender, CfgKeyLightMood, m_lightMood);
     WriteBool(CfgSectionRender, CfgKeyPostProcessing, m_postProcessing);
+    WriteString(CfgSectionRender, CfgKeyGraphicsPreset, GameConfigValidation::FormatGraphicsPreset(m_graphicsPreset));
+    WriteBool(CfgSectionRender, CfgKeyFxaa, m_fxaa);
+    WriteBool(CfgSectionRender, CfgKeyHdTextures, m_hdTextures);
+    WriteInt(CfgSectionRender, CfgKeySunShadows, m_sunShadows);
+    WriteInt(CfgSectionRender, CfgKeySharpen, m_sharpen);
     WriteBool(CfgSectionRender, CfgKeyDisableEffects, m_disableEffects);
     WriteBool(CfgSectionRender, CfgKeyDisableParticles, m_disableParticles);
     WriteBool(CfgSectionRender, CfgKeyDisableSkillEffectModels, m_disableSkillEffectModels);
@@ -222,6 +235,14 @@ LookPreset ReadLookPreset(const std::filesystem::path& configFile)
     GetPrivateProfileStringW(CfgSections::CfgSectionRender, CfgKeys::CfgKeyLook, L"", buffer.data(),
                              static_cast<DWORD>(buffer.size()), configFile.wstring().c_str());
     return GameConfigValidation::ValidateLook(buffer.data());
+}
+
+bool HasSavedLook(const std::filesystem::path& configFile)
+{
+    std::array<wchar_t, 32> buffer{};
+    GetPrivateProfileStringW(CfgSections::CfgSectionRender, CfgKeys::CfgKeyLook, L"", buffer.data(),
+                             static_cast<DWORD>(buffer.size()), configFile.wstring().c_str());
+    return buffer[0] != L'\0';
 }
 
 std::vector<std::wstring> GameConfig::ReadStringList(const wchar_t* section, const wchar_t* keyPrefix)
@@ -304,9 +325,19 @@ void GameConfig::SetAnisotropy(int anisotropy)
     m_anisotropy = GameConfigValidation::ValidateAnisotropy(anisotropy);
 }
 
+void GameConfig::SetSunShadows(int level)
+{
+    m_sunShadows = GameConfigValidation::ValidateSunShadows(level);
+}
+
 void GameConfig::SetAntialiasing(int samples)
 {
     m_antialiasing = GameConfigValidation::ValidateAntialiasing(samples);
+}
+
+void GameConfig::SetSharpen(int percent)
+{
+    m_sharpen = GameConfigValidation::ValidateSharpen(percent);
 }
 
 void GameConfig::SetDisableEffects(bool disabled)

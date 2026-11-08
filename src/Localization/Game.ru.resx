@@ -15856,4 +15856,19 @@
   <data name="JewelOfAncientDescHigh" xml:space="preserve">
     <value>+14, +15: ещё excellent-вещь (3+ опции).</value>
   </data>
+  <data name="HdTexturesRow" xml:space="preserve">
+    <value>HD-текстуры (после перезапуска)</value>
+  </data>
+  <data name="SunShadowsRow" xml:space="preserve">
+    <value>Тени от солнца</value>
+  </data>
+  <data name="SunShadowsMedium" xml:space="preserve">
+    <value>Средние</value>
+  </data>
+  <data name="SunShadowsHigh" xml:space="preserve">
+    <value>Высокие</value>
+  </data>
+  <data name="SunShadowsTooltip" xml:space="preserve">
+    <value>Настоящие тени от солнца у персонажей, монстров и объектов (вид Enhanced). Средние: карта 2048, высокие: 4096. Выкл — старые плоские тени.</value>
+  </data>
 </root>

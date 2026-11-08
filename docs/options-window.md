@@ -47,7 +47,7 @@ The window has five tabs:
 | Tab | Settings |
 |---|---|
 | Display | Resolution, windowed mode, VSync, FPS limit, UI scale |
-| Graphics | Quality: Enhanced graphics, anti-aliasing, anisotropic filtering, render level. Effects: the effect toggles. Shadows: the shadow toggles |
+| Graphics | Quality: graphics preset, Enhanced graphics, anti-aliasing, FXAA, sharpening, anisotropic filtering, render level. Effects: the effect toggles. Shadows: the shadow toggles |
 | Audio | Sound and music volume, whisper sound |
 | Gameplay | Auto attack, slide help |
 | Interface | Language, font, UI theme, FPS counter, debug info |
@@ -73,7 +73,11 @@ Enhanced tuning sliders) show it while the pointer is over the row.
 Settings are written next to the executable as `config.ini`. The options
 window writes to these sections:
 
-- `[Window]` - width, height, windowed flag.
+- `[Window]` - width, height, windowed flag. A new installation ships with
+  `Width=0` and `Height=0`: the first start opens a windowed game window of the
+  largest display mode of the main monitor that fits its usable area (the
+  screen without the taskbar) and writes those numbers; existing values are not
+  touched. The browser build takes its size from the page.
 - `[Render]` - set from the Display and Graphics tabs, each applied at once:
   - `VSync`: `$vsync on` and `$vsync off` update it too; startup and
     fullscreen/resolution changes reapply it before the next frame begins.
@@ -124,6 +128,14 @@ Missing keys fall back to compile-time defaults from
 `src/source/Data/GameConfig/GameConfigConstants.h`. If `config.ini` doesn't exist,
 the build seeds it from `src/bin/config.ini.template`, which lists every key the
 game writes, in the order `Save()` writes them, plus `Backend`.
+
+## Graphics preset
+
+The Graphics tab starts with a **Graphics preset** row (Low, Medium, High,
+Ultra; "Custom" when the values match none), and has **FXAA** and **Sharpening**
+rows next to Anti-aliasing. The presets, the `GraphicsPreset`, `Fxaa` and
+`Sharpen` keys and how Auto picks a preset from the GPU are described in
+[`enhanced-look.md`](enhanced-look.md#graphics-presets-and-screen-filters).
 
 ## Remembering login credentials
 

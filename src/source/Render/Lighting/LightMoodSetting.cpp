@@ -70,6 +70,12 @@ void RebuildStaticLight()
 }
 } // namespace
 
+const Data::Maps::LightMood& WorldMood()
+{
+    const int world = gMapManager.WorldActive;
+    return IsWorldMap(world) ? s_state.data.ForWorld(world) : s_state.data.defaultMood;
+}
+
 void SetMoodData(Data::Maps::LightMoodData data)
 {
     s_state.data = std::move(data);

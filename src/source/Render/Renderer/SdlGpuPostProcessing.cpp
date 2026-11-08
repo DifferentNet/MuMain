@@ -347,7 +347,10 @@ void SdlGpuPostProcessing::DrawComposite(SDL_GPUCommandBuffer* commandBuffer, SD
     // The image shown as the scene: the scene itself, or a diagnostic view in
     // its place (black when the bloom was not rendered this frame).
     SDL_GPUTexture* shown = m_sceneTexture;
-    SDL_GPUSampler* shownSampler = m_pointSampler;
+    // Linear: the scene is sampled at its texel centres (one texel per pixel)
+    // except where FXAA blends across an edge.
+    SDL_GPUSampler* shownSampler = m_linearSampler;
+    const bool sceneShown = view == PostProcessingView::Scene;
     bool bloom = bloomRendered;
     const float gradingStrength = Render::PostProcessing::CompositeGradingStrength(
         m_gradingEnabled, view != PostProcessingView::Scene, look.gradingStrength);
@@ -362,11 +365,11 @@ void SdlGpuPostProcessing::DrawComposite(SDL_GPUCommandBuffer* commandBuffer, SD
         else if (view == PostProcessingView::BloomSource)
         {
             shown = m_bloomSourceTexture;
+            shownSampler = m_pointSampler;
         }
         else
         {
             shown = m_bloomLevels[0].texture;
-            shownSampler = m_linearSampler;
         }
     }
     if (!shown)
@@ -393,7 +396,12 @@ void SdlGpuPostProcessing::DrawComposite(SDL_GPUCommandBuffer* commandBuffer, SD
     SDL_BindGPUGraphicsPipeline(pass, m_compositePipeline);
     SDL_BindGPUFragmentSamplers(pass, 0, bindings, static_cast<Uint32>(std::size(bindings)));
     const SdlGpuCompositeUniform uniform{
-        {1.0f / static_cast<float>(size.width), 1.0f / static_cast<float>(size.height)}, bloomScale, gradingStrength};
+        {1.0f / static_cast<float>(size.width), 1.0f / static_cast<float>(size.height)},
+        bloomScale,
+        gradingStrength,
+        sceneShown && look.fxaa ? 1.0f : 0.0f,
+        sceneShown ? std::clamp(look.sharpen, 0.0f, 1.0f) : 0.0f,
+        {0.0f, 0.0f}};
     SDL_PushGPUFragmentUniformData(commandBuffer, 0, &uniform, sizeof(uniform));
     SDL_DrawGPUPrimitives(pass, FullscreenVertexCount, 1, 0, 0);
 }

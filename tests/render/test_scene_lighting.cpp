@@ -122,3 +122,18 @@ TEST_CASE("a zero light direction packs as zero instead of NaN [render][scene_li
     CHECK(uniform.lightDirection[1] == 0.0f);
     CHECK(uniform.lightDirection[2] == 0.0f);
 }
+
+TEST_CASE("the item preview studio light shades by the true angle, without fog [render][scene_lighting]")
+{
+    const mu::SceneLightingUniform uniform = mu::ItemPreviewLightingUniform();
+
+    CHECK(uniform.rimParameters[2] == mu::kUnitDiffuseFlag);
+    CHECK(uniform.fogColor[3] == 0.0f);
+    // Lit faces stay below the cut-off, faces turned away keep some light.
+    CHECK(uniform.diffuseCurve[3] < 1.0f);
+    CHECK(uniform.diffuseCurve[2] > 0.0f);
+    CHECK(uniform.specularParameters[0] > 0.0f);
+    CHECK(mu::kItemPreviewSpecular > 0.0f);
+    // The scene's own lighting keeps the Classic diffuse term.
+    CHECK(mu::PackSceneLightingUniform({}, {}).rimParameters[2] == 0.0f);
+}

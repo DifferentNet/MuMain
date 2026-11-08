@@ -13034,6 +13034,21 @@
   <data name="QuestRequirementBuff" xml:space="preserve">
     <value>Bonus: %ls</value>
   </data>
+  <data name="HdTexturesRow" xml:space="preserve">
+    <value>Texturas HD (após reiniciar)</value>
+  </data>
+  <data name="SunShadowsRow" xml:space="preserve">
+    <value>Sombras do sol</value>
+  </data>
+  <data name="SunShadowsMedium" xml:space="preserve">
+    <value>Médias</value>
+  </data>
+  <data name="SunShadowsHigh" xml:space="preserve">
+    <value>Altas</value>
+  </data>
+  <data name="SunShadowsTooltip" xml:space="preserve">
+    <value>Sombras reais do sol em personagens, monstros e objetos (visual Enhanced). Médias: mapa de 2048, altas: 4096. Desligado mantém as sombras planas clássicas.</value>
+  </data>
   <data name="TouchAttack" xml:space="preserve">
     <value>Atacar</value>
   </data>

@@ -122,6 +122,18 @@ void ChooseEnhancedFeature(EnhancedFeature feature, bool enabled)
     Controller().SetChoices(SavedChoices());
 }
 
+void ApplyLookPreset(LookPreset preset, const EnhancedFeatureChoices& choices)
+{
+    GameConfig& config = GameConfig::GetInstance();
+    config.SetEnhancedLighting(choices.lighting);
+    config.SetDynamicLights(choices.dynamicLights);
+    config.SetLightMood(choices.lightMood);
+    config.SetPostProcessing(choices.postProcessing);
+    // The controller's persist hook saves the config with the look.
+    Controller().ApplyPreset(preset, SavedChoices());
+    mu::log::Get("render")->info("Look {}", preset == LookPreset::Enhanced ? "Enhanced" : "Classic");
+}
+
 void ChooseLightMoodStrength(std::optional<int> percent)
 {
     s_moodStrengthChoice = percent;

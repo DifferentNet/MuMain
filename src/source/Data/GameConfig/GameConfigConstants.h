@@ -96,6 +96,15 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyLightMood[] = L"LightMood";
     inline constexpr wchar_t CfgKeyPostProcessing[] = L"PostProcessing";
 
+    // The graphics preset: Auto, Low, Medium, High, Ultra or Custom (Render/Look/GraphicsPreset.h).
+    inline constexpr wchar_t CfgKeyGraphicsPreset[] = L"GraphicsPreset";
+    // Screen filters of the finished 3D scene: FXAA (0/1) and sharpening in percent (0 to 100).
+    inline constexpr wchar_t CfgKeyFxaa[] = L"Fxaa";
+    inline constexpr wchar_t CfgKeyHdTextures[] = L"HdTextures";
+    // Sun shadows of the Enhanced look: 0 off, 1 medium (2048 map), 2 high (4096 map).
+    inline constexpr wchar_t CfgKeySunShadows[] = L"SunShadows";
+    inline constexpr wchar_t CfgKeySharpen[] = L"Sharpen";
+
     inline constexpr wchar_t CfgKeyRenderBackend[] = L"Backend";
     // DXP-23's per-system effect-cost toggles (MainScene.h's SetDisableEffects/SetDisableParticles/
     // SetDisableSkillEffectModels/SetDisableBoids/SetDisableWingShadow), originally console-only
@@ -197,6 +206,19 @@ namespace CfgDefaults
     inline constexpr bool CfgDefaultDynamicLights = true;
     inline constexpr bool CfgDefaultLightMood = true;
     inline constexpr bool CfgDefaultPostProcessing = true;
+
+    // A missing or invalid [Render] GraphicsPreset: chosen from the GPU at start-up.
+    inline constexpr wchar_t CfgDefaultGraphicsPreset[] = L"Auto";
+    inline constexpr bool CfgDefaultFxaa = false;
+    inline constexpr bool CfgDefaultHdTextures = false;
+    inline constexpr int CfgDefaultSunShadows = 0;
+    inline constexpr int CfgMinSunShadows = 0;
+    inline constexpr int CfgMaxSunShadows = 2;
+    inline constexpr int CfgDefaultSharpen = 0;
+    inline constexpr int CfgMinSharpen = 0;
+    inline constexpr int CfgMaxSharpen = 100;
+    // The share of the screen's usable area a new installation's window takes when no display mode fits.
+    inline constexpr int CfgFallbackWindowPercent = 90;
 
     inline constexpr bool CfgDefaultDisableEffects = false;
     inline constexpr bool CfgDefaultDisableParticles = false;

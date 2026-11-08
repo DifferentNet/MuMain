@@ -24,6 +24,10 @@ void UseMood(Data::Maps::LightMoodData data, bool enabled, int strengthPercent);
 // outside the world maps (login and character selection).
 const Scales& Active();
 
+// The active world's mood as the file gives it (its sun shadow values), whether
+// the mood switch is on or not; the file's default outside the world maps.
+const Data::Maps::LightMood& WorldMood();
+
 // Logs the scales a map's static light was built with (map load and reload).
 void LogMapLight();
 

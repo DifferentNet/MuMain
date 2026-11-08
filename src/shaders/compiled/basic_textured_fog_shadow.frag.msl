@@ -1,0 +1,174 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct FSInput
+{
+    float4 pos;
+    float2 uv;
+    float4 color;
+    float fogFactor;
+    float eyeDepth;
+    float3 normal;
+    float3 viewVector;
+    float4 lightDirectionAndSpecular;
+    float4 worldPositionAndDynamicLights;
+    float3 worldNormal;
+};
+
+struct SceneLighting
+{
+    float4 sceneLightDirection;
+    float4 sceneLightColor;
+    float4 diffuseCurve;
+    float4 rimParameters;
+    float4 specularParameters;
+    float4 sceneFogColor;
+    float4 sceneFogParameters;
+    float4 cameraPosition;
+    float4x4 sunViewProjection;
+    float4 sunShadowParameters;
+    float4 sunDirectionAndSoftness;
+};
+
+struct FogUniforms
+{
+    uint fogEnabled;
+    uint alphaDiscardEnabled;
+    float alphaThreshold;
+    uint alphaToCoverage;
+    float fogStart;
+    float fogEnd;
+    float4 fogColor;
+};
+
+struct main0_out
+{
+    float4 _entryPointOutput [[color(0)]];
+};
+
+struct main0_in
+{
+    float2 input_uv [[user(locn0)]];
+    float4 input_color [[user(locn1)]];
+    float input_fogFactor [[user(locn2)]];
+    float input_eyeDepth [[user(locn3)]];
+    float3 input_normal [[user(locn4)]];
+    float3 input_viewVector [[user(locn5)]];
+    float4 input_lightDirectionAndSpecular [[user(locn6), flat]];
+    float4 input_worldPositionAndDynamicLights [[user(locn7)]];
+    float3 input_worldNormal [[user(locn8)]];
+};
+
+static inline __attribute__((always_inline))
+float SunShadowAmount(thread const float3& worldPosition, thread const float3& normal, constant SceneLighting& _33, depth2d<float> sunShadowMap, sampler sunShadowSampler)
+{
+    if (_33.sunShadowParameters.w < 0.5)
+    {
+        return 0.0;
+    }
+    float texel = _33.sunShadowParameters.x;
+    float3 offsetPosition = worldPosition + (normal * _33.sunShadowParameters.z);
+    float4 clip = _33.sunViewProjection * float4(offsetPosition, 1.0);
+    float2 ndc = clip.xy;
+    float2 uv = float2((ndc.x * 0.5) + 0.5, 0.5 - (ndc.y * 0.5));
+    float depth = clip.z - 0.000600000028498470783233642578125;
+    float edge = fast::max(abs(ndc.x), abs(ndc.y));
+    if (((edge >= 1.0) || (clip.z >= 1.0)) || (clip.z <= 0.0))
+    {
+        return 0.0;
+    }
+    float radius = fast::max(_33.sunDirectionAndSoftness.w, 0.5) * texel;
+    float lit = 0.0;
+    for (int y = 0; y < 4; y++)
+    {
+        for (int x = 0; x < 4; x++)
+        {
+            float2 tap = (float2(float(x), float(y)) - float2(1.5)) * (radius / 1.5);
+            float3 _169 = float3(uv + tap, depth);
+            lit += sunShadowMap.sample_compare(sunShadowSampler, _169.xy, _169.z, level(0.0));
+        }
+    }
+    float shadow = 1.0 - (lit / 16.0);
+    return shadow * (1.0 - smoothstep(0.800000011920928955078125, 1.0, edge));
+}
+
+static inline __attribute__((always_inline))
+float SunShadowScale(thread const float& shadow, constant SceneLighting& _33)
+{
+    return 1.0 - (shadow * _33.sunShadowParameters.y);
+}
+
+static inline __attribute__((always_inline))
+float EnhancedFogAmount(thread const float& eyeDepth, constant SceneLighting& _33)
+{
+    float scaledDistance = fast::max(eyeDepth - _33.sceneFogParameters.x, 0.0) * _33.sceneFogParameters.z;
+    return fast::clamp(1.0 - exp((-scaledDistance) * scaledDistance), 0.0, 1.0);
+}
+
+static inline __attribute__((always_inline))
+float4 _main(thread const FSInput& _input, constant SceneLighting& _33, depth2d<float> sunShadowMap, sampler sunShadowSampler, texture2d<float> tex, sampler s, constant FogUniforms& _236)
+{
+    float4 color = tex.sample(s, _input.uv) * _input.color;
+    if (_236.alphaToCoverage != 0u)
+    {
+        float edge = fast::clamp(((color.w - _236.alphaThreshold) / fast::max(fwidth(color.w), 9.9999997473787516355514526367188e-05)) + 0.5, 0.0, 1.0);
+        color.w *= edge;
+        if (color.w <= 0.0)
+        {
+            discard_fragment();
+        }
+    }
+    else
+    {
+        if ((_236.alphaDiscardEnabled != 0u) && (color.w <= _236.alphaThreshold))
+        {
+            discard_fragment();
+        }
+    }
+    float3 normal = _input.worldNormal;
+    float normalLength = length(normal);
+    float3 unitNormal = select(float3(0.0), normal / float3(normalLength), bool3(normalLength > 9.9999997473787516355514526367188e-05));
+    float3 param = _input.worldPositionAndDynamicLights.xyz;
+    float3 param_1 = unitNormal;
+    float param_2 = SunShadowAmount(param, param_1, _33, sunShadowMap, sunShadowSampler);
+    float4 _308 = color;
+    float3 _310 = _308.xyz * SunShadowScale(param_2, _33);
+    color.x = _310.x;
+    color.y = _310.y;
+    color.z = _310.z;
+    if ((_236.fogEnabled != 0u) && (_33.sceneFogColor.w > 0.0))
+    {
+        float4 _327 = color;
+        float param_3 = _input.eyeDepth;
+        float3 _338 = mix(_327.xyz, _33.sceneFogColor.xyz, float3(EnhancedFogAmount(param_3, _33)));
+        color.x = _338.x;
+        color.y = _338.y;
+        color.z = _338.z;
+    }
+    return color;
+}
+
+fragment main0_out main0(main0_in in [[stage_in]], constant SceneLighting& _33 [[buffer(0)]], constant FogUniforms& _236 [[buffer(1)]], depth2d<float> sunShadowMap [[texture(0)]], texture2d<float> tex [[texture(1)]], sampler sunShadowSampler [[sampler(0)]], sampler s [[sampler(1)]], float4 gl_FragCoord [[position]])
+{
+    main0_out out = {};
+    FSInput _input;
+    _input.pos = gl_FragCoord;
+    _input.uv = in.input_uv;
+    _input.color = in.input_color;
+    _input.fogFactor = in.input_fogFactor;
+    _input.eyeDepth = in.input_eyeDepth;
+    _input.normal = in.input_normal;
+    _input.viewVector = in.input_viewVector;
+    _input.lightDirectionAndSpecular = in.input_lightDirectionAndSpecular;
+    _input.worldPositionAndDynamicLights = in.input_worldPositionAndDynamicLights;
+    _input.worldNormal = in.input_worldNormal;
+    FSInput param = _input;
+    float4 _388 = _main(param, _33, sunShadowMap, sunShadowSampler, tex, s, _236);
+    out._entryPointOutput = _388;
+    return out;
+}
+

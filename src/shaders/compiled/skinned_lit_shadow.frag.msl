@@ -1,0 +1,271 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct FSInput
+{
+    float4 pos;
+    float2 uv;
+    float4 color;
+    float fogFactor;
+    float eyeDepth;
+    float3 normal;
+    float3 viewVector;
+    float4 lightDirectionAndSpecular;
+    float4 worldPositionAndDynamicLights;
+    float3 worldNormal;
+};
+
+struct SceneLighting
+{
+    float4 sceneLightDirection;
+    float4 sceneLightColor;
+    float4 diffuseCurve;
+    float4 rimParameters;
+    float4 specularParameters;
+    float4 sceneFogColor;
+    float4 sceneFogParameters;
+    float4 cameraPosition;
+    float4x4 sunViewProjection;
+    float4 sunShadowParameters;
+    float4 sunDirectionAndSoftness;
+};
+
+struct DynamicLights
+{
+    uint dynamicLightCount;
+    float dynamicLightWrap;
+    uint2 dynamicLightPadding;
+    float4 dynamicLightPositionAndRadius[32];
+    float4 dynamicLightColor[32];
+};
+
+struct FogUniforms
+{
+    uint fogEnabled;
+    uint alphaDiscardEnabled;
+    float alphaThreshold;
+    uint alphaToCoverage;
+    float fogStart;
+    float fogEnd;
+    float4 fogColor;
+};
+
+struct main0_out
+{
+    float4 _entryPointOutput [[color(0)]];
+};
+
+struct main0_in
+{
+    float2 input_uv [[user(locn0)]];
+    float4 input_color [[user(locn1)]];
+    float input_fogFactor [[user(locn2)]];
+    float input_eyeDepth [[user(locn3)]];
+    float3 input_normal [[user(locn4)]];
+    float3 input_viewVector [[user(locn5)]];
+    float4 input_lightDirectionAndSpecular [[user(locn6), flat]];
+    float4 input_worldPositionAndDynamicLights [[user(locn7)]];
+    float3 input_worldNormal [[user(locn8)]];
+};
+
+static inline __attribute__((always_inline))
+float3 SafeNormalize(thread const float3& value)
+{
+    float lengthSquared = dot(value, value);
+    return select(float3(0.0), value * rsqrt(lengthSquared), bool3(lengthSquared > 9.9999999600419720025001879548654e-13));
+}
+
+static inline __attribute__((always_inline))
+float3 DynamicLighting(thread const float3& worldPosition, thread const float3& worldNormal, constant DynamicLights& _321)
+{
+    float3 light = float3(0.0);
+    uint count = min(_321.dynamicLightCount, 32u);
+    for (uint i = 0u; i < count; i++)
+    {
+        float4 positionAndRadius = _321.dynamicLightPositionAndRadius[i];
+        float3 toLight = positionAndRadius.xyz - worldPosition;
+        float radius = positionAndRadius.w;
+        float horizontalDistance = length(toLight.xy);
+        if (horizontalDistance >= radius)
+        {
+            continue;
+        }
+        float falloff = (radius - horizontalDistance) / radius;
+        float3 param = toLight;
+        float wrapped = fast::clamp((dot(worldNormal, SafeNormalize(param)) * (1.0 - _321.dynamicLightWrap)) + _321.dynamicLightWrap, 0.0, 1.0);
+        light += (_321.dynamicLightColor[i].xyz * (falloff * wrapped));
+    }
+    return light;
+}
+
+static inline __attribute__((always_inline))
+float SunShadowAmount(thread const float3& worldPosition, thread const float3& normal, constant SceneLighting& _57, depth2d<float> sunShadowMap, sampler sunShadowSampler)
+{
+    if (_57.sunShadowParameters.w < 0.5)
+    {
+        return 0.0;
+    }
+    float texel = _57.sunShadowParameters.x;
+    float3 offsetPosition = worldPosition + (normal * _57.sunShadowParameters.z);
+    float4 clip = _57.sunViewProjection * float4(offsetPosition, 1.0);
+    float2 ndc = clip.xy;
+    float2 uv = float2((ndc.x * 0.5) + 0.5, 0.5 - (ndc.y * 0.5));
+    float depth = clip.z - 0.000600000028498470783233642578125;
+    float edge = fast::max(abs(ndc.x), abs(ndc.y));
+    if (((edge >= 1.0) || (clip.z >= 1.0)) || (clip.z <= 0.0))
+    {
+        return 0.0;
+    }
+    float radius = fast::max(_57.sunDirectionAndSoftness.w, 0.5) * texel;
+    float lit = 0.0;
+    for (int y = 0; y < 4; y++)
+    {
+        for (int x = 0; x < 4; x++)
+        {
+            float2 tap = (float2(float(x), float(y)) - float2(1.5)) * (radius / 1.5);
+            float3 _192 = float3(uv + tap, depth);
+            lit += sunShadowMap.sample_compare(sunShadowSampler, _192.xy, _192.z, level(0.0));
+        }
+    }
+    float shadow = 1.0 - (lit / 16.0);
+    return shadow * (1.0 - smoothstep(0.800000011920928955078125, 1.0, edge));
+}
+
+static inline __attribute__((always_inline))
+float SunShadowScale(thread const float& shadow, constant SceneLighting& _57)
+{
+    return 1.0 - (shadow * _57.sunShadowParameters.y);
+}
+
+static inline __attribute__((always_inline))
+bool RollsOffHighlight(thread const float& knee)
+{
+    return (knee > 0.0) && (knee < 1.0);
+}
+
+static inline __attribute__((always_inline))
+float RollOffChannel(thread const float& value, thread const float& knee)
+{
+    float range = 1.0 - knee;
+    return (value > knee) ? (knee + (range * (1.0 - exp((-fast::max(value - knee, 0.0)) / range)))) : value;
+}
+
+static inline __attribute__((always_inline))
+float3 RollOffHighlight(thread const float3& color, thread const float& knee)
+{
+    float param = color.x;
+    float param_1 = knee;
+    float param_2 = color.y;
+    float param_3 = knee;
+    float param_4 = color.z;
+    float param_5 = knee;
+    return fast::clamp(float3(RollOffChannel(param, param_1), RollOffChannel(param_2, param_3), RollOffChannel(param_4, param_5)), float3(0.0), float3(1.0));
+}
+
+static inline __attribute__((always_inline))
+float EnhancedFogAmount(thread const float& eyeDepth, constant SceneLighting& _57)
+{
+    float scaledDistance = fast::max(eyeDepth - _57.sceneFogParameters.x, 0.0) * _57.sceneFogParameters.z;
+    return fast::clamp(1.0 - exp((-scaledDistance) * scaledDistance), 0.0, 1.0);
+}
+
+static inline __attribute__((always_inline))
+float4 _main(thread const FSInput& _input, constant SceneLighting& _57, depth2d<float> sunShadowMap, sampler sunShadowSampler, constant DynamicLights& _321, texture2d<float> tex, sampler s, constant FogUniforms& _598)
+{
+    float3 objectLight = _input.color.xyz;
+    float3 param = _input.normal;
+    float3 normal = SafeNormalize(param);
+    float3 param_1 = _input.viewVector;
+    float3 view = SafeNormalize(param_1);
+    float3 light = _input.lightDirectionAndSpecular.xyz;
+    float lightDot = dot(_input.normal, light);
+    float luminosity = fast::max((lightDot * _57.diffuseCurve.x) + _57.diffuseCurve.y, _57.diffuseCurve.z);
+    float3 param_2 = _input.worldNormal;
+    float3 param_3 = _input.worldPositionAndDynamicLights.xyz;
+    float3 param_4 = SafeNormalize(param_2);
+    float3 dynamicLight = select(float3(0.0), DynamicLighting(param_3, param_4, _321), bool3(_input.worldPositionAndDynamicLights.w > 0.5));
+    float3 param_5 = _input.worldNormal;
+    float3 worldNormal = SafeNormalize(param_5);
+    float3 param_6 = _input.worldPositionAndDynamicLights.xyz;
+    float3 param_7 = worldNormal;
+    float sunShadow = SunShadowAmount(param_6, param_7, _57, sunShadowMap, sunShadowSampler);
+    if (dot(worldNormal, worldNormal) > 0.5)
+    {
+        sunShadow = fast::max(sunShadow, 0.5 * (1.0 - smoothstep(-0.3499999940395355224609375, 0.0500000007450580596923828125, dot(worldNormal, _57.sunDirectionAndSoftness.xyz))));
+    }
+    float param_8 = sunShadow;
+    float3 sunLight = (objectLight * luminosity) * SunShadowScale(param_8, _57);
+    float3 diffuse = fast::clamp(sunLight + dynamicLight, float3(0.0), float3(1.0));
+    float param_9 = _57.diffuseCurve.w;
+    if (RollsOffHighlight(param_9))
+    {
+        float3 param_10 = sunLight + dynamicLight;
+        float param_11 = _57.diffuseCurve.w;
+        diffuse = RollOffHighlight(param_10, param_11);
+    }
+    float facing = fast::clamp(abs(dot(normal, view)), 0.0, 1.0);
+    float3 rim = objectLight * (_57.rimParameters.x * powr(1.0 - facing, _57.rimParameters.y));
+    float specularStrength = _input.lightDirectionAndSpecular.w * _57.specularParameters.x;
+    float3 specular = float3(0.0);
+    if ((specularStrength > 0.0) && (lightDot > 0.0))
+    {
+        float3 param_12 = light;
+        float3 param_13 = SafeNormalize(param_12) + view;
+        float3 halfVector = SafeNormalize(param_13);
+        float highlight = powr(fast::clamp(dot(normal, halfVector), 0.0, 1.0), _57.specularParameters.y);
+        specular = ((_57.sceneLightColor.xyz * (specularStrength * highlight)) * objectLight) * (1.0 - sunShadow);
+    }
+    float4 texel = tex.sample(s, _input.uv);
+    float4 color = float4(((texel.xyz * diffuse) + rim) + specular, texel.w * _input.color.w);
+    if (_598.alphaToCoverage != 0u)
+    {
+        float edge = fast::clamp(((color.w - _598.alphaThreshold) / fast::max(fwidth(color.w), 9.9999997473787516355514526367188e-05)) + 0.5, 0.0, 1.0);
+        color.w *= edge;
+        if (color.w <= 0.0)
+        {
+            discard_fragment();
+        }
+    }
+    else
+    {
+        if ((_598.alphaDiscardEnabled != 0u) && (color.w <= _598.alphaThreshold))
+        {
+            discard_fragment();
+        }
+    }
+    if ((_598.fogEnabled != 0u) && (_57.sceneFogColor.w > 0.0))
+    {
+        float4 _651 = color;
+        float param_14 = _input.eyeDepth;
+        float3 _661 = mix(_651.xyz, _57.sceneFogColor.xyz, float3(EnhancedFogAmount(param_14, _57)));
+        color.x = _661.x;
+        color.y = _661.y;
+        color.z = _661.z;
+    }
+    return color;
+}
+
+fragment main0_out main0(main0_in in [[stage_in]], constant SceneLighting& _57 [[buffer(0)]], constant DynamicLights& _321 [[buffer(1)]], constant FogUniforms& _598 [[buffer(2)]], depth2d<float> sunShadowMap [[texture(0)]], texture2d<float> tex [[texture(1)]], sampler sunShadowSampler [[sampler(0)]], sampler s [[sampler(1)]], float4 gl_FragCoord [[position]])
+{
+    main0_out out = {};
+    FSInput _input;
+    _input.pos = gl_FragCoord;
+    _input.uv = in.input_uv;
+    _input.color = in.input_color;
+    _input.fogFactor = in.input_fogFactor;
+    _input.eyeDepth = in.input_eyeDepth;
+    _input.normal = in.input_normal;
+    _input.viewVector = in.input_viewVector;
+    _input.lightDirectionAndSpecular = in.input_lightDirectionAndSpecular;
+    _input.worldPositionAndDynamicLights = in.input_worldPositionAndDynamicLights;
+    _input.worldNormal = in.input_worldNormal;
+    FSInput param = _input;
+    float4 _710 = _main(param, _57, sunShadowMap, sunShadowSampler, _321, tex, s, _598);
+    out._entryPointOutput = _710;
+    return out;
+}
+

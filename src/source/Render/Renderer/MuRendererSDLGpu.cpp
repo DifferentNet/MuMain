@@ -624,6 +624,30 @@ static mu::SceneLightingUniform s_sceneLightingUniform = mu::PackSceneLightingUn
 // The frame's point lights (none until SetDynamicLights), pushed with it to fragment uniform slot 2.
 static mu::DynamicLightsUniform s_dynamicLightsUniform{};
 
+// Sun shadow (desktop, Enhanced lighting; SunShadow.h). The frame's settings arrive with
+// SetSunShadow; the shadowed receivers read mu::SunShadowUniform right after the scene lighting
+// in fragment uniform slot 1, so the Classic and Enhanced shaders keep their bindings.
+struct SceneLightingWithSunShadow
+{
+    mu::SceneLightingUniform scene;
+    mu::SunShadowUniform sun;
+};
+static_assert(sizeof(SceneLightingWithSunShadow) == sizeof(mu::SceneLightingUniform) + sizeof(mu::SunShadowUniform));
+static mu::SunShadowFrame s_sunShadowFrame{};
+static mu::SunShadowUniform s_sunShadowUniform{};
+static glm::mat4 s_sunShadowViewProjection{1.0f};
+static int s_sunShadowScopeDepth = 0;
+// The shadow map holds this frame's casters: the receivers may draw shadowed.
+static bool s_sunShadowMapReady = false;
+static SDL_GPUTexture* s_sunShadowMap = nullptr;
+static std::uint32_t s_sunShadowMapSize = 0u;
+static bool s_sunShadowMapFailed = false;
+static SDL_GPUSampler* s_sunShadowSampler = nullptr;
+static SDL_GPUGraphicsPipeline* s_sunShadowCasterPipeline = nullptr;
+// Each shadowed receiver pipeline, keyed by the Enhanced pipeline (or its alpha-to-coverage
+// variant) it stands in for.
+static std::unordered_map<SDL_GPUGraphicsPipeline*, SDL_GPUGraphicsPipeline*> s_sunShadowReceiverPipelines;
+
 // Post-processing of the 3D scene: with it on, a frame whose scene marked its end
 // (EndSceneGeometry) is replayed in separate scene, bloom and UI passes, see EndFrame.
 static mu::SdlGpuPostProcessing s_postProcessing;
@@ -819,6 +843,8 @@ struct RenderCmd
     VertexUniforms vu;
     Uint32 skinningIndex = 0u; // into s_skinningUniforms, for DrawSkinnedTriangles
     Uint32 shadowIndex = ~0u;  // into s_shadowUniforms when a DrawSkinnedTriangles is a body shadow
+    // A 3D sun shadow receiver's vertex-to-world rows, into s_sunShadowReceiverRows.
+    Uint32 sunShadowRows = ~0u;
     FogUniform fogUniform;
     SDL_GPUViewport viewport; // for SetViewport only
     SDL_Rect scissor;         // for SetScissor only
@@ -828,6 +854,12 @@ struct RenderCmd
     bool depthMaskEnabled{};
     bool cullFaceEnabled{};
     bool bloomExcluded{}; // recorded inside a ScopedBloomExclusion: never a bloom source
+    // Recorded inside the sun shadow scope with a pipeline that has a shadowed twin
+    // (s_sunShadowReceiverPipelines): drawn through it once the frame's shadow map is ready.
+    bool sunShadowReceiver{};
+    // A skinned item preview under the studio light: drawn with ItemPreviewLightingUniform() in
+    // place of the scene lighting.
+    bool itemPreviewLighting{};
     // Set once this command has been replayed into an offscreen capture (see
     // BeginOffscreenCapture/EndOffscreenCapture); the main frame's replay pass then
     // skips it instead of drawing it a second time into the frame.
@@ -838,6 +870,10 @@ static std::vector<RenderCmd> s_renderCmds;
 // Kept apart from RenderCmd: only skinned draws carry them, and they would nearly double every command.
 static std::vector<SkinningVertexUniforms> s_skinningUniforms;
 static std::vector<ShadowVertexUniforms> s_shadowUniforms;
+// The frame's sun shadow: the depth-writing models of the shadow scope, again, as the sun sees them
+// (RenderSunShadowMap draws them before the main pass), and the 3D receivers' vertex-to-world rows.
+static std::vector<RenderCmd> s_sunShadowCasterCmds;
+static std::vector<std::array<float, 12>> s_sunShadowReceiverRows;
 static constexpr std::size_t kNoDrawCommand = std::numeric_limits<std::size_t>::max();
 static Render::DrawCommandHistory s_previousDrawCommands;
 
@@ -1039,15 +1075,48 @@ static void PushReplayFragmentUniforms(const FogUniform& uniforms, Render::SdlGp
     ++s_dbgFragmentUniformPushesThisFrame;
 }
 
+// Which scene lighting block the pass has in fragment uniform slot 1: false for the scene's.
+static bool s_itemPreviewLightingPushed = false;
+
 // Classic fragment shaders declare one uniform buffer and never read slots 1 and 2; only
 // skinned_lit.frag reads slot 2.
 static void PushSceneLightingUniforms()
 {
+    s_itemPreviewLightingPushed = false;
+#ifdef __EMSCRIPTEN__
     SDL_PushGPUFragmentUniformData(s_cmdBuf, k_FragmentUniformSlotSceneLighting, &s_sceneLightingUniform,
                                    sizeof(s_sceneLightingUniform));
+#else
+    // The shadowed receivers read the sun shadow after the scene lighting; the others only the
+    // scene lighting at the start of the block.
+    const SceneLightingWithSunShadow block{s_sceneLightingUniform,
+                                           s_sunShadowMapReady ? s_sunShadowUniform : mu::SunShadowUniform{}};
+    SDL_PushGPUFragmentUniformData(s_cmdBuf, k_FragmentUniformSlotSceneLighting, &block, sizeof(block));
+#endif
     SDL_PushGPUFragmentUniformData(s_cmdBuf, k_FragmentUniformSlotDynamicLights, &s_dynamicLightsUniform,
                                    sizeof(s_dynamicLightsUniform));
     s_dbgFragmentUniformPushesThisFrame += 2;
+}
+
+// Swaps slot 1 between the scene lighting and the item preview studio light, as the draws need.
+static void SelectSceneLightingBlock(bool itemPreview)
+{
+#ifndef __EMSCRIPTEN__
+    if (itemPreview == s_itemPreviewLightingPushed)
+        return;
+    if (!itemPreview)
+    {
+        PushSceneLightingUniforms();
+        return;
+    }
+    static const mu::SceneLightingUniform studio = mu::ItemPreviewLightingUniform();
+    const SceneLightingWithSunShadow block{studio, mu::SunShadowUniform{}};
+    SDL_PushGPUFragmentUniformData(s_cmdBuf, k_FragmentUniformSlotSceneLighting, &block, sizeof(block));
+    ++s_dbgFragmentUniformPushesThisFrame;
+    s_itemPreviewLightingPushed = true;
+#else
+    (void)itemPreview;
+#endif
 }
 
 static void BindReplayFragmentSampler(const RenderCmd& command, Render::SdlGpuReplayState& state)
@@ -1085,6 +1154,19 @@ static bool s_pipelinesMultisampled = false;
 static void ReplayDrawCommand(const RenderCmd& command, SDL_GPUGraphicsPipeline* pipeline, bool boneDataReady,
                               const SDL_Rect& scissor, Render::SdlGpuReplayState& state)
 {
+    // A sun shadow receiver draws through its shadowed twin in the frame's own passes once the
+    // shadow map is ready; the single-sample passes (offscreen, UI) keep the plain pipeline.
+    bool sunShadowed = false;
+    if (command.sunShadowReceiver && s_sunShadowMapReady && !s_singleSamplePass)
+    {
+        const auto shadowed = s_sunShadowReceiverPipelines.find(pipeline);
+        if (shadowed != s_sunShadowReceiverPipelines.end() &&
+            (command.type == RenderCmdType::DrawSkinnedTriangles || command.sunShadowRows != ~0u))
+        {
+            pipeline = shadowed->second;
+            sunShadowed = true;
+        }
+    }
     // With one sample the frame's own pipelines already match; with more, a pass outside the
     // main one draws only through a twin (CreateSingleSamplePipelines guarantees a complete set,
     // or turns anti-aliasing off).
@@ -1107,6 +1189,18 @@ static void ReplayDrawCommand(const RenderCmd& command, SDL_GPUGraphicsPipeline*
         PushReplayVertexUniforms(0, &command.vu, sizeof(command.vu), state);
     if (shadow)
         PushReplayVertexUniforms(1, &s_shadowUniforms[command.shadowIndex], sizeof(ShadowVertexUniforms), state);
+    if (sunShadowed && !skinned)
+    {
+        const std::array<float, 12>& rows = s_sunShadowReceiverRows[command.sunShadowRows];
+        PushReplayVertexUniforms(1, rows.data(), sizeof(rows), state);
+    }
+    if (sunShadowed && state.SelectSunShadowMap())
+    {
+        // Slot 1 keeps the map for the rest of the pass; slot 0 changes with each texture.
+        const SDL_GPUTextureSamplerBinding shadowBinding{s_sunShadowMap, s_sunShadowSampler};
+        SDL_BindGPUFragmentSamplers(s_renderPass, 1, &shadowBinding, 1);
+        ++s_dbgSamplerBindsThisFrame;
+    }
 
     // Bound again only when the buffer or the vertex size changes; draws in between say where their vertices start.
     SDL_GPUBuffer* const vertexBuffer = command.vtxBuffer ? command.vtxBuffer : s_vtxGpuBuf;
@@ -1147,6 +1241,8 @@ static void ReplayDrawCommand(const RenderCmd& command, SDL_GPUGraphicsPipeline*
 
     BindReplayFragmentSampler(command, state);
     PushReplayFragmentUniforms(command.fogUniform, state);
+    if (skinned && !shadow)
+        SelectSceneLightingBlock(command.itemPreviewLighting);
 
     if (command.type == RenderCmdType::DrawIndexedQuads || command.type == RenderCmdType::DrawIndexedStrip)
         SDL_DrawGPUIndexedPrimitives(s_renderPass, command.idxCount, 1, firstIndex, static_cast<Sint32>(firstVertex), 0);
@@ -1189,6 +1285,11 @@ static SDL_GPUShader* s_vertShaderSkinned = nullptr; // skinned_textured.vert
 static SDL_GPUShader* s_vertShaderSkinnedShadow = nullptr; // skinned_shadow.vert
 static SDL_GPUShader* s_fragShaderTexFog = nullptr;  // basic_textured_fog.frag (Enhanced, optional)
 static SDL_GPUShader* s_fragShaderLit = nullptr;     // skinned_lit.frag (Enhanced, optional)
+// Sun shadow (desktop, optional): without them the sun shadow is unavailable.
+static SDL_GPUShader* s_vertShader3DWorld = nullptr;      // basic_textured_world.vert
+static SDL_GPUShader* s_fragShaderTexFogShadow = nullptr; // basic_textured_fog_shadow.frag
+static SDL_GPUShader* s_fragShaderLitShadow = nullptr;    // skinned_lit_shadow.frag
+static SDL_GPUShader* s_fragShaderShadowCaster = nullptr; // shadow_caster.frag
 // Post-processing (optional): without them post-processing is unavailable.
 static SDL_GPUShader* s_vertShaderPostFullscreen = nullptr; // post_fullscreen.vert
 static SDL_GPUShader* s_fragShaderBloomDown = nullptr;      // post_bloom_down.frag
@@ -1616,6 +1717,8 @@ static std::vector<std::uint32_t> s_filteredSamplerRequests;
 static std::unordered_set<std::uint32_t> s_updatedTextureIds;
 static bool s_textureFilteringEnabled = false;
 static int s_screenSpaceSamplingDepth = 0;
+// Item previews drawn under the studio light (BeginItemPreviewLighting; desktop only).
+static int s_itemPreviewLightingDepth = 0;
 static std::uint32_t s_cachedWorldSamplerId = 0u;
 static void* s_cachedWorldSampler = nullptr;
 static bool s_worldSamplerCacheValid = false;
@@ -1634,9 +1737,9 @@ static void InvalidateSamplerLookupCaches()
            s_filteredSamplerMap.find(id) != s_filteredSamplerMap.end();
 }
 
-[[nodiscard]] static void* LookupWorldSampler(std::uint32_t id)
+[[nodiscard]] static void* LookupWorldSampler(std::uint32_t id, bool screenSpace)
 {
-    if (!s_textureFilteringEnabled || s_screenSpaceSamplingDepth > 0)
+    if (!s_textureFilteringEnabled || screenSpace)
     {
         return LookupSampler(id);
     }
@@ -1664,6 +1767,11 @@ static void InvalidateSamplerLookupCaches()
     s_cachedWorldSampler = sampler;
     s_worldSamplerCacheValid = true;
     return sampler;
+}
+
+[[nodiscard]] static void* LookupWorldSampler(std::uint32_t id)
+{
+    return LookupWorldSampler(id, s_screenSpaceSamplingDepth > 0);
 }
 
 void RegisterSampler(std::uint32_t id, void* pSampler)
@@ -1786,6 +1894,123 @@ std::pair<int, int> GetBlendFactors(BlendMode mode)
         mu::log::Get("render")->warn("SDL_gpu::GetBlendFactors -- unknown BlendMode {}", static_cast<int>(mode));
         return {7, 8}; // default to alpha blend
     }
+}
+
+// ---------------------------------------------------------------------------
+// Sun shadow map (desktop): the depth the sun sees of the frame's casters.
+// ---------------------------------------------------------------------------
+static void ReleaseSunShadowMap()
+{
+    if (s_sunShadowMap)
+    {
+        SDL_ReleaseGPUTexture(s_device, s_sunShadowMap);
+        s_sunShadowMap = nullptr;
+    }
+    if (s_sunShadowSampler)
+    {
+        SDL_ReleaseGPUSampler(s_device, s_sunShadowSampler);
+        s_sunShadowSampler = nullptr;
+    }
+    s_sunShadowMapSize = 0u;
+    s_sunShadowMapReady = false;
+}
+
+// A depth texture the size of the level, and the comparison sampler the receivers read it with.
+static bool EnsureSunShadowMap(std::uint32_t size)
+{
+    if (s_sunShadowMap && s_sunShadowSampler && s_sunShadowMapSize == size)
+    {
+        return true;
+    }
+    if (s_sunShadowMapFailed)
+    {
+        return false;
+    }
+    ReleaseSunShadowMap();
+
+    constexpr SDL_GPUTextureFormat format = SDL_GPU_TEXTUREFORMAT_D32_FLOAT;
+    constexpr SDL_GPUTextureUsageFlags usage =
+        SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER;
+    if (!SDL_GPUTextureSupportsFormat(s_device, format, SDL_GPU_TEXTURETYPE_2D, usage))
+    {
+        mu::log::Get("render")->warn("SDL_gpu -- sun shadow: D32_FLOAT depth sampling unsupported; off");
+        s_sunShadowMapFailed = true;
+        return false;
+    }
+
+    SDL_GPUTextureCreateInfo textureInfo{};
+    textureInfo.type = SDL_GPU_TEXTURETYPE_2D;
+    textureInfo.format = format;
+    textureInfo.usage = usage;
+    textureInfo.width = size;
+    textureInfo.height = size;
+    textureInfo.layer_count_or_depth = 1;
+    textureInfo.num_levels = 1;
+    textureInfo.sample_count = SDL_GPU_SAMPLECOUNT_1;
+    s_sunShadowMap = SDL_CreateGPUTexture(s_device, &textureInfo);
+
+    SDL_GPUSamplerCreateInfo samplerInfo{};
+    samplerInfo.min_filter = SDL_GPU_FILTER_LINEAR;
+    samplerInfo.mag_filter = SDL_GPU_FILTER_LINEAR;
+    samplerInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_NEAREST;
+    samplerInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    samplerInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    samplerInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    samplerInfo.enable_compare = true;
+    samplerInfo.compare_op = SDL_GPU_COMPAREOP_LESS_OR_EQUAL;
+    s_sunShadowSampler = SDL_CreateGPUSampler(s_device, &samplerInfo);
+
+    if (!s_sunShadowMap || !s_sunShadowSampler)
+    {
+        mu::log::Get("render")->warn("SDL_gpu -- sun shadow: {}x{} map failed: {}; off", size, size, SDL_GetError());
+        ReleaseSunShadowMap();
+        s_sunShadowMapFailed = true;
+        return false;
+    }
+    s_sunShadowMapSize = size;
+    mu::log::Get("render")->info("SDL_gpu -- sun shadow: {}x{} map", size, size);
+    return true;
+}
+
+// Draws the frame's casters from the sun; the receivers sample the result in the passes after it.
+static void RenderSunShadowMap(bool boneDataReady)
+{
+    s_sunShadowMapReady = false;
+    if (!s_sunShadowFrame.enabled || s_sunShadowCasterCmds.empty() || s_texturesInvalidated || !boneDataReady ||
+        !s_cmdBuf || !EnsureSunShadowMap(s_sunShadowFrame.mapSize))
+    {
+        return;
+    }
+
+    SDL_GPUDepthStencilTargetInfo depthTarget{};
+    depthTarget.texture = s_sunShadowMap;
+    depthTarget.clear_depth = 1.0f;
+    depthTarget.load_op = SDL_GPU_LOADOP_CLEAR;
+    depthTarget.store_op = SDL_GPU_STOREOP_STORE;
+    depthTarget.stencil_load_op = SDL_GPU_LOADOP_DONT_CARE;
+    depthTarget.stencil_store_op = SDL_GPU_STOREOP_DONT_CARE;
+    depthTarget.cycle = true;
+    s_renderPass = SDL_BeginGPURenderPass(s_cmdBuf, nullptr, 0, &depthTarget);
+    if (!s_renderPass)
+    {
+        return;
+    }
+
+    const float size = static_cast<float>(s_sunShadowMapSize);
+    const SDL_GPUViewport viewport{0.0f, 0.0f, size, size, 0.0f, 1.0f};
+    const SDL_Rect scissor{0, 0, static_cast<int>(s_sunShadowMapSize), static_cast<int>(s_sunShadowMapSize)};
+    SDL_SetGPUViewport(s_renderPass, &viewport);
+    SDL_SetGPUScissor(s_renderPass, &scissor);
+    Render::SdlGpuReplayState state;
+    state.SelectViewport(viewport);
+    state.SelectScissor(scissor);
+    for (const RenderCmd& caster : s_sunShadowCasterCmds)
+    {
+        ReplayDrawCommand(caster, caster.pipeline, boneDataReady, scissor, state);
+    }
+    SDL_EndGPURenderPass(s_renderPass);
+    s_renderPass = nullptr;
+    s_sunShadowMapReady = true;
 }
 
 // ---------------------------------------------------------------------------
@@ -2155,6 +2380,7 @@ public:
         DestroySkinnedMeshCache();
         DestroyPipelines();
         ReleaseShaders();
+        ReleaseSunShadowMap();
         s_postProcessing.Release();
 
         SDL_ReleaseWindowFromGPUDevice(s_device, s_window);
@@ -2210,6 +2436,15 @@ public:
         s_renderCmds.clear();
         s_skinningUniforms.clear();
         s_shadowUniforms.clear();
+        s_sunShadowCasterCmds.clear();
+        s_sunShadowReceiverRows.clear();
+        s_sunShadowFrame.enabled = false;
+        s_sunShadowMapReady = false;
+        if (s_sunShadowScopeDepth != 0)
+        {
+            mu::log::Get("render")->warn("SDL_gpu -- {} sun shadow scope(s) left open; reset", s_sunShadowScopeDepth);
+            s_sunShadowScopeDepth = 0;
+        }
         s_previousDrawCommands.fill(kNoDrawCommand);
         s_sceneBoundary.Reset();
         if (s_bloomExclusionDepth != 0)
@@ -2986,6 +3221,12 @@ public:
             ProcessPendingOffscreenCaptures(boneDataReady);
         }
 
+        // The sun's shadow map, before the passes whose receivers sample it.
+        {
+            FRAME_PROFILE(RendererOffscreen);
+            RenderSunShadowMap(boneDataReady);
+        }
+
         // ---------------------------------------------------------------
         // Render pass — replay all recorded draw commands.
         // The GPU vertex/index buffers now contain current-frame data.
@@ -3473,6 +3714,17 @@ public:
             --s_screenSpaceSamplingDepth;
             InvalidateSamplerLookupCaches();
         }
+    }
+
+    void BeginItemPreviewLighting() override
+    {
+        ++s_itemPreviewLightingDepth;
+    }
+
+    void EndItemPreviewLighting() override
+    {
+        if (s_itemPreviewLightingDepth > 0)
+            --s_itemPreviewLightingDepth;
     }
 
     // -----------------------------------------------------------------------
@@ -4948,6 +5200,39 @@ public:
         s_dynamicLightsUniform = lights;
     }
 
+    // The frame's sun shadow; off unless Enhanced lighting draws this frame and its pipelines exist.
+    void SetSunShadow(const SunShadowFrame& frame) override
+    {
+        s_sunShadowFrame = frame;
+        s_sunShadowFrame.enabled = frame.enabled && frame.mapSize > 0u && UsesEnhancedLighting() &&
+                                   s_sunShadowCasterPipeline && !s_sunShadowReceiverPipelines.empty() &&
+                                   !s_sunShadowMapFailed;
+        if (!s_sunShadowFrame.enabled)
+        {
+            return;
+        }
+        s_sunShadowUniform = PackSunShadowUniform(s_sunShadowFrame);
+        s_sunShadowViewProjection = glm::make_mat4(s_sunShadowUniform.viewProjection);
+    }
+
+    void BeginSunShadowScope() override
+    {
+        ++s_sunShadowScopeDepth;
+    }
+
+    void EndSunShadowScope() override
+    {
+        if (s_sunShadowScopeDepth > 0)
+        {
+            --s_sunShadowScopeDepth;
+        }
+    }
+
+    [[nodiscard]] bool IsSunShadowActive() const override
+    {
+        return s_sunShadowFrame.enabled;
+    }
+
     [[nodiscard]] bool SetEnhancedLighting(bool enabled) override
     {
         s_enhancedLightingEnabled = enabled;
@@ -5084,7 +5369,8 @@ private:
                        : s_pipelinesSkinnedDepthReadOnly[pipelineIdx])
                 : s_pipelinesSkinnedDepthOff[pipelineIdx];
         const bool enhanced = !shadow && UsesEnhancedLighting();
-        const bool enhancedLit = enhanced && parameters.lightEnabled;
+        const bool itemPreview = enhanced && UsesItemPreviewLighting(parameters);
+        const bool enhancedLit = enhanced && (parameters.lightEnabled || itemPreview);
         if (enhanced)
         {
             const EnhancedPipelineSet& enhancedSet =
@@ -5143,7 +5429,7 @@ private:
         cmd.skinningIndex = static_cast<Uint32>(s_skinningUniforms.size() - 1u);
         cmd.pipeline = pipeline;
         cmd.texture = texture;
-        void* sampler = LookupWorldSampler(resolvedTexId);
+        void* sampler = LookupWorldSampler(resolvedTexId, s_screenSpaceSamplingDepth > 0 && !itemPreview);
         cmd.sampler = sampler ? static_cast<SDL_GPUSampler*>(sampler) : s_defaultSampler;
         cmd.vtxBuffer = frameVertices ? nullptr : s_skinnedMeshBlocks[cached.block].buffer;
         cmd.vtxOffset = vtxOffset;
@@ -5185,6 +5471,19 @@ private:
             skinningVu.eyePositionAndSpecular[2] = eyePosition.z;
             skinningVu.eyePositionAndSpecular[3] = parameters.specularStrength;
             PackVertexToWorldRows(skinningVu);
+        }
+        if (itemPreview)
+        {
+            // The studio light stays put on screen, whatever way the model is turned.
+            const glm::vec3 towardLight = glm::normalize(glm::vec3(
+                glm::inverse(m_modelViewMatrix) *
+                glm::vec4(mu::kItemPreviewLightDirection[0], mu::kItemPreviewLightDirection[1],
+                          mu::kItemPreviewLightDirection[2], 0.0f)));
+            skinningVu.lightDirection[0] = towardLight.x;
+            skinningVu.lightDirection[1] = towardLight.y;
+            skinningVu.lightDirection[2] = towardLight.z;
+            skinningVu.eyePositionAndSpecular[3] = std::max(parameters.specularStrength, mu::kItemPreviewSpecular);
+            cmd.itemPreviewLighting = true;
         }
         if (shadow)
         {
@@ -5286,6 +5585,80 @@ private:
         command.depthMaskEnabled = m_depthMaskEnabled;
         command.cullFaceEnabled = m_cullFaceEnabled;
         command.bloomExcluded = s_bloomExclusionDepth > 0;
+        RecordSunShadow(command);
+    }
+
+    // Inside the sun shadow scope, depth-tested world draws that blend Alpha or not at all
+    // receive the shadow when their pipeline has a shadowed twin; depth-writing models also cast
+    // it, through a copy drawn from the sun (s_sunShadowCasterCmds).
+    void RecordSunShadow(RenderCmd& command) const
+    {
+        if (s_sunShadowScopeDepth <= 0 || !s_sunShadowFrame.enabled || s_screenSpaceSamplingDepth != 0 ||
+            !command.depthTestEnabled || (command.blendEnabled && command.blendMode != mu::BlendMode::Alpha))
+        {
+            return;
+        }
+        const bool skinned = command.type == RenderCmdType::DrawSkinnedTriangles;
+        if (skinned && command.shadowIndex != ~0u)
+        {
+            return; // a Classic flat shadow
+        }
+        if (!skinned && command.type != RenderCmdType::DrawTriangles &&
+            command.type != RenderCmdType::DrawIndexedQuads && command.type != RenderCmdType::DrawIndexedStrip)
+        {
+            return;
+        }
+        if (!skinned && command.vtxStride != sizeof(Vertex3D))
+        {
+            return;
+        }
+
+        const glm::mat4 vertexToWorld = m_worldFromViewMatrix * m_modelViewMatrix;
+        if (s_sunShadowReceiverPipelines.contains(command.pipeline))
+        {
+            command.sunShadowReceiver = true;
+            if (skinned)
+            {
+                PackVertexToWorldRows(s_skinningUniforms[command.skinningIndex]);
+            }
+            else
+            {
+                std::array<float, 12>& rows = s_sunShadowReceiverRows.emplace_back();
+                for (int row = 0; row < 3; ++row)
+                {
+                    for (int column = 0; column < 4; ++column)
+                    {
+                        rows[static_cast<std::size_t>(row * 4 + column)] = vertexToWorld[column][row];
+                    }
+                }
+                command.sunShadowRows = static_cast<Uint32>(s_sunShadowReceiverRows.size() - 1u);
+            }
+        }
+
+        if (skinned && command.depthMaskEnabled && s_sunShadowCasterPipeline)
+        {
+            RenderCmd caster = command;
+            caster.sunShadowReceiver = false;
+            caster.pipeline = s_sunShadowCasterPipeline;
+            // An alpha-blended model lets the light through its clear texels like a cutout does; an
+            // opaque one casts whole (MU armour textures often carry a zero alpha they never use).
+            if (command.blendEnabled)
+            {
+                caster.fogUniform.alphaDiscardEnabled = 1u;
+            }
+            SkinningVertexUniforms casterUniforms = s_skinningUniforms[command.skinningIndex];
+            casterUniforms.mvp = s_sunShadowViewProjection * vertexToWorld;
+            // Orthographic: w is exactly 1, so the shaders' near clip (w - 1) never cuts a caster
+            // over a rounding error of the inverted view.
+            casterUniforms.mvp[0][3] = 0.0f;
+            casterUniforms.mvp[1][3] = 0.0f;
+            casterUniforms.mvp[2][3] = 0.0f;
+            casterUniforms.mvp[3][3] = 1.0f;
+            casterUniforms.palette[3] = k_SkinningLightingNone;
+            s_skinningUniforms.push_back(casterUniforms);
+            caster.skinningIndex = static_cast<Uint32>(s_skinningUniforms.size() - 1u);
+            s_sunShadowCasterCmds.push_back(caster);
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -5303,6 +5676,19 @@ private:
     [[nodiscard]] static bool UsesEnhancedLighting()
     {
         return s_enhancedLightingEnabled && s_enhancedLightingAvailable;
+    }
+
+    // An item preview's own surface (not its additive glow or chrome passes) under the studio light.
+    [[nodiscard]] bool UsesItemPreviewLighting(const SkinningParameters& parameters) const
+    {
+#ifdef __EMSCRIPTEN__
+        (void)parameters;
+        return false;
+#else
+        return s_itemPreviewLightingDepth > 0 &&
+               parameters.textureCoordinates == mu::SkinningTextureCoordinates::Mesh &&
+               (!m_blendEnabled || m_activeBlendMode == BlendMode::Alpha);
+#endif
     }
 
     [[nodiscard]] SDL_GPUGraphicsPipeline* GetActive3DPipeline() const
@@ -5606,6 +5992,20 @@ private:
             createShader("basic_textured_fog", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 2, /*fatal=*/false);
         // skinned_lit.frag also reads the frame's point lights, DynamicLights (b2).
         s_fragShaderLit = createShader("skinned_lit", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 3, /*fatal=*/false);
+#ifndef __EMSCRIPTEN__
+        // Sun shadow (desktop only) — non-fatal: without them the sun shadow is unavailable.
+        // basic_textured_world.vert: Transform (b0) and the draw's vertex-to-world rows (b1).
+        // The receivers sample the shadow map (t1/s1) and read SunShadow after the scene
+        // lighting in b1; the caster pass only alpha-tests (FogUniforms, b0).
+        s_vertShader3DWorld =
+            createShader("basic_textured_world", "vert", SDL_GPU_SHADERSTAGE_VERTEX, 0, 0, 2, /*fatal=*/false);
+        s_fragShaderTexFogShadow =
+            createShader("basic_textured_fog_shadow", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 2, /*fatal=*/false);
+        s_fragShaderLitShadow =
+            createShader("skinned_lit_shadow", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 3, /*fatal=*/false);
+        s_fragShaderShadowCaster =
+            createShader("shadow_caster", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 1, /*fatal=*/false);
+#endif
 
         // Post-processing — non-fatal: without them post-processing is unavailable.
         // Bloom passes: source texture (t0) and BloomUniforms (b0); composite: scene, bloom and
@@ -5675,6 +6075,15 @@ private:
             s_fragShaderLit = nullptr;
         }
         for (SDL_GPUShader** shader :
+             {&s_vertShader3DWorld, &s_fragShaderTexFogShadow, &s_fragShaderLitShadow, &s_fragShaderShadowCaster})
+        {
+            if (*shader)
+            {
+                SDL_ReleaseGPUShader(s_device, *shader);
+                *shader = nullptr;
+            }
+        }
+        for (SDL_GPUShader** shader :
              {&s_vertShaderPostFullscreen, &s_fragShaderBloomDown, &s_fragShaderBloomUp, &s_fragShaderComposite})
         {
             if (*shader)
@@ -5695,6 +6104,7 @@ private:
         ThreeDimensional,
         Skinned,
         SkinnedShadow, // the skinned layout, with skinned_shadow.vert
+        ThreeDimensionalWorld, // the 3D layout, with basic_textured_world.vert (sun shadow receivers)
     };
 
     enum class FragmentShader
@@ -5702,6 +6112,9 @@ private:
         Textured,
         TexturedEnhancedFog,
         SkinnedLit,
+        TexturedEnhancedFogShadow,
+        SkinnedLitShadow,
+        SunShadowCaster,
     };
 
     struct PipelineBuildDescription
@@ -5715,6 +6128,8 @@ private:
         bool cullFaceEnabled;
         FragmentShader fragmentShader = FragmentShader::Textured;
         bool alphaToCoverage = false;
+        // The sun's shadow map pass: no colour target, one sample, slope-scaled depth bias.
+        bool depthOnly = false;
     };
 
     [[nodiscard]] static SDL_GPUShader* GetFragmentShader(FragmentShader shader)
@@ -5725,6 +6140,12 @@ private:
             return s_fragShaderTexFog;
         case FragmentShader::SkinnedLit:
             return s_fragShaderLit;
+        case FragmentShader::TexturedEnhancedFogShadow:
+            return s_fragShaderTexFogShadow;
+        case FragmentShader::SkinnedLitShadow:
+            return s_fragShaderLitShadow;
+        case FragmentShader::SunShadowCaster:
+            return s_fragShaderShadowCaster;
         case FragmentShader::Textured:
             break;
         }
@@ -5739,6 +6160,12 @@ private:
             return "basic_textured_fog.frag";
         case FragmentShader::SkinnedLit:
             return "skinned_lit.frag";
+        case FragmentShader::TexturedEnhancedFogShadow:
+            return "basic_textured_fog_shadow.frag";
+        case FragmentShader::SkinnedLitShadow:
+            return "skinned_lit_shadow.frag";
+        case FragmentShader::SunShadowCaster:
+            return "shadow_caster.frag";
         case FragmentShader::Textured:
             break;
         }
@@ -5813,7 +6240,8 @@ private:
             vtxBufDesc.pitch = sizeof(Vertex2D);
             numAttribs = 3;
         }
-        else if (description.vertexLayout == VertexLayout::ThreeDimensional)
+        else if (description.vertexLayout == VertexLayout::ThreeDimensional ||
+                 description.vertexLayout == VertexLayout::ThreeDimensionalWorld)
         {
             // Vertex3D mapped to the 2D shader's input locations:
             //   location 0 (TEXCOORD0 → pos):   float3 pos  — shader reads float2 (x,y), z dropped
@@ -5896,8 +6324,8 @@ private:
         vtxInputState.num_vertex_attributes = numAttribs;
 
         SDL_GPUGraphicsPipelineTargetInfo targetInfo{};
-        targetInfo.color_target_descriptions = &colorTargetDesc;
-        targetInfo.num_color_targets = 1;
+        targetInfo.color_target_descriptions = description.depthOnly ? nullptr : &colorTargetDesc;
+        targetInfo.num_color_targets = description.depthOnly ? 0u : 1u;
         // Enable depth-stencil target so pipelines match
         // the render pass that now includes a depth buffer.
         targetInfo.has_depth_stencil_target = true;
@@ -5909,15 +6337,24 @@ private:
         rasterState.fill_mode = SDL_GPU_FILLMODE_FILL;
         rasterState.cull_mode = description.cullFaceEnabled ? SDL_GPU_CULLMODE_BACK : SDL_GPU_CULLMODE_NONE;
         rasterState.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE;
+        if (description.depthOnly)
+        {
+            // Surfaces steep to the sun push their depth back the most: no acne on slopes.
+            rasterState.enable_depth_bias = true;
+            rasterState.depth_bias_constant_factor = 1.0f;
+            rasterState.depth_bias_slope_factor = 1.75f;
+        }
 #ifdef __EMSCRIPTEN__
         // Clamped depth (false) wherever the card can (see mu::web::HasDepthClamp).
         rasterState.enable_depth_clip = !mu::web::HasDepthClamp();
 #endif
 
         SDL_GPUGraphicsPipelineCreateInfo pipelineInfo{};
-        pipelineInfo.vertex_shader = description.vertexLayout == VertexLayout::Skinned         ? s_vertShaderSkinned
-                                     : description.vertexLayout == VertexLayout::SkinnedShadow ? s_vertShaderSkinnedShadow
-                                                                                               : s_vertShader2D;
+        pipelineInfo.vertex_shader =
+            description.vertexLayout == VertexLayout::Skinned                 ? s_vertShaderSkinned
+            : description.vertexLayout == VertexLayout::SkinnedShadow         ? s_vertShaderSkinnedShadow
+            : description.vertexLayout == VertexLayout::ThreeDimensionalWorld ? s_vertShader3DWorld
+                                                                              : s_vertShader2D;
         pipelineInfo.fragment_shader = GetFragmentShader(description.fragmentShader);
         pipelineInfo.vertex_input_state = vtxInputState;
         pipelineInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
@@ -5927,7 +6364,8 @@ private:
         pipelineInfo.props = 0;
 
         pipelineInfo.multisample_state.sample_count =
-            mu::GetSdlGpuSampleCount(s_sampleCount).value_or(SDL_GPU_SAMPLECOUNT_1);
+            description.depthOnly ? SDL_GPU_SAMPLECOUNT_1
+                                  : mu::GetSdlGpuSampleCount(s_sampleCount).value_or(SDL_GPU_SAMPLECOUNT_1);
         pipelineInfo.multisample_state.enable_alpha_to_coverage = description.alphaToCoverage;
 
         result.pipeline = SDL_CreateGPUGraphicsPipeline(s_device, &pipelineInfo);
@@ -5951,6 +6389,8 @@ private:
         const char* vertexShaderName = description.vertexLayout == VertexLayout::Skinned ? "skinned_textured.vert"
                                        : description.vertexLayout == VertexLayout::SkinnedShadow
                                            ? "skinned_shadow.vert"
+                                       : description.vertexLayout == VertexLayout::ThreeDimensionalWorld
+                                           ? "basic_textured_world.vert"
                                            : "basic_textured.vert";
         const char* fragmentShaderName = GetFragmentShaderName(description.fragmentShader);
         const char* cullMode = description.cullFaceEnabled ? "back" : "none";
@@ -6185,6 +6625,7 @@ private:
 
     static void DestroyPipelines()
     {
+        DestroySunShadowPipelines();
         DestroySingleSamplePipelines();
         s_pipelinesMultisampled = false;
         DestroyEnhancedPipelines();
@@ -6389,6 +6830,7 @@ private:
             CreatePostProcessingPipelines();
         }
         s_pipelinesMultisampled = s_sampleCount != Render::Antialiasing::OffSampleCount;
+        CreateSunShadowPipelines();
         return true;
     }
 
@@ -6594,6 +7036,143 @@ private:
                 entry.variant = nullptr;
             }
         }
+    }
+
+    // The sun shadow's pipelines (desktop, Enhanced lighting): the caster pass, and a shadowed
+    // twin of each depth-tested Enhanced pipeline that blends Alpha or not at all.
+    static void CreateSunShadowPipelines()
+    {
+        DestroySunShadowPipelines();
+#ifndef __EMSCRIPTEN__
+        if (!s_enhancedLightingAvailable || !s_vertShader3DWorld || !s_fragShaderTexFogShadow ||
+            !s_fragShaderLitShadow || !s_fragShaderShadowCaster)
+        {
+            return;
+        }
+        const char* deviceDriver = SDL_GetGPUDeviceDriver(s_device);
+        const char* driverName = deviceDriver ? deviceDriver : "unknown";
+
+        SDL_GPUColorTargetBlendState opaque{};
+        opaque.src_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+        opaque.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ZERO;
+        opaque.color_blend_op = SDL_GPU_BLENDOP_ADD;
+        opaque.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+        opaque.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ZERO;
+        opaque.alpha_blend_op = SDL_GPU_BLENDOP_ADD;
+        opaque.enable_blend = false;
+        SDL_GPUColorTargetBlendState alpha = opaque;
+        alpha.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+        alpha.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+        alpha.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+        alpha.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+        alpha.enable_blend = true;
+
+        int built = 0;
+        int wanted = 0;
+        const auto addTwin = [&](SDL_GPUGraphicsPipeline* source, SDL_GPUColorTargetBlendState blendState,
+                                 const PipelineBuildDescription& description)
+        {
+            if (!source)
+            {
+                return;
+            }
+            ++wanted;
+            const PipelineBuildResult result = BuildBlendPipeline(blendState, description);
+            if (!result.pipeline)
+            {
+                LogPipelineFailure(driverName, result, false);
+                return;
+            }
+            s_sunShadowReceiverPipelines[source] = result.pipeline;
+            ++built;
+        };
+
+        struct ShadowedSet
+        {
+            EnhancedPipelineSet* set;
+            const char* name;
+            VertexLayout layout;
+            FragmentShader fragment;
+        };
+        const ShadowedSet sets[] = {
+            {&s_pipelines3DEnhancedFog, "3d-enhanced-fog-sun-shadow", VertexLayout::ThreeDimensionalWorld,
+             FragmentShader::TexturedEnhancedFogShadow},
+            {&s_pipelinesSkinnedEnhancedFog, "skinned-enhanced-fog-sun-shadow", VertexLayout::Skinned,
+             FragmentShader::TexturedEnhancedFogShadow},
+            {&s_pipelinesSkinnedLit, "skinned-lit-sun-shadow", VertexLayout::Skinned, FragmentShader::SkinnedLitShadow},
+        };
+        struct ShadowedBlend
+        {
+            int index;
+            const char* name;
+            SDL_GPUColorTargetBlendState state;
+        };
+        const ShadowedBlend blends[] = {{k_PipelineDisabled, "disabled", opaque}, {k_PipelineAlpha, "alpha", alpha}};
+        for (const ShadowedSet& entry : sets)
+        {
+            for (const ShadowedBlend& blend : blends)
+            {
+                addTwin(entry.set->culled[blend.index], blend.state,
+                        {entry.name, blend.name, blend.index, true, true, entry.layout, true, entry.fragment});
+                addTwin(entry.set->noCull[blend.index], blend.state,
+                        {entry.name, blend.name, blend.index, true, true, entry.layout, false, entry.fragment});
+                addTwin(entry.set->depthReadOnly[blend.index], blend.state,
+                        {entry.name, blend.name, blend.index, true, false, entry.layout, false, entry.fragment});
+            }
+        }
+
+        // The alpha-to-coverage variants of the Enhanced sets (entries 4.. of s_alphaCoveragePipelines).
+        struct CoverageTwin
+        {
+            std::size_t entry;
+            VertexLayout layout;
+            bool cullFaceEnabled;
+            FragmentShader fragment;
+        };
+        const CoverageTwin coverage[] = {
+            {4, VertexLayout::ThreeDimensionalWorld, true, FragmentShader::TexturedEnhancedFogShadow},
+            {5, VertexLayout::ThreeDimensionalWorld, false, FragmentShader::TexturedEnhancedFogShadow},
+            {6, VertexLayout::Skinned, true, FragmentShader::TexturedEnhancedFogShadow},
+            {7, VertexLayout::Skinned, false, FragmentShader::TexturedEnhancedFogShadow},
+            {8, VertexLayout::Skinned, true, FragmentShader::SkinnedLitShadow},
+            {9, VertexLayout::Skinned, false, FragmentShader::SkinnedLitShadow},
+        };
+        static_assert(std::size(s_alphaCoveragePipelines) == 10);
+        for (const CoverageTwin& twin : coverage)
+        {
+            addTwin(s_alphaCoveragePipelines[twin.entry].variant, opaque,
+                    {"sun-shadow-alpha-coverage", "disabled", k_PipelineDisabled, true, true, twin.layout,
+                     twin.cullFaceEnabled, twin.fragment, true});
+        }
+
+        PipelineBuildDescription casterDescription{"sun-shadow-caster", "disabled", k_PipelineDisabled, true, true,
+                                                   VertexLayout::Skinned, false, FragmentShader::SunShadowCaster};
+        casterDescription.depthOnly = true;
+        const PipelineBuildResult caster = BuildBlendPipeline(opaque, casterDescription);
+        s_sunShadowCasterPipeline = caster.pipeline;
+        if (!caster.pipeline)
+        {
+            LogPipelineFailure(driverName, caster, false);
+        }
+        mu::log::Get("render")->info("SDL_gpu -- sun shadow: {} of {} receiver pipelines, caster {}", built, wanted,
+                                     s_sunShadowCasterPipeline ? "ready" : "missing");
+#endif
+    }
+
+    static void DestroySunShadowPipelines()
+    {
+        for (const auto& [source, shadowed] : s_sunShadowReceiverPipelines)
+        {
+            SDL_ReleaseGPUGraphicsPipeline(s_device, shadowed);
+        }
+        s_sunShadowReceiverPipelines.clear();
+        if (s_sunShadowCasterPipeline)
+        {
+            SDL_ReleaseGPUGraphicsPipeline(s_device, s_sunShadowCasterPipeline);
+            s_sunShadowCasterPipeline = nullptr;
+        }
+        s_sunShadowFrame.enabled = false;
+        s_sunShadowMapReady = false;
     }
 
     static void ReleaseMultisampleColorTexture()

@@ -83,6 +83,17 @@ static_assert(sizeof(SceneLightingUniform) == 8 * kSceneLightingRegisterSize);
 
 [[nodiscard]] SceneLightingUniform PackSceneLightingUniform(const SceneLighting& lighting, const SceneFog& fog);
 
+// Studio light for inventory item previews (IMuRenderer::BeginItemPreviewLighting): the same on
+// every map, from the viewer's upper left. The direction is in view space (x right, y up, z
+// towards the viewer); the renderer turns it into each model's space.
+inline constexpr float kItemPreviewLightDirection[3]{-0.5f, 0.65f, 0.6f};
+// Every preview gets at least this specular strength, so plain jewels and potions shine too.
+inline constexpr float kItemPreviewSpecular = 0.3f;
+// rimParameters[2] above this: the diffuse term uses the unit normal and light direction (the
+// world's Classic curve takes them as they come).
+inline constexpr float kUnitDiffuseFlag = 1.0f;
+[[nodiscard]] SceneLightingUniform ItemPreviewLightingUniform();
+
 // Point lights on models light a face with saturate(dot(n, l) * (1 - wrap) + wrap): 0 is Lambert,
 // 0.5 (the built-in value) half-Lambert. Up to 0.5 a face turned away from the light gets nothing.
 inline constexpr float kDefaultDynamicWrap = 0.5f;

@@ -1,0 +1,110 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct VSInput
+{
+    float3 pos;
+    float2 uv;
+    float4 color;
+};
+
+struct VSOutput
+{
+    float4 pos;
+    float2 uv;
+    float4 color;
+    float fogFactor;
+    float eyeDepth;
+    float3 normal;
+    float3 viewVector;
+    float4 lightDirectionAndSpecular;
+    float4 worldPositionAndDynamicLights;
+    float3 worldNormal;
+    float clipDist;
+};
+
+struct Transform
+{
+    float4x4 mvp;
+    float fogStart;
+    float fogEnd;
+    float2 fogPad;
+};
+
+struct VertexToWorld
+{
+    float4 vertexToWorldRows[3];
+};
+
+struct main0_out
+{
+    float2 _entryPointOutput_uv [[user(locn0)]];
+    float4 _entryPointOutput_color [[user(locn1)]];
+    float _entryPointOutput_fogFactor [[user(locn2)]];
+    float _entryPointOutput_eyeDepth [[user(locn3)]];
+    float3 _entryPointOutput_normal [[user(locn4)]];
+    float3 _entryPointOutput_viewVector [[user(locn5)]];
+    float4 _entryPointOutput_lightDirectionAndSpecular [[user(locn6)]];
+    float4 _entryPointOutput_worldPositionAndDynamicLights [[user(locn7)]];
+    float3 _entryPointOutput_worldNormal [[user(locn8)]];
+    float4 gl_Position [[position]];
+    float gl_ClipDistance [[clip_distance]] [1];
+    float gl_ClipDistance_0 [[user(clip0)]];
+};
+
+struct main0_in
+{
+    float3 input_pos [[attribute(0)]];
+    float2 input_uv [[attribute(1)]];
+    float4 input_color [[attribute(2)]];
+};
+
+static inline __attribute__((always_inline))
+VSOutput _main(thread const VSInput& _input, constant Transform& _32, constant VertexToWorld& _104)
+{
+    VSOutput o;
+    o.pos = _32.mvp * float4(_input.pos, 1.0);
+    o.uv = _input.uv;
+    o.color = _input.color;
+    o.clipDist = o.pos.w - 1.0;
+    float dist = abs(o.pos.w);
+    float range = _32.fogEnd - _32.fogStart;
+    o.fogFactor = (range > 0.001000000047497451305389404296875) ? fast::clamp((_32.fogEnd - dist) / range, 0.0, 1.0) : 1.0;
+    o.eyeDepth = dist;
+    o.normal = float3(0.0);
+    o.viewVector = float3(0.0);
+    o.lightDirectionAndSpecular = float4(0.0);
+    float4 position = float4(_input.pos, 1.0);
+    o.worldPositionAndDynamicLights = float4(dot(_104.vertexToWorldRows[0], position), dot(_104.vertexToWorldRows[1], position), dot(_104.vertexToWorldRows[2], position), 0.0);
+    o.worldNormal = float3(0.0);
+    return o;
+}
+
+vertex main0_out main0(main0_in in [[stage_in]], constant Transform& _32 [[buffer(0)]], constant VertexToWorld& _104 [[buffer(1)]])
+{
+    main0_out out = {};
+    VSInput _input;
+    _input.pos = in.input_pos;
+    _input.uv = in.input_uv;
+    _input.color = in.input_color;
+    VSInput param = _input;
+    VSOutput flattenTemp = _main(param, _32, _104);
+    out.gl_Position = flattenTemp.pos;
+    out._entryPointOutput_uv = flattenTemp.uv;
+    out._entryPointOutput_color = flattenTemp.color;
+    out._entryPointOutput_fogFactor = flattenTemp.fogFactor;
+    out._entryPointOutput_eyeDepth = flattenTemp.eyeDepth;
+    out._entryPointOutput_normal = flattenTemp.normal;
+    out._entryPointOutput_viewVector = flattenTemp.viewVector;
+    out._entryPointOutput_lightDirectionAndSpecular = flattenTemp.lightDirectionAndSpecular;
+    out._entryPointOutput_worldPositionAndDynamicLights = flattenTemp.worldPositionAndDynamicLights;
+    out._entryPointOutput_worldNormal = flattenTemp.worldNormal;
+    out.gl_ClipDistance[0] = flattenTemp.clipDist;
+    out.gl_ClipDistance_0 = out.gl_ClipDistance[0];
+    return out;
+}
+

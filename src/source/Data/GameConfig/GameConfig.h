@@ -184,6 +184,21 @@ public:
         return m_antialiasing;
     }
     void SetAntialiasing(int samples);
+    // [Render] GraphicsPreset, Fxaa (on/off) and Sharpen (0 to 100 percent).
+    GraphicsPreset GetGraphicsPreset() const { return m_graphicsPreset; }
+    // Whether config.ini already had a [Render] Look key when it was read: false on a new install only.
+    bool HadSavedLook() const { return m_hadSavedLook; }
+    void SetGraphicsPreset(GraphicsPreset preset) { m_graphicsPreset = preset; }
+    bool GetFxaa() const { return m_fxaa; }
+    void SetFxaa(bool enabled) { m_fxaa = enabled; }
+    // [Render] HdTextures: load the upscaled copies from Data/HD where there is one (after a restart).
+    bool GetHdTextures() const { return m_hdTextures; }
+    void SetHdTextures(bool enabled) { m_hdTextures = enabled; }
+    // [Render] SunShadows: 0 off, 1 medium, 2 high (clamped).
+    int GetSunShadows() const { return m_sunShadows; }
+    void SetSunShadows(int level);
+    int GetSharpen() const { return m_sharpen; }
+    void SetSharpen(int percent);
     bool GetEnhancedLighting() const { return m_enhancedLighting; }
     void SetEnhancedLighting(bool enabled) { m_enhancedLighting = enabled; }
     bool GetDynamicLights() const { return m_dynamicLights; }
@@ -288,6 +303,12 @@ private:
     bool m_dynamicLights;
     bool m_lightMood;
     bool m_postProcessing;
+    GraphicsPreset m_graphicsPreset = GraphicsPreset::Auto;
+    bool m_hadSavedLook = false;
+    bool m_fxaa = false;
+    bool m_hdTextures = false;
+    int m_sunShadows = 0;
+    int m_sharpen = 0;
     std::wstring m_renderBackend;
     bool m_disableEffects;
     bool m_disableParticles;
@@ -317,3 +338,4 @@ private:
 
 // The [Render] Look of a config.ini as GameConfig::Load reads it.
 LookPreset ReadLookPreset(const std::filesystem::path& configFile);
+bool HasSavedLook(const std::filesystem::path& configFile);
