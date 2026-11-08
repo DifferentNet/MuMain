@@ -120,6 +120,7 @@ namespace MUHelper
         m_iBuffWaitRounds = 0;
         m_iCurrentTarget = -1;
         m_iStrongTarget = -1;
+        m_strongRestUntil = {};
         m_iCurrentSkill = (ActionSkillType)m_config.aiSkill[0];
         m_iCurrentItem = MAX_ITEMS;
         m_posOriginal = { Hero->PositionX, Hero->PositionY };
@@ -298,6 +299,7 @@ namespace MUHelper
         Hero->Path.Lock.unlock();
         LetHeroStop(Hero, TRUE);
         m_walkWatchSince = {};
+        RestStrongTarget(now);
         m_iCurrentTarget = -1;
         g_ConsoleDebug->Write(MCD_NORMAL, L"[MU Helper] Stopped a walk that went nowhere");
     }
@@ -357,6 +359,7 @@ namespace MUHelper
         }
         GameLogic::Automation::ForgetAutomatedSend();
 
+        RestStrongTarget(now);
         m_iCurrentTarget = -1;
         m_iCurrentItem = MAX_ITEMS;
         m_iComboState = 0;
@@ -664,9 +667,26 @@ namespace MUHelper
         return ComputeDistanceBetween({ pTarget->PositionX, pTarget->PositionY }, m_posOriginal) <= m_iHuntingDistance;
     }
 
+    void CMuHelper::RestStrongTarget(std::chrono::steady_clock::time_point now)
+    {
+        // The walk to the strong target got stuck (a boss behind a ring of its minions in Kalima): the target is
+        // dropped, and picking the same one again at once would start the same walk. For StrongTargetRest the
+        // helper picks as before, the nearest first, and clears the way.
+        if (m_iStrongTarget != -1 && m_iCurrentTarget == m_iStrongTarget)
+        {
+            m_strongRestUntil = now + StrongTargetRest;
+            m_iStrongTarget = -1;
+        }
+    }
+
     int CMuHelper::UpdateStrongTarget(bool bNearSpot)
     {
+        const int iKept = m_iStrongTarget;
         m_iStrongTarget = -1;
+        if (std::chrono::steady_clock::now() < m_strongRestUntil)
+        {
+            return -1;
+        }
         GameLogic::Automation::RequestStrengths();
 
         const auto& strengths = GameLogic::Automation::Strengths();
@@ -703,7 +723,7 @@ namespace MUHelper
             candidates.push_back({ iMonsterId, strengths.ScoreOf(iMonsterId), iDistance });
         }
 
-        m_iStrongTarget = GameLogic::Automation::PickStrongTarget(candidates, m_iCurrentTarget);
+        m_iStrongTarget = GameLogic::Automation::PickStrongTarget(candidates, m_iCurrentTarget, iKept);
         return m_iStrongTarget;
     }
 

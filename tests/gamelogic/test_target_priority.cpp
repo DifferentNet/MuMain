@@ -138,3 +138,17 @@ TEST_CASE("The list follows the server's lines [gamelogic][helper-targets]")
     strengths.Clear();
     CHECK(strengths.ScoreOf(3) == 0.0);
 }
+
+TEST_CASE("The strong target stays strong once the weak ones around it are dead [gamelogic][helper-targets]")
+{
+    // Alone: nothing to compare with, yet the boss it fights is kept.
+    CHECK(PickStrongTarget({ { 3, 500000.0, 2 } }, 3, 3) == 3);
+    // Only when it is still the current target and the last strong pick.
+    CHECK(PickStrongTarget({ { 3, 500000.0, 2 } }, 3, -1) == -1);
+    CHECK(PickStrongTarget({ { 3, 500000.0, 2 } }, -1, 3) == -1);
+    // Gone from the candidates (dead or out of range): nothing is kept.
+    CHECK(PickStrongTarget({ { 1, 100.0, 1 } }, 3, 3) == -1);
+    // Monsters of about its strength came: it is kept; a monster 4 times stronger takes over.
+    CHECK(PickStrongTarget({ { 3, 5000.0, 2 }, { 4, 6000.0, 1 } }, 3, 3) == 3);
+    CHECK(PickStrongTarget({ { 3, 5000.0, 2 }, { 4, 6000.0, 1 }, { 5, 90000.0, 4 } }, 3, 3) == 5);
+}

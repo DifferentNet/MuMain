@@ -123,9 +123,24 @@ struct TargetCandidate
 
 // The strong monster to go for, or -1 when there is none and the helper picks as before. `currentKey` is the
 // current target (-1 = none): a strong one is kept while no monster `factor` times stronger is around.
+// `keptKey` is the strong target picked last time: while it is the current target and still a candidate it stays
+// strong, also once the weak monsters around it are dead and there is nothing left to compare it with (a boss
+// fought alone must not lose its hold on the helper halfway).
 [[nodiscard]] inline int PickStrongTarget(const std::vector<TargetCandidate>& candidates, int currentKey,
-                                          double factor = StrongFactor)
+                                          int keptKey = -1, double factor = StrongFactor)
 {
+    const TargetCandidate* kept = nullptr;
+    if (keptKey != -1 && keptKey == currentKey)
+    {
+        for (const TargetCandidate& c : candidates)
+        {
+            if (c.key == keptKey)
+            {
+                kept = &c;
+            }
+        }
+    }
+
     double weakest = 0.0;
     int known = 0;
     for (const TargetCandidate& c : candidates)
@@ -139,7 +154,7 @@ struct TargetCandidate
     }
     if (known < 2)
     {
-        return -1; // nothing to compare with
+        return kept != nullptr ? kept->key : -1; // nothing to compare with
     }
 
     const TargetCandidate* strongest = nullptr;
@@ -160,9 +175,13 @@ struct TargetCandidate
             strongest = &c;
         }
     }
+    if (current == nullptr)
+    {
+        current = kept;
+    }
     if (strongest == nullptr)
     {
-        return -1;
+        return current != nullptr ? current->key : -1;
     }
     if (current != nullptr && strongest->score < current->score * factor)
     {
