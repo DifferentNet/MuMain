@@ -141,6 +141,12 @@ rows next to Anti-aliasing. The presets, the `GraphicsPreset`, `Fxaa` and
 `Sharpen` keys and how Auto picks a preset from the GPU are described in
 [`enhanced-look.md`](enhanced-look.md#graphics-presets-and-screen-filters).
 
+These rows, **HD textures** and **Sun shadows** are MU Skynet's and belong to the Remaster
+client: the Classic client (no `Data\HD` folder, `Render::Textures::Hd::Installed`) hides them
+and keeps FXAA, sharpening, sun shadows and HD textures off whatever `config.ini` says, and Auto
+picks no preset there (`Render::Look::RemasterGraphicsOptions`). OpenMU's own rows stay in both.
+The browser client shows them as before.
+
 ## Remembering login credentials
 
 The login screen has two separate checkboxes:

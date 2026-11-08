@@ -2691,7 +2691,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
 
 #ifndef __EMSCRIPTEN__
     // HD textures (Options): every texture loaded from now on takes its Data\HD copy if there is one.
-    Render::Textures::Hd::SetEnabled(GameConfig::GetInstance().GetHdTextures());
+    // Only the Remaster client has them (Data\HD); the Classic client ignores a saved HdTextures=1.
+    Render::Textures::Hd::SetEnabled(GameConfig::GetInstance().GetHdTextures() && Render::Textures::Hd::Installed());
 #endif
 
     // The animation task pool is off unless config.ini or the command line turns it on.
