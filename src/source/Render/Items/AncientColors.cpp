@@ -105,7 +105,11 @@ int SetOfItem(int modelSlot, int ancientDiscriminator)
     const int discriminator = DiscriminatorOfByte(ancientDiscriminator);
     if (discriminator == 0 || !Data::Items::IsItemModelSlot(modelSlot))
         return 0;
+    // Only armour (helms to boots), as on the character: weapons and jewellery keep their look there.
     const int itemType = Data::Items::ToItemType(modelSlot);
+    const int group = Data::Items::GetItemGroup(itemType);
+    if (group < ITEM_GROUP_HELM || group > ITEM_GROUP_BOOTS)
+        return 0;
     return PickSet(g_csItemOption.GetSetsOfItem(itemType), discriminator);
 }
 
