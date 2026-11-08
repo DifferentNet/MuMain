@@ -689,6 +689,8 @@ bool CTrade::ProcessToReceiveTradeRequest(const wchar_t* pszYourID)
     };
     cfg.onPrimary = [] { SocketClient->ToGameServer()->SendTradeRequestResponse(true); };
     cfg.onCancel = [] { SocketClient->ToGameServer()->SendTradeRequestResponse(false); };
+    const int serial = ++m_nTradeRequestSerial;
+    cfg.isValid = [serial] { return g_pTrade != nullptr && g_pTrade->IsTradeRequestCurrent(serial); };
     mu::ui::window::g_pGenericConfirmDialog->Show(std::move(cfg));
 
     mu::ui::window::CInventoryCtrl::BackupPickedItem();
@@ -884,6 +886,10 @@ void CTrade::ProcessToReceiveYourConfirm(UI::Trade::PartnerConfirm state)
 
 void CTrade::ProcessToReceiveTradeExit(UI::Trade::CloseReason reason)
 {
+    // The server ended the trade or the request (the partner opened an NPC, logged out...): an
+    // unanswered request dialog for it goes away by itself.
+    ++m_nTradeRequestSerial;
+
     switch (reason)
     {
     case UI::Trade::CloseReason::Cancelled:
