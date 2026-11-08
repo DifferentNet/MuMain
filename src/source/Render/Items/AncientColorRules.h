@@ -42,6 +42,9 @@ const SetColor* FindSetColor(int set);
 // the slot of the discriminator is empty, the other number counts. 0 when there is none.
 int PickSet(const std::array<std::uint8_t, 2>& setsOfItem, int discriminator);
 
+// The ancient discriminator (0, 1 or 2) of an item's ancient byte: its low bits; the rest is the bonus level.
+int DiscriminatorOfByte(int ancientByte);
+
 // A plain piece (no ancient set) drawn in the colour of the set the character's armour shows: pieces of a model
 // whose ancient set has no such piece, so they don't stand out next to it (Grand Soul pants with Alvis armour;
 // ghinzuro 2026-11-08, option A: looks only, no stats). `itemType` is group * 512 + number. 0 when it keeps its look.

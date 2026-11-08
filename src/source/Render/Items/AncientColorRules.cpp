@@ -275,6 +275,11 @@ const SetColor* FindSetColor(int set)
     return found == SetColors.end() ? nullptr : &*found;
 }
 
+int DiscriminatorOfByte(int ancientByte)
+{
+    return ancientByte & 0x03;
+}
+
 int PickSet(const std::array<std::uint8_t, 2>& setsOfItem, int discriminator)
 {
     if (discriminator < 1 || discriminator > static_cast<int>(setsOfItem.size()))
