@@ -60,6 +60,17 @@ TEST_CASE("the set follows the discriminator, or the other slot when its own is 
     CHECK(PickSet({Kantata, Rave}, 3) == 0);
 }
 
+TEST_CASE("an item's ancient byte gives its discriminator without the bonus level")
+{
+    CHECK(DiscriminatorOfByte(0) == 0);
+    CHECK(DiscriminatorOfByte(1) == 1);
+    CHECK(DiscriminatorOfByte(2) == 2);
+    CHECK(DiscriminatorOfByte(1 | (1 << 2)) == 1);
+    CHECK(DiscriminatorOfByte(2 | (2 << 2)) == 2);
+    CHECK(DiscriminatorOfByte(1 << 2) == 0);
+    CHECK(PickSet({Kantata, Rave}, DiscriminatorOfByte(2 | (1 << 2))) == Rave);
+}
+
 TEST_CASE("skin, hair and faces keep their look")
 {
     CHECK(KeepsTexture(L"Data\\Player\\hair_R.jpg"));

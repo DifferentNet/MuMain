@@ -20,8 +20,6 @@ namespace Render::Items::AncientColors
 {
 namespace
 {
-// The ancient discriminator is the low bits of the item's value; the rest is other options.
-constexpr int DiscriminatorMask = 0x03;
 // The cache key: the texture's number and the set.
 constexpr int SetBits = 8;
 
@@ -44,7 +42,7 @@ int OwnDiscriminator(int bodyPart, int itemType)
     if (CharacterMachine == nullptr)
         return 0;
     const ITEM& item = CharacterMachine->Equipment[EQUIPMENT_HELM + bodyPart - BODYPART_HELM];
-    return item.Type == itemType ? item.AncientDiscriminator & DiscriminatorMask : 0;
+    return item.Type == itemType ? DiscriminatorOfByte(item.AncientDiscriminator) : 0;
 }
 
 bool KeepsLook(const BMD& model, int mesh, const BITMAP_t& texture)
@@ -100,6 +98,19 @@ int SetOfBodyPart(const CHARACTER* c, int bodyPart)
     if (discriminator == 0)
         discriminator = GameLogic::AncientLook::DiscriminatorOf(std::wstring_view(c->ID), bodyPart - BODYPART_HELM);
     return discriminator == 0 ? 0 : PickSet(g_csItemOption.GetSetsOfItem(itemType), discriminator);
+}
+
+int SetOfItem(int modelSlot, int ancientDiscriminator)
+{
+    const int discriminator = DiscriminatorOfByte(ancientDiscriminator);
+    if (discriminator == 0 || !Data::Items::IsItemModelSlot(modelSlot))
+        return 0;
+    // Only armour (helms to boots), as on the character: weapons and jewellery keep their look there.
+    const int itemType = Data::Items::ToItemType(modelSlot);
+    const int group = Data::Items::GetItemGroup(itemType);
+    if (group < ITEM_GROUP_HELM || group > ITEM_GROUP_BOOTS)
+        return 0;
+    return PickSet(g_csItemOption.GetSetsOfItem(itemType), discriminator);
 }
 
 ScopedPartSet::ScopedPartSet(int set)

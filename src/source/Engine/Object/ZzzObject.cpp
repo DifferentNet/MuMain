@@ -5959,6 +5959,9 @@ void RenderItems()
                     o->Position[2] = GetWaterTerrain(o->Position[0], o->Position[1]) + 180;
                 }
 
+                // An ancient item on the ground in its set's colour (Render/Items/AncientColors.h).
+                const Render::Items::AncientColors::ScopedPartSet ancientSet(
+                    Render::Items::AncientColors::SetOfItem(o->Type, Items[i].Item.AncientDiscriminator));
                 RenderPartObject(o, o->Type, NULL, Light, o->Alpha, Items[i].Item.Level, Items[i].Item.ExcellentFlags, Items[i].Item.AncientDiscriminator, true, true, true);
                 VectorCopy(vBackup, o->Position);
 

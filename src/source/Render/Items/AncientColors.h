@@ -18,6 +18,10 @@ namespace Render::Items::AncientColors
 // equipment, the others' from the server's line (GameLogic/Items/AncientLook.h). 0 when none or not known yet.
 int SetOfBodyPart(const CHARACTER* c, int bodyPart);
 
+// The ancient set of an item drawn on its own (a window's preview, an item on the ground), from its model slot and
+// its ancient byte. 0 when none.
+int SetOfItem(int modelSlot, int ancientDiscriminator);
+
 // While alive, the body part RenderCharacter draws belongs to this set (0: none).
 class ScopedPartSet
 {

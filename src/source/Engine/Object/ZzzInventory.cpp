@@ -40,6 +40,7 @@
 #include "GameLogic/Events/SeasonMarks.h"
 #include "GameLogic/Items/ItemLevelBonus.h"
 #include "GameLogic/Items/ItemCombatPower.h"
+#include "Render/Items/AncientColors.h"
 #include "Render/Items/ItemDisplay.h"
 #include "Data/GameData/ItemData/ItemModelSlots.h"
 #include "UI/Scaling/UITransform.h"
@@ -6785,6 +6786,7 @@ void RenderObjectScreen(int Type, int ItemLevel, int excellentFlags, int ancient
     else
         VectorMA(MousePosition, 0.1f, Direction, Position);
 
+    const int itemModel = Type;
     Type = Render::Items::Display::GetDrawnModel(Type, Level);
 
     const Render::Items::Display::InventoryDisplay display = Render::Items::Display::GetInventoryDisplay(Type);
@@ -6841,6 +6843,9 @@ void RenderObjectScreen(int Type, int ItemLevel, int excellentFlags, int ancient
 
     Vector(1.f, 1.f, 1.f, Light);
 
+    // An ancient item in a window in its set's colour, as on the character (Render/Items/AncientColors.h).
+    const Render::Items::AncientColors::ScopedPartSet ancientSet(
+        Render::Items::AncientColors::SetOfItem(itemModel, ancientDiscriminator));
     RenderPartObject(o, Type, NULL, Light, alpha, ItemLevel, excellentFlags, ancientDiscriminator, true, true, true);
 }
 
