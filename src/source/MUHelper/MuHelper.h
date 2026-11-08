@@ -88,6 +88,7 @@ namespace MUHelper
 		// GameLogic/Automation/TargetPriority.h), within the hunting range of the hero, or of the start spot when
 		// standing still; -1 when there is none. Remembered in m_iStrongTarget.
 		int UpdateStrongTarget(bool bNearSpot);
+		bool IsFightingStrongTargetNearSpot();
 		void CleanupTargets();
 		int ComputeDistanceByRange(int iRange);
 		int ComputeDistanceFromTarget(CHARACTER* pTarget);

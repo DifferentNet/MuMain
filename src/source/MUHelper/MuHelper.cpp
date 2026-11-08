@@ -650,6 +650,20 @@ namespace MUHelper
         return iFarthestMonsterId;
     }
 
+    bool CMuHelper::IsFightingStrongTargetNearSpot()
+    {
+        if (m_iStrongTarget == -1 || m_iCurrentTarget != m_iStrongTarget)
+        {
+            return false;
+        }
+        CHARACTER* pTarget = FindCharacterByKey(m_iStrongTarget);
+        if (pTarget == nullptr || pTarget->Dead > 0 || !pTarget->Object.Live)
+        {
+            return false;
+        }
+        return ComputeDistanceBetween({ pTarget->PositionX, pTarget->PositionY }, m_posOriginal) <= m_iHuntingDistance;
+    }
+
     int CMuHelper::UpdateStrongTarget(bool bNearSpot)
     {
         m_iStrongTarget = -1;
@@ -1782,6 +1796,15 @@ namespace MUHelper
         using GameLogic::Automation::MoveResult;
 
         if (!m_config.bReturnToOriginalPosition || m_iSecondsAway <= m_config.iMaxSecondsAway)
+        {
+            m_regroupSince = {};
+            return 1;
+        }
+
+        // A boss fight lasts longer than the time away: walking back to the spot mid-fight and out again every
+        // few seconds was the Kalima trouble "Strong monsters first" is for. The strong target stands within
+        // the hunting range of the spot, so the hero stays on it and goes back after it dies.
+        if (IsFightingStrongTargetNearSpot())
         {
             m_regroupSince = {};
             return 1;
