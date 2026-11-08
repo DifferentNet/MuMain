@@ -109,3 +109,34 @@ TEST_CASE("a name an older client saved in the PC code page loads as the older c
     // Saved again it is UTF-8 and loads the same.
     CHECK(RoundTrip(out).aExtraItems.contains(std::wstring(expected)));
 }
+
+TEST_CASE("the strong monsters first switch is on by default, survives a save and load and leaves its neighbours alone [ui][muhelper]")
+{
+    CHECK(ConfigData{}.bStrongTargetFirst);
+
+    ConfigData c;
+    c.bPickQuestItems = true;
+    c.bPickContainers = false;
+    c.bStrongTargetFirst = true;
+    ConfigData out = RoundTrip(c);
+    CHECK(out.bStrongTargetFirst);
+    CHECK(out.bPickQuestItems);
+    CHECK_FALSE(out.bPickContainers);
+
+    c.bStrongTargetFirst = false;
+    c.bPickQuestItems = false;
+    c.bPickContainers = true;
+    out = RoundTrip(c);
+    CHECK_FALSE(out.bStrongTargetFirst);
+    CHECK_FALSE(out.bPickQuestItems);
+    CHECK(out.bPickContainers);
+}
+
+TEST_CASE("a blob of zeros, as an older client saved it, reads as strong monsters first on [ui][muhelper]")
+{
+    PRECEIVE_MUHELPER_DATA packet{};
+    ConfigData out;
+    out.bStrongTargetFirst = false;
+    ConfigDataSerDe::Deserialize(packet, out);
+    CHECK(out.bStrongTargetFirst);
+}

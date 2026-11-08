@@ -52,6 +52,7 @@
 					<div class="mhc-content">
 						<div id="cb_long_distance" class="mh-check" data-event-click="muhelper_toggle('long_distance')"><div class="checkbox-box modern-checkbox-px" data-class-checked="checks.long_distance"></div><span class="mh-text checkbox-label">{{labels.long_distance}}</span></div>
 						<div class="mhc-wrap"><div id="cb_orig_position" class="mh-check" data-event-click="muhelper_toggle('orig_position')"><div class="checkbox-box modern-checkbox-px" data-class-checked="checks.orig_position"></div><span class="mh-text checkbox-label">{{labels.orig_position}}</span></div><div class="mhc-inline"><span id="distance_label" class="mh-text">{{labels.distance}}</span><div class="mhc-number"><div id="distance_plate" class="mh-number-plate"></div><input id="distance_time" type="text" class="text-field text-field--numeric mh-field" data-value="distance_time"/></div><span id="distance_unit" class="mh-text">{{labels.seconds}}</span></div></div>
+						<div id="cb_strong_first" class="mh-check" data-event-click="muhelper_toggle('strong_first')"><div class="checkbox-box modern-checkbox-px" data-class-checked="checks.strong_first"></div><span class="mh-text checkbox-label">{{labels.strong_first}}</span></div>
 					</div>
 				</div>
 				<div id="box_h_skills" class="mh-box mhc-group mhc-skills"><div class="b b-fill"></div>
