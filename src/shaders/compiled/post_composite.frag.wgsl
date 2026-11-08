@@ -540,56 +540,59 @@ fn u0040_main_u0028_struct_u002d_FSInput_u002d_vf4_u002d_vf21_u003b(input: ptr<f
     let _e63 = uv_4;
     let _e64 = textureSampleLevel(scene, sceneSampler, _e63, 0f);
     color_3 = _e64;
+    smoothed = false;
     let _e66 = unnamed.fxaa;
-    let _e68 = uv_4;
-    param_24 = _e68;
-    let _e69 = color_3;
-    param_25 = _e69.xyz;
-    let _e71 = Fxaa_u0028_vf2_u003b_vf3_u003b((&param_24), (&param_25));
-    let _e72 = param_25;
-    color_3[0u] = _e72.x;
-    color_3[1u] = _e72.y;
-    color_3[2u] = _e72.z;
-    smoothed = ((_e66 > 0.5f) && _e71);
-    let _e81 = unnamed.sharpen;
-    let _e83 = smoothed;
-    if ((_e81 > 0f) && !(_e83)) {
-        let _e86 = uv_4;
-        param_26 = _e86;
-        let _e87 = color_3;
-        param_27 = _e87.xyz;
-        let _e89 = Sharpen_u0028_vf2_u003b_vf3_u003b((&param_26), (&param_27));
-        color_3[0u] = _e89.x;
-        color_3[1u] = _e89.y;
-        color_3[2u] = _e89.z;
+    if (_e66 > 0.5f) {
+        let _e68 = uv_4;
+        param_24 = _e68;
+        let _e69 = color_3;
+        param_25 = _e69.xyz;
+        let _e71 = Fxaa_u0028_vf2_u003b_vf3_u003b((&param_24), (&param_25));
+        let _e72 = param_25;
+        color_3[0u] = _e72.x;
+        color_3[1u] = _e72.y;
+        color_3[2u] = _e72.z;
+        smoothed = _e71;
     }
-    let _e97 = unnamed.bloomScale;
-    if (_e97 > 0f) {
-        let _e99 = uv_4;
-        let _e100 = textureSample(bloom, bloomSampler, _e99);
-        let _e103 = unnamed.bloomScale;
-        glow = clamp((_e100.xyz * _e103), vec3(0f), vec3(1f));
-        let _e108 = color_3;
-        let _e112 = glow;
-        let _e117 = (vec3(1f) - ((vec3(1f) - _e108.xyz) * (vec3(1f) - _e112)));
-        color_3[0u] = _e117.x;
-        color_3[1u] = _e117.y;
-        color_3[2u] = _e117.z;
+    let _e80 = unnamed.sharpen;
+    let _e82 = smoothed;
+    if ((_e80 > 0f) && !(_e82)) {
+        let _e85 = uv_4;
+        param_26 = _e85;
+        let _e86 = color_3;
+        param_27 = _e86.xyz;
+        let _e88 = Sharpen_u0028_vf2_u003b_vf3_u003b((&param_26), (&param_27));
+        color_3[0u] = _e88.x;
+        color_3[1u] = _e88.y;
+        color_3[2u] = _e88.z;
     }
-    let _e125 = unnamed.gradingStrength;
-    if (_e125 > 0f) {
-        let _e127 = color_3;
-        let _e129 = color_3;
-        param_28 = _e129.xyz;
-        let _e131 = Grade_u0028_vf3_u003b((&param_28));
-        let _e133 = unnamed.gradingStrength;
-        let _e135 = mix(_e127.xyz, _e131, vec3(_e133));
-        color_3[0u] = _e135.x;
-        color_3[1u] = _e135.y;
-        color_3[2u] = _e135.z;
+    let _e96 = unnamed.bloomScale;
+    if (_e96 > 0f) {
+        let _e98 = uv_4;
+        let _e99 = textureSample(bloom, bloomSampler, _e98);
+        let _e102 = unnamed.bloomScale;
+        glow = clamp((_e99.xyz * _e102), vec3(0f), vec3(1f));
+        let _e107 = color_3;
+        let _e111 = glow;
+        let _e116 = (vec3(1f) - ((vec3(1f) - _e107.xyz) * (vec3(1f) - _e111)));
+        color_3[0u] = _e116.x;
+        color_3[1u] = _e116.y;
+        color_3[2u] = _e116.z;
     }
-    let _e142 = color_3;
-    return _e142;
+    let _e124 = unnamed.gradingStrength;
+    if (_e124 > 0f) {
+        let _e126 = color_3;
+        let _e128 = color_3;
+        param_28 = _e128.xyz;
+        let _e130 = Grade_u0028_vf3_u003b((&param_28));
+        let _e132 = unnamed.gradingStrength;
+        let _e134 = mix(_e126.xyz, _e130, vec3(_e132));
+        color_3[0u] = _e134.x;
+        color_3[1u] = _e134.y;
+        color_3[2u] = _e134.z;
+    }
+    let _e141 = color_3;
+    return _e141;
 }
 
 fn main_1() {

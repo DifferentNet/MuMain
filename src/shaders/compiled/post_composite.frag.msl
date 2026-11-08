@@ -60,7 +60,7 @@ struct CompositeUniforms
     float2 padding;
 };
 
-constant spvUnsafeArray<float, 8> _609 = spvUnsafeArray<float, 8>({ 1.0, 1.5, 2.0, 2.0, 2.0, 2.0, 4.0, 8.0 });
+constant spvUnsafeArray<float, 8> _610 = spvUnsafeArray<float, 8>({ 1.0, 1.5, 2.0, 2.0, 2.0, 2.0, 4.0, 8.0 });
 
 struct main0_out
 {
@@ -154,14 +154,14 @@ bool Fxaa(thread const float2& uv, thread float3& color, constant CompositeUnifo
     {
         if (!positiveEnd)
         {
-            positiveUv += (along * _609[i]);
+            positiveUv += (along * _610[i]);
             float2 param_11 = positiveUv;
             positiveDelta = LumaAt(param_11, scene, sceneSampler) - edgeLuma;
             positiveEnd = abs(positiveDelta) >= threshold;
         }
         if (!negativeEnd)
         {
-            negativeUv -= (along * _609[i]);
+            negativeUv -= (along * _610[i]);
             float2 param_12 = negativeUv;
             negativeDelta = LumaAt(param_12, scene, sceneSampler) - edgeLuma;
             negativeEnd = abs(negativeDelta) >= threshold;
@@ -230,39 +230,43 @@ float4 _main(thread const FSInput& _input, constant CompositeUniforms& _54, text
 {
     float2 uv = _input.pos.xy * _54.inverseTargetSize;
     float4 color = scene.sample(sceneSampler, uv, level(0.0));
-    float2 param = uv;
-    float3 param_1 = color.xyz;
-    bool _86 = Fxaa(param, param_1, _54, scene, sceneSampler);
-    color.x = param_1.x;
-    color.y = param_1.y;
-    color.z = param_1.z;
-    bool smoothed = (_54.fxaa > 0.5) && _86;
+    bool smoothed = false;
+    if (_54.fxaa > 0.5)
+    {
+        float2 param = uv;
+        float3 param_1 = color.xyz;
+        bool _89 = Fxaa(param, param_1, _54, scene, sceneSampler);
+        color.x = param_1.x;
+        color.y = param_1.y;
+        color.z = param_1.z;
+        smoothed = _89;
+    }
     if ((_54.sharpen > 0.0) && (!smoothed))
     {
         float2 param_2 = uv;
         float3 param_3 = color.xyz;
-        float3 _114 = Sharpen(param_2, param_3, _54, scene, sceneSampler);
-        color.x = _114.x;
-        color.y = _114.y;
-        color.z = _114.z;
+        float3 _116 = Sharpen(param_2, param_3, _54, scene, sceneSampler);
+        color.x = _116.x;
+        color.y = _116.y;
+        color.z = _116.z;
     }
     if (_54.bloomScale > 0.0)
     {
         float3 glow = fast::clamp(bloom.sample(bloomSampler, uv).xyz * _54.bloomScale, float3(0.0), float3(1.0));
-        float4 _143 = color;
-        float3 _152 = float3(1.0) - ((float3(1.0) - _143.xyz) * (float3(1.0) - glow));
-        color.x = _152.x;
-        color.y = _152.y;
-        color.z = _152.z;
+        float4 _145 = color;
+        float3 _154 = float3(1.0) - ((float3(1.0) - _145.xyz) * (float3(1.0) - glow));
+        color.x = _154.x;
+        color.y = _154.y;
+        color.z = _154.z;
     }
     if (_54.gradingStrength > 0.0)
     {
-        float4 _165 = color;
+        float4 _167 = color;
         float3 param_4 = color.xyz;
-        float3 _174 = mix(_165.xyz, Grade(param_4, grading, gradingSampler), float3(_54.gradingStrength));
-        color.x = _174.x;
-        color.y = _174.y;
-        color.z = _174.z;
+        float3 _176 = mix(_167.xyz, Grade(param_4, grading, gradingSampler), float3(_54.gradingStrength));
+        color.x = _176.x;
+        color.y = _176.y;
+        color.z = _176.z;
     }
     return color;
 }

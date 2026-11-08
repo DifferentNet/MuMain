@@ -37,8 +37,13 @@ float4 main(FSInput input) : SV_Target
 {
     const float2 uv = input.pos.xy * inverseTargetSize;
     float4 color = scene.SampleLevel(sceneSampler, uv, 0.0);
-    // Sharpening is skipped on the edges FXAA smoothed: it would undo them.
-    const bool smoothed = fxaa > 0.5 && Fxaa(uv, color.rgb);
+    // Sharpening is skipped on the edges FXAA smoothed: it would undo them. An explicit if, not &&:
+    // glslang's HLSL front end evaluates both sides of &&, so FXAA would run with the setting off.
+    bool smoothed = false;
+    if (fxaa > 0.5)
+    {
+        smoothed = Fxaa(uv, color.rgb);
+    }
     if (sharpen > 0.0 && !smoothed)
     {
         color.rgb = Sharpen(uv, color.rgb);
