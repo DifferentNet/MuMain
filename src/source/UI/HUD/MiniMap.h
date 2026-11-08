@@ -54,6 +54,9 @@ private:
     void SyncMap();
     void SyncHint();
     void SyncClips();
+    // MU Moldova: the live event monsters (UI/HUD/MiniMapLive.h); their names join the boss labels.
+    void SyncLive(const UI::MiniMap::Screen& screen, float heroX, float heroY, float length,
+                  std::vector<MiniMapLabelEntry>& labels);
 
     CManager* m_pNewUIMng;
     MINI_MAP m_Mini_Map_Data[MAX_MINI_MAP_DATA];
@@ -67,6 +70,15 @@ private:
         [this](Rml::DataModelConstructor& c, MiniMapRmlModel& model) { BindRmlModel(c, model); },
         {{"Data/Interface/RmlUi/mini_map.rml"}}};
     bool m_PendingClose = false;
+    // The map showed last frame: the live monster list is asked while it does and dropped when it closes.
+    bool m_WasVisible = false;
+    // The live markers' hint boxes (reference units, as m_Btn_Loc) and texts.
+    struct LiveHint
+    {
+        float box[4];
+        std::wstring text;
+    };
+    std::vector<LiveHint> m_LiveHints;
     // The screen the border tiles' matrices were built for (SyncScreen()).
     UI::MiniMap::Screen m_SideLinesScreen;
 };

@@ -28,9 +28,20 @@
 				<div class="dim"></div>
 			</div>
 			<img class="map" data-attr-src="map_source" data-style-transform="map_transform"/>
-			<div class="marker" data-for="marker : markers" data-class-portal="marker.portal" data-class-monster="marker.monster"
+			<div class="marker" data-for="marker : markers" data-class-portal="marker.portal" data-class-monster="marker.monster" data-class-boss="marker.boss"
 			     data-style-width="marker.size + 'px'" data-style-height="marker.size + 'px'"
 			     data-style-transform="marker.transform"></div>
+			<!-- MU Moldova: live event monsters (/mmlive): a circle around the square each is in, its icon in the middle. -->
+			<div class="live-area" data-for="live : lives" data-class-gold="live.gold" data-class-wizard="live.wizard" data-class-wboss="live.wboss"
+			     data-style-left="live.area_left + 'px'" data-style-top="live.area_top + 'px'"
+			     data-style-width="live.area_size + 'px'" data-style-height="live.area_size + 'px'"
+			     data-style-border-radius="(live.area_size / 2) + 'px'"></div>
+			<div class="live-icon" data-for="live : lives" data-class-gold="live.gold" data-class-wizard="live.wizard" data-class-wboss="live.wboss"
+			     data-style-left="live.left + 'px'" data-style-top="live.top + 'px'"
+			     data-style-width="live.size + 'px'" data-style-height="live.size + 'px'"></div>
+			<!-- MU Moldova: a boss's name under its skull, always shown. -->
+			<div class="boss-label" data-for="label : labels" data-style-left="label.left + 'px'" data-style-top="label.top + 'px'"
+			     data-style-font-size="text_px + 'px'">{{label.text}}</div>
 			<div class="screen">
 				<div class="hero"></div>
 				<!-- The top and bottom edge tiling: 25 fixed 35-unit tiles each, which the theme
