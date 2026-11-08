@@ -15859,6 +15859,30 @@
   <data name="JewelOfAncientDescHigh" xml:space="preserve">
     <value>+14, +15: ещё excellent-вещь (3+ опции).</value>
   </data>
+  <data name="GraphicsPresetRow" xml:space="preserve">
+    <value>Пресет графики</value>
+  </data>
+  <data name="GraphicsPresetLow" xml:space="preserve">
+    <value>Низкий</value>
+  </data>
+  <data name="GraphicsPresetMedium" xml:space="preserve">
+    <value>Средний</value>
+  </data>
+  <data name="GraphicsPresetHigh" xml:space="preserve">
+    <value>Высокий</value>
+  </data>
+  <data name="GraphicsPresetUltra" xml:space="preserve">
+    <value>Ультра</value>
+  </data>
+  <data name="GraphicsPresetCustom" xml:space="preserve">
+    <value>Свой</value>
+  </data>
+  <data name="FxaaRow" xml:space="preserve">
+    <value>FXAA</value>
+  </data>
+  <data name="SharpenRow" xml:space="preserve">
+    <value>Резкость</value>
+  </data>
   <data name="HdTexturesRow" xml:space="preserve">
     <value>HD-текстуры (после перезапуска)</value>
   </data>
