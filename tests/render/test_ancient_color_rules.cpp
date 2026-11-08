@@ -120,3 +120,12 @@ TEST_CASE("accent moves only the model's main colour; gold trims and silver stay
     const std::array<std::uint8_t, 4> silver{180, 180, 185, 255};
     CHECK(RecolorOne(silver, Tyr) == silver);
 }
+
+TEST_CASE("plain Grand Soul pants take Alvis's colour, nothing else borrows")
+{
+    constexpr int GrandSoulPants = 9 * 512 + 18;
+    CHECK(BorrowedSet(GrandSoulPants, 55) == 55);
+    CHECK(BorrowedSet(GrandSoulPants, 0) == 0);
+    CHECK(BorrowedSet(GrandSoulPants, 57) == 0);
+    CHECK(BorrowedSet(9 * 512 + 17, 55) == 0);
+}
