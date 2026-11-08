@@ -84,7 +84,7 @@
 			<div id="gauge_potion" class="level-gauge mh-gauge">
 				<div class="level-gauge-hit mh-gauge-hit" data-event-mousedown="muhelper_detail_gauge(0)"
 				     data-event-drag="muhelper_detail_gauge(0)"
-				     data-event-mousescroll="muhelper_detail_gauge(0)"></div>
+				     data-event-mousescroll="muhelper_detail_gauge(0)" data-event-keydown="muhelper_detail_gauge(0)"></div>
 			</div>
 			<div id="gauge_potion_fill" class="level-gauge-fill mh-gauge-fill" data-class-hidden="potion_level == 0"
 			     data-style-width="(potion_level * 12.4) + 'px'"></div>
@@ -93,7 +93,7 @@
 			<div id="gauge_mana" class="level-gauge mh-gauge">
 				<div class="level-gauge-hit mh-gauge-hit" data-event-mousedown="muhelper_detail_gauge(3)"
 				     data-event-drag="muhelper_detail_gauge(3)"
-				     data-event-mousescroll="muhelper_detail_gauge(3)"></div>
+				     data-event-mousescroll="muhelper_detail_gauge(3)" data-event-keydown="muhelper_detail_gauge(3)"></div>
 			</div>
 			<div id="gauge_mana_fill" class="level-gauge-fill mh-gauge-fill" data-class-hidden="mana_potion_level == 0"
 			     data-style-width="(mana_potion_level * 12.4) + 'px'"></div>
@@ -103,7 +103,7 @@
 			<div id="gauge_heal" class="level-gauge mh-gauge">
 				<div class="level-gauge-hit mh-gauge-hit" data-event-mousedown="muhelper_detail_gauge(1)"
 				     data-event-drag="muhelper_detail_gauge(1)"
-				     data-event-mousescroll="muhelper_detail_gauge(1)"></div>
+				     data-event-mousescroll="muhelper_detail_gauge(1)" data-event-keydown="muhelper_detail_gauge(1)"></div>
 			</div>
 			<div id="gauge_heal_fill" class="level-gauge-fill mh-gauge-fill" data-class-hidden="heal_level == 0"
 			     data-style-width="(heal_level * 12.4) + 'px'"></div>
@@ -132,7 +132,7 @@
 			<div id="gauge_party_heal" class="level-gauge mh-gauge">
 				<div class="level-gauge-hit mh-gauge-hit" data-event-mousedown="muhelper_detail_gauge(2)"
 				     data-event-drag="muhelper_detail_gauge(2)"
-				     data-event-mousescroll="muhelper_detail_gauge(2)"></div>
+				     data-event-mousescroll="muhelper_detail_gauge(2)" data-event-keydown="muhelper_detail_gauge(2)"></div>
 			</div>
 			<div id="gauge_party_heal_fill" class="level-gauge-fill mh-gauge-fill" data-class-hidden="party_heal_level == 0"
 			     data-style-width="(party_heal_level * 12.4) + 'px'"></div>

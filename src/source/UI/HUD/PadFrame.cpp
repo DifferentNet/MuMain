@@ -62,6 +62,7 @@ struct State
     bool onGoods = false;
     bool onMixItem = false;
     bool onEmptyCell = false;
+    bool onGauge = false;
     Pick::Box box;
     // The frame's target went away (a card opened over it, a dialog closed): it moves on a frame later,
     // with A up, so the release that closed a dialog does not land on the next target (the game reads
@@ -296,7 +297,10 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
     for (const Pad::Button button : {Pad::Button::DpadUp, Pad::Button::DpadDown, Pad::Button::DpadLeft,
                                      Pad::Button::DpadRight})
         presses[static_cast<int>(button)] = false;
-    if (step.dx != 0 || step.dy != 0)
+    // On a slider the d-pad's sides change it; up and down leave it.
+    if (step.dx != 0 && step.dy == 0 && current != Pick::None && targets[current].gauge)
+        PadTargets::StepGauge(current, step.dx);
+    else if (step.dx != 0 || step.dy != 0)
         Hop(window, targets, current, step, scale);
     if (step.dx != 0 || step.dy != 0 || g_state.stickPushed)
         g_state.newWindowPending = false;
@@ -318,6 +322,7 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
     g_state.onGoods = g_state.onItemPlace && UI::HUD::PadTargets::IsIn(targets[current], ShopDocument);
     g_state.onMixItem = g_state.onItemPlace && UI::HUD::PadTargets::IsIn(targets[current], MixDocument);
     g_state.onEmptyCell = g_state.onTarget && targets[current].empty;
+    g_state.onGauge = g_state.onTarget && g_state.placed && targets[current].gauge;
     if (g_state.onTarget)
         g_state.box = targets[current].box;
     if (g_state.onTarget && !onDialog)
@@ -356,6 +361,7 @@ void Reset()
     g_state.onGoods = false;
     g_state.onMixItem = false;
     g_state.onEmptyCell = false;
+    g_state.onGauge = false;
     g_state.stickPushed = false;
     g_state.lostFrames = 0;
     g_state.onDialog = false;
@@ -397,5 +403,10 @@ bool OnMixItem()
 bool OnEmptyCell()
 {
     return g_state.onEmptyCell;
+}
+
+bool OnGauge()
+{
+    return g_state.onGauge;
 }
 } // namespace UI::HUD::PadFrame

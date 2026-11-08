@@ -43,6 +43,8 @@ constexpr float ScreenMessageBoxDepth = 31.f;
 constexpr std::array<const char*, 2> PlacedRoots = {"panel", "content_root"};
 constexpr const char* PlacedClass = "slot-placed";
 constexpr const char* CellClass = "item-cell";
+// A level gauge's hit strip (RmlLevelGauge): it takes drags, not clicks, and the arrow keys.
+constexpr const char* GaugeClass = "level-gauge-hit";
 constexpr const char* SlotClass = "equip-slot";
 // The control a window marks for the frame to start on (PadTargetPick::Target::start).
 constexpr const char* StartClass = "pad-start";
@@ -126,7 +128,7 @@ bool IsTarget(Rml::Element& element)
 {
     if (element.GetId() == CornerCloseId)
         return false;
-    if (element.IsClassSet(CellClass) || element.IsClassSet(SlotClass))
+    if (element.IsClassSet(CellClass) || element.IsClassSet(SlotClass) || element.IsClassSet(GaugeClass))
         return true;
     const Rml::String& tag = element.GetTagName();
     if (tag == "button" || tag == "input" || tag == "select")
@@ -233,6 +235,11 @@ public:
 
     bool OnPopup() const { return m_OnPopup; }
 
+    Rml::Element* Element(int index) const
+    {
+        return index >= 0 && index < static_cast<int>(m_Elements.size()) ? m_Elements[index] : nullptr;
+    }
+
     Rml::Element* List(int index) const { return index >= 0 && index < m_ListCount ? m_Lists[index] : nullptr; }
 
     std::span<const Target> Targets() const { return m_Targets; }
@@ -259,6 +266,7 @@ private:
         target.cell = element.IsClassSet(CellClass);
         target.slot = element.IsClassSet(SlotClass);
         target.start = element.IsClassSet(StartClass);
+        target.gauge = element.IsClassSet(GaugeClass);
         target.empty = (target.cell && element.GetClassNames().find(TintPrefix) == Rml::String::npos)
                        || (target.slot && element.IsClassSet(BareSlotClass))
                        || (target.cell && element.Closest(LookOnlySelector) != nullptr);
@@ -392,6 +400,18 @@ void ScrollList(int list, int dy)
     const float most = std::max(element->GetScrollHeight() - element->GetClientHeight(), 0.f);
     const float step = element->GetClientHeight() * ListStepShare * (dy < 0 ? -1.f : 1.f);
     element->SetScrollTop(std::clamp(element->GetScrollTop() + step, 0.f, most));
+}
+
+void StepGauge(int target, int dx)
+{
+    Rml::Element* element = g_collector.Element(target);
+    if (element == nullptr || dx == 0)
+        return;
+    // A key press and its release: a settings slider previews on the press and saves on the release.
+    Rml::Dictionary parameters;
+    parameters["key_identifier"] = static_cast<int>(dx < 0 ? Rml::Input::KI_LEFT : Rml::Input::KI_RIGHT);
+    element->DispatchEvent(Rml::EventId::Keydown, parameters);
+    element->DispatchEvent(Rml::EventId::Keyup, parameters);
 }
 
 bool IsIn(const PadTargetPick::Target& target, std::string_view fileName)
