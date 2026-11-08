@@ -39,6 +39,7 @@
 #include "Render/Textures/HdTextures.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "Render/Lighting/SoftShadowSetting.h"
+#include "Render/Lighting/SunShadowSetting.h"
 #include "Render/Look/GraphicsPresetSetting.h"
 #include "Render/Look/LookPresetSetting.h"
 #include "Render/Look/LookProfileSetting.h"
@@ -1888,8 +1889,11 @@ static void MuWebStartAtPageSize()
 namespace
 {
 // Options' six effect and shadow settings (Graphics tab), one bit each in this order: set = off.
+// Above them, two bits hold the Sun shadows level (0 off, 1 medium, 2 high).
 constexpr int kEffectSettingCount = 6;
-constexpr int kAllEffectSettingsOff = (1 << kEffectSettingCount) - 1;
+constexpr int kAllEffectSettingsOff = (1 << kEffectSettingCount) - 1; // sun shadows off too
+constexpr int kSunShadowsShift = kEffectSettingCount;
+constexpr int kSunShadowsMask = 3;
 
 int EffectSettingBits()
 {
@@ -1903,7 +1907,7 @@ int EffectSettingBits()
         if (off[i])
             bits |= 1 << i;
     }
-    return bits;
+    return bits | (cfg.GetSunShadows() << kSunShadowsShift);
 }
 
 // Sets, applies and saves them, as their checkboxes in Options do.
@@ -1917,6 +1921,7 @@ void ApplyEffectSettingBits(int bits)
     cfg.SetDisableBoids(off(3));
     cfg.SetDisableWingShadow(off(4));
     cfg.SetDisableBodyShadows(off(5));
+    cfg.SetSunShadows((bits >> kSunShadowsShift) & kSunShadowsMask);
     cfg.Save();
     SetDisableEffects(off(0));
     SetDisableParticles(off(1));
@@ -1924,11 +1929,12 @@ void ApplyEffectSettingBits(int bits)
     SetDisableBoids(off(3));
     SetDisableWingShadow(off(4));
     SetDisableBodyShadows(off(5));
+    Render::Lighting::SunShadow::SetLevel(cfg.GetSunShadows());
 }
 } // namespace
 
 // Browser build, once a frame: the footer's Quality "Lowest" (index.html) turns every effect and
-// shadow off, keeping the player's own settings on the page; another quality brings them back.
+// shadow off (sun shadows too), keeping the player's own settings on the page; another quality brings them back.
 // Options can still change them meanwhile, and a later visit at Lowest keeps those changes.
 static void MuWebFollowLowestQuality()
 {
