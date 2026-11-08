@@ -13561,4 +13561,7 @@
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Lege zuerst den dort getragenen Gegenstand ab</value>
   </data>
+  <data name="SoftShadowsRow" xml:space="preserve">
+    <value>Weiche Schatten</value>
+  </data>
 </root>

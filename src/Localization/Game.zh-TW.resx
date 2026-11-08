@@ -13463,4 +13463,7 @@
   <data name="PadSlotTaken" xml:space="preserve">
     <value>請先卸下該處穿戴的物品</value>
   </data>
+  <data name="SoftShadowsRow" xml:space="preserve">
+    <value>柔和陰影</value>
+  </data>
 </root>

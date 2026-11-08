@@ -99,6 +99,10 @@ window writes to these sections:
     greyed out: Disable Effects covers skill effects and wildlife; without
     Render full effects, or with Disable Shadows, no wing shadow is drawn
     (and without full effects no shadow at all).
+  - `SoftShadows` (default `1`): the Soft shadows row under Shadows, browser
+    build only (the desktop hides it). Blurs the body shadows; greyed out and
+    off when no body shadow is drawn. `$softshadow <strength%> <levels>` tunes
+    it for the session (0.65 and 1 by default). Cape and cloth shadows stay hard.
 
   Set by hand only, never written by the game:
   - `Backend` (`default`/`vulkan`/`direct3d12`/`metal`, case-insensitive,

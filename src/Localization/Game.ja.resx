@@ -11538,4 +11538,7 @@
   <data name="PadSlotTaken" xml:space="preserve">
     <value>先にそこに装備しているアイテムを外してください</value>
   </data>
+  <data name="SoftShadowsRow" xml:space="preserve">
+    <value>ソフトシャドウ</value>
+  </data>
 </root>

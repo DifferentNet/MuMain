@@ -13463,4 +13463,7 @@
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Tire primeiro o item usado ali</value>
   </data>
+  <data name="SoftShadowsRow" xml:space="preserve">
+    <value>Sombras suaves</value>
+  </data>
 </root>

@@ -13463,4 +13463,7 @@
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Спершу зніми предмет, одягнений там</value>
   </data>
+  <data name="SoftShadowsRow" xml:space="preserve">
+    <value>М’які тіні</value>
+  </data>
 </root>
