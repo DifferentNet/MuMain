@@ -15371,6 +15371,9 @@
   <data name="TouchAuto" xml:space="preserve">
     <value>Auto</value>
   </data>
+  <data name="TouchNextTarget" xml:space="preserve">
+    <value>Target</value>
+  </data>
   <data name="TouchMenu" xml:space="preserve">
     <value>Menu</value>
   </data>
@@ -15523,6 +15526,12 @@
   </data>
   <data name="TouchHelpAuto" xml:space="preserve">
     <value>Auto: MU Helper on and off; walking with the stick moves where it hunts</value>
+  </data>
+  <data name="TouchHelpTarget" xml:space="preserve">
+    <value>Target: switch to the next monster by distance; the one Attack will hit is highlighted</value>
+  </data>
+  <data name="TouchHelpNova" xml:space="preserve">
+    <value>Nova: hold its button to charge, let go to cast (it goes off by itself after 5 seconds)</value>
   </data>
   <data name="TouchHelpPotions" xml:space="preserve">
     <value>Q and W: drink the potions</value>

@@ -47,6 +47,7 @@
 #include "Render/Renderer/MuRenderer.h"
 #include "GameLogic/Items/ItemCategories.h"
 #include "GameLogic/Events/SeasonMarks.h"
+#include "Render/Items/AncientColors.h"
 #include "Render/Items/ItemDisplay.h"
 #include "Render/Items/ItemGlow.h"
 #include "Render/Items/ItemEffects.h"
@@ -6025,6 +6026,11 @@ void PartObjectColor2(int Type, float Alpha, float Bright, vec3_t Light, bool Ex
 
 void PartObjectColor3(int Type, float Alpha, float Bright, vec3_t Light, bool ExtraMon)
 {
+    // The pulse of ancient armour takes its set's colour (Render/Items/AncientColors.h).
+    if (Render::Items::AncientColors::PulseColor(Light))
+    {
+        return;
+    }
     const Render::Items::Glow::Color& color = Render::Items::Glow::GetColors(Type).ancientColor;
     Vector(color[0], color[1], color[2], Light);
 }
@@ -7247,6 +7253,8 @@ void RenderPartObject(OBJECT* o, int Type, void* p2, vec3_t Light, float Alpha, 
     Type = Render::Items::Display::GetDrawnModel(Type, ItemLevel);
 
     BMD* b = &Models[Type];
+    // An ancient body part draws its armour in its set's colour (Render/Items/AncientColors.h).
+    const Render::Items::AncientColors::ScopedSetTextures ancientTextures(b);
     b->HideSkin = HideSkin;
     b->BodyScale = o->Scale;
     b->ContrastEnable = o->ContrastEnable;
