@@ -833,6 +833,9 @@ struct RenderCmd
     SDL_GPUGraphicsPipeline* pipeline;
     SDL_GPUTexture* texture;
     SDL_GPUSampler* sampler;
+    // A lit skinned draw's normal map (Render/Textures/NormalMaps.h), sampled through `sampler`:
+    // the texture's own or the flat one; null for every other draw (desktop only).
+    SDL_GPUTexture* normalMap = nullptr;
     SDL_GPUBuffer* vtxBuffer = nullptr; // null: the frame's s_vtxGpuBuf
     Uint32 vtxOffset;      // in bytes, a multiple of vtxStride
     Uint32 vtxStride;
@@ -1240,6 +1243,17 @@ static void ReplayDrawCommand(const RenderCmd& command, SDL_GPUGraphicsPipeline*
     }
 
     BindReplayFragmentSampler(command, state);
+    if (command.normalMap)
+    {
+        // skinned_lit.frag reads it at slot 1; its sun-shadowed twin keeps the shadow map there.
+        const Uint32 slot = sunShadowed ? 2u : 1u;
+        if (state.SelectNormalMap(slot, command.normalMap, command.sampler))
+        {
+            const SDL_GPUTextureSamplerBinding normalBinding{command.normalMap, command.sampler};
+            SDL_BindGPUFragmentSamplers(s_renderPass, slot, &normalBinding, 1);
+            ++s_dbgSamplerBindsThisFrame;
+        }
+    }
     PushReplayFragmentUniforms(command.fogUniform, state);
     if (skinned && !shadow)
         SelectSceneLightingBlock(command.itemPreviewLighting);
@@ -1274,6 +1288,10 @@ static std::vector<TextureUpdateCmd> s_textureUpdates;
 
 // Default white 1×1 texture used for textureId==0 and unknown IDs.
 static SDL_GPUTexture* s_whiteTexture = nullptr;
+// 1x1 flat normal map (128, 128, 255): bound for lit skinned draws whose texture has no map.
+static SDL_GPUTexture* s_flatNormalMap = nullptr;
+// The Remaster's normal maps by texture id (Render/Textures/NormalMaps.h); owned by the bitmaps.
+static std::unordered_map<std::uint32_t, SDL_GPUTexture*> s_normalMaps;
 
 // Shader handles for basic_textured (2D path) and basic_colored — released after pipeline creation.
 static SDL_GPUShader* s_vertShader2D = nullptr;      // basic_textured.vert
@@ -1657,8 +1675,37 @@ void UnregisterTexture(std::uint32_t id)
     s_texturesInvalidated = true;
 }
 
+void RegisterNormalMap(std::uint32_t id, SDL_GPUTexture* texture)
+{
+    s_normalMaps[id] = texture;
+}
+
+void UnregisterNormalMap(std::uint32_t id)
+{
+    if (s_normalMaps.erase(id) != 0u)
+    {
+        // Recorded draws may still point at it.
+        s_texturesInvalidated = true;
+    }
+}
+
+[[nodiscard]] static SDL_GPUTexture* NormalMapForDraw(std::uint32_t textureId,
+                                                      mu::SkinningTextureCoordinates coordinates)
+{
+    if (coordinates == mu::SkinningTextureCoordinates::Mesh)
+    {
+        const auto found = s_normalMaps.find(textureId);
+        if (found != s_normalMaps.end() && found->second)
+        {
+            return found->second;
+        }
+    }
+    return s_flatNormalMap;
+}
+
 void ClearTextureRegistry()
 {
+    s_normalMaps.clear();
     const bool hadTextures = !s_textureMap.empty();
     ReleaseOwnedTextures();
     s_textureMap.clear();
@@ -2327,6 +2374,11 @@ public:
         {
             SDL_ReleaseGPUTexture(s_device, s_whiteTexture);
             s_whiteTexture = nullptr;
+        }
+        if (s_flatNormalMap)
+        {
+            SDL_ReleaseGPUTexture(s_device, s_flatNormalMap);
+            s_flatNormalMap = nullptr;
         }
 
         if (s_defaultSampler)
@@ -5431,6 +5483,12 @@ private:
         cmd.texture = texture;
         void* sampler = LookupWorldSampler(resolvedTexId, s_screenSpaceSamplingDepth > 0 && !itemPreview);
         cmd.sampler = sampler ? static_cast<SDL_GPUSampler*>(sampler) : s_defaultSampler;
+#ifndef __EMSCRIPTEN__
+        if (enhancedLit)
+        {
+            cmd.normalMap = NormalMapForDraw(resolvedTexId, parameters.textureCoordinates);
+        }
+#endif
         cmd.vtxBuffer = frameVertices ? nullptr : s_skinnedMeshBlocks[cached.block].buffer;
         cmd.vtxOffset = vtxOffset;
         cmd.vtxStride = sizeof(SkinnedVertex3D);
@@ -5647,6 +5705,7 @@ private:
         {
             RenderCmd caster = command;
             caster.sunShadowReceiver = false;
+            caster.normalMap = nullptr;
             caster.pipeline = s_sunShadowCasterPipeline;
             // An alpha-blended model lets the light through its clear texels like a cutout does; an
             // opaque one casts whole (MU armour textures often carry a zero alpha they never use).
@@ -5999,7 +6058,12 @@ private:
         s_fragShaderTexFog =
             createShader("basic_textured_fog", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 2, /*fatal=*/false);
         // skinned_lit.frag also reads the frame's point lights, DynamicLights (b2).
+#ifdef __EMSCRIPTEN__
         s_fragShaderLit = createShader("skinned_lit", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 3, /*fatal=*/false);
+#else
+        // Desktop: the texture (t0) and its normal map (t1, Render/Textures/NormalMaps.h).
+        s_fragShaderLit = createShader("skinned_lit", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 3, /*fatal=*/false);
+#endif
 #ifndef __EMSCRIPTEN__
         // Sun shadow (desktop only) — non-fatal: without them the sun shadow is unavailable.
         // basic_textured_world.vert: Transform (b0) and the draw's vertex-to-world rows (b1).
@@ -6010,7 +6074,7 @@ private:
         s_fragShaderTexFogShadow =
             createShader("basic_textured_fog_shadow", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 2, /*fatal=*/false);
         s_fragShaderLitShadow =
-            createShader("skinned_lit_shadow", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 3, /*fatal=*/false);
+            createShader("skinned_lit_shadow", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 3, 0, 3, /*fatal=*/false);
         s_fragShaderShadowCaster =
             createShader("shadow_caster", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 1, /*fatal=*/false);
 #endif
@@ -7804,9 +7868,9 @@ private:
         return true;
     }
 
-    [[nodiscard]] static bool CreateWhiteTexture()
+    [[nodiscard]] static bool CreateSolidTexture(SDL_GPUTexture*& texture, Uint32 pixel)
     {
-        // Upload a 1×1 RGBA white pixel as the default fallback texture.
+        // A 1×1 RGBA texture of one pixel (little-endian RGBA bytes).
         SDL_GPUTextureCreateInfo texInfo{};
         texInfo.type = SDL_GPU_TEXTURETYPE_2D;
         texInfo.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
@@ -7817,15 +7881,14 @@ private:
         texInfo.num_levels = 1;
         texInfo.sample_count = SDL_GPU_SAMPLECOUNT_1;
 
-        s_whiteTexture = SDL_CreateGPUTexture(s_device, &texInfo);
-        if (!s_whiteTexture)
+        texture = SDL_CreateGPUTexture(s_device, &texInfo);
+        if (!texture)
         {
-            mu::log::Get("render")->error("SDL_gpu -- white texture creation failed: {}", SDL_GetError());
+            mu::log::Get("render")->error("SDL_gpu -- solid texture creation failed: {}", SDL_GetError());
             return false;
         }
 
-        // Upload white pixel data.
-        constexpr Uint32 kWhitePixel = 0xFFFFFFFFu; // RGBA = 255,255,255,255
+        // Upload the pixel.
         constexpr Uint32 kPixelByteSize = 4u;
 
         SDL_GPUTransferBufferCreateInfo tbInfo{};
@@ -7834,9 +7897,9 @@ private:
         SDL_GPUTransferBuffer* pixelTransfer = SDL_CreateGPUTransferBuffer(s_device, &tbInfo);
         if (!pixelTransfer)
         {
-            mu::log::Get("render")->error("SDL_gpu -- white texture transfer buffer failed: {}", SDL_GetError());
-            SDL_ReleaseGPUTexture(s_device, s_whiteTexture);
-            s_whiteTexture = nullptr;
+            mu::log::Get("render")->error("SDL_gpu -- solid texture transfer buffer failed: {}", SDL_GetError());
+            SDL_ReleaseGPUTexture(s_device, texture);
+            texture = nullptr;
             return false;
         }
 
@@ -7844,19 +7907,19 @@ private:
         if (!pMapped)
         {
             SDL_ReleaseGPUTransferBuffer(s_device, pixelTransfer);
-            SDL_ReleaseGPUTexture(s_device, s_whiteTexture);
-            s_whiteTexture = nullptr;
+            SDL_ReleaseGPUTexture(s_device, texture);
+            texture = nullptr;
             return false;
         }
-        std::memcpy(pMapped, &kWhitePixel, kPixelByteSize);
+        std::memcpy(pMapped, &pixel, kPixelByteSize);
         SDL_UnmapGPUTransferBuffer(s_device, pixelTransfer);
 
         SDL_GPUCommandBuffer* uploadCmd = SDL_AcquireGPUCommandBuffer(s_device);
         if (!uploadCmd)
         {
             SDL_ReleaseGPUTransferBuffer(s_device, pixelTransfer);
-            SDL_ReleaseGPUTexture(s_device, s_whiteTexture);
-            s_whiteTexture = nullptr;
+            SDL_ReleaseGPUTexture(s_device, texture);
+            texture = nullptr;
             return false;
         }
 
@@ -7864,8 +7927,8 @@ private:
         if (!copyPass)
         {
             SDL_ReleaseGPUTransferBuffer(s_device, pixelTransfer);
-            SDL_ReleaseGPUTexture(s_device, s_whiteTexture);
-            s_whiteTexture = nullptr;
+            SDL_ReleaseGPUTexture(s_device, texture);
+            texture = nullptr;
             SDL_CancelGPUCommandBuffer(uploadCmd);
             return false;
         }
@@ -7877,7 +7940,7 @@ private:
         texTransferInfo.rows_per_layer = 1;
 
         SDL_GPUTextureRegion texRegion{};
-        texRegion.texture = s_whiteTexture;
+        texRegion.texture = texture;
         texRegion.mip_level = 0;
         texRegion.layer = 0;
         texRegion.x = 0;
@@ -7893,9 +7956,24 @@ private:
 
         SDL_ReleaseGPUTransferBuffer(s_device, pixelTransfer);
 
+        return true;
+    }
+
+    [[nodiscard]] static bool CreateWhiteTexture()
+    {
+        if (!CreateSolidTexture(s_whiteTexture, 0xFFFFFFFFu)) // RGBA = 255,255,255,255
+        {
+            return false;
+        }
         // Register the white texture as textureId=0 (sentinel for "no texture").
         RegisterTexture(0u, s_whiteTexture);
-
+#ifndef __EMSCRIPTEN__
+        // RGBA = 128,128,255,255 (little-endian): the flat normal map.
+        if (!CreateSolidTexture(s_flatNormalMap, 0xFFFF8080u))
+        {
+            return false;
+        }
+#endif
         return true;
     }
 };

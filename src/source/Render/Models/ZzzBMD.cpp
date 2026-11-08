@@ -26,6 +26,7 @@
 #include "Render/Textures/ZzzTexture.h"
 #include "Render/Textures/HdTextures.h"
 #include "Render/Items/RimGlow.h"
+#include "Render/Models/ModelSmoothing.h"
 #include "Engine/AI/ZzzAI.h"
 #include "SMD.h"
 #include "Render/Effects/ZzzEffect.h"
@@ -3231,6 +3232,7 @@ void BMD::Release()
             if (m->Normals) { delete[] m->Normals; m->Normals = nullptr; }
             if (m->TexCoords) { delete[] m->TexCoords; m->TexCoords = nullptr; }
             if (m->Triangles) { delete[] m->Triangles; m->Triangles = nullptr; }
+            Render::Models::Smoothing::FreeOriginal(*m);
 
             if (m->m_csTScript)
             {
@@ -3585,6 +3587,9 @@ bool BMD::Open2(const wchar_t* DirName, const wchar_t* ModelFileName, bool bReAl
             }
         }
     }
+
+    // The Remaster's smoother models (Render/Models/ModelSmoothing.h).
+    Render::Models::Smoothing::Apply(*this);
 
     Init(false);
 

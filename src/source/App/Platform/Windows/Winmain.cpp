@@ -37,6 +37,8 @@
 #include "Render/Textures/ZzzOpenglUtil.h"
 #include "Render/Textures/ZzzTexture.h"
 #include "Render/Textures/HdTextures.h"
+#include "Render/Models/ModelSmoothing.h"
+#include "Render/Textures/NormalMaps.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "Render/Look/GraphicsPresetSetting.h"
 #include "Render/Look/LookPresetSetting.h"
@@ -2685,6 +2687,11 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
 #ifndef __EMSCRIPTEN__
     // HD textures (Options): every texture loaded from now on takes its Data\HD copy if there is one.
     Render::Textures::Hd::SetEnabled(GameConfig::GetInstance().GetHdTextures());
+    // The Remaster's smoother models go with the HD textures.
+    Render::Models::Smoothing::SetLevel(GameConfig::GetInstance().GetHdTextures() ? GameConfig::GetInstance().GetSmoothModels() : 0);
+    // So do the relief maps of the model textures.
+    Render::Textures::NormalMaps::SetEnabled(GameConfig::GetInstance().GetHdTextures() &&
+                                             GameConfig::GetInstance().GetNormalMaps());
 #endif
 
     // The animation task pool is off unless config.ini or the command line turns it on.

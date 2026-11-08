@@ -122,6 +122,8 @@ void GameConfig::Load()
         ReadString(CfgSectionRender, CfgKeyGraphicsPreset, CfgDefaultGraphicsPreset));
     m_fxaa = ReadBool(CfgSectionRender, CfgKeyFxaa, CfgDefaultFxaa);
     m_hdTextures = ReadBool(CfgSectionRender, CfgKeyHdTextures, CfgDefaultHdTextures);
+    m_smoothModels = std::clamp(ReadInt(CfgSectionRender, CfgKeySmoothModels, CfgDefaultSmoothModels), 0, 2);
+    m_normalMaps = ReadBool(CfgSectionRender, CfgKeyNormalMaps, CfgDefaultNormalMaps);
     m_sunShadows = GameConfigValidation::ValidateSunShadows(
         ReadInt(CfgSectionRender, CfgKeySunShadows, CfgDefaultSunShadows));
     m_sharpen = GameConfigValidation::ValidateSharpen(ReadInt(CfgSectionRender, CfgKeySharpen, CfgDefaultSharpen));
@@ -205,6 +207,8 @@ void GameConfig::Save()
     WriteString(CfgSectionRender, CfgKeyGraphicsPreset, GameConfigValidation::FormatGraphicsPreset(m_graphicsPreset));
     WriteBool(CfgSectionRender, CfgKeyFxaa, m_fxaa);
     WriteBool(CfgSectionRender, CfgKeyHdTextures, m_hdTextures);
+    WriteInt(CfgSectionRender, CfgKeySmoothModels, m_smoothModels);
+    WriteBool(CfgSectionRender, CfgKeyNormalMaps, m_normalMaps);
     WriteInt(CfgSectionRender, CfgKeySunShadows, m_sunShadows);
     WriteInt(CfgSectionRender, CfgKeySharpen, m_sharpen);
     WriteBool(CfgSectionRender, CfgKeyDisableEffects, m_disableEffects);

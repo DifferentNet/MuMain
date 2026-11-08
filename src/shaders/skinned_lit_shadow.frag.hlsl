@@ -5,6 +5,10 @@
 // followed by mu::SunShadowUniform (std140).
 Texture2D tex : register(t0, space2);
 SamplerState s : register(s0, space2);
+// The Remaster's normal map (normal_map.hlsli), sampled like the texture; flat without one.
+Texture2D normalMap : register(t2, space2);
+SamplerState normalMapSampler : register(s2, space2);
+#include "normal_map.hlsli"
 cbuffer FogUniforms : register(b0, space3)
 {
     uint fogEnabled;
@@ -114,18 +118,22 @@ float3 DynamicLighting(float3 worldPosition, float3 worldNormal)
 float4 main(FSInput input) : SV_Target
 {
     const float3 objectLight = input.color.rgb;
-    const float3 normal = SafeNormalize(input.normal);
+    const float2 tilt = NormalMapTilt(normalMap.Sample(normalMapSampler, input.uv));
+    const float3 surfaceNormal = PerturbNormal(input.normal, -input.viewVector, input.uv, tilt);
+    const float3 surfaceWorldNormal =
+        PerturbNormal(input.worldNormal, input.worldPositionAndDynamicLights.xyz, input.uv, tilt);
+    const float3 normal = SafeNormalize(surfaceNormal);
     const float3 view = SafeNormalize(input.viewVector);
     // Neither the per-object direction nor the skinned normal is unit length in Classic. The
     // diffuse term uses both as they are, so that it is the Classic per-vertex value wherever the
     // curve is not clamped (dot() is linear in the interpolated normal) and keeps the palette.
     const float3 light = input.lightDirectionAndSpecular.xyz;
-    const float lightDot = dot(input.normal, light);
+    const float lightDot = dot(surfaceNormal, light);
 
     const float luminosity = max(lightDot * diffuseCurve.x + diffuseCurve.y, diffuseCurve.z);
     const float3 dynamicLight = input.worldPositionAndDynamicLights.w > 0.5
                                     ? DynamicLighting(input.worldPositionAndDynamicLights.xyz,
-                                                      SafeNormalize(input.worldNormal))
+                                                      SafeNormalize(surfaceWorldNormal))
                                     : float3(0.0, 0.0, 0.0);
     const float3 worldNormal = SafeNormalize(input.worldNormal);
     float sunShadow = SunShadowAmount(input.worldPositionAndDynamicLights.xyz, worldNormal);

@@ -46,6 +46,8 @@ public:
 #pragma pack(pop)
     SDL_GPUTexture* sdlTexture = nullptr;
     SDL_GPUSampler* sdlSampler = nullptr; // Borrowed from the renderer until device shutdown.
+    // The Remaster's normal map of an upscaled model texture (Render/Textures/NormalMaps.h), or null.
+    SDL_GPUTexture* sdlNormalMap = nullptr;
     // The base level, counted as texture memory.
     std::uint32_t UploadedBytes = 0;
 
