@@ -337,7 +337,7 @@
 			<div class="level-gauge option-gauge effect-gauge">
 				<div data-attr-class="'level-gauge-fill level-' + (render_level + 1)"></div>
 				<div class="level-gauge-hit option-gauge-hit" data-event-mousedown="option_gauge(2)"
-				     data-event-drag="option_gauge(2)" data-event-mousescroll="option_gauge(2)"></div>
+				     data-event-drag="option_gauge(2)" data-event-mousescroll="option_gauge(2)" data-event-keydown="option_gauge(2)"></div>
 			</div>
 		</div>
 		<div class="option-section">{{section_effects_label}}</div>
@@ -392,7 +392,7 @@
 			<div class="level-gauge option-gauge">
 				<div data-attr-class="'level-gauge-fill level-' + sound_volume"></div>
 				<div class="level-gauge-hit option-gauge-hit" data-event-mousedown="option_gauge(0)"
-				     data-event-drag="option_gauge(0)" data-event-mousescroll="option_gauge(0)"></div>
+				     data-event-drag="option_gauge(0)" data-event-mousescroll="option_gauge(0)" data-event-keydown="option_gauge(0)"></div>
 			</div>
 		</div>
 		<div class="option-row option-gauge-row">
@@ -400,7 +400,7 @@
 			<div class="level-gauge option-gauge">
 				<div data-attr-class="'level-gauge-fill level-' + music_volume"></div>
 				<div class="level-gauge-hit option-gauge-hit" data-event-mousedown="option_gauge(1)"
-				     data-event-drag="option_gauge(1)" data-event-mousescroll="option_gauge(1)"></div>
+				     data-event-drag="option_gauge(1)" data-event-mousescroll="option_gauge(1)" data-event-keydown="option_gauge(1)"></div>
 			</div>
 		</div>
 		<div class="option-row option-checkbox-row" data-event-click="option_toggle_whisper_sound">
