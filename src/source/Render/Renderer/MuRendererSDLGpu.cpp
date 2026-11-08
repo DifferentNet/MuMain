@@ -5603,6 +5603,14 @@ private:
             skinningVu.eyePositionAndSpecular[3] = parameters.specularStrength;
             PackVertexToWorldRows(skinningVu);
         }
+        else if (parameters.textureCoordinates == mu::SkinningTextureCoordinates::Rim)
+        {
+            // The Remaster enchant glow lights the outline as seen from the camera.
+            const glm::vec4 eyePosition = glm::inverse(m_modelViewMatrix) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+            skinningVu.eyePositionAndSpecular[0] = eyePosition.x;
+            skinningVu.eyePositionAndSpecular[1] = eyePosition.y;
+            skinningVu.eyePositionAndSpecular[2] = eyePosition.z;
+        }
         if (itemPreview)
         {
             // The studio light stays put on screen, whatever way the model is turned.
