@@ -201,6 +201,7 @@ namespace MUHelper
 		netData.bFallbackBasicAttack = gameData.bFallbackBasicAttack ? 1 : 0;
 		netData.bPickContainers = gameData.bPickContainers ? 1 : 0;
 		netData.bPickQuestItems = gameData.bPickQuestItems ? 1 : 0;
+		netData.bNoStrongTargetFirst = gameData.bStrongTargetFirst ? 0 : 1;
 	}
 
 	void ConfigDataSerDe::Deserialize(const PRECEIVE_MUHELPER_DATA& netData, ConfigData& gameData)
@@ -309,6 +310,7 @@ namespace MUHelper
 		gameData.bFallbackBasicAttack = (bool)netData.bFallbackBasicAttack;
 		gameData.bPickContainers = (bool)netData.bPickContainers;
 		gameData.bPickQuestItems = (bool)netData.bPickQuestItems;
+		gameData.bStrongTargetFirst = !netData.bNoStrongTargetFirst;
 	}
 
 }

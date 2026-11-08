@@ -36,7 +36,7 @@ namespace mu::ui::window
     // clicked, so it is the one source of truth).
     struct MuHelperConfigChecks
     {
-        bool potion = false, longDistance = false, origPosition = false;
+        bool potion = false, longDistance = false, origPosition = false, strongFirst = false;
         bool skill2Delay = false, skill2Condition = false, skill3Delay = false, skill3Condition = false;
         bool combo = false, fallback = false, buffDuration = false;
         bool usePet = false, party = false, autoHeal = false, drainLife = false;
@@ -68,7 +68,7 @@ namespace mu::ui::window
         Rml::String title, tabHunting, tabObtaining, tabOther;
         Rml::String range, distance, basicSkill, activationSkill1, activationSkill2, seconds;
         Rml::String extensionUsed, extensionNone, slotHint;
-        Rml::String potion, longDistance, origPosition, delay, condition, combo, fallback, buffDuration;
+        Rml::String potion, longDistance, origPosition, strongFirst, delay, condition, combo, fallback, buffDuration;
         Rml::String usePet, party, autoHeal, drainLife, ravenCease, ravenAuto, ravenTogether;
         Rml::String repair, pickAll, pickSelected, pickJewel, pickAncient, pickZen, pickExcellent, pickExtra, pickBoxes, pickQuest;
         Rml::String autoFriend, autoGuild, autoDefend;

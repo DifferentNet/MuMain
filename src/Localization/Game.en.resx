@@ -16239,4 +16239,8 @@
   <data name="SoftShadowsRow" xml:space="preserve">
     <value>Soft shadows</value>
   </data>
+  <!-- MU Helper: strong monsters first -->
+  <data name="HelperStrongFirst" xml:space="preserve">
+    <value>Strong monsters first</value>
+  </data>
 </root>
