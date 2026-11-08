@@ -15792,6 +15792,9 @@
   <data name="PadPress" xml:space="preserve">
     <value>Нажать</value>
   </data>
+  <data name="PadAdjust" xml:space="preserve">
+    <value>Изменить</value>
+  </data>
   <data name="PadCannotEquip" xml:space="preserve">
     <value>Эту вещь не надеть: смотрите её требования</value>
   </data>

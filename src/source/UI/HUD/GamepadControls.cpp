@@ -590,7 +590,14 @@ void PlayPointer(SDL_Window* window, Presses& presses, float seconds)
 {
     const Pad::StickPosition pointer = Pad::RightStick();
     Pointer::Move(window, pointer.x, pointer.y, seconds, IsPointerOverUi());
-    FollowPress(window, g_state.a, {}, Take(presses, Button::A), Held(Button::A), true);
+    // On a slider the frame rests in its middle: a press there would set it to half.
+    const bool aPressed = Take(presses, Button::A);
+    const bool onGauge = UI::HUD::PadFrame::OnGauge();
+    // The frame on a window's target: A clicks it, never attacks. A grid drawn under a panel that takes
+    // no pointer (the storage's) does not tell the UI the pointer is on it until a click lands there.
+    UI::HUD::PadTargetPick::Box box;
+    const bool onTarget = g_state.frameOpen && UI::HUD::PadFrame::Box(box);
+    FollowPress(window, g_state.a, {}, aPressed && !onGauge, Held(Button::A) && !onGauge, !onTarget);
     PressRightButton(window, presses);
 }
 
@@ -1265,6 +1272,8 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
     using Legend = UI::HUD::PadOverlay::View::Legend;
     if (UI::Inventory::HasPickedItem())
         view.legendSays = Legend::Holding;
+    else if (view.frame && UI::HUD::PadFrame::OnGauge())
+        view.legendSays = Legend::Slider;
     else if (view.frame && !UI::HUD::PadFrame::OnItemPlace())
         view.legendSays = Legend::Button;
     else if (view.frame && UI::HUD::PadFrame::OnEmptyCell())

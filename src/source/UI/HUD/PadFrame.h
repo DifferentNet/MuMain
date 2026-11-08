@@ -38,6 +38,9 @@ void Reset();
 [[nodiscard]] bool OnGoods();
 // Whether that target is a cell of the crafting box: its items have no card.
 [[nodiscard]] bool OnMixItem();
+// Whether the frame rests on a slider (the pad's pointer in its middle, not moved by the right stick):
+// the d-pad's sides change it, A does nothing there.
+[[nodiscard]] bool OnGauge();
 // Whether that target is a cell with no item in it.
 [[nodiscard]] bool OnEmptyCell();
 } // namespace UI::HUD::PadFrame

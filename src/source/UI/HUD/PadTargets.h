@@ -30,6 +30,9 @@ void SetScreens(bool screens);
 // shows. Straight, not by a wheel turn: a wheel goes to the element under the pointer, which may not
 // scroll it (the settings window took none).
 void ScrollList(int list, int dy);
+// Steps a slider of the last Collect (a target's `gauge`) one step left (dx < 0) or right, as the arrow
+// keys do on it.
+void StepGauge(int target, int dx);
 // Whether the target is in the document of this file name (npc_shop.rml).
 [[nodiscard]] bool IsIn(const PadTargetPick::Target& target, std::string_view fileName);
 } // namespace UI::HUD::PadTargets
