@@ -49,10 +49,6 @@ private:
     int m_partSet = 0;
 };
 
-// While a ScopedSetTextures recolours a model, the recoloured copy of one more texture of that part (a cloth's,
-// which isn't one of the model's meshes); the texture itself otherwise, or when it keeps its look.
-std::uint32_t PartTexture(std::uint32_t texture);
-
 // The colour of the ancient pulse while a ScopedSetTextures recolours a model; false otherwise.
 bool PulseColor(float color[3]);
 } // namespace Render::Items::AncientColors
