@@ -289,6 +289,23 @@ int PickSet(const std::array<std::uint8_t, 2>& setsOfItem, int discriminator)
     return own != 0 ? own : set(discriminator == 1 ? 1 : 0);
 }
 
+int BorrowedSet(int itemType, int armourSet)
+{
+    struct Borrowed
+    {
+        int itemType;
+        int set;
+    };
+    // Grand Soul pants (9:18) with Alvis (set 55, on Grand Soul armour, gloves and boots).
+    constexpr std::array<Borrowed, 1> Pieces{{{9 * 512 + 18, 55}}};
+    for (const Borrowed& piece : Pieces)
+    {
+        if (piece.itemType == itemType && piece.set == armourSet)
+            return armourSet;
+    }
+    return 0;
+}
+
 bool KeepsTexture(std::wstring_view fileName)
 {
     // The folder part doesn't count.

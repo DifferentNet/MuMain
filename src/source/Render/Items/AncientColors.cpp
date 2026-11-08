@@ -103,10 +103,15 @@ int SetOfBodyPart(const CHARACTER* c, int bodyPart)
     if (c == nullptr || bodyPart < BODYPART_HELM || bodyPart > BODYPART_BOOTS)
         return 0;
     const PART_t& part = c->BodyPart[bodyPart];
-    if (part.AncientDiscriminator == 0 || !Data::Items::IsItemModelSlot(part.Type))
+    if (!Data::Items::IsItemModelSlot(part.Type))
         return 0;
 
     const int itemType = Data::Items::ToItemType(part.Type);
+    if (part.AncientDiscriminator == 0)
+    {
+        // A plain piece may take the colour of the set the armour shows (BorrowedSet).
+        return bodyPart == BODYPART_ARMOR ? 0 : BorrowedSet(itemType, SetOfBodyPart(c, BODYPART_ARMOR));
+    }
     int discriminator = c == Hero ? OwnDiscriminator(bodyPart, itemType) : 0;
     if (discriminator == 0)
         discriminator = GameLogic::AncientLook::DiscriminatorOf(std::wstring_view(c->ID), bodyPart - BODYPART_HELM);
