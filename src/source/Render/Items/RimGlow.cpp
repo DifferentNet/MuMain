@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Render/Items/RimGlow.h"
 
+#include "Render/Items/EnchantFxTuning.h"
 #include "Render/Textures/HdTextures.h"
 
 #include <algorithm>
@@ -25,9 +26,12 @@ float SmoothStep(float edge0, float edge1, float x)
 // u: 0 where the surface faces the camera, 1 at the outline; v: the band's phase (repeats).
 float Value(float u, float v)
 {
-    const float outline = std::pow(SmoothStep(0.45f, 1.0f, u), 1.4f);
-    const float fromBand = (v - 0.5f) / 0.035f;
-    const float band = 0.7f * std::exp(-fromBand * fromBand) * (0.4f + 0.6f * u);
+    using namespace Render::Items::EnchantFx::Tuning;
+    const float outline = std::pow(SmoothStep(OutlineStart, 1.0f, u), OutlinePower);
+    // BandsPerSweep bands, evenly spaced over the repeating v.
+    const float phase = v * static_cast<float>(BandsPerSweep);
+    const float fromBand = (phase - std::floor(phase) - 0.5f) / (BandWidth * static_cast<float>(BandsPerSweep));
+    const float band = BandBrightness * std::exp(-fromBand * fromBand) * (0.4f + 0.6f * u);
     return std::min(1.0f, outline + band);
 }
 
@@ -79,15 +83,10 @@ GLuint Texture()
 
 float Strength(int level)
 {
+    using Render::Items::EnchantFx::Tuning::RimStrength;
     if (level < 7)
         return 0.0f;
-    if (level < 9)
-        return 0.55f;
-    if (level < 11)
-        return 0.7f;
-    if (level < 13)
-        return 0.85f;
-    return 1.0f;
+    return RimStrength[std::min(level, 15) - 7];
 }
 
 } // namespace Render::Items::RimGlow
