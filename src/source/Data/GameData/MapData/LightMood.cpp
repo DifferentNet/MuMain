@@ -44,7 +44,7 @@ constexpr std::array<LightMoodValueInfo, LightMoodValueCount> MoodValues = {{
     {"sunAzimuth", &LightMood::sunAzimuth, false, 0.0, 360.0},
     {"sunElevation", &LightMood::sunElevation, false, 20.0, 85.0},
     {"sunShadow", &LightMood::sunShadow, false, 0.0, 1.0},
-    {"sunSoftness", &LightMood::sunSoftness, false, 0.5, 4.0},
+    {"sunSoftness", &LightMood::sunSoftness, false, 2.0, 40.0},
 }};
 
 class IssueList

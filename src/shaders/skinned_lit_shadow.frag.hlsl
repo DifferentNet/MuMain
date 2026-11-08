@@ -128,7 +128,7 @@ float4 main(FSInput input) : SV_Target
                                                       SafeNormalize(input.worldNormal))
                                     : float3(0.0, 0.0, 0.0);
     const float3 worldNormal = SafeNormalize(input.worldNormal);
-    float sunShadow = SunShadowAmount(input.worldPositionAndDynamicLights.xyz, worldNormal);
+    float sunShadow = SunShadowAmount(input.worldPositionAndDynamicLights.xyz, worldNormal, input.pos.xy);
     if (dot(worldNormal, worldNormal) > 0.5)
         sunShadow = max(sunShadow, 0.5 * (1.0 - smoothstep(-0.35, 0.05, dot(worldNormal, sunDirectionAndSoftness.xyz))));
     const float3 sunLight = objectLight * luminosity * SunShadowScale(sunShadow);

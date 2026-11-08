@@ -45,7 +45,7 @@ mu::SunShadowFrame BuildFrame(const Data::Maps::LightMood& mood, int level, cons
     frame.halfExtent = HalfExtent;
     frame.depthRange = DepthRange;
     frame.strength = static_cast<float>(std::clamp(mood.sunShadow, 0.0, 1.0));
-    frame.softness = static_cast<float>(std::clamp(mood.sunSoftness, 0.5, 4.0));
+    frame.softness = static_cast<float>(std::clamp(mood.sunSoftness, 2.0, 40.0));
     return frame;
 }
 
