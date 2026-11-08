@@ -13055,6 +13055,30 @@
   <data name="QuestRequirementBuff" xml:space="preserve">
     <value>Bonus: %ls</value>
   </data>
+  <data name="GraphicsPresetRow" xml:space="preserve">
+    <value>Ustawienia grafiki</value>
+  </data>
+  <data name="GraphicsPresetLow" xml:space="preserve">
+    <value>Niskie</value>
+  </data>
+  <data name="GraphicsPresetMedium" xml:space="preserve">
+    <value>Średnie</value>
+  </data>
+  <data name="GraphicsPresetHigh" xml:space="preserve">
+    <value>Wysokie</value>
+  </data>
+  <data name="GraphicsPresetUltra" xml:space="preserve">
+    <value>Ultra</value>
+  </data>
+  <data name="GraphicsPresetCustom" xml:space="preserve">
+    <value>Własne</value>
+  </data>
+  <data name="FxaaRow" xml:space="preserve">
+    <value>FXAA</value>
+  </data>
+  <data name="SharpenRow" xml:space="preserve">
+    <value>Wyostrzanie</value>
+  </data>
   <data name="HdTexturesRow" xml:space="preserve">
     <value>Tekstury HD (po restarcie)</value>
   </data>
@@ -13483,5 +13507,8 @@
   </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Najpierw zdejmij przedmiot noszony w tym miejscu</value>
+  </data>
+  <data name="SoftShadowsRow" xml:space="preserve">
+    <value>Miękkie cienie</value>
   </data>
 </root>

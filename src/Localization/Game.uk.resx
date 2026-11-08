@@ -13034,6 +13034,30 @@
   <data name="QuestRequirementBuff" xml:space="preserve">
     <value>Bonus: %ls</value>
   </data>
+  <data name="GraphicsPresetRow" xml:space="preserve">
+    <value>Пресет графіки</value>
+  </data>
+  <data name="GraphicsPresetLow" xml:space="preserve">
+    <value>Низький</value>
+  </data>
+  <data name="GraphicsPresetMedium" xml:space="preserve">
+    <value>Середній</value>
+  </data>
+  <data name="GraphicsPresetHigh" xml:space="preserve">
+    <value>Високий</value>
+  </data>
+  <data name="GraphicsPresetUltra" xml:space="preserve">
+    <value>Ультра</value>
+  </data>
+  <data name="GraphicsPresetCustom" xml:space="preserve">
+    <value>Власний</value>
+  </data>
+  <data name="FxaaRow" xml:space="preserve">
+    <value>FXAA</value>
+  </data>
+  <data name="SharpenRow" xml:space="preserve">
+    <value>Різкість</value>
+  </data>
   <data name="HdTexturesRow" xml:space="preserve">
     <value>HD-текстури (після перезапуску)</value>
   </data>
@@ -13462,5 +13486,8 @@
   </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Спершу зніми предмет, одягнений там</value>
+  </data>
+  <data name="SoftShadowsRow" xml:space="preserve">
+    <value>М’які тіні</value>
   </data>
 </root>

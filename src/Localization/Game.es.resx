@@ -13034,6 +13034,30 @@
   <data name="QuestRequirementBuff" xml:space="preserve">
     <value>Bonus: %ls</value>
   </data>
+  <data name="GraphicsPresetRow" xml:space="preserve">
+    <value>Preajuste gráfico</value>
+  </data>
+  <data name="GraphicsPresetLow" xml:space="preserve">
+    <value>Bajo</value>
+  </data>
+  <data name="GraphicsPresetMedium" xml:space="preserve">
+    <value>Medio</value>
+  </data>
+  <data name="GraphicsPresetHigh" xml:space="preserve">
+    <value>Alto</value>
+  </data>
+  <data name="GraphicsPresetUltra" xml:space="preserve">
+    <value>Ultra</value>
+  </data>
+  <data name="GraphicsPresetCustom" xml:space="preserve">
+    <value>Personalizado</value>
+  </data>
+  <data name="FxaaRow" xml:space="preserve">
+    <value>FXAA</value>
+  </data>
+  <data name="SharpenRow" xml:space="preserve">
+    <value>Nitidez</value>
+  </data>
   <data name="HdTexturesRow" xml:space="preserve">
     <value>Texturas HD (tras reiniciar)</value>
   </data>
@@ -13462,5 +13486,8 @@
   </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Quita primero el objeto que llevas ahí</value>
+  </data>
+  <data name="SoftShadowsRow" xml:space="preserve">
+    <value>Sombras suaves</value>
   </data>
 </root>

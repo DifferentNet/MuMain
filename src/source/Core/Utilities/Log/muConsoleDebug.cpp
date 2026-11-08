@@ -17,6 +17,7 @@
 
 #include "Render/Lighting/DynamicLightHistory.h"
 #include "Render/PostProcessing/PostProcessingSetting.h"
+#include "Render/Lighting/SoftShadowSetting.h"
 #include "Render/Look/LookPresetSetting.h"
 #include "Render/Renderer/Antialiasing.h"
 #include "Render/Look/LookTuning.h"
@@ -357,6 +358,15 @@ bool CmuConsoleDebug::CheckCommand(const std::wstring& strCommand)
         return true;
     }
 #endif
+    // "$softshadow <strength %> <levels>": tunes the soft body shadows (browser build); 0 = hard.
+    if (strCommand.compare(0, 12, L"$softshadow ") == 0)
+    {
+        int strength = 0;
+        int levels = 1;
+        swscanf(strCommand.c_str() + 12, L"%d %d", &strength, &levels);
+        Render::Lighting::SoftShadow::SetTuning(strength, levels);
+        return true;
+    }
     if (strCommand.compare(L"$fpscounter on") == 0)
     {
         SetShowFpsCounter(true);

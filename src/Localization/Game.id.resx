@@ -13034,6 +13034,30 @@
   <data name="QuestRequirementBuff" xml:space="preserve">
     <value>Bonus: %ls</value>
   </data>
+  <data name="GraphicsPresetRow" xml:space="preserve">
+    <value>Preset grafis</value>
+  </data>
+  <data name="GraphicsPresetLow" xml:space="preserve">
+    <value>Rendah</value>
+  </data>
+  <data name="GraphicsPresetMedium" xml:space="preserve">
+    <value>Sedang</value>
+  </data>
+  <data name="GraphicsPresetHigh" xml:space="preserve">
+    <value>Tinggi</value>
+  </data>
+  <data name="GraphicsPresetUltra" xml:space="preserve">
+    <value>Ultra</value>
+  </data>
+  <data name="GraphicsPresetCustom" xml:space="preserve">
+    <value>Kustom</value>
+  </data>
+  <data name="FxaaRow" xml:space="preserve">
+    <value>FXAA</value>
+  </data>
+  <data name="SharpenRow" xml:space="preserve">
+    <value>Ketajaman</value>
+  </data>
   <data name="HdTexturesRow" xml:space="preserve">
     <value>Tekstur HD (setelah restart)</value>
   </data>
@@ -13462,5 +13486,8 @@
   </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Lepas dulu item yang dipakai di sana</value>
+  </data>
+  <data name="SoftShadowsRow" xml:space="preserve">
+    <value>Bayangan halus</value>
   </data>
 </root>

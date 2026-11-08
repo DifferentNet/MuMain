@@ -13034,6 +13034,30 @@
   <data name="QuestRequirementBuff" xml:space="preserve">
     <value>Bonus: %ls</value>
   </data>
+  <data name="GraphicsPresetRow" xml:space="preserve">
+    <value>Preset ng graphics</value>
+  </data>
+  <data name="GraphicsPresetLow" xml:space="preserve">
+    <value>Mababa</value>
+  </data>
+  <data name="GraphicsPresetMedium" xml:space="preserve">
+    <value>Katamtaman</value>
+  </data>
+  <data name="GraphicsPresetHigh" xml:space="preserve">
+    <value>Mataas</value>
+  </data>
+  <data name="GraphicsPresetUltra" xml:space="preserve">
+    <value>Ultra</value>
+  </data>
+  <data name="GraphicsPresetCustom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="FxaaRow" xml:space="preserve">
+    <value>FXAA</value>
+  </data>
+  <data name="SharpenRow" xml:space="preserve">
+    <value>Talas</value>
+  </data>
   <data name="HdTexturesRow" xml:space="preserve">
     <value>HD textures (pagkatapos mag-restart)</value>
   </data>
@@ -13462,5 +13486,8 @@
   </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Hubarin muna ang suot na item doon</value>
+  </data>
+  <data name="SoftShadowsRow" xml:space="preserve">
+    <value>Malambot na anino</value>
   </data>
 </root>

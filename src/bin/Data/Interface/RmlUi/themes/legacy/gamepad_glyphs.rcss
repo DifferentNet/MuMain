@@ -111,3 +111,5 @@ body.pad .pad-glyph {
 .pad-dpad-down .pad-dpad-lit { left: 6rem; top: 11rem; width: 6rem; height: 5rem; }
 .pad-dpad-left .pad-dpad-lit { left: 2rem; top: 6rem; width: 5rem; height: 6rem; }
 .pad-dpad-right .pad-dpad-lit { left: 11rem; top: 6rem; width: 5rem; height: 6rem; }
+/* Left and right both lit: a slider the d-pad sides change. */
+.pad-dpad-sides .pad-dpad-lit { left: 2rem; top: 6rem; width: 14rem; height: 6rem; }

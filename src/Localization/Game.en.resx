@@ -16154,6 +16154,9 @@
   <data name="PadPress" xml:space="preserve">
     <value>Press</value>
   </data>
+  <data name="PadAdjust" xml:space="preserve">
+    <value>Adjust</value>
+  </data>
   <data name="PadCannotEquip" xml:space="preserve">
     <value>This item can't be put on: see its requirements</value>
   </data>
@@ -16232,5 +16235,8 @@
   </data>
   <data name="SunShadowsTooltip" xml:space="preserve">
     <value>Real shadows from the sun on characters, monsters and objects (Enhanced look). Medium: 2048 map, High: 4096. Off keeps the classic flat shadows.</value>
+  </data>
+  <data name="SoftShadowsRow" xml:space="preserve">
+    <value>Soft shadows</value>
   </data>
 </root>
