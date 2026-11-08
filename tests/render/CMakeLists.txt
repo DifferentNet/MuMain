@@ -119,6 +119,17 @@ target_compile_definitions(ozt_file_tests PRIVATE
     MU_TEST_DATA_DIR="${CMAKE_SOURCE_DIR}/src/bin/Data"
 )
 
+# Packed HD textures (scripts/hd_pack.py): lossless WebP back to the original OZT.
+if(TARGET mu_webp)
+    mu_add_test(
+        NAME packed_ozt_tests
+        SOURCES
+            test_packed_ozt.cpp
+            ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/PackedOzt.cpp
+        LINK_LIBS mu_webp
+    )
+endif()
+
 # The marker of upscaled art that CGlobalBitmap reads from OZJ and OZT files.
 mu_add_test(
     NAME upscale_marker_tests

@@ -241,6 +241,9 @@ set(SDLIMAGE_VENDORED ON CACHE BOOL "" FORCE)
 # disabling formats we'll never load avoids requiring build tools purely to satisfy an unused
 # code path's link-time dependencies.
 set(SDLIMAGE_AVIF OFF CACHE BOOL "" FORCE)
+# libwebp built in, not loaded at run time: the packed HD textures (Render/Textures/PackedOzt.cpp) are
+# lossless WebP, and no libwebp DLL ships with the client.
+set(SDLIMAGE_WEBP_SHARED OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(SDL3_image
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_image.git
     GIT_TAG        release-3.2.4

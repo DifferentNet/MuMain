@@ -11,6 +11,7 @@
 #include "Render/RmlUi/RmlPremultiply.h"
 #include "Render/Textures/MipChain.h"
 #include "Render/Textures/OztFile.h"
+#include "Render/Textures/PackedOzt.h"
 #include "Render/Textures/TextureFiltering.h"
 #include "Render/Textures/HdTextures.h"
 #include "Render/Textures/UpscaleMarker.h"
@@ -833,6 +834,19 @@ bool CGlobalBitmap::OpenTga(GLuint uiBitmapIndex, const std::wstring& filename, 
 
     std::vector<unsigned char> pakBuffer((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
     input.close();
+
+    // The HD art ships packed (scripts/hd_pack.py): back to the original file first.
+    if (Render::Textures::PackedOzt::IsPacked(pakBuffer))
+    {
+        std::vector<unsigned char> unpacked;
+        if (!Render::Textures::PackedOzt::Unpack(pakBuffer, unpacked))
+        {
+            g_ErrorReport.Write(L"OpenTga: broken packed file %ls (%zu bytes)\r\n", filename_ozt.c_str(),
+                                pakBuffer.size());
+            return false;
+        }
+        pakBuffer = std::move(unpacked);
+    }
 
     // A marked file holds an image up to its scale times the largest original.
     const int markedScale = Render::Textures::Upscale::ReadMarkedScale(pakBuffer);

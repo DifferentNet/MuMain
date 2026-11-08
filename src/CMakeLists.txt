@@ -336,6 +336,15 @@ endif()
 if(TARGET SDL3_image::SDL3_image)
   target_link_libraries(MuClient PUBLIC SDL3_image::SDL3_image)
 endif()
+# SDL_image's built-in libwebp decodes the packed HD textures (Render/Textures/PackedOzt.cpp, scripts/hd_pack.py).
+# Its headers aren't public on the target, hence the include folder.
+if(TARGET webp AND NOT TARGET mu_webp)
+  add_library(mu_webp INTERFACE)
+  target_link_libraries(mu_webp INTERFACE webp)
+  target_include_directories(mu_webp INTERFACE "${sdl3_image_SOURCE_DIR}/external/libwebp/src")
+  target_compile_definitions(mu_webp INTERFACE MU_HAS_WEBP=1)
+  target_link_libraries(MuClient PUBLIC mu_webp)
+endif()
 
 # RmlUi (game UI middleware). The real target is rmlui_core, aliased as RmlUi::Core
 # (Source/Core/CMakeLists.txt).
