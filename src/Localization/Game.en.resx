@@ -13780,7 +13780,7 @@
     <value>Upgrade %d items to +9 or higher</value>
   </data>
   <data name="BattlePassQuestCraft" xml:space="preserve">
-    <value>Craft %d items: wings, a chaos weapon, Fenrir or +14 with a Jewel of Ancient</value>
+    <value>Craft %d items: wings, a chaos weapon, Fenrir or any item to +14</value>
   </data>
   <data name="BattlePassQuestTier" xml:space="preserve">
     <value>Clear Tier %d</value>
@@ -14080,18 +14080,6 @@
   <data name="JewelOfAncientMixDesc3" xml:space="preserve">
     <value>On failure both items stay.</value>
     <comment>legacy_id=3904</comment>
-  </data>
-  <data name="AncientUpgradeDesc1" xml:space="preserve">
-    <value>On failure an ancient item</value>
-    <comment>legacy_id=3905</comment>
-  </data>
-  <data name="AncientUpgradeDesc2" xml:space="preserve">
-    <value>doesn't burn: it loses one level.</value>
-    <comment>legacy_id=3906</comment>
-  </data>
-  <data name="AncientUpgradeDesc3" xml:space="preserve">
-    <value>The jewels and zen are used up.</value>
-    <comment>legacy_id=3907</comment>
   </data>
   <data name="ExcellentDustDistilMix" xml:space="preserve">
     <value>Distil into Excellent Dust</value>
@@ -15359,6 +15347,9 @@
   <data name="TouchAuto" xml:space="preserve">
     <value>Auto</value>
   </data>
+  <data name="TouchNextTarget" xml:space="preserve">
+    <value>Target</value>
+  </data>
   <data name="TouchMenu" xml:space="preserve">
     <value>Menu</value>
   </data>
@@ -15511,6 +15502,12 @@
   </data>
   <data name="TouchHelpAuto" xml:space="preserve">
     <value>Auto: MU Helper on and off; walking with the stick moves where it hunts</value>
+  </data>
+  <data name="TouchHelpTarget" xml:space="preserve">
+    <value>Target: switch to the next monster by distance; the one Attack will hit is highlighted</value>
+  </data>
+  <data name="TouchHelpNova" xml:space="preserve">
+    <value>Nova: hold its button to charge, let go to cast (it goes off by itself after 5 seconds)</value>
   </data>
   <data name="TouchHelpPotions" xml:space="preserve">
     <value>Q and W: drink the potions</value>
@@ -16146,6 +16143,9 @@
   <data name="TitleEffects" xml:space="preserve">
     <value>Title effects</value>
   </data>
+  <data name="BackgroundSound" xml:space="preserve">
+    <value>Sound in background</value>
+  </data>
   <data name="TitlesTownsOnly" xml:space="preserve">
     <value>Titles in towns only</value>
   </data>
@@ -16186,5 +16186,12 @@
   </data>
   <data name="ExcellentDustHoursMinutes" xml:space="preserve">
     <value>%dh %dm</value>
+  </data>
+  <!-- Ancient JoA upgrade (2026-11-07) -->
+  <data name="JewelOfAncientDescFail" xml:space="preserve">
+    <value>+10…+13: on failure the item loses 1 level.</value>
+  </data>
+  <data name="JewelOfAncientDescHigh" xml:space="preserve">
+    <value>+14, +15: also an excellent item (3+ options).</value>
   </data>
 </root>

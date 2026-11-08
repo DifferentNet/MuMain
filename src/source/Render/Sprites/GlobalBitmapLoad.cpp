@@ -293,6 +293,41 @@ GLuint CGlobalBitmap::LoadImageExclusive(const std::wstring& filename, GLuint ui
     }
     return BITMAP_UNKNOWN;
 }
+GLuint CGlobalBitmap::LoadChangedImage(const std::wstring& filename, const std::wstring& name, GLuint uiFilter,
+                                       GLuint uiWrapMode, const PixelChange& change)
+{
+    if (BITMAP_t* known = FindTextureEntry(name); known != nullptr && known->Ref > 0)
+    {
+        return known->BitmapIndex;
+    }
+
+    std::wstring ext;
+    SplitExt(filename, ext, false);
+    const bool jpg = 0 == _wcsicmp(ext.c_str(), L"jpg");
+    if (!jpg && 0 != _wcsicmp(ext.c_str(), L"tga"))
+    {
+        return BITMAP_UNKNOWN;
+    }
+
+    const GLuint index = GenerateTextureIndex();
+    m_pixelChange = &change;
+    const bool loaded = jpg ? OpenJpegTurbo(index, filename, uiFilter, uiWrapMode, false)
+                            : OpenTga(index, filename, uiFilter, uiWrapMode, false);
+    m_pixelChange = nullptr;
+    const auto added = m_mapBitmap.find(index);
+    if (!loaded || added == m_mapBitmap.end())
+    {
+        return BITMAP_UNKNOWN;
+    }
+
+    BITMAP_t& copy = *added->second;
+    wcsncpy(copy.FileName, name.c_str(), MAX_BITMAP_FILE_NAME - 1);
+    copy.FileName[MAX_BITMAP_FILE_NAME - 1] = L'\0';
+    m_listNonamedIndex.push_back(index);
+    m_BitmapCache.Remove(index);
+    return index;
+}
+
 bool CGlobalBitmap::LoadImage(GLuint uiBitmapIndex, const std::wstring& filename, GLuint uiFilter, GLuint uiWrapMode,
                               bool padToPowerOfTwo, bool premultiplyAlpha, bool keepPixels)
 {
@@ -738,6 +773,10 @@ bool CGlobalBitmap::OpenJpegTurbo(GLuint uiBitmapIndex, const std::wstring& file
     pNewBitmap->wrapRepeat = uiWrapMode == GL_REPEAT;
     pNewBitmap->scale = static_cast<std::uint8_t>(upscaled ? scale : 1);
     std::vector<std::uint8_t> rgbaData = PadRGBToRGBA(pNewBitmap->Buffer, uploadWidth, uploadHeight);
+    if (m_pixelChange != nullptr)
+    {
+        (*m_pixelChange)(rgbaData.data(), rgbaData.size() / 4u, 4);
+    }
     const MipLevels mips = PlanMipLevels(upscaled || (worldTexture && m_textureFilteringEnabled), rgbaData.data(),
                                          uploadWidth, uploadHeight, false, m_mipChainSeconds);
     if (!UploadTextureSDLGpu(pNewBitmap.get(), rgbaData, uploadWidth, uploadHeight, MapGLFilterToSDL(uiFilter),
@@ -812,6 +851,10 @@ bool CGlobalBitmap::OpenTga(GLuint uiBitmapIndex, const std::wstring& filename, 
     const std::size_t BufferSize = pNewBitmap->BufferStorage.size();
 
     Ozt::CopyPixels(pakBuffer, header, std::span<std::uint8_t>(pNewBitmap->Buffer, BufferSize), Width);
+    if (m_pixelChange != nullptr)
+    {
+        (*m_pixelChange)(pNewBitmap->Buffer, BufferSize / Ozt::BytesPerPixel, Ozt::BytesPerPixel);
+    }
     if (premultiplyAlpha)
     {
         Render::RmlUi::PremultiplyAlpha(pNewBitmap->Buffer, BufferSize / Ozt::BytesPerPixel);

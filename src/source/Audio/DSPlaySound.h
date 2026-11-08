@@ -1008,3 +1008,5 @@ void Set3DSoundPosition();
 HRESULT ReleaseBuffer(int Buffer);
 void SetVolume(int Buffer, long vol);
 void SetMasterVolume(long vol);
+void ApplyBackgroundSound();            // re-applies the "Sound in background" option
+void SetWindowInBackground(bool inBackground); // desktop: window unfocused or minimized

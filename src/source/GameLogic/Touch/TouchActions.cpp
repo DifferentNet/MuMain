@@ -4,6 +4,7 @@
 #include "Audio/DSPlaySound.h"
 #include "Camera/CameraProjection.h"
 #include "Camera/CameraState.h"
+#include "Engine/AI/ZzzAI.h"
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzInterface.h"
@@ -58,6 +59,9 @@ using Clock = std::chrono::steady_clock;
 
 // The pace of the walk packets and of the other actions: the control socket's and the MU Helper's.
 constexpr auto WalkRepeat = std::chrono::milliseconds(300);
+// A turn of the joystick, or a fresh push, sends its walk sooner: at 300 ms a turn lagged behind the
+// thumb. The server charges a walk the tiles walked, not the packets (the walk budget).
+constexpr auto TurnRepeat = std::chrono::milliseconds(120);
 constexpr auto ActionRepeat = std::chrono::milliseconds(250);
 // How long a monster that could not be fought (behind a wall, out of reach) is passed over.
 constexpr auto ForgetTime = std::chrono::seconds(3);
@@ -84,6 +88,8 @@ constexpr auto ShortOfManaSayRepeat = std::chrono::seconds(6);
 constexpr auto PetCommandRepeat = std::chrono::seconds(1);
 // How often the pad's Teleport Ally with no friend chosen says so.
 constexpr auto NoFriendSayRepeat = std::chrono::seconds(3);
+// A Nova held this long goes off by itself: the server's charge is full well before.
+constexpr auto LongestCharge = std::chrono::seconds(5);
 // The pad's Teleport jumps at least this many tiles, else it does not go off.
 constexpr int ShortestTeleport = 2;
 
@@ -91,7 +97,7 @@ constexpr int ShortestTeleport = 2;
 constexpr int StickTiles = 4;
 constexpr int ShortStickTiles = 2;
 // The joystick turned this far (radians) from the walk under way: a new walk at once.
-constexpr float TurnToReplan = 0.5f;
+constexpr float TurnToReplan = 0.35f;
 // A walk with this many steps left is extended before the character stops.
 constexpr int StepsLeftToReplan = 2;
 
@@ -109,6 +115,12 @@ constexpr float FireRingTiles = 3.f;
 
 constexpr int NoTarget = -1;
 constexpr int NoDrop = -1;
+constexpr int NoHotKey = -1;
+
+// The Nova charging (the server grows its damage until it is let go, and a Nova sent without its
+// start does nothing): its hotkey, and when it began.
+int g_chargeHotKey = NoHotKey;
+Clock::time_point g_chargeStart{};
 
 struct Steering
 {
@@ -130,6 +142,7 @@ Clock::time_point g_standUntil;
 Clock::time_point g_standAgainAt;
 bool g_pointerAims = false;
 bool g_padPlaysWorld = false;
+bool g_controlsShown = false;
 // The pad's left stick now, in screen directions; 0, 0 while it rests (UI/HUD/GamepadControls).
 float g_padAimX = 0.f;
 float g_padAimY = 0.f;
@@ -189,6 +202,15 @@ bool ActionDue()
 
 // An action that took the turn but found it could not go off yet, with nothing sent: another button
 // held may have the turn.
+// An attack or a cast whose swing went off: the swing paces the next one (Automation::IsSwingInProgress,
+// which also waits a while for a swing that does not show), as a held mouse button. The 250 ms turn
+// cut a fast character to 4 blows a second: a sword's swing is shorter from an attack speed of about
+// 220 on, a spell's from a magic speed of about 415.
+void SwingPaces()
+{
+    g_nextAction = Clock::now();
+}
+
 Progress GiveTurnBack()
 {
     g_nextAction = g_turnTakenFrom;
@@ -493,19 +515,15 @@ CHARACTER* AimedCharacter()
     return &CharactersClient[index];
 }
 
-// The monster or player aimed at, else the one fought last (a player aimed at once stays the target),
-// else the nearest monster, or the nearest enemy player where players fight.
-int ChooseTarget()
+// The one chosen, else the monster or player aimed at, else the one fought last (a player aimed at
+// once stays the target), else the nearest monster, or the nearest enemy player where players fight.
+int TargetToFight()
 {
-    if (g_chosenKey != NoTarget)
-    {
-        if (IsGoodTarget(FindByKey(g_chosenKey), true))
-            return g_targetKey = g_chosenKey;
-        g_chosenKey = NoTarget;
-    }
+    if (IsGoodTarget(FindByKey(g_chosenKey), true))
+        return g_chosenKey;
     const CHARACTER* aimed = AimedCharacter();
     if (IsGoodTarget(aimed, true))
-        return g_targetKey = aimed->Key;
+        return aimed->Key;
 
     if (IsGoodTarget(FindByKey(g_targetKey), true))
         return g_targetKey;
@@ -524,7 +542,15 @@ int ChooseTarget()
             nearestKey = character->Key;
         }
     }
-    return g_targetKey = nearestKey;
+    return nearestKey;
+}
+
+// TargetToFight(), now the buttons' target; a chosen one gone is forgotten.
+int ChooseTarget()
+{
+    if (g_chosenKey != NoTarget && !IsGoodTarget(FindByKey(g_chosenKey), true))
+        g_chosenKey = NoTarget;
+    return g_targetKey = TargetToFight();
 }
 
 void Forget(int key)
@@ -742,6 +768,7 @@ Progress OutcomeOf(Automation::SkillResult result)
     {
     case Automation::SkillResult::Cast:
         ActionWentOff();
+        SwingPaces();
         return Progress::Done;
     case Automation::SkillResult::NoTarget:
     case Automation::SkillResult::Refused:
@@ -1105,9 +1132,9 @@ void Steer(float screenX, float screenY)
         return;
 
     const auto now = Clock::now();
-    if (now - g_steering.lastWalk < WalkRepeat)
-        return;
     const bool turned = !g_steering.active || dirX * g_steering.dirX + dirY * g_steering.dirY < std::cos(TurnToReplan);
+    if (now - g_steering.lastWalk < (turned ? TurnRepeat : WalkRepeat))
+        return;
     if (!turned && StepsLeft() > StepsLeftToReplan)
         return;
 
@@ -1169,6 +1196,11 @@ void SetPadPlaysWorld(bool plays)
     g_padPlaysWorld = plays;
 }
 
+void SetControlsShown(bool shown)
+{
+    g_controlsShown = shown;
+}
+
 Progress Attack()
 {
     // A safe zone refuses attacks: no walk out of town towards a monster either.
@@ -1191,6 +1223,7 @@ Progress Attack()
     {
     case Automation::AttackResult::Attacked:
         ActionWentOff();
+        SwingPaces();
         return Progress::Done;
     case Automation::AttackResult::NoTarget:
     case Automation::AttackResult::NoArrows:
@@ -1205,6 +1238,49 @@ void SelectHotKey(int hotKey)
 {
     if (InWorld() && HotKeySkillIndex(hotKey) >= 0)
         g_pSkillList->SelectHotKey(hotKey);
+}
+
+// Starts the Nova's charge, as the PC's right mouse button does (ZzzInterface.cpp, Attack).
+static Progress BeginCharge(int hotKey)
+{
+    if (g_chargeHotKey != NoHotKey)
+        return Progress::Done;
+    int energy = 0;
+    gSkillManager.GetSkillInformation_Energy(AT_SKILL_NOVA, &energy);
+    if (CharacterAttribute->Energy + CharacterAttribute->AddEnergy < energy)
+        return Progress::Done;
+    const Progress progress = CastWhereHeroStands(AT_SKILL_NOVA_BEGIN, false);
+    // The charge pose says it began: the cast's own result is not set for the Nova's start
+    // (ClassAttack.cpp, AttackWizard returns before SkillSuccess).
+    if (Hero->Object.CurrentAction != PLAYER_SKILL_HELL_BEGIN)
+        return progress;
+    Hero->Object.m_bySkillCount = 0;
+    g_chargeHotKey = hotKey;
+    g_chargeStart = Clock::now();
+    return Progress::Done;
+}
+
+int ChargingHotKey()
+{
+    if (g_chargeHotKey != NoHotKey && Clock::now() - g_chargeStart >= LongestCharge)
+        ReleaseCharge();
+    return g_chargeHotKey;
+}
+
+void ReleaseCharge()
+{
+    if (g_chargeHotKey == NoHotKey)
+        return;
+    g_chargeHotKey = NoHotKey;
+    if (!InWorld())
+        return;
+    // What the PC's release casts (ClassAttack.cpp, AT_SKILL_NOVA), sent whatever the character does
+    // now: a charge the server keeps running would go off on its own later.
+    SendRequestMagic(AT_SKILL_NOVA, HeroKey);
+    SetAttackSpeed();
+    SetAction(&Hero->Object, PLAYER_SKILL_HELL_START);
+    Hero->Movement = 0;
+    ActionWentOff();
 }
 
 Progress CastHotKey(int hotKey)
@@ -1231,6 +1307,8 @@ Progress CastHotKey(int hotKey)
 
     if (padAims)
         return skill == AT_SKILL_TELEPORT_ALLY ? PadTeleportAlly(skill) : PadTeleport(skill);
+    if (skill == AT_SKILL_NOVA)
+        return BeginCharge(hotKey);
 
     const CHARACTER* friendCharacter = GoesOnFriend(skill) ? ChosenFriend() : nullptr;
     if (friendCharacter != nullptr)
@@ -1405,6 +1483,7 @@ void Reset()
     g_friendName.clear();
     g_forgottenUntil.clear();
     g_skippedDrops.clear();
+    g_chargeHotKey = NoHotKey;
     g_dropWalkedTo = NoDrop;
     g_standUntil = {};
     g_standAgainAt = {};
@@ -1414,19 +1493,44 @@ void Reset()
     SteerHelper(false);
 }
 
-void CycleTarget(int step)
+namespace
 {
-    if (!InWorld())
-        return;
-    // By distance, then by key: two at the same distance keep their order between presses.
+// The foes in reach by distance, then by key: two at the same distance keep their order between
+// presses. With the PK switch on, players too (as a tap on one would aim at them).
+std::vector<std::pair<int, int>> FoesByDistance()
+{
     std::vector<std::pair<int, int>> foes;
     for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
     {
         const CHARACTER* character = &CharactersClient[i];
-        // With the PK switch on, players too (as a tap on one would aim at them).
         if (IsGoodTarget(character, g_forceAttack))
             foes.emplace_back(TilesTo(character), character->Key);
     }
+    std::sort(foes.begin(), foes.end());
+    return foes;
+}
+
+// The key of the one lit now (TargetIndex()), NoTarget for none.
+int LitKey()
+{
+    const int index = TargetIndex();
+    return index >= 0 ? CharactersClient[index].Key : NoTarget;
+}
+
+// Chooses the foe `step` on from the one lit: the one chosen while it is a good target. One chosen
+// and since dead would start from the nearest, likely the one lit already.
+void StepThrough(const std::vector<std::pair<int, int>>& foes, int step)
+{
+    g_meetKey = NoTarget;
+    g_chosenKey = g_targetKey = NextInRound(foes, LitKey(), step);
+}
+} // namespace
+
+bool CycleTarget(int step)
+{
+    if (!InWorld())
+        return false;
+    const std::vector<std::pair<int, int>> foes = FoesByDistance();
     if (foes.empty())
     {
         // No foe near (a town): the NPCs and the other players around, to talk to or to trade with.
@@ -1438,18 +1542,36 @@ void CycleTarget(int step)
                 meets.emplace_back(TilesTo(character), character->Key);
         }
         if (meets.empty())
-            return;
+            return false;
         std::sort(meets.begin(), meets.end());
         g_meetKey = NextInRound(meets, MeetIndex() >= 0 ? g_meetKey : NoTarget, step);
         g_chosenKey = NoTarget;
-        return;
+        return true;
     }
-    g_meetKey = NoTarget;
-    std::sort(foes.begin(), foes.end());
-    int current = g_chosenKey;
-    if (current == NoTarget && TargetIndex() >= 0)
-        current = CharactersClient[TargetIndex()].Key;
-    g_chosenKey = g_targetKey = NextInRound(foes, current, step);
+    StepThrough(foes, step);
+    return true;
+}
+
+bool NextFoe()
+{
+    if (!InWorld() || !HasOtherFoe())
+        return false;
+    StepThrough(FoesByDistance(), 1);
+    return true;
+}
+
+bool HasOtherFoe()
+{
+    if (!InWorld())
+        return false;
+    const int lit = LitKey();
+    for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
+    {
+        const CHARACTER* character = &CharactersClient[i];
+        if (character->Key != lit && IsGoodTarget(character, g_forceAttack))
+            return true;
+    }
+    return false;
 }
 
 void ClearChosenTarget()
@@ -1557,11 +1679,17 @@ bool FeetOnScreen(int index, float& x, float& y)
 
 int TargetIndex()
 {
-    if (!InWorld() || g_targetKey == NoTarget)
+    if (!InWorld())
         return -1;
     const CHARACTER* target = FindByKey(g_targetKey);
-    if (target == nullptr || !IsGoodTarget(target, true))
-        return -1;
+    if (!IsGoodTarget(target, true))
+    {
+        if (!g_controlsShown || MUHelper::g_MuHelper.IsActive())
+            return -1;
+        target = FindByKey(TargetToFight());
+        if (!IsGoodTarget(target, true))
+            return -1;
+    }
     return static_cast<int>(target - CharactersClient);
 }
 

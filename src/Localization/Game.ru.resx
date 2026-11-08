@@ -13403,7 +13403,7 @@
     <value>Заточить предметы на +9 и выше: %d</value>
   </data>
   <data name="BattlePassQuestCraft" xml:space="preserve">
-    <value>Скрафтить крылья, хаос-оружие, Fenrir или +14 через Jewel of Ancient: %d</value>
+    <value>Скрафтить крылья, хаос-оружие, Fenrir или любую вещь +14: %d</value>
   </data>
   <data name="BattlePassQuestTier" xml:space="preserve">
     <value>Пройти Тир %d</value>
@@ -13703,18 +13703,6 @@
   <data name="JewelOfAncientMixDesc3" xml:space="preserve">
     <value>При провале обе вещи остаются.</value>
     <comment>legacy_id=3904</comment>
-  </data>
-  <data name="AncientUpgradeDesc1" xml:space="preserve">
-    <value>Ancient-вещь при провале</value>
-    <comment>legacy_id=3905</comment>
-  </data>
-  <data name="AncientUpgradeDesc2" xml:space="preserve">
-    <value>не сгорает, а теряет 1 уровень.</value>
-    <comment>legacy_id=3906</comment>
-  </data>
-  <data name="AncientUpgradeDesc3" xml:space="preserve">
-    <value>Камни и zen расходуются.</value>
-    <comment>legacy_id=3907</comment>
   </data>
   <data name="ExcellentDustDistilMix" xml:space="preserve">
     <value>Распылить в пыль экселента</value>
@@ -14982,6 +14970,9 @@
   <data name="TouchAuto" xml:space="preserve">
     <value>Авто</value>
   </data>
+  <data name="TouchNextTarget" xml:space="preserve">
+    <value>Цель</value>
+  </data>
   <data name="TouchMenu" xml:space="preserve">
     <value>Меню</value>
   </data>
@@ -15134,6 +15125,12 @@
   </data>
   <data name="TouchHelpAuto" xml:space="preserve">
     <value>Авто: включает и выключает MU Helper; стик меняет место его охоты</value>
+  </data>
+  <data name="TouchHelpTarget" xml:space="preserve">
+    <value>Цель: переключиться на следующего монстра по расстоянию; тот, кого бьёт Атака, подсвечен</value>
+  </data>
+  <data name="TouchHelpNova" xml:space="preserve">
+    <value>Nova: держите кнопку — заряд, отпустите — удар (сработает сама через 5 секунд)</value>
   </data>
   <data name="TouchHelpPotions" xml:space="preserve">
     <value>Q и W: выпить зелья</value>
@@ -15808,6 +15805,9 @@
   <data name="TitleEffects" xml:space="preserve">
     <value>Эффекты титулов</value>
   </data>
+  <data name="BackgroundSound" xml:space="preserve">
+    <value>Звук в фоне</value>
+  </data>
   <data name="TitlesTownsOnly" xml:space="preserve">
     <value>Титулы только в городах</value>
   </data>
@@ -15848,5 +15848,12 @@
   </data>
   <data name="ExcellentDustHoursMinutes" xml:space="preserve">
     <value>%d ч %d мин</value>
+  </data>
+  <!-- Ancient JoA upgrade (2026-11-07) -->
+  <data name="JewelOfAncientDescFail" xml:space="preserve">
+    <value>+10…+13: при провале вещь -1 уровень.</value>
+  </data>
+  <data name="JewelOfAncientDescHigh" xml:space="preserve">
+    <value>+14, +15: ещё excellent-вещь (3+ опции).</value>
   </data>
 </root>

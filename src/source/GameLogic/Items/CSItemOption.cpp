@@ -344,6 +344,15 @@ std::uint16_t CSItemOption::GetMixItemLevel(const int Type) const
     return static_cast<std::uint16_t>(itemSType.byMixItemLevel[0] | (static_cast<std::uint16_t>(itemSType.byMixItemLevel[1]) << 8));
 }
 
+std::array<std::uint8_t, MAX_ITEM_SETS_PER_ITEM> CSItemOption::GetSetsOfItem(const int itemType) const
+{
+    if (itemType < 0 || itemType >= MAX_ITEM)
+    {
+        return {};
+    }
+    return m_ItemSetType[itemType].byOption;
+}
+
 int CSItemOption::GetAncientSetNumber(const int itemType, const int ancientDiscriminator) const
 {
     const int setItemType = ancientDiscriminator % 0x04;

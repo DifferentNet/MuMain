@@ -419,3 +419,10 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Render/Sprites/GlobalBitmapLoad.cpp
     LINK_LIBS MuClient
 )
+
+mu_add_test(
+    NAME ancient_color_rules_tests
+    SOURCES
+        test_ancient_color_rules.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Items/AncientColorRules.cpp
+)

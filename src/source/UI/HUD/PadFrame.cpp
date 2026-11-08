@@ -22,9 +22,9 @@ namespace Pick = UI::HUD::PadTargetPick;
 using UI::HUD::PadFrame::Clock;
 
 // The frame hops at once with the d-pad or the stick, again after this while held, then at the second
-// pace: a little slower than the menu's, as a window's cells are small.
-constexpr auto FirstRepeat = std::chrono::milliseconds(380);
-constexpr auto Repeat = std::chrono::milliseconds(130);
+// pace: the menu's.
+constexpr auto FirstRepeat = std::chrono::milliseconds(300);
+constexpr auto Repeat = std::chrono::milliseconds(100);
 // The right stick let go snaps the pointer onto a target this near, as a share of the screen's height.
 constexpr float SnapReachShare = 0.04f;
 constexpr float Anywhere = std::numeric_limits<float>::max();

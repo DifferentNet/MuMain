@@ -10120,6 +10120,9 @@ void ReceiveOption(const BYTE* ReceiveBuffer)
     BYTE wChatListBoxBackAlpha = Data->ChatLogBox & 0x0F;
 
     UI::Hud::SetItemHotkey(UI::Hud::ItemHotkey::R, Data->KeyR + ITEM_POTION, byRLevel);
+
+    // What the server holds now; later changes are sent as they happen (SaveOptionsIfChangedEvery).
+    MarkOptionsSaved();
 }
 
 void ReceiveEventChipInfomation(const BYTE* ReceiveBuffer)
