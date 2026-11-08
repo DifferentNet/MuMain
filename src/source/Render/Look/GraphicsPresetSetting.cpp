@@ -20,11 +20,7 @@ constexpr float PercentPerUnit = 100.0f;
 
 void ApplySunShadows()
 {
-#ifdef __EMSCRIPTEN__
-    Render::Lighting::SunShadow::SetLevel(Render::Lighting::SunShadow::LevelOff);
-#else
     Render::Lighting::SunShadow::SetLevel(GameConfig::GetInstance().GetSunShadows());
-#endif
 }
 
 void ApplyScreenFilters()
@@ -55,8 +51,9 @@ GraphicsSettings CurrentGraphicsSettings()
     settings.anisotropy = config.GetAnisotropy();
     settings.sunShadows = config.GetSunShadows();
 #ifdef __EMSCRIPTEN__
-    // The browser build has no sun shadows and no Options row: whatever the config holds, the value is taken
-    // from the preset row the other settings match, so the shadows never keep a preset from matching.
+    // In the browser the presets leave the sun shadows alone (their own Options row, off unless the player turns
+    // them on, a phone's GPU can't spare them): the value is taken from the preset row the other settings match,
+    // so the shadows never keep a preset from matching.
     for (const GraphicsPreset preset : {GraphicsPreset::Low, GraphicsPreset::Medium, GraphicsPreset::High,
                                         GraphicsPreset::Ultra})
     {
@@ -83,7 +80,9 @@ void ApplyGraphicsPreset(GraphicsPreset preset)
     MuSetAntialiasingPreference(settings.antialiasing);
     config.SetFxaa(settings.fxaa);
     config.SetSharpen(settings.sharpen);
+#ifndef __EMSCRIPTEN__
     config.SetSunShadows(settings.sunShadows);
+#endif
     ApplySunShadows();
     // The look and the player's feature choices together, so the features switch once.
     ApplyLookPreset(settings.look, {settings.enhancedLighting, settings.dynamicLights, settings.lightMood,

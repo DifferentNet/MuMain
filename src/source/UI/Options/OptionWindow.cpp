@@ -536,12 +536,7 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("sun_shadows_row_label", &model.sunShadowsRowLabel);
     c.Bind("sun_shadows_value_label", &model.sunShadowsValueLabel);
     c.Bind("sun_shadows_tooltip", &model.sunShadowsTooltip);
-    // The browser build has no sun shadows: the row stays hidden there.
-#ifdef __EMSCRIPTEN__
-    model.sunShadowsAvailable = false;
-#else
     model.sunShadowsAvailable = true;
-#endif
     c.Bind("sun_shadows_available", &model.sunShadowsAvailable);
     c.Bind("sharpen_labels", &model.sharpenLabels);
     c.Bind("sharpen_index", &model.sharpenIndex);

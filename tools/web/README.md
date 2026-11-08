@@ -106,6 +106,12 @@ page tells iOS users to update by what the browser lacks, not by that number. iP
     for each upload, and the clearing took a few per cent of every frame.
   - The bind group cache hashes its key (64 ids) a word at a time instead of a byte at a time: 512 steps per
     lookup took 5 % of a phone's frame (2026-11-03).
+- Bind groups match the shader (the sun shadows came out black, 2026-11-08):
+  - A group holds only the textures and buffers its shader declares. A texture the game left bound in slot 1
+    for an earlier draw made the group for a one-texture shader fail.
+  - The cache key includes the layout, so two shaders with the same bindings but different layouts don't share
+    a group.
+- Blend constants are passed as {r, g, b, a} (they were {a, r, g, b}). The game doesn't use them yet.
 - Fences (Enhanced graphics crashed or froze the tab, 2026-10-22; found with AddressSanitizer, see below):
   - `SubmitAndAcquireFence` read the queue from the command buffer that Submit had just freed.
   - `GenerateMipmaps` freed its temporary texture while the command buffer still tracked it.
