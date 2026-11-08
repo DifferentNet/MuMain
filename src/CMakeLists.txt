@@ -53,6 +53,20 @@ if(EMSCRIPTEN)
   if(NOT MU_SDL_SOURCE_DIR)
     message(FATAL_ERROR "The web build needs MU_SDL_SOURCE_DIR: a checkout of SDL with the WebGPU GPU backend.")
   endif()
+  # The fork must carry this repo's patch exactly (tools/web/patches/sdl-webgpu.patch): an older
+  # patch still compiles but draws wrong (the sun shadows need its bind group fixes).
+  set(MU_SDL_WEBGPU_PATCH "${CMAKE_SOURCE_DIR}/tools/web/patches/sdl-webgpu.patch")
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${MU_SDL_WEBGPU_PATCH}")
+  find_package(Git REQUIRED)
+  execute_process(
+    COMMAND "${GIT_EXECUTABLE}" apply --reverse --check "${MU_SDL_WEBGPU_PATCH}"
+    WORKING_DIRECTORY "${MU_SDL_SOURCE_DIR}"
+    RESULT_VARIABLE mu_sdl_patch_result
+    OUTPUT_QUIET ERROR_QUIET)
+  if(NOT mu_sdl_patch_result EQUAL 0)
+    message(FATAL_ERROR "MU_SDL_SOURCE_DIR (${MU_SDL_SOURCE_DIR}) does not carry tools/web/patches/sdl-webgpu.patch "
+                        "as it is now. Reset it to the fork commit and git apply the patch (tools/web/README.md).")
+  endif()
   set(SDL_WEBGPU ON CACHE BOOL "" FORCE)
   set(SDL_WEBGPU_EMSCRIPTEN ON CACHE BOOL "" FORCE)
 endif()

@@ -16,7 +16,7 @@ container behind Caddy (`server/README.md`, "Browser client").
 - **emsdk 6.0.13** (`EMSDK_DIR`, default `F:/trench/toolchain/emsdk`).
 - **SDL with the WebGPU backend**: https://github.com/TheeStickmahn/SDL_wgpu at commit
   `09026288bffe2bf9d7451255b766256a34bd8963` (libsdl-org/SDL#16020) plus `patches/sdl-webgpu.patch`
-  (`git apply` in the checkout). `MU_SDL_SOURCE_DIR` points CMake at it; the web build requires it.
+  (`git apply` in the checkout). `MU_SDL_SOURCE_DIR` points CMake at it; the web build requires it, and configuring stops when that tree does not carry the patch as it is in this repo (`git apply --reverse --check`).
 - **naga-wasm 30.2.0** (npm) for the shader conversion below. Only needed after shader changes.
 
 ## How the pieces fit
@@ -35,7 +35,7 @@ container behind Caddy (`server/README.md`, "Browser client").
 | Shaders | `src/shaders/compiled/*.wgsl`, `Core/Platform/web/RmlUiShadersWgsl.h` | WGSL from the SPIR-V blobs (see below). |
 | RmlUi shaders | `Core/Platform/web/RmlUiGpuShaders.cpp` | RmlUi's SDL_GPU renderer asks for SPIR-V; the build redirects its two calls here, which hand out the WGSL version by the SPIR-V's hash. |
 | Desktop-only libraries | `Core/Platform/web/include`, `TurboJpegShim.cpp`, `CurlFileDownloaderWeb.cpp`, `PlatformCryptoWeb.cpp` | libjpeg-turbo through SDL_image; no downloads. The saved login (Remember me, Save password) is encrypted with a key of its own in the browser's storage (`mu-web/login-key`), see `PlatformCryptoWeb.cpp`. |
-| Resolution | `index.html` `muDisplay`, `Core/Platform/web/WebDisplay.*`, `Winmain.cpp` `MuWebFollowPageSize`, `MuWebDisplayResolutions` | Options has "Auto" first, the default: the game takes the game area's size in the screen's real pixels (devicePixelRatio), so the picture is drawn 1:1, and draws its interface that many times larger (the content scale, as on a desktop display at 125 or 150 %). It follows window resizes, Fullscreen and browser zoom. The footer's Quality caps the pixels: High 2560x1440 (phones 1.5 million), Medium 1920x1080 (0.75 M), Low 1280x720 (0.4 M); never below 640x480. Lowest has Low's pixels and also turns Options' six effect and shadow settings off (`Winmain.cpp` `MuWebFollowLowestQuality`); the player's own come back with another quality (kept meanwhile in `mu-web/effects-before-lowest`). Weak phones start at Lowest until a quality is picked: ARM Mali Bifrost or Midgard, Adreno 5xx or older, PowerVR, or 2 GB of memory or less (`index.html` `weakPhoneGpu`; `?weakphone` tries it anywhere). `?q=high\|medium\|low\|lowest` sets it, `?dpr=N` stands in for the screen's ratio, `?reset` forgets both. A size picked in Options (the usual sizes up to the screen's pixels, plus the one that fills the window exactly) turns "Auto" off and is scaled to the window, keeping its shape; the browser keeps the choice (`mu-web/resolution`, `mu-web/quality`). |
+| Resolution | `index.html` `muDisplay`, `Core/Platform/web/WebDisplay.*`, `Winmain.cpp` `MuWebFollowPageSize`, `MuWebDisplayResolutions` | Options has "Auto" first, the default: the game takes the game area's size in the screen's real pixels (devicePixelRatio), so the picture is drawn 1:1, and draws its interface that many times larger (the content scale, as on a desktop display at 125 or 150 %). It follows window resizes, Fullscreen and browser zoom. The footer's Quality caps the pixels: High 2560x1440 (phones 1.5 million), Medium 1920x1080 (0.75 M), Low 1280x720 (0.4 M); never below 640x480. Lowest has Low's pixels and also turns Options' six effect and shadow settings and the Sun shadows off (`Winmain.cpp` `MuWebFollowLowestQuality`); the player's own come back with another quality (kept meanwhile in `mu-web/effects-before-lowest`). Weak phones start at Lowest until a quality is picked: ARM Mali Bifrost or Midgard, Adreno 5xx or older, PowerVR, or 2 GB of memory or less (`index.html` `weakPhoneGpu`; `?weakphone` tries it anywhere). `?q=high\|medium\|low\|lowest` sets it, `?dpr=N` stands in for the screen's ratio, `?reset` forgets both. A size picked in Options (the usual sizes up to the screen's pixels, plus the one that fills the window exactly) turns "Auto" off and is scaled to the window, keeping its shape; the browser keeps the choice (`mu-web/resolution`, `mu-web/quality`). |
 | Settings | `index.html` `saveConfig`, `WebFileSystem.cpp` `MuWeb_MergeSavedConfig` | config.ini (resolution, volume, …) is kept in the browser's storage (`mu-web/config.ini`) and comes back on the next visit, with the server copy's `[CONNECTION SETTINGS]`. |
 | Frame pacing | `Winmain.cpp` `WaitForBrowserFrame`, `SceneCore.cpp` `WaitForNextActivity` | After each frame the game hands the browser a turn and keeps to about 60 frames a second (no cap while loading). `sleep_for` and `yield` would spin without letting the browser deliver network messages. |
 
@@ -106,6 +106,12 @@ page tells iOS users to update by what the browser lacks, not by that number. iP
     for each upload, and the clearing took a few per cent of every frame.
   - The bind group cache hashes its key (64 ids) a word at a time instead of a byte at a time: 512 steps per
     lookup took 5 % of a phone's frame (2026-11-03).
+- Bind groups match the shader (the sun shadows came out black, 2026-11-08):
+  - A group holds only the textures and buffers its shader declares. A texture the game left bound in slot 1
+    for an earlier draw made the group for a one-texture shader fail.
+  - The cache key includes the layout, so two shaders with the same bindings but different layouts don't share
+    a group.
+- Blend constants are passed as {r, g, b, a} (they were {a, r, g, b}). The game doesn't use them yet.
 - Fences (Enhanced graphics crashed or froze the tab, 2026-10-22; found with AddressSanitizer, see below):
   - `SubmitAndAcquireFence` read the queue from the command buffer that Submit had just freed.
   - `GenerateMipmaps` freed its temporary texture while the command buffer still tracked it.

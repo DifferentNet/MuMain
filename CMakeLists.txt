@@ -156,9 +156,7 @@ if(EMSCRIPTEN)
         basic_textured_softclip.frag
         basic_textured_fog_softclip.frag
         skinned_lit_softclip.frag)
-    set(MU_WEB_SHADER_STAGE_NAMES ${MU_SHADER_STAGE_NAMES})
-    list(REMOVE_ITEM MU_WEB_SHADER_STAGE_NAMES ${MU_DESKTOP_ONLY_SHADER_STAGE_NAMES})
-    foreach(shader_stage IN LISTS MU_WEB_SHADER_STAGE_NAMES MU_WEB_SOFT_CLIP_SHADER_STAGE_NAMES)
+    foreach(shader_stage IN LISTS MU_SHADER_STAGE_NAMES MU_WEB_SOFT_CLIP_SHADER_STAGE_NAMES)
         configure_file("${MU_SHADER_COMPILED_DIR}/${shader_stage}.wgsl"
                        "${MU_SHADER_OUTPUT_DIR}/${shader_stage}.wgsl" COPYONLY)
     endforeach()

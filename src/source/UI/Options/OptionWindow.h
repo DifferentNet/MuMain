@@ -398,7 +398,8 @@ namespace mu::ui::window
             Rml::String anisotropyRowLabel;
             Rml::String anisotropyValueLabel;
             Rml::String anisotropyTooltip;
-            // [Render] SunShadows: Off / Medium / High; no row in the browser build.
+            // [Render] SunShadows (WebSunShadows in the browser): Off / Medium / High; in the browser no row on
+            // cards without sun shadow pipelines.
             std::vector<Rml::String> sunShadowsLabels;
             int sunShadowsIndex = 0;
             bool sunShadowsAvailable = true;
