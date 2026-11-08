@@ -8400,7 +8400,7 @@ void RenderLinkObject(float x, float y, float z, CHARACTER* c, PART_t* f, int Ty
     }
 
     if (gMapManager.WorldActive != WD_10HEAVEN && gMapManager.InHellas() == FALSE &&
-        !g_Direction.m_CKanturu.IsMayaScene() && !IsWingShadowDisabledDebug())
+        !g_Direction.m_CKanturu.IsMayaScene() && !IsWingShadowDisabledDebug() && SceneFlag != LOG_IN_SCENE)
     {
         switch (Type)        // 날개인지 검사
         {
@@ -8739,7 +8739,8 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
     if (byRender == CHARACTER_ANIMATION)
         Calc_ObjectAnimation(o, Translate, Select);
 
-    if (o->Alpha >= 0.5f && c->HideShadow == false)
+    // No ground shadow on the login screen: the hero stands in front of a flat picture.
+    if (o->Alpha >= 0.5f && c->HideShadow == false && SceneFlag != LOG_IN_SCENE)
     {
         if (gMapManager.WorldActive != WD_10HEAVEN && (o->Type == MODEL_PLAYER) && (!(MODEL_HORN_OF_UNIRIA <= c->Helper.Type && c->Helper.Type <= MODEL_HORN_OF_DINORANT) || c->SafeZone)
             && gMapManager.InHellas() == false

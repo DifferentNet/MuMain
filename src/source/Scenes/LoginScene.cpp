@@ -35,6 +35,9 @@
 #include "Render/Text/CUIRenderText.h"
 #include "Scenes/SceneLightingSetup.h"
 #include "Scenes/ScenePostProcessing.h"
+#include "Render/Sprites/GlobalBitmap.h"
+
+#include <cmath>
 
 // External declarations
 extern int DeleteGuildIndex;
@@ -47,6 +50,8 @@ extern double WorldTime;
 extern HFONT g_hFont;
 extern wchar_t m_ExeVersion[11];
 extern HWND g_hWnd;
+extern unsigned int WindowWidth;
+extern unsigned int WindowHeight;
 
 #ifdef _EDITOR
 extern "C" float DevEditor_GetLoginTerrainDist();
@@ -88,6 +93,106 @@ struct LoginCameraState {
 LoginCameraState g_loginCamera;
 
 }  // namespace
+
+//=============================================================================
+// Skynet backdrop scene (ghinzuro 2026-11-08, option B)
+//=============================================================================
+// The castle of map 73 is gone from the login screen: a painting of the sky city Skynet
+// (Data/Logo/SkynetLogin.OZJ) fills the screen, and a knight in the top set with wings stands in
+// front of it, seen by a camera that doesn't move. The map's terrain still loads (the hero stands
+// on its heights) but isn't drawn, and its objects aren't loaded at all (MapManager::LoadWorld).
+namespace LoginBackdrop
+{
+constexpr int TEXTURE = BITMAP_LOG_IN + 18;
+constexpr float IMAGE_ASPECT = 2.0f;  // 2048x1024
+// Which part of the picture stays on screen when the window is narrower (0 left, 1 right) or
+// wider (0 top, 1 bottom) than the picture.
+constexpr float ANCHOR_X = 0.45f;
+constexpr float ANCHOR_Y = 0.5f;
+
+// Not the hero's slot 0: the game moves the hero by the mouse.
+constexpr int HERO_INDEX = 1;
+constexpr float HERO_X = 128.f * TERRAIN_SCALE;
+constexpr float HERO_Y = 128.f * TERRAIN_SCALE;
+constexpr float HERO_ANGLE = 15.f;  // 0 faces the camera, more turns the face to the screen's right
+
+// The camera relative to the hero's feet; it looks along +Y, so +X is the screen's right. Its X
+// follows the window's shape, so the hero stands at the same place of the screen: HERO_SCREEN_X
+// of the half width right of the centre (the picture's empty dark side).
+constexpr float HERO_SCREEN_X = 0.7f;
+constexpr float CAMERA_Y = -420.f;
+constexpr float CAMERA_Z = 140.f;
+constexpr float CAMERA_PITCH = -90.f;  // -90 looks straight ahead
+constexpr float CAMERA_FOV = 45.f;
+
+vec3_t g_heroFeet = {HERO_X, HERO_Y, 0.f};
+
+void CreateHeroOnStage()
+{
+    CHARACTER* c = CreateHero(HERO_INDEX, CLASS_KNIGHT, 0, HERO_X, HERO_Y, HERO_ANGLE);
+    // The Season 4 knight set at +15 with excellent shine, the third wings and the top sword.
+    const int set[] = {MODEL_TITAN_HELM, MODEL_TITAN_ARMOR, MODEL_TITAN_PANTS, MODEL_TITAN_GLOVES, MODEL_TITAN_BOOTS};
+    const int parts[] = {BODYPART_HELM, BODYPART_ARMOR, BODYPART_PANTS, BODYPART_GLOVES, BODYPART_BOOTS};
+    for (int i = 0; i < 5; ++i)
+    {
+        c->BodyPart[parts[i]].Type = set[i];
+        c->BodyPart[parts[i]].Level = 15;
+        c->BodyPart[parts[i]].ExcellentFlags = 0x3F;
+        c->BodyPart[parts[i]].AncientDiscriminator = 0;
+    }
+    c->Weapon[0].Type = MODEL_IMPERIAL_SWORD;
+    c->Weapon[0].Level = 15;
+    c->Weapon[0].ExcellentFlags = 0x3F;
+    c->Weapon[1].Type = -1;
+    c->Wing.Type = MODEL_WING_OF_STORM;
+    c->Wing.Level = 15;
+    c->Helper.Type = -1;
+    c->ID[0] = L'\0';
+    SetPlayerStop(c);
+
+    g_heroFeet[2] = RequestTerrainHeight(HERO_X, HERO_Y);
+    c->Object.Position[2] = g_heroFeet[2];
+}
+
+void SetCamera()
+{
+    g_Camera.FOV = CAMERA_FOV;
+    const float aspect = (WindowHeight > 0) ? static_cast<float>(WindowWidth) / static_cast<float>(WindowHeight) : 4.f / 3.f;
+    const float halfHeight = std::tan(CAMERA_FOV * 0.5f * 3.14159265f / 180.f) * -CAMERA_Y;
+    vec3_t offset = {-HERO_SCREEN_X * halfHeight * aspect, CAMERA_Y, CAMERA_Z};
+    vec3_t angle = {CAMERA_PITCH, 0.f, 0.f};
+    MoveCharacterCamera(g_heroFeet, offset, angle);
+}
+
+// The picture over the whole window, cut to the window's shape (it fills it, no bars).
+void RenderPicture()
+{
+    if (Bitmaps.GetTexture(TEXTURE) == nullptr)
+        return;
+    const float width = static_cast<float>(WindowWidth);
+    const float height = static_cast<float>(WindowHeight);
+    if (width <= 0.f || height <= 0.f)
+        return;
+
+    float u = 0.f, v = 0.f, uWidth = 1.f, vHeight = 1.f;
+    const float aspect = width / height;
+    if (aspect < IMAGE_ASPECT)
+    {
+        uWidth = aspect / IMAGE_ASPECT;
+        u = (1.f - uWidth) * ANCHOR_X;
+    }
+    else
+    {
+        vHeight = IMAGE_ASPECT / aspect;
+        v = (1.f - vHeight) * ANCHOR_Y;
+    }
+
+    BeginBitmap();
+    DisableAlphaBlend();
+    RenderBitmap(TEXTURE, 0.f, 0.f, width, height, u, v, uWidth, vHeight, false, false);
+    EndBitmap();
+}
+}  // namespace LoginBackdrop
 
 //=============================================================================
 // Accessor functions for external use
@@ -237,6 +342,12 @@ void MoveCamera()
         return;
     }
 
+    if (SceneFlag == LOG_IN_SCENE)
+    {
+        LoginBackdrop::SetCamera();
+        return;
+    }
+
     if (g_loginCamera.currentCount == -1)
     {
         InitializeLoginCamera();
@@ -285,8 +396,10 @@ void CreateLogInScene()
     // FIX: Enable tour mode with offset correction
     // Tour mode waypoints work well for movement, but need position offset
     // Offset is applied in CCameraMove::GetCurrentCameraPos()
-    CCameraMove::GetInstancePtr()->PlayCameraWalk(Hero->Object.Position, 1000);
-    CCameraMove::GetInstancePtr()->SetTourMode(TRUE, FALSE, 0);  // Start from waypoint 0
+    // No camera tour over the castle: the Skynet picture and a hero, seen from one spot.
+    CCameraMove::GetInstancePtr()->SetTourMode(FALSE);
+    LoginBackdrop::CreateHeroOnStage();
+    LoginBackdrop::SetCamera();
 
     MoveMainCamera();
 
@@ -380,7 +493,7 @@ bool NewRenderLogInScene(HDC hDC)
 {
     if (!InitLogIn) return false;
 
-    FogEnable = true;
+    FogEnable = false;
 
     vec3_t pos;
     VectorCopy(g_Camera.Position, pos);
@@ -404,6 +517,8 @@ bool NewRenderLogInScene(HDC hDC)
 #endif
     g_Camera.ViewNear = 100.f;  // Push near plane out to preserve z-buffer precision
 
+    LoginBackdrop::RenderPicture();
+
     const auto viewport = UI::Scaling::FullReferenceViewport();
     BeginOpengl(viewport.x, viewport.y, viewport.width, viewport.height);
     Scenes::Lighting::SubmitSceneLighting();
@@ -416,7 +531,6 @@ bool NewRenderLogInScene(HDC hDC)
 
     if (!g_CreditWin.IsVisible())
     {
-        { FRAME_PROFILE(Terrain); RenderTerrain(false); }
         { FRAME_PROFILE(Characters); RenderCharactersClient(); }
         { FRAME_PROFILE(Objects); RenderMount(); }
         {
@@ -453,8 +567,8 @@ bool NewRenderLogInScene(HDC hDC)
 
     BeginBitmap();
 
-    const bool tourMode = CCameraMove::GetInstancePtr()->IsTourMode();
-    if (tourMode)
+    // The logo shows over the picture as it did over the camera tour.
+    const bool tourMode = true;
     {
         g_fMULogoAlpha += 0.02f;
         if (g_fMULogoAlpha > 10.0f) g_fMULogoAlpha = 10.0f;
