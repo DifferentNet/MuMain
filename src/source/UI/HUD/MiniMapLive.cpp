@@ -18,6 +18,8 @@ constexpr std::wstring_view RowTag = L"#MML|";
 constexpr std::wstring_view EndTag = L"#MML.|";
 constexpr const wchar_t* Command = L"/mmlive";
 constexpr auto RequestInterval = std::chrono::seconds(5);
+// An older list (a map closed long ago) is not drawn while the new answer is on its way.
+constexpr auto ShownFor = std::chrono::seconds(30);
 // A list longer than the server ever sends (20 rows) is cut here.
 constexpr size_t MaxEntries = 32;
 
@@ -73,6 +75,7 @@ bool Store::TakeMessage(const std::wstring& text)
             m_map = m_pendingMap;
             m_cell = m_pendingCell;
             m_receiving = false;
+            m_received = std::chrono::steady_clock::now();
             ++m_version;
         }
         return true;
@@ -108,6 +111,11 @@ void Store::Request()
     SocketClient->ToGameServer()->SendPublicChatMessage(MU_C16(Hero->ID), MU_C16(Command));
 }
 
+void Store::Closed()
+{
+    m_lastRequest = {};
+}
+
 void Store::Reset()
 {
     if (!m_entries.empty())
@@ -117,11 +125,14 @@ void Store::Reset()
     m_map = m_pendingMap = -1;
     m_receiving = false;
     m_lastRequest = {};
+    m_received = {};
 }
 
 const std::vector<Entry>* Store::EntriesFor(int map) const
 {
-    return map == m_map ? &m_entries : nullptr;
+    if (map != m_map || std::chrono::steady_clock::now() - m_received > ShownFor)
+        return nullptr;
+    return &m_entries;
 }
 
 namespace
