@@ -13034,6 +13034,30 @@
   <data name="QuestRequirementBuff" xml:space="preserve">
     <value>Bonus: %ls</value>
   </data>
+  <data name="GraphicsPresetRow" xml:space="preserve">
+    <value>Predefinição gráfica</value>
+  </data>
+  <data name="GraphicsPresetLow" xml:space="preserve">
+    <value>Baixo</value>
+  </data>
+  <data name="GraphicsPresetMedium" xml:space="preserve">
+    <value>Médio</value>
+  </data>
+  <data name="GraphicsPresetHigh" xml:space="preserve">
+    <value>Alto</value>
+  </data>
+  <data name="GraphicsPresetUltra" xml:space="preserve">
+    <value>Ultra</value>
+  </data>
+  <data name="GraphicsPresetCustom" xml:space="preserve">
+    <value>Personalizado</value>
+  </data>
+  <data name="FxaaRow" xml:space="preserve">
+    <value>FXAA</value>
+  </data>
+  <data name="SharpenRow" xml:space="preserve">
+    <value>Nitidez</value>
+  </data>
   <data name="HdTexturesRow" xml:space="preserve">
     <value>Texturas HD (após reiniciar)</value>
   </data>

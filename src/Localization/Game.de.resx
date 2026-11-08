@@ -13132,6 +13132,30 @@
   <data name="Other items" xml:space="preserve">
     <value>Andere Gegenstände</value>
   </data>
+  <data name="GraphicsPresetRow" xml:space="preserve">
+    <value>Grafikvoreinstellung</value>
+  </data>
+  <data name="GraphicsPresetLow" xml:space="preserve">
+    <value>Niedrig</value>
+  </data>
+  <data name="GraphicsPresetMedium" xml:space="preserve">
+    <value>Mittel</value>
+  </data>
+  <data name="GraphicsPresetHigh" xml:space="preserve">
+    <value>Hoch</value>
+  </data>
+  <data name="GraphicsPresetUltra" xml:space="preserve">
+    <value>Ultra</value>
+  </data>
+  <data name="GraphicsPresetCustom" xml:space="preserve">
+    <value>Benutzerdefiniert</value>
+  </data>
+  <data name="FxaaRow" xml:space="preserve">
+    <value>FXAA</value>
+  </data>
+  <data name="SharpenRow" xml:space="preserve">
+    <value>Schärfe</value>
+  </data>
   <data name="HdTexturesRow" xml:space="preserve">
     <value>HD-Texturen (nach Neustart)</value>
   </data>
