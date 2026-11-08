@@ -818,34 +818,44 @@ bool CGlobalBitmap::OpenTga(GLuint uiBitmapIndex, const std::wstring& filename, 
 {
     namespace Ozt = Render::Textures::Ozt;
 
-    std::wstring filename_ozt;
-    ExchangeExt(filename, L"OZT", filename_ozt);
+    std::wstring classic_ozt;
+    ExchangeExt(filename, L"OZT", classic_ozt);
+    std::wstring filename_ozt = keepPixels ? classic_ozt : Render::Textures::Hd::Resolve(classic_ozt);
 
-    if (!keepPixels)
+    // The file's bytes; the HD art ships packed (scripts/hd_pack.py), so back to the original file first.
+    const auto readOzt = [](const std::wstring& path, std::vector<unsigned char>& bytes)
     {
-        filename_ozt = Render::Textures::Hd::Resolve(filename_ozt);
-    }
-    std::ifstream input(Render::Sprites::NarrowBitmapPath(filename_ozt), std::ios::binary);
-    if (!input)
-    {
-        mu::log::Get("render")->debug("OpenTga -- file open failed: {}", mu_wchar_to_utf8(filename_ozt.c_str()));
-        return false;
-    }
-
-    std::vector<unsigned char> pakBuffer((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
-    input.close();
-
-    // The HD art ships packed (scripts/hd_pack.py): back to the original file first.
-    if (Render::Textures::PackedOzt::IsPacked(pakBuffer))
-    {
-        std::vector<unsigned char> unpacked;
-        if (!Render::Textures::PackedOzt::Unpack(pakBuffer, unpacked))
+        std::ifstream input(Render::Sprites::NarrowBitmapPath(path), std::ios::binary);
+        if (!input)
         {
-            g_ErrorReport.Write(L"OpenTga: broken packed file %ls (%zu bytes)\r\n", filename_ozt.c_str(),
-                                pakBuffer.size());
+            mu::log::Get("render")->debug("OpenTga -- file open failed: {}", mu_wchar_to_utf8(path.c_str()));
             return false;
         }
-        pakBuffer = std::move(unpacked);
+        bytes.assign(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
+        if (!Render::Textures::PackedOzt::IsPacked(bytes))
+        {
+            return true;
+        }
+        std::vector<unsigned char> unpacked;
+        if (!Render::Textures::PackedOzt::Unpack(bytes, unpacked))
+        {
+            g_ErrorReport.Write(L"OpenTga: broken packed file %ls (%zu bytes)\r\n", path.c_str(), bytes.size());
+            return false;
+        }
+        bytes = std::move(unpacked);
+        return true;
+    };
+
+    std::vector<unsigned char> pakBuffer;
+    if (!readOzt(filename_ozt, pakBuffer))
+    {
+        // A missing or broken HD copy: the original texture instead.
+        if (filename_ozt == classic_ozt || !readOzt(classic_ozt, pakBuffer))
+        {
+            return false;
+        }
+        g_ErrorReport.Write(L"OpenTga: HD copy unusable, original used: %ls\r\n", classic_ozt.c_str());
+        filename_ozt = classic_ozt;
     }
 
     // A marked file holds an image up to its scale times the largest original.
@@ -1161,7 +1171,8 @@ bool CGlobalBitmap::BuildMipChain(GLuint uiBitmapIndex)
     const auto width = static_cast<int>(bitmap.Width);
     const auto height = static_cast<int>(bitmap.Height);
     SDL_GPUDevice* device = static_cast<SDL_GPUDevice*>(mu::GetRenderer().GetDevice());
-    if (!device || !bitmap.worldTexture || bitmap.mipLevels > 1u || width <= 0 || height <= 0 ||
+    // HD art (scale above 1) got its whole chain at load; its pixels are not the original file's.
+    if (!device || !bitmap.worldTexture || bitmap.mipLevels > 1u || bitmap.scale > 1u || width <= 0 || height <= 0 ||
         (bitmap.Components != 3 && bitmap.Components != 4))
     {
         return false;

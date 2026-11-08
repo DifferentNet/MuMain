@@ -1,8 +1,11 @@
 #include "PackedOzt.h"
 
 #include "OztFile.h"
+#include "Render/Sprites/BitmapTextureLimits.h"
 
 #include <cstring>
+#include <new>
+#include <stdexcept>
 
 #if defined(MU_HAS_WEBP)
 #include <webp/decode.h>
@@ -13,6 +16,16 @@ namespace Render::Textures::PackedOzt
 namespace
 {
 constexpr std::uint8_t Magic[4] = {'M', 'U', 'W', '1'};
+
+// The HD art is at most 4 times the largest original (UpscaleMarker: scale 2 or 4).
+constexpr int MaximumScale = 4;
+constexpr int MaximumWidth = Render::Sprites::kBitmapMaximumWidth * MaximumScale;
+constexpr int MaximumHeight = Render::Sprites::kBitmapMaximumHeight * MaximumScale;
+
+// Where the OZT header (after its 4-byte "MUX" marker) keeps width, height and bits per pixel.
+constexpr std::size_t WidthOffset = 4 + 12;
+constexpr std::size_t HeightOffset = 4 + 14;
+constexpr std::size_t BitsOffset = 4 + 16;
 
 std::uint32_t ReadUInt32(std::span<const std::uint8_t> file, std::size_t offset)
 {
@@ -39,39 +52,64 @@ bool Unpack(std::span<const std::uint8_t> file, std::vector<std::uint8_t>& out)
         return false;
     }
 #if defined(MU_HAS_WEBP)
-    const std::size_t size = ReadUInt32(file, 4);
-    const std::size_t headSize = ReadUInt16(file, 8);
-    const std::size_t tailSize = ReadUInt32(file, 10);
-    if (headSize < Ozt::HeaderSize || file.size() - PrefixSize < headSize + tailSize)
+    // Every size is checked in 64 bits, part by part: on x86 a sum of two sizes from a broken
+    // file could wrap round and the buffer come out smaller than what is written into it.
+    const std::uint64_t size = ReadUInt32(file, 4);
+    const std::uint64_t headSize = ReadUInt16(file, 8);
+    const std::uint64_t tailSize = ReadUInt32(file, 10);
+    const std::uint64_t rest = file.size() - PrefixSize;
+    if (headSize < Ozt::HeaderSize || headSize > rest || tailSize > rest - headSize || headSize > size ||
+        tailSize > size - headSize)
     {
         return false;
     }
     const std::uint8_t* head = file.data() + PrefixSize;
-    const std::uint8_t* tail = head + headSize;
-    const std::uint8_t* webp = tail + tailSize;
-    const std::size_t webpSize = file.size() - PrefixSize - headSize - tailSize;
+    const std::uint8_t* tail = head + static_cast<std::size_t>(headSize);
+    const std::uint8_t* webp = tail + static_cast<std::size_t>(tailSize);
+    const auto webpSize = static_cast<std::size_t>(rest - headSize - tailSize);
 
     int width = 0;
     int height = 0;
-    if (!WebPGetInfo(webp, webpSize, &width, &height) || width <= 0 || height <= 0)
+    if (!WebPGetInfo(webp, webpSize, &width, &height) || width <= 0 || height <= 0 || width > MaximumWidth ||
+        height > MaximumHeight)
     {
         return false;
     }
-    const std::size_t pixelBytes = static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * 4;
-    if (headSize + pixelBytes + tailSize != size)
+    // The picture must be the one the OZT header describes, 32 bits a pixel.
+    if (ReadUInt16(file, PrefixSize + WidthOffset) != width || ReadUInt16(file, PrefixSize + HeightOffset) != height ||
+        file[PrefixSize + BitsOffset] != 32)
+    {
+        return false;
+    }
+    const std::uint64_t pixelBytes = static_cast<std::uint64_t>(width) * static_cast<std::uint64_t>(height) * 4u;
+    if (pixelBytes != size - headSize - tailSize)
     {
         return false;
     }
 
-    out.resize(size);
-    std::memcpy(out.data(), head, headSize);
-    // The OZT keeps its pixels as BGRA in file order, as hd_pack.py packed them.
-    if (WebPDecodeBGRAInto(webp, webpSize, out.data() + headSize, pixelBytes, width * 4) == nullptr)
+    try
+    {
+        out.resize(static_cast<std::size_t>(size));
+    }
+    catch (const std::bad_alloc&)
     {
         out.clear();
         return false;
     }
-    std::memcpy(out.data() + headSize + pixelBytes, tail, tailSize);
+    catch (const std::length_error&)
+    {
+        out.clear();
+        return false;
+    }
+    std::memcpy(out.data(), head, static_cast<std::size_t>(headSize));
+    // The OZT keeps its pixels as BGRA in file order, as hd_pack.py packed them.
+    if (WebPDecodeBGRAInto(webp, webpSize, out.data() + headSize, static_cast<std::size_t>(pixelBytes), width * 4) ==
+        nullptr)
+    {
+        out.clear();
+        return false;
+    }
+    std::memcpy(out.data() + headSize + pixelBytes, tail, static_cast<std::size_t>(tailSize));
     return true;
 #else
     return false;

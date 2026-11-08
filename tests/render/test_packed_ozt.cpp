@@ -132,5 +132,77 @@ TEST_CASE("a broken packed file is refused")
         packed.resize(Packed::PrefixSize);
         CHECK_FALSE(Packed::Unpack(packed, out));
     }
+    SUBCASE("tail size near 4 GB: head + tail would wrap round in 32 bits")
+    {
+        packed[10] = 0xF0;
+        packed[11] = 0xFF;
+        packed[12] = 0xFF;
+        packed[13] = 0xFF;
+        CHECK_FALSE(Packed::Unpack(packed, out));
+    }
+    SUBCASE("tail longer than the file")
+    {
+        const auto tail = static_cast<std::uint32_t>(packed.size());
+        for (int i = 0; i < 4; ++i)
+        {
+            packed[10 + i] = static_cast<std::uint8_t>(tail >> (8 * i));
+        }
+        CHECK_FALSE(Packed::Unpack(packed, out));
+    }
+    SUBCASE("head longer than the file")
+    {
+        packed[8] = 0xFF;
+        packed[9] = 0xFF;
+        CHECK_FALSE(Packed::Unpack(packed, out));
+    }
+    SUBCASE("original size smaller than head + tail")
+    {
+        packed[4] = 1;
+        packed[5] = 0;
+        packed[6] = 0;
+        packed[7] = 0;
+        CHECK_FALSE(Packed::Unpack(packed, out));
+    }
+    SUBCASE("OZT header width not the picture's")
+    {
+        packed[Packed::PrefixSize + 4 + 12] ^= 1;
+        CHECK_FALSE(Packed::Unpack(packed, out));
+    }
+    SUBCASE("OZT header height not the picture's")
+    {
+        packed[Packed::PrefixSize + 4 + 14] ^= 1;
+        CHECK_FALSE(Packed::Unpack(packed, out));
+    }
+    SUBCASE("OZT header not 32 bits a pixel")
+    {
+        packed[Packed::PrefixSize + 4 + 16] = 24;
+        CHECK_FALSE(Packed::Unpack(packed, out));
+    }
+    SUBCASE("WebP data broken")
+    {
+        packed.back() ^= 0xFF;
+        packed[packed.size() - 2] ^= 0xFF;
+        packed[packed.size() / 2 + 20] ^= 0x55;
+        // Either refused or, if libwebp still decodes it, nothing beyond the original size.
+        if (Packed::Unpack(packed, out))
+        {
+            CHECK(out.size() == ozt.size());
+            out.clear();
+        }
+    }
     CHECK(out.empty());
+}
+
+TEST_CASE("a picture wider than 4 times the largest original is refused before any allocation")
+{
+    // 4097 x 1: within libwebp's limits, beyond the HD art's (1024 x scale 4).
+    const auto ozt = MakeOzt(4097, 1, {});
+    const auto packed = Pack(ozt, 4097, 1, 0);
+    std::vector<std::uint8_t> out;
+    CHECK_FALSE(Packed::Unpack(packed, out));
+    CHECK(out.empty());
+
+    const auto widest = MakeOzt(4096, 1, {});
+    REQUIRE(Packed::Unpack(Pack(widest, 4096, 1, 0), out));
+    CHECK(out == widest);
 }
