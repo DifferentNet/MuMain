@@ -78,7 +78,7 @@ SunShadowUniform PackSunShadowUniform(const SunShadowFrame& frame)
     uniform.directionAndSoftness[0] = towardSun.x;
     uniform.directionAndSoftness[1] = towardSun.y;
     uniform.directionAndSoftness[2] = towardSun.z;
-    uniform.directionAndSoftness[3] = std::clamp(frame.softness, 0.5f, 8.0f);
+    uniform.directionAndSoftness[3] = std::clamp(frame.softness / texelWorld, 0.5f, 32.0f);
     return uniform;
 }
 

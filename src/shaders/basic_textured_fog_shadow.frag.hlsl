@@ -66,7 +66,7 @@ float4 main(FSInput input) : SV_Target
     const float3 normal = input.worldNormal;
     const float normalLength = length(normal);
     const float3 unitNormal = normalLength > 1e-4 ? normal / normalLength : float3(0.0, 0.0, 0.0);
-    color.rgb *= SunShadowScale(SunShadowAmount(input.worldPositionAndDynamicLights.xyz, unitNormal));
+    color.rgb *= SunShadowScale(SunShadowAmount(input.worldPositionAndDynamicLights.xyz, unitNormal, input.pos.xy));
     if (fogEnabled && sceneFogColor.w > 0.0)
         color.rgb = lerp(color.rgb, sceneFogColor.rgb, EnhancedFogAmount(input.eyeDepth));
     return color;

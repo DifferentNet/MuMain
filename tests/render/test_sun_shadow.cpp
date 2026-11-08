@@ -82,12 +82,16 @@ TEST_CASE("the uniform carries the strength, the texel and a unit sun direction 
 {
     mu::SunShadowFrame frame = TestFrame();
     frame.strength = 1.5f;
-    frame.softness = 20.0f;
+    frame.softness = 1000.0f;
     const mu::SunShadowUniform uniform = mu::PackSunShadowUniform(frame);
     CHECK(uniform.parameters[0] == doctest::Approx(1.0f / 2048.0f));
     CHECK(uniform.parameters[1] == doctest::Approx(1.0f));
     CHECK(uniform.parameters[3] == doctest::Approx(1.0f));
-    CHECK(uniform.directionAndSoftness[3] == doctest::Approx(8.0f));
+    CHECK(uniform.directionAndSoftness[3] == doctest::Approx(32.0f));
+    // Softness is in world units: the same edge at 2048 and 4096 texels.
+    frame.softness = 12.0f;
+    const float texelWorld = 2.0f * frame.halfExtent / 2048.0f;
+    CHECK(mu::PackSunShadowUniform(frame).directionAndSoftness[3] == doctest::Approx(12.0f / texelWorld));
     const float length = std::sqrt(uniform.directionAndSoftness[0] * uniform.directionAndSoftness[0] +
                                    uniform.directionAndSoftness[1] * uniform.directionAndSoftness[1] +
                                    uniform.directionAndSoftness[2] * uniform.directionAndSoftness[2]);
@@ -118,7 +122,8 @@ TEST_CASE("a map's mood gives the frame its sun [render][sunshadow]")
     CHECK(frame.towardSun[0] > 0.0f);
     CHECK(frame.towardSun[1] < 0.0f);
     CHECK(frame.towardSun[2] == doctest::Approx(std::sin(40.0 * 3.14159265358979323846 / 180.0)));
-    CHECK(frame.strength == doctest::Approx(0.45f));
+    CHECK(frame.strength == doctest::Approx(0.33f));
+    CHECK(frame.softness == doctest::Approx(12.0f));
     CHECK(frame.focus[1] == 200.0f);
 
     CHECK(BuildFrame(mood, 2, focus).mapSize == 4096u);
