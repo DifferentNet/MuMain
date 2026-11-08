@@ -11,6 +11,7 @@ namespace Render::Textures::NormalMaps
 namespace
 {
 bool s_enabled = false;
+bool s_runtimeBuild = false;
 
 // How steep the relief is: the tilt per unit of brightness change per texel, for the fine detail
 // and for the broad shapes (measured over `scale` texels).
@@ -130,6 +131,16 @@ void SetEnabled(bool enabled)
 bool Enabled()
 {
     return s_enabled;
+}
+
+void SetRuntimeBuild(bool enabled)
+{
+    s_runtimeBuild = enabled;
+}
+
+bool RuntimeBuild()
+{
+    return s_runtimeBuild;
 }
 
 bool WantsNormalMap(std::wstring_view path)

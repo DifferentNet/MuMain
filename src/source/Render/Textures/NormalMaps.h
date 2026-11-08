@@ -17,12 +17,17 @@ namespace Render::Textures::NormalMaps
 void SetEnabled(bool enabled);
 [[nodiscard]] bool Enabled();
 
+// For development only (MU_NORMAL_MAPS_RUNTIME=1, off by default): build a texture's map at load
+// when its prebuilt file is missing, as before the maps shipped.
+void SetRuntimeBuild(bool enabled);
+[[nodiscard]] bool RuntimeBuild();
+
 // Whether the texture at `path` (an HD copy, "Data\HD\...") belongs to a model that gets a normal
 // map: Item, Player, Monster, NPC and ObjectN. World ground, effects, skills and the interface
 // do not. Either separator and any case.
 [[nodiscard]] bool WantsNormalMap(std::wstring_view path);
 
-// The normal map of `rgba` (width x height RGBA8, rows top to bottom): red and green hold the
+// The normal map of `rgba` (width x height, at full size; scripts/hd_pack.py does the same and then halves it) RGBA8, rows top to bottom): red and green hold the
 // tilt along u (right) and v (down), 128 = flat; blue and alpha are 255. `scale` is how many
 // times the HD copy was upscaled (1 or more): the broad relief is measured over that many texels.
 // Fully transparent texels count as the lowest. Empty for an empty image.

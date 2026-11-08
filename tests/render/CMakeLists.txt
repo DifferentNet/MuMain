@@ -128,6 +128,15 @@ if(TARGET mu_webp)
             ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/PackedOzt.cpp
         LINK_LIBS mu_webp
     )
+    # The Remaster's prebuilt normal maps (scripts/hd_pack.py), read from Data\HD.
+    mu_add_test(
+        NAME normal_map_file_tests
+        SOURCES
+            test_normal_map_file.cpp
+            ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/NormalMapFile.cpp
+            ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/NormalMaps.cpp
+        LINK_LIBS mu_webp
+    )
 endif()
 
 # The marker of upscaled art that CGlobalBitmap reads from OZJ and OZT files.

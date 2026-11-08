@@ -14,6 +14,7 @@
 #include "Render/Textures/PackedOzt.h"
 #include "Render/Textures/TextureFiltering.h"
 #include "Render/Textures/HdTextures.h"
+#include "Render/Textures/NormalMapFile.h"
 #include "Render/Textures/NormalMaps.h"
 #include "Render/Textures/UpscaleMarker.h"
 #ifdef _EDITOR
@@ -197,21 +198,41 @@ bool UploadTextureSDLGpu(BITMAP_t* bitmap, std::span<const std::uint8_t> pixels,
     return true;
 }
 
-// The Remaster's normal map of an upscaled model texture (Render/Textures/NormalMaps.h), mipmapped
-// by the GPU like the texture. A failure only costs the relief.
+// The Remaster's normal map of an upscaled model texture, read from its prebuilt file next to the
+// texture (Render/Textures/NormalMapFile.h) and mipmapped by the GPU like the texture. A missing or
+// broken file only costs the relief; MU_NORMAL_MAPS_RUNTIME=1 builds it here instead (development).
 void UploadNormalMap(BITMAP_t& bitmap, const std::wstring& loadedPath, std::span<const std::uint8_t> rgba, int width,
                      int height, int scale, SDL_GPUSamplerAddressMode wrapMode)
 {
-    if (!Render::Textures::NormalMaps::Enabled() || !Render::Textures::NormalMaps::WantsNormalMap(loadedPath))
+    namespace NormalMaps = Render::Textures::NormalMaps;
+    namespace NormalMapFile = Render::Textures::NormalMapFile;
+    if (!NormalMaps::Enabled() || !NormalMaps::WantsNormalMap(loadedPath))
     {
         return;
     }
-    const std::vector<std::uint8_t> normals = Render::Textures::NormalMaps::Build(rgba, width, height, scale);
+    int mapWidth = NormalMapFile::HalfSize(width);
+    int mapHeight = NormalMapFile::HalfSize(height);
+    std::vector<std::uint8_t> normals = NormalMapFile::Load(
+        loadedPath, width, height, [](const std::wstring& path, std::vector<std::uint8_t>& bytes) {
+            std::ifstream input(Render::Sprites::NarrowBitmapPath(path), std::ios::binary);
+            if (!input)
+            {
+                return false;
+            }
+            bytes.assign(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
+            return true;
+        });
+    if (normals.empty() && NormalMaps::RuntimeBuild())
+    {
+        normals = NormalMaps::Build(rgba, width, height, scale);
+        mapWidth = width;
+        mapHeight = height;
+    }
     if (normals.empty())
     {
         return;
     }
-    auto result = mu::UploadBitmapPixels(normals, width, height, SDL_GPU_FILTER_LINEAR, wrapMode, {}, true);
+    auto result = mu::UploadBitmapPixels(normals, mapWidth, mapHeight, SDL_GPU_FILTER_LINEAR, wrapMode, {}, true);
     if (!result)
     {
         mu::log::Get("render")->debug("Normal map upload failed for {}: {}", mu_wchar_to_utf8(loadedPath.c_str()),
