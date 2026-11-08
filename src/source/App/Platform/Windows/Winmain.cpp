@@ -37,6 +37,8 @@
 #include "Render/Textures/ZzzOpenglUtil.h"
 #include "Render/Textures/ZzzTexture.h"
 #include "Render/Textures/HdTextures.h"
+#include "Render/Models/ModelSmoothing.h"
+#include "Render/Textures/NormalMaps.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "Render/Lighting/SoftShadowSetting.h"
 #include "Render/Lighting/SunShadowSetting.h"
@@ -2692,7 +2694,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
 #ifndef __EMSCRIPTEN__
     // HD textures (Options): every texture loaded from now on takes its Data\HD copy if there is one.
     // Only the Remaster client has them (Data\HD); the Classic client ignores a saved HdTextures=1.
-    Render::Textures::Hd::SetEnabled(GameConfig::GetInstance().GetHdTextures() && Render::Textures::Hd::Installed());
+    const bool hdTextures = GameConfig::GetInstance().GetHdTextures() && Render::Textures::Hd::Installed();
+    Render::Textures::Hd::SetEnabled(hdTextures);
+    // The Remaster's smoother models go with the HD textures (off in the Classic client).
+    Render::Models::Smoothing::SetLevel(hdTextures ? GameConfig::GetInstance().GetSmoothModels() : 0);
+    // So do the relief maps of the model textures.
+    Render::Textures::NormalMaps::SetEnabled(hdTextures && GameConfig::GetInstance().GetNormalMaps());
 #endif
 
     // The animation task pool is off unless config.ini or the command line turns it on.

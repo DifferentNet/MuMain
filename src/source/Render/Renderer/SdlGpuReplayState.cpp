@@ -165,6 +165,8 @@ void SdlGpuReplayState::Invalidate()
     m_viewportValid = false;
     m_scissorValid = false;
     m_sunShadowMapValid = false;
+    m_normalMapTexture.fill(nullptr);
+    m_normalMapSampler.fill(nullptr);
 }
 
 bool SdlGpuReplayState::SelectSunShadowMap()
@@ -173,6 +175,23 @@ bool SdlGpuReplayState::SelectSunShadowMap()
         return false;
 
     m_sunShadowMapValid = true;
+    m_normalMapTexture[0] = nullptr;
+    m_normalMapSampler[0] = nullptr;
+    return true;
+}
+
+bool SdlGpuReplayState::SelectNormalMap(Uint32 slot, SDL_GPUTexture* texture, SDL_GPUSampler* sampler)
+{
+    if (slot < 1u || slot > m_normalMapTexture.size())
+        return true;
+    const std::size_t index = slot - 1u;
+    if (m_normalMapTexture[index] == texture && m_normalMapSampler[index] == sampler)
+        return false;
+
+    m_normalMapTexture[index] = texture;
+    m_normalMapSampler[index] = sampler;
+    if (slot == 1u)
+        m_sunShadowMapValid = false;
     return true;
 }
 }

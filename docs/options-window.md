@@ -147,6 +147,11 @@ and keeps FXAA, sharpening, sun shadows and HD textures off whatever `config.ini
 picks no preset there (`Render::Look::RemasterGraphicsOptions`). OpenMU's own rows stay in both.
 The browser client shows them as before.
 
+The Remaster's smoother models and normal maps (`[Render] SmoothModels`, default 1, and
+`NormalMaps`, default 1; `Render/Models/ModelSmoothing.h`, `Render/Textures/NormalMaps.h`) have
+no Options row. They follow the HD textures: on in the Remaster client, always off in the
+Classic client (`Winmain.cpp`), off in the browser.
+
 ## Remembering login credentials
 
 The login screen has two separate checkboxes:

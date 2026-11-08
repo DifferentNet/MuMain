@@ -105,6 +105,35 @@ TEST_CASE("a file without a tail unpacks too")
     CHECK(out == ozt);
 }
 
+TEST_CASE("the layout check adds the sizes in 64 bits")
+{
+    constexpr std::uint64_t head = 0x200;
+    constexpr std::uint64_t tail = 0xFFFFFF00;
+    // In 32 bits head + tail wraps round to 0x100, which would fit this file and leave all of
+    // `size` for the pixels.
+    static_assert(static_cast<std::uint32_t>(head + tail) == 0x100u);
+    constexpr std::uint64_t fileSize = Packed::PrefixSize + 0x1000;
+    constexpr std::uint64_t size = 0x1100;
+    CHECK_FALSE(Packed::CheckLayout(fileSize, size, head, tail, size - 0x100));
+    CHECK_FALSE(Packed::CheckLayout(fileSize, size, head, tail, size - static_cast<std::uint32_t>(head + tail)));
+    // The same tail against an original of 4 GB and more: still more than the file holds.
+    CHECK_FALSE(Packed::CheckLayout(fileSize, 0x1'0000'0100ull, head, tail, 0x100));
+
+    // A layout that adds up, and each way it can be off by one.
+    constexpr std::uint64_t okHead = Render::Textures::Ozt::HeaderSize;
+    constexpr std::uint64_t okTail = 3;
+    constexpr std::uint64_t pixels = 16;
+    constexpr std::uint64_t okSize = okHead + pixels + okTail;
+    constexpr std::uint64_t okFile = Packed::PrefixSize + okHead + okTail + 40;
+    CHECK(Packed::CheckLayout(okFile, okSize, okHead, okTail, pixels));
+    CHECK_FALSE(Packed::CheckLayout(okFile, okSize, okHead - 1, okTail, pixels + 1));
+    CHECK_FALSE(Packed::CheckLayout(okFile, okSize, okHead, okTail, pixels + 1));
+    CHECK_FALSE(Packed::CheckLayout(okFile, okSize + 1, okHead, okTail, pixels));
+    CHECK(Packed::CheckLayout(Packed::PrefixSize + okHead + okTail, okSize, okHead, okTail, pixels));
+    CHECK_FALSE(Packed::CheckLayout(Packed::PrefixSize + okHead + okTail - 1, okSize, okHead, okTail, pixels));
+    CHECK_FALSE(Packed::CheckLayout(Packed::PrefixSize - 1, okSize, okHead, okTail, pixels));
+}
+
 TEST_CASE("a broken packed file is refused")
 {
     const auto ozt = MakeOzt(16, 4, {});

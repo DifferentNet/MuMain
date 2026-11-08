@@ -160,6 +160,9 @@ typedef struct _Mesh_t
 
     TextureScript* m_csTScript;
 
+    // The original arrays while the mesh is smoothed (Render/Models/ModelSmoothing.h), else null.
+    struct MeshSmoothOriginal* SmoothOriginal;
+
     _Mesh_t()
     {
         Vertices = NULL;
@@ -167,6 +170,7 @@ typedef struct _Mesh_t
         Triangles = NULL;
         Commands = NULL;
         m_csTScript = NULL;
+        SmoothOriginal = NULL;
 
         NumVertices = NumNormals = NumTexCoords =
             NumVertexColors = NumTriangles = 0;

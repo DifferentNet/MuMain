@@ -14,6 +14,13 @@ namespace Render::Textures::PackedOzt
 {
 inline constexpr std::size_t PrefixSize = 4 + 4 + 2 + 4;
 
+// Whether the sizes of a packed file add up: a file of `fileSize` bytes holds the prefix, a head
+// of `headSize` (at least the OZT header) and a tail of `tailSize`, and the original of `size`
+// bytes is exactly head + `pixelBytes` + tail. All in 64 bits, so no sum of two 32-bit sizes from
+// a broken file wraps round (on x86 a wrapped sum would make the buffer smaller than its writes).
+bool CheckLayout(std::uint64_t fileSize, std::uint64_t size, std::uint64_t headSize, std::uint64_t tailSize,
+                 std::uint64_t pixelBytes);
+
 // True when the file starts with the packed marker.
 bool IsPacked(std::span<const std::uint8_t> file);
 

@@ -146,6 +146,13 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/HdTexturePath.cpp
 )
 
+mu_add_test(
+    NAME normal_maps_tests
+    SOURCES
+        test_normal_maps.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/NormalMaps.cpp
+)
+
 # The sun shadow's box, uniform and the frame a map's mood gives.
 mu_add_test(
     NAME sun_shadow_tests

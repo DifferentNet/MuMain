@@ -6,6 +6,7 @@
 #include <cstring>
 #include <new>
 #include <stdexcept>
+#include <type_traits>
 
 #if defined(MU_HAS_WEBP)
 #include <webp/decode.h>
@@ -39,6 +40,18 @@ std::uint16_t ReadUInt16(std::span<const std::uint8_t> file, std::size_t offset)
 }
 } // namespace
 
+bool CheckLayout(std::uint64_t fileSize, std::uint64_t size, std::uint64_t headSize, std::uint64_t tailSize,
+                 std::uint64_t pixelBytes)
+{
+    if (fileSize < PrefixSize || headSize < Ozt::HeaderSize)
+    {
+        return false;
+    }
+    // Two sizes of at most 32 bits each: their sum fits in 64 bits.
+    const std::uint64_t sections = headSize + tailSize;
+    return sections <= fileSize - PrefixSize && sections <= size && pixelBytes == size - sections;
+}
+
 bool IsPacked(std::span<const std::uint8_t> file)
 {
     return file.size() >= PrefixSize && std::memcmp(file.data(), Magic, sizeof(Magic)) == 0;
@@ -52,14 +65,18 @@ bool Unpack(std::span<const std::uint8_t> file, std::vector<std::uint8_t>& out)
         return false;
     }
 #if defined(MU_HAS_WEBP)
-    // Every size is checked in 64 bits, part by part: on x86 a sum of two sizes from a broken
+    // Every size is checked in 64 bits (CheckLayout): on x86 a sum of two sizes from a broken
     // file could wrap round and the buffer come out smaller than what is written into it.
     const std::uint64_t size = ReadUInt32(file, 4);
     const std::uint64_t headSize = ReadUInt16(file, 8);
     const std::uint64_t tailSize = ReadUInt32(file, 10);
+    static_assert(std::is_same_v<decltype(headSize + tailSize), std::uint64_t>,
+                  "the packed sizes must be added in 64 bits");
+    static_assert(std::is_same_v<decltype(size - headSize - tailSize), std::uint64_t>,
+                  "the packed sizes must be subtracted in 64 bits");
     const std::uint64_t rest = file.size() - PrefixSize;
-    if (headSize < Ozt::HeaderSize || headSize > rest || tailSize > rest - headSize || headSize > size ||
-        tailSize > size - headSize)
+    // Where the WebP starts; CheckLayout below checks the whole layout once the picture's size is known.
+    if (headSize < Ozt::HeaderSize || headSize + tailSize > rest)
     {
         return false;
     }
@@ -82,7 +99,7 @@ bool Unpack(std::span<const std::uint8_t> file, std::vector<std::uint8_t>& out)
         return false;
     }
     const std::uint64_t pixelBytes = static_cast<std::uint64_t>(width) * static_cast<std::uint64_t>(height) * 4u;
-    if (pixelBytes != size - headSize - tailSize)
+    if (!CheckLayout(file.size(), size, headSize, tailSize, pixelBytes))
     {
         return false;
     }

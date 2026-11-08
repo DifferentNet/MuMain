@@ -101,6 +101,8 @@ namespace CfgKeys
     // Screen filters of the finished 3D scene: FXAA (0/1) and sharpening in percent (0 to 100).
     inline constexpr wchar_t CfgKeyFxaa[] = L"Fxaa";
     inline constexpr wchar_t CfgKeyHdTextures[] = L"HdTextures";
+    inline constexpr wchar_t CfgKeySmoothModels[] = L"SmoothModels";
+    inline constexpr wchar_t CfgKeyNormalMaps[] = L"NormalMaps";
     // Sun shadows of the Enhanced look: 0 off, 1 medium (2048 map), 2 high (4096 map). The browser
     // build keeps them under their own key: older /play builds saved the presets' value in SunShadows,
     // and a browser player gets sun shadows only from the Options row.
@@ -219,6 +221,8 @@ namespace CfgDefaults
     inline constexpr wchar_t CfgDefaultGraphicsPreset[] = L"Auto";
     inline constexpr bool CfgDefaultFxaa = false;
     inline constexpr bool CfgDefaultHdTextures = false;
+    inline constexpr int CfgDefaultSmoothModels = 1;
+    inline constexpr bool CfgDefaultNormalMaps = true;
     inline constexpr int CfgDefaultSunShadows = 0;
     inline constexpr int CfgMinSunShadows = 0;
     inline constexpr int CfgMaxSunShadows = 2;
