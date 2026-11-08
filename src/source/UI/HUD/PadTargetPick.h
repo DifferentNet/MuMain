@@ -42,6 +42,8 @@ struct Target
     // Where the frame starts when its window opens, before any cell (the Cancel of a question that
     // deletes something).
     bool start = false;
+    // A slider (a level gauge's hit strip): the d-pad's sides change it instead of leaving it.
+    bool gauge = false;
 };
 
 // The smallest target holding the point (a button over its panel), None for none.
