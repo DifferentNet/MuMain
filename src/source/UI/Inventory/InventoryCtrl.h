@@ -266,6 +266,11 @@ namespace mu::ui::window
         // the item picked from it are in window pixels, so its window draws its items
         // (Render3D()) into a target without a layout transform.
         void FollowGridPx(Rml::ElementDocument* doc, const char* gridId);
+        // As above, for a grid of fewer rows drawn `firstRow` rows down `gridId`: the bag's page 2 shows two of the
+        // 8x4 inventory extensions over the bag's 8x8 box (UI/Inventory/BagPages.h).
+        void FollowGridPx(Rml::ElementDocument* doc, const char* gridId, int firstRow);
+        // Takes the grid off the screen, so no pointer reaches it (a bag page not shown).
+        void ParkOffScreen();
         // The pointer, in the window pixels every grid is in.
         static POINT PointerPos();
         bool ContainsPointer();
@@ -285,6 +290,8 @@ namespace mu::ui::window
         EVENT_STATE GetEventState();
 
         CObject* GetOwner() const;
+        // The window whose visibility the grid follows: the bag window while it shows page 2 (MU Moldova).
+        void SetOwner(CObject* owner) { m_pOwner = owner; }
         bool IsVisible() const;
         void ShowInventory();
         void HideInventory();

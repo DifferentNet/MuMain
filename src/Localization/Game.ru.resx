@@ -15901,4 +15901,25 @@
   <data name="SoftShadowsRow" xml:space="preserve">
     <value>Мягкие тени</value>
   </data>
+  <data name="BagPageLocked" xml:space="preserve">
+    <value>Страница 2 закрыта</value>
+  </data>
+  <data name="BagPageCells" xml:space="preserve">
+    <value>+64 ячейки персонажу</value>
+  </data>
+  <data name="BagPageBuy" xml:space="preserve">
+    <value>%ls зен</value>
+  </data>
+  <data name="BagPageBuyQuestion" xml:space="preserve">
+    <value>Открыть страницу 2 сумки за %ls зен?</value>
+  </data>
+  <data name="BagPageBuyFrom" xml:space="preserve">
+    <value>Зен берётся сначала из сумки, остаток из хранилища.</value>
+  </data>
+  <data name="BagPageBuyConfirm" xml:space="preserve">
+    <value>Открыть</value>
+  </data>
+  <data name="BagPageBuying" xml:space="preserve">
+    <value>Открываем...</value>
+  </data>
 </root>

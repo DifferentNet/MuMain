@@ -49,11 +49,24 @@
 			<div class="item-count" data-for="c : grid_cells"><span class="item-count-text counter-scaled" data-if="c.count != ''"
 			     data-style-font-size="text_px + 'px'">{{c.count}}</span></div>
 		</div>
+		<!-- Bag page 2 while not bought (UI/Inventory/BagPages.h): over the grid, what it gives, its price
+		     and the button that asks to buy it. -->
+		<div id="bag_lock" class="bag-lock" data-if="bag_locked">
+			<div class="bag-lock-line bag-lock-title native-text counter-scaled" data-style-font-size="text_px + 'px'">{{bag_locked_text}}</div>
+			<div class="bag-lock-line bag-lock-cells native-text counter-scaled" data-style-font-size="text_px + 'px'">{{bag_cells_text}}</div>
+			<div class="bag-lock-line bag-lock-price native-text counter-scaled" data-style-font-size="text_px + 'px'">{{bag_price_text}}</div>
+			<div id="btn_bag_buy" class="btn bag-lock-btn" data-class-disabled="bag_buying" data-event-click="my_inventory_bag_buy">{{bag_buy_label}}</div>
+		</div>
 		<div id="option_tooltip_anchor" class="native-anchor"></div>
 		<!-- Text leaves marked native-text render at the native text renderer's size: text_px is the
 		     physical size, and .counter-scaled cancels #panel's scale so glyphs rasterise at it. #title
 		     stays full size as the drag handle. -->
 		<div id="title"><span class="native-text title-text counter-scaled" data-style-font-size="text_px + 'px'">{{title}}</span></div>
+		<!-- The bag page arrows beside the title (BagPages.h), the vault's art; hidden on a server without pages. -->
+		<div id="btn_bag_prev" class="bag-page-btn bag-page-prev" data-class-hidden="!pages_visible" data-class-busy="!page_prev_enabled"
+		     data-event-click="my_inventory_page(-1)"></div>
+		<div id="btn_bag_next" class="bag-page-btn bag-page-next" data-class-hidden="!pages_visible" data-class-busy="!page_next_enabled"
+		     data-event-click="my_inventory_page(1)"></div>
 
 		<div id="gold_bg"></div>
 		<span id="gold_text" class="native-text gold-amount counter-scaled"

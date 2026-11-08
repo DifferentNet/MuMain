@@ -135,6 +135,17 @@ namespace mu::ui::window
             // "unequipable"), and "refused" while the item on the cursor cannot go in.
             std::vector<Rml::String> slotStates = std::vector<Rml::String>(MAX_EQUIPMENT_INDEX);
             UI::Items::ItemGridCells gridCells;
+
+            // Bag pages (UI/Inventory/BagPages.h): the arrows by the title, and page 2 while it is locked.
+            bool pagesVisible = false;
+            bool pagePrevEnabled = false;
+            bool pageNextEnabled = false;
+            bool bagLocked = false;
+            bool bagBuying = false;
+            Rml::String bagLockedText;
+            Rml::String bagCellsText;
+            Rml::String bagPriceText;
+            Rml::String bagBuyLabel;
         };
         void BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlModel& model);
         void OnRmlBuilt();
@@ -147,6 +158,21 @@ namespace mu::ui::window
         void SyncRmlModel();
         // The equipment slots' states and the grid's cells, into the model.
         void SyncSlotStates();
+
+        // The bag's shown page (1 or 2). Page 2 shows OpenMU's inventory extensions 1 and 2 (slots 76-139),
+        // whose grids belong to the hidden extension window (g_pMyInventoryExt) and are lent to this window
+        // while page 2 shows; page 1 lends them back.
+        int m_BagPage = 1;
+        // The grids of the shown page: page 1 the bag's own, page 2 extensions 1 and 2 once bought (none
+        // while locked).
+        CInventoryCtrl* BagGrid(int i) const;
+        // The shown grid under the pointer, else the first shown one (may be null).
+        CInventoryCtrl* PointedBagGrid() const;
+        bool IsBagPageLocked() const;
+        void SetBagPage(int page);
+        // Lends page 2's grids to this window, or gives them back.
+        void SyncBagPageGrids();
+        void AskBagPageBuy();
 
     public:
         CMyInventory();

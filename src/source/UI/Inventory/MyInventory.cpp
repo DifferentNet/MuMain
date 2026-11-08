@@ -38,6 +38,9 @@ extern bool SelectFlag;
 #include "UI/Scaling/UITransform.h"
 #include "GameLogic/Items/ShopRestrictions.h"
 #include "GameLogic/Items/TradeRestrictions.h"
+#include "UI/Inventory/BagPages.h"
+#include "UI/Inventory/InventoryExtension.h"
+#include "UI/Dialogs/GenericConfirmDialog.h"
 
 // RmlUi migration -- see this class's header comment.
 #include "Render/RmlUi/RmlUiRuntime.h"
@@ -205,6 +208,24 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
     c.Bind("slot_states", &model.slotStates);
     UI::Items::RegisterItemGridCells(c);
     c.Bind("grid_cells", &model.gridCells);
+    c.Bind("pages_visible", &model.pagesVisible);
+    c.Bind("page_prev_enabled", &model.pagePrevEnabled);
+    c.Bind("page_next_enabled", &model.pageNextEnabled);
+    c.Bind("bag_locked", &model.bagLocked);
+    c.Bind("bag_buying", &model.bagBuying);
+    c.Bind("bag_locked_text", &model.bagLockedText);
+    c.Bind("bag_cells_text", &model.bagCellsText);
+    c.Bind("bag_price_text", &model.bagPriceText);
+    c.Bind("bag_buy_label", &model.bagBuyLabel);
+
+    c.BindEventCallback("my_inventory_page",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& args)
+        {
+            const int step = args.empty() ? 1 : args[0].Get<int>();
+            SetBagPage(m_BagPage + step);
+        });
+    c.BindEventCallback("my_inventory_bag_buy",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { AskBagPageBuy(); });
 
     c.BindEventCallback("my_inventory_set_option_hover",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
@@ -620,7 +641,100 @@ void CMyInventory::SyncNativeLayout()
     }
 
     if (m_pNewInventoryCtrl)
-        m_pNewInventoryCtrl->FollowGridPx(document, "item_grid");
+    {
+        if (m_BagPage == 1)
+            m_pNewInventoryCtrl->FollowGridPx(document, "item_grid");
+        else
+            m_pNewInventoryCtrl->ParkOffScreen();
+    }
+    // Page 2's two 8x4 grids fill the bag's 8x8 grid, the second from its fifth row.
+    if (CInventoryCtrl* first = BagGrid(0); first != nullptr && first != m_pNewInventoryCtrl)
+        first->FollowGridPx(document, "item_grid", 0);
+    if (CInventoryCtrl* second = BagGrid(1))
+        second->FollowGridPx(document, "item_grid", ROW_INVENTORY_EXT);
+}
+
+CInventoryCtrl* CMyInventory::BagGrid(int i) const
+{
+    if (m_BagPage == 1)
+        return i == 0 ? m_pNewInventoryCtrl : nullptr;
+    if (IsBagPageLocked() || g_pMyInventoryExt == nullptr || i < 0 || i > 1)
+        return nullptr;
+    return g_pMyInventoryExt->GetExtension(i);
+}
+
+CInventoryCtrl* CMyInventory::PointedBagGrid() const
+{
+    for (int i = 0; i < 2; i++)
+    {
+        if (CInventoryCtrl* grid = BagGrid(i); grid != nullptr && grid->ContainsPointer())
+            return grid;
+    }
+    return BagGrid(0);
+}
+
+bool CMyInventory::IsBagPageLocked() const
+{
+    return m_BagPage > UI::Inventory::Bag().OwnedPages();
+}
+
+void CMyInventory::SetBagPage(int page)
+{
+    const int maxPages = UI::Inventory::Bag().MaxPages();
+    if (page < 1 || page > maxPages || page == m_BagPage)
+        return;
+
+    PlayBuffer(SOUND_CLICK01);
+    m_BagPage = page;
+    SyncBagPageGrids();
+}
+
+void CMyInventory::SyncBagPageGrids()
+{
+    if (g_pMyInventoryExt == nullptr)
+        return;
+
+    // Page 2's grids draw and take clicks only while this window has them; given back, they leave the screen
+    // (the extension window, hidden, never lays them out).
+    const bool lent = m_BagPage == 2 && !IsBagPageLocked();
+    for (int i = 0; i < 2; i++)
+    {
+        CInventoryCtrl* grid = g_pMyInventoryExt->GetExtension(i);
+        if (grid == nullptr)
+            continue;
+        if (lent)
+        {
+            grid->SetOwner(this);
+            grid->ShowInventory();
+        }
+        else if (grid->GetOwner() == this)
+        {
+            grid->SetOwner(g_pMyInventoryExt);
+            grid->ParkOffScreen();
+        }
+    }
+}
+
+void CMyInventory::AskBagPageBuy()
+{
+    auto& bag = UI::Inventory::Bag();
+    if (!IsBagPageLocked() || bag.IsBuying() || CInventoryCtrl::GetPickedItem() != nullptr
+        || g_pGenericConfirmDialog == nullptr)
+        return;
+
+    PlayBuffer(SOUND_CLICK01);
+    wchar_t price[64] = {};
+    ConvertGold(static_cast<double>(bag.Price()), price);
+    wchar_t question[256] = {};
+    mu_swprintf(question, I18N::Game::BagPageBuyQuestion, price);
+
+    GenericDialogConfig cfg;
+    cfg.lines = {{question, true}, {I18N::Game::BagPageBuyFrom, false}};
+    cfg.primaryLabel = I18N::Game::BagPageBuyConfirm;
+    cfg.showCancel = true;
+    cfg.cancelLabel = I18N::Game::Cancel;
+    cfg.onPrimary = [] { UI::Inventory::Bag().Buy(); };
+    g_pGenericConfirmDialog->Show(std::move(cfg));
 }
 
 void CMyInventory::SyncBesideNeighbour()
@@ -678,8 +792,11 @@ bool CMyInventory::UpdateMouseEvent()
 {
     if (PutClickedItemOnHotKey())
         return false;
-    if (m_pNewInventoryCtrl && !m_pNewInventoryCtrl->UpdateMouseEvent())
-        return false;
+    for (int i = 0; i < 2; i++)
+    {
+        if (CInventoryCtrl* grid = BagGrid(i); grid != nullptr && !grid->UpdateMouseEvent())
+            return false;
+    }
 
     if (true == EquipmentWindowProcess())
         return false;
@@ -687,6 +804,12 @@ bool CMyInventory::UpdateMouseEvent()
         return false;
 
     CPickedItem* pPickedItem = CInventoryCtrl::GetPickedItem();
+    // A held item over the locked page 2 stays held: the click there is no drop on the ground.
+    if (pPickedItem && IsBagPageLocked() && IsPointerOverPanel() && IsPress(VK_LBUTTON))
+    {
+        ResetMouseLButton();
+        return false;
+    }
     if (pPickedItem && IsPress(VK_LBUTTON)
         && !(g_pMainFrame != nullptr && g_pMainFrame->IsMouseOverHud()))
     {
@@ -796,14 +919,14 @@ bool CMyInventory::DropHeldItemAtFeet()
 // up, so this takes that release before the grid sees it.
 bool CMyInventory::PutClickedItemOnHotKey()
 {
-    if (!IsVisible() || m_pNewInventoryCtrl == nullptr || !IsRepeat(VK_CONTROL) || !IsRelease(VK_LBUTTON)
+    if (!IsVisible() || PointedBagGrid() == nullptr || !IsRepeat(VK_CONTROL) || !IsRelease(VK_LBUTTON)
         || CInventoryCtrl::GetPickedItem() != nullptr || m_RepairMode == SEASON3B::REPAIR_MODE_ON
-        || m_pNewInventoryCtrl->IsLocked())
+        || PointedBagGrid()->IsLocked())
     {
         return false;
     }
 
-    const ITEM* pItem = m_pNewInventoryCtrl->FindItemAtPointer();
+    const ITEM* pItem = PointedBagGrid()->FindItemAtPointer();
     if (pItem == nullptr || !CanRegisterItemHotKey(pItem->Type))
     {
         return false;
@@ -924,7 +1047,8 @@ bool CMyInventory::UpdateKeyEvent()
 
         if (iHotKey != -1)
         {
-            const ITEM* pItem = m_pNewInventoryCtrl->FindItemAtPointer();
+            CInventoryCtrl* grid = PointedBagGrid();
+            const ITEM* pItem = grid != nullptr ? grid->FindItemAtPointer() : nullptr;
             if (pItem == nullptr)
             {
                 return false;
@@ -947,9 +1071,17 @@ bool CMyInventory::UpdateKeyEvent()
 
 bool CMyInventory::Update()
 {
+    // A purchase opens page 2 at once: its grids come to this window on the next frame.
+    SyncBagPageGrids();
+    // The bag's own grid also on page 2, where it lies off the screen: it lets go of its pointed item.
     if (m_pNewInventoryCtrl && false == m_pNewInventoryCtrl->Update())
     {
         return false;
+    }
+    for (int i = 0; i < 2; i++)
+    {
+        if (CInventoryCtrl* grid = BagGrid(i); grid != nullptr && grid != m_pNewInventoryCtrl && !grid->Update())
+            return false;
     }
 
     if (IsVisible())
@@ -1008,7 +1140,42 @@ void CMyInventory::SyncRmlModel()
         syncText(field, boundName, StringUtils::WideToNarrow(text));
     };
 
-    syncWide(&MyInventoryRmlModel::title, "title", I18N::Game::Inventory);
+    auto& bag = UI::Inventory::Bag();
+    const bool pages = bag.HasInfo() && bag.MaxPages() > 1;
+    if (!pages && m_BagPage != 1)
+    {
+        m_BagPage = 1;
+        SyncBagPageGrids();
+    }
+    if (pages)
+    {
+        wchar_t titleBuf[128] = {};
+        mu_swprintf(titleBuf, L"%ls %d/%d", I18N::Game::Inventory, m_BagPage, bag.MaxPages());
+        syncWide(&MyInventoryRmlModel::title, "title", titleBuf);
+    }
+    else
+    {
+        syncWide(&MyInventoryRmlModel::title, "title", I18N::Game::Inventory);
+    }
+    const bool holding = CInventoryCtrl::GetPickedItem() != nullptr;
+    syncBool(&MyInventoryRmlModel::pagesVisible, "pages_visible", pages);
+    syncBool(&MyInventoryRmlModel::pagePrevEnabled, "page_prev_enabled", m_BagPage > 1);
+    syncBool(&MyInventoryRmlModel::pageNextEnabled, "page_next_enabled", m_BagPage < bag.MaxPages());
+    const bool locked = pages && IsBagPageLocked();
+    syncBool(&MyInventoryRmlModel::bagLocked, "bag_locked", locked);
+    syncBool(&MyInventoryRmlModel::bagBuying, "bag_buying", bag.IsBuying() || holding);
+    if (locked)
+    {
+        syncWide(&MyInventoryRmlModel::bagLockedText, "bag_locked_text", I18N::Game::BagPageLocked);
+        syncWide(&MyInventoryRmlModel::bagCellsText, "bag_cells_text", I18N::Game::BagPageCells);
+        wchar_t price[64] = {};
+        ConvertGold(static_cast<double>(bag.Price()), price);
+        wchar_t priceBuf[128] = {};
+        mu_swprintf(priceBuf, I18N::Game::BagPageBuy, price);
+        syncWide(&MyInventoryRmlModel::bagPriceText, "bag_price_text", priceBuf);
+        syncWide(&MyInventoryRmlModel::bagBuyLabel, "bag_buy_label",
+                 bag.IsBuying() ? I18N::Game::BagPageBuying : I18N::Game::BagPageBuyConfirm);
+    }
 
     const DWORD dwZen = CharacterMachine->Gold;
     wchar_t goldBuf[256] = { 0, };
@@ -1124,8 +1291,11 @@ void CMyInventory::SyncRmlModel()
 // and a pointed slot shows its item's.
 bool CMyInventory::Render()
 {
-    if (m_pNewInventoryCtrl)
-        m_pNewInventoryCtrl->Render();
+    for (int i = 0; i < 2; i++)
+    {
+        if (CInventoryCtrl* grid = BagGrid(i))
+            grid->Render();
+    }
     if (m_iPointedSlot != -1)
         RenderItemToolTip(m_iPointedSlot);
     return true;
@@ -1134,8 +1304,11 @@ bool CMyInventory::Render()
 // Into #item_view (m_ItemTarget), in window pixels: the equipped items, then the grid's.
 void CMyInventory::Render3D()
 {
-    if (m_pNewInventoryCtrl && m_pNewInventoryCtrl->IsVisible())
-        m_pNewInventoryCtrl->Render3D();
+    for (int i = 0; i < 2; i++)
+    {
+        if (CInventoryCtrl* grid = BagGrid(i); grid != nullptr && grid->IsVisible())
+            grid->Render3D();
+    }
     Rml::Element* panel = m_RmlView.Document() != nullptr ? m_RmlView.Document()->GetElementById("panel") : nullptr;
     const float scale = panel != nullptr ? UI::RmlBridge::DrawnScale(*panel) : 1.f;
     for (int i = 0; i < MAX_EQUIPMENT_INDEX; i++)
@@ -1175,6 +1348,7 @@ bool CMyInventory::IsVisible() const
 void CMyInventory::OpenningProcess()
 {
     SetRepairMode(false);
+    UI::Inventory::Bag().RequestInfoOnce();
 
     m_MyShopMode = MYSHOP_MODE_OPEN;
     ChangeMyShopButtonStateOpen();
@@ -1560,9 +1734,31 @@ void CMyInventory::SyncSlotStates()
     if (changed)
         m_RmlView.MarkDirty("slot_states");
 
-    if (m_pNewInventoryCtrl && m_RmlView.GetModel().gridCells != m_pNewInventoryCtrl->Cells())
+    // Page 2: its two 8x4 grids' cells one after the other, as the 8x8 grid draws them.
+    UI::Items::ItemGridCells cells;
+    if (m_BagPage == 1)
     {
-        m_RmlView.GetModel().gridCells = m_pNewInventoryCtrl->Cells();
+        if (m_pNewInventoryCtrl)
+            cells = m_pNewInventoryCtrl->Cells();
+    }
+    else
+    {
+        for (int i = 0; i < 2; i++)
+        {
+            if (CInventoryCtrl* grid = BagGrid(i))
+            {
+                const UI::Items::ItemGridCells& part = grid->Cells();
+                cells.insert(cells.end(), part.begin(), part.end());
+            }
+            else
+            {
+                cells.resize(cells.size() + COLUMN_INVENTORY * ROW_INVENTORY_EXT);
+            }
+        }
+    }
+    if (m_RmlView.GetModel().gridCells != cells)
+    {
+        m_RmlView.GetModel().gridCells = std::move(cells);
         m_RmlView.MarkDirty("grid_cells");
     }
 
@@ -1795,12 +1991,13 @@ bool CMyInventory::InventoryProcess() const
         return false;
     }
 
-    if (m_pNewInventoryCtrl == nullptr)
+    CInventoryCtrl* grid = PointedBagGrid();
+    if (grid == nullptr)
     {
         return false;
     }
 
-    return m_ActionController.HandleInventoryActions(m_pNewInventoryCtrl);
+    return m_ActionController.HandleInventoryActions(grid);
 }
 
 bool CMyInventory::WindowProcess()
@@ -1996,7 +2193,8 @@ BYTE CMyInventory::GetDurabilityPointedItem() const
         return byDurability;
     }
 
-    pItem = m_pNewInventoryCtrl->FindItemPointedSquareIndex();
+    CInventoryCtrl* grid = PointedBagGrid();
+    pItem = grid != nullptr ? grid->FindItemPointedSquareIndex() : nullptr;
     if (pItem != nullptr)
     {
         const BYTE byDurability = pItem->Durability;
@@ -2013,7 +2211,8 @@ int CMyInventory::GetPointedItemIndex() const
         return m_iPointedSlot;
     }
 
-    return m_pNewInventoryCtrl->GetPointedSquareIndex();
+    CInventoryCtrl* grid = PointedBagGrid();
+    return grid != nullptr ? grid->GetPointedSquareIndex() : -1;
 }
 
 int CMyInventory::FindManaItemIndex() const
