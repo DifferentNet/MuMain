@@ -157,6 +157,8 @@ namespace mu::ui::window
         void RmlToggleDisableBoids();
         void RmlToggleDisableWingShadow();
         void RmlToggleDisableBodyShadows();
+        // [Render] SoftShadows (browser build only).
+        void RmlToggleSoftShadows();
         // The look preset is read live (SyncRmlModel), since `$look classic|enhanced` changes it
         // outside this window too.
         void RmlToggleEnhancedGraphics();
@@ -327,6 +329,11 @@ namespace mu::ui::window
             Rml::String disableWingShadowLabel;
             bool disableBodyShadows = false;
             Rml::String disableBodyShadowsLabel;
+            // Soft body shadows: only in the browser build, locked off while no body shadow is drawn.
+            bool softShadows = true;
+            bool softShadowsAvailable = false;
+            bool softShadowsLocked = false;
+            Rml::String softShadowsLabel;
             // A row another setting already covers shows ticked and ignores clicks: Disable Effects
             // skips skill effect models and wildlife; without full effects, or with every body
             // shadow off, no wing shadow is drawn either.

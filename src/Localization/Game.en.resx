@@ -16236,4 +16236,7 @@
   <data name="SunShadowsTooltip" xml:space="preserve">
     <value>Real shadows from the sun on characters, monsters and objects (Enhanced look). Medium: 2048 map, High: 4096. Off keeps the classic flat shadows.</value>
   </data>
+  <data name="SoftShadowsRow" xml:space="preserve">
+    <value>Soft shadows</value>
+  </data>
 </root>
