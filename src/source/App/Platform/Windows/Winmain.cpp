@@ -1664,8 +1664,15 @@ static void ResolveAutoWindowSize()
     config.Save();
 }
 #else
+// The browser and the editor don't measure the monitor: a size of 0 from the template becomes the default
+// (the browser then takes the page's size when it can).
 static void ResolveAutoWindowSize()
 {
+    GameConfig& config = GameConfig::GetInstance();
+    if (config.GetWindowWidth() <= 0 || config.GetWindowHeight() <= 0)
+    {
+        config.SetWindowSize(CfgDefaults::CfgDefaultWindowWidth, CfgDefaults::CfgDefaultWindowHeight);
+    }
 }
 #endif
 

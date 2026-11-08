@@ -72,6 +72,8 @@ TEST_CASE("Auto picks Medium for integrated graphics and unknown names [render][
     CHECK(ChooseAutoGraphicsPreset("AMD Radeon Graphics") == GraphicsPreset::Medium);
     CHECK(ChooseAutoGraphicsPreset("AMD Radeon(TM) Vega 8 Graphics") == GraphicsPreset::Medium);
     CHECK(ChooseAutoGraphicsPreset("AMD Radeon(TM) RX Vega 11 Graphics") == GraphicsPreset::Medium);
+    CHECK(ChooseAutoGraphicsPreset("AMD Radeon 780M Graphics") == GraphicsPreset::Medium);
+    CHECK(ChooseAutoGraphicsPreset("AMD Radeon(TM) 610M") == GraphicsPreset::Medium);
     CHECK(ChooseAutoGraphicsPreset("") == GraphicsPreset::Medium);
     CHECK(ChooseAutoGraphicsPreset("Unknown") == GraphicsPreset::Medium);
 }
@@ -82,6 +84,7 @@ TEST_CASE("Auto picks High for discrete cards, Intel Arc and Radeon RX [render][
     CHECK(ChooseAutoGraphicsPreset("Intel(R) Arc(TM) A770 Graphics") == GraphicsPreset::High);
     CHECK(ChooseAutoGraphicsPreset("AMD Radeon RX 6700 XT") == GraphicsPreset::High);
     CHECK(ChooseAutoGraphicsPreset("AMD Radeon RX Vega 64") == GraphicsPreset::High);
+    CHECK(ChooseAutoGraphicsPreset("AMD Radeon Pro W6800") == GraphicsPreset::High);
     CHECK(ChooseAutoGraphicsPreset("Apple M2") == GraphicsPreset::High);
 }
 

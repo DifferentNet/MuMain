@@ -29,7 +29,6 @@ TitlesTownsOnly=1
 Zoom=1735
 [Render]
 VSync=1
-Look=Enhanced
 GraphicsPreset=Auto
 Fxaa=0
 HdTextures=0

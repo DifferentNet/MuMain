@@ -42,8 +42,9 @@ bool IsSoftwareRenderer(const std::string& lowerName)
     return ContainsAny(lowerName, {"microsoft basic render", "llvmpipe", "swiftshader", "warp"});
 }
 
-// Intel graphics other than the Arc cards; AMD's integrated Radeon (named "Radeon(TM) Graphics",
-// "Radeon Graphics" or "Vega", without an "RX" card model).
+// Intel graphics other than the Arc cards; AMD's integrated Radeon: no "RX", "Pro" or "FirePro" card model,
+// and named "... Graphics" ("Radeon(TM) Graphics", "Radeon 780M Graphics", the Ryzen APUs' "RX Vega 11
+// Graphics"), a mobile model number ending in "M" ("Radeon(TM) 610M") or "Vega".
 bool IsIntegratedGraphics(const std::string& lowerName)
 {
     if (lowerName.find("intel") != std::string::npos)
@@ -54,16 +55,30 @@ bool IsIntegratedGraphics(const std::string& lowerName)
     {
         return false;
     }
-    // Ryzen APUs call themselves "Radeon(TM) RX Vega 11 Graphics": a Vega with "graphics" is integrated.
-    if (lowerName.find("vega") != std::string::npos && lowerName.find("graphics") != std::string::npos)
+    const bool vegaGraphics =
+        lowerName.find("vega") != std::string::npos && lowerName.find("graphics") != std::string::npos;
+    if (vegaGraphics)
     {
         return true;
     }
-    if (lowerName.find("rx") != std::string::npos)
+    if (ContainsAny(lowerName, {"rx", "pro", "fire"}))
     {
         return false;
     }
-    return ContainsAny(lowerName, {"radeon(tm) graphics", "radeon graphics", "vega"});
+    if (ContainsAny(lowerName, {"graphics", "vega"}))
+    {
+        return true;
+    }
+    // A model number ending in "m": "610m", "680m".
+    for (std::size_t i = 1; i < lowerName.size(); ++i)
+    {
+        const bool atWordEnd = i + 1 == lowerName.size() || lowerName[i + 1] == ' ';
+        if (lowerName[i] == 'm' && atWordEnd && lowerName[i - 1] >= '0' && lowerName[i - 1] <= '9')
+        {
+            return true;
+        }
+    }
+    return false;
 }
 } // namespace
 
