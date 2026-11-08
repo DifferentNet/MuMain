@@ -13487,4 +13487,7 @@
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Lepas dulu item yang dipakai di sana</value>
   </data>
+  <data name="SoftShadowsRow" xml:space="preserve">
+    <value>Bayangan halus</value>
+  </data>
 </root>

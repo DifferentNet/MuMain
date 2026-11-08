@@ -13508,4 +13508,7 @@
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Najpierw zdejmij przedmiot noszony w tym miejscu</value>
   </data>
+  <data name="SoftShadowsRow" xml:space="preserve">
+    <value>Miękkie cienie</value>
+  </data>
 </root>

@@ -9,6 +9,7 @@
 #include "Data/GameConfig/GameConfigConstants.h"
 #include "Core/Input/GamepadInput.h"
 #include "UI/Chat/MessageType.h"
+#include "Render/Lighting/SoftShadowSetting.h"
 #include "Render/Lighting/SunShadowSetting.h"
 #include "Render/Look/GraphicsPresetSetting.h"
 #include "Render/Look/LookPresetSetting.h"
@@ -471,6 +472,11 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("skill_effect_models_locked", &model.skillEffectModelsLocked);
     c.Bind("boids_locked", &model.boidsLocked);
     c.Bind("body_shadows_locked", &model.bodyShadowsLocked);
+    model.softShadowsAvailable = Render::Lighting::SoftShadow::Available();
+    c.Bind("soft_shadows_available", &model.softShadowsAvailable);
+    c.Bind("soft_shadows", &model.softShadows);
+    c.Bind("soft_shadows_locked", &model.softShadowsLocked);
+    c.Bind("soft_shadows_label", &model.softShadowsLabel);
     c.Bind("wing_shadow_locked", &model.wingShadowLocked);
     c.Bind("enhanced_graphics", &model.enhancedGraphics);
     c.Bind("look_lighting", &model.lookLighting);
@@ -659,6 +665,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleDisableWingShadow(); });
     c.BindEventCallback("option_toggle_disable_body_shadows",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleDisableBodyShadows(); });
+    c.BindEventCallback("option_toggle_soft_shadows",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleSoftShadows(); });
     c.BindEventCallback("option_toggle_enhanced_graphics",
                         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
                         { RmlToggleEnhancedGraphics(); });
@@ -956,6 +964,9 @@ void mu::ui::window::COptionWindow::SyncImpliedEffectRows(OptionRmlModel& model)
     syncFlag(model.disableBoids, "disable_boids", m_bDisableBoids || m_bDisableEffects);
     syncFlag(model.disableBodyShadows, "disable_body_shadows", m_bDisableBodyShadows || noBodyShadows);
     syncFlag(model.disableWingShadow, "disable_wing_shadow", m_bDisableWingShadow || noWingShadow);
+    // No body shadow drawn: nothing to soften, the row shows off.
+    syncFlag(model.softShadowsLocked, "soft_shadows_locked", noWingShadow);
+    syncFlag(model.softShadows, "soft_shadows", GameConfig::GetInstance().GetSoftShadows() && !noWingShadow);
 }
 
 void mu::ui::window::COptionWindow::RmlToggleDropdown(int dropdownId)
@@ -1231,6 +1242,13 @@ void mu::ui::window::COptionWindow::RmlToggleDisableBodyShadows()
     SetDisableBodyShadows(m_bDisableBodyShadows);
     GameConfig::GetInstance().SetDisableBodyShadows(m_bDisableBodyShadows);
     GameConfig::GetInstance().Save();
+}
+
+void mu::ui::window::COptionWindow::RmlToggleSoftShadows()
+{
+    if (!Render::Lighting::SoftShadow::Available() || !m_bRenderAllEffects || m_bDisableBodyShadows)
+        return; // no body shadow is drawn
+    Render::Lighting::SoftShadow::Choose(!GameConfig::GetInstance().GetSoftShadows());
 }
 
 // The look preset through the one function start-up and `$look classic|enhanced` use: it saves
@@ -2005,6 +2023,7 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.disableBoidsLabel, "disable_boids_label", I18N::Game::DisableAmbientWildlife);
     syncLabel(model.disableWingShadowLabel, "disable_wing_shadow_label", I18N::Game::DisableWingShadow);
     syncLabel(model.disableBodyShadowsLabel, "disable_body_shadows_label", I18N::Game::DisableShadows);
+    syncLabel(model.softShadowsLabel, "soft_shadows_label", I18N::Game::SoftShadowsRow);
     syncLabel(model.enhancedGraphicsLabel, "enhanced_graphics_label", I18N::Game::EnhancedGraphics);
     syncLabel(model.lookLightingLabel, "look_lighting_label", I18N::Game::EnhancedLighting);
     syncLabel(model.lookDynamicLightsLabel, "look_dynamic_lights_label", I18N::Game::DynamicLights);

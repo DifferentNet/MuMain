@@ -38,6 +38,7 @@
 #include "Render/Textures/ZzzTexture.h"
 #include "Render/Textures/HdTextures.h"
 #include "Render/Renderer/MuRenderer.h"
+#include "Render/Lighting/SoftShadowSetting.h"
 #include "Render/Look/GraphicsPresetSetting.h"
 #include "Render/Look/LookPresetSetting.h"
 #include "Render/Look/LookProfileSetting.h"
@@ -3009,6 +3010,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
         SetDisableWingShadow(cfg.GetDisableWingShadow());
         SetDisableBodyShadows(cfg.GetDisableBodyShadows());
     }
+    Render::Lighting::SoftShadow::ApplyFromConfig();
 
     // Make the bundled ./fonts faces resolvable by GDI before the first CreateFont,
     // so a chosen curated font works even without a system-wide install.

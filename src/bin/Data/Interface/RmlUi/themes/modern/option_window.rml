@@ -398,6 +398,10 @@
 						<span class="opt-label">{{disable_body_shadows_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="disable_body_shadows"><div class="opt-toggle-knob"></div></div></div>
 					</div>
+					<div class="opt-row opt-toggle-row" data-class-hidden="!soft_shadows_available" data-class-locked="soft_shadows_locked" data-event-click="option_toggle_soft_shadows">
+						<span class="opt-label">{{soft_shadows_label}}</span>
+						<div class="opt-control"><div class="opt-toggle" data-class-checked="soft_shadows"><div class="opt-toggle-knob"></div></div></div>
+					</div>
 					<div class="opt-row opt-toggle-row" data-class-locked="wing_shadow_locked" data-event-click="option_toggle_disable_wing_shadow">
 						<span class="opt-label">{{disable_wing_shadow_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="disable_wing_shadow"><div class="opt-toggle-knob"></div></div></div>

@@ -135,6 +135,7 @@ void GameConfig::Load()
     m_disableBoids = ReadBool(CfgSectionRender, CfgKeyDisableBoids, CfgDefaultDisableBoids);
     m_disableWingShadow = ReadBool(CfgSectionRender, CfgKeyDisableWingShadow, CfgDefaultDisableWingShadow);
     m_disableBodyShadows = ReadBool(CfgSectionRender, CfgKeyDisableBodyShadows, CfgDefaultDisableBodyShadows);
+    m_softShadows = ReadBool(CfgSectionRender, CfgKeySoftShadows, CfgDefaultSoftShadows);
     m_fpsCap = ReadInt(CfgSectionRender, CfgKeyFpsCap, CfgDefaultFpsCap);
 
     // Strip keys/sections we used to write but no longer use, so user config
@@ -213,6 +214,7 @@ void GameConfig::Save()
     WriteBool(CfgSectionRender, CfgKeyDisableBoids, m_disableBoids);
     WriteBool(CfgSectionRender, CfgKeyDisableWingShadow, m_disableWingShadow);
     WriteBool(CfgSectionRender, CfgKeyDisableBodyShadows, m_disableBodyShadows);
+    WriteBool(CfgSectionRender, CfgKeySoftShadows, m_softShadows);
     WriteInt(CfgSectionRender, CfgKeyFpsCap, m_fpsCap);
 }
 

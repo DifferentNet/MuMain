@@ -15898,4 +15898,7 @@
   <data name="SunShadowsTooltip" xml:space="preserve">
     <value>Настоящие тени от солнца у персонажей, монстров и объектов (вид Enhanced). Средние: карта 2048, высокие: 4096. Выкл — старые плоские тени.</value>
   </data>
+  <data name="SoftShadowsRow" xml:space="preserve">
+    <value>Мягкие тени</value>
+  </data>
 </root>
