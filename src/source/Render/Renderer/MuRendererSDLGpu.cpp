@@ -5359,6 +5359,11 @@ public:
         return s_sunShadowFrame.enabled;
     }
 
+    [[nodiscard]] bool HasSunShadowPipelines() const override
+    {
+        return s_sunShadowCasterPipeline && !s_sunShadowReceiverPipelines.empty();
+    }
+
     [[nodiscard]] bool SetEnhancedLighting(bool enabled) override
     {
         s_enhancedLightingEnabled = enabled;

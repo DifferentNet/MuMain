@@ -338,6 +338,11 @@ public:
     {
         return false;
     }
+    // True when this renderer can draw sun shadows at all (its caster and receiver pipelines exist).
+    [[nodiscard]] virtual bool HasSunShadowPipelines() const
+    {
+        return false;
+    }
 
     // Select Enhanced (per-pixel lighting and fog) or Classic pipelines for the following frames.
     // Returns false when Enhanced lighting was requested but this backend could not build it; the

@@ -76,7 +76,7 @@ the row reads **Custom** (shown only, it cannot be picked).
 | `GraphicsPreset` | `Auto`, `Low`, `Medium`, `High`, `Ultra` or `Custom` | `Auto` |
 | `Fxaa` | `1` smooths edges of the 3D scene in one cheap pass (for when anti-aliasing is off), `0` off | `0` |
 | `Sharpen` | sharpening of the 3D scene in percent, `0` (off) to `100` | `0` |
-| `SunShadows` | sun shadows of characters, monsters and objects: `0` off, `1` Medium, `2` High (the browser's presets don't set it) | `0` |
+| `SunShadows` | sun shadows of characters, monsters and objects: `0` off, `1` Medium, `2` High. The browser build reads `WebSunShadows` instead (older /play builds saved the presets' value here), and its presets don't set it | `0` |
 | `HdTextures` | `1` loads the upscaled textures and models from `Data\HD` where a file exists (after a restart), `0` off | `0` |
 
 Each map's light mood can also set the sun's direction and the shadows'

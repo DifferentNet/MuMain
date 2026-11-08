@@ -19,6 +19,7 @@
 #include "Render/Lighting/EnhancedLightingSetting.h"
 #include "Render/Lighting/LightMoodScales.h"
 #include "Render/PostProcessing/PostProcessingSetting.h"
+#include "Render/Renderer/MuRenderer.h"
 #include "UI/Mobile/ButtonSize.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Mobile/TouchUnit.h"
@@ -536,7 +537,12 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("sun_shadows_row_label", &model.sunShadowsRowLabel);
     c.Bind("sun_shadows_value_label", &model.sunShadowsValueLabel);
     c.Bind("sun_shadows_tooltip", &model.sunShadowsTooltip);
+#ifdef __EMSCRIPTEN__
+    // Browser cards without clip distances (soft clip shaders) get no sun shadow pipelines: no row there.
+    model.sunShadowsAvailable = mu::GetRenderer().HasSunShadowPipelines();
+#else
     model.sunShadowsAvailable = true;
+#endif
     c.Bind("sun_shadows_available", &model.sunShadowsAvailable);
     c.Bind("sharpen_labels", &model.sharpenLabels);
     c.Bind("sharpen_index", &model.sharpenIndex);
