@@ -100,15 +100,18 @@
 		<div id="tc_menu_11" class="tc-button tc-menu-item" data-class-focused="menu_focus == 11"><span class="tc-menu-label">{{menu_label_11}}</span></div>
 		<div id="tc_menu_12" class="tc-button tc-menu-item" data-class-focused="menu_focus == 12"><span class="tc-menu-label">{{menu_label_12}}</span></div>
 		<div id="tc_menu_13" class="tc-button tc-menu-item" data-class-focused="menu_focus == 13"><span class="tc-menu-label">{{menu_label_13}}</span></div>
-		<div id="tc_menu_14" class="tc-button tc-menu-item" data-class-focused="menu_focus == 14"><span class="tc-menu-label">{{menu_label_14}}</span></div>
-		<div id="tc_menu_15" class="tc-button tc-menu-item" data-class-focused="menu_focus == 15"><span class="tc-menu-label">{{menu_label_15}}</span></div>
+		<!-- The drops' names and the monsters' HP bars (Alt, F8): lit while on. -->
+		<div id="tc_menu_14" class="tc-button tc-menu-item" data-class-focused="menu_focus == 14" data-class-on="names_on"><span class="tc-menu-label">{{menu_label_14}}</span></div>
+		<div id="tc_menu_15" class="tc-button tc-menu-item" data-class-focused="menu_focus == 15" data-class-on="bars_on"><span class="tc-menu-label">{{menu_label_15}}</span></div>
 		<div id="tc_menu_16" class="tc-button tc-menu-item" data-class-focused="menu_focus == 16"><span class="tc-menu-label">{{menu_label_16}}</span></div>
 		<div id="tc_menu_17" class="tc-button tc-menu-item" data-class-focused="menu_focus == 17"><span class="tc-menu-label">{{menu_label_17}}</span></div>
 		<div id="tc_menu_18" class="tc-button tc-menu-item" data-class-focused="menu_focus == 18"><span class="tc-menu-label">{{menu_label_18}}</span></div>
+		<div id="tc_menu_19" class="tc-button tc-menu-item" data-class-focused="menu_focus == 19"><span class="tc-menu-label">{{menu_label_19}}</span></div>
+		<div id="tc_menu_20" class="tc-button tc-menu-item" data-class-focused="menu_focus == 20"><span class="tc-menu-label">{{menu_label_20}}</span></div>
 		<!-- The PK switch: lit while on. -->
-		<div id="tc_menu_19" class="tc-button tc-menu-item" data-class-focused="menu_focus == 19" data-class-on="pk_on"><span class="tc-menu-label">{{menu_label_19}}</span></div>
+		<div id="tc_menu_21" class="tc-button tc-menu-item" data-class-focused="menu_focus == 21" data-class-on="pk_on"><span class="tc-menu-label">{{menu_label_21}}</span></div>
 		<!-- The GM panel, for game masters only. -->
-		<div id="tc_menu_20" class="tc-button tc-menu-item" data-if="menu_gm" data-class-focused="menu_focus == 20"><span class="tc-menu-label">{{menu_label_20}}</span></div>
+		<div id="tc_menu_22" class="tc-button tc-menu-item" data-if="menu_gm" data-class-focused="menu_focus == 22"><span class="tc-menu-label">{{menu_label_22}}</span></div>
 		<!-- With a pad, its keys for the menu: the stick or the d-pad move the highlight. -->
 		<div id="tc_menu_legend">
 			<div class="pad-glyph pad-face pad-a">A</div><div class="pad-legend-label">{{pad_open_label}}</div>
@@ -198,16 +201,12 @@
 		</div>
 	</div>
 
-	<!-- The item hotkeys Q and W (the potions), above the joystick, with how many are left (dimmed when none are). E and R
-	     show nowhere now: the pad's d-pad left and right open the map and the inventory. -->
+	<!-- The item hotkeys Q and W (the potions), above the joystick, with how many are left (dimmed when none are). -->
 	<div id="tc_potion_q" class="tc-button tc-potion" data-class-empty="potion_q_count == ''">Q<div class="tc-potion-count">{{potion_q_count}}</div><div class="pad-glyph pad-bumper">LB</div></div>
 	<div id="tc_potion_w" class="tc-button tc-potion" data-class-empty="potion_w_count == ''">W<div class="tc-potion-count">{{potion_w_count}}</div><div class="pad-glyph pad-trigger">LT</div></div>
-	<div id="tc_potion_e" class="tc-button tc-potion">E<div class="tc-potion-count">{{potion_e_count}}</div>
-		<div class="pad-glyph pad-dpad pad-dpad-left"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
-	</div>
-	<div id="tc_potion_r" class="tc-button tc-potion">R<div class="tc-potion-count">{{potion_r_count}}</div>
-		<div class="pad-glyph pad-dpad pad-dpad-right"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
-	</div>
+	<!-- E and R: a pad with RT held drinks them on LB and LT, in Q's and W's places. -->
+	<div id="tc_potion_e" class="tc-button tc-potion" data-class-empty="potion_e_count == ''">E<div class="tc-potion-count">{{potion_e_count}}</div><div class="pad-glyph pad-bumper">LB</div></div>
+	<div id="tc_potion_r" class="tc-button tc-potion" data-class-empty="potion_r_count == ''">R<div class="tc-potion-count">{{potion_r_count}}</div><div class="pad-glyph pad-trigger">LT</div></div>
 
 	<!-- Bottom right: attack (held, it fights the tapped or the nearest monster), the hotkey bar's
 	     five skills around it (a tap makes the skill current, holding casts it), pickup (held, it

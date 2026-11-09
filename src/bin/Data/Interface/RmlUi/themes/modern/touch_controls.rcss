@@ -950,6 +950,10 @@ body.pad.no-touch #tc_potion_q, body.pad.no-touch #tc_potion_w, body.pad.no-touc
 }
 body.pad.no-touch #tc_potion_q { margin-left: -200rem; }
 body.pad.no-touch #tc_potion_w { margin-left: -148rem; }
+/* RT held: E and R stand in Q's and W's places, on LB and LT. */
+body.pad.no-touch.pad-alt #tc_potion_q, body.pad.no-touch.pad-alt #tc_potion_w { display: none; }
+body.pad.no-touch.pad-alt #tc_potion_e { display: block; margin-left: -200rem; }
+body.pad.no-touch.pad-alt #tc_potion_r { display: block; margin-left: -148rem; }
 body.pad.no-touch #tc_attack {
 	margin-left: -92rem;
 	line-height: 50rem;

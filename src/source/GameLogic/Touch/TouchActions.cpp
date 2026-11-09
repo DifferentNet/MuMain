@@ -1564,14 +1564,22 @@ bool HasOtherFoe()
 {
     if (!InWorld())
         return false;
+    // Asked every frame for the Target button's look: a scan of every character five times a second
+    // is enough for a button's dimming.
+    static Clock::time_point s_checkedAt{};
+    static bool s_found = false;
+    const Clock::time_point now = Clock::now();
+    if (now - s_checkedAt < std::chrono::milliseconds(200))
+        return s_found;
+    s_checkedAt = now;
     const int lit = LitKey();
-    for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
+    s_found = false;
+    for (int i = 0; i < MAX_CHARACTERS_CLIENT && !s_found; ++i)
     {
         const CHARACTER* character = &CharactersClient[i];
-        if (character->Key != lit && IsGoodTarget(character, g_forceAttack))
-            return true;
+        s_found = character->Key != lit && IsGoodTarget(character, g_forceAttack);
     }
-    return false;
+    return s_found;
 }
 
 void ClearChosenTarget()
@@ -1686,7 +1694,17 @@ int TargetIndex()
     {
         if (!g_controlsShown || MUHelper::g_MuHelper.IsActive())
             return -1;
-        target = FindByKey(TargetToFight());
+        // The one the buttons would fight, lit before they do: a scan of every character, asked as
+        // each character is drawn, so it is looked up again ten times a second.
+        static Clock::time_point s_foundAt{};
+        static int s_foundKey = NoTarget;
+        const Clock::time_point now = Clock::now();
+        if (now - s_foundAt >= std::chrono::milliseconds(100))
+        {
+            s_foundAt = now;
+            s_foundKey = TargetToFight();
+        }
+        target = FindByKey(s_foundKey);
         if (!IsGoodTarget(target, true))
             return -1;
     }
