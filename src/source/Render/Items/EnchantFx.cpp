@@ -5,7 +5,9 @@
 #include "Engine/AI/ZzzAI.h"
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzObject.h"
+#include "GameLogic/Items/AncientLook.h"
 #include "GameLogic/Items/EnchantFlashLine.h"
+#include "GameLogic/Items/ExactLevelLine.h"
 #include "Network/Server/HiddenChatLines.h"
 #include "Render/Effects/ZzzEffect.h"
 #include "Render/Items/EnchantFxTuning.h"
@@ -117,6 +119,14 @@ void GlowColor(int modelType, vec3_t color)
     PartObjectColor(modelType, 1.0f, 1.0f, color);
 }
 
+// A worn piece's level: the look packet gives +14 as 13, the server's #UPL line the exact one
+// (GameLogic/Items/ExactLevelLine.h; piece 0-1 the hands, 2-6 helm to boots).
+int PieceLevel(CHARACTER* c, int piece, int shownLevel)
+{
+    const int exact = GameLogic::AncientLook::ExactLevelOf(std::wstring_view(c->ID), piece);
+    return GameLogic::Items::ExactLevelLine::Resolve(shownLevel, exact);
+}
+
 int CollectPieces(CHARACTER* c, OBJECT* o, BMD* b, std::array<Piece, 7>& pieces)
 {
     int count = 0;
@@ -126,7 +136,7 @@ int CollectPieces(CHARACTER* c, OBJECT* o, BMD* b, std::array<Piece, 7>& pieces)
         const PART_t& weapon = c->Weapon[i];
         if (weapon.Type == -1 || weapon.Type == MODEL_ARROWS || weapon.Type == MODEL_BOLT)
             continue;
-        const int level = GlowLevel(weapon.Type, weapon.Level);
+        const int level = GlowLevel(weapon.Type, PieceLevel(c, i, weapon.Level));
         if (level < T::AuraMinLevel || level > 15)
             continue;
         Piece& piece = pieces[count++];
@@ -140,7 +150,7 @@ int CollectPieces(CHARACTER* c, OBJECT* o, BMD* b, std::array<Piece, 7>& pieces)
         const PART_t& part = c->BodyPart[armour.bodyPart];
         if (part.Type == -1)
             continue;
-        const int level = GlowLevel(part.Type, part.Level);
+        const int level = GlowLevel(part.Type, PieceLevel(c, GameLogic::Items::ExactLevelLine::FirstArmourPiece + armour.bodyPart - BODYPART_HELM, part.Level));
         if (level < T::AuraMinLevel || level > 15)
             continue;
         Piece& piece = pieces[count++];
