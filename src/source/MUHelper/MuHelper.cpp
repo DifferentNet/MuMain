@@ -3,6 +3,7 @@
 #include "GameLogic/Automation/Movement.h"
 #include "GameLogic/Automation/Pickup.h"
 #include "GameLogic/Automation/Skill.h"
+#include "GameLogic/Automation/TargetPriority.h"
 #include "GameLogic/Combat/SkillExecution.h"
 
 #include <thread>
@@ -118,6 +119,8 @@ namespace MUHelper
         m_iCurrentBuffPartyIndex = 0;
         m_iBuffWaitRounds = 0;
         m_iCurrentTarget = -1;
+        m_iStrongTarget = -1;
+        m_strongRestUntil = {};
         m_iCurrentSkill = (ActionSkillType)m_config.aiSkill[0];
         m_iCurrentItem = MAX_ITEMS;
         m_posOriginal = { Hero->PositionX, Hero->PositionY };
@@ -296,6 +299,7 @@ namespace MUHelper
         Hero->Path.Lock.unlock();
         LetHeroStop(Hero, TRUE);
         m_walkWatchSince = {};
+        RestStrongTarget(now);
         m_iCurrentTarget = -1;
         g_ConsoleDebug->Write(MCD_NORMAL, L"[MU Helper] Stopped a walk that went nowhere");
     }
@@ -355,6 +359,7 @@ namespace MUHelper
         }
         GameLogic::Automation::ForgetAutomatedSend();
 
+        RestStrongTarget(now);
         m_iCurrentTarget = -1;
         m_iCurrentItem = MAX_ITEMS;
         m_iComboState = 0;
@@ -459,7 +464,10 @@ namespace MUHelper
             m_setAttackersOfHero.insert(iTargetId);
             _targetsLock.unlock();
 
-            if (!bCurrentAttacksHero)
+            // A boss or a much stronger monster picked by "Strong monsters first" is kept too: the weak monsters
+            // around a boss in Kalima drew the hero away from it (ghinzuro, 2026-11-08).
+            const bool bCurrentIsStrong = m_iStrongTarget != -1 && m_iCurrentTarget == m_iStrongTarget;
+            if (!bCurrentAttacksHero && !bCurrentIsStrong)
             {
                 m_iCurrentTarget = iTargetId;
             }
@@ -479,6 +487,10 @@ namespace MUHelper
         if (iTargetId == m_iCurrentTarget)
         {
             m_iCurrentTarget = -1;
+        }
+        if (iTargetId == m_iStrongTarget)
+        {
+            m_iStrongTarget = -1;
         }
     }
 
@@ -639,6 +651,80 @@ namespace MUHelper
         }
 
         return iFarthestMonsterId;
+    }
+
+    bool CMuHelper::IsFightingStrongTargetNearSpot()
+    {
+        if (m_iStrongTarget == -1 || m_iCurrentTarget != m_iStrongTarget)
+        {
+            return false;
+        }
+        CHARACTER* pTarget = FindCharacterByKey(m_iStrongTarget);
+        if (pTarget == nullptr || pTarget->Dead > 0 || !pTarget->Object.Live)
+        {
+            return false;
+        }
+        return ComputeDistanceBetween({ pTarget->PositionX, pTarget->PositionY }, m_posOriginal) <= m_iHuntingDistance;
+    }
+
+    void CMuHelper::RestStrongTarget(std::chrono::steady_clock::time_point now)
+    {
+        // The walk to the strong target got stuck (a boss behind a ring of its minions in Kalima): the target is
+        // dropped, and picking the same one again at once would start the same walk. For StrongTargetRest the
+        // helper picks as before, the nearest first, and clears the way.
+        if (m_iStrongTarget != -1 && m_iCurrentTarget == m_iStrongTarget)
+        {
+            m_strongRestUntil = now + StrongTargetRest;
+            m_iStrongTarget = -1;
+        }
+    }
+
+    int CMuHelper::UpdateStrongTarget(bool bNearSpot)
+    {
+        const int iKept = m_iStrongTarget;
+        m_iStrongTarget = -1;
+        if (std::chrono::steady_clock::now() < m_strongRestUntil)
+        {
+            return -1;
+        }
+        GameLogic::Automation::RequestStrengths();
+
+        const auto& strengths = GameLogic::Automation::Strengths();
+        if (std::chrono::steady_clock::now() - strengths.LastAnswer() > GameLogic::Automation::StrengthMaxAge)
+        {
+            return -1; // no fresh answer: a server without the add-on, or none yet
+        }
+
+        std::set<int> setTargets;
+        {
+            _targetsLock.lock();
+            setTargets = m_setTargets;
+            _targetsLock.unlock();
+        }
+
+        std::vector<GameLogic::Automation::TargetCandidate> candidates;
+        candidates.reserve(setTargets.size());
+        for (const int& iMonsterId : setTargets)
+        {
+            CHARACTER* pTarget = FindCharacterByKey(iMonsterId);
+            if (pTarget == nullptr || pTarget->Dead > 0 || !pTarget->Object.Live || !IsMonster(pTarget)
+                || m_mapForgottenUntil.count(iMonsterId))
+            {
+                continue;
+            }
+            const int iDistance = ComputeDistanceFromTarget(pTarget);
+            const int iRangeDistance = bNearSpot
+                ? ComputeDistanceBetween({ pTarget->PositionX, pTarget->PositionY }, m_posOriginal)
+                : iDistance;
+            if (iRangeDistance > m_iHuntingDistance)
+            {
+                continue;
+            }
+            candidates.push_back({ iMonsterId, strengths.ScoreOf(iMonsterId), iDistance });
+        }
+
+        m_iStrongTarget = GameLogic::Automation::PickStrongTarget(candidates, m_iCurrentTarget, iKept);
+        return m_iStrongTarget;
     }
 
     void CMuHelper::CleanupTargets()
@@ -1313,6 +1399,23 @@ namespace MUHelper
 
     int CMuHelper::Attack()
     {
+        // "Strong monsters first" (ghinzuro, 2026-11-08: «выбирал цель по максимальному хп и урону вокруг себя»):
+        // a boss or a monster StrongFactor times stronger than the weakest one around is attacked first and kept
+        // until it dies, instead of the nearest monster after every kill.
+        if (m_config.bStrongTargetFirst)
+        {
+            const int iStrong = UpdateStrongTarget(!PicksUpItems());
+            if (iStrong != -1 && iStrong != m_iCurrentTarget)
+            {
+                m_iCurrentTarget = iStrong;
+                m_noTargetInReachSince = {};
+            }
+        }
+        else
+        {
+            m_iStrongTarget = -1;
+        }
+
         if (m_iCurrentTarget == -1)
         {
             if (!m_setTargets.empty())
@@ -1469,6 +1572,12 @@ namespace MUHelper
         // attacks what is within reach from where it stands; only when nothing has been for StandStillPatience
         // does it go for the nearest monster within the hunting range of its start spot. With "original
         // position" ticked it walks back there as before (Regroup).
+        // A strong target ("Strong monsters first") within the hunting range of the spot is gone for at once.
+        if (m_iStrongTarget != -1 && m_iCurrentTarget == m_iStrongTarget)
+        {
+            m_noTargetInReachSince = {};
+            return true;
+        }
         if (KeepTargetWithinReach(fReach))
         {
             m_noTargetInReachSince = {};
@@ -1707,6 +1816,15 @@ namespace MUHelper
         using GameLogic::Automation::MoveResult;
 
         if (!m_config.bReturnToOriginalPosition || m_iSecondsAway <= m_config.iMaxSecondsAway)
+        {
+            m_regroupSince = {};
+            return 1;
+        }
+
+        // A boss fight lasts longer than the time away: walking back to the spot mid-fight and out again every
+        // few seconds was the Kalima trouble "Strong monsters first" is for. The strong target stands within
+        // the hunting range of the spot, so the hero stays on it and goes back after it dies.
+        if (IsFightingStrongTargetNearSpot())
         {
             m_regroupSince = {};
             return 1;

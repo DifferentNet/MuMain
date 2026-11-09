@@ -190,6 +190,7 @@ void CMuHelperConfigWindow::OnToggle(const Rml::String& key)
     if (key == "potion") flip(c.bUseHealPotion);
     else if (key == "long_distance") flip(c.bLongRangeCounterAttack);
     else if (key == "orig_position") flip(c.bReturnToOriginalPosition);
+    else if (key == "strong_first") flip(c.bStrongTargetFirst);
     else if (key == "skill2_delay" || key == "skill3_delay"
              || key == "skill2_condition" || key == "skill3_condition")
     {
@@ -437,6 +438,7 @@ void CMuHelperConfigWindow::Reset()
     c.iMaxSecondsAway = 10;
     c.bLongRangeCounterAttack = false;
     c.bReturnToOriginalPosition = true;
+    c.bStrongTargetFirst = true;
 
     c.aiSkill.fill(0);
     c.bUseCombo = false;
@@ -534,6 +536,7 @@ void CMuHelperConfigWindow::BindRmlModel(Rml::DataModelConstructor& c, MuHelperC
     checks.RegisterMember("potion", &MuHelperConfigChecks::potion);
     checks.RegisterMember("long_distance", &MuHelperConfigChecks::longDistance);
     checks.RegisterMember("orig_position", &MuHelperConfigChecks::origPosition);
+    checks.RegisterMember("strong_first", &MuHelperConfigChecks::strongFirst);
     checks.RegisterMember("skill2_delay", &MuHelperConfigChecks::skill2Delay);
     checks.RegisterMember("skill2_condition", &MuHelperConfigChecks::skill2Condition);
     checks.RegisterMember("skill3_delay", &MuHelperConfigChecks::skill3Delay);
@@ -598,6 +601,7 @@ void CMuHelperConfigWindow::BindRmlModel(Rml::DataModelConstructor& c, MuHelperC
     labels.RegisterMember("potion", &MuHelperConfigLabels::potion);
     labels.RegisterMember("long_distance", &MuHelperConfigLabels::longDistance);
     labels.RegisterMember("orig_position", &MuHelperConfigLabels::origPosition);
+    labels.RegisterMember("strong_first", &MuHelperConfigLabels::strongFirst);
     labels.RegisterMember("delay", &MuHelperConfigLabels::delay);
     labels.RegisterMember("condition", &MuHelperConfigLabels::condition);
     labels.RegisterMember("combo", &MuHelperConfigLabels::combo);
@@ -700,6 +704,7 @@ void CMuHelperConfigWindow::BindRmlModel(Rml::DataModelConstructor& c, MuHelperC
     l.potion = Narrow(I18N::Game::Potion);
     l.longDistance = Narrow(I18N::Game::LongDistanceCounterAttack);
     l.origPosition = Narrow(I18N::Game::OriginalPosition);
+    l.strongFirst = Narrow(I18N::Game::HelperStrongFirst);
     l.delay = Narrow(I18N::Game::Delay);
     l.condition = Narrow(I18N::Game::Con);
     l.combo = Narrow(I18N::Game::Combo);
@@ -809,6 +814,7 @@ void CMuHelperConfigWindow::SyncRmlModel()
     checks.potion = c.bUseHealPotion;
     checks.longDistance = c.bLongRangeCounterAttack;
     checks.origPosition = c.bReturnToOriginalPosition;
+    checks.strongFirst = c.bStrongTargetFirst;
     checks.skill2Delay = (c.aiSkillCondition[1] & ON_TIMER) != 0;
     checks.skill2Condition = (c.aiSkillCondition[1] & ON_CONDITION) != 0;
     checks.skill3Delay = (c.aiSkillCondition[2] & ON_TIMER) != 0;

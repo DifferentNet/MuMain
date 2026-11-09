@@ -11565,4 +11565,8 @@
   <data name="SoftShadowsRow" xml:space="preserve">
     <value>ソフトシャドウ</value>
   </data>
+  <!-- MU Helper: strong monsters first -->
+  <data name="HelperStrongFirst" xml:space="preserve">
+    <value>強いモンスター優先</value>
+  </data>
 </root>

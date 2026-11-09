@@ -13490,4 +13490,8 @@
   <data name="SoftShadowsRow" xml:space="preserve">
     <value>Malambot na anino</value>
   </data>
+  <!-- MU Helper: strong monsters first -->
+  <data name="HelperStrongFirst" xml:space="preserve">
+    <value>Unahin ang malakas</value>
+  </data>
 </root>

@@ -94,6 +94,12 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME test_target_priority
+    SOURCES
+        test_target_priority.cpp
+)
+
+mu_add_test(
     NAME test_steer_hold
     SOURCES
         test_steer_hold.cpp
