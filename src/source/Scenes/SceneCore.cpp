@@ -114,6 +114,7 @@ float g_Luminosity;
 extern int g_iNoMouseTime;
 
 extern bool g_bWindowMinimized;
+extern bool g_bMinimizedWaitSleepsOnly;
 
 namespace
 {
@@ -159,9 +160,11 @@ void WaitForNextActivity(bool usePreciseSleep)
                 std::min<double>(rest_ms - sleep_duration_offset_ms, Scenes::FramePacing::kMaxSleepMs));
         }
 #else
-        // A minimized window shows no frames, so its cap needs no yield loop at all.
-        const Precision precision =
-            g_bWindowMinimized ? Precision::Relaxed : usePreciseSleep ? Precision::Fine : Precision::Coarse;
+        // A minimized window shows no frames, so its cap needs no yield loop at all; Winmain.cpp caps it
+        // a little early for that (InactiveTargetFps) where the 1 ms timer is certain.
+        const Precision precision = g_bWindowMinimized && g_bMinimizedWaitSleepsOnly ? Precision::Relaxed :
+                                    usePreciseSleep                                 ? Precision::Fine :
+                                                                                      Precision::Coarse;
         sleep_ms =
             Scenes::FramePacing::SleepMsBeforeNextFrame(current_ms_per_frame - current_frame_time_ms, precision);
 #endif

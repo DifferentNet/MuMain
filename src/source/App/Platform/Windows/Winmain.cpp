@@ -707,6 +707,10 @@ bool g_bWndActive = false;
 // when ACTIVE_FOCUS_OUT is defined, so it cannot tell a background window apart).
 bool g_bHasInputFocus = false;
 bool g_bWindowMinimized = false;
+// A minimized window waits for its next frame with sleeps alone, no yield loop (Scenes/FramePacing.h,
+// Relaxed). Only with the 1 ms timer that Windows also leaves to a minimized process (MainLoop):
+// with the default 15.6 ms timer a sleep-only wait would fall below REFERENCE_FPS.
+bool g_bMinimizedWaitSleepsOnly = false;
 bool HangulDelete = false;
 int Hangul = 0;
 bool g_bEnterPressed = false;
@@ -1472,22 +1476,6 @@ void SyncPhoneKeyboard()
     mu::web::SyncTapOnTextField(PhoneKeysFor(tap ? ui.GetTextFieldAt(tap->x, tap->y) : nullptr));
 }
 
-namespace
-{
-// The cap of a window nobody plays in: unfocused or minimized. Logic and MU Helper run per frame and
-// slow down below REFERENCE_FPS, so it is never lower. A minimized window's wait only sleeps
-// (Scenes/FramePacing.h, Relaxed) and a sleep overruns, so its cap is a little above the reference
-// rate: a late frame still comes within the reference frame's 40 ms.
-double InactiveTargetFps()
-{
-#ifdef __EMSCRIPTEN__
-    return REFERENCE_FPS;
-#else
-    return g_bWindowMinimized ? Scenes::FramePacing::RelaxedTargetFps(REFERENCE_FPS) : REFERENCE_FPS;
-#endif
-}
-} // namespace
-
 // The frame cap: none while loading; 30 on the login and character screens, where nothing moves fast;
 // in the world the Options FPS limit, 60 when it has none (a phone's 90-120 Hz screen gains nothing
 // the game's 25-step logic shows, and costs heat).
@@ -1505,6 +1493,20 @@ void WaitForBrowserFrame()
     WaitForBrowserFrameJs(SceneFlag == MAIN_SCENE ? worldFps : std::min(worldFps, MenuFps));
 }
 #endif
+
+namespace
+{
+// The cap of a window nobody plays in: unfocused or minimized. Logic and MU Helper run per frame and
+// slow down below REFERENCE_FPS, so it is never lower. Where a minimized window's wait only sleeps
+// (g_bMinimizedWaitSleepsOnly) a sleep overruns, so its cap is a little above the reference rate: a
+// late frame still comes within the reference frame's 40 ms.
+double InactiveTargetFps()
+{
+    return g_bWindowMinimized && g_bMinimizedWaitSleepsOnly ?
+               Scenes::FramePacing::RelaxedTargetFps(REFERENCE_FPS) :
+               REFERENCE_FPS;
+}
+} // namespace
 
 void HandleFocusChange(bool active)
 {
@@ -2081,7 +2083,10 @@ MSG MainLoop()
         throttling.ControlMask = PROCESS_POWER_THROTTLING_EXECUTION_SPEED | PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION;
         throttling.StateMask = 0;
         if (SetProcessInformation(GetCurrentProcess(), ProcessPowerThrottling, &throttling, sizeof(throttling)))
+        {
             mu::log::Get("platform")->info("Process power throttling disabled");
+            g_bMinimizedWaitSleepsOnly = precise == TIMERR_NOERROR;
+        }
         else
             mu::log::Get("platform")->warn("SetProcessInformation(ProcessPowerThrottling) failed: error {}", GetLastError());
     }
