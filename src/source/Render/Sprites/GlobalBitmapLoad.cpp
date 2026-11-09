@@ -213,14 +213,29 @@ void UploadNormalMap(BITMAP_t& bitmap, const std::wstring& loadedPath, std::span
     int mapWidth = NormalMapFile::HalfSize(width);
     int mapHeight = NormalMapFile::HalfSize(height);
     std::vector<std::uint8_t> normals = NormalMapFile::Load(
-        loadedPath, width, height, [](const std::wstring& path, std::vector<std::uint8_t>& bytes) {
-            std::ifstream input(Render::Sprites::NarrowBitmapPath(path), std::ios::binary);
+        loadedPath, width, height,
+        [](const std::wstring& path, std::size_t maxBytes, std::vector<std::uint8_t>& bytes) {
+            std::ifstream input(Render::Sprites::NarrowBitmapPath(path), std::ios::binary | std::ios::ate);
             if (!input)
             {
                 return false;
             }
-            bytes.assign(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
-            return true;
+            const std::streamoff size = input.tellg();
+            if (size < 0 || static_cast<std::uint64_t>(size) > maxBytes)
+            {
+                return false;
+            }
+            try
+            {
+                bytes.resize(static_cast<std::size_t>(size));
+            }
+            catch (const std::bad_alloc&)
+            {
+                return false;
+            }
+            input.seekg(0);
+            return static_cast<bool>(
+                input.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size())));
         });
     if (normals.empty() && NormalMaps::RuntimeBuild())
     {
@@ -240,6 +255,8 @@ void UploadNormalMap(BITMAP_t& bitmap, const std::wstring& loadedPath, std::span
         return;
     }
     bitmap.sdlNormalMap = result.texture;
+    // Counted with its texture, so the texture memory the game reports includes the relief.
+    bitmap.UploadedBytes += UploadedBytes(mapWidth, mapHeight);
 }
 
 void ReleaseNormalMap(SDL_GPUDevice* device, BITMAP_t& bitmap)

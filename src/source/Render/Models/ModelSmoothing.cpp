@@ -186,7 +186,7 @@ bool SplitOnce(Mesh_t& m, const Pose& pose)
         int a = -1, b = -1;
         int normalA = -1, normalB = -1;
         bool hard = false;
-        int point = -1;
+        int point = -1; // the new point on the edge; -1: the edge is not split
     };
     std::unordered_map<std::uint32_t, Edge> edges;
     edges.reserve(triangleCount * 2);
@@ -222,7 +222,16 @@ bool SplitOnce(Mesh_t& m, const Pose& pose)
         }
     }
 
-    const int newPoints = static_cast<int>(edges.size());
+    // An edge between points of two bones is not split: its new point could follow only one of them,
+    // so the bend would break when the bones turn apart. Its triangles are split into two or three.
+    int newPoints = 0;
+    for (const auto& [key, e] : edges)
+    {
+        if (m.Vertices[e.a].Node == m.Vertices[e.b].Node)
+            ++newPoints;
+    }
+    if (newPoints == 0)
+        return false;
     if (vertexCount + newPoints > MaxPoints || vertexCount + newPoints > SHRT_MAX)
         return false;
 
@@ -236,6 +245,8 @@ bool SplitOnce(Mesh_t& m, const Pose& pose)
 
     for (auto& [key, e] : edges)
     {
+        if (m.Vertices[e.a].Node != m.Vertices[e.b].Node)
+            continue;
         const Vec pa = position[e.a];
         const Vec pb = position[e.b];
         Vec mid = Mul(Add(pa, pb), 0.5f);
@@ -288,12 +299,17 @@ bool SplitOnce(Mesh_t& m, const Pose& pose)
     for (int t = 0; t < triangleCount; ++t)
     {
         const Triangle_t& tri = m.Triangles[t];
-        int pv[3], pn[3], pt[3]; // the midpoints of edges 01, 12, 20
+        int pv[3], pn[3], pt[3]; // the midpoints of edges 01, 12, 20; -1 where the edge is not split
+        int splitEdges = 0;
         for (int k = 0; k < 3; ++k)
         {
             const int a = tri.VertexIndex[k];
             const int b = tri.VertexIndex[(k + 1) % 3];
             const Edge& e = edges[Key(a, b)];
+            pv[k] = pn[k] = pt[k] = -1;
+            if (e.point < 0)
+                continue;
+            ++splitEdges;
             pv[k] = e.point;
             pn[k] = midNormal(tri.NormalIndex[k], tri.NormalIndex[(k + 1) % 3], e.point, vertices[e.point].Node);
             pt[k] = midTex(tri.TexCoordIndex[k], tri.TexCoordIndex[(k + 1) % 3]);
@@ -319,10 +335,36 @@ bool SplitOnce(Mesh_t& m, const Pose& pose)
         const short* v = tri.VertexIndex;
         const short* n = tri.NormalIndex;
         const short* c = tri.TexCoordIndex;
-        make(v[0], n[0], c[0], pv[0], pn[0], pt[0], pv[2], pn[2], pt[2]);
-        make(pv[0], pn[0], pt[0], v[1], n[1], c[1], pv[1], pn[1], pt[1]);
-        make(pv[2], pn[2], pt[2], pv[1], pn[1], pt[1], v[2], n[2], c[2]);
-        make(pv[0], pn[0], pt[0], pv[1], pn[1], pt[1], pv[2], pn[2], pt[2]);
+        if (splitEdges == 3)
+        {
+            make(v[0], n[0], c[0], pv[0], pn[0], pt[0], pv[2], pn[2], pt[2]);
+            make(pv[0], pn[0], pt[0], v[1], n[1], c[1], pv[1], pn[1], pt[1]);
+            make(pv[2], pn[2], pt[2], pv[1], pn[1], pt[1], v[2], n[2], c[2]);
+            make(pv[0], pn[0], pt[0], pv[1], pn[1], pt[1], pv[2], pn[2], pt[2]);
+        }
+        else if (splitEdges == 2)
+        {
+            // Corners A B C, with A-B the edge that stays whole; P on B-C, Q on C-A.
+            const int a = pv[0] < 0 ? 0 : (pv[1] < 0 ? 1 : 2);
+            const int b = (a + 1) % 3;
+            const int cc = (a + 2) % 3;
+            make(v[a], n[a], c[a], v[b], n[b], c[b], pv[b], pn[b], pt[b]);
+            make(v[a], n[a], c[a], pv[b], pn[b], pt[b], pv[cc], pn[cc], pt[cc]);
+            make(pv[b], pn[b], pt[b], v[cc], n[cc], c[cc], pv[cc], pn[cc], pt[cc]);
+        }
+        else if (splitEdges == 1)
+        {
+            // Corners A B C, with P on A-B, the only split edge.
+            const int a = pv[0] >= 0 ? 0 : (pv[1] >= 0 ? 1 : 2);
+            const int b = (a + 1) % 3;
+            const int cc = (a + 2) % 3;
+            make(v[a], n[a], c[a], pv[a], pn[a], pt[a], v[cc], n[cc], c[cc]);
+            make(pv[a], pn[a], pt[a], v[b], n[b], c[b], v[cc], n[cc], c[cc]);
+        }
+        else
+        {
+            make(v[0], n[0], c[0], v[1], n[1], c[1], v[2], n[2], c[2]);
+        }
     }
 
     // The renderer's arrays are indexed by normal as well (NormalTransform, g_chrome).

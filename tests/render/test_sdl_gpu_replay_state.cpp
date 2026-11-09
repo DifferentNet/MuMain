@@ -139,3 +139,21 @@ TEST_CASE("a shadow draw's second uniform slot and storage buffer are tracked [r
     CHECK(state.SelectVertexUniforms(1, skinning));
     CHECK(state.SelectVertexStorageBuffers(bones));
 }
+
+TEST_CASE("a pipeline change rebinds the normal maps [render][sdl_gpu_replay_state]")
+{
+    Render::SdlGpuReplayState state;
+    auto* const map = Pointer<SDL_GPUTexture>(7);
+    auto* const sampler = Pointer<SDL_GPUSampler>(8);
+
+    state.SelectPipeline(Pointer<SDL_GPUGraphicsPipeline>(1));
+    CHECK(state.SelectNormalMap(1, map, sampler));
+    CHECK(state.SelectNormalMap(2, map, sampler));
+    CHECK_FALSE(state.SelectNormalMap(1, map, sampler));
+    CHECK_FALSE(state.SelectNormalMap(2, map, sampler));
+
+    // SDL's WebGPU backend forgets the bindings with the pipeline.
+    state.SelectPipeline(Pointer<SDL_GPUGraphicsPipeline>(2));
+    CHECK(state.SelectNormalMap(1, map, sampler));
+    CHECK(state.SelectNormalMap(2, map, sampler));
+}

@@ -8,8 +8,9 @@ struct _Mesh_t;
 // so round shapes (shoulders, helmets, bodies, wheels) lose their angular outline. Hard edges stay
 // sharp: an edge whose two sides have different normals, or whose normals turn away from each other
 // steeply, keeps its straight midpoint. The original points, their indices and the textures stay as
-// they are; only new points and triangles are added. Each new point follows the bone of one end of
-// its edge.
+// they are; only new points and triangles are added. Only edges whose two ends follow the same bone
+// get a new point (which follows that bone): an edge between two bones stays whole, so bends keep
+// their shape in animation, and its triangles are split into two or three instead of four.
 namespace Render::Models::Smoothing
 {
 

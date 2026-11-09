@@ -41,6 +41,9 @@ bool SdlGpuReplayState::SelectPipeline(SDL_GPUGraphicsPipeline* pipeline)
     // SDL's WebGPU backend forgets every texture binding when a pipeline is bound: the shadowed
     // receivers would sample no shadow map (a black frame). Rebinding costs nothing elsewhere.
     m_sunShadowMapValid = false;
+    // The same holds for the normal maps at slots 1 and 2.
+    m_normalMapTexture.fill(nullptr);
+    m_normalMapSampler.fill(nullptr);
     return true;
 }
 

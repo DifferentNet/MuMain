@@ -151,7 +151,7 @@ The Remaster's smoother models and normal maps (`[Render] SmoothModels`, default
 `NormalMaps`, default 1; `Render/Models/ModelSmoothing.h`, `Render/Textures/NormalMaps.h`) have
 no Options row. They follow the HD textures: on in the Remaster client, always off in the
 Classic client (`Winmain.cpp`), off in the browser. The normal maps ship prebuilt next to the
-HD textures as `<texture>.nrm` at half size (`scripts/hd_pack.py`,
+HD textures as `<texture>.nrm` at half size, two grey lossy WebP pictures (`scripts/hd_pack.py`,
 `Render/Textures/NormalMapFile.h`); the game only reads them, and a texture without one gets no
 relief. For development, the environment variable `MU_NORMAL_MAPS_RUNTIME=1` builds missing
 ones at load instead.

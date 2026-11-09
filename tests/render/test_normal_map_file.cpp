@@ -14,24 +14,43 @@ namespace
 namespace File = Render::Textures::NormalMapFile;
 namespace NormalMaps = Render::Textures::NormalMaps;
 
-// A map file as scripts/hd_pack.py writes it: red and green vary, blue 255.
-std::vector<std::uint8_t> MakeFile(int width, int height)
+// One grey picture of a map file (lossless here, so the test knows every value).
+std::vector<std::uint8_t> GreyWebp(int width, int height, int base, int step, int period)
 {
     std::vector<std::uint8_t> rgb;
     for (int i = 0; i < width * height; ++i)
     {
-        rgb.push_back(static_cast<std::uint8_t>(100 + i % 50));
-        rgb.push_back(static_cast<std::uint8_t>(140 - i % 30));
-        rgb.push_back(255);
+        const auto value = static_cast<std::uint8_t>(base + step * (i % period));
+        rgb.insert(rgb.end(), {value, value, value});
     }
     std::uint8_t* webp = nullptr;
     const std::size_t size = WebPEncodeLosslessRGB(rgb.data(), width, height, width * 3, &webp);
     REQUIRE(size > 0);
-    std::vector<std::uint8_t> file = {'M', 'U', 'N', '1', static_cast<std::uint8_t>(width),
-                                      static_cast<std::uint8_t>(width >> 8), static_cast<std::uint8_t>(height),
-                                      static_cast<std::uint8_t>(height >> 8)};
-    file.insert(file.end(), webp, webp + size);
+    std::vector<std::uint8_t> out(webp, webp + size);
     WebPFree(webp);
+    return out;
+}
+
+// A map file laid out as scripts/hd_pack.py writes it: x tilt 100 + i % 50, y tilt 140 - i % 30.
+std::vector<std::uint8_t> MakeFile(int width, int height)
+{
+    const auto red = GreyWebp(width, height, 100, 1, 50);
+    const auto green = GreyWebp(width, height, 140, -1, 30);
+    const auto redSize = static_cast<std::uint32_t>(red.size());
+    std::vector<std::uint8_t> file = {'M',
+                                      'U',
+                                      'N',
+                                      '2',
+                                      static_cast<std::uint8_t>(width),
+                                      static_cast<std::uint8_t>(width >> 8),
+                                      static_cast<std::uint8_t>(height),
+                                      static_cast<std::uint8_t>(height >> 8),
+                                      static_cast<std::uint8_t>(redSize),
+                                      static_cast<std::uint8_t>(redSize >> 8),
+                                      static_cast<std::uint8_t>(redSize >> 16),
+                                      static_cast<std::uint8_t>(redSize >> 24)};
+    file.insert(file.end(), red.begin(), red.end());
+    file.insert(file.end(), green.begin(), green.end());
     return file;
 }
 
@@ -40,11 +59,13 @@ struct Disk
     std::wstring path;
     std::vector<std::uint8_t> bytes;
     int reads = 0;
+    std::size_t askedMax = 0;
 
     File::Reader Reader()
     {
-        return [this](const std::wstring& asked, std::vector<std::uint8_t>& out) {
+        return [this](const std::wstring& asked, std::size_t maxBytes, std::vector<std::uint8_t>& out) {
             ++reads;
+            askedMax = maxBytes;
             if (asked != path)
             {
                 return false;
@@ -64,6 +85,7 @@ struct MapsOn
 
 TEST_CASE("a prebuilt map sits next to its texture at half its size [render][textures][normalmaps]")
 {
+    CHECK(File::MaxFileSize(8, 4) == File::PrefixSize + 4u * 2u * 4u + 64u * 1024u);
     CHECK(File::PathFor(L"Data\\HD\\Item\\Sword01.OZJ") == L"Data\\HD\\Item\\Sword01.OZJ.nrm");
     CHECK(File::HalfSize(512) == 256);
     CHECK(File::HalfSize(5) == 3);
@@ -103,7 +125,24 @@ TEST_CASE("a broken or mismatched map file is refused [render][textures][normalm
     }
     SUBCASE("wrong mark")
     {
-        file[3] = '2';
+        file[3] = '3';
+        CHECK(File::Decode(file, 8, 8).empty());
+    }
+    SUBCASE("an old MUN1 file")
+    {
+        file[3] = '1';
+        CHECK(File::Decode(file, 8, 8).empty());
+    }
+    SUBCASE("first picture's size past the end")
+    {
+        file[8] = 0xFF;
+        file[9] = 0xFF;
+        CHECK(File::Decode(file, 8, 8).empty());
+    }
+    SUBCASE("no second picture")
+    {
+        const std::size_t firstSize = file[8] | (file[9] << 8);
+        file.resize(File::PrefixSize + firstSize + 1);
         CHECK(File::Decode(file, 8, 8).empty());
     }
     SUBCASE("prefix only")
@@ -128,6 +167,7 @@ TEST_CASE("the Remaster loads the map of a model texture from disk [render][text
     Disk disk{L"Data\\HD\\Item\\Sword01.OZJ.nrm", MakeFile(4, 2)};
     CHECK(File::Load(L"Data\\HD\\Item\\Sword01.OZJ", 8, 4, disk.Reader()).size() == 4u * 2u * 4u);
     CHECK(disk.reads == 1);
+    CHECK(disk.askedMax == File::MaxFileSize(8, 4));
 
     SUBCASE("a missing file: no relief, nothing built")
     {
@@ -136,6 +176,11 @@ TEST_CASE("the Remaster loads the map of a model texture from disk [render][text
     SUBCASE("a broken file: no relief")
     {
         disk.bytes.resize(disk.bytes.size() / 2);
+        CHECK(File::Load(L"Data\\HD\\Item\\Sword01.OZJ", 8, 4, disk.Reader()).empty());
+    }
+    SUBCASE("a file larger than a map can be: refused")
+    {
+        disk.bytes.resize(File::MaxFileSize(8, 4) + 1u, 0);
         CHECK(File::Load(L"Data\\HD\\Item\\Sword01.OZJ", 8, 4, disk.Reader()).empty());
     }
     SUBCASE("textures that get no map are not looked up")

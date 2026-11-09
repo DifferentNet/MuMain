@@ -18,9 +18,11 @@ Normal maps: every upscaled (x2/x4) texture of a model (Item, Player, Monster, N
 map, built here once with the algorithm of the game's Render/Textures/NormalMaps.cpp, halved, and written next to
 the texture as "<texture file>.nrm" (Render/Textures/NormalMapFile.h):
 
-    "MUN1"  u16 width  u16 height  lossless WebP (red, green = tilt, 128 = flat; blue 255)
+    "MUN2"  u16 width  u16 height  u32 size of the first WebP  WebP of the x tilt  WebP of the y tilt
 
-The game only reads them: a texture without one gets no relief. --no-normal-maps skips them.
+Each tilt is a grey picture (128 = flat) in lossy WebP of quality NRM_QUALITY: about half the bytes of a lossless
+map, at a mean error near 1.4 of 127. The game only reads them: a texture without one gets no relief.
+--no-normal-maps skips them; --check also builds each map again and prints how far the stored one is off.
 """
 import argparse, io, os, re, struct, sys
 from concurrent.futures import ProcessPoolExecutor
@@ -32,10 +34,14 @@ MAGIC = b"MUW1"
 HEAD = 4 + 18
 DEFAULT_SRC = r"E:\Mu Online Server\hd-art\Data\HD"
 STAT_NAME = ".hd-pack-sources"  # src size and mtime per packed file, for the incremental runs
-NRM_MAGIC = b"MUN1"
+NRM_MAGIC = b"MUN2"
 NRM_SUFFIX = ".nrm"
 # Bumped when the maps' algorithm changes, so the next run builds them all again.
-NRM_VERSION = "1"
+NRM_VERSION = "3"
+NRM_QUALITY = 90
+# --check fails a map whose error (in steps of 1/127 tilt) is larger than this anywhere, or on average.
+NRM_MAX_ERROR, NRM_MEAN_ERROR = 32, 2.0
+MAX_SIDE = 1024  # Render::Sprites::kBitmapMaximumWidth and Height
 MODEL_FOLDER = re.compile(r"^(item|player|monster|npc|object[0-9]+)$", re.IGNORECASE)
 # NormalMaps.cpp: kFineStrength, kBroadStrength, kMaxTilt.
 FINE_STRENGTH, BROAD_STRENGTH, MAX_TILT = 24.0, 12.0, 0.9
@@ -112,10 +118,27 @@ def texture_rgba(data, ozj):
         bgra = np.frombuffer(data, dtype=np.uint8, count=width * height * 4, offset=HEAD).reshape(height, width, 4)
         # The file's rows go from the bottom up and hold BGRA (OztFile.cpp CopyPixels).
         rgba = bgra[::-1, :, [2, 1, 0, 3]].astype(np.float32)
+    # GlobalBitmapLoad.cpp pads the picture to a power of two (at most 1024 x scale) in the top-left corner:
+    # an OZJ with black opaque texels (PadRGBToRGBA), an OZT with transparent zeros (CreateBitmapStorage).
     height, width = rgba.shape[:2]
-    if width < scale or height < scale:
+    padded_width = next_power_of_two(width, MAX_SIDE * scale)
+    padded_height = next_power_of_two(height, MAX_SIDE * scale)
+    if padded_width < scale or padded_height < scale:
         return None
-    return rgba, scale
+    canvas = np.zeros((padded_height, padded_width, 4), dtype=np.float32)
+    if ozj:
+        canvas[..., 3] = 255.0
+    rows, cols = min(height, padded_height), min(width, padded_width)
+    canvas[:rows, :cols] = rgba[:rows, :cols]
+    return canvas, scale
+
+
+def next_power_of_two(value, max_value):
+    """GlobalBitmapLoad.cpp NextPowerOfTwo."""
+    result = 1
+    while result < value and result < max_value:
+        result <<= 1
+    return min(result, max_value)
 
 
 def box_blur(values, radius):
@@ -176,31 +199,69 @@ def halve(values):
     return 0.25 * (padded[0::2, 0::2] + padded[1::2, 0::2] + padded[0::2, 1::2] + padded[1::2, 1::2])
 
 
-def normal_map(data, ozj):
-    """The .nrm bytes of a texture file (its HD source, not packed), or None when it gets no map."""
+def map_planes(data, ozj):
+    """The two tilt planes (x, y; uint8, 128 = flat) of a texture file's map, or None when it gets none."""
     texture = texture_rgba(data, ozj)
     if texture is None:
         return None
     rgba, scale = texture
     tx, ty = tilt_of(rgba, scale)
-    red, green = encode_tilt(halve(tx)), encode_tilt(halve(ty))
-    height, width = red.shape
-    rgb = np.dstack([red, green, np.full_like(red, 255)])
+    return encode_tilt(halve(tx)), encode_tilt(halve(ty))
+
+
+def grey_webp(plane):
     buffer = io.BytesIO()
-    Image.fromarray(rgb, "RGB").save(buffer, "WEBP", lossless=True, quality=100, method=5)
-    return NRM_MAGIC + struct.pack("<HH", width, height) + buffer.getvalue()
+    Image.fromarray(np.dstack([plane] * 3), "RGB").save(buffer, "WEBP", quality=NRM_QUALITY, method=6)
+    return buffer.getvalue()
+
+
+def normal_map(data, ozj):
+    """The .nrm bytes of a texture file (its HD source, not packed), or None when it gets no map."""
+    planes = map_planes(data, ozj)
+    if planes is None:
+        return None
+    red, green = planes
+    height, width = red.shape
+    first, second = grey_webp(red), grey_webp(green)
+    return NRM_MAGIC + struct.pack("<HHI", width, height, len(first)) + first + second
 
 
 def read_normal_map(data):
-    """(width, height, RGB array) of a .nrm file."""
-    if data[:4] != NRM_MAGIC:
+    """(width, height, x plane, y plane) of a .nrm file, as the game decodes it (the red of each picture)."""
+    if data[:4] != NRM_MAGIC or len(data) < 12:
         raise ValueError("not a normal map")
-    width, height = struct.unpack_from("<HH", data, 4)
-    with Image.open(io.BytesIO(data[8:])) as im:
-        rgb = np.asarray(im.convert("RGB"))
-    if rgb.shape[:2] != (height, width):
-        raise ValueError("size differs")
-    return width, height, rgb
+    width, height, first = struct.unpack_from("<HHI", data, 4)
+    if first <= 0 or 12 + first >= len(data):
+        raise ValueError("bad picture size")
+    planes = []
+    for part in (data[12:12 + first], data[12 + first:]):
+        with Image.open(io.BytesIO(part)) as im:
+            plane = np.asarray(im.convert("RGB"))[..., 0]
+        if plane.shape != (height, width):
+            raise ValueError("size differs")
+        planes.append(plane)
+    return width, height, planes[0], planes[1]
+
+
+def check_map(job):
+    """(rel, problem or None, max error, sum of errors, values) of one stored map against a fresh build."""
+    rel, source, nrm = job
+    try:
+        with open(source, "rb") as f:
+            original = f.read()
+        with open(nrm, "rb") as f:
+            width, height, red, green = read_normal_map(f.read())
+        planes = map_planes(original, rel.lower().endswith(".ozj"))
+        if planes is None or planes[0].shape != (height, width):
+            return rel, "not half the texture's size", 0, 0, 0
+        error = np.concatenate([np.abs(red.astype(np.int16) - planes[0]).ravel(),
+                                np.abs(green.astype(np.int16) - planes[1]).ravel()])
+        worst, total = int(error.max()), int(error.sum())
+        if worst > NRM_MAX_ERROR or total > NRM_MEAN_ERROR * error.size:
+            return rel, f"error max {worst}, mean {total / error.size:.2f}", worst, total, error.size
+        return rel, None, worst, total, error.size
+    except (OSError, ValueError) as e:
+        return rel, str(e), 0, 0, 0
 
 
 def write(path, data):
@@ -255,8 +316,9 @@ def save_stats(dst, stats):
     write(os.path.join(dst, STAT_NAME), lines.encode("utf-8"))
 
 
-def check(src, dst, normal_maps=True):
+def check(src, dst, normal_maps=True, jobs=1):
     bad = maps = 0
+    map_jobs = []
     for rel, path in walk(src):
         out = os.path.join(dst, rel)
         with open(path, "rb") as f:
@@ -273,17 +335,20 @@ def check(src, dst, normal_maps=True):
             print("DIFFERS", rel)
         nrm = out + NRM_SUFFIX
         if normal_maps and wants_normal_map(rel) and os.path.exists(nrm):
-            try:
-                with open(nrm, "rb") as f:
-                    width, height, _ = read_normal_map(f.read())
-                texture = texture_rgba(original, rel.lower().endswith(".ozj"))
-                if texture is None or (height, width) != tuple((n + 1) // 2 for n in texture[0].shape[:2]):
-                    raise ValueError("not half the texture's size")
-                maps += 1
-            except (OSError, ValueError) as e:
+            map_jobs.append((rel, path, nrm))
+    worst = total = values = 0
+    with ProcessPoolExecutor(jobs) as pool:
+        for rel, problem, map_worst, map_total, map_values in pool.map(check_map, map_jobs, chunksize=4):
+            if problem:
                 bad += 1
-                print("BROKEN MAP", rel + NRM_SUFFIX, e)
+                print("BROKEN MAP", rel + NRM_SUFFIX, problem)
+                continue
+            maps += 1
+            worst, total, values = max(worst, map_worst), total + map_total, values + map_values
     print("check:", "all files come back exactly" if not bad else f"{bad} files differ", f"({maps} normal maps)")
+    if values:
+        print(f"normal maps against a fresh build: error max {worst}, mean {total / values:.2f} (in steps of 1/127 tilt; "
+              f"limits {NRM_MAX_ERROR} and {NRM_MEAN_ERROR})")
     return bad == 0
 
 
@@ -300,7 +365,7 @@ def main():
     if not os.path.isdir(src):
         sys.exit(f"No HD art in {src}")
     if args.check:
-        sys.exit(0 if check(src, dst, not args.no_normal_maps) else 1)
+        sys.exit(0 if check(src, dst, not args.no_normal_maps, args.jobs) else 1)
 
     stats = load_stats(dst)
     sources = dict(walk(src))
