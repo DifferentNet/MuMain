@@ -123,6 +123,8 @@ void LetHeroStop(CHARACTER* c = NULL, BOOL bSetMovementFalse = FALSE);
 void SendCharacterMove(unsigned short Key, float Angle, unsigned char PathNum, unsigned char* PathX, unsigned char* PathY, unsigned char TargetX, unsigned char TargetY);
 void Attack(CHARACTER* c);
 void SendRequestMagic(int Type, int Key);
+// The server answered the hero's own skill: the next targeted skill may go (SendRequestMagic).
+void OnOwnTargetedSkillAnswered();
 void SendRequestMagicContinue(int Type, int x, int y, int Angle, BYTE Dest, BYTE Tpos, WORD TKey, BYTE* pSkillSerial);
 BYTE GetDestValue(int xPos, int yPos, int xDst, int yDst);
 

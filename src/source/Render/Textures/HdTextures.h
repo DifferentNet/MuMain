@@ -16,6 +16,11 @@ namespace Render::Textures::Hd
 // outside Data or already under Data\HD. Either separator and any case.
 [[nodiscard]] std::optional<std::wstring> HdCopyPath(std::wstring_view path);
 
+// True when the HD art is installed (a Data\HD folder): the Remaster client. The Classic client
+// ships without it and shows only OpenMU's own graphics settings (no preset, FXAA, sharpening,
+// HD textures or sun shadows: GraphicsPresetSetting.h, OptionWindow.cpp). Always false in the browser.
+[[nodiscard]] bool Installed();
+
 // Read once from the config at start-up: a texture already loaded keeps its image.
 void SetEnabled(bool enabled);
 [[nodiscard]] bool Enabled();

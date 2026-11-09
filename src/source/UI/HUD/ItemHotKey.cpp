@@ -205,34 +205,39 @@ int mu::ui::window::CItemHotKey::GetHotKeyItemIndex(int iType, bool bItemCount)
     int iItemCount = 0;
     ITEM* pItem = NULL;
 
-    int iNumberofItems = g_pMyInventory->GetInventoryCtrl()->GetNumberOfItems();
     for (const int i : GetHotKeyItemTypes(iType, m_iHotKeyItemType[iType], m_iHotKeyItemLevel[iType]))
     {
         if (bItemCount)
         {
-            for (j = 0; j < iNumberofItems; ++j)
+            // Every owned bag page counts (page 2: OpenMU's inventory extensions).
+            for (int g = 0; g < CMyInventory::OwnedBagGridCount; ++g)
             {
-                pItem = g_pMyInventory->GetInventoryCtrl()->GetItem(j);
-                if (pItem == NULL)
+                CInventoryCtrl* grid = g_pMyInventory->OwnedBagGrid(g);
+                const int iNumberofItems = grid != nullptr ? grid->GetNumberOfItems() : 0;
+                for (j = 0; j < iNumberofItems; ++j)
                 {
-                    continue;
-                }
+                    pItem = grid->GetItem(j);
+                    if (pItem == NULL)
+                    {
+                        continue;
+                    }
 
-                if (
-                    (pItem->Type == i && pItem->Level == m_iHotKeyItemLevel[iType])
-                    || (pItem->Type == i && GameLogic::Items::IsHealingPotion(pItem))
-                    )
-                {
-                    if (pItem->Type == ITEM_ALE
-                        || pItem->Type == ITEM_TOWN_PORTAL_SCROLL
-                        || pItem->Type == ITEM_REMEDY_OF_LOVE
+                    if (
+                        (pItem->Type == i && pItem->Level == m_iHotKeyItemLevel[iType])
+                        || (pItem->Type == i && GameLogic::Items::IsHealingPotion(pItem))
                         )
                     {
-                        iItemCount++;
-                    }
-                    else
-                    {
-                        iItemCount += pItem->Durability;
+                        if (pItem->Type == ITEM_ALE
+                            || pItem->Type == ITEM_TOWN_PORTAL_SCROLL
+                            || pItem->Type == ITEM_REMEDY_OF_LOVE
+                            )
+                        {
+                            iItemCount++;
+                        }
+                        else
+                        {
+                            iItemCount += pItem->Durability;
+                        }
                     }
                 }
             }

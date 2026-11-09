@@ -23,14 +23,14 @@ set(shader_specs
     "shadow_volume.vert|cb0,space1"
     "skinned_textured.vert|cb0,space1+t0,space0"
     "skinned_shadow.vert|cb0,space1+cb1,space1+t0,space0+t1,space0"
-    "skinned_lit.frag|cb0,space3+cb1,space3+cb2,space3+s0,space2+t0,space2"
+    "skinned_lit.frag|cb0,space3+cb1,space3+cb2,space3+s0,space2+s1,space2+t0,space2+t1,space2"
     "post_fullscreen.vert|-"
     "post_bloom_down.frag|cb0,space3+s0,space2+t0,space2"
     "post_bloom_up.frag|cb0,space3+s0,space2+t0,space2"
     "post_composite.frag|cb0,space3+s0,space2+s1,space2+s2,space2+t0,space2+t1,space2+t2,space2"
     "basic_textured_world.vert|cb0,space1+cb1,space1"
     "basic_textured_fog_shadow.frag|cb0,space3+cb1,space3+s0,space2+s1,space2+t0,space2+t1,space2"
-    "skinned_lit_shadow.frag|cb0,space3+cb1,space3+cb2,space3+s0,space2+s1,space2+t0,space2+t1,space2"
+    "skinned_lit_shadow.frag|cb0,space3+cb1,space3+cb2,space3+s0,space2+s1,space2+s2,space2+t0,space2+t1,space2+t2,space2"
     "shadow_caster.frag|cb0,space3+s0,space2+t0,space2"
 )
 

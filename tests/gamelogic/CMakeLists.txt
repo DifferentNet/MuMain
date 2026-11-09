@@ -94,8 +94,30 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME test_target_priority
+    SOURCES
+        test_target_priority.cpp
+)
+
+mu_add_test(
     NAME test_steer_hold
     SOURCES
         test_steer_hold.cpp
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Touch/SteerHold.cpp
+)
+
+# The server's "#UPF|<key>|<level>" line after an enchant to +13..+15 (Render/Items/EnchantFx).
+mu_add_test(
+    NAME test_enchant_flash_line
+    SOURCES
+        test_enchant_flash_line.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/EnchantFlashLine.cpp
+)
+
+# The server's "#UPL|<name>|<levels>" line: other characters' exact +14/+15 (GameLogic/Items/AncientLook, EnchantFx).
+mu_add_test(
+    NAME test_exact_level_line
+    SOURCES
+        test_exact_level_line.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/ExactLevelLine.cpp
 )

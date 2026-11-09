@@ -205,12 +205,21 @@ void CMixInventory::SetMixState(int iMixState)
     {
         m_iMixEffectTimer = 50;
         m_pNewInventoryCtrl->LockInventory();
-        g_pMyInventory->GetInventoryCtrl()->LockInventory();
     }
     else
     {
         m_pNewInventoryCtrl->UnlockInventory();
-        g_pMyInventory->GetInventoryCtrl()->UnlockInventory();
+    }
+    // The whole bag, page 2 too (BagPages.h), is locked while the mix waits for the server.
+    for (int g = 0; g < CMyInventory::OwnedBagGridCount; ++g)
+    {
+        if (CInventoryCtrl* bag = g_pMyInventory->OwnedBagGrid(g))
+        {
+            if (iMixState == MIX_REQUESTED)
+                bag->LockInventory();
+            else
+                bag->UnlockInventory();
+        }
     }
     // MU Moldova: a mix in the dust mode changed the account's dust: the counter asks again, past the throttle
     // (review 2026-11-05).

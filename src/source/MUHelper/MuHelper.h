@@ -84,6 +84,12 @@ namespace MUHelper
 		int SimulateComboAttack();
 		int GetNearestTarget();
 		int GetFarthestAttackingTarget();
+		// "Strong monsters first": a boss or a much stronger monster among the targets (the server's /mst numbers,
+		// GameLogic/Automation/TargetPriority.h), within the hunting range of the hero, or of the start spot when
+		// standing still; -1 when there is none. Remembered in m_iStrongTarget.
+		int UpdateStrongTarget(bool bNearSpot);
+		bool IsFightingStrongTargetNearSpot();
+		void RestStrongTarget(std::chrono::steady_clock::time_point now);
 		void CleanupTargets();
 		int ComputeDistanceByRange(int iRange);
 		int ComputeDistanceFromTarget(CHARACTER* pTarget);
@@ -128,6 +134,8 @@ namespace MUHelper
 		std::map<int, int> m_mapPickupAttempts; // drop id -> pickups requested; guarded like m_setItems
 		int m_iCurrentItem;
 		int m_iCurrentTarget;
+		int m_iStrongTarget = -1; // the strong target UpdateStrongTarget picked, -1 = none
+		std::chrono::steady_clock::time_point m_strongRestUntil{}; // no strong pick before this (RestStrongTarget)
 		int m_iCurrentBuffIndex;
 		int m_iCurrentBuffPartyIndex;
 		int m_iBuffWaitRounds = 0;                                          // rounds the current member's buff waited
@@ -207,6 +215,7 @@ namespace MUHelper
 		std::map<int, std::chrono::steady_clock::time_point> m_mapItemRestUntil; // drop id -> back in the choice; guarded like m_setItems
 		void SetAsideItem(int iItemId, std::chrono::steady_clock::time_point now);
 		static constexpr std::chrono::seconds ForgottenTargetRest{ 2 };
+		static constexpr std::chrono::seconds StrongTargetRest{ 5 };
 		std::map<int, std::chrono::steady_clock::time_point> m_mapForgottenUntil; // monster key -> back in the list
 	};
 

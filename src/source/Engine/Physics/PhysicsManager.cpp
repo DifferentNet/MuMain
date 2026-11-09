@@ -9,6 +9,7 @@
 #include "Engine/Object/ZzzCharacter.h"
 #include "Render/Effects/ZzzEffect.h"
 #include "World/MapInfra/MapManager.h"
+#include "Render/Models/ModelSmoothing.h"
 
 #define RENDER_CLOTH
 #define ADD_COLLISION
@@ -966,7 +967,9 @@ extern float BoneScale;
 
 bool CPhysicsClothMesh::CanCreate(int iBMDType, int iMesh)
 {
-    const BMD& b = Models[iBMDType];
+    BMD& b = Models[iBMDType];
+    // The cloth reads the mesh as its own grid: it needs the original points, not the smoothed ones.
+    Render::Models::Smoothing::RestoreMesh(b, iMesh);
     return b.Meshs != nullptr && iMesh >= 0 && iMesh < b.NumMeshs;
 }
 

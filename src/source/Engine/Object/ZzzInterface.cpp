@@ -71,6 +71,9 @@
 #include "Camera/CameraProjection.h"
 #include "Scenes/SceneCommon.h"
 #include "Render/Text/CUIRenderText.h"
+#include "UI/Inventory/InventoryContents.h"
+#include "UI/Inventory/InventoryExtension.h"
+#include "GameLogic/Combat/OwnSkillEcho.h"
 
 #include <iterator>
 
@@ -1112,14 +1115,48 @@ void SetCharacterPos(CHARACTER* c, BYTE posX, BYTE posY, vec3_t position)
     SendCharacterMove(c->Key, c->Object.Angle[2], 1, PathX, PathY, PathX[0], PathY[0]);
 }
 
+namespace
+{
+// A targeted skill sent whose swing hasn't shown and whose answer hasn't come (SendRequestMagic).
+bool g_bTargetedSkillPending = false;
+constexpr DWORD TargetedSkillAnswerWait = 300;
+
+bool IsTargetedSkillAnswerPending()
+{
+    if (!g_bTargetedSkillPending)
+    {
+        return false;
+    }
+    if (Engine::Object::IsSwingAction(Hero->Object.CurrentAction)
+        || GetTickCount() - g_dwLatestMagicTick > TargetedSkillAnswerWait)
+    {
+        g_bTargetedSkillPending = false;
+    }
+    return g_bTargetedSkillPending;
+}
+} // namespace
+
+void OnOwnTargetedSkillAnswered()
+{
+    g_bTargetedSkillPending = false;
+}
+
 void SendRequestMagic(int Type, int Key)
 {
     if (!IsCanBCSkill(Type))
         return;
 
-    if (Type == 40 || Type == 263 || Type == 261 || abs((int)(GetTickCount() - g_dwLatestMagicTick)) > 300)
+    // No fixed pace: a skill casts as fast as its swing allows (attack or magic speed). ExecuteSkill starts a skill only
+    // from a stand pose, and for many skills the hero's swing starts only with the server's answer, so until then the
+    // hero still stands and a held button would send a cast on every frame. The next targeted skill waits for the
+    // last one's swing or answer instead, at most TargetedSkillAnswerWait when none comes (the server refused it).
+    // Until 2026-11-09 it was one targeted skill per 300 ms, which held Death Stab, Ice Arrow, the wizard's spells
+    // and the rest to about 3 a second at any speed.
+    if (Type == 40 || Type == 263 || Type == 261 || GameLogic::Combat::OwnStrikeEchoKey(Type) != -1
+        || !IsTargetedSkillAnswerPending())
     {
         g_dwLatestMagicTick = GetTickCount();
+        g_bTargetedSkillPending = true;
         SocketClient->ToGameServer()->SendTargetedSkill(Type, Key);
         g_ConsoleDebug->Write(MCD_SEND, L"0x19 [SendRequestMagic(%d %d)]", Type, Key);
     }
@@ -1163,6 +1200,20 @@ BYTE GetDestValue(int xPos, int yPos, int xDst, int yDst)
     return (byValue1 | byValue2);
 }
 
+// The grid that holds a bag slot: page 1's, or an extension grid for bag page 2 (slots 76+), where
+// SearchArrow also looks since bag page 2.
+static mu::ui::window::CInventoryCtrl* ArrowGrid(int index)
+{
+    if (index >= MAX_MY_INVENTORY_INDEX && g_pMyInventoryExt != nullptr)
+    {
+        if (auto* grid = g_pMyInventoryExt->TryGetExtensionByInventoryIndex(index))
+        {
+            return grid;
+        }
+    }
+    return g_pMyInventory->GetInventoryCtrl();
+}
+
 void ReloadArrow()
 {
     int Index = SearchArrow();
@@ -1186,24 +1237,24 @@ void ReloadArrow()
             if ((gCharacterManager.GetEquipedBowType(lp) == BOWTYPE_BOW) && (rp->Type == -1))
             {
                 ITEM* pItem = g_pMyInventory->FindItem(Index);
-                mu::ui::window::CInventoryCtrl::CreatePickedItem(g_pMyInventory->GetInventoryCtrl(), pItem);
+                mu::ui::window::CInventoryCtrl::CreatePickedItem(ArrowGrid(Index), pItem);
                 if (pItem)
                 {
                     SendRequestEquipmentItem(STORAGE_TYPE::INVENTORY, Index, pItem, STORAGE_TYPE::INVENTORY, EQUIPMENT_WEAPON_RIGHT);
                 }
-                g_pMyInventory->DeleteItem(Index);
+                UI::Inventory::RemoveItem(Index);
                 g_pSystemLogBox->AddText(I18N::Game::ArrowsReloaded, mu::ui::window::TYPE_SYSTEM_MESSAGE);
             }
             else
                 if ((gCharacterManager.GetEquipedBowType(rp) == BOWTYPE_CROSSBOW) && (lp->Type == -1))
                 {
                     ITEM* pItem = g_pMyInventory->FindItem(Index);
-                    mu::ui::window::CInventoryCtrl::CreatePickedItem(g_pMyInventory->GetInventoryCtrl(), pItem);
+                    mu::ui::window::CInventoryCtrl::CreatePickedItem(ArrowGrid(Index), pItem);
                     if (pItem)
                     {
                         SendRequestEquipmentItem(STORAGE_TYPE::INVENTORY, Index, pItem, STORAGE_TYPE::INVENTORY, EQUIPMENT_WEAPON_LEFT);
                     }
-                    g_pMyInventory->DeleteItem(Index);
+                    UI::Inventory::RemoveItem(Index);
                     g_pSystemLogBox->AddText(I18N::Game::ArrowsReloaded, mu::ui::window::TYPE_SYSTEM_MESSAGE);
                 }
         }
