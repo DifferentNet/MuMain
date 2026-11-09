@@ -798,9 +798,13 @@ bool RenderMainScene()
     // (IsFrameActive() is false). Building those draws still cost a whole frame of CPU: models skinned,
     // terrain and sprites assembled, the interface laid out. Several minimized clients (MU Helper
     // farming) loaded the PC almost like visible ones. Packets, movement, animation timing and MU Helper
-    // run in MoveMainScene(), which this does not touch; the camera above keeps following the hero.
+    // run in MoveMainScene(), which this does not touch; the camera above keeps following the hero, and
+    // the selection below is still refreshed.
     if (g_bWindowMinimized && !mu::GetRenderer().IsFrameActive())
     {
+        // Draws nothing, and is the one place that drops the attack selection once its target is dead:
+        // without it MU Helper kept casting at the corpse's slot.
+        Input::Selection::SelectObjects();
         Scenes::PostProcessing::EndSceneGeometry();
         EndOpengl();
         return true;

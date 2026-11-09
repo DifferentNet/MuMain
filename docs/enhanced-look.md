@@ -88,10 +88,15 @@ inventory and shops has a studio light of its own in the Enhanced look.
 new desktop install only (`config.ini` has no `Look` key yet), from the GPU's
 name. An existing config keeps every saved value and the row shows the preset
 they match, or Custom; the browser build never picks one. The rule: a software renderer (Microsoft Basic Render, WARP, llvmpipe,
-SwiftShader) gets Low; integrated graphics (Intel except Arc; AMD "Radeon
-Graphics", a Vega named "... Graphics" such as the Ryzen APUs' "RX Vega 11
-Graphics", or Vega without "RX") and an empty or unknown name get Medium; every
-other GPU gets High. That preset is applied and written to `config.ini` by
+SwiftShader) gets Low, and so does weak integrated graphics (Intel "HD Graphics"
+and "UHD Graphics", AMD's pre-Ryzen "Radeon R2..R7 Graphics"); the other
+integrated graphics (Intel Iris; AMD "Radeon Graphics", a Vega named "...
+Graphics" such as the Ryzen APUs' "RX Vega 11 Graphics", or Vega without "RX")
+and an empty or unknown name get Medium; every other GPU gets High. On a
+software renderer or weak integrated graphics with the Low preset, the HD
+client also loads its models without smoothing and without normal maps for
+that run, whatever `SmoothModels` and `NormalMaps` say (nothing is saved; the
+log has a line `Weak GPU ... on Low`). That preset is applied and written to `config.ini` by
 name, so Auto does not run again; the log has a line `Graphics preset Auto: ...
 for GPU '...'`. With any other value start-up leaves the saved values alone.
 FXAA and sharpening work in both looks; the interface is never filtered.
