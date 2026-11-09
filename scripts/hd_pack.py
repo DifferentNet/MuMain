@@ -21,7 +21,8 @@ the texture as "<texture file>.nrm" (Render/Textures/NormalMapFile.h):
     "MUN2"  u16 width  u16 height  u32 size of the first WebP  WebP of the x tilt  WebP of the y tilt
 
 Each tilt is a grey picture (128 = flat) in lossy WebP of quality NRM_QUALITY: about half the bytes of a lossless
-map, at a mean error near 1.4 of 127. The game only reads them: a texture without one gets no relief.
+map, at a mean error near 1.4 of 127. A map that would miss --check's limits at that quality (a few small, busy
+textures) is encoded again at the next of NRM_RETRY_QUALITIES, then lossless, so the packer never writes one. The game only reads them: a texture without one gets no relief.
 --no-normal-maps skips them; --check also builds each map again and prints how far the stored one is off.
 """
 import argparse, io, os, re, struct, sys
@@ -39,6 +40,7 @@ NRM_SUFFIX = ".nrm"
 # Bumped when the maps' algorithm changes, so the next run builds them all again.
 NRM_VERSION = "3"
 NRM_QUALITY = 90
+NRM_RETRY_QUALITIES = (95, 100)  # then lossless
 # --check fails a map whose error (in steps of 1/127 tilt) is larger than this anywhere, or on average.
 NRM_MAX_ERROR, NRM_MEAN_ERROR = 32, 2.0
 MAX_SIDE = 1024  # Render::Sprites::kBitmapMaximumWidth and Height
@@ -209,10 +211,30 @@ def map_planes(data, ozj):
     return encode_tilt(halve(tx)), encode_tilt(halve(ty))
 
 
-def grey_webp(plane):
+def grey_webp(plane, quality=None):
+    """A grey WebP of one tilt plane: lossy at that quality, lossless with None."""
     buffer = io.BytesIO()
-    Image.fromarray(np.dstack([plane] * 3), "RGB").save(buffer, "WEBP", quality=NRM_QUALITY, method=6)
+    image = Image.fromarray(np.dstack([plane] * 3), "RGB")
+    if quality is None:
+        image.save(buffer, "WEBP", lossless=True, method=6)
+    else:
+        image.save(buffer, "WEBP", quality=quality, method=6)
     return buffer.getvalue()
+
+
+def map_error(stored, fresh):
+    """(max error, sum of errors, values) of stored tilt planes against freshly built ones."""
+    error = np.concatenate([np.abs(a.astype(np.int16) - b).ravel() for a, b in zip(stored, fresh)])
+    return int(error.max()), int(error.sum()), error.size
+
+
+def within_limits(worst, total, size):
+    return worst <= NRM_MAX_ERROR and total <= NRM_MEAN_ERROR * size
+
+
+def decoded_plane(webp):
+    with Image.open(io.BytesIO(webp)) as im:
+        return np.asarray(im.convert("RGB"))[..., 0]
 
 
 def normal_map(data, ozj):
@@ -222,7 +244,10 @@ def normal_map(data, ozj):
         return None
     red, green = planes
     height, width = red.shape
-    first, second = grey_webp(red), grey_webp(green)
+    for quality in (NRM_QUALITY, *NRM_RETRY_QUALITIES, None):
+        first, second = grey_webp(red, quality), grey_webp(green, quality)
+        if quality is None or within_limits(*map_error((decoded_plane(first), decoded_plane(second)), planes)):
+            break
     return NRM_MAGIC + struct.pack("<HHI", width, height, len(first)) + first + second
 
 
@@ -254,12 +279,10 @@ def check_map(job):
         planes = map_planes(original, rel.lower().endswith(".ozj"))
         if planes is None or planes[0].shape != (height, width):
             return rel, "not half the texture's size", 0, 0, 0
-        error = np.concatenate([np.abs(red.astype(np.int16) - planes[0]).ravel(),
-                                np.abs(green.astype(np.int16) - planes[1]).ravel()])
-        worst, total = int(error.max()), int(error.sum())
-        if worst > NRM_MAX_ERROR or total > NRM_MEAN_ERROR * error.size:
-            return rel, f"error max {worst}, mean {total / error.size:.2f}", worst, total, error.size
-        return rel, None, worst, total, error.size
+        worst, total, size = map_error((red, green), planes)
+        if not within_limits(worst, total, size):
+            return rel, f"error max {worst}, mean {total / size:.2f}", worst, total, size
+        return rel, None, worst, total, size
     except (OSError, ValueError) as e:
         return rel, str(e), 0, 0, 0
 
