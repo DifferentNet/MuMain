@@ -10,7 +10,7 @@
       "title": { "text": [165, 225, 255, 255], "background": [0, 22, 45, 190], "topText": [255, 214, 110, 255], "topBackground": [30, 20, 0, 190] },
       "aura": { "circle": "runes", "circleColor": [0.3, 0.7, 1.0], "particles": "snow", "particleColor": [0.75, 0.9, 1.0] },
       "fenrir": {
-        "texture": "Skill/fenril_winter.jpg",
+        "texture": "Skill/fenril_winter_snow.jpg",
         "bodyLight": [0.8, 0.84, 0.92],
         "glowLight": [0.3, 0.38, 0.5],
         "furTexture": "Skill/fenril_winter_fur.jpg",
