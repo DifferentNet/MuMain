@@ -48,6 +48,11 @@ void LightenModelsForWeakGpu(const std::string& gpuName)
     {
         return;
     }
+    if (Render::Models::Smoothing::Level() == 0 && !Render::Textures::NormalMaps::Enabled())
+    {
+        // Classic client, or HD textures off: there is nothing to lighten.
+        return;
+    }
     Render::Models::Smoothing::SetLevel(0);
     Render::Textures::NormalMaps::SetEnabled(false);
     mu::log::Get("render")->info("Weak GPU '{}' on Low: model smoothing and normal maps off for this run", gpuName);
