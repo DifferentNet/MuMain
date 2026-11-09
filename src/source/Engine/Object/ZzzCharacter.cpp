@@ -135,6 +135,7 @@ namespace
 #include "UI/Core/WindowSystem.h"
 #include "Render/Lighting/LightMoodSetting.h"
 #include "Render/Effects/FullSetGlow.h"
+#include "Render/Items/EnchantFx.h"
 #include "Render/Effects/SeasonAura.h"
 #include "GameLogic/Touch/TouchActions.h"
 #include "UI/HUD/GamepadControls.h"
@@ -10183,6 +10184,9 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
     {
         NextGradeObjectRender(c);
     }
+
+    // The Remaster enchant aura, sparks and the flash after an enchant to +13..+15 (none in Classic).
+    Render::Items::EnchantFx::RenderCharacter(c);
 
     for (int i = 0; i < 2; i++) {
         if (g_CMonkSystem.EqualItemModelType(c->Weapon[i].Type) == MODEL_PHOENIX_SOUL_STAR) {

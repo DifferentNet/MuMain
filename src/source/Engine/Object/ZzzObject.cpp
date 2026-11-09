@@ -52,6 +52,7 @@
 #include "Render/Items/ItemGlow.h"
 #include "Render/Items/ItemEffects.h"
 #include "Render/Items/RimGlow.h"
+#include "Render/Items/EnchantFx.h"
 #include "Render/Items/ItemRenderStyles.h"
 #include "Data/GameData/ItemData/ItemModelSlots.h"
 
@@ -7010,21 +7011,27 @@ void RenderPartObjectEffect(OBJECT* o, int Type, vec3_t Light, float Alpha, int 
         }
         else if (g_pOption->GetRenderLevel() && Render::Items::RimGlow::Enabled() && Level < 16)
         {
-            // Remaster (HD textures): the piece keeps its full light and texture; the glow runs
-            // along its outline with a sweeping band, and +11 and up keep a faint Classic shimmer.
-            VectorCopy(Light, b->BodyLight);
+            // Remaster (HD textures): the Classic chrome passes of the level, a little softer so the HD texture
+            // shows, under the outline light with its sweeping band (numbers in Render/Items/EnchantFxTuning.h).
+            const int extra = RenderType & RENDER_EXTRA;
+            const float share = Render::Items::EnchantFx::ChromeShare(Level);
+            const float bodyLight = Render::Items::EnchantFx::BodyLight();
+            Vector(Light[0] * bodyLight, Light[1] * bodyLight, Light[2] * bodyLight, b->BodyLight);
             RenderPartObjectBody(b, o, Type, Alpha, RenderType);
             if (Level >= 13)
             {
-                RenderPartObjectBodyColor2(b, o, Type, 0.3f, RENDER_CHROME4 | RENDER_BRIGHT | (RenderType & RENDER_EXTRA),
-                                           1.f);
+                RenderPartObjectBodyColor2(b, o, Type, share, RENDER_CHROME4 | RENDER_BRIGHT | extra, 1.f);
             }
             else if (Level >= 11)
             {
-                RenderPartObjectBodyColor2(b, o, Type, 0.25f, RENDER_CHROME2 | RENDER_BRIGHT | (RenderType & RENDER_EXTRA),
-                                           1.f);
+                RenderPartObjectBodyColor2(b, o, Type, share, RENDER_CHROME2 | RENDER_BRIGHT | extra, 1.f);
             }
-            RenderPartObjectBodyColor(b, o, Type, Alpha, RENDER_RIM | RENDER_BRIGHT | (RenderType & RENDER_EXTRA),
+            if (Level >= 9)
+            {
+                RenderPartObjectBodyColor(b, o, Type, Alpha, RENDER_METAL | RENDER_BRIGHT | extra, share);
+            }
+            RenderPartObjectBodyColor(b, o, Type, Alpha, RENDER_CHROME | RENDER_BRIGHT | extra, share);
+            RenderPartObjectBodyColor(b, o, Type, Alpha, RENDER_RIM | RENDER_BRIGHT | extra,
                                       Render::Items::RimGlow::Strength(Level));
         }
         else if (g_pOption->GetRenderLevel())
