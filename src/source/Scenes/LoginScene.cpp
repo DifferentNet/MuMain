@@ -114,14 +114,16 @@ constexpr float ANCHOR_Y = 0.5f;
 constexpr int HERO_INDEX = 1;
 constexpr float HERO_X = 128.f * TERRAIN_SCALE;
 constexpr float HERO_Y = 128.f * TERRAIN_SCALE;
-constexpr float HERO_ANGLE = 15.f;  // 0 faces the camera, more turns the face to the screen's right
+constexpr float HERO_ANGLE = -65.f; // 0 faces the camera, more turns the face to the screen's right
+// The knight rides the seasonal Fenrir; false shows the Fenrir alone.
+constexpr bool SHOW_RIDER = false;
 
 // The camera relative to the hero's feet; it looks along +Y, so +X is the screen's right. Its X
 // follows the window's shape, so the hero stands at the same place of the screen: HERO_SCREEN_X
 // of the half width right of the centre (the picture's empty dark side).
-constexpr float HERO_SCREEN_X = 0.7f;
-constexpr float CAMERA_Y = -420.f;
-constexpr float CAMERA_Z = 140.f;
+constexpr float HERO_SCREEN_X = 0.55f;
+constexpr float CAMERA_Y = -720.f;
+constexpr float CAMERA_Z = 170.f;
 constexpr float CAMERA_PITCH = -90.f;  // -90 looks straight ahead
 constexpr float CAMERA_FOV = 45.f;
 
@@ -146,12 +148,20 @@ void CreateHeroOnStage()
     c->Weapon[1].Type = -1;
     c->Wing.Type = MODEL_WING_OF_STORM;
     c->Wing.Level = 15;
-    c->Helper.Type = -1;
     c->ID[0] = L'\0';
-    SetPlayerStop(c);
 
     g_heroFeet[2] = RequestTerrainHeight(HERO_X, HERO_Y);
     c->Object.Position[2] = g_heroFeet[2];
+
+    // The battle pass' seasonal Fenrir (the gold horn), in the current season's look (Data/Seasons.json).
+    c->Helper.Type = MODEL_HORN_OF_FENRIR;
+    c->Helper.Level = 0;
+    c->Helper.ExcellentFlags = 0x04;
+    // In a safe zone the rider walks and the Fenrir hides, so the stage is not one.
+    TerrainWall[TERRAIN_INDEX_REPEAT(c->PositionX, c->PositionY)] &= ~TW_SAFEZONE;
+    c->SafeZone = false;
+    CreateMount(MODEL_FENRIR_GOLD, c->Object.Position, &c->Object);
+    SetPlayerStop(c);
 }
 
 void SetCamera()
@@ -531,7 +541,11 @@ bool NewRenderLogInScene(HDC hDC)
 
     if (!g_CreditWin.IsVisible())
     {
-        { FRAME_PROFILE(Characters); RenderCharactersClient(); }
+        if (LoginBackdrop::SHOW_RIDER)
+        {
+            FRAME_PROFILE(Characters);
+            RenderCharactersClient();
+        }
         { FRAME_PROFILE(Objects); RenderMount(); }
         {
             FRAME_PROFILE(Objects);

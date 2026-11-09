@@ -2996,7 +2996,7 @@ void OpenSkills()
     gLoadData.OpenTexture(MODEL_FENRIR_BLUE, L"Skill\\");
 
     gLoadData.AccessModel(MODEL_FENRIR_GOLD, L"Data\\Skill\\", L"fenril_gold");
-    gLoadData.OpenTexture(MODEL_FENRIR_BLUE, L"Skill\\");
+    gLoadData.OpenTexture(MODEL_FENRIR_GOLD, L"Skill\\");
 
     gLoadData.AccessModel(MODEL_PANDA, L"Data\\Item\\", L"panda");
     gLoadData.OpenTexture(MODEL_PANDA, L"Item\\");

@@ -63,6 +63,10 @@ struct FenrirLook
     // The body's texture pass and its bright chrome pass (the glow).
     float Body[3] = {1.0f, 1.0f, 1.0f};
     float Glow[3] = {1.0f, 1.0f, 1.0f};
+    // The fur's texture (the model's second mesh) under Data; empty keeps the model's own.
+    std::wstring FurTexture;
+    // The fur's light.
+    float Fur[3] = {1.0f, 1.0f, 1.0f};
     // The two eye lights and the chest light.
     float Eyes[3] = {0.9f, 0.2f, 0.1f};
     float Chest[3] = {1.0f, 0.3f, 0.2f};
@@ -130,8 +134,9 @@ public:
     // How a season looks; read from Data/Seasons.json on first use.
     const SeasonLook& Look(int season);
 
-    // The newest season that has a Fenrir look: a gold Fenrir whose season isn't known wears it. Null when none has
-    // one.
+    // The Fenrir look a gold Fenrir whose season isn't known wears: the current season's (Data/Seasons.json
+    // "currentSeason", the closest season at or before it that has one), the newest season's when the file names
+    // none. Null when none has one.
     const SeasonLook* FenrirSeason();
 
     // The season of the seasonal Fenrir a character rides (by its name as the game shows it; #BPF), 0 when not known.
@@ -141,12 +146,15 @@ public:
     // rider's #BPF line; 0 when not known (outside the game world, a rider that isn't a character in the game).
     int RiderFenrirSeason(const OBJECT* mount) const;
 
-    // The Fenrir look of a season: the closest season at or before it that has one; the newest one for 0 (not known)
+    // The Fenrir look of a season: the closest season at or before it that has one; FenrirSeason() for 0 (not known)
     // and for a season before all of them. Null when none has one.
     const SeasonLook* FenrirLookOf(int season);
 
     // The texture of a season look's Fenrir (loaded on first use, once a season), 0 for none: the model keeps its own.
     unsigned int FenrirTexture(const SeasonLook& look);
+
+    // The texture of a season look's Fenrir fur, the same way.
+    unsigned int FenrirFurTexture(const SeasonLook& look);
 
     // A season's name in the UI language when Data/Seasons.json has that very season, else empty.
     std::wstring NameOf(int season);
@@ -182,8 +190,11 @@ private:
     std::vector<SeasonLook> m_looks;
     SeasonLook m_defaultLook;
     bool m_looksLoaded = false;
+    // Data/Seasons.json's "currentSeason", 0 when it has none.
+    int m_currentSeason = 0;
     // The Fenrir textures by the season of their look (0: none, the model keeps its own).
     std::map<int, unsigned int> m_fenrirTextures;
+    std::map<int, unsigned int> m_fenrirFurTextures;
 };
 
 inline Store& Marks()
