@@ -15,8 +15,19 @@ enum class Precision
 {
     Coarse,  // the system timer has its default period (about 15.6 ms on Windows): a sleep may overrun by that
     Fine,    // the timer period is 1 ms: a sleep overruns by a millisecond or two at most
-    Relaxed, // nobody sees the frames (minimized window): the cap may be missed by a couple of milliseconds
+    Relaxed, // nobody sees the frames (minimized window): a frame may start a few milliseconds late
 };
+
+// A Relaxed wait rounds its last sleep up (up to 1 ms late) and the sleep itself overruns by a
+// millisecond or two. Whoever needs `fps` as the lowest rate (the game's logic slows below its
+// reference rate) caps a Relaxed loop this much earlier, so a late frame is still in time.
+inline constexpr double kRelaxedSlackMs = 4.0;
+
+constexpr double RelaxedTargetFps(double fps)
+{
+    const double periodMs = 1000.0 / fps;
+    return periodMs > 2.0 * kRelaxedSlackMs ? 1000.0 / (periodMs - kRelaxedSlackMs) : fps;
+}
 
 // Whole milliseconds to sleep now, `restMs` before the next frame is due; 0 = yield instead.
 //  - Coarse: sleeps while 20 ms or more are left, 4 ms short of the frame.

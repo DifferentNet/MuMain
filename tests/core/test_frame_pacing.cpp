@@ -54,3 +54,13 @@ TEST_CASE("no time left means no sleep [core][frame-pacing]")
         CHECK(SleepMsBeforeNextFrame(-3.0, precision) == 0);
     }
 }
+
+TEST_CASE("a relaxed loop is capped early enough to hold the wanted rate [core][frame-pacing]")
+{
+    using Scenes::FramePacing::RelaxedTargetFps;
+    // 25 FPS wanted: frames are due every 36 ms, so one that starts up to 4 ms late keeps 25 FPS.
+    CHECK(1000.0 / RelaxedTargetFps(25.0) == doctest::Approx(36.0));
+    CHECK(RelaxedTargetFps(25.0) > 25.0);
+    // A rate too fast for the slack is left alone.
+    CHECK(RelaxedTargetFps(240.0) == doctest::Approx(240.0));
+}

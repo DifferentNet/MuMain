@@ -53,6 +53,7 @@
 #include "UI/Mobile/PhonePage.h"
 #include "UI/RmlBridge/RmlRuntimeHooks.h"
 #include "Engine/Object/ZzzOpenData.h"
+#include "Scenes/FramePacing.h"
 #include "Scenes/SceneCore.h"
 #include "Scenes/SceneManager.h"
 #include "Scenes/MainScene.h"
@@ -1547,14 +1548,22 @@ void HandleFocusChange(bool active)
 void HandleMinimizedChange(bool minimized)
 {
     g_bWindowMinimized = minimized;
+#ifdef __EMSCRIPTEN__
+    const double minimizedFps = REFERENCE_FPS;
+#else
+    // The minimized wait only sleeps (Scenes/FramePacing.h, Relaxed) and a sleep overruns, so the cap
+    // is set a little above the reference rate: a late frame still comes within the reference frame's
+    // 40 ms, and logic and MU Helper keep their speed (below REFERENCE_FPS the simulation would slow).
+    const double minimizedFps = Scenes::FramePacing::RelaxedTargetFps(REFERENCE_FPS);
+#endif
     if (minimized)
     {
         if (!g_HasInactiveFpsOverride)
         {
             g_TargetFpsBeforeInactive = GetTargetFps();
-            SetTargetFps(REFERENCE_FPS);
             g_HasInactiveFpsOverride = true;
         }
+        SetTargetFps(minimizedFps);
     }
 #if defined(_EDITOR) || defined(__EMSCRIPTEN__)
     else if (g_HasInactiveFpsOverride && (g_bWndActive || g_bUseWindowMode))
@@ -1562,9 +1571,14 @@ void HandleMinimizedChange(bool minimized)
     else if (g_HasInactiveFpsOverride && g_bHasInputFocus)
 #endif
     {
-        // An unfocused window keeps its cap until it gets the focus back.
         SetTargetFps(g_TargetFpsBeforeInactive);
         g_HasInactiveFpsOverride = false;
+    }
+    else if (g_HasInactiveFpsOverride)
+    {
+        // An unfocused window keeps its cap until it gets the focus back: the exact reference rate
+        // again, now that its frames are shown.
+        SetTargetFps(REFERENCE_FPS);
     }
 #ifndef __EMSCRIPTEN__
     SetWindowInBackground(!g_bHasInputFocus || g_bWindowMinimized);
