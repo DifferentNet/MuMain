@@ -36,9 +36,9 @@
 //                the map's +X axis towards +Y.
 //   sunElevation optional, 20 to 85 degrees (default 40): its height above the
 //                horizon; low suns cast long shadows.
-//   sunShadow    optional, 0 to 1 (default 0.33): the share of the light a
+//   sunShadow    optional, 0 to 1 (default 0.8): the share of the light a
 //                place in full sun shadow loses; 0 casts none on the map.
-//   sunSoftness  optional, 2 to 40 (default 12): the soft edge of the
+//   sunSoftness  optional, 2 to 40 (default 4): the soft edge of the
 //                shadows, in world units (a tile is 100), the same at every
 //                shadow map size.
 // "default" has all five and applies to every map without an entry. A map
@@ -58,8 +58,8 @@ struct LightMood
     double brightScale = 1.0;
     double sunAzimuth = 315.0;
     double sunElevation = 40.0;
-    double sunShadow = 0.33;
-    double sunSoftness = 12.0;
+    double sunShadow = 0.8;
+    double sunSoftness = 4.0;
 
     bool operator==(const LightMood&) const = default;
 };

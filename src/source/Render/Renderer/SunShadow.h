@@ -29,9 +29,9 @@ struct SunShadowFrame
     // Depth of the box along the sun direction, centred on the focus.
     float depthRange = 6000.0f;
     // Share of the light a fully shadowed pixel loses (0..1).
-    float strength = 0.33f;
+    float strength = 0.8f;
     // Soft edge radius in world units (a tile is 100); the uniform turns it into texels.
-    float softness = 12.0f;
+    float softness = 4.0f;
     std::uint32_t mapSize = kSunShadowMapMedium;
 };
 
