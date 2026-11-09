@@ -85,6 +85,7 @@ extern CUIMapName* g_pUIMapName;
 extern int MouseX;
 extern vec3_t MouseTarget;
 extern int EditFlag;
+extern bool g_bWindowMinimized;
 
 static bool RequireLeavesEffect()
 {
@@ -792,6 +793,19 @@ bool RenderMainScene()
     }
 
     SetupMainSceneViewport(width, height, byWaterMap, cameraPos);
+
+    // A minimized window has no swapchain image, so the renderer drops every draw of this frame
+    // (IsFrameActive() is false). Building those draws still cost a whole frame of CPU: models skinned,
+    // terrain and sprites assembled, the interface laid out. Several minimized clients (MU Helper
+    // farming) loaded the PC almost like visible ones. Packets, movement, animation timing and MU Helper
+    // run in MoveMainScene(), which this does not touch; the camera above keeps following the hero.
+    if (g_bWindowMinimized && !mu::GetRenderer().IsFrameActive())
+    {
+        Scenes::PostProcessing::EndSceneGeometry();
+        EndOpengl();
+        return true;
+    }
+
     AddFrameHistoryLights();
     RenderGameWorld(byWaterMap, width, height);
 
