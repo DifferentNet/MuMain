@@ -38,6 +38,8 @@ bool SdlGpuReplayState::SelectPipeline(SDL_GPUGraphicsPipeline* pipeline)
     m_vertexUniformsValid.fill(false);
     m_fragmentUniformsValid = false;
     m_vertexStorageBufferValid = false;
+    // SDL's WebGPU backend drops every texture binding when a pipeline is bound.
+    m_sunShadowMapValid = false;
     return true;
 }
 

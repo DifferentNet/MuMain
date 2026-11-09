@@ -18,6 +18,9 @@
 #include "Render/Lighting/DynamicLightHistory.h"
 #include "Render/PostProcessing/PostProcessingSetting.h"
 #include "Render/Look/LookPresetSetting.h"
+#include "Render/Lighting/SunShadowSetting.h"
+#include "Render/Renderer/SdlGpuSoftShadow.h"
+#include <cwchar>
 #include "Render/Renderer/Antialiasing.h"
 #include "Render/Look/LookTuning.h"
 #include "Core/Text/Utf8.h"
@@ -357,6 +360,28 @@ bool CmuConsoleDebug::CheckCommand(const std::wstring& strCommand)
         return true;
     }
 #endif
+    // EXPERIMENT exp/web-sun-shadow: "$sunshadow 0|1|2" and "$look classic|enhanced" to measure on /play.
+    if (strCommand.compare(0, 11, L"$sunshadow ") == 0)
+    {
+        Render::Lighting::SunShadow::SetLevel(_wtoi(strCommand.c_str() + 11));
+        mu::log::Get("render")->info("Sun shadow level {}", Render::Lighting::SunShadow::Level());
+        return true;
+    }
+    if (strCommand.compare(0, 12, L"$softshadow ") == 0)
+    {
+        int strength = 0;
+        int levels = 1;
+        swscanf(strCommand.c_str() + 12, L"%d %d", &strength, &levels);
+        mu::SetSoftShadowSettings(static_cast<float>(strength) / 100.0f, levels);
+        mu::log::Get("render")->info("Soft shadow strength {} % levels {}", strength, levels);
+        return true;
+    }
+    if (strCommand == L"$look enhanced" || strCommand == L"$look classic")
+    {
+        Render::Look::ApplyLookPreset(strCommand == L"$look enhanced" ? ::LookPreset::Enhanced
+                                                                       : ::LookPreset::Classic);
+        return true;
+    }
     if (strCommand.compare(L"$fpscounter on") == 0)
     {
         SetShowFpsCounter(true);

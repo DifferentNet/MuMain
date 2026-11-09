@@ -40,6 +40,7 @@
 #include "SdlGpuPixelFormat.h"
 #include "SdlGpuPostProcessing.h"
 #include "SdlGpuReplayState.h"
+#include "SdlGpuSoftShadow.h"
 #include "SdlGpuValidation.h"
 #include "SingleSampleTwins.h"
 #include "SoftClipShaders.h"
@@ -651,6 +652,16 @@ static std::unordered_map<SDL_GPUGraphicsPipeline*, SDL_GPUGraphicsPipeline*> s_
 // Post-processing of the 3D scene: with it on, a frame whose scene marked its end
 // (EndSceneGeometry) is replayed in separate scene, bloom and UI passes, see EndFrame.
 static mu::SdlGpuPostProcessing s_postProcessing;
+// EXPERIMENT exp/web-sun-shadow: soft body shadows (SdlGpuSoftShadow.h).
+static mu::SdlGpuSoftShadow s_softShadow;
+static float s_softShadowStrength = 0.0f; // 0: hard shadows as before
+static int s_softShadowLevels = 1;
+static SDL_GPUGraphicsPipeline* s_softShadowMaskPipelines[2] = {}; // depth test on, off
+void SetSoftShadowSettings(float strength, int levels)
+{
+    s_softShadowStrength = std::clamp(strength, 0.0f, 1.0f);
+    s_softShadowLevels = std::clamp(levels, 1, 2);
+}
 static bool s_postProcessingEnabled = false;
 static mu::PostProcessingLook s_postProcessingLook{};
 static mu::PostProcessingView s_postProcessingView = mu::PostProcessingView::Scene;
@@ -1083,16 +1094,13 @@ static bool s_itemPreviewLightingPushed = false;
 static void PushSceneLightingUniforms()
 {
     s_itemPreviewLightingPushed = false;
-#ifdef __EMSCRIPTEN__
-    SDL_PushGPUFragmentUniformData(s_cmdBuf, k_FragmentUniformSlotSceneLighting, &s_sceneLightingUniform,
-                                   sizeof(s_sceneLightingUniform));
-#else
+    {
     // The shadowed receivers read the sun shadow after the scene lighting; the others only the
     // scene lighting at the start of the block.
     const SceneLightingWithSunShadow block{s_sceneLightingUniform,
                                            s_sunShadowMapReady ? s_sunShadowUniform : mu::SunShadowUniform{}};
     SDL_PushGPUFragmentUniformData(s_cmdBuf, k_FragmentUniformSlotSceneLighting, &block, sizeof(block));
-#endif
+    }
     SDL_PushGPUFragmentUniformData(s_cmdBuf, k_FragmentUniformSlotDynamicLights, &s_dynamicLightsUniform,
                                    sizeof(s_dynamicLightsUniform));
     s_dbgFragmentUniformPushesThisFrame += 2;
@@ -2382,6 +2390,7 @@ public:
         ReleaseShaders();
         ReleaseSunShadowMap();
         s_postProcessing.Release();
+        s_softShadow.Release();
 
         SDL_ReleaseWindowFromGPUDevice(s_device, s_window);
         SDL_DestroyGPUDevice(s_device);
@@ -2561,6 +2570,8 @@ public:
     {
         AllCommands,
         BloomSources,
+        SkipBodyShadows, // everything but the body shadows
+        BodyShadowMask,  // only the body shadows, into the soft shadow mask
     };
 
     [[nodiscard]] static ReplayView FullFrameView()
@@ -2679,6 +2690,20 @@ public:
             case RenderCmdType::DrawTriangles2D:
             {
                 SDL_GPUGraphicsPipeline* pipeline = bloomSourcesOnly ? GetBloomSourcePipeline(cmd) : cmd.pipeline;
+                const bool bodyShadow =
+                    cmd.type == RenderCmdType::DrawSkinnedTriangles && cmd.shadowIndex != ~0u;
+                if (selection == ReplaySelection::SkipBodyShadows && bodyShadow)
+                {
+                    break;
+                }
+                if (selection == ReplaySelection::BodyShadowMask)
+                {
+                    if (!bodyShadow)
+                    {
+                        break;
+                    }
+                    pipeline = s_softShadowMaskPipelines[cmd.depthTestEnabled ? 0 : 1];
+                }
                 if (pipeline)
                 {
                     ReplayDrawCommand(cmd, pipeline, boneDataReady, view.scissor, replayState);
@@ -2740,8 +2765,104 @@ public:
 
     // The whole frame in one pass into `destination`. Multisampled, the pass
     // resolves into it, so the readback, capture and swapchain paths see one sample.
+    // EXPERIMENT exp/web-sun-shadow: the frame with soft body shadows. The scene up to the last
+    // body shadow, then the shadows alone into a mask against its depth, the mask blurred, the
+    // frame darkened by it, and the rest of the frame on top. False when it cannot run.
+    // `frameTarget` is the colour target the scene pass would use, `end` the end of its commands,
+    // `finalDepthStore` what the pass would do with depth; `view` ends as the scene left it.
+    [[nodiscard]] static bool ReplaySoftShadowScene(const SDL_GPUColorTargetInfo& frameTarget, std::size_t end,
+                                                    SDL_GPUStoreOp finalDepthStore, bool boneDataReady,
+                                                    ReplayView& view)
+    {
+        if (s_softShadowStrength <= 0.0f || !s_softShadowMaskPipelines[0] || !s_softShadowMaskPipelines[1] ||
+            !s_depthTexture || !s_softShadow.IsAvailable())
+        {
+            return false;
+        }
+        std::size_t split = 0u;
+        for (std::size_t index = end; index > 0u; --index)
+        {
+            const RenderCmd& cmd = s_renderCmds[index - 1u];
+            if (cmd.type == RenderCmdType::DrawSkinnedTriangles && cmd.shadowIndex != ~0u)
+            {
+                split = index;
+                break;
+            }
+        }
+        const SDL_GPUSampleCount sampleCount = mu::GetSdlGpuSampleCount(s_sampleCount).value_or(SDL_GPU_SAMPLECOUNT_1);
+        if (split == 0u || !s_softShadow.EnsureTargets({s_swapW, s_swapH}, sampleCount))
+        {
+            return false;
+        }
+
+        // The scene without the shadows; colour and depth kept for the passes after it.
+        SDL_GPUColorTargetInfo sceneTarget = frameTarget;
+        sceneTarget.store_op = SDL_GPU_STOREOP_STORE;
+        sceneTarget.resolve_texture = nullptr;
+        sceneTarget.cycle = true;
+        if (!BeginReplayPass(sceneTarget, MakeDepthTarget(SDL_GPU_LOADOP_CLEAR, SDL_GPU_STOREOP_STORE)))
+        {
+            return false;
+        }
+        ReplayCommands(0u, split, boneDataReady, ReplaySelection::SkipBodyShadows, view);
+        EndReplayPass();
+
+        // The shadows into the mask, tested against the scene's depth.
+        SDL_GPUColorTargetInfo maskTarget{};
+        maskTarget.texture = s_softShadow.GetMask();
+        maskTarget.clear_color = SDL_FColor{1.0f, 1.0f, 1.0f, 1.0f};
+        maskTarget.load_op = SDL_GPU_LOADOP_CLEAR;
+        maskTarget.cycle = true;
+        if (s_softShadow.GetMaskResolve())
+        {
+            maskTarget.store_op = SDL_GPU_STOREOP_RESOLVE;
+            maskTarget.resolve_texture = s_softShadow.GetMaskResolve();
+            maskTarget.cycle_resolve_texture = true;
+        }
+        else
+        {
+            maskTarget.store_op = SDL_GPU_STOREOP_STORE;
+        }
+        if (BeginReplayPass(maskTarget, MakeDepthTarget(SDL_GPU_LOADOP_LOAD, SDL_GPU_STOREOP_STORE)))
+        {
+            ReplayView maskView = FullFrameView();
+            ReplayCommands(0u, split, boneDataReady, ReplaySelection::BodyShadowMask, maskView);
+            EndReplayPass();
+            s_softShadow.Blur(s_cmdBuf, s_softShadowLevels);
+        }
+
+        // The darkening, then the rest of the frame.
+        SDL_GPUColorTargetInfo restTarget = frameTarget;
+        restTarget.load_op = SDL_GPU_LOADOP_LOAD;
+        restTarget.cycle = false;
+        restTarget.cycle_resolve_texture = false;
+        SDL_GPUDepthStencilTargetInfo restDepth = MakeDepthTarget(SDL_GPU_LOADOP_LOAD, finalDepthStore);
+        s_renderPass = SDL_BeginGPURenderPass(s_cmdBuf, &restTarget, 1, &restDepth);
+        if (!s_renderPass)
+        {
+            return true; // the scene is drawn; this frame loses its effects and UI
+        }
+        s_softShadow.DrawComposite(s_cmdBuf, s_renderPass, s_softShadowStrength);
+        PushSceneLightingUniforms();
+        ReplayCommands(split, end, boneDataReady, ReplaySelection::AllCommands, view);
+        EndReplayPass();
+        return true;
+    }
+
     [[nodiscard]] static bool ReplayFrame(SDL_GPUTexture* destination, bool boneDataReady)
     {
+        {
+            ReplayView softView = FullFrameView();
+            if (ReplaySoftShadowScene(mu::GetSdlGpuFrameColorTarget(
+                                          {destination, IsMultisampled() ? s_multisampleColorTexture : nullptr},
+                                          s_clearColor),
+                                      s_renderCmds.size(),
+                                      IsMultisampled() ? SDL_GPU_STOREOP_DONT_CARE : SDL_GPU_STOREOP_STORE,
+                                      boneDataReady, softView))
+            {
+                return true;
+            }
+        }
         const SDL_GPUColorTargetInfo colorTarget = mu::GetSdlGpuFrameColorTarget(
             {destination, IsMultisampled() ? s_multisampleColorTexture : nullptr}, s_clearColor);
         // Nothing reads depth after the pass; skip storing every sample of it.
@@ -2857,12 +2978,15 @@ public:
         // the UI did when it shared the scene's pass.
         const SDL_GPUColorTargetInfo sceneTarget = CycledTarget(
             mu::GetSdlGpuFrameColorTarget({s_postProcessing.GetSceneTexture(), multisampled}, s_clearColor));
-        if (!BeginReplayPass(sceneTarget, MakeDepthTarget(SDL_GPU_LOADOP_CLEAR, SDL_GPU_STOREOP_STORE)))
+        if (!ReplaySoftShadowScene(sceneTarget, sceneEnd, SDL_GPU_STOREOP_STORE, boneDataReady, view))
         {
-            return false;
+            if (!BeginReplayPass(sceneTarget, MakeDepthTarget(SDL_GPU_LOADOP_CLEAR, SDL_GPU_STOREOP_STORE)))
+            {
+                return false;
+            }
+            ReplayCommands(0u, sceneEnd, boneDataReady, ReplaySelection::AllCommands, view);
+            EndReplayPass();
         }
-        ReplayCommands(0u, sceneEnd, boneDataReady, ReplaySelection::AllCommands, view);
-        EndReplayPass();
 
         if (s_postProcessingLook.bloomStrength > 0.0f)
         {
@@ -5992,7 +6116,7 @@ private:
             createShader("basic_textured_fog", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 2, /*fatal=*/false);
         // skinned_lit.frag also reads the frame's point lights, DynamicLights (b2).
         s_fragShaderLit = createShader("skinned_lit", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 3, /*fatal=*/false);
-#ifndef __EMSCRIPTEN__
+#if 1 // EXPERIMENT exp/web-sun-shadow: on the web too
         // Sun shadow (desktop only) — non-fatal: without them the sun shadow is unavailable.
         // basic_textured_world.vert: Transform (b0) and the draw's vertex-to-world rows (b1).
         // The receivers sample the shadow map (t1/s1) and read SunShadow after the scene
@@ -6130,6 +6254,7 @@ private:
         bool alphaToCoverage = false;
         // The sun's shadow map pass: no colour target, one sample, slope-scaled depth bias.
         bool depthOnly = false;
+        SDL_GPUTextureFormat colorFormat = SDL_GPU_TEXTUREFORMAT_INVALID; // invalid: the frame's
     };
 
     [[nodiscard]] static SDL_GPUShader* GetFragmentShader(FragmentShader shader)
@@ -6204,7 +6329,8 @@ private:
         const SDL_GPUTextureFormat swapchainFmt = SDL_GetGPUSwapchainTextureFormat(s_device, s_window);
 
         SDL_GPUColorTargetDescription colorTargetDesc{};
-        colorTargetDesc.format = swapchainFmt;
+        colorTargetDesc.format =
+            description.colorFormat != SDL_GPU_TEXTUREFORMAT_INVALID ? description.colorFormat : swapchainFmt;
         colorTargetDesc.blend_state = blendState;
 
         SDL_GPUVertexAttribute vertexAttribs[6];
@@ -6694,6 +6820,15 @@ private:
         }
         DestroyAlphaCoveragePipelines();
         s_postProcessing.DestroyPipelines();
+        s_softShadow.DestroyPipelines();
+        for (SDL_GPUGraphicsPipeline*& mask : s_softShadowMaskPipelines)
+        {
+            if (mask)
+            {
+                SDL_ReleaseGPUGraphicsPipeline(s_device, mask);
+                mask = nullptr;
+            }
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -6946,6 +7081,36 @@ private:
                                              mu::GetSdlGpuSampleCount(s_sampleCount).value_or(SDL_GPU_SAMPLECOUNT_1));
         mu::log::Get("render")->info("SDL_gpu -- post-processing {} at {}x", created ? "available" : "unavailable",
                                      s_sampleCount);
+        const bool softCreated = s_softShadow.CreatePipelines(
+            s_device, s_vertShaderPostFullscreen, s_fragShaderBloomDown, s_fragShaderBloomUp,
+            SDL_GetGPUSwapchainTextureFormat(s_device, s_window),
+            mu::GetSdlGpuSampleCount(s_sampleCount).value_or(SDL_GPU_SAMPLECOUNT_1));
+        if (s_vertShaderSkinnedShadow)
+        {
+            SDL_GPUColorTargetBlendState minimum{};
+            minimum.enable_blend = true;
+            minimum.src_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+            minimum.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+            minimum.color_blend_op = SDL_GPU_BLENDOP_MIN;
+            minimum.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+            minimum.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+            minimum.alpha_blend_op = SDL_GPU_BLENDOP_MIN;
+            for (int depthOff = 0; depthOff < 2; ++depthOff)
+            {
+                PipelineBuildDescription description{
+                    "soft-shadow-mask", "minimum", k_PipelineDisabled, depthOff == 0, false,
+                    VertexLayout::SkinnedShadow, false};
+                description.colorFormat = mu::SdlGpuSoftShadow::MaskFormat;
+                const PipelineBuildResult result = BuildBlendPipeline(minimum, description);
+                s_softShadowMaskPipelines[depthOff] = result.pipeline;
+                if (!result.pipeline)
+                {
+                    LogPipelineFailure("soft-shadow", result, false);
+                }
+            }
+        }
+        mu::log::Get("render")->info("SDL_gpu -- soft shadow {}, mask {}", softCreated ? "available" : "unavailable",
+                                     s_softShadowMaskPipelines[0] && s_softShadowMaskPipelines[1] ? "ready" : "missing");
     }
 
     // Alpha-to-coverage variants for s_sampleCount; none with one sample.
@@ -7043,7 +7208,7 @@ private:
     static void CreateSunShadowPipelines()
     {
         DestroySunShadowPipelines();
-#ifndef __EMSCRIPTEN__
+#if 1 // EXPERIMENT exp/web-sun-shadow
         if (!s_enhancedLightingAvailable || !s_vertShader3DWorld || !s_fragShaderTexFogShadow ||
             !s_fragShaderLitShadow || !s_fragShaderShadowCaster)
         {
