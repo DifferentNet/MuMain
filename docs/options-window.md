@@ -82,6 +82,7 @@ window writes to these sections:
   - `VSync`: `$vsync on` and `$vsync off` update it too; startup and
     fullscreen/resolution changes reapply it before the next frame begins.
   - `FpsCap`: the frame limit while VSync is off, `-1` for none.
+  - `EffectLevel` (0 to 4) and `FullEffects`: the effect level bar and its "Render full effects" checkbox.
   - `Look` (default `Classic`): the "Enhanced graphics" checkbox, ticked for
     the Enhanced look; see [`enhanced-look.md`](enhanced-look.md).
   - `Antialiasing` (`0`, `2`, `4`, `8`; default `4`): the Anti-aliasing row,

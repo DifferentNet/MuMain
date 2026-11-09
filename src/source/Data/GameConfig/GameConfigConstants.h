@@ -130,6 +130,10 @@ namespace CfgKeys
     // User-chosen FPS cap when VSync is off; -1 = uncapped. Same promotion story as the toggles
     // above, this time for the console-only `$fps <N>` diagnostic.
     inline constexpr wchar_t CfgKeyFpsCap[] = L"FpsCap";
+    // Options' effect level bar (0..4) and its "Render full effects" checkbox. They lived only for one
+    // run, so a player on a weak PC had to turn the effects down again after every start.
+    inline constexpr wchar_t CfgKeyEffectLevel[] = L"EffectLevel";
+    inline constexpr wchar_t CfgKeyFullEffects[] = L"FullEffects";
 }
 
 namespace CfgDefaults
@@ -240,6 +244,10 @@ namespace CfgDefaults
     inline constexpr bool CfgDefaultDisableBodyShadows = false;
     inline constexpr bool CfgDefaultSoftShadows = true;
     inline constexpr int CfgDefaultFpsCap = -1;  // Uncapped
+    inline constexpr int CfgMinEffectLevel = 0;
+    inline constexpr int CfgMaxEffectLevel = 4;
+    inline constexpr int CfgDefaultEffectLevel = CfgMaxEffectLevel;
+    inline constexpr bool CfgDefaultFullEffects = true;
 
     // "default" = this app's own platform-aware pick (prefers Vulkan on Windows to avoid
     // D3D12's vsync-cap bug; SDL's own auto-pick elsewhere). Other accepted values:

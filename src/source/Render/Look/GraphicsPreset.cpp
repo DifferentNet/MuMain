@@ -80,6 +80,26 @@ bool IsIntegratedGraphics(const std::string& lowerName)
     }
     return false;
 }
+
+// The integrated graphics too slow for the Enhanced look at a playable frame rate: Intel's "HD Graphics"
+// and "UHD Graphics" (not Iris, which has twice the execution units or more), and AMD's pre-Ryzen APUs
+// ("Radeon(TM) R5 Graphics", "Radeon R7 Graphics").
+bool IsWeakIntegratedGraphics(const std::string& lowerName)
+{
+    if (lowerName.find("intel") != std::string::npos)
+    {
+        return lowerName.find("iris") == std::string::npos && lowerName.find("hd graphics") != std::string::npos;
+    }
+    for (const char model : {'2', '3', '4', '5', '6', '7'})
+    {
+        const std::string apu = std::string(" r") + model + " graphics";
+        if (lowerName.find(apu) != std::string::npos)
+        {
+            return true;
+        }
+    }
+    return false;
+}
 } // namespace
 
 GraphicsSettings GraphicsPresetSettings(GraphicsPreset preset)
@@ -106,22 +126,43 @@ GraphicsPreset MatchGraphicsPreset(const GraphicsSettings& settings)
     return GraphicsPreset::Custom;
 }
 
-GraphicsPreset ChooseAutoGraphicsPreset(std::string_view gpuName)
+GpuClass ClassifyGpu(std::string_view gpuName)
 {
     const std::string lowerName = Lowercase(gpuName);
     if (IsSoftwareRenderer(lowerName))
     {
-        return GraphicsPreset::Low;
+        return GpuClass::Software;
     }
     if (lowerName.empty() || lowerName.find("unknown") != std::string::npos)
     {
-        return GraphicsPreset::Medium;
+        return GpuClass::Integrated;
     }
     if (IsIntegratedGraphics(lowerName))
     {
+        return IsWeakIntegratedGraphics(lowerName) ? GpuClass::WeakIntegrated : GpuClass::Integrated;
+    }
+    return GpuClass::Discrete;
+}
+
+GraphicsPreset ChooseAutoGraphicsPreset(std::string_view gpuName)
+{
+    switch (ClassifyGpu(gpuName))
+    {
+    case GpuClass::Software:
+    case GpuClass::WeakIntegrated:
+        return GraphicsPreset::Low;
+    case GpuClass::Integrated:
         return GraphicsPreset::Medium;
+    case GpuClass::Discrete:
+        break;
     }
     return GraphicsPreset::High;
+}
+
+bool IsWeakGpu(std::string_view gpuName)
+{
+    const GpuClass gpu = ClassifyGpu(gpuName);
+    return gpu == GpuClass::Software || gpu == GpuClass::WeakIntegrated;
 }
 
 } // namespace Render::Look

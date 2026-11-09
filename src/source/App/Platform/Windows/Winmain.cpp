@@ -970,7 +970,10 @@ static void RenderProfiledFrame()
 
 void RecordCpuUsage()
 {
-    constexpr int max_recordings = 60;
+    // One second of history: four samples a second. The value only feeds the diagnostics overlay, and
+    // waking 60 times a second kept a core out of its deep idle states on a battery-powered PC.
+    constexpr int max_recordings = 4;
+    constexpr auto sample_interval = std::chrono::milliseconds(250);
     double CPU_Recordings[max_recordings] = {0.0};
     double currentAvg = 0.0;
     double sum = 0.0;
@@ -1010,8 +1013,7 @@ void RecordCpuUsage()
             lastUpdateTime = currentTime;
         }
 
-        // Sleep to match a 60Hz frame rate as the basis
-        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+        std::this_thread::sleep_for(sample_interval);
     }
 }
 
@@ -3119,11 +3121,10 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     g_pUIMapName = new CUIMapName; // rozy
 
     g_BuffSystem = BuffStateSystem::Make();
-#ifdef __EMSCRIPTEN__
-    // A browser's workers are few (a phone's cores are slow too): the pool's threads only start when it
-    // is on (off by default, g_bDisableAnimationTaskPool).
+    // The pool's threads only start when it is on (off by default, g_bDisableAnimationTaskPool, set once
+    // above from config.ini or the command line): a weak PC or a phone has few cores, and idle workers
+    // still cost their stacks.
     if (!g_bDisableAnimationTaskPool)
-#endif
         AnimationTaskPool::Instance().Initialize();
 
     g_MapProcess = MapProcess::Make();

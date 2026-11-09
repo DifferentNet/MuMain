@@ -350,8 +350,8 @@ mu::ui::window::COptionWindow::COptionWindow()
     m_bSlideHelp = true;
     m_iVolumeLevel = GameConfig::GetInstance().GetSoundVolume();
     m_iMusicLevel = GameConfig::GetInstance().GetMusicVolume();
-    m_iRenderLevel = 4;
-    m_bRenderAllEffects = true;
+    m_iRenderLevel = GameConfig::GetInstance().GetEffectLevel();
+    m_bRenderAllEffects = GameConfig::GetInstance().GetFullEffects();
     m_iResolutionIndex = 0;
     m_bWindowedMode = (g_bUseWindowMode == TRUE);
     m_iLanguageIndex = FindCurrentLanguageIndex();
@@ -1059,6 +1059,8 @@ void mu::ui::window::COptionWindow::RmlToggleSlideHelp()
 void mu::ui::window::COptionWindow::RmlToggleRenderAllEffects()
 {
     m_bRenderAllEffects = !m_bRenderAllEffects;
+    GameConfig::GetInstance().SetFullEffects(m_bRenderAllEffects);
+    GameConfig::GetInstance().Save();
 }
 
 void mu::ui::window::COptionWindow::RmlToggleWindowedMode()
@@ -1082,7 +1084,14 @@ void mu::ui::window::COptionWindow::RmlMusicVolumeChanged(int value)
 void mu::ui::window::COptionWindow::RmlRenderLevelChanged(int value)
 {
     // Five cells, levels 0..4; the game reads level 4 as everything on.
-    m_iRenderLevel = std::clamp(value, 0, 4);
+    const int level = std::clamp(value, 0, 4);
+    if (level == m_iRenderLevel)
+    {
+        return;
+    }
+    m_iRenderLevel = level;
+    GameConfig::GetInstance().SetEffectLevel(level);
+    GameConfig::GetInstance().Save();
 }
 
 void mu::ui::window::COptionWindow::RmlGaugeEvent(Rml::Event& event, int gauge)

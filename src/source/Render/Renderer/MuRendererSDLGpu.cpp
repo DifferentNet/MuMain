@@ -101,7 +101,10 @@ constexpr int k_MaxQuads = 4096;
 // needs more.
 constexpr Uint32 k_InitialVertexBufferSize = 4u * 1024u * 1024u;
 #else
-constexpr Uint32 k_InitialVertexBufferSize = 64u * 1024u * 1024u;
+// On the desktop both buffers double the same way before a frame's upload, so a busy frame loses nothing and a
+// small start only costs a few regrows; 64 MiB up front took a few hundred MiB of the memory an integrated
+// GPU shares with the system.
+constexpr Uint32 k_InitialVertexBufferSize = 8u * 1024u * 1024u;
 #endif
 constexpr Uint32 k_InitialBoneBufferSize = 64u * 1024u;
 // Number of blend pipelines: 8 blend modes + 1 disabled.

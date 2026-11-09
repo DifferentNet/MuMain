@@ -239,6 +239,13 @@ public:
     int GetFpsCap() const { return m_fpsCap; }
     void SetFpsCap(int fps);
 
+    // [Render] EffectLevel (0..4, 4 = everything) and FullEffects: Options' effect bar and its
+    // "Render full effects" checkbox.
+    int GetEffectLevel() const { return m_effectLevel; }
+    void SetEffectLevel(int level);
+    bool GetFullEffects() const { return m_fullEffects; }
+    void SetFullEffects(bool enabled) { m_fullEffects = enabled; }
+
     // GPU backend override -- "default"/"vulkan"/"direct3d12"/"metal". Manual config.ini edit
     // only, same as GetSortParticleDraws() above: no setter, no in-game options-window exposure.
     std::wstring GetRenderBackend() const { return m_renderBackend; }
@@ -329,6 +336,8 @@ private:
     bool m_disableBodyShadows;
     bool m_softShadows = true;
     int m_fpsCap;
+    int m_effectLevel = 4;
+    bool m_fullEffects = true;
 
     int ReadInt(const wchar_t* section, const wchar_t* key, int defaultValue) const;
     void WriteInt(const wchar_t* section, const wchar_t* key, int value);

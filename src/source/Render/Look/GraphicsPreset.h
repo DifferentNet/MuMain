@@ -36,8 +36,21 @@ struct GraphicsSettings
 [[nodiscard]] GraphicsSettings GraphicsPresetSettings(GraphicsPreset preset);
 // The preset whose row equals `settings`, else Custom.
 [[nodiscard]] GraphicsPreset MatchGraphicsPreset(const GraphicsSettings& settings);
-// The preset Auto picks for a GPU by its name as the driver reports it: Low for a software renderer,
-// Medium for integrated graphics or an unknown name, High for the rest. Never Auto or Custom.
+// What a GPU is, by its name as the driver reports it. An empty or unknown name counts as Integrated.
+enum class GpuClass
+{
+    // No GPU: the CPU draws (Microsoft Basic Render Driver, llvmpipe).
+    Software,
+    // Integrated graphics too slow for the Enhanced look: Intel HD and UHD Graphics, AMD's pre-Ryzen APUs.
+    WeakIntegrated,
+    Integrated,
+    Discrete,
+};
+[[nodiscard]] GpuClass ClassifyGpu(std::string_view gpuName);
+// Software or WeakIntegrated: the GPUs a new install starts with the lightest settings on.
+[[nodiscard]] bool IsWeakGpu(std::string_view gpuName);
+// The preset Auto picks for a GPU: Low for a software renderer and for weak integrated graphics, Medium
+// for the other integrated graphics or an unknown name, High for the rest. Never Auto or Custom.
 [[nodiscard]] GraphicsPreset ChooseAutoGraphicsPreset(std::string_view gpuName);
 
 } // namespace Render::Look
