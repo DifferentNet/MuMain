@@ -93,8 +93,12 @@ namespace
 
 // Maximum number of quads supported by the static quad index buffer.
 constexpr int k_MaxQuads = 4096;
-// Initial vertex capacity. CPU staging grows so stress frames keep late UI draws.
-constexpr Uint32 k_InitialVertexBufferSize = 64u * 1024u * 1024u;
+// Initial vertex capacity of the GPU buffer and of its transfer buffer (the driver keeps more than one
+// instance of each, they cycle every frame). Both double on demand before a frame's upload
+// (EnsureVertexBufferCapacity), and the CPU staging grows by itself, so a busy frame loses nothing: a small
+// start only costs a few regrows on the way to a scene's real size. 64 MiB up front took a few hundred MiB
+// of the memory an integrated GPU shares with the system, for scenes that mostly need a fraction of it.
+constexpr Uint32 k_InitialVertexBufferSize = 8u * 1024u * 1024u;
 constexpr Uint32 k_InitialBoneBufferSize = 64u * 1024u;
 // Number of blend pipelines: 8 blend modes + 1 disabled.
 constexpr int k_PipelineCount = 9;
