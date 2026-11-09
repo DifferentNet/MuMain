@@ -158,7 +158,7 @@ void CreateHeroOnStage()
     c->Helper.Level = 0;
     c->Helper.ExcellentFlags = 0x04;
     // In a safe zone the rider walks and the Fenrir hides, so the stage is not one.
-    TerrainWall[TERRAIN_INDEX_REPEAT(c->PositionX, c->PositionY)] &= ~TW_SAFEZONE;
+    TerrainWall[TERRAIN_INDEX_REPEAT(static_cast<int>(HERO_X / TERRAIN_SCALE), static_cast<int>(HERO_Y / TERRAIN_SCALE))] &= ~TW_SAFEZONE;
     c->SafeZone = false;
     CreateMount(MODEL_FENRIR_GOLD, c->Object.Position, &c->Object);
     SetPlayerStop(c);
