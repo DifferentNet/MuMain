@@ -128,6 +128,9 @@ bool IsTarget(Rml::Element& element)
 {
     if (element.GetId() == CornerCloseId)
         return false;
+    // A greyed control does nothing: the frame passes it by.
+    if (element.HasAttribute("disabled") || element.IsClassSet("disabled"))
+        return false;
     if (element.IsClassSet(CellClass) || element.IsClassSet(SlotClass) || element.IsClassSet(GaugeClass))
         return true;
     const Rml::String& tag = element.GetTagName();
@@ -139,6 +142,10 @@ bool IsTarget(Rml::Element& element)
         if (element.HasAttribute(click))
             return true;
     }
+    // Some act on the press alone (the guild window's tabs, the reconnect Cancel, the guild mark's
+    // cells); one that also drags is a track the frame steps another way, not a button.
+    if (element.HasAttribute("data-event-mousedown") && !element.HasAttribute("data-event-drag"))
+        return true;
     return element.GetComputedValues().drag() == Rml::Style::Drag::Block;
 }
 

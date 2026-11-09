@@ -66,6 +66,8 @@ void Show(Content content)
     AddButton(cfg, std::move(content.primaryLabel), std::move(content.primary));
     AddButton(cfg, I18N::Game::TouchItemHotkeyQ, std::move(content.putOnQ));
     AddButton(cfg, I18N::Game::TouchItemHotkeyW, std::move(content.putOnW));
+    AddButton(cfg, I18N::Game::TouchItemHotkeyE, std::move(content.putOnE));
+    AddButton(cfg, I18N::Game::TouchItemHotkeyR, std::move(content.putOnR));
     if (content.drop)
     {
         AddButton(cfg, I18N::Game::TouchItemDrop,
