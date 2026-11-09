@@ -1115,18 +1115,48 @@ void SetCharacterPos(CHARACTER* c, BYTE posX, BYTE posY, vec3_t position)
     SendCharacterMove(c->Key, c->Object.Angle[2], 1, PathX, PathY, PathX[0], PathY[0]);
 }
 
+namespace
+{
+// A targeted skill sent whose swing hasn't shown and whose answer hasn't come (SendRequestMagic).
+bool g_bTargetedSkillPending = false;
+constexpr DWORD TargetedSkillAnswerWait = 300;
+
+bool IsTargetedSkillAnswerPending()
+{
+    if (!g_bTargetedSkillPending)
+    {
+        return false;
+    }
+    if (Engine::Object::IsSwingAction(Hero->Object.CurrentAction)
+        || GetTickCount() - g_dwLatestMagicTick > TargetedSkillAnswerWait)
+    {
+        g_bTargetedSkillPending = false;
+    }
+    return g_bTargetedSkillPending;
+}
+} // namespace
+
+void OnOwnTargetedSkillAnswered()
+{
+    g_bTargetedSkillPending = false;
+}
+
 void SendRequestMagic(int Type, int Key)
 {
     if (!IsCanBCSkill(Type))
         return;
 
-    // At most one targeted skill per 300 ms, except a few. The Dark Lord's Force and Fire Burst are exempt too: their
-    // swing paces them (UseSkillWarrior), and the gate dropped every cast past 3 a second while the swing still
-    // played, so they hit no faster at any attack speed (31 of 384 casts in 10 s at speed 2251).
+    // No fixed pace: a skill casts as fast as its swing allows (attack or magic speed). ExecuteSkill starts a skill only
+    // from a stand pose, and for many skills the hero's swing starts only with the server's answer, so until then the
+    // hero still stands and a held button would send a cast on every frame. The next targeted skill waits for the
+    // last one's swing or answer instead, at most TargetedSkillAnswerWait when none comes (the server refused it).
+    // Until 2026-11-09 it was one targeted skill per 300 ms, which held Death Stab, Ice Arrow, the wizard's spells
+    // and the rest to about 3 a second at any speed.
     if (Type == 40 || Type == 263 || Type == 261 || GameLogic::Combat::OwnStrikeEchoKey(Type) != -1
-        || abs((int)(GetTickCount() - g_dwLatestMagicTick)) > 300)
+        || !IsTargetedSkillAnswerPending())
     {
         g_dwLatestMagicTick = GetTickCount();
+        g_bTargetedSkillPending = true;
         SocketClient->ToGameServer()->SendTargetedSkill(Type, Key);
         g_ConsoleDebug->Write(MCD_SEND, L"0x19 [SendRequestMagic(%d %d)]", Type, Key);
     }

@@ -4158,6 +4158,11 @@ BOOL ReceiveMagic(const BYTE* ReceiveBuffer, int Size, BOOL bEncrypted)
     OBJECT* so = &sc->Object;
     OBJECT* to = &tc->Object;
 
+    if (sc == Hero)
+    {
+        OnOwnTargetedSkillAnswered();
+    }
+
     // The answer to the hero's own Force or Fire Burst, whose swing and effects the cast already started
     // (UseSkillWarrior). Played again here, it restarted the timer and could change a later swing's skill.
     if (sc == Hero && GameLogic::Combat::OwnStrikeEchoKey(MagicNumber) != -1
