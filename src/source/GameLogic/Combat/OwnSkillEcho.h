@@ -3,8 +3,29 @@
 #include <array>
 #include <chrono>
 
+#include "Core/Globals/_enum.h"
+
 namespace GameLogic::Combat
 {
+// The Dark Lord's Force and Fire Burst: the hero's own swing starts at the cast, as Fire Scream's always did
+// (UseSkillWarrior). The server may answer Force with Force Wave, so a family shares one key; -1 for other skills.
+inline int OwnStrikeEchoKey(int skill)
+{
+    switch (skill)
+    {
+    case AT_SKILL_FORCE:
+    case AT_SKILL_FORCE_WAVE:
+    case AT_SKILL_FORCE_WAVE_STR:
+        return AT_SKILL_FORCE;
+    case AT_SKILL_FIREBURST:
+    case AT_SKILL_FIREBURST_STR:
+    case AT_SKILL_FIREBURST_MASTERY:
+        return AT_SKILL_FIREBURST;
+    default:
+        return -1;
+    }
+}
+
 // The server answers every area skill the hero casts with the animation packet it sends to everyone around
 // (ReceiveMagicContinue). For the hero's own volley skills the client starts the swing's timer when casting, so
 // the answer must not start it a second time: it arrives a round trip later, and on a busy connection it lands in
