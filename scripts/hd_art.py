@@ -30,7 +30,9 @@ cutouts  the leaves in CUTOUTS (and every file with the same source bytes) as gh
          the walls as black blots. Their colour goes up to the original's (alpha-weighted mean, per
          channel, at most x CUTOUT_MAX_GAIN), the colour under the edges is filled from the leaves, and
          the alpha is half the x4 one and half the original's smooth one. It works from a copy of the
-         written file in <work>/cutouts, so running it again gives the same result.
+         written file in <work>/cutouts, so running it again gives the same result. Keep that folder
+         with Data/HD: without it the stage takes the already fixed files for clean ones and fixes them
+         twice (then put the clean ones back from a published Remaster zip with hd_pack.unpack).
 
 Models: SDXL 1.0 base (CreativeML Open RAIL++-M), the fp16-fix SDXL VAE (MIT),
 xinsir controlnet-tile-sdxl-1.0 (Apache-2.0); stable-diffusion.cpp sd-cli (MIT) on Vulkan.
@@ -458,8 +460,12 @@ def cmd_cutouts(args):
             # first run, or write put a new texture there since: keep that one
             keep.parent.mkdir(parents=True, exist_ok=True)
             keep.write_bytes(current)
-        hdt.write_ozt(args.out / rel, fix_cutout(hdt.read_texture(args.src / rel), hdt.read_texture(keep)))
-        last.write_text(hashlib.md5((args.out / rel).read_bytes()).hexdigest())
+        # the note first, then the file: a run stopped in between finds a file that differs from the
+        # note, which is still the clean one, and keeps it again
+        tmp = args.out / (rel + ".tmp")
+        hdt.write_ozt(tmp, fix_cutout(hdt.read_texture(args.src / rel), hdt.read_texture(keep)))
+        last.write_text(hashlib.md5(tmp.read_bytes()).hexdigest())
+        os.replace(tmp, args.out / rel)
         print("cut-out", rel)
     print(f"{len(set(rels))} cut-outs written to {args.out}")
 
