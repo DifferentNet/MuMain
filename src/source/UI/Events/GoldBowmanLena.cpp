@@ -114,14 +114,11 @@ bool CGoldBowmanLena::Update()
         return true;
     if (pressed == BUTTON_REGISTER)
     {
-        int registerItem = g_pMyInventory->GetInventoryCtrl()->GetItemCount(ITEM_RENA, 0);
-        if (registerItem != 0)
+        // Any bag page (page 2 included) may hold the Rena.
+        const int index = g_pMyInventory->FindItemIndex(ITEM_RENA, 0);
+        if (index != -1)
         {
-            int index = g_pMyInventory->GetInventoryCtrl()->FindItemIndex(ITEM_RENA, 0);
-            if (index != -1)
-            {
-                SocketClient->ToGameServer()->SendEventChipRegistrationRequest(0, index);
-            }
+            SocketClient->ToGameServer()->SendEventChipRegistrationRequest(0, index);
         }
     }
     else if (pressed == BUTTON_EXIT)

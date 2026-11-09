@@ -1075,6 +1075,9 @@ bool CMyInventory::UpdateKeyEvent()
 
 bool CMyInventory::Update()
 {
+    // The vault, a shop or the chaos machine open the bag without OpenningProcess: ask for the pages here too.
+    if (g_pNewUISystem->IsVisible(INTERFACE_INVENTORY))
+        UI::Inventory::Bag().RequestInfoOnce();
     // A purchase opens page 2 at once: its grids come to this window on the next frame.
     SyncBagPageGrids();
     // The bag's own grid also on page 2, where it lies off the screen: it lets go of its pointed item.
@@ -1411,34 +1414,59 @@ CInventoryCtrl* CMyInventory::OwnedBagGrid(int i) const
     return g_pMyInventoryExt->GetExtension(i - 1);
 }
 
+// The lookups below search every owned bag page: page 2's grids carry their own slot offsets (76 and up).
 ITEM* CMyInventory::FindItem(int iLinealPos) const
 {
-    if (m_pNewInventoryCtrl)
-        return m_pNewInventoryCtrl->FindItem(iLinealPos);
+    for (int g = 0; g < OwnedBagGridCount; ++g)
+    {
+        if (CInventoryCtrl* grid = OwnedBagGrid(g))
+        {
+            if (ITEM* item = grid->FindItem(iLinealPos))
+                return item;
+        }
+    }
     return nullptr;
 }
 
 ITEM* CMyInventory::FindItemByKey(DWORD dwKey) const
 {
-    if (m_pNewInventoryCtrl)
-        return m_pNewInventoryCtrl->FindItemByKey(dwKey);
+    for (int g = 0; g < OwnedBagGridCount; ++g)
+    {
+        if (CInventoryCtrl* grid = OwnedBagGrid(g))
+        {
+            if (ITEM* item = grid->FindItemByKey(dwKey))
+                return item;
+        }
+    }
     return nullptr;
 }
 
 int CMyInventory::FindItemIndex(short int siType, int iLevel) const
 {
-    if (m_pNewInventoryCtrl)
-        return m_pNewInventoryCtrl->FindItemIndex(siType, iLevel);
+    for (int g = 0; g < OwnedBagGridCount; ++g)
+    {
+        if (CInventoryCtrl* grid = OwnedBagGrid(g))
+        {
+            const int index = grid->FindItemIndex(siType, iLevel);
+            if (index != -1)
+                return index;
+        }
+    }
     return -1;
 }
 
 int CMyInventory::FindItemReverseIndex(short sType, int iLevel) const
 {
-    if (m_pNewInventoryCtrl)
+    // From the last page back, as the grid itself searches from its last cell.
+    for (int g = OwnedBagGridCount - 1; g >= 0; --g)
     {
-        return m_pNewInventoryCtrl->FindItemReverseIndex(sType, iLevel);
+        if (CInventoryCtrl* grid = OwnedBagGrid(g))
+        {
+            const int index = grid->FindItemReverseIndex(sType, iLevel);
+            if (index != -1)
+                return index;
+        }
     }
-
     return -1;
 }
 
@@ -2191,7 +2219,13 @@ int CMyInventory::GetNumItemByKey(DWORD dwItemKey) const
 
 int CMyInventory::GetNumItemByType(short sItemType) const
 {
-    return m_pNewInventoryCtrl->GetNumItemByType(sItemType);
+    int count = 0;
+    for (int g = 0; g < OwnedBagGridCount; ++g)
+    {
+        if (CInventoryCtrl* grid = OwnedBagGrid(g))
+            count += grid->GetNumItemByType(sItemType);
+    }
+    return count;
 }
 
 BYTE CMyInventory::GetDurabilityPointedItem() const
