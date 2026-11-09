@@ -71,6 +71,8 @@ def pack_of_map(number):
         return 19
     if 45 <= number <= 50:
         return 47
+    if number == 32:  # the second Devil Square map shows the first one's world
+        return 10
     return number + 1
 
 
