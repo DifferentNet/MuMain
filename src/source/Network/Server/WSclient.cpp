@@ -4158,6 +4158,14 @@ BOOL ReceiveMagic(const BYTE* ReceiveBuffer, int Size, BOOL bEncrypted)
     OBJECT* so = &sc->Object;
     OBJECT* to = &tc->Object;
 
+    // The answer to the hero's own Force or Fire Burst, whose swing and effects the cast already started
+    // (UseSkillWarrior). Played again here, it restarted the timer and could change a later swing's skill.
+    if (sc == Hero && GameLogic::Combat::OwnStrikeEchoKey(MagicNumber) != -1
+        && GameLogic::Combat::OwnSkillEcho::Consume(GameLogic::Combat::OwnStrikeEchoKey(MagicNumber)))
+    {
+        return TRUE;
+    }
+
     if (MagicNumber != AT_SKILL_COMBO)
     {
         if (sc != Hero && MagicNumber != AT_SKILL_TELEPORT && MagicNumber != AT_SKILL_TELEPORT_ALLY && to->Visible)

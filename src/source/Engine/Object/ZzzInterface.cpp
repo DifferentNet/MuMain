@@ -73,6 +73,7 @@
 #include "Render/Text/CUIRenderText.h"
 #include "UI/Inventory/InventoryContents.h"
 #include "UI/Inventory/InventoryExtension.h"
+#include "GameLogic/Combat/OwnSkillEcho.h"
 
 #include <iterator>
 
@@ -1119,7 +1120,11 @@ void SendRequestMagic(int Type, int Key)
     if (!IsCanBCSkill(Type))
         return;
 
-    if (Type == 40 || Type == 263 || Type == 261 || abs((int)(GetTickCount() - g_dwLatestMagicTick)) > 300)
+    // At most one targeted skill per 300 ms, except a few. The Dark Lord's Force and Fire Burst are exempt too: their
+    // swing paces them (UseSkillWarrior), and the gate dropped every cast past 3 a second while the swing still
+    // played, so they hit no faster at any attack speed (31 of 384 casts in 10 s at speed 2251).
+    if (Type == 40 || Type == 263 || Type == 261 || GameLogic::Combat::OwnStrikeEchoKey(Type) != -1
+        || abs((int)(GetTickCount() - g_dwLatestMagicTick)) > 300)
     {
         g_dwLatestMagicTick = GetTickCount();
         SocketClient->ToGameServer()->SendTargetedSkill(Type, Key);

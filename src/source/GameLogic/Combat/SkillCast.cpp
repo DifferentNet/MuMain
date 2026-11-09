@@ -328,6 +328,33 @@ void UseSkillWarrior(CHARACTER* c, OBJECT* o)
         case AT_SKILL_FIREBURST:
         case AT_SKILL_FIREBURST_STR:
         case AT_SKILL_FIREBURST_MASTERY:
+            // Started here, as Fire Scream's swing is. Left to the server's answer, the next cast waited a round
+            // trip plus the whole swing, so these stayed at a few casts a second whatever the attack speed
+            // (Fire Scream 38 a second at speed 2251, Fire Burst and Force 5.7 on a local server, fewer with a
+            // real ping). The answer to this cast then changes nothing (ReceiveMagic, OwnSkillEcho.h).
+            if (c == Hero && g_MovementSkill.m_iTarget >= 0 && g_MovementSkill.m_iTarget < MAX_CHARACTERS_CLIENT)
+            {
+                if ((c->Helper.Type >= MODEL_HORN_OF_UNIRIA && c->Helper.Type <= MODEL_DARK_HORSE_ITEM) && !c->SafeZone)
+                {
+                    SetAction(o, PLAYER_ATTACK_RIDE_STRIKE);
+                }
+                else if (c->Helper.Type == MODEL_HORN_OF_FENRIR && !c->SafeZone)
+                {
+                    SetAction(o, PLAYER_FENRIR_ATTACK_DARKLORD_STRIKE);
+                }
+                else
+                {
+                    SetAction(o, PLAYER_ATTACK_STRIKE);
+                }
+                // What the answer sets for those watching: the timer creates the skill's effects on the target.
+                c->Skill = Skill;
+                c->TargetCharacter = g_MovementSkill.m_iTarget;
+                c->SkillSuccess = true;
+                c->AttackTime = 1;
+                OwnSkillEcho::Expect(OwnStrikeEchoKey(Skill));
+                PlayBuffer(OwnStrikeEchoKey(Skill) == AT_SKILL_FIREBURST ? SOUND_ATTACK_FIRE_BUST : SOUND_SKILL_SWORD1);
+            }
+            break;
         case AT_SKILL_SPACE_SPLIT:
             break;
         case AT_SKILL_RUSH:
