@@ -133,6 +133,12 @@ mu_add_test(
         test_cpu_usage_math.cpp
 )
 
+mu_add_test(
+    NAME test_frame_pacing
+    SOURCES
+        test_frame_pacing.cpp
+)
+
 add_test(
     NAME msvc_runtime_dll_staging_contract
     COMMAND "${CMAKE_COMMAND}"

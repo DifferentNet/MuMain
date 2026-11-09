@@ -29,6 +29,7 @@
 #endif
 
 #include "Camera/CameraUtility.h"
+#include "Scenes/FramePacing.h"
 #include "Scenes/SceneManager.h"
 #include "Core/Input/ImeInput.h"
 
@@ -112,6 +113,8 @@ float g_Luminosity;
 
 extern int g_iNoMouseTime;
 
+extern bool g_bWindowMinimized;
+
 namespace
 {
 // In the browser the game loop runs on the page's main thread, and only a wait that hands control
@@ -141,22 +144,32 @@ void WaitForNextActivity(bool usePreciseSleep)
     // We only sleep when we have enough time to sleep and have some additional rest time.
     const auto current_frame_time_ms = g_frameTiming.GetCurrentFrameTime();
     const auto current_ms_per_frame = g_frameTiming.GetMsPerFrame();
+    long sleep_ms = 0;
     if (current_ms_per_frame > 0 && current_frame_time_ms > 0 && current_frame_time_ms < current_ms_per_frame)
     {
-        const auto sleep_threshold_ms = usePreciseSleep? 4.0 : 16.0;
-        const auto sleep_duration_offset_ms = usePreciseSleep? 1.0 : 4.0;
-        const auto max_sleep_ms = 10.0;
+        using Scenes::FramePacing::Precision;
+#ifdef __EMSCRIPTEN__
+        // The browser paces the frames itself (WaitForBrowserFrame); this wait keeps its old numbers there.
+        const auto sleep_threshold_ms = usePreciseSleep ? 4.0 : 16.0;
+        const auto sleep_duration_offset_ms = usePreciseSleep ? 1.0 : 4.0;
         const auto rest_ms = current_ms_per_frame - current_frame_time_ms;
-
         if (rest_ms - sleep_duration_offset_ms > sleep_threshold_ms)
         {
-            const auto sleep_ms = std::min<double>(rest_ms - sleep_duration_offset_ms, max_sleep_ms);
-            SleepBetweenFrames(static_cast<long>(sleep_ms));
+            sleep_ms = static_cast<long>(
+                std::min<double>(rest_ms - sleep_duration_offset_ms, Scenes::FramePacing::kMaxSleepMs));
         }
-        else
-        {
-            YieldBetweenFrames();
-        }
+#else
+        // A minimized window shows no frames, so its cap needs no yield loop at all.
+        const Precision precision =
+            g_bWindowMinimized ? Precision::Relaxed : usePreciseSleep ? Precision::Fine : Precision::Coarse;
+        sleep_ms =
+            Scenes::FramePacing::SleepMsBeforeNextFrame(current_ms_per_frame - current_frame_time_ms, precision);
+#endif
+    }
+
+    if (sleep_ms > 0)
+    {
+        SleepBetweenFrames(sleep_ms);
     }
     else
     {
