@@ -71,6 +71,8 @@
 #include "Camera/CameraProjection.h"
 #include "Scenes/SceneCommon.h"
 #include "Render/Text/CUIRenderText.h"
+#include "UI/Inventory/InventoryContents.h"
+#include "UI/Inventory/InventoryExtension.h"
 
 #include <iterator>
 
@@ -1163,6 +1165,20 @@ BYTE GetDestValue(int xPos, int yPos, int xDst, int yDst)
     return (byValue1 | byValue2);
 }
 
+// The grid that holds a bag slot: page 1's, or an extension grid for bag page 2 (slots 76+), where
+// SearchArrow also looks since bag page 2.
+static mu::ui::window::CInventoryCtrl* ArrowGrid(int index)
+{
+    if (index >= MAX_MY_INVENTORY_INDEX && g_pMyInventoryExt != nullptr)
+    {
+        if (auto* grid = g_pMyInventoryExt->TryGetExtensionByInventoryIndex(index))
+        {
+            return grid;
+        }
+    }
+    return g_pMyInventory->GetInventoryCtrl();
+}
+
 void ReloadArrow()
 {
     int Index = SearchArrow();
@@ -1186,24 +1202,24 @@ void ReloadArrow()
             if ((gCharacterManager.GetEquipedBowType(lp) == BOWTYPE_BOW) && (rp->Type == -1))
             {
                 ITEM* pItem = g_pMyInventory->FindItem(Index);
-                mu::ui::window::CInventoryCtrl::CreatePickedItem(g_pMyInventory->GetInventoryCtrl(), pItem);
+                mu::ui::window::CInventoryCtrl::CreatePickedItem(ArrowGrid(Index), pItem);
                 if (pItem)
                 {
                     SendRequestEquipmentItem(STORAGE_TYPE::INVENTORY, Index, pItem, STORAGE_TYPE::INVENTORY, EQUIPMENT_WEAPON_RIGHT);
                 }
-                g_pMyInventory->DeleteItem(Index);
+                UI::Inventory::RemoveItem(Index);
                 g_pSystemLogBox->AddText(I18N::Game::ArrowsReloaded, mu::ui::window::TYPE_SYSTEM_MESSAGE);
             }
             else
                 if ((gCharacterManager.GetEquipedBowType(rp) == BOWTYPE_CROSSBOW) && (lp->Type == -1))
                 {
                     ITEM* pItem = g_pMyInventory->FindItem(Index);
-                    mu::ui::window::CInventoryCtrl::CreatePickedItem(g_pMyInventory->GetInventoryCtrl(), pItem);
+                    mu::ui::window::CInventoryCtrl::CreatePickedItem(ArrowGrid(Index), pItem);
                     if (pItem)
                     {
                         SendRequestEquipmentItem(STORAGE_TYPE::INVENTORY, Index, pItem, STORAGE_TYPE::INVENTORY, EQUIPMENT_WEAPON_LEFT);
                     }
-                    g_pMyInventory->DeleteItem(Index);
+                    UI::Inventory::RemoveItem(Index);
                     g_pSystemLogBox->AddText(I18N::Game::ArrowsReloaded, mu::ui::window::TYPE_SYSTEM_MESSAGE);
                 }
         }
