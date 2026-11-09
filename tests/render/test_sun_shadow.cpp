@@ -122,8 +122,8 @@ TEST_CASE("a map's mood gives the frame its sun [render][sunshadow]")
     CHECK(frame.towardSun[0] > 0.0f);
     CHECK(frame.towardSun[1] < 0.0f);
     CHECK(frame.towardSun[2] == doctest::Approx(std::sin(40.0 * 3.14159265358979323846 / 180.0)));
-    CHECK(frame.strength == doctest::Approx(0.33f));
-    CHECK(frame.softness == doctest::Approx(12.0f));
+    CHECK(frame.strength == doctest::Approx(0.8f));
+    CHECK(frame.softness == doctest::Approx(4.0f));
     CHECK(frame.focus[1] == 200.0f);
 
     CHECK(BuildFrame(mood, 2, focus).mapSize == 4096u);
