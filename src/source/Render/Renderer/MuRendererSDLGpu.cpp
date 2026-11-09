@@ -93,12 +93,19 @@ namespace
 
 // Maximum number of quads supported by the static quad index buffer.
 constexpr int k_MaxQuads = 4096;
-// Initial vertex capacity of the GPU buffer and of its transfer buffer (the driver keeps more than one
-// instance of each, they cycle every frame). Both double on demand before a frame's upload
-// (EnsureVertexBufferCapacity), and the CPU staging grows by itself, so a busy frame loses nothing: a small
-// start only costs a few regrows on the way to a scene's real size. 64 MiB up front took a few hundred MiB
-// of the memory an integrated GPU shares with the system, for scenes that mostly need a fraction of it.
+// Initial vertex capacity. CPU staging grows so stress frames keep late UI draws.
+#ifdef __EMSCRIPTEN__
+// In the browser every instance of these buffers is real memory: SDL's WebGPU backend keeps a CPU copy of the
+// transfer buffer and cycles through several GPU instances of both (six of 64 MB = 384 MB in Lorencia,
+// 2026-11-09), while a frame there stages about 0.6 MB. EnsureVertexBufferCapacity doubles it when a frame
+// needs more.
+constexpr Uint32 k_InitialVertexBufferSize = 4u * 1024u * 1024u;
+#else
+// On the desktop both buffers double the same way before a frame's upload, so a busy frame loses nothing and a
+// small start only costs a few regrows; 64 MiB up front took a few hundred MiB of the memory an integrated
+// GPU shares with the system.
 constexpr Uint32 k_InitialVertexBufferSize = 8u * 1024u * 1024u;
+#endif
 constexpr Uint32 k_InitialBoneBufferSize = 64u * 1024u;
 // Number of blend pipelines: 8 blend modes + 1 disabled.
 constexpr int k_PipelineCount = 9;
@@ -2138,8 +2145,9 @@ public:
             SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_FEATURE_DEPTH_CLAMPING_BOOLEAN, depthClamp);
             SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_DEBUGMODE_BOOLEAN, Render::kGpuValidationEnabled);
             // Transfer buffers up to this size are written through the queue instead of mapped. A
-            // mapped one waits for the GPU each time it's mapped again, and the vertex stream's is
-            // 64 MB, above the backend's 32 MB default, so every frame waited. The backend compares
+            // mapped one waits for the GPU each time it's mapped again, and the vertex stream's was
+            // 64 MB, above the backend's 32 MB default, so every frame waited (it starts at 4 MB now
+            // and doubles on demand: this keeps it written through the queue however it grows). The backend compares
             // this value with buffer sizes in bytes, despite the property's "_N_MB" name.
             SDL_SetNumberProperty(props, SDL_PROP_GPU_DEVICE_CREATE_WEBGPU_PSEUDOMAP_BUFFERS_SMALLER_THAN_N_MB,
                                   static_cast<Sint64>(256) << 20);
