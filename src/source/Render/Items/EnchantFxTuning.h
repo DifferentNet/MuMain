@@ -4,7 +4,7 @@
 //   +7..+10   the outline light (RimGlow) over the Classic chrome shine,
 //   +11..+13  and a slowly pulsing aura in the glow colour around each such piece and the character,
 //   +14..+15  and sparks rising from each such piece,
-//   and the flash over a character whose item was just enchanted to +13, +14 or +15 ("#UPF" line).
+//   and the flash over a character whose item was just enchanted to +14 or +15 ("#UPF" line).
 // Classic (HD textures off) uses none of these.
 namespace Render::Items::EnchantFx::Tuning
 {
@@ -76,7 +76,7 @@ inline constexpr float MaxSparksPerSecond = 220.0f;
 
 // ---- The flash after an enchant to +13, +14, +15 ----
 
-// Index 0 = +13, 1 = +14, 2 = +15.
+// Index 0 = +13 (unused: only +14 and +15 flash, ghinzuro 2026-11-09), 1 = +14, 2 = +15.
 inline constexpr float FlashSeconds[3] = {2.0f, 2.5f, 3.2f};
 // Fade in and fade out (seconds) inside that time.
 inline constexpr float FlashFadeIn = 0.15f;
