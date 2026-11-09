@@ -113,3 +113,11 @@ mu_add_test(
         test_enchant_flash_line.cpp
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/EnchantFlashLine.cpp
 )
+
+# The server's "#UPL|<name>|<levels>" line: other characters' exact +14/+15 (GameLogic/Items/AncientLook, EnchantFx).
+mu_add_test(
+    NAME test_exact_level_line
+    SOURCES
+        test_exact_level_line.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/ExactLevelLine.cpp
+)
