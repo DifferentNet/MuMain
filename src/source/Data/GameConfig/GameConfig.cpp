@@ -139,6 +139,9 @@ void GameConfig::Load()
     m_disableBodyShadows = ReadBool(CfgSectionRender, CfgKeyDisableBodyShadows, CfgDefaultDisableBodyShadows);
     m_softShadows = ReadBool(CfgSectionRender, CfgKeySoftShadows, CfgDefaultSoftShadows);
     m_fpsCap = ReadInt(CfgSectionRender, CfgKeyFpsCap, CfgDefaultFpsCap);
+    m_effectLevel = std::clamp(ReadInt(CfgSectionRender, CfgKeyEffectLevel, CfgDefaultEffectLevel),
+                               CfgMinEffectLevel, CfgMaxEffectLevel);
+    m_fullEffects = ReadBool(CfgSectionRender, CfgKeyFullEffects, CfgDefaultFullEffects);
 
     // Strip keys/sections we used to write but no longer use, so user config
     // files don't accumulate orphans. Append one line per retired key — no
@@ -220,6 +223,8 @@ void GameConfig::Save()
     WriteBool(CfgSectionRender, CfgKeyDisableBodyShadows, m_disableBodyShadows);
     WriteBool(CfgSectionRender, CfgKeySoftShadows, m_softShadows);
     WriteInt(CfgSectionRender, CfgKeyFpsCap, m_fpsCap);
+    WriteInt(CfgSectionRender, CfgKeyEffectLevel, m_effectLevel);
+    WriteBool(CfgSectionRender, CfgKeyFullEffects, m_fullEffects);
 }
 
 void GameConfig::SaveCamera()
@@ -379,6 +384,11 @@ void GameConfig::SetDisableBodyShadows(bool disabled)
 void GameConfig::SetFpsCap(int fps)
 {
     m_fpsCap = fps;
+}
+
+void GameConfig::SetEffectLevel(int level)
+{
+    m_effectLevel = std::clamp(level, CfgDefaults::CfgMinEffectLevel, CfgDefaults::CfgMaxEffectLevel);
 }
 
 void GameConfig::SetRememberMe(bool remember)

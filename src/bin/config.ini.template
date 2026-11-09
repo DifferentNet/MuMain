@@ -47,4 +47,6 @@ DisableBoids=0
 DisableWingShadow=0
 DisableBodyShadows=0
 FpsCap=-1
+EffectLevel=4
+FullEffects=1
 Backend=default
