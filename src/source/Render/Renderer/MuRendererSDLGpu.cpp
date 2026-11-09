@@ -2142,8 +2142,9 @@ public:
             SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_FEATURE_DEPTH_CLAMPING_BOOLEAN, depthClamp);
             SDL_SetBooleanProperty(props, SDL_PROP_GPU_DEVICE_CREATE_DEBUGMODE_BOOLEAN, Render::kGpuValidationEnabled);
             // Transfer buffers up to this size are written through the queue instead of mapped. A
-            // mapped one waits for the GPU each time it's mapped again, and the vertex stream's is
-            // 64 MB, above the backend's 32 MB default, so every frame waited. The backend compares
+            // mapped one waits for the GPU each time it's mapped again, and the vertex stream's was
+            // 64 MB, above the backend's 32 MB default, so every frame waited (it starts at 4 MB now
+            // and doubles on demand: this keeps it written through the queue however it grows). The backend compares
             // this value with buffer sizes in bytes, despite the property's "_N_MB" name.
             SDL_SetNumberProperty(props, SDL_PROP_GPU_DEVICE_CREATE_WEBGPU_PSEUDOMAP_BUFFERS_SMALLER_THAN_N_MB,
                                   static_cast<Sint64>(256) << 20);
