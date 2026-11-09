@@ -31,9 +31,11 @@
 //   brightScale  optional, 0.3 to 1 (default, Classic): the scale places at the
 //                shadow keep get, never below base (figures: never below the
 //                figure scale); only with a shadow keep.
-//   sunAzimuth   optional, 0 to 360 degrees (default 315, the Classic terrain
-//                light): where the sun of the sun shadows stands, counted from
-//                the map's +X axis towards +Y.
+//   sunAzimuth   optional, 0 to 360 degrees (default 225): where the sun of the
+//                sun shadows stands, counted from the map's +X axis towards +Y.
+//                225 throws the shadows to the side of the default camera; at 315
+//                (the Classic terrain light) they fell straight behind each figure,
+//                hidden by its own body.
 //   sunElevation optional, 20 to 85 degrees (default 40): its height above the
 //                horizon; low suns cast long shadows.
 //   sunShadow    optional, 0 to 1 (default 0.8): the share of the light a
@@ -56,7 +58,7 @@ struct LightMood
     double shadowKeep = 0.0;
     double shadeCool = 0.0;
     double brightScale = 1.0;
-    double sunAzimuth = 315.0;
+    double sunAzimuth = 225.0;
     double sunElevation = 40.0;
     double sunShadow = 0.8;
     double sunSoftness = 4.0;
