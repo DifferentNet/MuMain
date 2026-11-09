@@ -152,8 +152,11 @@ Driving the game from a script has limits that real players don't hit:
 `index.html` catches a WebAssembly error, shows "The game stopped" with Reload and "Reset settings and reload", and stops calling into the game. A failure can leave a lock taken, and the next call from the page (saving settings, a key, a network message) would wait for it forever and freeze the tab. `?reset` clears the settings saved in the browser.
 
 The game also sets `SDL_PROP_GPU_DEVICE_CREATE_WEBGPU_PSEUDOMAP_BUFFERS_SMALLER_THAN_N_MB` to 256 MB
-(the backend reads it in bytes), so its 64 MB vertex stream is written through the queue instead of
+(the backend reads it in bytes), so its vertex stream is written through the queue instead of
 mapped, which waited for the GPU every frame.
+The stream's buffers start at 4 MB in the browser (64 MB on desktop) and double when a frame needs more:
+the backend keeps a CPU copy of the transfer buffer and cycles several GPU instances of both buffers, and
+six of 64 MB took 384 MB of GPU memory for the 0.6 MB a frame in Lorencia stages (2026-11-09).
 
 ## Running from a folder (https://skynet-mu.net/play/)
 
