@@ -78,6 +78,8 @@ namespace mu::ui::window
         // a slot belongs to is not derivable from the index alone, and
         // picking an item up needs the control it sits in.
         CInventoryCtrl* TryGetExtensionByInventoryIndex(int iIndex) const;
+        // Extension `i` (from 0), or null: the bag window shows 0 and 1 as its page 2 (UI/Inventory/BagPages.h).
+        CInventoryCtrl* GetExtension(int i) const { return i >= 0 && i < MAX_INVENTORY_EXT_COUNT ? m_extensions[i] : nullptr; }
 
     private:
         void Init();

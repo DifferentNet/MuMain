@@ -1273,6 +1273,21 @@ void mu::ui::window::CInventoryCtrl::FollowGridPx(Rml::ElementDocument* doc, con
     m_Geometry = geometry;
 }
 
+void mu::ui::window::CInventoryCtrl::FollowGridPx(Rml::ElementDocument* doc, const char* gridId, int firstRow)
+{
+    UI::Items::GridGeometry geometry;
+    if (!UI::Items::DrawnGridGeometry(doc ? doc->GetElementById(gridId) : nullptr, m_nColumn, m_nRow,
+                                      m_Geometry.PitchX(), m_Geometry.PitchY(), geometry))
+        return;
+    m_Geometry = {geometry.Left(), geometry.Top() + firstRow * geometry.PitchY(), geometry.PitchX(), geometry.PitchY(),
+                  m_nColumn, m_nRow};
+}
+
+void mu::ui::window::CInventoryCtrl::ParkOffScreen()
+{
+    m_Geometry = {-100000.f, -100000.f, m_Geometry.PitchX(), m_Geometry.PitchY(), m_nColumn, m_nRow};
+}
+
 POINT mu::ui::window::CInventoryCtrl::PointerPos()
 {
     return {static_cast<LONG>(std::floor(g_fWindowMouseX)), static_cast<LONG>(std::floor(g_fWindowMouseY))};

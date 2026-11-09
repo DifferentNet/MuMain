@@ -16239,6 +16239,27 @@
   <data name="SoftShadowsRow" xml:space="preserve">
     <value>Soft shadows</value>
   </data>
+  <data name="BagPageLocked" xml:space="preserve">
+    <value>Page 2 is locked</value>
+  </data>
+  <data name="BagPageCells" xml:space="preserve">
+    <value>+64 cells for the character</value>
+  </data>
+  <data name="BagPageBuy" xml:space="preserve">
+    <value>%ls zen</value>
+  </data>
+  <data name="BagPageBuyQuestion" xml:space="preserve">
+    <value>Open page 2 of the bag for %ls zen?</value>
+  </data>
+  <data name="BagPageBuyFrom" xml:space="preserve">
+    <value>Zen is taken from the bag first, the rest from the vault.</value>
+  </data>
+  <data name="BagPageBuyConfirm" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="BagPageBuying" xml:space="preserve">
+    <value>Opening...</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Strong monsters first</value>

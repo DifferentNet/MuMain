@@ -181,7 +181,48 @@
 .equip-slot.durability-30 .equip-slot-item { background-color: rgba(255, 128, 0, 64); }
 .equip-slot.durability-50 .equip-slot-item { background-color: rgba(255, 255, 0, 64); }
 .equip-slot.refused .equip-slot-item { background-color: rgba(230, 26, 26, 102); }
-#item_grid, #item_grid_counts { left: 15px; top: 200px; width: calc(8 * var(--item-cell)); height: calc(8 * var(--item-cell)); }
+#item_grid, #item_grid_counts, #bag_lock { left: 15px; top: 200px; width: calc(8 * var(--item-cell)); height: calc(8 * var(--item-cell)); }
+
+/* Bag page 2 while not bought (BagPages.h): a dark cover over the grid with three centred lines and
+   the buy button. */
+.bag-lock {
+	position: absolute;
+	background-color: rgba(0, 0, 0, 200);
+	pointer-events: auto;
+}
+.bag-lock-line {
+	position: absolute;
+	left: 0;
+	width: 100%;
+	text-align: center;
+	transform-origin: center top;
+}
+.bag-lock-title { top: 34px; font-weight: bold; color: #ffcc19; }
+.bag-lock-cells { top: 54px; color: #c8c8c8; }
+.bag-lock-price { top: 74px; font-weight: bold; color: #ffffff; }
+.bag-lock-btn { left: 26px; top: 100px; width: 108px; height: 30px; line-height: 30px; }
+
+/* The bag page arrows beside the centred title, as the vault's (storage.rcss): the cash shop storage's
+   page arrows, 20x22 with hover and pressed frames, clear of the corner close (x 163-187). Dimmed on
+   the first and the last page. */
+@spritesheet bag-page-left-sheet  { src: "../../../InGameShop/IGS_Storage_Page_Left.tga";  bag-page-left-up: 0px 0px 20px 22px;  bag-page-left-over: 0px 22px 20px 22px;  bag-page-left-down: 0px 44px 20px 22px; }
+@spritesheet bag-page-right-sheet { src: "../../../InGameShop/IGS_Storage_Page_Right.tga"; bag-page-right-up: 0px 0px 20px 22px; bag-page-right-over: 0px 22px 20px 22px; bag-page-right-down: 0px 44px 20px 22px; }
+.bag-page-btn {
+	position: absolute;
+	top: 7px;
+	width: 20px;
+	height: 22px;
+	cursor: pointer;
+	pointer-events: auto;
+}
+.bag-page-btn.hidden { display: none; }
+.bag-page-btn.busy { pointer-events: none; filter: brightness(0.5); }
+.bag-page-prev { left: 30px; decorator: image(bag-page-left-up); }
+.bag-page-prev:hover { decorator: image(bag-page-left-over); }
+.bag-page-prev:active { decorator: image(bag-page-left-down); }
+.bag-page-next { left: 140px; decorator: image(bag-page-right-up); }
+.bag-page-next:hover { decorator: image(bag-page-right-over); }
+.bag-page-next:active { decorator: image(bag-page-right-down); }
 #option_tooltip_anchor { left: 95px; top: 40px; }
 
 /* The grid's clicks are native (CInventoryCtrl), so the placed panel takes no pointer events; its
@@ -242,7 +283,16 @@
 	/* The gold above the bag, then the bag. */
 	#gold_bg { left: var(--bag-x); top: 34px; width: 200px; height: 30px; }
 	#gold_text { left: calc(var(--bag-x) + 46px); top: 42px; }
-	#item_grid, #item_grid_counts { left: var(--bag-x); top: 70px; }
+	#item_grid, #item_grid_counts, #bag_lock { left: var(--bag-x); top: 70px; }
+	/* Page 2's cover in finger-sized cells: its lines and button lower and wider. */
+	.bag-lock-title { top: 110px; }
+	.bag-lock-cells { top: 140px; }
+	.bag-lock-price { top: 170px; }
+	.bag-lock-btn { left: calc(50% - 80px); top: 210px; width: 160px; height: 44px; line-height: 44px; }
+	/* The page arrows, 30 x 33, either side of the centred title. */
+	.bag-page-btn { top: 2px; width: 30px; height: 33px; }
+	.bag-page-prev { left: calc(50% - 150px); }
+	.bag-page-next { left: calc(50% + 120px); }
 
 	/* The buttons in a row under the equipment, 60 x 48. */
 	.inv-btn { top: 352px; width: 60px; height: 48px; }

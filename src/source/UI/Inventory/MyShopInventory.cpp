@@ -9,6 +9,7 @@
 #include "UI/Dialogs/GenericMenuDialog.h"
 #include "UI/Core/WindowCommon.h" // g_IsPurchaseShop
 #include "UI/Inventory/ShopUpdates.h"
+#include "UI/Inventory/InventoryExtension.h"
 #include "GameLogic/Items/PersonalShopCurrency.h"
 #include "GameLogic/Items/PersonalShopTitleImp.h"
 #include "I18N/All.h"
@@ -76,7 +77,9 @@ void ApplyPersonalShopItemPrice(const GameLogic::PersonalShop::ItemPrice& price,
     const int iSourceIndex = pPickedItem->GetSourceLinealPos();
     const int iTargetIndex = g_pMyShopInventory->GetTargetIndex();
     const auto* pOwnerInventory = pPickedItem->GetOwnerInventory();
-    const bool isFromInventory = pOwnerInventory == g_pMyInventory->GetInventoryCtrl() || pOwnerInventory == nullptr;
+    // Bag page 2's grids belong to the extension window (MyInventory.h, OwnedBagGrid).
+    const bool isFromInventory = pOwnerInventory == g_pMyInventory->GetInventoryCtrl() || pOwnerInventory == nullptr ||
+                                 g_pMyInventoryExt->GetOwnerOf(pPickedItem) != nullptr;
     const bool isFromShop = pOwnerInventory == g_pMyShopInventory->GetInventoryCtrl();
     if (isFromInventory || isFromShop)
     {
@@ -574,7 +577,8 @@ bool mu::ui::window::CMyShopInventory::MyShopInventoryProcess()
             return true;
         }
 
-        if (pPickedItem->GetOwnerInventory() == g_pMyInventory->GetInventoryCtrl())
+        if (pPickedItem->GetOwnerInventory() == g_pMyInventory->GetInventoryCtrl() ||
+            g_pMyInventoryExt->GetOwnerOf(pPickedItem) != nullptr)
         {
             if (GameLogic::Items::IsPersonalShopBan(pItemObj) == true)
             {

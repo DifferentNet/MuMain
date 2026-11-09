@@ -137,6 +137,8 @@ constexpr NamedElement Buttons[] = {
     {"trade.zen", mu::ui::window::INTERFACE_TRADE, "#btn_zen"},
     {"inventory.repair", mu::ui::window::INTERFACE_INVENTORY, "#btn_repair"},
     {"inventory.my_shop", mu::ui::window::INTERFACE_INVENTORY, "#btn_myshop"},
+    {"inventory.page_prev", mu::ui::window::INTERFACE_INVENTORY, "#btn_bag_prev"},
+    {"inventory.page_next", mu::ui::window::INTERFACE_INVENTORY, "#btn_bag_next"},
     {"my_shop.title", mu::ui::window::INTERFACE_MYSHOP_INVENTORY, "#shop_title"},
     {"my_shop.open", mu::ui::window::INTERFACE_MYSHOP_INVENTORY, "#btn_open"},
     {"my_shop.close", mu::ui::window::INTERFACE_MYSHOP_INVENTORY, "#btn_close"},

@@ -50,6 +50,14 @@
 			<div class="item-count" data-for="c : grid_cells"><span class="item-count-text counter-scaled" data-if="c.count != ''"
 			     data-style-font-size="text_px + 'px'">{{c.count}}</span></div>
 		</div>
+		<!-- Bag page 2 while not bought (UI/Inventory/BagPages.h): over the grid, what it gives, its price
+		     and the button that asks to buy it. -->
+		<div id="bag_lock" class="bag-lock" data-if="bag_locked">
+			<div class="bag-lock-line bag-lock-title native-text counter-scaled" data-style-font-size="text_px + 'px'">{{bag_locked_text}}</div>
+			<div class="bag-lock-line bag-lock-cells native-text counter-scaled" data-style-font-size="text_px + 'px'">{{bag_cells_text}}</div>
+			<div class="bag-lock-line bag-lock-price native-text counter-scaled" data-style-font-size="text_px + 'px'">{{bag_price_text}}</div>
+			<div id="btn_bag_buy" class="btn bag-lock-btn" data-class-disabled="bag_buying" data-event-click="my_inventory_bag_buy">{{bag_buy_label}}</div>
+		</div>
 		<div id="option_tooltip_anchor" class="native-anchor"></div>
 		<!-- Header rail: `-px` variants since #panel carries its placement's scale (see
 		     base.rcss). Fill/accent are the frame's .rail-fill/.rail-accent above. -->
@@ -59,6 +67,11 @@
 				<div id="title" class="modern-header-title-px">{{title}}</div>
 			</div>
 		</div>
+		<!-- The bag page arrows on the header rail's right (BagPages.h), as the vault's; hidden on a server without pages. -->
+		<div id="btn_bag_prev" class="bag-page-btn bag-page-prev" data-class-hidden="!pages_visible" data-class-busy="!page_prev_enabled"
+		     data-event-click="my_inventory_page(-1)"><span class="bag-page-glyph">&#9664;</span></div>
+		<div id="btn_bag_next" class="bag-page-btn bag-page-next" data-class-hidden="!pages_visible" data-class-busy="!page_next_enabled"
+		     data-event-click="my_inventory_page(1)"><span class="bag-page-glyph">&#9654;</span></div>
 		<!-- Wallet + action buttons: base.rcss's shared .modern-wallet-px/.modern-icon-btn-px
 		     family (generalized from this window). Fixed warm-gold value color, not bound to
 		     gold_tier's native wealth-tier blue/green scheme -- that palette was tuned for
