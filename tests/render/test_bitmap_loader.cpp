@@ -166,6 +166,8 @@ void TakeFilteredSamplerRequests(std::vector<std::uint32_t>& requests)
     requests.clear();
 }
 void SetTextureFilteringEnabled(bool) {}
+void RegisterNormalMap(std::uint32_t, SDL_GPUTexture*) {}
+void UnregisterNormalMap(std::uint32_t) {}
 } // namespace mu
 
 namespace mu

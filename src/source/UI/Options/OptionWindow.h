@@ -382,6 +382,7 @@ namespace mu::ui::window
             Rml::String fxaaLabel;
             bool hdTextures = false;
             bool hdTexturesAvailable = true;
+            bool remasterGraphics = true;
             Rml::String hdTexturesLabel;
             std::vector<Rml::String> sharpenLabels;
             int sharpenIndex = 0;

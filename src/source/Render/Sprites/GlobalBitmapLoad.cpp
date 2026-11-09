@@ -11,8 +11,11 @@
 #include "Render/RmlUi/RmlPremultiply.h"
 #include "Render/Textures/MipChain.h"
 #include "Render/Textures/OztFile.h"
+#include "Render/Textures/PackedOzt.h"
 #include "Render/Textures/TextureFiltering.h"
 #include "Render/Textures/HdTextures.h"
+#include "Render/Textures/NormalMapFile.h"
+#include "Render/Textures/NormalMaps.h"
 #include "Render/Textures/UpscaleMarker.h"
 #ifdef _EDITOR
 #include "Core/Utilities/AssetLoadWorld.h"
@@ -44,6 +47,8 @@ void RegisterFilteredSampler(std::uint32_t id, void* sampler);
 void MarkFilteredSamplerPending(std::uint32_t id);
 void TakeFilteredSamplerRequests(std::vector<std::uint32_t>& requests);
 void SetTextureFilteringEnabled(bool enabled);
+void RegisterNormalMap(std::uint32_t id, SDL_GPUTexture* texture);
+void UnregisterNormalMap(std::uint32_t id);
 } // namespace mu
 
 namespace
@@ -191,6 +196,77 @@ bool UploadTextureSDLGpu(BITMAP_t* bitmap, std::span<const std::uint8_t> pixels,
                                                          static_cast<std::uint32_t>(height))
                       : mips.chain.size() + 1u);
     return true;
+}
+
+// The Remaster's normal map of an upscaled model texture, read from its prebuilt file next to the
+// texture (Render/Textures/NormalMapFile.h) and mipmapped by the GPU like the texture. A missing or
+// broken file only costs the relief; MU_NORMAL_MAPS_RUNTIME=1 builds it here instead (development).
+void UploadNormalMap(BITMAP_t& bitmap, const std::wstring& loadedPath, std::span<const std::uint8_t> rgba, int width,
+                     int height, int scale, SDL_GPUSamplerAddressMode wrapMode)
+{
+    namespace NormalMaps = Render::Textures::NormalMaps;
+    namespace NormalMapFile = Render::Textures::NormalMapFile;
+    if (!NormalMaps::Enabled() || !NormalMaps::WantsNormalMap(loadedPath))
+    {
+        return;
+    }
+    int mapWidth = NormalMapFile::HalfSize(width);
+    int mapHeight = NormalMapFile::HalfSize(height);
+    std::vector<std::uint8_t> normals = NormalMapFile::Load(
+        loadedPath, width, height,
+        [](const std::wstring& path, std::size_t maxBytes, std::vector<std::uint8_t>& bytes) {
+            std::ifstream input(Render::Sprites::NarrowBitmapPath(path), std::ios::binary | std::ios::ate);
+            if (!input)
+            {
+                return false;
+            }
+            const std::streamoff size = input.tellg();
+            if (size < 0 || static_cast<std::uint64_t>(size) > maxBytes)
+            {
+                return false;
+            }
+            try
+            {
+                bytes.resize(static_cast<std::size_t>(size));
+            }
+            catch (const std::bad_alloc&)
+            {
+                return false;
+            }
+            input.seekg(0);
+            return static_cast<bool>(
+                input.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size())));
+        });
+    if (normals.empty() && NormalMaps::RuntimeBuild())
+    {
+        normals = NormalMaps::Build(rgba, width, height, scale);
+        mapWidth = width;
+        mapHeight = height;
+    }
+    if (normals.empty())
+    {
+        return;
+    }
+    auto result = mu::UploadBitmapPixels(normals, mapWidth, mapHeight, SDL_GPU_FILTER_LINEAR, wrapMode, {}, true);
+    if (!result)
+    {
+        mu::log::Get("render")->debug("Normal map upload failed for {}: {}", mu_wchar_to_utf8(loadedPath.c_str()),
+                                      result.error);
+        return;
+    }
+    bitmap.sdlNormalMap = result.texture;
+    // Counted with its texture, so the texture memory the game reports includes the relief.
+    bitmap.UploadedBytes += UploadedBytes(mapWidth, mapHeight);
+}
+
+void ReleaseNormalMap(SDL_GPUDevice* device, BITMAP_t& bitmap)
+{
+    mu::UnregisterNormalMap(bitmap.BitmapIndex);
+    if (device && bitmap.sdlNormalMap)
+    {
+        mu::ReleaseBitmapTexture(device, bitmap.sdlNormalMap);
+    }
+    bitmap.sdlNormalMap = nullptr;
 }
 
 // Enhanced samplers cover the whole chain (Vulkan's VK_LOD_CLAMP_NONE).
@@ -545,6 +621,7 @@ void CGlobalBitmap::UnloadImage(GLuint uiBitmapIndex, bool bForce)
             mu::UnregisterTexture(uiBitmapIndex);
             mu::UnregisterSampler(uiBitmapIndex);
             SDL_GPUDevice* device = static_cast<SDL_GPUDevice*>(mu::GetRenderer().GetDevice());
+            ReleaseNormalMap(device, *pBitmap);
             if (device)
             {
                 pBitmap->sdlSampler = nullptr;
@@ -608,6 +685,7 @@ void CGlobalBitmap::UnloadAllImages()
             }
             mu::UnregisterTexture(pBitmap->BitmapIndex);
             mu::UnregisterSampler(pBitmap->BitmapIndex);
+            ReleaseNormalMap(device, *pBitmap);
             pBitmap->sdlSampler = nullptr;
             if (pBitmap->sdlTexture)
             {
@@ -794,6 +872,11 @@ bool CGlobalBitmap::OpenJpegTurbo(GLuint uiBitmapIndex, const std::wstring& file
         return false;
     }
     pNewBitmap->UploadedBytes = UploadedBytes(uploadWidth, uploadHeight);
+    if (upscaled)
+    {
+        UploadNormalMap(*pNewBitmap, filename_ozj, rgbaData, uploadWidth, uploadHeight, scale,
+                        MapGLWrapToSDL(uiWrapMode));
+    }
     if (!keepPixels)
     {
         ReleaseUploadedPixels(*pNewBitmap);
@@ -801,11 +884,16 @@ bool CGlobalBitmap::OpenJpegTurbo(GLuint uiBitmapIndex, const std::wstring& file
 
     SDL_GPUTexture* rawTexture = pNewBitmap->sdlTexture;
     SDL_GPUSampler* rawSampler = pNewBitmap->sdlSampler;
+    SDL_GPUTexture* normalMap = pNewBitmap->sdlNormalMap;
     const BITMAP_t& loaded = *pNewBitmap;
     const std::uint32_t uploadedBytes = pNewBitmap->UploadedBytes;
     m_mapBitmap.insert(type_bitmap_map::value_type(uiBitmapIndex, std::move(pNewBitmap)));
     mu::RegisterTexture(uiBitmapIndex, rawTexture);
     mu::RegisterSampler(uiBitmapIndex, rawSampler);
+    if (normalMap)
+    {
+        mu::RegisterNormalMap(uiBitmapIndex, normalMap);
+    }
     RegisterFilteredSampler(loaded);
     m_dwUsedTextureMemory += uploadedBytes;
 
@@ -817,22 +905,45 @@ bool CGlobalBitmap::OpenTga(GLuint uiBitmapIndex, const std::wstring& filename, 
 {
     namespace Ozt = Render::Textures::Ozt;
 
-    std::wstring filename_ozt;
-    ExchangeExt(filename, L"OZT", filename_ozt);
+    std::wstring classic_ozt;
+    ExchangeExt(filename, L"OZT", classic_ozt);
+    std::wstring filename_ozt = keepPixels ? classic_ozt : Render::Textures::Hd::Resolve(classic_ozt);
 
-    if (!keepPixels)
+    // The file's bytes; the HD art ships packed (scripts/hd_pack.py), so back to the original file first.
+    const auto readOzt = [](const std::wstring& path, std::vector<unsigned char>& bytes)
     {
-        filename_ozt = Render::Textures::Hd::Resolve(filename_ozt);
-    }
-    std::ifstream input(Render::Sprites::NarrowBitmapPath(filename_ozt), std::ios::binary);
-    if (!input)
-    {
-        mu::log::Get("render")->debug("OpenTga -- file open failed: {}", mu_wchar_to_utf8(filename_ozt.c_str()));
-        return false;
-    }
+        std::ifstream input(Render::Sprites::NarrowBitmapPath(path), std::ios::binary);
+        if (!input)
+        {
+            mu::log::Get("render")->debug("OpenTga -- file open failed: {}", mu_wchar_to_utf8(path.c_str()));
+            return false;
+        }
+        bytes.assign(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
+        if (!Render::Textures::PackedOzt::IsPacked(bytes))
+        {
+            return true;
+        }
+        std::vector<unsigned char> unpacked;
+        if (!Render::Textures::PackedOzt::Unpack(bytes, unpacked))
+        {
+            g_ErrorReport.Write(L"OpenTga: broken packed file %ls (%zu bytes)\r\n", path.c_str(), bytes.size());
+            return false;
+        }
+        bytes = std::move(unpacked);
+        return true;
+    };
 
-    std::vector<unsigned char> pakBuffer((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
-    input.close();
+    std::vector<unsigned char> pakBuffer;
+    if (!readOzt(filename_ozt, pakBuffer))
+    {
+        // A missing or broken HD copy: the original texture instead.
+        if (filename_ozt == classic_ozt || !readOzt(classic_ozt, pakBuffer))
+        {
+            return false;
+        }
+        g_ErrorReport.Write(L"OpenTga: HD copy unusable, original used: %ls\r\n", classic_ozt.c_str());
+        filename_ozt = classic_ozt;
+    }
 
     // A marked file holds an image up to its scale times the largest original.
     const int markedScale = Render::Textures::Upscale::ReadMarkedScale(pakBuffer);
@@ -892,6 +1003,11 @@ bool CGlobalBitmap::OpenTga(GLuint uiBitmapIndex, const std::wstring& filename, 
         return false;
     }
     pNewBitmap->UploadedBytes = UploadedBytes(uploadWidth, uploadHeight);
+    if (upscaled)
+    {
+        UploadNormalMap(*pNewBitmap, filename_ozt, pNewBitmap->BufferStorage, uploadWidth, uploadHeight, scale,
+                        MapGLWrapToSDL(uiWrapMode));
+    }
     if (!keepPixels)
     {
         ReleaseUploadedPixels(*pNewBitmap);
@@ -899,11 +1015,16 @@ bool CGlobalBitmap::OpenTga(GLuint uiBitmapIndex, const std::wstring& filename, 
 
     SDL_GPUTexture* rawTexture = pNewBitmap->sdlTexture;
     SDL_GPUSampler* rawSampler = pNewBitmap->sdlSampler;
+    SDL_GPUTexture* normalMap = pNewBitmap->sdlNormalMap;
     const BITMAP_t& loaded = *pNewBitmap;
     const std::uint32_t uploadedBytes = pNewBitmap->UploadedBytes;
     m_mapBitmap.insert(type_bitmap_map::value_type(uiBitmapIndex, std::move(pNewBitmap)));
     mu::RegisterTexture(uiBitmapIndex, rawTexture);
     mu::RegisterSampler(uiBitmapIndex, rawSampler);
+    if (normalMap)
+    {
+        mu::RegisterNormalMap(uiBitmapIndex, normalMap);
+    }
     RegisterFilteredSampler(loaded);
     m_dwUsedTextureMemory += uploadedBytes;
 
@@ -1147,7 +1268,8 @@ bool CGlobalBitmap::BuildMipChain(GLuint uiBitmapIndex)
     const auto width = static_cast<int>(bitmap.Width);
     const auto height = static_cast<int>(bitmap.Height);
     SDL_GPUDevice* device = static_cast<SDL_GPUDevice*>(mu::GetRenderer().GetDevice());
-    if (!device || !bitmap.worldTexture || bitmap.mipLevels > 1u || width <= 0 || height <= 0 ||
+    // HD art (scale above 1) got its whole chain at load; its pixels are not the original file's.
+    if (!device || !bitmap.worldTexture || bitmap.mipLevels > 1u || bitmap.scale > 1u || width <= 0 || height <= 0 ||
         (bitmap.Components != 3 && bitmap.Components != 4))
     {
         return false;

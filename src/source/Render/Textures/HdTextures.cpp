@@ -24,6 +24,20 @@ bool Enabled()
     return s_enabled;
 }
 
+bool Installed()
+{
+#ifdef __EMSCRIPTEN__
+    return false;
+#else
+    static const bool installed = []
+    {
+        std::error_code error;
+        return std::filesystem::is_directory("Data/HD", error);
+    }();
+    return installed;
+#endif
+}
+
 std::wstring Resolve(const std::wstring& path)
 {
     if (!s_enabled)
