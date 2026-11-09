@@ -53,6 +53,7 @@
 #include "UI/Mobile/PhonePage.h"
 #include "UI/RmlBridge/RmlRuntimeHooks.h"
 #include "Engine/Object/ZzzOpenData.h"
+#include "Scenes/FramePacing.h"
 #include "Scenes/SceneCore.h"
 #include "Scenes/SceneManager.h"
 #include "Scenes/MainScene.h"
@@ -706,6 +707,10 @@ bool g_bWndActive = false;
 // when ACTIVE_FOCUS_OUT is defined, so it cannot tell a background window apart).
 bool g_bHasInputFocus = false;
 bool g_bWindowMinimized = false;
+// A minimized window waits for its next frame with sleeps alone, no yield loop (Scenes/FramePacing.h,
+// Relaxed). Only with the 1 ms timer that Windows also leaves to a minimized process (MainLoop):
+// with the default 15.6 ms timer a sleep-only wait would fall below REFERENCE_FPS.
+bool g_bMinimizedWaitSleepsOnly = false;
 bool HangulDelete = false;
 int Hangul = 0;
 bool g_bEnterPressed = false;
@@ -1489,6 +1494,20 @@ void WaitForBrowserFrame()
 }
 #endif
 
+namespace
+{
+// The cap of a window nobody plays in: unfocused or minimized. Logic and MU Helper run per frame and
+// slow down below REFERENCE_FPS, so it is never lower. Where a minimized window's wait only sleeps
+// (g_bMinimizedWaitSleepsOnly) a sleep overruns, so its cap is a little above the reference rate: a
+// late frame still comes within the reference frame's 40 ms.
+double InactiveTargetFps()
+{
+    return g_bWindowMinimized && g_bMinimizedWaitSleepsOnly ?
+               Scenes::FramePacing::RelaxedTargetFps(REFERENCE_FPS) :
+               REFERENCE_FPS;
+}
+} // namespace
+
 void HandleFocusChange(bool active)
 {
     if (InputDiagnosticsEnabled())
@@ -1518,7 +1537,7 @@ void HandleFocusChange(bool active)
         if (throttleOnFocusLoss && !g_HasInactiveFpsOverride)
         {
             g_TargetFpsBeforeInactive = GetTargetFps();
-            SetTargetFps(REFERENCE_FPS);
+            SetTargetFps(InactiveTargetFps());
             g_HasInactiveFpsOverride = true;
         }
         if (g_bUseWindowMode == TRUE)
@@ -1527,7 +1546,9 @@ void HandleFocusChange(bool active)
     else
     {
         g_bWndActive = true;
-        if (g_HasInactiveFpsOverride)
+        // Windows can give the focus to a window that stays minimized (the active window closed and
+        // only minimized ones are left): it keeps its cap until it is restored (HandleMinimizedChange).
+        if (g_HasInactiveFpsOverride && !g_bWindowMinimized)
         {
             SetTargetFps(g_TargetFpsBeforeInactive);
             g_HasInactiveFpsOverride = false;
@@ -1552,9 +1573,9 @@ void HandleMinimizedChange(bool minimized)
         if (!g_HasInactiveFpsOverride)
         {
             g_TargetFpsBeforeInactive = GetTargetFps();
-            SetTargetFps(REFERENCE_FPS);
             g_HasInactiveFpsOverride = true;
         }
+        SetTargetFps(InactiveTargetFps());
     }
 #if defined(_EDITOR) || defined(__EMSCRIPTEN__)
     else if (g_HasInactiveFpsOverride && (g_bWndActive || g_bUseWindowMode))
@@ -1562,9 +1583,14 @@ void HandleMinimizedChange(bool minimized)
     else if (g_HasInactiveFpsOverride && g_bHasInputFocus)
 #endif
     {
-        // An unfocused window keeps its cap until it gets the focus back.
         SetTargetFps(g_TargetFpsBeforeInactive);
         g_HasInactiveFpsOverride = false;
+    }
+    else if (g_HasInactiveFpsOverride)
+    {
+        // An unfocused window keeps its cap until it gets the focus back: the exact reference rate
+        // again, now that its frames are shown.
+        SetTargetFps(InactiveTargetFps());
     }
 #ifndef __EMSCRIPTEN__
     SetWindowInBackground(!g_bHasInputFocus || g_bWindowMinimized);
@@ -2057,7 +2083,10 @@ MSG MainLoop()
         throttling.ControlMask = PROCESS_POWER_THROTTLING_EXECUTION_SPEED | PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION;
         throttling.StateMask = 0;
         if (SetProcessInformation(GetCurrentProcess(), ProcessPowerThrottling, &throttling, sizeof(throttling)))
+        {
             mu::log::Get("platform")->info("Process power throttling disabled");
+            g_bMinimizedWaitSleepsOnly = precise == TIMERR_NOERROR;
+        }
         else
             mu::log::Get("platform")->warn("SetProcessInformation(ProcessPowerThrottling) failed: error {}", GetLastError());
     }
