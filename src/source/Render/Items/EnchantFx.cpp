@@ -245,7 +245,7 @@ void CreateSparks(OBJECT* o, const std::array<Piece, 7>& pieces, int count)
     }
 }
 
-// ---- The flash after an enchant to +13..+15 ----
+// ---- The flash after an enchant to +14 or +15 ----
 
 struct Flash
 {
@@ -288,7 +288,7 @@ void StartFlash(int key, int level)
     }
     slot->active = true;
     slot->key = key;
-    slot->tier = std::clamp(level - GameLogic::Items::EnchantFlashLine::MinLevel, 0, 2);
+    slot->tier = std::clamp(level - 13, 0, 2); // the tuning tables keep a +13 row, unused since only +14/+15 flash
     slot->start = WorldTime;
     slot->burstDone = false;
 }
@@ -315,7 +315,7 @@ void FlashColor(CHARACTER* c, vec3_t color)
             bestType = part.Type;
         }
     }
-    if (best >= GameLogic::Items::EnchantFlashLine::MinLevel && bestType != -1)
+    if (best >= 13 && bestType != -1)
     {
         GlowColor(bestType, color);
         return;

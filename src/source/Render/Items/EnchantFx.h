@@ -6,7 +6,7 @@ class CHARACTER;
 //   +7..+10   the outline light (Render/Items/RimGlow.h) over the Classic chrome shine (RenderPartObjectEffect),
 //   +11..+13  and a slowly pulsing aura in the glow colour around each such piece and around the character,
 //   +14..+15  and sparks rising from each such piece,
-// and a column of light over a character whose item the server says was just enchanted to +13, +14 or +15
+// and a column of light over a character whose item the server says was just enchanted to +14 or +15
 // ("#UPF|<key>|<level>", GameLogic/Items/EnchantFlashLine.h). The line stays out of the chat in Classic too;
 // Classic draws none of this.
 namespace Render::Items::EnchantFx
