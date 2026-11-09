@@ -27,7 +27,8 @@ write    unpacks the canvases, runs the post pass, joins wrap seams and writes O
          the x4 marker (the format hd_textures.py writes).
 cutouts  the leaves in CUTOUTS (and every file with the same source bytes) as ghinzuro picked them
          (2026-11-09, variant C): the x4 alpha made hard and the colours dark, so the Arena's ivy lay on
-         the walls as black blots. Their colour goes up to the original's (alpha-weighted mean, per
+         the walls as black blots; the same day he had the other darkened leaves, grass and moss done
+         too (not monsters, items, metal or stone: there the x4 is only sharper). Their colour goes up to the original's (alpha-weighted mean, per
          channel, at most x CUTOUT_MAX_GAIN), the colour under the edges is filled from the leaves, and
          the alpha is half the x4 one and half the original's smooth one. It works from a copy of the
          written file in <work>/cutouts, so running it again gives the same result. Keep that folder
@@ -414,7 +415,22 @@ def cmd_paint(args):
 
 # ---------------------------------------------------------------- write
 
-CUTOUTS = ("Object7/tree_01.OZT", "Object7/tree_02.OZT", "Object7/tree_08.OZT")
+CUTOUTS = (
+    # the Arena's ivy and its bushes (2026-11-09, variant C)
+    "Object7/tree_01.OZT", "Object7/tree_02.OZT", "Object7/tree_08.OZT",
+    # the other leaves, grass and moss 15-43 % darker than the original ("только листва", same day)
+    "Object1/tree_06.OZT", "Object1/Tree_a.OZT",
+    "Object32/treeleap.OZT",
+    "Object34/Atree011.OZT", "Object34/Pool004.OZT", "Object34/Pool004_org.OZT",
+    "Object35/cr1_branch01.OZT", "Object35/cr1_branch02.OZT", "Object35/cr1_branch04.OZT",
+    "Object35/cr1_branch06.OZT", "Object35/leaves.OZT",
+    "Object38/han_moss4.OZT", "Object38/han_moss5.OZT", "Object38/han_moss6.OZT", "Object38/Pool001.OZT",
+    "Object41/csr_wood.OZT", "Object41/csr_wood1.OZT", "Object41/cho_tree_d.OZT", "Object41/tree_a1.OZT",
+    "Object42/cryleaftypeA.OZT", "Object42/cryleaftypeC.OZT", "Object42/cr1_grass02.OZT",
+    "object55/severleaf01.ozt", "object56/severleaf01.ozt",
+    "Object64/so_tree05.OZT", "Object81/so_ktree01.OZT",
+    "World34/TileGrass01.OZT", "World38/TileGrass01.OZT",
+)
 CUTOUT_MAX_GAIN = 1.6
 CUTOUT_ALPHA_MIX = 0.5  # share of the x4 alpha; the rest is the original's, upscaled smoothly
 
