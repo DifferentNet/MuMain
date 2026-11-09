@@ -93,7 +93,54 @@
 .equip-slot.durability-30 .equip-slot-item { background-color: rgba(255, 128, 0, 64); }
 .equip-slot.durability-50 .equip-slot-item { background-color: rgba(255, 255, 0, 64); }
 .equip-slot.refused .equip-slot-item { background-color: rgba(230, 26, 26, 102); }
-#item_grid, #item_grid_counts { left: 15px; top: 200px; width: calc(8 * var(--item-cell)); height: calc(8 * var(--item-cell)); }
+#item_grid, #item_grid_counts, #bag_lock { left: 15px; top: 200px; width: calc(8 * var(--item-cell)); height: calc(8 * var(--item-cell)); }
+
+/* Bag page 2 while not bought (BagPages.h): a dark cover over the grid with three centred lines and
+   the buy button. */
+.bag-lock {
+	position: absolute;
+	background-color: rgba(0, 0, 0, 200);
+	pointer-events: auto;
+}
+.bag-lock-line {
+	position: absolute;
+	left: 0;
+	width: 100%;
+	text-align: center;
+	transform-origin: center top;
+}
+.bag-lock-title { top: 34px; font-weight: bold; color: #ffcc19; }
+.bag-lock-cells { top: 54px; color: #c8c8c8; }
+.bag-lock-price { top: 74px; font-weight: bold; color: #ffffff; }
+.bag-lock-btn { left: 26px; top: 100px; width: 108px; height: 30px; line-height: 30px; }
+
+/* The bag page arrows on the header rail's right, as the vault's (storage.rcss): small forged buttons
+   with a triangle, clear of the corner close (x 163-187). Dimmed on the first and the last page. */
+.bag-page-btn {
+	position: absolute;
+	top: 14px;
+	width: 18px;
+	height: 18px;
+	cursor: pointer;
+	pointer-events: auto;
+	text-align: center;
+	line-height: 18px;
+	color: token(text-secondary);
+	background-color: #13140f;
+	decorator: linear-gradient(to bottom, #26251d, #15160f 56%, #090a08);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+.bag-page-btn:hover { color: token(accent-gold-hover); border-color: token(border-hover); }
+.bag-page-btn.hidden { display: none; }
+.bag-page-btn.busy { pointer-events: none; filter: brightness(0.5); }
+.bag-page-prev { left: 121px; }
+.bag-page-next { left: 142px; }
+.bag-page-glyph {
+	font-family: "DejaVu Sans";
+	font-size: 9px;
+	pointer-events: none;
+}
 #option_tooltip_anchor { left: 95px; top: 40px; }
 
 /* The frame: values below are copied VERBATIM from sys_menu.rcss's #panel and base.rcss's
@@ -237,7 +284,16 @@
 	#option_tooltip_anchor { left: 170px; top: 64px; }
 
 	/* The bag from the top; the gold and a row of 60 x 48 buttons under the equipment. */
-	#item_grid, #item_grid_counts { left: var(--bag-x); top: 50px; }
+	#item_grid, #item_grid_counts, #bag_lock { left: var(--bag-x); top: 50px; }
+	.bag-lock-title { top: 110px; }
+	.bag-lock-cells { top: 140px; }
+	.bag-lock-price { top: 170px; }
+	.bag-lock-btn { left: calc(50% - 80px); top: 210px; width: 160px; height: 44px; line-height: 44px; }
+	/* The page arrows a finger wide, on the header rail's right. */
+	.bag-page-btn { top: 6px; width: 32px; height: 28px; line-height: 28px; }
+	.bag-page-prev { left: auto; right: 92px; }
+	.bag-page-next { left: auto; right: 54px; }
+	.bag-page-glyph { font-size: 13px; }
 	#gold_bg { left: 20px; top: 340px; width: 300px; }
 	#gold_text { left: 202px; right: auto; top: 345px; }
 	#panel .modern-icon-btn-px { top: 372px; width: 60px; height: 48px; line-height: 48px; }
@@ -250,7 +306,7 @@
 	#panel.beside .equip-slot, #panel.beside .option-label { display: none; }
 	#panel.beside #gold_bg { left: var(--bag-x); top: 46px; width: calc(8 * var(--item-cell)); }
 	#panel.beside #gold_text { left: calc(var(--bag-x) + 8 * var(--item-cell) - 118px); top: 51px; }
-	#panel.beside #item_grid, #panel.beside #item_grid_counts { top: 78px; }
+	#panel.beside #item_grid, #panel.beside #item_grid_counts, #panel.beside #bag_lock { top: 78px; }
 	#panel.beside .modern-icon-btn-px {
 		left: calc(var(--bag-x) + 8 * var(--item-cell) + 12px);
 		width: 44px;

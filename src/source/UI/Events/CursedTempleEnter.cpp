@@ -143,13 +143,13 @@ bool mu::ui::window::CCursedTempleEnter::CheckInventory(BYTE& itempos, int enter
         return false;
     }
 
-    pos = g_pMyInventory->GetInventoryCtrl()->FindItemIndex(ITEM_SCROLL_OF_BLOOD, enterlevel);
+    pos = g_pMyInventory->FindItemIndex(ITEM_SCROLL_OF_BLOOD, enterlevel);
     if (pos != -1) {
         itempos = pos;
         return true;
     }
 
-    pos = g_pMyInventory->GetInventoryCtrl()->FindItemIndex(ITEM_ILLUSION_TEMPLE_TICKET, -1);
+    pos = g_pMyInventory->FindItemIndex(ITEM_ILLUSION_TEMPLE_TICKET, -1);
     if (pos != -1) {
         itempos = pos;
         return true;

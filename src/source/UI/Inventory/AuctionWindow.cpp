@@ -325,7 +325,7 @@ AuctionLine WaitLine(std::chrono::steady_clock::time_point askedAt, int width)
     return Line(waiting ? I18N::Game::AuctionAsking : I18N::Game::AuctionNoAnswer, width);
 }
 
-// The bag's items now (the inventory's main grid), by slot as the server counts it (12 is the first).
+// The bag's items now (the bag and, once bought, page 2: BagPages.h), by slot as the server counts it (12 is the first).
 struct BagEntry
 {
     int slot = 0;
@@ -335,17 +335,22 @@ struct BagEntry
 std::vector<BagEntry> CurrentBag()
 {
     std::vector<BagEntry> bag;
-    CInventoryCtrl* grid = g_pMyInventory != nullptr ? g_pMyInventory->GetInventoryCtrl() : nullptr;
-    if (grid == nullptr)
+    if (g_pMyInventory == nullptr)
         return bag;
-    const size_t count = grid->GetNumberOfItems();
-    for (size_t i = 0; i < count; ++i)
+    for (int g = 0; g < CMyInventory::OwnedBagGridCount; ++g)
     {
-        ITEM* item = grid->GetItem(static_cast<int>(i));
-        // The item's slot number: GetIndexByItem counts the grid's offset (12) in already.
-        const int slot = grid->GetIndexByItem(item);
-        if (item != nullptr && slot >= 0)
-            bag.push_back({slot, item});
+        CInventoryCtrl* grid = g_pMyInventory->OwnedBagGrid(g);
+        if (grid == nullptr)
+            continue;
+        const size_t count = grid->GetNumberOfItems();
+        for (size_t i = 0; i < count; ++i)
+        {
+            ITEM* item = grid->GetItem(static_cast<int>(i));
+            // The item's slot number: GetIndexByItem counts the grid's offset (12, page 2 76) in already.
+            const int slot = grid->GetIndexByItem(item);
+            if (item != nullptr && slot >= 0)
+                bag.push_back({slot, item});
+        }
     }
     std::sort(bag.begin(), bag.end(), [](const BagEntry& a, const BagEntry& b) { return a.slot < b.slot; });
     return bag;
