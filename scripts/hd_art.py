@@ -452,10 +452,14 @@ def cmd_cutouts(args):
             rels.append(rel)
     for rel in sorted(set(rels)):
         keep = args.work / "cutouts" / rel
-        if not keep.exists():
+        last = keep.with_name(keep.name + ".written.md5")  # what this stage wrote last time
+        current = (args.out / rel).read_bytes()
+        if not keep.exists() or not last.exists() or last.read_text() != hashlib.md5(current).hexdigest():
+            # first run, or write put a new texture there since: keep that one
             keep.parent.mkdir(parents=True, exist_ok=True)
-            keep.write_bytes((args.out / rel).read_bytes())
+            keep.write_bytes(current)
         hdt.write_ozt(args.out / rel, fix_cutout(hdt.read_texture(args.src / rel), hdt.read_texture(keep)))
+        last.write_text(hashlib.md5((args.out / rel).read_bytes()).hexdigest())
         print("cut-out", rel)
     print(f"{len(set(rels))} cut-outs written to {args.out}")
 
