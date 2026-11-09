@@ -2996,7 +2996,7 @@ void OpenSkills()
     gLoadData.OpenTexture(MODEL_FENRIR_BLUE, L"Skill\\");
 
     gLoadData.AccessModel(MODEL_FENRIR_GOLD, L"Data\\Skill\\", L"fenril_gold");
-    gLoadData.OpenTexture(MODEL_FENRIR_BLUE, L"Skill\\");
+    gLoadData.OpenTexture(MODEL_FENRIR_GOLD, L"Skill\\");
 
     gLoadData.AccessModel(MODEL_PANDA, L"Data\\Item\\", L"panda");
     gLoadData.OpenTexture(MODEL_PANDA, L"Item\\");
@@ -3927,6 +3927,8 @@ void OpenLogoSceneData()
     ::LoadBitmap(L"Interface\\server_ex01.tga", BITMAP_LOG_IN + 12);
     ::LoadBitmap(L"Interface\\server_ex02.jpg", BITMAP_LOG_IN + 13, GL_NEAREST, GL_REPEAT);
     ::LoadBitmap(L"Interface\\cr_mu_lo.tga", BITMAP_LOG_IN + 14, GL_LINEAR);
+    // The Skynet picture behind the login screen (LoginScene.cpp, LoginBackdrop).
+    ::LoadBitmap(L"Logo\\SkynetLogin.jpg", BITMAP_LOG_IN + 18, GL_LINEAR);
 }
 
 void ReleaseLogoSceneData()

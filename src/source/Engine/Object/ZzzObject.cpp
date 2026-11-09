@@ -885,6 +885,8 @@ void Draw_RenderObject(OBJECT* o, bool Translate, int Select, int ExtraMon)
                 {
                     const unsigned int seasonTexture = seasonLook != nullptr ? seasonMarks.FenrirTexture(*seasonLook) : 0;
                     const int bodyTexture = seasonTexture != 0 ? static_cast<int>(seasonTexture) : -1;
+                    const unsigned int seasonFur = seasonLook != nullptr ? seasonMarks.FenrirFurTexture(*seasonLook) : 0;
+                    const int furTexture = seasonFur != 0 ? static_cast<int>(seasonFur) : -1;
 
                     b->StreamMesh = 0;
 
@@ -898,8 +900,21 @@ void Draw_RenderObject(OBJECT* o, bool Translate, int Select, int ExtraMon)
                         VectorCopy(seasonFenrir->Glow, b->BodyLight);
                     }
                     b->RenderMesh(0, RENDER_TEXTURE | RENDER_BRIGHT | RENDER_CHROME, o->Alpha, o->BlendMesh, o->BlendMeshLight, o->BlendMeshTexCoordU, o->BlendMeshTexCoordV, bodyTexture);
-                    Vector(1.0f, 1.0f, 1.0f, b->BodyLight);
-                    b->RenderMesh(1, RENDER_TEXTURE, o->Alpha, o->BlendMesh, o->BlendMeshLight, o->BlendMeshTexCoordU, o->BlendMeshTexCoordV);
+                    if (seasonFenrir != nullptr)
+                    {
+                        VectorCopy(seasonFenrir->Fur, b->BodyLight);
+                    }
+                    else
+                    {
+                        Vector(1.0f, 1.0f, 1.0f, b->BodyLight);
+                    }
+                    b->RenderMesh(1, RENDER_TEXTURE, o->Alpha, o->BlendMesh, o->BlendMeshLight, o->BlendMeshTexCoordU, o->BlendMeshTexCoordV, furTexture);
+                    if (seasonFenrir != nullptr && furTexture != -1)
+                    {
+                        // A light fur (snow) looks grey under the scene's dim light: add a soft glow over it.
+                        VectorScale(seasonFenrir->Fur, 0.7f, b->BodyLight);
+                        b->RenderMesh(1, RENDER_TEXTURE | RENDER_BRIGHT, o->Alpha, o->BlendMesh, o->BlendMeshLight, o->BlendMeshTexCoordU, o->BlendMeshTexCoordV, furTexture);
+                    }
 
                     if (o->CurrentAction == FENRIR_ATTACK_SKILL)
                     {
@@ -946,7 +961,8 @@ void Draw_RenderObject(OBJECT* o, bool Translate, int Select, int ExtraMon)
 
                 b->EndRender();
 
-                if (gMapManager.WorldActive != WD_10HEAVEN && gMapManager.InHellas() == FALSE)
+                // No ground shadow on the login screen: the Fenrir stands in front of a flat picture.
+                if (gMapManager.WorldActive != WD_10HEAVEN && gMapManager.InHellas() == FALSE && SceneFlag != LOG_IN_SCENE)
                 {
                     if (!g_Direction.m_CKanturu.IsMayaScene())
                     {

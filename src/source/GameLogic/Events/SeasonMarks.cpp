@@ -130,6 +130,12 @@ void ReadFenrir(const nlohmann::json& entry, FenrirLook& fenrir)
     }
     ReadLight(*it, "bodyLight", fenrir.Body);
     ReadLight(*it, "glowLight", fenrir.Glow);
+    if (const auto fur = it->find("furTexture"); fur != it->end() && fur->is_string())
+    {
+        fenrir.FurTexture = Widen(fur->get<std::string>());
+        std::replace(fenrir.FurTexture.begin(), fenrir.FurTexture.end(), L'/', L'\\');
+    }
+    ReadLight(*it, "furLight", fenrir.Fur);
     ReadLight(*it, "eyeLight", fenrir.Eyes);
     ReadLight(*it, "chestLight", fenrir.Chest);
     ReadLight(*it, "lightning", fenrir.Lightning);
@@ -285,6 +291,7 @@ void Store::LoadLooks()
 {
     m_looksLoaded = true;
     m_looks.clear();
+    m_currentSeason = 0;
 
     std::ifstream file(std::filesystem::path(L"Data") / L"Seasons.json", std::ios::binary);
     if (!file)
@@ -295,6 +302,9 @@ void Store::LoadLooks()
     const auto json = nlohmann::json::parse(text.str(), nullptr, false);
     if (json.is_discarded() || !json.is_object() || !json.contains("seasons") || !json["seasons"].is_array())
         return;
+
+    if (const auto current = json.find("currentSeason"); current != json.end() && current->is_number_integer())
+        m_currentSeason = current->get<int>();
 
     for (const auto& entry : json["seasons"])
     {
@@ -335,13 +345,19 @@ const SeasonLook* Store::FenrirSeason()
     if (!m_looksLoaded)
         LoadLooks();
 
+    // The current season's look (the closest at or before it), else the newest one.
+    const SeasonLook* current = nullptr;
     const SeasonLook* newest = nullptr;
     for (const SeasonLook& look : m_looks)
     {
-        if (look.Fenrir.Present && (newest == nullptr || look.Season > newest->Season))
+        if (!look.Fenrir.Present)
+            continue;
+        if (newest == nullptr || look.Season > newest->Season)
             newest = &look;
+        if (m_currentSeason > 0 && look.Season <= m_currentSeason && (current == nullptr || look.Season > current->Season))
+            current = &look;
     }
-    return newest;
+    return current != nullptr ? current : newest;
 }
 
 int Store::FenrirSeasonOf(std::wstring_view name) const
@@ -409,6 +425,21 @@ unsigned int Store::FenrirTexture(const SeasonLook& look)
         texture = index == BITMAP_UNKNOWN ? 0 : index;
     }
     m_fenrirTextures.emplace(look.Season, texture);
+    return texture;
+}
+
+unsigned int Store::FenrirFurTexture(const SeasonLook& look)
+{
+    if (const auto known = m_fenrirFurTextures.find(look.Season); known != m_fenrirFurTextures.end())
+        return known->second;
+
+    unsigned int texture = 0;
+    if (!look.Fenrir.FurTexture.empty())
+    {
+        const GLuint index = Bitmaps.LoadImage(L"Data\\" + look.Fenrir.FurTexture, GL_NEAREST, GL_REPEAT);
+        texture = index == BITMAP_UNKNOWN ? 0 : index;
+    }
+    m_fenrirFurTextures.emplace(look.Season, texture);
     return texture;
 }
 

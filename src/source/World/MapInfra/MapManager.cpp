@@ -1343,7 +1343,9 @@ void CMapManager::LoadWorld(int Map)
 
     mu_swprintf(FileName, L"Data\\%ls\\EncTerrain%d.obj", WorldName, iMapWorld);
 
-    iResult = OpenObjectsEnc(FileName);
+    // The login screen shows the Skynet picture instead of the castle (LoginScene.cpp, LoginBackdrop):
+    // the castle's objects aren't placed (their models still load, so /play's startup pack keeps them).
+    iResult = (this->WorldActive == WD_73NEW_LOGIN_SCENE) ? iMapWorld : OpenObjectsEnc(FileName);
     if (iMapWorld != iResult && -1 != iResult)
     {
         wchar_t Text[256];
