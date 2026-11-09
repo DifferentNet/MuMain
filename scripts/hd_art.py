@@ -13,6 +13,7 @@ Stages (each one can be stopped and run again; it goes on where it stopped):
     python -I scripts/hd_art.py sheets --src ... --work ...          (contact sheets for the prompts)
     python -I scripts/hd_art.py paint  --src ... --work ... --sd <sd-cli.exe> --models <dir>
     python -I scripts/hd_art.py write  --src ... --work ... --out <client>/Data/HD
+    python -I scripts/hd_art.py cutouts --src ... --work ... --out <client>/Data/HD   (after every write)
 
 plan     lists every texture of the world (World*, Object*, Monster, NPC, the non-gear Item files,
          Effect, Skill) with its size, alpha and which directions it repeats in.
@@ -24,6 +25,12 @@ paint    packs the textures into 1024x1024 canvases (one per 256 px texture, fou
          and repaints each canvas with sd-cli.
 write    unpacks the canvases, runs the post pass, joins wrap seams and writes OZJ/OZT files with
          the x4 marker (the format hd_textures.py writes).
+cutouts  the leaves in CUTOUTS (and every file with the same source bytes) as ghinzuro picked them
+         (2026-11-09, variant C): the x4 alpha made hard and the colours dark, so the Arena's ivy lay on
+         the walls as black blots. Their colour goes up to the original's (alpha-weighted mean, per
+         channel, at most x CUTOUT_MAX_GAIN), the colour under the edges is filled from the leaves, and
+         the alpha is half the x4 one and half the original's smooth one. It works from a copy of the
+         written file in <work>/cutouts, so running it again gives the same result.
 
 Models: SDXL 1.0 base (CreativeML Open RAIL++-M), the fp16-fix SDXL VAE (MIT),
 xinsir controlnet-tile-sdxl-1.0 (Apache-2.0); stable-diffusion.cpp sd-cli (MIT) on Vulkan.
@@ -405,6 +412,54 @@ def cmd_paint(args):
 
 # ---------------------------------------------------------------- write
 
+CUTOUTS = ("Object7/tree_01.OZT", "Object7/tree_02.OZT", "Object7/tree_08.OZT")
+CUTOUT_MAX_GAIN = 1.6
+CUTOUT_ALPHA_MIX = 0.5  # share of the x4 alpha; the rest is the original's, upscaled smoothly
+
+
+def smooth_upscale(rgba: np.ndarray, size) -> np.ndarray:
+    """Bicubic upscale of a straight-alpha float RGBA, through premultiplied colour (no dark fringes)."""
+    pm = np.dstack([rgba[..., :3] * rgba[..., 3:], rgba[..., 3:]]).astype(np.float32)
+    big = np.stack([np.asarray(Image.fromarray(pm[..., c], "F").resize(size, Image.BICUBIC)) for c in range(4)], -1)
+    big = np.clip(big, 0, 1)
+    alpha = big[..., 3:]
+    return np.dstack([np.where(alpha > 1e-3, big[..., :3] / np.maximum(alpha, 1e-3), 0).clip(0, 1), alpha])
+
+
+def fix_cutout(original: Image.Image, hd: Image.Image) -> Image.Image:
+    """Variant C of a cut-out: the original's brightness, clean edge colour, half-soft alpha."""
+    o = np.asarray(original.convert("RGBA"), dtype=np.float64) / 255
+    h = np.asarray(hd.convert("RGBA"), dtype=np.float64) / 255
+    ou = smooth_upscale(o, hd.size)
+
+    def weighted_mean(a):
+        return (a[..., :3] * a[..., 3:]).sum((0, 1)) / max(a[..., 3].sum(), 1e-6)
+
+    gain = np.clip(weighted_mean(ou) / np.maximum(weighted_mean(h), 1e-3), 1, CUTOUT_MAX_GAIN)
+    filled = np.asarray(fill_transparent(hd.convert("RGBA")), dtype=np.float64) / 255
+    rgb = np.clip(filled * gain, 0, 1)
+    alpha = np.clip(CUTOUT_ALPHA_MIX * h[..., 3] + (1 - CUTOUT_ALPHA_MIX) * ou[..., 3], 0, 1)
+    out = np.dstack([rgb, alpha])
+    return Image.fromarray((out * 255 + 0.5).astype(np.uint8), "RGBA")
+
+
+def cmd_cutouts(args):
+    wanted = {(args.src / rel).read_bytes(): rel for rel in CUTOUTS}
+    rels = []
+    for path in sorted(args.src.rglob("*.OZT")) + sorted(args.src.rglob("*.ozt")):
+        rel = path.relative_to(args.src).as_posix()
+        if rel.split("/")[0].upper() != "HD" and path.read_bytes() in wanted and (args.out / rel).exists():
+            rels.append(rel)
+    for rel in sorted(set(rels)):
+        keep = args.work / "cutouts" / rel
+        if not keep.exists():
+            keep.parent.mkdir(parents=True, exist_ok=True)
+            keep.write_bytes((args.out / rel).read_bytes())
+        hdt.write_ozt(args.out / rel, fix_cutout(hdt.read_texture(args.src / rel), hdt.read_texture(keep)))
+        print("cut-out", rel)
+    print(f"{len(set(rels))} cut-outs written to {args.out}")
+
+
 def gblur(a, sigma, wrap=(False, False)):
     """Gaussian blur by FFT; circular along the axes in wrap, mirrored along the others."""
     h, w = a.shape[:2]
@@ -612,7 +667,7 @@ def cmd_write(args):
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("stage", choices=["plan", "esr", "sheets", "paint", "write"])
+    ap.add_argument("stage", choices=["plan", "esr", "sheets", "paint", "write", "cutouts"])
     ap.add_argument("--src", type=Path, required=True)
     ap.add_argument("--work", type=Path, required=True)
     ap.add_argument("--out", type=Path)
@@ -628,7 +683,8 @@ def main() -> int:
     ap.add_argument("--png", action="store_true", help="write: also save PNG previews in <work>/preview")
     ap.add_argument("--allow-unpainted", action="store_true", help="write: upscale-only for textures not painted")
     args = ap.parse_args()
-    {"plan": cmd_plan, "esr": cmd_esr, "sheets": cmd_sheets, "paint": cmd_paint, "write": cmd_write}[args.stage](args)
+    {"plan": cmd_plan, "esr": cmd_esr, "sheets": cmd_sheets, "paint": cmd_paint, "write": cmd_write,
+     "cutouts": cmd_cutouts}[args.stage](args)
     return 0
 
 
