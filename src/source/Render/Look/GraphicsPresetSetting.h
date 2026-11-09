@@ -22,4 +22,9 @@ void ChooseScreenFilters(bool fxaa, int sharpenPercent);
 // screen filters are applied.
 void ApplyStartupGraphics();
 
+// The settings MU Skynet added on top of OpenMU's (graphics preset, FXAA, sharpening, HD textures,
+// sun shadows) belong to the Remaster client: true there and in the browser, false in the Classic
+// client (no Data\HD), where they stay off and Options doesn't show them.
+[[nodiscard]] bool RemasterGraphicsOptions();
+
 } // namespace Render::Look

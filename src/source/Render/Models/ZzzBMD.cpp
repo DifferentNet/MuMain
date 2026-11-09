@@ -7,6 +7,7 @@
 // headers; musl targets (Emscripten) need its declaring header explicitly.
 #include <sys/types.h>
 #include <cstring>
+#include <algorithm>
 #include <cmath>
 #include <cassert>
 #include <climits>
@@ -24,6 +25,8 @@
 #include "Render/Terrain/ZzzLodTerrain.h"
 #include "Render/Textures/ZzzTexture.h"
 #include "Render/Textures/HdTextures.h"
+#include "Render/Items/RimGlow.h"
+#include "Render/Models/ModelSmoothing.h"
 #include "Engine/AI/ZzzAI.h"
 #include "SMD.h"
 #include "Render/Effects/ZzzEffect.h"
@@ -105,6 +108,8 @@ std::span<mu::SkinnedVertex3D> GetRendererSkinnedVertexScratch(std::size_t requi
 
 mu::SkinningTextureCoordinates GetSkinningTextureCoordinates(int renderFlags)
 {
+    if ((renderFlags & RENDER_RIM) == RENDER_RIM)
+        return mu::SkinningTextureCoordinates::Rim;
     if ((renderFlags & RENDER_CHROME2) == RENDER_CHROME2)
         return mu::SkinningTextureCoordinates::Chrome2;
     if ((renderFlags & RENDER_CHROME3) == RENDER_CHROME3)
@@ -1452,7 +1457,8 @@ void BMD::RenderMesh(int meshIndex, int renderFlags, float alpha, int blendMeshI
         (renderFlags & RENDER_CHROME6) == RENDER_CHROME6 ||
         (renderFlags & RENDER_CHROME7) == RENDER_CHROME7 ||
         (renderFlags & RENDER_METAL) == RENDER_METAL ||
-        (renderFlags & RENDER_OIL) == RENDER_OIL
+        (renderFlags & RENDER_OIL) == RENDER_OIL ||
+        (renderFlags & RENDER_RIM) == RENDER_RIM
         )
     {
         if (m->m_csTScript != nullptr)
@@ -1515,7 +1521,11 @@ void BMD::RenderMesh(int meshIndex, int renderFlags, float alpha, int blendMeshI
 
         if (explicitTextureIndex == -1)
         {
-            if ((renderFlags & RENDER_CHROME2) == RENDER_CHROME2)
+            if ((renderFlags & RENDER_RIM) == RENDER_RIM)
+            {
+                BindTexture(Render::Items::RimGlow::Texture());
+            }
+            else if ((renderFlags & RENDER_CHROME2) == RENDER_CHROME2)
             {
                 BindTexture(BITMAP_CHROME2);
             }
@@ -1624,7 +1634,8 @@ void BMD::RenderMesh(int meshIndex, int renderFlags, float alpha, int blendMeshI
     const bool useChrome = (renderFlags & RENDER_CHROME) || (renderFlags & RENDER_CHROME2) ||
                            (renderFlags & RENDER_CHROME3) || (renderFlags & RENDER_CHROME4) ||
                            (renderFlags & RENDER_CHROME5) || (renderFlags & RENDER_CHROME6) ||
-                           (renderFlags & RENDER_CHROME7) || (renderFlags & RENDER_OIL) || (renderFlags & RENDER_METAL);
+                           (renderFlags & RENDER_CHROME7) || (renderFlags & RENDER_OIL) || (renderFlags & RENDER_METAL) ||
+                           (renderFlags & RENDER_RIM);
     const bool usesCpuLighting = enableLight && finalRenderFlags == RENDER_TEXTURE;
 
     auto materializeCpuDerivedData = [&]()
@@ -1659,7 +1670,13 @@ void BMD::RenderMesh(int meshIndex, int renderFlags, float alpha, int blendMeshI
         for (int j = 0; j < m->NumNormals && j < MAX_VERTICES; ++j)
         {
             const auto normal = NormalTransform[meshIndex][j];
-            if ((renderFlags & RENDER_CHROME2) == RENDER_CHROME2)
+            if ((renderFlags & RENDER_RIM) == RENDER_RIM)
+            {
+                // No camera here: the outline is where the surface turns away from the top-down view.
+                g_chrome[j][0] = std::clamp(1.0f - std::fabs(normal[2]), 1.0f / 128.0f, 1.0f - 1.0f / 128.0f);
+                g_chrome[j][1] = static_cast<float>(WorldTime) * 0.00036f;
+            }
+            else if ((renderFlags & RENDER_CHROME2) == RENDER_CHROME2)
             {
                 g_chrome[j][0] = (normal[2] + normal[0]) * 0.8f + wave2 * 2.0f;
                 g_chrome[j][1] = (normal[1] + normal[0]) + wave2 * 3.0f;
@@ -3215,6 +3232,7 @@ void BMD::Release()
             if (m->Normals) { delete[] m->Normals; m->Normals = nullptr; }
             if (m->TexCoords) { delete[] m->TexCoords; m->TexCoords = nullptr; }
             if (m->Triangles) { delete[] m->Triangles; m->Triangles = nullptr; }
+            Render::Models::Smoothing::FreeOriginal(*m);
 
             if (m->m_csTScript)
             {
@@ -3569,6 +3587,9 @@ bool BMD::Open2(const wchar_t* DirName, const wchar_t* ModelFileName, bool bReAl
             }
         }
     }
+
+    // The Remaster's smoother models (Render/Models/ModelSmoothing.h).
+    Render::Models::Smoothing::Apply(*this);
 
     Init(false);
 

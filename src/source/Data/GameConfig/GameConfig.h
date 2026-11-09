@@ -194,6 +194,12 @@ public:
     // [Render] HdTextures: load the upscaled copies from Data/HD where there is one (after a restart).
     bool GetHdTextures() const { return m_hdTextures; }
     void SetHdTextures(bool enabled) { m_hdTextures = enabled; }
+    // [Render] SmoothModels: with HD textures on, how many times each model triangle is split when
+    // it loads (0 = off, 1, 2; Render/Models/ModelSmoothing.h).
+    int GetSmoothModels() const { return m_smoothModels; }
+    // [Render] NormalMaps: with HD textures on, model textures get a relief map for the Enhanced
+    // lighting (Render/Textures/NormalMaps.h).
+    bool GetNormalMaps() const { return m_normalMaps; }
     // [Render] SunShadows: 0 off, 1 medium, 2 high (clamped).
     int GetSunShadows() const { return m_sunShadows; }
     void SetSunShadows(int level);
@@ -310,6 +316,8 @@ private:
     bool m_hadSavedLook = false;
     bool m_fxaa = false;
     bool m_hdTextures = false;
+    int m_smoothModels = 1;
+    bool m_normalMaps = true;
     int m_sunShadows = 0;
     int m_sharpen = 0;
     std::wstring m_renderBackend;

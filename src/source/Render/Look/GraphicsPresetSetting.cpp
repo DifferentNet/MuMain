@@ -9,6 +9,7 @@
 #include "Render/Look/LookPresetSetting.h"
 #include "Render/PostProcessing/ScreenFilterSetting.h"
 #include "Render/Renderer/MuRenderer.h"
+#include "Render/Textures/HdTextures.h"
 
 #include <string>
 
@@ -109,15 +110,34 @@ void ChooseScreenFilters(bool fxaa, int sharpenPercent)
     RefreshGraphicsPreset();
 }
 
+bool RemasterGraphicsOptions()
+{
+#ifdef __EMSCRIPTEN__
+    return true;
+#else
+    return Render::Textures::Hd::Installed();
+#endif
+}
+
 void ApplyStartupGraphics()
 {
     GameConfig& config = GameConfig::GetInstance();
+    if (!RemasterGraphicsOptions())
+    {
+        // Classic client: OpenMU's settings only, so our filters, sun shadows and HD textures stay off
+        // even where an older client saved them on.
+        config.SetFxaa(false);
+        config.SetSharpen(0);
+        config.SetSunShadows(0);
+        config.SetHdTextures(false);
+    }
     // Auto picks a preset only on a new install (no [Render] Look yet) and only on the desktop: an existing
     // player's choices stay as they are, and the browser's WebGPU device reports no GPU name to go by.
 #ifdef __EMSCRIPTEN__
     const bool chooseAuto = false;
 #else
-    const bool chooseAuto = config.GetGraphicsPreset() == GraphicsPreset::Auto && !config.HadSavedLook();
+    const bool chooseAuto =
+        RemasterGraphicsOptions() && config.GetGraphicsPreset() == GraphicsPreset::Auto && !config.HadSavedLook();
 #endif
     if (chooseAuto)
     {

@@ -141,7 +141,7 @@ float3 transformNormal(float3 normal, int boneIndex)
 #endif
 }
 
-float2 getTextureCoordinates(float2 restCoordinates, float3 normal)
+float2 getTextureCoordinates(float2 restCoordinates, float3 normal, float3 position)
 {
     const uint mode = textureCoordinateMode.x;
     const float chromeWave = chromeParameters.x;
@@ -191,6 +191,18 @@ float2 getTextureCoordinates(float2 restCoordinates, float3 normal)
     {
         return float2(normal.z * 0.5 + 0.2, normal.y * 0.5 + 0.5);
     }
+    if (mode == 10)
+    {
+        // The Remaster enchant glow (RimGlow texture): u = how far the surface turns away from the
+        // camera (1 at the outline), v = the phase of a band sweeping up the model.
+        const float3 toEye = eyePositionAndSpecular.xyz - position;
+        const float facing = abs(dot(normalize(normal), toEye)) * rsqrt(max(dot(toEye, toEye), 1e-6));
+        const float outline = clamp(1.0 - facing, 1.0 / 128.0, 1.0 - 1.0 / 128.0);
+        const float3 origin = palette.z != 0 ? bodyOriginAndScale.xyz : float3(0.0, 0.0, 0.0);
+        const float3 local = position - origin;
+        const float sweep = local.z * 0.006 + (local.x + local.y) * 0.002 - textureCoordinateParameters.z * 6.0;
+        return float2(outline, sweep);
+    }
     return restCoordinates;
 }
 
@@ -200,7 +212,7 @@ VSOutput main(VSInput input)
     const float3 skinnedPosition = transformPosition(input.pos, input.positionBoneIndex);
     const float3 skinnedNormal = transformNormal(input.normal, input.normalBoneIndex);
     output.pos = mul(mvp, float4(skinnedPosition, 1.0));
-    output.uv = getTextureCoordinates(input.uv, skinnedNormal);
+    output.uv = getTextureCoordinates(input.uv, skinnedNormal, skinnedPosition);
     output.color = input.color;
 
     if (palette.w == LightingClassic)

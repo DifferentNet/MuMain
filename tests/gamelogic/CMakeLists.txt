@@ -105,3 +105,11 @@ mu_add_test(
         test_steer_hold.cpp
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Touch/SteerHold.cpp
 )
+
+# The server's "#UPF|<key>|<level>" line after an enchant to +13..+15 (Render/Items/EnchantFx).
+mu_add_test(
+    NAME test_enchant_flash_line
+    SOURCES
+        test_enchant_flash_line.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/EnchantFlashLine.cpp
+)

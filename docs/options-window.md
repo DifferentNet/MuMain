@@ -141,6 +141,22 @@ rows next to Anti-aliasing. The presets, the `GraphicsPreset`, `Fxaa` and
 `Sharpen` keys and how Auto picks a preset from the GPU are described in
 [`enhanced-look.md`](enhanced-look.md#graphics-presets-and-screen-filters).
 
+These rows, **HD textures** and **Sun shadows** are MU Skynet's and belong to the Remaster
+client: the Classic client (no `Data\HD` folder, `Render::Textures::Hd::Installed`) hides them
+and keeps FXAA, sharpening, sun shadows and HD textures off whatever `config.ini` says, and Auto
+picks no preset there (`Render::Look::RemasterGraphicsOptions`). OpenMU's own rows stay in both.
+The browser client shows them as before.
+
+The Remaster's smoother models and normal maps (`[Render] SmoothModels`, default 1, and
+`NormalMaps`, default 1; `Render/Models/ModelSmoothing.h`, `Render/Textures/NormalMaps.h`) have
+no Options row. They follow the HD textures: on in the Remaster client, always off in the
+Classic client (`Winmain.cpp`), off in the browser. The normal maps ship prebuilt next to the
+HD textures as `<texture>.nrm` at half size, two grey lossy WebP pictures (a map that would miss
+`hd_pack.py --check`'s limits goes at a higher quality or lossless; `scripts/hd_pack.py`,
+`Render/Textures/NormalMapFile.h`); the game only reads them, and a texture without one gets no
+relief. For development, the environment variable `MU_NORMAL_MAPS_RUNTIME=1` builds missing
+ones at load instead.
+
 ## Remembering login credentials
 
 The login screen has two separate checkboxes:

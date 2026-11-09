@@ -119,6 +119,26 @@ target_compile_definitions(ozt_file_tests PRIVATE
     MU_TEST_DATA_DIR="${CMAKE_SOURCE_DIR}/src/bin/Data"
 )
 
+# Packed HD textures (scripts/hd_pack.py): lossless WebP back to the original OZT.
+if(TARGET mu_webp)
+    mu_add_test(
+        NAME packed_ozt_tests
+        SOURCES
+            test_packed_ozt.cpp
+            ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/PackedOzt.cpp
+        LINK_LIBS mu_webp
+    )
+    # The Remaster's prebuilt normal maps (scripts/hd_pack.py), read from Data\HD.
+    mu_add_test(
+        NAME normal_map_file_tests
+        SOURCES
+            test_normal_map_file.cpp
+            ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/NormalMapFile.cpp
+            ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/NormalMaps.cpp
+        LINK_LIBS mu_webp
+    )
+endif()
+
 # The marker of upscaled art that CGlobalBitmap reads from OZJ and OZT files.
 mu_add_test(
     NAME upscale_marker_tests
@@ -133,6 +153,13 @@ mu_add_test(
     SOURCES
         test_hd_textures.cpp
         ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/HdTexturePath.cpp
+)
+
+mu_add_test(
+    NAME normal_maps_tests
+    SOURCES
+        test_normal_maps.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/NormalMaps.cpp
 )
 
 # The sun shadow's box, uniform and the frame a map's mood gives.

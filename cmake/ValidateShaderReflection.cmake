@@ -268,14 +268,14 @@ set(shader_specs
     "shadow_volume.vert|vert|0|0|0|1"
     "skinned_textured.vert|vert|0,1,2,3,4,5|0|1|1"
     "skinned_shadow.vert|vert|0,3,4|0|2|2"
-    "skinned_lit.frag|frag||1|0|3"
+    "skinned_lit.frag|frag||2|0|3"
     "post_fullscreen.vert|vert||0|0|0"
     "post_bloom_down.frag|frag||1|0|1"
     "post_bloom_up.frag|frag||1|0|1"
     "post_composite.frag|frag||3|0|1"
     "basic_textured_world.vert|vert|0,1,2|0|0|2"
     "basic_textured_fog_shadow.frag|frag||2|0|2"
-    "skinned_lit_shadow.frag|frag||2|0|3"
+    "skinned_lit_shadow.frag|frag||3|0|3"
     "shadow_caster.frag|frag||1|0|1"
 )
 

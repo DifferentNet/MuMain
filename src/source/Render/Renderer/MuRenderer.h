@@ -133,6 +133,8 @@ enum class SkinningTextureCoordinates : std::uint32_t
     Chrome7,
     Oil,
     Metal,
+    // The Remaster enchant glow: u = how far the surface turns from the camera, v = the sweeping band.
+    Rim,
 };
 
 // Bone matrices are contiguous row-major 3x4 affine transforms: 12 floats per bone.

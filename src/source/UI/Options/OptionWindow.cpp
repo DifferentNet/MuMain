@@ -529,7 +529,7 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
 #ifdef __EMSCRIPTEN__
     model.hdTexturesAvailable = false;
 #else
-    model.hdTexturesAvailable = true;
+    model.hdTexturesAvailable = Render::Look::RemasterGraphicsOptions();
 #endif
     c.Bind("hd_textures_available", &model.hdTexturesAvailable);
     c.Bind("sun_shadows_labels", &model.sunShadowsLabels);
@@ -541,9 +541,12 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     // Browser cards without clip distances (soft clip shaders) get no sun shadow pipelines: no row there.
     model.sunShadowsAvailable = mu::GetRenderer().HasSunShadowPipelines();
 #else
-    model.sunShadowsAvailable = true;
+    model.sunShadowsAvailable = Render::Look::RemasterGraphicsOptions();
 #endif
     c.Bind("sun_shadows_available", &model.sunShadowsAvailable);
+    // The preset, FXAA and sharpening rows: the Remaster client's (and the browser's), not the Classic one's.
+    model.remasterGraphics = Render::Look::RemasterGraphicsOptions();
+    c.Bind("remaster_graphics", &model.remasterGraphics);
     c.Bind("sharpen_labels", &model.sharpenLabels);
     c.Bind("sharpen_index", &model.sharpenIndex);
     c.Bind("sharpen_row_label", &model.sharpenRowLabel);
