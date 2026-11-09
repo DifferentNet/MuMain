@@ -706,11 +706,13 @@ void CMyInventory::SyncBagPageGrids()
         {
             grid->SetOwner(this);
             grid->ShowInventory();
+            grid->SetRepairMode(m_RepairMode == SEASON3B::REPAIR_MODE_ON);
         }
         else if (grid->GetOwner() == this)
         {
             grid->SetOwner(g_pMyInventoryExt);
             grid->ParkOffScreen();
+            grid->SetRepairMode(false);
         }
     }
 }
@@ -786,6 +788,8 @@ void CMyInventory::SetRepairMode(bool bRepair)
             m_pNewInventoryCtrl->SetRepairMode(false);
         }
     }
+    // Page 2's grids take clicks while lent to this window; in repair mode a click there must repair, not lift.
+    SyncBagPageGrids();
 }
 
 bool CMyInventory::UpdateMouseEvent()
