@@ -51,6 +51,7 @@ constexpr int HeadBone = 20;
 constexpr int LeftLegBone = 3;
 constexpr int RightLegBone = 10;
 constexpr float MaxGlowingPieces = 7.0f;
+constexpr float MinVisibleAlpha = 0.02f; // below it a fading character draws no enchant light
 
 // One glowing piece found this frame.
 struct Piece
@@ -167,10 +168,11 @@ int CollectPieces(CHARACTER* c, OBJECT* o, BMD* b, std::array<Piece, 7>& pieces)
     return count;
 }
 
-void RenderAura(CHARACTER* c, OBJECT* o, BMD* b, const std::array<Piece, 7>& pieces, int count)
+void RenderAura(CHARACTER* c, OBJECT* o, BMD* b, const std::array<Piece, 7>& pieces, int count, float alpha)
 {
     const float wave = sinf(static_cast<float>(WorldTime) * T::AuraPulseSpeed + static_cast<float>(c->Key) * 0.7f);
-    const float pulse = T::AuraPulseLow + (T::AuraPulseHigh - T::AuraPulseLow) * (0.5f + 0.5f * wave);
+    const float pulse =
+        (T::AuraPulseLow + (T::AuraPulseHigh - T::AuraPulseLow) * (0.5f + 0.5f * wave)) * alpha;
 
     vec3_t average{};
     for (int i = 0; i < count; ++i)
@@ -212,9 +214,9 @@ void RenderAura(CHARACTER* c, OBJECT* o, BMD* b, const std::array<Piece, 7>& pie
     AddTerrainLight(o->Position[0], o->Position[1], ground, T::AuraGroundRange, PrimaryTerrainLight);
 }
 
-void CreateSparks(OBJECT* o, const std::array<Piece, 7>& pieces, int count)
+void CreateSparks(OBJECT* o, const std::array<Piece, 7>& pieces, int count, float alpha)
 {
-    const float seconds = FrameSeconds();
+    const float seconds = FrameSeconds() * alpha;
     float wished = 0.0f;
     for (int i = 0; i < count; ++i)
     {
@@ -374,6 +376,7 @@ void RenderFlash(CHARACTER* c, OBJECT* o, Flash& flash)
     strength = std::clamp(strength, 0.0f, 1.0f);
     // A little flicker keeps it alive.
     strength *= 0.9f + 0.1f * sinf(static_cast<float>(WorldTime) * 0.03f);
+    strength *= std::clamp(o->Alpha, 0.0f, 1.0f);
 
     vec3_t color;
     FlashColor(c, color);
@@ -466,6 +469,11 @@ void RenderCharacter(CHARACTER* c)
     OBJECT* o = &c->Object;
     if (!o->Visible)
         return;
+    // A character fading out (a teleport's start, a warp) takes its light with it: the sprites are additive and
+    // ignore the body's alpha, so at 0 they stood on the old spot as a glowing figure.
+    const float alpha = std::clamp(o->Alpha, 0.0f, 1.0f);
+    if (alpha < MinVisibleAlpha)
+        return;
 
     StartFrame();
 
@@ -488,7 +496,7 @@ void RenderCharacter(CHARACTER* c)
     const int count = CollectPieces(c, o, b, pieces);
     if (count == 0)
         return;
-    RenderAura(c, o, b, pieces, count);
-    CreateSparks(o, pieces, count);
+    RenderAura(c, o, b, pieces, count, alpha);
+    CreateSparks(o, pieces, count, alpha);
 }
 } // namespace Render::Items::EnchantFx
