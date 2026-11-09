@@ -94,7 +94,15 @@ namespace
 // Maximum number of quads supported by the static quad index buffer.
 constexpr int k_MaxQuads = 4096;
 // Initial vertex capacity. CPU staging grows so stress frames keep late UI draws.
+#ifdef __EMSCRIPTEN__
+// In the browser every instance of these buffers is real memory: SDL's WebGPU backend keeps a CPU copy of the
+// transfer buffer and cycles through several GPU instances of both (six of 64 MB = 384 MB in Lorencia,
+// 2026-11-09), while a frame there stages about 0.6 MB. EnsureVertexBufferCapacity doubles it when a frame
+// needs more.
+constexpr Uint32 k_InitialVertexBufferSize = 4u * 1024u * 1024u;
+#else
 constexpr Uint32 k_InitialVertexBufferSize = 64u * 1024u * 1024u;
+#endif
 constexpr Uint32 k_InitialBoneBufferSize = 64u * 1024u;
 // Number of blend pipelines: 8 blend modes + 1 disabled.
 constexpr int k_PipelineCount = 9;
