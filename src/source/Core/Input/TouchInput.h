@@ -63,6 +63,10 @@ void SetCarryQuery(CarryQuery isCarrying);
 // become a right click (Gesture::WorldLongPressTime). Unset: never over the world.
 using WorldQuery = bool (*)();
 void SetWorldQuery(WorldQuery isOverWorld);
+// Whether a held finger may slide from one control onto another, letting the first go and pressing the
+// second (Attack onto a skill, a skill onto the next). Unset: a finger stays on the control it landed on.
+using SlideQuery = bool (*)(int control);
+void SetSlideQuery(SlideQuery slides);
 // TapKey() ends typing first, so a control's key works while a text field (the chat) is focused.
 void SetEndTyping(EndTyping endTyping);
 

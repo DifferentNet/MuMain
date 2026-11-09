@@ -31,6 +31,7 @@ bool g_enabled = false;
 HitTest g_hitTest = nullptr;
 CarryQuery g_isCarrying = nullptr;
 WorldQuery g_isOverWorld = nullptr;
+SlideQuery g_slides = nullptr;
 EndTyping g_endTyping = nullptr;
 SDL_Window* g_window = nullptr;
 std::array<FingerSlot, MaxFingers> g_fingers{};
@@ -121,6 +122,18 @@ void FingerMove(SDL_FingerID id, float x, float y, SDL_Window* window)
     {
         g_controls[slot->owner].x = x;
         g_controls[slot->owner].y = y;
+        // A thumb sliding from Attack onto a skill (or between skills) presses the one it is on now, as
+        // a phone's action game does; one held by another finger stays with that finger.
+        if (g_slides != nullptr && g_hitTest != nullptr && g_slides(slot->owner))
+        {
+            const int under = g_hitTest(x, y);
+            if (IsControl(under) && under != slot->owner && g_slides(under) && !g_controls[under].held)
+            {
+                ReleaseControl(slot->owner, x, y);
+                slot->owner = under;
+                PressControl(under, x, y);
+            }
+        }
         return;
     }
     if (slot->owner == PointerOwner)
@@ -173,6 +186,11 @@ void SetHitTest(HitTest hitTest)
 void SetCarryQuery(CarryQuery isCarrying)
 {
     g_isCarrying = isCarrying;
+}
+
+void SetSlideQuery(SlideQuery slides)
+{
+    g_slides = slides;
 }
 
 void SetWorldQuery(WorldQuery isOverWorld)

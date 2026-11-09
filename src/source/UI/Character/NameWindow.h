@@ -37,6 +37,12 @@ namespace mu::ui::window
 
         float GetLayerDepth();		// 1.0f
 
+        // Every drop's name (Alt) and the monsters' HP bars (F8), switched from the touch and pad menu too.
+        bool ShowsItemNames() const { return m_bShowItemName; }
+        void ToggleItemNames() { m_bShowItemName = !m_bShowItemName; }
+        bool ShowsHealthBars() const { return m_bShowMonsterHealthBar; }
+        void ToggleHealthBars() { m_bShowMonsterHealthBar = !m_bShowMonsterHealthBar; }
+
     private:
         // Everything this window draws; recorded into m_labelLayer (RmlUi) when it is available,
         // drawn natively otherwise.

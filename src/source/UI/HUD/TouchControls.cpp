@@ -119,6 +119,20 @@ void TogglePk()
     PlayBuffer(SOUND_CLICK01);
 }
 
+// Every drop's name on the ground, as Alt switches it on a keyboard.
+void ToggleItemNames()
+{
+    g_pNameWindow->ToggleItemNames();
+    PlayBuffer(SOUND_CLICK01);
+}
+
+// The monsters' HP bars, as F8 switches them.
+void ToggleHealthBars()
+{
+    g_pNameWindow->ToggleHealthBars();
+    PlayBuffer(SOUND_CLICK01);
+}
+
 // Between the phone and the PC layout, saved as a choice of its own (Options -> Interface shows it).
 void ToggleView()
 {
@@ -161,6 +175,9 @@ const MenuItem MenuItems[] = {
     {&I18N::Game::TouchMenuHelper, 'Z'},
     {&I18N::Game::TouchMenuCommands, 'J'},
     {&I18N::Game::TouchMenuHelp, VK_F1},
+    // Switches: lit while on (names_on, bars_on in the markup).
+    {&I18N::Game::TouchMenuItemNames, 0, &ToggleItemNames},
+    {&I18N::Game::TouchMenuHealthBars, 0, &ToggleHealthBars},
     {&I18N::Game::TouchMenuSkills, 0, &OpenPickerOnFreeButton},
     {&I18N::Game::TouchMenuView, 0, &ToggleView},
     {&I18N::Game::TouchMenuSystem, 0, &OpenSystemMenu},
@@ -398,6 +415,9 @@ struct ControlsModel
     bool menuOpen = false;
     // The PK switch on: the attack button reads PK and the menu's switch is lit.
     bool pkOn = false;
+    // The drops' names and the monsters' HP bars are shown (the menu's switches).
+    bool namesOn = false;
+    bool barsOn = false;
     // A game master's character: the menu has the GM panel.
     bool gmMenu = false;
     Rml::String attackLabel;
@@ -504,6 +524,8 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     c.Bind("target_none", &model.targetNone);
     c.Bind("menu_open", &model.menuOpen);
     c.Bind("pk_on", &model.pkOn);
+    c.Bind("names_on", &model.namesOn);
+    c.Bind("bars_on", &model.barsOn);
     c.Bind("menu_gm", &model.gmMenu);
     c.Bind("attack_label", &model.attackLabel);
     c.Bind("pickup_label", &model.pickupLabel);
@@ -796,6 +818,13 @@ int SocialHitTest(float x, float y, float slop)
     return Inside(g_boxes[SocialBackdropControl], x, y, 0.f) ? SocialBackdropControl : Touch::NoControl;
 }
 
+// The fighting buttons a held finger slides between: Attack, the skills and Pick up.
+bool SlidesBetween(int control)
+{
+    return control == AttackControl || control == PickupControl
+           || (control >= FirstSkillControl && control < FirstSkillControl + SkillButtons);
+}
+
 // Which control a finger landing at a window pixel belongs to.
 int HitTest(float x, float y)
 {
@@ -967,6 +996,11 @@ void SyncLabels(ControlsModel& model)
     const bool pkChanged = model.pkOn != pk;
     SetField(model.pkOn, pk, "pk_on");
     SetField(model.gmMenu, GameLogic::GmPanel::Panel().IsGm(), "menu_gm");
+    if (g_pNameWindow != nullptr)
+    {
+        SetField(model.namesOn, g_pNameWindow->ShowsItemNames(), "names_on");
+        SetField(model.barsOn, g_pNameWindow->ShowsHealthBars(), "bars_on");
+    }
     const double now = Now();
     if (!pkChanged && s_labelsAt >= 0.0 && now >= s_labelsAt && now - s_labelsAt < LabelSeconds)
         return;
@@ -2073,6 +2107,7 @@ void Update()
         return;
 
     Touch::SetHitTest(&HitTest);
+    Touch::SetSlideQuery(&SlidesBetween);
     Rml::ElementDocument* document = g_View.Document();
     if (document == nullptr)
         return;

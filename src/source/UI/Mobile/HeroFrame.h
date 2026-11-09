@@ -34,7 +34,7 @@ struct Sources
     const wchar_t* levelFormat = nullptr;
     int potionsQ = 0;
     int potionsW = 0;
-    // E and R: the pad's d-pad drinks them (UI/HUD/GamepadControls).
+    // E and R: the pad drinks them with RT held (UI/HUD/GamepadControls).
     int potionsE = 0;
     int potionsR = 0;
     std::chrono::steady_clock::time_point potionsCountedAt{};

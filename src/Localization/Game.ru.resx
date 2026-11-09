@@ -15090,6 +15090,12 @@
   <data name="TouchItemHotkeyQ" xml:space="preserve">
     <value>На кнопку Q</value>
   </data>
+  <data name="TouchItemHotkeyE" xml:space="preserve">
+    <value>На кнопку E</value>
+  </data>
+  <data name="TouchItemHotkeyR" xml:space="preserve">
+    <value>На кнопку R</value>
+  </data>
   <data name="TouchItemHotkeyW" xml:space="preserve">
     <value>На кнопку W</value>
   </data>
@@ -15190,7 +15196,7 @@
     <value>Крестовина вниз: поднять вещь, чьё имя показано, держите — собирать дальше; если поднимать нечего — поговорить с ближайшим NPC</value>
   </data>
   <data name="PadHelpPotions" xml:space="preserve">
-    <value>LB и LT: зелья Q и W. Крестовина влево: карта (удержать: окно телепорта). Крестовина вправо: инвентарь</value>
+    <value>LB и LT: зелья Q и W, с зажатым RT — E и R. RT + крестовина вверх/вниз: приблизить и отдалить камеру. Крестовина влево: карта (удержать: окно телепорта). Крестовина вправо: инвентарь</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
     <value>RS (нажмите правый стик, не наклоняя): снова ближайшая цель</value>
@@ -15259,7 +15265,7 @@
     <value>Выбрать</value>
   </data>
   <data name="PadConnected" xml:space="preserve">
-    <value>Геймпад: A атакует, X, Y и B применяют умения (с зажатым RT ещё два), LB и LT пьют зелья, правый стик выбирает цель, крестовина влево — карта, вправо — инвентарь, Menu открывает все окна (там «Помощь» со всеми кнопками)</value>
+    <value>Геймпад: A атакует, X, Y и B применяют умения (с зажатым RT ещё два), LB и LT пьют зелья (с RT — E и R), правый стик выбирает цель, крестовина влево — карта, вправо — инвентарь, Menu открывает все окна (там «Помощь» со всеми кнопками)</value>
   </data>
   <data name="PadFriendChosen" xml:space="preserve">
     <value>Лечение и бафы на: </value>
@@ -15647,6 +15653,12 @@
   </data>
   <data name="TouchMenuPlayer" xml:space="preserve">
     <value>Действия с игроком</value>
+  </data>
+  <data name="TouchMenuItemNames" xml:space="preserve">
+    <value>Имена вещей</value>
+  </data>
+  <data name="TouchMenuHealthBars" xml:space="preserve">
+    <value>Полоски HP</value>
   </data>
   <data name="TouchMenuPkOff" xml:space="preserve">
     <value>PK: выкл.</value>

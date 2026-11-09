@@ -115,7 +115,11 @@ void SyncPotions(Model& model, bool force, MarkDirty markDirty)
                "potion_q_count", markDirty);
     SetPotions(model.potionWCount, seen.potionsW, g_pMainFrame->GetItemHotKeyCount(mu::ui::window::HOTKEY_W), force,
                "potion_w_count", markDirty);
-    // E and R show nowhere (touch_controls.rml): not counted.
+    // E and R: a pad's RT page shows them.
+    SetPotions(model.potionECount, seen.potionsE, g_pMainFrame->GetItemHotKeyCount(mu::ui::window::HOTKEY_E), force,
+               "potion_e_count", markDirty);
+    SetPotions(model.potionRCount, seen.potionsR, g_pMainFrame->GetItemHotKeyCount(mu::ui::window::HOTKEY_R), force,
+               "potion_r_count", markDirty);
 }
 } // namespace
 

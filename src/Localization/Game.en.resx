@@ -15491,6 +15491,12 @@
   <data name="TouchItemHotkeyQ" xml:space="preserve">
     <value>Put on button Q</value>
   </data>
+  <data name="TouchItemHotkeyE" xml:space="preserve">
+    <value>Put on button E</value>
+  </data>
+  <data name="TouchItemHotkeyR" xml:space="preserve">
+    <value>Put on button R</value>
+  </data>
   <data name="TouchItemHotkeyW" xml:space="preserve">
     <value>Put on button W</value>
   </data>
@@ -15591,7 +15597,7 @@
     <value>D-pad down: pick up the item whose name shows, hold to keep picking up; with nothing to pick up, talk to the nearest NPC</value>
   </data>
   <data name="PadHelpPotions" xml:space="preserve">
-    <value>LB and LT: potions Q and W. D-pad left: the map (held: Teleport window). D-pad right: the inventory</value>
+    <value>LB and LT: potions Q and W, with RT held E and R. RT + d-pad up/down: zoom the camera in and out. D-pad left: the map (held: Teleport window). D-pad right: the inventory</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
     <value>RS (click the right stick in, centred): back to the nearest target</value>
@@ -15660,7 +15666,7 @@
     <value>Choose</value>
   </data>
   <data name="PadConnected" xml:space="preserve">
-    <value>Gamepad: A attacks, X, Y and B cast skills (hold RT for two more), LB and LT drink potions, the right stick picks the target, d-pad left the map, right the inventory, Menu opens every window (its Help lists all the buttons)</value>
+    <value>Gamepad: A attacks, X, Y and B cast skills (hold RT for two more), LB and LT drink potions (with RT, E and R), the right stick picks the target, d-pad left the map, right the inventory, Menu opens every window (its Help lists all the buttons)</value>
   </data>
   <data name="PadFriendChosen" xml:space="preserve">
     <value>Heals and buffs go to: </value>
@@ -16045,6 +16051,12 @@
   </data>
   <data name="TouchMenuPlayer" xml:space="preserve">
     <value>Player actions</value>
+  </data>
+  <data name="TouchMenuItemNames" xml:space="preserve">
+    <value>Item names</value>
+  </data>
+  <data name="TouchMenuHealthBars" xml:space="preserve">
+    <value>HP bars</value>
   </data>
   <data name="TouchMenuPkOff" xml:space="preserve">
     <value>PK: off</value>

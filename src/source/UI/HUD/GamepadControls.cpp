@@ -55,6 +55,9 @@
 #include <optional>
 #include <utility>
 
+// The mouse wheel's ticks this frame (Winmain): the camera zooms by them.
+extern int MouseWheel;
+
 namespace
 {
 namespace Pad = Core::Input::Gamepad;
@@ -138,8 +141,12 @@ constexpr Mapping Mappings[] = {
     {Button::X, PadButton::Skill3, When::World, Page::Alt},
     {Button::Y, PadButton::Skill4, When::World, Page::Alt},
     {Button::B, PadButton::Back, When::Window},
-    {Button::LeftShoulder, PadButton::PotionQ, When::Always},
-    {Button::LeftTrigger, PadButton::PotionW, When::Always},
+    {Button::LeftShoulder, PadButton::PotionQ, When::Always, Page::Main},
+    {Button::LeftTrigger, PadButton::PotionW, When::Always, Page::Main},
+    // With RT held the left bumper and trigger drink E and R (an antidote, AG): the item card puts a
+    // potion on any of the four.
+    {Button::LeftShoulder, PadButton::PotionE, When::Always, Page::Alt},
+    {Button::LeftTrigger, PadButton::PotionR, When::Always, Page::Alt},
     {Button::View, PadButton::Social, When::Always},
 };
 
@@ -782,6 +789,11 @@ bool IsGameWindowOpen()
 {
     if (g_pSkillList->IsSkillGridOpen())
         return true;
+    // The Golden Archer's and Lena's windows stay up through a hide-all, yet they are windows to use:
+    // without the frame A would fight and the pad could not hand in a single Rena.
+    if (g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_GOLD_BOWMAN)
+        || g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_GOLD_BOWMAN_LENA))
+        return true;
     for (int window = mu::ui::window::INTERFACE_BEGIN + 1; window < mu::ui::window::INTERFACE_END; ++window)
     {
         if (!g_pNewUISystem->IsImpossibleHideInterface(window) && g_pNewUISystem->IsVisible(window))
@@ -926,6 +938,21 @@ void PlayDpadDown(SDL_Window* window, const Presses& presses)
     Controls::SetPadHeld(PadButton::PickUp, holds);
 }
 
+// RT held in the world, d-pad up and down zoom the camera in and out, a step a press, as the mouse's
+// wheel does; the d-pad's own actions wait until it is let go.
+void ZoomWithDpad(Presses& presses)
+{
+    if (!Held(Button::RightTrigger) || g_state.windowOpen)
+        return;
+    for (const auto [button, step] : {std::pair{Button::DpadUp, 1}, std::pair{Button::DpadDown, -1}})
+    {
+        if (Held(button))
+            g_state.waitForRelease[static_cast<int>(button)] = true;
+        if (Take(presses, button))
+            MouseWheel += step;
+    }
+}
+
 // D-pad up (no game window): a tap turns the MU Helper on and off (its button, as Home), held half a
 // second it opens the helper's settings (Z) in the world.
 void PlayDpadUp(const Presses& presses, Clock::time_point now)
@@ -1038,6 +1065,7 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
     HoldMappedControls(presses);
     if (!frameOpen)
     {
+        ZoomWithDpad(presses);
         PlayDpadDown(window, presses);
         PlayDpadUp(presses, now);
         if (!windowOpen)
