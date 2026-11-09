@@ -20,6 +20,9 @@ struct Content
     // Puts it on the potion buttons Q and W.
     std::function<void()> putOnQ;
     std::function<void()> putOnW;
+    // E and R, offered while a pad plays (RT with LB / LT drinks them); a phone shows only Q and W.
+    std::function<void()> putOnE;
+    std::function<void()> putOnR;
     // Drops it on the ground, after asking.
     std::function<void()> drop;
 };

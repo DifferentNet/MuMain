@@ -27,6 +27,7 @@
 #include "GameLogic/Items/TradeRestrictions.h"
 #include "UI/HUD/ItemHotKey.h"
 #include "UI/Mobile/ClickSource.h"
+#include "UI/Mobile/InterfaceMode.h"
 #include "UI/Mobile/ItemCard.h"
 
 #include <utility>
@@ -468,6 +469,11 @@ bool CInventoryActionController::ShowTouchItemCard(CInventoryCtrl* targetControl
     {
         card.putOnQ = [itemType, itemLevel] { g_pMainFrame->SetItemHotKey(HOTKEY_Q, itemType, itemLevel); };
         card.putOnW = [itemType, itemLevel] { g_pMainFrame->SetItemHotKey(HOTKEY_W, itemType, itemLevel); };
+        if (UI::Mobile::IsGamepadInUse())
+        {
+            card.putOnE = [itemType, itemLevel] { g_pMainFrame->SetItemHotKey(HOTKEY_E, itemType, itemLevel); };
+            card.putOnR = [itemType, itemLevel] { g_pMainFrame->SetItemHotKey(HOTKEY_R, itemType, itemLevel); };
+        }
     }
 
     // A box opens where it is dropped, which its Open does already.
