@@ -66,7 +66,6 @@ TEST_CASE("Auto picks Low for software renderers [render][graphics-preset]")
 
 TEST_CASE("Auto picks Medium for integrated graphics and unknown names [render][graphics-preset]")
 {
-    CHECK(ChooseAutoGraphicsPreset("Intel(R) UHD Graphics 630") == GraphicsPreset::Medium);
     CHECK(ChooseAutoGraphicsPreset("Intel(R) Iris(R) Xe Graphics") == GraphicsPreset::Medium);
     CHECK(ChooseAutoGraphicsPreset("AMD Radeon(TM) Graphics") == GraphicsPreset::Medium);
     CHECK(ChooseAutoGraphicsPreset("AMD Radeon Graphics") == GraphicsPreset::Medium);
@@ -76,6 +75,37 @@ TEST_CASE("Auto picks Medium for integrated graphics and unknown names [render][
     CHECK(ChooseAutoGraphicsPreset("AMD Radeon(TM) 610M") == GraphicsPreset::Medium);
     CHECK(ChooseAutoGraphicsPreset("") == GraphicsPreset::Medium);
     CHECK(ChooseAutoGraphicsPreset("Unknown") == GraphicsPreset::Medium);
+}
+
+TEST_CASE("Auto picks Low for weak integrated graphics [render][graphics-preset]")
+{
+    CHECK(ChooseAutoGraphicsPreset("Intel(R) HD Graphics 520") == GraphicsPreset::Low);
+    CHECK(ChooseAutoGraphicsPreset("Intel(R) HD Graphics") == GraphicsPreset::Low);
+    CHECK(ChooseAutoGraphicsPreset("Intel(R) UHD Graphics 630") == GraphicsPreset::Low);
+    CHECK(ChooseAutoGraphicsPreset("Intel(R) UHD Graphics") == GraphicsPreset::Low);
+    CHECK(ChooseAutoGraphicsPreset("AMD Radeon(TM) R5 Graphics") == GraphicsPreset::Low);
+    CHECK(ChooseAutoGraphicsPreset("AMD Radeon R7 Graphics") == GraphicsPreset::Low);
+}
+
+TEST_CASE("a GPU is classed by its name [render][graphics-preset]")
+{
+    using Render::Look::ClassifyGpu;
+    using Render::Look::GpuClass;
+    using Render::Look::IsWeakGpu;
+    CHECK(ClassifyGpu("Microsoft Basic Render Driver") == GpuClass::Software);
+    CHECK(ClassifyGpu("Intel(R) UHD Graphics 620") == GpuClass::WeakIntegrated);
+    CHECK(ClassifyGpu("Intel(R) Iris(R) Plus Graphics 640") == GpuClass::Integrated);
+    CHECK(ClassifyGpu("Intel(R) Iris(R) Xe Graphics") == GpuClass::Integrated);
+    CHECK(ClassifyGpu("AMD Radeon(TM) Vega 8 Graphics") == GpuClass::Integrated);
+    CHECK(ClassifyGpu("") == GpuClass::Integrated);
+    CHECK(ClassifyGpu("Intel(R) Arc(TM) A380 Graphics") == GpuClass::Discrete);
+    CHECK(ClassifyGpu("AMD Radeon R7 200 Series") == GpuClass::Discrete);
+    CHECK(ClassifyGpu("NVIDIA GeForce GT 710") == GpuClass::Discrete);
+    CHECK(IsWeakGpu("llvmpipe (LLVM 15.0.7, 256 bits)"));
+    CHECK(IsWeakGpu("Intel(R) HD Graphics 4600"));
+    CHECK_FALSE(IsWeakGpu("Intel(R) Iris(R) Xe Graphics"));
+    CHECK_FALSE(IsWeakGpu("NVIDIA GeForce RTX 3060"));
+    CHECK_FALSE(IsWeakGpu("Unknown"));
 }
 
 TEST_CASE("Auto picks High for discrete cards, Intel Arc and Radeon RX [render][graphics-preset]")

@@ -7,9 +7,11 @@
 #include "Data/GameConfig/GameConfig.h"
 #include "Render/Lighting/SunShadowSetting.h"
 #include "Render/Look/LookPresetSetting.h"
+#include "Render/Models/ModelSmoothing.h"
 #include "Render/PostProcessing/ScreenFilterSetting.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "Render/Textures/HdTextures.h"
+#include "Render/Textures/NormalMaps.h"
 
 #include <string>
 
@@ -28,6 +30,27 @@ void ApplyScreenFilters()
 {
     const GameConfig& config = GameConfig::GetInstance();
     PostProcessing::SetScreenFilters({config.GetFxaa(), static_cast<float>(config.GetSharpen()) / PercentPerUnit});
+}
+
+std::string ReportedGpuName()
+{
+    const char* reportedName = mu::GetRenderer().GetGPUDeviceName();
+    return reportedName != nullptr ? reportedName : "";
+}
+
+// Remaster on a weak GPU with the Low preset: the models load as they are in the files (smoothing splits
+// every triangle into four or sixteen) and without normal maps, which only the Enhanced lighting reads and
+// which add a quarter to the HD textures' memory. For this run only, nothing is saved: with another preset
+// the next start loads both again. Called before the first model or texture loads.
+void LightenModelsForWeakGpu(const std::string& gpuName)
+{
+    if (!IsWeakGpu(gpuName) || GameConfig::GetInstance().GetGraphicsPreset() != GraphicsPreset::Low)
+    {
+        return;
+    }
+    Render::Models::Smoothing::SetLevel(0);
+    Render::Textures::NormalMaps::SetEnabled(false);
+    mu::log::Get("render")->info("Weak GPU '{}' on Low: model smoothing and normal maps off for this run", gpuName);
 }
 
 std::string PresetName(GraphicsPreset preset)
@@ -141,11 +164,11 @@ void ApplyStartupGraphics()
 #endif
     if (chooseAuto)
     {
-        const char* reportedName = mu::GetRenderer().GetGPUDeviceName();
-        const std::string gpuName = reportedName != nullptr ? reportedName : "";
+        const std::string gpuName = ReportedGpuName();
         const GraphicsPreset chosen = ChooseAutoGraphicsPreset(gpuName);
         mu::log::Get("render")->info("Graphics preset Auto: {} for GPU '{}'", PresetName(chosen), gpuName);
         ApplyGraphicsPreset(chosen);
+        LightenModelsForWeakGpu(gpuName);
         return;
     }
     ApplyLookPreset(config.GetLook());
@@ -156,6 +179,9 @@ void ApplyStartupGraphics()
         // Name the preset the kept settings match (Custom if none), so Auto doesn't wait for the next start.
         RefreshGraphicsPreset();
     }
+#ifndef __EMSCRIPTEN__
+    LightenModelsForWeakGpu(ReportedGpuName());
+#endif
 }
 
 } // namespace Render::Look
