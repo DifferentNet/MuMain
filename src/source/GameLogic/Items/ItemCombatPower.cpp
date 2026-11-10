@@ -38,8 +38,10 @@ constexpr int HighTierAncientPiecePoints = 500;
 constexpr int PowerOfTheAncientsPoints = 1500;
 
 constexpr int ItemGroupSword = 0;
+constexpr int ItemGroupSpear = 3;
 constexpr int ItemGroupBow = 4;
 constexpr int ItemGroupStaff = 5;
+constexpr int ItemGroupShield = 6;
 constexpr int ItemGroupWings = 12;
 constexpr int ItemGroupMisc = 13;
 constexpr int BoltNumber = 7;
@@ -230,15 +232,20 @@ bool AreHeldTogether(const CombatPowerItem& first, const CombatPowerItem& second
     return (IsBowOrCrossbow(first) && IsAmmunition(second)) || (IsAmmunition(first) && IsBowOrCrossbow(second));
 }
 
-// The server's PowerOfTheAncientsPlugIn: a full ancient set gives the bonus only with the class's weapon.
+// The server's PowerOfTheAncientsPlugIn: a full ancient set counts with a stance that raises the damage
+// (PowerOfTheAncientsRules.Of, 2026-11-10); a shield alone only lowers the damage taken and counts nothing.
 bool HasPowerOfTheAncientsWeapon(const CombatPowerEquipment& equipment, int baseClass)
 {
     bool twoHandedSword = false;
     bool twoHandedStaff = false;
     bool bow = false;
     bool raven = false;
-    for (const CombatPowerItem& item : equipment)
+    bool shield = false;
+    bool staff = false;
+    int handWeapons = 0;
+    for (std::size_t index = 0; index < equipment.size(); ++index)
     {
+        const CombatPowerItem& item = equipment[index];
         if (item.IsEmpty() || item.IsBroken)
         {
             continue;
@@ -248,14 +255,21 @@ bool HasPowerOfTheAncientsWeapon(const CombatPowerEquipment& equipment, int base
         twoHandedStaff |= item.Group == ItemGroupStaff && item.IsTwoHanded;
         bow |= IsBowOrCrossbow(item);
         raven |= item.Group == ItemGroupMisc && item.Number == DarkRavenNumber;
+        if (static_cast<int>(index) == RightHandIndex || static_cast<int>(index) == LeftHandIndex)
+        {
+            shield |= item.Group == ItemGroupShield;
+            staff |= item.Group == ItemGroupStaff;
+            handWeapons += item.Group >= 0 && item.Group <= ItemGroupSpear ? 1 : 0;
+        }
     }
 
+    const bool weaponAndShield = shield && handWeapons >= 1;
     switch (baseClass)
     {
-    case CLASS_WIZARD: return twoHandedStaff;
-    case CLASS_KNIGHT: return twoHandedSword;
+    case CLASS_WIZARD: return twoHandedStaff || (shield && staff);
+    case CLASS_KNIGHT: return twoHandedSword || handWeapons >= 2 || weaponAndShield;
     case CLASS_ELF: return bow;
-    case CLASS_DARK: return twoHandedSword || twoHandedStaff;
+    case CLASS_DARK: return twoHandedSword || twoHandedStaff || handWeapons >= 2 || weaponAndShield || (shield && staff);
     case CLASS_DARK_LORD: return raven;
     default: return false;
     }
