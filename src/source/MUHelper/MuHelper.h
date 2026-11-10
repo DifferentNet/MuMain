@@ -220,7 +220,7 @@ namespace MUHelper
 		// A target whose walk into range gets no closer for ApproachPatience (one behind a fence: the steps go to
 		// and fro along it) is left for ApproachRest, and the nearest target is one with a clear line to it when
 		// there is any (GameLogic::Automation::ApproachWatch, 2026-11-10).
-		static constexpr std::chrono::milliseconds ApproachPatience{ 2000 };
+		static constexpr std::chrono::milliseconds ApproachPatience{ 3500 }; // room for a detour through a gate (review 2026-11-10)
 		static constexpr std::chrono::milliseconds ApproachPause{ 1000 };
 		static constexpr std::chrono::seconds ApproachRest{ 8 };
 		GameLogic::Automation::ApproachWatch m_approachWatch;

@@ -578,7 +578,7 @@ namespace MUHelper
             || result == SkillResult::NoPath || result == SkillResult::Blocked)
         {
             DeleteTarget(iTargetId);
-            m_mapForgottenUntil[iTargetId] = std::chrono::steady_clock::now() + ForgottenTargetRest;
+            m_mapForgottenUntil[iTargetId] = (std::max)(m_mapForgottenUntil[iTargetId], std::chrono::steady_clock::now() + ForgottenTargetRest);
         }
     }
 
@@ -1889,7 +1889,7 @@ namespace MUHelper
         if (GameLogic::Automation::ShouldForgetTarget(result))
         {
             DeleteTarget(iTarget);
-            m_mapForgottenUntil[iTarget] = std::chrono::steady_clock::now() + ForgottenTargetRest;
+            m_mapForgottenUntil[iTarget] = (std::max)(m_mapForgottenUntil[iTarget], std::chrono::steady_clock::now() + ForgottenTargetRest);
         }
         else if (result == AttackResult::Approaching)
         {
