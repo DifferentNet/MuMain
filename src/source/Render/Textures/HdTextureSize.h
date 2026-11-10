@@ -27,7 +27,8 @@ enum class Setting
 
 // Below this much system memory Auto halves the HD textures on a discrete GPU too: such a PC rarely
 // has more than 2 GiB of video memory, and what does not fit there is paged through system memory.
-inline constexpr int kAutoHalfBelowSystemRamMb = 12 * 1024;
+// Windows reports a little less than is installed, so this is "less than 12 GB installed".
+inline constexpr int kAutoHalfBelowSystemRamMb = 11 * 1024;
 
 // Whether the HD textures load at half size. Auto: on a GPU that shares the system memory
 // (`sharedMemoryGpu`: integrated graphics or a software renderer) and on a PC with little memory

@@ -148,6 +148,12 @@ and keeps FXAA, sharpening, sun shadows and HD textures off whatever `config.ini
 picks no preset there (`Render::Look::RemasterGraphicsOptions`). OpenMU's own rows stay in both.
 The browser client shows them as before.
 
+Under HD textures the Remaster client has an **HD texture size** row (Auto / Full / Half,
+`[Render] HdTextureSize`), shown only while HD textures are on; a change applies after a restart.
+Half loads the HD copies at half their sides, a quarter of the texture memory, and Auto picks it on
+integrated graphics and on a PC with less than 12 GB of memory: see
+[`enhanced-look.md`](enhanced-look.md). The browser client never shows it.
+
 The Remaster's smoother models and normal maps (`[Render] SmoothModels`, default 1, and
 `NormalMaps`, default 1; `Render/Models/ModelSmoothing.h`, `Render/Textures/NormalMaps.h`) have
 no Options row. They follow the HD textures: on in the Remaster client, always off in the
