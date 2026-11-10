@@ -75,7 +75,8 @@ public:
     // No display rate known: above every display sold, and a cap no player on a fast display minds.
     static constexpr double kUnknownLimitFps = 700.0;
     static constexpr double kUnknownCapFps = 144.0;
-    // A display that reports a wrongly low rate must not slow the game down.
+    // A display that reports a wrongly low rate must not slow the game down: below this the rate
+    // counts as this, for the limit and for the cap.
     static constexpr double kMinCapFps = 60.0;
 
     // Call once per drawn frame. `refreshHz`: the fastest connected display, 0 when unknown.
@@ -114,10 +115,11 @@ public:
             return 0.0;
         }
         const bool known = refreshHz > 0.0;
+        const double displayHz = refreshHz < kMinCapFps ? kMinCapFps : refreshHz;
         const double rate = static_cast<double>(m_frames) * 1000.0 / elapsedMs;
-        if (rate > (known ? refreshHz * kOverRefresh : kUnknownLimitFps))
+        if (rate > (known ? displayHz * kOverRefresh : kUnknownLimitFps))
         {
-            m_capFps = !known ? kUnknownCapFps : refreshHz < kMinCapFps ? kMinCapFps : refreshHz;
+            m_capFps = known ? displayHz : kUnknownCapFps;
             m_engagedAtMs = nowMs;
             m_engagedNow = !m_probing;
             m_measuredFps = rate;

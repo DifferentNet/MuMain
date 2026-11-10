@@ -159,6 +159,10 @@ TEST_CASE("a display that reports a very low rate does not slow the game [core][
     VsyncWatch watch;
     double now = 0.0;
     CHECK(Run(watch, now, 2000.0, 800.0, true, 24.0) == VsyncWatch::kMinCapFps);
+    // VSync really paces at 60 or 75 on a display that reports 30: nothing to cap.
+    VsyncWatch paced;
+    CHECK(Run(paced, now, 20000.0, 60.0, true, 30.0) == 0.0);
+    CHECK(Run(paced, now, 20000.0, 75.0, true, 30.0) == 0.0);
 }
 
 TEST_CASE("a clock that steps back restarts the watch's window [core][frame-pacing][vsync-watch]")
