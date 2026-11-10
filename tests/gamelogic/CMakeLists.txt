@@ -76,6 +76,15 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME test_helper_fence
+    SOURCES
+        test_helper_fence.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/App/Platform/Windows/Winmain.cpp
+    LINK_LIBS
+        MuClient
+)
+
+mu_add_test(
     NAME test_walk_stop
     SOURCES
         test_walk_stop.cpp

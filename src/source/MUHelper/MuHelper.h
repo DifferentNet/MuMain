@@ -217,6 +217,17 @@ namespace MUHelper
 		static constexpr std::chrono::seconds ForgottenTargetRest{ 2 };
 		static constexpr std::chrono::seconds StrongTargetRest{ 5 };
 		std::map<int, std::chrono::steady_clock::time_point> m_mapForgottenUntil; // monster key -> back in the list
+		// A target whose walk into range gets no closer for ApproachPatience (one behind a fence: the steps go to
+		// and fro along it) is left for ApproachRest, and the nearest target is one with a clear line to it when
+		// there is any (GameLogic::Automation::ApproachWatch, 2026-11-10).
+		static constexpr std::chrono::milliseconds ApproachPatience{ 2000 };
+		static constexpr std::chrono::milliseconds ApproachPause{ 1000 };
+		static constexpr std::chrono::seconds ApproachRest{ 8 };
+		GameLogic::Automation::ApproachWatch m_approachWatch;
+		static constexpr int MaxApproachLogs = 10; // lines in MuError.log per run
+		int m_iApproachLogs = 0;
+		void WatchApproach(int iTarget);
+		bool HasClearLineTo(int iCharacterIndex) const;
 	};
 
 	extern CMuHelper g_MuHelper;

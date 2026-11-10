@@ -146,6 +146,8 @@ namespace MUHelper
         m_bLastPotionWasMana = false;
         m_setNotified.clear();
         m_mapForgottenUntil.clear();
+        m_approachWatch.Reset();
+        m_iApproachLogs = 0;
         m_noTargetInReachSince = {};
         m_walkWatchSince = {};
         m_regroupSince = {};
@@ -584,6 +586,7 @@ namespace MUHelper
     {
         int iClosestMonsterId = -1;
         int iMinDistance = m_iHuntingDistance;
+        bool bClosestClearLine = false;
         std::set<int> setTargets;
         {
             _targetsLock.lock();
@@ -604,16 +607,76 @@ namespace MUHelper
             {
                 continue;
             }
+            // The packets put a monster that moves or attacks back among the targets (AddTarget), a given-up one too.
+            if (m_mapForgottenUntil.count(iMonsterId))
+            {
+                continue;
+            }
 
             int iDistance = ComputeDistanceFromTarget(pTarget);
-            if (iDistance <= iMinDistance)
+            if (iDistance > m_iHuntingDistance)
+            {
+                continue;
+            }
+            // A monster behind a wall or a fence only when none stands in the open: the nearest one used to be
+            // taken whatever stood between, and no walk reaches it (HasClearLineTo, 2026-11-10).
+            const bool bClearLine = HasClearLineTo(iIndex);
+            if (iClosestMonsterId == -1
+                || GameLogic::Automation::IsBetterTarget(bClearLine, iDistance, bClosestClearLine, iMinDistance))
             {
                 iMinDistance = iDistance;
                 iClosestMonsterId = iMonsterId;
+                bClosestClearLine = bClearLine;
             }
         }
 
         return iClosestMonsterId;
+    }
+
+    bool CMuHelper::HasClearLineTo(int iCharacterIndex) const
+    {
+        const CHARACTER* pTarget = &CharactersClient[iCharacterIndex];
+        // CheckWall lets a gate stand on its no-move tiles when it is the selected character (Attack.cpp).
+        const int iPreviousSelection = SelectedCharacter;
+        SelectedCharacter = iCharacterIndex;
+        const bool bClear = CheckWall(Hero->PositionX, Hero->PositionY,
+            static_cast<int>(pTarget->Object.Position[0] / TERRAIN_SCALE),
+            static_cast<int>(pTarget->Object.Position[1] / TERRAIN_SCALE));
+        SelectedCharacter = iPreviousSelection;
+        return bClear;
+    }
+
+    void CMuHelper::WatchApproach(int iTarget)
+    {
+        CHARACTER* pTarget = FindCharacterByKey(iTarget);
+        if (pTarget == nullptr)
+        {
+            return;
+        }
+        const auto now = std::chrono::steady_clock::now();
+        const int iDx = Hero->PositionX - pTarget->PositionX;
+        const int iDy = Hero->PositionY - pTarget->PositionY;
+        const long long llNow = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+        if (!m_approachWatch.NoteStep(iTarget, iDx * iDx + iDy * iDy, llNow, ApproachPatience.count(), ApproachPause.count()))
+        {
+            return;
+        }
+
+        // The step under way would keep the attack waiting (it runs only while the character stands).
+        GameLogic::Automation::StopAtNextTile();
+        RestStrongTarget(now);
+        DeleteTarget(iTarget);
+        m_mapForgottenUntil[iTarget] = now + ApproachRest;
+        // The first few of a run: by a fenced spot it happens every few seconds.
+        if (m_iApproachLogs >= MaxApproachLogs)
+        {
+            return;
+        }
+        ++m_iApproachLogs;
+        MU_LOG_INFO(mu::log::Get("core"),
+            "[MU Helper] The walk to target {} at {},{} gets no closer from {},{}; leaving it for {} s",
+            iTarget, static_cast<int>(pTarget->PositionX), static_cast<int>(pTarget->PositionY),
+            static_cast<int>(Hero->PositionX), static_cast<int>(Hero->PositionY), ApproachRest.count());
     }
 
     int CMuHelper::GetFarthestAttackingTarget()
@@ -637,7 +700,8 @@ namespace MUHelper
             }
             CHARACTER* pTarget = &CharactersClient[iIndex];
 
-            if (!IsMonster(pTarget) || pTarget->Dead > 0 || !pTarget->Object.Live)
+            if (!IsMonster(pTarget) || pTarget->Dead > 0 || !pTarget->Object.Live
+                || m_mapForgottenUntil.count(iMonsterId))
             {
                 continue;
             }
@@ -1416,6 +1480,13 @@ namespace MUHelper
             m_iStrongTarget = -1;
         }
 
+        // A given-up target can come back as the current one: "PVP Counterattack" turns to a monster that hits the
+        // hero (AddTarget), an archer behind a fence too.
+        if (m_iCurrentTarget != -1 && m_mapForgottenUntil.count(m_iCurrentTarget))
+        {
+            m_iCurrentTarget = -1;
+        }
+
         if (m_iCurrentTarget == -1)
         {
             if (!m_setTargets.empty())
@@ -1615,6 +1686,7 @@ namespace MUHelper
 
         int iNearest = -1;
         int iNearestDistance = 0;
+        bool bNearestClearLine = false;
         for (const int& iMonsterId : setTargets)
         {
             CHARACTER* pTarget = FindCharacterByKey(iMonsterId);
@@ -1626,11 +1698,19 @@ namespace MUHelper
             {
                 continue;
             }
+            if (m_mapForgottenUntil.count(iMonsterId))
+            {
+                continue;
+            }
             const int iDistance = ComputeDistanceFromTarget(pTarget);
-            if (iNearest == -1 || iDistance < iNearestDistance)
+            // As GetNearestTarget: one in the open before one behind a wall. At the same distance the first found
+            // stays, as it did here.
+            const bool bClearLine = HasClearLineTo(static_cast<int>(pTarget - CharactersClient));
+            if (iNearest == -1 || (bClearLine == bNearestClearLine ? iDistance < iNearestDistance : bClearLine))
             {
                 iNearest = iMonsterId;
                 iNearestDistance = iDistance;
+                bNearestClearLine = bClearLine;
             }
         }
         return iNearest;
@@ -1778,6 +1858,10 @@ namespace MUHelper
         if (iTarget != -1)
         {
             ForgetTarget(iTarget, result);
+            if (result == SkillResult::Approaching && bTargetRequired && iTarget == m_iCurrentTarget)
+            {
+                WatchApproach(iTarget);
+            }
         }
 
         return result == SkillResult::Cast ? 1 : 0;
@@ -1806,6 +1890,10 @@ namespace MUHelper
         {
             DeleteTarget(iTarget);
             m_mapForgottenUntil[iTarget] = std::chrono::steady_clock::now() + ForgottenTargetRest;
+        }
+        else if (result == AttackResult::Approaching)
+        {
+            WatchApproach(iTarget);
         }
 
         return result == AttackResult::Attacked ? 1 : 0;
