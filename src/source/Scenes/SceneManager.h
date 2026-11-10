@@ -15,6 +15,7 @@ class FrameTimingState {
 private:
     double targetFps = -1.0;      // -1 = uncapped, >0 = specific FPS limit
     double msPerFrame = 0.0;      // 0 = no frame limiting (uncapped)
+    double fallbackMsPerFrame = 0.0; // a cap beside the target: VSync that paces nothing (FramePacing::VsyncWatch)
     double lastRenderTickCount = 0.0;
     double currentTickCount = 0.0;
     double lastWaterChange = 0.0;
@@ -58,7 +59,15 @@ public:
      * @return Milliseconds per frame. Returns 0.0 if uncapped (no limiting).
      */
     double GetMsPerFrame() const {
-        return msPerFrame;
+        return msPerFrame > fallbackMsPerFrame ? msPerFrame : fallbackMsPerFrame;
+    }
+
+    /**
+     * A cap that holds beside the target FPS, whichever is slower; 0 or less = none. The target stays
+     * what the player or the window's state set, so nothing that saves and restores it sees this cap.
+     */
+    void SetFallbackFps(double fps) {
+        fallbackMsPerFrame = fps > 0.0 ? 1000.0 / fps : 0.0;
     }
 
     /**
@@ -70,10 +79,11 @@ public:
      * - Capped mode: Returns true only when enough time has elapsed for target FPS
      */
     bool ShouldRenderNextFrame() const {
-        if (msPerFrame <= 0.0) {
+        const double perFrame = GetMsPerFrame();
+        if (perFrame <= 0.0) {
             return true;  // Uncapped: always render
         }
-        return (currentTickCount - lastRenderTickCount) >= msPerFrame;
+        return (currentTickCount - lastRenderTickCount) >= perFrame;
     }
 
     /**

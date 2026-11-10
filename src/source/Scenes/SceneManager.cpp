@@ -16,6 +16,7 @@
 #include <iterator>
 #include <thread>
 #include "SceneManager.h"
+#include "FramePacing.h"
 #include "Core/Utilities/FrameProfiler.h"
 #include "UI/Diagnostics/DiagnosticsOverlay.h"
 #include "Core/Utilities/Log/MuLogger.h"
@@ -1222,6 +1223,24 @@ void MainScene(HDC hDC)
     }
 }
 
+// VSync on and yet far more frames than the display shows: cap them at the display's rate
+// (Scenes/FramePacing.h, VsyncWatch). The browser paces its own frames.
+static void WatchVSyncPacing()
+{
+#ifndef __EMSCRIPTEN__
+    static Scenes::FramePacing::VsyncWatch watch;
+    const double refreshHz = GetHighestDisplayRefreshHz();
+    g_frameTiming.SetFallbackFps(watch.OnFrame(g_frameTiming.GetCurrentTickCount(), IsVSyncEnabled(), refreshHz));
+    if (watch.EngagedNow())
+    {
+        mu::log::Get("render")->warn(
+            "VSync is on but does not pace the frames: {:.0f} FPS, fastest display {:.0f} Hz (0 = unknown). "
+            "Capping at {:.0f} FPS until it does",
+            watch.MeasuredFps(), refreshHz, watch.CapFps());
+    }
+#endif
+}
+
 void RenderScene(HDC hDC)
 {
     CalcFPS();
@@ -1233,6 +1252,7 @@ void RenderScene(HDC hDC)
     ReconnectManager::Instance().Update();
 
     g_frameTiming.MarkFrameRendered();
+    WatchVSyncPacing();
 
     try
     {

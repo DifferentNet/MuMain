@@ -81,6 +81,11 @@ window writes to these sections:
 - `[Render]` - set from the Display and Graphics tabs, each applied at once:
   - `VSync`: `$vsync on` and `$vsync off` update it too; startup and
     fullscreen/resolution changes reapply it before the next frame begins.
+    With VSync on the display paces the frames and the game sets no limit of its own. If the
+    frame rate still runs far past the fastest display's (a display asleep or switched off, a
+    remote session, VSync forced off in the driver), the game caps it at that display's rate,
+    144 FPS when the rate is unknown, writes one warning to the log and looks every 15 seconds
+    whether VSync paces again (`Scenes/FramePacing.h`, `VsyncWatch`).
   - `FpsCap`: the frame limit while VSync is off, `-1` for none.
   - `EffectLevel` (0 to 4) and `FullEffects`: the effect level bar and its "Render full effects" checkbox.
   - `Look` (default `Classic`): the "Enhanced graphics" checkbox, ticked for

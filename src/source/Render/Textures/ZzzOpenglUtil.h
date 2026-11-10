@@ -117,6 +117,7 @@ bool IsVSyncEnabled();
 bool EnableVSync();
 bool DisableVSync();
 int GetFPSLimit();
+double GetHighestDisplayRefreshHz();
 
 void UpdateMousePositionn();
 inline void TEXCOORD(float* c, float u, float v)
