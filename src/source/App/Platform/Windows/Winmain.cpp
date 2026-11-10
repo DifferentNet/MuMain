@@ -345,6 +345,44 @@ int GetFPSLimit()
     return DEFAULT_REFRESH_HZ;
 }
 
+// The fastest connected display's refresh rate in Hz, the last one known when SDL lists none now, 0 when
+// it never knew one. For the VSync watch
+// (Scenes/FramePacing.h): a window between two displays, or one SDL places on the wrong display, must
+// not look as if VSync let through more frames than its display has. Asked once a second at most.
+double GetHighestDisplayRefreshHz()
+{
+    static double cached = 0.0;
+    static Uint64 askedAtMs = 0;
+    const Uint64 nowMs = SDL_GetTicks();
+    if (askedAtMs != 0 && nowMs - askedAtMs < 1000)
+    {
+        return cached;
+    }
+    askedAtMs = nowMs == 0 ? 1 : nowMs;
+
+    double highest = 0.0;
+    int count = 0;
+    if (SDL_DisplayID* displays = SDL_GetDisplays(&count))
+    {
+        for (int i = 0; i < count; ++i)
+        {
+            const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(displays[i]);
+            if (mode && mode->refresh_rate > highest)
+            {
+                highest = mode->refresh_rate;
+            }
+        }
+        SDL_free(displays);
+    }
+    // A display that went away (switched off, unplugged) keeps its rate here: that is just when VSync
+    // stops pacing, and the watch's rule for a known rate is the tighter one.
+    if (highest > 0.0)
+    {
+        cached = highest;
+    }
+    return cached;
+}
+
 namespace
 {
 bool g_hasPendingVSyncPreference = false;
