@@ -13061,6 +13061,18 @@
   <data name="HdTexturesRow" xml:space="preserve">
     <value>Texturas HD (após reiniciar)</value>
   </data>
+  <data name="HdTextureSizeRow" xml:space="preserve">
+    <value>Tamanho das texturas HD (após reiniciar)</value>
+  </data>
+  <data name="HdTextureSizeFull" xml:space="preserve">
+    <value>Completo</value>
+  </data>
+  <data name="HdTextureSizeHalf" xml:space="preserve">
+    <value>Metade</value>
+  </data>
+  <data name="HdTextureSizeTooltip" xml:space="preserve">
+    <value>Metade do tamanho usa um quarto da memória de vídeo e ainda fica mais nítida do que as texturas originais. Auto escolhe-a com gráficos integrados e em PCs com menos de 12 GB de memória.</value>
+  </data>
   <data name="SunShadowsRow" xml:space="preserve">
     <value>Sombras do sol</value>
   </data>

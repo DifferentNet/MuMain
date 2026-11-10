@@ -87,7 +87,8 @@ static constexpr int kGamepadDropdown = 11;
 static constexpr int kGraphicsPresetDropdown = 12;
 static constexpr int kSharpenDropdown = 13;
 static constexpr int kSunShadowsDropdown = 14;
-static constexpr int kLastDropdownId = kSunShadowsDropdown;
+static constexpr int kHdTextureSizeDropdown = 15;
+static constexpr int kLastDropdownId = kHdTextureSizeDropdown;
 // The gamepad row's choices, in its labels' order.
 static constexpr int kGamepadOnIndex = 0;
 static constexpr int kGamepadQuietIndex = 1;
@@ -222,6 +223,8 @@ static constexpr int s_AntialiasingValues[] = {0, 2, 4, 8};
 static constexpr int s_AnisotropyValues[] = {1, 2, 4, 8, 16};
 // The Sun shadows row: [Render] SunShadows, 0 off, 1 medium (2048 map), 2 high (4096 map).
 static constexpr int s_SunShadowsValues[] = {0, 1, 2};
+// The HD texture size row: [Render] HdTextureSize, 0 auto, 1 full, 2 half.
+static constexpr int s_HdTextureSizeValues[] = {0, 1, 2};
 // The graphics preset row's presets, in its labels' order (the Custom entry is shown, never picked), and
 // the Sharpening row's percentages ([Render] Sharpen); the first entry of the latter is "Off".
 static constexpr GraphicsPreset s_GraphicsPresets[] = {GraphicsPreset::Low, GraphicsPreset::Medium,
@@ -532,6 +535,12 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     model.hdTexturesAvailable = Render::Look::RemasterGraphicsOptions();
 #endif
     c.Bind("hd_textures_available", &model.hdTexturesAvailable);
+    c.Bind("hd_texture_size_labels", &model.hdTextureSizeLabels);
+    c.Bind("hd_texture_size_index", &model.hdTextureSizeIndex);
+    c.Bind("hd_texture_size_row_label", &model.hdTextureSizeRowLabel);
+    c.Bind("hd_texture_size_value_label", &model.hdTextureSizeValueLabel);
+    c.Bind("hd_texture_size_tooltip", &model.hdTextureSizeTooltip);
+    c.Bind("hd_texture_size_available", &model.hdTextureSizeAvailable);
     c.Bind("sun_shadows_labels", &model.sunShadowsLabels);
     c.Bind("sun_shadows_index", &model.sunShadowsIndex);
     c.Bind("sun_shadows_row_label", &model.sunShadowsRowLabel);
@@ -1023,6 +1032,9 @@ void mu::ui::window::COptionWindow::RmlDropdownOptionClick(int dropdownId, int o
     case kSunShadowsDropdown:
         RmlSunShadowsChanged(optionIndex);
         break;
+    case kHdTextureSizeDropdown:
+        RmlHdTextureSizeChanged(optionIndex);
+        break;
     case kInterfaceViewDropdown:
         RmlInterfaceViewChanged(optionIndex);
         break;
@@ -1488,6 +1500,19 @@ void mu::ui::window::COptionWindow::RmlToggleHdTextures()
     // their version, so the new value takes effect after a restart (Winmain reads it once).
     GameConfig& config = GameConfig::GetInstance();
     config.SetHdTextures(!config.GetHdTextures());
+    config.Save();
+}
+
+void mu::ui::window::COptionWindow::RmlHdTextureSizeChanged(int index)
+{
+    // See RmlResolutionChanged's own comment -- same settle-frame guard applies here.
+    if (m_rmlSyncCount < kRmlSelectSettleFrames)
+        return;
+    if (index < 0 || index >= static_cast<int>(std::size(s_HdTextureSizeValues)))
+        return;
+    // Like HD textures themselves: read once at start-up, so the new size comes with the next start.
+    GameConfig& config = GameConfig::GetInstance();
+    config.SetHdTextureSize(s_HdTextureSizeValues[index]);
     config.Save();
 }
 
@@ -2045,6 +2070,8 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.graphicsPresetRowLabel, "graphics_preset_row_label", I18N::Game::GraphicsPresetRow);
     syncLabel(model.fxaaLabel, "fxaa_label", I18N::Game::FxaaRow);
     syncLabel(model.hdTexturesLabel, "hd_textures_label", I18N::Game::HdTexturesRow);
+    syncLabel(model.hdTextureSizeRowLabel, "hd_texture_size_row_label", I18N::Game::HdTextureSizeRow);
+    syncLabel(model.hdTextureSizeTooltip, "hd_texture_size_tooltip", I18N::Game::HdTextureSizeTooltip);
     syncLabel(model.sharpenRowLabel, "sharpen_row_label", I18N::Game::SharpenRow);
     syncLabel(model.antialiasingRowLabel, "antialiasing_row_label", I18N::Game::AntiAliasing);
     syncLabel(model.antialiasingTooltip, "antialiasing_tooltip", I18N::Game::AntiAliasingTooltip);
@@ -2243,6 +2270,20 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
                       model.sunShadowsValueLabel, "sun_shadows_value_label",
                       NarrowLabels({I18N::Game::Off, I18N::Game::SunShadowsMedium, I18N::Game::SunShadowsHigh}),
                       FindValueIndex(s_SunShadowsValues, GameConfig::GetInstance().GetSunShadows()));
+    syncMultiplierRow(model.hdTextureSizeLabels, "hd_texture_size_labels", model.hdTextureSizeIndex,
+                      "hd_texture_size_index", model.hdTextureSizeValueLabel, "hd_texture_size_value_label",
+                      NarrowLabels({I18N::Game::ChoiceAuto, I18N::Game::HdTextureSizeFull,
+                                    I18N::Game::HdTextureSizeHalf}),
+                      FindValueIndex(s_HdTextureSizeValues, GameConfig::GetInstance().GetHdTextureSize()));
+    {
+        // The size matters only with HD textures on (the Remaster's switch above this row).
+        const bool available = model.hdTexturesAvailable && GameConfig::GetInstance().GetHdTextures();
+        if (model.hdTextureSizeAvailable != available)
+        {
+            model.hdTextureSizeAvailable = available;
+            m_RmlView.MarkDirty("hd_texture_size_available");
+        }
+    }
     // Rebuilt every sync for a live language switch, as the rows above.
     syncMultiplierRow(model.interfaceViewLabels, "interface_view_labels", model.interfaceViewIndex,
                       "interface_view_index", model.interfaceViewValueLabel, "interface_view_value_label",

@@ -125,7 +125,7 @@ namespace mu::ui::window
         // Custom-dropdown mechanism (option_window.rml's own .option-dropdown family; RmlUi's
         // native <select> isn't used here) -- dropdownId is 0=resolution,1=fpsCap,2=theme,
         // 3=language,4=font,5=uiScale,6=antialiasing,7=anisotropy,8=interfaceView,9=controls,
-        // 10=touchButtons,11=gamepad,12=graphicsPreset,13=sharpen,14=sunShadows, matching model.openDropdown's
+        // 10=touchButtons,11=gamepad,12=graphicsPreset,13=sharpen,14=sunShadows,15=hdTextureSize, matching model.openDropdown's
         // own comment (OptionWindow.h).
         // RmlDropdownOptionClick dispatches to RmlResolutionChanged()/RmlFpsCapChanged()/etc. per
         // dropdownId.
@@ -189,6 +189,8 @@ namespace mu::ui::window
         void RmlToggleFxaa();
         // [Render] HdTextures; takes effect after a restart, not part of the presets.
         void RmlToggleHdTextures();
+        // [Render] HdTextureSize (dropdown 15): Auto / Full / Half; after a restart, not part of the presets.
+        void RmlHdTextureSizeChanged(int index);
         void RmlSharpenChanged(int index);
         void RmlAnisotropyChanged(int index);
         // [Render] SunShadows (dropdown 14): applied at once, part of the graphics presets.
@@ -262,7 +264,7 @@ namespace mu::ui::window
             // field rather than one bool per dropdown gives exclusivity for free -- opening one
             // overwrites whichever other id was here, no separate "close the others" step needed.
             // 0=resolution, 1=fpsCap, 2=theme, 3=language, 4=font, 5=uiScale, 6=antialiasing,
-            // 7=anisotropy, 8=interfaceView, 9=controls, 10=touchButtons, 11=gamepad, 12=graphicsPreset, 13=sharpen, 14=sunShadows (RmlToggleDropdown()/
+            // 7=anisotropy, 8=interfaceView, 9=controls, 10=touchButtons, 11=gamepad, 12=graphicsPreset, 13=sharpen, 14=sunShadows, 15=hdTextureSize (RmlToggleDropdown()/
             // RmlDropdownOptionClick()'s own ids). Replaces RmlUi's native <select>/<option>
             // (WidgetDropDown) entirely -- see option_window.rml's own history for why: that
             // widget's own generated selectbox/selectvalue/selectarrow sub-elements need CSS this
@@ -384,6 +386,13 @@ namespace mu::ui::window
             bool hdTexturesAvailable = true;
             bool remasterGraphics = true;
             Rml::String hdTexturesLabel;
+            // [Render] HdTextureSize: Auto / Full / Half, shown while HD textures are on.
+            std::vector<Rml::String> hdTextureSizeLabels;
+            int hdTextureSizeIndex = 0;
+            bool hdTextureSizeAvailable = false;
+            Rml::String hdTextureSizeRowLabel;
+            Rml::String hdTextureSizeValueLabel;
+            Rml::String hdTextureSizeTooltip;
             std::vector<Rml::String> sharpenLabels;
             int sharpenIndex = 0;
             Rml::String sharpenRowLabel;

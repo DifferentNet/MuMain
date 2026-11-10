@@ -15898,6 +15898,18 @@
   <data name="HdTexturesRow" xml:space="preserve">
     <value>HD-текстуры (после перезапуска)</value>
   </data>
+  <data name="HdTextureSizeRow" xml:space="preserve">
+    <value>Размер HD-текстур (после перезапуска)</value>
+  </data>
+  <data name="HdTextureSizeFull" xml:space="preserve">
+    <value>Полный</value>
+  </data>
+  <data name="HdTextureSizeHalf" xml:space="preserve">
+    <value>Половина</value>
+  </data>
+  <data name="HdTextureSizeTooltip" xml:space="preserve">
+    <value>Половинный размер занимает вчетверо меньше видеопамяти и всё равно чётче исходных текстур. Авто выбирает его на встроенной графике и на ПК с памятью меньше 12 ГБ.</value>
+  </data>
   <data name="SunShadowsRow" xml:space="preserve">
     <value>Тени от солнца</value>
   </data>

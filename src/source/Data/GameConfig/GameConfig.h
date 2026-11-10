@@ -194,6 +194,10 @@ public:
     // [Render] HdTextures: load the upscaled copies from Data/HD where there is one (after a restart).
     bool GetHdTextures() const { return m_hdTextures; }
     void SetHdTextures(bool enabled) { m_hdTextures = enabled; }
+    // [Render] HdTextureSize: how large the HD textures load, 0 by the machine, 1 full, 2 half
+    // (clamped; after a restart; Render/Textures/HdTextureSize.h).
+    int GetHdTextureSize() const { return m_hdTextureSize; }
+    void SetHdTextureSize(int size);
     // [Render] SmoothModels: with HD textures on, how many times each model triangle is split when
     // it loads (0 = off, 1, 2; Render/Models/ModelSmoothing.h).
     int GetSmoothModels() const { return m_smoothModels; }
@@ -323,6 +327,7 @@ private:
     bool m_hadSavedLook = false;
     bool m_fxaa = false;
     bool m_hdTextures = false;
+    int m_hdTextureSize = 0;
     int m_smoothModels = 1;
     bool m_normalMaps = true;
     int m_sunShadows = 0;

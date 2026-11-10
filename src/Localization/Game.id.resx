@@ -13061,6 +13061,18 @@
   <data name="HdTexturesRow" xml:space="preserve">
     <value>Tekstur HD (setelah restart)</value>
   </data>
+  <data name="HdTextureSizeRow" xml:space="preserve">
+    <value>Ukuran tekstur HD (setelah mulai ulang)</value>
+  </data>
+  <data name="HdTextureSizeFull" xml:space="preserve">
+    <value>Penuh</value>
+  </data>
+  <data name="HdTextureSizeHalf" xml:space="preserve">
+    <value>Setengah</value>
+  </data>
+  <data name="HdTextureSizeTooltip" xml:space="preserve">
+    <value>Ukuran setengah memakai seperempat memori video dan tetap lebih tajam daripada tekstur asli. Otomatis memilihnya pada grafis terintegrasi dan PC dengan memori kurang dari 12 GB.</value>
+  </data>
   <data name="SunShadowsRow" xml:space="preserve">
     <value>Bayangan matahari</value>
   </data>

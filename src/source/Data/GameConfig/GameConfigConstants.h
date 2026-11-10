@@ -101,6 +101,7 @@ namespace CfgKeys
     // Screen filters of the finished 3D scene: FXAA (0/1) and sharpening in percent (0 to 100).
     inline constexpr wchar_t CfgKeyFxaa[] = L"Fxaa";
     inline constexpr wchar_t CfgKeyHdTextures[] = L"HdTextures";
+    inline constexpr wchar_t CfgKeyHdTextureSize[] = L"HdTextureSize";
     inline constexpr wchar_t CfgKeySmoothModels[] = L"SmoothModels";
     inline constexpr wchar_t CfgKeyNormalMaps[] = L"NormalMaps";
     // Sun shadows of the Enhanced look: 0 off, 1 medium (2048 map), 2 high (4096 map). The browser
@@ -225,6 +226,10 @@ namespace CfgDefaults
     inline constexpr wchar_t CfgDefaultGraphicsPreset[] = L"Auto";
     inline constexpr bool CfgDefaultFxaa = false;
     inline constexpr bool CfgDefaultHdTextures = false;
+    // 0 = by the machine at every start, 1 = full, 2 = half (Render/Textures/HdTextureSize.h).
+    inline constexpr int CfgDefaultHdTextureSize = 0;
+    inline constexpr int CfgMinHdTextureSize = 0;
+    inline constexpr int CfgMaxHdTextureSize = 2;
     inline constexpr int CfgDefaultSmoothModels = 1;
     inline constexpr bool CfgDefaultNormalMaps = true;
     inline constexpr int CfgDefaultSunShadows = 0;

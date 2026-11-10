@@ -13082,6 +13082,18 @@
   <data name="HdTexturesRow" xml:space="preserve">
     <value>Tekstury HD (po restarcie)</value>
   </data>
+  <data name="HdTextureSizeRow" xml:space="preserve">
+    <value>Rozmiar tekstur HD (po restarcie)</value>
+  </data>
+  <data name="HdTextureSizeFull" xml:space="preserve">
+    <value>Pełny</value>
+  </data>
+  <data name="HdTextureSizeHalf" xml:space="preserve">
+    <value>Połowa</value>
+  </data>
+  <data name="HdTextureSizeTooltip" xml:space="preserve">
+    <value>Połowa rozmiaru zajmuje jedną czwartą pamięci wideo i nadal jest ostrzejsza od oryginalnych tekstur. Auto wybiera ją na zintegrowanej grafice i na komputerach z mniej niż 12 GB pamięci.</value>
+  </data>
   <data name="SunShadowsRow" xml:space="preserve">
     <value>Cienie od słońca</value>
   </data>

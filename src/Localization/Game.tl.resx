@@ -13061,6 +13061,18 @@
   <data name="HdTexturesRow" xml:space="preserve">
     <value>HD textures (pagkatapos mag-restart)</value>
   </data>
+  <data name="HdTextureSizeRow" xml:space="preserve">
+    <value>Laki ng HD texture (pagkatapos i-restart)</value>
+  </data>
+  <data name="HdTextureSizeFull" xml:space="preserve">
+    <value>Buo</value>
+  </data>
+  <data name="HdTextureSizeHalf" xml:space="preserve">
+    <value>Kalahati</value>
+  </data>
+  <data name="HdTextureSizeTooltip" xml:space="preserve">
+    <value>Ang kalahating laki ay gumagamit ng sangkapat ng video memory at mas malinaw pa rin kaysa sa orihinal na texture. Pinipili ito ng Auto sa integrated graphics at sa mga PC na wala pang 12 GB ang memory.</value>
+  </data>
   <data name="SunShadowsRow" xml:space="preserve">
     <value>Anino ng araw</value>
   </data>

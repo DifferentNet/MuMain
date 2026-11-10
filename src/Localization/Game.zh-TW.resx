@@ -13061,6 +13061,18 @@
   <data name="HdTexturesRow" xml:space="preserve">
     <value>HD 貼圖（重新啟動後生效）</value>
   </data>
+  <data name="HdTextureSizeRow" xml:space="preserve">
+    <value>HD 材質大小（重新啟動後生效）</value>
+  </data>
+  <data name="HdTextureSizeFull" xml:space="preserve">
+    <value>完整</value>
+  </data>
+  <data name="HdTextureSizeHalf" xml:space="preserve">
+    <value>一半</value>
+  </data>
+  <data name="HdTextureSizeTooltip" xml:space="preserve">
+    <value>一半大小只使用四分之一的顯示記憶體，仍比原始材質清晰。自動會在內建顯示卡及記憶體少於 12 GB 的電腦上選擇一半。</value>
+  </data>
   <data name="SunShadowsRow" xml:space="preserve">
     <value>太陽陰影</value>
   </data>

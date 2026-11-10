@@ -32,6 +32,7 @@ VSync=1
 GraphicsPreset=Auto
 Fxaa=0
 HdTextures=0
+HdTextureSize=0
 SunShadows=0
 Sharpen=0
 Anisotropy=8
