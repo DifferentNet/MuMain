@@ -1285,11 +1285,14 @@ int CSItemOption::RenderPowerOfTheAncients(int textIndex) const
         return textIndex;
     }
 
-    // The weapons the server's PowerOfTheAncientsPlugIn looks for.
+    // What the server's PowerOfTheAncientsPlugIn looks for (stances since 2026-11-10, PowerOfTheAncientsRules.Of).
     bool twoHandedSword = false;
     bool twoHandedStaff = false;
     bool bow = false;
     bool raven = false;
+    bool shield = false;
+    bool staff = false;
+    int handWeapons = 0;
     for (const int slot : { EQUIPMENT_WEAPON_RIGHT, EQUIPMENT_WEAPON_LEFT, EQUIPMENT_HELPER })
     {
         const int type = CharacterMachine->Equipment[slot].Type;
@@ -1304,33 +1307,57 @@ int CSItemOption::RenderPowerOfTheAncients(int textIndex) const
         twoHandedStaff |= group == ITEM_GROUP_STAFF && twoHanded;
         bow |= group == ITEM_GROUP_BOW && type != ITEM_BOLT && type != ITEM_ARROWS;
         raven |= type == ITEM_DARK_RAVEN_ITEM;
+        if (slot != EQUIPMENT_HELPER)
+        {
+            shield |= group == ITEM_GROUP_SHIELD;
+            staff |= group == ITEM_GROUP_STAFF;
+            handWeapons += group <= ITEM_GROUP_SPEAR ? 1 : 0;
+        }
     }
 
+    // One line per stance; only the stance the server applies is green (the first that fits, as on the server).
     struct Bonus
     {
         const wchar_t* format;
         int percent;
+        int lessDamageTaken;
         bool weaponWorn;
     };
 
+    constexpr int ShieldPercent = 10;
+    const bool twoWeapons = handWeapons >= 2;
+    const bool weaponAndShield = shield && handWeapons >= 1;
     std::vector<Bonus> bonuses;
     switch (gCharacterManager.GetBaseClass(Hero->Class))
     {
     case CLASS_KNIGHT:
-        bonuses.push_back({ I18N::Game::PowerOfTheAncientsTwoHandedSwordD, 35, twoHandedSword });
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsTwoHandedSwordD, 35, 0, twoHandedSword });
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsTwoWeaponsD, 25, 0, !twoHandedSword && twoWeapons });
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsWeaponShieldDD, 15, ShieldPercent,
+                            !twoHandedSword && !twoWeapons && weaponAndShield });
         break;
     case CLASS_WIZARD:
-        bonuses.push_back({ I18N::Game::PowerOfTheAncientsTwoHandedStaffD, 20, twoHandedStaff });
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsTwoHandedStaffD, 20, 0, twoHandedStaff });
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsStaffShieldDD, 10, ShieldPercent,
+                            !twoHandedStaff && shield && staff });
         break;
     case CLASS_ELF:
-        bonuses.push_back({ I18N::Game::PowerOfTheAncientsBowD, 10, bow });
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsBowD, 10, 0, bow });
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsShieldD, ShieldPercent, 0, shield });
         break;
     case CLASS_DARK:
-        bonuses.push_back({ I18N::Game::PowerOfTheAncientsTwoHandedSwordD, 40, twoHandedSword });
-        bonuses.push_back({ I18N::Game::PowerOfTheAncientsTwoHandedStaffD, 25, twoHandedStaff });
+    {
+        const bool twoHanded = twoHandedSword || twoHandedStaff;
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsTwoHandedSwordD, 40, 0, twoHandedSword });
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsTwoWeaponsD, 30, 0, !twoHanded && twoWeapons });
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsTwoHandedStaffD, 25, 0, !twoHandedSword && twoHandedStaff });
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsWeaponShieldDD, 15, ShieldPercent,
+                            !twoHanded && !twoWeapons && (weaponAndShield || (shield && staff)) });
         break;
+    }
     case CLASS_DARK_LORD:
-        bonuses.push_back({ I18N::Game::PowerOfTheAncientsRavenD, 20, raven });
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsRavenD, 20, 0, raven });
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsShieldD, ShieldPercent, 0, shield });
         break;
     default:
         return textIndex;
@@ -1356,7 +1383,7 @@ int CSItemOption::RenderPowerOfTheAncients(int textIndex) const
     textIndex++;
     for (const auto& bonus : bonuses)
     {
-        mu_swprintf(TextList[textIndex], bonus.format, bonus.percent);
+        mu_swprintf(TextList[textIndex], bonus.format, bonus.percent, bonus.lessDamageTaken);
         TextListColor[textIndex] = fullSetWorn && bonus.weaponWorn ? TEXT_COLOR_GREEN : TEXT_COLOR_GRAY;
         TextBold[textIndex] = false;
         textIndex++;

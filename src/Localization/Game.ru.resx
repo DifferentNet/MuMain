@@ -13645,6 +13645,18 @@
   <data name="PowerOfTheAncientsRavenD" xml:space="preserve">
     <value>С Тёмным вороном: итоговый урон +%d%%</value>
   </data>
+  <data name="PowerOfTheAncientsTwoWeaponsD" xml:space="preserve">
+    <value>С двумя одноручными оружиями: итоговый урон +%d%%</value>
+  </data>
+  <data name="PowerOfTheAncientsWeaponShieldDD" xml:space="preserve">
+    <value>С оружием и щитом: итоговый урон +%d%%, получаемый урон -%d%%</value>
+  </data>
+  <data name="PowerOfTheAncientsStaffShieldDD" xml:space="preserve">
+    <value>С посохом и щитом: итоговый урон +%d%%, получаемый урон -%d%%</value>
+  </data>
+  <data name="PowerOfTheAncientsShieldD" xml:space="preserve">
+    <value>Со щитом: получаемый урон -%d%%</value>
+  </data>
   <data name="FullAncientSetBonus" xml:space="preserve">
     <value>Бонус полного сета (весь этот сет надет):</value>
   </data>

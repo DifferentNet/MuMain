@@ -206,6 +206,41 @@ TEST_CASE("Power of the Ancients needs a whole set and the class's weapon")
     CHECK(GetEquipmentCombatPower(equipment, Wizard) == set + 1000);
 }
 
+TEST_CASE("Power of the Ancients counts the one-handed and shield stances that raise the damage")
+{
+    CombatPowerEquipment set = Wearing({{2, Piece(9, 7, Helm)}, {3, Piece(9, 8, Armor)}, {4, Piece(9, 9, Pants)},
+                                        {5, Piece(9, 10, Gloves)}, {6, Piece(9, 11, Boots)}});
+    const int points = 5 * 500 + 5 * 250 + 4 * 300 + 10000;
+    const CombatPowerItem sword = Gear(0, 17, MainHand, 100, 0);
+    const CombatPowerItem shield = Gear(6, 1, OffHand, 100, 0);
+    const CombatPowerItem staff = Gear(5, 1, MainHand, 100, 0);
+
+    CombatPowerEquipment oneSword = set;
+    oneSword[0] = sword;
+    CHECK(GetEquipmentCombatPower(oneSword, Knight) == points + 1000);
+
+    CombatPowerEquipment twoSwords = oneSword;
+    twoSwords[1] = sword;
+    CHECK(GetEquipmentCombatPower(twoSwords, Knight) == points + 2000 + 1500);
+    CHECK(GetEquipmentCombatPower(twoSwords, Wizard) == points + 2000);
+
+    CombatPowerEquipment swordAndShield = oneSword;
+    swordAndShield[1] = shield;
+    CHECK(GetEquipmentCombatPower(swordAndShield, Knight) == points + 2000 + 1500);
+    CHECK(GetEquipmentCombatPower(swordAndShield, Wizard) == points + 2000);
+
+    CombatPowerEquipment staffAndShield = set;
+    staffAndShield[0] = staff;
+    staffAndShield[1] = shield;
+    CHECK(GetEquipmentCombatPower(staffAndShield, Wizard) == points + 2000 + 1500);
+    CHECK(GetEquipmentCombatPower(staffAndShield, Knight) == points + 2000);
+
+    // A shield alone lowers the damage taken only: no points.
+    CombatPowerEquipment shieldOnly = set;
+    shieldOnly[1] = shield;
+    CHECK(GetEquipmentCombatPower(shieldOnly, Knight) == points + 1000);
+}
+
 TEST_CASE("Power of the Ancients needs a whole set of 4 pieces or more")
 {
     CombatPowerItem helm = Piece(9, 7, Helm);

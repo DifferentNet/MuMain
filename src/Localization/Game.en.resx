@@ -14046,6 +14046,18 @@
   <data name="PowerOfTheAncientsRavenD" xml:space="preserve">
     <value>With the Dark Raven: final damage +%d%%</value>
   </data>
+  <data name="PowerOfTheAncientsTwoWeaponsD" xml:space="preserve">
+    <value>With two one-handed weapons: final damage +%d%%</value>
+  </data>
+  <data name="PowerOfTheAncientsWeaponShieldDD" xml:space="preserve">
+    <value>With a weapon and a shield: final damage +%d%%, damage taken -%d%%</value>
+  </data>
+  <data name="PowerOfTheAncientsStaffShieldDD" xml:space="preserve">
+    <value>With a staff and a shield: final damage +%d%%, damage taken -%d%%</value>
+  </data>
+  <data name="PowerOfTheAncientsShieldD" xml:space="preserve">
+    <value>With a shield: damage taken -%d%%</value>
+  </data>
   <data name="FullAncientSetBonus" xml:space="preserve">
     <value>Full set bonus (this set worn complete):</value>
   </data>
