@@ -13,6 +13,7 @@
 #include "Render/Textures/OztFile.h"
 #include "Render/Textures/PackedOzt.h"
 #include "Render/Textures/TextureFiltering.h"
+#include "Render/Textures/HdTextureSize.h"
 #include "Render/Textures/HdTextures.h"
 #include "Render/Textures/NormalMapFile.h"
 #include "Render/Textures/NormalMaps.h"
@@ -201,8 +202,10 @@ bool UploadTextureSDLGpu(BITMAP_t* bitmap, std::span<const std::uint8_t> pixels,
 // The Remaster's normal map of an upscaled model texture, read from its prebuilt file next to the
 // texture (Render/Textures/NormalMapFile.h) and mipmapped by the GPU like the texture. A missing or
 // broken file only costs the relief; MU_NORMAL_MAPS_RUNTIME=1 builds it here instead (development).
+// `width` x `height` is the texture as uploaded and `scale` its scale: the file held `fileDivisor`
+// times that (Render/Textures/HdTextureSize.h), and its map is brought down by as much.
 void UploadNormalMap(BITMAP_t& bitmap, const std::wstring& loadedPath, std::span<const std::uint8_t> rgba, int width,
-                     int height, int scale, SDL_GPUSamplerAddressMode wrapMode)
+                     int height, int scale, int fileDivisor, SDL_GPUSamplerAddressMode wrapMode)
 {
     namespace NormalMaps = Render::Textures::NormalMaps;
     namespace NormalMapFile = Render::Textures::NormalMapFile;
@@ -210,10 +213,12 @@ void UploadNormalMap(BITMAP_t& bitmap, const std::wstring& loadedPath, std::span
     {
         return;
     }
-    int mapWidth = NormalMapFile::HalfSize(width);
-    int mapHeight = NormalMapFile::HalfSize(height);
+    const int fileWidth = width * fileDivisor;
+    const int fileHeight = height * fileDivisor;
+    int mapWidth = NormalMapFile::HalfSize(fileWidth);
+    int mapHeight = NormalMapFile::HalfSize(fileHeight);
     std::vector<std::uint8_t> normals = NormalMapFile::Load(
-        loadedPath, width, height,
+        loadedPath, fileWidth, fileHeight,
         [](const std::wstring& path, std::size_t maxBytes, std::vector<std::uint8_t>& bytes) {
             std::ifstream input(Render::Sprites::NarrowBitmapPath(path), std::ios::binary | std::ios::ate);
             if (!input)
@@ -237,6 +242,17 @@ void UploadNormalMap(BITMAP_t& bitmap, const std::wstring& loadedPath, std::span
             return static_cast<bool>(
                 input.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size())));
         });
+    if (!normals.empty() && fileDivisor == 2)
+    {
+        // Tilts average like colours; a map with an odd side stays as its file has it.
+        std::vector<std::uint8_t> half = Render::Textures::HdSize::HalveRgba(normals, mapWidth, mapHeight, false);
+        if (!half.empty())
+        {
+            normals = std::move(half);
+            mapWidth /= 2;
+            mapHeight /= 2;
+        }
+    }
     if (normals.empty() && NormalMaps::RuntimeBuild())
     {
         normals = NormalMaps::Build(rgba, width, height, scale);
@@ -809,6 +825,20 @@ bool CGlobalBitmap::OpenJpegTurbo(GLuint uiBitmapIndex, const std::wstring& file
         return false;
     }
 
+    // The scale is read against the image as the file holds it. With HD textures at half size
+    // (Render/Textures/HdTextureSize.h) an HD copy is decoded at half its sides right here, by the
+    // JPEG decoder's own scaling: less work than decoding it whole and shrinking it.
+    const int fileTextureWidth = padToPowerOfTwo ? NextPowerOfTwo(jpegWidth, maxWidth) : jpegWidth;
+    const int fileTextureHeight = padToPowerOfTwo ? NextPowerOfTwo(jpegHeight, maxHeight) : jpegHeight;
+    const int fileScale = Render::Textures::Upscale::ReadScale(jpegBuf, fileTextureWidth, fileTextureHeight);
+    const bool upscaled = fileScale > Render::Textures::Upscale::NoScale && !keepPixels;
+    namespace HdSize = Render::Textures::HdSize;
+    const bool halve = upscaled && HdSize::Divisor(HdSize::Half(), fileScale, jpegWidth, jpegHeight) == 2 &&
+                       HdSize::Divisor(true, fileScale, fileTextureWidth, fileTextureHeight) == 2;
+    const int divisor = halve ? 2 : 1;
+    jpegWidth /= divisor;
+    jpegHeight /= divisor;
+
     std::vector<unsigned char> decompressedBuffer(static_cast<std::size_t>(jpegWidth) *
                                                   static_cast<std::size_t>(jpegHeight) * 3u);
     auto decompressResult = tjDecompress2(tjHandle.get(), jpegData, jpegSize, decompressedBuffer.data(), jpegWidth, 0,
@@ -819,10 +849,9 @@ bool CGlobalBitmap::OpenJpegTurbo(GLuint uiBitmapIndex, const std::wstring& file
         return false;
     }
 
-    const int textureWidth = padToPowerOfTwo ? NextPowerOfTwo(jpegWidth, maxWidth) : jpegWidth;
-    const int textureHeight = padToPowerOfTwo ? NextPowerOfTwo(jpegHeight, maxHeight) : jpegHeight;
-    const int scale = Render::Textures::Upscale::ReadScale(jpegBuf, textureWidth, textureHeight);
-    const bool upscaled = scale > Render::Textures::Upscale::NoScale && !keepPixels;
+    const int textureWidth = fileTextureWidth / divisor;
+    const int textureHeight = fileTextureHeight / divisor;
+    const int scale = fileScale / divisor;
 
     auto pNewBitmap = CreateBitmapStorage(uiBitmapIndex, filename, textureWidth, textureHeight, 3);
     pNewBitmap->Width = static_cast<float>(textureWidth / scale);
@@ -874,7 +903,7 @@ bool CGlobalBitmap::OpenJpegTurbo(GLuint uiBitmapIndex, const std::wstring& file
     pNewBitmap->UploadedBytes = UploadedBytes(uploadWidth, uploadHeight);
     if (upscaled)
     {
-        UploadNormalMap(*pNewBitmap, filename_ozj, rgbaData, uploadWidth, uploadHeight, scale,
+        UploadNormalMap(*pNewBitmap, filename_ozj, rgbaData, uploadWidth, uploadHeight, scale, divisor,
                         MapGLWrapToSDL(uiWrapMode));
     }
     if (!keepPixels)
@@ -966,12 +995,16 @@ bool CGlobalBitmap::OpenTga(GLuint uiBitmapIndex, const std::wstring& filename, 
 
     const int Width = padToPowerOfTwo ? NextPowerOfTwo(header.width, maxWidth) : header.width;
     const int Height = padToPowerOfTwo ? NextPowerOfTwo(header.height, maxHeight) : header.height;
-    const int scale = Render::Textures::Upscale::ReadScale(pakBuffer, Width, Height);
-    const bool upscaled = scale > Render::Textures::Upscale::NoScale && !keepPixels;
+    const int fileScale = Render::Textures::Upscale::ReadScale(pakBuffer, Width, Height);
+    const bool upscaled = fileScale > Render::Textures::Upscale::NoScale && !keepPixels;
+    // With HD textures at half size an HD copy is uploaded at half its sides (HdTextureSize.h).
+    namespace HdSize = Render::Textures::HdSize;
+    const int divisor = upscaled ? HdSize::Divisor(HdSize::Half(), fileScale, Width, Height) : 1;
+    const int scale = fileScale / divisor;
 
     auto pNewBitmap = CreateBitmapStorage(uiBitmapIndex, filename, Width, Height, 4);
-    pNewBitmap->Width = static_cast<float>(Width / scale);
-    pNewBitmap->Height = static_cast<float>(Height / scale);
+    pNewBitmap->Width = static_cast<float>(Width / fileScale);
+    pNewBitmap->Height = static_cast<float>(Height / fileScale);
     const std::size_t BufferSize = pNewBitmap->BufferStorage.size();
 
     Ozt::CopyPixels(pakBuffer, header, std::span<std::uint8_t>(pNewBitmap->Buffer, BufferSize), Width);
@@ -990,6 +1023,21 @@ bool CGlobalBitmap::OpenTga(GLuint uiBitmapIndex, const std::wstring& filename, 
     {
         ShrinkCanvas(*pNewBitmap, uploadWidth, uploadHeight, scale);
     }
+    else if (divisor == 2)
+    {
+        // Colour weighted by alpha, so cut-out edges keep clear of the colour of the hidden texels.
+        std::vector<std::uint8_t> half =
+            HdSize::HalveRgba(pNewBitmap->BufferStorage, Width, Height, !premultiplyAlpha);
+        if (half.empty())
+        {
+            g_ErrorReport.Write(L"OpenTga: half size failed %ls (%dx%d)\r\n", filename_ozt.c_str(), Width, Height);
+            return false;
+        }
+        pNewBitmap->BufferStorage = std::move(half);
+        pNewBitmap->Buffer = pNewBitmap->BufferStorage.data();
+        uploadWidth /= 2;
+        uploadHeight /= 2;
+    }
 
     pNewBitmap->TextureNumber = uiBitmapIndex;
     pNewBitmap->worldTexture = worldTexture;
@@ -1006,7 +1054,7 @@ bool CGlobalBitmap::OpenTga(GLuint uiBitmapIndex, const std::wstring& filename, 
     if (upscaled)
     {
         UploadNormalMap(*pNewBitmap, filename_ozt, pNewBitmap->BufferStorage, uploadWidth, uploadHeight, scale,
-                        MapGLWrapToSDL(uiWrapMode));
+                        divisor, MapGLWrapToSDL(uiWrapMode));
     }
     if (!keepPixels)
     {

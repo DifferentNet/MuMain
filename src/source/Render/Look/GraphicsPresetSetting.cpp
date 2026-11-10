@@ -3,6 +3,7 @@
 #include "Render/Look/GraphicsPresetSetting.h"
 
 #include "App/Platform/Windows/Winmain.h"
+#include "Core/Utilities/PlatformInfo.h"
 #include "Core/Utilities/Log/MuLogger.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "Render/Lighting/SunShadowSetting.h"
@@ -10,6 +11,7 @@
 #include "Render/Models/ModelSmoothing.h"
 #include "Render/PostProcessing/ScreenFilterSetting.h"
 #include "Render/Renderer/MuRenderer.h"
+#include "Render/Textures/HdTextureSize.h"
 #include "Render/Textures/HdTextures.h"
 #include "Render/Textures/NormalMaps.h"
 
@@ -56,6 +58,27 @@ void LightenModelsForWeakGpu(const std::string& gpuName)
     Render::Models::Smoothing::SetLevel(0);
     Render::Textures::NormalMaps::SetEnabled(false);
     mu::log::Get("render")->info("Weak GPU '{}' on Low: model smoothing and normal maps off for this run", gpuName);
+}
+
+// Remaster: whether the HD textures load at half size this run ([Render] HdTextureSize; Auto goes by
+// the GPU and the system memory, Render/Textures/HdTextureSize.h). A GPU whose name tells nothing counts
+// as integrated, as for the Auto preset. Called before the first texture loads.
+void ChooseHdTextureSize(const std::string& gpuName)
+{
+    namespace HdSize = Render::Textures::HdSize;
+    if (!Render::Textures::Hd::Enabled())
+    {
+        HdSize::SetHalf(false);
+        return;
+    }
+    const HdSize::Setting setting = HdSize::SettingFromConfig(GameConfig::GetInstance().GetHdTextureSize());
+    const bool sharedMemoryGpu = ClassifyGpu(gpuName) != GpuClass::Discrete;
+    const int systemRamMb = Core::Platform::GetSystemMemoryMB();
+    const bool half = HdSize::ChooseHalf(setting, sharedMemoryGpu, systemRamMb);
+    HdSize::SetHalf(half);
+    mu::log::Get("render")->info("HD textures at {} size ({}; GPU '{}', {} MiB of system memory)",
+                                 half ? "half" : "full", setting == HdSize::Setting::Auto ? "auto" : "set by the player",
+                                 gpuName, systemRamMb);
 }
 
 std::string PresetName(GraphicsPreset preset)
@@ -174,6 +197,7 @@ void ApplyStartupGraphics()
         mu::log::Get("render")->info("Graphics preset Auto: {} for GPU '{}'", PresetName(chosen), gpuName);
         ApplyGraphicsPreset(chosen);
         LightenModelsForWeakGpu(gpuName);
+        ChooseHdTextureSize(gpuName);
         return;
     }
     ApplyLookPreset(config.GetLook());
@@ -185,7 +209,9 @@ void ApplyStartupGraphics()
         RefreshGraphicsPreset();
     }
 #ifndef __EMSCRIPTEN__
-    LightenModelsForWeakGpu(ReportedGpuName());
+    const std::string gpuName = ReportedGpuName();
+    LightenModelsForWeakGpu(gpuName);
+    ChooseHdTextureSize(gpuName);
 #endif
 }
 

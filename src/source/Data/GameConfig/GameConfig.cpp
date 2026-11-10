@@ -122,6 +122,7 @@ void GameConfig::Load()
         ReadString(CfgSectionRender, CfgKeyGraphicsPreset, CfgDefaultGraphicsPreset));
     m_fxaa = ReadBool(CfgSectionRender, CfgKeyFxaa, CfgDefaultFxaa);
     m_hdTextures = ReadBool(CfgSectionRender, CfgKeyHdTextures, CfgDefaultHdTextures);
+    SetHdTextureSize(ReadInt(CfgSectionRender, CfgKeyHdTextureSize, CfgDefaultHdTextureSize));
     m_smoothModels = std::clamp(ReadInt(CfgSectionRender, CfgKeySmoothModels, CfgDefaultSmoothModels), 0, 2);
     m_normalMaps = ReadBool(CfgSectionRender, CfgKeyNormalMaps, CfgDefaultNormalMaps);
     m_sunShadows = GameConfigValidation::ValidateSunShadows(
@@ -211,6 +212,7 @@ void GameConfig::Save()
     WriteString(CfgSectionRender, CfgKeyGraphicsPreset, GameConfigValidation::FormatGraphicsPreset(m_graphicsPreset));
     WriteBool(CfgSectionRender, CfgKeyFxaa, m_fxaa);
     WriteBool(CfgSectionRender, CfgKeyHdTextures, m_hdTextures);
+    WriteInt(CfgSectionRender, CfgKeyHdTextureSize, m_hdTextureSize);
     WriteInt(CfgSectionRender, CfgKeySmoothModels, m_smoothModels);
     WriteBool(CfgSectionRender, CfgKeyNormalMaps, m_normalMaps);
     WriteInt(CfgSectionRender, CfgKeySunShadows, m_sunShadows);
@@ -334,6 +336,13 @@ void GameConfig::SetLook(LookPreset look)
 void GameConfig::SetAnisotropy(int anisotropy)
 {
     m_anisotropy = GameConfigValidation::ValidateAnisotropy(anisotropy);
+}
+
+void GameConfig::SetHdTextureSize(int size)
+{
+    m_hdTextureSize = size < CfgDefaults::CfgMinHdTextureSize || size > CfgDefaults::CfgMaxHdTextureSize
+                          ? CfgDefaults::CfgDefaultHdTextureSize
+                          : size;
 }
 
 void GameConfig::SetSunShadows(int level)

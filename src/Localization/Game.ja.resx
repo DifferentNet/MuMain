@@ -11136,6 +11136,18 @@
   <data name="HdTexturesRow" xml:space="preserve">
     <value>HDテクスチャ（再起動後）</value>
   </data>
+  <data name="HdTextureSizeRow" xml:space="preserve">
+    <value>HDテクスチャのサイズ（再起動後）</value>
+  </data>
+  <data name="HdTextureSizeFull" xml:space="preserve">
+    <value>フル</value>
+  </data>
+  <data name="HdTextureSizeHalf" xml:space="preserve">
+    <value>半分</value>
+  </data>
+  <data name="HdTextureSizeTooltip" xml:space="preserve">
+    <value>半分のサイズではビデオメモリの使用量が4分の1になり、それでも元のテクスチャより鮮明です。自動は、内蔵グラフィックスやメモリが12GB未満のPCで半分を選びます。</value>
+  </data>
   <data name="SunShadowsRow" xml:space="preserve">
     <value>太陽の影</value>
   </data>

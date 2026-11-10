@@ -147,6 +147,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/UpscaleMarker.cpp
 )
 
+# HD textures at half size: the choice by the machine and the 2 x 2 shrink of the loader.
+mu_add_test(
+    NAME hd_texture_size_tests
+    SOURCES
+        test_hd_texture_size.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/HdTextureSize.cpp
+)
+
 # HD textures: the Data\HD path of a texture.
 mu_add_test(
     NAME hd_textures_tests

@@ -16236,6 +16236,18 @@
   <data name="HdTexturesRow" xml:space="preserve">
     <value>HD textures (after restart)</value>
   </data>
+  <data name="HdTextureSizeRow" xml:space="preserve">
+    <value>HD texture size (after restart)</value>
+  </data>
+  <data name="HdTextureSizeFull" xml:space="preserve">
+    <value>Full</value>
+  </data>
+  <data name="HdTextureSizeHalf" xml:space="preserve">
+    <value>Half</value>
+  </data>
+  <data name="HdTextureSizeTooltip" xml:space="preserve">
+    <value>Half size takes a quarter of the video memory and still looks sharper than the original textures. Auto picks Half on integrated graphics and on PCs with less than 12 GB of memory.</value>
+  </data>
   <data name="SunShadowsRow" xml:space="preserve">
     <value>Sun shadows</value>
   </data>

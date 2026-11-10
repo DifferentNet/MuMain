@@ -78,6 +78,7 @@ the row reads **Custom** (shown only, it cannot be picked).
 | `Sharpen` | sharpening of the 3D scene in percent, `0` (off) to `100` | `0` |
 | `SunShadows` | sun shadows of characters, monsters and objects: `0` off, `1` Medium, `2` High. The browser build reads `WebSunShadows` instead (older /play builds saved the presets' value here), and its presets don't set it | `0` |
 | `HdTextures` | `1` loads the upscaled textures and models from `Data\HD` where a file exists (after a restart), `0` off | `0` |
+| `HdTextureSize` | With HD textures on, how large they load (after a restart): `0` by the machine at every start, `1` full, `2` half. Half takes a quarter of the texture memory (about 0.5 GiB instead of 1.9 GiB; the normal maps shrink with it) and still holds 4 times the original texels. `0` picks half on integrated graphics, a software renderer or an unnamed GPU, and on a PC with less than 12 GB of memory; the log line "HD textures at ... size" says which. Options: "HD texture size" | `0` |
 
 Each map's light mood can also set the sun's direction and the shadows'
 strength and softness (`sunAzimuth`, `sunElevation`, `sunShadow`,
