@@ -34,6 +34,9 @@ cutouts  the leaves in CUTOUTS (and every file with the same source bytes) as gh
          written file in <work>/cutouts, so running it again gives the same result. Keep that folder
          with Data/HD: without it the stage takes the already fixed files for clean ones and fixes them
          twice (then put the clean ones back from a published Remaster zip with hd_pack.unpack).
+         The leaf litter in CUTOUT_SMOOTH (tree_08, strewn over Lorencia's ground and the Arena's walls)
+         gets the original upscaled smoothly instead: its crisp x4 leaves looked stuck in the air
+         (ghinzuro 2026-11-10).
 
 Models: SDXL 1.0 base (CreativeML Open RAIL++-M), the fp16-fix SDXL VAE (MIT),
 xinsir controlnet-tile-sdxl-1.0 (Apache-2.0); stable-diffusion.cpp sd-cli (MIT) on Vulkan.
@@ -431,6 +434,11 @@ CUTOUTS = (
     "Object64/so_tree05.OZT", "Object81/so_ktree01.OZT",
     "World34/TileGrass01.OZT", "World38/TileGrass01.OZT",
 )
+# Leaf litter strewn flat over ground, stones and walls (Lorencia Grass01/02, the Arena's Object32/33):
+# the x4 makes crisp dark single leaves that look stuck in the air over the surface ("плавают в воздухе",
+# ghinzuro 2026-11-10, sun shadows off made no difference). These take the original upscaled smoothly,
+# the Classic look.
+CUTOUT_SMOOTH = ("Object7/tree_08.OZT",)
 CUTOUT_MAX_GAIN = 1.6
 CUTOUT_ALPHA_MIX = 0.5  # share of the x4 alpha; the rest is the original's, upscaled smoothly
 
@@ -461,6 +469,12 @@ def fix_cutout(original: Image.Image, hd: Image.Image) -> Image.Image:
     return Image.fromarray((out * 255 + 0.5).astype(np.uint8), "RGBA")
 
 
+def smooth_cutout(original: Image.Image, hd: Image.Image) -> Image.Image:
+    """The original upscaled smoothly to the HD size: no x4 detail at all (CUTOUT_SMOOTH)."""
+    o = np.asarray(original.convert("RGBA"), dtype=np.float64) / 255
+    return Image.fromarray((smooth_upscale(o, hd.size) * 255 + 0.5).astype(np.uint8), "RGBA")
+
+
 def cmd_cutouts(args):
     wanted = {(args.src / rel).read_bytes(): rel for rel in CUTOUTS}
     rels = []
@@ -468,6 +482,7 @@ def cmd_cutouts(args):
         rel = path.relative_to(args.src).as_posix()
         if rel.split("/")[0].upper() != "HD" and path.read_bytes() in wanted and (args.out / rel).exists():
             rels.append(rel)
+    smooth = {(args.src / rel).read_bytes() for rel in CUTOUT_SMOOTH}
     for rel in sorted(set(rels)):
         keep = args.work / "cutouts" / rel
         last = keep.with_name(keep.name + ".written.md5")  # what this stage wrote last time
@@ -479,10 +494,11 @@ def cmd_cutouts(args):
         # the note first, then the file: a run stopped in between finds a file that differs from the
         # note, which is still the clean one, and keeps it again
         tmp = args.out / (rel + ".tmp")
-        hdt.write_ozt(tmp, fix_cutout(hdt.read_texture(args.src / rel), hdt.read_texture(keep)))
+        fix = smooth_cutout if (args.src / rel).read_bytes() in smooth else fix_cutout
+        hdt.write_ozt(tmp, fix(hdt.read_texture(args.src / rel), hdt.read_texture(keep)))
         last.write_text(hashlib.md5(tmp.read_bytes()).hexdigest())
         os.replace(tmp, args.out / rel)
-        print("cut-out", rel)
+        print("cut-out", rel, "(smooth)" if fix is smooth_cutout else "")
     print(f"{len(set(rels))} cut-outs written to {args.out}")
 
 
