@@ -636,6 +636,8 @@ if (EMSCRIPTEN)
       --root "$<TARGET_FILE_DIR:Main>"
       --list "${CMAKE_CURRENT_SOURCE_DIR}/web/startup-files.txt"
       --late "${CMAKE_CURRENT_SOURCE_DIR}/web/late-files.txt"
+      --maps "${CMAKE_CURRENT_SOURCE_DIR}/web/map-files.txt"
+      --models "${CMAKE_CURRENT_SOURCE_DIR}/web/model-files.txt"
     VERBATIM
   )
 endif()

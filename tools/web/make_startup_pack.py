@@ -24,7 +24,11 @@ A pack per map: packs/worldN.pack.gz with the files of Data/WorldN and Data/Obje
 and objects) that aren't in the startup pack, and packs/worldN.json, their paths and sizes and a hash.
 Entering Lorencia opened about 250 of them one after another, a minute on a phone (2026-10-29); the
 page now downloads the map's pack when the game enters it and keeps it like the startup pack
-(WebFileSystem.cpp LoadWorldFiles).
+(WebFileSystem.cpp LoadWorldFiles). The files of --maps (src/web/map-files.txt, "<pack's number> <path>"
+lines made by tools/web/make_map_files.py) go in the map's pack as well: its monsters and NPCs, minimap,
+name and colours, which the game otherwise downloads one by one when they come into sight, standing
+still for each. One of them may be in several maps' packs, and the game leaves a map's pack when it
+leaves the map, so these keep their versions.
 
 Packs are gzip files, which the page unpacks itself: the web server sends files as they are, and a
 phone on a slow line waits for every megabyte. So is Main.wasm.gz, a copy of Main.wasm. A pack whose
@@ -44,6 +48,11 @@ startup.json, which the page reads first:
   code      the hashes of Main.js and Main.wasm: the page asks for Main.js?v=<hash> ...
   versions  {path: hash} of the files the game downloads one by one when it first reads them
             (fetch-backend.js asks for path?v=<hash>)
+  groups    [[model, file, ...]], each a number counting the paths of versions from 0: the files the
+            game reads right after a model, its textures (the model names them, model_textures.py)
+            and what --models lists for it (src/web/model-files.txt, "<model> <file>" lines made by
+            tools/web/make_map_files.py: a monster's sounds). The game reads them one after another
+            and waits for each; the page starts them all when the model is read (fetch-backend.js).
 A URL with ?v=<hash> names one version of a file, so the page's service worker (sw.js) keeps it on
 the device and asks the server again only when the hash changes. Files beside Main.js get none:
 scripts/publish-web.py rewrites config.ini for the server it publishes to.
@@ -61,6 +70,7 @@ import sys
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import ima_adpcm  # noqa: E402
+import model_textures  # noqa: E402
 
 # The page asks for "<name>.gz" first and takes the file itself where there is none.
 GZIP_COPIES = ["Main.wasm"]
@@ -87,6 +97,8 @@ MODEL_SUFFIX = ".bmd"
 MODEL_ENCRYPTED = b"BMD\x0c"
 MODEL_PLAIN = b"BMD\x0a"
 MODEL_HEADER_BYTES = 8
+# The game asks for a texture as .tga or .jpg; the files are .ozt and .ozj (and .ozb for .bmp).
+TEXTURE_STORED_SUFFIX = {".tga": ".ozt", ".jpg": ".ozj", ".bmp": ".ozb"}
 # ZzzLodTerrain.h MapFileDecrypt.
 MAP_XOR_KEY = bytes([0xD1, 0x73, 0x52, 0xF6, 0xD2, 0x9A, 0xCB, 0x27, 0x3E, 0xAF, 0x59, 0x31, 0x37, 0xB3, 0xE7, 0xA2])
 MAP_FIRST_KEY = 0x5E
@@ -268,15 +280,65 @@ def write_startup_parts(root, files, previous_index):
     return entries, written
 
 
-def write_map_packs(root, listed, in_startup_pack):
-    """Writes a pack per map (the module's docstring). Returns (the packs' names, the paths in them,
-    how many were written, megabytes in them)."""
+def read_map_files(path, root, known, taken):
+    """{pack's number: [paths]} of the list at `path` (the module's docstring: --maps), without the
+    files the output lacks or `taken` (the startup and late packs') holds."""
+    extras = {}
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            parts = line.split("#", 1)[0].split(None, 1)
+            if len(parts) != 2:
+                continue
+            world, name = int(parts[0]), parts[1].strip()
+            if name in known and name not in taken and name not in extras.setdefault(world, []):
+                extras[world].append(name)
+    return extras
+
+
+def model_groups(root, versions, models_path):
+    """startup.json's "groups" (the module's docstring) for the models among `versions`."""
+    by_lower = {path.lower(): path for path in versions}
+    by_name = {}
+    for path in versions:
+        by_name.setdefault(path.rsplit("/", 1)[1].lower(), []).append(path)
+    groups = {}
+    if models_path:
+        with open(models_path, encoding="utf-8") as f:
+            for line in f:
+                parts = line.split("#", 1)[0].split(None, 1)
+                if len(parts) == 2 and parts[0] in versions and parts[1].strip() in versions:
+                    groups.setdefault(parts[0], []).append(parts[1].strip())
+    for path in versions:
+        if not path.lower().endswith(MODEL_SUFFIX):
+            continue
+        group = groups.setdefault(path, [])
+        folder = path.rsplit("/", 1)[0]
+        for name in model_textures.texture_names(os.path.join(root, path), decrypt_map_file):
+            stem, suffix = os.path.splitext(name.lower())
+            stored = stem + TEXTURE_STORED_SUFFIX.get(suffix, suffix)
+            # In the model's folder, or the only file of that name anywhere (an item's texture in
+            # Data/Player, a monster's in Data/Skill).
+            elsewhere = by_name.get(stored, [])
+            found = by_lower.get(f"{folder}/{stored}".lower()) or (elsewhere[0] if len(elsewhere) == 1 else None)
+            if found and found != path and found not in group:
+                group.append(found)
+    numbers = {path: number for number, path in enumerate(versions)}
+    return [[numbers[model]] + [numbers[path] for path in files] for model, files in groups.items() if files]
+
+
+def write_map_packs(root, listed, in_startup_pack, extras):
+    """Writes a pack per map (the module's docstring). Returns (the packs' names, the paths of the
+    maps' folders in them, how many were written, megabytes in them)."""
     maps = {}
     for path in listed:
         folders = path.split("/")
         match = MAP_FOLDER.fullmatch(folders[1]) if len(folders) > 2 and folders[0] == "Data" else None
         if match and path not in in_startup_pack:
             maps.setdefault(int(match.group(2)), []).append([path, packed_size(os.path.join(root, path))])
+    folder_files = {path for files in maps.values() for path, _ in files}
+    for world, paths in extras.items():
+        maps.setdefault(world, []).extend([path, packed_size(os.path.join(root, path))] for path in paths
+                                          if path not in folder_files)
     names, packed, written, total = [], set(), 0, 0
     for world, files in sorted(maps.items()):
         name = f"world{world}"
@@ -288,7 +350,7 @@ def write_map_packs(root, listed, in_startup_pack):
                 json.dump(entry, out, separators=(",", ":"))
             os.replace(index_path + ".tmp", index_path)
         names.append(name)
-        packed.update(path for path, _ in files)
+        packed.update(path for path, _ in files if path in folder_files)
         written += wrote
         total += sum(size for _, size in files)
     return names, packed, written, total / 1e6
@@ -299,6 +361,8 @@ def main():
     parser.add_argument("--root", required=True, help="the web build's output folder")
     parser.add_argument("--list", required=True, help="the files to pack, relative to --root")
     parser.add_argument("--late", help="the files of the late pack, relative to --root")
+    parser.add_argument("--maps", help="the files of the maps' packs besides the maps' folders")
+    parser.add_argument("--models", help="the files the game reads right after a model")
     args = parser.parse_args()
     global sound_cache_dir
     sound_cache_dir = os.path.join(os.path.dirname(os.path.abspath(args.root)), SOUND_CACHE)
@@ -339,7 +403,8 @@ def main():
                                         ((previous_index or {}).get("late") or {}).get("hash"))
         parts_written += late_written
     in_startup_pack = {path for path, _ in files}
-    maps, in_map_packs, maps_written, map_megabytes = write_map_packs(args.root, listed, in_startup_pack)
+    extras = read_map_files(args.maps, args.root, set(listed), seen) if args.maps else {}
+    maps, in_map_packs, maps_written, map_megabytes = write_map_packs(args.root, listed, in_startup_pack, extras)
 
     kept = {os.path.basename(part["name"]) + ".gz" for part in parts + ([late] if late else [])}
     kept.update(name + suffix for name in maps for suffix in (".pack.gz", ".json"))
@@ -357,7 +422,8 @@ def main():
                 if "/" in path and path not in in_packs and not path.startswith(PACKS + "/")}
     code = {name: file_hash(os.path.join(args.root, name)) for name in CODE
             if os.path.isfile(os.path.join(args.root, name))}
-    index = {"parts": parts, "code": code, "versions": versions}
+    groups = model_groups(args.root, versions, args.models)
+    index = {"parts": parts, "code": code, "versions": versions, "groups": groups}
     if late:
         index["late"] = late
     with open(index_path + ".tmp", "w", encoding="utf-8") as out:
@@ -381,7 +447,8 @@ def main():
         size = os.path.getsize(os.path.join(args.root, name + ".gz"))
         print(f"{name}.gz: {size / 1e6:.1f} MB")
     print(f"Map packs: {len(maps)}, {map_megabytes:.0f} MB in them, {maps_written} written")
-    print(f"Files downloaded one by one, with versions: {len(versions)}")
+    print(f"Files downloaded one by one, with versions: {len(versions)}; "
+          f"{len(groups)} models with {sum(len(group) - 1 for group in groups)} files read together")
     return 0
 
 

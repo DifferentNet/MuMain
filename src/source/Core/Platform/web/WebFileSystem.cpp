@@ -11,6 +11,11 @@
 #include "Core/Platform/web/WebFileSystem.h"
 #include "Core/Platform/BundledFonts.h"
 
+#ifdef MU_WEB_FILE_TRACE
+#include "stdafx.h"
+#include "Engine/Object/ZzzCharacter.h"
+#endif
+
 #include <emscripten.h>
 #include <emscripten/threading.h>
 #include <emscripten/wasmfs.h>
@@ -594,6 +599,60 @@ extern "C" EMSCRIPTEN_KEEPALIVE int MuWeb_FilesOnPageThread()
 
 extern "C" FILE* __real_fopen(const char* path, const char* mode);
 
+#ifdef MU_WEB_FILE_TRACE
+// For tools/web/make_map_files.py, in a build made with -DMU_WEB_FILE_TRACE only: the files the game
+// opens, on the page's thread, to show a monster or an NPC. MuWeb_TraceMonster(type) puts one beside the hero and takes it
+// away again; it returns the model the game gave it and, a line each, the files it opened for it. A
+// file is read once in a run, so the tool adds what the model's first call read to the later ones.
+// MuWeb_TraceTake() returns the files of the mount opened since its last call, a line each: the ones no
+// pack held when the game wanted them.
+std::string g_traceFiles;
+std::string g_traceMountFiles;
+bool g_tracing = false;
+
+void TraceOpen(const char* path)
+{
+    if (!path || !emscripten_is_main_browser_thread())
+    {
+        return;
+    }
+    if (g_tracing)
+    {
+        g_traceFiles += path;
+        g_traceFiles += '\n';
+    }
+    char target[PATH_MAX];
+    if (const char* fileInMount = FileInMount(path, target))
+    {
+        g_traceMountFiles += fileInMount;
+        g_traceMountFiles += '\n';
+    }
+}
+
+extern "C" EMSCRIPTEN_KEEPALIVE const char* MuWeb_TraceTake()
+{
+    static std::string result;
+    result = std::exchange(g_traceMountFiles, {});
+    return result.c_str();
+}
+
+extern "C" EMSCRIPTEN_KEEPALIVE const char* MuWeb_TraceMonster(int type)
+{
+    constexpr int TraceKey = 9990;
+    static std::string result;
+    g_traceFiles.clear();
+    g_tracing = true;
+    CHARACTER* monster = Hero ? CreateMonster(static_cast<EMonsterType>(type), Hero->PositionX, Hero->PositionY, TraceKey) : nullptr;
+    g_tracing = false;
+    result = std::to_string(monster ? static_cast<int>(monster->Object.Type) : -1) + "\n" + g_traceFiles;
+    if (monster)
+    {
+        DeleteCharacter(TraceKey);
+    }
+    return result.c_str();
+}
+#endif
+
 // Every fopen of the program comes here (src/CMakeLists.txt links with -Wl,--wrap=fopen), std::ifstream's
 // and miniaudio's among them. Each read of a file of the mount is a round trip to the thread that runs it
 // (fetch-backend.js), tens of microseconds even with the file in memory there, and the game reads in
@@ -603,6 +662,9 @@ extern "C" FILE* __real_fopen(const char* path, const char* mode);
 // for files in 1 and 9 profile samples instead of 9 and 11 (Edge, 2026-10-30).
 extern "C" FILE* __wrap_fopen(const char* path, const char* mode)
 {
+#ifdef MU_WEB_FILE_TRACE
+    TraceOpen(path);
+#endif
     if (FILE* inMemory = OpenWholeInMemory(path, mode))
     {
         return inMemory;

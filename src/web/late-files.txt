@@ -1523,3 +1523,24 @@ Data/Interface/partCharge1/newui_menu_Bt04.OZJ
 Data/Interface/partCharge1/newui_menu_Bt05.OZJ
 Data/Item/hawkstatue.ozj
 Data/Item/hawkstatueb.ozj
+# Model 644 (Monster01), which monsters on more than 12 maps use: make_map_files.py leaves it out of the map packs (2026-11-10).
+Data/Monster/Monster01.bmd
+Data/Monster/helmat_01.OZJ
+Data/Monster/helmat_02.OZJ
+Data/Monster/npc_a_01.OZJ
+Data/Monster/npc_a_02.OZJ
+Data/Monster/npc_a_03.OZJ
+Data/Monster/npc_a_04.OZJ
+Data/Monster/npc_a_05.OZJ
+Data/Monster/npc_a_06.OZJ
+Data/Monster/npc_a_07.OZJ
+Data/Monster/npc_a_08_01.OZJ
+Data/Monster/npc_a_08_02.OZJ
+Data/Monster/npc_a_09_01.OZJ
+Data/Monster/npc_a_09_02.OZJ
+Data/Monster/npc_a_clothes.OZT
+Data/Sound/mBull1.wav
+Data/Sound/mBull2.wav
+Data/Sound/mBullAttack1.wav
+Data/Sound/mBullAttack2.wav
+Data/Sound/mBullDie.wav

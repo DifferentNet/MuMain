@@ -18,7 +18,11 @@
  * Files the game read together on an earlier visit (a monster's models, textures and sounds, the first
  * time it is seen) are read together again: when the first of them is read, the rest start too
  * (readGroups), instead of one after another as the game asks for them; and while the game reads
- * nothing new, the groups' files are read from the device ahead of time (warmUp).
+ * nothing new, the groups' files are read from the device ahead of time (warmUp). On the first visit
+ * nothing is learned yet: startup.json's "groups" say which files follow a model (its textures and
+ * sounds, tools/web/make_startup_pack.py), and those start with the model too (builtGroups). A phone
+ * that saw a monster for the first time waited for some twenty downloads one after another, a second
+ * or two of a still picture (2026-11-10).
  *
  * The downloads run in the mount's worker, except where the page decides (index.html,
  * MuWeb_FilesOnPageThread in WebFileSystem.cpp) that the page's thread runs them: WebKit (Safari,
@@ -73,11 +77,20 @@ addToLibrary({
     // This runs in a worker, whose location is Main.js's: the page's folder.
     var pageFolder = new URL('.', self.location.href).href;
     var versions = null;
+    var builtGroups = new Map(); // a model's path -> the paths of the files read after it
     function fileVersions() {
       if (!versions) {
         versions = fetch(new URL('startup.json', pageFolder), {cache: 'no-cache'})
           .then((response) => response.ok ? response.json() : {})
-          .then((index) => index.versions || {}, () => ({}));
+          .then((index) => {
+            var hashes = index.versions || {};
+            // "groups": [[model, file, ...]], numbers counting the paths of "versions" from 0.
+            var paths = Object.keys(hashes);
+            for (var group of index.groups || []) {
+              builtGroups.set(paths[group[0]], group.slice(1).map((number) => paths[number]));
+            }
+            return hashes;
+          }, () => ({}));
       }
       return versions;
     }
@@ -320,8 +333,9 @@ addToLibrary({
       }
       clearTimeout(saveTimer);
       saveTimer = setTimeout(saveReadGroups, SAVE_AFTER_MS);
-      var rest = readGroups.get(path);
-      if (rest) {
+      // The files learned on this device first, in the order the game read them, then the model's.
+      var rest = (readGroups.get(path) || []).concat(builtGroups.get(path) || []);
+      if (rest.length) {
         readEarly(rest, end);
       }
     }
