@@ -24,6 +24,9 @@ namespace
 // where the PC's bottom bar gives way to theirs (main_frame.rcss).
 constexpr char MobileThemeFlag[] = "mobile";
 constexpr char MobileHudThemeFlag[] = "mobile-hud";
+// A phone or tablet in the browser, whichever layout is picked: the page keeps its own menu button in
+// the top right corner there, over whatever the game draws under it (mini_map.rcss).
+constexpr char HandheldThemeFlag[] = "handheld";
 
 // config.ini words, in the enums' order.
 constexpr std::array<std::wstring_view, UI::Mobile::ViewChoiceCount> ViewWords = {L"auto", L"pc", L"phone"};
@@ -45,25 +48,6 @@ Choice FromWord(const std::wstring& word, const std::array<std::wstring_view, Co
     return static_cast<Choice>(0);
 }
 
-// The style flags every document sees; the layout follows next frame (workspace regions move,
-// windows resize).
-void ApplyThemeFlags()
-{
-    if (Rml::Context* context = RmlUiRuntime::Instance().GetContext())
-    {
-        context->ActivateTheme(MobileThemeFlag, g_phoneView);
-        context->ActivateTheme(MobileHudThemeFlag, UI::Mobile::ReplacesPcHud());
-    }
-    UI::Placement::InvalidateStyles();
-}
-
-template <typename Choice, std::size_t Count>
-std::wstring ToWord(Choice choice, const std::array<std::wstring_view, Count>& words)
-{
-    const auto index = static_cast<std::size_t>(choice);
-    return std::wstring(index < Count ? words[index] : words[0]);
-}
-
 // A phone or tablet, as the browser page tells. A computer's touch screen does not count: its fingers
 // already play the mouse, and its screen fits the PC layout.
 bool IsHandheld()
@@ -73,6 +57,26 @@ bool IsHandheld()
 #else
     return false;
 #endif
+}
+
+// The style flags every document sees; the layout follows next frame (workspace regions move,
+// windows resize).
+void ApplyThemeFlags()
+{
+    if (Rml::Context* context = RmlUiRuntime::Instance().GetContext())
+    {
+        context->ActivateTheme(MobileThemeFlag, g_phoneView);
+        context->ActivateTheme(MobileHudThemeFlag, UI::Mobile::ReplacesPcHud());
+        context->ActivateTheme(HandheldThemeFlag, IsHandheld());
+    }
+    UI::Placement::InvalidateStyles();
+}
+
+template <typename Choice, std::size_t Count>
+std::wstring ToWord(Choice choice, const std::array<std::wstring_view, Count>& words)
+{
+    const auto index = static_cast<std::size_t>(choice);
+    return std::wstring(index < Count ? words[index] : words[0]);
 }
 } // namespace
 

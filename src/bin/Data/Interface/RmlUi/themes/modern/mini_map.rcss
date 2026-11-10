@@ -182,9 +182,14 @@ body { pointer-events: none; }
 .edges .edge-top:nth-child(24), .edges .edge-bottom:nth-child(24) { left: 805px; }
 .edges .edge-top:nth-child(25), .edges .edge-bottom:nth-child(25) { left: 840px; }
 
-/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): the close button below
-   the page's own menu button in the top right corner, with room round it for a finger (the touch
-   controls' Back closes the map too). */
+/* MU Moldova: on a phone or tablet the page keeps its own round menu button in the top right corner,
+   over the close button (about 600-640 x 5-65 of this 640 x 480 space, wider on a small phone, further
+   left on an iPhone with its safe area). So the close button stands left of it, with room round it
+   for a finger. Theme flag "mobile" is the phone layout, "handheld" the device whatever its layout
+   (UI::Mobile::InterfaceMode): with the PC layout on a phone there is no Back button to close the map. */
 @media (theme: mobile) {
-	.close { left: 596px; top: 44px; margin: -8px; padding: 8px; decorator: image(mm-close) content-box; }
+	.close { left: 540px; top: 6px; margin: -8px; padding: 8px; decorator: image(mm-close) content-box; }
+}
+@media (theme: handheld) {
+	.close { left: 540px; top: 6px; margin: -8px; padding: 8px; decorator: image(mm-close) content-box; }
 }

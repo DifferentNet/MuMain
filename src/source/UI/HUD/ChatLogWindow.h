@@ -11,6 +11,7 @@
 
 #pragma warning(disable : 4786)
 #include <string>
+#include <chrono>
 #include <vector>
 
 namespace Rml
@@ -332,6 +333,11 @@ namespace mu::ui::window
         bool m_bLinesDirty = true;
         float m_LastPanelHeight = -1.f;
         void TrackPanelSize();
+        // MU Moldova, the phone view: the newest few messages, each for a while (ChatLogWindow.cpp).
+        // When each message of m_vecAllMsgs came, and how many the model showed last.
+        std::vector<std::chrono::steady_clock::time_point> m_Arrivals;
+        int m_ShownOnPhone = -1;
+        int PhoneShownCount() const;
 
         void RemoveFrontLine();
         int GetCurrentRenderEndLine() const;
