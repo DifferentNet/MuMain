@@ -161,6 +161,9 @@ enum INTERFACE_LIST
     // CRenaShopWindow (UI/Events/RenaShopWindow.h), the Rena shop of the Golden Archer. Same reasoning as
     // INTERFACE_CREDITS above.
     INTERFACE_RENA_SHOP,
+    // CGrandShopWindow (UI/Events/GrandShopWindow.h), the Grand Reset shop of ancient sets (/grshop). Same reasoning as
+    // INTERFACE_CREDITS above.
+    INTERFACE_GRAND_SHOP,
     INTERFACE_END,
     INTERFACE_COUNT = INTERFACE_END - 2,
 };

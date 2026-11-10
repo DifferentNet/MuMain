@@ -15971,6 +15971,57 @@
   <data name="RenaShopTopEmpty" xml:space="preserve">
     <value>Nobody yet.</value>
   </data>
+  <data name="GrandShopTitle" xml:space="preserve">
+    <value>Grand Reset shop</value>
+  </data>
+  <data name="GrandShopAsking" xml:space="preserve">
+    <value>Asking the server...</value>
+  </data>
+  <data name="GrandShopNoAnswer" xml:space="preserve">
+    <value>The server sends no Grand Reset shop data.</value>
+  </data>
+  <data name="GrandShopMarks" xml:space="preserve">
+    <value>Grand Marks: %ls</value>
+  </data>
+  <data name="GrandShopTopMark" xml:space="preserve">
+    <value>top</value>
+  </data>
+  <data name="GrandShopJewelRow" xml:space="preserve">
+    <value>Jewel of Ancient</value>
+  </data>
+  <data name="GrandShopPrice" xml:space="preserve">
+    <value>%ls marks</value>
+  </data>
+  <data name="GrandShopBuy" xml:space="preserve">
+    <value>Buy</value>
+  </data>
+  <data name="GrandShopBoundNote" xml:space="preserve">
+    <value>Bought items are bound to the account: they cannot be traded, sold at the auction or dropped; the vault is allowed.</value>
+  </data>
+  <data name="GrandShopBoundToAccount" xml:space="preserve">
+    <value>Bound to account</value>
+  </data>
+  <data name="GrandShopNotTransferable" xml:space="preserve">
+    <value>Cannot be passed on; the vault is allowed</value>
+  </data>
+  <data name="GrandShopNotSafeZone" xml:space="preserve">
+    <value>You can buy only in a safe zone.</value>
+  </data>
+  <data name="GrandShopNoMarks" xml:space="preserve">
+    <value>Not enough Grand Marks.</value>
+  </data>
+  <data name="GrandShopWorking" xml:space="preserve">
+    <value>Waiting for the server...</value>
+  </data>
+  <data name="GrandShopPickSet" xml:space="preserve">
+    <value>Pick a set on the left.</value>
+  </data>
+  <data name="GrandShopNoLines" xml:space="preserve">
+    <value>Nothing for sale.</value>
+  </data>
+  <data name="GrandShopConfirm" xml:space="preserve">
+    <value>Buy %ls for %ls Grand Marks? It will be bound to your account.</value>
+  </data>
   <data name="HelpSkynetKeysHeading" xml:space="preserve">
     <value>MU Skynet</value>
   </data>

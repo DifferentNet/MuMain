@@ -1,0 +1,97 @@
+/* Legacy theme for CGrandShopWindow (the Grand Reset shop of ancient sets), in the look of the Rena shop (rena_shop.rcss):
+   the docked_panel_frame.rcss frame (linked first; newui_item_back01 top) stretched to 400px wide and the full dock
+   height (432), the title bold and centred, the Grand Marks balance, the set list on the left and the pieces on the
+   right (their icons are drawn under them into #gs_items), the hint and the note about the account binding, and the
+   Buy buttons in the small empty button art (newui_btn_empty_very_small); and the exit button. Reference px inside
+   #panel; inside the panes, physical px (reference px times --root-scale). */
+
+@spritesheet gs-buy-sheet {
+	src: "../../../newui_btn_empty_very_small.tga";
+	gs-buy-up: 0px 0px 53px 23px;
+	gs-buy-over: 0px 23px 53px 23px;
+	gs-buy-down: 0px 46px 53px 23px;
+}
+
+.frame-top { decorator: image(docked-bg-top-b); }
+#panel { width: 400px; height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; }
+
+.gs-title { left: 0; top: 12px; text-align: center; font-weight: bold; pointer-events: none; color: rgb(255, 220, 120); }
+#gs_marks { left: 12px; top: 34px; font-weight: bold; pointer-events: none; color: rgb(255, 220, 120); }
+
+/* The panes and the icons' target under the pieces' one. */
+.gs-items { position: absolute; left: 144px; top: 56px; width: 244px; height: 228px; pointer-events: none; }
+#gs_sets { left: 12px; top: 56px; --flow-w: 124px; line-height: 1.12; height: calc(228px * var(--root-scale)); }
+#gs_pieces { left: 144px; top: 56px; --flow-w: 244px; line-height: 1.12; height: calc(228px * var(--root-scale)); }
+/* The panes not shown: .sharp-text's display above wins over base.rcss's .hidden (same specificity, later sheet). */
+#gs_items.hidden, #gs_sets.hidden, #gs_pieces.hidden { display: none; }
+
+.gs-set {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	box-sizing: border-box;
+	height: calc(22px * var(--root-scale));
+	margin-bottom: calc(1px * var(--root-scale));
+	padding: 0 calc(4px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+}
+.gs-set-name { display: block; flex: 1 1 auto; white-space: nowrap; color: rgb(200, 220, 255); }
+.gs-set-top { display: block; flex: 0 0 auto; margin-left: calc(2px * var(--root-scale)); font-weight: bold; white-space: nowrap; color: rgb(255, 220, 120); }
+.gs-set:hover { background-color: rgba(255, 255, 255, 18); }
+.gs-set.selected { background-color: rgba(255, 210, 100, 48); }
+.gs-set.selected .gs-set-name { color: rgb(255, 220, 120); font-weight: bold; }
+
+.gs-piece {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	box-sizing: border-box;
+	height: calc(42px * var(--root-scale));
+	margin-bottom: calc(2px * var(--root-scale));
+	padding: 0 calc(4px * var(--root-scale));
+	background-color: rgba(255, 255, 255, 10);
+}
+.gs-icon {
+	display: block;
+	flex: 0 0 auto;
+	box-sizing: border-box;
+	width: calc(32px * var(--root-scale));
+	height: calc(36px * var(--root-scale));
+	margin-right: calc(5px * var(--root-scale));
+	border: calc(1px * var(--root-scale)) rgba(120, 100, 60, 110);
+	pointer-events: none;
+}
+.gs-text { display: block; flex: 1 1 auto; pointer-events: none; }
+.gs-name { display: block; white-space: nowrap; font-weight: bold; color: rgb(255, 220, 120); }
+.gs-price { display: block; white-space: nowrap; color: rgb(200, 220, 255); }
+
+.gs-buy {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: calc(56px * var(--root-scale));
+	height: calc(26px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	decorator: image(gs-buy-up);
+}
+.gs-buy:hover { decorator: image(gs-buy-over); }
+.gs-buy:active { decorator: image(gs-buy-down); }
+.gs-buy.off { opacity: 0.45; cursor: arrow; }
+.gs-buy.off:hover, .gs-buy.off:active { decorator: image(gs-buy-up); }
+.gs-buy-label { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; color: #ffffff; }
+
+#gs_hint { left: 12px; top: 292px; --flow-w: 376px; line-height: 1.12; pointer-events: none; }
+.gs-hint { display: block; white-space: nowrap; color: rgb(200, 220, 255); }
+.gs-hint.good { color: rgb(150, 255, 150); }
+.gs-hint.bad { color: rgb(255, 150, 120); }
+#gs_note { left: 12px; top: 336px; --flow-w: 376px; line-height: 1.12; pointer-events: none; }
+.gs-note { display: block; white-space: nowrap; color: rgb(170, 170, 170); }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+.gs-title { width: calc(100% * var(--root-scale)); }
+#gs_marks { width: calc(376px * var(--root-scale)); }

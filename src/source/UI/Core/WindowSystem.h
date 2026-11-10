@@ -50,6 +50,7 @@
 #include "UI/Events/TierMapsWindow.h"
 #include "UI/Events/EndlessTowerWindow.h"
 #include "UI/Events/RenaShopWindow.h"
+#include "UI/Events/GrandShopWindow.h"
 #include "UI/Inventory/JewelBankWindow.h"
 #include "UI/Inventory/AuctionWindow.h"
 #include "UI/Dialogs/GmPanelWindow.h"
@@ -204,6 +205,7 @@ namespace mu::ui::window
         CTierMapsWindow* m_pNewTierMapsWindow;
         CEndlessTowerWindow* m_pNewEndlessTowerWindow;
         CRenaShopWindow* m_pNewRenaShopWindow;
+        CGrandShopWindow* m_pNewGrandShopWindow;
         CJewelBankWindow* m_pNewJewelBankWindow;
         CAuctionWindow* m_pNewAuctionWindow;
         CGmPanelWindow* m_pNewGmPanelWindow;
@@ -301,6 +303,7 @@ namespace mu::ui::window
         CTierMapsWindow* GetUI_NewTierMapsWindow() const;
         CEndlessTowerWindow* GetUI_NewEndlessTowerWindow() const;
         CRenaShopWindow* GetUI_NewRenaShopWindow() const;
+        CGrandShopWindow* GetUI_NewGrandShopWindow() const;
         CJewelBankWindow* GetUI_NewJewelBankWindow() const;
         CAuctionWindow* GetUI_NewAuctionWindow() const;
         CGmPanelWindow* GetUI_NewGmPanelWindow() const;

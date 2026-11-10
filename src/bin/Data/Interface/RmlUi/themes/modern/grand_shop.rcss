@@ -1,0 +1,106 @@
+/* Modern theme for CGrandShopWindow (the Grand Reset shop of ancient sets): docked_panel_frame.rcss's forged panel
+   (linked first), here 400px wide at the full dock height, the modern exit button, forged rows and buttons in the
+   look of the Rena shop (rena_shop.rcss). Geometry is the legacy one: reference px inside #panel, physical px
+   (reference px times --root-scale) inside the panes. */
+
+#panel { width: 400px; height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; transform-origin: left top; }
+
+#btn_exit {
+	position: absolute;
+	left: 13px;
+	top: 392px;
+	width: 36px;
+	height: 28px;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+	pointer-events: auto;
+}
+#btn_exit:hover { border-color: token(accent-steel-hover); }
+
+.gs-title { left: 0; top: 12px; text-align: center; font-weight: bold; pointer-events: none; color: token(accent-gold); }
+#gs_marks { left: 12px; top: 34px; font-weight: bold; pointer-events: none; color: token(accent-gold); }
+
+/* The panes and the icons' target under the pieces' one. */
+.gs-items { position: absolute; left: 144px; top: 56px; width: 244px; height: 228px; pointer-events: none; }
+#gs_sets { left: 12px; top: 56px; --flow-w: 124px; line-height: 1.12; height: calc(228px * var(--root-scale)); }
+#gs_pieces { left: 144px; top: 56px; --flow-w: 244px; line-height: 1.12; height: calc(228px * var(--root-scale)); }
+/* The panes not shown: .sharp-text's display above wins over base.rcss's .hidden (same specificity, later sheet). */
+#gs_items.hidden, #gs_sets.hidden, #gs_pieces.hidden { display: none; }
+
+.gs-set {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	box-sizing: border-box;
+	height: calc(22px * var(--root-scale));
+	margin-bottom: calc(1px * var(--root-scale));
+	padding: 0 calc(4px * var(--root-scale));
+	border-radius: token(radius-sm)px;
+	cursor: pointer;
+	pointer-events: auto;
+}
+.gs-set-name { display: block; flex: 1 1 auto; white-space: nowrap; color: token(text-secondary); }
+.gs-set-top { display: block; flex: 0 0 auto; margin-left: calc(2px * var(--root-scale)); font-weight: bold; white-space: nowrap; color: token(accent-gold); }
+.gs-set:hover { background-color: rgba(255, 255, 255, 14); }
+.gs-set.selected { background-color: rgba(255, 200, 90, 40); }
+.gs-set.selected .gs-set-name { color: token(accent-gold); font-weight: bold; }
+
+.gs-piece {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	box-sizing: border-box;
+	height: calc(42px * var(--root-scale));
+	margin-bottom: calc(2px * var(--root-scale));
+	padding: 0 calc(4px * var(--root-scale));
+	border-radius: token(radius-sm)px;
+	background-color: rgba(255, 255, 255, 8);
+}
+.gs-icon {
+	display: block;
+	flex: 0 0 auto;
+	box-sizing: border-box;
+	width: calc(32px * var(--root-scale));
+	height: calc(36px * var(--root-scale));
+	margin-right: calc(5px * var(--root-scale));
+	border: calc(1px * var(--root-scale)) token(border-frame);
+	border-radius: token(radius-sm)px;
+	pointer-events: none;
+}
+.gs-text { display: block; flex: 1 1 auto; pointer-events: none; }
+.gs-name { display: block; white-space: nowrap; font-weight: bold; color: token(accent-gold); }
+.gs-price { display: block; white-space: nowrap; color: token(text-secondary); }
+
+.gs-buy {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	box-sizing: border-box;
+	width: calc(56px * var(--root-scale));
+	height: calc(26px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+.gs-buy:hover { border-color: token(accent-steel-hover); }
+.gs-buy:active { background-color: token(surface-recessed); }
+.gs-buy.off { opacity: 0.45; cursor: arrow; }
+.gs-buy.off:hover { border-color: token(border-frame); }
+.gs-buy-label { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; color: token(text-primary); }
+
+#gs_hint { left: 12px; top: 292px; --flow-w: 376px; line-height: 1.12; pointer-events: none; }
+.gs-hint { display: block; white-space: nowrap; color: token(text-secondary); }
+.gs-hint.good { color: token(semantic-success); }
+.gs-hint.bad { color: token(semantic-danger); }
+#gs_note { left: 12px; top: 336px; --flow-w: 376px; line-height: 1.12; pointer-events: none; }
+.gs-note { display: block; white-space: nowrap; color: token(text-muted); }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+.gs-title { width: calc(100% * var(--root-scale)); }
+#gs_marks { width: calc(376px * var(--root-scale)); }
