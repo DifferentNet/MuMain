@@ -1,0 +1,67 @@
+<rml>
+<head>
+	<title>Grand Reset shop</title>
+	<link type="text/rcss" href="base.rcss"/>
+	<link type="text/rcss" href="docked_panel_frame.rcss"/>
+	<link type="text/rcss" href="grand_shop.rcss"/>
+</head>
+<body>
+	<!-- The Grand Reset shop of ancient sets (CGrandShopWindow), opened by the chat command /grshop, docked right at
+	     full dock height and wider than the other NPC windows: the title and the Grand Marks balance; on the left the
+	     sets (a high-tier set carries the "top" mark, the Jewel of Ancient has a row of its own; the shown set on a gold
+	     band); on the right the shown set's pieces, each with its live 3D icon (C++ draws them into #gs_items, under the
+	     pieces' pane, into the boxes .gs-icon), its name, its price and a Buy button (grey with the reason as its
+	     tooltip while it cannot be pressed); below, the last answer (green or red) or why buying is off, and the note about
+	     the account binding; and the exit button. The workspace slot places and scales #panel. C++ keeps the state and
+	     checks every click; clicks are queued with grand_shop_set(index), grand_shop_buy(index) and grand_shop_exit. -->
+	<div id="panel" data-model="grand_shop">
+		<div class="frame-piece frame-top"></div>
+		<div class="frame-piece frame-left"></div>
+		<div class="frame-piece frame-right"></div>
+		<div class="frame-piece frame-bottom"></div>
+
+		<span id="gs_title" class="sharp-text gs-title"
+		      data-style-font-size="title.text_px + 'px'">{{title.text}}</span>
+		<span id="gs_marks" class="sharp-text gs-marks"
+		      data-style-font-size="marks.text_px + 'px'">{{marks.text}}</span>
+
+		<!-- The pieces' icons, live 3D, drawn by C++ under the pieces' pane. -->
+		<img id="gs_items" class="gs-items" data-class-hidden="!has_info"/>
+
+		<div id="gs_sets" class="sharp-text sharp-flow scroll-pane" data-class-hidden="!has_info">
+			<div class="gs-set" data-for="s : sets" data-class-selected="s.selected"
+			     data-event-click="grand_shop_set(s.index)">
+				<span class="gs-set-name" data-style-font-size="s.name.text_px + 'px'">{{s.name.text}}</span>
+				<span class="gs-set-top" data-if="s.top"
+				      data-style-font-size="top_label.text_px + 'px'">{{top_label.text}}</span>
+			</div>
+		</div>
+
+		<div id="gs_pieces" class="sharp-text sharp-flow scroll-pane" data-class-hidden="!has_info">
+			<div class="gs-piece" data-for="p : items">
+				<div class="gs-icon" data-attr-id="p.id"></div>
+				<div class="gs-text">
+					<span class="gs-name" data-style-font-size="p.name.text_px + 'px'">{{p.name.text}}</span>
+					<span class="gs-price" data-style-font-size="p.price.text_px + 'px'">{{p.price.text}}</span>
+				</div>
+				<div class="gs-buy" data-class-off="!p.can_buy" data-attr-data-hint="p.hint"
+				     data-event-click="grand_shop_buy(p.index)">
+					<span class="gs-buy-label" data-style-font-size="buy_label.text_px + 'px'">{{buy_label.text}}</span>
+				</div>
+			</div>
+		</div>
+
+		<div id="gs_hint" class="sharp-text sharp-flow">
+			<span class="gs-hint" data-for="h : hint" data-class-good="hint_kind == 1" data-class-bad="hint_kind == 2"
+			      data-style-font-size="h.text_px + 'px'">{{h.text}}</span>
+		</div>
+
+		<div id="gs_note" class="sharp-text sharp-flow">
+			<span class="gs-note" data-for="n : note" data-style-font-size="n.text_px + 'px'">{{n.text}}</span>
+		</div>
+
+		<div id="btn_exit" data-event-click="grand_shop_exit" data-attr-data-hint="exit_tooltip"></div>
+		<div id="frame_corner_close" data-event-click="grand_shop_exit"></div>
+	</div>
+</body>
+</rml>

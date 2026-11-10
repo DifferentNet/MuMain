@@ -919,41 +919,10 @@ void mu::ui::window::CCharacterInfoWindow::BuildAttributeLines()
         }
     }
 
-    int itemoption380Attack = 0;
-    int itemoption380Defense = 0;
-
-    for (int j = 0; j < MAX_EQUIPMENT; ++j)
-    {
-        bool is380item = CharacterMachine->Equipment[j].option_380;
-        int i380type = CharacterMachine->Equipment[j].Type;
-
-        if (is380item && i380type > -1 && i380type < MAX_ITEM)
-        {
-            ITEM_ADD_OPTION item380option;
-
-            item380option = g_pItemAddOptioninfo->GetItemAddOtioninfo(CharacterMachine->Equipment[j].Type);
-
-            if (item380option.m_byOption1 == 1)
-            {
-                itemoption380Attack += item380option.m_byValue1;
-            }
-
-            if (item380option.m_byOption2 == 1)
-            {
-                itemoption380Attack += item380option.m_byValue2;
-            }
-
-            if (item380option.m_byOption1 == 3)
-            {
-                itemoption380Defense += item380option.m_byValue1;
-            }
-
-            if (item380option.m_byOption2 == 3)
-            {
-                itemoption380Defense += item380option.m_byValue2;
-            }
-        }
-    }
+    // MU Moldova: option_380 marks an account-bound Grand Reset shop piece, not a real 380 option, so it adds no
+    // attack or defense rate bonus.
+    const int itemoption380Attack = 0;
+    const int itemoption380Defense = 0;
 
     ITEM* pItemRingLeft, * pItemRingRight;
 

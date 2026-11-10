@@ -157,6 +157,7 @@ constexpr DocumentPlacement Placements[] = {
     {"tier_maps.rml", 10.65f, MainScene},
     {"endless_tower.rml", 10.65f, MainScene},
     {"rena_shop.rml", 10.65f, MainScene},
+    {"grand_shop.rml", 10.65f, MainScene},
     {"jewel_bank.rml", 10.65f, MainScene},
     {"gm_panel.rml", 10.65f, MainScene},
     {"auction.rml", 10.65f, MainScene},

@@ -4892,24 +4892,23 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
         }
     }
 
+    // MU Moldova: the 380 flag marks a Grand Reset shop piece, bound to the account (no real 380 option exists on
+    // this server), so it shows the label instead of the 380 lines. Rena and the SkyNet Box can't be passed on either.
+    const wchar_t* bindLabel = nullptr;
     if (ip->option_380 != 0)
+        bindLabel = I18N::Game::GrandShopBoundToAccount;
+    else if (ip->Type == ITEM_RENA || ip->Type == ITEM_GOLDEN_BOX)
+        bindLabel = I18N::Game::GrandShopNotTransferable;
+
+    if (bindLabel != nullptr)
     {
-        std::vector<std::wstring> Text380;
+        mu_swprintf(TextList[TextNum], L"\n"); TextNum++; SkipNum++;
 
-        if (g_pItemAddOptioninfo)
-        {
-            g_pItemAddOptioninfo->GetItemAddOtioninfoText(Text380, ip->Type);
+        wcsncpy(TextList[TextNum], bindLabel, 100);
+        TextList[TextNum][99] = L'\0';
+        TextListColor[TextNum] = TEXT_COLOR_ORANGE; TextBold[TextNum] = true; TextNum++;
 
-            mu_swprintf(TextList[TextNum], L"\n"); TextNum++; SkipNum++;
-
-            for (int i = 0; i < (int)Text380.size(); ++i)
-            {
-                wcsncpy(TextList[TextNum], Text380[i].c_str(), 100);
-                TextListColor[TextNum] = TEXT_COLOR_REDPURPLE; TextBold[TextNum] = true; TextNum++;
-            }
-
-            mu_swprintf(TextList[TextNum], L"\n"); TextNum++; SkipNum++;
-        }
+        mu_swprintf(TextList[TextNum], L"\n"); TextNum++; SkipNum++;
     }
     //#ifndef PBG_MOD_NEWCHAR_MONK_WING_2
     //#ifdef PBG_MOD_NEWCHAR_MONK_WING

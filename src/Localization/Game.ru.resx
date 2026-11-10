@@ -15570,6 +15570,57 @@
   <data name="RenaShopTopEmpty" xml:space="preserve">
     <value>Пока никого.</value>
   </data>
+  <data name="GrandShopTitle" xml:space="preserve">
+    <value>Магазин Гранд-ресета</value>
+  </data>
+  <data name="GrandShopAsking" xml:space="preserve">
+    <value>Спрашиваю сервер...</value>
+  </data>
+  <data name="GrandShopNoAnswer" xml:space="preserve">
+    <value>Сервер не присылает данные магазина Гранд-ресета.</value>
+  </data>
+  <data name="GrandShopMarks" xml:space="preserve">
+    <value>Знаки Гранда: %ls</value>
+  </data>
+  <data name="GrandShopTopMark" xml:space="preserve">
+    <value>топ</value>
+  </data>
+  <data name="GrandShopJewelRow" xml:space="preserve">
+    <value>Jewel of Ancient</value>
+  </data>
+  <data name="GrandShopPrice" xml:space="preserve">
+    <value>%ls зн.</value>
+  </data>
+  <data name="GrandShopBuy" xml:space="preserve">
+    <value>Купить</value>
+  </data>
+  <data name="GrandShopBoundNote" xml:space="preserve">
+    <value>Купленные вещи привязаны к аккаунту: их нельзя передать, продать на аукционе или выбросить; хранилище можно.</value>
+  </data>
+  <data name="GrandShopBoundToAccount" xml:space="preserve">
+    <value>Привязано к аккаунту</value>
+  </data>
+  <data name="GrandShopNotTransferable" xml:space="preserve">
+    <value>Нельзя передать; хранилище можно</value>
+  </data>
+  <data name="GrandShopNotSafeZone" xml:space="preserve">
+    <value>Покупать можно только в безопасной зоне.</value>
+  </data>
+  <data name="GrandShopNoMarks" xml:space="preserve">
+    <value>Не хватает Знаков Гранда.</value>
+  </data>
+  <data name="GrandShopWorking" xml:space="preserve">
+    <value>Жду ответ сервера...</value>
+  </data>
+  <data name="GrandShopPickSet" xml:space="preserve">
+    <value>Выберите сет слева.</value>
+  </data>
+  <data name="GrandShopNoLines" xml:space="preserve">
+    <value>Ничего не продаётся.</value>
+  </data>
+  <data name="GrandShopConfirm" xml:space="preserve">
+    <value>Купить %ls за %ls Знаков Гранда? Вещь будет привязана к аккаунту.</value>
+  </data>
   <data name="HelpSkynetKeysHeading" xml:space="preserve">
     <value>MU Skynet</value>
   </data>

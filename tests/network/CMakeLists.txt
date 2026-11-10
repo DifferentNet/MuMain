@@ -77,6 +77,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Network/Server/HiddenChatLines.cpp
 )
 
+mu_add_test(
+    NAME test_grand_shop_lines
+    SOURCES
+        test_grand_shop_lines.cpp
+    LINK_LIBS
+        MuClient
+)
+
 if(DOTNET_EXECUTABLE)
     add_test(
         NAME login_diagnostics_contract
