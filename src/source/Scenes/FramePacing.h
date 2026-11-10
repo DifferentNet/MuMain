@@ -63,6 +63,8 @@ constexpr long SleepMsBeforeNextFrame(double restMs, Precision precision)
 // (measured 2026-11-10: about 800 FPS, a whole core, VSync on). The watch counts the frames of each
 // half second; a rate far above the display's means VSync is not pacing, and it asks for a cap at the
 // display's rate. Every 15 s it lifts the cap for one half second to see whether VSync paces again.
+// It counts every pass of the loop that reaches the renderer, also one whose frame the renderer then
+// skips because the swapchain gave no image: those passes are the wasted core as well.
 class VsyncWatch
 {
 public:
@@ -73,6 +75,8 @@ public:
     // No display rate known: above every display sold, and a cap no player on a fast display minds.
     static constexpr double kUnknownLimitFps = 700.0;
     static constexpr double kUnknownCapFps = 144.0;
+    // A display that reports a wrongly low rate must not slow the game down.
+    static constexpr double kMinCapFps = 60.0;
 
     // Call once per drawn frame. `refreshHz`: the fastest connected display, 0 when unknown.
     // Returns the cap for the next frames in FPS, 0 for none.
@@ -113,7 +117,7 @@ public:
         const double rate = static_cast<double>(m_frames) * 1000.0 / elapsedMs;
         if (rate > (known ? refreshHz * kOverRefresh : kUnknownLimitFps))
         {
-            m_capFps = known ? refreshHz : kUnknownCapFps;
+            m_capFps = !known ? kUnknownCapFps : refreshHz < kMinCapFps ? kMinCapFps : refreshHz;
             m_engagedAtMs = nowMs;
             m_engagedNow = !m_probing;
             m_measuredFps = rate;

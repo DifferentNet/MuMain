@@ -1234,7 +1234,8 @@ static void WatchVSyncPacing()
     if (watch.EngagedNow())
     {
         mu::log::Get("render")->warn(
-            "VSync is on but does not pace the frames: {:.0f} FPS, fastest display {:.0f} Hz (0 = unknown). "
+            "VSync is on but the frame loop is not paced by it (or the swapchain gives no image): {:.0f} passes a "
+            "second, fastest display {:.0f} Hz (0 = unknown). "
             "Capping at {:.0f} FPS until it does",
             watch.MeasuredFps(), refreshHz, watch.CapFps());
     }

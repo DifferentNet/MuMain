@@ -154,6 +154,13 @@ TEST_CASE("an unknown display rate: only a wild frame rate is capped [core][fram
     CHECK(Run(watch, now, 2000.0, 800.0, true, 0.0) == VsyncWatch::kUnknownCapFps);
 }
 
+TEST_CASE("a display that reports a very low rate does not slow the game [core][frame-pacing][vsync-watch]")
+{
+    VsyncWatch watch;
+    double now = 0.0;
+    CHECK(Run(watch, now, 2000.0, 800.0, true, 24.0) == VsyncWatch::kMinCapFps);
+}
+
 TEST_CASE("a clock that steps back restarts the watch's window [core][frame-pacing][vsync-watch]")
 {
     VsyncWatch watch;
