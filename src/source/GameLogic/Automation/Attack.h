@@ -92,6 +92,58 @@ float EquippedAttackRange();
            result == AttackResult::NoPath || result == AttackResult::Blocked;
 }
 
+// The walk into range of a target takes one step per call, to the free tile next to the character that lies
+// nearest to the target, with no look further ahead. With a wall or a fence between the two the nearest tile is the
+// one at the wall, then the one beside it, then the first again: the character stepped to and fro along the fence
+// without ever reaching the target or giving it up, while monsters on its own side waited (Tyres in the Arena pen,
+// 2026-11-10). ApproachWatch tells such a walk from one that gets there: the gap to the target (any measure that
+// falls as the character gets closer) has to reach a new low within `patience`.
+struct ApproachWatch
+{
+    int target = -1;
+    int bestGap = 0;
+    long long closerAt = 0; // when the gap last reached a new low
+    long long seenAt = 0;   // the last step towards this target
+
+    // Notes a step towards `targetKey` at `now` (any time unit) and returns whether the approach should be given
+    // up. A step after a pause longer than `pause` starts a new approach: the character did something else meanwhile.
+    [[nodiscard]] constexpr bool NoteStep(int targetKey, int gap, long long now, long long patience, long long pause)
+    {
+        const bool fresh = targetKey != target || now - seenAt > pause;
+        seenAt = now;
+        if (fresh || gap < bestGap)
+        {
+            target = targetKey;
+            bestGap = gap;
+            closerAt = now;
+            return false;
+        }
+        if (now - closerAt < patience)
+        {
+            return false;
+        }
+        target = -1;
+        return true;
+    }
+
+    constexpr void Reset()
+    {
+        target = -1;
+    }
+};
+
+// Which of two targets a caller that picks the nearest should prefer: one with a clear line to it comes before one
+// behind a wall, however near that one is; among equals the nearer one, and at the same distance the later one, as
+// the helper's choice always did.
+[[nodiscard]] constexpr bool IsBetterTarget(bool clearLine, int distance, bool bestClearLine, int bestDistance)
+{
+    if (clearLine != bestClearLine)
+    {
+        return clearLine;
+    }
+    return distance <= bestDistance;
+}
+
 // True while a swing animation is still playing, so callers keep the
 // cadence of AttackSpeed instead of their own timer.
 [[nodiscard]] bool IsSwingInProgress();
