@@ -19,6 +19,8 @@ constexpr float kFineStrength = 24.0f;
 constexpr float kBroadStrength = 12.0f;
 // Tilt never goes past this (about 64 degrees), so no texel faces sideways.
 constexpr float kMaxTilt = 0.9f;
+// Below this share of visible texels around it (after a blur), a texel has no height of its own.
+constexpr float kMinCoverage = 1e-4f;
 
 bool IsSeparator(wchar_t c)
 {
@@ -92,6 +94,14 @@ bool IsPlayerFace(std::wstring_view file)
 {
     return StartsWithNoCase(file, L"skin_") || IsPrefixNumberDot(file, L"SkinClass") ||
            IsPrefixNumberDot(file, L"LevelClass") || ContainsNoCase(file, L"head_N.") || ContainsNoCase(file, L"face");
+}
+
+// Leaf litter strewn flat over ground, stones and walls (Lorencia Grass01/02, the Arena's Object32/33). Its HD
+// picture is the original upscaled smoothly, the Classic look (scripts/hd_art.py CUTOUT_SMOOTH), and Classic has
+// no relief: from brightness its tiny leaves came out half black under the side light (Lorencia fountain, 2026-11-11).
+bool IsLeafLitter(std::wstring_view file)
+{
+    return StartsWithNoCase(file, L"tree_08.");
 }
 
 bool IsModelFolder(std::wstring_view folder)
@@ -216,7 +226,8 @@ bool WantsNormalMap(std::wstring_view path)
         start = end + 1;
     }
     return EqualsNoCase(parts[0], L"Data") && EqualsNoCase(parts[1], L"HD") && IsModelFolder(parts[2]) &&
-           start < path.size() && !(EqualsNoCase(parts[2], L"Player") && IsPlayerFace(FileName(path)));
+           start < path.size() && !(EqualsNoCase(parts[2], L"Player") && IsPlayerFace(FileName(path))) &&
+           !IsLeafLitter(FileName(path));
 }
 
 std::vector<std::uint8_t> Build(std::span<const std::uint8_t> rgba, int width, int height, int scale)
@@ -227,18 +238,32 @@ std::vector<std::uint8_t> Build(std::span<const std::uint8_t> rgba, int width, i
         return {};
     }
     const std::size_t count = static_cast<std::size_t>(width) * static_cast<std::size_t>(height);
-    std::vector<float> height0(count);
+    // The height is the brightness of the visible texels only. A cut-out (a leaf on a clear background) must not
+    // rise from nothing at its edge: that cliff turned small strewn leaves half black under the side light
+    // (Lorencia fountain, 2026-11-11). So every blur is weighted by the alpha, and clear texels add nothing.
+    std::vector<float> alpha(count);
+    std::vector<float> weighted(count);
     for (std::size_t i = 0; i < count; ++i)
     {
         const std::uint8_t* p = rgba.data() + i * 4u;
         const float luminance = (0.299f * p[0] + 0.587f * p[1] + 0.114f * p[2]) / 255.0f;
-        height0[i] = luminance * (p[3] / 255.0f);
+        alpha[i] = p[3] / 255.0f;
+        weighted[i] = luminance * alpha[i];
     }
 
     // Fine relief: lightly smoothed against JPEG noise. Broad relief: the shapes over `scale` texels.
     const int broadRadius = std::max(scale, 1) * 2;
-    const std::vector<float> fine = BoxBlur(height0, width, height, 1);
-    const std::vector<float> broad = BoxBlur(fine, width, height, broadRadius);
+    const std::vector<float> fineWeighted = BoxBlur(weighted, width, height, 1);
+    const std::vector<float> fineAlpha = BoxBlur(alpha, width, height, 1);
+    const std::vector<float> broadWeighted = BoxBlur(fineWeighted, width, height, broadRadius);
+    const std::vector<float> broadAlpha = BoxBlur(fineAlpha, width, height, broadRadius);
+    std::vector<float> fine(count);
+    std::vector<float> broad(count);
+    for (std::size_t i = 0; i < count; ++i)
+    {
+        fine[i] = fineAlpha[i] > kMinCoverage ? fineWeighted[i] / fineAlpha[i] : 0.0f;
+        broad[i] = broadAlpha[i] > kMinCoverage ? broadWeighted[i] / broadAlpha[i] : 0.0f;
+    }
 
     std::vector<std::uint8_t> normals(count * 4u);
     for (int y = 0; y < height; ++y)
@@ -265,6 +290,10 @@ std::vector<std::uint8_t> Build(std::span<const std::uint8_t> rgba, int width, i
                 tx *= kMaxTilt / tilt;
                 ty *= kMaxTilt / tilt;
             }
+            // A half-clear texel leans only as far as it shows; a clear one stays flat.
+            const float shown = alpha[static_cast<std::size_t>(y) * width + x];
+            tx *= shown;
+            ty *= shown;
             std::uint8_t* out = normals.data() + (static_cast<std::size_t>(y) * width + x) * 4u;
             out[0] = Encode(tx);
             out[1] = Encode(ty);

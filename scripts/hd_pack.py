@@ -38,7 +38,7 @@ STAT_NAME = ".hd-pack-sources"  # src size and mtime per packed file, for the in
 NRM_MAGIC = b"MUN2"
 NRM_SUFFIX = ".nrm"
 # Bumped when the maps' algorithm changes, so the next run builds them all again.
-NRM_VERSION = "3"
+NRM_VERSION = "4"
 NRM_QUALITY = 90
 NRM_RETRY_QUALITIES = (95, 100)  # then lossless
 # --check fails a map whose error (in steps of 1/127 tilt) is larger than this anywhere, or on average.
@@ -46,9 +46,12 @@ NRM_MAX_ERROR, NRM_MEAN_ERROR = 32, 2.0
 MAX_SIDE = 1024  # Render::Sprites::kBitmapMaximumWidth and Height
 MODEL_FOLDER = re.compile(r"^(item|player|monster|npc|object[0-9]+)$", re.IGNORECASE)
 # NormalMaps.cpp IsPlayerFace: the characters' faces carry painted shading; relief sank their eyes.
+# NormalMaps.cpp IsLeafLitter: strewn leaves, the Classic look, no relief (half black under the side light).
+LEAF_LITTER = "tree_08."
 PLAYER_FACE = re.compile(r"^(skin_|skinclass[0-9]+\.|levelclass[0-9]+\.)|head_n\.|face", re.IGNORECASE)
 # NormalMaps.cpp: kFineStrength, kBroadStrength, kMaxTilt.
 FINE_STRENGTH, BROAD_STRENGTH, MAX_TILT = 24.0, 12.0, 0.9
+MIN_COVERAGE = 1e-4  # NormalMaps.cpp kMinCoverage
 
 
 def pixels_layout(data):
@@ -101,6 +104,8 @@ def wants_normal_map(rel):
     """NormalMaps::WantsNormalMap for a path under Data/HD: an OZT or OZJ of a model folder."""
     parts = rel.split("/")
     if len(parts) >= 2 and parts[0].lower() == "player" and PLAYER_FACE.search(parts[-1]):
+        return False
+    if parts[-1].lower().startswith(LEAF_LITTER):
         return False
     return len(parts) >= 2 and MODEL_FOLDER.match(parts[0]) is not None and rel.lower().endswith((".ozt", ".ozj"))
 
@@ -176,10 +181,15 @@ def gradient(h, step):
 def tilt_of(rgba, scale):
     """The tilt (tx, ty) per texel of NormalMaps::Build, before its encoding to bytes."""
     lum = (0.299 * rgba[..., 0] + 0.587 * rgba[..., 1] + 0.114 * rgba[..., 2]) / 255.0
-    h0 = (lum * (rgba[..., 3] / 255.0)).astype(np.float32)
+    alpha = (rgba[..., 3] / 255.0).astype(np.float32)
+    # Brightness of the visible texels only (alpha-weighted blurs), so a cut-out's edge is no cliff.
+    weighted = (lum * alpha).astype(np.float32)
     broad_radius = max(scale, 1) * 2
-    fine = box_blur(h0, 1)
-    broad = box_blur(fine, broad_radius)
+    fine_w, fine_a = box_blur(weighted, 1), box_blur(alpha, 1)
+    broad_w, broad_a = box_blur(fine_w, broad_radius), box_blur(fine_a, broad_radius)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        fine = np.where(fine_a > MIN_COVERAGE, fine_w / fine_a, 0).astype(np.float32)
+        broad = np.where(broad_a > MIN_COVERAGE, broad_w / broad_a, 0).astype(np.float32)
     fx, fy = gradient(fine, 1)
     bx, by = gradient(broad, broad_radius)
     broad_scale = BROAD_STRENGTH * broad_radius
@@ -189,7 +199,7 @@ def tilt_of(rgba, scale):
     inverse = 1.0 / np.sqrt(1.0 + tx * tx + ty * ty)
     tx, ty = tx * inverse, ty * inverse
     tilt = np.sqrt(tx * tx + ty * ty)
-    limit = np.where(tilt > MAX_TILT, MAX_TILT / np.maximum(tilt, 1e-12), 1.0)
+    limit = np.where(tilt > MAX_TILT, MAX_TILT / np.maximum(tilt, 1e-12), 1.0) * alpha
     return tx * limit, ty * limit
 
 
