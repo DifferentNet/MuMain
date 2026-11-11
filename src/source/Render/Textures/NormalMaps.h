@@ -25,13 +25,15 @@ void SetRuntimeBuild(bool enabled);
 // Whether the texture at `path` (an HD copy, "Data\HD\...") belongs to a model that gets a normal
 // map: Item, Player, Monster, NPC and ObjectN. World ground, effects, skills and the interface
 // do not, nor the characters' faces (Player skin_*, SkinClassNNN, LevelClassNNN, *head_N, *face*):
-// their shading is painted in. Either separator and any case. Mirrored by scripts/hd_pack.py.
+// their shading is painted in; nor strewn leaf litter (tree_08.*, the Classic look). Either separator
+// and any case. Mirrored by scripts/hd_pack.py.
 [[nodiscard]] bool WantsNormalMap(std::wstring_view path);
 
 // The normal map of `rgba` (width x height, at full size; scripts/hd_pack.py does the same and then halves it) RGBA8, rows top to bottom): red and green hold the
 // tilt along u (right) and v (down), 128 = flat; blue and alpha are 255. `scale` is how many
 // times the HD copy was upscaled (1 or more): the broad relief is measured over that many texels.
-// Fully transparent texels count as the lowest. Empty for an empty image.
+// Only visible texels count, weighted by their alpha, and each texel leans as far as it shows: a
+// cut-out's edge is no cliff and clear texels stay flat. Empty for an empty image.
 [[nodiscard]] std::vector<std::uint8_t> Build(std::span<const std::uint8_t> rgba, int width, int height,
                                               int scale);
 
