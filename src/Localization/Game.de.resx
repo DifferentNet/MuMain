@@ -13195,6 +13195,9 @@
   <data name="TouchNextTarget" xml:space="preserve">
     <value>Ziel</value>
   </data>
+  <data name="TouchLoot" xml:space="preserve">
+    <value>Beute</value>
+  </data>
   <data name="TouchMenu" xml:space="preserve">
     <value>Menü</value>
   </data>

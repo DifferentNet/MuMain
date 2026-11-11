@@ -27,6 +27,9 @@ struct Edges
     // of it). 0 leaves the party's cards at their theme's place.
     float topRowBottom = 0.f;
     float topRowRight = 0.f;
+    // The row folded behind its first button: that button's box, the world labels' only band up
+    // there. Not shown while the row is open: its band runs across the screen.
+    TouchTarget::Box topRowBand{};
     // The hero frame.
     float heroLeft = 0.f;
     float heroRight = 0.f;

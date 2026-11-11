@@ -33,6 +33,11 @@ inline constexpr int ControlChoiceCount = 3;
 void SetViewChoice(ViewChoice choice);
 void SetControlChoice(ControlChoice choice);
 
+// A phone or tablet in the browser (the page's device check). There the phone layout and the touch
+// controls always apply and the saved choices wait for a computer; the theme is always legacy
+// (UI/RmlBridge/RmlTheme.cpp). A computer's touch screen does not count.
+[[nodiscard]] bool IsHandheld();
+
 // What the choices come to on this device (as last applied).
 [[nodiscard]] bool IsPhoneView();
 [[nodiscard]] bool IsTouchControls();

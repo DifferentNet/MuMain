@@ -112,6 +112,9 @@ public:
     // The on-screen controls' size in percent (UI::Mobile::TouchUnit).
     int GetTouchButtonSize() const { return m_touchButtonSize; }
     void SetTouchButtonSize(int percent);
+    // Whether the phone's top row of buttons is open (UI/HUD/TouchControls).
+    bool GetTouchTopRow() const { return m_touchTopRow; }
+    void SetTouchTopRow(bool open) { m_touchTopRow = open; }
     // Whether the game reads a gamepad (Core::Input::Gamepad::SetEnabled).
     bool GetGamepad() const { return m_gamepad; }
     void SetGamepad(bool enabled) { m_gamepad = enabled; }
@@ -304,6 +307,7 @@ private:
     std::wstring m_interfaceView;
     std::wstring m_controls;
     int m_touchButtonSize = 100;
+    bool m_touchTopRow = false;
     bool m_gamepad = true;
     bool m_gamepadRumble = true;
     bool m_enableAnimationTaskPool;

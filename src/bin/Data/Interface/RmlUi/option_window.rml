@@ -77,7 +77,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="option-row option-checkbox-row" data-event-click="option_toggle_windowed_mode">
+		<div class="option-row option-checkbox-row" data-if="window_mode_shown" data-event-click="option_toggle_windowed_mode">
 			<span class="option-row-label">{{windowed_mode_label}}</span>
 			<div class="checkbox-box" data-class-checked="windowed_mode">
 				<div class="checkbox-tick"></div>
@@ -517,7 +517,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="option-row option-select-row">
+		<div class="option-row option-select-row" data-if="layout_choices_shown">
 			<span class="option-row-label">{{theme_row_label}}</span>
 			<div class="option-dropdown">
 				<div class="option-dropdown-value" data-event-click="option_toggle_dropdown(2)">{{theme_value_label}}</div>
@@ -529,7 +529,7 @@
 			</div>
 		</div>
 		<!-- MU Moldova: the phone or PC layout and the controls (UI::Mobile::InterfaceMode). -->
-		<div class="option-row option-select-row">
+		<div class="option-row option-select-row" data-if="layout_choices_shown">
 			<span class="option-row-label">{{interface_view_row_label}}</span>
 			<div class="option-dropdown">
 				<div class="option-dropdown-value" data-event-click="option_toggle_dropdown(8)">{{interface_view_value_label}}</div>
@@ -540,7 +540,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="option-row option-select-row">
+		<div class="option-row option-select-row" data-if="layout_choices_shown">
 			<span class="option-row-label">{{controls_row_label}}</span>
 			<div class="option-dropdown">
 				<div class="option-dropdown-value" data-event-click="option_toggle_dropdown(9)">{{controls_value_label}}</div>

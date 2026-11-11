@@ -48,17 +48,6 @@ Choice FromWord(const std::wstring& word, const std::array<std::wstring_view, Co
     return static_cast<Choice>(0);
 }
 
-// A phone or tablet, as the browser page tells. A computer's touch screen does not count: its fingers
-// already play the mouse, and its screen fits the PC layout.
-bool IsHandheld()
-{
-#ifdef __EMSCRIPTEN__
-    return mu::web::IsTouchDevice();
-#else
-    return false;
-#endif
-}
-
 // The style flags every document sees; the layout follows next frame (workspace regions move,
 // windows resize).
 void ApplyThemeFlags()
@@ -67,7 +56,7 @@ void ApplyThemeFlags()
     {
         context->ActivateTheme(MobileThemeFlag, g_phoneView);
         context->ActivateTheme(MobileHudThemeFlag, UI::Mobile::ReplacesPcHud());
-        context->ActivateTheme(HandheldThemeFlag, IsHandheld());
+        context->ActivateTheme(HandheldThemeFlag, UI::Mobile::IsHandheld());
     }
     UI::Placement::InvalidateStyles();
 }
@@ -104,6 +93,15 @@ void UI::Mobile::SetControlChoice(ControlChoice choice)
     config.SetControls(ToWord(choice, ControlWords));
     config.Save();
     Apply();
+}
+
+bool UI::Mobile::IsHandheld()
+{
+#ifdef __EMSCRIPTEN__
+    return mu::web::IsTouchDevice();
+#else
+    return false;
+#endif
 }
 
 bool UI::Mobile::IsPhoneView()
@@ -144,8 +142,10 @@ void UI::Mobile::Apply()
     const bool handheld = IsHandheld();
     const ViewChoice view = GetViewChoice();
     const ControlChoice controls = GetControlChoice();
-    g_phoneView = view == ViewChoice::Phone || (view == ViewChoice::Auto && handheld);
-    g_touchControls = controls == ControlChoice::Touch || (controls == ControlChoice::Auto && handheld);
+    // A phone or tablet always plays the phone layout with the fingers; the saved choices stay in
+    // config.ini for a computer.
+    g_phoneView = handheld || view == ViewChoice::Phone;
+    g_touchControls = handheld || controls == ControlChoice::Touch;
 
     Core::Input::Touch::SetEnabled(g_touchControls);
     ApplyThemeFlags();

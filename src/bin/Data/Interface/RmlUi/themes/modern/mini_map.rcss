@@ -190,6 +190,21 @@ body { pointer-events: none; }
 @media (theme: mobile) {
 	.close { left: 540px; top: 6px; margin: -8px; padding: 8px; decorator: image(mm-close) content-box; }
 }
+/* On a phone or tablet the cross also stands under the touch controls' top row (its band ends about
+   47 units down this space), on a dark round backing that shows it over any map, and the tap area is
+   at least 44 finger units tall (this space is drawn about 0.84 times as tall on a phone in landscape). */
 @media (theme: handheld) {
-	.close { left: 540px; top: 6px; margin: -8px; padding: 8px; decorator: image(mm-close) content-box; }
+	.close {
+		left: 530px;
+		top: 54px;
+		width: 44px;
+		height: 38px;
+		margin: 0;
+		padding: 8px;
+		border-width: 1px;
+		border-color: token(border-frame);
+		border-radius: 12px;
+		background-color: rgba(0, 0, 0, 170);
+		decorator: image(mm-close) content-box;
+	}
 }

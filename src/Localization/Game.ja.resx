@@ -11172,6 +11172,9 @@
   <data name="TouchNextTarget" xml:space="preserve">
     <value>ターゲット</value>
   </data>
+  <data name="TouchLoot" xml:space="preserve">
+    <value>ドロップ</value>
+  </data>
   <data name="TouchMenu" xml:space="preserve">
     <value>メニュー</value>
   </data>

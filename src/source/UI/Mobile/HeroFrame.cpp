@@ -2,13 +2,10 @@
 #include "UI/Mobile/HeroFrame.h"
 
 #include "Character/CharacterManager.h"
-#include "Core/Utilities/StringUtils.h"
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInfomation.h"
-#include "I18N/All.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/HUD/ItemHotKey.h"
-#include "UI/Mobile/CompactNumber.h"
 #include "Network/Server/WSclient.h"
 
 #include <RmlUi/Core/DataModelHandle.h>
@@ -40,13 +37,8 @@ Rml::String FullText(const Gauges::Gauge& gauge)
     return std::to_string(gauge.current) + " / " + std::to_string(gauge.max);
 }
 
-// SD and AG share a row, so each has half the width: big numbers in thousands ("32k/32k").
-Rml::String ShortText(const Gauges::Gauge& gauge)
-{
-    return CompactNumber::Format(gauge.current) + "/" + CompactNumber::Format(gauge.max);
-}
-
-// One gauge of the frame: its model fields and how its numbers are written.
+// One gauge of the frame: its model fields and how its numbers are written (SD and AG are thin bars
+// with none).
 struct GaugeSlot
 {
     const char* fractionName;
@@ -56,8 +48,6 @@ struct GaugeSlot
 
 constexpr GaugeSlot HpSlot{"hero_hp", "hero_hp_text", FullText};
 constexpr GaugeSlot MpSlot{"hero_mp", "hero_mp_text", FullText};
-constexpr GaugeSlot SdSlot{"hero_sd", "hero_sd_text", ShortText};
-constexpr GaugeSlot AgSlot{"hero_ag", "hero_ag_text", ShortText};
 
 bool Same(const Gauges::Gauge& a, const Gauges::Gauge& b)
 {
@@ -74,26 +64,31 @@ void SetGauge(float& fraction, Rml::String& text, Gauges::Gauge& seen, const Gau
     Set(text, slot.format(gauge), slot.textName, markDirty);
 }
 
-// The level, and the master level beside it once there is one.
+// The bar's fill and nothing else: SD and AG show no numbers.
+void SetBar(float& fraction, Gauges::Gauge& seen, const Gauges::Gauge& gauge, const char* name, bool force,
+            MarkDirty markDirty)
+{
+    if (!force && Same(seen, gauge))
+        return;
+    seen = gauge;
+    Set(fraction, gauge.Fraction(), name, markDirty);
+}
+
+// The level's number in the circle, and the master level under it once there is one: numbers only, so
+// the circle needs no words in any language.
 void SyncLevel(Model& model, bool force, MarkDirty markDirty)
 {
     const bool master = gCharacterManager.IsMasterLevel(Hero->Class);
-    const wchar_t* format = master ? I18N::Game::TouchHeroMasterLevel : I18N::Game::TouchHeroLevel;
     const int level = static_cast<int>(CharacterAttribute->Level);
     const int masterLevel = master ? static_cast<int>(Master_Level_Data.nMLevel) : 0;
     Sources& seen = model.seen;
-    if (!force && format == seen.levelFormat && level == seen.level && masterLevel == seen.masterLevel)
+    if (!force && level == seen.level && masterLevel == seen.masterLevel)
         return;
-    seen.levelFormat = format;
     seen.level = level;
     seen.masterLevel = masterLevel;
-
-    wchar_t text[64] = {};
-    if (master)
-        mu_swprintf(text, format, level, masterLevel);
-    else
-        mu_swprintf(text, format, level);
-    Set(model.levelText, StringUtils::WideToNarrow(text), "hero_level", markDirty);
+    Set(model.levelText, std::to_string(level), "hero_level", markDirty);
+    Set(model.masterText, masterLevel > 0 ? "+" + std::to_string(masterLevel) : Rml::String(), "hero_master",
+        markDirty);
 }
 
 void SetPotions(Rml::String& text, int& seen, int count, bool force, const char* name, MarkDirty markDirty)
@@ -132,9 +127,8 @@ void Bind(Rml::DataModelConstructor& constructor, Model& model)
     constructor.Bind("hero_exp", &model.exp);
     constructor.Bind("hero_hp_text", &model.hpText);
     constructor.Bind("hero_mp_text", &model.mpText);
-    constructor.Bind("hero_sd_text", &model.sdText);
-    constructor.Bind("hero_ag_text", &model.agText);
     constructor.Bind("hero_level", &model.levelText);
+    constructor.Bind("hero_master", &model.masterText);
     constructor.Bind("potion_q_count", &model.potionQCount);
     constructor.Bind("potion_w_count", &model.potionWCount);
     constructor.Bind("potion_e_count", &model.potionECount);
@@ -149,8 +143,8 @@ void Sync(Model& model, MarkDirty markDirty)
     Sources& seen = model.seen;
     SetGauge(model.hp, model.hpText, seen.hp, Gauges::Life(), HpSlot, force, markDirty);
     SetGauge(model.mp, model.mpText, seen.mp, Gauges::Mana(), MpSlot, force, markDirty);
-    SetGauge(model.sd, model.sdText, seen.sd, Gauges::Shield(), SdSlot, force, markDirty);
-    SetGauge(model.ag, model.agText, seen.ag, Gauges::SkillMana(), AgSlot, force, markDirty);
+    SetBar(model.sd, seen.sd, Gauges::Shield(), "hero_sd", force, markDirty);
+    SetBar(model.ag, seen.ag, Gauges::SkillMana(), "hero_ag", force, markDirty);
     Set(model.exp, static_cast<float>(Gauges::ReadExperience().progress), "hero_exp", markDirty);
     SyncLevel(model, force, markDirty);
     SyncPotions(model, force, markDirty);

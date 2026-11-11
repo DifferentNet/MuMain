@@ -11,7 +11,7 @@
 namespace UI::Mobile::ButtonSize
 {
 // The choices Options offers, in percent, ascending; 100 is the default.
-inline constexpr std::array<int, 5> Percents = {80, 90, 100, 115, 130};
+inline constexpr std::array<int, 7> Percents = {60, 70, 80, 90, 100, 115, 130};
 
 // The choice nearest a saved percent (a hand edit of config.ini may hold any number).
 [[nodiscard]] int NearestIndex(int percent);

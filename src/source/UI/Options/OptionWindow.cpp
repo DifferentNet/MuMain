@@ -605,6 +605,12 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("controls_index", &model.controlsIndex);
     c.Bind("controls_row_label", &model.controlsRowLabel);
     c.Bind("controls_value_label", &model.controlsValueLabel);
+    model.layoutChoicesShown = !UI::Mobile::IsHandheld();
+    c.Bind("layout_choices_shown", &model.layoutChoicesShown);
+#ifdef __EMSCRIPTEN__
+    model.windowModeShown = false;
+#endif
+    c.Bind("window_mode_shown", &model.windowModeShown);
     c.Bind("touch_buttons_shown", &model.touchButtonsShown);
     c.Bind("touch_buttons_labels", &model.touchButtonsLabels);
     c.Bind("touch_buttons_index", &model.touchButtonsIndex);

@@ -95,6 +95,7 @@ void GameConfig::Load()
     m_interfaceView = ReadString(CfgSectionUI, CfgKeyInterfaceView, CfgDefaultInterfaceView);
     m_controls = ReadString(CfgSectionUI, CfgKeyControls, CfgDefaultControls);
     SetTouchButtonSize(ReadInt(CfgSectionUI, CfgKeyTouchButtonSize, CfgDefaultTouchButtonSize));
+    m_touchTopRow = ReadBool(CfgSectionUI, CfgKeyTouchTopRow, CfgDefaultTouchTopRow);
     m_gamepad = ReadBool(CfgSectionUI, CfgKeyGamepad, CfgDefaultGamepad);
     m_gamepadRumble = ReadBool(CfgSectionUI, CfgKeyGamepadRumble, CfgDefaultGamepadRumble);
     m_enableAnimationTaskPool =
@@ -197,6 +198,7 @@ void GameConfig::Save()
     WriteString(CfgSectionUI, CfgKeyInterfaceView, m_interfaceView);
     WriteString(CfgSectionUI, CfgKeyControls, m_controls);
     WriteInt(CfgSectionUI, CfgKeyTouchButtonSize, m_touchButtonSize);
+    WriteBool(CfgSectionUI, CfgKeyTouchTopRow, m_touchTopRow);
     WriteBool(CfgSectionUI, CfgKeyGamepad, m_gamepad);
     WriteBool(CfgSectionUI, CfgKeyGamepadRumble, m_gamepadRumble);
 

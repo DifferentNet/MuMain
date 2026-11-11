@@ -60,6 +60,8 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyControls[] = L"Controls";
     // MU Moldova: the on-screen controls' size in percent (Options -> Interface, Button size).
     inline constexpr wchar_t CfgKeyTouchButtonSize[] = L"TouchButtonSize";
+    // MU Moldova: whether the phone's top row of buttons is open (its toggle button, UI/HUD/TouchControls).
+    inline constexpr wchar_t CfgKeyTouchTopRow[] = L"TouchTopRow";
     // MU Moldova: whether the game reads a gamepad (Options -> Interface, Gamepad).
     inline constexpr wchar_t CfgKeyGamepad[] = L"Gamepad";
     // MU Moldova: whether the pad vibrates on hits and on death (Options -> Interface, Gamepad).
@@ -191,8 +193,10 @@ namespace CfgDefaults
     inline constexpr wchar_t CfgDefaultInterfaceView[] = L"auto";
     inline constexpr wchar_t CfgDefaultControls[] = L"auto";
     inline constexpr int CfgDefaultTouchButtonSize = 100;
-    inline constexpr int CfgMinTouchButtonSize = 70;
+    inline constexpr int CfgMinTouchButtonSize = 60;
     inline constexpr int CfgMaxTouchButtonSize = 150;
+    // The top row starts hidden behind its toggle (ghinzuro, 2026-11-11).
+    inline constexpr bool CfgDefaultTouchTopRow = false;
     // On: a pad plugged in plays. Off for a pad that Steam Input or the handheld's own software
     // already turns into a mouse and keys, which would otherwise press twice.
     inline constexpr bool CfgDefaultGamepad = true;

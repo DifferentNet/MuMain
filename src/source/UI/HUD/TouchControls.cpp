@@ -5,6 +5,7 @@
 #include "Camera/CameraManager.h"
 #include "Core/Input/TouchInput.h"
 #include "Core/Utilities/StringUtils.h"
+#include "Data/GameConfig/GameConfig.h"
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "Engine/Object/ZzzOpenData.h"
@@ -79,9 +80,22 @@ void Back()
     Touch::TapKey(VK_ESCAPE);
 }
 
+// The top row's buttons shown or folded behind its first button, saved (config.ini [UI] TouchTopRow).
+void ToggleQuickRow()
+{
+    GameConfig& config = GameConfig::GetInstance();
+    config.SetTouchTopRow(!config.GetTouchTopRow());
+    config.Save();
+    PlayBuffer(SOUND_CLICK01);
+}
+
+// Every drop's name on the ground (defined with the menu's switches below).
+void ToggleItemNames();
+
 // Buttons that press a key, as a keyboard would: the potions drink the item hotkeys Q and W, the chat
 // button opens the chat field (Enter), Back closes the window on top or, with none open, opens the
-// system menu (Esc, as a phone has none), and the rest open their windows (UI/HUD/HotKey.cpp).
+// system menu (Esc, as a phone has none), and the rest open their windows (UI/HUD/HotKey.cpp). The top
+// row's first button folds the row, and Loot shows the drops' names as the menu's switch does.
 struct KeyButton
 {
     const char* element;
@@ -94,6 +108,7 @@ constexpr KeyButton KeyButtons[] = {
     {"tc_potion_q", 'Q'},  {"tc_potion_w", 'W'}, {"tc_chat", VK_RETURN}, {"tc_inventory", 'I'},
     {"tc_character", 'C'}, {"tc_move", 'M'},     {"tc_map", VK_TAB},     {"tc_back", VK_ESCAPE, &Back},
     {"tc_potion_e", 'E'},  {"tc_potion_r", 'R'},
+    {"tc_quick_toggle", 0, &ToggleQuickRow},       {"tc_names", 0, &ToggleItemNames},
 };
 constexpr int KeyButtonCount = static_cast<int>(std::size(KeyButtons));
 
@@ -420,10 +435,18 @@ struct ControlsModel
     bool barsOn = false;
     // A game master's character: the menu has the GM panel.
     bool gmMenu = false;
+    // The menu's View switch: not on a phone or tablet, which always plays the phone layout.
+    bool viewMenu = !UI::Mobile::IsHandheld();
+    // The top row's buttons shown; folded, only its first button stays (config.ini [UI] TouchTopRow).
+    bool quickOpen = false;
+    // The player's Button size in percent: the body's class size-60 .. size-90 keeps the labels as large
+    // on the screen as at 100 % (touch_controls.rcss).
+    int sizePercent = 100;
     Rml::String attackLabel;
     Rml::String pickupLabel;
     Rml::String autoLabel;
     Rml::String targetLabel;
+    Rml::String namesLabel;
     Rml::String menuLabel;
     Rml::String chatLabel;
     Rml::String backLabel;
@@ -527,10 +550,14 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     c.Bind("names_on", &model.namesOn);
     c.Bind("bars_on", &model.barsOn);
     c.Bind("menu_gm", &model.gmMenu);
+    c.Bind("menu_view", &model.viewMenu);
+    c.Bind("quick_open", &model.quickOpen);
+    c.Bind("size_pct", &model.sizePercent);
     c.Bind("attack_label", &model.attackLabel);
     c.Bind("pickup_label", &model.pickupLabel);
     c.Bind("auto_label", &model.autoLabel);
     c.Bind("target_label", &model.targetLabel);
+    c.Bind("names_label", &model.namesLabel);
     c.Bind("menu_label", &model.menuLabel);
     c.Bind("chat_label", &model.chatLabel);
     c.Bind("back_label", &model.backLabel);
@@ -934,6 +961,9 @@ void FollowNeighbours(Rml::ElementDocument* document)
     UI::Mobile::PhoneHudLayout::Edges edges;
     edges.topRowBottom = topRow.bottom;
     edges.topRowRight = topRow.right;
+    // Folded, the row is only its first button: the world labels show beside it.
+    if (!g_View.GetModel().quickOpen)
+        edges.topRowBand = BoxOf(document, "tc_quick_toggle");
     edges.heroLeft = hero.left;
     edges.heroRight = hero.right;
     edges.heroBottom = hero.bottom;
@@ -959,10 +989,11 @@ void FollowNeighbours(Rml::ElementDocument* document)
         keepLeftOf(g_boxes[FirstSkillControl + slot]);
     keepLeftOf(g_boxes[SkillEditControl]);
     // The buttons the party's cards, the chat and the world labels keep clear of (MeasureBoxes() laid
-    // them out this frame): 2 potions + 5 + the skill buttons, within Edges::MaxControls.
-    static_assert(2 + 5 + SkillButtons <= UI::Mobile::PhoneHudLayout::Edges::MaxControls);
+    // them out this frame): 2 potions + 6 + the skill buttons, within Edges::MaxControls.
+    static_assert(2 + 6 + SkillButtons <= UI::Mobile::PhoneHudLayout::Edges::MaxControls);
     for (int control : {AttackControl, PickupControl, AutoControl, TargetControl, SkillEditControl})
         edges.KeepClearOf(g_boxes[control]);
+    edges.KeepClearOf(BoxOf(document, "tc_names"));
     for (int slot = 0; slot < SkillButtons; ++slot)
         edges.KeepClearOf(g_boxes[FirstSkillControl + slot]);
     UI::Mobile::PhoneHudLayout::Follow(edges);
@@ -996,6 +1027,8 @@ void SyncLabels(ControlsModel& model)
     const bool pkChanged = model.pkOn != pk;
     SetField(model.pkOn, pk, "pk_on");
     SetField(model.gmMenu, GameLogic::GmPanel::Panel().IsGm(), "menu_gm");
+    SetField(model.quickOpen, GameConfig::GetInstance().GetTouchTopRow(), "quick_open");
+    SetField(model.sizePercent, UI::Mobile::TouchUnit::GetPercent(), "size_pct");
     if (g_pNameWindow != nullptr)
     {
         SetField(model.namesOn, g_pNameWindow->ShowsItemNames(), "names_on");
@@ -1009,6 +1042,7 @@ void SyncLabels(ControlsModel& model)
     SyncLabel(model.pickupLabel, I18N::Game::TouchPickUp, "pickup_label");
     SyncLabel(model.autoLabel, I18N::Game::TouchAuto, "auto_label");
     SyncLabel(model.targetLabel, I18N::Game::TouchNextTarget, "target_label");
+    SyncLabel(model.namesLabel, I18N::Game::TouchLoot, "names_label");
     SyncLabel(model.menuLabel, I18N::Game::TouchMenu, "menu_label");
     SyncLabel(model.chatLabel, I18N::Game::TouchChat, "chat_label");
     SyncLabel(model.backLabel, I18N::Game::Back, "back_label");
