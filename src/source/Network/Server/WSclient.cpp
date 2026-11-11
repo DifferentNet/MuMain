@@ -3512,6 +3512,8 @@ void ReceiveAttackDamageExtended(const BYTE* ReceiveBuffer)
     if (IsMonster(c))
     {
         MUHelper::g_MuHelper.AddTarget(Key, true);
+        // Damage or a miss: the target takes hits (a fortress gate that is still closed sends none).
+        MUHelper::g_MuHelper.NoteTargetHurt(Key);
     }
 
     if (Data->HealthStatus == 0xFF)

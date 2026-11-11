@@ -144,6 +144,81 @@ struct ApproachWatch
     return distance <= bestDistance;
 }
 
+// The Imperial Guardian fortress's gates (524 Evil, 525 Lion, 527 Star, 528 Rush) and its statue (526), where Tier
+// Maps run. The client takes them for monsters, but the server lets them be hit only while their zone allows it
+// (OpenMU's ImperialGuardianGate.IsAttackable), and the next zone's gates stand in the room during the fight. The MU
+// Helper ran across the room to them or kept hitting a gate that took no damage (ghinzuro, 2026-11-11: «mu helper
+// тоже странно себя ведет в тир мапс начинает куда то убегать»). So they are targets of last resort.
+[[nodiscard]] constexpr bool IsFortressObjectType(int monsterType)
+{
+    return monsterType >= 524 && monsterType <= 528;
+}
+
+// How good a target is in the fortress, 0 the best: a monster with a clear line to it, then a gate or the statue with
+// a clear line, then a monster behind a wall, then a gate or the statue behind one. The clear line comes before "not
+// a fortress object": the guards stand behind the zone's gate while it still stands, no walk reaches them, and when
+// they won over the gate a melee hero (DK) paced along the wall and never broke the gate (ghinzuro 2026-11-11, review).
+[[nodiscard]] constexpr int FortressAwareRank(bool fortress, bool clearLine)
+{
+    return (clearLine ? 0 : 2) + (fortress ? 1 : 0);
+}
+
+// Which of two targets to prefer: the better FortressAwareRank; at the same rank `otherwiseBetter` decides (the
+// caller's distance rule).
+[[nodiscard]] constexpr bool IsBetterFortressRank(bool fortress, bool clearLine, bool bestFortress, bool bestClearLine,
+    bool otherwiseBetter)
+{
+    const int rank = FortressAwareRank(fortress, clearLine);
+    const int bestRank = FortressAwareRank(bestFortress, bestClearLine);
+    if (rank != bestRank)
+    {
+        return rank < bestRank;
+    }
+    return otherwiseBetter;
+}
+
+// Hits on a fortress object that bring no damage packet back: a gate the server doesn't let anyone break yet sends
+// nothing, an open one a damage (or a miss) packet for every hit. Only for fortress objects: a boss in an immune
+// phase must not be given up for it.
+struct BlindHitWatch
+{
+    int target = -1;
+    long long since = 0;     // the first hit since the last damage packet for the target
+    long long lastHitAt = 0; // the last hit sent at it
+
+    // Notes a hit sent at `targetKey` at `now` and returns whether the target should be given up: hits on it for
+    // `patience` brought no damage. A hit after a pause longer than `pause` starts the watch over.
+    [[nodiscard]] constexpr bool NoteHit(int targetKey, long long now, long long patience, long long pause)
+    {
+        if (targetKey != target || now - lastHitAt > pause)
+        {
+            target = targetKey;
+            since = now;
+        }
+        lastHitAt = now;
+        if (now - since < patience)
+        {
+            return false;
+        }
+        target = -1;
+        return true;
+    }
+
+    // A damage packet for `targetKey` came at `now`: the target can be hit.
+    constexpr void NoteDamage(int targetKey, long long now)
+    {
+        if (targetKey == target)
+        {
+            since = now;
+        }
+    }
+
+    constexpr void Reset()
+    {
+        target = -1;
+    }
+};
+
 // True while a swing animation is still playing, so callers keep the
 // cadence of AttackSpeed instead of their own timer.
 [[nodiscard]] bool IsSwingInProgress();
