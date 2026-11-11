@@ -993,6 +993,7 @@ void AttackKnight(CHARACTER* c, ActionSkillType Skill, float Distance)
                     }
                     SendRequestMagicContinue(Skill, (c->PositionX),
                         (c->PositionY), (BYTE)(o->Angle[2] / 360.f * 256.f), 0, pos, TKey, 0);
+                    SetAttackSpeed();
                     SetAction(o, PLAYER_ATTACK_SKILL_FURY_STRIKE);
                     c->Movement = 0;
                 }
@@ -1018,6 +1019,7 @@ void AttackKnight(CHARACTER* c, ActionSkillType Skill, float Distance)
                         TKey = getTargetCharacterKey(c, g_MovementSkill.m_iTarget);
                     }
                     SendRequestMagicContinue(Skill, TargetX, TargetY, (BYTE)(o->Angle[2] / 360.f * 256.f), 0, pos, TKey, 0);
+                    SetAttackSpeed();
                     SetAction(o, PLAYER_SKILL_BLOW_OF_DESTRUCTION);
                     c->Movement = 0;
                 }
