@@ -13514,7 +13514,10 @@
     <value>Filtro de saque</value>
   </data>
   <data name="LootFilterOpen" xml:space="preserve">
-    <value>Filtro de saque...</value>
+    <value>Filtro de saque</value>
+  </data>
+  <data name="LootFilterOpenButton" xml:space="preserve">
+    <value>Configurar</value>
   </data>
   <data name="TouchMenuLootFilter" xml:space="preserve">
     <value>Filtro de saque</value>
@@ -13561,9 +13564,6 @@
   <data name="LootFilterCatQuest" xml:space="preserve">
     <value>Itens de missão</value>
   </data>
-  <data name="LootFilterCatSocket" xml:space="preserve">
-    <value>Sementes e esferas</value>
-  </data>
   <data name="LootFilterCatMedal" xml:space="preserve">
     <value>Medalhas e ingressos</value>
   </data>
@@ -13593,9 +13593,6 @@
   </data>
   <data name="LootFilterRarAncient" xml:space="preserve">
     <value>Ancestral</value>
-  </data>
-  <data name="LootFilterRarSocket" xml:space="preserve">
-    <value>Socket</value>
   </data>
   <data name="LootFilterRarLuck" xml:space="preserve">
     <value>Sorte</value>

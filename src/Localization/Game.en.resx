@@ -16359,7 +16359,10 @@
     <value>Loot filter</value>
   </data>
   <data name="LootFilterOpen" xml:space="preserve">
-    <value>Loot filter...</value>
+    <value>Loot filter</value>
+  </data>
+  <data name="LootFilterOpenButton" xml:space="preserve">
+    <value>Configure</value>
   </data>
   <data name="TouchMenuLootFilter" xml:space="preserve">
     <value>Loot filter</value>
@@ -16406,9 +16409,6 @@
   <data name="LootFilterCatQuest" xml:space="preserve">
     <value>Quest items</value>
   </data>
-  <data name="LootFilterCatSocket" xml:space="preserve">
-    <value>Seeds and spheres</value>
-  </data>
   <data name="LootFilterCatMedal" xml:space="preserve">
     <value>Medals and tickets</value>
   </data>
@@ -16438,9 +16438,6 @@
   </data>
   <data name="LootFilterRarAncient" xml:space="preserve">
     <value>Ancient</value>
-  </data>
-  <data name="LootFilterRarSocket" xml:space="preserve">
-    <value>Socket</value>
   </data>
   <data name="LootFilterRarLuck" xml:space="preserve">
     <value>Luck</value>

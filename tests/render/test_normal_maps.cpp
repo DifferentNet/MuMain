@@ -50,6 +50,16 @@ TEST_CASE("characters' faces get none, their armour and helmets still do [render
     CHECK(WantsNormalMap(L"Data\\HD\\Monster\\skin_x.OZJ"));
 }
 
+TEST_CASE("strewn leaf litter gets none, the other leaves still do [render][textures][normalmaps]")
+{
+    CHECK_FALSE(WantsNormalMap(L"Data\\HD\\Object1\\tree_08.OZT"));
+    CHECK_FALSE(WantsNormalMap(L"Data/HD/Object7/TREE_08.ozt"));
+    CHECK_FALSE(WantsNormalMap(L"Data\\HD\\Object9\\tree_08.OZT"));
+    CHECK(WantsNormalMap(L"Data\\HD\\Object1\\tree_01.OZT"));
+    CHECK(WantsNormalMap(L"Data\\HD\\Object1\\tree_09.OZT"));
+    CHECK(WantsNormalMap(L"Data\\HD\\Object1\\tree_080.OZT"));
+}
+
 TEST_CASE("an even image is flat and a brighter right half leans the normal left [render][textures][normalmaps]")
 {
     constexpr int size = 16;
@@ -79,6 +89,49 @@ TEST_CASE("an even image is flat and a brighter right half leans the normal left
     const std::uint8_t* middle = edge.data() + (static_cast<std::size_t>(size / 2) * size + size / 2) * 4u;
     CHECK(middle[0] < 128);
     CHECK(middle[1] == 128);
+}
+
+TEST_CASE("a cut-out's edge is no cliff: an even leaf on a clear background stays flat [render][textures][normalmaps]")
+{
+    // A leaf (even brightness 100, opaque) in the middle; around it clear texels whose colour (white) must not count.
+    constexpr int size = 16;
+    std::vector<std::uint8_t> leaf(size * size * 4, 255);
+    for (std::size_t i = 3; i < leaf.size(); i += 4)
+    {
+        leaf[i] = 0;
+    }
+    const auto texel = [&](std::vector<std::uint8_t>& pixels, int x, int y) {
+        return pixels.data() + (static_cast<std::size_t>(y) * size + x) * 4u;
+    };
+    for (int y = 4; y < 12; ++y)
+    {
+        for (int x = 4; x < 12; ++x)
+        {
+            std::uint8_t* p = texel(leaf, x, y);
+            p[0] = p[1] = p[2] = 100;
+            p[3] = 255;
+        }
+    }
+    std::vector<std::uint8_t> flat = Build(leaf, size, size, 2);
+    REQUIRE(flat.size() == leaf.size());
+    for (std::size_t i = 0; i < flat.size(); i += 4)
+    {
+        CHECK(flat[i] == 128);
+        CHECK(flat[i + 1] == 128);
+    }
+
+    // Relief inside the leaf stays: a brighter right half still leans the normal left at the step.
+    for (int y = 4; y < 12; ++y)
+    {
+        for (int x = 8; x < 12; ++x)
+        {
+            std::uint8_t* p = texel(leaf, x, y);
+            p[0] = p[1] = p[2] = 200;
+        }
+    }
+    std::vector<std::uint8_t> inside = Build(leaf, size, size, 2);
+    CHECK(texel(inside, 8, 8)[0] < 128);
+    CHECK(texel(inside, 8, 8)[1] == 128);
 }
 
 TEST_CASE("a short buffer builds nothing [render][textures][normalmaps]")

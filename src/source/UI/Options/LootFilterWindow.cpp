@@ -33,18 +33,19 @@ namespace
 constexpr std::array<std::uint32_t, 9> ZenSteps{
     0, 10'000, 100'000, 500'000, 1'000'000, 5'000'000, 10'000'000, 50'000'000, 100'000'000};
 
-// The item types' names, in LootFilter::Category order.
+// The item types' names, in LootFilter::Category order; nullptr for a retired category (never shown).
 const wchar_t* const* const CategoryLabels[LootFilter::CategoryCount] = {
     &I18N::Game::LootFilterCatZen,        &I18N::Game::LootFilterCatJewel,  &I18N::Game::LootFilterCatWings,
-    &I18N::Game::LootFilterCatContainer,  &I18N::Game::LootFilterCatQuest,  &I18N::Game::LootFilterCatSocket,
+    &I18N::Game::LootFilterCatContainer,  &I18N::Game::LootFilterCatQuest,  nullptr,
     &I18N::Game::LootFilterCatMedal,      &I18N::Game::LootFilterCatConsumable, &I18N::Game::LootFilterCatWeapon,
     &I18N::Game::LootFilterCatShield,     &I18N::Game::LootFilterCatArmour, &I18N::Game::LootFilterCatJewellery,
     &I18N::Game::LootFilterCatOther,
 };
 
-// The rarity options' names, in RarityFlag bit order; the level one is a format with the level threshold.
+// The rarity options' names, in RarityFlag bit order; the level one is a format with the level threshold; nullptr
+// for a retired bit (never shown).
 const wchar_t* const* const RarityLabels[LootFilter::RarityFlagCount] = {
-    &I18N::Game::LootFilterRarExcellent, &I18N::Game::LootFilterRarAncient, &I18N::Game::LootFilterRarSocket,
+    &I18N::Game::LootFilterRarExcellent, &I18N::Game::LootFilterRarAncient, nullptr,
     &I18N::Game::LootFilterRarLuck,      &I18N::Game::LootFilterRarSkill,   &I18N::Game::LootFilterRarOption,
     &I18N::Game::LootFilterRarLevel,
 };
@@ -90,7 +91,13 @@ int ZenStepIndex(std::uint32_t zenMin)
 
 bool ValidCategory(int index)
 {
-    return index >= 0 && index < LootFilter::CategoryCount;
+    return index >= 0 && index < LootFilter::CategoryCount
+        && !LootFilter::IsRetired(static_cast<LootFilter::Category>(index));
+}
+
+bool IsRetiredRarity(int bit)
+{
+    return (LootFilter::RarityRetiredMask & (1u << bit)) != 0;
 }
 
 bool ValidVerdict(int verdict)
@@ -217,7 +224,7 @@ bool ApplyAction(const CLootFilterWindow::PendingAction& pending, LootFilter::Se
         return true;
     }
     case CLootFilterWindow::Action::Rarity:
-        if (pending.first < 0 || pending.first >= LootFilter::RarityFlagCount)
+        if (pending.first < 0 || pending.first >= LootFilter::RarityFlagCount || IsRetiredRarity(pending.first))
             return false;
         settings.rarity = static_cast<std::uint8_t>(settings.rarity ^ (1u << pending.first));
         return true;
@@ -465,6 +472,8 @@ void CLootFilterWindow::SyncContent()
     for (int i = 0; i < LootFilter::CategoryCount; ++i)
     {
         const auto category = static_cast<LootFilter::Category>(i);
+        if (LootFilter::IsRetired(category))
+            continue;
         updated.categories.push_back({Narrow(*CategoryLabels[i]), i,
                                       static_cast<int>(settings.categories[static_cast<size_t>(i)]),
                                       LootFilter::CanHide(category)});
@@ -472,6 +481,8 @@ void CLootFilterWindow::SyncContent()
 
     for (int i = 0; i < LootFilter::RarityFlagCount; ++i)
     {
+        if (IsRetiredRarity(i))
+            continue;
         const std::wstring label = i == RarityLevelIndex ? LevelRarityLabel(settings.minLevel) : *RarityLabels[i];
         updated.rarities.push_back({Narrow(label), i, (settings.rarity & (1u << i)) != 0});
     }
