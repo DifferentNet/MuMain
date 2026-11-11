@@ -69,7 +69,8 @@ namespace GameLogic::Items
         {
             return false;
         }
-        if (IsHeartOfDarkLord(pItem) || IsWizardsRingVariant(pItem) || IsSeasonalFenrir(pItem))
+        // The seasonal Fenrir is bound to the account, so the account's vault takes it (ghinzuro 2026-11-11).
+        if (IsHeartOfDarkLord(pItem) || IsWizardsRingVariant(pItem))
         {
             return true;
         }

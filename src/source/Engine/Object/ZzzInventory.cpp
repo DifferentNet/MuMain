@@ -5082,7 +5082,7 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
             mu_swprintf(TextList[TextNum], I18N::Game::SeasonPassReward, Level);
             TextListColor[TextNum] = TEXT_COLOR_GREEN;
             TextNum++;
-            mu_swprintf(TextList[TextNum], L"%ls", I18N::Game::SeasonItemBound);
+            mu_swprintf(TextList[TextNum], L"%ls", I18N::Game::SeasonFenrirBound);
             TextListColor[TextNum] = TEXT_COLOR_RED;
             TextNum++;
         }
