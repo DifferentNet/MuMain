@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "doctest.h"
 
+#include "Engine/Object/PlayerActionState.h"
 #include "Engine/Object/SwingCadence.h"
 
 #include <algorithm>
@@ -90,4 +91,18 @@ TEST_CASE("The carry goes only to a swing that starts right away, once [gamelogi
 
     cadence.RecordSwingEnd(10.f, 4.f, 0.5f, 300);  // more than one frame of overshoot: at most one frame
     CHECK(cadence.TakeStartKey(4.f, 300) == doctest::Approx(2.f));
+}
+
+TEST_CASE("Rageful Blow and Strike of Destruction count as swings [gamelogic][timing]")
+{
+    // Both are paced by attack speed (SetAttackSpeed), so the cadence carry, MU Helper's wait and a hit
+    // taken must treat them as swings. Strike of Destruction sits outside the attack range in the enum.
+    CHECK(Engine::Object::IsSwingAction(PLAYER_ATTACK_SKILL_FURY_STRIKE));
+    CHECK(Engine::Object::IsSwingAction(PLAYER_SKILL_BLOW_OF_DESTRUCTION));
+    CHECK_FALSE(Engine::Object::IsAttackAction(PLAYER_SKILL_BLOW_OF_DESTRUCTION));
+
+    // The stances and the neighbours of Strike of Destruction stay out.
+    CHECK_FALSE(Engine::Object::IsSwingAction(PLAYER_FENRIR_STAND));
+    CHECK_FALSE(Engine::Object::IsSwingAction(PLAYER_SKILL_SUMMON_FENRIR));
+    CHECK_FALSE(Engine::Object::IsSwingAction(PLAYER_SKILL_SWELL_OF_MP));
 }
