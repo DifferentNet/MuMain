@@ -14,8 +14,8 @@ constexpr float BigPhoneHeight = 412.f;
 constexpr float TabletWidth = 1024.f;
 constexpr float TabletHeight = 768.f;
 // The attack button and a skill, in units (touch_controls.rcss).
-constexpr float AttackUnits = 84.f;
-constexpr float SkillUnits = 50.f;
+constexpr float AttackUnits = 72.f;
+constexpr float SkillUnits = 44.f;
 } // namespace
 
 TEST_CASE("the choices hold 100 % and a saved percent finds the nearest [ui][button-size]")
@@ -35,7 +35,7 @@ TEST_CASE("a phone's buttons are a thumb wide whatever its size [ui][button-size
     CHECK(big == doctest::Approx(1.f));
     // Apple's and Google's smallest touch target is 44-48 CSS pixels.
     CHECK(SkillUnits * small >= 44.f);
-    CHECK(AttackUnits * small >= 80.f);
+    CHECK(AttackUnits * small >= 70.f);
 }
 
 TEST_CASE("a tablet's buttons grow only a little [ui][button-size]")
@@ -56,7 +56,9 @@ TEST_CASE("the player's percent scales the unit until the screen's height runs o
     const float biggest = ButtonSize::UnitCssPixels(BigPhoneWidth, BigPhoneHeight, 130);
     CHECK(biggest > bigger);
     CHECK(biggest < 1.3f);
-    CHECK(ButtonSize::UnitCssPixels(SmallPhoneWidth, SmallPhoneHeight, 130) < 1.1f);
+    CHECK(ButtonSize::UnitCssPixels(SmallPhoneWidth, SmallPhoneHeight, 130) < 1.15f);
+    // The smallest choice.
+    CHECK(ButtonSize::UnitCssPixels(BigPhoneWidth, BigPhoneHeight, 60) == doctest::Approx(0.6f));
 }
 
 TEST_CASE("an area not laid out yet gives one pixel [ui][button-size]")

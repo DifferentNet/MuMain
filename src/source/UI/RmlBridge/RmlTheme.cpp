@@ -8,6 +8,7 @@
 #include "Core/Platform/WinIni.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/Inventory/ItemGridScroll.h"
+#include "UI/Mobile/InterfaceMode.h"
 
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/Core.h>
@@ -89,6 +90,12 @@ namespace UI::RmlBridge
 
     std::string ResolveStartupThemeName(const std::string& savedName)
     {
+        // A phone or tablet plays the legacy theme whatever was saved (the saved one waits for a computer):
+        // the modern theme's windows are not ready for a phone yet (ghinzuro 2026-11-11).
+        constexpr const char* handheldTheme = "legacy";
+        if (UI::Mobile::IsHandheld() && ThemeExists(handheldTheme))
+            return handheldTheme;
+
         const std::string name = ToLower(savedName);
         if (ThemeExists(name))
             return name;

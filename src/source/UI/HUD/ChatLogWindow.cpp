@@ -25,7 +25,20 @@
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Element.h>
 
+#include "UI/Mobile/InterfaceMode.h"
+
+#include <chrono>
+
 using namespace SEASON3B;
+
+namespace
+{
+// MU Moldova, the phone view: the system messages stand in the middle of a small screen, in a text
+// raised to a readable size, and the original kept its six for ever (ghinzuro 2026-11-11: too big).
+// So the phone shows the newest three, and each leaves after a while.
+constexpr int PhoneSystemLines = 3;
+constexpr std::chrono::seconds PhoneSystemLineStays{8};
+} // namespace
 using namespace mu::ui::window;
 
 
@@ -1174,6 +1187,7 @@ void mu::ui::window::CSystemLogWindow::AddText(const type_string& strText, MESSA
     }
 
     pvecMsgs->push_back(pMsgText);
+    m_Arrivals.push_back(std::chrono::steady_clock::now());
 
     m_iCurrentRenderEndLine = pvecMsgs->size() - 1;
 }
@@ -1186,7 +1200,24 @@ void mu::ui::window::CSystemLogWindow::RemoveFrontLine()
     {
         delete (*vi);
         vi = m_vecAllMsgs.erase(vi);
+        if (!m_Arrivals.empty())
+            m_Arrivals.erase(m_Arrivals.begin());
     }
+}
+
+// How many of the newest messages the phone view shows now: at most PhoneSystemLines, and none older
+// than PhoneSystemLineStays.
+int mu::ui::window::CSystemLogWindow::PhoneShownCount() const
+{
+    const auto now = std::chrono::steady_clock::now();
+    int count = 0;
+    for (auto it = m_Arrivals.rbegin(); it != m_Arrivals.rend() && count < PhoneSystemLines; ++it)
+    {
+        if (now - *it > PhoneSystemLineStays)
+            break;
+        ++count;
+    }
+    return count;
 }
 
 int mu::ui::window::CSystemLogWindow::GetCurrentRenderEndLine() const
@@ -1274,6 +1305,14 @@ void mu::ui::window::CSystemLogWindow::SyncRmlModel()
 
     SyncNativeGeometry();
 
+    // The phone view's lines leave by the clock, and the view can change under them.
+    const int shownOnPhone = UI::Mobile::IsPhoneView() ? PhoneShownCount() : -1;
+    if (shownOnPhone != m_ShownOnPhone)
+    {
+        m_ShownOnPhone = shownOnPhone;
+        m_bLinesDirty = true;
+    }
+
     if (m_bLinesDirty)
     {
         m_bLinesDirty = false;
@@ -1332,8 +1371,11 @@ void mu::ui::window::CSystemLogWindow::RebuildLineModel()
     model.lines.clear();
     model.lines.reserve(m_vecAllMsgs.size());
 
-    for (const CMessageText* pMsgText : m_vecAllMsgs)
+    const bool phone = UI::Mobile::IsPhoneView();
+    const std::size_t first = phone ? m_vecAllMsgs.size() - std::min<std::size_t>(m_vecAllMsgs.size(), static_cast<std::size_t>(PhoneShownCount())) : 0;
+    for (std::size_t index = first; index < m_vecAllMsgs.size(); ++index)
     {
+        const CMessageText* pMsgText = m_vecAllMsgs[index];
         if (pMsgText == nullptr)
             continue;
 
@@ -1344,8 +1386,8 @@ void mu::ui::window::CSystemLogWindow::RebuildLineModel()
         entry.text = StringUtils::WideToNarrow(pMsgText->GetText().c_str());
         model.lines.push_back(std::move(entry));
     }
-    // Empty rows preserve the six-line workspace reservation without drawing a backdrop.
-    model.lines.resize(MAX_NUMBER_OF_LINES);
+    // Empty rows preserve the six-line workspace reservation without drawing a backdrop (three on a phone).
+    model.lines.resize(phone ? PhoneSystemLines : MAX_NUMBER_OF_LINES);
 }
 
 float mu::ui::window::CSystemLogWindow::GetLayerDepth()
@@ -1365,6 +1407,7 @@ void mu::ui::window::CSystemLogWindow::ClearAll()
     for (; vi_msg != m_vecAllMsgs.end(); vi_msg++)
         delete (*vi_msg);
     m_vecAllMsgs.clear();
+    m_Arrivals.clear();
 
     m_iCurrentRenderEndLine = -1;
 }

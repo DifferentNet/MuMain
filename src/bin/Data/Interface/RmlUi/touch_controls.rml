@@ -7,7 +7,7 @@
 	<link type="text/rcss" href="gamepad_glyphs.rcss"/>
 	<link type="text/rcss" href="touch_controls.rcss"/>
 </head>
-<body class="native-text" data-model="touch_controls" data-class-pad="pad" data-class-pad-alt="pad_alt" data-class-no-touch="!fingers" data-class-picking="picker_open" data-class-socialising="social_open" data-class-under-hub="under_hub" data-class-no-skills="no_skills &amp;&amp; !picker_open">
+<body class="native-text" data-model="touch_controls" data-class-size-60="size_pct == 60" data-class-size-70="size_pct == 70" data-class-size-80="size_pct == 80" data-class-size-90="size_pct == 90" data-class-pad="pad" data-class-pad-alt="pad_alt" data-class-no-touch="!fingers" data-class-picking="picker_open" data-class-socialising="social_open" data-class-under-hub="under_hub" data-class-no-skills="no_skills &amp;&amp; !picker_open">
 	<!-- The on-screen controls of phones and tablets (UI/HUD/TouchControls.cpp), shown only on a touch
 	     device in the world. Nothing here takes the pointer (pointer-events: none throughout): fingers
 	     reach the controls through Core::Input::Touch, which C++ answers from these elements' boxes,
@@ -25,11 +25,11 @@
 	     is, in window pixels), a skill's cooldown wipe is the cooldown's fraction, and a hero
 	     gauge's fill is the gauge's. -->
 
-	<!-- The phone view's hero frame (UI/Mobile/HeroFrame.cpp), in the PC bar's place: the level,
-	     HP and MP with their numbers, SD and AG, and the EXP line along the bottom edge. Shown by
-	     the theme flag "mobile" (touch_controls.rcss). -->
+	<!-- The phone view's hero frame (UI/Mobile/HeroFrame.cpp), in the PC bar's place: the level's
+	     number with the master level under it, HP and MP with their numbers, SD and AG as thin bars,
+	     and the EXP line along the bottom edge. Shown by the theme flag "mobile" (touch_controls.rcss). -->
 	<div id="tc_hero">
-		<div id="tc_hero_level">{{hero_level}}</div>
+		<div id="tc_hero_level"><div class="tc-hero-level-number">{{hero_level}}</div><div class="tc-hero-master" data-if="hero_master != ''">{{hero_master}}</div></div>
 		<div id="tc_hero_hp" class="tc-gauge">
 			<div class="tc-gauge-fill" data-style-width="hero_hp * 100 + '%'"></div>
 			<div class="tc-gauge-text">{{hero_hp_text}}</div>
@@ -41,11 +41,9 @@
 		<div id="tc_hero_small">
 			<div id="tc_hero_sd" class="tc-gauge tc-gauge-small">
 				<div class="tc-gauge-fill" data-style-width="hero_sd * 100 + '%'"></div>
-				<div class="tc-gauge-text">{{hero_sd_text}}</div>
 			</div>
 			<div id="tc_hero_ag" class="tc-gauge tc-gauge-small">
 				<div class="tc-gauge-fill" data-style-width="hero_ag * 100 + '%'"></div>
-				<div class="tc-gauge-text">{{hero_ag_text}}</div>
 			</div>
 		</div>
 	</div>
@@ -64,8 +62,10 @@
 	<!-- Along the top, right of the location bar: Back (Esc: closes the window on top, or opens the
 	     system menu), the menu and the windows played most. The window buttons press the keys a
 	     keyboard opens them with. Back comes first: the windows docked on the right cover the row's
-	     end. -->
-	<div id="tc_quick">
+	     end. Before it the button that folds the row away and back (config.ini [UI] TouchTopRow); folded,
+	     the pad's Menu still opens the menu. -->
+	<div id="tc_quick" data-class-collapsed="!quick_open">
+		<div id="tc_quick_toggle" class="tc-button tc-quick-toggle" data-class-open="quick_open"><div class="tc-toggle-line tc-toggle-line-1"></div><div class="tc-toggle-line tc-toggle-line-2"></div><div class="tc-toggle-line tc-toggle-line-3"></div></div>
 		<div id="tc_back" class="tc-button tc-quick">{{back_label}}<div class="pad-glyph pad-face pad-b">B</div></div>
 		<div id="tc_menu" class="tc-button tc-quick" data-class-open="menu_open">{{menu_label}}
 			<div class="pad-glyph pad-round pad-menu"><div class="pad-menu-line pad-menu-line-1"></div><div class="pad-menu-line pad-menu-line-2"></div><div class="pad-menu-line pad-menu-line-3"></div></div>
@@ -106,7 +106,8 @@
 		<div id="tc_menu_15" class="tc-button tc-menu-item" data-class-focused="menu_focus == 15"><span class="tc-menu-label">{{menu_label_15}}</span></div>
 		<div id="tc_menu_16" class="tc-button tc-menu-item" data-class-focused="menu_focus == 16" data-class-on="bars_on"><span class="tc-menu-label">{{menu_label_16}}</span></div>
 		<div id="tc_menu_17" class="tc-button tc-menu-item" data-class-focused="menu_focus == 17"><span class="tc-menu-label">{{menu_label_17}}</span></div>
-		<div id="tc_menu_18" class="tc-button tc-menu-item" data-class-focused="menu_focus == 18"><span class="tc-menu-label">{{menu_label_18}}</span></div>
+		<!-- The View switch: not on a phone or tablet (they always play the phone layout). -->
+		<div id="tc_menu_18" class="tc-button tc-menu-item" data-if="menu_view" data-class-focused="menu_focus == 18"><span class="tc-menu-label">{{menu_label_18}}</span></div>
 		<div id="tc_menu_19" class="tc-button tc-menu-item" data-class-focused="menu_focus == 19"><span class="tc-menu-label">{{menu_label_19}}</span></div>
 		<div id="tc_menu_20" class="tc-button tc-menu-item" data-class-focused="menu_focus == 20"><span class="tc-menu-label">{{menu_label_20}}</span></div>
 		<div id="tc_menu_21" class="tc-button tc-menu-item" data-class-focused="menu_focus == 21"><span class="tc-menu-label">{{menu_label_21}}</span></div>
@@ -263,6 +264,9 @@
 	<div id="tc_auto" class="tc-button tc-small" data-class-on="helper_on">{{auto_label}}
 		<div class="pad-glyph pad-dpad pad-dpad-up"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
 	</div>
+	<!-- The drops' names on the ground, as the menu's switch and Alt show them; lit while on. A pad alone
+	     shows none (the menu has the switch). -->
+	<div id="tc_names" class="tc-button tc-small" data-class-on="names_on">{{names_label}}</div>
 	<!-- The next monster by distance becomes the one fought (and lit); faded with none other near. A pad
 	     has its right stick for it, so a pad alone shows none. -->
 	<div id="tc_target" class="tc-button tc-small" data-class-none="target_none">{{target_label}}</div>

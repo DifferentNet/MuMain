@@ -462,6 +462,10 @@ namespace mu::ui::window
             int controlsIndex = 0;
             Rml::String controlsRowLabel;
             Rml::String controlsValueLabel;
+            // The theme, layout and controls rows: not on a phone or tablet, which always plays the phone
+            // layout with the fingers in the legacy theme (UI::Mobile::IsHandheld).
+            bool layoutChoicesShown = true;
+            bool windowModeShown = true;  // false in the browser build: the page owns the canvas
             // The on-screen controls' size (UI::Mobile::ButtonSize::Percents), shown while they are.
             bool touchButtonsShown = false;
             std::vector<Rml::String> touchButtonsLabels;

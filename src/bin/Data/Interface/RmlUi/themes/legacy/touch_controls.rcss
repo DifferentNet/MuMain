@@ -111,6 +111,32 @@ body {
 #tc_menu.open, #tc_social.open {
 	border-color: token(accent-gold);
 }
+/* The row's first button folds the rest of it away and back (config.ini [UI] TouchTopRow): three lines
+   like the pad's Menu glyph, no text, gold-edged while the row shows. Folded, it stays alone. */
+#tc_quick_toggle {
+	position: relative;
+	flex: 0 0 auto;
+	width: 36rem;
+	height: 36rem;
+	border-radius: 6rem;
+}
+#tc_quick_toggle.open {
+	border-color: token(accent-gold);
+}
+.tc-toggle-line {
+	position: absolute;
+	left: 8rem;
+	width: 16rem;
+	height: 2rem;
+	border-radius: 1rem;
+	background-color: token(text-primary);
+}
+.tc-toggle-line-1 { top: 9rem; }
+.tc-toggle-line-2 { top: 15rem; }
+.tc-toggle-line-3 { top: 21rem; }
+#tc_quick.collapsed .tc-quick {
+	display: none;
+}
 
 /* The screen around the open menu, dimmed; a tap there closes it. Over the other controls, which
    take no finger while the menu is open, under the top row and the menu. */
@@ -699,14 +725,21 @@ body.no-skills .tc-skill, body.no-skills #tc_skill_edit {
 #tc_target.none {
 	opacity: 0.4;
 }
-#tc_auto.on {
+#tc_auto.on, #tc_names.on {
 	border-color: token(accent-gold);
 	background-color: rgba(255, 210, 60, 110);
 }
+/* Loot: left of Target, the drops' names on the ground while lit. */
+#tc_names {
+	right: 230rem;
+	bottom: 8rem;
+	white-space: nowrap;
+}
 
 /* The phone view's hero frame (theme flag "mobile", UI::Mobile::InterfaceMode) in the PC bar's
-   place: under the location bar and as wide (dp), its text in finger units, the chat log's lines
-   below it; the EXP line along the bottom. */
+   place: under the location bar, compact bars on a dark plate (the level in a circle on the left, HP
+   and MP with their numbers, SD and AG thin without), in finger units; the chat log's lines below
+   it; the EXP line along the bottom. */
 #tc_hero, #tc_exp {
 	display: none;
 	pointer-events: none;
@@ -720,7 +753,11 @@ body.no-skills .tc-skill, body.no-skills #tc_skill_edit {
 	position: absolute;
 	left: 4dp;
 	top: 26dp;
-	width: 200dp;
+	width: 170rem;
+	box-sizing: border-box;
+	padding: 3rem 3rem 3rem 41rem;
+	border-radius: 6rem;
+	background-color: rgba(0, 0, 0, 140);
 	font-family: "token(font-body)";
 	color: token(text-primary);
 	font-effect: shadow(0rem 1rem #000000);
@@ -728,20 +765,41 @@ body.no-skills .tc-skill, body.no-skills #tc_skill_edit {
 #tc_hero * {
 	pointer-events: none;
 }
+/* The level's number, a master level's "+N" under it: two lines of 12 fit the circle up to four digits. */
 #tc_hero_level {
-	height: 16rem;
-	line-height: 16rem;
-	font-size: 13rem;
+	position: absolute;
+	left: 3rem;
+	top: 50%;
+	margin-top: -17rem;
+	width: 34rem;
+	height: 34rem;
+	box-sizing: border-box;
+	border: 1rem rgba(255, 220, 100, 150);
+	border-radius: 17rem;
+	background-color: rgba(0, 0, 0, 200);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	font-size: 12rem;
+	line-height: 13rem;
+	white-space: nowrap;
+}
+.tc-hero-master {
+	color: token(accent-gold);
 }
 .tc-gauge {
 	position: relative;
-	height: 18rem;
+	height: 16rem;
 	margin-top: 2rem;
 	box-sizing: border-box;
-	border: 1rem rgba(255, 255, 255, 60);
+	border: 1rem rgba(255, 255, 255, 50);
 	border-radius: 3rem;
 	background-color: rgba(0, 0, 0, 150);
 	overflow: hidden;
+}
+#tc_hero_hp {
+	margin-top: 0;
 }
 .tc-gauge-fill {
 	position: absolute;
@@ -752,26 +810,28 @@ body.no-skills .tc-skill, body.no-skills #tc_skill_edit {
 .tc-gauge-text {
 	position: relative;
 	height: 100%;
-	line-height: 16rem;
+	line-height: 14rem;
 	font-size: 12rem;
 	text-align: center;
 }
 #tc_hero_small {
 	display: flex;
-	gap: 4rem;
+	gap: 3rem;
+	margin-top: 2rem;
 }
 .tc-gauge-small {
 	flex: 1 1 0;
-	height: 15rem;
+	height: 5rem;
+	margin-top: 0;
+	border-width: 0;
+	border-radius: 2rem;
+	background-color: rgba(255, 255, 255, 35);
 }
-.tc-gauge-small .tc-gauge-text {
-	line-height: 13rem;
-	font-size: 11rem;
-}
-#tc_hero_hp .tc-gauge-fill { background-color: rgba(200, 30, 30, 220); }
-#tc_hero_mp .tc-gauge-fill { background-color: rgba(40, 80, 220, 220); }
-#tc_hero_sd .tc-gauge-fill { background-color: rgba(220, 190, 40, 220); }
-#tc_hero_ag .tc-gauge-fill { background-color: rgba(60, 180, 60, 220); }
+/* The original's bright colours, a little lighter at the top. */
+#tc_hero_hp .tc-gauge-fill { background-color: #c81e1e; decorator: linear-gradient(to bottom, #dc3a32, #b41818); }
+#tc_hero_mp .tc-gauge-fill { background-color: #2850dc; decorator: linear-gradient(to bottom, #4068e8, #2040c0); }
+#tc_hero_sd .tc-gauge-fill { background-color: #dcbe28; decorator: linear-gradient(to bottom, #ead048, #c8a820); }
+#tc_hero_ag .tc-gauge-fill { background-color: #3cb43c; decorator: linear-gradient(to bottom, #54c654, #2c9c2c); }
 #tc_exp {
 	position: absolute;
 	left: 0;
@@ -808,25 +868,82 @@ body.no-skills .tc-skill, body.no-skills #tc_skill_edit {
 	   out up to 72 units a button (a wide phone looks as before). Where the row is too short for the
 	   labels at 12 units, they get smaller: the four long ones (Russian "Инвентарь", "Персонаж",
 	   "Общение", "Телепорт": 20.5 times the font size together in DejaVu Sans, 4 % more here for other fonts)
-	   get what the four short ones (44 units each), the gaps and the borders leave. */
+	   get what the fold button (36 units and its gap), the four short ones (44 units each), the gaps and
+	   the borders leave. */
 	.tc-quick {
 		width: auto;
 		flex: 1 1 auto;
 		max-width: 72rem;
-		font-size: clamp(9rem, (100vw - 214dp - 292rem) / 21.4, 12rem);
+		font-size: clamp(9rem, (100vw - 214dp - 332rem) / 21.4, 12rem);
 	}
 	/* With a pad, Back, Menu and Social carry its glyph (22 units) beside their short labels. */
 	body.pad .tc-quick {
-		font-size: clamp(9rem, (100vw - 214dp - 238rem) / 30.9, 12rem);
+		font-size: clamp(9rem, (100vw - 214dp - 278rem) / 30.9, 12rem);
 	}
 
-	/* Pick up as a pill as tall as Auto: "Поднять" needs 54 units at 12. */
-	#tc_pickup {
-		width: 62rem;
+	/* The buttons on the right 15 % smaller than on a PC touch screen (ghinzuro 2026-11-11): Attack 72
+	   units, the skills 44 on an arc 124 units from Attack's centre (angles as before), the round buttons
+	   38. Pick up a pill as tall as Auto ("Поднять" needs 54 units at 12 in DejaVu Sans), Target
+	   ("ターゲット" needs 60) and Loot left of it along the bottom, Skills above the arc's first two. */
+	#tc_attack {
+		width: 72rem;
+		height: 72rem;
+		line-height: 68rem;
+		border-radius: 36rem;
 	}
-	/* Target as wide: "ターゲット" needs 60 units at 12. */
-	#tc_target {
-		width: 62rem;
+	.tc-skill {
+		width: 44rem;
+		height: 44rem;
+		border-radius: 9rem;
+	}
+	#tc_skill_0 { right: 161rem; bottom: 51rem; }
+	#tc_skill_1 { right: 147rem; bottom: 97rem; }
+	#tc_skill_2 { right: 116rem; bottom: 135rem; }
+	#tc_skill_3 { right: 73rem; bottom: 157rem; }
+	#tc_skill_4 { right: 25rem; bottom: 161rem; }
+	.tc-skill .tc-skill-icon {
+		left: 8.5rem;
+		top: 4rem;
+		width: 23rem;
+		height: 32rem;
+	}
+	.tc-skill .tc-skill-plus {
+		left: 10rem;
+		top: 10rem;
+		width: 20rem;
+		height: 20rem;
+	}
+	.tc-skill .tc-plus-h {
+		top: 8rem;
+		width: 20rem;
+	}
+	.tc-skill .tc-plus-v {
+		left: 8rem;
+		height: 20rem;
+	}
+	.tc-small {
+		width: 38rem;
+		height: 38rem;
+		line-height: 34rem;
+		border-radius: 19rem;
+	}
+	#tc_pickup { right: 10rem; bottom: 109rem; width: 60rem; }
+	#tc_auto { right: 109rem; bottom: 10rem; }
+	#tc_target { right: 155rem; bottom: 10rem; width: 60rem; }
+	#tc_names { right: 223rem; bottom: 10rem; width: 60rem; }
+	#tc_skill_edit {
+		right: 199rem;
+		bottom: 103rem;
+		width: 54rem;
+		height: 28rem;
+		line-height: 24rem;
+		border-radius: 14rem;
+	}
+	#tc_bind_hint {
+		bottom: 212rem;
+	}
+	#tc_picker {
+		right: 214rem;
 	}
 
 	/* No text under 12 units on a phone, and the skill picker's buttons a finger tall. */
@@ -867,13 +984,79 @@ body.no-skills .tc-skill, body.no-skills #tc_skill_edit {
 		height: 44rem;
 		font-size: 12rem;
 	}
-	.tc-gauge-small {
-		height: 16rem;
-	}
-	.tc-gauge-small .tc-gauge-text {
-		line-height: 14rem;
-		font-size: 12rem;
-	}
+
+	/* A Button size under 100 % (UI::Mobile::ButtonSize) shrinks the buttons, not their labels: 12 units
+	   of text at 100 % stay as large on the screen (12 x 100 / percent units here), and the labelled
+	   buttons widen to hold them, Loot moving left with Target. Auto stays round: its label grows only as
+	   far as the button holds it. */
+
+	body.size-90 .tc-small, body.size-90 #tc_skill_edit { font-size: 13.3rem; }
+	body.size-90 #tc_pickup, body.size-90 #tc_names { width: 66rem; }
+	body.size-90 #tc_target { width: 73rem; }
+	body.size-90 #tc_names { right: 236rem; }
+	body.size-90 #tc_skill_edit { width: 66rem; height: 30rem; line-height: 26rem; }
+
+	body.size-80 .tc-small, body.size-80 #tc_skill_edit { font-size: 15rem; }
+	body.size-80 #tc_pickup, body.size-80 #tc_names { width: 74rem; }
+	body.size-80 #tc_target { width: 81rem; }
+	body.size-80 #tc_names { right: 244rem; }
+	body.size-80 #tc_skill_edit { width: 74rem; height: 33rem; line-height: 29rem; }
+
+	body.size-70 .tc-small, body.size-70 #tc_skill_edit { font-size: 17.1rem; }
+	body.size-70 #tc_pickup, body.size-70 #tc_names { width: 83rem; }
+	body.size-70 #tc_target { width: 92rem; }
+	body.size-70 #tc_names { right: 255rem; }
+	body.size-70 #tc_skill_edit { width: 83rem; height: 37rem; line-height: 33rem; }
+	body.size-70 #tc_attack { font-size: 17.1rem; }
+
+	body.size-60 .tc-small, body.size-60 #tc_skill_edit { font-size: 20rem; }
+	body.size-60 #tc_pickup, body.size-60 #tc_names { width: 96rem; }
+	body.size-60 #tc_target { width: 106rem; }
+	body.size-60 #tc_names { right: 269rem; }
+	body.size-60 #tc_skill_edit { width: 96rem; height: 43rem; line-height: 39rem; }
+	body.size-60 #tc_attack { font-size: 20rem; }
+
+	body.size-70 #tc_auto, body.size-60 #tc_auto { font-size: 15rem; }
+
+	/* The top row's labels and the hero frame keep their size on the screen as well: the top row's
+	   widths and font, and the whole hero frame, 100 / percent times their units at 100 %. The row still
+	   ends as far left of the page's menu button as at 100 %. */
+	body.size-90 #tc_quick { right: 80rem; }
+	body.size-80 #tc_quick { right: 90rem; }
+	body.size-70 #tc_quick { right: 102.9rem; }
+	body.size-60 #tc_quick { right: 120rem; }
+	body.size-90 .tc-quick { max-width: 80rem; min-width: 48.9rem; font-size: clamp(10rem, (100vw - 214dp - 368.9rem) / 21.4, 13.3rem); }
+	body.pad.size-90 .tc-quick { font-size: clamp(10rem, (100vw - 214dp - 308.9rem) / 30.9, 13.3rem); }
+	body.size-90 #tc_hero { width: 188.9rem; padding: 3.3rem 3.3rem 3.3rem 45.6rem; border-radius: 6.7rem; }
+	body.size-90 #tc_hero_level { left: 3.3rem; margin-top: -18.9rem; width: 37.8rem; height: 37.8rem; border-radius: 18.9rem; font-size: 13.3rem; line-height: 14.4rem; }
+	body.size-90 #tc_hero .tc-gauge { height: 17.8rem; border-radius: 3.3rem; }
+	body.size-90 #tc_hero .tc-gauge-text { line-height: 15.6rem; font-size: 13.3rem; }
+	body.size-90 #tc_hero .tc-gauge-small { height: 5.6rem; border-radius: 2.2rem; }
+	body.size-90 #tc_hero_small { gap: 3.3rem; margin-top: 2.2rem; }
+	body.size-80 .tc-quick { max-width: 90rem; min-width: 55rem; font-size: clamp(11.2rem, (100vw - 214dp - 415rem) / 21.4, 15rem); }
+	body.pad.size-80 .tc-quick { font-size: clamp(11.2rem, (100vw - 214dp - 347.5rem) / 30.9, 15rem); }
+	body.size-80 #tc_hero { width: 212.5rem; padding: 3.8rem 3.8rem 3.8rem 51.2rem; border-radius: 7.5rem; }
+	body.size-80 #tc_hero_level { left: 3.8rem; margin-top: -21.2rem; width: 42.5rem; height: 42.5rem; border-radius: 21.2rem; font-size: 15rem; line-height: 16.2rem; }
+	body.size-80 #tc_hero .tc-gauge { height: 20rem; border-radius: 3.8rem; }
+	body.size-80 #tc_hero .tc-gauge-text { line-height: 17.5rem; font-size: 15rem; }
+	body.size-80 #tc_hero .tc-gauge-small { height: 6.2rem; border-radius: 2.5rem; }
+	body.size-80 #tc_hero_small { gap: 3.8rem; margin-top: 2.5rem; }
+	body.size-70 .tc-quick { max-width: 102.9rem; min-width: 62.9rem; font-size: clamp(12.9rem, (100vw - 214dp - 474.3rem) / 21.4, 17.1rem); }
+	body.pad.size-70 .tc-quick { font-size: clamp(12.9rem, (100vw - 214dp - 397.1rem) / 30.9, 17.1rem); }
+	body.size-70 #tc_hero { width: 242.9rem; padding: 4.3rem 4.3rem 4.3rem 58.6rem; border-radius: 8.6rem; }
+	body.size-70 #tc_hero_level { left: 4.3rem; margin-top: -24.3rem; width: 48.6rem; height: 48.6rem; border-radius: 24.3rem; font-size: 17.1rem; line-height: 18.6rem; }
+	body.size-70 #tc_hero .tc-gauge { height: 22.9rem; border-radius: 4.3rem; }
+	body.size-70 #tc_hero .tc-gauge-text { line-height: 20rem; font-size: 17.1rem; }
+	body.size-70 #tc_hero .tc-gauge-small { height: 7.1rem; border-radius: 2.9rem; }
+	body.size-70 #tc_hero_small { gap: 4.3rem; margin-top: 2.9rem; }
+	body.size-60 .tc-quick { max-width: 120rem; min-width: 73.3rem; font-size: clamp(15rem, (100vw - 214dp - 553.3rem) / 21.4, 20rem); }
+	body.pad.size-60 .tc-quick { font-size: clamp(15rem, (100vw - 214dp - 463.3rem) / 30.9, 20rem); }
+	body.size-60 #tc_hero { width: 283.3rem; padding: 5rem 5rem 5rem 68.3rem; border-radius: 10rem; }
+	body.size-60 #tc_hero_level { left: 5rem; margin-top: -28.3rem; width: 56.7rem; height: 56.7rem; border-radius: 28.3rem; font-size: 20rem; line-height: 21.7rem; }
+	body.size-60 #tc_hero .tc-gauge { height: 26.7rem; border-radius: 5rem; }
+	body.size-60 #tc_hero .tc-gauge-text { line-height: 23.3rem; font-size: 20rem; }
+	body.size-60 #tc_hero .tc-gauge-small { height: 8.3rem; border-radius: 3.3rem; }
+	body.size-60 #tc_hero_small { gap: 5rem; margin-top: 3.3rem; }
 }
 
 /* A pad: each control shows the pad button that presses it (gamepad_glyphs.rcss draws them) on its
@@ -915,8 +1098,35 @@ body.pad #tc_back, body.pad #tc_menu, body.pad #tc_social {
    2026-11-03: three skills, RT held for the next ones). While RT is held (pad-alt), the skill buttons 4
    and 5 stand in the places of X and Y. No top row (Menu opens the windows, View the Social panel), no
    pickup button (d-pad down), no Skills button (LS). */
-body.pad.no-touch #tc_quick, body.pad.no-touch #tc_pickup, body.pad.no-touch #tc_skill_edit, body.pad.no-touch #tc_target {
+body.pad.no-touch #tc_quick, body.pad.no-touch #tc_pickup, body.pad.no-touch #tc_skill_edit, body.pad.no-touch #tc_target,
+body.pad.no-touch #tc_names {
 	display: none;
+}
+/* The row keeps its own sizes whatever the phone's smaller buttons: the skills' corners, icons and
+   pluses, Auto round. */
+body.pad.no-touch .tc-skill {
+	border-radius: 10rem;
+}
+body.pad.no-touch .tc-skill .tc-skill-icon {
+	width: 26rem;
+	height: 36rem;
+}
+body.pad.no-touch .tc-skill .tc-skill-plus {
+	left: 12rem;
+	top: 12rem;
+	width: 22rem;
+	height: 22rem;
+}
+body.pad.no-touch .tc-skill .tc-plus-h {
+	top: 9rem;
+	width: 22rem;
+}
+body.pad.no-touch .tc-skill .tc-plus-v {
+	left: 9rem;
+	height: 22rem;
+}
+body.pad.no-touch #tc_auto {
+	border-radius: 22rem;
 }
 body.pad.no-touch #tc_skill_3, body.pad.no-touch #tc_skill_4 {
 	display: none;
@@ -995,6 +1205,10 @@ body.pad.no-touch #tc_bind_hint {
 	}
 	body.pad.no-touch #tc_bind_hint {
 		bottom: 80rem;
+	}
+	/* The label's size as the row had it, whatever the Button size. */
+	body.pad.no-touch #tc_auto {
+		font-size: 12rem;
 	}
 }
 

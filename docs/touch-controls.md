@@ -9,16 +9,23 @@ config.ini `[UI]`:
 |---|---|---|
 | Interface view | `InterfaceView` | Auto, PC, Phone |
 | Controls | `Controls` | Auto, Mouse and keyboard, Touch |
-| Button size (only while the on-screen controls show) | `TouchButtonSize` | 80, 90, 100, 115, 130 % |
+| Button size (only while the on-screen controls show) | `TouchButtonSize` | 60, 70, 80, 90, 100, 115, 130 % |
 | Gamepad ([below](#gamepad-xbox-layout)) | `Gamepad` | On, Off |
 
 Auto means the phone view and touch controls on a touch device (`mu::web::IsTouchDevice()`), the PC
 view and the mouse elsewhere. A desktop build or a computer's browser is unchanged unless the player
 picks Phone or Touch (a Windows touch screen works with Touch). The touch menu's View item switches
-between the PC and phone views at once. In the browser the page's own menu (⋮ on a phone, the
-footer on a computer) has a View item too: it steps Auto → PC → Phone and shows the choice in force
+between the PC and phone views at once. In the browser the page's own menu (the footer on a computer)
+has a View item too: it steps Auto → PC → Phone and shows the choice in force
 (`Core/Platform/web/WebPageView.{h,cpp}`, `window.muView` in `src/web/index.html`; the game takes
 the page's request between frames, `UI::Mobile::FollowPage`).
+
+On a phone or tablet in the browser (`UI::Mobile::IsHandheld()`) none of this is a choice: the phone
+view, the touch controls and the Legacy theme always apply (`InterfaceMode::Apply`,
+`RmlTheme::ResolveStartupThemeName`; the Modern theme's windows are not ready for a phone yet,
+ghinzuro 2026-11-11). A saved PC view, mouse or Modern theme stays in config.ini and applies again on a
+computer. Options hides the Theme, Interface view and Controls rows there (`layout_choices_shown`), the
+touch menu has no View item (`menu_view`) and the page's ⋮ menu none either.
 
 ## What the player gets
 
@@ -26,8 +33,9 @@ the page's request between frames, `UI::Mobile::FollowPage`).
 |---|---|---|
 | Bottom left | Joystick (floating: it appears where the thumb lands) | Walks the way it points, a few tiles ahead, re-planning as the walk runs out or the thumb turns. Letting go cuts the planned walk short at the next tile (`Automation::StopAtNextTile`, tested in `tests/gamelogic/test_walk_stop.cpp`): the hero stops within a step instead of finishing the tiles planned ahead. The page going out of sight (`SDL_EVENT_WINDOW_HIDDEN`) lets go of every finger, as a phone sends no lift for a thumb still down when the app is switched. |
 | Above the joystick | Q, W | The item hotkeys Q and W (potions). |
-| Along the top, right of the location bar | Back, Menu, Inventory, Character, Chat, Teleport, Map | Back is Esc: it closes the top window (or opens the system menu with none open). Menu opens a panel of 21 items under the row (20 for a player who is not a GM): windows, Skills (the skill picker, below), View (PC / phone), Chat (for a pad, which has no Chat button of its own), Player actions (D, the commands for the character under the pointer), the PK switch (below) and the GM panel (Y, GMs only). The others press the window's key (I, C, Enter, M, Tab). |
+| Along the top, right of the location bar | ≡ (fold), Back, Menu, Inventory, Character, Chat, Social, Teleport, Map | ≡ folds the rest of the row away and back, saved as `[UI] TouchTopRow` (folded by default); it is gold-edged while the row shows, and folded the world labels show beside it. With the row folded the pad's Menu still opens the menu. Back is Esc: it closes the top window (or opens the system menu with none open). Menu opens a panel of 21 items under the row (20 for a player who is not a GM, one fewer on a phone or tablet, which has no View item): windows, Skills (the skill picker, below), View (PC / phone), Chat (for a pad, which has no Chat button of its own), Player actions (D, the commands for the character under the pointer), the PK switch (below) and the GM panel (Y, GMs only). The others press the window's key (I, C, Enter, M, Tab). |
 | Bottom right | Attack (held) | Plain attack on the monster tapped last, else the one fought last, else the nearest within 8 tiles. Where players fight (a duel, Chaos Castle, a Gens enemy on the strife maps) a player tapped or fought counts as a monster does, and the nearest enemy player too. The target the buttons fight is lit, as a monster under the mouse is (`TouchActions::TargetIndex`, drawn in `RenderCharactersClient`); while the controls show and the MU Helper is not hunting, the monster Attack would pick is lit before the first swing too (`TouchActions::SetControlsShown`). |
+| Left of Target | Loot | The drops' names on the ground on or off, as Alt and the menu's switch do (`NameWindow::ToggleItemNames`); lit while on. Hidden for a pad without touch. |
 | Under the skills, left of Auto | Target | Steps to the next monster by distance (from the one lit, round the list nearest first); it becomes the one the buttons fight. Faded when no other monster is near, and a press then does nothing (`TouchActions::NextFoe`, `HasOtherFoe`). Hidden for a pad without touch. |
 | Menu | PK switch | Ctrl for a finger: while on, Attack reads "PK" in red, a tap on a player attacks and the buttons fight the player tapped last, as Ctrl and a click do on a PC (`TouchActions::SetForceAttack`, the engine's `CanAttackCharacter`). Never a member of the party; off again on a new map or at death. |
 | Party cards | A tap on a member's card | The skill buttons' heals and buffs go to that member, walking up to them while they are in sight (14 tiles), and the card stays lit. Out of sight (farther, another map, no way to them) the chat says "Too far away" with their name and nothing is cast; a member who leaves the party is forgotten. A tap on the card again (or on the character's own) gives the heals back to the character (`TouchActions::ToggleFriend`). The card's leave button is no pick. |
@@ -83,7 +91,9 @@ click, as before; a gamble shop asks first anyway (`UI/NPCs/ShopTapToBuy.{h,cpp}
 ## Phone view
 
 The phone view replaces the PC's bottom bar while the touch controls show: a hero frame top left
-(level, HP and MP with their numbers, SD and AG), a thin EXP line along the bottom edge, and how many
+(compact bars on a dark plate, the level's number in a circle with a master level's "+N" under
+it, HP and MP 16 units tall with their numbers, SD and AG 5-unit bars without), a thin EXP line along
+the bottom edge, and how many
 potions Q and W hold under the buttons. The PC bar and the top-right buttons hide (the skill picker
 stands in for its skill list); the system messages move under the hero frame, the pets'
 HP frames right of it, the buffs under the top row and the chat right of the joystick's area. Without touch controls the phone view keeps the PC bar.
@@ -116,17 +126,17 @@ the server reads a burst of walk packets as a speed hack.
 The controls are sized for the finger, not for the game's resolution: `touch_controls.rcss` (both
 themes) and the pad glyphs it shows (`gamepad_glyphs.rcss`) write their sizes in `rem`, and C++ sets the
 document's font size to one *finger unit* (`UI/Mobile/TouchUnit.{h,cpp}`). In the browser a unit is
-one CSS pixel on a phone (a 50-unit skill button is 50 CSS px, Google's and Apple's smallest touch
+one CSS pixel on a phone (a 44-unit skill button is 44 CSS px, Google's and Apple's smallest touch
 target being 44–48), up to 1.15 on a tablet (the short side over 412 CSS px), times the player's Button
 size, but never more than the screen's height holds (the left column of top row, hero frame and
-potions over the joystick is 345 units tall): `UI/Mobile/ButtonSize.{h,cpp}`, tested in
+potions over the joystick is 320 units tall): `UI/Mobile/ButtonSize.{h,cpp}`, tested in
 `tests/ui/test_button_size.cpp`. It follows the canvas's size on the page, measured again when the window
 or the percent changes and every second (the browser's zoom changes it alone). Off the web a unit is
 RmlUi's dp at the player's percent. The finger's slop, the stick's reach and its dead zone are in units
 too.
 
 Only what lines up with the PC's own HUD stays in dp: the top row starts right of the location bar
-(214dp), and the hero frame sits under it (4dp, 26dp, 200dp wide).
+(214dp), and the hero frame sits under it (4dp, 26dp, 170 units wide).
 
 The phone's HUD pieces in other documents, which their themes draw in dp, follow the controls'
 boxes instead (`UI/Mobile/PhoneHudLayout.{h,cpp}`, from `TouchControls::Update`): the buffs and the
@@ -159,11 +169,17 @@ input bar is drawn at at least 1.4 finger units per unit (its slot's `data-touch
 
 In the phone's HUD the top row's buttons are as wide as their labels, 44 to 72 units (a wide phone
 looks as before), and the labels get smaller, not under 9 units, where the row is too short for them
-at 12 units: Russian's on a phone 640 CSS px wide. Pick up is a pill 62 units wide for "Поднять";
-the skill picker's Remove, Done and page buttons are 44 units tall; no text is under 12 units. The
-hero frame's SD and AG show their numbers short from 10 000 on ("12k/32k", `UI/Mobile/CompactNumber`,
-tested in `tests/ui/test_compact_number.cpp`), HP and MP in full. A PC with a touch screen or a pad
-keeps the controls' own sizes.
+at 12 units: Russian's on a phone 640 CSS px wide. The buttons on the right are 15 % smaller than on a
+PC touch screen (ghinzuro 2026-11-11): Attack 72 units, the skills 44 on an arc 124 units from
+Attack's centre, the round buttons (Auto) 38, Pick up and Loot pills 54 wide in the Modern theme
+("Поднять" needs 48 at 12) and 60 in the Legacy one (DejaVu Sans, 54), Target 60 ("ターゲット"), Skills 54 x 28. The skill picker's Remove, Done and page buttons are 44
+units tall; no text is under 12 units. Below 100 % Button size the labels keep their size on the
+screen: the controls' body gets the class `size-60` .. `size-90` (`size_pct`), and the labels' font is
+12 x 100 / percent units, with Pick up, Target, Loot and Skills wider to hold it (Loot moves left with
+Target; Auto's label stops growing at 15 units, as much as its round button holds). The top row's
+labels and widths and the whole hero frame grow the same way, so they look as at 100 %. The hero frame's
+HP and MP show their numbers in full. A PC with a touch screen or a pad keeps the controls' own sizes,
+and so does the pad's row along the bottom.
 
 The phone view also raises the chat's and the system messages' text to at least 12 units at 100 %
 (`TouchUnit::ReadableTextPx`), with their lines and rows; the chat's well keeps its height and shows
@@ -376,7 +392,7 @@ the keyboard closes act only once released, so the B that closed it does not als
 | World actions | `GameLogic/Touch/TouchActions.{h,cpp}` | Steer, Attack, Select/Cast/BindHotKeySlot, PickUpNearest, on `GameLogic::Automation` (the helper's and control socket's primitives). |
 | Controls | `UI/HUD/TouchControls.{h,cpp}` + `touch_controls.rml` + `themes/{legacy,modern}/touch_controls.rcss` | Draws the controls, answers the router's hit test from the elements' boxes, acts once a frame (`SceneManager.cpp`, after the scene). Depth 1.06 in `RmlStackingOrder.cpp`: under every window. |
 | View and controls choice | `UI/Mobile/InterfaceMode.{h,cpp}` | Reads the two Options rows, turns the touch layer on or off and sets the style flags `mobile` (phone view) and `mobile-hud` (phone view with touch controls). RCSS restyles a document for them with `@media (theme: mobile)` / `@media (theme: mobile-hud)`. |
-| Hero frame | `UI/Mobile/HeroFrame.{h,cpp}`, `UI/HUD/HeroGauges.{h,cpp}`, `UI/Mobile/CompactNumber.{h,cpp}` | Fills the hero frame's part of the touch controls' model, writing only what changed (the potions are counted four times a second); HeroGauges reads HP/MP/AG/SD and EXP for it and for the PC bar alike. |
+| Hero frame | `UI/Mobile/HeroFrame.{h,cpp}`, `UI/HUD/HeroGauges.{h,cpp}` | Fills the hero frame's part of the touch controls' model, writing only what changed (the potions are counted four times a second); HeroGauges reads HP/MP/AG/SD and EXP for it and for the PC bar alike. |
 | Item card | `UI/Mobile/ItemCard.{h,cpp}`, `UI/Inventory/InventoryActionController.cpp`, `UI/Inventory/MyInventory.cpp`, `UI/Inventory/StorageInventory.cpp`, `UI/Inventory/StorageInventoryExt.cpp` | The card (a generic menu dialog); the controller opens it for a finger's long press or R3 on a bag item, the inventory for a tap, a long press or R3 on worn gear, the storages for a long press or the pad's Y on theirs. |
 | Click source | `UI/Mobile/ClickSource.{h,cpp}` | Whether a window's click came from a finger's tap, drag or long press, or from the pad's R3 (`Touch::Pointer::LastLeftPress`), so that a window can ask first only for those. |
 | Finger unit | `UI/Mobile/TouchUnit.{h,cpp}`, `UI/Mobile/ButtonSize.{h,cpp}` | The unit the controls are sized in and the Button size option (Options → Interface, `OptionWindow.cpp`). |

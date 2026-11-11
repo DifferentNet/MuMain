@@ -24,6 +24,9 @@ namespace
 // where the PC's bottom bar gives way to theirs (main_frame.rcss).
 constexpr char MobileThemeFlag[] = "mobile";
 constexpr char MobileHudThemeFlag[] = "mobile-hud";
+// A phone or tablet in the browser, whichever layout is picked: the page keeps its own menu button in
+// the top right corner there, over whatever the game draws under it (mini_map.rcss).
+constexpr char HandheldThemeFlag[] = "handheld";
 
 // config.ini words, in the enums' order.
 constexpr std::array<std::wstring_view, UI::Mobile::ViewChoiceCount> ViewWords = {L"auto", L"pc", L"phone"};
@@ -53,6 +56,7 @@ void ApplyThemeFlags()
     {
         context->ActivateTheme(MobileThemeFlag, g_phoneView);
         context->ActivateTheme(MobileHudThemeFlag, UI::Mobile::ReplacesPcHud());
+        context->ActivateTheme(HandheldThemeFlag, UI::Mobile::IsHandheld());
     }
     UI::Placement::InvalidateStyles();
 }
@@ -62,17 +66,6 @@ std::wstring ToWord(Choice choice, const std::array<std::wstring_view, Count>& w
 {
     const auto index = static_cast<std::size_t>(choice);
     return std::wstring(index < Count ? words[index] : words[0]);
-}
-
-// A phone or tablet, as the browser page tells. A computer's touch screen does not count: its fingers
-// already play the mouse, and its screen fits the PC layout.
-bool IsHandheld()
-{
-#ifdef __EMSCRIPTEN__
-    return mu::web::IsTouchDevice();
-#else
-    return false;
-#endif
 }
 } // namespace
 
@@ -100,6 +93,15 @@ void UI::Mobile::SetControlChoice(ControlChoice choice)
     config.SetControls(ToWord(choice, ControlWords));
     config.Save();
     Apply();
+}
+
+bool UI::Mobile::IsHandheld()
+{
+#ifdef __EMSCRIPTEN__
+    return mu::web::IsTouchDevice();
+#else
+    return false;
+#endif
 }
 
 bool UI::Mobile::IsPhoneView()
@@ -140,8 +142,10 @@ void UI::Mobile::Apply()
     const bool handheld = IsHandheld();
     const ViewChoice view = GetViewChoice();
     const ControlChoice controls = GetControlChoice();
-    g_phoneView = view == ViewChoice::Phone || (view == ViewChoice::Auto && handheld);
-    g_touchControls = controls == ControlChoice::Touch || (controls == ControlChoice::Auto && handheld);
+    // A phone or tablet always plays the phone layout with the fingers; the saved choices stay in
+    // config.ini for a computer.
+    g_phoneView = handheld || view == ViewChoice::Phone;
+    g_touchControls = handheld || controls == ControlChoice::Touch;
 
     Core::Input::Touch::SetEnabled(g_touchControls);
     ApplyThemeFlags();

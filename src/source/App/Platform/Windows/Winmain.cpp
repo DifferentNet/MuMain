@@ -2811,6 +2811,11 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     WindowWidth = GameConfig::GetInstance().GetWindowWidth();
     WindowHeight = GameConfig::GetInstance().GetWindowHeight();
     g_bUseWindowMode = GameConfig::GetInstance().GetWindowMode() ? TRUE : FALSE;
+#ifdef __EMSCRIPTEN__
+    // The page owns the canvas: a saved "fullscreen" (Windowed=0) left the game drawing at the
+    // wrong size, a zoomed picture the player could not undo. The browser build is always windowed.
+    g_bUseWindowMode = TRUE;
+#endif
     g_bUseFullscreenMode = !g_bUseWindowMode;
 #ifdef __EMSCRIPTEN__
     MuWebStartAtPageSize();

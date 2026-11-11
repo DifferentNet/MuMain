@@ -51,7 +51,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="opt-row opt-toggle-row" data-event-click="option_toggle_windowed_mode">
+					<div class="opt-row opt-toggle-row" data-if="window_mode_shown" data-event-click="option_toggle_windowed_mode">
 						<span class="opt-label">{{windowed_mode_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="windowed_mode"><div class="opt-toggle-knob"></div></div></div>
 					</div>
@@ -501,7 +501,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="opt-row">
+					<div class="opt-row" data-if="layout_choices_shown">
 						<span class="opt-label">{{theme_row_label}}</span>
 						<div class="opt-control">
 							<div class="option-dropdown">
@@ -515,7 +515,7 @@
 						</div>
 					</div>
 					<!-- MU Moldova: the phone or PC layout and the controls (UI::Mobile::InterfaceMode). -->
-					<div class="opt-row">
+					<div class="opt-row" data-if="layout_choices_shown">
 						<span class="opt-label">{{interface_view_row_label}}</span>
 						<div class="opt-control">
 							<div class="option-dropdown">
@@ -528,7 +528,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="opt-row">
+					<div class="opt-row" data-if="layout_choices_shown">
 						<span class="opt-label">{{controls_row_label}}</span>
 						<div class="opt-control">
 							<div class="option-dropdown">

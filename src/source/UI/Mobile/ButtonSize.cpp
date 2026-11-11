@@ -6,13 +6,13 @@
 namespace
 {
 // A phone held sideways is 360-430 CSS pixels tall: on up to this short side a unit is one CSS pixel,
-// so the attack button (84 units) is about 13 mm and a skill (50 units) about 8 mm.
+// so the attack button (72 units) is about 11 mm and a skill (44 units) about 7 mm.
 constexpr float PhoneShortSide = 412.f;
 // A tablet's buttons grow at most this much: a thumb is no wider there.
 constexpr float MaxScreenGrowth = 1.15f;
 // The height the controls need, in units: the top row and the hero frame over the potions, the
-// potions over the joystick.
-constexpr float ColumnUnits = 345.f;
+// potions over the joystick, and the skills' arc with Pick up under the top row.
+constexpr float ColumnUnits = 320.f;
 } // namespace
 
 int UI::Mobile::ButtonSize::NearestIndex(int percent)

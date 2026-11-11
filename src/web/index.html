@@ -456,8 +456,8 @@
   document.getElementById("menu").onclick = () => footer.classList.toggle("open");
   canvas.addEventListener("pointerdown", () => footer.classList.remove("open"));
 
-  // View: the game's layout, Auto / PC / Phone, the same choice as its Options → Interface (Auto is
-  // the phone layout on a phone or tablet, detectDevice). The game takes muView.request between
+  // View: the game's layout, Auto / PC / Phone, the same choice as its Options → Interface, on a
+  // computer only (a phone or tablet, detectDevice, always plays the phone layout). The game takes muView.request between
   // frames (Core/Platform/web/WebPageView.h) and calls show() with the choice in force, which also
   // shows the item once the game runs.
   const viewButton = document.getElementById("view");
@@ -474,7 +474,8 @@
         ru += phoneView ? " (телефон)" : " (ПК)";
       }
       viewButton.textContent = "View: " + en + " · Вид: " + ru;
-      viewButton.hidden = false;
+      // A phone or tablet always plays the phone layout (UI/Mobile/InterfaceMode.cpp): no choice there.
+      viewButton.hidden = phone;
     },
   };
   viewButton.onclick = () => {

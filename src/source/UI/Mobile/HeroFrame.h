@@ -1,8 +1,8 @@
 #pragma once
 
 // MU Moldova: the phone's hero frame, part of the touch controls' document (touch_controls.rml,
-// shown in the phone view in place of the PC bar): HP, MP, SD and AG with their numbers, the
-// level, a thin EXP line along the bottom, and how many potions the buttons Q and W hold. The touch
+// shown in the phone view in place of the PC bar): HP and MP with their numbers, SD and AG as thin
+// bars, the level in a circle, a thin EXP line along the bottom, and how many potions the buttons Q and W hold. The touch
 // controls own the document and its model; this fills the frame's part of it.
 
 #include "UI/HUD/HeroGauges.h"
@@ -30,8 +30,6 @@ struct Sources
     UI::HUD::HeroGauges::Gauge ag;
     int level = 0;
     int masterLevel = 0;
-    // The level's text format of the language in use: a language switch makes the text again.
-    const wchar_t* levelFormat = nullptr;
     int potionsQ = 0;
     int potionsW = 0;
     // E and R: the pad drinks them with RT held (UI/HUD/GamepadControls).
@@ -49,9 +47,9 @@ struct Model
     float exp = 0.f;
     Rml::String hpText;
     Rml::String mpText;
-    Rml::String sdText;
-    Rml::String agText;
+    // The level's number alone, and the master level as "+N" (empty without one) under it.
     Rml::String levelText;
+    Rml::String masterText;
     Rml::String potionQCount;
     Rml::String potionWCount;
     Rml::String potionECount;

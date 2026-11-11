@@ -50,6 +50,10 @@
 
 /* Keep all six message rows available, including while no message is visible. */
 #panel { min-height: 7.2em; }
+/* MU Moldova: the phone view shows three (CSystemLogWindow::RebuildLineModel). */
+@media (theme: mobile) {
+	#panel { min-height: 3.6em; }
+}
 #panel.workspace-placed { transform-origin: left top; }
 .syslog-line { flex-shrink: 0; }
 

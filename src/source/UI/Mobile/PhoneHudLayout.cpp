@@ -84,8 +84,11 @@ void ReadLabelZones(const Frame& frame)
 {
     const Edges& edges = frame.edges;
     std::size_t count = 0;
-    // The whole band: the page's own menu button lies right of the row.
-    g_labelZones[count++] = {true, 0.f, 0.f, static_cast<float>(frame.screen.x), edges.topRowBottom};
+    // The whole band: the page's own menu button lies right of the row. Folded, only its first button.
+    g_labelZones[count++] = edges.topRowBand.shown
+                                ? edges.topRowBand
+                                : UI::Mobile::TouchTarget::Box{true, 0.f, 0.f, static_cast<float>(frame.screen.x),
+                                                               edges.topRowBottom};
     g_labelZones[count++] = {true, edges.heroLeft, 0.f, edges.heroRight, edges.heroBottom};
     for (const UI::Mobile::TouchTarget::Box& control : edges.Controls())
         g_labelZones[count++] = control;
@@ -102,7 +105,7 @@ bool SameEdges(const Edges& a, const Edges& b)
     const bool lines = a.topRowBottom == b.topRowBottom && a.topRowRight == b.topRowRight &&
                        a.heroLeft == b.heroLeft && a.heroRight == b.heroRight && a.heroBottom == b.heroBottom &&
                        a.potionsTop == b.potionsTop && a.potionsRight == b.potionsRight &&
-                       a.skillsLeft == b.skillsLeft;
+                       a.skillsLeft == b.skillsLeft && SameBox(a.topRowBand, b.topRowBand);
     return lines && std::ranges::equal(a.Controls(), b.Controls(), SameBox);
 }
 
