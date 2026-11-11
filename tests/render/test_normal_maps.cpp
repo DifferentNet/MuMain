@@ -31,6 +31,25 @@ TEST_CASE("ground, effects, the interface and originals get none [render][textur
     CHECK_FALSE(WantsNormalMap(L""));
 }
 
+TEST_CASE("characters' faces get none, their armour and helmets still do [render][textures][normalmaps]")
+{
+    CHECK_FALSE(WantsNormalMap(L"Data\\HD\\Player\\skin_warrior_01.OZJ"));
+    CHECK_FALSE(WantsNormalMap(L"data/hd/player/SKIN_BARBARIAN_01.ozj"));
+    CHECK_FALSE(WantsNormalMap(L"Data\\HD\\Player\\SkinClass301.OZJ"));
+    CHECK_FALSE(WantsNormalMap(L"Data\\HD\\Player\\Skinclass106.OZJ"));
+    CHECK_FALSE(WantsNormalMap(L"Data\\HD\\Player\\LevelClass207.OZJ"));
+    CHECK_FALSE(WantsNormalMap(L"Data\\HD\\Player\\SkinClass306head_N.OZJ"));
+    CHECK_FALSE(WantsNormalMap(L"Data\\HD\\Player\\darknight_face.OZJ"));
+    CHECK_FALSE(WantsNormalMap(L"Data\\HD\\Player\\LuckyItem\\62\\skin_barbarian_01.OZJ"));
+    CHECK_FALSE(WantsNormalMap(L"Data/HD/Player/LuckyItem/65/SkinClass106head_N.OZJ"));
+    CHECK(WantsNormalMap(L"Data/HD/Player/skin_dir/Armor.OZJ"));
+    CHECK(WantsNormalMap(L"Data\\HD\\Player\\SkinClass306_upper.OZJ"));
+    CHECK(WantsNormalMap(L"Data\\HD\\Player\\SkinClass306_headhelmet.OZJ"));
+    CHECK(WantsNormalMap(L"Data\\HD\\Player\\LevelClass207_1.OZJ"));
+    CHECK(WantsNormalMap(L"Data\\HD\\Player\\head_02.OZJ"));
+    CHECK(WantsNormalMap(L"Data\\HD\\Monster\\skin_x.OZJ"));
+}
+
 TEST_CASE("an even image is flat and a brighter right half leans the normal left [render][textures][normalmaps]")
 {
     constexpr int size = 16;

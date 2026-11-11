@@ -24,7 +24,8 @@ void SetRuntimeBuild(bool enabled);
 
 // Whether the texture at `path` (an HD copy, "Data\HD\...") belongs to a model that gets a normal
 // map: Item, Player, Monster, NPC and ObjectN. World ground, effects, skills and the interface
-// do not. Either separator and any case.
+// do not, nor the characters' faces (Player skin_*, SkinClassNNN, LevelClassNNN, *head_N, *face*):
+// their shading is painted in. Either separator and any case. Mirrored by scripts/hd_pack.py.
 [[nodiscard]] bool WantsNormalMap(std::wstring_view path);
 
 // The normal map of `rgba` (width x height, at full size; scripts/hd_pack.py does the same and then halves it) RGBA8, rows top to bottom): red and green hold the

@@ -45,6 +45,8 @@ NRM_RETRY_QUALITIES = (95, 100)  # then lossless
 NRM_MAX_ERROR, NRM_MEAN_ERROR = 32, 2.0
 MAX_SIDE = 1024  # Render::Sprites::kBitmapMaximumWidth and Height
 MODEL_FOLDER = re.compile(r"^(item|player|monster|npc|object[0-9]+)$", re.IGNORECASE)
+# NormalMaps.cpp IsPlayerFace: the characters' faces carry painted shading; relief sank their eyes.
+PLAYER_FACE = re.compile(r"^(skin_|skinclass[0-9]+\.|levelclass[0-9]+\.)|head_n\.|face", re.IGNORECASE)
 # NormalMaps.cpp: kFineStrength, kBroadStrength, kMaxTilt.
 FINE_STRENGTH, BROAD_STRENGTH, MAX_TILT = 24.0, 12.0, 0.9
 
@@ -98,6 +100,8 @@ def pack(data):
 def wants_normal_map(rel):
     """NormalMaps::WantsNormalMap for a path under Data/HD: an OZT or OZJ of a model folder."""
     parts = rel.split("/")
+    if len(parts) >= 2 and parts[0].lower() == "player" and PLAYER_FACE.search(parts[-1]):
+        return False
     return len(parts) >= 2 and MODEL_FOLDER.match(parts[0]) is not None and rel.lower().endswith((".ozt", ".ozj"))
 
 
