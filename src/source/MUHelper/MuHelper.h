@@ -239,6 +239,8 @@ namespace MUHelper
 		GameLogic::Automation::BlindHitWatch m_blindHitWatch;
 		int m_iBlindHitLogs = 0;
 		void WatchBlindHit(int iTarget);
+		// A monster other than a gate or the statue within the hunting distance and with a clear line to it, one the
+		// hero can reach (not a guard behind a standing gate, ghinzuro 2026-11-11, review).
 		bool HasTargetOtherThanFortress();
 	};
 

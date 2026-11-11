@@ -11,7 +11,8 @@
 #include "GameLogic/Automation/Attack.h"
 
 using GameLogic::Automation::BlindHitWatch;
-using GameLogic::Automation::IsBetterFortressAware;
+using GameLogic::Automation::FortressAwareRank;
+using GameLogic::Automation::IsBetterFortressRank;
 using GameLogic::Automation::IsFortressObjectType;
 
 namespace
@@ -36,16 +37,45 @@ TEST_CASE("Only the fortress's gates and statue are fortress objects")
     CHECK_FALSE(IsFortressObjectType(275)); // Illusion of Kundun 7
 }
 
-TEST_CASE("Any monster comes before a fortress object, whatever the distance")
+TEST_CASE("The fortress rank: clear line first, then not a fortress object")
 {
-    // Candidate is a guard far off, the best so far a gate next to the hero: the guard wins.
-    CHECK(IsBetterFortressAware(false, true, false));
-    // Candidate is a gate, the best so far a guard: the gate never wins.
-    CHECK_FALSE(IsBetterFortressAware(true, false, true));
-    // Two of a kind: the usual rule decides.
-    CHECK(IsBetterFortressAware(false, false, true));
-    CHECK_FALSE(IsBetterFortressAware(false, false, false));
-    CHECK(IsBetterFortressAware(true, true, true));
+    CHECK(FortressAwareRank(false, true) == 0);  // a monster in the open
+    CHECK(FortressAwareRank(true, true) == 1);   // a gate in the open
+    CHECK(FortressAwareRank(false, false) == 2); // a monster behind a wall
+    CHECK(FortressAwareRank(true, false) == 3);  // a gate behind a wall
+}
+
+TEST_CASE("A guard behind the standing gate never wins over the gate")
+{
+    // Arguments: candidate fortress, candidate clear line, best fortress, best clear line, otherwise better.
+    // Candidate is the guard behind the gate, nearer, the best so far the gate in the open: the gate stays.
+    CHECK_FALSE(IsBetterFortressRank(false, false, true, true, true));
+    // Candidate is the gate in the open, farther, the best so far the guard behind it: the gate wins.
+    CHECK(IsBetterFortressRank(true, true, false, false, false));
+}
+
+TEST_CASE("A monster in the open comes before a gate in the open, whatever the distance")
+{
+    CHECK(IsBetterFortressRank(false, true, true, true, false));
+    CHECK_FALSE(IsBetterFortressRank(true, true, false, true, true));
+}
+
+TEST_CASE("Behind a wall a monster still comes before a gate")
+{
+    CHECK(IsBetterFortressRank(false, false, true, false, false));
+    CHECK_FALSE(IsBetterFortressRank(true, false, false, false, true));
+}
+
+TEST_CASE("At the same rank the distance rule decides")
+{
+    for (const bool fortress : { false, true })
+    {
+        for (const bool clearLine : { false, true })
+        {
+            CHECK(IsBetterFortressRank(fortress, clearLine, fortress, clearLine, true));
+            CHECK_FALSE(IsBetterFortressRank(fortress, clearLine, fortress, clearLine, false));
+        }
+    }
 }
 
 TEST_CASE("A closed gate is given up after the patience of hits without damage")

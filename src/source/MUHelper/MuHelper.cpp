@@ -556,13 +556,19 @@ namespace MUHelper
         }
         for (const int& iMonsterId : setTargets)
         {
-            CHARACTER* pTarget = FindCharacterByKey(iMonsterId);
-            if (pTarget == nullptr || !IsMonster(pTarget) || pTarget->Dead > 0 || !pTarget->Object.Live
+            const int iIndex = FindCharacterIndex(iMonsterId);
+            if (iIndex == MAX_CHARACTERS_CLIENT)
+            {
+                continue;
+            }
+            CHARACTER* pTarget = &CharactersClient[iIndex];
+            if (!IsMonster(pTarget) || pTarget->Dead > 0 || !pTarget->Object.Live
                 || IsFortressObject(pTarget) || m_mapForgottenUntil.count(iMonsterId))
             {
                 continue;
             }
-            if (ComputeDistanceFromTarget(pTarget) <= m_iHuntingDistance)
+            // Only one the hero can reach: the guards behind a standing gate don't count (FortressAwareRank).
+            if (ComputeDistanceFromTarget(pTarget) <= m_iHuntingDistance && HasClearLineTo(iIndex))
             {
                 return true;
             }
@@ -695,13 +701,13 @@ namespace MUHelper
             }
             // A monster behind a wall or a fence only when none stands in the open: the nearest one used to be
             // taken whatever stood between, and no walk reaches it (HasClearLineTo, 2026-11-10).
-            // A fortress gate or statue only when no other monster is about (Tier Maps, 2026-11-11): CheckWall
-            // counts a gate as in the open, so it used to win over the guards.
+            // A fortress gate or statue after the monsters in the open, before those behind a wall (Tier Maps,
+            // FortressAwareRank): the guards behind a standing gate must not keep the hero from breaking it.
             const bool bClearLine = HasClearLineTo(iIndex);
             const bool bFortress = IsFortressObject(pTarget);
             if (iClosestMonsterId == -1
-                || GameLogic::Automation::IsBetterFortressAware(bFortress, bClosestFortress,
-                    GameLogic::Automation::IsBetterTarget(bClearLine, iDistance, bClosestClearLine, iMinDistance)))
+                || GameLogic::Automation::IsBetterFortressRank(bFortress, bClearLine, bClosestFortress,
+                    bClosestClearLine, iDistance <= iMinDistance))
             {
                 iMinDistance = iDistance;
                 iClosestMonsterId = iMonsterId;
@@ -1567,7 +1573,8 @@ namespace MUHelper
         {
             m_iCurrentTarget = -1;
         }
-        // A fortress gate or statue gives way to any monster that turns up (Tier Maps, 2026-11-11).
+        // A fortress gate or statue gives way to a monster that turns up with a clear line to it (Tier Maps,
+        // 2026-11-11); not to the guards behind the gate itself.
         if (m_iCurrentTarget != -1 && IsFortressObject(FindCharacterByKey(m_iCurrentTarget)) && HasTargetOtherThanFortress())
         {
             m_iCurrentTarget = -1;
@@ -1790,13 +1797,13 @@ namespace MUHelper
                 continue;
             }
             const int iDistance = ComputeDistanceFromTarget(pTarget);
-            // As GetNearestTarget: one in the open before one behind a wall. At the same distance the first found
+            // As GetNearestTarget: the order of FortressAwareRank. At the same rank and distance the first found
             // stays, as it did here.
             const bool bClearLine = HasClearLineTo(static_cast<int>(pTarget - CharactersClient));
             const bool bFortress = IsFortressObject(pTarget);
             if (iNearest == -1
-                || GameLogic::Automation::IsBetterFortressAware(bFortress, bNearestFortress,
-                    bClearLine == bNearestClearLine ? iDistance < iNearestDistance : bClearLine))
+                || GameLogic::Automation::IsBetterFortressRank(bFortress, bClearLine, bNearestFortress,
+                    bNearestClearLine, iDistance < iNearestDistance))
             {
                 iNearest = iMonsterId;
                 iNearestDistance = iDistance;
@@ -1840,7 +1847,8 @@ namespace MUHelper
             const float fDistance = fDx * fDx + fDy * fDy;
             const bool bFortress = IsFortressObject(pTarget);
             if (iNearest == -1
-                || GameLogic::Automation::IsBetterFortressAware(bFortress, bNearestFortress, fDistance < fNearest))
+                || GameLogic::Automation::IsBetterFortressRank(bFortress, true, bNearestFortress, true,
+                    fDistance < fNearest))
             {
                 iNearest = iMonsterId;
                 fNearest = fDistance;

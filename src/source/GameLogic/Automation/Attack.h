@@ -154,13 +154,25 @@ struct ApproachWatch
     return monsterType >= 524 && monsterType <= 528;
 }
 
-// Which of two targets to prefer when one of them may be a fortress object: any other monster comes before a gate or
-// the statue; between two of a kind `otherwiseBetter` decides.
-[[nodiscard]] constexpr bool IsBetterFortressAware(bool fortress, bool bestFortress, bool otherwiseBetter)
+// How good a target is in the fortress, 0 the best: a monster with a clear line to it, then a gate or the statue with
+// a clear line, then a monster behind a wall, then a gate or the statue behind one. The clear line comes before "not
+// a fortress object": the guards stand behind the zone's gate while it still stands, no walk reaches them, and when
+// they won over the gate a melee hero (DK) paced along the wall and never broke the gate (ghinzuro 2026-11-11, review).
+[[nodiscard]] constexpr int FortressAwareRank(bool fortress, bool clearLine)
 {
-    if (fortress != bestFortress)
+    return (clearLine ? 0 : 2) + (fortress ? 1 : 0);
+}
+
+// Which of two targets to prefer: the better FortressAwareRank; at the same rank `otherwiseBetter` decides (the
+// caller's distance rule).
+[[nodiscard]] constexpr bool IsBetterFortressRank(bool fortress, bool clearLine, bool bestFortress, bool bestClearLine,
+    bool otherwiseBetter)
+{
+    const int rank = FortressAwareRank(fortress, clearLine);
+    const int bestRank = FortressAwareRank(bestFortress, bestClearLine);
+    if (rank != bestRank)
     {
-        return !fortress;
+        return rank < bestRank;
     }
     return otherwiseBetter;
 }
