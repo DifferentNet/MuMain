@@ -1,0 +1,91 @@
+<rml>
+<head>
+	<title>Loot filter</title>
+	<link type="text/rcss" href="base.rcss"/>
+	<link type="text/rcss" href="loot_filter.rcss"/>
+	<link type="text/template" href="window_shell.rml"/>
+</head>
+<!-- The loot highlight filter's settings (CLootFilterWindow, GameLogic/Items/LootFilter.h), in the theme's window
+     shell (window_shell.rml: frame, title, centred; dragged by any part that is not a control). On top the on switch
+     and the presets; in the scrolling area one row per item type with Hide / Normal / Highlight (Hide greyed out
+     where it may not be picked), the options that always highlight, the level and zen thresholds, the names to
+     highlight (a field, Add and the names as chips with a cross), and the beam and sound switches; at the bottom
+     Close. C++ keeps the settings and checks every click; clicks are queued with loot_filter_*(...). -->
+<body template="window_shell" data-model="loot_filter">
+	<div class="lf-top">
+		<div class="lf-check-row lf-enabled" data-event-click="loot_filter_enabled">
+			<div class="checkbox-box" data-class-checked="enabled"><div class="checkbox-tick"></div></div>
+			<span class="lf-check-label">{{labels.enabled}}</span>
+		</div>
+		<div class="lf-presets">
+			<span class="lf-presets-label">{{labels.presets}}</span>
+			<div class="lf-button" data-event-click="loot_filter_preset(1)">{{labels.preset_default}}</div>
+			<div class="lf-button" data-event-click="loot_filter_preset(2)">{{labels.preset_strict}}</div>
+			<div class="lf-button" data-event-click="loot_filter_preset(0)">{{labels.preset_off}}</div>
+		</div>
+	</div>
+
+	<div class="lf-scroll scroll-pane" data-class-off="!enabled">
+		<div class="lf-section">{{labels.categories}}</div>
+		<div class="lf-row" data-for="row : categories">
+			<span class="lf-row-label">{{row.label}}</span>
+			<div class="lf-segments">
+				<div class="lf-seg lf-seg-hide" data-class-active="row.verdict == 1" data-class-locked="!row.can_hide"
+				     data-event-click="loot_filter_category(row.index, 1)">{{labels.hide}}</div>
+				<div class="lf-seg" data-class-active="row.verdict == 0"
+				     data-event-click="loot_filter_category(row.index, 0)">{{labels.normal}}</div>
+				<div class="lf-seg lf-seg-highlight" data-class-active="row.verdict == 2"
+				     data-event-click="loot_filter_category(row.index, 2)">{{labels.highlight}}</div>
+			</div>
+		</div>
+
+		<div class="lf-section">{{labels.rarity}}</div>
+		<div class="lf-check-row" data-for="rarity : rarities" data-event-click="loot_filter_rarity(rarity.index)">
+			<div class="checkbox-box" data-class-checked="rarity.on"><div class="checkbox-tick"></div></div>
+			<span class="lf-check-label">{{rarity.label}}</span>
+		</div>
+		<div class="lf-row">
+			<span class="lf-row-label">{{labels.level}}</span>
+			<div class="lf-stepper">
+				<div class="lf-step" data-event-click="loot_filter_level(-1)">-</div>
+				<span class="lf-step-value">{{level_text}}</span>
+				<div class="lf-step" data-event-click="loot_filter_level(1)">+</div>
+			</div>
+		</div>
+		<div class="lf-row">
+			<span class="lf-row-label">{{labels.zen}}</span>
+			<div class="lf-stepper">
+				<div class="lf-step" data-event-click="loot_filter_zen(-1)">-</div>
+				<span class="lf-step-value">{{zen_text}}</span>
+				<div class="lf-step" data-event-click="loot_filter_zen(1)">+</div>
+			</div>
+		</div>
+
+		<div class="lf-section">{{labels.names}}</div>
+		<div class="lf-hint">{{labels.name_hint}}</div>
+		<div class="lf-name-entry">
+			<input id="lf_name" type="text" class="text-field lf-name-field" maxlength="40" data-value="name_input"/>
+			<div class="lf-button" data-class-disabled="!can_add_name" data-event-click="loot_filter_name_add">{{labels.name_add}}</div>
+		</div>
+		<div class="lf-chips">
+			<div class="lf-chip" data-for="chip : names" data-event-click="loot_filter_name_remove(chip.index)">
+				<span class="lf-chip-text">{{chip.text}}</span><span class="lf-chip-x">x</span>
+			</div>
+		</div>
+
+		<div class="lf-section"></div>
+		<div class="lf-check-row" data-event-click="loot_filter_marker">
+			<div class="checkbox-box" data-class-checked="marker"><div class="checkbox-tick"></div></div>
+			<span class="lf-check-label">{{labels.marker}}</span>
+		</div>
+		<div class="lf-check-row" data-event-click="loot_filter_sound">
+			<div class="checkbox-box" data-class-checked="sound"><div class="checkbox-tick"></div></div>
+			<span class="lf-check-label">{{labels.sound}}</span>
+		</div>
+	</div>
+
+	<div class="lf-foot">
+		<div class="lf-button lf-close" data-event-click="loot_filter_close">{{labels.close}}</div>
+	</div>
+</body>
+</rml>

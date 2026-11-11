@@ -46,6 +46,8 @@
 #include "Engine/Object/CullingConstants.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "GameLogic/Items/ItemCategories.h"
+#include "GameLogic/Items/LootFilterRuntime.h"
+#include "Render/Items/LootBeam.h"
 #include "GameLogic/Events/SeasonMarks.h"
 #include "Render/Items/AncientColors.h"
 #include "Render/Items/ItemDisplay.h"
@@ -5732,6 +5734,7 @@ void CreateItemDrop(ITEM_t* ip, ItemCreationParams params, vec3_t position, bool
     }
 
     ItemAngle(o);
+    GameLogic::Items::LootFilterRuntime::ClassifyDrop(static_cast<int>(ip - Items), isFreshDrop);
 }
 
 void CreateMoneyDrop(ITEM_t* ip, int amount, vec3_t position, bool isFreshDrop)
@@ -5768,6 +5771,7 @@ void CreateMoneyDrop(ITEM_t* ip, int amount, vec3_t position, bool isFreshDrop)
     }
 
     ItemAngle(o);
+    GameLogic::Items::LootFilterRuntime::ClassifyDrop(static_cast<int>(ip - Items), isFreshDrop);
 }
 
 void CreateShiny(OBJECT* o)
@@ -5845,8 +5849,8 @@ void MoveItems()
                 HandleItemFalling(o);
             }
 
-            // Create shiny particle effect
-            if (rand_fps_check(1))
+            // Create shiny particle effect; an item the loot filter hides gets none.
+            if (rand_fps_check(1) && !GameLogic::Items::LootFilterRuntime::IsHidden(i))
             {
                 CreateShiny(o);
             }
@@ -6004,6 +6008,9 @@ void RenderItems()
             }
         }
     }
+
+    // The loot filter's beams over highlighted items, still inside the bloom exclusion.
+    Render::Items::LootBeam::RenderAll();
 }
 
 void PartObjectColor(int Type, float Alpha, float Bright, vec3_t Light, bool ExtraMon)

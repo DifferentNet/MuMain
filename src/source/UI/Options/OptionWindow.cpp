@@ -32,11 +32,13 @@
 #include "UI/Theme/ThemeSelection.h"
 #include "UI/RmlBridge/RmlTooltip.h"
 #include "Core/Utilities/StringUtils.h"
+#include "Scenes/SceneCore.h"
 #include "Scenes/SceneManager.h"
 #include "Scenes/MainScene.h"
 #include "App/Platform/Windows/Winmain.h"
 #include "UI/Core/SceneUICoordinator.h"
 #include "UI/Windows/RememberPasswordPrompt.h"
+#include "GameLogic/Items/LootFilterRuntime.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -426,6 +428,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("whisper_sound_label", &model.whisperSoundLabel);
     c.Bind("slide_help", &model.slideHelp);
     c.Bind("slide_help_label", &model.slideHelpLabel);
+    c.Bind("loot_filter_shown", &model.lootFilterShown);
+    c.Bind("loot_filter_label", &model.lootFilterLabel);
     c.Bind("render_all_effects", &model.renderAllEffects);
     c.Bind("render_all_effects_label", &model.renderAllEffectsLabel);
     c.Bind("windowed_mode", &model.windowedMode);
@@ -631,6 +635,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleWhisperSound(); });
     c.BindEventCallback("option_toggle_slide_help",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleSlideHelp(); });
+    c.BindEventCallback("option_open_loot_filter",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlOpenLootFilter(); });
     c.BindEventCallback("option_toggle_render_all_effects",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleRenderAllEffects(); });
     c.BindEventCallback("option_toggle_windowed_mode",
@@ -1740,6 +1746,16 @@ void mu::ui::window::COptionWindow::RmlClickClose()
     PlayBuffer(SOUND_CLICK01);
 }
 
+void mu::ui::window::COptionWindow::RmlOpenLootFilter()
+{
+    // The loot filter belongs to the game (it filters the items on the ground); its row is hidden elsewhere.
+    if (SceneFlag != MAIN_SCENE)
+        return;
+    g_pNewUISystem->Hide(mu::ui::window::INTERFACE_OPTION);
+    g_pNewUISystem->Show(mu::ui::window::INTERFACE_LOOT_FILTER);
+    PlayBuffer(SOUND_CLICK01);
+}
+
 void mu::ui::window::COptionWindow::OnSoundVolumeChanged()
 {
     m_SoundOnOff = (m_iVolumeLevel > 0) ? 1 : 0;
@@ -1861,6 +1877,8 @@ void mu::ui::window::COptionWindow::ApplyLanguage()
     I18N::SetLocale(code);
     GameConfig::GetInstance().SetUILocale(wide);
     GameConfig::GetInstance().Save();
+    // The loot filter matches names against the labels, which are in the new language now.
+    GameLogic::Items::LootFilterRuntime::ReclassifyAll();
 }
 
 int mu::ui::window::COptionWindow::FindCurrentFontIndex()
@@ -2044,6 +2062,7 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.autoAttackLabel, "auto_attack_label", I18N::Game::AutomaticAttack);
     syncLabel(model.whisperSoundLabel, "whisper_sound_label", I18N::Game::BeepSoundForWhispering);
     syncLabel(model.slideHelpLabel, "slide_help_label", I18N::Game::SlideHelp);
+    syncLabel(model.lootFilterLabel, "loot_filter_label", I18N::Game::LootFilterOpen);
     syncLabel(model.renderAllEffectsLabel, "render_all_effects_label", I18N::Game::RenderFullEffects);
     syncLabel(model.windowedModeLabel, "windowed_mode_label", I18N::Game::WindowedMode);
     syncLabel(model.soundVolumeLabel, "sound_volume_label", I18N::Game::SoundVolume);
@@ -2101,6 +2120,8 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     if (model.autoAttack != m_bAutoAttack) { model.autoAttack = m_bAutoAttack; m_RmlView.MarkDirty("auto_attack"); }
     if (model.whisperSound != m_bWhisperSound) { model.whisperSound = m_bWhisperSound; m_RmlView.MarkDirty("whisper_sound"); }
     if (model.slideHelp != m_bSlideHelp) { model.slideHelp = m_bSlideHelp; m_RmlView.MarkDirty("slide_help"); }
+    const bool lootFilterShown = SceneFlag == MAIN_SCENE;
+    if (model.lootFilterShown != lootFilterShown) { model.lootFilterShown = lootFilterShown; m_RmlView.MarkDirty("loot_filter_shown"); }
     if (model.renderAllEffects != m_bRenderAllEffects) { model.renderAllEffects = m_bRenderAllEffects; m_RmlView.MarkDirty("render_all_effects"); }
     if (model.windowedMode != m_bWindowedMode) { model.windowedMode = m_bWindowedMode; m_RmlView.MarkDirty("windowed_mode"); }
 

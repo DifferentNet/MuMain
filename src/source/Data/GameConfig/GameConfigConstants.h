@@ -10,6 +10,8 @@ namespace CfgSections
     inline constexpr wchar_t CfgSectionConnectionSettings[] = L"CONNECTION SETTINGS";
     inline constexpr wchar_t CfgSectionCamera[] = L"Camera";
     inline constexpr wchar_t CfgSectionRender[] = L"Render";
+    // MU Moldova: the loot highlight filter (GameLogic::Items::LootFilter).
+    inline constexpr wchar_t CfgSectionLootFilter[] = L"LootFilter";
 }
 
 namespace CfgKeys
@@ -58,6 +60,17 @@ namespace CfgKeys
     // "touch"), set in the options window's Interface tab. See UI::Mobile::InterfaceMode.
     inline constexpr wchar_t CfgKeyInterfaceView[] = L"InterfaceView";
     inline constexpr wchar_t CfgKeyControls[] = L"Controls";
+
+    // LootFilter: on/off, the beam, the drop sound, one digit per category (LootFilter::SerializeCategories),
+    // the rarity mask, the +level and zen thresholds, and the names as Name0..NameN with NameCount.
+    inline constexpr wchar_t CfgKeyLootFilterEnabled[] = L"Enabled";
+    inline constexpr wchar_t CfgKeyLootFilterMarker[] = L"Marker";
+    inline constexpr wchar_t CfgKeyLootFilterSound[] = L"Sound";
+    inline constexpr wchar_t CfgKeyLootFilterCategories[] = L"Categories";
+    inline constexpr wchar_t CfgKeyLootFilterRarity[] = L"Rarity";
+    inline constexpr wchar_t CfgKeyLootFilterMinLevel[] = L"MinLevel";
+    inline constexpr wchar_t CfgKeyLootFilterZenMin[] = L"ZenMin";
+    inline constexpr wchar_t CfgKeyLootFilterNamePrefix[] = L"Name";
     // MU Moldova: the on-screen controls' size in percent (Options -> Interface, Button size).
     inline constexpr wchar_t CfgKeyTouchButtonSize[] = L"TouchButtonSize";
     // MU Moldova: whether the game reads a gamepad (Options -> Interface, Gamepad).
@@ -186,6 +199,18 @@ namespace CfgDefaults
     inline constexpr bool CfgDefaultTitleEffects = true;
     // On by default, a switch in Options (ghinzuro, 2026-11-03).
     inline constexpr bool CfgDefaultTitlesTownsOnly = true;
+
+    // The loot filter's «Ценное» defaults (ghinzuro 2026-11-11), equal to LootFilter::Preset::Default
+    // (test_loot_filter checks it). An empty category string means the Default preset's categories.
+    inline constexpr bool CfgDefaultLootFilterEnabled = true;
+    inline constexpr bool CfgDefaultLootFilterMarker = true;
+    inline constexpr bool CfgDefaultLootFilterSound = false;
+    inline constexpr wchar_t CfgDefaultLootFilterCategories[] = L"";
+    inline constexpr int CfgDefaultLootFilterRarity = 3; // excellent + ancient
+    inline constexpr int CfgDefaultLootFilterMinLevel = 9;
+    inline constexpr int CfgDefaultLootFilterZenMin = 0; // off
+    // At most this many names are read back, as LootFilter::MaxNames (test_loot_filter checks it).
+    inline constexpr int CfgMaxLootFilterNames = 32;
 
     // "auto" follows the device: a phone or tablet in the browser gets the phone layout and touch.
     inline constexpr wchar_t CfgDefaultInterfaceView[] = L"auto";

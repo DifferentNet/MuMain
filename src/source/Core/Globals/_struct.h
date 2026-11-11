@@ -478,6 +478,9 @@ typedef struct
     short  Key;
     ITEM   Item;
     OBJECT Object;
+    // The loot filter's verdict for this ground item, a GameLogic::Items::LootFilter::Verdict (0 = Normal),
+    // set when it drops (LootFilterRuntime::ClassifyDrop).
+    BYTE   LootVerdict;
 } ITEM_t;
 
 //object end

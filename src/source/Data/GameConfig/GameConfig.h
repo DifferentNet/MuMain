@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <limits>
 #include <string>
 #include <vector>
 #include "Core/Platform/WinCompat.h"
@@ -103,6 +104,24 @@ public:
     void SetBackgroundSound(bool on) { m_backgroundSound = on; }
     bool GetTitlesTownsOnly() const { return m_titlesTownsOnly; }
     void SetTitlesTownsOnly(bool townsOnly) { m_titlesTownsOnly = townsOnly; }
+
+    // The loot highlight filter's raw settings; GameLogic::Items::LootFilterRuntime turns them into rules.
+    bool GetLootFilterEnabled() const { return m_lootFilterEnabled; }
+    void SetLootFilterEnabled(bool on) { m_lootFilterEnabled = on; }
+    bool GetLootFilterMarker() const { return m_lootFilterMarker; }
+    void SetLootFilterMarker(bool on) { m_lootFilterMarker = on; }
+    bool GetLootFilterSound() const { return m_lootFilterSound; }
+    void SetLootFilterSound(bool on) { m_lootFilterSound = on; }
+    const std::wstring& GetLootFilterCategories() const { return m_lootFilterCategories; }
+    void SetLootFilterCategories(const std::wstring& digits) { m_lootFilterCategories = digits; }
+    int GetLootFilterRarity() const { return m_lootFilterRarity; }
+    void SetLootFilterRarity(int mask) { m_lootFilterRarity = mask; }
+    int GetLootFilterMinLevel() const { return m_lootFilterMinLevel; }
+    void SetLootFilterMinLevel(int level) { m_lootFilterMinLevel = level; }
+    int GetLootFilterZenMin() const { return m_lootFilterZenMin; }
+    void SetLootFilterZenMin(int zen) { m_lootFilterZenMin = zen; }
+    const std::vector<std::wstring>& GetLootFilterNames() const { return m_lootFilterNames; }
+    void SetLootFilterNames(const std::vector<std::wstring>& names) { m_lootFilterNames = names; }
 
     // The phone or PC layout and the controls, as config.ini words (UI::Mobile::InterfaceMode).
     const std::wstring& GetInterfaceView() const { return m_interfaceView; }
@@ -300,6 +319,14 @@ private:
     bool m_overheadTitles = true;
     bool m_titleEffects = true;
     bool m_titlesTownsOnly = true;
+    bool m_lootFilterEnabled = true;
+    bool m_lootFilterMarker = true;
+    bool m_lootFilterSound = false;
+    std::wstring m_lootFilterCategories;
+    int m_lootFilterRarity = 3;
+    int m_lootFilterMinLevel = 9;
+    int m_lootFilterZenMin = 0;
+    std::vector<std::wstring> m_lootFilterNames;
     bool m_backgroundSound = true;
     std::wstring m_interfaceView;
     std::wstring m_controls;
@@ -350,7 +377,11 @@ private:
     bool ReadBool(const wchar_t* section, const wchar_t* key, bool defaultValue) const;
     void WriteBool(const wchar_t* section, const wchar_t* key, bool value);
 
-    std::vector<std::wstring> ReadStringList(const wchar_t* section, const wchar_t* keyPrefix);
+    // Reads at most maxCount entries, whatever <prefix>Count says.
+    std::vector<std::wstring> ReadStringList(const wchar_t* section, const wchar_t* keyPrefix,
+                                             int maxCount = (std::numeric_limits<int>::max)());
+    void LoadLootFilter();
+    void SaveLootFilter();
     void WriteStringList(const wchar_t* section, const wchar_t* keyPrefix, const std::vector<std::wstring>& values);
     std::wstring ReadString(const wchar_t* section, const wchar_t* key, const std::wstring& defaultValue);
     void WriteString(const wchar_t* section, const wchar_t* key, const std::wstring& value);
