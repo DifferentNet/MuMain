@@ -4,6 +4,7 @@
 #include "I18N/All.h"
 
 #include "UI/HUD/HotKey.h"
+#include "UI/Character/OverheadNames.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Core/WindowCommon.h" // ShowSystemMenuDialog
 #include "UI/Dialogs/CommonMessageBox.h"
@@ -94,7 +95,7 @@ bool mu::ui::window::CHotKey::UpdateMouseEvent()
         {
             CHARACTER* pCha = &CharactersClient[SelectedCharacter];
 
-            if (pCha->Object.Kind != KIND_PLAYER)
+            if (pCha->Object.Kind != KIND_PLAYER || UI::OverheadNames::IsOfflineShadow(pCha))
             {
                 return false;
             }

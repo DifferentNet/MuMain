@@ -20,6 +20,7 @@
 #include "Engine/AI/ZzzAI.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "UI/Chat/ChatInput.h"
+#include "UI/Character/OverheadNames.h"
 #include "GameLogic/Combat/ClassAttack.h"
 #include "GameLogic/Combat/SkillCast.h"
 #include "GameLogic/Combat/SkillExecution.h"
@@ -2153,7 +2154,7 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
                 {
                     CHARACTER* c = &CharactersClient[SelectedCharacter];
                     OBJECT* o = &c->Object;
-                    if (o->Kind == KIND_PLAYER && c != Hero && (o->Type == MODEL_PLAYER || c->Change) &&
+                    if (o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change) &&
                         abs((c->PositionX) - (Hero->PositionX)) <= 1 &&
                         abs((c->PositionY) - (Hero->PositionY)) <= 1)
                     {
@@ -2174,7 +2175,7 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
                     CHARACTER* c = &CharactersClient[i];
                     OBJECT* o = &c->Object;
 
-                    if (o->Live && o->Kind == KIND_PLAYER && c != Hero && (o->Type == MODEL_PLAYER || c->Change) &&
+                    if (o->Live && o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change) &&
                         abs((c->PositionX) - (Hero->PositionX)) <= 1 &&
                         abs((c->PositionY) - (Hero->PositionY)) <= 1)
                     {
@@ -2243,7 +2244,7 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
             {
                 CHARACTER* c = &CharactersClient[SelectedCharacter];
                 OBJECT* o = &c->Object;
-                if (o->Kind == KIND_PLAYER && c != Hero && (o->Type == MODEL_PLAYER || c->Change))
+                if (o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change))
                 {
                     SocketClient->ToGameServer()->SendPlayerShopItemListRequest(c->Key, MU_C16(c->ID));
                 }
@@ -2263,7 +2264,7 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
                     else
                     {
                         OBJECT* o = &c->Object;
-                        if (o->Live && o->Kind == KIND_PLAYER && c != Hero && (o->Type == MODEL_PLAYER || c->Change))
+                        if (o->Live && o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change))
                         {
                             BYTE Dir1 = (BYTE)((o->Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
                             BYTE Dir2 = (BYTE)((Hero->Object.Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
@@ -2315,7 +2316,7 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
                     {
                         CHARACTER* c = &CharactersClient[SelectedCharacter];
                         OBJECT* o = &c->Object;
-                        if (o->Kind == KIND_PLAYER && c != Hero && (o->Type == MODEL_PLAYER || c->Change) &&
+                        if (o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change) &&
                             abs((c->PositionX) - (Hero->PositionX)) <= 1 &&
                             abs((c->PositionY) - (Hero->PositionY)) <= 1) {
                             SocketClient->ToGameServer()->SendDuelStartRequest(c->Key, MU_C16(c->ID));
@@ -2326,7 +2327,7 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
                         CHARACTER* c = &CharactersClient[i];
                         OBJECT* o = &c->Object;
 
-                        if (o->Live && o->Kind == KIND_PLAYER && c != Hero && (o->Type == MODEL_PLAYER || c->Change) &&
+                        if (o->Live && o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change) &&
                             abs((c->PositionX) - (Hero->PositionX)) <= 1 &&
                             abs((c->PositionY) - (Hero->PositionY)) <= 1)
                         {
@@ -2376,7 +2377,7 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
             {
                 CHARACTER* c = &CharactersClient[SelectedCharacter];
                 OBJECT* o = &c->Object;
-                if (o->Kind == KIND_PLAYER && c != Hero && (o->Type == MODEL_PLAYER || c->Change) &&
+                if (o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change) &&
                     abs((c->PositionX) - (Hero->PositionX)) <= 1 &&
                     abs((c->PositionY) - (Hero->PositionY)) <= 1)
                 {
@@ -2392,7 +2393,7 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
                 CHARACTER* c = &CharactersClient[i];
                 OBJECT* o = &c->Object;
 
-                if (o->Live && o->Kind == KIND_PLAYER && c != Hero && (o->Type == MODEL_PLAYER || c->Change) &&
+                if (o->Live && o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change) &&
                     abs((c->PositionX) - (Hero->PositionX)) <= 1 &&
                     abs((c->PositionY) - (Hero->PositionY)) <= 1)
                 {
@@ -2430,7 +2431,7 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
             {
                 CHARACTER* c = &CharactersClient[SelectedCharacter];
                 OBJECT* o = &c->Object;
-                if (o->Kind == KIND_PLAYER && c != Hero && (o->Type == MODEL_PLAYER || c->Change) &&
+                if (o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change) &&
                     abs((c->PositionX) - (Hero->PositionX)) <= 1 &&
                     abs((c->PositionY) - (Hero->PositionY)) <= 1)
                 {
@@ -2458,7 +2459,7 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
                 CHARACTER* c = &CharactersClient[i];
                 OBJECT* o = &c->Object;
 
-                if (o->Live && o->Kind == KIND_PLAYER && c != Hero && (o->Type == MODEL_PLAYER || c->Change) &&
+                if (o->Live && o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change) &&
                     abs((c->PositionX) - (Hero->PositionX)) <= 1 &&
                     abs((c->PositionY) - (Hero->PositionY)) <= 1)
                 {
@@ -2505,7 +2506,7 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
             {
                 CHARACTER* c = &CharactersClient[SelectedCharacter];
                 OBJECT* o = &c->Object;
-                if (o->Kind == KIND_PLAYER && c != Hero && (o->Type == MODEL_PLAYER || c->Change) && abs((c->PositionX) - (Hero->PositionX)) <= 1 && abs((c->PositionY) - (Hero->PositionY)) <= 1)
+                if (o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change) && abs((c->PositionX) - (Hero->PositionX)) <= 1 && abs((c->PositionY) - (Hero->PositionY)) <= 1)
                 {
                     PartyKey = c->Key;
                     SocketClient->ToGameServer()->SendPartyInviteRequest(c->Key);
@@ -2518,7 +2519,7 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
             {
                 CHARACTER* c = &CharactersClient[i];
                 OBJECT* o = &c->Object;
-                if (o->Live && o->Kind == KIND_PLAYER && c != Hero && (o->Type == MODEL_PLAYER || c->Change) && abs((c->PositionX) - (Hero->PositionX)) <= 1 && abs((c->PositionY) - (Hero->PositionY)) <= 1)
+                if (o->Live && o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change) && abs((c->PositionX) - (Hero->PositionX)) <= 1 && abs((c->PositionY) - (Hero->PositionY)) <= 1)
                 {
                     BYTE Dir1 = (BYTE)((o->Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
                     BYTE Dir2 = (BYTE)((Hero->Object.Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
