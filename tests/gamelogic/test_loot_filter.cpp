@@ -69,10 +69,47 @@ TEST_CASE("The Strict preset hides plain gear and potions but never excellent or
     CHECK(Classify(settings, Item(Category::Armour, 0, 3)) == Verdict::Hide);
     CHECK(Classify(settings, Item(Category::Armour, RarityExcellent)) == Verdict::Highlight);
     CHECK(Classify(settings, Item(Category::Armour, 0, 11)) == Verdict::Highlight);
-    CHECK(Classify(settings, Item(Category::Weapon, RaritySocket)) == Verdict::Highlight);
-    CHECK(Classify(settings, Item(Category::SocketSeed)) == Verdict::Highlight);
     CHECK(Classify(settings, Item(Category::Jewel)) == Verdict::Highlight);
     CHECK(Classify(settings, Item(Category::MedalTicket)) == Verdict::Highlight);
+}
+
+TEST_CASE("Sockets are retired: the Strict preset does not highlight them")
+{
+    // No socket items or seeds on the server (ghinzuro 2026-11-11); the enum slot and the bit stay for saved settings.
+    const Settings settings = MakePreset(Preset::Strict);
+    CHECK(IsRetired(Category::SocketSeed));
+    CHECK_FALSE(IsRetired(Category::Weapon));
+    CHECK(settings.categories[static_cast<std::size_t>(Category::SocketSeed)] == Verdict::Normal);
+    CHECK((settings.rarity & RarityRetiredMask) == 0);
+    CHECK(Classify(settings, Item(Category::SocketSeed)) == Verdict::Normal);
+    // A socket bit no longer counts, so it is a plain weapon, which Strict hides.
+    CHECK(Classify(settings, Item(Category::Weapon, RaritySocket)) == Verdict::Hide);
+}
+
+TEST_CASE("Saved socket settings have no effect")
+{
+    Settings settings = MakePreset(Preset::Off);
+    settings.rarity = RarityAllMask;
+    settings.minLevel = MinLevelHigh;
+    Set(settings, Category::SocketSeed, Verdict::Highlight);
+    CHECK(Classify(settings, Item(Category::SocketSeed)) == Verdict::Normal);
+    CHECK(Classify(settings, Item(Category::Weapon, RaritySocket)) == Verdict::Normal);
+    CHECK(Classify(settings, Item(Category::Weapon, RarityLuck)) == Verdict::Highlight);
+}
+
+TEST_CASE("The retired socket category reads as Normal and saves as 0")
+{
+    std::wstring text(static_cast<std::size_t>(CategoryCount), L'0');
+    const auto socket = static_cast<std::size_t>(Category::SocketSeed);
+    text[socket] = L'2';
+    std::array<Verdict, CategoryCount> categories{};
+    REQUIRE(ParseCategories(text, categories));
+    CHECK(categories[socket] == Verdict::Normal);
+
+    categories[socket] = Verdict::Highlight;
+    const std::wstring saved = SerializeCategories(categories);
+    CHECK(saved.size() == static_cast<std::size_t>(CategoryCount));
+    CHECK(saved[socket] == L'0');
 }
 
 TEST_CASE("A disabled filter gives Normal for everything")

@@ -32,7 +32,7 @@ bool NameMatches(const std::vector<std::wstring>& names, const std::wstring& low
 
 std::uint8_t RarityOf(const Settings& settings, const Facts& facts)
 {
-    std::uint8_t rarity = facts.rarity;
+    std::uint8_t rarity = static_cast<std::uint8_t>(facts.rarity & ~RarityRetiredMask);
     if (facts.category != Category::Zen && facts.level >= settings.minLevel)
         rarity |= RarityLevel;
     return rarity;
@@ -71,17 +71,24 @@ bool CanHide(Category category)
     return category != Category::Jewel && category != Category::Quest;
 }
 
+bool IsRetired(Category category)
+{
+    return category == Category::SocketSeed;
+}
+
 Verdict Classify(const Settings& settings, const Facts& facts)
 {
     if (!settings.enabled)
         return Verdict::Normal;
     if (NameMatches(settings.names, facts.lowerName))
         return Verdict::Highlight;
-    if ((RarityOf(settings, facts) & settings.rarity) != 0)
+    if ((RarityOf(settings, facts) & settings.rarity & ~RarityRetiredMask) != 0)
         return Verdict::Highlight;
     if (facts.category == Category::Zen && settings.zenMin > 0 && facts.zenAmount >= settings.zenMin)
         return Verdict::Highlight;
 
+    if (IsRetired(facts.category))
+        return Verdict::Normal;
     return ClampHide(settings.categories[Index(facts.category)], facts);
 }
 
@@ -104,9 +111,8 @@ void ApplyPreset(Settings& settings, Preset preset)
     if (preset == Preset::Default)
         return;
 
-    // Strict: also seeds and socket items and high levels; plain gear and potions are hidden.
-    settings.categories[Index(Category::SocketSeed)] = Verdict::Highlight;
-    settings.rarity |= RaritySocket | RarityLevel;
+    // Strict: also high levels; plain gear and potions are hidden.
+    settings.rarity |= RarityLevel;
     settings.categories[Index(Category::Consumable)] = Verdict::Hide;
     settings.categories[Index(Category::Weapon)] = Verdict::Hide;
     settings.categories[Index(Category::Shield)] = Verdict::Hide;
@@ -125,9 +131,12 @@ std::wstring SerializeCategories(const std::array<Verdict, CategoryCount>& categ
 {
     std::wstring text;
     text.reserve(CategoryCount);
-    for (const Verdict verdict : categories)
+    for (int i = 0; i < CategoryCount; ++i)
     {
-        if (verdict == Verdict::Hide)
+        const Verdict verdict = categories[static_cast<std::size_t>(i)];
+        if (IsRetired(static_cast<Category>(i)))
+            text.push_back(DigitNormal);
+        else if (verdict == Verdict::Hide)
             text.push_back(DigitHide);
         else if (verdict == Verdict::Highlight)
             text.push_back(DigitHighlight);
@@ -154,6 +163,8 @@ bool ParseCategories(std::wstring_view text, std::array<Verdict, CategoryCount>&
             parsed[i] = Verdict::Highlight;
         else
             return false;
+        if (IsRetired(static_cast<Category>(i)))
+            parsed[i] = Verdict::Normal;
     }
     categories = parsed;
     return true;

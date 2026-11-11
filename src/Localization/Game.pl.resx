@@ -13535,7 +13535,10 @@
     <value>Filtr łupów</value>
   </data>
   <data name="LootFilterOpen" xml:space="preserve">
-    <value>Filtr łupów...</value>
+    <value>Filtr łupów</value>
+  </data>
+  <data name="LootFilterOpenButton" xml:space="preserve">
+    <value>Ustaw</value>
   </data>
   <data name="TouchMenuLootFilter" xml:space="preserve">
     <value>Filtr łupów</value>
@@ -13582,9 +13585,6 @@
   <data name="LootFilterCatQuest" xml:space="preserve">
     <value>Przedmioty zadań</value>
   </data>
-  <data name="LootFilterCatSocket" xml:space="preserve">
-    <value>Nasiona i sfery</value>
-  </data>
   <data name="LootFilterCatMedal" xml:space="preserve">
     <value>Medale i bilety</value>
   </data>
@@ -13614,9 +13614,6 @@
   </data>
   <data name="LootFilterRarAncient" xml:space="preserve">
     <value>Starożytne</value>
-  </data>
-  <data name="LootFilterRarSocket" xml:space="preserve">
-    <value>Gniazda</value>
   </data>
   <data name="LootFilterRarLuck" xml:space="preserve">
     <value>Szczęście</value>

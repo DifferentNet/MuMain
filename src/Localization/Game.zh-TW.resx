@@ -13514,7 +13514,10 @@
     <value>掉落物篩選</value>
   </data>
   <data name="LootFilterOpen" xml:space="preserve">
-    <value>掉落物篩選...</value>
+    <value>掉落物篩選</value>
+  </data>
+  <data name="LootFilterOpenButton" xml:space="preserve">
+    <value>設定</value>
   </data>
   <data name="TouchMenuLootFilter" xml:space="preserve">
     <value>掉落物篩選</value>
@@ -13561,9 +13564,6 @@
   <data name="LootFilterCatQuest" xml:space="preserve">
     <value>任務物品</value>
   </data>
-  <data name="LootFilterCatSocket" xml:space="preserve">
-    <value>種子與球體</value>
-  </data>
   <data name="LootFilterCatMedal" xml:space="preserve">
     <value>勳章與門票</value>
   </data>
@@ -13593,9 +13593,6 @@
   </data>
   <data name="LootFilterRarAncient" xml:space="preserve">
     <value>遠古</value>
-  </data>
-  <data name="LootFilterRarSocket" xml:space="preserve">
-    <value>鑲孔</value>
   </data>
   <data name="LootFilterRarLuck" xml:space="preserve">
     <value>幸運</value>

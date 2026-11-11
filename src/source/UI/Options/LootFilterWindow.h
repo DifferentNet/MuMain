@@ -18,8 +18,8 @@ namespace mu::ui::window
 {
 // The loot highlight filter's settings (GameLogic/Items/LootFilter.h), opened from Options > Gameplay or the touch
 // menu: the on switch and the presets on top; one row per item type with Hide / Normal / Highlight (Hide is off for
-// jewels and quest items); the options that always highlight (excellent, ancient, socket, luck, skill, option, item
-// level from +N) with the level and zen thresholds; names to highlight (a field, Add and removable chips); and the
+// jewels and quest items); the options that always highlight (excellent, ancient, luck, skill, option, item level
+// from +N) with the level and zen thresholds; names to highlight (a field, Add and removable chips); and the
 // beam and drop sound switches. Every change applies at once: the items on the ground are classified again and
 // config.ini is saved. Centred and draggable; loot_filter.rml draws it.
 class CLootFilterWindow : public CObject

@@ -28,7 +28,7 @@ enum class Category : std::uint8_t
     Wings,
     Container,
     Quest,
-    SocketSeed,
+    SocketSeed, // retired: the server has no socket items or seeds (ghinzuro 2026-11-11); the slot stays for saved settings
     MedalTicket,
     Consumable,
     Weapon,
@@ -46,7 +46,7 @@ enum RarityFlag : std::uint8_t
 {
     RarityExcellent = 1 << 0,
     RarityAncient = 1 << 1,
-    RaritySocket = 1 << 2,
+    RaritySocket = 1 << 2, // retired: no socket items on the server (ghinzuro 2026-11-11); the bit stays for saved settings
     RarityLuck = 1 << 3,
     RaritySkill = 1 << 4,
     RarityOption = 1 << 5,
@@ -55,6 +55,8 @@ enum RarityFlag : std::uint8_t
 
 inline constexpr int RarityFlagCount = 7;
 inline constexpr std::uint8_t RarityAllMask = (1 << RarityFlagCount) - 1;
+// Bits kept only so saved settings still parse; they are never shown and never highlight.
+inline constexpr std::uint8_t RarityRetiredMask = RaritySocket;
 
 // What the rules need to know about one dropped item.
 struct Facts
@@ -95,6 +97,9 @@ enum class Preset : std::uint8_t
 // Hiding is never allowed for these categories (jewels and quest items stay visible).
 [[nodiscard]] bool CanHide(Category category);
 
+// A retired category keeps its place in Category (and in saved settings) but is never shown and always acts as Normal.
+[[nodiscard]] bool IsRetired(Category category);
+
 // The verdict for one item under the settings; see the order in LootFilter.cpp.
 [[nodiscard]] Verdict Classify(const Settings& settings, const Facts& facts);
 
@@ -106,7 +111,7 @@ void ApplyPreset(Settings& settings, Preset preset);
 [[nodiscard]] std::wstring SerializeCategories(const std::array<Verdict, CategoryCount>& categories);
 
 // Reads SerializeCategories' string into categories; false (and categories untouched) when it has the wrong length
-// or a bad digit. A Hide for a category that cannot hide becomes Normal.
+// or a bad digit. A Hide for a category that cannot hide becomes Normal; a retired category always reads as Normal.
 [[nodiscard]] bool ParseCategories(std::wstring_view text, std::array<Verdict, CategoryCount>& categories);
 
 // Lower case for Latin, Latin-1 and Cyrillic letters, so names match whatever the client language.

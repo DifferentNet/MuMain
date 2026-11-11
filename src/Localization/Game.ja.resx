@@ -11589,7 +11589,10 @@
     <value>ドロップフィルター</value>
   </data>
   <data name="LootFilterOpen" xml:space="preserve">
-    <value>ドロップフィルター...</value>
+    <value>ドロップフィルター</value>
+  </data>
+  <data name="LootFilterOpenButton" xml:space="preserve">
+    <value>設定</value>
   </data>
   <data name="TouchMenuLootFilter" xml:space="preserve">
     <value>ドロップフィルター</value>
@@ -11636,9 +11639,6 @@
   <data name="LootFilterCatQuest" xml:space="preserve">
     <value>クエストアイテム</value>
   </data>
-  <data name="LootFilterCatSocket" xml:space="preserve">
-    <value>シードとスフィア</value>
-  </data>
   <data name="LootFilterCatMedal" xml:space="preserve">
     <value>メダルとチケット</value>
   </data>
@@ -11668,9 +11668,6 @@
   </data>
   <data name="LootFilterRarAncient" xml:space="preserve">
     <value>エンシェント</value>
-  </data>
-  <data name="LootFilterRarSocket" xml:space="preserve">
-    <value>ソケット</value>
   </data>
   <data name="LootFilterRarLuck" xml:space="preserve">
     <value>ラック</value>
