@@ -165,6 +165,8 @@ constexpr DocumentPlacement Placements[] = {
     // The original drew it at 10.5, under the HUD; the modern theme's settings screen covers the
     // whole screen, HUD included. Still under the tooltips and message boxes.
     {"option_window.rml", 10.67f, EveryScene},
+    // Opened from the settings, so just over them; the game only (it filters the items on the ground).
+    {"loot_filter.rml", 10.68f, MainScene},
     // The original drew each tooltip at its owner's depth (item tooltips at 5.5), where the
     // chat log, the friends window, the full map and the HUD hid its rows: an original
     // defect. Every tooltip draws above the windows instead, still under the message boxes.

@@ -13509,4 +13509,131 @@
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Monster kuat dulu</value>
   </data>
+  <!-- Loot highlight filter (GameLogic/Items/LootFilter.h) -->
+  <data name="LootFilterTitle" xml:space="preserve">
+    <value>Filter jarahan</value>
+  </data>
+  <data name="LootFilterOpen" xml:space="preserve">
+    <value>Filter jarahan...</value>
+  </data>
+  <data name="TouchMenuLootFilter" xml:space="preserve">
+    <value>Filter jarahan</value>
+  </data>
+  <data name="LootFilterEnabled" xml:space="preserve">
+    <value>Filter aktif</value>
+  </data>
+  <data name="LootFilterPresets" xml:space="preserve">
+    <value>Preset:</value>
+  </data>
+  <data name="LootFilterPresetDefault" xml:space="preserve">
+    <value>Berharga</value>
+  </data>
+  <data name="LootFilterPresetStrict" xml:space="preserve">
+    <value>Ketat</value>
+  </data>
+  <data name="LootFilterPresetOff" xml:space="preserve">
+    <value>Tanpa sorotan</value>
+  </data>
+  <data name="LootFilterHide" xml:space="preserve">
+    <value>Sembunyikan</value>
+  </data>
+  <data name="LootFilterNormal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="LootFilterHighlight" xml:space="preserve">
+    <value>Sorot</value>
+  </data>
+  <data name="LootFilterCategories" xml:space="preserve">
+    <value>Jenis item</value>
+  </data>
+  <data name="LootFilterCatZen" xml:space="preserve">
+    <value>Zen</value>
+  </data>
+  <data name="LootFilterCatJewel" xml:space="preserve">
+    <value>Permata</value>
+  </data>
+  <data name="LootFilterCatWings" xml:space="preserve">
+    <value>Sayap</value>
+  </data>
+  <data name="LootFilterCatContainer" xml:space="preserve">
+    <value>Kotak</value>
+  </data>
+  <data name="LootFilterCatQuest" xml:space="preserve">
+    <value>Item misi</value>
+  </data>
+  <data name="LootFilterCatSocket" xml:space="preserve">
+    <value>Benih dan bola</value>
+  </data>
+  <data name="LootFilterCatMedal" xml:space="preserve">
+    <value>Medali dan tiket</value>
+  </data>
+  <data name="LootFilterCatConsumable" xml:space="preserve">
+    <value>Ramuan dan gulungan</value>
+  </data>
+  <data name="LootFilterCatWeapon" xml:space="preserve">
+    <value>Senjata</value>
+  </data>
+  <data name="LootFilterCatShield" xml:space="preserve">
+    <value>Perisai</value>
+  </data>
+  <data name="LootFilterCatArmour" xml:space="preserve">
+    <value>Zirah</value>
+  </data>
+  <data name="LootFilterCatJewellery" xml:space="preserve">
+    <value>Cincin dan liontin</value>
+  </data>
+  <data name="LootFilterCatOther" xml:space="preserve">
+    <value>Lainnya</value>
+  </data>
+  <data name="LootFilterRarity" xml:space="preserve">
+    <value>Selalu sorot</value>
+  </data>
+  <data name="LootFilterRarExcellent" xml:space="preserve">
+    <value>Excellent</value>
+  </data>
+  <data name="LootFilterRarAncient" xml:space="preserve">
+    <value>Kuno</value>
+  </data>
+  <data name="LootFilterRarSocket" xml:space="preserve">
+    <value>Socket</value>
+  </data>
+  <data name="LootFilterRarLuck" xml:space="preserve">
+    <value>Keberuntungan</value>
+  </data>
+  <data name="LootFilterRarSkill" xml:space="preserve">
+    <value>Skill</value>
+  </data>
+  <data name="LootFilterRarOption" xml:space="preserve">
+    <value>Opsi</value>
+  </data>
+  <data name="LootFilterRarLevel" xml:space="preserve">
+    <value>Level +%d ke atas</value>
+  </data>
+  <data name="LootFilterLevel" xml:space="preserve">
+    <value>Level item</value>
+  </data>
+  <data name="LootFilterZen" xml:space="preserve">
+    <value>Zen mulai</value>
+  </data>
+  <data name="LootFilterZenOff" xml:space="preserve">
+    <value>mati</value>
+  </data>
+  <data name="LootFilterNames" xml:space="preserve">
+    <value>Sorot berdasarkan nama</value>
+  </data>
+  <data name="LootFilterNameHint" xml:space="preserve">
+    <value>Bagian nama, seperti di game</value>
+  </data>
+  <data name="LootFilterNameAdd" xml:space="preserve">
+    <value>Tambah</value>
+  </data>
+  <data name="LootFilterMarker" xml:space="preserve">
+    <value>Sinar cahaya</value>
+  </data>
+  <data name="LootFilterSound" xml:space="preserve">
+    <value>Suara saat jatuh</value>
+  </data>
+  <data name="LootFilterClose" xml:space="preserve">
+    <value>Tutup</value>
+  </data>
 </root>

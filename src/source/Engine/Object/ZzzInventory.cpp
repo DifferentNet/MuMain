@@ -28,6 +28,7 @@
 #include "GameLogic/Items/PersonalShopTitleImp.h"
 #include "Engine/AI/GOBoid.h"
 #include "GameLogic/Items/CSItemOption.h"
+#include "GameLogic/Items/LootFilterRuntime.h"
 #include "GameLogic/Events/CSChaosCastle.h"
 #include "GameLogic/NPCs/npcBreeder.h"
 #include "GameLogic/Pets/GIPetManager.h"
@@ -6509,6 +6510,21 @@ void BuildGroundItemLabelDescriptor(OBJECT* o, ITEM* ip, GroundItemLabelDescript
     }
 }
 
+// A loot-filter highlighted item: bold, on dark gold unless its rarity already has its own background (ancient blue);
+// the text keeps its rarity colour.
+constexpr BYTE LootHighlightBgR = 90;
+constexpr BYTE LootHighlightBgG = 64;
+constexpr BYTE LootHighlightBgB = 12;
+
+void ApplyLootHighlight(int index, GroundItemLabelDescriptor& descriptor)
+{
+    if (!GameLogic::Items::LootFilterRuntime::IsHighlighted(index))
+        return;
+    descriptor.Font = g_hFontBold;
+    if (descriptor.BgColor == MakeRgba(0, 0, 0, 255))
+        descriptor.BgColor = MakeRgba(LootHighlightBgR, LootHighlightBgG, LootHighlightBgB, 255);
+}
+
 void ApplyGroundItemLabelDescriptor(const GroundItemLabelDescriptor& descriptor)
 {
     g_pRenderText->SetFont(descriptor.Font);
@@ -6518,14 +6534,20 @@ void ApplyGroundItemLabelDescriptor(const GroundItemLabelDescriptor& descriptor)
 
 }
 
+std::wstring GroundItemLabelText(OBJECT* o, ITEM* ip)
+{
+    GroundItemLabelDescriptor descriptor;
+    BuildGroundItemLabelDescriptor(o, ip, descriptor);
+    return descriptor.Name;
+}
+
 void RenderItemName(int i, OBJECT* o, ITEM* ip, bool Sort)
 {
-    (void)i;
-
     if (!Sort)
     {
         GroundItemLabelDescriptor descriptor;
         BuildGroundItemLabelDescriptor(o, ip, descriptor);
+        ApplyLootHighlight(i, descriptor);
         ApplyGroundItemLabelDescriptor(descriptor);
         g_pRenderText->RenderText(MouseX, MouseY - 15, descriptor.Name, 0, 0, RT3_WRITE_CENTER);
     }
@@ -6533,6 +6555,7 @@ void RenderItemName(int i, OBJECT* o, ITEM* ip, bool Sort)
     {
         GroundItemLabelDescriptor descriptor;
         BuildGroundItemLabelDescriptor(o, ip, descriptor);
+        ApplyLootHighlight(i, descriptor);
         ApplyGroundItemLabelDescriptor(descriptor);
         g_pRenderText->RenderText(o->ScreenX, o->ScreenY - 15, descriptor.Name, 0, 0, RT3_WRITE_CENTER);
     }

@@ -137,6 +137,8 @@ namespace mu::ui::window
         void RmlToggleAutoAttack();
         void RmlToggleWhisperSound();
         void RmlToggleSlideHelp();
+        // Closes the settings and opens the loot filter's window (in the game only).
+        void RmlOpenLootFilter();
         void RmlToggleRenderAllEffects();
         void RmlToggleWindowedMode();
         void RmlSoundVolumeChanged(int value);
@@ -282,6 +284,9 @@ namespace mu::ui::window
             Rml::String whisperSoundLabel;
             bool slideHelp = true;
             Rml::String slideHelpLabel;
+            // The row that opens the loot filter: shown in the game only.
+            bool lootFilterShown = false;
+            Rml::String lootFilterLabel;
             bool renderAllEffects = true;
             Rml::String renderAllEffectsLabel;
             bool windowedMode = false;

@@ -730,3 +730,12 @@
 	.opt-footer-action { padding: 8dp 14dp; }
 	.opt-footer-label { font-size: 15dp; }
 }
+
+/* The row that opens the loot filter's own window: an arrow where the toggle would be. */
+.opt-open-arrow {
+	padding-right: 6dp;
+	font-size: 14dp;
+	font-weight: bold;
+	color: token(text-secondary);
+}
+.opt-row:hover .opt-open-arrow { color: token(accent-gold); }

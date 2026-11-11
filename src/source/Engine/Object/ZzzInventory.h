@@ -220,6 +220,8 @@ bool IsMoneyItem(ITEM* pItem);
 void ComputeItemInfo(int iHelpItem);
 void SetGroundItemLabelBuildBudget(int buildBudget);
 void RenderItemName(int i, OBJECT* o, ITEM* ip, bool Sort);
+// The name a ground item's label shows (with its level, Skill, Luck, Option and so on).
+std::wstring GroundItemLabelText(OBJECT* o, ITEM* ip);
 
 BYTE CaculateFreeTicketLevel(int iType);
 

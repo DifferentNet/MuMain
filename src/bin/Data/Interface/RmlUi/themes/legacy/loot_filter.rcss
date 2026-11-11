@@ -1,0 +1,242 @@
+/* Legacy theme for CLootFilterWindow (the loot highlight filter's settings): the window_shell msgbox frame and title
+   banner, re-sliced as ninepatches (as chat_room.rcss does) so the art keeps its corners at this width; the on switch
+   and the presets on top, the scrolling settings, Close at the bottom. Rows, segments and steppers are flat boxes in
+   the original's dark-gold palette; the phone view makes every control finger-sized. */
+
+@spritesheet lf-cap-top-sheet    { src: "../../../newui_msgbox_top.tga";    lf-cap-top:    0px 0px 230px 67px; lf-cap-top-inner:    12px 12px 206px 43px; }
+@spritesheet lf-cap-middle-sheet { src: "../../../newui_msgbox_middle.tga"; lf-cap-middle: 0px 0px 230px 15px; lf-cap-middle-inner: 12px  4px 206px  7px; }
+@spritesheet lf-cap-bottom-sheet { src: "../../../newui_msgbox_bottom.tga"; lf-cap-bottom: 0px 0px 230px 50px; lf-cap-bottom-inner: 12px 12px 206px 26px; }
+@spritesheet lf-back-sheet       { src: "../../../newui_msgbox_back.jpg";   lf-back:       0px 0px 222px 250px; }
+@spritesheet lf-banner-sheet     { src: "../../../newui_Message_03.tga";    lf-banner:     0px 0px 230px 67px; lf-banner-inner:     20px 12px 190px 43px; }
+
+.window-shell-sprite-back   { decorator: image(lf-back repeat left top); }
+.window-shell-sprite-top    { height: 46dp; decorator: ninepatch(lf-cap-top, lf-cap-top-inner); }
+.window-shell-sprite-middle { top: 46dp; bottom: 40dp; decorator: ninepatch(lf-cap-middle, lf-cap-middle-inner); }
+.window-shell-sprite-bottom { height: 40dp; decorator: ninepatch(lf-cap-bottom, lf-cap-bottom-inner); }
+.window-shell-header-rail   { height: 46dp; decorator: ninepatch(lf-banner, lf-banner-inner); }
+
+#panel {
+	width: 460dp;
+	height: 470dp;
+	max-height: 96%;
+	font-family: "token(font-body)";
+	font-size: 1rem;
+	color: token(text-input);
+}
+
+/* The content: the top bar, the scrolling settings and the foot, one under the other. An ID selector, so it wins
+   over window_shell.rcss's own .window-shell-content insets. */
+#content {
+	left: 18dp;
+	right: 18dp;
+	top: 34dp;
+	bottom: 16dp;
+	padding-top: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	justify-content: flex-start;
+}
+
+.lf-top {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	flex-shrink: 0;
+	padding-bottom: 6dp;
+	border-bottom: 1dp #5a4a2a;
+}
+.lf-presets {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
+.lf-presets-label {
+	margin-right: 4dp;
+	color: token(text-secondary);
+}
+
+/* The settings scroll with the chat log's scrollbar (base.rcss's .scroll-pane); a stretched flex child bounds it. */
+.lf-scroll {
+	flex: 1 1 0;
+	min-height: 0;
+	padding: 4dp 8dp 4dp 2dp;
+}
+.lf-scroll.off .lf-row,
+.lf-scroll.off .lf-check-row,
+.lf-scroll.off .lf-name-entry,
+.lf-scroll.off .lf-chips { opacity: 0.55; }
+
+.lf-section {
+	margin: 8dp 0 4dp;
+	padding-bottom: 2dp;
+	border-bottom: 1dp #5a4a2a;
+	color: token(accent-gold);
+	font-weight: bold;
+}
+
+.lf-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	min-height: 26dp;
+	margin-bottom: 2dp;
+}
+.lf-row-label {
+	flex: 1 1 auto;
+	padding-right: 8dp;
+	white-space: normal;
+	color: token(text-input);
+}
+
+/* Hide / Normal / Highlight: three joined boxes, the picked one lit. */
+.lf-segments {
+	display: flex;
+	flex-direction: row;
+	flex-shrink: 0;
+}
+.lf-seg {
+	width: 78dp;
+	height: 22dp;
+	line-height: 22dp;
+	text-align: center;
+	white-space: nowrap;
+	overflow: hidden;
+	cursor: pointer;
+	pointer-events: auto;
+	color: token(text-muted);
+	background-color: rgba(0, 0, 0, 120);
+	border: 1dp #5a4a2a;
+	margin-left: -1dp;
+}
+.lf-seg:hover { color: token(text-input); border-color: #8a7040; }
+.lf-seg.active { color: #ffffff; background-color: rgba(120, 100, 60, 200); border-color: #c0a060; }
+.lf-seg-hide.active { background-color: rgba(110, 40, 30, 200); border-color: #b06040; }
+.lf-seg-highlight.active { color: #fff0b0; background-color: rgba(150, 110, 20, 220); border-color: #f0c850; }
+.lf-seg.locked { opacity: 0.3; pointer-events: none; cursor: arrow; }
+
+/* A checkbox and its label; the whole row takes the click. */
+.lf-check-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	min-height: 24dp;
+	cursor: pointer;
+	pointer-events: auto;
+}
+.lf-check-row .checkbox-box { flex-shrink: 0; }
+/* The tick is baked into the checked sprite (base.rcss), as in option_window.rcss. */
+.checkbox-tick { display: none; }
+.lf-check-label {
+	margin-left: 6dp;
+	white-space: normal;
+	color: token(text-input);
+}
+.lf-check-row:hover .lf-check-label { color: #ffffff; }
+
+.lf-stepper {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	flex-shrink: 0;
+}
+.lf-step {
+	width: 26dp;
+	height: 22dp;
+	line-height: 22dp;
+	text-align: center;
+	font-weight: bold;
+	cursor: pointer;
+	pointer-events: auto;
+	color: token(text-input);
+	background-color: rgba(0, 0, 0, 120);
+	border: 1dp #5a4a2a;
+}
+.lf-step:hover { color: #ffffff; border-color: #c0a060; }
+.lf-step-value {
+	width: 96dp;
+	text-align: center;
+	color: token(accent-gold);
+}
+
+/* Text buttons: flat boxes sized by their label (the native button art does not stretch). */
+.lf-button {
+	min-width: 64dp;
+	height: 24dp;
+	line-height: 24dp;
+	padding: 0 8dp;
+	margin-left: 4dp;
+	text-align: center;
+	white-space: nowrap;
+	cursor: pointer;
+	pointer-events: auto;
+	color: token(text-input);
+	background-color: rgba(60, 45, 20, 220);
+	border: 1dp #8a7040;
+}
+.lf-button:hover { color: #ffffff; border-color: #f0c850; }
+.lf-button:active { background-color: rgba(30, 22, 10, 220); }
+.lf-button.disabled { opacity: 0.45; pointer-events: none; cursor: arrow; }
+
+.lf-hint {
+	margin-bottom: 4dp;
+	white-space: normal;
+	color: token(text-muted);
+}
+.lf-name-entry {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	margin-bottom: 4dp;
+}
+.lf-name-field {
+	flex: 1 1 auto;
+	height: 22dp;
+	padding: 3dp 4dp 0;
+}
+.lf-chips {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+.lf-chip {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	height: 22dp;
+	margin: 0 4dp 4dp 0;
+	padding: 0 6dp;
+	cursor: pointer;
+	pointer-events: auto;
+	background-color: rgba(90, 64, 12, 200);
+	border: 1dp #c0a060;
+}
+.lf-chip-text { color: #fff0b0; white-space: nowrap; }
+.lf-chip-x { margin-left: 6dp; color: token(text-muted); font-weight: bold; }
+.lf-chip:hover .lf-chip-x { color: token(semantic-danger); }
+
+.lf-foot {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	flex-shrink: 0;
+	padding-top: 6dp;
+}
+.lf-close { min-width: 100dp; margin-left: 0; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): the window nearly fills the screen,
+   with larger text and finger-sized rows, segments, steppers, boxes and buttons (40 dp at least). */
+@media (theme: mobile) {
+	#panel { width: 640dp; max-width: 96%; height: 96%; font-size: 1.3rem; }
+	#content { left: 22dp; right: 22dp; top: 40dp; }
+	.lf-row, .lf-check-row { min-height: 44dp; }
+	.lf-seg { width: 96dp; height: 40dp; line-height: 40dp; }
+	.lf-step { width: 44dp; height: 40dp; line-height: 40dp; }
+	.lf-step-value { width: 120dp; }
+	.lf-button { height: 40dp; line-height: 40dp; padding: 0 12dp; }
+	.lf-name-field { height: 40dp; padding-top: 10dp; }
+	.lf-chip { height: 40dp; padding: 0 10dp; }
+	.checkbox-box { width: 26dp; height: 26dp; }
+}

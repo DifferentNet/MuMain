@@ -141,6 +141,13 @@ void ToggleItemNames()
     PlayBuffer(SOUND_CLICK01);
 }
 
+// The loot filter's settings (UI/Options/LootFilterWindow.h): which drops are highlighted or hidden.
+void OpenLootFilter()
+{
+    g_pNewUISystem->Show(mu::ui::window::INTERFACE_LOOT_FILTER);
+    PlayBuffer(SOUND_CLICK01);
+}
+
 // The monsters' HP bars, as F8 switches them.
 void ToggleHealthBars()
 {
@@ -192,6 +199,7 @@ const MenuItem MenuItems[] = {
     {&I18N::Game::TouchMenuHelp, VK_F1},
     // Switches: lit while on (names_on, bars_on in the markup).
     {&I18N::Game::TouchMenuItemNames, 0, &ToggleItemNames},
+    {&I18N::Game::TouchMenuLootFilter, 0, &OpenLootFilter},
     {&I18N::Game::TouchMenuHealthBars, 0, &ToggleHealthBars},
     {&I18N::Game::TouchMenuSkills, 0, &OpenPickerOnFreeButton},
     {&I18N::Game::TouchMenuView, 0, &ToggleView},

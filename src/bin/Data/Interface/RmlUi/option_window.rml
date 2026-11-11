@@ -492,6 +492,12 @@
 				<div class="checkbox-tick"></div>
 			</div>
 		</div>
+		<!-- The loot filter's own window (CLootFilterWindow); only in the game, where there is loot. -->
+		<div class="option-row option-checkbox-row" data-class-hidden="!loot_filter_shown"
+		     data-event-click="option_open_loot_filter">
+			<span class="option-row-label">{{loot_filter_label}}</span>
+			<span class="option-open-arrow">&gt;</span>
+		</div>
 	</div>
 
 	<div class="option-tab-panel" data-class-hidden="active_tab != 4">

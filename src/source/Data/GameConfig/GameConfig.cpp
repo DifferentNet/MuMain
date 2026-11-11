@@ -92,6 +92,7 @@ void GameConfig::Load()
     m_overheadTitles = ReadBool(CfgSectionUI, CfgKeyOverheadTitles, CfgDefaultOverheadTitles);
     m_titleEffects = ReadBool(CfgSectionUI, CfgKeyTitleEffects, CfgDefaultTitleEffects);
     m_titlesTownsOnly = ReadBool(CfgSectionUI, CfgKeyTitlesTownsOnly, CfgDefaultTitlesTownsOnly);
+    LoadLootFilter();
     m_interfaceView = ReadString(CfgSectionUI, CfgKeyInterfaceView, CfgDefaultInterfaceView);
     m_controls = ReadString(CfgSectionUI, CfgKeyControls, CfgDefaultControls);
     SetTouchButtonSize(ReadInt(CfgSectionUI, CfgKeyTouchButtonSize, CfgDefaultTouchButtonSize));
@@ -195,6 +196,7 @@ void GameConfig::Save()
     WriteBool(CfgSectionUI, CfgKeyOverheadTitles, m_overheadTitles);
     WriteBool(CfgSectionUI, CfgKeyTitleEffects, m_titleEffects);
     WriteBool(CfgSectionUI, CfgKeyTitlesTownsOnly, m_titlesTownsOnly);
+    SaveLootFilter();
     WriteString(CfgSectionUI, CfgKeyInterfaceView, m_interfaceView);
     WriteString(CfgSectionUI, CfgKeyControls, m_controls);
     WriteInt(CfgSectionUI, CfgKeyTouchButtonSize, m_touchButtonSize);
@@ -260,10 +262,42 @@ bool HasSavedLook(const std::filesystem::path& configFile)
     return buffer[0] != L'\0';
 }
 
-std::vector<std::wstring> GameConfig::ReadStringList(const wchar_t* section, const wchar_t* keyPrefix)
+void GameConfig::LoadLootFilter()
+{
+    using namespace CfgSections;
+    using namespace CfgKeys;
+    using namespace CfgDefaults;
+
+    m_lootFilterEnabled = ReadBool(CfgSectionLootFilter, CfgKeyLootFilterEnabled, CfgDefaultLootFilterEnabled);
+    m_lootFilterMarker = ReadBool(CfgSectionLootFilter, CfgKeyLootFilterMarker, CfgDefaultLootFilterMarker);
+    m_lootFilterSound = ReadBool(CfgSectionLootFilter, CfgKeyLootFilterSound, CfgDefaultLootFilterSound);
+    m_lootFilterCategories =
+        ReadString(CfgSectionLootFilter, CfgKeyLootFilterCategories, CfgDefaultLootFilterCategories);
+    m_lootFilterRarity = ReadInt(CfgSectionLootFilter, CfgKeyLootFilterRarity, CfgDefaultLootFilterRarity);
+    m_lootFilterMinLevel = ReadInt(CfgSectionLootFilter, CfgKeyLootFilterMinLevel, CfgDefaultLootFilterMinLevel);
+    m_lootFilterZenMin = ReadInt(CfgSectionLootFilter, CfgKeyLootFilterZenMin, CfgDefaultLootFilterZenMin);
+    m_lootFilterNames = ReadStringList(CfgSectionLootFilter, CfgKeyLootFilterNamePrefix, CfgMaxLootFilterNames);
+}
+
+void GameConfig::SaveLootFilter()
+{
+    using namespace CfgSections;
+    using namespace CfgKeys;
+
+    WriteBool(CfgSectionLootFilter, CfgKeyLootFilterEnabled, m_lootFilterEnabled);
+    WriteBool(CfgSectionLootFilter, CfgKeyLootFilterMarker, m_lootFilterMarker);
+    WriteBool(CfgSectionLootFilter, CfgKeyLootFilterSound, m_lootFilterSound);
+    WriteString(CfgSectionLootFilter, CfgKeyLootFilterCategories, m_lootFilterCategories);
+    WriteInt(CfgSectionLootFilter, CfgKeyLootFilterRarity, m_lootFilterRarity);
+    WriteInt(CfgSectionLootFilter, CfgKeyLootFilterMinLevel, m_lootFilterMinLevel);
+    WriteInt(CfgSectionLootFilter, CfgKeyLootFilterZenMin, m_lootFilterZenMin);
+    WriteStringList(CfgSectionLootFilter, CfgKeyLootFilterNamePrefix, m_lootFilterNames);
+}
+
+std::vector<std::wstring> GameConfig::ReadStringList(const wchar_t* section, const wchar_t* keyPrefix, int maxCount)
 {
     std::vector<std::wstring> result;
-    const auto count = ReadInt(section, (std::wstring(keyPrefix) + L"Count").c_str(), 0);
+    const auto count = std::min(ReadInt(section, (std::wstring(keyPrefix) + L"Count").c_str(), 0), maxCount);
     for (int i = 0; i < count; ++i)
     {
         auto entry = ReadString(section, (std::wstring(keyPrefix) + std::to_wstring(i)).c_str(), L"");

@@ -10,6 +10,7 @@
 #include "Engine/Object/ZzzInterface.h"
 #include "Engine/Object/ZzzInventory.h"
 #include "GameLogic/Events/CSChaosCastle.h"
+#include "GameLogic/Items/LootFilterRuntime.h"
 #include "GameLogic/Items/PersonalShopTitleImp.h"
 #include "GameLogic/Events/MatchEvent.h"
 #include "World/MapInfra/MapManager.h"
@@ -297,34 +298,35 @@ void mu::ui::window::CNameWindow::RenderName()
         }
     }
 
-    if (m_bShowItemName || mu::ui::window::IsRepeat(VK_MENU))
-    {
+    // The loot filter: with Alt or the names toggle every item but the hidden ones has its label, otherwise only the
+    // highlighted ones. The hovered item's label (above) always draws, so a hidden item can still be found.
+    const bool allLabels = m_bShowItemName || mu::ui::window::IsRepeat(VK_MENU);
 #ifdef _EDITOR
-        bool renderLabels = DevEditor_ShouldRenderItemLabels();
+    bool renderLabels = DevEditor_ShouldRenderItemLabels();
 #else
-        bool renderLabels = true;
+    bool renderLabels = true;
 #endif
 
-        if (renderLabels)
+    if (renderLabels)
+    {
+        namespace LootFilterRuntime = GameLogic::Items::LootFilterRuntime;
+        for (int i = 0; i < MAX_ITEMS; i++)
         {
-            for (int i = 0; i < MAX_ITEMS; i++)
-            {
-                OBJECT* o = &Items[i].Object;
-                if (o->Live)
-                {
-                    if (o->Visible && i != SelectedItem)
-                    {
-                        RenderItemName(i, o, &Items[i].Item, true);
-                    }
-                }
-            }
+            OBJECT* o = &Items[i].Object;
+            if (!o->Live || !o->Visible || i == SelectedItem)
+                continue;
+            const bool shown = allLabels ? !LootFilterRuntime::IsHidden(i) : LootFilterRuntime::IsHighlighted(i);
+            if (shown)
+                RenderItemName(i, o, &Items[i].Item, true);
         }
-        return;
     }
+    if (allLabels)
+        return;
 
     // The drop the pad's d-pad down would pick up shows its name, under its prompt (UI/HUD/PadOverlay).
     const int padDrop = UI::HUD::GamepadControls::PromptDrop();
-    if (padDrop >= 0 && padDrop != SelectedItem && Items[padDrop].Object.Live && Items[padDrop].Object.Visible)
+    if (padDrop >= 0 && padDrop != SelectedItem && Items[padDrop].Object.Live && Items[padDrop].Object.Visible
+        && !GameLogic::Items::LootFilterRuntime::IsHighlighted(padDrop)) // a highlighted one has its label already
         RenderItemName(padDrop, &Items[padDrop].Object, &Items[padDrop].Item, true);
 }
 

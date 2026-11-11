@@ -542,3 +542,11 @@
 		decorator: ninepatch(option-close, option-close-inner) content-box;
 	}
 }
+
+/* The row that opens the loot filter's own window: its label and an arrow where a control would be. */
+.option-open-arrow {
+	flex-shrink: 0;
+	padding-left: 6dp;
+	font-weight: bold;
+	color: token(text-primary);
+}
