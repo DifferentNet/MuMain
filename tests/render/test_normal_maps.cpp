@@ -40,6 +40,9 @@ TEST_CASE("characters' faces get none, their armour and helmets still do [render
     CHECK_FALSE(WantsNormalMap(L"Data\\HD\\Player\\LevelClass207.OZJ"));
     CHECK_FALSE(WantsNormalMap(L"Data\\HD\\Player\\SkinClass306head_N.OZJ"));
     CHECK_FALSE(WantsNormalMap(L"Data\\HD\\Player\\darknight_face.OZJ"));
+    CHECK_FALSE(WantsNormalMap(L"Data\\HD\\Player\\LuckyItem\\62\\skin_barbarian_01.OZJ"));
+    CHECK_FALSE(WantsNormalMap(L"Data/HD/Player/LuckyItem/65/SkinClass106head_N.OZJ"));
+    CHECK(WantsNormalMap(L"Data/HD/Player/skin_dir/Armor.OZJ"));
     CHECK(WantsNormalMap(L"Data\\HD\\Player\\SkinClass306_upper.OZJ"));
     CHECK(WantsNormalMap(L"Data\\HD\\Player\\SkinClass306_headhelmet.OZJ"));
     CHECK(WantsNormalMap(L"Data\\HD\\Player\\LevelClass207_1.OZJ"));

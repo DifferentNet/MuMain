@@ -58,6 +58,17 @@ bool ContainsNoCase(std::wstring_view text, std::wstring_view part)
     return false;
 }
 
+// The part after the last separator.
+std::wstring_view FileName(std::wstring_view path)
+{
+    std::size_t start = path.size();
+    while (start > 0 && !IsSeparator(path[start - 1]))
+    {
+        --start;
+    }
+    return path.substr(start);
+}
+
 // "<prefix><digits>." at the start of `file`, as SkinClass301.OZJ or LevelClass107.OZJ.
 bool IsPrefixNumberDot(std::wstring_view file, std::wstring_view prefix)
 {
@@ -205,7 +216,7 @@ bool WantsNormalMap(std::wstring_view path)
         start = end + 1;
     }
     return EqualsNoCase(parts[0], L"Data") && EqualsNoCase(parts[1], L"HD") && IsModelFolder(parts[2]) &&
-           start < path.size() && !(EqualsNoCase(parts[2], L"Player") && IsPlayerFace(path.substr(start)));
+           start < path.size() && !(EqualsNoCase(parts[2], L"Player") && IsPlayerFace(FileName(path)));
 }
 
 std::vector<std::uint8_t> Build(std::span<const std::uint8_t> rgba, int width, int height, int scale)

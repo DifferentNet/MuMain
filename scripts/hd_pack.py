@@ -100,7 +100,7 @@ def pack(data):
 def wants_normal_map(rel):
     """NormalMaps::WantsNormalMap for a path under Data/HD: an OZT or OZJ of a model folder."""
     parts = rel.split("/")
-    if len(parts) == 2 and parts[0].lower() == "player" and PLAYER_FACE.search(parts[1]):
+    if len(parts) >= 2 and parts[0].lower() == "player" and PLAYER_FACE.search(parts[-1]):
         return False
     return len(parts) >= 2 and MODEL_FOLDER.match(parts[0]) is not None and rel.lower().endswith((".ozt", ".ozj"))
 
