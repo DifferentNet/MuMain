@@ -43,6 +43,8 @@ namespace MUHelper
 
 		void AddTarget(int iTargetId, bool bIsAttacking, bool bAttacksHero = false);
 		void DeleteTarget(int iTargetId);
+		// A damage (or miss) packet for the target came: it can be hit (fortress gates, BlindHitWatch).
+		void NoteTargetHurt(int iTargetId);
 		void DeleteAllTargets();
 
 		void AddItem(int iItemId, POINT posDropped);
@@ -228,6 +230,16 @@ namespace MUHelper
 		int m_iApproachLogs = 0;
 		void WatchApproach(int iTarget);
 		bool HasClearLineTo(int iCharacterIndex) const;
+		// Tier Maps' fortress gates and statue are targets of last resort, and one whose hits bring no damage for
+		// BlindHitPatience (a gate still closed) is left for BlindHitRest (GameLogic::Automation::BlindHitWatch,
+		// 2026-11-11).
+		static constexpr std::chrono::milliseconds BlindHitPatience{ 3000 };
+		static constexpr std::chrono::milliseconds BlindHitPause{ 1500 };
+		static constexpr std::chrono::seconds BlindHitRest{ 10 };
+		GameLogic::Automation::BlindHitWatch m_blindHitWatch;
+		int m_iBlindHitLogs = 0;
+		void WatchBlindHit(int iTarget);
+		bool HasTargetOtherThanFortress();
 	};
 
 	extern CMuHelper g_MuHelper;

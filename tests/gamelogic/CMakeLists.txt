@@ -138,3 +138,11 @@ mu_add_test(
         test_exact_level_line.cpp
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/ExactLevelLine.cpp
 )
+
+mu_add_test(
+    NAME test_fortress_targets
+    SOURCES
+        test_fortress_targets.cpp
+    LINK_LIBS
+        MuClient
+)

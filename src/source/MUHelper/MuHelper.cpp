@@ -53,6 +53,22 @@ namespace MUHelper
 
     CMuHelper g_MuHelper;
 
+    namespace
+    {
+        // A Tier Maps fortress gate or statue (GameLogic::Automation::IsFortressObjectType).
+        bool IsFortressObject(const CHARACTER* pChar)
+        {
+            return pChar != nullptr && pChar->Object.Kind == KIND_MONSTER
+                && GameLogic::Automation::IsFortressObjectType(static_cast<int>(pChar->MonsterIndex));
+        }
+
+        long long NowMs()
+        {
+            return std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now().time_since_epoch()).count();
+        }
+    }
+
     void CALLBACK CMuHelper::TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
     {
         g_MuHelper.WorkLoop(hwnd, uMsg, idEvent, dwTime);
@@ -148,6 +164,8 @@ namespace MUHelper
         m_mapForgottenUntil.clear();
         m_approachWatch.Reset();
         m_iApproachLogs = 0;
+        m_blindHitWatch.Reset();
+        m_iBlindHitLogs = 0;
         m_noTargetInReachSince = {};
         m_walkWatchSince = {};
         m_regroupSince = {};
@@ -496,6 +514,62 @@ namespace MUHelper
         }
     }
 
+    void CMuHelper::NoteTargetHurt(int iTargetId)
+    {
+        if (m_bActive)
+        {
+            m_blindHitWatch.NoteDamage(iTargetId, NowMs());
+        }
+    }
+
+    void CMuHelper::WatchBlindHit(int iTarget)
+    {
+        CHARACTER* pTarget = FindCharacterByKey(iTarget);
+        if (!IsFortressObject(pTarget)
+            || !m_blindHitWatch.NoteHit(iTarget, NowMs(), BlindHitPatience.count(), BlindHitPause.count()))
+        {
+            return;
+        }
+
+        // A gate the server doesn't let anyone break yet: no damage came back for any hit. Leave it while the zone
+        // goes on; after "Zone n cleared" it opens and its hits come back.
+        DeleteTarget(iTarget);
+        m_mapForgottenUntil[iTarget] = std::chrono::steady_clock::now() + BlindHitRest;
+        if (m_iBlindHitLogs >= MaxApproachLogs)
+        {
+            return;
+        }
+        ++m_iBlindHitLogs;
+        MU_LOG_INFO(mu::log::Get("core"),
+            "[MU Helper] Hits on fortress object {} (type {}) at {},{} brought no damage for {} ms; leaving it for {} s",
+            iTarget, static_cast<int>(pTarget->MonsterIndex), static_cast<int>(pTarget->PositionX),
+            static_cast<int>(pTarget->PositionY), BlindHitPatience.count(), BlindHitRest.count());
+    }
+
+    bool CMuHelper::HasTargetOtherThanFortress()
+    {
+        std::set<int> setTargets;
+        {
+            _targetsLock.lock();
+            setTargets = m_setTargets;
+            _targetsLock.unlock();
+        }
+        for (const int& iMonsterId : setTargets)
+        {
+            CHARACTER* pTarget = FindCharacterByKey(iMonsterId);
+            if (pTarget == nullptr || !IsMonster(pTarget) || pTarget->Dead > 0 || !pTarget->Object.Live
+                || IsFortressObject(pTarget) || m_mapForgottenUntil.count(iMonsterId))
+            {
+                continue;
+            }
+            if (ComputeDistanceFromTarget(pTarget) <= m_iHuntingDistance)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     void CMuHelper::DeleteAllTargets()
     {
         _targetsLock.lock();
@@ -587,6 +661,7 @@ namespace MUHelper
         int iClosestMonsterId = -1;
         int iMinDistance = m_iHuntingDistance;
         bool bClosestClearLine = false;
+        bool bClosestFortress = false;
         std::set<int> setTargets;
         {
             _targetsLock.lock();
@@ -620,13 +695,18 @@ namespace MUHelper
             }
             // A monster behind a wall or a fence only when none stands in the open: the nearest one used to be
             // taken whatever stood between, and no walk reaches it (HasClearLineTo, 2026-11-10).
+            // A fortress gate or statue only when no other monster is about (Tier Maps, 2026-11-11): CheckWall
+            // counts a gate as in the open, so it used to win over the guards.
             const bool bClearLine = HasClearLineTo(iIndex);
+            const bool bFortress = IsFortressObject(pTarget);
             if (iClosestMonsterId == -1
-                || GameLogic::Automation::IsBetterTarget(bClearLine, iDistance, bClosestClearLine, iMinDistance))
+                || GameLogic::Automation::IsBetterFortressAware(bFortress, bClosestFortress,
+                    GameLogic::Automation::IsBetterTarget(bClearLine, iDistance, bClosestClearLine, iMinDistance)))
             {
                 iMinDistance = iDistance;
                 iClosestMonsterId = iMonsterId;
                 bClosestClearLine = bClearLine;
+                bClosestFortress = bFortress;
             }
         }
 
@@ -700,8 +780,9 @@ namespace MUHelper
             }
             CHARACTER* pTarget = &CharactersClient[iIndex];
 
+            // A fortress gate or statue never attacks; its own damage packets only mark it as hurt (AddTarget).
             if (!IsMonster(pTarget) || pTarget->Dead > 0 || !pTarget->Object.Live
-                || m_mapForgottenUntil.count(iMonsterId))
+                || m_mapForgottenUntil.count(iMonsterId) || IsFortressObject(pTarget))
             {
                 continue;
             }
@@ -1486,6 +1567,11 @@ namespace MUHelper
         {
             m_iCurrentTarget = -1;
         }
+        // A fortress gate or statue gives way to any monster that turns up (Tier Maps, 2026-11-11).
+        if (m_iCurrentTarget != -1 && IsFortressObject(FindCharacterByKey(m_iCurrentTarget)) && HasTargetOtherThanFortress())
+        {
+            m_iCurrentTarget = -1;
+        }
 
         if (m_iCurrentTarget == -1)
         {
@@ -1687,6 +1773,7 @@ namespace MUHelper
         int iNearest = -1;
         int iNearestDistance = 0;
         bool bNearestClearLine = false;
+        bool bNearestFortress = false;
         for (const int& iMonsterId : setTargets)
         {
             CHARACTER* pTarget = FindCharacterByKey(iMonsterId);
@@ -1706,11 +1793,15 @@ namespace MUHelper
             // As GetNearestTarget: one in the open before one behind a wall. At the same distance the first found
             // stays, as it did here.
             const bool bClearLine = HasClearLineTo(static_cast<int>(pTarget - CharactersClient));
-            if (iNearest == -1 || (bClearLine == bNearestClearLine ? iDistance < iNearestDistance : bClearLine))
+            const bool bFortress = IsFortressObject(pTarget);
+            if (iNearest == -1
+                || GameLogic::Automation::IsBetterFortressAware(bFortress, bNearestFortress,
+                    bClearLine == bNearestClearLine ? iDistance < iNearestDistance : bClearLine))
             {
                 iNearest = iMonsterId;
                 iNearestDistance = iDistance;
                 bNearestClearLine = bClearLine;
+                bNearestFortress = bFortress;
             }
         }
         return iNearest;
@@ -1718,7 +1809,8 @@ namespace MUHelper
 
     bool CMuHelper::KeepTargetWithinReach(float fReach)
     {
-        if (m_iCurrentTarget != -1 && IsWithinReach(m_iCurrentTarget, fReach))
+        if (m_iCurrentTarget != -1 && IsWithinReach(m_iCurrentTarget, fReach)
+            && !IsFortressObject(FindCharacterByKey(m_iCurrentTarget)))
         {
             return true;
         }
@@ -1730,12 +1822,15 @@ namespace MUHelper
             _targetsLock.unlock();
         }
 
+        // A fortress gate or statue within reach only when no other monster is (Tier Maps, 2026-11-11).
         int iNearest = -1;
         float fNearest = 0.f;
+        bool bNearestFortress = false;
         for (const int& iMonsterId : setTargets)
         {
             CHARACTER* pTarget = FindCharacterByKey(iMonsterId);
-            if (pTarget == nullptr || !IsMonster(pTarget) || !IsWithinReach(iMonsterId, fReach))
+            if (pTarget == nullptr || !IsMonster(pTarget) || !IsWithinReach(iMonsterId, fReach)
+                || m_mapForgottenUntil.count(iMonsterId))
             {
                 continue;
             }
@@ -1743,10 +1838,13 @@ namespace MUHelper
             const float fDx = Hero->Object.Position[0] - pTarget->Object.Position[0];
             const float fDy = Hero->Object.Position[1] - pTarget->Object.Position[1];
             const float fDistance = fDx * fDx + fDy * fDy;
-            if (iNearest == -1 || fDistance < fNearest)
+            const bool bFortress = IsFortressObject(pTarget);
+            if (iNearest == -1
+                || GameLogic::Automation::IsBetterFortressAware(bFortress, bNearestFortress, fDistance < fNearest))
             {
                 iNearest = iMonsterId;
                 fNearest = fDistance;
+                bNearestFortress = bFortress;
             }
         }
 
@@ -1853,6 +1951,10 @@ namespace MUHelper
         {
             m_lastHitAt = std::chrono::steady_clock::now();
             m_bStallLogged = false;
+            if (bTargetRequired && iTarget != -1)
+            {
+                WatchBlindHit(iTarget);
+            }
         }
 
         if (iTarget != -1)
@@ -1884,6 +1986,7 @@ namespace MUHelper
         {
             m_lastHitAt = std::chrono::steady_clock::now();
             m_bStallLogged = false;
+            WatchBlindHit(iTarget);
         }
 
         if (GameLogic::Automation::ShouldForgetTarget(result))
