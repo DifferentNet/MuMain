@@ -1216,3 +1216,40 @@ body.pad.no-touch .tc-potion-count {
 	line-height: 11rem;
 	font-size: 10rem;
 }
+
+/* Below 100 % the top row keeps its height, its fold button and the gap to the menu panel as large on the
+   screen as at 100 % (a 22-pixel row is no target for a finger): 100 / percent times the units above. */
+body.size-90 #tc_quick { top: 4.4rem; gap: 4.4rem; }
+body.size-90 .tc-quick { height: 40rem; line-height: 35.6rem; border-radius: 6.7rem; }
+body.size-90 #tc_quick_toggle { width: 40rem; height: 40rem; border-radius: 6.7rem; }
+body.size-90 .tc-toggle-line { left: 8.9rem; width: 17.8rem; height: 2.2rem; }
+body.size-90 .tc-toggle-line-1 { top: 10rem; }
+body.size-90 .tc-toggle-line-2 { top: 16.7rem; }
+body.size-90 .tc-toggle-line-3 { top: 23.3rem; }
+body.size-90 #tc_menu_panel { top: 51.1rem; }
+body.size-80 #tc_quick { top: 5rem; gap: 5rem; }
+body.size-80 .tc-quick { height: 45rem; line-height: 40rem; border-radius: 7.5rem; }
+body.size-80 #tc_quick_toggle { width: 45rem; height: 45rem; border-radius: 7.5rem; }
+body.size-80 .tc-toggle-line { left: 10rem; width: 20rem; height: 2.5rem; }
+body.size-80 .tc-toggle-line-1 { top: 11.2rem; }
+body.size-80 .tc-toggle-line-2 { top: 18.8rem; }
+body.size-80 .tc-toggle-line-3 { top: 26.2rem; }
+body.size-80 #tc_menu_panel { top: 57.5rem; }
+body.size-70 #tc_quick { top: 5.7rem; gap: 5.7rem; }
+body.size-70 .tc-quick { height: 51.4rem; line-height: 45.7rem; border-radius: 8.6rem; }
+body.size-70 #tc_quick_toggle { width: 51.4rem; height: 51.4rem; border-radius: 8.6rem; }
+body.size-70 .tc-toggle-line { left: 11.4rem; width: 22.9rem; height: 2.9rem; }
+body.size-70 .tc-toggle-line-1 { top: 12.9rem; }
+body.size-70 .tc-toggle-line-2 { top: 21.4rem; }
+body.size-70 .tc-toggle-line-3 { top: 30rem; }
+body.size-70 #tc_menu_panel { top: 65.7rem; }
+body.size-60 #tc_quick { top: 6.7rem; gap: 6.7rem; }
+body.size-60 .tc-quick { height: 60rem; line-height: 53.3rem; border-radius: 10rem; }
+body.size-60 #tc_quick_toggle { width: 60rem; height: 60rem; border-radius: 10rem; }
+body.size-60 .tc-toggle-line { left: 13.3rem; width: 26.7rem; height: 3.3rem; }
+body.size-60 .tc-toggle-line-1 { top: 15rem; }
+body.size-60 .tc-toggle-line-2 { top: 25rem; }
+body.size-60 .tc-toggle-line-3 { top: 35rem; }
+body.size-60 #tc_menu_panel { top: 76.7rem; }
+/* Above 100 % the hero frame stops short of the top row, which starts at 214dp whatever the size. */
+#tc_hero { max-width: 204dp; }
