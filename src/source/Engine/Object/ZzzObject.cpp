@@ -11,7 +11,11 @@
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzObject.h"
 #include "Core/Utilities/FrameProfiler.h"
+#include <array>
+#include <cstdint>
+#include <cstring>
 #include <optional>
+#include <string_view>
 #include "Engine/Object/ZzzCharacter.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
 #include "Render/Textures/ZzzTexture.h"
@@ -24,7 +28,9 @@
 #include "Audio/DSPlaySound.h"
 #include "Camera/ICamera.h"
 
+#include "Render/Models/LeafLitter.h"
 #include "Render/Models/SideHair.h"
+#include "Render/Textures/HdTextures.h"
 #include "Engine/Physics/PhysicsManager.h"
 #include "Engine/AI/GOBoid.h"
 #include "Character/CSParts.h"
@@ -3405,6 +3411,77 @@ float g_MapEditorPlacementPreviewYaw = 0.0f;
 float g_MapEditorPlacementPreviewScale = 1.0f;
 #endif
 
+namespace
+{
+// Per world-object model of the current map: unknown (model not loaded yet), leaf litter or not.
+enum class LitterKind : std::uint8_t
+{
+    Unknown,
+    Litter,
+    Other,
+};
+
+// World-object models are reloaded per map under the same indices, so the answers are per map.
+LitterKind ClassifyLitter(int type)
+{
+    static std::array<LitterKind, MAX_WORLD_OBJECTS> s_kinds{};
+    static int s_world = -1;
+    if (s_world != gMapManager.WorldActive)
+    {
+        s_kinds.fill(LitterKind::Unknown);
+        s_world = gMapManager.WorldActive;
+    }
+    if (type < 0 || type >= MAX_WORLD_OBJECTS)
+    {
+        return LitterKind::Other;
+    }
+    LitterKind& kind = s_kinds[static_cast<std::size_t>(type)];
+    if (kind != LitterKind::Unknown)
+    {
+        return kind;
+    }
+    const BMD& model = Models[type];
+    if (model.NumMeshs <= 0 || !model.Meshs || !model.Textures)
+    {
+        return LitterKind::Unknown;
+    }
+    bool litter = true;
+    for (int i = 0; i < model.NumMeshs && litter; ++i)
+    {
+        const short texture = model.Meshs[i].Texture;
+        litter = texture >= 0 && texture < model.NumMeshs &&
+                 Render::Models::LeafLitter::IsLeafLitterTexture(
+                     std::string_view(model.Textures[texture].FileName,
+                                      strnlen(model.Textures[texture].FileName, sizeof(model.Textures[texture].FileName))));
+    }
+    kind = litter ? LitterKind::Litter : LitterKind::Other;
+    return kind;
+}
+
+// Remaster only: a leaf-litter sprig hanging in the air (see LeafLitter.h) is left out.
+bool IsHangingLeafLitter(const OBJECT* o)
+{
+    return Render::Textures::Hd::Enabled() && ClassifyLitter(o->Type) == LitterKind::Litter &&
+           Render::Models::LeafLitter::Floats(o->Position[2], RequestTerrainHeight(o->Position[0], o->Position[1]));
+}
+
+// Draws a map object; leaf litter casts no sun shadow (a sprig on a stone would print a dark leaf
+// beside itself).
+void RenderWorldObject(OBJECT* o)
+{
+    if (ClassifyLitter(o->Type) == LitterKind::Litter)
+    {
+        mu::ScopedNoSunShadowCast noCast;
+        RenderObject(o);
+    }
+    else
+    {
+        RenderObject(o);
+    }
+    RenderObjectVisual(o);
+}
+} // namespace
+
 void RenderObjects()
 {
 #ifdef _EDITOR
@@ -3576,11 +3653,10 @@ void RenderObjects()
                                                         Success = true;
                                                 }
                                                 else
-                                                    Success = true;
+                                                    Success = !IsHangingLeafLitter(o);
                                                 if (Success)
                                                 {
-                                                    RenderObject(o);
-                                                    RenderObjectVisual(o);
+                                                    RenderWorldObject(o);
                                                 }
                                             }
 #ifdef CSK_DEBUG_RENDER_BOUNDINGBOX
