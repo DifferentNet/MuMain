@@ -3,6 +3,7 @@
 #include "I18N/All.h"
 
 #include "UI/HUD/CommandWindow.h"
+#include "UI/Character/OverheadNames.h"
 #include "UI/RmlBridge/RmlPanelGeometry.h"
 #include "UI/RmlBridge/RmlPointer.h"
 
@@ -331,7 +332,7 @@ void mu::ui::window::CCommandWindow::RunCommand()
         {
             distX = abs((pSelectedCha->PositionX) - (Hero->PositionX));
             distY = abs((pSelectedCha->PositionY) - (Hero->PositionY));
-            if (pSelectedCha->Object.Kind == KIND_PLAYER && pSelectedCha != Hero && (pSelectedCha->Object.Type == MODEL_PLAYER || pSelectedCha->Change) && (distX <= MAX_DISTANCE_TILE && distY <= MAX_DISTANCE_TILE))
+            if (pSelectedCha->Object.Kind == KIND_PLAYER && pSelectedCha != Hero && !UI::OverheadNames::IsOfflineShadow(pSelectedCha) && (pSelectedCha->Object.Type == MODEL_PLAYER || pSelectedCha->Change) && (distX <= MAX_DISTANCE_TILE && distY <= MAX_DISTANCE_TILE))
             {
                 if ((pSelectedCha->Object.SubType != MODEL_XMAS_EVENT_CHA_DEER) && (pSelectedCha->Object.SubType != MODEL_XMAS_EVENT_CHA_SNOWMAN) && (pSelectedCha->Object.SubType != MODEL_XMAS_EVENT_CHA_SSANTA))
                 {
