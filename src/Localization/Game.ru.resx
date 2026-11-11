@@ -14025,6 +14025,9 @@
   <data name="SeasonPassReward" xml:space="preserve">
     <value>Награда боевого пропуска · Сезон %d</value>
   </data>
+  <data name="SeasonFenrirBound" xml:space="preserve">
+    <value>Привязан к аккаунту: можно положить в хранилище, нельзя передать или продать</value>
+  </data>
   <data name="SeasonItemBound" xml:space="preserve">
     <value>Привязан к персонажу: нельзя передать, сложить в хранилище или продать</value>
   </data>

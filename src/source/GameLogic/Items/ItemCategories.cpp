@@ -101,7 +101,7 @@ namespace GameLogic::Items
     bool IsSeasonalFenrir(const ITEM* pItem)
     {
         // MU Skynet has no recipe for a gold Fenrir: the battle pass gives every one (server add-on
-        // BattlePass/SeasonalFenrir.cs, which also keeps it in its character's inventory).
+        // BattlePass/SeasonalFenrir.cs, which also keeps it in its account: the bag or the vault).
         return pItem != nullptr && pItem->Type == ITEM_HORN_OF_FENRIR && (pItem->ExcellentFlags & 63) == 0x04;
     }
 

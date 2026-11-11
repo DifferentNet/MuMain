@@ -14426,6 +14426,9 @@
   <data name="SeasonPassReward" xml:space="preserve">
     <value>Battle pass reward · Season %d</value>
   </data>
+  <data name="SeasonFenrirBound" xml:space="preserve">
+    <value>Bound to the account: goes into the vault, can't be traded or sold</value>
+  </data>
   <data name="SeasonItemBound" xml:space="preserve">
     <value>Bound to the character: can't be traded, stored or sold</value>
   </data>
