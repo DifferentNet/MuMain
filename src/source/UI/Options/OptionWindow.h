@@ -284,9 +284,10 @@ namespace mu::ui::window
             Rml::String whisperSoundLabel;
             bool slideHelp = true;
             Rml::String slideHelpLabel;
-            // The row that opens the loot filter: shown in the game only.
+            // The row that opens the loot filter: shown in the game only; its label and its button's text.
             bool lootFilterShown = false;
             Rml::String lootFilterLabel;
+            Rml::String lootFilterButtonLabel;
             bool renderAllEffects = true;
             Rml::String renderAllEffectsLabel;
             bool windowedMode = false;

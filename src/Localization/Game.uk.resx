@@ -13514,7 +13514,10 @@
     <value>Фільтр луту</value>
   </data>
   <data name="LootFilterOpen" xml:space="preserve">
-    <value>Фільтр луту...</value>
+    <value>Фільтр луту</value>
+  </data>
+  <data name="LootFilterOpenButton" xml:space="preserve">
+    <value>Налаштувати</value>
   </data>
   <data name="TouchMenuLootFilter" xml:space="preserve">
     <value>Фільтр луту</value>
@@ -13561,9 +13564,6 @@
   <data name="LootFilterCatQuest" xml:space="preserve">
     <value>Квестові предмети</value>
   </data>
-  <data name="LootFilterCatSocket" xml:space="preserve">
-    <value>Насіння і сфери</value>
-  </data>
   <data name="LootFilterCatMedal" xml:space="preserve">
     <value>Медалі та квитки</value>
   </data>
@@ -13593,9 +13593,6 @@
   </data>
   <data name="LootFilterRarAncient" xml:space="preserve">
     <value>Стародавні</value>
-  </data>
-  <data name="LootFilterRarSocket" xml:space="preserve">
-    <value>Сокет</value>
   </data>
   <data name="LootFilterRarLuck" xml:space="preserve">
     <value>Удача</value>

@@ -13514,7 +13514,10 @@
     <value>Filtro de botín</value>
   </data>
   <data name="LootFilterOpen" xml:space="preserve">
-    <value>Filtro de botín...</value>
+    <value>Filtro de botín</value>
+  </data>
+  <data name="LootFilterOpenButton" xml:space="preserve">
+    <value>Configurar</value>
   </data>
   <data name="TouchMenuLootFilter" xml:space="preserve">
     <value>Filtro de botín</value>
@@ -13561,9 +13564,6 @@
   <data name="LootFilterCatQuest" xml:space="preserve">
     <value>Objetos de misión</value>
   </data>
-  <data name="LootFilterCatSocket" xml:space="preserve">
-    <value>Semillas y esferas</value>
-  </data>
   <data name="LootFilterCatMedal" xml:space="preserve">
     <value>Medallas y entradas</value>
   </data>
@@ -13593,9 +13593,6 @@
   </data>
   <data name="LootFilterRarAncient" xml:space="preserve">
     <value>Ancestral</value>
-  </data>
-  <data name="LootFilterRarSocket" xml:space="preserve">
-    <value>Socket</value>
   </data>
   <data name="LootFilterRarLuck" xml:space="preserve">
     <value>Suerte</value>

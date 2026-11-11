@@ -14,7 +14,6 @@
 #include "Engine/Object/ZzzObject.h"
 #include "GameLogic/Items/CComGem.h"
 #include "GameLogic/Items/ItemCategories.h"
-#include "Network/Server/SocketSystem.h"
 
 namespace GameLogic::Items::LootFilterRuntime
 {
@@ -41,7 +40,8 @@ Settings LoadFromConfig()
     settings.sound = config.GetLootFilterSound();
     // An empty or broken string keeps the Default preset's categories.
     (void)LootFilter::ParseCategories(config.GetLootFilterCategories(), settings.categories);
-    settings.rarity = static_cast<std::uint8_t>(config.GetLootFilterRarity() & LootFilter::RarityAllMask);
+    settings.rarity = static_cast<std::uint8_t>(config.GetLootFilterRarity() & LootFilter::RarityAllMask
+                                                  & ~LootFilter::RarityRetiredMask);
     settings.minLevel =
         std::clamp(config.GetLootFilterMinLevel(), LootFilter::MinLevelLow, LootFilter::MinLevelHigh);
     settings.zenMin = static_cast<std::uint32_t>(
@@ -124,8 +124,6 @@ Category CategoryOf(const ITEM& item)
         return Category::Container;
     if (IsQuestItem(&item))
         return Category::Quest;
-    if (IsSocketSeedOrSphere(&item))
-        return Category::SocketSeed;
     if (IsMedalOrTicket(item))
         return Category::MedalTicket;
     if (IsConsumable(item))
@@ -140,8 +138,6 @@ std::uint8_t RarityOf(const ITEM& item)
         rarity |= LootFilter::RarityExcellent;
     if (item.AncientDiscriminator != 0)
         rarity |= LootFilter::RarityAncient;
-    if (g_SocketItemMgr.IsSocketItem(&item))
-        rarity |= LootFilter::RaritySocket;
     if (item.HasLuck)
         rarity |= LootFilter::RarityLuck;
     if (item.HasSkill)

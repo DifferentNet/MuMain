@@ -523,6 +523,7 @@
 	.option-tab-panel { padding: 2dp 14dp 0 4dp; }
 	.option-row { min-height: 40dp; margin-bottom: 4dp; }
 	.checkbox-box { width: 26dp; height: 26dp; }
+	.option-open-btn { height: 36dp; line-height: 36dp; padding: 0 12dp; }
 	.option-gauge { width: 186dp; height: 24dp; }
 	.option-gauge.effect-gauge { width: 105dp; height: 22dp; }
 	.option-dropdown { max-width: none; height: 34dp; }
@@ -543,10 +544,21 @@
 	}
 }
 
-/* The row that opens the loot filter's own window: its label and an arrow where a control would be. */
-.option-open-arrow {
+/* The button that opens the loot filter's own window, in the control column; drawn as the loot filter's
+   own .lf-button (loot_filter.rcss). */
+.option-open-btn {
 	flex-shrink: 0;
-	padding-left: 6dp;
-	font-weight: bold;
-	color: token(text-primary);
+	min-width: 64dp;
+	height: 18dp;
+	line-height: 18dp;
+	padding: 0 10dp;
+	text-align: center;
+	white-space: nowrap;
+	cursor: pointer;
+	pointer-events: auto;
+	color: token(text-input);
+	background-color: rgba(60, 45, 20, 220);
+	border: 1dp #8a7040;
 }
+.option-open-btn:hover { color: #ffffff; border-color: #f0c850; }
+.option-open-btn:active { background-color: rgba(30, 22, 10, 220); }

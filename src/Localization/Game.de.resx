@@ -13612,7 +13612,10 @@
     <value>Beutefilter</value>
   </data>
   <data name="LootFilterOpen" xml:space="preserve">
-    <value>Beutefilter...</value>
+    <value>Beutefilter</value>
+  </data>
+  <data name="LootFilterOpenButton" xml:space="preserve">
+    <value>Einstellen</value>
   </data>
   <data name="TouchMenuLootFilter" xml:space="preserve">
     <value>Beutefilter</value>
@@ -13659,9 +13662,6 @@
   <data name="LootFilterCatQuest" xml:space="preserve">
     <value>Questgegenstände</value>
   </data>
-  <data name="LootFilterCatSocket" xml:space="preserve">
-    <value>Samen und Sphären</value>
-  </data>
   <data name="LootFilterCatMedal" xml:space="preserve">
     <value>Medaillen und Tickets</value>
   </data>
@@ -13691,9 +13691,6 @@
   </data>
   <data name="LootFilterRarAncient" xml:space="preserve">
     <value>Antik</value>
-  </data>
-  <data name="LootFilterRarSocket" xml:space="preserve">
-    <value>Sockel</value>
   </data>
   <data name="LootFilterRarLuck" xml:space="preserve">
     <value>Glück</value>

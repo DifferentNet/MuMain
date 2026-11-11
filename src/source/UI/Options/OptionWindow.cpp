@@ -430,6 +430,7 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("slide_help_label", &model.slideHelpLabel);
     c.Bind("loot_filter_shown", &model.lootFilterShown);
     c.Bind("loot_filter_label", &model.lootFilterLabel);
+    c.Bind("loot_filter_button_label", &model.lootFilterButtonLabel);
     c.Bind("render_all_effects", &model.renderAllEffects);
     c.Bind("render_all_effects_label", &model.renderAllEffectsLabel);
     c.Bind("windowed_mode", &model.windowedMode);
@@ -2069,6 +2070,7 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.whisperSoundLabel, "whisper_sound_label", I18N::Game::BeepSoundForWhispering);
     syncLabel(model.slideHelpLabel, "slide_help_label", I18N::Game::SlideHelp);
     syncLabel(model.lootFilterLabel, "loot_filter_label", I18N::Game::LootFilterOpen);
+    syncLabel(model.lootFilterButtonLabel, "loot_filter_button_label", I18N::Game::LootFilterOpenButton);
     syncLabel(model.renderAllEffectsLabel, "render_all_effects_label", I18N::Game::RenderFullEffects);
     syncLabel(model.windowedModeLabel, "windowed_mode_label", I18N::Game::WindowedMode);
     syncLabel(model.soundVolumeLabel, "sound_volume_label", I18N::Game::SoundVolume);
