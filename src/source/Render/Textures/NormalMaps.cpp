@@ -41,6 +41,48 @@ bool EqualsNoCase(std::wstring_view a, std::wstring_view b)
     return true;
 }
 
+bool StartsWithNoCase(std::wstring_view text, std::wstring_view prefix)
+{
+    return text.size() >= prefix.size() && EqualsNoCase(text.substr(0, prefix.size()), prefix);
+}
+
+bool ContainsNoCase(std::wstring_view text, std::wstring_view part)
+{
+    for (std::size_t i = 0; i + part.size() <= text.size(); ++i)
+    {
+        if (EqualsNoCase(text.substr(i, part.size()), part))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+// "<prefix><digits>." at the start of `file`, as SkinClass301.OZJ or LevelClass107.OZJ.
+bool IsPrefixNumberDot(std::wstring_view file, std::wstring_view prefix)
+{
+    if (!StartsWithNoCase(file, prefix))
+    {
+        return false;
+    }
+    std::size_t i = prefix.size();
+    const std::size_t digitsStart = i;
+    while (i < file.size() && file[i] >= L'0' && file[i] <= L'9')
+    {
+        ++i;
+    }
+    return i > digitsStart && i < file.size() && file[i] == L'.';
+}
+
+// A character's face (Player): the bare classes' skins (skin_*, SkinClassNNN, LevelClassNNN) and the
+// heads without a helmet (*head_N, *face*). Their shading is painted in: relief built from brightness
+// sinks the dark eyes and lays a band across them like a mask (ghinzuro 2026-11-11).
+bool IsPlayerFace(std::wstring_view file)
+{
+    return StartsWithNoCase(file, L"skin_") || IsPrefixNumberDot(file, L"SkinClass") ||
+           IsPrefixNumberDot(file, L"LevelClass") || ContainsNoCase(file, L"head_N.") || ContainsNoCase(file, L"face");
+}
+
 bool IsModelFolder(std::wstring_view folder)
 {
     static constexpr std::array<std::wstring_view, 4> kFolders{L"Item", L"Player", L"Monster", L"NPC"};
@@ -163,7 +205,7 @@ bool WantsNormalMap(std::wstring_view path)
         start = end + 1;
     }
     return EqualsNoCase(parts[0], L"Data") && EqualsNoCase(parts[1], L"HD") && IsModelFolder(parts[2]) &&
-           start < path.size();
+           start < path.size() && !(EqualsNoCase(parts[2], L"Player") && IsPlayerFace(path.substr(start)));
 }
 
 std::vector<std::uint8_t> Build(std::span<const std::uint8_t> rgba, int width, int height, int scale)
