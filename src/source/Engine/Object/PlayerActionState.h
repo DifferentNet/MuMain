@@ -18,8 +18,16 @@ namespace Engine::Object
     // True while a player is in an actual attack or skill swing: IsAttackAction without the
     // stance animations that share its enum range (mounted idle/walk/run, the two-hand sword
     // stance, ride-horse, rage-fenrir), which MoveHero (ZzzInterface.cpp) excludes the same way.
+    // Strike of Destruction's swing sits outside that range in the enum but is paced by attack speed
+    // like the rest (since 2026-11-11), so it counts too: the hero's swing cadence, MU Helper and a hit
+    // taken treat it as the swing it is.
     inline bool IsSwingAction(int currentAction)
     {
+        if (currentAction == PLAYER_SKILL_BLOW_OF_DESTRUCTION)
+        {
+            return true;
+        }
+
         if (!IsAttackAction(currentAction))
         {
             return false;
