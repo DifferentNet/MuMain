@@ -649,6 +649,8 @@ static mu::SunShadowFrame s_sunShadowFrame{};
 static mu::SunShadowUniform s_sunShadowUniform{};
 static glm::mat4 s_sunShadowViewProjection{1.0f};
 static int s_sunShadowScopeDepth = 0;
+// Inside a ScopedNoSunShadowCast: draws receive the sun shadow but cast none.
+static int s_noSunShadowCastDepth = 0;
 // The shadow map holds this frame's casters: the receivers may draw shadowed.
 static bool s_sunShadowMapReady = false;
 static SDL_GPUTexture* s_sunShadowMap = nullptr;
@@ -2515,6 +2517,12 @@ public:
         {
             mu::log::Get("render")->warn("SDL_gpu -- {} sun shadow scope(s) left open; reset", s_sunShadowScopeDepth);
             s_sunShadowScopeDepth = 0;
+        }
+        if (s_noSunShadowCastDepth != 0)
+        {
+            mu::log::Get("render")->warn("SDL_gpu -- {} no-shadow-cast scope(s) left open; reset",
+                                         s_noSunShadowCastDepth);
+            s_noSunShadowCastDepth = 0;
         }
         s_previousDrawCommands.fill(kNoDrawCommand);
         s_sceneBoundary.Reset();
@@ -5418,6 +5426,19 @@ public:
         }
     }
 
+    void BeginNoSunShadowCast() override
+    {
+        ++s_noSunShadowCastDepth;
+    }
+
+    void EndNoSunShadowCast() override
+    {
+        if (s_noSunShadowCastDepth > 0)
+        {
+            --s_noSunShadowCastDepth;
+        }
+    }
+
     [[nodiscard]] bool IsSunShadowActive() const override
     {
         return s_sunShadowFrame.enabled;
@@ -5844,7 +5865,7 @@ private:
             }
         }
 
-        if (skinned && command.depthMaskEnabled && s_sunShadowCasterPipeline)
+        if (skinned && command.depthMaskEnabled && s_sunShadowCasterPipeline && s_noSunShadowCastDepth == 0)
         {
             RenderCmd caster = command;
             caster.sunShadowReceiver = false;

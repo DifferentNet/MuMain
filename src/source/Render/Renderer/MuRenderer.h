@@ -334,6 +334,11 @@ public:
     virtual void SetSunShadow(const SunShadowFrame& /*frame*/) {}
     virtual void BeginSunShadowScope() {}
     virtual void EndSunShadowScope() {}
+    // Draws recorded between these still receive the sun shadow but cast none (strewn leaf
+    // litter: a sprig lying on a stone would print a dark leaf beside itself); see
+    // ScopedNoSunShadowCast.
+    virtual void BeginNoSunShadowCast() {}
+    virtual void EndNoSunShadowCast() {}
     // True when this frame's sun shadow is drawn: the scene then leaves out the Classic flat
     // shadows it would draw instead.
     [[nodiscard]] virtual bool IsSunShadowActive() const
@@ -839,6 +844,21 @@ public:
     }
     ScopedSunShadowScope(const ScopedSunShadowScope&) = delete;
     ScopedSunShadowScope& operator=(const ScopedSunShadowScope&) = delete;
+};
+// The draws recorded in its lifetime cast no sun shadow (they still receive it).
+class ScopedNoSunShadowCast
+{
+public:
+    ScopedNoSunShadowCast()
+    {
+        GetRenderer().BeginNoSunShadowCast();
+    }
+    ~ScopedNoSunShadowCast()
+    {
+        GetRenderer().EndNoSunShadowCast();
+    }
+    ScopedNoSunShadowCast(const ScopedNoSunShadowCast&) = delete;
+    ScopedNoSunShadowCast& operator=(const ScopedNoSunShadowCast&) = delete;
 };
 class ScopedBloomExclusion
 {
