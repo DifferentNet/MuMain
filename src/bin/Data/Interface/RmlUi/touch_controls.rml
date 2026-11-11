@@ -102,16 +102,18 @@
 		<div id="tc_menu_13" class="tc-button tc-menu-item" data-class-focused="menu_focus == 13"><span class="tc-menu-label">{{menu_label_13}}</span></div>
 		<!-- The drops' names and the monsters' HP bars (Alt, F8): lit while on. -->
 		<div id="tc_menu_14" class="tc-button tc-menu-item" data-class-focused="menu_focus == 14" data-class-on="names_on"><span class="tc-menu-label">{{menu_label_14}}</span></div>
-		<div id="tc_menu_15" class="tc-button tc-menu-item" data-class-focused="menu_focus == 15" data-class-on="bars_on"><span class="tc-menu-label">{{menu_label_15}}</span></div>
-		<div id="tc_menu_16" class="tc-button tc-menu-item" data-class-focused="menu_focus == 16"><span class="tc-menu-label">{{menu_label_16}}</span></div>
+		<!-- The loot filter's settings (CLootFilterWindow). -->
+		<div id="tc_menu_15" class="tc-button tc-menu-item" data-class-focused="menu_focus == 15"><span class="tc-menu-label">{{menu_label_15}}</span></div>
+		<div id="tc_menu_16" class="tc-button tc-menu-item" data-class-focused="menu_focus == 16" data-class-on="bars_on"><span class="tc-menu-label">{{menu_label_16}}</span></div>
 		<div id="tc_menu_17" class="tc-button tc-menu-item" data-class-focused="menu_focus == 17"><span class="tc-menu-label">{{menu_label_17}}</span></div>
 		<div id="tc_menu_18" class="tc-button tc-menu-item" data-class-focused="menu_focus == 18"><span class="tc-menu-label">{{menu_label_18}}</span></div>
 		<div id="tc_menu_19" class="tc-button tc-menu-item" data-class-focused="menu_focus == 19"><span class="tc-menu-label">{{menu_label_19}}</span></div>
 		<div id="tc_menu_20" class="tc-button tc-menu-item" data-class-focused="menu_focus == 20"><span class="tc-menu-label">{{menu_label_20}}</span></div>
+		<div id="tc_menu_21" class="tc-button tc-menu-item" data-class-focused="menu_focus == 21"><span class="tc-menu-label">{{menu_label_21}}</span></div>
 		<!-- The PK switch: lit while on. -->
-		<div id="tc_menu_21" class="tc-button tc-menu-item" data-class-focused="menu_focus == 21" data-class-on="pk_on"><span class="tc-menu-label">{{menu_label_21}}</span></div>
+		<div id="tc_menu_22" class="tc-button tc-menu-item" data-class-focused="menu_focus == 22" data-class-on="pk_on"><span class="tc-menu-label">{{menu_label_22}}</span></div>
 		<!-- The GM panel, for game masters only. -->
-		<div id="tc_menu_22" class="tc-button tc-menu-item" data-if="menu_gm" data-class-focused="menu_focus == 22"><span class="tc-menu-label">{{menu_label_22}}</span></div>
+		<div id="tc_menu_23" class="tc-button tc-menu-item" data-if="menu_gm" data-class-focused="menu_focus == 23"><span class="tc-menu-label">{{menu_label_23}}</span></div>
 		<!-- With a pad, its keys for the menu: the stick or the d-pad move the highlight. -->
 		<div id="tc_menu_legend">
 			<div class="pad-glyph pad-face pad-a">A</div><div class="pad-legend-label">{{pad_open_label}}</div>

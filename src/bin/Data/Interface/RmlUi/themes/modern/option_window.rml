@@ -466,6 +466,11 @@
 						<span class="opt-label">{{slide_help_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="slide_help"><div class="opt-toggle-knob"></div></div></div>
 					</div>
+					<!-- The loot filter's own window (CLootFilterWindow); only in the game, where there is loot. -->
+					<div class="opt-row opt-toggle-row" data-class-hidden="!loot_filter_shown" data-event-click="option_open_loot_filter">
+						<span class="opt-label">{{loot_filter_label}}</span>
+						<div class="opt-control"><span class="opt-open-arrow">&gt;</span></div>
+					</div>
 				</div>
 
 				<div class="opt-page" data-class-hidden="active_tab != 4">

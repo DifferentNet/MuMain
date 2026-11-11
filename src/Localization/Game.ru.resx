@@ -16013,4 +16013,131 @@
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Сначала сильные монстры</value>
   </data>
+  <!-- Loot highlight filter (GameLogic/Items/LootFilter.h) -->
+  <data name="LootFilterTitle" xml:space="preserve">
+    <value>Фильтр лута</value>
+  </data>
+  <data name="LootFilterOpen" xml:space="preserve">
+    <value>Фильтр лута...</value>
+  </data>
+  <data name="TouchMenuLootFilter" xml:space="preserve">
+    <value>Фильтр лута</value>
+  </data>
+  <data name="LootFilterEnabled" xml:space="preserve">
+    <value>Фильтр включён</value>
+  </data>
+  <data name="LootFilterPresets" xml:space="preserve">
+    <value>Наборы:</value>
+  </data>
+  <data name="LootFilterPresetDefault" xml:space="preserve">
+    <value>Ценное</value>
+  </data>
+  <data name="LootFilterPresetStrict" xml:space="preserve">
+    <value>Строгий</value>
+  </data>
+  <data name="LootFilterPresetOff" xml:space="preserve">
+    <value>Без подсветки</value>
+  </data>
+  <data name="LootFilterHide" xml:space="preserve">
+    <value>Скрыть</value>
+  </data>
+  <data name="LootFilterNormal" xml:space="preserve">
+    <value>Обычно</value>
+  </data>
+  <data name="LootFilterHighlight" xml:space="preserve">
+    <value>Подсветить</value>
+  </data>
+  <data name="LootFilterCategories" xml:space="preserve">
+    <value>Типы предметов</value>
+  </data>
+  <data name="LootFilterCatZen" xml:space="preserve">
+    <value>Зен</value>
+  </data>
+  <data name="LootFilterCatJewel" xml:space="preserve">
+    <value>Камни</value>
+  </data>
+  <data name="LootFilterCatWings" xml:space="preserve">
+    <value>Крылья</value>
+  </data>
+  <data name="LootFilterCatContainer" xml:space="preserve">
+    <value>Коробки</value>
+  </data>
+  <data name="LootFilterCatQuest" xml:space="preserve">
+    <value>Квестовые предметы</value>
+  </data>
+  <data name="LootFilterCatSocket" xml:space="preserve">
+    <value>Семена и сферы</value>
+  </data>
+  <data name="LootFilterCatMedal" xml:space="preserve">
+    <value>Медали и билеты</value>
+  </data>
+  <data name="LootFilterCatConsumable" xml:space="preserve">
+    <value>Зелья и свитки</value>
+  </data>
+  <data name="LootFilterCatWeapon" xml:space="preserve">
+    <value>Оружие</value>
+  </data>
+  <data name="LootFilterCatShield" xml:space="preserve">
+    <value>Щиты</value>
+  </data>
+  <data name="LootFilterCatArmour" xml:space="preserve">
+    <value>Броня</value>
+  </data>
+  <data name="LootFilterCatJewellery" xml:space="preserve">
+    <value>Кольца и кулоны</value>
+  </data>
+  <data name="LootFilterCatOther" xml:space="preserve">
+    <value>Прочее</value>
+  </data>
+  <data name="LootFilterRarity" xml:space="preserve">
+    <value>Всегда подсвечивать</value>
+  </data>
+  <data name="LootFilterRarExcellent" xml:space="preserve">
+    <value>Экселент</value>
+  </data>
+  <data name="LootFilterRarAncient" xml:space="preserve">
+    <value>Древние</value>
+  </data>
+  <data name="LootFilterRarSocket" xml:space="preserve">
+    <value>Сокет</value>
+  </data>
+  <data name="LootFilterRarLuck" xml:space="preserve">
+    <value>Удача</value>
+  </data>
+  <data name="LootFilterRarSkill" xml:space="preserve">
+    <value>Скилл</value>
+  </data>
+  <data name="LootFilterRarOption" xml:space="preserve">
+    <value>Опция</value>
+  </data>
+  <data name="LootFilterRarLevel" xml:space="preserve">
+    <value>Уровень +%d и выше</value>
+  </data>
+  <data name="LootFilterLevel" xml:space="preserve">
+    <value>Уровень предмета</value>
+  </data>
+  <data name="LootFilterZen" xml:space="preserve">
+    <value>Зен от</value>
+  </data>
+  <data name="LootFilterZenOff" xml:space="preserve">
+    <value>выкл.</value>
+  </data>
+  <data name="LootFilterNames" xml:space="preserve">
+    <value>Подсвечивать по названию</value>
+  </data>
+  <data name="LootFilterNameHint" xml:space="preserve">
+    <value>Часть названия, как в игре</value>
+  </data>
+  <data name="LootFilterNameAdd" xml:space="preserve">
+    <value>Добавить</value>
+  </data>
+  <data name="LootFilterMarker" xml:space="preserve">
+    <value>Луч света</value>
+  </data>
+  <data name="LootFilterSound" xml:space="preserve">
+    <value>Звук при выпадении</value>
+  </data>
+  <data name="LootFilterClose" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
 </root>

@@ -164,6 +164,9 @@ enum INTERFACE_LIST
     // CGrandShopWindow (UI/Events/GrandShopWindow.h), the Grand Reset shop of ancient sets (/grshop). Same reasoning as
     // INTERFACE_CREDITS above.
     INTERFACE_GRAND_SHOP,
+    // CLootFilterWindow (UI/Options/LootFilterWindow.h), the loot highlight filter's settings. Same reasoning as
+    // INTERFACE_CREDITS above.
+    INTERFACE_LOOT_FILTER,
     INTERFACE_END,
     INTERFACE_COUNT = INTERFACE_END - 2,
 };

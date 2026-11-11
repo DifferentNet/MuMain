@@ -2397,6 +2397,8 @@ Data/Interface/RmlUi/rena_shop.rml
 # Added 2026-11-10: the Grand Reset shop window
 Data/Interface/RmlUi/themes/legacy/grand_shop.rcss
 Data/Interface/RmlUi/grand_shop.rml
+Data/Interface/RmlUi/themes/legacy/loot_filter.rcss
+Data/Interface/RmlUi/loot_filter.rml
 # Added 2026-11-10: every shader and every window's layout and style (a window opened for the first
 # time waited for each of its files), the login picture, the season list, the winter Fenrir
 Data/Interface/RmlUi/chat_log.rml
@@ -2568,6 +2570,7 @@ Data/Interface/RmlUi/themes/modern/remember_password_prompt.rcss
 Data/Interface/RmlUi/themes/modern/remember_password_prompt.rml
 Data/Interface/RmlUi/themes/modern/rena_shop.rcss
 Data/Interface/RmlUi/themes/modern/grand_shop.rcss
+Data/Interface/RmlUi/themes/modern/loot_filter.rcss
 Data/Interface/RmlUi/themes/modern/server_msg.rcss
 Data/Interface/RmlUi/themes/modern/server_select.rcss
 Data/Interface/RmlUi/themes/modern/shop_notice.rcss

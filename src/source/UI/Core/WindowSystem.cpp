@@ -94,6 +94,7 @@ CSystem::CSystem()
     m_pNewEndlessTowerWindow = nullptr;
     m_pNewRenaShopWindow = nullptr;
     m_pNewGrandShopWindow = nullptr;
+    m_pNewLootFilterWindow = nullptr;
     m_pNewJewelBankWindow = nullptr;
     m_pNewAuctionWindow = nullptr;
     m_pNewGmPanelWindow = nullptr;
@@ -422,6 +423,12 @@ bool CSystem::LoadMainSceneInterface()
         return false;
     }
 
+    m_pNewLootFilterWindow = new CLootFilterWindow;
+    if (m_pNewLootFilterWindow->Create(m_pNewUIMng) == false)
+    {
+        return false;
+    }
+
     m_pNewJewelBankWindow = new CJewelBankWindow;
     if (m_pNewJewelBankWindow->Create(m_pNewUIMng) == false)
     {
@@ -731,6 +738,7 @@ void CSystem::UnloadMainSceneInterface()
     SAFE_DELETE(m_pNewEndlessTowerWindow);
     SAFE_DELETE(m_pNewRenaShopWindow);
     SAFE_DELETE(m_pNewGrandShopWindow);
+    SAFE_DELETE(m_pNewLootFilterWindow);
     SAFE_DELETE(m_pNewJewelBankWindow);
     SAFE_DELETE(m_pNewAuctionWindow);
     SAFE_DELETE(m_pNewGmPanelWindow);
@@ -1051,6 +1059,10 @@ void CSystem::Show(DWORD dwKey)
     {
         HideAllGroupA();
         m_pNewGrandShopWindow->OpenningProcess();
+    }
+    else if (dwKey == INTERFACE_LOOT_FILTER)
+    {
+        m_pNewLootFilterWindow->OpenningProcess();
     }
     else if (dwKey == INTERFACE_GM_PANEL)
     {
@@ -1543,6 +1555,10 @@ void CSystem::Hide(DWORD dwKey)
     else if (dwKey == INTERFACE_GRAND_SHOP)
     {
         m_pNewGrandShopWindow->ClosingProcess();
+    }
+    else if (dwKey == INTERFACE_LOOT_FILTER)
+    {
+        m_pNewLootFilterWindow->ClosingProcess();
     }
     else if (dwKey == INTERFACE_GM_PANEL)
     {
@@ -2494,6 +2510,11 @@ CRenaShopWindow* CSystem::GetUI_NewRenaShopWindow() const
 CGrandShopWindow* CSystem::GetUI_NewGrandShopWindow() const
 {
     return m_pNewGrandShopWindow;
+}
+
+CLootFilterWindow* CSystem::GetUI_NewLootFilterWindow() const
+{
+    return m_pNewLootFilterWindow;
 }
 
 CJewelBankWindow* CSystem::GetUI_NewJewelBankWindow() const

@@ -13527,4 +13527,131 @@
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Najpierw silne potwory</value>
   </data>
+  <!-- Loot highlight filter (GameLogic/Items/LootFilter.h) -->
+  <data name="LootFilterTitle" xml:space="preserve">
+    <value>Filtr łupów</value>
+  </data>
+  <data name="LootFilterOpen" xml:space="preserve">
+    <value>Filtr łupów...</value>
+  </data>
+  <data name="TouchMenuLootFilter" xml:space="preserve">
+    <value>Filtr łupów</value>
+  </data>
+  <data name="LootFilterEnabled" xml:space="preserve">
+    <value>Filtr włączony</value>
+  </data>
+  <data name="LootFilterPresets" xml:space="preserve">
+    <value>Zestawy:</value>
+  </data>
+  <data name="LootFilterPresetDefault" xml:space="preserve">
+    <value>Cenne</value>
+  </data>
+  <data name="LootFilterPresetStrict" xml:space="preserve">
+    <value>Ścisły</value>
+  </data>
+  <data name="LootFilterPresetOff" xml:space="preserve">
+    <value>Bez podświetlenia</value>
+  </data>
+  <data name="LootFilterHide" xml:space="preserve">
+    <value>Ukryj</value>
+  </data>
+  <data name="LootFilterNormal" xml:space="preserve">
+    <value>Zwykle</value>
+  </data>
+  <data name="LootFilterHighlight" xml:space="preserve">
+    <value>Podświetl</value>
+  </data>
+  <data name="LootFilterCategories" xml:space="preserve">
+    <value>Rodzaje przedmiotów</value>
+  </data>
+  <data name="LootFilterCatZen" xml:space="preserve">
+    <value>Zen</value>
+  </data>
+  <data name="LootFilterCatJewel" xml:space="preserve">
+    <value>Klejnoty</value>
+  </data>
+  <data name="LootFilterCatWings" xml:space="preserve">
+    <value>Skrzydła</value>
+  </data>
+  <data name="LootFilterCatContainer" xml:space="preserve">
+    <value>Skrzynie</value>
+  </data>
+  <data name="LootFilterCatQuest" xml:space="preserve">
+    <value>Przedmioty zadań</value>
+  </data>
+  <data name="LootFilterCatSocket" xml:space="preserve">
+    <value>Nasiona i sfery</value>
+  </data>
+  <data name="LootFilterCatMedal" xml:space="preserve">
+    <value>Medale i bilety</value>
+  </data>
+  <data name="LootFilterCatConsumable" xml:space="preserve">
+    <value>Mikstury i zwoje</value>
+  </data>
+  <data name="LootFilterCatWeapon" xml:space="preserve">
+    <value>Broń</value>
+  </data>
+  <data name="LootFilterCatShield" xml:space="preserve">
+    <value>Tarcze</value>
+  </data>
+  <data name="LootFilterCatArmour" xml:space="preserve">
+    <value>Zbroja</value>
+  </data>
+  <data name="LootFilterCatJewellery" xml:space="preserve">
+    <value>Pierścienie i wisiorki</value>
+  </data>
+  <data name="LootFilterCatOther" xml:space="preserve">
+    <value>Inne</value>
+  </data>
+  <data name="LootFilterRarity" xml:space="preserve">
+    <value>Zawsze podświetlaj</value>
+  </data>
+  <data name="LootFilterRarExcellent" xml:space="preserve">
+    <value>Excellent</value>
+  </data>
+  <data name="LootFilterRarAncient" xml:space="preserve">
+    <value>Starożytne</value>
+  </data>
+  <data name="LootFilterRarSocket" xml:space="preserve">
+    <value>Gniazda</value>
+  </data>
+  <data name="LootFilterRarLuck" xml:space="preserve">
+    <value>Szczęście</value>
+  </data>
+  <data name="LootFilterRarSkill" xml:space="preserve">
+    <value>Umiejętność</value>
+  </data>
+  <data name="LootFilterRarOption" xml:space="preserve">
+    <value>Opcja</value>
+  </data>
+  <data name="LootFilterRarLevel" xml:space="preserve">
+    <value>Poziom +%d i wyżej</value>
+  </data>
+  <data name="LootFilterLevel" xml:space="preserve">
+    <value>Poziom przedmiotu</value>
+  </data>
+  <data name="LootFilterZen" xml:space="preserve">
+    <value>Zen od</value>
+  </data>
+  <data name="LootFilterZenOff" xml:space="preserve">
+    <value>wył.</value>
+  </data>
+  <data name="LootFilterNames" xml:space="preserve">
+    <value>Podświetlaj po nazwie</value>
+  </data>
+  <data name="LootFilterNameHint" xml:space="preserve">
+    <value>Część nazwy, jak w grze</value>
+  </data>
+  <data name="LootFilterNameAdd" xml:space="preserve">
+    <value>Dodaj</value>
+  </data>
+  <data name="LootFilterMarker" xml:space="preserve">
+    <value>Promień światła</value>
+  </data>
+  <data name="LootFilterSound" xml:space="preserve">
+    <value>Dźwięk przy upadku</value>
+  </data>
+  <data name="LootFilterClose" xml:space="preserve">
+    <value>Zamknij</value>
+  </data>
 </root>

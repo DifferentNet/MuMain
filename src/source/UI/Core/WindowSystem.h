@@ -51,6 +51,7 @@
 #include "UI/Events/EndlessTowerWindow.h"
 #include "UI/Events/RenaShopWindow.h"
 #include "UI/Events/GrandShopWindow.h"
+#include "UI/Options/LootFilterWindow.h"
 #include "UI/Inventory/JewelBankWindow.h"
 #include "UI/Inventory/AuctionWindow.h"
 #include "UI/Dialogs/GmPanelWindow.h"
@@ -206,6 +207,7 @@ namespace mu::ui::window
         CEndlessTowerWindow* m_pNewEndlessTowerWindow;
         CRenaShopWindow* m_pNewRenaShopWindow;
         CGrandShopWindow* m_pNewGrandShopWindow;
+        CLootFilterWindow* m_pNewLootFilterWindow;
         CJewelBankWindow* m_pNewJewelBankWindow;
         CAuctionWindow* m_pNewAuctionWindow;
         CGmPanelWindow* m_pNewGmPanelWindow;
@@ -304,6 +306,7 @@ namespace mu::ui::window
         CEndlessTowerWindow* GetUI_NewEndlessTowerWindow() const;
         CRenaShopWindow* GetUI_NewRenaShopWindow() const;
         CGrandShopWindow* GetUI_NewGrandShopWindow() const;
+        CLootFilterWindow* GetUI_NewLootFilterWindow() const;
         CJewelBankWindow* GetUI_NewJewelBankWindow() const;
         CAuctionWindow* GetUI_NewAuctionWindow() const;
         CGmPanelWindow* GetUI_NewGmPanelWindow() const;
