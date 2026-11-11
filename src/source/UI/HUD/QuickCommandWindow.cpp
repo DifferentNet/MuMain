@@ -1,6 +1,7 @@
 
 #include "stdafx.h"
 #include "UI/HUD/QuickCommandWindow.h"
+#include "UI/Character/OverheadNames.h"
 #include "UI/Core/WindowSystem.h"
 #include "Audio/DSPlaySound.h"
 #include "I18N/All.h"
@@ -261,6 +262,8 @@ void mu::ui::window::CQuickCommandWindow::OpenQuickCommandAt(const wchar_t* strI
 bool mu::ui::window::CQuickCommandWindow::IsMenuAllowedFor(const CHARACTER* character)
 {
     if (character == nullptr || character->Object.Kind != KIND_PLAYER)
+        return false;
+    if (UI::OverheadNames::IsOfflineShadow(character))
         return false;
     if (gMapManager.InChaosCastle() || gMapManager.IsCursedTemple())
         return false;

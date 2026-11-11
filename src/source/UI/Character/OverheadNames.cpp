@@ -23,6 +23,12 @@
 
 namespace UI::OverheadNames
 {
+bool IsOfflineShadow(const CHARACTER* c)
+{
+    return c != nullptr && c->Object.Kind == KIND_PLAYER &&
+           g_isCharacterBuff((&const_cast<CHARACTER*>(c)->Object), eBuff_OfflineShadow);
+}
+
 namespace
 {
 struct Candidate
@@ -43,6 +49,11 @@ bool IsGameMaster(CHARACTER* c)
 // colour when the plate takes over.
 void SetNameColor(CHARACTER* c, bool gameMaster)
 {
+    if (IsOfflineShadow(c))
+    {
+        g_pRenderText->SetTextColor(170, 170, 170, 255);
+        return;
+    }
     if (c == Hero)
     {
         g_pRenderText->SetTextColor(200, 255, 0, 255);
@@ -240,6 +251,16 @@ void Render()
 
         if (title != nullptr)
             UI::TitlePlates::Render(*title, *c, found[n].x, y - 1, n < MaxEffectPlates);
+
+        if (IsOfflineShadow(c))
+        {
+            // A second grey line under the name.
+            const wchar_t* label = GameLogic::Titles::Store::Russian() ? L"\u0422\u0435\u043d\u044c \u00b7 \u043d\u0435 \u0432 \u0441\u0435\u0442\u0438" : L"Shadow \u00b7 offline";
+            g_pRenderText->SetFont(g_hFont);
+            const SIZE labelSize = Fitted(g_pRenderText->MeasureText(label, lstrlen(label)), fit);
+            g_pRenderText->SetTextColor(170, 170, 170, 255);
+            RenderShadowed(found[n].x - labelSize.cx / 2, found[n].y, label, labelSize.cx, labelSize.cy);
+        }
     }
 
     g_pRenderText->SetFont(g_hFont);
