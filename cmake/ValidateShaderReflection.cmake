@@ -278,6 +278,9 @@ set(shader_specs
     "skinned_lit_shadow.frag|frag||3|0|3"
     "shadow_caster.frag|frag||1|0|1"
     "terrain_water.frag|frag||1|0|2"
+    "post_ssao.frag|frag||1|0|1"
+    "post_ssao_blur.frag|frag||1|0|1"
+    "post_ssao_apply.frag|frag||2|0|1"
 )
 
 foreach(shader_spec IN LISTS shader_specs)

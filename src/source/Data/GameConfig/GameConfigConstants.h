@@ -131,6 +131,10 @@ namespace CfgKeys
     // terrain's water tiles (terrain_water.frag), and its strength in percent (0 to 100).
     inline constexpr wchar_t CfgKeyTerrainWater[] = L"TerrainWater";
     inline constexpr wchar_t CfgKeyTerrainWaterStrength[] = L"TerrainWaterStrength";
+    // [Render] Ssao: with HD textures on, 0 off, 1 soft contact shadows (screen-space ambient occlusion)
+    // in creases and where models meet the ground, and its strength in percent (0 to 100).
+    inline constexpr wchar_t CfgKeySsao[] = L"Ssao";
+    inline constexpr wchar_t CfgKeySsaoStrength[] = L"SsaoStrength";
     // Sun shadows of the Enhanced look: 0 off, 1 medium (2048 map), 2 high (4096 map). The browser
     // build keeps them under their own key: older /play builds saved the presets' value in SunShadows,
     // and a browser player gets sun shadows only from the Options row.
@@ -291,6 +295,12 @@ namespace CfgDefaults
     inline constexpr int CfgDefaultTerrainWaterStrength = 100;
     inline constexpr int CfgMinTerrainWaterStrength = 0;
     inline constexpr int CfgMaxTerrainWaterStrength = 100;
+    inline constexpr int CfgDefaultSsao = 1;
+    inline constexpr int CfgMinSsao = 0;
+    inline constexpr int CfgMaxSsao = 1;
+    inline constexpr int CfgDefaultSsaoStrength = 100;
+    inline constexpr int CfgMinSsaoStrength = 0;
+    inline constexpr int CfgMaxSsaoStrength = 100;
     inline constexpr int CfgDefaultSunShadows = 0;
     inline constexpr int CfgMinSunShadows = 0;
     inline constexpr int CfgMaxSunShadows = 2;

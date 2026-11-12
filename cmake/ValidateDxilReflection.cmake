@@ -33,6 +33,9 @@ set(shader_specs
     "skinned_lit_shadow.frag|cb0,space3+cb1,space3+cb2,space3+s0,space2+s1,space2+s2,space2+t0,space2+t1,space2+t2,space2"
     "shadow_caster.frag|cb0,space3+s0,space2+t0,space2"
     "terrain_water.frag|cb0,space3+cb1,space3+s0,space2+t0,space2"
+    "post_ssao.frag|cb0,space3+s0,space2+t0,space2"
+    "post_ssao_blur.frag|cb0,space3+s0,space2+t0,space2"
+    "post_ssao_apply.frag|cb0,space3+s0,space2+s1,space2+t0,space2+t1,space2"
 )
 
 foreach(shader_spec IN LISTS shader_specs)

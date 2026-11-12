@@ -98,6 +98,8 @@ the row reads **Custom** (shown only, it cannot be picked).
 | `TerrainVariationStrength` | Strength of the patches in percent, `0` (off) to `100` | `100` |
 | `TerrainWater` | With HD textures and Enhanced lighting on (desktop only), the terrain's water tiles get small moving ripples that catch the sun as a highlight and reflect a sky tint, stronger at a grazing view (after a restart): `0` off, `1` on. Only on the maps whose water tile is water (not the lava, sand, rock or ice that tile holds elsewhere), not on Atlans' sea; the water takes no sun shadow | `1` |
 | `TerrainWaterStrength` | Strength of the water look in percent, `0` (off) to `100` | `100` |
+| `Ssao` | With HD textures, Enhanced lighting and post-processing on (desktop only, not on the Low preset), soft contact shadows (screen-space ambient occlusion): creases, corners and the ground under models darken a little; effects, particles and windows are not darkened, and it fades out towards the horizon (after a restart): `0` off, `1` on | `1` |
+| `SsaoStrength` | Strength of those shadows in percent, `0` (off) to `100` | `100` |
 
 Each map's light mood can also set the sun's direction and the shadows'
 strength and softness (`sunAzimuth`, `sunElevation`, `sunShadow`,

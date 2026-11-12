@@ -613,6 +613,9 @@ static void RenderGameWorld(BYTE& byWaterMap, int width, int height)
         RenderObjects_AfterCharacter();
     }
     sunShadowScope.reset();
+    // Water-terrain maps (Atlans) draw their ground later, after the effects: no SSAO there.
+    if (IsWaterTerrain() == false)
+        mu::GetRenderer().EndOpaqueWorld();
 
     { FRAME_PROFILE(Joints); RenderJoints(byWaterMap); }
 

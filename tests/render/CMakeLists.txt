@@ -171,6 +171,13 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Render/Terrain/TerrainVariation.cpp
 )
 
+# SSAO: the strength from the [Render] Ssao settings, depth to distance, the fade range.
+mu_add_test(
+    NAME ssao_setting_tests
+    SOURCES
+        test_ssao_setting.cpp
+)
+
 # HD textures: the Data\HD path of a texture.
 mu_add_test(
     NAME hd_textures_tests

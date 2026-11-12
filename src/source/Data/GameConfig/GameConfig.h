@@ -240,6 +240,11 @@ public:
     // in percent (both clamped; after a restart).
     int GetTerrainWater() const { return m_terrainWater; }
     int GetTerrainWaterStrength() const { return m_terrainWaterStrength; }
+    // [Render] Ssao: with HD textures on, soft contact shadows in creases and where models meet the
+    // ground (Render/PostProcessing/SsaoSetting.h; Enhanced lighting and post-processing), 0 off, 1 on;
+    // SsaoStrength in percent (both clamped; after a restart).
+    int GetSsao() const { return m_ssao; }
+    int GetSsaoStrength() const { return m_ssaoStrength; }
     // [Render] SunShadows: 0 off, 1 medium, 2 high (clamped).
     int GetSunShadows() const { return m_sunShadows; }
     void SetSunShadows(int level);
@@ -381,6 +386,8 @@ private:
     int m_terrainVariationStrength = 100;
     int m_terrainWater = 1;
     int m_terrainWaterStrength = 100;
+    int m_ssao = 1;
+    int m_ssaoStrength = 100;
     int m_sunShadows = 0;
     int m_sharpen = 0;
     std::wstring m_renderBackend;
