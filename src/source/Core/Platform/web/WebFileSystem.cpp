@@ -37,6 +37,7 @@
 #include <sys/stat.h>
 #include <thread>
 #include <unistd.h>
+#include <unordered_set>
 #include <utility>
 
 namespace
@@ -691,6 +692,100 @@ bool mu::web::ReadWholeAhead(const char* path)
     return true;
 }
 
+namespace
+{
+// The files of the deferred parts (index.html Module.muDeferredFiles: the startup pack's sounds and
+// music, tools/web/make_startup_pack.py) whose part hasn't come or failed yet, as the game opens them
+// (below /game). The page's thread only.
+std::unordered_set<std::string> g_waitingDeferredFiles;
+
+// Index.html's Module.muDeferredFiles: the paths of the deferred parts' files, a line each, to free; null
+// without any.
+EM_JS(char*, MuWeb_DeferredFiles, (), {
+    const files = Module["muDeferredFiles"] ? Module["muDeferredFiles"]() : [];
+    return files.length ? stringToNewUTF8(files.join("\n")) : 0;
+});
+
+// Index.html's Module.muDeferredPart: the next deferred part that came ({files, bytes}) or failed (bytes
+// null), handed over once. Writes a part's files into /game in place of their links to /server, as the
+// late pack's (a file that doesn't write keeps its link), and returns its paths, a line each, to free,
+// with how many it wrote in *written; null while no part waits.
+EM_JS(char*, MuWeb_InstallDeferredPart, (int* written), {
+    const part = Module["muDeferredPart"] ? Module["muDeferredPart"]() : null;
+    if (!part) {
+        return 0;
+    }
+    let count = 0;
+    let offset = 0;
+    let failed = 0;
+    let firstError = null;
+    for (const [path, size] of part.bytes ? part.files : []) {
+        const full = "/game/" + path;
+        try {
+            FS.unlink(full);
+        } catch (e) {
+        }
+        // A file that doesn't write gets its link to /server back, so the game downloads it alone;
+        // the part's other files still go in.
+        let wrote = false;
+        try {
+            FS.mkdirTree(full.substring(0, full.lastIndexOf("/")));
+            wrote = FS.writeFile(full, part.bytes.subarray(offset, offset + size)) >= 0;
+        } catch (e) {
+            firstError = firstError || e;
+        }
+        if (wrote) {
+            ++count;
+        } else {
+            ++failed;
+            try {
+                FS.unlink(full);
+            } catch (e) {
+            }
+            try {
+                FS.symlink("/server/" + path, full);
+            } catch (e) {
+                firstError = firstError || e;
+            }
+        }
+        offset += size;
+    }
+    if (failed) {
+        err("Deferred part: " + failed + " files didn't write (" + (firstError || "no reason given") +
+            "); the game downloads them one by one");
+    }
+    HEAP32[(written >>> 0) >>> 2] = count;
+    return stringToNewUTF8(part.files.map(([path]) => path).join("\n"));
+});
+
+// The lines of `text`, one call each. Returns how many there were.
+template <typename Visit>
+std::size_t ForEachLine(std::string_view text, Visit visit)
+{
+    std::size_t count = 0;
+    while (!text.empty())
+    {
+        const std::size_t end = std::min(text.find('\n'), text.size());
+        visit(text.substr(0, end));
+        text.remove_prefix(std::min(end + 1, text.size()));
+        ++count;
+    }
+    return count;
+}
+
+// Fills g_waitingDeferredFiles from the page.
+void NoteDeferredFiles()
+{
+    char* paths = MuWeb_DeferredFiles();
+    if (!paths)
+    {
+        return;
+    }
+    ForEachLine(paths, [](std::string_view path) { g_waitingDeferredFiles.emplace(path); });
+    std::free(paths);
+}
+} // namespace
+
 bool mu::web::MountGameFiles()
 {
     if (::mkdir(GameDir, 0777) != 0)
@@ -740,6 +835,9 @@ bool mu::web::MountGameFiles()
             std::printf("Web file system: config.ini from this browser's earlier visits\n");
         }
     }
+    NoteDeferredFiles();
+    // A part kept on this device may be here already: then the game loads its sounds as before.
+    InstallDeferredParts();
     return ::chdir(GameDir) == 0;
 }
 
@@ -888,6 +986,39 @@ void mu::web::InstallLatePack()
     installed = true;
     const auto ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
     std::printf("Web file system: %d files from the late pack in %.0f ms\n", written, ms);
+}
+
+void mu::web::InstallDeferredParts()
+{
+    if (g_waitingDeferredFiles.empty())
+    {
+        return;
+    }
+    int written = 0;
+    while (char* paths = MuWeb_InstallDeferredPart(&written))
+    {
+        const std::size_t files =
+            ForEachLine(paths, [](std::string_view path) { g_waitingDeferredFiles.erase(std::string(path)); });
+        std::free(paths);
+        if (written > 0)
+        {
+            std::printf("Web file system: %d of %zu files from a deferred part (sounds, music)\n", written, files);
+        }
+        else
+        {
+            std::printf("Web file system: a deferred part failed; its %zu files are read one by one\n", files);
+        }
+    }
+}
+
+bool mu::web::WaitsForDeferredPart(const std::string& path)
+{
+    return !g_waitingDeferredFiles.empty() && g_waitingDeferredFiles.contains(path);
+}
+
+std::size_t mu::web::DeferredFilesWaiting()
+{
+    return g_waitingDeferredFiles.size();
 }
 
 void mu::web::LoadWorldFiles(int world)

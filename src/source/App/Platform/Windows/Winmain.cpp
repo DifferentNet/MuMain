@@ -2337,6 +2337,12 @@ MSG MainLoop()
 #ifdef __EMSCRIPTEN__
                 // Between frames, where no texture file is open.
                 mu::web::InstallLatePack();
+                // The sounds and music, where no sound file is open, then the sounds that waited for them.
+                mu::web::InstallDeferredParts();
+                if (g_platformAudio != nullptr)
+                {
+                    g_platformAudio->LoadWaitingSounds();
+                }
                 MuWebFollowPageSize();
                 UI::Mobile::FollowPage();
                 mu::web::ShowInWorld(SceneFlag == MAIN_SCENE);

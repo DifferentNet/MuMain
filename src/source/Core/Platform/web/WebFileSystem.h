@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstddef>
+#include <string>
+
 // Web build only. In the browser the game's files (Data/, fonts/, shaders/, config.ini ...) stay on
 // the web server. The files the game reads before it can be played come in one download,
 // startup.pack (tools/web/make_startup_pack.py), which the page fetches while the game's code loads;
@@ -31,6 +34,20 @@ bool LateFontsReady();
 // as the startup pack's are. Call it between frames, where no file of the game is open; it returns at
 // once until the pack is here, and does nothing after it was taken.
 void InstallLatePack();
+
+// The deferred parts of the startup pack (tools/web/make_startup_pack.py: the sounds and music), which the
+// game starts without: writes the files of each part the page downloaded into /game in place of their
+// links, as the late pack's; a part that failed leaves its files to download one by one. Call it between
+// frames, where no sound file is open; MountGameFiles calls it once too.
+void InstallDeferredParts();
+
+// True while the file at `path` (as the game opens it, below /game, after MuResolvePath) belongs to a
+// deferred part that hasn't come or failed yet: reading it now would download it alone, the part's
+// copy coming anyway (MiniAudioBackend waits for it instead).
+bool WaitsForDeferredPart(const std::string& path);
+
+// How many files of the deferred parts haven't come or failed yet: 0 once they all did.
+std::size_t DeferredFilesWaiting();
 
 // Where the page's thread downloads the game's files (Safari), reads the file at `path` whole now, the
 // game waiting for it the way it waits for a frame, through the service worker, which keeps it on the

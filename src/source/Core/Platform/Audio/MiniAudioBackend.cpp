@@ -11,6 +11,11 @@
 #include "Core/Globals/_struct.h" // OBJECT forward decl — needed for void* → OBJECT* casts
 #ifdef __EMSCRIPTEN__
 #include "Core/Platform/web/WebFileSystem.h"
+
+#include <emscripten.h>
+
+#include <chrono>
+#include <cstdio>
 #endif
 
 #include <algorithm>
@@ -74,6 +79,16 @@ bool IsSameMusicTrack(const std::string& identity, const char* name)
     }
     return i == identity.size();
 }
+
+#ifdef __EMSCRIPTEN__
+// The most time a frame spends loading the sounds that waited for their files (LoadWaitingSounds), one
+// sound at least: decoding the startup pack's 207 sounds in one frame would freeze the picture.
+constexpr std::chrono::microseconds WaitingSoundsFrameBudget{3500};
+
+// The page's count of the sounds that wait for their files: Module.muWaitingSounds in the browser
+// console (0 where none waits or none ever did).
+EM_JS(void, MuWeb_NoteWaitingSounds, (int count), { Module["muWaitingSounds"] = count; });
+#endif
 } // namespace
 
 // ---------------------------------------------------------------------------
@@ -142,6 +157,15 @@ void MiniAudioBackend::Shutdown()
     ReleaseMusicStream();
     m_failedMusicNames.clear();
     m_decodedSounds.ReleaseAll();
+#ifdef __EMSCRIPTEN__
+    m_waitingSounds.Clear();
+    MuWeb_NoteWaitingSounds(0);
+    m_deferredFilesAtLastLook = static_cast<std::size_t>(-1);
+    m_waitedSoundsLoaded = 0;
+    m_waitedSoundFrames = 0;
+    m_waitingMusicName.clear();
+    m_waitingMusicPath.clear();
+#endif
 
     ma_engine_uninit(&m_engine);
     m_initialized = false;
@@ -186,6 +210,12 @@ void MiniAudioBackend::LoadSound(ESound buffer, const wchar_t* filename, int cha
     NormalizeSeparators(utf8Path);
 #ifndef _WIN32
     utf8Path = MuResolvePath(utf8Path.c_str());
+#endif
+#ifdef __EMSCRIPTEN__
+    if (WaitForSoundFile(bufIdx, filename, utf8Path, channels, enable3D))
+    {
+        return;
+    }
 #endif
 
     if (m_decodedSounds.Acquire(utf8Path))
@@ -405,6 +435,12 @@ void MiniAudioBackend::ReleaseSound(ESound buffer)
         return;
     }
 
+#ifdef __EMSCRIPTEN__
+    if (m_waitingSounds.Remove(buf))
+    {
+        MuWeb_NoteWaitingSounds(static_cast<int>(m_waitingSounds.Size()));
+    }
+#endif
     UnloadSlot(buf);
 }
 
@@ -546,6 +582,12 @@ void MiniAudioBackend::PlayMusic(const char* name, bool enforce)
     {
         return;
     }
+#ifdef __EMSCRIPTEN__
+    if (WaitForMusicFile(name, enforce))
+    {
+        return;
+    }
+#endif
 
     ReleaseMusicStream();
     if (!enforce && HasFailedMusicTrack(name))
@@ -646,6 +688,9 @@ void MiniAudioBackend::ReleaseMusicStream()
 // ---------------------------------------------------------------------------
 void MiniAudioBackend::StopMusic(const char* name, bool enforce)
 {
+#ifdef __EMSCRIPTEN__
+    ForgetWaitingMusic(name, enforce);
+#endif
     if (!m_initialized || !m_musicLoaded)
     {
         return;
@@ -793,6 +838,137 @@ float MiniAudioBackend::GetSFXVolume() const
 {
     return m_sfxVolume;
 }
+
+#ifdef __EMSCRIPTEN__
+// ---------------------------------------------------------------------------
+// Web build: the startup pack's sounds and music come after the game started (WebFileSystem.h
+// InstallDeferredParts). A sound whose file is still on its way isn't read, which would download it
+// alone: its load waits, the slot stays unloaded (PlaySound refuses it quietly, as any unloaded slot),
+// and LoadWaitingSounds loads it once the file is here. Loading or releasing the slot meanwhile
+// replaces or drops the waiting load. Looping ambient sounds the game asks to play every frame need
+// nothing more. A looped sound asked for once (the Blood Castle and Chaos Castle ambience) before its
+// part came stays silent until the game asks for it again: accepted, as the parts come seconds after
+// the start, mostly before a player gets there.
+// ---------------------------------------------------------------------------
+bool MiniAudioBackend::WaitForSoundFile(int bufIdx, const wchar_t* filename, const std::string& utf8Path, int channels,
+                                        bool enable3D)
+{
+    const bool waited = m_waitingSounds.Remove(bufIdx);
+    const bool waits = mu::web::WaitsForDeferredPart(utf8Path);
+    if (waits)
+    {
+        m_waitingSounds.Add({bufIdx, filename ? filename : L"", utf8Path, channels, enable3D});
+    }
+    if (waits || waited)
+    {
+        MuWeb_NoteWaitingSounds(static_cast<int>(m_waitingSounds.Size()));
+    }
+    return waits;
+}
+
+// The track asked for while its file is on its way: the current one stops, as for any new track, and
+// LoadWaitingSounds starts this one once the file is here; only the last one asked for waits. False
+// (nothing waiting any more) where the track can play now.
+bool MiniAudioBackend::WaitForMusicFile(const char* name, bool enforce)
+{
+    if (!m_waitingMusicName.empty() && IsSameMusicTrack(m_waitingMusicName, name))
+    {
+        m_waitingMusicEnforced = enforce;
+        return true;
+    }
+    m_waitingMusicName.clear();
+    m_waitingMusicPath.clear();
+    if (mu::web::DeferredFilesWaiting() == 0)
+    {
+        return false;
+    }
+    std::string identity(name);
+    NormalizeSeparators(identity);
+    std::string path = MuResolvePath(identity.c_str());
+    if (!mu::web::WaitsForDeferredPart(path))
+    {
+        return false;
+    }
+    ReleaseMusicStream();
+    m_waitingMusicName = std::move(identity);
+    m_waitingMusicPath = std::move(path);
+    m_waitingMusicEnforced = enforce;
+    return true;
+}
+
+// StopMusic's rules for the waiting track: a stop of it or of any track (no name, or enforced) forgets it.
+void MiniAudioBackend::ForgetWaitingMusic(const char* name, bool enforce)
+{
+    if (m_waitingMusicName.empty() || (!enforce && name != nullptr && !IsSameMusicTrack(m_waitingMusicName, name)))
+    {
+        return;
+    }
+    m_waitingMusicName.clear();
+    m_waitingMusicPath.clear();
+}
+
+void MiniAudioBackend::StartWaitingMusic()
+{
+    if (m_waitingMusicName.empty() || mu::web::WaitsForDeferredPart(m_waitingMusicPath))
+    {
+        return;
+    }
+    const std::string name = std::exchange(m_waitingMusicName, {});
+    m_waitingMusicPath.clear();
+    PlayMusic(name.c_str(), m_waitingMusicEnforced);
+}
+
+// Loads the waiting sounds whose files are here, in the order asked for, as many as
+// WaitingSoundsFrameBudget allows; the others keep waiting. Looks through them again only once another
+// part came or failed (m_deferredFilesAtLastLook). Once none waits any more it says in the page's log how
+// many it loaded and in how many frames.
+void MiniAudioBackend::LoadWaitingSounds()
+{
+    if (!m_initialized)
+    {
+        return;
+    }
+    StartWaitingMusic();
+    const std::size_t filesWaiting = mu::web::DeferredFilesWaiting();
+    if (m_waitingSounds.Empty() || filesWaiting == m_deferredFilesAtLastLook)
+    {
+        return;
+    }
+    const auto here = [](const WaitingSoundLoad& load) { return !mu::web::WaitsForDeferredPart(load.path); };
+    const auto start = std::chrono::steady_clock::now();
+    bool outOfTime = false;
+    std::size_t loaded = 0;
+    while (std::optional<WaitingSoundLoad> load = m_waitingSounds.TakeFirstReady(here))
+    {
+        LoadSound(static_cast<ESound>(load->slot), load->file.c_str(), load->channels, load->enable3D);
+        ++loaded;
+        if (std::chrono::steady_clock::now() - start >= WaitingSoundsFrameBudget)
+        {
+            outOfTime = true; // the rest next frame, looking through them again
+            break;
+        }
+    }
+    if (loaded > 0)
+    {
+        m_waitedSoundsLoaded += loaded;
+        ++m_waitedSoundFrames;
+        MuWeb_NoteWaitingSounds(static_cast<int>(m_waitingSounds.Size()));
+    }
+    if (!outOfTime)
+    {
+        m_deferredFilesAtLastLook = filesWaiting;
+    }
+    // Checked after the loop, not only where it ran out of sounds: the frame that loads the last one
+    // also often runs out of time.
+    if (m_waitingSounds.Empty() && m_waitedSoundsLoaded > 0)
+    {
+        std::printf("Web audio: %zu sounds that waited for their files loaded in %zu frames\n", m_waitedSoundsLoaded,
+                    m_waitedSoundFrames);
+        m_waitedSoundsLoaded = 0;
+        m_waitedSoundFrames = 0;
+    }
+}
+#endif
 
 // ---------------------------------------------------------------------------
 // GetAudioDeviceNames — enumerate playback devices for error reporting.

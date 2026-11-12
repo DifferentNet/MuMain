@@ -45,6 +45,13 @@ public:
     virtual void SetSFXVolume(float level) = 0;
     [[nodiscard]] virtual float GetBGMVolume() const = 0;
     [[nodiscard]] virtual float GetSFXVolume() const = 0;
+
+#ifdef __EMSCRIPTEN__
+    // Web build: loads the sounds and starts the music the game asked for while their files were on their
+    // way (WebFileSystem.h WaitsForDeferredPart), a few a frame once they are here. Call it between frames,
+    // after mu::web::InstallDeferredParts.
+    virtual void LoadWaitingSounds() {}
+#endif
 };
 
 } // namespace mu

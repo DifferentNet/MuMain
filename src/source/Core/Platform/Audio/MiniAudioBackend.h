@@ -16,6 +16,9 @@
 
 #include "Core/Platform/IPlatformAudio.h"
 #include "Core/Platform/Audio/DecodedSoundStore.h"
+#ifdef __EMSCRIPTEN__
+#include "Core/Platform/Audio/WaitingSoundLoads.h"
+#endif
 
 // miniaudio.h required for ma_engine and ma_sound full type definitions.
 // See isolation note above — this include is the known limitation tracked for 5.2.x.
@@ -64,6 +67,10 @@ public:
     [[nodiscard]] float GetBGMVolume() const override;
     [[nodiscard]] float GetSFXVolume() const override;
 
+#ifdef __EMSCRIPTEN__
+    void LoadWaitingSounds() override;
+#endif
+
 private:
     // Convert DirectSound volume (dB * 100, range -10000..0) to linear 0.0..1.0
     static float DbToLinear(long dsVol);
@@ -73,6 +80,12 @@ private:
     void ReleaseMusicStream();
     void UnloadSlot(int buf);
     void ReleaseDecodedSound(int buf);
+#ifdef __EMSCRIPTEN__
+    bool WaitForSoundFile(int bufIdx, const wchar_t* filename, const std::string& utf8Path, int channels, bool enable3D);
+    bool WaitForMusicFile(const char* name, bool enforce);
+    void ForgetWaitingMusic(const char* name, bool enforce);
+    void StartWaitingMusic();
+#endif
 
     ma_engine m_engine{};
 
@@ -113,6 +126,21 @@ private:
     // Session failures survive stop calls and track changes; enforced playback retries them.
     std::vector<std::string> m_failedMusicNames;
     bool m_initialized = false;
+
+#ifdef __EMSCRIPTEN__
+    // The sounds asked for while their files were on their way (WebFileSystem.h WaitsForDeferredPart).
+    WaitingSoundLoads m_waitingSounds;
+    // DeferredFilesWaiting when LoadWaitingSounds last found no waiting sound's file here.
+    std::size_t m_deferredFilesAtLastLook = static_cast<std::size_t>(-1);
+    // Sounds loaded by LoadWaitingSounds and the frames it spent on them, since its last log line.
+    std::size_t m_waitedSoundsLoaded = 0;
+    std::size_t m_waitedSoundFrames = 0;
+    // The last track asked for while its file was on its way (separators-normalized, as
+    // m_currentMusicName), its path, and whether it was enforced; empty without one. A stop forgets it.
+    std::string m_waitingMusicName;
+    std::string m_waitingMusicPath;
+    bool m_waitingMusicEnforced = false;
+#endif
 };
 
 } // namespace mu

@@ -20,6 +20,16 @@ while the player logs in, and the game puts its files in place between two frame
 (WebFileSystem.cpp InstallLatePack); until then the game downloads one it needs by itself, so these
 files keep their versions too.
 
+The deferred parts: the startup pack's sounds and music (DEFERRED_FOLDERS, Data/Sound and Data/Music),
+15 MB of the 51 the startup download took (2026-11-12), each its own part marked "deferred" in
+startup.json, with the hash and name it had before it was deferred, so the players' copies stay. The
+page doesn't wait for them: it downloads them right after the other parts (before the late pack) and
+keeps them like those, and the game puts their files in place between two frames once they are here
+(WebFileSystem.cpp InstallDeferredParts). Until then MiniAudioBackend.cpp only notes the sounds the game
+loads and the music it plays, and loads them a few a frame once the files are here; where a part fails,
+the game reads its files one by one. They get no versions: the game doesn't read them before the part
+came or failed.
+
 A pack per map: packs/worldN.pack.gz with the files of Data/WorldN and Data/ObjectN (the map's ground
 and objects) that aren't in the startup pack, and packs/worldN.json, their paths and sizes and a hash.
 Entering Lorencia opened about 250 of them one after another, a minute on a phone (2026-10-29); the
@@ -43,7 +53,8 @@ way, 28 MB as they are. Encoding them takes minutes, so the results wait in pack
 output for the next build. The files' sizes in the index are the packed ones.
 
 startup.json, which the page reads first:
-  parts     the startup pack's parts: [{name, hash, packed (bytes to download), files: [[path, size]]}]
+  parts     the startup pack's parts: [{name, hash, packed (bytes to download), files: [[path, size]]}],
+            the deferred ones with "deferred": true
   late      the late pack, the same way (absent without one)
   code      the hashes of Main.js and Main.wasm: the page asks for Main.js?v=<hash> ...
   versions  {path: hash} of the files the game downloads one by one when it first reads them
@@ -86,6 +97,9 @@ PACKS = "packs"
 LATE_PACK = "startup-late"
 # Folders with less of the startup pack than this share one part.
 PART_MIN_BYTES = 2_000_000
+# The folders whose files the game starts without (the deferred parts, the module's docstring): each
+# its own part, whatever its size.
+DEFERRED_FOLDERS = ("Data/Sound/", "Data/Music/")
 # Changes every pack's hash when what the packs hold changes, not only the files.
 PACK_FORMAT = b"plain-models"
 # Added for a pack with sounds, so that the packs without any keep their hashes (and the players'
@@ -252,15 +266,21 @@ def part_name(path):
     return "startup-" + (re.sub(r"[^a-z0-9]+", "-", "-".join(folders[:2]).lower()).strip("-") or "root")
 
 
+def is_deferred(path):
+    """Whether the file goes in a deferred part (the module's docstring)."""
+    return path.startswith(DEFERRED_FOLDERS)
+
+
 def startup_parts(files):
     """{part name: [[path, size], ...]} in the list's order (part_name; small folders share
-    startup-misc)."""
+    startup-misc, but not the deferred ones)."""
     folders = {}
     for path, size in files:
         folders.setdefault(part_name(path), []).append([path, size])
     parts, misc = {}, []
     for name, folder_files in folders.items():
-        if sum(size for _, size in folder_files) < PART_MIN_BYTES:
+        deferred = is_deferred(folder_files[0][0])
+        if not deferred and sum(size for _, size in folder_files) < PART_MIN_BYTES:
             misc.extend(folder_files)
         else:
             parts[name] = folder_files
@@ -275,6 +295,8 @@ def write_startup_parts(root, files, previous_index):
     entries, written = [], 0
     for name, part_files in startup_parts(files).items():
         entry, wrote = write_pack(root, name, part_files, previous.get(f"{PACKS}/{name}.pack"))
+        if is_deferred(part_files[0][0]):
+            entry["deferred"] = True
         entries.append(entry)
         written += wrote
     return entries, written
@@ -440,6 +462,11 @@ def main():
     note = f", {missing} listed files not in the output" if missing else ""
     print(f"Startup pack: {len(files)} files, {total / 1e6:.1f} MB in {len(parts)} parts "
           f"({packed / 1e6:.1f} MB packed), {parts_written} written{note}")
+    deferred = [part for part in parts if part.get("deferred")]
+    if deferred:
+        deferred_packed = sum(part["packed"] for part in deferred)
+        print(f"  of them deferred (after the start): {', '.join(part['name'] for part in deferred)}, "
+              f"{deferred_packed / 1e6:.1f} MB packed; before the start: {(packed - deferred_packed) / 1e6:.1f} MB")
     if late:
         print(f"Late pack: {len(late_files)} files, {sum(size for _, size in late_files) / 1e6:.1f} MB "
               f"({late['packed'] / 1e6:.1f} MB packed)")

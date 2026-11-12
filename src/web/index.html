@@ -1679,16 +1679,18 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         else waiting.push(start);
       });
     }
-    // The startup pack's parts, each a promise of its files and bytes (WebFileSystem.cpp takes them in
-    // order as they come), or null where startup.json has none.
+    // The startup pack's parts the game waits for, each a promise of its files and bytes (WebFileSystem.cpp
+    // takes them in order as they come), or null where startup.json has none. Not the deferred ones
+    // (deferredSettled below), but this keeps them in the storage too.
     async function startupPack() {
-      const parts = releaseIndex && releaseIndex.parts;
-      if (!parts) return null;
+      const allParts = releaseIndex && releaseIndex.parts;
+      if (!allParts) return null;
+      const parts = allParts.filter((part) => !part.deferred);
       const store = await openStore(STARTUP_STORE);
       const kept = await Promise.all(parts.map((part) => store && store.match(packKey(part)).catch(() => undefined)));
       if (store) {
         // Parts this release no longer has, the single pack of earlier releases among them.
-        const current = new Set(parts.map((part) => packPath(packKey(part))));
+        const current = new Set(allParts.map((part) => packPath(packKey(part))));
         if (releaseIndex.late) current.add(packPath(packKey(releaseIndex.late)));
         for (const request of await store.keys()) {
           if (!current.has(packPath(request.url))) store.delete(request);
@@ -1713,6 +1715,41 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     const startupPackSettled = startupParts.then((parts) => Promise.allSettled(parts || []).then(() => {}), () => {})
       .finally(() => { packDone = true; setStatus(""); });
     let mapPacksLoading = 0;
+    // The deferred parts (startup.json parts with "deferred", tools/web/make_startup_pack.py): the sounds
+    // and music, 15 MB of the 51 the startup download took (2026-11-12). The game starts without them:
+    // they download right after the other parts, a map's pack going first, alongside the late pack, and
+    // are kept with them; one on this device reads at once. A download that failed is tried once more
+    // after DEFERRED_RETRY_MS. Each part that came ({files, bytes}) or failed (bytes null) waits in
+    // deferredSettled for WebFileSystem.cpp InstallDeferredParts (Module.muDeferredPart), which writes
+    // its files into /game between two frames; the game reads a failed part's files one by one.
+    const DEFERRED_RETRY_MS = 2000;
+    const deferredEntries = ((releaseIndex && releaseIndex.parts) || []).filter((part) => part.deferred);
+    const deferredSettled = [];
+    (async () => {
+      if (!deferredEntries.length) return;
+      const store = await openStore(STARTUP_STORE);
+      await Promise.all(deferredEntries.map(async (entry) => {
+        const label = `Startup pack part ${entry.name} (after the start)`;
+        let pack = null;
+        try {
+          const kept = store ? await store.match(packKey(entry)).catch(() => undefined) : undefined;
+          if (!kept) {
+            await startupPackSettled;
+            while (mapPacksLoading) await new Promise((resolve) => setTimeout(resolve, 500));
+          }
+          try {
+            pack = await loadPack(label, entry, store, kept, () => {});
+          } catch (e) {
+            console.warn(`${label}: ${e}; trying once more`);
+            await new Promise((resolve) => setTimeout(resolve, DEFERRED_RETRY_MS));
+            pack = await loadPack(label, entry, store, undefined, () => {});
+          }
+        } catch (e) {
+          console.warn(`${label}: ${e}; the game reads its files one by one instead`);
+        }
+        deferredSettled.push(pack || { files: entry.files, bytes: null });
+      }));
+    })();
     // The late pack (startup.json "late", tools/web/make_startup_pack.py): textures the game reads only
     // once it is played, 23 MB of the 73.5 the startup download took (2026-11-03). It downloads after
     // the startup pack, while the player logs in, a map's pack going first, and is kept like the
@@ -2105,6 +2142,9 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       muMapPack: mapPack,
       // The late pack once it is here ({files, bytes}), handed over once; else null.
       muLatePack: () => { const pack = latePack; latePack = null; return pack; },
+      // The deferred parts' files (paths), and the next part that came or failed, handed over once; else null.
+      muDeferredFiles: () => deferredEntries.flatMap((entry) => entry.files.map(([path]) => path)),
+      muDeferredPart: () => deferredSettled.shift() || null,
       muFilesOnPageThread: filesOnPageThread,
       muClipDistances: gpuCheck.clipDistances,
       muDepthClamp: gpuCheck.depthClamp,
