@@ -1001,8 +1001,9 @@ bool CMixInventory::Mix()
         return false;
     }
 
+    // MU Moldova: room for the result on bag page 2 counts too (BagPages.h, ghinzuro 2026-11-12).
     if (g_MixRecipeMgr.GetCurRecipe()->m_iWidth != -1 &&
-        g_pMyInventory->FindEmptySlot(g_MixRecipeMgr.GetCurRecipe()->m_iWidth, g_MixRecipeMgr.GetCurRecipe()->m_iHeight) == -1)
+        g_pMyInventory->FindEmptySlotIncludingExtensions(g_MixRecipeMgr.GetCurRecipe()->m_iWidth, g_MixRecipeMgr.GetCurRecipe()->m_iHeight) == -1)
     {
         g_pSystemLogBox->AddText(I18N::Game::CombineItemsAfterOrganizingYourInventory, mu::ui::window::TYPE_ERROR_MESSAGE);
         return false;
@@ -1112,10 +1113,22 @@ bool CMixInventory::ProcessMyInvenItemAutoMove(CInventoryCtrl* sourceCtrl)
 
 bool CMixInventory::ProcessMixItemAutoMoveToInventory()
 {
-    CInventoryCtrl* dstCtrl = g_pMyInventory ? g_pMyInventory->GetInventoryCtrl() : nullptr;
-    return AutoMoveItem(m_pNewInventoryCtrl, g_MixRecipeMgr.GetMixInventoryEquipmentIndex(),
-        dstCtrl, STORAGE_TYPE::INVENTORY,
-        /*requireMixSource*/ false);
+    // MU Moldova: page 1 first, then bag page 2's grids (BagPages.h, ghinzuro 2026-11-12). A grid without room
+    // fails before anything is picked up or sent, so the next one can be tried.
+    if (g_pMyInventory == nullptr)
+        return false;
+    for (int g = 0; g < CMyInventory::OwnedBagGridCount; ++g)
+    {
+        if (CInventoryCtrl* dstCtrl = g_pMyInventory->OwnedBagGrid(g);
+            dstCtrl != nullptr
+            && AutoMoveItem(m_pNewInventoryCtrl, g_MixRecipeMgr.GetMixInventoryEquipmentIndex(),
+                dstCtrl, STORAGE_TYPE::INVENTORY,
+                /*requireMixSource*/ false))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool CMixInventory::CheckMixInventory()
