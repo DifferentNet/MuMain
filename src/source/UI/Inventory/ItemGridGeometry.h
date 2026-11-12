@@ -40,6 +40,13 @@ public:
     // The cell (x, y) falls in, also outside the grid, one further out on the negative side as
     // the original counted it: where an item hanging off the grid starts.
     void CellOf(float x, float y, int& column, int& row) const;
+    // MU Skynet (ghinzuro 2026-11-12: tall weapons in the 8 x 4 chaos machine): where a held item of
+    // `width` x `height` cells goes. While the pointer is over the grid and the item fits it, an item
+    // that would hang off an edge moves to the nearest place inside instead (a 2 x 4 weapon in a grid
+    // of 4 rows had one pointer row to land on). Otherwise the cell under the target point, as before.
+    // (targetX, targetY) is AnchoredTargetPoint(); false when the item has no cell in this grid.
+    bool DropCell(float targetX, float targetY, float pointerX, float pointerY, int width, int height, int& column,
+                  int& row) const;
     // The box of `width` x `height` cells from (column, row).
     GridRect CellsRect(int column, int row, int width, int height) const;
 

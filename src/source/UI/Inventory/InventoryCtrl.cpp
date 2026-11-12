@@ -242,14 +242,17 @@ int mu::ui::window::CPickedItem::GetSourceLinealPos()
 
 bool mu::ui::window::CPickedItem::GetTargetPos(CInventoryCtrl* pDest, int& iTargetColumnX, int& iTargetRowY)
 {
-    if (pDest != nullptr)
-    {
-        const POINT pointer = pDest->PointerPos();
-        const POINT target = TargetPointIn(pDest, pointer.x, pointer.y);
+    if (pDest == nullptr || m_pPickedItem == nullptr)
+        return false;
 
-        return pDest->GetSquarePosAtPt(target.x, target.y, iTargetColumnX, iTargetRowY);
-    }
-    return false;
+    const POINT pointer = pDest->PointerPos();
+    const POINT target = TargetPointIn(pDest, pointer.x, pointer.y);
+    // The same cell as the drop preview (CInventoryCtrl::UpdateCells): an item that fits the grid
+    // but hangs off its edge goes to the nearest place inside.
+    const ITEM_ATTRIBUTE& attribute = ItemAttribute[m_pPickedItem->Type];
+    return pDest->Geometry().DropCell(static_cast<float>(target.x), static_cast<float>(target.y),
+                                      static_cast<float>(pointer.x), static_cast<float>(pointer.y),
+                                      attribute.Width, attribute.Height, iTargetColumnX, iTargetRowY);
 }
 
 int mu::ui::window::CPickedItem::GetTargetLinealPos(CInventoryCtrl* pDest)
@@ -1173,7 +1176,9 @@ void mu::ui::window::CInventoryCtrl::UpdateCells()
     int nItemColumn = pItemAttr->Width, nItemRow = pItemAttr->Height;
     // The same cell as the drop (CPickedItem::GetTargetPos).
     const POINT target = ms_pPickedItem->TargetPointIn(this, pointer.x, pointer.y);
-    m_Geometry.CellOf(static_cast<float>(target.x), static_cast<float>(target.y), iColumnX, iRowY);
+    // Pulled inside the grid when the item fits it (GridGeometry::DropCell).
+    m_Geometry.DropCell(static_cast<float>(target.x), static_cast<float>(target.y), static_cast<float>(pointer.x),
+                        static_cast<float>(pointer.y), nItemColumn, nItemRow, iColumnX, iRowY);
 
     bool bWarning = false;
     if (iColumnX < 0 && iColumnX >= -nItemColumn)
@@ -1200,6 +1205,10 @@ void mu::ui::window::CInventoryCtrl::UpdateCells()
     }
     m_bCanPushItem = bWarning;
     if (iColumnX < 0 || iColumnX >= m_nColumn || iRowY < 0 || iRowY >= m_nRow)
+        return;
+    // An item hanging into this grid from a pointer over another one (the bag's second page is two
+    // grids of 8 x 4 one above the other) goes where that grid puts it, not here: no red edge here.
+    if (bWarning && !m_Geometry.Contains(static_cast<float>(pointer.x), static_cast<float>(pointer.y)))
         return;
 
     // The window's "normal" colour turns red where it refuses the item (the mix and lucky item
