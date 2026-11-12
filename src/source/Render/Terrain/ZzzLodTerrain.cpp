@@ -33,6 +33,7 @@
 #include "Render/Look/LookProfileSetting.h"
 #include "Render/Terrain/TerrainLightGrid.h"
 #include "Render/Terrain/TerrainDetail.h"
+#include "Render/Terrain/TerrainVariation.h"
 #include "Render/Textures/HdTextures.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "Scenes/SceneCore.h"
@@ -1482,6 +1483,60 @@ static const Render::Terrain::Detail::Params& GroundDetailParams()
     return params;
 }
 
+// The ground's repeat breakers (Render/Terrain/TerrainVariation.h), read from config.ini once like
+// the grain. Desktop only.
+static const Render::Terrain::Variation::Params& GroundVariationParams()
+{
+#ifdef __EMSCRIPTEN__
+    static const Render::Terrain::Variation::Params params{};
+#else
+    static const Render::Terrain::Variation::Params params = []
+    {
+        auto resolved = Render::Terrain::Variation::Resolve(GameConfig::GetInstance().GetTerrainVariation(),
+                                                            GameConfig::GetInstance().GetTerrainVariationStrength(),
+                                                            Render::Textures::Hd::Enabled());
+        // The noise grain hashes the texture coordinates: a mirrored repeat would show its edges.
+        if (GroundDetailParams().strength > 0.f && GroundDetailParams().scale < 0.f)
+            resolved.flips = false;
+        return resolved;
+    }();
+#endif
+    return params;
+}
+
+// The macro colour factor of every terrain vertex for the current map, built when the map changes.
+static const float* GroundMacroFactor(int terrainIndex)
+{
+    static std::vector<float> factors;
+    static int builtFor = -1;
+    const auto& params = GroundVariationParams();
+    if (!params.macro || terrainIndex < 0 || terrainIndex >= TERRAIN_SIZE * TERRAIN_SIZE)
+        return nullptr;
+    if (factors.empty() || builtFor != gMapManager.WorldActive)
+    {
+        builtFor = gMapManager.WorldActive;
+        factors.resize(static_cast<std::size_t>(TERRAIN_SIZE) * TERRAIN_SIZE * 3);
+        for (int y = 0; y < TERRAIN_SIZE; ++y)
+            for (int x = 0; x < TERRAIN_SIZE; ++x)
+                Render::Terrain::Variation::MacroFactor(x, y, builtFor, params.strength,
+                                                        &factors[(static_cast<std::size_t>(y) * TERRAIN_SIZE + x) * 3]);
+    }
+    return &factors[static_cast<std::size_t>(terrainIndex) * 3];
+}
+
+// A ground vertex's light with the macro colour applied (the light itself when it is off).
+static std::uint32_t GroundVertexColor(int terrainIndex, float alpha = 1.f)
+{
+    const float* light = PrimaryTerrainLight[terrainIndex];
+    if (const float* factor = GroundMacroFactor(terrainIndex))
+        return mu::PackABGR(light[0] * factor[0], light[1] * factor[1], light[2] * factor[2], alpha);
+    return mu::PackABGR(light[0], light[1], light[2], alpha);
+}
+
+// The plain tileable ground textures (TileGrass, TileGround, TileWood, TileRock) that may be
+// mirrored; ExtTile and the special textures may be pictures that must keep their orientation.
+constexpr int kLastFlippableTileTexture = 13;
+
 // The tile textures FaceTexture moves as water: they keep their own look, without the grain.
 constexpr int kWaterTileTexture = 5;
 constexpr int kPkFieldWaterTileTexture = 11;
@@ -1490,6 +1545,37 @@ static bool IsWaterTileTexture(int texture)
 {
     return texture == kWaterTileTexture ||
            (texture == kPkFieldWaterTileTexture && (gMapManager.IsPKField() || IsDoppelGanger2()));
+}
+
+// The tile textures SetGroundFaceState draws with the alpha test: cut-outs, not plain repeats.
+static bool IsAlphaTestedTileTexture(int texture)
+{
+    const int world = gMapManager.WorldActive;
+    if (world == WD_39KANTURU_3RD)
+        return texture == 3;
+    if (world >= WD_45CURSEDTEMPLE_LV1 && world <= WD_45CURSEDTEMPLE_LV6)
+        return texture == 4;
+    if (world == WD_51HOME_6TH_CHAR)
+        return texture == 2;
+    if (world == WD_69EMPIREGUARDIAN1 || world == WD_70EMPIREGUARDIAN2 || world == WD_71EMPIREGUARDIAN3 ||
+        world == WD_72EMPIREGUARDIAN4 || world == WD_73NEW_LOGIN_SCENE || world == WD_74NEW_CHARACTER_SCENE)
+        return texture == 10;
+#ifdef ASG_ADD_MAP_KARUTAN
+    if (IsKarutanMap())
+        return texture == 12;
+#endif
+    return false;
+}
+
+// Whether FaceTexture may mirror this texture's repeats: a plain tile texture (not water, not a
+// cut-out) whose repeat holds a whole number of tiles, so no tile straddles two repeats.
+static bool IsFlippableTileTexture(int texture, float repeatPerTile)
+{
+    if (texture < 0 || texture > kLastFlippableTileTexture || texture == kWaterTileTexture ||
+        IsWaterTileTexture(texture) || IsAlphaTestedTileTexture(texture) || repeatPerTile <= 0.f)
+        return false;
+    const float tilesPerRepeat = 1.f / repeatPerTile;
+    return std::fabs(tilesPerRepeat - std::round(tilesPerRepeat)) < 1.0e-3f;
 }
 
 // Turns the grain on (enabled true) or off for the ground draws recorded next. Only a mipmapped
@@ -1562,15 +1648,14 @@ void RenderFace(int Texture, int mx, int my)
     if (gMapManager.WorldActive == WD_39KANTURU_3RD && Texture == 100)
         return;
 
-    auto MakeVert = [](const float* pos, const float* tc, const float* light) -> mu::Vertex3D
+    auto MakeVert = [](const float* pos, const float* tc, int terrainIndex) -> mu::Vertex3D
     {
-        return {pos[0], pos[1], pos[2], 0.f, 0.f, 1.f, tc[0], tc[1],
-                mu::PackABGR(light[0], light[1], light[2], 1.f)};
+        return {pos[0], pos[1], pos[2], 0.f, 0.f, 1.f, tc[0], tc[1], GroundVertexColor(terrainIndex)};
     };
-    const mu::Vertex3D v0 = MakeVert(TerrainVertex[0], TerrainTextureCoord[0], PrimaryTerrainLight[TerrainIndex1]);
-    const mu::Vertex3D v1 = MakeVert(TerrainVertex[1], TerrainTextureCoord[1], PrimaryTerrainLight[TerrainIndex2]);
-    const mu::Vertex3D v2 = MakeVert(TerrainVertex[2], TerrainTextureCoord[2], PrimaryTerrainLight[TerrainIndex3]);
-    const mu::Vertex3D v3 = MakeVert(TerrainVertex[3], TerrainTextureCoord[3], PrimaryTerrainLight[TerrainIndex4]);
+    const mu::Vertex3D v0 = MakeVert(TerrainVertex[0], TerrainTextureCoord[0], TerrainIndex1);
+    const mu::Vertex3D v1 = MakeVert(TerrainVertex[1], TerrainTextureCoord[1], TerrainIndex2);
+    const mu::Vertex3D v2 = MakeVert(TerrainVertex[2], TerrainTextureCoord[2], TerrainIndex3);
+    const mu::Vertex3D v3 = MakeVert(TerrainVertex[3], TerrainTextureCoord[3], TerrainIndex4);
     s_groundFaces.push_back({Texture, {v0, v1, v2, v3}});
 }
 
@@ -1630,15 +1715,15 @@ static void RenderLayerFaces()
 
 void RenderFaceAlpha(int Texture, int mx, int my)
 {
-    auto MakeVert = [](const float* pos, const float* tc, const float* light, float alpha) -> mu::Vertex3D
+    auto MakeVert = [](const float* pos, const float* tc, int terrainIndex) -> mu::Vertex3D
     {
         return {pos[0], pos[1], pos[2], 0.f, 0.f, 1.f, tc[0], tc[1],
-                mu::PackABGR(light[0], light[1], light[2], alpha)};
+                GroundVertexColor(terrainIndex, TerrainMappingAlpha[terrainIndex])};
     };
-    const mu::Vertex3D v0 = MakeVert(TerrainVertex[0], TerrainTextureCoord[0], PrimaryTerrainLight[TerrainIndex1], TerrainMappingAlpha[TerrainIndex1]);
-    const mu::Vertex3D v1 = MakeVert(TerrainVertex[1], TerrainTextureCoord[1], PrimaryTerrainLight[TerrainIndex2], TerrainMappingAlpha[TerrainIndex2]);
-    const mu::Vertex3D v2 = MakeVert(TerrainVertex[2], TerrainTextureCoord[2], PrimaryTerrainLight[TerrainIndex3], TerrainMappingAlpha[TerrainIndex3]);
-    const mu::Vertex3D v3 = MakeVert(TerrainVertex[3], TerrainTextureCoord[3], PrimaryTerrainLight[TerrainIndex4], TerrainMappingAlpha[TerrainIndex4]);
+    const mu::Vertex3D v0 = MakeVert(TerrainVertex[0], TerrainTextureCoord[0], TerrainIndex1);
+    const mu::Vertex3D v1 = MakeVert(TerrainVertex[1], TerrainTextureCoord[1], TerrainIndex2);
+    const mu::Vertex3D v2 = MakeVert(TerrainVertex[2], TerrainTextureCoord[2], TerrainIndex3);
+    const mu::Vertex3D v3 = MakeVert(TerrainVertex[3], TerrainTextureCoord[3], TerrainIndex4);
     s_layerFaces.push_back({Texture, false, {v0, v1, v2, v3}});
 }
 
@@ -1679,6 +1764,15 @@ void FaceTexture(int Texture, float xf, float yf, bool Water, bool Scale)
         TEXCOORD(TerrainTextureCoord[1], suf + Width, svf);
         TEXCOORD(TerrainTextureCoord[2], suf + Width, svf + Height);
         TEXCOORD(TerrainTextureCoord[3], suf, svf + Height);
+        if (!Scale && GroundVariationParams().flips && IsFlippableTileTexture(Texture, Width) &&
+            IsFlippableTileTexture(Texture, Height))
+        {
+            // Mirror this tile's texture repeat as the hash of the repeat says: seamless both ways.
+            const auto flip = Render::Terrain::Variation::BlockFlip(static_cast<int>(std::floor(suf + 1.0e-4f)),
+                                                                    static_cast<int>(std::floor(svf + 1.0e-4f)),
+                                                                    Texture, gMapManager.WorldActive);
+            Render::Terrain::Variation::MirrorTileUv(TerrainTextureCoord, flip);
+        }
     }
     else
     {
@@ -1825,19 +1919,15 @@ void RenderTerrainFace(float xf, float yf, int xi, int yi, float lodf)
 #ifdef ASG_ADD_MAP_KARUTAN
                 }
 #endif	// ASG_ADD_MAP_KARUTAN
-                const auto MakeVert = [](const float* pos, const float* tc, const float* light) -> mu::Vertex3D
+                // The grass takes the ground's macro colour too, so it stays on the patch under it.
+                const auto MakeVert = [](const float* pos, const float* tc, int terrainIndex) -> mu::Vertex3D
                 {
-                    return {pos[0], pos[1], pos[2], 0.f, 0.f, 1.f, tc[0], tc[1],
-                            mu::PackABGR(light[0], light[1], light[2], 1.f)};
+                    return {pos[0], pos[1], pos[2], 0.f, 0.f, 1.f, tc[0], tc[1], GroundVertexColor(terrainIndex)};
                 };
-                const mu::Vertex3D v0 =
-                    MakeVert(TerrainVertex[0], TerrainTextureCoord[0], PrimaryTerrainLight[TerrainIndex1]);
-                const mu::Vertex3D v1 =
-                    MakeVert(TerrainVertex[1], TerrainTextureCoord[1], PrimaryTerrainLight[TerrainIndex2]);
-                const mu::Vertex3D v2 =
-                    MakeVert(TerrainVertex[2], TerrainTextureCoord[2], PrimaryTerrainLight[TerrainIndex3]);
-                const mu::Vertex3D v3 =
-                    MakeVert(TerrainVertex[3], TerrainTextureCoord[3], PrimaryTerrainLight[TerrainIndex4]);
+                const mu::Vertex3D v0 = MakeVert(TerrainVertex[0], TerrainTextureCoord[0], TerrainIndex1);
+                const mu::Vertex3D v1 = MakeVert(TerrainVertex[1], TerrainTextureCoord[1], TerrainIndex2);
+                const mu::Vertex3D v2 = MakeVert(TerrainVertex[2], TerrainTextureCoord[2], TerrainIndex3);
+                const mu::Vertex3D v3 = MakeVert(TerrainVertex[3], TerrainTextureCoord[3], TerrainIndex4);
                 if (!blended)
                 {
                     s_groundFaces.push_back({Texture, {v0, v1, v2, v3}});

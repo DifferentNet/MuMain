@@ -132,6 +132,11 @@ void GameConfig::Load()
     m_terrainDetailStrength =
         std::clamp(ReadInt(CfgSectionRender, CfgKeyTerrainDetailStrength, CfgDefaultTerrainDetailStrength),
                    CfgMinTerrainDetailStrength, CfgMaxTerrainDetailStrength);
+    m_terrainVariation = std::clamp(ReadInt(CfgSectionRender, CfgKeyTerrainVariation, CfgDefaultTerrainVariation),
+                                    CfgMinTerrainVariation, CfgMaxTerrainVariation);
+    m_terrainVariationStrength =
+        std::clamp(ReadInt(CfgSectionRender, CfgKeyTerrainVariationStrength, CfgDefaultTerrainVariationStrength),
+                   CfgMinTerrainVariationStrength, CfgMaxTerrainVariationStrength);
     m_sunShadows = GameConfigValidation::ValidateSunShadows(
         ReadInt(CfgSectionRender, CfgKeySunShadows, CfgDefaultSunShadows));
     m_sharpen = GameConfigValidation::ValidateSharpen(ReadInt(CfgSectionRender, CfgKeySharpen, CfgDefaultSharpen));
@@ -226,6 +231,8 @@ void GameConfig::Save()
     WriteBool(CfgSectionRender, CfgKeyNormalMaps, m_normalMaps);
     WriteInt(CfgSectionRender, CfgKeyTerrainDetail, m_terrainDetail);
     WriteInt(CfgSectionRender, CfgKeyTerrainDetailStrength, m_terrainDetailStrength);
+    WriteInt(CfgSectionRender, CfgKeyTerrainVariation, m_terrainVariation);
+    WriteInt(CfgSectionRender, CfgKeyTerrainVariationStrength, m_terrainVariationStrength);
     WriteInt(CfgSectionRender, CfgKeySunShadows, m_sunShadows);
     WriteInt(CfgSectionRender, CfgKeySharpen, m_sharpen);
     WriteBool(CfgSectionRender, CfgKeyDisableEffects, m_disableEffects);
