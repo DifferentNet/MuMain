@@ -200,6 +200,14 @@ void ApplyStartupGraphics()
         ChooseHdTextureSize(gpuName);
         return;
     }
+    if (const int sharpen = UpdatedPresetSharpen(config.GetGraphicsPreset(), config.GetSharpen());
+        sharpen != config.GetSharpen())
+    {
+        mu::log::Get("render")->info("Graphics preset {}: sharpening {} -> {} %",
+                                     PresetName(config.GetGraphicsPreset()), config.GetSharpen(), sharpen);
+        config.SetSharpen(sharpen);
+        config.Save();
+    }
     ApplyLookPreset(config.GetLook());
     ApplyScreenFilters();
     ApplySunShadows();

@@ -59,3 +59,12 @@ TEST_CASE("anisotropy is clamped to what every backend supports [render][mipmap]
     CHECK(ClampAnisotropy(64).value == MaxSupportedAnisotropy);
     CHECK(ClampAnisotropy(64).clamped);
 }
+
+TEST_CASE("only HD textures bias the mip level toward the sharper one [render][texture-filtering]")
+{
+    using Render::Textures::MipLodBias;
+
+    CHECK(MipLodBias(false) == 0.0f);
+    CHECK(MipLodBias(true) < 0.0f);
+    CHECK(MipLodBias(true) >= -1.0f);
+}

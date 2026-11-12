@@ -24,11 +24,26 @@ struct MipLevel
 // texel of that axis also averages the leftover row or column.
 [[nodiscard]] MipLevel DownsampleBox(std::span<const std::uint8_t> rgba, std::uint32_t width, std::uint32_t height);
 
+// Halves an RGBA8 image with a 4-tap Catmull-Rom filter (-1, 9, 9, -1) / 16 on
+// each axis, clamped at the edges. It keeps more of the fine detail than the box
+// filter, so a mipmapped texture seen at a distance looks less soft. Sizes follow
+// DownsampleBox; an axis of size 1 stays 1. When a size above 1 is odd it falls
+// back to DownsampleBox.
+[[nodiscard]] MipLevel DownsampleSharp(std::span<const std::uint8_t> rgba, std::uint32_t width,
+                                       std::uint32_t height);
+
+// How BuildMipChain halves each level.
+enum class MipFilter
+{
+    Box,
+    Sharp,
+};
+
 // Builds levels 1 to CountMipLevels - 1 of an RGBA8 image; level 0 is the
 // input itself and is not copied. Returns nothing for a 1x1 image or when the
 // input is smaller than width * height * 4 bytes.
 [[nodiscard]] std::vector<MipLevel> BuildMipChain(std::span<const std::uint8_t> rgba, std::uint32_t width,
-                                                  std::uint32_t height);
+                                                  std::uint32_t height, MipFilter filter = MipFilter::Box);
 
 // Reference of the alpha test the game enables for world drawing
 // (EnableAlphaTest: GL_GREATER 0.25); the shader discards alpha <= reference.

@@ -94,7 +94,9 @@ bloom and the grading: **FXAA** (`[Render] Fxaa`, smooths jagged edges in one
 cheap pass, meant for when multisampling is off) and **sharpening**
 (`[Render] Sharpen`, 0 to 100 %, contrast-adaptive: flat areas and full-contrast
 edges are left alone, so it does not ring or add grain). Where FXAA smoothed an
-edge the pixel is not sharpened. They are chosen by the graphics preset or one
+edge the pixel is not sharpened. FXAA is skipped while multisampling is on (2x or
+more): MSAA already smooths the edges, and FXAA on top only blurred texture
+detail. The FXAA setting is kept and works again once anti-aliasing is off. They are chosen by the graphics preset or one
 by one in the options window, and work in both looks: with either on and the
 look's post-processing off (Classic, or the row switched off), the pass runs
 for the filters only, with no bloom and no grading. The interface is never

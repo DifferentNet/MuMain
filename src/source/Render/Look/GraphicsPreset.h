@@ -36,6 +36,11 @@ struct GraphicsSettings
 [[nodiscard]] GraphicsSettings GraphicsPresetSettings(GraphicsPreset preset);
 // The preset whose row equals `settings`, else Custom.
 [[nodiscard]] GraphicsPreset MatchGraphicsPreset(const GraphicsSettings& settings);
+// Medium, High and Ultra sharpened 30 % until 2026-11-12, now 40 % (the Remaster looked soft). A
+// player who kept such a preset has 30 saved: `savedSharpen` becomes the preset's current value.
+// Any other preset or value is the player's own and is kept.
+inline constexpr int LegacyPresetSharpen = 30;
+[[nodiscard]] int UpdatedPresetSharpen(GraphicsPreset preset, int savedSharpen);
 // What a GPU is, by its name as the driver reports it. An empty or unknown name counts as Integrated.
 enum class GpuClass
 {

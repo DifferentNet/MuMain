@@ -31,4 +31,15 @@ struct AnisotropyLevel
 // anisotropy), at most MaxSupportedAnisotropy.
 [[nodiscard]] AnisotropyLevel ClampAnisotropy(int configured);
 
+// Mip LOD bias of the Enhanced sampler while the Remaster's HD textures are on: half a level
+// toward the sharper mip. Without it the ground seen at a slant, as the game camera sees it,
+// samples a mip level that is softer than the original texture Classic draws (ghinzuro
+// 2026-11-12: Remaster looked soapy next to Classic). Classic and the browser keep no bias.
+inline constexpr float HdMipLodBias = -0.5f;
+
+[[nodiscard]] constexpr float MipLodBias(bool hdTextures)
+{
+    return hdTextures ? HdMipLodBias : 0.0f;
+}
+
 } // namespace Render::Textures
