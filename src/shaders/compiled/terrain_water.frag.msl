@@ -126,51 +126,52 @@ float4 _main(thread const FSInput& _input, constant SceneLighting& _181, texture
     if (strength > 0.0)
     {
         float3 worldPosition = _input.worldPositionAndDynamicLights.xyz;
+        float2 flowUv = float2(_input.uv.x, worldPosition.y * _240.detailScale);
         float2 param = worldPosition.xy / float2(35.0);
         float param_1 = 0.0;
-        float2 param_2 = _input.uv * 6.0;
+        float2 param_2 = flowUv * 6.0;
         float param_3 = 6.0;
         float2 slope = ((WaterNoiseGradient(param, param_1) * 0.3499999940395355224609375) / float2(35.0)) + (((WaterNoiseGradient(param_2, param_3) * 0.64999997615814208984375) * 6.0) * _240.detailScale);
-        float3 param_4 = float3((-slope) * 30.0, 1.0);
+        float3 param_4 = float3((-slope) * 14.0, 1.0);
         float3 normal = SafeNormalize(param_4);
         float3 param_5 = _181.cameraPosition.xyz - worldPosition;
         float3 view = SafeNormalize(param_5);
         float facing = fast::clamp(dot(normal, view), 0.0, 1.0);
-        float light = fast::clamp(dot(_input.color.xyz, float3(0.2989999949932098388671875, 0.58700001239776611328125, 0.114000000059604644775390625)) * 1.5, 0.0, 1.0);
+        float light = fast::clamp(dot(_input.color.xyz, float3(0.2989999949932098388671875, 0.58700001239776611328125, 0.114000000059604644775390625)) * 1.2000000476837158203125, 0.0, 1.0);
         float3 sky = float3(0.62000000476837158203125, 0.7400000095367431640625, 0.89999997615814208984375);
         if (_181.sceneFogColor.w > 0.0)
         {
             sky = mix(sky, _181.sceneFogColor.xyz, float3(0.4000000059604644775390625));
         }
-        float skyShare = mix(0.100000001490116119384765625, 0.550000011920928955078125, powr(1.0 - facing, 1.60000002384185791015625));
-        float4 _357 = color;
-        float3 _366 = mix(_357.xyz, sky * light, float3(skyShare * strength));
-        color.x = _366.x;
-        color.y = _366.y;
-        color.z = _366.z;
+        float skyShare = mix(0.0599999986588954925537109375, 0.319999992847442626953125, powr(1.0 - facing, 1.60000002384185791015625));
+        float4 _365 = color;
+        float3 _374 = mix(_365.xyz, sky * light, float3(skyShare * strength));
+        color.x = _374.x;
+        color.y = _374.y;
+        color.z = _374.z;
         float3 param_6 = _181.sceneLightDirection.xyz;
         float sunAbove = fast::clamp(SafeNormalize(param_6).z * 4.0, 0.0, 1.0);
         float2 away = select(float2(1.0, 0.0), -fast::normalize(view.xy), bool2(length(view.xy) > 9.9999997473787516355514526367188e-05));
-        float glintElevation = fast::max(asin(fast::clamp(view.z, 0.0, 1.0)) - 0.300000011920928955078125, 0.100000001490116119384765625);
+        float glintElevation = fast::max(asin(fast::clamp(view.z, 0.0, 1.0)) - 0.449999988079071044921875, 0.100000001490116119384765625);
         float3 glintLight = float3(away * cos(glintElevation), sin(glintElevation));
         float3 param_7 = glintLight + view;
         float3 halfVector = SafeNormalize(param_7);
         float highlight = fast::clamp(dot(normal, halfVector), 0.0, 1.0);
-        float glint = (1.60000002384185791015625 * powr(highlight, 180.0)) + (0.180000007152557373046875 * powr(highlight, 24.0));
-        float4 _448 = color;
-        float3 _450 = _448.xyz + ((_181.sceneLightColor.xyz * ((glint * sunAbove) * light)) * strength);
-        color.x = _450.x;
-        color.y = _450.y;
-        color.z = _450.z;
+        float glint = (0.550000011920928955078125 * powr(highlight, 180.0)) + (0.039999999105930328369140625 * powr(highlight, 24.0));
+        float4 _458 = color;
+        float3 _460 = _458.xyz + ((_181.sceneLightColor.xyz * ((glint * sunAbove) * light)) * strength);
+        color.x = _460.x;
+        color.y = _460.y;
+        color.z = _460.z;
     }
     if ((_240.fogEnabled != 0u) && (_181.sceneFogColor.w > 0.0))
     {
-        float4 _466 = color;
+        float4 _476 = color;
         float param_8 = _input.eyeDepth;
-        float3 _477 = mix(_466.xyz, _181.sceneFogColor.xyz, float3(EnhancedFogAmount(param_8, _181)));
-        color.x = _477.x;
-        color.y = _477.y;
-        color.z = _477.z;
+        float3 _487 = mix(_476.xyz, _181.sceneFogColor.xyz, float3(EnhancedFogAmount(param_8, _181)));
+        color.x = _487.x;
+        color.y = _487.y;
+        color.z = _487.z;
     }
     return color;
 }
@@ -190,8 +191,8 @@ fragment main0_out main0(main0_in in [[stage_in]], constant SceneLighting& _181 
     _input.worldPositionAndDynamicLights = in.input_worldPositionAndDynamicLights;
     _input.worldNormal = in.input_worldNormal;
     FSInput param = _input;
-    float4 _528 = _main(param, _181, tex, s, _240);
-    out._entryPointOutput = _528;
+    float4 _538 = _main(param, _181, tex, s, _240);
+    out._entryPointOutput = _538;
     return out;
 }
 

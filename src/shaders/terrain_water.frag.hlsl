@@ -46,25 +46,27 @@ struct FSInput
 
 // Ripples: two octaves of gradient value noise. The first is fixed to the world, the second moves
 // with the water texture (its uv scrolls) and leads, so the pattern runs as the water flows. The
-// flow octave repeats with the texture, so it does not jump when the scroll wraps round.
+// flow octave repeats with the texture, so it does not jump when the scroll wraps round. It takes u
+// from the texture (the scroll runs along u) and v from the world: FaceTexture sways each tile's v
+// with the wind on its own, which would break the ripples at the tile edges.
 static const float kRippleWorldCell = 35.0;   // world units (a tile is 100)
 static const float kRippleFlowCells = 6.0;    // cells per texture repeat (whole)
 static const float kRippleWorldWeight = 0.35;
 static const float kRippleFlowWeight = 0.65;
-static const float kRippleHeight = 30.0;      // how far the ripples tilt the surface
+static const float kRippleHeight = 14.0;      // how far the ripples tilt the surface
 // Sun glints: the game camera looks down at about 45 degrees and rarely towards the sun, so the
 // glints come from a light opposite the camera, this far below the view's mirror direction: flat
 // water stays dark and only the ripples tilted towards the camera sparkle. The map's sun gives
 // whether it is day (its height).
-static const float kGlintDrop = 0.30;         // radians below the mirror direction
+static const float kGlintDrop = 0.45;         // radians below the mirror direction
 static const float kGlintMinElevation = 0.10; // radians
 static const float kGlintPower = 180.0;
-static const float kGlintScale = 1.6;
+static const float kGlintScale = 0.55;
 static const float kSheenPower = 24.0;
-static const float kSheenScale = 0.18;
+static const float kSheenScale = 0.04;
 // Sky reflection: this share at a straight-down view, rising towards kSkyMax at a grazing one.
-static const float kSkyMin = 0.10;
-static const float kSkyMax = 0.55;
+static const float kSkyMin = 0.06;
+static const float kSkyMax = 0.32;
 static const float kSkyCurve = 1.6;
 static const float3 kSkyTint = float3(0.62, 0.74, 0.90);
 // How much of the fog colour (the map's horizon) goes into the sky tint.
@@ -116,17 +118,18 @@ float4 main(FSInput input) : SV_Target
     if (strength > 0.0)
     {
         const float3 worldPosition = input.worldPositionAndDynamicLights.xyz;
+        const float2 flowUv = float2(input.uv.x, worldPosition.y * detailScale);
         // Slope of the ripples per world unit (MU is z up; the texture's u and v run along x and y).
         const float2 slope = kRippleWorldWeight * WaterNoiseGradient(worldPosition.xy / kRippleWorldCell, 0.0) /
                                  kRippleWorldCell +
-                             kRippleFlowWeight * WaterNoiseGradient(input.uv * kRippleFlowCells, kRippleFlowCells) * kRippleFlowCells *
+                             kRippleFlowWeight * WaterNoiseGradient(flowUv * kRippleFlowCells, kRippleFlowCells) * kRippleFlowCells *
                                  detailScale;
         const float3 normal = SafeNormalize(float3(-slope * kRippleHeight, 1.0));
         const float3 view = SafeNormalize(cameraPosition.xyz - worldPosition);
         const float facing = saturate(dot(normal, view));
 
         // The vertex light says how lit this water is (dark in shade and at night).
-        const float light = saturate(dot(input.color.rgb, kLuminanceWeights) * 1.5);
+        const float light = saturate(dot(input.color.rgb, kLuminanceWeights) * 1.2);
         float3 sky = kSkyTint;
         if (sceneFogColor.w > 0.0)
             sky = lerp(sky, sceneFogColor.rgb, kSkyFogShare);

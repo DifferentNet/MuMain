@@ -1593,15 +1593,15 @@ static float GroundWaterStrength()
 }
 
 // Whether the active map's TileWater01 (tile texture 5) is water: elsewhere it holds lava (Lost Tower,
-// Kalima, Balgass' camp), sand (Blood and Chaos Castle, Hellas), rock or moss. By the map's Data\WorldN
-// folder (WorldActive + 1), from the textures' colours; the event maps that load another map's folder
-// (Blood and Chaos Castle, Hellas, Illusion Temple) are left out either way.
+// Kalima, Balgass' camp), sand (Blood and Chaos Castle, Hellas), rock, moss or ice (Devias, Raklion,
+// Santa village). By the map's Data\WorldN folder (WorldActive + 1), from the textures' colours; the
+// event maps that load another map's folder (Blood and Chaos Castle, Hellas, Illusion Temple) are left
+// out either way.
 static bool IsWaterWorld()
 {
     switch (gMapManager.WorldActive + 1)
     {
     case 1:  // Lorencia
-    case 3:  // Devias
     case 4:  // Noria
     case 7:  // Arena
     case 31: // Valley of Loren (Battle Castle)
@@ -1611,9 +1611,6 @@ static bool IsWaterWorld()
     case 41: // GM area
     case 52: // Elbeland
     case 57: // Swamp of Calmness
-    case 58: // Raklion
-    case 59: // Raklion boss
-    case 63: // Santa village
     case 66: // Doppelganger 1
     case 69: // Doppelganger 4
     case 70: // Empire Guardian 1-4

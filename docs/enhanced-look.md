@@ -96,7 +96,7 @@ the row reads **Custom** (shown only, it cannot be picked).
 | `TerrainDetailStrength` | Strength of that grain in percent, `0` (off) to `100` | `60` |
 | `TerrainVariation` | With HD textures on (desktop only), breaks the visible repeat of the ground textures (after a restart): `0` off, `1` large soft patches of brighter/darker and warmer/cooler ground (grass follows them), `2` the same plus each texture repeat of the plain tiles (grass, ground, wood, rock) mirrored at random, which stays seamless | `2` |
 | `TerrainVariationStrength` | Strength of the patches in percent, `0` (off) to `100` | `100` |
-| `TerrainWater` | With HD textures and Enhanced lighting on (desktop only), the terrain's water tiles get small moving ripples that catch the sun as a highlight and reflect a sky tint, stronger at a grazing view (after a restart): `0` off, `1` on. Only on the maps whose water tile is water (not the lava, sand or rock that tile holds elsewhere), not on Atlans' sea; the water takes no sun shadow | `1` |
+| `TerrainWater` | With HD textures and Enhanced lighting on (desktop only), the terrain's water tiles get small moving ripples that catch the sun as a highlight and reflect a sky tint, stronger at a grazing view (after a restart): `0` off, `1` on. Only on the maps whose water tile is water (not the lava, sand, rock or ice that tile holds elsewhere), not on Atlans' sea; the water takes no sun shadow | `1` |
 | `TerrainWaterStrength` | Strength of the water look in percent, `0` (off) to `100` | `100` |
 
 Each map's light mood can also set the sun's direction and the shadows'
