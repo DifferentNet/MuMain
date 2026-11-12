@@ -91,7 +91,9 @@ void SubmitPostProcessingLook()
         look.gradingStrength = 0.0f; // filters only: the scene keeps its colours
     }
     const ScreenFilters filters = GetScreenFilters();
-    look.fxaa = filters.fxaa;
+    // FXAA only without multisampling: MSAA already smooths the edges, and FXAA on top only
+    // blurred texture detail (ghinzuro 2026-11-12: the Remaster looked soapy with both on).
+    look.fxaa = filters.fxaa && mu::GetRenderer().GetAntialiasingSamples() < 2;
     look.sharpen = filters.sharpen;
     mu::GetRenderer().SetPostProcessingLook(look);
 }

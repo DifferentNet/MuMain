@@ -55,9 +55,22 @@ them:
 | Preset | Look | Lighting | Dynamic lights | Light mood | Bloom/grading | Anti-aliasing | FXAA | Sharpening | Anisotropy | Sun shadows |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Low | Classic | off | off | off | off | off | off | 0 | 1 | off |
-| Medium | Enhanced | on | off | on | on | off | on | 30 | 4 | off |
-| High | Enhanced | on | on | on | on | 4x | off | 30 | 8 | Medium |
-| Ultra | Enhanced | on | on | on | on | 8x | off | 30 | 16 | High |
+| Medium | Enhanced | on | off | on | on | off | on | 40 | 4 | off |
+| High | Enhanced | on | on | on | on | 4x | off | 40 | 8 | Medium |
+| Ultra | Enhanced | on | on | on | on | 8x | off | 40 | 16 | High |
+
+Sharpening was 30 for Medium, High and Ultra until 2026-11-12. A player who
+kept one of them with 30 saved gets 40 at the next start; any other value is the
+player's own and stays.
+
+With the Remaster's HD textures on, the Enhanced sampler also biases the mip
+level half a level toward the sharper one (`HdMipLodBias`, -0.5), and opaque HD
+textures build their mip chain on the CPU with a 4-tap Catmull-Rom filter
+(-1, 9, 9, -1) / 16 instead of the box filter (`MipFilter::Sharp`). HD textures
+with alpha keep the box filter with alpha-coverage preservation. Without both,
+the ground seen at the camera's slant sampled a level softer than the original
+texture Classic draws, and the Remaster looked soft next to it. Classic and the
+browser have no HD textures and keep both as they were.
 
 In the browser the presets leave Sun shadows alone: the player turns them on in
 Options, and they stay off until then (a phone's GPU can't spare them). Cards

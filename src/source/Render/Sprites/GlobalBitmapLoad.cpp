@@ -292,9 +292,10 @@ constexpr float UnclampedMaxLod = 1000.0f;
 constexpr std::chrono::milliseconds MipChainBudgetPerFrame{4};
 
 // The mip chain of a bitmap's RGBA8 pixels. Textures with an alpha channel
-// keep their alpha-test coverage at every level; opaque ones are box filtered.
-std::vector<Render::Textures::MipLevel> BuildBitmapMipChain(const std::uint8_t* rgba, int width, int height,
-                                                            bool hasAlpha, double& seconds)
+// keep their alpha-test coverage at every level (box filtered); opaque ones use `opaqueFilter`.
+std::vector<Render::Textures::MipLevel> BuildBitmapMipChain(
+    const std::uint8_t* rgba, int width, int height, bool hasAlpha, double& seconds,
+    Render::Textures::MipFilter opaqueFilter = Render::Textures::MipFilter::Box)
 {
     const auto start = std::chrono::steady_clock::now();
     const std::span<const std::uint8_t> pixels(rgba, static_cast<std::size_t>(width) * height * 4u);
@@ -303,7 +304,7 @@ std::vector<Render::Textures::MipLevel> BuildBitmapMipChain(const std::uint8_t* 
                        pixels, static_cast<std::uint32_t>(width), static_cast<std::uint32_t>(height),
                        Render::Textures::AlphaTest::FromReference(Render::Textures::AlphaTestReference))
                  : Render::Textures::BuildMipChain(pixels, static_cast<std::uint32_t>(width),
-                                                   static_cast<std::uint32_t>(height));
+                                                   static_cast<std::uint32_t>(height), opaqueFilter);
     seconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
     return chain;
 }
@@ -311,9 +312,14 @@ std::vector<Render::Textures::MipLevel> BuildBitmapMipChain(const std::uint8_t* 
 // Upscaled art, and world textures while texture filtering is on, get every mip
 // level. The GPU builds them for an opaque image, box filtered as the CPU would;
 // an image with alpha keeps its alpha-test coverage at every level on the CPU.
+// `sharp` (opaque upscaled art) builds the opaque chain on the CPU with the sharper
+// filter instead: the box-filtered HD levels made the Remaster's ground look soft at a
+// distance next to Classic (ghinzuro 2026-11-12).
 MipLevels PlanMipLevels(bool mipmapped, const std::uint8_t* rgba, int width, int height, bool hasAlpha,
-                        double& seconds)
+                        double& seconds, bool sharp = false)
 {
+    const Render::Textures::MipFilter opaqueFilter =
+        sharp ? Render::Textures::MipFilter::Sharp : Render::Textures::MipFilter::Box;
     if (!mipmapped)
     {
         return {};
@@ -321,10 +327,14 @@ MipLevels PlanMipLevels(bool mipmapped, const std::uint8_t* rgba, int width, int
 #ifdef __EMSCRIPTEN__
     // Browser build: the CPU builds every chain. The WebGPU backend's GPU mipmap generation
     // corrupted memory when Enhanced graphics switched on (2026-10-22).
-    return {BuildBitmapMipChain(rgba, width, height, hasAlpha, seconds), false};
+    return {BuildBitmapMipChain(rgba, width, height, hasAlpha, seconds, opaqueFilter), false};
 #else
     if (!hasAlpha)
     {
+        if (sharp)
+        {
+            return {BuildBitmapMipChain(rgba, width, height, false, seconds, opaqueFilter), false};
+        }
         return {{}, true};
     }
     return {BuildBitmapMipChain(rgba, width, height, true, seconds), false};
@@ -894,7 +904,7 @@ bool CGlobalBitmap::OpenJpegTurbo(GLuint uiBitmapIndex, const std::wstring& file
         (*m_pixelChange)(rgbaData.data(), rgbaData.size() / 4u, 4);
     }
     const MipLevels mips = PlanMipLevels(upscaled || (worldTexture && m_textureFilteringEnabled), rgbaData.data(),
-                                         uploadWidth, uploadHeight, false, m_mipChainSeconds);
+                                         uploadWidth, uploadHeight, false, m_mipChainSeconds, upscaled);
     if (!UploadTextureSDLGpu(pNewBitmap.get(), rgbaData, uploadWidth, uploadHeight, MapGLFilterToSDL(uiFilter),
                              MapGLWrapToSDL(uiWrapMode), mips))
     {
@@ -1215,6 +1225,7 @@ SDL_GPUSampler* CGlobalBitmap::GetFilteredSampler(bool wrapRepeat)
     samplerInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
     samplerInfo.min_lod = 0.0f;
     samplerInfo.max_lod = UnclampedMaxLod;
+    samplerInfo.mip_lod_bias = Render::Textures::MipLodBias(Render::Textures::Hd::Enabled());
     samplerInfo.enable_anisotropy = anisotropy > 1u;
     samplerInfo.max_anisotropy = static_cast<float>(anisotropy);
 

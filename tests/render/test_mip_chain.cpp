@@ -268,3 +268,96 @@ TEST_CASE("tied alpha at the pass boundary is split to hit the coverage [render]
         CHECK((level.rgba[i] == minPassing || level.rgba[i] == minPassing - 1));
     }
 }
+
+namespace
+{
+// A width x height RGBA8 image whose red channel is `red(x, y)`, the rest opaque grey.
+template <typename Red>
+std::vector<std::uint8_t> MakeRedImage(std::uint32_t width, std::uint32_t height, Red red)
+{
+    std::vector<std::uint8_t> rgba(static_cast<std::size_t>(width) * height * 4u);
+    for (std::uint32_t y = 0; y < height; ++y)
+    {
+        for (std::uint32_t x = 0; x < width; ++x)
+        {
+            std::uint8_t* texel = rgba.data() + (static_cast<std::size_t>(y) * width + x) * 4u;
+            texel[0] = red(x, y);
+            texel[1] = 100;
+            texel[2] = 100;
+            texel[3] = 255;
+        }
+    }
+    return rgba;
+}
+} // namespace
+
+TEST_CASE("the sharp filter keeps a flat image flat and opaque [render][mipmap]")
+{
+    const auto image = MakeRedImage(8, 4, [](std::uint32_t, std::uint32_t) { return std::uint8_t{77}; });
+    const Render::Textures::MipLevel half = Render::Textures::DownsampleSharp(image, 8, 4);
+    REQUIRE(half.width == 4u);
+    REQUIRE(half.height == 2u);
+    for (std::size_t i = 0; i < half.rgba.size(); i += 4u)
+    {
+        CHECK(half.rgba[i] == 77);
+        CHECK(half.rgba[i + 1] == 100);
+        CHECK(half.rgba[i + 3] == 255);
+    }
+}
+
+TEST_CASE("the sharp filter keeps an edge harder than the box filter [render][mipmap]")
+{
+    // Columns 0-3 dark, 4-7 bright: the edge lies between target texels 1 and 2.
+    const auto image =
+        MakeRedImage(8, 2, [](std::uint32_t x, std::uint32_t) { return std::uint8_t(x < 4u ? 40 : 200); });
+    const Render::Textures::MipLevel box = Render::Textures::DownsampleBox(image, 8, 2);
+    const Render::Textures::MipLevel sharp = Render::Textures::DownsampleSharp(image, 8, 2);
+    REQUIRE(sharp.width == 4u);
+    REQUIRE(sharp.height == 1u);
+    // The box keeps both sides flat; the sharp filter darkens the dark side and brightens the
+    // bright side next to the edge, and leaves texels away from it alone.
+    CHECK(box.rgba[1 * 4] == 40);
+    CHECK(box.rgba[2 * 4] == 200);
+    CHECK(sharp.rgba[0 * 4] == 40);
+    CHECK(sharp.rgba[1 * 4] == 30);
+    CHECK(sharp.rgba[2 * 4] == 210);
+    CHECK(sharp.rgba[3 * 4] == 200);
+    // Opaque alpha never rings.
+    for (std::size_t i = 3; i < sharp.rgba.size(); i += 4u)
+    {
+        CHECK(sharp.rgba[i] == 255);
+    }
+}
+
+TEST_CASE("the sharp filter clamps to the byte range [render][mipmap]")
+{
+    // Alternating 0 / 255 pairs ring past both ends before the clamp.
+    const auto image =
+        MakeRedImage(8, 1, [](std::uint32_t x, std::uint32_t) { return std::uint8_t((x / 2u) % 2u ? 255 : 0); });
+    const Render::Textures::MipLevel sharp = Render::Textures::DownsampleSharp(image, 8, 1);
+    REQUIRE(sharp.width == 4u);
+    REQUIRE(sharp.height == 1u);
+    CHECK(sharp.rgba[0] == 0);
+    CHECK(sharp.rgba[4] == 255);
+}
+
+TEST_CASE("the sharp filter falls back to the box filter on odd sizes [render][mipmap]")
+{
+    const std::vector<std::uint8_t> image = MakeImage(5, 4);
+    CHECK(Render::Textures::DownsampleSharp(image, 5, 4).rgba == Render::Textures::DownsampleBox(image, 5, 4).rgba);
+    CHECK(Render::Textures::DownsampleSharp(image, 5, 4).width == 2u);
+}
+
+TEST_CASE("a sharp chain has the same levels as a box chain [render][mipmap]")
+{
+    const std::vector<std::uint8_t> image = MakeImage(16, 4);
+    const auto box = Render::Textures::BuildMipChain(image, 16, 4);
+    const auto sharp = Render::Textures::BuildMipChain(image, 16, 4, Render::Textures::MipFilter::Sharp);
+    REQUIRE(sharp.size() == box.size());
+    for (std::size_t i = 0; i < box.size(); ++i)
+    {
+        CHECK(sharp[i].width == box[i].width);
+        CHECK(sharp[i].height == box[i].height);
+        CHECK(sharp[i].rgba.size() == box[i].rgba.size());
+    }
+}

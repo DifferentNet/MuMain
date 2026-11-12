@@ -112,7 +112,126 @@ MipLevel DownsampleBox(std::span<const std::uint8_t> rgba, std::uint32_t width, 
     return level;
 }
 
-std::vector<MipLevel> BuildMipChain(std::span<const std::uint8_t> rgba, std::uint32_t width, std::uint32_t height)
+MipLevel DownsampleSharp(std::span<const std::uint8_t> rgba, std::uint32_t width, std::uint32_t height)
+{
+    if (width == 0u || height == 0u || rgba.size() < ByteCount(width, height))
+    {
+        return {};
+    }
+    if ((width > 1u && width % 2u != 0u) || (height > 1u && height % 2u != 0u))
+    {
+        return DownsampleBox(rgba, width, height);
+    }
+
+    // Integer weights (-1, 9, 9, -1) / 16 per axis. Target texel i covers source texels 2i and
+    // 2i + 1; the taps reach one further on each side, clamped at the edges. An axis of size 1
+    // weighs its only texel 16.
+    constexpr std::array<int, 4> Taps = {-1, 9, 9, -1};
+    constexpr int AxisScale = 16;
+    const std::uint32_t targetWidth = HalfSize(width);
+    const std::uint32_t targetHeight = HalfSize(height);
+
+    // The four source indices of every target index along one axis.
+    const auto tapIndices = [](std::uint32_t sourceSize, std::uint32_t targetSize)
+    {
+        std::vector<std::uint32_t> indices(static_cast<std::size_t>(targetSize) * Taps.size());
+        for (std::uint32_t i = 0; i < targetSize; ++i)
+        {
+            for (std::size_t tap = 0; tap < Taps.size(); ++tap)
+            {
+                const std::int64_t index = static_cast<std::int64_t>(i) * 2 - 1 + static_cast<std::int64_t>(tap);
+                indices[i * Taps.size() + tap] = static_cast<std::uint32_t>(
+                    std::clamp<std::int64_t>(index, 0, static_cast<std::int64_t>(sourceSize) - 1));
+            }
+        }
+        return indices;
+    };
+
+    // Horizontal pass: width -> targetWidth for every source row, kept at 16 times the value
+    // (-510 to 4590, fits int16).
+    const std::size_t rowValues = static_cast<std::size_t>(targetWidth) * BytesPerTexel;
+    std::vector<std::int16_t> rows(rowValues * height);
+    const std::vector<std::uint32_t> columns =
+        width > 1u ? tapIndices(width, targetWidth) : std::vector<std::uint32_t>{};
+    for (std::uint32_t y = 0; y < height; ++y)
+    {
+        const std::uint8_t* source = rgba.data() + ByteCount(width, y);
+        std::int16_t* target = rows.data() + rowValues * y;
+        if (width == 1u)
+        {
+            for (std::size_t channel = 0; channel < BytesPerTexel; ++channel)
+            {
+                target[channel] = static_cast<std::int16_t>(source[channel] * AxisScale);
+            }
+            continue;
+        }
+        // The first and last target texels clamp; those between read source texels 2x - 1 to 2x + 2.
+        const auto clamped = [&](std::uint32_t x)
+        {
+            const std::uint32_t* taps = columns.data() + x * Taps.size();
+            for (std::size_t channel = 0; channel < BytesPerTexel; ++channel)
+            {
+                int sum = 0;
+                for (std::size_t tap = 0; tap < Taps.size(); ++tap)
+                {
+                    sum += Taps[tap] * source[taps[tap] * BytesPerTexel + channel];
+                }
+                target[x * BytesPerTexel + channel] = static_cast<std::int16_t>(sum);
+            }
+        };
+        clamped(0u);
+        for (std::uint32_t x = 1; x + 1u < targetWidth; ++x)
+        {
+            const std::uint8_t* p = source + (static_cast<std::size_t>(x) * 2u - 1u) * BytesPerTexel;
+            std::int16_t* out = target + static_cast<std::size_t>(x) * BytesPerTexel;
+            for (std::size_t channel = 0; channel < BytesPerTexel; ++channel)
+            {
+                out[channel] = static_cast<std::int16_t>(9 * (p[channel + 4] + p[channel + 8]) - p[channel] -
+                                                         p[channel + 12]);
+            }
+        }
+        if (targetWidth > 1u)
+        {
+            clamped(targetWidth - 1u);
+        }
+    }
+
+    // Vertical pass: height -> targetHeight, then back to bytes (divide by 16 * 16, rounded, clamped).
+    MipLevel level;
+    level.width = targetWidth;
+    level.height = targetHeight;
+    level.rgba.resize(ByteCount(targetWidth, targetHeight));
+    const std::vector<std::uint32_t> lines =
+        height > 1u ? tapIndices(height, targetHeight) : std::vector<std::uint32_t>{};
+    constexpr int Scale = AxisScale * AxisScale;
+    for (std::uint32_t y = 0; y < targetHeight; ++y)
+    {
+        std::uint8_t* target = level.rgba.data() + ByteCount(targetWidth, y);
+        if (height == 1u)
+        {
+            for (std::size_t i = 0; i < rowValues; ++i)
+            {
+                const int sum = rows[i] * AxisScale;
+                target[i] = static_cast<std::uint8_t>(std::clamp((sum + Scale / 2) / Scale, 0, 255));
+            }
+            continue;
+        }
+        const std::uint32_t* taps = lines.data() + y * Taps.size();
+        const std::int16_t* row0 = rows.data() + rowValues * taps[0];
+        const std::int16_t* row1 = rows.data() + rowValues * taps[1];
+        const std::int16_t* row2 = rows.data() + rowValues * taps[2];
+        const std::int16_t* row3 = rows.data() + rowValues * taps[3];
+        for (std::size_t i = 0; i < rowValues; ++i)
+        {
+            const int sum = Taps[0] * row0[i] + Taps[1] * row1[i] + Taps[2] * row2[i] + Taps[3] * row3[i];
+            target[i] = static_cast<std::uint8_t>(sum <= 0 ? 0 : std::min((sum + Scale / 2) / Scale, 255));
+        }
+    }
+    return level;
+}
+
+std::vector<MipLevel> BuildMipChain(std::span<const std::uint8_t> rgba, std::uint32_t width, std::uint32_t height,
+                                    MipFilter filter)
 {
     std::vector<MipLevel> chain;
     const std::uint32_t levels = CountMipLevels(width, height);
@@ -127,7 +246,8 @@ std::vector<MipLevel> BuildMipChain(std::span<const std::uint8_t> rgba, std::uin
     std::uint32_t sourceHeight = height;
     for (std::uint32_t level = 1; level < levels; ++level)
     {
-        chain.push_back(DownsampleBox(source, sourceWidth, sourceHeight));
+        chain.push_back(filter == MipFilter::Sharp ? DownsampleSharp(source, sourceWidth, sourceHeight)
+                                                   : DownsampleBox(source, sourceWidth, sourceHeight));
         const MipLevel& built = chain.back();
         source = built.rgba;
         sourceWidth = built.width;

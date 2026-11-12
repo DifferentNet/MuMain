@@ -19,11 +19,11 @@ TEST_CASE("the preset table has the agreed rows [render][graphics-preset]")
     const GraphicsSettings low = GraphicsPresetSettings(GraphicsPreset::Low);
     CHECK(low == GraphicsSettings{LookPreset::Classic, false, false, false, false, 0, false, 0, 1, 0});
     const GraphicsSettings medium = GraphicsPresetSettings(GraphicsPreset::Medium);
-    CHECK(medium == GraphicsSettings{LookPreset::Enhanced, true, false, true, true, 0, true, 30, 4, 0});
+    CHECK(medium == GraphicsSettings{LookPreset::Enhanced, true, false, true, true, 0, true, 40, 4, 0});
     const GraphicsSettings high = GraphicsPresetSettings(GraphicsPreset::High);
-    CHECK(high == GraphicsSettings{LookPreset::Enhanced, true, true, true, true, 4, false, 30, 8, 1});
+    CHECK(high == GraphicsSettings{LookPreset::Enhanced, true, true, true, true, 4, false, 40, 8, 1});
     const GraphicsSettings ultra = GraphicsPresetSettings(GraphicsPreset::Ultra);
-    CHECK(ultra == GraphicsSettings{LookPreset::Enhanced, true, true, true, true, 8, false, 30, 16, 2});
+    CHECK(ultra == GraphicsSettings{LookPreset::Enhanced, true, true, true, true, 8, false, 40, 16, 2});
     CHECK(low.sunShadows == 0);
     CHECK(medium.sunShadows == 0);
     CHECK(high.sunShadows == 1);
@@ -162,4 +162,17 @@ TEST_CASE("without a fitting display mode the window takes 90 percent of the usa
     using GameConfigValidation::ChooseWindowSize;
     CHECK(ChooseWindowSize({}, 1000, 700) == std::pair<int, int>{900, 630});
     CHECK(ChooseWindowSize({{1920, 1080}}, 1000, 700) == std::pair<int, int>{900, 630});
+}
+
+TEST_CASE("a kept preset's old sharpening moves to the new value [render][look]")
+{
+    using Render::Look::UpdatedPresetSharpen;
+
+    CHECK(UpdatedPresetSharpen(GraphicsPreset::High, 30) == 40);
+    CHECK(UpdatedPresetSharpen(GraphicsPreset::Medium, 30) == 40);
+    CHECK(UpdatedPresetSharpen(GraphicsPreset::Ultra, 30) == 40);
+    CHECK(UpdatedPresetSharpen(GraphicsPreset::High, 70) == 70);
+    CHECK(UpdatedPresetSharpen(GraphicsPreset::Custom, 30) == 30);
+    CHECK(UpdatedPresetSharpen(GraphicsPreset::Auto, 30) == 30);
+    CHECK(UpdatedPresetSharpen(GraphicsPreset::Low, 30) == 30);
 }
