@@ -438,11 +438,8 @@ bool CLuckyItemWnd::Process_BTN_Action(void)
         g_pChatListBox->AddText(L"", I18N::Game::CorrespondingItemIsInappropriate, mu::ui::window::TYPE_ERROR_MESSAGE);
         return false;
     }
-#ifdef LEM_FIX_LUCKYITEM_SLOTCHECK
-    if (g_pMyInventory->FindEmptySlot(4, 4) == -1)
-#else // LEM_FIX_LUCKYITEM_SLOTCHECK
-    if (g_pMyInventory->GetInventoryCtrl()->FindEmptySlot(4, 4) == -1)
-#endif // LEM_FIX_LUCKYITEM_SLOTCHECK
+    // MU Moldova: room on bag page 2 counts too (BagPages.h, ghinzuro 2026-11-12).
+    if (g_pMyInventory->FindEmptySlotIncludingExtensions(4, 4) == -1)
     {
         g_pChatListBox->AddText(L"", I18N::Game::InventorySpaceIsInsufficient, mu::ui::window::TYPE_ERROR_MESSAGE);
         return false;
