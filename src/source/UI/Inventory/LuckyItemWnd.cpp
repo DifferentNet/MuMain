@@ -439,7 +439,7 @@ bool CLuckyItemWnd::Process_BTN_Action(void)
         return false;
     }
 #ifdef LEM_FIX_LUCKYITEM_SLOTCHECK
-    if (g_pMyInventory->FindEmptySlot(4, 4) == -1)
+    if (g_pMyInventory->FindEmptySlotIncludingExtensions(4, 4) == -1)
 #else // LEM_FIX_LUCKYITEM_SLOTCHECK
     if (g_pMyInventory->GetInventoryCtrl()->FindEmptySlot(4, 4) == -1)
 #endif // LEM_FIX_LUCKYITEM_SLOTCHECK

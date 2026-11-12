@@ -1001,8 +1001,9 @@ bool CMixInventory::Mix()
         return false;
     }
 
+    // MU Moldova: room for the result on bag page 2 counts too (BagPages.h, ghinzuro 2026-11-12).
     if (g_MixRecipeMgr.GetCurRecipe()->m_iWidth != -1 &&
-        g_pMyInventory->FindEmptySlot(g_MixRecipeMgr.GetCurRecipe()->m_iWidth, g_MixRecipeMgr.GetCurRecipe()->m_iHeight) == -1)
+        g_pMyInventory->FindEmptySlotIncludingExtensions(g_MixRecipeMgr.GetCurRecipe()->m_iWidth, g_MixRecipeMgr.GetCurRecipe()->m_iHeight) == -1)
     {
         g_pSystemLogBox->AddText(I18N::Game::CombineItemsAfterOrganizingYourInventory, mu::ui::window::TYPE_ERROR_MESSAGE);
         return false;
