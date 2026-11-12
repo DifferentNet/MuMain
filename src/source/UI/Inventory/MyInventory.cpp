@@ -209,8 +209,8 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
     UI::Items::RegisterItemGridCells(c);
     c.Bind("grid_cells", &model.gridCells);
     c.Bind("pages_visible", &model.pagesVisible);
-    c.Bind("page_prev_enabled", &model.pagePrevEnabled);
-    c.Bind("page_next_enabled", &model.pageNextEnabled);
+    c.Bind("bag_page", &model.bagPage);
+    c.Bind("bag_page2_locked", &model.bagPage2Locked);
     c.Bind("bag_locked", &model.bagLocked);
     c.Bind("bag_buying", &model.bagBuying);
     c.Bind("bag_locked_text", &model.bagLockedText);
@@ -218,11 +218,11 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
     c.Bind("bag_price_text", &model.bagPriceText);
     c.Bind("bag_buy_label", &model.bagBuyLabel);
 
-    c.BindEventCallback("my_inventory_page",
+    c.BindEventCallback("my_inventory_bag_page",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& args)
         {
-            const int step = args.empty() ? 1 : args[0].Get<int>();
-            SetBagPage(m_BagPage + step);
+            if (!args.empty())
+                SetBagPage(args[0].Get<int>());
         });
     c.BindEventCallback("my_inventory_bag_buy",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { AskBagPageBuy(); });
@@ -1138,6 +1138,10 @@ void CMyInventory::SyncRmlModel()
     {
         if (m_RmlView.GetModel().*field != value) { m_RmlView.GetModel().*field = value; m_RmlView.MarkDirty(boundName); }
     };
+    auto syncInt = [this](int MyInventoryRmlModel::* field, const char* boundName, int value)
+    {
+        if (m_RmlView.GetModel().*field != value) { m_RmlView.GetModel().*field = value; m_RmlView.MarkDirty(boundName); }
+    };
     auto syncText = [this](Rml::String MyInventoryRmlModel::* field, const char* boundName, const Rml::String& value)
     {
         if (m_RmlView.GetModel().*field != value) { m_RmlView.GetModel().*field = value; m_RmlView.MarkDirty(boundName); }
@@ -1154,20 +1158,11 @@ void CMyInventory::SyncRmlModel()
         m_BagPage = 1;
         SyncBagPageGrids();
     }
-    if (pages)
-    {
-        wchar_t titleBuf[128] = {};
-        mu_swprintf(titleBuf, L"%ls %d/%d", I18N::Game::Inventory, m_BagPage, bag.MaxPages());
-        syncWide(&MyInventoryRmlModel::title, "title", titleBuf);
-    }
-    else
-    {
-        syncWide(&MyInventoryRmlModel::title, "title", I18N::Game::Inventory);
-    }
+    syncWide(&MyInventoryRmlModel::title, "title", I18N::Game::Inventory);
     const bool holding = CInventoryCtrl::GetPickedItem() != nullptr;
     syncBool(&MyInventoryRmlModel::pagesVisible, "pages_visible", pages);
-    syncBool(&MyInventoryRmlModel::pagePrevEnabled, "page_prev_enabled", m_BagPage > 1);
-    syncBool(&MyInventoryRmlModel::pageNextEnabled, "page_next_enabled", m_BagPage < bag.MaxPages());
+    syncInt(&MyInventoryRmlModel::bagPage, "bag_page", m_BagPage);
+    syncBool(&MyInventoryRmlModel::bagPage2Locked, "bag_page2_locked", bag.OwnedPages() < 2);
     const bool locked = pages && IsBagPageLocked();
     syncBool(&MyInventoryRmlModel::bagLocked, "bag_locked", locked);
     syncBool(&MyInventoryRmlModel::bagBuying, "bag_buying", bag.IsBuying() || holding);
