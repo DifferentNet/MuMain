@@ -116,9 +116,11 @@ def _blur(array, radius: float):
 
 
 # Finish strengths, picked by eye at the size the interface is drawn (about 2.7x at 1296 px high).
-FIDELITY = 0.5  # how far the colours and texture go back toward the original
-GRAIN = 0.5  # fine grain where the upscaler smoothed the original's texture away
-CLARITY = 0.35  # wide local contrast: depth for engraved metal and stone
+# ghinzuro 2026-11-12 picked the soft variant B: the first values (0.5 / 0.5 / 0.35) gave white
+# outlines with a black halo and noise in the empty slots.
+FIDELITY = 0.75  # how far the colours and texture go back toward the original
+GRAIN = 0.3  # fine grain where the upscaler smoothed the original's texture away
+CLARITY = 0.1  # wide local contrast: depth for engraved metal and stone
 
 
 def finish(original: Image.Image, rgb: Image.Image, alpha: Image.Image | None, seed: int) -> Image.Image:
