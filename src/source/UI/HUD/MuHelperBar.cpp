@@ -183,15 +183,15 @@ void CMuHelperBar::SyncRmlModel()
     {
         const auto& reading = ping.Current();
         wchar_t label[64] = {};
-        mu_swprintf(label, I18N::Game::PingHudLabel, reading.lastMs);
+        mu_swprintf_s(label, I18N::Game::PingHudLabel, reading.lastMs);
         pingText = StringUtils::WideToNarrow(label);
         pingLevel = ping.IsStale() ? "stale" : reading.lastMs < 100 ? "good" : reading.lastMs < 200 ? "fair" : "bad";
 
         wchar_t hint[256] = {};
         if (reading.networkMs >= 0)
-            mu_swprintf(hint, I18N::Game::PingHudHintNetwork, reading.lastMs, reading.medianMs, reading.networkMs);
+            mu_swprintf_s(hint, I18N::Game::PingHudHintNetwork, reading.lastMs, reading.medianMs, reading.networkMs);
         else
-            mu_swprintf(hint, I18N::Game::PingHudHint, reading.lastMs, reading.medianMs);
+            mu_swprintf_s(hint, I18N::Game::PingHudHint, reading.lastMs, reading.medianMs);
         pingHint = StringUtils::WideToNarrow(hint);
     }
     SyncField(m_RmlView.Binder(), &MuHelperBarRmlModel::pingText, "ping_text", pingText);
