@@ -41,6 +41,7 @@
 #include "SdlGpuPostProcessing.h"
 #include "SdlGpuReplayState.h"
 #include "SdlGpuSoftShadow.h"
+#include "SdlGpuSsao.h"
 #include "SdlGpuValidation.h"
 #include "SingleSampleTwins.h"
 #include "SoftClipShaders.h"
@@ -49,6 +50,7 @@
 #include "Core/Utilities/Log/MuLogger.h"
 #include "Render/PostProcessing/BloomSource.h"
 #include "Render/PostProcessing/SceneBoundary.h"
+#include "Render/PostProcessing/SsaoSetting.h"
 #include "Render/Terrain/TerrainHeightGrid.h"
 #include "Render/Text/SdlTtfFontSet.h"
 #ifdef _EDITOR
@@ -679,6 +681,27 @@ void SetSoftShadowSettings(float strength, int levels)
 {
     s_softShadowStrength = std::clamp(strength, 0.0f, 1.0f);
     s_softShadowLevels = std::clamp(levels, 1, 2);
+}
+// Screen-space ambient occlusion of the Remaster (SdlGpuSsao.h, desktop). Its shaders and pipelines
+// exist only when it was on at start-up (s_ssaoStrength > 0 before Init).
+static mu::SdlGpuSsao s_ssao;
+static float s_ssaoStrength = 0.0f; // 0: off
+// The depth-only pipeline (shadow_caster.frag, no colour, one sample, no depth bias) each
+// depth-writing pipeline that blends Alpha or not at all draws the opaque world's depth with.
+static std::unordered_map<SDL_GPUGraphicsPipeline*, SDL_GPUGraphicsPipeline*> s_ssaoDepthPipelines;
+// 3D culled, 3D no cull, skinned culled, skinned no cull.
+static SDL_GPUGraphicsPipeline* s_ssaoDepthOnlyPipelines[4] = {};
+// The end of the frame's opaque world (EndOpaqueWorld), its projection and fade range.
+static std::size_t s_opaqueWorldEnd = std::numeric_limits<std::size_t>::max();
+static glm::mat4 s_ssaoProjection{1.0f};
+static Render::PostProcessing::Ssao::FadeRange s_ssaoFade{};
+// The frame's linear fog as SetFog set it (the fog toggle goes off for blended draws), for the fade.
+static bool s_ssaoLinearFog = false;
+static float s_ssaoFogStart = 0.0f;
+static float s_ssaoFogEnd = 0.0f;
+void SetSsaoSettings(float strength)
+{
+    s_ssaoStrength = std::clamp(strength, 0.0f, 1.0f);
 }
 static bool s_postProcessingEnabled = false;
 static mu::PostProcessingLook s_postProcessingLook{};
@@ -1350,6 +1373,9 @@ static SDL_GPUShader* s_fragShaderShadowCaster = nullptr; // shadow_caster.frag
 static SDL_GPUShader* s_fragShaderTerrainWater = nullptr; // terrain_water.frag (desktop, optional)
 // Post-processing (optional): without them post-processing is unavailable.
 static SDL_GPUShader* s_vertShaderPostFullscreen = nullptr; // post_fullscreen.vert
+static SDL_GPUShader* s_fragShaderSsao = nullptr;           // post_ssao.frag (only with SSAO on)
+static SDL_GPUShader* s_fragShaderSsaoBlur = nullptr;       // post_ssao_blur.frag
+static SDL_GPUShader* s_fragShaderSsaoApply = nullptr;      // post_ssao_apply.frag
 static SDL_GPUShader* s_fragShaderBloomDown = nullptr;      // post_bloom_down.frag
 static SDL_GPUShader* s_fragShaderBloomUp = nullptr;        // post_bloom_up.frag
 static SDL_GPUShader* s_fragShaderComposite = nullptr;      // post_composite.frag
@@ -2476,6 +2502,7 @@ public:
         ReleaseSunShadowMap();
         s_postProcessing.Release();
         s_softShadow.Release();
+        s_ssao.Release();
 
         SDL_ReleaseWindowFromGPUDevice(s_device, s_window);
         SDL_DestroyGPUDevice(s_device);
@@ -2547,6 +2574,8 @@ public:
         }
         s_previousDrawCommands.fill(kNoDrawCommand);
         s_sceneBoundary.Reset();
+        s_opaqueWorldEnd = kNoDrawCommand;
+        s_ssaoLinearFog = false;
         if (s_bloomExclusionDepth != 0)
         {
             mu::log::Get("render")->warn("SDL_gpu -- {} bloom exclusion scope(s) left open; reset",
@@ -2663,6 +2692,7 @@ public:
         BloomSources,
         SkipBodyShadows, // everything but the body shadows
         BodyShadowMask,  // only the body shadows, into the soft shadow mask
+        OpaqueDepth,     // the depth-writing world draws, depth only, into the SSAO depth
     };
 
     [[nodiscard]] static ReplayView FullFrameView()
@@ -2723,6 +2753,37 @@ public:
         return nullptr;
     }
 
+    // One world draw into the SSAO depth: only the depth-writing draws with a depth-only twin
+    // (s_ssaoDepthPipelines), without the normal map; an alpha-blended one drops its clear texels
+    // as the sun's casters do (RecordSunShadow).
+    static void ReplayOpaqueDepthCommand(const RenderCmd& cmd, bool boneDataReady, const SDL_Rect& scissor,
+                                         Render::SdlGpuReplayState& replayState)
+    {
+        const bool bodyShadow = cmd.type == RenderCmdType::DrawSkinnedTriangles && cmd.shadowIndex != ~0u;
+        if (bodyShadow || cmd.type == RenderCmdType::DrawTriangles2D || !cmd.depthTestEnabled ||
+            !cmd.depthMaskEnabled)
+        {
+            return;
+        }
+        const auto depth = s_ssaoDepthPipelines.find(cmd.pipeline);
+        if (depth == s_ssaoDepthPipelines.end())
+        {
+            return;
+        }
+        if (!cmd.normalMap && !cmd.blendEnabled)
+        {
+            ReplayDrawCommand(cmd, depth->second, boneDataReady, scissor, replayState);
+            return;
+        }
+        RenderCmd depthOnly = cmd;
+        depthOnly.normalMap = nullptr;
+        if (cmd.blendEnabled)
+        {
+            depthOnly.fogUniform.alphaDiscardEnabled = 1u;
+        }
+        ReplayDrawCommand(depthOnly, depth->second, boneDataReady, scissor, replayState);
+    }
+
     // Replays commands [begin, end) into s_renderPass, starting from `view`;
     // `view` ends as the last replayed command left it.
     static void ReplayCommands(std::size_t begin, std::size_t end, bool boneDataReady, ReplaySelection selection,
@@ -2750,7 +2811,7 @@ public:
             {
                 continue; // already drawn into its own offscreen texture above
             }
-            if (!bloomSourcesOnly)
+            if (!bloomSourcesOnly && selection != ReplaySelection::OpaqueDepth)
             {
                 ++s_dbgRenderCmdsReplayedThisFrame;
             }
@@ -2794,6 +2855,11 @@ public:
                         break;
                     }
                     pipeline = s_softShadowMaskPipelines[cmd.depthTestEnabled ? 0 : 1];
+                }
+                if (selection == ReplaySelection::OpaqueDepth)
+                {
+                    ReplayOpaqueDepthCommand(cmd, boneDataReady, view.scissor, replayState);
+                    break;
                 }
                 if (pipeline)
                 {
@@ -3061,6 +3127,58 @@ public:
         s_postProcessing.RenderBloom(s_cmdBuf, s_postProcessingLook.bloomLevelFalloff);
     }
 
+    // The end of the opaque world when this frame draws SSAO (EndOpaqueWorld marked it inside the
+    // scene, Enhanced lighting is on), else kNoDrawCommand.
+    [[nodiscard]] static std::size_t GetSsaoWorldEnd(std::size_t sceneEnd, bool boneDataReady)
+    {
+        if (s_ssaoStrength <= 0.0f || s_opaqueWorldEnd == kNoDrawCommand || s_opaqueWorldEnd == 0u ||
+            s_opaqueWorldEnd > sceneEnd || !s_depthTexture || !UsesEnhancedLighting() ||
+            s_ssaoDepthPipelines.empty() || s_texturesInvalidated || !boneDataReady ||
+            !s_ssao.EnsureTargets({s_swapW, s_swapH}))
+        {
+            return kNoDrawCommand;
+        }
+        return s_opaqueWorldEnd;
+    }
+
+    // The opaque world's depth into the SSAO depth, then its occlusion. False when it did not run.
+    [[nodiscard]] static bool RenderSsao(std::size_t worldEnd, bool boneDataReady)
+    {
+        FRAME_PROFILE(RendererSsao);
+        SDL_GPUDepthStencilTargetInfo depthTarget{};
+        depthTarget.texture = s_ssao.GetDepth();
+        depthTarget.clear_depth = 1.0f;
+        depthTarget.load_op = SDL_GPU_LOADOP_CLEAR;
+        depthTarget.store_op = SDL_GPU_STOREOP_STORE;
+        depthTarget.stencil_load_op = SDL_GPU_LOADOP_DONT_CARE;
+        depthTarget.stencil_store_op = SDL_GPU_STOREOP_DONT_CARE;
+        depthTarget.cycle = true;
+        s_renderPass = SDL_BeginGPURenderPass(s_cmdBuf, nullptr, 0, &depthTarget);
+        if (!s_renderPass)
+        {
+            s_ssao.DropResult();
+            return false;
+        }
+        // The world's viewport is the one its last draws used.
+        ReplayView view = FullFrameView();
+        const Uint32 drawCalls = s_dbgGpuDrawCallsThisFrame;
+        const Uint32 pipelineBinds = s_dbgPipelineBindsThisFrame;
+        const Uint32 samplerBinds = s_dbgSamplerBindsThisFrame;
+        ReplayCommands(0u, worldEnd, boneDataReady, ReplaySelection::OpaqueDepth, view);
+        s_dbgGpuDrawCallsThisFrame = drawCalls;
+        s_dbgPipelineBindsThisFrame = pipelineBinds;
+        s_dbgSamplerBindsThisFrame = samplerBinds;
+        EndReplayPass();
+
+        mu::SdlGpuSsaoFrame frame{};
+        std::memcpy(frame.projection, glm::value_ptr(s_ssaoProjection), sizeof(frame.projection));
+        frame.viewport = view.viewport;
+        frame.strength = s_ssaoStrength;
+        frame.fadeStart = s_ssaoFade.start;
+        frame.fadeEnd = s_ssaoFade.end;
+        return s_ssao.Render(s_cmdBuf, frame);
+    }
+
     // The scene into the scene texture, its bloom, then the processed scene and
     // the UI on top of it into `destination`.
     [[nodiscard]] static bool ReplayPostProcessedFrame(SDL_GPUTexture* destination, std::size_t sceneEnd,
@@ -3075,11 +3193,25 @@ public:
             mu::GetSdlGpuFrameColorTarget({s_postProcessing.GetSceneTexture(), multisampled}, s_clearColor));
         if (!ReplaySoftShadowScene(sceneTarget, sceneEnd, SDL_GPU_STOREOP_STORE, boneDataReady, view))
         {
+            // With SSAO the opaque world is drawn, darkened by its occlusion, and the rest of the
+            // scene (effects, particles) drawn on top. Soft body shadows go without it.
+            const std::size_t worldEnd = GetSsaoWorldEnd(sceneEnd, boneDataReady);
+            const bool ssao = worldEnd != kNoDrawCommand && RenderSsao(worldEnd, boneDataReady);
             if (!BeginReplayPass(sceneTarget, MakeDepthTarget(SDL_GPU_LOADOP_CLEAR, SDL_GPU_STOREOP_STORE)))
             {
                 return false;
             }
-            ReplayCommands(0u, sceneEnd, boneDataReady, ReplaySelection::AllCommands, view);
+            if (ssao)
+            {
+                ReplayCommands(0u, worldEnd, boneDataReady, ReplaySelection::AllCommands, view);
+                s_ssao.DrawApply(s_cmdBuf, s_renderPass);
+                PushSceneLightingUniforms();
+                ReplayCommands(worldEnd, sceneEnd, boneDataReady, ReplaySelection::AllCommands, view);
+            }
+            else
+            {
+                ReplayCommands(0u, sceneEnd, boneDataReady, ReplaySelection::AllCommands, view);
+            }
             EndReplayPass();
         }
 
@@ -3500,6 +3632,12 @@ public:
         else
         {
             renderPassCompleted = ReplayFrame(frameColorTexture, boneDataReady);
+        }
+
+        // Classic lighting or no post-processing: no SSAO until they come back, so neither its targets.
+        if (s_ssaoStrength > 0.0f && (!IsPostProcessingActive() || !UsesEnhancedLighting()))
+        {
+            s_ssao.ReleaseTargets();
         }
 
         s_mainColorPassOpenedThisFrame = true;
@@ -4126,6 +4264,29 @@ public:
             return;
         }
         s_sceneBoundary.Mark(s_renderCmds.size());
+    }
+
+    void EndOpaqueWorld() override
+    {
+        if (!s_frameActive || s_ssaoStrength <= 0.0f || s_opaqueWorldEnd != kNoDrawCommand)
+        {
+            return;
+        }
+        // Only under the world's perspective projection (w = -z): its depth turns into distances.
+        const glm::mat4& projection = m_projMatrix;
+        if (projection[2][3] != -1.0f || projection[3][3] != 0.0f)
+        {
+            return;
+        }
+        namespace Ssao = Render::PostProcessing::Ssao;
+        const float farDistance = Ssao::LinearDepth(1.0f, projection[2][2], projection[3][2]);
+        if (!(farDistance > 0.0f))
+        {
+            return;
+        }
+        s_opaqueWorldEnd = s_renderCmds.size();
+        s_ssaoProjection = projection;
+        s_ssaoFade = Ssao::ResolveFade(s_ssaoLinearFog, s_ssaoFogStart, s_ssaoFogEnd, farDistance);
     }
 
     [[nodiscard]] bool SetPostProcessing(bool enabled) override
@@ -5396,6 +5557,10 @@ public:
     {
         m_fogParams = params;
         m_fogEnabled = params.mode != 0;
+        constexpr int kLinearFog = 0x2601; // GL_LINEAR
+        s_ssaoLinearFog = params.mode == kLinearFog;
+        s_ssaoFogStart = params.start;
+        s_ssaoFogEnd = params.end;
 
         // Map GL-style FogParams (mode/start/end/density/color) to the
         // HLSL FogUniforms cbuffer layout used by basic_textured.frag.hlsl.
@@ -6336,6 +6501,19 @@ private:
             createShader("post_bloom_up", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 1, /*fatal=*/false);
         s_fragShaderComposite =
             createShader("post_composite", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 3, 0, 1, /*fatal=*/false);
+#ifndef __EMSCRIPTEN__
+        // SSAO (desktop, only when on): the depth (t0) or the occlusion and depth (t0, t1), and
+        // SsaoUniforms (b0).
+        if (s_ssaoStrength > 0.0f)
+        {
+            s_fragShaderSsao =
+                createShader("post_ssao", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 1, /*fatal=*/false);
+            s_fragShaderSsaoBlur =
+                createShader("post_ssao_blur", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 1, /*fatal=*/false);
+            s_fragShaderSsaoApply =
+                createShader("post_ssao_apply", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 1, /*fatal=*/false);
+        }
+#endif
 
         mu::log::Get("render")->info("SDL_gpu -- shaders loaded for driver: {}", driverName ? driverName : "unknown");
         return true;
@@ -6403,7 +6581,8 @@ private:
             }
         }
         for (SDL_GPUShader** shader :
-             {&s_vertShaderPostFullscreen, &s_fragShaderBloomDown, &s_fragShaderBloomUp, &s_fragShaderComposite})
+             {&s_vertShaderPostFullscreen, &s_fragShaderBloomDown, &s_fragShaderBloomUp, &s_fragShaderComposite,
+              &s_fragShaderSsao, &s_fragShaderSsaoBlur, &s_fragShaderSsaoApply})
         {
             if (*shader)
             {
@@ -6448,8 +6627,10 @@ private:
         bool cullFaceEnabled;
         FragmentShader fragmentShader = FragmentShader::Textured;
         bool alphaToCoverage = false;
-        // The sun's shadow map pass: no colour target, one sample, slope-scaled depth bias.
+        // No colour target, one sample: the sun's shadow map and the SSAO depth.
         bool depthOnly = false;
+        // Slope-scaled depth bias (the sun's shadow map).
+        bool depthBias = false;
         SDL_GPUTextureFormat colorFormat = SDL_GPU_TEXTUREFORMAT_INVALID; // invalid: the frame's
     };
 
@@ -6663,7 +6844,7 @@ private:
         rasterState.fill_mode = SDL_GPU_FILLMODE_FILL;
         rasterState.cull_mode = description.cullFaceEnabled ? SDL_GPU_CULLMODE_BACK : SDL_GPU_CULLMODE_NONE;
         rasterState.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE;
-        if (description.depthOnly)
+        if (description.depthBias)
         {
             // Surfaces steep to the sun push their depth back the most: no acne on slopes.
             rasterState.enable_depth_bias = true;
@@ -6951,6 +7132,7 @@ private:
 
     static void DestroyPipelines()
     {
+        DestroySsaoPipelines();
         DestroyTerrainWaterPipelines();
         DestroySunShadowPipelines();
         DestroySingleSamplePipelines();
@@ -7168,6 +7350,7 @@ private:
         s_pipelinesMultisampled = s_sampleCount != Render::Antialiasing::OffSampleCount;
         CreateSunShadowPipelines();
         CreateTerrainWaterPipelines();
+        CreateSsaoPipelines();
         return true;
     }
 
@@ -7515,6 +7698,7 @@ private:
         PipelineBuildDescription casterDescription{"sun-shadow-caster", "disabled", k_PipelineDisabled, true, true,
                                                    VertexLayout::Skinned, false, FragmentShader::SunShadowCaster};
         casterDescription.depthOnly = true;
+        casterDescription.depthBias = true;
         const PipelineBuildResult caster = BuildBlendPipeline(opaque, casterDescription);
         s_sunShadowCasterPipeline = caster.pipeline;
         if (!caster.pipeline)
@@ -7592,6 +7776,109 @@ private:
                      FragmentShader::TerrainWater});
         }
         mu::log::Get("render")->info("SDL_gpu -- terrain water: {} of {} pipelines", built, wanted);
+    }
+
+    // SSAO's pipelines (desktop, only when on at start-up): the depth-only twins the opaque world's
+    // depth is drawn with, and SdlGpuSsao's occlusion, blur and apply passes.
+    static void CreateSsaoPipelines()
+    {
+        DestroySsaoPipelines();
+        if (s_ssaoStrength <= 0.0f || !s_fragShaderShadowCaster || !s_vertShaderPostFullscreen)
+        {
+            return;
+        }
+        const char* deviceDriver = SDL_GetGPUDeviceDriver(s_device);
+        const char* driverName = deviceDriver ? deviceDriver : "unknown";
+
+        SDL_GPUColorTargetBlendState opaque{};
+        opaque.src_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+        opaque.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ZERO;
+        opaque.color_blend_op = SDL_GPU_BLENDOP_ADD;
+        opaque.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+        opaque.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ZERO;
+        opaque.alpha_blend_op = SDL_GPU_BLENDOP_ADD;
+        opaque.enable_blend = false;
+
+        struct DepthOnly
+        {
+            VertexLayout layout;
+            bool cullFaceEnabled;
+        };
+        constexpr DepthOnly depthOnly[] = {{VertexLayout::ThreeDimensional, true},
+                                           {VertexLayout::ThreeDimensional, false},
+                                           {VertexLayout::Skinned, true},
+                                           {VertexLayout::Skinned, false}};
+        static_assert(std::size(depthOnly) == std::size(s_ssaoDepthOnlyPipelines));
+        for (std::size_t i = 0; i < std::size(depthOnly); ++i)
+        {
+            PipelineBuildDescription description{"ssao-depth", "disabled", k_PipelineDisabled, true, true,
+                                                 depthOnly[i].layout, depthOnly[i].cullFaceEnabled,
+                                                 FragmentShader::SunShadowCaster};
+            description.depthOnly = true;
+            const PipelineBuildResult result = BuildBlendPipeline(opaque, description);
+            if (!result.pipeline)
+            {
+                LogPipelineFailure(driverName, result, false);
+                DestroySsaoPipelines();
+                return;
+            }
+            s_ssaoDepthOnlyPipelines[i] = result.pipeline;
+        }
+
+        // Each depth-writing pipeline that blends Alpha or not at all, by its layout and culling.
+        const auto map = [](SDL_GPUGraphicsPipeline* source, bool skinned, bool culled)
+        {
+            if (source)
+            {
+                s_ssaoDepthPipelines[source] = s_ssaoDepthOnlyPipelines[(skinned ? 2u : 0u) + (culled ? 0u : 1u)];
+            }
+        };
+        for (const int index : {k_PipelineDisabled, k_PipelineAlpha})
+        {
+            map(s_pipelines3D[index], false, true);
+            map(s_pipelines3DNoCull[index], false, false);
+            map(s_pipelinesSkinned[index], true, true);
+            map(s_pipelinesSkinnedNoCull[index], true, false);
+            map(s_pipelines3DEnhancedFog.culled[index], false, true);
+            map(s_pipelines3DEnhancedFog.noCull[index], false, false);
+            map(s_pipelinesSkinnedEnhancedFog.culled[index], true, true);
+            map(s_pipelinesSkinnedEnhancedFog.noCull[index], true, false);
+            map(s_pipelinesSkinnedLit.culled[index], true, true);
+            map(s_pipelinesSkinnedLit.noCull[index], true, false);
+        }
+        // The alpha-to-coverage variants: 3D (0, 1, 4, 5) or skinned, culled at even entries.
+        static_assert(std::size(s_alphaCoveragePipelines) == 10);
+        for (std::size_t entry = 0; entry < std::size(s_alphaCoveragePipelines); ++entry)
+        {
+            const bool skinned = !(entry == 0u || entry == 1u || entry == 4u || entry == 5u);
+            map(s_alphaCoveragePipelines[entry].variant, skinned, entry % 2u == 0u);
+        }
+
+        const mu::SdlGpuSsaoShaders shaders{s_vertShaderPostFullscreen, s_fragShaderSsao, s_fragShaderSsaoBlur,
+                                            s_fragShaderSsaoApply};
+        const bool created =
+            s_ssao.CreatePipelines(s_device, shaders, SDL_GetGPUSwapchainTextureFormat(s_device, s_window),
+                                   mu::GetSdlGpuSampleCount(s_sampleCount).value_or(SDL_GPU_SAMPLECOUNT_1));
+        if (!created)
+        {
+            DestroySsaoPipelines();
+        }
+        mu::log::Get("render")->info("SDL_gpu -- SSAO: {} ({} depth-only twins)", created ? "ready" : "missing",
+                                     s_ssaoDepthPipelines.size());
+    }
+
+    static void DestroySsaoPipelines()
+    {
+        s_ssaoDepthPipelines.clear();
+        for (SDL_GPUGraphicsPipeline*& pipeline : s_ssaoDepthOnlyPipelines)
+        {
+            if (pipeline)
+            {
+                SDL_ReleaseGPUGraphicsPipeline(s_device, pipeline);
+                pipeline = nullptr;
+            }
+        }
+        s_ssao.DestroyPipelines();
     }
 
     static void DestroyTerrainWaterPipelines()

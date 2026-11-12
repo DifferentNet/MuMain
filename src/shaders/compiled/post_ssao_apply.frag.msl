@@ -1,0 +1,93 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct FSInput
+{
+    float4 pos;
+    float2 uv;
+};
+
+struct SsaoUniforms
+{
+    float4 projectionInfo;
+    float4 worldViewport;
+    float4 fullSize;
+    float4 sampling;
+    float4 applyParams;
+    float4 blurParams;
+};
+
+struct main0_out
+{
+    float4 _entryPointOutput [[color(0)]];
+};
+
+struct main0_in
+{
+    float2 input_uv [[user(locn0)]];
+};
+
+static inline __attribute__((always_inline))
+float SsaoLinearDepth(thread const float& depth, constant SsaoUniforms& _27)
+{
+    return _27.projectionInfo.w / (depth + _27.projectionInfo.z);
+}
+
+static inline __attribute__((always_inline))
+float SsaoUnpackDepth(thread const float2& packedDepth)
+{
+    return ((packedDepth.x * 255.0) + packedDepth.y) / 255.0;
+}
+
+static inline __attribute__((always_inline))
+float4 _main(thread const FSInput& _input, constant SsaoUniforms& _27, texture2d<float> occlusionTexture, sampler occlusionSampler, texture2d<float> depthTexture, sampler depthSampler)
+{
+    float2 uv = _input.pos.xy * _27.fullSize.xy;
+    float2 halfSize = fast::max(floor(_27.fullSize.zw * 0.5), float2(1.0));
+    float2 halfPosition = (uv * halfSize) - float2(0.5);
+    float2 base = floor(halfPosition);
+    float2 blend = halfPosition - base;
+    float4 tap00 = occlusionTexture.sample(occlusionSampler, ((base + float2(0.5)) / halfSize), level(0.0));
+    float4 tap10 = occlusionTexture.sample(occlusionSampler, ((base + float2(1.5, 0.5)) / halfSize), level(0.0));
+    float4 tap01 = occlusionTexture.sample(occlusionSampler, ((base + float2(0.5, 1.5)) / halfSize), level(0.0));
+    float4 tap11 = occlusionTexture.sample(occlusionSampler, ((base + float2(1.5)) / halfSize), level(0.0));
+    float depth = depthTexture.sample(depthSampler, uv, level(0.0)).x;
+    if (depth >= 1.0)
+    {
+        return float4(1.0);
+    }
+    float param = depth;
+    float viewDistance = SsaoLinearDepth(param, _27);
+    float packedDistance = fast::max(fast::clamp(viewDistance / _27.blurParams.z, 0.0, 1.0), 9.9999997473787516355514526367188e-05);
+    float4 bilinear = float4((1.0 - blend.x) * (1.0 - blend.y), blend.x * (1.0 - blend.y), (1.0 - blend.x) * blend.y, blend.x * blend.y);
+    float2 param_1 = tap00.yz;
+    float2 param_2 = tap10.yz;
+    float2 param_3 = tap01.yz;
+    float2 param_4 = tap11.yz;
+    float4 tapDepths = float4(SsaoUnpackDepth(param_1), SsaoUnpackDepth(param_2), SsaoUnpackDepth(param_3), SsaoUnpackDepth(param_4));
+    float4 closeness = fast::clamp(float4(1.0) - (abs(tapDepths - float4(packedDistance)) / float4(packedDistance * 0.100000001490116119384765625)), float4(0.0), float4(1.0));
+    float4 weights = bilinear * fast::max(closeness, float4(0.001000000047497451305389404296875));
+    float4 occlusions = float4(tap00.x, tap10.x, tap01.x, tap11.x);
+    float open = dot(occlusions, weights) / fast::max(dot(weights, float4(1.0)), 0.001000000047497451305389404296875);
+    float fadeLength = fast::max(_27.applyParams.y - _27.applyParams.x, 9.9999997473787516355514526367188e-05);
+    float fade = 1.0 - fast::clamp((viewDistance - _27.applyParams.x) / fadeLength, 0.0, 1.0);
+    float darkened = fast::max(open, _27.applyParams.w);
+    float result = mix(1.0, darkened, _27.applyParams.z * fade);
+    return float4(result, result, result, 1.0);
+}
+
+fragment main0_out main0(main0_in in [[stage_in]], constant SsaoUniforms& _27 [[buffer(0)]], texture2d<float> occlusionTexture [[texture(0)]], texture2d<float> depthTexture [[texture(1)]], sampler occlusionSampler [[sampler(0)]], sampler depthSampler [[sampler(1)]], float4 gl_FragCoord [[position]])
+{
+    main0_out out = {};
+    FSInput _input;
+    _input.pos = gl_FragCoord;
+    _input.uv = in.input_uv;
+    FSInput param = _input;
+    out._entryPointOutput = _main(param, _27, occlusionTexture, occlusionSampler, depthTexture, depthSampler);
+    return out;
+}
+

@@ -143,6 +143,9 @@ void GameConfig::Load()
     m_terrainWaterStrength =
         std::clamp(ReadInt(CfgSectionRender, CfgKeyTerrainWaterStrength, CfgDefaultTerrainWaterStrength),
                    CfgMinTerrainWaterStrength, CfgMaxTerrainWaterStrength);
+    m_ssao = std::clamp(ReadInt(CfgSectionRender, CfgKeySsao, CfgDefaultSsao), CfgMinSsao, CfgMaxSsao);
+    m_ssaoStrength = std::clamp(ReadInt(CfgSectionRender, CfgKeySsaoStrength, CfgDefaultSsaoStrength),
+                                CfgMinSsaoStrength, CfgMaxSsaoStrength);
     m_sunShadows = GameConfigValidation::ValidateSunShadows(
         ReadInt(CfgSectionRender, CfgKeySunShadows, CfgDefaultSunShadows));
     m_sharpen = GameConfigValidation::ValidateSharpen(ReadInt(CfgSectionRender, CfgKeySharpen, CfgDefaultSharpen));
@@ -241,6 +244,8 @@ void GameConfig::Save()
     WriteInt(CfgSectionRender, CfgKeyTerrainVariationStrength, m_terrainVariationStrength);
     WriteInt(CfgSectionRender, CfgKeyTerrainWater, m_terrainWater);
     WriteInt(CfgSectionRender, CfgKeyTerrainWaterStrength, m_terrainWaterStrength);
+    WriteInt(CfgSectionRender, CfgKeySsao, m_ssao);
+    WriteInt(CfgSectionRender, CfgKeySsaoStrength, m_ssaoStrength);
     WriteInt(CfgSectionRender, CfgKeySunShadows, m_sunShadows);
     WriteInt(CfgSectionRender, CfgKeySharpen, m_sharpen);
     WriteBool(CfgSectionRender, CfgKeyDisableEffects, m_disableEffects);

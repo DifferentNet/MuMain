@@ -1,0 +1,143 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct FSInput
+{
+    float4 pos;
+    float2 uv;
+};
+
+struct SsaoUniforms
+{
+    float4 projectionInfo;
+    float4 worldViewport;
+    float4 fullSize;
+    float4 sampling;
+    float4 applyParams;
+    float4 blurParams;
+};
+
+struct main0_out
+{
+    float4 _entryPointOutput [[color(0)]];
+};
+
+struct main0_in
+{
+    float2 input_uv [[user(locn0)]];
+};
+
+static inline __attribute__((always_inline))
+float2 SsaoPackDepth(thread const float& viewDistance, constant SsaoUniforms& _43)
+{
+    float scaled = fast::clamp(viewDistance / _43.blurParams.z, 0.0, 1.0) * 255.0;
+    float high = floor(scaled);
+    return float2(high / 255.0, scaled - high);
+}
+
+static inline __attribute__((always_inline))
+float SsaoLinearDepth(thread const float& depth, constant SsaoUniforms& _43)
+{
+    return _43.projectionInfo.w / (depth + _43.projectionInfo.z);
+}
+
+static inline __attribute__((always_inline))
+float3 ViewPosition(thread const float2& pixel, thread const float& depth, constant SsaoUniforms& _43)
+{
+    float param = depth;
+    float viewDistance = SsaoLinearDepth(param, _43);
+    float2 ndc = float2((((pixel.x - _43.worldViewport.x) / _43.worldViewport.z) * 2.0) - 1.0, 1.0 - (((pixel.y - _43.worldViewport.y) / _43.worldViewport.w) * 2.0));
+    return float3((ndc * viewDistance) * _43.projectionInfo.xy, viewDistance);
+}
+
+static inline __attribute__((always_inline))
+float3 ViewPositionAt(thread const float2& pixel, constant SsaoUniforms& _43, texture2d<float> depthTexture, sampler pointSampler)
+{
+    float depth = depthTexture.sample(pointSampler, (pixel * _43.fullSize.xy), level(0.0)).x;
+    float2 param = pixel;
+    float param_1 = depth;
+    return ViewPosition(param, param_1, _43);
+}
+
+static inline __attribute__((always_inline))
+float3 ViewNormal(thread const float2& pixel, thread const float3& position, constant SsaoUniforms& _43, texture2d<float> depthTexture, sampler pointSampler)
+{
+    float2 param = pixel - float2(1.0, 0.0);
+    float3 left = ViewPositionAt(param, _43, depthTexture, pointSampler);
+    float2 param_1 = pixel + float2(1.0, 0.0);
+    float3 right = ViewPositionAt(param_1, _43, depthTexture, pointSampler);
+    float2 param_2 = pixel - float2(0.0, 1.0);
+    float3 up = ViewPositionAt(param_2, _43, depthTexture, pointSampler);
+    float2 param_3 = pixel + float2(0.0, 1.0);
+    float3 down = ViewPositionAt(param_3, _43, depthTexture, pointSampler);
+    float3 alongX = select(position - left, right - position, bool3(abs(right.z - position.z) < abs(position.z - left.z)));
+    float3 alongY = select(position - up, down - position, bool3(abs(down.z - position.z) < abs(position.z - up.z)));
+    float3 normal = fast::normalize(cross(alongX, alongY));
+    if (dot(normal, position) > 0.0)
+    {
+        normal = -normal;
+    }
+    return normal;
+}
+
+static inline __attribute__((always_inline))
+float4 _main(thread const FSInput& _input, constant SsaoUniforms& _43, texture2d<float> depthTexture, sampler pointSampler)
+{
+    float2 pixel = floor((_input.uv * _43.fullSize.zw) - float2(0.5)) + float2(0.5);
+    float depth = depthTexture.sample(pointSampler, (pixel * _43.fullSize.xy), level(0.0)).x;
+    bool outside = (((pixel.x < _43.worldViewport.x) || (pixel.y < _43.worldViewport.y)) || (pixel.x > (_43.worldViewport.x + _43.worldViewport.z))) || (pixel.y > (_43.worldViewport.y + _43.worldViewport.w));
+    if ((depth >= 1.0) || outside)
+    {
+        float param = _43.blurParams.z;
+        return float4(1.0, SsaoPackDepth(param, _43), 1.0);
+    }
+    float2 param_1 = pixel;
+    float param_2 = depth;
+    float3 position = ViewPosition(param_1, param_2, _43);
+    float2 param_3 = pixel;
+    float3 param_4 = position;
+    float3 normal = ViewNormal(param_3, param_4, _43, depthTexture, pointSampler);
+    float radius = _43.sampling.x;
+    float radiusPixels = fast::min(((radius * _43.worldViewport.w) * 0.5) / (position.z * _43.projectionInfo.y), _43.sampling.y);
+    float param_5 = position.z;
+    float2 packedDepth = SsaoPackDepth(param_5, _43);
+    if (radiusPixels < 1.0)
+    {
+        return float4(1.0, packedDepth, 1.0);
+    }
+    float _noise = fract(52.98291778564453125 * fract(dot(_input.pos.xy, float2(0.067110560834407806396484375, 0.005837149918079376220703125))));
+    float turn = _noise * 6.283185482025146484375;
+    float radiusSquared = radius * radius;
+    float occlusion = 0.0;
+    for (int i = 0; i < 8; i++)
+    {
+        float along = (float(i) + 0.5) / 8.0;
+        float sine = sin((float(i) * 2.3999631404876708984375) + turn);
+        float cosine = cos((float(i) * 2.3999631404876708984375) + turn);
+        float2 tapPixel = floor(pixel + (float2(cosine, sine) * (along * radiusPixels))) + float2(0.5);
+        float2 param_6 = tapPixel;
+        float3 toTap = ViewPositionAt(param_6, _43, depthTexture, pointSampler) - position;
+        float distanceSquared = dot(toTap, toTap);
+        float rise = fast::max(dot(toTap, normal) - _43.sampling.z, 0.0);
+        float falloff = fast::clamp(1.0 - (distanceSquared / radiusSquared), 0.0, 1.0);
+        occlusion += ((rise / (sqrt(distanceSquared) + 9.9999997473787516355514526367188e-05)) * falloff);
+    }
+    float open = fast::clamp(1.0 - (((2.0 * _43.sampling.w) * occlusion) / 8.0), 0.0, 1.0);
+    return float4(open, packedDepth, 1.0);
+}
+
+fragment main0_out main0(main0_in in [[stage_in]], constant SsaoUniforms& _43 [[buffer(0)]], texture2d<float> depthTexture [[texture(0)]], sampler pointSampler [[sampler(0)]], float4 gl_FragCoord [[position]])
+{
+    main0_out out = {};
+    FSInput _input;
+    _input.pos = gl_FragCoord;
+    _input.uv = in.input_uv;
+    FSInput param = _input;
+    out._entryPointOutput = _main(param, _43, depthTexture, pointSampler);
+    return out;
+}
+

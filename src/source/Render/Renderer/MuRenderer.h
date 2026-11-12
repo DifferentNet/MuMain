@@ -467,6 +467,11 @@ public:
     // image. The first call of a frame counts; a frame without one is not
     // processed.
     virtual void EndSceneGeometry() {}
+    // The scene's opaque world (terrain, objects, characters, items) ends here; joints, effects,
+    // sprites and particles follow. The Remaster's ambient occlusion (SdlGpuSsao) is worked out from
+    // the depth of what came before and darkens the frame here, so what follows never gets it. The
+    // first call of a frame counts; a frame without one gets none.
+    virtual void EndOpaqueWorld() {}
 
     // Opaque, depth-writing draws recorded between these two move ahead of the others and are
     // grouped by state, to cut state changes; depth decides what shows, and the others keep

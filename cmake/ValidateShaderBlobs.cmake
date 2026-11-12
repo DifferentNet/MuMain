@@ -27,6 +27,9 @@ set(MU_SHADER_STAGE_NAMES
     skinned_lit_shadow.frag
     shadow_caster.frag
     terrain_water.frag
+    post_ssao.frag
+    post_ssao_blur.frag
+    post_ssao_apply.frag
 )
 set(MU_SHADER_BLOB_FORMATS spv msl dxil)
 set(MU_SHADER_BLOB_NAMES)

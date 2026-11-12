@@ -45,6 +45,8 @@ enum class Pass : int
     // The two halves of a map object inside Objects: its animation and bones, and its draws.
     ObjectsAnimate,
     ObjectsDraw,
+    // Inside RendererReplay: the SSAO depth prepass and occlusion passes (CPU time).
+    RendererSsao,
     Count_
 };
 
@@ -53,6 +55,7 @@ inline constexpr const char* kPassNames[static_cast<int>(Pass::Count_)] = {
     "MovePart",  "Skinning", "UI",        "RenderBegin", "RenderEnd", "Submit",  "UIUpdate", "RmlInput",
     "UILayout",  "Flush",    "Sprites",   "Particles",   "Joints",    "Overlay", "RmlUpd",   "RmlRend",
     "EndOffscr", "EndStage", "EndReplay", "EndPostUI",   "ObjAnim",   "ObjDraw",
+    "EndSsao",
 };
 
 enum class Counter : int
