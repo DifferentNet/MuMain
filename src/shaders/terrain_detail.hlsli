@@ -1,7 +1,8 @@
 // terrain_detail.hlsli — fine grain over the ground tiles near the camera (Remaster, desktop only).
 // Included by basic_textured_fog.frag and basic_textured_fog_shadow.frag after their tex, s and
 // FogUniforms cbuffer, whose detailStrength and detailScale the renderer sets for the terrain's ground draws
-// only (IMuRenderer::SetTerrainDetail); every other draw has detailStrength 0 and keeps its colour.
+// only (IMuRenderer::SetTerrainDetail); every other draw has detailStrength 0 and keeps its colour. The
+// terrain water draws (SetTerrainWater, terrain_water.frag) carry a negative detailStrength: no grain.
 //   detailScale > 0: variant A, the tile texture itself sampled detailScale times denser, as a ratio
 //                    to the texture's mean brightness.
 //   detailScale < 0: variant B, hash value noise on uv * |detailScale|.

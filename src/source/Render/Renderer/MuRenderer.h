@@ -345,6 +345,11 @@ public:
     // variant (noise cells over uv * -scale). The terrain sets it around its ground draws and back
     // to 0 after them.
     virtual void SetTerrainDetail(float /*strength*/, float /*scale*/) {}
+    // Ripples, a sun highlight and a sky tint on the terrain's water tiles (terrain_water.frag;
+    // Enhanced lighting, desktop only). Draws recorded while strength is above 0 get it: strength
+    // 0..1, repeatsPerUnit the water texture's repeats per world unit (the flowing ripples' scale).
+    // The terrain sets it around its water runs and back to 0 after them.
+    virtual void SetTerrainWater(float /*strength*/, float /*repeatsPerUnit*/) {}
     // True when this frame's sun shadow is drawn: the scene then leaves out the Classic flat
     // shadows it would draw instead.
     [[nodiscard]] virtual bool IsSunShadowActive() const

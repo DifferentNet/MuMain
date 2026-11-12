@@ -1578,6 +1578,73 @@ static bool IsFlippableTileTexture(int texture, float repeatPerTile)
     return std::fabs(tilesPerRepeat - std::round(tilesPerRepeat)) < 1.0e-3f;
 }
 
+// The water look's strength (terrain_water.frag), 0 when off: read from config.ini once like the
+// grain. Desktop with HD textures only.
+static float GroundWaterStrength()
+{
+#ifdef __EMSCRIPTEN__
+    return 0.f;
+#else
+    static const float strength = GameConfig::GetInstance().GetTerrainWater() != 0 && Render::Textures::Hd::Enabled()
+                                      ? static_cast<float>(GameConfig::GetInstance().GetTerrainWaterStrength()) / 100.f
+                                      : 0.f;
+    return strength;
+#endif
+}
+
+// Whether the active map's TileWater01 (tile texture 5) is water: elsewhere it holds lava (Lost Tower,
+// Kalima, Balgass' camp), sand (Blood and Chaos Castle, Hellas), rock or moss. By the map's Data\WorldN
+// folder (WorldActive + 1), from the textures' colours; the event maps that load another map's folder
+// (Blood and Chaos Castle, Hellas, Illusion Temple) are left out either way.
+static bool IsWaterWorld()
+{
+    switch (gMapManager.WorldActive + 1)
+    {
+    case 1:  // Lorencia
+    case 3:  // Devias
+    case 4:  // Noria
+    case 7:  // Arena
+    case 31: // Valley of Loren (Battle Castle)
+    case 32: // Land of Trials
+    case 35: // Crywolf
+    case 38: // Kanturu
+    case 41: // GM area
+    case 52: // Elbeland
+    case 57: // Swamp of Calmness
+    case 58: // Raklion
+    case 59: // Raklion boss
+    case 63: // Santa village
+    case 66: // Doppelganger 1
+    case 69: // Doppelganger 4
+    case 70: // Empire Guardian 1-4
+    case 71:
+    case 72:
+    case 73:
+    case 74: // the new login and character scenes
+    case 75:
+    case 78:
+    case 79:
+    case 80: // Loren Market
+        return true;
+    default:
+        return false;
+    }
+}
+
+// Turns the water look on for the water tile's ground draws recorded next (lava keeps its own), or off.
+static void SetGroundWater(int tileTexture)
+{
+    const float strength = tileTexture == kWaterTileTexture && IsWaterWorld() ? GroundWaterStrength() : 0.f;
+    if (strength <= 0.f)
+    {
+        mu::GetRenderer().SetTerrainWater(0.f, 0.f);
+        return;
+    }
+    // FaceTexture's uv: 64 / width repeats per tile of TERRAIN_SCALE world units.
+    const float width = static_cast<float>(Bitmaps[BITMAP_MAPTILE + tileTexture].Width);
+    mu::GetRenderer().SetTerrainWater(strength, width > 0.f ? 64.f / width / TERRAIN_SCALE : 0.f);
+}
+
 // Turns the grain on (enabled true) or off for the ground draws recorded next. Only a mipmapped
 // tile texture gets it: the self-detail variant reads the texture's smallest mip as its mean.
 static void SetGroundDetail(bool enabled, int tileTexture = 0)
@@ -1635,6 +1702,8 @@ static void RenderGroundFaces(bool grass)
             if (drawn)
                 BindTexture(grass ? face.texture : BITMAP_MAPTILE + face.texture);
             SetGroundDetail(!grass && !IsWaterTileTexture(face.texture), face.texture);
+            if (!grass && IsWaterTileTexture(face.texture))
+                SetGroundWater(face.texture);
         }
         if (drawn)
             mu::GetRenderer().RenderQuad3D(face.vertices, 0u);
@@ -1707,6 +1776,9 @@ static void RenderLayerFaces()
         BindTexture(BITMAP_MAPTILE + face.texture);
         // A blend face is Atlans' water over the ground (RenderFaceBlend): no grain.
         SetGroundDetail(!face.blend && !IsWaterTileTexture(face.texture), face.texture);
+        // A shore layer of the water tile gets the water look like the water under it.
+        if (!face.blend && IsWaterTileTexture(face.texture))
+            SetGroundWater(face.texture);
         mu::GetRenderer().RenderQuad3D(face.vertices, 0u);
     }
     SetGroundDetail(false);
