@@ -94,8 +94,9 @@ With HD textures on (the Remaster client) the client first looks in
 `Data/Grading/Remaster`: the map's `World<N>.png`, else `Default.png`; only
 when neither loads does it use the Classic table above. These tables are the
 map's Classic mood followed by the Remaster tone (lighter mid-tones, an S
-curve, 30 % more colour, warm light and cool shadows: variant "3 rich" picked
-by ghinzuro on 2026-11-12), so unlike the Classic tables they may brighten and
+curve, 18 % more colour, warm light and cool shadows: variant "3 rich" picked
+by ghinzuro on 2026-11-12, then made weaker on every map; Devias lifts its
+mid-tones less), so unlike the Classic tables they may brighten and
 touch highlights. They come from
 `scripts/grading_table.py remaster src/bin/Data/Grading/Remaster`; per-map
 numbers go in `REMASTER_TONES`. The browser build never has HD textures and

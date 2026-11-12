@@ -18,7 +18,8 @@ darkness belongs to the map's light, not to its grading.
 
 The Remaster client (HD textures on) reads its own tables from Data/Grading/Remaster: the
 map's Classic mood followed by the Remaster tone (lighter mid-tones, an S curve, richer colour,
-warm light and cool shadows; variant "3 rich" picked by ghinzuro 2026-11-12). Those tables may
+warm light and cool shadows; variant "3 rich" picked by ghinzuro 2026-11-12, then made
+weaker on every map after the in-game shots: «слабее на всех картах»). Those tables may
 brighten and do touch highlights, so the Classic rules above do not apply to them; Default.png
 there grades every map without its own Remaster table.
 
@@ -138,7 +139,7 @@ MAP_TABLES = {
 REMASTER_PIVOT = 0.45
 
 
-def remaster_tone(gamma=0.86, contrast=0.20, saturation=0.30, warmth=0.03):
+def remaster_tone(gamma=0.92, contrast=0.12, saturation=0.18, warmth=0.02):
     def s_curve(x):
         if x < REMASTER_PIVOT:
             return REMASTER_PIVOT * (x / REMASTER_PIVOT) ** (1.0 + contrast)
@@ -163,7 +164,10 @@ def then(first, second):
 # The Remaster tone per map: maps listed here use their own numbers, every other map the default
 # (on top of its Classic mood where it has one). Tuned from in-game shots.
 REMASTER_DEFAULT = remaster_tone()
-REMASTER_TONES = {}
+REMASTER_TONES = {
+    # Devias: the snow went near white; lift its mid-tones less.
+    "devias": remaster_tone(gamma=0.97),
+}
 
 
 def remaster_tables():
