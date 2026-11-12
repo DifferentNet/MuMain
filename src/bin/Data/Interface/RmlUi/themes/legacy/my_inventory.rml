@@ -8,7 +8,7 @@
 <body data-model="my_inventory">
 	<!-- CMyInventory (MyInventory.h): the frame, the equipment slots, the item grid, the items
 	     C++ draws live into #item_view, the stack counts, the title, gold and buttons. -->
-	<div id="panel" data-style---text-px="text_px + 'px'">
+	<div id="panel" data-style---text-px="text_px + 'px'" data-class-paged="pages_visible">
 		<div id="frame_corner_close" data-event-click="window_close"></div>
 		<!-- CMyInventory::RenderFrame()'s five pieces. -->
 		<div class="bg-fill"></div>
@@ -62,11 +62,17 @@
 		     physical size, and .counter-scaled cancels #panel's scale so glyphs rasterise at it. #title
 		     stays full size as the drag handle. -->
 		<div id="title"><span class="native-text title-text counter-scaled" data-style-font-size="text_px + 'px'">{{title}}</span></div>
-		<!-- The bag page arrows beside the title (BagPages.h), the vault's art; hidden on a server without pages. -->
-		<div id="btn_bag_prev" class="bag-page-btn bag-page-prev" data-class-hidden="!pages_visible" data-class-busy="!page_prev_enabled"
-		     data-event-click="my_inventory_page(-1)"></div>
-		<div id="btn_bag_next" class="bag-page-btn bag-page-next" data-class-hidden="!pages_visible" data-class-busy="!page_next_enabled"
-		     data-event-click="my_inventory_page(1)"></div>
+		<!-- The bag's page tabs on the grid's top edge (BagPages.h): the shown page lit, page 2 with a lock
+		     until it is bought; none on a server without pages. -->
+		<div id="btn_bag_tab1" class="bag-tab bag-tab-1" data-if="pages_visible" data-class-active="bag_page == 1"
+		     data-event-click="my_inventory_bag_page(1)">
+			<span class="native-text counter-scaled bag-tab-label" data-style-font-size="text_px + 'px'">1</span>
+		</div>
+		<div id="btn_bag_tab2" class="bag-tab bag-tab-2" data-if="pages_visible" data-class-active="bag_page == 2"
+		     data-class-locked="bag_page2_locked" data-event-click="my_inventory_bag_page(2)">
+			<span class="native-text counter-scaled bag-tab-label" data-style-font-size="text_px + 'px'">2</span>
+			<div class="bag-tab-lock" data-if="bag_page2_locked"></div>
+		</div>
 
 		<div id="gold_bg"></div>
 		<span id="gold_text" class="native-text gold-amount counter-scaled"
