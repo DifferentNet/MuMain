@@ -142,3 +142,47 @@ TEST_CASE("a dragged item goes to the cell its top-left square covers the most")
     CHECK(column == 2);
     CHECK(row == 1);
 }
+
+TEST_CASE("a held item that fits the grid but hangs off it drops at the nearest place inside")
+{
+    // The chaos machine: 8 x 4 cells of 20 from (100, 200); a 2 x 4 weapon.
+    const GridGeometry grid{100.f, 200.f, 20.f, 20.f, 8, 4};
+    int column = -1;
+    int row = -1;
+
+    // Pointer on row 2, target point on row 1: the weapon would cover rows 1-4, so it moves up to row 0.
+    REQUIRE(grid.DropCell(130.f, 230.f, 130.f, 250.f, 2, 4, column, row));
+    CHECK(column == 1);
+    CHECK(row == 0);
+
+    // Target point above the grid (pointer on row 0): the weapon moves down to row 0.
+    REQUIRE(grid.DropCell(130.f, 190.f, 130.f, 205.f, 2, 4, column, row));
+    CHECK(row == 0);
+
+    // Off the right edge: pulled left so both columns are inside.
+    REQUIRE(grid.DropCell(255.f, 205.f, 255.f, 205.f, 2, 1, column, row));
+    CHECK(column == 6);
+    CHECK(row == 0);
+
+    // An item that already fits stays where it was aimed.
+    REQUIRE(grid.DropCell(150.f, 220.f, 150.f, 220.f, 1, 1, column, row));
+    CHECK(column == 2);
+    CHECK(row == 1);
+}
+
+TEST_CASE("a held item keeps the old drop rule when the pointer is off the grid or the item is too big")
+{
+    const GridGeometry grid{100.f, 200.f, 20.f, 20.f, 8, 4};
+    int column = -1;
+    int row = -1;
+
+    // Pointer outside: only a target point inside the grid has a cell.
+    CHECK_FALSE(grid.DropCell(130.f, 190.f, 130.f, 150.f, 2, 4, column, row));
+    REQUIRE(grid.DropCell(130.f, 210.f, 130.f, 150.f, 2, 4, column, row));
+    CHECK(column == 1);
+    CHECK(row == 0);
+
+    // Taller than the grid: no place to move it to, the cell is the one under the target point.
+    REQUIRE(grid.DropCell(130.f, 230.f, 130.f, 250.f, 1, 5, column, row));
+    CHECK(row == 1);
+}

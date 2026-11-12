@@ -389,6 +389,9 @@ items and remaining effects draw into the window's item-camera target.
 `GridGeometry`. Rendering, hit tests, drop targets and tooltips use that geometry. RCSS owns
 `--item-cell` and grid dimensions. `PickupAnchor` stores a drag's hold point in cells so it works
 between grids with different pitches. `CMyInventory` is the reference, including equipment slots.
+`GridGeometry::DropCell()` picks the drop cell for both the preview and the drop: while the pointer
+is over a grid and the item fits it, an item that would hang off an edge goes to the nearest place
+inside (a 2 x 4 weapon in the 8 x 4 chaos machine).
 
 ## Native 3D viewer input
 

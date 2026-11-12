@@ -1,5 +1,6 @@
 #include "ItemGridGeometry.h"
 
+#include <algorithm>
 #include <cmath>
 
 namespace UI::Items
@@ -52,6 +53,22 @@ void GridGeometry::CellOf(float x, float y, int& column, int& row) const
     const float dy = y - m_Top;
     column = static_cast<int>(dx / m_PitchX) - (dx < 0.f ? 1 : 0);
     row = static_cast<int>(dy / m_PitchY) - (dy < 0.f ? 1 : 0);
+}
+
+bool GridGeometry::DropCell(float targetX, float targetY, float pointerX, float pointerY, int width, int height,
+                            int& column, int& row) const
+{
+    if (!Contains(pointerX, pointerY) || width < 1 || height < 1 || width > m_Columns || height > m_Rows)
+    {
+        if (CellAt(targetX, targetY, column, row))
+            return true;
+        CellOf(targetX, targetY, column, row);
+        return false;
+    }
+    CellOf(targetX, targetY, column, row);
+    column = std::clamp(column, 0, m_Columns - width);
+    row = std::clamp(row, 0, m_Rows - height);
+    return true;
 }
 
 GridRect GridGeometry::CellsRect(int column, int row, int width, int height) const
