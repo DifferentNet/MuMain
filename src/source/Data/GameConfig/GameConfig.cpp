@@ -127,6 +127,11 @@ void GameConfig::Load()
     SetHdTextureSize(ReadInt(CfgSectionRender, CfgKeyHdTextureSize, CfgDefaultHdTextureSize));
     m_smoothModels = std::clamp(ReadInt(CfgSectionRender, CfgKeySmoothModels, CfgDefaultSmoothModels), 0, 2);
     m_normalMaps = ReadBool(CfgSectionRender, CfgKeyNormalMaps, CfgDefaultNormalMaps);
+    m_terrainDetail = std::clamp(ReadInt(CfgSectionRender, CfgKeyTerrainDetail, CfgDefaultTerrainDetail),
+                                 CfgMinTerrainDetail, CfgMaxTerrainDetail);
+    m_terrainDetailStrength =
+        std::clamp(ReadInt(CfgSectionRender, CfgKeyTerrainDetailStrength, CfgDefaultTerrainDetailStrength),
+                   CfgMinTerrainDetailStrength, CfgMaxTerrainDetailStrength);
     m_sunShadows = GameConfigValidation::ValidateSunShadows(
         ReadInt(CfgSectionRender, CfgKeySunShadows, CfgDefaultSunShadows));
     m_sharpen = GameConfigValidation::ValidateSharpen(ReadInt(CfgSectionRender, CfgKeySharpen, CfgDefaultSharpen));
@@ -219,6 +224,8 @@ void GameConfig::Save()
     WriteInt(CfgSectionRender, CfgKeyHdTextureSize, m_hdTextureSize);
     WriteInt(CfgSectionRender, CfgKeySmoothModels, m_smoothModels);
     WriteBool(CfgSectionRender, CfgKeyNormalMaps, m_normalMaps);
+    WriteInt(CfgSectionRender, CfgKeyTerrainDetail, m_terrainDetail);
+    WriteInt(CfgSectionRender, CfgKeyTerrainDetailStrength, m_terrainDetailStrength);
     WriteInt(CfgSectionRender, CfgKeySunShadows, m_sunShadows);
     WriteInt(CfgSectionRender, CfgKeySharpen, m_sharpen);
     WriteBool(CfgSectionRender, CfgKeyDisableEffects, m_disableEffects);

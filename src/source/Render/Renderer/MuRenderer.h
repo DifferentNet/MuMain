@@ -339,6 +339,12 @@ public:
     // ScopedNoSunShadowCast.
     virtual void BeginNoSunShadowCast() {}
     virtual void EndNoSunShadowCast() {}
+    // Fine grain on the terrain's ground tiles near the camera (terrain_detail.hlsli; Enhanced
+    // lighting only). Draws recorded while strength is above 0 get it: strength 0..1, scale > 0 for
+    // the self-detail variant (the tile texture sampled scale times denser), < 0 for the noise
+    // variant (noise cells over uv * -scale). The terrain sets it around its ground draws and back
+    // to 0 after them.
+    virtual void SetTerrainDetail(float /*strength*/, float /*scale*/) {}
     // True when this frame's sun shadow is drawn: the scene then leaves out the Classic flat
     // shadows it would draw instead.
     [[nodiscard]] virtual bool IsSunShadowActive() const

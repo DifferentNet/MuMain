@@ -32,6 +32,9 @@
 #include "Render/Lighting/LightMoodSetting.h"
 #include "Render/Look/LookProfileSetting.h"
 #include "Render/Terrain/TerrainLightGrid.h"
+#include "Render/Terrain/TerrainDetail.h"
+#include "Render/Textures/HdTextures.h"
+#include "Data/GameConfig/GameConfig.h"
 #include "Scenes/SceneCore.h"
 #include "Core/Utilities/Log/MuLogger.h"
 #include "I18N/All.h"
@@ -1464,6 +1467,40 @@ static bool SetGroundFaceState(int Texture)
     return true;
 }
 
+// The ground grain's renderer params (Render/Terrain/TerrainDetail.h), read from config.ini once:
+// HD textures are chosen at start-up too. Desktop only.
+static const Render::Terrain::Detail::Params& GroundDetailParams()
+{
+#ifdef __EMSCRIPTEN__
+    static const Render::Terrain::Detail::Params params{};
+#else
+    static const Render::Terrain::Detail::Params params =
+        Render::Terrain::Detail::Resolve(GameConfig::GetInstance().GetTerrainDetail(),
+                                         GameConfig::GetInstance().GetTerrainDetailStrength(),
+                                         Render::Textures::Hd::Enabled());
+#endif
+    return params;
+}
+
+// The tile textures FaceTexture moves as water: they keep their own look, without the grain.
+constexpr int kWaterTileTexture = 5;
+constexpr int kPkFieldWaterTileTexture = 11;
+
+static bool IsWaterTileTexture(int texture)
+{
+    return texture == kWaterTileTexture ||
+           (texture == kPkFieldWaterTileTexture && (gMapManager.IsPKField() || IsDoppelGanger2()));
+}
+
+// Turns the grain on (enabled true) or off for the ground draws recorded next. Only a mipmapped
+// tile texture gets it: the self-detail variant reads the texture's smallest mip as its mean.
+static void SetGroundDetail(bool enabled, int tileTexture = 0)
+{
+    const bool mipmapped = enabled && Bitmaps[BITMAP_MAPTILE + tileTexture].mipLevels > 1u;
+    const Render::Terrain::Detail::Params& params = GroundDetailParams();
+    mu::GetRenderer().SetTerrainDetail(mipmapped ? params.strength : 0.f, params.scale);
+}
+
 // Draws the ground faces kept since the last call, a run per texture. Grass (grass true) keeps the
 // alpha test RenderTerrain set for it.
 static void RenderGroundFaces(bool grass)
@@ -1511,10 +1548,12 @@ static void RenderGroundFaces(bool grass)
             drawn = grass || SetGroundFaceState(face.texture);
             if (drawn)
                 BindTexture(grass ? face.texture : BITMAP_MAPTILE + face.texture);
+            SetGroundDetail(!grass && !IsWaterTileTexture(face.texture), face.texture);
         }
         if (drawn)
             mu::GetRenderer().RenderQuad3D(face.vertices, 0u);
     }
+    SetGroundDetail(false);
     s_groundFaces.clear();
 }
 
@@ -1581,8 +1620,11 @@ static void RenderLayerFaces()
         else
             EnableAlphaBlend3();
         BindTexture(BITMAP_MAPTILE + face.texture);
+        // A blend face is Atlans' water over the ground (RenderFaceBlend): no grain.
+        SetGroundDetail(!face.blend && !IsWaterTileTexture(face.texture), face.texture);
         mu::GetRenderer().RenderQuad3D(face.vertices, 0u);
     }
+    SetGroundDetail(false);
     s_layerFaces.clear();
 }
 

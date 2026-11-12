@@ -13,6 +13,8 @@ cbuffer FogUniforms : register(b0, space3)
     uint alphaToCoverage; // 1: the pipeline turns alpha into multisample coverage
     float fogStart;
     float fogEnd;
+    float detailStrength; // terrain_detail.hlsli: 0 off, else 0..1 (ground draws only)
+    float detailScale;    // terrain_detail.hlsli: > 0 variant A, < 0 variant B
     float4 fogColor;
 };
 cbuffer SceneLighting : register(b1, space3)
@@ -30,6 +32,7 @@ cbuffer SceneLighting : register(b1, space3)
     float4 sunDirectionAndSoftness; // xyz: towards the sun, w: soft edge radius in texels
 };
 #include "sun_shadow.hlsli"
+#include "terrain_detail.hlsli"
 
 struct FSInput
 {
@@ -55,6 +58,7 @@ float EnhancedFogAmount(float eyeDepth)
 float4 main(FSInput input) : SV_Target
 {
     float4 color = tex.Sample(s, input.uv) * input.color;
+    color.rgb *= TerrainDetailFactor(input.uv, input.eyeDepth);
     if (alphaToCoverage)
     {
         const float edge = saturate((color.a - alphaThreshold) / max(fwidth(color.a), 0.0001) + 0.5);
