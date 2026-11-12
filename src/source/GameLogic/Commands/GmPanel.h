@@ -70,6 +70,9 @@ struct OnlinePlayer
     int Y = 0;
     int CombatPower = 0;
     std::wstring Flags;
+    // The median round trip to the server in ms (NetworkQuality.cs); -1 before the first answer or from a server
+    // that doesn't send it.
+    int PingMs = -1;
 
     bool Has(wchar_t flag) const { return Flags.find(flag) != std::wstring::npos; }
 };

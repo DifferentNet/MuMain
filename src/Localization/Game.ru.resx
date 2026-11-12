@@ -16143,4 +16143,16 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>Закрыть</value>
   </data>
+  <data name="PingHudLabel" xml:space="preserve">
+    <value>Пинг %d мс</value>
+  </data>
+  <data name="PingHudHint" xml:space="preserve">
+    <value>Ответ игрового сервера: последний %d мс, медиана за 5 минут %d мс.</value>
+  </data>
+  <data name="PingHudHintNetwork" xml:space="preserve">
+    <value>Ответ игрового сервера: последний %d мс, медиана за 5 минут %d мс. Одна сеть: %d мс.</value>
+  </data>
+  <data name="GmPanelRowPing" xml:space="preserve">
+    <value>  %d мс</value>
+  </data>
 </root>

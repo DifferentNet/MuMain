@@ -61,6 +61,9 @@ namespace mu::ui::window
             Rml::String configHint;
             Rml::String startHint;
             Rml::String stopHint;
+            Rml::String pingText;       // "Ping 48 ms" under the bar (GameLogic/Character/PingHud.h), empty: hidden
+            Rml::String pingLevel;      // "good", "fair", "bad" or "stale": the label's colour
+            Rml::String pingHint;
         };
         void BindRmlModel(Rml::DataModelConstructor& c, MuHelperBarRmlModel& model);
         void OnRmlReloaded();

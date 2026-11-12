@@ -178,6 +178,7 @@ bool Store::TakeMessage(const std::wstring& text)
                          p.Y = ToInt(At(f, 7));
                          p.CombatPower = ToInt(At(f, 8));
                          p.Flags = At(f, 9);
+                         p.PingMs = At(f, 10).empty() ? -1 : ToInt(At(f, 10));
                          return p;
                      });
         return true;

@@ -7,6 +7,7 @@
 #include "UI/Core/WindowSystem.h"
 #include "World/MapInfra/MapManager.h"
 #include "MUHelper/MuHelper.h"
+#include "GameLogic/Character/PingHud.h"
 
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
@@ -64,6 +65,9 @@ void CMuHelperBar::BindRmlModel(Rml::DataModelConstructor& c, MuHelperBarRmlMode
     c.Bind("config_hint", &model.configHint);
     c.Bind("start_hint", &model.startHint);
     c.Bind("stop_hint", &model.stopHint);
+    c.Bind("ping_text", &model.pingText);
+    c.Bind("ping_level", &model.pingLevel);
+    c.Bind("ping_hint", &model.pingHint);
 
     c.BindEventCallback("mu_helper_config_click",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickConfig(); });
@@ -168,6 +172,31 @@ void CMuHelperBar::SyncRmlModel()
               StringUtils::WideToNarrow(I18N::Game::StartOfficialMUHelper));
     SyncField(m_RmlView.Binder(), &MuHelperBarRmlModel::stopHint, "stop_hint",
               StringUtils::WideToNarrow(I18N::Game::StopOfficialMUHelper));
+
+    // The ping label: the server's last round trip, green below 100 ms, yellow below 200, red above, grey while
+    // the server waits for a late answer. Hidden on a server without the add-on (no line ever came).
+    const auto& ping = GameLogic::PingHud::Ping();
+    std::string pingText;
+    std::string pingLevel;
+    std::string pingHint;
+    if (ping.HasReading())
+    {
+        const auto& reading = ping.Current();
+        wchar_t label[64] = {};
+        mu_swprintf_s(label, I18N::Game::PingHudLabel, reading.lastMs);
+        pingText = StringUtils::WideToNarrow(label);
+        pingLevel = ping.IsStale() ? "stale" : reading.lastMs < 100 ? "good" : reading.lastMs < 200 ? "fair" : "bad";
+
+        wchar_t hint[256] = {};
+        if (reading.networkMs >= 0)
+            mu_swprintf_s(hint, I18N::Game::PingHudHintNetwork, reading.lastMs, reading.medianMs, reading.networkMs);
+        else
+            mu_swprintf_s(hint, I18N::Game::PingHudHint, reading.lastMs, reading.medianMs);
+        pingHint = StringUtils::WideToNarrow(hint);
+    }
+    SyncField(m_RmlView.Binder(), &MuHelperBarRmlModel::pingText, "ping_text", pingText);
+    SyncField(m_RmlView.Binder(), &MuHelperBarRmlModel::pingLevel, "ping_level", pingLevel);
+    SyncField(m_RmlView.Binder(), &MuHelperBarRmlModel::pingHint, "ping_hint", pingHint);
 }
 
 float CMuHelperBar::GetLayerDepth()
