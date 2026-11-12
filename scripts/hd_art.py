@@ -40,18 +40,29 @@ cutouts  the leaves in CUTOUTS (and every file with the same source bytes) as gh
          The leaf litter in CUTOUT_SMOOTH (tree_08, strewn over Lorencia's ground and the Arena's walls)
          gets the original upscaled smoothly instead: its crisp x4 leaves looked stuck in the air
          (ghinzuro 2026-11-10).
-detail   the original's fine grain back in the opaque (OZJ) World*, Object*, Monster and NPC textures, after
+detail   the original's fine grain back in the World*, Object*, Monster, NPC, Item and Player textures, after
          write and cutouts (ghinzuro 2026-11-12: Remaster less soapy, stage 4): the repaint smoothed it
          away, so from afar (mip levels) the HD read flat. The detail band is x - gaussian(x, 1.5 px) at the
          original size; where the HD, boxed down, keeps less than DETAIL_TARGET of the original's band,
          the band it lacks is upscaled bicubically and added. Ground tiles wrap both ways, model textures
          wrap where their models repeat them. Skipped: cut-outs, light and reflection maps, World effects on
          black (leaves, fog, map pictures, backdrops), World and Object glows, water, clouds, mist and
-         lava (light*, squid*, water, tilewater*, cloud, *mist*, *lava*, wfmoon*, streetlight), OZT files
-         (not done yet), files with no original
-         or not exactly x4. Like cutouts it keeps the clean file in <work>/detail, so running it again
-         gives the same result (a skipped file it changed before gets its clean file back); keep that
-         folder with Data/HD.
+         lava (light*, squid*, water, tilewater*, cloud, *mist*, *lava*, wfmoon*, streetlight), files with
+         no original or not exactly x4.
+         Since ghinzuro 2026-11-12 (plan steps 1-2) it also takes the OZT (alpha) files of those folders
+         and the Item and Player folders (OZJ and OZT). For OZT the band and the ratio are alpha-weighted
+         (weights = original alpha > 0.5, normalized blur, only those pixels in the means); the band is
+         added to the colour only, scaled by the HD alpha, so fully transparent pixels and the alpha stay
+         byte for byte; the HD is boxed down weighted by its alpha. Skipped as well: OZT under
+         DETAIL_MIN_COVER (5 %) opaque, foliage OZT in World*, Object*, Item and Player (tree, leaf,
+         grass, bush, flower, plant, moss, ivy, vine: soft leaves stay; trunks are OZJ; never names with
+         treemonster, bark or root; Monster and NPC names are creatures and get grain), Player faces
+         (hd_pack.PLAYER_FACE) and, in Item and Player only, glows: names with render, effect, glow,
+         flare, shine, light or hide, and nearly black originals (median max(R, G, B) under DETAIL_DARK =
+         0.02).
+         Like cutouts it keeps the clean file in <work>/detail (OZT too; the note beside it is written
+         through a .tmp as well, stale ones are removed), so running it again gives the same result (a
+         skipped file it changed before gets its clean file back); keep that folder with Data/HD.
          --only takes path patterns (fnmatch, any case); --dry-run prints the numbers and writes nothing.
 
 Models: SDXL 1.0 base (CreativeML Open RAIL++-M), the fp16-fix SDXL VAE (MIT),
@@ -738,7 +749,22 @@ DETAIL_SKIP_WORLD = re.compile(r"^(leaf\d*|fog\d*|map\d*|bg_b_.*)$", re.IGNORECA
 # World* and Object* glows, water, clouds, mist and lava: grain would only add noise there.
 DETAIL_SKIP_EFFECT = re.compile(r"^(light\d*|squid\d*|water|cswater|tilewater\d*(?:_org)?|cloud|.*mist.*|.*lava.*|wfmoon.*"
                                 r"|streetlight)$", re.IGNORECASE)
+# Item and Player (ghinzuro 2026-11-12: plan steps 1-2) are taken too, OZJ and OZT.
+DETAIL_GEAR_FOLDERS = re.compile(r"^(item|player)$", re.IGNORECASE)
+# Leaves, grass and the like stay soft in OZT (ghinzuro chose soft leaves); trunks are OZJ and still done.
+# Not in Monster and NPC: there the names are creatures (treemonster01), and they get grain.
+DETAIL_FOLIAGE = re.compile(r"tree|leaf|grass|bush|flower|plant|moss|ivy|vine", re.IGNORECASE)
+# ... but trunks, bark, roots and tree creatures are never foliage (Object34/35/55 treemonster01, Object42/43 rootree).
+DETAIL_NOT_FOLIAGE = re.compile(r"treemonster|bark|root", re.IGNORECASE)
+# Player faces and skin keep no grain: the same rule as hd_pack.PLAYER_FACE (NormalMaps.cpp IsPlayerFace),
+# matched against the file name with its extension.
+DETAIL_PLAYER_FACE = re.compile(r"^(skin_|skinclass[0-9]+\.|levelclass[0-9]+\.)|head_n\.|face", re.IGNORECASE)
+DETAIL_DARK = 0.02  # Item/Player only: median max(R, G, B) of the original below this = an additive glow on black
+# Item/Player only: glows, flares and render effects by name (dark gear on black atlases stays in).
+DETAIL_GLOW_NAME = re.compile(r"render|effect|glow|flare|shine|light|hide", re.IGNORECASE)
+DETAIL_MIN_COVER = 0.05  # OZT: share of original pixels with alpha > 0.5 below this, nothing to measure
 _detail_replace = os.replace  # the self-check swaps it to stop a run between the note and the file
+_detail_note_replace = os.replace  # ... and this one to stop it between the clean copy and the note
 
 
 def box_down(a: np.ndarray, factor: int = SCALE) -> np.ndarray:
@@ -759,24 +785,43 @@ def upscale_band(a: np.ndarray, size, wrap) -> np.ndarray:
     return big[p * SCALE:p * SCALE + size[1], p * SCALE:p * SCALE + size[0]]
 
 
-def detail_ratio(o: np.ndarray, hd: np.ndarray, wrap):
+def detail_ratio(o: np.ndarray, hd: np.ndarray, wrap, w=None, alpha_hd=None):
     """(ratio, band_o, band_h, energy_o): how much of the original's detail band the HD keeps at the
-    original size. o and hd are float RGB in 0..1, hd exactly SCALE times larger."""
+    original size. o and hd are float RGB in 0..1, hd exactly SCALE times larger. With w (h, w, 1) of
+    0/1 weights at the original size (OZT: original alpha > 0.5) the blur is normalized (blur(x w) /
+    blur(w)), the bands are zero where w is 0 and only weighted pixels count in the means. With
+    alpha_hd ((H, W) in 0..1) the HD is boxed down weighted by its alpha, so the colour under clear
+    HD pixels does not pull the rim (a block with no alpha at all is boxed plainly)."""
     down = box_down(hd)
+    if alpha_hd is not None:
+        a = alpha_hd[..., None]
+        box_a = box_down(a)
+        down = np.where(box_a > 1e-6, box_down(hd * a) / np.maximum(box_a, 1e-6), down)
+    if w is not None:
+        gw = np.maximum(gblur(w, DETAIL_SIGMA_SRC, wrap), 1e-6)
+        band_o = (o - gblur(o * w, DETAIL_SIGMA_SRC, wrap) / gw) * w
+        band_h = (down - gblur(down * w, DETAIL_SIGMA_SRC, wrap) / gw) * w
+        n = max(float(w.sum()) * o.shape[2], 1.0)
+        energy_o = float(np.abs(band_o).sum()) / n
+        return float(np.abs(band_h).sum()) / n / (energy_o + 1e-6), band_o, band_h, energy_o
     band_o = o - gblur(o, DETAIL_SIGMA_SRC, wrap)
     band_h = down - gblur(down, DETAIL_SIGMA_SRC, wrap)
     energy_o = float(np.abs(band_o).mean())
     return float(np.abs(band_h).mean()) / (energy_o + 1e-6), band_o, band_h, energy_o
 
 
-def add_detail(o: np.ndarray, hd: np.ndarray, wrap):
+def add_detail(o: np.ndarray, hd: np.ndarray, wrap, w=None, alpha_hd=None):
     """Returns (new hd or None if left as is, ratio before, k). Adds k of the band the HD lacks,
-    upscaled bicubically, so the ratio comes up to about DETAIL_TARGET."""
-    ratio, band_o, band_h, energy_o = detail_ratio(o, hd, wrap)
+    upscaled bicubically, so the ratio comes up to about DETAIL_TARGET. OZT: w as in detail_ratio, and
+    the added band is scaled by the HD alpha (alpha_hd, (H, W) in 0..1), so fully transparent pixels
+    keep their colour."""
+    ratio, band_o, band_h, energy_o = detail_ratio(o, hd, wrap, w, alpha_hd)
     if ratio >= DETAIL_TARGET or energy_o < DETAIL_MIN_ENERGY:
         return None, ratio, 0.0
     k = min(DETAIL_MAX_GAIN, (DETAIL_TARGET - ratio) / max(1 - ratio, 1e-3))
     add = upscale_band(band_o - band_h, (hd.shape[1], hd.shape[0]), wrap) * k
+    if alpha_hd is not None:
+        add = add * alpha_hd[..., None]
     return np.clip(hd + add, 0, 1), ratio, k
 
 
@@ -795,6 +840,13 @@ def detail_skip_reason(rel: str):
         return "effect on black"
     if re.match(r"^(world|object)", rel.split("/")[0], re.IGNORECASE) and DETAIL_SKIP_EFFECT.match(stem):
         return "effect / water"
+    if (Path(rel).suffix.lower() == ".ozt" and DETAIL_FOLIAGE.search(stem) and not DETAIL_NOT_FOLIAGE.search(stem)
+            and rel.split("/")[0].lower() not in ("monster", "npc")):  # creatures (treemonster01) get grain
+        return "foliage (soft leaves)"
+    if DETAIL_GEAR_FOLDERS.match(rel.split("/")[0]) and DETAIL_GLOW_NAME.search(stem):
+        return "glow (name)"
+    if rel.split("/")[0].lower() == "player" and DETAIL_PLAYER_FACE.search(Path(rel).name):
+        return "player face"
     return None
 
 
@@ -808,12 +860,13 @@ def cmd_detail(args):
         if not path.is_file():
             continue
         rel = path.relative_to(args.out).as_posix()
-        if not PAINT_FOLDERS.match(rel.split("/")[0]):
-            continue  # Item, Player, Effect, Skill, Interface and the rest keep their HD as is
-        if path.name.lower().endswith(".ozj.tmp"):
+        top = rel.split("/")[0]
+        if not (PAINT_FOLDERS.match(top) or DETAIL_GEAR_FOLDERS.match(top)):
+            continue  # Effect, Skill, Interface and the rest keep their HD as is
+        if path.name.lower().endswith((".ozj.tmp", ".ozt.tmp")):
             stale.append(path)  # left by a run of this stage that was stopped
             continue
-        if path.suffix.lower() != ".ozj":
+        if path.suffix.lower() not in (".ozj", ".ozt"):
             continue
         if args.only and not any(fnmatch.fnmatch(rel.lower(), p.lower()) for p in args.only):
             continue
@@ -822,6 +875,10 @@ def cmd_detail(args):
         for path in stale:
             os.remove(path)
             print(f"removed stale {path.relative_to(args.out).as_posix()}")
+        if (args.work / "detail").is_dir():
+            for path in sorted((args.work / "detail").rglob("*.written.md5.tmp")):
+                os.remove(path)  # a note a stopped run did not finish (the old note, if any, still holds)
+                print(f"removed stale {path.relative_to(args.work).as_posix()}")
     # which directions each model texture repeats in, read only from the folders taken
     repeats = {}
     for folder in sorted({rel.split("/")[0] for rel in rels}):
@@ -845,7 +902,9 @@ def cmd_detail(args):
             if not ours:
                 keep.parent.mkdir(parents=True, exist_ok=True)
                 keep.write_bytes(current)
-            last.write_text(f"{hashlib.md5(current).hexdigest()}\n{hashlib.md5(out_bytes).hexdigest()}\n")
+            note_tmp = last.with_name(last.name + ".tmp")
+            note_tmp.write_text(f"{hashlib.md5(current).hexdigest()}\n{hashlib.md5(out_bytes).hexdigest()}\n")
+            _detail_note_replace(note_tmp, last)
             if tmp is None:
                 tmp = args.out / (rel + ".tmp")
                 tmp.write_bytes(out_bytes)
@@ -860,11 +919,23 @@ def cmd_detail(args):
             why = "no original"
         elif src.read_bytes() in skip_bytes:
             why = "same bytes as a cut-out"
+        is_ozt = target.suffix.lower() == ".ozt"
+        w = alpha_hd = None
         if why is None:
             o_img = hdt.read_texture(src)
             h_img = hdt.read_texture(keep if ours else target)
             if h_img.size != (o_img.size[0] * SCALE, o_img.size[1] * SCALE):
                 why = f"HD {h_img.size[0]}x{h_img.size[1]} is not x{SCALE} of {o_img.size[0]}x{o_img.size[1]}"
+        if why is None:
+            o = np.asarray(o_img.convert("RGB"), dtype=np.float32) / 255
+            if is_ozt:
+                w = (np.asarray(o_img.convert("RGBA"))[..., 3:4] > 127.5).astype(np.float32)  # alpha > 0.5
+                if float(w.mean()) < DETAIL_MIN_COVER:
+                    why = f"only {float(w.mean()) * 100:.1f} % opaque"
+            if why is None and DETAIL_GEAR_FOLDERS.match(rel.split("/")[0]):
+                bright = o.max(-1) if w is None else o.max(-1)[w[..., 0] > 0]
+                if float(np.median(bright)) < DETAIL_DARK:
+                    why = f"dark (median {float(np.median(bright)):.3f}): additive glow"
         if why:
             count["skipped"] += 1
             if pristine != current:  # it got grain from an earlier run: the clean file back
@@ -876,13 +947,23 @@ def cmd_detail(args):
             continue
         t0 = time.time()
         wrap = detail_wrap(rel, repeats)
-        o = np.asarray(o_img.convert("RGB"), dtype=np.float32) / 255
-        hd = np.asarray(h_img.convert("RGB"), dtype=np.float32) / 255
-        new, ratio, k = add_detail(o, hd, wrap)
+        if is_ozt:
+            h_rgba = np.asarray(h_img.convert("RGBA"))
+            hd = h_rgba[..., :3].astype(np.float32) / 255
+            alpha_hd = h_rgba[..., 3].astype(np.float32) / 255
+        else:
+            hd = np.asarray(h_img.convert("RGB"), dtype=np.float32) / 255
+        new, ratio, k = add_detail(o, hd, wrap, w, alpha_hd)
         flat = ratio < DETAIL_TARGET and new is None  # below the target only when the original is flat
         out_img = None
         if new is None:
             ratio_after = ratio
+        elif is_ozt:
+            rgb = (new * 255 + 0.5).astype(np.uint8)
+            clear = h_rgba[..., 3] == 0
+            rgb[clear] = h_rgba[..., :3][clear]  # fully transparent pixels keep their colour exactly
+            out_img = Image.fromarray(np.dstack([rgb, h_rgba[..., 3]]), "RGBA")  # alpha byte for byte
+            ratio_after = detail_ratio(o, rgb.astype(np.float32) / 255, wrap, w, alpha_hd)[0]
         else:
             out_img = Image.fromarray((new * 255 + 0.5).astype(np.uint8), "RGB")
             ratio_after = detail_ratio(o, np.asarray(out_img, dtype=np.float32) / 255, wrap)[0]  # before JPEG
@@ -900,7 +981,7 @@ def cmd_detail(args):
                     note = ", clean file put back"
             else:
                 tmp = args.out / (rel + ".tmp")
-                hdt.write_ozj(tmp, out_img)
+                (hdt.write_ozt if is_ozt else hdt.write_ozj)(tmp, out_img)
                 out_bytes = tmp.read_bytes()
                 if out_bytes == current:
                     os.remove(tmp)
@@ -945,6 +1026,18 @@ def detail_selftest() -> int:
     print(f"seams x {seam:.4f} y {seam_y:.4f}, neighbours inside {inner:.4f}")
     ok &= seam <= inner * 1.2 and seam_y <= inner * 1.2
     ok &= detail_selftest_runs(o, soft)
+    ok &= detail_selftest_ozt(o, soft)
+    names = {"Object1/tree_01.OZT": "foliage (soft leaves)", "Object1/tree_01.OZJ": None,
+             "Object2/ivy_wall.ozt": "foliage (soft leaves)", "Object34/treemonster01.OZT": None,
+             "Object42/rootreebark.OZT": None, "Item/sword_render.OZJ": "glow (name)",
+             "Player/LuckyItem/62/lower_luck14.OZJ": None,
+             "Monster/treemonster01.OZT": None, "Item/leaf.OZT": "foliage (soft leaves)", "Player/skin_wizard_01.OZJ": "player face",
+             "Player/SkinClass3.OZJ": "player face", "Player/head_n.OZT": "player face",
+             "Player/ArmorMale01.OZJ": None, "Item/Face_shield.OZJ": None}
+    for rel, want in names.items():
+        got = detail_skip_reason(rel)
+        print(f"name {rel}: {got or 'taken'}")
+        ok &= got == want
     print("detail self-check", "OK" if ok else "FAILED")
     return 0 if ok else 1
 
@@ -1011,6 +1104,98 @@ def detail_selftest_runs(o, soft) -> bool:
         ok &= back
     finally:
         DETAIL_TARGET, DETAIL_SKIP, _detail_replace = saved
+        shutil.rmtree(root, ignore_errors=True)
+    return ok
+
+
+def detail_selftest_ozt(o, soft) -> bool:
+    """cmd_detail on an OZT: a disc of opaque pixels on noise that is fully transparent. The ratio
+    (alpha-weighted) goes up, the alpha is the same byte for byte and the colour under fully transparent
+    pixels too. A run stopped between the note and the file, or between the clean copy and the note,
+    then run again, keeps the clean copy, drops its stale tmp files and gives what a clean run gives."""
+    import contextlib
+    import io
+    import shutil
+    import tempfile
+    global DETAIL_TARGET, _detail_replace, _detail_note_replace
+    saved = DETAIL_TARGET, _detail_replace, _detail_note_replace
+    n = o.shape[0]
+    rng = np.random.default_rng(2)
+    yy, xx = np.mgrid[:n, :n]
+    alpha = np.where((yy - n / 2) ** 2 + (xx - n / 2) ** 2 < (n * 0.35) ** 2, 255, 0).astype(np.uint8)
+    alpha_hd = np.repeat(np.repeat(alpha, SCALE, 0), SCALE, 1)
+    alpha_hd[::7, ::5] = 128  # a few half-transparent pixels as well
+    o_rgb = (o * 255 + 0.5).astype(np.uint8)
+    o_rgb[alpha == 0] = rng.integers(0, 256, (int((alpha == 0).sum()), 3), dtype=np.uint8)  # junk under clear
+    hd_rgb = (soft * 255 + 0.5).astype(np.uint8)
+    hd_rgb[alpha_hd == 0] = rng.integers(0, 256, (int((alpha_hd == 0).sum()), 3), dtype=np.uint8)
+    root = Path(tempfile.mkdtemp(prefix="hdart-detail-ozt-"))
+    rel = "Object1/StoneTest.OZT"
+
+    class Stop(Exception):
+        pass
+
+    def stop(*_):
+        raise Stop
+
+    def make(name):
+        for sub, rgb, a in (("src", o_rgb, alpha), ("out", hd_rgb, alpha_hd)):
+            (root / name / sub / "Object1").mkdir(parents=True)
+            hdt.write_ozt(root / name / sub / rel, Image.fromarray(np.dstack([rgb, a]), "RGBA"))
+        return argparse.Namespace(src=root / name / "src", work=root / name / "work", out=root / name / "out",
+                                  only=None, dry_run=False)
+
+    def run(a):
+        with contextlib.redirect_stdout(io.StringIO()):
+            cmd_detail(a)
+
+    ok = True
+    try:
+        args = make("first")
+        run(args)
+        got = np.asarray(hdt.read_texture(args.out / rel))
+        w = (alpha[..., None] > 127.5).astype(np.float32)
+        a_hd = alpha_hd.astype(np.float32) / 255
+        before = detail_ratio(o, hd_rgb.astype(np.float32) / 255, (False, False), w, a_hd)[0]
+        after = detail_ratio(o, got[..., :3].astype(np.float32) / 255, (False, False), w, a_hd)[0]
+        alpha_same = np.array_equal(got[..., 3], alpha_hd)
+        clear = alpha_hd == 0
+        clear_same = np.array_equal(got[..., :3][clear], hd_rgb[clear])
+        kept = (args.work / "detail" / rel).exists()
+        print(f"ozt: ratio {before:.2f} -> {after:.2f}, alpha same {alpha_same}, clear colour same {clear_same}, "
+              f"clean copy {kept}")
+        ok &= after - before >= 0.5 * (DETAIL_TARGET - before) and alpha_same and clear_same and kept
+
+        clean = make("clean")
+        DETAIL_TARGET = 0.80
+        run(clean)
+        want = (clean.out / rel).read_bytes()
+        for where in ("note and file", "clean copy and note"):
+            a = make(where.replace(" ", "-"))
+            start = (a.out / rel).read_bytes()
+            note = (a.work / "detail" / rel).with_name(Path(rel).name + ".written.md5.tmp")
+            DETAIL_TARGET = 0.85
+            run(a)  # grain at 0.85
+            DETAIL_TARGET = 0.80
+            if where == "note and file":
+                _detail_replace = stop
+            else:
+                _detail_note_replace = stop
+            try:
+                run(a)  # a new result at 0.80, stopped
+            except Stop:
+                pass
+            _detail_replace, _detail_note_replace = saved[1], saved[2]
+            stale = (a.out / (rel + ".tmp")).exists() if where == "note and file" else note.exists()
+            run(a)
+            got = (a.out / rel).read_bytes()
+            keep_ok = (a.work / "detail" / rel).read_bytes() == start
+            gone = not (a.out / (rel + ".tmp")).exists() and not note.exists()
+            print(f"ozt stopped between {where}: stale tmp {stale} -> removed {gone}, clean copy kept {keep_ok}, "
+                  f"same as a clean run {got == want}")
+            ok &= stale and gone and keep_ok and got == want and got != start
+    finally:
+        DETAIL_TARGET, _detail_replace, _detail_note_replace = saved
         shutil.rmtree(root, ignore_errors=True)
     return ok
 
