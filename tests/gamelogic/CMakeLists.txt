@@ -123,6 +123,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/EnchantFlashLine.cpp
 )
 
+# The server's "#GRS|str|agi|vit|ene|cmd" line with the own Grand stat points (GameLogic/Items/GrandStats).
+mu_add_test(
+    NAME test_grand_stats_line
+    SOURCES
+        test_grand_stats_line.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/GrandStatsLine.cpp
+)
+
 # The loot highlight filter's rules (GameLogic/Items/LootFilter).
 mu_add_test(
     NAME test_loot_filter
