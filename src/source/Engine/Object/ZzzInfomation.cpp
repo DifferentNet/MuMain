@@ -22,6 +22,7 @@
 
 #include "Render/Terrain/ZzzLodTerrain.h"
 #include "GameLogic/Items/AncientAura.h"
+#include "GameLogic/Items/GrandStats.h"
 #include "GameLogic/Items/CSItemOption.h"
 #include "GameLogic/Pets/GIPetManager.h"
 #include "GameLogic/Items/CComGem.h"
@@ -3466,6 +3467,26 @@ void AddAncientTierStat(WORD base, WORD& add, int tier)
     add = static_cast<WORD>(add + std::min(GameLogic::AncientAura::StatBonus(total, tier), room));
 }
 
+// Adds Grand stat points to a stat's bonus, without overflowing the WORD.
+void AddGrandStat(WORD base, WORD& add, int points)
+{
+    const int total = base + add;
+    const int room = std::max(0, static_cast<int>(std::numeric_limits<WORD>::max()) - total);
+    add = static_cast<WORD>(add + std::min(std::max(points, 0), room));
+}
+
+// The Grand stat points put in with /grstats (GameLogic/Items/GrandStats.h): the server adds them to the total
+// strength, agility, vitality, energy and command; the character window shows the same.
+void AddGrandStats(CHARACTER_ATTRIBUTE& character)
+{
+    const auto& points = GameLogic::GrandStats::Own();
+    AddGrandStat(character.Strength, character.AddStrength, points.strength);
+    AddGrandStat(character.Dexterity, character.AddDexterity, points.agility);
+    AddGrandStat(character.Vitality, character.AddVitality, points.vitality);
+    AddGrandStat(character.Energy, character.AddEnergy, points.energy);
+    AddGrandStat(character.Charisma, character.AddCharisma, points.command);
+}
+
 // The +14/+15 ancient tier (GameLogic/Items/AncientAura.h): the server multiplies the total strength, agility,
 // vitality, energy and command by 1.05 / 1.10; the character window shows the same.
 void AddAncientTierStats(CHARACTER_ATTRIBUTE& character)
@@ -3525,6 +3546,8 @@ void CHARACTER_MACHINE::CalculateAll()
         PlusSpecial(&Character.AddCharisma, AT_SET_OPTION_IMPROVE_CHARISMA, &CharacterMachine->Equipment[EQUIPMENT_WING]);
     }
 
+    // The Grand stat points first: the server adds them before it multiplies by the ancient tier.
+    AddGrandStats(Character);
     AddAncientTierStats(Character);
 
     CalculateBasicState();
