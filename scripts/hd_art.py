@@ -14,6 +14,9 @@ Stages (each one can be stopped and run again; it goes on where it stopped):
     python -I scripts/hd_art.py paint  --src ... --work ... --sd <sd-cli.exe> --models <dir>
     python -I scripts/hd_art.py write  --src ... --work ... --out <client>/Data/HD
     python -I scripts/hd_art.py cutouts --src ... --work ... --out <client>/Data/HD   (after every write)
+    python -I scripts/hd_art.py detail  --src ... --work ... --out <client>/Data/HD   (after write and cutouts)
+                                [--only <glob>...] [--dry-run]
+    python -I scripts/hd_art.py detail-selftest                     (checks the detail stage on test arrays)
 
 plan     lists every texture of the world (World*, Object*, Monster, NPC, the non-gear Item files,
          Effect, Skill) with its size, alpha and which directions it repeats in.
@@ -37,6 +40,19 @@ cutouts  the leaves in CUTOUTS (and every file with the same source bytes) as gh
          The leaf litter in CUTOUT_SMOOTH (tree_08, strewn over Lorencia's ground and the Arena's walls)
          gets the original upscaled smoothly instead: its crisp x4 leaves looked stuck in the air
          (ghinzuro 2026-11-10).
+detail   the original's fine grain back in the opaque (OZJ) World*, Object*, Monster and NPC textures, after
+         write and cutouts (ghinzuro 2026-11-12: Remaster less soapy, stage 4): the repaint smoothed it
+         away, so from afar (mip levels) the HD read flat. The detail band is x - gaussian(x, 1.5 px) at the
+         original size; where the HD, boxed down, keeps less than DETAIL_TARGET of the original's band,
+         the band it lacks is upscaled bicubically and added. Ground tiles wrap both ways, model textures
+         wrap where their models repeat them. Skipped: cut-outs, light and reflection maps, World effects on
+         black (leaves, fog, map pictures, backdrops), World and Object glows, water, clouds, mist and
+         lava (light*, squid*, water, tilewater*, cloud, *mist*, *lava*, wfmoon*, streetlight), OZT files
+         (not done yet), files with no original
+         or not exactly x4. Like cutouts it keeps the clean file in <work>/detail, so running it again
+         gives the same result (a skipped file it changed before gets its clean file back); keep that
+         folder with Data/HD.
+         --only takes path patterns (fnmatch, any case); --dry-run prints the numbers and writes nothing.
 
 Models: SDXL 1.0 base (CreativeML Open RAIL++-M), the fp16-fix SDXL VAE (MIT),
 xinsir controlnet-tile-sdxl-1.0 (Apache-2.0); stable-diffusion.cpp sd-cli (MIT) on Vulkan.
@@ -707,9 +723,303 @@ def cmd_write(args):
     print(f"wrote {written} textures to {args.out}; effects: {fx_count[False]} crisp (B), {fx_count[True]} soft (E)")
 
 
+# ---------------------------------------------------------------- detail
+# The repaint smoothed the original's fine grain away: box-downsampled to the original size, the HD
+# World1 ground kept ~65 % (worst 33 %) of the original's detail band, so at a distance (mip levels)
+# the Remaster read flat. This stage adds back the part of that band the HD lacks.
+DETAIL_TARGET = 0.85  # share of the original's detail band the HD should keep at the original size
+DETAIL_SIGMA_SRC = 1.5  # source pixels: the detail band is x - gaussian(x, this)
+DETAIL_MAX_GAIN = 1.0  # at most the whole missing band is added
+DETAIL_MIN_ENERGY = 0.004  # mean |band| of the original below this: flat, nothing to bring back
+# Light maps set a map's lighting and reflection maps (_R) are blurred on purpose: no grain there.
+DETAIL_SKIP = re.compile(r"terrainlight|_r$", re.IGNORECASE)
+# World* textures drawn like effects on black (falling leaves, fog, the map picture, backdrops).
+DETAIL_SKIP_WORLD = re.compile(r"^(leaf\d*|fog\d*|map\d*|bg_b_.*)$", re.IGNORECASE)
+# World* and Object* glows, water, clouds, mist and lava: grain would only add noise there.
+DETAIL_SKIP_EFFECT = re.compile(r"^(light\d*|squid\d*|water|cswater|tilewater\d*(?:_org)?|cloud|.*mist.*|.*lava.*|wfmoon.*"
+                                r"|streetlight)$", re.IGNORECASE)
+_detail_replace = os.replace  # the self-check swaps it to stop a run between the note and the file
+
+
+def box_down(a: np.ndarray, factor: int = SCALE) -> np.ndarray:
+    """Mean of each factor x factor block (an exact box downsample)."""
+    h, w = a.shape[0] // factor, a.shape[1] // factor
+    return a[:h * factor, :w * factor].reshape(h, factor, w, factor, -1).mean((1, 3))
+
+
+def upscale_band(a: np.ndarray, size, wrap) -> np.ndarray:
+    """Bicubic x4 of a float (h, w, c) array to size (W, H), padded by wrapping along the axes in wrap
+    and by repeating the edge along the others, so a repeating texture stays seamless."""
+    p = 2
+    a = np.pad(a, ((0, 0), (p, p), (0, 0)), mode="wrap" if wrap[0] else "edge")
+    a = np.pad(a, ((p, p), (0, 0), (0, 0)), mode="wrap" if wrap[1] else "edge")
+    h, w = a.shape[:2]
+    big = np.stack([np.asarray(Image.fromarray(np.ascontiguousarray(a[..., c], dtype=np.float32), "F").resize(
+        (w * SCALE, h * SCALE), Image.BICUBIC)) for c in range(a.shape[2])], -1)
+    return big[p * SCALE:p * SCALE + size[1], p * SCALE:p * SCALE + size[0]]
+
+
+def detail_ratio(o: np.ndarray, hd: np.ndarray, wrap):
+    """(ratio, band_o, band_h, energy_o): how much of the original's detail band the HD keeps at the
+    original size. o and hd are float RGB in 0..1, hd exactly SCALE times larger."""
+    down = box_down(hd)
+    band_o = o - gblur(o, DETAIL_SIGMA_SRC, wrap)
+    band_h = down - gblur(down, DETAIL_SIGMA_SRC, wrap)
+    energy_o = float(np.abs(band_o).mean())
+    return float(np.abs(band_h).mean()) / (energy_o + 1e-6), band_o, band_h, energy_o
+
+
+def add_detail(o: np.ndarray, hd: np.ndarray, wrap):
+    """Returns (new hd or None if left as is, ratio before, k). Adds k of the band the HD lacks,
+    upscaled bicubically, so the ratio comes up to about DETAIL_TARGET."""
+    ratio, band_o, band_h, energy_o = detail_ratio(o, hd, wrap)
+    if ratio >= DETAIL_TARGET or energy_o < DETAIL_MIN_ENERGY:
+        return None, ratio, 0.0
+    k = min(DETAIL_MAX_GAIN, (DETAIL_TARGET - ratio) / max(1 - ratio, 1e-3))
+    add = upscale_band(band_o - band_h, (hd.shape[1], hd.shape[0]), wrap) * k
+    return np.clip(hd + add, 0, 1), ratio, k
+
+
+def detail_wrap(rel: str, repeats: dict):
+    if hdt.is_tile(Path(rel)):
+        return (True, True)
+    p = Path(rel)
+    return tuple(repeats.get((p.parent.name.lower(), p.stem.lower()), (False, False)))
+
+
+def detail_skip_reason(rel: str):
+    stem = Path(rel).stem
+    if DETAIL_SKIP.search(stem):
+        return "light or reflection map"
+    if rel.split("/")[0].lower().startswith("world") and DETAIL_SKIP_WORLD.match(stem):
+        return "effect on black"
+    if re.match(r"^(world|object)", rel.split("/")[0], re.IGNORECASE) and DETAIL_SKIP_EFFECT.match(stem):
+        return "effect / water"
+    return None
+
+
+def cmd_detail(args):
+    import fnmatch
+    started = time.time()
+    skip_bytes = {(args.src / rel).read_bytes() for rel in CUTOUTS + CUTOUT_SMOOTH if (args.src / rel).exists()}
+    skip_rels = {rel.lower() for rel in CUTOUTS + CUTOUT_SMOOTH}
+    rels, stale = [], []
+    for path in sorted(args.out.rglob("*")):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(args.out).as_posix()
+        if not PAINT_FOLDERS.match(rel.split("/")[0]):
+            continue  # Item, Player, Effect, Skill, Interface and the rest keep their HD as is
+        if path.name.lower().endswith(".ozj.tmp"):
+            stale.append(path)  # left by a run of this stage that was stopped
+            continue
+        if path.suffix.lower() != ".ozj":
+            continue
+        if args.only and not any(fnmatch.fnmatch(rel.lower(), p.lower()) for p in args.only):
+            continue
+        rels.append(rel)
+    if not args.dry_run:
+        for path in stale:
+            os.remove(path)
+            print(f"removed stale {path.relative_to(args.out).as_posix()}")
+    # which directions each model texture repeats in, read only from the folders taken
+    repeats = {}
+    for folder in sorted({rel.split("/")[0] for rel in rels}):
+        if (args.src / folder).is_dir():
+            repeats.update(model_repeats(args.src / folder))
+    before, after = [], []
+    count = {"changed": 0, "written": 0, "restored": 0, "skipped": 0}
+    for rel in rels:
+        src = args.src / rel
+        target = args.out / rel
+        keep = args.work / "detail" / rel
+        # md5s of the file in --out before the last write and of what it wrote: the file is this
+        # stage's own when it matches either (a run stopped between the note and the file left the old)
+        last = keep.with_name(keep.name + ".written.md5")
+        current = target.read_bytes()
+        ours = keep.exists() and last.exists() and hashlib.md5(current).hexdigest() in last.read_text().split()
+        pristine = keep.read_bytes() if ours else current  # not ours: a new write put a clean file there
+
+        def put(out_bytes, tmp=None, rel=rel, target=target, keep=keep, last=last, current=current, ours=ours):
+            """Writes out_bytes over the file in --out: the clean copy and the note first."""
+            if not ours:
+                keep.parent.mkdir(parents=True, exist_ok=True)
+                keep.write_bytes(current)
+            last.write_text(f"{hashlib.md5(current).hexdigest()}\n{hashlib.md5(out_bytes).hexdigest()}\n")
+            if tmp is None:
+                tmp = args.out / (rel + ".tmp")
+                tmp.write_bytes(out_bytes)
+            _detail_replace(tmp, target)
+
+        why = None
+        if rel.lower() in skip_rels:
+            why = "cut-out"
+        elif detail_skip_reason(rel):
+            why = detail_skip_reason(rel)
+        elif not src.exists():
+            why = "no original"
+        elif src.read_bytes() in skip_bytes:
+            why = "same bytes as a cut-out"
+        if why is None:
+            o_img = hdt.read_texture(src)
+            h_img = hdt.read_texture(keep if ours else target)
+            if h_img.size != (o_img.size[0] * SCALE, o_img.size[1] * SCALE):
+                why = f"HD {h_img.size[0]}x{h_img.size[1]} is not x{SCALE} of {o_img.size[0]}x{o_img.size[1]}"
+        if why:
+            count["skipped"] += 1
+            if pristine != current:  # it got grain from an earlier run: the clean file back
+                count["restored"] += 1
+                why += ", clean file put back" + (" (dry run: not)" if args.dry_run else "")
+                if not args.dry_run:
+                    put(pristine)
+            print(f"skip {rel}: {why}")
+            continue
+        t0 = time.time()
+        wrap = detail_wrap(rel, repeats)
+        o = np.asarray(o_img.convert("RGB"), dtype=np.float32) / 255
+        hd = np.asarray(h_img.convert("RGB"), dtype=np.float32) / 255
+        new, ratio, k = add_detail(o, hd, wrap)
+        flat = ratio < DETAIL_TARGET and new is None  # below the target only when the original is flat
+        out_img = None
+        if new is None:
+            ratio_after = ratio
+        else:
+            out_img = Image.fromarray((new * 255 + 0.5).astype(np.uint8), "RGB")
+            ratio_after = detail_ratio(o, np.asarray(out_img, dtype=np.float32) / 255, wrap)[0]  # before JPEG
+        if not flat:
+            before.append(ratio)
+            after.append(ratio_after)
+        count["changed"] += new is not None
+        state = "changed" if new is not None else ("flat" if flat else "kept")
+        note = ""
+        if not args.dry_run:
+            if out_img is None:
+                if pristine != current:  # no longer needs grain: the clean file back
+                    put(pristine)
+                    count["restored"] += 1
+                    note = ", clean file put back"
+            else:
+                tmp = args.out / (rel + ".tmp")
+                hdt.write_ozj(tmp, out_img)
+                out_bytes = tmp.read_bytes()
+                if out_bytes == current:
+                    os.remove(tmp)
+                    note = ", up to date"
+                else:
+                    put(out_bytes, tmp)
+                    count["written"] += 1
+                    note = ", written"
+        print(f"{rel}: ratio {ratio:.2f} -> {ratio_after:.2f} k {k:.2f} {state}{note} "
+              f"wrap {'x' if wrap[0] else '-'}{'y' if wrap[1] else '-'} {(time.time() - t0) * 1000:.0f} ms", flush=True)
+    med = (lambda v: f"{float(np.median(v)):.2f}" if v else "-")
+    c = count
+    done = (" (dry run, nothing written)" if args.dry_run else
+            f" ({c['written']} written, {c['changed'] - c['written']} already up to date)")
+    print(f"{c['changed']} of {len(rels) - c['skipped']} textures changed{done}, {c['restored']} put back clean, "
+          f"{c['skipped']} skipped; median ratio {med(before)} -> {med(after)} "
+          f"(flat originals left out); {time.time() - started:.0f} s")
+
+
+def detail_selftest() -> int:
+    """Checks add_detail on synthetic textures: the ratio comes up toward the target (at least half the
+    gap: the bicubic x4 loses part of the added band when boxed down again) and not past it, a texture
+    that already keeps its detail is left alone, and a wrapped tile stays seamless."""
+    rng = np.random.default_rng(1)
+    n = 64
+    o = gblur(rng.random((n, n, 3)).astype(np.float32), 0.7, (True, True)) * 0.6 + 0.2
+    sharp = np.repeat(np.repeat(o, SCALE, 0), SCALE, 1)  # boxes back to the original exactly
+    soft = gblur(sharp, 2.5 * SCALE, (True, True))  # the band smoothed away
+    ok = True
+    new, ratio, k = add_detail(o, soft, (True, True))
+    ratio_new = detail_ratio(o, new, (True, True))[0] if new is not None else ratio
+    print(f"soft: ratio {ratio:.2f} -> {ratio_new:.2f} k {k:.2f}")
+    ok &= new is not None and ratio < 0.5 and ratio_new - ratio >= 0.5 * (DETAIL_TARGET - ratio)
+    ok &= ratio_new <= DETAIL_TARGET + 0.02
+    kept, ratio_sharp, _ = add_detail(o, sharp, (True, True))
+    print(f"sharp: ratio {ratio_sharp:.2f}, {'kept' if kept is None else 'CHANGED'}")
+    ok &= kept is None and ratio_sharp >= DETAIL_TARGET
+    seam = float(np.abs(new[:, 0] - new[:, -1]).mean())
+    seam_y = float(np.abs(new[0] - new[-1]).mean())
+    # neighbours inside at the same place in a 4 px block as the seam (column 4m-1 next to 4m)
+    inner = float(np.abs(new[:, SCALE::SCALE] - new[:, SCALE - 1:-1:SCALE]).mean())
+    print(f"seams x {seam:.4f} y {seam_y:.4f}, neighbours inside {inner:.4f}")
+    ok &= seam <= inner * 1.2 and seam_y <= inner * 1.2
+    ok &= detail_selftest_runs(o, soft)
+    print("detail self-check", "OK" if ok else "FAILED")
+    return 0 if ok else 1
+
+
+def detail_selftest_runs(o, soft) -> bool:
+    """cmd_detail on files in a temporary folder: a run stopped between the note and the file, then run
+    again, keeps the clean copy and gives what a clean run gives; its stale .tmp goes; a file that is
+    skipped later gets its clean file back."""
+    import contextlib
+    import io
+    import shutil
+    import tempfile
+    global DETAIL_TARGET, DETAIL_SKIP, _detail_replace
+    saved = DETAIL_TARGET, DETAIL_SKIP, _detail_replace
+    root = Path(tempfile.mkdtemp(prefix="hdart-detail-"))
+    rel = "World1/TileTest.OZJ"
+
+    class Stop(Exception):
+        pass
+
+    def stop(*_):
+        raise Stop
+
+    def make(name):
+        for sub, a in (("src", o), ("out", soft)):
+            (root / name / sub / "World1").mkdir(parents=True)
+            hdt.write_ozj(root / name / sub / rel, Image.fromarray((a * 255 + 0.5).astype(np.uint8), "RGB"))
+        return argparse.Namespace(src=root / name / "src", work=root / name / "work", out=root / name / "out",
+                                  only=None, dry_run=False)
+
+    def run(a):
+        with contextlib.redirect_stdout(io.StringIO()):
+            cmd_detail(a)
+
+    ok = True
+    try:
+        clean = make("clean")
+        DETAIL_TARGET = 0.80
+        run(clean)
+        want = (clean.out / rel).read_bytes()
+        a = make("stopped")
+        start = (a.out / rel).read_bytes()
+        DETAIL_TARGET = 0.85
+        run(a)  # grain at 0.85
+        DETAIL_TARGET = 0.80
+        _detail_replace = stop
+        try:
+            run(a)  # a new result at 0.80, stopped after the note, before the file
+        except Stop:
+            pass
+        _detail_replace = saved[2]
+        stale = (a.out / (rel + ".tmp")).exists()
+        run(a)
+        got = (a.out / rel).read_bytes()
+        keep_ok = (a.work / "detail" / rel).read_bytes() == start
+        tmp_gone = not (a.out / (rel + ".tmp")).exists()
+        print(f"stopped run: stale tmp {stale} -> removed {tmp_gone}, clean copy kept {keep_ok}, "
+              f"same as a clean run {got == want}")
+        ok &= stale and tmp_gone and keep_ok and got == want and got != start
+        DETAIL_SKIP = re.compile(r"tiletest", re.IGNORECASE)
+        run(a)
+        back = (a.out / rel).read_bytes() == start
+        print(f"skipped later: clean file back {back}")
+        ok &= back
+    finally:
+        DETAIL_TARGET, DETAIL_SKIP, _detail_replace = saved
+        shutil.rmtree(root, ignore_errors=True)
+    return ok
+
+
 def main() -> int:
+    if sys.argv[1:2] == ["detail-selftest"]:
+        return detail_selftest()
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("stage", choices=["plan", "esr", "sheets", "paint", "write", "cutouts"])
+    ap.add_argument("stage", choices=["plan", "esr", "sheets", "paint", "write", "cutouts", "detail"])
     ap.add_argument("--src", type=Path, required=True)
     ap.add_argument("--work", type=Path, required=True)
     ap.add_argument("--out", type=Path)
@@ -720,13 +1030,16 @@ def main() -> int:
     ap.add_argument("--sd", type=Path)
     ap.add_argument("--models", type=Path)
     ap.add_argument("--limit", type=int, default=0)
-    ap.add_argument("--only", nargs="*", help="write: only these path patterns")
+    ap.add_argument("--only", nargs="*", help="write, detail: only these path patterns")
     ap.add_argument("--force", action="store_true", help="write: overwrite files already in --out")
     ap.add_argument("--png", action="store_true", help="write: also save PNG previews in <work>/preview")
+    ap.add_argument("--dry-run", action="store_true", help="detail: print the ratios, write nothing")
     ap.add_argument("--allow-unpainted", action="store_true", help="write: upscale-only for textures not painted")
     args = ap.parse_args()
+    if args.stage == "detail" and args.out is None:
+        ap.error("detail needs --out (the Data/HD folder to work on)")
     {"plan": cmd_plan, "esr": cmd_esr, "sheets": cmd_sheets, "paint": cmd_paint, "write": cmd_write,
-     "cutouts": cmd_cutouts}[args.stage](args)
+     "cutouts": cmd_cutouts, "detail": cmd_detail}[args.stage](args)
     return 0
 
 
