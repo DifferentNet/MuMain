@@ -1417,7 +1417,10 @@ void mu::ui::window::CGmPanelWindow::SyncPlayers(GmPanelRmlModel& updated)
             GmPanelRow row;
             row.index = static_cast<int>(i);
             row.title = Line(Joined({p.Name, Joined(tags, L", ")}, L"  "), ROW_WIDTH, true);
-            row.detail = Line(Printf(I18N::Game::GmPanelRowPlayer, p.Level, p.Resets, MapName(p.Map).c_str(), p.X, p.Y), ROW_WIDTH);
+            std::wstring detail = Printf(I18N::Game::GmPanelRowPlayer, p.Level, p.Resets, MapName(p.Map).c_str(), p.X, p.Y);
+            if (p.PingMs >= 0)
+                detail += Printf(I18N::Game::GmPanelRowPing, p.PingMs);
+            row.detail = Line(detail, ROW_WIDTH);
             row.selected = SameName(p.Name, m_selected);
             row.alert = p.Has(L'm');
             updated.rows.push_back(std::move(row));
