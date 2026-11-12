@@ -127,6 +127,10 @@ namespace CfgKeys
     // mirrored blocks (Render/Terrain/TerrainVariation.h), and its strength in percent (0 to 100).
     inline constexpr wchar_t CfgKeyTerrainVariation[] = L"TerrainVariation";
     inline constexpr wchar_t CfgKeyTerrainVariationStrength[] = L"TerrainVariationStrength";
+    // [Render] TerrainWater: with HD textures on, 0 off, 1 ripples, sun highlight and sky tint on the
+    // terrain's water tiles (terrain_water.frag), and its strength in percent (0 to 100).
+    inline constexpr wchar_t CfgKeyTerrainWater[] = L"TerrainWater";
+    inline constexpr wchar_t CfgKeyTerrainWaterStrength[] = L"TerrainWaterStrength";
     // Sun shadows of the Enhanced look: 0 off, 1 medium (2048 map), 2 high (4096 map). The browser
     // build keeps them under their own key: older /play builds saved the presets' value in SunShadows,
     // and a browser player gets sun shadows only from the Options row.
@@ -281,6 +285,12 @@ namespace CfgDefaults
     inline constexpr int CfgDefaultTerrainVariationStrength = 100;
     inline constexpr int CfgMinTerrainVariationStrength = 0;
     inline constexpr int CfgMaxTerrainVariationStrength = 100;
+    inline constexpr int CfgDefaultTerrainWater = 1;
+    inline constexpr int CfgMinTerrainWater = 0;
+    inline constexpr int CfgMaxTerrainWater = 1;
+    inline constexpr int CfgDefaultTerrainWaterStrength = 100;
+    inline constexpr int CfgMinTerrainWaterStrength = 0;
+    inline constexpr int CfgMaxTerrainWaterStrength = 100;
     inline constexpr int CfgDefaultSunShadows = 0;
     inline constexpr int CfgMinSunShadows = 0;
     inline constexpr int CfgMaxSunShadows = 2;

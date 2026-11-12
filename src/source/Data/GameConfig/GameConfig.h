@@ -235,6 +235,11 @@ public:
     // TerrainVariationStrength in percent (both clamped; after a restart).
     int GetTerrainVariation() const { return m_terrainVariation; }
     int GetTerrainVariationStrength() const { return m_terrainVariationStrength; }
+    // [Render] TerrainWater: with HD textures on, ripples, a sun highlight and a sky tint on the
+    // terrain's water tiles (terrain_water.frag; Enhanced lighting), 0 off, 1 on; TerrainWaterStrength
+    // in percent (both clamped; after a restart).
+    int GetTerrainWater() const { return m_terrainWater; }
+    int GetTerrainWaterStrength() const { return m_terrainWaterStrength; }
     // [Render] SunShadows: 0 off, 1 medium, 2 high (clamped).
     int GetSunShadows() const { return m_sunShadows; }
     void SetSunShadows(int level);
@@ -374,6 +379,8 @@ private:
     int m_terrainDetailStrength = 60;
     int m_terrainVariation = 2;
     int m_terrainVariationStrength = 100;
+    int m_terrainWater = 1;
+    int m_terrainWaterStrength = 100;
     int m_sunShadows = 0;
     int m_sharpen = 0;
     std::wstring m_renderBackend;
