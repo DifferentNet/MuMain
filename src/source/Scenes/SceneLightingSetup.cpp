@@ -15,7 +15,9 @@
 #include "Render/Renderer/SceneLighting.h"
 #include "Scenes/SceneCore.h"
 
+#include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 
 namespace Scenes::Lighting
@@ -51,6 +53,15 @@ void SubmitSceneLighting()
     lighting.cameraPosition[0] = g_Camera.Position[0];
     lighting.cameraPosition[1] = g_Camera.Position[1];
     lighting.cameraPosition[2] = g_Camera.Position[2];
+    // Towards the map's sun (its mood file, as the sun shadow takes it): the water highlight's
+    // light and whether the sun is up (terrain_water.frag).
+    const Data::Maps::LightMood& mood = Render::Lighting::LightMood::WorldMood();
+    constexpr double degreesToRadians = 3.14159265358979323846 / 180.0;
+    const double azimuth = mood.sunAzimuth * degreesToRadians;
+    const double elevation = std::clamp(mood.sunElevation, 20.0, 85.0) * degreesToRadians;
+    lighting.lightDirection[0] = static_cast<float>(std::cos(elevation) * std::cos(azimuth));
+    lighting.lightDirection[1] = static_cast<float>(std::cos(elevation) * std::sin(azimuth));
+    lighting.lightDirection[2] = static_cast<float>(std::sin(elevation));
     Render::Lighting::ApplyTuning(lighting);
     lighting.highlightKnee = Render::Lighting::LightMood::Active().highlightKnee;
     mu::GetRenderer().SetSceneLighting(lighting);

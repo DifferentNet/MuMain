@@ -26,6 +26,7 @@ set(MU_SHADER_STAGE_NAMES
     basic_textured_fog_shadow.frag
     skinned_lit_shadow.frag
     shadow_caster.frag
+    terrain_water.frag
 )
 set(MU_SHADER_BLOB_FORMATS spv msl dxil)
 set(MU_SHADER_BLOB_NAMES)

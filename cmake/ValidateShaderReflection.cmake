@@ -277,6 +277,7 @@ set(shader_specs
     "basic_textured_fog_shadow.frag|frag||2|0|2"
     "skinned_lit_shadow.frag|frag||3|0|3"
     "shadow_caster.frag|frag||1|0|1"
+    "terrain_water.frag|frag||1|0|2"
 )
 
 foreach(shader_spec IN LISTS shader_specs)

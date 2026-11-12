@@ -663,6 +663,9 @@ static SDL_GPUGraphicsPipeline* s_sunShadowCasterPipeline = nullptr;
 // Each shadowed receiver pipeline, keyed by the Enhanced pipeline (or its alpha-to-coverage
 // variant) it stands in for.
 static std::unordered_map<SDL_GPUGraphicsPipeline*, SDL_GPUGraphicsPipeline*> s_sunShadowReceiverPipelines;
+// The terrain water pipeline (terrain_water.frag) of each depth-tested Enhanced 3D pipeline that
+// blends Alpha or not at all, keyed by it (desktop only; empty without the shader).
+static std::unordered_map<SDL_GPUGraphicsPipeline*, SDL_GPUGraphicsPipeline*> s_terrainWaterPipelines;
 
 // Post-processing of the 3D scene: with it on, a frame whose scene marked its end
 // (EndSceneGeometry) is replayed in separate scene, bloom and UI passes, see EndFrame.
@@ -872,7 +875,7 @@ struct RenderCmd
     VertexUniforms vu;
     Uint32 skinningIndex = 0u; // into s_skinningUniforms, for DrawSkinnedTriangles
     Uint32 shadowIndex = ~0u;  // into s_shadowUniforms when a DrawSkinnedTriangles is a body shadow
-    // A 3D sun shadow receiver's vertex-to-world rows, into s_sunShadowReceiverRows.
+    // A 3D sun shadow receiver's or terrain water draw's vertex-to-world rows, into s_sunShadowReceiverRows.
     Uint32 sunShadowRows = ~0u;
     FogUniform fogUniform;
     SDL_GPUViewport viewport; // for SetViewport only
@@ -886,6 +889,9 @@ struct RenderCmd
     // Recorded inside the sun shadow scope with a pipeline that has a shadowed twin
     // (s_sunShadowReceiverPipelines): drawn through it once the frame's shadow map is ready.
     bool sunShadowReceiver{};
+    // Recorded under SetTerrainWater with a pipeline that has a water twin (s_terrainWaterPipelines):
+    // drawn through it in the frame's own passes; its vertex-to-world rows are in sunShadowRows.
+    bool terrainWater{};
     // A skinned item preview under the studio light: drawn with ItemPreviewLightingUniform() in
     // place of the scene lighting.
     bool itemPreviewLighting{};
@@ -900,7 +906,8 @@ static std::vector<RenderCmd> s_renderCmds;
 static std::vector<SkinningVertexUniforms> s_skinningUniforms;
 static std::vector<ShadowVertexUniforms> s_shadowUniforms;
 // The frame's sun shadow: the depth-writing models of the shadow scope, again, as the sun sees them
-// (RenderSunShadowMap draws them before the main pass), and the 3D receivers' vertex-to-world rows.
+// (RenderSunShadowMap draws them before the main pass), and the 3D receivers' vertex-to-world rows
+// (which the terrain water draws use too, RecordTerrainWater).
 static std::vector<RenderCmd> s_sunShadowCasterCmds;
 static std::vector<std::array<float, 12>> s_sunShadowReceiverRows;
 static constexpr std::size_t kNoDrawCommand = std::numeric_limits<std::size_t>::max();
@@ -1181,7 +1188,17 @@ static void ReplayDrawCommand(const RenderCmd& command, SDL_GPUGraphicsPipeline*
     // A sun shadow receiver draws through its shadowed twin in the frame's own passes once the
     // shadow map is ready; the single-sample passes (offscreen, UI) keep the plain pipeline.
     bool sunShadowed = false;
-    if (command.sunShadowReceiver && s_sunShadowMapReady && !s_singleSamplePass)
+    bool worldRows = false;
+    if (command.terrainWater && !s_singleSamplePass && command.sunShadowRows != ~0u)
+    {
+        const auto water = s_terrainWaterPipelines.find(pipeline);
+        if (water != s_terrainWaterPipelines.end())
+        {
+            pipeline = water->second;
+            worldRows = true;
+        }
+    }
+    if (!worldRows && command.sunShadowReceiver && s_sunShadowMapReady && !s_singleSamplePass)
     {
         const auto shadowed = s_sunShadowReceiverPipelines.find(pipeline);
         if (shadowed != s_sunShadowReceiverPipelines.end() &&
@@ -1189,6 +1206,7 @@ static void ReplayDrawCommand(const RenderCmd& command, SDL_GPUGraphicsPipeline*
         {
             pipeline = shadowed->second;
             sunShadowed = true;
+            worldRows = command.type != RenderCmdType::DrawSkinnedTriangles;
         }
     }
     // With one sample the frame's own pipelines already match; with more, a pass outside the
@@ -1213,7 +1231,7 @@ static void ReplayDrawCommand(const RenderCmd& command, SDL_GPUGraphicsPipeline*
         PushReplayVertexUniforms(0, &command.vu, sizeof(command.vu), state);
     if (shadow)
         PushReplayVertexUniforms(1, &s_shadowUniforms[command.shadowIndex], sizeof(ShadowVertexUniforms), state);
-    if (sunShadowed && !skinned)
+    if (worldRows)
     {
         const std::array<float, 12>& rows = s_sunShadowReceiverRows[command.sunShadowRows];
         PushReplayVertexUniforms(1, rows.data(), sizeof(rows), state);
@@ -1329,6 +1347,7 @@ static SDL_GPUShader* s_vertShader3DWorld = nullptr;      // basic_textured_worl
 static SDL_GPUShader* s_fragShaderTexFogShadow = nullptr; // basic_textured_fog_shadow.frag
 static SDL_GPUShader* s_fragShaderLitShadow = nullptr;    // skinned_lit_shadow.frag
 static SDL_GPUShader* s_fragShaderShadowCaster = nullptr; // shadow_caster.frag
+static SDL_GPUShader* s_fragShaderTerrainWater = nullptr; // terrain_water.frag (desktop, optional)
 // Post-processing (optional): without them post-processing is unavailable.
 static SDL_GPUShader* s_vertShaderPostFullscreen = nullptr; // post_fullscreen.vert
 static SDL_GPUShader* s_fragShaderBloomDown = nullptr;      // post_bloom_down.frag
@@ -5364,6 +5383,14 @@ public:
         m_fogUniform.detailStrength = enabled ? strength : 0.0f;
         m_fogUniform.detailScale = enabled ? scale : 0.0f;
     }
+    // Water draws carry minus the strength in detailStrength (terrain_water.frag), which also
+    // keeps the grain off them, and the texture's repeats per world unit in detailScale.
+    void SetTerrainWater(float strength, float repeatsPerUnit) override
+    {
+        const bool enabled = strength > 0.0f && !s_terrainWaterPipelines.empty();
+        m_fogUniform.detailStrength = enabled ? -std::min(strength, 1.0f) : 0.0f;
+        m_fogUniform.detailScale = enabled ? repeatsPerUnit : 0.0f;
+    }
 
     void SetFog(const FogParams& params) override
     {
@@ -5825,6 +5852,35 @@ private:
         command.cullFaceEnabled = m_cullFaceEnabled;
         command.bloomExcluded = s_bloomExclusionDepth > 0;
         RecordSunShadow(command);
+        RecordTerrainWater(command);
+    }
+
+    // A depth-tested 3D draw recorded under SetTerrainWater draws through its pipeline's water twin,
+    // which needs the draw's vertex-to-world rows (shared with the sun shadow receivers).
+    void RecordTerrainWater(RenderCmd& command) const
+    {
+        if (m_fogUniform.detailStrength >= 0.0f || s_screenSpaceSamplingDepth != 0 || !command.depthTestEnabled ||
+            command.vtxStride != sizeof(Vertex3D) ||
+            (command.type != RenderCmdType::DrawTriangles && command.type != RenderCmdType::DrawIndexedQuads &&
+             command.type != RenderCmdType::DrawIndexedStrip) ||
+            !s_terrainWaterPipelines.contains(command.pipeline))
+        {
+            return;
+        }
+        command.terrainWater = true;
+        if (command.sunShadowRows == ~0u)
+        {
+            const glm::mat4 vertexToWorld = m_worldFromViewMatrix * m_modelViewMatrix;
+            std::array<float, 12>& rows = s_sunShadowReceiverRows.emplace_back();
+            for (int row = 0; row < 3; ++row)
+            {
+                for (int column = 0; column < 4; ++column)
+                {
+                    rows[static_cast<std::size_t>(row * 4 + column)] = vertexToWorld[column][row];
+                }
+            }
+            command.sunShadowRows = static_cast<Uint32>(s_sunShadowReceiverRows.size() - 1u);
+        }
     }
 
     // Inside the sun shadow scope, depth-tested world draws that blend Alpha or not at all
@@ -6252,6 +6308,11 @@ private:
                 createShader("basic_textured_world", "vert", SDL_GPU_SHADERSTAGE_VERTEX, 0, 0, 2, /*fatal=*/false);
             s_fragShaderTexFogShadow =
                 createShader("basic_textured_fog_shadow", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 2, /*fatal=*/false);
+#ifndef __EMSCRIPTEN__
+            // Terrain water (desktop only): the tile texture (t0), FogUniforms (b0), SceneLighting (b1).
+            s_fragShaderTerrainWater =
+                createShader("terrain_water", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 2, /*fatal=*/false);
+#endif
             // The desktop's also takes the normal map (t2); the browser's WGSL has none.
 #ifndef __EMSCRIPTEN__
             s_fragShaderLitShadow =
@@ -6332,7 +6393,8 @@ private:
             s_fragShaderLit = nullptr;
         }
         for (SDL_GPUShader** shader :
-             {&s_vertShader3DWorld, &s_fragShaderTexFogShadow, &s_fragShaderLitShadow, &s_fragShaderShadowCaster})
+             {&s_vertShader3DWorld, &s_fragShaderTexFogShadow, &s_fragShaderLitShadow, &s_fragShaderShadowCaster,
+              &s_fragShaderTerrainWater})
         {
             if (*shader)
             {
@@ -6372,6 +6434,7 @@ private:
         TexturedEnhancedFogShadow,
         SkinnedLitShadow,
         SunShadowCaster,
+        TerrainWater,
     };
 
     struct PipelineBuildDescription
@@ -6404,6 +6467,8 @@ private:
             return s_fragShaderLitShadow;
         case FragmentShader::SunShadowCaster:
             return s_fragShaderShadowCaster;
+        case FragmentShader::TerrainWater:
+            return s_fragShaderTerrainWater;
         case FragmentShader::Textured:
             break;
         }
@@ -6424,6 +6489,8 @@ private:
             return "skinned_lit_shadow.frag";
         case FragmentShader::SunShadowCaster:
             return "shadow_caster.frag";
+        case FragmentShader::TerrainWater:
+            return "terrain_water.frag";
         case FragmentShader::Textured:
             break;
         }
@@ -6884,6 +6951,7 @@ private:
 
     static void DestroyPipelines()
     {
+        DestroyTerrainWaterPipelines();
         DestroySunShadowPipelines();
         DestroySingleSamplePipelines();
         s_pipelinesMultisampled = false;
@@ -7099,6 +7167,7 @@ private:
         }
         s_pipelinesMultisampled = s_sampleCount != Render::Antialiasing::OffSampleCount;
         CreateSunShadowPipelines();
+        CreateTerrainWaterPipelines();
         return true;
     }
 
@@ -7454,6 +7523,84 @@ private:
         }
         mu::log::Get("render")->info("SDL_gpu -- sun shadow: {} of {} receiver pipelines, caster {}", built, wanted,
                                      s_sunShadowCasterPipeline ? "ready" : "missing");
+    }
+
+    // The terrain water pipelines (Enhanced lighting, desktop): a twin of each depth-tested Enhanced
+    // 3D pipeline that blends Alpha or not at all, with basic_textured_world.vert and terrain_water.frag.
+    static void CreateTerrainWaterPipelines()
+    {
+        DestroyTerrainWaterPipelines();
+        if (!s_enhancedLightingAvailable || !s_vertShader3DWorld || !s_fragShaderTerrainWater)
+        {
+            return;
+        }
+        const char* deviceDriver = SDL_GetGPUDeviceDriver(s_device);
+        const char* driverName = deviceDriver ? deviceDriver : "unknown";
+
+        SDL_GPUColorTargetBlendState opaque{};
+        opaque.src_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+        opaque.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ZERO;
+        opaque.color_blend_op = SDL_GPU_BLENDOP_ADD;
+        opaque.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+        opaque.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ZERO;
+        opaque.alpha_blend_op = SDL_GPU_BLENDOP_ADD;
+        opaque.enable_blend = false;
+        SDL_GPUColorTargetBlendState alpha = opaque;
+        alpha.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+        alpha.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+        alpha.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+        alpha.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+        alpha.enable_blend = true;
+
+        int built = 0;
+        int wanted = 0;
+        const auto addTwin = [&](SDL_GPUGraphicsPipeline* source, SDL_GPUColorTargetBlendState blendState,
+                                 const PipelineBuildDescription& description)
+        {
+            if (!source)
+            {
+                return;
+            }
+            ++wanted;
+            const PipelineBuildResult result = BuildBlendPipeline(blendState, description);
+            if (!result.pipeline)
+            {
+                LogPipelineFailure(driverName, result, false);
+                return;
+            }
+            s_terrainWaterPipelines[source] = result.pipeline;
+            ++built;
+        };
+        struct WaterBlend
+        {
+            int index;
+            const char* name;
+            SDL_GPUColorTargetBlendState state;
+        };
+        const WaterBlend blends[] = {{k_PipelineDisabled, "disabled", opaque}, {k_PipelineAlpha, "alpha", alpha}};
+        constexpr const char* kSetName = "3d-enhanced-fog-terrain-water";
+        for (const WaterBlend& blend : blends)
+        {
+            addTwin(s_pipelines3DEnhancedFog.culled[blend.index], blend.state,
+                    {kSetName, blend.name, blend.index, true, true, VertexLayout::ThreeDimensionalWorld, true,
+                     FragmentShader::TerrainWater});
+            addTwin(s_pipelines3DEnhancedFog.noCull[blend.index], blend.state,
+                    {kSetName, blend.name, blend.index, true, true, VertexLayout::ThreeDimensionalWorld, false,
+                     FragmentShader::TerrainWater});
+            addTwin(s_pipelines3DEnhancedFog.depthReadOnly[blend.index], blend.state,
+                    {kSetName, blend.name, blend.index, true, false, VertexLayout::ThreeDimensionalWorld, false,
+                     FragmentShader::TerrainWater});
+        }
+        mu::log::Get("render")->info("SDL_gpu -- terrain water: {} of {} pipelines", built, wanted);
+    }
+
+    static void DestroyTerrainWaterPipelines()
+    {
+        for (const auto& [source, water] : s_terrainWaterPipelines)
+        {
+            SDL_ReleaseGPUGraphicsPipeline(s_device, water);
+        }
+        s_terrainWaterPipelines.clear();
     }
 
     static void DestroySunShadowPipelines()
