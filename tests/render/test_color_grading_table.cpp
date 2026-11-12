@@ -143,4 +143,8 @@ TEST_CASE("a map's table is named after its number plus one [render][post_proces
 {
     CHECK(Render::PostProcessing::GetGradingTablePath(0) == std::filesystem::path("Data/Grading/World1.png"));
     CHECK(Render::PostProcessing::GetGradingTablePath(32) == std::filesystem::path("Data/Grading/World33.png"));
+    CHECK(Render::PostProcessing::GetRemasterGradingTablePath(0) ==
+          std::filesystem::path("Data/Grading/Remaster/World1.png"));
+    CHECK(Render::PostProcessing::GetRemasterDefaultGradingTablePath() ==
+          std::filesystem::path("Data/Grading/Remaster/Default.png"));
 }

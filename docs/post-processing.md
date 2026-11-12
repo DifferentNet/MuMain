@@ -11,9 +11,10 @@ top of it. It adds two things to the Classic look:
   halo is screen-blended, so it lights dark surroundings without washing bright
   ones out to white, and it stays close to its effect.
 - **Colour grading**: a map can carry its own colour mood through a lookup
-  table. A map without a table is not graded. A table never makes anything
+  table. A map without a table is not graded. A Classic table never makes anything
   brighter and leaves highlights (armour, glows, light pools) untouched; it
-  cools and deepens shadows.
+  cools and deepens shadows. The Remaster client has its own, livelier tables
+  for every map ("Remaster tone" below).
 
 The HUD, windows, text, the cursor and item previews in windows are never
 processed: they look exactly as without post-processing.
@@ -86,6 +87,21 @@ saturation or desaturation and deepening; mid-tones and highlights unchanged):
 | Kanturu 1–3 | World38–40 | cold steel, desaturated |
 | Swamp of Quiet | World57 | murky olive |
 | Raklion, its boss map | World58–59 | icy blue |
+
+### Remaster tone
+
+With HD textures on (the Remaster client) the client first looks in
+`Data/Grading/Remaster`: the map's `World<N>.png`, else `Default.png`; only
+when neither loads does it use the Classic table above. These tables are the
+map's Classic mood followed by the Remaster tone (lighter mid-tones, an S
+curve, 18 % more colour, warm light and cool shadows: variant "3 rich" picked
+by ghinzuro on 2026-11-12, then made weaker on every map; Devias lifts its
+mid-tones less), so unlike the Classic tables they may brighten and
+touch highlights. They come from
+`scripts/grading_table.py remaster src/bin/Data/Grading/Remaster`; per-map
+numbers go in `REMASTER_TONES`. The browser build never has HD textures and
+never reads them. Like every grading table, the tone shows only while
+the look's post-processing ("Bloom and colour grading") is on.
 
 ## Screen filters
 

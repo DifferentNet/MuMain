@@ -5,6 +5,7 @@
 #include "Core/Utilities/Log/MuLogger.h"
 #include "Render/PostProcessing/ColorGradingTable.h"
 #include "Render/Renderer/MuRenderer.h"
+#include "Render/Textures/HdTextures.h"
 
 #include <optional>
 
@@ -45,6 +46,26 @@ void SelectMapColorGrading(int mapNumber)
         return;
     }
     s_selectedMap = mapNumber;
+
+    // The Remaster client (HD textures on) has its own tone: the map's Remaster table, else the
+    // Remaster default; a broken or missing Remaster table falls back to the Classic one.
+    if (Render::Textures::Hd::Enabled())
+    {
+        for (const std::filesystem::path& path : {GetRemasterGradingTablePath(mapNumber), GetRemasterDefaultGradingTablePath()})
+        {
+            const GradingTableLoad table = LoadGradingTable(path);
+            if (table.status == GradingTableStatus::Loaded)
+            {
+                ApplyTable(table, mapNumber, path);
+                return;
+            }
+            if (table.status == GradingTableStatus::Invalid)
+            {
+                mu::log::Get("render")->warn("Colour grading: {} is invalid ({}); trying the next table", path.string(), table.error);
+            }
+        }
+        mu::log::Get("render")->info("Colour grading: no Remaster table for map {}; using the Classic one", mapNumber);
+    }
 
     const std::filesystem::path path = GetGradingTablePath(mapNumber);
     ApplyTable(LoadGradingTable(path), mapNumber, path);

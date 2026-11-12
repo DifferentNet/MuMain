@@ -16,8 +16,16 @@ alone (no tint above HIGHLIGHT_LUMA), so armour, glows and light pools keep
 their Classic colour. Grading may cool and deepen shadows a little; real base
 darkness belongs to the map's light, not to its grading.
 
+The Remaster client (HD textures on) reads its own tables from Data/Grading/Remaster: the
+map's Classic mood followed by the Remaster tone (lighter mid-tones, an S curve, richer colour,
+warm light and cool shadows; variant "3 rich" picked by ghinzuro 2026-11-12, then made
+weaker on every map after the in-game shots: «слабее на всех картах»). Those tables may
+brighten and do touch highlights, so the Classic rules above do not apply to them; Default.png
+there grades every map without its own Remaster table.
+
 Usage: scripts/grading_table.py identity|<map preset> <output.png>
        scripts/grading_table.py maps src/bin/Data/Grading   (every shipped map table)
+       scripts/grading_table.py remaster src/bin/Data/Grading/Remaster   (the Remaster tables)
 """
 
 import argparse
@@ -126,6 +134,51 @@ MAP_TABLES = {
     "raklion": (mood((-0.022, 0.006, 0.030), saturation=0.04, deepening=0.04), [58, 59]),
 }
 
+# The Remaster tone: gamma (below 1 lifts mid-tones), S-curve contrast around REMASTER_PIVOT,
+# saturation (0.3 = 30 % further from grey), warmth (warm highlights, cool shadows).
+REMASTER_PIVOT = 0.45
+
+
+def remaster_tone(gamma=0.92, contrast=0.12, saturation=0.18, warmth=0.02):
+    def s_curve(x):
+        if x < REMASTER_PIVOT:
+            return REMASTER_PIVOT * (x / REMASTER_PIVOT) ** (1.0 + contrast)
+        return 1.0 - (1.0 - REMASTER_PIVOT) * ((1.0 - x) / (1.0 - REMASTER_PIVOT)) ** (1.0 + contrast)
+
+    def grade(color):
+        curved = [s_curve(clamp(channel) ** gamma) for channel in color]
+        y = luma(curved)
+        rich = [y + (channel - y) * (1.0 + saturation) for channel in curved]
+        light = clamp((y - 0.5) / 0.5)
+        shade = 1.0 - y
+        warm = (light * warmth - shade * warmth * 0.15, light * warmth * 0.4, -light * warmth * 0.6 + shade * warmth * 0.2)
+        return [clamp(channel + shift) for channel, shift in zip(rich, warm)]
+
+    return grade
+
+
+def then(first, second):
+    return lambda color: second(first(color))
+
+
+# The Remaster tone per map: maps listed here use their own numbers, every other map the default
+# (on top of its Classic mood where it has one). Tuned from in-game shots.
+REMASTER_DEFAULT = remaster_tone()
+REMASTER_TONES = {
+    # Devias: the snow went near white; lift its mid-tones less.
+    "devias": remaster_tone(gamma=0.97),
+}
+
+
+def remaster_tables():
+    """(name, grade, file name) for every Remaster table: one per map with a Classic table, plus Default."""
+    jobs = [("default", REMASTER_DEFAULT, "Default.png")]
+    for name, (mood_grade, numbers) in MAP_TABLES.items():
+        tone = REMASTER_TONES.get(name, REMASTER_DEFAULT)
+        jobs += [(f"remaster {name}", then(mood_grade, tone), f"World{number}.png") for number in numbers]
+    return jobs
+
+
 PRESETS = {"identity": identity, **{name: grade for name, (grade, _) in MAP_TABLES.items()}}
 
 
@@ -158,9 +211,13 @@ def write_png(path, rows):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("preset", choices=sorted(PRESETS) + ["maps"])
-    parser.add_argument("output", type=Path, help="the PNG, or for maps the Grading folder")
+    parser.add_argument("preset", choices=sorted(PRESETS) + ["maps", "remaster"])
+    parser.add_argument("output", type=Path, help="the PNG, or for maps / remaster the folder")
     arguments = parser.parse_args()
+    if arguments.preset == "remaster":
+        for _, grade, file_name in remaster_tables():
+            write_png(arguments.output / file_name, table_rows(grade))
+        return 0
     if arguments.preset == "maps":
         jobs = [(name, grade, arguments.output / f"World{number}.png")
                 for name, (grade, numbers) in MAP_TABLES.items() for number in numbers]

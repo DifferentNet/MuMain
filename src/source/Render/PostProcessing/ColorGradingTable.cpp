@@ -42,6 +42,16 @@ std::filesystem::path GetGradingTablePath(int mapNumber)
     return std::filesystem::path("Data") / "Grading" / ("World" + std::to_string(mapNumber + 1) + ".png");
 }
 
+std::filesystem::path GetRemasterGradingTablePath(int mapNumber)
+{
+    return std::filesystem::path("Data") / "Grading" / "Remaster" / ("World" + std::to_string(mapNumber + 1) + ".png");
+}
+
+std::filesystem::path GetRemasterDefaultGradingTablePath()
+{
+    return std::filesystem::path("Data") / "Grading" / "Remaster" / "Default.png";
+}
+
 GradingTableLoad LoadGradingTable(const std::filesystem::path& path)
 {
     std::error_code error;

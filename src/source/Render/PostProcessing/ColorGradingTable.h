@@ -36,6 +36,11 @@ struct GradingTableLoad
 // The table file of map `mapNumber` (0 is Lorencia).
 [[nodiscard]] std::filesystem::path GetGradingTablePath(int mapNumber);
 
+// The Remaster client's own tables (HD textures on): `Data/Grading/Remaster/World<N>.png`, and
+// `Data/Grading/Remaster/Default.png` for a map without its own (scripts/grading_table.py remaster).
+[[nodiscard]] std::filesystem::path GetRemasterGradingTablePath(int mapNumber);
+[[nodiscard]] std::filesystem::path GetRemasterDefaultGradingTablePath();
+
 // Reads a table from a PNG file.
 [[nodiscard]] GradingTableLoad LoadGradingTable(const std::filesystem::path& path);
 
