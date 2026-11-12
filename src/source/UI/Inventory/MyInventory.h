@@ -136,10 +136,10 @@ namespace mu::ui::window
             std::vector<Rml::String> slotStates = std::vector<Rml::String>(MAX_EQUIPMENT_INDEX);
             UI::Items::ItemGridCells gridCells;
 
-            // Bag pages (UI/Inventory/BagPages.h): the arrows by the title, and page 2 while it is locked.
+            // Bag pages (UI/Inventory/BagPages.h): the page tabs over the grid, and page 2 while it is locked.
             bool pagesVisible = false;
-            bool pagePrevEnabled = false;
-            bool pageNextEnabled = false;
+            int bagPage = 1;
+            bool bagPage2Locked = false;
             bool bagLocked = false;
             bool bagBuying = false;
             Rml::String bagLockedText;

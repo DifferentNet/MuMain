@@ -10,7 +10,7 @@
 //
 // The bag window asks "/bag" when it first opens after entering the world; the server answers
 // "#BGP|pages|max|price". Buying sends "/bag buy"; the server answers with a chat line, then "#BGB|ok" or "#BGB|no",
-// and on success a new "#BGP". A server without the add-on never answers, and the window then shows no arrows.
+// and on success a new "#BGP". A server without the add-on never answers, and the window then shows no page tabs.
 namespace UI::Inventory
 {
 class BagPages
