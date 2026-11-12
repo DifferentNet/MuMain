@@ -94,6 +94,8 @@ the row reads **Custom** (shown only, it cannot be picked).
 | `HdTextureSize` | With HD textures on, how large they load (after a restart): `0` by the machine at every start, `1` full, `2` half. Half takes a quarter of the texture memory (about 0.5 GiB instead of 1.9 GiB; the normal maps shrink with it) and still holds 4 times the original texels. `0` picks half on integrated graphics, a software renderer or an unnamed GPU, and on a PC with less than 12 GB of memory; the log line "HD textures at ... size" says which. Options: "HD texture size" | `0` |
 | `TerrainDetail` | With HD textures on (desktop only, Enhanced lighting), fine grain on the ground tiles around the hero that fades out towards the horizon (not on water or grass; after a restart): `0` off, `1` the tile texture's own detail repeated about once per tile, `2` soft noise of about 25 world units | `1` |
 | `TerrainDetailStrength` | Strength of that grain in percent, `0` (off) to `100` | `60` |
+| `TerrainVariation` | With HD textures on (desktop only), breaks the visible repeat of the ground textures (after a restart): `0` off, `1` large soft patches of brighter/darker and warmer/cooler ground (grass follows them), `2` the same plus each texture repeat of the plain tiles (grass, ground, wood, rock) mirrored at random, which stays seamless | `2` |
+| `TerrainVariationStrength` | Strength of the patches in percent, `0` (off) to `100` | `100` |
 
 Each map's light mood can also set the sun's direction and the shadows'
 strength and softness (`sunAzimuth`, `sunElevation`, `sunShadow`,

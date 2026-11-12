@@ -123,6 +123,10 @@ namespace CfgKeys
     // 2 noise (Render/Terrain/TerrainDetail.h), and its strength in percent (0 to 100).
     inline constexpr wchar_t CfgKeyTerrainDetail[] = L"TerrainDetail";
     inline constexpr wchar_t CfgKeyTerrainDetailStrength[] = L"TerrainDetailStrength";
+    // [Render] TerrainVariation: with HD textures on, 0 off, 1 macro colour, 2 macro colour and
+    // mirrored blocks (Render/Terrain/TerrainVariation.h), and its strength in percent (0 to 100).
+    inline constexpr wchar_t CfgKeyTerrainVariation[] = L"TerrainVariation";
+    inline constexpr wchar_t CfgKeyTerrainVariationStrength[] = L"TerrainVariationStrength";
     // Sun shadows of the Enhanced look: 0 off, 1 medium (2048 map), 2 high (4096 map). The browser
     // build keeps them under their own key: older /play builds saved the presets' value in SunShadows,
     // and a browser player gets sun shadows only from the Options row.
@@ -271,6 +275,12 @@ namespace CfgDefaults
     inline constexpr int CfgDefaultTerrainDetailStrength = 60;
     inline constexpr int CfgMinTerrainDetailStrength = 0;
     inline constexpr int CfgMaxTerrainDetailStrength = 100;
+    inline constexpr int CfgDefaultTerrainVariation = 2;
+    inline constexpr int CfgMinTerrainVariation = 0;
+    inline constexpr int CfgMaxTerrainVariation = 2;
+    inline constexpr int CfgDefaultTerrainVariationStrength = 100;
+    inline constexpr int CfgMinTerrainVariationStrength = 0;
+    inline constexpr int CfgMaxTerrainVariationStrength = 100;
     inline constexpr int CfgDefaultSunShadows = 0;
     inline constexpr int CfgMinSunShadows = 0;
     inline constexpr int CfgMaxSunShadows = 2;

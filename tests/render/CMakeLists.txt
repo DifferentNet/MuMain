@@ -163,6 +163,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Render/Terrain/TerrainDetail.cpp
 )
 
+# Breaking the ground textures' repeat: params, macro colour, mirrored blocks.
+mu_add_test(
+    NAME terrain_variation_tests
+    SOURCES
+        test_terrain_variation.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Terrain/TerrainVariation.cpp
+)
+
 # HD textures: the Data\HD path of a texture.
 mu_add_test(
     NAME hd_textures_tests
