@@ -736,7 +736,7 @@ DETAIL_SKIP = re.compile(r"terrainlight|_r$", re.IGNORECASE)
 # World* textures drawn like effects on black (falling leaves, fog, the map picture, backdrops).
 DETAIL_SKIP_WORLD = re.compile(r"^(leaf\d*|fog\d*|map\d*|bg_b_.*)$", re.IGNORECASE)
 # World* and Object* glows, water, clouds, mist and lava: grain would only add noise there.
-DETAIL_SKIP_EFFECT = re.compile(r"^(light\d*|squid\d*|water|cswater|tilewater\d*|cloud|.*mist.*|.*lava.*|wfmoon.*"
+DETAIL_SKIP_EFFECT = re.compile(r"^(light\d*|squid\d*|water|cswater|tilewater\d*(?:_org)?|cloud|.*mist.*|.*lava.*|wfmoon.*"
                                 r"|streetlight)$", re.IGNORECASE)
 _detail_replace = os.replace  # the self-check swaps it to stop a run between the note and the file
 
