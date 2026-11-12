@@ -63,4 +63,12 @@ with tempfile.TemporaryDirectory() as folder:
     unpacked = gzip.decompress(Path(folder, pack.PACKS, "test.pack.gz").read_bytes())
     assert unpacked == b"BMD\x0a" + body + table.read_bytes()
 
+# The sounds and music are parts of their own, however small, which the page doesn't wait for.
+parts = pack.startup_parts([["Data/Sound/a.wav", 10], ["Data/Music/b.mp3", 10], ["fonts/c.ttf", 10],
+                            ["Data/Logo/d.ozt", 10]])
+assert parts == {"startup-data-sound": [["Data/Sound/a.wav", 10]], "startup-data-music": [["Data/Music/b.mp3", 10]],
+                 "startup-misc": [["fonts/c.ttf", 10], ["Data/Logo/d.ozt", 10]]}, parts
+assert pack.is_deferred("Data/Sound/a.wav") and pack.is_deferred("Data/Music/b.mp3")
+assert not pack.is_deferred("Data/Logo/d.ozt") and not pack.is_deferred("Data/SoundX/e.wav")
+
 print("startup pack models: ok")

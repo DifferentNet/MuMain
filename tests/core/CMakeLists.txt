@@ -72,6 +72,12 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME test_waiting_sound_loads
+    SOURCES
+        test_waiting_sound_loads.cpp
+)
+
+mu_add_test(
     NAME test_platform_crypto
     SOURCES
         test_platform_crypto.cpp

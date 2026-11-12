@@ -126,8 +126,8 @@ MipLevel DownsampleSharp(std::span<const std::uint8_t> rgba, std::uint32_t width
     // Integer weights (-1, 9, 9, -1) / 16 per axis. Target texel i covers source texels 2i and
     // 2i + 1; the taps reach one further on each side, clamped at the edges. An axis of size 1
     // weighs its only texel 16.
-    constexpr std::array<int, 4> Taps = {-1, 9, 9, -1};
-    constexpr int AxisScale = 16;
+    static constexpr std::array<int, 4> Taps = {-1, 9, 9, -1};
+    static constexpr int AxisScale = 16;
     const std::uint32_t targetWidth = HalfSize(width);
     const std::uint32_t targetHeight = HalfSize(height);
 
