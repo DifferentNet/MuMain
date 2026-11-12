@@ -119,6 +119,10 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyHdTextureSize[] = L"HdTextureSize";
     inline constexpr wchar_t CfgKeySmoothModels[] = L"SmoothModels";
     inline constexpr wchar_t CfgKeyNormalMaps[] = L"NormalMaps";
+    // Grain on the ground near the camera, with HD textures on (desktop only): 0 off, 1 self-detail,
+    // 2 noise (Render/Terrain/TerrainDetail.h), and its strength in percent (0 to 100).
+    inline constexpr wchar_t CfgKeyTerrainDetail[] = L"TerrainDetail";
+    inline constexpr wchar_t CfgKeyTerrainDetailStrength[] = L"TerrainDetailStrength";
     // Sun shadows of the Enhanced look: 0 off, 1 medium (2048 map), 2 high (4096 map). The browser
     // build keeps them under their own key: older /play builds saved the presets' value in SunShadows,
     // and a browser player gets sun shadows only from the Options row.
@@ -261,6 +265,12 @@ namespace CfgDefaults
     inline constexpr int CfgMaxHdTextureSize = 2;
     inline constexpr int CfgDefaultSmoothModels = 1;
     inline constexpr bool CfgDefaultNormalMaps = true;
+    inline constexpr int CfgDefaultTerrainDetail = 1;
+    inline constexpr int CfgMinTerrainDetail = 0;
+    inline constexpr int CfgMaxTerrainDetail = 2;
+    inline constexpr int CfgDefaultTerrainDetailStrength = 60;
+    inline constexpr int CfgMinTerrainDetailStrength = 0;
+    inline constexpr int CfgMaxTerrainDetailStrength = 100;
     inline constexpr int CfgDefaultSunShadows = 0;
     inline constexpr int CfgMinSunShadows = 0;
     inline constexpr int CfgMaxSunShadows = 2;

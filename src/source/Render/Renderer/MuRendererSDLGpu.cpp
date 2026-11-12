@@ -185,7 +185,8 @@ struct FogUniform
     uint32_t alphaToCoverage;      // offset 12 (1: shader sharpens alpha for coverage)
     float fogStart;                // offset 16
     float fogEnd;                  // offset 20
-    float fogPadding[2];           // offset 24
+    float detailStrength;          // offset 24 (terrain_detail.hlsli; 0 off)
+    float detailScale;             // offset 28 (> 0 self-detail, < 0 noise)
     std::array<float, 4> fogColor; // offset 32 (float4 register alignment)
 }; // total: 48 bytes
 
@@ -195,7 +196,8 @@ static_assert(offsetof(FogUniform, alphaThreshold) == 8, "FogUniform std140 layo
 static_assert(offsetof(FogUniform, alphaToCoverage) == 12, "FogUniform std140 layout");
 static_assert(offsetof(FogUniform, fogStart) == 16, "FogUniform std140 layout");
 static_assert(offsetof(FogUniform, fogEnd) == 20, "FogUniform std140 layout");
-static_assert(offsetof(FogUniform, fogPadding) == 24, "FogUniform HLSL cbuffer layout");
+static_assert(offsetof(FogUniform, detailStrength) == 24, "FogUniform HLSL cbuffer layout");
+static_assert(offsetof(FogUniform, detailScale) == 28, "FogUniform HLSL cbuffer layout");
 static_assert(offsetof(FogUniform, fogColor) == 32, "FogUniform HLSL float4 register alignment");
 static_assert(sizeof(FogUniform) == 48, "FogUniform must be 48 bytes (HLSL cbuffer)");
 
@@ -5354,6 +5356,14 @@ public:
     {
         m_boundTextureId = texId;
     }
+    // Every draw copies m_fogUniform, and draws with different uniforms never merge
+    // (ClassifyBatchBreak), so detail and plain draws stay in separate batches.
+    void SetTerrainDetail(float strength, float scale) override
+    {
+        const bool enabled = strength > 0.0f && scale != 0.0f;
+        m_fogUniform.detailStrength = enabled ? strength : 0.0f;
+        m_fogUniform.detailScale = enabled ? scale : 0.0f;
+    }
 
     void SetFog(const FogParams& params) override
     {
@@ -5370,8 +5380,7 @@ public:
         m_fogUniform.alphaToCoverage = 0u;
         m_fogUniform.fogStart = params.start;
         m_fogUniform.fogEnd = params.end;
-        m_fogUniform.fogPadding[0] = 0.0f;
-        m_fogUniform.fogPadding[1] = 0.0f;
+        // detailStrength / detailScale stay as SetTerrainDetail left them.
         m_fogUniform.fogColor[0] = params.color[0];
         m_fogUniform.fogColor[1] = params.color[1];
         m_fogUniform.fogColor[2] = params.color[2];

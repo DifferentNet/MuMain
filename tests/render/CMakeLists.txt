@@ -155,6 +155,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/HdTextureSize.cpp
 )
 
+# Grain on the ground near the camera: the renderer params from the [Render] TerrainDetail settings.
+mu_add_test(
+    NAME terrain_detail_tests
+    SOURCES
+        test_terrain_detail.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Terrain/TerrainDetail.cpp
+)
+
 # HD textures: the Data\HD path of a texture.
 mu_add_test(
     NAME hd_textures_tests

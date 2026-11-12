@@ -33,6 +33,8 @@ struct FogUniforms {
     alphaToCoverage: u32,
     fogStart: f32,
     fogEnd: f32,
+    detailStrength: f32,
+    detailScale: f32,
     fogColor: vec4<f32>,
 }
 
@@ -63,19 +65,19 @@ var<private> u0040_entryPointOutput: vec4<f32>;
 fn EnhancedFogAmount_u0028_f1_u003b(eyeDepth: ptr<function, f32>) -> f32 {
     var scaledDistance: f32;
 
-    let _e104 = (*eyeDepth);
-    let _e107 = unnamed.sceneFogParameters[0u];
-    let _e112 = unnamed.sceneFogParameters[2u];
-    scaledDistance = (max((_e104 - _e107), 0f) * _e112);
-    let _e114 = scaledDistance;
-    let _e116 = scaledDistance;
-    return clamp((1f - exp((-(_e114) * _e116))), 0f, 1f);
+    let _e126 = (*eyeDepth);
+    let _e129 = unnamed.sceneFogParameters[0u];
+    let _e134 = unnamed.sceneFogParameters[2u];
+    scaledDistance = (max((_e126 - _e129), 0f) * _e134);
+    let _e136 = scaledDistance;
+    let _e138 = scaledDistance;
+    return clamp((1f - exp((-(_e136) * _e138))), 0f, 1f);
 }
 
 fn SunShadowScale_u0028_f1_u003b(shadow: ptr<function, f32>) -> f32 {
-    let _e103 = (*shadow);
-    let _e106 = unnamed.sunShadowParameters[1u];
-    return (1f - (_e103 * _e106));
+    let _e125 = (*shadow);
+    let _e128 = unnamed.sunShadowParameters[1u];
+    return (1f - (_e125 * _e128));
 }
 
 fn SunShadowAmount_u0028_vf3_u003b_vf3_u003b_vf2_u003b(worldPosition: ptr<function, vec3<f32>>, normal: ptr<function, vec3<f32>>, screenPosition: ptr<function, vec2<f32>>) -> f32 {
@@ -101,217 +103,426 @@ fn SunShadowAmount_u0028_vf3_u003b_vf3_u003b_vf2_u003b(worldPosition: ptr<functi
     var indexable: array<vec2<f32>, 16>;
     var shadow_1: f32;
 
-    let _e128 = unnamed.sunShadowParameters[3u];
-    if (_e128 < 0.5f) {
+    let _e150 = unnamed.sunShadowParameters[3u];
+    if (_e150 < 0.5f) {
         return 0f;
     }
-    let _e132 = unnamed.sunShadowParameters[0u];
-    texel = _e132;
-    let _e133 = (*worldPosition);
-    let _e134 = (*normal);
-    let _e137 = unnamed.sunShadowParameters[2u];
-    offsetPosition = (_e133 + (_e134 * _e137));
-    let _e140 = offsetPosition;
-    let _e146 = unnamed.sunViewProjection;
-    clip = (vec4<f32>(_e140.x, _e140.y, _e140.z, 1f) * transpose(_e146));
-    let _e149 = clip;
-    ndc = _e149.xy;
-    let _e152 = ndc[0u];
-    let _e156 = ndc[1u];
-    uv = vec2<f32>(((_e152 * 0.5f) + 0.5f), (0.5f - (_e156 * 0.5f)));
-    let _e161 = clip[2u];
-    depth = (_e161 - 0.0006f);
-    let _e163 = uv;
-    let _e164 = depth;
-    let _e168 = dpdx(vec3<f32>(_e163.x, _e163.y, _e164));
-    dx = _e168;
-    let _e169 = uv;
-    let _e170 = depth;
-    let _e174 = dpdy(vec3<f32>(_e169.x, _e169.y, _e170));
-    dy = _e174;
-    let _e176 = dx[0u];
-    let _e178 = dy[1u];
-    let _e181 = dx[1u];
-    let _e183 = dy[0u];
-    determinant_ = ((_e176 * _e178) - (_e181 * _e183));
-    let _e186 = determinant_;
-    let _e190 = dy[1u];
-    let _e192 = dx[2u];
-    let _e195 = dx[1u];
-    let _e197 = dy[2u];
-    let _e201 = dx[0u];
-    let _e203 = dy[2u];
-    let _e206 = dy[0u];
-    let _e208 = dx[2u];
-    let _e212 = determinant_;
-    depthSlope = select(vec2<f32>(0f, 0f), (vec2<f32>(((_e190 * _e192) - (_e195 * _e197)), ((_e201 * _e203) - (_e206 * _e208))) / vec2(_e212)), vec2((abs(_e186) > 0.000000000001f)));
-    let _e217 = depthSlope;
-    depthSlope = clamp(_e217, vec2<f32>(-2f, -2f), vec2<f32>(2f, 2f));
-    let _e220 = ndc[0u];
-    let _e223 = ndc[1u];
-    edge = max(abs(_e220), abs(_e223));
-    let _e226 = edge;
-    let _e229 = clip[2u];
-    let _e233 = clip[2u];
-    if (((_e226 >= 1f) || (_e229 >= 1f)) || (_e233 <= 0f)) {
+    let _e154 = unnamed.sunShadowParameters[0u];
+    texel = _e154;
+    let _e155 = (*worldPosition);
+    let _e156 = (*normal);
+    let _e159 = unnamed.sunShadowParameters[2u];
+    offsetPosition = (_e155 + (_e156 * _e159));
+    let _e162 = offsetPosition;
+    let _e168 = unnamed.sunViewProjection;
+    clip = (vec4<f32>(_e162.x, _e162.y, _e162.z, 1f) * transpose(_e168));
+    let _e171 = clip;
+    ndc = _e171.xy;
+    let _e174 = ndc[0u];
+    let _e178 = ndc[1u];
+    uv = vec2<f32>(((_e174 * 0.5f) + 0.5f), (0.5f - (_e178 * 0.5f)));
+    let _e183 = clip[2u];
+    depth = (_e183 - 0.0006f);
+    let _e185 = uv;
+    let _e186 = depth;
+    let _e190 = dpdx(vec3<f32>(_e185.x, _e185.y, _e186));
+    dx = _e190;
+    let _e191 = uv;
+    let _e192 = depth;
+    let _e196 = dpdy(vec3<f32>(_e191.x, _e191.y, _e192));
+    dy = _e196;
+    let _e198 = dx[0u];
+    let _e200 = dy[1u];
+    let _e203 = dx[1u];
+    let _e205 = dy[0u];
+    determinant_ = ((_e198 * _e200) - (_e203 * _e205));
+    let _e208 = determinant_;
+    let _e212 = dy[1u];
+    let _e214 = dx[2u];
+    let _e217 = dx[1u];
+    let _e219 = dy[2u];
+    let _e223 = dx[0u];
+    let _e225 = dy[2u];
+    let _e228 = dy[0u];
+    let _e230 = dx[2u];
+    let _e234 = determinant_;
+    depthSlope = select(vec2<f32>(0f, 0f), (vec2<f32>(((_e212 * _e214) - (_e217 * _e219)), ((_e223 * _e225) - (_e228 * _e230))) / vec2(_e234)), vec2((abs(_e208) > 0.000000000001f)));
+    let _e239 = depthSlope;
+    depthSlope = clamp(_e239, vec2<f32>(-2f, -2f), vec2<f32>(2f, 2f));
+    let _e242 = ndc[0u];
+    let _e245 = ndc[1u];
+    edge = max(abs(_e242), abs(_e245));
+    let _e248 = edge;
+    let _e251 = clip[2u];
+    let _e255 = clip[2u];
+    if (((_e248 >= 1f) || (_e251 >= 1f)) || (_e255 <= 0f)) {
         return 0f;
     }
-    let _e238 = unnamed.sunDirectionAndSoftness[3u];
-    let _e240 = texel;
-    radius = (max(_e238, 0.5f) * _e240);
-    let _e242 = (*screenPosition);
-    angle = (6.2831855f * fract((52.982918f * fract(dot(_e242, vec2<f32>(0.06711056f, 0.00583715f))))));
-    let _e248 = angle;
-    sine = sin(_e248);
-    let _e250 = angle;
-    cosine = cos(_e250);
-    let _e252 = cosine;
-    let _e253 = sine;
-    let _e255 = sine;
-    let _e256 = cosine;
-    turn = mat2x2<f32>(vec2<f32>(_e252, -(_e253)), vec2<f32>(_e255, _e256));
+    let _e260 = unnamed.sunDirectionAndSoftness[3u];
+    let _e262 = texel;
+    radius = (max(_e260, 0.5f) * _e262);
+    let _e264 = (*screenPosition);
+    angle = (6.2831855f * fract((52.982918f * fract(dot(_e264, vec2<f32>(0.06711056f, 0.00583715f))))));
+    let _e270 = angle;
+    sine = sin(_e270);
+    let _e272 = angle;
+    cosine = cos(_e272);
+    let _e274 = cosine;
+    let _e275 = sine;
+    let _e277 = sine;
+    let _e278 = cosine;
+    turn = mat2x2<f32>(vec2<f32>(_e274, -(_e275)), vec2<f32>(_e277, _e278));
     lit = 0f;
     i = 0i;
     loop {
-        let _e260 = i;
-        if (_e260 < 16i) {
-            let _e262 = i;
+        let _e282 = i;
+        if (_e282 < 16i) {
+            let _e284 = i;
             indexable = array<vec2<f32>, 16>(vec2<f32>(-0.94201624f, -0.39906216f), vec2<f32>(0.9455861f, -0.76890725f), vec2<f32>(-0.0941841f, -0.9293887f), vec2<f32>(0.34495938f, 0.2938776f), vec2<f32>(-0.9158858f, 0.45771432f), vec2<f32>(-0.8154423f, -0.87912464f), vec2<f32>(-0.38277543f, 0.27676845f), vec2<f32>(0.974844f, 0.7564838f), vec2<f32>(0.44323325f, -0.97511554f), vec2<f32>(0.5374298f, -0.4737342f), vec2<f32>(-0.2649691f, -0.41893023f), vec2<f32>(0.79197514f, 0.19090188f), vec2<f32>(-0.2418884f, 0.99706507f), vec2<f32>(-0.81409955f, 0.9143759f), vec2<f32>(0.19984126f, 0.78641367f), vec2<f32>(0.14383161f, -0.1410079f));
-            let _e264 = indexable[_e262];
-            let _e265 = turn;
-            let _e267 = radius;
-            tap = ((_e264 * _e265) * _e267);
-            let _e269 = uv;
-            let _e270 = tap;
-            let _e271 = (_e269 + _e270);
-            let _e272 = depth;
-            let _e273 = depthSlope;
-            let _e274 = tap;
-            let _e279 = vec3<f32>(_e271.x, _e271.y, (_e272 + dot(_e273, _e274)));
-            let _e282 = textureSampleCompareLevel(sunShadowMap, sunShadowSampler, _e279.xy, _e279.z);
-            let _e283 = lit;
-            lit = (_e283 + _e282);
+            let _e286 = indexable[_e284];
+            let _e287 = turn;
+            let _e289 = radius;
+            tap = ((_e286 * _e287) * _e289);
+            let _e291 = uv;
+            let _e292 = tap;
+            let _e293 = (_e291 + _e292);
+            let _e294 = depth;
+            let _e295 = depthSlope;
+            let _e296 = tap;
+            let _e301 = vec3<f32>(_e293.x, _e293.y, (_e294 + dot(_e295, _e296)));
+            let _e304 = textureSampleCompareLevel(sunShadowMap, sunShadowSampler, _e301.xy, _e301.z);
+            let _e305 = lit;
+            lit = (_e305 + _e304);
             continue;
         } else {
             break;
         }
         continuing {
-            let _e285 = i;
-            i = (_e285 + 1i);
+            let _e307 = i;
+            i = (_e307 + 1i);
         }
     }
-    let _e287 = lit;
-    shadow_1 = (1f - (_e287 / 16f));
-    let _e290 = shadow_1;
-    let _e291 = edge;
-    return (_e290 * (1f - smoothstep(0.8f, 1f, _e291)));
+    let _e309 = lit;
+    shadow_1 = (1f - (_e309 / 16f));
+    let _e312 = shadow_1;
+    let _e313 = edge;
+    return (_e312 * (1f - smoothstep(0.8f, 1f, _e313)));
+}
+
+fn TerrainNoiseHash_u0028_vf2_u003b(cell: ptr<function, vec2<f32>>) -> f32 {
+    var q: vec2<u32>;
+    var n: u32;
+
+    let _e127 = (*cell);
+    q = (bitcast<vec2<u32>>(vec2<i32>(_e127)) * vec2<u32>(1597334673u, 3812015801u));
+    let _e132 = q[0u];
+    let _e134 = q[1u];
+    n = ((_e132 ^ _e134) * 1597334673u);
+    let _e137 = n;
+    return (f32((_e137 >> bitcast<u32>(8i))) * 0.000000059604645f);
+}
+
+fn TerrainValueNoise_u0028_vf2_u003b(p: ptr<function, vec2<f32>>) -> f32 {
+    var cell_1: vec2<f32>;
+    var f: vec2<f32>;
+    var w: vec2<f32>;
+    var a: f32;
+    var param: vec2<f32>;
+    var b: f32;
+    var param_1: vec2<f32>;
+    var c: f32;
+    var param_2: vec2<f32>;
+    var d: f32;
+    var param_3: vec2<f32>;
+
+    let _e136 = (*p);
+    cell_1 = floor(_e136);
+    let _e138 = (*p);
+    let _e139 = cell_1;
+    f = (_e138 - _e139);
+    let _e141 = f;
+    let _e142 = f;
+    let _e144 = f;
+    w = ((_e141 * _e142) * (vec2(3f) - (_e144 * 2f)));
+    let _e149 = cell_1;
+    param = _e149;
+    let _e150 = TerrainNoiseHash_u0028_vf2_u003b((&param));
+    a = _e150;
+    let _e151 = cell_1;
+    param_1 = (_e151 + vec2<f32>(1f, 0f));
+    let _e153 = TerrainNoiseHash_u0028_vf2_u003b((&param_1));
+    b = _e153;
+    let _e154 = cell_1;
+    param_2 = (_e154 + vec2<f32>(0f, 1f));
+    let _e156 = TerrainNoiseHash_u0028_vf2_u003b((&param_2));
+    c = _e156;
+    let _e157 = cell_1;
+    param_3 = (_e157 + vec2<f32>(1f, 1f));
+    let _e159 = TerrainNoiseHash_u0028_vf2_u003b((&param_3));
+    d = _e159;
+    let _e160 = a;
+    let _e161 = b;
+    let _e163 = w[0u];
+    let _e165 = c;
+    let _e166 = d;
+    let _e168 = w[0u];
+    let _e171 = w[1u];
+    return mix(mix(_e160, _e161, _e163), mix(_e165, _e166, _e168), _e171);
+}
+
+fn TerrainNoiseOctave_u0028_vf2_u003b_f1_u003b(p_1: ptr<function, vec2<f32>>, cellsPerPixel: ptr<function, f32>) -> f32 {
+    var alias_: f32;
+    var param_4: vec2<f32>;
+
+    let _e128 = (*cellsPerPixel);
+    alias_ = smoothstep(0.5f, 1f, _e128);
+    let _e130 = (*p_1);
+    param_4 = _e130;
+    let _e131 = TerrainValueNoise_u0028_vf2_u003b((&param_4));
+    let _e132 = alias_;
+    return mix(_e131, 0.5f, _e132);
+}
+
+fn TerrainNoiseDetail_u0028_vf2_u003b_vf2_u003b_f1_u003b(uv_1: ptr<function, vec2<f32>>, uvWidth: ptr<function, vec2<f32>>, scale: ptr<function, f32>) -> f32 {
+    var p_2: vec2<f32>;
+    var footprint: vec2<f32>;
+    var cellsPerPixel_1: f32;
+    var n_1: f32;
+    var param_5: vec2<f32>;
+    var param_6: f32;
+    var param_7: vec2<f32>;
+    var param_8: f32;
+    var param_9: vec2<f32>;
+    var param_10: f32;
+
+    let _e137 = (*uv_1);
+    let _e138 = (*scale);
+    p_2 = (_e137 * _e138);
+    let _e140 = (*uvWidth);
+    let _e141 = (*scale);
+    footprint = (_e140 * _e141);
+    let _e144 = footprint[0u];
+    let _e146 = footprint[1u];
+    cellsPerPixel_1 = max(_e144, _e146);
+    let _e148 = p_2;
+    param_5 = _e148;
+    let _e149 = cellsPerPixel_1;
+    param_6 = _e149;
+    let _e150 = TerrainNoiseOctave_u0028_vf2_u003b_f1_u003b((&param_5), (&param_6));
+    let _e152 = p_2;
+    let _e154 = cellsPerPixel_1;
+    param_7 = (_e152 * 2.31f);
+    param_8 = (_e154 * 2.31f);
+    let _e156 = TerrainNoiseOctave_u0028_vf2_u003b_f1_u003b((&param_7), (&param_8));
+    let _e159 = p_2;
+    let _e161 = cellsPerPixel_1;
+    param_9 = (_e159 * 5.17f);
+    param_10 = (_e161 * 5.17f);
+    let _e163 = TerrainNoiseOctave_u0028_vf2_u003b_f1_u003b((&param_9), (&param_10));
+    n_1 = (((0.5f * _e150) + (0.3f * _e156)) + (0.2f * _e163));
+    let _e166 = n_1;
+    return (1f + ((0.25f * (_e166 - 0.5f)) * 2f));
+}
+
+fn TerrainSelfDetail_u0028_vf2_u003b_vf2_u003b_vf2_u003b_f1_u003b(uv_2: ptr<function, vec2<f32>>, uvDx: ptr<function, vec2<f32>>, uvDy: ptr<function, vec2<f32>>, scale_1: ptr<function, f32>) -> f32 {
+    var dense: f32;
+    var mean: f32;
+
+    let _e130 = (*uv_2);
+    let _e131 = (*scale_1);
+    let _e133 = (*uvDx);
+    let _e134 = (*scale_1);
+    let _e136 = (*uvDy);
+    let _e137 = (*scale_1);
+    let _e139 = textureSampleGrad(tex, s, (_e130 * _e131), (_e133 * _e134), (_e136 * _e137));
+    dense = dot(_e139.xyz, vec3<f32>(0.299f, 0.587f, 0.114f));
+    let _e142 = (*uv_2);
+    let _e143 = textureSampleLevel(tex, s, _e142, 16f);
+    mean = dot(_e143.xyz, vec3<f32>(0.299f, 0.587f, 0.114f));
+    let _e146 = dense;
+    let _e147 = mean;
+    return clamp((_e146 / max(_e147, 0.02f)), 0.6f, 1.4f);
+}
+
+fn TerrainDetailFade_u0028_f1_u003b(eyeDepth_1: ptr<function, f32>) -> f32 {
+    let _e125 = (*eyeDepth_1);
+    return (1f - smoothstep(2400f, 3800f, _e125));
+}
+
+fn TerrainDetailFactor_u0028_vf2_u003b_f1_u003b(uv_3: ptr<function, vec2<f32>>, eyeDepth_2: ptr<function, f32>) -> f32 {
+    var uvDx_1: vec2<f32>;
+    var uvDy_1: vec2<f32>;
+    var uvWidth_1: vec2<f32>;
+    var amount: f32;
+    var param_11: f32;
+    var param_12: vec2<f32>;
+    var param_13: vec2<f32>;
+    var param_14: vec2<f32>;
+    var param_15: f32;
+    var param_16: vec2<f32>;
+    var param_17: vec2<f32>;
+    var param_18: f32;
+
+    let _e138 = (*uv_3);
+    let _e139 = dpdx(_e138);
+    uvDx_1 = _e139;
+    let _e140 = (*uv_3);
+    let _e141 = dpdy(_e140);
+    uvDy_1 = _e141;
+    let _e142 = uvDx_1;
+    let _e144 = uvDy_1;
+    uvWidth_1 = (abs(_e142) + abs(_e144));
+    let _e148 = unnamed_1.detailStrength;
+    if (_e148 <= 0f) {
+        return 1f;
+    }
+    let _e151 = unnamed_1.detailStrength;
+    let _e152 = (*eyeDepth_2);
+    param_11 = _e152;
+    let _e153 = TerrainDetailFade_u0028_f1_u003b((&param_11));
+    amount = (_e151 * _e153);
+    let _e156 = unnamed_1.detailScale;
+    if (_e156 > 0f) {
+        let _e158 = (*uv_3);
+        param_12 = _e158;
+        let _e159 = uvDx_1;
+        param_13 = _e159;
+        let _e160 = uvDy_1;
+        param_14 = _e160;
+        let _e162 = unnamed_1.detailScale;
+        param_15 = _e162;
+        let _e163 = TerrainSelfDetail_u0028_vf2_u003b_vf2_u003b_vf2_u003b_f1_u003b((&param_12), (&param_13), (&param_14), (&param_15));
+        let _e164 = amount;
+        return mix(1f, _e163, _e164);
+    }
+    let _e166 = amount;
+    let _e168 = unnamed_1.detailScale;
+    let _e170 = (*uv_3);
+    param_16 = _e170;
+    let _e171 = uvWidth_1;
+    param_17 = _e171;
+    param_18 = -(_e168);
+    let _e172 = TerrainNoiseDetail_u0028_vf2_u003b_vf2_u003b_f1_u003b((&param_16), (&param_17), (&param_18));
+    return (1f + (_e166 * (_e172 - 1f)));
 }
 
 fn u0040_main_u0028_struct_u002d_FSInput_u002d_vf4_u002d_vf2_u002d_vf4_u002d_f1_u002d_f1_u002d_vf3_u002d_vf3_u002d_vf4_u002d_vf4_u002d_vf31_u003b(input: ptr<function, FSInput>) -> vec4<f32> {
     var color: vec4<f32>;
+    var param_19: vec2<f32>;
+    var param_20: f32;
     var edge_1: f32;
     var normal_1: vec3<f32>;
     var normalLength: f32;
     var unitNormal: vec3<f32>;
-    var param: vec3<f32>;
-    var param_1: vec3<f32>;
-    var param_2: vec2<f32>;
-    var param_3: f32;
-    var param_4: f32;
+    var param_21: vec3<f32>;
+    var param_22: vec3<f32>;
+    var param_23: vec2<f32>;
+    var param_24: f32;
+    var param_25: f32;
 
-    let _e114 = (*input).uv;
-    let _e115 = textureSample(tex, s, _e114);
-    let _e117 = (*input).color;
-    color = (_e115 * _e117);
-    let _e120 = unnamed_1.alphaToCoverage;
-    if (_e120 != 0u) {
-        let _e123 = color[3u];
-        let _e125 = unnamed_1.alphaThreshold;
-        let _e128 = color[3u];
-        let _e129 = fwidth(_e128);
-        edge_1 = clamp((((_e123 - _e125) / max(_e129, 0.0001f)) + 0.5f), 0f, 1f);
-        let _e134 = edge_1;
-        let _e136 = color[3u];
-        color[3u] = (_e136 * _e134);
-        let _e140 = color[3u];
-        if (_e140 <= 0f) {
+    let _e138 = (*input).uv;
+    let _e139 = textureSample(tex, s, _e138);
+    let _e141 = (*input).color;
+    color = (_e139 * _e141);
+    let _e144 = (*input).uv;
+    param_19 = _e144;
+    let _e146 = (*input).eyeDepth;
+    param_20 = _e146;
+    let _e147 = TerrainDetailFactor_u0028_vf2_u003b_f1_u003b((&param_19), (&param_20));
+    let _e148 = color;
+    let _e150 = (_e148.xyz * _e147);
+    color[0u] = _e150.x;
+    color[1u] = _e150.y;
+    color[2u] = _e150.z;
+    let _e158 = unnamed_1.alphaToCoverage;
+    if (_e158 != 0u) {
+        let _e161 = color[3u];
+        let _e163 = unnamed_1.alphaThreshold;
+        let _e166 = color[3u];
+        let _e167 = fwidth(_e166);
+        edge_1 = clamp((((_e161 - _e163) / max(_e167, 0.0001f)) + 0.5f), 0f, 1f);
+        let _e172 = edge_1;
+        let _e174 = color[3u];
+        color[3u] = (_e174 * _e172);
+        let _e178 = color[3u];
+        if (_e178 <= 0f) {
             discard;
         }
     } else {
-        let _e143 = unnamed_1.alphaDiscardEnabled;
-        let _e146 = color[3u];
-        let _e148 = unnamed_1.alphaThreshold;
-        if ((_e143 != 0u) && (_e146 <= _e148)) {
+        let _e181 = unnamed_1.alphaDiscardEnabled;
+        let _e184 = color[3u];
+        let _e186 = unnamed_1.alphaThreshold;
+        if ((_e181 != 0u) && (_e184 <= _e186)) {
             discard;
         }
     }
-    let _e152 = (*input).worldNormal;
-    normal_1 = _e152;
-    let _e153 = normal_1;
-    normalLength = length(_e153);
-    let _e155 = normalLength;
-    let _e157 = normal_1;
-    let _e158 = normalLength;
-    unitNormal = select(vec3<f32>(0f, 0f, 0f), (_e157 / vec3(_e158)), vec3((_e155 > 0.0001f)));
-    let _e164 = (*input).worldPositionAndDynamicLights;
-    param = _e164.xyz;
-    let _e166 = unitNormal;
-    param_1 = _e166;
-    let _e168 = (*input).pos;
-    param_2 = _e168.xy;
-    let _e170 = SunShadowAmount_u0028_vf3_u003b_vf3_u003b_vf2_u003b((&param), (&param_1), (&param_2));
-    param_3 = _e170;
-    let _e171 = SunShadowScale_u0028_f1_u003b((&param_3));
-    let _e172 = color;
-    let _e174 = (_e172.xyz * _e171);
-    color[0u] = _e174.x;
-    color[1u] = _e174.y;
-    color[2u] = _e174.z;
-    let _e182 = unnamed_1.fogEnabled;
-    let _e186 = unnamed.sceneFogColor[3u];
-    if ((_e182 != 0u) && (_e186 > 0f)) {
-        let _e189 = color;
-        let _e192 = unnamed.sceneFogColor;
-        let _e195 = (*input).eyeDepth;
-        param_4 = _e195;
-        let _e196 = EnhancedFogAmount_u0028_f1_u003b((&param_4));
-        let _e198 = mix(_e189.xyz, _e192.xyz, vec3(_e196));
-        color[0u] = _e198.x;
-        color[1u] = _e198.y;
-        color[2u] = _e198.z;
+    let _e190 = (*input).worldNormal;
+    normal_1 = _e190;
+    let _e191 = normal_1;
+    normalLength = length(_e191);
+    let _e193 = normalLength;
+    let _e195 = normal_1;
+    let _e196 = normalLength;
+    unitNormal = select(vec3<f32>(0f, 0f, 0f), (_e195 / vec3(_e196)), vec3((_e193 > 0.0001f)));
+    let _e202 = (*input).worldPositionAndDynamicLights;
+    param_21 = _e202.xyz;
+    let _e204 = unitNormal;
+    param_22 = _e204;
+    let _e206 = (*input).pos;
+    param_23 = _e206.xy;
+    let _e208 = SunShadowAmount_u0028_vf3_u003b_vf3_u003b_vf2_u003b((&param_21), (&param_22), (&param_23));
+    param_24 = _e208;
+    let _e209 = SunShadowScale_u0028_f1_u003b((&param_24));
+    let _e210 = color;
+    let _e212 = (_e210.xyz * _e209);
+    color[0u] = _e212.x;
+    color[1u] = _e212.y;
+    color[2u] = _e212.z;
+    let _e220 = unnamed_1.fogEnabled;
+    let _e224 = unnamed.sceneFogColor[3u];
+    if ((_e220 != 0u) && (_e224 > 0f)) {
+        let _e227 = color;
+        let _e230 = unnamed.sceneFogColor;
+        let _e233 = (*input).eyeDepth;
+        param_25 = _e233;
+        let _e234 = EnhancedFogAmount_u0028_f1_u003b((&param_25));
+        let _e236 = mix(_e227.xyz, _e230.xyz, vec3(_e234));
+        color[0u] = _e236.x;
+        color[1u] = _e236.y;
+        color[2u] = _e236.z;
     }
-    let _e205 = color;
-    return _e205;
+    let _e243 = color;
+    return _e243;
 }
 
 fn main_1() {
     var input_1: FSInput;
-    var param_5: FSInput;
+    var param_26: FSInput;
 
-    let _e104 = input_u002e_pos_1;
-    input_1.pos = _e104;
-    let _e106 = input_u002e_uv_1;
-    input_1.uv = _e106;
-    let _e108 = input_u002e_color_1;
-    input_1.color = _e108;
-    let _e110 = input_u002e_fogFactor_1;
-    input_1.fogFactor = _e110;
-    let _e112 = input_u002e_eyeDepth_1;
-    input_1.eyeDepth = _e112;
-    let _e114 = input_u002e_normal_1;
-    input_1.normal = _e114;
-    let _e116 = input_u002e_viewVector_1;
-    input_1.viewVector = _e116;
-    let _e118 = input_u002e_lightDirectionAndSpecular_1;
-    input_1.lightDirectionAndSpecular = _e118;
-    let _e120 = input_u002e_worldPositionAndDynamicLights_1;
-    input_1.worldPositionAndDynamicLights = _e120;
-    let _e122 = input_u002e_worldNormal_1;
-    input_1.worldNormal = _e122;
-    let _e124 = input_1;
-    param_5 = _e124;
-    let _e125 = u0040_main_u0028_struct_u002d_FSInput_u002d_vf4_u002d_vf2_u002d_vf4_u002d_f1_u002d_f1_u002d_vf3_u002d_vf3_u002d_vf4_u002d_vf4_u002d_vf31_u003b((&param_5));
-    u0040_entryPointOutput = _e125;
+    let _e126 = input_u002e_pos_1;
+    input_1.pos = _e126;
+    let _e128 = input_u002e_uv_1;
+    input_1.uv = _e128;
+    let _e130 = input_u002e_color_1;
+    input_1.color = _e130;
+    let _e132 = input_u002e_fogFactor_1;
+    input_1.fogFactor = _e132;
+    let _e134 = input_u002e_eyeDepth_1;
+    input_1.eyeDepth = _e134;
+    let _e136 = input_u002e_normal_1;
+    input_1.normal = _e136;
+    let _e138 = input_u002e_viewVector_1;
+    input_1.viewVector = _e138;
+    let _e140 = input_u002e_lightDirectionAndSpecular_1;
+    input_1.lightDirectionAndSpecular = _e140;
+    let _e142 = input_u002e_worldPositionAndDynamicLights_1;
+    input_1.worldPositionAndDynamicLights = _e142;
+    let _e144 = input_u002e_worldNormal_1;
+    input_1.worldNormal = _e144;
+    let _e146 = input_1;
+    param_26 = _e146;
+    let _e147 = u0040_main_u0028_struct_u002d_FSInput_u002d_vf4_u002d_vf2_u002d_vf4_u002d_f1_u002d_f1_u002d_vf3_u002d_vf3_u002d_vf4_u002d_vf4_u002d_vf31_u003b((&param_26));
+    u0040_entryPointOutput = _e147;
     return;
 }
 
