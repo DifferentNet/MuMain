@@ -16481,4 +16481,16 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>Close</value>
   </data>
+  <data name="PingHudLabel" xml:space="preserve">
+    <value>Ping %d ms</value>
+  </data>
+  <data name="PingHudHint" xml:space="preserve">
+    <value>Round trip to the game server: last %d ms, median of 5 minutes %d ms.</value>
+  </data>
+  <data name="PingHudHintNetwork" xml:space="preserve">
+    <value>Round trip to the game server: last %d ms, median of 5 minutes %d ms. The network alone: %d ms.</value>
+  </data>
+  <data name="GmPanelRowPing" xml:space="preserve">
+    <value>  %d ms</value>
+  </data>
 </root>

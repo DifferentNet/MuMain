@@ -118,6 +118,26 @@
 	display: none;
 }
 
+/* MU Skynet: the ping label right of the bar, on the readout's line (GameLogic/Character/PingHud.h), coloured by
+   the last round trip. Under the bar it covered the pet's health frame. */
+#ping {
+	position: absolute;
+	left: 212dp;
+	top: 5dp;
+	height: 9dp;
+	line-height: 9dp;
+	font-family: "token(font-body)";
+	font-size: 1rem;
+	white-space: nowrap;
+	color: token(text-primary);
+	font-effect: outline(1px #000000);
+	pointer-events: auto;
+}
+#ping.good  { color: #7ee07a; }
+#ping.fair  { color: #f0d060; }
+#ping.bad   { color: #ff6a5a; }
+#ping.stale { color: #9a9a9a; }
+
 /* MU Skynet: the phone's own HUD (theme flag "mobile-hud"). Its Auto button and Menu -> MU Helper do
    what these two 18x13 buttons do, which a finger cannot hit, only brush by mistake: the bar keeps the
    position readout alone. */
