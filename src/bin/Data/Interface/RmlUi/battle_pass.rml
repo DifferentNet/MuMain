@@ -48,12 +48,12 @@
 		</div>
 
 		<div id="bp_tabs">
-			<div id="bp_tab_rewards" class="bp-tab bp-tab-left" data-class-active="tab == 0"
+			<div id="bp_tab_rewards" class="bp-tab bp-tab-left pad-page" data-class-active="tab == 0"
 			     data-event-click="battle_pass_tab_rewards">
 				<span class="sharp-text sharp-centre sharp-middle bp-tab-label"
 				      data-style-font-size="tab_rewards.text_px + 'px'">{{tab_rewards.text}}</span>
 			</div>
-			<div id="bp_tab_quests" class="bp-tab bp-tab-right" data-class-active="tab == 1"
+			<div id="bp_tab_quests" class="bp-tab bp-tab-right pad-page" data-class-active="tab == 1"
 			     data-event-click="battle_pass_tab_quests">
 				<span class="sharp-text sharp-centre sharp-middle bp-tab-label"
 				      data-style-font-size="tab_quests.text_px + 'px'">{{tab_quests.text}}</span>

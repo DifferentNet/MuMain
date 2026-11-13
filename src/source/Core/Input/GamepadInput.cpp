@@ -39,6 +39,7 @@ struct Pad
 {
     SDL_Gamepad* handle = nullptr;
     SDL_JoystickID id = 0;
+    PadKind kind = PadKind::Xbox;
     std::array<bool, ButtonCount> held{};
     std::array<float, SDL_GAMEPAD_AXIS_COUNT> axes{};
     // SDL's axis values at the last poll: only a change since then counts, so a stick held when the
@@ -55,6 +56,33 @@ bool g_enabled = true;
 bool g_offWhenPutDown = false;
 bool g_started = false;
 bool g_rumble = true;
+PadKind g_lastKind = PadKind::Xbox;
+GlyphChoice g_glyphChoice = GlyphChoice::Auto;
+
+// The pad's kind: SDL's own guess from its vendor and product where it has one (a PC), else its name
+// (the browser gives SDL only the Gamepad.id).
+PadKind KindOf(SDL_Gamepad* handle)
+{
+    switch (SDL_GetGamepadType(handle))
+    {
+    case SDL_GAMEPAD_TYPE_PS3:
+    case SDL_GAMEPAD_TYPE_PS4:
+    case SDL_GAMEPAD_TYPE_PS5:
+        return PadKind::PlayStation;
+    case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_PRO:
+    case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_LEFT:
+    case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_RIGHT:
+    case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_PAIR:
+        return PadKind::Nintendo;
+    case SDL_GAMEPAD_TYPE_XBOX360:
+    case SDL_GAMEPAD_TYPE_XBOXONE:
+        return PadKind::Xbox;
+    default:
+        break;
+    }
+    const char* name = SDL_GetGamepadName(handle);
+    return KindFromName(name != nullptr ? name : "");
+}
 
 std::optional<Button> FromSdlButton(int button)
 {
@@ -234,8 +262,13 @@ void AddPad(SDL_JoystickID id)
     *free = Pad{};
     free->handle = handle;
     free->id = id;
+    free->kind = KindOf(handle);
+    g_lastKind = free->kind;
     const char* name = SDL_GetGamepadName(handle);
-    mu::log::Get("input")->info("Gamepad connected: {}", name != nullptr ? name : "unnamed");
+    mu::log::Get("input")->info("Gamepad connected: {} ({})", name != nullptr ? name : "unnamed",
+                                free->kind == PadKind::PlayStation ? "PlayStation"
+                                : free->kind == PadKind::Nintendo  ? "Nintendo"
+                                                                   : "Xbox");
 #ifdef __EMSCRIPTEN__
     TapWakingPress();
 #endif
@@ -356,6 +389,26 @@ bool IsRumbleOn()
     return g_rumble;
 }
 
+PadKind ConnectedKind()
+{
+    return IsConnected() ? g_lastKind : PadKind::Xbox;
+}
+
+void SetGlyphChoice(GlyphChoice choice)
+{
+    g_glyphChoice = choice;
+}
+
+GlyphChoice GetGlyphChoice()
+{
+    return g_glyphChoice;
+}
+
+PadKind ShownKind()
+{
+    return Core::Input::Gamepad::ShownKind(g_glyphChoice, ConnectedKind());
+}
+
 void Rumble(float low, float high, int milliseconds)
 {
     if (!g_rumble || !IsEnabled() || milliseconds <= 0)
@@ -394,6 +447,8 @@ void ProcessEvent(const SDL_Event& event)
     case SDL_EVENT_GAMEPAD_BUTTON_UP:
         if (Pad* pad = FindPad(event.gbutton.which))
         {
+            if (event.gbutton.down)
+                g_lastKind = pad->kind;
             if (const std::optional<Button> button = FromSdlButton(event.gbutton.button))
                 SetPadButton(*pad, *button, event.gbutton.down);
         }

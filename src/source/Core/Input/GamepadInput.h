@@ -7,6 +7,8 @@
 // press the same buttons.
 #pragma once
 
+#include "Core/Input/GamepadKind.h"
+
 #include <cstdint>
 
 union SDL_Event;
@@ -96,4 +98,12 @@ void SetRumble(bool on);
 // Shakes the pads for `milliseconds`: `low` the heavy motor, `high` the light one, each 0 .. 1. Nothing
 // with vibration off, the pad off or a pad without motors (a browser without the vibration API).
 void Rumble(float low, float high, int milliseconds);
+
+// The kind of the pad pressed last (of the one connected last until then); Xbox with none.
+[[nodiscard]] PadKind ConnectedKind();
+// The player's glyph choice (Options -> Interface -> Button glyphs); Auto to start with.
+void SetGlyphChoice(GlyphChoice choice);
+[[nodiscard]] GlyphChoice GetGlyphChoice();
+// The glyphs the controls draw now: the choice, or with Auto the pad's own kind.
+[[nodiscard]] PadKind ShownKind();
 } // namespace Core::Input::Gamepad

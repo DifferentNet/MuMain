@@ -32,11 +32,11 @@
 		</div>
 
 		<div class="tab-row">
-			<div id="tab_quest" class="tab-btn tab-btn-quest" data-class-active="active_tab == 0"
+			<div id="tab_quest" class="tab-btn pad-page tab-btn-quest" data-class-active="active_tab == 0"
 			     data-event-click="myquest_select_tab(0)">{{tab_quest_label}}</div>
-			<div id="tab_jobchange" class="tab-btn tab-btn-jobchange" data-class-active="active_tab == 1"
+			<div id="tab_jobchange" class="tab-btn pad-page tab-btn-jobchange" data-class-active="active_tab == 1"
 			     data-event-click="myquest_select_tab(1)">{{tab_jobchange_label}}</div>
-			<div id="tab_castletemple" class="tab-btn tab-btn-castletemple" data-class-active="active_tab == 2"
+			<div id="tab_castletemple" class="tab-btn pad-page tab-btn-castletemple" data-class-active="active_tab == 2"
 			     data-event-click="myquest_select_tab(2)">{{tab_castletemple_label}}</div>
 		</div>
 

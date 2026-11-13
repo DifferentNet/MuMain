@@ -7,9 +7,18 @@
 
 namespace Core::Input::Gamepad
 {
-// The share of a stick's throw around its centre that reads as rest: about XInput's advice for an
-// Xbox pad (7849 and 8689 of 32767 for the left and the right stick).
-inline constexpr float StickDeadZone = 0.25f;
+// The share of a stick's throw around its centre that reads as rest, to start with: about XInput's
+// advice for an Xbox pad (7849 and 8689 of 32767 for the left and the right stick).
+inline constexpr float DefaultStickDeadZone = 0.25f;
+// The player's choice keeps to this range (Options -> Interface -> Stick dead zone): less reads a
+// worn stick's drift as a lean, more leaves too little of the throw to aim with.
+inline constexpr float MinStickDeadZone = 0.10f;
+inline constexpr float MaxStickDeadZone = 0.35f;
+
+// The dead zone in use, DefaultStickDeadZone until the player picks another.
+[[nodiscard]] float StickDeadZone();
+// Sets it, kept to MinStickDeadZone .. MaxStickDeadZone.
+void SetStickDeadZone(float share);
 
 // A stick's raw place (-1 .. 1 each axis) past the dead zone, the same way: (0, 0) inside it, then a
 // length growing from 0 at its edge to 1 at the rim. Round, so a diagonal is not cut short.

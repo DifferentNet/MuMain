@@ -17,11 +17,11 @@
 		<span class="sharp-text" id="title" data-style-font-size="text_px + 'px'">Quest</span>
 
 		<div class="tab-row">
-			<div id="tab_quest" class="sharp-text tab-btn tab-btn-quest" data-class-active="active_tab == 0" data-style-font-size="text_px + 'px'"
+			<div id="tab_quest" class="sharp-text tab-btn pad-page tab-btn-quest" data-class-active="active_tab == 0" data-style-font-size="text_px + 'px'"
 			     data-event-click="myquest_select_tab(0)">{{tab_quest_label}}</div>
-			<div id="tab_jobchange" class="sharp-text tab-btn tab-btn-jobchange" data-class-active="active_tab == 1" data-style-font-size="text_px + 'px'"
+			<div id="tab_jobchange" class="sharp-text tab-btn pad-page tab-btn-jobchange" data-class-active="active_tab == 1" data-style-font-size="text_px + 'px'"
 			     data-event-click="myquest_select_tab(1)">{{tab_jobchange_label}}</div>
-			<div id="tab_castletemple" class="sharp-text tab-btn tab-btn-castletemple" data-class-active="active_tab == 2" data-style-font-size="text_px + 'px'"
+			<div id="tab_castletemple" class="sharp-text tab-btn pad-page tab-btn-castletemple" data-class-active="active_tab == 2" data-style-font-size="text_px + 'px'"
 			     data-event-click="myquest_select_tab(2)">{{tab_castletemple_label}}</div>
 		</div>
 

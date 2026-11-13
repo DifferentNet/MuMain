@@ -38,7 +38,7 @@
 
 		<div id="tt_body" class="sharp-text sharp-flow">
 			<div class="tt-tabs">
-				<div class="tt-tab" data-for="tab, i : tabs" data-class-on="tab.selected" data-event-click="titles_tab(i)">
+				<div class="tt-tab pad-page" data-for="tab, i : tabs" data-class-on="tab.selected" data-event-click="titles_tab(i)">
 					<span class="tt-tab-label" data-style-font-size="tab.label.text_px + 'px'">{{tab.label.text}}</span>
 				</div>
 			</div>

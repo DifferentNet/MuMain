@@ -35,7 +35,7 @@
 
 		<div id="et_list" class="sharp-text sharp-flow">
 			<div class="et-tabs">
-				<div class="et-tab" data-for="t : tabs" data-class-selected="t.selected"
+				<div class="et-tab pad-page" data-for="t : tabs" data-class-selected="t.selected"
 				     data-event-click="endless_tower_tab(t.tab)">
 					<span class="et-tab-label" data-style-font-size="t.label.text_px + 'px'">{{t.label.text}}</span>
 				</div>

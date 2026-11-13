@@ -43,11 +43,11 @@
      frame's top-right corner by option_window.rcss. -->
 <body template="window_shell" data-model="option_window">
 	<div class="option-tab-row">
-		<div class="option-tab-btn" data-class-active-tab="active_tab == 0" data-event-click="option_select_tab(0)">{{tab_display_label}}</div>
-		<div class="option-tab-btn" data-class-active-tab="active_tab == 1" data-event-click="option_select_tab(1)">{{tab_graphics_label}}</div>
-		<div class="option-tab-btn" data-class-active-tab="active_tab == 2" data-event-click="option_select_tab(2)">{{tab_audio_label}}</div>
-		<div class="option-tab-btn" data-class-active-tab="active_tab == 3" data-event-click="option_select_tab(3)">{{tab_gameplay_label}}</div>
-		<div class="option-tab-btn" data-class-active-tab="active_tab == 4" data-event-click="option_select_tab(4)">{{tab_interface_label}}</div>
+		<div class="option-tab-btn pad-page" data-class-active-tab="active_tab == 0" data-event-click="option_select_tab(0)">{{tab_display_label}}</div>
+		<div class="option-tab-btn pad-page" data-class-active-tab="active_tab == 1" data-event-click="option_select_tab(1)">{{tab_graphics_label}}</div>
+		<div class="option-tab-btn pad-page" data-class-active-tab="active_tab == 2" data-event-click="option_select_tab(2)">{{tab_audio_label}}</div>
+		<div class="option-tab-btn pad-page" data-class-active-tab="active_tab == 3" data-event-click="option_select_tab(3)">{{tab_gameplay_label}}</div>
+		<div class="option-tab-btn pad-page" data-class-active-tab="active_tab == 4" data-event-click="option_select_tab(4)">{{tab_interface_label}}</div>
 	</div>
 
 	<div class="option-close-btn" data-event-click="option_click_close"></div>
@@ -623,6 +623,39 @@
 					<div class="option-dropdown-option" data-for="label : gamepad_labels"
 					     data-class-selected="it_index == gamepad_index"
 					     data-event-click="option_dropdown_option_click(11, it_index)">{{label}}</div>
+				</div>
+			</div>
+		</div>
+		<div class="option-row option-select-row" data-if="gamepad_index != 2">
+			<span class="option-row-label">{{gamepad_dead_zone_row_label}}</span>
+			<div class="option-dropdown">
+				<div class="option-dropdown-value" data-event-click="option_toggle_dropdown(16)">{{gamepad_dead_zone_value_label}}</div>
+				<div class="option-dropdown-list" data-class-hidden="open_dropdown != 16">
+					<div class="option-dropdown-option" data-for="label : gamepad_dead_zone_labels"
+					     data-class-selected="it_index == gamepad_dead_zone_index"
+					     data-event-click="option_dropdown_option_click(16, it_index)">{{label}}</div>
+				</div>
+			</div>
+		</div>
+		<div class="option-row option-select-row" data-if="gamepad_index != 2">
+			<span class="option-row-label">{{gamepad_speed_row_label}}</span>
+			<div class="option-dropdown">
+				<div class="option-dropdown-value" data-event-click="option_toggle_dropdown(17)">{{gamepad_speed_value_label}}</div>
+				<div class="option-dropdown-list" data-class-hidden="open_dropdown != 17">
+					<div class="option-dropdown-option" data-for="label : gamepad_speed_labels"
+					     data-class-selected="it_index == gamepad_speed_index"
+					     data-event-click="option_dropdown_option_click(17, it_index)">{{label}}</div>
+				</div>
+			</div>
+		</div>
+		<div class="option-row option-select-row" data-if="gamepad_index != 2">
+			<span class="option-row-label">{{gamepad_glyphs_row_label}}</span>
+			<div class="option-dropdown">
+				<div class="option-dropdown-value" data-event-click="option_toggle_dropdown(18)">{{gamepad_glyphs_value_label}}</div>
+				<div class="option-dropdown-list" data-class-hidden="open_dropdown != 18">
+					<div class="option-dropdown-option" data-for="label : gamepad_glyphs_labels"
+					     data-class-selected="it_index == gamepad_glyphs_index"
+					     data-event-click="option_dropdown_option_click(18, it_index)">{{label}}</div>
 				</div>
 			</div>
 		</div>

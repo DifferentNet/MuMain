@@ -28,9 +28,9 @@
 		<span id="title">{{window_title}}</span>
 
 		<div class="tab-row">
-			<div class="tab-btn tab-btn-darkhorse" data-class-active="active_tab == 0"
+			<div class="tab-btn pad-page tab-btn-darkhorse" data-class-active="active_tab == 0"
 			     data-event-click="petinfo_select_tab(0)">{{tab_darkhorse_label}}</div>
-			<div class="tab-btn tab-btn-darkspirit" data-class-active="active_tab == 1"
+			<div class="tab-btn pad-page tab-btn-darkspirit" data-class-active="active_tab == 1"
 			     data-event-click="petinfo_select_tab(1)">{{tab_darkspirit_label}}</div>
 		</div>
 

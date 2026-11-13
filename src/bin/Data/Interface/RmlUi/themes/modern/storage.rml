@@ -53,7 +53,7 @@
 		<!-- The vault page arrows (VaultPages.h), over the header rail. -->
 		<div id="btn_page_prev" class="stor-page-btn stor-page-prev" data-class-hidden="!pages_visible" data-class-busy="pages_busy"
 		     data-event-click="storage_page(-1)"><span class="stor-page-glyph">&#9664;</span></div>
-		<div id="btn_page_next" class="stor-page-btn stor-page-next" data-class-hidden="!pages_visible" data-class-busy="pages_busy"
+		<div id="btn_page_next" class="stor-page-btn stor-page-next pad-page-next" data-class-hidden="!pages_visible" data-class-busy="pages_busy"
 		     data-event-click="storage_page(1)"><span class="stor-page-glyph">&#9654;</span></div>
 
 		<!-- Wallet + fee row: base.rcss's shared .modern-wallet-px family, heightened to fit both

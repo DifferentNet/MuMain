@@ -113,3 +113,93 @@ body {
 	margin: 0 12dp 0 5dp;
 	line-height: 22dp;
 }
+
+/* The controls card (pad round 3, B4): in the middle of the screen, clear of the hub's tabs along the
+   top and the pad's row along the bottom. */
+#po_card {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 640dp;
+	margin-left: -320dp;
+	margin-top: -170dp;
+	padding: 10dp 14dp;
+	box-sizing: border-box;
+	border: 1dp token(border-frame);
+	border-radius: 4dp;
+	background-color: rgba(6, 7, 6, 235);
+	font-size: 13dp;
+}
+#pc_head {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 8dp;
+}
+#pc_title {
+	font-size: 16dp;
+	color: token(accent-gold);
+}
+#pc_pages {
+	display: flex;
+	flex-direction: row;
+}
+.pc-page {
+	margin-left: 8dp;
+	padding: 1dp 6dp;
+	color: rgba(242, 242, 242, 150);
+}
+.pc-page.active {
+	color: token(accent-gold);
+	border-bottom: 2dp token(accent-gold);
+}
+.pc-body {
+	display: flex;
+	flex-direction: row;
+	height: 252dp;
+}
+.pc-col {
+	width: 50%;
+}
+.pc-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	height: 30dp;
+}
+.pc-keys {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-end;
+	width: 104dp;
+	margin-right: 8dp;
+}
+.pc-keys .pad-glyph, #pc_foot .pad-glyph {
+	position: relative;
+	margin-left: 2dp;
+}
+.pc-plus {
+	margin: 0 2dp;
+}
+.pc-label {
+	line-height: 15dp;
+}
+#pc_foot {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	margin-top: 4dp;
+}
+/* The phone view: the card fills the screen's width. */
+@media (theme: mobile) {
+	#po_card {
+		left: 8dp;
+		width: auto;
+		right: 8dp;
+		margin-left: 0;
+		font-size: 11dp;
+	}
+	.pc-keys { width: 92dp; }
+}

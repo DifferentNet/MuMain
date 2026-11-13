@@ -3,6 +3,7 @@
 
 #include "Core/Utilities/StringUtils.h"
 #include "I18N/All.h"
+#include "UI/HUD/PadGlyphs.h"
 #include "UI/HUD/PadHub.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlThemedView.h"
@@ -10,6 +11,7 @@
 #include <RmlUi/Core/DataModelHandle.h>
 #include <RmlUi/Core/ElementDocument.h>
 
+#include <array>
 #include <cmath>
 #include <string>
 #include <vector>
@@ -27,8 +29,44 @@ struct TabView
     bool active = false;
 };
 
+// The controls card's texts, card[0] .. in pad_overlay.rml, in this order.
+const std::array<const wchar_t* const*, 29> CardLabels = {
+    &I18N::Game::PadCardTitle,
+    &I18N::Game::PadCardWorld,
+    &I18N::Game::PadCardWindows,
+    &I18N::Game::PadCardPage,
+    &I18N::Game::PadCardWalk,
+    &I18N::Game::PadCardTarget,
+    &I18N::Game::PadCardPotions,
+    &I18N::Game::PadCardFriend,
+    &I18N::Game::PadCardHelper,
+    &I18N::Game::PadCardPickUp,
+    &I18N::Game::PadCardMap,
+    &I18N::Game::PadCardBag,
+    &I18N::Game::PadCardAttack,
+    &I18N::Game::PadCardSkills,
+    &I18N::Game::PadCardMoreSkills,
+    &I18N::Game::PadCardSocial,
+    &I18N::Game::PadCardMenu,
+    &I18N::Game::PadCardPicker,
+    &I18N::Game::PadCardFrame,
+    &I18N::Game::PadCardPointer,
+    &I18N::Game::PadCardNextWindow,
+    &I18N::Game::PadCardNextPage,
+    &I18N::Game::PadCardHubTabs,
+    &I18N::Game::PadCardTake,
+    &I18N::Game::PadCardUse,
+    &I18N::Game::PadCardItemCard,
+    &I18N::Game::PadCardClose,
+    &I18N::Game::PadCardAllWindows,
+    &I18N::Game::PadClose};
+
 struct OverlayModel
 {
+    UI::HUD::PadGlyphs::Model glyphs;
+    bool cardShown = false;
+    int cardPage = 0;
+    std::vector<Rml::String> card;
     bool frameShown = false;
     Rml::String frameLeft;
     Rml::String frameTop;
@@ -48,6 +86,8 @@ struct OverlayModel
     bool legendY = true;
     // Menu (every window): not over a question box.
     bool legendMenu = true;
+    bool legendWindows = false;
+    bool legendPages = false;
     Rml::String pickupLabel;
     // The prompt's button: A (an NPC or a player chosen), else d-pad down (a drop).
     bool promptA = false;
@@ -63,6 +103,8 @@ struct OverlayModel
     Rml::String cardLabel;
     Rml::String closeLabel;
     Rml::String windowsLabel;
+    Rml::String nextWindowLabel;
+    Rml::String nextPageLabel;
 };
 
 void BindModel(Rml::DataModelConstructor& c, OverlayModel& model)
@@ -72,6 +114,12 @@ void BindModel(Rml::DataModelConstructor& c, OverlayModel& model)
     tab.RegisterMember("active", &TabView::active);
     c.RegisterArray<std::vector<TabView>>();
 
+    c.RegisterArray<std::vector<Rml::String>>();
+
+    UI::HUD::PadGlyphs::Bind(c, model.glyphs);
+    c.Bind("card_shown", &model.cardShown);
+    c.Bind("card_page", &model.cardPage);
+    c.Bind("card", &model.card);
     c.Bind("frame_shown", &model.frameShown);
     c.Bind("frame_left", &model.frameLeft);
     c.Bind("frame_top", &model.frameTop);
@@ -89,6 +137,10 @@ void BindModel(Rml::DataModelConstructor& c, OverlayModel& model)
     c.Bind("legend_item", &model.legendItem);
     c.Bind("legend_y", &model.legendY);
     c.Bind("legend_menu", &model.legendMenu);
+    c.Bind("legend_windows", &model.legendWindows);
+    c.Bind("legend_pages", &model.legendPages);
+    c.Bind("next_window_label", &model.nextWindowLabel);
+    c.Bind("next_page_label", &model.nextPageLabel);
     c.Bind("pickup_label", &model.pickupLabel);
     c.Bind("prompt_a", &model.promptA);
     c.Bind("characters_shown", &model.charactersShown);
@@ -137,6 +189,28 @@ void SyncPixels(Rml::String& field, float value, const char* name)
 void SyncLabel(Rml::String& field, const wchar_t* label, const char* name)
 {
     SyncString(field, StringUtils::WideToNarrow(label), name);
+}
+
+void SyncCard(OverlayModel& model, const View& view)
+{
+    const bool opens = view.card && !model.cardShown;
+    SyncBool(model.cardShown, view.card, "card_shown");
+    if (model.cardPage != view.cardPage)
+    {
+        model.cardPage = view.cardPage;
+        g_View.MarkDirty("card_page");
+    }
+    if (!opens && !model.card.empty())
+        return;
+    std::vector<Rml::String> card;
+    card.reserve(CardLabels.size());
+    for (const wchar_t* const* label : CardLabels)
+        card.push_back(StringUtils::WideToNarrow(*label));
+    if (card != model.card)
+    {
+        model.card = std::move(card);
+        g_View.MarkDirty("card");
+    }
 }
 
 void SyncFrame(OverlayModel& model, const View& view)
@@ -221,6 +295,10 @@ void SyncLegend(OverlayModel& model, const View& view)
                  && says != Legend::Slider && !asks,
              "legend_y");
     SyncBool(model.legendMenu, !asks, "legend_menu");
+    SyncBool(model.legendWindows, view.legendWindows && !asks, "legend_windows");
+    SyncBool(model.legendPages, view.legendPages && !asks, "legend_pages");
+    SyncLabel(model.nextWindowLabel, I18N::Game::PadNextWindow, "next_window_label");
+    SyncLabel(model.nextPageLabel, I18N::Game::PadNextPage, "next_page_label");
     const auto* aLabel = onItem                    ? &I18N::Game::PadTake
                          : says == Legend::Goods   ? &I18N::Game::PadBuy
                          : says == Legend::Holding ? &I18N::Game::PadPutDown
@@ -246,7 +324,7 @@ namespace UI::HUD::PadOverlay
 {
 void Update(const View& view)
 {
-    const bool shown = view.hub || view.legend || view.frame || view.prompt || view.characters;
+    const bool shown = view.hub || view.card || view.legend || view.frame || view.prompt || view.characters;
     if (!shown)
     {
         UI::RmlBridge::SyncDocumentVisibility(g_View.Document(), false);
@@ -263,6 +341,8 @@ void Update(const View& view)
     SyncTabs(model, view);
     SyncLegend(model, view);
     SyncCharacters(model, view);
+    SyncCard(model, view);
+    UI::HUD::PadGlyphs::Sync(model.glyphs, [](const char* name) { g_View.MarkDirty(name); });
     // Shown again after a theme switch rebuilt the document, too.
     if (!document->IsVisible())
         document->Show(Rml::ModalFlag::None, Rml::FocusFlag::None);

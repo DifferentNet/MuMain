@@ -17,9 +17,9 @@
 		<span class="sharp-text" id="title" data-style-font-size="text_px + 'px'">{{window_title}}</span>
 
 		<div class="tab-row">
-			<div class="sharp-text tab-btn tab-btn-darkhorse" data-class-active="active_tab == 0" data-style-font-size="text_px + 'px'"
+			<div class="sharp-text tab-btn pad-page tab-btn-darkhorse" data-class-active="active_tab == 0" data-style-font-size="text_px + 'px'"
 			     data-event-click="petinfo_select_tab(0)">{{tab_darkhorse_label}}</div>
-			<div class="sharp-text tab-btn tab-btn-darkspirit" data-class-active="active_tab == 1" data-style-font-size="text_px + 'px'"
+			<div class="sharp-text tab-btn pad-page tab-btn-darkspirit" data-class-active="active_tab == 1" data-style-font-size="text_px + 'px'"
 			     data-event-click="petinfo_select_tab(1)">{{tab_darkspirit_label}}</div>
 		</div>
 

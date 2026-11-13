@@ -8,6 +8,8 @@
 #include "Data/GameConfig/GameConfig.h"
 #include "Data/GameConfig/GameConfigConstants.h"
 #include "Core/Input/GamepadInput.h"
+#include "Core/Input/GamepadPointer.h"
+#include "Core/Input/GamepadStick.h"
 #include "UI/Chat/MessageType.h"
 #include "Render/Lighting/SoftShadowSetting.h"
 #include "Render/Lighting/SunShadowSetting.h"
@@ -43,6 +45,7 @@
 #include "UI/Windows/RememberPasswordPrompt.h"
 #include "GameLogic/Items/LootFilterRuntime.h"
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdlib>
 #include <initializer_list>
@@ -171,11 +174,29 @@ static constexpr int kGraphicsPresetDropdown = 12;
 static constexpr int kSharpenDropdown = 13;
 static constexpr int kSunShadowsDropdown = 14;
 static constexpr int kHdTextureSizeDropdown = 15;
-static constexpr int kLastDropdownId = kHdTextureSizeDropdown;
+static constexpr int kGamepadDeadZoneDropdown = 16;
+static constexpr int kGamepadSpeedDropdown = 17;
+static constexpr int kGamepadGlyphsDropdown = 18;
+static constexpr int kLastDropdownId = kGamepadGlyphsDropdown;
 // The gamepad row's choices, in its labels' order.
 static constexpr int kGamepadOnIndex = 0;
 static constexpr int kGamepadQuietIndex = 1;
 static constexpr int kGamepadOffIndex = 2;
+// The pad's tuning rows' choices, in percent (GameConfig keeps the same numbers).
+static constexpr std::array<int, 6> kGamepadDeadZones{10, 15, 20, 25, 30, 35};
+static constexpr std::array<int, 6> kGamepadSpeeds{50, 75, 100, 125, 150, 200};
+
+// The choice nearest to `percent`: a config.ini edited by hand may hold a number between them.
+template <std::size_t N> static int NearestChoice(const std::array<int, N>& choices, int percent)
+{
+    int best = 0;
+    for (int index = 1; index < static_cast<int>(N); ++index)
+    {
+        if (std::abs(choices[index] - percent) < std::abs(choices[best] - percent))
+            best = index;
+    }
+    return best;
+}
 
 std::vector<UI::Options::DisplayResolution>
 UI::Options::NormalizeDisplayResolutions(std::vector<DisplayResolution> resolutions)
@@ -739,6 +760,18 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("gamepad_index", &model.gamepadIndex);
     c.Bind("gamepad_row_label", &model.gamepadRowLabel);
     c.Bind("gamepad_value_label", &model.gamepadValueLabel);
+    c.Bind("gamepad_dead_zone_labels", &model.gamepadDeadZoneLabels);
+    c.Bind("gamepad_dead_zone_index", &model.gamepadDeadZoneIndex);
+    c.Bind("gamepad_dead_zone_row_label", &model.gamepadDeadZoneRowLabel);
+    c.Bind("gamepad_dead_zone_value_label", &model.gamepadDeadZoneValueLabel);
+    c.Bind("gamepad_speed_labels", &model.gamepadSpeedLabels);
+    c.Bind("gamepad_speed_index", &model.gamepadSpeedIndex);
+    c.Bind("gamepad_speed_row_label", &model.gamepadSpeedRowLabel);
+    c.Bind("gamepad_speed_value_label", &model.gamepadSpeedValueLabel);
+    c.Bind("gamepad_glyphs_labels", &model.gamepadGlyphsLabels);
+    c.Bind("gamepad_glyphs_index", &model.gamepadGlyphsIndex);
+    c.Bind("gamepad_glyphs_row_label", &model.gamepadGlyphsRowLabel);
+    c.Bind("gamepad_glyphs_value_label", &model.gamepadGlyphsValueLabel);
 
     c.BindEventCallback("option_click_close",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickClose(); });
@@ -1179,6 +1212,15 @@ void mu::ui::window::COptionWindow::RmlDropdownOptionClick(int dropdownId, int o
         break;
     case kGamepadDropdown:
         RmlGamepadChanged(optionIndex);
+        break;
+    case kGamepadDeadZoneDropdown:
+        RmlGamepadDeadZoneChanged(optionIndex);
+        break;
+    case kGamepadSpeedDropdown:
+        RmlGamepadSpeedChanged(optionIndex);
+        break;
+    case kGamepadGlyphsDropdown:
+        RmlGamepadGlyphsChanged(optionIndex);
         break;
     default:
         break;
@@ -2067,6 +2109,36 @@ void mu::ui::window::COptionWindow::RmlGamepadChanged(int index)
         m_iPendingGamepad = index;
 }
 
+void mu::ui::window::COptionWindow::RmlGamepadDeadZoneChanged(int index)
+{
+    if (m_rmlSyncCount < kRmlSelectSettleFrames || index < 0 || index >= static_cast<int>(kGamepadDeadZones.size()))
+        return;
+    GameConfig& config = GameConfig::GetInstance();
+    config.SetGamepadDeadZone(kGamepadDeadZones[index]);
+    Core::Input::Gamepad::SetStickDeadZone(static_cast<float>(config.GetGamepadDeadZone()) / 100.f);
+    config.Save();
+}
+
+void mu::ui::window::COptionWindow::RmlGamepadSpeedChanged(int index)
+{
+    if (m_rmlSyncCount < kRmlSelectSettleFrames || index < 0 || index >= static_cast<int>(kGamepadSpeeds.size()))
+        return;
+    GameConfig& config = GameConfig::GetInstance();
+    config.SetGamepadPointerSpeed(kGamepadSpeeds[index]);
+    Core::Input::Gamepad::Pointer::SetSpeed(static_cast<float>(config.GetGamepadPointerSpeed()) / 100.f);
+    config.Save();
+}
+
+void mu::ui::window::COptionWindow::RmlGamepadGlyphsChanged(int index)
+{
+    if (m_rmlSyncCount < kRmlSelectSettleFrames || index < 0 || index >= Core::Input::Gamepad::GlyphChoiceCount)
+        return;
+    GameConfig& config = GameConfig::GetInstance();
+    config.SetGamepadGlyphs(index);
+    Core::Input::Gamepad::SetGlyphChoice(static_cast<Core::Input::Gamepad::GlyphChoice>(config.GetGamepadGlyphs()));
+    config.Save();
+}
+
 void mu::ui::window::COptionWindow::ApplyPendingInterfaceMode()
 {
     const int view = std::exchange(m_iPendingInterfaceView, -1);
@@ -2472,6 +2544,9 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.controlsRowLabel, "controls_row_label", I18N::Game::ControlsRow);
     syncLabel(model.touchButtonsRowLabel, "touch_buttons_row_label", I18N::Game::TouchButtonSizeRow);
     syncLabel(model.gamepadRowLabel, "gamepad_row_label", I18N::Game::GamepadRow);
+    syncLabel(model.gamepadDeadZoneRowLabel, "gamepad_dead_zone_row_label", I18N::Game::GamepadDeadZoneRow);
+    syncLabel(model.gamepadSpeedRowLabel, "gamepad_speed_row_label", I18N::Game::GamepadPointerSpeedRow);
+    syncLabel(model.gamepadGlyphsRowLabel, "gamepad_glyphs_row_label", I18N::Game::GamepadGlyphsRow);
 
     // positioned/root_x/root_y stay at their model defaults (false/0/0, see OptionRmlModel's own
     // comment): window_shell's `.center-both` CSS places the window, a drag moves it.
@@ -2689,6 +2764,28 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
                       !Core::Input::Gamepad::IsEnabled()    ? kGamepadOffIndex
                       : Core::Input::Gamepad::IsRumbleOn() ? kGamepadOnIndex
                                                            : kGamepadQuietIndex);
+    {
+        const auto percentLabels = [](const auto& choices)
+        {
+            std::vector<Rml::String> labels;
+            for (const int percent : choices)
+                labels.push_back(std::to_string(percent) + " %");
+            return labels;
+        };
+        const GameConfig& config = GameConfig::GetInstance();
+        syncMultiplierRow(model.gamepadDeadZoneLabels, "gamepad_dead_zone_labels", model.gamepadDeadZoneIndex,
+                          "gamepad_dead_zone_index", model.gamepadDeadZoneValueLabel, "gamepad_dead_zone_value_label",
+                          percentLabels(kGamepadDeadZones),
+                          NearestChoice(kGamepadDeadZones, config.GetGamepadDeadZone()));
+        syncMultiplierRow(model.gamepadSpeedLabels, "gamepad_speed_labels", model.gamepadSpeedIndex,
+                          "gamepad_speed_index", model.gamepadSpeedValueLabel, "gamepad_speed_value_label",
+                          percentLabels(kGamepadSpeeds), NearestChoice(kGamepadSpeeds, config.GetGamepadPointerSpeed()));
+        std::vector<Rml::String> glyphLabels = NarrowLabels({I18N::Game::GamepadGlyphsAuto});
+        glyphLabels.insert(glyphLabels.end(), {"Xbox", "PlayStation", "Nintendo"});
+        syncMultiplierRow(model.gamepadGlyphsLabels, "gamepad_glyphs_labels", model.gamepadGlyphsIndex,
+                          "gamepad_glyphs_index", model.gamepadGlyphsValueLabel, "gamepad_glyphs_value_label",
+                          std::move(glyphLabels), static_cast<int>(Core::Input::Gamepad::GetGlyphChoice()));
+    }
     const bool touchButtonsShown = UI::Mobile::ShowsControls();
     if (model.touchButtonsShown != touchButtonsShown)
     {
