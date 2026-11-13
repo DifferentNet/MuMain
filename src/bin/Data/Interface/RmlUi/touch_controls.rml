@@ -7,7 +7,7 @@
 	<link type="text/rcss" href="gamepad_glyphs.rcss"/>
 	<link type="text/rcss" href="touch_controls.rcss"/>
 </head>
-<body class="native-text" data-model="touch_controls" data-class-size-60="size_pct == 60" data-class-size-70="size_pct == 70" data-class-size-80="size_pct == 80" data-class-size-90="size_pct == 90" data-class-pad="pad" data-class-pad-alt="pad_alt" data-class-no-touch="!fingers" data-class-picking="picker_open" data-class-socialising="social_open" data-class-under-hub="under_hub" data-class-no-skills="no_skills &amp;&amp; !picker_open">
+<body class="native-text" data-model="touch_controls" data-class-glyph-ps="glyph_family == 1" data-class-glyph-nin="glyph_family == 2" data-class-size-60="size_pct == 60" data-class-size-70="size_pct == 70" data-class-size-80="size_pct == 80" data-class-size-90="size_pct == 90" data-class-pad="pad" data-class-pad-alt="pad_alt" data-class-no-touch="!fingers" data-class-picking="picker_open" data-class-socialising="social_open" data-class-under-hub="under_hub" data-class-no-skills="no_skills &amp;&amp; !picker_open">
 	<!-- The on-screen controls of phones and tablets (UI/HUD/TouchControls.cpp), shown only on a touch
 	     device in the world. Nothing here takes the pointer (pointer-events: none throughout): fingers
 	     reach the controls through Core::Input::Touch, which C++ answers from these elements' boxes,
@@ -66,7 +66,7 @@
 	     the pad's Menu still opens the menu. -->
 	<div id="tc_quick" data-class-collapsed="!quick_open">
 		<div id="tc_quick_toggle" class="tc-button tc-quick-toggle" data-class-open="quick_open"><div class="tc-toggle-line tc-toggle-line-1"></div><div class="tc-toggle-line tc-toggle-line-2"></div><div class="tc-toggle-line tc-toggle-line-3"></div></div>
-		<div id="tc_back" class="tc-button tc-quick">{{back_label}}<div class="pad-glyph pad-face pad-b">B</div></div>
+		<div id="tc_back" class="tc-button tc-quick">{{back_label}}<div class="pad-glyph pad-face pad-b">{{glyph_b}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div></div>
 		<div id="tc_menu" class="tc-button tc-quick" data-class-open="menu_open">{{menu_label}}
 			<div class="pad-glyph pad-round pad-menu"><div class="pad-menu-line pad-menu-line-1"></div><div class="pad-menu-line pad-menu-line-2"></div><div class="pad-menu-line pad-menu-line-3"></div></div>
 		</div>
@@ -117,8 +117,8 @@
 		<div id="tc_menu_23" class="tc-button tc-menu-item" data-if="menu_gm" data-class-focused="menu_focus == 23"><span class="tc-menu-label">{{menu_label_23}}</span></div>
 		<!-- With a pad, its keys for the menu: the stick or the d-pad move the highlight. -->
 		<div id="tc_menu_legend">
-			<div class="pad-glyph pad-face pad-a">A</div><div class="pad-legend-label">{{pad_open_label}}</div>
-			<div class="pad-glyph pad-face pad-b">B</div><div class="pad-legend-label">{{pad_close_label}}</div>
+			<div class="pad-glyph pad-face pad-a">{{glyph_a}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div><div class="pad-legend-label">{{pad_open_label}}</div>
+			<div class="pad-glyph pad-face pad-b">{{glyph_b}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div><div class="pad-legend-label">{{pad_close_label}}</div>
 		</div>
 	</div>
 
@@ -155,8 +155,8 @@
 		<!-- With a pad, its keys for the picker: the stick or the d-pad move the highlight, over the
 		     skill buttons on the right too. -->
 		<div id="tc_pick_legend">
-			<div class="pad-glyph pad-face pad-a">A</div><div class="pad-legend-label">{{pad_choose_label}}</div>
-			<div class="pad-glyph pad-face pad-b">B</div><div class="pad-legend-label">{{pad_close_label}}</div>
+			<div class="pad-glyph pad-face pad-a">{{glyph_a}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div><div class="pad-legend-label">{{pad_choose_label}}</div>
+			<div class="pad-glyph pad-face pad-b">{{glyph_b}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div><div class="pad-legend-label">{{pad_close_label}}</div>
 		</div>
 	</div>
 
@@ -199,22 +199,22 @@
 		</div>
 		<!-- With a pad, its keys for the panel. -->
 		<div id="tc_soc_legend">
-			<div class="pad-glyph pad-face pad-a">A</div><div class="pad-legend-label">{{pad_choose_label}}</div>
-			<div class="pad-glyph pad-face pad-b">B</div><div class="pad-legend-label">{{pad_close_label}}</div>
+			<div class="pad-glyph pad-face pad-a">{{glyph_a}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div><div class="pad-legend-label">{{pad_choose_label}}</div>
+			<div class="pad-glyph pad-face pad-b">{{glyph_b}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div><div class="pad-legend-label">{{pad_close_label}}</div>
 		</div>
 	</div>
 
 	<!-- The item hotkeys Q and W (the potions), above the joystick, with how many are left (dimmed when none are). -->
-	<div id="tc_potion_q" class="tc-button tc-potion" data-class-empty="potion_q_count == ''">Q<div class="tc-potion-count">{{potion_q_count}}</div><div class="pad-glyph pad-bumper">LB</div></div>
-	<div id="tc_potion_w" class="tc-button tc-potion" data-class-empty="potion_w_count == ''">W<div class="tc-potion-count">{{potion_w_count}}</div><div class="pad-glyph pad-trigger">LT</div></div>
+	<div id="tc_potion_q" class="tc-button tc-potion" data-class-empty="potion_q_count == ''">Q<div class="tc-potion-count">{{potion_q_count}}</div><div class="pad-glyph pad-bumper">{{glyph_lb}}</div></div>
+	<div id="tc_potion_w" class="tc-button tc-potion" data-class-empty="potion_w_count == ''">W<div class="tc-potion-count">{{potion_w_count}}</div><div class="pad-glyph pad-trigger">{{glyph_lt}}</div></div>
 	<!-- E and R: a pad with RT held drinks them on LB and LT, in Q's and W's places. -->
-	<div id="tc_potion_e" class="tc-button tc-potion" data-class-empty="potion_e_count == ''">E<div class="tc-potion-count">{{potion_e_count}}</div><div class="pad-glyph pad-bumper">LB</div></div>
-	<div id="tc_potion_r" class="tc-button tc-potion" data-class-empty="potion_r_count == ''">R<div class="tc-potion-count">{{potion_r_count}}</div><div class="pad-glyph pad-trigger">LT</div></div>
+	<div id="tc_potion_e" class="tc-button tc-potion" data-class-empty="potion_e_count == ''">E<div class="tc-potion-count">{{potion_e_count}}</div><div class="pad-glyph pad-bumper">{{glyph_lb}}</div></div>
+	<div id="tc_potion_r" class="tc-button tc-potion" data-class-empty="potion_r_count == ''">R<div class="tc-potion-count">{{potion_r_count}}</div><div class="pad-glyph pad-trigger">{{glyph_lt}}</div></div>
 
 	<!-- Bottom right: attack (held, it fights the tapped or the nearest monster), the hotkey bar's
-	     five skills around it (a tap makes the skill current, holding casts it), pickup (held, it
+	     five skills around it (a pad alone has a sixth) (a tap makes the skill current, holding casts it), pickup (held, it
 	     gathers the drops around) and auto-hunt (the MU Helper on and off). -->
-	<div id="tc_attack" class="tc-button" data-class-pk="pk_on">{{attack_label}}<div class="pad-glyph pad-face pad-a">A</div></div>
+	<div id="tc_attack" class="tc-button" data-class-pk="pk_on">{{attack_label}}<div class="pad-glyph pad-face pad-a">{{glyph_a}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div></div>
 	<!-- An empty skill button shows a plus: a tap on it opens the skill picker for it. While the
 	     picker is open the buttons stand lit over the dimmed screen, the one being set in gold
 	     ("target"), the pad's highlight white ("focused"). The game's own skill list, where the
@@ -226,35 +226,44 @@
 		<div class="tc-skill-icon" data-style-decorator="skill_0_icon"></div>
 		<div class="tc-skill-plus"><div class="tc-plus-h"></div><div class="tc-plus-v"></div></div>
 		<div class="tc-cooldown" data-style-height="skill_0_cooldown * 100 + '%'"></div>
-		<div class="pad-glyph pad-face pad-x">X</div>
+		<div class="pad-glyph pad-face pad-x">{{glyph_x}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div>
 	</div>
 	<div id="tc_skill_1" class="tc-button tc-skill" data-class-selected="skill_1_selected" data-class-empty="skill_1_empty" data-class-nomana="skill_1_nomana" data-class-bind="skill_1_bind"
 	     data-class-target="picker_open &amp;&amp; picker_slot == 1" data-class-focused="picker_focus == 'tc_skill_1'">
 		<div class="tc-skill-icon" data-style-decorator="skill_1_icon"></div>
 		<div class="tc-skill-plus"><div class="tc-plus-h"></div><div class="tc-plus-v"></div></div>
 		<div class="tc-cooldown" data-style-height="skill_1_cooldown * 100 + '%'"></div>
-		<div class="pad-glyph pad-face pad-y">Y</div>
+		<div class="pad-glyph pad-face pad-y">{{glyph_y}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div>
 	</div>
 	<div id="tc_skill_2" class="tc-button tc-skill" data-class-selected="skill_2_selected" data-class-empty="skill_2_empty" data-class-nomana="skill_2_nomana" data-class-bind="skill_2_bind"
 	     data-class-target="picker_open &amp;&amp; picker_slot == 2" data-class-focused="picker_focus == 'tc_skill_2'">
 		<div class="tc-skill-icon" data-style-decorator="skill_2_icon"></div>
 		<div class="tc-skill-plus"><div class="tc-plus-h"></div><div class="tc-plus-v"></div></div>
 		<div class="tc-cooldown" data-style-height="skill_2_cooldown * 100 + '%'"></div>
-		<div class="pad-glyph pad-face pad-b">B</div>
+		<div class="pad-glyph pad-face pad-b">{{glyph_b}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div>
 	</div>
 	<div id="tc_skill_3" class="tc-button tc-skill" data-class-selected="skill_3_selected" data-class-empty="skill_3_empty" data-class-nomana="skill_3_nomana" data-class-bind="skill_3_bind"
 	     data-class-target="picker_open &amp;&amp; picker_slot == 3" data-class-focused="picker_focus == 'tc_skill_3'">
 		<div class="tc-skill-icon" data-style-decorator="skill_3_icon"></div>
 		<div class="tc-skill-plus"><div class="tc-plus-h"></div><div class="tc-plus-v"></div></div>
 		<div class="tc-cooldown" data-style-height="skill_3_cooldown * 100 + '%'"></div>
-		<div class="pad-glyph pad-trigger">RT</div><div class="pad-glyph pad-face pad-x pad-alt-key">X</div>
+		<div class="pad-glyph pad-trigger">{{glyph_rt}}</div><div class="pad-glyph pad-face pad-x pad-alt-key">{{glyph_x}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div>
 	</div>
 	<div id="tc_skill_4" class="tc-button tc-skill" data-class-selected="skill_4_selected" data-class-empty="skill_4_empty" data-class-nomana="skill_4_nomana" data-class-bind="skill_4_bind"
 	     data-class-target="picker_open &amp;&amp; picker_slot == 4" data-class-focused="picker_focus == 'tc_skill_4'">
 		<div class="tc-skill-icon" data-style-decorator="skill_4_icon"></div>
 		<div class="tc-skill-plus"><div class="tc-plus-h"></div><div class="tc-plus-v"></div></div>
 		<div class="tc-cooldown" data-style-height="skill_4_cooldown * 100 + '%'"></div>
-		<div class="pad-glyph pad-trigger">RT</div><div class="pad-glyph pad-face pad-y pad-alt-key">Y</div>
+		<div class="pad-glyph pad-trigger">{{glyph_rt}}</div><div class="pad-glyph pad-face pad-y pad-alt-key">{{glyph_y}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div>
+	</div>
+	<!-- The pad's sixth skill (RT + B, pad round 3): a pad alone on the lower hotkey set ("unused"
+	     otherwise); touch never shows it. -->
+	<div id="tc_skill_5" class="tc-button tc-skill" data-class-selected="skill_5_selected" data-class-empty="skill_5_empty" data-class-nomana="skill_5_nomana" data-class-bind="skill_5_bind"
+	     data-class-target="picker_open &amp;&amp; picker_slot == 5" data-class-focused="picker_focus == 'tc_skill_5'" data-class-unused="!skill_5_shown">
+		<div class="tc-skill-icon" data-style-decorator="skill_5_icon"></div>
+		<div class="tc-skill-plus"><div class="tc-plus-h"></div><div class="tc-plus-v"></div></div>
+		<div class="tc-cooldown" data-style-height="skill_5_cooldown * 100 + '%'"></div>
+		<div class="pad-glyph pad-trigger">{{glyph_rt}}</div><div class="pad-glyph pad-face pad-b pad-alt-key">{{glyph_b}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div>
 	</div>
 	<!-- Beside the skill buttons: opens the skill picker, which sets them. -->
 	<div id="tc_skill_edit" class="tc-button">{{skills_label}}<div class="pad-glyph pad-round pad-stick">LS</div></div>

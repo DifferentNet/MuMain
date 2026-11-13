@@ -46,4 +46,9 @@ void SetCardClick(bool card);
 
 // Lets go of the buttons it holds.
 void Release(SDL_Window* window);
+
+// The player's pointer speed (Options -> Interface -> Pointer speed), a share of the usual one.
+inline constexpr float DefaultSpeed = 1.f;
+void SetSpeed(float share);
+[[nodiscard]] float GetSpeed();
 } // namespace Core::Input::Gamepad::Pointer

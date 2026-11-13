@@ -10,6 +10,7 @@
 #include "Scenes/SceneCore.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/HUD/ChatInputBox.h"
+#include "UI/HUD/PadGlyphs.h"
 #include "UI/HUD/PadKeyboardLayout.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlNumericInputFilter.h"
@@ -88,6 +89,7 @@ struct RowView
 
 struct KeyboardModel
 {
+    UI::HUD::PadGlyphs::Model glyphs;
     std::vector<RowView> rows;
     int focusRow = 0;
     int focusColumn = 0;
@@ -116,6 +118,7 @@ void BindModel(Rml::DataModelConstructor& c, KeyboardModel& model)
     row.RegisterMember("keys", &RowView::keys);
     c.RegisterArray<std::vector<RowView>>();
 
+    UI::HUD::PadGlyphs::Bind(c, model.glyphs);
     c.Bind("rows", &model.rows);
     c.Bind("focus_row", &model.focusRow);
     c.Bind("focus_column", &model.focusColumn);
@@ -566,6 +569,7 @@ void Sync(Rml::Element* field)
     SyncInt(model.focusColumn, g_state.spot.column, "focus_column");
     SyncLine(field, model);
     SyncLabels(model);
+    UI::HUD::PadGlyphs::Sync(model.glyphs, [](const char* name) { g_View.MarkDirty(name); });
 }
 
 void Hide()

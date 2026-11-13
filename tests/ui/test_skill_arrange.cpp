@@ -30,6 +30,9 @@ TEST_CASE("the buttons stand for hotkeys 1-5, or 6-9 and 0 on the upper set [ui]
     CHECK(SkillArrange::HotKeyOfSlot(0, true) == 6);
     CHECK(SkillArrange::HotKeyOfSlot(3, true) == 9);
     CHECK(SkillArrange::HotKeyOfSlot(4, true) == 0);
+    // The pad's sixth button: hotkey 6 below, 1 (empty by the upper set's rule) above.
+    CHECK(SkillArrange::HotKeyOfSlot(5, false) == 6);
+    CHECK(SkillArrange::HotKeyOfSlot(5, true) == 1);
 }
 
 TEST_CASE("a skill on no button goes on the chosen one, and what it held comes off [ui][skill-arrange]")
@@ -121,6 +124,8 @@ TEST_CASE("the next empty button is found round the five, the current one when a
     keys[4] = PetAttack;
     CHECK(SkillArrange::NextEmptySlot(keys, false, 3) == 4);
     CHECK(SkillArrange::NextEmptySlot(keys, false, 4) == 4);
+    // With the pad's six buttons the sixth (hotkey 6) is the next empty one after 4.
+    CHECK(SkillArrange::NextEmptySlot(keys, false, 4, SkillArrange::SlotCount) == 5);
     keys[5] = 9;
     CHECK(SkillArrange::NextEmptySlot(keys, false, 2) == 2);
     // The upper set looks at hotkeys 6-9 and 0.

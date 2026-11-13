@@ -159,11 +159,12 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/GoldAmountTier.cpp
 )
 
-# The gamepad sticks: the dead zone, a push, a stick click on purpose.
+# The gamepad sticks: the dead zone, a push, a stick click on purpose; which maker's glyphs a pad wears.
 mu_add_test(
     NAME gamepad_stick_tests
     SOURCES
         test_gamepad_stick.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Input/GamepadKind.cpp
         ${CMAKE_SOURCE_DIR}/src/source/Core/Input/GamepadStick.cpp
         ${CMAKE_SOURCE_DIR}/src/source/Core/Input/GamepadStickClick.cpp
 )

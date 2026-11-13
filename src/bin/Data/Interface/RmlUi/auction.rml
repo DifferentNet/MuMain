@@ -33,7 +33,7 @@
 
 		<div id="au_body" class="sharp-text sharp-flow">
 			<div class="au-bar">
-				<div class="au-btn au-btn-third" data-for="b : tabs" data-class-on="b.on" data-event-click="au_tab(b.id)">
+				<div class="au-btn au-btn-third pad-page" data-for="b : tabs" data-class-on="b.on" data-event-click="au_tab(b.id)">
 					<span class="au-btn-label" data-style-font-size="b.label.text_px + 'px'">{{b.label.text}}</span>
 				</div>
 			</div>

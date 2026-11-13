@@ -140,6 +140,18 @@ public:
     // Whether the pad vibrates on hits and on death (Core::Input::Gamepad::SetRumble).
     bool GetGamepadRumble() const { return m_gamepadRumble; }
     void SetGamepadRumble(bool on) { m_gamepadRumble = on; }
+    // The sticks' dead zone in percent of their throw (Core::Input::Gamepad::SetStickDeadZone).
+    int GetGamepadDeadZone() const { return m_gamepadDeadZone; }
+    void SetGamepadDeadZone(int percent);
+    // The pad pointer's speed in percent of the usual one (Core::Input::Gamepad::Pointer::SetSpeed).
+    int GetGamepadPointerSpeed() const { return m_gamepadPointerSpeed; }
+    void SetGamepadPointerSpeed(int percent);
+    // The button glyphs: 0 Auto, 1 Xbox, 2 PlayStation, 3 Nintendo (Core::Input::Gamepad::GlyphChoice).
+    int GetGamepadGlyphs() const { return m_gamepadGlyphs; }
+    void SetGamepadGlyphs(int choice);
+    // Whether the pad's controls card showed once by itself (UI/HUD/PadCard).
+    bool GetGamepadCardSeen() const { return m_gamepadCardSeen; }
+    void SetGamepadCardSeen(bool seen) { m_gamepadCardSeen = seen; }
 
     // Chat commands - the favourites and the named templates of the command
     // window. They belong to the installation, not to a character.
@@ -372,6 +384,10 @@ private:
     bool m_touchTopRow = false;
     bool m_gamepad = true;
     bool m_gamepadRumble = true;
+    int m_gamepadDeadZone = 25;
+    int m_gamepadPointerSpeed = 100;
+    int m_gamepadGlyphs = 0;
+    bool m_gamepadCardSeen = false;
     bool m_enableAnimationTaskPool;
 
     int m_zoom;

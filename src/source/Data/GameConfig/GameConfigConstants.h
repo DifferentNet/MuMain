@@ -79,6 +79,12 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyGamepad[] = L"Gamepad";
     // MU Moldova: whether the pad vibrates on hits and on death (Options -> Interface, Gamepad).
     inline constexpr wchar_t CfgKeyGamepadRumble[] = L"GamepadRumble";
+    // MU Moldova: the gamepad's sticks' dead zone, pointer speed and button glyphs (Options -> Interface),
+    // and whether its controls card showed once by itself.
+    inline constexpr wchar_t CfgKeyGamepadDeadZone[] = L"GamepadDeadZone";
+    inline constexpr wchar_t CfgKeyGamepadPointerSpeed[] = L"GamepadPointerSpeed";
+    inline constexpr wchar_t CfgKeyGamepadGlyphs[] = L"GamepadGlyphs";
+    inline constexpr wchar_t CfgKeyGamepadCardSeen[] = L"GamepadCardSeen";
     // Animates characters on worker threads when many are in view. Off unless set here or
     // started with --enable-taskpool; manual config.ini edit only.
     inline constexpr wchar_t CfgKeyEnableAnimationTaskPool[] = L"EnableAnimationTaskPool";
@@ -251,6 +257,17 @@ namespace CfgDefaults
     // already turns into a mouse and keys, which would otherwise press twice.
     inline constexpr bool CfgDefaultGamepad = true;
     inline constexpr bool CfgDefaultGamepadRumble = true;
+    // Percent of a stick's throw, as Core::Input::Gamepad::DefaultStickDeadZone and its range.
+    inline constexpr int CfgDefaultGamepadDeadZone = 25;
+    inline constexpr int CfgMinGamepadDeadZone = 10;
+    inline constexpr int CfgMaxGamepadDeadZone = 35;
+    inline constexpr int CfgDefaultGamepadPointerSpeed = 100;
+    inline constexpr int CfgMinGamepadPointerSpeed = 50;
+    inline constexpr int CfgMaxGamepadPointerSpeed = 200;
+    // Auto: the glyphs of the pad in hand.
+    inline constexpr int CfgDefaultGamepadGlyphs = 0;
+    inline constexpr int CfgMaxGamepadGlyphs = 3;
+    inline constexpr bool CfgDefaultGamepadCardSeen = false;
 
     // Bounds GameConfig clamps to, on load and on set. Below 75% text gets too small to read;
     // above 150% a docked panel no longer fits a small window.

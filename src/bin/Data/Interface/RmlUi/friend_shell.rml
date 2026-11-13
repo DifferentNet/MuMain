@@ -21,7 +21,7 @@
         <button id="btn_close" data-event-click="shell_action('close')"></button>
     </div>
     <div id="tabs">
-        <button class="btn" data-class-selected="active_tab == 0" data-event-click="shell_action('tab', 0)">{{friends_label}}</button><button class="btn" data-class-selected="active_tab == 1" data-event-click="shell_action('tab', 1)">{{mail_label}}</button><button class="btn" data-class-selected="active_tab == 2" data-event-click="shell_action('tab', 2)">{{windows_label}}</button>
+        <button class="btn pad-page" data-class-selected="active_tab == 0" data-event-click="shell_action('tab', 0)">{{friends_label}}</button><button class="btn pad-page" data-class-selected="active_tab == 1" data-event-click="shell_action('tab', 1)">{{mail_label}}</button><button class="btn pad-page" data-class-selected="active_tab == 2" data-event-click="shell_action('tab', 2)">{{windows_label}}</button>
     </div>
     <button id="reject" class="toggle" data-class-checked="reject_chat" data-event-click="shell_action('reject')"><span class="check"></span>{{reject_label}}</button>
     <div class="page" data-if="active_tab == 0">

@@ -44,7 +44,7 @@
 		<!-- The vault page arrows (VaultPages.h), after the title so they take the clicks over it. -->
 		<div id="btn_page_prev" class="stor-page-btn stor-page-prev" data-class-hidden="!pages_visible" data-class-busy="pages_busy"
 		     data-event-click="storage_page(-1)"></div>
-		<div id="btn_page_next" class="stor-page-btn stor-page-next" data-class-hidden="!pages_visible" data-class-busy="pages_busy"
+		<div id="btn_page_next" class="stor-page-btn stor-page-next pad-page-next" data-class-hidden="!pages_visible" data-class-busy="pages_busy"
 		     data-event-click="storage_page(1)"></div>
 
 		<div id="money_bg"></div>

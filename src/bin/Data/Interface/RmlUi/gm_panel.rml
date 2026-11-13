@@ -46,7 +46,7 @@
 
 		<div id="gm_body" class="sharp-text sharp-flow" data-class-gm-admin="tabs.size > 3">
 			<div class="gm-bar">
-				<div class="gm-btn gm-btn-third" data-for="b : tabs" data-class-on="b.on" data-event-click="gm_tab(b.id)">
+				<div class="gm-btn gm-btn-third pad-page" data-for="b : tabs" data-class-on="b.on" data-event-click="gm_tab(b.id)">
 					<span class="gm-btn-label" data-style-font-size="b.label.text_px + 'px'">{{b.label.text}}</span>
 				</div>
 			</div>
