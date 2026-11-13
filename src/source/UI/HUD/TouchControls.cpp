@@ -19,6 +19,7 @@
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/ModalDialogs.h"
 #include "UI/HUD/GamepadControls.h"
+#include "UI/HUD/PadGlyphs.h"
 #include "UI/HUD/PadHub.h"
 #include "UI/HUD/SkillList.h"
 #include "UI/HUD/Skills/SkillTooltip.h"
@@ -280,7 +281,7 @@ enum ControlId : int
 static_assert(ControlCount <= Touch::MaxControls);
 
 constexpr const char* SkillElements[SkillButtons] = {"tc_skill_0", "tc_skill_1", "tc_skill_2", "tc_skill_3",
-                                                     "tc_skill_4"};
+                                                     "tc_skill_4", "tc_skill_5"};
 
 // Numbered names, "<prefix>0" .. "<prefix><Count - 1>", made once.
 template <int Count> std::array<std::string, Count> NumberedNames(std::string_view prefix)
@@ -417,16 +418,19 @@ struct SocialEntry
 
 struct ControlsModel
 {
+    UI::HUD::PadGlyphs::Model glyphs;
     bool stickActive = false;
     // Window pixels: the stick's centre where the finger landed, and the knob's offset from it.
     float stickX = 0.f;
     float stickY = 0.f;
     float knobX = 0.f;
     float knobY = 0.f;
-    std::array<Rml::String, SkillButtons> skillIcons{"none", "none", "none", "none", "none"};
+    std::array<Rml::String, SkillButtons> skillIcons{"none", "none", "none", "none", "none", "none"};
     std::array<float, SkillButtons> skillCooldowns{};
     std::array<bool, SkillButtons> skillSelected{};
-    std::array<bool, SkillButtons> skillEmpty{true, true, true, true, true};
+    std::array<bool, SkillButtons> skillEmpty{true, true, true, true, true, true};
+    // The pad's sixth button (RT + B) is in play: a pad alone, the lower hotkey set (ActiveSlots).
+    bool sixthShown = false;
     std::array<bool, SkillButtons> skillNoMana{};
     // The buttons a skill picked in the skill list can go on: the one chosen, else all for a while.
     std::array<bool, SkillButtons> skillBind{};
@@ -524,31 +528,38 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     c.Bind("skill_2_icon", &model.skillIcons[2]);
     c.Bind("skill_3_icon", &model.skillIcons[3]);
     c.Bind("skill_4_icon", &model.skillIcons[4]);
+    c.Bind("skill_5_icon", &model.skillIcons[5]);
     c.Bind("skill_0_cooldown", &model.skillCooldowns[0]);
     c.Bind("skill_1_cooldown", &model.skillCooldowns[1]);
     c.Bind("skill_2_cooldown", &model.skillCooldowns[2]);
     c.Bind("skill_3_cooldown", &model.skillCooldowns[3]);
     c.Bind("skill_4_cooldown", &model.skillCooldowns[4]);
+    c.Bind("skill_5_cooldown", &model.skillCooldowns[5]);
     c.Bind("skill_0_selected", &model.skillSelected[0]);
     c.Bind("skill_1_selected", &model.skillSelected[1]);
     c.Bind("skill_2_selected", &model.skillSelected[2]);
     c.Bind("skill_3_selected", &model.skillSelected[3]);
     c.Bind("skill_4_selected", &model.skillSelected[4]);
+    c.Bind("skill_5_selected", &model.skillSelected[5]);
     c.Bind("skill_0_empty", &model.skillEmpty[0]);
     c.Bind("skill_1_empty", &model.skillEmpty[1]);
     c.Bind("skill_2_empty", &model.skillEmpty[2]);
     c.Bind("skill_3_empty", &model.skillEmpty[3]);
     c.Bind("skill_4_empty", &model.skillEmpty[4]);
+    c.Bind("skill_5_empty", &model.skillEmpty[5]);
     c.Bind("skill_0_nomana", &model.skillNoMana[0]);
     c.Bind("skill_1_nomana", &model.skillNoMana[1]);
     c.Bind("skill_2_nomana", &model.skillNoMana[2]);
     c.Bind("skill_3_nomana", &model.skillNoMana[3]);
     c.Bind("skill_4_nomana", &model.skillNoMana[4]);
+    c.Bind("skill_5_nomana", &model.skillNoMana[5]);
     c.Bind("skill_0_bind", &model.skillBind[0]);
     c.Bind("skill_1_bind", &model.skillBind[1]);
     c.Bind("skill_2_bind", &model.skillBind[2]);
     c.Bind("skill_3_bind", &model.skillBind[3]);
     c.Bind("skill_4_bind", &model.skillBind[4]);
+    c.Bind("skill_5_bind", &model.skillBind[5]);
+    c.Bind("skill_5_shown", &model.sixthShown);
     c.Bind("hint_shown", &model.hintShown);
     c.Bind("bind_hint", &model.bindHint);
     c.Bind("helper_on", &model.helperOn);
@@ -572,6 +583,7 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     for (int item = 0; item < MenuItemCount; ++item)
         c.Bind(MenuLabelFields[item], &model.menuLabels[item]);
     c.Bind("pad", &model.pad);
+    UI::HUD::PadGlyphs::Bind(c, model.glyphs);
     c.Bind("pad_alt", &model.padAlt);
     c.Bind("under_hub", &model.underHub);
     c.Bind("fingers", &model.fingers);
@@ -1082,6 +1094,7 @@ void SyncLabels(ControlsModel& model)
 void SyncDevices(ControlsModel& model)
 {
     SetField(model.pad, UI::Mobile::IsGamepadInUse(), "pad");
+    UI::HUD::PadGlyphs::Sync(model.glyphs, [](const char* name) { g_View.MarkDirty(name); });
     SetField(model.padAlt, model.pad && g_padAlt, "pad_alt");
     SetField(model.fingers, Touch::IsEnabled(), "fingers");
     SetField(model.underHub, UI::HUD::PadHub::IsOnSkills(), "under_hub");
@@ -1090,7 +1103,7 @@ void SyncDevices(ControlsModel& model)
 // Whether a skill button set holds anything: the hotkeys 1-5, or 6-9 and 0.
 bool AnySkillOn(bool upper)
 {
-    for (int slot = 0; slot < SkillButtons; ++slot)
+    for (int slot = 0; slot < SkillArrange::TouchSlotCount; ++slot)
     {
         if (GameLogic::Touch::HotKeyHoldsSkill(SkillArrange::HotKeyOfSlot(slot, upper)))
             return true;
@@ -1112,18 +1125,26 @@ int SlotHotKey(int slot)
     return SkillArrange::HotKeyOfSlot(slot, g_upperSet);
 }
 
+// How many skill buttons are in play: six for a pad alone on the lower set (the sixth on RT + B), else
+// five. Touch keeps five (a phone has no room for more); the upper set has no sixth hotkey.
+int ActiveSlots()
+{
+    const bool padAlone = UI::Mobile::IsGamepadInUse() && !Touch::IsEnabled();
+    return padAlone && !g_upperSet ? SkillArrange::SlotCount : SkillArrange::TouchSlotCount;
+}
+
 void SyncSkills(ControlsModel& model)
 {
     static constexpr const char* IconFields[SkillButtons] = {"skill_0_icon", "skill_1_icon", "skill_2_icon",
-                                                             "skill_3_icon", "skill_4_icon"};
+                                                             "skill_3_icon", "skill_4_icon", "skill_5_icon"};
     static constexpr const char* CooldownFields[SkillButtons] = {
-        "skill_0_cooldown", "skill_1_cooldown", "skill_2_cooldown", "skill_3_cooldown", "skill_4_cooldown"};
+        "skill_0_cooldown", "skill_1_cooldown", "skill_2_cooldown", "skill_3_cooldown", "skill_4_cooldown", "skill_5_cooldown"};
     static constexpr const char* SelectedFields[SkillButtons] = {
-        "skill_0_selected", "skill_1_selected", "skill_2_selected", "skill_3_selected", "skill_4_selected"};
+        "skill_0_selected", "skill_1_selected", "skill_2_selected", "skill_3_selected", "skill_4_selected", "skill_5_selected"};
     static constexpr const char* EmptyFields[SkillButtons] = {"skill_0_empty", "skill_1_empty", "skill_2_empty",
-                                                              "skill_3_empty", "skill_4_empty"};
+                                                              "skill_3_empty", "skill_4_empty", "skill_5_empty"};
     static constexpr const char* NoManaFields[SkillButtons] = {"skill_0_nomana", "skill_1_nomana", "skill_2_nomana",
-                                                               "skill_3_nomana", "skill_4_nomana"};
+                                                               "skill_3_nomana", "skill_4_nomana", "skill_5_nomana"};
     for (int slot = 0; slot < SkillButtons; ++slot)
     {
         const int hotKey = SlotHotKey(slot);
@@ -1139,6 +1160,7 @@ void SyncSkills(ControlsModel& model)
         SetField(model.skillCooldowns[slot], cooldown, CooldownFields[slot]);
         SetField(model.skillSelected[slot], !empty && g_pSkillList->IsHotKeyCurrentSkill(hotKey), SelectedFields[slot]);
     }
+    SetField(model.sixthShown, ActiveSlots() > SkillArrange::TouchSlotCount, "skill_5_shown");
     // A skill on a button is known; only with all of them empty is the list read.
     const bool allEmpty = std::ranges::all_of(model.skillEmpty, [](bool empty) { return empty; });
     SetField(model.noSkills, allEmpty && g_pSkillList->GetListedSkills().empty(), "no_skills");
@@ -1163,7 +1185,7 @@ const wchar_t* BindHint(bool gridOpen)
 void UpdateBinding(ControlsModel& model)
 {
     static constexpr const char* BindFields[SkillButtons] = {"skill_0_bind", "skill_1_bind", "skill_2_bind",
-                                                             "skill_3_bind", "skill_4_bind"};
+                                                             "skill_3_bind", "skill_4_bind", "skill_5_bind"};
     const bool gridOpen = g_pSkillList->IsSkillGridOpen();
     const int picks = g_pSkillList->GetGridPickCount();
     const bool picked = g_binding.picksSeen && *g_binding.picksSeen != picks;
@@ -1234,7 +1256,9 @@ int KeyControl(std::string_view element)
     return Touch::NoControl;
 }
 
-int PadControl(UI::HUD::TouchControls::PadButton button)
+// `held`: a press counts only on a button shown; a release always reaches its control, so a skill
+// held while the slots drop to five (the hotkey set flipped) still lets go.
+int PadControl(UI::HUD::TouchControls::PadButton button, bool held)
 {
     using UI::HUD::TouchControls::PadButton;
     switch (button)
@@ -1263,7 +1287,8 @@ int PadControl(UI::HUD::TouchControls::PadButton button)
         break;
     }
     const int skill = static_cast<int>(button) - static_cast<int>(PadButton::Skill0);
-    return skill >= 0 && skill < SkillButtons ? FirstSkillControl + skill : Touch::NoControl;
+    const int slots = held ? ActiveSlots() : SkillButtons;
+    return skill >= 0 && skill < slots ? FirstSkillControl + skill : Touch::NoControl;
 }
 
 struct BoxCentre
@@ -1453,7 +1478,7 @@ int SlotToSet()
     const SkillArrange::HotKeys keys = ReadHotKeys();
     if (keys[SlotHotKey(0)] == SkillArrange::NoSkill)
         return 0;
-    return SkillArrange::NextEmptySlot(keys, g_upperSet, 0);
+    return SkillArrange::NextEmptySlot(keys, g_upperSet, 0, ActiveSlots());
 }
 
 // A skill's or pet command's name, as its tooltip heads it; looked up once a showing.
@@ -1534,7 +1559,7 @@ std::vector<int> PickerFocusables()
         controls.push_back(FirstPickControl + entry);
     for (const int control : {PickerPrevControl, PickerNextControl, PickerClearControl, PickerDoneControl})
         controls.push_back(control);
-    for (int slot = 0; slot < SkillButtons; ++slot)
+    for (int slot = 0; slot < ActiveSlots(); ++slot)
         controls.push_back(FirstSkillControl + slot);
     return controls;
 }
@@ -1585,7 +1610,7 @@ void ShowPickerPage(ControlsModel& model, const SkillArrange::HotKeys& keys, boo
         g_picker.shown[entry] = skill;
         const int on = SkillArrange::HotKeyOf(keys, skill);
         bool onButton = false;
-        for (int slot = 0; slot < SkillButtons; ++slot)
+        for (int slot = 0; slot < ActiveSlots(); ++slot)
             onButton = onButton || on == SkillArrange::HotKeyOfSlot(slot, upper);
         entries.push_back({PickElements[entry], g_pSkillList->GetSkillIconDecorator(skill),
                            StringUtils::WideToNarrow(SkillName(skill).c_str()), onButton, on == hotKey});
@@ -1682,7 +1707,7 @@ void UpdatePicker(ControlsModel& model)
             continue;
         // On to the next empty button: filling them all is a tap a skill.
         g_picker.pageFollowsSlot = false;
-        SetField(model.pickerSlot, SkillArrange::NextEmptySlot(keys, upper, model.pickerSlot), "picker_slot");
+        SetField(model.pickerSlot, SkillArrange::NextEmptySlot(keys, upper, model.pickerSlot, ActiveSlots()), "picker_slot");
     }
 
     ShowPickerPage(model, keys, upper);
@@ -2217,7 +2242,7 @@ void SetPadAlt(bool alt)
 
 void SetPadHeld(PadButton button, bool held)
 {
-    HoldForPad(PadControl(button), held);
+    HoldForPad(PadControl(button, held), held);
 }
 
 int ControlAt(float x, float y)

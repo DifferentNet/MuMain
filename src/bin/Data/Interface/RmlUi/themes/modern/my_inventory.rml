@@ -69,9 +69,9 @@
 		</div>
 		<!-- The bag's page tabs on the grid's top edge (BagPages.h): the shown page lit, page 2 with a lock
 		     until it is bought; none on a server without pages. -->
-		<div id="btn_bag_tab1" class="bag-tab bag-tab-1" data-if="pages_visible" data-class-active="bag_page == 1"
+		<div id="btn_bag_tab1" class="bag-tab bag-tab-1 pad-page" data-if="pages_visible" data-class-active="bag_page == 1"
 		     data-event-click="my_inventory_bag_page(1)"><span class="bag-tab-label">1</span></div>
-		<div id="btn_bag_tab2" class="bag-tab bag-tab-2" data-if="pages_visible" data-class-active="bag_page == 2"
+		<div id="btn_bag_tab2" class="bag-tab bag-tab-2 pad-page" data-if="pages_visible" data-class-active="bag_page == 2"
 		     data-class-locked="bag_page2_locked" data-event-click="my_inventory_bag_page(2)">
 			<span class="bag-tab-label">2</span>
 			<div class="bag-tab-lock" data-if="bag_page2_locked">

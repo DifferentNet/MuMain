@@ -30,6 +30,8 @@ enum class PadButton : std::uint8_t
     Skill2,
     Skill3,
     Skill4,
+    // The pad's sixth skill (RT + B): a pad alone on the lower hotkey set only.
+    Skill5,
     PickUp,
     Auto,
     Menu,

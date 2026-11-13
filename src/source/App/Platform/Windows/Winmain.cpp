@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include "Core/Input/GamepadInput.h"
 #include "Core/Input/GamepadPointer.h"
+#include "Core/Input/GamepadStick.h"
 #include "Core/Input/KeyState.h"
 #include "Core/Utilities/FrameProfiler.h"
 #include "Core/Input/SyntheticInput.h"
@@ -2900,6 +2901,11 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     Core::Input::Gamepad::Init();
     Core::Input::Gamepad::SetEnabled(GameConfig::GetInstance().GetGamepad());
     Core::Input::Gamepad::SetRumble(GameConfig::GetInstance().GetGamepadRumble());
+    Core::Input::Gamepad::SetStickDeadZone(static_cast<float>(GameConfig::GetInstance().GetGamepadDeadZone()) / 100.f);
+    Core::Input::Gamepad::Pointer::SetSpeed(static_cast<float>(GameConfig::GetInstance().GetGamepadPointerSpeed()) /
+                                            100.f);
+    Core::Input::Gamepad::SetGlyphChoice(
+        static_cast<Core::Input::Gamepad::GlyphChoice>(GameConfig::GetInstance().GetGamepadGlyphs()));
 
 #ifndef _WIN32
     // Install POSIX crash-diagnostic signal handlers. After SDL_Init (R8

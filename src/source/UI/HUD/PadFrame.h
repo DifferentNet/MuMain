@@ -27,6 +27,13 @@ void SnapSoon();
 void SnapOnNewWindow();
 // The windows closed: the frame is gone.
 void Reset();
+// RB over the windows (pad round 3, 2026-11-13): the frame goes to the next window to the right (round
+// to the leftmost), back to where it last rested there, else to its first target. Done in the next Update.
+void NextWindow();
+// How many windows the frame's targets are in (as of the last Update; 0 under a dialog).
+[[nodiscard]] int WindowCount();
+// The window (a target's `window`) the frame rests in, -1 for none.
+[[nodiscard]] int CurrentWindow();
 
 // Whether the frame rests on a target, and its box in the RmlUi context's pixels.
 [[nodiscard]] bool Box(PadTargetPick::Box& box);
