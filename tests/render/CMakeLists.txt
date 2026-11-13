@@ -178,6 +178,13 @@ mu_add_test(
         test_ssao_setting.cpp
 )
 
+# Haze: the strength from the [Render] Haze settings, the range, distance and ground amounts, the cap.
+mu_add_test(
+    NAME haze_setting_tests
+    SOURCES
+        test_haze_setting.cpp
+)
+
 # Wind sway: the strength from the [Render] Wind settings, foliage by texture, phase, grass offset, sway.
 mu_add_test(
     NAME wind_sway_tests

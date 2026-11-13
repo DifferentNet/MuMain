@@ -102,10 +102,17 @@ the row reads **Custom** (shown only, it cannot be picked).
 | `SsaoStrength` | Strength of those shadows in percent, `0` (off) to `100`; the SSAO strength slider under the SSAO row sets it in steps of 10 | `100` |
 | `Wind` | With HD textures on (desktop only, not on the Low preset), the map's foliage sways in the wind: tree crowns, bushes, plants and flowers of the map objects bend more the higher they stand (their sun shadows and SSAO follow), and the terrain grass waves in a gust that travels across the map instead of the Classic column wave (not in Tarkan, Karutan and Ice City, which keep their own). Trunks, stones, leaf litter, hay and seaweed stay still. Options > Graphics > Wind switches it at once: `0` off, `1` on | `1` |
 | `WindStrength` | How far the foliage sways in percent, `0` (off) to `100` (tree crowns up to about 6 units, a tenth of a tile; grass tops up to 12); the wind strength slider under the Wind row sets it in steps of 10 | `100` |
+| `Haze` | With HD textures, Enhanced lighting and post-processing on (desktop only, not on the Low preset), a soft haze in the distance and a light mist over low ground, in the colour each map's light mood gives (maps without haze values get none). It starts a little behind the hero, so he and the characters near him are never touched, grows towards the old fog and fades out under it; effects, particles, windows and the sky are not covered. It is laid over the same depth SSAO draws, so it works with SSAO off too. Options > Graphics > Distance haze switches it at once; turning it on needs a restart only when both it and SSAO were off as the game started: `0` off, `1` on | `1` |
+| `HazeStrength` | Strength of the haze in percent, `0` (off) to `100`; `70` shows each map's haze as its light mood gives it, `100` is a little more (never more than 45 % of the haze colour on a pixel); the haze strength slider under the Distance haze row sets it in steps of 10 | `70` |
 
 Each map's light mood can also set the sun's direction and the shadows'
 strength and softness (`sunAzimuth`, `sunElevation`, `sunShadow`,
-`sunSoftness`; see `Render/Lighting/LightMood.h`). The item preview in the
+`sunSoftness`; see `Render/Lighting/LightMood.h`), and the Remaster's distance
+haze: `haze` (0 to 0.5, how much of the haze colour the far world takes),
+`hazeR`, `hazeG`, `hazeB` (its colour, darkened by `background`), `groundFog`
+(0 to 0.5, the low mist), `groundFogHeight` (50 to 600 world units above the
+hero's ground that the mist reaches) and `hazeSun` (0 to 0.5, how much brighter
+the haze gets towards the sun). The item preview in the
 inventory and shops has a studio light of its own in the Enhanced look.
 
 **Auto** (no `GraphicsPreset` key, or `Auto`) is decided once at start-up, on a

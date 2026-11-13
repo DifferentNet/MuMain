@@ -51,6 +51,20 @@ bool HasIssueAbout(const std::vector<ItemDataIssue>& issues, const std::string& 
                        { return issue.field == field && issue.message.find(message) != std::string::npos; });
 }
 
+// A mood with the haze values of a map entry (Remaster distance haze).
+LightMood WithHaze(LightMood mood, double haze, double red, double green, double blue, double groundFog,
+                   double groundFogHeight, double hazeSun)
+{
+    mood.haze = haze;
+    mood.hazeR = red;
+    mood.hazeG = green;
+    mood.hazeB = blue;
+    mood.groundFog = groundFog;
+    mood.groundFogHeight = groundFogHeight;
+    mood.hazeSun = hazeSun;
+    return mood;
+}
+
 const std::string ValidFile = R"({
   "formatVersion": 1,
   "default": { "base": 0.7, "figures": 0.8, "dynamicGain": 1.2, "background": 1, "sun": 0.5 },
@@ -188,10 +202,53 @@ TEST_CASE("the shipped light mood file has the tuned values [data][lightmood]")
     // The tuned Enhanced look: base, figures, dynamicGain, background, sun,
     // shadowKeep, shadeCool, brightScale.
     CHECK(loaded.data.defaultMood == LightMood{0.45, 0.7, 1.7, 1.0, 0.8, 0.8, 0.1, 0.8});
-    CHECK(loaded.data.ForWorld(Icarus) == LightMood{0.7, 0.7, 1.7, 0.7, 0.8, 0.8, 0.1, 0.95});
-    CHECK(loaded.data.ForWorld(LostTower) == LightMood{0.45, 0.7, 1.7, 1.0, 1.0, 0.8, 0.1, 0.8});
+    // The haze values: haze, hazeR/G/B, groundFog, groundFogHeight, hazeSun.
+    CHECK(loaded.data.ForWorld(Icarus) ==
+          WithHaze(LightMood{0.7, 0.7, 1.7, 0.7, 0.8, 0.8, 0.1, 0.95}, 0.16, 0.5, 0.62, 0.86, 0.0, 220.0, 0.1));
+    CHECK(loaded.data.ForWorld(LostTower) ==
+          WithHaze(LightMood{0.45, 0.7, 1.7, 1.0, 1.0, 0.8, 0.1, 0.8}, 0.1, 0.34, 0.28, 0.4, 0.1, 150.0, 0.0));
+    // Atlans draws its ground after the effects: no haze there.
     CHECK(loaded.data.ForWorld(Atlans) == LightMood{0.8, 0.8, 1.7, 1.0, 1.0, 0.8, 0.1, 1.0});
-    CHECK(loaded.data.ForWorld(Lorencia) == loaded.data.defaultMood);
+    CHECK(loaded.data.ForWorld(Lorencia) ==
+          WithHaze(loaded.data.defaultMood, 0.18, 0.62, 0.7, 0.66, 0.06, 220.0, 0.12));
+    // Maps without an entry (arenas, events) keep no haze.
+    CHECK(loaded.data.defaultMood.haze == 0.0);
+    CHECK(loaded.data.defaultMood.groundFog == 0.0);
+}
+
+TEST_CASE("the haze values are optional and range-checked [data][lightmood]")
+{
+    const ReadResult result = Read(R"({
+  "formatVersion": 1,
+  "default": { "base": 0.7, "figures": 0.7, "dynamicGain": 1, "background": 1, "sun": 0.6 },
+  "maps": [ { "world": 3, "name": "Noria", "haze": 0.2, "hazeR": 0.6, "hazeG": 0.72, "hazeB": 0.62,
+              "groundFog": 0.14, "groundFogHeight": 200, "hazeSun": 0.1 } ]
+})");
+    REQUIRE_FALSE(HasErrors(result.issues));
+    CHECK(result.data.defaultMood.haze == 0.0);
+    CHECK(result.data.defaultMood.hazeR == doctest::Approx(0.6));
+    CHECK(result.data.defaultMood.groundFogHeight == doctest::Approx(220.0));
+    const LightMood& noria = result.data.ForWorld(3);
+    CHECK(noria.haze == doctest::Approx(0.2));
+    CHECK(noria.hazeG == doctest::Approx(0.72));
+    CHECK(noria.groundFog == doctest::Approx(0.14));
+    CHECK(noria.groundFogHeight == doctest::Approx(200.0));
+    CHECK(noria.hazeSun == doctest::Approx(0.1));
+
+    const ReadResult outOfRange = Read(R"({
+  "formatVersion": 1,
+  "default": { "base": 0.7, "figures": 0.7, "dynamicGain": 1, "background": 1, "sun": 0.6, "haze": 0.6,
+               "hazeR": 1.2, "hazeG": -0.1, "hazeB": 2, "groundFog": 0.7, "groundFogHeight": 20, "hazeSun": 0.8 }
+})");
+    CHECK(HasErrors(outOfRange.issues));
+    CHECK(HasIssueAbout(outOfRange.issues, "default.haze", "must be from 0 to 0.5"));
+    CHECK(HasIssueAbout(outOfRange.issues, "default.hazeR", "must be from 0 to 1"));
+    CHECK(HasIssueAbout(outOfRange.issues, "default.hazeG", "must be from 0 to 1"));
+    CHECK(HasIssueAbout(outOfRange.issues, "default.hazeB", "must be from 0 to 1"));
+    CHECK(HasIssueAbout(outOfRange.issues, "default.groundFog", "must be from 0 to 0.5"));
+    CHECK(HasIssueAbout(outOfRange.issues, "default.groundFogHeight", "must be from 50 to 600"));
+    CHECK(HasIssueAbout(outOfRange.issues, "default.hazeSun", "must be from 0 to 0.5"));
+    CHECK(outOfRange.data.defaultMood == LightMood{});
 }
 
 TEST_CASE("the shadow keep and the cool shade are optional and range-checked [data][lightmood]")

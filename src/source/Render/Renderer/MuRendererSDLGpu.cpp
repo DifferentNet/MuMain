@@ -38,6 +38,7 @@
 #include "QuadTopology.h"
 #include "RangeAllocator.h"
 #include "SdlGpuPixelFormat.h"
+#include "SdlGpuHaze.h"
 #include "SdlGpuPostProcessing.h"
 #include "SdlGpuReplayState.h"
 #include "SdlGpuSoftShadow.h"
@@ -49,6 +50,7 @@
 #include "Core/Utilities/FrameProfiler.h"
 #include "Core/Utilities/Log/MuLogger.h"
 #include "Render/PostProcessing/BloomSource.h"
+#include "Render/PostProcessing/HazeSetting.h"
 #include "Render/PostProcessing/SceneBoundary.h"
 #include "Render/PostProcessing/SsaoSetting.h"
 #include "Render/Terrain/TerrainHeightGrid.h"
@@ -708,6 +710,29 @@ void SetSsaoSettings(float strength)
 bool HasSsaoPipelines()
 {
     return !s_ssaoDepthPipelines.empty();
+}
+// Distance haze of the Remaster (SdlGpuHaze.h, desktop), laid over the depth SSAO draws. Its shader
+// and pipeline exist only when SSAO or haze was on at start-up (WorldDepthWanted() before Init).
+static mu::SdlGpuHaze s_haze;
+static float s_hazeStrength = 0.0f; // 0: off
+// The frame's haze as the scene set it, and what EndOpaqueWorld took for it: the view's
+// world-from-view matrix and the hero's view distance; the world's viewport from the depth pass.
+static mu::HazeFrame s_hazeFrame{};
+static glm::mat4 s_hazeWorldFromView{1.0f};
+static float s_hazeHeroDistance = 0.0f;
+static SDL_GPUViewport s_hazeViewport{};
+void SetHazeSettings(float strength)
+{
+    s_hazeStrength = std::max(strength, 0.0f);
+}
+bool HasHazePipelines()
+{
+    return s_haze.IsAvailable() && !s_ssaoDepthPipelines.empty();
+}
+// Whether the opaque world's depth is drawn on its own: SSAO and the haze both read it.
+[[nodiscard]] static bool WorldDepthWanted()
+{
+    return s_ssaoStrength > 0.0f || s_hazeStrength > 0.0f;
 }
 static bool s_postProcessingEnabled = false;
 static mu::PostProcessingLook s_postProcessingLook{};
@@ -1382,6 +1407,7 @@ static SDL_GPUShader* s_vertShaderPostFullscreen = nullptr; // post_fullscreen.v
 static SDL_GPUShader* s_fragShaderSsao = nullptr;           // post_ssao.frag (only with SSAO on)
 static SDL_GPUShader* s_fragShaderSsaoBlur = nullptr;       // post_ssao_blur.frag
 static SDL_GPUShader* s_fragShaderSsaoApply = nullptr;      // post_ssao_apply.frag
+static SDL_GPUShader* s_fragShaderHaze = nullptr;           // post_haze.frag (with SSAO or haze on)
 static SDL_GPUShader* s_fragShaderBloomDown = nullptr;      // post_bloom_down.frag
 static SDL_GPUShader* s_fragShaderBloomUp = nullptr;        // post_bloom_up.frag
 static SDL_GPUShader* s_fragShaderComposite = nullptr;      // post_composite.frag
@@ -2509,6 +2535,7 @@ public:
         s_postProcessing.Release();
         s_softShadow.Release();
         s_ssao.Release();
+        s_haze.Release();
 
         SDL_ReleaseWindowFromGPUDevice(s_device, s_window);
         SDL_DestroyGPUDevice(s_device);
@@ -2581,6 +2608,7 @@ public:
         s_previousDrawCommands.fill(kNoDrawCommand);
         s_sceneBoundary.Reset();
         s_opaqueWorldEnd = kNoDrawCommand;
+        s_hazeFrame = {};
         s_ssaoLinearFog = false;
         if (s_bloomExclusionDepth != 0)
         {
@@ -3133,11 +3161,11 @@ public:
         s_postProcessing.RenderBloom(s_cmdBuf, s_postProcessingLook.bloomLevelFalloff);
     }
 
-    // The end of the opaque world when this frame draws SSAO (EndOpaqueWorld marked it inside the
-    // scene, Enhanced lighting is on), else kNoDrawCommand.
+    // The end of the opaque world when this frame draws its depth for SSAO or the haze
+    // (EndOpaqueWorld marked it inside the scene, Enhanced lighting is on), else kNoDrawCommand.
     [[nodiscard]] static std::size_t GetSsaoWorldEnd(std::size_t sceneEnd, bool boneDataReady)
     {
-        if (s_ssaoStrength <= 0.0f || s_opaqueWorldEnd == kNoDrawCommand || s_opaqueWorldEnd == 0u ||
+        if (!WorldDepthWanted() || s_opaqueWorldEnd == kNoDrawCommand || s_opaqueWorldEnd == 0u ||
             s_opaqueWorldEnd > sceneEnd || !s_depthTexture || !UsesEnhancedLighting() ||
             s_ssaoDepthPipelines.empty() || s_texturesInvalidated || !boneDataReady ||
             !s_ssao.EnsureTargets({s_swapW, s_swapH}))
@@ -3147,7 +3175,8 @@ public:
         return s_opaqueWorldEnd;
     }
 
-    // The opaque world's depth into the SSAO depth, then its occlusion. False when it did not run.
+    // The opaque world's depth into the SSAO depth, then its occlusion while SSAO is on. False when
+    // the depth was not drawn (then neither SSAO nor the haze draws).
     [[nodiscard]] static bool RenderSsao(std::size_t worldEnd, bool boneDataReady)
     {
         FRAME_PROFILE(RendererSsao);
@@ -3175,6 +3204,12 @@ public:
         s_dbgPipelineBindsThisFrame = pipelineBinds;
         s_dbgSamplerBindsThisFrame = samplerBinds;
         EndReplayPass();
+        s_hazeViewport = view.viewport;
+        if (s_ssaoStrength <= 0.0f)
+        {
+            s_ssao.DropResult();
+            return true;
+        }
 
         mu::SdlGpuSsaoFrame frame{};
         std::memcpy(frame.projection, glm::value_ptr(s_ssaoProjection), sizeof(frame.projection));
@@ -3182,7 +3217,77 @@ public:
         frame.strength = s_ssaoStrength;
         frame.fadeStart = s_ssaoFade.start;
         frame.fadeEnd = s_ssaoFade.end;
-        return s_ssao.Render(s_cmdBuf, frame);
+        // A failed occlusion still leaves the depth for the haze; DrawApply then draws nothing.
+        s_ssao.Render(s_cmdBuf, frame);
+        return true;
+    }
+
+    // The uniform of this frame's haze, or none (off, the map has none, too short a range).
+    [[nodiscard]] static std::optional<mu::SdlGpuHazeUniform> BuildHazeUniform()
+    {
+        namespace Haze = Render::PostProcessing::Haze;
+        const mu::HazeFrame& frame = s_hazeFrame;
+        if (s_hazeStrength <= 0.0f || !s_haze.IsAvailable() || frame.haze + frame.groundFog <= 0.0f)
+        {
+            return std::nullopt;
+        }
+        const glm::mat4& projection = s_ssaoProjection;
+        if (projection[0][0] == 0.0f || projection[1][1] == 0.0f || s_swapW == 0u || s_swapH == 0u)
+        {
+            return std::nullopt;
+        }
+        const Haze::Range range = Haze::ResolveRange(frame.heroVisible, s_hazeHeroDistance, s_ssaoFade.start);
+        if (!range.valid)
+        {
+            return std::nullopt;
+        }
+        const auto setFour = [](float (&target)[4], float x, float y, float z, float w)
+        {
+            target[0] = x;
+            target[1] = y;
+            target[2] = z;
+            target[3] = w;
+        };
+        // Row `row` of a column-major glm matrix.
+        const auto setRow = [](float (&target)[4], const glm::mat4& matrix, int row)
+        {
+            for (int column = 0; column < 4; ++column)
+            {
+                target[column] = matrix[column][row];
+            }
+        };
+        const float width = static_cast<float>(s_swapW);
+        const float height = static_cast<float>(s_swapH);
+        const float fadeLength = s_ssaoFade.end - s_ssaoFade.start;
+        constexpr float kThinnestLayer = 1.0f;
+        const float layerHeight = std::max(frame.groundFogHeight, kThinnestLayer);
+        mu::SdlGpuHazeUniform uniform{};
+        setFour(uniform.projection, 1.0f / projection[0][0], 1.0f / projection[1][1], projection[2][2],
+                projection[3][2]);
+        setFour(uniform.viewport, s_hazeViewport.x, s_hazeViewport.y, s_hazeViewport.w, s_hazeViewport.h);
+        setFour(uniform.fullSize, 1.0f / width, 1.0f / height, width, height);
+        setRow(uniform.worldRowX, s_hazeWorldFromView, 0);
+        setRow(uniform.worldRowY, s_hazeWorldFromView, 1);
+        setRow(uniform.worldRowZ, s_hazeWorldFromView, 2);
+        setFour(uniform.color, frame.color[0], frame.color[1], frame.color[2], Haze::kMaxAmount);
+        // A broken fade range (no fog) never fades: the haze then holds its full amount to the far plane.
+        setFour(uniform.distance, range.start, 1.0f / (range.end - range.start), s_ssaoFade.start,
+                fadeLength > 0.0f ? 1.0f / fadeLength : 0.0f);
+        setFour(uniform.ground, frame.referenceHeight, 1.0f / layerHeight, frame.groundFog * s_hazeStrength,
+                frame.haze * s_hazeStrength);
+        setFour(uniform.sun, frame.sunDirection[0], frame.sunDirection[1], frame.sun, 0.0f);
+        return uniform;
+    }
+
+    // Blends this frame's haze over the opaque world (inside the scene pass, after SSAO's apply).
+    static void DrawHaze()
+    {
+        const std::optional<mu::SdlGpuHazeUniform> uniform = BuildHazeUniform();
+        if (!uniform)
+        {
+            return;
+        }
+        s_haze.Draw(s_cmdBuf, s_renderPass, s_ssao.GetDepth(), *uniform, s_hazeViewport);
     }
 
     // The scene into the scene texture, its bloom, then the processed scene and
@@ -3199,8 +3304,9 @@ public:
             mu::GetSdlGpuFrameColorTarget({s_postProcessing.GetSceneTexture(), multisampled}, s_clearColor));
         if (!ReplaySoftShadowScene(sceneTarget, sceneEnd, SDL_GPU_STOREOP_STORE, boneDataReady, view))
         {
-            // With SSAO the opaque world is drawn, darkened by its occlusion, and the rest of the
-            // scene (effects, particles) drawn on top. Soft body shadows go without it.
+            // With SSAO or the haze the opaque world is drawn, darkened by its occlusion and veiled
+            // by the haze, and the rest of the scene (effects, particles) drawn on top. Soft body
+            // shadows go without them.
             const std::size_t worldEnd = GetSsaoWorldEnd(sceneEnd, boneDataReady);
             const bool ssao = worldEnd != kNoDrawCommand && RenderSsao(worldEnd, boneDataReady);
             if (!BeginReplayPass(sceneTarget, MakeDepthTarget(SDL_GPU_LOADOP_CLEAR, SDL_GPU_STOREOP_STORE)))
@@ -3211,6 +3317,7 @@ public:
             {
                 ReplayCommands(0u, worldEnd, boneDataReady, ReplaySelection::AllCommands, view);
                 s_ssao.DrawApply(s_cmdBuf, s_renderPass);
+                DrawHaze();
                 PushSceneLightingUniforms();
                 ReplayCommands(worldEnd, sceneEnd, boneDataReady, ReplaySelection::AllCommands, view);
             }
@@ -3640,9 +3747,10 @@ public:
             renderPassCompleted = ReplayFrame(frameColorTexture, boneDataReady);
         }
 
-        // SSAO off (Options, strength 0, the Low preset), Classic lighting or no post-processing: no SSAO until it
-        // comes back, so neither its targets (ReleaseTargets() does nothing when none are allocated).
-        if (s_ssaoStrength <= 0.0f || !IsPostProcessingActive() || !UsesEnhancedLighting())
+        // SSAO and the haze off (Options, strength 0, the Low preset), Classic lighting or no post-processing: no
+        // world depth until one comes back, so neither its targets (ReleaseTargets() does nothing when none are
+        // allocated).
+        if (!WorldDepthWanted() || !IsPostProcessingActive() || !UsesEnhancedLighting())
         {
             s_ssao.ReleaseTargets();
         }
@@ -4275,7 +4383,7 @@ public:
 
     void EndOpaqueWorld() override
     {
-        if (!s_frameActive || s_ssaoStrength <= 0.0f || s_opaqueWorldEnd != kNoDrawCommand)
+        if (!s_frameActive || !WorldDepthWanted() || s_opaqueWorldEnd != kNoDrawCommand)
         {
             return;
         }
@@ -4294,6 +4402,28 @@ public:
         s_opaqueWorldEnd = s_renderCmds.size();
         s_ssaoProjection = projection;
         s_ssaoFade = Ssao::ResolveFade(s_ssaoLinearFog, s_ssaoFogStart, s_ssaoFogEnd, farDistance);
+        CaptureHazeView();
+    }
+
+    // The view the haze needs from this frame (SetSceneLighting set its world-from-view matrix).
+    void CaptureHazeView()
+    {
+        s_hazeWorldFromView = m_worldFromViewMatrix;
+        if (!s_hazeFrame.heroVisible)
+        {
+            s_hazeHeroDistance = 0.0f;
+            return;
+        }
+        const glm::vec4 hero{s_hazeFrame.heroPosition[0], s_hazeFrame.heroPosition[1], s_hazeFrame.heroPosition[2],
+                             1.0f};
+        // View space looks down -z: the distance ahead is -z.
+        const glm::vec4 heroInView = glm::inverse(s_hazeWorldFromView) * hero;
+        s_hazeHeroDistance = -heroInView.z;
+    }
+
+    void SetHazeFrame(const mu::HazeFrame& frame) override
+    {
+        s_hazeFrame = frame;
     }
 
     [[nodiscard]] bool SetPostProcessing(bool enabled) override
@@ -6516,9 +6646,9 @@ private:
         s_fragShaderComposite =
             createShader("post_composite", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 3, 0, 1, /*fatal=*/false);
 #ifndef __EMSCRIPTEN__
-        // SSAO (desktop, only when on): the depth (t0) or the occlusion and depth (t0, t1), and
-        // SsaoUniforms (b0).
-        if (s_ssaoStrength > 0.0f)
+        // SSAO and the haze (desktop, only when either is on; the haze needs SSAO's depth pipelines):
+        // the depth (t0) or the occlusion and depth (t0, t1), and SsaoUniforms or HazeUniforms (b0).
+        if (WorldDepthWanted())
         {
             s_fragShaderSsao =
                 createShader("post_ssao", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 1, /*fatal=*/false);
@@ -6526,6 +6656,8 @@ private:
                 createShader("post_ssao_blur", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 1, /*fatal=*/false);
             s_fragShaderSsaoApply =
                 createShader("post_ssao_apply", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 1, /*fatal=*/false);
+            s_fragShaderHaze =
+                createShader("post_haze", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 1, /*fatal=*/false);
         }
 #endif
 
@@ -6596,7 +6728,7 @@ private:
         }
         for (SDL_GPUShader** shader :
              {&s_vertShaderPostFullscreen, &s_fragShaderBloomDown, &s_fragShaderBloomUp, &s_fragShaderComposite,
-              &s_fragShaderSsao, &s_fragShaderSsaoBlur, &s_fragShaderSsaoApply})
+              &s_fragShaderSsao, &s_fragShaderSsaoBlur, &s_fragShaderSsaoApply, &s_fragShaderHaze})
         {
             if (*shader)
             {
@@ -7792,12 +7924,13 @@ private:
         mu::log::Get("render")->info("SDL_gpu -- terrain water: {} of {} pipelines", built, wanted);
     }
 
-    // SSAO's pipelines (desktop, only when on at start-up): the depth-only twins the opaque world's
-    // depth is drawn with, and SdlGpuSsao's occlusion, blur and apply passes.
+    // SSAO's pipelines (desktop, only when SSAO or the haze is on at start-up): the depth-only twins
+    // the opaque world's depth is drawn with, SdlGpuSsao's occlusion, blur and apply passes, and the
+    // haze over that depth.
     static void CreateSsaoPipelines()
     {
         DestroySsaoPipelines();
-        if (s_ssaoStrength <= 0.0f || !s_fragShaderShadowCaster || !s_vertShaderPostFullscreen)
+        if (!WorldDepthWanted() || !s_fragShaderShadowCaster || !s_vertShaderPostFullscreen)
         {
             return;
         }
@@ -7879,6 +8012,15 @@ private:
         }
         mu::log::Get("render")->info("SDL_gpu -- SSAO: {} ({} depth-only twins)", created ? "ready" : "missing",
                                      s_ssaoDepthPipelines.size());
+        if (!created)
+        {
+            return;
+        }
+        const bool haze =
+            s_haze.CreatePipeline(s_device, s_vertShaderPostFullscreen, s_fragShaderHaze,
+                                  SDL_GetGPUSwapchainTextureFormat(s_device, s_window),
+                                  mu::GetSdlGpuSampleCount(s_sampleCount).value_or(SDL_GPU_SAMPLECOUNT_1));
+        mu::log::Get("render")->info("SDL_gpu -- haze: {}", haze ? "ready" : "missing");
     }
 
     static void DestroySsaoPipelines()
@@ -7893,6 +8035,7 @@ private:
             }
         }
         s_ssao.DestroyPipelines();
+        s_haze.DestroyPipeline();
     }
 
     static void DestroyTerrainWaterPipelines()

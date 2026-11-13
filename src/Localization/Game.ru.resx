@@ -16030,6 +16030,27 @@
   <data name="WindLockedLowPreset" xml:space="preserve">
     <value>Выключено на пресете графики «Низкий».</value>
   </data>
+  <data name="HazeRow" xml:space="preserve">
+    <value>Дымка вдали</value>
+  </data>
+  <data name="HazeTooltip" xml:space="preserve">
+    <value>Лёгкая дымка вдали и туман над низинами. Персонажи рядом не меняются.</value>
+  </data>
+  <data name="HazeStrengthRow" xml:space="preserve">
+    <value>Сила дымки</value>
+  </data>
+  <data name="HazeLockedHdTextures" xml:space="preserve">
+    <value>Нужны HD-текстуры.</value>
+  </data>
+  <data name="HazeLockedLowPreset" xml:space="preserve">
+    <value>Выключено на пресете графики «Низкий».</value>
+  </data>
+  <data name="HazeLockedEnhanced" xml:space="preserve">
+    <value>Нужны Enhanced graphics с Enhanced lighting и Bloom and colour grading.</value>
+  </data>
+  <data name="HazeAfterRestart" xml:space="preserve">
+    <value>Включение заработает после перезапуска.</value>
+  </data>
   <data name="BagPageLocked" xml:space="preserve">
     <value>Страница 2 закрыта</value>
   </data>

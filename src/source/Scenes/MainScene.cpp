@@ -42,6 +42,7 @@
 #include "Scenes/ScenePostProcessing.h"
 #include "Render/Lighting/DynamicLightHistory.h"
 #include "Render/Lighting/SunShadowSetting.h"
+#include "Render/PostProcessing/HazeSetting.h"
 #include <optional>
 #include "Camera/CameraManager.h"
 #include "Camera/CameraMode.h"
@@ -613,9 +614,12 @@ static void RenderGameWorld(BYTE& byWaterMap, int width, int height)
         RenderObjects_AfterCharacter();
     }
     sunShadowScope.reset();
-    // Water-terrain maps (Atlans) draw their ground later, after the effects: no SSAO there.
+    // Water-terrain maps (Atlans) draw their ground later, after the effects: no SSAO or haze there.
     if (IsWaterTerrain() == false)
+    {
+        Render::PostProcessing::Haze::PushFrame();
         mu::GetRenderer().EndOpaqueWorld();
+    }
 
     { FRAME_PROFILE(Joints); RenderJoints(byWaterMap); }
 

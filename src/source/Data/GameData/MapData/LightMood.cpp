@@ -30,6 +30,9 @@ constexpr double MinSun = 0.0;
 constexpr double MaxShadowKeep = 1.5;
 constexpr double MaxShadeCool = 0.5;
 constexpr double MinBrightScale = 0.3;
+constexpr double MaxHaze = 0.5;
+constexpr double MinGroundFogHeight = 50.0;
+constexpr double MaxGroundFogHeight = 600.0;
 
 // The default needs every required value; optional ones keep their Classic value.
 constexpr std::array<LightMoodValueInfo, LightMoodValueCount> MoodValues = {{
@@ -45,6 +48,13 @@ constexpr std::array<LightMoodValueInfo, LightMoodValueCount> MoodValues = {{
     {"sunElevation", &LightMood::sunElevation, false, 20.0, 85.0},
     {"sunShadow", &LightMood::sunShadow, false, 0.0, 1.0},
     {"sunSoftness", &LightMood::sunSoftness, false, 2.0, 40.0},
+    {"haze", &LightMood::haze, false, 0.0, MaxHaze},
+    {"hazeR", &LightMood::hazeR, false, 0.0, MaxScale},
+    {"hazeG", &LightMood::hazeG, false, 0.0, MaxScale},
+    {"hazeB", &LightMood::hazeB, false, 0.0, MaxScale},
+    {"groundFog", &LightMood::groundFog, false, 0.0, MaxHaze},
+    {"groundFogHeight", &LightMood::groundFogHeight, false, MinGroundFogHeight, MaxGroundFogHeight},
+    {"hazeSun", &LightMood::hazeSun, false, 0.0, MaxHaze},
 }};
 
 class IssueList

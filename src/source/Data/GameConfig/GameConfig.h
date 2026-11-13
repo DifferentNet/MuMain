@@ -254,6 +254,13 @@ public:
     int GetWindStrength() const { return m_windStrength; }
     void SetWind(int wind);
     void SetWindStrength(int percent);
+    // [Render] Haze: with HD textures on, distance haze and low ground fog over the world
+    // (Render/PostProcessing/HazeSetting.h), 0 off, 1 on; HazeStrength in percent (both clamped;
+    // Options > Graphics applies them at once).
+    int GetHaze() const { return m_haze; }
+    int GetHazeStrength() const { return m_hazeStrength; }
+    void SetHaze(int haze);
+    void SetHazeStrength(int percent);
     // [Render] SunShadows: 0 off, 1 medium, 2 high (clamped).
     int GetSunShadows() const { return m_sunShadows; }
     void SetSunShadows(int level);
@@ -399,6 +406,8 @@ private:
     int m_ssaoStrength = 100;
     int m_wind = 1;
     int m_windStrength = 100;
+    int m_haze = 1;
+    int m_hazeStrength = 70;
     int m_sunShadows = 0;
     int m_sharpen = 0;
     std::wstring m_renderBackend;

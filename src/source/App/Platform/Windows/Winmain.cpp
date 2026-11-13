@@ -42,6 +42,7 @@
 #include "Render/Renderer/MuRenderer.h"
 #include "Render/Lighting/SoftShadowSetting.h"
 #include "Render/Lighting/SunShadowSetting.h"
+#include "Render/PostProcessing/HazeSetting.h"
 #include "Render/PostProcessing/SsaoSetting.h"
 #include "Render/Models/WindSway.h"
 #include "Render/Look/GraphicsPresetSetting.h"
@@ -2954,6 +2955,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     MuSetAntialiasingActive(Render::Look::PresetFeatures(GameConfig::GetInstance().GetLook()).antialiasing);
     // Also before Init: the renderer loads the SSAO shaders and builds its pipelines only when it is on.
     Render::PostProcessing::Ssao::ApplyFromConfig();
+    Render::PostProcessing::Haze::ApplyFromConfig();
     Render::Models::Wind::ApplyFromConfig();
     if (!mu::InitSDLGpuRenderer(g_sdlWindow, selectedFontFamily, renderBackend,
                                 static_cast<float>(initialFontSizes.normal),
@@ -3115,6 +3117,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     Render::Lighting::SoftShadow::ApplyFromConfig();
     // Again now that an Auto preset has become a concrete one (Low turns it off).
     Render::PostProcessing::Ssao::ApplyFromConfig();
+    Render::PostProcessing::Haze::ApplyFromConfig();
     Render::Models::Wind::ApplyFromConfig();
 
     // Make the bundled ./fonts faces resolvable by GDI before the first CreateFont,

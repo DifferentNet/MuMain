@@ -120,6 +120,11 @@ window writes to these sections:
     Remaster PC client only (the browser and Classic clients hide them). Both apply at once. The row
     is greyed out, its hint saying why, without HD textures and on the Low graphics preset. See
     [`enhanced-look.md`](enhanced-look.md).
+  - `Haze` and `HazeStrength` (defaults `1` and `70`): the **Distance haze** row and the haze
+    strength slider under it (0 to 100 % in steps of 10, shown while the haze is on), Remaster PC
+    client only (the browser and Classic clients hide them). Both apply at once. The row is greyed
+    out as the SSAO row is, its hint saying why; when both the haze and SSAO were off as the game
+    started, turning it on takes effect after a restart. See [`enhanced-look.md`](enhanced-look.md).
 
   Set by hand only, never written by the game:
   - `Backend` (`default`/`vulkan`/`direct3d12`/`metal`, case-insensitive,

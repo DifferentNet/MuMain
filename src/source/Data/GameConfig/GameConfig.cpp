@@ -149,6 +149,9 @@ void GameConfig::Load()
     m_wind = std::clamp(ReadInt(CfgSectionRender, CfgKeyWind, CfgDefaultWind), CfgMinWind, CfgMaxWind);
     m_windStrength = std::clamp(ReadInt(CfgSectionRender, CfgKeyWindStrength, CfgDefaultWindStrength),
                                 CfgMinWindStrength, CfgMaxWindStrength);
+    m_haze = std::clamp(ReadInt(CfgSectionRender, CfgKeyHaze, CfgDefaultHaze), CfgMinHaze, CfgMaxHaze);
+    m_hazeStrength = std::clamp(ReadInt(CfgSectionRender, CfgKeyHazeStrength, CfgDefaultHazeStrength),
+                                CfgMinHazeStrength, CfgMaxHazeStrength);
     m_sunShadows = GameConfigValidation::ValidateSunShadows(
         ReadInt(CfgSectionRender, CfgKeySunShadows, CfgDefaultSunShadows));
     m_sharpen = GameConfigValidation::ValidateSharpen(ReadInt(CfgSectionRender, CfgKeySharpen, CfgDefaultSharpen));
@@ -251,6 +254,8 @@ void GameConfig::Save()
     WriteInt(CfgSectionRender, CfgKeySsaoStrength, m_ssaoStrength);
     WriteInt(CfgSectionRender, CfgKeyWind, m_wind);
     WriteInt(CfgSectionRender, CfgKeyWindStrength, m_windStrength);
+    WriteInt(CfgSectionRender, CfgKeyHaze, m_haze);
+    WriteInt(CfgSectionRender, CfgKeyHazeStrength, m_hazeStrength);
     WriteInt(CfgSectionRender, CfgKeySunShadows, m_sunShadows);
     WriteInt(CfgSectionRender, CfgKeySharpen, m_sharpen);
     WriteBool(CfgSectionRender, CfgKeyDisableEffects, m_disableEffects);
@@ -436,6 +441,16 @@ void GameConfig::SetWind(int wind)
 void GameConfig::SetWindStrength(int percent)
 {
     m_windStrength = std::clamp(percent, CfgDefaults::CfgMinWindStrength, CfgDefaults::CfgMaxWindStrength);
+}
+
+void GameConfig::SetHaze(int haze)
+{
+    m_haze = std::clamp(haze, CfgDefaults::CfgMinHaze, CfgDefaults::CfgMaxHaze);
+}
+
+void GameConfig::SetHazeStrength(int percent)
+{
+    m_hazeStrength = std::clamp(percent, CfgDefaults::CfgMinHazeStrength, CfgDefaults::CfgMaxHazeStrength);
 }
 
 void GameConfig::SetAntialiasing(int samples)
