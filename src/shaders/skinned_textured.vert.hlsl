@@ -14,10 +14,10 @@ cbuffer Skinning : register(b0, space1)
 {
     float4x4 mvp;
     float4 bodyOriginAndScale;
-    float4 boneScaleAndRestPoseScale;
+    float4 boneScaleAndRestPoseScale; // x: bone scale; y: rest-pose scale; z: wind phase (applyWind)
     uint4 palette;
     float4 lightDirection; // xyz: the model light vector; w: the highlight knee
-    float4 fogParameters;
+    float4 fogParameters; // x, y: fog start and end; z, w: wind amplitude and 1 / height range
     uint4 textureCoordinateMode;
     float4 chromeParameters;
     float4 textureCoordinateParameters;
@@ -122,6 +122,23 @@ float3 transformPosition(float3 position, int boneIndex)
     return transformed;
 }
 
+// Wind sway of map foliage (Render/Models/WindSway.h). fogParameters.z: amplitude in world units, 0 = none;
+// fogParameters.w: 1 / height above the object's origin over which it grows; boneScaleAndRestPoseScale.z: phase, 0..4pi.
+float3 applyWind(float3 position)
+{
+    const float amplitude = fogParameters.z;
+    if (amplitude <= 0.0)
+        return position;
+    const float rise = saturate((position.z - bodyOriginAndScale.z) * fogParameters.w);
+    const float weight = rise * rise;
+    const float phase = boneScaleAndRestPoseScale.z;
+    const float travel = dot(position.xy, float2(0.006, 0.008));
+    const float gust = sin(phase - travel) * 0.65 + sin(2.5 * phase - travel * 3.1 + bodyOriginAndScale.x * 0.05) * 0.35;
+    position.xy += float2(0.6, 0.8) * (gust * amplitude * weight);
+    position.z -= abs(gust) * amplitude * weight * 0.15;
+    return position;
+}
+
 float3 transformNormal(float3 normal, int boneIndex)
 {
     if (boneIndex < 0 || boneIndex >= int(palette.y))
@@ -209,7 +226,7 @@ float2 getTextureCoordinates(float2 restCoordinates, float3 normal, float3 posit
 VSOutput main(VSInput input)
 {
     VSOutput output;
-    const float3 skinnedPosition = transformPosition(input.pos, input.positionBoneIndex);
+    const float3 skinnedPosition = applyWind(transformPosition(input.pos, input.positionBoneIndex));
     const float3 skinnedNormal = transformNormal(input.normal, input.normalBoneIndex);
     output.pos = mul(mvp, float4(skinnedPosition, 1.0));
     output.uv = getTextureCoordinates(input.uv, skinnedNormal, skinnedPosition);

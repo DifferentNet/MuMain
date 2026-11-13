@@ -135,6 +135,15 @@ namespace CfgKeys
     // in creases and where models meet the ground, and its strength in percent (0 to 100).
     inline constexpr wchar_t CfgKeySsao[] = L"Ssao";
     inline constexpr wchar_t CfgKeySsaoStrength[] = L"SsaoStrength";
+    // [Render] Wind: with HD textures on, 0 off, 1 grass, bushes and tree crowns sway in the wind
+    // (Render/Models/WindSway.h), and its strength in percent (0 to 100).
+    inline constexpr wchar_t CfgKeyWind[] = L"Wind";
+    inline constexpr wchar_t CfgKeyWindStrength[] = L"WindStrength";
+    // [Render] Haze: with HD textures, Enhanced lighting and post-processing on, 0 off, 1 distance haze
+    // and low ground fog (Render/PostProcessing/HazeSetting.h), and its strength in percent (0 to 100;
+    // 70 shows the maps' haze as their light mood gives it).
+    inline constexpr wchar_t CfgKeyHaze[] = L"Haze";
+    inline constexpr wchar_t CfgKeyHazeStrength[] = L"HazeStrength";
     // Sun shadows of the Enhanced look: 0 off, 1 medium (2048 map), 2 high (4096 map). The browser
     // build keeps them under their own key: older /play builds saved the presets' value in SunShadows,
     // and a browser player gets sun shadows only from the Options row.
@@ -301,6 +310,18 @@ namespace CfgDefaults
     inline constexpr int CfgDefaultSsaoStrength = 100;
     inline constexpr int CfgMinSsaoStrength = 0;
     inline constexpr int CfgMaxSsaoStrength = 100;
+    inline constexpr int CfgDefaultWind = 1;
+    inline constexpr int CfgMinWind = 0;
+    inline constexpr int CfgMaxWind = 1;
+    inline constexpr int CfgDefaultWindStrength = 100;
+    inline constexpr int CfgMinWindStrength = 0;
+    inline constexpr int CfgMaxWindStrength = 100;
+    inline constexpr int CfgDefaultHaze = 1;
+    inline constexpr int CfgMinHaze = 0;
+    inline constexpr int CfgMaxHaze = 1;
+    inline constexpr int CfgDefaultHazeStrength = 70;
+    inline constexpr int CfgMinHazeStrength = 0;
+    inline constexpr int CfgMaxHazeStrength = 100;
     inline constexpr int CfgDefaultSunShadows = 0;
     inline constexpr int CfgMinSunShadows = 0;
     inline constexpr int CfgMaxSunShadows = 2;

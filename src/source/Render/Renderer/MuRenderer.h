@@ -160,6 +160,26 @@ struct SkinningParameters
     bool lightEnabled = false;
     // Enhanced lighting only: Blinn-Phong strength declared by the item model; 0 = no highlight.
     float specularStrength = 0.0f;
+    // Wind sway of map foliage (Render/Models/WindSway.h): the largest offset in world units
+    // (0 = none), 1 / the height range it grows over, and the frame's phase.
+    float windAmplitude = 0.0f;
+    float windInverseHeight = 0.0f;
+    float windPhase = 0.0f;
+};
+
+// The frame's distance haze and low ground fog (Render/PostProcessing/HazeSetting.h), from the
+// map's light mood before the player's strength; haze and groundFog 0 draw none.
+struct HazeFrame
+{
+    float haze = 0.0f;
+    float groundFog = 0.0f;
+    float groundFogHeight = 0.0f; // world units above the reference height where it ends
+    float color[3]{};             // already scaled by the mood's background
+    float sun = 0.0f;             // how much brighter the haze gets looking towards the sun
+    float sunDirection[2]{};      // towards the sun on the ground plane (cos, sin of its azimuth)
+    bool heroVisible = false;
+    float heroPosition[3]{};
+    float referenceHeight = 0.0f; // the hero's ground height, smoothed
 };
 
 // Where a body shadow lands, as CalcShadowPosition() puts it there.
@@ -472,6 +492,9 @@ public:
     // the depth of what came before and darkens the frame here, so what follows never gets it. The
     // first call of a frame counts; a frame without one gets none.
     virtual void EndOpaqueWorld() {}
+    // The frame's distance haze (HazeFrame), set before EndOpaqueWorld; laid over the same depth
+    // as the ambient occlusion, right after it. A frame that does not set it has none.
+    virtual void SetHazeFrame(const HazeFrame& /*frame*/) {}
 
     // Opaque, depth-writing draws recorded between these two move ahead of the others and are
     // grouped by state, to cut state changes; depth decides what shows, and the others keep

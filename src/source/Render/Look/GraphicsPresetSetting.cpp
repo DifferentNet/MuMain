@@ -9,6 +9,8 @@
 #include "Render/Lighting/SunShadowSetting.h"
 #include "Render/Look/LookPresetSetting.h"
 #include "Render/Models/ModelSmoothing.h"
+#include "Render/Models/WindSway.h"
+#include "Render/PostProcessing/HazeSetting.h"
 #include "Render/PostProcessing/ScreenFilterSetting.h"
 #include "Render/PostProcessing/SsaoSetting.h"
 #include "Render/Renderer/MuRenderer.h"
@@ -145,6 +147,10 @@ void ApplyGraphicsPreset(GraphicsPreset preset)
     // SSAO's strength before the next frame rebuilds the pipelines for the new anti-aliasing: Low pushes 0, and a
     // rebuild at 0 builds no SSAO pipelines, so leaving Low again would keep it off until a restart.
     Render::PostProcessing::Ssao::ApplyFromConfig();
+    // The wind is off on Low as well.
+    Render::Models::Wind::ApplyFromConfig();
+    // The haze too, for the same reason as SSAO (it is built with SSAO's pipelines).
+    Render::PostProcessing::Haze::ApplyFromConfig();
     config.Save();
     mu::log::Get("render")->info("Graphics preset {}", PresetName(preset));
 }

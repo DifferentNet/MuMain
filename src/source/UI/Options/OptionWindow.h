@@ -144,8 +144,8 @@ namespace mu::ui::window
         void RmlSoundVolumeChanged(int value);
         void RmlMusicVolumeChanged(int value);
         void RmlRenderLevelChanged(int value);
-        // The volume, effect-limit and SSAO strength gauges' pointer and wheel events (0 sound, 1 music,
-        // 2 effects, 3 SSAO strength).
+        // The volume, effect-limit, SSAO, wind and haze strength gauges' pointer and wheel events (0 sound,
+        // 1 music, 2 effects, 3 SSAO strength, 4 wind strength, 5 haze strength).
         void RmlGaugeEvent(Rml::Event& event, int gauge);
         void RmlResolutionChanged(int index);
         void RmlLanguageChanged(int index);
@@ -202,6 +202,14 @@ namespace mu::ui::window
         // part of the graphics presets.
         void RmlToggleSsao();
         void RmlSsaoStrengthChanged(int level);
+        // [Render] Wind and WindStrength (gauge 4, levels 0..10): saved and applied at once, not
+        // part of the graphics presets.
+        void RmlToggleWind();
+        void RmlWindStrengthChanged(int level);
+        // [Render] Haze and HazeStrength (gauge 5, levels 0..10): saved and applied at once, not
+        // part of the graphics presets.
+        void RmlToggleHaze();
+        void RmlHazeStrengthChanged(int level);
         // Interface/UI tab -- Show FPS Counter/Show Debug Info stay ephemeral (SceneManager.h
         // globals, no GameConfig persistence), matching $fpscounter/$details today.
         void RmlToggleShowFpsCounter();
@@ -416,6 +424,30 @@ namespace mu::ui::window
             int ssaoStrength = 10;
             int ssaoStrengthPercent = 100;
             Rml::String ssaoStrengthLabel;
+            // [Render] Wind and WindStrength (Remaster PC client only): the row is locked while the
+            // wind cannot show (Render::Models::Wind::Block), its hint says why; the strength slider
+            // (levels 0..10 = 0..100 %) shows while the wind is on and not locked.
+            bool wind = true;
+            bool windAvailable = false;
+            bool windLocked = false;
+            Rml::String windLabel;
+            Rml::String windTooltip;
+            bool windStrengthShown = false;
+            int windStrength = 10;
+            int windStrengthPercent = 100;
+            Rml::String windStrengthLabel;
+            // [Render] Haze and HazeStrength (Remaster PC client only): locked as the SSAO row is
+            // (Render::PostProcessing::Haze::Block), its hint says why; the strength slider (levels
+            // 0..10 = 0..100 %) shows while the haze is on and not locked.
+            bool haze = true;
+            bool hazeAvailable = false;
+            bool hazeLocked = false;
+            Rml::String hazeLabel;
+            Rml::String hazeTooltip;
+            bool hazeStrengthShown = false;
+            int hazeStrength = 7;
+            int hazeStrengthPercent = 70;
+            Rml::String hazeStrengthLabel;
             std::vector<Rml::String> sharpenLabels;
             int sharpenIndex = 0;
             Rml::String sharpenRowLabel;
@@ -500,6 +532,8 @@ namespace mu::ui::window
         void SyncImpliedEffectRows(OptionRmlModel& model);
         void SyncTuningModel(OptionRmlModel& model);
         void SyncSsaoRows(OptionRmlModel& model);
+        void SyncWindRows(OptionRmlModel& model);
+        void SyncHazeRows(OptionRmlModel& model);
         void OnRmlBuilt();
         UI::RmlBridge::ThemedView<OptionRmlModel> m_RmlView{"option_window",
             [this](Rml::DataModelConstructor& c, OptionRmlModel& model) { BindRmlModel(c, model); },

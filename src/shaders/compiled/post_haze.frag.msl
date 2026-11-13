@@ -1,0 +1,77 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct FSInput
+{
+    float4 pos;
+    float2 uv;
+};
+
+struct HazeUniforms
+{
+    float4 projectionInfo;
+    float4 worldViewport;
+    float4 fullSize;
+    float4 worldRowX;
+    float4 worldRowY;
+    float4 worldRowZ;
+    float4 hazeColor;
+    float4 distanceParams;
+    float4 groundParams;
+    float4 sunParams;
+};
+
+struct main0_out
+{
+    float4 _entryPointOutput [[color(0)]];
+};
+
+struct main0_in
+{
+    float2 input_uv [[user(locn0)]];
+};
+
+static inline __attribute__((always_inline))
+float4 _main(thread const FSInput& _input, texture2d<float> depthTexture, sampler depthSampler, constant HazeUniforms& _38)
+{
+    float2 pixel = _input.pos.xy;
+    float depth = depthTexture.sample(depthSampler, (pixel * _38.fullSize.xy), level(0.0)).x;
+    if (depth >= 1.0)
+    {
+        return float4(0.0);
+    }
+    float viewDistance = _38.projectionInfo.w / (depth + _38.projectionInfo.z);
+    float share = fast::clamp((viewDistance - _38.distanceParams.x) * _38.distanceParams.y, 0.0, 1.0);
+    if (share <= 0.0)
+    {
+        return float4(0.0);
+    }
+    float2 ndc = float2((((pixel.x - _38.worldViewport.x) / _38.worldViewport.z) * 2.0) - 1.0, 1.0 - (((pixel.y - _38.worldViewport.y) / _38.worldViewport.w) * 2.0));
+    float4 viewPosition = float4((ndc * viewDistance) * _38.projectionInfo.xy, -viewDistance, 1.0);
+    float worldZ = dot(_38.worldRowZ, viewPosition);
+    float2 rayXY = float2(dot(_38.worldRowX.xyz, viewPosition.xyz), dot(_38.worldRowY.xyz, viewPosition.xyz));
+    float distanceAmount = ((_38.groundParams.w * share) * share) * (3.0 - (2.0 * share));
+    float low = fast::clamp(1.0 - ((worldZ - _38.groundParams.x) * _38.groundParams.y), 0.0, 1.0);
+    float groundAmount = ((_38.groundParams.z * low) * low) * sqrt(share);
+    float fogFadeOut = 1.0 - fast::clamp((viewDistance - _38.distanceParams.z) * _38.distanceParams.w, 0.0, 1.0);
+    float both = 1.0 - ((1.0 - distanceAmount) * (1.0 - groundAmount));
+    float amount = fast::min(both * fogFadeOut, _38.hazeColor.w);
+    float sunFacing = fast::clamp(dot(rayXY / float2(fast::max(length(rayXY), 9.9999997473787516355514526367188e-05)), _38.sunParams.xy), 0.0, 1.0);
+    return float4(_38.hazeColor.xyz * (1.0 + (_38.sunParams.z * sunFacing)), amount);
+}
+
+fragment main0_out main0(main0_in in [[stage_in]], constant HazeUniforms& _38 [[buffer(0)]], texture2d<float> depthTexture [[texture(0)]], sampler depthSampler [[sampler(0)]], float4 gl_FragCoord [[position]])
+{
+    main0_out out = {};
+    FSInput _input;
+    _input.pos = gl_FragCoord;
+    _input.uv = in.input_uv;
+    FSInput param = _input;
+    out._entryPointOutput = _main(param, depthTexture, depthSampler, _38);
+    return out;
+}
+
