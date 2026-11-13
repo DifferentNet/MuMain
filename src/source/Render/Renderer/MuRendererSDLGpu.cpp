@@ -703,6 +703,10 @@ void SetSsaoSettings(float strength)
 {
     s_ssaoStrength = std::clamp(strength, 0.0f, 1.0f);
 }
+bool HasSsaoPipelines()
+{
+    return !s_ssaoDepthPipelines.empty();
+}
 static bool s_postProcessingEnabled = false;
 static mu::PostProcessingLook s_postProcessingLook{};
 static mu::PostProcessingView s_postProcessingView = mu::PostProcessingView::Scene;

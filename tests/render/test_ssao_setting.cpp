@@ -64,3 +64,23 @@ TEST_CASE("without fog or with a broken range the fade covers the view's last pa
         CHECK(fade.end == doctest::Approx(5000.0f));
     }
 }
+
+TEST_CASE("the Options row's reason, first that applies [render][ssao]")
+{
+    using Block = Ssao::Block;
+    CHECK(Ssao::ResolveBlock(true, false, true, true) == Block::None);
+    CHECK(Ssao::ResolveBlock(false, true, false, false) == Block::NoHdTextures);
+    CHECK(Ssao::ResolveBlock(true, true, false, false) == Block::LowPreset);
+    CHECK(Ssao::ResolveBlock(true, false, false, false) == Block::NeedsEnhanced);
+    CHECK(Ssao::ResolveBlock(true, false, true, false) == Block::AfterRestart);
+}
+
+TEST_CASE("only a reason SSAO cannot show for locks the Options row [render][ssao]")
+{
+    using Block = Ssao::Block;
+    CHECK_FALSE(Ssao::Locks(Block::None));
+    CHECK_FALSE(Ssao::Locks(Block::AfterRestart));
+    CHECK(Ssao::Locks(Block::NoHdTextures));
+    CHECK(Ssao::Locks(Block::LowPreset));
+    CHECK(Ssao::Locks(Block::NeedsEnhanced));
+}

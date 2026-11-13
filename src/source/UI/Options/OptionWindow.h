@@ -144,7 +144,8 @@ namespace mu::ui::window
         void RmlSoundVolumeChanged(int value);
         void RmlMusicVolumeChanged(int value);
         void RmlRenderLevelChanged(int value);
-        // The volume and effect-limit gauges' pointer and wheel events (0 sound, 1 music, 2 effects).
+        // The volume, effect-limit and SSAO strength gauges' pointer and wheel events (0 sound, 1 music,
+        // 2 effects, 3 SSAO strength).
         void RmlGaugeEvent(Rml::Event& event, int gauge);
         void RmlResolutionChanged(int index);
         void RmlLanguageChanged(int index);
@@ -197,6 +198,10 @@ namespace mu::ui::window
         void RmlAnisotropyChanged(int index);
         // [Render] SunShadows (dropdown 14): applied at once, part of the graphics presets.
         void RmlSunShadowsChanged(int index);
+        // [Render] Ssao and SsaoStrength (gauge 3, levels 0..10): saved and applied at once, not
+        // part of the graphics presets.
+        void RmlToggleSsao();
+        void RmlSsaoStrengthChanged(int level);
         // Interface/UI tab -- Show FPS Counter/Show Debug Info stay ephemeral (SceneManager.h
         // globals, no GameConfig persistence), matching $fpscounter/$details today.
         void RmlToggleShowFpsCounter();
@@ -399,6 +404,18 @@ namespace mu::ui::window
             Rml::String hdTextureSizeRowLabel;
             Rml::String hdTextureSizeValueLabel;
             Rml::String hdTextureSizeTooltip;
+            // [Render] Ssao and SsaoStrength (Remaster PC client only): the row is locked while
+            // SSAO cannot show (Render::PostProcessing::Ssao::Block), its hint says why; the
+            // strength slider (levels 0..10 = 0..100 %) shows while SSAO is on and not locked.
+            bool ssao = true;
+            bool ssaoAvailable = false;
+            bool ssaoLocked = false;
+            Rml::String ssaoLabel;
+            Rml::String ssaoTooltip;
+            bool ssaoStrengthShown = false;
+            int ssaoStrength = 10;
+            int ssaoStrengthPercent = 100;
+            Rml::String ssaoStrengthLabel;
             std::vector<Rml::String> sharpenLabels;
             int sharpenIndex = 0;
             Rml::String sharpenRowLabel;
@@ -482,6 +499,7 @@ namespace mu::ui::window
         void BindRmlModel(Rml::DataModelConstructor& c, OptionRmlModel& model);
         void SyncImpliedEffectRows(OptionRmlModel& model);
         void SyncTuningModel(OptionRmlModel& model);
+        void SyncSsaoRows(OptionRmlModel& model);
         void OnRmlBuilt();
         UI::RmlBridge::ThemedView<OptionRmlModel> m_RmlView{"option_window",
             [this](Rml::DataModelConstructor& c, OptionRmlModel& model) { BindRmlModel(c, model); },

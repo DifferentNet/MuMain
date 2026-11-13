@@ -13505,6 +13505,27 @@
   <data name="SoftShadowsRow" xml:space="preserve">
     <value>柔和陰影</value>
   </data>
+  <data name="SsaoRow" xml:space="preserve">
+    <value>SSAO (contact shadows)</value>
+  </data>
+  <data name="SsaoTooltip" xml:space="preserve">
+    <value>Soft shadows in creases, in corners and where models meet the ground.</value>
+  </data>
+  <data name="SsaoStrengthRow" xml:space="preserve">
+    <value>SSAO strength</value>
+  </data>
+  <data name="SsaoLockedHdTextures" xml:space="preserve">
+    <value>Needs HD textures.</value>
+  </data>
+  <data name="SsaoLockedLowPreset" xml:space="preserve">
+    <value>Off on the Low graphics preset.</value>
+  </data>
+  <data name="SsaoLockedEnhanced" xml:space="preserve">
+    <value>Needs Enhanced graphics with Enhanced lighting and Bloom and colour grading.</value>
+  </data>
+  <data name="SsaoAfterRestart" xml:space="preserve">
+    <value>Turning it on takes effect after a restart.</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>優先攻擊強大怪物</value>
