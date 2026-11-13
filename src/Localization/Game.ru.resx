@@ -16015,6 +16015,21 @@
   <data name="SsaoAfterRestart" xml:space="preserve">
     <value>Включение заработает после перезапуска.</value>
   </data>
+  <data name="WindRow" xml:space="preserve">
+    <value>Ветер (качаются трава и деревья)</value>
+  </data>
+  <data name="WindTooltip" xml:space="preserve">
+    <value>Трава, кусты и кроны деревьев качаются на ветру.</value>
+  </data>
+  <data name="WindStrengthRow" xml:space="preserve">
+    <value>Сила ветра</value>
+  </data>
+  <data name="WindLockedHdTextures" xml:space="preserve">
+    <value>Нужны HD-текстуры.</value>
+  </data>
+  <data name="WindLockedLowPreset" xml:space="preserve">
+    <value>Выключено на пресете графики «Низкий».</value>
+  </data>
   <data name="BagPageLocked" xml:space="preserve">
     <value>Страница 2 закрыта</value>
   </data>

@@ -30,6 +30,7 @@
 
 #include "Render/Models/LeafLitter.h"
 #include "Render/Models/SideHair.h"
+#include "Render/Models/WindSway.h"
 #include "Render/Textures/HdTextures.h"
 #include "Engine/Physics/PhysicsManager.h"
 #include "Engine/AI/GOBoid.h"
@@ -3466,17 +3467,20 @@ bool IsHangingLeafLitter(const OBJECT* o)
 }
 
 // Draws a map object; leaf litter casts no sun shadow (a sprig on a stone would print a dark leaf
-// beside itself).
+// beside itself). Its foliage meshes sway in the wind (WindSway.h), its effects do not.
 void RenderWorldObject(OBJECT* o)
 {
-    if (ClassifyLitter(o->Type) == LitterKind::Litter)
     {
-        mu::ScopedNoSunShadowCast noCast;
-        RenderObject(o);
-    }
-    else
-    {
-        RenderObject(o);
+        const Render::Models::Wind::ScopedObject wind(o);
+        if (ClassifyLitter(o->Type) == LitterKind::Litter)
+        {
+            mu::ScopedNoSunShadowCast noCast;
+            RenderObject(o);
+        }
+        else
+        {
+            RenderObject(o);
+        }
     }
     RenderObjectVisual(o);
 }
@@ -3529,7 +3533,10 @@ void RenderObjects()
                     {
                         if (g_Direction.m_CKanturu.IsMayaScene() && (o->Type == 0 || o->Type == MODEL_STORM2))
                         {
-                            RenderObject(o);
+                            {
+                                const Render::Models::Wind::ScopedObject wind(o);
+                                RenderObject(o);
+                            }
                             RenderObjectVisual(o);
                         }
                         else
@@ -3557,7 +3564,10 @@ void RenderObjects()
                                     else
                                         o->AlphaTarget = 1.0f;
 
-                                    RenderObject(o);
+                                    {
+                                        const Render::Models::Wind::ScopedObject wind(o);
+                                        RenderObject(o);
+                                    }
                                     RenderObjectVisual(o);
                                 }
                                 else if (TestFrustrum2D(o->Position[0] * 0.01f, o->Position[1] * 0.01f, -500.f) && fDistance < fDis && o->Type <= MAX_WORLD_OBJECTS)
@@ -3567,7 +3577,10 @@ void RenderObjects()
                                     else
                                         o->AlphaTarget = 1.0f;
 
-                                    RenderObject(o);
+                                    {
+                                        const Render::Models::Wind::ScopedObject wind(o);
+                                        RenderObject(o);
+                                    }
                                     RenderObjectVisual(o);
                                 }
                                 else if (o->AlphaTarget != 0 && fDistance > fDis)
@@ -3581,27 +3594,42 @@ void RenderObjects()
                             else if ((gMapManager.WorldActive == WD_51HOME_6TH_CHAR
                                 ) && ((o->Type >= 5 && o->Type <= 14) || (o->Type >= 87 && o->Type <= 88) || (o->Type == 4 || o->Type == 129)) && TestFrustrum2D(o->Position[0] * 0.01f, o->Position[1] * 0.01f, -400.f))
                             {
-                                RenderObject(o);
+                                {
+                                    const Render::Models::Wind::ScopedObject wind(o);
+                                    RenderObject(o);
+                                }
                                 RenderObjectVisual(o);
                             }
                             else if ((gMapManager.WorldActive == WD_74NEW_CHARACTER_SCENE) && (o->Type == 129 || o->Type == 98))
                             {
-                                RenderObject(o);
+                                {
+                                    const Render::Models::Wind::ScopedObject wind(o);
+                                    RenderObject(o);
+                                }
                                 RenderObjectVisual(o);
                             }
                             else if ((gMapManager.WorldActive == WD_57ICECITY || gMapManager.WorldActive == WD_58ICECITY_BOSS) && (o->Type == 30 || o->Type == 31) && TestFrustrum2D(o->Position[0] * 0.01f, o->Position[1] * 0.01f, -600.f))
                             {
-                                RenderObject(o);
+                                {
+                                    const Render::Models::Wind::ScopedObject wind(o);
+                                    RenderObject(o);
+                                }
                                 RenderObjectVisual(o);
                             }
                             else if (gMapManager.IsPKField() && (o->Type == 16 || o->Type == 67 || o->Type == 68) && TestFrustrum2D(o->Position[0] * 0.01f, o->Position[1] * 0.01f, -600.f))
                             {
-                                RenderObject(o);
+                                {
+                                    const Render::Models::Wind::ScopedObject wind(o);
+                                    RenderObject(o);
+                                }
                                 RenderObjectVisual(o);
                             }
                             else if (IsDoppelGanger2() && (o->Type == 16 || o->Type == 67 || o->Type == 68) && TestFrustrum2D(o->Position[0] * 0.01f, o->Position[1] * 0.01f, -600.f))
                             {
-                                RenderObject(o);
+                                {
+                                    const Render::Models::Wind::ScopedObject wind(o);
+                                    RenderObject(o);
+                                }
                                 RenderObjectVisual(o);
                             }
 

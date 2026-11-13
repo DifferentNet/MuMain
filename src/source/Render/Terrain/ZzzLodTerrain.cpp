@@ -31,6 +31,7 @@
 #include "Render/Lighting/DynamicLightsSetting.h"
 #include "Render/Lighting/LightMoodSetting.h"
 #include "Render/Look/LookProfileSetting.h"
+#include "Render/Models/WindSway.h"
 #include "Render/Terrain/TerrainLightGrid.h"
 #include "Render/Terrain/TerrainDetail.h"
 #include "Render/Terrain/TerrainVariation.h"
@@ -90,6 +91,17 @@ unsigned char   TerrainMappingLayer2[TERRAIN_SIZE * TERRAIN_SIZE];
 float           TerrainMappingAlpha[TERRAIN_SIZE * TERRAIN_SIZE];
 float           TerrainGrassTexture[TERRAIN_SIZE * TERRAIN_SIZE];
 float           TerrainGrassWind[TERRAIN_SIZE * TERRAIN_SIZE];
+// With the wind on (Render/Models/WindSway.h, not in Tarkan, Karutan or Ice City): this frame's offset
+// of each visible tile's grass top along the wind direction. TerrainGrassWind keeps the Classic column
+// wave, which the water tiles' ripple also reads.
+static bool s_windGrass = false;
+static float s_windGrassOffset[TERRAIN_SIZE * TERRAIN_SIZE];
+
+static void AddWindGrassOffset(float* vertex, float offset)
+{
+    vertex[0] += offset * Render::Models::Wind::kDirectionX;
+    vertex[1] += offset * Render::Models::Wind::kDirectionY;
+}
 #ifdef ASG_ADD_MAP_KARUTAN
 float			g_fTerrainGrassWind1[TERRAIN_SIZE * TERRAIN_SIZE];
 #endif	// ASG_ADD_MAP_KARUTAN
@@ -2026,8 +2038,16 @@ void RenderTerrainFace(float xf, float yf, int xi, int yi, float lodf)
                 else
                 {
 #endif	// ASG_ADD_MAP_KARUTAN
-                    TerrainVertex[0][1] += TerrainGrassWind[TerrainIndex1];
-                    TerrainVertex[1][1] += TerrainGrassWind[TerrainIndex2];
+                    if (s_windGrass)
+                    {
+                        AddWindGrassOffset(TerrainVertex[0], s_windGrassOffset[TerrainIndex1]);
+                        AddWindGrassOffset(TerrainVertex[1], s_windGrassOffset[TerrainIndex2]);
+                    }
+                    else
+                    {
+                        TerrainVertex[0][1] += TerrainGrassWind[TerrainIndex1];
+                        TerrainVertex[1][1] += TerrainGrassWind[TerrainIndex2];
+                    }
 #ifdef ASG_ADD_MAP_KARUTAN
                 }
 #endif	// ASG_ADD_MAP_KARUTAN
@@ -3174,6 +3194,8 @@ void InitTerrainLight()
     const int lastX = std::min<int>(FrustrumBoundMaxX + 3, TERRAIN_SIZE_MASK);
     const int lastY = std::min<int>(FrustrumBoundMaxY + 3, TERRAIN_SIZE_MASK);
     const int firstX = FrustrumBoundMinX;
+    // Set again below once the map is known; never left from an earlier frame.
+    s_windGrass = false;
     if (lastX < firstX)
         return;
     const bool tarkan = gMapManager.WorldActive == WD_8TARKAN;
@@ -3208,6 +3230,19 @@ void InitTerrainLight()
         if (karutan)
             std::copy_n(&columnWind1[firstX], count, &g_fTerrainGrassWind1[rowStart]);
 #endif // ASG_ADD_MAP_KARUTAN
+    }
+
+    const float windStrength = Render::Models::Wind::Strength();
+    s_windGrass = windStrength > 0.0f && !tarkan && !karutan && !iceCity;
+    if (!s_windGrass)
+        return;
+    const float windPhase = Render::Models::Wind::Phase(WorldTime);
+    for (yi = FrustrumBoundMinY; yi <= lastY; ++yi)
+    {
+        for (xi = firstX; xi <= lastX; ++xi)
+        {
+            s_windGrassOffset[TERRAIN_INDEX(xi, yi)] = Render::Models::Wind::GrassOffset(windPhase, xi, yi, windStrength);
+        }
     }
 }
 

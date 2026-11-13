@@ -100,6 +100,8 @@ the row reads **Custom** (shown only, it cannot be picked).
 | `TerrainWaterStrength` | Strength of the water look in percent, `0` (off) to `100` | `100` |
 | `Ssao` | With HD textures, Enhanced lighting and post-processing on (desktop only, not on the Low preset), soft contact shadows (screen-space ambient occlusion): creases, corners and the ground under models darken a little; effects, particles and windows are not darkened, and it fades out towards the horizon. Options > Graphics > SSAO (contact shadows) switches it at once; turning it on needs a restart only when it was off as the game started: `0` off, `1` on | `1` |
 | `SsaoStrength` | Strength of those shadows in percent, `0` (off) to `100`; the SSAO strength slider under the SSAO row sets it in steps of 10 | `100` |
+| `Wind` | With HD textures on (desktop only, not on the Low preset), the map's foliage sways in the wind: tree crowns, bushes, plants and flowers of the map objects bend more the higher they stand (their sun shadows and SSAO follow), and the terrain grass waves in a gust that travels across the map instead of the Classic column wave (not in Tarkan, Karutan and Ice City, which keep their own). Trunks, stones, leaf litter, hay and seaweed stay still. Options > Graphics > Wind switches it at once: `0` off, `1` on | `1` |
+| `WindStrength` | How far the foliage sways in percent, `0` (off) to `100` (tree crowns up to about 6 units, a tenth of a tile; grass tops up to 12); the wind strength slider under the Wind row sets it in steps of 10 | `100` |
 
 Each map's light mood can also set the sun's direction and the shadows'
 strength and softness (`sunAzimuth`, `sunElevation`, `sunShadow`,

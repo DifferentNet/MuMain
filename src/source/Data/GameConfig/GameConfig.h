@@ -247,6 +247,13 @@ public:
     int GetSsaoStrength() const { return m_ssaoStrength; }
     void SetSsao(int ssao);
     void SetSsaoStrength(int percent);
+    // [Render] Wind: with HD textures on, grass, bushes and tree crowns sway in the wind
+    // (Render/Models/WindSway.h), 0 off, 1 on; WindStrength in percent (both clamped; Options >
+    // Graphics applies them at once).
+    int GetWind() const { return m_wind; }
+    int GetWindStrength() const { return m_windStrength; }
+    void SetWind(int wind);
+    void SetWindStrength(int percent);
     // [Render] SunShadows: 0 off, 1 medium, 2 high (clamped).
     int GetSunShadows() const { return m_sunShadows; }
     void SetSunShadows(int level);
@@ -390,6 +397,8 @@ private:
     int m_terrainWaterStrength = 100;
     int m_ssao = 1;
     int m_ssaoStrength = 100;
+    int m_wind = 1;
+    int m_windStrength = 100;
     int m_sunShadows = 0;
     int m_sharpen = 0;
     std::wstring m_renderBackend;

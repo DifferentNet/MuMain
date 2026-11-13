@@ -404,6 +404,22 @@
 				     data-event-drag="option_gauge(3)" data-event-mousescroll="option_gauge(3)" data-event-keydown="option_gauge(3)"></div>
 			</div>
 		</div>
+		<!-- Wind (Remaster PC client): as the SSAO rows above, its strength slider is gauge 4. Keep both
+		     themes in step. -->
+		<div class="option-row option-checkbox-row option-row-tipped" data-class-hidden="!wind_available" data-class-locked="wind_locked" data-attr-data-hint="wind_tooltip" data-event-click="option_toggle_wind">
+			<span class="option-row-label">{{wind_label}}</span>
+			<div class="checkbox-box" data-class-checked="wind">
+				<div class="checkbox-tick"></div>
+			</div>
+		</div>
+		<div class="option-row option-gauge-row option-sub-row" data-class-hidden="!wind_strength_shown">
+			<span class="option-row-label">{{wind_strength_label}}</span>
+			<div class="level-gauge option-gauge">
+				<div data-attr-class="'level-gauge-fill level-' + wind_strength"></div>
+				<div class="level-gauge-hit option-gauge-hit" data-event-mousedown="option_gauge(4)"
+				     data-event-drag="option_gauge(4)" data-event-mousescroll="option_gauge(4)" data-event-keydown="option_gauge(4)"></div>
+			</div>
+		</div>
 		<div class="option-row option-gauge-row">
 			<span class="option-row-label">{{render_level_label}}</span>
 			<div class="level-gauge option-gauge effect-gauge">

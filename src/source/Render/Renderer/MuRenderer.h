@@ -160,6 +160,11 @@ struct SkinningParameters
     bool lightEnabled = false;
     // Enhanced lighting only: Blinn-Phong strength declared by the item model; 0 = no highlight.
     float specularStrength = 0.0f;
+    // Wind sway of map foliage (Render/Models/WindSway.h): the largest offset in world units
+    // (0 = none), 1 / the height range it grows over, and the frame's phase.
+    float windAmplitude = 0.0f;
+    float windInverseHeight = 0.0f;
+    float windPhase = 0.0f;
 };
 
 // Where a body shadow lands, as CalcShadowPosition() puts it there.

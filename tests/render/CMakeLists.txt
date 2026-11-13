@@ -178,6 +178,14 @@ mu_add_test(
         test_ssao_setting.cpp
 )
 
+# Wind sway: the strength from the [Render] Wind settings, foliage by texture, phase, grass offset, sway.
+mu_add_test(
+    NAME wind_sway_tests
+    SOURCES
+        test_wind_sway.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Models/WindSway.cpp
+)
+
 # HD textures: the Data\HD path of a texture.
 mu_add_test(
     NAME hd_textures_tests

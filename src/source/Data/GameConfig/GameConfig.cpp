@@ -146,6 +146,9 @@ void GameConfig::Load()
     m_ssao = std::clamp(ReadInt(CfgSectionRender, CfgKeySsao, CfgDefaultSsao), CfgMinSsao, CfgMaxSsao);
     m_ssaoStrength = std::clamp(ReadInt(CfgSectionRender, CfgKeySsaoStrength, CfgDefaultSsaoStrength),
                                 CfgMinSsaoStrength, CfgMaxSsaoStrength);
+    m_wind = std::clamp(ReadInt(CfgSectionRender, CfgKeyWind, CfgDefaultWind), CfgMinWind, CfgMaxWind);
+    m_windStrength = std::clamp(ReadInt(CfgSectionRender, CfgKeyWindStrength, CfgDefaultWindStrength),
+                                CfgMinWindStrength, CfgMaxWindStrength);
     m_sunShadows = GameConfigValidation::ValidateSunShadows(
         ReadInt(CfgSectionRender, CfgKeySunShadows, CfgDefaultSunShadows));
     m_sharpen = GameConfigValidation::ValidateSharpen(ReadInt(CfgSectionRender, CfgKeySharpen, CfgDefaultSharpen));
@@ -246,6 +249,8 @@ void GameConfig::Save()
     WriteInt(CfgSectionRender, CfgKeyTerrainWaterStrength, m_terrainWaterStrength);
     WriteInt(CfgSectionRender, CfgKeySsao, m_ssao);
     WriteInt(CfgSectionRender, CfgKeySsaoStrength, m_ssaoStrength);
+    WriteInt(CfgSectionRender, CfgKeyWind, m_wind);
+    WriteInt(CfgSectionRender, CfgKeyWindStrength, m_windStrength);
     WriteInt(CfgSectionRender, CfgKeySunShadows, m_sunShadows);
     WriteInt(CfgSectionRender, CfgKeySharpen, m_sharpen);
     WriteBool(CfgSectionRender, CfgKeyDisableEffects, m_disableEffects);
@@ -421,6 +426,16 @@ void GameConfig::SetSsao(int ssao)
 void GameConfig::SetSsaoStrength(int percent)
 {
     m_ssaoStrength = std::clamp(percent, CfgDefaults::CfgMinSsaoStrength, CfgDefaults::CfgMaxSsaoStrength);
+}
+
+void GameConfig::SetWind(int wind)
+{
+    m_wind = std::clamp(wind, CfgDefaults::CfgMinWind, CfgDefaults::CfgMaxWind);
+}
+
+void GameConfig::SetWindStrength(int percent)
+{
+    m_windStrength = std::clamp(percent, CfgDefaults::CfgMinWindStrength, CfgDefaults::CfgMaxWindStrength);
 }
 
 void GameConfig::SetAntialiasing(int samples)

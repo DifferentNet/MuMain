@@ -125,6 +125,8 @@ struct VertexUniforms
 };
 static_assert(sizeof(VertexUniforms) == 80, "VertexUniforms must be 80 bytes");
 
+// skinned_textured.vert.hlsl's Skinning cbuffer. skinningScales: bone scale, rest-pose scale, wind
+// phase; fogParameters: fog start, fog end, wind amplitude, 1 / wind height range (WindSway.h).
 struct SkinningVertexUniforms
 {
     glm::mat4 mvp;
@@ -5883,6 +5885,13 @@ private:
         skinningVu.lightDirection[3] = parameters.highlightKnee;
         skinningVu.fogParameters[0] = m_fogUniform.fogStart;
         skinningVu.fogParameters[1] = m_fogUniform.fogEnd;
+        // Wind sway (Render/Models/WindSway.h): world draws only, never a body shadow or the UI.
+        if (!shadow && s_screenSpaceSamplingDepth == 0)
+        {
+            skinningVu.fogParameters[2] = parameters.windAmplitude;
+            skinningVu.fogParameters[3] = parameters.windInverseHeight;
+            skinningVu.skinningScales[2] = parameters.windPhase;
+        }
         skinningVu.textureCoordinates[0] = static_cast<std::uint32_t>(parameters.textureCoordinates);
         skinningVu.chromeParameters[0] = parameters.chromeWave;
         skinningVu.chromeParameters[1] = parameters.chromeWave2;
