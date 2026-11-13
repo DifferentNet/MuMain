@@ -253,6 +253,7 @@
     GPUAdapter.prototype.requestDevice = function (...args) {
       return requestDevice.apply(this, args).then((gpuDevice) => {
         gpuDevice.addEventListener("uncapturederror", onGpuError);
+        gpuDevice.lost.then(gpuDeviceLost);
         return gpuDevice;
       });
     };
@@ -1211,7 +1212,7 @@
     else removeEventListener("beforeunload", askBeforeLeaving);
     worldEnteredAt = inWorld ? worldEnteredAt || performance.now() : 0;
   };
-  function gameCrashed(error) {
+  function gameCrashed(error, title = "The game stopped because of an error.") {
     if (crashed) return;
     crashed = true;
     removeEventListener("beforeunload", askBeforeLeaving);
@@ -1226,7 +1227,8 @@
     statusEl.style.background = "rgba(13,14,18,.92)";
     statusEl.innerHTML = "";
     const box = document.createElement("div");
-    box.innerHTML = "<p>The game stopped because of an error.</p><p></p>";
+    box.innerHTML = "<p></p><p></p>";
+    box.firstChild.textContent = title;
     box.lastChild.textContent = String(error && error.message || error).slice(0, 300);
     const reload = document.createElement("button");
     reload.textContent = "Reload";
@@ -1241,6 +1243,14 @@
     statusEl.appendChild(box);
     console.error("The game stopped:", error);
   }
+  // The WebGPU device lost (a GPU or driver reset, or the browser freed it, on phones mostly): the
+  // picture stays black or frozen, so say so. Not when the page destroyed it or is going away.
+  function gpuDeviceLost(info) {
+    if (!info || info.reason === "destroyed" || pageGone || crashed) return;
+    gameCrashed(String(info.message || "").slice(0, 200),
+                "The graphics device was lost (GPU reset or the browser freed it). Reload to continue.");
+  }
+  window.muTestDeviceLost = () => gpuDeviceLost({ reason: "unknown", message: "test" });
   // Leaving the page can keep it frozen in Chrome's back/forward cache with its sockets open, and
   // the browser still answers the bridge's pings, so the character stayed "already connected"
   // until OpenMU's own timeout. Close them when the page goes, and start over if it comes back.
