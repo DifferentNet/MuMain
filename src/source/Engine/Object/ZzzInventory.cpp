@@ -43,6 +43,7 @@
 #include "GameLogic/Items/ItemCombatPower.h"
 #include "Render/Items/AncientColors.h"
 #include "Render/Items/ItemDisplay.h"
+#include "UI/Inventory/InventorySort.h"
 #include "Data/GameData/ItemData/ItemModelSlots.h"
 #include "UI/Scaling/UITransform.h"
 #include "GameLogic/Items/ShopRestrictions.h"
@@ -418,6 +419,12 @@ void SendRequestUse(int Index, int Target, bool addPoints)
         return;
     }
     if (EnableUse > 0)
+    {
+        return;
+    }
+    // While a sort waits for its answer the server has already moved the items, but the client still shows the old
+    // slots: a potion hotkey or MU Helper would use whatever now lies there (a jewel, a fruit, a scroll).
+    if (UI::Inventory::Sort().IsWaiting())
     {
         return;
     }
