@@ -46,6 +46,10 @@
 		     data-event-click="storage_page(-1)"></div>
 		<div id="btn_page_next" class="stor-page-btn stor-page-next" data-class-hidden="!pages_visible" data-class-busy="pages_busy"
 		     data-event-click="storage_page(1)"></div>
+		<!-- The sort button (InventorySort.h) beside the arrows, shown once the server told the page (it has the
+		     add-on): three bars, dimmed while it can't sort. It sorts both grids of the page. -->
+		<div id="btn_storage_sort" class="stor-sort-btn" data-class-hidden="!sort_visible" data-class-busy="sort_busy"
+		     data-event-click="storage_sort" data-attr-data-hint="sort_tooltip"><div class="stor-sort-icon"><div class="stor-sort-bar stor-sort-bar-1"></div><div class="stor-sort-bar stor-sort-bar-2"></div><div class="stor-sort-bar stor-sort-bar-3"></div></div></div>
 
 		<div id="money_bg"></div>
 		<span id="zen_text" class="sharp-text sharp-right gold-amount" data-style-font-size="text_px + 'px'"

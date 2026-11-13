@@ -16078,6 +16078,10 @@
   <data name="BagPageBuying" xml:space="preserve">
     <value>Открываем...</value>
   </data>
+  <!-- Sort button of the bag and the vault (UI/Inventory/InventorySort.h) -->
+  <data name="InventorySortHint" xml:space="preserve">
+    <value>Сортировать предметы</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Сначала сильные монстры</value>

@@ -88,6 +88,12 @@
 		     data-event-click="storage_expand_click" data-attr-data-hint="expand_tooltip">
 			<span class="modern-icon-btn-glyph-px">+</span>
 		</div>
+
+		<!-- The sort button (InventorySort.h), last in the action row (on a phone in the header, left of the page
+		     arrows), shown once the server told the page (it has the add-on): three bars, dimmed while it can't
+		     sort. It sorts both grids of the page. -->
+		<div id="btn_storage_sort" class="modern-icon-btn-px stor-sort-btn" data-class-hidden="!sort_visible" data-class-busy="sort_busy"
+		     data-event-click="storage_sort" data-attr-data-hint="sort_tooltip"><div class="stor-sort-icon"><div class="stor-sort-bar stor-sort-bar-1"></div><div class="stor-sort-bar stor-sort-bar-2"></div><div class="stor-sort-bar stor-sort-bar-3"></div></div></div>
 	</div>
 </body>
 </rml>

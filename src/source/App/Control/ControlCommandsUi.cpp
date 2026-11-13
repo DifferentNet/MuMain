@@ -142,6 +142,9 @@ constexpr NamedElement Buttons[] = {
     // The bag's page tabs (two pages); page_prev/page_next stay the names scenarios already use.
     {"inventory.page_prev", mu::ui::window::INTERFACE_INVENTORY, "#btn_bag_tab1"},
     {"inventory.page_next", mu::ui::window::INTERFACE_INVENTORY, "#btn_bag_tab2"},
+    // The sort buttons of the bag and the vault (UI/Inventory/InventorySort.h).
+    {"inventory.sort", mu::ui::window::INTERFACE_INVENTORY, "#btn_bag_sort"},
+    {"storage.sort", mu::ui::window::INTERFACE_STORAGE, "#btn_storage_sort"},
     {"my_shop.title", mu::ui::window::INTERFACE_MYSHOP_INVENTORY, "#shop_title"},
     {"my_shop.open", mu::ui::window::INTERFACE_MYSHOP_INVENTORY, "#btn_open"},
     {"my_shop.close", mu::ui::window::INTERFACE_MYSHOP_INVENTORY, "#btn_close"},

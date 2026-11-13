@@ -4,6 +4,7 @@
 
 #include "stdafx.h"
 #include "UI/Inventory/StorageInventoryExt.h"
+#include "UI/Inventory/InventorySort.h"
 #include "I18N/All.h"
 
 #include "Audio/DSPlaySound.h"
@@ -294,6 +295,9 @@ void CStorageInventoryExt::ProcessInventoryCtrl()
     }
     else if (IsPress(VK_RBUTTON))
     {
+        // Nothing moves to the bag while the server sorts (UI/Inventory/InventorySort.h).
+        if (UI::Inventory::Sort().IsWaiting())
+            return;
         if ((UI::Mobile::ClickSource::IsFingerLongPress() || UI::Mobile::ClickSource::IsPadCardClick())
             && ShowItemCard())
             return;
