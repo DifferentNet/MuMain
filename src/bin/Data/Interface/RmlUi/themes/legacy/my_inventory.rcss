@@ -27,10 +27,10 @@
 	height: 429px;
 	font-family: "token(font-body)";
 }
-/* With bag pages (BagPages.h) the page tabs sit on the grid's top edge: the grid and the gold move down 8 and the
-   buttons 5, over the gold's and the buttons' bottom shadows, clear of the frame's bottom line (y 427). Without
-   pages the window keeps the native layout. */
-#panel.paged { --bag-tabs-shift: 8px; --bag-buttons-shift: 5px; }
+/* The page tabs (BagPages.h) and the sort button (InventorySort.h) sit on the grid's top edge: the grid and the
+   gold move down 8 and the buttons 5, over the gold's and the buttons' bottom shadows, clear of the frame's bottom
+   line (y 427). The sort button shows without pages too, so the room is always there. */
+#panel { --bag-tabs-shift: 8px; --bag-buttons-shift: 5px; }
 
 /* Text rendered at the native text renderer's size: font-size comes from the RML and .counter-scaled
    cancels the panel's scale (see my_inventory.rml), so these leaves lay out in physical pixels and scale back
@@ -241,6 +241,16 @@
 .bag-tab.locked .bag-tab-label { color: #6e6e6e; }
 .bag-tab.active .bag-tab-label { color: #ffcc19; }
 .bag-tab-lock { position: absolute; right: 3px; top: 2px; width: 7px; height: 8px; pointer-events: none; decorator: image(bag-tab-lock); }
+/* The sort button (InventorySort.h): an idle tab plate at the grid's top right (x 141-175, under the boots' slot),
+   three bars short to long in the page numbers' gray, lighter on hover; dimmed and deaf while it can't sort. */
+#btn_bag_sort { left: 141px; }
+.bag-sort.busy { pointer-events: none; filter: brightness(0.5); }
+.bag-sort-icon { position: absolute; left: 50%; top: 50%; width: 12px; height: 8px; margin-left: -6px; margin-top: -4px; pointer-events: none; }
+.bag-sort-bar { position: absolute; left: 0; height: 2px; background-color: #a0a0a0; }
+.bag-sort-bar-1 { top: 0; width: 4px; }
+.bag-sort-bar-2 { top: 3px; width: 8px; }
+.bag-sort-bar-3 { top: 6px; width: 12px; }
+.bag-sort:hover .bag-sort-bar { background-color: #e6e6e6; }
 #option_tooltip_anchor { left: 95px; top: 40px; }
 
 /* The grid's clicks are native (CInventoryCtrl), so the placed panel takes no pointer events; its
@@ -298,8 +308,8 @@
 	.option-hover-socket { left: 170px; }
 	#option_tooltip_anchor { left: 170px; top: 62px; }
 
-	/* The gold above the bag, then the bag. */
-	#gold_bg { left: var(--bag-x); top: 34px; width: 200px; height: 30px; }
+	/* The gold above the bag, then the bag; the gold short of the sort button. */
+	#gold_bg { left: var(--bag-x); top: 34px; width: calc(8 * var(--item-cell) - 180px); height: 30px; }
 	#gold_text { left: calc(var(--bag-x) + 46px); top: 42px; }
 	#item_grid, #item_grid_counts, #bag_lock { left: var(--bag-x); top: 70px; }
 	/* Page 2's cover in finger-sized cells: its lines and button lower and wider. */
@@ -312,6 +322,13 @@
 	.bag-tab-1 { left: calc(var(--bag-x) + 8 * var(--item-cell) - 124px); }
 	.bag-tab-2 { left: calc(var(--bag-x) + 8 * var(--item-cell) - 60px); }
 	.bag-tab-lock { right: 6px; top: 6px; width: 14px; height: 16px; }
+	/* The sort button left of the tabs, a little narrower, its bars bigger. */
+	#btn_bag_sort { left: calc(var(--bag-x) + 8 * var(--item-cell) - 176px); width: 48px; }
+	.bag-sort-icon { width: 20px; height: 13px; margin-left: -10px; margin-top: -6px; }
+	.bag-sort-bar { height: 3px; }
+	.bag-sort-bar-1 { width: 7px; }
+	.bag-sort-bar-2 { top: 5px; width: 13px; }
+	.bag-sort-bar-3 { top: 10px; width: 20px; }
 
 	/* The buttons in a row under the equipment, 60 x 48. */
 	.inv-btn { top: 352px; width: 60px; height: 48px; }
@@ -327,4 +344,7 @@
 	#panel.beside .inv-btn-repair { top: 116px; }
 	#panel.beside .inv-btn-myshop { top: 162px; }
 	#panel.beside .inv-btn-jewel-bank { top: 208px; }
+	/* The sort button joins them, under the jewel bank; the gold its width again. */
+	#panel.beside #btn_bag_sort { left: calc(var(--bag-x) + 8 * var(--item-cell) + 12px); top: 254px; width: 44px; height: 36px; }
+	#panel.beside #gold_bg { width: 200px; }
 }

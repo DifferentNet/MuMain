@@ -39,6 +39,7 @@ extern bool SelectFlag;
 #include "GameLogic/Items/ShopRestrictions.h"
 #include "GameLogic/Items/TradeRestrictions.h"
 #include "UI/Inventory/BagPages.h"
+#include "UI/Inventory/InventorySort.h"
 #include "UI/Inventory/InventoryExtension.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
 
@@ -217,6 +218,8 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
     c.Bind("bag_cells_text", &model.bagCellsText);
     c.Bind("bag_price_text", &model.bagPriceText);
     c.Bind("bag_buy_label", &model.bagBuyLabel);
+    c.Bind("bag_sort_busy", &model.bagSortBusy);
+    c.Bind("bag_sort_tooltip", &model.bagSortTooltip);
 
     c.BindEventCallback("my_inventory_bag_page",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& args)
@@ -226,6 +229,11 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
         });
     c.BindEventCallback("my_inventory_bag_buy",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { AskBagPageBuy(); });
+    c.BindEventCallback("my_inventory_bag_sort",
+        [](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
+        {
+            UI::Inventory::Sort().Request(UI::Inventory::InventorySort::Target::Bag);
+        });
 
     c.BindEventCallback("my_inventory_set_option_hover",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
@@ -1178,6 +1186,10 @@ void CMyInventory::SyncRmlModel()
         syncWide(&MyInventoryRmlModel::bagBuyLabel, "bag_buy_label",
                  bag.IsBuying() ? I18N::Game::BagPageBuying : I18N::Game::BagPageBuyConfirm);
     }
+
+    syncBool(&MyInventoryRmlModel::bagSortBusy, "bag_sort_busy",
+             UI::Inventory::Sort().IsBlocked(UI::Inventory::InventorySort::Target::Bag));
+    syncWide(&MyInventoryRmlModel::bagSortTooltip, "bag_sort_tooltip", I18N::Game::InventorySortHint);
 
     const DWORD dwZen = CharacterMachine->Gold;
     wchar_t goldBuf[256] = { 0, };

@@ -5,6 +5,7 @@
 #include "UI/Inventory/InventoryActionController.h"
 #include "UI/Inventory/MyInventory.h"
 #include "UI/Inventory/InventoryCtrl.h"
+#include "UI/Inventory/InventorySort.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/CustomMessageBox.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
@@ -222,6 +223,11 @@ bool CInventoryActionController::HandleInventoryActions(CInventoryCtrl* targetCo
 
     if (m_pContext->GetRepairMode() == SEASON3B::REPAIR_MODE_OFF && IsPress(VK_RBUTTON))
     {
+        // Nothing is used or moved from the bag while the server sorts it (UI/Inventory/InventorySort.h).
+        if (UI::Inventory::Sort().IsWaiting())
+        {
+            return true;
+        }
         if (AsksWithItemCard(FindRightClickTarget()) && ShowTouchItemCard(targetControl))
         {
             return true;

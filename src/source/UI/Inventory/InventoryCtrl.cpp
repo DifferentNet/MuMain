@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "UI/Core/UIManager.h"
 #include "UI/Inventory/InventoryCtrl.h"
+#include "UI/Inventory/InventorySort.h"
 #include "UI/RmlBridge/RmlElementBox.h"
 #include "UI/RmlBridge/RmlPanelGeometry.h"
 #include "UI/Inventory/ItemMng.h"
@@ -41,6 +42,13 @@ Rml::Element* ClippingViewport(Rml::Element& grid)
         return ancestor->GetComputedValues().overflow_y() != Rml::Style::Overflow::Visible ? ancestor : nullptr;
     }
     return nullptr;
+}
+
+// A sort of the bag or the vault waits for its answer (UI/Inventory/InventorySort.h): the server is moving the items
+// of these grids, so none is lifted meanwhile.
+bool SortHoldsGrid(STORAGE_TYPE type)
+{
+    return (type == STORAGE_TYPE::INVENTORY || type == STORAGE_TYPE::VAULT) && UI::Inventory::Sort().IsWaiting();
 }
 } // namespace
 
@@ -980,7 +988,8 @@ bool mu::ui::window::CInventoryCtrl::UpdateMouseEvent()
         m_EventState = EVENT_HOVER;
     }
     else if (m_EventState == EVENT_HOVER && mu::ui::window::IsRelease(VK_LBUTTON) && m_iPointedSquareIndex != -1 &&
-             std::exchange(m_bPressSeen, false) && nullptr == GetPickedItem() && false == IsLocked() && m_bRepairMode == false)
+             std::exchange(m_bPressSeen, false) && nullptr == GetPickedItem() && false == IsLocked() && m_bRepairMode == false
+             && !SortHoldsGrid(m_StorageType))
     {
         m_EventState = EVENT_PICKING;
         ITEM* pItem = this->FindItem(m_iPointedSquareIndex);

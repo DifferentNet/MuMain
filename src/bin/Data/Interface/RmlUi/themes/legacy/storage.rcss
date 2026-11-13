@@ -141,6 +141,31 @@
 .stor-page-next:hover { decorator: image(stor-page-right-over); }
 .stor-page-next:active { decorator: image(stor-page-right-down); }
 
+/* The sort button (InventorySort.h) left of the arrows (x 8-28), clear of them and of the centred title: a dark
+   plate as tall as the arrows with three bars short to long, lighter on hover; dimmed and deaf while it can't
+   sort. */
+.stor-sort-btn {
+	position: absolute;
+	left: 8px;
+	top: 7px;
+	width: 20px;
+	height: 22px;
+	box-sizing: border-box;
+	cursor: pointer;
+	pointer-events: auto;
+	background-color: rgba(0, 0, 0, 160);
+	border: 1px #6e5f45;
+}
+.stor-sort-btn:hover { border-color: #b39b6e; }
+.stor-sort-btn.hidden { display: none; }
+.stor-sort-btn.busy { pointer-events: none; filter: brightness(0.5); }
+.stor-sort-icon { position: absolute; left: 50%; top: 50%; width: 12px; height: 8px; margin-left: -6px; margin-top: -4px; pointer-events: none; }
+.stor-sort-bar { position: absolute; left: 0; height: 2px; background-color: #a0a0a0; }
+.stor-sort-bar-1 { top: 0; width: 4px; }
+.stor-sort-bar-2 { top: 3px; width: 8px; }
+.stor-sort-bar-3 { top: 6px; width: 12px; }
+.stor-sort-btn:hover .stor-sort-bar { background-color: #e6e6e6; }
+
 /* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): the full 432 height of
    the dock, 42 px cells, 8 of the 15 rows on view (item_grid.rcss pages them), the ▲▼ and the four
    buttons down the right side, the money under the grid, bigger page arrows. 420 wide, so the
@@ -178,4 +203,11 @@
 	.stor-page-btn { top: 2px; width: 30px; height: 33px; }
 	.stor-page-prev { left: 60px; }
 	.stor-page-next { left: 330px; }
+	/* The sort button as big, left of them. */
+	.stor-sort-btn { left: 24px; top: 2px; width: 30px; height: 33px; }
+	.stor-sort-icon { width: 20px; height: 13px; margin-left: -10px; margin-top: -6px; }
+	.stor-sort-bar { height: 3px; }
+	.stor-sort-bar-1 { width: 7px; }
+	.stor-sort-bar-2 { top: 5px; width: 13px; }
+	.stor-sort-bar-3 { top: 10px; width: 20px; }
 }

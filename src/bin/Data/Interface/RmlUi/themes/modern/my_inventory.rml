@@ -8,7 +8,7 @@
 <body data-model="my_inventory">
 	<!-- CMyInventory (MyInventory.h): the frame, the equipment slots, the item grid, the items
 	     C++ draws live into #item_view, the stack counts, the title, gold and buttons. -->
-	<div id="panel" data-style---text-px="text_px + 'px'" data-class-paged="pages_visible">
+	<div id="panel" data-style---text-px="text_px + 'px'">
 		<div id="frame_corner_close" data-event-click="window_close"></div>
 		<div class="bg-panel">
 			<div class="inv-shell-edge"></div>
@@ -78,6 +78,12 @@
 				<div class="bag-tab-lock-shackle"></div>
 				<div class="bag-tab-lock-body"></div>
 			</div>
+		</div>
+		<!-- The sort button (InventorySort.h) at the grid's top right, right of the page tabs and shown without
+		     them too: a tab with three bars, dimmed while it can't sort. -->
+		<div id="btn_bag_sort" class="bag-tab bag-sort" data-class-busy="bag_sort_busy"
+		     data-event-click="my_inventory_bag_sort" data-attr-data-hint="bag_sort_tooltip">
+			<div class="bag-sort-icon"><div class="bag-sort-bar bag-sort-bar-1"></div><div class="bag-sort-bar bag-sort-bar-2"></div><div class="bag-sort-bar bag-sort-bar-3"></div></div>
 		</div>
 		<!-- Wallet + action buttons: base.rcss's shared .modern-wallet-px/.modern-icon-btn-px
 		     family (generalized from this window). Fixed warm-gold value color, not bound to

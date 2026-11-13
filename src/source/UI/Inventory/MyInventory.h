@@ -146,6 +146,10 @@ namespace mu::ui::window
             Rml::String bagCellsText;
             Rml::String bagPriceText;
             Rml::String bagBuyLabel;
+
+            // The sort button on the grid's top edge (UI/Inventory/InventorySort.h), dimmed while it can't sort.
+            bool bagSortBusy = false;
+            Rml::String bagSortTooltip;
         };
         void BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlModel& model);
         void OnRmlBuilt();
