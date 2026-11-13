@@ -34,6 +34,12 @@ struct RmlUiRuntimeHooks
     // Before the main context updates each frame, and after each context updates.
     std::function<void()> beforeUpdate;
     std::function<void(Rml::Context*)> afterUpdate;
+#ifdef __EMSCRIPTEN__
+    // Before Update() and after Render() of each frame: what is set between them reaches neither the
+    // game's logic nor the next frame (the browser build's window warm-up).
+    std::function<void()> beforeFrame;
+    std::function<void()> afterFrame;
+#endif
     // A texture source the game draws itself: true if `source` is one, with its texture (null if
     // it has none yet) and size.
     std::function<bool(const Rml::String& source, void*& texture, int& width, int& height)> resolveTexture;
@@ -68,6 +74,10 @@ public:
     void RefreshScale();
     // What RefreshScale() does to each non-null context in `contexts`.
     static void ApplyScale(std::span<Rml::Context* const> contexts, const RmlUiRuntimeHooks& hooks);
+#ifdef __EMSCRIPTEN__
+    // Hover again under the mouse where it is now, after the documents changed under a still mouse.
+    void RefreshMouseHover();
+#endif
 
     void Update();
     void Render();

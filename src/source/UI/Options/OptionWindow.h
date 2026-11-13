@@ -58,6 +58,10 @@ namespace mu::ui::window
 
         float GetLayerDepth();	//. 10.5f
         float GetKeyEventOrder();	// 10.f;
+#ifdef __EMSCRIPTEN__
+        // The warm-up (UI/Core/WindowWarmUp.h).
+        Rml::ElementDocument* GetWarmUpDocument() const override { return m_RmlView.Document(); }
+#endif
 
         void OpenningProcess();
         void ClosingProcess();

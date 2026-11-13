@@ -75,6 +75,8 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyTouchButtonSize[] = L"TouchButtonSize";
     // MU Moldova: whether the phone's top row of buttons is open (its toggle button, UI/HUD/TouchControls).
     inline constexpr wchar_t CfgKeyTouchTopRow[] = L"TouchTopRow";
+    // MU Moldova: whether the browser client warms the windows up after entering the world (UI/Core/WindowWarmUp).
+    inline constexpr wchar_t CfgKeyWarmUpWindows[] = L"WarmUpWindows";
     // MU Moldova: whether the game reads a gamepad (Options -> Interface, Gamepad).
     inline constexpr wchar_t CfgKeyGamepad[] = L"Gamepad";
     // MU Moldova: whether the pad vibrates on hits and on death (Options -> Interface, Gamepad).
@@ -253,6 +255,8 @@ namespace CfgDefaults
     inline constexpr int CfgMaxTouchButtonSize = 150;
     // The top row starts hidden behind its toggle (ghinzuro, 2026-11-11).
     inline constexpr bool CfgDefaultTouchTopRow = false;
+    // On; 0 in config.ini turns it off, to compare a window's first opening with and without it.
+    inline constexpr bool CfgDefaultWarmUpWindows = true;
     // On: a pad plugged in plays. Off for a pad that Steam Input or the handheld's own software
     // already turns into a mouse and keys, which would otherwise press twice.
     inline constexpr bool CfgDefaultGamepad = true;

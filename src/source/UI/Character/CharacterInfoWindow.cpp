@@ -36,6 +36,9 @@
 
 #include <algorithm>
 #include <cmath>
+#ifdef __EMSCRIPTEN__
+#include "Core/Utilities/FirstOpenTiming.h"
+#endif
 
 using namespace SEASON3B;
 using namespace mu::ui::window;
@@ -510,6 +513,9 @@ void mu::ui::window::CCharacterInfoWindow::ResetEquipmentLevel()
 
 void mu::ui::window::CCharacterInfoWindow::SyncRmlModel()
 {
+#ifdef __EMSCRIPTEN__
+    const Core::FirstOpenTiming::SyncScope firstOpenTiming("Character", m_RmlView.Document() && IsVisible());
+#endif
     if (!m_RmlView.Document() || !IsVisible())
         return;
 

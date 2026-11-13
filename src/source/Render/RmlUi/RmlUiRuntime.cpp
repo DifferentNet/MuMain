@@ -15,6 +15,9 @@
 #include "Render/Renderer/MuRenderer.h"
 #include "Core/Utilities/FrameProfiler.h"
 #include "Core/Platform/BundledFonts.h"
+#ifdef __EMSCRIPTEN__
+#include "Core/Utilities/FirstOpenTiming.h"
+#endif
 
 namespace
 {
@@ -277,7 +280,15 @@ void RmlUiRuntime::Update()
         if (m_Hooks.beforeUpdate)
             m_Hooks.beforeUpdate();
         ReleaseStrandedFieldFocus();
+#ifdef __EMSCRIPTEN__
+        const bool timed = Core::FirstOpenTiming::Active();
+        const double updateStartedAt = timed ? Core::FirstOpenTiming::NowMs() : 0.0;
+#endif
         m_Context->Update();
+#ifdef __EMSCRIPTEN__
+        if (timed)
+            Core::FirstOpenTiming::AddRmlUpdate(Core::FirstOpenTiming::NowMs() - updateStartedAt);
+#endif
         AfterUpdate(m_Context);
     }
     if (m_DebugContext)
@@ -377,6 +388,17 @@ void RmlUiRuntime::CancelSyntheticMousePress(unsigned char button, SDL_Window* w
         m_Context->ProcessMouseMove(static_cast<int>(x), static_cast<int>(y), RmlSDL::GetKeyModifierState());
     }
 }
+
+#ifdef __EMSCRIPTEN__
+void RmlUiRuntime::RefreshMouseHover()
+{
+    if (!m_Context || SDL_GetMouseFocus() == nullptr)
+        return;
+    float x = 0.0f, y = 0.0f;
+    SDL_GetMouseState(&x, &y);
+    m_Context->ProcessMouseMove(static_cast<int>(x), static_cast<int>(y), RmlSDL::GetKeyModifierState());
+}
+#endif
 
 bool RmlUiRuntime::BeginTouchScroll(float x, float y)
 {
@@ -487,7 +509,15 @@ void RmlUiRuntime::Render()
     {
         FRAME_PROFILE(RmlUiRender);
         m_RenderInterface->BeginFrame(ctx.commandBuffer, ctx.swapchainTexture, ctx.width, ctx.height, ctx.drawable);
+#ifdef __EMSCRIPTEN__
+        const bool timed = Core::FirstOpenTiming::Active();
+        const double renderStartedAt = timed ? Core::FirstOpenTiming::NowMs() : 0.0;
+#endif
         m_Context->Render();
+#ifdef __EMSCRIPTEN__
+        if (timed)
+            Core::FirstOpenTiming::AddRmlRender(Core::FirstOpenTiming::NowMs() - renderStartedAt);
+#endif
     }
     if (m_DebugContext)
     {
@@ -500,6 +530,14 @@ void RmlUiRuntime::Render()
 
 void RmlUiRuntime::RenderFrame()
 {
+#ifdef __EMSCRIPTEN__
+    if (m_Hooks.beforeFrame)
+        m_Hooks.beforeFrame();
+#endif
     Update();
     Render();
+#ifdef __EMSCRIPTEN__
+    if (m_Hooks.afterFrame)
+        m_Hooks.afterFrame();
+#endif
 }

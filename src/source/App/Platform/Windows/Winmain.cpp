@@ -192,6 +192,10 @@ bool g_bDisableAnimationTaskPool = true;
 #include "Audio/AudioPlayer.h"
 #include "Render/Text/CUIRenderText.h"
 #include "Core/Input/ImeInput.h"
+#ifdef __EMSCRIPTEN__
+#include "Core/Utilities/FirstOpenTiming.h"
+#include "UI/Core/WindowWarmUp.h"
+#endif
 
 extern int LogIn;
 extern wchar_t LogInID[];
@@ -1002,6 +1006,9 @@ bool ExceptionCallback(_EXCEPTION_POINTERS* pExceptionInfo)
 double CPU_AVG = 0.0;
 static void RenderProfiledFrame()
 {
+#ifdef __EMSCRIPTEN__
+    Core::FirstOpenTiming::FrameBegin();
+#endif
     {
         FRAME_PROFILE(RendererBegin);
         mu::GetRenderer().BeginFrame();
@@ -1013,6 +1020,9 @@ static void RenderProfiledFrame()
     }
     FrameProfiler::CompleteFrame();
     Core::Benchmark::Recorder::Instance().Tick();
+#ifdef __EMSCRIPTEN__
+    Core::FirstOpenTiming::FrameEnd();
+#endif
 }
 
 void RecordCpuUsage()
@@ -2352,6 +2362,7 @@ MSG MainLoop()
                 mu::web::ShowInWorld(SceneFlag == MAIN_SCENE);
                 UI::Mobile::PhonePage::Update();
                 MuWebFollowLowestQuality();
+                UI::WarmUp::Tick(Core::FirstOpenTiming::LastFrameMs());
 #endif
                 RenderProfiledFrame();
 #ifdef __EMSCRIPTEN__
