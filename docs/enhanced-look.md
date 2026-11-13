@@ -104,6 +104,8 @@ the row reads **Custom** (shown only, it cannot be picked).
 | `WindStrength` | How far the foliage sways in percent, `0` (off) to `100` (tree crowns up to about 6 units, a tenth of a tile; grass tops up to 12); the wind strength slider under the Wind row sets it in steps of 10 | `100` |
 | `Haze` | With HD textures, Enhanced lighting and post-processing on (desktop only, not on the Low preset), a soft haze in the distance and a light mist over low ground, in the colour each map's light mood gives (maps without haze values get none). It starts a little behind the hero, so he and the characters near him are never touched, grows towards the old fog and fades out under it; effects, particles, windows and the sky are not covered. It is laid over the same depth SSAO draws, so it works with SSAO off too. Options > Graphics > Distance haze switches it at once; turning it on needs a restart only when both it and SSAO were off as the game started: `0` off, `1` on | `1` |
 | `HazeStrength` | Strength of the haze in percent, `0` (off) to `100`; `70` shows each map's haze as its light mood gives it, `100` is a little more (never more than 45 % of the haze colour on a pixel); the haze strength slider under the Distance haze row sets it in steps of 10 | `70` |
+| `Particles` | With HD textures on (desktop only, not on the Low preset, and not while "all effects" is off), fine particles drift in the air of some maps: dust, pollen, fireflies, fine snow, ash and embers, in the kinds each map's light mood gives (maps without particle values get none). They are small (a few pixels) and faint, never drawn right in front of the camera, sit behind effects, windows and names, and drift with the wind (a little even with the wind off). In Lorencia and Devias they show only outdoors. Options > Graphics > Air particles switches them at once: `0` off, `1` on | `1` |
+| `ParticlesStrength` | Particle density in percent, `0` (off) to `100`; `70` shows each map's particles as its light mood gives them, `100` is about 1.4 times as many; the particle density slider under the Air particles row sets it in steps of 10 | `70` |
 
 Each map's light mood can also set the sun's direction and the shadows'
 strength and softness (`sunAzimuth`, `sunElevation`, `sunShadow`,
@@ -114,6 +116,31 @@ haze: `haze` (0 to 0.5, how much of the haze colour the far world takes),
 hero's ground that the mist reaches) and `hazeSun` (0 to 0.5, how much brighter
 the haze gets towards the sun). The item preview in the
 inventory and shops has a studio light of its own in the Enhanced look.
+
+The Remaster's air particles come from the same light mood: `particles` and
+`particles2` (kind ids of two layers: `0` none, `1` dust, `2` pollen, `3`
+fireflies, `4` snow, `5` ash, `6` embers), `particlesDensity` and
+`particles2Density` (0 to 2, `1` is the kind's own density) and `particlesR`,
+`particlesG`, `particlesB` (0 to 1, a tint of both layers). Maps with them:
+
+| World | Map | Particles | Second layer | Tint |
+| --- | --- | --- | --- | --- |
+| 0 | Lorencia | dust 0.8 | | |
+| 1 | Dungeon | dust 0.6 | | 0.75, 0.82, 1.0 |
+| 2 | Devias | snow 0.7 | | |
+| 3 | Noria | pollen 1.0 | fireflies 1.0 | |
+| 4 | Lost Tower | ash 1.0 | embers 0.6 | |
+| 8 | Tarkan | dust 1.2 | | 1.0, 0.85, 0.62 |
+| 33 | Aida | pollen 0.8 | fireflies 0.8 | |
+| 37, 38 | Kanturu Ruins and Relics | dust 0.7 | | 0.85, 0.90, 1.0 |
+| 51 | Elbeland | pollen 0.8 | | |
+| 56 | Swamp of Calmness | fireflies 1.2 | dust 0.5 | |
+| 57 | Raklion | snow 0.7 | | |
+| 63 | Vulcanus | ash 0.8 | | |
+| 80, 81 | Karutan 1 and 2 | dust 1.0 | | 1.0, 0.85, 0.62 |
+
+The other maps (arenas, events, Atlans, Icarus, Crywolf, Kalima and the like)
+have none.
 
 **Auto** (no `GraphicsPreset` key, or `Auto`) is decided once at start-up, on a
 new desktop install only (`config.ini` has no `Look` key yet), from the GPU's

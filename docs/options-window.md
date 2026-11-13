@@ -125,6 +125,11 @@ window writes to these sections:
     client only (the browser and Classic clients hide them). Both apply at once. The row is greyed
     out as the SSAO row is, its hint saying why; when both the haze and SSAO were off as the game
     started, turning it on takes effect after a restart. See [`enhanced-look.md`](enhanced-look.md).
+  - `Particles` and `ParticlesStrength` (defaults `1` and `70`): the **Air particles** row and the
+    particle density slider under it (0 to 100 % in steps of 10, shown while the particles are on),
+    Remaster PC client only (the browser and Classic clients hide them). Both apply at once. The row
+    is greyed out as the Wind row is, without HD textures and on the Low graphics preset, its hint
+    saying why. See [`enhanced-look.md`](enhanced-look.md).
 
   Set by hand only, never written by the game:
   - `Backend` (`default`/`vulkan`/`direct3d12`/`metal`, case-insensitive,

@@ -13660,6 +13660,21 @@
   <data name="HazeAfterRestart" xml:space="preserve">
     <value>Turning it on takes effect after a restart.</value>
   </data>
+  <data name="ParticlesRow" xml:space="preserve">
+    <value>Air particles</value>
+  </data>
+  <data name="ParticlesTooltip" xml:space="preserve">
+    <value>Dust, pollen, fireflies, fine snow and ash in the air of some maps. Small and faint: they do not hide characters, monsters or drops.</value>
+  </data>
+  <data name="ParticlesStrengthRow" xml:space="preserve">
+    <value>Particle density</value>
+  </data>
+  <data name="ParticlesLockedHdTextures" xml:space="preserve">
+    <value>Needs HD textures.</value>
+  </data>
+  <data name="ParticlesLockedLowPreset" xml:space="preserve">
+    <value>Off on the Low graphics preset.</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Starke Monster zuerst</value>

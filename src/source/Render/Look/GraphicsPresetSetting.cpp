@@ -10,6 +10,7 @@
 #include "Render/Look/LookPresetSetting.h"
 #include "Render/Models/ModelSmoothing.h"
 #include "Render/Models/WindSway.h"
+#include "Render/Effects/ParticlesSetting.h"
 #include "Render/PostProcessing/HazeSetting.h"
 #include "Render/PostProcessing/ScreenFilterSetting.h"
 #include "Render/PostProcessing/SsaoSetting.h"
@@ -151,6 +152,8 @@ void ApplyGraphicsPreset(GraphicsPreset preset)
     Render::Models::Wind::ApplyFromConfig();
     // The haze too, for the same reason as SSAO (it is built with SSAO's pipelines).
     Render::PostProcessing::Haze::ApplyFromConfig();
+    // The ambient particles are off on Low too, as the wind.
+    Render::Effects::Particles::ApplyFromConfig();
     config.Save();
     mu::log::Get("render")->info("Graphics preset {}", PresetName(preset));
 }

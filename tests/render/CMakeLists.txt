@@ -185,6 +185,13 @@ mu_add_test(
         test_haze_setting.cpp
 )
 
+# Ambient particles: the strength from the [Render] Particles settings, kinds, counts, phase, wrap, fades.
+mu_add_test(
+    NAME particles_setting_tests
+    SOURCES
+        test_particles_setting.cpp
+)
+
 # Wind sway: the strength from the [Render] Wind settings, foliage by texture, phase, grass offset, sway.
 mu_add_test(
     NAME wind_sway_tests

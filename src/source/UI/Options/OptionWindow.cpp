@@ -18,6 +18,7 @@
 #include "Render/Lighting/DynamicLightsSetting.h"
 #include "Render/Lighting/EnhancedLightingSetting.h"
 #include "Render/Lighting/LightMoodScales.h"
+#include "Render/Effects/ParticlesSetting.h"
 #include "Render/PostProcessing/HazeSetting.h"
 #include "Render/PostProcessing/PostProcessingSetting.h"
 #include "Render/PostProcessing/SsaoSetting.h"
@@ -160,6 +161,28 @@ static const wchar_t* HazeHint(Render::PostProcessing::Haze::Block block)
         break;
     }
     return I18N::Game::HazeTooltip;
+}
+
+// The particle density slider: levels 0..10, 10 % each ([Render] ParticlesStrength is in percent), as SSAO's.
+static int ParticlesStrengthLevel(int percent)
+{
+    return SsaoStrengthLevel(percent);
+}
+
+// The Particles row's hint: why they do not show right now, or what they are.
+static const wchar_t* ParticlesHint(Render::Effects::Particles::Block block)
+{
+    using Render::Effects::Particles::Block;
+    switch (block)
+    {
+    case Block::NoHdTextures:
+        return I18N::Game::ParticlesLockedHdTextures;
+    case Block::LowPreset:
+        return I18N::Game::ParticlesLockedLowPreset;
+    case Block::None:
+        break;
+    }
+    return I18N::Game::ParticlesTooltip;
 }
 
 // The custom dropdowns' ids, 0 .. kLastDropdownId (see RmlToggleDropdown()).
@@ -672,6 +695,17 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("haze_strength", &model.hazeStrength);
     c.Bind("haze_strength_percent", &model.hazeStrengthPercent);
     c.Bind("haze_strength_label", &model.hazeStrengthLabel);
+    // Particles: the Remaster PC client's, as the wind's.
+    model.particlesAvailable = Render::Effects::Particles::Available() && Render::Look::RemasterGraphicsOptions();
+    c.Bind("particles_available", &model.particlesAvailable);
+    c.Bind("particles", &model.particles);
+    c.Bind("particles_locked", &model.particlesLocked);
+    c.Bind("particles_label", &model.particlesLabel);
+    c.Bind("particles_tooltip", &model.particlesTooltip);
+    c.Bind("particles_strength_shown", &model.particlesStrengthShown);
+    c.Bind("particles_strength", &model.particlesStrength);
+    c.Bind("particles_strength_percent", &model.particlesStrengthPercent);
+    c.Bind("particles_strength_label", &model.particlesStrengthLabel);
     // The preset, FXAA and sharpening rows: the Remaster client's (and the browser's), not the Classic one's.
     model.remasterGraphics = Render::Look::RemasterGraphicsOptions();
     c.Bind("remaster_graphics", &model.remasterGraphics);
@@ -796,6 +830,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleWind(); });
     c.BindEventCallback("option_toggle_haze",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleHaze(); });
+    c.BindEventCallback("option_toggle_particles",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleParticles(); });
     c.BindEventCallback("option_toggle_vsync",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleVsync(); });
 
@@ -1282,6 +1318,13 @@ void mu::ui::window::COptionWindow::RmlGaugeEvent(Rml::Event& event, int gauge)
                 event, HazeStrengthLevel(GameConfig::GetInstance().GetHazeStrength()), kSsaoStrengthLevels,
                 volumeFromPointer))
             RmlHazeStrengthChanged(*next);
+        break;
+    case 6:
+        // The particle density, as the SSAO strength.
+        if (const auto next = UI::RmlBridge::ApplyLevelGaugeEvent(
+                event, ParticlesStrengthLevel(GameConfig::GetInstance().GetParticlesStrength()), kSsaoStrengthLevels,
+                volumeFromPointer))
+            RmlParticlesStrengthChanged(*next);
         break;
     default:
         break;
@@ -1911,6 +1954,77 @@ void mu::ui::window::COptionWindow::SyncHazeRows(OptionRmlModel& model)
     syncText(model.hazeLabel, "haze_label", I18N::Game::HazeRow);
     syncText(model.hazeTooltip, "haze_tooltip", HazeHint(block));
     syncText(model.hazeStrengthLabel, "haze_strength_label", I18N::Game::HazeStrengthRow);
+}
+
+// A locked row ignores clicks (Particles::Block): its saved choice is kept for when they can show.
+void mu::ui::window::COptionWindow::RmlToggleParticles()
+{
+    namespace Particles = Render::Effects::Particles;
+    if (!m_RmlView.GetModel().particlesAvailable || Particles::Locks(Particles::CurrentBlock()))
+        return;
+    const GameConfig& config = GameConfig::GetInstance();
+    Particles::Choose(config.GetParticles() == 0, config.GetParticlesStrength());
+}
+
+// The slider shows only while the particles are on and the row not locked (SyncParticlesRows()).
+void mu::ui::window::COptionWindow::RmlParticlesStrengthChanged(int level)
+{
+    namespace Particles = Render::Effects::Particles;
+    const GameConfig& config = GameConfig::GetInstance();
+    if (!m_RmlView.GetModel().particlesAvailable || config.GetParticles() == 0 ||
+        Particles::Locks(Particles::CurrentBlock()))
+        return;
+    const int percent = std::clamp(level, 0, kSsaoStrengthLevels) * kSsaoPercentPerLevel;
+    if (percent == config.GetParticlesStrength())
+        return;
+    Particles::Choose(true, percent);
+}
+
+void mu::ui::window::COptionWindow::SyncParticlesRows(OptionRmlModel& model)
+{
+    const auto syncFlag = [this](bool& field, const char* name, bool value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncInt = [this](int& field, const char* name, int value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncText = [this](Rml::String& field, const char* name, const wchar_t* text)
+    {
+        const Rml::String narrow = StringUtils::WideToNarrow(text);
+        if (field != narrow)
+        {
+            field = narrow;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    if (!model.particlesAvailable)
+        return;
+    namespace Particles = Render::Effects::Particles;
+    // Pushed again every sync: a graphics preset switched to or from Low here turns them off or on
+    // at once (it logs only a change).
+    Particles::ApplyFromConfig();
+    const GameConfig& config = GameConfig::GetInstance();
+    const Particles::Block block = Particles::CurrentBlock();
+    const bool locked = Particles::Locks(block);
+    const bool on = config.GetParticles() != 0;
+    syncFlag(model.particlesLocked, "particles_locked", locked);
+    syncFlag(model.particles, "particles", on);
+    syncFlag(model.particlesStrengthShown, "particles_strength_shown", on && !locked);
+    syncInt(model.particlesStrength, "particles_strength", ParticlesStrengthLevel(config.GetParticlesStrength()));
+    syncInt(model.particlesStrengthPercent, "particles_strength_percent", config.GetParticlesStrength());
+    syncText(model.particlesLabel, "particles_label", I18N::Game::ParticlesRow);
+    syncText(model.particlesTooltip, "particles_tooltip", ParticlesHint(block));
+    syncText(model.particlesStrengthLabel, "particles_strength_label", I18N::Game::ParticlesStrengthRow);
 }
 
 void mu::ui::window::COptionWindow::RmlToggleShowFpsCounter()
@@ -2667,6 +2781,7 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     SyncSsaoRows(model);
     SyncWindRows(model);
     SyncHazeRows(model);
+    SyncParticlesRows(model);
     // Rebuilt every sync for a live language switch, as the rows above.
     syncMultiplierRow(model.interfaceViewLabels, "interface_view_labels", model.interfaceViewIndex,
                       "interface_view_index", model.interfaceViewValueLabel, "interface_view_value_label",

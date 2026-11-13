@@ -39,6 +39,7 @@
 #include "RangeAllocator.h"
 #include "SdlGpuPixelFormat.h"
 #include "SdlGpuHaze.h"
+#include "SdlGpuParticles.h"
 #include "SdlGpuPostProcessing.h"
 #include "SdlGpuReplayState.h"
 #include "SdlGpuSoftShadow.h"
@@ -49,6 +50,7 @@
 #include "WorldPipelineSet.h"
 #include "Core/Utilities/FrameProfiler.h"
 #include "Core/Utilities/Log/MuLogger.h"
+#include "Render/Effects/ParticlesSetting.h"
 #include "Render/PostProcessing/BloomSource.h"
 #include "Render/PostProcessing/HazeSetting.h"
 #include "Render/PostProcessing/SceneBoundary.h"
@@ -734,6 +736,19 @@ bool HasHazePipelines()
 {
     return s_ssaoStrength > 0.0f || s_hazeStrength > 0.0f;
 }
+// Ambient air particles of the Remaster (SdlGpuParticles.h, desktop). Their shaders and pipeline
+// are always built on desktop; a frame draws them only where the scene marked them
+// (DrawAmbientParticles), with the view and projection of that moment.
+static mu::SdlGpuParticles s_particles;
+static float s_particlesStrength = 0.0f; // 0: off
+static std::size_t s_particlesAt = std::numeric_limits<std::size_t>::max(); // as kNoDrawCommand: none
+static mu::AmbientParticlesFrame s_particlesFrame{};
+static glm::mat4 s_particlesView{1.0f};
+static glm::mat4 s_particlesProjection{1.0f};
+void SetParticlesSettings(float strength)
+{
+    s_particlesStrength = std::max(strength, 0.0f);
+}
 static bool s_postProcessingEnabled = false;
 static mu::PostProcessingLook s_postProcessingLook{};
 static mu::PostProcessingView s_postProcessingView = mu::PostProcessingView::Scene;
@@ -1408,6 +1423,8 @@ static SDL_GPUShader* s_fragShaderSsao = nullptr;           // post_ssao.frag (o
 static SDL_GPUShader* s_fragShaderSsaoBlur = nullptr;       // post_ssao_blur.frag
 static SDL_GPUShader* s_fragShaderSsaoApply = nullptr;      // post_ssao_apply.frag
 static SDL_GPUShader* s_fragShaderHaze = nullptr;           // post_haze.frag (with SSAO or haze on)
+static SDL_GPUShader* s_vertShaderParticles = nullptr;      // ambient_particles.vert (desktop)
+static SDL_GPUShader* s_fragShaderParticles = nullptr;      // ambient_particles.frag (desktop)
 static SDL_GPUShader* s_fragShaderBloomDown = nullptr;      // post_bloom_down.frag
 static SDL_GPUShader* s_fragShaderBloomUp = nullptr;        // post_bloom_up.frag
 static SDL_GPUShader* s_fragShaderComposite = nullptr;      // post_composite.frag
@@ -2536,6 +2553,7 @@ public:
         s_softShadow.Release();
         s_ssao.Release();
         s_haze.Release();
+        s_particles.DestroyPipeline();
 
         SDL_ReleaseWindowFromGPUDevice(s_device, s_window);
         SDL_DestroyGPUDevice(s_device);
@@ -2609,6 +2627,8 @@ public:
         s_sceneBoundary.Reset();
         s_opaqueWorldEnd = kNoDrawCommand;
         s_hazeFrame = {};
+        s_particlesAt = kNoDrawCommand;
+        s_particlesFrame = {};
         s_ssaoLinearFog = false;
         if (s_bloomExclusionDepth != 0)
         {
@@ -2818,6 +2838,72 @@ public:
         ReplayDrawCommand(depthOnly, depth->second, boneDataReady, scissor, replayState);
     }
 
+    // This frame's ambient particle layers into s_renderPass, inside `view` (the world's, as the
+    // command before the scene's mark left it).
+    static void DrawParticlesNow(const ReplayView& view)
+    {
+        namespace Particles = Render::Effects::Particles;
+        const glm::mat4& projection = s_particlesProjection;
+        if (view.viewport.w <= 0.0f || view.viewport.h <= 0.0f)
+        {
+            return;
+        }
+        const float pixelScale = view.viewport.h / Particles::kReferencePixelHeight;
+        const float pixelsPerUnit = projection[1][1] * view.viewport.h * 0.5f;
+        const int layerCount = std::clamp(s_particlesFrame.layerCount, 0, Particles::kMaxLayers);
+        for (int index = 0; index < layerCount; ++index)
+        {
+            const mu::AmbientParticleLayer& layer = s_particlesFrame.layers[index];
+            const std::uint32_t count =
+                std::min<std::uint32_t>(layer.count, static_cast<std::uint32_t>(Particles::kMaxCount));
+            if (count == 0u)
+            {
+                continue;
+            }
+            mu::SdlGpuParticleUniform uniform{};
+            std::memcpy(uniform.viewFromWorld, glm::value_ptr(s_particlesView), sizeof(uniform.viewFromWorld));
+            std::memcpy(uniform.projection, glm::value_ptr(projection), sizeof(uniform.projection));
+            uniform.boxCenter[0] = layer.boxCenter[0];
+            uniform.boxCenter[1] = layer.boxCenter[1];
+            uniform.boxCenter[2] = layer.boxCenter[2];
+            uniform.boxCenter[3] = layer.phase;
+            uniform.boxSize[0] = layer.boxSize[0];
+            uniform.boxSize[1] = layer.boxSize[1];
+            uniform.boxSize[2] = layer.boxSize[2];
+            uniform.boxSize[3] = layer.seed;
+            std::memcpy(uniform.travel, layer.travel, sizeof(uniform.travel));
+            std::memcpy(uniform.sway, layer.sway, sizeof(uniform.sway));
+            uniform.sizeParams[0] = layer.radius[0];
+            uniform.sizeParams[1] = layer.radius[1];
+            uniform.sizeParams[2] = layer.pixels[0] * pixelScale;
+            uniform.sizeParams[3] = layer.pixels[1] * pixelScale;
+            uniform.fadeParams[0] = Particles::kNearFadeStart;
+            uniform.fadeParams[1] = 1.0f / Particles::kNearFadeLength;
+            uniform.fadeParams[2] = Particles::kEdgeFadeStart;
+            uniform.fadeParams[3] = pixelsPerUnit;
+            std::memcpy(uniform.color, layer.color, sizeof(uniform.color));
+            std::memcpy(uniform.look, layer.look, sizeof(uniform.look));
+            s_particles.Draw(s_cmdBuf, s_renderPass, uniform, 6u * count, view.viewport, view.scissor);
+            ++s_dbgGpuDrawCallsThisFrame;
+        }
+    }
+
+    // ReplayCommands for the scene's colour: the ambient particles go in where the scene marked
+    // them (DrawAmbientParticles), when that mark falls inside [begin, end).
+    static void ReplaySceneCommands(std::size_t begin, std::size_t end, bool boneDataReady,
+                                    ReplaySelection selection, ReplayView& view)
+    {
+        if (s_particlesAt != kNoDrawCommand && begin <= s_particlesAt && s_particlesAt < end &&
+            !s_texturesInvalidated && s_particles.IsAvailable())
+        {
+            ReplayCommands(begin, s_particlesAt, boneDataReady, selection, view);
+            DrawParticlesNow(view);
+            ReplayCommands(s_particlesAt, end, boneDataReady, selection, view);
+            return;
+        }
+        ReplayCommands(begin, end, boneDataReady, selection, view);
+    }
+
     // Replays commands [begin, end) into s_renderPass, starting from `view`;
     // `view` ends as the last replayed command left it.
     static void ReplayCommands(std::size_t begin, std::size_t end, bool boneDataReady, ReplaySelection selection,
@@ -2993,7 +3079,7 @@ public:
         {
             return false;
         }
-        ReplayCommands(0u, split, boneDataReady, ReplaySelection::SkipBodyShadows, view);
+        ReplaySceneCommands(0u, split, boneDataReady, ReplaySelection::SkipBodyShadows, view);
         EndReplayPass();
 
         // The shadows into the mask, tested against the scene's depth.
@@ -3037,7 +3123,7 @@ public:
         }
         s_softShadow.DrawComposite(s_cmdBuf, s_renderPass, s_softShadowStrength);
         PushSceneLightingUniforms();
-        ReplayCommands(split, end, boneDataReady, ReplaySelection::AllCommands, view);
+        ReplaySceneCommands(split, end, boneDataReady, ReplaySelection::AllCommands, view);
         EndReplayPass();
         return true;
     }
@@ -3068,7 +3154,7 @@ public:
             return false;
         }
         ReplayView view = FullFrameView();
-        ReplayCommands(0u, s_renderCmds.size(), boneDataReady, ReplaySelection::AllCommands, view);
+        ReplaySceneCommands(0u, s_renderCmds.size(), boneDataReady, ReplaySelection::AllCommands, view);
         EndReplayPass();
         return true;
     }
@@ -3315,15 +3401,15 @@ public:
             }
             if (ssao)
             {
-                ReplayCommands(0u, worldEnd, boneDataReady, ReplaySelection::AllCommands, view);
+                ReplaySceneCommands(0u, worldEnd, boneDataReady, ReplaySelection::AllCommands, view);
                 s_ssao.DrawApply(s_cmdBuf, s_renderPass);
                 DrawHaze();
                 PushSceneLightingUniforms();
-                ReplayCommands(worldEnd, sceneEnd, boneDataReady, ReplaySelection::AllCommands, view);
+                ReplaySceneCommands(worldEnd, sceneEnd, boneDataReady, ReplaySelection::AllCommands, view);
             }
             else
             {
-                ReplayCommands(0u, sceneEnd, boneDataReady, ReplaySelection::AllCommands, view);
+                ReplaySceneCommands(0u, sceneEnd, boneDataReady, ReplaySelection::AllCommands, view);
             }
             EndReplayPass();
         }
@@ -4424,6 +4510,27 @@ public:
     void SetHazeFrame(const mu::HazeFrame& frame) override
     {
         s_hazeFrame = frame;
+    }
+
+    void DrawAmbientParticles(const mu::AmbientParticlesFrame& frame) override
+    {
+        if (!s_frameActive || s_particlesStrength <= 0.0f || !s_particles.IsAvailable() || frame.layerCount <= 0 ||
+            s_particlesAt != kNoDrawCommand)
+        {
+            return;
+        }
+        // Only under the world's perspective projection (w = -z). At this point of the scene the
+        // model-view is the camera's: the Classic leaves draw world positions with it.
+        if (m_projMatrix[2][3] != -1.0f || m_projMatrix[3][3] != 0.0f)
+        {
+            return;
+        }
+        s_particlesAt = s_renderCmds.size();
+        // The first draw after the mark must not merge into a command before it.
+        s_previousDrawCommands.fill(kNoDrawCommand);
+        s_particlesFrame = frame;
+        s_particlesView = m_modelViewMatrix;
+        s_particlesProjection = m_projMatrix;
     }
 
     [[nodiscard]] bool SetPostProcessing(bool enabled) override
@@ -6659,6 +6766,11 @@ private:
             s_fragShaderHaze =
                 createShader("post_haze", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 1, /*fatal=*/false);
         }
+        // Ambient particles (desktop, always built): ParticleUniforms (vertex b0), nothing else.
+        s_vertShaderParticles =
+            createShader("ambient_particles", "vert", SDL_GPU_SHADERSTAGE_VERTEX, 0, 0, 1, /*fatal=*/false);
+        s_fragShaderParticles =
+            createShader("ambient_particles", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 0, 0, 0, /*fatal=*/false);
 #endif
 
         mu::log::Get("render")->info("SDL_gpu -- shaders loaded for driver: {}", driverName ? driverName : "unknown");
@@ -6728,7 +6840,8 @@ private:
         }
         for (SDL_GPUShader** shader :
              {&s_vertShaderPostFullscreen, &s_fragShaderBloomDown, &s_fragShaderBloomUp, &s_fragShaderComposite,
-              &s_fragShaderSsao, &s_fragShaderSsaoBlur, &s_fragShaderSsaoApply, &s_fragShaderHaze})
+              &s_fragShaderSsao, &s_fragShaderSsaoBlur, &s_fragShaderSsaoApply, &s_fragShaderHaze,
+              &s_vertShaderParticles, &s_fragShaderParticles})
         {
             if (*shader)
             {
@@ -7279,6 +7392,7 @@ private:
     static void DestroyPipelines()
     {
         DestroySsaoPipelines();
+        s_particles.DestroyPipeline();
         DestroyTerrainWaterPipelines();
         DestroySunShadowPipelines();
         DestroySingleSamplePipelines();
@@ -7497,6 +7611,7 @@ private:
         CreateSunShadowPipelines();
         CreateTerrainWaterPipelines();
         CreateSsaoPipelines();
+        CreateParticlesPipeline();
         return true;
     }
 
@@ -8021,6 +8136,23 @@ private:
                                   SDL_GetGPUSwapchainTextureFormat(s_device, s_window),
                                   mu::GetSdlGpuSampleCount(s_sampleCount).value_or(SDL_GPU_SAMPLECOUNT_1));
         mu::log::Get("render")->info("SDL_gpu -- haze: {}", haze ? "ready" : "missing");
+    }
+
+    // The ambient particles' pipeline (desktop): blends into the frame's format with its samples,
+    // tested against the scene's depth. Rebuilt with the others on a change of anti-aliasing.
+    static void CreateParticlesPipeline()
+    {
+        s_particles.DestroyPipeline();
+        if (!s_vertShaderParticles || !s_fragShaderParticles)
+        {
+            mu::log::Get("render")->info("SDL_gpu -- ambient particles: missing (no shaders)");
+            return;
+        }
+        const bool created =
+            s_particles.CreatePipeline(s_device, s_vertShaderParticles, s_fragShaderParticles,
+                                       SDL_GetGPUSwapchainTextureFormat(s_device, s_window),
+                                       mu::GetSdlGpuSampleCount(s_sampleCount).value_or(SDL_GPU_SAMPLECOUNT_1));
+        mu::log::Get("render")->info("SDL_gpu -- ambient particles: {}", created ? "ready" : "missing");
     }
 
     static void DestroySsaoPipelines()

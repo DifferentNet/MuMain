@@ -18,9 +18,12 @@ using Data::Maps::LightMoodData;
 namespace
 {
 constexpr int Lorencia = 0;
+constexpr int Noria = 3;
 constexpr int LostTower = 4;
 constexpr int Atlans = 7;
+constexpr int Tarkan = 8;
 constexpr int Icarus = 10;
+constexpr int BloodCastle1 = 11;
 
 struct ReadResult
 {
@@ -62,6 +65,20 @@ LightMood WithHaze(LightMood mood, double haze, double red, double green, double
     mood.groundFog = groundFog;
     mood.groundFogHeight = groundFogHeight;
     mood.hazeSun = hazeSun;
+    return mood;
+}
+
+// A mood with the ambient particle values of a map entry (Remaster air particles).
+LightMood WithParticles(LightMood mood, double particles, double density, double particles2, double density2,
+                        double red = 1.0, double green = 1.0, double blue = 1.0)
+{
+    mood.particles = particles;
+    mood.particlesDensity = density;
+    mood.particles2 = particles2;
+    mood.particles2Density = density2;
+    mood.particlesR = red;
+    mood.particlesG = green;
+    mood.particlesB = blue;
     return mood;
 }
 
@@ -205,15 +222,77 @@ TEST_CASE("the shipped light mood file has the tuned values [data][lightmood]")
     // The haze values: haze, hazeR/G/B, groundFog, groundFogHeight, hazeSun.
     CHECK(loaded.data.ForWorld(Icarus) ==
           WithHaze(LightMood{0.7, 0.7, 1.7, 0.7, 0.8, 0.8, 0.1, 0.95}, 0.16, 0.5, 0.62, 0.86, 0.0, 220.0, 0.1));
+    // Lost Tower also has ash and embers in the air.
     CHECK(loaded.data.ForWorld(LostTower) ==
-          WithHaze(LightMood{0.45, 0.7, 1.7, 1.0, 1.0, 0.8, 0.1, 0.8}, 0.1, 0.34, 0.28, 0.4, 0.1, 150.0, 0.0));
+          WithParticles(WithHaze(LightMood{0.45, 0.7, 1.7, 1.0, 1.0, 0.8, 0.1, 0.8}, 0.1, 0.34, 0.28, 0.4, 0.1,
+                                 150.0, 0.0),
+                        5.0, 1.0, 6.0, 0.6));
     // Atlans draws its ground after the effects: no haze there.
     CHECK(loaded.data.ForWorld(Atlans) == LightMood{0.8, 0.8, 1.7, 1.0, 1.0, 0.8, 0.1, 1.0});
     CHECK(loaded.data.ForWorld(Lorencia) ==
-          WithHaze(loaded.data.defaultMood, 0.18, 0.62, 0.7, 0.66, 0.06, 220.0, 0.12));
-    // Maps without an entry (arenas, events) keep no haze.
+          WithParticles(WithHaze(loaded.data.defaultMood, 0.18, 0.62, 0.7, 0.66, 0.06, 220.0, 0.12), 1.0, 0.8, 0.0,
+                        1.0));
+    // Maps without an entry (arenas, events) keep no haze and no particles.
     CHECK(loaded.data.defaultMood.haze == 0.0);
     CHECK(loaded.data.defaultMood.groundFog == 0.0);
+    CHECK(loaded.data.defaultMood.particles == 0.0);
+    CHECK(loaded.data.defaultMood.particles2 == 0.0);
+    // Ambient particles: Noria pollen and fireflies, Tarkan sand-tinted dust, none in Blood Castle.
+    const LightMood& noria = loaded.data.ForWorld(Noria);
+    CHECK(noria.particles == 2.0);
+    CHECK(noria.particlesDensity == doctest::Approx(1.0));
+    CHECK(noria.particles2 == 3.0);
+    CHECK(noria.particles2Density == doctest::Approx(1.0));
+    const LightMood& tarkan = loaded.data.ForWorld(Tarkan);
+    CHECK(tarkan.particles == 1.0);
+    CHECK(tarkan.particlesDensity == doctest::Approx(1.2));
+    CHECK(tarkan.particlesR == doctest::Approx(1.0));
+    CHECK(tarkan.particlesG == doctest::Approx(0.85));
+    CHECK(tarkan.particlesB == doctest::Approx(0.62));
+    CHECK(loaded.data.ForWorld(BloodCastle1).particles == 0.0);
+    CHECK(loaded.data.ForWorld(BloodCastle1).particles2 == 0.0);
+}
+
+TEST_CASE("the ambient particle values are optional and range-checked [data][lightmood]")
+{
+    const ReadResult result = Read(R"({
+  "formatVersion": 1,
+  "default": { "base": 0.7, "figures": 0.7, "dynamicGain": 1, "background": 1, "sun": 0.6 },
+  "maps": [ { "world": 3, "name": "Noria", "particles": 2, "particlesDensity": 0.5, "particles2": 3,
+              "particles2Density": 1.5, "particlesR": 0.9, "particlesG": 0.8, "particlesB": 0.7 } ]
+})");
+    REQUIRE_FALSE(HasErrors(result.issues));
+    CHECK(result.data.defaultMood.particles == 0.0);
+    CHECK(result.data.defaultMood.particlesDensity == 1.0);
+    CHECK(result.data.defaultMood.particles2 == 0.0);
+    CHECK(result.data.defaultMood.particles2Density == 1.0);
+    CHECK(result.data.defaultMood.particlesR == 1.0);
+    CHECK(result.data.defaultMood.particlesG == 1.0);
+    CHECK(result.data.defaultMood.particlesB == 1.0);
+    const LightMood& noria = result.data.ForWorld(Noria);
+    CHECK(noria.particles == 2.0);
+    CHECK(noria.particlesDensity == doctest::Approx(0.5));
+    CHECK(noria.particles2 == 3.0);
+    CHECK(noria.particles2Density == doctest::Approx(1.5));
+    CHECK(noria.particlesR == doctest::Approx(0.9));
+    CHECK(noria.particlesG == doctest::Approx(0.8));
+    CHECK(noria.particlesB == doctest::Approx(0.7));
+
+    const ReadResult outOfRange = Read(R"({
+  "formatVersion": 1,
+  "default": { "base": 0.7, "figures": 0.7, "dynamicGain": 1, "background": 1, "sun": 0.6, "particles": 7,
+               "particlesDensity": 2.5, "particles2": -1, "particles2Density": -0.1, "particlesR": 1.2,
+               "particlesG": -0.1, "particlesB": 2 }
+})");
+    CHECK(HasErrors(outOfRange.issues));
+    CHECK(HasIssueAbout(outOfRange.issues, "default.particles", "must be from 0 to 6"));
+    CHECK(HasIssueAbout(outOfRange.issues, "default.particlesDensity", "must be from 0 to 2"));
+    CHECK(HasIssueAbout(outOfRange.issues, "default.particles2", "must be from 0 to 6"));
+    CHECK(HasIssueAbout(outOfRange.issues, "default.particles2Density", "must be from 0 to 2"));
+    CHECK(HasIssueAbout(outOfRange.issues, "default.particlesR", "must be from 0 to 1"));
+    CHECK(HasIssueAbout(outOfRange.issues, "default.particlesG", "must be from 0 to 1"));
+    CHECK(HasIssueAbout(outOfRange.issues, "default.particlesB", "must be from 0 to 1"));
+    CHECK(outOfRange.data.defaultMood == LightMood{});
 }
 
 TEST_CASE("the haze values are optional and range-checked [data][lightmood]")

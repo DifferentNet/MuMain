@@ -16057,6 +16057,21 @@
   <data name="HazeAfterRestart" xml:space="preserve">
     <value>Включение заработает после перезапуска.</value>
   </data>
+  <data name="ParticlesRow" xml:space="preserve">
+    <value>Частицы в воздухе</value>
+  </data>
+  <data name="ParticlesTooltip" xml:space="preserve">
+    <value>Пыль, пыльца, светлячки, мелкий снег и пепел в воздухе на некоторых картах. Мелкие и неяркие: персонажей, монстров и дроп не закрывают.</value>
+  </data>
+  <data name="ParticlesStrengthRow" xml:space="preserve">
+    <value>Плотность частиц</value>
+  </data>
+  <data name="ParticlesLockedHdTextures" xml:space="preserve">
+    <value>Нужны HD-текстуры.</value>
+  </data>
+  <data name="ParticlesLockedLowPreset" xml:space="preserve">
+    <value>Выключено на пресете графики «Низкий».</value>
+  </data>
   <data name="BagPageLocked" xml:space="preserve">
     <value>Страница 2 закрыта</value>
   </data>

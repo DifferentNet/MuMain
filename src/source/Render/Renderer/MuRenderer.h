@@ -182,6 +182,30 @@ struct HazeFrame
     float referenceHeight = 0.0f; // the hero's ground height, smoothed
 };
 
+// One layer of the Remaster's ambient air particles (Render/Effects/ParticlesSetting.h), as
+// ambient_particles.vert takes it; count 0 draws none.
+struct AmbientParticleLayer
+{
+    std::uint32_t count = 0u;
+    float boxCenter[3]{}; // the box's centre in the world (hero XY, smoothed ground height + the kind's)
+    float boxSize[3]{};
+    float seed = 0.0f;    // the layer's hash seed
+    float travel[4]{};    // box lengths per period along x, y, z; w: speed spread 0..1
+    float sway[4]{};      // amplitude xy, amplitude z, sway turns per period, flicker turns per period
+    float radius[2]{};    // smallest, largest radius in world units
+    float pixels[2]{};    // smallest, largest radius in pixels at a 1080 pixel high viewport
+    float color[4]{};     // rgb, a: the peak alpha (already x presence)
+    float look[4]{};      // additive 0/1, glow 0/1, flicker depth, rise fade
+    float phase = 0.0f;   // 0..1 over the period
+};
+
+// The frame's ambient particle layers.
+struct AmbientParticlesFrame
+{
+    AmbientParticleLayer layers[2]{};
+    int layerCount = 0;
+};
+
 // Where a body shadow lands, as CalcShadowPosition() puts it there.
 struct ShadowProjection
 {
@@ -495,6 +519,10 @@ public:
     // The frame's distance haze (HazeFrame), set before EndOpaqueWorld; laid over the same depth
     // as the ambient occlusion, right after it. A frame that does not set it has none.
     virtual void SetHazeFrame(const HazeFrame& /*frame*/) {}
+    // Ambient air particles (AmbientParticlesFrame) at this point of the scene: after everything
+    // recorded so far, before what follows. The first call of a frame counts; a frame without one
+    // has none.
+    virtual void DrawAmbientParticles(const AmbientParticlesFrame& /*frame*/) {}
 
     // Opaque, depth-writing draws recorded between these two move ahead of the others and are
     // grouped by state, to cut state changes; depth decides what shows, and the others keep

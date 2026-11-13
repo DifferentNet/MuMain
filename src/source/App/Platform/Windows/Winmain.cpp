@@ -43,6 +43,7 @@
 #include "Render/Lighting/SoftShadowSetting.h"
 #include "Render/Lighting/SunShadowSetting.h"
 #include "Render/PostProcessing/HazeSetting.h"
+#include "Render/Effects/ParticlesSetting.h"
 #include "Render/PostProcessing/SsaoSetting.h"
 #include "Render/Models/WindSway.h"
 #include "Render/Look/GraphicsPresetSetting.h"
@@ -2957,6 +2958,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     Render::PostProcessing::Ssao::ApplyFromConfig();
     Render::PostProcessing::Haze::ApplyFromConfig();
     Render::Models::Wind::ApplyFromConfig();
+    Render::Effects::Particles::ApplyFromConfig();
     if (!mu::InitSDLGpuRenderer(g_sdlWindow, selectedFontFamily, renderBackend,
                                 static_cast<float>(initialFontSizes.normal),
                                 static_cast<float>(initialFontSizes.big),
@@ -3119,6 +3121,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     Render::PostProcessing::Ssao::ApplyFromConfig();
     Render::PostProcessing::Haze::ApplyFromConfig();
     Render::Models::Wind::ApplyFromConfig();
+    Render::Effects::Particles::ApplyFromConfig();
 
     // Make the bundled ./fonts faces resolvable by GDI before the first CreateFont,
     // so a chosen curated font works even without a system-wide install.

@@ -144,6 +144,11 @@ namespace CfgKeys
     // 70 shows the maps' haze as their light mood gives it).
     inline constexpr wchar_t CfgKeyHaze[] = L"Haze";
     inline constexpr wchar_t CfgKeyHazeStrength[] = L"HazeStrength";
+    // [Render] Particles: with HD textures on, 0 off, 1 ambient air particles on some maps (dust,
+    // pollen, fireflies, fine snow, ash; Render/Effects/ParticlesSetting.h), and their density in
+    // percent (0 to 100; 70 shows the maps' particles as their light mood gives them).
+    inline constexpr wchar_t CfgKeyParticles[] = L"Particles";
+    inline constexpr wchar_t CfgKeyParticlesStrength[] = L"ParticlesStrength";
     // Sun shadows of the Enhanced look: 0 off, 1 medium (2048 map), 2 high (4096 map). The browser
     // build keeps them under their own key: older /play builds saved the presets' value in SunShadows,
     // and a browser player gets sun shadows only from the Options row.
@@ -322,6 +327,12 @@ namespace CfgDefaults
     inline constexpr int CfgDefaultHazeStrength = 70;
     inline constexpr int CfgMinHazeStrength = 0;
     inline constexpr int CfgMaxHazeStrength = 100;
+    inline constexpr int CfgDefaultParticles = 1;
+    inline constexpr int CfgMinParticles = 0;
+    inline constexpr int CfgMaxParticles = 1;
+    inline constexpr int CfgDefaultParticlesStrength = 70;
+    inline constexpr int CfgMinParticlesStrength = 0;
+    inline constexpr int CfgMaxParticlesStrength = 100;
     inline constexpr int CfgDefaultSunShadows = 0;
     inline constexpr int CfgMinSunShadows = 0;
     inline constexpr int CfgMaxSunShadows = 2;

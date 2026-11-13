@@ -422,6 +422,23 @@
 							<span class="opt-value">{{haze_strength_percent}}%</span>
 						</div>
 					</div>
+					<!-- Particles: as the legacy theme's rows (option_window.rml). -->
+					<div class="opt-row opt-toggle-row opt-row-tipped" data-class-hidden="!particles_available" data-class-locked="particles_locked" data-event-click="option_toggle_particles">
+						<span class="opt-label">{{particles_label}}</span>
+						<div class="opt-control"><div class="opt-toggle" data-class-checked="particles"><div class="opt-toggle-knob"></div></div></div>
+						<span class="opt-row-tip">{{particles_tooltip}}</span>
+					</div>
+					<div class="opt-row opt-sub-row" data-class-hidden="!particles_strength_shown">
+						<span class="opt-label">{{particles_strength_label}}</span>
+						<div class="opt-control">
+							<div class="level-gauge opt-slider">
+								<div data-attr-class="'level-gauge-fill level-' + particles_strength"><div class="opt-slider-thumb"></div></div>
+								<div class="level-gauge-hit opt-slider-hit" data-event-mousedown="option_gauge(6)"
+								     data-event-drag="option_gauge(6)" data-event-mousescroll="option_gauge(6)" data-event-keydown="option_gauge(6)"></div>
+							</div>
+							<span class="opt-value">{{particles_strength_percent}}%</span>
+						</div>
+					</div>
 					<div class="opt-row">
 						<span class="opt-label">{{render_level_label}}</span>
 						<div class="opt-control">

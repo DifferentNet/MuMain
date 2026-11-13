@@ -1,0 +1,171 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+#pragma clang diagnostic ignored "-Wmissing-braces"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+template<typename T, size_t Num>
+struct spvUnsafeArray
+{
+    T elements[Num ? Num : 1];
+    
+    thread T& operator [] (size_t pos) thread
+    {
+        return elements[pos];
+    }
+    constexpr const thread T& operator [] (size_t pos) const thread
+    {
+        return elements[pos];
+    }
+    
+    device T& operator [] (size_t pos) device
+    {
+        return elements[pos];
+    }
+    constexpr const device T& operator [] (size_t pos) const device
+    {
+        return elements[pos];
+    }
+    
+    constexpr const constant T& operator [] (size_t pos) const constant
+    {
+        return elements[pos];
+    }
+    
+    threadgroup T& operator [] (size_t pos) threadgroup
+    {
+        return elements[pos];
+    }
+    constexpr const threadgroup T& operator [] (size_t pos) const threadgroup
+    {
+        return elements[pos];
+    }
+};
+
+struct VSInput
+{
+    uint vertexId;
+};
+
+struct VSOutput
+{
+    float4 pos;
+    float2 uv;
+    float4 color;
+    float2 look;
+};
+
+struct ParticleUniforms
+{
+    float4x4 viewFromWorld;
+    float4x4 projection;
+    float4 boxCenter;
+    float4 boxSize;
+    float4 travel;
+    float4 sway;
+    float4 sizeParams;
+    float4 fadeParams;
+    float4 color;
+    float4 look;
+};
+
+constant spvUnsafeArray<float2, 6> _73 = spvUnsafeArray<float2, 6>({ float2(-1.0), float2(1.0, -1.0), float2(-1.0, 1.0), float2(-1.0, 1.0), float2(1.0, -1.0), float2(1.0) });
+
+struct main0_out
+{
+    float2 _entryPointOutput_uv [[user(locn0)]];
+    float4 _entryPointOutput_color [[user(locn1)]];
+    float2 _entryPointOutput_look [[user(locn2)]];
+    float4 gl_Position [[position]];
+};
+
+static inline __attribute__((always_inline))
+uint Hash(thread uint& x)
+{
+    x ^= (x >> uint(16));
+    x *= 2146121005u;
+    x ^= (x >> uint(15));
+    x *= 2221713035u;
+    x ^= (x >> uint(16));
+    return x;
+}
+
+static inline __attribute__((always_inline))
+float Unit(thread const uint& h)
+{
+    return float(h & 16777215u) / 16777216.0;
+}
+
+static inline __attribute__((always_inline))
+VSOutput _main(thread const VSInput& _input, constant ParticleUniforms& _86)
+{
+    uint id = _input.vertexId / 6u;
+    float2 corner = _73[_input.vertexId % 6u];
+    float phase = _86.boxCenter.w;
+    uint param = (id * 2654435769u) + uint(_86.boxSize.w);
+    uint _102 = Hash(param);
+    uint h = _102;
+    spvUnsafeArray<float, 12> u;
+    for (int i = 0; i < 12; i++)
+    {
+        uint param_1 = h + 1757159915u;
+        uint _118 = Hash(param_1);
+        h = _118;
+        uint param_2 = h;
+        u[i] = Unit(param_2);
+    }
+    float3 turns = rint(_86.travel.xyz * (1.0 - (_86.travel.w * u[3])));
+    float swayA = 6.283185482025146484375 * fract((fast::max(rint(_86.sway.z * (0.60000002384185791015625 + (0.800000011920928955078125 * u[4]))), 1.0) * phase) + u[5]);
+    float swayB = 6.283185482025146484375 * fract((fast::max(rint(_86.sway.z * (0.60000002384185791015625 + (0.800000011920928955078125 * u[6]))), 1.0) * phase) + u[7]);
+    float3 swayOffset = float3(sin(swayA), cos(swayB), sin(swayA + swayB)) * float3(_86.sway.x, _86.sway.x, _86.sway.y);
+    float3 rel = (float3(u[0], u[1], u[2]) + (turns * phase)) + ((swayOffset - _86.boxCenter.xyz) / _86.boxSize.xyz);
+    rel = fract(rel + float3(0.5)) - float3(0.5);
+    float3 world = _86.boxCenter.xyz + (rel * _86.boxSize.xyz);
+    float4 view = _86.viewFromWorld * float4(world, 1.0);
+    float _distance = -view.z;
+    float edge = fast::max(abs(rel.x), abs(rel.y)) * 2.0;
+    float height = rel.z + 0.5;
+    float fade = 1.0 - smoothstep(_86.fadeParams.z, 1.0, edge);
+    fade *= (smoothstep(0.0, 0.119999997317790985107421875, height) * (1.0 - smoothstep(0.87999999523162841796875, 1.0, height)));
+    fade *= mix(1.0, 1.0 - height, _86.look.w);
+    fade *= fast::clamp((_distance - _86.fadeParams.x) * _86.fadeParams.y, 0.0, 1.0);
+    float pulse = 0.5 + (0.5 * sin(6.283185482025146484375 * fract((fast::max(rint(_86.sway.w * (0.5 + u[9])), 1.0) * phase) + u[10])));
+    fade *= mix(1.0, smoothstep(0.3499999940395355224609375, 0.85000002384185791015625, pulse), _86.look.z);
+    float safeDistance = fast::max(_distance, 1.0);
+    float pixels = (mix(_86.sizeParams.x, _86.sizeParams.y, u[8]) * _86.fadeParams.w) / safeDistance;
+    float shrink = fast::min(pixels / _86.sizeParams.z, 1.0);
+    fade *= (shrink * shrink);
+    float radius = (fast::clamp(pixels, _86.sizeParams.z, _86.sizeParams.w) * safeDistance) / _86.fadeParams.w;
+    VSOutput o;
+    o.uv = corner;
+    o.color = float4(_86.color.xyz, _86.color.w * fade);
+    o.look = _86.look.xy;
+    if ((fade <= 0.00200000009499490261077880859375) || (_distance <= 0.0))
+    {
+        o.pos = float4(0.0, 0.0, 2.0, 1.0);
+        return o;
+    }
+    float4 _415 = view;
+    float2 _417 = _415.xy + (corner * radius);
+    view.x = _417.x;
+    view.y = _417.y;
+    o.pos = _86.projection * view;
+    return o;
+}
+
+vertex main0_out main0(constant ParticleUniforms& _86 [[buffer(0)]], uint gl_VertexIndex [[vertex_id]])
+{
+    main0_out out = {};
+    VSInput _input;
+    _input.vertexId = gl_VertexIndex;
+    VSInput param = _input;
+    VSOutput flattenTemp = _main(param, _86);
+    out.gl_Position = flattenTemp.pos;
+    out._entryPointOutput_uv = flattenTemp.uv;
+    out._entryPointOutput_color = flattenTemp.color;
+    out._entryPointOutput_look = flattenTemp.look;
+    return out;
+}
+

@@ -261,6 +261,13 @@ public:
     int GetHazeStrength() const { return m_hazeStrength; }
     void SetHaze(int haze);
     void SetHazeStrength(int percent);
+    // [Render] Particles: with HD textures on, ambient air particles on some maps
+    // (Render/Effects/ParticlesSetting.h), 0 off, 1 on; ParticlesStrength (their density) in percent
+    // (both clamped; Options > Graphics applies them at once).
+    int GetParticles() const { return m_particles; }
+    int GetParticlesStrength() const { return m_particlesStrength; }
+    void SetParticles(int particles);
+    void SetParticlesStrength(int percent);
     // [Render] SunShadows: 0 off, 1 medium, 2 high (clamped).
     int GetSunShadows() const { return m_sunShadows; }
     void SetSunShadows(int level);
@@ -408,6 +415,8 @@ private:
     int m_windStrength = 100;
     int m_haze = 1;
     int m_hazeStrength = 70;
+    int m_particles = 1;
+    int m_particlesStrength = 70;
     int m_sunShadows = 0;
     int m_sharpen = 0;
     std::wstring m_renderBackend;
