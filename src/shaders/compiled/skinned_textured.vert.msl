@@ -77,54 +77,75 @@ struct main0_in
 };
 
 static inline __attribute__((always_inline))
-float3 transformPosition(thread const float3& position, thread const int& boneIndex, constant Skinning& _122, const device boneRows& boneRows_1)
+float3 transformPosition(thread const float3& position, thread const int& boneIndex, constant Skinning& _126, const device boneRows& boneRows_1)
 {
-    if ((boneIndex < 0) || (boneIndex >= int(_122.palette.y)))
+    if ((boneIndex < 0) || (boneIndex >= int(_126.palette.y)))
     {
         return position;
     }
-    uint row = _122.palette.x + (uint(boneIndex) * 3u);
+    uint row = _126.palette.x + (uint(boneIndex) * 3u);
     float4 row0 = boneRows_1._data[row];
     float4 row1 = boneRows_1._data[row + 1u];
     float4 row2 = boneRows_1._data[row + 2u];
     float3 transformed;
-    if (_122.boneScaleAndRestPoseScale.x == 1.0)
+    if (_126.boneScaleAndRestPoseScale.x == 1.0)
     {
-        float restScale = (_122.boneScaleAndRestPoseScale.y != 0.0) ? _122.boneScaleAndRestPoseScale.y : 1.0;
+        float restScale = (_126.boneScaleAndRestPoseScale.y != 0.0) ? _126.boneScaleAndRestPoseScale.y : 1.0;
         float4 restPosition = float4(position * restScale, 1.0);
         transformed = float3(dot(row0, restPosition), dot(row1, restPosition), dot(row2, restPosition));
     }
     else
     {
         transformed = float3(dot(row0.xyz, position), dot(row1.xyz, position), dot(row2.xyz, position));
-        transformed = (transformed * _122.boneScaleAndRestPoseScale.x) + float3(row0.w, row1.w, row2.w);
+        transformed = (transformed * _126.boneScaleAndRestPoseScale.x) + float3(row0.w, row1.w, row2.w);
     }
-    if (_122.palette.z != 0u)
+    if (_126.palette.z != 0u)
     {
-        transformed = _122.bodyOriginAndScale.xyz + (transformed * _122.bodyOriginAndScale.w);
+        transformed = _126.bodyOriginAndScale.xyz + (transformed * _126.bodyOriginAndScale.w);
     }
     return transformed;
 }
 
 static inline __attribute__((always_inline))
-float3 transformNormal(thread const float3& normal, thread const int& boneIndex, constant Skinning& _122, const device boneRows& boneRows_1)
+float3 applyWind(thread float3& position, constant Skinning& _126)
 {
-    if ((boneIndex < 0) || (boneIndex >= int(_122.palette.y)))
+    float amplitude = _126.fogParameters.z;
+    if (amplitude <= 0.0)
+    {
+        return position;
+    }
+    float rise = fast::clamp((position.z - _126.bodyOriginAndScale.z) * _126.fogParameters.w, 0.0, 1.0);
+    float weight = rise * rise;
+    float phase = _126.boneScaleAndRestPoseScale.z;
+    float travel = dot(position.xy, float2(0.006000000052154064178466796875, 0.008000000379979610443115234375));
+    float gust = (sin(phase - travel) * 0.64999997615814208984375) + (sin(((2.5 * phase) - (travel * 3.099999904632568359375)) + (_126.bodyOriginAndScale.x * 0.0500000007450580596923828125)) * 0.3499999940395355224609375);
+    float3 _308 = position;
+    float2 _310 = _308.xy + (float2(0.60000002384185791015625, 0.800000011920928955078125) * ((gust * amplitude) * weight));
+    position.x = _310.x;
+    position.y = _310.y;
+    position.z -= (((abs(gust) * amplitude) * weight) * 0.1500000059604644775390625);
+    return position;
+}
+
+static inline __attribute__((always_inline))
+float3 transformNormal(thread const float3& normal, thread const int& boneIndex, constant Skinning& _126, const device boneRows& boneRows_1)
+{
+    if ((boneIndex < 0) || (boneIndex >= int(_126.palette.y)))
     {
         return normal;
     }
-    uint row = _122.palette.x + (uint(boneIndex) * 3u);
+    uint row = _126.palette.x + (uint(boneIndex) * 3u);
     return float3(dot(boneRows_1._data[row].xyz, normal), dot(boneRows_1._data[row + 1u].xyz, normal), dot(boneRows_1._data[row + 2u].xyz, normal));
 }
 
 static inline __attribute__((always_inline))
-float2 getTextureCoordinates(thread const float2& restCoordinates, thread const float3& normal, thread const float3& position, constant Skinning& _122)
+float2 getTextureCoordinates(thread const float2& restCoordinates, thread const float3& normal, thread const float3& position, constant Skinning& _126)
 {
-    uint mode = _122.textureCoordinateMode.x;
-    float chromeWave = _122.chromeParameters.x;
-    float chromeWave2 = _122.chromeParameters.y;
-    float2 chromeLight = _122.chromeParameters.zw;
-    float2 offset = _122.textureCoordinateParameters.xy;
+    uint mode = _126.textureCoordinateMode.x;
+    float chromeWave = _126.chromeParameters.x;
+    float chromeWave2 = _126.chromeParameters.y;
+    float2 chromeLight = _126.chromeParameters.zw;
+    float2 offset = _126.textureCoordinateParameters.xy;
     if (mode == 1u)
     {
         return float2((normal.z * 0.5) + chromeWave, (normal.y * 0.5) + (chromeWave * 2.0));
@@ -154,7 +175,7 @@ float2 getTextureCoordinates(thread const float2& restCoordinates, thread const 
     }
     if (mode == 7u)
     {
-        float coordinate_1 = ((normal.z + normal.x) * 0.800000011920928955078125) + _122.textureCoordinateParameters.z;
+        float coordinate_1 = ((normal.z + normal.x) * 0.800000011920928955078125) + _126.textureCoordinateParameters.z;
         return float2(coordinate_1);
     }
     if (mode == 8u)
@@ -167,12 +188,12 @@ float2 getTextureCoordinates(thread const float2& restCoordinates, thread const 
     }
     if (mode == 10u)
     {
-        float3 toEye = _122.eyePositionAndSpecular.xyz - position;
+        float3 toEye = _126.eyePositionAndSpecular.xyz - position;
         float facing = abs(dot(fast::normalize(normal), toEye)) * rsqrt(fast::max(dot(toEye, toEye), 9.9999999747524270787835121154785e-07));
         float outline = fast::clamp(1.0 - facing, 0.0078125, 0.9921875);
-        float3 origin = select(float3(0.0), _122.bodyOriginAndScale.xyz, bool3(_122.palette.z != 0u));
+        float3 origin = select(float3(0.0), _126.bodyOriginAndScale.xyz, bool3(_126.palette.z != 0u));
         float3 local = position - origin;
-        float sweep = ((local.z * 0.006000000052154064178466796875) + ((local.x + local.y) * 0.00200000009499490261077880859375)) - (_122.textureCoordinateParameters.z * 6.0);
+        float sweep = ((local.z * 0.006000000052154064178466796875) + ((local.x + local.y) * 0.00200000009499490261077880859375)) - (_126.textureCoordinateParameters.z * 6.0);
         return float2(outline, sweep);
     }
     return restCoordinates;
@@ -204,54 +225,56 @@ float3 RollOffHighlight(thread const float3& color, thread const float& knee)
 }
 
 static inline __attribute__((always_inline))
-VSOutput _main(thread const VSInput& _input, constant Skinning& _122, const device boneRows& boneRows_1)
+VSOutput _main(thread const VSInput& _input, constant Skinning& _126, const device boneRows& boneRows_1)
 {
     float3 param = _input.pos;
     int param_1 = _input.positionBoneIndex;
-    float3 skinnedPosition = transformPosition(param, param_1, _122, boneRows_1);
-    float3 param_2 = _input.normal;
-    int param_3 = _input.normalBoneIndex;
-    float3 skinnedNormal = transformNormal(param_2, param_3, _122, boneRows_1);
+    float3 param_2 = transformPosition(param, param_1, _126, boneRows_1);
+    float3 _653 = applyWind(param_2, _126);
+    float3 skinnedPosition = _653;
+    float3 param_3 = _input.normal;
+    int param_4 = _input.normalBoneIndex;
+    float3 skinnedNormal = transformNormal(param_3, param_4, _126, boneRows_1);
     VSOutput _output;
-    _output.pos = _122.mvp * float4(skinnedPosition, 1.0);
-    float2 param_4 = _input.uv;
-    float3 param_5 = skinnedNormal;
-    float3 param_6 = skinnedPosition;
-    _output.uv = getTextureCoordinates(param_4, param_5, param_6, _122);
+    _output.pos = _126.mvp * float4(skinnedPosition, 1.0);
+    float2 param_5 = _input.uv;
+    float3 param_6 = skinnedNormal;
+    float3 param_7 = skinnedPosition;
+    _output.uv = getTextureCoordinates(param_5, param_6, param_7, _126);
     _output.color = _input.color;
-    if (_122.palette.w == 1u)
+    if (_126.palette.w == 1u)
     {
-        float luminosity = fast::max((dot(skinnedNormal, _122.lightDirection.xyz) * 0.800000011920928955078125) + 0.4000000059604644775390625, 0.20000000298023223876953125);
-        float4 _612 = _output.color;
-        float3 _618 = fast::clamp(_612.xyz * luminosity, float3(0.0), float3(1.0));
-        _output.color.x = _618.x;
-        _output.color.y = _618.y;
-        _output.color.z = _618.z;
-        float param_7 = _122.lightDirection.w;
-        if (RollsOffHighlight(param_7))
+        float luminosity = fast::max((dot(skinnedNormal, _126.lightDirection.xyz) * 0.800000011920928955078125) + 0.4000000059604644775390625, 0.20000000298023223876953125);
+        float4 _702 = _output.color;
+        float3 _708 = fast::clamp(_702.xyz * luminosity, float3(0.0), float3(1.0));
+        _output.color.x = _708.x;
+        _output.color.y = _708.y;
+        _output.color.z = _708.z;
+        float param_8 = _126.lightDirection.w;
+        if (RollsOffHighlight(param_8))
         {
-            float3 param_8 = _input.color.xyz * luminosity;
-            float param_9 = _122.lightDirection.w;
-            float3 _640 = RollOffHighlight(param_8, param_9);
-            _output.color.x = _640.x;
-            _output.color.y = _640.y;
-            _output.color.z = _640.z;
+            float3 param_9 = _input.color.xyz * luminosity;
+            float param_10 = _126.lightDirection.w;
+            float3 _730 = RollOffHighlight(param_9, param_10);
+            _output.color.x = _730.x;
+            _output.color.y = _730.y;
+            _output.color.z = _730.z;
         }
     }
     _output.clipDist = _output.pos.w - 1.0;
-    float range = _122.fogParameters.y - _122.fogParameters.x;
-    _output.fogFactor = (range > 0.001000000047497451305389404296875) ? fast::clamp((_122.fogParameters.y - abs(_output.pos.w)) / range, 0.0, 1.0) : 1.0;
+    float range = _126.fogParameters.y - _126.fogParameters.x;
+    _output.fogFactor = (range > 0.001000000047497451305389404296875) ? fast::clamp((_126.fogParameters.y - abs(_output.pos.w)) / range, 0.0, 1.0) : 1.0;
     _output.eyeDepth = abs(_output.pos.w);
     _output.normal = skinnedNormal;
-    _output.viewVector = _122.eyePositionAndSpecular.xyz - skinnedPosition;
-    _output.lightDirectionAndSpecular = float4(_122.lightDirection.xyz, _122.eyePositionAndSpecular.w);
+    _output.viewVector = _126.eyePositionAndSpecular.xyz - skinnedPosition;
+    _output.lightDirectionAndSpecular = float4(_126.lightDirection.xyz, _126.eyePositionAndSpecular.w);
     float4 position = float4(skinnedPosition, 1.0);
-    _output.worldPositionAndDynamicLights = float4(dot(_122.vertexToWorldRows[0], position), dot(_122.vertexToWorldRows[1], position), dot(_122.vertexToWorldRows[2], position), float(_122.palette.w == 3u));
-    _output.worldNormal = float3(dot(_122.vertexToWorldRows[0].xyz, skinnedNormal), dot(_122.vertexToWorldRows[1].xyz, skinnedNormal), dot(_122.vertexToWorldRows[2].xyz, skinnedNormal));
+    _output.worldPositionAndDynamicLights = float4(dot(_126.vertexToWorldRows[0], position), dot(_126.vertexToWorldRows[1], position), dot(_126.vertexToWorldRows[2], position), float(_126.palette.w == 3u));
+    _output.worldNormal = float3(dot(_126.vertexToWorldRows[0].xyz, skinnedNormal), dot(_126.vertexToWorldRows[1].xyz, skinnedNormal), dot(_126.vertexToWorldRows[2].xyz, skinnedNormal));
     return _output;
 }
 
-vertex main0_out main0(main0_in in [[stage_in]], constant Skinning& _122 [[buffer(0)]], const device boneRows& boneRows_1 [[buffer(1)]])
+vertex main0_out main0(main0_in in [[stage_in]], constant Skinning& _126 [[buffer(0)]], const device boneRows& boneRows_1 [[buffer(1)]])
 {
     main0_out out = {};
     VSInput _input;
@@ -262,7 +285,7 @@ vertex main0_out main0(main0_in in [[stage_in]], constant Skinning& _122 [[buffe
     _input.positionBoneIndex = in.input_positionBoneIndex;
     _input.normalBoneIndex = in.input_normalBoneIndex;
     VSInput param = _input;
-    VSOutput flattenTemp = _main(param, _122, boneRows_1);
+    VSOutput flattenTemp = _main(param, _126, boneRows_1);
     out.gl_Position = flattenTemp.pos;
     out._entryPointOutput_uv = flattenTemp.uv;
     out._entryPointOutput_color = flattenTemp.color;

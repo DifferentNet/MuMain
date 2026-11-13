@@ -46,6 +46,8 @@ struct OverlayModel
     bool legendSlider = false;
     bool legendItem = true;
     bool legendY = true;
+    // Menu (every window): not over a question box.
+    bool legendMenu = true;
     Rml::String pickupLabel;
     // The prompt's button: A (an NPC or a player chosen), else d-pad down (a drop).
     bool promptA = false;
@@ -86,6 +88,7 @@ void BindModel(Rml::DataModelConstructor& c, OverlayModel& model)
     c.Bind("legend_slider", &model.legendSlider);
     c.Bind("legend_item", &model.legendItem);
     c.Bind("legend_y", &model.legendY);
+    c.Bind("legend_menu", &model.legendMenu);
     c.Bind("pickup_label", &model.pickupLabel);
     c.Bind("prompt_a", &model.promptA);
     c.Bind("characters_shown", &model.charactersShown);
@@ -156,7 +159,7 @@ void SyncPrompt(OverlayModel& model, const View& view)
     SyncPixels(model.promptLeft, view.promptX, "prompt_left");
     SyncPixels(model.promptTop, view.promptY, "prompt_top");
     using Prompt = View::Prompt;
-    SyncBool(model.promptA, view.promptSays != Prompt::PickUp, "prompt_a");
+    SyncBool(model.promptA, view.promptSays != Prompt::PickUp || view.promptByA, "prompt_a");
     SyncLabel(model.pickupLabel,
               view.promptSays == Prompt::Talk   ? I18N::Game::PadTalkPrompt
               : view.promptSays == Prompt::Menu ? I18N::Game::PadMenuPrompt
@@ -205,6 +208,7 @@ void SyncLegend(OverlayModel& model, const View& view)
         return;
     using Legend = View::Legend;
     const Legend says = view.legendSays;
+    const bool asks = says == Legend::Answer || says == Legend::DialogButton;
     const bool onItem = says == Legend::Item || says == Legend::Worn || says == Legend::Sell || says == Legend::Move
                         || says == Legend::Crafting || says == Legend::Use || says == Legend::Keep;
     SyncBool(model.legendA, says != Legend::Empty && says != Legend::Slider, "legend_a");
@@ -214,11 +218,13 @@ void SyncLegend(OverlayModel& model, const View& view)
     // The shop's goods have no card and nothing for X: A buys them. The crafting box's items have no card.
     SyncBool(model.legendY,
              says != Legend::Button && says != Legend::Goods && says != Legend::Empty && says != Legend::Crafting
-                 && says != Legend::Slider,
+                 && says != Legend::Slider && !asks,
              "legend_y");
+    SyncBool(model.legendMenu, !asks, "legend_menu");
     const auto* aLabel = onItem                    ? &I18N::Game::PadTake
                          : says == Legend::Goods   ? &I18N::Game::PadBuy
                          : says == Legend::Holding ? &I18N::Game::PadPutDown
+                         : says == Legend::Answer  ? &I18N::Game::PadDialogYes
                                                    : &I18N::Game::PadPress;
     SyncLabel(model.takeLabel, *aLabel, "take_label");
     const auto* xLabel = says == Legend::Worn   ? &I18N::Game::TouchItemUnequip
@@ -229,7 +235,8 @@ void SyncLegend(OverlayModel& model, const View& view)
     SyncLabel(model.equipLabel, *xLabel, "equip_label");
     SyncLabel(model.cardLabel, view.legendSays == Legend::Holding ? I18N::Game::TouchItemDrop : I18N::Game::PadCard,
               "card_label");
-    SyncLabel(model.closeLabel, view.legendSays == Legend::Holding ? I18N::Game::PadPutBack : I18N::Game::PadClose,
+    SyncLabel(model.closeLabel,
+              says == Legend::Holding ? I18N::Game::PadPutBack : asks ? I18N::Game::PadDialogNo : I18N::Game::PadClose,
               "close_label");
     SyncLabel(model.windowsLabel, I18N::Game::PadAllWindows, "windows_label");
 }

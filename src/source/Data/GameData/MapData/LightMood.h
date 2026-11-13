@@ -43,6 +43,17 @@
 //   sunSoftness  optional, 2 to 40 (default 4): the soft edge of the
 //                shadows, in world units (a tile is 100), the same at every
 //                shadow map size.
+//   haze         optional, 0 (default, none) to 0.5: the Remaster's distance
+//                haze (Render/PostProcessing/HazeSetting.h), how much of the
+//                haze colour the far world takes before the fog.
+//   hazeR, hazeG, hazeB  optional, 0 to 1 (default 0.60, 0.65, 0.72): its
+//                colour, darkened by background.
+//   groundFog    optional, 0 (default, none) to 0.5: the low mist over the
+//                ground below the hero's height plus groundFogHeight.
+//   groundFogHeight  optional, 50 to 600 (default 220): how high above the
+//                hero's ground that mist reaches, in world units.
+//   hazeSun      optional, 0 (default) to 0.5: how much brighter the haze
+//                gets looking towards the sun (sunAzimuth).
 // "default" has all five and applies to every map without an entry. A map
 // entry names its world number and overrides any of them; "name" is for the
 // reader only.
@@ -62,6 +73,13 @@ struct LightMood
     double sunElevation = 40.0;
     double sunShadow = 0.8;
     double sunSoftness = 4.0;
+    double haze = 0.0;
+    double hazeR = 0.60;
+    double hazeG = 0.65;
+    double hazeB = 0.72;
+    double groundFog = 0.0;
+    double groundFogHeight = 220.0;
+    double hazeSun = 0.0;
 
     bool operator==(const LightMood&) const = default;
 };
@@ -104,7 +122,7 @@ struct LightMoodValueInfo
     double max;
 };
 
-constexpr std::size_t LightMoodValueCount = 12;
+constexpr std::size_t LightMoodValueCount = 19;
 [[nodiscard]] const std::array<LightMoodValueInfo, LightMoodValueCount>& LightMoodValueInfos();
 // The value with that key in the file, if there is one.
 [[nodiscard]] const LightMoodValueInfo* FindLightMoodValue(std::string_view key);

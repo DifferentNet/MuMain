@@ -33,6 +33,10 @@ struct View
         Holding,
         Button,
         Slider,
+        // A question box up and the frame not on its buttons: A and Menu say yes (OK), B says no.
+        Answer,
+        // The frame on a question box's buttons: A presses the one it is on, B says no.
+        DialogButton,
     };
     Legend legendSays = Legend::Item;
     bool frame = false;
@@ -46,6 +50,8 @@ struct View
         Menu,
     };
     Prompt promptSays = Prompt::PickUp;
+    // No foe near: A picks the drop up, so its glyph is A rather than d-pad down.
+    bool promptByA = false;
     // The character screen's keys: LB RB the character, A play, X create, Y delete, Menu.
     bool characters = false;
     bool prompt = false;

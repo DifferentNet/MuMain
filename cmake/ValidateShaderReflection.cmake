@@ -281,6 +281,7 @@ set(shader_specs
     "post_ssao.frag|frag||1|0|1"
     "post_ssao_blur.frag|frag||1|0|1"
     "post_ssao_apply.frag|frag||2|0|1"
+    "post_haze.frag|frag||1|0|1"
 )
 
 foreach(shader_spec IN LISTS shader_specs)

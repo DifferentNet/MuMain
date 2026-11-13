@@ -15196,10 +15196,10 @@
     <value>Геймпад (раскладка Xbox)</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Левый стик: идти. Правый стик: толкните — следующая цель (вправо дальше, влево ближе); в окне — свободный курсор</value>
+    <value>Левый стик: идти. Правый стик: наклоните к цели — выбрать её, держите — дальше в ту сторону; в окне — свободный курсор</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
-    <value>A: нажмите — ударить цель, держите — продолжать бой</value>
+    <value>A: нажмите — ударить цель, держите — продолжать бой; без монстров рядом — поднять (держите) или поговорить с NPC</value>
   </data>
   <data name="PadHelpSkills" xml:space="preserve">
     <value>X, Y, B: три кнопки умений. Держите RT: X и Y применяют умения 4 и 5. RB: кого из группы лечить и баффать</value>
@@ -15873,6 +15873,12 @@
   <data name="PadPress" xml:space="preserve">
     <value>Нажать</value>
   </data>
+  <data name="PadDialogYes" xml:space="preserve">
+    <value>Да / ОК</value>
+  </data>
+  <data name="PadDialogNo" xml:space="preserve">
+    <value>Нет / Отмена</value>
+  </data>
   <data name="PadAdjust" xml:space="preserve">
     <value>Изменить</value>
   </data>
@@ -16013,6 +16019,42 @@
     <value>Нужны Enhanced graphics с Enhanced lighting и Bloom and colour grading.</value>
   </data>
   <data name="SsaoAfterRestart" xml:space="preserve">
+    <value>Включение заработает после перезапуска.</value>
+  </data>
+  <data name="WindRow" xml:space="preserve">
+    <value>Ветер (качаются трава и деревья)</value>
+  </data>
+  <data name="WindTooltip" xml:space="preserve">
+    <value>Трава, кусты и кроны деревьев качаются на ветру.</value>
+  </data>
+  <data name="WindStrengthRow" xml:space="preserve">
+    <value>Сила ветра</value>
+  </data>
+  <data name="WindLockedHdTextures" xml:space="preserve">
+    <value>Нужны HD-текстуры.</value>
+  </data>
+  <data name="WindLockedLowPreset" xml:space="preserve">
+    <value>Выключено на пресете графики «Низкий».</value>
+  </data>
+  <data name="HazeRow" xml:space="preserve">
+    <value>Дымка вдали</value>
+  </data>
+  <data name="HazeTooltip" xml:space="preserve">
+    <value>Лёгкая дымка вдали и туман над низинами. Персонажи рядом не меняются.</value>
+  </data>
+  <data name="HazeStrengthRow" xml:space="preserve">
+    <value>Сила дымки</value>
+  </data>
+  <data name="HazeLockedHdTextures" xml:space="preserve">
+    <value>Нужны HD-текстуры.</value>
+  </data>
+  <data name="HazeLockedLowPreset" xml:space="preserve">
+    <value>Выключено на пресете графики «Низкий».</value>
+  </data>
+  <data name="HazeLockedEnhanced" xml:space="preserve">
+    <value>Нужны Enhanced graphics с Enhanced lighting и Bloom and colour grading.</value>
+  </data>
+  <data name="HazeAfterRestart" xml:space="preserve">
     <value>Включение заработает после перезапуска.</value>
   </data>
   <data name="BagPageLocked" xml:space="preserve">

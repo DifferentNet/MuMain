@@ -27,6 +27,7 @@
 #include "Render/Textures/HdTextures.h"
 #include "Render/Items/RimGlow.h"
 #include "Render/Models/ModelSmoothing.h"
+#include "Render/Models/WindSway.h"
 #include "Engine/AI/ZzzAI.h"
 #include "SMD.h"
 #include "Render/Effects/ZzzEffect.h"
@@ -1786,6 +1787,12 @@ void BMD::RenderMesh(int meshIndex, int renderFlags, float alpha, int blendMeshI
             .lightEnabled = usesCpuLighting,
             .specularStrength = texture->IsSkin || texture->IsHair ? 0.0f : SpecularStrength,
         };
+        if (float wind[3]; Render::Models::Wind::MeshSway(this, meshIndex, wind))
+        {
+            skinning.windAmplitude = wind[0];
+            skinning.windInverseHeight = wind[1];
+            skinning.windPhase = wind[2];
+        }
         auto& renderer = mu::GetRenderer();
         if (!waveTextureCoordinates &&
             (renderer.IsSkinnedMeshCached(m) || renderer.CacheSkinnedMesh(m, buildSkinnedVertices())))

@@ -17,9 +17,27 @@ body {
 #po_frame {
 	position: absolute;
 	box-sizing: border-box;
-	border: 2dp token(accent-gold);
+	border: 3dp token(accent-gold);
 	border-radius: 3dp;
+	/* A dark rim outside the gold: the frame shows on bright cells and bright items too (pad round 3). */
+	box-shadow: 0 0 0 1dp rgba(0, 0, 0, 200);
+}
+
+/* A slow pulse of the fill, on its own element: the frame's shadow keeps its texture (a shadow
+   redraws whenever its element's background changes). */
+#po_frame_fill {
+	position: absolute;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
 	background-color: rgba(242, 194, 48, 28);
+	animation: 0.9s quadratic-in-out infinite alternate po-frame-pulse;
+}
+
+@keyframes po-frame-pulse {
+	from { background-color: rgba(242, 194, 48, 18); }
+	to { background-color: rgba(242, 194, 48, 64); }
 }
 
 /* The prompt's point is the drop's foot: the prompt stands centred just under it. */
@@ -37,7 +55,7 @@ body {
 	flex-direction: row;
 	justify-content: center;
 	align-items: center;
-	font-size: 13dp;
+	font-size: 15dp;
 }
 #po_prompt_inner .pad-glyph {
 	position: relative;
@@ -67,10 +85,10 @@ body {
 }
 #po_tabs {
 	margin-bottom: 4dp;
-	font-size: 13dp;
+	font-size: 15dp;
 }
 #po_legend, #po_characters {
-	font-size: 12dp;
+	font-size: 14dp;
 }
 #po_top .pad-glyph {
 	position: relative;

@@ -10132,11 +10132,13 @@ void ReceiveOption(const BYTE* ReceiveBuffer)
                             (Data->GameOption & WHISPER_SOUND_ON) == WHISPER_SOUND_ON,
                             (Data->GameOption & SLIDE_HELP_OFF) != SLIDE_HELP_OFF);
 
-    BYTE byQLevel, byWLevel, byELevel, byRLevel;
-    byQLevel = (Data->QWERLevel & 0xFF000000) >> 24;
-    byWLevel = (Data->QWERLevel & 0x00FF0000) >> 16;
-    byELevel = (Data->QWERLevel & 0x0000FF00) >> 8;
-    byRLevel = Data->QWERLevel & 0x000000FF;
+    // The levels come in the order SaveOptions writes them: Q, W, E, R. Read as one little-endian int, as
+    // before, Q got R's level and W got E's, so a potion with a level (large potions +13) left its slot empty
+    // after the next login, and the next save wrote the swapped levels back.
+    const BYTE byQLevel = Data->KeyLevel[0];
+    const BYTE byWLevel = Data->KeyLevel[1];
+    const BYTE byELevel = Data->KeyLevel[2];
+    const BYTE byRLevel = Data->KeyLevel[3];
 
     UI::Hud::SetItemHotkey(UI::Hud::ItemHotkey::Q, Data->KeyQWE[0] + ITEM_POTION, byQLevel);
     UI::Hud::SetItemHotkey(UI::Hud::ItemHotkey::W, Data->KeyQWE[1] + ITEM_POTION, byWLevel);

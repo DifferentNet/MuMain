@@ -15597,10 +15597,10 @@
     <value>Gamepad (Xbox layout)</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Left stick: walk. Right stick: flick it for the next target (right further, left nearer); in a window, a free pointer</value>
+    <value>Left stick: walk. Right stick: lean it towards a target to pick it, hold to go on that way; in a window, a free pointer</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
-    <value>A: tap to hit the target once, hold to keep fighting</value>
+    <value>A: tap to hit the target once, hold to keep fighting; with no monster near, pick up (hold) or talk to the NPC</value>
   </data>
   <data name="PadHelpSkills" xml:space="preserve">
     <value>X, Y, B: the three skill buttons. Hold RT: X and Y cast the skills 4 and 5. RB: the party member your heals and buffs go to</value>
@@ -16235,6 +16235,12 @@
   <data name="PadPress" xml:space="preserve">
     <value>Press</value>
   </data>
+  <data name="PadDialogYes" xml:space="preserve">
+    <value>Yes / OK</value>
+  </data>
+  <data name="PadDialogNo" xml:space="preserve">
+    <value>No / Cancel</value>
+  </data>
   <data name="PadAdjust" xml:space="preserve">
     <value>Adjust</value>
   </data>
@@ -16351,6 +16357,42 @@
     <value>Needs Enhanced graphics with Enhanced lighting and Bloom and colour grading.</value>
   </data>
   <data name="SsaoAfterRestart" xml:space="preserve">
+    <value>Turning it on takes effect after a restart.</value>
+  </data>
+  <data name="WindRow" xml:space="preserve">
+    <value>Wind (swaying grass and trees)</value>
+  </data>
+  <data name="WindTooltip" xml:space="preserve">
+    <value>Grass, bushes and tree crowns sway in the wind.</value>
+  </data>
+  <data name="WindStrengthRow" xml:space="preserve">
+    <value>Wind strength</value>
+  </data>
+  <data name="WindLockedHdTextures" xml:space="preserve">
+    <value>Needs HD textures.</value>
+  </data>
+  <data name="WindLockedLowPreset" xml:space="preserve">
+    <value>Off on the Low graphics preset.</value>
+  </data>
+  <data name="HazeRow" xml:space="preserve">
+    <value>Distance haze</value>
+  </data>
+  <data name="HazeTooltip" xml:space="preserve">
+    <value>Soft haze in the distance and light mist over low ground. Does not change characters near you.</value>
+  </data>
+  <data name="HazeStrengthRow" xml:space="preserve">
+    <value>Haze strength</value>
+  </data>
+  <data name="HazeLockedHdTextures" xml:space="preserve">
+    <value>Needs HD textures.</value>
+  </data>
+  <data name="HazeLockedLowPreset" xml:space="preserve">
+    <value>Off on the Low graphics preset.</value>
+  </data>
+  <data name="HazeLockedEnhanced" xml:space="preserve">
+    <value>Needs Enhanced graphics with Enhanced lighting and Bloom and colour grading.</value>
+  </data>
+  <data name="HazeAfterRestart" xml:space="preserve">
     <value>Turning it on takes effect after a restart.</value>
   </data>
   <data name="BagPageLocked" xml:space="preserve">

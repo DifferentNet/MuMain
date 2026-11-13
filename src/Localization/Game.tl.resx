@@ -13526,6 +13526,42 @@
   <data name="SsaoAfterRestart" xml:space="preserve">
     <value>Turning it on takes effect after a restart.</value>
   </data>
+  <data name="WindRow" xml:space="preserve">
+    <value>Wind (swaying grass and trees)</value>
+  </data>
+  <data name="WindTooltip" xml:space="preserve">
+    <value>Grass, bushes and tree crowns sway in the wind.</value>
+  </data>
+  <data name="WindStrengthRow" xml:space="preserve">
+    <value>Wind strength</value>
+  </data>
+  <data name="WindLockedHdTextures" xml:space="preserve">
+    <value>Needs HD textures.</value>
+  </data>
+  <data name="WindLockedLowPreset" xml:space="preserve">
+    <value>Off on the Low graphics preset.</value>
+  </data>
+  <data name="HazeRow" xml:space="preserve">
+    <value>Distance haze</value>
+  </data>
+  <data name="HazeTooltip" xml:space="preserve">
+    <value>Soft haze in the distance and light mist over low ground. Does not change characters near you.</value>
+  </data>
+  <data name="HazeStrengthRow" xml:space="preserve">
+    <value>Haze strength</value>
+  </data>
+  <data name="HazeLockedHdTextures" xml:space="preserve">
+    <value>Needs HD textures.</value>
+  </data>
+  <data name="HazeLockedLowPreset" xml:space="preserve">
+    <value>Off on the Low graphics preset.</value>
+  </data>
+  <data name="HazeLockedEnhanced" xml:space="preserve">
+    <value>Needs Enhanced graphics with Enhanced lighting and Bloom and colour grading.</value>
+  </data>
+  <data name="HazeAfterRestart" xml:space="preserve">
+    <value>Turning it on takes effect after a restart.</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Unahin ang malakas</value>

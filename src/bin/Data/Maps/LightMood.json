@@ -12,14 +12,57 @@
   },
   "maps": [
     {
+      "world": 0,
+      "name": "Lorencia",
+      "haze": 0.18,
+      "hazeR": 0.62,
+      "hazeG": 0.7,
+      "hazeB": 0.66,
+      "groundFog": 0.06,
+      "groundFogHeight": 220.0,
+      "hazeSun": 0.12
+    },
+    {
       "world": 1,
       "name": "Dungeon",
-      "sun": 1.0
+      "sun": 1.0,
+      "haze": 0.1,
+      "hazeR": 0.3,
+      "hazeG": 0.34,
+      "hazeB": 0.4,
+      "groundFog": 0.12,
+      "groundFogHeight": 150.0
+    },
+    {
+      "world": 2,
+      "name": "Devias",
+      "haze": 0.22,
+      "hazeR": 0.74,
+      "hazeG": 0.8,
+      "hazeB": 0.9,
+      "hazeSun": 0.08
+    },
+    {
+      "world": 3,
+      "name": "Noria",
+      "haze": 0.2,
+      "hazeR": 0.6,
+      "hazeG": 0.72,
+      "hazeB": 0.62,
+      "groundFog": 0.14,
+      "groundFogHeight": 200.0,
+      "hazeSun": 0.1
     },
     {
       "world": 4,
       "name": "Lost Tower",
-      "sun": 1.0
+      "sun": 1.0,
+      "haze": 0.1,
+      "hazeR": 0.34,
+      "hazeG": 0.28,
+      "hazeB": 0.4,
+      "groundFog": 0.1,
+      "groundFogHeight": 150.0
     },
     {
       "world": 7,
@@ -28,6 +71,17 @@
       "base": 0.8,
       "brightScale": 1.0,
       "figures": 0.8
+    },
+    {
+      "world": 8,
+      "name": "Tarkan",
+      "haze": 0.2,
+      "hazeR": 0.8,
+      "hazeG": 0.66,
+      "hazeB": 0.46,
+      "groundFog": 0.05,
+      "groundFogHeight": 220.0,
+      "hazeSun": 0.15
     },
     {
       "world": 9,
@@ -40,7 +94,12 @@
       "background": 0.7,
       "sun": 0.8,
       "base": 0.7,
-      "brightScale": 0.95
+      "brightScale": 0.95,
+      "haze": 0.16,
+      "hazeR": 0.5,
+      "hazeG": 0.62,
+      "hazeB": 0.86,
+      "hazeSun": 0.1
     },
     {
       "world": 11,
@@ -138,6 +197,28 @@
       "sun": 1.0
     },
     {
+      "world": 33,
+      "name": "Aida",
+      "haze": 0.2,
+      "hazeR": 0.56,
+      "hazeG": 0.68,
+      "hazeB": 0.58,
+      "groundFog": 0.14,
+      "groundFogHeight": 200.0,
+      "hazeSun": 0.1
+    },
+    {
+      "world": 34,
+      "name": "Crywolf",
+      "haze": 0.16,
+      "hazeR": 0.6,
+      "hazeG": 0.64,
+      "hazeB": 0.72,
+      "groundFog": 0.08,
+      "groundFogHeight": 220.0,
+      "hazeSun": 0.08
+    },
+    {
       "world": 36,
       "name": "Lost Kalima",
       "sun": 1.0
@@ -145,12 +226,24 @@
     {
       "world": 37,
       "name": "Kanturu Ruins",
-      "sun": 1.0
+      "sun": 1.0,
+      "haze": 0.14,
+      "hazeR": 0.5,
+      "hazeG": 0.52,
+      "hazeB": 0.56,
+      "groundFog": 0.08,
+      "groundFogHeight": 180.0
     },
     {
       "world": 38,
       "name": "Kanturu Relics",
-      "sun": 1.0
+      "sun": 1.0,
+      "haze": 0.14,
+      "hazeR": 0.5,
+      "hazeG": 0.52,
+      "hazeB": 0.56,
+      "groundFog": 0.08,
+      "groundFogHeight": 180.0
     },
     {
       "world": 39,
@@ -198,6 +291,17 @@
       "sun": 1.0
     },
     {
+      "world": 51,
+      "name": "Elbeland",
+      "haze": 0.18,
+      "hazeR": 0.66,
+      "hazeG": 0.7,
+      "hazeB": 0.8,
+      "groundFog": 0.08,
+      "groundFogHeight": 220.0,
+      "hazeSun": 0.1
+    },
+    {
       "world": 52,
       "name": "Blood Castle 8",
       "sun": 1.0
@@ -210,13 +314,26 @@
     {
       "world": 56,
       "name": "Swamp of Calmness",
-      "sun": 1.0
+      "sun": 1.0,
+      "haze": 0.22,
+      "hazeR": 0.42,
+      "hazeG": 0.52,
+      "hazeB": 0.44,
+      "groundFog": 0.2,
+      "groundFogHeight": 180.0
     },
     {
       "world": 57,
       "name": "Raklion",
       "base": 0.7,
-      "brightScale": 0.95
+      "brightScale": 0.95,
+      "haze": 0.2,
+      "hazeR": 0.7,
+      "hazeG": 0.8,
+      "hazeB": 0.92,
+      "groundFog": 0.06,
+      "groundFogHeight": 220.0,
+      "hazeSun": 0.05
     },
     {
       "world": 58,

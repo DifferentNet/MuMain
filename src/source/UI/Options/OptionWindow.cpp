@@ -18,8 +18,10 @@
 #include "Render/Lighting/DynamicLightsSetting.h"
 #include "Render/Lighting/EnhancedLightingSetting.h"
 #include "Render/Lighting/LightMoodScales.h"
+#include "Render/PostProcessing/HazeSetting.h"
 #include "Render/PostProcessing/PostProcessingSetting.h"
 #include "Render/PostProcessing/SsaoSetting.h"
+#include "Render/Models/WindSway.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "UI/Mobile/ButtonSize.h"
 #include "UI/Mobile/InterfaceMode.h"
@@ -110,6 +112,54 @@ static const wchar_t* SsaoHint(Render::PostProcessing::Ssao::Block block)
         break;
     }
     return I18N::Game::SsaoTooltip;
+}
+
+// The wind strength slider: levels 0..10, 10 % each ([Render] WindStrength is in percent), as SSAO's.
+static int WindStrengthLevel(int percent)
+{
+    return SsaoStrengthLevel(percent);
+}
+
+// The Wind row's hint: why it does not show right now, or what it does.
+static const wchar_t* WindHint(Render::Models::Wind::Block block)
+{
+    using Render::Models::Wind::Block;
+    switch (block)
+    {
+    case Block::NoHdTextures:
+        return I18N::Game::WindLockedHdTextures;
+    case Block::LowPreset:
+        return I18N::Game::WindLockedLowPreset;
+    case Block::None:
+        break;
+    }
+    return I18N::Game::WindTooltip;
+}
+
+// The haze strength slider: levels 0..10, 10 % each ([Render] HazeStrength is in percent), as SSAO's.
+static int HazeStrengthLevel(int percent)
+{
+    return SsaoStrengthLevel(percent);
+}
+
+// The Haze row's hint: why it does not show right now, or what it does.
+static const wchar_t* HazeHint(Render::PostProcessing::Haze::Block block)
+{
+    using Render::PostProcessing::Haze::Block;
+    switch (block)
+    {
+    case Block::NoHdTextures:
+        return I18N::Game::HazeLockedHdTextures;
+    case Block::LowPreset:
+        return I18N::Game::HazeLockedLowPreset;
+    case Block::NeedsEnhanced:
+        return I18N::Game::HazeLockedEnhanced;
+    case Block::AfterRestart:
+        return I18N::Game::HazeAfterRestart;
+    case Block::None:
+        break;
+    }
+    return I18N::Game::HazeTooltip;
 }
 
 // The custom dropdowns' ids, 0 .. kLastDropdownId (see RmlToggleDropdown()).
@@ -600,6 +650,28 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("ssao_strength", &model.ssaoStrength);
     c.Bind("ssao_strength_percent", &model.ssaoStrengthPercent);
     c.Bind("ssao_strength_label", &model.ssaoStrengthLabel);
+    // Wind: the Remaster PC client's, as SSAO's.
+    model.windAvailable = Render::Models::Wind::Available() && Render::Look::RemasterGraphicsOptions();
+    c.Bind("wind_available", &model.windAvailable);
+    c.Bind("wind", &model.wind);
+    c.Bind("wind_locked", &model.windLocked);
+    c.Bind("wind_label", &model.windLabel);
+    c.Bind("wind_tooltip", &model.windTooltip);
+    c.Bind("wind_strength_shown", &model.windStrengthShown);
+    c.Bind("wind_strength", &model.windStrength);
+    c.Bind("wind_strength_percent", &model.windStrengthPercent);
+    c.Bind("wind_strength_label", &model.windStrengthLabel);
+    // Haze: the Remaster PC client's, as SSAO's.
+    model.hazeAvailable = Render::PostProcessing::Haze::Available() && Render::Look::RemasterGraphicsOptions();
+    c.Bind("haze_available", &model.hazeAvailable);
+    c.Bind("haze", &model.haze);
+    c.Bind("haze_locked", &model.hazeLocked);
+    c.Bind("haze_label", &model.hazeLabel);
+    c.Bind("haze_tooltip", &model.hazeTooltip);
+    c.Bind("haze_strength_shown", &model.hazeStrengthShown);
+    c.Bind("haze_strength", &model.hazeStrength);
+    c.Bind("haze_strength_percent", &model.hazeStrengthPercent);
+    c.Bind("haze_strength_label", &model.hazeStrengthLabel);
     // The preset, FXAA and sharpening rows: the Remaster client's (and the browser's), not the Classic one's.
     model.remasterGraphics = Render::Look::RemasterGraphicsOptions();
     c.Bind("remaster_graphics", &model.remasterGraphics);
@@ -720,6 +792,10 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleHdTextures(); });
     c.BindEventCallback("option_toggle_ssao",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleSsao(); });
+    c.BindEventCallback("option_toggle_wind",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleWind(); });
+    c.BindEventCallback("option_toggle_haze",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleHaze(); });
     c.BindEventCallback("option_toggle_vsync",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleVsync(); });
 
@@ -1192,6 +1268,20 @@ void mu::ui::window::COptionWindow::RmlGaugeEvent(Rml::Event& event, int gauge)
                 event, SsaoStrengthLevel(GameConfig::GetInstance().GetSsaoStrength()), kSsaoStrengthLevels,
                 volumeFromPointer))
             RmlSsaoStrengthChanged(*next);
+        break;
+    case 4:
+        // The wind strength, as the SSAO strength.
+        if (const auto next = UI::RmlBridge::ApplyLevelGaugeEvent(
+                event, WindStrengthLevel(GameConfig::GetInstance().GetWindStrength()), kSsaoStrengthLevels,
+                volumeFromPointer))
+            RmlWindStrengthChanged(*next);
+        break;
+    case 5:
+        // The haze strength, as the SSAO strength.
+        if (const auto next = UI::RmlBridge::ApplyLevelGaugeEvent(
+                event, HazeStrengthLevel(GameConfig::GetInstance().GetHazeStrength()), kSsaoStrengthLevels,
+                volumeFromPointer))
+            RmlHazeStrengthChanged(*next);
         break;
     default:
         break;
@@ -1681,6 +1771,146 @@ void mu::ui::window::COptionWindow::SyncSsaoRows(OptionRmlModel& model)
     syncText(model.ssaoLabel, "ssao_label", I18N::Game::SsaoRow);
     syncText(model.ssaoTooltip, "ssao_tooltip", SsaoHint(block));
     syncText(model.ssaoStrengthLabel, "ssao_strength_label", I18N::Game::SsaoStrengthRow);
+}
+
+// A locked row ignores clicks (Wind::Block): its saved choice is kept for when the wind can show.
+void mu::ui::window::COptionWindow::RmlToggleWind()
+{
+    namespace Wind = Render::Models::Wind;
+    if (!m_RmlView.GetModel().windAvailable || Wind::Locks(Wind::CurrentBlock()))
+        return;
+    const GameConfig& config = GameConfig::GetInstance();
+    Wind::Choose(config.GetWind() == 0, config.GetWindStrength());
+}
+
+// The slider shows only while the wind is on and the row not locked (SyncWindRows()).
+void mu::ui::window::COptionWindow::RmlWindStrengthChanged(int level)
+{
+    namespace Wind = Render::Models::Wind;
+    const GameConfig& config = GameConfig::GetInstance();
+    if (!m_RmlView.GetModel().windAvailable || config.GetWind() == 0 || Wind::Locks(Wind::CurrentBlock()))
+        return;
+    const int percent = std::clamp(level, 0, kSsaoStrengthLevels) * kSsaoPercentPerLevel;
+    if (percent == config.GetWindStrength())
+        return;
+    Wind::Choose(true, percent);
+}
+
+void mu::ui::window::COptionWindow::SyncWindRows(OptionRmlModel& model)
+{
+    const auto syncFlag = [this](bool& field, const char* name, bool value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncInt = [this](int& field, const char* name, int value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncText = [this](Rml::String& field, const char* name, const wchar_t* text)
+    {
+        const Rml::String narrow = StringUtils::WideToNarrow(text);
+        if (field != narrow)
+        {
+            field = narrow;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    if (!model.windAvailable)
+        return;
+    namespace Wind = Render::Models::Wind;
+    // Pushed again every sync: a graphics preset switched to or from Low here turns the wind off or
+    // on at once (it logs only a change).
+    Wind::ApplyFromConfig();
+    const GameConfig& config = GameConfig::GetInstance();
+    const Wind::Block block = Wind::CurrentBlock();
+    const bool locked = Wind::Locks(block);
+    const bool on = config.GetWind() != 0;
+    syncFlag(model.windLocked, "wind_locked", locked);
+    syncFlag(model.wind, "wind", on);
+    syncFlag(model.windStrengthShown, "wind_strength_shown", on && !locked);
+    syncInt(model.windStrength, "wind_strength", WindStrengthLevel(config.GetWindStrength()));
+    syncInt(model.windStrengthPercent, "wind_strength_percent", config.GetWindStrength());
+    syncText(model.windLabel, "wind_label", I18N::Game::WindRow);
+    syncText(model.windTooltip, "wind_tooltip", WindHint(block));
+    syncText(model.windStrengthLabel, "wind_strength_label", I18N::Game::WindStrengthRow);
+}
+
+// A locked row ignores clicks (Haze::Block): its saved choice is kept for when the haze can show.
+void mu::ui::window::COptionWindow::RmlToggleHaze()
+{
+    namespace Haze = Render::PostProcessing::Haze;
+    if (!m_RmlView.GetModel().hazeAvailable || Haze::Locks(Haze::CurrentBlock()))
+        return;
+    const GameConfig& config = GameConfig::GetInstance();
+    Haze::Choose(config.GetHaze() == 0, config.GetHazeStrength());
+}
+
+// The slider shows only while the haze is on and the row not locked (SyncHazeRows()).
+void mu::ui::window::COptionWindow::RmlHazeStrengthChanged(int level)
+{
+    namespace Haze = Render::PostProcessing::Haze;
+    const GameConfig& config = GameConfig::GetInstance();
+    if (!m_RmlView.GetModel().hazeAvailable || config.GetHaze() == 0 || Haze::Locks(Haze::CurrentBlock()))
+        return;
+    const int percent = std::clamp(level, 0, kSsaoStrengthLevels) * kSsaoPercentPerLevel;
+    if (percent == config.GetHazeStrength())
+        return;
+    Haze::Choose(true, percent);
+}
+
+void mu::ui::window::COptionWindow::SyncHazeRows(OptionRmlModel& model)
+{
+    const auto syncFlag = [this](bool& field, const char* name, bool value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncInt = [this](int& field, const char* name, int value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncText = [this](Rml::String& field, const char* name, const wchar_t* text)
+    {
+        const Rml::String narrow = StringUtils::WideToNarrow(text);
+        if (field != narrow)
+        {
+            field = narrow;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    if (!model.hazeAvailable)
+        return;
+    namespace Haze = Render::PostProcessing::Haze;
+    // Pushed again every sync: a graphics preset switched to or from Low here turns the haze off or
+    // on at once (it logs only a change).
+    Haze::ApplyFromConfig();
+    const GameConfig& config = GameConfig::GetInstance();
+    const Haze::Block block = Haze::CurrentBlock();
+    const bool locked = Haze::Locks(block);
+    const bool on = config.GetHaze() != 0;
+    syncFlag(model.hazeLocked, "haze_locked", locked);
+    syncFlag(model.haze, "haze", on);
+    syncFlag(model.hazeStrengthShown, "haze_strength_shown", on && !locked);
+    syncInt(model.hazeStrength, "haze_strength", HazeStrengthLevel(config.GetHazeStrength()));
+    syncInt(model.hazeStrengthPercent, "haze_strength_percent", config.GetHazeStrength());
+    syncText(model.hazeLabel, "haze_label", I18N::Game::HazeRow);
+    syncText(model.hazeTooltip, "haze_tooltip", HazeHint(block));
+    syncText(model.hazeStrengthLabel, "haze_strength_label", I18N::Game::HazeStrengthRow);
 }
 
 void mu::ui::window::COptionWindow::RmlToggleShowFpsCounter()
@@ -2435,6 +2665,8 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
         }
     }
     SyncSsaoRows(model);
+    SyncWindRows(model);
+    SyncHazeRows(model);
     // Rebuilt every sync for a live language switch, as the rows above.
     syncMultiplierRow(model.interfaceViewLabels, "interface_view_labels", model.interfaceViewIndex,
                       "interface_view_index", model.interfaceViewValueLabel, "interface_view_value_label",

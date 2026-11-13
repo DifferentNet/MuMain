@@ -17,6 +17,8 @@
 #include "GameLogic/Automation/Skill.h"
 #include "GameLogic/Combat/DuelMgr.h"
 #include "GameLogic/Combat/SkillExecution.h"
+#include "GameLogic/Items/LootFilterRuntime.h"
+#include "GameLogic/Touch/DirectionPick.h"
 #include "GameLogic/Pets/GIPetManager.h"
 #include "GameLogic/Skills/SkillManager.h"
 #include "GameLogic/Social/PartyManager.h"
@@ -528,17 +530,24 @@ int TargetToFight()
     if (IsGoodTarget(FindByKey(g_targetKey), true))
         return g_targetKey;
 
+    // The pad's walk tilts the choice its way: a foe ahead beats one as near behind (pad round 3,
+    // 2026-11-13). Touch and the mouse keep the plain nearest.
+    const bool tilts = g_padPlaysWorld && IsSteering() && g_steering.active;
     int nearestKey = NoTarget;
-    int nearestTiles = TargetRange + 1;
+    float nearestScore = static_cast<float>(TargetRange) * 3.f;
     for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
     {
         const CHARACTER* character = &CharactersClient[i];
         if (!IsGoodTarget(character, false))
             continue;
-        const int tiles = TilesTo(character);
-        if (tiles < nearestTiles)
+        const float tiles = static_cast<float>(TilesTo(character));
+        const float score = tilts ? DirectionPick::Biased(tiles, character->Object.Position[0] - Hero->Object.Position[0],
+                                                          character->Object.Position[1] - Hero->Object.Position[1],
+                                                          g_steering.dirX, g_steering.dirY)
+                                  : tiles;
+        if (score < nearestScore)
         {
-            nearestTiles = tiles;
+            nearestScore = score;
             nearestKey = character->Key;
         }
     }
@@ -1012,7 +1021,7 @@ bool IsSkipped(int drop)
     if (it == g_skippedDrops.end())
         return false;
     // Kept past its time, to count the asks for the same drop; another drop in the slot starts anew.
-    const ITEM_t& item = Items[drop];
+    const ITEM_t& item = ::Items[drop];
     const SkippedDrop& skipped = it->second;
     return Clock::now() < skipped.until && skipped.type == item.Item.Type &&
            skipped.tileX == TileOf(item.Object.Position[0]) && skipped.tileY == TileOf(item.Object.Position[1]);
@@ -1020,7 +1029,7 @@ bool IsSkipped(int drop)
 
 void Skip(int drop, Clock::duration time, bool asked)
 {
-    const ITEM_t& item = Items[drop];
+    const ITEM_t& item = ::Items[drop];
     const int type = item.Item.Type;
     const int tileX = TileOf(item.Object.Position[0]);
     const int tileY = TileOf(item.Object.Position[1]);
@@ -1055,12 +1064,13 @@ void ForgetGoneDrops()
 {
     for (int i = 0; i < MAX_ITEMS; ++i)
     {
-        if (!Items[i].Object.Live)
+        if (!::Items[i].Object.Live)
             g_skippedDrops.erase(i);
     }
 }
 
-// The nearest drop within reach that fits the bag and was not passed over, NoDrop for none; `unfit`
+// The nearest drop within reach that fits the bag, was not passed over and is not hidden by the loot filter
+// (a hidden one is junk to the player: the pointer or a tap on it still takes it), NoDrop for none; `unfit`
 // says whether a nearer one did not fit.
 int NearestFittingDrop(bool* unfit)
 {
@@ -1068,8 +1078,8 @@ int NearestFittingDrop(bool* unfit)
     int nearestTiles = PickupRange + 1;
     for (int i = 0; i < MAX_ITEMS; ++i)
     {
-        ITEM_t& drop = Items[i];
-        if (!drop.Object.Live || IsSkipped(i))
+        ITEM_t& drop = ::Items[i];
+        if (!drop.Object.Live || IsSkipped(i) || GameLogic::Items::LootFilterRuntime::IsHidden(i))
             continue;
         const int dx = Hero->PositionX - TileOf(drop.Object.Position[0]);
         const int dy = Hero->PositionY - TileOf(drop.Object.Position[1]);
@@ -1374,7 +1384,7 @@ Progress PickUpNearest()
         return NothingToDo();
     }
 
-    const OBJECT& dropObject = Items[nearest].Object;
+    const OBJECT& dropObject = ::Items[nearest].Object;
     const bool inReach =
         HeroWithin(TileOf(dropObject.Position[0]), TileOf(dropObject.Position[1]), Automation::PickupReach);
     // While the joystick walks, the button takes what is in reach.
@@ -1552,6 +1562,64 @@ bool CycleTarget(int step)
     return true;
 }
 
+bool CycleTargetToward(float screenX, float screenY, bool again)
+{
+    if (!InWorld())
+        return false;
+    float dirX = 0.f;
+    float dirY = 0.f;
+    if (!ScreenToMap(screenX, screenY, dirX, dirY))
+        return false;
+    const auto tileOf = [](const CHARACTER* character) {
+        return DirectionPick::Candidate{character->Key, character->Object.Position[0] / TERRAIN_SCALE,
+                                        character->Object.Position[1] / TERRAIN_SCALE};
+    };
+    std::vector<DirectionPick::Candidate> candidates;
+    for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
+    {
+        if (IsGoodTarget(&CharactersClient[i], g_forceAttack))
+            candidates.push_back(tileOf(&CharactersClient[i]));
+    }
+    // No foe near (a town): the NPCs and the other players around, to talk to or to trade with.
+    const bool foes = !candidates.empty();
+    if (!foes)
+    {
+        for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
+        {
+            if (IsGoodMeet(&CharactersClient[i]))
+                candidates.push_back(tileOf(&CharactersClient[i]));
+        }
+    }
+    if (candidates.empty())
+        return false;
+    // From the one lit, as a d-pad steps from a button; from the hero with none lit.
+    int from = foes ? LitKey() : (MeetIndex() >= 0 ? g_meetKey : NoTarget);
+    const auto lit = std::find_if(candidates.begin(), candidates.end(), [from](const auto& c) { return c.key == from; });
+    float originX = Hero->Object.Position[0] / TERRAIN_SCALE;
+    float originY = Hero->Object.Position[1] / TERRAIN_SCALE;
+    if (lit != candidates.end())
+    {
+        originX = lit->x;
+        originY = lit->y;
+    }
+    else
+        from = NoTarget;
+    const int key = DirectionPick::Pick(candidates, originX, originY, dirX, dirY, from, !again || from == NoTarget);
+    if (key == DirectionPick::NoKey)
+        return false;
+    if (foes)
+    {
+        g_meetKey = NoTarget;
+        g_chosenKey = g_targetKey = key;
+    }
+    else
+    {
+        g_meetKey = key;
+        g_chosenKey = NoTarget;
+    }
+    return true;
+}
+
 bool NextFoe()
 {
     if (!InWorld() || !HasOtherFoe())
@@ -1579,6 +1647,26 @@ bool HasOtherFoe()
         const CHARACTER* character = &CharactersClient[i];
         s_found = character->Key != lit && IsGoodTarget(character, g_forceAttack);
     }
+    return s_found;
+}
+
+bool HasFoeNear()
+{
+    if (!InWorld())
+        return false;
+    // The one chosen or fought last counts as A fights it (TargetToFight): a player too.
+    if (IsGoodTarget(FindByKey(g_chosenKey), true) || IsGoodTarget(FindByKey(g_targetKey), true))
+        return true;
+    // Asked every frame for the prompt's glyph: five scans a second, as HasOtherFoe.
+    static Clock::time_point s_checkedAt{};
+    static bool s_found = false;
+    const Clock::time_point now = Clock::now();
+    if (now - s_checkedAt < std::chrono::milliseconds(200))
+        return s_found;
+    s_checkedAt = now;
+    s_found = false;
+    for (int i = 0; i < MAX_CHARACTERS_CLIENT && !s_found; ++i)
+        s_found = IsGoodTarget(&CharactersClient[i], g_forceAttack);
     return s_found;
 }
 
@@ -1641,9 +1729,9 @@ int NearestDropToPick()
 
 bool DropOnScreen(int index, float& x, float& y)
 {
-    if (index < 0 || index >= MAX_ITEMS || !Items[index].Object.Live)
+    if (index < 0 || index >= MAX_ITEMS || !::Items[index].Object.Live)
         return false;
-    return CameraProjection::WorldToWindowPixel(g_Camera, Items[index].Object.Position, &x, &y);
+    return CameraProjection::WorldToWindowPixel(g_Camera, ::Items[index].Object.Position, &x, &y);
 }
 
 int NearestNpc(int tiles)
