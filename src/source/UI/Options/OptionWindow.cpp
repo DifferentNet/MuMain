@@ -19,6 +19,7 @@
 #include "Render/Lighting/EnhancedLightingSetting.h"
 #include "Render/Lighting/LightMoodScales.h"
 #include "Render/PostProcessing/PostProcessingSetting.h"
+#include "Render/PostProcessing/SsaoSetting.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "UI/Mobile/ButtonSize.h"
 #include "UI/Mobile/InterfaceMode.h"
@@ -81,6 +82,36 @@ using namespace mu::ui::window;
 // resolution/language/font <select> change callbacks are ignored -- see m_rmlSyncCount's own
 // comment in OptionWindow.h.
 static constexpr int kRmlSelectSettleFrames = 5;
+// The SSAO strength slider: levels 0..10, 10 % each ([Render] SsaoStrength is in percent).
+static constexpr int kSsaoStrengthLevels = 10;
+static constexpr int kSsaoPercentPerLevel = 10;
+
+static int SsaoStrengthLevel(int percent)
+{
+    return std::clamp(static_cast<int>(std::lround(static_cast<double>(percent) / kSsaoPercentPerLevel)), 0,
+                      kSsaoStrengthLevels);
+}
+
+// The SSAO row's hint: why it does not show right now, or what it does.
+static const wchar_t* SsaoHint(Render::PostProcessing::Ssao::Block block)
+{
+    using Render::PostProcessing::Ssao::Block;
+    switch (block)
+    {
+    case Block::NoHdTextures:
+        return I18N::Game::SsaoLockedHdTextures;
+    case Block::LowPreset:
+        return I18N::Game::SsaoLockedLowPreset;
+    case Block::NeedsEnhanced:
+        return I18N::Game::SsaoLockedEnhanced;
+    case Block::AfterRestart:
+        return I18N::Game::SsaoAfterRestart;
+    case Block::None:
+        break;
+    }
+    return I18N::Game::SsaoTooltip;
+}
+
 // The custom dropdowns' ids, 0 .. kLastDropdownId (see RmlToggleDropdown()).
 static constexpr int kInterfaceViewDropdown = 8;
 static constexpr int kControlsDropdown = 9;
@@ -558,6 +589,17 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     model.sunShadowsAvailable = Render::Look::RemasterGraphicsOptions();
 #endif
     c.Bind("sun_shadows_available", &model.sunShadowsAvailable);
+    // SSAO: the Remaster PC client's (the browser build cannot draw it, the Classic client has no HD textures).
+    model.ssaoAvailable = Render::PostProcessing::Ssao::Available() && Render::Look::RemasterGraphicsOptions();
+    c.Bind("ssao_available", &model.ssaoAvailable);
+    c.Bind("ssao", &model.ssao);
+    c.Bind("ssao_locked", &model.ssaoLocked);
+    c.Bind("ssao_label", &model.ssaoLabel);
+    c.Bind("ssao_tooltip", &model.ssaoTooltip);
+    c.Bind("ssao_strength_shown", &model.ssaoStrengthShown);
+    c.Bind("ssao_strength", &model.ssaoStrength);
+    c.Bind("ssao_strength_percent", &model.ssaoStrengthPercent);
+    c.Bind("ssao_strength_label", &model.ssaoStrengthLabel);
     // The preset, FXAA and sharpening rows: the Remaster client's (and the browser's), not the Classic one's.
     model.remasterGraphics = Render::Look::RemasterGraphicsOptions();
     c.Bind("remaster_graphics", &model.remasterGraphics);
@@ -676,6 +718,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleFxaa(); });
     c.BindEventCallback("option_toggle_hd_textures",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleHdTextures(); });
+    c.BindEventCallback("option_toggle_ssao",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleSsao(); });
     c.BindEventCallback("option_toggle_vsync",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleVsync(); });
 
@@ -1142,6 +1186,13 @@ void mu::ui::window::COptionWindow::RmlGaugeEvent(Rml::Event& event, int gauge)
         if (const auto next = UI::RmlBridge::ApplyLevelGaugeEvent(event, m_iRenderLevel, 4, renderFromPointer))
             RmlRenderLevelChanged(*next);
         break;
+    case 3:
+        // The SSAO strength rounds to the nearest of 0..10 like the volume bars, a level per 10 %.
+        if (const auto next = UI::RmlBridge::ApplyLevelGaugeEvent(
+                event, SsaoStrengthLevel(GameConfig::GetInstance().GetSsaoStrength()), kSsaoStrengthLevels,
+                volumeFromPointer))
+            RmlSsaoStrengthChanged(*next);
+        break;
     default:
         break;
     }
@@ -1560,6 +1611,76 @@ void mu::ui::window::COptionWindow::RmlSunShadowsChanged(int index)
     GameConfig::GetInstance().SetSunShadows(s_SunShadowsValues[index]);
     Render::Lighting::SunShadow::SetLevel(GameConfig::GetInstance().GetSunShadows());
     Render::Look::RefreshGraphicsPreset();
+}
+
+// A locked row ignores clicks (Ssao::Block): its saved choice is kept for when SSAO can show.
+void mu::ui::window::COptionWindow::RmlToggleSsao()
+{
+    namespace Ssao = Render::PostProcessing::Ssao;
+    if (!m_RmlView.GetModel().ssaoAvailable || Ssao::Locks(Ssao::CurrentBlock()))
+        return;
+    const GameConfig& config = GameConfig::GetInstance();
+    Render::PostProcessing::Ssao::Choose(config.GetSsao() == 0, config.GetSsaoStrength());
+}
+
+// The slider shows only while SSAO is on and the row not locked (SyncSsaoRows()).
+void mu::ui::window::COptionWindow::RmlSsaoStrengthChanged(int level)
+{
+    namespace Ssao = Render::PostProcessing::Ssao;
+    const GameConfig& config = GameConfig::GetInstance();
+    if (!m_RmlView.GetModel().ssaoAvailable || config.GetSsao() == 0 || Ssao::Locks(Ssao::CurrentBlock()))
+        return;
+    const int percent = std::clamp(level, 0, kSsaoStrengthLevels) * kSsaoPercentPerLevel;
+    if (percent == config.GetSsaoStrength())
+        return;
+    Ssao::Choose(true, percent);
+}
+
+void mu::ui::window::COptionWindow::SyncSsaoRows(OptionRmlModel& model)
+{
+    const auto syncFlag = [this](bool& field, const char* name, bool value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncInt = [this](int& field, const char* name, int value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncText = [this](Rml::String& field, const char* name, const wchar_t* text)
+    {
+        const Rml::String narrow = StringUtils::WideToNarrow(text);
+        if (field != narrow)
+        {
+            field = narrow;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    if (!model.ssaoAvailable)
+        return;
+    namespace Ssao = Render::PostProcessing::Ssao;
+    // Pushed again every sync: a graphics preset switched to or from Low here turns SSAO off or on
+    // at once (it logs only a change).
+    Ssao::ApplyFromConfig();
+    const GameConfig& config = GameConfig::GetInstance();
+    const Ssao::Block block = Ssao::CurrentBlock();
+    const bool locked = Ssao::Locks(block);
+    const bool on = config.GetSsao() != 0;
+    syncFlag(model.ssaoLocked, "ssao_locked", locked);
+    syncFlag(model.ssao, "ssao", on);
+    syncFlag(model.ssaoStrengthShown, "ssao_strength_shown", on && !locked);
+    syncInt(model.ssaoStrength, "ssao_strength", SsaoStrengthLevel(config.GetSsaoStrength()));
+    syncInt(model.ssaoStrengthPercent, "ssao_strength_percent", config.GetSsaoStrength());
+    syncText(model.ssaoLabel, "ssao_label", I18N::Game::SsaoRow);
+    syncText(model.ssaoTooltip, "ssao_tooltip", SsaoHint(block));
+    syncText(model.ssaoStrengthLabel, "ssao_strength_label", I18N::Game::SsaoStrengthRow);
 }
 
 void mu::ui::window::COptionWindow::RmlToggleShowFpsCounter()
@@ -2313,6 +2434,7 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
             m_RmlView.MarkDirty("hd_texture_size_available");
         }
     }
+    SyncSsaoRows(model);
     // Rebuilt every sync for a live language switch, as the rows above.
     syncMultiplierRow(model.interfaceViewLabels, "interface_view_labels", model.interfaceViewIndex,
                       "interface_view_index", model.interfaceViewValueLabel, "interface_view_value_label",

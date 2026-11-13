@@ -242,9 +242,11 @@ public:
     int GetTerrainWaterStrength() const { return m_terrainWaterStrength; }
     // [Render] Ssao: with HD textures on, soft contact shadows in creases and where models meet the
     // ground (Render/PostProcessing/SsaoSetting.h; Enhanced lighting and post-processing), 0 off, 1 on;
-    // SsaoStrength in percent (both clamped; after a restart).
+    // SsaoStrength in percent (both clamped; Options > Graphics applies them at once).
     int GetSsao() const { return m_ssao; }
     int GetSsaoStrength() const { return m_ssaoStrength; }
+    void SetSsao(int ssao);
+    void SetSsaoStrength(int percent);
     // [Render] SunShadows: 0 off, 1 medium, 2 high (clamped).
     int GetSunShadows() const { return m_sunShadows; }
     void SetSunShadows(int level);

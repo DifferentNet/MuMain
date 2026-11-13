@@ -109,6 +109,12 @@ window writes to these sections:
     build only (the desktop hides it). Blurs the body shadows; greyed out and
     off when no body shadow is drawn. `$softshadow <strength%> <levels>` tunes
     it for the session (0.65 and 1 by default). Cape and cloth shadows stay hard.
+  - `Ssao` and `SsaoStrength` (defaults `1` and `100`): the **SSAO (contact shadows)** row and the
+    SSAO strength slider under it (0 to 100 % in steps of 10, shown while SSAO is on), Remaster PC
+    client only (the browser and Classic clients hide them). Both apply at once. The row is greyed
+    out, its hint saying why, without HD textures, on the Low graphics preset, and without Enhanced
+    lighting and Bloom and colour grading; when SSAO was off as the game started, turning it on
+    takes effect after a restart (the hint says so). See [`enhanced-look.md`](enhanced-look.md).
 
   Set by hand only, never written by the game:
   - `Backend` (`default`/`vulkan`/`direct3d12`/`metal`, case-insensitive,

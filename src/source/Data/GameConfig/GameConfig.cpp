@@ -413,6 +413,16 @@ void GameConfig::SetSunShadows(int level)
     m_sunShadows = GameConfigValidation::ValidateSunShadows(level);
 }
 
+void GameConfig::SetSsao(int ssao)
+{
+    m_ssao = std::clamp(ssao, CfgDefaults::CfgMinSsao, CfgDefaults::CfgMaxSsao);
+}
+
+void GameConfig::SetSsaoStrength(int percent)
+{
+    m_ssaoStrength = std::clamp(percent, CfgDefaults::CfgMinSsaoStrength, CfgDefaults::CfgMaxSsaoStrength);
+}
+
 void GameConfig::SetAntialiasing(int samples)
 {
     m_antialiasing = GameConfigValidation::ValidateAntialiasing(samples);

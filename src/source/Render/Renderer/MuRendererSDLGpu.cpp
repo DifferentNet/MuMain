@@ -703,6 +703,10 @@ void SetSsaoSettings(float strength)
 {
     s_ssaoStrength = std::clamp(strength, 0.0f, 1.0f);
 }
+bool HasSsaoPipelines()
+{
+    return !s_ssaoDepthPipelines.empty();
+}
 static bool s_postProcessingEnabled = false;
 static mu::PostProcessingLook s_postProcessingLook{};
 static mu::PostProcessingView s_postProcessingView = mu::PostProcessingView::Scene;
@@ -3634,8 +3638,9 @@ public:
             renderPassCompleted = ReplayFrame(frameColorTexture, boneDataReady);
         }
 
-        // Classic lighting or no post-processing: no SSAO until they come back, so neither its targets.
-        if (s_ssaoStrength > 0.0f && (!IsPostProcessingActive() || !UsesEnhancedLighting()))
+        // SSAO off (Options, strength 0, the Low preset), Classic lighting or no post-processing: no SSAO until it
+        // comes back, so neither its targets (ReleaseTargets() does nothing when none are allocated).
+        if (s_ssaoStrength <= 0.0f || !IsPostProcessingActive() || !UsesEnhancedLighting())
         {
             s_ssao.ReleaseTargets();
         }

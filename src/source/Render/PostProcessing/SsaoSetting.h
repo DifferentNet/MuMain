@@ -9,6 +9,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cstdint>
 
 namespace Render::PostProcessing::Ssao
 {
@@ -63,9 +64,59 @@ struct FadeRange
     return {farDistance * kNoFogFadeStart, farDistance};
 }
 
+// Why it does not show right now (the Options window's SSAO row).
+enum class Block : std::uint8_t
+{
+    None,
+    // HD textures are off in this session (they switch on with the next start).
+    NoHdTextures,
+    // The Low graphics preset keeps it off.
+    LowPreset,
+    // It needs Enhanced lighting and post-processing, both drawn.
+    NeedsEnhanced,
+    // The renderer built no SSAO this session (it was off when the game started, or its pipelines
+    // were rebuilt while it was off): turning it on takes effect after a restart.
+    AfterRestart,
+};
+
+// The first reason that applies, in the order of Block. NoHdTextures, LowPreset and NeedsEnhanced
+// lock the Options row; AfterRestart only explains it.
+[[nodiscard]] inline Block ResolveBlock(bool hdTextures, bool lowPreset, bool enhancedActive, bool drawable)
+{
+    if (!hdTextures)
+    {
+        return Block::NoHdTextures;
+    }
+    if (lowPreset)
+    {
+        return Block::LowPreset;
+    }
+    if (!enhancedActive)
+    {
+        return Block::NeedsEnhanced;
+    }
+    if (!drawable)
+    {
+        return Block::AfterRestart;
+    }
+    return Block::None;
+}
+
+// Whether a reason locks the Options row (AfterRestart leaves it to switch).
+[[nodiscard]] inline bool Locks(Block block)
+{
+    return block != Block::None && block != Block::AfterRestart;
+}
+
 // Whether this build can draw it (desktop only).
 [[nodiscard]] bool Available();
-// The [Render] Ssao settings, at start-up once the graphics preset and HD textures are known.
+// The [Render] Ssao settings, at start-up once the graphics preset and HD textures are known, and
+// again by the Options window (a change of graphics preset). Logs only when the strength changes.
 void ApplyFromConfig();
+// Why it does not show right now, from the session's HD textures, graphics preset, Enhanced
+// features and renderer.
+[[nodiscard]] Block CurrentBlock();
+// Saves [Render] Ssao and SsaoStrength (Options > Graphics) and applies them at once.
+void Choose(bool enabled, int strengthPercent);
 
 } // namespace Render::PostProcessing::Ssao

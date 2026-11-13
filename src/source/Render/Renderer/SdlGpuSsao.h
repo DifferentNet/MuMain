@@ -15,6 +15,9 @@ namespace mu
 
 // Strength 0..1 (0 = off: nothing is allocated or drawn). [Render] Ssao, SsaoStrength.
 void SetSsaoSettings(float strength);
+// True when this session's renderer can draw it: its pipelines exist only when it was on as they
+// were built (start-up, a change of anti-aliasing).
+[[nodiscard]] bool HasSsaoPipelines();
 
 // Mirrors SsaoUniforms in post_ssao.frag, post_ssao_blur.frag and post_ssao_apply.frag.
 struct SdlGpuSsaoUniform

@@ -15994,6 +15994,27 @@
   <data name="SoftShadowsRow" xml:space="preserve">
     <value>Мягкие тени</value>
   </data>
+  <data name="SsaoRow" xml:space="preserve">
+    <value>SSAO (контактные тени)</value>
+  </data>
+  <data name="SsaoTooltip" xml:space="preserve">
+    <value>Мягкие тени в складках, в углах и там, где модели касаются земли.</value>
+  </data>
+  <data name="SsaoStrengthRow" xml:space="preserve">
+    <value>Сила SSAO</value>
+  </data>
+  <data name="SsaoLockedHdTextures" xml:space="preserve">
+    <value>Нужны HD-текстуры.</value>
+  </data>
+  <data name="SsaoLockedLowPreset" xml:space="preserve">
+    <value>Выключено на пресете графики «Низкий».</value>
+  </data>
+  <data name="SsaoLockedEnhanced" xml:space="preserve">
+    <value>Нужны Enhanced graphics с Enhanced lighting и Bloom and colour grading.</value>
+  </data>
+  <data name="SsaoAfterRestart" xml:space="preserve">
+    <value>Включение заработает после перезапуска.</value>
+  </data>
   <data name="BagPageLocked" xml:space="preserve">
     <value>Страница 2 закрыта</value>
   </data>

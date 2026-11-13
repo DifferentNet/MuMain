@@ -10,6 +10,7 @@
 #include "Render/Look/LookPresetSetting.h"
 #include "Render/Models/ModelSmoothing.h"
 #include "Render/PostProcessing/ScreenFilterSetting.h"
+#include "Render/PostProcessing/SsaoSetting.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "Render/Textures/HdTextureSize.h"
 #include "Render/Textures/HdTextures.h"
@@ -141,6 +142,9 @@ void ApplyGraphicsPreset(GraphicsPreset preset)
                                     settings.postProcessing});
     ApplyScreenFilters();
     config.SetGraphicsPreset(preset);
+    // SSAO's strength before the next frame rebuilds the pipelines for the new anti-aliasing: Low pushes 0, and a
+    // rebuild at 0 builds no SSAO pipelines, so leaving Low again would keep it off until a restart.
+    Render::PostProcessing::Ssao::ApplyFromConfig();
     config.Save();
     mu::log::Get("render")->info("Graphics preset {}", PresetName(preset));
 }
