@@ -251,6 +251,18 @@ mu_add_test(
         test_gpu_skinning_path.cpp
 )
 
+# Torch light on the ground: strength, locks, the selected map lights, the shader block, the share grid
+# and the vertex colour's removable part.
+mu_add_test(
+    NAME torch_lights_tests
+    SOURCES
+        test_torch_lights.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Terrain/TorchLights.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Terrain/TerrainLightGrid.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Lighting/DynamicLightHistory.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Lighting/DynamicLightList.cpp
+)
+
 mu_add_test(
     NAME dynamic_lights_tests
     SOURCES

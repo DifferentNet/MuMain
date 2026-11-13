@@ -11652,6 +11652,24 @@
   <data name="ParticlesLockedLowPreset" xml:space="preserve">
     <value>Off on the Low graphics preset.</value>
   </data>
+  <data name="TorchLightsRow" xml:space="preserve">
+    <value>地面の松明の光</value>
+  </data>
+  <data name="TorchLightsTooltip" xml:space="preserve">
+    <value>松明、ランプ、焚き火が地面に柔らかく丸い光を落とします。キャラクター、モンスター、装備の照明はこれまでどおりです。</value>
+  </data>
+  <data name="TorchLightsStrengthRow" xml:space="preserve">
+    <value>松明の光の強さ</value>
+  </data>
+  <data name="TorchLightsLockedHdTextures" xml:space="preserve">
+    <value>HDテクスチャが必要です。</value>
+  </data>
+  <data name="TorchLightsLockedLowPreset" xml:space="preserve">
+    <value>グラフィックプリセット「低」ではオフです。</value>
+  </data>
+  <data name="TorchLightsLockedLighting" xml:space="preserve">
+    <value>Enhanced lighting と Dynamic lights が必要です。</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>強いモンスター優先</value>

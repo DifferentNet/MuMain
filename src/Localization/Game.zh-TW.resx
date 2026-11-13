@@ -13577,6 +13577,24 @@
   <data name="ParticlesLockedLowPreset" xml:space="preserve">
     <value>Off on the Low graphics preset.</value>
   </data>
+  <data name="TorchLightsRow" xml:space="preserve">
+    <value>地面火把光</value>
+  </data>
+  <data name="TorchLightsTooltip" xml:space="preserve">
+    <value>火把、燈火與營火會在地面投下柔和的圓形光暈。角色、怪物與裝備的照明維持不變。</value>
+  </data>
+  <data name="TorchLightsStrengthRow" xml:space="preserve">
+    <value>火把光強度</value>
+  </data>
+  <data name="TorchLightsLockedHdTextures" xml:space="preserve">
+    <value>需要 HD 材質。</value>
+  </data>
+  <data name="TorchLightsLockedLowPreset" xml:space="preserve">
+    <value>圖形預設為「低」時關閉。</value>
+  </data>
+  <data name="TorchLightsLockedLighting" xml:space="preserve">
+    <value>需要 Enhanced lighting 與 Dynamic lights。</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>優先攻擊強大怪物</value>

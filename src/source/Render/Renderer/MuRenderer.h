@@ -394,6 +394,15 @@ public:
     // 0..1, repeatsPerUnit the water texture's repeats per world unit (the flowing ripples' scale).
     // The terrain sets it around its water runs and back to 0 after them.
     virtual void SetTerrainWater(float /*strength*/, float /*repeatsPerUnit*/) {}
+    // The frame's torch lights on the ground (Render/Terrain/TorchLights.h; Enhanced lighting,
+    // desktop only): the last block set before the frame is drawn is the one its flagged ground
+    // draws use; an empty block turns them off.
+    virtual void SetTerrainLightsFrame(const TerrainLightsUniform& /*lights*/) {}
+    // Draws recorded while it is on (opaque ground runs and their non-blended layers) take the torch
+    // light out of their vertex colour (the Vertex3D normal carries it) and draw it per pixel
+    // (terrain_lights.hlsli), when their pipeline has a terrain light twin. The terrain sets it
+    // around those runs and back to off after them.
+    virtual void SetTerrainLit(bool /*lit*/) {}
     // True when this frame's sun shadow is drawn: the scene then leaves out the Classic flat
     // shadows it would draw instead.
     [[nodiscard]] virtual bool IsSunShadowActive() const
@@ -866,6 +875,10 @@ public:
 // Initially returns MuRendererGL; will return MuRendererSDLGPU after 4.3.1.
 // ---------------------------------------------------------------------------
 [[nodiscard]] IMuRenderer& GetRenderer();
+
+// Whether the renderer built every terrain light twin (desktop, Enhanced lighting): without them
+// the torch light on the ground stays off (Render/Terrain/TorchLights.h).
+[[nodiscard]] bool HasTerrainLightPipelines();
 
 // Keeps Classic texture sampling for the draws made while it is alive.
 class ScopedScreenSpaceSampling

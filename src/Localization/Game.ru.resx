@@ -16072,6 +16072,24 @@
   <data name="ParticlesLockedLowPreset" xml:space="preserve">
     <value>Выключено на пресете графики «Низкий».</value>
   </data>
+  <data name="TorchLightsRow" xml:space="preserve">
+    <value>Свет факелов на земле</value>
+  </data>
+  <data name="TorchLightsTooltip" xml:space="preserve">
+    <value>Факелы, фонари и костры дают на земле мягкое круглое пятно света. Персонажи, монстры и снаряжение освещены как прежде.</value>
+  </data>
+  <data name="TorchLightsStrengthRow" xml:space="preserve">
+    <value>Сила света факелов</value>
+  </data>
+  <data name="TorchLightsLockedHdTextures" xml:space="preserve">
+    <value>Нужны HD-текстуры.</value>
+  </data>
+  <data name="TorchLightsLockedLowPreset" xml:space="preserve">
+    <value>Выключено на пресете графики «Низкий».</value>
+  </data>
+  <data name="TorchLightsLockedLighting" xml:space="preserve">
+    <value>Нужны Enhanced lighting и Dynamic lights.</value>
+  </data>
   <data name="BagPageLocked" xml:space="preserve">
     <value>Страница 2 закрыта</value>
   </data>

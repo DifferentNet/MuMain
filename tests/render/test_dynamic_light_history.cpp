@@ -1009,3 +1009,21 @@ TEST_CASE(
     CHECK(lingering[0].x == Approx(100.f));
     CHECK(lingering[1].x == Approx(5000.f));
 }
+
+TEST_CASE("a replayed map light is marked as the map's, other sources are not [render][lighthistory]")
+{
+    namespace Grid = Render::Terrain::LightGrid;
+    std::vector<std::array<float, 3>> frame(static_cast<std::size_t>(TERRAIN_SIZE) * TERRAIN_SIZE, {0.1f, 0.1f, 0.1f});
+    auto* data = reinterpret_cast<float (*)[3]>(frame.data());
+    Render::Lighting::DynamicLightList list;
+    DynamicLightHistory history;
+    const LightHistorySettings settings;
+    history.BeginTick();
+    Grid::RecordFrameLight(Target(data, list, history), Call(1000.f, 1000.f, 0.3f, 2, LightSource::Map));
+    Grid::RecordFrameLight(Target(data, list, history), Call(3000.f, 1000.f, 0.3f, 2, LightSource::Character));
+    Grid::RecordFrameLight(Target(data, list, history), Call(5000.f, 1000.f, 0.3f, 2, LightSource::Effect));
+    Grid::ReplayFrameLights(Target(data, list, history), Frame, settings);
+    REQUIRE(list.Lights().size() == 3);
+    for (const auto& light : list.Lights())
+        CHECK(light.fromMap == (light.position[0] == 1000.f));
+}

@@ -13577,6 +13577,24 @@
   <data name="ParticlesLockedLowPreset" xml:space="preserve">
     <value>Off on the Low graphics preset.</value>
   </data>
+  <data name="TorchLightsRow" xml:space="preserve">
+    <value>Cahaya obor di tanah</value>
+  </data>
+  <data name="TorchLightsTooltip" xml:space="preserve">
+    <value>Obor, lampu, dan api unggun memancarkan cahaya bulat yang lembut di tanah. Karakter, monster, dan perlengkapan tetap diterangi seperti sebelumnya.</value>
+  </data>
+  <data name="TorchLightsStrengthRow" xml:space="preserve">
+    <value>Kekuatan cahaya obor</value>
+  </data>
+  <data name="TorchLightsLockedHdTextures" xml:space="preserve">
+    <value>Memerlukan tekstur HD.</value>
+  </data>
+  <data name="TorchLightsLockedLowPreset" xml:space="preserve">
+    <value>Mati pada preset grafis Rendah.</value>
+  </data>
+  <data name="TorchLightsLockedLighting" xml:space="preserve">
+    <value>Memerlukan Enhanced lighting dengan Dynamic lights.</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Monster kuat dulu</value>

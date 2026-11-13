@@ -13577,6 +13577,24 @@
   <data name="ParticlesLockedLowPreset" xml:space="preserve">
     <value>Off on the Low graphics preset.</value>
   </data>
+  <data name="TorchLightsRow" xml:space="preserve">
+    <value>Luz das tochas no chão</value>
+  </data>
+  <data name="TorchLightsTooltip" xml:space="preserve">
+    <value>Tochas, lâmpadas e fogueiras lançam um brilho suave e redondo no chão. Personagens, monstros e equipamentos são iluminados como antes.</value>
+  </data>
+  <data name="TorchLightsStrengthRow" xml:space="preserve">
+    <value>Intensidade da luz das tochas</value>
+  </data>
+  <data name="TorchLightsLockedHdTextures" xml:space="preserve">
+    <value>Requer texturas HD.</value>
+  </data>
+  <data name="TorchLightsLockedLowPreset" xml:space="preserve">
+    <value>Desligado na predefinição gráfica Baixa.</value>
+  </data>
+  <data name="TorchLightsLockedLighting" xml:space="preserve">
+    <value>Requer Enhanced lighting com Dynamic lights.</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Monstros fortes primeiro</value>

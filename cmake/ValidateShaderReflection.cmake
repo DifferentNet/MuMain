@@ -284,6 +284,9 @@ set(shader_specs
     "post_haze.frag|frag||1|0|1"
     "ambient_particles.vert|vert||0|0|1"
     "ambient_particles.frag|frag||0|0|0"
+    "terrain_lights.vert|vert|0,1,2,3|0|0|2"
+    "terrain_lights.frag|frag||1|0|2"
+    "terrain_lights_shadow.frag|frag||2|0|2"
 )
 
 foreach(shader_spec IN LISTS shader_specs)

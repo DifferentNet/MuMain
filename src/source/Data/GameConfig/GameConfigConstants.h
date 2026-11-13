@@ -149,6 +149,11 @@ namespace CfgKeys
     // percent (0 to 100; 70 shows the maps' particles as their light mood gives them).
     inline constexpr wchar_t CfgKeyParticles[] = L"Particles";
     inline constexpr wchar_t CfgKeyParticlesStrength[] = L"ParticlesStrength";
+    // [Render] TorchLights: with HD textures on, 0 off, 1 the map lights near the hero (torches,
+    // lamps, fires) drawn on the ground as smooth round pools (Render/Terrain/TorchLights.h); models
+    // keep their light. TorchLightsStrength in percent (0 to 100; 70 = 1.2 times the Classic light).
+    inline constexpr wchar_t CfgKeyTorchLights[] = L"TorchLights";
+    inline constexpr wchar_t CfgKeyTorchLightsStrength[] = L"TorchLightsStrength";
     // Sun shadows of the Enhanced look: 0 off, 1 medium (2048 map), 2 high (4096 map). The browser
     // build keeps them under their own key: older /play builds saved the presets' value in SunShadows,
     // and a browser player gets sun shadows only from the Options row.
@@ -333,6 +338,12 @@ namespace CfgDefaults
     inline constexpr int CfgDefaultParticlesStrength = 70;
     inline constexpr int CfgMinParticlesStrength = 0;
     inline constexpr int CfgMaxParticlesStrength = 100;
+    inline constexpr int CfgDefaultTorchLights = 1;
+    inline constexpr int CfgMinTorchLights = 0;
+    inline constexpr int CfgMaxTorchLights = 1;
+    inline constexpr int CfgDefaultTorchLightsStrength = 70;
+    inline constexpr int CfgMinTorchLightsStrength = 0;
+    inline constexpr int CfgMaxTorchLightsStrength = 100;
     inline constexpr int CfgDefaultSunShadows = 0;
     inline constexpr int CfgMinSunShadows = 0;
     inline constexpr int CfgMaxSunShadows = 2;

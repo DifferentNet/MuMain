@@ -1,0 +1,251 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct FSInput
+{
+    float4 pos;
+    float2 uv;
+    float4 color;
+    float fogFactor;
+    float eyeDepth;
+    float3 normal;
+    float3 viewVector;
+    float4 lightDirectionAndSpecular;
+    float4 worldPositionAndDynamicLights;
+    float3 worldNormal;
+};
+
+struct FogUniforms
+{
+    uint fogEnabled;
+    uint alphaDiscardEnabled;
+    float alphaThreshold;
+    uint alphaToCoverage;
+    float fogStart;
+    float fogEnd;
+    float detailStrength;
+    float detailScale;
+    float4 fogColor;
+};
+
+struct SceneLighting
+{
+    float4 sceneLightDirection;
+    float4 sceneLightColor;
+    float4 diffuseCurve;
+    float4 rimParameters;
+    float4 specularParameters;
+    float4 sceneFogColor;
+    float4 sceneFogParameters;
+    float4 cameraPosition;
+    float4x4 sunViewProjection;
+    float4 sunShadowParameters;
+    float4 sunDirectionAndSoftness;
+    float4 terrainLightHeader;
+    float4 terrainLightPositionAndRadius[16];
+    float4 terrainLightColor[16];
+};
+
+struct main0_out
+{
+    float4 _entryPointOutput [[color(0)]];
+};
+
+struct main0_in
+{
+    float2 input_uv [[user(locn0)]];
+    float4 input_color [[user(locn1)]];
+    float input_fogFactor [[user(locn2)]];
+    float input_eyeDepth [[user(locn3)]];
+    float3 input_normal [[user(locn4)]];
+    float3 input_viewVector [[user(locn5)]];
+    float4 input_lightDirectionAndSpecular [[user(locn6), flat]];
+    float4 input_worldPositionAndDynamicLights [[user(locn7)]];
+    float3 input_worldNormal [[user(locn8)]];
+};
+
+static inline __attribute__((always_inline))
+float3 TorchLighting(thread const float3& worldPosition, constant SceneLighting& _335)
+{
+    float3 light = float3(0.0);
+    int count = min(int(_335.terrainLightHeader.x), 16);
+    for (int i = 0; i < count; i++)
+    {
+        float4 positionAndRadius = _335.terrainLightPositionAndRadius[i];
+        float2 offset = worldPosition.xy - positionAndRadius.xy;
+        float distanceSquared = dot(offset, offset);
+        float radius = positionAndRadius.w;
+        if ((radius <= 0.0) || (distanceSquared >= (radius * radius)))
+        {
+            continue;
+        }
+        float t = 1.0 - (sqrt(distanceSquared) / radius);
+        light += (_335.terrainLightColor[i].xyz * ((t * t) * (3.0 - (2.0 * t))));
+    }
+    return light;
+}
+
+static inline __attribute__((always_inline))
+float TerrainDetailFade(thread const float& eyeDepth)
+{
+    return 1.0 - smoothstep(2400.0, 3800.0, eyeDepth);
+}
+
+static inline __attribute__((always_inline))
+float TerrainSelfDetail(thread const float2& uv, thread const float2& uvDx, thread const float2& uvDy, thread const float& scale, texture2d<float> tex, sampler s)
+{
+    float dense = dot(tex.sample(s, (uv * scale), gradient2d(uvDx * scale, uvDy * scale)).xyz, float3(0.2989999949932098388671875, 0.58700001239776611328125, 0.114000000059604644775390625));
+    float mean = dot(tex.sample(s, uv, level(16.0)).xyz, float3(0.2989999949932098388671875, 0.58700001239776611328125, 0.114000000059604644775390625));
+    return fast::clamp(dense / fast::max(mean, 0.0199999995529651641845703125), 0.60000002384185791015625, 1.39999997615814208984375);
+}
+
+static inline __attribute__((always_inline))
+float TerrainNoiseHash(thread const float2& cell)
+{
+    uint2 q = uint2(int2(cell)) * uint2(1597334673u, 3812015801u);
+    uint n = (q.x ^ q.y) * 1597334673u;
+    return float(n >> uint(8)) * 5.9604644775390625e-08;
+}
+
+static inline __attribute__((always_inline))
+float TerrainValueNoise(thread const float2& p)
+{
+    float2 cell = floor(p);
+    float2 f = p - cell;
+    float2 w = (f * f) * (float2(3.0) - (f * 2.0));
+    float2 param = cell;
+    float a = TerrainNoiseHash(param);
+    float2 param_1 = cell + float2(1.0, 0.0);
+    float b = TerrainNoiseHash(param_1);
+    float2 param_2 = cell + float2(0.0, 1.0);
+    float c = TerrainNoiseHash(param_2);
+    float2 param_3 = cell + float2(1.0);
+    float d = TerrainNoiseHash(param_3);
+    return mix(mix(a, b, w.x), mix(c, d, w.x), w.y);
+}
+
+static inline __attribute__((always_inline))
+float TerrainNoiseOctave(thread const float2& p, thread const float& cellsPerPixel)
+{
+    float alias = smoothstep(0.5, 1.0, cellsPerPixel);
+    float2 param = p;
+    return mix(TerrainValueNoise(param), 0.5, alias);
+}
+
+static inline __attribute__((always_inline))
+float TerrainNoiseDetail(thread const float2& uv, thread const float2& uvWidth, thread const float& scale)
+{
+    float2 p = uv * scale;
+    float2 footprint = uvWidth * scale;
+    float cellsPerPixel = fast::max(footprint.x, footprint.y);
+    float2 param = p;
+    float param_1 = cellsPerPixel;
+    float2 param_2 = p * 2.309999942779541015625;
+    float param_3 = cellsPerPixel * 2.309999942779541015625;
+    float2 param_4 = p * 5.1700000762939453125;
+    float param_5 = cellsPerPixel * 5.1700000762939453125;
+    float n = ((0.5 * TerrainNoiseOctave(param, param_1)) + (0.300000011920928955078125 * TerrainNoiseOctave(param_2, param_3))) + (0.20000000298023223876953125 * TerrainNoiseOctave(param_4, param_5));
+    return 1.0 + ((0.25 * (n - 0.5)) * 2.0);
+}
+
+static inline __attribute__((always_inline))
+float TerrainDetailFactor(thread const float2& uv, thread const float& eyeDepth, texture2d<float> tex, sampler s, constant FogUniforms& _276)
+{
+    float2 uvDx = dfdx(uv);
+    float2 uvDy = dfdy(uv);
+    float2 uvWidth = abs(uvDx) + abs(uvDy);
+    if (_276.detailStrength <= 0.0)
+    {
+        return 1.0;
+    }
+    float param = eyeDepth;
+    float amount = _276.detailStrength * TerrainDetailFade(param);
+    if (_276.detailScale > 0.0)
+    {
+        float2 param_1 = uv;
+        float2 param_2 = uvDx;
+        float2 param_3 = uvDy;
+        float param_4 = _276.detailScale;
+        return mix(1.0, TerrainSelfDetail(param_1, param_2, param_3, param_4, tex, s), amount);
+    }
+    float2 param_5 = uv;
+    float2 param_6 = uvWidth;
+    float param_7 = -_276.detailScale;
+    return 1.0 + (amount * (TerrainNoiseDetail(param_5, param_6, param_7) - 1.0));
+}
+
+static inline __attribute__((always_inline))
+float EnhancedFogAmount(thread const float& eyeDepth, constant SceneLighting& _335)
+{
+    float scaledDistance = fast::max(eyeDepth - _335.sceneFogParameters.x, 0.0) * _335.sceneFogParameters.z;
+    return fast::clamp(1.0 - exp((-scaledDistance) * scaledDistance), 0.0, 1.0);
+}
+
+static inline __attribute__((always_inline))
+float4 _main(thread const FSInput& _input, texture2d<float> tex, sampler s, constant FogUniforms& _276, constant SceneLighting& _335)
+{
+    float4 texel = tex.sample(s, _input.uv);
+    float3 baseLight = fast::max(_input.color.xyz - _input.normal, float3(0.0));
+    float shadowScale = 1.0;
+    float3 param = _input.worldPositionAndDynamicLights.xyz;
+    float3 lit = fast::clamp((baseLight * shadowScale) + TorchLighting(param, _335), float3(0.0), float3(1.0));
+    float4 color = float4(texel.xyz * lit, texel.w * _input.color.w);
+    float2 param_1 = _input.uv;
+    float param_2 = _input.eyeDepth;
+    float4 _485 = color;
+    float3 _487 = _485.xyz * TerrainDetailFactor(param_1, param_2, tex, s, _276);
+    color.x = _487.x;
+    color.y = _487.y;
+    color.z = _487.z;
+    if (_276.alphaToCoverage != 0u)
+    {
+        float edge = fast::clamp(((color.w - _276.alphaThreshold) / fast::max(fwidth(color.w), 9.9999997473787516355514526367188e-05)) + 0.5, 0.0, 1.0);
+        color.w *= edge;
+        if (color.w <= 0.0)
+        {
+            discard_fragment();
+        }
+    }
+    else
+    {
+        if ((_276.alphaDiscardEnabled != 0u) && (color.w <= _276.alphaThreshold))
+        {
+            discard_fragment();
+        }
+    }
+    if ((_276.fogEnabled != 0u) && (_335.sceneFogColor.w > 0.0))
+    {
+        float4 _548 = color;
+        float param_3 = _input.eyeDepth;
+        float3 _558 = mix(_548.xyz, _335.sceneFogColor.xyz, float3(EnhancedFogAmount(param_3, _335)));
+        color.x = _558.x;
+        color.y = _558.y;
+        color.z = _558.z;
+    }
+    return color;
+}
+
+fragment main0_out main0(main0_in in [[stage_in]], constant FogUniforms& _276 [[buffer(0)]], constant SceneLighting& _335 [[buffer(1)]], texture2d<float> tex [[texture(0)]], sampler s [[sampler(0)]], float4 gl_FragCoord [[position]])
+{
+    main0_out out = {};
+    FSInput _input;
+    _input.pos = gl_FragCoord;
+    _input.uv = in.input_uv;
+    _input.color = in.input_color;
+    _input.fogFactor = in.input_fogFactor;
+    _input.eyeDepth = in.input_eyeDepth;
+    _input.normal = in.input_normal;
+    _input.viewVector = in.input_viewVector;
+    _input.lightDirectionAndSpecular = in.input_lightDirectionAndSpecular;
+    _input.worldPositionAndDynamicLights = in.input_worldPositionAndDynamicLights;
+    _input.worldNormal = in.input_worldNormal;
+    FSInput param = _input;
+    float4 _608 = _main(param, tex, s, _276, _335);
+    out._entryPointOutput = _608;
+    return out;
+}
+

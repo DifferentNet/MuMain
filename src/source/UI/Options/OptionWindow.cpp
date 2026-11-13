@@ -19,6 +19,7 @@
 #include "Render/Lighting/EnhancedLightingSetting.h"
 #include "Render/Lighting/LightMoodScales.h"
 #include "Render/Effects/ParticlesSetting.h"
+#include "Render/Terrain/TorchLights.h"
 #include "Render/PostProcessing/HazeSetting.h"
 #include "Render/PostProcessing/PostProcessingSetting.h"
 #include "Render/PostProcessing/SsaoSetting.h"
@@ -183,6 +184,30 @@ static const wchar_t* ParticlesHint(Render::Effects::Particles::Block block)
         break;
     }
     return I18N::Game::ParticlesTooltip;
+}
+
+// The torch light strength slider: levels 0..10, 10 % each ([Render] TorchLightsStrength is in percent), as SSAO's.
+static int TorchLightsStrengthLevel(int percent)
+{
+    return SsaoStrengthLevel(percent);
+}
+
+// The TorchLights row's hint: why it does not show right now, or what it is.
+static const wchar_t* TorchLightsHint(Render::Terrain::TorchLights::Block block)
+{
+    using Render::Terrain::TorchLights::Block;
+    switch (block)
+    {
+    case Block::NoHdTextures:
+        return I18N::Game::TorchLightsLockedHdTextures;
+    case Block::LowPreset:
+        return I18N::Game::TorchLightsLockedLowPreset;
+    case Block::NoDynamicLights:
+        return I18N::Game::TorchLightsLockedLighting;
+    case Block::None:
+        break;
+    }
+    return I18N::Game::TorchLightsTooltip;
 }
 
 // The custom dropdowns' ids, 0 .. kLastDropdownId (see RmlToggleDropdown()).
@@ -706,6 +731,17 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("particles_strength", &model.particlesStrength);
     c.Bind("particles_strength_percent", &model.particlesStrengthPercent);
     c.Bind("particles_strength_label", &model.particlesStrengthLabel);
+    // Torch light on the ground: the Remaster PC client's, as the particles'.
+    model.torchLightsAvailable = Render::Terrain::TorchLights::Available() && Render::Look::RemasterGraphicsOptions();
+    c.Bind("torch_lights_available", &model.torchLightsAvailable);
+    c.Bind("torch_lights", &model.torchLights);
+    c.Bind("torch_lights_locked", &model.torchLightsLocked);
+    c.Bind("torch_lights_label", &model.torchLightsLabel);
+    c.Bind("torch_lights_tooltip", &model.torchLightsTooltip);
+    c.Bind("torch_lights_strength_shown", &model.torchLightsStrengthShown);
+    c.Bind("torch_lights_strength", &model.torchLightsStrength);
+    c.Bind("torch_lights_strength_percent", &model.torchLightsStrengthPercent);
+    c.Bind("torch_lights_strength_label", &model.torchLightsStrengthLabel);
     // The preset, FXAA and sharpening rows: the Remaster client's (and the browser's), not the Classic one's.
     model.remasterGraphics = Render::Look::RemasterGraphicsOptions();
     c.Bind("remaster_graphics", &model.remasterGraphics);
@@ -832,6 +868,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleHaze(); });
     c.BindEventCallback("option_toggle_particles",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleParticles(); });
+    c.BindEventCallback("option_toggle_torch_lights",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleTorchLights(); });
     c.BindEventCallback("option_toggle_vsync",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleVsync(); });
 
@@ -1325,6 +1363,13 @@ void mu::ui::window::COptionWindow::RmlGaugeEvent(Rml::Event& event, int gauge)
                 event, ParticlesStrengthLevel(GameConfig::GetInstance().GetParticlesStrength()), kSsaoStrengthLevels,
                 volumeFromPointer))
             RmlParticlesStrengthChanged(*next);
+        break;
+    case 7:
+        // The torch light strength, as the SSAO strength.
+        if (const auto next = UI::RmlBridge::ApplyLevelGaugeEvent(
+                event, TorchLightsStrengthLevel(GameConfig::GetInstance().GetTorchLightsStrength()),
+                kSsaoStrengthLevels, volumeFromPointer))
+            RmlTorchLightsStrengthChanged(*next);
         break;
     default:
         break;
@@ -2025,6 +2070,78 @@ void mu::ui::window::COptionWindow::SyncParticlesRows(OptionRmlModel& model)
     syncText(model.particlesLabel, "particles_label", I18N::Game::ParticlesRow);
     syncText(model.particlesTooltip, "particles_tooltip", ParticlesHint(block));
     syncText(model.particlesStrengthLabel, "particles_strength_label", I18N::Game::ParticlesStrengthRow);
+}
+
+// A locked row ignores clicks (TorchLights::Block): its saved choice is kept for when it can show.
+void mu::ui::window::COptionWindow::RmlToggleTorchLights()
+{
+    namespace TorchLights = Render::Terrain::TorchLights;
+    if (!m_RmlView.GetModel().torchLightsAvailable || TorchLights::Locks(TorchLights::CurrentBlock()))
+        return;
+    const GameConfig& config = GameConfig::GetInstance();
+    TorchLights::Choose(config.GetTorchLights() == 0, config.GetTorchLightsStrength());
+}
+
+// The slider shows only while the torch light is on and the row not locked (SyncTorchLightsRows()).
+void mu::ui::window::COptionWindow::RmlTorchLightsStrengthChanged(int level)
+{
+    namespace TorchLights = Render::Terrain::TorchLights;
+    const GameConfig& config = GameConfig::GetInstance();
+    if (!m_RmlView.GetModel().torchLightsAvailable || config.GetTorchLights() == 0 ||
+        TorchLights::Locks(TorchLights::CurrentBlock()))
+        return;
+    const int percent = std::clamp(level, 0, kSsaoStrengthLevels) * kSsaoPercentPerLevel;
+    if (percent == config.GetTorchLightsStrength())
+        return;
+    TorchLights::Choose(true, percent);
+}
+
+void mu::ui::window::COptionWindow::SyncTorchLightsRows(OptionRmlModel& model)
+{
+    const auto syncFlag = [this](bool& field, const char* name, bool value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncInt = [this](int& field, const char* name, int value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncText = [this](Rml::String& field, const char* name, const wchar_t* text)
+    {
+        const Rml::String narrow = StringUtils::WideToNarrow(text);
+        if (field != narrow)
+        {
+            field = narrow;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    if (!model.torchLightsAvailable)
+        return;
+    namespace TorchLights = Render::Terrain::TorchLights;
+    // Pushed again every sync: a graphics preset switched to or from Low here turns it off or on
+    // at once (it logs only a change).
+    TorchLights::ApplyFromConfig();
+    const GameConfig& config = GameConfig::GetInstance();
+    const TorchLights::Block block = TorchLights::CurrentBlock();
+    const bool locked = TorchLights::Locks(block);
+    const bool on = config.GetTorchLights() != 0;
+    syncFlag(model.torchLightsLocked, "torch_lights_locked", locked);
+    syncFlag(model.torchLights, "torch_lights", on);
+    syncFlag(model.torchLightsStrengthShown, "torch_lights_strength_shown", on && !locked);
+    syncInt(model.torchLightsStrength, "torch_lights_strength",
+            TorchLightsStrengthLevel(config.GetTorchLightsStrength()));
+    syncInt(model.torchLightsStrengthPercent, "torch_lights_strength_percent", config.GetTorchLightsStrength());
+    syncText(model.torchLightsLabel, "torch_lights_label", I18N::Game::TorchLightsRow);
+    syncText(model.torchLightsTooltip, "torch_lights_tooltip", TorchLightsHint(block));
+    syncText(model.torchLightsStrengthLabel, "torch_lights_strength_label", I18N::Game::TorchLightsStrengthRow);
 }
 
 void mu::ui::window::COptionWindow::RmlToggleShowFpsCounter()
@@ -2782,6 +2899,7 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     SyncWindRows(model);
     SyncHazeRows(model);
     SyncParticlesRows(model);
+    SyncTorchLightsRows(model);
     // Rebuilt every sync for a live language switch, as the rows above.
     syncMultiplierRow(model.interfaceViewLabels, "interface_view_labels", model.interfaceViewIndex,
                       "interface_view_index", model.interfaceViewValueLabel, "interface_view_value_label",

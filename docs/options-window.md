@@ -130,6 +130,11 @@ window writes to these sections:
     Remaster PC client only (the browser and Classic clients hide them). Both apply at once. The row
     is greyed out as the Wind row is, without HD textures and on the Low graphics preset, its hint
     saying why. See [`enhanced-look.md`](enhanced-look.md).
+  - `TorchLights` and `TorchLightsStrength` (defaults `1` and `70`): the **Torch light on the ground**
+    row and the torch light strength slider under it (0 to 100 % in steps of 10, shown while it is
+    on), Remaster PC client only (the browser and Classic clients hide them). Both apply at once.
+    The row is greyed out without HD textures, on the Low graphics preset and without Enhanced
+    lighting with Dynamic lights, its hint saying why. See [`enhanced-look.md`](enhanced-look.md).
 
   Set by hand only, never written by the game:
   - `Backend` (`default`/`vulkan`/`direct3d12`/`metal`, case-insensitive,

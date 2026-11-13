@@ -106,6 +106,8 @@ the row reads **Custom** (shown only, it cannot be picked).
 | `HazeStrength` | Strength of the haze in percent, `0` (off) to `100`; `70` shows each map's haze as its light mood gives it, `100` is a little more (never more than 45 % of the haze colour on a pixel); the haze strength slider under the Distance haze row sets it in steps of 10 | `70` |
 | `Particles` | With HD textures on (desktop only, not on the Low preset, and not while "all effects" is off), fine particles drift in the air of some maps: dust, pollen, fireflies, fine snow, ash and embers, in the kinds each map's light mood gives (maps without particle values get none). They are small (a few pixels) and faint, never drawn right in front of the camera, sit behind effects, windows and names, and drift with the wind (a little even with the wind off). In Lorencia and Devias they show only outdoors. Options > Graphics > Air particles switches them at once: `0` off, `1` on | `1` |
 | `ParticlesStrength` | Particle density in percent, `0` (off) to `100`; `70` shows each map's particles as its light mood gives them, `100` is about 1.4 times as many; the particle density slider under the Air particles row sets it in steps of 10 | `70` |
+| `TorchLights` | With HD textures, Enhanced lighting and Dynamic lights on (desktop only, not on the Low preset), the 16 map lights nearest to the hero (torches, lamps, fires, street lights) light the ground as smooth round pools instead of the light grid's diamonds; lights farther away (more than 32 tiles, or past the 16th) keep the old look and fade over to it. Only the ground and its layers are drawn so: water, grass, objects, characters, monsters and gear keep exactly the light they had. Options > Graphics > Torch light on the ground switches it at once: `0` off, `1` on | `1` |
+| `TorchLightsStrength` | Strength of the pools in percent, `0` (off) to `100`; the pools are 0.5 plus the strength times the Classic light (`70` is 1.2 times, `100` 1.5 times); the torch light strength slider under that row sets it in steps of 10 | `70` |
 
 Each map's light mood can also set the sun's direction and the shadows'
 strength and softness (`sunAzimuth`, `sunElevation`, `sunShadow`,
@@ -141,6 +143,13 @@ fireflies, `4` snow, `5` ash, `6` embers), `particlesDensity` and
 
 The other maps (arenas, events, Atlans, Icarus, Crywolf, Kalima and the like)
 have none.
+
+The torch light on the ground has no light mood values of its own: it works on
+every map with map lights (the lights map objects make each frame, as the light
+grid has them), with each map's own light colours and the light mood's dynamic
+gain. Effect and character lights (spells, a held torch) are not drawn so. Models
+are unchanged: characters, monsters, gear and objects get exactly the light they
+had before, with the setting on or off.
 
 **Auto** (no `GraphicsPreset` key, or `Auto`) is decided once at start-up, on a
 new desktop install only (`config.ini` has no `Look` key yet), from the GPU's

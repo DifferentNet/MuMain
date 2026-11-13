@@ -16410,6 +16410,24 @@
   <data name="ParticlesLockedLowPreset" xml:space="preserve">
     <value>Off on the Low graphics preset.</value>
   </data>
+  <data name="TorchLightsRow" xml:space="preserve">
+    <value>Torch light on the ground</value>
+  </data>
+  <data name="TorchLightsTooltip" xml:space="preserve">
+    <value>Torches, lamps and fires cast a soft round glow on the ground. Characters, monsters and gear are lit as before.</value>
+  </data>
+  <data name="TorchLightsStrengthRow" xml:space="preserve">
+    <value>Torch light strength</value>
+  </data>
+  <data name="TorchLightsLockedHdTextures" xml:space="preserve">
+    <value>Needs HD textures.</value>
+  </data>
+  <data name="TorchLightsLockedLowPreset" xml:space="preserve">
+    <value>Off on the Low graphics preset.</value>
+  </data>
+  <data name="TorchLightsLockedLighting" xml:space="preserve">
+    <value>Needs Enhanced lighting with dynamic lights.</value>
+  </data>
   <data name="BagPageLocked" xml:space="preserve">
     <value>Page 2 is locked</value>
   </data>

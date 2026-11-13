@@ -13577,6 +13577,24 @@
   <data name="ParticlesLockedLowPreset" xml:space="preserve">
     <value>Off on the Low graphics preset.</value>
   </data>
+  <data name="TorchLightsRow" xml:space="preserve">
+    <value>Світло смолоскипів на землі</value>
+  </data>
+  <data name="TorchLightsTooltip" xml:space="preserve">
+    <value>Смолоскипи, ліхтарі та вогнища дають на землі м'яку круглу пляму світла. Персонажі, монстри та спорядження освітлені як раніше.</value>
+  </data>
+  <data name="TorchLightsStrengthRow" xml:space="preserve">
+    <value>Сила світла смолоскипів</value>
+  </data>
+  <data name="TorchLightsLockedHdTextures" xml:space="preserve">
+    <value>Потрібні HD-текстури.</value>
+  </data>
+  <data name="TorchLightsLockedLowPreset" xml:space="preserve">
+    <value>Вимкнено на пресеті графіки «Низький».</value>
+  </data>
+  <data name="TorchLightsLockedLighting" xml:space="preserve">
+    <value>Потрібні Enhanced lighting і Dynamic lights.</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Спершу сильні монстри</value>

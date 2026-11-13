@@ -13577,6 +13577,24 @@
   <data name="ParticlesLockedLowPreset" xml:space="preserve">
     <value>Off on the Low graphics preset.</value>
   </data>
+  <data name="TorchLightsRow" xml:space="preserve">
+    <value>Liwanag ng sulo sa lupa</value>
+  </data>
+  <data name="TorchLightsTooltip" xml:space="preserve">
+    <value>Ang mga sulo, lampara at apoy ay nagbibigay ng malambot at bilog na liwanag sa lupa. Ang mga karakter, halimaw at gamit ay naiilawan gaya ng dati.</value>
+  </data>
+  <data name="TorchLightsStrengthRow" xml:space="preserve">
+    <value>Lakas ng liwanag ng sulo</value>
+  </data>
+  <data name="TorchLightsLockedHdTextures" xml:space="preserve">
+    <value>Kailangan ng HD na texture.</value>
+  </data>
+  <data name="TorchLightsLockedLowPreset" xml:space="preserve">
+    <value>Naka-off sa Low na graphics preset.</value>
+  </data>
+  <data name="TorchLightsLockedLighting" xml:space="preserve">
+    <value>Kailangan ng Enhanced lighting na may Dynamic lights.</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Unahin ang malakas</value>

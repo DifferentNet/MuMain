@@ -33,6 +33,9 @@ set(MU_SHADER_STAGE_NAMES
     post_haze.frag
     ambient_particles.vert
     ambient_particles.frag
+    terrain_lights.vert
+    terrain_lights.frag
+    terrain_lights_shadow.frag
 )
 set(MU_SHADER_BLOB_FORMATS spv msl dxil)
 set(MU_SHADER_BLOB_NAMES)

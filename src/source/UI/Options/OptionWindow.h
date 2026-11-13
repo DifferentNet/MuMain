@@ -144,8 +144,9 @@ namespace mu::ui::window
         void RmlSoundVolumeChanged(int value);
         void RmlMusicVolumeChanged(int value);
         void RmlRenderLevelChanged(int value);
-        // The volume, effect-limit, SSAO, wind, haze and particle gauges' pointer and wheel events (0 sound,
-        // 1 music, 2 effects, 3 SSAO strength, 4 wind strength, 5 haze strength, 6 particle density).
+        // The volume, effect-limit, SSAO, wind, haze, particle and torch light gauges' pointer and wheel
+        // events (0 sound, 1 music, 2 effects, 3 SSAO strength, 4 wind strength, 5 haze strength,
+        // 6 particle density, 7 torch light strength).
         void RmlGaugeEvent(Rml::Event& event, int gauge);
         void RmlResolutionChanged(int index);
         void RmlLanguageChanged(int index);
@@ -214,6 +215,10 @@ namespace mu::ui::window
         // once, not part of the graphics presets.
         void RmlToggleParticles();
         void RmlParticlesStrengthChanged(int level);
+        // [Render] TorchLights and TorchLightsStrength (gauge 7, levels 0..10): saved and applied at
+        // once, not part of the graphics presets.
+        void RmlToggleTorchLights();
+        void RmlTorchLightsStrengthChanged(int level);
         // Interface/UI tab -- Show FPS Counter/Show Debug Info stay ephemeral (SceneManager.h
         // globals, no GameConfig persistence), matching $fpscounter/$details today.
         void RmlToggleShowFpsCounter();
@@ -464,6 +469,19 @@ namespace mu::ui::window
             int particlesStrength = 7;
             int particlesStrengthPercent = 70;
             Rml::String particlesStrengthLabel;
+            // [Render] TorchLights and TorchLightsStrength (Remaster PC client only): locked as the
+            // Particles row is, and without Enhanced dynamic lights (Render::Terrain::TorchLights::Block);
+            // its hint says why; the strength slider (levels 0..10 = 0..100 %) shows while it is on and
+            // not locked.
+            bool torchLights = true;
+            bool torchLightsAvailable = false;
+            bool torchLightsLocked = false;
+            Rml::String torchLightsLabel;
+            Rml::String torchLightsTooltip;
+            bool torchLightsStrengthShown = false;
+            int torchLightsStrength = 7;
+            int torchLightsStrengthPercent = 70;
+            Rml::String torchLightsStrengthLabel;
             std::vector<Rml::String> sharpenLabels;
             int sharpenIndex = 0;
             Rml::String sharpenRowLabel;
@@ -551,6 +569,7 @@ namespace mu::ui::window
         void SyncWindRows(OptionRmlModel& model);
         void SyncHazeRows(OptionRmlModel& model);
         void SyncParticlesRows(OptionRmlModel& model);
+        void SyncTorchLightsRows(OptionRmlModel& model);
         void OnRmlBuilt();
         UI::RmlBridge::ThemedView<OptionRmlModel> m_RmlView{"option_window",
             [this](Rml::DataModelConstructor& c, OptionRmlModel& model) { BindRmlModel(c, model); },

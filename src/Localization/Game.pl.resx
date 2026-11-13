@@ -13598,6 +13598,24 @@
   <data name="ParticlesLockedLowPreset" xml:space="preserve">
     <value>Off on the Low graphics preset.</value>
   </data>
+  <data name="TorchLightsRow" xml:space="preserve">
+    <value>Światło pochodni na ziemi</value>
+  </data>
+  <data name="TorchLightsTooltip" xml:space="preserve">
+    <value>Pochodnie, lampy i ogniska rzucają na ziemię miękką, okrągłą poświatę. Postacie, potwory i ekwipunek są oświetlone jak dotąd.</value>
+  </data>
+  <data name="TorchLightsStrengthRow" xml:space="preserve">
+    <value>Siła światła pochodni</value>
+  </data>
+  <data name="TorchLightsLockedHdTextures" xml:space="preserve">
+    <value>Wymaga tekstur HD.</value>
+  </data>
+  <data name="TorchLightsLockedLowPreset" xml:space="preserve">
+    <value>Wyłączone przy ustawieniu grafiki Niskie.</value>
+  </data>
+  <data name="TorchLightsLockedLighting" xml:space="preserve">
+    <value>Wymaga Enhanced lighting z Dynamic lights.</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Najpierw silne potwory</value>

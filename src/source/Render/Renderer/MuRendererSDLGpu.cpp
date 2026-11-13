@@ -649,12 +649,23 @@ static mu::DynamicLightsUniform s_dynamicLightsUniform{};
 // Sun shadow (desktop, Enhanced lighting; SunShadow.h). The frame's settings arrive with
 // SetSunShadow; the shadowed receivers read mu::SunShadowUniform right after the scene lighting
 // in fragment uniform slot 1, so the Classic and Enhanced shaders keep their bindings.
+// On desktop the torch lights on the ground (terrain_lights.hlsli) follow the sun shadow.
 struct SceneLightingWithSunShadow
 {
     mu::SceneLightingUniform scene;
     mu::SunShadowUniform sun;
+#ifndef __EMSCRIPTEN__
+    mu::TerrainLightsUniform terrainLights;
+#endif
 };
+#ifndef __EMSCRIPTEN__
+static_assert(offsetof(SceneLightingWithSunShadow, terrainLights) ==
+              sizeof(mu::SceneLightingUniform) + sizeof(mu::SunShadowUniform));
+static_assert(sizeof(SceneLightingWithSunShadow) ==
+              sizeof(mu::SceneLightingUniform) + sizeof(mu::SunShadowUniform) + sizeof(mu::TerrainLightsUniform));
+#else
 static_assert(sizeof(SceneLightingWithSunShadow) == sizeof(mu::SceneLightingUniform) + sizeof(mu::SunShadowUniform));
+#endif
 static mu::SunShadowFrame s_sunShadowFrame{};
 static mu::SunShadowUniform s_sunShadowUniform{};
 static glm::mat4 s_sunShadowViewProjection{1.0f};
@@ -674,6 +685,14 @@ static std::unordered_map<SDL_GPUGraphicsPipeline*, SDL_GPUGraphicsPipeline*> s_
 // The terrain water pipeline (terrain_water.frag) of each depth-tested Enhanced 3D pipeline that
 // blends Alpha or not at all, keyed by it (desktop only; empty without the shader).
 static std::unordered_map<SDL_GPUGraphicsPipeline*, SDL_GPUGraphicsPipeline*> s_terrainWaterPipelines;
+// The terrain light twins (terrain_lights.vert with terrain_lights.frag, or terrain_lights_shadow.frag
+// for a sun-shadowed draw) of the same Enhanced 3D pipelines, keyed by them (desktop only; empty
+// unless all were built, see CreateTerrainLightPipelines).
+static std::unordered_map<SDL_GPUGraphicsPipeline*, SDL_GPUGraphicsPipeline*> s_terrainLightPipelines;
+static std::unordered_map<SDL_GPUGraphicsPipeline*, SDL_GPUGraphicsPipeline*> s_terrainLightShadowPipelines;
+// The frame's torch lights on the ground (SetTerrainLightsFrame), pushed after the sun shadow in
+// fragment uniform slot 1.
+static mu::TerrainLightsUniform s_terrainLightsUniform{};
 
 // Post-processing of the 3D scene: with it on, a frame whose scene marked its end
 // (EndSceneGeometry) is replayed in separate scene, bloom and UI passes, see EndFrame.
@@ -730,6 +749,10 @@ void SetHazeSettings(float strength)
 bool HasHazePipelines()
 {
     return s_haze.IsAvailable() && !s_ssaoDepthPipelines.empty();
+}
+bool HasTerrainLightPipelines()
+{
+    return !s_terrainLightPipelines.empty() && !s_terrainLightShadowPipelines.empty();
 }
 // Whether the opaque world's depth is drawn on its own: SSAO and the haze both read it.
 [[nodiscard]] static bool WorldDepthWanted()
@@ -961,6 +984,10 @@ struct RenderCmd
     // Recorded under SetTerrainWater with a pipeline that has a water twin (s_terrainWaterPipelines):
     // drawn through it in the frame's own passes; its vertex-to-world rows are in sunShadowRows.
     bool terrainWater{};
+    // Recorded under SetTerrainLit with a pipeline that has a terrain light twin
+    // (s_terrainLightPipelines): drawn through it in the frame's own passes; its vertex-to-world
+    // rows are in sunShadowRows.
+    bool terrainLit{};
     // A skinned item preview under the studio light: drawn with ItemPreviewLightingUniform() in
     // place of the scene lighting.
     bool itemPreviewLighting{};
@@ -1012,7 +1039,7 @@ static Render::DrawCommandHistory s_previousDrawCommands;
     {
         return Counter::BatchBreakDepth;
     }
-    if (previous.pipeline != command.pipeline)
+    if (previous.pipeline != command.pipeline || previous.terrainLit != command.terrainLit)
     {
         return Counter::BatchBreakProgram;
     }
@@ -1190,8 +1217,12 @@ static void PushSceneLightingUniforms()
     s_itemPreviewLightingPushed = false;
     // The shadowed receivers read the sun shadow after the scene lighting; the others only the
     // scene lighting at the start of the block.
-    const SceneLightingWithSunShadow block{s_sceneLightingUniform,
-                                           s_sunShadowMapReady ? s_sunShadowUniform : mu::SunShadowUniform{}};
+    SceneLightingWithSunShadow block{s_sceneLightingUniform,
+                                     s_sunShadowMapReady ? s_sunShadowUniform : mu::SunShadowUniform{}};
+#ifndef __EMSCRIPTEN__
+    // Only terrain_lights.frag reads it; the other shaders' blocks end before it.
+    block.terrainLights = s_terrainLightsUniform;
+#endif
     SDL_PushGPUFragmentUniformData(s_cmdBuf, k_FragmentUniformSlotSceneLighting, &block, sizeof(block));
     SDL_PushGPUFragmentUniformData(s_cmdBuf, k_FragmentUniformSlotDynamicLights, &s_dynamicLightsUniform,
                                    sizeof(s_dynamicLightsUniform));
@@ -1210,6 +1241,7 @@ static void SelectSceneLightingBlock(bool itemPreview)
         return;
     }
     static const mu::SceneLightingUniform studio = mu::ItemPreviewLightingUniform();
+    // No torch light on the ground under the studio light: its block is zero.
     const SceneLightingWithSunShadow block{studio, mu::SunShadowUniform{}};
     SDL_PushGPUFragmentUniformData(s_cmdBuf, k_FragmentUniformSlotSceneLighting, &block, sizeof(block));
     ++s_dbgFragmentUniformPushesThisFrame;
@@ -1265,6 +1297,21 @@ static void ReplayDrawCommand(const RenderCmd& command, SDL_GPUGraphicsPipeline*
         {
             pipeline = water->second;
             worldRows = true;
+        }
+    }
+    // A torch-lit ground draw: its terrain light twin, the sun-shadowed one once the shadow map is
+    // ready for a receiver. It reads the scene's block in slot 1, never the item preview's.
+    if (!worldRows && command.terrainLit && !s_singleSamplePass && command.sunShadowRows != ~0u)
+    {
+        const bool shadowed = command.sunShadowReceiver && s_sunShadowMapReady;
+        const auto& twins = shadowed ? s_terrainLightShadowPipelines : s_terrainLightPipelines;
+        const auto lit = twins.find(pipeline);
+        if (lit != twins.end())
+        {
+            pipeline = lit->second;
+            worldRows = true;
+            sunShadowed = shadowed;
+            SelectSceneLightingBlock(false);
         }
     }
     if (!worldRows && command.sunShadowReceiver && s_sunShadowMapReady && !s_singleSamplePass)
@@ -1417,6 +1464,10 @@ static SDL_GPUShader* s_fragShaderTexFogShadow = nullptr; // basic_textured_fog_
 static SDL_GPUShader* s_fragShaderLitShadow = nullptr;    // skinned_lit_shadow.frag
 static SDL_GPUShader* s_fragShaderShadowCaster = nullptr; // shadow_caster.frag
 static SDL_GPUShader* s_fragShaderTerrainWater = nullptr; // terrain_water.frag (desktop, optional)
+// Torch light on the ground (desktop, optional): without them it stays off.
+static SDL_GPUShader* s_vertShaderTerrainLights = nullptr;       // terrain_lights.vert
+static SDL_GPUShader* s_fragShaderTerrainLights = nullptr;       // terrain_lights.frag
+static SDL_GPUShader* s_fragShaderTerrainLightsShadow = nullptr; // terrain_lights_shadow.frag
 // Post-processing (optional): without them post-processing is unavailable.
 static SDL_GPUShader* s_vertShaderPostFullscreen = nullptr; // post_fullscreen.vert
 static SDL_GPUShader* s_fragShaderSsao = nullptr;           // post_ssao.frag (only with SSAO on)
@@ -2629,6 +2680,7 @@ public:
         s_hazeFrame = {};
         s_particlesAt = kNoDrawCommand;
         s_particlesFrame = {};
+        m_terrainLit = false;
         s_ssaoLinearFog = false;
         if (s_bloomExclusionDepth != 0)
         {
@@ -5796,6 +5848,15 @@ public:
         m_fogUniform.detailStrength = enabled ? -std::min(strength, 1.0f) : 0.0f;
         m_fogUniform.detailScale = enabled ? repeatsPerUnit : 0.0f;
     }
+    void SetTerrainLightsFrame(const TerrainLightsUniform& lights) override
+    {
+        s_terrainLightsUniform = lights;
+    }
+    // Draws with and without it never merge (ClassifyBatchBreak).
+    void SetTerrainLit(bool lit) override
+    {
+        m_terrainLit = lit && !s_terrainLightPipelines.empty();
+    }
 
     void SetFog(const FogParams& params) override
     {
@@ -6239,6 +6300,8 @@ private:
     bool m_fogEnabled = false;
     bool m_colorWriteEnabled = true;
     bool m_stencilTestEnabled = false;
+    // SetTerrainLit: the ground draws recorded next take the torch light per pixel.
+    bool m_terrainLit = false;
     int m_boundTextureId = -1;
     FogParams m_fogParams{};
     // CPU-side fog uniform data, uploaded to GPU when dirty.
@@ -6269,6 +6332,42 @@ private:
         command.bloomExcluded = s_bloomExclusionDepth > 0;
         RecordSunShadow(command);
         RecordTerrainWater(command);
+        RecordTerrainLights(command);
+    }
+
+    // A depth-tested 3D draw recorded under SetTerrainLit draws through its pipeline's terrain light
+    // twin, which needs the draw's vertex-to-world rows (shared with the sun shadow receivers).
+    void RecordTerrainLights(RenderCmd& command) const
+    {
+        if (!m_terrainLit || command.terrainWater || s_screenSpaceSamplingDepth != 0 || !command.depthTestEnabled ||
+            command.vtxStride != sizeof(Vertex3D) ||
+            (command.type != RenderCmdType::DrawTriangles && command.type != RenderCmdType::DrawIndexedQuads &&
+             command.type != RenderCmdType::DrawIndexedStrip) ||
+            !s_terrainLightPipelines.contains(command.pipeline))
+        {
+            return;
+        }
+        command.terrainLit = true;
+        if (command.sunShadowRows == ~0u)
+        {
+            command.sunShadowRows = PushVertexToWorldRows();
+        }
+    }
+
+    // The current vertex-to-world transform's rows, for a 3D draw's world-position twin; returns
+    // their index into s_sunShadowReceiverRows.
+    [[nodiscard]] Uint32 PushVertexToWorldRows() const
+    {
+        const glm::mat4 vertexToWorld = m_worldFromViewMatrix * m_modelViewMatrix;
+        std::array<float, 12>& rows = s_sunShadowReceiverRows.emplace_back();
+        for (int row = 0; row < 3; ++row)
+        {
+            for (int column = 0; column < 4; ++column)
+            {
+                rows[static_cast<std::size_t>(row * 4 + column)] = vertexToWorld[column][row];
+            }
+        }
+        return static_cast<Uint32>(s_sunShadowReceiverRows.size() - 1u);
     }
 
     // A depth-tested 3D draw recorded under SetTerrainWater draws through its pipeline's water twin,
@@ -6728,6 +6827,16 @@ private:
             // Terrain water (desktop only): the tile texture (t0), FogUniforms (b0), SceneLighting (b1).
             s_fragShaderTerrainWater =
                 createShader("terrain_water", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 2, /*fatal=*/false);
+            // Torch light on the ground (desktop only): terrain_lights.vert takes Transform (b0), the
+            // vertex-to-world rows (b1) and the light taken out of the vertex colour (the normal); the
+            // fragment shaders the tile texture (t0, and the sun's shadow map t1), FogUniforms (b0) and
+            // SceneLighting with the sun shadow and the torch lights (b1).
+            s_vertShaderTerrainLights =
+                createShader("terrain_lights", "vert", SDL_GPU_SHADERSTAGE_VERTEX, 0, 0, 2, /*fatal=*/false);
+            s_fragShaderTerrainLights =
+                createShader("terrain_lights", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 2, /*fatal=*/false);
+            s_fragShaderTerrainLightsShadow =
+                createShader("terrain_lights_shadow", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 2, /*fatal=*/false);
 #endif
             // The desktop's also takes the normal map (t2); the browser's WGSL has none.
 #ifndef __EMSCRIPTEN__
@@ -6830,7 +6939,8 @@ private:
         }
         for (SDL_GPUShader** shader :
              {&s_vertShader3DWorld, &s_fragShaderTexFogShadow, &s_fragShaderLitShadow, &s_fragShaderShadowCaster,
-              &s_fragShaderTerrainWater})
+              &s_fragShaderTerrainWater, &s_vertShaderTerrainLights, &s_fragShaderTerrainLights,
+              &s_fragShaderTerrainLightsShadow})
         {
             if (*shader)
             {
@@ -6862,6 +6972,9 @@ private:
         Skinned,
         SkinnedShadow, // the skinned layout, with skinned_shadow.vert
         ThreeDimensionalWorld, // the 3D layout, with basic_textured_world.vert (sun shadow receivers)
+        // The 3D layout plus the normal (the torch light taken out of the vertex colour), with
+        // terrain_lights.vert (the torch light on the ground).
+        ThreeDimensionalTerrainLights,
     };
 
     enum class FragmentShader
@@ -6873,6 +6986,8 @@ private:
         SkinnedLitShadow,
         SunShadowCaster,
         TerrainWater,
+        TerrainLights,
+        TerrainLightsShadow,
     };
 
     struct PipelineBuildDescription
@@ -6909,6 +7024,10 @@ private:
             return s_fragShaderShadowCaster;
         case FragmentShader::TerrainWater:
             return s_fragShaderTerrainWater;
+        case FragmentShader::TerrainLights:
+            return s_fragShaderTerrainLights;
+        case FragmentShader::TerrainLightsShadow:
+            return s_fragShaderTerrainLightsShadow;
         case FragmentShader::Textured:
             break;
         }
@@ -6931,6 +7050,10 @@ private:
             return "shadow_caster.frag";
         case FragmentShader::TerrainWater:
             return "terrain_water.frag";
+        case FragmentShader::TerrainLights:
+            return "terrain_lights.frag";
+        case FragmentShader::TerrainLightsShadow:
+            return "terrain_lights_shadow.frag";
         case FragmentShader::Textured:
             break;
         }
@@ -7007,7 +7130,8 @@ private:
             numAttribs = 3;
         }
         else if (description.vertexLayout == VertexLayout::ThreeDimensional ||
-                 description.vertexLayout == VertexLayout::ThreeDimensionalWorld)
+                 description.vertexLayout == VertexLayout::ThreeDimensionalWorld ||
+                 description.vertexLayout == VertexLayout::ThreeDimensionalTerrainLights)
         {
             // Vertex3D mapped to the 2D shader's input locations:
             //   location 0 (TEXCOORD0 → pos):   float3 pos  — shader reads float2 (x,y), z dropped
@@ -7034,6 +7158,16 @@ private:
 
             vtxBufDesc.pitch = sizeof(Vertex3D);
             numAttribs = 3;
+            if (description.vertexLayout == VertexLayout::ThreeDimensionalTerrainLights)
+            {
+                // location 3 (TEXCOORD3): the normal, which carries the torch light taken out of the colour.
+                vertexAttribs[3] = {};
+                vertexAttribs[3].location = 3;
+                vertexAttribs[3].buffer_slot = 0;
+                vertexAttribs[3].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3;
+                vertexAttribs[3].offset = static_cast<Uint32>(offsetof(Vertex3D, nx));
+                numAttribs = 4;
+            }
         }
         else
         {
@@ -7120,6 +7254,7 @@ private:
             description.vertexLayout == VertexLayout::Skinned                 ? s_vertShaderSkinned
             : description.vertexLayout == VertexLayout::SkinnedShadow         ? s_vertShaderSkinnedShadow
             : description.vertexLayout == VertexLayout::ThreeDimensionalWorld ? s_vertShader3DWorld
+            : description.vertexLayout == VertexLayout::ThreeDimensionalTerrainLights ? s_vertShaderTerrainLights
                                                                               : s_vertShader2D;
         pipelineInfo.fragment_shader = GetFragmentShader(description.fragmentShader);
         pipelineInfo.vertex_input_state = vtxInputState;
@@ -7394,6 +7529,7 @@ private:
         DestroySsaoPipelines();
         s_particles.DestroyPipeline();
         DestroyTerrainWaterPipelines();
+        DestroyTerrainLightPipelines();
         DestroySunShadowPipelines();
         DestroySingleSamplePipelines();
         s_pipelinesMultisampled = false;
@@ -7610,6 +7746,7 @@ private:
         s_pipelinesMultisampled = s_sampleCount != Render::Antialiasing::OffSampleCount;
         CreateSunShadowPipelines();
         CreateTerrainWaterPipelines();
+        CreateTerrainLightPipelines();
         CreateSsaoPipelines();
         CreateParticlesPipeline();
         return true;
@@ -8039,6 +8176,94 @@ private:
         mu::log::Get("render")->info("SDL_gpu -- terrain water: {} of {} pipelines", built, wanted);
     }
 
+    // The terrain light pipelines (Enhanced lighting, desktop): two twins of each depth-tested Enhanced
+    // 3D pipeline that blends Alpha or not at all, with terrain_lights.vert and terrain_lights.frag or
+    // terrain_lights_shadow.frag. Kept only when all kTerrainLightPipelineCount were built, so a
+    // flagged draw always finds both of its twins.
+    static void CreateTerrainLightPipelines()
+    {
+        DestroyTerrainLightPipelines();
+        if (!s_enhancedLightingAvailable || !s_vertShaderTerrainLights || !s_fragShaderTerrainLights ||
+            !s_fragShaderTerrainLightsShadow)
+        {
+            return;
+        }
+        const char* deviceDriver = SDL_GetGPUDeviceDriver(s_device);
+        const char* driverName = deviceDriver ? deviceDriver : "unknown";
+
+        SDL_GPUColorTargetBlendState opaque{};
+        opaque.src_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+        opaque.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ZERO;
+        opaque.color_blend_op = SDL_GPU_BLENDOP_ADD;
+        opaque.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+        opaque.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ZERO;
+        opaque.alpha_blend_op = SDL_GPU_BLENDOP_ADD;
+        opaque.enable_blend = false;
+        SDL_GPUColorTargetBlendState alpha = opaque;
+        alpha.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+        alpha.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+        alpha.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+        alpha.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+        alpha.enable_blend = true;
+
+        int built = 0;
+        const auto addTwin = [&](std::unordered_map<SDL_GPUGraphicsPipeline*, SDL_GPUGraphicsPipeline*>& twins,
+                                 SDL_GPUGraphicsPipeline* source, SDL_GPUColorTargetBlendState blendState,
+                                 const PipelineBuildDescription& description)
+        {
+            if (!source)
+            {
+                return;
+            }
+            const PipelineBuildResult result = BuildBlendPipeline(blendState, description);
+            if (!result.pipeline)
+            {
+                LogPipelineFailure(driverName, result, false);
+                return;
+            }
+            twins[source] = result.pipeline;
+            ++built;
+        };
+        struct LightBlend
+        {
+            int index;
+            const char* name;
+            SDL_GPUColorTargetBlendState state;
+        };
+        struct LightSet
+        {
+            std::unordered_map<SDL_GPUGraphicsPipeline*, SDL_GPUGraphicsPipeline*>* twins;
+            const char* name;
+            FragmentShader fragment;
+        };
+        const LightBlend blends[] = {{k_PipelineDisabled, "disabled", opaque}, {k_PipelineAlpha, "alpha", alpha}};
+        const LightSet sets[] = {
+            {&s_terrainLightPipelines, "3d-enhanced-fog-terrain-lights", FragmentShader::TerrainLights},
+            {&s_terrainLightShadowPipelines, "3d-enhanced-fog-terrain-lights-sun-shadow",
+             FragmentShader::TerrainLightsShadow},
+        };
+        constexpr VertexLayout kLayout = VertexLayout::ThreeDimensionalTerrainLights;
+        for (const LightSet& set : sets)
+        {
+            for (const LightBlend& blend : blends)
+            {
+                addTwin(*set.twins, s_pipelines3DEnhancedFog.culled[blend.index], blend.state,
+                        {set.name, blend.name, blend.index, true, true, kLayout, true, set.fragment});
+                addTwin(*set.twins, s_pipelines3DEnhancedFog.noCull[blend.index], blend.state,
+                        {set.name, blend.name, blend.index, true, true, kLayout, false, set.fragment});
+                addTwin(*set.twins, s_pipelines3DEnhancedFog.depthReadOnly[blend.index], blend.state,
+                        {set.name, blend.name, blend.index, true, false, kLayout, false, set.fragment});
+            }
+        }
+        constexpr int kTerrainLightPipelineCount = 12;
+        mu::log::Get("render")->info("SDL_gpu -- terrain lights: {} of {} pipelines", built,
+                                     kTerrainLightPipelineCount);
+        if (built != kTerrainLightPipelineCount)
+        {
+            DestroyTerrainLightPipelines();
+        }
+    }
+
     // SSAO's pipelines (desktop, only when SSAO or the haze is on at start-up): the depth-only twins
     // the opaque world's depth is drawn with, SdlGpuSsao's occlusion, blur and apply passes, and the
     // haze over that depth.
@@ -8168,6 +8393,18 @@ private:
         }
         s_ssao.DestroyPipelines();
         s_haze.DestroyPipeline();
+    }
+
+    static void DestroyTerrainLightPipelines()
+    {
+        for (auto* twins : {&s_terrainLightPipelines, &s_terrainLightShadowPipelines})
+        {
+            for (const auto& [source, lit] : *twins)
+            {
+                SDL_ReleaseGPUGraphicsPipeline(s_device, lit);
+            }
+            twins->clear();
+        }
     }
 
     static void DestroyTerrainWaterPipelines()

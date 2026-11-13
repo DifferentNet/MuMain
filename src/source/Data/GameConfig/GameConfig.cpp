@@ -157,6 +157,11 @@ void GameConfig::Load()
     m_particlesStrength =
         std::clamp(ReadInt(CfgSectionRender, CfgKeyParticlesStrength, CfgDefaultParticlesStrength),
                    CfgMinParticlesStrength, CfgMaxParticlesStrength);
+    m_torchLights = std::clamp(ReadInt(CfgSectionRender, CfgKeyTorchLights, CfgDefaultTorchLights), CfgMinTorchLights,
+                               CfgMaxTorchLights);
+    m_torchLightsStrength =
+        std::clamp(ReadInt(CfgSectionRender, CfgKeyTorchLightsStrength, CfgDefaultTorchLightsStrength),
+                   CfgMinTorchLightsStrength, CfgMaxTorchLightsStrength);
     m_sunShadows = GameConfigValidation::ValidateSunShadows(
         ReadInt(CfgSectionRender, CfgKeySunShadows, CfgDefaultSunShadows));
     m_sharpen = GameConfigValidation::ValidateSharpen(ReadInt(CfgSectionRender, CfgKeySharpen, CfgDefaultSharpen));
@@ -263,6 +268,8 @@ void GameConfig::Save()
     WriteInt(CfgSectionRender, CfgKeyHazeStrength, m_hazeStrength);
     WriteInt(CfgSectionRender, CfgKeyParticles, m_particles);
     WriteInt(CfgSectionRender, CfgKeyParticlesStrength, m_particlesStrength);
+    WriteInt(CfgSectionRender, CfgKeyTorchLights, m_torchLights);
+    WriteInt(CfgSectionRender, CfgKeyTorchLightsStrength, m_torchLightsStrength);
     WriteInt(CfgSectionRender, CfgKeySunShadows, m_sunShadows);
     WriteInt(CfgSectionRender, CfgKeySharpen, m_sharpen);
     WriteBool(CfgSectionRender, CfgKeyDisableEffects, m_disableEffects);
@@ -469,6 +476,17 @@ void GameConfig::SetParticlesStrength(int percent)
 {
     m_particlesStrength =
         std::clamp(percent, CfgDefaults::CfgMinParticlesStrength, CfgDefaults::CfgMaxParticlesStrength);
+}
+
+void GameConfig::SetTorchLights(int torchLights)
+{
+    m_torchLights = std::clamp(torchLights, CfgDefaults::CfgMinTorchLights, CfgDefaults::CfgMaxTorchLights);
+}
+
+void GameConfig::SetTorchLightsStrength(int percent)
+{
+    m_torchLightsStrength =
+        std::clamp(percent, CfgDefaults::CfgMinTorchLightsStrength, CfgDefaults::CfgMaxTorchLightsStrength);
 }
 
 void GameConfig::SetAntialiasing(int samples)

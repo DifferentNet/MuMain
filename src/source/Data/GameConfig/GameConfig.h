@@ -268,6 +268,13 @@ public:
     int GetParticlesStrength() const { return m_particlesStrength; }
     void SetParticles(int particles);
     void SetParticlesStrength(int percent);
+    // [Render] TorchLights: with HD textures on, the map lights near the hero drawn on the ground as
+    // smooth round pools (Render/Terrain/TorchLights.h), 0 off, 1 on; TorchLightsStrength in percent
+    // (both clamped; Options > Graphics applies them at once).
+    int GetTorchLights() const { return m_torchLights; }
+    int GetTorchLightsStrength() const { return m_torchLightsStrength; }
+    void SetTorchLights(int torchLights);
+    void SetTorchLightsStrength(int percent);
     // [Render] SunShadows: 0 off, 1 medium, 2 high (clamped).
     int GetSunShadows() const { return m_sunShadows; }
     void SetSunShadows(int level);
@@ -417,6 +424,8 @@ private:
     int m_hazeStrength = 70;
     int m_particles = 1;
     int m_particlesStrength = 70;
+    int m_torchLights = 1;
+    int m_torchLightsStrength = 70;
     int m_sunShadows = 0;
     int m_sharpen = 0;
     std::wstring m_renderBackend;
