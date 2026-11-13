@@ -7264,9 +7264,20 @@ void ReceiveTradeExit(const BYTE* ReceiveBuffer)
     App::Control::Events::RecordTradeClosed(Data->Value);
 }
 
-void ReceivePing(const BYTE* ReceiveBuffer)
+// The server's ping: C1 03 71, or C1 07 71 + a 4-byte number (MU Skynet add-on NetworkQuality). A numbered ping is
+// answered with the same number, so the server can tell a late answer from the next ping's.
+void ReceivePing(const BYTE* ReceiveBuffer, int32_t Size)
 {
-    SocketClient->ToGameServer()->SendPingResponse();
+    constexpr int32_t TaggedPingSize = 7;
+    if (Size < TaggedPingSize || ReceiveBuffer[1] < TaggedPingSize)
+    {
+        SocketClient->ToGameServer()->SendPingResponse();
+        return;
+    }
+
+    BYTE answer[TaggedPingSize] = {0xC1, TaggedPingSize, 0x71};
+    std::copy(ReceiveBuffer + 3, ReceiveBuffer + TaggedPingSize, answer + 3);
+    SocketClient->Send(answer, TaggedPingSize);
 }
 
 void ReceiveStorageGold(const BYTE* ReceiveBuffer)
@@ -13895,7 +13906,7 @@ static void ProcessPacket(const BYTE* ReceiveBuffer, int32_t Size)
         break;
 
     case 0x71:
-        ReceivePing(ReceiveBuffer);
+        ReceivePing(ReceiveBuffer, Size);
         break;
     case 0x81:
         ReceiveStorageGold(ReceiveBuffer);
