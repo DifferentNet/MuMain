@@ -1142,7 +1142,9 @@ void mu::ui::window::CInventoryCtrl::UpdateCells()
         }
         if (CanChangeItemColorState(pItem) == true)
             SetItemColorState(pItem);
-        m_Cells[iCurSquareIndex].tint = TintClass(pItem->byColorState);
+        // pad-item-<its top-left cell>: the pad's frame takes the item's cells as one (UI/HUD/PadTargets).
+        m_Cells[iCurSquareIndex].tint = std::string(TintClass(pItem->byColorState)) + " pad-item-"
+                                        + std::to_string(pItem->y * m_nColumn + pItem->x);
     }
 
     for (const ITEM* pItem : m_vecItem)

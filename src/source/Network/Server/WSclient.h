@@ -1218,7 +1218,7 @@ typedef struct
     BYTE         KeyQWE[3];
     BYTE		 ChatLogBox;
     BYTE		 KeyR;
-    int			 QWERLevel;
+    BYTE         KeyLevel[4]; // Q, W, E, R: bytes 26-29 of the saved layout (BuildOptions)
 } PRECEIVE_OPTION, * LPPRECEIVE_OPTION;
 #pragma pack(pop)
 

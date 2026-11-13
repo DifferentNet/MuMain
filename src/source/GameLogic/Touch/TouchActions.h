@@ -128,12 +128,19 @@ Progress PickUpNearest();
 // A to talk to the NPC or open the player's menu, and for the world to light it. False when there was
 // none to pick.
 bool CycleTarget(int step);
+// The pad's right stick (pad round 3, 2026-11-13): chooses the foe that lies the way the stick leans
+// on the screen (screenX, screenY), from the one lit; with no foe near, the NPC or player that way.
+// `again` for the stick held on: it goes on that way and stops at the last one. False with no change.
+bool CycleTargetToward(float screenX, float screenY, bool again);
 void ClearChosenTarget();
 // The touch Target button: the next foe by distance after the one lit, going round, as CycleTarget(1)
 // picks one, but never an NPC or a player to meet. False when there is no other foe to go to.
 bool NextFoe();
 // Whether NextFoe() has another foe to go to than the one lit now: the Target button dims without.
 [[nodiscard]] bool HasOtherFoe();
+// Whether any foe A would attack stands within reach, the lit one too: with none, the pad's A picks
+// up or talks instead (pad round 3, 2026-11-13).
+[[nodiscard]] bool HasFoeNear();
 [[nodiscard]] int MeetIndex();
 // Walks the character up to that one: true once within `distance` (the world's units, a tile is
 // 100), else sends the walk again now and then. Called every frame until it says true.

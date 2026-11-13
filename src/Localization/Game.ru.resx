@@ -15196,10 +15196,10 @@
     <value>Геймпад (раскладка Xbox)</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Левый стик: идти. Правый стик: толкните — следующая цель (вправо дальше, влево ближе); в окне — свободный курсор</value>
+    <value>Левый стик: идти. Правый стик: наклоните к цели — выбрать её, держите — дальше в ту сторону; в окне — свободный курсор</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
-    <value>A: нажмите — ударить цель, держите — продолжать бой</value>
+    <value>A: нажмите — ударить цель, держите — продолжать бой; без монстров рядом — поднять (держите) или поговорить с NPC</value>
   </data>
   <data name="PadHelpSkills" xml:space="preserve">
     <value>X, Y, B: три кнопки умений. Держите RT: X и Y применяют умения 4 и 5. RB: кого из группы лечить и баффать</value>
@@ -15872,6 +15872,12 @@
   </data>
   <data name="PadPress" xml:space="preserve">
     <value>Нажать</value>
+  </data>
+  <data name="PadDialogYes" xml:space="preserve">
+    <value>Да / ОК</value>
+  </data>
+  <data name="PadDialogNo" xml:space="preserve">
+    <value>Нет / Отмена</value>
   </data>
   <data name="PadAdjust" xml:space="preserve">
     <value>Изменить</value>

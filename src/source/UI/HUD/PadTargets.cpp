@@ -4,6 +4,7 @@
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/RmlBridge/RmlElementBox.h"
 #include "UI/Placement/WindowPlacement.h"
+#include "UI/Inventory/InventoryContents.h"
 #include "UI/RmlBridge/RmlStackingOrder.h"
 
 #include <RmlUi/Core.h>
@@ -50,6 +51,9 @@ constexpr const char* SlotClass = "equip-slot";
 constexpr const char* StartClass = "pad-start";
 // A cell under an item carries its tint (ItemGridCell::tint), an empty one none.
 constexpr std::string_view TintPrefix = "tint-";
+// An item's cells carry pad-item-<its top-left cell> (CInventoryCtrl::UpdateCells): the frame takes
+// them as one target, the item's whole box, and hops from item to item (pad round 3, 2026-11-13).
+constexpr std::string_view ItemPrefix = "pad-item-";
 // A worn slot with nothing in it (MyInventory's slot_states).
 constexpr const char* BareSlotClass = "bare";
 // A grid whose items are only to look at (the partner's offer in a trade): its tooltip shows them,
@@ -189,6 +193,7 @@ public:
     {
         m_Targets.clear();
         m_Elements.clear();
+        m_Items.clear();
         m_Popup = nullptr;
         m_OnPopup = false;
         m_ListCount = 0;
@@ -282,8 +287,40 @@ private:
         Rml::Element* list = ScrollingList(element);
         if (list != nullptr && !PlaceInList(*list, target))
             return;
+        // An item on the cursor goes down cell by cell: then every cell stays its own target.
+        const int item = target.cell && !target.empty && !UI::Inventory::HasPickedItem() ? ItemOf(element) : -1;
+        if (item >= 0)
+        {
+            for (const ItemCells& cells : m_Items)
+            {
+                if (cells.grid != element.GetParentNode() || cells.item != item)
+                    continue;
+                Box& box = m_Targets[cells.target].box;
+                box = {std::min(box.left, target.box.left), std::min(box.top, target.box.top),
+                       std::max(box.right, target.box.right), std::max(box.bottom, target.box.bottom)};
+                return;
+            }
+            m_Items.push_back({element.GetParentNode(), item, m_Targets.size()});
+        }
         m_Targets.push_back(target);
         m_Elements.push_back(&element);
+    }
+
+    // The item's top-left cell a cell carries in its pad-item- class, -1 for none.
+    static int ItemOf(const Rml::Element& element)
+    {
+        const Rml::String names = element.GetClassNames();
+        const std::size_t at = names.find(ItemPrefix);
+        if (at == Rml::String::npos)
+            return -1;
+        int cell = 0;
+        bool digits = false;
+        for (std::size_t i = at + ItemPrefix.size(); i < names.size() && names[i] >= '0' && names[i] <= '9'; ++i)
+        {
+            cell = cell * 10 + (names[i] - '0');
+            digits = true;
+        }
+        return digits ? cell : -1;
     }
 
     // Marks the target with its list, false when the list shows too little of it.
@@ -321,8 +358,17 @@ private:
         return false;
     }
 
+    // The items whose first cell is a target already: the grid, the item, the target.
+    struct ItemCells
+    {
+        const Rml::Element* grid = nullptr;
+        int item = -1;
+        std::size_t target = 0;
+    };
+
     std::vector<Target> m_Targets;
     std::vector<Rml::Element*> m_Elements;
+    std::vector<ItemCells> m_Items;
     Rml::Element* m_Popup = nullptr;
     bool m_OnPopup = false;
     std::array<Rml::Element*, MostLists> m_Lists{};

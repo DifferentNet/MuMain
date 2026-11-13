@@ -108,6 +108,14 @@ mu_add_test(
         test_target_priority.cpp
 )
 
+# The pad's right stick picks the target that lies the way it leans (pad round 3, 2026-11-13).
+mu_add_test(
+    NAME test_direction_pick
+    SOURCES
+        test_direction_pick.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Touch/DirectionPick.cpp
+)
+
 mu_add_test(
     NAME test_steer_hold
     SOURCES

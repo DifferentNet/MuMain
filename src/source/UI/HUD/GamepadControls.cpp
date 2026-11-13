@@ -239,6 +239,8 @@ struct State
     LongPress dpadLeftPress;
     // D-pad down's press talks to an NPC (no drop around), rather than holding the pickup button.
     bool dpadDownTalks = false;
+    // A, pressed with no foe near and a drop around, holds the pickup button until let go.
+    bool aPicks = false;
     // The NPC click: the pointer moved onto the NPC (1), the button down (2).
     int npcClickStage = 0;
     // The player A chose (an index in CharactersClient, -1 for none), walked up to until their menu
@@ -475,6 +477,7 @@ void ReleaseButtons(SDL_Window* window)
     EndPress(window, g_state.a, {});
     ReleaseControls();
     g_state.npcClickStage = 0;
+    g_state.aPicks = false;
     ForgetLongPresses();
     Controls::ReleasePad();
     Pointer::Release(window);
@@ -623,8 +626,8 @@ void PickTargets()
     {
         g_state.flicked = true;
         g_state.flickNext = now + (fresh ? FlickFirstRepeat : FlickRepeat);
-        const float along = std::abs(stick.x) >= std::abs(stick.y) ? stick.x : stick.y;
-        if (GameLogic::Touch::CycleTarget(along >= 0.f ? 1 : -1))
+        // The one that lies the way the stick leans (pad round 3, 2026-11-13); held, the next one on.
+        if (GameLogic::Touch::CycleTargetToward(stick.x, stick.y, !fresh))
             Pad::Rumble(0.f, PickTickStrength, PickTickMilliseconds);
     }
     if (g_state.rightStickClick.Pressed())
@@ -776,8 +779,9 @@ void HoldMappedControls(const Presses& presses)
     }
     for (const Mapping& mapping : Mappings)
     {
-        // A over the world with a window open holds the attack button itself (PlayPointer).
-        if (mapping.control == PadButton::Attack && g_state.a.mode == Hold::Attack)
+        // A over the world with a window open holds the attack button itself (PlayPointer); A that
+        // picks up (PlayContextA) holds none.
+        if (mapping.control == PadButton::Attack && (g_state.a.mode == Hold::Attack || g_state.aPicks))
             continue;
         Controls::SetPadHeld(mapping.control, held[static_cast<int>(mapping.control)]);
     }
@@ -796,6 +800,10 @@ bool IsGameWindowOpen()
         return true;
     for (int window = mu::ui::window::INTERFACE_BEGIN + 1; window < mu::ui::window::INTERFACE_END; ++window)
     {
+        // The map (d-pad left, Tab) is a look, not a window to use: the hero keeps walking, fighting and
+        // picking up under it, and d-pad left closes it again (pad round 3, 2026-11-13).
+        if (window == mu::ui::window::INTERFACE_MINI_MAP)
+            continue;
         if (!g_pNewUISystem->IsImpossibleHideInterface(window) && g_pNewUISystem->IsVisible(window))
             return true;
     }
@@ -902,6 +910,33 @@ void PlayMeet(SDL_Window* window, Presses& presses, Clock::time_point now)
     }
 }
 
+// A with no foe in reach (pad round 3, 2026-11-13): held, it gathers the drops around as d-pad down
+// does; with no drop either, a press talks to the nearest NPC. A foe near keeps A an attack.
+void PlayContextA(SDL_Window* window, Presses& presses)
+{
+    const bool holds = HoldsControl(Button::A);
+    if (g_state.aPicks)
+    {
+        g_state.aPicks = holds;
+        Take(presses, Button::A);
+        return;
+    }
+    if (!Pressed(presses, Button::A) || g_state.waitForRelease[static_cast<int>(Button::A)])
+        return;
+    if (GameLogic::Touch::HasFoeNear())
+        return;
+    if (GameLogic::Touch::HasDropToPick())
+    {
+        Take(presses, Button::A);
+        g_state.aPicks = true;
+    }
+    else if (TalkToNearestNpc(window))
+    {
+        Take(presses, Button::A);
+        g_state.waitForRelease[static_cast<int>(Button::A)] = true;
+    }
+}
+
 // The NPC click a frame at a time: the game reads the moved pointer first, then the button.
 void FollowNpcClick(SDL_Window* window)
 {
@@ -935,7 +970,7 @@ void PlayDpadDown(SDL_Window* window, const Presses& presses)
     }
     if (!holds && pressed)
         Controls::SetPadHeld(PadButton::PickUp, true);
-    Controls::SetPadHeld(PadButton::PickUp, holds);
+    Controls::SetPadHeld(PadButton::PickUp, holds || g_state.aPicks);
 }
 
 // RT held in the world, d-pad up and down zoom the camera in and out, a step a press, as the mouse's
@@ -1043,6 +1078,7 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
         AnswerDialog(presses, aRested);
     if (windowOpen)
     {
+        g_state.aPicks = false;
         TurnHelpPages(presses);
         TurnHubTabs(presses, now);
         if (frameOpen)
@@ -1057,6 +1093,7 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
     {
         PickTargets();
         PlayMeet(window, presses, now);
+        PlayContextA(window, presses);
         // RB: whom the heals and buffs go to (ghinzuro, 2026-11-04).
         if (Pressed(presses, Button::RightShoulder) && !g_state.waitForRelease[static_cast<int>(Button::RightShoulder)])
             GameLogic::Touch::ChooseNextFriend();
@@ -1325,6 +1362,13 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
         else if (does == Does::Keeps)
             view.legendSays = Legend::Keep;
     }
+    // A question box (trade, party, selling) says its answers: B is no, A and Menu yes, or A presses
+    // the button the frame is on (pad round 3, 2026-11-13: a new player saw a question and no hint).
+    if (UI::Dialogs::Modal::IsOpen() && !menu)
+    {
+        view.legend = true;
+        view.legendSays = dialog || UI::Dialogs::Modal::IsPointerOnButton() ? Legend::DialogButton : Legend::Answer;
+    }
     float x = 0.f;
     float y = 0.f;
     const Rml::Context* context = RmlUiRuntime::Instance().GetContext();
@@ -1341,7 +1385,10 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
         view.promptSays = CharactersClient[meet].Object.Kind == KIND_NPC ? Prompt::Talk : Prompt::Menu;
     }
     else if (g_state.promptDrop >= 0)
+    {
         prompted = GameLogic::Touch::DropOnScreen(g_state.promptDrop, x, y);
+        view.promptByA = !GameLogic::Touch::HasFoeNear();
+    }
     if (prompted && context != nullptr && WindowWidth > 0)
     {
         // The camera's point is in the game's window pixels, the overlay's in the context's.
