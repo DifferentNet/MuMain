@@ -144,9 +144,9 @@ namespace mu::ui::window
         void RmlSoundVolumeChanged(int value);
         void RmlMusicVolumeChanged(int value);
         void RmlRenderLevelChanged(int value);
-        // The volume, effect-limit, SSAO, wind, haze, particle and torch light gauges' pointer and wheel
-        // events (0 sound, 1 music, 2 effects, 3 SSAO strength, 4 wind strength, 5 haze strength,
-        // 6 particle density, 7 torch light strength).
+        // The volume, effect-limit, SSAO, wind, haze, particle, torch light and foliage smoothing gauges'
+        // pointer and wheel events (0 sound, 1 music, 2 effects, 3 SSAO strength, 4 wind strength, 5 haze
+        // strength, 6 particle density, 7 torch light strength, 8 foliage smoothing strength).
         void RmlGaugeEvent(Rml::Event& event, int gauge);
         void RmlResolutionChanged(int index);
         void RmlLanguageChanged(int index);
@@ -219,6 +219,10 @@ namespace mu::ui::window
         // once, not part of the graphics presets.
         void RmlToggleTorchLights();
         void RmlTorchLightsStrengthChanged(int level);
+        // [Render] FoliageSmoothing and FoliageSmoothingStrength (gauge 8, levels 0..10): saved and
+        // applied at once, not part of the graphics presets.
+        void RmlToggleFoliageSmoothing();
+        void RmlFoliageSmoothingStrengthChanged(int level);
         // Interface/UI tab -- Show FPS Counter/Show Debug Info stay ephemeral (SceneManager.h
         // globals, no GameConfig persistence), matching $fpscounter/$details today.
         void RmlToggleShowFpsCounter();
@@ -482,6 +486,19 @@ namespace mu::ui::window
             int torchLightsStrength = 7;
             int torchLightsStrengthPercent = 70;
             Rml::String torchLightsStrengthLabel;
+            // [Render] FoliageSmoothing and FoliageSmoothingStrength (Remaster PC client only): locked
+            // without HD textures and on the Low preset (Render::Textures::FoliageSmoothing::Block); its
+            // hint says why; the strength slider (levels 0..10 = 0..100 %) shows while it is on and not
+            // locked.
+            bool foliageSmoothing = true;
+            bool foliageSmoothingAvailable = false;
+            bool foliageSmoothingLocked = false;
+            Rml::String foliageSmoothingLabel;
+            Rml::String foliageSmoothingTooltip;
+            bool foliageSmoothingStrengthShown = false;
+            int foliageSmoothingStrength = 7;
+            int foliageSmoothingStrengthPercent = 70;
+            Rml::String foliageSmoothingStrengthLabel;
             std::vector<Rml::String> sharpenLabels;
             int sharpenIndex = 0;
             Rml::String sharpenRowLabel;
@@ -570,6 +587,7 @@ namespace mu::ui::window
         void SyncHazeRows(OptionRmlModel& model);
         void SyncParticlesRows(OptionRmlModel& model);
         void SyncTorchLightsRows(OptionRmlModel& model);
+        void SyncFoliageSmoothingRows(OptionRmlModel& model);
         void OnRmlBuilt();
         UI::RmlBridge::ThemedView<OptionRmlModel> m_RmlView{"option_window",
             [this](Rml::DataModelConstructor& c, OptionRmlModel& model) { BindRmlModel(c, model); },

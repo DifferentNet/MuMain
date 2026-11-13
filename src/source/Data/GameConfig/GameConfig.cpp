@@ -162,6 +162,11 @@ void GameConfig::Load()
     m_torchLightsStrength =
         std::clamp(ReadInt(CfgSectionRender, CfgKeyTorchLightsStrength, CfgDefaultTorchLightsStrength),
                    CfgMinTorchLightsStrength, CfgMaxTorchLightsStrength);
+    m_foliageSmoothing = std::clamp(ReadInt(CfgSectionRender, CfgKeyFoliageSmoothing, CfgDefaultFoliageSmoothing),
+                                    CfgMinFoliageSmoothing, CfgMaxFoliageSmoothing);
+    m_foliageSmoothingStrength =
+        std::clamp(ReadInt(CfgSectionRender, CfgKeyFoliageSmoothingStrength, CfgDefaultFoliageSmoothingStrength),
+                   CfgMinFoliageSmoothingStrength, CfgMaxFoliageSmoothingStrength);
     m_sunShadows = GameConfigValidation::ValidateSunShadows(
         ReadInt(CfgSectionRender, CfgKeySunShadows, CfgDefaultSunShadows));
     m_sharpen = GameConfigValidation::ValidateSharpen(ReadInt(CfgSectionRender, CfgKeySharpen, CfgDefaultSharpen));
@@ -270,6 +275,8 @@ void GameConfig::Save()
     WriteInt(CfgSectionRender, CfgKeyParticlesStrength, m_particlesStrength);
     WriteInt(CfgSectionRender, CfgKeyTorchLights, m_torchLights);
     WriteInt(CfgSectionRender, CfgKeyTorchLightsStrength, m_torchLightsStrength);
+    WriteInt(CfgSectionRender, CfgKeyFoliageSmoothing, m_foliageSmoothing);
+    WriteInt(CfgSectionRender, CfgKeyFoliageSmoothingStrength, m_foliageSmoothingStrength);
     WriteInt(CfgSectionRender, CfgKeySunShadows, m_sunShadows);
     WriteInt(CfgSectionRender, CfgKeySharpen, m_sharpen);
     WriteBool(CfgSectionRender, CfgKeyDisableEffects, m_disableEffects);
@@ -487,6 +494,18 @@ void GameConfig::SetTorchLightsStrength(int percent)
 {
     m_torchLightsStrength =
         std::clamp(percent, CfgDefaults::CfgMinTorchLightsStrength, CfgDefaults::CfgMaxTorchLightsStrength);
+}
+
+void GameConfig::SetFoliageSmoothing(int foliageSmoothing)
+{
+    m_foliageSmoothing =
+        std::clamp(foliageSmoothing, CfgDefaults::CfgMinFoliageSmoothing, CfgDefaults::CfgMaxFoliageSmoothing);
+}
+
+void GameConfig::SetFoliageSmoothingStrength(int percent)
+{
+    m_foliageSmoothingStrength =
+        std::clamp(percent, CfgDefaults::CfgMinFoliageSmoothingStrength, CfgDefaults::CfgMaxFoliageSmoothingStrength);
 }
 
 void GameConfig::SetAntialiasing(int samples)

@@ -11670,6 +11670,21 @@
   <data name="TorchLightsLockedLighting" xml:space="preserve">
     <value>Enhanced lighting と Dynamic lights が必要です。</value>
   </data>
+  <data name="FoliageSmoothingRow" xml:space="preserve">
+    <value>葉の縁を滑らかに</value>
+  </data>
+  <data name="FoliageSmoothingTooltip" xml:space="preserve">
+    <value>カメラを動かしたときの草、葉、柵、手すりのちらつきが減ります。キャラクター、モンスター、装備は変わりません。</value>
+  </data>
+  <data name="FoliageSmoothingStrengthRow" xml:space="preserve">
+    <value>葉の滑らかさの強さ</value>
+  </data>
+  <data name="FoliageSmoothingLockedHdTextures" xml:space="preserve">
+    <value>HDテクスチャが必要です。</value>
+  </data>
+  <data name="FoliageSmoothingLockedLowPreset" xml:space="preserve">
+    <value>グラフィックプリセット「低」ではオフです。</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>強いモンスター優先</value>

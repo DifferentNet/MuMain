@@ -16090,6 +16090,21 @@
   <data name="TorchLightsLockedLighting" xml:space="preserve">
     <value>Нужны Enhanced lighting и Dynamic lights.</value>
   </data>
+  <data name="FoliageSmoothingRow" xml:space="preserve">
+    <value>Сглаживание листвы и травы</value>
+  </data>
+  <data name="FoliageSmoothingTooltip" xml:space="preserve">
+    <value>Трава, листва, заборы и перила меньше рябят при движении камеры. Персонажи, монстры и снаряжение не меняются.</value>
+  </data>
+  <data name="FoliageSmoothingStrengthRow" xml:space="preserve">
+    <value>Сила сглаживания листвы</value>
+  </data>
+  <data name="FoliageSmoothingLockedHdTextures" xml:space="preserve">
+    <value>Нужны HD-текстуры.</value>
+  </data>
+  <data name="FoliageSmoothingLockedLowPreset" xml:space="preserve">
+    <value>Выключено на пресете графики «Низкий».</value>
+  </data>
   <data name="BagPageLocked" xml:space="preserve">
     <value>Страница 2 закрыта</value>
   </data>

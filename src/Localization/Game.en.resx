@@ -16428,6 +16428,21 @@
   <data name="TorchLightsLockedLighting" xml:space="preserve">
     <value>Needs Enhanced lighting with dynamic lights.</value>
   </data>
+  <data name="FoliageSmoothingRow" xml:space="preserve">
+    <value>Smooth foliage edges</value>
+  </data>
+  <data name="FoliageSmoothingTooltip" xml:space="preserve">
+    <value>Grass, leaves, fences and railings shimmer less while the camera moves. Characters, monsters and gear are unchanged.</value>
+  </data>
+  <data name="FoliageSmoothingStrengthRow" xml:space="preserve">
+    <value>Foliage smoothing strength</value>
+  </data>
+  <data name="FoliageSmoothingLockedHdTextures" xml:space="preserve">
+    <value>Needs HD textures.</value>
+  </data>
+  <data name="FoliageSmoothingLockedLowPreset" xml:space="preserve">
+    <value>Off on the Low graphics preset.</value>
+  </data>
   <data name="BagPageLocked" xml:space="preserve">
     <value>Page 2 is locked</value>
   </data>

@@ -13595,6 +13595,21 @@
   <data name="TorchLightsLockedLighting" xml:space="preserve">
     <value>Kailangan ng Enhanced lighting na may Dynamic lights.</value>
   </data>
+  <data name="FoliageSmoothingRow" xml:space="preserve">
+    <value>Pakinisin ang gilid ng mga dahon</value>
+  </data>
+  <data name="FoliageSmoothingTooltip" xml:space="preserve">
+    <value>Mas kaunti ang kislap ng damo, dahon, bakod at barandilya habang gumagalaw ang camera. Hindi nagbabago ang mga karakter, halimaw at gamit.</value>
+  </data>
+  <data name="FoliageSmoothingStrengthRow" xml:space="preserve">
+    <value>Lakas ng pagpapakinis ng mga dahon</value>
+  </data>
+  <data name="FoliageSmoothingLockedHdTextures" xml:space="preserve">
+    <value>Kailangan ng HD na texture.</value>
+  </data>
+  <data name="FoliageSmoothingLockedLowPreset" xml:space="preserve">
+    <value>Naka-off sa Low na graphics preset.</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Unahin ang malakas</value>

@@ -154,6 +154,12 @@ namespace CfgKeys
     // keep their light. TorchLightsStrength in percent (0 to 100; 70 = 1.2 times the Classic light).
     inline constexpr wchar_t CfgKeyTorchLights[] = L"TorchLights";
     inline constexpr wchar_t CfgKeyTorchLightsStrength[] = L"TorchLightsStrength";
+    // [Render] FoliageSmoothing: with HD textures on, 0 off, 1 the maps' cut-out textures (grass, leaves,
+    // fences, railings) sampled a little softer and the grass under anti-aliasing through
+    // alpha-to-coverage (Render/Textures/FoliageSmoothing.h); no light is added to anything.
+    // FoliageSmoothingStrength in percent (0 to 100; 70 = +0.7 mip levels on the HD bias).
+    inline constexpr wchar_t CfgKeyFoliageSmoothing[] = L"FoliageSmoothing";
+    inline constexpr wchar_t CfgKeyFoliageSmoothingStrength[] = L"FoliageSmoothingStrength";
     // Sun shadows of the Enhanced look: 0 off, 1 medium (2048 map), 2 high (4096 map). The browser
     // build keeps them under their own key: older /play builds saved the presets' value in SunShadows,
     // and a browser player gets sun shadows only from the Options row.
@@ -344,6 +350,12 @@ namespace CfgDefaults
     inline constexpr int CfgDefaultTorchLightsStrength = 70;
     inline constexpr int CfgMinTorchLightsStrength = 0;
     inline constexpr int CfgMaxTorchLightsStrength = 100;
+    inline constexpr int CfgDefaultFoliageSmoothing = 1;
+    inline constexpr int CfgMinFoliageSmoothing = 0;
+    inline constexpr int CfgMaxFoliageSmoothing = 1;
+    inline constexpr int CfgDefaultFoliageSmoothingStrength = 70;
+    inline constexpr int CfgMinFoliageSmoothingStrength = 0;
+    inline constexpr int CfgMaxFoliageSmoothingStrength = 100;
     inline constexpr int CfgDefaultSunShadows = 0;
     inline constexpr int CfgMinSunShadows = 0;
     inline constexpr int CfgMaxSunShadows = 2;

@@ -12,6 +12,7 @@
 #include "Render/Models/WindSway.h"
 #include "Render/Effects/ParticlesSetting.h"
 #include "Render/Terrain/TorchLights.h"
+#include "Render/Textures/FoliageSmoothing.h"
 #include "Render/PostProcessing/HazeSetting.h"
 #include "Render/PostProcessing/ScreenFilterSetting.h"
 #include "Render/PostProcessing/SsaoSetting.h"
@@ -157,6 +158,8 @@ void ApplyGraphicsPreset(GraphicsPreset preset)
     Render::Effects::Particles::ApplyFromConfig();
     // The torch light on the ground is off on Low too.
     Render::Terrain::TorchLights::ApplyFromConfig();
+    // The foliage smoothing is off on Low too.
+    Render::Textures::FoliageSmoothing::ApplyFromConfig();
     config.Save();
     mu::log::Get("render")->info("Graphics preset {}", PresetName(preset));
 }

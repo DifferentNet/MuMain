@@ -263,6 +263,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Render/Lighting/DynamicLightList.cpp
 )
 
+# Smoother cut-out foliage: strength, locks, the cut-out samplers' mip bias and the cut-out test.
+mu_add_test(
+    NAME foliage_smoothing_tests
+    SOURCES
+        test_foliage_smoothing.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/FoliageSmoothing.cpp
+)
+
 mu_add_test(
     NAME dynamic_lights_tests
     SOURCES

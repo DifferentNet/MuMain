@@ -15,7 +15,7 @@ options window, without editing those files (see "Tuning it yourself").
 | Dynamic model lights | candles, fires and spells light characters, monsters and NPCs | — |
 | Light mood | darker baked map light, so the light sources stand out | [light-mood.md](light-mood.md) |
 | Post-processing | bloom around light effects and per-map colour grading | [post-processing.md](post-processing.md) |
-| Anti-aliasing | multisampled edges (4 samples, or what `Antialiasing` asks for), alpha-to-coverage for cut-out foliage and fences | — |
+| Anti-aliasing | multisampled edges (4 samples, or what `Antialiasing` asks for), alpha-to-coverage for cut-out foliage and fences (and, with foliage smoothing on, the ground's grass) | — |
 
 ## Choosing the look
 
@@ -108,6 +108,8 @@ the row reads **Custom** (shown only, it cannot be picked).
 | `ParticlesStrength` | Particle density in percent, `0` (off) to `100`; `70` shows each map's particles as its light mood gives them, `100` is about 1.4 times as many; the particle density slider under the Air particles row sets it in steps of 10 | `70` |
 | `TorchLights` | With HD textures, Enhanced lighting and Dynamic lights on (desktop only, not on the Low preset), the 16 map lights nearest to the hero (torches, lamps, fires, street lights) light the ground as smooth round pools instead of the light grid's diamonds; lights farther away (more than 32 tiles, or past the 16th) keep the old look and fade over to it. Only the ground and its layers are drawn so: water, grass, objects, characters, monsters and gear keep exactly the light they had. Options > Graphics > Torch light on the ground switches it at once: `0` off, `1` on | `1` |
 | `TorchLightsStrength` | Strength of the pools in percent, `0` (off) to `100`; the pools are 0.5 plus the strength times the Classic light (`70` is 1.2 times, `100` 1.5 times); the torch light strength slider under that row sets it in steps of 10 | `70` |
+| `FoliageSmoothing` | With HD textures on (desktop only, not on the Low preset), the maps' own cut-out textures (grass, leaves, fences, railings: files under `Data\World<N>` and `Data\Object<N>` with see-through holes) are sampled a little softer, so their edges shimmer less while the camera moves; with anti-aliasing on, the ground's grass also gets alpha-to-coverage as trees and fences already do. Textures under `Data\Player`, `Monster`, `Item`, `NPC`, `Skill` and `Effect` are never touched, and neither are the ground's tiles or the mini map. Options > Graphics > Smooth foliage edges switches it at once: `0` off, `1` on | `1` |
+| `FoliageSmoothingStrength` | How much softer, in percent, `0` (off) to `100`; the cut-outs' mip bias is the HD bias (−0.5) plus the strength (so `50` is 0, the default `70` is +0.2 and `100` is +0.5 mip levels); the foliage smoothing strength slider under that row sets it in steps of 10 | `70` |
 
 Each map's light mood can also set the sun's direction and the shadows'
 strength and softness (`sunAzimuth`, `sunElevation`, `sunShadow`,
@@ -150,6 +152,16 @@ grid has them), with each map's own light colours and the light mood's dynamic
 gain. Effect and character lights (spells, a held torch) are not drawn so. Models
 are unchanged: characters, monsters, gear and objects get exactly the light they
 had before, with the setting on or off.
+
+Foliage smoothing needs no light mood values either. Why it helps: with HD textures
+the Enhanced samplers lean half a mip level toward the sharper one (the Remaster
+looked soapy without it), but on a cut-out the alpha-tested edge is then sampled
+finer than the screen can show and crawls as the camera moves. A texture counts as
+a cut-out when less than 90 % of its texels pass the alpha test; those get
+samplers of their own with the bias above, every other texture keeps the sharp
+one. With the setting off, on Low, without HD textures and in the browser the
+samplers and the draws are exactly as before. If trees look too soft, lower the
+strength.
 
 **Auto** (no `GraphicsPreset` key, or `Auto`) is decided once at start-up, on a
 new desktop install only (`config.ini` has no `Look` key yet), from the GPU's

@@ -403,6 +403,10 @@ public:
     // (terrain_lights.hlsli), when their pipeline has a terrain light twin. The terrain sets it
     // around those runs and back to off after them.
     virtual void SetTerrainLit(bool /*lit*/) {}
+    // Foliage smoothing (Render/Textures/FoliageSmoothing.h): world quads recorded while it is on (the
+    // terrain's grass) take alpha-to-coverage under anti-aliasing as map objects do, when their state
+    // allows it (ChooseAlphaCoverage). The terrain sets it around its grass and back to off after it.
+    virtual void SetCutoutQuads(bool /*cutout*/) {}
     // True when this frame's sun shadow is drawn: the scene then leaves out the Classic flat
     // shadows it would draw instead.
     [[nodiscard]] virtual bool IsSunShadowActive() const

@@ -36,6 +36,7 @@
 #include "Render/Terrain/TerrainDetail.h"
 #include "Render/Terrain/TerrainVariation.h"
 #include "Render/Terrain/TorchLights.h"
+#include "Render/Textures/FoliageSmoothing.h"
 #include "Render/Textures/HdTextures.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "Scenes/SceneCore.h"
@@ -1769,6 +1770,8 @@ static void RenderGroundFaces(bool grass)
 
     int boundTexture = -1;
     bool drawn = true;
+    // Foliage smoothing: the grass may take alpha-to-coverage under anti-aliasing.
+    mu::GetRenderer().SetCutoutQuads(grass && Render::Textures::FoliageSmoothing::Strength() > 0.0f);
     for (const std::uint32_t index : order)
     {
         const GroundFace& face = s_groundFaces[index];
@@ -1787,6 +1790,7 @@ static void RenderGroundFaces(bool grass)
             mu::GetRenderer().RenderQuad3D(face.vertices, 0u);
     }
     mu::GetRenderer().SetTerrainLit(false);
+    mu::GetRenderer().SetCutoutQuads(false);
     SetGroundDetail(false);
     s_groundFaces.clear();
 }

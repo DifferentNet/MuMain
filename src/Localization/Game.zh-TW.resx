@@ -13595,6 +13595,21 @@
   <data name="TorchLightsLockedLighting" xml:space="preserve">
     <value>需要 Enhanced lighting 與 Dynamic lights。</value>
   </data>
+  <data name="FoliageSmoothingRow" xml:space="preserve">
+    <value>平滑植被邊緣</value>
+  </data>
+  <data name="FoliageSmoothingTooltip" xml:space="preserve">
+    <value>移動鏡頭時，草、樹葉、圍欄與欄杆的閃爍會減少。角色、怪物與裝備維持不變。</value>
+  </data>
+  <data name="FoliageSmoothingStrengthRow" xml:space="preserve">
+    <value>植被平滑強度</value>
+  </data>
+  <data name="FoliageSmoothingLockedHdTextures" xml:space="preserve">
+    <value>需要 HD 材質。</value>
+  </data>
+  <data name="FoliageSmoothingLockedLowPreset" xml:space="preserve">
+    <value>圖形預設為「低」時關閉。</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>優先攻擊強大怪物</value>

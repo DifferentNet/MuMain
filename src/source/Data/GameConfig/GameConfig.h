@@ -275,6 +275,13 @@ public:
     int GetTorchLightsStrength() const { return m_torchLightsStrength; }
     void SetTorchLights(int torchLights);
     void SetTorchLightsStrength(int percent);
+    // [Render] FoliageSmoothing: with HD textures on, the maps' cut-out textures (grass, leaves, fences)
+    // shimmer less (Render/Textures/FoliageSmoothing.h), 0 off, 1 on; FoliageSmoothingStrength in
+    // percent (both clamped; Options > Graphics applies them at once).
+    int GetFoliageSmoothing() const { return m_foliageSmoothing; }
+    int GetFoliageSmoothingStrength() const { return m_foliageSmoothingStrength; }
+    void SetFoliageSmoothing(int foliageSmoothing);
+    void SetFoliageSmoothingStrength(int percent);
     // [Render] SunShadows: 0 off, 1 medium, 2 high (clamped).
     int GetSunShadows() const { return m_sunShadows; }
     void SetSunShadows(int level);
@@ -426,6 +433,8 @@ private:
     int m_particlesStrength = 70;
     int m_torchLights = 1;
     int m_torchLightsStrength = 70;
+    int m_foliageSmoothing = 1;
+    int m_foliageSmoothingStrength = 70;
     int m_sunShadows = 0;
     int m_sharpen = 0;
     std::wstring m_renderBackend;

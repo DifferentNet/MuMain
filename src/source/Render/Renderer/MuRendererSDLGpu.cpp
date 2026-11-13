@@ -2681,6 +2681,7 @@ public:
         s_particlesAt = kNoDrawCommand;
         s_particlesFrame = {};
         m_terrainLit = false;
+        m_cutoutQuads = false;
         s_ssaoLinearFog = false;
         if (s_bloomExclusionDepth != 0)
         {
@@ -5448,6 +5449,11 @@ public:
             }
             return;
         }
+        const AlphaCoverageChoice coverage =
+            m_cutoutQuads && !m_terrainLit
+                ? ChooseAlphaCoverage(pipeline, resolvedTexId, GetVertexAlpha(vertices.first(drawQuads * 4u)))
+                : AlphaCoverageChoice{pipeline, false};
+        pipeline = coverage.pipeline;
 
         void* pSampler = LookupWorldSampler(resolvedTexId);
 
@@ -5463,6 +5469,7 @@ public:
         cmd.vu.fogStart = m_fogUniform.fogStart;
         cmd.vu.fogEnd = m_fogUniform.fogEnd;
         cmd.fogUniform = m_fogUniform;
+        cmd.fogUniform.alphaToCoverage = coverage.alphaToCoverage ? 1u : 0u;
         RecordDrawState(cmd);
         FrameProfiler::Count(FrameProfiler::Counter::BatchVertices, drawQuads * 4u);
         std::size_t& previousCommand =
@@ -5856,6 +5863,10 @@ public:
     void SetTerrainLit(bool lit) override
     {
         m_terrainLit = lit && !s_terrainLightPipelines.empty();
+    }
+    void SetCutoutQuads(bool cutout) override
+    {
+        m_cutoutQuads = cutout;
     }
 
     void SetFog(const FogParams& params) override
@@ -6302,6 +6313,8 @@ private:
     bool m_stencilTestEnabled = false;
     // SetTerrainLit: the ground draws recorded next take the torch light per pixel.
     bool m_terrainLit = false;
+    // SetCutoutQuads: the world quads recorded next may take alpha-to-coverage (the grass).
+    bool m_cutoutQuads = false;
     int m_boundTextureId = -1;
     FogParams m_fogParams{};
     // CPU-side fog uniform data, uploaded to GPU when dirty.

@@ -20,6 +20,7 @@
 #include "Render/Lighting/LightMoodScales.h"
 #include "Render/Effects/ParticlesSetting.h"
 #include "Render/Terrain/TorchLights.h"
+#include "Render/Textures/FoliageSmoothing.h"
 #include "Render/PostProcessing/HazeSetting.h"
 #include "Render/PostProcessing/PostProcessingSetting.h"
 #include "Render/PostProcessing/SsaoSetting.h"
@@ -208,6 +209,29 @@ static const wchar_t* TorchLightsHint(Render::Terrain::TorchLights::Block block)
         break;
     }
     return I18N::Game::TorchLightsTooltip;
+}
+
+// The foliage smoothing strength slider: levels 0..10, 10 % each ([Render] FoliageSmoothingStrength is in
+// percent), as SSAO's.
+static int FoliageSmoothingStrengthLevel(int percent)
+{
+    return SsaoStrengthLevel(percent);
+}
+
+// The FoliageSmoothing row's hint: why it does not show right now, or what it is.
+static const wchar_t* FoliageSmoothingHint(Render::Textures::FoliageSmoothing::Block block)
+{
+    using Render::Textures::FoliageSmoothing::Block;
+    switch (block)
+    {
+    case Block::NoHdTextures:
+        return I18N::Game::FoliageSmoothingLockedHdTextures;
+    case Block::LowPreset:
+        return I18N::Game::FoliageSmoothingLockedLowPreset;
+    case Block::None:
+        break;
+    }
+    return I18N::Game::FoliageSmoothingTooltip;
 }
 
 // The custom dropdowns' ids, 0 .. kLastDropdownId (see RmlToggleDropdown()).
@@ -742,6 +766,18 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("torch_lights_strength", &model.torchLightsStrength);
     c.Bind("torch_lights_strength_percent", &model.torchLightsStrengthPercent);
     c.Bind("torch_lights_strength_label", &model.torchLightsStrengthLabel);
+    // Foliage smoothing: the Remaster PC client's, as the torch light's.
+    model.foliageSmoothingAvailable =
+        Render::Textures::FoliageSmoothing::Available() && Render::Look::RemasterGraphicsOptions();
+    c.Bind("foliage_smoothing_available", &model.foliageSmoothingAvailable);
+    c.Bind("foliage_smoothing", &model.foliageSmoothing);
+    c.Bind("foliage_smoothing_locked", &model.foliageSmoothingLocked);
+    c.Bind("foliage_smoothing_label", &model.foliageSmoothingLabel);
+    c.Bind("foliage_smoothing_tooltip", &model.foliageSmoothingTooltip);
+    c.Bind("foliage_smoothing_strength_shown", &model.foliageSmoothingStrengthShown);
+    c.Bind("foliage_smoothing_strength", &model.foliageSmoothingStrength);
+    c.Bind("foliage_smoothing_strength_percent", &model.foliageSmoothingStrengthPercent);
+    c.Bind("foliage_smoothing_strength_label", &model.foliageSmoothingStrengthLabel);
     // The preset, FXAA and sharpening rows: the Remaster client's (and the browser's), not the Classic one's.
     model.remasterGraphics = Render::Look::RemasterGraphicsOptions();
     c.Bind("remaster_graphics", &model.remasterGraphics);
@@ -870,6 +906,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleParticles(); });
     c.BindEventCallback("option_toggle_torch_lights",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleTorchLights(); });
+    c.BindEventCallback("option_toggle_foliage_smoothing",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleFoliageSmoothing(); });
     c.BindEventCallback("option_toggle_vsync",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleVsync(); });
 
@@ -1370,6 +1408,13 @@ void mu::ui::window::COptionWindow::RmlGaugeEvent(Rml::Event& event, int gauge)
                 event, TorchLightsStrengthLevel(GameConfig::GetInstance().GetTorchLightsStrength()),
                 kSsaoStrengthLevels, volumeFromPointer))
             RmlTorchLightsStrengthChanged(*next);
+        break;
+    case 8:
+        // The foliage smoothing strength, as the SSAO strength.
+        if (const auto next = UI::RmlBridge::ApplyLevelGaugeEvent(
+                event, FoliageSmoothingStrengthLevel(GameConfig::GetInstance().GetFoliageSmoothingStrength()),
+                kSsaoStrengthLevels, volumeFromPointer))
+            RmlFoliageSmoothingStrengthChanged(*next);
         break;
     default:
         break;
@@ -2144,6 +2189,80 @@ void mu::ui::window::COptionWindow::SyncTorchLightsRows(OptionRmlModel& model)
     syncText(model.torchLightsStrengthLabel, "torch_lights_strength_label", I18N::Game::TorchLightsStrengthRow);
 }
 
+// A locked row ignores clicks (FoliageSmoothing::Block): its saved choice is kept for when it can show.
+void mu::ui::window::COptionWindow::RmlToggleFoliageSmoothing()
+{
+    namespace FoliageSmoothing = Render::Textures::FoliageSmoothing;
+    if (!m_RmlView.GetModel().foliageSmoothingAvailable || FoliageSmoothing::Locks(FoliageSmoothing::CurrentBlock()))
+        return;
+    const GameConfig& config = GameConfig::GetInstance();
+    FoliageSmoothing::Choose(config.GetFoliageSmoothing() == 0, config.GetFoliageSmoothingStrength());
+}
+
+// The slider shows only while the foliage smoothing is on and the row not locked (SyncFoliageSmoothingRows()).
+void mu::ui::window::COptionWindow::RmlFoliageSmoothingStrengthChanged(int level)
+{
+    namespace FoliageSmoothing = Render::Textures::FoliageSmoothing;
+    const GameConfig& config = GameConfig::GetInstance();
+    if (!m_RmlView.GetModel().foliageSmoothingAvailable || config.GetFoliageSmoothing() == 0 ||
+        FoliageSmoothing::Locks(FoliageSmoothing::CurrentBlock()))
+        return;
+    const int percent = std::clamp(level, 0, kSsaoStrengthLevels) * kSsaoPercentPerLevel;
+    if (percent == config.GetFoliageSmoothingStrength())
+        return;
+    FoliageSmoothing::Choose(true, percent);
+}
+
+void mu::ui::window::COptionWindow::SyncFoliageSmoothingRows(OptionRmlModel& model)
+{
+    const auto syncFlag = [this](bool& field, const char* name, bool value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncInt = [this](int& field, const char* name, int value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncText = [this](Rml::String& field, const char* name, const wchar_t* text)
+    {
+        const Rml::String narrow = StringUtils::WideToNarrow(text);
+        if (field != narrow)
+        {
+            field = narrow;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    if (!model.foliageSmoothingAvailable)
+        return;
+    namespace FoliageSmoothing = Render::Textures::FoliageSmoothing;
+    // Pushed again every sync: a graphics preset switched to or from Low here turns it off or on
+    // at once (it logs only a change, and the textures switch only on a new bias).
+    FoliageSmoothing::ApplyFromConfig();
+    const GameConfig& config = GameConfig::GetInstance();
+    const FoliageSmoothing::Block block = FoliageSmoothing::CurrentBlock();
+    const bool locked = FoliageSmoothing::Locks(block);
+    const bool on = config.GetFoliageSmoothing() != 0;
+    syncFlag(model.foliageSmoothingLocked, "foliage_smoothing_locked", locked);
+    syncFlag(model.foliageSmoothing, "foliage_smoothing", on);
+    syncFlag(model.foliageSmoothingStrengthShown, "foliage_smoothing_strength_shown", on && !locked);
+    syncInt(model.foliageSmoothingStrength, "foliage_smoothing_strength",
+            FoliageSmoothingStrengthLevel(config.GetFoliageSmoothingStrength()));
+    syncInt(model.foliageSmoothingStrengthPercent, "foliage_smoothing_strength_percent",
+            config.GetFoliageSmoothingStrength());
+    syncText(model.foliageSmoothingLabel, "foliage_smoothing_label", I18N::Game::FoliageSmoothingRow);
+    syncText(model.foliageSmoothingTooltip, "foliage_smoothing_tooltip", FoliageSmoothingHint(block));
+    syncText(model.foliageSmoothingStrengthLabel, "foliage_smoothing_strength_label",
+             I18N::Game::FoliageSmoothingStrengthRow);
+}
+
 void mu::ui::window::COptionWindow::RmlToggleShowFpsCounter()
 {
     // No member/persistence -- SetShowFpsCounter() also clears ShowDebugInfo internally
@@ -2900,6 +3019,7 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     SyncHazeRows(model);
     SyncParticlesRows(model);
     SyncTorchLightsRows(model);
+    SyncFoliageSmoothingRows(model);
     // Rebuilt every sync for a live language switch, as the rows above.
     syncMultiplierRow(model.interfaceViewLabels, "interface_view_labels", model.interfaceViewIndex,
                       "interface_view_index", model.interfaceViewValueLabel, "interface_view_value_label",

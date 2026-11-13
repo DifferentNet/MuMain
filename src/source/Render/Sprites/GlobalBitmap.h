@@ -55,6 +55,10 @@ public:
     // get a mip chain; sdlSampler stays the Classic sampler either way.
     bool worldTexture = false;
     bool wrapRepeat = false;
+    // A map's own cut-out texture (Render/Textures/FoliageSmoothing.h): under Data\World<N> or
+    // Data\Object<N>, with alpha-tested holes. Sampled through the cut-out samplers while the
+    // Remaster's foliage smoothing is on.
+    bool mapCutout = false;
     std::uint8_t mipLevels = 1;
     // Upscaled art: the uploaded texture is this times Width x Height, always
     // mipmapped and sampled through the shared anisotropic samplers.
@@ -151,8 +155,14 @@ private:
     int m_requestedAnisotropy = 8;
     std::uint32_t m_anisotropy = 0;
     bool m_anisotropyClampLogged = false;
-    // Shared Enhanced samplers: [0] clamp to edge, [1] repeat.
-    std::array<SDL_GPUSampler*, 2> m_filteredSamplers{};
+    // Shared Enhanced samplers: [0] clamp to edge, [1] repeat; [2] and [3] the same for the maps'
+    // cut-out textures while foliage smoothing is on (their own mip bias, m_cutoutMipBias).
+    std::array<SDL_GPUSampler*, 4> m_filteredSamplers{};
+    // The cut-out samplers' mip bias; nullopt: none, cut-outs use [0] and [1]. The requested bias
+    // is applied between frames by UpdateTextureFiltering.
+    std::optional<float> m_cutoutMipBias;
+    std::optional<float> m_requestedCutoutMipBias;
+    bool m_cutoutBiasSwitchPending = false;
     std::vector<std::uint32_t> m_mipChainRequests;
     double m_textureLoadSeconds = 0.0;
     double m_mipChainSeconds = 0.0;
@@ -240,6 +250,10 @@ public:
         return m_requestedAnisotropy;
     }
     void UpdateTextureFiltering();
+    // Foliage smoothing (Render/Textures/FoliageSmoothing.h): the maps' cut-out textures get samplers
+    // with this mip bias, nullopt for none (they share the Enhanced ones again). Only records a
+    // change; UpdateTextureFiltering applies it between frames.
+    void SetCutoutMipBias(std::optional<float> bias);
     bool IsTextureFilteringEnabled() const
     {
         return m_textureFilteringEnabled;
@@ -269,9 +283,10 @@ protected:
                  bool worldTexture, bool padToPowerOfTwo = true, bool premultiplyAlpha = false,
                  bool keepPixels = false);
     void RegisterFilteredSampler(const BITMAP_t& bitmap);
-    SDL_GPUSampler* GetFilteredSampler(bool wrapRepeat);
+    SDL_GPUSampler* GetFilteredSampler(bool wrapRepeat, bool cutout = false);
     void ReleaseFilteredSamplers();
     void ApplyTextureFilteringSwitch();
+    void ApplyCutoutBiasSwitch();
     // The RGBA pixels of a loaded original texture, read from its file again.
     bool ReadBitmapPixels(const BITMAP_t& bitmap, std::vector<std::uint8_t>& rgba);
     bool BuildMipChain(GLuint uiBitmapIndex);
