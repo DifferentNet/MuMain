@@ -1567,12 +1567,53 @@ static bool IsAlphaTestedTileTexture(int texture)
     return false;
 }
 
+// The tile textures of large distinct shapes (boulders, cobbles, flagstones): a mirrored repeat bends
+// their shapes into kaleidoscope arcs and flips their baked light (the ground looks hilly), and the
+// self-detail grain prints their seams again 4x denser (cracked slabs). They keep their orientation
+// and get no grain; the macro colour stays. By the map's Data\WorldN folder (WorldActive + 1) and the
+// tile texture index (MapManager: 1 TileGrass02, 2 TileGround01, 3 TileGround02, 4 TileGround03,
+// 7 TileRock01, 8 TileRock02), picked by eye from a contact sheet of the textures with the most
+// contrast at the size of a stone.
+static bool IsStructuredTileTexture(int texture)
+{
+    switch (gMapManager.WorldActive + 1)
+    {
+    case 2:  // Dungeon: flagstones
+    case 3:  // Devias: flagstones in snow
+    case 31: // Valley of Loren: stone paving
+    case 56: // the login scene (Valley of Loren's paving)
+        return texture == 4;
+    case 4: // Noria: mossy boulders
+        return texture == 7;
+    case 7: // Arena: stone blocks
+        return texture == 8;
+    case 34: // Aida: round cobbles
+    case 55: // the character scene (Aida's cobbles)
+    case 42: // Barracks of Balgass: cobbles
+    case 43: // Balgass' Refuge
+        return texture == 3;
+    case 70: // Empire Guardian 1-3: cobbles
+    case 71:
+    case 72:
+    case 75: // the new character scene
+    case 80: // Loren Market
+        return texture == 2;
+    case 73: // Empire Guardian 4 and the new login scene: cobbles and a flagstone path
+    case 74:
+        return texture == 1 || texture == 2;
+    default:
+        return false;
+    }
+}
+
 // Whether FaceTexture may mirror this texture's repeats: a plain tile texture (not water, not a
-// cut-out) whose repeat holds a whole number of tiles, so no tile straddles two repeats.
+// cut-out, not large distinct shapes) whose repeat holds a whole number of tiles, so no tile
+// straddles two repeats.
 static bool IsFlippableTileTexture(int texture, float repeatPerTile)
 {
     if (texture < 0 || texture > kLastFlippableTileTexture || texture == kWaterTileTexture ||
-        IsWaterTileTexture(texture) || IsAlphaTestedTileTexture(texture) || repeatPerTile <= 0.f)
+        IsWaterTileTexture(texture) || IsAlphaTestedTileTexture(texture) || IsStructuredTileTexture(texture) ||
+        repeatPerTile <= 0.f)
         return false;
     const float tilesPerRepeat = 1.f / repeatPerTile;
     return std::fabs(tilesPerRepeat - std::round(tilesPerRepeat)) < 1.0e-3f;
@@ -1643,10 +1684,12 @@ static void SetGroundWater(int tileTexture)
 }
 
 // Turns the grain on (enabled true) or off for the ground draws recorded next. Only a mipmapped
-// tile texture gets it: the self-detail variant reads the texture's smallest mip as its mean.
+// tile texture gets it: the self-detail variant reads the texture's smallest mip as its mean. Large
+// distinct shapes (IsStructuredTileTexture) get none.
 static void SetGroundDetail(bool enabled, int tileTexture = 0)
 {
-    const bool mipmapped = enabled && Bitmaps[BITMAP_MAPTILE + tileTexture].mipLevels > 1u;
+    const bool mipmapped = enabled && !IsStructuredTileTexture(tileTexture) &&
+                           Bitmaps[BITMAP_MAPTILE + tileTexture].mipLevels > 1u;
     const Render::Terrain::Detail::Params& params = GroundDetailParams();
     mu::GetRenderer().SetTerrainDetail(mipmapped ? params.strength : 0.f, params.scale);
 }
