@@ -1,11 +1,13 @@
 #include "stdafx.h"
 #include "Core/Utilities/FrameProfiler.h"
 #include "UI/RmlBridge/RmlWorkspaceParticipant.h"
+#include "UI/RmlBridge/RmlKeptElement.h"
 #include "UI/Placement/WindowPlacement.h"
 
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/ElementDocument.h>
 
+#include <memory>
 #include <string>
 
 namespace UI::RmlBridge
@@ -13,10 +15,10 @@ namespace UI::RmlBridge
 void RegisterWorkspaceDocument(std::string_view name, std::function<Rml::ElementDocument*()> document,
                                const char* rootId, WorkspaceDocumentOptions options)
 {
-    const auto root = [document, id = std::string(rootId)]() -> Rml::Element*
+    // Looked for once a frame by each of visible, measure and place: kept, not searched for each time.
+    const auto root = [document, id = std::string(rootId), kept = std::make_shared<KeptElement>()]() -> Rml::Element*
     {
-        auto* doc = document();
-        return doc != nullptr ? doc->GetElementById(id) : nullptr;
+        return kept->Find(document(), id.c_str());
     };
     UI::Placement::PlacementParticipant participant;
     participant.visible = [root, keep = options.placedWhileHidden]()

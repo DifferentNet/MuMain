@@ -1,5 +1,7 @@
 #pragma once
 
+#include "UI/RmlBridge/RmlKeptElement.h"
+
 namespace Rml
 {
     class ElementDocument;
@@ -23,6 +25,10 @@ namespace UI::RmlBridge
         void Apply(Rml::ElementDocument* doc, const char* panelId) const;
         // Applies a non-zero size again to a document that lost it (rebuilt by a theme switch).
         void Sync(Rml::ElementDocument* doc, const char* panelId) const;
+
+    private:
+        // The panel Sync() checks every frame.
+        mutable KeptElement m_panel;
     };
 
     // Where a workspace slot puts a window's panel (CObject::GetPlacedDocument()): the slot's
@@ -43,5 +49,9 @@ namespace UI::RmlBridge
         void Sync(Rml::ElementDocument* doc, const char* panelId) const;
         // Returns a panel the player dragged (MakeDraggable()) to where its slot puts it.
         static void ResetDrag(Rml::ElementDocument* doc, const char* panelId);
+
+    private:
+        // The panel Sync() checks every frame.
+        mutable KeptElement m_panel;
     };
 }

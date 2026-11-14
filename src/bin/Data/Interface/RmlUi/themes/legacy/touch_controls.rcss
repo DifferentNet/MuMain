@@ -845,6 +845,52 @@ body.no-skills .tc-skill, body.no-skills #tc_skill_edit {
 	background-color: rgba(255, 210, 60, 220);
 }
 
+/* The EXP line's percentage, with one decimal (UI/Mobile/HeroFrame.cpp), only in the phone HUD. */
+#tc_exp_text {
+	display: none;
+	pointer-events: none;
+}
+@media (theme: mobile-hud) {
+	/* The last row of the hero frame, under SD and AG (the bottom centre over the EXP line is the
+	   chat's, workspace.rcss); the frame grows by it and the system messages under it follow. */
+	#tc_exp_text {
+		display: block;
+		margin-top: 1rem;
+		height: 13rem;
+		line-height: 13rem;
+		font-family: "token(font-body)";
+		font-size: 12rem;
+		text-align: center;
+		color: token(text-primary);
+		font-effect: shadow(0rem 1rem #000000);
+		white-space: nowrap;
+	}
+	/* Not smaller than 12 units at 100 % (the size-N rules below scale the controls' own units). */
+	body.size-90 #tc_exp_text { margin-top: 1.1rem; height: 14.4rem; line-height: 14.4rem; font-size: 13.3rem; }
+	body.size-80 #tc_exp_text { margin-top: 1.25rem; height: 16.2rem; line-height: 16.2rem; font-size: 15rem; }
+	body.size-70 #tc_exp_text { margin-top: 1.43rem; height: 18.6rem; line-height: 18.6rem; font-size: 17.1rem; }
+	body.size-60 #tc_exp_text { margin-top: 1.67rem; height: 21.7rem; line-height: 21.7rem; font-size: 20rem; }
+
+	/* Low HP (under a quarter, still alive: the markup's "low" class): a red border and the fill
+	   pulsing. A dead hero (no HP) does not pulse. */
+	#tc_hero_hp.low {
+		border-color: #ff5040;
+	}
+	#tc_hero_hp.low .tc-gauge-fill {
+		animation: 0.8s quadratic-in-out infinite alternate tc-hp-low-pulse;
+	}
+
+	/* The hero frame opens the character window (TouchControls.cpp): a little lighter while pressed. */
+	#tc_hero.pressed {
+		background-color: rgba(40, 40, 40, 170);
+	}
+}
+
+@keyframes tc-hp-low-pulse {
+	from { opacity: 1; }
+	to { opacity: 0.45; }
+}
+
 /* How many potions the button has left, under it. */
 .tc-potion-count {
 	position: absolute;
@@ -1488,6 +1534,6 @@ body #tc_attack.pressed, body #tc_attack.pk.pressed {
    joystick stay over it. A hidden button takes no finger (TouchControls.cpp reads only shown boxes). */
 body.over-map #tc_hero, body.over-map #tc_exp, body.over-map .tc-potion, body.over-map #tc_attack,
 body.over-map .tc-skill, body.over-map #tc_skill_edit, body.over-map #tc_pickup, body.over-map #tc_auto,
-body.over-map #tc_names, body.over-map #tc_target, body.over-map #tc_bind_hint {
+body.over-map #tc_names, body.over-map #tc_target, body.over-map #tc_bind_hint, body.over-map #tc_exp_text {
 	display: none;
 }

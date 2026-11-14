@@ -141,6 +141,13 @@
    file's own comment. */
 .nq-answer-row:hover { color: #ff4040; }
 
+/* MU Skynet: the phone view (theme flag "mobile"): answer rows with room above and below a finger.
+   4 px, not more: the dialogue band (7 lines from 66) is centred, so a full band with 4 answers grows
+   16 px each way, which still clears the quest title above and the divider at 220 below. */
+@media (theme: mobile) {
+	.nq-answer-row { padding: 4px 0; }
+}
+
 /* .modern-icon-btn-px sets top:392px but leaves left unset (every window supplies its own) -- same
    13px left every sibling this session uses, matching the legacy #btn_exit box exactly. */
 .nq-btn-exit { left: 13px; }

@@ -96,7 +96,9 @@ void ToggleItemNames();
 // Buttons that press a key, as a keyboard would: the potions drink the item hotkeys Q and W, the chat
 // button opens the chat field (Enter), Back closes the window on top or, with none open, opens the
 // system menu (Esc, as a phone has none), and the rest open their windows (UI/HUD/HotKey.cpp). The top
-// row's first button folds the row, and Loot shows the drops' names as the menu's switch does.
+// row's first button folds the row, and Loot shows the drops' names as the menu's switch does. The phone
+// view's hero frame opens the character window (C); it shows only in the phone view, and a hidden frame
+// takes no finger. Controls are numbered by their place here: new ones go at the end.
 struct KeyButton
 {
     const char* element;
@@ -110,6 +112,7 @@ constexpr KeyButton KeyButtons[] = {
     {"tc_character", 'C'}, {"tc_move", 'M'},     {"tc_map", VK_TAB},     {"tc_back", VK_ESCAPE, &Back},
     {"tc_potion_e", 'E'},  {"tc_potion_r", 'R'},
     {"tc_quick_toggle", 0, &ToggleQuickRow},       {"tc_names", 0, &ToggleItemNames},
+    {"tc_hero", 'C'},
 };
 constexpr int KeyButtonCount = static_cast<int>(std::size(KeyButtons));
 
@@ -907,9 +910,15 @@ int HitTest(float x, float y)
         return SocialHitTest(x, y, slop);
     if (g_View.GetModel().menuOpen)
         return MenuHitTest(x, y, slop);
+    // The hero frame (the last key button) takes a finger inside it only: one beside it goes to the
+    // world, as before the frame was a button.
+    constexpr int HeroControl = FirstMenuItemControl - 1;
+    static_assert(std::string_view(KeyButtons[KeyButtonCount - 1].element) == "tc_hero");
+    if (Inside(g_boxes[HeroControl], x, y, 0.f))
+        return HeroControl;
     // The buttons before the joystick's area, which they stand in. The Skills button takes a finger
     // inside it, but a thumb between it and the skill buttons it lies beside casts.
-    static constexpr auto Buttons = ControlRange<FirstMenuItemControl - 1, AttackControl>();
+    static constexpr auto Buttons = ControlRange<HeroControl - 1, AttackControl>();
     for (const float margin : {0.f, slop})
     {
         if (const int button = ClosestControl(Buttons, x, y, margin); button != Touch::NoControl)

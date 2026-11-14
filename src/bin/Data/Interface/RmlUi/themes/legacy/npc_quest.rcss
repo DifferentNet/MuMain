@@ -178,6 +178,13 @@
    answer lists use, since that's genuinely how this window's own RenderText() colored it. */
 .nq-answer-row:hover { color: #ff0000; }
 
+/* MU Skynet: the phone view (theme flag "mobile"): answer rows with room above and below a finger.
+   4 px, not more: the dialogue band (7 lines from 66) is centred, so a full band with 4 answers grows
+   16 px each way, which still clears the quest title above and the divider at 220 below. */
+@media (theme: mobile) {
+	.nq-answer-row { padding: calc(4px * var(--root-scale)) 0; }
+}
+
 /* Exit is a common close button -- legacy's sprite already has its own "X" baked in, so the shared
    label span is redundant (same convention every sibling this session uses). */
 .btn-exit-label { display: none; }

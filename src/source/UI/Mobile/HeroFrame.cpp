@@ -10,6 +10,8 @@
 
 #include <RmlUi/Core/DataModelHandle.h>
 
+#include <algorithm>
+#include <cmath>
 #include <string>
 
 namespace UI::Mobile::HeroFrame
@@ -116,6 +118,21 @@ void SyncPotions(Model& model, bool force, MarkDirty markDirty)
     SetPotions(model.potionRCount, seen.potionsR, g_pMainFrame->GetItemHotKeyCount(mu::ui::window::HOTKEY_R), force,
                "potion_r_count", markDirty);
 }
+
+// The percentage the EXP line shows, cut (not rounded) to tenths, so it reads 100 % only when full:
+// written again only when the tenths change, as the experience moves every kill.
+void SyncExpText(Model& model, double progress, bool force, MarkDirty markDirty)
+{
+    constexpr double TenthsPerWhole = 1000.0;
+    if (!std::isfinite(progress))
+        progress = 0.0;
+    const int tenths = static_cast<int>(std::floor(std::clamp(progress, 0.0, 1.0) * TenthsPerWhole));
+    if (!force && tenths == model.seen.expTenths)
+        return;
+    model.seen.expTenths = tenths;
+    Set(model.expText, std::to_string(tenths / 10) + "." + std::to_string(tenths % 10) + "%", "hero_exp_text",
+        markDirty);
+}
 } // namespace
 
 void Bind(Rml::DataModelConstructor& constructor, Model& model)
@@ -125,6 +142,7 @@ void Bind(Rml::DataModelConstructor& constructor, Model& model)
     constructor.Bind("hero_sd", &model.sd);
     constructor.Bind("hero_ag", &model.ag);
     constructor.Bind("hero_exp", &model.exp);
+    constructor.Bind("hero_exp_text", &model.expText);
     constructor.Bind("hero_hp_text", &model.hpText);
     constructor.Bind("hero_mp_text", &model.mpText);
     constructor.Bind("hero_level", &model.levelText);
@@ -145,7 +163,9 @@ void Sync(Model& model, MarkDirty markDirty)
     SetGauge(model.mp, model.mpText, seen.mp, Gauges::Mana(), MpSlot, force, markDirty);
     SetBar(model.sd, seen.sd, Gauges::Shield(), "hero_sd", force, markDirty);
     SetBar(model.ag, seen.ag, Gauges::SkillMana(), "hero_ag", force, markDirty);
-    Set(model.exp, static_cast<float>(Gauges::ReadExperience().progress), "hero_exp", markDirty);
+    const double expProgress = Gauges::ReadExperience().progress;
+    Set(model.exp, static_cast<float>(expProgress), "hero_exp", markDirty);
+    SyncExpText(model, expProgress, force, markDirty);
     SyncLevel(model, force, markDirty);
     SyncPotions(model, force, markDirty);
 }

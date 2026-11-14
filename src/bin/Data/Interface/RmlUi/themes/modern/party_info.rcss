@@ -141,6 +141,22 @@
 	pointer-events: auto;
 }
 .party-kick-btn:hover { border-color: token(border-hover); color: #ff8080; }
+/* MU Skynet: the phone view (theme flag "mobile"): the kick cross a finger can hit, as
+   docked_panel_frame.rcss's exit button. The square stays where it was (the negative margin takes back
+   the padding) and only the box round it grows: its fill is a decorator on the content box alone, the
+   same 15 px square the border and fill made, without the thin border. */
+@media (theme: mobile) {
+	.party-kick-btn {
+		margin: -14px;
+		padding: 14px;
+		width: 15px;
+		height: 15px;
+		line-height: 15px;
+		border-width: 0;
+		background-color: transparent;
+		decorator: linear-gradient(to bottom, token(surface-control), token(surface-control)) content-box;
+	}
+}
 
 /* Exit: base.rcss's shared .modern-icon-btn-px/.modern-icon-btn-glyph-px family, this window's own
    left offset only. */

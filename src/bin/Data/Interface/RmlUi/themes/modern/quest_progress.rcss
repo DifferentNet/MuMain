@@ -101,6 +101,19 @@
 }
 .qp-answer-row:hover { background-color: token(surface-panel); color: token(accent-gold-hover); }
 
+/* MU Skynet: the phone view (theme flag "mobile"): page arrows a finger can hit, apart (the left one
+   further left) and each grown round its sprite (the negative margin takes back the padding, the
+   decorator paints the content box alone), and answer rows with room above and below. */
+@media (theme: mobile) {
+	.qp-btn-l, .qp-btn-r {
+		margin: -8px;
+		padding: 8px;
+	}
+	.qp-btn-l { left: 112px; decorator: image(qp-btn-l) content-box; }
+	.qp-btn-r { decorator: image(qp-btn-r) content-box; }
+	.qp-answer-row { padding: 6px 0; }
+}
+
 .qp-reward {
 	position: absolute;
 	left: 0;
