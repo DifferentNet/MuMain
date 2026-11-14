@@ -33,6 +33,8 @@ constexpr double MinBrightScale = 0.3;
 constexpr double MaxHaze = 0.5;
 constexpr double MinGroundFogHeight = 50.0;
 constexpr double MaxGroundFogHeight = 600.0;
+constexpr double MaxParticleKind = 6.0;
+constexpr double MaxParticleDensity = 2.0;
 
 // The default needs every required value; optional ones keep their Classic value.
 constexpr std::array<LightMoodValueInfo, LightMoodValueCount> MoodValues = {{
@@ -55,6 +57,13 @@ constexpr std::array<LightMoodValueInfo, LightMoodValueCount> MoodValues = {{
     {"groundFog", &LightMood::groundFog, false, 0.0, MaxHaze},
     {"groundFogHeight", &LightMood::groundFogHeight, false, MinGroundFogHeight, MaxGroundFogHeight},
     {"hazeSun", &LightMood::hazeSun, false, 0.0, MaxHaze},
+    {"particles", &LightMood::particles, false, 0.0, MaxParticleKind},
+    {"particlesDensity", &LightMood::particlesDensity, false, 0.0, MaxParticleDensity},
+    {"particles2", &LightMood::particles2, false, 0.0, MaxParticleKind},
+    {"particles2Density", &LightMood::particles2Density, false, 0.0, MaxParticleDensity},
+    {"particlesR", &LightMood::particlesR, false, 0.0, MaxScale},
+    {"particlesG", &LightMood::particlesG, false, 0.0, MaxScale},
+    {"particlesB", &LightMood::particlesB, false, 0.0, MaxScale},
 }};
 
 class IssueList

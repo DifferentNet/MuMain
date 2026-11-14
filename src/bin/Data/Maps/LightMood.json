@@ -20,7 +20,9 @@
       "hazeB": 0.66,
       "groundFog": 0.06,
       "groundFogHeight": 220.0,
-      "hazeSun": 0.12
+      "hazeSun": 0.12,
+      "particles": 1,
+      "particlesDensity": 0.8
     },
     {
       "world": 1,
@@ -31,7 +33,12 @@
       "hazeG": 0.34,
       "hazeB": 0.4,
       "groundFog": 0.12,
-      "groundFogHeight": 150.0
+      "groundFogHeight": 150.0,
+      "particles": 1,
+      "particlesDensity": 0.6,
+      "particlesR": 0.75,
+      "particlesG": 0.82,
+      "particlesB": 1.0
     },
     {
       "world": 2,
@@ -40,7 +47,9 @@
       "hazeR": 0.74,
       "hazeG": 0.8,
       "hazeB": 0.9,
-      "hazeSun": 0.08
+      "hazeSun": 0.08,
+      "particles": 4,
+      "particlesDensity": 0.7
     },
     {
       "world": 3,
@@ -51,7 +60,11 @@
       "hazeB": 0.62,
       "groundFog": 0.14,
       "groundFogHeight": 200.0,
-      "hazeSun": 0.1
+      "hazeSun": 0.1,
+      "particles": 2,
+      "particlesDensity": 1.0,
+      "particles2": 3,
+      "particles2Density": 1.0
     },
     {
       "world": 4,
@@ -62,7 +75,11 @@
       "hazeG": 0.28,
       "hazeB": 0.4,
       "groundFog": 0.1,
-      "groundFogHeight": 150.0
+      "groundFogHeight": 150.0,
+      "particles": 5,
+      "particlesDensity": 1.0,
+      "particles2": 6,
+      "particles2Density": 0.6
     },
     {
       "world": 7,
@@ -81,7 +98,12 @@
       "hazeB": 0.46,
       "groundFog": 0.05,
       "groundFogHeight": 220.0,
-      "hazeSun": 0.15
+      "hazeSun": 0.15,
+      "particles": 1,
+      "particlesDensity": 1.2,
+      "particlesR": 1.0,
+      "particlesG": 0.85,
+      "particlesB": 0.62
     },
     {
       "world": 9,
@@ -205,7 +227,11 @@
       "hazeB": 0.58,
       "groundFog": 0.14,
       "groundFogHeight": 200.0,
-      "hazeSun": 0.1
+      "hazeSun": 0.1,
+      "particles": 2,
+      "particlesDensity": 0.8,
+      "particles2": 3,
+      "particles2Density": 0.8
     },
     {
       "world": 34,
@@ -232,7 +258,12 @@
       "hazeG": 0.52,
       "hazeB": 0.56,
       "groundFog": 0.08,
-      "groundFogHeight": 180.0
+      "groundFogHeight": 180.0,
+      "particles": 1,
+      "particlesDensity": 0.7,
+      "particlesR": 0.85,
+      "particlesG": 0.9,
+      "particlesB": 1.0
     },
     {
       "world": 38,
@@ -243,7 +274,12 @@
       "hazeG": 0.52,
       "hazeB": 0.56,
       "groundFog": 0.08,
-      "groundFogHeight": 180.0
+      "groundFogHeight": 180.0,
+      "particles": 1,
+      "particlesDensity": 0.7,
+      "particlesR": 0.85,
+      "particlesG": 0.9,
+      "particlesB": 1.0
     },
     {
       "world": 39,
@@ -299,7 +335,9 @@
       "hazeB": 0.8,
       "groundFog": 0.08,
       "groundFogHeight": 220.0,
-      "hazeSun": 0.1
+      "hazeSun": 0.1,
+      "particles": 2,
+      "particlesDensity": 0.8
     },
     {
       "world": 52,
@@ -320,7 +358,11 @@
       "hazeG": 0.52,
       "hazeB": 0.44,
       "groundFog": 0.2,
-      "groundFogHeight": 180.0
+      "groundFogHeight": 180.0,
+      "particles": 3,
+      "particlesDensity": 1.2,
+      "particles2": 1,
+      "particles2Density": 0.5
     },
     {
       "world": 57,
@@ -333,7 +375,9 @@
       "hazeB": 0.92,
       "groundFog": 0.06,
       "groundFogHeight": 220.0,
-      "hazeSun": 0.05
+      "hazeSun": 0.05,
+      "particles": 4,
+      "particlesDensity": 0.7
     },
     {
       "world": 58,
@@ -345,7 +389,9 @@
       "name": "Vulcanus",
       "sun": 1.0,
       "base": 0.7,
-      "brightScale": 0.95
+      "brightScale": 0.95,
+      "particles": 5,
+      "particlesDensity": 0.8
     },
     {
       "world": 65,
@@ -391,13 +437,23 @@
       "world": 80,
       "name": "Karutan 1",
       "base": 0.62,
-      "brightScale": 0.9
+      "brightScale": 0.9,
+      "particles": 1,
+      "particlesDensity": 1.0,
+      "particlesR": 1.0,
+      "particlesG": 0.85,
+      "particlesB": 0.62
     },
     {
       "world": 81,
       "name": "Karutan 2",
       "base": 0.62,
-      "brightScale": 0.9
+      "brightScale": 0.9,
+      "particles": 1,
+      "particlesDensity": 1.0,
+      "particlesR": 1.0,
+      "particlesG": 0.85,
+      "particlesB": 0.62
     }
   ]
 }

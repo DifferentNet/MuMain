@@ -182,6 +182,30 @@ struct HazeFrame
     float referenceHeight = 0.0f; // the hero's ground height, smoothed
 };
 
+// One layer of the Remaster's ambient air particles (Render/Effects/ParticlesSetting.h), as
+// ambient_particles.vert takes it; count 0 draws none.
+struct AmbientParticleLayer
+{
+    std::uint32_t count = 0u;
+    float boxCenter[3]{}; // the box's centre in the world (hero XY, smoothed ground height + the kind's)
+    float boxSize[3]{};
+    float seed = 0.0f;    // the layer's hash seed
+    float travel[4]{};    // box lengths per period along x, y, z; w: speed spread 0..1
+    float sway[4]{};      // amplitude xy, amplitude z, sway turns per period, flicker turns per period
+    float radius[2]{};    // smallest, largest radius in world units
+    float pixels[2]{};    // smallest, largest radius in pixels at a 1080 pixel high viewport
+    float color[4]{};     // rgb, a: the peak alpha (already x presence)
+    float look[4]{};      // additive 0/1, glow 0/1, flicker depth, rise fade
+    float phase = 0.0f;   // 0..1 over the period
+};
+
+// The frame's ambient particle layers.
+struct AmbientParticlesFrame
+{
+    AmbientParticleLayer layers[2]{};
+    int layerCount = 0;
+};
+
 // Where a body shadow lands, as CalcShadowPosition() puts it there.
 struct ShadowProjection
 {
@@ -370,6 +394,19 @@ public:
     // 0..1, repeatsPerUnit the water texture's repeats per world unit (the flowing ripples' scale).
     // The terrain sets it around its water runs and back to 0 after them.
     virtual void SetTerrainWater(float /*strength*/, float /*repeatsPerUnit*/) {}
+    // The frame's torch lights on the ground (Render/Terrain/TorchLights.h; Enhanced lighting,
+    // desktop only): the last block set before the frame is drawn is the one its flagged ground
+    // draws use; an empty block turns them off.
+    virtual void SetTerrainLightsFrame(const TerrainLightsUniform& /*lights*/) {}
+    // Draws recorded while it is on (opaque ground runs and their non-blended layers) take the torch
+    // light out of their vertex colour (the Vertex3D normal carries it) and draw it per pixel
+    // (terrain_lights.hlsli), when their pipeline has a terrain light twin. The terrain sets it
+    // around those runs and back to off after them.
+    virtual void SetTerrainLit(bool /*lit*/) {}
+    // Foliage smoothing (Render/Textures/FoliageSmoothing.h): world quads recorded while it is on (the
+    // terrain's grass) take alpha-to-coverage under anti-aliasing as map objects do, when their state
+    // allows it (ChooseAlphaCoverage). The terrain sets it around its grass and back to off after it.
+    virtual void SetCutoutQuads(bool /*cutout*/) {}
     // True when this frame's sun shadow is drawn: the scene then leaves out the Classic flat
     // shadows it would draw instead.
     [[nodiscard]] virtual bool IsSunShadowActive() const
@@ -495,6 +532,10 @@ public:
     // The frame's distance haze (HazeFrame), set before EndOpaqueWorld; laid over the same depth
     // as the ambient occlusion, right after it. A frame that does not set it has none.
     virtual void SetHazeFrame(const HazeFrame& /*frame*/) {}
+    // Ambient air particles (AmbientParticlesFrame) at this point of the scene: after everything
+    // recorded so far, before what follows. The first call of a frame counts; a frame without one
+    // has none.
+    virtual void DrawAmbientParticles(const AmbientParticlesFrame& /*frame*/) {}
 
     // Opaque, depth-writing draws recorded between these two move ahead of the others and are
     // grouped by state, to cut state changes; depth decides what shows, and the others keep
@@ -838,6 +879,10 @@ public:
 // Initially returns MuRendererGL; will return MuRendererSDLGPU after 4.3.1.
 // ---------------------------------------------------------------------------
 [[nodiscard]] IMuRenderer& GetRenderer();
+
+// Whether the renderer built every terrain light twin (desktop, Enhanced lighting): without them
+// the torch light on the ground stays off (Render/Terrain/TorchLights.h).
+[[nodiscard]] bool HasTerrainLightPipelines();
 
 // Keeps Classic texture sampling for the draws made while it is alive.
 class ScopedScreenSpaceSampling

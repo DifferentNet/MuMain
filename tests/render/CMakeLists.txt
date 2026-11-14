@@ -185,6 +185,13 @@ mu_add_test(
         test_haze_setting.cpp
 )
 
+# Ambient particles: the strength from the [Render] Particles settings, kinds, counts, phase, wrap, fades.
+mu_add_test(
+    NAME particles_setting_tests
+    SOURCES
+        test_particles_setting.cpp
+)
+
 # Wind sway: the strength from the [Render] Wind settings, foliage by texture, phase, grass offset, sway.
 mu_add_test(
     NAME wind_sway_tests
@@ -242,6 +249,36 @@ mu_add_test(
     NAME gpu_skinning_path_tests
     SOURCES
         test_gpu_skinning_path.cpp
+)
+
+# Torch light on the ground: strength, locks, the selected map lights, the shader block, the share grid
+# and the vertex colour's removable part.
+mu_add_test(
+    NAME torch_lights_tests
+    SOURCES
+        test_torch_lights.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Terrain/TorchLights.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Terrain/TerrainLightGrid.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Lighting/DynamicLightHistory.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Lighting/DynamicLightList.cpp
+)
+
+# Smoother cut-out foliage: strength, locks, the cut-out samplers' mip bias and the cut-out test.
+mu_add_test(
+    NAME foliage_smoothing_tests
+    SOURCES
+        test_foliage_smoothing.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/FoliageSmoothing.cpp
+)
+
+# Soft sun shadow edges: strength, locks, the edge's growth and the uniform's widening edge part.
+mu_add_test(
+    NAME sun_shadow_soft_edges_tests
+    SOURCES
+        test_sun_shadow_soft_edges.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Lighting/SunShadowSoftEdges.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Renderer/SunShadow.cpp
+    LINK_LIBS glm::glm
 )
 
 mu_add_test(

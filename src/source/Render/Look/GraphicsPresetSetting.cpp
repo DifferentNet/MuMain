@@ -10,6 +10,10 @@
 #include "Render/Look/LookPresetSetting.h"
 #include "Render/Models/ModelSmoothing.h"
 #include "Render/Models/WindSway.h"
+#include "Render/Effects/ParticlesSetting.h"
+#include "Render/Terrain/TorchLights.h"
+#include "Render/Textures/FoliageSmoothing.h"
+#include "Render/Lighting/SunShadowSoftEdges.h"
 #include "Render/PostProcessing/HazeSetting.h"
 #include "Render/PostProcessing/ScreenFilterSetting.h"
 #include "Render/PostProcessing/SsaoSetting.h"
@@ -151,6 +155,14 @@ void ApplyGraphicsPreset(GraphicsPreset preset)
     Render::Models::Wind::ApplyFromConfig();
     // The haze too, for the same reason as SSAO (it is built with SSAO's pipelines).
     Render::PostProcessing::Haze::ApplyFromConfig();
+    // The ambient particles are off on Low too, as the wind.
+    Render::Effects::Particles::ApplyFromConfig();
+    // The torch light on the ground is off on Low too.
+    Render::Terrain::TorchLights::ApplyFromConfig();
+    // The foliage smoothing is off on Low too.
+    Render::Textures::FoliageSmoothing::ApplyFromConfig();
+    // The soft sun shadow edges are off on Low too.
+    Render::Lighting::SunShadowSoftEdges::ApplyFromConfig();
     config.Save();
     mu::log::Get("render")->info("Graphics preset {}", PresetName(preset));
 }

@@ -54,6 +54,16 @@
 //                hero's ground that mist reaches, in world units.
 //   hazeSun      optional, 0 (default) to 0.5: how much brighter the haze
 //                gets looking towards the sun (sunAzimuth).
+//   particles    optional, 0 (default, none) to 6: the kind of the Remaster's
+//                first layer of ambient air particles
+//                (Render/Effects/ParticlesSetting.h), by number: 1 dust,
+//                2 pollen, 3 fireflies, 4 fine snow, 5 ash, 6 embers (rounded;
+//                anything else is none).
+//   particlesDensity  optional, 0 to 2 (default 1): how many of them, times
+//                the kind's own count.
+//   particles2, particles2Density  optional, the same for a second layer.
+//   particlesR, particlesG, particlesB  optional, 0 to 1 (default 1, 1, 1):
+//                the tint of both layers.
 // "default" has all five and applies to every map without an entry. A map
 // entry names its world number and overrides any of them; "name" is for the
 // reader only.
@@ -80,6 +90,13 @@ struct LightMood
     double groundFog = 0.0;
     double groundFogHeight = 220.0;
     double hazeSun = 0.0;
+    double particles = 0.0;
+    double particlesDensity = 1.0;
+    double particles2 = 0.0;
+    double particles2Density = 1.0;
+    double particlesR = 1.0;
+    double particlesG = 1.0;
+    double particlesB = 1.0;
 
     bool operator==(const LightMood&) const = default;
 };
@@ -122,7 +139,7 @@ struct LightMoodValueInfo
     double max;
 };
 
-constexpr std::size_t LightMoodValueCount = 19;
+constexpr std::size_t LightMoodValueCount = 26;
 [[nodiscard]] const std::array<LightMoodValueInfo, LightMoodValueCount>& LightMoodValueInfos();
 // The value with that key in the file, if there is one.
 [[nodiscard]] const LightMoodValueInfo* FindLightMoodValue(std::string_view key);

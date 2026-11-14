@@ -122,6 +122,26 @@ static_assert(offsetof(DynamicLightsUniform, positionAndRadius) == 1 * kSceneLig
 static_assert(offsetof(DynamicLightsUniform, color) == (1 + kMaxDynamicLights) * kSceneLightingRegisterSize);
 static_assert(sizeof(DynamicLightsUniform) == (1 + 2 * kMaxDynamicLights) * kSceneLightingRegisterSize);
 
+// Most torch lights the Remaster's ground draws apply per pixel (Render/Terrain/TorchLights.h).
+inline constexpr std::size_t kMaxTerrainLights = 16;
+
+// HLSL layout of the frame's torch lights on the ground: the end of cbuffer SceneLighting
+// (register(b1, space3)) in terrain_lights.hlsli, right after mu::SunShadowUniform (desktop only).
+// Each light adds color * smooth(1 - d / radius), d being the horizontal distance; the colour is
+// already scaled by the light's hand-over weight and the strength's gain.
+struct TerrainLightsUniform
+{
+    float header[4]{};                                // x: lights used, yzw unused
+    float positionAndRadius[kMaxTerrainLights][4]{}; // xy world position, z unused, w radius in world units
+    float color[kMaxTerrainLights][4]{};             // rgb, w unused
+};
+
+static_assert(offsetof(TerrainLightsUniform, header) == 0);
+static_assert(offsetof(TerrainLightsUniform, positionAndRadius) == 1 * kSceneLightingRegisterSize);
+static_assert(offsetof(TerrainLightsUniform, color) == (1 + kMaxTerrainLights) * kSceneLightingRegisterSize);
+static_assert(sizeof(TerrainLightsUniform) == (1 + 2 * kMaxTerrainLights) * kSceneLightingRegisterSize);
+static_assert(sizeof(TerrainLightsUniform) == 528);
+
 // Enhanced fog: amount = 1 - exp(-(density * max(depth - start, 0))^2). The density makes the
 // amount reach kEnhancedFogCoverageAtEnd at the fog end, so Enhanced fog is clear before the
 // Classic fog start and covers objects at the Classic fog end. 0 when the fog range is empty.

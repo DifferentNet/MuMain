@@ -13562,6 +13562,72 @@
   <data name="HazeAfterRestart" xml:space="preserve">
     <value>Turning it on takes effect after a restart.</value>
   </data>
+  <data name="ParticlesRow" xml:space="preserve">
+    <value>Air particles</value>
+  </data>
+  <data name="ParticlesTooltip" xml:space="preserve">
+    <value>Dust, pollen, fireflies, fine snow and ash in the air of some maps. Small and faint: they do not hide characters, monsters or drops.</value>
+  </data>
+  <data name="ParticlesStrengthRow" xml:space="preserve">
+    <value>Particle density</value>
+  </data>
+  <data name="ParticlesLockedHdTextures" xml:space="preserve">
+    <value>Needs HD textures.</value>
+  </data>
+  <data name="ParticlesLockedLowPreset" xml:space="preserve">
+    <value>Off on the Low graphics preset.</value>
+  </data>
+  <data name="TorchLightsRow" xml:space="preserve">
+    <value>Cahaya obor di tanah</value>
+  </data>
+  <data name="TorchLightsTooltip" xml:space="preserve">
+    <value>Obor, lampu, dan api unggun memancarkan cahaya bulat yang lembut di tanah. Karakter, monster, dan perlengkapan tetap diterangi seperti sebelumnya.</value>
+  </data>
+  <data name="TorchLightsStrengthRow" xml:space="preserve">
+    <value>Kekuatan cahaya obor</value>
+  </data>
+  <data name="TorchLightsLockedHdTextures" xml:space="preserve">
+    <value>Memerlukan tekstur HD.</value>
+  </data>
+  <data name="TorchLightsLockedLowPreset" xml:space="preserve">
+    <value>Mati pada preset grafis Rendah.</value>
+  </data>
+  <data name="TorchLightsLockedLighting" xml:space="preserve">
+    <value>Memerlukan Enhanced lighting dengan Dynamic lights.</value>
+  </data>
+  <data name="FoliageSmoothingRow" xml:space="preserve">
+    <value>Haluskan tepi dedaunan</value>
+  </data>
+  <data name="FoliageSmoothingTooltip" xml:space="preserve">
+    <value>Rumput, daun, pagar, dan pegangan tangga tidak terlalu berkedip saat kamera bergerak. Karakter, monster, dan perlengkapan tidak berubah.</value>
+  </data>
+  <data name="FoliageSmoothingStrengthRow" xml:space="preserve">
+    <value>Kekuatan penghalusan dedaunan</value>
+  </data>
+  <data name="FoliageSmoothingLockedHdTextures" xml:space="preserve">
+    <value>Memerlukan tekstur HD.</value>
+  </data>
+  <data name="FoliageSmoothingLockedLowPreset" xml:space="preserve">
+    <value>Mati pada preset grafis Rendah.</value>
+  </data>
+  <data name="SunShadowSoftEdgesRow" xml:space="preserve">
+    <value>Tepi bayangan matahari lembut</value>
+  </data>
+  <data name="SunShadowSoftEdgesTooltip" xml:space="preserve">
+    <value>Bayangan matahari tajam di dekat benda yang membuatnya dan makin lembut saat makin jauh. Hanya tepi bayangan yang berubah: karakter, monster, dan perlengkapan diterangi seperti sebelumnya.</value>
+  </data>
+  <data name="SunShadowSoftEdgesStrengthRow" xml:space="preserve">
+    <value>Kelembutan tepi bayangan</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedHdTextures" xml:space="preserve">
+    <value>Memerlukan tekstur HD.</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedLowPreset" xml:space="preserve">
+    <value>Mati pada preset grafis Rendah.</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedSunShadows" xml:space="preserve">
+    <value>Memerlukan Bayangan matahari (Sedang atau Tinggi).</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Monster kuat dulu</value>

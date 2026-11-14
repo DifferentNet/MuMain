@@ -17,6 +17,15 @@ TEST_CASE("scene lighting uniform matches the HLSL cbuffer registers [render][sc
     CHECK(offsetof(mu::SceneLightingUniform, cameraPosition) == 112);
 }
 
+TEST_CASE("the torch light block matches terrain_lights.hlsli's registers [render][scene_lighting]")
+{
+    CHECK(mu::kMaxTerrainLights == 16);
+    CHECK(sizeof(mu::TerrainLightsUniform) == 528);
+    CHECK(offsetof(mu::TerrainLightsUniform, header) == 0);
+    CHECK(offsetof(mu::TerrainLightsUniform, positionAndRadius) == 16);
+    CHECK(offsetof(mu::TerrainLightsUniform, color) == 272);
+}
+
 TEST_CASE("the light mood's highlight knee rides in the diffuse curve [render][scene_lighting]")
 {
     mu::SceneLighting lighting;

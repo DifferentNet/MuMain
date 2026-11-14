@@ -13562,6 +13562,72 @@
   <data name="HazeAfterRestart" xml:space="preserve">
     <value>Turning it on takes effect after a restart.</value>
   </data>
+  <data name="ParticlesRow" xml:space="preserve">
+    <value>Air particles</value>
+  </data>
+  <data name="ParticlesTooltip" xml:space="preserve">
+    <value>Dust, pollen, fireflies, fine snow and ash in the air of some maps. Small and faint: they do not hide characters, monsters or drops.</value>
+  </data>
+  <data name="ParticlesStrengthRow" xml:space="preserve">
+    <value>Particle density</value>
+  </data>
+  <data name="ParticlesLockedHdTextures" xml:space="preserve">
+    <value>Needs HD textures.</value>
+  </data>
+  <data name="ParticlesLockedLowPreset" xml:space="preserve">
+    <value>Off on the Low graphics preset.</value>
+  </data>
+  <data name="TorchLightsRow" xml:space="preserve">
+    <value>Світло смолоскипів на землі</value>
+  </data>
+  <data name="TorchLightsTooltip" xml:space="preserve">
+    <value>Смолоскипи, ліхтарі та вогнища дають на землі м'яку круглу пляму світла. Персонажі, монстри та спорядження освітлені як раніше.</value>
+  </data>
+  <data name="TorchLightsStrengthRow" xml:space="preserve">
+    <value>Сила світла смолоскипів</value>
+  </data>
+  <data name="TorchLightsLockedHdTextures" xml:space="preserve">
+    <value>Потрібні HD-текстури.</value>
+  </data>
+  <data name="TorchLightsLockedLowPreset" xml:space="preserve">
+    <value>Вимкнено на пресеті графіки «Низький».</value>
+  </data>
+  <data name="TorchLightsLockedLighting" xml:space="preserve">
+    <value>Потрібні Enhanced lighting і Dynamic lights.</value>
+  </data>
+  <data name="FoliageSmoothingRow" xml:space="preserve">
+    <value>Згладжування листя й трави</value>
+  </data>
+  <data name="FoliageSmoothingTooltip" xml:space="preserve">
+    <value>Трава, листя, паркани та поручні менше мерехтять під час руху камери. Персонажі, монстри та спорядження не змінюються.</value>
+  </data>
+  <data name="FoliageSmoothingStrengthRow" xml:space="preserve">
+    <value>Сила згладжування листя</value>
+  </data>
+  <data name="FoliageSmoothingLockedHdTextures" xml:space="preserve">
+    <value>Потрібні HD-текстури.</value>
+  </data>
+  <data name="FoliageSmoothingLockedLowPreset" xml:space="preserve">
+    <value>Вимкнено на пресеті графіки «Низький».</value>
+  </data>
+  <data name="SunShadowSoftEdgesRow" xml:space="preserve">
+    <value>М'які краї тіней від сонця</value>
+  </data>
+  <data name="SunShadowSoftEdgesTooltip" xml:space="preserve">
+    <value>Тіні від сонця чіткі поруч із предметом і м'якші далі від нього. Змінюються лише краї тіней: персонажі, монстри й спорядження освітлені як раніше.</value>
+  </data>
+  <data name="SunShadowSoftEdgesStrengthRow" xml:space="preserve">
+    <value>М'якість країв тіней</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedHdTextures" xml:space="preserve">
+    <value>Потрібні HD-текстури.</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedLowPreset" xml:space="preserve">
+    <value>Вимкнено на пресеті графіки «Низький».</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedSunShadows" xml:space="preserve">
+    <value>Потрібні тіні від сонця (середні або високі).</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Спершу сильні монстри</value>

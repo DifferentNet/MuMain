@@ -9,6 +9,7 @@
 #include "GlobalBitmapPath.h"
 
 #include "Render/RmlUi/RmlPremultiply.h"
+#include "Render/Textures/FoliageSmoothing.h"
 #include "Render/Textures/MipChain.h"
 #include "Render/Textures/OztFile.h"
 #include "Render/Textures/PackedOzt.h"
@@ -161,6 +162,40 @@ std::uint32_t UploadedBytes(int width, int height)
     return static_cast<std::uint32_t>(width) * static_cast<std::uint32_t>(height) * 4u;
 }
 
+// The ground's tile slots (BITMAP_MAPTILE + n): drawn as terrain, also when a tile has alpha (Hellas
+// water1, Karutan AlphaTile01), so never a foliage cut-out.
+bool IsTerrainTileIndex(GLuint index)
+{
+    return index >= BITMAP_MAPTILE_BEGIN && index <= BITMAP_MAPTILE_END;
+}
+
+// Whether RGBA pixels loaded from `filename` into `index` are a map's own cut-out
+// (Render/Textures/FoliageSmoothing.h). Only the Remaster PC client uses it, so only it pays for the
+// alpha pass.
+bool IsMapCutout(GLuint index, const std::wstring& filename, std::span<const std::uint8_t> rgba, int width,
+                 int height)
+{
+#ifdef __EMSCRIPTEN__
+    (void)index;
+    (void)filename;
+    (void)rgba;
+    (void)width;
+    (void)height;
+    return false;
+#else
+    if (!Render::Textures::Hd::Enabled() || IsTerrainTileIndex(index) ||
+        !Render::Textures::IsMapCutoutCandidatePath(filename) || width <= 0 || height <= 0 ||
+        rgba.size() < UploadedBytes(width, height))
+    {
+        return false;
+    }
+    const float coverage = Render::Textures::AlphaCoverage(
+        rgba, static_cast<std::uint32_t>(width), static_cast<std::uint32_t>(height),
+        Render::Textures::AlphaTest::FromReference(Render::Textures::AlphaTestReference));
+    return Render::Textures::FoliageSmoothing::IsCutout(coverage);
+#endif
+}
+
 // A canvas is drawn on through Buffer at the original size, so an upscaled file
 // loaded into one is brought back to that size. Width and height become the
 // size to upload.
@@ -290,6 +325,9 @@ void ReleaseNormalMap(SDL_GPUDevice* device, BITMAP_t& bitmap)
 
 // Enhanced samplers cover the whole chain (Vulkan's VK_LOD_CLAMP_NONE).
 constexpr float UnclampedMaxLod = 1000.0f;
+
+// CGlobalBitmap::m_filteredSamplers: the cut-out pair (clamp, repeat) starts here.
+constexpr std::size_t kCutoutSamplerFirst = 2u;
 
 // Build mip chains requested by world draws for at most this long per frame.
 constexpr std::chrono::milliseconds MipChainBudgetPerFrame{4};
@@ -1060,6 +1098,8 @@ bool CGlobalBitmap::OpenTga(GLuint uiBitmapIndex, const std::wstring& filename, 
     pNewBitmap->TextureNumber = uiBitmapIndex;
     pNewBitmap->worldTexture = worldTexture;
     pNewBitmap->wrapRepeat = uiWrapMode == GL_REPEAT;
+    pNewBitmap->mapCutout =
+        IsMapCutout(uiBitmapIndex, filename, pNewBitmap->BufferStorage, uploadWidth, uploadHeight);
     pNewBitmap->scale = static_cast<std::uint8_t>(upscaled ? scale : 1);
     const MipLevels mips = PlanMipLevels(upscaled || (worldTexture && m_textureFilteringEnabled), pNewBitmap->Buffer,
                                          uploadWidth, uploadHeight, true, m_mipChainSeconds);
@@ -1104,11 +1144,25 @@ void CGlobalBitmap::SetTextureFiltering(bool enabled, int anisotropy)
     m_textureFilteringSwitchPending = true;
 }
 
+void CGlobalBitmap::SetCutoutMipBias(std::optional<float> bias)
+{
+    if (bias == m_requestedCutoutMipBias)
+    {
+        return;
+    }
+    m_requestedCutoutMipBias = bias;
+    m_cutoutBiasSwitchPending = true;
+}
+
 void CGlobalBitmap::UpdateTextureFiltering()
 {
     if (m_textureFilteringSwitchPending)
     {
         ApplyTextureFilteringSwitch();
+    }
+    if (m_cutoutBiasSwitchPending)
+    {
+        ApplyCutoutBiasSwitch();
     }
     if (!m_textureFilteringEnabled)
     {
@@ -1183,6 +1237,34 @@ void CGlobalBitmap::ApplyTextureFilteringSwitch()
     }
 }
 
+void CGlobalBitmap::ApplyCutoutBiasSwitch()
+{
+    m_cutoutBiasSwitchPending = false;
+    if (m_requestedCutoutMipBias == m_cutoutMipBias)
+    {
+        return;
+    }
+    // The cut-out samplers bake in the bias; drop them and point every chained cut-out at the new
+    // ones (or back at the shared Enhanced ones when there is none).
+    SDL_GPUDevice* device = static_cast<SDL_GPUDevice*>(mu::GetRenderer().GetDevice());
+    for (std::size_t i = kCutoutSamplerFirst; i < m_filteredSamplers.size(); ++i)
+    {
+        if (m_filteredSamplers[i] && device)
+        {
+            SDL_ReleaseGPUSampler(device, m_filteredSamplers[i]);
+        }
+        m_filteredSamplers[i] = nullptr;
+    }
+    m_cutoutMipBias = m_requestedCutoutMipBias;
+    for (const auto& [index, bitmap] : m_mapBitmap)
+    {
+        if (bitmap->mapCutout)
+        {
+            RegisterFilteredSampler(*bitmap);
+        }
+    }
+}
+
 void CGlobalBitmap::RegisterFilteredSampler(const BITMAP_t& bitmap)
 {
     const bool upscaled = bitmap.scale > 1u;
@@ -1190,7 +1272,13 @@ void CGlobalBitmap::RegisterFilteredSampler(const BITMAP_t& bitmap)
     {
         return;
     }
-    SDL_GPUSampler* sampler = GetFilteredSampler(bitmap.wrapRepeat);
+    const bool cutout = m_cutoutMipBias.has_value() && bitmap.mapCutout;
+    SDL_GPUSampler* sampler = GetFilteredSampler(bitmap.wrapRepeat, cutout);
+    if (!sampler && cutout)
+    {
+        // No cut-out sampler: the shared Enhanced one, so no registry keeps a sampler released before.
+        sampler = GetFilteredSampler(bitmap.wrapRepeat, false);
+    }
     if (!sampler)
     {
         return;
@@ -1206,9 +1294,11 @@ void CGlobalBitmap::RegisterFilteredSampler(const BITMAP_t& bitmap)
     }
 }
 
-SDL_GPUSampler* CGlobalBitmap::GetFilteredSampler(bool wrapRepeat)
+SDL_GPUSampler* CGlobalBitmap::GetFilteredSampler(bool wrapRepeat, bool cutout)
 {
-    SDL_GPUSampler*& sampler = m_filteredSamplers[wrapRepeat ? 1u : 0u];
+    const bool cutoutSampler = cutout && m_cutoutMipBias.has_value();
+    SDL_GPUSampler*& sampler =
+        m_filteredSamplers[(cutoutSampler ? kCutoutSamplerFirst : 0u) + (wrapRepeat ? 1u : 0u)];
     if (sampler)
     {
         return sampler;
@@ -1233,14 +1323,16 @@ SDL_GPUSampler* CGlobalBitmap::GetFilteredSampler(bool wrapRepeat)
     samplerInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
     samplerInfo.min_lod = 0.0f;
     samplerInfo.max_lod = UnclampedMaxLod;
-    samplerInfo.mip_lod_bias = Render::Textures::MipLodBias(Render::Textures::Hd::Enabled());
+    samplerInfo.mip_lod_bias =
+        cutoutSampler ? *m_cutoutMipBias : Render::Textures::MipLodBias(Render::Textures::Hd::Enabled());
     samplerInfo.enable_anisotropy = anisotropy > 1u;
     samplerInfo.max_anisotropy = static_cast<float>(anisotropy);
 
     sampler = SDL_CreateGPUSampler(device, &samplerInfo);
     if (!sampler)
     {
-        mu::log::Get("render")->error("Texture filtering: creating the Enhanced sampler failed: {}", SDL_GetError());
+        mu::log::Get("render")->error("Texture filtering: creating the {} sampler failed: {}",
+                                      cutoutSampler ? "foliage cut-out" : "Enhanced", SDL_GetError());
     }
     return sampler;
 }

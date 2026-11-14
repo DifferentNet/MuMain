@@ -43,6 +43,7 @@
 #include "Render/Lighting/DynamicLightHistory.h"
 #include "Render/Lighting/SunShadowSetting.h"
 #include "Render/PostProcessing/HazeSetting.h"
+#include "Render/Effects/ParticlesSetting.h"
 #include <optional>
 #include "Camera/CameraManager.h"
 #include "Camera/CameraMode.h"
@@ -619,6 +620,10 @@ static void RenderGameWorld(BYTE& byWaterMap, int width, int height)
     {
         Render::PostProcessing::Haze::PushFrame();
         mu::GetRenderer().EndOpaqueWorld();
+        // The Remaster's ambient air particles right here: after the opaque world, SSAO and the
+        // haze, before joints, effects and the UI.
+        if (renderWeatherEffects)
+            Render::Effects::Particles::PushFrame();
     }
 
     { FRAME_PROFILE(Joints); RenderJoints(byWaterMap); }

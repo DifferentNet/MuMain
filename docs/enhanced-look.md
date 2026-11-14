@@ -15,7 +15,7 @@ options window, without editing those files (see "Tuning it yourself").
 | Dynamic model lights | candles, fires and spells light characters, monsters and NPCs | — |
 | Light mood | darker baked map light, so the light sources stand out | [light-mood.md](light-mood.md) |
 | Post-processing | bloom around light effects and per-map colour grading | [post-processing.md](post-processing.md) |
-| Anti-aliasing | multisampled edges (4 samples, or what `Antialiasing` asks for), alpha-to-coverage for cut-out foliage and fences | — |
+| Anti-aliasing | multisampled edges (4 samples, or what `Antialiasing` asks for), alpha-to-coverage for cut-out foliage and fences (and, with foliage smoothing on, the ground's grass) | — |
 
 ## Choosing the look
 
@@ -104,16 +104,67 @@ the row reads **Custom** (shown only, it cannot be picked).
 | `WindStrength` | How far the foliage sways in percent, `0` (off) to `100` (tree crowns up to about 6 units, a tenth of a tile; grass tops up to 12); the wind strength slider under the Wind row sets it in steps of 10 | `100` |
 | `Haze` | With HD textures, Enhanced lighting and post-processing on (desktop only, not on the Low preset), a soft haze in the distance and a light mist over low ground, in the colour each map's light mood gives (maps without haze values get none). It starts a little behind the hero, so he and the characters near him are never touched, grows towards the old fog and fades out under it; effects, particles, windows and the sky are not covered. It is laid over the same depth SSAO draws, so it works with SSAO off too. Options > Graphics > Distance haze switches it at once; turning it on needs a restart only when both it and SSAO were off as the game started: `0` off, `1` on | `1` |
 | `HazeStrength` | Strength of the haze in percent, `0` (off) to `100`; `70` shows each map's haze as its light mood gives it, `100` is a little more (never more than 45 % of the haze colour on a pixel); the haze strength slider under the Distance haze row sets it in steps of 10 | `70` |
+| `Particles` | With HD textures on (desktop only, not on the Low preset, and not while "all effects" is off), fine particles drift in the air of some maps: dust, pollen, fireflies, fine snow, ash and embers, in the kinds each map's light mood gives (maps without particle values get none). They are small (a few pixels) and faint, never drawn right in front of the camera, sit behind effects, windows and names, and drift with the wind (a little even with the wind off). In Lorencia and Devias they show only outdoors. Options > Graphics > Air particles switches them at once: `0` off, `1` on | `1` |
+| `ParticlesStrength` | Particle density in percent, `0` (off) to `100`; `70` shows each map's particles as its light mood gives them, `100` is about 1.4 times as many; the particle density slider under the Air particles row sets it in steps of 10 | `70` |
+| `TorchLights` | With HD textures, Enhanced lighting and Dynamic lights on (desktop only, not on the Low preset), the 16 map lights nearest to the hero (torches, lamps, fires, street lights) light the ground as smooth round pools instead of the light grid's diamonds; lights farther away (more than 32 tiles, or past the 16th) keep the old look and fade over to it. Only the ground and its layers are drawn so: water, grass, objects, characters, monsters and gear keep exactly the light they had. Options > Graphics > Torch light on the ground switches it at once: `0` off, `1` on | `1` |
+| `TorchLightsStrength` | Strength of the pools in percent, `0` (off) to `100`; the pools are 0.5 plus the strength times the Classic light (`70` is 1.2 times, `100` 1.5 times); the torch light strength slider under that row sets it in steps of 10 | `70` |
+| `FoliageSmoothing` | With HD textures on (desktop only, not on the Low preset), the maps' own cut-out textures (grass, leaves, fences, railings: files under `Data\World<N>` and `Data\Object<N>` with see-through holes) are sampled a little softer, so their edges shimmer less while the camera moves; with anti-aliasing on, the ground's grass also gets alpha-to-coverage as trees and fences already do. Textures under `Data\Player`, `Monster`, `Item`, `NPC`, `Skill` and `Effect` are never touched, and neither are the ground's tiles or the mini map. Options > Graphics > Smooth foliage edges switches it at once: `0` off, `1` on | `1` |
+| `FoliageSmoothingStrength` | How much softer, in percent, `0` (off) to `100`; the cut-outs' mip bias is the HD bias (−0.5) plus the strength (so `50` is 0, the default `70` is +0.2 and `100` is +0.5 mip levels); the foliage smoothing strength slider under that row sets it in steps of 10 | `70` |
+| `SunShadowSoftEdges` | With HD textures and Sun shadows (Medium or High) on (desktop only, not on the Low preset), the sun shadows' edges are crisp right next to what casts them and get softer the farther the shadow falls from it, as a real sun's shadow does (a hero's feet stay sharp, the tip of a tree's long shadow is soft). Only the edges change: the shadows are as dark as before, and characters, monsters and gear are lit as before. Options > Graphics > Soft sun shadow edges switches it at once: `0` off, `1` on | `1` |
+| `SunShadowSoftEdgesStrength` | How fast the edge softens, in percent, `0` (off) to `100`: the edge grows by 0.06 times the strength world units for each world unit between the caster and where its shadow falls, and by at most 40 times the strength world units over the map's own edge (the default `70` is 0.042 per unit and at most 28 units more); the shadow edge softness slider under that row sets it in steps of 10 | `70` |
 
 Each map's light mood can also set the sun's direction and the shadows'
 strength and softness (`sunAzimuth`, `sunElevation`, `sunShadow`,
-`sunSoftness`; see `Render/Lighting/LightMood.h`), and the Remaster's distance
+`sunSoftness`; see `Render/Lighting/LightMood.h`; with soft sun shadow edges on,
+`sunSoftness` is the edge next to the caster and the edge widens from there), and the Remaster's distance
 haze: `haze` (0 to 0.5, how much of the haze colour the far world takes),
 `hazeR`, `hazeG`, `hazeB` (its colour, darkened by `background`), `groundFog`
 (0 to 0.5, the low mist), `groundFogHeight` (50 to 600 world units above the
 hero's ground that the mist reaches) and `hazeSun` (0 to 0.5, how much brighter
 the haze gets towards the sun). The item preview in the
 inventory and shops has a studio light of its own in the Enhanced look.
+
+The Remaster's air particles come from the same light mood: `particles` and
+`particles2` (kind ids of two layers: `0` none, `1` dust, `2` pollen, `3`
+fireflies, `4` snow, `5` ash, `6` embers), `particlesDensity` and
+`particles2Density` (0 to 2, `1` is the kind's own density) and `particlesR`,
+`particlesG`, `particlesB` (0 to 1, a tint of both layers). Maps with them:
+
+| World | Map | Particles | Second layer | Tint |
+| --- | --- | --- | --- | --- |
+| 0 | Lorencia | dust 0.8 | | |
+| 1 | Dungeon | dust 0.6 | | 0.75, 0.82, 1.0 |
+| 2 | Devias | snow 0.7 | | |
+| 3 | Noria | pollen 1.0 | fireflies 1.0 | |
+| 4 | Lost Tower | ash 1.0 | embers 0.6 | |
+| 8 | Tarkan | dust 1.2 | | 1.0, 0.85, 0.62 |
+| 33 | Aida | pollen 0.8 | fireflies 0.8 | |
+| 37, 38 | Kanturu Ruins and Relics | dust 0.7 | | 0.85, 0.90, 1.0 |
+| 51 | Elbeland | pollen 0.8 | | |
+| 56 | Swamp of Calmness | fireflies 1.2 | dust 0.5 | |
+| 57 | Raklion | snow 0.7 | | |
+| 63 | Vulcanus | ash 0.8 | | |
+| 80, 81 | Karutan 1 and 2 | dust 1.0 | | 1.0, 0.85, 0.62 |
+
+The other maps (arenas, events, Atlans, Icarus, Crywolf, Kalima and the like)
+have none.
+
+The torch light on the ground has no light mood values of its own: it works on
+every map with map lights (the lights map objects make each frame, as the light
+grid has them), with each map's own light colours and the light mood's dynamic
+gain. Effect and character lights (spells, a held torch) are not drawn so. Models
+are unchanged: characters, monsters, gear and objects get exactly the light they
+had before, with the setting on or off.
+
+Foliage smoothing needs no light mood values either. Why it helps: with HD textures
+the Enhanced samplers lean half a mip level toward the sharper one (the Remaster
+looked soapy without it), but on a cut-out the alpha-tested edge is then sampled
+finer than the screen can show and crawls as the camera moves. A texture counts as
+a cut-out when less than 90 % of its texels pass the alpha test; those get
+samplers of their own with the bias above, every other texture keeps the sharp
+one. With the setting off, on Low, without HD textures and in the browser the
+samplers and the draws are exactly as before. If trees look too soft, lower the
+strength.
 
 **Auto** (no `GraphicsPreset` key, or `Auto`) is decided once at start-up, on a
 new desktop install only (`config.ini` has no `Look` key yet), from the GPU's

@@ -35,6 +35,8 @@
 #include "Render/Terrain/TerrainLightGrid.h"
 #include "Render/Terrain/TerrainDetail.h"
 #include "Render/Terrain/TerrainVariation.h"
+#include "Render/Terrain/TorchLights.h"
+#include "Render/Textures/FoliageSmoothing.h"
 #include "Render/Textures/HdTextures.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "Scenes/SceneCore.h"
@@ -1075,6 +1077,7 @@ void AddFrameHistoryLights()
 {
     if (!UseLightHistory())
     {
+        Render::Terrain::TorchLights::BuildFrame();
         return;
     }
     Render::Lighting::DynamicLightHistory& history = Render::Lighting::FrameLightHistory();
@@ -1092,6 +1095,7 @@ void AddFrameHistoryLights()
     const float seconds = std::clamp(std::chrono::duration<float>(now - last).count(), 0.f, LongestStep);
     last = now;
     Render::Terrain::LightGrid::ReplayFrameLights(FrameLightTarget(), seconds, Render::Look::LightHistorySettings());
+    Render::Terrain::TorchLights::BuildFrame();
 }
 
 // Every light added to the frame's dynamic terrain light is also a point light of the frame. The
@@ -1559,6 +1563,28 @@ static bool IsWaterTileTexture(int texture)
            (texture == kPkFieldWaterTileTexture && (gMapManager.IsPKField() || IsDoppelGanger2()));
 }
 
+// A ground vertex's normal: the part of its colour from the frame's torch-lit lights (TorchLights.h)
+// on a tile texture drawn torch-lit (not water), else the plain up normal as before.
+static void GroundVertexNormal(int terrainIndex, int texture, float normal[3])
+{
+    if (IsWaterTileTexture(texture) || !Render::Terrain::TorchLights::FrameActive())
+    {
+        normal[0] = 0.f;
+        normal[1] = 0.f;
+        normal[2] = 1.f;
+        return;
+    }
+    Render::Terrain::TorchLights::RemovablePart(PrimaryTerrainLight[terrainIndex],
+                                                Render::Terrain::TorchLights::Share(terrainIndex),
+                                                GroundMacroFactor(terrainIndex), normal);
+}
+
+// Whether a ground run or layer of this tile texture is drawn torch-lit this frame.
+static bool TorchLitGround(int texture)
+{
+    return !IsWaterTileTexture(texture) && Render::Terrain::TorchLights::FrameActive();
+}
+
 // The tile textures SetGroundFaceState draws with the alpha test: cut-outs, not plain repeats.
 static bool IsAlphaTestedTileTexture(int texture)
 {
@@ -1744,6 +1770,8 @@ static void RenderGroundFaces(bool grass)
 
     int boundTexture = -1;
     bool drawn = true;
+    // Foliage smoothing: the grass may take alpha-to-coverage under anti-aliasing.
+    mu::GetRenderer().SetCutoutQuads(grass && Render::Textures::FoliageSmoothing::Strength() > 0.0f);
     for (const std::uint32_t index : order)
     {
         const GroundFace& face = s_groundFaces[index];
@@ -1756,10 +1784,13 @@ static void RenderGroundFaces(bool grass)
             SetGroundDetail(!grass && !IsWaterTileTexture(face.texture), face.texture);
             if (!grass && IsWaterTileTexture(face.texture))
                 SetGroundWater(face.texture);
+            mu::GetRenderer().SetTerrainLit(!grass && TorchLitGround(face.texture));
         }
         if (drawn)
             mu::GetRenderer().RenderQuad3D(face.vertices, 0u);
     }
+    mu::GetRenderer().SetTerrainLit(false);
+    mu::GetRenderer().SetCutoutQuads(false);
     SetGroundDetail(false);
     s_groundFaces.clear();
 }
@@ -1769,9 +1800,11 @@ void RenderFace(int Texture, int mx, int my)
     if (gMapManager.WorldActive == WD_39KANTURU_3RD && Texture == 100)
         return;
 
-    auto MakeVert = [](const float* pos, const float* tc, int terrainIndex) -> mu::Vertex3D
+    auto MakeVert = [Texture](const float* pos, const float* tc, int terrainIndex) -> mu::Vertex3D
     {
-        return {pos[0], pos[1], pos[2], 0.f, 0.f, 1.f, tc[0], tc[1], GroundVertexColor(terrainIndex)};
+        float normal[3];
+        GroundVertexNormal(terrainIndex, Texture, normal);
+        return {pos[0], pos[1], pos[2], normal[0], normal[1], normal[2], tc[0], tc[1], GroundVertexColor(terrainIndex)};
     };
     const mu::Vertex3D v0 = MakeVert(TerrainVertex[0], TerrainTextureCoord[0], TerrainIndex1);
     const mu::Vertex3D v1 = MakeVert(TerrainVertex[1], TerrainTextureCoord[1], TerrainIndex2);
@@ -1831,17 +1864,21 @@ static void RenderLayerFaces()
         // A shore layer of the water tile gets the water look like the water under it.
         if (!face.blend && IsWaterTileTexture(face.texture))
             SetGroundWater(face.texture);
+        mu::GetRenderer().SetTerrainLit(!face.blend && TorchLitGround(face.texture));
         mu::GetRenderer().RenderQuad3D(face.vertices, 0u);
     }
+    mu::GetRenderer().SetTerrainLit(false);
     SetGroundDetail(false);
     s_layerFaces.clear();
 }
 
 void RenderFaceAlpha(int Texture, int mx, int my)
 {
-    auto MakeVert = [](const float* pos, const float* tc, int terrainIndex) -> mu::Vertex3D
+    auto MakeVert = [Texture](const float* pos, const float* tc, int terrainIndex) -> mu::Vertex3D
     {
-        return {pos[0], pos[1], pos[2], 0.f, 0.f, 1.f, tc[0], tc[1],
+        float normal[3];
+        GroundVertexNormal(terrainIndex, Texture, normal);
+        return {pos[0], pos[1], pos[2], normal[0], normal[1], normal[2], tc[0], tc[1],
                 GroundVertexColor(terrainIndex, TerrainMappingAlpha[terrainIndex])};
     };
     const mu::Vertex3D v0 = MakeVert(TerrainVertex[0], TerrainTextureCoord[0], TerrainIndex1);
