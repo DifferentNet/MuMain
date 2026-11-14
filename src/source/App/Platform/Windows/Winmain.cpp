@@ -8,6 +8,7 @@
 #include "Core/Utilities/FrameProfiler.h"
 #include "Core/Input/SyntheticInput.h"
 #include "Core/Input/TouchInput.h"
+#include "Core/Platform/CrashReport.h"
 #include "Core/Platform/GameWindow.h"
 #include "Core/Input/UiInputRouter.h"
 #include "App/Control/ControlServer.h"
@@ -997,15 +998,6 @@ BOOL GetConnectServerInfo(wchar_t* szCmdLine, wchar_t* lpszURL, WORD* pwPort)
 extern int TimeRemain;
 BOOL g_bInactiveTimeChecked = FALSE;
 void MoveObject(OBJECT* o);
-
-bool ExceptionCallback(_EXCEPTION_POINTERS* pExceptionInfo)
-{
-    if (g_bUseWindowMode == FALSE && g_bUseFullscreenMode == TRUE)
-    {
-        ChangeDisplaySettings(nullptr, 0);
-    }
-    return true;
-}
 
 double CPU_AVG = 0.0;
 static void RenderProfiledFrame()
@@ -2746,6 +2738,10 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
 #endif
 {
     InitializeWorkingDirectoryAndLog();
+#ifdef _WIN32
+    // A crash from here on leaves CrashReports\crash-*.dmp and .txt for the player to send.
+    Core::Platform::CrashReport::Install();
+#endif
     // Installed before SDL starts so init failures are captured; every early
     // return restores it, and ShutdownRuntime() releases it before mu::log closes.
     std::optional<Core::Log::Sdl::ScopedLogOutput> sdlLogOutput;
