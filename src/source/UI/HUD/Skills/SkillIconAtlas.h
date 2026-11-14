@@ -46,4 +46,9 @@ SkillIcon ResolveSkillIcon(const SkillIconSource& skill);
 // The @spritesheet sprite of an icon (skill_icons.rcss / master_skill_icons.rcss), or an empty
 // string for Atlas::None.
 std::string IconSpriteName(const SkillIcon& icon);
+
+// The decorator an element binds for the icon: "image(<sprite>)", or "none" for Atlas::None. Built
+// once per cell and lit/grey state and kept (main thread only): the HUD asks for about a dozen
+// icons every frame, and formatting them each time was a per-frame allocation.
+const std::string& IconDecorator(const SkillIcon& icon);
 } // namespace UI::Skills::Icon

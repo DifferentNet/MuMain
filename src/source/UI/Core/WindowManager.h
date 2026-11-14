@@ -27,6 +27,11 @@ namespace mu::ui::window
 
         bool TrackLeftPress();
         bool HoldsShownWindow(const CObject* pUIObj) const;
+        // Sorts m_vecUI by `compare` when it is not in that order already.
+        void SortWindows(bool (*compare)(IObject*, IObject*));
+
+        // The per-call copies of m_vecUI the loops walk, kept for their capacity.
+        type_vector_uibase m_vecMouseScratch, m_vecKeyScratch, m_vecRenderScratch;
 
     public:
         using UnitsFor = UI::Scaling::Transform (*)(int windowWidth, int windowHeight);

@@ -372,13 +372,25 @@ void mu::ui::window::CItemHotKey::SyncSlotIcons(Rml::ElementDocument* document)
         return;
     for (int i = 0; i < HOTKEY_COUNT; ++i)
     {
-        Rml::Element* icon = document->GetElementById("item_icon_" + std::to_string(i));
+        if (document != m_pIconDocument || !m_SlotIcons[i])
+        {
+            Rml::Element* found = document->GetElementById("item_icon_" + std::to_string(i));
+            m_SlotIcons[i] = found != nullptr ? found->GetObserverPtr() : Rml::ObserverPtr<Rml::Element>();
+        }
+        Rml::Element* icon = m_SlotIcons[i].get();
         if (icon == nullptr)
             continue;
         const bool filled = GetSlotItem(i) != nullptr;
         icon->SetClass("hidden", !filled);
         m_SlotTargets[i]->Sync(icon, m_bSlotIconsShown && filled);
     }
+    m_pIconDocument = document;
+}
+
+void mu::ui::window::CItemHotKey::StopSlotIcons()
+{
+    for (auto& target : m_SlotTargets)
+        target->Disable();
 }
 
 void mu::ui::window::CItemHotKey::SetSlotIconsShown(bool shown)

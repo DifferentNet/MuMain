@@ -4,10 +4,12 @@
 #include <memory>
 #include <span>
 
+#include <RmlUi/Core/ObserverPtr.h>
+
 #include "UI/Core/WindowObject.h"
 #include "UI/Inventory/ItemCameraTarget.h"
 
-namespace Rml { class ElementDocument; }
+namespace Rml { class Element; class ElementDocument; }
 
 namespace mu::ui::window
 {
@@ -71,6 +73,9 @@ namespace mu::ui::window
         void SyncSlotIcons(Rml::ElementDocument* document);
         // From SyncDocVisibility(), which runs whether or not this window updates.
         void SetSlotIconsShown(bool shown);
+        // Stops drawing the icons for a frame SyncSlotIcons() is skipped (the phone's HUD hides the
+        // slots); the next SyncSlotIcons() starts them again.
+        void StopSlotIcons();
 
         // RmlUi handles hit-testing/hover for the 4 item-hotkey slots; sets a member read by
         // SyncRmlModel() and by the icon's own drawer.
@@ -95,6 +100,10 @@ namespace mu::ui::window
         int m_iHotKeyItemLevel[HOTKEY_COUNT];
         std::unique_ptr<UI::Items::ItemCameraTarget> m_SlotTargets[HOTKEY_COUNT];
         bool m_bSlotIconsShown = false;
+        // SyncSlotIcons()'s #item_icon_0..3, looked up once per document instead of by id every
+        // frame (per-frame cost); an expired pointer (the document rebuilt) looks them up again.
+        Rml::ElementDocument* m_pIconDocument = nullptr;
+        Rml::ObserverPtr<Rml::Element> m_SlotIcons[HOTKEY_COUNT];
 
         // -1 = nothing hovered; set by OnHotkeySlotHover(), cleared by OnUnhover().
         int m_iHoveredSlot = -1;

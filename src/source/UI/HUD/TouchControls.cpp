@@ -1152,8 +1152,9 @@ void SyncSkills(ControlsModel& model)
         SetField(model.skillEmpty[slot], empty, EmptyFields[slot]);
         // Not enough mana or AG shows on the button itself, not only once in the chat.
         SetField(model.skillNoMana[slot], !empty && GameLogic::Touch::HotKeyShortOfMana(hotKey), NoManaFields[slot]);
-        SetField(model.skillIcons[slot], empty ? Rml::String("none") : g_pSkillList->GetHotKeyIconDecorator(hotKey),
-                 IconFields[slot]);
+        // Both sides are kept strings: no copy made each frame.
+        static const Rml::String NoIcon = "none";
+        SetField(model.skillIcons[slot], empty ? NoIcon : g_pSkillList->GetHotKeyIconDecorator(hotKey), IconFields[slot]);
         // Whole percents: the wipe redraws only when it moves.
         const float cooldown =
             empty ? 0.f : std::round(g_pSkillList->GetHotKeyCooldownFraction(hotKey) * 100.f) / 100.f;

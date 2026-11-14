@@ -114,6 +114,18 @@ namespace UI::RmlBridge
     // Marks `documentName`'s document as a main-scene one when the stacking table says so; every
     // themed document gets it when it loads.
     void ApplyDocumentScene(Rml::ElementDocument* document, const std::string& documentName);
+
+    // Classes a per-frame pass looks for (RmlNativeTextFit.h, RmlMarquee.h). ThemedDocumentLoader
+    // notes, when it loads a document, whether its markup names them at all: the passes walked every
+    // visible document's whole tree every frame to find a handful of elements (per-frame cost).
+    enum class MarkupClass
+    {
+        NativeFit, // "native-fit"
+        Marquee,   // "marquee"
+    };
+    // True only for a document ThemedDocumentLoader loaded whose markup never names the class; false
+    // for any other (unknown documents are walked as before).
+    bool MarkupLacksClass(const Rml::ElementDocument* document, MarkupClass markupClass);
     // Every frame before RmlUi updates and renders (RmlUiRuntime::Update()): outside the main
     // scene, suspends every marked document, including one loaded since (a theme switch).
     void SuspendMainSceneDocumentsOutsideMainScene();

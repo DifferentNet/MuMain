@@ -2,6 +2,7 @@
 #include "UI/RmlBridge/RmlMarquee.h"
 
 #include "UI/RmlBridge/RmlPointer.h"
+#include "UI/RmlBridge/RmlTheme.h"
 
 #include <RmlUi/Core.h>
 
@@ -13,14 +14,18 @@ namespace UI::RmlBridge
 {
 namespace
 {
-constexpr const char* kMarqueeClass = "marquee";
-constexpr const char* kOverflowClass = "marquee-overflow";
+// Rml::Strings made once: IsClassSet()/SetClass() take one, and a const char* made a temporary on every
+// element every frame (per-frame cost).
+const Rml::String kMarqueeClass = "marquee";
+const Rml::String kOverflowClass = "marquee-overflow";
 constexpr const char* kEllipsis = "..";
 // Scroll speed in the element's own px per second; a short wait before it starts, a longer one
 // at each end.
 constexpr double kSpeed = 50.0;
 constexpr double kStartDelay = 0.15;
 constexpr double kEndPause = 0.8;
+// How often a document whose markup never names .marquee is walked all the same.
+constexpr double kUnmarkedRecheckSeconds = 0.5;
 
 struct MarqueeState
 {
@@ -148,12 +153,22 @@ void UpdateMarquees(Rml::Context* context)
         return;
 
     const double now = Rml::GetSystemInterface()->GetElapsedTime();
+    // Walking every visible document's whole tree each frame was the cost; only the documents whose
+    // markup names the class are walked every frame, the rest every kUnmarkedRecheckSeconds, in case an
+    // element got the class some other way.
+    static double s_nextUnmarkedWalk = 0.0;
+    const bool walkUnmarked = now >= s_nextUnmarkedWalk || now < s_nextUnmarkedWalk - kUnmarkedRecheckSeconds;
+    if (walkUnmarked)
+        s_nextUnmarkedWalk = now + kUnmarkedRecheckSeconds;
+
     for (int i = 0; i < context->GetNumDocuments(); ++i)
     {
         Rml::ElementDocument* document = context->GetDocument(i);
-        if (document->IsVisible())
+        if (document->IsVisible() && (walkUnmarked || !MarkupLacksClass(document, MarkupClass::Marquee)))
             UpdateSubtree(document, now);
     }
-    std::erase_if(States(), [](const auto& entry) { return entry.second.element.get() != entry.first; });
+    // Nothing to sweep while no marquee was seen (per-frame cost).
+    if (!States().empty())
+        std::erase_if(States(), [](const auto& entry) { return entry.second.element.get() != entry.first; });
 }
 } // namespace UI::RmlBridge

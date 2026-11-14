@@ -78,5 +78,18 @@ namespace mu::ui::window
 
         void SyncRmlModel();
         void BuildRmlUi();
+        // Writes `text` into the model field and dirties it, when it differs.
+        void SyncText(Rml::String MuHelperBarRmlModel::* field, const char* boundName, const Rml::String& text);
+
+        // SyncRmlModel()'s caches, so the texts are not formatted and converted every frame (per-frame
+        // cost): the position readout for the map name and position it was built for, and each hint
+        // for the language text it came from (a language switch swaps the text pointers).
+        bool m_bPositionBuilt = false;
+        const wchar_t* m_pPositionMapName = nullptr;
+        POINT m_PositionBuiltAt{};
+        Rml::String m_PositionText;
+        static constexpr int HintCount = 3;
+        const wchar_t* m_pHintSources[HintCount] = {};
+        Rml::String m_HintTexts[HintCount];
     };
 }

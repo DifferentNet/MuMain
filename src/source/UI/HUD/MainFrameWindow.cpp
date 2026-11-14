@@ -20,6 +20,7 @@
 #include "World/MapInfra/MapManager.h"
 #include "Character/CharacterManager.h"
 #include "UI/HUD/HeroGauges.h"
+#include "UI/Mobile/InterfaceMode.h"
 #include "GameLogic/Skills/SkillManager.h"
 #include "UI/HUD/Skills/SkillIconAtlas.h"
 #include "UI/HUD/Skills/SkillTooltip.h"
@@ -464,44 +465,100 @@ bool mu::ui::window::CMainFrameWindow::Update()
     return true;
 }
 
+namespace
+{
+// The gauge readouts' formats; their addresses are part of TextSource's key.
+constexpr wchar_t kCurrentOfMaxFormat[] = L"%d / %d";
+constexpr wchar_t kNumberFormat[] = L"%d";
+} // namespace
+
+void mu::ui::window::CMainFrameWindow::SyncFloat(float MainFrameRmlModel::* field, const char* boundName, float value)
+{
+    if (m_RmlView.GetModel().*field != value)
+    {
+        m_RmlView.GetModel().*field = value;
+        m_RmlView.MarkDirty(boundName);
+    }
+}
+
+void mu::ui::window::CMainFrameWindow::SyncBool(bool MainFrameRmlModel::* field, const char* boundName, bool value)
+{
+    if (m_RmlView.GetModel().*field != value)
+    {
+        m_RmlView.GetModel().*field = value;
+        m_RmlView.MarkDirty(boundName);
+    }
+}
+
+void mu::ui::window::CMainFrameWindow::SyncText(Rml::String MainFrameRmlModel::* field, const char* boundName,
+                                                const Rml::String& value)
+{
+    if (m_RmlView.GetModel().*field != value)
+    {
+        m_RmlView.GetModel().*field = value;
+        m_RmlView.MarkDirty(boundName);
+    }
+}
+
+void mu::ui::window::CMainFrameWindow::SyncWide(Rml::String MainFrameRmlModel::* field, const char* boundName,
+                                                const wchar_t* text)
+{
+    SyncText(field, boundName, StringUtils::WideToNarrow(text));
+}
+
+void mu::ui::window::CMainFrameWindow::ResetSyncCaches()
+{
+    m_TextSources = {};
+    m_bGridSynced = false;
+}
+
 void mu::ui::window::CMainFrameWindow::SyncRmlModel()
 {
-    if (!m_RmlView.Document()) return;
-
-    auto& model = m_RmlView.GetModel();
-
-    // --- HP/MP/AG/SD/EXP: fraction/text/tooltip helper, mirrors CMuHelperBar's syncLabel() ---
-    auto syncFloat = [this](float MainFrameRmlModel::* field, const char* boundName, float value)
+    Rml::ElementDocument* document = m_RmlView.Document();
+    if (!document)
     {
-        if (m_RmlView.GetModel().*field != value)
-        {
-            m_RmlView.GetModel().*field = value;
-            m_RmlView.MarkDirty(boundName);
-        }
-    };
-    auto syncBool = [this](bool MainFrameRmlModel::* field, const char* boundName, bool value)
-    {
-        if (m_RmlView.GetModel().*field != value)
-        {
-            m_RmlView.GetModel().*field = value;
-            m_RmlView.MarkDirty(boundName);
-        }
-    };
-    auto syncText = [this](Rml::String MainFrameRmlModel::* field, const char* boundName, const Rml::String& value)
-    {
-        if (m_RmlView.GetModel().*field != value)
-        {
-            m_RmlView.GetModel().*field = value;
-            m_RmlView.MarkDirty(boundName);
-        }
-    };
-    auto syncWide = [&](Rml::String MainFrameRmlModel::* field, const char* boundName, const wchar_t* text)
-    {
-        syncText(field, boundName, StringUtils::WideToNarrow(text));
-    };
+        m_pSyncedDocument = nullptr;
+        return;
+    }
 
-    m_ItemHotKey.SyncSlotIcons(m_RmlView.Document());
+    // A rebuilt document can come with its model reset to the defaults, and leaving the phone's HUD
+    // shows parts not synced while it was on: build every text again then.
+    const bool phoneHud = UI::Mobile::ReplacesPcHud();
+    if (document != m_pSyncedDocument || phoneHud != m_bSyncedPhoneHud)
+    {
+        ResetSyncCaches();
+        m_pSyncedDocument = document;
+        m_bSyncedPhoneHud = phoneHud;
+    }
 
+    // Legacy RenderLifeMana()'s heartbeat under 20 % life, in either HUD.
+    const UI::HUD::HeroGauges::Gauge life = UI::HUD::HeroGauges::Life();
+    if (life.max > 0 && life.current > 0 && (life.current / (float)life.max) < 0.2f)
+        PlayBuffer(SOUND_HEART);
+
+    if (phoneHud)
+    {
+        // The phone's HUD hides the bar's gauges, buttons, skill row and item slots (main_frame.rcss),
+        // so their texts, icons and stack counts are not built each frame (per-frame cost).
+        m_ItemHotKey.StopSlotIcons();
+    }
+    else
+    {
+        m_ItemHotKey.SyncSlotIcons(document);
+        SyncGauges();
+        SyncExperience();
+        SyncButtons();
+        SyncSkillRow();
+        SyncItemSlots();
+    }
+
+    SyncAlerts();
+    SyncSkillList();
+    SyncSkillTooltip();
+}
+
+void mu::ui::window::CMainFrameWindow::SyncGauges()
+{
     // HP/MP -- legacy RenderLifeMana(). fLife/fMana there are the EMPTY fraction; store filled.
     const UI::HUD::HeroGauges::Gauge life = UI::HUD::HeroGauges::Life();
     const UI::HUD::HeroGauges::Gauge mana = UI::HUD::HeroGauges::Mana();
@@ -509,90 +566,147 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
     const DWORD wLife = life.current;
     const DWORD wManaMax = mana.max;
     const DWORD wMana = mana.current;
-    if (wLifeMax > 0 && wLife > 0 && (wLife / (float)wLifeMax) < 0.2f)
-        PlayBuffer(SOUND_HEART);
 
-    syncFloat(&MainFrameRmlModel::hpFraction, "hp_fraction", wLifeMax > 0 ? wLife / (float)wLifeMax : 0.f);
-    syncFloat(&MainFrameRmlModel::mpFraction, "mp_fraction", wManaMax > 0 ? wMana / (float)wManaMax : 0.f);
-    syncBool(&MainFrameRmlModel::poisoned, "poisoned", g_isCharacterBuff((&Hero->Object), eDeBuff_Poison));
+    SyncFloat(&MainFrameRmlModel::hpFraction, "hp_fraction", wLifeMax > 0 ? wLife / (float)wLifeMax : 0.f);
+    SyncFloat(&MainFrameRmlModel::mpFraction, "mp_fraction", wManaMax > 0 ? wMana / (float)wManaMax : 0.f);
+    SyncBool(&MainFrameRmlModel::poisoned, "poisoned", g_isCharacterBuff((&Hero->Object), eDeBuff_Poison));
 
-    // "X / Y" (current/max), not just "X" -- shared model field, both themes.
+    // "X / Y" (current/max), not just "X" -- shared model field, both themes. Each text is formatted
+    // only when its numbers (or the locale's format) changed (TextSource; per-frame cost).
     wchar_t szNum[32] = {};
-    mu_swprintf(szNum, L"%d / %d", wLife, wLifeMax);
-    syncWide(&MainFrameRmlModel::hpText, "hp_text", szNum);
-    mu_swprintf(szNum, L"%d / %d", wMana, wManaMax);
-    syncWide(&MainFrameRmlModel::mpText, "mp_text", szNum);
-    mu_swprintf(szNum, L"%d", wLife);
-    syncWide(&MainFrameRmlModel::hpCurrentText, "hp_current_text", szNum);
-    mu_swprintf(szNum, L"%d", wMana);
-    syncWide(&MainFrameRmlModel::mpCurrentText, "mp_current_text", szNum);
-
     wchar_t szTip[256] = {};
-    mu_swprintf(szTip, I18N::Game::LifeDD, wLife, wLifeMax);
-    syncWide(&MainFrameRmlModel::hpTooltip, "hp_tooltip", szTip);
-    mu_swprintf(szTip, I18N::Game::ManaDD359, wMana, wManaMax);
-    syncWide(&MainFrameRmlModel::mpTooltip, "mp_tooltip", szTip);
+    TextSources& sources = m_TextSources;
+    if (sources.hpText.Changed(kCurrentOfMaxFormat, wLife, wLifeMax))
+    {
+        mu_swprintf(szNum, kCurrentOfMaxFormat, wLife, wLifeMax);
+        SyncWide(&MainFrameRmlModel::hpText, "hp_text", szNum);
+    }
+    if (sources.mpText.Changed(kCurrentOfMaxFormat, wMana, wManaMax))
+    {
+        mu_swprintf(szNum, kCurrentOfMaxFormat, wMana, wManaMax);
+        SyncWide(&MainFrameRmlModel::mpText, "mp_text", szNum);
+    }
+    if (sources.hpCurrent.Changed(kNumberFormat, wLife))
+    {
+        mu_swprintf(szNum, kNumberFormat, wLife);
+        SyncWide(&MainFrameRmlModel::hpCurrentText, "hp_current_text", szNum);
+    }
+    if (sources.mpCurrent.Changed(kNumberFormat, wMana))
+    {
+        mu_swprintf(szNum, kNumberFormat, wMana);
+        SyncWide(&MainFrameRmlModel::mpCurrentText, "mp_current_text", szNum);
+    }
+    if (sources.hpTooltip.Changed(I18N::Game::LifeDD, wLife, wLifeMax))
+    {
+        mu_swprintf(szTip, I18N::Game::LifeDD, wLife, wLifeMax);
+        SyncWide(&MainFrameRmlModel::hpTooltip, "hp_tooltip", szTip);
+    }
+    if (sources.mpTooltip.Changed(I18N::Game::ManaDD359, wMana, wManaMax))
+    {
+        mu_swprintf(szTip, I18N::Game::ManaDD359, wMana, wManaMax);
+        SyncWide(&MainFrameRmlModel::mpTooltip, "mp_tooltip", szTip);
+    }
 
     // AG (stamina/skill-mana) -- legacy RenderGuageAG().
     const UI::HUD::HeroGauges::Gauge skillMana = UI::HUD::HeroGauges::SkillMana();
     const DWORD dwMaxSkillMana = skillMana.max;
     const DWORD dwSkillMana = skillMana.current;
-    syncFloat(&MainFrameRmlModel::agFraction, "ag_fraction", dwSkillMana / (float)dwMaxSkillMana);
-    mu_swprintf(szNum, L"%d / %d", dwSkillMana, dwMaxSkillMana);
-    syncWide(&MainFrameRmlModel::agText, "ag_text", szNum);
-    mu_swprintf(szNum, L"%d", dwSkillMana);
-    syncWide(&MainFrameRmlModel::agCurrentText, "ag_current_text", szNum);
-    mu_swprintf(szTip, I18N::Game::AGDD, dwSkillMana, dwMaxSkillMana);
-    syncWide(&MainFrameRmlModel::agTooltip, "ag_tooltip", szTip);
+    SyncFloat(&MainFrameRmlModel::agFraction, "ag_fraction", dwSkillMana / (float)dwMaxSkillMana);
+    if (sources.agText.Changed(kCurrentOfMaxFormat, dwSkillMana, dwMaxSkillMana))
+    {
+        mu_swprintf(szNum, kCurrentOfMaxFormat, dwSkillMana, dwMaxSkillMana);
+        SyncWide(&MainFrameRmlModel::agText, "ag_text", szNum);
+    }
+    if (sources.agCurrent.Changed(kNumberFormat, dwSkillMana))
+    {
+        mu_swprintf(szNum, kNumberFormat, dwSkillMana);
+        SyncWide(&MainFrameRmlModel::agCurrentText, "ag_current_text", szNum);
+    }
+    if (sources.agTooltip.Changed(I18N::Game::AGDD, dwSkillMana, dwMaxSkillMana))
+    {
+        mu_swprintf(szTip, I18N::Game::AGDD, dwSkillMana, dwMaxSkillMana);
+        SyncWide(&MainFrameRmlModel::agTooltip, "ag_tooltip", szTip);
+    }
 
     // SD (shield) -- legacy RenderGuageSD().
     const UI::HUD::HeroGauges::Gauge shield = UI::HUD::HeroGauges::Shield();
     const DWORD wMaxShield = shield.max;
     const DWORD wShield = shield.current;
-    syncFloat(&MainFrameRmlModel::sdFraction, "sd_fraction", wShield / (float)wMaxShield);
-    mu_swprintf(szNum, L"%d / %d", wShield, wMaxShield);
-    syncWide(&MainFrameRmlModel::sdText, "sd_text", szNum);
-    mu_swprintf(szNum, L"%d", wShield);
-    syncWide(&MainFrameRmlModel::sdCurrentText, "sd_current_text", szNum);
-    mu_swprintf(szTip, I18N::Game::SDDD, wShield, wMaxShield);
-    syncWide(&MainFrameRmlModel::sdTooltip, "sd_tooltip", szTip);
+    SyncFloat(&MainFrameRmlModel::sdFraction, "sd_fraction", wShield / (float)wMaxShield);
+    if (sources.sdText.Changed(kCurrentOfMaxFormat, wShield, wMaxShield))
+    {
+        mu_swprintf(szNum, kCurrentOfMaxFormat, wShield, wMaxShield);
+        SyncWide(&MainFrameRmlModel::sdText, "sd_text", szNum);
+    }
+    if (sources.sdCurrent.Changed(kNumberFormat, wShield))
+    {
+        mu_swprintf(szNum, kNumberFormat, wShield);
+        SyncWide(&MainFrameRmlModel::sdCurrentText, "sd_current_text", szNum);
+    }
+    if (sources.sdTooltip.Changed(I18N::Game::SDDD, wShield, wMaxShield))
+    {
+        mu_swprintf(szTip, I18N::Game::SDDD, wShield, wMaxShield);
+        SyncWide(&MainFrameRmlModel::sdTooltip, "sd_tooltip", szTip);
+    }
+}
 
+void mu::ui::window::CMainFrameWindow::SyncExperience()
+{
     // EXP -- legacy RenderExperience(), flash-highlight overlay intentionally not reproduced (see
     // this class's header comment). expFraction is progress *within* the current decile, matching
     // buildExpSegment()'s original digit/fraction split.
+    const UI::HUD::HeroGauges::Experience experience = UI::HUD::HeroGauges::ReadExperience();
+    const __int64 dwNexExperience = experience.next;
+    const __int64 dwExperience = experience.current;
+    const double fRatio = experience.progress;
+
+    const double scaled = std::clamp(fRatio, 0.0, 1.0) * 10.0;
+    int iExp = std::clamp(static_cast<int>(scaled), 0, 9);
+    double fProgress = std::clamp(scaled - static_cast<double>(static_cast<long long>(scaled)), 0.0, 1.0);
+    if (fRatio >= 1.0) { iExp = 9; fProgress = 1.0; }
+
+    SyncFloat(&MainFrameRmlModel::expFraction, "exp_fraction", static_cast<float>(fProgress));
+    if (m_TextSources.expDigit.Changed(kNumberFormat, iExp))
     {
-        const UI::HUD::HeroGauges::Experience experience = UI::HUD::HeroGauges::ReadExperience();
-        const __int64 dwNexExperience = experience.next;
-        const __int64 dwExperience = experience.current;
-        const double fRatio = experience.progress;
-
-        const double scaled = std::clamp(fRatio, 0.0, 1.0) * 10.0;
-        int iExp = std::clamp(static_cast<int>(scaled), 0, 9);
-        double fProgress = std::clamp(scaled - static_cast<double>(static_cast<long long>(scaled)), 0.0, 1.0);
-        if (fRatio >= 1.0) { iExp = 9; fProgress = 1.0; }
-
-        syncFloat(&MainFrameRmlModel::expFraction, "exp_fraction", static_cast<float>(fProgress));
         wchar_t szExp[8] = {};
-        mu_swprintf(szExp, L"%d", iExp);
-        syncWide(&MainFrameRmlModel::expDigit, "exp_digit", szExp);
+        mu_swprintf(szExp, kNumberFormat, iExp);
+        SyncWide(&MainFrameRmlModel::expDigit, "exp_digit", szExp);
+    }
+    if (m_TextSources.expTooltip.Changed(I18N::Game::EXPI64dI64d, dwExperience, dwNexExperience))
+    {
+        wchar_t szTip[256] = {};
         mu_swprintf(szTip, I18N::Game::EXPI64dI64d, static_cast<unsigned long long>(dwExperience),
                     static_cast<unsigned long long>(dwNexExperience));
-        syncWide(&MainFrameRmlModel::expTooltip, "exp_tooltip", szTip);
+        SyncWide(&MainFrameRmlModel::expTooltip, "exp_tooltip", szTip);
     }
+}
 
-    // Button tooltips: static strings, re-checked every frame for consistency but effectively set-once.
-    syncWide(&MainFrameRmlModel::chaInfoTooltip, "chainfo_tooltip", I18N::Game::CharacterC);
-    syncWide(&MainFrameRmlModel::myInvenTooltip, "myinven_tooltip", I18N::Game::InventoryIV);
-    syncWide(&MainFrameRmlModel::friendTooltip, "friend_tooltip", I18N::Game::FriendF);
-    syncWide(&MainFrameRmlModel::windowTooltip, "window_tooltip", I18N::Game::MenuU);
-    syncWide(&MainFrameRmlModel::battlePassTooltip, "battle_pass_tooltip", I18N::Game::BattlePassX);
+void mu::ui::window::CMainFrameWindow::SyncButtons()
+{
+    // Button tooltips: static strings, converted again only when the locale gives another one
+    // (per-frame cost).
+    TextSources& sources = m_TextSources;
+    if (sources.chaInfoTooltip.Changed(I18N::Game::CharacterC))
+        SyncWide(&MainFrameRmlModel::chaInfoTooltip, "chainfo_tooltip", I18N::Game::CharacterC);
+    if (sources.myInvenTooltip.Changed(I18N::Game::InventoryIV))
+        SyncWide(&MainFrameRmlModel::myInvenTooltip, "myinven_tooltip", I18N::Game::InventoryIV);
+    if (sources.friendTooltip.Changed(I18N::Game::FriendF))
+        SyncWide(&MainFrameRmlModel::friendTooltip, "friend_tooltip", I18N::Game::FriendF);
+    if (sources.windowTooltip.Changed(I18N::Game::MenuU))
+        SyncWide(&MainFrameRmlModel::windowTooltip, "window_tooltip", I18N::Game::MenuU);
+    if (sources.battlePassTooltip.Changed(I18N::Game::BattlePassX))
+        SyncWide(&MainFrameRmlModel::battlePassTooltip, "battle_pass_tooltip", I18N::Game::BattlePassX);
     // No SetBtnState() for the battle pass: the window opens from several places, so its state is read here.
-    syncBool(&MainFrameRmlModel::battlePassOpen, "battle_pass_open",
+    SyncBool(&MainFrameRmlModel::battlePassOpen, "battle_pass_open",
              g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_BATTLE_PASS));
 #ifdef PBG_ADD_INGAMESHOP_UI_MAINFRAME
-    syncWide(&MainFrameRmlModel::cShopTooltip, "cshop_tooltip", I18N::Game::MUItemShopX);
+    if (sources.cShopTooltip.Changed(I18N::Game::MUItemShopX))
+        SyncWide(&MainFrameRmlModel::cShopTooltip, "cshop_tooltip", I18N::Game::MUItemShopX);
 #endif //defined PBG_ADD_INGAMESHOP_UI_MAINFRAME
+}
 
+void mu::ui::window::CMainFrameWindow::SyncAlerts()
+{
     // Char-info quest-available blink -- legacy RenderCharInfoButton().
     bool chaInfoAlert = false;
     if (!g_QuestMng.IsQuestIndexByEtcListEmpty())
@@ -603,7 +717,7 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
             && !(g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_QUEST_PROGRESS_ETC)
                 || g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_CHARACTER));
     }
-    syncBool(&MainFrameRmlModel::chaInfoAlert, "chainfo_alert", chaInfoAlert);
+    SyncBool(&MainFrameRmlModel::chaInfoAlert, "chainfo_alert", chaInfoAlert);
 
     // Friend mail/chat blink -- legacy RenderFriendButton()/RenderFriendButtonState().
     const int iBlinkTemp = g_pFriendMenu->GetBlinkTemp();
@@ -627,68 +741,97 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
         friendAlert = true;
     }
     g_pFriendMenu->IncreaseBlinkTemp();
-    syncBool(&MainFrameRmlModel::friendAlert, "friend_alert", friendAlert);
+    SyncBool(&MainFrameRmlModel::friendAlert, "friend_alert", friendAlert);
+}
 
+namespace
+{
+// A hotkey's number, or an empty string for -1 (one digit fits the string's own buffer).
+Rml::String HotkeyText(int hotkey)
+{
+    return hotkey >= 0 ? std::to_string(hotkey) : Rml::String();
+}
+} // namespace
+
+void mu::ui::window::CMainFrameWindow::SyncSkillRow()
+{
     // Skill-hotkey row selection highlight (legacy: the IMAGE_SKILLBOX_USE sprite, modern: an
     // outline; see MainFrameRmlModel::skillSlot0Selected and CSkillList::IsHotKeySlotCurrentSkill()).
-    syncBool(&MainFrameRmlModel::skillSlot0Selected, "skill_slot_0_selected", g_pSkillList->IsHotKeySlotCurrentSkill(0));
-    syncBool(&MainFrameRmlModel::skillSlot1Selected, "skill_slot_1_selected", g_pSkillList->IsHotKeySlotCurrentSkill(1));
-    syncBool(&MainFrameRmlModel::skillSlot2Selected, "skill_slot_2_selected", g_pSkillList->IsHotKeySlotCurrentSkill(2));
-    syncBool(&MainFrameRmlModel::skillSlot3Selected, "skill_slot_3_selected", g_pSkillList->IsHotKeySlotCurrentSkill(3));
-    syncBool(&MainFrameRmlModel::skillSlot4Selected, "skill_slot_4_selected", g_pSkillList->IsHotKeySlotCurrentSkill(4));
+    SyncBool(&MainFrameRmlModel::skillSlot0Selected, "skill_slot_0_selected", g_pSkillList->IsHotKeySlotCurrentSkill(0));
+    SyncBool(&MainFrameRmlModel::skillSlot1Selected, "skill_slot_1_selected", g_pSkillList->IsHotKeySlotCurrentSkill(1));
+    SyncBool(&MainFrameRmlModel::skillSlot2Selected, "skill_slot_2_selected", g_pSkillList->IsHotKeySlotCurrentSkill(2));
+    SyncBool(&MainFrameRmlModel::skillSlot3Selected, "skill_slot_3_selected", g_pSkillList->IsHotKeySlotCurrentSkill(3));
+    SyncBool(&MainFrameRmlModel::skillSlot4Selected, "skill_slot_4_selected", g_pSkillList->IsHotKeySlotCurrentSkill(4));
 
     // Skill-hotkey number labels (see MainFrameRmlModel::skillSlot0Hotkey and
     // CSkillList::GetHotKeySlotNumber()). -1 (empty slot) becomes an empty string.
-    auto hotkeyText = [](int hotkey) { return hotkey >= 0 ? std::to_string(hotkey) : Rml::String(); };
-    syncText(&MainFrameRmlModel::skillSlot0Hotkey, "skill_slot_0_hotkey", hotkeyText(g_pSkillList->GetHotKeySlotNumber(0)));
-    syncText(&MainFrameRmlModel::skillSlot1Hotkey, "skill_slot_1_hotkey", hotkeyText(g_pSkillList->GetHotKeySlotNumber(1)));
-    syncText(&MainFrameRmlModel::skillSlot2Hotkey, "skill_slot_2_hotkey", hotkeyText(g_pSkillList->GetHotKeySlotNumber(2)));
-    syncText(&MainFrameRmlModel::skillSlot3Hotkey, "skill_slot_3_hotkey", hotkeyText(g_pSkillList->GetHotKeySlotNumber(3)));
-    syncText(&MainFrameRmlModel::skillSlot4Hotkey, "skill_slot_4_hotkey", hotkeyText(g_pSkillList->GetHotKeySlotNumber(4)));
+    SyncText(&MainFrameRmlModel::skillSlot0Hotkey, "skill_slot_0_hotkey", HotkeyText(g_pSkillList->GetHotKeySlotNumber(0)));
+    SyncText(&MainFrameRmlModel::skillSlot1Hotkey, "skill_slot_1_hotkey", HotkeyText(g_pSkillList->GetHotKeySlotNumber(1)));
+    SyncText(&MainFrameRmlModel::skillSlot2Hotkey, "skill_slot_2_hotkey", HotkeyText(g_pSkillList->GetHotKeySlotNumber(2)));
+    SyncText(&MainFrameRmlModel::skillSlot3Hotkey, "skill_slot_3_hotkey", HotkeyText(g_pSkillList->GetHotKeySlotNumber(3)));
+    SyncText(&MainFrameRmlModel::skillSlot4Hotkey, "skill_slot_4_hotkey", HotkeyText(g_pSkillList->GetHotKeySlotNumber(4)));
 
-    // Skill icons of the hotkey row and the current-skill slot, and the current skill's hotkey.
-    syncText(&MainFrameRmlModel::skillSlot0Icon, "skill_slot_0_icon", g_pSkillList->GetHotKeySlotIconDecorator(0));
-    syncText(&MainFrameRmlModel::skillSlot1Icon, "skill_slot_1_icon", g_pSkillList->GetHotKeySlotIconDecorator(1));
-    syncText(&MainFrameRmlModel::skillSlot2Icon, "skill_slot_2_icon", g_pSkillList->GetHotKeySlotIconDecorator(2));
-    syncText(&MainFrameRmlModel::skillSlot3Icon, "skill_slot_3_icon", g_pSkillList->GetHotKeySlotIconDecorator(3));
-    syncText(&MainFrameRmlModel::skillSlot4Icon, "skill_slot_4_icon", g_pSkillList->GetHotKeySlotIconDecorator(4));
-    syncText(&MainFrameRmlModel::currentSkillIcon, "current_skill_icon", g_pSkillList->GetCurrentSkillIconDecorator());
-    syncText(&MainFrameRmlModel::currentSkillHotkey, "current_skill_hotkey",
-             CharacterAttribute->SkillNumber > 0 ? hotkeyText(g_pSkillList->GetSkillHotKeyNumber(Hero->CurrentSkill))
+    // Skill icons of the hotkey row and the current-skill slot, and the current skill's hotkey. The
+    // decorators are kept strings (CSkillList::GetSkillIconDecorator()): compared, not built.
+    SyncText(&MainFrameRmlModel::skillSlot0Icon, "skill_slot_0_icon", g_pSkillList->GetHotKeySlotIconDecorator(0));
+    SyncText(&MainFrameRmlModel::skillSlot1Icon, "skill_slot_1_icon", g_pSkillList->GetHotKeySlotIconDecorator(1));
+    SyncText(&MainFrameRmlModel::skillSlot2Icon, "skill_slot_2_icon", g_pSkillList->GetHotKeySlotIconDecorator(2));
+    SyncText(&MainFrameRmlModel::skillSlot3Icon, "skill_slot_3_icon", g_pSkillList->GetHotKeySlotIconDecorator(3));
+    SyncText(&MainFrameRmlModel::skillSlot4Icon, "skill_slot_4_icon", g_pSkillList->GetHotKeySlotIconDecorator(4));
+    SyncText(&MainFrameRmlModel::currentSkillIcon, "current_skill_icon", g_pSkillList->GetCurrentSkillIconDecorator());
+    SyncText(&MainFrameRmlModel::currentSkillHotkey, "current_skill_hotkey",
+             CharacterAttribute->SkillNumber > 0 ? HotkeyText(g_pSkillList->GetSkillHotKeyNumber(Hero->CurrentSkill))
                                                  : Rml::String());
 
     // Skill list cooldown fractions.
-    syncFloat(&MainFrameRmlModel::skillSlot0Cooldown, "skill_slot_0_cooldown", g_pSkillList->GetHotKeySlotCooldownFraction(0));
-    syncFloat(&MainFrameRmlModel::skillSlot1Cooldown, "skill_slot_1_cooldown", g_pSkillList->GetHotKeySlotCooldownFraction(1));
-    syncFloat(&MainFrameRmlModel::skillSlot2Cooldown, "skill_slot_2_cooldown", g_pSkillList->GetHotKeySlotCooldownFraction(2));
-    syncFloat(&MainFrameRmlModel::skillSlot3Cooldown, "skill_slot_3_cooldown", g_pSkillList->GetHotKeySlotCooldownFraction(3));
-    syncFloat(&MainFrameRmlModel::skillSlot4Cooldown, "skill_slot_4_cooldown", g_pSkillList->GetHotKeySlotCooldownFraction(4));
+    SyncFloat(&MainFrameRmlModel::skillSlot0Cooldown, "skill_slot_0_cooldown", g_pSkillList->GetHotKeySlotCooldownFraction(0));
+    SyncFloat(&MainFrameRmlModel::skillSlot1Cooldown, "skill_slot_1_cooldown", g_pSkillList->GetHotKeySlotCooldownFraction(1));
+    SyncFloat(&MainFrameRmlModel::skillSlot2Cooldown, "skill_slot_2_cooldown", g_pSkillList->GetHotKeySlotCooldownFraction(2));
+    SyncFloat(&MainFrameRmlModel::skillSlot3Cooldown, "skill_slot_3_cooldown", g_pSkillList->GetHotKeySlotCooldownFraction(3));
+    SyncFloat(&MainFrameRmlModel::skillSlot4Cooldown, "skill_slot_4_cooldown", g_pSkillList->GetHotKeySlotCooldownFraction(4));
+    SyncFloat(&MainFrameRmlModel::currentSkillCooldown, "current_skill_cooldown",
+              g_pSkillList->GetCurrentSkillCooldownFraction());
+}
 
-    // Item hotkey chrome (#item_slots hover border + stack-count). m_ItemHotKey is a member, read directly.
+void mu::ui::window::CMainFrameWindow::SyncItemSlots()
+{
+    // Item hotkey chrome (#item_slots hover border + stack-count). m_ItemHotKey is a member, read
+    // directly. The counts stay per frame: a potion stack changes in place, with no signal to wait on.
     auto stackCountText = [](int count) { return count > 0 ? std::to_string(count) : Rml::String(); };
-    syncBool(&MainFrameRmlModel::itemSlot0Hovered, "item_slot_0_hovered", m_ItemHotKey.GetHoveredSlot() == 0);
-    syncBool(&MainFrameRmlModel::itemSlot1Hovered, "item_slot_1_hovered", m_ItemHotKey.GetHoveredSlot() == 1);
-    syncBool(&MainFrameRmlModel::itemSlot2Hovered, "item_slot_2_hovered", m_ItemHotKey.GetHoveredSlot() == 2);
-    syncBool(&MainFrameRmlModel::itemSlot3Hovered, "item_slot_3_hovered", m_ItemHotKey.GetHoveredSlot() == 3);
-    syncText(&MainFrameRmlModel::itemSlot0Count, "item_slot_0_count", stackCountText(m_ItemHotKey.GetSlotItemCount(0)));
-    syncText(&MainFrameRmlModel::itemSlot1Count, "item_slot_1_count", stackCountText(m_ItemHotKey.GetSlotItemCount(1)));
-    syncText(&MainFrameRmlModel::itemSlot2Count, "item_slot_2_count", stackCountText(m_ItemHotKey.GetSlotItemCount(2)));
-    syncText(&MainFrameRmlModel::itemSlot3Count, "item_slot_3_count", stackCountText(m_ItemHotKey.GetSlotItemCount(3)));
-    syncFloat(&MainFrameRmlModel::currentSkillCooldown, "current_skill_cooldown", g_pSkillList->GetCurrentSkillCooldownFraction());
+    SyncBool(&MainFrameRmlModel::itemSlot0Hovered, "item_slot_0_hovered", m_ItemHotKey.GetHoveredSlot() == 0);
+    SyncBool(&MainFrameRmlModel::itemSlot1Hovered, "item_slot_1_hovered", m_ItemHotKey.GetHoveredSlot() == 1);
+    SyncBool(&MainFrameRmlModel::itemSlot2Hovered, "item_slot_2_hovered", m_ItemHotKey.GetHoveredSlot() == 2);
+    SyncBool(&MainFrameRmlModel::itemSlot3Hovered, "item_slot_3_hovered", m_ItemHotKey.GetHoveredSlot() == 3);
+    SyncText(&MainFrameRmlModel::itemSlot0Count, "item_slot_0_count", stackCountText(m_ItemHotKey.GetSlotItemCount(0)));
+    SyncText(&MainFrameRmlModel::itemSlot1Count, "item_slot_1_count", stackCountText(m_ItemHotKey.GetSlotItemCount(1)));
+    SyncText(&MainFrameRmlModel::itemSlot2Count, "item_slot_2_count", stackCountText(m_ItemHotKey.GetSlotItemCount(2)));
+    SyncText(&MainFrameRmlModel::itemSlot3Count, "item_slot_3_count", stackCountText(m_ItemHotKey.GetSlotItemCount(3)));
+}
 
-    syncBool(&MainFrameRmlModel::skillGridOpen, "skill_grid_open", g_pSkillList->IsSkillGridOpen());
-    syncBool(&MainFrameRmlModel::skillListUp, "skill_list_up", g_pSkillList->IsSkillListUp());
+void mu::ui::window::CMainFrameWindow::SyncSkillList()
+{
+    // The skill list stays under the phone's HUD too: its touch menu's Skills is this grid.
+    auto& model = m_RmlView.GetModel();
+    SyncBool(&MainFrameRmlModel::skillGridOpen, "skill_grid_open", g_pSkillList->IsSkillGridOpen());
+    SyncBool(&MainFrameRmlModel::skillListUp, "skill_list_up", g_pSkillList->IsSkillListUp());
 
-    // Dynamic-count lists, copied unconditionally every frame while the grid is open (cooldown
-    // fractions change every frame anyway, so a change-check would rarely help).
-    if (model.skillGridOpen)
-    {
-        model.skillGridCells = g_pSkillList->GetGridSnapshot();
-        model.petSkillCells = g_pSkillList->GetPetSnapshot();
-        m_RmlView.MarkDirty("skill_grid_cells");
-        m_RmlView.MarkDirty("pet_skill_cells");
-    }
+    // Dynamic-count lists, copied while the grid is open, and only when CSkillList's snapshot changed
+    // since the last copy (its generation): a still grid copies nothing (per-frame cost).
+    if (!model.skillGridOpen)
+        return;
+    const unsigned generation = g_pSkillList->GetGridSnapshotGeneration();
+    if (m_bGridSynced && generation == m_uSyncedGridGeneration)
+        return;
+    model.skillGridCells = g_pSkillList->GetGridSnapshot();
+    model.petSkillCells = g_pSkillList->GetPetSnapshot();
+    m_RmlView.MarkDirty("skill_grid_cells");
+    m_RmlView.MarkDirty("pet_skill_cells");
+    m_uSyncedGridGeneration = generation;
+    m_bGridSynced = true;
+}
 
+void mu::ui::window::CMainFrameWindow::SyncSkillTooltip()
+{
     // Shared skill tooltip: one hover target queued at a time (QueueTooltip()/OnUnhover()).
     // BuildModelForSlot() is the same content resolution SkillTooltip.cpp's Render() uses; the
     // destination is now UI::RmlBridge::Tooltip's own shared document, not a per-window RML block

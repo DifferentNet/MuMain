@@ -141,14 +141,26 @@ bool mu::ui::window::CManager::HoldsShownWindow(const CObject* pUIObj) const
     return std::find(m_vecUI.begin(), m_vecUI.end(), pUIObj) != m_vecUI.end() && pUIObj->IsVisible();
 }
 
+void mu::ui::window::CManager::SortWindows(bool (*compare)(IObject*, IObject*))
+{
+    // Four sorts a frame with three orders: Render()'s follows Update()'s and finds it in place; the
+    // others sort when their order differs from the last one. Checking is one pass, so a sort runs
+    // only when the order is off (per-frame cost).
+    if (!std::is_sorted(m_vecUI.begin(), m_vecUI.end(), compare))
+        std::sort(m_vecUI.begin(), m_vecUI.end(), compare);
+}
+
 bool mu::ui::window::CManager::UpdateMouseEvent()
 {
     const UI::Scaling::ScopedActiveTransform units(MeasuringUnits());
     m_pActiveMouseUIObj = NULL;
     const bool leftPress = TrackLeftPress();
 
-    std::sort(m_vecUI.begin(), m_vecUI.end(), CompareLayerDepthReverse);
-    auto vecUI = m_vecUI;
+    SortWindows(CompareLayerDepthReverse);
+    // A copy, as before: a window's event may add or remove windows. Kept as a member so it keeps
+    // its capacity instead of allocating every frame (per-frame cost).
+    auto& vecUI = m_vecMouseScratch;
+    vecUI.assign(m_vecUI.begin(), m_vecUI.end());
 
     auto vi = vecUI.begin();
     vi = vecUI.begin();
@@ -186,9 +198,11 @@ bool mu::ui::window::CManager::UpdateKeyEvent()
 {
     const UI::Scaling::ScopedActiveTransform units(MeasuringUnits());
     m_pActiveKeyUIObj = NULL;
-    std::sort(m_vecUI.begin(), m_vecUI.end(), CompareKeyEventOrder);
+    SortWindows(CompareKeyEventOrder);
 
-    auto vecUI = m_vecUI;
+    // A copy kept as a member, see UpdateMouseEvent().
+    auto& vecUI = m_vecKeyScratch;
+    vecUI.assign(m_vecUI.begin(), m_vecUI.end());
 
     // A RmlUi field never takes Win32 focus. While the player types in one, or a control that takes
     // keys is focused, only the window that claims its document receives keys, so those keys never
@@ -222,7 +236,7 @@ bool mu::ui::window::CManager::UpdateKeyEvent()
 bool mu::ui::window::CManager::Update()
 {
     const UI::Scaling::ScopedActiveTransform units(MeasuringUnits());
-    std::sort(m_vecUI.begin(), m_vecUI.end(), CompareLayerDepth);
+    SortWindows(CompareLayerDepth);
 
     auto vi = m_vecUI.begin();
     for (; vi != m_vecUI.end(); vi++)
@@ -243,8 +257,10 @@ bool mu::ui::window::CManager::Update()
 bool mu::ui::window::CManager::Render()
 {
     const UI::Scaling::ScopedActiveTransform units(MeasuringUnits());
-    std::sort(m_vecUI.begin(), m_vecUI.end(), CompareLayerDepth);
-    auto vecUI = m_vecUI;
+    SortWindows(CompareLayerDepth);
+    // A copy kept as a member, see UpdateMouseEvent().
+    auto& vecUI = m_vecRenderScratch;
+    vecUI.assign(m_vecUI.begin(), m_vecUI.end());
 
     for (CObject* object : vecUI)
     {
