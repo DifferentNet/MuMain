@@ -324,12 +324,13 @@
 	.attr-textbox { decorator: ninepatch(chainfo-phone-textbox, chainfo-phone-textbox-inner); }
 	.attr-label { width: 110px; }
 	.attr-value { left: 122px; right: 44px; }
+	/* The "+" drawn 24 x 21, its hit box 50 x 50 around it (the rows are 55 or more apart). */
 	.stat-btn {
 		right: 14px;
 		width: 24px;
 		height: 21px;
-		margin: -6px;
-		padding: 6px;
+		margin: -14.5px -13px;
+		padding: 14.5px 13px;
 		decorator: image(chainfo-stat-btn) content-box;
 	}
 	.stat-btn-str { top: 120px; }

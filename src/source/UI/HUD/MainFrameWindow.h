@@ -183,6 +183,60 @@ namespace mu::ui::window
         };
         void BindRmlModel(Rml::DataModelConstructor& c, MainFrameRmlModel& model);
         void OnRmlReloaded();
+
+        // SyncRmlModel()'s parts. The gauges, buttons, skill row and item slots are hidden under the
+        // phone's HUD (theme flag "mobile-hud", main_frame.rcss), so they are skipped there; the
+        // alerts (their blink counters), the skill list and its tooltip run every frame.
+        void SyncGauges();
+        void SyncExperience();
+        void SyncButtons();
+        void SyncAlerts();
+        void SyncSkillRow();
+        void SyncItemSlots();
+        void SyncSkillList();
+        void SyncSkillTooltip();
+        void SyncFloat(float MainFrameRmlModel::* field, const char* boundName, float value);
+        void SyncBool(bool MainFrameRmlModel::* field, const char* boundName, bool value);
+        void SyncText(Rml::String MainFrameRmlModel::* field, const char* boundName, const Rml::String& value);
+        void SyncWide(Rml::String MainFrameRmlModel::* field, const char* boundName, const wchar_t* text);
+        // Forgets what the model texts were built from, so the next sync builds them all again.
+        void ResetSyncCaches();
+
+        // What a model text was last built from: its format (an I18N string, which another locale
+        // replaces by another pointer) and its numbers. The texts are formatted and converted again
+        // only when these change, not every frame (per-frame cost).
+        struct TextSource
+        {
+            const wchar_t* format = nullptr;
+            long long first = 0;
+            long long second = 0;
+
+            // Takes the new source; whether it differs from the last one.
+            bool Changed(const wchar_t* newFormat, long long newFirst = 0, long long newSecond = 0)
+            {
+                if (format == newFormat && first == newFirst && second == newSecond)
+                    return false;
+                format = newFormat;
+                first = newFirst;
+                second = newSecond;
+                return true;
+            }
+        };
+        struct TextSources
+        {
+            TextSource hpText, mpText, hpCurrent, mpCurrent, hpTooltip, mpTooltip;
+            TextSource agText, agCurrent, agTooltip, sdText, sdCurrent, sdTooltip;
+            TextSource expDigit, expTooltip;
+            TextSource chaInfoTooltip, myInvenTooltip, friendTooltip, windowTooltip, battlePassTooltip, cShopTooltip;
+        };
+        TextSources m_TextSources;
+        // The skill list snapshot generation last copied into the model (CSkillList::GetGridSnapshotGeneration()).
+        unsigned m_uSyncedGridGeneration = 0;
+        bool m_bGridSynced = false;
+        // The document the caches above describe (a rebuilt model starts empty), and whether the last
+        // sync ran under the phone's HUD.
+        const Rml::ElementDocument* m_pSyncedDocument = nullptr;
+        bool m_bSyncedPhoneHud = false;
         // The HUD, and its top-right button row on the same model: a document of its own so it
         // stacks under the windows docked over that corner while the bars stay over them
         // (RmlStackingOrder.cpp).

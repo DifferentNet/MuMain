@@ -303,14 +303,28 @@ bool CBuffStrip::Render()
 
 void CBuffStrip::SyncRmlModel()
 {
-    if (!m_RmlView.Document()) return;
+    if (!m_RmlView.Document())
+    {
+        // Forgotten, so a later document at the same address still rebuilds.
+        m_SyncedDocument = nullptr;
+        return;
+    }
 
     std::list<eBuffState> buffstate;
     BuffSort(buffstate);
 
-    // Rebuilt and marked dirty unconditionally every frame -- deliberate, since this verifies
-    // RmlModelBinder handling a bound std::vector whose size changes at runtime. Revisit if this
-    // proves too expensive in practice.
+    // Rebuilt and marked dirty only when the buffs shown change (per-frame cost): an icon is a
+    // function of its buff alone. A new document may come with the model reset, so it rebuilds too.
+    Rml::ElementDocument* document = m_RmlView.Document();
+    const bool sameBuffs = std::equal(buffstate.begin(), buffstate.end(), m_ShownBuffs.begin(), m_ShownBuffs.end(),
+                                      [](eBuffState buff, int shown) { return static_cast<int>(buff) == shown; });
+    if (sameBuffs && document == m_SyncedDocument)
+    {
+        SyncTooltip();
+        return;
+    }
+    m_SyncedDocument = document;
+
     auto& model = m_RmlView.GetModel();
     model.buffs.clear();
     model.buffs.reserve(buffstate.size());

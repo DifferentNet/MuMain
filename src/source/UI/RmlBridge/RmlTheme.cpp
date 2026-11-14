@@ -14,6 +14,7 @@
 #include <RmlUi/Core/Core.h>
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Factory.h>
+#include <RmlUi/Core/ObserverPtr.h>
 
 #include <algorithm>
 #include <cctype>
@@ -21,6 +22,7 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -198,17 +200,41 @@ namespace UI::RmlBridge
     {
     // Set on the document element of every main-scene document, see
     // SuspendMainSceneDocumentsOutsideMainScene().
-    constexpr const char* MainSceneDocumentAttribute = "data-main-scene-document";
+    // Rml::Strings made once: the per-frame passes look them up on every document, and a const char*
+    // made a temporary string each time (per-frame cost).
+    const Rml::String MainSceneDocumentAttribute = "data-main-scene-document";
     // A DocumentScene::Every document's depths, in and outside the main scene.
-    constexpr const char* MainSceneDepthAttribute = "data-main-scene-depth";
-    constexpr const char* OtherSceneDepthAttribute = "data-other-scene-depth";
+    const Rml::String MainSceneDepthAttribute = "data-main-scene-depth";
+    const Rml::String OtherSceneDepthAttribute = "data-other-scene-depth";
     // A document with a depth of its own in the phone view (PhoneViewStackingDepth()): its depths in
     // the PC and phone views.
-    constexpr const char* PcViewDepthAttribute = "data-pc-view-depth";
-    constexpr const char* PhoneViewDepthAttribute = "data-phone-view-depth";
+    const Rml::String PcViewDepthAttribute = "data-pc-view-depth";
+    const Rml::String PhoneViewDepthAttribute = "data-phone-view-depth";
     bool s_mainSceneDocumentsSuspended = false;
 
-    template <typename Visit> void ForEachDocumentWith(const char* attribute, Visit&& visit)
+    // Counts the documents given depth attributes (ApplyStackingDepth(), ApplyDocumentScene()). The
+    // depths are applied again only when a new one came or the attribute to take changed (the scene,
+    // the view), not every frame: nothing else sets these documents' z-index (per-frame cost).
+    unsigned s_depthDocumentsGeneration = 1;
+    struct AppliedDepths
+    {
+        unsigned generation = 0;
+        const Rml::String* attribute = nullptr;
+    };
+    AppliedDepths s_sceneDepths;
+    AppliedDepths s_viewDepths;
+
+    // Whether `attribute`'s depths are applied already for the documents there are; if not, notes
+    // them as applied by the caller.
+    bool AlreadyApplied(AppliedDepths& applied, const Rml::String& attribute)
+    {
+        if (applied.generation == s_depthDocumentsGeneration && applied.attribute == &attribute)
+            return true;
+        applied = {s_depthDocumentsGeneration, &attribute};
+        return false;
+    }
+
+    template <typename Visit> void ForEachDocumentWith(const Rml::String& attribute, Visit&& visit)
     {
         for (int contextIndex = 0; contextIndex < Rml::GetNumContexts(); ++contextIndex)
         {
@@ -228,7 +254,7 @@ namespace UI::RmlBridge
     }
 
     // Sets the document's z-index to the depth stored in its `attribute`, when it differs.
-    void TakeStackingDepthFrom(Rml::ElementDocument* document, const char* attribute)
+    void TakeStackingDepthFrom(Rml::ElementDocument* document, const Rml::String& attribute)
     {
         const float depth = document->GetAttribute<float>(attribute, 0.f);
         const Rml::Property* current = document->GetLocalProperty(Rml::PropertyId::ZIndex);
@@ -252,6 +278,32 @@ namespace UI::RmlBridge
         std::ostringstream buffer;
         buffer << file.rdbuf();
         return buffer.str();
+    }
+
+    // What NoteMarkupClasses() found in a loaded document's markup (MarkupLacksClass()).
+    struct MarkupClasses
+    {
+        Rml::ObserverPtr<Rml::Element> document; // expires with the document; guards a reused address
+        bool nativeFit = true;
+        bool marquee = true;
+    };
+
+    std::unordered_map<const Rml::ElementDocument*, MarkupClasses>& LoadedMarkupClasses()
+    {
+        static std::unordered_map<const Rml::ElementDocument*, MarkupClasses> documents;
+        return documents;
+    }
+
+    void NoteMarkupClasses(Rml::ElementDocument* document, const std::string& markup)
+    {
+        auto& documents = LoadedMarkupClasses();
+        std::erase_if(documents, [](const auto& entry) { return entry.second.document.get() != entry.first; });
+        if (document == nullptr)
+            return;
+        // A plain substring test: it also matches "native-fit-small", "marquee-overflow" or a data-class
+        // binding, which only means the document is walked as before.
+        documents[document] = {document->GetObserverPtr(), markup.find("native-fit") != std::string::npos,
+                               markup.find("marquee") != std::string::npos};
     }
 
     void ApplyModelName(std::string& markup, const std::string& placeholder, const std::string& modelName)
@@ -291,6 +343,7 @@ namespace UI::RmlBridge
         ApplyModelName(rmlText, modelPlaceholder, modelName);
 
         Rml::ElementDocument* doc = context->LoadDocumentFromMemory(rmlText, sourceUrl);
+        NoteMarkupClasses(doc, rmlText);
         UI::Items::GridScroll::Attach(doc);
         ApplyNativeTextSize(doc);
         ApplyStackingDepth(doc, documentName);
@@ -318,6 +371,7 @@ namespace UI::RmlBridge
         {
             document->SetAttribute(PcViewDepthAttribute, *depth);
             document->SetAttribute(PhoneViewDepthAttribute, *phoneDepth);
+            ++s_depthDocumentsGeneration;
         }
     }
 
@@ -332,20 +386,34 @@ namespace UI::RmlBridge
         {
             document->SetAttribute(MainSceneDepthAttribute, *mainDepth);
             document->SetAttribute(OtherSceneDepthAttribute, *otherDepth);
+            ++s_depthDocumentsGeneration;
         }
+    }
+
+    bool MarkupLacksClass(const Rml::ElementDocument* document, MarkupClass markupClass)
+    {
+        const auto& documents = LoadedMarkupClasses();
+        const auto found = documents.find(document);
+        if (found == documents.end() || found->second.document.get() != document)
+            return false;
+        return markupClass == MarkupClass::NativeFit ? !found->second.nativeFit : !found->second.marquee;
     }
 
     void ApplySceneStackingDepths()
     {
-        const char* attribute = SceneFlag == MAIN_SCENE ? MainSceneDepthAttribute : OtherSceneDepthAttribute;
-        ForEachDocumentWith(attribute, [attribute](Rml::ElementDocument* document)
+        const Rml::String& attribute = SceneFlag == MAIN_SCENE ? MainSceneDepthAttribute : OtherSceneDepthAttribute;
+        if (AlreadyApplied(s_sceneDepths, attribute))
+            return;
+        ForEachDocumentWith(attribute, [&attribute](Rml::ElementDocument* document)
                             { TakeStackingDepthFrom(document, attribute); });
     }
 
     void ApplyViewStackingDepths(bool phoneView)
     {
-        const char* attribute = phoneView ? PhoneViewDepthAttribute : PcViewDepthAttribute;
-        ForEachDocumentWith(attribute, [attribute](Rml::ElementDocument* document)
+        const Rml::String& attribute = phoneView ? PhoneViewDepthAttribute : PcViewDepthAttribute;
+        if (AlreadyApplied(s_viewDepths, attribute))
+            return;
+        ForEachDocumentWith(attribute, [&attribute](Rml::ElementDocument* document)
                             { TakeStackingDepthFrom(document, attribute); });
     }
 

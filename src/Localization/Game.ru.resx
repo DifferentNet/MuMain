@@ -16396,4 +16396,20 @@
   <data name="SkillDamageWithMaxDD" xml:space="preserve">
     <value>Урон навыка: %d%% (макс. %d%%)</value>
   </data>
+  <!-- Quick chat on a phone: the phrases over the chat line (UI/HUD/ChatInputBox.cpp) -->
+  <data name="TouchQuickChat1" xml:space="preserve">
+    <value>Привет!</value>
+  </data>
+  <data name="TouchQuickChat2" xml:space="preserve">
+    <value>Нужна группа</value>
+  </data>
+  <data name="TouchQuickChat3" xml:space="preserve">
+    <value>Спасибо!</value>
+  </data>
+  <data name="TouchQuickChat4" xml:space="preserve">
+    <value>Иду</value>
+  </data>
+  <data name="TouchQuickChat5" xml:space="preserve">
+    <value>Помогите!</value>
+  </data>
 </root>

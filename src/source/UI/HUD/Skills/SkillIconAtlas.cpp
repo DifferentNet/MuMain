@@ -4,6 +4,9 @@
 #include "Core/Globals/_enum.h"
 #include "UI/HUD/Skills/MasterSkillTreeLayout.h"
 
+#include <map>
+#include <tuple>
+
 namespace UI::Skills::Icon
 {
 namespace
@@ -108,5 +111,18 @@ std::string IconSpriteName(const SkillIcon& icon)
     }
     return std::string("skill-icon-") + AtlasSpritePrefix(icon.atlas) + (icon.usable ? "-lit-" : "-grey-") +
            std::to_string(icon.column) + "-" + std::to_string(icon.row);
+}
+
+const std::string& IconDecorator(const SkillIcon& icon)
+{
+    // A node-based map: the references handed out stay valid as it grows.
+    using Key = std::tuple<int, int, int, bool>;
+    static std::map<Key, std::string> decorators;
+    const Key key{static_cast<int>(icon.atlas), icon.column, icon.row, icon.usable};
+    const auto found = decorators.find(key);
+    if (found != decorators.end())
+        return found->second;
+    const std::string sprite = IconSpriteName(icon);
+    return decorators.emplace(key, sprite.empty() ? std::string("none") : "image(" + sprite + ")").first->second;
 }
 } // namespace UI::Skills::Icon

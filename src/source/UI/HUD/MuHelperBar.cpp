@@ -150,14 +150,20 @@ void CMuHelperBar::SyncRmlModel()
 
     auto& model = m_RmlView.GetModel();
 
-    wchar_t szText[255] = {};
-    mu_swprintf(szText, L"%ls (%d , %d)", gMapManager.GetMapName(gMapManager.WorldActive), m_CurHeroPosition.x, m_CurHeroPosition.y);
-    const std::string positionUtf8 = StringUtils::WideToNarrow(szText);
-    if (model.positionText != positionUtf8)
+    // Formatted again only when the map name or the position changed (per-frame cost). The bar stays
+    // under the phone's HUD (mu_helper_bar.rcss keeps the position and ping), so it is synced there too.
+    const wchar_t* mapName = gMapManager.GetMapName(gMapManager.WorldActive);
+    if (!m_bPositionBuilt || mapName != m_pPositionMapName || m_CurHeroPosition.x != m_PositionBuiltAt.x ||
+        m_CurHeroPosition.y != m_PositionBuiltAt.y)
     {
-        model.positionText = positionUtf8;
-        m_RmlView.MarkDirty("position_text");
+        wchar_t szText[255] = {};
+        mu_swprintf(szText, L"%ls (%d , %d)", mapName, m_CurHeroPosition.x, m_CurHeroPosition.y);
+        m_PositionText = StringUtils::WideToNarrow(szText);
+        m_bPositionBuilt = true;
+        m_pPositionMapName = mapName;
+        m_PositionBuiltAt = m_CurHeroPosition;
     }
+    SyncText(&MuHelperBarRmlModel::positionText, "position_text", m_PositionText);
 
     const bool active = MUHelper::g_MuHelper.IsActive();
     if (model.muHelperActive != active)
@@ -166,12 +172,21 @@ void CMuHelperBar::SyncRmlModel()
         m_RmlView.MarkDirty("mu_helper_active");
     }
 
-    SyncField(m_RmlView.Binder(), &MuHelperBarRmlModel::configHint, "config_hint",
-              StringUtils::WideToNarrow(I18N::Game::OfficialMUHelperSetting));
-    SyncField(m_RmlView.Binder(), &MuHelperBarRmlModel::startHint, "start_hint",
-              StringUtils::WideToNarrow(I18N::Game::StartOfficialMUHelper));
-    SyncField(m_RmlView.Binder(), &MuHelperBarRmlModel::stopHint, "stop_hint",
-              StringUtils::WideToNarrow(I18N::Game::StopOfficialMUHelper));
+    // The hints are converted once per language text, not every frame (per-frame cost).
+    const wchar_t* const hintSources[HintCount] = {I18N::Game::OfficialMUHelperSetting,
+                                                   I18N::Game::StartOfficialMUHelper,
+                                                   I18N::Game::StopOfficialMUHelper};
+    for (int i = 0; i < HintCount; ++i)
+    {
+        if (hintSources[i] != m_pHintSources[i])
+        {
+            m_pHintSources[i] = hintSources[i];
+            m_HintTexts[i] = StringUtils::WideToNarrow(hintSources[i]);
+        }
+    }
+    SyncText(&MuHelperBarRmlModel::configHint, "config_hint", m_HintTexts[0]);
+    SyncText(&MuHelperBarRmlModel::startHint, "start_hint", m_HintTexts[1]);
+    SyncText(&MuHelperBarRmlModel::stopHint, "stop_hint", m_HintTexts[2]);
 
     // The ping label: the server's last round trip, green below 100 ms, yellow below 200, red above, grey while
     // the server waits for a late answer. Hidden on a server without the add-on (no line ever came).
@@ -197,6 +212,16 @@ void CMuHelperBar::SyncRmlModel()
     SyncField(m_RmlView.Binder(), &MuHelperBarRmlModel::pingText, "ping_text", pingText);
     SyncField(m_RmlView.Binder(), &MuHelperBarRmlModel::pingLevel, "ping_level", pingLevel);
     SyncField(m_RmlView.Binder(), &MuHelperBarRmlModel::pingHint, "ping_hint", pingHint);
+}
+
+void CMuHelperBar::SyncText(Rml::String MuHelperBarRmlModel::* field, const char* boundName, const Rml::String& text)
+{
+    auto& model = m_RmlView.GetModel();
+    if (model.*field != text)
+    {
+        model.*field = text;
+        m_RmlView.MarkDirty(boundName);
+    }
 }
 
 float CMuHelperBar::GetLayerDepth()

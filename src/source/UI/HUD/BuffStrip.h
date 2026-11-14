@@ -66,6 +66,8 @@ namespace mu::ui::window
 
         // The buffs shown, in slot order, for mapping a slot's event back to its buff.
         std::vector<int> m_ShownBuffs;
+        // The document m_ShownBuffs was last put in (SyncRmlModel() rebuilds for a new one).
+        const Rml::ElementDocument* m_SyncedDocument = nullptr;
         // The hovered slot's buff, in the shared tooltip.
         UI::RmlBridge::ElementTooltip m_Tooltip;
         void SyncTooltip();

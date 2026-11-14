@@ -39,6 +39,8 @@ namespace mu::ui::window
 
         // The buttons' hints, in the button row's order.
         std::array<Rml::String, 10> buttonHints;
+        // A phone's quick phrases over the bar (theme mobile): a tap sends one as Enter sends a line.
+        std::array<Rml::String, 5> quickPhrases;
     };
 
     class CChatInputBox : public CObject
@@ -95,6 +97,10 @@ namespace mu::ui::window
         bool IsFieldFocused(const char* id) const;
         void SetFieldText(const char* id, const type_string& text);
         void FocusField(const char* id);
+
+        // Sends the chat field's line as Enter does (to the channel chosen, or the whisper target),
+        // clears the field and closes the bar.
+        void SendChatLine();
 
         void BindRmlModel(Rml::DataModelConstructor& c, ChatInputRmlModel& model);
         void OnRmlReloaded();

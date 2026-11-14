@@ -13780,4 +13780,20 @@
   <data name="SkillDamageWithMaxDD" xml:space="preserve">
     <value>Obrażenia umiejętności: %d%% (maks. %d%%)</value>
   </data>
+  <!-- Quick chat on a phone: the phrases over the chat line (UI/HUD/ChatInputBox.cpp) -->
+  <data name="TouchQuickChat1" xml:space="preserve">
+    <value>Cześć!</value>
+  </data>
+  <data name="TouchQuickChat2" xml:space="preserve">
+    <value>Szukam drużyny</value>
+  </data>
+  <data name="TouchQuickChat3" xml:space="preserve">
+    <value>Dzięki!</value>
+  </data>
+  <data name="TouchQuickChat4" xml:space="preserve">
+    <value>Już idę</value>
+  </data>
+  <data name="TouchQuickChat5" xml:space="preserve">
+    <value>Pomocy!</value>
+  </data>
 </root>

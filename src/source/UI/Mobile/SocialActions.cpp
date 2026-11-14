@@ -137,8 +137,9 @@ const wchar_t* Label(Action action)
     {
     case Action::Trade:
         return I18N::Game::Trade;
+    // The touch menu's word for the group (ru «Группа»): the shared Party reads «Вечеринка» in Russian.
     case Action::Party:
-        return I18N::Game::Party;
+        return I18N::Game::TouchMenuParty;
     case Action::Whisper:
         return I18N::Game::Whisper;
     case Action::Friend:

@@ -384,10 +384,23 @@ void MiniAudioBackend::StopSound(ESound buffer, bool resetPosition)
     // Iterate only the channels actually initialised.
     for (int ch = 0; ch < m_loadedChannels[bufIdx]; ++ch)
     {
-        ma_sound_stop(&m_sounds[bufIdx][ch]);
+        ma_sound* sound = &m_sounds[bufIdx][ch];
+        // Callers stop sounds every frame that mostly are not playing (per-frame cost): a channel that
+        // is not playing needs no stop, and a seek only when it is not at the start already.
+        if (!ma_sound_is_playing(sound))
+        {
+            ma_uint64 cursor = 0;
+            if (resetPosition &&
+                (ma_sound_get_cursor_in_pcm_frames(sound, &cursor) != MA_SUCCESS || cursor != 0))
+            {
+                ma_sound_seek_to_pcm_frame(sound, 0);
+            }
+            continue;
+        }
+        ma_sound_stop(sound);
         if (resetPosition)
         {
-            ma_sound_seek_to_pcm_frame(&m_sounds[bufIdx][ch], 0);
+            ma_sound_seek_to_pcm_frame(sound, 0);
         }
     }
 
