@@ -9,6 +9,7 @@
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
 #include "UI/Inventory/MyInventory.h"
+#include "UI/Mobile/InterfaceMode.h"
 
 #include "Core/Utilities/StringUtils.h"
 #include "Render/Text/CUIRenderText.h"
@@ -312,6 +313,8 @@ void mu::ui::window::CJewelBankWindow::SyncContent()
     };
 
     auto& bank = Bank();
+    // Read every frame the window shows, so a switch to or from the phone view fits the names anew.
+    const int nameWidth = UI::Mobile::IsPhoneView() ? PHONE_NAME_WIDTH : NAME_WIDTH;
     JewelBankRmlModel updated;
     updated.title = StringUtils::WideToNarrow(I18N::Game::JewelBankTitle);
 
@@ -331,7 +334,7 @@ void mu::ui::window::CJewelBankWindow::SyncContent()
         JewelBankRow row;
         row.kind = i;
         row.name = StringUtils::WideToNarrow(name.c_str());
-        row.namePx = fitted(name, NAME_WIDTH);
+        row.namePx = fitted(name, nameWidth);
         if (bank.HasInfo())
         {
             std::wstring count = Amount(bank.Count(i));

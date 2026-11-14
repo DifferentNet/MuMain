@@ -48,7 +48,7 @@ void UI::RmlBridge::FillPlacementSize::Sync(Rml::ElementDocument* doc, const cha
 {
     if (width <= 0.f || height <= 0.f || doc == nullptr)
         return;
-    Rml::Element* panel = doc->GetElementById(panelId);
+    Rml::Element* panel = m_panel.Find(doc, panelId);
     if (panel != nullptr && !panel->IsClassSet("fill-placement"))
         Apply(doc, panelId);
 }
@@ -91,7 +91,7 @@ void UI::RmlBridge::SlotPlacement::Sync(Rml::ElementDocument* doc, const char* p
 {
     if (scale <= 0.f || doc == nullptr)
         return;
-    Rml::Element* panel = doc->GetElementById(panelId);
+    Rml::Element* panel = m_panel.Find(doc, panelId);
     if (panel != nullptr && !panel->IsClassSet("slot-placed"))
         Apply(doc, panelId);
 }

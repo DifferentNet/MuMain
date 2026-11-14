@@ -456,6 +456,11 @@ target_compile_definitions(rml_styling_regression_tests PRIVATE
 )
 
 mu_add_test(
+    NAME window_sort_memo_tests
+    SOURCES test_window_sort_memo.cpp
+)
+
+mu_add_test(
     NAME compact_number_tests
     SOURCES
         test_compact_number.cpp

@@ -36,6 +36,8 @@ struct Sources
     int potionsE = 0;
     int potionsR = 0;
     std::chrono::steady_clock::time_point potionsCountedAt{};
+    // The EXP percentage in tenths of a percent (427 for 42.7 %); -1 before the first.
+    int expTenths = -1;
 };
 
 struct Model
@@ -54,6 +56,8 @@ struct Model
     Rml::String potionWCount;
     Rml::String potionECount;
     Rml::String potionRCount;
+    // The EXP line's percentage with one decimal ("42.7%"), the phone HUD's text beside the line.
+    Rml::String expText;
     Sources seen;
 };
 

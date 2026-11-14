@@ -141,13 +141,19 @@ bool mu::ui::window::CManager::HoldsShownWindow(const CObject* pUIObj) const
     return std::find(m_vecUI.begin(), m_vecUI.end(), pUIObj) != m_vecUI.end() && pUIObj->IsVisible();
 }
 
-void mu::ui::window::CManager::SortWindows(bool (*compare)(IObject*, IObject*))
+void mu::ui::window::CManager::SortWindows(bool (*compare)(IObject*, IObject*), float (IObject::*key)(),
+                                           bool descending, WindowOrderMemo& memo)
 {
-    // Four sorts a frame with three orders: Render()'s follows Update()'s and finds it in place; the
-    // others sort when their order differs from the last one. Checking is one pass, so a sort runs
-    // only when the order is off (per-frame cost).
-    if (!std::is_sorted(m_vecUI.begin(), m_vecUI.end(), compare))
-        std::sort(m_vecUI.begin(), m_vecUI.end(), compare);
+    // Four stable sorts a frame with three orders: Render()'s follows Update()'s and finds it in place; the
+    // others undo each other every frame. Stable, so equal windows keep one order from frame to frame and each
+    // order's memo hands back its last result for the same windows and keys instead of sorting again.
+    // The keys are read once (per-frame cost).
+    m_sortKeys.clear();
+    for (CObject* window : m_vecUI)
+    {
+        m_sortKeys.push_back((window->*key)());
+    }
+    memo.Sort(m_vecUI, m_sortKeys, descending, compare);
 }
 
 bool mu::ui::window::CManager::UpdateMouseEvent()
@@ -156,7 +162,7 @@ bool mu::ui::window::CManager::UpdateMouseEvent()
     m_pActiveMouseUIObj = NULL;
     const bool leftPress = TrackLeftPress();
 
-    SortWindows(CompareLayerDepthReverse);
+    SortWindows(CompareLayerDepthReverse, &IObject::GetLayerDepth, true, m_layerDepthReverseSort);
     // A copy, as before: a window's event may add or remove windows. Kept as a member so it keeps
     // its capacity instead of allocating every frame (per-frame cost).
     auto& vecUI = m_vecMouseScratch;
@@ -198,7 +204,7 @@ bool mu::ui::window::CManager::UpdateKeyEvent()
 {
     const UI::Scaling::ScopedActiveTransform units(MeasuringUnits());
     m_pActiveKeyUIObj = NULL;
-    SortWindows(CompareKeyEventOrder);
+    SortWindows(CompareKeyEventOrder, &IObject::GetKeyEventOrder, true, m_keyEventSort);
 
     // A copy kept as a member, see UpdateMouseEvent().
     auto& vecUI = m_vecKeyScratch;
@@ -236,7 +242,7 @@ bool mu::ui::window::CManager::UpdateKeyEvent()
 bool mu::ui::window::CManager::Update()
 {
     const UI::Scaling::ScopedActiveTransform units(MeasuringUnits());
-    SortWindows(CompareLayerDepth);
+    SortWindows(CompareLayerDepth, &IObject::GetLayerDepth, false, m_layerDepthSort);
 
     auto vi = m_vecUI.begin();
     for (; vi != m_vecUI.end(); vi++)
@@ -257,7 +263,7 @@ bool mu::ui::window::CManager::Update()
 bool mu::ui::window::CManager::Render()
 {
     const UI::Scaling::ScopedActiveTransform units(MeasuringUnits());
-    SortWindows(CompareLayerDepth);
+    SortWindows(CompareLayerDepth, &IObject::GetLayerDepth, false, m_layerDepthSort);
     // A copy kept as a member, see UpdateMouseEvent().
     auto& vecUI = m_vecRenderScratch;
     vecUI.assign(m_vecUI.begin(), m_vecUI.end());

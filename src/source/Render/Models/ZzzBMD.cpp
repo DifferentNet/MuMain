@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <cstring>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cassert>
 #include <climits>
@@ -153,6 +154,44 @@ std::map<ShadowStreamId, char>& ShadowStreams()
 {
     static auto* streams = new std::map<ShadowStreamId, char>();
     return *streams;
+}
+
+// Direct-mapped memo in front of ShadowStreams(): a hit (the whole key matches) returns the same entry address
+// the map would, without walking the tree on every shadow draw. Cleared whenever the map loses entries.
+struct ShadowStreamMemoSlot
+{
+    ShadowStreamId key{};
+    const void* stream = nullptr;
+};
+constexpr std::size_t kShadowStreamMemoSlots = 256;
+std::array<ShadowStreamMemoSlot, kShadowStreamMemoSlots> g_shadowStreamMemo{};
+
+std::size_t ShadowStreamMemoIndex(const ShadowStreamId& id)
+{
+    constexpr std::uint64_t kMix = 0x9E3779B97F4A7C15ull;
+    std::uint64_t hash = static_cast<std::uint64_t>(std::get<0>(id)) >> 4;
+    for (const int part : {std::get<1>(id), std::get<2>(id), std::get<3>(id), std::get<4>(id)})
+    {
+        hash = (hash ^ static_cast<std::uint32_t>(part)) * kMix;
+    }
+    return static_cast<std::size_t>(hash >> 32) % kShadowStreamMemoSlots;
+}
+
+const void* FindOrAddShadowStream(const ShadowStreamId& id)
+{
+    auto& slot = g_shadowStreamMemo[ShadowStreamMemoIndex(id)];
+    if (slot.stream && slot.key == id)
+    {
+        return slot.stream;
+    }
+    const void* stream = &*ShadowStreams().try_emplace(id).first;
+    slot = {id, stream};
+    return stream;
+}
+
+void ClearShadowStreamMemo()
+{
+    g_shadowStreamMemo.fill({});
 }
 } // namespace
 
@@ -1794,8 +1833,16 @@ void BMD::RenderMesh(int meshIndex, int renderFlags, float alpha, int blendMeshI
             skinning.windPhase = wind[2];
         }
         auto& renderer = mu::GetRenderer();
-        if (!waveTextureCoordinates &&
-            (renderer.IsSkinnedMeshCached(m) || renderer.CacheSkinnedMesh(m, buildSkinnedVertices())))
+        // A cached mesh draws with one lookup; a failed draw of a cached mesh stays failed, as before.
+        if (!waveTextureCoordinates && renderer.RenderCachedSkinnedMesh(m, color, 0u, skinning))
+        {
+            gpuSkinningSubmitted = true;
+        }
+        else if (!waveTextureCoordinates && renderer.IsSkinnedMeshCached(m))
+        {
+            gpuSkinningSubmitted = false;
+        }
+        else if (!waveTextureCoordinates && renderer.CacheSkinnedMesh(m, buildSkinnedVertices()))
         {
             gpuSkinningSubmitted = renderer.RenderCachedSkinnedMesh(m, color, 0u, skinning);
         }
@@ -2900,43 +2947,8 @@ bool BMD::RenderGpuMeshShadow(const int blendMesh, const int hiddenMesh, const i
         return false;
     }
 
-    const auto stream = ShadowStreams()
-                            .try_emplace({reinterpret_cast<std::uintptr_t>(this), startMesh, endMesh, hiddenMesh,
-                                          blendMesh})
-                            .first;
-    const void* key = &*stream;
-    if (!renderer.IsSkinnedMeshCached(key))
-    {
-        std::size_t vertexCount = 0;
-        for (int i = startMesh; i < endMesh; i++)
-        {
-            for (int j = 0; drawn(i) && j < Meshs[i].NumTriangles; j++)
-            {
-                vertexCount += static_cast<std::size_t>(Meshs[i].Triangles[j].Polygon);
-            }
-        }
-
-        auto vertices = GetRendererSkinnedVertexScratch(vertexCount);
-        std::size_t count = 0;
-        for (int i = startMesh; i < endMesh; i++)
-        {
-            const Mesh_t* mesh = &Meshs[i];
-            for (int j = 0; drawn(i) && j < mesh->NumTriangles; j++)
-            {
-                const auto* tp = &mesh->Triangles[j];
-                for (int k = 0; k < tp->Polygon; k++)
-                {
-                    const auto& vertex = mesh->Vertices[tp->VertexIndex[k]];
-                    vertices[count++] = {vertex.Position[0], vertex.Position[1], vertex.Position[2], 0.f, 0.f, 0.f,
-                                         0.f, 0.f, vertex.Node, -1};
-                }
-            }
-        }
-        if (!renderer.CacheSkinnedMesh(key, vertices.first(count)))
-        {
-            return false;
-        }
-    }
+    const void* key =
+        FindOrAddShadowStream({reinterpret_cast<std::uintptr_t>(this), startMesh, endMesh, hiddenMesh, blendMesh});
 
     // What EnsureCpuVertices() would skin with now.
     const mu::SkinningParameters skinning{
@@ -2955,6 +2967,45 @@ bool BMD::RenderGpuMeshShadow(const int blendMesh, const int hiddenMesh, const i
         .specialHeight = g_fSpecialHeight,
         .terrain = SceneFlag != SERVER_LIST_SCENE && SceneFlag != WEBZEN_SCENE && SceneFlag != LOADING_SCENE,
     };
+    // A cached stream draws with one lookup; a failed draw of a cached stream stays failed, as before.
+    if (renderer.RenderCachedSkinnedShadow(key, color, skinning, projection))
+    {
+        return true;
+    }
+    if (renderer.IsSkinnedMeshCached(key))
+    {
+        return false;
+    }
+
+    std::size_t vertexCount = 0;
+    for (int i = startMesh; i < endMesh; i++)
+    {
+        for (int j = 0; drawn(i) && j < Meshs[i].NumTriangles; j++)
+        {
+            vertexCount += static_cast<std::size_t>(Meshs[i].Triangles[j].Polygon);
+        }
+    }
+
+    auto vertices = GetRendererSkinnedVertexScratch(vertexCount);
+    std::size_t count = 0;
+    for (int i = startMesh; i < endMesh; i++)
+    {
+        const Mesh_t* mesh = &Meshs[i];
+        for (int j = 0; drawn(i) && j < mesh->NumTriangles; j++)
+        {
+            const auto* tp = &mesh->Triangles[j];
+            for (int k = 0; k < tp->Polygon; k++)
+            {
+                const auto& vertex = mesh->Vertices[tp->VertexIndex[k]];
+                vertices[count++] = {vertex.Position[0], vertex.Position[1], vertex.Position[2], 0.f, 0.f, 0.f,
+                                     0.f, 0.f, vertex.Node, -1};
+            }
+        }
+    }
+    if (!renderer.CacheSkinnedMesh(key, vertices.first(count)))
+    {
+        return false;
+    }
     return renderer.RenderCachedSkinnedShadow(key, color, skinning, projection);
 }
 
@@ -3156,6 +3207,7 @@ long BMD::GetDataUserCount() const
 void BMD::Release()
 {
     auto& shadowStreams = ShadowStreams();
+    ClearShadowStreamMemo();
     const auto self = reinterpret_cast<std::uintptr_t>(this);
     for (auto stream = shadowStreams.lower_bound({self, INT_MIN, INT_MIN, INT_MIN, INT_MIN});
          stream != shadowStreams.end() && std::get<0>(stream->first) == self;)

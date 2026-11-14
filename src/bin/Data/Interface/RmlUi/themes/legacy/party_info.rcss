@@ -145,6 +145,16 @@
 	pointer-events: auto;
 }
 .party-kick-btn:hover { filter: brightness(1.25); }
+/* MU Skynet: the phone view (theme flag "mobile"): the kick cross a finger can hit, as
+   docked_panel_frame.rcss's exit button. The sprite stays where it was (the negative margin takes back
+   the padding) and only the box round it grows; the decorator paints the content box alone. */
+@media (theme: mobile) {
+	.party-kick-btn {
+		margin: -14px;
+		padding: 14px;
+		decorator: image(party-kick) content-box;
+	}
+}
 
 /* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
 .party-empty-msg { line-height: calc(15px * var(--root-scale)); }

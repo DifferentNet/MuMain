@@ -101,6 +101,17 @@ potions Q and W hold under the buttons. The PC bar and the top-right buttons hid
 stands in for its skill list); the system messages move under the hero frame, the pets'
 HP frames right of it, the buffs under the top row and the chat right of the joystick's area. Without touch controls the phone view keeps the PC bar.
 
+With the touch controls (the phone HUD) the hero frame also:
+
+- warns of low HP: under a quarter of the hero's HP, the HP bar gets a red border (#ff5040) and its fill
+  pulses (0.8 s); a dead hero (no HP) does not pulse;
+- opens the character window when tapped (as C does; the frame lights while pressed). It is hidden over
+  the full-screen map, and a hidden frame takes no finger; the pad has no glyph or highlight for it;
+- shows the EXP line's percentage with one decimal ("42.7%") as its last row, centred under SD and AG
+  (the bottom centre over the EXP line is the chat's); the frame grows by that row and the system
+  messages under it follow. It is cut, not rounded, so it reads 100 % only when full, and it hides over
+  the map with the frame.
+
 The phone view also draws the login box, server list, character select buttons, system menu and
 menus larger, for fingers (the character select buttons at twice their art, about 36 CSS px tall on a
 phone 360 px high).
@@ -254,10 +265,11 @@ Each window restyles itself under `@media (theme: mobile)` in both themes; on a 
 | MU Helper | The settings 640 units wide in two columns, the pieces a third larger, a check box's finger area running on over its label, and a line saying how to clear a skill slot (hold it; R3 on a pad). Its Setting panel beside it, 300 units wide: each pane the panel's width, the condition radios in one column, long labels on two lines, a whole check row a target, the gauges half as large again, Save and Initialization the panel's width. The skill picker's entries 40 × 46 in columns of eight. The pieces both windows share are in `mu_helper_common.rcss`'s phone block. |
 | Commands | A side panel 300 units wide (`chat_command.rcss`): rows 34 units tall, every command listed and scrolled by finger instead of by page; a command's page fits its description, each parameter's name over a 30-unit box, and the actions to the panel (`CChatCommandWindow::CurrentPage`, re-wrapped when the view changes). |
 | Skill list (the PC bar's current-skill icon) | Rows of eight finger-sized cells on a dark plate above the controls. Back closes it (Esc would open the system menu over it). |
-| Map (Tab) | Full screen, under the touch controls so their Back closes it. While it is open the controls' body gets `over-map` (`over_map`, with fingers only): the hero frame, EXP, potions, Attack, the skills, Skills, Pick up, Auto, Names, Target and the bind hint hide, so only the top row and the joystick stay over the map. |
+| Map (Tab) | Full screen, under the touch controls so their Back closes it. While it is open the controls' body gets `over-map` (`over_map`, with fingers only): the hero frame, EXP and its percentage, potions, Attack, the skills, Skills, Pick up, Auto, Names, Target and the bind hint hide, so only the top row and the joystick stay over the map. |
 | Confirm dialogs (`generic_confirm_dialog.rcss`, legacy), event results (`message_box_view.rcss`, legacy) | Buttons 84 x 44 (three: 66 wide), 16 above the bottom edge and further apart, 66 under the text for them; the Blood/Chaos Castle and Devil Square results' OK 84 x 42. The Modern theme lays these out its own way and is unchanged. |
 | Corner close (`base.rcss`, both themes) | 56 x 50 px. In the inventory (legacy) the bag tabs (60 x 40) and Sort (as tall) move 40 px left to clear it, and the gold box is 40 px narrower. |
 | Character (legacy) | The stat "+" buttons take a 50 x 50 finger area round their art (padding with a negative margin). |
+| Party, quests, jewel bank | The party's kick cross takes a 41 x 41 finger area round it; the quest progress window's page arrows sit further apart (the left one at 112 px) with 8 px around each, and the answer rows get 6 px above and below in the quest progress window and 4 px in the NPC quest window (its dialogue band is centred on 7 lines, so a full band with 4 answers still clears the title and the divider). The jewel bank's zen buttons are narrow and as tall as the row (30 x 31: 5 px above and below their art, 2 px beside it), moved left (106 and 138 px); the name and the count are cut 74 px wide so they stop short of them. The art stays where it was (padding with a negative margin, the face painted on the content box); in the Modern theme the kick cross and the zen buttons lose their thin border on the phone. |
 | Social | Fewer players are listed while the panel would run past its foot (a short screen, many actions): the last row of cards goes until the panel fits, never the first row (`FitSocialPlayers`, measured on the frame's layout; the limit resets when it opens). A player chosen by a tap who is still around but past the cards that fit takes the last card; one who leaves leaves nobody chosen, and the actions wait for a new tap. Party says `TouchMenuParty`. |
 | Chat input (legacy) | Five quick phrases over the bar (`TouchQuickChat1..5`, all 11 languages), the bar's width, wrapping upward; a tap sends one as Enter sends a line (`CChatInputBox::SendChatLine`, Enter's 1 s pause between lines); a line half typed comes back in the bar after it. Hidden off the phone view and in the Modern theme. |
 | Touch menu | Drawn over every window while open (`OpenTouchMenuDepth`); a tap on the dimmed screen around it shuts it, and it shuts while a dialog waits for an answer. |

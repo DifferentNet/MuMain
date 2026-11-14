@@ -1901,11 +1901,49 @@ void RenderFaceBlend(int Texture, int mx, int my)
     s_layerFaces.push_back({Texture, true, {v0, v1, v2, v3}});
 }
 
+// Neighbouring tiles mostly share a texture, so the ground pass remembers the last bitmap it looked up instead of
+// asking Bitmaps for every face. Only used inside RenderTerrain(), which starts each pass empty: no texture is
+// loaded or released during the pass, so a remembered bitmap stays the one Bitmaps would return.
+struct TerrainBitmapMemo
+{
+    int texture = -1;
+    BITMAP_t* bitmap = nullptr;
+};
+static bool s_terrainBitmapMemoActive = false;
+static TerrainBitmapMemo s_tileBitmapMemo;
+static TerrainBitmapMemo s_grassBitmapMemo;
+
+static void BeginTerrainBitmapMemo(bool active)
+{
+    s_terrainBitmapMemoActive = active;
+    s_tileBitmapMemo = {};
+    s_grassBitmapMemo = {};
+}
+
+static BITMAP_t* TileBitmap(int texture)
+{
+    if (!s_terrainBitmapMemoActive)
+        return &Bitmaps[BITMAP_MAPTILE + texture];
+    if (s_tileBitmapMemo.bitmap == nullptr || s_tileBitmapMemo.texture != texture)
+        s_tileBitmapMemo = {texture, &Bitmaps[BITMAP_MAPTILE + texture]};
+    return s_tileBitmapMemo.bitmap;
+}
+
+// FindTexture() may return null (no grass texture): a miss is remembered too.
+static BITMAP_t* GrassBitmap(int texture)
+{
+    if (!s_terrainBitmapMemoActive)
+        return Bitmaps.FindTexture(texture);
+    if (s_grassBitmapMemo.texture != texture)
+        s_grassBitmapMemo = {texture, Bitmaps.FindTexture(texture)};
+    return s_grassBitmapMemo.bitmap;
+}
+
 void FaceTexture(int Texture, float xf, float yf, bool Water, bool Scale)
 {
     vec3_t Light, Pos;
     Vector(0.30f, 0.40f, 0.20f, Light);
-    BITMAP_t* b = &Bitmaps[BITMAP_MAPTILE + Texture];
+    BITMAP_t* b = TileBitmap(Texture);
     float Width, Height;
     if (Scale)
     {
@@ -2041,7 +2079,7 @@ void RenderTerrainFace(float xf, float yf, int xi, int yi, float lodf)
         {
             int Texture = BITMAP_MAPGRASS + TerrainMappingLayer1[TerrainIndex1];
 
-            BITMAP_t* pBitmap = Bitmaps.FindTexture(Texture);
+            BITMAP_t* pBitmap = GrassBitmap(Texture);
             if (pBitmap)
             {
                 float Height = pBitmap->Height * 2.f;
@@ -3671,6 +3709,7 @@ bool g_bMapEditorFullTerrain = false;
 
 void RenderTerrain(bool EditFlag)
 {
+    BeginTerrainBitmapMemo(true);
     if (g_bMapEditorFullTerrain)
         ResetFrustrumBoundsFullTerrain();
 
@@ -3737,6 +3776,7 @@ void RenderTerrain(bool EditFlag)
         RenderPointers();
         EnableDepthTest();
     }
+    BeginTerrainBitmapMemo(false);
 }
 
 void RenderTerrain_After(bool EditFlag)

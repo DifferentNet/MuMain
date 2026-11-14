@@ -27,10 +27,12 @@
 
 	<!-- The phone view's hero frame (UI/Mobile/HeroFrame.cpp), in the PC bar's place: the level's
 	     number with the master level under it, HP and MP with their numbers, SD and AG as thin bars,
-	     and the EXP line along the bottom edge. Shown by the theme flag "mobile" (touch_controls.rcss). -->
+	     the EXP percentage under them (phone HUD only), and the EXP line along the bottom edge. Shown
+	     by the theme flag "mobile" (touch_controls.rcss). HP under a quarter marks its gauge "low";
+	     a tap on the frame opens the character window. -->
 	<div id="tc_hero">
 		<div id="tc_hero_level"><div class="tc-hero-level-number">{{hero_level}}</div><div class="tc-hero-master" data-if="hero_master != ''">{{hero_master}}</div></div>
-		<div id="tc_hero_hp" class="tc-gauge">
+		<div id="tc_hero_hp" class="tc-gauge" data-class-low="hero_hp < 0.25 &amp;&amp; hero_hp > 0">
 			<div class="tc-gauge-fill" data-style-width="hero_hp * 100 + '%'"></div>
 			<div class="tc-gauge-text">{{hero_hp_text}}</div>
 		</div>
@@ -46,6 +48,9 @@
 				<div class="tc-gauge-fill" data-style-width="hero_ag * 100 + '%'"></div>
 			</div>
 		</div>
+		<!-- The EXP line's percentage, shown only in the phone HUD (touch_controls.rcss): the bottom
+		     centre is the chat's, so it stands in the frame, which the system messages follow down. -->
+		<div id="tc_exp_text">{{hero_exp_text}}</div>
 	</div>
 	<div id="tc_exp"><div id="tc_exp_fill" data-style-width="hero_exp * 100 + '%'"></div></div>
 

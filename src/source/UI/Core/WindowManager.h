@@ -10,6 +10,7 @@
 #include <algorithm>
 
 #include "UI/Core/WindowObject.h"
+#include "UI/Core/WindowSortMemo.h"
 
 namespace mu::ui::window
 {
@@ -27,8 +28,13 @@ namespace mu::ui::window
 
         bool TrackLeftPress();
         bool HoldsShownWindow(const CObject* pUIObj) const;
-        // Sorts m_vecUI by `compare` when it is not in that order already.
-        void SortWindows(bool (*compare)(IObject*, IObject*));
+        using WindowOrderMemo = WindowSortMemo<CObject*>;
+        // Sorts m_vecUI by `compare`, which orders by `key` (descending when `descending`), when it is not in
+        // that order already; `memo` remembers the last sort for that order (per-frame cost).
+        void SortWindows(bool (*compare)(IObject*, IObject*), float (IObject::*key)(), bool descending,
+                         WindowOrderMemo& memo);
+        WindowOrderMemo m_layerDepthSort, m_layerDepthReverseSort, m_keyEventSort;
+        std::vector<float> m_sortKeys;
 
         // The per-call copies of m_vecUI the loops walk, kept for their capacity.
         type_vector_uibase m_vecMouseScratch, m_vecKeyScratch, m_vecRenderScratch;

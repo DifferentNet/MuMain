@@ -46,6 +46,16 @@
 /* The modern theme's arrow glyphs; the legacy buttons carry their art. */
 .jb-glyph { display: none; }
 
+/* MU Skynet: the phone view (theme flag "mobile"): zen buttons a finger can hit, narrow and as tall as the row,
+   moved left, each grown round its art (the decorator paints the content box alone). The name and the
+   count stop short of the buttons (cut at 74 px, the room left of them). */
+@media (theme: mobile) {
+	.jb-btn { top: 0; margin: 0; padding: 5px 2px; }
+	.jb-deposit { left: 106px; decorator: image(jb-deposit) content-box; }
+	.jb-withdraw { left: 138px; decorator: image(jb-withdraw) content-box; }
+	.jb-name, .jb-count { width: calc(74px * var(--root-scale)); overflow: hidden; }
+}
+
 .jb-items { position: absolute; left: 0; top: 0; width: 190px; height: 432px; pointer-events: none; }
 
 /* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
