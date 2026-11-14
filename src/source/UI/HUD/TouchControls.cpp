@@ -389,6 +389,17 @@ constexpr float PickGapUnits = 6.f;
 // less than elsewhere, the panel's buttons lie close to its entries.
 constexpr float PickSlopUnits = 3.f;
 
+// One finger unit as the panels (the menu, the skill picker, the Social panel) are drawn: below 100 %
+// the phone's HUD draws them 100 / percent times larger (touch_controls.rcss, mobile-hud, body.size-60 ..
+// size-90), as at 100 %; a PC's touch screen or pad row keeps the controls' own sizes.
+float PanelUnitPixels()
+{
+    const int percent = UI::Mobile::TouchUnit::GetPercent();
+    const bool compensated = UI::Mobile::ReplacesPcHud() &&
+                             (percent == 60 || percent == 70 || percent == 80 || percent == 90);
+    return UI::Mobile::TouchUnit::Pixels() * (compensated ? 100.f / static_cast<float>(percent) : 1.f);
+}
+
 // A skill the picker offers.
 struct PickerEntry
 {
@@ -473,6 +484,9 @@ struct ControlsModel
     bool fingers = false;
     // The pad's hero hub is open on its Skills tab: the picker sits under the hub's tabs.
     bool underHub = false;
+    // The full-screen map is open in the phone view, under the controls: only the top row and the
+    // joystick stay over it (touch_controls.rcss, body.over-map).
+    bool overMap = false;
     int menuFocus = -1;
     Rml::String padOpenLabel;
     Rml::String padCloseLabel;
@@ -586,6 +600,7 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     UI::HUD::PadGlyphs::Bind(c, model.glyphs);
     c.Bind("pad_alt", &model.padAlt);
     c.Bind("under_hub", &model.underHub);
+    c.Bind("over_map", &model.overMap);
     c.Bind("fingers", &model.fingers);
     c.Bind("menu_focus", &model.menuFocus);
     c.Bind("pad_open_label", &model.padOpenLabel);
@@ -815,7 +830,9 @@ bool IsPlacedWindowAt(Rml::Context* context, Rml::ElementDocument* controls, Rml
 int MenuHitTest(float x, float y, float slop)
 {
     static constexpr auto Items = ControlRange<FirstMenuItemControl, FirstMenuItemControl + MenuItemCount - 1>();
-    if (const int item = ClosestControl(Items, x, y, slop); item != Touch::NoControl)
+    // The items are drawn as the panel is (PanelUnitPixels()); the Menu button as the other buttons.
+    const float itemSlop = TouchSlopUnits * PanelUnitPixels();
+    if (const int item = ClosestControl(Items, x, y, itemSlop); item != Touch::NoControl)
         return item;
     if (Inside(g_boxes[MenuControl], x, y, slop))
         return MenuControl;
@@ -831,7 +848,7 @@ int PickerHitTest(float x, float y, float slop)
         if (Inside(g_boxes[control], x, y, 0.f))
             return control;
     }
-    const float panelSlop = PickSlopUnits * UI::Mobile::TouchUnit::Pixels();
+    const float panelSlop = PickSlopUnits * PanelUnitPixels();
     for (const int control : {PickerDoneControl, PickerClearControl, PickerPrevControl, PickerNextControl})
     {
         if (Inside(g_boxes[control], x, y, panelSlop))
@@ -849,7 +866,7 @@ int PickerHitTest(float x, float y, float slop)
 // around them, the Social button that shuts it, and the screen around, which shuts it.
 int SocialHitTest(float x, float y, float slop)
 {
-    const float panelSlop = PickSlopUnits * UI::Mobile::TouchUnit::Pixels();
+    const float panelSlop = PickSlopUnits * PanelUnitPixels();
     for (const float margin : {0.f, panelSlop})
     {
         for (int control = SocialCloseControl; control < ControlCount; ++control)
@@ -1024,6 +1041,9 @@ double Now()
     return std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
+// A tap shorter than this still lights its button this long (the pressed class).
+constexpr double PressFlashSeconds = 0.12;
+
 template <typename T> void SetField(T& field, const T& value, const char* name)
 {
     if (field == value)
@@ -1098,6 +1118,9 @@ void SyncDevices(ControlsModel& model)
     SetField(model.padAlt, model.pad && g_padAlt, "pad_alt");
     SetField(model.fingers, Touch::IsEnabled(), "fingers");
     SetField(model.underHub, UI::HUD::PadHub::IsOnSkills(), "under_hub");
+    SetField(model.overMap,
+             model.fingers && UI::Mobile::IsPhoneView() && g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_MINI_MAP),
+             "over_map");
 }
 
 // Whether a skill button set holds anything: the hotkeys 1-5, or 6-9 and 0.
@@ -1234,6 +1257,60 @@ bool TakePress(int control)
 bool IsHeld(int control)
 {
     return Touch::Control(control).held || g_pad.held[control];
+}
+
+// The buttons that light while pressed: Attack, the skills, Pick up, Auto, Target, Menu, Social, the
+// key buttons (the potions, Loot, the top row) and Skills.
+bool LightsWhenPressed(int control)
+{
+    return (control >= AttackControl && control < FirstMenuItemControl) || control == SkillEditControl;
+}
+
+// The presses each lit control had when last looked at (apart from TakePress()'s count, which the
+// buttons take), and until when a short tap keeps it lit.
+struct PressLights
+{
+    std::array<std::uint32_t, ControlCount> touchSeen{};
+    std::array<std::uint32_t, ControlCount> padSeen{};
+    std::array<double, ControlCount> until{};
+};
+PressLights g_lights;
+
+// The pressed class on the buttons held, and for a moment after a short tap; written only when it
+// changes. Only where fingers drive the phone's HUD (lit): elsewhere (a PC's pad row) the class goes.
+void SyncPressed(Rml::ElementDocument* document, bool lit)
+{
+    const double now = Now();
+    for (int control = AttackControl; control < ControlCount; ++control)
+    {
+        if (!LightsWhenPressed(control))
+            continue;
+        const std::uint32_t touchPresses = Touch::Control(control).presses;
+        if (touchPresses != g_lights.touchSeen[control] || g_pad.presses[control] != g_lights.padSeen[control])
+            g_lights.until[control] = now + PressFlashSeconds;
+        g_lights.touchSeen[control] = touchPresses;
+        g_lights.padSeen[control] = g_pad.presses[control];
+        Rml::Element* element = FindElement(document, ControlElement(control));
+        if (element == nullptr)
+            continue;
+        const bool pressed = lit && (IsHeld(control) || now < g_lights.until[control]);
+        if (element->IsClassSet("pressed") != pressed)
+            element->SetClass("pressed", pressed);
+    }
+}
+
+// The first time fingers open the bag in a session, a line in the system messages says what holding
+// does (the help's page says it too): an item's card, many stat points at once.
+void HintHoldOnce()
+{
+    static bool s_shown = false;
+    if (s_shown || g_pNewUISystem == nullptr || g_pSystemLogBox == nullptr)
+        return;
+    if (!Touch::IsEnabled() || UI::Mobile::IsGamepadInUse() ||
+        !g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_INVENTORY))
+        return;
+    s_shown = true;
+    g_pSystemLogBox->AddText(I18N::Game::TouchHelpItem, mu::ui::window::TYPE_SYSTEM_MESSAGE);
 }
 
 void HoldForPad(int control, bool held)
@@ -1721,7 +1798,7 @@ void MeasurePickerPage(Rml::ElementDocument* document)
     if (!entry.shown || grid == nullptr)
         return;
     const Rml::Vector2f size = grid->GetBox().GetSize(Rml::BoxArea::Content);
-    const float gap = PickGapUnits * UI::Mobile::TouchUnit::Pixels();
+    const float gap = PickGapUnits * PanelUnitPixels();
     g_picker.perPage =
         std::clamp(SkillArrange::PageCapacity(size.x, size.y, entry.right - entry.left, entry.bottom - entry.top, gap),
                    1, MaxPickEntries);
@@ -1775,6 +1852,9 @@ struct SocialPanel
     bool chosenByHand = false;
     // The pad's highlight: a control, or none.
     int focus = Touch::NoControl;
+    // How many players are listed at most: fewer where the panel would run past its foot
+    // (FitSocialPlayers()), until it opens again.
+    int limit = MaxSocialPlayers;
 };
 SocialPanel g_social;
 
@@ -1787,6 +1867,7 @@ void OpenSocial(ControlsModel& model)
     g_social.chosenKey = UI::Mobile::Social::AimedPlayer();
     g_social.chosenByHand = g_social.chosenKey >= 0;
     g_social.focus = Touch::NoControl;
+    g_social.limit = MaxSocialPlayers;
     SetField(model.socialOpen, true, "social_open");
     PlayBuffer(SOUND_CLICK01);
     RestFingerPointer();
@@ -1847,11 +1928,26 @@ void MoveSocialFocus(ControlsModel& model, int dx, int dy)
 void ShowSocial(ControlsModel& model)
 {
     namespace Social = UI::Mobile::Social;
-    const std::vector<Social::Player> players = Social::NearbyPlayers(MaxSocialPlayers);
+    std::vector<Social::Player> players = Social::NearbyPlayers(g_social.limit);
     if (g_social.chosenKey >= 0 && !Social::IsAround(g_social.chosenKey))
     {
+        // Gone: nobody chosen, so the actions wait for a new tap (a choice made by hand does not pass
+        // to someone else).
         g_social.chosenKey = -1;
-        g_social.chosenByHand = false;
+    }
+    else if (g_social.chosenKey >= 0 && !players.empty() &&
+             std::none_of(players.begin(), players.end(),
+                          [](const Social::Player& player) { return player.key == g_social.chosenKey; }))
+    {
+        // Still around but past the cards that fit (FitSocialPlayers()): the chosen takes the last card.
+        for (const Social::Player& player : Social::NearbyPlayers(MaxSocialPlayers))
+        {
+            if (player.key == g_social.chosenKey)
+            {
+                players.back() = player;
+                break;
+            }
+        }
     }
     // Not chosen by a tap: the nearest, as the list orders them.
     if (!g_social.chosenByHand)
@@ -1899,6 +1995,61 @@ void ShowSocial(ControlsModel& model)
         !model.socialActionShown[focus - FirstSocialActionControl])
         focus = FirstSocialActionControl;
     SetField(model.socialFocus, Rml::String(focus == Touch::NoControl ? "" : ControlElement(focus)), "social_focus");
+}
+
+// Fewer players listed while the panel runs past its foot (a short screen, many actions): the last row
+// of cards goes (never the first), so the window buttons at the foot stay in reach. Measured on the cards this frame laid
+// out; the pad's highlight follows the shorter list (ShowSocial()).
+void FitSocialPlayers(Rml::ElementDocument* document)
+{
+    if (g_social.count <= 1)
+        return;
+    Rml::Element* panel = FindElement(document, "tc_social_panel");
+    const ControlBox& first = g_boxes[FirstSocialPlayerControl];
+    if (panel == nullptr || !first.shown)
+        return;
+    int laidOut = 0;
+    int perRow = 0;
+    float nextRowTop = 0.f;
+    for (int entry = 0; entry < MaxSocialPlayers; ++entry)
+    {
+        const ControlBox& box = g_boxes[FirstSocialPlayerControl + entry];
+        if (!box.shown)
+            continue;
+        ++laidOut;
+        if (std::abs(box.top - first.top) < 1.f)
+            ++perRow;
+        else if (nextRowTop <= first.top || box.top < nextRowTop)
+            nextRowTop = box.top;
+    }
+    // Cards of another count (the list changed this frame) are laid out next frame.
+    if (laidOut != g_social.count || perRow <= 0)
+        return;
+    const int rows = (g_social.count + perRow - 1) / perRow;
+    if (rows <= 1)
+        return;
+    const float contentBottom =
+        panel->GetAbsoluteOffset(Rml::BoxArea::Content).y + panel->GetBox().GetSize(Rml::BoxArea::Content).y;
+    float bottom = contentBottom;
+    for (int child = 0; child < panel->GetNumChildren(); ++child)
+    {
+        Rml::Element* element = panel->GetChild(child);
+        if (element == nullptr || !element->IsVisible())
+            continue;
+        bottom = std::max(bottom, element->GetAbsoluteOffset(Rml::BoxArea::Border).y +
+                                      element->GetBox().GetSize(Rml::BoxArea::Border).y);
+    }
+    const float cut = bottom - contentBottom;
+    if (cut <= 1.f)
+        return;
+    const float cardHeight = first.bottom - first.top;
+    const float rowStep =
+        nextRowTop > first.top ? nextRowTop - first.top : cardHeight + PickGapUnits * PanelUnitPixels();
+    if (rowStep <= 0.f)
+        return;
+    const int rowsCut = std::max(1, static_cast<int>(std::ceil(cut / rowStep)));
+    // One row of cards always stays.
+    g_social.limit = std::max(perRow, (rows - rowsCut) * perRow);
 }
 
 // The panel's taps and the pad's presses on it, then what it shows.
@@ -2228,10 +2379,14 @@ void Update()
     UI::Mobile::Social::Update(GameLogic::Touch::IsSteering());
     SyncDepth(document, model.menuOpen || model.pickerOpen || model.socialOpen);
     UI::Mobile::HeroFrame::Sync(model.hero, [](const char* field) { g_View.MarkDirty(field); });
+    SyncPressed(document, model.fingers && UI::Mobile::ReplacesPcHud());
+    HintHoldOnce();
     // The boxes the next fingers are tested against: where this frame lays the controls out.
     MeasureBoxes();
     if (model.pickerOpen)
         MeasurePickerPage(document);
+    if (model.socialOpen)
+        FitSocialPlayers(document);
     FollowNeighbours(document);
 }
 

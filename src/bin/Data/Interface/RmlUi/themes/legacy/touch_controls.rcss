@@ -1262,3 +1262,232 @@ body.size-60 .tc-toggle-line-3 { top: 35rem; }
 body.size-60 #tc_menu_panel { top: 76.7rem; }
 /* Above 100 % the hero frame stops short of the top row, which starts at 214dp whatever the size. */
 #tc_hero { max-width: 204dp; }
+
+/* Below 100 % the panels (the menu, the skill picker, the Social panel), the potions' counts and the skill
+   hint's text stay as large on the screen as at 100 %: 100 / percent times the units above (generated from
+   the rules above; the panels lay out as at 100 %, UI/HUD/TouchControls.cpp scales the picker's gap and
+   the panels' slop alike). Only in the phone's HUD (theme flag mobile-hud): a PC's touch screen or pad row
+   keeps the controls' own sizes. The buttons' own 13-unit label and 2-unit border (.tc-button) first. */
+@media (theme: mobile-hud) {
+	body.size-90 .tc-menu-item, body.size-90 .tc-pick-button, body.size-90 .tc-pick-page, body.size-90 .tc-pick, body.size-90 .tc-soc-player, body.size-90 .tc-soc-act { font-size: 14.44rem; border-width: 2.22rem; }
+	body.size-90 .tc-pick-icon { width: 28.89rem; height: 40rem; }
+	body.size-80 .tc-menu-item, body.size-80 .tc-pick-button, body.size-80 .tc-pick-page, body.size-80 .tc-pick, body.size-80 .tc-soc-player, body.size-80 .tc-soc-act { font-size: 16.25rem; border-width: 2.5rem; }
+	body.size-80 .tc-pick-icon { width: 32.5rem; height: 45rem; }
+	body.size-70 .tc-menu-item, body.size-70 .tc-pick-button, body.size-70 .tc-pick-page, body.size-70 .tc-pick, body.size-70 .tc-soc-player, body.size-70 .tc-soc-act { font-size: 18.57rem; border-width: 2.86rem; }
+	body.size-70 .tc-pick-icon { width: 37.14rem; height: 51.43rem; }
+	body.size-60 .tc-menu-item, body.size-60 .tc-pick-button, body.size-60 .tc-pick-page, body.size-60 .tc-pick, body.size-60 .tc-soc-player, body.size-60 .tc-soc-act { font-size: 21.67rem; border-width: 3.33rem; }
+	body.size-60 .tc-pick-icon { width: 43.33rem; height: 60rem; }
+	body.size-90 #tc_menu_panel { width: 724.44rem; padding: 8.89rem; gap: 6.67rem; border-width: 1.11rem; border-radius: 6.67rem; }
+	body.size-80 #tc_menu_panel { width: 815rem; padding: 10rem; gap: 7.5rem; border-width: 1.25rem; border-radius: 7.5rem; }
+	body.size-70 #tc_menu_panel { width: 931.43rem; padding: 11.43rem; gap: 8.57rem; border-width: 1.43rem; border-radius: 8.57rem; }
+	body.size-60 #tc_menu_panel { width: 1086.67rem; padding: 13.33rem; gap: 10rem; border-width: 1.67rem; border-radius: 10rem; }
+	body.size-90 .tc-menu-item { width: 111.11rem; height: 42.22rem; padding: 0 4.44rem; border-radius: 4.44rem; }
+	body.size-80 .tc-menu-item { width: 125rem; height: 47.5rem; padding: 0 5rem; border-radius: 5rem; }
+	body.size-70 .tc-menu-item { width: 142.86rem; height: 54.29rem; padding: 0 5.71rem; border-radius: 5.71rem; }
+	body.size-60 .tc-menu-item { width: 166.67rem; height: 63.33rem; padding: 0 6.67rem; border-radius: 6.67rem; }
+	body.size-90 .tc-menu-label { line-height: 16.67rem; }
+	body.size-80 .tc-menu-label { line-height: 18.75rem; }
+	body.size-70 .tc-menu-label { line-height: 21.43rem; }
+	body.size-60 .tc-menu-label { line-height: 25rem; }
+	body.size-90 #tc_menu_legend { height: 24.44rem; padding-top: 2.22rem; font-size: 13.33rem; }
+	body.size-80 #tc_menu_legend { height: 27.5rem; padding-top: 2.5rem; font-size: 15rem; }
+	body.size-70 #tc_menu_legend { height: 31.43rem; padding-top: 2.86rem; font-size: 17.14rem; }
+	body.size-60 #tc_menu_legend { height: 36.67rem; padding-top: 3.33rem; font-size: 20rem; }
+	body.size-90 .pad-legend-label { margin: 0 15.56rem 0 6.67rem; line-height: 22.22rem; }
+	body.size-80 .pad-legend-label { margin: 0 17.5rem 0 7.5rem; line-height: 25rem; }
+	body.size-70 .pad-legend-label { margin: 0 20rem 0 8.57rem; line-height: 28.57rem; }
+	body.size-60 .pad-legend-label { margin: 0 23.33rem 0 10rem; line-height: 33.33rem; }
+	body.size-90 #tc_picker { left: 8.89rem; top: 8.89rem; right: 271.11rem; bottom: 8.89rem; padding: 8.89rem; border-width: 1.11rem; border-radius: 6.67rem; font-size: 14.44rem; }
+	body.size-80 #tc_picker { left: 10rem; top: 10rem; right: 305rem; bottom: 10rem; padding: 10rem; border-width: 1.25rem; border-radius: 7.5rem; font-size: 16.25rem; }
+	body.size-70 #tc_picker { left: 11.43rem; top: 11.43rem; right: 348.57rem; bottom: 11.43rem; padding: 11.43rem; border-width: 1.43rem; border-radius: 8.57rem; font-size: 18.57rem; }
+	body.size-60 #tc_picker { left: 13.33rem; top: 13.33rem; right: 406.67rem; bottom: 13.33rem; padding: 13.33rem; border-width: 1.67rem; border-radius: 10rem; font-size: 21.67rem; }
+	body.size-90 #tc_pick_head, body.size-90 #tc_pick_hint_row, body.size-90 #tc_pick_pager { gap: 6.67rem; }
+	body.size-80 #tc_pick_head, body.size-80 #tc_pick_hint_row, body.size-80 #tc_pick_pager { gap: 7.5rem; }
+	body.size-70 #tc_pick_head, body.size-70 #tc_pick_hint_row, body.size-70 #tc_pick_pager { gap: 8.57rem; }
+	body.size-60 #tc_pick_head, body.size-60 #tc_pick_hint_row, body.size-60 #tc_pick_pager { gap: 10rem; }
+	body.size-90 #tc_pick_head { height: 37.78rem; }
+	body.size-80 #tc_pick_head { height: 42.5rem; }
+	body.size-70 #tc_pick_head { height: 48.57rem; }
+	body.size-60 #tc_pick_head { height: 56.67rem; }
+	body.size-90 #tc_pick_title { font-size: 16.67rem; }
+	body.size-80 #tc_pick_title { font-size: 18.75rem; }
+	body.size-70 #tc_pick_title { font-size: 21.43rem; }
+	body.size-60 #tc_pick_title { font-size: 25rem; }
+	body.size-90 .tc-pick-button { width: 93.33rem; height: 35.56rem; line-height: 31.11rem; border-radius: 6.67rem; }
+	body.size-80 .tc-pick-button { width: 105rem; height: 40rem; line-height: 35rem; border-radius: 7.5rem; }
+	body.size-70 .tc-pick-button { width: 120rem; height: 45.71rem; line-height: 40rem; border-radius: 8.57rem; }
+	body.size-60 .tc-pick-button { width: 140rem; height: 53.33rem; line-height: 46.67rem; border-radius: 10rem; }
+	body.size-90 #tc_pick_hint_row { min-height: 37.78rem; }
+	body.size-80 #tc_pick_hint_row { min-height: 42.5rem; }
+	body.size-70 #tc_pick_hint_row { min-height: 48.57rem; }
+	body.size-60 #tc_pick_hint_row { min-height: 56.67rem; }
+	body.size-90 #tc_pick_hint { font-size: 13.33rem; line-height: 16.67rem; }
+	body.size-80 #tc_pick_hint { font-size: 15rem; line-height: 18.75rem; }
+	body.size-70 #tc_pick_hint { font-size: 17.14rem; line-height: 21.43rem; }
+	body.size-60 #tc_pick_hint { font-size: 20rem; line-height: 25rem; }
+	body.size-90 #tc_pick_pager { gap: 4.44rem; }
+	body.size-80 #tc_pick_pager { gap: 5rem; }
+	body.size-70 #tc_pick_pager { gap: 5.71rem; }
+	body.size-60 #tc_pick_pager { gap: 6.67rem; }
+	body.size-90 .tc-pick-page { width: 40rem; height: 35.56rem; line-height: 31.11rem; font-size: 16.67rem; border-radius: 6.67rem; }
+	body.size-80 .tc-pick-page { width: 45rem; height: 40rem; line-height: 35rem; font-size: 18.75rem; border-radius: 7.5rem; }
+	body.size-70 .tc-pick-page { width: 51.43rem; height: 45.71rem; line-height: 40rem; font-size: 21.43rem; border-radius: 8.57rem; }
+	body.size-60 .tc-pick-page { width: 60rem; height: 53.33rem; line-height: 46.67rem; font-size: 25rem; border-radius: 10rem; }
+	body.size-90 #tc_pick_page { min-width: 42.22rem; font-size: 13.33rem; }
+	body.size-80 #tc_pick_page { min-width: 47.5rem; font-size: 15rem; }
+	body.size-70 #tc_pick_page { min-width: 54.29rem; font-size: 17.14rem; }
+	body.size-60 #tc_pick_page { min-width: 63.33rem; font-size: 20rem; }
+	body.size-90 #tc_pick_grid { margin-top: 4.44rem; gap: 6.67rem; }
+	body.size-80 #tc_pick_grid { margin-top: 5rem; gap: 7.5rem; }
+	body.size-70 #tc_pick_grid { margin-top: 5.71rem; gap: 8.57rem; }
+	body.size-60 #tc_pick_grid { margin-top: 6.67rem; gap: 10rem; }
+	body.size-90 .tc-pick { width: 124.44rem; height: 53.33rem; border-width: 1.11rem; border-radius: 6.67rem; }
+	body.size-80 .tc-pick { width: 140rem; height: 60rem; border-width: 1.25rem; border-radius: 7.5rem; }
+	body.size-70 .tc-pick { width: 160rem; height: 68.57rem; border-width: 1.43rem; border-radius: 8.57rem; }
+	body.size-60 .tc-pick { width: 186.67rem; height: 80rem; border-width: 1.67rem; border-radius: 10rem; }
+	body.size-90 .tc-pick-icon { left: 6.67rem; top: 5.56rem; }
+	body.size-80 .tc-pick-icon { left: 7.5rem; top: 6.25rem; }
+	body.size-70 .tc-pick-icon { left: 8.57rem; top: 7.14rem; }
+	body.size-60 .tc-pick-icon { left: 10rem; top: 8.33rem; }
+	body.size-90 .tc-pick-name { left: 40rem; right: 4.44rem; top: 1.11rem; bottom: 1.11rem; font-size: 12.22rem; line-height: 14.44rem; }
+	body.size-80 .tc-pick-name { left: 45rem; right: 5rem; top: 1.25rem; bottom: 1.25rem; font-size: 13.75rem; line-height: 16.25rem; }
+	body.size-70 .tc-pick-name { left: 51.43rem; right: 5.71rem; top: 1.43rem; bottom: 1.43rem; font-size: 15.71rem; line-height: 18.57rem; }
+	body.size-60 .tc-pick-name { left: 60rem; right: 6.67rem; top: 1.67rem; bottom: 1.67rem; font-size: 18.33rem; line-height: 21.67rem; }
+	body.size-90 .tc-pick-mark { right: 3.33rem; bottom: 3.33rem; width: 7.78rem; height: 7.78rem; border-radius: 4.44rem; }
+	body.size-80 .tc-pick-mark { right: 3.75rem; bottom: 3.75rem; width: 8.75rem; height: 8.75rem; border-radius: 5rem; }
+	body.size-70 .tc-pick-mark { right: 4.29rem; bottom: 4.29rem; width: 10rem; height: 10rem; border-radius: 5.71rem; }
+	body.size-60 .tc-pick-mark { right: 5rem; bottom: 5rem; width: 11.67rem; height: 11.67rem; border-radius: 6.67rem; }
+	body.size-90 #tc_pick_none { padding-top: 44.44rem; }
+	body.size-80 #tc_pick_none { padding-top: 50rem; }
+	body.size-70 #tc_pick_none { padding-top: 57.14rem; }
+	body.size-60 #tc_pick_none { padding-top: 66.67rem; }
+	body.size-90 #tc_pick_tip { padding-top: 4.44rem; font-size: 12.22rem; line-height: 15.56rem; }
+	body.size-80 #tc_pick_tip { padding-top: 5rem; font-size: 13.75rem; line-height: 17.5rem; }
+	body.size-70 #tc_pick_tip { padding-top: 5.71rem; font-size: 15.71rem; line-height: 20rem; }
+	body.size-60 #tc_pick_tip { padding-top: 6.67rem; font-size: 18.33rem; line-height: 23.33rem; }
+	body.size-90 #tc_pick_legend { height: 24.44rem; padding-top: 2.22rem; font-size: 13.33rem; }
+	body.size-80 #tc_pick_legend { height: 27.5rem; padding-top: 2.5rem; font-size: 15rem; }
+	body.size-70 #tc_pick_legend { height: 31.43rem; padding-top: 2.86rem; font-size: 17.14rem; }
+	body.size-60 #tc_pick_legend { height: 36.67rem; padding-top: 3.33rem; font-size: 20rem; }
+	body.size-90 #tc_social_panel { top: 8.89rem; width: 724.44rem; padding: 8.89rem; border-width: 1.11rem; border-radius: 6.67rem; font-size: 14.44rem; }
+	body.size-80 #tc_social_panel { top: 10rem; width: 815rem; padding: 10rem; border-width: 1.25rem; border-radius: 7.5rem; font-size: 16.25rem; }
+	body.size-70 #tc_social_panel { top: 11.43rem; width: 931.43rem; padding: 11.43rem; border-width: 1.43rem; border-radius: 8.57rem; font-size: 18.57rem; }
+	body.size-60 #tc_social_panel { top: 13.33rem; width: 1086.67rem; padding: 13.33rem; border-width: 1.67rem; border-radius: 10rem; font-size: 21.67rem; }
+	body.size-90 #tc_soc_head, body.size-90 #tc_soc_windows { gap: 6.67rem; }
+	body.size-80 #tc_soc_head, body.size-80 #tc_soc_windows { gap: 7.5rem; }
+	body.size-70 #tc_soc_head, body.size-70 #tc_soc_windows { gap: 8.57rem; }
+	body.size-60 #tc_soc_head, body.size-60 #tc_soc_windows { gap: 10rem; }
+	body.size-90 #tc_soc_head { height: 37.78rem; }
+	body.size-80 #tc_soc_head { height: 42.5rem; }
+	body.size-70 #tc_soc_head { height: 48.57rem; }
+	body.size-60 #tc_soc_head { height: 56.67rem; }
+	body.size-90 #tc_soc_title { font-size: 16.67rem; }
+	body.size-80 #tc_soc_title { font-size: 18.75rem; }
+	body.size-70 #tc_soc_title { font-size: 21.43rem; }
+	body.size-60 #tc_soc_title { font-size: 25rem; }
+	body.size-90 #tc_soc_players, body.size-90 #tc_soc_actions { gap: 6.67rem; margin-top: 4.44rem; }
+	body.size-80 #tc_soc_players, body.size-80 #tc_soc_actions { gap: 7.5rem; margin-top: 5rem; }
+	body.size-70 #tc_soc_players, body.size-70 #tc_soc_actions { gap: 8.57rem; margin-top: 5.71rem; }
+	body.size-60 #tc_soc_players, body.size-60 #tc_soc_actions { gap: 10rem; margin-top: 6.67rem; }
+	body.size-90 .tc-soc-player { width: 166.67rem; height: 44.44rem; padding: 2.22rem 6.67rem; border-width: 1.11rem; border-radius: 6.67rem; }
+	body.size-80 .tc-soc-player { width: 187.5rem; height: 50rem; padding: 2.5rem 7.5rem; border-width: 1.25rem; border-radius: 7.5rem; }
+	body.size-70 .tc-soc-player { width: 214.29rem; height: 57.14rem; padding: 2.86rem 8.57rem; border-width: 1.43rem; border-radius: 8.57rem; }
+	body.size-60 .tc-soc-player { width: 250rem; height: 66.67rem; padding: 3.33rem 10rem; border-width: 1.67rem; border-radius: 10rem; }
+	body.size-90 .tc-soc-name { font-size: 14.44rem; line-height: 17.78rem; }
+	body.size-80 .tc-soc-name { font-size: 16.25rem; line-height: 20rem; }
+	body.size-70 .tc-soc-name { font-size: 18.57rem; line-height: 22.86rem; }
+	body.size-60 .tc-soc-name { font-size: 21.67rem; line-height: 26.67rem; }
+	body.size-90 .tc-soc-guild { font-size: 12.22rem; line-height: 15.56rem; }
+	body.size-80 .tc-soc-guild { font-size: 13.75rem; line-height: 17.5rem; }
+	body.size-70 .tc-soc-guild { font-size: 15.71rem; line-height: 20rem; }
+	body.size-60 .tc-soc-guild { font-size: 18.33rem; line-height: 23.33rem; }
+	body.size-90 #tc_soc_hint { margin-top: 6.67rem; font-size: 13.33rem; line-height: 16.67rem; }
+	body.size-80 #tc_soc_hint { margin-top: 7.5rem; font-size: 15rem; line-height: 18.75rem; }
+	body.size-70 #tc_soc_hint { margin-top: 8.57rem; font-size: 17.14rem; line-height: 21.43rem; }
+	body.size-60 #tc_soc_hint { margin-top: 10rem; font-size: 20rem; line-height: 25rem; }
+	body.size-90 .tc-soc-act { width: 111.11rem; height: 42.22rem; padding: 0 4.44rem; border-radius: 4.44rem; line-height: 42.22rem; }
+	body.size-80 .tc-soc-act { width: 125rem; height: 47.5rem; padding: 0 5rem; border-radius: 5rem; line-height: 47.5rem; }
+	body.size-70 .tc-soc-act { width: 142.86rem; height: 54.29rem; padding: 0 5.71rem; border-radius: 5.71rem; line-height: 54.29rem; }
+	body.size-60 .tc-soc-act { width: 166.67rem; height: 63.33rem; padding: 0 6.67rem; border-radius: 6.67rem; line-height: 63.33rem; }
+	body.size-90 #tc_soc_windows { margin-top: 8.89rem; padding-top: 6.67rem; border-top-width: 1.11rem; }
+	body.size-80 #tc_soc_windows { margin-top: 10rem; padding-top: 7.5rem; border-top-width: 1.25rem; }
+	body.size-70 #tc_soc_windows { margin-top: 11.43rem; padding-top: 8.57rem; border-top-width: 1.43rem; }
+	body.size-60 #tc_soc_windows { margin-top: 13.33rem; padding-top: 10rem; border-top-width: 1.67rem; }
+	body.size-90 #tc_soc_windows_label { font-size: 13.33rem; margin-right: 4.44rem; }
+	body.size-80 #tc_soc_windows_label { font-size: 15rem; margin-right: 5rem; }
+	body.size-70 #tc_soc_windows_label { font-size: 17.14rem; margin-right: 5.71rem; }
+	body.size-60 #tc_soc_windows_label { font-size: 20rem; margin-right: 6.67rem; }
+	body.size-90 #tc_soc_legend { height: 24.44rem; padding-top: 2.22rem; font-size: 13.33rem; }
+	body.size-80 #tc_soc_legend { height: 27.5rem; padding-top: 2.5rem; font-size: 15rem; }
+	body.size-70 #tc_soc_legend { height: 31.43rem; padding-top: 2.86rem; font-size: 17.14rem; }
+	body.size-60 #tc_soc_legend { height: 36.67rem; padding-top: 3.33rem; font-size: 20rem; }
+	body.size-90 #tc_bind_hint { padding: 4.44rem 8.89rem; border-radius: 4.44rem; font-size: 13.33rem; }
+	body.size-80 #tc_bind_hint { padding: 5rem 10rem; border-radius: 5rem; font-size: 15rem; }
+	body.size-70 #tc_bind_hint { padding: 5.71rem 11.43rem; border-radius: 5.71rem; font-size: 17.14rem; }
+	body.size-60 #tc_bind_hint { padding: 6.67rem 13.33rem; border-radius: 6.67rem; font-size: 20rem; }
+	body.size-90 .tc-potion-count { bottom: -17.78rem; line-height: 15.56rem; font-size: 13.33rem; }
+	body.size-80 .tc-potion-count { bottom: -20rem; line-height: 17.5rem; font-size: 15rem; }
+	body.size-70 .tc-potion-count { bottom: -22.86rem; line-height: 20rem; font-size: 17.14rem; }
+	body.size-60 .tc-potion-count { bottom: -26.67rem; line-height: 23.33rem; font-size: 20rem; }
+	body.size-90 #tc_picker { right: 237.78rem; }
+	body.size-80 #tc_picker { right: 267.5rem; }
+	body.size-70 #tc_picker { right: 305.71rem; }
+	body.size-60 #tc_picker { right: 356.67rem; }
+	body.size-90 #tc_pick_head { height: 48.89rem; }
+	body.size-80 #tc_pick_head { height: 55rem; }
+	body.size-70 #tc_pick_head { height: 62.86rem; }
+	body.size-60 #tc_pick_head { height: 73.33rem; }
+	body.size-90 #tc_pick_hint_row { min-height: 48.89rem; }
+	body.size-80 #tc_pick_hint_row { min-height: 55rem; }
+	body.size-70 #tc_pick_hint_row { min-height: 62.86rem; }
+	body.size-60 #tc_pick_hint_row { min-height: 73.33rem; }
+	body.size-90 .tc-pick-button { height: 48.89rem; line-height: 44.44rem; }
+	body.size-80 .tc-pick-button { height: 55rem; line-height: 50rem; }
+	body.size-70 .tc-pick-button { height: 62.86rem; line-height: 57.14rem; }
+	body.size-60 .tc-pick-button { height: 73.33rem; line-height: 66.67rem; }
+	body.size-90 .tc-pick-page { width: 48.89rem; height: 48.89rem; line-height: 44.44rem; }
+	body.size-80 .tc-pick-page { width: 55rem; height: 55rem; line-height: 50rem; }
+	body.size-70 .tc-pick-page { width: 62.86rem; height: 62.86rem; line-height: 57.14rem; }
+	body.size-60 .tc-pick-page { width: 73.33rem; height: 73.33rem; line-height: 66.67rem; }
+	body.size-90 .tc-pick-name { font-size: 13.33rem; line-height: 15.56rem; }
+	body.size-80 .tc-pick-name { font-size: 15rem; line-height: 17.5rem; }
+	body.size-70 .tc-pick-name { font-size: 17.14rem; line-height: 20rem; }
+	body.size-60 .tc-pick-name { font-size: 20rem; line-height: 23.33rem; }
+	body.size-90 #tc_pick_tip { font-size: 13.33rem; line-height: 16.67rem; }
+	body.size-80 #tc_pick_tip { font-size: 15rem; line-height: 18.75rem; }
+	body.size-70 #tc_pick_tip { font-size: 17.14rem; line-height: 21.43rem; }
+	body.size-60 #tc_pick_tip { font-size: 20rem; line-height: 25rem; }
+	body.size-90 #tc_soc_head { height: 48.89rem; }
+	body.size-80 #tc_soc_head { height: 55rem; }
+	body.size-70 #tc_soc_head { height: 62.86rem; }
+	body.size-60 #tc_soc_head { height: 73.33rem; }
+	body.size-90 .tc-soc-player { height: 48.89rem; }
+	body.size-80 .tc-soc-player { height: 55rem; }
+	body.size-70 .tc-soc-player { height: 62.86rem; }
+	body.size-60 .tc-soc-player { height: 73.33rem; }
+	body.size-90 .tc-soc-act { height: 48.89rem; font-size: 13.33rem; }
+	body.size-80 .tc-soc-act { height: 55rem; font-size: 15rem; }
+	body.size-70 .tc-soc-act { height: 62.86rem; font-size: 17.14rem; }
+	body.size-60 .tc-soc-act { height: 73.33rem; font-size: 20rem; }
+}
+
+/* A button a finger or the pad holds, and a short tap for a moment after it (UI/HUD/TouchControls.cpp
+   writes the class): a brighter border and background, over its own state (lit, PK, selected). */
+body .tc-button.pressed, body #tc_skill_edit.pressed, body #tc_auto.pressed, body #tc_names.pressed,
+body #tc_quick_toggle.pressed, body #tc_menu.pressed, body #tc_social.pressed {
+	border-color: rgba(255, 255, 255, 240);
+	background-color: rgba(255, 255, 255, 80);
+}
+/* Attack stays red, only brighter. */
+body #tc_attack.pressed, body #tc_attack.pk.pressed {
+	border-color: rgba(255, 170, 140, 255);
+	background-color: rgba(230, 60, 40, 220);
+}
+
+/* The full-screen map (Tab, the top row's Map) under the controls on a phone: only the top row and the
+   joystick stay over it. A hidden button takes no finger (TouchControls.cpp reads only shown boxes). */
+body.over-map #tc_hero, body.over-map #tc_exp, body.over-map .tc-potion, body.over-map #tc_attack,
+body.over-map .tc-skill, body.over-map #tc_skill_edit, body.over-map #tc_pickup, body.over-map #tc_auto,
+body.over-map #tc_names, body.over-map #tc_target, body.over-map #tc_bind_hint {
+	display: none;
+}

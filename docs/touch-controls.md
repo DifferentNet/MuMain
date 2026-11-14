@@ -181,8 +181,29 @@ screen: the controls' body gets the class `size-60` .. `size-90` (`size_pct`), a
 12 x 100 / percent units, with Pick up, Target, Loot and Skills wider to hold it (Loot moves left with
 Target; Auto's label stops growing at 15 units, as much as its round button holds). The top row's
 labels and widths and the whole hero frame grow the same way, so they look as at 100 %. The hero frame's
-HP and MP show their numbers in full. A PC with a touch screen or a pad keeps the controls' own sizes,
-and so does the pad's row along the bottom.
+HP and MP show their numbers in full. In the phone's HUD (`mobile-hud`) the panels (the menu with its
+items and legends, the skill picker, the Social panel with its cards and actions), the potions' counts
+and the bind hint's text grow the same way (the generated `body.size-XX` block inside `@media (theme:
+mobile-hud)` at the end of `touch_controls.rcss`, both themes; the bind hint keeps its place, only its
+text, padding and corners grow; the pad glyphs inside the legends keep their size), and the menu's,
+the picker's and the Social panel's finger slop and the picker's page gap follow (`PanelUnitPixels` in
+`TouchControls.cpp`, only while `ReplacesPcHud()`; used by `MenuHitTest`, `PickerHitTest`,
+`SocialHitTest` and `MeasurePickerPage`). A PC with a touch screen or a pad keeps the controls' own
+sizes, and so does the pad's row along the bottom.
+
+In the phone's HUD a unit is also never wider than the screen's width holds for the top row: the row
+needs 214dp (the location bar's corner) plus 332 + 21.4 x 9 = 524.6 units at its smallest labels with
+fingers, 278 + 30.9 x 9 = 556.1 with the pad's glyphs (`ButtonSize::TouchTopRowUnits`,
+`PadTopRowUnits`), so a unit is at most (width - 214dp) / those units (`ButtonSize::UnitCssPixels`, its
+fourth argument the row's units, 0 outside the phone's HUD, the fifth the dp in CSS px; above 100 % the
+cap stays the 100 % one, below it shrinks with the percent). A phone 667 x 375 gets a smaller unit,
+915 x 412 and 874 x 402 keep 1 (750 x 381 too with fingers, not with the pad). Desktop /play and a PC's
+touch screen are not capped.
+
+The buttons light while held, and a tap shorter than 120 ms still lights its button that long (the
+`pressed` class, `SyncPressed` in `TouchControls.cpp`): Attack (its own red), the skills, Pick up,
+Auto, Target, Menu, Social, the key buttons (potions, Loot, the top row) and Skills; fingers and the pad
+both light them, only while fingers drive the phone's HUD (a PC's pad row looks as before).
 
 The phone view also raises the chat's and the system messages' text to at least 12 units at 100 %
 (`TouchUnit::ReadableTextPx`), with their lines and rows; the chat's well keeps its height and shows
@@ -229,11 +250,16 @@ Each window restyles itself under `@media (theme: mobile)` in both themes; on a 
 | Windows | What the phone view does |
 |---|---|
 | Inventory, storage, shops, trade, chaos machine, personal shops | The inventory alone fills the screen (equipment left, bag right, cells about 40 CSS px). Beside another window `#panel` gets the class `beside`: the bag only. The 15-row grids show part of the grid in an `.item-grid-viewport` paged by ▲▼ (`data-grid-scroll`); a drop outside the shown rows is refused. The 4-row windows put the grid right, text and big buttons left. |
-| Character, quests, party, friends, battle pass, help, options, teleport | Wider panels (`docked_panel_frame.rcss` repeats the frame's middle so the art stays undistorted), bigger tabs, rows and buttons, a corner close a finger hits (44 × 40 px). |
+| Character, quests, party, friends, battle pass, help, options, teleport | Wider panels (`docked_panel_frame.rcss` repeats the frame's middle so the art stays undistorted), bigger tabs, rows and buttons, a corner close a finger hits (56 × 50 px). |
 | MU Helper | The settings 640 units wide in two columns, the pieces a third larger, a check box's finger area running on over its label, and a line saying how to clear a skill slot (hold it; R3 on a pad). Its Setting panel beside it, 300 units wide: each pane the panel's width, the condition radios in one column, long labels on two lines, a whole check row a target, the gauges half as large again, Save and Initialization the panel's width. The skill picker's entries 40 × 46 in columns of eight. The pieces both windows share are in `mu_helper_common.rcss`'s phone block. |
 | Commands | A side panel 300 units wide (`chat_command.rcss`): rows 34 units tall, every command listed and scrolled by finger instead of by page; a command's page fits its description, each parameter's name over a 30-unit box, and the actions to the panel (`CChatCommandWindow::CurrentPage`, re-wrapped when the view changes). |
 | Skill list (the PC bar's current-skill icon) | Rows of eight finger-sized cells on a dark plate above the controls. Back closes it (Esc would open the system menu over it). |
-| Map (Tab) | Full screen, under the touch controls so their Back closes it. |
+| Map (Tab) | Full screen, under the touch controls so their Back closes it. While it is open the controls' body gets `over-map` (`over_map`, with fingers only): the hero frame, EXP, potions, Attack, the skills, Skills, Pick up, Auto, Names, Target and the bind hint hide, so only the top row and the joystick stay over the map. |
+| Confirm dialogs (`generic_confirm_dialog.rcss`, legacy), event results (`message_box_view.rcss`, legacy) | Buttons 84 x 44 (three: 66 wide), 16 above the bottom edge and further apart, 66 under the text for them; the Blood/Chaos Castle and Devil Square results' OK 84 x 42. The Modern theme lays these out its own way and is unchanged. |
+| Corner close (`base.rcss`, both themes) | 56 x 50 px. In the inventory (legacy) the bag tabs (60 x 40) and Sort (as tall) move 40 px left to clear it, and the gold box is 40 px narrower. |
+| Character (legacy) | The stat "+" buttons take a 50 x 50 finger area round their art (padding with a negative margin). |
+| Social | Fewer players are listed while the panel would run past its foot (a short screen, many actions): the last row of cards goes until the panel fits, never the first row (`FitSocialPlayers`, measured on the frame's layout; the limit resets when it opens). A player chosen by a tap who is still around but past the cards that fit takes the last card; one who leaves leaves nobody chosen, and the actions wait for a new tap. Party says `TouchMenuParty`. |
+| Chat input (legacy) | Five quick phrases over the bar (`TouchQuickChat1..5`, all 11 languages), the bar's width, wrapping upward; a tap sends one as Enter sends a line (`CChatInputBox::SendChatLine`, Enter's 1 s pause between lines); a line half typed comes back in the bar after it. Hidden off the phone view and in the Modern theme. |
 | Touch menu | Drawn over every window while open (`OpenTouchMenuDepth`); a tap on the dimmed screen around it shuts it, and it shuts while a dialog waits for an answer. |
 
 A finger that moves on a scrollable list scrolls it, as on a phone, rows and buttons included (they
@@ -243,6 +269,9 @@ a slider inside a list that scrolls up and down (Options) takes the finger only 
 sideways, and an up or down swipe over it scrolls the list (`TouchGesture::IsMostlyVertical`)
 (`Render/RmlUi/RmlTouchScroll.{h,cpp}`, reached from `Touch::Pointer` through
 `Core::Input::BeginUiTouchScroll` and the other `IUiInputConsumer` touch-scroll calls).
+
+The first time fingers open the bag in a session (no pad in use), the system messages say once what
+holding does (`TouchHelpItem`, `HintHoldOnce` in `TouchControls.cpp`).
 
 With touch controls on, Help's first page lists the touch controls instead of the F keys, and MU
 Skynet's chat commands get a page of their own after the chat page: with them under the chat rows

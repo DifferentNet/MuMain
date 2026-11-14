@@ -13756,4 +13756,20 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>Fechar</value>
   </data>
+  <!-- Quick chat on a phone: the phrases over the chat line (UI/HUD/ChatInputBox.cpp) -->
+  <data name="TouchQuickChat1" xml:space="preserve">
+    <value>Olá!</value>
+  </data>
+  <data name="TouchQuickChat2" xml:space="preserve">
+    <value>Procuro grupo</value>
+  </data>
+  <data name="TouchQuickChat3" xml:space="preserve">
+    <value>Obrigado!</value>
+  </data>
+  <data name="TouchQuickChat4" xml:space="preserve">
+    <value>Estou indo</value>
+  </data>
+  <data name="TouchQuickChat5" xml:space="preserve">
+    <value>Socorro!</value>
+  </data>
 </root>

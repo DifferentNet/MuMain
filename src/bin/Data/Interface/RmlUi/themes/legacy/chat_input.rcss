@@ -112,3 +112,35 @@
 	background-color: rgba(128, 51, 51, 51);
 	pointer-events: none;
 }
+
+/* A phone's quick phrases (ChatInputBox.cpp, chat_quick): a row of five over the bar, shown only in
+   the theme flag "mobile"; a tap sends the phrase as Enter sends a line. */
+.cib-quick { display: none; }
+@media (theme: mobile) {
+	.cib-quick {
+		display: flex;
+		position: absolute;
+		left: 0;
+		/* Over the bar (47 high) with 4 between; the bar's width, a second line going up when the
+		   phrases are longer (a language's), so the row never reaches the skill buttons beside it. */
+		bottom: 51dp;
+		width: 281dp;
+		flex-wrap: wrap;
+		gap: 4dp;
+		white-space: nowrap;
+		pointer-events: auto;
+	}
+	.cib-quick-btn {
+		height: 28dp;
+		line-height: 28dp;
+		padding: 0 6dp;
+		font-size: 11dp;
+		color: rgba(240, 225, 190, 255);
+		background-color: rgba(20, 16, 12, 210);
+		border: 1dp rgba(160, 130, 80, 220);
+		border-radius: 4dp;
+		pointer-events: auto;
+		cursor: pointer;
+	}
+	.cib-quick-btn:active { background-color: rgba(90, 70, 40, 230); }
+}
