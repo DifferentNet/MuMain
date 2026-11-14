@@ -13610,6 +13610,24 @@
   <data name="FoliageSmoothingLockedLowPreset" xml:space="preserve">
     <value>Naka-off sa Low na graphics preset.</value>
   </data>
+  <data name="SunShadowSoftEdgesRow" xml:space="preserve">
+    <value>Malambot na gilid ng anino ng araw</value>
+  </data>
+  <data name="SunShadowSoftEdgesTooltip" xml:space="preserve">
+    <value>Matalas ang anino ng araw malapit sa bagay na gumagawa nito at lumalambot habang lumalayo. Ang gilid lang ng anino ang nagbabago: ang mga karakter, halimaw at gamit ay naiilawan gaya ng dati.</value>
+  </data>
+  <data name="SunShadowSoftEdgesStrengthRow" xml:space="preserve">
+    <value>Lambot ng gilid ng anino</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedHdTextures" xml:space="preserve">
+    <value>Kailangan ng HD na texture.</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedLowPreset" xml:space="preserve">
+    <value>Naka-off sa Low na graphics preset.</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedSunShadows" xml:space="preserve">
+    <value>Kailangan ng Anino ng araw (Katamtaman o Mataas).</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Unahin ang malakas</value>

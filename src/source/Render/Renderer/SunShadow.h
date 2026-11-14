@@ -32,11 +32,17 @@ struct SunShadowFrame
     float strength = 0.8f;
     // Soft edge radius in world units (a tile is 100); the uniform turns it into texels.
     float softness = 4.0f;
+    // Widening edge (Render/Lighting/SunShadowSoftEdges.h): world units of extra edge radius per world
+    // unit between the caster and the receiver; 0 keeps the fixed `softness` edge.
+    float penumbraSlope = 0.0f;
+    // The most the widening edge adds to `softness`, in world units.
+    float penumbraGrowth = 0.0f;
     std::uint32_t mapSize = kSunShadowMapMedium;
 };
 
 // HLSL layout of the block after the scene lighting registers (cbuffer SceneLighting in
-// basic_textured_fog_shadow.frag.hlsl and skinned_lit_shadow.frag.hlsl, sun_shadow.hlsli).
+// basic_textured_fog_shadow.frag.hlsl, skinned_lit_shadow.frag.hlsl and terrain_lights.hlsli,
+// sun_shadow.hlsli).
 struct SunShadowUniform
 {
     // World to shadow clip space, column-major (as glm::mat4 and the HLSL default).
@@ -45,11 +51,16 @@ struct SunShadowUniform
     float parameters[4]{};
     // xyz: unit direction towards the sun, w: soft edge radius in texels (0.5 to 32).
     float directionAndSoftness[4]{};
+    // The widening edge, all 0 for the fixed edge. x: edge radius growth in texels per unit of map
+    // depth, y: the widest edge in texels, z: the blocker search radius in texels, w: blocker bias in
+    // map depth units.
+    float penumbra[4]{};
 };
 
 static_assert(offsetof(SunShadowUniform, parameters) == 64);
 static_assert(offsetof(SunShadowUniform, directionAndSoftness) == 80);
-static_assert(sizeof(SunShadowUniform) == 96);
+static_assert(offsetof(SunShadowUniform, penumbra) == 96);
+static_assert(sizeof(SunShadowUniform) == 112);
 
 // The sun's view-projection for a frame: orthographic, depth 0..1 from the sun side, with the
 // box moved in whole texels so that the shadow edges do not crawl while the hero walks.

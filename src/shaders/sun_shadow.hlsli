@@ -1,7 +1,10 @@
 // sun_shadow.hlsli — the sun's shadow map lookup for the shadowed receiver shaders
-// (basic_textured_fog_shadow.frag, skinned_lit_shadow.frag). The shadow map is the depth the sun
-// sees (shadow_caster.frag pass); SunShadow mirrors mu::SunShadowUniform and follows the
-// SceneLighting registers in the same uniform buffer (slot 1, see PushSceneLightingUniforms).
+// (basic_textured_fog_shadow.frag, skinned_lit_shadow.frag, terrain_lights_shadow.frag). The shadow
+// map is the depth the sun sees (shadow_caster.frag pass); SunShadow mirrors mu::SunShadowUniform and
+// follows the SceneLighting registers in the same uniform buffer (slot 1, see PushSceneLightingUniforms).
+// The includer declares sunShadowPenumbra (Render/Lighting/SunShadowSoftEdges.h) after
+// sunDirectionAndSoftness: x 0 keeps the fixed soft edge, else the edge widens away from the caster.
+// Defining SUN_SHADOW_FIXED_EDGE 1 before the include always keeps the fixed edge.
 Texture2D<float> sunShadowMap : register(t1, space2);
 SamplerComparisonState sunShadowSampler : register(s1, space2);
 
@@ -13,6 +16,47 @@ static const float2 SunShadowDisc[16] = {
     float2(0.53742981, -0.47373420),  float2(-0.26496911, -0.41893023), float2(0.79197514, 0.19090188),
     float2(-0.24188840, 0.99706507),  float2(-0.81409955, 0.91437590), float2(0.19984126, 0.78641367),
     float2(0.14383161, -0.14100790)};
+
+// 8 points of a Vogel spiral (r = sqrt((i + 0.5) / 8), angle = i * golden angle) for the blocker
+// search of the widening edge.
+static const float2 SunShadowSearchDisc[8] = {
+    float2(0.25000000, 0.00000000),   float2(-0.31929009, 0.29249588), float2(0.04887247, -0.55687654),
+    float2(0.40244448, 0.52491756),   float2(-0.73853511, -0.13063646), float2(0.69960493, -0.44503139),
+    float2(-0.23400416, 0.87048380),  float2(-0.44627131, -0.85926825)};
+
+// The soft edge's radius in map uv. Fixed edge: `baseRadius`. Widening edge: the search finds the
+// casters around the lookup point (nearer the sun than the receiver), and the edge grows with how far
+// behind them the receiver lies, up to sunShadowPenumbra.y texels. Never narrower than `baseRadius`;
+// with no caster around it stays `baseRadius`, and the comparison taps still decide the shadow.
+float SunShadowEdgeRadius(float2 uv, float depth, float2 depthSlope, float texel, float2x2 turn, float baseRadius)
+{
+#if SUN_SHADOW_FIXED_EDGE
+    return baseRadius;
+#else
+    if (sunShadowPenumbra.x <= 0.0)
+        return baseRadius;
+    const int mapSize = (int)(1.0 / texel + 0.5);
+    float blockerDepthSum = 0.0;
+    float blockerCount = 0.0;
+    [unroll]
+    for (int i = 0; i < 8; ++i)
+    {
+        const float2 tap = mul(turn, SunShadowSearchDisc[i]) * sunShadowPenumbra.z * texel;
+        const int2 coord = clamp(int2((uv + tap) / texel), int2(0, 0), int2(mapSize - 1, mapSize - 1));
+        const float stored = sunShadowMap.Load(int3(coord, 0));
+        if (stored < depth + dot(depthSlope, tap) - sunShadowPenumbra.w)
+        {
+            blockerDepthSum += stored;
+            blockerCount += 1.0;
+        }
+    }
+    if (blockerCount < 0.5)
+        return baseRadius;
+    const float gap = max(depth - blockerDepthSum / blockerCount, 0.0);
+    const float widest = max(baseRadius, sunShadowPenumbra.y * texel);
+    return min(baseRadius + gap * sunShadowPenumbra.x * texel, widest);
+#endif
+}
 
 // 0: lit, 1: fully in the sun's shadow. `normal` may be zero (terrain): then no normal offset.
 // `screenPosition` (SV_Position.xy) turns the disc per pixel, so a wide edge is a fine grain
@@ -44,13 +88,14 @@ float SunShadowAmount(float3 worldPosition, float3 normal, float2 screenPosition
     if (edge >= 1.0 || clip.z >= 1.0 || clip.z <= 0.0)
         return 0.0;
 
-    // Soft edge: 16 bilinear comparisons on a Poisson disc of the map's softness radius,
-    // turned by an interleaved gradient noise angle per pixel.
-    const float radius = max(sunDirectionAndSoftness.w, 0.5) * texel;
+    // Soft edge: 16 bilinear comparisons on a Poisson disc of the edge radius (the map's softness
+    // radius, or wider away from the caster), turned by an interleaved gradient noise angle per pixel.
     const float angle = 6.2831853 * frac(52.9829189 * frac(dot(screenPosition, float2(0.06711056, 0.00583715))));
     float sine, cosine;
     sincos(angle, sine, cosine);
     const float2x2 turn = float2x2(cosine, -sine, sine, cosine);
+    const float baseRadius = max(sunDirectionAndSoftness.w, 0.5) * texel;
+    const float radius = SunShadowEdgeRadius(uv, depth, depthSlope, texel, turn, baseRadius);
     float lit = 0.0;
     [unroll]
     for (int i = 0; i < 16; ++i)

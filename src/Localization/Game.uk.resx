@@ -13610,6 +13610,24 @@
   <data name="FoliageSmoothingLockedLowPreset" xml:space="preserve">
     <value>Вимкнено на пресеті графіки «Низький».</value>
   </data>
+  <data name="SunShadowSoftEdgesRow" xml:space="preserve">
+    <value>М'які краї тіней від сонця</value>
+  </data>
+  <data name="SunShadowSoftEdgesTooltip" xml:space="preserve">
+    <value>Тіні від сонця чіткі поруч із предметом і м'якші далі від нього. Змінюються лише краї тіней: персонажі, монстри й спорядження освітлені як раніше.</value>
+  </data>
+  <data name="SunShadowSoftEdgesStrengthRow" xml:space="preserve">
+    <value>М'якість країв тіней</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedHdTextures" xml:space="preserve">
+    <value>Потрібні HD-текстури.</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedLowPreset" xml:space="preserve">
+    <value>Вимкнено на пресеті графіки «Низький».</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedSunShadows" xml:space="preserve">
+    <value>Потрібні тіні від сонця (середні або високі).</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Спершу сильні монстри</value>

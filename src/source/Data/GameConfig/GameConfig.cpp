@@ -167,6 +167,12 @@ void GameConfig::Load()
     m_foliageSmoothingStrength =
         std::clamp(ReadInt(CfgSectionRender, CfgKeyFoliageSmoothingStrength, CfgDefaultFoliageSmoothingStrength),
                    CfgMinFoliageSmoothingStrength, CfgMaxFoliageSmoothingStrength);
+    m_sunShadowSoftEdges =
+        std::clamp(ReadInt(CfgSectionRender, CfgKeySunShadowSoftEdges, CfgDefaultSunShadowSoftEdges),
+                   CfgMinSunShadowSoftEdges, CfgMaxSunShadowSoftEdges);
+    m_sunShadowSoftEdgesStrength =
+        std::clamp(ReadInt(CfgSectionRender, CfgKeySunShadowSoftEdgesStrength, CfgDefaultSunShadowSoftEdgesStrength),
+                   CfgMinSunShadowSoftEdgesStrength, CfgMaxSunShadowSoftEdgesStrength);
     m_sunShadows = GameConfigValidation::ValidateSunShadows(
         ReadInt(CfgSectionRender, CfgKeySunShadows, CfgDefaultSunShadows));
     m_sharpen = GameConfigValidation::ValidateSharpen(ReadInt(CfgSectionRender, CfgKeySharpen, CfgDefaultSharpen));
@@ -277,6 +283,8 @@ void GameConfig::Save()
     WriteInt(CfgSectionRender, CfgKeyTorchLightsStrength, m_torchLightsStrength);
     WriteInt(CfgSectionRender, CfgKeyFoliageSmoothing, m_foliageSmoothing);
     WriteInt(CfgSectionRender, CfgKeyFoliageSmoothingStrength, m_foliageSmoothingStrength);
+    WriteInt(CfgSectionRender, CfgKeySunShadowSoftEdges, m_sunShadowSoftEdges);
+    WriteInt(CfgSectionRender, CfgKeySunShadowSoftEdgesStrength, m_sunShadowSoftEdgesStrength);
     WriteInt(CfgSectionRender, CfgKeySunShadows, m_sunShadows);
     WriteInt(CfgSectionRender, CfgKeySharpen, m_sharpen);
     WriteBool(CfgSectionRender, CfgKeyDisableEffects, m_disableEffects);
@@ -506,6 +514,18 @@ void GameConfig::SetFoliageSmoothingStrength(int percent)
 {
     m_foliageSmoothingStrength =
         std::clamp(percent, CfgDefaults::CfgMinFoliageSmoothingStrength, CfgDefaults::CfgMaxFoliageSmoothingStrength);
+}
+
+void GameConfig::SetSunShadowSoftEdges(int sunShadowSoftEdges)
+{
+    m_sunShadowSoftEdges =
+        std::clamp(sunShadowSoftEdges, CfgDefaults::CfgMinSunShadowSoftEdges, CfgDefaults::CfgMaxSunShadowSoftEdges);
+}
+
+void GameConfig::SetSunShadowSoftEdgesStrength(int percent)
+{
+    m_sunShadowSoftEdgesStrength = std::clamp(percent, CfgDefaults::CfgMinSunShadowSoftEdgesStrength,
+                                              CfgDefaults::CfgMaxSunShadowSoftEdgesStrength);
 }
 
 void GameConfig::SetAntialiasing(int samples)

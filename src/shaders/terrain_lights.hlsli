@@ -32,6 +32,7 @@ cbuffer SceneLighting : register(b1, space3)
     float4x4 sunViewProjection;
     float4 sunShadowParameters;     // x: 1 / map size, y: strength, z: normal offset, w: 1 when on
     float4 sunDirectionAndSoftness; // xyz: towards the sun, w: soft edge radius in texels
+    float4 sunShadowPenumbra;       // widening edge (sun_shadow.hlsli): x 0 = fixed edge
     float4 terrainLightHeader;               // x: the number of lights (0..16)
     float4 terrainLightPositionAndRadius[16]; // xy: world position, w: the pool's radius
     float4 terrainLightColor[16];             // rgb: colour * weight * gain

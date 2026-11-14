@@ -110,10 +110,13 @@ the row reads **Custom** (shown only, it cannot be picked).
 | `TorchLightsStrength` | Strength of the pools in percent, `0` (off) to `100`; the pools are 0.5 plus the strength times the Classic light (`70` is 1.2 times, `100` 1.5 times); the torch light strength slider under that row sets it in steps of 10 | `70` |
 | `FoliageSmoothing` | With HD textures on (desktop only, not on the Low preset), the maps' own cut-out textures (grass, leaves, fences, railings: files under `Data\World<N>` and `Data\Object<N>` with see-through holes) are sampled a little softer, so their edges shimmer less while the camera moves; with anti-aliasing on, the ground's grass also gets alpha-to-coverage as trees and fences already do. Textures under `Data\Player`, `Monster`, `Item`, `NPC`, `Skill` and `Effect` are never touched, and neither are the ground's tiles or the mini map. Options > Graphics > Smooth foliage edges switches it at once: `0` off, `1` on | `1` |
 | `FoliageSmoothingStrength` | How much softer, in percent, `0` (off) to `100`; the cut-outs' mip bias is the HD bias (−0.5) plus the strength (so `50` is 0, the default `70` is +0.2 and `100` is +0.5 mip levels); the foliage smoothing strength slider under that row sets it in steps of 10 | `70` |
+| `SunShadowSoftEdges` | With HD textures and Sun shadows (Medium or High) on (desktop only, not on the Low preset), the sun shadows' edges are crisp right next to what casts them and get softer the farther the shadow falls from it, as a real sun's shadow does (a hero's feet stay sharp, the tip of a tree's long shadow is soft). Only the edges change: the shadows are as dark as before, and characters, monsters and gear are lit as before. Options > Graphics > Soft sun shadow edges switches it at once: `0` off, `1` on | `1` |
+| `SunShadowSoftEdgesStrength` | How fast the edge softens, in percent, `0` (off) to `100`: the edge grows by 0.06 times the strength world units for each world unit between the caster and where its shadow falls, and by at most 40 times the strength world units over the map's own edge (the default `70` is 0.042 per unit and at most 28 units more); the shadow edge softness slider under that row sets it in steps of 10 | `70` |
 
 Each map's light mood can also set the sun's direction and the shadows'
 strength and softness (`sunAzimuth`, `sunElevation`, `sunShadow`,
-`sunSoftness`; see `Render/Lighting/LightMood.h`), and the Remaster's distance
+`sunSoftness`; see `Render/Lighting/LightMood.h`; with soft sun shadow edges on,
+`sunSoftness` is the edge next to the caster and the edge widens from there), and the Remaster's distance
 haze: `haze` (0 to 0.5, how much of the haze colour the far world takes),
 `hazeR`, `hazeG`, `hazeB` (its colour, darkened by `background`), `groundFog`
 (0 to 0.5, the low mist), `groundFogHeight` (50 to 600 world units above the

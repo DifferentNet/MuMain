@@ -16105,6 +16105,24 @@
   <data name="FoliageSmoothingLockedLowPreset" xml:space="preserve">
     <value>Выключено на пресете графики «Низкий».</value>
   </data>
+  <data name="SunShadowSoftEdgesRow" xml:space="preserve">
+    <value>Мягкие края теней от солнца</value>
+  </data>
+  <data name="SunShadowSoftEdgesTooltip" xml:space="preserve">
+    <value>Тени от солнца чёткие рядом с предметом и мягче вдали от него. Меняются только края теней: персонажи, монстры и снаряжение освещены как раньше.</value>
+  </data>
+  <data name="SunShadowSoftEdgesStrengthRow" xml:space="preserve">
+    <value>Мягкость краёв теней</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedHdTextures" xml:space="preserve">
+    <value>Нужны HD-текстуры.</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedLowPreset" xml:space="preserve">
+    <value>Выключено на пресете графики «Низкий».</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedSunShadows" xml:space="preserve">
+    <value>Нужны тени от солнца (средние или высокие).</value>
+  </data>
   <data name="BagPageLocked" xml:space="preserve">
     <value>Страница 2 закрыта</value>
   </data>

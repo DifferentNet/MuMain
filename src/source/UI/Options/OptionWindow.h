@@ -144,9 +144,10 @@ namespace mu::ui::window
         void RmlSoundVolumeChanged(int value);
         void RmlMusicVolumeChanged(int value);
         void RmlRenderLevelChanged(int value);
-        // The volume, effect-limit, SSAO, wind, haze, particle, torch light and foliage smoothing gauges'
-        // pointer and wheel events (0 sound, 1 music, 2 effects, 3 SSAO strength, 4 wind strength, 5 haze
-        // strength, 6 particle density, 7 torch light strength, 8 foliage smoothing strength).
+        // The volume, effect-limit, SSAO, wind, haze, particle, torch light, foliage smoothing and soft sun
+        // shadow edge gauges' pointer and wheel events (0 sound, 1 music, 2 effects, 3 SSAO strength, 4 wind
+        // strength, 5 haze strength, 6 particle density, 7 torch light strength, 8 foliage smoothing
+        // strength, 9 soft sun shadow edge strength).
         void RmlGaugeEvent(Rml::Event& event, int gauge);
         void RmlResolutionChanged(int index);
         void RmlLanguageChanged(int index);
@@ -223,6 +224,10 @@ namespace mu::ui::window
         // applied at once, not part of the graphics presets.
         void RmlToggleFoliageSmoothing();
         void RmlFoliageSmoothingStrengthChanged(int level);
+        // [Render] SunShadowSoftEdges and SunShadowSoftEdgesStrength (gauge 9, levels 0..10): saved and
+        // applied at once, not part of the graphics presets.
+        void RmlToggleSunShadowSoftEdges();
+        void RmlSunShadowSoftEdgesStrengthChanged(int level);
         // Interface/UI tab -- Show FPS Counter/Show Debug Info stay ephemeral (SceneManager.h
         // globals, no GameConfig persistence), matching $fpscounter/$details today.
         void RmlToggleShowFpsCounter();
@@ -499,6 +504,19 @@ namespace mu::ui::window
             int foliageSmoothingStrength = 7;
             int foliageSmoothingStrengthPercent = 70;
             Rml::String foliageSmoothingStrengthLabel;
+            // [Render] SunShadowSoftEdges and SunShadowSoftEdgesStrength (Remaster PC client only): locked
+            // without HD textures, on the Low preset and with Sun shadows off
+            // (Render::Lighting::SunShadowSoftEdges::Block); its hint says why; the strength slider
+            // (levels 0..10 = 0..100 %) shows while it is on and not locked.
+            bool sunShadowSoftEdges = true;
+            bool sunShadowSoftEdgesAvailable = false;
+            bool sunShadowSoftEdgesLocked = false;
+            Rml::String sunShadowSoftEdgesLabel;
+            Rml::String sunShadowSoftEdgesTooltip;
+            bool sunShadowSoftEdgesStrengthShown = false;
+            int sunShadowSoftEdgesStrength = 7;
+            int sunShadowSoftEdgesStrengthPercent = 70;
+            Rml::String sunShadowSoftEdgesStrengthLabel;
             std::vector<Rml::String> sharpenLabels;
             int sharpenIndex = 0;
             Rml::String sharpenRowLabel;
@@ -588,6 +606,7 @@ namespace mu::ui::window
         void SyncParticlesRows(OptionRmlModel& model);
         void SyncTorchLightsRows(OptionRmlModel& model);
         void SyncFoliageSmoothingRows(OptionRmlModel& model);
+        void SyncSunShadowSoftEdgesRows(OptionRmlModel& model);
         void OnRmlBuilt();
         UI::RmlBridge::ThemedView<OptionRmlModel> m_RmlView{"option_window",
             [this](Rml::DataModelConstructor& c, OptionRmlModel& model) { BindRmlModel(c, model); },

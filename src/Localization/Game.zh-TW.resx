@@ -13610,6 +13610,24 @@
   <data name="FoliageSmoothingLockedLowPreset" xml:space="preserve">
     <value>圖形預設為「低」時關閉。</value>
   </data>
+  <data name="SunShadowSoftEdgesRow" xml:space="preserve">
+    <value>柔和太陽陰影邊緣</value>
+  </data>
+  <data name="SunShadowSoftEdgesTooltip" xml:space="preserve">
+    <value>太陽陰影在投影物附近清晰，離得越遠越柔和。只改變陰影的邊緣：角色、怪物與裝備的光照與以前相同。</value>
+  </data>
+  <data name="SunShadowSoftEdgesStrengthRow" xml:space="preserve">
+    <value>陰影邊緣柔和度</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedHdTextures" xml:space="preserve">
+    <value>需要 HD 材質。</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedLowPreset" xml:space="preserve">
+    <value>圖形預設為「低」時關閉。</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedSunShadows" xml:space="preserve">
+    <value>需要太陽陰影（中或高）。</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>優先攻擊強大怪物</value>

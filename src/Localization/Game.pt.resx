@@ -13610,6 +13610,24 @@
   <data name="FoliageSmoothingLockedLowPreset" xml:space="preserve">
     <value>Desligado na predefinição gráfica Baixa.</value>
   </data>
+  <data name="SunShadowSoftEdgesRow" xml:space="preserve">
+    <value>Bordas suaves das sombras do sol</value>
+  </data>
+  <data name="SunShadowSoftEdgesTooltip" xml:space="preserve">
+    <value>As sombras do sol são nítidas junto ao que as projeta e mais suaves longe dele. Só mudam as bordas das sombras: personagens, monstros e equipamento são iluminados como antes.</value>
+  </data>
+  <data name="SunShadowSoftEdgesStrengthRow" xml:space="preserve">
+    <value>Suavidade das bordas das sombras</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedHdTextures" xml:space="preserve">
+    <value>Requer texturas HD.</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedLowPreset" xml:space="preserve">
+    <value>Desligado na predefinição gráfica Baixa.</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedSunShadows" xml:space="preserve">
+    <value>Requer Sombras do sol (Médias ou Altas).</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Monstros fortes primeiro</value>

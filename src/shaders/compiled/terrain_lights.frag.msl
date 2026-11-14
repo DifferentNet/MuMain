@@ -45,6 +45,7 @@ struct SceneLighting
     float4x4 sunViewProjection;
     float4 sunShadowParameters;
     float4 sunDirectionAndSoftness;
+    float4 sunShadowPenumbra;
     float4 terrainLightHeader;
     float4 terrainLightPositionAndRadius[16];
     float4 terrainLightColor[16];

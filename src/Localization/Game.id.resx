@@ -13610,6 +13610,24 @@
   <data name="FoliageSmoothingLockedLowPreset" xml:space="preserve">
     <value>Mati pada preset grafis Rendah.</value>
   </data>
+  <data name="SunShadowSoftEdgesRow" xml:space="preserve">
+    <value>Tepi bayangan matahari lembut</value>
+  </data>
+  <data name="SunShadowSoftEdgesTooltip" xml:space="preserve">
+    <value>Bayangan matahari tajam di dekat benda yang membuatnya dan makin lembut saat makin jauh. Hanya tepi bayangan yang berubah: karakter, monster, dan perlengkapan diterangi seperti sebelumnya.</value>
+  </data>
+  <data name="SunShadowSoftEdgesStrengthRow" xml:space="preserve">
+    <value>Kelembutan tepi bayangan</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedHdTextures" xml:space="preserve">
+    <value>Memerlukan tekstur HD.</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedLowPreset" xml:space="preserve">
+    <value>Mati pada preset grafis Rendah.</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedSunShadows" xml:space="preserve">
+    <value>Memerlukan Bayangan matahari (Sedang atau Tinggi).</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Monster kuat dulu</value>

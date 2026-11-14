@@ -13,6 +13,7 @@
 #include "Render/Effects/ParticlesSetting.h"
 #include "Render/Terrain/TorchLights.h"
 #include "Render/Textures/FoliageSmoothing.h"
+#include "Render/Lighting/SunShadowSoftEdges.h"
 #include "Render/PostProcessing/HazeSetting.h"
 #include "Render/PostProcessing/ScreenFilterSetting.h"
 #include "Render/PostProcessing/SsaoSetting.h"
@@ -160,6 +161,8 @@ void ApplyGraphicsPreset(GraphicsPreset preset)
     Render::Terrain::TorchLights::ApplyFromConfig();
     // The foliage smoothing is off on Low too.
     Render::Textures::FoliageSmoothing::ApplyFromConfig();
+    // The soft sun shadow edges are off on Low too.
+    Render::Lighting::SunShadowSoftEdges::ApplyFromConfig();
     config.Save();
     mu::log::Get("render")->info("Graphics preset {}", PresetName(preset));
 }

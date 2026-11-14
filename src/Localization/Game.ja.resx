@@ -11685,6 +11685,24 @@
   <data name="FoliageSmoothingLockedLowPreset" xml:space="preserve">
     <value>グラフィックプリセット「低」ではオフです。</value>
   </data>
+  <data name="SunShadowSoftEdgesRow" xml:space="preserve">
+    <value>太陽の影の縁をやわらかく</value>
+  </data>
+  <data name="SunShadowSoftEdgesTooltip" xml:space="preserve">
+    <value>太陽の影は影を落とすものの近くではくっきりし、離れるほどやわらかくなります。変わるのは影の縁だけで、キャラクター、モンスター、装備の明るさはこれまでどおりです。</value>
+  </data>
+  <data name="SunShadowSoftEdgesStrengthRow" xml:space="preserve">
+    <value>影の縁のやわらかさ</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedHdTextures" xml:space="preserve">
+    <value>HDテクスチャが必要です。</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedLowPreset" xml:space="preserve">
+    <value>グラフィックプリセット「低」ではオフです。</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedSunShadows" xml:space="preserve">
+    <value>太陽の影（中または高）が必要です。</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>強いモンスター優先</value>

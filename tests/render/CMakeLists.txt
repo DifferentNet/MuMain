@@ -271,6 +271,16 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/FoliageSmoothing.cpp
 )
 
+# Soft sun shadow edges: strength, locks, the edge's growth and the uniform's widening edge part.
+mu_add_test(
+    NAME sun_shadow_soft_edges_tests
+    SOURCES
+        test_sun_shadow_soft_edges.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Lighting/SunShadowSoftEdges.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Renderer/SunShadow.cpp
+    LINK_LIBS glm::glm
+)
+
 mu_add_test(
     NAME dynamic_lights_tests
     SOURCES

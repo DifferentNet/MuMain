@@ -13631,6 +13631,24 @@
   <data name="FoliageSmoothingLockedLowPreset" xml:space="preserve">
     <value>Wyłączone przy ustawieniu grafiki Niskie.</value>
   </data>
+  <data name="SunShadowSoftEdgesRow" xml:space="preserve">
+    <value>Miękkie krawędzie cieni od słońca</value>
+  </data>
+  <data name="SunShadowSoftEdgesTooltip" xml:space="preserve">
+    <value>Cienie od słońca są ostre tuż przy tym, co je rzuca, i coraz miększe dalej od niego. Zmieniają się tylko krawędzie cieni: postacie, potwory i ekwipunek są oświetlone jak dotąd.</value>
+  </data>
+  <data name="SunShadowSoftEdgesStrengthRow" xml:space="preserve">
+    <value>Miękkość krawędzi cieni</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedHdTextures" xml:space="preserve">
+    <value>Wymaga tekstur HD.</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedLowPreset" xml:space="preserve">
+    <value>Wyłączone przy ustawieniu grafiki Niskie.</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedSunShadows" xml:space="preserve">
+    <value>Wymaga Cieni od słońca (Średnie lub Wysokie).</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Najpierw silne potwory</value>
