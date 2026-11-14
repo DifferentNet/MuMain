@@ -6,6 +6,7 @@
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/Diagnostics/DiagnosticsOverlay.h"
 #include "UI/Mobile/InterfaceMode.h"
+#include "UI/Placement/WindowPlacement.h"
 #include "UI/RmlBridge/RmlDocumentHints.h"
 #include "UI/RmlBridge/RmlMarquee.h"
 #include "UI/RmlBridge/RmlNativeText.h"
@@ -51,6 +52,7 @@ void InstallRuntimeHooks()
         ApplySceneStackingDepths();
         ApplyViewStackingDepths(UI::Mobile::IsPhoneView());
         Tooltip::ExpireUnrefreshed();
+        UI::Placement::ApplyWorkspaceVars();
         if (Rml::Context* context = RmlUiRuntime::Instance().GetContext())
             DocumentHints::Update(*context);
     };

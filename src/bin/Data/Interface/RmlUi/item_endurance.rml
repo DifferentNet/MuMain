@@ -6,7 +6,7 @@
 	<link type="text/rcss" href="base.rcss"/>
 	<link type="text/rcss" href="item_endurance.rcss"/>
 </head>
-<body data-model="item_endurance">
+<body data-model="item_endurance" data-workspace-vars="1">
 	<!-- The item endurance HUD (CItemEnduranceInfo). Left column: the pet / summon HP frames in the
 	     screen's stretch (#pets, reference px inside; the theme places #pet_column), the elf's
 	     arrow count line at its top and each frame's name, counter-scaled out of the stretch.

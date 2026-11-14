@@ -5,7 +5,7 @@
 	<link type="text/rcss" href="base.rcss"/>
 	<link type="text/rcss" href="party_list.rcss"/>
 </head>
-<body>
+<body data-workspace-vars="1">
 	<!-- The party HUD list (CPartyListWindow): one card per member down the right side, left of
 	     the docked panels. The theme places #panel against the uncovered world's right edge
 	     (--world-right) at the dock's scale; cards are reference px, one below the other. C++

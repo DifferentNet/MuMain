@@ -64,6 +64,10 @@ bool HasOpenNeighbour(std::string_view slotName);
 void Arrange();
 // Once a frame: re-places windows when the screen size, UI scale or HUD position changed.
 void Update();
+// Sets the last published workspace bounds (--world-left/-right, --workspace-top/-bottom) on every
+// document whose <body> has data-workspace-vars and lacks them yet. Once a frame before the RmlUi
+// update, so a document loaded since the last arrangement gets them before it is laid out.
+void ApplyWorkspaceVars();
 // Edges, in screen pixels, of the world the open windows leave uncovered. An open slot in a region
 // marked data-covers-world narrows it from the side of the screen the slot is on.
 float UncoveredWorldLeft();
