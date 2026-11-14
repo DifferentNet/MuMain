@@ -59,6 +59,9 @@ class CJewelBankWindow : public CObject
     {
         // The width a jewel's name is fitted to (reference px; jewel_bank.rcss places it).
         NAME_WIDTH = 132,
+        // The same in the phone view, where the zen buttons stand further left: the width of .jb-name in
+        // jewel_bank.rcss's `@media (theme: mobile)` (the theme flag follows UI::Mobile::IsPhoneView()).
+        PHONE_NAME_WIDTH = 74,
         STATUS_WIDTH = 120,
     };
 
