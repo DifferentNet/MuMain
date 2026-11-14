@@ -13756,6 +13756,9 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>Isara</value>
   </data>
+  <data name="SkillDamageWithMaxDD" xml:space="preserve">
+    <value>Pinsala sa Kasanayan: %d%% (max %d%%)</value>
+  </data>
   <!-- Quick chat on a phone: the phrases over the chat line (UI/HUD/ChatInputBox.cpp) -->
   <data name="TouchQuickChat1" xml:space="preserve">
     <value>Kumusta!</value>

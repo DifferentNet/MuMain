@@ -1342,7 +1342,7 @@ int CSItemOption::RenderPowerOfTheAncients(int textIndex) const
                             !twoHandedStaff && shield && staff });
         break;
     case CLASS_ELF:
-        bonuses.push_back({ I18N::Game::PowerOfTheAncientsBowD, 10, 0, bow });
+        bonuses.push_back({ I18N::Game::PowerOfTheAncientsBowD, 20, 0, bow });
         bonuses.push_back({ I18N::Game::PowerOfTheAncientsShieldD, ShieldPercent, 0, shield });
         break;
     case CLASS_DARK:

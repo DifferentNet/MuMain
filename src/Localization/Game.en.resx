@@ -16731,6 +16731,9 @@
   <data name="GmPanelRowPing" xml:space="preserve">
     <value>  %d ms</value>
   </data>
+  <data name="SkillDamageWithMaxDD" xml:space="preserve">
+    <value>Skill Damage: %d%% (max %d%%)</value>
+  </data>
   <!-- Quick chat on a phone: the phrases over the chat line (UI/HUD/ChatInputBox.cpp) -->
   <data name="TouchQuickChat1" xml:space="preserve">
     <value>Hi!</value>
