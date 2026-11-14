@@ -73,6 +73,9 @@ constexpr auto StandTime = std::chrono::milliseconds(600);
 constexpr auto StandAgainTime = std::chrono::milliseconds(1500);
 // How long the joystick waits after a swing went off, before the swing's own pose holds it.
 constexpr auto SwingStartTime = std::chrono::milliseconds(200);
+// How long the drop the prompt shows is kept before the drops are searched again (every frame was
+// heavy after a boss died); a press still searches at once.
+constexpr auto DropPromptRefresh = std::chrono::milliseconds(150);
 // How long a drop asked for is passed over while the server answers, and one no walk reaches.
 constexpr auto AskedDropTime = std::chrono::milliseconds(1500);
 constexpr auto UnreachableDropTime = std::chrono::seconds(3);
@@ -134,6 +137,11 @@ struct Steering
     Clock::time_point lastWalk;
     // Where the character was when the walk was sent.
     HeroPlace from;
+    // The last walk tried found no way (a wall ahead): that way waits WalkRepeat before it is tried
+    // again, unless the stick turned (ten path searches a try).
+    bool blocked = false;
+    float blockedX = 0.f;
+    float blockedY = 0.f;
 };
 
 Steering g_steering;
@@ -173,6 +181,9 @@ std::map<int, SkippedDrop> g_skippedDrops;
 // The drop the pickup button walks to, and when the bag was last said to be full.
 int g_dropWalkedTo = NoDrop;
 Clock::time_point g_fullBagSaidAt;
+// The drop the prompt shows (NearestDropToPick), -1 for none, and when it was searched.
+int g_promptDrop = -1;
+Clock::time_point g_promptDropAt{};
 // The PK switch (SetForceAttack) and the party member the heals and buffs go to (ToggleFriend).
 bool g_forceAttack = false;
 int g_friendKey = NoTarget;
@@ -1097,6 +1108,27 @@ int NearestFittingDrop(bool* unfit)
     }
     return nearest;
 }
+
+// The drop the pickup button takes now, searched afresh and kept for the prompt (NearestDropToPick).
+int NearestDropNow()
+{
+    const int nearest = NearestFittingDrop(nullptr);
+    g_promptDrop = nearest == NoDrop ? -1 : nearest;
+    g_promptDropAt = Clock::now();
+    return g_promptDrop;
+}
+
+// Whether the stick points far enough from the walk under way (or from the way that found a wall)
+// for a new walk at once; a fresh push always is.
+bool TurnedFromWalk(float dirX, float dirY)
+{
+    const float turnCos = std::cos(TurnToReplan);
+    if (g_steering.active)
+        return dirX * g_steering.dirX + dirY * g_steering.dirY < turnCos;
+    if (g_steering.blocked)
+        return dirX * g_steering.blockedX + dirY * g_steering.blockedY < turnCos;
+    return true;
+}
 } // namespace
 
 // Whether the MU Helper was told the player steers the character (CMuHelper::SetSteered): the stick
@@ -1142,7 +1174,7 @@ void Steer(float screenX, float screenY)
         return;
 
     const auto now = Clock::now();
-    const bool turned = !g_steering.active || dirX * g_steering.dirX + dirY * g_steering.dirY < std::cos(TurnToReplan);
+    const bool turned = TurnedFromWalk(dirX, dirY);
     if (now - g_steering.lastWalk < (turned ? TurnRepeat : WalkRepeat))
         return;
     if (!turned && StepsLeft() > StepsLeftToReplan)
@@ -1150,18 +1182,23 @@ void Steer(float screenX, float screenY)
 
     g_steering.lastWalk = now;
     const HeroPlace from = HerePlace();
-    if (WalkToward(dirX, dirY))
+    g_steering.blocked = !WalkToward(dirX, dirY);
+    if (g_steering.blocked)
     {
-        BreakOffFight();
-        g_steering.active = true;
-        g_steering.dirX = dirX;
-        g_steering.dirY = dirY;
-        g_steering.from = from;
+        g_steering.blockedX = dirX;
+        g_steering.blockedY = dirY;
+        return;
     }
+    BreakOffFight();
+    g_steering.active = true;
+    g_steering.dirX = dirX;
+    g_steering.dirY = dirY;
+    g_steering.from = from;
 }
 
 void StopSteering()
 {
+    g_steering.blocked = false;
     g_hold.Release();
     SteerHelper(false);
     if (InWorld())
@@ -1172,6 +1209,7 @@ void StopSteering()
 
 void PauseSteering()
 {
+    g_steering.blocked = false;
     g_hold.Pause();
     SteerHelper(false);
     if (InWorld())
@@ -1498,6 +1536,7 @@ void Reset()
     g_standUntil = {};
     g_standAgainAt = {};
     g_steering.active = false;
+    g_steering.blocked = false;
     g_hold.Pause();
     g_buttonsHoldHelperUntil = {};
     SteerHelper(false);
@@ -1716,15 +1755,17 @@ bool WalkUpTo(int index, float distance)
 
 bool HasDropToPick()
 {
-    return NearestDropToPick() >= 0;
+    return InWorld() && NearestDropNow() >= 0;
 }
 
 int NearestDropToPick()
 {
     if (!InWorld())
         return -1;
-    const int nearest = NearestFittingDrop(nullptr);
-    return nearest == NoDrop ? -1 : nearest;
+    const bool gone = g_promptDrop >= 0 && !::Items[g_promptDrop].Object.Live;
+    if (!gone && Clock::now() - g_promptDropAt < DropPromptRefresh)
+        return g_promptDrop;
+    return NearestDropNow();
 }
 
 bool DropOnScreen(int index, float& x, float& y)

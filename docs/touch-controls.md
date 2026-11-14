@@ -327,7 +327,7 @@ skill edit button are not drawn for a pad without touch (`body.pad.no-touch`).
 
 | Pad | In the world (no window open) |
 |---|---|
-| Left stick | Walks the way it points (as the joystick) |
+| Left stick | Walks the way it points (as the joystick). Its walk waits until the buttons acted that frame, as the joystick's: with A or a skill held beside a monster the hero fights on, A let go and the stick walks away. Into a wall, the same way is tried again every 0.3 s, a turn of the stick at once |
 | Right stick | A flick picks the next target: right or down the next further, left or up the next nearer. With no monster (or enemy player) within 8 tiles, as in a town, it picks the NPCs and the other players on the screen the same way: the one chosen is lit, its name shown as under the mouse, with "A Talk" (an NPC) or "A Menu" (a player) under its feet |
 | RS (the right stick pressed) | Back to the nearest target; in a town, no NPC or player chosen |
 | A | Attack: a tap fights the target once, held it goes on. On an NPC chosen: walks there and talks (as a click on it). On a player chosen: walks up to them and opens the player menu (Trade, Buy, Party, Follow, Duel, as Alt and a right click open it): the frame rests on its rows, the d-pad moves it, A runs the row, B closes |
@@ -359,10 +359,12 @@ closes it.
 **Windows without a mouse.** Over a game window (not a dialog alone) no pointer is drawn: a gold frame
 rests on an item cell, an equipment slot or a button (any element that binds a click, a field or a
 list too; not the cross in a window's corner, as B closes the window), and the d-pad and the left stick hop it to the next one that way (in line before aside,
-the same window before the next window); the character stands meanwhile. On a list's last row on
+the same window before the next window); the character stands meanwhile. The stick hops once leaned 60 % of
+the way and stops below 40 %, and keeps its way until the other axis leans 1.3 times more, so a stick held near a
+diagonal hops once, not on its wobble; held 1.2 s, the stick or the d-pad hop quicker (every 60 ms, not 100). On a list's last row on
 view, a step further scrolls the list. As a window opens or a tab turns, the frame starts on its item
 cell nearest the top-left corner, or without cells on the target nearest it (a tab before the close
-button); a window that opens within a moment after, before the frame moved (an NPC shop, its goods
+button); a window that opens within 0.75 s after, before the frame moved (an NPC shop, its goods
 sent by the server after the inventory opened), takes it on the same way; when its target goes away, it
 goes to the nearest one. While a message box or a menu over the windows is up (the item card),
 the frame rests only on it. The right stick still moves the pointer (shown while off every target, at
@@ -409,7 +411,7 @@ and LB and RB turn the pages.
 |---|---|---|
 | Device | `Core/Input/GamepadInput.{h,cpp}` | SDL gamepad events → held buttons, presses since the last frame and the sticks (radial dead zone, triggers as buttons), across up to four pads; which device the player used last. The sticks are also polled once a frame (`Poll`): SDL keeps the first value an axis reports as its rest and sends no event for it. |
 | Pointer | `Core/Input/GamepadPointer.{h,cpp}` | The stick moves the SDL pointer (warped), buttons as pushed SDL mouse events with their own `which`; held buttons ORed into `IsKeyDown(VK_LBUTTON/VK_RBUTTON)`, the wheel too (`TurnWheel`, for the d-pad over a list; `Core::Input::UiScrollsAt` says whether a list there scrolls). A real mouse moving it is followed; a browser repeating a resting mouse's place (it does on layout changes) is not. |
-| Mapping | `UI/HUD/GamepadControls.{h,cpp}` | Once a frame before the touch controls: presses their controls (`TouchControls::SetPadHeld`), steers (`GameLogic::Touch::Steer`), moves the menu's highlight; off the world, the plain pointer; with a text field focused, hands the pad to the keyboard. `HidesPointer` keeps `RenderCursor` from drawing the game's pointer. |
+| Mapping | `UI/HUD/GamepadControls.{h,cpp}` | Once a frame before the touch controls: presses their controls (`TouchControls::SetPadHeld`), moves the menu's highlight; after them (`LateUpdate`) steers (`GameLogic::Touch::Steer`); off the world, the plain pointer; with a text field focused, hands the pad to the keyboard. `HidesPointer` keeps `RenderCursor` from drawing the game's pointer. |
 | Frame | `UI/HUD/PadFrame.{h,cpp}`, `PadTargets.{h,cpp}`, `PadTargetPick.{h,cpp}` | The targets are the visible elements of the game's windows (a workspace-placed document, or one drawn between depth 8 and the message boxes) that a click works (`drag: block` in base.rcss), `.item-cell` and `.equip-slot`, with the list that scrolls each; `PadTargetPick` chooses the one under the pointer, the nearest, and the next one a step points at. Tests: `tests/ui/test_pad_target_pick.cpp`. |
 | Hub | `UI/HUD/PadHub.{h,cpp}` | The tabs and their windows (`g_pNewUISystem->Show/Hide`, the skill picker through `TouchControls::OpenSkillPicker`). |
 | Overlay | `UI/HUD/PadOverlay.{h,cpp}` + `pad_overlay.rml` + `themes/{legacy,modern}/pad_overlay.rcss` | The frame, the hub's tabs and legend, the pickup prompt (`GameLogic::Touch::NearestDropToPick`, `DropOnScreen`; its name drawn by `NameWindow`). Depth 10.72: over the windows and message boxes, under the item on the cursor. |
@@ -448,7 +450,7 @@ the keyboard closes act only once released, so the B that closed it does not als
 |---|---|---|
 | Layout | `UI/HUD/PadKeyboardLayout.{h,cpp}` | The pages (English, Russian, symbols, digits), their keys and widths, and moving between keys (rows centred, up and down to the nearest key's middle). Tests: `tests/ui/test_pad_keyboard_layout.cpp`. |
 | Keyboard | `UI/HUD/PadKeyboard.{h,cpp}` + `pad_keyboard.rml` + `themes/{legacy,modern}/pad_keyboard.rcss` | Shows itself for the focused field (`GetFocusedTextField`), types into it through RmlUi's own SDL path (`Core::Input::RouteToUi`: text input and key events, as a real keyboard), Enter and Esc also as game keys (`Touch::TapKey`). Depth 35 in `RmlStackingOrder.cpp`: over the windows and messages of any scene, under the loading screen. It stands at the screen's foot, at its top for a field low on the screen, weighed again every frame; the login window steps up to the top while it is up (`CLoginWin::SetPosition`, `PadKeyboard::IsUp`), so both fields stay in view. |
-| Repeats | `Core/Input/GamepadStepper.{h,cpp}` | The d-pad's and stick's steps with a first pause and a repeat, shared with the menu's highlight; a held button's repeat. |
+| Repeats | `Core/Input/GamepadStepper.{h,cpp}` | The d-pad's and stick's steps with a first pause and a repeat (quicker after a long hold), shared with the menu's highlight; the stick's way with its lean in and out and its kept axis (`PointingOf`, tested in `tests/core/test_gamepad_stepper.cpp`); a held button's repeat. |
 | Phone keyboard | `Core/Platform/web/WebKeyboard.{h,cpp}` | `HoldBackKeyboard` keeps the phone's keyboard down while the pad is in use. |
 
 ## How it is built
