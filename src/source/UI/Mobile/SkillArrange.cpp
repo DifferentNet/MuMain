@@ -27,11 +27,11 @@ HotKeys Placed(HotKeys keys, int target, int skill)
     return keys;
 }
 
-int NextEmptySlot(const HotKeys& keys, bool upperSet, int from)
+int NextEmptySlot(const HotKeys& keys, bool upperSet, int from, int slots)
 {
-    for (int step = 1; step < SlotCount; ++step)
+    for (int step = 1; step < slots; ++step)
     {
-        const int slot = (from + step) % SlotCount;
+        const int slot = (from + step) % slots;
         if (keys[HotKeyOfSlot(slot, upperSet)] == NoSkill)
             return slot;
     }

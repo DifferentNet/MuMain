@@ -11,6 +11,9 @@ namespace UI::HUD::PadOverlay
 struct View
 {
     bool hub = false;
+    // The controls card (UI/HUD/PadCard) and its page.
+    bool card = false;
+    int cardPage = 0;
     // The legend of the pad's buttons in a window.
     bool legend = false;
     // What the legend says: on an item's place Take, Equip, Card and Close (on worn gear Take off for
@@ -39,6 +42,9 @@ struct View
         DialogButton,
     };
     Legend legendSays = Legend::Item;
+    // RB takes the frame to the next window (two or more open), RT turns a window's page (pad round 3).
+    bool legendWindows = false;
+    bool legendPages = false;
     bool frame = false;
     PadTargetPick::Box frameBox;
     // The prompt under the drop d-pad down picks up, or under the NPC or player the right stick chose:

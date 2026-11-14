@@ -11,7 +11,11 @@
    .pad-round.pad-menu              a disc with three lines (Menu)
    .pad-round.pad-stick             a disc with the stick's letters (LS: the left stick pressed)
    .pad-dpad.pad-dpad-up / -down / -left / -right
-                                    the d-pad's cross with the pressed arm lit */
+                                    the d-pad's cross with the pressed arm lit
+
+   The names come from UI/HUD/PadGlyphs ({{glyph_a}} .. {{glyph_rt}}): Xbox's, Nintendo's or
+   PlayStation's. The body's class glyph-nin turns the faces white, as on a Switch pad; glyph-ps draws
+   the faces' shapes (cross, circle, square, triangle) from each face's .pad-ps boxes, centred on it. */
 
 .pad-glyph {
 	display: none;
@@ -113,3 +117,66 @@ body.pad .pad-glyph {
 .pad-dpad-right .pad-dpad-lit { left: 11rem; top: 6rem; width: 5rem; height: 6rem; }
 /* Left and right both lit: a slider the d-pad sides change. */
 .pad-dpad-sides .pad-dpad-lit { left: 2rem; top: 6rem; width: 14rem; height: 6rem; }
+
+/* PlayStation: a shape in its own colour on each face, drawn from up to three boxes round the
+   face's centre (.pad-ps is a point there). Bars are 10rem by 2rem. */
+.pad-ps {
+	display: none;
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 0;
+	height: 0;
+}
+body.glyph-ps .pad-ps {
+	display: block;
+}
+.pad-ps-1, .pad-ps-2, .pad-ps-3 {
+	display: none;
+	position: absolute;
+	box-sizing: border-box;
+}
+body.glyph-ps .pad-face { border-color: rgba(200, 200, 204, 230); }
+/* Cross: two bars across. */
+.pad-a .pad-ps-1, .pad-a .pad-ps-2 {
+	display: block;
+	left: -5rem;
+	top: -1rem;
+	width: 10rem;
+	height: 2rem;
+	background-color: #7fa8e8;
+}
+.pad-a .pad-ps-1 { transform: rotate(45deg); }
+.pad-a .pad-ps-2 { transform: rotate(-45deg); }
+/* Circle: a ring. */
+.pad-b .pad-ps-1 {
+	display: block;
+	left: -5rem;
+	top: -5rem;
+	width: 10rem;
+	height: 10rem;
+	border: 2rem #e8636a;
+	border-radius: 5rem;
+}
+/* Square: a frame. */
+.pad-x .pad-ps-1 {
+	display: block;
+	left: -4.5rem;
+	top: -4.5rem;
+	width: 9rem;
+	height: 9rem;
+	border: 2rem #e48fc9;
+}
+/* Triangle: three bars on the sides of a 10rem triangle, its middle a little below the centre. */
+.pad-y .pad-ps-1, .pad-y .pad-ps-2, .pad-y .pad-ps-3 {
+	display: block;
+	width: 10rem;
+	height: 2rem;
+	background-color: #45c3a4;
+}
+.pad-y .pad-ps-1 { left: -5rem; top: 2.4rem; }
+.pad-y .pad-ps-2 { left: -7.5rem; top: -1.9rem; transform: rotate(-60deg); }
+.pad-y .pad-ps-3 { left: -2.5rem; top: -1.9rem; transform: rotate(60deg); }
+
+/* Nintendo: plain white letters, as the Switch pads wear them. */
+body.glyph-nin .pad-face { border-color: #f2f2f2; color: #f2f2f2; }

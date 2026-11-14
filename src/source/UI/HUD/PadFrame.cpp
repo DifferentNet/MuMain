@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <map>
 #include <string_view>
 #include <vector>
 
@@ -96,6 +97,12 @@ struct State
     std::vector<Pick::Box> knownTargets;
     // The targets' boxes in the last frame the frame played.
     std::vector<Pick::Box> lastTargets;
+    // RB asked for the next window (NextWindow); where the frame last rested in each window, by its
+    // `window`, to go back there; the windows and the frame's window as of the last Update.
+    bool nextWindowPending = false;
+    std::map<int, Point> windowPlaces;
+    int windowCount = 0;
+    int currentWindow = -1;
 };
 State g_state;
 // Reused each frame, not built anew.
@@ -153,6 +160,46 @@ bool ScrollsInstead(std::span<const Pick::Target> targets, int from, int next, i
         return false;
     const bool goesOn = dy < 0 ? here.listScrollsUp : here.listScrollsDown;
     return goesOn && (next == Pick::None || targets[next].list != here.list);
+}
+
+// RB: the next window to the right of the one at `from` (by the windows' left edges, round to the
+// leftmost), where the frame last rested there, else its first target.
+void JumpToNextWindow(SDL_Window* window, std::span<const Pick::Target> targets, int from, float scale)
+{
+    std::map<int, float> lefts;
+    for (const Pick::Target& target : targets)
+    {
+        const auto found = lefts.find(target.window);
+        if (found == lefts.end())
+            lefts.emplace(target.window, target.box.left);
+        else
+            found->second = std::min(found->second, target.box.left);
+    }
+    if (lefts.size() < 2)
+        return;
+    std::vector<std::pair<float, int>> order;
+    for (const auto& [id, left] : lefts)
+        order.emplace_back(left, id);
+    std::sort(order.begin(), order.end());
+    const int here = from == Pick::None ? order.back().second : targets[from].window;
+    std::size_t at = 0;
+    while (at < order.size() && order[at].second != here)
+        ++at;
+    const int next = order[(at + 1) % order.size()].second;
+    std::vector<Pick::Target>& inNext = g_newTargets;
+    inNext.clear();
+    for (const Pick::Target& target : targets)
+    {
+        if (target.window == next)
+            inNext.push_back(target);
+    }
+    int pick = Pick::None;
+    if (const auto place = g_state.windowPlaces.find(next); place != g_state.windowPlaces.end())
+        pick = Pick::Nearest(inNext, place->second.x, place->second.y, Anywhere);
+    if (pick == Pick::None)
+        pick = Pick::First(inNext);
+    if (pick != Pick::None)
+        MoveOnto(window, inNext[pick], scale);
 }
 
 void Hop(SDL_Window* window, std::span<const Pick::Target> targets, int from, Pad::Step step, float scale)
@@ -302,6 +349,16 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
         PadTargets::StepGauge(current, step.dx);
     else if (step.dx != 0 || step.dy != 0)
         Hop(window, targets, current, step, scale);
+    if (g_state.nextWindowPending)
+    {
+        g_state.nextWindowPending = false;
+        if (!onDialog)
+        {
+            JumpToNextWindow(window, targets, current, scale);
+            g_state.newWindowPending = false;
+            g_state.settleFrames = -1;
+        }
+    }
     if (step.dx != 0 || step.dy != 0 || g_state.stickPushed)
         g_state.newWindowPending = false;
     if (g_state.settleFrames >= 0)
@@ -329,7 +386,10 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
     {
         g_state.windowPlace = here;
         g_state.hasWindowPlace = true;
+        g_state.windowPlaces[targets[current].window] = here;
     }
+    g_state.windowCount = onDialog ? 0 : CountWindows(targets);
+    g_state.currentWindow = g_state.onTarget && !onDialog ? targets[current].window : -1;
 }
 
 void SnapSoon()
@@ -370,6 +430,25 @@ void Reset()
     g_state.goBack = false;
     g_state.goFirst = false;
     g_state.stepper.Reset();
+    g_state.nextWindowPending = false;
+    g_state.windowPlaces.clear();
+    g_state.windowCount = 0;
+    g_state.currentWindow = -1;
+}
+
+void NextWindow()
+{
+    g_state.nextWindowPending = true;
+}
+
+int WindowCount()
+{
+    return g_state.windowCount;
+}
+
+int CurrentWindow()
+{
+    return g_state.currentWindow;
 }
 
 bool Box(PadTargetPick::Box& box)

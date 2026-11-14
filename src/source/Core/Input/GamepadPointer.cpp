@@ -61,6 +61,7 @@ struct State
     float atRim = 0.f;
 };
 State g_state;
+float g_speed = DefaultSpeed;
 
 void WindowSize(SDL_Window* window, float& width, float& height)
 {
@@ -170,7 +171,7 @@ void Move(SDL_Window* window, float x, float y, float seconds, bool precise)
         return;
     const float ramp = std::clamp((g_state.atRim - RimDelay) / RimRampTime, 0.f, 1.f);
     const float boost = 1.f + (RimBoost - 1.f) * ramp;
-    const float speed = TopSpeed * height * lean * boost * (precise ? PreciseShare : 1.f);
+    const float speed = TopSpeed * g_speed * height * lean * boost * (precise ? PreciseShare : 1.f);
     g_state.x = std::clamp(g_state.x + x * speed * seconds, 0.f, width - 1.f);
     g_state.y = std::clamp(g_state.y + y * speed * seconds, 0.f, height - 1.f);
     SDL_WarpMouseInWindow(window, g_state.x, g_state.y);
@@ -274,5 +275,15 @@ void Release(SDL_Window* window)
             PushButton(window, button, false, 1);
         g_state.buttons[button] = false;
     }
+}
+
+void SetSpeed(float share)
+{
+    g_speed = std::clamp(share, 0.25f, 4.f);
+}
+
+float GetSpeed()
+{
+    return g_speed;
 }
 } // namespace Core::Input::Gamepad::Pointer

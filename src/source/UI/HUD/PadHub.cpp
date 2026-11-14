@@ -3,6 +3,7 @@
 
 #include "I18N/All.h"
 #include "UI/Core/WindowSystem.h"
+#include "UI/HUD/PadCard.h"
 #include "UI/HUD/TouchControls.h"
 
 #include <array>
@@ -15,8 +16,9 @@ namespace Controls = UI::HUD::TouchControls;
 // A tab's window opens a frame or two after it is asked to: until then the hub does not take it for
 // closed.
 constexpr auto OpeningGrace = std::chrono::milliseconds(300);
-// The skill picker's tab has no window of its own.
+// The skill picker's tab and the controls card's have no window of their own.
 constexpr int SkillPicker = -1;
+constexpr int ControlsCard = -2;
 
 struct Tab
 {
@@ -24,13 +26,14 @@ struct Tab
     int window;
 };
 
-const std::array<Tab, 6> Tabs = {{
+const std::array<Tab, 7> Tabs = {{
     {&I18N::Game::TouchMenuInventory, mu::ui::window::INTERFACE_INVENTORY},
     {&I18N::Game::TouchMenuCharacter, mu::ui::window::INTERFACE_CHARACTER},
     {&I18N::Game::TouchMenuSkills, SkillPicker},
     {&I18N::Game::TouchMenuQuests, mu::ui::window::INTERFACE_MYQUEST},
     {&I18N::Game::TouchMenuGuild, mu::ui::window::INTERFACE_GUILDINFO},
     {&I18N::Game::PadHubSettings, mu::ui::window::INTERFACE_OPTION},
+    {&I18N::Game::PadCardTab, ControlsCard},
 }};
 constexpr int TabTotal = static_cast<int>(Tabs.size());
 
@@ -45,6 +48,8 @@ State g_state;
 bool IsShown(int tab)
 {
     const int window = Tabs[tab].window;
+    if (window == ControlsCard)
+        return UI::HUD::PadCard::IsOpen();
     return window == SkillPicker ? Controls::IsMenuOpen() : g_pNewUISystem->IsVisible(window);
 }
 
@@ -54,6 +59,11 @@ bool Show(int tab)
     const int window = Tabs[tab].window;
     if (window == SkillPicker)
         return Controls::OpenSkillPicker();
+    if (window == ControlsCard)
+    {
+        UI::HUD::PadCard::Open();
+        return true;
+    }
     if (!g_pNewUISystem->IsVisible(window))
         g_pNewUISystem->Show(window);
     return true;
@@ -66,6 +76,11 @@ void Hide(int tab)
     {
         if (Controls::IsMenuOpen())
             Controls::CloseMenu();
+        return;
+    }
+    if (window == ControlsCard)
+    {
+        UI::HUD::PadCard::Close();
         return;
     }
     if (g_pNewUISystem->IsVisible(window))

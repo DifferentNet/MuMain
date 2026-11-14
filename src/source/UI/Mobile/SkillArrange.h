@@ -15,11 +15,16 @@ inline constexpr int NoSkill = -1;
 using HotKeys = std::array<int, HotKeyCount>;
 
 // The skill buttons stand for five hotkeys: 1-5, or 6-9 and 0 as the upper set (the touch controls
-// keep their own set, which the current skill does not switch).
-inline constexpr int SlotCount = 5;
+// keep their own set, which the current skill does not switch). A pad alone has a sixth button
+// (RT + B, pad round 3): hotkey 6 in the lower set. The upper set has no sixth hotkey left, so there
+// the sixth button stands for 1 (empty by the set's rule) and the pad hides it.
+inline constexpr int TouchSlotCount = 5;
+inline constexpr int SlotCount = 6;
 
 [[nodiscard]] constexpr int HotKeyOfSlot(int slot, bool upperSet)
 {
+    if (slot >= TouchSlotCount)
+        return upperSet ? 1 : 6;
     const int hotKey = (upperSet ? 6 : 1) + slot;
     return hotKey == HotKeyCount ? 0 : hotKey;
 }
@@ -32,9 +37,9 @@ inline constexpr int SlotCount = 5;
 // held comes off. NoSkill empties `target`.
 [[nodiscard]] HotKeys Placed(HotKeys keys, int target, int skill);
 
-// The first slot after `from`, round the five, whose hotkey is empty; `from` when the others are
-// all taken.
-[[nodiscard]] int NextEmptySlot(const HotKeys& keys, bool upperSet, int from);
+// The first slot after `from`, round the first `slots` buttons, whose hotkey is empty; `from` when
+// the others are all taken.
+[[nodiscard]] int NextEmptySlot(const HotKeys& keys, bool upperSet, int from, int slots = TouchSlotCount);
 
 // How many entries fit a box in rows and columns with `gap` between them; at least one.
 [[nodiscard]] int PageCapacity(float boxWidth, float boxHeight, float entryWidth, float entryHeight, float gap);

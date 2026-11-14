@@ -467,6 +467,91 @@ void StepGauge(int target, int dx)
     element->DispatchEvent(Rml::EventId::Keyup, parameters);
 }
 
+namespace
+{
+constexpr const char* PageClass = "pad-page";
+constexpr const char* PageNextClass = "pad-page-next";
+
+bool Usable(Rml::Element& element)
+{
+    return element.IsVisible(true) && !element.IsClassSet("hidden") && !element.IsClassSet("locked")
+           && !element.IsClassSet("disabled") && !element.HasAttribute("disabled");
+}
+
+// The control TurnPage clicks in a document, null for none.
+Rml::Element* NextPageControl(Rml::ElementDocument& document)
+{
+    Rml::ElementList found;
+    document.GetElementsByClassName(found, PageNextClass);
+    for (Rml::Element* element : found)
+    {
+        if (element != nullptr && Usable(*element))
+            return element;
+    }
+    found.clear();
+    document.GetElementsByClassName(found, PageClass);
+    std::vector<Rml::Element*> tabs;
+    int active = -1;
+    for (Rml::Element* element : found)
+    {
+        if (element == nullptr || !element->IsVisible(true))
+            continue;
+        if (element->IsClassSet("active") || element->IsClassSet("selected") || element->IsClassSet("on")
+            || element->IsClassSet("active-tab"))
+            active = static_cast<int>(tabs.size());
+        tabs.push_back(element);
+    }
+    if (tabs.size() < 2)
+        return nullptr;
+    const int count = static_cast<int>(tabs.size());
+    for (int step = 1; step < count; ++step)
+    {
+        Rml::Element* tab = tabs[static_cast<size_t>(((active < 0 ? -1 : active) + step + count) % count)];
+        if (Usable(*tab))
+            return tab;
+    }
+    return nullptr;
+}
+
+// The control TurnPage would click for `window` (-1: the first open window with one).
+Rml::Element* PageControlFor(int window)
+{
+    Rml::Context* context = RmlUiRuntime::Instance().GetContext();
+    if (context == nullptr)
+        return nullptr;
+    if (window >= 0)
+    {
+        Rml::ElementDocument* document = window < context->GetNumDocuments() ? context->GetDocument(window) : nullptr;
+        return document != nullptr && IsWindow(*document) ? NextPageControl(*document) : nullptr;
+    }
+    for (int i = 0; i < context->GetNumDocuments(); ++i)
+    {
+        Rml::ElementDocument* document = context->GetDocument(i);
+        if (document == nullptr || !IsWindow(*document) || IsDialog(*document))
+            continue;
+        if (Rml::Element* control = NextPageControl(*document))
+            return control;
+    }
+    return nullptr;
+}
+} // namespace
+
+bool TurnPage(int window)
+{
+    Rml::Element* control = PageControlFor(window);
+    if (control == nullptr && window >= 0)
+        control = PageControlFor(-1);
+    if (control == nullptr)
+        return false;
+    control->Click();
+    return true;
+}
+
+bool HasPages(int window)
+{
+    return PageControlFor(window) != nullptr || (window >= 0 && PageControlFor(-1) != nullptr);
+}
+
 bool IsIn(const PadTargetPick::Target& target, std::string_view fileName)
 {
     Rml::Context* context = RmlUiRuntime::Instance().GetContext();

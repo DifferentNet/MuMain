@@ -51,7 +51,7 @@
 			<span class="sharp-text igs-page-slash" data-style-font-size="text_px + 'px'">/</span>
 			<span class="sharp-text igs-page-total" data-style-font-size="text_px + 'px'">{{total_pages}}</span>
 		</div>
-		<div id="igs_page_next" class="igs-page-btn" data-event-click="igs_page(1)"></div>
+		<div id="igs_page_next" class="igs-page-btn pad-page-next" data-event-click="igs_page(1)"></div>
 
 		<!-- The player: name, balances, and the gift, charge and refresh buttons. -->
 		<div id="igs_character">

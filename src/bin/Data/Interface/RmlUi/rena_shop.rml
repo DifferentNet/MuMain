@@ -37,7 +37,7 @@
 
 		<div id="rs_list" class="sharp-text sharp-flow">
 			<div class="rs-tabs">
-				<div class="rs-tab" data-for="t : tabs" data-class-selected="t.selected"
+				<div class="rs-tab pad-page" data-for="t : tabs" data-class-selected="t.selected"
 				     data-event-click="rena_shop_tab(t.tab)">
 					<span class="rs-tab-label" data-style-font-size="t.label.text_px + 'px'">{{t.label.text}}</span>
 				</div>

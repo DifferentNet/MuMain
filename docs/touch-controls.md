@@ -10,7 +10,10 @@ config.ini `[UI]`:
 | Interface view | `InterfaceView` | Auto, PC, Phone |
 | Controls | `Controls` | Auto, Mouse and keyboard, Touch |
 | Button size (only while the on-screen controls show) | `TouchButtonSize` | 60, 70, 80, 90, 100, 115, 130 % |
-| Gamepad ([below](#gamepad-xbox-layout)) | `Gamepad` | On, Off |
+| Gamepad ([below](#gamepad-xbox-layout)) | `Gamepad`, `GamepadRumble` | On, On without vibration, Off |
+| Stick dead zone (while the pad is on) | `GamepadDeadZone` | 10, 15, 20, 25, 30, 35 % of the throw (25 to start with) |
+| Pad pointer speed (while the pad is on) | `GamepadPointerSpeed` | 50, 75, 100, 125, 150, 200 % |
+| Button glyphs (while the pad is on) | `GamepadGlyphs` | Auto (the pad in hand), Xbox, PlayStation, Nintendo |
 
 Auto means the phone view and touch controls on a touch device (`mu::web::IsTouchDevice()`), the PC
 view and the mouse elsewhere. A desktop build or a computer's browser is unchanged unless the player
@@ -259,7 +262,14 @@ says so: the player is never left with nothing to press (`Gamepad::TurnsOffWhenP
 While the pad is in use, the touch controls show in the world (in the PC view too, over the PC bar)
 with the pad button that presses each one drawn on its corner: the Xbox glyphs (A green, B red,
 X blue, Y yellow, the bumpers, triggers, View, Menu, LS for the left stick pressed and the d-pad's
-arms), drawn from boxes in `themes/{legacy,modern}/gamepad_glyphs.rcss`, no images. In the phone view
+arms), drawn from boxes in `themes/{legacy,modern}/gamepad_glyphs.rcss`, no images. Button glyphs
+in Options picks another maker's names: PlayStation draws the cross, circle, square and triangle and
+names the shoulders L1 R1 L2 R2; Nintendo shows white letters, B A Y X by place, and L R ZL ZR.
+The pad is read by place either way, so the bottom button confirms on all three (ghinzuro
+2026-11-13: Nintendo letters only, confirm stays on the bottom). Auto takes the kind of the pad
+pressed last: SDL's type on a PC, else the pad's name (the browser's Gamepad.id with Sony's 054c or
+Nintendo's 057e vendor id, `Core::Input::Gamepad::KindFromName`); the names are `UI/HUD/PadGlyphs`'s.
+In the phone view
 the pad replaces the PC bar as touch does (style flag `mobile-hud`). Without touch the joystick is not drawn.
 
 In the world the pad plays as Diablo's pads do (layout A of 2026-10-31): no pointer (none is drawn), a row along the
@@ -273,7 +283,7 @@ skill edit button are not drawn for a pad without touch (`body.pad.no-touch`).
 | RS (the right stick pressed) | Back to the nearest target; in a town, no NPC or player chosen |
 | A | Attack: a tap fights the target once, held it goes on. On an NPC chosen: walks there and talks (as a click on it). On a player chosen: walks up to them and opens the player menu (Trade, Buy, Party, Follow, Duel, as Alt and a right click open it): the frame rests on its rows, the d-pad moves it, A runs the row, B closes |
 | X, Y, B | The skill buttons 1–3: a tap uses the skill once, held it goes on. With fingers off the screen only these three show in the row (ghinzuro 2026-11-03: two or three skills carry the game). Teleport (ghinzuro 2026-11-04) jumps the way the left stick points (centred: the way the character last walked, screen-up before any walk) onto the farthest free tile within the skill's reach, at least 2 tiles (`TouchActions::PadTeleportTile`, cast through `Automation::CastSkillAtTile` with `Combat::SetGroundAim`); one jump a press. Teleport Ally brings the party member chosen with RB, or says to choose one first |
-| RT held + X, Y | The skill buttons 4 and 5. While RT is held (no window open) they stand in the places of X and Y (`TouchControls::SetPadAlt`, body class `pad-alt`); RT + B does nothing |
+| RT held + X, Y, B | The skill buttons 4, 5 and 6. While RT is held (no window open) they stand in the places of X, Y and B (`TouchControls::SetPadAlt`, body class `pad-alt`). The sixth (hotkey 6) is a pad's alone: it shows only with no finger on the screen and the lower hotkey set (`TouchControls::ActiveSlots`, `UI::Mobile::SlotCount`); touch keeps five |
 | LB, LT | The potions Q and W (E and R are on the keyboard only: no layout shows their buttons now) |
 | RB | The party member heals and buffs go on (ghinzuro 2026-11-04, `TouchActions::ChooseNextFriend`): each press the next member near, their card lit and their name in the chat; past the last, back to the character itself. With no member near, it says so. A heal, a buff or Teleport Ally on the chosen member walks up to them while they are in sight (`FriendSightRange`, 14 tiles); out of sight the chat says "Too far away: <name>" (`FriendTooFar`) and nothing is cast |
 | D-pad left | A tap: the map (Tab). Held half a second: the Teleport window (M) |
@@ -285,9 +295,17 @@ skill edit button are not drawn for a pad without touch (`body.pad.no-touch`).
 | Menu | A tap: the hero hub (below). In the hub, or over another window, the menu of windows (the stick or the d-pad move its highlight, A opens, B or Menu closes; its legend shows the keys). Held half a second: the chat line, with the pad's keyboard |
 
 **The hero hub.** Menu with no window open opens the character's windows as tabs: Inventory,
-Character, Skills (the skill picker), Quests, Guild, Settings. The strip of tabs stands at the top
+Character, Skills (the skill picker), Quests, Guild, Settings, Controls. The strip of tabs stands at the top
 with LB and RB on its ends, and LB and RB turn the tabs (round the ends); the hub opens on the tab it
 was last on. Closing its window (B) ends it; Menu in it goes to the full menu of windows.
+
+**The controls card** (pad round 3, `UI/HUD/PadCard`, drawn in `pad_overlay.rml`): every button and
+what it does, a page for the world and one for the windows, with the glyphs of the pad in hand. It
+shows once by itself, at the first press of the pad in a safe zone with no window open, so never over
+a fight (`[UI] GamepadCardSeen`; it replaced the long line the system log said), and opens from the
+hub's Controls tab. LB and RB or the d-pad's sides turn its page, B, A or Menu closes it; opened from
+the hub, LB and RB turn the hub's tabs and the d-pad's sides its page. A key, a click or a finger
+closes it.
 
 **Windows without a mouse.** Over a game window (not a dialog alone) no pointer is drawn: a gold frame
 rests on an item cell, an equipment slot or a button (any element that binds a click, a field or a
@@ -317,6 +335,8 @@ tabs:
 | B | Back: closes the window on top; with an item on the cursor, puts it back where it was taken from instead |
 | Y with an item on the cursor | Drops it to the ground under the hero (refused, as with the mouse, for expensive, bound and reinforced items) |
 | LB, RB | The hub's tabs (the help's pages with the help open) |
+| RB (no hub, two or more windows open) | The frame goes to the next window, left to right and round, back to where it was in it (`PadFrame::NextWindow`); the legend says so |
+| RT (no hub) | The window's next page or tab: its next-page button, or the tab after the lit one, round (`PadTargets::TurnPage`, the markup's `pad-page` and `pad-page-next` classes); the legend says so |
 | Menu | The menu of every window |
 
 A dialog alone (a trade or party request) keeps the free pointer, and d-pad up and down over a list

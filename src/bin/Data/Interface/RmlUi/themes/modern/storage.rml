@@ -53,7 +53,7 @@
 		<!-- The vault page arrows (VaultPages.h), over the header rail. -->
 		<div id="btn_page_prev" class="stor-page-btn stor-page-prev" data-class-hidden="!pages_visible" data-class-busy="pages_busy"
 		     data-event-click="storage_page(-1)"><span class="stor-page-glyph">&#9664;</span></div>
-		<div id="btn_page_next" class="stor-page-btn stor-page-next" data-class-hidden="!pages_visible" data-class-busy="pages_busy"
+		<div id="btn_page_next" class="stor-page-btn stor-page-next pad-page-next" data-class-hidden="!pages_visible" data-class-busy="pages_busy"
 		     data-event-click="storage_page(1)"><span class="stor-page-glyph">&#9654;</span></div>
 
 		<!-- Wallet + fee row: base.rcss's shared .modern-wallet-px family, heightened to fit both
@@ -88,6 +88,12 @@
 		     data-event-click="storage_expand_click" data-attr-data-hint="expand_tooltip">
 			<span class="modern-icon-btn-glyph-px">+</span>
 		</div>
+
+		<!-- The sort button (InventorySort.h), last in the action row (on a phone in the header, left of the page
+		     arrows), shown once the server told the page (it has the add-on): three bars, dimmed while it can't
+		     sort. It sorts both grids of the page. -->
+		<div id="btn_storage_sort" class="modern-icon-btn-px stor-sort-btn" data-class-hidden="!sort_visible" data-class-busy="sort_busy"
+		     data-event-click="storage_sort" data-attr-data-hint="sort_tooltip"><div class="stor-sort-icon"><div class="stor-sort-bar stor-sort-bar-1"></div><div class="stor-sort-bar stor-sort-bar-2"></div><div class="stor-sort-bar stor-sort-bar-3"></div></div></div>
 	</div>
 </body>
 </rml>

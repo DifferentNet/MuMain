@@ -16,6 +16,7 @@
 #include "GameLogic/Items/TradeRestrictions.h"
 #include "UI/Inventory/MyInventory.h"
 #include "UI/Inventory/StorageInventoryExt.h"
+#include "UI/Inventory/InventorySort.h"
 #include "UI/Inventory/VaultPages.h"
 #include "Scenes/SceneCore.h" // g_iLengthAuthorityCode -- the WEBZEN password field's maxLength below
 
@@ -221,6 +222,15 @@ void CStorageInventory::BindRmlModel(Rml::DataModelConstructor& c, StorageRmlMod
     c.Bind("title_locked", &model.titleLocked);
     c.Bind("pages_visible", &model.pagesVisible);
     c.Bind("pages_busy", &model.pagesBusy);
+    c.Bind("sort_visible", &model.sortVisible);
+    c.Bind("sort_busy", &model.sortBusy);
+    c.Bind("sort_tooltip", &model.sortTooltip);
+    c.BindEventCallback("storage_sort",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
+        {
+            if (!IsSortBusy())
+                UI::Inventory::Sort().Request(UI::Inventory::InventorySort::Target::Vault);
+        });
     c.BindEventCallback("storage_page",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& args)
         {
@@ -466,13 +476,21 @@ void CStorageInventory::StepPage(int step)
     auto& pages = UI::Storage::Pages();
     // Not while an item is on the cursor or a move waits for the server: the item would land on the other page.
     if (!pages.HasInfo() || pages.Pages() < 2 || pages.IsSwitching() || g_pPickedItem || IsItemMovePending() || m_bItemAutoMove
-        || g_pStorageInventoryExt->IsItemAutoMove())
+        || g_pStorageInventoryExt->IsItemAutoMove() || UI::Inventory::Sort().IsWaiting())
         return;
 
     const int count = pages.Pages();
     const int next = (pages.Page() - 1 + step + count) % count + 1;
     PlayBuffer(SOUND_CLICK01);
     pages.RequestPage(next);
+}
+
+bool CStorageInventory::IsSortBusy() const
+{
+    // Also not while a page switch or a vault auto-move waits for the server: the sort would race it.
+    return UI::Inventory::Sort().IsBlocked(UI::Inventory::InventorySort::Target::Vault)
+        || UI::Storage::Pages().IsSwitching() || m_bItemAutoMove
+        || g_pStorageInventoryExt->IsItemAutoMove();
 }
 
 void CStorageInventory::ClearForPageSwitch()
@@ -538,7 +556,11 @@ void CStorageInventory::SyncRmlModel()
     syncBool(&StorageRmlModel::titleLocked, "title_locked", m_bLock);
     syncBool(&StorageRmlModel::pagesVisible, "pages_visible", pages.HasInfo() && pages.Pages() > 1);
     syncBool(&StorageRmlModel::pagesBusy, "pages_busy",
-             pages.IsSwitching() || g_pPickedItem != nullptr || IsItemMovePending() || m_bItemAutoMove);
+             pages.IsSwitching() || g_pPickedItem != nullptr || IsItemMovePending() || m_bItemAutoMove
+                 || UI::Inventory::Sort().IsWaiting());
+    syncBool(&StorageRmlModel::sortVisible, "sort_visible", pages.HasInfo());
+    syncBool(&StorageRmlModel::sortBusy, "sort_busy", IsSortBusy());
+    syncWide(&StorageRmlModel::sortTooltip, "sort_tooltip", I18N::Game::InventorySortHint);
 
     const int nZen = CharacterMachine->StorageGold;
     wchar_t zenBuf[256] = { 0, };
@@ -664,6 +686,9 @@ void CStorageInventory::ProcessInventoryCtrl()
     }
     else if (IsPress(VK_RBUTTON))
     {
+        // Nothing moves to the bag while the server sorts (UI/Inventory/InventorySort.h).
+        if (UI::Inventory::Sort().IsWaiting())
+            return;
         if ((UI::Mobile::ClickSource::IsFingerLongPress() || UI::Mobile::ClickSource::IsPadCardClick())
             && ShowItemCard())
             return;

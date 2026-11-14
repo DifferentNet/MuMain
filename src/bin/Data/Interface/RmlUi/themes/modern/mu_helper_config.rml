@@ -28,9 +28,9 @@
 
 		<div id="mhc_main">
 			<div id="mhc_tabs">
-				<div class="mhc-tab-cell"><div id="tab_0" class="mh-tab" data-class-active="active_tab == 0" data-event-click="muhelper_tab(0)"></div><span id="tab_0_label" class="mh-text mh-center mh-tab-label" data-class-active="active_tab == 0">{{labels.tab_hunting}}</span></div>
-				<div class="mhc-tab-cell"><div id="tab_1" class="mh-tab" data-class-active="active_tab == 1" data-event-click="muhelper_tab(1)"></div><span id="tab_1_label" class="mh-text mh-center mh-tab-label" data-class-active="active_tab == 1">{{labels.tab_obtaining}}</span></div>
-				<div class="mhc-tab-cell"><div id="tab_2" class="mh-tab" data-class-active="active_tab == 2" data-event-click="muhelper_tab(2)"></div><span id="tab_2_label" class="mh-text mh-center mh-tab-label" data-class-active="active_tab == 2">{{labels.tab_other}}</span></div>
+				<div class="mhc-tab-cell"><div id="tab_0" class="mh-tab pad-page" data-class-active="active_tab == 0" data-event-click="muhelper_tab(0)"></div><span id="tab_0_label" class="mh-text mh-center mh-tab-label" data-class-active="active_tab == 0">{{labels.tab_hunting}}</span></div>
+				<div class="mhc-tab-cell"><div id="tab_1" class="mh-tab pad-page" data-class-active="active_tab == 1" data-event-click="muhelper_tab(1)"></div><span id="tab_1_label" class="mh-text mh-center mh-tab-label" data-class-active="active_tab == 1">{{labels.tab_obtaining}}</span></div>
+				<div class="mhc-tab-cell"><div id="tab_2" class="mh-tab pad-page" data-class-active="active_tab == 2" data-event-click="muhelper_tab(2)"></div><span id="tab_2_label" class="mh-text mh-center mh-tab-label" data-class-active="active_tab == 2">{{labels.tab_other}}</span></div>
 			</div>
 			<div id="mhc_body" class="scroll-pane">
 				<!-- Hunting -->

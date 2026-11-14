@@ -99,6 +99,10 @@ void GameConfig::Load()
     m_touchTopRow = ReadBool(CfgSectionUI, CfgKeyTouchTopRow, CfgDefaultTouchTopRow);
     m_gamepad = ReadBool(CfgSectionUI, CfgKeyGamepad, CfgDefaultGamepad);
     m_gamepadRumble = ReadBool(CfgSectionUI, CfgKeyGamepadRumble, CfgDefaultGamepadRumble);
+    SetGamepadDeadZone(ReadInt(CfgSectionUI, CfgKeyGamepadDeadZone, CfgDefaultGamepadDeadZone));
+    SetGamepadPointerSpeed(ReadInt(CfgSectionUI, CfgKeyGamepadPointerSpeed, CfgDefaultGamepadPointerSpeed));
+    SetGamepadGlyphs(ReadInt(CfgSectionUI, CfgKeyGamepadGlyphs, CfgDefaultGamepadGlyphs));
+    m_gamepadCardSeen = ReadBool(CfgSectionUI, CfgKeyGamepadCardSeen, CfgDefaultGamepadCardSeen);
     m_enableAnimationTaskPool =
         ReadBool(CfgSectionUI, CfgKeyEnableAnimationTaskPool, CfgDefaultEnableAnimationTaskPool);
 
@@ -249,6 +253,10 @@ void GameConfig::Save()
     WriteBool(CfgSectionUI, CfgKeyTouchTopRow, m_touchTopRow);
     WriteBool(CfgSectionUI, CfgKeyGamepad, m_gamepad);
     WriteBool(CfgSectionUI, CfgKeyGamepadRumble, m_gamepadRumble);
+    WriteInt(CfgSectionUI, CfgKeyGamepadDeadZone, m_gamepadDeadZone);
+    WriteInt(CfgSectionUI, CfgKeyGamepadPointerSpeed, m_gamepadPointerSpeed);
+    WriteInt(CfgSectionUI, CfgKeyGamepadGlyphs, m_gamepadGlyphs);
+    WriteBool(CfgSectionUI, CfgKeyGamepadCardSeen, m_gamepadCardSeen);
 
     SaveCamera();
     WriteBool(CfgSectionRender, CfgKeyVSync, m_vsyncEnabled);
@@ -627,6 +635,22 @@ void GameConfig::SetUIScalePercent(int percent)
 void GameConfig::SetTouchButtonSize(int percent)
 {
     m_touchButtonSize = std::clamp(percent, CfgDefaults::CfgMinTouchButtonSize, CfgDefaults::CfgMaxTouchButtonSize);
+}
+
+void GameConfig::SetGamepadDeadZone(int percent)
+{
+    m_gamepadDeadZone = std::clamp(percent, CfgDefaults::CfgMinGamepadDeadZone, CfgDefaults::CfgMaxGamepadDeadZone);
+}
+
+void GameConfig::SetGamepadPointerSpeed(int percent)
+{
+    m_gamepadPointerSpeed =
+        std::clamp(percent, CfgDefaults::CfgMinGamepadPointerSpeed, CfgDefaults::CfgMaxGamepadPointerSpeed);
+}
+
+void GameConfig::SetGamepadGlyphs(int choice)
+{
+    m_gamepadGlyphs = std::clamp(choice, 0, CfgDefaults::CfgMaxGamepadGlyphs);
 }
 
 void GameConfig::SetEncryptedUsername(const std::wstring& encryptedUsername)

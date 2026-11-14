@@ -19,6 +19,10 @@
 	top: 6px;
 	height: 29px;
 }
+/* The title a bit further left and without letter spacing, so "Хранилище 10/10" (Liberation Sans 13 px, ~106 px
+   wide: x 15-121; "Storage 10/10" ~81 px: x 15-96) ends left of the page arrows at 127. */
+.stor-header-rail .modern-header-text-px { left: 7px; }
+.stor-header-rail .modern-header-title-px { letter-spacing: 0px; }
 
 /* Wallet bar heightened to fit both the Zen balance (top row) and the Storage Fee line
    CStorageInventory::RenderText() used to draw -- left/width stay the shared default (15/160). */
@@ -49,14 +53,17 @@
 	pointer-events: none;
 }
 
-/* Action row: base.rcss's shared .modern-icon-btn-px family at its default geometry (37x26,
-   top:392) -- same 4-slot spacing MyInventory's own row uses (15/56/97/138); base.rcss's own
-   comment on this class family names Storage explicitly as a consumer. */
+/* Action row: base.rcss's shared .modern-icon-btn-px family (26 high, top:392); base.rcss's own
+   comment on this class family names Storage explicitly as a consumer. Five slots with the sort
+   button (InventorySort.h), so 29 wide with a 3 px gap: 15/47/79/111/143, ending at 172, clear of
+   the frame's right edge (190). */
+.stor-btn-insert, .stor-btn-take, .stor-btn-lock, .stor-btn-expand, .stor-sort-btn { width: 29px; }
 .stor-btn-insert { left: 15px;  }
-.stor-btn-take   { left: 56px;  }
-.stor-btn-lock   { left: 97px;  }
+.stor-btn-take   { left: 47px;  }
+.stor-btn-lock   { left: 79px;  }
 .stor-btn-lock.locked-mode { color: token(accent-gold-hover); border-color: token(border-hover); }
-.stor-btn-expand { left: 138px; }
+.stor-btn-expand { left: 111px; }
+.stor-sort-btn   { left: 143px; }
 
 /* Native item grid: the first cell's top-left, in #panel's units. */
 .native-anchor { position: absolute; pointer-events: none; }
@@ -157,12 +164,12 @@
 #panel.slot-placed { pointer-events: none; }
 
 /* The vault page arrows on the header rail's right (VaultPages.h), after the left-aligned title and
-   clear of the corner close (x 163-187): small forged buttons with a triangle. Dimmed while a switch
-   waits or an item is held. */
+   clear of the corner close (x 163-187): small forged buttons with a triangle, x 127-143 and 145-161.
+   Dimmed while a switch or a sort waits or an item is held. */
 .stor-page-btn {
 	position: absolute;
 	top: 14px;
-	width: 18px;
+	width: 16px;
 	height: 18px;
 	cursor: pointer;
 	pointer-events: auto;
@@ -177,13 +184,22 @@
 .stor-page-btn:hover { color: token(accent-gold-hover); border-color: token(border-hover); }
 .stor-page-btn.hidden { display: none; }
 .stor-page-btn.busy { pointer-events: none; filter: brightness(0.5); }
-.stor-page-prev { left: 121px; }
-.stor-page-next { left: 142px; }
+.stor-page-prev { left: 127px; }
+.stor-page-next { left: 145px; }
 .stor-page-glyph {
 	font-family: "DejaVu Sans";
 	font-size: 9px;
 	pointer-events: none;
 }
+/* The sort button (InventorySort.h) in the action row (above): three bars short to long; dimmed and deaf
+   while it can't sort. */
+.stor-sort-btn.busy { pointer-events: none; filter: brightness(0.5); }
+.stor-sort-icon { position: absolute; left: 50%; top: 50%; width: 10px; height: 7px; margin-left: -5px; margin-top: -4px; pointer-events: none; }
+.stor-sort-bar { position: absolute; left: 0; height: 1px; background-color: token(text-secondary); }
+.stor-sort-bar-1 { top: 0; width: 4px; }
+.stor-sort-bar-2 { top: 3px; width: 7px; }
+.stor-sort-bar-3 { top: 6px; width: 10px; }
+.stor-sort-btn:hover .stor-sort-bar { background-color: token(accent-gold-hover); }
 
 /* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode), as the legacy theme
    lays it out: the full 432 height of the dock, 42 px cells, 8 of the 15 rows on view
@@ -197,6 +213,15 @@
 	.stor-page-prev { left: 296px; }
 	.stor-page-next { left: 334px; }
 	.stor-page-glyph { font-size: 13px; }
+	/* The sort button as big as them, left of them in the header (the action row runs down the right side
+	   here, its four buttons back to their own 37 width). */
+	.stor-btn-insert, .stor-btn-take, .stor-btn-lock, .stor-btn-expand { width: 37px; }
+	.stor-sort-btn { left: 258px; top: 6px; bottom: auto; width: 32px; height: 28px; }
+	.stor-sort-icon { width: 18px; height: 12px; margin-left: -9px; margin-top: -6px; }
+	.stor-sort-bar { height: 2px; }
+	.stor-sort-bar-1 { width: 7px; }
+	.stor-sort-bar-2 { top: 5px; width: 12px; }
+	.stor-sort-bar-3 { top: 10px; width: 18px; }
 
 	/* The grid's first cell at (16, 42). */
 	#grid_viewport { left: 10px; top: 36px; }

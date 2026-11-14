@@ -53,6 +53,11 @@ namespace mu::ui::window
             // page, dimmed while a switch waits for its answer or an item is on the cursor.
             bool pagesVisible = false;
             bool pagesBusy = false;
+            // The sort button beside the arrows (UI/Inventory/InventorySort.h): shown once the server told the page
+            // (it has the add-on), dimmed while it can't sort.
+            bool sortVisible = false;
+            bool sortBusy = false;
+            Rml::String sortTooltip;
 
             Rml::String zenText;
             Rml::String zenTier; // UI::RmlBridge::GoldTierKey() of the amount, legacy only
@@ -87,6 +92,8 @@ namespace mu::ui::window
         // Whether the window was open last frame: opening asks the server for the page, closing forgets it.
         bool m_bWasVisible = false;
         void StepPage(int step);
+        // The sort button is dimmed (UI/Inventory/InventorySort.h), or a page switch or a vault auto-move waits.
+        bool IsSortBusy() const;
 
     public:
         CStorageInventory();

@@ -15084,6 +15084,18 @@
   <data name="GamepadOff" xml:space="preserve">
     <value>Выкл.</value>
   </data>
+  <data name="GamepadDeadZoneRow" xml:space="preserve">
+    <value>Мёртвая зона стиков</value>
+  </data>
+  <data name="GamepadPointerSpeedRow" xml:space="preserve">
+    <value>Скорость курсора геймпада</value>
+  </data>
+  <data name="GamepadGlyphsRow" xml:space="preserve">
+    <value>Значки кнопок</value>
+  </data>
+  <data name="GamepadGlyphsAuto" xml:space="preserve">
+    <value>Авто (по геймпаду)</value>
+  </data>
   <data name="ControlsTouch" xml:space="preserve">
     <value>Сенсорный экран</value>
   </data>
@@ -15202,7 +15214,7 @@
     <value>A: нажмите — ударить цель, держите — продолжать бой; без монстров рядом — поднять (держите) или поговорить с NPC</value>
   </data>
   <data name="PadHelpSkills" xml:space="preserve">
-    <value>X, Y, B: три кнопки умений. Держите RT: X и Y применяют умения 4 и 5. RB: кого из группы лечить и баффать</value>
+    <value>X, Y, B: три кнопки умений. Держите RT: X, Y и B применяют умения 4–6. RB: кого из группы лечить и баффать</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
     <value>LS (нажмите левый стик, не наклоняя): расставить умения по кнопкам</value>
@@ -15232,7 +15244,7 @@
     <value>После ворот или смены карты отпустите стик, чтобы снова идти</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>В окне вместо курсора рамка. Крестовина или левый стик: к следующей ячейке или кнопке (за последним рядом список прокручивается). A: взять, положить, нажать. X: надеть, использовать. Y: карточка вещи. Правый стик: свободный курсор</value>
+    <value>В окне вместо курсора рамка. Крестовина или левый стик: к следующей ячейке или кнопке (за последним рядом список прокручивается). A: взять, положить, нажать. X: надеть, использовать. Y: карточка вещи. RB: следующее окно, RT: следующая страница или вкладка. Правый стик: свободный курсор</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
     <value>Нажмите — применить один раз, держите — повторять. Телепорт прыгает туда, куда наклонён левый стик</value>
@@ -15301,10 +15313,10 @@
     <value>Слишком далеко: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Выберите умение курсором и A, потом нажмите X, Y или B (RT + X или Y для кнопок 4 и 5), куда его поставить</value>
+    <value>Выберите умение курсором и A, потом нажмите X, Y или B (RT + X, Y или B для кнопок 4–6), куда его поставить</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Нажмите X, Y или B (RT + X или Y для кнопок 4 и 5), куда поставить умение</value>
+    <value>Нажмите X, Y или B (RT + X, Y или B для кнопок 4–6), куда поставить умение</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>Ввести</value>
@@ -15879,6 +15891,99 @@
   <data name="PadDialogNo" xml:space="preserve">
     <value>Нет / Отмена</value>
   </data>
+  <data name="PadNextWindow" xml:space="preserve">
+    <value>Окно</value>
+  </data>
+  <data name="PadNextPage" xml:space="preserve">
+    <value>Страница</value>
+  </data>
+  <data name="PadCardTitle" xml:space="preserve">
+    <value>Управление геймпадом</value>
+  </data>
+  <data name="PadCardWorld" xml:space="preserve">
+    <value>В мире</value>
+  </data>
+  <data name="PadCardWindows" xml:space="preserve">
+    <value>В окнах</value>
+  </data>
+  <data name="PadCardPage" xml:space="preserve">
+    <value>Страница</value>
+  </data>
+  <data name="PadCardWalk" xml:space="preserve">
+    <value>Идти</value>
+  </data>
+  <data name="PadCardTarget" xml:space="preserve">
+    <value>Толчок: следующая цель, нажатие: ближайшая</value>
+  </data>
+  <data name="PadCardPotions" xml:space="preserve">
+    <value>Зелья Q и W</value>
+  </data>
+  <data name="PadCardFriend" xml:space="preserve">
+    <value>Следующий в группе для лечения и баффов</value>
+  </data>
+  <data name="PadCardHelper" xml:space="preserve">
+    <value>MU Helper вкл. и выкл. (удержание: настройки)</value>
+  </data>
+  <data name="PadCardPickUp" xml:space="preserve">
+    <value>Поднять (удержание: собрать всё)</value>
+  </data>
+  <data name="PadCardMap" xml:space="preserve">
+    <value>Карта (удержание: телепорт)</value>
+  </data>
+  <data name="PadCardBag" xml:space="preserve">
+    <value>Инвентарь</value>
+  </data>
+  <data name="PadCardAttack" xml:space="preserve">
+    <value>Атака, разговор, меню игрока</value>
+  </data>
+  <data name="PadCardSkills" xml:space="preserve">
+    <value>Умения 1–3</value>
+  </data>
+  <data name="PadCardMoreSkills" xml:space="preserve">
+    <value>Умения 4–6</value>
+  </data>
+  <data name="PadCardSocial" xml:space="preserve">
+    <value>Общение</value>
+  </data>
+  <data name="PadCardMenu" xml:space="preserve">
+    <value>Меню героя (удержание: чат)</value>
+  </data>
+  <data name="PadCardPicker" xml:space="preserve">
+    <value>Выбор умений</value>
+  </data>
+  <data name="PadCardFrame" xml:space="preserve">
+    <value>Двигать рамку</value>
+  </data>
+  <data name="PadCardPointer" xml:space="preserve">
+    <value>Двигать курсор</value>
+  </data>
+  <data name="PadCardNextWindow" xml:space="preserve">
+    <value>Следующее окно</value>
+  </data>
+  <data name="PadCardNextPage" xml:space="preserve">
+    <value>Следующая страница или вкладка</value>
+  </data>
+  <data name="PadCardHubTabs" xml:space="preserve">
+    <value>Вкладки меню героя</value>
+  </data>
+  <data name="PadCardTake" xml:space="preserve">
+    <value>Взять, нажать</value>
+  </data>
+  <data name="PadCardUse" xml:space="preserve">
+    <value>Использовать или надеть</value>
+  </data>
+  <data name="PadCardItemCard" xml:space="preserve">
+    <value>Карточка предмета</value>
+  </data>
+  <data name="PadCardClose" xml:space="preserve">
+    <value>Закрыть, вернуть</value>
+  </data>
+  <data name="PadCardAllWindows" xml:space="preserve">
+    <value>Все окна</value>
+  </data>
+  <data name="PadCardTab" xml:space="preserve">
+    <value>Управление</value>
+  </data>
   <data name="PadAdjust" xml:space="preserve">
     <value>Изменить</value>
   </data>
@@ -16143,6 +16248,10 @@
   </data>
   <data name="BagPageBuying" xml:space="preserve">
     <value>Открываем...</value>
+  </data>
+  <!-- Sort button of the bag and the vault (UI/Inventory/InventorySort.h) -->
+  <data name="InventorySortHint" xml:space="preserve">
+    <value>Сортировать предметы</value>
   </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">

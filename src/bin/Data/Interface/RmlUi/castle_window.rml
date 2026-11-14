@@ -25,7 +25,7 @@
 
 		<!-- Long tab labels can overflow their 40px tab as in the original client. -->
 		<div class="cw-tabs">
-			<div class="cw-tab" data-for="t, i : tabs" data-class-selected="t.selected"
+			<div class="cw-tab pad-page" data-for="t, i : tabs" data-class-selected="t.selected"
 			     data-event-click="senatus_tab(i)">
 				<span class="sharp-text sharp-middle cw-tab-label"
 				      data-style-font-size="t.text_px + 'px'" data-style-line-height="line_height_px + 'px'">{{t.label}}</span>

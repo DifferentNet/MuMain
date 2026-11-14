@@ -125,7 +125,8 @@ namespace mu::ui::window
         // Custom-dropdown mechanism (option_window.rml's own .option-dropdown family; RmlUi's
         // native <select> isn't used here) -- dropdownId is 0=resolution,1=fpsCap,2=theme,
         // 3=language,4=font,5=uiScale,6=antialiasing,7=anisotropy,8=interfaceView,9=controls,
-        // 10=touchButtons,11=gamepad,12=graphicsPreset,13=sharpen,14=sunShadows,15=hdTextureSize, matching model.openDropdown's
+        // 10=touchButtons,11=gamepad,12=graphicsPreset,13=sharpen,14=sunShadows,15=hdTextureSize,
+        // 16=gamepadDeadZone,17=gamepadSpeed,18=gamepadGlyphs, matching model.openDropdown's
         // own comment (OptionWindow.h).
         // RmlDropdownOptionClick dispatches to RmlResolutionChanged()/RmlFpsCapChanged()/etc. per
         // dropdownId.
@@ -247,6 +248,10 @@ namespace mu::ui::window
         void RmlTouchButtonsChanged(int index);
         // MU Moldova: whether the game reads a gamepad (Core::Input::Gamepad::SetEnabled).
         void RmlGamepadChanged(int index);
+        // MU Moldova: the pad's sticks' dead zone, its pointer's speed and its button glyphs.
+        void RmlGamepadDeadZoneChanged(int index);
+        void RmlGamepadSpeedChanged(int index);
+        void RmlGamepadGlyphsChanged(int index);
         void RmlClickClose();
 
         // One tuning slider (UI::Options::TuningRow) as the RmlUi model binds it.
@@ -297,7 +302,8 @@ namespace mu::ui::window
             // field rather than one bool per dropdown gives exclusivity for free -- opening one
             // overwrites whichever other id was here, no separate "close the others" step needed.
             // 0=resolution, 1=fpsCap, 2=theme, 3=language, 4=font, 5=uiScale, 6=antialiasing,
-            // 7=anisotropy, 8=interfaceView, 9=controls, 10=touchButtons, 11=gamepad, 12=graphicsPreset, 13=sharpen, 14=sunShadows, 15=hdTextureSize (RmlToggleDropdown()/
+            // 7=anisotropy, 8=interfaceView, 9=controls, 10=touchButtons, 11=gamepad, 12=graphicsPreset, 13=sharpen, 14=sunShadows, 15=hdTextureSize,
+            // 16=gamepadDeadZone, 17=gamepadSpeed, 18=gamepadGlyphs (RmlToggleDropdown()/
             // RmlDropdownOptionClick()'s own ids). Replaces RmlUi's native <select>/<option>
             // (WidgetDropDown) entirely -- see option_window.rml's own history for why: that
             // widget's own generated selectbox/selectvalue/selectarrow sub-elements need CSS this
@@ -596,6 +602,19 @@ namespace mu::ui::window
             int gamepadIndex = 0;
             Rml::String gamepadRowLabel;
             Rml::String gamepadValueLabel;
+            // The pad's tuning, shown while the pad is on: dead zone, pointer speed, button glyphs.
+            std::vector<Rml::String> gamepadDeadZoneLabels;
+            int gamepadDeadZoneIndex = 0;
+            Rml::String gamepadDeadZoneRowLabel;
+            Rml::String gamepadDeadZoneValueLabel;
+            std::vector<Rml::String> gamepadSpeedLabels;
+            int gamepadSpeedIndex = 0;
+            Rml::String gamepadSpeedRowLabel;
+            Rml::String gamepadSpeedValueLabel;
+            std::vector<Rml::String> gamepadGlyphsLabels;
+            int gamepadGlyphsIndex = 0;
+            Rml::String gamepadGlyphsRowLabel;
+            Rml::String gamepadGlyphsValueLabel;
         };
         void BindRmlModel(Rml::DataModelConstructor& c, OptionRmlModel& model);
         void SyncImpliedEffectRows(OptionRmlModel& model);

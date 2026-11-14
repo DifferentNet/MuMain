@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "UI/HUD/GamepadControls.h"
 
+#include "Audio/DSPlaySound.h"
 #include "Core/Input/GamepadInput.h"
 #include "Core/Input/GamepadPointer.h"
 #include "Core/Input/GamepadStepper.h"
@@ -9,6 +10,7 @@
 #include "Core/Input/TouchInput.h"
 #include "Core/Input/UiInputRouter.h"
 #include "Core/Platform/GameWindow.h"
+#include "Data/GameConfig/GameConfig.h"
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzInterface.h"
@@ -26,6 +28,7 @@
 #include "UI/Dialogs/HelpWindow.h"
 #include "UI/Dialogs/ModalDialogs.h"
 #include "UI/HUD/MainFrameWindow.h"
+#include "UI/HUD/PadCard.h"
 #include "UI/HUD/PadFrame.h"
 #include "UI/HUD/PadHub.h"
 #include "UI/HUD/PadKeyboard.h"
@@ -125,7 +128,7 @@ enum class Page : std::uint8_t
 };
 
 // The pad buttons that press a control as long as they are held, laid out as Diablo's pads: A attacks,
-// X, Y and B cast (with RT held, X and Y the next skills), the bumper and trigger on the left drink.
+// X, Y and B cast (with RT held, X, Y and B the next skills), the bumper and trigger on the left drink.
 struct Mapping
 {
     Button pad;
@@ -140,6 +143,8 @@ constexpr Mapping Mappings[] = {
     {Button::B, PadButton::Skill2, When::World, Page::Main},
     {Button::X, PadButton::Skill3, When::World, Page::Alt},
     {Button::Y, PadButton::Skill4, When::World, Page::Alt},
+    // The sixth skill (pad round 3): only while the touch controls have six buttons in play.
+    {Button::B, PadButton::Skill5, When::World, Page::Alt},
     {Button::B, PadButton::Back, When::Window},
     {Button::LeftShoulder, PadButton::PotionQ, When::Always, Page::Main},
     {Button::LeftTrigger, PadButton::PotionW, When::Always, Page::Main},
@@ -498,17 +503,33 @@ void ReleaseForWorldChange(SDL_Window* window)
     PauseWalking();
     // The frame starts anew on the other side: on the screen's first control, or the first window opened.
     UI::HUD::PadFrame::Reset();
+    UI::HUD::PadCard::Close();
     g_state.frameOpen = false;
     g_state.windowOpen = false;
     g_state.onCharacters = false;
 }
 
-void TellOnce()
+// The controls card shows once by itself ([UI] GamepadCardSeen), at the first press of the pad in a
+// safe zone with no window open: never over a fight. It replaces the long line the system log said.
+// `windowOpen` is this frame's (a game window or a question box). True when it opened just now: the
+// press that woke it is the card's, not a page turn or a close in the same frame.
+bool TellOnce(bool windowOpen)
 {
     if (g_state.told)
-        return;
+        return false;
+    GameConfig& config = GameConfig::GetInstance();
+    if (config.GetGamepadCardSeen())
+    {
+        g_state.told = true;
+        return false;
+    }
+    if (Hero == nullptr || !Hero->SafeZone || windowOpen || Controls::IsMenuOpen() || UI::HUD::PadHub::IsOpen())
+        return false;
     g_state.told = true;
-    g_pSystemLogBox->AddText(I18N::Game::PadConnected, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+    config.SetGamepadCardSeen(true);
+    config.Save();
+    UI::HUD::PadCard::Open();
+    return true;
 }
 
 // Presses the Menu control once: the menu of windows opens (or shuts).
@@ -564,6 +585,43 @@ void PlayMenu(SDL_Window* window, const Presses& presses, Clock::time_point now)
     }
     if (Pressed(presses, Button::B) || Pressed(presses, Button::Menu) || Pressed(presses, Button::View))
         Controls::CloseMenu();
+}
+
+// The controls card open: LB and RB or the d-pad's sides turn its page, B, A or Menu closes it. Opened
+// from the hero hub, LB and RB turn the hub's tabs instead and B closes the hub. Nothing else acts.
+void PlayCard(SDL_Window* window, const Presses& presses, Clock::time_point now)
+{
+    StopWalking();
+    EndPress(window, g_state.a, {});
+    Pointer::SetButton(window, SDL_BUTTON_RIGHT, false);
+    ReleaseControls();
+    WaitForRelease();
+    ForgetLongPresses();
+
+    const bool closes =
+        Pressed(presses, Button::B) || Pressed(presses, Button::A) || Pressed(presses, Button::Menu);
+    if (UI::HUD::PadHub::IsOpen())
+    {
+        // Another tab: its window's frame starts on its first control, as LB and RB in a window do.
+        if (Pressed(presses, Button::LeftShoulder) || Pressed(presses, Button::RightShoulder))
+        {
+            UI::HUD::PadHub::Turn(Pressed(presses, Button::LeftShoulder) ? -1 : 1, now);
+            UI::HUD::PadFrame::SnapSoon();
+        }
+        else if (Pressed(presses, Button::DpadLeft))
+            UI::HUD::PadCard::Turn(-1);
+        else if (Pressed(presses, Button::DpadRight))
+            UI::HUD::PadCard::Turn(1);
+        else if (closes)
+            UI::HUD::PadHub::Close();
+        return;
+    }
+    if (Pressed(presses, Button::LeftShoulder) || Pressed(presses, Button::DpadLeft))
+        UI::HUD::PadCard::Turn(-1);
+    else if (Pressed(presses, Button::RightShoulder) || Pressed(presses, Button::DpadRight))
+        UI::HUD::PadCard::Turn(1);
+    else if (closes)
+        UI::HUD::PadCard::Close();
 }
 
 // The sticks' own buttons count only when pressed on purpose, read every frame the pad plays.
@@ -725,6 +783,29 @@ void TurnHubTabs(Presses& presses, Clock::time_point now)
         return;
     UI::HUD::PadHub::Turn(step, now);
     UI::HUD::PadFrame::SnapSoon();
+}
+
+// Over the windows (pad round 3, 2026-11-13): RB takes the frame to the next window (the bag and the
+// vault, shop, trade or crafting box side by side), RT turns the page where a window has pages (the
+// bag's tabs, the vault's next page, a window's tabs). The hub's own tabs and the help's pages keep RB
+// (they take it first).
+void PlayWindowKeys(Presses& presses)
+{
+    for (const Button button : {Button::RightShoulder, Button::RightTrigger})
+    {
+        if (Held(button))
+            g_state.waitForRelease[static_cast<int>(button)] = true;
+    }
+    if (Take(presses, Button::RightShoulder) && UI::HUD::PadFrame::WindowCount() >= 2)
+    {
+        UI::HUD::PadFrame::NextWindow();
+        PlayBuffer(SOUND_CLICK01);
+    }
+    if (Take(presses, Button::RightTrigger) && UI::HUD::PadTargets::TurnPage(UI::HUD::PadFrame::CurrentWindow()))
+    {
+        UI::HUD::PadFrame::SnapSoon();
+        PlayBuffer(SOUND_CLICK01);
+    }
 }
 
 // Over a list that scrolls (a shop, the quests, the chat's scrollbar), d-pad up and down turn the mouse
@@ -1055,6 +1136,11 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
         g_state.aActive = now;
     UI::HUD::PadHub::Update(now);
     g_state.promptDrop = -1;
+    if (UI::HUD::PadCard::IsOpen())
+    {
+        PlayCard(window, presses, now);
+        return;
+    }
     if (Controls::IsMenuOpen())
     {
         PlayMenu(window, presses, now);
@@ -1082,7 +1168,11 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
         TurnHelpPages(presses);
         TurnHubTabs(presses, now);
         if (frameOpen)
+        {
             PlayHeldItem(presses);
+            if (!UI::HUD::PadTargets::OnDialog())
+                PlayWindowKeys(presses);
+        }
         if (!frameOpen)
             TurnWheelWithDpad(window, presses, now);
         PlayPointer(window, presses, seconds);
@@ -1331,9 +1421,22 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
     // The menu of windows says its own keys and has its own highlight: the frame and the legend wait under it.
     const bool menu = Controls::IsMenuOpen();
     view.hub = UI::HUD::PadHub::IsOpen() && !dialog;
+    view.card = UI::HUD::PadCard::IsOpen();
+    view.cardPage = UI::HUD::PadCard::Page();
     // The skill picker says its own keys too.
     view.legend = g_state.frameOpen && !dialog && !menu && !UI::HUD::PadHub::IsOnSkills();
     view.frame = g_state.frameOpen && !menu && UI::HUD::PadFrame::Box(view.frameBox);
+    // The controls card covers the windows: their frame and legend wait under it.
+    if (view.card)
+    {
+        view.legend = false;
+        view.frame = false;
+    }
+    if (view.legend && !UI::HUD::PadHub::IsOpen())
+    {
+        view.legendWindows = UI::HUD::PadFrame::WindowCount() >= 2;
+        view.legendPages = UI::HUD::PadTargets::HasPages(UI::HUD::PadFrame::CurrentWindow());
+    }
     using Legend = UI::HUD::PadOverlay::View::Legend;
     if (UI::Inventory::HasPickedItem())
         view.legendSays = Legend::Holding;
@@ -1452,6 +1555,9 @@ void Play()
     const bool inUse = Pad::IsConnected() && Pad::WasUsedLast();
     if (inUse != g_state.inUse)
         SwitchUse(window, inUse);
+    // The card is the pad's own: a key, a click or a finger closes it.
+    if (!inUse)
+        UI::HUD::PadCard::Close();
     const Presses presses = TakePresses();
     if (inUse)
         UpdateStickClicks(presses, now);
@@ -1485,7 +1591,9 @@ void Play()
         PlayScreens(window, presses, seconds, now);
         return;
     }
-    TellOnce();
-    PlayWorld(window, presses, seconds, now);
+    const bool cardOpened = TellOnce(IsGameWindowOpen() || UI::Dialogs::Modal::IsOpen());
+    if (cardOpened)
+        WaitForRelease();
+    PlayWorld(window, cardOpened ? Presses{} : presses, seconds, now);
 }
 } // namespace
