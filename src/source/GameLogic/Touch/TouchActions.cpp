@@ -101,8 +101,9 @@ constexpr int ShortestTeleport = 2;
 // How far ahead the joystick walks, in tiles, and the shorter walk tried along a wall.
 constexpr int StickTiles = 4;
 constexpr int ShortStickTiles = 2;
-// The joystick turned this far (radians) from the walk under way: a new walk at once.
-constexpr float TurnToReplan = 0.35f;
+// The joystick turned this far (radians, about 15 degrees) from the walk under way: a new walk at once
+// (still at most every TurnRepeat). At 0.35 a slow arc of the thumb was followed in kinks.
+constexpr float TurnToReplan = 0.26f;
 // A walk with this many steps left is extended before the character stops.
 constexpr int StepsLeftToReplan = 2;
 

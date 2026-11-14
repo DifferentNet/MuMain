@@ -2,6 +2,7 @@
 #include "Core/Input/GamepadInput.h"
 
 #include "Core/Input/GamepadPointer.h"
+#include "Core/Input/GamepadRumble.h"
 #include "Core/Input/GamepadStick.h"
 #include "Core/Utilities/Log/MuLogger.h"
 
@@ -412,6 +413,10 @@ PadKind ShownKind()
 void Rumble(float low, float high, int milliseconds)
 {
     if (!g_rumble || !IsEnabled() || milliseconds <= 0)
+        return;
+    // SDL replaces the shake under way: a weaker one would cut a stronger one short.
+    static RumbleArbiter s_arbiter;
+    if (!s_arbiter.Take(low, high, milliseconds, RumbleArbiter::Clock::now()))
         return;
     const auto strength = [](float share) {
         return static_cast<Uint16>(std::clamp(share, 0.f, 1.f) * 65535.f);

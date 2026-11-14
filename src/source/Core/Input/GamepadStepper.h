@@ -1,6 +1,6 @@
 // The d-pad and the left stick stepping through a grid of choices (the pad's window menu, its
 // on-screen keyboard): one step as soon as they point somewhere, another after a pause while held,
-// then one at a steady pace, quicker after a long hold (a long list). A d-pad tap that began and
+// then one at a steady pace, the stick's quicker after a long hold (a long list). A d-pad tap that began and
 // ended between two frames (a slow phone) still steps.
 #pragma once
 
@@ -40,7 +40,7 @@ public:
 
     Stepper(Clock::duration firstRepeat, Clock::duration repeat);
 
-    // Once a frame: the step to take now, or none. After a long hold the pace quickens.
+    // Once a frame: the step to take now, or none. After a long hold the stick's pace quickens.
     Step Take(const Presses& presses, Clock::time_point now) { return Take(ReadAim(), presses, now); }
     // The same with the pad's state given: the stepping alone, for the tests.
     Step Take(const Aim& aim, const Presses& presses, Clock::time_point now);

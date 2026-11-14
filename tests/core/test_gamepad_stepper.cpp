@@ -108,6 +108,19 @@ TEST_CASE("a held stick steps, waits, then repeats, quicker after a long hold [c
     CHECK(IsStep(stepper.Take(right, NoPresses, start + LongHold + milliseconds(65)), 1, 0));
 }
 
+TEST_CASE("a held d-pad keeps its pace after a long hold [core][gamepad]")
+{
+    Pad::Stepper stepper{FirstRepeat, Repeat};
+    const Clock::time_point start = Clock::now();
+    Pad::Aim down;
+    down.dpad = {0, 1};
+
+    CHECK(IsStep(stepper.Take(down, NoPresses, start), 0, 1));
+    CHECK(IsStep(stepper.Take(down, NoPresses, start + LongHold), 0, 1));
+    CHECK(IsStill(stepper.Take(down, NoPresses, start + LongHold + milliseconds(65))));
+    CHECK(IsStep(stepper.Take(down, NoPresses, start + LongHold + Repeat), 0, 1));
+}
+
 TEST_CASE("a d-pad tap between two frames still steps [core][gamepad]")
 {
     Pad::Stepper stepper{FirstRepeat, Repeat};

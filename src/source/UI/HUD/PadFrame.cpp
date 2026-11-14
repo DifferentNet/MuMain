@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "UI/HUD/PadFrame.h"
 
+#include "Audio/DSPlaySound.h"
 #include "Core/Input/GamepadInput.h"
 #include "Core/Input/GamepadPointer.h"
 #include "Core/Input/GamepadStick.h"
@@ -34,10 +35,12 @@ constexpr float Anywhere = std::numeric_limits<float>::max();
 constexpr int MinWaitFrames = 2;
 // How long the frame waits before it snaps (a window opened), moves on from a target gone, or goes
 // back after a dialog.
-constexpr auto SnapDelay = std::chrono::milliseconds(35);
+constexpr auto SnapDelay = std::chrono::milliseconds(30);
 // A window that opens this long after the one the frame started in (the NPC shop after the
 // inventory, its goods come from the server) takes the frame there, while it has not moved yet.
 constexpr auto SettleTime = std::chrono::milliseconds(750);
+// A hop ticks (the game's quiet button-move sound), but not quicker than this: a fast repeat stays calm.
+constexpr auto TickRepeat = std::chrono::milliseconds(100);
 // The NPC shop's window: its cells are goods, A buys them.
 constexpr std::string_view ShopDocument = "npc_shop.rml";
 // The crafting box: its items have no card.
@@ -113,6 +116,8 @@ struct State
     std::map<int, Point> windowPlaces;
     int windowCount = 0;
     int currentWindow = -1;
+    // When the last hop ticked.
+    Clock::time_point tickedAt{};
 };
 State g_state;
 // Reused each frame, not built anew.
@@ -218,21 +223,36 @@ void JumpToNextWindow(SDL_Window* window, std::span<const Pick::Target> targets,
         MoveOnto(window, inNext[pick], scale);
 }
 
-void Hop(SDL_Window* window, std::span<const Pick::Target> targets, int from, Pad::Step step, float scale)
+// The d-pad or the stick moves the frame that way; false when it stayed (no target that way).
+bool Hop(SDL_Window* window, std::span<const Pick::Target> targets, int from, Pad::Step step, float scale)
 {
     if (from == Pick::None)
     {
         const Point here = PointerPlace(scale);
         const int nearest = Pick::Nearest(targets, here.x, here.y, Anywhere);
-        if (nearest != Pick::None)
-            MoveOnto(window, targets[nearest], scale);
-        return;
+        if (nearest == Pick::None)
+            return false;
+        MoveOnto(window, targets[nearest], scale);
+        return true;
     }
     const int next = Pick::NextThatWay(targets, from, step.dx, step.dy);
     if (ScrollsInstead(targets, from, next, step.dy))
+    {
         UI::HUD::PadTargets::ScrollList(targets[from].list, step.dy);
-    else if (next != Pick::None)
-        MoveOnto(window, targets[next], scale);
+        return true;
+    }
+    if (next == Pick::None)
+        return false;
+    MoveOnto(window, targets[next], scale);
+    return true;
+}
+
+void Tick(Clock::time_point now)
+{
+    if (now - g_state.tickedAt < TickRepeat)
+        return;
+    g_state.tickedAt = now;
+    PlayBuffer(SOUND_MENU01);
 }
 
 // The right stick: while it moves the pointer the frame follows it; let go off every target, the
@@ -259,10 +279,14 @@ namespace UI::HUD::PadFrame
 {
 void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
 {
+    Update(window, presses, now, PadTargets::Collect());
+}
+
+void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now, std::span<const Pick::Target> targets)
+{
     Rml::Context* context = RmlUiRuntime::Instance().GetContext();
     if (window == nullptr || context == nullptr)
         return;
-    const std::span<const Pick::Target> targets = PadTargets::Collect();
     const float scale = ContextScale(window, *context);
     Point here = PointerPlace(scale);
     int current = Pick::At(targets, here.x, here.y);
@@ -371,8 +395,8 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now)
     // On a slider the d-pad's sides change it; up and down leave it.
     if (step.dx != 0 && step.dy == 0 && current != Pick::None && targets[current].gauge)
         PadTargets::StepGauge(current, step.dx);
-    else if (step.dx != 0 || step.dy != 0)
-        Hop(window, targets, current, step, scale);
+    else if ((step.dx != 0 || step.dy != 0) && Hop(window, targets, current, step, scale))
+        Tick(now);
     if (g_state.nextWindowPending)
     {
         g_state.nextWindowPending = false;

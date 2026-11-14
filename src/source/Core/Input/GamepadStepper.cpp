@@ -12,7 +12,7 @@ constexpr float LeanIn = 0.6f;
 constexpr float LeanOut = 0.4f;
 // How much bigger the other axis must grow before the stick turns to it.
 constexpr float AxisTurn = 1.3f;
-// After this long a hold, the pace quickens to FastRepeat.
+// After this long a hold of the stick, its pace quickens to FastRepeat (the d-pad keeps its own).
 constexpr auto LongHold = std::chrono::milliseconds(1200);
 constexpr auto FastRepeat = std::chrono::milliseconds(60);
 
@@ -80,7 +80,7 @@ Step Stepper::Take(const Aim& aim, const Presses& presses, Clock::time_point now
     }
     if (now < m_Next)
         return {};
-    const bool longHold = now - m_HeldSince >= LongHold;
+    const bool longHold = IsStill(aim.dpad) && now - m_HeldSince >= LongHold;
     m_Next = now + (longHold ? std::min<Clock::duration>(m_Repeat, FastRepeat) : m_Repeat);
     return pointing;
 }

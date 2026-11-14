@@ -43,8 +43,9 @@
 // While a text field has the keys (the chat, the login), the on-screen keyboard (UI/HUD/PadKeyboard)
 // has the pad and nothing else acts.
 //
-// The pad shakes as the hero takes a hard blow (as hard as it hurt) and long on the death, unless the
-// player chose "On, no vibration" (Options -> Interface -> Gamepad).
+// The pad shakes as the hero takes a hard blow (as hard as it hurt), long on the death, softly on a level
+// up and lightly on a drop the loot filter highlights near the hero, unless the player chose "On, no
+// vibration" (Options -> Interface -> Gamepad). A weaker shake never cuts a stronger one short.
 #pragma once
 
 namespace UI::HUD::GamepadControls

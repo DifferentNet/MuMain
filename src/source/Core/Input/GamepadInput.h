@@ -96,7 +96,8 @@ void Reset();
 void SetRumble(bool on);
 [[nodiscard]] bool IsRumbleOn();
 // Shakes the pads for `milliseconds`: `low` the heavy motor, `high` the light one, each 0 .. 1. Nothing
-// with vibration off, the pad off or a pad without motors (a browser without the vibration API).
+// with vibration off, the pad off or a pad without motors (a browser without the vibration API). A
+// weaker shake while a stronger one still runs is dropped (Core/Input/GamepadRumble.h).
 void Rumble(float low, float high, int milliseconds);
 
 // The kind of the pad pressed last (of the one connected last until then); Xbox with none.

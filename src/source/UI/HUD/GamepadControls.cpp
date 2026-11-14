@@ -14,6 +14,7 @@
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzInterface.h"
+#include "GameLogic/Items/LootFilterRuntime.h"
 #include "GameLogic/Touch/TouchActions.h"
 #include "I18N/All.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
@@ -105,7 +106,7 @@ constexpr auto FlickFirstRepeat = std::chrono::milliseconds(450);
 constexpr auto FlickRepeat = std::chrono::milliseconds(250);
 // A pick is felt as a short light tick of the pad's small motor.
 constexpr float PickTickStrength = 0.22f;
-constexpr int PickTickMilliseconds = 28;
+constexpr int PickTickMilliseconds = 40;
 
 // When a pad button presses its control: always, only in the world (no window open: the right stick
 // picks targets), only while a window is open (the right stick plays the pointer), or anywhere but over
@@ -274,6 +275,8 @@ struct State
     // The on-screen keyboard has the pad (UI/HUD/PadKeyboard).
     bool typing = false;
     Clock::time_point lastFrame{};
+    // Seconds since the last frame (FrameSeconds), for the overlay's glide.
+    float frameSeconds = 0.f;
     Pad::Stepper menuStepper{MenuFirstRepeat, MenuRepeat};
 };
 State g_state;
@@ -1291,7 +1294,8 @@ void PlayCharacters(const Presses& presses)
 // face buttons work the characters (PlayCharacters). B is Esc, Menu Enter.
 void PlayScreens(SDL_Window* window, Presses presses, float seconds, Clock::time_point now)
 {
-    const bool frameOpen = !UI::HUD::PadTargets::Collect().empty();
+    const std::span<const UI::HUD::PadTargetPick::Target> targets = UI::HUD::PadTargets::Collect();
+    const bool frameOpen = !targets.empty();
     const bool onCharacters = !frameOpen && OnCharacterBar();
     if (frameOpen != g_state.frameOpen || onCharacters != g_state.onCharacters)
     {
@@ -1314,7 +1318,7 @@ void PlayScreens(SDL_Window* window, Presses presses, float seconds, Clock::time
     if (frameOpen)
     {
         Pointer::Move(window, right.x, right.y, seconds, true);
-        UI::HUD::PadFrame::Update(window, presses, now);
+        UI::HUD::PadFrame::Update(window, presses, now, targets);
     }
     else
     {
@@ -1430,6 +1434,59 @@ void FeelBlows(bool playing)
         return;
     const float strength = std::min(share / FullBlowShare, 1.f);
     Pad::Rumble(0.25f + 0.75f * strength, 0.4f + 0.6f * strength, BlowMilliseconds);
+}
+
+// A level up is felt as one soft swell of both motors.
+constexpr float LevelUpLow = 0.35f;
+constexpr float LevelUpHigh = 0.5f;
+constexpr int LevelUpMilliseconds = 300;
+// A drop the loot filter highlights, falling this near the hero (tiles), is felt as a light tick, longer than a pick's.
+constexpr int HighlightNearTiles = 8;
+constexpr float HighlightLow = 0.f;
+constexpr float HighlightHigh = 0.35f;
+constexpr int HighlightMilliseconds = 90;
+
+struct Gains
+{
+    bool known = false;
+    int level = 0;
+    unsigned highlights = 0;
+};
+Gains g_gains;
+
+bool NearHero(const OBJECT& object, int tiles)
+{
+    const float dx = object.Position[0] - Hero->Object.Position[0];
+    const float dy = object.Position[1] - Hero->Object.Position[1];
+    const float reach = static_cast<float>(tiles) * TERRAIN_SCALE;
+    return dx * dx + dy * dy <= reach * reach;
+}
+
+// Like FeelBlows: a level up and a highlighted drop near the hero shake the pad while it plays the world;
+// out of it only the last seen level and drop count are forgotten (a reset or a map change is no level up).
+void FeelGains(bool playing)
+{
+    namespace Loot = GameLogic::Items::LootFilterRuntime;
+    if (!playing || Hero == nullptr || CharacterAttribute == nullptr)
+    {
+        g_gains.known = false;
+        return;
+    }
+    Gains now;
+    now.known = true;
+    now.level = CharacterAttribute->Level;
+    now.highlights = Loot::FreshHighlights();
+    const Gains before = std::exchange(g_gains, now);
+    if (!before.known)
+        return;
+    if (now.level > before.level)
+        Pad::Rumble(LevelUpLow, LevelUpHigh, LevelUpMilliseconds);
+    if (now.highlights == before.highlights)
+        return;
+    const int drop = Loot::LastFreshHighlight();
+    if (drop >= 0 && drop < MAX_ITEMS && ::Items[drop].Object.Live && Loot::IsHighlighted(drop) &&
+        NearHero(::Items[drop].Object, HighlightNearTiles))
+        Pad::Rumble(HighlightLow, HighlightHigh, HighlightMilliseconds);
 }
 
 // What the overlay shows this frame: the frame, the hub's tabs, the legend over a game window, the
@@ -1570,7 +1627,8 @@ void Update()
     Play();
     const bool playing = g_state.inUse && !g_state.typing;
     FeelBlows(g_state.inUse && g_state.inWorld && IsInWorld());
-    UI::HUD::PadOverlay::Update(OverlayView(playing));
+    FeelGains(g_state.inUse && g_state.inWorld && IsInWorld());
+    UI::HUD::PadOverlay::Update(OverlayView(playing), g_state.frameSeconds);
 }
 
 void LateUpdate()
@@ -1586,6 +1644,7 @@ void Play()
     SDL_Window* window = Core::Platform::GameWindow();
     const Clock::time_point now = Clock::now();
     const float seconds = FrameSeconds(now);
+    g_state.frameSeconds = seconds;
     // Chosen anew in the world with no window open (PlayWorld); none elsewhere.
     g_state.meet = -1;
     Pad::Poll();
@@ -1604,6 +1663,8 @@ void Play()
     if (typing)
     {
         HandToKeyboard(window);
+        // The one chosen stays lit and named while the keyboard is up.
+        g_state.meet = GameLogic::Touch::MeetIndex();
         return;
     }
     g_state.typing = false;

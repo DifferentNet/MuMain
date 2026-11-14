@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <limits>
 #include <optional>
 #include <string_view>
@@ -194,6 +195,7 @@ public:
         m_Targets.clear();
         m_Elements.clear();
         m_Items.clear();
+        m_LookOnlyGrid = nullptr;
         m_Popup = nullptr;
         m_OnPopup = false;
         m_ListCount = 0;
@@ -279,16 +281,17 @@ private:
         target.slot = element.IsClassSet(SlotClass);
         target.start = element.IsClassSet(StartClass);
         target.gauge = element.IsClassSet(GaugeClass);
-        target.empty = (target.cell && element.GetClassNames().find(TintPrefix) == Rml::String::npos)
-                       || (target.slot && element.IsClassSet(BareSlotClass))
-                       || (target.cell && element.Closest(LookOnlySelector) != nullptr);
+        // A cell's classes are read once: its tint and its item.
+        const Rml::String names = target.cell ? element.GetClassNames() : Rml::String{};
+        target.empty = (target.cell && names.find(TintPrefix) == Rml::String::npos)
+                       || (target.slot && element.IsClassSet(BareSlotClass)) || (target.cell && IsLookOnly(element));
         if (!DrawnBox(element, target.box) || Area(target.box) <= 0.f || Area(target.box) >= m_LargestArea)
             return;
         Rml::Element* list = ScrollingList(element);
         if (list != nullptr && !PlaceInList(*list, target))
             return;
         // An item on the cursor goes down cell by cell: then every cell stays its own target.
-        const int item = target.cell && !target.empty && !UI::Inventory::HasPickedItem() ? ItemOf(element) : -1;
+        const int item = target.cell && !target.empty && !UI::Inventory::HasPickedItem() ? ItemOf(names) : -1;
         if (item >= 0)
         {
             for (const ItemCells& cells : m_Items)
@@ -306,10 +309,22 @@ private:
         m_Elements.push_back(&element);
     }
 
-    // The item's top-left cell a cell carries in its pad-item- class, -1 for none.
-    static int ItemOf(const Rml::Element& element)
+    // Whether the cell lies in a grid only to look at; asked once a grid, as its cells come one after another
+    // (Closest parses its selector on every call).
+    bool IsLookOnly(const Rml::Element& cell)
     {
-        const Rml::String names = element.GetClassNames();
+        const Rml::Element* grid = cell.GetParentNode();
+        if (grid != m_LookOnlyGrid || grid == nullptr)
+        {
+            m_LookOnlyGrid = grid;
+            m_LookOnly = cell.Closest(LookOnlySelector) != nullptr;
+        }
+        return m_LookOnly;
+    }
+
+    // The item's top-left cell a cell carries in its pad-item- class (its class names), -1 for none.
+    static int ItemOf(const Rml::String& names)
+    {
         const std::size_t at = names.find(ItemPrefix);
         if (at == Rml::String::npos)
             return -1;
@@ -369,6 +384,9 @@ private:
     std::vector<Target> m_Targets;
     std::vector<Rml::Element*> m_Elements;
     std::vector<ItemCells> m_Items;
+    // The grid IsLookOnly asked about last in this pass, and its answer.
+    const Rml::Element* m_LookOnlyGrid = nullptr;
+    bool m_LookOnly = false;
     Rml::Element* m_Popup = nullptr;
     bool m_OnPopup = false;
     std::array<Rml::Element*, MostLists> m_Lists{};
@@ -381,6 +399,22 @@ private:
 
 Collector g_collector;
 bool g_onDialog = false;
+// The documents of the last Collect that are windows (IsWindow), by their index; asked once a pass.
+std::vector<bool> g_isWindow;
+// Which documents were windows in the last Collect, folded into one number: HasPages asks again when it
+// changes.
+std::size_t g_windowSet = 0;
+// HasPages' last answer, for which window and window set, and when.
+constexpr auto PagesRefresh = std::chrono::milliseconds(250);
+struct PagesSeen
+{
+    bool known = false;
+    int window = -1;
+    std::size_t windowSet = 0;
+    std::chrono::steady_clock::time_point at{};
+    bool pages = false;
+};
+PagesSeen g_pagesSeen;
 
 bool PlacedBox(Rml::ElementDocument& document, Box& box)
 {
@@ -400,23 +434,28 @@ std::span<const PadTargetPick::Target> Collect()
     if (context == nullptr)
         return {};
     g_collector.Begin(*context);
-    for (int i = 0; i < context->GetNumDocuments(); ++i)
+    const int documents = context->GetNumDocuments();
+    g_isWindow.assign(static_cast<std::size_t>(documents), false);
+    std::size_t windowSet = 0;
+    for (int i = 0; i < documents; ++i)
     {
         Rml::ElementDocument* document = context->GetDocument(i);
         if (document == nullptr || !IsWindow(*document))
             continue;
+        g_isWindow[static_cast<std::size_t>(i)] = true;
+        windowSet = windowSet * 31 + static_cast<std::size_t>(i) + 1;
         g_collector.NoteWindow(*document);
         if (IsDialog(*document))
             g_collector.AddDocument(*document, i);
     }
+    g_windowSet = windowSet;
     g_onDialog = !g_collector.Targets().empty();
     if (g_onDialog)
         return g_collector.Targets();
-    for (int i = 0; i < context->GetNumDocuments(); ++i)
+    for (int i = 0; i < documents; ++i)
     {
-        Rml::ElementDocument* document = context->GetDocument(i);
-        if (document != nullptr && IsWindow(*document))
-            g_collector.AddDocument(*document, i);
+        if (g_isWindow[static_cast<std::size_t>(i)])
+            g_collector.AddDocument(*context->GetDocument(i), i);
     }
     g_collector.KeepToPopup();
     return g_collector.Targets();
@@ -544,12 +583,19 @@ bool TurnPage(int window)
     if (control == nullptr)
         return false;
     control->Click();
+    g_pagesSeen.known = false;
     return true;
 }
 
 bool HasPages(int window)
 {
-    return PageControlFor(window) != nullptr || (window >= 0 && PageControlFor(-1) != nullptr);
+    const auto now = std::chrono::steady_clock::now();
+    PagesSeen& seen = g_pagesSeen;
+    if (seen.known && seen.window == window && seen.windowSet == g_windowSet && now - seen.at < PagesRefresh)
+        return seen.pages;
+    seen = {true, window, g_windowSet, now,
+            PageControlFor(window) != nullptr || (window >= 0 && PageControlFor(-1) != nullptr)};
+    return seen.pages;
 }
 
 bool IsIn(const PadTargetPick::Target& target, std::string_view fileName)

@@ -214,7 +214,8 @@ touch screen are not capped.
 The buttons light while held, and a tap shorter than 120 ms still lights its button that long (the
 `pressed` class, `SyncPressed` in `TouchControls.cpp`): Attack (its own red), the skills, Pick up,
 Auto, Target, Menu, Social, the key buttons (potions, Loot, the top row) and Skills; fingers and the pad
-both light them, only while fingers drive the phone's HUD (a PC's pad row looks as before).
+both light them. On a PC the pad row lights the same way while its pad button is held (X held shows
+before the skill animates).
 
 The phone view also raises the chat's and the system messages' text to at least 12 units at 100 %
 (`TouchUnit::ReadableTextPx`), with their lines and rows; the chat's well keeps its height and shows
@@ -308,6 +309,12 @@ a mouse and keys, so a press does not count twice. Turned off with the pad itsel
 until a key, a mouse button or the screen is pressed (or the pad is unplugged), and the system log
 says so: the player is never left with nothing to press (`Gamepad::TurnsOffWhenPutDown`).
 
+The pad shakes (unless "On without vibration" is chosen): a hard blow as hard as it hurt, the death
+long, a level up with one soft swell, a drop the loot filter highlights within 8 tiles with a light
+tick (sound on or off), and a target picked with the right stick with a 40 ms light tick. A weaker
+shake while a stronger one still runs is dropped, so a pick's tick does not cut a blow's shake short
+(`Core/Input/GamepadRumble.{h,cpp}`, tested in `tests/core/test_gamepad_rumble.cpp`).
+
 While the pad is in use, the touch controls show in the world (in the PC view too, over the PC bar)
 with the pad button that presses each one drawn on its corner: the Xbox glyphs (A green, B red,
 X blue, Y yellow, the bumpers, triggers, View, Menu, LS for the left stick pressed and the d-pad's
@@ -361,8 +368,10 @@ rests on an item cell, an equipment slot or a button (any element that binds a c
 list too; not the cross in a window's corner, as B closes the window), and the d-pad and the left stick hop it to the next one that way (in line before aside,
 the same window before the next window); the character stands meanwhile. The stick hops once leaned 60 % of
 the way and stops below 40 %, and keeps its way until the other axis leans 1.3 times more, so a stick held near a
-diagonal hops once, not on its wobble; held 1.2 s, the stick or the d-pad hop quicker (every 60 ms, not 100). On a list's last row on
-view, a step further scrolls the list. As a window opens or a tab turns, the frame starts on its item
+diagonal hops once, not on its wobble; held 1.2 s, the stick hops quicker (every 60 ms, not 100; the d-pad keeps its pace). On a list's last row on
+view, a step further scrolls the list. The frame glides to the next target in about 70 ms (it jumps
+when it was hidden or the move is over half the screen), and each hop ticks softly (the menu's move
+sound, not on hops faster than every 100 ms). As a window opens or a tab turns, the frame starts on its item
 cell nearest the top-left corner, or without cells on the target nearest it (a tab before the close
 button); a window that opens within 0.75 s after, before the frame moved (an NPC shop, its goods
 sent by the server after the inventory opened), takes it on the same way; when its target goes away, it
@@ -450,7 +459,7 @@ the keyboard closes act only once released, so the B that closed it does not als
 |---|---|---|
 | Layout | `UI/HUD/PadKeyboardLayout.{h,cpp}` | The pages (English, Russian, symbols, digits), their keys and widths, and moving between keys (rows centred, up and down to the nearest key's middle). Tests: `tests/ui/test_pad_keyboard_layout.cpp`. |
 | Keyboard | `UI/HUD/PadKeyboard.{h,cpp}` + `pad_keyboard.rml` + `themes/{legacy,modern}/pad_keyboard.rcss` | Shows itself for the focused field (`GetFocusedTextField`), types into it through RmlUi's own SDL path (`Core::Input::RouteToUi`: text input and key events, as a real keyboard), Enter and Esc also as game keys (`Touch::TapKey`). Depth 35 in `RmlStackingOrder.cpp`: over the windows and messages of any scene, under the loading screen. It stands at the screen's foot, at its top for a field low on the screen, weighed again every frame; the login window steps up to the top while it is up (`CLoginWin::SetPosition`, `PadKeyboard::IsUp`), so both fields stay in view. |
-| Repeats | `Core/Input/GamepadStepper.{h,cpp}` | The d-pad's and stick's steps with a first pause and a repeat (quicker after a long hold), shared with the menu's highlight; the stick's way with its lean in and out and its kept axis (`PointingOf`, tested in `tests/core/test_gamepad_stepper.cpp`); a held button's repeat. |
+| Repeats | `Core/Input/GamepadStepper.{h,cpp}` | The d-pad's and stick's steps with a first pause and a repeat (the stick's quicker after a long hold), shared with the menu's highlight; the stick's way with its lean in and out and its kept axis (`PointingOf`, tested in `tests/core/test_gamepad_stepper.cpp`); a held button's repeat. |
 | Phone keyboard | `Core/Platform/web/WebKeyboard.{h,cpp}` | `HoldBackKeyboard` keeps the phone's keyboard down while the pad is in use. |
 
 ## How it is built

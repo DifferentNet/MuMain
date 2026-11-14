@@ -1287,7 +1287,7 @@ struct PressLights
 PressLights g_lights;
 
 // The pressed class on the buttons held, and for a moment after a short tap; written only when it
-// changes. Only where fingers drive the phone's HUD (lit): elsewhere (a PC's pad row) the class goes.
+// changes. Only where fingers drive the phone's HUD or the pad is in use (lit): elsewhere the class goes.
 void SyncPressed(Rml::ElementDocument* document, bool lit)
 {
     const double now = Now();
@@ -2389,7 +2389,8 @@ void Update()
     UI::Mobile::Social::Update(GameLogic::Touch::IsSteering());
     SyncDepth(document, model.menuOpen || model.pickerOpen || model.socialOpen);
     UI::Mobile::HeroFrame::Sync(model.hero, [](const char* field) { g_View.MarkDirty(field); });
-    SyncPressed(document, model.fingers && UI::Mobile::ReplacesPcHud());
+    // The pad lights the PC's pad row too: X held shows before the skill animates.
+    SyncPressed(document, (model.fingers && UI::Mobile::ReplacesPcHud()) || padInUse);
     HintHoldOnce();
     // The boxes the next fingers are tested against: where this frame lays the controls out.
     MeasureBoxes();
