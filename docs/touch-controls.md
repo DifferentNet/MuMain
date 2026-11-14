@@ -213,6 +213,14 @@ page's side):
   browser's `requestAnimationFrame`, not a timer, so they land on the display's refresh. The web build
   starts no animation thread pool and no CPU-usage thread: a phone's few cores go to the browser.
   The touch labels refresh 4 times a second, not every frame.
+- Window warm-up (`UI/Core/WindowWarmUp.{h,cpp}`, the whole browser build, PC and phone): 5 s after
+  entering the world or another map, while frames take under 40 ms (80 ms once they have been heavier
+  for 30 s) and no mouse button or finger is down, the windows opened most (Inventory, Character, Map,
+  Options, Teleport, Quest, Party, Guild, Daily, Events, Battle pass) are each shown unseen for one RmlUi
+  frame (opacity 0, no pointer, never open for the game), so their first layout and images are done
+  before the player opens them. Once a session each; one with nothing to show (open already, no map
+  picture) is tried again in the next map. config.ini `[UI] WarmUpWindows` (1 by default, 0 turns it
+  off). The `render` log says `Warm-up: <window> in <ms> ms (frame <ms> ms)` and `Warm-up: done, N windows`.
 
 ## Windows in the phone view
 

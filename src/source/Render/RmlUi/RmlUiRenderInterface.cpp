@@ -6,6 +6,9 @@
 #include "Core/Globals/_TextureIndex.h"
 #include "Core/Utilities/StringUtils.h"
 #include <algorithm>
+#ifdef __EMSCRIPTEN__
+#include "Core/Utilities/FirstOpenTiming.h"
+#endif
 
 namespace
 {
@@ -74,8 +77,19 @@ Rml::TextureHandle RmlUiRenderInterface::LoadTexture(Rml::Vector2i& texture_dime
     // it cannot be premultiplied here.
     constexpr bool PadToPowerOfTwo = false;
     constexpr bool PremultiplyAlpha = true;
+#ifdef __EMSCRIPTEN__
+    const bool timed = Core::FirstOpenTiming::Active();
+    const double loadStartedAt = timed ? Core::FirstOpenTiming::NowMs() : 0.0;
+#endif
     const GLuint bitmapIndex =
         Bitmaps.LoadImageExclusive(wpath, GL_LINEAR, GL_CLAMP_TO_EDGE, PadToPowerOfTwo, PremultiplyAlpha);
+#ifdef __EMSCRIPTEN__
+    if (timed)
+    {
+        const bool tga = wpath.size() >= 4 && _wcsicmp(wpath.c_str() + wpath.size() - 4, L".tga") == 0;
+        Core::FirstOpenTiming::AddRmlTexture(Core::FirstOpenTiming::NowMs() - loadStartedAt, tga);
+    }
+#endif
     if (bitmapIndex == BITMAP_UNKNOWN) return 0;
 
     BITMAP_t* bmp = Bitmaps.GetTexture(bitmapIndex);

@@ -6,6 +6,7 @@
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/Diagnostics/DiagnosticsOverlay.h"
 #include "UI/Mobile/InterfaceMode.h"
+#include "UI/Placement/WindowPlacement.h"
 #include "UI/RmlBridge/RmlDocumentHints.h"
 #include "UI/RmlBridge/RmlMarquee.h"
 #include "UI/RmlBridge/RmlNativeText.h"
@@ -20,6 +21,9 @@
 #include "UI/Scaling/UITransform.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/HUD/ChatLogWindow.h"
+#ifdef __EMSCRIPTEN__
+#include "UI/Core/WindowWarmUp.h"
+#endif
 
 namespace UI::RmlBridge
 {
@@ -48,6 +52,7 @@ void InstallRuntimeHooks()
         ApplySceneStackingDepths();
         ApplyViewStackingDepths(UI::Mobile::IsPhoneView());
         Tooltip::ExpireUnrefreshed();
+        UI::Placement::ApplyWorkspaceVars();
         if (Rml::Context* context = RmlUiRuntime::Instance().GetContext())
             DocumentHints::Update(*context);
     };
@@ -58,6 +63,15 @@ void InstallRuntimeHooks()
         if (auto* chat = g_pChatListBox)
             chat->AfterRmlLayout(context);
     };
+#ifdef __EMSCRIPTEN__
+    // A window warmed up is shown only between these two; the hover follows the mouse again after.
+    hooks.beforeFrame = [] { UI::WarmUp::BeforeRmlUpdate(); };
+    hooks.afterFrame = []
+    {
+        if (UI::WarmUp::AfterRmlRender())
+            RmlUiRuntime::Instance().RefreshMouseHover();
+    };
+#endif
     hooks.resolveTextureFile = [](const Rml::String& source) { return ResolveThemeResource(source, true); };
     hooks.createFileInterface = [] { return std::make_unique<ThemeFileInterface>(); };
     hooks.resolveTexture = [](const Rml::String& source, void*& texture, int& width, int& height)

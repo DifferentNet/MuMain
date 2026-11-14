@@ -45,6 +45,13 @@ public:
     void ClosingProcess();
     void LoadImages(const wchar_t* Filename);
     void UnloadImages();
+#ifdef __EMSCRIPTEN__
+    // The warm-up (UI/Core/WindowWarmUp.h): the screen, the clips and the world's picture with its NPC
+    // and gate markers; the live monsters are not asked of the server (MiniMapLive), so their markers
+    // stay as the last opening left them.
+    Rml::ElementDocument* GetWarmUpDocument() const override { return m_RmlView.Document(); }
+    bool PrepareWarmUp() override;
+#endif
 
 
 private:

@@ -70,6 +70,13 @@ namespace mu::ui::window
         // A window drawn by a document whose #panel the workspace places: a slot gives the panel its
         // position and scale, so the window binds neither.
         virtual Rml::ElementDocument* GetPlacedDocument() const { return nullptr; }
+#ifdef __EMSCRIPTEN__
+        // The browser client's warm-up (UI/Core/WindowWarmUp.h): the document it shows unseen once, and
+        // what the window fills in first so that its first opening finds everything loaded. Nothing sent,
+        // no game state changed; false: nothing to warm.
+        virtual Rml::ElementDocument* GetWarmUpDocument() const { return GetPlacedDocument(); }
+        virtual bool PrepareWarmUp() { return true; }
+#endif
         // The id of the element the slot places in that document.
         virtual const char* PlacedRootId() const { return "panel"; }
         // The workspace places this window in a slot: its document's root at the slot's top-left

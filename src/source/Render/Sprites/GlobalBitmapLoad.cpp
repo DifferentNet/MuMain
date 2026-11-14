@@ -22,6 +22,9 @@
 #ifdef _EDITOR
 #include "Core/Utilities/AssetLoadWorld.h"
 #endif
+#ifdef __EMSCRIPTEN__
+#include "Core/Utilities/FirstOpenTiming.h"
+#endif
 
 #include <SDL3/SDL_gpu.h>
 #include <algorithm>
@@ -638,6 +641,11 @@ bool CGlobalBitmap::ResolvePendingLoad(GLuint uiBitmapIndex)
         loaded = OpenTga(uiBitmapIndex, filename, pending->pendingFilter, pending->pendingWrap, pending->worldTexture,
                          pending->pendingPad, pending->pendingPremultiply, false);
     m_textureLoadSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+#ifdef __EMSCRIPTEN__
+    if (Core::FirstOpenTiming::Active())
+        Core::FirstOpenTiming::AddGameTexture(
+            std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count());
+#endif
 
     mi = m_mapBitmap.find(uiBitmapIndex);
     if (!loaded || mi == m_mapBitmap.end())

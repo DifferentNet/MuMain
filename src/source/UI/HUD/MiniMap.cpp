@@ -28,6 +28,14 @@
 
 #include <algorithm>
 #include <cstdio>
+#ifdef __EMSCRIPTEN__
+#include "Core/Utilities/FirstOpenTiming.h"
+
+#include <RmlUi/Core/Core.h>
+#include <RmlUi/Core/StringUtilities.h>
+#include <RmlUi/Core/SystemInterface.h>
+#include <RmlUi/Core/URL.h>
+#endif
 
 extern BYTE m_OccupationState;
 
@@ -104,6 +112,20 @@ bool MarkerDrawn(const MINI_MAP& data)
     return !(gMapManager.WorldActive == WD_34CRYWOLF_1ST && m_OccupationState > 0) ||
            (data.Location[0] == 228 && data.Location[1] == 48 && gMapManager.WorldActive == WD_34CRYWOLF_1ST);
 }
+
+#ifdef __EMSCRIPTEN__
+// Frees the texture of an image the document loaded from `source`, under the name ElementImage gave it.
+// RmlUi keeps every image it loaded for the session; one shown again loads again.
+void ReleaseDocumentImage(Rml::ElementDocument* document, const Rml::String& source)
+{
+    if (document == nullptr || source.empty())
+        return;
+    Rml::String path;
+    Rml::GetSystemInterface()->JoinPath(
+        path, Rml::StringUtilities::Replace(Rml::URL(document->GetSourceURL()).GetPath(), '|', ':'), source);
+    Rml::ReleaseTexture(path);
+}
+#endif
 } // namespace
 
 mu::ui::window::CMiniMap::CMiniMap()
@@ -355,6 +377,9 @@ void mu::ui::window::CMiniMap::BuildRmlUi()
 
 void mu::ui::window::CMiniMap::SyncRmlModel()
 {
+#ifdef __EMSCRIPTEN__
+    const Core::FirstOpenTiming::SyncScope firstOpenTiming("MiniMap", IsVisible() && m_bSuccess && Hero != nullptr);
+#endif
     BuildRmlUi();
     if (!m_RmlView.Document())
         return;
@@ -383,6 +408,19 @@ void mu::ui::window::CMiniMap::SyncRmlModel()
     SyncMap();
     SyncHint();
 }
+
+#ifdef __EMSCRIPTEN__
+bool mu::ui::window::CMiniMap::PrepareWarmUp()
+{
+    if (!m_bSuccess || Hero == nullptr || !m_RmlView.Document())
+        return false;
+    // The picture shows only inside the clips; SyncMap() names the world's picture.
+    SyncScreen();
+    SyncClips();
+    SyncMap();
+    return true;
+}
+#endif
 
 void mu::ui::window::CMiniMap::SyncScreen()
 {
@@ -455,7 +493,15 @@ void mu::ui::window::CMiniMap::SyncMap()
     Rml::String source;
     if (!m_WorldName.empty())
         source = "../../../../" + StringUtils::WideToNarrow(m_WorldName.c_str()) + "/mini_map.tga";
+#ifdef __EMSCRIPTEN__
+    // The map shows the new world from now on: the old world's picture waits for nothing.
+    const Rml::String oldSource = m_RmlView.GetModel().mapSource;
+#endif
     Sync(m_RmlView.Binder(), &MiniMapRmlModel::mapSource, "map_source", std::move(source));
+#ifdef __EMSCRIPTEN__
+    if (oldSource != m_RmlView.GetModel().mapSource)
+        ReleaseDocumentImage(m_RmlView.Document(), oldSource);
+#endif
 
     Sync(m_RmlView.Binder(), &MiniMapRmlModel::mapTransform, "map_transform",
          MatrixText(UI::MiniMap::ElementToQuad(

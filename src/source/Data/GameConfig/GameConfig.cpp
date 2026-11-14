@@ -97,6 +97,7 @@ void GameConfig::Load()
     m_controls = ReadString(CfgSectionUI, CfgKeyControls, CfgDefaultControls);
     SetTouchButtonSize(ReadInt(CfgSectionUI, CfgKeyTouchButtonSize, CfgDefaultTouchButtonSize));
     m_touchTopRow = ReadBool(CfgSectionUI, CfgKeyTouchTopRow, CfgDefaultTouchTopRow);
+    m_warmUpWindows = ReadBool(CfgSectionUI, CfgKeyWarmUpWindows, CfgDefaultWarmUpWindows);
     m_gamepad = ReadBool(CfgSectionUI, CfgKeyGamepad, CfgDefaultGamepad);
     m_gamepadRumble = ReadBool(CfgSectionUI, CfgKeyGamepadRumble, CfgDefaultGamepadRumble);
     SetGamepadDeadZone(ReadInt(CfgSectionUI, CfgKeyGamepadDeadZone, CfgDefaultGamepadDeadZone));
@@ -251,6 +252,7 @@ void GameConfig::Save()
     WriteString(CfgSectionUI, CfgKeyControls, m_controls);
     WriteInt(CfgSectionUI, CfgKeyTouchButtonSize, m_touchButtonSize);
     WriteBool(CfgSectionUI, CfgKeyTouchTopRow, m_touchTopRow);
+    WriteBool(CfgSectionUI, CfgKeyWarmUpWindows, m_warmUpWindows);
     WriteBool(CfgSectionUI, CfgKeyGamepad, m_gamepad);
     WriteBool(CfgSectionUI, CfgKeyGamepadRumble, m_gamepadRumble);
     WriteInt(CfgSectionUI, CfgKeyGamepadDeadZone, m_gamepadDeadZone);

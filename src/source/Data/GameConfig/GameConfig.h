@@ -134,6 +134,8 @@ public:
     // Whether the phone's top row of buttons is open (UI/HUD/TouchControls).
     bool GetTouchTopRow() const { return m_touchTopRow; }
     void SetTouchTopRow(bool open) { m_touchTopRow = open; }
+    // Whether the browser client warms the windows up after entering the world (UI/Core/WindowWarmUp).
+    bool GetWarmUpWindows() const { return m_warmUpWindows; }
     // Whether the game reads a gamepad (Core::Input::Gamepad::SetEnabled).
     bool GetGamepad() const { return m_gamepad; }
     void SetGamepad(bool enabled) { m_gamepad = enabled; }
@@ -410,6 +412,7 @@ private:
     std::wstring m_controls;
     int m_touchButtonSize = 100;
     bool m_touchTopRow = false;
+    bool m_warmUpWindows = true;
     bool m_gamepad = true;
     bool m_gamepadRumble = true;
     int m_gamepadDeadZone = 25;

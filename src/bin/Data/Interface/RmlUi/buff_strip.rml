@@ -4,7 +4,7 @@
 	<link type="text/rcss" href="base.rcss"/>
 	<link type="text/rcss" href="buff_strip.rcss"/>
 </head>
-<body class="native-text" data-model="buff_strip">
+<body class="native-text" data-model="buff_strip" data-workspace-vars="1">
 	<!-- Buff icon strip; #panel wraps the slots into rows (buff_strip.rcss). #strip_slot is the box
 	     the original gave the strip, which the theme centres in the screen width the docked panels
 	     leave free (--world-left / --world-right), at the HUD's scale, so it moves as docks open. A

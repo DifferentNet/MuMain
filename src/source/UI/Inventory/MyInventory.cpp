@@ -66,6 +66,9 @@ extern bool SelectFlag;
 #include <RmlUi/Core/Event.h>
 #include <cmath>
 #include <utility>
+#ifdef __EMSCRIPTEN__
+#include "Core/Utilities/FirstOpenTiming.h"
+#endif
 
 namespace
 {
@@ -1128,6 +1131,9 @@ bool CMyInventory::Update()
 
 void CMyInventory::SyncRmlModel()
 {
+#ifdef __EMSCRIPTEN__
+    const Core::FirstOpenTiming::SyncScope firstOpenTiming("Inventory", IsVisible());
+#endif
     m_ItemTarget.Sync(m_RmlView.Document() ? m_RmlView.Document()->GetElementById("item_view") : nullptr, IsVisible());
     if (!m_RmlView.Document()) return;
     UI::RmlBridge::SyncDocumentVisibility(m_RmlView.Document(), IsVisible());

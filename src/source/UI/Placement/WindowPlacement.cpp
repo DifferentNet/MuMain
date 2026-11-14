@@ -14,6 +14,7 @@
 #include "UI/Scaling/UITransform.h"
 
 #include <RmlUi/Core/Context.h>
+#include <RmlUi/Core/Core.h>
 #include <RmlUi/Core/ElementDocument.h>
 
 #include <algorithm>
@@ -61,6 +62,18 @@ unsigned int g_lastWidth = 0;
 unsigned int g_lastHeight = 0;
 float g_uncoveredLeft = 0.f;
 float g_uncoveredRight = 0.f;
+// The last published workspace bounds, applied to every document whose <body> has
+// data-workspace-vars. Set on those documents only, not on the context root: a variable set on the
+// root dirties the styles of every element of every document, even hidden ones.
+struct WorkspaceVars
+{
+    std::string worldLeft;
+    std::string worldRight;
+    std::string workspaceTop;
+    std::string workspaceBottom;
+    std::string key;
+};
+WorkspaceVars g_workspaceVars;
 // A rebuilt workspace has new slots: every window is placed again.
 void OnWorkspaceReloaded()
 {
@@ -385,19 +398,47 @@ static Rml::ElementList PrepareSlots(Rml::ElementDocument* workspace, const UI::
     return slots;
 }
 
+// Gives each consumer document the current bounds once: data-workspace-applied keeps the values it
+// has, so an unchanged value sets nothing and a newly loaded document gets them on the next call.
+void ApplyWorkspaceVars()
+{
+    if (g_workspaceVars.key.empty())
+        return;
+    Rml::ElementDocument* workspace = g_workspaceView.Document();
+    Rml::Context* context = workspace != nullptr ? workspace->GetContext() : Rml::GetContext("main");
+    if (context == nullptr)
+        return;
+    static const Rml::String ConsumerAttribute = "data-workspace-vars";
+    static const Rml::String AppliedAttribute = "data-workspace-applied";
+    for (int i = 0; i < context->GetNumDocuments(); ++i)
+    {
+        Rml::ElementDocument* document = context->GetDocument(i);
+        if (document == nullptr || !document->HasAttribute(ConsumerAttribute))
+            continue;
+        const Rml::Variant* applied = document->GetAttribute(AppliedAttribute);
+        if (applied != nullptr && applied->GetType() == Rml::Variant::STRING &&
+            applied->GetReference<Rml::String>() == g_workspaceVars.key)
+            continue;
+        document->SetProperty("--world-left", g_workspaceVars.worldLeft);
+        document->SetProperty("--world-right", g_workspaceVars.worldRight);
+        document->SetProperty("--workspace-top", g_workspaceVars.workspaceTop);
+        document->SetProperty("--workspace-bottom", g_workspaceVars.workspaceBottom);
+        document->SetAttribute(AppliedAttribute, g_workspaceVars.key);
+    }
+}
+
 static void PublishWorkspaceBounds(Rml::ElementDocument* workspace, Rml::Element* content)
 {
-    Rml::Element* root = workspace->GetContext() != nullptr ? workspace->GetContext()->GetRootElement() : nullptr;
-    if (root == nullptr)
-        return;
-
     const float top = content != nullptr ? content->GetAbsoluteOffset(Rml::BoxArea::Border).y : 0.f;
     const float bottom = content != nullptr ? top + content->GetBox().GetSize(Rml::BoxArea::Border).y
                                            : static_cast<float>(WindowHeight);
-    root->SetProperty("--world-left", std::to_string(g_uncoveredLeft) + "px");
-    root->SetProperty("--world-right", std::to_string(g_uncoveredRight) + "px");
-    root->SetProperty("--workspace-top", std::to_string(top) + "px");
-    root->SetProperty("--workspace-bottom", std::to_string(bottom) + "px");
+    g_workspaceVars.worldLeft = std::to_string(g_uncoveredLeft) + "px";
+    g_workspaceVars.worldRight = std::to_string(g_uncoveredRight) + "px";
+    g_workspaceVars.workspaceTop = std::to_string(top) + "px";
+    g_workspaceVars.workspaceBottom = std::to_string(bottom) + "px";
+    g_workspaceVars.key = g_workspaceVars.worldLeft + " " + g_workspaceVars.worldRight + " " +
+                          g_workspaceVars.workspaceTop + " " + g_workspaceVars.workspaceBottom;
+    ApplyWorkspaceVars();
 }
 
 static void UpdateUncoveredArea(Rml::ElementDocument* workspace, const Rml::ElementList& slots)
