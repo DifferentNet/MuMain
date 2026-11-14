@@ -16500,6 +16500,72 @@
   <data name="HazeAfterRestart" xml:space="preserve">
     <value>Turning it on takes effect after a restart.</value>
   </data>
+  <data name="ParticlesRow" xml:space="preserve">
+    <value>Air particles</value>
+  </data>
+  <data name="ParticlesTooltip" xml:space="preserve">
+    <value>Dust, pollen, fireflies, fine snow and ash in the air of some maps. Small and faint: they do not hide characters, monsters or drops.</value>
+  </data>
+  <data name="ParticlesStrengthRow" xml:space="preserve">
+    <value>Particle density</value>
+  </data>
+  <data name="ParticlesLockedHdTextures" xml:space="preserve">
+    <value>Needs HD textures.</value>
+  </data>
+  <data name="ParticlesLockedLowPreset" xml:space="preserve">
+    <value>Off on the Low graphics preset.</value>
+  </data>
+  <data name="TorchLightsRow" xml:space="preserve">
+    <value>Torch light on the ground</value>
+  </data>
+  <data name="TorchLightsTooltip" xml:space="preserve">
+    <value>Torches, lamps and fires cast a soft round glow on the ground. Characters, monsters and gear are lit as before.</value>
+  </data>
+  <data name="TorchLightsStrengthRow" xml:space="preserve">
+    <value>Torch light strength</value>
+  </data>
+  <data name="TorchLightsLockedHdTextures" xml:space="preserve">
+    <value>Needs HD textures.</value>
+  </data>
+  <data name="TorchLightsLockedLowPreset" xml:space="preserve">
+    <value>Off on the Low graphics preset.</value>
+  </data>
+  <data name="TorchLightsLockedLighting" xml:space="preserve">
+    <value>Needs Enhanced lighting with dynamic lights.</value>
+  </data>
+  <data name="FoliageSmoothingRow" xml:space="preserve">
+    <value>Smooth foliage edges</value>
+  </data>
+  <data name="FoliageSmoothingTooltip" xml:space="preserve">
+    <value>Grass, leaves, fences and railings shimmer less while the camera moves. Characters, monsters and gear are unchanged.</value>
+  </data>
+  <data name="FoliageSmoothingStrengthRow" xml:space="preserve">
+    <value>Foliage smoothing strength</value>
+  </data>
+  <data name="FoliageSmoothingLockedHdTextures" xml:space="preserve">
+    <value>Needs HD textures.</value>
+  </data>
+  <data name="FoliageSmoothingLockedLowPreset" xml:space="preserve">
+    <value>Off on the Low graphics preset.</value>
+  </data>
+  <data name="SunShadowSoftEdgesRow" xml:space="preserve">
+    <value>Soft sun shadow edges</value>
+  </data>
+  <data name="SunShadowSoftEdgesTooltip" xml:space="preserve">
+    <value>Sun shadows are crisp next to what casts them and get softer farther away. Only the shadows' edges change: characters, monsters and gear are lit as before.</value>
+  </data>
+  <data name="SunShadowSoftEdgesStrengthRow" xml:space="preserve">
+    <value>Shadow edge softness</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedHdTextures" xml:space="preserve">
+    <value>Needs HD textures.</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedLowPreset" xml:space="preserve">
+    <value>Off on the Low graphics preset.</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedSunShadows" xml:space="preserve">
+    <value>Needs Sun shadows (Medium or High).</value>
+  </data>
   <data name="BagPageLocked" xml:space="preserve">
     <value>Page 2 is locked</value>
   </data>

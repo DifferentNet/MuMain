@@ -156,6 +156,27 @@ void GameConfig::Load()
     m_haze = std::clamp(ReadInt(CfgSectionRender, CfgKeyHaze, CfgDefaultHaze), CfgMinHaze, CfgMaxHaze);
     m_hazeStrength = std::clamp(ReadInt(CfgSectionRender, CfgKeyHazeStrength, CfgDefaultHazeStrength),
                                 CfgMinHazeStrength, CfgMaxHazeStrength);
+    m_particles =
+        std::clamp(ReadInt(CfgSectionRender, CfgKeyParticles, CfgDefaultParticles), CfgMinParticles, CfgMaxParticles);
+    m_particlesStrength =
+        std::clamp(ReadInt(CfgSectionRender, CfgKeyParticlesStrength, CfgDefaultParticlesStrength),
+                   CfgMinParticlesStrength, CfgMaxParticlesStrength);
+    m_torchLights = std::clamp(ReadInt(CfgSectionRender, CfgKeyTorchLights, CfgDefaultTorchLights), CfgMinTorchLights,
+                               CfgMaxTorchLights);
+    m_torchLightsStrength =
+        std::clamp(ReadInt(CfgSectionRender, CfgKeyTorchLightsStrength, CfgDefaultTorchLightsStrength),
+                   CfgMinTorchLightsStrength, CfgMaxTorchLightsStrength);
+    m_foliageSmoothing = std::clamp(ReadInt(CfgSectionRender, CfgKeyFoliageSmoothing, CfgDefaultFoliageSmoothing),
+                                    CfgMinFoliageSmoothing, CfgMaxFoliageSmoothing);
+    m_foliageSmoothingStrength =
+        std::clamp(ReadInt(CfgSectionRender, CfgKeyFoliageSmoothingStrength, CfgDefaultFoliageSmoothingStrength),
+                   CfgMinFoliageSmoothingStrength, CfgMaxFoliageSmoothingStrength);
+    m_sunShadowSoftEdges =
+        std::clamp(ReadInt(CfgSectionRender, CfgKeySunShadowSoftEdges, CfgDefaultSunShadowSoftEdges),
+                   CfgMinSunShadowSoftEdges, CfgMaxSunShadowSoftEdges);
+    m_sunShadowSoftEdgesStrength =
+        std::clamp(ReadInt(CfgSectionRender, CfgKeySunShadowSoftEdgesStrength, CfgDefaultSunShadowSoftEdgesStrength),
+                   CfgMinSunShadowSoftEdgesStrength, CfgMaxSunShadowSoftEdgesStrength);
     m_sunShadows = GameConfigValidation::ValidateSunShadows(
         ReadInt(CfgSectionRender, CfgKeySunShadows, CfgDefaultSunShadows));
     m_sharpen = GameConfigValidation::ValidateSharpen(ReadInt(CfgSectionRender, CfgKeySharpen, CfgDefaultSharpen));
@@ -264,6 +285,14 @@ void GameConfig::Save()
     WriteInt(CfgSectionRender, CfgKeyWindStrength, m_windStrength);
     WriteInt(CfgSectionRender, CfgKeyHaze, m_haze);
     WriteInt(CfgSectionRender, CfgKeyHazeStrength, m_hazeStrength);
+    WriteInt(CfgSectionRender, CfgKeyParticles, m_particles);
+    WriteInt(CfgSectionRender, CfgKeyParticlesStrength, m_particlesStrength);
+    WriteInt(CfgSectionRender, CfgKeyTorchLights, m_torchLights);
+    WriteInt(CfgSectionRender, CfgKeyTorchLightsStrength, m_torchLightsStrength);
+    WriteInt(CfgSectionRender, CfgKeyFoliageSmoothing, m_foliageSmoothing);
+    WriteInt(CfgSectionRender, CfgKeyFoliageSmoothingStrength, m_foliageSmoothingStrength);
+    WriteInt(CfgSectionRender, CfgKeySunShadowSoftEdges, m_sunShadowSoftEdges);
+    WriteInt(CfgSectionRender, CfgKeySunShadowSoftEdgesStrength, m_sunShadowSoftEdgesStrength);
     WriteInt(CfgSectionRender, CfgKeySunShadows, m_sunShadows);
     WriteInt(CfgSectionRender, CfgKeySharpen, m_sharpen);
     WriteBool(CfgSectionRender, CfgKeyDisableEffects, m_disableEffects);
@@ -459,6 +488,52 @@ void GameConfig::SetHaze(int haze)
 void GameConfig::SetHazeStrength(int percent)
 {
     m_hazeStrength = std::clamp(percent, CfgDefaults::CfgMinHazeStrength, CfgDefaults::CfgMaxHazeStrength);
+}
+
+void GameConfig::SetParticles(int particles)
+{
+    m_particles = std::clamp(particles, CfgDefaults::CfgMinParticles, CfgDefaults::CfgMaxParticles);
+}
+
+void GameConfig::SetParticlesStrength(int percent)
+{
+    m_particlesStrength =
+        std::clamp(percent, CfgDefaults::CfgMinParticlesStrength, CfgDefaults::CfgMaxParticlesStrength);
+}
+
+void GameConfig::SetTorchLights(int torchLights)
+{
+    m_torchLights = std::clamp(torchLights, CfgDefaults::CfgMinTorchLights, CfgDefaults::CfgMaxTorchLights);
+}
+
+void GameConfig::SetTorchLightsStrength(int percent)
+{
+    m_torchLightsStrength =
+        std::clamp(percent, CfgDefaults::CfgMinTorchLightsStrength, CfgDefaults::CfgMaxTorchLightsStrength);
+}
+
+void GameConfig::SetFoliageSmoothing(int foliageSmoothing)
+{
+    m_foliageSmoothing =
+        std::clamp(foliageSmoothing, CfgDefaults::CfgMinFoliageSmoothing, CfgDefaults::CfgMaxFoliageSmoothing);
+}
+
+void GameConfig::SetFoliageSmoothingStrength(int percent)
+{
+    m_foliageSmoothingStrength =
+        std::clamp(percent, CfgDefaults::CfgMinFoliageSmoothingStrength, CfgDefaults::CfgMaxFoliageSmoothingStrength);
+}
+
+void GameConfig::SetSunShadowSoftEdges(int sunShadowSoftEdges)
+{
+    m_sunShadowSoftEdges =
+        std::clamp(sunShadowSoftEdges, CfgDefaults::CfgMinSunShadowSoftEdges, CfgDefaults::CfgMaxSunShadowSoftEdges);
+}
+
+void GameConfig::SetSunShadowSoftEdgesStrength(int percent)
+{
+    m_sunShadowSoftEdgesStrength = std::clamp(percent, CfgDefaults::CfgMinSunShadowSoftEdgesStrength,
+                                              CfgDefaults::CfgMaxSunShadowSoftEdgesStrength);
 }
 
 void GameConfig::SetAntialiasing(int samples)

@@ -68,3 +68,45 @@ TEST_CASE("only HD textures bias the mip level toward the sharper one [render][t
     CHECK(MipLodBias(true) < 0.0f);
     CHECK(MipLodBias(true) >= -1.0f);
 }
+
+TEST_CASE("textures under the numbered map folders are map textures [render][mipmap][foliage]")
+{
+    CHECK(Render::Textures::IsMapTexturePath(L"Data\\World1\\TileGrass01.tga"));
+    CHECK(Render::Textures::IsMapTexturePath(L"Data/Object3/leaf.tga"));
+    CHECK(Render::Textures::IsMapTexturePath(L"data\\world74\\TileGrass02.tga"));
+    CHECK(Render::Textures::IsMapTexturePath(L"DATA/OBJECT12/fence01.tga"));
+    CHECK(Render::Textures::IsMapTexturePath(L"Data\\Object1\\sub\\tree01.tga"));
+}
+
+TEST_CASE("player, monster, item, NPC, effect, skill and interface textures are not map textures [render][mipmap][foliage]")
+{
+    CHECK_FALSE(Render::Textures::IsMapTexturePath(L"Data\\Player\\hair_class01.tga"));
+    CHECK_FALSE(Render::Textures::IsMapTexturePath(L"Data\\Monster\\bull.tga"));
+    CHECK_FALSE(Render::Textures::IsMapTexturePath(L"Data\\Item\\Texture\\sword01.tga"));
+    CHECK_FALSE(Render::Textures::IsMapTexturePath(L"Data\\NPC\\smith.tga"));
+    CHECK_FALSE(Render::Textures::IsMapTexturePath(L"Data\\Effect\\flare01.tga"));
+    CHECK_FALSE(Render::Textures::IsMapTexturePath(L"Data\\Skill\\arrow.tga"));
+    CHECK_FALSE(Render::Textures::IsMapTexturePath(L"Data\\Interface\\newui_item_box.tga"));
+    CHECK_FALSE(Render::Textures::IsMapTexturePath(L"Data\\WorldMap\\map.tga"));
+    CHECK_FALSE(Render::Textures::IsMapTexturePath(L"Data\\Object\\stone.tga"));
+    CHECK_FALSE(Render::Textures::IsMapTexturePath(L"Shop\\World1\\banner.tga"));
+}
+
+TEST_CASE("a map folder without a file is not a map texture path [render][mipmap][foliage]")
+{
+    CHECK_FALSE(Render::Textures::IsMapTexturePath(L""));
+    CHECK_FALSE(Render::Textures::IsMapTexturePath(L"Data"));
+    CHECK_FALSE(Render::Textures::IsMapTexturePath(L"Data\\World1"));
+    CHECK_FALSE(Render::Textures::IsMapTexturePath(L"Data\\Object3\\"));
+}
+
+TEST_CASE("a map's mini map is never a cut-out candidate [render][mipmap][foliage]")
+{
+    CHECK_FALSE(Render::Textures::IsMapCutoutCandidatePath(L"Data\\World1\\mini_map.ozt"));
+    CHECK_FALSE(Render::Textures::IsMapCutoutCandidatePath(L"data/world34/Mini_Map.OZT"));
+    CHECK_FALSE(Render::Textures::IsMapCutoutCandidatePath(L"Data\\World2\\mini_map.tga"));
+    CHECK(Render::Textures::IsMapCutoutCandidatePath(L"Data\\World1\\TileGrass01.tga"));
+    CHECK(Render::Textures::IsMapCutoutCandidatePath(L"Data/Object3/mini_map_leaf.tga"));
+    CHECK(Render::Textures::IsMapCutoutCandidatePath(L"Data\\Object3\\leaf.tga"));
+    CHECK_FALSE(Render::Textures::IsMapCutoutCandidatePath(L"Data\\Monster\\leaf.tga"));
+}

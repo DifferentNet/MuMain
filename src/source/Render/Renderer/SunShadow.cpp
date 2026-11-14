@@ -13,6 +13,30 @@ namespace mu
 namespace
 {
 
+// The fixed soft edge's radius in texels: the uniform's directionAndSoftness[3] range.
+constexpr float kMinEdgeTexels = 0.5f;
+constexpr float kMaxEdgeTexels = 32.0f;
+// The widest the widening edge gets, in texels.
+constexpr float kMaxWideEdgeTexels = 48.0f;
+// World units a stored depth must lie nearer the sun than the receiver to count as its caster.
+constexpr float kBlockerBiasWorld = 8.0f;
+
+// The widening edge's part of the uniform (sun_shadow.hlsli); all 0 when the frame has none.
+void PackPenumbra(const SunShadowFrame& frame, float texelWorld, float fixedEdgeTexels, float penumbra[4])
+{
+    if (!(frame.penumbraSlope > 0.0f))
+    {
+        return;
+    }
+    const float depthRange = std::max(frame.depthRange, 1.0f);
+    const float widestTexels =
+        std::clamp((frame.softness + frame.penumbraGrowth) / texelWorld, fixedEdgeTexels, kMaxWideEdgeTexels);
+    penumbra[0] = frame.penumbraSlope * depthRange / texelWorld;
+    penumbra[1] = widestTexels;
+    penumbra[2] = widestTexels;
+    penumbra[3] = kBlockerBiasWorld / depthRange;
+}
+
 // Unit direction towards the sun, kept at least about 17 degrees above the horizon so that
 // shadows stay inside the box; a zero vector means straight above.
 glm::vec3 TowardSun(const SunShadowFrame& frame)
@@ -78,7 +102,8 @@ SunShadowUniform PackSunShadowUniform(const SunShadowFrame& frame)
     uniform.directionAndSoftness[0] = towardSun.x;
     uniform.directionAndSoftness[1] = towardSun.y;
     uniform.directionAndSoftness[2] = towardSun.z;
-    uniform.directionAndSoftness[3] = std::clamp(frame.softness / texelWorld, 0.5f, 32.0f);
+    uniform.directionAndSoftness[3] = std::clamp(frame.softness / texelWorld, kMinEdgeTexels, kMaxEdgeTexels);
+    PackPenumbra(frame, texelWorld, uniform.directionAndSoftness[3], uniform.penumbra);
     return uniform;
 }
 

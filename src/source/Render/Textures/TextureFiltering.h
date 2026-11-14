@@ -15,6 +15,16 @@ namespace Render::Textures
 // unknown folder can miss the enhancement but never change the UI.
 [[nodiscard]] bool IsWorldTexturePath(std::wstring_view path);
 
+// Whether `path` is a map's own texture: a file under a numbered map folder,
+// "Data\World<N>\..." (terrain, grass) or "Data\Object<N>\..." (the map's
+// objects: trees, fences, railings), with either separator and in any case.
+// Textures under Data\Player, Monster, Item, NPC, Skill and Effect never match.
+[[nodiscard]] bool IsMapTexturePath(std::wstring_view path);
+
+// Whether foliage smoothing may treat the texture at `path` as a map cut-out: a map texture
+// (IsMapTexturePath) other than the map's mini map (a file named "mini_map.<ext>", any case).
+[[nodiscard]] bool IsMapCutoutCandidatePath(std::wstring_view path);
+
 // Highest anisotropy every SDL GPU backend accepts: the D3D12 and Metal
 // maximum, and the minimum Vulkan guarantees once samplerAnisotropy is
 // enabled (SDL only selects devices that have it). SDL exposes no query.

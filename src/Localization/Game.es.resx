@@ -13562,6 +13562,72 @@
   <data name="HazeAfterRestart" xml:space="preserve">
     <value>Turning it on takes effect after a restart.</value>
   </data>
+  <data name="ParticlesRow" xml:space="preserve">
+    <value>Air particles</value>
+  </data>
+  <data name="ParticlesTooltip" xml:space="preserve">
+    <value>Dust, pollen, fireflies, fine snow and ash in the air of some maps. Small and faint: they do not hide characters, monsters or drops.</value>
+  </data>
+  <data name="ParticlesStrengthRow" xml:space="preserve">
+    <value>Particle density</value>
+  </data>
+  <data name="ParticlesLockedHdTextures" xml:space="preserve">
+    <value>Needs HD textures.</value>
+  </data>
+  <data name="ParticlesLockedLowPreset" xml:space="preserve">
+    <value>Off on the Low graphics preset.</value>
+  </data>
+  <data name="TorchLightsRow" xml:space="preserve">
+    <value>Luz de antorchas en el suelo</value>
+  </data>
+  <data name="TorchLightsTooltip" xml:space="preserve">
+    <value>Las antorchas, lámparas y hogueras proyectan un brillo suave y redondo sobre el suelo. Los personajes, monstruos y el equipo se iluminan como antes.</value>
+  </data>
+  <data name="TorchLightsStrengthRow" xml:space="preserve">
+    <value>Intensidad de la luz de antorchas</value>
+  </data>
+  <data name="TorchLightsLockedHdTextures" xml:space="preserve">
+    <value>Requiere texturas HD.</value>
+  </data>
+  <data name="TorchLightsLockedLowPreset" xml:space="preserve">
+    <value>Desactivado con el ajuste gráfico Bajo.</value>
+  </data>
+  <data name="TorchLightsLockedLighting" xml:space="preserve">
+    <value>Requiere Enhanced lighting con Dynamic lights.</value>
+  </data>
+  <data name="FoliageSmoothingRow" xml:space="preserve">
+    <value>Suavizar bordes del follaje</value>
+  </data>
+  <data name="FoliageSmoothingTooltip" xml:space="preserve">
+    <value>La hierba, las hojas, las vallas y las barandillas parpadean menos al mover la cámara. Los personajes, monstruos y el equipo no cambian.</value>
+  </data>
+  <data name="FoliageSmoothingStrengthRow" xml:space="preserve">
+    <value>Intensidad del suavizado del follaje</value>
+  </data>
+  <data name="FoliageSmoothingLockedHdTextures" xml:space="preserve">
+    <value>Requiere texturas HD.</value>
+  </data>
+  <data name="FoliageSmoothingLockedLowPreset" xml:space="preserve">
+    <value>Desactivado con el ajuste gráfico Bajo.</value>
+  </data>
+  <data name="SunShadowSoftEdgesRow" xml:space="preserve">
+    <value>Bordes suaves de las sombras del sol</value>
+  </data>
+  <data name="SunShadowSoftEdgesTooltip" xml:space="preserve">
+    <value>Las sombras del sol son nítidas junto a lo que las proyecta y más suaves lejos de ello. Solo cambian los bordes de las sombras: personajes, monstruos y equipo se iluminan como antes.</value>
+  </data>
+  <data name="SunShadowSoftEdgesStrengthRow" xml:space="preserve">
+    <value>Suavidad de los bordes de sombra</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedHdTextures" xml:space="preserve">
+    <value>Requiere texturas HD.</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedLowPreset" xml:space="preserve">
+    <value>Desactivado con el ajuste gráfico Bajo.</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedSunShadows" xml:space="preserve">
+    <value>Requiere Sombras del sol (Medias o Altas).</value>
+  </data>
   <!-- MU Helper: strong monsters first -->
   <data name="HelperStrongFirst" xml:space="preserve">
     <value>Monstruos fuertes primero</value>

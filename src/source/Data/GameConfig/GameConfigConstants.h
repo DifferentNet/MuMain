@@ -150,6 +150,28 @@ namespace CfgKeys
     // 70 shows the maps' haze as their light mood gives it).
     inline constexpr wchar_t CfgKeyHaze[] = L"Haze";
     inline constexpr wchar_t CfgKeyHazeStrength[] = L"HazeStrength";
+    // [Render] Particles: with HD textures on, 0 off, 1 ambient air particles on some maps (dust,
+    // pollen, fireflies, fine snow, ash; Render/Effects/ParticlesSetting.h), and their density in
+    // percent (0 to 100; 70 shows the maps' particles as their light mood gives them).
+    inline constexpr wchar_t CfgKeyParticles[] = L"Particles";
+    inline constexpr wchar_t CfgKeyParticlesStrength[] = L"ParticlesStrength";
+    // [Render] TorchLights: with HD textures on, 0 off, 1 the map lights near the hero (torches,
+    // lamps, fires) drawn on the ground as smooth round pools (Render/Terrain/TorchLights.h); models
+    // keep their light. TorchLightsStrength in percent (0 to 100; 70 = 1.2 times the Classic light).
+    inline constexpr wchar_t CfgKeyTorchLights[] = L"TorchLights";
+    inline constexpr wchar_t CfgKeyTorchLightsStrength[] = L"TorchLightsStrength";
+    // [Render] FoliageSmoothing: with HD textures on, 0 off, 1 the maps' cut-out textures (grass, leaves,
+    // fences, railings) sampled a little softer and the grass under anti-aliasing through
+    // alpha-to-coverage (Render/Textures/FoliageSmoothing.h); no light is added to anything.
+    // FoliageSmoothingStrength in percent (0 to 100; 70 = +0.7 mip levels on the HD bias).
+    inline constexpr wchar_t CfgKeyFoliageSmoothing[] = L"FoliageSmoothing";
+    inline constexpr wchar_t CfgKeyFoliageSmoothingStrength[] = L"FoliageSmoothingStrength";
+    // [Render] SunShadowSoftEdges: with HD textures and sun shadows on, 0 off, 1 the sun shadows' edges
+    // crisp next to what casts them and softer farther away (Render/Lighting/SunShadowSoftEdges.h); only
+    // the edges change. SunShadowSoftEdgesStrength in percent (0 to 100; 70 = the edge grows 0.042 world
+    // units per world unit from the caster, at most 28 world units more).
+    inline constexpr wchar_t CfgKeySunShadowSoftEdges[] = L"SunShadowSoftEdges";
+    inline constexpr wchar_t CfgKeySunShadowSoftEdgesStrength[] = L"SunShadowSoftEdgesStrength";
     // Sun shadows of the Enhanced look: 0 off, 1 medium (2048 map), 2 high (4096 map). The browser
     // build keeps them under their own key: older /play builds saved the presets' value in SunShadows,
     // and a browser player gets sun shadows only from the Options row.
@@ -339,6 +361,30 @@ namespace CfgDefaults
     inline constexpr int CfgDefaultHazeStrength = 70;
     inline constexpr int CfgMinHazeStrength = 0;
     inline constexpr int CfgMaxHazeStrength = 100;
+    inline constexpr int CfgDefaultParticles = 1;
+    inline constexpr int CfgMinParticles = 0;
+    inline constexpr int CfgMaxParticles = 1;
+    inline constexpr int CfgDefaultParticlesStrength = 70;
+    inline constexpr int CfgMinParticlesStrength = 0;
+    inline constexpr int CfgMaxParticlesStrength = 100;
+    inline constexpr int CfgDefaultTorchLights = 1;
+    inline constexpr int CfgMinTorchLights = 0;
+    inline constexpr int CfgMaxTorchLights = 1;
+    inline constexpr int CfgDefaultTorchLightsStrength = 70;
+    inline constexpr int CfgMinTorchLightsStrength = 0;
+    inline constexpr int CfgMaxTorchLightsStrength = 100;
+    inline constexpr int CfgDefaultFoliageSmoothing = 1;
+    inline constexpr int CfgMinFoliageSmoothing = 0;
+    inline constexpr int CfgMaxFoliageSmoothing = 1;
+    inline constexpr int CfgDefaultFoliageSmoothingStrength = 70;
+    inline constexpr int CfgMinFoliageSmoothingStrength = 0;
+    inline constexpr int CfgMaxFoliageSmoothingStrength = 100;
+    inline constexpr int CfgDefaultSunShadowSoftEdges = 1;
+    inline constexpr int CfgMinSunShadowSoftEdges = 0;
+    inline constexpr int CfgMaxSunShadowSoftEdges = 1;
+    inline constexpr int CfgDefaultSunShadowSoftEdgesStrength = 70;
+    inline constexpr int CfgMinSunShadowSoftEdgesStrength = 0;
+    inline constexpr int CfgMaxSunShadowSoftEdgesStrength = 100;
     inline constexpr int CfgDefaultSunShadows = 0;
     inline constexpr int CfgMinSunShadows = 0;
     inline constexpr int CfgMaxSunShadows = 2;

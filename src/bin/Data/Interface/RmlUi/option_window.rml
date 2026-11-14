@@ -388,6 +388,22 @@
 				</div>
 			</div>
 		</div>
+		<!-- Soft sun shadow edges (Remaster PC client): locked while it cannot show (also with Sun shadows
+		     off), its hint says why; its strength slider is gauge 9. Keep both themes in step. -->
+		<div class="option-row option-checkbox-row option-row-tipped" data-class-hidden="!sun_shadow_soft_edges_available" data-class-locked="sun_shadow_soft_edges_locked" data-attr-data-hint="sun_shadow_soft_edges_tooltip" data-event-click="option_toggle_sun_shadow_soft_edges">
+			<span class="option-row-label">{{sun_shadow_soft_edges_label}}</span>
+			<div class="checkbox-box" data-class-checked="sun_shadow_soft_edges">
+				<div class="checkbox-tick"></div>
+			</div>
+		</div>
+		<div class="option-row option-gauge-row option-sub-row" data-class-hidden="!sun_shadow_soft_edges_strength_shown">
+			<span class="option-row-label">{{sun_shadow_soft_edges_strength_label}}</span>
+			<div class="level-gauge option-gauge">
+				<div data-attr-class="'level-gauge-fill level-' + sun_shadow_soft_edges_strength"></div>
+				<div class="level-gauge-hit option-gauge-hit" data-event-mousedown="option_gauge(9)"
+				     data-event-drag="option_gauge(9)" data-event-mousescroll="option_gauge(9)" data-event-keydown="option_gauge(9)"></div>
+			</div>
+		</div>
 		<!-- SSAO (Remaster PC client): locked while it cannot show, its hint says why; the strength
 		     slider (0..100 % in steps of 10) only while it is on. Keep both themes in step. -->
 		<div class="option-row option-checkbox-row option-row-tipped" data-class-hidden="!ssao_available" data-class-locked="ssao_locked" data-attr-data-hint="ssao_tooltip" data-event-click="option_toggle_ssao">
@@ -434,6 +450,54 @@
 				<div data-attr-class="'level-gauge-fill level-' + haze_strength"></div>
 				<div class="level-gauge-hit option-gauge-hit" data-event-mousedown="option_gauge(5)"
 				     data-event-drag="option_gauge(5)" data-event-mousescroll="option_gauge(5)" data-event-keydown="option_gauge(5)"></div>
+			</div>
+		</div>
+		<!-- Particles (Remaster PC client): as the Wind rows above, their density slider is gauge 6. Keep
+		     both themes in step. -->
+		<div class="option-row option-checkbox-row option-row-tipped" data-class-hidden="!particles_available" data-class-locked="particles_locked" data-attr-data-hint="particles_tooltip" data-event-click="option_toggle_particles">
+			<span class="option-row-label">{{particles_label}}</span>
+			<div class="checkbox-box" data-class-checked="particles">
+				<div class="checkbox-tick"></div>
+			</div>
+		</div>
+		<div class="option-row option-gauge-row option-sub-row" data-class-hidden="!particles_strength_shown">
+			<span class="option-row-label">{{particles_strength_label}}</span>
+			<div class="level-gauge option-gauge">
+				<div data-attr-class="'level-gauge-fill level-' + particles_strength"></div>
+				<div class="level-gauge-hit option-gauge-hit" data-event-mousedown="option_gauge(6)"
+				     data-event-drag="option_gauge(6)" data-event-mousescroll="option_gauge(6)" data-event-keydown="option_gauge(6)"></div>
+			</div>
+		</div>
+		<!-- Torch light on the ground (Remaster PC client): as the Particles rows above, its strength slider is
+		     gauge 7. Keep both themes in step. -->
+		<div class="option-row option-checkbox-row option-row-tipped" data-class-hidden="!torch_lights_available" data-class-locked="torch_lights_locked" data-attr-data-hint="torch_lights_tooltip" data-event-click="option_toggle_torch_lights">
+			<span class="option-row-label">{{torch_lights_label}}</span>
+			<div class="checkbox-box" data-class-checked="torch_lights">
+				<div class="checkbox-tick"></div>
+			</div>
+		</div>
+		<div class="option-row option-gauge-row option-sub-row" data-class-hidden="!torch_lights_strength_shown">
+			<span class="option-row-label">{{torch_lights_strength_label}}</span>
+			<div class="level-gauge option-gauge">
+				<div data-attr-class="'level-gauge-fill level-' + torch_lights_strength"></div>
+				<div class="level-gauge-hit option-gauge-hit" data-event-mousedown="option_gauge(7)"
+				     data-event-drag="option_gauge(7)" data-event-mousescroll="option_gauge(7)" data-event-keydown="option_gauge(7)"></div>
+			</div>
+		</div>
+		<!-- Smooth foliage edges (Remaster PC client): as the Torch light rows above, its strength slider is
+		     gauge 8. Keep both themes in step. -->
+		<div class="option-row option-checkbox-row option-row-tipped" data-class-hidden="!foliage_smoothing_available" data-class-locked="foliage_smoothing_locked" data-attr-data-hint="foliage_smoothing_tooltip" data-event-click="option_toggle_foliage_smoothing">
+			<span class="option-row-label">{{foliage_smoothing_label}}</span>
+			<div class="checkbox-box" data-class-checked="foliage_smoothing">
+				<div class="checkbox-tick"></div>
+			</div>
+		</div>
+		<div class="option-row option-gauge-row option-sub-row" data-class-hidden="!foliage_smoothing_strength_shown">
+			<span class="option-row-label">{{foliage_smoothing_strength_label}}</span>
+			<div class="level-gauge option-gauge">
+				<div data-attr-class="'level-gauge-fill level-' + foliage_smoothing_strength"></div>
+				<div class="level-gauge-hit option-gauge-hit" data-event-mousedown="option_gauge(8)"
+				     data-event-drag="option_gauge(8)" data-event-mousescroll="option_gauge(8)" data-event-keydown="option_gauge(8)"></div>
 			</div>
 		</div>
 		<div class="option-row option-gauge-row">

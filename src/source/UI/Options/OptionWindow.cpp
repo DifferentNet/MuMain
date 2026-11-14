@@ -20,6 +20,10 @@
 #include "Render/Lighting/DynamicLightsSetting.h"
 #include "Render/Lighting/EnhancedLightingSetting.h"
 #include "Render/Lighting/LightMoodScales.h"
+#include "Render/Effects/ParticlesSetting.h"
+#include "Render/Terrain/TorchLights.h"
+#include "Render/Textures/FoliageSmoothing.h"
+#include "Render/Lighting/SunShadowSoftEdges.h"
 #include "Render/PostProcessing/HazeSetting.h"
 #include "Render/PostProcessing/PostProcessingSetting.h"
 #include "Render/PostProcessing/SsaoSetting.h"
@@ -163,6 +167,100 @@ static const wchar_t* HazeHint(Render::PostProcessing::Haze::Block block)
         break;
     }
     return I18N::Game::HazeTooltip;
+}
+
+// The particle density slider: levels 0..10, 10 % each ([Render] ParticlesStrength is in percent), as SSAO's.
+static int ParticlesStrengthLevel(int percent)
+{
+    return SsaoStrengthLevel(percent);
+}
+
+// The Particles row's hint: why they do not show right now, or what they are.
+static const wchar_t* ParticlesHint(Render::Effects::Particles::Block block)
+{
+    using Render::Effects::Particles::Block;
+    switch (block)
+    {
+    case Block::NoHdTextures:
+        return I18N::Game::ParticlesLockedHdTextures;
+    case Block::LowPreset:
+        return I18N::Game::ParticlesLockedLowPreset;
+    case Block::None:
+        break;
+    }
+    return I18N::Game::ParticlesTooltip;
+}
+
+// The torch light strength slider: levels 0..10, 10 % each ([Render] TorchLightsStrength is in percent), as SSAO's.
+static int TorchLightsStrengthLevel(int percent)
+{
+    return SsaoStrengthLevel(percent);
+}
+
+// The TorchLights row's hint: why it does not show right now, or what it is.
+static const wchar_t* TorchLightsHint(Render::Terrain::TorchLights::Block block)
+{
+    using Render::Terrain::TorchLights::Block;
+    switch (block)
+    {
+    case Block::NoHdTextures:
+        return I18N::Game::TorchLightsLockedHdTextures;
+    case Block::LowPreset:
+        return I18N::Game::TorchLightsLockedLowPreset;
+    case Block::NoDynamicLights:
+        return I18N::Game::TorchLightsLockedLighting;
+    case Block::None:
+        break;
+    }
+    return I18N::Game::TorchLightsTooltip;
+}
+
+// The foliage smoothing strength slider: levels 0..10, 10 % each ([Render] FoliageSmoothingStrength is in
+// percent), as SSAO's.
+static int FoliageSmoothingStrengthLevel(int percent)
+{
+    return SsaoStrengthLevel(percent);
+}
+
+// The FoliageSmoothing row's hint: why it does not show right now, or what it is.
+static const wchar_t* FoliageSmoothingHint(Render::Textures::FoliageSmoothing::Block block)
+{
+    using Render::Textures::FoliageSmoothing::Block;
+    switch (block)
+    {
+    case Block::NoHdTextures:
+        return I18N::Game::FoliageSmoothingLockedHdTextures;
+    case Block::LowPreset:
+        return I18N::Game::FoliageSmoothingLockedLowPreset;
+    case Block::None:
+        break;
+    }
+    return I18N::Game::FoliageSmoothingTooltip;
+}
+
+// The soft sun shadow edges' strength slider: levels 0..10, 10 % each ([Render] SunShadowSoftEdgesStrength
+// is in percent), as SSAO's.
+static int SunShadowSoftEdgesStrengthLevel(int percent)
+{
+    return SsaoStrengthLevel(percent);
+}
+
+// The SunShadowSoftEdges row's hint: why it does not show right now, or what it is.
+static const wchar_t* SunShadowSoftEdgesHint(Render::Lighting::SunShadowSoftEdges::Block block)
+{
+    using Render::Lighting::SunShadowSoftEdges::Block;
+    switch (block)
+    {
+    case Block::NoHdTextures:
+        return I18N::Game::SunShadowSoftEdgesLockedHdTextures;
+    case Block::LowPreset:
+        return I18N::Game::SunShadowSoftEdgesLockedLowPreset;
+    case Block::NoSunShadows:
+        return I18N::Game::SunShadowSoftEdgesLockedSunShadows;
+    case Block::None:
+        break;
+    }
+    return I18N::Game::SunShadowSoftEdgesTooltip;
 }
 
 // The custom dropdowns' ids, 0 .. kLastDropdownId (see RmlToggleDropdown()).
@@ -693,6 +791,52 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("haze_strength", &model.hazeStrength);
     c.Bind("haze_strength_percent", &model.hazeStrengthPercent);
     c.Bind("haze_strength_label", &model.hazeStrengthLabel);
+    // Particles: the Remaster PC client's, as the wind's.
+    model.particlesAvailable = Render::Effects::Particles::Available() && Render::Look::RemasterGraphicsOptions();
+    c.Bind("particles_available", &model.particlesAvailable);
+    c.Bind("particles", &model.particles);
+    c.Bind("particles_locked", &model.particlesLocked);
+    c.Bind("particles_label", &model.particlesLabel);
+    c.Bind("particles_tooltip", &model.particlesTooltip);
+    c.Bind("particles_strength_shown", &model.particlesStrengthShown);
+    c.Bind("particles_strength", &model.particlesStrength);
+    c.Bind("particles_strength_percent", &model.particlesStrengthPercent);
+    c.Bind("particles_strength_label", &model.particlesStrengthLabel);
+    // Torch light on the ground: the Remaster PC client's, as the particles'.
+    model.torchLightsAvailable = Render::Terrain::TorchLights::Available() && Render::Look::RemasterGraphicsOptions();
+    c.Bind("torch_lights_available", &model.torchLightsAvailable);
+    c.Bind("torch_lights", &model.torchLights);
+    c.Bind("torch_lights_locked", &model.torchLightsLocked);
+    c.Bind("torch_lights_label", &model.torchLightsLabel);
+    c.Bind("torch_lights_tooltip", &model.torchLightsTooltip);
+    c.Bind("torch_lights_strength_shown", &model.torchLightsStrengthShown);
+    c.Bind("torch_lights_strength", &model.torchLightsStrength);
+    c.Bind("torch_lights_strength_percent", &model.torchLightsStrengthPercent);
+    c.Bind("torch_lights_strength_label", &model.torchLightsStrengthLabel);
+    // Foliage smoothing: the Remaster PC client's, as the torch light's.
+    model.foliageSmoothingAvailable =
+        Render::Textures::FoliageSmoothing::Available() && Render::Look::RemasterGraphicsOptions();
+    c.Bind("foliage_smoothing_available", &model.foliageSmoothingAvailable);
+    c.Bind("foliage_smoothing", &model.foliageSmoothing);
+    c.Bind("foliage_smoothing_locked", &model.foliageSmoothingLocked);
+    c.Bind("foliage_smoothing_label", &model.foliageSmoothingLabel);
+    c.Bind("foliage_smoothing_tooltip", &model.foliageSmoothingTooltip);
+    c.Bind("foliage_smoothing_strength_shown", &model.foliageSmoothingStrengthShown);
+    c.Bind("foliage_smoothing_strength", &model.foliageSmoothingStrength);
+    c.Bind("foliage_smoothing_strength_percent", &model.foliageSmoothingStrengthPercent);
+    c.Bind("foliage_smoothing_strength_label", &model.foliageSmoothingStrengthLabel);
+    // Soft sun shadow edges: the Remaster PC client's, as the foliage smoothing.
+    model.sunShadowSoftEdgesAvailable =
+        Render::Lighting::SunShadowSoftEdges::Available() && Render::Look::RemasterGraphicsOptions();
+    c.Bind("sun_shadow_soft_edges_available", &model.sunShadowSoftEdgesAvailable);
+    c.Bind("sun_shadow_soft_edges", &model.sunShadowSoftEdges);
+    c.Bind("sun_shadow_soft_edges_locked", &model.sunShadowSoftEdgesLocked);
+    c.Bind("sun_shadow_soft_edges_label", &model.sunShadowSoftEdgesLabel);
+    c.Bind("sun_shadow_soft_edges_tooltip", &model.sunShadowSoftEdgesTooltip);
+    c.Bind("sun_shadow_soft_edges_strength_shown", &model.sunShadowSoftEdgesStrengthShown);
+    c.Bind("sun_shadow_soft_edges_strength", &model.sunShadowSoftEdgesStrength);
+    c.Bind("sun_shadow_soft_edges_strength_percent", &model.sunShadowSoftEdgesStrengthPercent);
+    c.Bind("sun_shadow_soft_edges_strength_label", &model.sunShadowSoftEdgesStrengthLabel);
     // The preset, FXAA and sharpening rows: the Remaster client's (and the browser's), not the Classic one's.
     model.remasterGraphics = Render::Look::RemasterGraphicsOptions();
     c.Bind("remaster_graphics", &model.remasterGraphics);
@@ -829,6 +973,14 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleWind(); });
     c.BindEventCallback("option_toggle_haze",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleHaze(); });
+    c.BindEventCallback("option_toggle_particles",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleParticles(); });
+    c.BindEventCallback("option_toggle_torch_lights",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleTorchLights(); });
+    c.BindEventCallback("option_toggle_foliage_smoothing",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleFoliageSmoothing(); });
+    c.BindEventCallback("option_toggle_sun_shadow_soft_edges",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleSunShadowSoftEdges(); });
     c.BindEventCallback("option_toggle_vsync",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleVsync(); });
 
@@ -1324,6 +1476,34 @@ void mu::ui::window::COptionWindow::RmlGaugeEvent(Rml::Event& event, int gauge)
                 event, HazeStrengthLevel(GameConfig::GetInstance().GetHazeStrength()), kSsaoStrengthLevels,
                 volumeFromPointer))
             RmlHazeStrengthChanged(*next);
+        break;
+    case 6:
+        // The particle density, as the SSAO strength.
+        if (const auto next = UI::RmlBridge::ApplyLevelGaugeEvent(
+                event, ParticlesStrengthLevel(GameConfig::GetInstance().GetParticlesStrength()), kSsaoStrengthLevels,
+                volumeFromPointer))
+            RmlParticlesStrengthChanged(*next);
+        break;
+    case 7:
+        // The torch light strength, as the SSAO strength.
+        if (const auto next = UI::RmlBridge::ApplyLevelGaugeEvent(
+                event, TorchLightsStrengthLevel(GameConfig::GetInstance().GetTorchLightsStrength()),
+                kSsaoStrengthLevels, volumeFromPointer))
+            RmlTorchLightsStrengthChanged(*next);
+        break;
+    case 8:
+        // The foliage smoothing strength, as the SSAO strength.
+        if (const auto next = UI::RmlBridge::ApplyLevelGaugeEvent(
+                event, FoliageSmoothingStrengthLevel(GameConfig::GetInstance().GetFoliageSmoothingStrength()),
+                kSsaoStrengthLevels, volumeFromPointer))
+            RmlFoliageSmoothingStrengthChanged(*next);
+        break;
+    case 9:
+        // The soft sun shadow edges' strength, as the SSAO strength.
+        if (const auto next = UI::RmlBridge::ApplyLevelGaugeEvent(
+                event, SunShadowSoftEdgesStrengthLevel(GameConfig::GetInstance().GetSunShadowSoftEdgesStrength()),
+                kSsaoStrengthLevels, volumeFromPointer))
+            RmlSunShadowSoftEdgesStrengthChanged(*next);
         break;
     default:
         break;
@@ -1953,6 +2133,298 @@ void mu::ui::window::COptionWindow::SyncHazeRows(OptionRmlModel& model)
     syncText(model.hazeLabel, "haze_label", I18N::Game::HazeRow);
     syncText(model.hazeTooltip, "haze_tooltip", HazeHint(block));
     syncText(model.hazeStrengthLabel, "haze_strength_label", I18N::Game::HazeStrengthRow);
+}
+
+// A locked row ignores clicks (Particles::Block): its saved choice is kept for when they can show.
+void mu::ui::window::COptionWindow::RmlToggleParticles()
+{
+    namespace Particles = Render::Effects::Particles;
+    if (!m_RmlView.GetModel().particlesAvailable || Particles::Locks(Particles::CurrentBlock()))
+        return;
+    const GameConfig& config = GameConfig::GetInstance();
+    Particles::Choose(config.GetParticles() == 0, config.GetParticlesStrength());
+}
+
+// The slider shows only while the particles are on and the row not locked (SyncParticlesRows()).
+void mu::ui::window::COptionWindow::RmlParticlesStrengthChanged(int level)
+{
+    namespace Particles = Render::Effects::Particles;
+    const GameConfig& config = GameConfig::GetInstance();
+    if (!m_RmlView.GetModel().particlesAvailable || config.GetParticles() == 0 ||
+        Particles::Locks(Particles::CurrentBlock()))
+        return;
+    const int percent = std::clamp(level, 0, kSsaoStrengthLevels) * kSsaoPercentPerLevel;
+    if (percent == config.GetParticlesStrength())
+        return;
+    Particles::Choose(true, percent);
+}
+
+void mu::ui::window::COptionWindow::SyncParticlesRows(OptionRmlModel& model)
+{
+    const auto syncFlag = [this](bool& field, const char* name, bool value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncInt = [this](int& field, const char* name, int value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncText = [this](Rml::String& field, const char* name, const wchar_t* text)
+    {
+        const Rml::String narrow = StringUtils::WideToNarrow(text);
+        if (field != narrow)
+        {
+            field = narrow;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    if (!model.particlesAvailable)
+        return;
+    namespace Particles = Render::Effects::Particles;
+    // Pushed again every sync: a graphics preset switched to or from Low here turns them off or on
+    // at once (it logs only a change).
+    Particles::ApplyFromConfig();
+    const GameConfig& config = GameConfig::GetInstance();
+    const Particles::Block block = Particles::CurrentBlock();
+    const bool locked = Particles::Locks(block);
+    const bool on = config.GetParticles() != 0;
+    syncFlag(model.particlesLocked, "particles_locked", locked);
+    syncFlag(model.particles, "particles", on);
+    syncFlag(model.particlesStrengthShown, "particles_strength_shown", on && !locked);
+    syncInt(model.particlesStrength, "particles_strength", ParticlesStrengthLevel(config.GetParticlesStrength()));
+    syncInt(model.particlesStrengthPercent, "particles_strength_percent", config.GetParticlesStrength());
+    syncText(model.particlesLabel, "particles_label", I18N::Game::ParticlesRow);
+    syncText(model.particlesTooltip, "particles_tooltip", ParticlesHint(block));
+    syncText(model.particlesStrengthLabel, "particles_strength_label", I18N::Game::ParticlesStrengthRow);
+}
+
+// A locked row ignores clicks (TorchLights::Block): its saved choice is kept for when it can show.
+void mu::ui::window::COptionWindow::RmlToggleTorchLights()
+{
+    namespace TorchLights = Render::Terrain::TorchLights;
+    if (!m_RmlView.GetModel().torchLightsAvailable || TorchLights::Locks(TorchLights::CurrentBlock()))
+        return;
+    const GameConfig& config = GameConfig::GetInstance();
+    TorchLights::Choose(config.GetTorchLights() == 0, config.GetTorchLightsStrength());
+}
+
+// The slider shows only while the torch light is on and the row not locked (SyncTorchLightsRows()).
+void mu::ui::window::COptionWindow::RmlTorchLightsStrengthChanged(int level)
+{
+    namespace TorchLights = Render::Terrain::TorchLights;
+    const GameConfig& config = GameConfig::GetInstance();
+    if (!m_RmlView.GetModel().torchLightsAvailable || config.GetTorchLights() == 0 ||
+        TorchLights::Locks(TorchLights::CurrentBlock()))
+        return;
+    const int percent = std::clamp(level, 0, kSsaoStrengthLevels) * kSsaoPercentPerLevel;
+    if (percent == config.GetTorchLightsStrength())
+        return;
+    TorchLights::Choose(true, percent);
+}
+
+void mu::ui::window::COptionWindow::SyncTorchLightsRows(OptionRmlModel& model)
+{
+    const auto syncFlag = [this](bool& field, const char* name, bool value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncInt = [this](int& field, const char* name, int value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncText = [this](Rml::String& field, const char* name, const wchar_t* text)
+    {
+        const Rml::String narrow = StringUtils::WideToNarrow(text);
+        if (field != narrow)
+        {
+            field = narrow;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    if (!model.torchLightsAvailable)
+        return;
+    namespace TorchLights = Render::Terrain::TorchLights;
+    // Pushed again every sync: a graphics preset switched to or from Low here turns it off or on
+    // at once (it logs only a change).
+    TorchLights::ApplyFromConfig();
+    const GameConfig& config = GameConfig::GetInstance();
+    const TorchLights::Block block = TorchLights::CurrentBlock();
+    const bool locked = TorchLights::Locks(block);
+    const bool on = config.GetTorchLights() != 0;
+    syncFlag(model.torchLightsLocked, "torch_lights_locked", locked);
+    syncFlag(model.torchLights, "torch_lights", on);
+    syncFlag(model.torchLightsStrengthShown, "torch_lights_strength_shown", on && !locked);
+    syncInt(model.torchLightsStrength, "torch_lights_strength",
+            TorchLightsStrengthLevel(config.GetTorchLightsStrength()));
+    syncInt(model.torchLightsStrengthPercent, "torch_lights_strength_percent", config.GetTorchLightsStrength());
+    syncText(model.torchLightsLabel, "torch_lights_label", I18N::Game::TorchLightsRow);
+    syncText(model.torchLightsTooltip, "torch_lights_tooltip", TorchLightsHint(block));
+    syncText(model.torchLightsStrengthLabel, "torch_lights_strength_label", I18N::Game::TorchLightsStrengthRow);
+}
+
+// A locked row ignores clicks (FoliageSmoothing::Block): its saved choice is kept for when it can show.
+void mu::ui::window::COptionWindow::RmlToggleFoliageSmoothing()
+{
+    namespace FoliageSmoothing = Render::Textures::FoliageSmoothing;
+    if (!m_RmlView.GetModel().foliageSmoothingAvailable || FoliageSmoothing::Locks(FoliageSmoothing::CurrentBlock()))
+        return;
+    const GameConfig& config = GameConfig::GetInstance();
+    FoliageSmoothing::Choose(config.GetFoliageSmoothing() == 0, config.GetFoliageSmoothingStrength());
+}
+
+// The slider shows only while the foliage smoothing is on and the row not locked (SyncFoliageSmoothingRows()).
+void mu::ui::window::COptionWindow::RmlFoliageSmoothingStrengthChanged(int level)
+{
+    namespace FoliageSmoothing = Render::Textures::FoliageSmoothing;
+    const GameConfig& config = GameConfig::GetInstance();
+    if (!m_RmlView.GetModel().foliageSmoothingAvailable || config.GetFoliageSmoothing() == 0 ||
+        FoliageSmoothing::Locks(FoliageSmoothing::CurrentBlock()))
+        return;
+    const int percent = std::clamp(level, 0, kSsaoStrengthLevels) * kSsaoPercentPerLevel;
+    if (percent == config.GetFoliageSmoothingStrength())
+        return;
+    FoliageSmoothing::Choose(true, percent);
+}
+
+void mu::ui::window::COptionWindow::SyncFoliageSmoothingRows(OptionRmlModel& model)
+{
+    const auto syncFlag = [this](bool& field, const char* name, bool value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncInt = [this](int& field, const char* name, int value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncText = [this](Rml::String& field, const char* name, const wchar_t* text)
+    {
+        const Rml::String narrow = StringUtils::WideToNarrow(text);
+        if (field != narrow)
+        {
+            field = narrow;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    if (!model.foliageSmoothingAvailable)
+        return;
+    namespace FoliageSmoothing = Render::Textures::FoliageSmoothing;
+    // Pushed again every sync: a graphics preset switched to or from Low here turns it off or on
+    // at once (it logs only a change, and the textures switch only on a new bias).
+    FoliageSmoothing::ApplyFromConfig();
+    const GameConfig& config = GameConfig::GetInstance();
+    const FoliageSmoothing::Block block = FoliageSmoothing::CurrentBlock();
+    const bool locked = FoliageSmoothing::Locks(block);
+    const bool on = config.GetFoliageSmoothing() != 0;
+    syncFlag(model.foliageSmoothingLocked, "foliage_smoothing_locked", locked);
+    syncFlag(model.foliageSmoothing, "foliage_smoothing", on);
+    syncFlag(model.foliageSmoothingStrengthShown, "foliage_smoothing_strength_shown", on && !locked);
+    syncInt(model.foliageSmoothingStrength, "foliage_smoothing_strength",
+            FoliageSmoothingStrengthLevel(config.GetFoliageSmoothingStrength()));
+    syncInt(model.foliageSmoothingStrengthPercent, "foliage_smoothing_strength_percent",
+            config.GetFoliageSmoothingStrength());
+    syncText(model.foliageSmoothingLabel, "foliage_smoothing_label", I18N::Game::FoliageSmoothingRow);
+    syncText(model.foliageSmoothingTooltip, "foliage_smoothing_tooltip", FoliageSmoothingHint(block));
+    syncText(model.foliageSmoothingStrengthLabel, "foliage_smoothing_strength_label",
+             I18N::Game::FoliageSmoothingStrengthRow);
+}
+
+// A locked row ignores clicks (SunShadowSoftEdges::Block): its saved choice is kept for when it can show.
+void mu::ui::window::COptionWindow::RmlToggleSunShadowSoftEdges()
+{
+    namespace SunShadowSoftEdges = Render::Lighting::SunShadowSoftEdges;
+    if (!m_RmlView.GetModel().sunShadowSoftEdgesAvailable ||
+        SunShadowSoftEdges::Locks(SunShadowSoftEdges::CurrentBlock()))
+        return;
+    const GameConfig& config = GameConfig::GetInstance();
+    SunShadowSoftEdges::Choose(config.GetSunShadowSoftEdges() == 0, config.GetSunShadowSoftEdgesStrength());
+}
+
+// The slider shows only while the soft edges are on and the row not locked (SyncSunShadowSoftEdgesRows()).
+void mu::ui::window::COptionWindow::RmlSunShadowSoftEdgesStrengthChanged(int level)
+{
+    namespace SunShadowSoftEdges = Render::Lighting::SunShadowSoftEdges;
+    const GameConfig& config = GameConfig::GetInstance();
+    if (!m_RmlView.GetModel().sunShadowSoftEdgesAvailable || config.GetSunShadowSoftEdges() == 0 ||
+        SunShadowSoftEdges::Locks(SunShadowSoftEdges::CurrentBlock()))
+        return;
+    const int percent = std::clamp(level, 0, kSsaoStrengthLevels) * kSsaoPercentPerLevel;
+    if (percent == config.GetSunShadowSoftEdgesStrength())
+        return;
+    SunShadowSoftEdges::Choose(true, percent);
+}
+
+void mu::ui::window::COptionWindow::SyncSunShadowSoftEdgesRows(OptionRmlModel& model)
+{
+    const auto syncFlag = [this](bool& field, const char* name, bool value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncInt = [this](int& field, const char* name, int value)
+    {
+        if (field != value)
+        {
+            field = value;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    const auto syncText = [this](Rml::String& field, const char* name, const wchar_t* text)
+    {
+        const Rml::String narrow = StringUtils::WideToNarrow(text);
+        if (field != narrow)
+        {
+            field = narrow;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    if (!model.sunShadowSoftEdgesAvailable)
+        return;
+    namespace SunShadowSoftEdges = Render::Lighting::SunShadowSoftEdges;
+    // Pushed again every sync: a graphics preset switched to or from Low here turns it off or on
+    // at once (it logs only a change).
+    SunShadowSoftEdges::ApplyFromConfig();
+    const GameConfig& config = GameConfig::GetInstance();
+    const SunShadowSoftEdges::Block block = SunShadowSoftEdges::CurrentBlock();
+    const bool locked = SunShadowSoftEdges::Locks(block);
+    const bool on = config.GetSunShadowSoftEdges() != 0;
+    syncFlag(model.sunShadowSoftEdgesLocked, "sun_shadow_soft_edges_locked", locked);
+    syncFlag(model.sunShadowSoftEdges, "sun_shadow_soft_edges", on);
+    syncFlag(model.sunShadowSoftEdgesStrengthShown, "sun_shadow_soft_edges_strength_shown", on && !locked);
+    syncInt(model.sunShadowSoftEdgesStrength, "sun_shadow_soft_edges_strength",
+            SunShadowSoftEdgesStrengthLevel(config.GetSunShadowSoftEdgesStrength()));
+    syncInt(model.sunShadowSoftEdgesStrengthPercent, "sun_shadow_soft_edges_strength_percent",
+            config.GetSunShadowSoftEdgesStrength());
+    syncText(model.sunShadowSoftEdgesLabel, "sun_shadow_soft_edges_label", I18N::Game::SunShadowSoftEdgesRow);
+    syncText(model.sunShadowSoftEdgesTooltip, "sun_shadow_soft_edges_tooltip", SunShadowSoftEdgesHint(block));
+    syncText(model.sunShadowSoftEdgesStrengthLabel, "sun_shadow_soft_edges_strength_label",
+             I18N::Game::SunShadowSoftEdgesStrengthRow);
 }
 
 void mu::ui::window::COptionWindow::RmlToggleShowFpsCounter()
@@ -2742,6 +3214,10 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     SyncSsaoRows(model);
     SyncWindRows(model);
     SyncHazeRows(model);
+    SyncParticlesRows(model);
+    SyncTorchLightsRows(model);
+    SyncFoliageSmoothingRows(model);
+    SyncSunShadowSoftEdgesRows(model);
     // Rebuilt every sync for a live language switch, as the rows above.
     syncMultiplierRow(model.interfaceViewLabels, "interface_view_labels", model.interfaceViewIndex,
                       "interface_view_index", model.interfaceViewValueLabel, "interface_view_value_label",

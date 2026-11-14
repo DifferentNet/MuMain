@@ -16162,6 +16162,72 @@
   <data name="HazeAfterRestart" xml:space="preserve">
     <value>Включение заработает после перезапуска.</value>
   </data>
+  <data name="ParticlesRow" xml:space="preserve">
+    <value>Частицы в воздухе</value>
+  </data>
+  <data name="ParticlesTooltip" xml:space="preserve">
+    <value>Пыль, пыльца, светлячки, мелкий снег и пепел в воздухе на некоторых картах. Мелкие и неяркие: персонажей, монстров и дроп не закрывают.</value>
+  </data>
+  <data name="ParticlesStrengthRow" xml:space="preserve">
+    <value>Плотность частиц</value>
+  </data>
+  <data name="ParticlesLockedHdTextures" xml:space="preserve">
+    <value>Нужны HD-текстуры.</value>
+  </data>
+  <data name="ParticlesLockedLowPreset" xml:space="preserve">
+    <value>Выключено на пресете графики «Низкий».</value>
+  </data>
+  <data name="TorchLightsRow" xml:space="preserve">
+    <value>Свет факелов на земле</value>
+  </data>
+  <data name="TorchLightsTooltip" xml:space="preserve">
+    <value>Факелы, фонари и костры дают на земле мягкое круглое пятно света. Персонажи, монстры и снаряжение освещены как прежде.</value>
+  </data>
+  <data name="TorchLightsStrengthRow" xml:space="preserve">
+    <value>Сила света факелов</value>
+  </data>
+  <data name="TorchLightsLockedHdTextures" xml:space="preserve">
+    <value>Нужны HD-текстуры.</value>
+  </data>
+  <data name="TorchLightsLockedLowPreset" xml:space="preserve">
+    <value>Выключено на пресете графики «Низкий».</value>
+  </data>
+  <data name="TorchLightsLockedLighting" xml:space="preserve">
+    <value>Нужны Enhanced lighting и Dynamic lights.</value>
+  </data>
+  <data name="FoliageSmoothingRow" xml:space="preserve">
+    <value>Сглаживание листвы и травы</value>
+  </data>
+  <data name="FoliageSmoothingTooltip" xml:space="preserve">
+    <value>Трава, листва, заборы и перила меньше рябят при движении камеры. Персонажи, монстры и снаряжение не меняются.</value>
+  </data>
+  <data name="FoliageSmoothingStrengthRow" xml:space="preserve">
+    <value>Сила сглаживания листвы</value>
+  </data>
+  <data name="FoliageSmoothingLockedHdTextures" xml:space="preserve">
+    <value>Нужны HD-текстуры.</value>
+  </data>
+  <data name="FoliageSmoothingLockedLowPreset" xml:space="preserve">
+    <value>Выключено на пресете графики «Низкий».</value>
+  </data>
+  <data name="SunShadowSoftEdgesRow" xml:space="preserve">
+    <value>Мягкие края теней от солнца</value>
+  </data>
+  <data name="SunShadowSoftEdgesTooltip" xml:space="preserve">
+    <value>Тени от солнца чёткие рядом с предметом и мягче вдали от него. Меняются только края теней: персонажи, монстры и снаряжение освещены как раньше.</value>
+  </data>
+  <data name="SunShadowSoftEdgesStrengthRow" xml:space="preserve">
+    <value>Мягкость краёв теней</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedHdTextures" xml:space="preserve">
+    <value>Нужны HD-текстуры.</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedLowPreset" xml:space="preserve">
+    <value>Выключено на пресете графики «Низкий».</value>
+  </data>
+  <data name="SunShadowSoftEdgesLockedSunShadows" xml:space="preserve">
+    <value>Нужны тени от солнца (средние или высокие).</value>
+  </data>
   <data name="BagPageLocked" xml:space="preserve">
     <value>Страница 2 закрыта</value>
   </data>

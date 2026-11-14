@@ -37,6 +37,11 @@ set(shader_specs
     "post_ssao_blur.frag|cb0,space3+s0,space2+t0,space2"
     "post_ssao_apply.frag|cb0,space3+s0,space2+s1,space2+t0,space2+t1,space2"
     "post_haze.frag|cb0,space3+s0,space2+t0,space2"
+    "ambient_particles.vert|cb0,space1"
+    "ambient_particles.frag|-"
+    "terrain_lights.vert|cb0,space1+cb1,space1"
+    "terrain_lights.frag|cb0,space3+cb1,space3+s0,space2+t0,space2"
+    "terrain_lights_shadow.frag|cb0,space3+cb1,space3+s0,space2+s1,space2+t0,space2+t1,space2"
 )
 
 foreach(shader_spec IN LISTS shader_specs)

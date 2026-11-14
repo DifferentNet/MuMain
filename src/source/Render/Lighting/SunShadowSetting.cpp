@@ -3,6 +3,7 @@
 #include "Render/Lighting/SunShadowSetting.h"
 
 #include "Render/Lighting/LightMoodSetting.h"
+#include "Render/Lighting/SunShadowSoftEdges.h"
 #include "Render/Renderer/MuRenderer.h"
 
 #include <algorithm>
@@ -51,7 +52,9 @@ mu::SunShadowFrame BuildFrame(const Data::Maps::LightMood& mood, int level, cons
 
 void Submit(const float focus[3])
 {
-    mu::GetRenderer().SetSunShadow(BuildFrame(LightMood::WorldMood(), s_level, focus));
+    mu::SunShadowFrame frame = BuildFrame(LightMood::WorldMood(), s_level, focus);
+    SunShadowSoftEdges::ApplyToFrame(frame, SunShadowSoftEdges::Strength());
+    mu::GetRenderer().SetSunShadow(frame);
 }
 
 bool Active()

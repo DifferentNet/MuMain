@@ -22,6 +22,10 @@ struct DynamicLight
     int range = 0;
     // range in world units.
     float radius = 0.0f;
+    // Made by a map object's light call (LightSource::Map through the light history): torches,
+    // lamps and fires. The Remaster's torch light on the ground (Render/Terrain/TorchLights.h)
+    // picks only these.
+    bool fromMap = false;
 };
 
 } // namespace Render::Lighting
