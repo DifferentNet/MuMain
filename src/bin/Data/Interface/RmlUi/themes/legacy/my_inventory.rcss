@@ -309,7 +309,7 @@
 	#option_tooltip_anchor { left: 170px; top: 62px; }
 
 	/* The gold above the bag, then the bag; the gold short of the sort button. */
-	#gold_bg { left: var(--bag-x); top: 34px; width: calc(8 * var(--item-cell) - 180px); height: 30px; }
+	#gold_bg { left: var(--bag-x); top: 34px; width: calc(8 * var(--item-cell) - 220px); height: 30px; }
 	#gold_text { left: calc(var(--bag-x) + 46px); top: 42px; }
 	#item_grid, #item_grid_counts, #bag_lock { left: var(--bag-x); top: 70px; }
 	/* Page 2's cover in finger-sized cells: its lines and button lower and wider. */
@@ -317,13 +317,14 @@
 	.bag-lock-cells { top: 140px; }
 	.bag-lock-price { top: 170px; }
 	.bag-lock-btn { left: calc(50% - 80px); top: 210px; width: 160px; height: 44px; line-height: 44px; }
-	/* The page tabs a finger wide, right of the gold on the bag's top edge. */
-	.bag-tab { top: 40px; width: 60px; height: 27px; }
-	.bag-tab-1 { left: calc(var(--bag-x) + 8 * var(--item-cell) - 124px); }
-	.bag-tab-2 { left: calc(var(--bag-x) + 8 * var(--item-cell) - 60px); }
-	.bag-tab-lock { right: 6px; top: 6px; width: 14px; height: 16px; }
-	/* The sort button left of the tabs, a little narrower, its bars bigger. */
-	#btn_bag_sort { left: calc(var(--bag-x) + 8 * var(--item-cell) - 176px); width: 48px; }
+	/* The page tabs a finger wide and tall (60 x 40), right of the gold on the bag's top edge, centred on
+	   the gold's line, and clear of the corner close (56 x 50 at the panel's top right, base.rcss). */
+	.bag-tab { top: 28px; width: 60px; height: 40px; }
+	.bag-tab-1 { left: calc(var(--bag-x) + 8 * var(--item-cell) - 164px); }
+	.bag-tab-2 { left: calc(var(--bag-x) + 8 * var(--item-cell) - 100px); }
+	.bag-tab-lock { right: 6px; top: 12px; width: 14px; height: 16px; }
+	/* The sort button left of the tabs, as tall, a little narrower, its bars bigger. */
+	#btn_bag_sort { left: calc(var(--bag-x) + 8 * var(--item-cell) - 216px); width: 48px; }
 	.bag-sort-icon { width: 20px; height: 13px; margin-left: -10px; margin-top: -6px; }
 	.bag-sort-bar { height: 3px; }
 	.bag-sort-bar-1 { width: 7px; }
@@ -347,4 +348,7 @@
 	/* The sort button joins them, under the jewel bank; the gold its width again. */
 	#panel.beside #btn_bag_sort { left: calc(var(--bag-x) + 8 * var(--item-cell) + 12px); top: 254px; width: 44px; height: 36px; }
 	#panel.beside #gold_bg { width: 200px; }
+	/* The corner close lies right of the bag there: the tabs keep the bag's right edge. */
+	#panel.beside .bag-tab-1 { left: calc(var(--bag-x) + 8 * var(--item-cell) - 124px); }
+	#panel.beside .bag-tab-2 { left: calc(var(--bag-x) + 8 * var(--item-cell) - 60px); }
 }

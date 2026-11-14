@@ -159,3 +159,10 @@
 #panel[data-kind="guild-appoint"] .box-btn:nth-child(2) { left: 57px; top: 57px; width: 114px; }
 #panel[data-kind="guild-appoint"] .box-btn:nth-child(3) { left: 48px; top: 127px; }
 #panel[data-kind="guild-appoint"] .box-btn:nth-child(4) { left: 112px; top: 127px; }
+
+/* A phone (theme flag "mobile"): the results' OK a finger wide, 84 x 42, centred; its top edge stays
+   where the 54 x 30 button's was (50 above the bottom edge), so the lines keep their room. */
+@media (theme: mobile) {
+	#panel[data-kind="blood-castle-result"] .box-btn, #panel[data-kind="chaos-castle-result"] .box-btn,
+	#panel[data-kind="devil-square-rank"] .box-btn { left: 73px; bottom: 8px; width: 84px; height: 42px; }
+}

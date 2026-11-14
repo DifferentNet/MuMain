@@ -75,3 +75,6 @@
 	border-radius: token(radius-sm)px;
 	pointer-events: none;
 }
+
+/* A phone's quick phrases: the legacy theme's only (phones use it); never shown here. */
+.cib-quick { display: none; }
