@@ -98,6 +98,9 @@ void mu::ui::window::CSkillList::Reset()
 
     m_GridSnapshot.clear();
     m_PetSnapshot.clear();
+    // The cleared snapshot is a change too: a following character with no skills never rebuilds it, and
+    // the main frame copies it only when the generation moves.
+    ++m_uGridSnapshotGeneration;
     m_bTooltipPending = false;
     m_iTooltipSkillIndex = -1;
     m_fTooltipAnchorX = 0.f;
@@ -619,13 +622,18 @@ bool IsHudSkillUsable(ActionSkillType bySkillType)
 }
 } // namespace
 
-Rml::String mu::ui::window::CSkillList::GetSkillIconDecorator(int iIndex)
+namespace
+{
+const Rml::String kNoIconDecorator = "none";
+} // namespace
+
+const Rml::String& mu::ui::window::CSkillList::GetSkillIconDecorator(int iIndex)
 {
     auto bySkillType = CharacterAttribute->Skill[iIndex];
 
     if (bySkillType == 0)
     {
-        return "none";
+        return kNoIconDecorator;
     }
 
     if (iIndex >= AT_PET_COMMAND_DEFAULT)
@@ -638,23 +646,24 @@ Rml::String mu::ui::window::CSkillList::GetSkillIconDecorator(int iIndex)
                                             .skillUseType = SkillAttribute[bySkillType].SkillUseType,
                                             .magicIcon = SkillAttribute[bySkillType].Magic_Icon,
                                             .usable = IsHudSkillUsable(bySkillType)});
-    const std::string sprite = UI::Skills::Icon::IconSpriteName(icon);
-    return sprite.empty() ? Rml::String("none") : "image(" + sprite + ")";
+    // The usability check above stays per call (the grey tint follows it at once); only the text is
+    // kept, per atlas cell and state, instead of formatted again each frame.
+    return UI::Skills::Icon::IconDecorator(icon);
 }
 
-Rml::String mu::ui::window::CSkillList::GetHotKeySlotIconDecorator(int iSlotIndex)
+const Rml::String& mu::ui::window::CSkillList::GetHotKeySlotIconDecorator(int iSlotIndex)
 {
     return GetHotKeyIconDecorator(SlotHotKey(iSlotIndex));
 }
 
-Rml::String mu::ui::window::CSkillList::GetHotKeyIconDecorator(int iHotKey)
+const Rml::String& mu::ui::window::CSkillList::GetHotKeyIconDecorator(int iHotKey)
 {
-    return IsHotKeyShown(iHotKey) ? GetSkillIconDecorator(m_iHotKeySkillType[iHotKey]) : Rml::String("none");
+    return IsHotKeyShown(iHotKey) ? GetSkillIconDecorator(m_iHotKeySkillType[iHotKey]) : kNoIconDecorator;
 }
 
-Rml::String mu::ui::window::CSkillList::GetCurrentSkillIconDecorator()
+const Rml::String& mu::ui::window::CSkillList::GetCurrentSkillIconDecorator()
 {
-    return CharacterAttribute->SkillNumber > 0 ? GetSkillIconDecorator(Hero->CurrentSkill) : Rml::String("none");
+    return CharacterAttribute->SkillNumber > 0 ? GetSkillIconDecorator(Hero->CurrentSkill) : kNoIconDecorator;
 }
 
 int mu::ui::window::CSkillList::GetSkillHotKeyNumber(int iIndex)
@@ -721,10 +730,17 @@ Rml::String HotKeyText(int hotkey)
 
 std::vector<int> mu::ui::window::CSkillList::GetListedSkills() const
 {
-    // The skills the legacy grid loop drew, in its order.
     std::vector<int> skills;
+    CollectListedSkills(skills);
+    return skills;
+}
+
+void mu::ui::window::CSkillList::CollectListedSkills(std::vector<int>& skills) const
+{
+    // The skills the legacy grid loop drew, in its order.
+    skills.clear();
     if (CharacterAttribute->SkillNumber == 0)
-        return skills;
+        return;
 
     for (int i = 0; i < MAX_MAGIC; ++i)
     {
@@ -745,28 +761,66 @@ std::vector<int> mu::ui::window::CSkillList::GetListedSkills() const
         for (int i = AT_PET_COMMAND_DEFAULT; i < AT_PET_COMMAND_END; ++i)
             skills.push_back(i);
     }
-    return skills;
 }
+
+namespace
+{
+template <typename T> void AssignIfDifferent(T& field, const T& value, bool& changed)
+{
+    if (field == value)
+        return;
+    field = value;
+    changed = true;
+}
+
+// The snapshot's next cell, reused when it is there already, so its strings keep their buffers.
+mu::ui::window::SkillCellEntry& NextCell(std::vector<mu::ui::window::SkillCellEntry>& cells, size_t& used, bool& changed)
+{
+    if (used == cells.size())
+    {
+        cells.emplace_back();
+        changed = true;
+    }
+    return cells[used++];
+}
+
+void DropUnusedCells(std::vector<mu::ui::window::SkillCellEntry>& cells, size_t used, bool& changed)
+{
+    if (cells.size() == used)
+        return;
+    cells.resize(used);
+    changed = true;
+}
+} // namespace
 
 void mu::ui::window::CSkillList::RebuildGridSnapshot()
 {
     // The theme lays the grid out (the original's zig-zag in legacy). The four pet commands are
     // always all four, so the theme puts each on its own cell; only the grid needs a computed
     // position.
-    m_GridSnapshot.clear();
-    m_PetSnapshot.clear();
-
-    for (const int i : GetListedSkills())
+    //
+    // Runs every frame while the grid is open: the cells are updated in place, field by field, so a
+    // frame where nothing moved allocates nothing and leaves the generation (the model copy) alone.
+    CollectListedSkills(m_ListedScratch);
+    bool changed = false;
+    size_t gridUsed = 0;
+    size_t petUsed = 0;
+    for (const int i : m_ListedScratch)
     {
-        SkillCellEntry entry;
-        entry.skillIndex = i;
-        entry.isPet = i >= AT_PET_COMMAND_DEFAULT;
-        entry.isCurrent = (i == Hero->CurrentSkill);
-        entry.cooldownFraction = ComputeSkillCooldownFraction(i);
-        entry.icon = GetSkillIconDecorator(i);
-        entry.hotkey = HotKeyText(GetSkillHotKeyNumber(i));
-        (entry.isPet ? m_PetSnapshot : m_GridSnapshot).push_back(entry);
+        const bool isPet = i >= AT_PET_COMMAND_DEFAULT;
+        SkillCellEntry& entry =
+            isPet ? NextCell(m_PetSnapshot, petUsed, changed) : NextCell(m_GridSnapshot, gridUsed, changed);
+        AssignIfDifferent(entry.skillIndex, i, changed);
+        AssignIfDifferent(entry.isPet, isPet, changed);
+        AssignIfDifferent(entry.isCurrent, i == Hero->CurrentSkill, changed);
+        AssignIfDifferent(entry.cooldownFraction, ComputeSkillCooldownFraction(i), changed);
+        AssignIfDifferent(entry.icon, GetSkillIconDecorator(i), changed);
+        AssignIfDifferent(entry.hotkey, HotKeyText(GetSkillHotKeyNumber(i)), changed);
     }
+    DropUnusedCells(m_GridSnapshot, gridUsed, changed);
+    DropUnusedCells(m_PetSnapshot, petUsed, changed);
+    if (changed)
+        ++m_uGridSnapshotGeneration;
 }
 
 // Native CNewUISkillList::RenderSkillInfo() centres the skill tooltip at box x + 10 for the current

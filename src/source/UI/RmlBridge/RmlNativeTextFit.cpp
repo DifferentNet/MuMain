@@ -11,6 +11,7 @@
 #include <RmlUi/Core/ElementText.h>
 #include <RmlUi/Core/FontEngineInterface.h>
 #include <RmlUi/Core/Property.h>
+#include <RmlUi/Core/SystemInterface.h>
 #include <RmlUi/Core/TextShapingContext.h>
 
 #include <algorithm>
@@ -154,8 +155,15 @@ bool FitSubtree(Rml::Element* element)
 
 void ForgetRemovedElements()
 {
+    // Nothing to sweep while no element was fitted (per-frame cost).
+    if (FitStates().empty())
+        return;
     std::erase_if(FitStates(), [](const auto& entry) { return entry.second.element.get() != entry.first; });
 }
+
+// How often a document whose markup never names .native-fit is walked all the same, in case an element
+// got the class some other way.
+constexpr double kUnmarkedRecheckSeconds = 0.5;
 } // namespace
 
 void FitNativeTextToBoxes(Rml::Context* context)
@@ -163,10 +171,20 @@ void FitNativeTextToBoxes(Rml::Context* context)
     if (!context || !ThemeUsesNativeTextSize())
         return;
 
+    // Walking every visible document's whole tree each frame was the cost; only the documents whose
+    // markup names the class are walked every frame, the rest every kUnmarkedRecheckSeconds.
+    static double s_nextUnmarkedWalk = 0.0;
+    const double now = Rml::GetSystemInterface()->GetElapsedTime();
+    const bool walkUnmarked = now >= s_nextUnmarkedWalk || now < s_nextUnmarkedWalk - kUnmarkedRecheckSeconds;
+    if (walkUnmarked)
+        s_nextUnmarkedWalk = now + kUnmarkedRecheckSeconds;
+
     for (int i = 0; i < context->GetNumDocuments(); ++i)
     {
         Rml::ElementDocument* document = context->GetDocument(i);
-        if (document->IsVisible() && FitSubtree(document))
+        if (!document->IsVisible() || (!walkUnmarked && MarkupLacksClass(document, MarkupClass::NativeFit)))
+            continue;
+        if (FitSubtree(document))
             document->UpdateDocument();
     }
     ForgetRemovedElements();

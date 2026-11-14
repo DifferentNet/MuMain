@@ -99,3 +99,13 @@ TEST_CASE("skills from Spiral Slash on use the second atlas eight per row [ui][s
     CheckCell(ResolveSkillIcon(Plain(AT_SKILL_SPIRAL_SLASH)), Atlas::Skill2, 0, 0);
     CheckCell(ResolveSkillIcon(Plain(AT_SKILL_SPIRAL_SLASH + 10)), Atlas::Skill2, 2, 1);
 }
+
+TEST_CASE("the icon decorator wraps the sprite and is kept per cell and state [ui][skills]")
+{
+    const SkillIcon lit = ResolveSkillIcon(Plain(AT_SKILL_FALLING_SLASH));
+    const SkillIcon grey = ResolveSkillIcon(Grey(AT_SKILL_FALLING_SLASH));
+    CHECK(IconDecorator(lit) == "image(skill-icon-skill1-lit-2-2)");
+    CHECK(IconDecorator(grey) == "image(skill-icon-skill1-grey-2-2)");
+    CHECK(&IconDecorator(lit) == &IconDecorator(lit));
+    CHECK(IconDecorator(ResolveSkillIcon(Plain(0))) == "none");
+}

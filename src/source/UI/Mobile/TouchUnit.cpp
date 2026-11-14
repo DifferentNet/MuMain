@@ -58,7 +58,14 @@ float Measure(int percent, bool& settled)
     mu::web::CanvasOnPage canvas;
     if (mu::web::MeasureCanvas(canvas))
     {
-        return UI::Mobile::ButtonSize::UnitCssPixels(canvas.cssWidth, canvas.cssHeight, percent) * canvas.pixelsPerCss;
+        // The top row's width counts in the phone's HUD only: a PC's touch screen or pad row keeps its unit.
+        namespace ButtonSize = UI::Mobile::ButtonSize;
+        const float topRow = !UI::Mobile::ReplacesPcHud()      ? 0.f
+                             : UI::Mobile::IsGamepadInUse() ? ButtonSize::PadTopRowUnits
+                                                            : ButtonSize::TouchTopRowUnits;
+        const float dpCss = canvas.pixelsPerCss > 0.f ? DpRatio() / canvas.pixelsPerCss : 1.f;
+        return ButtonSize::UnitCssPixels(canvas.cssWidth, canvas.cssHeight, percent, topRow, dpCss) *
+               canvas.pixelsPerCss;
     }
     settled = false;
 #endif

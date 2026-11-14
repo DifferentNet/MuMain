@@ -325,3 +325,26 @@
 /* #panel.tall's buttons keep the same 20dp bottom margin the default 160dp panel already has
    (110 + 30 + 20 = 160). */
 
+/* A phone (theme flag "mobile"): the buttons a finger wide, 84 x 44 (66 wide for three), with more
+   room between them, 16 above the bottom edge. The panel keeps 66 under the text for them (native's
+   56 + 10), so each of its minimums grows by 10; .tall and .portrait keep their own. */
+@media (theme: mobile) {
+	#panel { min-height: 127dp; }
+	#panel.tall { min-height: 250dp; }
+	#panel.portrait { min-height: 232dp; }
+	.gcd-body { margin-bottom: 66dp; }
+	.btn.gcd-btn-primary, .btn.gcd-btn-secondary, .btn.gcd-btn-cancel {
+		bottom: 16dp;
+		width: 84dp;
+		height: 44dp;
+	}
+	/* Two: 12 from the edges, 38 apart; one centred. */
+	.gcd-btn-primary { left: 12dp; }
+	.gcd-btn-primary.solo { left: 73dp; }
+	.gcd-btn-secondary, .gcd-btn-cancel { left: 134dp; }
+	/* Three: 66 wide, 6 from the edges, 10 apart. */
+	.btn.gcd-btn-primary.triple, .btn.gcd-btn-secondary.triple, .btn.gcd-btn-cancel.triple { width: 66dp; }
+	.gcd-btn-primary.triple { left: 6dp; }
+	.gcd-btn-secondary.triple { left: 82dp; }
+	.gcd-btn-cancel.triple { left: 158dp; }
+}

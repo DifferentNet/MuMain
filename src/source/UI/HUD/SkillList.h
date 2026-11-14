@@ -74,10 +74,11 @@ namespace mu::ui::window
 
         // The icon decorator ("image(<sprite>)", or "none") for a skill/pet-command index, lit or
         // grey as the original's RenderSkillIcon() chose: UI::Skills::Icon::ResolveSkillIcon() on
-        // this frame's usability.
-        Rml::String GetSkillIconDecorator(int iIndex);
-        Rml::String GetHotKeySlotIconDecorator(int iSlotIndex);
-        Rml::String GetCurrentSkillIconDecorator();
+        // this frame's usability. A reference to a kept string (UI::Skills::Icon::IconDecorator()),
+        // valid for the program's lifetime: the HUD reads about a dozen every frame.
+        const Rml::String& GetSkillIconDecorator(int iIndex);
+        const Rml::String& GetHotKeySlotIconDecorator(int iSlotIndex);
+        const Rml::String& GetCurrentSkillIconDecorator();
 
         // The hotkey (0-9) a skill/pet-command index is bound to, or -1: the number the original
         // drew on every skill icon.
@@ -100,7 +101,7 @@ namespace mu::ui::window
         // hotkey itself (0-9): whether it shows a skill (an empty one or a pet command without a pet
         // does not), its icon, its cooldown, whether it is the current skill, and the slot's click.
         bool IsHotKeyShown(int iHotKey);
-        Rml::String GetHotKeyIconDecorator(int iHotKey);
+        const Rml::String& GetHotKeyIconDecorator(int iHotKey);
         float GetHotKeyCooldownFraction(int iHotKey);
         bool IsHotKeyCurrentSkill(int iHotKey);
         void SelectHotKey(int iHotKey);
@@ -143,6 +144,9 @@ namespace mu::ui::window
         // RmlUi model's skill_grid_cells/pet_skill_cells by SyncRmlModel().
         const std::vector<SkillCellEntry>& GetGridSnapshot() const { return m_GridSnapshot; }
         const std::vector<SkillCellEntry>& GetPetSnapshot() const { return m_PetSnapshot; }
+        // Counts the rebuilds that changed either snapshot: SyncRmlModel() copies them into the model
+        // only when it moved, not every frame the grid is open.
+        unsigned GetGridSnapshotGeneration() const { return m_uGridSnapshotGeneration; }
 
         // True when a hover callback has queued a tooltip for SyncRmlModel(); cleared by
         // OnUnhover() or a new hover target.
@@ -162,6 +166,8 @@ namespace mu::ui::window
 
         // Rebuilds m_GridSnapshot/m_PetSnapshot from the grid/pet state each frame while open.
         void RebuildGridSnapshot();
+        // GetListedSkills() into a caller's vector, so a per-frame caller keeps its capacity.
+        void CollectListedSkills(std::vector<int>& skills) const;
 
         // Queues a tooltip for the given skill/pet-command index, anchored at (x, y) in #bars's
         // local space. Shared by all 5 hover entry points.
@@ -182,6 +188,9 @@ namespace mu::ui::window
 
         std::vector<SkillCellEntry> m_GridSnapshot;
         std::vector<SkillCellEntry> m_PetSnapshot;
+        unsigned m_uGridSnapshotGeneration = 0;
+        // RebuildGridSnapshot()'s list of skills, kept between frames for its capacity.
+        std::vector<int> m_ListedScratch;
 
         bool m_bTooltipPending = false;
         int m_iTooltipSkillIndex = -1;
