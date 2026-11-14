@@ -13756,4 +13756,7 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>Закрити</value>
   </data>
+  <data name="SkillDamageWithMaxDD" xml:space="preserve">
+    <value>Пошкодження навичок: %d%% (макс. %d%%)</value>
+  </data>
 </root>

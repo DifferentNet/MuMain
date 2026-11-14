@@ -12,6 +12,7 @@
 #include "Engine/Object/ZzzInterface.h"
 #include "Scenes/SceneCore.h"
 #include "Engine/Object/ZzzInventory.h"
+#include "GameLogic/Skills/SkillDamagePercent.h"
 #include "GameLogic/Skills/SkillManager.h"
 #include "UI/Inventory/UIJewelHarmony.h"
 #include "UI/Core/UIManager.h"
@@ -1640,17 +1641,19 @@ void mu::ui::window::CCharacterInfoWindow::BuildAttributeLines()
 
     if (iBaseClass == CLASS_KNIGHT)
     {
-        mu_swprintf(strEnergy, I18N::Game::SkillDamageD, 200 + (wEnergy / 10));
+        mu_swprintf(strEnergy, I18N::Game::SkillDamageWithMaxDD, GameLogic::Skills::SkillDamagePercent::Knight(wEnergy),
+                    GameLogic::Skills::SkillDamagePercent::KnightMaxPercent);
         model.eneLines.push_back({ StringUtils::WideToNarrow(strEnergy), "base" });
     }
     if (iBaseClass == CLASS_DARK)
     {
-        mu_swprintf(strEnergy, I18N::Game::SkillDamageD, 200);
+        mu_swprintf(strEnergy, I18N::Game::SkillDamageD, GameLogic::Skills::SkillDamagePercent::MagicGladiator());
         model.eneLines.push_back({ StringUtils::WideToNarrow(strEnergy), "base" });
     }
     if (iBaseClass == CLASS_DARK_LORD)
     {
-        mu_swprintf(strEnergy, I18N::Game::SkillDamageD, 200 + (wEnergy / 20));
+        mu_swprintf(strEnergy, I18N::Game::SkillDamageWithMaxDD, GameLogic::Skills::SkillDamagePercent::DarkLord(wEnergy),
+                    GameLogic::Skills::SkillDamagePercent::DarkLordMaxPercent);
         model.eneLines.push_back({ StringUtils::WideToNarrow(strEnergy), "base" });
     }
 

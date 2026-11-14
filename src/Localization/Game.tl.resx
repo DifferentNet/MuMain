@@ -13756,4 +13756,7 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>Isara</value>
   </data>
+  <data name="SkillDamageWithMaxDD" xml:space="preserve">
+    <value>Pinsala sa Kasanayan: %d%% (max %d%%)</value>
+  </data>
 </root>

@@ -16393,4 +16393,7 @@
   <data name="GmPanelRowPing" xml:space="preserve">
     <value>  %d мс</value>
   </data>
+  <data name="SkillDamageWithMaxDD" xml:space="preserve">
+    <value>Урон навыка: %d%% (макс. %d%%)</value>
+  </data>
 </root>

@@ -13854,4 +13854,7 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>Schließen</value>
   </data>
+  <data name="SkillDamageWithMaxDD" xml:space="preserve">
+    <value>Fähigkeitsschaden: %d%% (max. %d%%)</value>
+  </data>
 </root>

@@ -16731,4 +16731,7 @@
   <data name="GmPanelRowPing" xml:space="preserve">
     <value>  %d ms</value>
   </data>
+  <data name="SkillDamageWithMaxDD" xml:space="preserve">
+    <value>Skill Damage: %d%% (max %d%%)</value>
+  </data>
 </root>

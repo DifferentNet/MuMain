@@ -13756,4 +13756,7 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>Tutup</value>
   </data>
+  <data name="SkillDamageWithMaxDD" xml:space="preserve">
+    <value>Kerusakan Keterampilan: %d%% (maks. %d%%)</value>
+  </data>
 </root>
