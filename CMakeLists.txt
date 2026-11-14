@@ -156,7 +156,18 @@ if(EMSCRIPTEN)
         basic_textured_softclip.frag
         basic_textured_fog_softclip.frag
         skinned_lit_softclip.frag)
+    # Desktop-only shaders (created under #ifndef __EMSCRIPTEN__ in MuRendererSDLGpu.cpp): no WGSL, the browser
+    # never loads them (naga can't convert terrain_lights_shadow.frag).
+    set(MU_DESKTOP_ONLY_SHADER_STAGE_NAMES
+        ambient_particles.vert
+        ambient_particles.frag
+        terrain_lights.vert
+        terrain_lights.frag
+        terrain_lights_shadow.frag)
     foreach(shader_stage IN LISTS MU_SHADER_STAGE_NAMES MU_WEB_SOFT_CLIP_SHADER_STAGE_NAMES)
+        if(shader_stage IN_LIST MU_DESKTOP_ONLY_SHADER_STAGE_NAMES)
+            continue()
+        endif()
         configure_file("${MU_SHADER_COMPILED_DIR}/${shader_stage}.wgsl"
                        "${MU_SHADER_OUTPUT_DIR}/${shader_stage}.wgsl" COPYONLY)
     endforeach()

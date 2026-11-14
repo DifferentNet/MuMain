@@ -54,6 +54,10 @@ node tools/web/rmlui-shaders-to-wgsl.mjs <naga-wasm folder>   # writes RmlUiShad
 
 RmlUi's blur shaders use array varyings naga rejects; `rmlui-wgsl/` holds hand-written versions.
 
+Desktop-only shaders (`MU_DESKTOP_ONLY_SHADER_STAGE_NAMES` in `CMakeLists.txt`: ambient particles, torch lights)
+have no WGSL and the web build doesn't copy them; leave their `.spv` out of the command above (naga can't convert
+`terrain_lights_shadow.frag`). A new shader the browser never loads goes on that list.
+
 Soft clip: the world shaders cut off what is nearer than one unit with a clip distance, a WebGPU
 feature ARM Mali phones (the Pixel 9) don't have. `spirv-to-wgsl.mjs` also writes a `*_softclip`
 copy of the three vertex shaders that write it and of the three fragment shaders paired with them
