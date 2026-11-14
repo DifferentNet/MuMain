@@ -13756,6 +13756,9 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>關閉</value>
   </data>
+  <data name="SkillDamageWithMaxDD" xml:space="preserve">
+    <value>技能傷害：%d%%（上限 %d%%）</value>
+  </data>
   <!-- Quick chat on a phone: the phrases over the chat line (UI/HUD/ChatInputBox.cpp) -->
   <data name="TouchQuickChat1" xml:space="preserve">
     <value>你好！</value>

@@ -139,6 +139,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/GrandStatsLine.cpp
 )
 
+# The character window's "Skill Damage: N %" for the Dark Knight, Magic Gladiator and Dark Lord
+# (GameLogic/Skills/SkillDamagePercent.h).
+mu_add_test(
+    NAME test_skill_damage_percent
+    SOURCES
+        test_skill_damage_percent.cpp
+)
+
 # The loot highlight filter's rules (GameLogic/Items/LootFilter).
 mu_add_test(
     NAME test_loot_filter
