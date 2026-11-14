@@ -164,8 +164,9 @@ Rml::Vector2f ItemCells(int type)
     return {width, height};
 }
 
-// The item's name as its tooltip calls it: an ancient one by its set ("Hyon Gloves +13"); the level only for gear
-// (groups 0 to 12; for the others GetItemName names the level itself: "Box of Kundun +5").
+// The item's name as its tooltip calls it: an ancient one by its set ("Hyon Gloves +13"). GetItemName already names
+// the level ("Brass Helm +2", "Box of Kundun +5"); only the ancient set name comes without it, so only that one gets
+// " +level" here (adding it to GetItemName's text showed "Brass Helm +2 +2", ghinzuro 2026-11-14).
 std::wstring ItemTitle(const ITEM* item)
 {
     if (item == nullptr)
@@ -173,9 +174,10 @@ std::wstring ItemTitle(const ITEM* item)
     const int level = static_cast<int>(item->Level);
     const bool gear = item->Type / MAX_ITEM_INDEX <= 12;
     wchar_t name[256]{};
-    if (item->AncientDiscriminator == 0 || !g_csItemOption.GetAncientItemName(name, std::size(name), item->Type, item->AncientDiscriminator))
-        GetItemName(item->Type, level, name);
-    return gear && level > 0 ? Printf(L"%ls +%d", name, level) : std::wstring(name);
+    if (item->AncientDiscriminator != 0 && g_csItemOption.GetAncientItemName(name, std::size(name), item->Type, item->AncientDiscriminator))
+        return gear && level > 0 ? Printf(L"%ls +%d", name, level) : std::wstring(name);
+    GetItemName(item->Type, level, name);
+    return std::wstring(name);
 }
 
 bool IsExcellent(const ITEM* item)
