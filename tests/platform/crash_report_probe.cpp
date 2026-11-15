@@ -51,6 +51,8 @@ void ThrowFromNoexcept() noexcept
 
 int main(int argc, char** argv)
 {
+    if (Core::Platform::CrashReport::RunNoticeIfAsked())
+        return 0;
     Core::Platform::CrashReport::Install();
     const char* kind = argc > 1 ? argv[1] : "none";
 

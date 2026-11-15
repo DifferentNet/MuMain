@@ -2737,6 +2737,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLin
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nCmdShow)
 #endif
 {
+#ifdef _WIN32
+    // Started by a crashed copy of the game only to tell the player about its report.
+    if (Core::Platform::CrashReport::RunNoticeIfAsked())
+        return 0;
+#endif
     InitializeWorkingDirectoryAndLog();
 #ifdef _WIN32
     // A crash from here on leaves CrashReports\crash-*.dmp and .txt for the player to send.

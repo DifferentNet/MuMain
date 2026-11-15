@@ -4,8 +4,10 @@ When the Windows client crashes, it leaves a report the player can send us, and 
 
 ## What the player sees
 
-A dialog in Russian and English says the game closed because of an error, names the folder with the report and asks
-the player to send both files on Discord. **Yes** opens the folder in Explorer with the report selected.
+The game closes at once (it does not stay connected to the server). A second copy, `Main.exe --crash-notice <txt>
+<dmp>`, shows a dialog in Russian and English: the game closed because of an error, the folder with the report, and a
+request to send both files to an admin in a private Discord message, not a public channel, since the dump can hold the
+player's login details. **Yes** opens the folder in Explorer with the report selected.
 
 ## Where the report is
 
@@ -28,8 +30,9 @@ GPU driver reset that only hangs the game, and fast-fail checks (`/GS` buffer ov
 ends without running any handler; those still appear in Windows' own error reporting.
 
 The report is written by a thread started with the game, which sleeps until a crash. When it can't finish (the
-crashed thread held the heap lock, inside `malloc` on a damaged heap), the game closes after 5 seconds with the
-`.txt` only ("Dump: not written") and without the dialog, which would wait for the same lock.
+crashed thread held the heap lock, inside `malloc` on a damaged heap), the game closes without the dialog and with
+the `.txt` only ("Dump: not written"): after 5 seconds when not even the text got written (the crashed thread then
+writes it itself), after 20 seconds when the dump hung (its half-written `.dmp` is removed).
 
 ## Reading a report
 
@@ -39,5 +42,8 @@ that `Main.pdb`; without it, look up the call stack offsets in `Main.map`.
 
 ## Tests and automated runs
 
-`MU_CRASH_REPORT_NO_DIALOG=1` writes the report without showing the dialog. The `crash_report` test
-(`tests/platform/test_crash_report.py`) crashes `crash_report_probe` each of the ways above and checks the files.
+`MU_CRASH_REPORT_NO_DIALOG=1` writes the report without showing the dialog; a client started with `MU_CONTROL_SOCKET`
+(the in-game tests) shows none either. With `MU_CRASH_REPORT_NOTICE_LOG=<file>` the `--crash-notice` copy writes the
+dialog's text (UTF-16) to that file instead of showing it. The `crash_report` test
+(`tests/platform/test_crash_report.py`) crashes `crash_report_probe` each of the ways above and checks the files, then
+crashes it once with the dialog wanted and checks that the second copy names the report.

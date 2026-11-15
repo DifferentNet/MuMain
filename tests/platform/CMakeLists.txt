@@ -92,7 +92,7 @@ if(WIN32)
         ${CMAKE_SOURCE_DIR}/src/source/Core/Platform/win32/CrashReport.cpp
         ${CMAKE_SOURCE_DIR}/src/source/Core/Platform/win32/CrashReportWriter.cpp)
     target_include_directories(crash_report_probe PRIVATE ${CMAKE_SOURCE_DIR}/src/source)
-    target_link_libraries(crash_report_probe PRIVATE user32)
+    target_link_libraries(crash_report_probe PRIVATE user32 shell32)
     if(MSVC)
         target_compile_options(crash_report_probe PRIVATE /utf-8)
     endif()

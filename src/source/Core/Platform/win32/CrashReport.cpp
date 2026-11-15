@@ -9,6 +9,8 @@
 
 #include <windows.h>
 
+#include <shellapi.h>
+
 #include "Core/Platform/win32/CrashReportWriter.h"
 
 namespace Core::Platform::CrashReport
@@ -18,10 +20,15 @@ namespace
 
 constexpr std::size_t kPathCapacity = MAX_PATH * 2;
 constexpr std::size_t kNoticeCapacity = 4096;
+constexpr wchar_t kNoticeOption[] = L"--crash-notice";
 constexpr std::size_t kReportsKept = 10;
 constexpr wchar_t kFolderName[] = L"CrashReports";
-// Set to 1 by tests and automated runs: write the report, show no dialog.
+// Set to 1 by tests and automated runs: write the report, show no dialog. A client driven over the
+// control socket (the in-game tests) shows none either.
 constexpr wchar_t kNoDialogVariable[] = L"MU_CRASH_REPORT_NO_DIALOG";
+constexpr wchar_t kControlSocketVariable[] = L"MU_CONTROL_SOCKET";
+// Tests: the notice process writes its text to this file instead of showing the dialog.
+constexpr wchar_t kNoticeLogVariable[] = L"MU_CRASH_REPORT_NOTICE_LOG";
 // Room the crash handler keeps on a thread whose stack overflowed.
 constexpr ULONG kStackGuaranteeBytes = 64 * 1024;
 constexpr SIZE_T kWriterStackBytes = 512 * 1024;
@@ -36,7 +43,7 @@ struct CrashContext
     DWORD threadId = 0;
     HANDLE wake = nullptr;         // set by the crashed thread: write the report
     HANDLE textWritten = nullptr;  // set once the .txt is on disk
-    HANDLE written = nullptr;      // set once both files are on disk, before the dialog
+    HANDLE written = nullptr;      // set once both files are on disk and the dialog is started
     wchar_t dumpPath[kPathCapacity] = {};
     wchar_t textPath[kPathCapacity] = {};
     bool ok = false;
@@ -58,50 +65,26 @@ const wchar_t* FileName(const wchar_t* path)
     return slash != nullptr ? slash + 1 : path;
 }
 
-void ComposeNotice(const CrashContext& crash)
-{
-    if (!crash.ok)
-    {
-        std::swprintf(s_notice, kNoticeCapacity,
-                      L"MU Skynet закрылась из-за ошибки. Отчёт записать не удалось.\n\n"
-                      L"MU Skynet closed because of an error. The crash report could not be written.");
-        return;
-    }
-    const wchar_t* dumpName = crash.dumpPath[0] != L'\0' ? FileName(crash.dumpPath) : L"-";
-    std::swprintf(s_notice, kNoticeCapacity,
-                  L"MU Skynet закрылась из-за ошибки.\n\n"
-                  L"Отчёт сохранён в папке:\n%ls\n\n"
-                  L"Пришлите нам в Discord оба файла: %ls и %ls. По ним мы найдём и исправим причину.\n\n"
-                  L"MU Skynet closed because of an error. The report is in the folder above; please send us "
-                  L"both files on Discord so we can fix it.\n\n"
-                  L"Открыть папку? / Open the folder?",
-                  Writer::Directory(), FileName(crash.textPath), dumpName);
-}
+// The dialog is shown by a second copy of the game (RunNoticeIfAsked), so the crashed one closes at
+// once: it doesn't stay connected, and its other threads don't run on behind the dialog.
+wchar_t s_exePath[kPathCapacity] = {};
+wchar_t s_noticeCommandLine[kPathCapacity * 3 + 64] = {};
 
-void OpenFolderAt(const wchar_t* path)
+void StartNotice(const CrashContext& crash)
 {
-    wchar_t commandLine[kPathCapacity + 32] = {};
-    std::swprintf(commandLine, kPathCapacity + 32, L"explorer.exe /select,\"%ls\"", path);
+    if (!s_showDialog || s_exePath[0] == L'\0')
+        return;
+    std::swprintf(s_noticeCommandLine, sizeof(s_noticeCommandLine) / sizeof(wchar_t), L"\"%ls\" %ls \"%ls\" \"%ls\"",
+                  s_exePath, kNoticeOption, crash.ok ? crash.textPath : L"", crash.ok ? crash.dumpPath : L"");
     STARTUPINFOW startup = {};
     startup.cb = sizeof(startup);
     PROCESS_INFORMATION process = {};
-    if (CreateProcessW(nullptr, commandLine, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startup, &process))
+    if (CreateProcessW(s_exePath, s_noticeCommandLine, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startup,
+                       &process))
     {
         CloseHandle(process.hThread);
         CloseHandle(process.hProcess);
     }
-}
-
-void ShowNotice(const CrashContext& crash)
-{
-    if (!s_showDialog)
-        return;
-    // An exclusive full-screen mode would stay on the monitor and hide the dialog.
-    ChangeDisplaySettingsW(nullptr, 0);
-    ComposeNotice(crash);
-    const UINT style = (crash.ok ? MB_YESNO : MB_OK) | MB_ICONERROR | MB_TOPMOST | MB_SETFOREGROUND | MB_SYSTEMMODAL;
-    if (MessageBoxW(nullptr, s_notice, L"MU Skynet", style) == IDYES)
-        OpenFolderAt(crash.textPath);
 }
 
 // Started by Install() and asleep until a crash: a thread started during the crash could hang in
@@ -116,8 +99,8 @@ DWORD WINAPI WriterThreadMain(LPVOID parameter)
         return 0;
     crash->ok = Writer::Write(crash->exception, crash->threadId, crash->dumpPath, crash->textPath, kPathCapacity,
                               crash->textWritten, true);
+    StartNotice(*crash);
     SetEvent(crash->written);
-    ShowNotice(*crash);
     return 0;
 }
 
@@ -143,22 +126,21 @@ void ReportAndExit(EXCEPTION_POINTERS* exception)
     {
         s_crash.ok = Writer::Write(exception, s_crash.threadId, s_crash.dumpPath, s_crash.textPath, kPathCapacity,
                                    nullptr, true);
-        ShowNotice(s_crash);
+        StartNotice(s_crash);
     }
     else
     {
         SetEvent(s_crash.wake);
-        if (WaitForSingleObject(s_crash.textWritten, kTextTimeoutMs) == WAIT_OBJECT_0 &&
-            WaitForSingleObject(s_crash.written, kWriteTimeoutMs) == WAIT_OBJECT_0)
-        {
-            WaitForSingleObject(s_writer, INFINITE);  // the player reads the dialog
-        }
-        else
+        const bool textOk = WaitForSingleObject(s_crash.textWritten, kTextTimeoutMs) == WAIT_OBJECT_0;
+        if (!textOk || WaitForSingleObject(s_crash.written, kWriteTimeoutMs) != WAIT_OBJECT_0)
         {
             // The writer waits for a lock this thread holds. Keep its text report, or write one from
-            // here; no dump and no dialog, which would wait for the same locks.
+            // here; no dump (a half-written one is removed) and no dialog, which would wait for the
+            // same locks.
             SuspendThread(s_writer);
-            if (WaitForSingleObject(s_crash.textWritten, 0) != WAIT_OBJECT_0)
+            if (WaitForSingleObject(s_crash.textWritten, 0) == WAIT_OBJECT_0)
+                DeleteFileW(s_crash.dumpPath);  // gone once the writer's handle closes with the process
+            else
                 Writer::Write(exception, s_crash.threadId, s_crash.dumpPath, s_crash.textPath, kPathCapacity, nullptr,
                               false);
         }
@@ -264,14 +246,93 @@ bool DialogWanted()
 {
     wchar_t value[8] = {};
     const DWORD length = GetEnvironmentVariableW(kNoDialogVariable, value, 8);
-    return !(length == 1 && value[0] == L'1');
+    if (length == 1 && value[0] == L'1')
+        return false;
+    return GetEnvironmentVariableW(kControlSocketVariable, value, 8) == 0;
+}
+
+void ComposeNotice(const wchar_t* textPath, const wchar_t* dumpPath)
+{
+    if (textPath[0] == L'\0')
+    {
+        std::swprintf(s_notice, kNoticeCapacity,
+                      L"MU Skynet закрылась из-за ошибки. Отчёт записать не удалось.\n\n"
+                      L"MU Skynet closed because of an error. The crash report could not be written.");
+        return;
+    }
+    const std::wstring text(textPath);
+    const std::wstring folder = text.substr(0, text.find_last_of(L'\\'));
+    std::swprintf(s_notice, kNoticeCapacity,
+                  L"MU Skynet закрылась из-за ошибки.\n\n"
+                  L"Отчёт сохранён в папке:\n%ls\n\n"
+                  L"Пришлите оба файла (%ls и %ls) администратору в личные сообщения Discord, не в общий канал: "
+                  L"в них могут быть данные вашего входа. По ним мы найдём и исправим причину.\n\n"
+                  L"MU Skynet closed because of an error. The report is in the folder above; please send both "
+                  L"files to an admin in a private Discord message, not a public channel (they may hold your "
+                  L"login details), so we can fix it.\n\n"
+                  L"Открыть папку? / Open the folder?",
+                  folder.c_str(), FileName(textPath), dumpPath[0] != L'\0' ? FileName(dumpPath) : L"-");
+}
+
+void OpenFolderAt(const wchar_t* path)
+{
+    std::wstring commandLine = L"explorer.exe /select,\"" + std::wstring(path) + L"\"";
+    STARTUPINFOW startup = {};
+    startup.cb = sizeof(startup);
+    PROCESS_INFORMATION process = {};
+    if (CreateProcessW(nullptr, commandLine.data(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startup, &process))
+    {
+        CloseHandle(process.hThread);
+        CloseHandle(process.hProcess);
+    }
+}
+
+void WriteNoticeLog(const wchar_t* logPath)
+{
+    HANDLE file = CreateFileW(logPath, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (file == INVALID_HANDLE_VALUE)
+        return;
+    DWORD written = 0;
+    WriteFile(file, s_notice, static_cast<DWORD>(std::wcslen(s_notice) * sizeof(wchar_t)), &written, nullptr);
+    CloseHandle(file);
 }
 
 } // namespace
 
+bool RunNoticeIfAsked()
+{
+    int count = 0;
+    LPWSTR* arguments = CommandLineToArgvW(GetCommandLineW(), &count);
+    if (arguments == nullptr)
+        return false;
+    const bool asked = count == 4 && std::wcscmp(arguments[1], kNoticeOption) == 0;
+    if (asked)
+    {
+        ComposeNotice(arguments[2], arguments[3]);
+        wchar_t logPath[kPathCapacity] = {};
+        const DWORD logLength = GetEnvironmentVariableW(kNoticeLogVariable, logPath, static_cast<DWORD>(kPathCapacity));
+        if (logLength > 0 && logLength < kPathCapacity)
+        {
+            WriteNoticeLog(logPath);
+        }
+        else
+        {
+            const UINT style =
+                (arguments[2][0] != L'\0' ? MB_YESNO : MB_OK) | MB_ICONERROR | MB_TOPMOST | MB_SETFOREGROUND;
+            if (MessageBoxW(nullptr, s_notice, L"MU Skynet", style) == IDYES)
+                OpenFolderAt(arguments[2]);
+        }
+    }
+    LocalFree(arguments);
+    return asked;
+}
+
 void Install()
 {
     s_showDialog = DialogWanted();
+    const DWORD exeLength = GetModuleFileNameW(nullptr, s_exePath, static_cast<DWORD>(kPathCapacity));
+    if (exeLength == 0 || exeLength >= kPathCapacity)
+        s_exePath[0] = L'\0';
     if (!Writer::Prepare(DefaultDirectory()))
         return;
     Writer::PruneOldReports(kReportsKept);
