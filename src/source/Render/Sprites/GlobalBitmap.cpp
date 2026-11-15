@@ -81,8 +81,14 @@ void CBitmapCache::Release()
     }
 }
 
+void CBitmapCache::ClearFindMemo()
+{
+    m_FindMemo.fill(FIND_MEMO_SLOT{});
+}
+
 void CBitmapCache::Add(GLuint uiBitmapIndex, BITMAP_t* pBitmap)
 {
+    FindMemoSlot(uiBitmapIndex) = FIND_MEMO_SLOT{};
     for (auto& cache : m_QuickCache)
     {
         if (uiBitmapIndex >= cache.dwBitmapIndexMin && uiBitmapIndex < cache.dwBitmapIndexMax)
@@ -107,6 +113,7 @@ void CBitmapCache::Add(GLuint uiBitmapIndex, BITMAP_t* pBitmap)
 }
 void CBitmapCache::Remove(GLuint uiBitmapIndex)
 {
+    FindMemoSlot(uiBitmapIndex) = FIND_MEMO_SLOT{};
     for (int i = 0; i < NUMBER_OF_QUICK_CACHE; i++)
     {
         if (uiBitmapIndex >= m_QuickCache[i].dwBitmapIndexMin && uiBitmapIndex < m_QuickCache[i].dwBitmapIndexMax)
@@ -144,6 +151,7 @@ void CBitmapCache::Remove(GLuint uiBitmapIndex)
 }
 void CBitmapCache::RemoveAll()
 {
+    ClearFindMemo();
     for (int i = 0; i < NUMBER_OF_QUICK_CACHE; i++)
     {
         std::fill(m_QuickCache[i].bitmaps.begin(), m_QuickCache[i].bitmaps.end(), nullptr);
@@ -165,6 +173,7 @@ void CBitmapCache::Update()
 
     if (m_ManageTimer.IsTime())
     {
+        ClearFindMemo();
         auto mi = m_mapCacheMain.begin();
         for (; mi != m_mapCacheMain.end();)
         {
@@ -250,6 +259,14 @@ bool CBitmapCache::Find(GLuint uiBitmapIndex, BITMAP_t** ppBitmap)
         }
     }
 
+    FIND_MEMO_SLOT& memo = FindMemoSlot(uiBitmapIndex);
+    if (memo.pBitmap != nullptr && memo.uiBitmapIndex == uiBitmapIndex)
+    {
+        *ppBitmap = memo.pBitmap;
+        memo.pBitmap->dwCallCount++;
+        return true;
+    }
+
     if (BITMAP_PLAYER_TEXTURE_BEGIN <= uiBitmapIndex && BITMAP_PLAYER_TEXTURE_END >= uiBitmapIndex)
     {
         auto mi = m_mapCachePlayer.find(uiBitmapIndex);
@@ -257,6 +274,7 @@ bool CBitmapCache::Find(GLuint uiBitmapIndex, BITMAP_t** ppBitmap)
         {
             *ppBitmap = (*mi).second;
             (*ppBitmap)->dwCallCount++;
+            memo = FIND_MEMO_SLOT{uiBitmapIndex, *ppBitmap};
             return true;
         }
     }
@@ -267,6 +285,7 @@ bool CBitmapCache::Find(GLuint uiBitmapIndex, BITMAP_t** ppBitmap)
         {
             *ppBitmap = (*mi).second;
             (*ppBitmap)->dwCallCount++;
+            memo = FIND_MEMO_SLOT{uiBitmapIndex, *ppBitmap};
             return true;
         }
     }
@@ -277,6 +296,7 @@ bool CBitmapCache::Find(GLuint uiBitmapIndex, BITMAP_t** ppBitmap)
         {
             *ppBitmap = (*mi).second;
             (*ppBitmap)->dwCallCount++;
+            memo = FIND_MEMO_SLOT{uiBitmapIndex, *ppBitmap};
             return true;
         }
     }
@@ -287,6 +307,7 @@ bool CBitmapCache::Find(GLuint uiBitmapIndex, BITMAP_t** ppBitmap)
         {
             *ppBitmap = (*mi).second;
             (*ppBitmap)->dwCallCount++;
+            memo = FIND_MEMO_SLOT{uiBitmapIndex, *ppBitmap};
             return true;
         }
     }

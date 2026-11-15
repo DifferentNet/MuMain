@@ -38,3 +38,13 @@
 #es_title { width: calc(100% * var(--root-scale)); }
 #es_message { width: calc(146px * var(--root-scale)); }
 .es-name, .es-time { width: calc(146px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (UI::Mobile::IsPhoneView()): the text keeps the native text size while the panel
+   shrinks to the phone's height, so the 190-wide window cut its time lines off. It is 270 wide here and the
+   lines widen with it (CEventScheduleWindow's PHONE_CONTENT_WIDTH). */
+@media (theme: mobile) {
+	#panel { width: 270px; }
+	.es-rows { width: 226px; }
+	#es_message { width: calc(226px * var(--root-scale)); }
+	.es-name, .es-time { width: calc(226px * var(--root-scale)); }
+}

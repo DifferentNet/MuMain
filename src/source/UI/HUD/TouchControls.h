@@ -70,6 +70,10 @@ void CloseMenu();
 void MoveMenuFocus(int dx, int dy);
 void ActivateMenuFocus();
 
+// Opens the Social panel (the players around and what to do with them), as its button does: the party
+// window's phone button (UI/Party/PartyInfoWindow.h) asks for it.
+void ShowSocialPanel();
+
 // Opens the skill picker on the first empty skill button (the pad's L3). False with the controls not
 // shown, where there is no picker.
 bool OpenSkillPicker();

@@ -30,6 +30,13 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME jewel_bank_names_tests
+    SOURCES
+        test_jewel_bank_names.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Inventory/JewelBankNames.cpp
+)
+
+mu_add_test(
     NAME jewel_unmix_selection_tests
     SOURCES
         test_jewel_unmix_selection.cpp

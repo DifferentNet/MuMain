@@ -17,6 +17,7 @@
 #include <set>
 #include <tuple>
 #include <utility>
+#include <vector>
 #include "Render/Textures/ZzzOpenglUtil.h"
 
 #include "Engine/Object/ZzzInfomation.h"
@@ -2796,24 +2797,73 @@ __forceinline void CalcShadowPosition(vec3_t* position, const vec3_t origin, con
     VectorCopy(result, *position);
 }
 
-__forceinline void GetClothShadowPosition(vec3_t* target, CPhysicsCloth* pCloth, const int index, const vec3_t origin, const float sx, const float sy)
+namespace
 {
-    pCloth->GetPosition(index, target);
-    CalcShadowPosition(target, origin, sx, sy);
+// A cloth's grid points on the ground, each projected once: a point is a corner of up to 4 cells, each
+// cell's two triangles take 4 of its corners (the main render loop only, so one buffer serves).
+const vec3_t* ProjectClothShadowGrid(CPhysicsCloth* pCloth, const int pointCount, const vec3_t origin,
+                                     const float sx, const float sy)
+{
+    static std::vector<std::array<float, 3>> projected;
+    projected.resize(static_cast<std::size_t>(pointCount));
+    for (int index = 0; index < pointCount; ++index)
+    {
+        vec3_t position;
+        pCloth->GetPosition(index, &position);
+        CalcShadowPosition(&position, origin, sx, sy);
+        VectorCopy(position, projected[static_cast<std::size_t>(index)].data());
+    }
+    return reinterpret_cast<const vec3_t*>(projected.data());
 }
+
+// A mesh's vertices on the ground, each projected once however many triangles share it: stamped per
+// mesh, so a vertex no triangle uses is never projected (the main render loop only).
+struct MeshShadowProjection
+{
+    vec3_t positions[MAX_VERTICES];
+    std::uint32_t stamps[MAX_VERTICES] = {};
+    std::uint32_t current = 0;
+
+    void BeginMesh()
+    {
+        if (++current == 0u)
+        {
+            std::fill(std::begin(stamps), std::end(stamps), 0u);
+            current = 1u;
+        }
+    }
+
+    const float* Projected(const vec3_t* transformed, const int vertexIndex, const vec3_t origin, const float sx,
+                           const float sy)
+    {
+        float* position = positions[vertexIndex];
+        if (stamps[vertexIndex] != current)
+        {
+            stamps[vertexIndex] = current;
+            VectorCopy(transformed[vertexIndex], position);
+            CalcShadowPosition(&positions[vertexIndex], origin, sx, sy);
+        }
+        return position;
+    }
+};
+MeshShadowProjection g_meshShadowProjection;
+} // namespace
 
 void BMD::AddClothesShadowTriangles(void* pClothes, const int clothesCount, const float sx, const float sy,
     const std::uint32_t color) const
 {
     auto vertices = RenderArrayVertices;
     int target_vertex_index = -1;
-    
+
     for (int i = 0; i < clothesCount; i++)
     {
         auto* const pCloth = &static_cast<CPhysicsCloth*>(pClothes)[i];
         auto const columns = pCloth->GetVerticalCount();
         auto const rows = pCloth->GetHorizontalCount();
-        
+        if (columns < 2 || rows < 2)
+            continue;
+        const vec3_t* projected = ProjectClothShadowGrid(pCloth, columns * rows, BodyOrigin, sx, sy);
+
         for (int col = 0; col < columns - 1; ++col)
         {
             for (int row = 0; row < rows - 1; ++row)
@@ -2825,12 +2875,10 @@ void BMD::AddClothesShadowTriangles(void* pClothes, const int clothesCount, cons
                 int c = rows * col + row + 1;
                 int d = rows * (col + 1) + row + 1;
 
-                vec3_t posA, posB, posC, posD;
-
-                GetClothShadowPosition(&posA, pCloth, a, BodyOrigin, sx, sy);
-                GetClothShadowPosition(&posB, pCloth, b, BodyOrigin, sx, sy);
-                GetClothShadowPosition(&posC, pCloth, c, BodyOrigin, sx, sy);
-                GetClothShadowPosition(&posD, pCloth, d, BodyOrigin, sx, sy);
+                const float* posA = projected[a];
+                const float* posB = projected[b];
+                const float* posC = projected[c];
+                const float* posD = projected[d];
 
                 // A-Triangle:
                 target_vertex_index++;
@@ -2886,6 +2934,7 @@ void BMD::AddMeshShadowTriangles(const int blendMesh, const int hiddenMesh, cons
         }
 
         EnsureCpuVertices(i);
+        g_meshShadowProjection.BeginMesh();
 
         for (int j = 0; j < mesh->NumTriangles; j++)
         {
@@ -2895,9 +2944,9 @@ void BMD::AddMeshShadowTriangles(const int blendMesh, const int hiddenMesh, cons
                 const int source_vertex_index = tp->VertexIndex[k];
                 target_vertex_index++;
 
-                VectorCopy(VertexTransform[i][source_vertex_index], vertices[target_vertex_index]);
-
-                CalcShadowPosition(&vertices[target_vertex_index], BodyOrigin, sx, sy);
+                const float* projected =
+                    g_meshShadowProjection.Projected(VertexTransform[i], source_vertex_index, BodyOrigin, sx, sy);
+                VectorCopy(projected, vertices[target_vertex_index]);
             }
         }
     }

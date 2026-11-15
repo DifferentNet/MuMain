@@ -24,7 +24,7 @@
 		<div id="jb_rows">
 			<div class="jb-row" data-for="r : rows">
 				<div class="jb-icon"></div>
-				<span class="sharp-text jb-name" data-style-font-size="r.name_px + 'px'">{{r.name}}</span>
+				<span class="sharp-text jb-name" data-class-two-lines="r.two_lines" data-style-font-size="r.name_px + 'px'">{{r.name}}</span>
 				<span class="sharp-text jb-count" data-style-font-size="text_px + 'px'">{{r.count}}</span>
 				<div class="jb-btn jb-deposit" data-class-disabled="!r.can_deposit"
 				     data-event-click="jewel_bank_deposit(r.kind)" data-attr-data-hint="deposit_tooltip"><span class="jb-glyph">&#8595;</span></div>

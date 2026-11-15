@@ -54,6 +54,9 @@
 	.jb-deposit { left: 106px; decorator: image(jb-deposit) content-box; }
 	.jb-withdraw { left: 138px; decorator: image(jb-withdraw) content-box; }
 	.jb-name, .jb-count { width: calc(74px * var(--root-scale)); overflow: hidden; }
+	/* A name too long for the column even at the smallest size: on its two lines (C++ breaks it at a space and
+	   sizes it for the column and the room above the count; never wrapped again). */
+	.jb-name.two-lines { white-space: pre; line-height: 1.05; }
 }
 
 .jb-items { position: absolute; left: 0; top: 0; width: 190px; height: 432px; pointer-events: none; }

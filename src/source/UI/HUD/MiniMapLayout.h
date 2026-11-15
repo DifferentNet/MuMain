@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <span>
 
 // Pure geometry of the full-screen mini map (CMiniMap). The original drew the map texture and its
 // markers with RenderBitRotate()/RenderPointRotate() and the side border lines with
@@ -72,5 +73,15 @@ Marker MarkerQuad(const Screen& screen, float heroX, float heroY, float pointX, 
 // RenderBitmapRotate(): a width x height (reference units) quad centred on (x, y) reference,
 // turned by `rotation` degrees (the side border lines).
 Quad RotatedQuad(const Screen& screen, float x, float y, float width, float height, float rotation);
+
+// A marker's name box (x, y, width, height, reference units), as SetBtnPos() stored it.
+using HintBox = std::array<float, 4>;
+constexpr int NoHint = -1;
+
+// The marker a pointer at (x, y) (reference units) names, an index into boxes or NoHint: the first box that
+// holds it (strictly inside, as the original's Check_Btn()); else, with slopPixels above 0 (a finger, which
+// covers the small markers), the nearest box within that many window pixels of it, the first of equals.
+// scaleX and scaleY are window pixels per reference unit.
+int PickHint(std::span<const HintBox> boxes, float x, float y, float slopPixels, float scaleX, float scaleY);
 
 } // namespace UI::MiniMap

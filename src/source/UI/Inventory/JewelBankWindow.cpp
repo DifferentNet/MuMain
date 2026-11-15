@@ -2,6 +2,7 @@
 #include "I18N/All.h"
 
 #include "UI/Inventory/JewelBankWindow.h"
+#include "UI/Inventory/JewelBankNames.h"
 
 #include "Audio/DSPlaySound.h"
 #include "Engine/Object/ZzzInventory.h"
@@ -80,6 +81,36 @@ int InventoryJewels(const GameLogic::JewelBank::Kind& kind)
         }
     }
     return count;
+}
+
+// The space a row's name has under it: down to the count, or the whole row without one (reference px;
+// jewel_bank.rcss: the name at 2, the count at 16, rows of 31).
+constexpr float NameHeightAboveCount = 14.f;
+constexpr float NameHeightAlone = 27.f;
+
+// A text's size as the native renderer measures it.
+SIZE MeasuredSize(const std::wstring& text)
+{
+    g_pRenderText->SetFont(g_hFont);
+    return g_pRenderText->MeasureText(text.c_str(), static_cast<int>(text.size()));
+}
+
+float MeasuredWidth(const std::wstring& text)
+{
+    return static_cast<float>(MeasuredSize(text).cx);
+}
+
+// The names as the rows show them: in the phone view, when one is too long for its column, without the words
+// most of them start with ("Jewel of"), so they shrink less.
+std::vector<std::wstring> ShownNames(std::vector<std::wstring> names, bool phoneView, int width)
+{
+    if (!phoneView)
+        return names;
+    const bool tooLong = std::any_of(names.begin(), names.end(), [width](const std::wstring& name)
+                                     { return MeasuredWidth(name) > static_cast<float>(width); });
+    if (!tooLong)
+        return names;
+    return UI::Inventory::JewelBankNames::WithoutSharedLeadingWords(names);
 }
 } // namespace
 
@@ -253,6 +284,7 @@ void mu::ui::window::CJewelBankWindow::BindRmlModel(Rml::DataModelConstructor& c
     rowType.RegisterMember("kind", &JewelBankRow::kind);
     rowType.RegisterMember("name", &JewelBankRow::name);
     rowType.RegisterMember("name_px", &JewelBankRow::namePx);
+    rowType.RegisterMember("two_lines", &JewelBankRow::twoLines);
     rowType.RegisterMember("count", &JewelBankRow::count);
     rowType.RegisterMember("can_deposit", &JewelBankRow::canDeposit);
     rowType.RegisterMember("can_withdraw", &JewelBankRow::canWithdraw);
@@ -302,19 +334,71 @@ void mu::ui::window::CJewelBankWindow::SyncRmlModel()
     SyncContent();
 }
 
+const std::vector<mu::ui::window::CJewelBankWindow::NameLayout>&
+mu::ui::window::CJewelBankWindow::NameLayouts(const std::vector<std::wstring>& names, bool phoneView, int width,
+                                              bool withCounts)
+{
+    if (names == m_layoutNames && phoneView == m_layoutPhoneView && width == m_layoutWidth &&
+        withCounts == m_layoutWithCounts && WindowWidth == m_layoutWindowWidth &&
+        WindowHeight == m_layoutWindowHeight && m_nameLayouts.size() == names.size())
+        return m_nameLayouts;
+
+    m_layoutNames = names;
+    m_layoutPhoneView = phoneView;
+    m_layoutWidth = width;
+    m_layoutWithCounts = withCounts;
+    m_layoutWindowWidth = WindowWidth;
+    m_layoutWindowHeight = WindowHeight;
+    m_nameLayouts.clear();
+
+    const float boxWidth = static_cast<float>(width);
+    const float boxHeight = withCounts ? NameHeightAboveCount : NameHeightAlone;
+    for (const std::wstring& name : ShownNames(names, phoneView, width))
+    {
+        NameLayout layout;
+        layout.name = StringUtils::WideToNarrow(name.c_str());
+        const float measured = MeasuredWidth(name);
+        layout.px = UI::RmlBridge::NativeTextPxInBox(UI::Scaling::FontRole::Normal, measured, boxWidth);
+
+        // In the phone view a name that is still cut at the size it shrank to (the smallest one) goes onto two
+        // lines, broken at the space that makes the longer line shortest, sized so both lines fit the column and
+        // the room under it.
+        const float shrunkWidth = measured * layout.px / UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Normal);
+        const UI::Inventory::JewelBankNames::TwoLines lines =
+            phoneView && shrunkWidth > boxWidth + 0.5f ? UI::Inventory::JewelBankNames::SplitInTwo(name, MeasuredWidth)
+                                                       : UI::Inventory::JewelBankNames::TwoLines{};
+        if (!lines.second.empty())
+        {
+            const SIZE first = MeasuredSize(lines.first);
+            const SIZE second = MeasuredSize(lines.second);
+            const float wider = static_cast<float>(std::max(first.cx, second.cx));
+            const float tall = static_cast<float>(first.cy + second.cy);
+            layout.name = StringUtils::WideToNarrow((lines.first + L"\n" + lines.second).c_str());
+            // Not held at the smallest size like a line that shrinks (that size is what cut the name): the lines
+            // are made as small as the column and the row's room need, so the name shows whole.
+            const float fit = std::min({1.f, boxWidth / std::max(wider, 1.f), boxHeight / std::max(tall, 1.f)});
+            layout.px = UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Normal) * fit;
+            layout.twoLines = true;
+        }
+        m_nameLayouts.push_back(std::move(layout));
+    }
+    return m_nameLayouts;
+}
+
 void mu::ui::window::CJewelBankWindow::SyncContent()
 {
     // A text at the size the native renderer would have shrunk it to for its box.
     auto fitted = [](const std::wstring& text, int width) -> float
     {
-        g_pRenderText->SetFont(g_hFont);
-        const float measured = static_cast<float>(g_pRenderText->MeasureText(text.c_str(), static_cast<int>(text.size())).cx);
-        return UI::RmlBridge::NativeTextPxInBox(UI::Scaling::FontRole::Normal, measured, static_cast<float>(width));
+        return UI::RmlBridge::NativeTextPxInBox(UI::Scaling::FontRole::Normal, MeasuredWidth(text),
+                                                static_cast<float>(width));
     };
 
     auto& bank = Bank();
-    // Read every frame the window shows, so a switch to or from the phone view fits the names anew.
-    const int nameWidth = UI::Mobile::IsPhoneView() ? PHONE_NAME_WIDTH : NAME_WIDTH;
+    // Read every frame the window shows, so a switch to or from the phone view fits the names anew (NameLayouts()
+    // measures them only when it or the names change).
+    const bool phoneView = UI::Mobile::IsPhoneView();
+    const int nameWidth = phoneView ? PHONE_NAME_WIDTH : NAME_WIDTH;
     JewelBankRmlModel updated;
     updated.title = StringUtils::WideToNarrow(I18N::Game::JewelBankTitle);
 
@@ -322,19 +406,28 @@ void mu::ui::window::CJewelBankWindow::SyncContent()
     // refine stones since the server dropped the Jewel of Harmony, 2026-11-06) is left out once it has answered.
     const auto& kinds = GameLogic::JewelBank::Kinds();
     std::vector<int> shown;
+    std::vector<std::wstring> names;
     for (int i = 0; i < static_cast<int>(kinds.size()); ++i)
     {
         if ((i >= GameLogic::JewelBank::BaseKindCount || bank.HasInfo()) && !bank.IsAvailable(i))
             continue;
-        const auto& kind = kinds[i];
-        const std::wstring name = ItemName(kind.itemType);
-        const int inBag = InventoryJewels(kind);
         shown.push_back(i);
+        names.push_back(ItemName(kinds[i].itemType));
+    }
+    const auto& layouts = NameLayouts(names, phoneView, nameWidth, bank.HasInfo());
+
+    for (std::size_t r = 0; r < shown.size(); ++r)
+    {
+        const int i = shown[r];
+        const auto& kind = kinds[i];
+        const NameLayout& name = layouts[r];
+        const int inBag = InventoryJewels(kind);
 
         JewelBankRow row;
         row.kind = i;
-        row.name = StringUtils::WideToNarrow(name.c_str());
-        row.namePx = fitted(name, nameWidth);
+        row.name = name.name;
+        row.namePx = name.px;
+        row.twoLines = name.twoLines;
         if (bank.HasInfo())
         {
             std::wstring count = Amount(bank.Count(i));

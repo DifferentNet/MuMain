@@ -2,6 +2,8 @@
 
 #include "UI/HUD/MiniMapLayout.h"
 
+#include <array>
+
 using namespace UI::MiniMap;
 
 namespace
@@ -64,4 +66,50 @@ TEST_CASE("mini map side line turns a quarter around its centre [ui][minimap]")
     CHECK(quad.topLeft.y == doctest::Approx(64.f - 17.5f));
     CHECK(quad.topRight.y == doctest::Approx(64.f + 17.5f));
     CHECK(quad.bottomLeft.x == doctest::Approx(3.f - 3.f));
+}
+
+TEST_CASE("mini map hint: the box under the pointer wins, the first of overlapping ones [ui][minimap]")
+{
+    const std::array<HintBox, 3> boxes{HintBox{100.f, 100.f, 10.f, 10.f}, HintBox{105.f, 105.f, 10.f, 10.f},
+                                       HintBox{200.f, 200.f, 10.f, 10.f}};
+    CHECK(PickHint(boxes, 107.f, 107.f, 0.f, 1.f, 1.f) == 0);
+    CHECK(PickHint(boxes, 112.f, 112.f, 0.f, 1.f, 1.f) == 1);
+    CHECK(PickHint(boxes, 205.f, 205.f, 50.f, 1.f, 1.f) == 2);
+}
+
+TEST_CASE("mini map hint: without slack only a box under the pointer counts [ui][minimap]")
+{
+    const std::array<HintBox, 1> boxes{HintBox{100.f, 100.f, 10.f, 10.f}};
+    CHECK(PickHint(boxes, 115.f, 105.f, 0.f, 1.f, 1.f) == NoHint);
+    // On the edge is not inside, as the original's Check_Btn().
+    CHECK(PickHint(boxes, 100.f, 105.f, 0.f, 1.f, 1.f) == NoHint);
+}
+
+TEST_CASE("mini map hint: a finger picks the nearest box within its slack [ui][minimap]")
+{
+    const std::array<HintBox, 2> boxes{HintBox{100.f, 100.f, 10.f, 10.f}, HintBox{130.f, 100.f, 10.f, 10.f}};
+    // 5 units right of the first, 15 left of the second.
+    CHECK(PickHint(boxes, 115.f, 105.f, 22.f, 1.f, 1.f) == 0);
+    // 12 right of the first, 8 left of the second.
+    CHECK(PickHint(boxes, 122.f, 105.f, 22.f, 1.f, 1.f) == 1);
+    // Both too far.
+    CHECK(PickHint(boxes, 170.f, 105.f, 22.f, 1.f, 1.f) == NoHint);
+    // Equally near: the first.
+    CHECK(PickHint(boxes, 120.f, 105.f, 22.f, 1.f, 1.f) == 0);
+}
+
+TEST_CASE("mini map hint: the slack is in window pixels [ui][minimap]")
+{
+    const std::array<HintBox, 1> boxes{HintBox{100.f, 100.f, 10.f, 10.f}};
+    // 10 units right: 20 window pixels at 2 per unit, inside 22; 30 at 3, outside.
+    CHECK(PickHint(boxes, 120.f, 105.f, 22.f, 2.f, 2.f) == 0);
+    CHECK(PickHint(boxes, 120.f, 105.f, 22.f, 3.f, 3.f) == NoHint);
+    // Diagonal: 6 and 8 units at 2 per unit are 12 and 16 pixels, 20 away.
+    CHECK(PickHint(boxes, 116.f, 118.f, 22.f, 2.f, 2.f) == 0);
+    CHECK(PickHint(boxes, 116.f, 118.f, 19.f, 2.f, 2.f) == NoHint);
+}
+
+TEST_CASE("mini map hint: no boxes, no hint [ui][minimap]")
+{
+    CHECK(PickHint({}, 10.f, 10.f, 22.f, 1.f, 1.f) == NoHint);
 }

@@ -5,6 +5,8 @@
 #include "UI/Party/PartyInfoWindow.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Core/WindowGeometry.h"
+#include "UI/HUD/TouchControls.h"
+#include "UI/Mobile/InterfaceMode.h"
 #include "UI/Scaling/UITransform.h"
 #include "UI/RmlBridge/RmlPointer.h"
 #include "UI/RmlBridge/RmlWindowClose.h"
@@ -21,8 +23,39 @@
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Event.h>
 
+#include <array>
+#include <span>
+
 using namespace SEASON3B;
 using namespace mu::ui::window;
+
+namespace
+{
+// The hint with no party: how to make one with the mouse (lines 0-4), then why (5-6). The phone view leaves the
+// mouse lines out.
+constexpr std::size_t kMouseHintLines = 5;
+
+std::array<const wchar_t*, 7> EmptyStateTexts()
+{
+    return {I18N::Game::TypePartyWithTheMouseCursorOn, I18N::Game::ThePlayerYouWouldLike,
+            I18N::Game::ToCreateAPartyWith,            I18N::Game::AndYouCanCreate,
+            I18N::Game::APartyWithThem,                I18N::Game::YouCanShareMoreExpWith,
+            I18N::Game::YourPartyMembersBasedOnLevel};
+}
+
+// The hint's lines for the layout: all of them, or in the phone HUD those after the mouse lines.
+template <typename Line> std::vector<Line> EmptyStateLines(bool phoneHud)
+{
+    const auto texts = EmptyStateTexts();
+    std::span<const wchar_t* const> shown(texts);
+    if (phoneHud)
+        shown = shown.subspan(kMouseHintLines);
+    std::vector<Line> lines;
+    for (const wchar_t* text : shown)
+        lines.push_back({StringUtils::WideToNarrow(text)});
+    return lines;
+}
+} // namespace
 
 CPartyInfoWindow::CPartyInfoWindow()
 {
@@ -61,6 +94,8 @@ void CPartyInfoWindow::BindRmlModel(Rml::DataModelConstructor& c, PartyInfoRmlMo
     c.Bind("text_px", &model.textPx);
 
     c.Bind("has_party", &model.hasParty);
+    c.Bind("phone_hud", &model.phoneHud);
+    c.Bind("social_label", &model.socialLabel);
     c.Bind("window_title", &model.windowTitle);
     c.Bind("exit_tooltip", &model.exitTooltip);
 
@@ -88,19 +123,14 @@ void CPartyInfoWindow::BindRmlModel(Rml::DataModelConstructor& c, PartyInfoRmlMo
             if (arguments.size() == 1)
                 RmlClickKickMember(arguments[0].Get<int>(-1));
         });
+    c.BindEventCallback("party_open_social",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickOpenSocial(); });
 
     model.windowTitle = StringUtils::WideToNarrow(I18N::Game::Party);
     model.exitTooltip = StringUtils::WideToNarrow(I18N::Game::ClosePartyWindowP);
+    model.socialLabel = StringUtils::WideToNarrow(I18N::Game::TouchSocialTitle);
 
-    model.emptyStateLines = {
-        { StringUtils::WideToNarrow(I18N::Game::TypePartyWithTheMouseCursorOn) },
-        { StringUtils::WideToNarrow(I18N::Game::ThePlayerYouWouldLike) },
-        { StringUtils::WideToNarrow(I18N::Game::ToCreateAPartyWith) },
-        { StringUtils::WideToNarrow(I18N::Game::AndYouCanCreate) },
-        { StringUtils::WideToNarrow(I18N::Game::APartyWithThem) },
-        { StringUtils::WideToNarrow(I18N::Game::YouCanShareMoreExpWith) },
-        { StringUtils::WideToNarrow(I18N::Game::YourPartyMembersBasedOnLevel) },
-    };
+    model.emptyStateLines = EmptyStateLines<TextLine>(model.phoneHud);
 }
 
 void CPartyInfoWindow::BuildRmlUi()
@@ -123,11 +153,30 @@ void CPartyInfoWindow::Release()
 
 void CPartyInfoWindow::OpenningProcess()
 {
+    // A click left from an earlier opening never opens the Social panel later.
+    m_openSocialAsked = false;
     SocketClient->ToGameServer()->SendPartyListRequest();
 }
 
 void CPartyInfoWindow::ClosingProcess()
 {
+    m_openSocialAsked = false;
+}
+
+void CPartyInfoWindow::RmlClickOpenSocial()
+{
+    m_openSocialAsked = true;
+}
+
+void CPartyInfoWindow::OpenSocialIfAsked()
+{
+    if (!m_openSocialAsked)
+        return;
+    m_openSocialAsked = false;
+    if (!UI::Mobile::ReplacesPcHud())
+        return;
+    g_pNewUISystem->Hide(mu::ui::window::INTERFACE_PARTY);
+    UI::HUD::TouchControls::ShowSocialPanel();
 }
 
 void CPartyInfoWindow::RmlClickKickMember(int index)
@@ -164,6 +213,7 @@ bool CPartyInfoWindow::Update()
 {
     SetParty(PartyNumber > 0);
     SyncRmlModel();
+    OpenSocialIfAsked();
     return true;
 }
 
@@ -214,6 +264,7 @@ void CPartyInfoWindow::SyncRmlModel()
     auto& model = m_RmlView.GetModel();
 
     UI::RmlBridge::SyncNativeTextSize(m_RmlView.Binder());
+    SyncPhoneHud();
 
     if (model.hasParty != m_bParty)
     {
@@ -252,6 +303,21 @@ void CPartyInfoWindow::SyncRmlModel()
 
     model.members = std::move(members);
     m_RmlView.MarkDirty("members");
+}
+
+// The phone layout's hint without the mouse lines, and its Social button; read every frame, so a switch of the
+// layout shows at once.
+void CPartyInfoWindow::SyncPhoneHud()
+{
+    auto& model = m_RmlView.GetModel();
+    const bool phoneHud = UI::Mobile::ReplacesPcHud();
+    if (model.phoneHud == phoneHud)
+        return;
+    model.phoneHud = phoneHud;
+    m_RmlView.MarkDirty("phone_hud");
+
+    model.emptyStateLines = EmptyStateLines<TextLine>(phoneHud);
+    m_RmlView.MarkDirty("empty_state_lines");
 }
 
 void CPartyInfoWindow::LoadImages()

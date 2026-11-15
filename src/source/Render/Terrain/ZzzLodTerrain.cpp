@@ -1541,12 +1541,54 @@ static const float* GroundMacroFactor(int terrainIndex)
 }
 
 // A ground vertex's light with the macro colour applied (the light itself when it is off).
-static std::uint32_t GroundVertexColor(int terrainIndex, float alpha = 1.f)
+static std::uint32_t ComputeGroundVertexColor(int terrainIndex, float alpha)
 {
     const float* light = PrimaryTerrainLight[terrainIndex];
     if (const float* factor = GroundMacroFactor(terrainIndex))
         return mu::PackABGR(light[0] * factor[0], light[1] * factor[1], light[2] * factor[2], alpha);
     return mu::PackABGR(light[0], light[1], light[2], alpha);
+}
+
+// The ground vertices' colours at alpha 1, kept for one RenderTerrain() pass: the ground, its layers and the
+// grass read each vertex up to a dozen times. Nothing changes the light, the macro colour or the map inside
+// the pass (the frame's lights are added before it), so a kept colour is the one ComputeGroundVertexColor()
+// would give. A vertex is kept when its stamp is the pass's.
+constexpr int kTerrainVertexCount = TERRAIN_SIZE * TERRAIN_SIZE;
+static std::uint32_t s_groundColors[kTerrainVertexCount];
+static std::uint32_t s_groundColorStamps[kTerrainVertexCount] = {};
+static std::uint32_t s_groundColorPass = 0;
+static bool s_groundColorPassActive = false;
+
+static void BeginGroundColorPass(bool active)
+{
+    s_groundColorPassActive = active;
+    if (!active)
+        return;
+    if (++s_groundColorPass == 0u)
+    {
+        std::fill(std::begin(s_groundColorStamps), std::end(s_groundColorStamps), 0u);
+        s_groundColorPass = 1u;
+    }
+}
+
+// PackABGR()'s alpha byte, in place.
+static std::uint32_t PackedAlpha(float alpha)
+{
+    const float clamped = alpha < 0.f ? 0.f : (alpha > 1.f ? 1.f : alpha);
+    return static_cast<std::uint32_t>(clamped * 255.f) << 24;
+}
+
+static std::uint32_t GroundVertexColor(int terrainIndex, float alpha = 1.f)
+{
+    if (!s_groundColorPassActive || terrainIndex < 0 || terrainIndex >= kTerrainVertexCount)
+        return ComputeGroundVertexColor(terrainIndex, alpha);
+    if (s_groundColorStamps[terrainIndex] != s_groundColorPass)
+    {
+        s_groundColorStamps[terrainIndex] = s_groundColorPass;
+        s_groundColors[terrainIndex] = ComputeGroundVertexColor(terrainIndex, 1.f);
+    }
+    constexpr std::uint32_t kColourBits = 0x00FFFFFFu;
+    return (s_groundColors[terrainIndex] & kColourBits) | PackedAlpha(alpha);
 }
 
 // The plain tileable ground textures (TileGrass, TileGround, TileWood, TileRock) that may be
@@ -1732,12 +1774,11 @@ static void SetGroundDetail(bool enabled, int tileTexture = 0)
     mu::GetRenderer().SetTerrainDetail(mipmapped ? params.strength : 0.f, params.scale);
 }
 
-// Draws the ground faces kept since the last call, a run per texture. Grass (grass true) keeps the
-// alpha test RenderTerrain set for it.
-static void RenderGroundFaces(bool grass)
+// The faces of s_groundFaces grouped by texture, in first-seen texture order and keeping the
+// face order inside a texture. Buckets face indices in one pass (a map uses a dozen or two):
+// sorting the 148-byte faces took 3 % of a frame, sorting keys 1 %.
+static const std::vector<std::uint32_t>& GroundFacesByTexture()
 {
-    // Buckets face indices by texture in one pass (a map uses a dozen or two): sorting the 148-byte
-    // faces took 3 % of a frame, sorting keys 1 %.
     static std::vector<int> textures;
     static std::vector<std::uint32_t> starts;
     static std::vector<std::uint16_t> slots;
@@ -1767,16 +1808,50 @@ static void RenderGroundFaces(bool grass)
     order.resize(s_groundFaces.size());
     for (std::size_t i = 0; i < s_groundFaces.size(); ++i)
         order[starts[slots[i]]++] = static_cast<std::uint32_t>(i);
+    return order;
+}
+
+// Quads per ground draw: well under the SDL_gpu renderer's k_MaxQuads (4096), which clamps a longer draw.
+constexpr std::size_t kGroundQuadsPerDraw = 1024;
+constexpr std::size_t kQuadVertices = 4;
+constexpr std::uint32_t kOpaqueAlphaBits = 0xFF000000u;
+
+// True when every vertex of the face has full alpha: the renderer picks alpha-to-coverage per draw from
+// that, so a draw never mixes opaque and translucent faces.
+static bool IsOpaqueGroundFace(const GroundFace& face)
+{
+    for (const mu::Vertex3D& vertex : face.vertices)
+    {
+        if ((vertex.color & kOpaqueAlphaBits) != kOpaqueAlphaBits)
+            return false;
+    }
+    return true;
+}
+
+// Draws the ground faces kept since the last call, one draw per texture run (split every
+// kGroundQuadsPerDraw quads) instead of one per face: the same quads in the same order and state.
+// Grass (grass true) keeps the alpha test RenderTerrain set for it.
+static void RenderGroundFaces(bool grass)
+{
+    static std::vector<mu::Vertex3D> run;
+    run.clear();
+    bool runOpaque = true;
+    const auto flush = [&]() {
+        if (!run.empty())
+            mu::GetRenderer().RenderQuad3D(run, 0u);
+        run.clear();
+    };
 
     int boundTexture = -1;
     bool drawn = true;
     // Foliage smoothing: the grass may take alpha-to-coverage under anti-aliasing.
     mu::GetRenderer().SetCutoutQuads(grass && Render::Textures::FoliageSmoothing::Strength() > 0.0f);
-    for (const std::uint32_t index : order)
+    for (const std::uint32_t index : GroundFacesByTexture())
     {
         const GroundFace& face = s_groundFaces[index];
         if (face.texture != boundTexture)
         {
+            flush();
             boundTexture = face.texture;
             drawn = grass || SetGroundFaceState(face.texture);
             if (drawn)
@@ -1786,9 +1861,15 @@ static void RenderGroundFaces(bool grass)
                 SetGroundWater(face.texture);
             mu::GetRenderer().SetTerrainLit(!grass && TorchLitGround(face.texture));
         }
-        if (drawn)
-            mu::GetRenderer().RenderQuad3D(face.vertices, 0u);
+        if (!drawn)
+            continue;
+        const bool opaque = IsOpaqueGroundFace(face);
+        if (opaque != runOpaque || run.size() >= kGroundQuadsPerDraw * kQuadVertices)
+            flush();
+        runOpaque = opaque;
+        run.insert(run.end(), std::begin(face.vertices), std::end(face.vertices));
     }
+    flush();
     mu::GetRenderer().SetTerrainLit(false);
     mu::GetRenderer().SetCutoutQuads(false);
     SetGroundDetail(false);
@@ -3710,6 +3791,7 @@ bool g_bMapEditorFullTerrain = false;
 void RenderTerrain(bool EditFlag)
 {
     BeginTerrainBitmapMemo(true);
+    BeginGroundColorPass(true);
     if (g_bMapEditorFullTerrain)
         ResetFrustrumBoundsFullTerrain();
 
@@ -3776,6 +3858,7 @@ void RenderTerrain(bool EditFlag)
         RenderPointers();
         EnableDepthTest();
     }
+    BeginGroundColorPass(false);
     BeginTerrainBitmapMemo(false);
 }
 

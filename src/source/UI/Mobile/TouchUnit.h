@@ -15,6 +15,9 @@ namespace UI::Mobile::TouchUnit
 // One finger unit in window pixels. In the browser it follows the canvas's size on the page;
 // elsewhere it is RmlUi's dp at the player's percent.
 [[nodiscard]] float Pixels();
+// The same at 100 %, whatever the player's Button size: for a reach a finger needs (a tap's slack) rather
+// than the size of a button.
+[[nodiscard]] float FullPixels();
 
 // A text size in window pixels, raised in the phone view to the smallest a phone shows readably (12
 // finger units at 100 %, whatever the Button size): for the small texts a PC screen gets away with,

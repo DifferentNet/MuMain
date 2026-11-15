@@ -9,6 +9,7 @@
 #include <RmlUi/Core/Types.h>
 
 #include <chrono>
+#include <string>
 #include <vector>
 
 namespace Rml
@@ -26,6 +27,9 @@ struct JewelBankRow
     Rml::String name;
     // The name's size, shrunk to fit its line (the native renderer's rule).
     float namePx = 0.f;
+    // In the phone view, a name too long for its column even at the smallest size: broken onto two lines
+    // at a space (the line break is in `name`).
+    bool twoLines = false;
     Rml::String count;
     // Jewels of the kind in the inventory to deposit, and in the bank to take.
     bool canDeposit = false;
@@ -90,6 +94,16 @@ private:
     void BindRmlModel(Rml::DataModelConstructor& c, JewelBankRmlModel& model);
     void SyncRmlModel();
     void SyncContent();
+    // A row's name as it is shown, and its size.
+    struct NameLayout
+    {
+        Rml::String name;
+        float px = 0.f;
+        bool twoLines = false;
+    };
+    // The rows' names laid out for the view; measured again only when what they depend on changes.
+    const std::vector<NameLayout>& NameLayouts(const std::vector<std::wstring>& names, bool phoneView,
+                                               int width, bool withCounts);
     void AskWithdrawAmount(int kind);
     // The jewels, into the document's #jb_items, each over its row's icon box.
     void RenderItems();
@@ -104,6 +118,14 @@ private:
     bool m_pendingExit = false;
     int m_pendingDeposit = -1;
     int m_pendingWithdraw = -1;
+    // NameLayouts(): what the layouts were made for, and the layouts.
+    std::vector<std::wstring> m_layoutNames;
+    bool m_layoutPhoneView = false;
+    int m_layoutWidth = 0;
+    bool m_layoutWithCounts = false;
+    unsigned int m_layoutWindowWidth = 0;
+    unsigned int m_layoutWindowHeight = 0;
+    std::vector<NameLayout> m_nameLayouts;
 
     UI::RmlBridge::ThemedView<JewelBankRmlModel> m_RmlView{"jewel_bank",
         [this](Rml::DataModelConstructor& c, JewelBankRmlModel& model) { BindRmlModel(c, model); },

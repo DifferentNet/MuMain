@@ -162,3 +162,31 @@
    left offset only. */
 .party-btn-exit { left: 13px; }
 
+
+/* MU Moldova: the phone view's button under the party hint (no mouse there to type /party with), opening the
+   touch HUD's list of players nearby, as tall as a finger. Hidden elsewhere. */
+#party_social_btn {
+	position: absolute;
+	left: 25px;
+	top: 170px; /* below the hint, even when its two lines wrap to five at the phone text size */
+	width: 140px;
+	height: 48px;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+	cursor: pointer;
+	pointer-events: auto;
+}
+#party_social_btn:hover { border-color: token(accent-steel-hover); }
+#party_social_btn:active { background-color: token(surface-control); }
+.party-social-label {
+	display: block;
+	width: 100%;
+	line-height: 48px;
+	text-align: center;
+	white-space: nowrap;
+	color: token(text-primary);
+	font-size: 12px;
+	font-family: "token(font-body)";
+	pointer-events: none;
+}
