@@ -2,6 +2,7 @@
 #include "UI/Dialogs/HelpPages.h"
 
 #include "I18N/All.h"
+#include "UI/HUD/PadGlyphs.h"
 
 #include <algorithm>
 
@@ -126,10 +127,13 @@ void AddTouchPage(std::vector<UI::Help::PageLine>& lines)
         AddText(lines, line);
 }
 
-void AddGamepadPage(std::vector<UI::Help::PageLine>& lines)
+// The pad page names the buttons of the pad in hand, and the skills RT adds as many as are in play.
+void AddGamepadPage(std::vector<UI::Help::PageLine>& lines, UI::Help::Devices devices)
 {
     AddText(lines, I18N::Game::PadHelpTitle, true);
     AddHalfSpacer(lines);
+    const wchar_t* const skills =
+        devices.skillButtons > 5 ? I18N::Game::PadHelpSkills : I18N::Game::PadHelpSkillsFive;
     const wchar_t* const padLines[] = {
         I18N::Game::PadHelpSticks,
         I18N::Game::HelpControlsWalkHit,
@@ -138,7 +142,7 @@ void AddGamepadPage(std::vector<UI::Help::PageLine>& lines)
         I18N::Game::HelpControlsAutoAttack,
         I18N::Game::PadHelpPk,
         I18N::Game::PadHelpClickA,
-        I18N::Game::PadHelpSkills,
+        skills,
         I18N::Game::PadHelpSkillsUse,
         I18N::Game::HelpControlsSkillsSelf,
         I18N::Game::PadHelpSkillList,
@@ -156,8 +160,9 @@ void AddGamepadPage(std::vector<UI::Help::PageLine>& lines)
         I18N::Game::PadHelpScreens,
         I18N::Game::PadHelpScreensKeys,
     };
+    const UI::HUD::PadButtonNames::Names names = UI::HUD::PadGlyphs::TextNames(devices.padKind);
     for (const wchar_t* line : padLines)
-        AddText(lines, line);
+        AddText(lines, UI::HUD::PadButtonNames::Fill(line, names).c_str());
 }
 
 // With touch controls or a gamepad in hand the commands follow on a page of their own: the chat rows
@@ -188,7 +193,7 @@ void AddPageLines(std::vector<UI::Help::PageLine>& lines, UI::Help::Page page, U
         AddTouchPage(lines);
         break;
     case UI::Help::Page::Gamepad:
-        AddGamepadPage(lines);
+        AddGamepadPage(lines, devices);
         break;
     case UI::Help::Page::Chatting:
         AddChattingPage(lines, devices);
@@ -200,10 +205,11 @@ void AddPageLines(std::vector<UI::Help::PageLine>& lines, UI::Help::Page page, U
 }
 
 // What turns the page with the device in hand: the pad's LB and RB, a tap on the hint row, F1.
-const wchar_t* PageHint(UI::Help::Devices devices, bool lastPage)
+std::wstring PageHint(UI::Help::Devices devices, bool lastPage)
 {
     if (devices.gamepad)
-        return I18N::Game::PadHelpPagesHint;
+        return UI::HUD::PadButtonNames::Fill(I18N::Game::PadHelpPagesHint,
+                                             UI::HUD::PadGlyphs::TextNames(devices.padKind));
     if (devices.touchControls)
         return lastPage ? I18N::Game::TouchHelpCloseHint : I18N::Game::TouchHelpNextHint;
     return lastPage ? I18N::Game::HelpCloseHint : I18N::Game::HelpNextPageHint;
@@ -234,7 +240,7 @@ std::vector<UI::Help::PageLine> UI::Help::BuildPage(int index, Devices devices)
     std::vector<PageLine> lines;
     AddHalfSpacer(lines);
     AddPageLines(lines, pages[page], devices);
-    AddHint(lines, PageHint(devices, page == last));
+    AddHint(lines, PageHint(devices, page == last).c_str());
     AddHalfSpacer(lines);
     return lines;
 }

@@ -67,6 +67,7 @@ struct View
     float topRight = 0.f;
 };
 
-// Once a frame from UI::HUD::GamepadControls; an empty view (the pad put down) hides it.
-void Update(const View& view);
+// Once a frame from UI::HUD::GamepadControls, `seconds` since the last (the frame glides by it); an
+// empty view (the pad put down) hides it.
+void Update(const View& view, float seconds);
 } // namespace UI::HUD::PadOverlay

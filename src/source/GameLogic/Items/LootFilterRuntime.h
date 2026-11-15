@@ -26,6 +26,11 @@ void Apply(const LootFilter::Settings& settings);
 // when that is on.
 void ClassifyDrop(int index, bool isFreshDrop);
 
+// How many fresh highlighted drops there have been so far, sound on or off (the pad shakes on a new one),
+// and the Items[] index of the last.
+[[nodiscard]] unsigned FreshHighlights();
+[[nodiscard]] int LastFreshHighlight();
+
 // Classifies every live item on the ground again.
 void ReclassifyAll();
 

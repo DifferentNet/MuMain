@@ -6,6 +6,7 @@
 
 #include "I18N/All.h"
 #include "UI/Dialogs/HelpPages.h"
+#include "UI/HUD/PadButtonNames.h"
 
 namespace
 {
@@ -41,6 +42,12 @@ long CountHints(const std::vector<UI::Help::PageLine>& lines)
 const UI::Help::PageLine& Hint(const std::vector<UI::Help::PageLine>& lines)
 {
     return lines[lines.size() - 2];
+}
+
+// A pad text with the Xbox names in, as the pad page and hint show it for an Xbox pad.
+std::wstring Xbox(const wchar_t* text)
+{
+    return UI::HUD::PadButtonNames::Fill(text, {});
 }
 } // namespace
 
@@ -157,7 +164,7 @@ TEST_CASE("help commands page: MU Skynet's commands after the chat page, the las
     CHECK(lines.back().halfSpacer);
 
     CHECK(UI::Help::BuildPage(2, kPad)[1].text == I18N::Game::HelpSkynetCommandsHeading);
-    CHECK(Hint(UI::Help::BuildPage(2, kPad)).text == I18N::Game::PadHelpPagesHint);
+    CHECK(Hint(UI::Help::BuildPage(2, kPad)).text == Xbox(I18N::Game::PadHelpPagesHint));
 }
 
 TEST_CASE("help with a gamepad: the pad's buttons instead of the keys, LB and RB turn the pages [ui][help]")
@@ -171,14 +178,44 @@ TEST_CASE("help with a gamepad: the pad's buttons instead of the keys, LB and RB
     CHECK(CountHeadings(lines) == 1);
     CHECK(CountHints(lines) == 1);
     CHECK(lines[3].text == I18N::Game::PadHelpSticks);
-    CHECK(lines[6].text == I18N::Game::PadHelpAttack);
-    CHECK(lines[8].text == I18N::Game::PadHelpPk);
-    CHECK(lines[13].text == I18N::Game::PadHelpSkillList);
+    CHECK(lines[6].text == Xbox(I18N::Game::PadHelpAttack));
+    CHECK(lines[8].text == Xbox(I18N::Game::PadHelpPk));
+    CHECK(lines[10].text == Xbox(I18N::Game::PadHelpSkills));
+    CHECK(lines[13].text == Xbox(I18N::Game::PadHelpSkillList));
     CHECK(lines[22].text == I18N::Game::PadHelpKeyboard);
-    CHECK(lines[26].text == I18N::Game::PadHelpScreensKeys);
-    CHECK(Hint(lines).text == I18N::Game::PadHelpPagesHint);
+    CHECK(lines[26].text == Xbox(I18N::Game::PadHelpScreensKeys));
+    CHECK(Hint(lines).text == Xbox(I18N::Game::PadHelpPagesHint));
+    // No brace is left for the player to read.
+    for (const UI::Help::PageLine& line : lines)
+        CHECK(line.text.find(L'{') == std::wstring::npos);
 
-    CHECK(Hint(UI::Help::BuildPage(1, kPad)).text == I18N::Game::PadHelpPagesHint);
+    CHECK(Hint(UI::Help::BuildPage(1, kPad)).text == Xbox(I18N::Game::PadHelpPagesHint));
+}
+
+TEST_CASE("help with a PlayStation pad and five skill buttons: its button names, skills 4 and 5 [ui][help]")
+{
+    UI::Help::Devices devices{false, true};
+    devices.padKind = Core::Input::Gamepad::PadKind::PlayStation;
+    devices.skillButtons = 5;
+    const auto lines = UI::Help::BuildPage(0, devices);
+
+    REQUIRE(lines.size() == 30);
+    UI::HUD::PadButtonNames::Names names;
+    names.a = I18N::Game::PadNameCross;
+    names.b = I18N::Game::PadNameCircle;
+    names.x = I18N::Game::PadNameSquare;
+    names.y = I18N::Game::PadNameTriangle;
+    names.lb = L"L1";
+    names.rb = L"R1";
+    names.lt = L"L2";
+    names.rt = L"R2";
+    names.ls = L"L3";
+    names.rs = L"R3";
+    names.menu = L"Options";
+    names.view = L"Create";
+    CHECK(lines[6].text == UI::HUD::PadButtonNames::Fill(I18N::Game::PadHelpAttack, names));
+    CHECK(lines[10].text == UI::HUD::PadButtonNames::Fill(I18N::Game::PadHelpSkillsFive, names));
+    CHECK(Hint(lines).text == UI::HUD::PadButtonNames::Fill(I18N::Game::PadHelpPagesHint, names));
 }
 
 TEST_CASE("help with touch and a gamepad: the touch page, the pad page, then chat and commands [ui][help]")
@@ -188,8 +225,8 @@ TEST_CASE("help with touch and a gamepad: the touch page, the pad page, then cha
     CHECK(UI::Help::BuildPage(2, kTouchAndPad)[1].text == I18N::Game::ChattingInstructions);
     CHECK(UI::Help::BuildPage(3, kTouchAndPad)[1].text == I18N::Game::HelpSkynetCommandsHeading);
     // The pad in hand turns the pages: its hint on every page.
-    CHECK(Hint(UI::Help::BuildPage(0, kTouchAndPad)).text == I18N::Game::PadHelpPagesHint);
-    CHECK(Hint(UI::Help::BuildPage(3, kTouchAndPad)).text == I18N::Game::PadHelpPagesHint);
+    CHECK(Hint(UI::Help::BuildPage(0, kTouchAndPad)).text == Xbox(I18N::Game::PadHelpPagesHint));
+    CHECK(Hint(UI::Help::BuildPage(3, kTouchAndPad)).text == Xbox(I18N::Game::PadHelpPagesHint));
 }
 
 TEST_CASE("help page index: before the first, the first; past the last, the last [ui][help]")

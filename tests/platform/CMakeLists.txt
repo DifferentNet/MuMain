@@ -84,3 +84,18 @@ add_test(
             "${CMAKE_CURRENT_SOURCE_DIR}/test_ima_adpcm.py"
             "${CMAKE_SOURCE_DIR}"
 )
+
+# Crash reports (Core/Platform/CrashReport.h): a probe crashes each supported way, the script
+# checks the .txt and .dmp it leaves.
+if(WIN32)
+    add_executable(crash_report_probe crash_report_probe.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Platform/win32/CrashReport.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Platform/win32/CrashReportWriter.cpp)
+    target_include_directories(crash_report_probe PRIVATE ${CMAKE_SOURCE_DIR}/src/source)
+    target_link_libraries(crash_report_probe PRIVATE user32 shell32)
+    if(MSVC)
+        target_compile_options(crash_report_probe PRIVATE /utf-8)
+    endif()
+    add_test(NAME crash_report COMMAND "${Python3_EXECUTABLE}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/test_crash_report.py" $<TARGET_FILE:crash_report_probe>)
+endif()

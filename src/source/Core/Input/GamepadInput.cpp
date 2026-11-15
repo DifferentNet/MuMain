@@ -2,6 +2,7 @@
 #include "Core/Input/GamepadInput.h"
 
 #include "Core/Input/GamepadPointer.h"
+#include "Core/Input/GamepadRumble.h"
 #include "Core/Input/GamepadStick.h"
 #include "Core/Utilities/Log/MuLogger.h"
 
@@ -16,6 +17,7 @@
 #include <cmath>
 #include <cstdint>
 #include <optional>
+#include <utility>
 
 namespace Core::Input::Gamepad
 {
@@ -57,6 +59,8 @@ bool g_offWhenPutDown = false;
 bool g_started = false;
 bool g_rumble = true;
 PadKind g_lastKind = PadKind::Xbox;
+// A pad plugged in or out since TakeNews last asked (not the pads open at the start or by the switch).
+PadNews g_news = PadNews::None;
 GlyphChoice g_glyphChoice = GlyphChoice::Auto;
 
 // The pad's kind: SDL's own guess from its vendor and product where it has one (a PC), else its name
@@ -413,14 +417,24 @@ void Rumble(float low, float high, int milliseconds)
 {
     if (!g_rumble || !IsEnabled() || milliseconds <= 0)
         return;
+    // SDL replaces the shake under way: a weaker one would cut a stronger one short.
+    static RumbleArbiter s_arbiter;
+    const RumbleArbiter::Clock::time_point now = RumbleArbiter::Clock::now();
+    if (!s_arbiter.Allows(low, high, milliseconds, now))
+        return;
     const auto strength = [](float share) {
         return static_cast<Uint16>(std::clamp(share, 0.f, 1.f) * 65535.f);
     };
+    bool played = false;
     for (const Pad& pad : g_pads)
     {
-        if (pad.handle != nullptr)
-            SDL_RumbleGamepad(pad.handle, strength(low), strength(high), static_cast<Uint32>(milliseconds));
+        if (pad.handle != nullptr &&
+            SDL_RumbleGamepad(pad.handle, strength(low), strength(high), static_cast<Uint32>(milliseconds)))
+            played = true;
     }
+    // A pad that has no motors (or refused) shakes nothing: no shake is under way to keep.
+    if (played)
+        s_arbiter.Record(low, high, milliseconds, now);
 }
 
 void ProcessEvent(const SDL_Event& event)
@@ -435,14 +449,25 @@ void ProcessEvent(const SDL_Event& event)
     switch (event.type)
     {
     case SDL_EVENT_GAMEPAD_ADDED:
+    {
+        const bool known = FindPad(event.gdevice.which) != nullptr;
         AddPad(event.gdevice.which);
+        if (!known && FindPad(event.gdevice.which) != nullptr)
+            g_news = PadNews::Connected;
         break;
+    }
     case SDL_EVENT_GAMEPAD_REMOVED:
+    {
+        const bool known = FindPad(event.gdevice.which) != nullptr;
         RemovePad(event.gdevice.which);
+        // One pad of two pulled out leaves one playing: no news.
+        if (known && !IsConnected())
+            g_news = PadNews::Disconnected;
         // The last pad unplugged: nothing is left to play, so the off it waited for comes now.
         if (g_offWhenPutDown && !IsConnected())
             SetEnabled(false);
         break;
+    }
     case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
     case SDL_EVENT_GAMEPAD_BUTTON_UP:
         if (Pad* pad = FindPad(event.gbutton.which))
@@ -477,6 +502,11 @@ void Poll()
             SetAxis(pad, axis, AxisPosition(value));
         }
     }
+}
+
+PadNews TakeNews()
+{
+    return std::exchange(g_news, PadNews::None);
 }
 
 bool IsConnected()

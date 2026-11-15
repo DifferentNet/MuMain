@@ -22,6 +22,14 @@ mu_add_test(
     LINK_LIBS RmlUi::Core
 )
 
+# The pad's button names put into the help's texts.
+mu_add_test(
+    NAME pad_button_names_tests
+    SOURCES
+        test_pad_button_names.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/HUD/PadButtonNames.cpp
+)
+
 mu_add_test(
     NAME guard_guild_lists_tests
     SOURCES

@@ -9,6 +9,7 @@
 #include "UI/HUD/PadTargetPick.h"
 
 #include <chrono>
+#include <span>
 
 struct SDL_Window;
 
@@ -19,9 +20,15 @@ using Clock = std::chrono::steady_clock;
 // Once a frame while a game window is open, after the right stick moved the pointer: takes the d-pad's
 // presses it steps with.
 void Update(SDL_Window* window, Core::Input::Gamepad::Presses& presses, Clock::time_point now);
+// The same over the targets PadTargets::Collect just found this frame (the screens look first).
+void Update(SDL_Window* window, Core::Input::Gamepad::Presses& presses, Clock::time_point now,
+            std::span<const PadTargetPick::Target> targets);
 // The windows opened or changed (a hub tab turned): the frame goes to the nearest target as soon as
 // there is one.
 void SnapSoon();
+// RT turned the page of the window at `window` (a target's `window`): the frame goes to that page's first
+// target past its tabs, not back to where it was.
+void SnapToPage(int window);
 // A menu item pressed: the window it opens takes the frame on its first target; with nothing new open
 // the frame stays where it was.
 void SnapOnNewWindow();

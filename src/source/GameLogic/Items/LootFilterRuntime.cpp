@@ -30,6 +30,8 @@ constexpr auto SoundGap = std::chrono::milliseconds(300);
 Settings g_settings;
 bool g_loaded = false;
 std::chrono::steady_clock::time_point g_lastSound{};
+unsigned g_freshHighlights = 0;
+int g_lastFreshHighlight = -1;
 
 Settings LoadFromConfig()
 {
@@ -206,8 +208,22 @@ void ClassifyDrop(int index, bool isFreshDrop)
     ITEM_t& entry = ::Items[index];
     const Verdict verdict = LootFilter::Classify(Current(), BuildFacts(entry.Object, entry.Item));
     entry.LootVerdict = static_cast<BYTE>(verdict);
-    if (isFreshDrop && verdict == Verdict::Highlight && g_settings.sound)
+    if (!isFreshDrop || verdict != Verdict::Highlight)
+        return;
+    ++g_freshHighlights;
+    g_lastFreshHighlight = index;
+    if (g_settings.sound)
         PlayHighlightSound();
+}
+
+unsigned FreshHighlights()
+{
+    return g_freshHighlights;
+}
+
+int LastFreshHighlight()
+{
+    return g_lastFreshHighlight;
 }
 
 void ReclassifyAll()

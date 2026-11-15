@@ -2,6 +2,7 @@
 #include "UI/HUD/PadGlyphs.h"
 
 #include "Core/Input/GamepadInput.h"
+#include "I18N/All.h"
 
 namespace UI::HUD::PadGlyphs
 {
@@ -79,5 +80,47 @@ void Sync(Model& model, const std::function<void(const char*)>& markDirty)
     SyncName(model.rb, names.rb, "glyph_rb", markDirty);
     SyncName(model.lt, names.lt, "glyph_lt", markDirty);
     SyncName(model.rt, names.rt, "glyph_rt", markDirty);
+}
+
+PadButtonNames::Names TextNames(Core::Input::Gamepad::PadKind kind)
+{
+    PadButtonNames::Names names;
+    switch (kind)
+    {
+    case Core::Input::Gamepad::PadKind::PlayStation:
+        names.a = I18N::Game::PadNameCross;
+        names.b = I18N::Game::PadNameCircle;
+        names.x = I18N::Game::PadNameSquare;
+        names.y = I18N::Game::PadNameTriangle;
+        names.lb = L"L1";
+        names.rb = L"R1";
+        names.lt = L"L2";
+        names.rt = L"R2";
+        names.ls = L"L3";
+        names.rs = L"R3";
+        names.menu = L"Options";
+        names.view = L"Create";
+        break;
+    case Core::Input::Gamepad::PadKind::Nintendo:
+        names.a = L"B";
+        names.b = L"A";
+        names.x = L"Y";
+        names.y = L"X";
+        names.lb = L"L";
+        names.rb = L"R";
+        names.lt = L"ZL";
+        names.rt = L"ZR";
+        names.menu = L"+";
+        names.view = L"-";
+        break;
+    case Core::Input::Gamepad::PadKind::Xbox:
+        break;
+    }
+    return names;
+}
+
+std::wstring Named(const wchar_t* text)
+{
+    return PadButtonNames::Fill(text != nullptr ? text : L"", TextNames(Core::Input::Gamepad::ShownKind()));
 }
 } // namespace UI::HUD::PadGlyphs

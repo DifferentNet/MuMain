@@ -13254,61 +13254,61 @@
     <value>Pindutin dito: isara</value>
   </data>
   <data name="PadHelpTitle" xml:space="preserve">
-    <value>Gamepad (Xbox layout)</value>
+    <value>Gamepad</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Kaliwang stick: lakad. Kanang stick: itulak para sa susunod na target (kanan ay mas malayo, kaliwa ay mas malapit); sa window, malayang pointer</value>
+    <value>Kaliwang stick: lakad. Kanang stick: ikiling ito papunta sa target para piliin ito, hawakan para magpatuloy sa direksyong iyon; sa window, malayang pointer</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
-    <value>A: pindutin para tamaan ang target nang isang beses, pindutin nang matagal para tuloy ang laban</value>
+    <value>{A}: pindutin para tamaan ang target nang isang beses, hawakan para patuloy na lumaban; kung walang halimaw sa malapit, pumulot (hawakan) o kausapin ang NPC</value>
   </data>
   <data name="PadHelpSkills" xml:space="preserve">
-    <value>X, Y, B: ang tatlong skill button. Hawakan ang RT: X at Y ay gumagamit ng skill 4 at 5. RB: ang party member na tatanggap ng heal at buff mo</value>
+    <value>{X}, {Y}, {B}: ang tatlong button ng skill. Hawakan ang {RT}: ang {X}, {Y} at {B} ang gagamit ng skill 4 hanggang 6. {RB}: ang kasama sa party na tatanggap ng heal at buff mo</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>LS (idiin ang kaliwang stick, nasa gitna): maglagay ng skill sa mga button</value>
+    <value>{LS} (pindutin papasok ang kaliwang stick, nasa gitna): ilagay ang mga skill sa mga button</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
-    <value>B kapag may bukas na window: balik, isinasara ang pinakaitaas na window</value>
+    <value>{B} habang may bukas na window: bumalik, isinasara ang window na nasa ibabaw</value>
   </data>
   <data name="PadHelpPickUp" xml:space="preserve">
-    <value>D-pad pababa: pulutin ang item na nakikita ang pangalan, hawakan para tuloy ang pagpulot; kapag walang pupulutin, kausapin ang pinakamalapit na NPC</value>
+    <value>D-pad pababa: pulutin ang item na nakikita ang pangalan, hawakan para patuloy na pumulot; kung walang mapupulot, kausapin ang pinakamalapit na NPC</value>
   </data>
   <data name="PadHelpPotions" xml:space="preserve">
-    <value>LB at LT: potion Q at W. D-pad kaliwa: ang mapa (hawak: Teleport window). D-pad kanan: ang inventory</value>
+    <value>{LB} at {LT}: potion Q at W, habang hawak ang {RT} E at R. {RT} + D-pad pataas/pababa: ilapit at ilayo ang camera. D-pad pakaliwa: ang mapa (hawak: Teleport window). D-pad pakanan: ang inventory</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>RS (idiin ang kanang stick, nasa gitna): balik sa pinakamalapit na target</value>
+    <value>{RS} (pindutin papasok ang kanang stick, nasa gitna): bumalik sa pinakamalapit na target</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
-    <value>Menu: ang hero hub (inventory, karakter, skill, quest, guild, settings), ang LB at RB ang nagpapalit ng tab nito. Ulit: lahat ng window. Hawakan ang Menu: ang chat</value>
+    <value>{MENU}: ang hero hub (inventory, karakter, skill, quest, guild, settings), ang {LB} at {RB} ang nagpapalit ng tab nito. Ulit: lahat ng window. Hawakan ang {MENU}: ang chat</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
-    <value>Login at character screen: ang mga stick ang gumagalaw sa pointer</value>
+    <value>Login at screen ng karakter: ang mga stick ang nagpapagalaw ng pointer</value>
   </data>
   <data name="PadHelpScreensKeys" xml:space="preserve">
-    <value>Doon ang A ay click, ang B ay Esc, ang Menu ay Enter</value>
+    <value>Doon, ang {A} ay click, ang {B} ay Esc, ang {MENU} ay Enter</value>
   </data>
   <data name="PadHelpStickGate" xml:space="preserve">
-    <value>Pagkatapos ng gate o palit ng mapa, bitawan ang stick para makalakad ulit</value>
+    <value>Pagkatapos ng gate o paglipat ng mapa, bitawan ang stick para makalakad ulit</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>Sa window: frame imbes na pointer. D-pad o kaliwang stick: sa susunod na cell o button (lampas sa huling hanay, nag-i-scroll ang listahan). A: kunin, ilapag, pindutin. X: isuot, gamitin. Y: ang card ng item. Kanang stick: malayang pointer</value>
+    <value>Sa window: frame imbes na pointer. D-pad o kaliwang stick: sa susunod na cell o button (lampas sa huling hanay, nag-i-scroll ang listahan). {A}: kunin, ilapag, pindutin. {X}: isuot, gamitin. {Y}: ang card ng item. {RB}: ang susunod na window, {RT}: ang susunod na pahina o tab. Kanang stick: malayang pointer</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
-    <value>Pindutin para gamitin ang skill nang isang beses, pindutin nang matagal para ulitin. Ang Teleport ay tumatalon sa direksyong tinuturo ng kaliwang stick</value>
+    <value>Pindutin para gamitin ang skill nang isang beses, hawakan para ulitin ito. Ang Teleport ay tatalon kung saan nakaturo ang kaliwang stick</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
-    <value>D-pad pataas: pagbukas at pagpatay ng MU Helper, hawak: ang settings nito. View: Social (mga manlalaro sa paligid: trade, party, guild...)</value>
+    <value>D-pad pataas: MU Helper bukas at sara, hawak: ang settings nito. {VIEW}: Social (mga player sa paligid: trade, party, guild...)</value>
   </data>
   <data name="PadHelpRightClick" xml:space="preserve">
-    <value>RS sa ibabaw ng window: right click sa pointer, sa + ng stat maraming puntos</value>
+    <value>{RS} sa ibabaw ng window: right click sa pointer, sa + ng stat ay maraming puntos</value>
   </data>
   <data name="PadHelpDialog" xml:space="preserve">
-    <value>Isang tanong (trade, party): pagkatapos ng pangalawang Menu ay Oo, ang A din kapag nanatili ito nang isang segundo. Ang B ay Hindi</value>
+    <value>Isang tanong (trade, party): pagkalipas ng isang segundo, ang {MENU} ay Oo, pati ang {A} kapag nakapahinga na ito nang isang segundo. Ang {B} ay Hindi</value>
   </data>
   <data name="PadHelpPagesHint" xml:space="preserve">
-    <value>LB, RB: ilipat ang pahina. B: isara</value>
+    <value>{LB}, {RB}: lipat ng pahina. {B}: isara</value>
   </data>
   <data name="PadOpen" xml:space="preserve">
     <value>Buksan</value>
@@ -13329,7 +13329,7 @@
     <value>Pindutin ang button sa kanan para itakda ito. Ang skill na nasa button na ay magpapalit ng pwesto</value>
   </data>
   <data name="PadPickerTip" xml:space="preserve">
-    <value>Ilipat sa kanan ang pointer sa isang button at pindutin ang A para itakda ito. Ang skill na nasa button na ay magpapalit ng pwesto</value>
+    <value>Lumipat pakanan sa isang button at pindutin ang {A} para itakda ito. Ang skill na nasa button na ay magpapalit ng puwesto</value>
   </data>
   <data name="TouchPickerClear" xml:space="preserve">
     <value>Alisin</value>
@@ -13344,7 +13344,7 @@
     <value>Piliin</value>
   </data>
   <data name="PadConnected" xml:space="preserve">
-    <value>Gamepad: A ay atake, X, Y at B ay gumagamit ng skill (hawakan ang RT para sa dalawa pa), LB at LT ay umiinom ng potion, kanang stick ang pumipili ng target, D-pad kaliwa ang mapa, kanan ang inventory, binubuksan ng Menu ang lahat ng window (nakalista sa Tulong nito ang lahat ng button)</value>
+    <value>Nakakonekta ang gamepad</value>
   </data>
   <data name="PadFriendChosen" xml:space="preserve">
     <value>Ang heal at buff ay mapupunta kay: </value>
@@ -13356,16 +13356,16 @@
     <value>Walang party member na malapit: ang heal at buff ay mapupunta sa iyo</value>
   </data>
   <data name="PadChooseFriendFirst" xml:space="preserve">
-    <value>Teleport Ally: pumili muna ng party member gamit ang RB</value>
+    <value>Teleport Ally: pumili muna ng kasama sa party gamit ang {RB}</value>
   </data>
   <data name="PadFriendTooFar" xml:space="preserve">
     <value>Masyadong malayo: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Pumili ng skill gamit ang pointer at A, tapos pindutin ang X, Y o B (RT + X o Y para sa button 4 at 5) para ilagay ito roon</value>
+    <value>Pumili ng skill gamit ang pointer at {A}, pagkatapos pindutin ang {X}, {Y} o {B} ({RT} + {X}, {Y} o {B} para sa button 4 hanggang 6) para ilagay ito roon</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Pindutin ang X, Y o B (RT + X o Y para sa button 4 at 5) para ilagay roon ang skill</value>
+    <value>Pindutin ang {X}, {Y} o {B} ({RT} + {X}, {Y} o {B} para sa button 4 hanggang 6) para ilagay roon ang skill</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>I-type</value>
@@ -13377,13 +13377,13 @@
     <value>space</value>
   </data>
   <data name="PadHelpKeyboard" xml:space="preserve">
-    <value>Mga text field (chat, login): may bubukas na on-screen keyboard</value>
+    <value>Mga text field (chat, login): may bubukas na keyboard sa screen</value>
   </data>
   <data name="PadHelpKeyboardKeys" xml:space="preserve">
-    <value>D-pad o stick: mga key. A: pindutin, X: burahin, Y: space, Menu: Enter</value>
+    <value>D-pad o stick: mga key. {A}: pindutin, {X}: burahin, {Y}: espasyo, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>LT: shift, RT: simbolo, View: Ingles/Ruso, LB/RB: cursor, B: isara</value>
+    <value>{LT}: shift, {RT}: mga simbolo, {VIEW}: Ingles/Ruso, {LB}/{RB}: cursor, {B}: isara</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>Kulang ang mana</value>
@@ -13413,7 +13413,7 @@
     <value>PK (menu): pindutin ang manlalaro para labanan siya, tapos ang Atake at mga skill ay mananatili sa kanya. Ligtas ang party mo</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK (menu): pumipili rin ng manlalaro ang kanang stick, nilalabanan sila ng A, ligtas ang party mo</value>
+    <value>PK (menu): pumipili rin ng player ang kanang stick, ang {A} ay lumalaban sa kanila, ligtas ang party mo</value>
   </data>
   <data name="TouchShopTapAgainToBuy" xml:space="preserve">
     <value>Pindutin ulit ang item para bilhin ito.</value>
@@ -13452,7 +13452,7 @@
     <value>Mga window</value>
   </data>
   <data name="PadHubSettings" xml:space="preserve">
-    <value>Settings</value>
+    <value>Mga setting</value>
   </data>
   <data name="PadPickUpPrompt" xml:space="preserve">
     <value>Pulutin</value>
@@ -13501,6 +13501,135 @@
   </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Hubarin muna ang suot na item doon</value>
+  </data>
+  <data name="PadHelpSkillsFive" xml:space="preserve">
+    <value>{X}, {Y}, {B}: ang tatlong button ng skill. Hawakan ang {RT}: ang {X} at {Y} ang gagamit ng skill 4 at 5. {RB}: ang kasama sa party na tatanggap ng heal at buff mo</value>
+  </data>
+  <data name="PadDisconnected" xml:space="preserve">
+    <value>Nadiskonekta ang gamepad</value>
+  </data>
+  <data name="PadBindPickFive" xml:space="preserve">
+    <value>Pumili ng skill gamit ang pointer at {A}, pagkatapos pindutin ang {X}, {Y} o {B} ({RT} + {X} o {Y} para sa button 4 at 5) para ilagay ito roon</value>
+  </data>
+  <data name="PadBindPlaceFive" xml:space="preserve">
+    <value>Pindutin ang {X}, {Y} o {B} ({RT} + {X} o {Y} para sa button 4 at 5) para ilagay roon ang skill</value>
+  </data>
+  <data name="PadNameCross" xml:space="preserve">
+    <value>Ekis</value>
+  </data>
+  <data name="PadNameCircle" xml:space="preserve">
+    <value>Bilog</value>
+  </data>
+  <data name="PadNameSquare" xml:space="preserve">
+    <value>Parisukat</value>
+  </data>
+  <data name="PadNameTriangle" xml:space="preserve">
+    <value>Tatsulok</value>
+  </data>
+  <data name="PadDialogYes" xml:space="preserve">
+    <value>Oo / OK</value>
+  </data>
+  <data name="PadDialogNo" xml:space="preserve">
+    <value>Hindi / Kanselahin</value>
+  </data>
+  <data name="PadNextWindow" xml:space="preserve">
+    <value>Window</value>
+  </data>
+  <data name="PadNextPage" xml:space="preserve">
+    <value>Pahina</value>
+  </data>
+  <data name="PadCardTitle" xml:space="preserve">
+    <value>Kontrol ng gamepad</value>
+  </data>
+  <data name="PadCardWorld" xml:space="preserve">
+    <value>Sa mundo</value>
+  </data>
+  <data name="PadCardWindows" xml:space="preserve">
+    <value>Sa mga window</value>
+  </data>
+  <data name="PadCardPage" xml:space="preserve">
+    <value>Pahina</value>
+  </data>
+  <data name="PadCardWalk" xml:space="preserve">
+    <value>Lakad</value>
+  </data>
+  <data name="PadCardTarget" xml:space="preserve">
+    <value>Itulak: susunod na target, pindutin: ang pinakamalapit</value>
+  </data>
+  <data name="PadCardPotions" xml:space="preserve">
+    <value>Potion Q at W</value>
+  </data>
+  <data name="PadCardFriend" xml:space="preserve">
+    <value>Susunod na kasama sa party para sa heal at buff</value>
+  </data>
+  <data name="PadCardHelper" xml:space="preserve">
+    <value>MU Helper bukas at sara (hawakan: settings)</value>
+  </data>
+  <data name="PadCardPickUp" xml:space="preserve">
+    <value>Pumulot (hawakan: tipunin)</value>
+  </data>
+  <data name="PadCardMap" xml:space="preserve">
+    <value>Mapa (hawakan: teleport)</value>
+  </data>
+  <data name="PadCardBag" xml:space="preserve">
+    <value>Imbentaryo</value>
+  </data>
+  <data name="PadCardAttack" xml:space="preserve">
+    <value>Atake, kausap, menu ng player</value>
+  </data>
+  <data name="PadCardSkills" xml:space="preserve">
+    <value>Skill 1–3</value>
+  </data>
+  <data name="PadCardMoreSkills" xml:space="preserve">
+    <value>Skill 4–6</value>
+  </data>
+  <data name="PadCardMoreSkillsFive" xml:space="preserve">
+    <value>Skill 4 at 5</value>
+  </data>
+  <data name="PadCardSocial" xml:space="preserve">
+    <value>Social</value>
+  </data>
+  <data name="PadCardMenu" xml:space="preserve">
+    <value>Hero hub (hawakan: chat)</value>
+  </data>
+  <data name="PadCardPicker" xml:space="preserve">
+    <value>Pagpili ng skill</value>
+  </data>
+  <data name="PadCardFrame" xml:space="preserve">
+    <value>Igalaw ang frame</value>
+  </data>
+  <data name="PadCardPointer" xml:space="preserve">
+    <value>Igalaw ang pointer</value>
+  </data>
+  <data name="PadCardNextWindow" xml:space="preserve">
+    <value>Susunod na window</value>
+  </data>
+  <data name="PadCardNextPage" xml:space="preserve">
+    <value>Susunod na pahina o tab</value>
+  </data>
+  <data name="PadCardHubTabs" xml:space="preserve">
+    <value>Mga tab ng hero hub</value>
+  </data>
+  <data name="PadCardTake" xml:space="preserve">
+    <value>Kunin, pindutin</value>
+  </data>
+  <data name="PadCardUse" xml:space="preserve">
+    <value>Gamitin o isuot</value>
+  </data>
+  <data name="PadCardItemCard" xml:space="preserve">
+    <value>Card ng item</value>
+  </data>
+  <data name="PadCardClose" xml:space="preserve">
+    <value>Isara, ibalik</value>
+  </data>
+  <data name="PadCardAllWindows" xml:space="preserve">
+    <value>Lahat ng window</value>
+  </data>
+  <data name="PadCardTab" xml:space="preserve">
+    <value>Kontrol</value>
+  </data>
+  <data name="PadAdjust" xml:space="preserve">
+    <value>Ayusin</value>
   </data>
   <data name="SoftShadowsRow" xml:space="preserve">
     <value>Malambot na anino</value>

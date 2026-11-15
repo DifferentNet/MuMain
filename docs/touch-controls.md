@@ -216,7 +216,8 @@ touch screen are not capped.
 The buttons light while held, and a tap shorter than 120 ms still lights its button that long (the
 `pressed` class, `SyncPressed` in `TouchControls.cpp`): Attack (its own red), the skills, Pick up,
 Auto, Target, Menu, Social, the key buttons (potions, Loot, the top row) and Skills; fingers and the pad
-both light them, only while fingers drive the phone's HUD (a PC's pad row looks as before).
+both light them. On a PC the pad row lights the same way while its pad button is held (X held shows
+before the skill animates).
 
 The phone view also raises the chat's and the system messages' text to at least 12 units at 100 %
 (`TouchUnit::ReadableTextPx`), with their lines and rows; the chat's well keeps its height and shows
@@ -315,6 +316,13 @@ a mouse and keys, so a press does not count twice. Turned off with the pad itsel
 until a key, a mouse button or the screen is pressed (or the pad is unplugged), and the system log
 says so: the player is never left with nothing to press (`Gamepad::TurnsOffWhenPutDown`).
 
+The pad shakes (unless "On without vibration" is chosen): a hard blow as hard as it hurt, the death
+long, a level up with one soft swell, a drop the loot filter highlights within 8 tiles with a light
+tick (sound on or off), and a target picked with the right stick with a 40 ms light tick. A weaker
+shake that would end while a stronger one still runs is dropped, so a pick's tick does not cut a
+blow's shake short; a weaker one that runs on past it (a level up after a blow) plays. A shake the pad
+refused (no motors) does not count as under way (`Core/Input/GamepadRumble.{h,cpp}`, tested in `tests/core/test_gamepad_rumble.cpp`).
+
 While the pad is in use, the touch controls show in the world (in the PC view too, over the PC bar)
 with the pad button that presses each one drawn on its corner: the Xbox glyphs (A green, B red,
 X blue, Y yellow, the bumpers, triggers, View, Menu, LS for the left stick pressed and the d-pad's
@@ -325,6 +333,12 @@ The pad is read by place either way, so the bottom button confirms on all three 
 2026-11-13: Nintendo letters only, confirm stays on the bottom). Auto takes the kind of the pad
 pressed last: SDL's type on a PC, else the pad's name (the browser's Gamepad.id with Sony's 054c or
 Nintendo's 057e vendor id, `Core::Input::Gamepad::KindFromName`); the names are `UI/HUD/PadGlyphs`'s.
+The texts name the buttons the same way: Help's pad page, its LB/RB hint, the skill picker's tips and
+the chat's lines say `{A}`, `{B}`, `{X}`, `{Y}`, `{LB}`, `{RB}`, `{LT}`, `{RT}`, `{LS}`, `{RS}`, `{MENU}`
+and `{VIEW}` in all 11 languages, and `PadGlyphs::TextNames` puts in the pad in hand's names (Xbox
+letters; PlayStation Cross, Circle, Square, Triangle in the player's language, L1 R1 L2 R2 L3 R3,
+Options and Create; Nintendo B A Y X by place, L R ZL ZR, + and -), through the pure
+`UI/HUD/PadButtonNames` (tests: `tests/ui/test_pad_button_names.cpp`).
 In the phone view
 the pad replaces the PC bar as touch does (style flag `mobile-hud`). Without touch the joystick is not drawn.
 
@@ -334,7 +348,7 @@ skill edit button are not drawn for a pad without touch (`body.pad.no-touch`).
 
 | Pad | In the world (no window open) |
 |---|---|
-| Left stick | Walks the way it points (as the joystick) |
+| Left stick | Walks the way it points (as the joystick). Its walk waits until the buttons acted that frame, as the joystick's: with A or a skill held beside a monster the hero fights on, A let go and the stick walks away. Into a wall, the same way is tried again every 0.3 s, a turn of the stick at once |
 | Right stick | A flick picks the next target: right or down the next further, left or up the next nearer. With no monster (or enemy player) within 8 tiles, as in a town, it picks the NPCs and the other players on the screen the same way: the one chosen is lit, its name shown as under the mouse, with "A Talk" (an NPC) or "A Menu" (a player) under its feet |
 | RS (the right stick pressed) | Back to the nearest target; in a town, no NPC or player chosen |
 | A | Attack: a tap fights the target once, held it goes on. On an NPC chosen: walks there and talks (as a click on it). On a player chosen: walks up to them and opens the player menu (Trade, Buy, Party, Follow, Duel, as Alt and a right click open it): the frame rests on its rows, the d-pad moves it, A runs the row, B closes |
@@ -359,17 +373,26 @@ was last on. Closing its window (B) ends it; Menu in it goes to the full menu of
 what it does, a page for the world and one for the windows, with the glyphs of the pad in hand. It
 shows once by itself, at the first press of the pad in a safe zone with no window open, so never over
 a fight (`[UI] GamepadCardSeen`; it replaced the long line the system log said), and opens from the
-hub's Controls tab. LB and RB or the d-pad's sides turn its page, B, A or Menu closes it; opened from
+hub's Controls tab. With touch on (five skill buttons) its row says "Skills 4 and 5" and draws RT with
+X and Y alone; without touch, "Skills 4–6" with X, Y and B (`TouchControls::SkillButtonsInPlay`, as
+Help's pad page and the picker's tips). LB and RB or the d-pad's sides turn its page, B, A or Menu closes it; opened from
 the hub, LB and RB turn the hub's tabs and the d-pad's sides its page. A key, a click or a finger
 closes it.
 
 **Windows without a mouse.** Over a game window (not a dialog alone) no pointer is drawn: a gold frame
 rests on an item cell, an equipment slot or a button (any element that binds a click, a field or a
 list too; not the cross in a window's corner, as B closes the window), and the d-pad and the left stick hop it to the next one that way (in line before aside,
-the same window before the next window); the character stands meanwhile. On a list's last row on
-view, a step further scrolls the list. As a window opens or a tab turns, the frame starts on its item
+the same window before the next window); the character stands meanwhile. The stick hops once leaned 60 % of
+the way and stops below 40 %, and keeps its way until the other axis leans 1.3 times more, so a stick held near a
+diagonal hops once, not on its wobble; held 1.2 s, the stick hops quicker (every 60 ms, not 100; the d-pad keeps its pace). On a list's last row on
+view, a step further scrolls the list. The frame glides to the next target in about 70 ms (it jumps
+when it was hidden or the move is over half the screen), and each hop ticks softly (the menu's move
+sound: the first hop of a press always, a repeat while the d-pad or the stick is held at most every
+150 ms; a step at a list's end that scrolls nothing is no hop and no tick). As a window opens or a tab turns, the frame starts on its item
 cell nearest the top-left corner, or without cells on the target nearest it (a tab before the close
-button); a window that opens within a moment after, before the frame moved (an NPC shop, its goods
+button). After RT turns a page or tab, the frame starts on that window's first target past its page
+controls (the new page's first cell or button, not a tab: `PadFrame::SnapToPage`), never on another
+window; a window that opens within 0.75 s after, before the frame moved (an NPC shop, its goods
 sent by the server after the inventory opened), takes it on the same way; when its target goes away, it
 goes to the nearest one. While a message box or a menu over the windows is up (the item card),
 the frame rests only on it. The right stick still moves the pointer (shown while off every target, at
@@ -392,7 +415,7 @@ tabs:
 | Y with an item on the cursor | Drops it to the ground under the hero (refused, as with the mouse, for expensive, bound and reinforced items) |
 | LB, RB | The hub's tabs (the help's pages with the help open) |
 | RB (no hub, two or more windows open) | The frame goes to the next window, left to right and round, back to where it was in it (`PadFrame::NextWindow`); the legend says so |
-| RT (no hub) | The window's next page or tab: its next-page button, or the tab after the lit one, round (`PadTargets::TurnPage`, the markup's `pad-page` and `pad-page-next` classes); the legend says so |
+| RT | The window's next page or tab: its next-page button, or the tab after the lit one, round (`PadTargets::TurnPage`, the markup's `pad-page` and `pad-page-next` classes); the legend says so, in the hub too when the hub's window has pages (the bag's tabs) |
 | Menu | The menu of every window |
 
 A dialog alone (a trade or party request) keeps the free pointer, and d-pad up and down over a list
@@ -408,7 +431,10 @@ attacks at once; later it stays where the mouse left it, so a window under it st
 lifted finger leaves it off the window: then the centre again). A question (trade, party) takes Menu
 as yes after a second, and A only once A has rested a second, so A tapped in a fight goes on
 attacking. A button still held when the menu closes acts only once released, so the B that closed it does
-not also press Back. The first time a pad is used, the system log says how it plays; Help lists
+not also press Back. In the world, a pad plugged in or pulled out says so in the system log ("Gamepad
+connected", "Gamepad disconnected": `Gamepad::TakeNews`, read by `GamepadControls`); the pads found at
+the start and those the Options switch opens say nothing, and in a browser a pad shows (and says so) at
+its first press. Help lists
 every button on a page of its own while the pad is in use (after the touch page with touch on too),
 and LB and RB turn the pages.
 
@@ -416,7 +442,7 @@ and LB and RB turn the pages.
 |---|---|---|
 | Device | `Core/Input/GamepadInput.{h,cpp}` | SDL gamepad events → held buttons, presses since the last frame and the sticks (radial dead zone, triggers as buttons), across up to four pads; which device the player used last. The sticks are also polled once a frame (`Poll`): SDL keeps the first value an axis reports as its rest and sends no event for it. |
 | Pointer | `Core/Input/GamepadPointer.{h,cpp}` | The stick moves the SDL pointer (warped), buttons as pushed SDL mouse events with their own `which`; held buttons ORed into `IsKeyDown(VK_LBUTTON/VK_RBUTTON)`, the wheel too (`TurnWheel`, for the d-pad over a list; `Core::Input::UiScrollsAt` says whether a list there scrolls). A real mouse moving it is followed; a browser repeating a resting mouse's place (it does on layout changes) is not. |
-| Mapping | `UI/HUD/GamepadControls.{h,cpp}` | Once a frame before the touch controls: presses their controls (`TouchControls::SetPadHeld`), steers (`GameLogic::Touch::Steer`), moves the menu's highlight; off the world, the plain pointer; with a text field focused, hands the pad to the keyboard. `HidesPointer` keeps `RenderCursor` from drawing the game's pointer. |
+| Mapping | `UI/HUD/GamepadControls.{h,cpp}` | Once a frame before the touch controls: presses their controls (`TouchControls::SetPadHeld`), moves the menu's highlight; after them (`LateUpdate`) steers (`GameLogic::Touch::Steer`); off the world, the plain pointer; with a text field focused, hands the pad to the keyboard. `HidesPointer` keeps `RenderCursor` from drawing the game's pointer. |
 | Frame | `UI/HUD/PadFrame.{h,cpp}`, `PadTargets.{h,cpp}`, `PadTargetPick.{h,cpp}` | The targets are the visible elements of the game's windows (a workspace-placed document, or one drawn between depth 8 and the message boxes) that a click works (`drag: block` in base.rcss), `.item-cell` and `.equip-slot`, with the list that scrolls each; `PadTargetPick` chooses the one under the pointer, the nearest, and the next one a step points at. Tests: `tests/ui/test_pad_target_pick.cpp`. |
 | Hub | `UI/HUD/PadHub.{h,cpp}` | The tabs and their windows (`g_pNewUISystem->Show/Hide`, the skill picker through `TouchControls::OpenSkillPicker`). |
 | Overlay | `UI/HUD/PadOverlay.{h,cpp}` + `pad_overlay.rml` + `themes/{legacy,modern}/pad_overlay.rcss` | The frame, the hub's tabs and legend, the pickup prompt (`GameLogic::Touch::NearestDropToPick`, `DropOnScreen`; its name drawn by `NameWindow`). Depth 10.72: over the windows and message boxes, under the item on the cursor. |
@@ -455,7 +481,7 @@ the keyboard closes act only once released, so the B that closed it does not als
 |---|---|---|
 | Layout | `UI/HUD/PadKeyboardLayout.{h,cpp}` | The pages (English, Russian, symbols, digits), their keys and widths, and moving between keys (rows centred, up and down to the nearest key's middle). Tests: `tests/ui/test_pad_keyboard_layout.cpp`. |
 | Keyboard | `UI/HUD/PadKeyboard.{h,cpp}` + `pad_keyboard.rml` + `themes/{legacy,modern}/pad_keyboard.rcss` | Shows itself for the focused field (`GetFocusedTextField`), types into it through RmlUi's own SDL path (`Core::Input::RouteToUi`: text input and key events, as a real keyboard), Enter and Esc also as game keys (`Touch::TapKey`). Depth 35 in `RmlStackingOrder.cpp`: over the windows and messages of any scene, under the loading screen. It stands at the screen's foot, at its top for a field low on the screen, weighed again every frame; the login window steps up to the top while it is up (`CLoginWin::SetPosition`, `PadKeyboard::IsUp`), so both fields stay in view. |
-| Repeats | `Core/Input/GamepadStepper.{h,cpp}` | The d-pad's and stick's steps with a first pause and a repeat, shared with the menu's highlight; a held button's repeat. |
+| Repeats | `Core/Input/GamepadStepper.{h,cpp}` | The d-pad's and stick's steps with a first pause and a repeat (the stick's quicker after a long hold), shared with the menu's highlight; the stick's way with its lean in and out and its kept axis (`PointingOf`, tested in `tests/core/test_gamepad_stepper.cpp`); a held button's repeat. |
 | Phone keyboard | `Core/Platform/web/WebKeyboard.{h,cpp}` | `HoldBackKeyboard` keeps the phone's keyboard down while the pad is in use. |
 
 ## How it is built

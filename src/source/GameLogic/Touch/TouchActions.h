@@ -66,6 +66,10 @@ void HoldHelperForButtons(bool buttonsAct);
 // With none fought yet, the one the attack button would go for, lit before the first swing, while
 // the controls show and the MU Helper does not hunt (it picks its own).
 [[nodiscard]] int TargetIndex();
+// The foe the pad's right stick or the touch Target button chose (CycleTarget), while it is a good
+// target; -1 for none. The world marks it with a gold ring at its feet, so a chosen target differs
+// from the one the buttons pick on their own (ghinzuro 2026-11-15, Q1 of pad round 4).
+[[nodiscard]] int ChosenIndex();
 [[nodiscard]] bool IsForceAttack();
 
 // The party member a tap on their party card chose (CPartyListWindow): the heal and buff buttons
@@ -146,10 +150,11 @@ bool NextFoe();
 // 100), else sends the walk again now and then. Called every frame until it says true.
 bool WalkUpTo(int index, float distance);
 
-// Whether a drop the pickup button would take lies around.
+// Whether a drop the pickup button would take lies around, searched afresh (for a press).
 [[nodiscard]] bool HasDropToPick();
-// The drop the pickup button takes next (an index in Items), -1 for none; and where it lies on the
-// screen, in the camera's window pixels. False when it is behind the camera.
+// The drop the pickup button takes next (an index in Items), -1 for none, searched at most every
+// 150 ms (asked every frame for the prompt); and where it lies on the screen, in the camera's window
+// pixels. False when it is behind the camera.
 [[nodiscard]] int NearestDropToPick();
 [[nodiscard]] bool DropOnScreen(int index, float& x, float& y);
 // The nearest NPC within `tiles` tiles, -1 for none; and where it shows on the screen, in the

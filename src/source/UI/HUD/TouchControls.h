@@ -52,6 +52,9 @@ void SetPadHeld(PadButton button, bool held);
 // The pad's right trigger is held (its second page of skills): the skill buttons 4 and 5 show in the
 // places of the first ones while the pad plays without fingers.
 void SetPadAlt(bool alt);
+// How many skill buttons are in play: six for a pad alone on the lower hotkey set (the sixth on RT + B),
+// else five. The help and the controls card say "4 to 6" or "4 and 5" by it.
+[[nodiscard]] int SkillButtonsInPlay();
 
 // The control under a window pixel (the pad's pointer), or -1. The joystick's area does not count:
 // it walks only under a finger.
