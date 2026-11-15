@@ -294,20 +294,19 @@ endif()
 # links MuClient inherit them automatically.
 add_library(MuClient STATIC ${MU_CLIENT_SOURCES})
 
-# The control socket's `ping` names the git commit the client was built from,
-# so a test report says which client it tested (cmake/WriteGitCommit.cmake).
+# The git commit the client was built from (cmake/WriteGitCommit.cmake): the control
+# socket's `ping` names it, so a test report says which client it tested, and so does a
+# crash report (Core/Platform/win32/CrashReportWriter.cpp), in every build.
 # Checked on every build; the header only changes with the commit.
-if(ENABLE_CONTROL_SOCKET)
-  set(MU_GIT_COMMIT_HEADER "${CMAKE_BINARY_DIR}/Generated/MuGitCommit.h")
-  add_custom_target(GitCommitHeader
-    COMMAND "${CMAKE_COMMAND}" "-DSOURCE_DIR=${CMAKE_SOURCE_DIR}" "-DOUTPUT=${MU_GIT_COMMIT_HEADER}"
-            -P "${CMAKE_SOURCE_DIR}/cmake/WriteGitCommit.cmake"
-    BYPRODUCTS "${MU_GIT_COMMIT_HEADER}"
-    COMMENT "Recording the git commit for the control socket"
-    VERBATIM)
-  add_dependencies(MuClient GitCommitHeader)
-  target_include_directories(MuClient PRIVATE "${CMAKE_BINARY_DIR}/Generated")
-endif()
+set(MU_GIT_COMMIT_HEADER "${CMAKE_BINARY_DIR}/Generated/MuGitCommit.h")
+add_custom_target(GitCommitHeader
+  COMMAND "${CMAKE_COMMAND}" "-DSOURCE_DIR=${CMAKE_SOURCE_DIR}" "-DOUTPUT=${MU_GIT_COMMIT_HEADER}"
+          -P "${CMAKE_SOURCE_DIR}/cmake/WriteGitCommit.cmake"
+  BYPRODUCTS "${MU_GIT_COMMIT_HEADER}"
+  COMMENT "Recording the git commit"
+  VERBATIM)
+add_dependencies(MuClient GitCommitHeader)
+target_include_directories(MuClient PRIVATE "${CMAKE_BINARY_DIR}/Generated")
 target_compile_features(MuClient PUBLIC cxx_std_20)
 if(MSVC)
   target_compile_options(MuClient PRIVATE /utf-8 /we4828)
