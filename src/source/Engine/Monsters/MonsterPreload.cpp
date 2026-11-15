@@ -23,8 +23,13 @@ namespace Engine::Monsters
 {
     namespace
     {
-        // Above every key the server sends (15 bits): the dummy never takes a real character's slot.
-        constexpr int DryRunKey = 0x10000;
+        // The dummy's key. CHARACTER::Key is a short and the server sends 0..0x7FFF; -1 means "no one" in
+        // places, so -2. It must never be a live character's key: CreateCharacter reuses the character that
+        // has the key it is given.
+        constexpr int DryRunKey = -2;
+        static_assert(static_cast<decltype(CHARACTER::Key)>(DryRunKey) == DryRunKey,
+                      "the dry run's key must survive the store into CHARACTER::Key");
+        static_assert(DryRunKey < 0 && DryRunKey != -1, "the dry run's key must be one the server never sends");
 
         constexpr double SyncBudgetMs = 1500.0;
         constexpr int MaxTypesPerMap = 40;
@@ -208,10 +213,12 @@ namespace Engine::Monsters
         CHARACTER* dummy = CreateMonster(type, Hero->PositionX, Hero->PositionY, DryRunKey);
         g_warmingUp = false;
 
-        const bool created = FindCharacterIndex(DryRunKey) != MAX_CHARACTERS_CLIENT;
+        // NULL for a type no creator knows, the slot past the end when all were taken.
+        const bool created = dummy != nullptr && dummy != &CharactersClient[MAX_CHARACTERS_CLIENT] &&
+                             dummy->Object.Live && dummy->Key == DryRunKey;
         if (created)
         {
-            DeleteCharacter(DryRunKey);
+            DeleteCharacter(dummy, &dummy->Object);
             // Some creators put a buff on the monster (the Poison Bull); the slot's next owner starts clean.
             g_CharacterClearBuff((&dummy->Object));
         }
