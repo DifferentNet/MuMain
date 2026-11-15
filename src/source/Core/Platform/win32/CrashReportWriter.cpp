@@ -335,12 +335,16 @@ bool WriteDump(const wchar_t* path, const EXCEPTION_POINTERS* exception, DWORD t
 struct HelperWatch
 {
     HANDLE target;
+    const wchar_t* dumpPath;
 };
 
 DWORD WINAPI HelperWatchdog(LPVOID parameter)
 {
     Sleep(kHelperTimeoutMs);
-    TerminateProcess(static_cast<HelperWatch*>(parameter)->target, 1);
+    auto* watch = static_cast<HelperWatch*>(parameter);
+    // The half-written dump goes with the game, whose own clean-up never runs once it is ended here.
+    DeleteFileW(watch->dumpPath);
+    TerminateProcess(watch->target, 1);
     ExitProcess(2);
 }
 
@@ -425,6 +429,7 @@ int RunDumpHelper(DWORD processId, DWORD threadId, ULONG_PTR exceptionPointers, 
     if (writeDump == nullptr)
         return 1;
     static HelperWatch watch;
+    watch.dumpPath = dumpPath;
     watch.target = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE, FALSE, processId);
     if (watch.target == nullptr)
         return 1;
