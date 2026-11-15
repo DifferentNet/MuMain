@@ -2391,6 +2391,9 @@ Data/Item/hawkstatue.bmd
 # Added 2026-10-28: the Endless Tower window of Lugard (Lorencia, Devias)
 Data/Interface/RmlUi/themes/legacy/endless_tower.rcss
 Data/Interface/RmlUi/endless_tower.rml
+# Added 2026-11-15: Kundun's Lair
+Data/Interface/RmlUi/themes/legacy/solo_kalima.rcss
+Data/Interface/RmlUi/solo_kalima.rml
 # Added 2026-11-03: the Golden Archer's Rena shop window
 Data/Interface/RmlUi/themes/legacy/rena_shop.rcss
 Data/Interface/RmlUi/rena_shop.rml
@@ -2470,6 +2473,7 @@ Data/Interface/RmlUi/themes/modern/duel_watch_spectators.rcss
 Data/Interface/RmlUi/themes/modern/duel_window.rcss
 Data/Interface/RmlUi/themes/modern/empire_guardian_enter_rows.rcss
 Data/Interface/RmlUi/themes/modern/endless_tower.rcss
+Data/Interface/RmlUi/themes/modern/solo_kalima.rcss
 Data/Interface/RmlUi/themes/modern/event_entry.rcss
 Data/Interface/RmlUi/themes/modern/event_item_entry.rcss
 Data/Interface/RmlUi/themes/modern/event_schedule.rcss

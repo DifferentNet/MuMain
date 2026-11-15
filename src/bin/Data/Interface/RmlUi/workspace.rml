@@ -70,6 +70,7 @@
 					<div class="slot" data-window="empire_guardian_entry"></div>
 					<div class="slot" data-window="tier_maps"></div>
 					<div class="slot" data-window="endless_tower"></div>
+					<div class="slot" data-window="solo_kalima"></div>
 					<div class="slot" data-window="rena_shop"></div>
 					<div class="slot" data-window="grand_shop"></div>
 					<div class="slot" data-window="united_marketplace"></div>

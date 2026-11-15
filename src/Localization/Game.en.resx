@@ -16783,4 +16783,79 @@
   <data name="TouchQuickChat5" xml:space="preserve">
     <value>Help!</value>
   </data>
+  <data name="SoloKalimaTitle" xml:space="preserve">
+    <value>Kundun's Lair</value>
+  </data>
+  <data name="SoloKalimaAsking" xml:space="preserve">
+    <value>Asking the server...</value>
+  </data>
+  <data name="SoloKalimaNoAnswer" xml:space="preserve">
+    <value>The server sends no Kundun's Lair.</value>
+  </data>
+  <data name="SoloKalimaPower" xml:space="preserve">
+    <value>Your CP: %ls · HP: %ls</value>
+  </data>
+  <data name="SoloKalimaTickets" xml:space="preserve">
+    <value>Mirror of Dimensions: %d</value>
+  </data>
+  <data name="SoloKalimaNoTicket" xml:space="preserve">
+    <value>No Mirror of Dimensions.</value>
+  </data>
+  <data name="SoloKalimaRunsLeft" xml:space="preserve">
+    <value>Runs left today: %d, reset in %ls</value>
+  </data>
+  <data name="SoloKalimaTierTitle" xml:space="preserve">
+    <value>%d. %ls · Kalima %d</value>
+  </data>
+  <data name="SoloKalimaTierClosed" xml:space="preserve">
+    <value> · closed</value>
+  </data>
+  <data name="SoloKalimaTierDetail" xml:space="preserve">
+    <value>%ls CP · %ls HP · best %ls</value>
+  </data>
+  <data name="SoloKalimaNoRecord" xml:space="preserve">
+    <value>none</value>
+  </data>
+  <data name="SoloKalimaServerBest" xml:space="preserve">
+    <value>Server best, tier %d: %ls · %ls</value>
+  </data>
+  <data name="SoloKalimaNoServerBest" xml:space="preserve">
+    <value>Server best, tier %d: none yet</value>
+  </data>
+  <data name="SoloKalimaCurses" xml:space="preserve">
+    <value>Curses: %d of %d (more loot)</value>
+  </data>
+  <data name="SoloKalimaCurse" xml:space="preserve">
+    <value>%ls: %ls</value>
+  </data>
+  <data name="SoloKalimaEnter" xml:space="preserve">
+    <value>Enter tier %d</value>
+  </data>
+  <data name="SoloKalimaEnterAny" xml:space="preserve">
+    <value>Enter</value>
+  </data>
+  <data name="SoloKalimaEntering" xml:space="preserve">
+    <value>Going in...</value>
+  </data>
+  <data name="SoloKalimaInRun" xml:space="preserve">
+    <value>You are already in a run.</value>
+  </data>
+  <data name="SoloKalimaComeToNpc" xml:space="preserve">
+    <value>Come to Mirage (Lorencia, Devias).</value>
+  </data>
+  <data name="SoloKalimaNoRuns" xml:space="preserve">
+    <value>Today's run is used, next in %ls</value>
+  </data>
+  <data name="SoloKalimaPickTier" xml:space="preserve">
+    <value>Pick a tier.</value>
+  </data>
+  <data name="SoloKalimaTierLocked" xml:space="preserve">
+    <value>Tier %d needs %ls CP and %ls HP.</value>
+  </data>
+  <data name="SoloKalimaSealTimer" xml:space="preserve">
+    <value>Lair · Seal %d</value>
+  </data>
+  <data name="SoloKalimaBossTimer" xml:space="preserve">
+    <value>Lair · Boss</value>
+  </data>
 </root>

@@ -1,0 +1,63 @@
+<rml>
+<head>
+	<title>Kundun's Lair</title>
+	<link type="text/rcss" href="base.rcss"/>
+	<link type="text/rcss" href="docked_panel_frame.rcss"/>
+	<link type="text/rcss" href="solo_kalima.rcss"/>
+</head>
+<body>
+	<!-- Kundun's Lair (CSoloKalimaWindow, solo Kalima), opened by the lair's NPC in Lorencia and Devias, docked right at
+	     full dock height in the Tier Maps window's look: the title, the character's counted Combat Power and HP, the
+	     Mirrors of Dimensions and the runs left today with the reset time; then one counter-scaled pane in which the
+	     six tiers flow (a row each, clickable: name and Kalima, Combat Power and HP needed, own best time; open ones
+	     bright, the picked one on a gold band), the picked tier's server record, and the curses as checkboxes (name
+	     and what it does; the whole text as the hint); a second pane at the foot with the reason the button is off
+	     or the server's last answer, and the button beside the exit button. The workspace slot places and scales
+	     #panel. C++ keeps the state; clicks are queued with solo_kalima_select(tier), solo_kalima_curse(index),
+	     solo_kalima_enter and solo_kalima_exit. -->
+	<div id="panel" data-model="solo_kalima">
+		<div class="frame-piece frame-top"></div>
+		<div class="frame-piece frame-left"></div>
+		<div class="frame-piece frame-right"></div>
+		<div class="frame-piece frame-bottom"></div>
+
+		<span id="sk_title" class="sharp-text sk-title"
+		      data-style-font-size="title.text_px + 'px'">{{title.text}}</span>
+		<span id="sk_power" class="sharp-text sk-power"
+		      data-style-font-size="power.text_px + 'px'">{{power.text}}</span>
+		<span id="sk_ticket" class="sharp-text sk-ticket" data-class-ok="ticket_ok"
+		      data-style-font-size="ticket.text_px + 'px'">{{ticket.text}}</span>
+		<span id="sk_runs" class="sharp-text sk-runs" data-class-ok="runs_ok"
+		      data-style-font-size="runs.text_px + 'px'">{{runs.text}}</span>
+
+		<div id="sk_list" class="sharp-text sharp-flow">
+			<div class="sk-tier" data-for="t : tiers" data-class-open="t.open" data-class-selected="t.selected"
+			     data-event-click="solo_kalima_select(t.tier)">
+				<span class="sk-tier-title" data-style-font-size="t.title.text_px + 'px'">{{t.title.text}}</span>
+				<span class="sk-tier-detail" data-style-font-size="t.detail.text_px + 'px'">{{t.detail.text}}</span>
+			</div>
+
+			<span class="sk-record" data-if="record.text != ''" data-style-font-size="record.text_px + 'px'">{{record.text}}</span>
+
+			<span class="sk-curses-title" data-if="curses_title.text != ''"
+			      data-style-font-size="curses_title.text_px + 'px'">{{curses_title.text}}</span>
+			<div class="sk-curse" data-for="c : curses" data-class-checked="c.checked" data-class-locked="c.locked"
+			     data-attr-data-hint="c.hint" data-event-click="solo_kalima_curse(c.index)">
+				<div class="sk-check" data-class-checked="c.checked"></div>
+				<span class="sk-curse-text" data-style-font-size="c.text.text_px + 'px'">{{c.text.text}}</span>
+			</div>
+		</div>
+
+		<div id="sk_foot" class="sharp-text sharp-flow">
+			<span class="sk-hint" data-class-bad="hint_bad" data-style-font-size="hint.text_px + 'px'">{{hint.text}}</span>
+
+			<div id="sk_enter" data-if="enter_label.text != ''" data-class-off="!can_enter" data-event-click="solo_kalima_enter">
+				<span class="sk-enter-label" data-style-font-size="enter_label.text_px + 'px'">{{enter_label.text}}</span>
+			</div>
+		</div>
+
+		<div id="btn_exit" data-event-click="solo_kalima_exit" data-attr-data-hint="exit_tooltip"></div>
+		<div id="frame_corner_close" data-event-click="solo_kalima_exit"></div>
+	</div>
+</body>
+</rml>

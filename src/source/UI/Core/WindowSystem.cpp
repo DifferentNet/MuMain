@@ -92,6 +92,7 @@ CSystem::CSystem()
     m_pNewBattlePassWindow = nullptr;
     m_pNewTierMapsWindow = nullptr;
     m_pNewEndlessTowerWindow = nullptr;
+    m_pNewSoloKalimaWindow = nullptr;
     m_pNewRenaShopWindow = nullptr;
     m_pNewGrandShopWindow = nullptr;
     m_pNewLootFilterWindow = nullptr;
@@ -411,6 +412,12 @@ bool CSystem::LoadMainSceneInterface()
         return false;
     }
 
+    m_pNewSoloKalimaWindow = new CSoloKalimaWindow;
+    if (m_pNewSoloKalimaWindow->Create(m_pNewUIMng) == false)
+    {
+        return false;
+    }
+
     m_pNewRenaShopWindow = new CRenaShopWindow;
     if (m_pNewRenaShopWindow->Create(m_pNewUIMng) == false)
     {
@@ -650,6 +657,7 @@ bool CSystem::LoadMainSceneInterface()
     slot(INTERFACE_BATTLE_PASS, "battle_pass", m_pNewBattlePassWindow, "battle_pass.rml");
     slot(INTERFACE_TIER_MAPS, "tier_maps", m_pNewTierMapsWindow, "tier_maps.rml");
     slot(INTERFACE_ENDLESS_TOWER, "endless_tower", m_pNewEndlessTowerWindow, "endless_tower.rml");
+    slot(INTERFACE_SOLO_KALIMA, "solo_kalima", m_pNewSoloKalimaWindow, "solo_kalima.rml");
     slot(INTERFACE_RENA_SHOP, "rena_shop", m_pNewRenaShopWindow, "rena_shop.rml");
     slot(INTERFACE_GRAND_SHOP, "grand_shop", m_pNewGrandShopWindow, "grand_shop.rml");
     slot(INTERFACE_GM_PANEL, "gm_panel", m_pNewGmPanelWindow, "gm_panel.rml");
@@ -736,6 +744,7 @@ void CSystem::UnloadMainSceneInterface()
     SAFE_DELETE(m_pNewBattlePassWindow);
     SAFE_DELETE(m_pNewTierMapsWindow);
     SAFE_DELETE(m_pNewEndlessTowerWindow);
+    SAFE_DELETE(m_pNewSoloKalimaWindow);
     SAFE_DELETE(m_pNewRenaShopWindow);
     SAFE_DELETE(m_pNewGrandShopWindow);
     SAFE_DELETE(m_pNewLootFilterWindow);
@@ -1049,6 +1058,11 @@ void CSystem::Show(DWORD dwKey)
     {
         HideAllGroupA();
         m_pNewEndlessTowerWindow->OpenningProcess();
+    }
+    else if (dwKey == INTERFACE_SOLO_KALIMA)
+    {
+        HideAllGroupA();
+        m_pNewSoloKalimaWindow->OpenningProcess();
     }
     else if (dwKey == INTERFACE_RENA_SHOP)
     {
@@ -1548,6 +1562,10 @@ void CSystem::Hide(DWORD dwKey)
     {
         m_pNewEndlessTowerWindow->ClosingProcess();
     }
+    else if (dwKey == INTERFACE_SOLO_KALIMA)
+    {
+        m_pNewSoloKalimaWindow->ClosingProcess();
+    }
     else if (dwKey == INTERFACE_RENA_SHOP)
     {
         m_pNewRenaShopWindow->ClosingProcess();
@@ -1805,6 +1823,7 @@ void CSystem::HideAllGroupA()
         INTERFACE_BATTLE_PASS,
         INTERFACE_TIER_MAPS,
         INTERFACE_ENDLESS_TOWER,
+        INTERFACE_SOLO_KALIMA,
         INTERFACE_RENA_SHOP,
         INTERFACE_GRAND_SHOP,
         INTERFACE_GM_PANEL,
@@ -1865,6 +1884,7 @@ void CSystem::HideAllGroupB()
         INTERFACE_BATTLE_PASS,
         INTERFACE_TIER_MAPS,
         INTERFACE_ENDLESS_TOWER,
+        INTERFACE_SOLO_KALIMA,
         INTERFACE_RENA_SHOP,
         INTERFACE_GRAND_SHOP,
         INTERFACE_GM_PANEL,
@@ -2500,6 +2520,11 @@ CTierMapsWindow* CSystem::GetUI_NewTierMapsWindow() const
 CEndlessTowerWindow* CSystem::GetUI_NewEndlessTowerWindow() const
 {
     return m_pNewEndlessTowerWindow;
+}
+
+CSoloKalimaWindow* CSystem::GetUI_NewSoloKalimaWindow() const
+{
+    return m_pNewSoloKalimaWindow;
 }
 
 CRenaShopWindow* CSystem::GetUI_NewRenaShopWindow() const
