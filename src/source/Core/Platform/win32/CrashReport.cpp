@@ -47,6 +47,7 @@ struct CrashContext
     wchar_t dumpPath[kPathCapacity] = {};
     wchar_t textPath[kPathCapacity] = {};
     bool ok = false;
+    volatile LONG writeDone = 0;  // set by the writer once Write() returned: the dump is finished
 };
 
 constexpr DWORD kHeapCorruptionCode = 0xC0000374;  // STATUS_HEAP_CORRUPTION (ntstatus.h)
@@ -99,6 +100,7 @@ DWORD WINAPI WriterThreadMain(LPVOID parameter)
         return 0;
     crash->ok = Writer::Write(crash->exception, crash->threadId, crash->dumpPath, crash->textPath, kPathCapacity,
                               crash->textWritten, true);
+    InterlockedExchange(&crash->writeDone, 1);
     StartNotice(*crash);
     SetEvent(crash->written);
     return 0;
@@ -139,7 +141,12 @@ void ReportAndExit(EXCEPTION_POINTERS* exception)
             // same locks.
             SuspendThread(s_writer);
             if (WaitForSingleObject(s_crash.textWritten, 0) == WAIT_OBJECT_0)
-                DeleteFileW(s_crash.dumpPath);  // gone once the writer's handle closes with the process
+            {
+                // The dump hung: remove it (gone once the writer's handle closes with the process). A finished
+                // one stays; then only the dialog failed to start.
+                if (InterlockedCompareExchange(&s_crash.writeDone, 0, 0) == 0)
+                    DeleteFileW(s_crash.dumpPath);
+            }
             else
                 Writer::Write(exception, s_crash.threadId, s_crash.dumpPath, s_crash.textPath, kPathCapacity, nullptr,
                               false);

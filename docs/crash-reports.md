@@ -34,6 +34,11 @@ crashed thread held the heap lock, inside `malloc` on a damaged heap), the game 
 the `.txt` only ("Dump: not written"): after 5 seconds when not even the text got written (the crashed thread then
 writes it itself), after 20 seconds when the dump hung (its half-written `.dmp` is removed).
 
+Known limits: the dump is written from inside the crashed game, and `MiniDumpWriteDump` pauses every other thread
+meanwhile, the waiting crashed one included. If a paused thread held the heap lock, the dump and the game stay frozen
+until the player closes it. While the dialog is open, the launcher sees its `Main.exe` as a running game and asks to
+close it first.
+
 ## Reading a report
 
 The `.txt` link stamp matches the release's symbols, which `scripts/publish-client.py` of the server repository keeps

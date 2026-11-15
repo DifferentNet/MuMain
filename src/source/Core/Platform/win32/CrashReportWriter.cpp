@@ -276,7 +276,9 @@ bool WriteDump(const wchar_t* path, const EXCEPTION_POINTERS* exception, DWORD t
 {
     if (s_miniDumpWriteDump == nullptr)
         return false;
-    HANDLE file = CreateFileW(path, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    // FILE_SHARE_DELETE: a dump that hangs is deleted by the crashed thread while this handle is open.
+    HANDLE file = CreateFileW(path, GENERIC_WRITE, FILE_SHARE_DELETE, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
+                              nullptr);
     if (file == INVALID_HANDLE_VALUE)
         return false;
     MINIDUMP_EXCEPTION_INFORMATION info = {};
