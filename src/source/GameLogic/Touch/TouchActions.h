@@ -66,6 +66,10 @@ void HoldHelperForButtons(bool buttonsAct);
 // With none fought yet, the one the attack button would go for, lit before the first swing, while
 // the controls show and the MU Helper does not hunt (it picks its own).
 [[nodiscard]] int TargetIndex();
+// The foe the pad's right stick or the touch Target button chose (CycleTarget), while it is a good
+// target; -1 for none. The world marks it with a gold ring at its feet, so a chosen target differs
+// from the one the buttons pick on their own (ghinzuro 2026-11-15, Q1 of pad round 4).
+[[nodiscard]] int ChosenIndex();
 [[nodiscard]] bool IsForceAttack();
 
 // The party member a tap on their party card chose (CPartyListWindow): the heal and buff buttons

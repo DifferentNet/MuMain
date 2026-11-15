@@ -11555,6 +11555,23 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
     }
 }
 
+namespace
+{
+// The gold ring at the feet of the foe the pad's right stick (or the touch Target button) chose:
+// the guild-ground reticle, slowly turning and breathing, sized by the model.
+void RenderChosenRing(const OBJECT* o)
+{
+    const float time = static_cast<float>(WorldTime);
+    const float pulse = sinf(time * 0.004f) * 0.12f + 0.88f;
+    const float size = 1.1f * std::clamp(o->Scale, 0.8f, 2.0f);
+    vec3_t light;
+    Vector(1.0f * pulse, 0.76f * pulse, 0.28f * pulse, light);
+    EnableAlphaBlend();
+    RenderTerrainAlphaBitmap(BITMAP_OUR_INFLUENCE_GROUND, o->Position[0], o->Position[1], size, size, light,
+                             time * 0.02f);
+}
+} // namespace
+
 void RenderCharactersClient()
 {
 #ifdef _EDITOR
@@ -11570,6 +11587,8 @@ void RenderCharactersClient()
     const int touchTarget = GameLogic::Touch::TargetIndex();
     // And the NPC or player the pad's right stick chose in a town, while the pad plays.
     const int touchMeet = UI::HUD::GamepadControls::PromptMeet();
+    // The foe the right stick or the Target button chose gets a gold ring besides the light.
+    const int chosenTarget = GameLogic::Touch::ChosenIndex();
     for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
     {
         CHARACTER* c = &CharactersClient[i];
@@ -11631,6 +11650,9 @@ void RenderCharactersClient()
                     RenderCharacter(c, o);
                 else
                     RenderCharacter(c, o, true);
+
+                if (i == chosenTarget)
+                    RenderChosenRing(o);
 
                 if (o->Type == MODEL_PLAYER)
                     battleCastle::CreateBattleCastleCharacter_Visual(c, o);
