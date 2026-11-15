@@ -45,6 +45,9 @@
 #include "Core/Text/Utf8.h"
 #include "Network/Server/SocketSystem.h"
 #include "Render/Text/CUIRenderText.h"
+#include "Core/Utilities/Log/MuLogger.h"
+#include "Engine/Monsters/MonsterPreload.h"
+#include "Scenes/SceneCore.h"
 
 ///////////////////////////////////////////
 extern BOOL g_bUseChatListBox;
@@ -584,7 +587,19 @@ void DeleteNpcs()
         ReleaseBuffer(i);
 }
 
-void OpenNpc(int Type)
+// A model loaded while the hero is already in the game, not by the monster preload: the frame it
+// happened in stalled for that long (the preload's own loads are logged per map instead).
+static void LogLateModelLoad(const std::string& name, std::chrono::steady_clock::time_point start)
+{
+    if (SceneFlag != MAIN_SCENE || Engine::Monsters::IsWarmingUp())
+    {
+        return;
+    }
+    const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
+    MU_LOG_INFO(mu::log::Get("data"), "late model load: {} {:.0f} ms", name, ms);
+}
+
+static void LoadNpc(int Type)
 {
     BMD* b = &Models[Type];
     if (b->NumActions > 0) return;
@@ -1058,6 +1073,17 @@ void OpenNpc(int Type)
     //#endif
 }
 
+void OpenNpc(int Type)
+{
+    const bool wasLoaded = Models[Type].NumActions > 0;
+    const auto start = std::chrono::steady_clock::now();
+    LoadNpc(Type);
+    if (!wasLoaded)
+    {
+        LogLateModelLoad("NPC model " + std::to_string(Type), start);
+    }
+}
+
 void SetMonsterSound(int Type, int s1, int s2, int s3, int s4, int s5, int s6 = -1, int s7 = -1, int s8 = -1, int s9 = -1, int s10 = -1)
 {
     Models[Type].Sounds[0] = s1;
@@ -1318,7 +1344,7 @@ static const wchar_t* GetMonsterModelName(EMonsterModelType Type)
     return s_names[Type];
 }
 
-void OpenMonsterModel(EMonsterModelType Type)
+static void LoadMonsterModel(EMonsterModelType Type)
 {
     g_ConsoleDebug->Write(MCD_RECEIVE, L"OpenMonsterModel(%ls = %d)", GetMonsterModelName(Type), Type);
 
@@ -2930,6 +2956,19 @@ void OpenMonsterModel(EMonsterModelType Type)
         LoadWaveFile(SOUND_KARUTAN_CONDRA_DEATH, L"Data\\Sound\\Karutan\\Condra_death.wav");
         break;
 #endif	// ASG_ADD_KARUTAN_MONSTERS
+    }
+}
+
+void OpenMonsterModel(EMonsterModelType Type)
+{
+    const bool inRange = Type >= 0 && Type < MONSTER_MODEL_COUNT;
+    const BMD* b = inRange ? &Models[static_cast<int>(MODEL_MONSTER01) + Type] : nullptr;
+    const bool wasLoaded = b == nullptr || b->NumActions > 0 || b->NumMeshs > 0;
+    const auto start = std::chrono::steady_clock::now();
+    LoadMonsterModel(Type);
+    if (!wasLoaded)
+    {
+        LogLateModelLoad(Core::Text::ToUtf8(GetMonsterModelName(Type)), start);
     }
 }
 

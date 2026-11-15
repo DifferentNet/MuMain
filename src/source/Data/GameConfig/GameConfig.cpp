@@ -114,6 +114,7 @@ void GameConfig::Load()
     m_orbitYaw = ReadInt(CfgSectionCamera, CfgKeyOrbitYaw, 0);
     m_orbitPitch = ReadInt(CfgSectionCamera, CfgKeyOrbitPitch, 0);
     m_sortParticleDraws = ReadBool(CfgSectionRender, CfgKeySortParticleDraws, CfgDefaultSortParticleDraws);
+    m_preloadMonsters = ReadBool(CfgSectionRender, CfgKeyPreloadMonsters, CfgDefaultPreloadMonsters);
     m_vsyncEnabled = ReadBool(CfgSectionRender, CfgKeyVSync, CfgDefaultVSync);
     m_look = ReadLookPreset(m_configPath);
     m_hadSavedLook = HasSavedLook(m_configPath);

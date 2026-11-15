@@ -107,3 +107,16 @@ mu_add_test(
     LINK_LIBS
         MuClient
 )
+
+# The monster preload: its spawn list's format, the queue's time, type and texture limits (with a
+# fake clock and warm-up) and the shipped Data/Local/MapMonsters.txt.
+mu_add_test(
+    NAME test_monster_preload
+    SOURCES
+        test_monster_preload.cpp
+    LINK_LIBS
+        MuClient
+)
+target_compile_definitions(test_monster_preload PRIVATE
+    MU_TEST_DATA_DIR="${CMAKE_SOURCE_DIR}/src/bin/Data"
+)
