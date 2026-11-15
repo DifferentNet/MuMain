@@ -17,11 +17,14 @@ namespace Engine::Monsters
     WarmUpResult WarmUp(EMonsterType type);
 
     // The hero has entered `map` (its world is loaded, the hero placed): queues the map's types and warms
-    // them for the loading screen's share of the time.
-    void PreloadMap(int map);
+    // them for the loading screen's share of the time. Without a loading countdown after it
+    // (`countdownFollows` false: a revival on another map) the rest is dropped and loads when it shows.
+    // PC only: the browser client does nothing.
+    void PreloadMap(int map, bool countdownFollows);
 
-    // One queued type of the current map, called each frame while the loading countdown runs.
-    void RunPendingStep();
+    // One queued type of the current map, called each frame while LoadingWorld (passed in) counts down;
+    // only the map entry's countdown, not a gate's wait for the server.
+    void RunPendingStep(int loadingWorld);
 
     // True while WarmUp creates a monster: model loads then are the preload's, not a late load.
     bool IsWarmingUp();

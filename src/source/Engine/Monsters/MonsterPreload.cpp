@@ -31,6 +31,18 @@ namespace Engine::Monsters
                       "the dry run's key must survive the store into CHARACTER::Key");
         static_assert(DryRunKey < 0 && DryRunKey != -1, "the dry run's key must be one the server never sends");
 
+#ifdef __EMSCRIPTEN__
+        // The browser client brings a map's monster files in its map pack (tools/web/make_map_files.py);
+        // creating the models up front would cost phones memory and a longer freeze.
+        constexpr bool PreloadOnThisPlatform = false;
+#else
+        constexpr bool PreloadOnThisPlatform = true;
+#endif
+
+        // LoadingWorld after a map entry (WSclient.cpp); a gate's 9999999 only waits for the server's
+        // teleport, after which LoadWorld releases every monster model.
+        constexpr int MapEntryCountdown = 30;
+
         constexpr double SyncBudgetMs = 1500.0;
         constexpr int MaxTypesPerMap = 40;
         constexpr std::uint64_t BytesPerMiB = 1024ull * 1024ull;
@@ -226,8 +238,13 @@ namespace Engine::Monsters
         return created ? WarmUpResult::Warmed : WarmUpResult::Skipped;
     }
 
-    void PreloadMap(int map)
+    void PreloadMap(int map, bool countdownFollows)
     {
+        if constexpr (!PreloadOnThisPlatform)
+        {
+            return;
+        }
+
         Queue().Clear();
         g_queuedMap = map;
         if (!GameConfig::GetInstance().GetPreloadMonsters())
@@ -238,12 +255,24 @@ namespace Engine::Monsters
 
         Queue().Begin(SpawnList().TypesOf(map));
         LogMapPreload(map, Queue().RunFor(SyncBudgetMs));
+        if (!countdownFollows && Queue().HasPending())
+        {
+            MU_LOG_INFO(mu::log::Get("data"),
+                        "Monster preload: map {}, no loading countdown follows: {} types load when they first show",
+                        map, Queue().Stats().left);
+            Queue().Clear();
+        }
     }
 
-    void RunPendingStep()
+    void RunPendingStep(int loadingWorld)
     {
+        if constexpr (!PreloadOnThisPlatform)
+        {
+            return;
+        }
+
         MonsterPreloadQueue& queue = Queue();
-        if (!queue.HasPending())
+        if (!queue.HasPending() || loadingWorld > MapEntryCountdown)
         {
             return;
         }
