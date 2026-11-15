@@ -5,6 +5,7 @@
 
 #include "UI/Core/WindowObject.h"
 #include "UI/RmlBridge/RmlThemedView.h"
+#include "UI/Chat/ChatHistory.h"
 
 #pragma warning(disable : 4786)
 #include <array>
@@ -73,9 +74,11 @@ namespace mu::ui::window
         CChatLogWindow* m_pNewUIChatLogWnd;
         CSystemLogWindow* m_pNewUISystemLogWnd;
 
-        type_vec_history	m_vecChatHistory, m_vecWhsprIDHistory;
+        // Lines sent from the chat field (whispers too), for Up and Down there.
+        UI::Chat::ChatHistory m_chatHistory;
+        type_vec_history	m_vecWhsprIDHistory;
 
-        int m_iCurChatHistory, m_iCurWhisperIDHistory;
+        int m_iCurWhisperIDHistory;
 
         int m_iInputMsgType;
         bool m_bBlockWhisper;

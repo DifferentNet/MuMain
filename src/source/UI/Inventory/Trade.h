@@ -14,6 +14,7 @@
 #include "UI/RmlBridge/RmlThemedView.h"
 #include "UI/Inventory/TradeUpdates.h"
 
+#include <cstdint>
 #include <vector>
 
 namespace Rml { class ElementDocument; }
@@ -176,6 +177,9 @@ namespace mu::ui::window
         void SetYourTradeGold(int nGold) { m_nYourTradeGold = nGold; }
 
         void SendRequestMyGoldInput(int nInputGold);
+        // The zen dialog's OK / All: offers the typed amount, at most the zen carried (what the server
+        // accepts, UI::Inventory::ZenAmount::TradeLimit); "short of zen" when there is none.
+        void OfferZen(std::uint64_t typed);
         // Right-click: the item under the cursor in sourceCtrl (the inventory or
         // an extension) goes into my trade grid.
         bool ProcessMyInvenItemAutoMove(CInventoryCtrl* sourceCtrl);

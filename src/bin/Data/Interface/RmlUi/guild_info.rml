@@ -28,12 +28,19 @@
 		<div class="gi-page" data-if="no_guild">
 		<span id="gi_hint_title" class="sharp-text gi-line"
 		      data-style-font-size="hint_title.text_px + 'px'">{{hint_title.text}}</span>
-		<span id="gi_hint_1" class="sharp-text gi-note"
+		<span id="gi_hint_1" class="sharp-text gi-note" data-class-hidden="phone_hud"
 		      data-style-font-size="hint_line1.text_px + 'px'">{{hint_line1.text}}</span>
-		<span id="gi_hint_2" class="sharp-text gi-note"
+		<span id="gi_hint_2" class="sharp-text gi-note" data-class-hidden="phone_hud"
 		      data-style-font-size="hint_line2.text_px + 'px'">{{hint_line2.text}}</span>
-		<span id="gi_hint_3" class="sharp-text gi-note"
+		<span id="gi_hint_3" class="sharp-text gi-note" data-class-hidden="phone_hud"
 		      data-style-font-size="hint_line3.text_px + 'px'">{{hint_line3.text}}</span>
+		<!-- The phone view (no mouse there to type /guild with): the same hint as one paragraph wrapped inside
+		     the frame, and a button opening the touch HUD's list of players nearby. -->
+		<div id="gi_hint_wrapped" class="sharp-text gi-note" data-class-hidden="!phone_hud"
+		     data-style-font-size="hint_line1.text_px + 'px'">{{hint_text}}</div>
+		<div id="gi_social_btn" data-class-hidden="!phone_hud" data-event-click="guild_open_social">
+			<span class="sharp-text sharp-centre sharp-middle gi-social-label" data-style-font-size="hint_line1.text_px + 'px'">{{social_label}}</span>
+		</div>
 		</div>
 
 		<!-- The tabs' hit areas: the original's 56-unit columns over the top 90 units. -->

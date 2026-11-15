@@ -29,10 +29,15 @@
 #include "UI/RmlBridge/RmlTheme.h"
 #include "Render/Text/CUIRenderText.h"
 #include "Render/Text/TextWrap.h"
+#include "UI/HUD/TouchControls.h"
+#include "UI/Mobile/InterfaceMode.h"
 
 #include <RmlUi/Core/ElementDocument.h>
 
 #include <algorithm>
+#include <initializer_list>
+#include <string>
+#include <string_view>
 
 int	DeleteIndex = 0;
 int AppointStatus = 0;
@@ -45,6 +50,25 @@ using namespace mu::ui::window;
 
 namespace
 {
+    // The no-guild hint's lines as one paragraph for the phone view, which wraps it inside the frame: each line
+    // without its own leading and trailing spaces, one space between them.
+    Rml::String JoinHintLines(std::initializer_list<const wchar_t*> lines)
+    {
+        std::wstring joined;
+        for (const wchar_t* text : lines)
+        {
+            std::wstring_view part(text);
+            const auto first = part.find_first_not_of(L' ');
+            if (first == std::wstring_view::npos)
+                continue;
+            part = part.substr(first, part.find_last_not_of(L' ') - first + 1);
+            if (!joined.empty())
+                joined += L' ';
+            joined += part;
+        }
+        return StringUtils::WideToNarrow(joined.c_str());
+    }
+
     // Was CGuildBreakPasswordMsgBoxLayout (CustomMessageBox.h) -- a masked (bIsPassword=true),
     // non-numeric-restricted Mode::Text WEBZEN.COM password entry, ported 2026-09-14. Shared across
     // this file's 3 call sites (guild-disband, leave-guild, kick-member), all of which already set
@@ -136,6 +160,8 @@ bool mu::ui::window::CGuildInfoWindow::Create(CManager* pNewUIMng)
 void mu::ui::window::CGuildInfoWindow::OpenningProcess()
 {
     m_nCurrentTab = static_cast<int>(GuildConstants::GuildTab::MEMBERS);
+    // A click left from an earlier opening never opens the Social panel later.
+    m_openSocialAsked = false;
 
     SocketClient->ToGameServer()->SendGuildListRequest();
 }
@@ -143,6 +169,18 @@ void mu::ui::window::CGuildInfoWindow::OpenningProcess()
 void mu::ui::window::CGuildInfoWindow::ClosingProcess()
 {
     m_bRequestUnionList = false;
+    m_openSocialAsked = false;
+}
+
+void mu::ui::window::CGuildInfoWindow::OpenSocialIfAsked()
+{
+    if (!m_openSocialAsked)
+        return;
+    m_openSocialAsked = false;
+    if (!UI::Mobile::ReplacesPcHud())
+        return;
+    g_pNewUISystem->Hide(mu::ui::window::INTERFACE_GUILDINFO);
+    UI::HUD::TouchControls::ShowSocialPanel();
 }
 
 void mu::ui::window::CGuildInfoWindow::Release()
@@ -377,6 +415,7 @@ bool mu::ui::window::CGuildInfoWindow::Update()
     }
 
     SyncRmlModel();
+    OpenSocialIfAsked();
     return true;
 }
 
@@ -452,6 +491,11 @@ void mu::ui::window::CGuildInfoWindow::BindRmlModel(Rml::DataModelConstructor& c
     c.Bind("union_out_button", &model.unionOutButton);
     c.Bind("exit_tooltip", &model.exitTooltip);
     c.Bind("label_line_px", &model.labelLinePx);
+    c.Bind("phone_hud", &model.phoneHud);
+    c.Bind("hint_text", &model.hintText);
+    c.Bind("social_label", &model.socialLabel);
+    c.BindEventCallback("guild_open_social",
+                        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { m_openSocialAsked = true; });
     c.BindEventCallback("guild_info_button",
                         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& arguments)
                         {
@@ -528,6 +572,7 @@ void mu::ui::window::CGuildInfoWindow::SyncContent()
     std::vector<Rml::String> markCells;
     std::vector<GuildLine> allianceLines;
     GuildLine hintTitle, hintLine1, hintLine2, hintLine3;
+    Rml::String hintText;
     GuildLine title, guildName, tabInfo, tabMembers, tabUnion;
     GuildLine noticeLabel, created, score, memberCount, rival;
     GuildLine headerName, headerPosition, headerServer, headerUnionName, headerUnionMembers;
@@ -543,6 +588,8 @@ void mu::ui::window::CGuildInfoWindow::SyncContent()
         hintLine1 = line(I18N::Game::TypeGuildInFrontOf, false, 0.f);
         hintLine2 = line(I18N::Game::TheGuildMasterYouWantToJoin, false, 0.f);
         hintLine3 = line(I18N::Game::AndYouCanJoinTheGuild, false, 0.f);
+        hintText = JoinHintLines({I18N::Game::TypeGuildInFrontOf, I18N::Game::TheGuildMasterYouWantToJoin,
+                                  I18N::Game::AndYouCanJoinTheGuild});
     }
     else
     {
@@ -646,6 +693,10 @@ void mu::ui::window::CGuildInfoWindow::SyncContent()
     SyncField(m_RmlView.Binder(), &GuildInfoRmlModel::hintLine1, "hint_line1", std::move(hintLine1));
     SyncField(m_RmlView.Binder(), &GuildInfoRmlModel::hintLine2, "hint_line2", std::move(hintLine2));
     SyncField(m_RmlView.Binder(), &GuildInfoRmlModel::hintLine3, "hint_line3", std::move(hintLine3));
+    SyncField(m_RmlView.Binder(), &GuildInfoRmlModel::hintText, "hint_text", std::move(hintText));
+    SyncField(m_RmlView.Binder(), &GuildInfoRmlModel::phoneHud, "phone_hud", UI::Mobile::ReplacesPcHud());
+    SyncField(m_RmlView.Binder(), &GuildInfoRmlModel::socialLabel, "social_label",
+              StringUtils::WideToNarrow(I18N::Game::TouchSocialTitle));
     SyncField(m_RmlView.Binder(), &GuildInfoRmlModel::title, "title", std::move(title));
     SyncField(m_RmlView.Binder(), &GuildInfoRmlModel::guildName, "guild_name", std::move(guildName));
     SyncField(m_RmlView.Binder(), &GuildInfoRmlModel::tabInfo, "tab_info", std::move(tabInfo));

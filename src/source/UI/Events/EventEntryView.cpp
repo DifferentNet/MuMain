@@ -8,6 +8,7 @@
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlPointer.h"
 #include "UI/RmlBridge/RmlNativeTextSize.h"
+#include "UI/Mobile/InterfaceMode.h"
 
 #include <RmlUi/Core/ElementDocument.h>
 
@@ -68,6 +69,19 @@ void mu::ui::window::EventEntryView::SetContent(const wchar_t* title, const std:
     m_View.MarkDirty("title_text");
     m_View.MarkDirty("lines");
     m_View.MarkDirty("buttons");
+
+    m_ScrollButtonCount = static_cast<int>(buttons.size());
+    m_ScrollTargetIndex = -1;
+    for (std::size_t i = 0; i < buttons.size(); ++i)
+    {
+        if (buttons[i].enabled)
+        {
+            m_ScrollTargetIndex = static_cast<int>(i);
+            break;
+        }
+    }
+    m_ScrollToEnabledPending = m_ScrollTargetIndex >= 0;
+    m_ScrollFramesLeft = ScrollWaitFrames;
 }
 
 bool mu::ui::window::EventEntryView::IsPointerOver() const
@@ -87,6 +101,46 @@ void mu::ui::window::EventEntryView::Sync(bool visible)
         return;
 
     SyncTextSizes();
+    ScrollEnabledButtonIntoView();
+}
+
+// The phone view's list of level bands is taller than the panel: when the hero's band (the enabled one) starts
+// below the visible part, the list scrolls just far enough to show it. Elsewhere the whole list fits.
+void mu::ui::window::EventEntryView::ScrollEnabledButtonIntoView()
+{
+    if (!m_ScrollToEnabledPending)
+        return;
+    if (!UI::Mobile::IsPhoneView() || m_ScrollFramesLeft <= 0)
+    {
+        m_ScrollToEnabledPending = false;
+        return;
+    }
+
+    // SetContent() runs before the data model rebuilds the bands, so the old bands can still be there: skip the
+    // first frame, then wait (a few frames at most) until the list has the new count with the hero's band enabled.
+    const bool firstFrame = m_ScrollFramesLeft == ScrollWaitFrames;
+    --m_ScrollFramesLeft;
+    if (firstFrame)
+        return;
+    Rml::ElementDocument* document = m_View.Document();
+    if (!document)
+        return;
+    document->UpdateDocument();
+    Rml::Element* levels = document->GetElementById("entry_levels");
+    if (!levels)
+        return;
+    Rml::ElementList bands;
+    levels->GetElementsByClassName(bands, "entry-btn");
+    if (static_cast<int>(bands.size()) != m_ScrollButtonCount)
+        return;
+    Rml::Element* target = bands[static_cast<std::size_t>(m_ScrollTargetIndex)];
+    if (!target->IsClassSet("enabled"))
+        return;
+    m_ScrollToEnabledPending = false;
+    target->ScrollIntoView(Rml::ScrollIntoViewOptions(Rml::ScrollAlignment::Nearest,
+                                                               Rml::ScrollAlignment::Nearest,
+                                                               Rml::ScrollBehavior::Instant,
+                                                               Rml::ScrollParentage::Closest));
 }
 
 void mu::ui::window::EventEntryView::SyncTextSizes()

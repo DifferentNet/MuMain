@@ -153,6 +153,13 @@ add_test(
 )
 
 mu_add_test(
+    NAME durability_band_tests
+    SOURCES
+        test_durability_band.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/DurabilityBand.cpp
+)
+
+mu_add_test(
     NAME gold_amount_tier_tests
     SOURCES
         test_gold_amount_tier.cpp

@@ -662,6 +662,9 @@ namespace mu::ui::window
         std::vector<std::wstring> m_resolutionLabels;
 
         int m_iActiveTab = 0;
+        // The phone layout opened the window once already this session (OpenningProcess()).
+        bool m_bOpenedInPhoneHud = false;
+        void SelectFirstPhoneTab();
         // The tuning groups start collapsed in every session; see RmlToggleTuningGroup().
         std::array<bool, TuningGroupCount> m_tuningExpanded{};
         std::array<bool, TuningGroupCount> m_tuningMoreExpanded{};

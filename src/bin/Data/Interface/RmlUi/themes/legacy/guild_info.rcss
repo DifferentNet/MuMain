@@ -300,3 +300,37 @@
 #gi_tab_hit_0 { left: 12px; }
 #gi_tab_hit_1 { left: 68px; }
 #gi_tab_hit_2 { left: 124px; }
+
+/* MU Moldova: the phone view with the on-screen controls (no mouse there to type /guild with): the no-guild
+   hint as one paragraph wrapped inside the frame (its three native lines ran past the frame at the phone text
+   size), and under it a button opening the touch HUD's list of players nearby, as tall as a finger. Both are
+   hidden elsewhere (CGuildInfoWindow's phone_hud). */
+@spritesheet gi-social-sheet {
+	src: "../../../newui_btn_empty.tga";
+	gi-social-up: 0px 0px 108px 29px;
+	gi-social-over: 0px 29px 108px 29px;
+	gi-social-down: 0px 58px 108px 29px;
+}
+#gi_hint_wrapped {
+	left: 20px;
+	top: 46px;
+	width: calc(150px * var(--root-scale));
+	white-space: normal;
+	line-height: calc(15px * var(--root-scale));
+}
+#gi_social_btn {
+	position: absolute;
+	left: 25px;
+	top: 170px; /* below the hint, even when it wraps to six lines at the phone text size */
+	width: 140px;
+	height: 48px;
+	cursor: pointer;
+	pointer-events: auto;
+	decorator: image(gi-social-up);
+}
+#gi_social_btn:hover { decorator: image(gi-social-over); }
+#gi_social_btn:active { decorator: image(gi-social-down); }
+#gi_social_btn .gi-social-label { white-space: nowrap; color: token(text-primary); pointer-events: none; }
+/* .sharp-text sets display: block above, which outranks base.rcss's .hidden: the hint lines and the button
+   hide by phone_hud with this. */
+.gi-note.hidden, #gi_social_btn.hidden { display: none; }

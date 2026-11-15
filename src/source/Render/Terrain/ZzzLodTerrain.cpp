@@ -305,14 +305,15 @@ void AddTerrainAttribute(int x, int y, BYTE att)
 {
     int     iIndex = (x + (y * TERRAIN_SIZE));
     TerrainWall[iIndex] |= att;
-    if ((att & TW_HEIGHT) == TW_HEIGHT)
+    // TW_CHARACTER too: MoveCharactersClient clears only the cells it set itself until the version moves.
+    if ((att & TW_HEIGHT) == TW_HEIGHT || (att & TW_CHARACTER) == TW_CHARACTER)
         ++s_terrainHeightVersion;
 }
 
 void SubTerrainAttribute(int x, int y, BYTE att)
 {
     int     iIndex = (x + (y * TERRAIN_SIZE));
-    if ((att & TW_HEIGHT) == TW_HEIGHT)
+    if ((att & TW_HEIGHT) == TW_HEIGHT || (att & TW_CHARACTER) == TW_CHARACTER)
         ++s_terrainHeightVersion;
 
     TerrainWall[iIndex] ^= (TerrainWall[iIndex] & att);

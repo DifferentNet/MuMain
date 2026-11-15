@@ -4,6 +4,7 @@
 
 #include "UI/Inventory/Trade.h"
 #include "UI/Inventory/HeldItemPlacement.h"
+#include "UI/Inventory/ZenAmount.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/RmlBridge/RmlElementBox.h"
 #include "UI/RmlBridge/RmlPointer.h"
@@ -141,25 +142,28 @@ void CTrade::BindRmlModel(Rml::DataModelConstructor& c, TradeRmlModel& model)
     c.BindEventCallback("trade_zen_click",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
         {
-            // Numeric Mode::Text amount entry, same shape as every other zen-input dialog.
+            // Numeric Mode::Text amount entry, same shape as every other zen-input dialog. OK offers the typed
+            // amount (at most what can be offered), All everything that can be.
             mu::ui::window::GenericDialogConfig cfg;
             cfg.showCancel = true;
             cfg.lines = { { I18N::Game::EnterTheAmountOfZenYouWouldLikeToTrade, false } };
+            cfg.secondaryLabel = std::wstring(I18N::Game::ZenAmountAll);
             cfg.input = mu::ui::window::GenericDialogConfig::InputField{};
             cfg.input->mode = mu::ui::window::GenericDialogConfig::InputField::Mode::Text;
-            cfg.input->maxLength = 8;
+            cfg.input->maxLength = UI::Inventory::ZenAmount::kMaxDigits;
             cfg.input->numericOnly = true;
             cfg.onPrimary = [this]
             {
-                const std::wstring strText = mu::ui::window::g_pGenericConfirmDialog->GetInputText();
-                const int iInputZen = strText.empty() ? 0 : _wtoi(strText.c_str());
-                if (iInputZen == 0)
+                const std::uint64_t typed =
+                    UI::Inventory::ZenAmount::Parse(mu::ui::window::g_pGenericConfirmDialog->GetInputText());
+                if (typed == 0)
                 {
                     mu::ui::window::g_pGenericConfirmDialog->KeepOpen();
                     return;
                 }
-                SendRequestMyGoldInput(iInputZen);
+                OfferZen(typed);
             };
+            cfg.onSecondary = [this] { OfferZen(UI::Inventory::ZenAmount::kMaxCarriedZen); };
             mu::ui::window::g_pGenericConfirmDialog->Show(std::move(cfg));
             ::PlayBuffer(SOUND_CLICK01);
         });
@@ -616,6 +620,19 @@ bool CTrade::ProcessMyTradeItemAutoMoveToInventory()
         AlertTrade();
     m_nMyTradeWait = MyTradeWaitAfterChange;
     return true;
+}
+
+void CTrade::OfferZen(std::uint64_t typed)
+{
+    // Gold is what the server has left after the current offer; it accepts any amount up to that and answers it
+    // (ProcessToReceiveMyTradeGold), so nothing sent from here goes unanswered.
+    const std::uint32_t limit = UI::Inventory::ZenAmount::TradeLimit(CharacterMachine->Gold);
+    if (limit == 0)
+    {
+        mu::ui::window::CreateOkMessageBox(I18N::Game::YouAreShortOfZen);
+        return;
+    }
+    SendRequestMyGoldInput(static_cast<int>(UI::Inventory::ZenAmount::Clamp(typed, limit)));
 }
 
 void CTrade::SendRequestMyGoldInput(int nInputGold)

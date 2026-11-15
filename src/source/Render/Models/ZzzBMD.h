@@ -1,6 +1,7 @@
 #ifndef __ZZZBMD_H__
 #define __ZZZBMD_H__
 
+#include <array>
 #include <vector>
 #include <cstdint>
 #include <memory>
@@ -256,6 +257,24 @@ public:
                                               // m_SkinStamp
     float m_LastSkinScale;                    // Transform()'s `_Scale` arg, stashed for deferred materialization
     float m_LastBoneScale; // global BoneScale AT TransformCheap() time (callers mutate the global right after)
+
+    // The bone rotations of every action with a single key, built once when the model loads: a model standing
+    // still in such an action gets the same matrices each frame, so Animation() copies them instead of
+    // rebuilding them from the quaternions. Built at load rather than on first use because characters animate
+    // on worker threads. Behind one pointer because the model slots are ZeroMemory'd after new BMD[]
+    // (OpenPlayers), which a null smart pointer survives and vectors do not; slots that share the loaded data
+    // (ShareFrom) share it.
+    using StaticBoneRotation = std::array<float, 9>;
+    struct StaticPoses
+    {
+        std::vector<int> offsets; // per action, where its bones start in `rotations`, or -1
+        std::vector<StaticBoneRotation> rotations;
+    };
+    std::shared_ptr<const StaticPoses> m_staticPoses;
+    void BuildStaticPoses();
+    void ClearStaticPoses();
+    const StaticBoneRotation* FindStaticPose(unsigned short priorAction, unsigned short currentAction,
+                                             int priorFrame, int currentFrame) const;
 
     BMD()
         : NumBones(0), NumActions(0), NumMeshs(0), Meshs(NULL), Bones(NULL), Actions(NULL), Textures(NULL),

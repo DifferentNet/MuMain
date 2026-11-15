@@ -265,6 +265,8 @@ static const wchar_t* SunShadowSoftEdgesHint(Render::Lighting::SunShadowSoftEdge
 
 // The custom dropdowns' ids, 0 .. kLastDropdownId (see RmlToggleDropdown()).
 static constexpr int kInterfaceViewDropdown = 8;
+// option_window.rml's tab order: Display, Graphics, Audio, Gameplay, Interface.
+static constexpr int kInterfaceTab = 4;
 static constexpr int kControlsDropdown = 9;
 static constexpr int kTouchButtonsDropdown = 10;
 static constexpr int kGamepadDropdown = 11;
@@ -1260,6 +1262,17 @@ void mu::ui::window::COptionWindow::OpenningProcess()
 
     RefreshThemeChoices();
     m_iUIScaleIndex = FindCurrentUIScaleIndex();
+    SelectFirstPhoneTab();
+}
+
+// The phone layout with the on-screen controls opens on the Interface tab the first time in a session: its
+// view, controls and button choices are what a phone player comes here for. A tab picked after that stays.
+void mu::ui::window::COptionWindow::SelectFirstPhoneTab()
+{
+    if (m_bOpenedInPhoneHud || !UI::Mobile::ReplacesPcHud())
+        return;
+    m_bOpenedInPhoneHud = true;
+    m_iActiveTab = kInterfaceTab;
 }
 
 void mu::ui::window::COptionWindow::ClosingProcess()

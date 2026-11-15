@@ -41,6 +41,7 @@
 #include "GameLogic/Events/SeasonMarks.h"
 #include "GameLogic/Items/ItemLevelBonus.h"
 #include "GameLogic/Items/ItemCombatPower.h"
+#include "GameLogic/Items/DurabilityBand.h"
 #include "Render/Items/AncientColors.h"
 #include "Render/Items/ItemDisplay.h"
 #include "UI/Inventory/InventorySort.h"
@@ -1839,6 +1840,28 @@ bool GetItemCombatPowerChangeLine(const ITEM* ip, wchar_t* text, std::size_t tex
 
 // The tooltip's Combat Power lines (MU Skynet): what the item adds to the character's Combat Power while it is
 // equipped, the same number the server's /cp counts, and for an ancient piece what its set adds.
+// The tooltip colour of a "Durability: d/max" line: white above half, then the warning icons' yellow, orange
+// and red (UI/Inventory/ItemEnduranceInfo.cpp).
+static int DurabilityLineColor(int durability, int maxDurability)
+{
+    switch (GameLogic::Items::ClassifyDurability(durability, maxDurability))
+    {
+    case GameLogic::Items::DurabilityBand::Half: return TEXT_COLOR_YELLOW;
+    case GameLogic::Items::DurabilityBand::Third: return TEXT_COLOR_ORANGE;
+    case GameLogic::Items::DurabilityBand::Fifth:
+    case GameLogic::Items::DurabilityBand::Zero: return TEXT_COLOR_RED;
+    case GameLogic::Items::DurabilityBand::Fine: default: return TEXT_COLOR_WHITE;
+    }
+}
+
+// What buying the item from the open NPC shop takes from the hero: the shop price plus the castle tax, as the
+// tooltip shows it.
+static int64_t NpcShopChargeWithTax(ITEM* ip)
+{
+    const int64_t price = ShopPurchasePrice(ip);
+    return price + price * g_pNPCShop->GetTaxRate() / 100;
+}
+
 static void RenderItemOwnCombatPower(const ITEM* ip, const GameLogic::Items::CombatPowerItem& item, int points)
 {
     wchar_t pointsText[32]{};
@@ -2053,7 +2076,9 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
                 mu_swprintf(TextList[TextNum], I18N::Game::SellingPriceS, Text);
             }
 
-            TextListColor[TextNum] = Color;
+            // A price the hero can't pay shows red.
+            const bool shortOfZen = Sell && static_cast<int64_t>(CharacterMachine->Gold) < NpcShopChargeWithTax(ip);
+            TextListColor[TextNum] = shortOfZen ? TEXT_COLOR_RED : Color;
             //			TextBold[TextNum] = true;
             TextNum++;
             mu_swprintf(TextList[TextNum], L"\n"); TextNum++; SkipNum++;
@@ -4434,6 +4459,7 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
         )
     {
         int Success = false;
+        int durabilityColor = TEXT_COLOR_WHITE;
         int arrow = false;
         if (ip->Type >= ITEM_POTION && ip->Type <= ITEM_ANTIDOTE)
         {
@@ -4590,6 +4616,7 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
             int maxDurability = CalcMaxDurability(ip, p, Level);
 
             mu_swprintf(TextList[TextNum], I18N::Game::DurabilityDD, ip->Durability, maxDurability);
+            durabilityColor = DurabilityLineColor(ip->Durability, maxDurability);
             Success = true;
         }
         else if (GameLogic::Items::IsWingMixCharm(ip))
@@ -4606,7 +4633,7 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
 
         if (Success)
         {
-            TextListColor[TextNum] = TEXT_COLOR_WHITE;
+            TextListColor[TextNum] = durabilityColor;
             TextBold[TextNum] = false;
             TextNum++;
         }
@@ -5672,7 +5699,7 @@ static void RenderRepairInfo(const UI::Scaling::Transform& screen, int sx, int s
 
             mu_swprintf(TextList[TextNum], I18N::Game::DurabilityDD, ip->Durability, maxDurability);
 
-            TextListColor[TextNum] = TEXT_COLOR_WHITE;
+            TextListColor[TextNum] = DurabilityLineColor(ip->Durability, maxDurability);
             TextBold[TextNum] = false;
             TextNum++;
         }

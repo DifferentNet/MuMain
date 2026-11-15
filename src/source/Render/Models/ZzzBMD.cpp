@@ -199,6 +199,93 @@ void ClearShadowStreamMemo()
 bool  StopMotion = false;
 thread_local float ParentMatrix[3][4];
 
+namespace
+{
+// A bone's rotation between two keys: blended when they differ, else the first key as it is.
+void BuildBoneRotation(const float* q1, const float* q2, const float blend, float (*matrix)[4])
+{
+    vec4_t boneQuaternion;
+    if (!QuaternionCompare(q1, q2))
+    {
+        QuaternionNLERP(q1, q2, blend, boneQuaternion);
+    }
+    else
+    {
+        QuaternionCopy(q1, boneQuaternion);
+    }
+    QuaternionMatrix(boneQuaternion, matrix);
+}
+
+void CopyStaticBoneRotation(const BMD::StaticBoneRotation& rotation, float (*matrix)[4])
+{
+    for (int row = 0; row < 3; ++row)
+    {
+        for (int column = 0; column < 3; ++column)
+        {
+            matrix[row][column] = rotation[static_cast<std::size_t>(row * 3 + column)];
+        }
+    }
+}
+} // namespace
+
+void BMD::BuildStaticPoses()
+{
+    ClearStaticPoses();
+    if (!Bones || !Actions || NumActions <= 0 || NumBones <= 0)
+    {
+        return;
+    }
+
+    auto poses = std::make_shared<StaticPoses>();
+    poses->offsets.assign(static_cast<std::size_t>(NumActions), -1);
+    for (int action = 0; action < NumActions; ++action)
+    {
+        if (Actions[action].NumAnimationKeys != 1)
+        {
+            continue;
+        }
+        poses->offsets[static_cast<std::size_t>(action)] = static_cast<int>(poses->rotations.size());
+        for (int bone = 0; bone < NumBones; ++bone)
+        {
+            StaticBoneRotation rotation{};
+            const Bone_t& b = Bones[bone];
+            if (!b.Dummy && b.BoneMatrixes && b.BoneMatrixes[action].Quaternion)
+            {
+                const float* key = b.BoneMatrixes[action].Quaternion[0];
+                float matrix[3][4];
+                BuildBoneRotation(key, key, 0.f, matrix);
+                for (int row = 0; row < 3; ++row)
+                {
+                    for (int column = 0; column < 3; ++column)
+                    {
+                        rotation[static_cast<std::size_t>(row * 3 + column)] = matrix[row][column];
+                    }
+                }
+            }
+            poses->rotations.push_back(rotation);
+        }
+    }
+    m_staticPoses = std::move(poses);
+}
+
+void BMD::ClearStaticPoses()
+{
+    m_staticPoses.reset();
+}
+
+const BMD::StaticBoneRotation* BMD::FindStaticPose(const unsigned short priorAction, const unsigned short currentAction,
+                                                   const int priorFrame, const int currentFrame) const
+{
+    const StaticPoses* poses = m_staticPoses.get();
+    if (poses == nullptr || priorAction != currentAction || priorFrame != currentFrame ||
+        currentAction >= poses->offsets.size())
+    {
+        return nullptr;
+    }
+    const int offset = poses->offsets[currentAction];
+    return offset < 0 ? nullptr : &poses->rotations[static_cast<std::size_t>(offset)];
+}
+
 static vec3_t LightVector = { 0.f, -0.1f, -0.8f };
 static vec3_t LightVector2 = { 0.f, -0.5f, -0.8f };
 
@@ -285,6 +372,8 @@ void BMD::Animation(float (*BoneMatrix)[3][4], float AnimationFrame, float Prior
     }
 
     const bool bLockPositions = (Actions[PriorAction].LockPositions || Actions[currentAction].LockPositions);
+    const StaticBoneRotation* staticPose =
+        FindStaticPose(PriorAction, currentAction, PriorAnimationFrame, currentAnimationFrame);
 
     // bones loop
     for (int i = 0; i < NumBones; i++)
@@ -317,32 +406,16 @@ void BMD::Animation(float (*BoneMatrix)[3][4], float AnimationFrame, float Prior
         const BoneMatrix_t* bm1 = &b->BoneMatrixes[PriorAction];
         const BoneMatrix_t* bm2 = &b->BoneMatrixes[currentAction];
 
-        const float* q1;
-        const float* q2;
-
-        if (i == BoneHead)
-        {
-            q1 = headQ1;
-            q2 = headQ2;
-        }
-        else
-        {
-            q1 = bm1->Quaternion[PriorAnimationFrame];
-            q2 = bm2->Quaternion[currentAnimationFrame];
-        }
-
-        vec4_t boneQuaternion;
-        if (!QuaternionCompare(q1, q2))
-        {
-            QuaternionNLERP(q1, q2, s1, boneQuaternion);
-        }
-        else
-        {
-            QuaternionCopy(q1, boneQuaternion);
-        }
-
         float Matrix[3][4];
-        QuaternionMatrix(boneQuaternion, Matrix);
+        if (staticPose && i != BoneHead)
+        {
+            CopyStaticBoneRotation(staticPose[i], Matrix);
+        }
+        else
+        {
+            BuildBoneRotation(i == BoneHead ? headQ1 : bm1->Quaternion[PriorAnimationFrame],
+                              i == BoneHead ? headQ2 : bm2->Quaternion[currentAnimationFrame], s1, Matrix);
+        }
         const float* Position1 = bm1->Position[PriorAnimationFrame];
         const float* Position2 = bm2->Position[currentAnimationFrame];
 
@@ -2847,13 +2920,22 @@ struct MeshShadowProjection
     }
 };
 MeshShadowProjection g_meshShadowProjection;
+
+// Shadow triangles go straight into the renderer scratch, which holds as many vertices as the old
+// RenderArrayVertices staging array did.
+constexpr std::size_t kShadowVertexCapacity = static_cast<std::size_t>(MAX_VERTICES) * 3;
+
+void WriteShadowVertex(mu::Vertex3D& out, const float* position, const std::uint32_t color)
+{
+    out = {position[0], position[1], position[2], 0.f, 0.f, 0.f, 0.f, 0.f, color};
+}
 } // namespace
 
 void BMD::AddClothesShadowTriangles(void* pClothes, const int clothesCount, const float sx, const float sy,
     const std::uint32_t color) const
 {
-    auto vertices = RenderArrayVertices;
-    int target_vertex_index = -1;
+    auto vertices = GetRendererVertexScratch(kShadowVertexCapacity);
+    std::size_t vertexCount = 0;
 
     for (int i = 0; i < clothesCount; i++)
     {
@@ -2881,44 +2963,31 @@ void BMD::AddClothesShadowTriangles(void* pClothes, const int clothesCount, cons
                 const float* posD = projected[d];
 
                 // A-Triangle:
-                target_vertex_index++;
-                VectorCopy(posA, vertices[target_vertex_index]);
-                target_vertex_index++;
-                VectorCopy(posB, vertices[target_vertex_index]);
-                target_vertex_index++;
-                VectorCopy(posC, vertices[target_vertex_index]);
+                WriteShadowVertex(vertices[vertexCount++], posA, color);
+                WriteShadowVertex(vertices[vertexCount++], posB, color);
+                WriteShadowVertex(vertices[vertexCount++], posC, color);
 
                 // V-Triangle:
-                target_vertex_index++;
-                VectorCopy(posD, vertices[target_vertex_index]);
-                target_vertex_index++;
-                VectorCopy(posB, vertices[target_vertex_index]);
-                target_vertex_index++;
-                VectorCopy(posC, vertices[target_vertex_index]);
+                WriteShadowVertex(vertices[vertexCount++], posD, color);
+                WriteShadowVertex(vertices[vertexCount++], posB, color);
+                WriteShadowVertex(vertices[vertexCount++], posC, color);
             }
         }
     }
 
-    if (target_vertex_index < 0)
+    if (vertexCount == 0)
     {
         return;
     }
 
-    const int numVerts = target_vertex_index + 1;
-    auto muVerts = GetRendererVertexScratch(static_cast<std::size_t>(numVerts));
-    for (int i = 0; i < numVerts; ++i)
-    {
-        muVerts[static_cast<std::size_t>(i)] =
-            {vertices[i][0], vertices[i][1], vertices[i][2], 0.f, 0.f, 0.f, 0.f, 0.f, color};
-    }
-    mu::GetRenderer().RenderTriangles(muVerts, 0u);
+    mu::GetRenderer().RenderTriangles(vertices.first(vertexCount), 0u);
 }
 
 void BMD::AddMeshShadowTriangles(const int blendMesh, const int hiddenMesh, const int startMesh,
     const int endMesh, const float sx, const float sy, const std::uint32_t color) const
 {
-    auto vertices = RenderArrayVertices;
-    int target_vertex_index = -1;
+    auto vertices = GetRendererVertexScratch(kShadowVertexCapacity);
+    std::size_t vertexCount = 0;
 
     for (int i = startMesh; i < endMesh; i++)
     {
@@ -2942,28 +3011,19 @@ void BMD::AddMeshShadowTriangles(const int blendMesh, const int hiddenMesh, cons
             for (int k = 0; k < tp->Polygon; k++)
             {
                 const int source_vertex_index = tp->VertexIndex[k];
-                target_vertex_index++;
-
                 const float* projected =
                     g_meshShadowProjection.Projected(VertexTransform[i], source_vertex_index, BodyOrigin, sx, sy);
-                VectorCopy(projected, vertices[target_vertex_index]);
+                WriteShadowVertex(vertices[vertexCount++], projected, color);
             }
         }
     }
 
-    if (target_vertex_index < 0)
+    if (vertexCount == 0)
     {
         return;
     }
 
-    const int numVerts = target_vertex_index + 1;
-    auto muVerts = GetRendererVertexScratch(static_cast<std::size_t>(numVerts));
-    for (int i = 0; i < numVerts; ++i)
-    {
-        muVerts[static_cast<std::size_t>(i)] =
-            {vertices[i][0], vertices[i][1], vertices[i][2], 0.f, 0.f, 0.f, 0.f, 0.f, color};
-    }
-    mu::GetRenderer().RenderTriangles(muVerts, 0u);
+    mu::GetRenderer().RenderTriangles(vertices.first(vertexCount), 0u);
 }
 
 bool BMD::RenderGpuMeshShadow(const int blendMesh, const int hiddenMesh, const int startMesh, const int endMesh,
@@ -3234,6 +3294,7 @@ void BMD::ShareFrom(BMD& owner)
     Meshs = owner.Meshs;
     Bones = owner.Bones;
     Actions = owner.Actions;
+    m_staticPoses = owner.m_staticPoses;
     Textures = owner.Textures;
     IndexTexture = owner.IndexTexture;
     m_bSharedData = true;
@@ -3255,6 +3316,7 @@ long BMD::GetDataUserCount() const
 
 void BMD::Release()
 {
+    ClearStaticPoses();
     auto& shadowStreams = ShadowStreams();
     ClearShadowStreamMemo();
     const auto self = reinterpret_cast<std::uintptr_t>(this);
@@ -3700,6 +3762,7 @@ bool BMD::Open2(const wchar_t* DirName, const wchar_t* ModelFileName, bool bReAl
     Render::Models::Smoothing::Apply(*this);
 
     Init(false);
+    BuildStaticPoses();
 
     m_bCompletedAlloc = true;
     return true;
