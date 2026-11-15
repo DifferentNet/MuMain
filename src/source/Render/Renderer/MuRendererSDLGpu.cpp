@@ -34,6 +34,7 @@
 #include "BitmapUpload.h"
 #include "D3D12Diagnostics.h"
 #include "DrawCommandHistory.h"
+#include "GpuLossWatch.h"
 #include "MuRenderer.h"
 #include "QuadTopology.h"
 #include "RangeAllocator.h"
@@ -59,6 +60,9 @@
 #include "Render/Text/SdlTtfFontSet.h"
 #ifdef _EDITOR
 #include "Core/MuEditorCore.h"
+#endif
+#ifdef _WIN32
+#include "Core/Platform/CrashReport.h"
 #endif
 #ifdef __EMSCRIPTEN__
 #include "Core/Platform/web/WebGpuFeatures.h"
@@ -402,6 +406,47 @@ static void ReleaseFrameReadbackTexture()
         SDL_ReleaseGPUTexture(s_device, s_frameReadbackTexture);
     }
     s_frameReadbackTexture = nullptr;
+}
+
+// Frames the GPU refused in a row; a lost device (driver reset) closes the game with a crash report
+// instead of leaving it running behind a frozen picture.
+static ::Render::Renderer::GpuLossWatch s_gpuLossWatch;
+#ifdef _WIN32
+static constexpr const char* kGpuLostMarkerText = ::Core::Platform::CrashReport::kGpuLostMarker;
+#else
+static constexpr const char* kGpuLostMarkerText = "GPU device lost";
+#endif
+
+// MU_TEST_GPU_LOST=1: every frame fails as on a lost device, for testing the report.
+static bool GpuLossSimulated()
+{
+    static const bool simulated = []
+    {
+        const char* value = std::getenv("MU_TEST_GPU_LOST");
+        return value != nullptr && value[0] == '1';
+    }();
+    return simulated;
+}
+
+// A frame the GPU refused at `step`, with SDL's error text `error`.
+static void NoteGpuFailure(const char* step, const char* error)
+{
+    const bool lost = s_gpuLossWatch.OnFailure(SDL_GetTicks());
+    if (s_gpuLossWatch.ShouldLog())
+    {
+        mu::log::Get("render")->error("SDL_gpu -- {} failed ({} frames in a row): {}", step,
+                                      s_gpuLossWatch.FailedFrames(), error);
+    }
+    if (!lost)
+        return;
+    char text[256];
+    std::snprintf(text, sizeof(text), "%s: the graphics driver stopped responding (%s failed %u frames in a row: %s)",
+                  kGpuLostMarkerText, step, s_gpuLossWatch.FailedFrames(), error);
+    mu::log::Get("render")->critical("SDL_gpu -- {}", text);
+    mu::log::Get("render")->flush();
+#ifdef _WIN32
+    ::Core::Platform::CrashReport::ReportFailure(text);
+#endif
 }
 
 static void FailPendingFrameReadback()
@@ -2641,7 +2686,7 @@ public:
         s_cmdBuf = SDL_AcquireGPUCommandBuffer(s_device);
         if (!s_cmdBuf)
         {
-            mu::log::Get("render")->error("SDL_gpu -- SDL_AcquireGPUCommandBuffer failed: {}", SDL_GetError());
+            NoteGpuFailure("SDL_AcquireGPUCommandBuffer", SDL_GetError());
             FailPendingFrameReadback();
             return;
         }
@@ -2739,9 +2784,13 @@ public:
         s_swapH = 0u;
         s_swapchainTexture = nullptr;
 
-        if (!SDL_AcquireGPUSwapchainTexture(s_cmdBuf, s_window, &s_swapchainTexture, &s_swapW, &s_swapH))
+        const bool swapchainAcquired =
+            !GpuLossSimulated() &&
+            SDL_AcquireGPUSwapchainTexture(s_cmdBuf, s_window, &s_swapchainTexture, &s_swapW, &s_swapH);
+        if (!swapchainAcquired)
         {
-            mu::log::Get("render")->error("SDL_gpu -- SDL_AcquireGPUSwapchainTexture failed: {}", SDL_GetError());
+            NoteGpuFailure("SDL_AcquireGPUSwapchainTexture",
+                           GpuLossSimulated() ? "simulated by MU_TEST_GPU_LOST" : SDL_GetError());
             SDL_CancelGPUCommandBuffer(s_cmdBuf);
             s_cmdBuf = nullptr;
             FailPendingFrameReadback();
@@ -4069,8 +4118,17 @@ public:
         if (s_cmdBuf)
         {
             FRAME_PROFILE(RendererSubmit);
-            SDL_SubmitGPUCommandBuffer(s_cmdBuf);
+            const bool submitted = SDL_SubmitGPUCommandBuffer(s_cmdBuf);
             s_cmdBuf = nullptr;
+            if (submitted)
+                s_gpuLossWatch.OnSuccess();
+            else
+                NoteGpuFailure("SDL_SubmitGPUCommandBuffer", SDL_GetError());
+        }
+        else
+        {
+            // The frame readback submitted the frame itself.
+            s_gpuLossWatch.OnSuccess();
         }
 
         s_swapchainTexture = nullptr;
