@@ -13452,7 +13452,7 @@
     <value>Mga window</value>
   </data>
   <data name="PadHubSettings" xml:space="preserve">
-    <value>Settings</value>
+    <value>Mga setting</value>
   </data>
   <data name="PadPickUpPrompt" xml:space="preserve">
     <value>Pulutin</value>
@@ -13572,7 +13572,7 @@
     <value>Mapa (hawakan: teleport)</value>
   </data>
   <data name="PadCardBag" xml:space="preserve">
-    <value>Inventory</value>
+    <value>Imbentaryo</value>
   </data>
   <data name="PadCardAttack" xml:space="preserve">
     <value>Atake, kausap, menu ng player</value>

@@ -39,8 +39,9 @@ constexpr auto SnapDelay = std::chrono::milliseconds(30);
 // A window that opens this long after the one the frame started in (the NPC shop after the
 // inventory, its goods come from the server) takes the frame there, while it has not moved yet.
 constexpr auto SettleTime = std::chrono::milliseconds(750);
-// A hop ticks (the game's quiet button-move sound), but not quicker than this: a fast repeat stays calm.
-constexpr auto TickRepeat = std::chrono::milliseconds(100);
+// A hop ticks (the game's quiet button-move sound): the first of a press always, a repeat of the d-pad
+// or the stick held not quicker than this, so a fast repeat stays calm.
+constexpr auto TickRepeat = std::chrono::milliseconds(150);
 // The NPC shop's window: its cells are goods, A buys them.
 constexpr std::string_view ShopDocument = "npc_shop.rml";
 // The crafting box: its items have no card.
@@ -262,20 +263,19 @@ bool Hop(SDL_Window* window, std::span<const Pick::Target> targets, int from, Pa
         return true;
     }
     const int next = Pick::NextThatWay(targets, from, step.dx, step.dy);
-    if (ScrollsInstead(targets, from, next, step.dy))
-    {
-        UI::HUD::PadTargets::ScrollList(targets[from].list, step.dy);
+    // A list already at its end does not count as a hop (no tick): the frame goes on that way instead.
+    if (ScrollsInstead(targets, from, next, step.dy) &&
+        UI::HUD::PadTargets::ScrollList(targets[from].list, step.dy))
         return true;
-    }
     if (next == Pick::None)
         return false;
     MoveOnto(window, targets[next], scale);
     return true;
 }
 
-void Tick(Clock::time_point now)
+void Tick(Clock::time_point now, bool repeated)
 {
-    if (now - g_state.tickedAt < TickRepeat)
+    if (repeated && now - g_state.tickedAt < TickRepeat)
         return;
     g_state.tickedAt = now;
     PlayBuffer(SOUND_MENU01);
@@ -352,7 +352,8 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now, st
     }
     if (g_state.goBack)
         ++g_state.goBackFrames;
-    const bool backNow = g_state.goBack && Waited(g_state.goBackFrames, g_state.goBackSince, now, SnapDelay) && buttonUp;
+    const bool backNow =
+        g_state.goBack && Waited(g_state.goBackFrames, g_state.goBackSince, now, SnapDelay) && buttonUp;
     if (g_state.snapPending)
         ++g_state.snapFrames;
     const bool snapNow = g_state.snapPending && Waited(g_state.snapFrames, g_state.snapSince, now, SnapDelay);
@@ -431,7 +432,7 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now, st
     if (step.dx != 0 && step.dy == 0 && current != Pick::None && targets[current].gauge)
         PadTargets::StepGauge(current, step.dx);
     else if ((step.dx != 0 || step.dy != 0) && Hop(window, targets, current, step, scale))
-        Tick(now);
+        Tick(now, g_state.stepper.Repeated());
     if (g_state.nextWindowPending)
     {
         g_state.nextWindowPending = false;

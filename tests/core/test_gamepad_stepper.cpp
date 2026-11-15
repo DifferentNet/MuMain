@@ -128,3 +128,17 @@ TEST_CASE("a d-pad tap between two frames still steps [core][gamepad]")
     presses[static_cast<int>(Pad::Button::DpadDown)] = true;
     CHECK(IsStep(stepper.Take(Pad::Aim{}, presses, Clock::now()), 0, 1));
 }
+
+TEST_CASE("a step held on is a repeat, the first of a lean is not [core][gamepad]")
+{
+    Pad::Stepper stepper{FirstRepeat, Repeat};
+    const Clock::time_point start = Clock::now();
+    CHECK(IsStep(stepper.Take(Stick(0.9f, 0.f), NoPresses, start), 1, 0));
+    CHECK_FALSE(stepper.Repeated());
+    CHECK(IsStep(stepper.Take(Stick(0.9f, 0.f), NoPresses, start + FirstRepeat), 1, 0));
+    CHECK(stepper.Repeated());
+    // Let go and leaned again: a first step anew.
+    CHECK(IsStill(stepper.Take(Stick(0.f, 0.f), NoPresses, start + FirstRepeat + Frame)));
+    CHECK(IsStep(stepper.Take(Stick(0.9f, 0.f), NoPresses, start + FirstRepeat + Frame * 2), 1, 0));
+    CHECK_FALSE(stepper.Repeated());
+}

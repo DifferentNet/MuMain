@@ -1121,15 +1121,16 @@ int NearestDropNow()
     return g_promptDrop;
 }
 
-// Whether the stick points far enough from the walk under way (or from the way that found a wall)
-// for a new walk at once; a fresh push always is.
+// Whether the stick points far enough from the way that found a wall (or from the walk under way)
+// for a new walk at once; a fresh push always is. The wall's way goes first, the walk before it may
+// still be marked active: turned into another wall, the stick then waits, not retries every 120 ms.
 bool TurnedFromWalk(float dirX, float dirY)
 {
     const float turnCos = std::cos(TurnToReplan);
-    if (g_steering.active)
-        return dirX * g_steering.dirX + dirY * g_steering.dirY < turnCos;
     if (g_steering.blocked)
         return dirX * g_steering.blockedX + dirY * g_steering.blockedY < turnCos;
+    if (g_steering.active)
+        return dirX * g_steering.dirX + dirY * g_steering.dirY < turnCos;
     return true;
 }
 } // namespace

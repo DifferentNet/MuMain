@@ -46,6 +46,8 @@ public:
     Step Take(const Aim& aim, const Presses& presses, Clock::time_point now);
     // Forgets the way it pointed: the next lean steps at once.
     void Reset();
+    // Whether the last step Take gave repeated a way held (not the first of a lean, a press or a tap).
+    [[nodiscard]] bool Repeated() const { return m_Repeated; }
 
 private:
     // Inline, so the tests of the stepping need no pad.
@@ -56,6 +58,7 @@ private:
     Step m_Pointing;
     Clock::time_point m_HeldSince{};
     Clock::time_point m_Next{};
+    bool m_Repeated = false;
 };
 
 inline Aim Stepper::ReadAim()

@@ -70,6 +70,7 @@ Step Stepper::Take(const Aim& aim, const Presses& presses, Clock::time_point now
     const Step pointing = PointingOf(aim, m_Pointing);
     const bool turned = pointing.dx != m_Pointing.dx || pointing.dy != m_Pointing.dy;
     m_Pointing = pointing;
+    m_Repeated = false;
     if (IsStill(pointing))
         return Tapped(presses);
     if (turned)
@@ -82,6 +83,7 @@ Step Stepper::Take(const Aim& aim, const Presses& presses, Clock::time_point now
         return {};
     const bool longHold = IsStill(aim.dpad) && now - m_HeldSince >= LongHold;
     m_Next = now + (longHold ? std::min<Clock::duration>(m_Repeat, FastRepeat) : m_Repeat);
+    m_Repeated = true;
     return pointing;
 }
 

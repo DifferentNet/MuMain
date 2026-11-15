@@ -312,8 +312,9 @@ says so: the player is never left with nothing to press (`Gamepad::TurnsOffWhenP
 The pad shakes (unless "On without vibration" is chosen): a hard blow as hard as it hurt, the death
 long, a level up with one soft swell, a drop the loot filter highlights within 8 tiles with a light
 tick (sound on or off), and a target picked with the right stick with a 40 ms light tick. A weaker
-shake while a stronger one still runs is dropped, so a pick's tick does not cut a blow's shake short
-(`Core/Input/GamepadRumble.{h,cpp}`, tested in `tests/core/test_gamepad_rumble.cpp`).
+shake that would end while a stronger one still runs is dropped, so a pick's tick does not cut a
+blow's shake short; a weaker one that runs on past it (a level up after a blow) plays. A shake the pad
+refused (no motors) does not count as under way (`Core/Input/GamepadRumble.{h,cpp}`, tested in `tests/core/test_gamepad_rumble.cpp`).
 
 While the pad is in use, the touch controls show in the world (in the PC view too, over the PC bar)
 with the pad button that presses each one drawn on its corner: the Xbox glyphs (A green, B red,
@@ -379,7 +380,8 @@ the way and stops below 40 %, and keeps its way until the other axis leans 1.3 t
 diagonal hops once, not on its wobble; held 1.2 s, the stick hops quicker (every 60 ms, not 100; the d-pad keeps its pace). On a list's last row on
 view, a step further scrolls the list. The frame glides to the next target in about 70 ms (it jumps
 when it was hidden or the move is over half the screen), and each hop ticks softly (the menu's move
-sound, not on hops faster than every 100 ms). As a window opens or a tab turns, the frame starts on its item
+sound: the first hop of a press always, a repeat while the d-pad or the stick is held at most every
+150 ms; a step at a list's end that scrolls nothing is no hop and no tick). As a window opens or a tab turns, the frame starts on its item
 cell nearest the top-left corner, or without cells on the target nearest it (a tab before the close
 button). After RT turns a page or tab, the frame starts on that window's first target past its page
 controls (the new page's first cell or button, not a tab: `PadFrame::SnapToPage`), never on another

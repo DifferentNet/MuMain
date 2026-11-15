@@ -28,8 +28,8 @@ void SetScreens(bool screens);
 [[nodiscard]] std::optional<float> WindowsLeft();
 // Scrolls a list of the last Collect (a target's `list`) a step up (dy < 0) or down: a third of what it
 // shows. Straight, not by a wheel turn: a wheel goes to the element under the pointer, which may not
-// scroll it (the settings window took none).
-void ScrollList(int list, int dy);
+// scroll it (the settings window took none). False when it did not move (already at that end).
+bool ScrollList(int list, int dy);
 // Steps a slider of the last Collect (a target's `gauge`) one step left (dx < 0) or right, as the arrow
 // keys do on it.
 void StepGauge(int target, int dx);

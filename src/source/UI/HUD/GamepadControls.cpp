@@ -1173,6 +1173,8 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
         g_state.aActive = now;
     UI::HUD::PadHub::Update(now);
     g_state.promptDrop = -1;
+    // The one chosen stays lit and named under the card and the menu too (PickTargets renews it below).
+    g_state.meet = GameLogic::Touch::MeetIndex();
     if (UI::HUD::PadCard::IsOpen())
     {
         PlayCard(window, presses, now);

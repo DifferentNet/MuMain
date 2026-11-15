@@ -488,14 +488,16 @@ std::optional<float> WindowsLeft()
     return left;
 }
 
-void ScrollList(int list, int dy)
+bool ScrollList(int list, int dy)
 {
     Rml::Element* element = g_collector.List(list);
     if (element == nullptr || dy == 0)
-        return;
+        return false;
     const float most = std::max(element->GetScrollHeight() - element->GetClientHeight(), 0.f);
     const float step = element->GetClientHeight() * ListStepShare * (dy < 0 ? -1.f : 1.f);
-    element->SetScrollTop(std::clamp(element->GetScrollTop() + step, 0.f, most));
+    const float before = element->GetScrollTop();
+    element->SetScrollTop(std::clamp(before + step, 0.f, most));
+    return element->GetScrollTop() != before;
 }
 
 void StepGauge(int target, int dx)

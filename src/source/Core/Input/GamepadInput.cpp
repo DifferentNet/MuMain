@@ -419,16 +419,22 @@ void Rumble(float low, float high, int milliseconds)
         return;
     // SDL replaces the shake under way: a weaker one would cut a stronger one short.
     static RumbleArbiter s_arbiter;
-    if (!s_arbiter.Take(low, high, milliseconds, RumbleArbiter::Clock::now()))
+    const RumbleArbiter::Clock::time_point now = RumbleArbiter::Clock::now();
+    if (!s_arbiter.Allows(low, high, milliseconds, now))
         return;
     const auto strength = [](float share) {
         return static_cast<Uint16>(std::clamp(share, 0.f, 1.f) * 65535.f);
     };
+    bool played = false;
     for (const Pad& pad : g_pads)
     {
-        if (pad.handle != nullptr)
-            SDL_RumbleGamepad(pad.handle, strength(low), strength(high), static_cast<Uint32>(milliseconds));
+        if (pad.handle != nullptr &&
+            SDL_RumbleGamepad(pad.handle, strength(low), strength(high), static_cast<Uint32>(milliseconds)))
+            played = true;
     }
+    // A pad that has no motors (or refused) shakes nothing: no shake is under way to keep.
+    if (played)
+        s_arbiter.Record(low, high, milliseconds, now);
 }
 
 void ProcessEvent(const SDL_Event& event)
@@ -451,13 +457,17 @@ void ProcessEvent(const SDL_Event& event)
         break;
     }
     case SDL_EVENT_GAMEPAD_REMOVED:
-        if (FindPad(event.gdevice.which) != nullptr)
-            g_news = PadNews::Disconnected;
+    {
+        const bool known = FindPad(event.gdevice.which) != nullptr;
         RemovePad(event.gdevice.which);
+        // One pad of two pulled out leaves one playing: no news.
+        if (known && !IsConnected())
+            g_news = PadNews::Disconnected;
         // The last pad unplugged: nothing is left to play, so the off it waited for comes now.
         if (g_offWhenPutDown && !IsConnected())
             SetEnabled(false);
         break;
+    }
     case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
     case SDL_EVENT_GAMEPAD_BUTTON_UP:
         if (Pad* pad = FindPad(event.gbutton.which))
