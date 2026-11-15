@@ -34,6 +34,7 @@
 #include "BitmapUpload.h"
 #include "D3D12Diagnostics.h"
 #include "DrawCommandHistory.h"
+#include "GpuLossWatch.h"
 #include "MuRenderer.h"
 #include "QuadTopology.h"
 #include "RangeAllocator.h"
@@ -60,6 +61,9 @@
 #ifdef _EDITOR
 #include "Core/MuEditorCore.h"
 #endif
+#ifdef _WIN32
+#include "Core/Platform/CrashReport.h"
+#endif
 #ifdef __EMSCRIPTEN__
 #include "Core/Platform/web/WebGpuFeatures.h"
 #endif
@@ -69,6 +73,8 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -404,6 +410,51 @@ static void ReleaseFrameReadbackTexture()
     s_frameReadbackTexture = nullptr;
 }
 
+// Frames the GPU refused in a row; a lost device (driver reset) closes the game with a crash report
+// instead of leaving it running behind a frozen picture.
+static ::Render::Renderer::GpuLossWatch s_gpuLossWatch;
+#ifdef _WIN32
+static constexpr const char* kGpuLostMarkerText = ::Core::Platform::CrashReport::kGpuLostMarker;
+#else
+static constexpr const char* kGpuLostMarkerText = "GPU device lost";
+#endif
+
+// MU_TEST_GPU_LOST=1: every frame fails as on a lost device, for testing the report.
+static bool GpuLossSimulated()
+{
+    static const bool simulated = []
+    {
+        const char* value = std::getenv("MU_TEST_GPU_LOST");
+        return value != nullptr && value[0] == '1';
+    }();
+    return simulated;
+}
+
+// The last frame's submit failed: no frame the GPU took.
+static bool s_frameSubmitFailed = false;
+
+// A frame the GPU refused at `step`, with SDL's error text `error`; `deviceGone` false when only the error
+// text could tell (see GpuLossWatch).
+static void NoteGpuFailure(const char* step, const char* error, bool deviceGone = true)
+{
+    const bool lost = s_gpuLossWatch.OnFailure(SDL_GetTicks(), deviceGone);
+    if (s_gpuLossWatch.ShouldLog())
+    {
+        mu::log::Get("render")->error("SDL_gpu -- {} failed ({} frames in a row): {}", step,
+                                      s_gpuLossWatch.FailedFrames(), error);
+    }
+    if (!lost)
+        return;
+    char text[256];
+    std::snprintf(text, sizeof(text), "%s: the graphics driver stopped responding (%s failed %u frames in a row: %s)",
+                  kGpuLostMarkerText, step, s_gpuLossWatch.FailedFrames(), error);
+    mu::log::Get("render")->critical("SDL_gpu -- {}", text);
+    mu::log::Get("render")->flush();
+#ifdef _WIN32
+    ::Core::Platform::CrashReport::ReportFailure(text);
+#endif
+}
+
 static void FailPendingFrameReadback()
 {
     if (s_frameReadbackState.IsPending())
@@ -521,7 +572,8 @@ static void BlitTextureToSwapchain(SDL_GPUCommandBuffer* commandBuffer, SDL_GPUT
     }
     if (!fence)
     {
-        mu::log::Get("render")->warn("SDL_gpu -- frame readback fence acquisition failed: {}", SDL_GetError());
+        NoteGpuFailure("SDL_SubmitGPUCommandBufferAndAcquireFence", SDL_GetError());
+        s_frameSubmitFailed = true;
         SDL_ReleaseGPUTransferBuffer(s_device, download->transferBuffer);
         s_frameReadbackState.Fail();
         return true;
@@ -2654,7 +2706,7 @@ public:
         s_cmdBuf = SDL_AcquireGPUCommandBuffer(s_device);
         if (!s_cmdBuf)
         {
-            mu::log::Get("render")->error("SDL_gpu -- SDL_AcquireGPUCommandBuffer failed: {}", SDL_GetError());
+            NoteGpuFailure("SDL_AcquireGPUCommandBuffer", SDL_GetError());
             FailPendingFrameReadback();
             return;
         }
@@ -2752,9 +2804,21 @@ public:
         s_swapH = 0u;
         s_swapchainTexture = nullptr;
 
-        if (!SDL_AcquireGPUSwapchainTexture(s_cmdBuf, s_window, &s_swapchainTexture, &s_swapW, &s_swapH))
+        const bool swapchainAcquired =
+            !GpuLossSimulated() &&
+            SDL_AcquireGPUSwapchainTexture(s_cmdBuf, s_window, &s_swapchainTexture, &s_swapW, &s_swapH);
+        if (!swapchainAcquired)
         {
-            mu::log::Get("render")->error("SDL_gpu -- SDL_AcquireGPUSwapchainTexture failed: {}", SDL_GetError());
+            if (GpuLossSimulated())
+            {
+                NoteGpuFailure("SDL_AcquireGPUSwapchainTexture", "simulated by MU_TEST_GPU_LOST");
+            }
+            else
+            {
+                const char* error = SDL_GetError();
+                NoteGpuFailure("SDL_AcquireGPUSwapchainTexture", error,
+                               ::Render::Renderer::ErrorSaysDeviceGone(error));
+            }
             SDL_CancelGPUCommandBuffer(s_cmdBuf);
             s_cmdBuf = nullptr;
             FailPendingFrameReadback();
@@ -4082,9 +4146,19 @@ public:
         if (s_cmdBuf)
         {
             FRAME_PROFILE(RendererSubmit);
-            SDL_SubmitGPUCommandBuffer(s_cmdBuf);
+            const bool submitted = SDL_SubmitGPUCommandBuffer(s_cmdBuf);
             s_cmdBuf = nullptr;
+            if (submitted)
+                s_gpuLossWatch.OnSuccess();
+            else
+                NoteGpuFailure("SDL_SubmitGPUCommandBuffer", SDL_GetError());
         }
+        else if (!s_frameSubmitFailed)
+        {
+            // The frame readback submitted the frame itself.
+            s_gpuLossWatch.OnSuccess();
+        }
+        s_frameSubmitFailed = false;
 
         s_swapchainTexture = nullptr;
 

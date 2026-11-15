@@ -83,6 +83,13 @@ int main(int argc, char** argv)
         // An exception that escapes a thread: std::terminate() on that thread, not the main one.
         std::thread([] { throw std::runtime_error("from a thread"); }).join();
     }
+    else if (std::strcmp(kind, "gpu-lost") == 0)
+    {
+        // What the renderer reports when the GPU keeps refusing frames.
+        char text[64];
+        std::snprintf(text, sizeof(text), "%s: test", Core::Platform::CrashReport::kGpuLostMarker);
+        Core::Platform::CrashReport::ReportFailure(text);
+    }
     else if (std::strcmp(kind, "folder-gone") == 0)
     {
         // The player deleted CrashReports while the game ran (it is empty in the test).
