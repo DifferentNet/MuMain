@@ -15,6 +15,8 @@ void Install();
 
 // When the game was started as the crash dialog of a crashed copy (Main.exe --crash-notice <txt>
 // <dmp>), shows that dialog and returns true: the caller exits without starting the game.
+// When started as the dump writer of a crashed copy (Main.exe --crash-dump <pid> <thread>
+// <pointers> <dmp>), writes the dump and exits the process without returning.
 // Returns false otherwise.
 bool RunNoticeIfAsked();
 
