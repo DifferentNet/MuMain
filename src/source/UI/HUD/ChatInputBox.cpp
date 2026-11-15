@@ -227,7 +227,13 @@ void mu::ui::window::CChatInputBox::SendChatLine()
 
     if (wcslen(szChatText) != 0)
     {
-        if (!CheckCommand(szChatText))
+        // Typed commands (/trade, /party, ...) go to the history too, so Up repeats them.
+        const std::wstring typedLine = szChatText;
+        if (CheckCommand(szChatText))
+        {
+            AddChatHistory(typedLine);
+        }
+        else
         {
             {
                 //if (CheckAbuseFilter(szChatText))
@@ -253,6 +259,7 @@ void mu::ui::window::CChatInputBox::SendChatLine()
                     }
 
                     SocketClient->ToGameServer()->SendWarpCommandRequest(g_pMoveCommandWindow->GetMoveCommandKey(), iMapIndex);
+                    AddChatHistory(szChatText);
                 }
                 else
                 {
