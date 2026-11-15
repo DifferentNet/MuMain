@@ -1071,6 +1071,19 @@ static Render::DrawCommandHistory s_previousDrawCommands;
     return IsDrawCommand(type);
 }
 
+// Whether [first, last) of s_renderCmds draws anything: a range of only viewport/scissor changes
+// (or draws already replayed into an offscreen capture) needs no render pass of its own.
+[[nodiscard]] static bool HasDrawCommands(std::size_t first, std::size_t last)
+{
+    for (std::size_t index = first; index < last; ++index)
+    {
+        const RenderCmd& command = s_renderCmds[index];
+        if (IsDrawCommand(command.type) && !command.consumedByOffscreenCapture)
+            return true;
+    }
+    return false;
+}
+
 [[nodiscard]] static FrameProfiler::Counter ClassifyBatchBreak(const RenderCmd& command, std::size_t previousCommand,
                                                                bool geometryCanMerge)
 {
@@ -4052,7 +4065,7 @@ public:
                 postUiBoneDataReady = StageDeferredGpuData();
             }
 
-            if (s_renderCmds.size() > postUiCmdStart)
+            if (HasDrawCommands(postUiCmdStart, s_renderCmds.size()))
             {
                 SDL_GPUColorTargetInfo postUiColorTarget{};
                 postUiColorTarget.texture = frameColorTexture;

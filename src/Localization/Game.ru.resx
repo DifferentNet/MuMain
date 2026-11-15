@@ -13627,6 +13627,9 @@
   <data name="ZenAmountAll" xml:space="preserve">
     <value>Все</value>
   </data>
+  <data name="PartyInviteNotFound" xml:space="preserve">
+    <value>Игрок не найден. Выберите игрока или введите /party Имя.</value>
+  </data>
   <data name="JewelBankPacksHint" xml:space="preserve">
     <value>Пачками: каждые 10 камней придут одной пачкой, остаток отдельными камнями.</value>
   </data>

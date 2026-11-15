@@ -40,5 +40,5 @@
 
 /* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode) draws the menu larger, for fingers. */
 @media (theme: mobile) {
-	#panel { transform: translate(-50%, -50%) scale(1.5); }
+	#panel { transform: translate(-50%, -50%) scale(1.8); }
 }

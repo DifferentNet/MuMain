@@ -12,6 +12,7 @@
 #include "UI/Dialogs/GenericConfirmDialog.h"
 #include "Engine/Object/ZzzInventory.h"
 #include "GameLogic/Items/ItemCategories.h"
+#include "GameLogic/Items/SaleRefusal.h"
 #include "GameLogic/Items/ShopRestrictions.h"
 
 #include "GameLogic/Social/GambleSystem.h"
@@ -134,10 +135,22 @@ void mu::ui::window::CNPCShop::BindRmlModel(Rml::DataModelConstructor& c, NPCSho
     c.BindEventCallback("npc_shop_repair_click",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { ToggleState(); });
     c.BindEventCallback("npc_shop_repair_all_click",
-        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
-        {
-            SocketClient->ToGameServer()->SendRepairItemRequest(0xFF, 0);
-        });
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RequestRepairAll(); });
+}
+
+void mu::ui::window::CNPCShop::RequestRepairAll()
+{
+    if (!m_bRepairShop)
+    {
+        return;
+    }
+
+    if (!AnyEquippedItemNeedsRepair())
+    {
+        return;
+    }
+
+    SocketClient->ToGameServer()->SendRepairItemRequest(0xFF, 0);
 }
 
 void mu::ui::window::CNPCShop::BuildRmlUi()
@@ -305,10 +318,14 @@ bool mu::ui::window::CNPCShop::UpdateKeyEvent()
         return true;
     }
 
-    if (mu::ui::window::IsRepeat(VK_SHIFT) && mu::ui::window::IsPress('L'))
+    // The tooltip names A; Shift+L is the older key. The window manager keeps keys away while a text field types.
+    if ((mu::ui::window::IsRepeat(VK_SHIFT) && mu::ui::window::IsPress('L')) || mu::ui::window::IsPress('A'))
     {
-        SocketClient->ToGameServer()->SendRepairItemRequest(0xFF, 0);
-        return false;
+        if (m_bRepairShop)
+        {
+            RequestRepairAll();
+            return false;
+        }
     }
     if (mu::ui::window::IsPress('L'))
     {
@@ -445,16 +462,10 @@ bool mu::ui::window::CNPCShop::InventoryProcess()
 
     if (mu::ui::window::IsRelease(VK_LBUTTON) == true && m_pNewInventoryCtrl->ContainsPointer() == true && m_bSellingItem == false)
     {
-        if (CharacterMachine->Gold + ItemValue(pItem) > 2000000000)
+        if (const auto refusal = GameLogic::Items::SaleRefusalText(pItem, CharacterMachine->Gold, ItemValue(pItem)))
         {
-            g_pSystemLogBox->AddText(I18N::Game::ExceededMaximumAmountOfZenYouCanPossess, mu::ui::window::TYPE_SYSTEM_MESSAGE);
-
-            return true;
-        }
-
-        if (pItem && pItem->Jewel_Of_Harmony_Option != 0)
-        {
-            g_pSystemLogBox->AddText(I18N::Game::ReinforcedItemCanTBeSold, mu::ui::window::TYPE_ERROR_MESSAGE);
+            g_pSystemLogBox->AddText(refusal.text,
+                refusal.asError ? mu::ui::window::TYPE_ERROR_MESSAGE : mu::ui::window::TYPE_SYSTEM_MESSAGE);
 
             return true;
         }

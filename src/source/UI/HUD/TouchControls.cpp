@@ -40,6 +40,7 @@
 #include <RmlUi/Core/DataModelHandle.h>
 #include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/ElementDocument.h>
+#include <SDL3/SDL.h>
 
 #include <algorithm>
 #include <array>
@@ -735,6 +736,13 @@ bool g_upperSet = false;
 // once the finger is up: a dialog went, or a window asked (RestPointerOnLift).
 bool g_dialogWasOpen = false;
 bool g_restOnLift = false;
+// The window that covered the resting pointer last frame, and the documents shown then: a window that
+// opens under the pointer (an NPC's, after the tap on the NPC) is one not shown the frame before. Until
+// a first frame was seen (g_coverSeen) every shown document would look new, so that frame only looks.
+Rml::ElementDocument* g_lastCover = nullptr;
+std::vector<Rml::ElementDocument*> g_shownLastFrame;
+std::vector<Rml::ElementDocument*> g_shownNow;
+bool g_coverSeen = false;
 
 bool Inside(const ControlBox& box, float x, float y, float slop)
 {
@@ -810,7 +818,7 @@ bool IsWindowOver(Rml::Element* hit, Rml::ElementDocument* controls)
 // events (the inventory's item grid is clicked by its native code), so RmlUi's hit test looks
 // through it to the controls below. A panel marked "touch-through" (an event's timer or score
 // frame, which takes no taps) leaves the point to the controls.
-bool IsPlacedWindowAt(Rml::Context* context, Rml::ElementDocument* controls, Rml::Vector2f point)
+Rml::ElementDocument* PlacedWindowAt(Rml::Context* context, Rml::ElementDocument* controls, Rml::Vector2f point)
 {
     for (int index = 0; index < context->GetNumDocuments(); ++index)
     {
@@ -822,10 +830,24 @@ bool IsPlacedWindowAt(Rml::Context* context, Rml::ElementDocument* controls, Rml
             Rml::Element* root = other->GetElementById(rootId);
             if (root != nullptr && root->IsClassSet("slot-placed") && !root->IsClassSet("touch-through") &&
                 UI::RmlBridge::IsPointWithin(root, point))
-                return true;
+                return other;
         }
     }
-    return false;
+    return nullptr;
+}
+
+bool IsPlacedWindowAt(Rml::Context* context, Rml::ElementDocument* controls, Rml::Vector2f point)
+{
+    return PlacedWindowAt(context, controls, point) != nullptr;
+}
+
+// The window over the controls at `point` (the one a finger landing there would go to), else null.
+Rml::ElementDocument* WindowOverAt(Rml::Context* context, Rml::ElementDocument* controls, Rml::Vector2f point)
+{
+    Rml::Element* hit = context->GetElementAtPoint(point);
+    if (IsWindowOver(hit, controls))
+        return hit->GetOwnerDocument();
+    return PlacedWindowAt(context, controls, point);
 }
 
 // While the menu is open only it takes fingers: its items, the menu button that shuts it, and the
@@ -1449,10 +1471,13 @@ int NextMenuItem(int from, int dx, int dy)
     return NextThatWay(items, FirstMenuItemControl + from, dx, dy) - FirstMenuItemControl;
 }
 
+void ForgetCoveringWindows();
+
 // Drops the finger presses made while the controls were away. The pad's stay: when a pad press is
 // what brought the controls up, it acts.
 void ForgetFingers()
 {
+    ForgetCoveringWindows();
     for (int control = 0; control < ControlCount; ++control)
         g_seenPresses[control] = Touch::Control(control).presses;
 }
@@ -1533,6 +1558,70 @@ void RestPointerAfterDialog()
     g_dialogWasOpen = open;
     if (g_restOnLift)
         g_restOnLift = !UI::Mobile::IsGamepadInUse() && !Touch::RestPointer();
+}
+
+// Whether a finger plays the mouse now: about to tap, dragging, or holding the long press's right button.
+bool FingerPlaysMouse()
+{
+    return Touch::TapPoint().has_value() || Touch::IsMouseButtonHeld(SDL_BUTTON_LEFT) ||
+           Touch::IsMouseButtonHeld(SDL_BUTTON_RIGHT);
+}
+
+// Forgets the windows seen over the pointer: while the controls are away the documents come and go
+// unseen, and the frame they come back on only looks again.
+void ForgetCoveringWindows()
+{
+    g_lastCover = nullptr;
+    g_shownLastFrame.clear();
+    g_coverSeen = false;
+}
+
+bool WasShownLastFrame(const Rml::ElementDocument* document)
+{
+    return std::find(g_shownLastFrame.begin(), g_shownLastFrame.end(), document) != g_shownLastFrame.end();
+}
+
+// A window that opened under the spot the last tap left the pointer on (Storage after the tap on Baz)
+// would show the tooltip of whatever item of it lies there, one nobody tapped. The pointer leaves, as
+// after a dialog. A window already shown that the pointer comes over keeps it, and so does a window that
+// opens under a finger still on the screen (a long press's item card).
+void RestPointerUnderNewWindow()
+{
+    Rml::ElementDocument* controls = g_View.Document();
+    Rml::Context* context = RmlUiRuntime::Instance().GetContext();
+    if (controls == nullptr || context == nullptr)
+        return;
+
+    g_shownNow.clear();
+    bool anyNew = false;
+    for (int index = 0; index < context->GetNumDocuments(); ++index)
+    {
+        Rml::ElementDocument* document = context->GetDocument(index);
+        if (document == nullptr || !document->IsVisible())
+            continue;
+        g_shownNow.push_back(document);
+        anyNew = anyNew || !WasShownLastFrame(document);
+    }
+
+    // The pointer is looked under only on a frame a window came up: only one of those can open under it.
+    // A cover that went stays no cover, so it counts as new when it comes back.
+    if (std::find(g_shownNow.begin(), g_shownNow.end(), g_lastCover) == g_shownNow.end())
+        g_lastCover = nullptr;
+    if (anyNew)
+    {
+        float x = 0.f;
+        float y = 0.f;
+        SDL_GetMouseState(&x, &y);
+        Rml::ElementDocument* cover = WindowOverAt(context, controls, Rml::Vector2f(x, y));
+        // A window that takes another's place in one frame (an NPC's menu closes as Storage opens) is
+        // new too: it is a cover other than last frame's, not shown the frame before.
+        const bool opened = g_coverSeen && cover != nullptr && cover != g_lastCover && !WasShownLastFrame(cover);
+        g_lastCover = cover;
+        if (opened && !FingerPlaysMouse() && !UI::Mobile::IsGamepadInUse())
+            g_restOnLift = true;
+    }
+    g_coverSeen = true;
+    g_shownLastFrame.swap(g_shownNow);
 }
 
 // The hotkeys as the skill list holds them; one that holds a skill the character no longer has
@@ -2284,6 +2373,7 @@ void SyncDepth(Rml::ElementDocument* document, bool panelOpen)
 
 void Hide()
 {
+    ForgetCoveringWindows();
     if (!g_shown)
         return;
     g_shown = false;
@@ -2341,13 +2431,19 @@ void Update()
         return;
     }
     if (!g_View.Ensure())
+    {
+        ForgetCoveringWindows();
         return;
+    }
 
     Touch::SetHitTest(&HitTest);
     Touch::SetSlideQuery(&SlidesBetween);
     Rml::ElementDocument* document = g_View.Document();
     if (document == nullptr)
+    {
+        ForgetCoveringWindows();
         return;
+    }
     // Sized for fingers on this screen before it is first laid out, and as the screen changes.
     UI::Mobile::TouchUnit::Apply(document);
     // Shown again after a theme switch rebuilt the document, too.
@@ -2372,6 +2468,7 @@ void Update()
     GameLogic::Touch::SetPadPlaysWorld(padInUse && !UI::HUD::GamepadControls::PlaysPointer());
     // A player the pointer or a tap went for stays the attack button's target.
     GameLogic::Touch::TrackAim();
+    RestPointerUnderNewWindow();
     RestPointerAfterDialog();
     SyncLabels(model);
     SyncDevices(model);

@@ -15,6 +15,8 @@
 #include "UI/RmlBridge/RmlThemedView.h"
 #include "UI/Inventory/ItemCameraTarget.h"
 #include "UI/Inventory/ItemGridModel.h"
+#include <cstdint>
+#include <optional>
 #include <span>
 #include <vector>
 #include "Core/Globals/_enum.h"
@@ -162,6 +164,22 @@ namespace mu::ui::window
         void SyncRmlModel();
         // The equipment slots' states and the grid's cells, into the model.
         void SyncSlotStates();
+
+        // Everything the window's texts (labels, tooltips, zen, bag page price) are built from.
+        struct TextInputs
+        {
+            int locale = -1;
+            DWORD zen = 0;
+            bool bagLocked = false;
+            std::int64_t bagPrice = 0;
+            bool bagBuying = false;
+            int myShopMode = 0;
+            bool operator==(const TextInputs&) const = default;
+        };
+        // The texts into the model; formats them again only when their inputs changed.
+        void SyncTexts(bool bagLocked);
+        // The inputs SyncTexts() last built from; empty until the first sync after a build.
+        std::optional<TextInputs> m_SyncedTextInputs;
 
         // The bag's shown page (1 or 2). Page 2 shows OpenMU's inventory extensions 1 and 2 (slots 76-139),
         // whose grids belong to the hidden extension window (g_pMyInventoryExt) and are lent to this window

@@ -478,9 +478,7 @@ void mu::ui::window::CTitlesWindow::SyncRowShine()
     constexpr float U = 160.f / UI::TitlePlates::Art::FxAtlasWidth;
     constexpr float V = 33.f / UI::TitlePlates::Art::FxAtlasHeight;
 
-    Rml::ElementList shines;
-    m_RmlView.Document()->GetElementsByClassName(shines, "tt-row-shine");
-    for (Rml::Element* element : shines)
+    for (Rml::Element* element : RowShines())
     {
         const Rml::Vector2f size = element->GetBox().GetSize(Rml::BoxArea::Border);
         const double now = Rml::GetSystemInterface()->GetElapsedTime();
@@ -518,6 +516,29 @@ void mu::ui::window::CTitlesWindow::SyncRowShine()
         static_cast<Render::RmlUi::AdditiveMeshElement*>(element)->SetMesh(UI::TitlePlates::Effects::FxAtlasSource,
                                                                            quads, 1.f);
     }
+}
+
+const std::vector<Rml::Element*>& mu::ui::window::CTitlesWindow::RowShines()
+{
+    Rml::ElementDocument* document = m_RmlView.Document();
+    if (m_shineList == nullptr)
+        m_shineList = document->QuerySelector(".tt-list");
+    // Without the list (a theme without it) the elements are looked up every time, as before.
+    const int children = m_shineList != nullptr ? m_shineList->GetNumChildren() : -1;
+    if (children == m_shineListChildren && children >= 0)
+        return m_rowShines;
+
+    m_shineListChildren = children;
+    m_rowShines.clear();
+    document->GetElementsByClassName(m_rowShines, "tt-row-shine");
+    return m_rowShines;
+}
+
+void mu::ui::window::CTitlesWindow::ForgetRowShines()
+{
+    m_shineList = nullptr;
+    m_shineListChildren = -1;
+    m_rowShines.clear();
 }
 
 void mu::ui::window::CTitlesWindow::SyncPreview()

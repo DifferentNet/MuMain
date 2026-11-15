@@ -128,3 +128,13 @@
 /* A light running over the worn row now and then, when the title effects are on (Options); C++ draws it. */
 .tt-row { position: relative; overflow: hidden; }
 .tt-row-shine { position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none; }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the tabs and the rows a finger high (36 reference px), the rows'
+   text kept at the top-left with more room around it. */
+@media (theme: mobile) {
+	.tt-tab { height: calc(36px * var(--root-scale)); }
+	.tt-row {
+		min-height: calc(36px * var(--root-scale));
+		padding: calc(6px * var(--root-scale)) calc(4px * var(--root-scale));
+	}
+}

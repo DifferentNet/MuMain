@@ -6,6 +6,7 @@
 #include "Audio/DSPlaySound.h"
 #include "GameLogic/Events/DailyRewards.h"
 #include "UI/Core/WindowSystem.h"
+#include "UI/Mobile/InterfaceMode.h"
 
 #include "Core/Utilities/StringUtils.h"
 #include "Render/Text/CUIRenderText.h"
@@ -308,14 +309,21 @@ void mu::ui::window::CDailyRewardsWindow::SyncContent()
     const auto& status = rewards.GetStatus();
     const auto now = std::chrono::steady_clock::now();
 
+    // Read every frame the window shows, so a switch to or from the phone view fits the lines anew.
+    const bool phoneView = UI::Mobile::IsPhoneView();
+    const int windowWidth = phoneView ? PHONE_WINDOW_WIDTH : WINDOW_WIDTH;
+    const int contentWidth = phoneView ? PHONE_CONTENT_WIDTH : CONTENT_WIDTH;
+    const int tableWidth = phoneView ? PHONE_TABLE_WIDTH : TABLE_WIDTH;
+    const int itemsWidth = phoneView ? PHONE_ITEMS_WIDTH : ITEMS_WIDTH;
+
     DailyRewardsRmlModel updated;
-    updated.title = line(I18N::Game::DailyRewardsTitle, WINDOW_WIDTH, true);
+    updated.title = line(I18N::Game::DailyRewardsTitle, windowWidth, true);
 
     if (!rewards.HasInfo())
     {
         updated.status = line(now - m_openedAt < AnswerTimeout ? I18N::Game::DailyRewardsAsking
                                                                 : I18N::Game::DailyRewardsNoAnswer,
-                              CONTENT_WIDTH);
+                              contentWidth);
     }
     else
     {
@@ -329,10 +337,10 @@ void mu::ui::window::CDailyRewardsWindow::SyncContent()
         if (status.CountedToday)
         {
             mu_swprintf(text, I18N::Game::DailyRewardsReceived, todayDay);
-            updated.status = line(text, CONTENT_WIDTH, true);
+            updated.status = line(text, contentWidth, true);
             mu_swprintf(text, I18N::Game::DailyRewardsNextIn,
                         FormatDuration(SecondsToNextUtcDay(std::chrono::system_clock::now())).c_str());
-            updated.detail = line(text, CONTENT_WIDTH);
+            updated.detail = line(text, contentWidth);
         }
         else
         {
@@ -340,15 +348,15 @@ void mu::ui::window::CDailyRewardsWindow::SyncContent()
             const int needed = std::max(1, status.SecondsNeeded / 60);
             const int played = static_cast<int>(std::min<long long>(seconds / 60, needed));
             mu_swprintf(text, I18N::Game::DailyRewardsPlayed, todayDay, played, needed);
-            updated.status = line(text, CONTENT_WIDTH, true);
+            updated.status = line(text, contentWidth, true);
             if (seconds >= status.SecondsNeeded)
             {
-                updated.detail = line(I18N::Game::DailyRewardsComing, CONTENT_WIDTH);
+                updated.detail = line(I18N::Game::DailyRewardsComing, contentWidth);
             }
             else
             {
                 const int left = static_cast<int>((status.SecondsNeeded - seconds + 59) / 60);
-                updated.detail = line(Format(I18N::Game::DailyRewardsLeft, left), CONTENT_WIDTH);
+                updated.detail = line(Format(I18N::Game::DailyRewardsLeft, left), contentWidth);
             }
         }
 
@@ -357,7 +365,7 @@ void mu::ui::window::CDailyRewardsWindow::SyncContent()
             DailyRewardsDay row;
             row.label = line(Format(I18N::Game::DailyRewardsDay, day.Number), LABEL_WIDTH, true);
             for (const auto& item : SplitItems(day.Reward))
-                row.items.push_back(line(item, ITEMS_WIDTH));
+                row.items.push_back(line(item, itemsWidth));
             row.done = day.Number <= completed;
             row.today = day.Number == todayDay;
             updated.days.push_back(std::move(row));
@@ -365,13 +373,13 @@ void mu::ui::window::CDailyRewardsWindow::SyncContent()
 
         if (status.Waiting > 0)
         {
-            updated.footer = line(Format(I18N::Game::DailyRewardsWaiting, status.Waiting), CONTENT_WIDTH, true);
+            updated.footer = line(Format(I18N::Game::DailyRewardsWaiting, status.Waiting), contentWidth, true);
             updated.canTake = true;
-            updated.takeLabel = line(I18N::Game::DailyRewardsTake, TABLE_WIDTH, true);
+            updated.takeLabel = line(I18N::Game::DailyRewardsTake, tableWidth, true);
         }
         else
         {
-            updated.footer = line(I18N::Game::DailyRewardsHint, CONTENT_WIDTH);
+            updated.footer = line(I18N::Game::DailyRewardsHint, contentWidth);
         }
     }
 

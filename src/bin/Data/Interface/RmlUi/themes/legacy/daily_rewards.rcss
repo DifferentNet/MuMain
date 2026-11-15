@@ -65,3 +65,16 @@
 /* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
 #dr_title { width: calc(100% * var(--root-scale)); }
 #dr_status, #dr_detail { width: calc(166px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (UI::Mobile::IsPhoneView()), as the event timer's (event_schedule.rcss): the text keeps
+   the native text size while the panel shrinks to the phone's height, so the 190-wide window cut its lines and its
+   title ran into the frame's ornaments. It is 270 wide here (the character window's phone frame pieces), the lines
+   widen with it (CDailyRewardsWindow's PHONE_* widths) and the take button is a finger high. */
+@media (theme: mobile) {
+	#panel { width: 270px; }
+	.frame-top { decorator: tiled-horizontal(docked-phone-top-b-l, docked-phone-top-b-c, docked-phone-top-b-r); }
+	.frame-bottom { decorator: tiled-horizontal(docked-phone-bottom-l, docked-phone-bottom-c, docked-phone-bottom-r); }
+	#dr_days { --flow-w: 250px; }
+	#dr_status, #dr_detail { width: calc(246px * var(--root-scale)); }
+	#dr_take { height: calc(42px * var(--root-scale)); margin-top: calc(8px * var(--root-scale)); }
+}

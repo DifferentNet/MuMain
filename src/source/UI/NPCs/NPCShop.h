@@ -113,6 +113,9 @@ namespace mu::ui::window
         // The shop's grid, for the control socket.
         CInventoryCtrl* GetInventoryCtrl() const { return m_pNewInventoryCtrl; }
         void ToggleState();
+        // "Repair all" (button, A, Shift+L): asks the server to repair the equipped items, only in a repair shop and
+        // only while an equipped item needs it.
+        void RequestRepairAll();
         DWORD GetShopState();
 
         int GetPointedItemIndex();

@@ -60,6 +60,10 @@ The chat box keeps the last 30 lines sent from it, whispers and commands include
 past the newest, puts back what was typed before Up. A player who whispers you joins the list of
 whisper names (Up and Down in the name box) without filling the box.
 
+`/party Name` (or `/pt Name`) invites that player to your party when they are in sight, at any distance;
+`/party` alone invites the selected player, else the one standing face to face. When nobody fits, the
+chat says the player was not found.
+
 ## Favourites and templates
 
 Both are stored per installation in `config.ini`, not per character - the

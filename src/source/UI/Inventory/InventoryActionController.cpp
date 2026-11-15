@@ -24,6 +24,7 @@
 #include "World/MapInfra/PortalMgr.h"
 #include "GameLogic/Quests/CSQuest.h"
 #include "I18N/All.h"
+#include "GameLogic/Items/SaleRefusal.h"
 #include "GameLogic/Items/ShopRestrictions.h"
 #include "GameLogic/Items/TradeRestrictions.h"
 #include "UI/HUD/ItemHotKey.h"
@@ -589,6 +590,13 @@ bool CInventoryActionController::HandleSellToNPC(CInventoryCtrl* targetControl) 
     if (GameLogic::Items::IsSellingBan(pItem))
     {
         g_pSystemLogBox->AddText(I18N::Game::TheseItemsCannotBeTraded, TYPE_ERROR_MESSAGE);
+        return true;
+    }
+
+    // The same refusals as dropping the item on the shop (CNPCShop::InventoryProcess()).
+    if (const auto refusal = GameLogic::Items::SaleRefusalText(pItem, CharacterMachine->Gold, ItemValue(pItem)))
+    {
+        g_pSystemLogBox->AddText(refusal.text, refusal.asError ? TYPE_ERROR_MESSAGE : TYPE_SYSTEM_MESSAGE);
         return true;
     }
 

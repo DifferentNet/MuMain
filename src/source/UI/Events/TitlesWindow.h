@@ -67,8 +67,16 @@ private:
     void SyncContent();
     void SyncPreview();
     void SyncRowShine();
+    // The rows' light elements (one per row, titles.rml), found again only when the list's rows change.
+    const std::vector<Rml::Element*>& RowShines();
+    void ForgetRowShines();
 
     CManager* m_pNewUIMng = nullptr;
+    // The list the rows' light elements were found in and its child count then: rows are only added or removed at
+    // its end (data-for), so the same count means the same elements. Forgotten when the document is built again.
+    Rml::Element* m_shineList = nullptr;
+    int m_shineListChildren = -1;
+    std::vector<Rml::Element*> m_rowShines;
     std::chrono::steady_clock::time_point m_openedAt{};
     std::chrono::steady_clock::time_point m_lastRequest{};
     // 0: the own titles, 1: the catalogue.
@@ -100,6 +108,8 @@ private:
     UI::RmlBridge::ThemedView<TitlesRmlModel> m_RmlView{"titles",
                                                         [this](Rml::DataModelConstructor& c, TitlesRmlModel& model)
                                                         { BindRmlModel(c, model); },
-                                                        {{"Data/Interface/RmlUi/titles.rml"}}};
+                                                        {{"Data/Interface/RmlUi/titles.rml"}},
+                                                        {.afterBuild = [this] { ForgetRowShines(); },
+                                                         .beforeUnload = [this] { ForgetRowShines(); }}};
 };
 } // namespace mu::ui::window

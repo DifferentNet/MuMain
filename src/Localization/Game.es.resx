@@ -13907,4 +13907,7 @@
   <data name="ZenAmountAll" xml:space="preserve">
     <value>Todo</value>
   </data>
+  <data name="PartyInviteNotFound" xml:space="preserve">
+    <value>Jugador no encontrado. Selecciona un jugador o escribe /party Nombre.</value>
+  </data>
 </root>
