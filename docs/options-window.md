@@ -153,6 +153,9 @@ window writes to these sections:
     GPU backend at startup, falling back to SDL's own auto-pick with a logged
     warning if the requested one is unavailable.
   - `SortParticleDraws` (`0`/`1`) sorts particle draws back to front.
+  - `PreloadMonsters` (`0`/`1`, default `1`), PC client only: on a map change
+    the monster types the server spawns there (`Data/Local/MapMonsters.txt`)
+    are loaded behind the loading screen instead of when each first shows.
 - `[EnhancedTuning]` - only the tuning sliders under "Enhanced graphics" the
   player moved, one global key per value applying on every map and after restart;
   no per-map player setup is needed. "Defaults" means no personal override;
