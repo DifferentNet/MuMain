@@ -577,6 +577,8 @@ int ChooseTarget()
 
 void Forget(int key)
 {
+    if (g_chosenKey == key)
+        g_chosenKey = NoTarget;
     g_forgottenUntil[key] = Clock::now() + ForgetTime;
     if (g_targetKey == key)
         g_targetKey = NoTarget;
@@ -1842,6 +1844,24 @@ int TargetIndex()
             return -1;
     }
     return static_cast<int>(target - CharactersClient);
+}
+
+int ChosenIndex()
+{
+    if (!InWorld() || g_chosenKey == NoTarget)
+        return -1;
+    const CHARACTER* chosen = FindByKey(g_chosenKey);
+    if (!IsGoodTarget(chosen, true))
+    {
+        // Dead, gone (a warp clears the view) or out of reach: forgotten now, as the next button
+        // press would (ChooseTarget), so a respawn or another monster under the same key is not ringed.
+        g_chosenKey = NoTarget;
+        return -1;
+    }
+    // Played with the mouse again: no ring, the choice is kept for when the controls come back.
+    if (!g_controlsShown)
+        return -1;
+    return static_cast<int>(chosen - CharactersClient);
 }
 
 void HoldHelperForButtons(bool buttonsAct)
