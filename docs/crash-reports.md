@@ -36,7 +36,7 @@ no lock the game holds; the `.txt` says "Dump: written by a second copy of the g
 started is the dump written inside the game ("written inside the game"). The second copy gives up after 15 seconds
 and then ends the crashed game too. When the writer can't finish (the crashed thread held the heap lock, inside
 `malloc` on a damaged heap), the game closes without the dialog and with the `.txt` only ("Dump: not written"):
-after 5 seconds when not even the text got written (the crashed thread then writes it itself), after 20 seconds when
+after 5 seconds when not even the text got written (the crashed thread then writes it itself), after 30 seconds when
 the dump hung (its half-written `.dmp` is removed). A `CrashReports` folder deleted while the game ran is made again.
 
 While the dialog is open, the launcher closes it (the dialog copy holds the event `Local\MuSkynet-CrashNotice-<pid>`)

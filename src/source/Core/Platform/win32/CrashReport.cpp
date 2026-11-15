@@ -38,7 +38,9 @@ constexpr SIZE_T kWriterStackBytes = 512 * 1024;
 // The dump takes seconds. Longer means the writer waits for a lock the crashed thread holds (the
 // heap's, inside malloc on a damaged heap): then the game closes with the text report only.
 constexpr DWORD kTextTimeoutMs = 5 * 1000;
-constexpr DWORD kWriteTimeoutMs = 20 * 1000;
+// Longer than the writer's wait for the dump helper (20 s from its start), so a helper that starts
+// slowly still finishes a dump this thread would otherwise throw away.
+constexpr DWORD kWriteTimeoutMs = 30 * 1000;
 
 struct CrashContext
 {
