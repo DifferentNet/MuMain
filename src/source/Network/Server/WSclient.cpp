@@ -1162,7 +1162,7 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     // scripted `warp` waits for exactly this signal.
     App::Control::Events::RecordTeleportPacket();
 
-    Engine::Monsters::PreloadMap(gMapManager.WorldActive, true);
+    Engine::Monsters::PreloadMap(Data->Map, true);
     LoadingWorld = 30;
     MouseUpdateTime = 0;
     MouseUpdateTimeMax = 6;
@@ -1404,7 +1404,7 @@ void ReceiveRevival(const BYTE* ReceiveBuffer)
         }
 
         // A revival sets no loading countdown: what the preload has no time for loads when it shows.
-        Engine::Monsters::PreloadMap(gMapManager.WorldActive, false);
+        Engine::Monsters::PreloadMap(Data->Map, false);
     }
 
     CreatePetDarkSpirit_Now(c);
@@ -2235,7 +2235,7 @@ BOOL ReceiveTeleport(const BYTE* ReceiveBuffer, BOOL bEncrypted)
                 UI::Chat::PostSystem(Text, mu::ui::window::TYPE_SYSTEM_MESSAGE);
             }
 
-            Engine::Monsters::PreloadMap(gMapManager.WorldActive, true);
+            Engine::Monsters::PreloadMap(Data->Map, true);
         }
 
         SocketClient->ToGameServer()->SendClientReadyAfterMapChange();

@@ -16,7 +16,8 @@ namespace Engine::Monsters
     // never sends and deletes it at once, with the effects, joints and objects its creation started.
     WarmUpResult WarmUp(EMonsterType type);
 
-    // The hero has entered `map` (its world is loaded, the hero placed): queues the map's types and warms
+    // The hero has entered `map`, the server's map number (Devil Square stays 32 although LoadWorld loads 9;
+    // its world is loaded, the hero placed): queues the map's types and warms
     // them for the loading screen's share of the time. Without a loading countdown after it
     // (`countdownFollows` false: a revival on another map) the rest is dropped and loads when it shows.
     // PC only: the browser client does nothing.

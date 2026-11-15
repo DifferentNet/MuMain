@@ -55,6 +55,8 @@ namespace Engine::Monsters
 
         bool g_warmingUp = false;
         int g_queuedMap = -1;
+        // The world LoadWorld actually loaded: Devil Square's 32 becomes 9 there, the list is by the server's 32.
+        int g_queuedWorld = -1;
 
         double NowMs()
         {
@@ -247,6 +249,7 @@ namespace Engine::Monsters
 
         Queue().Clear();
         g_queuedMap = map;
+        g_queuedWorld = gMapManager.WorldActive;
         if (!GameConfig::GetInstance().GetPreloadMonsters())
         {
             MU_LOG_INFO(mu::log::Get("data"), "Monster preload: off ([Render] PreloadMonsters=0), map {}", map);
@@ -277,7 +280,7 @@ namespace Engine::Monsters
             return;
         }
         // The map changed some other way since it was queued: its types aren't this map's.
-        if (gMapManager.WorldActive != g_queuedMap)
+        if (gMapManager.WorldActive != g_queuedWorld)
         {
             queue.Clear();
             return;
