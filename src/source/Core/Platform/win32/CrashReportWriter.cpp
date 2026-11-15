@@ -36,6 +36,9 @@ constexpr wchar_t kFilePrefix[] = L"crash-";
 constexpr wchar_t kFallbackParent[] = L"MuSkynet";
 // The dump helper (a second copy of the game) gets this long; then the writer gives up on the dump.
 constexpr DWORD kHelperTimeoutMs = 15 * 1000;
+// The writer waits longer than the helper's own clock: a helper killed mid-dump would leave the
+// threads it paused frozen, with its watchdog gone. A late helper ends the game itself.
+constexpr DWORD kHelperSlackMs = 5 * 1000;
 
 // Small dumps (a few MB): every thread's stack and registers, the memory those point to, the
 // module list. The game's big global arrays stay out, which keeps the file small enough to send.
@@ -318,7 +321,7 @@ bool WriteDump(const wchar_t* path, const EXCEPTION_POINTERS* exception, DWORD t
         return WriteDumpHere(path, exception, threadId);
     CloseHandle(process.hThread);
     DWORD exitCode = 1;
-    const bool finished = WaitForSingleObject(process.hProcess, kHelperTimeoutMs) == WAIT_OBJECT_0 &&
+    const bool finished = WaitForSingleObject(process.hProcess, kHelperTimeoutMs + kHelperSlackMs) == WAIT_OBJECT_0 &&
                           GetExitCodeProcess(process.hProcess, &exitCode);
     if (!finished)
         TerminateProcess(process.hProcess, 1);

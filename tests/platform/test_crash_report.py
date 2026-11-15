@@ -15,9 +15,9 @@ CASES = {
     "cpp-exception": ("runtime_error", True),
     "abort": ("abort() was called", True),
     "pure-call": ("pure virtual function call", True),
-    "terminate": ("std::terminate()", True),
+    "terminate": ("std::terminate() was called", True),
     "heap-corruption": ("heap corruption", True),
-    "thread-exception": ("fatal runtime error", True),
+    "thread-exception": ("std::terminate() on another thread", True),
     "folder-gone": ("access violation", True),
     # The dump would wait for the heap lock the crashed thread holds: the text report is enough.
     "heap-locked": ("access violation", False),
