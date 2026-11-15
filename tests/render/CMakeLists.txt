@@ -30,6 +30,12 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME gpu_loss_watch_tests
+    SOURCES
+        test_gpu_loss_watch.cpp
+)
+
+mu_add_test(
     NAME reorderable_draw_runs_tests
     SOURCES
         test_reorderable_draw_runs.cpp

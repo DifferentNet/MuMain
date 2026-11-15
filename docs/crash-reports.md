@@ -25,8 +25,12 @@ The newest 10 reports stay; older ones are removed at the next start.
 ## What is caught
 
 Access violations, stack overflows, uncaught C++ exceptions, heap corruption, `abort()`, `std::terminate()`, pure
-virtual calls and invalid parameters to C runtime functions, on any thread. Not caught: the process being killed, a
-GPU driver reset that only hangs the game, and fast-fail checks (`/GS` buffer overruns, `__fastfail`), which Windows
+virtual calls and invalid parameters to C runtime functions, on any thread. A lost GPU device (a driver reset, the
+device removed) is caught too: when the GPU refuses every frame (no command buffer, no swapchain image or a failed
+submit; a minimized window is no failure) for at least 30 frames and 3 seconds in a row (30 seconds when only
+the swapchain refuses with an error that doesn't name a lost device, which may be the lock screen or a resume),
+the renderer writes the report itself, cause "GPU device lost: ..." with SDL's error, and the dialog also asks the player to update the
+graphics driver (`Render/Renderer/GpuLossWatch.h`). Not caught: the process being killed, and fast-fail checks (`/GS` buffer overruns, `__fastfail`), which Windows
 ends without running any handler; those still appear in Windows' own error reporting. `std::terminate()` on a thread
 other than the main one ends in `abort()`, so its report says "abort() was called".
 
@@ -56,4 +60,4 @@ dialog's text (UTF-16) to that file instead of showing it. The `crash_report` te
 (`tests/platform/test_crash_report.py`) crashes `crash_report_probe` each of the ways above and checks the files, then
 checks that each dump was written by the second copy and holds the exception, also for an exception escaping a
 thread and for a `CrashReports` folder deleted before the crash, then crashes it once with the dialog wanted and
-checks that the second copy names the report.
+checks that the second copy names the report, and once more as a lost GPU, whose dialog has the driver hint. `MU_TEST_GPU_LOST=1` makes the game's renderer fail every frame as on a lost device, to see the whole path in the game.

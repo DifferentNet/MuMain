@@ -20,4 +20,15 @@ void Install();
 // Returns false otherwise.
 bool RunNoticeIfAsked();
 
+// A failure the game noticed itself, with no exception behind it (the GPU device lost): writes the
+// report as for a crash, with this thread's call stack and `what` as the cause (copied; at most
+// kFailureTextCapacity - 1 characters are kept), shows the crash dialog and closes the game.
+// Windows only, like the rest of the crash report.
+inline constexpr int kFailureTextCapacity = 512;
+[[noreturn]] void ReportFailure(const char* what);
+
+// The marker ReportFailure's text carries for a lost GPU device: the dialog then also asks the player
+// to update the graphics driver.
+inline constexpr char kGpuLostMarker[] = "GPU device lost";
+
 } // namespace Core::Platform::CrashReport

@@ -3,6 +3,7 @@
 #include <cerrno>
 #include <csignal>
 #include <cstdlib>
+#include <cstring>
 #include <cwchar>
 #include <exception>
 #include <string>
@@ -58,6 +59,8 @@ struct CrashContext
 constexpr DWORD kHeapCorruptionCode = 0xC0000374;  // STATUS_HEAP_CORRUPTION (ntstatus.h)
 
 LONG s_handling = 0;
+// ReportFailure's text: the record points at it while the report is written.
+char s_failureText[kFailureTextCapacity] = {};
 DWORD s_handlingThreadId = 0;
 DWORD s_writerThreadId = 0;
 HANDLE s_writer = nullptr;
@@ -268,6 +271,20 @@ bool DialogWanted()
     return GetEnvironmentVariableW(kControlSocketVariable, value, 8) == 0;
 }
 
+// Whether the start of the report's text (ASCII, a few KB) contains `needle`.
+bool ReportMentions(const wchar_t* textPath, const char* needle)
+{
+    HANDLE file = CreateFileW(textPath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
+                              nullptr);
+    if (file == INVALID_HANDLE_VALUE)
+        return false;
+    char buffer[4096] = {};
+    DWORD read = 0;
+    const BOOL ok = ReadFile(file, buffer, sizeof(buffer) - 1, &read, nullptr);
+    CloseHandle(file);
+    return ok && read > 0 && std::strstr(buffer, needle) != nullptr;
+}
+
 void ComposeNotice(const wchar_t* textPath, const wchar_t* dumpPath)
 {
     if (textPath[0] == L'\0')
@@ -279,8 +296,12 @@ void ComposeNotice(const wchar_t* textPath, const wchar_t* dumpPath)
     }
     const std::wstring text(textPath);
     const std::wstring folder = text.substr(0, text.find_last_of(L'\\'));
+    const wchar_t* gpuHint = ReportMentions(textPath, kGpuLostMarker)
+                                 ? L"Видеокарта перестала отвечать. Обновите драйвер видеокарты.\n"
+                                   L"The graphics card stopped responding. Please update its driver.\n\n"
+                                 : L"";
     std::swprintf(s_notice, kNoticeCapacity,
-                  L"MU Skynet закрылась из-за ошибки.\n\n"
+                  L"MU Skynet закрылась из-за ошибки.\n\n%ls"
                   L"Отчёт сохранён в папке:\n%ls\n\n"
                   L"Пришлите оба файла (%ls и %ls) администратору в личные сообщения Discord, не в общий канал: "
                   L"в них могут быть данные вашего входа. По ним мы найдём и исправим причину.\n\n"
@@ -288,7 +309,7 @@ void ComposeNotice(const wchar_t* textPath, const wchar_t* dumpPath)
                   L"files to an admin in a private Discord message, not a public channel (they may hold your "
                   L"login details), so we can fix it.\n\n"
                   L"Открыть папку? / Open the folder?",
-                  folder.c_str(), FileName(textPath), dumpPath[0] != L'\0' ? FileName(dumpPath) : L"-");
+                  gpuHint, folder.c_str(), FileName(textPath), dumpPath[0] != L'\0' ? FileName(dumpPath) : L"-");
 }
 
 void OpenFolderAt(const wchar_t* path)
@@ -315,6 +336,12 @@ void WriteNoticeLog(const wchar_t* logPath)
 }
 
 } // namespace
+
+void ReportFailure(const char* what)
+{
+    strncpy_s(s_failureText, what != nullptr ? what : "unknown failure", _TRUNCATE);
+    ReportFromHere(s_failureText);
+}
 
 bool RunNoticeIfAsked()
 {
