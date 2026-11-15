@@ -6150,7 +6150,9 @@ void ReceiveGetItem(std::span<const BYTE> ReceiveBuffer)
 
             if (getGold > 0)
             {
-                mu_swprintf(szMessage, L"%d %ls %ls", getGold, I18N::Game::Zen, I18N::Game::Obtained);
+                wchar_t goldText[64];
+                ConvertGold(getGold, goldText);
+                mu_swprintf(szMessage, L"%ls %ls %ls", goldText, I18N::Game::Zen, I18N::Game::Obtained);
                 UI::Chat::PostSystem(szMessage, mu::ui::window::TYPE_SYSTEM_MESSAGE);
             }
         }

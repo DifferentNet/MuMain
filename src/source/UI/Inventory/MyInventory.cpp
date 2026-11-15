@@ -296,6 +296,8 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
 // they move with it. The position lasts until the workspace places it again.
 void CMyInventory::OnRmlBuilt()
 {
+    // A fresh document formats its texts on the next sync.
+    m_SyncedTextInputs.reset();
     Rml::Element* panelEl = m_RmlView.Document()->GetElementById("panel");
     Rml::Element* titleEl = m_RmlView.Document()->GetElementById("title");
     if (panelEl && titleEl)
@@ -1156,15 +1158,6 @@ void CMyInventory::SyncRmlModel()
     {
         if (m_RmlView.GetModel().*field != value) { m_RmlView.GetModel().*field = value; m_RmlView.MarkDirty(boundName); }
     };
-    auto syncText = [this](Rml::String MyInventoryRmlModel::* field, const char* boundName, const Rml::String& value)
-    {
-        if (m_RmlView.GetModel().*field != value) { m_RmlView.GetModel().*field = value; m_RmlView.MarkDirty(boundName); }
-    };
-    auto syncWide = [&](Rml::String MyInventoryRmlModel::* field, const char* boundName, const wchar_t* text)
-    {
-        syncText(field, boundName, StringUtils::WideToNarrow(text));
-    };
-
     auto& bag = UI::Inventory::Bag();
     const bool pages = bag.HasInfo() && bag.MaxPages() > 1;
     if (!pages && m_BagPage != 1)
@@ -1172,7 +1165,6 @@ void CMyInventory::SyncRmlModel()
         m_BagPage = 1;
         SyncBagPageGrids();
     }
-    syncWide(&MyInventoryRmlModel::title, "title", I18N::Game::Inventory);
     const bool holding = CInventoryCtrl::GetPickedItem() != nullptr;
     syncBool(&MyInventoryRmlModel::pagesVisible, "pages_visible", pages);
     syncInt(&MyInventoryRmlModel::bagPage, "bag_page", m_BagPage);
@@ -1180,30 +1172,11 @@ void CMyInventory::SyncRmlModel()
     const bool locked = pages && IsBagPageLocked();
     syncBool(&MyInventoryRmlModel::bagLocked, "bag_locked", locked);
     syncBool(&MyInventoryRmlModel::bagBuying, "bag_buying", bag.IsBuying() || holding);
-    if (locked)
-    {
-        syncWide(&MyInventoryRmlModel::bagLockedText, "bag_locked_text", I18N::Game::BagPageLocked);
-        syncWide(&MyInventoryRmlModel::bagCellsText, "bag_cells_text", I18N::Game::BagPageCells);
-        wchar_t price[64] = {};
-        ConvertGold(static_cast<double>(bag.Price()), price);
-        wchar_t priceBuf[128] = {};
-        mu_swprintf(priceBuf, I18N::Game::BagPageBuy, price);
-        syncWide(&MyInventoryRmlModel::bagPriceText, "bag_price_text", priceBuf);
-        syncWide(&MyInventoryRmlModel::bagBuyLabel, "bag_buy_label",
-                 bag.IsBuying() ? I18N::Game::BagPageBuying : I18N::Game::BagPageBuyConfirm);
-    }
 
     syncBool(&MyInventoryRmlModel::bagSortBusy, "bag_sort_busy",
              UI::Inventory::Sort().IsBlocked(UI::Inventory::InventorySort::Target::Bag));
-    syncWide(&MyInventoryRmlModel::bagSortTooltip, "bag_sort_tooltip", I18N::Game::InventorySortHint);
 
-    const DWORD dwZen = CharacterMachine->Gold;
-    wchar_t goldBuf[256] = { 0, };
-    ConvertGold(dwZen, goldBuf);
-    syncWide(&MyInventoryRmlModel::goldText, "gold_text", goldBuf);
-
-    syncText(&MyInventoryRmlModel::goldTier, "gold_tier",
-             UI::RmlBridge::GoldTierKey(GameLogic::Items::ClassifyGoldAmount(dwZen)));
+    SyncTexts(locked);
 
     // One flag now covers both visibility and interactivity via RmlUi's data-class-hidden.
     const bool otherWindowOpen = g_pNewUISystem->IsVisible(INTERFACE_NPCSHOP)
@@ -1215,27 +1188,12 @@ void CMyInventory::SyncRmlModel()
         || g_pNewUISystem->IsVisible(INTERFACE_STORAGE);
 
     syncBool(&MyInventoryRmlModel::repairVisible, "repair_visible", m_bRepairEnableLevel && !otherWindowOpen);
-    syncWide(&MyInventoryRmlModel::repairTooltip, "repair_tooltip", I18N::Game::RepairL);
 
     syncBool(&MyInventoryRmlModel::myShopVisible, "myshop_visible", m_bMyShopOpen && !otherWindowOpen);
     syncBool(&MyInventoryRmlModel::myShopModeOpen, "myshop_mode_open", m_MyShopMode == MYSHOP_MODE_OPEN);
     syncBool(&MyInventoryRmlModel::myShopLocked, "myshop_locked", m_bMyShopLocked);
-    syncWide(&MyInventoryRmlModel::myShopTooltip, "myshop_tooltip",
-        m_MyShopMode == MYSHOP_MODE_OPEN ? I18N::Game::OpenPersonalStoreS : I18N::Game::ClosePersonalStoreS);
 
-    syncWide(&MyInventoryRmlModel::exitTooltip, "exit_tooltip", I18N::Game::CloseIV);
-    syncWide(&MyInventoryRmlModel::jewelBankTooltip, "jewel_bank_tooltip", I18N::Game::JewelBankButtonK);
-
-    // Label text is static per-language but still routed through syncWide (change-checked) rather
-    // than bound once at Create() time.
-    wchar_t setOptionLabelBuf[128];
-    mu_swprintf(setOptionLabelBuf, L"[%ls]", I18N::Game::SetOption);
-    syncWide(&MyInventoryRmlModel::setOptionLabel, "set_option_label", setOptionLabelBuf);
     syncBool(&MyInventoryRmlModel::setOptionActive, "set_option_active", g_csItemOption.IsAncientSetEquipped());
-
-    wchar_t socketOptionLabelBuf[128];
-    mu_swprintf(socketOptionLabelBuf, L"[%ls]", I18N::Game::SocketOption);
-    syncWide(&MyInventoryRmlModel::socketOptionLabel, "socket_option_label", socketOptionLabelBuf);
     syncBool(&MyInventoryRmlModel::socketOptionActive, "socket_option_active", g_SocketItemMgr.IsSocketSetOptionEnabled());
 
     // Shared tooltip -- only one of setOptionHovered/socketOptionHovered is ever true at a time.
@@ -1305,6 +1263,59 @@ void CMyInventory::SyncRmlModel()
     {
         UI::RmlBridge::Tooltip::Hide(this);
     }
+}
+
+void CMyInventory::SyncTexts(bool bagLocked)
+{
+    const auto& bag = UI::Inventory::Bag();
+    const TextInputs inputs{I18N::LocaleIndex(I18N::GetCurrentLocale()), CharacterMachine->Gold, bagLocked,
+                            bag.Price(), bag.IsBuying(), static_cast<int>(m_MyShopMode)};
+    if (m_SyncedTextInputs == inputs)
+        return;
+    m_SyncedTextInputs = inputs;
+
+    auto syncText = [this](Rml::String MyInventoryRmlModel::* field, const char* boundName, const Rml::String& value)
+    {
+        if (m_RmlView.GetModel().*field != value) { m_RmlView.GetModel().*field = value; m_RmlView.MarkDirty(boundName); }
+    };
+    auto syncWide = [&](Rml::String MyInventoryRmlModel::* field, const char* boundName, const wchar_t* text)
+    {
+        syncText(field, boundName, StringUtils::WideToNarrow(text));
+    };
+
+    syncWide(&MyInventoryRmlModel::title, "title", I18N::Game::Inventory);
+    if (bagLocked)
+    {
+        syncWide(&MyInventoryRmlModel::bagLockedText, "bag_locked_text", I18N::Game::BagPageLocked);
+        syncWide(&MyInventoryRmlModel::bagCellsText, "bag_cells_text", I18N::Game::BagPageCells);
+        wchar_t price[64] = {};
+        ConvertGold(static_cast<double>(inputs.bagPrice), price);
+        wchar_t priceBuf[128] = {};
+        mu_swprintf(priceBuf, I18N::Game::BagPageBuy, price);
+        syncWide(&MyInventoryRmlModel::bagPriceText, "bag_price_text", priceBuf);
+        syncWide(&MyInventoryRmlModel::bagBuyLabel, "bag_buy_label",
+                 inputs.bagBuying ? I18N::Game::BagPageBuying : I18N::Game::BagPageBuyConfirm);
+    }
+    syncWide(&MyInventoryRmlModel::bagSortTooltip, "bag_sort_tooltip", I18N::Game::InventorySortHint);
+
+    wchar_t goldBuf[256] = { 0, };
+    ConvertGold(inputs.zen, goldBuf);
+    syncWide(&MyInventoryRmlModel::goldText, "gold_text", goldBuf);
+    syncText(&MyInventoryRmlModel::goldTier, "gold_tier",
+             UI::RmlBridge::GoldTierKey(GameLogic::Items::ClassifyGoldAmount(inputs.zen)));
+
+    syncWide(&MyInventoryRmlModel::repairTooltip, "repair_tooltip", I18N::Game::RepairL);
+    syncWide(&MyInventoryRmlModel::myShopTooltip, "myshop_tooltip",
+        m_MyShopMode == MYSHOP_MODE_OPEN ? I18N::Game::OpenPersonalStoreS : I18N::Game::ClosePersonalStoreS);
+    syncWide(&MyInventoryRmlModel::exitTooltip, "exit_tooltip", I18N::Game::CloseIV);
+    syncWide(&MyInventoryRmlModel::jewelBankTooltip, "jewel_bank_tooltip", I18N::Game::JewelBankButtonK);
+
+    wchar_t setOptionLabelBuf[128];
+    mu_swprintf(setOptionLabelBuf, L"[%ls]", I18N::Game::SetOption);
+    syncWide(&MyInventoryRmlModel::setOptionLabel, "set_option_label", setOptionLabelBuf);
+    wchar_t socketOptionLabelBuf[128];
+    mu_swprintf(socketOptionLabelBuf, L"[%ls]", I18N::Game::SocketOption);
+    syncWide(&MyInventoryRmlModel::socketOptionLabel, "socket_option_label", socketOptionLabelBuf);
 }
 
 // The document draws everything: the grid's Render() computes its cells and shows its tooltip,

@@ -14028,6 +14028,9 @@
   <data name="ZenAmountAll" xml:space="preserve">
     <value>All</value>
   </data>
+  <data name="PartyInviteNotFound" xml:space="preserve">
+    <value>Player not found. Select a player or type /party Name.</value>
+  </data>
   <data name="JewelBankPacksHint" xml:space="preserve">
     <value>In packs: each 10 comes as one packed jewel, the rest as single jewels.</value>
   </data>

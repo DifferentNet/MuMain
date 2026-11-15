@@ -1929,26 +1929,51 @@ struct LayerFace
 };
 static std::vector<LayerFace> s_layerFaces;
 
+// Sets the state a layer face draws with: everything follows from its texture and blend.
+static void SetLayerFaceState(const LayerFace& face)
+{
+    if (face.blend)
+        EnableAlphaBlend();
+    else
+        EnableAlphaBlend3();
+    BindTexture(BITMAP_MAPTILE + face.texture);
+    // A blend face is Atlans' water over the ground (RenderFaceBlend): no grain.
+    SetGroundDetail(!face.blend && !IsWaterTileTexture(face.texture), face.texture);
+    // A shore layer of the water tile gets the water look like the water under it.
+    if (!face.blend && IsWaterTileTexture(face.texture))
+        SetGroundWater(face.texture);
+    mu::GetRenderer().SetTerrainLit(!face.blend && TorchLitGround(face.texture));
+}
+
+// Draws the layer faces in their recorded order, one draw per run of neighbouring faces with the same
+// texture and blend (split every kGroundQuadsPerDraw quads) instead of one per face.
 static void RenderLayerFaces()
 {
+    static std::vector<mu::Vertex3D> run;
+    run.clear();
+    const auto flush = [&]() {
+        if (!run.empty())
+            mu::GetRenderer().RenderQuad3D(run, 0u);
+        run.clear();
+    };
+
     // Depth-tested without writing, so a layer stays on its own ground (same vertices, less or equal)
     // and nearer ground drawn before it still hides it.
     EnableDepthTest();
+    const LayerFace* runFace = nullptr;
     for (const LayerFace& face : s_layerFaces)
     {
-        if (face.blend)
-            EnableAlphaBlend();
-        else
-            EnableAlphaBlend3();
-        BindTexture(BITMAP_MAPTILE + face.texture);
-        // A blend face is Atlans' water over the ground (RenderFaceBlend): no grain.
-        SetGroundDetail(!face.blend && !IsWaterTileTexture(face.texture), face.texture);
-        // A shore layer of the water tile gets the water look like the water under it.
-        if (!face.blend && IsWaterTileTexture(face.texture))
-            SetGroundWater(face.texture);
-        mu::GetRenderer().SetTerrainLit(!face.blend && TorchLitGround(face.texture));
-        mu::GetRenderer().RenderQuad3D(face.vertices, 0u);
+        const bool sameState = runFace && runFace->texture == face.texture && runFace->blend == face.blend;
+        if (!sameState || run.size() >= kGroundQuadsPerDraw * kQuadVertices)
+        {
+            flush();
+            if (!sameState)
+                SetLayerFaceState(face);
+            runFace = &face;
+        }
+        run.insert(run.end(), std::begin(face.vertices), std::end(face.vertices));
     }
+    flush();
     mu::GetRenderer().SetTerrainLit(false);
     SetGroundDetail(false);
     s_layerFaces.clear();

@@ -59,6 +59,27 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME party_invite_command_tests
+    SOURCES
+        test_party_invite_command.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/PartyInviteCommand.cpp
+)
+
+mu_add_test(
+    NAME skill_resources_tests
+    SOURCES
+        test_skill_resources.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Skills/SkillResources.cpp
+)
+
+mu_add_test(
+    NAME sale_refusal_tests
+    SOURCES
+        test_sale_refusal.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/SaleRefusal.cpp
+)
+
+mu_add_test(
     NAME jewel_unmix_selection_tests
     SOURCES
         test_jewel_unmix_selection.cpp

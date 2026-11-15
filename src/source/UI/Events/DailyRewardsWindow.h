@@ -30,6 +30,12 @@ class CDailyRewardsWindow : public CObject
         TABLE_WIDTH = 170,
         LABEL_WIDTH = 44,
         ITEMS_WIDTH = TABLE_WIDTH - 2 * 4 - LABEL_WIDTH,
+        // The phone view's wider window (daily_rewards.rcss's `@media (theme: mobile)`), where the text keeps the
+        // native size while the panel shrinks, so the lines need the room.
+        PHONE_WINDOW_WIDTH = 270,
+        PHONE_CONTENT_WIDTH = 246,
+        PHONE_TABLE_WIDTH = 250,
+        PHONE_ITEMS_WIDTH = PHONE_TABLE_WIDTH - 2 * 4 - LABEL_WIDTH,
     };
 
 public:

@@ -20,6 +20,7 @@
 #include "Engine/AI/ZzzAI.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "UI/Chat/ChatInput.h"
+#include "UI/Chat/PartyInviteCommand.h"
 #include "UI/Character/OverheadNames.h"
 #include "GameLogic/Combat/ClassAttack.h"
 #include "GameLogic/Combat/SkillCast.h"
@@ -2103,6 +2104,67 @@ bool CheckMacroLimit(wchar_t* Text)
     return  false;
 }
 
+// A player the party command can invite: another live player in sight, not an offline shop's shadow.
+static bool IsPartyInviteCandidate(CHARACTER* c)
+{
+    const OBJECT* o = &c->Object;
+    return o->Live && o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c)
+        && (o->Type == MODEL_PLAYER || c->Change);
+}
+
+// "/party Name" invites that player when they are in sight; "/party" alone the selected player wherever they stand,
+// else the one standing face to face. The server checks no distance, only that the inviter sees the player.
+static void TryInviteToParty(std::wstring_view name)
+{
+    CHARACTER* target = nullptr;
+
+    if (!name.empty())
+    {
+        for (int i = 0; i < MAX_CHARACTERS_CLIENT && target == nullptr; i++)
+        {
+            CHARACTER* c = &CharactersClient[i];
+            if (IsPartyInviteCandidate(c) && UI::Chat::SameCharacterName(c->ID, name))
+            {
+                target = c;
+            }
+        }
+    }
+    else if (SelectedCharacter >= 0 && SelectedCharacter < MAX_CHARACTERS_CLIENT
+        && IsPartyInviteCandidate(&CharactersClient[SelectedCharacter]))
+    {
+        target = &CharactersClient[SelectedCharacter];
+    }
+    else
+    {
+        for (int i = 0; i < MAX_CHARACTERS_CLIENT && target == nullptr; i++)
+        {
+            CHARACTER* c = &CharactersClient[i];
+            OBJECT* o = &c->Object;
+            if (IsPartyInviteCandidate(c) && abs((c->PositionX) - (Hero->PositionX)) <= 1 && abs((c->PositionY) - (Hero->PositionY)) <= 1)
+            {
+                BYTE Dir1 = (BYTE)((o->Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
+                BYTE Dir2 = (BYTE)((Hero->Object.Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
+                if (abs(Dir1 - Dir2) == 4)
+                {
+                    target = c;
+                }
+            }
+        }
+    }
+
+    if (target == nullptr)
+    {
+        g_pSystemLogBox->AddText(I18N::Game::PartyInviteNotFound, mu::ui::window::TYPE_ERROR_MESSAGE);
+        return;
+    }
+
+    PartyKey = target->Key;
+    SocketClient->ToGameServer()->SendPartyInviteRequest(target->Key);
+    wchar_t message[100];
+    mu_swprintf(message, I18N::Game::YouHaveRequestedSToJoinYourParty, target->ID);
+    g_pSystemLogBox->AddText(message, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+}
+
 bool CheckCommand(wchar_t* Text, bool bMacroText)
 {
     if (g_ConsoleDebug->CheckCommand(Text) == true)
@@ -2490,7 +2552,7 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
             }
             return true;
         }
-        if (wcscmp(Text, I18N::Game::Party256) == 0 || wcsicmp(Text, L"/party") == 0 || wcsicmp(Text, L"/pt") == 0)
+        if (const auto partyArgument = UI::Chat::PartyCommandArgument(Text, I18N::Game::Party256))
         {
             if (gMapManager.InChaosCastle() == true)
             {
@@ -2503,38 +2565,7 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
                 return true;
             }
 
-            if (SelectedCharacter >= 0 && SelectedCharacter < MAX_CHARACTERS_CLIENT)
-            {
-                CHARACTER* c = &CharactersClient[SelectedCharacter];
-                OBJECT* o = &c->Object;
-                if (o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change) && abs((c->PositionX) - (Hero->PositionX)) <= 1 && abs((c->PositionY) - (Hero->PositionY)) <= 1)
-                {
-                    PartyKey = c->Key;
-                    SocketClient->ToGameServer()->SendPartyInviteRequest(c->Key);
-                    wchar_t Text[100];
-                    mu_swprintf(Text, I18N::Game::YouHaveRequestedSToJoinYourParty, c->ID);
-                    g_pSystemLogBox->AddText(Text, mu::ui::window::TYPE_SYSTEM_MESSAGE);
-                }
-            }
-            else for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
-            {
-                CHARACTER* c = &CharactersClient[i];
-                OBJECT* o = &c->Object;
-                if (o->Live && o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change) && abs((c->PositionX) - (Hero->PositionX)) <= 1 && abs((c->PositionY) - (Hero->PositionY)) <= 1)
-                {
-                    BYTE Dir1 = (BYTE)((o->Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
-                    BYTE Dir2 = (BYTE)((Hero->Object.Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
-                    if (abs(Dir1 - Dir2) == 4)
-                    {
-                        PartyKey = c->Key;
-                        SocketClient->ToGameServer()->SendPartyInviteRequest(c->Key);
-                        wchar_t Text[100];
-                        mu_swprintf(Text, I18N::Game::YouHaveRequestedSToJoinYourParty, c->ID);
-                        g_pSystemLogBox->AddText(Text, mu::ui::window::TYPE_SYSTEM_MESSAGE);
-                        break;
-                    }
-                }
-            }
+            TryInviteToParty(*partyArgument);
             return true;
         }
         // MU Moldova: "/titles" opens the titles window (UI/Events/TitlesWindow.h) instead of the server's list in

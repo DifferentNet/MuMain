@@ -13907,4 +13907,7 @@
   <data name="ZenAmountAll" xml:space="preserve">
     <value>Semua</value>
   </data>
+  <data name="PartyInviteNotFound" xml:space="preserve">
+    <value>Pemain tidak ditemukan. Pilih pemain atau ketik /party Nama.</value>
+  </data>
 </root>

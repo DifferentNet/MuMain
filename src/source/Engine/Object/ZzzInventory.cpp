@@ -1172,66 +1172,62 @@ int64_t ConvertRepairGold(int64_t Gold, int Durability, int MaxDurability, short
     return repairGold;
 }
 
-void RepairAllGold(void)
+// Whether "Repair all" repairs the item: one that can be repaired and has lost durability, as the server decides.
+static bool RepairAllRepairs(ITEM* ip)
+{
+    if (ip == nullptr || ip->Type == -1 || GameLogic::Items::IsRepairBan(ip))
+    {
+        return false;
+    }
+
+    ITEM_ATTRIBUTE* p = &ItemAttribute[ip->Type];
+    return ip->Durability < CalcMaxDurability(ip, p, ip->Level);
+}
+
+// What repairing one item costs at a repair shop: nothing for items it does not repair, nor for lucky items.
+static int64_t RepairAllCostOf(ITEM* ip)
 {
     wchar_t text[100];
 
-    AllRepairGold = 0;
+    if (!RepairAllRepairs(ip) || GameLogic::Items::IsLuckyItemType(ip->Type))
+    {
+        return 0;
+    }
+
+    ITEM_ATTRIBUTE* p = &ItemAttribute[ip->Type];
+    const int maxDurability = CalcMaxDurability(ip, p, ip->Level);
+    return ConvertRepairGold(ItemValue(ip, 2), ip->Durability, maxDurability, ip->Type, text);
+}
+
+bool AnyEquippedItemNeedsRepair()
+{
+    for (int i = 0; i < MAX_EQUIPMENT; ++i)
+    {
+        if (i != EQUIPMENT_HELPER && RepairAllRepairs(&CharacterMachine->Equipment[i]))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+// The server repairs (and charges) only the equipped items and skips the pet slot, which the pet trainer repairs
+// (OpenMU ItemRepairAction.RepairAllItemsAsync), so the sum leaves out the bag and the pet as well.
+void RepairAllGold(void)
+{
+    int64_t total = 0;
 
     for (int i = 0; i < MAX_EQUIPMENT; ++i)
     {
-        if (CharacterMachine->Equipment[i].Type != -1)
+        if (i == EQUIPMENT_HELPER)
         {
-            ITEM* ip = &CharacterMachine->Equipment[i];
-            ITEM_ATTRIBUTE* p = &ItemAttribute[ip->Type];
-
-            int Level = ip->Level;
-            int maxDurability = CalcMaxDurability(ip, p, Level);
-
-            if (GameLogic::Items::IsRepairBan(ip) == true)
-            {
-                continue;
-            }
-
-            //. check durability
-            if (ip->Durability < maxDurability)
-            {
-                int gold = ConvertRepairGold(ItemValue(ip, 2), ip->Durability, maxDurability, ip->Type, text);
-
-                if (GameLogic::Items::IsLuckyItemType(ip->Type))
-                    gold = 0;
-                AllRepairGold += gold;
-            }
+            continue;
         }
+
+        total += RepairAllCostOf(&CharacterMachine->Equipment[i]);
     }
 
-    ITEM* pItem = NULL;
-    for (int i = 0; i < (int)(g_pMyInventory->GetInventoryCtrl()->GetNumberOfItems()); ++i)
-    {
-        pItem = g_pMyInventory->GetInventoryCtrl()->GetItem(i);
-
-        if (pItem)
-        {
-            ITEM_ATTRIBUTE* p = &ItemAttribute[pItem->Type];
-
-            int Level = pItem->Level;
-            int maxDurability = CalcMaxDurability(pItem, p, Level);
-
-            if (GameLogic::Items::IsRepairBan(pItem))
-            {
-                continue;
-            }
-
-            //. check durability
-            if (pItem->Durability < maxDurability)
-            {
-                int gold = ConvertRepairGold(ItemValue(pItem, 2), pItem->Durability, maxDurability, pItem->Type, text);
-                if (GameLogic::Items::IsLuckyItemType(pItem->Type))
-                    gold = 0;
-                AllRepairGold += gold;
-            }
-        }
-    }
+    AllRepairGold = static_cast<int>(total);
 }
 
 int InventoryStartX;

@@ -171,6 +171,9 @@ void ConvertChaosTaxGold(DWORD Gold, wchar_t* Text);
 int64_t CalcSelfRepairCost(int64_t ItemValue, int Durability, int MaxDurability, short Type);
 int64_t ConvertRepairGold(int64_t Gold, int Durability, int MaxDurability, short Type, wchar_t* Text);
 void RepairAllGold(void);
+// Whether "Repair all" has something to repair: an equipped item (not the pet) that can be repaired and lost
+// durability.
+bool AnyEquippedItemNeedsRepair();
 WORD CalcMaxDurability(const ITEM* ip, ITEM_ATTRIBUTE* p, int Level);
 void RenderTipTextList(const int sx, const int sy, int TextNum, int Tab, int iSort = RT3_SORT_CENTER, int iRenderPoint = STRP_NONE, BOOL bUseBG = TRUE);
 

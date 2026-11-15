@@ -14005,4 +14005,7 @@
   <data name="ZenAmountAll" xml:space="preserve">
     <value>Alles</value>
   </data>
+  <data name="PartyInviteNotFound" xml:space="preserve">
+    <value>Spieler nicht gefunden. Wähle einen Spieler oder tippe /party Name.</value>
+  </data>
 </root>

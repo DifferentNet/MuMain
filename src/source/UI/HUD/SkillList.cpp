@@ -21,6 +21,7 @@
 #include "World/MapInfra/MapManager.h"
 #include "Character/CharacterManager.h"
 #include "GameLogic/Skills/SkillManager.h"
+#include "GameLogic/Skills/SkillResources.h"
 #include "UI/HUD/Skills/SkillIconAtlas.h"
 #include "UI/HUD/Skills/SkillTooltip.h"
 #include "UI/Scaling/UITransform.h"
@@ -625,6 +626,16 @@ bool IsHudSkillUsable(ActionSkillType bySkillType)
 namespace
 {
 const Rml::String kNoIconDecorator = "none";
+
+// The mana and AG the skill spends against what the character has (the costs are plain table reads, no text).
+// Infinity Arrow's extra mana per arrow is left out, as the cast code adds it only while the buff is on.
+bool HasHudSkillResources(ActionSkillType skillType)
+{
+    int manaCost = 0;
+    int agCost = 0;
+    gSkillManager.GetSkillInformation(skillType, 1, nullptr, &manaCost, nullptr, &agCost);
+    return GameLogic::Skills::HasResourcesFor(CharacterAttribute->Mana, CharacterAttribute->SkillMana, manaCost, agCost);
+}
 } // namespace
 
 const Rml::String& mu::ui::window::CSkillList::GetSkillIconDecorator(int iIndex)
@@ -645,7 +656,8 @@ const Rml::String& mu::ui::window::CSkillList::GetSkillIconDecorator(int iIndex)
         UI::Skills::Icon::ResolveSkillIcon({.skillType = bySkillType,
                                             .skillUseType = SkillAttribute[bySkillType].SkillUseType,
                                             .magicIcon = SkillAttribute[bySkillType].Magic_Icon,
-                                            .usable = IsHudSkillUsable(bySkillType)});
+                                            .usable = IsHudSkillUsable(bySkillType)
+                                                && (iIndex >= AT_PET_COMMAND_DEFAULT || HasHudSkillResources(bySkillType))});
     // The usability check above stays per call (the grey tint follows it at once); only the text is
     // kept, per atlas cell and state, instead of formatted again each frame.
     return UI::Skills::Icon::IconDecorator(icon);

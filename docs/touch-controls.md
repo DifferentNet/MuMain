@@ -129,7 +129,12 @@ not take the finger: they only show text, over the joystick's corner, the top ro
 The pointer stays where the last tap lifted, so a monster tapped stays Attack's target and an item
 tapped shows its tooltip. A tap on a top-row button or a menu item takes it off the window
 (`Touch::RestPointer`): a window opening where the last tap was would show the tooltip of whatever
-lies there. A pad's pointer is the player's own and stays.
+lies there. So does a pointer a window opens under once the finger is up (Storage after the tap on
+Baz, an NPC's shop after the tap on the NPC): only a window that was not
+shown the frame before counts (one that takes another's place in the same frame too, Storage as the
+NPC's menu closes), so the pointer stays over a window already open, and a window that
+opens under a finger still on the screen (a long press's item card) keeps it too. A pad's pointer is
+the player's own and stays.
 The game draws no pointer sprite for a finger (`RenderCursor`, `Touch::Pointer::FingerHasPointer`):
 none from the start, and none after a tap. A mouse button or the pad pressed since brings it back,
 and the pad's pointer shows whenever it plays one.
