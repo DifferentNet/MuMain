@@ -50,6 +50,9 @@ constexpr const char* GaugeClass = "level-gauge-hit";
 constexpr const char* SlotClass = "equip-slot";
 // The control a window marks for the frame to start on (PadTargetPick::Target::start).
 constexpr const char* StartClass = "pad-start";
+// A window's tabs and its next-page control (TurnPage).
+constexpr const char* PageClass = "pad-page";
+constexpr const char* PageNextClass = "pad-page-next";
 // A cell under an item carries its tint (ItemGridCell::tint), an empty one none.
 constexpr std::string_view TintPrefix = "tint-";
 // An item's cells carry pad-item-<its top-left cell> (CInventoryCtrl::UpdateCells): the frame takes
@@ -281,6 +284,7 @@ private:
         target.slot = element.IsClassSet(SlotClass);
         target.start = element.IsClassSet(StartClass);
         target.gauge = element.IsClassSet(GaugeClass);
+        target.page = element.IsClassSet(PageClass) || element.IsClassSet(PageNextClass);
         // A cell's classes are read once: its tint and its item.
         const Rml::String names = target.cell ? element.GetClassNames() : Rml::String{};
         target.empty = (target.cell && names.find(TintPrefix) == Rml::String::npos)
@@ -508,9 +512,6 @@ void StepGauge(int target, int dx)
 
 namespace
 {
-constexpr const char* PageClass = "pad-page";
-constexpr const char* PageNextClass = "pad-page-next";
-
 bool Usable(Rml::Element& element)
 {
     return element.IsVisible(true) && !element.IsClassSet("hidden") && !element.IsClassSet("locked")
@@ -552,16 +553,21 @@ Rml::Element* NextPageControl(Rml::ElementDocument& document)
     return nullptr;
 }
 
-// The control TurnPage would click for `window` (-1: the first open window with one).
-Rml::Element* PageControlFor(int window)
+// The control TurnPage would click for `window` (-1: the first open window with one), and the window
+// it is in.
+Rml::Element* PageControlFor(int window, int& found)
 {
+    found = -1;
     Rml::Context* context = RmlUiRuntime::Instance().GetContext();
     if (context == nullptr)
         return nullptr;
     if (window >= 0)
     {
         Rml::ElementDocument* document = window < context->GetNumDocuments() ? context->GetDocument(window) : nullptr;
-        return document != nullptr && IsWindow(*document) ? NextPageControl(*document) : nullptr;
+        Rml::Element* control = document != nullptr && IsWindow(*document) ? NextPageControl(*document) : nullptr;
+        if (control != nullptr)
+            found = window;
+        return control;
     }
     for (int i = 0; i < context->GetNumDocuments(); ++i)
     {
@@ -569,22 +575,32 @@ Rml::Element* PageControlFor(int window)
         if (document == nullptr || !IsWindow(*document) || IsDialog(*document))
             continue;
         if (Rml::Element* control = NextPageControl(*document))
+        {
+            found = i;
             return control;
+        }
     }
     return nullptr;
 }
+
+Rml::Element* PageControlFor(int window)
+{
+    int found = -1;
+    return PageControlFor(window, found);
+}
 } // namespace
 
-bool TurnPage(int window)
+int TurnPage(int window)
 {
-    Rml::Element* control = PageControlFor(window);
+    int turned = -1;
+    Rml::Element* control = PageControlFor(window, turned);
     if (control == nullptr && window >= 0)
-        control = PageControlFor(-1);
+        control = PageControlFor(-1, turned);
     if (control == nullptr)
-        return false;
+        return -1;
     control->Click();
     g_pagesSeen.known = false;
-    return true;
+    return turned;
 }
 
 bool HasPages(int window)

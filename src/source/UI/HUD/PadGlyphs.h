@@ -10,10 +10,14 @@
 // trigger {{glyph_lb}} .. {{glyph_rt}}.
 #pragma once
 
+#include "Core/Input/GamepadKind.h"
+#include "UI/HUD/PadButtonNames.h"
+
 #include <RmlUi/Core/DataModelHandle.h>
 #include <RmlUi/Core/Types.h>
 
 #include <functional>
+#include <string>
 
 namespace UI::HUD::PadGlyphs
 {
@@ -36,4 +40,11 @@ void Bind(Rml::DataModelConstructor& constructor, Model& model);
 // Brings the fields to the glyphs shown now (Core::Input::Gamepad::ShownKind()), calling markDirty
 // with each changed field's name.
 void Sync(Model& model, const std::function<void(const char*)>& markDirty);
+
+// The buttons' names in words for a text (UI/HUD/PadButtonNames): Xbox A .. LB .. LS, Menu, View;
+// PlayStation Cross, Circle, Square, Triangle (in the game's language), L1 .. L3, Options, Create;
+// Nintendo B A Y X by place, L R ZL ZR, LS RS, + and -.
+[[nodiscard]] PadButtonNames::Names TextNames(Core::Input::Gamepad::PadKind kind);
+// The text with the names of the glyphs shown now (Core::Input::Gamepad::ShownKind()).
+[[nodiscard]] std::wstring Named(const wchar_t* text);
 } // namespace UI::HUD::PadGlyphs

@@ -325,6 +325,12 @@ The pad is read by place either way, so the bottom button confirms on all three 
 2026-11-13: Nintendo letters only, confirm stays on the bottom). Auto takes the kind of the pad
 pressed last: SDL's type on a PC, else the pad's name (the browser's Gamepad.id with Sony's 054c or
 Nintendo's 057e vendor id, `Core::Input::Gamepad::KindFromName`); the names are `UI/HUD/PadGlyphs`'s.
+The texts name the buttons the same way: Help's pad page, its LB/RB hint, the skill picker's tips and
+the chat's lines say `{A}`, `{B}`, `{X}`, `{Y}`, `{LB}`, `{RB}`, `{LT}`, `{RT}`, `{LS}`, `{RS}`, `{MENU}`
+and `{VIEW}` in all 11 languages, and `PadGlyphs::TextNames` puts in the pad in hand's names (Xbox
+letters; PlayStation Cross, Circle, Square, Triangle in the player's language, L1 R1 L2 R2 L3 R3,
+Options and Create; Nintendo B A Y X by place, L R ZL ZR, + and -), through the pure
+`UI/HUD/PadButtonNames` (tests: `tests/ui/test_pad_button_names.cpp`).
 In the phone view
 the pad replaces the PC bar as touch does (style flag `mobile-hud`). Without touch the joystick is not drawn.
 
@@ -359,7 +365,9 @@ was last on. Closing its window (B) ends it; Menu in it goes to the full menu of
 what it does, a page for the world and one for the windows, with the glyphs of the pad in hand. It
 shows once by itself, at the first press of the pad in a safe zone with no window open, so never over
 a fight (`[UI] GamepadCardSeen`; it replaced the long line the system log said), and opens from the
-hub's Controls tab. LB and RB or the d-pad's sides turn its page, B, A or Menu closes it; opened from
+hub's Controls tab. With touch on (five skill buttons) its row says "Skills 4 and 5" and draws RT with
+X and Y alone; without touch, "Skills 4–6" with X, Y and B (`TouchControls::SkillButtonsInPlay`, as
+Help's pad page and the picker's tips). LB and RB or the d-pad's sides turn its page, B, A or Menu closes it; opened from
 the hub, LB and RB turn the hub's tabs and the d-pad's sides its page. A key, a click or a finger
 closes it.
 
@@ -373,7 +381,9 @@ view, a step further scrolls the list. The frame glides to the next target in ab
 when it was hidden or the move is over half the screen), and each hop ticks softly (the menu's move
 sound, not on hops faster than every 100 ms). As a window opens or a tab turns, the frame starts on its item
 cell nearest the top-left corner, or without cells on the target nearest it (a tab before the close
-button); a window that opens within 0.75 s after, before the frame moved (an NPC shop, its goods
+button). After RT turns a page or tab, the frame starts on that window's first target past its page
+controls (the new page's first cell or button, not a tab: `PadFrame::SnapToPage`), never on another
+window; a window that opens within 0.75 s after, before the frame moved (an NPC shop, its goods
 sent by the server after the inventory opened), takes it on the same way; when its target goes away, it
 goes to the nearest one. While a message box or a menu over the windows is up (the item card),
 the frame rests only on it. The right stick still moves the pointer (shown while off every target, at
@@ -396,7 +406,7 @@ tabs:
 | Y with an item on the cursor | Drops it to the ground under the hero (refused, as with the mouse, for expensive, bound and reinforced items) |
 | LB, RB | The hub's tabs (the help's pages with the help open) |
 | RB (no hub, two or more windows open) | The frame goes to the next window, left to right and round, back to where it was in it (`PadFrame::NextWindow`); the legend says so |
-| RT (no hub) | The window's next page or tab: its next-page button, or the tab after the lit one, round (`PadTargets::TurnPage`, the markup's `pad-page` and `pad-page-next` classes); the legend says so |
+| RT | The window's next page or tab: its next-page button, or the tab after the lit one, round (`PadTargets::TurnPage`, the markup's `pad-page` and `pad-page-next` classes); the legend says so, in the hub too when the hub's window has pages (the bag's tabs) |
 | Menu | The menu of every window |
 
 A dialog alone (a trade or party request) keeps the free pointer, and d-pad up and down over a list
@@ -412,7 +422,10 @@ attacks at once; later it stays where the mouse left it, so a window under it st
 lifted finger leaves it off the window: then the centre again). A question (trade, party) takes Menu
 as yes after a second, and A only once A has rested a second, so A tapped in a fight goes on
 attacking. A button still held when the menu closes acts only once released, so the B that closed it does
-not also press Back. The first time a pad is used, the system log says how it plays; Help lists
+not also press Back. In the world, a pad plugged in or pulled out says so in the system log ("Gamepad
+connected", "Gamepad disconnected": `Gamepad::TakeNews`, read by `GamepadControls`); the pads found at
+the start and those the Options switch opens say nothing, and in a browser a pad shows (and says so) at
+its first press. Help lists
 every button on a page of its own while the pad is in use (after the touch page with touch on too),
 and LB and RB turn the pages.
 

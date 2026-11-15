@@ -17,6 +17,7 @@
 #include <cmath>
 #include <cstdint>
 #include <optional>
+#include <utility>
 
 namespace Core::Input::Gamepad
 {
@@ -58,6 +59,8 @@ bool g_offWhenPutDown = false;
 bool g_started = false;
 bool g_rumble = true;
 PadKind g_lastKind = PadKind::Xbox;
+// A pad plugged in or out since TakeNews last asked (not the pads open at the start or by the switch).
+PadNews g_news = PadNews::None;
 GlyphChoice g_glyphChoice = GlyphChoice::Auto;
 
 // The pad's kind: SDL's own guess from its vendor and product where it has one (a PC), else its name
@@ -440,9 +443,16 @@ void ProcessEvent(const SDL_Event& event)
     switch (event.type)
     {
     case SDL_EVENT_GAMEPAD_ADDED:
+    {
+        const bool known = FindPad(event.gdevice.which) != nullptr;
         AddPad(event.gdevice.which);
+        if (!known && FindPad(event.gdevice.which) != nullptr)
+            g_news = PadNews::Connected;
         break;
+    }
     case SDL_EVENT_GAMEPAD_REMOVED:
+        if (FindPad(event.gdevice.which) != nullptr)
+            g_news = PadNews::Disconnected;
         RemovePad(event.gdevice.which);
         // The last pad unplugged: nothing is left to play, so the off it waited for comes now.
         if (g_offWhenPutDown && !IsConnected())
@@ -482,6 +492,11 @@ void Poll()
             SetAxis(pad, axis, AxisPosition(value));
         }
     }
+}
+
+PadNews TakeNews()
+{
+    return std::exchange(g_news, PadNews::None);
 }
 
 bool IsConnected()

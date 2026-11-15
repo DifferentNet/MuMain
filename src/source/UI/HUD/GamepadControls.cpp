@@ -24,6 +24,7 @@
 #include "Scenes/CharacterScene.h"
 #include "Scenes/SceneCommon.h"
 #include "Scenes/SceneCore.h"
+#include "UI/Chat/ChatMessages.h"
 #include "UI/Chat/MessageType.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/HelpWindow.h"
@@ -833,10 +834,14 @@ void PlayWindowKeys(Presses& presses)
         UI::HUD::PadFrame::NextWindow();
         PlayBuffer(SOUND_CLICK01);
     }
-    if (Take(presses, Button::RightTrigger) && UI::HUD::PadTargets::TurnPage(UI::HUD::PadFrame::CurrentWindow()))
+    if (Take(presses, Button::RightTrigger))
     {
-        UI::HUD::PadFrame::SnapSoon();
-        PlayBuffer(SOUND_CLICK01);
+        const int turned = UI::HUD::PadTargets::TurnPage(UI::HUD::PadFrame::CurrentWindow());
+        if (turned >= 0)
+        {
+            UI::HUD::PadFrame::SnapToPage(turned);
+            PlayBuffer(SOUND_CLICK01);
+        }
     }
 }
 
@@ -1489,6 +1494,17 @@ void FeelGains(bool playing)
         Pad::Rumble(HighlightLow, HighlightHigh, HighlightMilliseconds);
 }
 
+// A pad plugged in or pulled out says so in the system log, in the world only: a pad lost mid-fight
+// otherwise just leaves the hero standing. Before the world (the pads found at the start) it is no news.
+void SayPadNews(bool inWorld)
+{
+    const Pad::PadNews news = Pad::TakeNews();
+    if (!inWorld || news == Pad::PadNews::None)
+        return;
+    UI::Chat::PostSystem(news == Pad::PadNews::Connected ? I18N::Game::PadConnected : I18N::Game::PadDisconnected,
+                         mu::ui::window::TYPE_SYSTEM_MESSAGE);
+}
+
 // What the overlay shows this frame: the frame, the hub's tabs, the legend over a game window, the
 // pickup prompt under the drop d-pad down would take.
 UI::HUD::PadOverlay::View OverlayView(bool playing)
@@ -1519,9 +1535,11 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
         view.legend = false;
         view.frame = false;
     }
-    if (view.legend && !UI::HUD::PadHub::IsOpen())
+    if (view.legend)
     {
-        view.legendWindows = UI::HUD::PadFrame::WindowCount() >= 2;
+        // In the hub RB turns the hub's own tabs, so the next window is not said there; RT turns a page
+        // there too (the hub's window's own tabs).
+        view.legendWindows = !UI::HUD::PadHub::IsOpen() && UI::HUD::PadFrame::WindowCount() >= 2;
         view.legendPages = UI::HUD::PadTargets::HasPages(UI::HUD::PadFrame::CurrentWindow());
     }
     using Legend = UI::HUD::PadOverlay::View::Legend;
@@ -1628,6 +1646,7 @@ void Update()
     const bool playing = g_state.inUse && !g_state.typing;
     FeelBlows(g_state.inUse && g_state.inWorld && IsInWorld());
     FeelGains(g_state.inUse && g_state.inWorld && IsInWorld());
+    SayPadNews(IsInWorld());
     UI::HUD::PadOverlay::Update(OverlayView(playing), g_state.frameSeconds);
 }
 

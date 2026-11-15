@@ -80,6 +80,15 @@ void ProcessEvent(const SDL_Event& event);
 void Poll();
 
 [[nodiscard]] bool IsConnected();
+// A pad plugged in or pulled out since the last call (the last of them), then None: the game says it
+// in the system log. The pads open at the start or by the Options switch are no news.
+enum class PadNews : std::uint8_t
+{
+    None,
+    Connected,
+    Disconnected,
+};
+[[nodiscard]] PadNews TakeNews();
 // Whether a pad pressed a button or pushed a stick half way out since the last key, mouse button or
 // finger press. A worn stick drifting near its centre does not take the game from the mouse.
 [[nodiscard]] bool WasUsedLast();

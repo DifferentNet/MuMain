@@ -13254,61 +13254,61 @@
     <value>點這裡：關閉</value>
   </data>
   <data name="PadHelpTitle" xml:space="preserve">
-    <value>遊戲手把（Xbox 配置）</value>
+    <value>遊戲手把</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>左搖桿：行走。右搖桿：輕撥選下一個目標（向右較遠，向左較近）；在視窗中為自由游標</value>
+    <value>左搖桿：行走。右搖桿：朝目標推動以選取，推住不放則持續朝該方向前進；在視窗中為自由游標</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
-    <value>A：點一下攻擊目標一次，按住持續戰鬥</value>
+    <value>{A}：輕按攻擊目標一次，按住持續戰鬥；附近沒有怪物時，撿取（按住）或與 NPC 對話</value>
   </data>
   <data name="PadHelpSkills" xml:space="preserve">
-    <value>X、Y、B：三個技能按鈕。按住 RT：X 和 Y 施放技能 4 和 5。RB：接收你治療與增益的隊友</value>
+    <value>{X}、{Y}、{B}：三個技能按鈕。按住 {RT}：{X}、{Y} 和 {B} 施放技能 4 到 6。{RB}：接受你治療與增益的隊伍成員</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>LS（按下左搖桿，置中）：把技能放到按鈕上</value>
+    <value>{LS}（在中央按下左搖桿）：把技能放到按鈕上</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
-    <value>開著視窗時按 B：返回，關閉最上層的視窗</value>
+    <value>視窗開啟時按 {B}：返回，關閉最上層的視窗</value>
   </data>
   <data name="PadHelpPickUp" xml:space="preserve">
-    <value>D-pad 下：拾取顯示名稱的物品，按住持續拾取；沒有東西可拾取時，與最近的 NPC 交談</value>
+    <value>D-pad 下：撿起顯示名稱的物品，按住持續撿取；沒有東西可撿時，與最近的 NPC 對話</value>
   </data>
   <data name="PadHelpPotions" xml:space="preserve">
-    <value>LB 和 LT：藥水 Q 和 W。D-pad 左：地圖（按住：傳送視窗）。D-pad 右：背包</value>
+    <value>{LB} 和 {LT}：藥水 Q 和 W，按住 {RT} 時為 E 和 R。{RT} + D-pad 上/下：鏡頭拉近與拉遠。D-pad 左：地圖（按住：傳送視窗）。D-pad 右：背包</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>RS（按下右搖桿，置中）：回到最近的目標</value>
+    <value>{RS}（在中央按下右搖桿）：回到最近的目標</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
-    <value>Menu：英雄中心（背包、角色、技能、任務、公會、設定），LB 和 RB 切換分頁。再按一次：所有視窗。按住 Menu：聊天</value>
+    <value>{MENU}：英雄中心（背包、角色、技能、任務、公會、設定），{LB} 和 {RB} 切換分頁。再按一次：所有視窗。按住 {MENU}：聊天</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
     <value>登入與角色畫面：搖桿移動游標</value>
   </data>
   <data name="PadHelpScreensKeys" xml:space="preserve">
-    <value>在那裡 A 是點擊，B 是 Esc，Menu 是 Enter</value>
+    <value>在那裡 {A} 是點擊，{B} 是 Esc，{MENU} 是 Enter</value>
   </data>
   <data name="PadHelpStickGate" xml:space="preserve">
-    <value>通過傳送門或換地圖後，放開搖桿才能再次行走</value>
+    <value>經過傳送門或切換地圖後，放開搖桿即可再次行走</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>在視窗中：以外框取代游標。D-pad 或左搖桿：移到下一格或按鈕（超過最後一列時清單會捲動）。A：拿起、放下、按下。X：裝備、使用。Y：物品卡片。右搖桿：自由游標</value>
+    <value>在視窗中：以外框取代游標。D-pad 或左搖桿：移到下一格或按鈕（超過最後一列時清單會捲動）。{A}：拿起、放下、按下。{X}：裝備、使用。{Y}：物品卡片。{RB}：下一個視窗，{RT}：下一頁或下一個分頁。右搖桿：自由游標</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
-    <value>點一下使用技能一次，按住重複使用。傳送會朝左搖桿指的方向跳躍</value>
+    <value>輕按使用技能一次，按住則重複施放。瞬間移動會朝左搖桿所指的方向跳躍</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
-    <value>D-pad 上：開關 MU Helper，按住：其設定。View：社交（附近玩家：交易、隊伍、公會…）</value>
+    <value>D-pad 上：MU Helper 開關，按住：其設定。{VIEW}：社交（附近玩家：交易、組隊、公會…）</value>
   </data>
   <data name="PadHelpRightClick" xml:space="preserve">
-    <value>在視窗上按 RS：在游標處按右鍵，在屬性的 + 上一次加很多點</value>
+    <value>在視窗上按 {RS}：在游標處右鍵點擊，在屬性的 + 上一次加多點</value>
   </data>
   <data name="PadHelpDialog" xml:space="preserve">
-    <value>詢問（交易、隊伍）：第二次按 Menu 為「是」，A 在靜置一秒後也為「是」。B 為「否」</value>
+    <value>詢問（交易、組隊）：一秒後 {MENU} 為「是」，{A} 在靜置一秒後也是。{B} 為「否」</value>
   </data>
   <data name="PadHelpPagesHint" xml:space="preserve">
-    <value>LB、RB：翻頁。B：關閉</value>
+    <value>{LB}、{RB}：翻頁。{B}：關閉</value>
   </data>
   <data name="PadOpen" xml:space="preserve">
     <value>開啟</value>
@@ -13329,7 +13329,7 @@
     <value>點右側的按鈕來設定。已在按鈕上的技能會互換位置</value>
   </data>
   <data name="PadPickerTip" xml:space="preserve">
-    <value>將游標向右移到按鈕上並按 A 來設定。已在按鈕上的技能會互換位置</value>
+    <value>向右移到按鈕上並按 {A} 來設定。已在按鈕上的技能會互換位置</value>
   </data>
   <data name="TouchPickerClear" xml:space="preserve">
     <value>移除</value>
@@ -13344,7 +13344,7 @@
     <value>選擇</value>
   </data>
   <data name="PadConnected" xml:space="preserve">
-    <value>遊戲手把：A 攻擊，X、Y 和 B 施放技能（按住 RT 再多兩個），LB 和 LT 喝藥水，右搖桿選目標，D-pad 左為地圖、右為背包，Menu 開啟所有視窗（其說明列出所有按鈕）</value>
+    <value>遊戲手把已連接</value>
   </data>
   <data name="PadFriendChosen" xml:space="preserve">
     <value>治療與增益給：</value>
@@ -13356,16 +13356,16 @@
     <value>附近沒有隊友：治療與增益給你自己</value>
   </data>
   <data name="PadChooseFriendFirst" xml:space="preserve">
-    <value>Teleport Ally：請先用 RB 選擇隊友</value>
+    <value>Teleport Ally：請先用 {RB} 選擇隊伍成員</value>
   </data>
   <data name="PadFriendTooFar" xml:space="preserve">
     <value>太遠了：</value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>用游標和 A 選擇技能，再按 X、Y 或 B（按鈕 4 和 5 用 RT + X 或 Y）把它放到那裡</value>
+    <value>用游標和 {A} 選擇技能，再按 {X}、{Y} 或 {B}（按鈕 4 到 6 為 {RT} + {X}、{Y} 或 {B}）放到那裡</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>按 X、Y 或 B（按鈕 4 和 5 用 RT + X 或 Y）把技能放到那裡</value>
+    <value>按 {X}、{Y} 或 {B}（按鈕 4 到 6 為 {RT} + {X}、{Y} 或 {B}）把技能放到那裡</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>輸入</value>
@@ -13380,10 +13380,10 @@
     <value>文字欄位（聊天、登入）：會開啟螢幕鍵盤</value>
   </data>
   <data name="PadHelpKeyboardKeys" xml:space="preserve">
-    <value>D-pad 或搖桿：按鍵。A：按下，X：刪除，Y：空格，Menu：Enter</value>
+    <value>D-pad 或搖桿：按鍵。{A}：按下，{X}：刪除，{Y}：空白，{MENU}：Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>LT：Shift，RT：符號，View：英文／俄文，LB/RB：游標，B：關閉</value>
+    <value>{LT}：Shift，{RT}：符號，{VIEW}：英文/俄文，{LB}/{RB}：游標，{B}：關閉</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>魔力不足</value>
@@ -13413,7 +13413,7 @@
     <value>PK（選單）：點玩家與其戰鬥，之後攻擊和技能會持續對他。你的隊伍不受影響</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK（選單）：右搖桿也能選玩家，A 與其戰鬥，你的隊伍不受影響</value>
+    <value>PK（選單）：右搖桿也會選取玩家，{A} 與他們戰鬥，你的隊伍不受波及</value>
   </data>
   <data name="TouchShopTapAgainToBuy" xml:space="preserve">
     <value>再點一次物品即可購買。</value>
@@ -13501,6 +13501,135 @@
   </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>請先卸下該處穿戴的物品</value>
+  </data>
+  <data name="PadHelpSkillsFive" xml:space="preserve">
+    <value>{X}、{Y}、{B}：三個技能按鈕。按住 {RT}：{X} 和 {Y} 施放技能 4 和 5。{RB}：接受你治療與增益的隊伍成員</value>
+  </data>
+  <data name="PadDisconnected" xml:space="preserve">
+    <value>遊戲手把已中斷連接</value>
+  </data>
+  <data name="PadBindPickFive" xml:space="preserve">
+    <value>用游標和 {A} 選擇技能，再按 {X}、{Y} 或 {B}（按鈕 4 和 5 為 {RT} + {X} 或 {Y}）放到那裡</value>
+  </data>
+  <data name="PadBindPlaceFive" xml:space="preserve">
+    <value>按 {X}、{Y} 或 {B}（按鈕 4 和 5 為 {RT} + {X} 或 {Y}）把技能放到那裡</value>
+  </data>
+  <data name="PadNameCross" xml:space="preserve">
+    <value>叉</value>
+  </data>
+  <data name="PadNameCircle" xml:space="preserve">
+    <value>圈</value>
+  </data>
+  <data name="PadNameSquare" xml:space="preserve">
+    <value>方</value>
+  </data>
+  <data name="PadNameTriangle" xml:space="preserve">
+    <value>三角</value>
+  </data>
+  <data name="PadDialogYes" xml:space="preserve">
+    <value>是 / 確定</value>
+  </data>
+  <data name="PadDialogNo" xml:space="preserve">
+    <value>否 / 取消</value>
+  </data>
+  <data name="PadNextWindow" xml:space="preserve">
+    <value>視窗</value>
+  </data>
+  <data name="PadNextPage" xml:space="preserve">
+    <value>頁面</value>
+  </data>
+  <data name="PadCardTitle" xml:space="preserve">
+    <value>遊戲手把操作</value>
+  </data>
+  <data name="PadCardWorld" xml:space="preserve">
+    <value>在世界中</value>
+  </data>
+  <data name="PadCardWindows" xml:space="preserve">
+    <value>在視窗中</value>
+  </data>
+  <data name="PadCardPage" xml:space="preserve">
+    <value>頁面</value>
+  </data>
+  <data name="PadCardWalk" xml:space="preserve">
+    <value>行走</value>
+  </data>
+  <data name="PadCardTarget" xml:space="preserve">
+    <value>輕撥：下一個目標，按下：最近的目標</value>
+  </data>
+  <data name="PadCardPotions" xml:space="preserve">
+    <value>藥水 Q 和 W</value>
+  </data>
+  <data name="PadCardFriend" xml:space="preserve">
+    <value>下一個要治療與增益的隊伍成員</value>
+  </data>
+  <data name="PadCardHelper" xml:space="preserve">
+    <value>MU Helper 開關（按住：設定）</value>
+  </data>
+  <data name="PadCardPickUp" xml:space="preserve">
+    <value>撿取（按住：連續撿取）</value>
+  </data>
+  <data name="PadCardMap" xml:space="preserve">
+    <value>地圖（按住：傳送）</value>
+  </data>
+  <data name="PadCardBag" xml:space="preserve">
+    <value>背包</value>
+  </data>
+  <data name="PadCardAttack" xml:space="preserve">
+    <value>攻擊、對話、玩家選單</value>
+  </data>
+  <data name="PadCardSkills" xml:space="preserve">
+    <value>技能 1–3</value>
+  </data>
+  <data name="PadCardMoreSkills" xml:space="preserve">
+    <value>技能 4–6</value>
+  </data>
+  <data name="PadCardMoreSkillsFive" xml:space="preserve">
+    <value>技能 4 和 5</value>
+  </data>
+  <data name="PadCardSocial" xml:space="preserve">
+    <value>社交</value>
+  </data>
+  <data name="PadCardMenu" xml:space="preserve">
+    <value>英雄中心（按住：聊天）</value>
+  </data>
+  <data name="PadCardPicker" xml:space="preserve">
+    <value>技能選擇</value>
+  </data>
+  <data name="PadCardFrame" xml:space="preserve">
+    <value>移動外框</value>
+  </data>
+  <data name="PadCardPointer" xml:space="preserve">
+    <value>移動游標</value>
+  </data>
+  <data name="PadCardNextWindow" xml:space="preserve">
+    <value>下一個視窗</value>
+  </data>
+  <data name="PadCardNextPage" xml:space="preserve">
+    <value>下一頁或下一個分頁</value>
+  </data>
+  <data name="PadCardHubTabs" xml:space="preserve">
+    <value>英雄中心分頁</value>
+  </data>
+  <data name="PadCardTake" xml:space="preserve">
+    <value>拿取、按下</value>
+  </data>
+  <data name="PadCardUse" xml:space="preserve">
+    <value>使用或裝備</value>
+  </data>
+  <data name="PadCardItemCard" xml:space="preserve">
+    <value>物品卡片</value>
+  </data>
+  <data name="PadCardClose" xml:space="preserve">
+    <value>關閉、放回</value>
+  </data>
+  <data name="PadCardAllWindows" xml:space="preserve">
+    <value>所有視窗</value>
+  </data>
+  <data name="PadCardTab" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="PadAdjust" xml:space="preserve">
+    <value>調整</value>
   </data>
   <data name="SoftShadowsRow" xml:space="preserve">
     <value>柔和陰影</value>

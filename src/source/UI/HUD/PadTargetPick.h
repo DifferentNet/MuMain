@@ -44,6 +44,9 @@ struct Target
     bool start = false;
     // A slider (a level gauge's hit strip): the d-pad's sides change it instead of leaving it.
     bool gauge = false;
+    // A control that turns its window's page (a "pad-page" tab, a "pad-page-next" arrow): after RT turned
+    // the page the frame starts past them, on the new page's first target.
+    bool page = false;
 };
 
 // The smallest target holding the point (a button over its panel), None for none.

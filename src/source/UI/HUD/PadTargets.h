@@ -36,8 +36,9 @@ void StepGauge(int target, int dx);
 // A window's pages (pad round 3, 2026-11-13): the document at `window` (a target's `window`, or -1 for
 // the first open window that has pages) turns to its next page. Its markup marks them: a "pad-page-next"
 // control (the vault's arrow) is clicked, else of its "pad-page" tabs the one after the "active" or
-// "selected" one, round to the first (a "locked" or "hidden" tab is passed by). False with no pages.
-bool TurnPage(int window);
+// "selected" one, round to the first (a "locked" or "hidden" tab is passed by). The window turned, -1
+// with no pages.
+int TurnPage(int window);
 // Whether TurnPage would find pages there.
 [[nodiscard]] bool HasPages(int window);
 // Whether the target is in the document of this file name (npc_shop.rml).

@@ -5,6 +5,7 @@
 #include "I18N/All.h"
 #include "UI/HUD/PadGlyphs.h"
 #include "UI/HUD/PadHub.h"
+#include "UI/HUD/TouchControls.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 
@@ -80,6 +81,8 @@ struct OverlayModel
     bool cardShown = false;
     int cardPage = 0;
     std::vector<Rml::String> card;
+    // RT + B casts the sixth skill (a pad alone on the lower set): the card shows B in that row and says 4 to 6.
+    bool cardSix = true;
     bool frameShown = false;
     Rml::String frameLeft;
     Rml::String frameTop;
@@ -133,6 +136,7 @@ void BindModel(Rml::DataModelConstructor& c, OverlayModel& model)
     c.Bind("card_shown", &model.cardShown);
     c.Bind("card_page", &model.cardPage);
     c.Bind("card", &model.card);
+    c.Bind("card_six", &model.cardSix);
     c.Bind("frame_shown", &model.frameShown);
     c.Bind("frame_left", &model.frameLeft);
     c.Bind("frame_top", &model.frameTop);
@@ -252,10 +256,15 @@ void SyncCard(OverlayModel& model, const View& view)
     }
     if (!opens && !model.card.empty())
         return;
+    const bool six = UI::HUD::TouchControls::SkillButtonsInPlay() > 5;
+    SyncBool(model.cardSix, six, "card_six");
     std::vector<Rml::String> card;
     card.reserve(CardLabels.size());
     for (const wchar_t* const* label : CardLabels)
-        card.push_back(StringUtils::WideToNarrow(*label));
+    {
+        const bool moreSkills = label == &I18N::Game::PadCardMoreSkills;
+        card.push_back(StringUtils::WideToNarrow(moreSkills && !six ? I18N::Game::PadCardMoreSkillsFive : *label));
+    }
     if (card != model.card)
     {
         model.card = std::move(card);

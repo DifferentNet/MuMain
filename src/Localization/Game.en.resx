@@ -15606,61 +15606,61 @@
     <value>Tap here: close</value>
   </data>
   <data name="PadHelpTitle" xml:space="preserve">
-    <value>Gamepad (Xbox layout)</value>
+    <value>Gamepad</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
     <value>Left stick: walk. Right stick: lean it towards a target to pick it, hold to go on that way; in a window, a free pointer</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
-    <value>A: tap to hit the target once, hold to keep fighting; with no monster near, pick up (hold) or talk to the NPC</value>
+    <value>{A}: tap to hit the target once, hold to keep fighting; with no monster near, pick up (hold) or talk to the NPC</value>
   </data>
   <data name="PadHelpSkills" xml:space="preserve">
-    <value>X, Y, B: the three skill buttons. Hold RT: X, Y and B cast the skills 4 to 6. RB: the party member your heals and buffs go to</value>
+    <value>{X}, {Y}, {B}: the three skill buttons. Hold {RT}: {X}, {Y} and {B} cast the skills 4 to 6. {RB}: the party member your heals and buffs go to</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>LS (click the left stick in, centred): put skills on the buttons</value>
+    <value>{LS} (click the left stick in, centred): put skills on the buttons</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
-    <value>B with a window open: back, closes the window on top</value>
+    <value>{B} with a window open: back, closes the window on top</value>
   </data>
   <data name="PadHelpPickUp" xml:space="preserve">
     <value>D-pad down: pick up the item whose name shows, hold to keep picking up; with nothing to pick up, talk to the nearest NPC</value>
   </data>
   <data name="PadHelpPotions" xml:space="preserve">
-    <value>LB and LT: potions Q and W, with RT held E and R. RT + d-pad up/down: zoom the camera in and out. D-pad left: the map (held: Teleport window). D-pad right: the inventory</value>
+    <value>{LB} and {LT}: potions Q and W, with {RT} held E and R. {RT} + d-pad up/down: zoom the camera in and out. D-pad left: the map (held: Teleport window). D-pad right: the inventory</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>RS (click the right stick in, centred): back to the nearest target</value>
+    <value>{RS} (click the right stick in, centred): back to the nearest target</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
-    <value>Menu: the hero hub (inventory, character, skills, quests, guild, settings), LB and RB turn its tabs. Again: every window. Hold Menu: the chat</value>
+    <value>{MENU}: the hero hub (inventory, character, skills, quests, guild, settings), {LB} and {RB} turn its tabs. Again: every window. Hold {MENU}: the chat</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
     <value>Login and character screens: the sticks move the pointer</value>
   </data>
   <data name="PadHelpScreensKeys" xml:space="preserve">
-    <value>There A clicks, B is Esc, Menu is Enter</value>
+    <value>There {A} clicks, {B} is Esc, {MENU} is Enter</value>
   </data>
   <data name="PadHelpStickGate" xml:space="preserve">
     <value>After a gate or a map change, let go of the stick to walk again</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>In a window: a frame instead of the pointer. D-pad or left stick: to the next cell or button (past the last row, the list scrolls). A: take, put down, press. X: put on, use. Y: the item card. RB: the next window, RT: the next page or tab. Right stick: free pointer</value>
+    <value>In a window: a frame instead of the pointer. D-pad or left stick: to the next cell or button (past the last row, the list scrolls). {A}: take, put down, press. {X}: put on, use. {Y}: the item card. {RB}: the next window, {RT}: the next page or tab. Right stick: free pointer</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
     <value>Tap to use a skill once, hold to repeat it. Teleport jumps the way the left stick points</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
-    <value>D-pad up: MU Helper on and off, held: its settings. View: Social (players around: trade, party, guild...)</value>
+    <value>D-pad up: MU Helper on and off, held: its settings. {VIEW}: Social (players around: trade, party, guild...)</value>
   </data>
   <data name="PadHelpRightClick" xml:space="preserve">
-    <value>RS over a window: right click at the pointer, on a stat's + many points</value>
+    <value>{RS} over a window: right click at the pointer, on a stat's + many points</value>
   </data>
   <data name="PadHelpDialog" xml:space="preserve">
-    <value>A question (trade, party): after a second Menu is Yes, A too once it rested a second. B is No</value>
+    <value>A question (trade, party): after a second {MENU} is Yes, {A} too once it rested a second. {B} is No</value>
   </data>
   <data name="PadHelpPagesHint" xml:space="preserve">
-    <value>LB, RB: turn the pages. B: close</value>
+    <value>{LB}, {RB}: turn the pages. {B}: close</value>
   </data>
   <data name="PadOpen" xml:space="preserve">
     <value>Open</value>
@@ -15681,7 +15681,7 @@
     <value>Tap a button on the right to set it. A skill already on a button swaps places</value>
   </data>
   <data name="PadPickerTip" xml:space="preserve">
-    <value>Move right onto a button and press A to set it. A skill already on a button swaps places</value>
+    <value>Move right onto a button and press {A} to set it. A skill already on a button swaps places</value>
   </data>
   <data name="TouchPickerClear" xml:space="preserve">
     <value>Remove</value>
@@ -15696,7 +15696,7 @@
     <value>Choose</value>
   </data>
   <data name="PadConnected" xml:space="preserve">
-    <value>Gamepad: A attacks, X, Y and B cast skills (hold RT for two more), LB and LT drink potions (with RT, E and R), the right stick picks the target, d-pad left the map, right the inventory, Menu opens every window (its Help lists all the buttons)</value>
+    <value>Gamepad connected</value>
   </data>
   <data name="PadFriendChosen" xml:space="preserve">
     <value>Heals and buffs go to: </value>
@@ -15708,16 +15708,16 @@
     <value>No party member near: heals and buffs go to you</value>
   </data>
   <data name="PadChooseFriendFirst" xml:space="preserve">
-    <value>Teleport Ally: choose a party member with RB first</value>
+    <value>Teleport Ally: choose a party member with {RB} first</value>
   </data>
   <data name="PadFriendTooFar" xml:space="preserve">
     <value>Too far away: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Pick a skill with the pointer and A, then press X, Y or B (RT + X, Y or B for buttons 4 to 6) to put it there</value>
+    <value>Pick a skill with the pointer and {A}, then press {X}, {Y} or {B} ({RT} + {X}, {Y} or {B} for buttons 4 to 6) to put it there</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Press X, Y or B (RT + X, Y or B for buttons 4 to 6) to put the skill there</value>
+    <value>Press {X}, {Y} or {B} ({RT} + {X}, {Y} or {B} for buttons 4 to 6) to put the skill there</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>Type</value>
@@ -15732,10 +15732,10 @@
     <value>Text fields (chat, login): an on-screen keyboard opens</value>
   </data>
   <data name="PadHelpKeyboardKeys" xml:space="preserve">
-    <value>D-pad or stick: keys. A: press, X: erase, Y: space, Menu: Enter</value>
+    <value>D-pad or stick: keys. {A}: press, {X}: erase, {Y}: space, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>LT: shift, RT: symbols, View: English/Russian, LB/RB: cursor, B: close</value>
+    <value>{LT}: shift, {RT}: symbols, {VIEW}: English/Russian, {LB}/{RB}: cursor, {B}: close</value>
   </data>
   <data name="MuHelperSlotClearHint" xml:space="preserve">
     <value>Hold a skill slot to clear it (R3 on a gamepad)</value>
@@ -16158,7 +16158,7 @@
     <value>PK (menu): tap a player to fight them, then Attack and skills keep at them. Your party is spared</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK (menu): the right stick picks players too, A fights them, your party is spared</value>
+    <value>PK (menu): the right stick picks players too, {A} fights them, your party is spared</value>
   </data>
   <data name="GamepadOffLater" xml:space="preserve">
     <value>The gamepad turns off when you next press a key, a mouse button or the screen</value>
@@ -16354,6 +16354,33 @@
   </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Take off the item worn there first</value>
+  </data>
+  <data name="PadHelpSkillsFive" xml:space="preserve">
+    <value>{X}, {Y}, {B}: the three skill buttons. Hold {RT}: {X} and {Y} cast the skills 4 and 5. {RB}: the party member your heals and buffs go to</value>
+  </data>
+  <data name="PadDisconnected" xml:space="preserve">
+    <value>Gamepad disconnected</value>
+  </data>
+  <data name="PadBindPickFive" xml:space="preserve">
+    <value>Pick a skill with the pointer and {A}, then press {X}, {Y} or {B} ({RT} + {X} or {Y} for buttons 4 and 5) to put it there</value>
+  </data>
+  <data name="PadBindPlaceFive" xml:space="preserve">
+    <value>Press {X}, {Y} or {B} ({RT} + {X} or {Y} for buttons 4 and 5) to put the skill there</value>
+  </data>
+  <data name="PadCardMoreSkillsFive" xml:space="preserve">
+    <value>Skills 4 and 5</value>
+  </data>
+  <data name="PadNameCross" xml:space="preserve">
+    <value>Cross</value>
+  </data>
+  <data name="PadNameCircle" xml:space="preserve">
+    <value>Circle</value>
+  </data>
+  <data name="PadNameSquare" xml:space="preserve">
+    <value>Square</value>
+  </data>
+  <data name="PadNameTriangle" xml:space="preserve">
+    <value>Triangle</value>
   </data>
   <data name="HelperPickBoxes" xml:space="preserve">
     <value>Boxes &amp; medals</value>

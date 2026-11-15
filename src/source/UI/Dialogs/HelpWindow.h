@@ -62,6 +62,9 @@ private:
     float m_BuiltTextPx = 0.f;
     bool m_BuiltTouchControls = false;
     bool m_BuiltGamepad = false;
+    // The pad's kind (its button names) and the skill buttons in play the page was built for.
+    int m_BuiltPadKind = -1;
+    int m_BuiltSkillButtons = 0;
 };
 } // namespace mu::ui::window
 

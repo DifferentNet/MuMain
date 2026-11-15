@@ -1204,15 +1204,18 @@ bool WaitingForButton()
     return std::chrono::steady_clock::now() < g_binding.until;
 }
 
-// The line over the skill buttons while one is being set, in the words of the device in use.
-const wchar_t* BindHint(bool gridOpen)
+// The line over the skill buttons while one is being set, in the words of the device in use: a pad's
+// with its buttons' names and as many buttons under RT as are in play.
+std::wstring BindHint(bool gridOpen)
 {
     if (g_binding.pendingSlot >= 0)
         return I18N::Game::TouchBindPickFor;
-    const bool pad = UI::Mobile::IsGamepadInUse();
+    if (!UI::Mobile::IsGamepadInUse())
+        return gridOpen ? I18N::Game::TouchBindPick : I18N::Game::TouchBindPlace;
+    const bool six = ActiveSlots() > SkillArrange::TouchSlotCount;
     if (gridOpen)
-        return pad ? I18N::Game::PadBindPick : I18N::Game::TouchBindPick;
-    return pad ? I18N::Game::PadBindPlace : I18N::Game::TouchBindPlace;
+        return UI::HUD::PadGlyphs::Named(six ? I18N::Game::PadBindPick : I18N::Game::PadBindPickFive);
+    return UI::HUD::PadGlyphs::Named(six ? I18N::Game::PadBindPlace : I18N::Game::PadBindPlaceFive);
 }
 
 void UpdateBinding(ControlsModel& model)
@@ -1243,7 +1246,7 @@ void UpdateBinding(ControlsModel& model)
     for (int slot = 0; slot < SkillButtons; ++slot)
         SetField(model.skillBind[slot], waiting || slot == g_binding.pendingSlot, BindFields[slot]);
     SetField(model.hintShown, gridOpen || waiting, "hint_shown");
-    SyncLabel(model.bindHint, BindHint(gridOpen), "bind_hint");
+    SyncLabel(model.bindHint, BindHint(gridOpen).c_str(), "bind_hint");
 }
 
 // A dialog that waits for an answer (the system menu, a confirmation, a message box): the menu
@@ -1719,8 +1722,9 @@ void ShowPickerPage(ControlsModel& model, const SkillArrange::HotKeys& keys, boo
     else
         mu_swprintf_s(hint, L"%ls", I18N::Game::TouchPickerPickFor);
     SyncLabel(model.pickerHint, hint, "picker_hint");
-    SyncLabel(model.pickerTip, UI::Mobile::IsGamepadInUse() ? I18N::Game::PadPickerTip : I18N::Game::TouchPickerTip,
-              "picker_tip");
+    const std::wstring tip = UI::Mobile::IsGamepadInUse() ? UI::HUD::PadGlyphs::Named(I18N::Game::PadPickerTip)
+                                                          : std::wstring(I18N::Game::TouchPickerTip);
+    SyncLabel(model.pickerTip, tip.c_str(), "picker_tip");
 
     // A highlight on what no longer shows moves to what does.
     int& focus = g_picker.focus;
@@ -2420,6 +2424,11 @@ int ControlAt(float x, float y)
 void SetControlHeld(int control, bool held)
 {
     HoldForPad(control, held);
+}
+
+int SkillButtonsInPlay()
+{
+    return ActiveSlots();
 }
 
 void ReleasePad()

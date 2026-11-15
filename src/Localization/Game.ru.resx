@@ -15205,61 +15205,61 @@
     <value>Нажмите сюда: закрыть</value>
   </data>
   <data name="PadHelpTitle" xml:space="preserve">
-    <value>Геймпад (раскладка Xbox)</value>
+    <value>Геймпад</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
     <value>Левый стик: идти. Правый стик: наклоните к цели — выбрать её, держите — дальше в ту сторону; в окне — свободный курсор</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
-    <value>A: нажмите — ударить цель, держите — продолжать бой; без монстров рядом — поднять (держите) или поговорить с NPC</value>
+    <value>{A}: нажмите — ударить цель, держите — продолжать бой; без монстров рядом — поднять (держите) или поговорить с NPC</value>
   </data>
   <data name="PadHelpSkills" xml:space="preserve">
-    <value>X, Y, B: три кнопки умений. Держите RT: X, Y и B применяют умения 4–6. RB: кого из группы лечить и баффать</value>
+    <value>{X}, {Y}, {B}: три кнопки умений. Держите {RT}: {X}, {Y} и {B} применяют умения 4–6. {RB}: кого из группы лечить и баффать</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>LS (нажмите левый стик, не наклоняя): расставить умения по кнопкам</value>
+    <value>{LS} (нажмите левый стик, не наклоняя): расставить умения по кнопкам</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
-    <value>B при открытом окне: назад, закрывает верхнее окно</value>
+    <value>{B} при открытом окне: назад, закрывает верхнее окно</value>
   </data>
   <data name="PadHelpPickUp" xml:space="preserve">
     <value>Крестовина вниз: поднять вещь, чьё имя показано, держите — собирать дальше; если поднимать нечего — поговорить с ближайшим NPC</value>
   </data>
   <data name="PadHelpPotions" xml:space="preserve">
-    <value>LB и LT: зелья Q и W, с зажатым RT — E и R. RT + крестовина вверх/вниз: приблизить и отдалить камеру. Крестовина влево: карта (удержать: окно телепорта). Крестовина вправо: инвентарь</value>
+    <value>{LB} и {LT}: зелья Q и W, с зажатым {RT} — E и R. {RT} + крестовина вверх/вниз: приблизить и отдалить камеру. Крестовина влево: карта (удержать: окно телепорта). Крестовина вправо: инвентарь</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>RS (нажмите правый стик, не наклоняя): снова ближайшая цель</value>
+    <value>{RS} (нажмите правый стик, не наклоняя): снова ближайшая цель</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
-    <value>Menu: центр героя (инвентарь, персонаж, навыки, квесты, гильдия, настройки), LB и RB листают вкладки. Ещё раз: все окна. Держите Menu — чат</value>
+    <value>{MENU}: центр героя (инвентарь, персонаж, навыки, квесты, гильдия, настройки), {LB} и {RB} листают вкладки. Ещё раз: все окна. Держите {MENU} — чат</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
     <value>Экраны входа и выбора персонажа: стики двигают курсор</value>
   </data>
   <data name="PadHelpScreensKeys" xml:space="preserve">
-    <value>Там A кликает, B = Esc, Menu = Enter</value>
+    <value>Там {A} кликает, {B} = Esc, {MENU} = Enter</value>
   </data>
   <data name="PadHelpStickGate" xml:space="preserve">
     <value>После ворот или смены карты отпустите стик, чтобы снова идти</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>В окне вместо курсора рамка. Крестовина или левый стик: к следующей ячейке или кнопке (за последним рядом список прокручивается). A: взять, положить, нажать. X: надеть, использовать. Y: карточка вещи. RB: следующее окно, RT: следующая страница или вкладка. Правый стик: свободный курсор</value>
+    <value>В окне вместо курсора рамка. Крестовина или левый стик: к следующей ячейке или кнопке (за последним рядом список прокручивается). {A}: взять, положить, нажать. {X}: надеть, использовать. {Y}: карточка вещи. {RB}: следующее окно, {RT}: следующая страница или вкладка. Правый стик: свободный курсор</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
     <value>Нажмите — применить один раз, держите — повторять. Телепорт прыгает туда, куда наклонён левый стик</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
-    <value>Крестовина вверх: MU Helper вкл/выкл, удержать: его настройки. View: «Общение» (игроки рядом: трейд, пати, гильдия...)</value>
+    <value>Крестовина вверх: MU Helper вкл/выкл, удержать: его настройки. {VIEW}: «Общение» (игроки рядом: трейд, пати, гильдия...)</value>
   </data>
   <data name="PadHelpRightClick" xml:space="preserve">
-    <value>RS над окном: правый клик по курсору, на + у стата — много очков</value>
+    <value>{RS} над окном: правый клик по курсору, на + у стата — много очков</value>
   </data>
   <data name="PadHelpDialog" xml:space="preserve">
-    <value>Вопрос (обмен, группа): через секунду Menu — да, A — да, если секунду не нажимали. B — нет</value>
+    <value>Вопрос (обмен, группа): через секунду {MENU} — да, {A} — да, если секунду не нажимали. {B} — нет</value>
   </data>
   <data name="PadHelpPagesHint" xml:space="preserve">
-    <value>LB, RB: листать страницы. B: закрыть</value>
+    <value>{LB}, {RB}: листать страницы. {B}: закрыть</value>
   </data>
   <data name="PadOpen" xml:space="preserve">
     <value>Открыть</value>
@@ -15280,7 +15280,7 @@
     <value>Нажмите кнопку справа, чтобы выбрать её. Умение с другой кнопки поменяется с ней местами</value>
   </data>
   <data name="PadPickerTip" xml:space="preserve">
-    <value>Стиком вправо на кнопку и A, чтобы выбрать её. Умение с другой кнопки поменяется с ней местами</value>
+    <value>Стиком вправо на кнопку и {A}, чтобы выбрать её. Умение с другой кнопки поменяется с ней местами</value>
   </data>
   <data name="TouchPickerClear" xml:space="preserve">
     <value>Убрать</value>
@@ -15295,7 +15295,7 @@
     <value>Выбрать</value>
   </data>
   <data name="PadConnected" xml:space="preserve">
-    <value>Геймпад: A атакует, X, Y и B применяют умения (с зажатым RT ещё два), LB и LT пьют зелья (с RT — E и R), правый стик выбирает цель, крестовина влево — карта, вправо — инвентарь, Menu открывает все окна (там «Помощь» со всеми кнопками)</value>
+    <value>Геймпад подключён</value>
   </data>
   <data name="PadFriendChosen" xml:space="preserve">
     <value>Лечение и бафы на: </value>
@@ -15307,16 +15307,16 @@
     <value>Рядом нет никого из группы: лечение и бафы на себя</value>
   </data>
   <data name="PadChooseFriendFirst" xml:space="preserve">
-    <value>Телепорт союзника: сначала выберите члена группы кнопкой RB</value>
+    <value>Телепорт союзника: сначала выберите члена группы кнопкой {RB}</value>
   </data>
   <data name="PadFriendTooFar" xml:space="preserve">
     <value>Слишком далеко: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Выберите умение курсором и A, потом нажмите X, Y или B (RT + X, Y или B для кнопок 4–6), куда его поставить</value>
+    <value>Выберите умение курсором и {A}, потом нажмите {X}, {Y} или {B} ({RT} + {X}, {Y} или {B} для кнопок 4–6), куда его поставить</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Нажмите X, Y или B (RT + X, Y или B для кнопок 4–6), куда поставить умение</value>
+    <value>Нажмите {X}, {Y} или {B} ({RT} + {X}, {Y} или {B} для кнопок 4–6), куда поставить умение</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>Ввести</value>
@@ -15331,10 +15331,10 @@
     <value>Поля ввода (чат, вход): открывается экранная клавиатура</value>
   </data>
   <data name="PadHelpKeyboardKeys" xml:space="preserve">
-    <value>Крестовина или стик: клавиши. A: нажать, X: стереть, Y: пробел, Menu: Enter</value>
+    <value>Крестовина или стик: клавиши. {A}: нажать, {X}: стереть, {Y}: пробел, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>LT: заглавные, RT: символы, View: англ./рус., LB/RB: курсор, B: закрыть</value>
+    <value>{LT}: заглавные, {RT}: символы, {VIEW}: англ./рус., {LB}/{RB}: курсор, {B}: закрыть</value>
   </data>
   <data name="MuHelperSlotClearHint" xml:space="preserve">
     <value>Чтобы очистить ячейку навыка, удерживайте её (R3 на геймпаде)</value>
@@ -15760,7 +15760,7 @@
     <value>PK (меню): нажмите на игрока, чтобы напасть, дальше атака и умения бьют его. Группу не трогают</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK (меню): правый стик выбирает и игроков, A атакует, группу не трогают</value>
+    <value>PK (меню): правый стик выбирает и игроков, {A} атакует, группу не трогают</value>
   </data>
   <data name="GamepadOffLater" xml:space="preserve">
     <value>Геймпад выключится, когда вы нажмёте клавишу, кнопку мыши или экран</value>
@@ -15992,6 +15992,33 @@
   </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Сначала снимите то, что там надето</value>
+  </data>
+  <data name="PadHelpSkillsFive" xml:space="preserve">
+    <value>{X}, {Y}, {B}: три кнопки умений. Держите {RT}: {X} и {Y} применяют умения 4 и 5. {RB}: кого из группы лечить и баффать</value>
+  </data>
+  <data name="PadDisconnected" xml:space="preserve">
+    <value>Геймпад отключён</value>
+  </data>
+  <data name="PadBindPickFive" xml:space="preserve">
+    <value>Выберите умение курсором и {A}, потом нажмите {X}, {Y} или {B} ({RT} + {X} или {Y} для кнопок 4 и 5), куда его поставить</value>
+  </data>
+  <data name="PadBindPlaceFive" xml:space="preserve">
+    <value>Нажмите {X}, {Y} или {B} ({RT} + {X} или {Y} для кнопок 4 и 5), куда поставить умение</value>
+  </data>
+  <data name="PadCardMoreSkillsFive" xml:space="preserve">
+    <value>Умения 4 и 5</value>
+  </data>
+  <data name="PadNameCross" xml:space="preserve">
+    <value>Крест</value>
+  </data>
+  <data name="PadNameCircle" xml:space="preserve">
+    <value>Круг</value>
+  </data>
+  <data name="PadNameSquare" xml:space="preserve">
+    <value>Квадрат</value>
+  </data>
+  <data name="PadNameTriangle" xml:space="preserve">
+    <value>Треугольник</value>
   </data>
   <data name="HelperPickBoxes" xml:space="preserve">
     <value>Коробки и медали</value>

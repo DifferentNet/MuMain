@@ -28,6 +28,7 @@
 #include "Render/Terrain/ZzzLodTerrain.h"
 #include "UI/Chat/ChatMessages.h"
 #include "UI/Core/WindowSystem.h"
+#include "UI/HUD/PadGlyphs.h"
 #include "UI/HUD/QuickCommandWindow.h"
 #include "World/GameMaps/GMBattleCastle.h"
 #include "World/MapInfra/MapManager.h"
@@ -979,7 +980,8 @@ Progress PadTeleportAlly(ActionSkillType skill)
     if (now >= g_noFriendSaidAt)
     {
         g_noFriendSaidAt = now + NoFriendSayRepeat;
-        UI::Chat::PostSystem(I18N::Game::PadChooseFriendFirst, mu::ui::window::TYPE_ERROR_MESSAGE);
+        UI::Chat::PostSystem(UI::HUD::PadGlyphs::Named(I18N::Game::PadChooseFriendFirst),
+                             mu::ui::window::TYPE_ERROR_MESSAGE);
     }
     return Progress::Done;
 }

@@ -11329,61 +11329,61 @@
     <value>ここをタップ：閉じる</value>
   </data>
   <data name="PadHelpTitle" xml:space="preserve">
-    <value>ゲームパッド（Xbox配置）</value>
+    <value>ゲームパッド</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>左スティック：歩く。右スティック：弾いて次のターゲット（右ほど遠く、左ほど近く）。ウィンドウ内では自由ポインター</value>
+    <value>左スティック：歩く。右スティック：ターゲットの方へ倒すと選択、倒したままでその方向へ進み続ける。ウィンドウ内では自由ポインター</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
-    <value>A：タップでターゲットを1回攻撃、長押しで戦い続ける</value>
+    <value>{A}：押すとターゲットを1回攻撃、長押しで戦い続ける。近くにモンスターがいなければ拾う（長押し）かNPCと話す</value>
   </data>
   <data name="PadHelpSkills" xml:space="preserve">
-    <value>X、Y、B：3つのスキルボタン。RTを押しながら：XとYでスキル4と5。RB：回復とバフを受けるパーティーメンバー</value>
+    <value>{X}、{Y}、{B}：3つのスキルボタン。{RT}長押し：{X}、{Y}、{B}でスキル4〜6。{RB}：回復とバフを送るパーティーメンバー</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>LS（左スティック押し込み、中央）：スキルをボタンに置く</value>
+    <value>{LS}（左スティックを中央で押し込む）：スキルをボタンに割り当てる</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
-    <value>ウィンドウを開いているときのB：戻る、一番上のウィンドウを閉じる</value>
+    <value>ウィンドウが開いているときの{B}：戻る、一番上のウィンドウを閉じる</value>
   </data>
   <data name="PadHelpPickUp" xml:space="preserve">
-    <value>D-pad下：名前が表示されているアイテムを拾う、長押しで拾い続ける。拾うものがなければ最も近いNPCと話す</value>
+    <value>D-pad下：名前が表示されているアイテムを拾う、長押しで拾い続ける。拾う物がなければ一番近いNPCと話す</value>
   </data>
   <data name="PadHelpPotions" xml:space="preserve">
-    <value>LBとLT：ポーションQとW。D-pad左：マップ（長押し：テレポートウィンドウ）。D-pad右：インベントリ</value>
+    <value>{LB}と{LT}：ポーションQとW、{RT}長押し中はEとR。{RT}＋D-pad上/下：カメラのズームイン・アウト。D-pad左：マップ（長押し：テレポートウィンドウ）。D-pad右：インベントリ</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>RS（右スティック押し込み、中央）：最も近いターゲットに戻る</value>
+    <value>{RS}（右スティックを中央で押し込む）：一番近いターゲットに戻る</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
-    <value>Menu：ヒーローハブ（インベントリ、キャラクター、スキル、クエスト、ギルド、設定）。LBとRBでタブを切り替え。もう一度：すべてのウィンドウ。Menu長押し：チャット</value>
+    <value>{MENU}：ヒーローハブ（インベントリ、キャラクター、スキル、クエスト、ギルド、設定）。{LB}と{RB}でタブを切り替え。もう一度：すべてのウィンドウ。{MENU}長押し：チャット</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
     <value>ログイン画面とキャラクター画面：スティックでポインターを動かす</value>
   </data>
   <data name="PadHelpScreensKeys" xml:space="preserve">
-    <value>ここではAがクリック、BがEsc、MenuがEnter</value>
+    <value>そこでは{A}がクリック、{B}がEsc、{MENU}がEnter</value>
   </data>
   <data name="PadHelpStickGate" xml:space="preserve">
-    <value>ゲートやマップ移動のあとは、スティックを離すとまた歩けます</value>
+    <value>ゲートやマップ移動のあとは、スティックを一度離すと再び歩ける</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>ウィンドウ内：ポインターの代わりに枠。D-padまたは左スティック：次のマスやボタンへ（最後の行を過ぎるとリストがスクロール）。A：取る、置く、押す。X：装備、使用。Y：アイテムカード。右スティック：自由ポインター</value>
+    <value>ウィンドウ内：ポインターの代わりに枠。D-padまたは左スティック：次のマスやボタンへ（最後の行を過ぎるとリストがスクロール）。{A}：取る、置く、押す。{X}：装備、使用。{Y}：アイテムカード。{RB}：次のウィンドウ、{RT}：次のページまたはタブ。右スティック：自由ポインター</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
-    <value>タップでスキルを1回使用、長押しで繰り返し。テレポートは左スティックの向きに跳びます</value>
+    <value>押すとスキルを1回使用、長押しで繰り返す。テレポートは左スティックの方向へ跳ぶ</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
-    <value>D-pad上：MU Helperのオン/オフ、長押し：その設定。View：ソーシャル（周りのプレイヤー：取引、パーティー、ギルド…）</value>
+    <value>D-pad上：MU Helperのオン・オフ、長押し：その設定。{VIEW}：ソーシャル（周りのプレイヤー：取引、パーティー、ギルド…）</value>
   </data>
   <data name="PadHelpRightClick" xml:space="preserve">
-    <value>ウィンドウ上でRS：ポインター位置で右クリック、ステータスの＋でまとめて多くのポイント</value>
+    <value>ウィンドウ上の{RS}：ポインター位置で右クリック、ステータスの＋ではまとめて多くのポイント</value>
   </data>
   <data name="PadHelpDialog" xml:space="preserve">
-    <value>質問（取引、パーティー）：2回目のMenuで「はい」、Aも1秒置いたあとなら「はい」。Bは「いいえ」</value>
+    <value>質問（取引、パーティー）：1秒後に{MENU}で「はい」、{A}も1秒触れずにいれば「はい」。{B}は「いいえ」</value>
   </data>
   <data name="PadHelpPagesHint" xml:space="preserve">
-    <value>LB、RB：ページをめくる。B：閉じる</value>
+    <value>{LB}、{RB}：ページをめくる。{B}：閉じる</value>
   </data>
   <data name="PadOpen" xml:space="preserve">
     <value>開く</value>
@@ -11404,7 +11404,7 @@
     <value>右のボタンをタップして設定します。すでにボタンにあるスキルは場所が入れ替わります</value>
   </data>
   <data name="PadPickerTip" xml:space="preserve">
-    <value>ポインターを右のボタンに動かしてAで設定します。すでにボタンにあるスキルは場所が入れ替わります</value>
+    <value>右のボタンへ移動して{A}を押すと割り当て。すでにボタンにあるスキルは場所を入れ替える</value>
   </data>
   <data name="TouchPickerClear" xml:space="preserve">
     <value>外す</value>
@@ -11419,7 +11419,7 @@
     <value>選ぶ</value>
   </data>
   <data name="PadConnected" xml:space="preserve">
-    <value>ゲームパッド：Aで攻撃、X、Y、Bでスキル（RT長押しでさらに2つ）、LBとLTでポーション、右スティックでターゲット選択、D-pad左でマップ、右でインベントリ、Menuですべてのウィンドウ（そのヘルプに全ボタンの一覧）</value>
+    <value>ゲームパッドが接続されました</value>
   </data>
   <data name="PadFriendChosen" xml:space="preserve">
     <value>回復とバフの対象：</value>
@@ -11431,16 +11431,16 @@
     <value>近くにパーティーメンバーがいません：回復とバフは自分に向かいます</value>
   </data>
   <data name="PadChooseFriendFirst" xml:space="preserve">
-    <value>Teleport Ally：先にRBでパーティーメンバーを選んでください</value>
+    <value>Teleport Ally：先に{RB}でパーティーメンバーを選んでください</value>
   </data>
   <data name="PadFriendTooFar" xml:space="preserve">
     <value>遠すぎます：</value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>ポインターとAでスキルを選び、X、Y、B（ボタン4と5はRT＋XまたはY）を押してそこに置きます</value>
+    <value>ポインターと{A}でスキルを選び、{X}、{Y}、{B}（ボタン4〜6は{RT}＋{X}、{Y}、{B}）を押してそこに割り当てる</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>X、Y、B（ボタン4と5はRT＋XまたはY）を押してスキルを置きます</value>
+    <value>{X}、{Y}、{B}（ボタン4〜6は{RT}＋{X}、{Y}、{B}）を押してスキルをそこに割り当てる</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>入力</value>
@@ -11452,13 +11452,13 @@
     <value>スペース</value>
   </data>
   <data name="PadHelpKeyboard" xml:space="preserve">
-    <value>テキスト欄（チャット、ログイン）：画面キーボードが開きます</value>
+    <value>テキスト欄（チャット、ログイン）：画面キーボードが開く</value>
   </data>
   <data name="PadHelpKeyboardKeys" xml:space="preserve">
-    <value>D-padまたはスティック：キー。A：押す、X：消す、Y：スペース、Menu：Enter</value>
+    <value>D-padまたはスティック：キー。{A}：押す、{X}：消す、{Y}：スペース、{MENU}：Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>LT：シフト、RT：記号、View：英語/ロシア語、LB/RB：カーソル、B：閉じる</value>
+    <value>{LT}：シフト、{RT}：記号、{VIEW}：英語/ロシア語、{LB}/{RB}：カーソル、{B}：閉じる</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>マナが足りません</value>
@@ -11488,7 +11488,7 @@
     <value>PK（メニュー）：プレイヤーをタップして戦闘開始、その後は攻撃とスキルがその相手に向かいます。パーティーは対象外です</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK（メニュー）：右スティックでプレイヤーも選べ、Aで戦闘。パーティーは対象外です</value>
+    <value>PK（メニュー）：右スティックはプレイヤーも選び、{A}で戦う。自分のパーティーは対象外</value>
   </data>
   <data name="TouchShopTapAgainToBuy" xml:space="preserve">
     <value>もう一度アイテムをタップすると購入します。</value>
@@ -11576,6 +11576,135 @@
   </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>先にそこに装備しているアイテムを外してください</value>
+  </data>
+  <data name="PadHelpSkillsFive" xml:space="preserve">
+    <value>{X}、{Y}、{B}：3つのスキルボタン。{RT}長押し：{X}と{Y}でスキル4と5。{RB}：回復とバフを送るパーティーメンバー</value>
+  </data>
+  <data name="PadDisconnected" xml:space="preserve">
+    <value>ゲームパッドが切断されました</value>
+  </data>
+  <data name="PadBindPickFive" xml:space="preserve">
+    <value>ポインターと{A}でスキルを選び、{X}、{Y}、{B}（ボタン4と5は{RT}＋{X}、{Y}）を押してそこに割り当てる</value>
+  </data>
+  <data name="PadBindPlaceFive" xml:space="preserve">
+    <value>{X}、{Y}、{B}（ボタン4と5は{RT}＋{X}、{Y}）を押してスキルをそこに割り当てる</value>
+  </data>
+  <data name="PadNameCross" xml:space="preserve">
+    <value>バツ</value>
+  </data>
+  <data name="PadNameCircle" xml:space="preserve">
+    <value>マル</value>
+  </data>
+  <data name="PadNameSquare" xml:space="preserve">
+    <value>シカク</value>
+  </data>
+  <data name="PadNameTriangle" xml:space="preserve">
+    <value>サンカク</value>
+  </data>
+  <data name="PadDialogYes" xml:space="preserve">
+    <value>はい / OK</value>
+  </data>
+  <data name="PadDialogNo" xml:space="preserve">
+    <value>いいえ / キャンセル</value>
+  </data>
+  <data name="PadNextWindow" xml:space="preserve">
+    <value>ウィンドウ</value>
+  </data>
+  <data name="PadNextPage" xml:space="preserve">
+    <value>ページ</value>
+  </data>
+  <data name="PadCardTitle" xml:space="preserve">
+    <value>ゲームパッド操作</value>
+  </data>
+  <data name="PadCardWorld" xml:space="preserve">
+    <value>ワールドで</value>
+  </data>
+  <data name="PadCardWindows" xml:space="preserve">
+    <value>ウィンドウで</value>
+  </data>
+  <data name="PadCardPage" xml:space="preserve">
+    <value>ページ</value>
+  </data>
+  <data name="PadCardWalk" xml:space="preserve">
+    <value>歩く</value>
+  </data>
+  <data name="PadCardTarget" xml:space="preserve">
+    <value>弾く：次のターゲット、押す：一番近いもの</value>
+  </data>
+  <data name="PadCardPotions" xml:space="preserve">
+    <value>ポーションQとW</value>
+  </data>
+  <data name="PadCardFriend" xml:space="preserve">
+    <value>回復とバフを送る次のパーティーメンバー</value>
+  </data>
+  <data name="PadCardHelper" xml:space="preserve">
+    <value>MU Helperのオン・オフ（長押し：設定）</value>
+  </data>
+  <data name="PadCardPickUp" xml:space="preserve">
+    <value>拾う（長押し：拾い集める）</value>
+  </data>
+  <data name="PadCardMap" xml:space="preserve">
+    <value>マップ（長押し：テレポート）</value>
+  </data>
+  <data name="PadCardBag" xml:space="preserve">
+    <value>インベントリ</value>
+  </data>
+  <data name="PadCardAttack" xml:space="preserve">
+    <value>攻撃、会話、プレイヤーメニュー</value>
+  </data>
+  <data name="PadCardSkills" xml:space="preserve">
+    <value>スキル1〜3</value>
+  </data>
+  <data name="PadCardMoreSkills" xml:space="preserve">
+    <value>スキル4〜6</value>
+  </data>
+  <data name="PadCardMoreSkillsFive" xml:space="preserve">
+    <value>スキル4と5</value>
+  </data>
+  <data name="PadCardSocial" xml:space="preserve">
+    <value>ソーシャル</value>
+  </data>
+  <data name="PadCardMenu" xml:space="preserve">
+    <value>ヒーローハブ（長押し：チャット）</value>
+  </data>
+  <data name="PadCardPicker" xml:space="preserve">
+    <value>スキル選択</value>
+  </data>
+  <data name="PadCardFrame" xml:space="preserve">
+    <value>枠を動かす</value>
+  </data>
+  <data name="PadCardPointer" xml:space="preserve">
+    <value>ポインターを動かす</value>
+  </data>
+  <data name="PadCardNextWindow" xml:space="preserve">
+    <value>次のウィンドウ</value>
+  </data>
+  <data name="PadCardNextPage" xml:space="preserve">
+    <value>次のページまたはタブ</value>
+  </data>
+  <data name="PadCardHubTabs" xml:space="preserve">
+    <value>ヒーローハブのタブ</value>
+  </data>
+  <data name="PadCardTake" xml:space="preserve">
+    <value>取る、押す</value>
+  </data>
+  <data name="PadCardUse" xml:space="preserve">
+    <value>使用または装備</value>
+  </data>
+  <data name="PadCardItemCard" xml:space="preserve">
+    <value>アイテムカード</value>
+  </data>
+  <data name="PadCardClose" xml:space="preserve">
+    <value>閉じる、戻す</value>
+  </data>
+  <data name="PadCardAllWindows" xml:space="preserve">
+    <value>すべてのウィンドウ</value>
+  </data>
+  <data name="PadCardTab" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="PadAdjust" xml:space="preserve">
+    <value>調整</value>
   </data>
   <data name="SoftShadowsRow" xml:space="preserve">
     <value>ソフトシャドウ</value>

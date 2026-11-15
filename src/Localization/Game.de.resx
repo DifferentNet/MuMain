@@ -13352,61 +13352,61 @@
     <value>Hier tippen: schließen</value>
   </data>
   <data name="PadHelpTitle" xml:space="preserve">
-    <value>Gamepad (Xbox-Layout)</value>
+    <value>Gamepad</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Linker Stick: laufen. Rechter Stick: antippen für das nächste Ziel (weiter rechts, näher links); in einem Fenster ein freier Zeiger</value>
+    <value>Linker Stick: laufen. Rechter Stick: zu einem Ziel neigen, um es zu wählen, halten, um in diese Richtung weiterzugehen; in einem Fenster ein freier Zeiger</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
-    <value>A: tippen schlägt das Ziel einmal, halten kämpft weiter</value>
+    <value>{A}: tippen schlägt das Ziel einmal, halten kämpft weiter; ohne Monster in der Nähe aufheben (halten) oder mit dem NPC sprechen</value>
   </data>
   <data name="PadHelpSkills" xml:space="preserve">
-    <value>X, Y, B: die drei Fähigkeitsknöpfe. RT halten: X und Y wirken die Fähigkeiten 4 und 5. RB: das Gruppenmitglied, das deine Heilung und Buffs erhält</value>
+    <value>{X}, {Y}, {B}: die drei Fähigkeitsknöpfe. {RT} halten: {X}, {Y} und {B} wirken die Fähigkeiten 4 bis 6. {RB}: das Gruppenmitglied, das deine Heilung und Buffs erhält</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>LS (linken Stick eindrücken, zentriert): Fähigkeiten auf die Knöpfe legen</value>
+    <value>{LS} (linken Stick eindrücken, zentriert): Fähigkeiten auf die Knöpfe legen</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
-    <value>B bei offenem Fenster: zurück, schließt das oberste Fenster</value>
+    <value>{B} bei offenem Fenster: zurück, schließt das oberste Fenster</value>
   </data>
   <data name="PadHelpPickUp" xml:space="preserve">
     <value>D-pad unten: den Gegenstand mit sichtbarem Namen aufheben, halten zum Weitersammeln; gibt es nichts aufzuheben, mit dem nächsten NPC sprechen</value>
   </data>
   <data name="PadHelpPotions" xml:space="preserve">
-    <value>LB und LT: Tränke Q und W. D-pad links: die Karte (gehalten: Teleport-Fenster). D-pad rechts: das Inventar</value>
+    <value>{LB} und {LT}: Tränke Q und W, mit gehaltenem {RT} E und R. {RT} + D-pad oben/unten: Kamera heran- und wegzoomen. D-pad links: die Karte (gehalten: Teleport-Fenster). D-pad rechts: das Inventar</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>RS (rechten Stick eindrücken, zentriert): zurück zum nächsten Ziel</value>
+    <value>{RS} (rechten Stick eindrücken, zentriert): zurück zum nächsten Ziel</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
-    <value>Menu: die Heldenzentrale (Inventar, Charakter, Fähigkeiten, Quests, Gilde, Einstellungen), LB und RB wechseln ihre Tabs. Nochmal: alle Fenster. Menu halten: der Chat</value>
+    <value>{MENU}: die Heldenzentrale (Inventar, Charakter, Fähigkeiten, Quests, Gilde, Einstellungen), {LB} und {RB} wechseln ihre Tabs. Nochmal: alle Fenster. {MENU} halten: der Chat</value>
   </data>
   <data name="PadHelpScreens" xml:space="preserve">
     <value>Login- und Charakterbildschirm: die Sticks bewegen den Zeiger</value>
   </data>
   <data name="PadHelpScreensKeys" xml:space="preserve">
-    <value>Dort klickt A, B ist Esc, Menu ist Enter</value>
+    <value>Dort klickt {A}, {B} ist Esc, {MENU} ist Enter</value>
   </data>
   <data name="PadHelpStickGate" xml:space="preserve">
     <value>Nach einem Tor oder Kartenwechsel den Stick loslassen, um wieder zu laufen</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>In einem Fenster: ein Rahmen statt des Zeigers. D-pad oder linker Stick: zur nächsten Zelle oder zum nächsten Knopf (nach der letzten Zeile scrollt die Liste). A: nehmen, ablegen, drücken. X: anlegen, benutzen. Y: die Gegenstandskarte. Rechter Stick: freier Zeiger</value>
+    <value>In einem Fenster: ein Rahmen statt des Zeigers. D-pad oder linker Stick: zur nächsten Zelle oder zum nächsten Knopf (nach der letzten Zeile scrollt die Liste). {A}: nehmen, ablegen, drücken. {X}: anlegen, benutzen. {Y}: die Gegenstandskarte. {RB}: das nächste Fenster, {RT}: die nächste Seite oder der nächste Tab. Rechter Stick: freier Zeiger</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
     <value>Tippen setzt eine Fähigkeit einmal ein, halten wiederholt sie. Teleport springt in die Richtung, in die der linke Stick zeigt</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
-    <value>D-pad oben: MU Helper an und aus, gehalten: seine Einstellungen. View: Social (Spieler in der Nähe: Handel, Gruppe, Gilde ...)</value>
+    <value>D-pad oben: MU Helper an und aus, gehalten: seine Einstellungen. {VIEW}: Social (Spieler in der Nähe: Handel, Gruppe, Gilde ...)</value>
   </data>
   <data name="PadHelpRightClick" xml:space="preserve">
-    <value>RS über einem Fenster: Rechtsklick am Zeiger, am + eines Werts viele Punkte</value>
+    <value>{RS} über einem Fenster: Rechtsklick am Zeiger, am + eines Werts viele Punkte</value>
   </data>
   <data name="PadHelpDialog" xml:space="preserve">
-    <value>Eine Frage (Handel, Gruppe): nach einem zweiten Menu ist es Ja, A auch, sobald es eine Sekunde ruhte. B ist Nein</value>
+    <value>Eine Frage (Handel, Gruppe): nach einer Sekunde ist {MENU} Ja, {A} auch, sobald es eine Sekunde ruhte. {B} ist Nein</value>
   </data>
   <data name="PadHelpPagesHint" xml:space="preserve">
-    <value>LB, RB: Seiten umblättern. B: schließen</value>
+    <value>{LB}, {RB}: Seiten umblättern. {B}: schließen</value>
   </data>
   <data name="PadOpen" xml:space="preserve">
     <value>Öffnen</value>
@@ -13427,7 +13427,7 @@
     <value>Tippe rechts auf einen Knopf, um ihn zu belegen. Eine Fähigkeit, die schon auf einem Knopf liegt, tauscht den Platz</value>
   </data>
   <data name="PadPickerTip" xml:space="preserve">
-    <value>Bewege den Zeiger nach rechts auf einen Knopf und drücke A, um ihn zu belegen. Eine Fähigkeit, die schon auf einem Knopf liegt, tauscht den Platz</value>
+    <value>Nach rechts auf einen Knopf gehen und {A} drücken, um ihn zu belegen. Eine Fähigkeit, die schon auf einem Knopf liegt, tauscht den Platz</value>
   </data>
   <data name="TouchPickerClear" xml:space="preserve">
     <value>Entfernen</value>
@@ -13442,7 +13442,7 @@
     <value>Wählen</value>
   </data>
   <data name="PadConnected" xml:space="preserve">
-    <value>Gamepad: A greift an, X, Y und B wirken Fähigkeiten (RT halten für zwei weitere), LB und LT trinken Tränke, der rechte Stick wählt das Ziel, D-pad links die Karte, rechts das Inventar, Menu öffnet alle Fenster (seine Hilfe listet alle Tasten)</value>
+    <value>Gamepad verbunden</value>
   </data>
   <data name="PadFriendChosen" xml:space="preserve">
     <value>Heilung und Buffs gehen an: </value>
@@ -13454,16 +13454,16 @@
     <value>Kein Gruppenmitglied in der Nähe: Heilung und Buffs gehen an dich</value>
   </data>
   <data name="PadChooseFriendFirst" xml:space="preserve">
-    <value>Teleport Ally: wähle zuerst mit RB ein Gruppenmitglied</value>
+    <value>Teleport Ally: wähle zuerst mit {RB} ein Gruppenmitglied</value>
   </data>
   <data name="PadFriendTooFar" xml:space="preserve">
     <value>Zu weit weg: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Wähle mit dem Zeiger und A eine Fähigkeit, drücke dann X, Y oder B (RT + X oder Y für Knöpfe 4 und 5), um sie dort zu platzieren</value>
+    <value>Wähle mit dem Zeiger und {A} eine Fähigkeit, drücke dann {X}, {Y} oder {B} ({RT} + {X}, {Y} oder {B} für Knöpfe 4 bis 6), um sie dort zu platzieren</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Drücke X, Y oder B (RT + X oder Y für Knöpfe 4 und 5), um die Fähigkeit dort zu platzieren</value>
+    <value>Drücke {X}, {Y} oder {B} ({RT} + {X}, {Y} oder {B} für Knöpfe 4 bis 6), um die Fähigkeit dort zu platzieren</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>Tippen</value>
@@ -13478,10 +13478,10 @@
     <value>Textfelder (Chat, Login): eine Bildschirmtastatur öffnet sich</value>
   </data>
   <data name="PadHelpKeyboardKeys" xml:space="preserve">
-    <value>D-pad oder Stick: Tasten. A: drücken, X: löschen, Y: Leerzeichen, Menu: Enter</value>
+    <value>D-pad oder Stick: Tasten. {A}: drücken, {X}: löschen, {Y}: Leerzeichen, {MENU}: Enter</value>
   </data>
   <data name="PadHelpKeyboardMore" xml:space="preserve">
-    <value>LT: Umschalt, RT: Symbole, View: Englisch/Russisch, LB/RB: Cursor, B: schließen</value>
+    <value>{LT}: Umschalt, {RT}: Symbole, {VIEW}: Englisch/Russisch, {LB}/{RB}: Cursor, {B}: schließen</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>Nicht genug Mana</value>
@@ -13511,7 +13511,7 @@
     <value>PK (Menü): tippe einen Spieler an, um ihn zu bekämpfen; Angriff und Fähigkeiten bleiben dann an ihm. Deine Gruppe bleibt verschont</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK (Menü): der rechte Stick wählt auch Spieler, A bekämpft sie, deine Gruppe bleibt verschont</value>
+    <value>PK (Menü): der rechte Stick wählt auch Spieler, {A} bekämpft sie, deine Gruppe bleibt verschont</value>
   </data>
   <data name="TouchShopTapAgainToBuy" xml:space="preserve">
     <value>Tippe den Gegenstand erneut an, um ihn zu kaufen.</value>
@@ -13599,6 +13599,135 @@
   </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Lege zuerst den dort getragenen Gegenstand ab</value>
+  </data>
+  <data name="PadHelpSkillsFive" xml:space="preserve">
+    <value>{X}, {Y}, {B}: die drei Fähigkeitsknöpfe. {RT} halten: {X} und {Y} wirken die Fähigkeiten 4 und 5. {RB}: das Gruppenmitglied, das deine Heilung und Buffs erhält</value>
+  </data>
+  <data name="PadDisconnected" xml:space="preserve">
+    <value>Gamepad getrennt</value>
+  </data>
+  <data name="PadBindPickFive" xml:space="preserve">
+    <value>Wähle mit dem Zeiger und {A} eine Fähigkeit, drücke dann {X}, {Y} oder {B} ({RT} + {X} oder {Y} für Knöpfe 4 und 5), um sie dort zu platzieren</value>
+  </data>
+  <data name="PadBindPlaceFive" xml:space="preserve">
+    <value>Drücke {X}, {Y} oder {B} ({RT} + {X} oder {Y} für Knöpfe 4 und 5), um die Fähigkeit dort zu platzieren</value>
+  </data>
+  <data name="PadNameCross" xml:space="preserve">
+    <value>Kreuz</value>
+  </data>
+  <data name="PadNameCircle" xml:space="preserve">
+    <value>Kreis</value>
+  </data>
+  <data name="PadNameSquare" xml:space="preserve">
+    <value>Quadrat</value>
+  </data>
+  <data name="PadNameTriangle" xml:space="preserve">
+    <value>Dreieck</value>
+  </data>
+  <data name="PadDialogYes" xml:space="preserve">
+    <value>Ja / OK</value>
+  </data>
+  <data name="PadDialogNo" xml:space="preserve">
+    <value>Nein / Abbrechen</value>
+  </data>
+  <data name="PadNextWindow" xml:space="preserve">
+    <value>Fenster</value>
+  </data>
+  <data name="PadNextPage" xml:space="preserve">
+    <value>Seite</value>
+  </data>
+  <data name="PadCardTitle" xml:space="preserve">
+    <value>Gamepad-Steuerung</value>
+  </data>
+  <data name="PadCardWorld" xml:space="preserve">
+    <value>In der Welt</value>
+  </data>
+  <data name="PadCardWindows" xml:space="preserve">
+    <value>In Fenstern</value>
+  </data>
+  <data name="PadCardPage" xml:space="preserve">
+    <value>Seite</value>
+  </data>
+  <data name="PadCardWalk" xml:space="preserve">
+    <value>Laufen</value>
+  </data>
+  <data name="PadCardTarget" xml:space="preserve">
+    <value>Neigen: nächstes Ziel, drücken: das nächstgelegene</value>
+  </data>
+  <data name="PadCardPotions" xml:space="preserve">
+    <value>Tränke Q und W</value>
+  </data>
+  <data name="PadCardFriend" xml:space="preserve">
+    <value>Nächstes Gruppenmitglied für Heilung und Buffs</value>
+  </data>
+  <data name="PadCardHelper" xml:space="preserve">
+    <value>MU Helper an und aus (halten: Einstellungen)</value>
+  </data>
+  <data name="PadCardPickUp" xml:space="preserve">
+    <value>Aufheben (halten: einsammeln)</value>
+  </data>
+  <data name="PadCardMap" xml:space="preserve">
+    <value>Karte (halten: Teleport)</value>
+  </data>
+  <data name="PadCardBag" xml:space="preserve">
+    <value>Inventar</value>
+  </data>
+  <data name="PadCardAttack" xml:space="preserve">
+    <value>Angriff, Gespräch, Spielermenü</value>
+  </data>
+  <data name="PadCardSkills" xml:space="preserve">
+    <value>Fähigkeiten 1–3</value>
+  </data>
+  <data name="PadCardMoreSkills" xml:space="preserve">
+    <value>Fähigkeiten 4–6</value>
+  </data>
+  <data name="PadCardMoreSkillsFive" xml:space="preserve">
+    <value>Fähigkeiten 4 und 5</value>
+  </data>
+  <data name="PadCardSocial" xml:space="preserve">
+    <value>Social</value>
+  </data>
+  <data name="PadCardMenu" xml:space="preserve">
+    <value>Heldenzentrale (halten: Chat)</value>
+  </data>
+  <data name="PadCardPicker" xml:space="preserve">
+    <value>Fähigkeitenwahl</value>
+  </data>
+  <data name="PadCardFrame" xml:space="preserve">
+    <value>Rahmen bewegen</value>
+  </data>
+  <data name="PadCardPointer" xml:space="preserve">
+    <value>Zeiger bewegen</value>
+  </data>
+  <data name="PadCardNextWindow" xml:space="preserve">
+    <value>Nächstes Fenster</value>
+  </data>
+  <data name="PadCardNextPage" xml:space="preserve">
+    <value>Nächste Seite oder nächster Tab</value>
+  </data>
+  <data name="PadCardHubTabs" xml:space="preserve">
+    <value>Tabs der Heldenzentrale</value>
+  </data>
+  <data name="PadCardTake" xml:space="preserve">
+    <value>Nehmen, drücken</value>
+  </data>
+  <data name="PadCardUse" xml:space="preserve">
+    <value>Benutzen oder anlegen</value>
+  </data>
+  <data name="PadCardItemCard" xml:space="preserve">
+    <value>Gegenstandskarte</value>
+  </data>
+  <data name="PadCardClose" xml:space="preserve">
+    <value>Schließen, zurücklegen</value>
+  </data>
+  <data name="PadCardAllWindows" xml:space="preserve">
+    <value>Alle Fenster</value>
+  </data>
+  <data name="PadCardTab" xml:space="preserve">
+    <value>Steuerung</value>
+  </data>
+  <data name="PadAdjust" xml:space="preserve">
+    <value>Ändern</value>
   </data>
   <data name="SoftShadowsRow" xml:space="preserve">
     <value>Weiche Schatten</value>
