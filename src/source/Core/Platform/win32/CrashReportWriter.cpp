@@ -34,6 +34,8 @@ constexpr DWORD kStackBufferOverrunCode = 0xC0000409;  // STATUS_STACK_BUFFER_OV
 constexpr wchar_t kFolderName[] = L"CrashReports";
 constexpr wchar_t kFilePrefix[] = L"crash-";
 constexpr wchar_t kFallbackParent[] = L"MuSkynet";
+// The dump helper (a second copy of the game) gets this long; then the writer gives up on the dump.
+constexpr DWORD kHelperTimeoutMs = 15 * 1000;
 
 // Small dumps (a few MB): every thread's stack and registers, the memory those point to, the
 // module list. The game's big global arrays stay out, which keeps the file small enough to send.
@@ -44,6 +46,9 @@ constexpr MINIDUMP_TYPE kDumpType = static_cast<MINIDUMP_TYPE>(MiniDumpWithIndir
 MiniDumpWriteDumpFn s_miniDumpWriteDump = nullptr;
 RtlGetVersionFn s_rtlGetVersion = nullptr;
 wchar_t s_directory[kPathCapacity] = {};
+wchar_t s_helperExe[kPathCapacity] = {};
+bool s_dumpedByHelper = false;
+wchar_t s_helperCommandLine[kPathCapacity * 2 + 96] = {};
 char s_text[kTextCapacity] = {};
 std::size_t s_textLength = 0;
 
@@ -272,7 +277,9 @@ bool FormatPath(wchar_t* out, std::size_t capacity, const wchar_t* baseName, con
     return written > 0 && static_cast<std::size_t>(written) < capacity;
 }
 
-bool WriteDump(const wchar_t* path, const EXCEPTION_POINTERS* exception, DWORD threadId)
+// In-process dump: only when the helper can't be started. dbghelp then works inside the crashed
+// game and pauses its other threads, which can hang it when one of them holds the heap lock.
+bool WriteDumpHere(const wchar_t* path, const EXCEPTION_POINTERS* exception, DWORD threadId)
 {
     if (s_miniDumpWriteDump == nullptr)
         return false;
@@ -291,6 +298,50 @@ bool WriteDump(const wchar_t* path, const EXCEPTION_POINTERS* exception, DWORD t
     if (!written)
         DeleteFileW(path);
     return written != FALSE;
+}
+
+// The dump from outside: dbghelp runs in a second copy of the game (RunDumpHelper), so it takes no
+// lock the crashed game holds. Falls back to WriteDumpHere when the copy can't be started.
+bool WriteDump(const wchar_t* path, const EXCEPTION_POINTERS* exception, DWORD threadId)
+{
+    s_dumpedByHelper = false;
+    if (s_helperExe[0] == L'\0' || exception == nullptr)
+        return WriteDumpHere(path, exception, threadId);
+    std::swprintf(s_helperCommandLine, sizeof(s_helperCommandLine) / sizeof(wchar_t),
+                  L"\"%ls\" %ls %lu %lu %llx \"%ls\"", s_helperExe, kDumpHelperOption, GetCurrentProcessId(), threadId,
+                  static_cast<unsigned long long>(reinterpret_cast<ULONG_PTR>(exception)), path);
+    STARTUPINFOW startup = {};
+    startup.cb = sizeof(startup);
+    PROCESS_INFORMATION process = {};
+    if (!CreateProcessW(s_helperExe, s_helperCommandLine, nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, nullptr,
+                        &startup, &process))
+        return WriteDumpHere(path, exception, threadId);
+    CloseHandle(process.hThread);
+    DWORD exitCode = 1;
+    const bool finished = WaitForSingleObject(process.hProcess, kHelperTimeoutMs) == WAIT_OBJECT_0 &&
+                          GetExitCodeProcess(process.hProcess, &exitCode);
+    if (!finished)
+        TerminateProcess(process.hProcess, 1);
+    CloseHandle(process.hProcess);
+    s_dumpedByHelper = finished && exitCode == 0;
+    if (s_dumpedByHelper)
+        return true;
+    DeleteFileW(path);
+    return false;
+}
+
+// The helper's own clock: should dbghelp hang there, it ends the crashed game (whose threads it
+// paused) and itself, so neither stays frozen.
+struct HelperWatch
+{
+    HANDLE target;
+};
+
+DWORD WINAPI HelperWatchdog(LPVOID parameter)
+{
+    Sleep(kHelperTimeoutMs);
+    TerminateProcess(static_cast<HelperWatch*>(parameter)->target, 1);
+    ExitProcess(2);
 }
 
 bool WriteText(const wchar_t* path)
@@ -357,11 +408,50 @@ const wchar_t* Directory()
     return s_directory;
 }
 
+void SetDumpHelper(const wchar_t* exePath)
+{
+    if (exePath != nullptr && std::wcslen(exePath) < kPathCapacity)
+        wcscpy_s(s_helperExe, exePath);
+    else
+        s_helperExe[0] = L'\0';
+}
+
+int RunDumpHelper(DWORD processId, DWORD threadId, ULONG_PTR exceptionPointers, const wchar_t* dumpPath)
+{
+    HMODULE dbghelp = LoadLibraryExW(L"dbghelp.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+    auto writeDump = dbghelp != nullptr
+                         ? reinterpret_cast<MiniDumpWriteDumpFn>(GetProcAddress(dbghelp, "MiniDumpWriteDump"))
+                         : nullptr;
+    if (writeDump == nullptr)
+        return 1;
+    static HelperWatch watch;
+    watch.target = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE, FALSE, processId);
+    if (watch.target == nullptr)
+        return 1;
+    if (HANDLE watchdog = CreateThread(nullptr, 0, HelperWatchdog, &watch, 0, nullptr))
+        CloseHandle(watchdog);
+    // FILE_SHARE_DELETE: the crashed game deletes a dump that takes too long while this is open.
+    HANDLE file = CreateFileW(dumpPath, GENERIC_WRITE, FILE_SHARE_DELETE, nullptr, CREATE_ALWAYS,
+                              FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (file == INVALID_HANDLE_VALUE)
+        return 1;
+    MINIDUMP_EXCEPTION_INFORMATION info = {};
+    info.ThreadId = threadId;
+    info.ExceptionPointers = reinterpret_cast<PEXCEPTION_POINTERS>(exceptionPointers);
+    info.ClientPointers = TRUE;  // the pointers are the crashed game's
+    const BOOL written = writeDump(watch.target, processId, file, kDumpType, &info, nullptr, nullptr);
+    CloseHandle(file);
+    if (!written)
+        DeleteFileW(dumpPath);
+    return written ? 0 : 1;
+}
+
 bool Write(const EXCEPTION_POINTERS* exception, DWORD threadId, wchar_t* outDumpPath, wchar_t* outTextPath,
            std::size_t pathCapacity, HANDLE textWritten, bool withDump)
 {
     if (s_directory[0] == L'\0' || outDumpPath == nullptr || outTextPath == nullptr)
         return false;
+    CreateDirectoryW(s_directory, nullptr);  // the player may have deleted it while the game ran
     SYSTEMTIME now = {};
     GetLocalTime(&now);
     wchar_t baseName[64] = {};
@@ -396,7 +486,9 @@ bool Write(const EXCEPTION_POINTERS* exception, DWORD threadId, wchar_t* outDump
     const bool dumpWritten = WriteDump(outDumpPath, exception, threadId);
     s_textLength = lengthBeforeDump;
     s_text[s_textLength] = '\0';
-    Append("\r\nDump: %s\r\n", dumpWritten ? "written" : "could not be written");
+    Append("\r\nDump: %s\r\n", !dumpWritten        ? "could not be written"
+                                 : s_dumpedByHelper ? "written by a second copy of the game"
+                                                    : "written inside the game");
     if (!dumpWritten)
         outDumpPath[0] = L'\0';
     return WriteText(outTextPath) || textOk;

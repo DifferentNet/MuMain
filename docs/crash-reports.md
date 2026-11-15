@@ -27,17 +27,20 @@ The newest 10 reports stay; older ones are removed at the next start.
 Access violations, stack overflows, uncaught C++ exceptions, heap corruption, `abort()`, `std::terminate()`, pure
 virtual calls and invalid parameters to C runtime functions, on any thread. Not caught: the process being killed, a
 GPU driver reset that only hangs the game, and fast-fail checks (`/GS` buffer overruns, `__fastfail`), which Windows
-ends without running any handler; those still appear in Windows' own error reporting.
+ends without running any handler; those still appear in Windows' own error reporting. `std::terminate()` on a thread
+other than the main one ends in `abort()`, so its report says "abort() was called".
 
-The report is written by a thread started with the game, which sleeps until a crash. When it can't finish (the
-crashed thread held the heap lock, inside `malloc` on a damaged heap), the game closes without the dialog and with
-the `.txt` only ("Dump: not written"): after 5 seconds when not even the text got written (the crashed thread then
-writes it itself), after 20 seconds when the dump hung (its half-written `.dmp` is removed).
+The text is written by a thread started with the game, which sleeps until a crash. The dump is written by a second
+copy, `Main.exe --crash-dump <pid> <thread> <pointers> <dmp>`, which reads the crashed game from outside, so it takes
+no lock the game holds; the `.txt` says "Dump: written by a second copy of the game". Only when that copy can't be
+started is the dump written inside the game ("written inside the game"). The second copy gives up after 15 seconds
+and then ends the crashed game too. When the writer can't finish (the crashed thread held the heap lock, inside
+`malloc` on a damaged heap), the game closes without the dialog and with the `.txt` only ("Dump: not written"):
+after 5 seconds when not even the text got written (the crashed thread then writes it itself), after 20 seconds when
+the dump hung (its half-written `.dmp` is removed). A `CrashReports` folder deleted while the game ran is made again.
 
-Known limits: the dump is written from inside the crashed game, and `MiniDumpWriteDump` pauses every other thread
-meanwhile, the waiting crashed one included. If a paused thread held the heap lock, the dump and the game stay frozen
-until the player closes it. While the dialog is open, the launcher sees its `Main.exe` as a running game and asks to
-close it first.
+While the dialog is open, the launcher closes it (the dialog copy holds the event `Local\MuSkynet-CrashNotice-<pid>`)
+instead of counting it as a running game.
 
 ## Reading a report
 
@@ -51,4 +54,6 @@ that `Main.pdb`; without it, look up the call stack offsets in `Main.map`.
 (the in-game tests) shows none either. With `MU_CRASH_REPORT_NOTICE_LOG=<file>` the `--crash-notice` copy writes the
 dialog's text (UTF-16) to that file instead of showing it. The `crash_report` test
 (`tests/platform/test_crash_report.py`) crashes `crash_report_probe` each of the ways above and checks the files, then
-crashes it once with the dialog wanted and checks that the second copy names the report.
+checks that each dump was written by the second copy and holds the exception, also for an exception escaping a
+thread and for a `CrashReports` folder deleted before the crash, then crashes it once with the dialog wanted and
+checks that the second copy names the report.

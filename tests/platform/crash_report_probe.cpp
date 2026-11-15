@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <stdexcept>
+#include <string>
+#include <thread>
 
 #include <windows.h>
 
@@ -74,6 +76,21 @@ int main(int argc, char** argv)
     {
         // A crash while this thread holds the heap lock (inside malloc on a damaged heap).
         HeapLock(GetProcessHeap());
+        *static_cast<volatile int*>(nullptr) = 1;
+    }
+    else if (std::strcmp(kind, "thread-exception") == 0)
+    {
+        // An exception that escapes a thread: std::terminate() on that thread, not the main one.
+        std::thread([] { throw std::runtime_error("from a thread"); }).join();
+    }
+    else if (std::strcmp(kind, "folder-gone") == 0)
+    {
+        // The player deleted CrashReports while the game ran (it is empty in the test).
+        wchar_t exe[MAX_PATH] = {};
+        GetModuleFileNameW(nullptr, exe, MAX_PATH);
+        std::wstring folder(exe);
+        folder.resize(folder.find_last_of(L'\\') + 1);
+        RemoveDirectoryW((folder + L"CrashReports").c_str());
         *static_cast<volatile int*>(nullptr) = 1;
     }
     return 0;
