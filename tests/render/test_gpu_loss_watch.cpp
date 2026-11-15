@@ -49,6 +49,31 @@ TEST_CASE("GpuLossWatch: a frame the GPU took starts the count over")
     CHECK(FailFrames(watch, 400, 16, 20000) == 1); // reported again after a recovery
 }
 
+TEST_CASE("GpuLossWatch: a failure that doesn't say the device is gone needs 30 s")
+{
+    GpuLossWatch watch;
+    for (int i = 0; i < 1800; ++i) // 60 fps for 29 s
+        CHECK_FALSE(watch.OnFailure(static_cast<std::uint64_t>(i) * 16, false));
+    CHECK(watch.OnFailure(30000, false));
+
+    GpuLossWatch mixed;
+    CHECK_FALSE(mixed.OnFailure(0, false));
+    for (int i = 1; i < 200; ++i)
+        CHECK_FALSE(mixed.OnFailure(static_cast<std::uint64_t>(i) * 10, false));
+    CHECK(mixed.OnFailure(3000, true)); // one clear failure in the run: 3 s are enough
+}
+
+TEST_CASE("ErrorSaysDeviceGone")
+{
+    using Render::Renderer::ErrorSaysDeviceGone;
+    CHECK(ErrorSaysDeviceGone("vkAcquireNextImageKHR VK_ERROR_DEVICE_LOST"));
+    CHECK(ErrorSaysDeviceGone("The GPU device instance has been suspended. Use GetDeviceRemovedReason"));
+    CHECK(ErrorSaysDeviceGone("DXGI_ERROR_DEVICE_REMOVED"));
+    CHECK_FALSE(ErrorSaysDeviceGone("vkCreateSwapchainKHR VK_ERROR_INITIALIZATION_FAILED"));
+    CHECK_FALSE(ErrorSaysDeviceGone(""));
+    CHECK_FALSE(ErrorSaysDeviceGone(nullptr));
+}
+
 TEST_CASE("GpuLossWatch: logs the first failure and then every 100th")
 {
     GpuLossWatch watch;
