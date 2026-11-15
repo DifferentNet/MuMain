@@ -515,6 +515,8 @@ void UpdateSceneState()
     // buttons of phones and tablets (and the pad's presses) act on what the scene just moved.
     UI::HUD::GamepadControls::Update();
     UI::HUD::TouchControls::Update();
+    // The pad's walk once its buttons acted, as the touch stick's.
+    UI::HUD::GamepadControls::LateUpdate();
     UI::Notices::Move();
     Scenes::LoginOverlay::HideOutsideLoginScene();
     HandleScreenshotCapture();

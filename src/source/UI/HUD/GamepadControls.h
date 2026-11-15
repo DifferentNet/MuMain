@@ -43,14 +43,18 @@
 // While a text field has the keys (the chat, the login), the on-screen keyboard (UI/HUD/PadKeyboard)
 // has the pad and nothing else acts.
 //
-// The pad shakes as the hero takes a hard blow (as hard as it hurt) and long on the death, unless the
-// player chose "On, no vibration" (Options -> Interface -> Gamepad).
+// The pad shakes as the hero takes a hard blow (as hard as it hurt), long on the death, softly on a level
+// up and lightly on a drop the loot filter highlights near the hero, unless the player chose "On, no
+// vibration" (Options -> Interface -> Gamepad). A weaker shake never cuts a stronger one short.
 #pragma once
 
 namespace UI::HUD::GamepadControls
 {
 // Once a frame after the scene moved, before the touch controls act on what it pressed.
 void Update();
+// Once a frame after the touch controls acted: the left stick's walk, so a swing or a cast that
+// stands the hero holds this frame's walk off (as the touch stick's walk waits for its buttons).
+void LateUpdate();
 
 // Whether the pad plays the pointer now (a window open, or off the world): only then does a monster
 // under it count as aimed at.

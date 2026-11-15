@@ -146,10 +146,11 @@ bool NextFoe();
 // 100), else sends the walk again now and then. Called every frame until it says true.
 bool WalkUpTo(int index, float distance);
 
-// Whether a drop the pickup button would take lies around.
+// Whether a drop the pickup button would take lies around, searched afresh (for a press).
 [[nodiscard]] bool HasDropToPick();
-// The drop the pickup button takes next (an index in Items), -1 for none; and where it lies on the
-// screen, in the camera's window pixels. False when it is behind the camera.
+// The drop the pickup button takes next (an index in Items), -1 for none, searched at most every
+// 150 ms (asked every frame for the prompt); and where it lies on the screen, in the camera's window
+// pixels. False when it is behind the camera.
 [[nodiscard]] int NearestDropToPick();
 [[nodiscard]] bool DropOnScreen(int index, float& x, float& y);
 // The nearest NPC within `tiles` tiles, -1 for none; and where it shows on the screen, in the

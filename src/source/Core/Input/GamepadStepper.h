@@ -1,7 +1,7 @@
 // The d-pad and the left stick stepping through a grid of choices (the pad's window menu, its
 // on-screen keyboard): one step as soon as they point somewhere, another after a pause while held,
-// then one at a steady pace. A d-pad tap that began and ended between two frames (a slow phone)
-// still steps.
+// then one at a steady pace, the stick's quicker after a long hold (a long list). A d-pad tap that began and
+// ended between two frames (a slow phone) still steps.
 #pragma once
 
 #include "Core/Input/GamepadInput.h"
@@ -20,6 +20,19 @@ struct Step
     int dy = 0;
 };
 
+// Where the d-pad and the left stick point this frame.
+struct Aim
+{
+    // The d-pad held, a step on one axis or none.
+    Step dpad;
+    StickPosition stick;
+};
+
+// The way to step, a step on one axis or none; `previous` is the way of the last frame. The d-pad
+// wins. The stick leans in at 0.6 and out at 0.4, and keeps its axis until the other is 1.3 times
+// bigger: a stick held near a diagonal or near the lean does not step on its noise.
+[[nodiscard]] Step PointingOf(const Aim& aim, Step previous);
+
 class Stepper
 {
 public:
@@ -27,17 +40,41 @@ public:
 
     Stepper(Clock::duration firstRepeat, Clock::duration repeat);
 
-    // Once a frame: the step to take now, or none.
-    Step Take(const Presses& presses, Clock::time_point now);
+    // Once a frame: the step to take now, or none. After a long hold the stick's pace quickens.
+    Step Take(const Presses& presses, Clock::time_point now) { return Take(ReadAim(), presses, now); }
+    // The same with the pad's state given: the stepping alone, for the tests.
+    Step Take(const Aim& aim, const Presses& presses, Clock::time_point now);
     // Forgets the way it pointed: the next lean steps at once.
     void Reset();
+    // Whether the last step Take gave repeated a way held (not the first of a lean, a press or a tap).
+    [[nodiscard]] bool Repeated() const { return m_Repeated; }
 
 private:
+    // Inline, so the tests of the stepping need no pad.
+    static Aim ReadAim();
+
     Clock::duration m_FirstRepeat;
     Clock::duration m_Repeat;
     Step m_Pointing;
+    Clock::time_point m_HeldSince{};
     Clock::time_point m_Next{};
+    bool m_Repeated = false;
 };
+
+inline Aim Stepper::ReadAim()
+{
+    Aim aim;
+    if (GetButton(Button::DpadLeft).held)
+        aim.dpad = {-1, 0};
+    else if (GetButton(Button::DpadRight).held)
+        aim.dpad = {1, 0};
+    else if (GetButton(Button::DpadUp).held)
+        aim.dpad = {0, -1};
+    else if (GetButton(Button::DpadDown).held)
+        aim.dpad = {0, 1};
+    aim.stick = LeftStick();
+    return aim;
+}
 
 // A button that acts when pressed and again and again while held (Backspace, the caret).
 class RepeatButton

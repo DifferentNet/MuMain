@@ -169,6 +169,22 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Core/Input/GamepadStickClick.cpp
 )
 
+# The stick and the d-pad stepping through a grid: the lean in and out, the axis kept, the pace.
+mu_add_test(
+    NAME gamepad_stepper_tests
+    SOURCES
+        test_gamepad_stepper.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Input/GamepadStepper.cpp
+)
+
+# Which shake of the pad plays: a weaker one during a stronger one is dropped.
+mu_add_test(
+    NAME gamepad_rumble_tests
+    SOURCES
+        test_gamepad_rumble.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Input/GamepadRumble.cpp
+)
+
 # The finger that plays the mouse: what a finger landing or lifting does, when a long press comes.
 mu_add_test(
     NAME touch_gesture_tests

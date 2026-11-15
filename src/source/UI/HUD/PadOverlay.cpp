@@ -5,13 +5,17 @@
 #include "I18N/All.h"
 #include "UI/HUD/PadGlyphs.h"
 #include "UI/HUD/PadHub.h"
+#include "UI/HUD/TouchControls.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 
+#include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/DataModelHandle.h>
 #include <RmlUi/Core/ElementDocument.h>
 
+#include <algorithm>
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <string>
 #include <vector>
@@ -22,6 +26,16 @@ using UI::HUD::PadOverlay::View;
 
 // The frame stands this far outside its target's box, so it rings the cell rather than covering it.
 constexpr float FrameOutset = 2.f;
+// The frame glides to its next target: each frame it goes this share of the way left per this many
+// seconds (1 - e^(-dt / GlideTau)), so it is 95 % there after about 70 ms at any frame rate.
+constexpr float GlideTau = 0.023f;
+// Closer than this (pixels) it stands on the target.
+constexpr float GlideRest = 0.5f;
+// A move further than this share of the screen jumps (the next window far off): a long glide looks slow.
+constexpr float GlideJumpShare = 0.5f;
+// How often the labels are converted again even when they kept their text's address: a language
+// switched may write new texts in place (as TouchControls' labels, 4 a second).
+constexpr auto LabelRefresh = std::chrono::milliseconds(250);
 
 struct TabView
 {
@@ -67,6 +81,8 @@ struct OverlayModel
     bool cardShown = false;
     int cardPage = 0;
     std::vector<Rml::String> card;
+    // RT + B casts the sixth skill (a pad alone on the lower set): the card shows B in that row and says 4 to 6.
+    bool cardSix = true;
     bool frameShown = false;
     Rml::String frameLeft;
     Rml::String frameTop;
@@ -120,6 +136,7 @@ void BindModel(Rml::DataModelConstructor& c, OverlayModel& model)
     c.Bind("card_shown", &model.cardShown);
     c.Bind("card_page", &model.cardPage);
     c.Bind("card", &model.card);
+    c.Bind("card_six", &model.cardSix);
     c.Bind("frame_shown", &model.frameShown);
     c.Bind("frame_left", &model.frameLeft);
     c.Bind("frame_top", &model.frameTop);
@@ -186,8 +203,45 @@ void SyncPixels(Rml::String& field, float value, const char* name)
     SyncString(field, text, name);
 }
 
+// The text each label field was last converted from, so an unchanged one is not converted every frame;
+// forgotten every LabelRefresh.
+struct LabelSeen
+{
+    const Rml::String* field = nullptr;
+    const wchar_t* label = nullptr;
+};
+std::vector<LabelSeen> g_labelsSeen;
+std::chrono::steady_clock::time_point g_labelsSeenAt{};
+
+void ForgetLabelsNowAndThen()
+{
+    const auto now = std::chrono::steady_clock::now();
+    if (now - g_labelsSeenAt < LabelRefresh)
+        return;
+    g_labelsSeenAt = now;
+    g_labelsSeen.clear();
+}
+
+// Whether the field was last converted from this very text; remembers it otherwise.
+bool SeenLabel(const Rml::String& field, const wchar_t* label)
+{
+    const auto seen = std::find_if(g_labelsSeen.begin(), g_labelsSeen.end(),
+                                   [&field](const LabelSeen& entry) { return entry.field == &field; });
+    if (seen == g_labelsSeen.end())
+    {
+        g_labelsSeen.push_back({&field, label});
+        return false;
+    }
+    if (seen->label == label)
+        return true;
+    seen->label = label;
+    return false;
+}
+
 void SyncLabel(Rml::String& field, const wchar_t* label, const char* name)
 {
+    if (SeenLabel(field, label))
+        return;
     SyncString(field, StringUtils::WideToNarrow(label), name);
 }
 
@@ -202,10 +256,15 @@ void SyncCard(OverlayModel& model, const View& view)
     }
     if (!opens && !model.card.empty())
         return;
+    const bool six = UI::HUD::TouchControls::SkillButtonsInPlay() > 5;
+    SyncBool(model.cardSix, six, "card_six");
     std::vector<Rml::String> card;
     card.reserve(CardLabels.size());
     for (const wchar_t* const* label : CardLabels)
-        card.push_back(StringUtils::WideToNarrow(*label));
+    {
+        const bool moreSkills = label == &I18N::Game::PadCardMoreSkills;
+        card.push_back(StringUtils::WideToNarrow(moreSkills && !six ? I18N::Game::PadCardMoreSkillsFive : *label));
+    }
     if (card != model.card)
     {
         model.card = std::move(card);
@@ -213,12 +272,45 @@ void SyncCard(OverlayModel& model, const View& view)
     }
 }
 
-void SyncFrame(OverlayModel& model, const View& view)
+using UI::HUD::PadTargetPick::Box;
+
+// Where the frame is drawn now, on its way to its target's box, and whether it was drawn last frame.
+Box g_frameDrawn;
+bool g_frameWasDrawn = false;
+
+bool FarApart(const Box& a, const Box& b, const Rml::Vector2i& screen)
 {
+    const float dx = std::fabs(a.CentreX() - b.CentreX());
+    const float dy = std::fabs(a.CentreY() - b.CentreY());
+    return dx > static_cast<float>(screen.x) * GlideJumpShare || dy > static_cast<float>(screen.y) * GlideJumpShare;
+}
+
+float Approach(float from, float to, float share)
+{
+    const float at = from + (to - from) * share;
+    return std::fabs(to - at) < GlideRest ? to : at;
+}
+
+// The frame's box this frame: on its target at once when it was hidden or the target is far off, else
+// gliding there.
+Box GlideFrame(const Box& target, bool wasShown, float seconds, const Rml::Vector2i& screen)
+{
+    if (!wasShown || FarApart(g_frameDrawn, target, screen))
+        return target;
+    const float share = 1.f - std::exp(-seconds / GlideTau);
+    return {Approach(g_frameDrawn.left, target.left, share), Approach(g_frameDrawn.top, target.top, share),
+            Approach(g_frameDrawn.right, target.right, share), Approach(g_frameDrawn.bottom, target.bottom, share)};
+}
+
+void SyncFrame(OverlayModel& model, const View& view, float seconds, const Rml::Vector2i& screen)
+{
+    const bool wasShown = g_frameWasDrawn;
+    g_frameWasDrawn = view.frame;
     SyncBool(model.frameShown, view.frame, "frame_shown");
     if (!view.frame)
         return;
-    const UI::HUD::PadTargetPick::Box& box = view.frameBox;
+    g_frameDrawn = GlideFrame(view.frameBox, wasShown, seconds, screen);
+    const Box& box = g_frameDrawn;
     SyncPixels(model.frameLeft, box.left - FrameOutset, "frame_left");
     SyncPixels(model.frameTop, box.top - FrameOutset, "frame_top");
     SyncPixels(model.frameWidth, box.right - box.left + FrameOutset * 2.f, "frame_width");
@@ -249,15 +341,22 @@ void SyncTabs(OverlayModel& model, const View& view)
         return;
     const int count = UI::HUD::PadHub::TabCount();
     bool changed = static_cast<int>(model.tabs.size()) != count;
+    // Tabs added or taken away: their fields are new, none of them converted yet.
+    if (changed)
+        g_labelsSeen.clear();
     model.tabs.resize(count);
     for (int i = 0; i < count; ++i)
     {
         TabView& tab = model.tabs[i];
-        const Rml::String label = StringUtils::WideToNarrow(UI::HUD::PadHub::TabLabel(i));
         const bool active = i == UI::HUD::PadHub::CurrentTab();
-        changed = changed || tab.label != label || tab.active != active;
-        tab.label = label;
+        changed = changed || tab.active != active;
         tab.active = active;
+        const wchar_t* text = UI::HUD::PadHub::TabLabel(i);
+        if (SeenLabel(tab.label, text))
+            continue;
+        const Rml::String label = StringUtils::WideToNarrow(text);
+        changed = changed || tab.label != label;
+        tab.label = label;
     }
     if (changed)
         g_View.MarkDirty("tabs");
@@ -322,11 +421,12 @@ void SyncLegend(OverlayModel& model, const View& view)
 
 namespace UI::HUD::PadOverlay
 {
-void Update(const View& view)
+void Update(const View& view, float seconds)
 {
     const bool shown = view.hub || view.card || view.legend || view.frame || view.prompt || view.characters;
     if (!shown)
     {
+        g_frameWasDrawn = false;
         UI::RmlBridge::SyncDocumentVisibility(g_View.Document(), false);
         return;
     }
@@ -336,7 +436,9 @@ void Update(const View& view)
     if (document == nullptr)
         return;
     OverlayModel& model = g_View.GetModel();
-    SyncFrame(model, view);
+    ForgetLabelsNowAndThen();
+    const Rml::Context* context = document->GetContext();
+    SyncFrame(model, view, seconds, context != nullptr ? context->GetDimensions() : Rml::Vector2i{});
     SyncPrompt(model, view);
     SyncTabs(model, view);
     SyncLegend(model, view);

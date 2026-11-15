@@ -14,6 +14,7 @@
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzInterface.h"
+#include "GameLogic/Items/LootFilterRuntime.h"
 #include "GameLogic/Touch/TouchActions.h"
 #include "I18N/All.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
@@ -23,6 +24,7 @@
 #include "Scenes/CharacterScene.h"
 #include "Scenes/SceneCommon.h"
 #include "Scenes/SceneCore.h"
+#include "UI/Chat/ChatMessages.h"
 #include "UI/Chat/MessageType.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/HelpWindow.h"
@@ -105,7 +107,7 @@ constexpr auto FlickFirstRepeat = std::chrono::milliseconds(450);
 constexpr auto FlickRepeat = std::chrono::milliseconds(250);
 // A pick is felt as a short light tick of the pad's small motor.
 constexpr float PickTickStrength = 0.22f;
-constexpr int PickTickMilliseconds = 28;
+constexpr int PickTickMilliseconds = 40;
 
 // When a pad button presses its control: always, only in the world (no window open: the right stick
 // picks targets), only while a window is open (the right stick plays the pointer), or anywhere but over
@@ -264,12 +266,18 @@ struct State
     Pad::StickClick rightStickClick;
     // The left stick walks, or waits to be let go after a map change (GameLogic::Touch::PauseSteering).
     bool steering = false;
+    // The walk this frame's stick asks for, sent once the buttons acted (LateUpdate): centred to stop.
+    std::optional<Pad::StickPosition> walkStick;
+    // The NPC or player the right stick chose (GameLogic::Touch::MeetIndex), once a frame; -1 for none.
+    int meet = -1;
     // Since when a dialog waits for an answer (UI/Dialogs/ModalDialogs.h).
     bool dialogOpen = false;
     Clock::time_point dialogSince{};
     // The on-screen keyboard has the pad (UI/HUD/PadKeyboard).
     bool typing = false;
     Clock::time_point lastFrame{};
+    // Seconds since the last frame (FrameSeconds), for the overlay's glide.
+    float frameSeconds = 0.f;
     Pad::Stepper menuStepper{MenuFirstRepeat, MenuRepeat};
 };
 State g_state;
@@ -389,6 +397,7 @@ void FollowPress(SDL_Window* window, PointerPress& press, const PointerPress& ot
 
 void StopWalking()
 {
+    g_state.walkStick.reset();
     if (!g_state.steering)
         return;
     GameLogic::Touch::StopSteering();
@@ -399,21 +408,45 @@ void StopWalking()
 // the walk stops, and the push waits until the stick is let go or centred.
 void PauseWalking()
 {
+    g_state.walkStick.reset();
     if (g_state.steering)
         GameLogic::Touch::PauseSteering();
 }
 
 // A push past the edge of the dead zone walks; a worn stick resting there does not (Pad::IsPushed).
+// The walk waits until the buttons acted (ApplyWalk), as the touch stick's: a swing or a cast that
+// stands the hero holds this frame's walk off, rather than a walk breaking the fight off first.
 void Walk(Pad::StickPosition stick)
 {
     if (!Pad::IsPushed(stick, g_state.steering))
     {
         GameLogic::Touch::SetPadAim(0.f, 0.f);
-        StopWalking();
+        g_state.walkStick = Pad::StickPosition{};
         return;
     }
     // Teleport jumps this way even where no walk goes (GameLogic::Touch::PadTeleportTile).
     GameLogic::Touch::SetPadAim(stick.x, stick.y);
+    g_state.walkStick = stick;
+}
+
+// Whether the stick walks, or asked to this frame.
+bool StickWalks()
+{
+    const bool asks = g_state.walkStick && (g_state.walkStick->x != 0.f || g_state.walkStick->y != 0.f);
+    return g_state.steering || asks;
+}
+
+void ApplyWalk()
+{
+    if (!g_state.walkStick)
+        return;
+    const Pad::StickPosition stick = *g_state.walkStick;
+    g_state.walkStick.reset();
+    if (stick.x == 0.f && stick.y == 0.f)
+    {
+        StopWalking();
+        return;
+    }
     GameLogic::Touch::Steer(stick.x * StickToScreen, stick.y * StickToScreen);
     g_state.steering = true;
 }
@@ -801,10 +834,14 @@ void PlayWindowKeys(Presses& presses)
         UI::HUD::PadFrame::NextWindow();
         PlayBuffer(SOUND_CLICK01);
     }
-    if (Take(presses, Button::RightTrigger) && UI::HUD::PadTargets::TurnPage(UI::HUD::PadFrame::CurrentWindow()))
+    if (Take(presses, Button::RightTrigger))
     {
-        UI::HUD::PadFrame::SnapSoon();
-        PlayBuffer(SOUND_CLICK01);
+        const int turned = UI::HUD::PadTargets::TurnPage(UI::HUD::PadFrame::CurrentWindow());
+        if (turned >= 0)
+        {
+            UI::HUD::PadFrame::SnapToPage(turned);
+            PlayBuffer(SOUND_CLICK01);
+        }
     }
 }
 
@@ -965,7 +1002,7 @@ bool OpenPlayerMenu(int player)
 // there) or walks up to the player and opens their menu. The left stick or a window stops the walk.
 void PlayMeet(SDL_Window* window, Presses& presses, Clock::time_point now)
 {
-    const int meet = GameLogic::Touch::MeetIndex();
+    const int meet = g_state.meet;
     if (meet >= 0 && Take(presses, Button::A))
     {
         g_state.waitForRelease[static_cast<int>(Button::A)] = true;
@@ -979,7 +1016,7 @@ void PlayMeet(SDL_Window* window, Presses& presses, Clock::time_point now)
     }
     if (g_state.menuWalk < 0)
         return;
-    if (g_state.menuWalk != meet || g_state.steering || now >= g_state.menuWalkUntil)
+    if (g_state.menuWalk != meet || StickWalks() || now >= g_state.menuWalkUntil)
     {
         g_state.menuWalk = -1;
         return;
@@ -1136,6 +1173,8 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
         g_state.aActive = now;
     UI::HUD::PadHub::Update(now);
     g_state.promptDrop = -1;
+    // The one chosen stays lit and named under the card and the menu too (PickTargets renews it below).
+    g_state.meet = GameLogic::Touch::MeetIndex();
     if (UI::HUD::PadCard::IsOpen())
     {
         PlayCard(window, presses, now);
@@ -1182,6 +1221,7 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
     else
     {
         PickTargets();
+        g_state.meet = GameLogic::Touch::MeetIndex();
         PlayMeet(window, presses, now);
         PlayContextA(window, presses);
         // RB: whom the heals and buffs go to (ghinzuro, 2026-11-04).
@@ -1261,7 +1301,8 @@ void PlayCharacters(const Presses& presses)
 // face buttons work the characters (PlayCharacters). B is Esc, Menu Enter.
 void PlayScreens(SDL_Window* window, Presses presses, float seconds, Clock::time_point now)
 {
-    const bool frameOpen = !UI::HUD::PadTargets::Collect().empty();
+    const std::span<const UI::HUD::PadTargetPick::Target> targets = UI::HUD::PadTargets::Collect();
+    const bool frameOpen = !targets.empty();
     const bool onCharacters = !frameOpen && OnCharacterBar();
     if (frameOpen != g_state.frameOpen || onCharacters != g_state.onCharacters)
     {
@@ -1284,7 +1325,7 @@ void PlayScreens(SDL_Window* window, Presses presses, float seconds, Clock::time
     if (frameOpen)
     {
         Pointer::Move(window, right.x, right.y, seconds, true);
-        UI::HUD::PadFrame::Update(window, presses, now);
+        UI::HUD::PadFrame::Update(window, presses, now, targets);
     }
     else
     {
@@ -1402,6 +1443,70 @@ void FeelBlows(bool playing)
     Pad::Rumble(0.25f + 0.75f * strength, 0.4f + 0.6f * strength, BlowMilliseconds);
 }
 
+// A level up is felt as one soft swell of both motors.
+constexpr float LevelUpLow = 0.35f;
+constexpr float LevelUpHigh = 0.5f;
+constexpr int LevelUpMilliseconds = 300;
+// A drop the loot filter highlights, falling this near the hero (tiles), is felt as a light tick, longer than a pick's.
+constexpr int HighlightNearTiles = 8;
+constexpr float HighlightLow = 0.f;
+constexpr float HighlightHigh = 0.35f;
+constexpr int HighlightMilliseconds = 90;
+
+struct Gains
+{
+    bool known = false;
+    int level = 0;
+    unsigned highlights = 0;
+};
+Gains g_gains;
+
+bool NearHero(const OBJECT& object, int tiles)
+{
+    const float dx = object.Position[0] - Hero->Object.Position[0];
+    const float dy = object.Position[1] - Hero->Object.Position[1];
+    const float reach = static_cast<float>(tiles) * TERRAIN_SCALE;
+    return dx * dx + dy * dy <= reach * reach;
+}
+
+// Like FeelBlows: a level up and a highlighted drop near the hero shake the pad while it plays the world;
+// out of it only the last seen level and drop count are forgotten (a reset or a map change is no level up).
+void FeelGains(bool playing)
+{
+    namespace Loot = GameLogic::Items::LootFilterRuntime;
+    if (!playing || Hero == nullptr || CharacterAttribute == nullptr)
+    {
+        g_gains.known = false;
+        return;
+    }
+    Gains now;
+    now.known = true;
+    now.level = CharacterAttribute->Level;
+    now.highlights = Loot::FreshHighlights();
+    const Gains before = std::exchange(g_gains, now);
+    if (!before.known)
+        return;
+    if (now.level > before.level)
+        Pad::Rumble(LevelUpLow, LevelUpHigh, LevelUpMilliseconds);
+    if (now.highlights == before.highlights)
+        return;
+    const int drop = Loot::LastFreshHighlight();
+    if (drop >= 0 && drop < MAX_ITEMS && ::Items[drop].Object.Live && Loot::IsHighlighted(drop) &&
+        NearHero(::Items[drop].Object, HighlightNearTiles))
+        Pad::Rumble(HighlightLow, HighlightHigh, HighlightMilliseconds);
+}
+
+// A pad plugged in or pulled out says so in the system log, in the world only: a pad lost mid-fight
+// otherwise just leaves the hero standing. Before the world (the pads found at the start) it is no news.
+void SayPadNews(bool inWorld)
+{
+    const Pad::PadNews news = Pad::TakeNews();
+    if (!inWorld || news == Pad::PadNews::None)
+        return;
+    UI::Chat::PostSystem(news == Pad::PadNews::Connected ? I18N::Game::PadConnected : I18N::Game::PadDisconnected,
+                         mu::ui::window::TYPE_SYSTEM_MESSAGE);
+}
+
 // What the overlay shows this frame: the frame, the hub's tabs, the legend over a game window, the
 // pickup prompt under the drop d-pad down would take.
 UI::HUD::PadOverlay::View OverlayView(bool playing)
@@ -1432,9 +1537,11 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
         view.legend = false;
         view.frame = false;
     }
-    if (view.legend && !UI::HUD::PadHub::IsOpen())
+    if (view.legend)
     {
-        view.legendWindows = UI::HUD::PadFrame::WindowCount() >= 2;
+        // In the hub RB turns the hub's own tabs, so the next window is not said there; RT turns a page
+        // there too (the hub's window's own tabs).
+        view.legendWindows = !UI::HUD::PadHub::IsOpen() && UI::HUD::PadFrame::WindowCount() >= 2;
         view.legendPages = UI::HUD::PadTargets::HasPages(UI::HUD::PadFrame::CurrentWindow());
     }
     using Legend = UI::HUD::PadOverlay::View::Legend;
@@ -1480,7 +1587,7 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
         view.topRight = std::max(static_cast<float>(context->GetDimensions().x) - *windowsLeft, 0.f);
     using Prompt = UI::HUD::PadOverlay::View::Prompt;
     // The NPC or player chosen says what A does, under their feet; else the drop d-pad down takes.
-    const int meet = g_state.windowOpen ? -1 : GameLogic::Touch::MeetIndex();
+    const int meet = g_state.windowOpen ? -1 : g_state.meet;
     bool prompted = false;
     if (meet >= 0 && GameLogic::Touch::FeetOnScreen(meet, x, y))
     {
@@ -1532,7 +1639,7 @@ int PromptDrop()
 
 int PromptMeet()
 {
-    return g_state.inUse && g_state.inWorld && !g_state.windowOpen ? GameLogic::Touch::MeetIndex() : -1;
+    return g_state.inUse && g_state.inWorld && !g_state.windowOpen ? g_state.meet : -1;
 }
 
 void Update()
@@ -1540,7 +1647,14 @@ void Update()
     Play();
     const bool playing = g_state.inUse && !g_state.typing;
     FeelBlows(g_state.inUse && g_state.inWorld && IsInWorld());
-    UI::HUD::PadOverlay::Update(OverlayView(playing));
+    FeelGains(g_state.inUse && g_state.inWorld && IsInWorld());
+    SayPadNews(IsInWorld());
+    UI::HUD::PadOverlay::Update(OverlayView(playing), g_state.frameSeconds);
+}
+
+void LateUpdate()
+{
+    ApplyWalk();
 }
 } // namespace UI::HUD::GamepadControls
 
@@ -1551,6 +1665,9 @@ void Play()
     SDL_Window* window = Core::Platform::GameWindow();
     const Clock::time_point now = Clock::now();
     const float seconds = FrameSeconds(now);
+    g_state.frameSeconds = seconds;
+    // Chosen anew in the world with no window open (PlayWorld); none elsewhere.
+    g_state.meet = -1;
     Pad::Poll();
     const bool inUse = Pad::IsConnected() && Pad::WasUsedLast();
     if (inUse != g_state.inUse)
@@ -1567,6 +1684,8 @@ void Play()
     if (typing)
     {
         HandToKeyboard(window);
+        // The one chosen stays lit and named while the keyboard is up.
+        g_state.meet = GameLogic::Touch::MeetIndex();
         return;
     }
     g_state.typing = false;

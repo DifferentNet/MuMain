@@ -28,16 +28,17 @@ void SetScreens(bool screens);
 [[nodiscard]] std::optional<float> WindowsLeft();
 // Scrolls a list of the last Collect (a target's `list`) a step up (dy < 0) or down: a third of what it
 // shows. Straight, not by a wheel turn: a wheel goes to the element under the pointer, which may not
-// scroll it (the settings window took none).
-void ScrollList(int list, int dy);
+// scroll it (the settings window took none). False when it did not move (already at that end).
+bool ScrollList(int list, int dy);
 // Steps a slider of the last Collect (a target's `gauge`) one step left (dx < 0) or right, as the arrow
 // keys do on it.
 void StepGauge(int target, int dx);
 // A window's pages (pad round 3, 2026-11-13): the document at `window` (a target's `window`, or -1 for
 // the first open window that has pages) turns to its next page. Its markup marks them: a "pad-page-next"
 // control (the vault's arrow) is clicked, else of its "pad-page" tabs the one after the "active" or
-// "selected" one, round to the first (a "locked" or "hidden" tab is passed by). False with no pages.
-bool TurnPage(int window);
+// "selected" one, round to the first (a "locked" or "hidden" tab is passed by). The window turned, -1
+// with no pages.
+int TurnPage(int window);
 // Whether TurnPage would find pages there.
 [[nodiscard]] bool HasPages(int window);
 // Whether the target is in the document of this file name (npc_shop.rml).
