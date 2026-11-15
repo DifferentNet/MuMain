@@ -15,12 +15,21 @@ CASES = {
     "cpp-exception": ("runtime_error", True),
     "abort": ("abort() was called", True),
     "pure-call": ("pure virtual function call", True),
-    "terminate": ("std::terminate()", True),
+    "terminate": ("std::terminate() was called", True),
     "heap-corruption": ("heap corruption", True),
+    "thread-exception": ("std::terminate() on another thread", True),
+    "folder-gone": ("access violation", True),
     # The dump would wait for the heap lock the crashed thread holds: the text report is enough.
     "heap-locked": ("access violation", False),
 }
 DUMP_SIGNATURE = b"MDMP"
+EXCEPTION_STREAM = 6  # MINIDUMP_STREAM_TYPE ExceptionStream
+
+
+def has_exception_stream(data):
+    """The dump helper reads the crash through pointers into the crashed process: check it got them."""
+    count, rva = int.from_bytes(data[8:12], "little"), int.from_bytes(data[12:16], "little")
+    return any(int.from_bytes(data[rva + 12 * i:rva + 12 * i + 4], "little") == EXCEPTION_STREAM for i in range(count))
 
 
 def run(probe, kind):
@@ -42,9 +51,14 @@ def run(probe, kind):
     if dump_expected:
         if not os.path.isfile(dump):
             return f"{kind}: no dump next to the report:\n{text}"
+        if "Dump: written by a second copy of the game" not in text:
+            return f"{kind}: the dump was not written by the helper copy:\n{text}"
         with open(dump, "rb") as f:
-            if f.read(4) != DUMP_SIGNATURE:
+            data = f.read()
+            if data[:4] != DUMP_SIGNATURE:
                 return f"{kind}: the dump is not a minidump"
+            if not has_exception_stream(data):
+                return f"{kind}: the dump has no exception stream"
     elif os.path.isfile(dump):
         return f"{kind}: a half-written dump was left next to the text-only report"
     return None

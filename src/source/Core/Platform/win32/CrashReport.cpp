@@ -21,6 +21,9 @@ namespace
 constexpr std::size_t kPathCapacity = MAX_PATH * 2;
 constexpr std::size_t kNoticeCapacity = 4096;
 constexpr wchar_t kNoticeOption[] = L"--crash-notice";
+// The notice copy holds this event (with its own process id) while it runs, so the launcher tells it
+// from a running game (launcher/Updater.cs on the server).
+constexpr wchar_t kNoticeEventPrefix[] = L"Local\\MuSkynet-CrashNotice-";
 constexpr std::size_t kReportsKept = 10;
 constexpr wchar_t kFolderName[] = L"CrashReports";
 // Set to 1 by tests and automated runs: write the report, show no dialog. A client driven over the
@@ -35,7 +38,9 @@ constexpr SIZE_T kWriterStackBytes = 512 * 1024;
 // The dump takes seconds. Longer means the writer waits for a lock the crashed thread holds (the
 // heap's, inside malloc on a damaged heap): then the game closes with the text report only.
 constexpr DWORD kTextTimeoutMs = 5 * 1000;
-constexpr DWORD kWriteTimeoutMs = 20 * 1000;
+// Longer than the writer's wait for the dump helper (20 s from its start), so a helper that starts
+// slowly still finishes a dump this thread would otherwise throw away.
+constexpr DWORD kWriteTimeoutMs = 30 * 1000;
 
 struct CrashContext
 {
@@ -133,8 +138,13 @@ void ReportAndExit(EXCEPTION_POINTERS* exception)
     else
     {
         SetEvent(s_crash.wake);
-        const bool textOk = WaitForSingleObject(s_crash.textWritten, kTextTimeoutMs) == WAIT_OBJECT_0;
-        if (!textOk || WaitForSingleObject(s_crash.written, kWriteTimeoutMs) != WAIT_OBJECT_0)
+        // The writer may also finish without the text (no folder, a full disk): then don't wait on.
+        const HANDLE firstSign[] = {s_crash.textWritten, s_crash.written};
+        const DWORD first = WaitForMultipleObjects(2, firstSign, FALSE, kTextTimeoutMs);
+        const bool writerDone = first == WAIT_OBJECT_0 + 1 ||
+                                (first == WAIT_OBJECT_0 &&
+                                 WaitForSingleObject(s_crash.written, kWriteTimeoutMs) == WAIT_OBJECT_0);
+        if (!writerDone)
         {
             // The writer waits for a lock this thread holds. Keep its text report, or write one from
             // here; no dump (a half-written one is removed) and no dialog, which would wait for the
@@ -190,37 +200,15 @@ LONG WINAPI OnVectoredException(EXCEPTION_POINTERS* exception)
 }
 
 // abort(), pure virtual calls, invalid CRT parameters and std::terminate() don't raise an
-// exception by themselves; this raises one so they reach OnUnhandledException with a call stack.
-[[noreturn]] void RaiseReportedFailure(const char* what)
+// exception by themselves, and the C runtime may call their handlers inside its own __try/__except
+// (terminate() does, abort() included), which would swallow a raised one and end the game silently.
+// So they report from here, with this thread's context as the crash. On the stack, not static: two
+// threads may fail at once (the second waits in OnUnhandledException).
+[[noreturn]] void ReportFromHere(const char* what)
 {
-    const ULONG_PTR arguments[] = {reinterpret_cast<ULONG_PTR>(what)};
-    RaiseException(Writer::kReportedFailureCode, EXCEPTION_NONCONTINUABLE, 1, arguments);
-    TerminateProcess(GetCurrentProcess(), EXIT_FAILURE);
-    std::abort();
-}
-
-void OnAbortSignal(int)
-{
-    RaiseReportedFailure("abort() was called");
-}
-
-void OnPureCall()
-{
-    RaiseReportedFailure("pure virtual function call");
-}
-
-void OnInvalidParameter(const wchar_t*, const wchar_t*, const wchar_t*, unsigned int, uintptr_t)
-{
-    RaiseReportedFailure("invalid parameter passed to a C runtime function");
-}
-
-// The C runtime's terminate() runs this handler inside __try/__except (abort() included), so an
-// exception raised here would be swallowed and the game would end silently. Report from here.
-void OnTerminate()
-{
-    static CONTEXT context;
-    static EXCEPTION_RECORD record;
-    static EXCEPTION_POINTERS pointers;
+    alignas(16) CONTEXT context = {};
+    EXCEPTION_RECORD record = {};
+    EXCEPTION_POINTERS pointers = {};
     RtlCaptureContext(&context);
     record.ExceptionCode = Writer::kReportedFailureCode;
     record.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
@@ -230,12 +218,34 @@ void OnTerminate()
     record.ExceptionAddress = reinterpret_cast<void*>(context.Eip);
 #endif
     record.NumberParameters = 1;
-    record.ExceptionInformation[0] = reinterpret_cast<ULONG_PTR>(
-        "std::terminate() was called (an exception left a noexcept function or a thread)");
+    record.ExceptionInformation[0] = reinterpret_cast<ULONG_PTR>(what);
     pointers.ExceptionRecord = &record;
     pointers.ContextRecord = &context;
     OnUnhandledException(&pointers);
     TerminateProcess(GetCurrentProcess(), EXIT_FAILURE);
+    std::abort();
+}
+
+// Also the end of std::terminate() on threads other than the one Install() ran on: the C runtime
+// keeps the terminate handler per thread, and the default one calls abort().
+void OnAbortSignal(int)
+{
+    ReportFromHere("abort() was called (std::terminate() on another thread ends here too)");
+}
+
+void OnPureCall()
+{
+    ReportFromHere("pure virtual function call");
+}
+
+void OnInvalidParameter(const wchar_t*, const wchar_t*, const wchar_t*, unsigned int, uintptr_t)
+{
+    ReportFromHere("invalid parameter passed to a C runtime function");
+}
+
+void OnTerminate()
+{
+    ReportFromHere("std::terminate() was called (an exception left a noexcept function or a thread)");
 }
 
 std::wstring DefaultDirectory()
@@ -312,9 +322,20 @@ bool RunNoticeIfAsked()
     LPWSTR* arguments = CommandLineToArgvW(GetCommandLineW(), &count);
     if (arguments == nullptr)
         return false;
+    if (count == 6 && std::wcscmp(arguments[1], Writer::kDumpHelperOption) == 0)
+    {
+        const auto processId = static_cast<DWORD>(std::wcstoul(arguments[2], nullptr, 10));
+        const auto threadId = static_cast<DWORD>(std::wcstoul(arguments[3], nullptr, 10));
+        const auto pointers = static_cast<ULONG_PTR>(std::wcstoull(arguments[4], nullptr, 16));
+        ExitProcess(static_cast<UINT>(Writer::RunDumpHelper(processId, threadId, pointers, arguments[5])));
+    }
     const bool asked = count == 4 && std::wcscmp(arguments[1], kNoticeOption) == 0;
     if (asked)
     {
+        wchar_t eventName[64] = {};
+        std::swprintf(eventName, 64, L"%ls%lu", kNoticeEventPrefix, GetCurrentProcessId());
+        HANDLE marker = CreateEventW(nullptr, TRUE, FALSE, eventName);  // lives until this copy exits
+        (void)marker;
         ComposeNotice(arguments[2], arguments[3]);
         wchar_t logPath[kPathCapacity] = {};
         const DWORD logLength = GetEnvironmentVariableW(kNoticeLogVariable, logPath, static_cast<DWORD>(kPathCapacity));
@@ -340,6 +361,7 @@ void Install()
     const DWORD exeLength = GetModuleFileNameW(nullptr, s_exePath, static_cast<DWORD>(kPathCapacity));
     if (exeLength == 0 || exeLength >= kPathCapacity)
         s_exePath[0] = L'\0';
+    Writer::SetDumpHelper(s_exePath);
     if (!Writer::Prepare(DefaultDirectory()))
         return;
     Writer::PruneOldReports(kReportsKept);
