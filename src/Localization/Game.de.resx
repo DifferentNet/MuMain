@@ -14002,4 +14002,7 @@
   <data name="TouchQuickChat5" xml:space="preserve">
     <value>Hilfe!</value>
   </data>
+  <data name="ZenAmountAll" xml:space="preserve">
+    <value>Alles</value>
+  </data>
 </root>

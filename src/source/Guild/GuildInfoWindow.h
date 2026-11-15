@@ -68,6 +68,10 @@ namespace mu::ui::window
             [this](Rml::DataModelConstructor& c, GuildInfoRmlModel& model) { BindRmlModel(c, model); },
             {{"Data/Interface/RmlUi/guild_info.rml"}}, {.afterReload = [this] { OnRmlReloaded(); }}};
         int m_PendingButton = -1; // a BUTTON_EVENT, or BUTTON_EXIT
+        // The phone view's button under the no-guild hint asks Update() to open the Social panel, outside the
+        // click.
+        bool m_openSocialAsked = false;
+        void OpenSocialIfAsked();
 
         // Announcement lines in reading order; RmlUi owns scrolling.
         std::vector<std::wstring>   m_NoticeLines;

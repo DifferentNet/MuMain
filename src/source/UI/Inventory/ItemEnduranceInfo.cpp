@@ -12,6 +12,7 @@
 #include "Character/CharacterManager.h"
 #include "Data/GameData/ItemData/ItemModelSlots.h"
 #include "GameLogic/Items/ItemCategories.h"
+#include "GameLogic/Items/DurabilityBand.h"
 #include "Core/Utilities/StringUtils.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
@@ -315,16 +316,11 @@ void SyncItemEnduranceField(RmlModelBinder<UI::ItemEndurance::ItemEnduranceRmlMo
     binder.MarkDirty(name);
 }
 
-// The durability band the original's tint and tooltip colours follow.
+// The durability band the original's tint and tooltip colours follow. Callers only show items at most half
+// worn, so the band is never Fine here.
 const char* DurabilityBand(int durability, int maxDurability)
 {
-    if (durability <= 0)
-        return "zero";
-    if (durability <= maxDurability * 0.2f)
-        return "fifth";
-    if (durability <= maxDurability * 0.3f)
-        return "third";
-    return "half";
+    return GameLogic::Items::DurabilityBandName(GameLogic::Items::ClassifyDurability(durability, maxDurability));
 }
 } // namespace
 

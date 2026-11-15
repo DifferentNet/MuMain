@@ -51,7 +51,6 @@ void mu::ui::window::CChatInputBox::Init()
     m_pNewUIMng = nullptr;
     m_pNewUIChatLogWnd = nullptr;
     m_pNewUISystemLogWnd = nullptr;
-    m_iCurChatHistory = 0;
     m_iCurWhisperIDHistory = 0;
 
     m_iInputMsgType = INPUT_CHAT_MESSAGE;
@@ -126,23 +125,18 @@ bool mu::ui::window::CChatInputBox::HaveFocus()
 
 void mu::ui::window::CChatInputBox::AddChatHistory(const type_string& strText)
 {
-    auto vi = std::find(m_vecChatHistory.begin(), m_vecChatHistory.end(), strText);
-    if (vi != m_vecChatHistory.end())
-        m_vecChatHistory.erase(vi);
-    else if (m_vecChatHistory.size() > 12)
-        m_vecChatHistory.erase(m_vecChatHistory.begin());
-    m_vecChatHistory.push_back(strText);
+    m_chatHistory.Add(strText);
 }
 
 void mu::ui::window::CChatInputBox::RemoveChatHistory(int index)
 {
-    if (index >= 0 && index < (int)m_vecChatHistory.size())
-        m_vecChatHistory.erase(m_vecChatHistory.begin() + index);
+    if (index >= 0)
+        m_chatHistory.Remove(static_cast<std::size_t>(index));
 }
 
 void mu::ui::window::CChatInputBox::RemoveAllChatHIstory()
 {
-    m_vecChatHistory.clear();
+    m_chatHistory.Clear();
 }
 
 void mu::ui::window::CChatInputBox::AddWhsprIDHistory(const type_string& strWhsprID)
@@ -233,7 +227,13 @@ void mu::ui::window::CChatInputBox::SendChatLine()
 
     if (wcslen(szChatText) != 0)
     {
-        if (!CheckCommand(szChatText))
+        // Typed commands (/trade, /party, ...) go to the history too, so Up repeats them.
+        const std::wstring typedLine = szChatText;
+        if (CheckCommand(szChatText))
+        {
+            AddChatHistory(typedLine);
+        }
+        else
         {
             {
                 //if (CheckAbuseFilter(szChatText))
@@ -246,6 +246,7 @@ void mu::ui::window::CChatInputBox::SendChatLine()
                     SocketClient->ToGameServer()->SendWhisperMessage(MU_C16(szWhisperID), MU_C16(wstrText.c_str()));
                     g_pChatListBox->AddText(Hero->ID, szChatText, mu::ui::window::TYPE_WHISPER_MESSAGE);
                     AddWhsprIDHistory(szWhisperID);
+                    AddChatHistory(szChatText);
                 }
                 else if (wcsncmp(szChatText, I18N::Game::Warp, wcslen(I18N::Game::Warp)) == 0)
                 {
@@ -258,6 +259,7 @@ void mu::ui::window::CChatInputBox::SendChatLine()
                     }
 
                     SocketClient->ToGameServer()->SendWarpCommandRequest(g_pMoveCommandWindow->GetMoveCommandKey(), iMapIndex);
+                    AddChatHistory(szChatText);
                 }
                 else
                 {
@@ -273,7 +275,8 @@ void mu::ui::window::CChatInputBox::SendChatLine()
         }
     }
     SetFieldText("chat_field", L"");
-    m_iCurChatHistory = m_iCurWhisperIDHistory = 0;
+    m_chatHistory.ResetBrowsing();
+    m_iCurWhisperIDHistory = 0;
 
     SaveIMEStatus();
 
@@ -411,25 +414,23 @@ bool mu::ui::window::CChatInputBox::UpdateKeyEvent()
     }
     if (IsVisible() && IsFieldFocused("chat_field"))
     {
-        if (mu::ui::window::IsPress(VK_UP) && false == m_vecChatHistory.empty())
+        if (mu::ui::window::IsPress(VK_UP))
         {
-            m_iCurChatHistory--;
-            if (m_iCurChatHistory < 0)
-                m_iCurChatHistory = m_vecChatHistory.size() - 1;
-            SetFieldText("chat_field", m_vecChatHistory[m_iCurChatHistory]);
-
-            return false;
+            type_string draft;
+            GetChatText(draft);
+            if (const auto line = m_chatHistory.Older(draft))
+            {
+                SetFieldText("chat_field", *line);
+                return false;
+            }
         }
-        else if (mu::ui::window::IsPress(VK_DOWN) && false == m_vecChatHistory.empty())
+        else if (mu::ui::window::IsPress(VK_DOWN))
         {
-            m_iCurChatHistory++;
-
-            if (m_iCurChatHistory >= (int)m_vecChatHistory.size())
-                m_iCurChatHistory = 0;
-
-            SetFieldText("chat_field", m_vecChatHistory[m_iCurChatHistory]);
-
-            return false;
+            if (const auto line = m_chatHistory.Newer())
+            {
+                SetFieldText("chat_field", *line);
+                return false;
+            }
         }
     }
 
@@ -713,6 +714,7 @@ void mu::ui::window::CChatInputBox::OpenningProcess()
     // visible yet at this point, so focusing here would be silently dropped.
     BuildRmlUi();
     SetFieldText("chat_field", L"");
+    m_chatHistory.ResetBrowsing();
     m_bFocusPending = true;
 }
 

@@ -9,6 +9,8 @@
 #include <execution>
 #include <algorithm>
 #include <span>
+#include <array>
+#include <optional>
 #include "UI/Chat/Chat.h"
 #include "Core/Globals/_enum.h"
 #ifdef _WIN32
@@ -6424,12 +6426,47 @@ void MoveCharacterClient(CHARACTER* cc)
     }
 }
 
+namespace
+{
+    // Cells that got TW_CHARACTER last frame. Only these are cleared again, instead of all 65,536 cells. Every bulk
+    // write of TerrainWall (attribute file load, water state, editor paint/undo) and every Add/SubTerrainAttribute()
+    // with TW_CHARACTER bumps TerrainHeightVersion(); then
+    // the whole map is swept once, since such a write may bring the bit back on cells not in this list.
+    std::array<int, MAX_CHARACTERS_CLIENT> s_characterWallCells{};
+    int s_characterWallCount = 0;
+    std::optional<unsigned int> s_characterWallVersion;
+
+    void ClearCharacterWallMarks()
+    {
+        const unsigned int version = TerrainHeightVersion();
+        if (s_characterWallVersion != version)
+        {
+            for (int i = 0; i < TERRAIN_SIZE * TERRAIN_SIZE; i++)
+            {
+                TerrainWall[i] &= ~TW_CHARACTER;
+            }
+            s_characterWallVersion = version;
+        }
+        else
+        {
+            for (int i = 0; i < s_characterWallCount; i++)
+            {
+                TerrainWall[s_characterWallCells[i]] &= ~TW_CHARACTER;
+            }
+        }
+        s_characterWallCount = 0;
+    }
+
+    void MarkCharacterWall(int index)
+    {
+        TerrainWall[index] |= TW_CHARACTER;
+        s_characterWallCells[s_characterWallCount++] = index;
+    }
+}
+
 void MoveCharactersClient()
 {
-    for (int i = 0; i < TERRAIN_SIZE * TERRAIN_SIZE; i++)
-    {
-        if ((TerrainWall[i] & TW_CHARACTER) == TW_CHARACTER) TerrainWall[i] -= TW_CHARACTER;
-    }
+    ClearCharacterWallMarks();
 
     for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
     {
@@ -6437,8 +6474,7 @@ void MoveCharactersClient()
         OBJECT* to = &tc->Object;
         if (to->Live && tc->Dead == 0 && to->Kind != KIND_TRAP)
         {
-            int Index = TERRAIN_INDEX_REPEAT((tc->PositionX), (tc->PositionY));
-            TerrainWall[Index] |= TW_CHARACTER;
+            MarkCharacterWall(TERRAIN_INDEX_REPEAT((tc->PositionX), (tc->PositionY)));
         }
 
         to->Visible = TestFrustrum2D(to->Position[0] * 0.01f, to->Position[1] * 0.01f, -20.f);

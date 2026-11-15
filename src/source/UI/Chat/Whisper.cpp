@@ -12,7 +12,10 @@ namespace
     constexpr int WHISPER_ID_SLOTS = 10;
 
     int     WhisperID_Num = 0;
-    wchar_t WhisperRegistID[MAX_USERNAME_SIZE + 1][WHISPER_ID_SLOTS];
+    // One name per slot, each with room for its terminator.
+    wchar_t WhisperRegistID[WHISPER_ID_SLOTS][MAX_USERNAME_SIZE + 1];
+    static_assert(sizeof(WhisperRegistID[0]) == sizeof(wchar_t) * (MAX_USERNAME_SIZE + 1),
+                  "each slot holds one whole name");
 }
 
 namespace UI::Chat::Whisper
@@ -55,7 +58,9 @@ namespace UI::Chat::Whisper
 
             if (noMatch)
             {
-                wcscpy(WhisperRegistID[WhisperID_Num], targetId);
+                wchar_t* slot = WhisperRegistID[WhisperID_Num];
+                wcsncpy(slot, targetId, MAX_USERNAME_SIZE);
+                slot[MAX_USERNAME_SIZE] = L'\0';
                 WhisperID_Num++;
 
                 if (WhisperID_Num >= WHISPER_ID_SLOTS)
@@ -68,7 +73,8 @@ namespace UI::Chat::Whisper
 
     void Clear()
     {
-        ZeroMemory(WhisperRegistID, sizeof(char) * (MAX_USERNAME_SIZE + 1) * WHISPER_ID_SLOTS);
+        ZeroMemory(WhisperRegistID, sizeof(WhisperRegistID));
+        WhisperID_Num = 0;
     }
 
     void RenderList()

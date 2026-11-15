@@ -13624,6 +13624,9 @@
   <data name="JewelBankInPacks" xml:space="preserve">
     <value>Пачками</value>
   </data>
+  <data name="ZenAmountAll" xml:space="preserve">
+    <value>Все</value>
+  </data>
   <data name="JewelBankPacksHint" xml:space="preserve">
     <value>Пачками: каждые 10 камней придут одной пачкой, остаток отдельными камнями.</value>
   </data>

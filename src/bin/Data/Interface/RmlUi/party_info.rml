@@ -19,6 +19,11 @@
 		<div class="sharp-text party-empty-msg" data-class-hidden="has_party" data-style-font-size="text_px + 'px'">
 			<span data-for="line : empty_state_lines" data-class-paragraph="it_index == 3">{{line.text}}</span>
 		</div>
+		<!-- The phone view (no mouse to type /party with): opens the touch HUD's list of players nearby, where
+		     a party is offered with a tap. -->
+		<div id="party_social_btn" data-class-hidden="has_party || !phone_hud" data-event-click="party_open_social">
+			<span class="sharp-text sharp-centre sharp-middle" data-style-font-size="text_px + 'px'">{{social_label}}</span>
+		</div>
 
 		<div class="party-list" data-class-hidden="!has_party">
 			<div class="party-row" data-for="m : members">

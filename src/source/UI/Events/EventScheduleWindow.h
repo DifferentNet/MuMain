@@ -26,6 +26,10 @@ class CEventScheduleWindow : public CObject
     {
         WINDOW_WIDTH = 190,
         CONTENT_WIDTH = WINDOW_WIDTH - 2 * 22,
+        // The phone view's wider window (event_schedule.rcss's `@media (theme: mobile)`), where the text keeps
+        // the native size while the panel shrinks, so the time lines need the room.
+        PHONE_WINDOW_WIDTH = 270,
+        PHONE_CONTENT_WIDTH = PHONE_WINDOW_WIDTH - 2 * 22,
         // Rows that fit between the title and the exit button: a name line and a time line each.
         VISIBLE_ROWS = 11,
     };

@@ -90,3 +90,21 @@
 .entry-btn.enabled .entry-label { color: token(text-primary); }
 
 #btn_exit { left: 13px; }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the level bands are as tall as a finger, 6 apart. The list
+   scrolls (EventEntryView scrolls it to the hero's band); the exit button is outside it and stays in view. */
+@media (theme: mobile) {
+    .entry-btn { min-height: calc(42px * var(--root-scale)); }
+    .entry-btn + .entry-btn { margin-top: calc(6px * var(--root-scale)); }
+    /* The absolute art layer doesn't grow with the band's min-height here (it stays a thin bar on top), so the band
+       itself carries the art, stretched over its full height, and the label centres on it. */
+    .entry-btn-art { display: none; }
+    .entry-btn {
+        background-color: token(surface-recessed);
+        border: 1px token(border-frame);
+        border-radius: token(radius-sm)px;
+    }
+    .entry-btn.enabled { background-color: token(surface-raised); }
+    .entry-btn.enabled:hover { border-color: token(accent-steel-hover); }
+    .entry-btn.enabled:active { background-color: token(surface-recessed); }
+}

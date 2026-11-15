@@ -74,6 +74,11 @@ struct GuildInfoRmlModel
     GuildLine hintLine1;
     GuildLine hintLine2;
     GuildLine hintLine3;
+    // The phone layout with the on-screen controls (UI::Mobile::ReplacesPcHud()): the hint as one paragraph,
+    // wrapped inside the frame, and a button that opens the Social panel.
+    bool phoneHud = false;
+    Rml::String hintText;
+    Rml::String socialLabel;
 
     // The header every tab shares.
     GuildLine title;

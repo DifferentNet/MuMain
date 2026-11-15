@@ -2309,6 +2309,11 @@ void Hide()
 
 namespace UI::HUD::TouchControls
 {
+void ShowSocialPanel()
+{
+    OpenSocialPanel();
+}
+
 void Update()
 {
     // The MU Helper's stand-down for the action buttons runs out a second after they stop, however

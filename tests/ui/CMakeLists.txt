@@ -38,6 +38,27 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME jewel_bank_names_tests
+    SOURCES
+        test_jewel_bank_names.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Inventory/JewelBankNames.cpp
+)
+
+mu_add_test(
+    NAME chat_history_tests
+    SOURCES
+        test_chat_history.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ChatHistory.cpp
+)
+
+mu_add_test(
+    NAME zen_amount_tests
+    SOURCES
+        test_zen_amount.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Inventory/ZenAmount.cpp
+)
+
+mu_add_test(
     NAME jewel_unmix_selection_tests
     SOURCES
         test_jewel_unmix_selection.cpp

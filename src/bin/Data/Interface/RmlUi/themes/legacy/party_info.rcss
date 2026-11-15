@@ -161,3 +161,25 @@
 
 /* The native text size, counter-scaled out of the panel's scale. */
 #panel { font-size: calc(var(--text-px) / var(--root-scale)); }
+
+/* MU Moldova: the phone view's button under the party hint (no mouse there to type /party with), opening the
+   touch HUD's list of players nearby: the native menu button art, as tall as a finger. Hidden elsewhere. */
+@spritesheet party-social-sheet {
+	src: "../../../newui_btn_empty.tga";
+	party-social-up: 0px 0px 108px 29px;
+	party-social-over: 0px 29px 108px 29px;
+	party-social-down: 0px 58px 108px 29px;
+}
+#party_social_btn {
+	position: absolute;
+	left: 25px;
+	top: 170px; /* below the hint, even when its two lines wrap to five at the phone text size */
+	width: 140px;
+	height: 48px;
+	cursor: pointer;
+	pointer-events: auto;
+	decorator: image(party-social-up);
+}
+#party_social_btn:hover { decorator: image(party-social-over); }
+#party_social_btn:active { decorator: image(party-social-down); }
+#party_social_btn .sharp-text { position: absolute; white-space: nowrap; color: token(text-primary); pointer-events: none; }

@@ -150,7 +150,9 @@
 	.col-map { left: 35%; }
 	.col-level { left: 62%; }
 	.col-zen { left: 83%; }
-	.mc-row, .mc-row .col { line-height: calc(30px * var(--root-scale)); }
+	/* Rows as tall as a finger (44, were 30); a pressed row lights up like a hovered one, as a finger has no hover. */
+	.mc-row, .mc-row .col { line-height: calc(44px * var(--root-scale)); }
+	.mc-row.can-move:active { background-color: token(surface-raised); }
 	.mc-row {
 		padding-bottom: 0px;
 		border-bottom-width: calc(1px * var(--root-scale));

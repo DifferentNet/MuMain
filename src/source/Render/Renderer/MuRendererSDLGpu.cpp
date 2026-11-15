@@ -5501,10 +5501,40 @@ public:
         return s_screenSpaceSamplingDepth == 0 ? k_SkinningLightingEnhancedDynamic : k_SkinningLightingEnhanced;
     }
 
-    // World position and normal of Enhanced-lit skinned vertices, for the frame's point lights.
+    // The model-view's inverse, kept for the next draw with the same model-view: world models are drawn one
+    // after another with the scene's view, so it is computed again only when the model-view changed.
+    [[nodiscard]] const glm::mat4& InverseModelView() const
+    {
+        if (!m_inverseModelViewValid ||
+            std::memcmp(&m_inverseModelViewKey, &m_modelViewMatrix, sizeof(glm::mat4)) != 0)
+        {
+            m_inverseModelViewKey = m_modelViewMatrix;
+            m_inverseModelView = glm::inverse(m_modelViewMatrix);
+            m_inverseModelViewValid = true;
+        }
+        return m_inverseModelView;
+    }
+
+    // The camera's world position for the current model-view.
+    [[nodiscard]] glm::vec4 EyePosition() const
+    {
+        return InverseModelView() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    }
+
+    // World position and normal of Enhanced-lit skinned vertices, for the frame's point lights. Kept like
+    // InverseModelView() for the next draw with the same model-view and scene view.
     void PackVertexToWorldRows(SkinningVertexUniforms& uniforms) const
     {
-        const glm::mat4 vertexToWorld = m_worldFromViewMatrix * m_modelViewMatrix;
+        if (!m_vertexToWorldValid ||
+            std::memcmp(&m_vertexToWorldKey[0], &m_modelViewMatrix, sizeof(glm::mat4)) != 0 ||
+            std::memcmp(&m_vertexToWorldKey[1], &m_worldFromViewMatrix, sizeof(glm::mat4)) != 0)
+        {
+            m_vertexToWorldKey[0] = m_modelViewMatrix;
+            m_vertexToWorldKey[1] = m_worldFromViewMatrix;
+            m_vertexToWorld = m_worldFromViewMatrix * m_modelViewMatrix;
+            m_vertexToWorldValid = true;
+        }
+        const glm::mat4& vertexToWorld = m_vertexToWorld;
         for (int row = 0; row < 3; ++row)
         {
             for (int column = 0; column < 4; ++column)
@@ -6211,7 +6241,7 @@ private:
         skinningVu.textureCoordinateParameters[2] = parameters.chromeTimeTerm;
         if (enhancedLit)
         {
-            const glm::vec4 eyePosition = glm::inverse(m_modelViewMatrix) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+            const glm::vec4 eyePosition = EyePosition();
             skinningVu.eyePositionAndSpecular[0] = eyePosition.x;
             skinningVu.eyePositionAndSpecular[1] = eyePosition.y;
             skinningVu.eyePositionAndSpecular[2] = eyePosition.z;
@@ -6221,7 +6251,7 @@ private:
         else if (parameters.textureCoordinates == mu::SkinningTextureCoordinates::Rim)
         {
             // The Remaster enchant glow lights the outline as seen from the camera.
-            const glm::vec4 eyePosition = glm::inverse(m_modelViewMatrix) * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+            const glm::vec4 eyePosition = EyePosition();
             skinningVu.eyePositionAndSpecular[0] = eyePosition.x;
             skinningVu.eyePositionAndSpecular[1] = eyePosition.y;
             skinningVu.eyePositionAndSpecular[2] = eyePosition.z;
@@ -6230,7 +6260,7 @@ private:
         {
             // The studio light stays put on screen, whatever way the model is turned.
             const glm::vec3 towardLight = glm::normalize(glm::vec3(
-                glm::inverse(m_modelViewMatrix) *
+                InverseModelView() *
                 glm::vec4(mu::kItemPreviewLightDirection[0], mu::kItemPreviewLightDirection[1],
                           mu::kItemPreviewLightDirection[2], 0.0f)));
             skinningVu.lightDirection[0] = towardLight.x;
@@ -6327,6 +6357,13 @@ private:
     glm::mat4 m_modelViewMatrix{1.0f};
     // Inverse of the scene's view matrix, captured by SetSceneLighting().
     glm::mat4 m_worldFromViewMatrix{1.0f};
+    // Memos of InverseModelView() and PackVertexToWorldRows(), keyed by the matrices they were made from.
+    mutable glm::mat4 m_inverseModelViewKey{1.0f};
+    mutable glm::mat4 m_inverseModelView{1.0f};
+    mutable bool m_inverseModelViewValid = false;
+    mutable glm::mat4 m_vertexToWorldKey[2]{};
+    mutable glm::mat4 m_vertexToWorld{1.0f};
+    mutable bool m_vertexToWorldValid = false;
     glm::mat4 m_projStack[k_MatrixStackDepth]{};
     glm::mat4 m_mvStack[k_MatrixStackDepth]{};
     int m_projStackTop = 0;

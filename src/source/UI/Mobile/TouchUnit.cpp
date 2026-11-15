@@ -98,6 +98,11 @@ float UI::Mobile::TouchUnit::Pixels()
     return Current().pixels;
 }
 
+float UI::Mobile::TouchUnit::FullPixels()
+{
+    return Current().fullPixels;
+}
+
 float UI::Mobile::TouchUnit::ReadableTextPx(float px)
 {
     if (!UI::Mobile::IsPhoneView())

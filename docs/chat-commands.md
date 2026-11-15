@@ -55,6 +55,11 @@ A value marked with `*` is required - the command isn't sent without it.
 **Execute** sends the command. It is also added to your chat history, so the
 arrow keys in the chat box repeat it without opening the window again.
 
+The chat box keeps the last 30 lines sent from it, whispers and commands included
+(`UI::Chat::ChatHistory`). Up shows the newest one first and then older ones; Down goes back and,
+past the newest, puts back what was typed before Up. A player who whispers you joins the list of
+whisper names (Up and Down in the name box) without filling the box.
+
 ## Favourites and templates
 
 Both are stored per installation in `config.ini`, not per character - the

@@ -103,6 +103,20 @@ class CBitmapCache
     type_cache_map		m_mapCacheEffect;
 
     QUICK_CACHE			m_QuickCache[NUMBER_OF_QUICK_CACHE];
+
+    // The last map hit per index slot (index modulo FIND_MEMO_SIZE): Find() runs thousands of times a frame and most
+    // calls repeat the same few hundred textures, so a slot check skips the map lookup. A slot is cleared whenever
+    // its entry may leave the maps (Add, Remove, RemoveAll, Update).
+    struct FIND_MEMO_SLOT
+    {
+        GLuint uiBitmapIndex = 0;
+        BITMAP_t* pBitmap = nullptr;
+    };
+    static constexpr std::size_t FIND_MEMO_SIZE = 512;
+    std::array<FIND_MEMO_SLOT, FIND_MEMO_SIZE> m_FindMemo{};
+
+    FIND_MEMO_SLOT& FindMemoSlot(GLuint uiBitmapIndex) { return m_FindMemo[uiBitmapIndex & (FIND_MEMO_SIZE - 1)]; }
+    void ClearFindMemo();
     BITMAP_t* m_pNullBitmap = nullptr;
 
     CTimer2				m_ManageTimer;

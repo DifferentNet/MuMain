@@ -18,6 +18,7 @@
 #include "UI/Inventory/StorageInventoryExt.h"
 #include "UI/Inventory/InventorySort.h"
 #include "UI/Inventory/VaultPages.h"
+#include "UI/Inventory/ZenAmount.h"
 #include "Scenes/SceneCore.h" // g_iLengthAuthorityCode -- the WEBZEN password field's maxLength below
 
 // RmlUi migration -- see this class's header comment.
@@ -37,9 +38,77 @@ using namespace mu::ui::window;
 
 namespace
 {
+    void ShowVaultPinVerifyDialog();
+
+    // Puts zen into the vault: the typed amount, at most what the hero carries.
+    void DepositZen(std::uint64_t typed)
+    {
+        const std::uint32_t limit = UI::Inventory::ZenAmount::DepositLimit(CharacterMachine->Gold);
+        if (limit == 0)
+        {
+            mu::ui::window::CreateOkMessageBox(I18N::Game::YouAreShortOfZen);
+            return;
+        }
+        SocketClient->ToGameServer()->SendVaultMoveMoneyRequest(VaultMoneyMoveDirection::InventoryToVault,
+                                                                UI::Inventory::ZenAmount::Clamp(typed, limit));
+    }
+
+    // Takes zen out of the vault: the typed amount, at most what is in it and what the hero can still carry. A
+    // locked vault asks for its PIN first (ShowVaultPinVerifyDialog() sends the backed-up amount).
+    void WithdrawZen(std::uint64_t typed)
+    {
+        if (CharacterMachine->StorageGold <= 0)
+        {
+            mu::ui::window::CreateOkMessageBox(I18N::Game::YouAreShortOfZen);
+            return;
+        }
+        const std::uint32_t limit = UI::Inventory::ZenAmount::WithdrawLimit(
+            static_cast<std::uint64_t>(CharacterMachine->StorageGold), CharacterMachine->Gold);
+        if (limit == 0)
+        {
+            // The hero carries the most there is: a silent no-op, matching native -- still closes.
+            return;
+        }
+        const std::uint32_t amount = UI::Inventory::ZenAmount::Clamp(typed, limit);
+        if (!g_pStorageInventory->IsStorageLocked() || g_pStorageInventory->IsCorrectPassword())
+        {
+            SocketClient->ToGameServer()->SendVaultMoveMoneyRequest(VaultMoneyMoveDirection::VaultToInventory, amount);
+        }
+        else
+        {
+            g_pStorageInventory->SetBackupTakeZen(static_cast<int>(amount));
+            ShowVaultPinVerifyDialog();
+        }
+    }
+
+    // The vault's zen entry: up to ten digits, OK moves the typed amount and All everything that can go.
+    void ShowZenAmountDialog(const wchar_t* prompt, void (*move)(std::uint64_t typed))
+    {
+        mu::ui::window::GenericDialogConfig cfg;
+        cfg.showCancel = true;
+        cfg.lines = { { prompt, false } };
+        cfg.secondaryLabel = std::wstring(I18N::Game::ZenAmountAll);
+        cfg.input = mu::ui::window::GenericDialogConfig::InputField{};
+        cfg.input->mode = mu::ui::window::GenericDialogConfig::InputField::Mode::Text;
+        cfg.input->maxLength = UI::Inventory::ZenAmount::kMaxDigits;
+        cfg.input->numericOnly = true;
+        cfg.onPrimary = [move]
+        {
+            const std::uint64_t typed =
+                UI::Inventory::ZenAmount::Parse(mu::ui::window::g_pGenericConfirmDialog->GetInputText());
+            if (typed == 0)
+            {
+                mu::ui::window::g_pGenericConfirmDialog->KeepOpen();
+                return;
+            }
+            move(typed);
+        };
+        cfg.onSecondary = [move] { move(UI::Inventory::ZenAmount::kMaxCarriedZen); };
+        mu::ui::window::g_pGenericConfirmDialog->Show(std::move(cfg));
+    }
+
     // Plain 4-digit Mode::NumericKeypad PIN verify. Two call sites: SendRequestItemToMyInven's
-    // locked-vault guard below, and the insufficient-storage-gold zen-payment onPrimary further
-    // down in this file.
+    // locked-vault guard below, and WithdrawZen() above.
     void ShowVaultPinVerifyDialog()
     {
         GenericDialogConfig cfg;
@@ -253,81 +322,14 @@ void CStorageInventory::BindRmlModel(Rml::DataModelConstructor& c, StorageRmlMod
     c.Bind("lock_tooltip", &model.lockTooltip);
 
     c.BindEventCallback("storage_insert_click",
-        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
+        [](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
         {
-            mu::ui::window::GenericDialogConfig cfg;
-            cfg.showCancel = true;
-            cfg.lines = { { I18N::Game::EnterTheAmountOfZenYouWouldLikeToDeposit, false } };
-            cfg.input = mu::ui::window::GenericDialogConfig::InputField{};
-            cfg.input->mode = mu::ui::window::GenericDialogConfig::InputField::Mode::Text;
-            cfg.input->maxLength = 8;
-            cfg.input->numericOnly = true;
-            cfg.onPrimary = []
-            {
-                const std::wstring strText = mu::ui::window::g_pGenericConfirmDialog->GetInputText();
-                const int iInputZen = strText.empty() ? 0 : _wtoi(strText.c_str());
-                if (iInputZen == 0)
-                {
-                    mu::ui::window::g_pGenericConfirmDialog->KeepOpen();
-                    return;
-                }
-                if (iInputZen <= (int)CharacterMachine->Gold)
-                {
-                    SocketClient->ToGameServer()->SendVaultMoveMoneyRequest(
-                        VaultMoneyMoveDirection::InventoryToVault, iInputZen);
-                }
-                else
-                {
-                    mu::ui::window::CreateOkMessageBox(I18N::Game::YouAreShortOfZen);
-                }
-            };
-            mu::ui::window::g_pGenericConfirmDialog->Show(std::move(cfg));
+            ShowZenAmountDialog(I18N::Game::EnterTheAmountOfZenYouWouldLikeToDeposit, DepositZen);
         });
     c.BindEventCallback("storage_take_click",
-        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
+        [](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
         {
-            // The insufficient-storage-gold branch chains into
-            // ShowVaultPinVerifyDialog() (this file).
-            mu::ui::window::GenericDialogConfig cfg;
-            cfg.showCancel = true;
-            cfg.lines = { { I18N::Game::EnterTheAmountOfZenYouWouldLikeToWithdraw, false } };
-            cfg.input = mu::ui::window::GenericDialogConfig::InputField{};
-            cfg.input->mode = mu::ui::window::GenericDialogConfig::InputField::Mode::Text;
-            cfg.input->maxLength = 8;
-            cfg.input->numericOnly = true;
-            cfg.onPrimary = []
-            {
-                const std::wstring strText = mu::ui::window::g_pGenericConfirmDialog->GetInputText();
-                const int iInputZen = strText.empty() ? 0 : _wtoi(strText.c_str());
-                if (iInputZen == 0)
-                {
-                    mu::ui::window::g_pGenericConfirmDialog->KeepOpen();
-                    return;
-                }
-                if (iInputZen <= CharacterMachine->StorageGold
-                    && CharacterMachine->Gold + iInputZen <= 2000000000)
-                {
-                    if (!g_pStorageInventory->IsStorageLocked() || g_pStorageInventory->IsCorrectPassword())
-                    {
-                        SocketClient->ToGameServer()->SendVaultMoveMoneyRequest(
-                            VaultMoneyMoveDirection::VaultToInventory, iInputZen);
-                    }
-                    else
-                    {
-                        g_pStorageInventory->SetBackupTakeZen(iInputZen);
-                        ShowVaultPinVerifyDialog();
-                    }
-                }
-                else if (CharacterMachine->Gold + iInputZen > 2000000000)
-                {
-                    // Silent no-op, matching native -- still closes.
-                }
-                else
-                {
-                    mu::ui::window::CreateOkMessageBox(I18N::Game::YouAreShortOfZen);
-                }
-            };
-            mu::ui::window::g_pGenericConfirmDialog->Show(std::move(cfg));
+            ShowZenAmountDialog(I18N::Game::EnterTheAmountOfZenYouWouldLikeToWithdraw, WithdrawZen);
         });
     c.BindEventCallback("storage_lock_click",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)

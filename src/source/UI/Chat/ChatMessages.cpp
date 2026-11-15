@@ -22,6 +22,13 @@ bool IsWhisperBlocked()
     return g_pChatInputBox->IsBlockWhisper();
 }
 
+void RememberWhisperSender(std::wstring_view sender)
+{
+    if (sender.empty() || g_pChatInputBox == nullptr)
+        return;
+    g_pChatInputBox->AddWhsprIDHistory(std::wstring(sender));
+}
+
 void ResetLogFilter()
 {
     g_pChatListBox->ResetFilter();

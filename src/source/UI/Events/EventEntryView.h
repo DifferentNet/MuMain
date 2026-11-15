@@ -51,9 +51,19 @@ public:
 private:
     void BindModel(Rml::DataModelConstructor& c, EventEntryRmlModel& model);
     void SyncTextSizes();
+    void ScrollEnabledButtonIntoView();
+
+    static constexpr int ScrollWaitFrames = 10;
 
     UI::RmlBridge::ThemedView<EventEntryRmlModel> m_View;
     int m_PressedButton = -1;
     bool m_ExitPressed = false;
+    // Set by SetContent(): the phone view scrolls the level list to the hero's band once the new bands are built.
+    bool m_ScrollToEnabledPending = false;
+    // The new content's band count and its first enabled band (-1: none), to tell the new bands from the old.
+    int m_ScrollButtonCount = 0;
+    int m_ScrollTargetIndex = -1;
+    // Frames the scroll still waits for the new bands; the first frame after SetContent() is always skipped.
+    int m_ScrollFramesLeft = 0;
 };
 } // namespace mu::ui::window

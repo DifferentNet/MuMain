@@ -66,7 +66,9 @@ once as before (`CInventoryActionController::AsksWithItemCard`). A mouse's right
 unchanged. The card
 opens at the edge of the screen away from the item, so the item's tooltip beside it stays in view
 (`GenericMenuConfig::edge`, the `gmd-edge-left` / `gmd-edge-right` classes of
-`generic_menu_dialog.rcss`).
+`generic_menu_dialog.rcss`). In the phone view its buttons are 42 units tall (native's 29) and 3 apart; a
+long list (a potion's seven buttons and Close) scrolls inside the card, at most 300 units of it, so the card
+stays on a 400-pixel-tall screen.
 
 A finger held on a "+" of the character window (a right click, R3 on a pad) opens a menu of bigger
 steps for the free points: +10, +100, +1000 while there are more, then all of them, spent through
@@ -274,6 +276,15 @@ Each window restyles itself under `@media (theme: mobile)` in both themes; on a 
 | Social | Fewer players are listed while the panel would run past its foot (a short screen, many actions): the last row of cards goes until the panel fits, never the first row (`FitSocialPlayers`, measured on the frame's layout; the limit resets when it opens). A player chosen by a tap who is still around but past the cards that fit takes the last card; one who leaves leaves nobody chosen, and the actions wait for a new tap. Party says `TouchMenuParty`. |
 | Chat input (legacy) | Five quick phrases over the bar (`TouchQuickChat1..5`, all 11 languages), the bar's width, wrapping upward; a tap sends one as Enter sends a line (`CChatInputBox::SendChatLine`, Enter's 1 s pause between lines); a line half typed comes back in the bar after it. Hidden off the phone view and in the Modern theme. |
 | Touch menu | Drawn over every window while open (`OpenTouchMenuDepth`); a tap on the dimmed screen around it shuts it, and it shuts while a dialog waits for an answer. |
+| Map (Tab): names | A tap names the marker under it, or else the nearest drawn one within 22 finger units at 100 % (`TouchUnit::FullPixels`), live event monsters first (`UI::MiniMap::PickHint`, tested in `tests/ui/test_mini_map_layout.cpp`). A mouse names only the marker under it, as before. |
+| Teleport (warp list) | Rows 44 units tall (were 30); a pressed reachable row lights up as a hovered one does (`move_command.rcss`). |
+| Party, no party yet | With the phone HUD (`ReplacesPcHud`) the hint leaves out the mouse lines ("Type /party with the mouse cursor on…") and keeps why to party; under it a button 48 units tall, labelled `TouchSocialTitle`, closes the window and opens the Social panel, where a party is offered with a tap (`TouchControls::ShowSocialPanel`). Hidden in a party and off the phone HUD. |
+| Jewel bank: names | When a name is too long for the narrow name column, the words most names start with go ("Jewel of", "Камень"): words split on spaces only, shared by more than half of the shown rows and at least two (`UI::Inventory::JewelBankNames`, tested in `tests/ui/test_jewel_bank_names.cpp`). |
+| Event timer (O) | 270 units wide (was 190) with the character window's phone frame pieces; the name and time lines 226 wide, so the start times are not cut (`CEventScheduleWindow`'s `PHONE_CONTENT_WIDTH`). |
+| Character creation | The class buttons 34 units tall (32 in the Modern theme) and spaced to fill the class panel; OK and Cancel 38 units tall (36) beside the name row (`char_make.rcss`). The class description below keeps its place. |
+| Guild, no guild yet | With the phone HUD (`ReplacesPcHud`) the three hint lines become one wrapped line (`hint_text`, built by `JoinHintLines` in `GuildInfoWindow.cpp`), and a button 48 units tall labelled `TouchSocialTitle` closes the window and opens the Social panel, where a guild is offered with a tap (`TouchControls::ShowSocialPanel`). Hidden in a guild and off the phone HUD. |
+| Blood Castle / Devil Square entry | The level buttons at least 42 units tall with 6 between them (`event_entry.rcss`); when the window opens, the list scrolls so the button the hero may enter is in view (`EventEntryView::ScrollEnabledButtonIntoView`). |
+| Options | The first time it opens in the phone view with touch controls it shows the Interface tab (button size, view and controls rows); a tab the player picks afterwards is kept (`COptionWindow::SelectFirstPhoneTab`). |
 
 A finger that moves on a scrollable list scrolls it, as on a phone, rows and buttons included (they
 click only on a tap); a flick glides on and a tap on a gliding list only stops it. Item grids,

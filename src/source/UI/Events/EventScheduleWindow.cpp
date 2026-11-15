@@ -6,6 +6,7 @@
 #include "Audio/DSPlaySound.h"
 #include "GameLogic/Events/EventTimes.h"
 #include "UI/Core/WindowSystem.h"
+#include "UI/Mobile/InterfaceMode.h"
 
 #include "Core/Utilities/StringUtils.h"
 #include "Render/Text/CUIRenderText.h"
@@ -251,17 +252,21 @@ void mu::ui::window::CEventScheduleWindow::SyncContent()
 
     auto& times = Times();
     const auto now = std::chrono::steady_clock::now();
+    // Read every frame the window shows, so a switch to or from the phone view fits the lines anew.
+    const bool phoneView = UI::Mobile::IsPhoneView();
+    const int windowWidth = phoneView ? PHONE_WINDOW_WIDTH : WINDOW_WIDTH;
+    const int contentWidth = phoneView ? PHONE_CONTENT_WIDTH : CONTENT_WIDTH;
 
     EventScheduleLine message;
     if (!times.HasTimes())
     {
         message = line(now - m_openedAt < AnswerTimeout ? I18N::Game::EventScheduleAsking
                                                          : I18N::Game::EventScheduleNoAnswer,
-                       CONTENT_WIDTH);
+                       contentWidth);
     }
     else if (times.Entries().empty())
     {
-        message = line(I18N::Game::EventScheduleNone, CONTENT_WIDTH);
+        message = line(I18N::Game::EventScheduleNone, contentWidth);
     }
 
     std::vector<EventScheduleRow> rows;
@@ -288,10 +293,10 @@ void mu::ui::window::CEventScheduleWindow::SyncContent()
         }
 
         EventScheduleRow row;
-        const auto name = line(entry.Name, CONTENT_WIDTH, true);
+        const auto name = line(entry.Name, contentWidth, true);
         row.name = name.text;
         row.nameTextPx = name.textPx;
-        const auto time = line(timeText, CONTENT_WIDTH);
+        const auto time = line(timeText, contentWidth);
         row.time = time.text;
         row.timeTextPx = time.textPx;
         row.active = entry.State != Phase::Next;
@@ -301,7 +306,7 @@ void mu::ui::window::CEventScheduleWindow::SyncContent()
 
     EventScheduleRmlModel& model = m_RmlView.GetModel();
     SyncField(m_RmlView.Binder(), &EventScheduleRmlModel::title, "title",
-              line(I18N::Game::EventScheduleTitle, WINDOW_WIDTH, true));
+              line(I18N::Game::EventScheduleTitle, windowWidth, true));
     SyncField(m_RmlView.Binder(), &EventScheduleRmlModel::message, "message", std::move(message));
     if (model.rows != rows)
     {

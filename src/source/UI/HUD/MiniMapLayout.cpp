@@ -1,5 +1,6 @@
 #include "UI/HUD/MiniMapLayout.h"
 
+#include <algorithm>
 #include <cmath>
 
 namespace
@@ -113,4 +114,34 @@ UI::MiniMap::Quad UI::MiniMap::RotatedQuad(const Screen& screen, float x, float 
     quad.bottomLeft = corner(-w * 0.5f, -h * 0.5f);
     quad.topRight = corner(w * 0.5f, h * 0.5f);
     return quad;
+}
+
+int UI::MiniMap::PickHint(std::span<const HintBox> boxes, float x, float y, float slopPixels, float scaleX,
+                          float scaleY)
+{
+    const auto holds = [x, y](const HintBox& box)
+    { return x > box[0] && x < box[0] + box[2] && y > box[1] && y < box[1] + box[3]; };
+    for (std::size_t i = 0; i < boxes.size(); ++i)
+    {
+        if (holds(boxes[i]))
+            return static_cast<int>(i);
+    }
+    if (slopPixels <= 0.f)
+        return NoHint;
+
+    int nearest = NoHint;
+    float nearestDistance = slopPixels;
+    for (std::size_t i = 0; i < boxes.size(); ++i)
+    {
+        const HintBox& box = boxes[i];
+        const float dx = std::max({box[0] - x, 0.f, x - (box[0] + box[2])}) * scaleX;
+        const float dy = std::max({box[1] - y, 0.f, y - (box[1] + box[3])}) * scaleY;
+        const float distance = std::hypot(dx, dy);
+        if (distance <= nearestDistance && (nearest == NoHint || distance < nearestDistance))
+        {
+            nearest = static_cast<int>(i);
+            nearestDistance = distance;
+        }
+    }
+    return nearest;
 }

@@ -84,6 +84,8 @@ namespace mu::ui::window
 
         // Invoked directly from RmlUi data-event-click bindings (see Create()), not polled.
         void RmlClickKickMember(int index);
+        // The phone view's button under the hint: asks Update() to open the Social panel, outside the click.
+        void RmlClickOpenSocial();
 
 
     private:
@@ -92,6 +94,8 @@ namespace mu::ui::window
 
         void BuildRmlUi();
         void SyncRmlModel();
+        void SyncPhoneHud();
+        void OpenSocialIfAsked();
 
         // One member "status card" row -- mirrors RenderMemberStatue()'s per-slot rendering.
         struct PartyMemberRow
@@ -114,6 +118,9 @@ namespace mu::ui::window
             float textPx = 0.f; // native text size in physical px (RmlNativeTextSize.h)
 
             bool hasParty = false;
+            // The phone layout with the on-screen controls (UI::Mobile::ReplacesPcHud()): the hint leaves out
+            // the mouse and a button opens the Social panel instead.
+            bool phoneHud = false;
             std::vector<TextLine> emptyStateLines;
             std::vector<PartyMemberRow> members;
 
@@ -121,6 +128,7 @@ namespace mu::ui::window
             // language switcher of its own).
             Rml::String windowTitle;
             Rml::String exitTooltip;
+            Rml::String socialLabel;
         };
 
         void BindRmlModel(Rml::DataModelConstructor& c, PartyInfoRmlModel& model);
@@ -135,6 +143,7 @@ namespace mu::ui::window
         int m_iSelectedCharID;		// Party List에서 캐릭터 ID를 선택 (default : -1)
 
         bool m_bParty;
+        bool m_openSocialAsked = false;
     };
 }
 

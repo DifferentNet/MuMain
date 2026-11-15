@@ -19,6 +19,8 @@
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/HUD/MiniMapLayout.h"
 #include "UI/HUD/MiniMapLive.h"
+#include "UI/Mobile/InterfaceMode.h"
+#include "UI/Mobile/TouchUnit.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlNativeTextSize.h"
 #include "UI/RmlBridge/RmlTheme.h"
@@ -65,6 +67,9 @@ constexpr int kSideTiles = 20;
 // .edge-side's element size in mini_map.rcss (the tile's texel rectangle).
 constexpr float kSideElementWidth = 41.7f;
 constexpr float kSideElementHeight = 8.f;
+// In the phone view a tap names the nearest marker this far from it (finger units at 100 %, about CSS px): a
+// finger covers a 15 px NPC dot, so a tap beside one still names it.
+constexpr float kTapSlopUnits = 22.f;
 
 template <typename Model, typename T>
 void Sync(RmlModelBinder<Model>& binder, T Model::* field, const char* name, T value)
@@ -646,27 +651,43 @@ void mu::ui::window::CMiniMap::SyncHint()
     const UI::Scaling::ScopedScreenStretch screen(static_cast<int>(WindowWidth), static_cast<int>(WindowHeight));
     const float pointerX = UI::Scaling::LogicalX(transform, g_fWindowMouseX);
     const float pointerY = UI::Scaling::LogicalY(transform, g_fWindowMouseY);
-    const auto holds = [&](const float* box)
-    { return pointerX > box[0] && pointerX < (box[0] + box[2]) && pointerY > box[1] && pointerY < (box[1] + box[3]); };
-    // The live event monsters first (MU Moldova, UI/HUD/MiniMapLive.h): they may stand on a spot's dot.
-    const float* box = nullptr;
+    const bool phoneView = UI::Mobile::IsPhoneView();
+    const float slop = phoneView ? kTapSlopUnits * UI::Mobile::TouchUnit::FullPixels() : 0.f;
+
+    // The live event monsters first (MU Moldova, UI/HUD/MiniMapLive.h): they may stand on a spot's dot. Then the
+    // map's markers; in the phone view only the drawn ones, as a tap beside one may pick it.
+    static std::vector<UI::MiniMap::HintBox> boxes;
+    static std::vector<int> markers; // per box: the marker's index, or -1 for a live hint
+    boxes.clear();
+    markers.clear();
     for (const LiveHint& hint : m_LiveHints)
     {
-        if (holds(hint.box))
-        {
-            box = hint.box;
-            name = hint.text;
-            break;
-        }
+        boxes.push_back({hint.box[0], hint.box[1], hint.box[2], hint.box[3]});
+        markers.push_back(-1);
     }
-    for (int i = 0; i < MAX_MINI_MAP_DATA && box == nullptr; i++)
+    for (int i = 0; i < MAX_MINI_MAP_DATA; i++)
     {
         if (m_Mini_Map_Data[i].Kind <= 0)
             break;
-        if (holds(m_Btn_Loc[i]))
+        if (phoneView && !MarkerDrawn(m_Mini_Map_Data[i]))
+            continue;
+        boxes.push_back({m_Btn_Loc[i][0], m_Btn_Loc[i][1], m_Btn_Loc[i][2], m_Btn_Loc[i][3]});
+        markers.push_back(i);
+    }
+
+    const int picked = UI::MiniMap::PickHint(boxes, pointerX, pointerY, slop, transform.scaleX, transform.scaleY);
+    const float* box = nullptr;
+    if (picked != UI::MiniMap::NoHint)
+    {
+        box = boxes[static_cast<std::size_t>(picked)].data();
+        const int marker = markers[static_cast<std::size_t>(picked)];
+        if (marker < 0)
         {
-            box = m_Btn_Loc[i];
-            name = m_Mini_Map_Data[i].Name;
+            name = m_LiveHints[static_cast<std::size_t>(picked)].text;
+        }
+        else
+        {
+            name = m_Mini_Map_Data[marker].Name;
             std::replace(name.begin(), name.end(), L'\t', L' '); // a boss's name and details
         }
     }

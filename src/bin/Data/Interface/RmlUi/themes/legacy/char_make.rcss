@@ -219,3 +219,25 @@
 .stat-row-2 { top: calc(44px * var(--layout-pixel, 1)); }
 .stat-row-3 { top: calc(61px * var(--layout-pixel, 1)); }
 .stat-row-4 { top: calc(78px * var(--layout-pixel, 1)); }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): the class buttons were 26 tall
+   with no gap, too close for a finger. Here they are 34 tall at a 36 pitch, ending at 304, above the name row
+   (#input_frame at 317), and OK/Cancel are as tall as that row (317 to 355), so #desc_panel keeps its place.
+   #preview and #panel's own place stay: they drive the 3D preview. */
+@media (theme: mobile) {
+	.job-btn {
+		height: calc(34px * var(--layout-pixel, 1));
+		line-height: calc(34px * var(--layout-pixel, 1));
+	}
+	.job-btn[job="wizard"]    { top: calc(126px * var(--layout-pixel, 1)); }
+	.job-btn[job="knight"]    { top: calc(162px * var(--layout-pixel, 1)); }
+	.job-btn[job="elf"]       { top: calc(198px * var(--layout-pixel, 1)); }
+	.job-btn[job="dark"]      { top: calc(234px * var(--layout-pixel, 1)); }
+	.job-btn[job="dark-lord"] { top: calc(270px * var(--layout-pixel, 1)); }
+	#btn_ok     { top: calc(317px * var(--layout-pixel, 1)); }
+	#btn_cancel { top: calc(317px * var(--layout-pixel, 1)); }
+	.btn {
+		height: calc(38px * var(--layout-pixel, 1));
+		line-height: calc(38px * var(--layout-pixel, 1));
+	}
+}

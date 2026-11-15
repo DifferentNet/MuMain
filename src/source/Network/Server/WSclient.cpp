@@ -1910,6 +1910,7 @@ void ReceiveChatWhisper(const BYTE* ReceiveBuffer)
     Text[messageSize] = L'\0';
 
     UI::Chat::Whisper::Register(10, ID);
+    UI::Chat::RememberWhisperSender(ID);
 
     if (UI::Options::IsWhisperSoundOn())
     {

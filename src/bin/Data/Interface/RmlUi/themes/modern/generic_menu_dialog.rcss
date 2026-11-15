@@ -352,4 +352,9 @@
 	#panel.center-both.gmd-edge-right { transform: translate(0, -50%) scale(1.3); transform-origin: 100% 50%; }
 	#panel.center-both.dragged, #panel.window-shell-positioned { transform: scale(1.3); transform-origin: 0 0; }
 	#panel.system-menu { transform: none; }
+	/* MU Moldova: the item card (UI/Mobile/ItemCard.cpp, the only menu kept to an edge) has buttons as tall as a
+	   finger, closer together; a long list (a potion's seven and Close) scrolls inside the card's fixed height
+	   (the base max-height: 100%), which stays on a 400-tall phone screen. */
+	#panel.gmd-edge-left .gmd-btn, #panel.gmd-edge-right .gmd-btn { height: 42dp; line-height: 42dp; }
+	#panel.gmd-edge-left .gmd-button-cell, #panel.gmd-edge-right .gmd-button-cell { margin-bottom: 3dp; }
 }
