@@ -115,6 +115,7 @@ using namespace mu::ui::window;
 #include "Data/GameData/ItemData/ItemModelSlots.h"
 #include "GameLogic/Combat/OwnSkillEcho.h"
 #include "Network/Server/HiddenChatLines.h"
+#include "Engine/Monsters/MonsterPreload.h"
 
 #define MAX_DEBUG_MAX 10
 
@@ -1161,6 +1162,7 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     // scripted `warp` waits for exactly this signal.
     App::Control::Events::RecordTeleportPacket();
 
+    Engine::Monsters::PreloadMap(gMapManager.WorldActive);
     LoadingWorld = 30;
     MouseUpdateTime = 0;
     MouseUpdateTimeMax = 6;
@@ -1400,6 +1402,8 @@ void ReceiveRevival(const BYTE* ReceiveBuffer)
             else
                 o->Position[2] = RequestTerrainHeight(o->Position[0], o->Position[1]) + 30.f;
         }
+
+        Engine::Monsters::PreloadMap(gMapManager.WorldActive);
     }
 
     CreatePetDarkSpirit_Now(c);
@@ -2229,6 +2233,8 @@ BOOL ReceiveTeleport(const BYTE* ReceiveBuffer, BOOL bEncrypted)
 
                 UI::Chat::PostSystem(Text, mu::ui::window::TYPE_SYSTEM_MESSAGE);
             }
+
+            Engine::Monsters::PreloadMap(gMapManager.WorldActive);
         }
 
         SocketClient->ToGameServer()->SendClientReadyAfterMapChange();

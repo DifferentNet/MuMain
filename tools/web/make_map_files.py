@@ -33,6 +33,12 @@ a second run on another map, or from MuWeb_TraceTake right after entering.
 The game opens some monsters' models only on their own maps (the Kalima ones); the trace of one map
 has their model's number but no file. Those are named by the number, Data/Monster/Monster<NN>.bmd, and
 get the textures the model names (model_textures.py).
+
+With --monsters-out it also writes the PC client's src/bin/Data/Local/MapMonsters.txt, "<map> <monster>"
+lines from --spawns: the monster types the client loads behind a map's loading screen
+(Engine/Monsters/MonsterPreload.cpp, config.ini [Render] PreloadMonsters). A type whose model the
+client doesn't have (a model file the trace names, or a Kalima one's by its number, missing from
+--root) or that the trace doesn't know is left out: the client would open nothing for it.
 """
 import argparse
 import collections
@@ -58,6 +64,9 @@ MOST_PACKS_OF_A_FILE = 12
 MONSTER_MODEL = re.compile(r"Data/Monster/Monster(\d+)\.bmd", re.IGNORECASE)
 MONSTER_MODEL_FILE = "Data/Monster/Monster{:02d}.bmd"
 MODEL_SUFFIX = ".bmd"
+# The monster models' numbers after Monster01.bmd's (MAX_MODEL_MONSTER, _define.h); past them are others
+# (the player's, which monsters dressed as players use, and the game has from the start).
+MONSTER_MODEL_COUNT = 400
 
 
 def pack_of_map(number):
@@ -83,6 +92,8 @@ def main():
     parser.add_argument("--trace", required=True, help="{monster: [model, file, ...]} from a trace build")
     parser.add_argument("--out", default=os.path.join(REPO_ROOT, "src", "web", "map-files.txt"))
     parser.add_argument("--models-out", default=os.path.join(REPO_ROOT, "src", "web", "model-files.txt"))
+    parser.add_argument("--monsters-out", help="also write the PC client's monster preload list here "
+                        "(src/bin/Data/Local/MapMonsters.txt)")
     args = parser.parse_args()
 
     with open(os.path.join(args.root, "files.txt"), encoding="utf-8") as f:
@@ -140,6 +151,17 @@ def main():
                 found.append(actual)
         return found
 
+    def model_files_missing(monster):
+        """The model files a traced monster names (or its model's by number) that the output lacks."""
+        entry = trace[monster]
+        named = [path for path in entry[1:] + (files_of_model.get(entry[0]) or [])
+                 if path.lower().endswith(MODEL_SUFFIX)]
+        is_monster_model = first_monster_model is not None and \
+            first_monster_model <= entry[0] < first_monster_model + MONSTER_MODEL_COUNT
+        if not named and is_monster_model:
+            named = [MONSTER_MODEL_FILE.format(entry[0] - first_monster_model + 1)]
+        return [path for path in named if not in_output(path)]
+
     packs = collections.defaultdict(list)
 
     def add(pack, path):
@@ -161,6 +183,8 @@ def main():
             add(pack_of_map(int(match.group(1)) - 1), path)
 
     untraced = set()
+    monsters_of_map = collections.defaultdict(list)
+    without_model = set()
     with open(args.spawns, encoding="utf-8") as f:
         for line in f:
             if not line.strip():
@@ -168,6 +192,10 @@ def main():
             number, monster = (int(part) for part in line.split(","))
             if monster not in trace or trace[monster][0] < 0:
                 untraced.add(monster)
+            elif model_files_missing(monster):
+                without_model.add(monster)
+            elif monster not in monsters_of_map[number]:
+                monsters_of_map[number].append(monster)
             for path in files_of_monster(monster):
                 add(pack_of_map(number), path)
 
@@ -190,6 +218,17 @@ def main():
     with open(args.models_out, "w", encoding="utf-8", newline="\n") as out:
         out.write("\n".join(lines) + "\n")
     print(f"{args.models_out}: {len(lines) - 2} lines for {len(groups)} models")
+    if args.monsters_out:
+        lines = ["# Made by tools/web/make_map_files.py --monsters-out from the server's spawns: the monster",
+                 "# types the client loads behind a map's loading screen (config.ini [Render] PreloadMonsters).",
+                 "# \"<map> <monster>\"."]
+        lines.extend(f"{number} {monster}" for number in sorted(monsters_of_map)
+                     for monster in sorted(monsters_of_map[number]))
+        with open(args.monsters_out, "w", encoding="utf-8", newline="\n") as out:
+            out.write("\n".join(lines) + "\n")
+        print(f"{args.monsters_out}: {len(lines) - 3} lines for {len(monsters_of_map)} maps")
+        if without_model:
+            print(f"Left out of it, their model file is missing: {sorted(without_model)}")
     if untraced:
         print(f"Monsters of the spawns without a trace: {sorted(untraced)}")
     if everywhere:

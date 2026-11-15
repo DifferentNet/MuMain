@@ -201,6 +201,9 @@ public:
 
     // Render
     bool GetSortParticleDraws() const { return m_sortParticleDraws; }
+    // [Render] PreloadMonsters: load the map's monster types behind the loading screen. Manual
+    // config.ini edit only, like GetSortParticleDraws(): no setter, no options-window exposure.
+    bool GetPreloadMonsters() const { return m_preloadMonsters; }
     bool GetVSyncEnabled() const { return m_vsyncEnabled; }
     void SetVSyncEnabled(bool enabled);
     // The look preset ([Render] Look).
@@ -428,6 +431,7 @@ private:
     int m_orbitYaw = 0;
     int m_orbitPitch = 0;
     bool m_sortParticleDraws;
+    bool m_preloadMonsters = true;
     bool m_vsyncEnabled;
     LookPreset m_look;
     int m_anisotropy;

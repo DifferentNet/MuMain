@@ -51,3 +51,4 @@ FpsCap=-1
 EffectLevel=4
 FullEffects=1
 Backend=default
+PreloadMonsters=1

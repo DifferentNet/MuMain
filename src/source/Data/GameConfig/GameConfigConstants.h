@@ -103,6 +103,7 @@ namespace CfgKeys
 
     // Render
     inline constexpr wchar_t CfgKeySortParticleDraws[] = L"SortParticleDraws";
+    inline constexpr wchar_t CfgKeyPreloadMonsters[] = L"PreloadMonsters";
     inline constexpr wchar_t CfgKeyVSync[] = L"VSync";
     // The look preset: Classic or Enhanced (texture filtering, Enhanced lighting,
     // dynamic model lights, the light mood at full strength and post-processing).
@@ -304,6 +305,8 @@ namespace CfgDefaults
 
     // Opt-in until real effects have been visually checked on target hardware.
     inline constexpr bool CfgDefaultSortParticleDraws = false;
+    // On: a monster type's first appearance used to stall the game while its model loaded.
+    inline constexpr bool CfgDefaultPreloadMonsters = true;
     inline constexpr bool CfgDefaultVSync = true;
 
     // The look a missing or invalid [Render] Look stands for.

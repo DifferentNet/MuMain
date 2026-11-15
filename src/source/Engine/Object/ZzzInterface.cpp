@@ -75,6 +75,7 @@
 #include "UI/Inventory/InventoryContents.h"
 #include "UI/Inventory/InventoryExtension.h"
 #include "GameLogic/Combat/OwnSkillEcho.h"
+#include "Engine/Monsters/MonsterPreload.h"
 
 #include <iterator>
 
@@ -3023,6 +3024,8 @@ void MoveHero()
 
     if (LoadingWorld > 0)
     {
+        // The map's monster types the loading screen had no time for, one a frame.
+        Engine::Monsters::RunPendingStep();
         LoadingWorld--;
         if (LoadingWorld == 9999998 || LoadingWorld == 29)
 
