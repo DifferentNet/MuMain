@@ -85,13 +85,13 @@ public:
     // The answer to the last Enter, and whether one is still awaited.
     bool IsEntering() const { return m_entering; }
     bool LastEnterSucceeded() const { return m_lastEnterOk; }
-    // The server's text for it; kept until the first full refresh that starts after it (TakeFooter), then empty.
+    // The server's text for it (a refusal's reason); kept until the next Enter or until the window opens again, as the
+    // server sends its refresh right after the answer.
     const std::wstring& LastEnterText() const { return m_lastEnterText; }
     // Forgets that text, e.g. when the window opens again.
     void ClearEnterText()
     {
         m_lastEnterText.clear();
-        m_enterTextStale = false;
     }
     // Counts up on every answer to Enter, so the window notices a new one.
     int EnterAnswers() const { return m_enterAnswers; }
@@ -119,7 +119,6 @@ private:
     bool m_lastEnterOk = false;
     std::wstring m_lastEnterText;
     // Set when a refresh starts with an enter text already shown: its footer clears the text.
-    bool m_enterTextStale = false;
     int m_enterAnswers = 0;
     std::chrono::steady_clock::time_point m_lastRequest{};
     std::chrono::steady_clock::time_point m_enterSentAt{};
