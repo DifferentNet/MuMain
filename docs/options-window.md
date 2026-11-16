@@ -163,9 +163,11 @@ window writes to these sections:
   own, through a temporary file, when a slider is let go; see "Tuning it
   yourself" in [`enhanced-look.md`](enhanced-look.md).
 - `[UI]` - `Locale`, `Font`, `RmlTheme` and `UIScalePercent` from the Display and
-  Interface tabs. `EnableAnimationTaskPool` (`0`/`1`, set by hand only, like the
-  `--enable-taskpool` command-line flag) animates characters on worker
-  threads.
+  Interface tabs. `EnableAnimationTaskPool` (`auto` by default, `0`/`off`,
+  `1`/`on`; set by hand only, like the `--enable-taskpool` and
+  `--disable-taskpool` command-line flags) animates characters on worker
+  threads, and `ReuseCharacterBones` (`1` by default, set by hand only) lets
+  render keep the character bones built earlier in the frame.
 - `[Audio]` - volumes.
 - `[Login]` - language, and the remembered-credential keys (`RememberMe`,
   `SavePassword`, `EncryptedUsername`, `EncryptedPassword`); see

@@ -118,8 +118,16 @@
   the object's position and scale themselves. Never bake `BMD::BodyOrigin` or
   `BodyScale` into bones outside render: they belong to whichever object of that
   model was drawn last.
-- Render still animates each character again. In developer builds, the control
-  socket's `bones` query checks that the two match.
+- Render keeps those bones instead of animating the character again when every
+  input of the call is the same bit for bit (model, action, prior action,
+  frames, angles, head angles, body height, and no model loaded or released
+  since), and only for its model-space call. Anything else that writes
+  `o->BoneTransform` must call `Engine::Object::BonePose::Forget(*o)`.
+  `[UI] ReuseCharacterBones=0` turns this off. In developer builds, the control
+  socket's `bones` query (`{"start":true}`) makes render animate every
+  character again and compare: `mismatched` counts characters whose bones
+  differ, `reusable` the ones render would have kept, and `reusable_mismatched`
+  those of them that differ in any bit (must stay 0).
 - Render-frequency code must not advance fixed-step simulation once per rendered
   frame. Existing timing controls preserve animation and cloth cadence when FPS
   changes.

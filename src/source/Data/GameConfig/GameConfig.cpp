@@ -105,7 +105,8 @@ void GameConfig::Load()
     SetGamepadGlyphs(ReadInt(CfgSectionUI, CfgKeyGamepadGlyphs, CfgDefaultGamepadGlyphs));
     m_gamepadCardSeen = ReadBool(CfgSectionUI, CfgKeyGamepadCardSeen, CfgDefaultGamepadCardSeen);
     m_enableAnimationTaskPool =
-        ReadBool(CfgSectionUI, CfgKeyEnableAnimationTaskPool, CfgDefaultEnableAnimationTaskPool);
+        ReadString(CfgSectionUI, CfgKeyEnableAnimationTaskPool, CfgDefaultEnableAnimationTaskPool);
+    m_reuseCharacterBones = ReadBool(CfgSectionUI, CfgKeyReuseCharacterBones, CfgDefaultReuseCharacterBones);
 
     m_zoom = ReadInt(CfgSectionCamera, CfgKeyZoom, CfgDefaultZoom);
     m_cameraMode = ReadInt(CfgSectionCamera, CfgKeyCameraMode, CfgDefaultCameraMode);

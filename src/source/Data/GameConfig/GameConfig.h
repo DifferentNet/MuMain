@@ -361,8 +361,11 @@ public:
     // only, same as GetSortParticleDraws() above: no setter, no in-game options-window exposure.
     std::wstring GetRenderBackend() const { return m_renderBackend; }
 
-    // [UI] EnableAnimationTaskPool: manual config.ini edit only, like the two above.
-    bool GetEnableAnimationTaskPool() const { return m_enableAnimationTaskPool; }
+    // [UI] EnableAnimationTaskPool: "auto", "0"/"off" or "1"/"on" as written (see
+    // Engine::Object::AnimationThreads::ParseMode). Manual config.ini edit only, like the two above.
+    std::wstring GetEnableAnimationTaskPool() const { return m_enableAnimationTaskPool; }
+    // [UI] ReuseCharacterBones: manual config.ini edit only.
+    bool GetReuseCharacterBones() const { return m_reuseCharacterBones; }
 
     // Helpers
     static std::wstring BinaryToHex(const BYTE* data, DWORD size);
@@ -427,7 +430,8 @@ private:
     int m_gamepadPointerSpeed = 100;
     int m_gamepadGlyphs = 0;
     bool m_gamepadCardSeen = false;
-    bool m_enableAnimationTaskPool;
+    std::wstring m_enableAnimationTaskPool;
+    bool m_reuseCharacterBones = true;
 
     int m_zoom;
     int m_cameraMode = 0;

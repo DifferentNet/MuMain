@@ -10,6 +10,7 @@
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzObject.h"
 #include "Engine/Object/ZzzCharacter.h"
+#include "Engine/Object/AnimationTaskPool.h"
 #include "Engine/Object/PlayerActionState.h"
 #include "Engine/Object/SwingCadence.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
@@ -17,6 +18,7 @@
 #include "Engine/AI/BoidSteering.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <limits>
 #include <mutex>
@@ -341,6 +343,8 @@ static float HeroSwingStartKey(const OBJECT* o, const BMD* b, int action)
 
 void SetAction(OBJECT* o, int Action, bool bBlending)
 {
+    // The animation workers read the action and frames while they run (see AnimationTaskPool).
+    assert(!AnimationTaskPool::Instance().InFlight());
     BMD* b = &Models[o->Type];
     if (Action >= b->NumActions)
         return;

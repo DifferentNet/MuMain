@@ -8,6 +8,8 @@
 #include "stdafx.h"
 #include <execution>
 #include <algorithm>
+#include <cassert>
+#include <cstring>
 #include <span>
 #include <array>
 #include <optional>
@@ -26,6 +28,7 @@
 #include "Engine/Object/ZzzObject.h"
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/AnimationTaskPool.h"
+#include "Engine/Object/CharacterBonePose.h"
 #include "Engine/Object/PlayerActionState.h"
 #include "Engine/Object/SwingCadence.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
@@ -6484,7 +6487,13 @@ void MoveCharactersClient()
     {
         MoveCharacterClient(&CharactersClient[i]);
     }
-    UpdateCharactersAnimationParallel(std::span<CHARACTER>(CharactersClient, MAX_CHARACTERS_CLIENT));
+    {
+        // The bones themselves on the main thread, or only handing them to the workers (CharWait has the rest).
+        FRAME_PROFILE(CharAnim);
+        UpdateCharactersAnimationParallel(std::span<CHARACTER>(CharactersClient, MAX_CHARACTERS_CLIENT));
+    }
+    // The only main-thread work while the workers animate: it must not touch a character's
+    // animation inputs or bones, or load a model (see AnimationTaskPool).
     MoveBlurs();
     // Effects, joints and particles read these bones next.
     WaitCharactersAnimation();
@@ -6494,16 +6503,42 @@ void MoveCharactersClient()
 // the main thread), shown as "Characters animated" by the $details overlay (SceneManager.cpp).
 size_t g_LastActiveCharacterCount = 0;
 bool g_LastAnimationWasParallel = false;
+std::size_t g_AnimationTaskPoolWorkers = 0;
+
+namespace
+{
+// Fewer visible characters than this animate on the main thread: waking the workers costs more.
+constexpr std::size_t ParallelAnimationThreshold = 20;
+
+void AnimateCharacterJob(void* context, std::size_t index)
+{
+    CHARACTER* const* characters = static_cast<CHARACTER* const*>(context);
+    AnimateCharacterBones(&characters[index]->Object);
+}
+
+// Starts the workers the first time a crowd needs them. False when they are off: animate serially.
+bool DispatchCharacterBones(std::span<CHARACTER* const> activeChars)
+{
+    if (g_AnimationTaskPoolWorkers == 0 || activeChars.size() < ParallelAnimationThreshold) return false;
+
+    AnimationTaskPool& pool = AnimationTaskPool::Instance();
+    pool.Initialize(g_AnimationTaskPoolWorkers);
+    return pool.Dispatch(&AnimateCharacterJob, const_cast<CHARACTER**>(activeChars.data()), activeChars.size());
+}
+} // namespace
 
 void UpdateCharactersAnimationParallel(std::span<CHARACTER> characters)
 {
-    static thread_local std::vector<CHARACTER*> activeChars;
+    // Main thread only, and the previous batch was awaited: the workers may still read this list until then.
+    assert(!AnimationTaskPool::Instance().InFlight());
+    static std::vector<CHARACTER*> activeChars;
     activeChars.clear();
     activeChars.reserve(characters.size());
 
     for (CHARACTER& c : characters)
     {
         c.Object.EnableBoneMatrix = false;
+        Engine::Object::BonePose::Forget(c.Object);
         if (c.Object.Live && c.Object.Visible)
         {
             // Render animates characters at height 0; item previews leave other heights on the shared model.
@@ -6513,23 +6548,12 @@ void UpdateCharactersAnimationParallel(std::span<CHARACTER> characters)
     }
 
     g_LastActiveCharacterCount = activeChars.size();
-    g_LastAnimationWasParallel = false;
+    g_LastAnimationWasParallel = DispatchCharacterBones(activeChars);
+    if (g_LastAnimationWasParallel) return;
 
-    if (activeChars.empty()) return;
-
-    extern bool g_bDisableAnimationTaskPool;
-    constexpr size_t PARALLEL_ANIMATION_THRESHOLD = 20;
-    g_LastAnimationWasParallel = (!g_bDisableAnimationTaskPool && activeChars.size() >= PARALLEL_ANIMATION_THRESHOLD);
-    if (g_LastAnimationWasParallel)
+    for (CHARACTER* c : activeChars)
     {
-        AnimationTaskPool::Instance().DispatchCharacters(activeChars);
-    }
-    else
-    {
-        for (CHARACTER* c : activeChars)
-        {
-            AnimateCharacterBones(&c->Object);
-        }
+        AnimateCharacterBones(&c->Object);
     }
 }
 
@@ -6542,6 +6566,7 @@ void AnimateCharacterBones(OBJECT* o)
     model->Animation(o->BoneTransform, o->AnimationFrame, o->PriorAnimationFrame, o->PriorAction, o->Angle,
                      o->HeadAngle, false, false, nullptr, o->CurrentAction);
     o->EnableBoneMatrix = true;
+    Engine::Object::BonePose::Remember(*o, model->BodyHeight);
 }
 
 #ifdef MU_ENABLE_CONTROL_SOCKET
@@ -6569,12 +6594,13 @@ bool BeginPrepassBoneCheck(const OBJECT* o, int numBones)
     return true;
 }
 
-void EndPrepassBoneCheck(const OBJECT* o, int numBones)
+void EndPrepassBoneCheck(const OBJECT* o, int numBones, bool reusable)
 {
-    RecordPrepassBones(PrepassBones, o->BoneTransform, numBones, o->Type == MODEL_PLAYER);
+    RecordPrepassBones(PrepassBones, o->BoneTransform, numBones, o->Type == MODEL_PLAYER, reusable);
 }
 
-void RecordPrepassBones(const float (*prepass)[3][4], const float (*rendered)[3][4], int numBones, bool player)
+void RecordPrepassBones(const float (*prepass)[3][4], const float (*rendered)[3][4], int numBones, bool player,
+                        bool reusable)
 {
     float delta = 0.f;
     for (int bone = 0; bone < numBones; ++bone)
@@ -6585,6 +6611,10 @@ void RecordPrepassBones(const float (*prepass)[3][4], const float (*rendered)[3]
     if (player) ++g_PrepassBoneCheck.players;
     if (delta > 0.01f) ++g_PrepassBoneCheck.mismatched;
     g_PrepassBoneCheck.maxDelta = std::max(g_PrepassBoneCheck.maxDelta, delta);
+    if (!reusable) return;
+    // Render would have kept the pre-pass bones here: they must be the very same bits.
+    ++g_PrepassBoneCheck.reusable;
+    if (std::memcmp(prepass, rendered, sizeof(float) * 12 * numBones) != 0) ++g_PrepassBoneCheck.reusableMismatched;
 }
 #endif
 
@@ -12119,6 +12149,7 @@ void CreateCharacterPointer(CHARACTER* c, int Type, unsigned char PositionX, uns
         o->BoneTransform = NULL;
     }
     o->BoneTransform = new vec34_t[MAX_BONES];
+    Engine::Object::BonePose::Forget(*o);
 
     for (int i = 0; i < 2; i++)
     {

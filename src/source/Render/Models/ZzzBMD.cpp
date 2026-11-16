@@ -9,6 +9,7 @@
 #include <cstring>
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <cassert>
 #include <climits>
@@ -24,6 +25,7 @@
 #include "ZzzBMD.h"
 #include "Engine/Object/ZzzObject.h"
 #include "Engine/Object/ZzzCharacter.h"
+#include "Engine/Object/AnimationTaskPool.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
 #include "Render/Textures/ZzzTexture.h"
 #include "Render/Textures/HdTextures.h"
@@ -69,6 +71,24 @@ void SetActiveBoneTransform(const float (*ptr)[3][4])
 {
     g_pActiveBoneTransform = ptr;
     ++g_BoneTransformVersion;
+}
+
+namespace
+{
+// Written on the main thread only, read by the animation workers while no model loads (see AnimationTaskPool).
+std::atomic<std::uint32_t> s_modelDataGeneration{ 0 };
+
+void BumpModelDataGeneration()
+{
+    // Models load and release on the main thread only, never while the animation workers run.
+    assert(!AnimationTaskPool::Instance().InFlight());
+    s_modelDataGeneration.fetch_add(1, std::memory_order_relaxed);
+}
+} // namespace
+
+std::uint32_t ModelDataGeneration()
+{
+    return s_modelDataGeneration.load(std::memory_order_relaxed);
 }
 
 vec3_t VertexTransform[MAX_MESH][MAX_VERTICES];
@@ -3316,6 +3336,7 @@ long BMD::GetDataUserCount() const
 
 void BMD::Release()
 {
+    BumpModelDataGeneration();
     ClearStaticPoses();
     auto& shadowStreams = ShadowStreams();
     ClearShadowStreamMemo();
@@ -3535,6 +3556,7 @@ bool BMD::Open2(const wchar_t* DirName, const wchar_t* ModelFileName, bool bReAl
             return true;
         Release();
     }
+    BumpModelDataGeneration();
 
     wchar_t ModelPath[260] = {};
     _snwprintf(ModelPath, std::size(ModelPath), L"%ls%ls", DirName, ModelFileName);

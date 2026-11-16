@@ -16,6 +16,10 @@ extern const float (*g_pActiveBoneTransform)[3][4];
 extern unsigned int g_BoneTransformVersion;
 void SetActiveBoneTransform(const float (*ptr)[3][4]);
 
+// Bumped whenever any model slot loads or lets go of its data (Open2, Release, ShareFrom): bones
+// kept from an earlier Animation() call can only stand in for a new one while this is unchanged.
+std::uint32_t ModelDataGeneration();
+
 #define MAX_BONES    200
 #define MAX_MESH     50
 #define MAX_VERTICES 15000

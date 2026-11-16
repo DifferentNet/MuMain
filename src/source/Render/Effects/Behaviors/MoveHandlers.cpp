@@ -4,6 +4,7 @@
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzObject.h"
 #include "Engine/Object/ZzzCharacter.h"
+#include "Engine/Object/CharacterBonePose.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
 #include "Render/Textures/ZzzTexture.h"
 #include "Engine/AI/ZzzAI.h"
@@ -7534,6 +7535,8 @@ namespace Render::Effects::Behaviors
 
                     characterBMD->Animation(o->Owner->BoneTransform, o->Owner->AnimationFrame,
                         o->Owner->PriorAnimationFrame, o->Owner->PriorAction, o->Owner->Angle, o->Owner->HeadAngle);
+                    // World-space bones now: render must build its own.
+                    Engine::Object::BonePose::Forget(*o->Owner);
                     characterBMD->TransformPosition(o->Owner->BoneTransform[20], vRelativePos, vtaWorldPos, false);
 
                     if (rand_fps_check(2)) {
@@ -7563,6 +7566,7 @@ namespace Render::Effects::Behaviors
 
                     characterBMD->Animation(o->Owner->BoneTransform, o->Owner->AnimationFrame,
                         o->Owner->PriorAnimationFrame, o->Owner->PriorAction, o->Owner->Angle, o->Owner->HeadAngle);
+                    Engine::Object::BonePose::Forget(*o->Owner);
                     characterBMD->TransformPosition(o->Owner->BoneTransform[20], vRelativePos, vtaWorldPos, false);
 
                     vtaWorldPos[2] += 70;

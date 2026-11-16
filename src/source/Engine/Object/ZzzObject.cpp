@@ -17,6 +17,7 @@
 #include <optional>
 #include <string_view>
 #include "Engine/Object/ZzzCharacter.h"
+#include "Engine/Object/CharacterBonePose.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
 #include "Render/Textures/ZzzTexture.h"
 #include "Engine/AI/ZzzAI.h"
@@ -280,6 +281,60 @@ void BodyLight(OBJECT* o, BMD* b)
 }
 
 extern float BoneScale;
+extern thread_local float ParentMatrix[3][4];
+
+namespace
+{
+bool PrepassBoneCheckRunning()
+{
+#ifdef MU_ENABLE_CONTROL_SOCKET
+    return g_PrepassBoneCheck.enabled;
+#else
+    return false;
+#endif
+}
+
+// Render's model-space Animation() of o (Translate on means the bones stay model space and the draw
+// adds the position) builds exactly the bones the character pre-pass left when every input matches.
+bool PrepassBonesStand(const OBJECT* o, const BMD* b, bool Translate)
+{
+    // Render's call takes the action from the model; the pre-pass handed it o's.
+    if (!Translate || b->NumActions <= 0 || b->CurrentAction != o->CurrentAction) return false;
+    return Engine::Object::BonePose::Matches(*o, b->BodyHeight);
+}
+
+// Keeps the pre-pass bones when they stand, and leaves the root matrix behind as Animation() would.
+bool KeepPrepassBones(OBJECT* o, BMD* b, bool Translate)
+{
+    if (!Engine::Object::BonePose::g_ReuseEnabled || PrepassBoneCheckRunning()) return false;
+    if (!PrepassBonesStand(o, b, Translate)) return false;
+
+    AngleMatrix(o->Angle, ParentMatrix);
+    return true;
+}
+
+void AnimateForRender(OBJECT* o, BMD* b, bool Translate)
+{
+    if (!o->EnableBoneMatrix)
+    {
+        b->Animation(BoneTransform, o->AnimationFrame, o->PriorAnimationFrame, o->PriorAction, o->Angle, o->HeadAngle,
+                     false, !Translate);
+        return;
+    }
+    if (KeepPrepassBones(o, b, Translate)) return;
+
+#ifdef MU_ENABLE_CONTROL_SOCKET
+    const bool checkBones = BeginPrepassBoneCheck(o, b->NumBones);
+    const bool reusable = checkBones && PrepassBonesStand(o, b, Translate);
+#endif
+    b->Animation(o->BoneTransform, o->AnimationFrame, o->PriorAnimationFrame, o->PriorAction, o->Angle, o->HeadAngle,
+                 false, !Translate);
+    Engine::Object::BonePose::Forget(*o);
+#ifdef MU_ENABLE_CONTROL_SOCKET
+    if (checkBones) EndPrepassBoneCheck(o, b->NumBones, reusable);
+#endif
+}
+} // namespace
 
 bool Calc_RenderObject(OBJECT* o, bool Translate, int Select, int ExtraMon)
 {
@@ -326,23 +381,7 @@ bool Calc_RenderObject(OBJECT* o, bool Translate, int Select, int ExtraMon)
         }
     }
 
-#ifdef MU_ENABLE_CONTROL_SOCKET
-    const bool checkBones = BeginPrepassBoneCheck(o, b->NumBones);
-#endif
-    if (o->EnableBoneMatrix)
-    {
-        b->Animation(o->BoneTransform, o->AnimationFrame, o->PriorAnimationFrame, o->PriorAction, o->Angle,
-                     o->HeadAngle, false, !Translate);
-    }
-    else
-    {
-        b->Animation(BoneTransform, o->AnimationFrame, o->PriorAnimationFrame, o->PriorAction, o->Angle, o->HeadAngle,
-                     false, !Translate);
-    }
-
-#ifdef MU_ENABLE_CONTROL_SOCKET
-    if (checkBones) EndPrepassBoneCheck(o, b->NumBones);
-#endif
+    AnimateForRender(o, b, Translate);
 
     BoneScale = 1.f;
     if (3 == Select)
@@ -440,20 +479,7 @@ bool Calc_ObjectAnimation(OBJECT* o, bool Translate, int Select)
     b->CurrentAction = o->CurrentAction;
     VectorCopy(o->Position, b->BodyOrigin);
 
-#ifdef MU_ENABLE_CONTROL_SOCKET
-    const bool checkBones = BeginPrepassBoneCheck(o, b->NumBones);
-#endif
-    if (o->EnableBoneMatrix)
-    {
-        b->Animation(o->BoneTransform, o->AnimationFrame, o->PriorAnimationFrame, o->PriorAction, o->Angle, o->HeadAngle, false, !Translate);
-    }
-    else
-    {
-        b->Animation(BoneTransform, o->AnimationFrame, o->PriorAnimationFrame, o->PriorAction, o->Angle, o->HeadAngle, false, !Translate);
-    }
-#ifdef MU_ENABLE_CONTROL_SOCKET
-    if (checkBones) EndPrepassBoneCheck(o, b->NumBones);
-#endif
+    AnimateForRender(o, b, Translate);
     return true;
 }
 

@@ -57,6 +57,18 @@ target_compile_definitions(test_item_database_files PRIVATE
     MU_TEST_DATA_DIR="${CMAKE_SOURCE_DIR}/src/bin/Data"
 )
 
+# The character animation workers (a pool of plain jobs) and how many of them start.
+find_package(Threads REQUIRED)
+mu_add_test(
+    NAME test_animation_task_pool
+    SOURCES
+        test_animation_task_pool.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Engine/Object/AnimationTaskPool.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Engine/Object/AnimationThreadSettings.cpp
+    LINK_LIBS
+        Threads::Threads
+)
+
 # Animates the shipped player model the way the character pre-pass does.
 mu_add_test(
     NAME test_character_bones

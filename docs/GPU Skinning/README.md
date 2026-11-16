@@ -64,11 +64,18 @@ and HLSL shaders compiled for the active SDL GPU backend.
 - `[Render] SortParticleDraws=1` groups safe additive particle stretches by
   texture before SDL GPU submission. Default `0` preserves slot order until
   effects are visually checked on target hardware.
-- `[UI] EnableAnimationTaskPool=1` enables parallel animation processing when
-  at least 20 active characters are visible. Default `0` keeps sequential
-  processing.
-- `--enable-taskpool` enables the same task-pool path regardless of the INI
-  value; the 20-character threshold remains.
+- `[UI] EnableAnimationTaskPool` animates characters on worker threads when at
+  least 20 are visible. `auto` (the default, also when the key is missing) uses
+  half the hardware threads less two (1-4 workers) on a PC with 4 or more
+  hardware threads, and none below that; `0`/`off` keeps the main thread only;
+  `1`/`on` uses workers on any PC. The main thread takes its share of the work
+  while it waits. The browser build always animates on the main thread.
+- `--enable-taskpool` forces the workers on, `--disable-taskpool` forces them
+  off (it wins over both the INI value and `--enable-taskpool`); the
+  20-character threshold remains.
+- `[UI] ReuseCharacterBones=1` (default) lets render keep the bones the
+  character pre-pass built when nothing they depend on changed since; `0`
+  makes render build them again. A switch for measuring, edited by hand.
 - `[UI] Locale` defaults to `en` and is updated by the Options language picker.
 - `[Camera] Zoom` defaults to `1735` and stores the Orbital-camera distance.
 - `--editor` starts the editor enabled on `*_mueditor` builds; **F12** toggles
