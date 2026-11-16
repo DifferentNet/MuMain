@@ -58,7 +58,19 @@ static_assert(sizeof(SdlGpuCompositeUniform) == 32);
 class SdlGpuPostProcessing
 {
 public:
+    // The most levels of the bloom chain (the storage); each level is half the
+    // size of the one before.
     static constexpr std::size_t BloomLevelCount = 5;
+    // The levels the chain actually renders. The browser build is limited by
+    // the main thread, where every render pass costs WebGPU calls: it renders
+    // 3 levels (3 down + 2 up passes, 4 fewer per frame) and loses only the
+    // two widest, faintest halos. The PC build renders all 5.
+#ifdef __EMSCRIPTEN__
+    static constexpr std::size_t ActiveBloomLevels = 3;
+#else
+    static constexpr std::size_t ActiveBloomLevels = BloomLevelCount;
+#endif
+    static_assert(ActiveBloomLevels >= 1 && ActiveBloomLevels <= BloomLevelCount);
     // The built-in level falloff (look profile bloom.levelFalloff): each wider
     // level adds this share of itself to the next narrower one, so a level's
     // weight in the final glow falls with its radius (1, 0.5, 0.25, ...): the

@@ -232,8 +232,10 @@ bool SdlGpuPostProcessing::EnsureTargets(SdlGpuTargetSize size)
     m_bloomSourceTexture = CreateTarget(m_device, m_frameFormat, size);
     SdlGpuTargetSize levelSize = HalfSize(size);
     bool created = m_sceneTexture && m_bloomSourceTexture;
-    for (BloomLevel& level : m_bloomLevels)
+    // Only the levels the chain renders; the others stay empty.
+    for (std::size_t index = 0; index < ActiveBloomLevels; ++index)
     {
+        BloomLevel& level = m_bloomLevels[index];
         level.size = levelSize;
         level.texture = CreateTarget(m_device, m_bloomFormat, levelSize);
         created = created && level.texture;
@@ -314,8 +316,9 @@ void SdlGpuPostProcessing::RenderBloom(SDL_GPUCommandBuffer* commandBuffer, floa
     // Down: the bloom source into the first level, each level into the next.
     SDL_GPUTexture* source = m_bloomSourceTexture;
     SdlGpuTargetSize sourceSize = m_targetSize;
-    for (const BloomLevel& level : m_bloomLevels)
+    for (std::size_t index = 0; index < ActiveBloomLevels; ++index)
     {
+        const BloomLevel& level = m_bloomLevels[index];
         RunBloomPass(commandBuffer, m_bloomDownPipeline, level, SDL_GPU_LOADOP_DONT_CARE, source, sourceSize, 1.0f);
         source = level.texture;
         sourceSize = level.size;
@@ -324,7 +327,7 @@ void SdlGpuPostProcessing::RenderBloom(SDL_GPUCommandBuffer* commandBuffer, floa
     // Up: each level is blurred into the next larger one and added to it at
     // `levelFalloff`, so the first level ends up with the glow of every radius,
     // the wide ones fainter.
-    for (std::size_t index = BloomLevelCount - 1u; index > 0u; --index)
+    for (std::size_t index = ActiveBloomLevels - 1u; index > 0u; --index)
     {
         const BloomLevel& smaller = m_bloomLevels[index];
         RunBloomPass(commandBuffer, m_bloomUpPipeline, m_bloomLevels[index - 1u], SDL_GPU_LOADOP_LOAD, smaller.texture,
@@ -379,7 +382,7 @@ void SdlGpuPostProcessing::DrawComposite(SDL_GPUCommandBuffer* commandBuffer, SD
 
     // Every level of the chain adds its weighted blur of the source to the first one.
     const float bloomScale =
-        bloom ? look.bloomStrength / Render::PostProcessing::BloomWeightSum(BloomLevelCount, look.bloomLevelFalloff)
+        bloom ? look.bloomStrength / Render::PostProcessing::BloomWeightSum(ActiveBloomLevels, look.bloomLevelFalloff)
               : 0.0f;
     // Unused inputs still need a binding: the scene texture stands in for them.
     const SDL_GPUTextureSamplerBinding bindings[] = {
