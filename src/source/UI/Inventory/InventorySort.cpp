@@ -61,6 +61,7 @@ constexpr INTERFACE_LIST BagBusyWindows[] = {
     mu::ui::window::INTERFACE_TIER_MAPS,
     mu::ui::window::INTERFACE_AUCTION,
     mu::ui::window::INTERFACE_ENDLESS_TOWER,
+    mu::ui::window::INTERFACE_SOLO_KALIMA,
     mu::ui::window::INTERFACE_RENA_SHOP,
     mu::ui::window::INTERFACE_GRAND_SHOP,
 };

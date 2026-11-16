@@ -16445,4 +16445,85 @@
   <data name="TouchQuickChat5" xml:space="preserve">
     <value>Помогите!</value>
   </data>
+  <data name="SoloKalimaTitle" xml:space="preserve">
+    <value>Логово Кундуна</value>
+  </data>
+  <data name="SoloKalimaAsking" xml:space="preserve">
+    <value>Запрашиваю у сервера...</value>
+  </data>
+  <data name="SoloKalimaNoAnswer" xml:space="preserve">
+    <value>Сервер не присылает Логово Кундуна.</value>
+  </data>
+  <data name="SoloKalimaPower" xml:space="preserve">
+    <value>Ваш CP: %ls · HP: %ls</value>
+  </data>
+  <data name="SoloKalimaTickets" xml:space="preserve">
+    <value>Зеркало измерений: %d</value>
+  </data>
+  <data name="SoloKalimaNoTicket" xml:space="preserve">
+    <value>Нет Зеркала измерений.</value>
+  </data>
+  <data name="SoloKalimaRunsLeft" xml:space="preserve">
+    <value>Забегов сегодня: %d, сброс через %ls</value>
+  </data>
+  <data name="SoloKalimaTierTitle" xml:space="preserve">
+    <value>%d. %ls · Калима %d</value>
+  </data>
+  <data name="SoloKalimaTierClosed" xml:space="preserve">
+    <value> · закрыт</value>
+  </data>
+  <data name="SoloKalimaTierDetail" xml:space="preserve">
+    <value>%ls CP · %ls HP · рекорд %ls</value>
+  </data>
+  <data name="SoloKalimaNoRecord" xml:space="preserve">
+    <value>нет</value>
+  </data>
+  <data name="SoloKalimaServerBest" xml:space="preserve">
+    <value>Рекорд сервера, тир %d: %ls · %ls</value>
+  </data>
+  <data name="SoloKalimaNoServerBest" xml:space="preserve">
+    <value>Рекорд сервера, тир %d: пока нет</value>
+  </data>
+  <data name="SoloKalimaCurses" xml:space="preserve">
+    <value>Проклятия: %d из %d (больше добычи)</value>
+  </data>
+  <data name="SoloKalimaCurse" xml:space="preserve">
+    <value>%ls: %ls</value>
+  </data>
+  <data name="SoloKalimaEnter" xml:space="preserve">
+    <value>Войти в тир %d</value>
+  </data>
+  <data name="SoloKalimaEnterAny" xml:space="preserve">
+    <value>Войти</value>
+  </data>
+  <data name="SoloKalimaEntering" xml:space="preserve">
+    <value>Входим...</value>
+  </data>
+  <data name="SoloKalimaInRun" xml:space="preserve">
+    <value>Вы уже в забеге.</value>
+  </data>
+  <data name="SoloKalimaComeToNpc" xml:space="preserve">
+    <value>Подойдите к Миражу (Лоренсия, Девиас).</value>
+  </data>
+  <data name="SoloKalimaNoRuns" xml:space="preserve">
+    <value>Забег сегодня уже был, следующий через %ls</value>
+  </data>
+  <data name="SoloKalimaPickTier" xml:space="preserve">
+    <value>Выберите тир.</value>
+  </data>
+  <data name="SoloKalimaTierLocked" xml:space="preserve">
+    <value>Для тира %d нужно %ls CP и %ls HP.</value>
+  </data>
+  <data name="SoloKalimaSealTimer" xml:space="preserve">
+    <value>Логово · Печать %d</value>
+  </data>
+  <data name="SoloKalimaBossTimer" xml:space="preserve">
+    <value>Логово · Босс</value>
+  </data>
+  <data name="SoloKalimaCleared" xml:space="preserve">
+    <value>Логово Кундуна, тир %d: пройдено!</value>
+  </data>
+  <data name="SoloKalimaFailed" xml:space="preserve">
+    <value>Логово Кундуна, тир %d: не пройдено.</value>
+  </data>
 </root>

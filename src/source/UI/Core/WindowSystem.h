@@ -49,6 +49,7 @@
 #include "UI/Events/BattlePassWindow.h"
 #include "UI/Events/TierMapsWindow.h"
 #include "UI/Events/EndlessTowerWindow.h"
+#include "UI/Events/SoloKalimaWindow.h"
 #include "UI/Events/RenaShopWindow.h"
 #include "UI/Events/GrandShopWindow.h"
 #include "UI/Options/LootFilterWindow.h"
@@ -205,6 +206,7 @@ namespace mu::ui::window
         CBattlePassWindow* m_pNewBattlePassWindow;
         CTierMapsWindow* m_pNewTierMapsWindow;
         CEndlessTowerWindow* m_pNewEndlessTowerWindow;
+        CSoloKalimaWindow* m_pNewSoloKalimaWindow;
         CRenaShopWindow* m_pNewRenaShopWindow;
         CGrandShopWindow* m_pNewGrandShopWindow;
         CLootFilterWindow* m_pNewLootFilterWindow;
@@ -304,6 +306,7 @@ namespace mu::ui::window
         CBattlePassWindow* GetUI_NewBattlePassWindow() const;
         CTierMapsWindow* GetUI_NewTierMapsWindow() const;
         CEndlessTowerWindow* GetUI_NewEndlessTowerWindow() const;
+        CSoloKalimaWindow* GetUI_NewSoloKalimaWindow() const;
         CRenaShopWindow* GetUI_NewRenaShopWindow() const;
         CGrandShopWindow* GetUI_NewGrandShopWindow() const;
         CLootFilterWindow* GetUI_NewLootFilterWindow() const;

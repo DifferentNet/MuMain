@@ -64,6 +64,7 @@ constexpr NamedWindow Windows[] = {
     {"battle_pass", mu::ui::window::INTERFACE_BATTLE_PASS},
     {"tier_maps", mu::ui::window::INTERFACE_TIER_MAPS},
     {"endless_tower", mu::ui::window::INTERFACE_ENDLESS_TOWER},
+    {"solo_kalima", mu::ui::window::INTERFACE_SOLO_KALIMA},
     {"rena_shop", mu::ui::window::INTERFACE_RENA_SHOP},
     {"grand_shop", mu::ui::window::INTERFACE_GRAND_SHOP},
     {"loot_filter", mu::ui::window::INTERFACE_LOOT_FILTER},
