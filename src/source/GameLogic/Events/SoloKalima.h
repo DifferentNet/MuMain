@@ -118,7 +118,6 @@ private:
     bool m_entering = false;
     bool m_lastEnterOk = false;
     std::wstring m_lastEnterText;
-    // Set when a refresh starts with an enter text already shown: its footer clears the text.
     int m_enterAnswers = 0;
     std::chrono::steady_clock::time_point m_lastRequest{};
     std::chrono::steady_clock::time_point m_enterSentAt{};
