@@ -13885,6 +13885,55 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>Cerrar</value>
   </data>
+  <!-- Key bindings window (UI/Options/KeyBindingsWindow.h, Core/Input/KeyBindings.h) -->
+  <data name="KeyBindingsTitle" xml:space="preserve">
+    <value>Asignación de teclas</value>
+  </data>
+  <data name="KeyBindingsOpen" xml:space="preserve">
+    <value>Asignación de teclas</value>
+  </data>
+  <data name="KeyBindingsOpenButton" xml:space="preserve">
+    <value>Configurar</value>
+  </data>
+  <data name="KeyBindingsWindows" xml:space="preserve">
+    <value>Ventanas</value>
+  </data>
+  <data name="KeyBindingsPotions" xml:space="preserve">
+    <value>Pociones</value>
+  </data>
+  <data name="KeyBindingsSkills" xml:space="preserve">
+    <value>Habilidades</value>
+  </data>
+  <data name="KeyBindingsHint" xml:space="preserve">
+    <value>Haz clic en una acción y pulsa su nueva tecla. Una tecla ya usada intercambia las dos acciones.</value>
+  </data>
+  <data name="KeyBindingsPress" xml:space="preserve">
+    <value>Pulsa una tecla (Esc cancela)</value>
+  </data>
+  <data name="KeyBindingsFixed" xml:space="preserve">
+    <value>Esa tecla no se puede asignar. Pulsa otra (Esc cancela).</value>
+  </data>
+  <data name="KeyBindingsReset" xml:space="preserve">
+    <value>Restablecer</value>
+  </data>
+  <data name="KeyBindingsClose" xml:space="preserve">
+    <value>Cerrar</value>
+  </data>
+  <data name="KeyBindingsInventoryAlt" xml:space="preserve">
+    <value>Inventario (segunda tecla)</value>
+  </data>
+  <data name="KeyBindingsCommand" xml:space="preserve">
+    <value>Acciones de jugador</value>
+  </data>
+  <data name="KeyBindingsHelperToggle" xml:space="preserve">
+    <value>MU Helper sí/no</value>
+  </data>
+  <data name="KeyBindingsPotionSlot" xml:space="preserve">
+    <value>Ranura de poción %d</value>
+  </data>
+  <data name="KeyBindingsSkillSlot" xml:space="preserve">
+    <value>Ranura de habilidad %d</value>
+  </data>
   <data name="SkillDamageWithMaxDD" xml:space="preserve">
     <value>Daño de habilidad: %d%% (máx. %d%%)</value>
   </data>

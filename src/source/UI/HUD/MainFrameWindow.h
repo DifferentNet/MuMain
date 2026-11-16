@@ -180,6 +180,8 @@ namespace mu::ui::window
             // slots. The 3D-rendered potion icon itself is untouched (permanent native content).
             bool itemSlot0Hovered = false, itemSlot1Hovered = false, itemSlot2Hovered = false, itemSlot3Hovered = false;
             Rml::String itemSlot0Count, itemSlot1Count, itemSlot2Count, itemSlot3Count;
+            // The keys the player bound to the 4 potion slots (Q, W, E, R by default).
+            Rml::String itemSlot0Key = "Q", itemSlot1Key = "W", itemSlot2Key = "E", itemSlot3Key = "R";
         };
         void BindRmlModel(Rml::DataModelConstructor& c, MainFrameRmlModel& model);
         void OnRmlReloaded();

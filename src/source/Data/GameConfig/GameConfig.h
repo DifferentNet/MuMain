@@ -123,6 +123,11 @@ public:
     const std::vector<std::wstring>& GetLootFilterNames() const { return m_lootFilterNames; }
     void SetLootFilterNames(const std::vector<std::wstring>& names) { m_lootFilterNames = names; }
 
+    // One action's key name in [KeyBindings] ("" when the line is missing); Core::Input::KeyBindingsRuntime turns
+    // them into the table. SetKeyBinding writes at once; an empty key name removes the line.
+    std::wstring GetKeyBinding(const wchar_t* action);
+    void SetKeyBinding(const wchar_t* action, const std::wstring& keyName);
+
     // The phone or PC layout and the controls, as config.ini words (UI::Mobile::InterfaceMode).
     const std::wstring& GetInterfaceView() const { return m_interfaceView; }
     void SetInterfaceView(const std::wstring& view) { m_interfaceView = view; }

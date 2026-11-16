@@ -12,6 +12,9 @@ namespace CfgSections
     inline constexpr wchar_t CfgSectionRender[] = L"Render";
     // MU Moldova: the loot highlight filter (GameLogic::Items::LootFilter).
     inline constexpr wchar_t CfgSectionLootFilter[] = L"LootFilter";
+    // MU Moldova: the player's key bindings (Core::Input::KeyBindings), one line per action not on its default key,
+    // such as Inventory=B.
+    inline constexpr wchar_t CfgSectionKeyBindings[] = L"KeyBindings";
 }
 
 namespace CfgKeys

@@ -199,3 +199,11 @@ mu_add_test(
         test_touch_gesture.cpp
         ${CMAKE_SOURCE_DIR}/src/source/Core/Input/TouchGesture.cpp
 )
+
+# The player's key bindings: the defaults, the swap when a taken key is picked, saving and repairing what was saved.
+mu_add_test(
+    NAME test_key_bindings
+    SOURCES
+        test_key_bindings.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Input/KeyBindings.cpp
+)

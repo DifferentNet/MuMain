@@ -170,6 +170,9 @@ enum INTERFACE_LIST
     // CSoloKalimaWindow (UI/Events/SoloKalimaWindow.h), Kundun's Lair (solo Kalima) of its NPC. Same reasoning as
     // INTERFACE_CREDITS above.
     INTERFACE_SOLO_KALIMA,
+    // CKeyBindingsWindow (UI/Options/KeyBindingsWindow.h), the player's key bindings. Same reasoning as
+    // INTERFACE_CREDITS above.
+    INTERFACE_KEY_BINDINGS,
     INTERFACE_END,
     INTERFACE_COUNT = INTERFACE_END - 2,
 };

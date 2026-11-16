@@ -68,6 +68,7 @@ constexpr NamedWindow Windows[] = {
     {"rena_shop", mu::ui::window::INTERFACE_RENA_SHOP},
     {"grand_shop", mu::ui::window::INTERFACE_GRAND_SHOP},
     {"loot_filter", mu::ui::window::INTERFACE_LOOT_FILTER},
+    {"key_bindings", mu::ui::window::INTERFACE_KEY_BINDINGS},
     {"jewel_bank", mu::ui::window::INTERFACE_JEWEL_BANK},
     {"auction", mu::ui::window::INTERFACE_AUCTION},
     {"gm_panel", mu::ui::window::INTERFACE_GM_PANEL},

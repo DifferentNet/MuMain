@@ -7,6 +7,7 @@
 #include "Core/Input/GamepadStepper.h"
 #include "Core/Input/GamepadStick.h"
 #include "Core/Input/GamepadStickClick.h"
+#include "Core/Input/KeyBindingsRuntime.h"
 #include "Core/Input/TouchInput.h"
 #include "Core/Input/UiInputRouter.h"
 #include "Core/Platform/GameWindow.h"
@@ -68,6 +69,7 @@ namespace
 namespace Pad = Core::Input::Gamepad;
 namespace Pointer = Core::Input::Gamepad::Pointer;
 namespace Controls = UI::HUD::TouchControls;
+namespace KeyBindings = Core::Input::KeyBindings;
 using Controls::PadButton;
 using Pad::Button;
 using Clock = std::chrono::steady_clock;
@@ -1118,7 +1120,7 @@ void PlayDpadUp(const Presses& presses, Clock::time_point now)
         break;
     case PressKind::Hold:
         if (!g_state.windowOpen)
-            Core::Input::Touch::TapKey('Z');
+            Core::Input::Touch::TapKey(KeyBindings::Runtime::KeyOf(KeyBindings::Action::MuHelperSettings));
         break;
     default:
         break;
@@ -1126,7 +1128,7 @@ void PlayDpadUp(const Presses& presses, Clock::time_point now)
 }
 
 // D-pad left and right (no window open): the map (Tab) and the inventory (I), as a keyboard
-// opens them (ghinzuro, 2026-11-03). Left held half a second: the Teleport window (M) instead.
+// opens them (ghinzuro, 2026-11-03), with the keys the player bound. Left held half a second: the Teleport window (M) instead.
 void PlayDpadSides(const Presses& presses, Clock::time_point now)
 {
     switch (ReadLongPress(g_state.dpadLeftPress, Button::DpadLeft, presses, now, DpadHold))
@@ -1135,13 +1137,13 @@ void PlayDpadSides(const Presses& presses, Clock::time_point now)
         Core::Input::Touch::TapKey(VK_TAB);
         break;
     case PressKind::Hold:
-        Core::Input::Touch::TapKey('M');
+        Core::Input::Touch::TapKey(KeyBindings::Runtime::KeyOf(KeyBindings::Action::Move));
         break;
     default:
         break;
     }
     if (Pressed(presses, Button::DpadRight) && !g_state.waitForRelease[static_cast<int>(Button::DpadRight)])
-        Core::Input::Touch::TapKey('I');
+        Core::Input::Touch::TapKey(KeyBindings::Runtime::KeyOf(KeyBindings::Action::Inventory));
 }
 
 // A window opened or closed: what was held lets go and acts again only once let go, as the buttons
