@@ -16858,4 +16858,10 @@
   <data name="SoloKalimaBossTimer" xml:space="preserve">
     <value>Lair · Boss</value>
   </data>
+  <data name="SoloKalimaCleared" xml:space="preserve">
+    <value>Kundun's Lair tier %d cleared!</value>
+  </data>
+  <data name="SoloKalimaFailed" xml:space="preserve">
+    <value>Kundun's Lair tier %d failed.</value>
+  </data>
 </root>

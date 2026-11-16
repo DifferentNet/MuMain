@@ -16520,4 +16520,10 @@
   <data name="SoloKalimaBossTimer" xml:space="preserve">
     <value>Логово · Босс</value>
   </data>
+  <data name="SoloKalimaCleared" xml:space="preserve">
+    <value>Логово Кундуна, тир %d: пройдено!</value>
+  </data>
+  <data name="SoloKalimaFailed" xml:space="preserve">
+    <value>Логово Кундуна, тир %d: не пройдено.</value>
+  </data>
 </root>
