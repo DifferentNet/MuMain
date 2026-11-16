@@ -87,7 +87,6 @@ bool Store::TakeHeader(std::wstring_view text)
     m_receiving = fields.size() >= HeaderFields;
     if (!m_receiving)
         return true;
-    m_enterTextStale = !m_lastEnterText.empty();
 
     m_incomingStatus.Near = fields[0] == L"1";
     m_incomingStatus.Tickets = ToInt(fields[1]);
@@ -144,10 +143,6 @@ void Store::TakeFooter()
     m_incomingCurses.clear();
     m_receiving = false;
     m_hasInfo = true;
-    // An enter answer is news only until the state after it has come in.
-    if (m_enterTextStale)
-        m_lastEnterText.clear();
-    m_enterTextStale = false;
 }
 
 void Store::TakeEnterAnswer(std::wstring_view text)
@@ -157,7 +152,6 @@ void Store::TakeEnterAnswer(std::wstring_view text)
     m_entering = false;
     m_lastEnterOk = !fields.empty() && fields[0] == L"1";
     m_lastEnterText = Rest(fields, 1);
-    m_enterTextStale = false;
     ++m_enterAnswers;
 }
 
@@ -213,7 +207,6 @@ void Store::Reset()
     m_entering = false;
     m_lastEnterOk = false;
     m_lastEnterText.clear();
-    m_enterTextStale = false;
     m_lastRequest = {};
 }
 

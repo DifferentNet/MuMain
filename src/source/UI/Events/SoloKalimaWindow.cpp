@@ -471,14 +471,16 @@ void mu::ui::window::CSoloKalimaWindow::SyncContent()
         {
             updated.hint = Line(I18N::Game::SoloKalimaEntering, CONTENT_WIDTH);
         }
-        else if (!lair.LastEnterText().empty() && !lair.LastEnterSucceeded())
-        {
-            updated.hint = Line(lair.LastEnterText(), CONTENT_WIDTH);
-            updated.hintBad = true;
-        }
         else if (!reason.empty())
         {
+            // A reason the client sees itself is the current one: it goes before an older refusal of the server.
             updated.hint = Line(reason, CONTENT_WIDTH);
+            updated.hintBad = true;
+        }
+        else if (!lair.LastEnterText().empty() && !lair.LastEnterSucceeded())
+        {
+            // A refusal only the server knows the reason of (busy, a problem with the map), kept until the next Enter.
+            updated.hint = Line(lair.LastEnterText(), CONTENT_WIDTH);
             updated.hintBad = true;
         }
 
