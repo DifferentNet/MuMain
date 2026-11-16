@@ -1,5 +1,6 @@
 
 #include "stdafx.h"
+#include "Core/Input/KeyBindingsRuntime.h"
 #include "Core/Input/KeyState.h"
 #include "Core/Input/SyntheticInput.h"
 
@@ -159,6 +160,11 @@ bool mu::ui::window::IsPress(int iVirtKey)
 bool mu::ui::window::IsRepeat(int iVirtKey)
 {
     return g_pNewKeyInput->IsRepeat(iVirtKey);
+}
+
+bool mu::ui::window::IsActionPress(Core::Input::KeyBindings::Action action)
+{
+    return IsPress(Core::Input::KeyBindings::Runtime::KeyOf(action));
 }
 
 mu::ui::window::CNewKeyInput::CNewKeyInput()

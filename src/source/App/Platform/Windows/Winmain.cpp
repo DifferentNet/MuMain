@@ -4,6 +4,7 @@
 #include "Core/Input/GamepadInput.h"
 #include "Core/Input/GamepadPointer.h"
 #include "Core/Input/GamepadStick.h"
+#include "Core/Input/KeyBindingsRuntime.h"
 #include "Core/Input/KeyState.h"
 #include "Core/Utilities/FrameProfiler.h"
 #include "Core/Input/SyntheticInput.h"
@@ -2785,6 +2786,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
 
     // Load game settings from INI file first
     GameConfig::GetInstance().Load();
+    // The player's key bindings live in config.ini's [KeyBindings] (Core/Input/KeyBindingsRuntime.h).
+    Core::Input::KeyBindings::Runtime::Load();
 
 #ifndef __EMSCRIPTEN__
     // HD textures (Options): every texture loaded from now on takes its Data\HD copy if there is one.

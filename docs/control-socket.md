@@ -71,7 +71,7 @@ Error codes: `bad_request`, `unknown_command`, `wrong_scene`, `busy`,
 | `events` (`since`, `follow`) | recorded events, or a live stream of them |
 | `wait-for` (`event`, `match`, `timeout`) | block until a matching event arrives |
 | `screenshot` (`out`, `quality`) | capture the next frame as a JPEG to a path; without `out` it names itself, uniquely per capture; `quality` 1 to 100, default 100 |
-| `hotkey` (`key`) | press one game key for a frame: `esc`, `i`, `home`, `f1`, … |
+| `hotkey` (`key`) | press one game key for a frame: `esc`, `i`, `home`, `f1`, … (the raw key, not the action: with the player's key bindings changed, `i` presses whatever is bound to I) |
 | `click-ui` (`x`, `y`, `button`) | click a window pixel (`left` by default) |
 | `hover-ui` (`x`, `y`) | move the pointer to a window pixel with no button, as physical motion: RmlUi hover and the game's own pointer (native hover, tooltips) both follow it |
 | `drag-ui` (`x`, `y`, `to_x`, `to_y`, `button`) | press at one window pixel, move to the other over eight frames with the button held, release there |

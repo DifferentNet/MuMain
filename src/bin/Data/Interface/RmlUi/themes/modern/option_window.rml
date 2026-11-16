@@ -590,6 +590,11 @@
 						<span class="opt-label">{{loot_filter_label}}</span>
 						<div class="opt-control"><div class="opt-open-btn" data-event-click="option_open_loot_filter">{{loot_filter_button_label}}</div></div>
 					</div>
+					<!-- The key bindings' own window (CKeyBindingsWindow); only in the game, where the hot keys work. -->
+					<div class="opt-row" data-class-hidden="!key_bindings_shown">
+						<span class="opt-label">{{key_bindings_label}}</span>
+						<div class="opt-control"><div class="opt-open-btn" data-event-click="option_open_key_bindings">{{key_bindings_button_label}}</div></div>
+					</div>
 				</div>
 
 				<div class="opt-page" data-class-hidden="active_tab != 4">

@@ -6,7 +6,7 @@
 #include "UI/HUD/HotKey.h"
 #include "UI/Character/OverheadNames.h"
 #include "UI/Core/WindowSystem.h"
-#include "UI/Core/WindowCommon.h" // ShowSystemMenuDialog
+#include "UI/Core/WindowCommon.h" // ShowSystemMenuDialog, IsActionPress
 #include "UI/Dialogs/CommonMessageBox.h"
 #include "UI/Dialogs/CustomMessageBox.h"
 #include "UI/Dialogs/GenericConfirmDialog.h" // g_pGenericConfirmDialog
@@ -33,6 +33,54 @@
 
 using namespace SEASON3B;
 using namespace mu::ui::window;
+using KeyAction = Core::Input::KeyBindings::Action;
+
+namespace
+{
+// The windows whose bound key only opens or closes them.
+struct BoundWindow
+{
+    KeyAction action;
+    DWORD window;
+};
+
+constexpr BoundWindow PlainToggles[] = {
+    {KeyAction::Character, mu::ui::window::INTERFACE_CHARACTER},
+    {KeyAction::Quests, mu::ui::window::INTERFACE_MYQUEST},
+    {KeyAction::Party, mu::ui::window::INTERFACE_PARTY},
+    {KeyAction::Guild, mu::ui::window::INTERFACE_GUILDINFO},
+    {KeyAction::WindowMenu, mu::ui::window::INTERFACE_WINDOW_MENU},
+    // The event timer window: the events' times, kept out of the chat log (EventScheduleWindow.h).
+    {KeyAction::Events, mu::ui::window::INTERFACE_EVENT_SCHEDULE},
+    // The daily rewards window: the login reward cycle and today's progress (DailyRewardsWindow.h).
+    {KeyAction::DailyRewards, mu::ui::window::INTERFACE_DAILY_REWARDS},
+    // The battle pass window: the season's levels and their rewards, the quests (BattlePassWindow.h). X used to open
+    // the MU Item Shop, which the server doesn't have; its bottom bar slot opens the pass too.
+    {KeyAction::BattlePass, mu::ui::window::INTERFACE_BATTLE_PASS},
+    {KeyAction::Move, mu::ui::window::INTERFACE_MOVEMAP},
+    {KeyAction::MuHelperSettings, mu::ui::window::INTERFACE_MUHELPER},
+};
+
+bool IsInventoryPress()
+{
+    return mu::ui::window::IsActionPress(KeyAction::Inventory) || mu::ui::window::IsActionPress(KeyAction::InventoryAlt);
+}
+
+// Opens or closes the window whose bound key was pressed; false when none was.
+bool ToggleBoundWindow()
+{
+    for (const BoundWindow& bound : PlainToggles)
+    {
+        if (mu::ui::window::IsActionPress(bound.action))
+        {
+            g_pNewUISystem->Toggle(bound.window);
+            PlayBuffer(SOUND_CLICK01);
+            return true;
+        }
+    }
+    return false;
+}
+} // namespace
 
 mu::ui::window::CHotKey::CHotKey() : m_pNewUIMng(NULL), m_bStateGameOver(false)
 {
@@ -167,7 +215,7 @@ bool mu::ui::window::CHotKey::UpdateKeyEvent()
 
     if (g_isCharacterBuff((&Hero->Object), eBuff_DuelWatch))
     {
-        if (mu::ui::window::IsPress('M') == true)
+        if (mu::ui::window::IsActionPress(KeyAction::Move))
         {
             g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_MOVEMAP);
             PlayBuffer(SOUND_CLICK01);
@@ -182,7 +230,7 @@ bool mu::ui::window::CHotKey::UpdateKeyEvent()
 
     if (CanUpdateKeyEventRelatedMyInventory() == true)
     {
-        if (mu::ui::window::IsPress('I') || mu::ui::window::IsPress('V'))
+        if (IsInventoryPress())
         {
             if (g_pNPCShop->IsSellingItem() == false)
             {
@@ -199,7 +247,7 @@ bool mu::ui::window::CHotKey::UpdateKeyEvent()
         return true;
     }
 
-    if (mu::ui::window::IsPress('F'))
+    if (mu::ui::window::IsActionPress(KeyAction::Friends))
     {
         if (gMapManager.InChaosCastle() == true)
         {
@@ -223,7 +271,7 @@ bool mu::ui::window::CHotKey::UpdateKeyEvent()
         PlayBuffer(SOUND_CLICK01);
         return false;
     }
-    else if (mu::ui::window::IsPress('I') || mu::ui::window::IsPress('V'))
+    else if (IsInventoryPress())
     {
         if (g_pNPCShop->IsSellingItem() == false)
         {
@@ -245,38 +293,7 @@ bool mu::ui::window::CHotKey::UpdateKeyEvent()
             return false;
         }
     }
-    else if (mu::ui::window::IsPress('C'))
-    {
-        g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_CHARACTER);
-        PlayBuffer(SOUND_CLICK01);
-        return false;
-    }
-    else if (mu::ui::window::IsPress('T'))
-    {
-        g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_MYQUEST);
-        PlayBuffer(SOUND_CLICK01);
-        return false;
-    }
-    else if (mu::ui::window::IsPress('P'))
-    {
-        g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_PARTY);
-        PlayBuffer(SOUND_CLICK01);
-        return false;
-    }
-    else if (mu::ui::window::IsPress('G'))
-    {
-        g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_GUILDINFO);
-        PlayBuffer(SOUND_CLICK01);
-        return false;
-    }
-    // 'A' opened the master skill tree; MU Moldova has no master levels, so the key does nothing.
-    else if (mu::ui::window::IsPress('U'))
-    {
-        g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_WINDOW_MENU);
-        PlayBuffer(SOUND_CLICK01);
-        return false;
-    }
-    else if (gMapManager.InChaosCastle() == false && mu::ui::window::IsPress('D'))
+    else if (gMapManager.InChaosCastle() == false && mu::ui::window::IsActionPress(KeyAction::Command))
     {
         if (::IsStrifeMap(gMapManager.WorldActive))
         {
@@ -297,7 +314,7 @@ bool mu::ui::window::CHotKey::UpdateKeyEvent()
         PlayBuffer(SOUND_CLICK01);
         return false;
     }
-    else if (mu::ui::window::IsPress('J') == true)
+    else if (mu::ui::window::IsActionPress(KeyAction::CommandList))
     {
         // Only servers which offer their chat commands have something to show.
         if (GameLogic::Commands::Catalog().IsAvailable())
@@ -306,20 +323,6 @@ bool mu::ui::window::CHotKey::UpdateKeyEvent()
             PlayBuffer(SOUND_CLICK01);
         }
 
-        return false;
-    }
-    else if (mu::ui::window::IsPress('O') == true)
-    {
-        // The event timer window: the events' times, kept out of the chat log (EventScheduleWindow.h).
-        g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_EVENT_SCHEDULE);
-        PlayBuffer(SOUND_CLICK01);
-        return false;
-    }
-    else if (mu::ui::window::IsPress('N') == true)
-    {
-        // The daily rewards window: the login reward cycle and today's progress (DailyRewardsWindow.h).
-        g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_DAILY_REWARDS);
-        PlayBuffer(SOUND_CLICK01);
         return false;
     }
     else if (mu::ui::window::IsPress('Y') == true)
@@ -339,13 +342,6 @@ bool mu::ui::window::CHotKey::UpdateKeyEvent()
             return false;
         }
     }
-    else if (mu::ui::window::IsPress('M') == true)
-    {
-        g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_MOVEMAP);
-        PlayBuffer(SOUND_CLICK01);
-
-        return false;
-    }
     else if (mu::ui::window::IsPress(VK_TAB) == true && gMapManager.InBattleCastle() == true)
     {
         g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_SIEGEWARFARE);
@@ -363,15 +359,7 @@ bool mu::ui::window::CHotKey::UpdateKeyEvent()
         PlayBuffer(SOUND_CLICK01);
         return false;
     }
-    else if (mu::ui::window::IsPress('X') == true)
-    {
-        // The battle pass window: the season's levels and their rewards, the quests (BattlePassWindow.h). X used
-        // to open the MU Item Shop, which the server doesn't have; its bottom bar slot opens the pass too.
-        g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_BATTLE_PASS);
-        PlayBuffer(SOUND_CLICK01);
-        return false;
-    }
-    else if (mu::ui::window::IsPress('B'))
+    else if (mu::ui::window::IsActionPress(KeyAction::Gens))
     {
         if (!g_pNewUIGensRanking->SetGensInfo())
             return false;
@@ -380,16 +368,17 @@ bool mu::ui::window::CHotKey::UpdateKeyEvent()
         PlayBuffer(SOUND_CLICK01);
         return false;
     }
-    else if (mu::ui::window::IsPress(VK_HOME) && !g_pChatInputBox->HaveFocus())
+    else if (mu::ui::window::IsActionPress(KeyAction::MuHelperToggle) && !g_pChatInputBox->HaveFocus())
     {
         MUHelper::g_MuHelper.Toggle();
         PlayBuffer(SOUND_CLICK01);
         return false;
     }
-    else if (mu::ui::window::IsPress('Z'))
+    // The windows a bound key only opens or closes (Character, Quests, Party, Guild, the window menu, Events,
+    // Daily rewards, the battle pass, Move, MU Helper's settings). 'A' opened the master skill tree; MU Moldova has
+    // no master levels, so the key does nothing.
+    else if (ToggleBoundWindow())
     {
-        g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_MUHELPER);
-        PlayBuffer(SOUND_CLICK01);
         return false;
     }
     return true;

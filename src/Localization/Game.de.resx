@@ -13983,6 +13983,55 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>Schließen</value>
   </data>
+  <!-- Key bindings window (UI/Options/KeyBindingsWindow.h, Core/Input/KeyBindings.h) -->
+  <data name="KeyBindingsTitle" xml:space="preserve">
+    <value>Tastenbelegung</value>
+  </data>
+  <data name="KeyBindingsOpen" xml:space="preserve">
+    <value>Tastenbelegung</value>
+  </data>
+  <data name="KeyBindingsOpenButton" xml:space="preserve">
+    <value>Einstellen</value>
+  </data>
+  <data name="KeyBindingsWindows" xml:space="preserve">
+    <value>Fenster</value>
+  </data>
+  <data name="KeyBindingsPotions" xml:space="preserve">
+    <value>Tränke</value>
+  </data>
+  <data name="KeyBindingsSkills" xml:space="preserve">
+    <value>Fertigkeiten</value>
+  </data>
+  <data name="KeyBindingsHint" xml:space="preserve">
+    <value>Aktion anklicken, dann die neue Taste drücken. Eine belegte Taste tauscht die beiden Aktionen.</value>
+  </data>
+  <data name="KeyBindingsPress" xml:space="preserve">
+    <value>Taste drücken (Esc bricht ab)</value>
+  </data>
+  <data name="KeyBindingsFixed" xml:space="preserve">
+    <value>Diese Taste ist nicht belegbar. Andere Taste drücken (Esc bricht ab).</value>
+  </data>
+  <data name="KeyBindingsReset" xml:space="preserve">
+    <value>Standard wiederherstellen</value>
+  </data>
+  <data name="KeyBindingsClose" xml:space="preserve">
+    <value>Schließen</value>
+  </data>
+  <data name="KeyBindingsInventoryAlt" xml:space="preserve">
+    <value>Inventar (zweite Taste)</value>
+  </data>
+  <data name="KeyBindingsCommand" xml:space="preserve">
+    <value>Spieleraktionen</value>
+  </data>
+  <data name="KeyBindingsHelperToggle" xml:space="preserve">
+    <value>MU Helper an/aus</value>
+  </data>
+  <data name="KeyBindingsPotionSlot" xml:space="preserve">
+    <value>Trankplatz %d</value>
+  </data>
+  <data name="KeyBindingsSkillSlot" xml:space="preserve">
+    <value>Fertigkeitsplatz %d</value>
+  </data>
   <data name="SkillDamageWithMaxDD" xml:space="preserve">
     <value>Fähigkeitsschaden: %d%% (max. %d%%)</value>
   </data>

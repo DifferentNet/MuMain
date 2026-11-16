@@ -16752,6 +16752,55 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>Close</value>
   </data>
+  <!-- Key bindings window (UI/Options/KeyBindingsWindow.h, Core/Input/KeyBindings.h) -->
+  <data name="KeyBindingsTitle" xml:space="preserve">
+    <value>Key bindings</value>
+  </data>
+  <data name="KeyBindingsOpen" xml:space="preserve">
+    <value>Key bindings</value>
+  </data>
+  <data name="KeyBindingsOpenButton" xml:space="preserve">
+    <value>Configure</value>
+  </data>
+  <data name="KeyBindingsWindows" xml:space="preserve">
+    <value>Windows</value>
+  </data>
+  <data name="KeyBindingsPotions" xml:space="preserve">
+    <value>Potions</value>
+  </data>
+  <data name="KeyBindingsSkills" xml:space="preserve">
+    <value>Skills</value>
+  </data>
+  <data name="KeyBindingsHint" xml:space="preserve">
+    <value>Click an action, then press its new key. A key that is already used swaps the two actions.</value>
+  </data>
+  <data name="KeyBindingsPress" xml:space="preserve">
+    <value>Press a key (Esc cancels)</value>
+  </data>
+  <data name="KeyBindingsFixed" xml:space="preserve">
+    <value>That key can't be assigned. Press another one (Esc cancels).</value>
+  </data>
+  <data name="KeyBindingsReset" xml:space="preserve">
+    <value>Reset to defaults</value>
+  </data>
+  <data name="KeyBindingsClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="KeyBindingsInventoryAlt" xml:space="preserve">
+    <value>Inventory (second key)</value>
+  </data>
+  <data name="KeyBindingsCommand" xml:space="preserve">
+    <value>Player actions</value>
+  </data>
+  <data name="KeyBindingsHelperToggle" xml:space="preserve">
+    <value>MU Helper on/off</value>
+  </data>
+  <data name="KeyBindingsPotionSlot" xml:space="preserve">
+    <value>Potion slot %d</value>
+  </data>
+  <data name="KeyBindingsSkillSlot" xml:space="preserve">
+    <value>Skill slot %d</value>
+  </data>
   <data name="PingHudLabel" xml:space="preserve">
     <value>Ping %d ms</value>
   </data>

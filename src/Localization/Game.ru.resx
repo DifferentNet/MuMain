@@ -16414,6 +16414,55 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>Закрыть</value>
   </data>
+  <!-- Key bindings window (UI/Options/KeyBindingsWindow.h, Core/Input/KeyBindings.h) -->
+  <data name="KeyBindingsTitle" xml:space="preserve">
+    <value>Назначение клавиш</value>
+  </data>
+  <data name="KeyBindingsOpen" xml:space="preserve">
+    <value>Назначение клавиш</value>
+  </data>
+  <data name="KeyBindingsOpenButton" xml:space="preserve">
+    <value>Настроить</value>
+  </data>
+  <data name="KeyBindingsWindows" xml:space="preserve">
+    <value>Окна</value>
+  </data>
+  <data name="KeyBindingsPotions" xml:space="preserve">
+    <value>Зелья</value>
+  </data>
+  <data name="KeyBindingsSkills" xml:space="preserve">
+    <value>Умения</value>
+  </data>
+  <data name="KeyBindingsHint" xml:space="preserve">
+    <value>Нажмите на действие, затем на новую клавишу. Если клавиша уже занята, два действия поменяются клавишами.</value>
+  </data>
+  <data name="KeyBindingsPress" xml:space="preserve">
+    <value>Нажмите клавишу (Esc — отмена)</value>
+  </data>
+  <data name="KeyBindingsFixed" xml:space="preserve">
+    <value>Эту клавишу назначить нельзя. Нажмите другую (Esc — отмена).</value>
+  </data>
+  <data name="KeyBindingsReset" xml:space="preserve">
+    <value>Сбросить по умолчанию</value>
+  </data>
+  <data name="KeyBindingsClose" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
+  <data name="KeyBindingsInventoryAlt" xml:space="preserve">
+    <value>Инвентарь (вторая клавиша)</value>
+  </data>
+  <data name="KeyBindingsCommand" xml:space="preserve">
+    <value>Действия с игроком</value>
+  </data>
+  <data name="KeyBindingsHelperToggle" xml:space="preserve">
+    <value>MU Helper вкл/выкл</value>
+  </data>
+  <data name="KeyBindingsPotionSlot" xml:space="preserve">
+    <value>Ячейка зелья %d</value>
+  </data>
+  <data name="KeyBindingsSkillSlot" xml:space="preserve">
+    <value>Ячейка умения %d</value>
+  </data>
   <data name="PingHudLabel" xml:space="preserve">
     <value>Пинг %d мс</value>
   </data>

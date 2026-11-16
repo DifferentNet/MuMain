@@ -371,6 +371,21 @@ void GameConfig::SaveLootFilter()
     WriteStringList(CfgSectionLootFilter, CfgKeyLootFilterNamePrefix, m_lootFilterNames);
 }
 
+std::wstring GameConfig::GetKeyBinding(const wchar_t* action)
+{
+    return ReadString(CfgSections::CfgSectionKeyBindings, action, L"");
+}
+
+void GameConfig::SetKeyBinding(const wchar_t* action, const std::wstring& keyName)
+{
+    if (keyName.empty())
+    {
+        RemoveObsoleteKey(CfgSections::CfgSectionKeyBindings, action);
+        return;
+    }
+    WriteString(CfgSections::CfgSectionKeyBindings, action, keyName);
+}
+
 std::vector<std::wstring> GameConfig::ReadStringList(const wchar_t* section, const wchar_t* keyPrefix, int maxCount)
 {
     std::vector<std::wstring> result;

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "UI/HUD/SkillList.h"
+#include "Core/Input/KeyBindingsRuntime.h"
 #include "Engine/Object/ZzzOpenData.h"
 #include "GameLogic/Items/ItemCategories.h"
 #include <algorithm>
@@ -149,38 +150,24 @@ bool mu::ui::window::CSkillList::UpdateMouseEvent()
 
 bool mu::ui::window::CSkillList::UpdateKeyEvent()
 {
-    for (int i = 0; i < 9; ++i)
+    // The keys the player bound to the skill slots (1..9 and 0 by default).
+    for (int hotKey = 0; hotKey < SKILLHOTKEY_COUNT; ++hotKey)
     {
-        if (mu::ui::window::IsPress('1' + i))
+        if (mu::ui::window::IsActionPress(Core::Input::KeyBindings::SkillSlotAction(hotKey)))
         {
-            UseHotKey(i + 1);
+            UseHotKey(hotKey);
         }
     }
 
-    if (mu::ui::window::IsPress('0'))
+    // m_iHoveredGridSkillIndex arms Ctrl + a slot's bound key; set by OnGridCellHover()/OnPetCellHover(), cleared by
+    // OnUnhover().
+    if (m_iHoveredGridSkillIndex != -1 && mu::ui::window::IsRepeat(VK_CONTROL))
     {
-        UseHotKey(0);
-    }
-
-    // m_iHoveredGridSkillIndex arms Ctrl+digit assignment; set by OnGridCellHover()/OnPetCellHover(), cleared by OnUnhover().
-    if (m_iHoveredGridSkillIndex != -1)
-    {
-        if (mu::ui::window::IsRepeat(VK_CONTROL))
+        for (int hotKey = 0; hotKey < SKILLHOTKEY_COUNT; ++hotKey)
         {
-            for (int i = 0; i < 9; ++i)
+            if (mu::ui::window::IsActionPress(Core::Input::KeyBindings::SkillSlotAction(hotKey)))
             {
-                if (mu::ui::window::IsPress('1' + i))
-                {
-                    SetHotKey(i + 1, m_iHoveredGridSkillIndex);
-                    SaveOptionsIfChanged();
-
-                    return false;
-                }
-            }
-
-            if (mu::ui::window::IsPress('0'))
-            {
-                SetHotKey(0, m_iHoveredGridSkillIndex);
+                SetHotKey(hotKey, m_iHoveredGridSkillIndex);
                 SaveOptionsIfChanged();
 
                 return false;
@@ -734,9 +721,13 @@ namespace
 
 namespace
 {
+// The key the player bound to skill hot key N ("7", "Q", "Home"), or an empty string for -1 (no slot).
 Rml::String HotKeyText(int hotkey)
 {
-    return hotkey >= 0 ? std::to_string(hotkey) : Rml::String();
+    if (hotkey < 0)
+        return Rml::String();
+    namespace KeyBindings = Core::Input::KeyBindings;
+    return KeyBindings::KeyName(KeyBindings::Runtime::KeyOf(KeyBindings::SkillSlotAction(hotkey)));
 }
 } // namespace
 

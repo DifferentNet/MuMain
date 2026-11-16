@@ -13885,6 +13885,55 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>Закрити</value>
   </data>
+  <!-- Key bindings window (UI/Options/KeyBindingsWindow.h, Core/Input/KeyBindings.h) -->
+  <data name="KeyBindingsTitle" xml:space="preserve">
+    <value>Призначення клавіш</value>
+  </data>
+  <data name="KeyBindingsOpen" xml:space="preserve">
+    <value>Призначення клавіш</value>
+  </data>
+  <data name="KeyBindingsOpenButton" xml:space="preserve">
+    <value>Налаштувати</value>
+  </data>
+  <data name="KeyBindingsWindows" xml:space="preserve">
+    <value>Вікна</value>
+  </data>
+  <data name="KeyBindingsPotions" xml:space="preserve">
+    <value>Зілля</value>
+  </data>
+  <data name="KeyBindingsSkills" xml:space="preserve">
+    <value>Уміння</value>
+  </data>
+  <data name="KeyBindingsHint" xml:space="preserve">
+    <value>Натисніть на дію, потім на нову клавішу. Якщо клавіша вже зайнята, дві дії обміняються клавішами.</value>
+  </data>
+  <data name="KeyBindingsPress" xml:space="preserve">
+    <value>Натисніть клавішу (Esc — скасувати)</value>
+  </data>
+  <data name="KeyBindingsFixed" xml:space="preserve">
+    <value>Цю клавішу призначити не можна. Натисніть іншу (Esc — скасувати).</value>
+  </data>
+  <data name="KeyBindingsReset" xml:space="preserve">
+    <value>Скинути за замовчуванням</value>
+  </data>
+  <data name="KeyBindingsClose" xml:space="preserve">
+    <value>Закрити</value>
+  </data>
+  <data name="KeyBindingsInventoryAlt" xml:space="preserve">
+    <value>Інвентар (друга клавіша)</value>
+  </data>
+  <data name="KeyBindingsCommand" xml:space="preserve">
+    <value>Дії гравця</value>
+  </data>
+  <data name="KeyBindingsHelperToggle" xml:space="preserve">
+    <value>MU Helper увімк/вимк</value>
+  </data>
+  <data name="KeyBindingsPotionSlot" xml:space="preserve">
+    <value>Комірка зілля %d</value>
+  </data>
+  <data name="KeyBindingsSkillSlot" xml:space="preserve">
+    <value>Комірка вміння %d</value>
+  </data>
   <data name="SkillDamageWithMaxDD" xml:space="preserve">
     <value>Пошкодження навичок: %d%% (макс. %d%%)</value>
   </data>

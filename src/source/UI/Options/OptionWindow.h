@@ -144,6 +144,8 @@ namespace mu::ui::window
         void RmlToggleSlideHelp();
         // Closes the settings and opens the loot filter's window (in the game only).
         void RmlOpenLootFilter();
+        // Closes the settings and opens the key bindings' window (in the game only).
+        void RmlOpenKeyBindings();
         void RmlToggleRenderAllEffects();
         void RmlToggleWindowedMode();
         void RmlSoundVolumeChanged(int value);
@@ -329,6 +331,10 @@ namespace mu::ui::window
             bool lootFilterShown = false;
             Rml::String lootFilterLabel;
             Rml::String lootFilterButtonLabel;
+            // The row that opens the key bindings: shown in the game only; its label and its button's text.
+            bool keyBindingsShown = false;
+            Rml::String keyBindingsLabel;
+            Rml::String keyBindingsButtonLabel;
             bool renderAllEffects = true;
             Rml::String renderAllEffectsLabel;
             bool windowedMode = false;

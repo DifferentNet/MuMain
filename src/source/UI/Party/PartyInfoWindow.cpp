@@ -5,6 +5,7 @@
 #include "UI/Party/PartyInfoWindow.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Core/WindowGeometry.h"
+#include "UI/HUD/KeyHint.h"
 #include "UI/HUD/TouchControls.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Scaling/UITransform.h"
@@ -127,7 +128,8 @@ void CPartyInfoWindow::BindRmlModel(Rml::DataModelConstructor& c, PartyInfoRmlMo
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickOpenSocial(); });
 
     model.windowTitle = StringUtils::WideToNarrow(I18N::Game::Party);
-    model.exitTooltip = StringUtils::WideToNarrow(I18N::Game::ClosePartyWindowP);
+    model.exitTooltip = StringUtils::WideToNarrow(
+        UI::KeyHint::WithKey(I18N::Game::ClosePartyWindowP, Core::Input::KeyBindings::Action::Party).c_str());
     model.socialLabel = StringUtils::WideToNarrow(I18N::Game::TouchSocialTitle);
 
     model.emptyStateLines = EmptyStateLines<TextLine>(model.phoneHud);

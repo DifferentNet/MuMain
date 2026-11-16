@@ -3,6 +3,7 @@
 
 #include "Audio/DSPlaySound.h"
 #include "Camera/CameraManager.h"
+#include "Core/Input/KeyBindingsRuntime.h"
 #include "Core/Input/TouchInput.h"
 #include "Core/Utilities/StringUtils.h"
 #include "Data/GameConfig/GameConfig.h"
@@ -99,7 +100,8 @@ void ToggleItemNames();
 // system menu (Esc, as a phone has none), and the rest open their windows (UI/HUD/HotKey.cpp). The top
 // row's first button folds the row, and Loot shows the drops' names as the menu's switch does. The phone
 // view's hero frame opens the character window (C); it shows only in the phone view, and a hidden frame
-// takes no finger. Controls are numbered by their place here: new ones go at the end.
+// takes no finger. Controls are numbered by their place here: new ones go at the end. The keys are the defaults;
+// a tap presses the key the player bound to that action now (KeyBindings::Runtime::RemapDefaultKey).
 struct KeyButton
 {
     const char* element;
@@ -177,8 +179,8 @@ void OpenChat()
         g_pNewUISystem->Show(mu::ui::window::INTERFACE_CHATINPUTBOX);
 }
 
-// The menu's items: windows by the key that opens them, or an action of their own. Their labels are
-// menu_label_0.. in the markup.
+// The menu's items: windows by the default key that opens them (a tap presses the key bound now), or an action of
+// their own. Their labels are menu_label_0.. in the markup.
 struct MenuItem
 {
     const wchar_t* const* label;
@@ -299,6 +301,9 @@ template <int Count> std::array<std::string, Count> NumberedNames(std::string_vi
 // The menu items' elements in the markup, and their label fields in the model.
 const std::array<std::string, MenuItemCount> MenuItemElements = NumberedNames<MenuItemCount>("tc_menu_");
 const std::array<std::string, MenuItemCount> MenuLabelFields = NumberedNames<MenuItemCount>("menu_label_");
+// The potion buttons' key fields, in slot order.
+constexpr const char* PotionKeyFields[Core::Input::KeyBindings::PotionSlotCount] = {
+    "potion_q_key", "potion_w_key", "potion_e_key", "potion_r_key"};
 // The picker's entries, in the order of the page's skills (their ids are bound, PickerEntry::id).
 const std::array<std::string, MaxPickEntries> PickElements = NumberedNames<MaxPickEntries>("tc_pick_");
 // The Social panel's players (bound ids, SocialEntry::id), actions and window buttons.
@@ -530,6 +535,10 @@ struct ControlsModel
     std::array<bool, SocialActionCount> socialActionShown{};
     std::array<Rml::String, SocialWindowCount> socialWindowLabels;
     Rml::String socialFocus;
+    // The keys the potion buttons show: the keys bound to potion slots 1-4 (Q, W, E, R by default).
+    std::array<Rml::String, Core::Input::KeyBindings::PotionSlotCount> potionKeys{"Q", "W", "E", "R"};
+    // The bindings' revision the potion keys were made from.
+    unsigned potionKeysRevision = 0;
     // The phone view's hero frame.
     UI::Mobile::HeroFrame::Model hero;
 };
@@ -658,6 +667,8 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     for (int window = 0; window < SocialWindowCount; ++window)
         c.Bind(SocialWindowLabelFields[window], &model.socialWindowLabels[window]);
     c.Bind("social_focus", &model.socialFocus);
+    for (int slot = 0; slot < Core::Input::KeyBindings::PotionSlotCount; ++slot)
+        c.Bind(PotionKeyFields[slot], &model.potionKeys[slot]);
     UI::Mobile::HeroFrame::Bind(c, model.hero);
 }
 
@@ -1086,6 +1097,21 @@ template <typename T> void SetField(T& field, const T& value, const char* name)
 void SyncLabel(Rml::String& field, const wchar_t* text, const char* name)
 {
     SetField(field, StringUtils::WideToNarrow(text), name);
+}
+
+// The potion buttons' letters follow the key bindings, made again only when they changed.
+void SyncPotionKeys(ControlsModel& model)
+{
+    namespace KeyBindings = Core::Input::KeyBindings;
+    const unsigned revision = KeyBindings::Runtime::Revision();
+    if (revision == model.potionKeysRevision)
+        return;
+    model.potionKeysRevision = revision;
+    for (int slot = 0; slot < KeyBindings::PotionSlotCount; ++slot)
+    {
+        const int key = KeyBindings::Runtime::KeyOf(KeyBindings::PotionAction(slot));
+        SetField(model.potionKeys[slot], Rml::String(KeyBindings::KeyName(key)), PotionKeyFields[slot]);
+    }
 }
 
 // The labels follow the language a few times a second, and the PK switch at once: some thirty
@@ -1937,7 +1963,7 @@ void UpdateMenu(ControlsModel& model)
         if (MenuItems[item].action != nullptr)
             MenuItems[item].action();
         else
-            Touch::TapKey(MenuItems[item].key);
+            Touch::TapKey(Core::Input::KeyBindings::Runtime::RemapDefaultKey(MenuItems[item].key));
     }
 }
 
@@ -2198,7 +2224,7 @@ void UpdateSocial(ControlsModel& model)
         if (!TakePress(FirstSocialWindowControl + window))
             continue;
         CloseSocial(model);
-        Touch::TapKey(SocialWindows[window].key);
+        Touch::TapKey(Core::Input::KeyBindings::Runtime::RemapDefaultKey(SocialWindows[window].key));
         return;
     }
     ShowSocial(model);
@@ -2348,7 +2374,7 @@ void UpdateButtons(ControlsModel& model)
         if (KeyButtons[button].action != nullptr)
             KeyButtons[button].action();
         else
-            Touch::TapKey(KeyButtons[button].key);
+            Touch::TapKey(Core::Input::KeyBindings::Runtime::RemapDefaultKey(KeyButtons[button].key));
     }
 
     if (TakePress(SocialControl) && !IsDialogOpen())
@@ -2471,6 +2497,7 @@ void Update()
     RestPointerUnderNewWindow();
     RestPointerAfterDialog();
     SyncLabels(model);
+    SyncPotionKeys(model);
     SyncDevices(model);
     SyncSkills(model);
     UpdateBinding(model);

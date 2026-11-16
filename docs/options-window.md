@@ -173,11 +173,49 @@ window writes to these sections:
 - `[ConnectionSettings]`
 - `[Camera]` - orbital wheel-zoom radius (`Zoom`). **New in this PR**, the
   only key the camera rework added.
+- `[KeyBindings]` - the player's keys (see "Key bindings" below): one line per
+  action that is not on its default key, for example `Inventory=B` or
+  `MuHelperToggle=X`. An action on its default key has no line, so the section
+  is empty or missing until a key is changed, and the template lists none.
 
 Missing keys fall back to compile-time defaults from
 `src/source/Data/GameConfig/GameConfigConstants.h`. If `config.ini` doesn't exist,
 the build seeds it from `src/bin/config.ini.template`, which lists every key the
 game writes, in the order `Save()` writes them, plus `Backend`.
+
+## Key bindings
+
+Options > Gameplay has a Key bindings row (in the game only) that closes the
+settings and opens the key bindings window (`UI/Options/KeyBindingsWindow.h`,
+`key_bindings.rml`, both themes). It lists every action with its key, in
+three groups:
+
+- **Windows:** Inventory (I) and its second key (V), Character (C), Party (P),
+  Guild (G), Friends (F), Quests (T), Teleport (M), Menu (U), the command
+  window (D), Commands (J), Events (O), Daily rewards (N), Battle pass (X),
+  Gens (B), MU Helper settings (Z) and MU Helper on/off (Home).
+- **Potions:** the four potion slots (Q, W, E, R).
+- **Skills:** the ten skill slots (1 to 9, then 0).
+
+A click on a row waits for a key; the next key pressed becomes the action's
+key. The bindable keys are the letters but A, H, K, L, S and Y (kept for the
+game's own uses), the digits and Home: exactly as many keys as actions, so
+every bindable key belongs to one action, and a key another action holds
+swaps the two (the other row flashes). Escape cancels the wait; Enter, Tab,
+Space, the F keys, the arrows and the reserved letters are refused with a
+hint and the wait goes on. A second click on the waiting row also cancels.
+Reset to defaults gives every action its default key back. Every change is
+saved to `[KeyBindings]` at once. The keys inside windows (Enter, Esc, Tab,
+the chat's keys, Shift with a digit for pet commands) stay fixed.
+
+The rules live in `Core/Input/KeyBindings.h` (tested in
+`tests/core/test_key_bindings.cpp`); `Core/Input/KeyBindingsRuntime.h` holds
+the player's table, loaded once at start right after `GameConfig::Load()`. A
+hand-edited section that binds one key twice or names an unknown key is
+repaired on load and written back. The hot keys, the potion and skill slot
+labels on the HUD, the tooltips that name a key, the touch buttons and the
+pad's shortcuts all follow the bindings. The bindings are per computer (per
+browser on /play), not per character.
 
 ## Graphics preset
 

@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Core/Input/KeyBindings.h"
+
 namespace mu::ui::window
 {
     bool CreateOkMessageBox(const std::wstring& strMsg, DWORD dwColor = 0xffffffff, float fPriority = 3.f);
@@ -82,6 +84,8 @@ namespace mu::ui::window
     bool IsRelease(int iVirtKey);
     bool IsPress(int iVirtKey);
     bool IsRepeat(int iVirtKey);
+    // A press of the key the player bound to the action (Options > Gameplay > Key bindings).
+    bool IsActionPress(Core::Input::KeyBindings::Action action);
 
     class CNewKeyInput
     {

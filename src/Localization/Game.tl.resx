@@ -13885,6 +13885,55 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>Isara</value>
   </data>
+  <!-- Key bindings window (UI/Options/KeyBindingsWindow.h, Core/Input/KeyBindings.h) -->
+  <data name="KeyBindingsTitle" xml:space="preserve">
+    <value>Mga key binding</value>
+  </data>
+  <data name="KeyBindingsOpen" xml:space="preserve">
+    <value>Mga key binding</value>
+  </data>
+  <data name="KeyBindingsOpenButton" xml:space="preserve">
+    <value>I-set</value>
+  </data>
+  <data name="KeyBindingsWindows" xml:space="preserve">
+    <value>Mga window</value>
+  </data>
+  <data name="KeyBindingsPotions" xml:space="preserve">
+    <value>Mga potion</value>
+  </data>
+  <data name="KeyBindingsSkills" xml:space="preserve">
+    <value>Mga skill</value>
+  </data>
+  <data name="KeyBindingsHint" xml:space="preserve">
+    <value>I-click ang aksyon, saka pindutin ang bagong key. Kapag gamit na ang key, magpapalit ang dalawang aksyon.</value>
+  </data>
+  <data name="KeyBindingsPress" xml:space="preserve">
+    <value>Pumindot ng key (Esc para kanselahin)</value>
+  </data>
+  <data name="KeyBindingsFixed" xml:space="preserve">
+    <value>Hindi puwede ang key na iyan. Pumindot ng iba (Esc para kanselahin).</value>
+  </data>
+  <data name="KeyBindingsReset" xml:space="preserve">
+    <value>Ibalik sa default</value>
+  </data>
+  <data name="KeyBindingsClose" xml:space="preserve">
+    <value>Isara</value>
+  </data>
+  <data name="KeyBindingsInventoryAlt" xml:space="preserve">
+    <value>Inventory (ikalawang key)</value>
+  </data>
+  <data name="KeyBindingsCommand" xml:space="preserve">
+    <value>Aksyon ng manlalaro</value>
+  </data>
+  <data name="KeyBindingsHelperToggle" xml:space="preserve">
+    <value>MU Helper on/off</value>
+  </data>
+  <data name="KeyBindingsPotionSlot" xml:space="preserve">
+    <value>Slot ng potion %d</value>
+  </data>
+  <data name="KeyBindingsSkillSlot" xml:space="preserve">
+    <value>Slot ng skill %d</value>
+  </data>
   <data name="SkillDamageWithMaxDD" xml:space="preserve">
     <value>Pinsala sa Kasanayan: %d%% (max %d%%)</value>
   </data>

@@ -13906,6 +13906,55 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>Zamknij</value>
   </data>
+  <!-- Key bindings window (UI/Options/KeyBindingsWindow.h, Core/Input/KeyBindings.h) -->
+  <data name="KeyBindingsTitle" xml:space="preserve">
+    <value>Przypisanie klawiszy</value>
+  </data>
+  <data name="KeyBindingsOpen" xml:space="preserve">
+    <value>Przypisanie klawiszy</value>
+  </data>
+  <data name="KeyBindingsOpenButton" xml:space="preserve">
+    <value>Ustaw</value>
+  </data>
+  <data name="KeyBindingsWindows" xml:space="preserve">
+    <value>Okna</value>
+  </data>
+  <data name="KeyBindingsPotions" xml:space="preserve">
+    <value>Mikstury</value>
+  </data>
+  <data name="KeyBindingsSkills" xml:space="preserve">
+    <value>Umiejętności</value>
+  </data>
+  <data name="KeyBindingsHint" xml:space="preserve">
+    <value>Kliknij akcję, potem naciśnij nowy klawisz. Zajęty klawisz zamienia obie akcje miejscami.</value>
+  </data>
+  <data name="KeyBindingsPress" xml:space="preserve">
+    <value>Naciśnij klawisz (Esc anuluje)</value>
+  </data>
+  <data name="KeyBindingsFixed" xml:space="preserve">
+    <value>Tego klawisza nie można przypisać. Naciśnij inny (Esc anuluje).</value>
+  </data>
+  <data name="KeyBindingsReset" xml:space="preserve">
+    <value>Przywróć domyślne</value>
+  </data>
+  <data name="KeyBindingsClose" xml:space="preserve">
+    <value>Zamknij</value>
+  </data>
+  <data name="KeyBindingsInventoryAlt" xml:space="preserve">
+    <value>Ekwipunek (drugi klawisz)</value>
+  </data>
+  <data name="KeyBindingsCommand" xml:space="preserve">
+    <value>Akcje gracza</value>
+  </data>
+  <data name="KeyBindingsHelperToggle" xml:space="preserve">
+    <value>MU Helper wł./wył.</value>
+  </data>
+  <data name="KeyBindingsPotionSlot" xml:space="preserve">
+    <value>Slot mikstury %d</value>
+  </data>
+  <data name="KeyBindingsSkillSlot" xml:space="preserve">
+    <value>Slot umiejętności %d</value>
+  </data>
   <data name="SkillDamageWithMaxDD" xml:space="preserve">
     <value>Obrażenia umiejętności: %d%% (maks. %d%%)</value>
   </data>
