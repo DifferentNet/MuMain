@@ -25,7 +25,6 @@
         <div class="sharp-text sharp-flow scroll-pane entry-buttons" id="entry_levels" data-style-font-size="bold_text_px + 'px'">
             <div class="entry-btn" data-for="b, i : buttons" data-class-enabled="b.enabled"
                  data-event-click="entry_press(i)">
-                <div class="entry-btn-art"></div>
                 <span class="entry-label">{{b.label}}</span>
             </div>
         </div>

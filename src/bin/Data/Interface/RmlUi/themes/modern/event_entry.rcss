@@ -51,14 +51,6 @@
     pointer-events: auto;
 }
 .entry-btn + .entry-btn { margin-top: calc(4px * var(--root-scale)); }
-.entry-btn-art {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    pointer-events: none;
-}
 .entry-label {
     display: block;
     position: relative;
@@ -78,14 +70,17 @@
 
 #title { color: token(text-warm); }
 .entry-line { color: token(text-primary); }
-.entry-btn-art {
+/* MU Moldova: the band itself carries its background and border over its full height. A separate absolute art
+   layer (top/bottom 0) inside the flex band stayed a thin bar at the band's top, above the label (Hexfire,
+   2026-11-17: "the buttons are above the text"). */
+.entry-btn {
     background-color: token(surface-recessed);
     border: 1px token(border-frame);
     border-radius: token(radius-sm)px;
 }
-.entry-btn.enabled .entry-btn-art { background-color: token(surface-raised); }
-.entry-btn.enabled:hover .entry-btn-art { border-color: token(accent-steel-hover); }
-.entry-btn.enabled:active .entry-btn-art { background-color: token(surface-recessed); }
+.entry-btn.enabled { background-color: token(surface-raised); }
+.entry-btn.enabled:hover { border-color: token(accent-steel-hover); }
+.entry-btn.enabled:active { background-color: token(surface-recessed); }
 .entry-label { color: token(text-muted); }
 .entry-btn.enabled .entry-label { color: token(text-primary); }
 
@@ -96,15 +91,4 @@
 @media (theme: mobile) {
     .entry-btn { min-height: calc(42px * var(--root-scale)); }
     .entry-btn + .entry-btn { margin-top: calc(6px * var(--root-scale)); }
-    /* The absolute art layer doesn't grow with the band's min-height here (it stays a thin bar on top), so the band
-       itself carries the art, stretched over its full height, and the label centres on it. */
-    .entry-btn-art { display: none; }
-    .entry-btn {
-        background-color: token(surface-recessed);
-        border: 1px token(border-frame);
-        border-radius: token(radius-sm)px;
-    }
-    .entry-btn.enabled { background-color: token(surface-raised); }
-    .entry-btn.enabled:hover { border-color: token(accent-steel-hover); }
-    .entry-btn.enabled:active { background-color: token(surface-recessed); }
 }
