@@ -23,7 +23,12 @@ void Update(SDL_Window* window, Core::Input::Gamepad::Presses& presses, Clock::t
 // The same over the targets PadTargets::Collect just found this frame (the screens look first).
 void Update(SDL_Window* window, Core::Input::Gamepad::Presses& presses, Clock::time_point now,
             std::span<const PadTargetPick::Target> targets);
+// A pad button pressed over the windows: the targets are looked for now and what the frame rests on
+// is noted again, so the button reads this frame's window (an item just taken, a cell just emptied),
+// not the one kept from a moment ago. Update does the same after the d-pad and the stick moved.
+void Recheck(SDL_Window* window);
 // The windows opened or changed (a hub tab turned): the frame goes to the nearest target as soon as
+
 // there is one.
 void SnapSoon();
 // RT turned the page of the window at `window` (a target's `window`): the frame goes to that page's first

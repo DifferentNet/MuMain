@@ -160,6 +160,15 @@ public:
     // Whether the pad's controls card showed once by itself (UI/HUD/PadCard).
     bool GetGamepadCardSeen() const { return m_gamepadCardSeen; }
     void SetGamepadCardSeen(bool seen) { m_gamepadCardSeen = seen; }
+    // Whether a tap of A starts an attack that goes on until the next tap (else A attacks while held).
+    bool GetGamepadAttackToggle() const { return m_gamepadAttackToggle; }
+    void SetGamepadAttackToggle(bool on) { m_gamepadAttackToggle = on; }
+    // Whether a tap of RT switches the skill page (else the page shows while RT is held).
+    bool GetGamepadPageToggle() const { return m_gamepadPageToggle; }
+    void SetGamepadPageToggle(bool on) { m_gamepadPageToggle = on; }
+    // The one-time pad hints that showed already, one bit each (UI/HUD/PadHints).
+    int GetGamepadHintsSeen() const { return m_gamepadHintsSeen; }
+    void SetGamepadHintsSeen(int bits) { m_gamepadHintsSeen = bits; }
 
     // Chat commands - the favourites and the named templates of the command
     // window. They belong to the installation, not to a character.
@@ -440,6 +449,10 @@ private:
     int m_gamepadPointerSpeed = 100;
     int m_gamepadGlyphs = 0;
     bool m_gamepadCardSeen = false;
+    bool m_gamepadAttackToggle = false;
+    bool m_gamepadPageToggle = false;
+    int m_gamepadHintsSeen = 0;
+
     std::wstring m_enableAnimationTaskPool;
     bool m_reuseCharacterBones = true;
 

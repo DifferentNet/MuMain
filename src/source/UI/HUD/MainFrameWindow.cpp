@@ -760,18 +760,23 @@ void mu::ui::window::CMainFrameWindow::SyncAlerts()
 
 namespace
 {
-// The key the player bound to potion slot N (HOTKEY_Q..HOTKEY_R).
+// The key the player bound to potion slot N (HOTKEY_Q..HOTKEY_R). None while the pad plays: its row over
+// the bar names the pad's buttons, and a keyboard letter there only misleads.
 Rml::String PotionKeyText(int slot)
 {
+    if (UI::Mobile::IsGamepadInUse())
+        return Rml::String();
     namespace KeyBindings = Core::Input::KeyBindings;
     return KeyBindings::KeyName(KeyBindings::Runtime::KeyOf(KeyBindings::PotionAction(slot)));
 }
 
-// The key the player bound to skill hot key N ("7", "Q", "Home"), or an empty string for -1 (no slot).
+// The key the player bound to skill hot key N ("7", "Q", "Home"), or an empty string for -1 (no slot)
+// and while the pad plays (as PotionKeyText).
 Rml::String HotkeyText(int hotkey)
 {
-    if (hotkey < 0)
+    if (hotkey < 0 || UI::Mobile::IsGamepadInUse())
         return Rml::String();
+
     namespace KeyBindings = Core::Input::KeyBindings;
     return KeyBindings::KeyName(KeyBindings::Runtime::KeyOf(KeyBindings::SkillSlotAction(hotkey)));
 }

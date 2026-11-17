@@ -14006,4 +14006,28 @@
   <data name="ZenCarryLimitReached" xml:space="preserve">
     <value>Більше Зен ви не можете нести.</value>
   </data>
+  <data name="GamepadAttackModeRow" xml:space="preserve">
+    <value>Атака на A</value>
+  </data>
+  <data name="GamepadPageModeRow" xml:space="preserve">
+    <value>Друга сторінка на RT</value>
+  </data>
+  <data name="GamepadHoldMode" xml:space="preserve">
+    <value>Утримувати</value>
+  </data>
+  <data name="GamepadToggleMode" xml:space="preserve">
+    <value>Торкнутися — увімк., ще раз — вимк.</value>
+  </data>
+  <data name="PadHintPickUp" xml:space="preserve">
+    <value>Предмет поруч: D-pad вниз піднімає його, {A} теж, якщо монстрів поруч немає</value>
+  </data>
+  <data name="PadHintWindow" xml:space="preserve">
+    <value>У вікні: D-pad рухає рамку, {A} бере або натискає, {B} закриває</value>
+  </data>
+  <data name="PadHintBagFull" xml:space="preserve">
+    <value>Сумка повна: в інвентарі {Y} на предметі відкриває його картку — викинути або продати в магазині</value>
+  </data>
+  <data name="PadHintDeath" xml:space="preserve">
+    <value>За кілька секунд ти оживеш: відпусти лівий стік і йди далі</value>
+  </data>
 </root>

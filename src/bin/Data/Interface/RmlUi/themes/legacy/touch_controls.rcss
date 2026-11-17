@@ -1268,8 +1268,8 @@ body.pad.no-touch #tc_bind_hint {
 /* The pad row sits just over the HUD bar: the count goes inside its button, on the lower edge. */
 body.pad.no-touch .tc-potion-count {
 	bottom: 2rem;
-	line-height: 11rem;
-	font-size: 10rem;
+	line-height: 12rem;
+	font-size: 11rem;
 }
 
 /* Below 100 % the top row keeps its height, its fold button and the gap to the menu panel as large on the

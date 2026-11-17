@@ -35,6 +35,7 @@
 #include "UI/HUD/MainFrameWindow.h"
 #include "UI/HUD/PadCard.h"
 #include "UI/HUD/PadFrame.h"
+#include "UI/HUD/PadHints.h"
 #include "UI/HUD/PadHub.h"
 #include "UI/HUD/PadKeyboard.h"
 #include "UI/HUD/PadOverlay.h"
@@ -285,6 +286,15 @@ struct State
     bool typing = false;
     // The hero lay dead last frame (FollowDeath).
     bool heroDead = false;
+    // The A toggle (Options: Pad attack on A): the attack goes on without A held, on the foe it fights
+    // (attackKey, -1 until the first swing picked one). PlayAttackToggle.
+    bool attackLatched = false;
+    int attackKey = -1;
+    // The RT toggle (Options: Pad RT page): the second page stays up until the next tap of RT. RT went
+    // down in the world (rtTapping) and zoomed with the d-pad meanwhile (rtZoomed: not a tap then).
+    bool pageLatched = false;
+    bool rtTapping = false;
+    bool rtZoomed = false;
     Clock::time_point lastFrame{};
     // Seconds since the last frame (FrameSeconds), for the overlay's glide.
     float frameSeconds = 0.f;
@@ -461,8 +471,15 @@ void ApplyWalk()
     g_state.steering = true;
 }
 
+void StopAttackToggle()
+{
+    g_state.attackLatched = false;
+    g_state.attackKey = -1;
+}
+
 void ReleaseControls()
 {
+    StopAttackToggle();
     for (const Mapping& mapping : Mappings)
         Controls::SetPadHeld(mapping.control, false);
     Controls::SetPadAlt(false);
@@ -714,7 +731,8 @@ bool TurnWheelWithStick(SDL_Window* window, Pad::StickPosition stick, float seco
         float x = 0.f;
         float y = 0.f;
         PointerPosition(x, y);
-        overScroll = Core::Input::UiScrollsAt(x, y);
+        // Only a box that can still scroll the way pushed: at a list's end the push moves the pointer on.
+        overScroll = Core::Input::UiScrollsFurtherAt(x, y, stick.y > 0.f);
     }
     Pointer::TurnWheel(window, wheel.Take(stick, overScroll, seconds));
     return wheel.Turning();
@@ -928,15 +946,83 @@ void TurnWheelWithDpad(SDL_Window* window, Presses& presses, Clock::time_point n
     }
 }
 
+// RT with the page toggle on: a tap in the world turns the page, as RT is let go. RT held to zoom with
+// the d-pad (ZoomWithDpad) is no tap: the page stays.
+void FollowPageToggle(const Presses& presses)
+{
+    if (Pressed(presses, Button::RightTrigger) && !g_state.windowOpen)
+    {
+        g_state.rtTapping = true;
+        g_state.rtZoomed = false;
+    }
+    if (!g_state.rtTapping || Held(Button::RightTrigger))
+        return;
+    g_state.rtTapping = false;
+    if (!g_state.rtZoomed && !g_state.windowOpen)
+        g_state.pageLatched = !g_state.pageLatched;
+}
+
+// A with the attack toggle on (pad round 5): a tap on a foe starts the attack, and it goes on with A let
+// go. It stops on the next tap of A, a walk with the left stick, B, a window opening, a death or a warp
+// (ReleaseControls), and as the foe dies or goes out of reach: it goes on only to the foe the right
+// stick's choice passed on to (TouchActions' KeepChosen), so a kill never turns the hero on a foe
+// nobody chose.
+void PlayAttackToggle(const Presses& presses)
+{
+    if (!GameConfig::GetInstance().GetGamepadAttackToggle())
+    {
+        StopAttackToggle();
+        return;
+    }
+    // PlayContextA took the taps that pick up or talk.
+    const bool tapped = Pressed(presses, Button::A) && !g_state.waitForRelease[static_cast<int>(Button::A)];
+    if (!g_state.attackLatched)
+    {
+        if (tapped && GameLogic::Touch::HasFoeNear())
+            g_state.attackLatched = true;
+        return;
+    }
+    if (tapped || StickWalks() || Pressed(presses, Button::B))
+    {
+        StopAttackToggle();
+        return;
+    }
+    const int fought = GameLogic::Touch::FightKey();
+    if (g_state.attackKey == -1)
+    {
+        // The first swing picks the foe; with none left to pick, nothing to go on with.
+        if (fought != -1)
+            g_state.attackKey = fought;
+        else if (!GameLogic::Touch::HasFoeNear())
+            StopAttackToggle();
+        return;
+    }
+    if (fought == g_state.attackKey)
+        return;
+    if (fought != -1 && fought == GameLogic::Touch::ChosenKey())
+    {
+        g_state.attackKey = fought;
+        return;
+    }
+    StopAttackToggle();
+}
+
 // The buttons that press a control hold it while held. A tap shorter than a frame (a quick one on a
 // slow phone, the press that woke the pad in a browser) still presses it once. A button for the other
 // mode lets its control go (B is a skill in the world, Back over a window).
 void HoldMappedControls(const Presses& presses)
 {
+    const bool attackToggle = GameConfig::GetInstance().GetGamepadAttackToggle();
     std::array<bool, static_cast<int>(PadButton::Count)> held{};
     // The second page shows only in the world: over a window X and Y act on the items. The buttons
     // say the page RT shows now; each button acts on the page it went down on (Pad::PageLatch).
-    const bool altShown = Held(Button::RightTrigger) && !g_state.windowOpen;
+    // With the RT toggle, the page a tap of RT turned stays up (FollowPageToggle).
+    const bool pageToggle = GameConfig::GetInstance().GetGamepadPageToggle();
+    if (pageToggle)
+        FollowPageToggle(presses);
+    else
+        g_state.pageLatched = false;
+    const bool altShown = (pageToggle ? g_state.pageLatched : Held(Button::RightTrigger)) && !g_state.windowOpen;
     Controls::SetPadAlt(altShown);
     std::array<bool, Pad::ButtonCount> alt{};
     for (int button = 0; button < Pad::ButtonCount; ++button)
@@ -948,6 +1034,12 @@ void HoldMappedControls(const Presses& presses)
     {
         if (!Applies(mapping, g_state.windowOpen, g_state.frameOpen, alt[static_cast<int>(mapping.pad)]))
             continue;
+        // Toggled, the attack is held by the latch, not by A (PlayAttackToggle).
+        if (mapping.control == PadButton::Attack && attackToggle)
+        {
+            held[static_cast<int>(mapping.control)] = g_state.attackLatched;
+            continue;
+        }
         const bool holds = HoldsControl(mapping.pad);
         if (!holds && Pressed(presses, mapping.pad))
             Controls::SetPadHeld(mapping.control, true);
@@ -1160,7 +1252,10 @@ void ZoomWithDpad(Presses& presses)
         if (Held(button))
             g_state.waitForRelease[static_cast<int>(button)] = true;
         if (Take(presses, button))
+        {
             MouseWheel += step;
+            g_state.rtZoomed = true;
+        }
     }
 }
 
@@ -1207,7 +1302,10 @@ void PlayDpadSides(const Presses& presses, Clock::time_point now)
 void SwitchWindowMode(SDL_Window* window, bool windowOpen, bool frameOpen)
 {
     if (frameOpen && !g_state.frameOpen)
+    {
         UI::HUD::PadFrame::SnapSoon();
+        UI::HUD::PadHints::Show(UI::HUD::PadHints::Hint::Window);
+    }
     else if (!frameOpen)
         UI::HUD::PadFrame::Reset();
     g_state.windowOpen = windowOpen;
@@ -1233,6 +1331,8 @@ void FollowDeath(SDL_Window* window)
     if (dead == g_state.heroDead)
         return;
     g_state.heroDead = dead;
+    if (dead)
+        UI::HUD::PadHints::Show(UI::HUD::PadHints::Hint::Death);
     EndPress(window, g_state.a, {});
     ReleaseControls();
     g_state.aPicks = false;
@@ -1296,6 +1396,9 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
         TurnHubTabs(presses, now);
         if (frameOpen)
         {
+            // A press reads the window as it is now: the frame's flags below, not the kept ones.
+            if (std::any_of(presses.begin(), presses.end(), [](bool pressed) { return pressed; }))
+                UI::HUD::PadFrame::Recheck(window);
             PlayHeldItem(presses);
             if (!UI::HUD::PadTargets::OnDialog())
                 PlayWindowKeys(presses);
@@ -1313,10 +1416,13 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
             g_state.meet = GameLogic::Touch::MeetIndex();
         PlayMeet(window, presses, now);
         PlayContextA(window, presses);
+        PlayAttackToggle(presses);
         // RB: whom the heals and buffs go to (ghinzuro, 2026-11-04).
         if (Pressed(presses, Button::RightShoulder) && !g_state.waitForRelease[static_cast<int>(Button::RightShoulder)])
             GameLogic::Touch::ChooseNextFriend();
         g_state.promptDrop = GameLogic::Touch::NearestDropToPick();
+        if (g_state.promptDrop != -1)
+            UI::HUD::PadHints::Show(UI::HUD::PadHints::Hint::PickUp);
     }
     HoldMappedControls(presses);
     if (!frameOpen)
@@ -1819,6 +1925,5 @@ void Play()
     if (cardOpened)
         WaitForRelease();
     PlayWorld(window, cardOpened ? Presses{} : presses, seconds, now, gameWindowOpen);
-
 }
 } // namespace

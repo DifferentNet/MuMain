@@ -1098,7 +1098,16 @@ struct BoxesMeasure
     double at = -1e9;
     // Measures since the last TakeMeasureCount(), for the MU_RENDER_TIMING log.
     std::uint32_t count = 0;
+    // What the layout followed last: the top row folded or open and the screen's size. A change
+    // measures at once, so the buffs and the system messages move with the row on the same frame.
+    bool quickOpen = false;
+    float screenWidth = 0.f;
+    float screenHeight = 0.f;
+    // Frames still measured at once after such a change: the new layout may only show on the next.
+    int eagerFrames = 0;
 };
+// A change of the row or the screen is measured on this many frames in a row.
+constexpr int EagerFramesAfterChange = 2;
 BoxesMeasure g_measure;
 
 void MeasureBoxesNow()
@@ -2576,7 +2585,19 @@ void Update()
     // Played with the pad, the controls are measured lazily (EnsureBoxes): only an A press over a
     // window reads them then.
     g_measure.lazy = padInUse && !model.menuOpen && !model.pickerOpen && !model.socialOpen && !AnyFingerOnControls();
-    const bool due = !g_measure.lazy || Now() - g_measure.at >= LazyMeasureSeconds;
+    const Rml::Vector2f screen = document->GetBox().GetSize(Rml::BoxArea::Border);
+    const bool layoutChanged = model.quickOpen != g_measure.quickOpen || screen.x != g_measure.screenWidth
+                               || screen.y != g_measure.screenHeight;
+    g_measure.quickOpen = model.quickOpen;
+    g_measure.screenWidth = screen.x;
+    g_measure.screenHeight = screen.y;
+    if (layoutChanged)
+        g_measure.eagerFrames = EagerFramesAfterChange;
+    const bool eager = g_measure.eagerFrames > 0;
+    if (eager)
+        --g_measure.eagerFrames;
+    const bool due = !g_measure.lazy || eager || Now() - g_measure.at >= LazyMeasureSeconds;
+
     // The pad lights the PC's pad row too: X held shows before the skill animates.
     SyncPressed(document, (model.fingers && UI::Mobile::ReplacesPcHud()) || padInUse, due);
     HintHoldOnce();

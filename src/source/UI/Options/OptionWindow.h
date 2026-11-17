@@ -130,7 +130,8 @@ namespace mu::ui::window
         // native <select> isn't used here) -- dropdownId is 0=resolution,1=fpsCap,2=theme,
         // 3=language,4=font,5=uiScale,6=antialiasing,7=anisotropy,8=interfaceView,9=controls,
         // 10=touchButtons,11=gamepad,12=graphicsPreset,13=sharpen,14=sunShadows,15=hdTextureSize,
-        // 16=gamepadDeadZone,17=gamepadSpeed,18=gamepadGlyphs, matching model.openDropdown's
+        // 16=gamepadDeadZone,17=gamepadSpeed,18=gamepadGlyphs,19=gamepadAttackMode,20=gamepadPageMode,
+        // matching model.openDropdown's
         // own comment (OptionWindow.h).
         // RmlDropdownOptionClick dispatches to RmlResolutionChanged()/RmlFpsCapChanged()/etc. per
         // dropdownId.
@@ -259,6 +260,9 @@ namespace mu::ui::window
         void RmlGamepadDeadZoneChanged(int index);
         void RmlGamepadSpeedChanged(int index);
         void RmlGamepadGlyphsChanged(int index);
+        // MU Moldova: A attacks and RT shows the second page while held (0), or a tap on, a tap off (1).
+        void RmlGamepadAttackModeChanged(int index);
+        void RmlGamepadPageModeChanged(int index);
         void RmlClickClose();
 
         // One tuning slider (UI::Options::TuningRow) as the RmlUi model binds it.
@@ -310,7 +314,8 @@ namespace mu::ui::window
             // overwrites whichever other id was here, no separate "close the others" step needed.
             // 0=resolution, 1=fpsCap, 2=theme, 3=language, 4=font, 5=uiScale, 6=antialiasing,
             // 7=anisotropy, 8=interfaceView, 9=controls, 10=touchButtons, 11=gamepad, 12=graphicsPreset, 13=sharpen, 14=sunShadows, 15=hdTextureSize,
-            // 16=gamepadDeadZone, 17=gamepadSpeed, 18=gamepadGlyphs (RmlToggleDropdown()/
+            // 16=gamepadDeadZone, 17=gamepadSpeed, 18=gamepadGlyphs, 19=gamepadAttackMode,
+            // 20=gamepadPageMode (RmlToggleDropdown()/
             // RmlDropdownOptionClick()'s own ids). Replaces RmlUi's native <select>/<option>
             // (WidgetDropDown) entirely -- see option_window.rml's own history for why: that
             // widget's own generated selectbox/selectvalue/selectarrow sub-elements need CSS this
@@ -629,6 +634,15 @@ namespace mu::ui::window
             int gamepadGlyphsIndex = 0;
             Rml::String gamepadGlyphsRowLabel;
             Rml::String gamepadGlyphsValueLabel;
+            std::vector<Rml::String> gamepadAttackModeLabels;
+            int gamepadAttackModeIndex = 0;
+            Rml::String gamepadAttackModeRowLabel;
+            Rml::String gamepadAttackModeValueLabel;
+            std::vector<Rml::String> gamepadPageModeLabels;
+            int gamepadPageModeIndex = 0;
+            Rml::String gamepadPageModeRowLabel;
+            Rml::String gamepadPageModeValueLabel;
+
         };
         void BindRmlModel(Rml::DataModelConstructor& c, OptionRmlModel& model);
         void SyncImpliedEffectRows(OptionRmlModel& model);

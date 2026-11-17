@@ -425,6 +425,11 @@ bool RmlUiRuntime::ScrollsAt(float x, float y) const
     return Render::RmlUi::ScrollsVerticallyAt(m_Context, {x, y});
 }
 
+bool RmlUiRuntime::ScrollsFurtherAt(float x, float y, bool down) const
+{
+    return Render::RmlUi::ScrollsFurtherAt(m_Context, {x, y}, down);
+}
+
 bool RmlUiRuntime::IsMouseOverUI() const
 {
     return m_Context && m_Context->IsMouseInteracting();

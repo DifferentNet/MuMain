@@ -30,6 +30,7 @@
 #include "UI/Chat/ChatMessages.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/HUD/PadGlyphs.h"
+#include "UI/HUD/PadHints.h"
 #include "UI/HUD/QuickCommandWindow.h"
 #include "World/GameMaps/GMBattleCastle.h"
 #include "World/MapInfra/MapManager.h"
@@ -168,6 +169,8 @@ Clock::time_point g_chosenAt{};
 Clock::time_point g_chosenFoughtAt{};
 float g_chosenTileX = 0.f;
 float g_chosenTileY = 0.f;
+// The map the choice was made on: it never passes on to a foe on another (a warp, a gate).
+int g_chosenMap = -1;
 // The NPC or player the right stick chose where no foe is near (MeetIndex).
 int g_meetKey = NoTarget;
 // When the walk up to a player for their menu was last sent (WalkUpTo).
@@ -586,6 +589,7 @@ void Choose(int key)
     g_meetKey = NoTarget;
     g_chosenKey = g_targetKey = key;
     g_chosenAt = Clock::now();
+    g_chosenMap = static_cast<int>(gMapManager.WorldActive);
     if (const CHARACTER* chosen = FindByKey(key))
         NoteChosenTile(chosen);
 }
@@ -598,6 +602,13 @@ void KeepChosen()
 {
     if (g_chosenKey == NoTarget)
         return;
+    // A warp or a gate: the key may name another monster on the new map, so the choice ends here
+    // (Reset() runs on a map load only while the on-screen controls show).
+    if (g_chosenMap != static_cast<int>(gMapManager.WorldActive))
+    {
+        g_chosenKey = NoTarget;
+        return;
+    }
     const CHARACTER* chosen = FindByKey(g_chosenKey);
     if (IsGoodTarget(chosen, true))
     {
@@ -607,8 +618,15 @@ void KeepChosen()
     const int gone = g_chosenKey;
     const bool died = chosen == nullptr || !chosen->Object.Live || chosen->Dead != 0;
     g_chosenKey = NoTarget;
-    if (!died || !TargetPassOn::Passes(g_chosenAt, g_chosenFoughtAt, Attacking != -1, Clock::now()))
+    // The mouse player's own clicks choose: the choice only ever passes on under the pad or touch.
+    if (!died || !g_controlsShown || !TargetPassOn::Passes(g_chosenAt, g_chosenFoughtAt, Attacking != -1, Clock::now()))
         return;
+    // The hero far from where it died (respawned in town, teleported): no fight to go on with.
+    const float heroX = Hero->Object.Position[0] / TERRAIN_SCALE;
+    const float heroY = Hero->Object.Position[1] / TERRAIN_SCALE;
+    if (std::hypot(g_chosenTileX - heroX, g_chosenTileY - heroY) > static_cast<float>(TargetRange))
+        return;
+
     static std::vector<DirectionPick::Candidate> s_candidates;
     s_candidates.clear();
     for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
@@ -619,8 +637,8 @@ void KeepChosen()
         s_candidates.push_back({character->Key, character->Object.Position[0] / TERRAIN_SCALE,
                                 character->Object.Position[1] / TERRAIN_SCALE});
     }
-    const int next = TargetPassOn::Next(s_candidates, Hero->Object.Position[0] / TERRAIN_SCALE,
-                                        Hero->Object.Position[1] / TERRAIN_SCALE, g_chosenTileX, g_chosenTileY, gone);
+    const int next = TargetPassOn::Next(s_candidates, heroX, heroY, g_chosenTileX, g_chosenTileY, gone);
+
     if (next == DirectionPick::NoKey)
         return;
     // Still the player's choice, made when it was: g_chosenAt stays.
@@ -1138,6 +1156,8 @@ void SayBagFull()
         return;
     g_fullBagSaidAt = now;
     UI::Chat::PostSystem(I18N::Game::InventoryIsFull, mu::ui::window::TYPE_ERROR_MESSAGE);
+    // The first time with the pad: how to make room with it.
+    UI::HUD::PadHints::Show(UI::HUD::PadHints::Hint::BagFull);
 }
 
 // Taken or gone: a new drop under the same key is not the refused one.
@@ -1762,8 +1782,21 @@ bool HasOtherFoe()
     return s_found;
 }
 
+int FightKey()
+{
+    if (!InWorld() || !IsGoodTarget(FindByKey(g_targetKey), true))
+        return NoTarget;
+    return g_targetKey;
+}
+
+int ChosenKey()
+{
+    return g_chosenKey;
+}
+
 bool HasFoeNear()
 {
+
     if (!InWorld())
         return false;
     // The one chosen or fought last counts as A fights it (TargetToFight): a player too.

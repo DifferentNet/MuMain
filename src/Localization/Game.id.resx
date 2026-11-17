@@ -14006,4 +14006,28 @@
   <data name="ZenCarryLimitReached" xml:space="preserve">
     <value>Kamu tidak bisa membawa Zen lagi.</value>
   </data>
+  <data name="GamepadAttackModeRow" xml:space="preserve">
+    <value>Serang di A</value>
+  </data>
+  <data name="GamepadPageModeRow" xml:space="preserve">
+    <value>Halaman kedua di RT</value>
+  </data>
+  <data name="GamepadHoldMode" xml:space="preserve">
+    <value>Tahan</value>
+  </data>
+  <data name="GamepadToggleMode" xml:space="preserve">
+    <value>Ketuk untuk nyala, ketuk lagi untuk mati</value>
+  </data>
+  <data name="PadHintPickUp" xml:space="preserve">
+    <value>Item di dekatmu: D-pad bawah mengambilnya, {A} juga jika tidak ada monster di dekat</value>
+  </data>
+  <data name="PadHintWindow" xml:space="preserve">
+    <value>Di jendela: D-pad menggerakkan bingkai, {A} mengambil atau menekan, {B} menutup</value>
+  </data>
+  <data name="PadHintBagFull" xml:space="preserve">
+    <value>Tas penuh: di inventaris {Y} pada item membuka kartunya, untuk membuang atau menjualnya di toko</value>
+  </data>
+  <data name="PadHintDeath" xml:space="preserve">
+    <value>Kamu hidup lagi dalam beberapa detik: lepaskan stik kiri, lalu berjalan lagi</value>
+  </data>
 </root>

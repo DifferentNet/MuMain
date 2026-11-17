@@ -25,9 +25,9 @@ inline constexpr auto FightAge = std::chrono::seconds(3);
 // the hero fighting still (the engine's own attack under way).
 [[nodiscard]] bool Passes(Clock::time_point chosenAt, Clock::time_point foughtAt, bool fighting, Clock::time_point now);
 
-// The foe it passes on to, never `gone`: the way (goneX, goneY) lay from the hero (heroX, heroY), the
-// nearest within the cone first, else the one at the smallest angle (DirectionPick::Pick); NoKey with
-// none. All in the map's tiles.
+// The foe it passes on to, never `gone`: the nearest within the cone the way (goneX, goneY) lay from
+// the hero (heroX, heroY) (DirectionPick::Pick); NoKey with none that way. All in the map's tiles.
+
 [[nodiscard]] int Next(const std::vector<DirectionPick::Candidate>& candidates, float heroX, float heroY, float goneX,
                        float goneY, int gone);
 } // namespace GameLogic::Touch::TargetPassOn

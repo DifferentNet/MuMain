@@ -14006,4 +14006,28 @@
   <data name="ZenCarryLimitReached" xml:space="preserve">
     <value>No puedes llevar más Zen.</value>
   </data>
+  <data name="GamepadAttackModeRow" xml:space="preserve">
+    <value>Ataque en A</value>
+  </data>
+  <data name="GamepadPageModeRow" xml:space="preserve">
+    <value>Segunda página en RT</value>
+  </data>
+  <data name="GamepadHoldMode" xml:space="preserve">
+    <value>Mantener</value>
+  </data>
+  <data name="GamepadToggleMode" xml:space="preserve">
+    <value>Pulsa para activar, otra vez para quitar</value>
+  </data>
+  <data name="PadHintPickUp" xml:space="preserve">
+    <value>Un objeto cerca: D-pad abajo lo recoge, {A} también sin monstruos cerca</value>
+  </data>
+  <data name="PadHintWindow" xml:space="preserve">
+    <value>En una ventana: el D-pad mueve el marco, {A} toma o pulsa, {B} cierra</value>
+  </data>
+  <data name="PadHintBagFull" xml:space="preserve">
+    <value>Inventario lleno: en el inventario {Y} sobre un objeto abre su ficha, para tirarlo o venderlo en una tienda</value>
+  </data>
+  <data name="PadHintDeath" xml:space="preserve">
+    <value>Vuelves a la vida en unos segundos: suelta el stick izquierdo y sigue caminando</value>
+  </data>
 </root>

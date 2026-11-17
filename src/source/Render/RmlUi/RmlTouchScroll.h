@@ -14,6 +14,8 @@ namespace Render::RmlUi
 // Whether the element under the window point, or a box around it, scrolls up and down: has more to
 // show than it fits, and lets it scroll (overflow auto or scroll).
 bool ScrollsVerticallyAt(Rml::Context* context, Rml::Vector2f point);
+// Whether such a box can still scroll that way: down short of its end, up short of its top.
+bool ScrollsFurtherAt(Rml::Context* context, Rml::Vector2f point, bool down);
 
 // Touch scrolling of RmlUi's lists, as on a phone (Core::Input::IUiInputConsumer::BeginTouchScroll()):
 // the box under a dragged finger follows it, a flick glides on (RmlUi's smooth scroll), and a finger
