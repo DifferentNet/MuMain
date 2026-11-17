@@ -19,6 +19,8 @@
 #include "UI/Social/SocialUpdates.h"
 #include <algorithm>
 #include <memory>
+#include <string_view>
+#include "Network/Server/PacketText.h"
 #include "Guild/GuildCache.h"
 #include "Guild/GuildTypes.h"
 #include "Render/Models/ZzzBMD.h"
@@ -544,33 +546,38 @@ namespace
 constexpr std::size_t MaxPacketTextBytes = 255;
 
 // Converts UTF-8 packet text of at most sourceBytes bytes into a fixed buffer. It never writes past
-// the buffer and always terminates it: text that does not fit is cut. UTF-8 never yields more
-// wide characters than it has bytes, so the scratch buffer holds any packet's text.
+// the buffer and always terminates it: text that does not fit is cut. It stops at a zero byte and
+// leaves out a character cut off at the end, so a cut text never ends in a broken glyph. UTF-8 never
+// yields more wide characters than it has bytes, so the scratch buffer holds any packet's text.
 template <std::size_t TargetCapacity>
 void ConvertPacketText(wchar_t (&target)[TargetCapacity], const char* source, std::size_t sourceBytes)
 {
     static_assert(TargetCapacity > 0);
     wchar_t converted[MaxPacketTextBytes + 1]{};
-    const auto boundedBytes = static_cast<int>(std::min(sourceBytes, MaxPacketTextBytes));
-    CMultiLanguage::ConvertFromUtf8(converted, source, boundedBytes);
+    const std::string_view bytes(source, std::min(sourceBytes, MaxPacketTextBytes));
+    const auto completeBytes = static_cast<int>(Network::PacketText::CompleteUtf8Bytes(bytes));
+    if (completeBytes > 0)
+    {
+        CMultiLanguage::ConvertFromUtf8(converted, source, completeBytes);
+    }
 
     const std::size_t length = std::min(wcslen(converted), TargetCapacity - 1);
     std::wmemcpy(target, converted, length);
     target[length] = L'\0';
 }
 
-// How many bytes of the text field at textOffset (at most fieldSize) the packet really carries; 0 for a
-// packet that ends before it.
-std::size_t PacketTextBytes(const PBMSG_HEADER& header, std::size_t textOffset, std::size_t fieldSize)
+// How many bytes of text from textOffset to the packet's end the packet really carries; 0 for a packet
+// that ends before it. Text packets are as long as their text, which may be longer than the struct's
+// field (a Cyrillic letter takes two bytes), so only the packet's own size bounds it.
+std::size_t PacketTextBytes(const PBMSG_HEADER& header, std::size_t textOffset)
 {
-    const std::size_t carried = header.Size > textOffset ? header.Size - textOffset : 0;
-    return std::min(carried, fieldSize);
+    return header.Size > textOffset ? header.Size - textOffset : 0;
 }
 
 // How many bytes of chat text a chat or whisper packet carries.
 std::size_t ChatTextBytes(const PCHATING& data)
 {
-    return PacketTextBytes(data.Header, offsetof(PCHATING, ChatText), sizeof data.ChatText);
+    return PacketTextBytes(data.Header, offsetof(PCHATING, ChatText));
 }
 
 // Removes the channel prefix (~, @, @@, $, #) from the front of a received chat line.
@@ -1999,8 +2006,7 @@ void ReceiveChatKey(const BYTE* ReceiveBuffer)
     }
 
     wchar_t ChatText[sizeof Data->ChatText + 1]{};
-    ConvertPacketText(ChatText, Data->ChatText,
-                      PacketTextBytes(Data->Header, offsetof(PCHATING_KEY, ChatText), sizeof Data->ChatText));
+    ConvertPacketText(ChatText, Data->ChatText, PacketTextBytes(Data->Header, offsetof(PCHATING_KEY, ChatText)));
     UI::Chat::CreateChat(CharactersClient[Index].ID, ChatText, &CharactersClient[Index]);
 }
 
@@ -2008,8 +2014,7 @@ void ReceiveNotice(const BYTE* ReceiveBuffer)
 {
     auto Data = (LPPRECEIVE_NOTICE)ReceiveBuffer;
     wchar_t Text[sizeof Data->Notice + 1]{};
-    ConvertPacketText(Text, Data->Notice,
-                      PacketTextBytes(Data->Header, offsetof(PRECEIVE_NOTICE, Notice), sizeof Data->Notice));
+    ConvertPacketText(Text, Data->Notice, PacketTextBytes(Data->Header, offsetof(PRECEIVE_NOTICE, Notice)));
 
     if (Data->Result == 0)
     {

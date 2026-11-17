@@ -78,6 +78,13 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME test_packet_text
+    SOURCES
+        test_packet_text.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Network/Server/PacketText.cpp
+)
+
+mu_add_test(
     NAME test_grand_shop_lines
     SOURCES
         test_grand_shop_lines.cpp
