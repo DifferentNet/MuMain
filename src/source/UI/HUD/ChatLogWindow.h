@@ -12,6 +12,8 @@
 #pragma warning(disable : 4786)
 #include <string>
 #include <chrono>
+#include <cstdint>
+#include <optional>
 #include <vector>
 
 namespace Rml
@@ -24,6 +26,9 @@ namespace mu::ui::window
 {
     class CManager;
 
+    // The clock a chat line is stamped with when it comes (ChatLogWindow.cpp), in milliseconds.
+    std::uint64_t ChatLogClockMs();
+
     template <class T>
     class TMessageText
     {
@@ -32,6 +37,8 @@ namespace mu::ui::window
         type_string	m_strID, m_strText;
         MESSAGE_TYPE m_MsgType;
         DWORD m_dwIndentSize;
+        // When the line came (ChatLogClockMs()); a closed chat lets it go after a while (UI/Chat/ChatFade.h).
+        std::uint64_t m_addedAtMs = 0;
 
     public:
         TMessageText() : m_MsgType(TYPE_UNKNOWN), m_dwIndentSize(0) {}
@@ -45,6 +52,7 @@ namespace mu::ui::window
             m_strID = strID;
             m_strText = strText;
             m_MsgType = MsgType;
+            m_addedAtMs = ChatLogClockMs();
 
             return true;
         }
@@ -58,18 +66,24 @@ namespace mu::ui::window
         const type_string& GetID() const { return m_strID; }
         const type_string& GetText() const { return m_strText; }
         MESSAGE_TYPE GetType() const { return m_MsgType; }
+        std::uint64_t GetAddedAtMs() const { return m_addedAtMs; }
     };
 
     typedef TMessageText<wchar_t> CMessageText;
 
     // One rendered chat line. `kind` is the lowercase message-type slug the RCSS builds its
     // .chat-line--<kind> class from; `hasId` marks a line whose sender can be right-clicked to
-    // target a whisper (and which therefore gets the hover highlight).
+    // target a whisper (and which therefore gets the hover highlight). `faded` marks a line a
+    // closed chat has let go (UI/Chat/ChatFade.h): it stays in the list, so indices still match,
+    // but takes no space; `lead` marks the first line on screen, which carries the bottom-up
+    // stacking margin (chat_log.rcss).
     struct ChatLogLineEntry
     {
         Rml::String text;
         Rml::String kind;
         bool hasId = false;
+        bool faded = false;
+        bool lead = false;
     };
 
     // RmlUi owns this window's whole presentation now: the background fill, every message line,
@@ -200,6 +214,13 @@ namespace mu::ui::window
         // latched and applied to RmlUi's own scroll offset on the next sync rather than fighting
         // it every frame.
         bool m_bScrollRequest = false;
+        // MU Moldova, lines that go after a while (UI/Chat/ChatFade.h). Whether the chat counted as
+        // open at the last rebuild, and when a line on screen goes next (empty: none will). The
+        // model is rebuilt only when either changes, never every frame.
+        bool m_bChatOpen = false;
+        std::optional<std::uint64_t> m_NextFadeMs;
+        bool IsChatOpen() const;
+        bool FadeChanged();
 
     public:
 
