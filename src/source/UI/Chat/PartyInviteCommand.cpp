@@ -33,7 +33,8 @@ bool SameCharacterName(std::wstring_view a, std::wstring_view b)
     return true;
 }
 
-std::optional<std::wstring_view> PartyCommandArgument(std::wstring_view text, std::wstring_view localizedCommand)
+std::optional<std::wstring_view> CommandArgument(std::wstring_view text, std::initializer_list<std::wstring_view> commands,
+                                                 std::wstring_view localizedCommand)
 {
     text = Trim(text);
     std::size_t wordEnd = 0;
@@ -41,11 +42,17 @@ std::optional<std::wstring_view> PartyCommandArgument(std::wstring_view text, st
         ++wordEnd;
 
     const std::wstring_view word = text.substr(0, wordEnd);
-    const bool isCommand = SameCharacterName(word, L"/party") || SameCharacterName(word, L"/pt")
-        || (!localizedCommand.empty() && word == localizedCommand);
+    bool isCommand = !localizedCommand.empty() && word == localizedCommand;
+    for (const std::wstring_view command : commands)
+        isCommand = isCommand || (!command.empty() && SameCharacterName(word, command));
     if (!isCommand)
         return std::nullopt;
 
     return Trim(text.substr(wordEnd));
+}
+
+std::optional<std::wstring_view> PartyCommandArgument(std::wstring_view text, std::wstring_view localizedCommand)
+{
+    return CommandArgument(text, { L"/party", L"/pt" }, localizedCommand);
 }
 } // namespace UI::Chat

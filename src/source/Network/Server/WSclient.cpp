@@ -116,6 +116,7 @@ using namespace mu::ui::window;
 #include "GameLogic/Combat/OwnSkillEcho.h"
 #include "Network/Server/HiddenChatLines.h"
 #include "Engine/Monsters/MonsterPreload.h"
+#include "UI/Text/GroupedNumberText.h"
 
 #define MAX_DEBUG_MAX 10
 
@@ -5711,6 +5712,17 @@ void ReceiveSkillCount(const BYTE* ReceiveBuffer)
     }
 }
 
+namespace
+{
+// The experience line in chat, with the amount grouped by thousands.
+void PostExperienceGain(bool masterExperience, uint64_t amount)
+{
+    const wchar_t* format = masterExperience ? I18N::Game::MasterEXPAchievementD : I18N::Game::ObtainedDExp;
+    const std::wstring text = UI::Text::FormatGroupedNumbers(format, { static_cast<std::int64_t>(amount) });
+    UI::Chat::PostSystem(text, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+}
+} // namespace
+
 BOOL ReceiveDieExp(const BYTE* ReceiveBuffer, BOOL bEncrypted)
 {
     auto Data = (LPPRECEIVE_DIE)ReceiveBuffer;
@@ -5769,14 +5781,9 @@ BOOL ReceiveDieExp(const BYTE* ReceiveBuffer, BOOL bEncrypted)
 
     if (Exp > 0)
     {
-        wchar_t Text[100];
-        if (gCharacterManager.IsMasterExperienceActive(CharacterAttribute->Class, CharacterAttribute->Level) == true)
-        {
-            mu_swprintf(Text, I18N::Game::MasterEXPAchievementD, Exp);
-        }
-        else
-            mu_swprintf(Text, I18N::Game::ObtainedDExp, Exp);
-        UI::Chat::PostSystem(Text, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+        const bool masterExperience =
+            gCharacterManager.IsMasterExperienceActive(CharacterAttribute->Class, CharacterAttribute->Level);
+        PostExperienceGain(masterExperience, Exp);
     }
 
 #ifdef CONSOLE_DEBUG
@@ -5868,18 +5875,7 @@ BOOL ReceiveDieExpLarge(const BYTE* ReceiveBuffer, BOOL bEncrypted)
 
     if (addedExperience > 0)
     {
-        wchar_t Text[100];
-
-        if (experienceType == eExperienceType_Master)
-        {
-            mu_swprintf(Text, I18N::Game::MasterEXPAchievementD, addedExperience);
-        }
-        else
-        {
-            mu_swprintf(Text, I18N::Game::ObtainedDExp, addedExperience);
-        }
-
-        UI::Chat::PostSystem(Text, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+        PostExperienceGain(experienceType == eExperienceType_Master, addedExperience);
     }
 
     return TRUE;

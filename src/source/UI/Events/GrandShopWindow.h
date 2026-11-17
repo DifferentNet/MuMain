@@ -41,6 +41,9 @@ public:
         TOP_WIDTH = 24,
         ITEM_NAME_WIDTH = 136,
         ITEM_PRICE_WIDTH = 136,
+        // On a phone the Buy button is wider (grand_shop.rcss), so the piece's name and price get less room.
+        PHONE_ITEM_NAME_WIDTH = 128,
+        PHONE_ITEM_PRICE_WIDTH = 128,
         BUY_WIDTH = 56,
     };
 

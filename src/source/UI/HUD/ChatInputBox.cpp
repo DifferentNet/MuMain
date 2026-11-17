@@ -243,8 +243,9 @@ void mu::ui::window::CChatInputBox::SendChatLine()
 
                 if (m_bWhisperSend && wcslen(szChatText) && wcslen(szWhisperID) > 0)
                 {
-                    SocketClient->ToGameServer()->SendWhisperMessage(MU_C16(szWhisperID), MU_C16(wstrText.c_str()));
-                    g_pChatListBox->AddText(Hero->ID, szChatText, mu::ui::window::TYPE_WHISPER_MESSAGE);
+                    // A whisper goes out as typed: the party/guild/gens prefix belongs to public chat only.
+                    SocketClient->ToGameServer()->SendWhisperMessage(MU_C16(szWhisperID), MU_C16(szChatText));
+                    EchoSentWhisper(szWhisperID, szChatText);
                     AddWhsprIDHistory(szWhisperID);
                     AddChatHistory(szChatText);
                 }
@@ -742,6 +743,15 @@ void mu::ui::window::CChatInputBox::GetWhsprID(type_string& strWhsprID)
 void mu::ui::window::CChatInputBox::SetWhsprID(const wchar_t* strWhsprID)
 {
     SetFieldText("whisper_field", strWhsprID ? strWhsprID : L"");
+}
+
+// The own whisper shows as "[to Name] text" with no sender ID, so a right-click on the line does not
+// retarget the whisper to the player's own name.
+void mu::ui::window::CChatInputBox::EchoSentWhisper(const wchar_t* whisperId, const wchar_t* text)
+{
+    wchar_t echo[MAX_USERNAME_SIZE + MAX_CHAT_SIZE + 32] = { L'\0' };
+    mu_swprintf_s(echo, I18N::Game::WhisperEchoTo, whisperId, text);
+    g_pChatListBox->AddText(L"", echo, mu::ui::window::TYPE_WHISPER_MESSAGE);
 }
 
 void mu::ui::window::CChatInputBox::UpdateWhisperTargetFromRightClick()

@@ -126,6 +126,9 @@ namespace UI::RmlBridge
     // True only for a document ThemedDocumentLoader loaded whose markup never names the class; false
     // for any other (unknown documents are walked as before).
     bool MarkupLacksClass(const Rml::ElementDocument* document, MarkupClass markupClass);
+    // Goes up each time ThemedDocumentLoader loads a document: a per-frame pass over the documents may skip
+    // its work while this and its own inputs stay the same (UI::Placement::ApplyWorkspaceVars()).
+    unsigned ThemedDocumentsGeneration();
     // Every frame before RmlUi updates and renders (RmlUiRuntime::Update()): outside the main
     // scene, suspends every marked document, including one loaded since (a theme switch).
     void SuspendMainSceneDocumentsOutsideMainScene();

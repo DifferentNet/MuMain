@@ -96,3 +96,24 @@ button { font-family: "token(font-body)"; font-size: 1rem; color: token(text-pri
 #footer .btn { width: 20%; margin-left: 1%; }
 
 #resize { display: block; position: absolute; right: -4dp; bottom: -14dp; width: 9dp; height: 9dp; z-index: 10; pointer-events: auto; decorator: image(cr-resize-grip); cursor: resize; }
+
+/* Phone: finger-sized controls, the friend lists and chat line tall enough to tap, the panel wider. */
+@media (theme: mobile) {
+	#panel { width: 440dp; height: 300dp; }
+	#window_controls { top: 0; right: -8dp; }
+	#window_controls button { width: 40dp; height: 40dp; padding: 15dp; margin-left: 0; }
+	#btn_minimize { decorator: image(cr-minimize) content-box; }
+	#btn_maximize { decorator: image(cr-maximize) content-box; }
+	#btn_maximize.restore { decorator: image(cr-restore) content-box; }
+	#btn_close { decorator: image(cr-close) content-box; }
+	.scroll-pane { top: 42dp; bottom: 46dp; }
+	#chat_log.with-pals { right: 120dp; }
+	#chat_log.with-invite { right: 240dp; }
+	#pal_pane, #invite_pane { width: 120dp; }
+	#pal_pane.with-invite { right: 120dp; }
+	.pal { height: 32dp; line-height: 32dp; }
+	#footer { height: 40dp; }
+	#chat_field, #footer .btn { height: 40dp; }
+	#footer .btn { line-height: 40dp; }
+	#resize { width: 16dp; height: 16dp; right: -8dp; bottom: -20dp; }
+}

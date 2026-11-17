@@ -485,7 +485,7 @@
     <comment>legacy_id=121</comment>
   </data>
   <data name="F2 : Chat window on/off" xml:space="preserve">
-    <value>F2 : Jendela obrolan aktif/nonaktif</value>
+    <value>F2 : Obrolan: hanya bisikan / semua pesan</value>
     <comment>legacy_id=122</comment>
   </data>
   <data name="F3 : Whisper Mode window on/off" xml:space="preserve">
@@ -13958,5 +13958,21 @@
   </data>
   <data name="PartyInviteNotFound" xml:space="preserve">
     <value>Pemain tidak ditemukan. Pilih pemain atau ketik /party Nama.</value>
+  </data>
+  <!-- Round 8: whisper echo, party leave/kick question, /trade Name -->
+  <data name="WhisperEchoTo" xml:space="preserve">
+    <value>[ke %ls] %ls</value>
+  </data>
+  <data name="PartyLeaveConfirm" xml:space="preserve">
+    <value>Keluar dari party?</value>
+  </data>
+  <data name="PartyKickConfirm" xml:space="preserve">
+    <value>Keluarkan %ls dari party?</value>
+  </data>
+  <data name="TradePlayerNotFound" xml:space="preserve">
+    <value>Pemain tidak ditemukan. Pilih pemain atau ketik /trade Nama.</value>
+  </data>
+  <data name="CommandPlayerNotFound" xml:space="preserve">
+    <value>Pemain tidak ditemukan.</value>
   </data>
 </root>

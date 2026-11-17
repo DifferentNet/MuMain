@@ -9,6 +9,7 @@
 #include "CSChaosCastle.h"
 #include "World/MapInfra/MapManager.h"
 #include "Render/Text/CUIRenderText.h"
+#include "UI/Text/GroupedNumberText.h"
 
 using namespace SEASON3B;
 using namespace mu::ui::window;
@@ -137,13 +138,13 @@ void CNewBloodCastleSystem::CollectMatchResult(std::vector<MatchResultLine>& lin
 
     const MatchResult* pResult = &m_MatchResult[0];
 
-    mu_swprintf(lpszStr, I18N::Game::RewardedExpD, pResult->m_dwExp);
-    add("reward", lpszStr, MatchResultCell::Font::Bold, RGBA(210, 255, 210, 255));
+    const std::wstring rewardedExp = UI::Text::FormatGroupedNumbers(I18N::Game::RewardedExpD, { pResult->m_dwExp });
+    add("reward", rewardedExp.c_str(), MatchResultCell::Font::Bold, RGBA(210, 255, 210, 255));
 
     if (m_iNumResult)
     {
-        mu_swprintf(lpszStr, I18N::Game::RewardedZenD, pResult->m_iZen);
-        add("reward", lpszStr, MatchResultCell::Font::Bold, RGBA(255, 210, 210, 255));
+        const std::wstring rewardedZen = UI::Text::FormatGroupedNumbers(I18N::Game::RewardedZenD, { pResult->m_iZen });
+        add("reward", rewardedZen.c_str(), MatchResultCell::Font::Bold, RGBA(255, 210, 210, 255));
     }
 
     mu_swprintf(lpszStr, I18N::Game::BloodCastlePointD, pResult->m_iScore);

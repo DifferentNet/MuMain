@@ -10,6 +10,7 @@
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Mobile/TouchUnit.h"
 #include "UI/RmlBridge/RmlPanelGeometry.h"
+#include "UI/RmlBridge/RmlTheme.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 #include "UI/Scaling/UITransform.h"
 
@@ -43,6 +44,9 @@ struct Entry
     PlacementParticipant::Box box;
     bool hasBox = false;
     bool lastVisible = false;
+    // Open this frame or the last one: Update() syncs only these windows' placement (a closed window's
+    // document is not drawn; it is synced again when it opens).
+    bool syncPlacement = true;
     bool placed = false;
     bool warnedUnsupportedFill = false;
 };
@@ -408,6 +412,17 @@ void ApplyWorkspaceVars()
     Rml::Context* context = workspace != nullptr ? workspace->GetContext() : Rml::GetContext("main");
     if (context == nullptr)
         return;
+    // Called every frame: with the same bounds, the same context and no document loaded since, every
+    // consumer has them already.
+    static std::string appliedKey;
+    static Rml::Context* appliedContext = nullptr;
+    static unsigned appliedGeneration = 0;
+    const unsigned generation = UI::RmlBridge::ThemedDocumentsGeneration();
+    if (appliedKey == g_workspaceVars.key && appliedContext == context && appliedGeneration == generation)
+        return;
+    appliedKey = g_workspaceVars.key;
+    appliedContext = context;
+    appliedGeneration = generation;
     static const Rml::String ConsumerAttribute = "data-workspace-vars";
     static const Rml::String AppliedAttribute = "data-workspace-applied";
     for (int i = 0; i < context->GetNumDocuments(); ++i)
@@ -525,6 +540,10 @@ static void PlaceSlots(const Rml::ElementList& slots, const UI::Scaling::Transfo
             const Rml::Vector2f size = slot->GetBox().GetSize(Rml::BoxArea::Border);
             window->SetFillPlacementSize(size.x / scale, size.y / scale);
         }
+        // A document rebuilt while its window was closed (a theme switch) gets its place back as the
+        // window opens, not one frame later: Update() no longer syncs closed windows.
+        window->SyncFillPlacement();
+        window->SyncSlotPlacement();
         entry->placed = true;
     }
 
@@ -598,6 +617,7 @@ void Update()
     for (auto& [name, entry] : g_windows)
     {
         const bool visible = IsOpen(entry);
+        entry.syncPlacement = visible || entry.lastVisible;
         if (visible != entry.lastVisible)
         {
             entry.lastVisible = visible;
@@ -613,6 +633,8 @@ void Update()
     }
     for (const auto& [name, entry] : g_windows)
     {
+        if (!entry.syncPlacement)
+            continue;
         if (const mu::ui::window::CObject* window = entry.getWindow ? entry.getWindow() : nullptr)
         {
             window->SyncFillPlacement();
