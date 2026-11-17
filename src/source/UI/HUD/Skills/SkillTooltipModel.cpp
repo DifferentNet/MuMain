@@ -27,8 +27,7 @@ constexpr int GLOBAL_TEXT_REQUIRED_CHARISMA = 698;
 constexpr int GLOBAL_TEXT_NEED_MORE_STAT = 74;
 constexpr int GLOBAL_TEXT_MASTERY_TYPE_BASE = 1080;
 
-// Delay is stored in ms; tooltip shows seconds with one decimal. No localized GlobalText entry exists yet.
-constexpr wchar_t kCooldownFormat[] = L"Cooldown: %.1f sec";
+// Delay is stored in ms; tooltip shows seconds with one decimal (I18N::Game::SkillCooldownSeconds).
 constexpr float kMillisPerSecond = 1000.0f;
 
 bool IsCastleSiegeOnlySkill(int skillType)
@@ -429,7 +428,7 @@ void EmitBodyStats(Model& m, int skillType, int iDistance, int iMana, int iSkill
     if (iDelayMs > 0)
     {
         wchar_t buf[MAX_TOOLTIP_LINE_TEXT];
-        mu_swprintf(buf, kCooldownFormat, iDelayMs / kMillisPerSecond);
+        mu_swprintf(buf, I18N::Game::SkillCooldownSeconds, iDelayMs / kMillisPerSecond);
         AddRaw(m, buf, LineColor::White);
     }
     EndSection(m, before);

@@ -40,7 +40,7 @@ CPartyManager* CPartyManager::GetInstance()
 
 void CPartyManager::SearchPartyMember()
 {
-    for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
+    for (int i = 0; i < CharacterSlotEnd(); i++)
     {
         CHARACTER* c = &CharactersClient[i];
         OBJECT* o = &c->Object;

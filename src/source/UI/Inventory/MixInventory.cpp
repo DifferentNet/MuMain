@@ -371,7 +371,7 @@ bool CMixInventory::Render()
 
 void CMixInventory::SyncRmlModel()
 {
-    m_ItemTarget.Sync(m_RmlView.Document() ? m_RmlView.Document()->GetElementById("item_view") : nullptr, IsVisible());
+    m_ItemTarget.Sync(m_RmlView.Document(), "item_view", IsVisible());
     if (!m_RmlView.Document()) return;
     UI::RmlBridge::SyncDocumentVisibility(m_RmlView.Document(), IsVisible());
     if (!IsVisible())
@@ -1087,11 +1087,11 @@ bool CMixInventory::AcceptsHeldItem(CPickedItem* pPickedItem)
 }
 
 // Shared core for right-click moves: the item under the cursor in srcCtrl goes to an empty slot in dstCtrl.
-bool CMixInventory::AutoMoveItem(CInventoryCtrl* srcCtrl, STORAGE_TYPE srcType,
+UI::Items::Placement::AutoMoveResult CMixInventory::AutoMoveItem(CInventoryCtrl* srcCtrl, STORAGE_TYPE srcType,
     CInventoryCtrl* dstCtrl, STORAGE_TYPE dstType, bool requireMixSource)
 {
     if (GetMixState() != MIX_READY)
-        return false;
+        return UI::Items::Placement::AutoMoveResult::NothingToMove;
 
     return UI::Items::Placement::AutoMoveItemAtCursor(
         srcCtrl, srcType, dstCtrl, dstType,
@@ -1106,9 +1106,15 @@ bool CMixInventory::ProcessMyInvenItemAutoMove(CInventoryCtrl* sourceCtrl)
     if (sourceCtrl == nullptr || sourceCtrl->GetStorageType() != STORAGE_TYPE::INVENTORY)
         return false;
 
-    return AutoMoveItem(sourceCtrl, STORAGE_TYPE::INVENTORY,
+    using UI::Items::Placement::AutoMoveResult;
+    const AutoMoveResult result = AutoMoveItem(sourceCtrl, STORAGE_TYPE::INVENTORY,
         m_pNewInventoryCtrl, g_MixRecipeMgr.GetMixInventoryEquipmentIndex(),
         /*requireMixSource*/ true);
+    if (result == AutoMoveResult::Refused)
+        g_pSystemLogBox->AddText(I18N::Game::ImproperItemsForCombination, mu::ui::window::TYPE_ERROR_MESSAGE);
+    else if (result == AutoMoveResult::NoRoom)
+        g_pSystemLogBox->AddText(I18N::Game::WindowHasNoRoomForItem, mu::ui::window::TYPE_ERROR_MESSAGE);
+    return result == AutoMoveResult::Moved;
 }
 
 bool CMixInventory::ProcessMixItemAutoMoveToInventory()
@@ -1117,17 +1123,22 @@ bool CMixInventory::ProcessMixItemAutoMoveToInventory()
     // fails before anything is picked up or sent, so the next one can be tried.
     if (g_pMyInventory == nullptr)
         return false;
+    using UI::Items::Placement::AutoMoveResult;
+    AutoMoveResult result = AutoMoveResult::NothingToMove;
     for (int g = 0; g < CMyInventory::OwnedBagGridCount; ++g)
     {
-        if (CInventoryCtrl* dstCtrl = g_pMyInventory->OwnedBagGrid(g);
-            dstCtrl != nullptr
-            && AutoMoveItem(m_pNewInventoryCtrl, g_MixRecipeMgr.GetMixInventoryEquipmentIndex(),
-                dstCtrl, STORAGE_TYPE::INVENTORY,
-                /*requireMixSource*/ false))
-        {
+        CInventoryCtrl* dstCtrl = g_pMyInventory->OwnedBagGrid(g);
+        if (dstCtrl == nullptr)
+            continue;
+        result = AutoMoveItem(m_pNewInventoryCtrl, g_MixRecipeMgr.GetMixInventoryEquipmentIndex(),
+            dstCtrl, STORAGE_TYPE::INVENTORY,
+            /*requireMixSource*/ false);
+        if (result == AutoMoveResult::Moved)
             return true;
-        }
     }
+    // The last owned grid had no room either: every page is full.
+    if (result == AutoMoveResult::NoRoom)
+        g_pSystemLogBox->AddText(I18N::Game::InventoryIsFull, mu::ui::window::TYPE_ERROR_MESSAGE);
     return false;
 }
 

@@ -7145,7 +7145,7 @@
     <comment>legacy_id=1926</comment>
   </data>
   <data name="one of the certain weapons to 50%%." xml:space="preserve">
-    <value>isa sa mga tiyak na armas sa 50%%.</value>
+    <value>isa sa mga tiyak na armas sa 50%.</value>
     <comment>legacy_id=1927</comment>
   </data>
   <data name="Plasma storm skill (Mana:%d)" xml:space="preserve">
@@ -7329,11 +7329,11 @@
     <comment>legacy_id=1982</comment>
   </data>
   <data name="Monster strength decreased 10%%." xml:space="preserve">
-    <value>Bumaba ng 10%% ang lakas ng halimaw.</value>
+    <value>Bumaba ng 10% ang lakas ng halimaw.</value>
     <comment>legacy_id=2000</comment>
   </data>
   <data name="5%% increase in castle and arena invitation combine rate." xml:space="preserve">
-    <value>5%% ipagsamang rate ng imbitasyon sa kastilyo at arena.</value>
+    <value>5% pagsamang rate ng imbitasyon sa kastilyo at arena.</value>
     <comment>legacy_id=2001</comment>
   </data>
   <data name="Contract is ongoing therefore dual compact is not possible." xml:space="preserve">
@@ -7481,7 +7481,7 @@
     <comment>legacy_id=2053</comment>
   </data>
   <data name="Minimum Wizardry increment 20%%" xml:space="preserve">
-    <value>Minimum na pagtaas ng Wizardry 20%%</value>
+    <value>Minimum na pagtaas ng Wizardry 20%</value>
     <comment>legacy_id=2054</comment>
   </data>
   <data name="It cannot be applied on another." xml:space="preserve">
@@ -14005,5 +14005,44 @@
   </data>
   <data name="ZenCarryLimitReached" xml:space="preserve">
     <value>Hindi ka na makapagdadala ng mas maraming Zen.</value>
+  </data>
+  <data name="ChatMacroStored" xml:space="preserve">
+    <value>Alt+%d: %ls</value>
+  </data>
+  <data name="ChatMacroCleared" xml:space="preserve">
+    <value>Na-clear ang macro na Alt+%d.</value>
+  </data>
+  <data name="ExpMaxLevelReached" xml:space="preserve">
+    <value>Naabot mo na ang pinakamataas na Level.</value>
+  </data>
+  <data name="ExpMaxMasterLevelReached" xml:space="preserve">
+    <value>Naabot mo na ang pinakamataas na master Level.</value>
+  </data>
+  <data name="ExpMonsterTooWeakForMaster" xml:space="preserve">
+    <value>Pumatay ng mas malalakas na halimaw para makakuha ng master experience.</value>
+  </data>
+  <data name="SkillCooldownSeconds" xml:space="preserve">
+    <value>Cooldown: %.1f seg</value>
+  </data>
+  <data name="WindowHasNoRoomForItem" xml:space="preserve">
+    <value>Walang puwang dito para sa item na ito.</value>
+  </data>
+  <data name="PartyMemberJoined" xml:space="preserve">
+    <value>Sumali si %ls sa party.</value>
+  </data>
+  <data name="PartyMemberLeft" xml:space="preserve">
+    <value>Umalis si %ls sa party.</value>
+  </data>
+  <data name="KilledByName" xml:space="preserve">
+    <value>Pinatay ni %ls</value>
+  </data>
+  <data name="TradeWithNameCompleted" xml:space="preserve">
+    <value>Tapos na ang trade kay %ls.</value>
+  </data>
+  <data name="HotKeyNothingLeft" xml:space="preserve">
+    <value>Ubos na ang %ls.</value>
+  </data>
+  <data name="FriendIsOnline" xml:space="preserve">
+    <value>Online si %ls.</value>
   </data>
 </root>

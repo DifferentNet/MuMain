@@ -3535,6 +3535,12 @@ void RenderObjects()
         Time_Effect = 0;
     Time_Effect += FPS_ANIMATION_FACTOR;
 
+    // The map and the Kanturu scene stay the same for the whole pass.
+    const bool mayaScene = g_Direction.m_CKanturu.IsMayaScene();
+    const bool iceCity = IsIceCity();
+    const bool pkField = gMapManager.IsPKField();
+    const bool doppelGanger2 = IsDoppelGanger2();
+
     for (int i = 0; i < 16; i++)
     {
         for (int j = 0; j < 16; j++)
@@ -3542,13 +3548,13 @@ void RenderObjects()
             OBJECT_BLOCK* ob = &ObjectBlock[i * 16 + j];
 
             ob->Visible = TestFrustrum2D((float)(i * 16 + 8), (float)(j * 16 + 8), -180.f);
-            if (g_Direction.m_CKanturu.IsMayaScene()
+            if (mayaScene
                 || gMapManager.WorldActive == WD_51HOME_6TH_CHAR
                 || gMapManager.WorldActive == WD_73NEW_LOGIN_SCENE
                 || gMapManager.WorldActive == WD_74NEW_CHARACTER_SCENE
-                || IsIceCity()
-                || gMapManager.IsPKField()
-                || IsDoppelGanger2()
+                || iceCity
+                || pkField
+                || doppelGanger2
                 )
             {
                 OBJECT* o = ob->Head;
@@ -3557,7 +3563,7 @@ void RenderObjects()
                 {
                     if (o != NULL)
                     {
-                        if (g_Direction.m_CKanturu.IsMayaScene() && (o->Type == 0 || o->Type == MODEL_STORM2))
+                        if (mayaScene && (o->Type == 0 || o->Type == MODEL_STORM2))
                         {
                             {
                                 const Render::Models::Wind::ScopedObject wind(o);
@@ -3642,7 +3648,7 @@ void RenderObjects()
                                 }
                                 RenderObjectVisual(o);
                             }
-                            else if (gMapManager.IsPKField() && (o->Type == 16 || o->Type == 67 || o->Type == 68) && TestFrustrum2D(o->Position[0] * 0.01f, o->Position[1] * 0.01f, -600.f))
+                            else if (pkField && (o->Type == 16 || o->Type == 67 || o->Type == 68) && TestFrustrum2D(o->Position[0] * 0.01f, o->Position[1] * 0.01f, -600.f))
                             {
                                 {
                                     const Render::Models::Wind::ScopedObject wind(o);
@@ -3650,7 +3656,7 @@ void RenderObjects()
                                 }
                                 RenderObjectVisual(o);
                             }
-                            else if (IsDoppelGanger2() && (o->Type == 16 || o->Type == 67 || o->Type == 68) && TestFrustrum2D(o->Position[0] * 0.01f, o->Position[1] * 0.01f, -600.f))
+                            else if (doppelGanger2 && (o->Type == 16 || o->Type == 67 || o->Type == 68) && TestFrustrum2D(o->Position[0] * 0.01f, o->Position[1] * 0.01f, -600.f))
                             {
                                 {
                                     const Render::Models::Wind::ScopedObject wind(o);
@@ -3685,7 +3691,7 @@ void RenderObjects()
                             else
                                 if ((gMapManager.WorldActive == WD_57ICECITY || gMapManager.WorldActive == WD_58ICECITY_BOSS) && (o->Type == 30 || o->Type == 31 || o->Type == 76));
                                 else
-                                    if ((gMapManager.IsPKField() || IsDoppelGanger2()) && (o->Type == 16 || o->Type == 67 || o->Type == 68));
+                                    if ((pkField || doppelGanger2) && (o->Type == 16 || o->Type == 67 || o->Type == 68));
                                     else
                                         if (gMapManager.WorldActive == WD_73NEW_LOGIN_SCENE);
                                         else if ((gMapManager.WorldActive == WD_74NEW_CHARACTER_SCENE) && (o->Type == 129 || o->Type == 98));
@@ -3822,6 +3828,12 @@ void RenderObjects_AfterCharacter()
         Time_Effect = 0;
     Time_Effect += FPS_ANIMATION_FACTOR;
 
+    // The map and the Kanturu scene stay the same for the whole pass.
+    const bool mayaScene = g_Direction.m_CKanturu.IsMayaScene();
+    const bool iceCity = IsIceCity();
+    const bool pkField = gMapManager.IsPKField();
+    const bool doppelGanger2 = IsDoppelGanger2();
+
     for (int i = 0; i < 16; i++)
     {
         for (int j = 0; j < 16; j++)
@@ -3830,7 +3842,7 @@ void RenderObjects_AfterCharacter()
 
             ob->Visible = TestFrustrum2D((float)(i * 16 + 8), (float)(j * 16 + 8), -180.f);
 
-            if (g_Direction.m_CKanturu.IsMayaScene())
+            if (mayaScene)
             {
                 OBJECT* o = ob->Head;
 
@@ -3854,9 +3866,9 @@ void RenderObjects_AfterCharacter()
             }
 
             if (gMapManager.WorldActive == WD_51HOME_6TH_CHAR
-                || IsIceCity()
-                || gMapManager.IsPKField()
-                || IsDoppelGanger2()
+                || iceCity
+                || pkField
+                || doppelGanger2
                 )
             {
                 OBJECT* o = ob->Head;
@@ -3875,11 +3887,11 @@ void RenderObjects_AfterCharacter()
                         {
                             RenderObject_AfterCharacter(o);
                         }
-                        else if (gMapManager.IsPKField() && (o->Type == 16 || o->Type == 67 || o->Type == 68) && TestFrustrum2D(o->Position[0] * 0.01f, o->Position[1] * 0.01f, -600.f))
+                        else if (pkField && (o->Type == 16 || o->Type == 67 || o->Type == 68) && TestFrustrum2D(o->Position[0] * 0.01f, o->Position[1] * 0.01f, -600.f))
                         {
                             RenderObject_AfterCharacter(o);
                         }
-                        else if (IsDoppelGanger2() && (o->Type == 16 || o->Type == 67 || o->Type == 68) && TestFrustrum2D(o->Position[0] * 0.01f, o->Position[1] * 0.01f, -600.f))
+                        else if (doppelGanger2 && (o->Type == 16 || o->Type == 67 || o->Type == 68) && TestFrustrum2D(o->Position[0] * 0.01f, o->Position[1] * 0.01f, -600.f))
                         {
                             RenderObject_AfterCharacter(o);
                         }
@@ -3906,11 +3918,11 @@ void RenderObjects_AfterCharacter()
                             if ((gMapManager.WorldActive == WD_51HOME_6TH_CHAR
                                 ) && (o->Type == 89));
                             else
-                                if (IsIceCity() && o->Type == 76);
+                                if (iceCity && o->Type == 76);
                                 else
-                                    if (gMapManager.IsPKField() && (o->Type == 16 || o->Type == 67 || o->Type == 68));
+                                    if (pkField && (o->Type == 16 || o->Type == 67 || o->Type == 68));
                                     else
-                                        if (IsDoppelGanger2() && (o->Type == 16 || o->Type == 67 || o->Type == 68));
+                                        if (doppelGanger2 && (o->Type == 16 || o->Type == 67 || o->Type == 68));
                                         else
                                             if (o->Visible || g_Camera.TopViewEnable)
                                             {

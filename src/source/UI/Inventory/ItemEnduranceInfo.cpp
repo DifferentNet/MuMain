@@ -21,6 +21,7 @@
 
 #include <RmlUi/Core/ElementDocument.h>
 
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -122,43 +123,72 @@ void HelperLifeFrameName(wchar_t (&szText)[N])
     }
 }
 
-// The elf's arrow / bolt count line ("Arrows %d (%d)"), false when none is shown.
-bool ArrowCountText(int arrowType, int bowArrows, int crossbowBolts, wchar_t* szText)
+// What the elf's arrow / bolt count line ("Arrows %d (%d)") shows: its text, the equipped stack's durability and
+// the stacks in the bag.
+struct ArrowLine
 {
-    int iNumEquipedArrowDurability = 0;
-    int iNumArrowSetInInven = 0;
+    const wchar_t* format = nullptr;
+    int equipped = 0;
+    int inInventory = 0;
+
+    bool operator==(const ArrowLine&) const = default;
+};
+
+// None when no line is shown.
+std::optional<ArrowLine> ArrowLineOf(int arrowType, int bowArrows, int crossbowBolts)
+{
+    ArrowLine line;
 
     if (arrowType == bowArrows)
     {
-        iNumArrowSetInInven = g_pMyInventory->GetNumItemByType(bowArrows);
+        line.inInventory = g_pMyInventory->GetNumItemByType(bowArrows);
 
         if (CharacterMachine->Equipment[EQUIPMENT_WEAPON_RIGHT].Type == ITEM_ARROWS)
         {
-            iNumEquipedArrowDurability = CharacterMachine->Equipment[EQUIPMENT_WEAPON_RIGHT].Durability;
+            line.equipped = CharacterMachine->Equipment[EQUIPMENT_WEAPON_RIGHT].Durability;
         }
 
-        if ((iNumArrowSetInInven == 0) && (CharacterMachine->Equipment[EQUIPMENT_WEAPON_RIGHT].Type != ITEM_ARROWS))
-            return false;
+        if ((line.inInventory == 0) && (CharacterMachine->Equipment[EQUIPMENT_WEAPON_RIGHT].Type != ITEM_ARROWS))
+            return std::nullopt;
 
-        mu_swprintf(szText, I18N::Game::ArrowsDD, iNumEquipedArrowDurability, iNumArrowSetInInven);
-        return true;
+        line.format = I18N::Game::ArrowsDD;
+        return line;
     }
     if (arrowType == crossbowBolts)
     {
-        iNumArrowSetInInven = g_pMyInventory->GetNumItemByType(crossbowBolts);
+        line.inInventory = g_pMyInventory->GetNumItemByType(crossbowBolts);
 
         if (CharacterMachine->Equipment[EQUIPMENT_WEAPON_LEFT].Type == ITEM_BOLT)
         {
-            iNumEquipedArrowDurability = CharacterMachine->Equipment[EQUIPMENT_WEAPON_LEFT].Durability;
+            line.equipped = CharacterMachine->Equipment[EQUIPMENT_WEAPON_LEFT].Durability;
         }
 
-        if ((iNumArrowSetInInven == 0) && (CharacterMachine->Equipment[EQUIPMENT_WEAPON_LEFT].Type != ITEM_BOLT))
-            return false;
+        if ((line.inInventory == 0) && (CharacterMachine->Equipment[EQUIPMENT_WEAPON_LEFT].Type != ITEM_BOLT))
+            return std::nullopt;
 
-        mu_swprintf(szText, I18N::Game::BoltsDD, iNumEquipedArrowDurability, iNumArrowSetInInven);
-        return true;
+        line.format = I18N::Game::BoltsDD;
+        return line;
     }
-    return false;
+    return std::nullopt;
+}
+
+// The line's text. The HUD asks every frame; it is formatted again only when what it shows changed.
+const Rml::String& ArrowLineText(const std::optional<ArrowLine>& line)
+{
+    static std::optional<ArrowLine> s_shown;
+    static Rml::String s_text;
+    if (line == s_shown)
+        return s_text;
+
+    s_shown = line;
+    s_text.clear();
+    if (line)
+    {
+        wchar_t text[256] = {};
+        mu_swprintf(text, line->format, line->equipped, line->inInventory);
+        s_text = StringUtils::WideToNarrow(text);
+    }
+    return s_text;
 }
 } // namespace
 
@@ -390,13 +420,10 @@ void mu::ui::window::CItemEnduranceInfo::SyncLeftColumn()
 
     wchar_t szText[256] = {};
 
-    Rml::String arrows;
-    if (gCharacterManager.GetBaseClass(Hero->Class) == CLASS_ELF &&
-        ArrowCountText(m_iCurArrowType, ARROWTYPE_BOW, ARROWTYPE_CROSSBOW, szText))
-    {
-        arrows = StringUtils::WideToNarrow(szText);
-    }
-    SyncItemEnduranceField(m_RmlView.Binder(), &ItemEnduranceRmlModel::arrows, "arrows", std::move(arrows));
+    std::optional<ArrowLine> arrowLine;
+    if (gCharacterManager.GetBaseClass(Hero->Class) == CLASS_ELF)
+        arrowLine = ArrowLineOf(m_iCurArrowType, ARROWTYPE_BOW, ARROWTYPE_CROSSBOW);
+    SyncItemEnduranceField(m_RmlView.Binder(), &ItemEnduranceRmlModel::arrows, "arrows", ArrowLineText(arrowLine));
 
     std::vector<PetFrameEntry> pets;
     const auto addFrame = [&](const wchar_t* name, int life, int maxLife)

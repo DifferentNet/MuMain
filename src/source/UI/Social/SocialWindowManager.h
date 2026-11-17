@@ -52,6 +52,8 @@ public:
     int UpdateFriendList(std::deque<GUILDLIST_TEXT>& pDestData, const wchar_t* pszID);
     void UpdateFriendState(const wchar_t* pszID, BYTE Number, BYTE Server);
     void UpdateAllFriendState(BYTE Number, BYTE Server);
+    // The friend's server as the list holds it; false when the name is not in the list.
+    bool FindFriendServer(const wchar_t* pszID, BYTE* pServer) const;
     void Sort(int iType = -1);
     int GetCurrentSortType()
     {

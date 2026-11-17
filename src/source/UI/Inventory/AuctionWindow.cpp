@@ -1373,7 +1373,7 @@ void mu::ui::window::CAuctionWindow::SyncRmlModel()
     const bool showItem = IsVisible() && ShownItem() != nullptr;
     if (showItem)
         m_itemTarget.SetFieldOfView(ItemFieldOfView());
-    m_itemTarget.Sync(GetField("au_items"), showItem);
+    m_itemTarget.Sync(m_RmlView.Document(), "au_items", showItem);
     if (!m_RmlView.Document())
         return;
 

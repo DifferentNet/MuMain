@@ -192,16 +192,16 @@
 	#title { width: calc(584px * var(--root-scale)); }
 
 	/* --- Tabs --- */
-	.mh-tab { top: 44px; width: 140px; height: 28px; decorator: ninepatch(mh-phone-tab-up, mh-phone-tab-up-inner); }
+	.mh-tab { top: 38px; width: 140px; height: 34px; decorator: ninepatch(mh-phone-tab-up, mh-phone-tab-up-inner); }
 	.mh-tab.active { decorator: ninepatch(mh-phone-tab-on, mh-phone-tab-on-inner); }
-	.mh-tab-label { top: 44px; }
+	.mh-tab-label { top: 38px; }
 	#tab_0, #tab_0_label { left: 24px; }
 	#tab_1, #tab_1_label { left: 164px; }
 	#tab_2, #tab_2_label { left: 304px; }
 	#tab_0_label, #tab_1_label, #tab_2_label {
 		width: calc(140px * var(--root-scale));
-		height: calc(28px * var(--root-scale));
-		line-height: calc(28px * var(--root-scale));
+		height: calc(34px * var(--root-scale));
+		line-height: calc(34px * var(--root-scale));
 	}
 
 	/* --- The pieces, a third larger; the steppers' decorators paint their content box --- */
@@ -225,8 +225,8 @@
 	/* --- Hunting, left: range and recovery, movement, buffs (the pick-up page's range and repair alike) --- */
 	#box_h_range, #box_o_range { left: 24px; top: 73px; width: 110px; height: 78px; }
 	#box_h_recovery, #box_o_repair { left: 130px; top: 73px; width: 188px; height: 78px; }
-	#box_h_movement { left: 24px; top: 148px; width: 294px; height: 100px; }
-	#box_h_buffs { left: 24px; top: 245px; width: 294px; height: 94px; }
+	#box_h_movement { left: 24px; top: 148px; width: 294px; height: 120px; }
+	#box_h_buffs { left: 24px; top: 265px; width: 294px; height: 74px; }
 	#h_range_label, #o_range_label { left: 34px; top: 80px; width: calc(60px * var(--root-scale)); }
 	#h_range_rule, #o_range_rule { left: 34px; top: 85px; }
 	#h_range_digit, #o_range_digit { left: 54px; top: 106px; }
@@ -239,19 +239,20 @@
 	#btn_potion_setting, #btn_potion_setting_label,
 	#btn_potion_setting.summoner, #btn_potion_setting_label.summoner { left: 254px; top: 79px; }
 
-	/* Three 20-unit rows (the strong-monsters switch is the third) above the return-time row at 218. */
+	/* Three rows 30 units apart, one finger area each (the strong-monsters switch is the third), above the return-time
+	   row at 242; the buffs box below keeps its switch on its own row (273) above its three slots (297). */
 	#cb_long_distance { left: 34px; top: 156px; }
-	#cb_orig_position { left: 34px; top: 177px; }
-	#cb_strong_first { left: 34px; top: 198px; }
-	#distance_label { left: 60px; top: 223px; width: calc(100px * var(--root-scale)); }
-	#distance_plate { left: 168px; top: 218px; }
-	#distance_time { left: 170px; top: 221px; }
-	#distance_unit { left: 204px; top: 223px; }
+	#cb_orig_position { left: 34px; top: 186px; }
+	#cb_strong_first { left: 34px; top: 216px; }
+	#distance_label { left: 60px; top: 247px; width: calc(100px * var(--root-scale)); }
+	#distance_plate { left: 168px; top: 242px; }
+	#distance_time { left: 170px; top: 245px; }
+	#distance_unit { left: 204px; top: 247px; }
 
-	#cb_buff_duration { left: 34px; top: 255px; }
-	#slot_3 { left: 40px; top: 284px; }
-	#slot_4 { left: 88px; top: 284px; }
-	#slot_5 { left: 136px; top: 284px; }
+	#cb_buff_duration { left: 34px; top: 273px; }
+	#slot_3 { left: 40px; top: 297px; }
+	#slot_4 { left: 88px; top: 297px; }
+	#slot_5 { left: 136px; top: 297px; }
 
 	/* --- Hunting, right: the skills, each slot with its label and options beside it --- */
 	#box_h_skills { left: 322px; top: 73px; width: 294px; height: 266px; }

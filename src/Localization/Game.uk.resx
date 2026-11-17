@@ -676,7 +676,7 @@
     <comment>legacy_id=165</comment>
   </data>
   <data name="STR" xml:space="preserve">
-    <value>ВУЛ</value>
+    <value>СИЛ</value>
     <comment>legacy_id=166</comment>
   </data>
   <data name="AGI" xml:space="preserve">
@@ -772,7 +772,7 @@
     <comment>legacy_id=189</comment>
   </data>
   <data name="Party" xml:space="preserve">
-    <value>вечірка</value>
+    <value>Група</value>
     <comment>legacy_id=190,944,3515,3554</comment>
   </data>
   <data name="Type /party with the mouse cursor on" xml:space="preserve">
@@ -1044,7 +1044,7 @@
     <comment>legacy_id=259</comment>
   </data>
   <data name="/warp" xml:space="preserve">
-    <value>/деформація</value>
+    <value>/warp</value>
     <comment>legacy_id=260</comment>
   </data>
   <data name="You cannot go to Atlans while riding a Unicorn" xml:space="preserve">
@@ -2333,7 +2333,7 @@
     <comment>legacy_id=619</comment>
   </data>
   <data name="Excellent" xml:space="preserve">
-    <value>Чудово</value>
+    <value>Екселент</value>
     <comment>legacy_id=620</comment>
   </data>
   <data name="Increases item option by 1 level" xml:space="preserve">
@@ -2573,11 +2573,11 @@
     <comment>legacy_id=680</comment>
   </data>
   <data name="Character" xml:space="preserve">
-    <value>характер</value>
+    <value>Персонаж</value>
     <comment>legacy_id=681,3423</comment>
   </data>
   <data name="point" xml:space="preserve">
-    <value>точка</value>
+    <value>Очки</value>
     <comment>legacy_id=682</comment>
   </data>
   <data name="EXP" xml:space="preserve">
@@ -3321,7 +3321,7 @@
     <comment>legacy_id=891</comment>
   </data>
   <data name="written on the 100%% winning card." xml:space="preserve">
-    <value>написано на 100% виграшній картці.</value>
+    <value>написано на 100%% виграшній картці.</value>
     <comment>legacy_id=892</comment>
   </data>
   <data name="Enter the lucky number" xml:space="preserve">
@@ -3369,11 +3369,11 @@
     <comment>legacy_id=903</comment>
   </data>
   <data name="Register the lucky number on the 100%% winning card." xml:space="preserve">
-    <value>Зареєструйте щасливе число на 100% виграшній картці.</value>
+    <value>Зареєструйте щасливе число на 100%% виграшній картці.</value>
     <comment>legacy_id=904</comment>
   </data>
   <data name="PleaseCheckOutTheAnnouncementOn" xml:space="preserve">
-    <value>Перегляньте оголошення на офіційному веб-сайті про те, як отримати 100% виграшну картку.</value>
+    <value>Перегляньте оголошення на офіційному веб-сайті про те, як отримати 100%% виграшну картку.</value>
     <comment>legacy_id=905</comment>
   </data>
   <data name="Ring of Honor" xml:space="preserve">
@@ -3489,7 +3489,7 @@
     <comment>legacy_id=934</comment>
   </data>
   <data name="Min. Level" xml:space="preserve">
-    <value>Хв. Рівень</value>
+    <value>Мін. рівень</value>
     <comment>legacy_id=935</comment>
   </data>
   <data name="You must be in a party" xml:space="preserve">
@@ -7145,7 +7145,7 @@
     <comment>legacy_id=1926</comment>
   </data>
   <data name="one of the certain weapons to 50%%." xml:space="preserve">
-    <value>одна з певних видів зброї до 50%%.</value>
+    <value>одна з певних видів зброї до 50%.</value>
     <comment>legacy_id=1927</comment>
   </data>
   <data name="Plasma storm skill (Mana:%d)" xml:space="preserve">
@@ -7329,11 +7329,11 @@
     <comment>legacy_id=1982</comment>
   </data>
   <data name="Monster strength decreased 10%%." xml:space="preserve">
-    <value>Сила монстра зменшилася на 10%%.</value>
+    <value>Сила монстра зменшилася на 10%.</value>
     <comment>legacy_id=2000</comment>
   </data>
   <data name="5%% increase in castle and arena invitation combine rate." xml:space="preserve">
-    <value>5%% збільшення кількості запрошень на замок і арену.</value>
+    <value>5% збільшення кількості запрошень на замок і арену.</value>
     <comment>legacy_id=2001</comment>
   </data>
   <data name="Contract is ongoing therefore dual compact is not possible." xml:space="preserve">
@@ -7481,7 +7481,7 @@
     <comment>legacy_id=2053</comment>
   </data>
   <data name="Minimum Wizardry increment 20%%" xml:space="preserve">
-    <value>Мінімальний приріст магії 20%%</value>
+    <value>Мінімальний приріст магії 20%</value>
     <comment>legacy_id=2054</comment>
   </data>
   <data name="It cannot be applied on another." xml:space="preserve">
@@ -7497,7 +7497,7 @@
     <comment>legacy_id=2060</comment>
   </data>
   <data name="Refine" xml:space="preserve">
-    <value>Уточніть</value>
+    <value>Очищення</value>
     <comment>legacy_id=2061,2063</comment>
   </data>
   <data name="Restore" xml:space="preserve">
@@ -8101,7 +8101,7 @@
     <comment>legacy_id=2251</comment>
   </data>
   <data name="Day" xml:space="preserve">
-    <value>День</value>
+    <value>дн.</value>
     <comment>legacy_id=2252,2298</comment>
   </data>
   <data name="Experience rate is increased %d%%" xml:space="preserve">
@@ -8281,15 +8281,15 @@
     <comment>legacy_id=2297</comment>
   </data>
   <data name="Hour" xml:space="preserve">
-    <value>годину</value>
+    <value>год.</value>
     <comment>legacy_id=2299</comment>
   </data>
   <data name="Minute" xml:space="preserve">
-    <value>хвилина</value>
+    <value>хв.</value>
     <comment>legacy_id=2300</comment>
   </data>
   <data name="Second" xml:space="preserve">
-    <value>друге</value>
+    <value>сек.</value>
     <comment>legacy_id=2301</comment>
   </data>
   <data name="Available" xml:space="preserve">
@@ -8365,7 +8365,7 @@
     <comment>legacy_id=2325</comment>
   </data>
   <data name="Point2326" xml:space="preserve">
-    <value>точка</value>
+    <value>Очки</value>
     <comment>legacy_id=2326</comment>
   </data>
   <data name="PC cafe point store allows you to only purchase the objects." xml:space="preserve">
@@ -14005,5 +14005,44 @@
   </data>
   <data name="ZenCarryLimitReached" xml:space="preserve">
     <value>Більше Зен ви не можете нести.</value>
+  </data>
+  <data name="ChatMacroStored" xml:space="preserve">
+    <value>Alt+%d: %ls</value>
+  </data>
+  <data name="ChatMacroCleared" xml:space="preserve">
+    <value>Макрос Alt+%d очищено.</value>
+  </data>
+  <data name="ExpMaxLevelReached" xml:space="preserve">
+    <value>Ви вже досягли максимального рівня.</value>
+  </data>
+  <data name="ExpMaxMasterLevelReached" xml:space="preserve">
+    <value>Ви вже досягли максимального рівня майстра.</value>
+  </data>
+  <data name="ExpMonsterTooWeakForMaster" xml:space="preserve">
+    <value>Щоб отримувати досвід майстра, вбивайте сильніших монстрів.</value>
+  </data>
+  <data name="SkillCooldownSeconds" xml:space="preserve">
+    <value>Перезарядка: %.1f с</value>
+  </data>
+  <data name="WindowHasNoRoomForItem" xml:space="preserve">
+    <value>Тут немає місця для цього предмета.</value>
+  </data>
+  <data name="PartyMemberJoined" xml:space="preserve">
+    <value>%ls тепер у групі.</value>
+  </data>
+  <data name="PartyMemberLeft" xml:space="preserve">
+    <value>%ls залишає групу.</value>
+  </data>
+  <data name="KilledByName" xml:space="preserve">
+    <value>Вбивця: %ls</value>
+  </data>
+  <data name="TradeWithNameCompleted" xml:space="preserve">
+    <value>Обмін з %ls завершено.</value>
+  </data>
+  <data name="HotKeyNothingLeft" xml:space="preserve">
+    <value>Більше немає: %ls.</value>
+  </data>
+  <data name="FriendIsOnline" xml:space="preserve">
+    <value>%ls у мережі.</value>
   </data>
 </root>

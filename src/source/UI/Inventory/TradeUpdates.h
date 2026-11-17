@@ -33,11 +33,12 @@ enum class PartnerConfirm
 
 enum class CloseReason
 {
-    Completed,
+    Completed, // the server's result 1: both sides got the items
     Cancelled,
     InventoryFull,
     RequestCancelled,
     ReinforcedItem,
+    Other, // a result code the client does not know: the window closes without a line
 };
 
 // Asks whether to trade with `requester`, or declines at once if a window that forbids trading

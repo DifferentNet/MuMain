@@ -147,3 +147,9 @@
 /* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
 #au_title { width: calc(100% * var(--root-scale)); }
 #au_status { width: calc(166px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile"): list rows a finger can take (two text lines plus 5 units above and
+   below). The lists keep their heights and already scroll, so nothing else moves; the window keeps its PC width. */
+@media (theme: mobile) {
+	.au-row { padding: calc(5px * var(--root-scale)) calc(4px * var(--root-scale)); }
+}

@@ -65,6 +65,7 @@ mu::ui::window::CItemHotKey::~CItemHotKey()
 bool mu::ui::window::CItemHotKey::UpdateKeyEvent()
 {
     int iIndex = -1;
+    int pressedHotKey = -1;
 
     // The keys the player bound to the potion slots (Q, W, E, R by default).
     for (int hotKey = HOTKEY_Q; hotKey < HOTKEY_COUNT; ++hotKey)
@@ -72,8 +73,14 @@ bool mu::ui::window::CItemHotKey::UpdateKeyEvent()
         if (mu::ui::window::IsActionPress(Core::Input::KeyBindings::PotionAction(hotKey)))
         {
             iIndex = GetHotKeyItemIndex(hotKey);
+            pressedHotKey = hotKey;
             break;
         }
+    }
+
+    if (iIndex == -1 && pressedHotKey != -1)
+    {
+        PostNothingLeft(pressedHotKey);
     }
 
     if (iIndex != -1)
@@ -414,6 +421,31 @@ void mu::ui::window::CItemHotKey::OnHotkeySlotRightClick(int iSlotIndex)
     {
         SendRequestUse(iIndex, 0);
     }
+    else
+    {
+        PostNothingLeft(iSlotIndex);
+    }
+}
+
+void mu::ui::window::CItemHotKey::PostNothingLeft(int iHotKey)
+{
+    if (iHotKey < HOTKEY_Q || iHotKey >= HOTKEY_COUNT || m_iHotKeyItemType[iHotKey] == -1)
+    {
+        return;
+    }
+    const DWORD now = GetTickCount();
+    const DWORD lastPosted = m_dwNothingLeftPosted[iHotKey];
+    if (lastPosted != 0 && now - lastPosted < kNothingLeftLineIntervalMs)
+    {
+        return;
+    }
+    m_dwNothingLeftPosted[iHotKey] = now != 0 ? now : 1;
+
+    wchar_t itemName[128]{};
+    GetItemName(m_iHotKeyItemType[iHotKey], m_iHotKeyItemLevel[iHotKey], itemName);
+    wchar_t line[192];
+    mu_swprintf(line, I18N::Game::HotKeyNothingLeft, itemName);
+    g_pSystemLogBox->AddText(line, mu::ui::window::TYPE_ERROR_MESSAGE);
 }
 
 int mu::ui::window::CItemHotKey::GetSlotItemCount(int iSlotIndex)

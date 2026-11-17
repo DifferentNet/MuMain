@@ -684,7 +684,7 @@
     <comment>legacy_id=167</comment>
   </data>
   <data name="ENG" xml:space="preserve">
-    <value>POR</value>
+    <value>ENE</value>
     <comment>legacy_id=168</comment>
   </data>
   <data name="STA" xml:space="preserve">
@@ -772,7 +772,7 @@
     <comment>legacy_id=189</comment>
   </data>
   <data name="Party" xml:space="preserve">
-    <value>Festa</value>
+    <value>Grupo</value>
     <comment>legacy_id=190,944,3515,3554</comment>
   </data>
   <data name="Type /party with the mouse cursor on" xml:space="preserve">
@@ -1044,7 +1044,7 @@
     <comment>legacy_id=259</comment>
   </data>
   <data name="/warp" xml:space="preserve">
-    <value>/urdidura</value>
+    <value>/warp</value>
     <comment>legacy_id=260</comment>
   </data>
   <data name="You cannot go to Atlans while riding a Unicorn" xml:space="preserve">
@@ -2577,7 +2577,7 @@
     <comment>legacy_id=681,3423</comment>
   </data>
   <data name="point" xml:space="preserve">
-    <value>apontar</value>
+    <value>Pontos</value>
     <comment>legacy_id=682</comment>
   </data>
   <data name="EXP" xml:space="preserve">
@@ -3321,7 +3321,7 @@
     <comment>legacy_id=891</comment>
   </data>
   <data name="written on the 100%% winning card." xml:space="preserve">
-    <value>escrito no cartão 100% vencedor.</value>
+    <value>escrito no cartão 100%% vencedor.</value>
     <comment>legacy_id=892</comment>
   </data>
   <data name="Enter the lucky number" xml:space="preserve">
@@ -3369,11 +3369,11 @@
     <comment>legacy_id=903</comment>
   </data>
   <data name="Register the lucky number on the 100%% winning card." xml:space="preserve">
-    <value>Registre o número da sorte no cartão 100% vencedor.</value>
+    <value>Registre o número da sorte no cartão 100%% vencedor.</value>
     <comment>legacy_id=904</comment>
   </data>
   <data name="PleaseCheckOutTheAnnouncementOn" xml:space="preserve">
-    <value>Confira o anúncio no site oficial sobre como receber um cartão 100% vencedor.</value>
+    <value>Confira o anúncio no site oficial sobre como receber um cartão 100%% vencedor.</value>
     <comment>legacy_id=905</comment>
   </data>
   <data name="Ring of Honor" xml:space="preserve">
@@ -5933,7 +5933,7 @@
     <comment>legacy_id=1592,1599</comment>
   </data>
   <data name="Enter" xml:space="preserve">
-    <value>Digitar</value>
+    <value>Entrar</value>
     <comment>legacy_id=1593,2147,3457</comment>
   </data>
   <data name="Enter the entrance fee." xml:space="preserve">
@@ -7145,7 +7145,7 @@
     <comment>legacy_id=1926</comment>
   </data>
   <data name="one of the certain weapons to 50%%." xml:space="preserve">
-    <value>uma das armas certas para 50%%.</value>
+    <value>uma das armas certas para 50%.</value>
     <comment>legacy_id=1927</comment>
   </data>
   <data name="Plasma storm skill (Mana:%d)" xml:space="preserve">
@@ -7297,7 +7297,7 @@
     <comment>legacy_id=1972</comment>
   </data>
   <data name="Class" xml:space="preserve">
-    <value>Aula</value>
+    <value>Classe</value>
     <comment>legacy_id=1973</comment>
   </data>
   <data name="Feel the unusual forces around the Fortress of Crywolf." xml:space="preserve">
@@ -7329,11 +7329,11 @@
     <comment>legacy_id=1982</comment>
   </data>
   <data name="Monster strength decreased 10%%." xml:space="preserve">
-    <value>A força do monstro diminuiu 10%%.</value>
+    <value>A força do monstro diminuiu 10%.</value>
     <comment>legacy_id=2000</comment>
   </data>
   <data name="5%% increase in castle and arena invitation combine rate." xml:space="preserve">
-    <value>5%% inaumento na taxa combinada de convites para castelos e arenas.</value>
+    <value>5% de aumento na taxa combinada de convites para castelos e arenas.</value>
     <comment>legacy_id=2001</comment>
   </data>
   <data name="Contract is ongoing therefore dual compact is not possible." xml:space="preserve">
@@ -7481,7 +7481,7 @@
     <comment>legacy_id=2053</comment>
   </data>
   <data name="Minimum Wizardry increment 20%%" xml:space="preserve">
-    <value>Incremento mínimo de magia 20%%</value>
+    <value>Incremento mínimo de magia 20%</value>
     <comment>legacy_id=2054</comment>
   </data>
   <data name="It cannot be applied on another." xml:space="preserve">
@@ -8365,7 +8365,7 @@
     <comment>legacy_id=2325</comment>
   </data>
   <data name="Point2326" xml:space="preserve">
-    <value>Apontar</value>
+    <value>Pontos</value>
     <comment>legacy_id=2326</comment>
   </data>
   <data name="PC cafe point store allows you to only purchase the objects." xml:space="preserve">
@@ -10685,11 +10685,11 @@
     <comment>legacy_id=3059</comment>
   </data>
   <data name="EXP10IncreasePCCafeChaos" xml:space="preserve">
-    <value>EXP 10% % Increase/ PC Cafe Chaos Castle Access/ Acesso aberto a Kalima/ Aumento de pontos Goblin</value>
+    <value>EXP +10%% / Acesso ao Chaos Castle do PC Cafe / Acesso aberto a Kalima / Aumento de pontos Goblin</value>
     <comment>legacy_id=3060</comment>
   </data>
   <data name="EXP10IncreasePCCafeChaos3061" xml:space="preserve">
-    <value>EXP 10% % Increase/ Acesso ao PC Cafe Chaos Castle / Acesso aberto a Kalima/ Aumento de pontos Goblin/ Uso da janela de comando Warp/ Sistema de resistência não aplicado</value>
+    <value>EXP +10%% / Acesso ao Chaos Castle do PC Cafe / Acesso aberto a Kalima / Aumento de pontos Goblin / Uso da janela de comando Warp / Sistema de resistência não aplicado</value>
     <comment>legacy_id=3061</comment>
   </data>
   <data name=" PC Cafe" xml:space="preserve">
@@ -11005,7 +11005,7 @@
     <comment>legacy_id=3145</comment>
   </data>
   <data name="You need more %%s to purchase this item." xml:space="preserve">
-    <value>Você precisa de mais% %s para comprar este item.</value>
+    <value>Você precisa de mais %%s para comprar este item.</value>
     <comment>legacy_id=3146</comment>
   </data>
   <data name="Cannot apply in Battle Zone." xml:space="preserve">
@@ -14005,5 +14005,44 @@
   </data>
   <data name="ZenCarryLimitReached" xml:space="preserve">
     <value>Você não pode carregar mais Zen.</value>
+  </data>
+  <data name="ChatMacroStored" xml:space="preserve">
+    <value>Alt+%d: %ls</value>
+  </data>
+  <data name="ChatMacroCleared" xml:space="preserve">
+    <value>Macro Alt+%d apagada.</value>
+  </data>
+  <data name="ExpMaxLevelReached" xml:space="preserve">
+    <value>Você já atingiu o nível máximo.</value>
+  </data>
+  <data name="ExpMaxMasterLevelReached" xml:space="preserve">
+    <value>Você já atingiu o nível máximo de mestre.</value>
+  </data>
+  <data name="ExpMonsterTooWeakForMaster" xml:space="preserve">
+    <value>Mate monstros mais fortes para ganhar experiência de mestre.</value>
+  </data>
+  <data name="SkillCooldownSeconds" xml:space="preserve">
+    <value>Recarga: %.1f s</value>
+  </data>
+  <data name="WindowHasNoRoomForItem" xml:space="preserve">
+    <value>Não há espaço para este item aqui.</value>
+  </data>
+  <data name="PartyMemberJoined" xml:space="preserve">
+    <value>%ls entrou no grupo.</value>
+  </data>
+  <data name="PartyMemberLeft" xml:space="preserve">
+    <value>%ls saiu do grupo.</value>
+  </data>
+  <data name="KilledByName" xml:space="preserve">
+    <value>Morto por %ls</value>
+  </data>
+  <data name="TradeWithNameCompleted" xml:space="preserve">
+    <value>Troca com %ls concluída.</value>
+  </data>
+  <data name="HotKeyNothingLeft" xml:space="preserve">
+    <value>Acabou: %ls.</value>
+  </data>
+  <data name="FriendIsOnline" xml:space="preserve">
+    <value>%ls está online.</value>
   </data>
 </root>

@@ -236,7 +236,7 @@ void CInGameShop::BindRmlModel(Rml::DataModelConstructor& c, InGameShopRmlModel&
 
 void CInGameShop::SyncRmlModel()
 {
-    m_ItemTarget.Sync(m_RmlView.Document() ? m_RmlView.Document()->GetElementById("igs_items") : nullptr, IsVisible());
+    m_ItemTarget.Sync(m_RmlView.Document(), "igs_items", IsVisible());
     if (!m_RmlView.Document())
         return;
     UI::RmlBridge::SyncDocumentVisibility(m_RmlView.Document(), IsVisible());

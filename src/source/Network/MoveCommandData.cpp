@@ -104,3 +104,15 @@ const std::list<CMoveCommandData::MOVEINFODATA*>& CMoveCommandData::GetMoveComma
 {
     return m_listMoveInfoData;
 }
+
+bool CMoveCommandData::IsMapNamed(const wchar_t* mapName, const wchar_t* localizedName, const wchar_t* englishName,
+                                  bool prefix)
+{
+    if (prefix)
+    {
+        const size_t localizedLength = wcslen(localizedName);
+        return (localizedLength > 0 && wcsncmp(mapName, localizedName, localizedLength) == 0)
+            || _wcsnicmp(mapName, englishName, wcslen(englishName)) == 0;
+    }
+    return wcscmp(mapName, localizedName) == 0 || _wcsicmp(mapName, englishName) == 0;
+}

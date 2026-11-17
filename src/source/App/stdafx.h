@@ -111,79 +111,8 @@
 
 #pragma warning( pop )
 
-// Cross-platform swprintf replacement
-// MinGW blocks swprintf, so we provide mu_swprintf as a safe cross-platform alternative
-
-// Undefine MinGW's blocking macro first
-#undef swprintf
-#undef swprintf_instead_use_StringCbPrintfW_or_StringCchPrintfW
-
-// Use inline template functions instead of macros to avoid issues with #ifdef in arguments
-#ifdef _MSC_VER
-  // MSVC: swprintf doesn't need buffer size
-  template<typename... Args>
-  inline int mu_swprintf(wchar_t* buffer, const wchar_t* format, Args... args) {
-      return swprintf(buffer, format, args...);
-  }
-  // mu_swprintf_s with explicit size
-  template<typename... Args>
-  inline int mu_swprintf_s(wchar_t* buffer, size_t size, const wchar_t* format, Args... args) {
-      return swprintf_s(buffer, size, format, args...);
-  }
-  // mu_swprintf_s with array - auto-deduce size (like MSVC's swprintf_s)
-  template<size_t N, typename... Args>
-  inline int mu_swprintf_s(wchar_t (&buffer)[N], const wchar_t* format, Args... args) {
-      return swprintf_s(buffer, N, format, args...);
-  }
-#else
-  // GCC/MinGW/Clang: use std::swprintf with an explicit buffer size. For an array
-  // the bound is its real size. For a plain pointer, ask the compiler for the size
-  // it can see: the same size glibc's _FORTIFY_SOURCE checks swprintf against, so the
-  // two can't disagree -- once inlining reveals that the pointer aims into a smaller
-  // buffer, the call truncates instead of aborting. Only when the size is unknown
-  // (heap, hidden object) does the historical 1024 assumption remain.
-#ifndef MU_SWPRINTF_DEFINED
-#define MU_SWPRINTF_DEFINED
-  // Historical assumption for buffers whose size the compiler cannot see.
-  inline constexpr size_t kMuSwprintfUnknownBufferChars = 1024;
-  template<typename Buf, typename... Args>
-  inline int mu_swprintf(Buf&& buffer, const wchar_t* format, Args... args) {
-      using Array = std::remove_reference_t<Buf>;
-      if constexpr (std::is_array_v<Array>)
-          return std::swprintf(buffer, std::extent_v<Array>, format, args...);
-      else
-      {
-          // Object size type 1 asks for the maximum size: exactly what glibc's
-          // _FORTIFY_SOURCE checks swprintf against, so the two can't disagree.
-#if defined(__has_builtin)
-#if __has_builtin(__builtin_dynamic_object_size)
-          const size_t bytes = __builtin_dynamic_object_size(buffer, 1);
-#else
-          const size_t bytes = __builtin_object_size(buffer, 1);
-#endif
-#else
-          const size_t bytes = __builtin_object_size(buffer, 1);
-#endif
-          // Unknown (or empty) size keeps the historical assumption; a truly smaller
-          // buffer truncates instead of aborting.
-          const size_t count = (bytes == static_cast<size_t>(-1) || bytes == 0)
-              ? kMuSwprintfUnknownBufferChars
-              : bytes / sizeof(wchar_t);
-          return std::swprintf(buffer, count, format, args...);
-      }
-  }
-  // mu_swprintf_s with explicit size
-  template<typename... Args>
-  inline int mu_swprintf_s(wchar_t* buffer, size_t size, const wchar_t* format, Args... args) {
-      return std::swprintf(buffer, size, format, args...);
-  }
-  // mu_swprintf_s with array - auto-deduce size (compatible with MSVC swprintf_s)
-  template<size_t N, typename... Args>
-  inline int mu_swprintf_s(wchar_t (&buffer)[N], const wchar_t* format, Args... args) {
-      return std::swprintf(buffer, N, format, args...);
-  }
-#endif
-#endif
+// mu_swprintf / mu_swprintf_s live in their own header so tests can use them without the rest of this file.
+#include "Core/Text/MuSwprintf.h"
 
 //opengl
 #include <gl/glew.h>

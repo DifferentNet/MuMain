@@ -511,7 +511,7 @@ void FormatRewardText(SRequestRewardText& line, const SQuestReward& reward)
         break;
 
     case QUEST_REWARD_ITEM:
-        wchar_t szItemName[32];
+        wchar_t szItemName[128];
         ::GetItemName((int)reward.m_pItem->Type, reward.m_pItem->Level, szItemName);
         FormatRequestRewardText(line, I18N::Game::QuestRewardItem, szItemName,
                                 static_cast<unsigned long>(reward.m_dwValue));
@@ -593,7 +593,7 @@ bool CQuestMng::GetRequestRewardText(SRequestRewardText* aDest, int nDestCount, 
                 break;
             case QUEST_REQUEST_ITEM:
             {
-                wchar_t szItemName[32];
+                wchar_t szItemName[128];
                 ::GetItemName((int)pRequestInfo->m_pItem->Type,
                     (pRequestInfo->m_pItem->Level, szItemName);
                 FormatRequestRewardText(aDest[nLine], I18N::Game::QuestRequirementItem, szItemName,
@@ -668,7 +668,7 @@ bool CQuestMng::GetRequestRewardText(SRequestRewardText* aDest, int nDestCount, 
             else
                 aDest[nLine].m_eKind = RRTK_REQUIREMENT;
 
-            wchar_t szItemName[32];
+            wchar_t szItemName[128];
             ::GetItemName((int)pRequestInfo->m_pItem->Type, pRequestInfo->m_pItem->Level,
                 szItemName);
             FormatRequestRewardText(

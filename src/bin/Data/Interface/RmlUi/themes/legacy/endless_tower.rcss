@@ -111,3 +111,17 @@
 /* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
 #et_title { width: calc(100% * var(--root-scale)); }
 #et_entry, #et_party, #et_reset, #et_best { width: calc(166px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile"): tabs, shop lines and buttons a finger can take. The list stops above the
+   foot (94 + 228 < 326) and scrolls when its lines no longer fit, so it never covers the hint, Enter or the buy buttons. */
+@media (theme: mobile) {
+	.et-tab { padding: calc(8px * var(--root-scale)) 0; }
+	.et-row.pick { padding: calc(7px * var(--root-scale)) 0; border-bottom: 1px rgba(255, 255, 255, 28); }
+	#et_list {
+		height: calc(228px * var(--root-scale));
+		overflow: hidden auto;
+		pointer-events: auto;
+	}
+	#et_foot { top: 326px; }
+	#et_enter, .et-buy-btn { height: calc(38px * var(--root-scale)); }
+}

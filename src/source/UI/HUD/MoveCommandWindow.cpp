@@ -293,7 +293,7 @@ void mu::ui::window::CMoveCommandWindow::SettingCanMoveMap()
             ITEM* pEquipedHelper = &CharacterMachine->Equipment[EQUIPMENT_HELPER];
             ITEM* pEquipedWing = &CharacterMachine->Equipment[EQUIPMENT_WING];
 
-            if (wcscmp(moveInfo->_ReqInfo.szMainMapName, I18N::Game::Icarus) == 0)
+            if (CMoveCommandData::IsMapNamed(moveInfo->_ReqInfo.szMainMapName, I18N::Game::Icarus, L"Icarus"))
             {
                 if (
                     GameLogic::Items::HasFlightEquipment(pEquipedHelper, pEquipedWing)
@@ -308,7 +308,7 @@ void mu::ui::window::CMoveCommandWindow::SettingCanMoveMap()
                     moveInfo->_bCanMove = false;
                 }
             }
-            else if (wcsncmp(moveInfo->_ReqInfo.szMainMapName, I18N::Game::Atlans, wcslen(I18N::Game::Atlans)) == 0)
+            else if (CMoveCommandData::IsMapNamed(moveInfo->_ReqInfo.szMainMapName, I18N::Game::Atlans, L"Atlans", true))
             {
                 if (pEquipedHelper->Type == ITEM_HORN_OF_UNIRIA || pEquipedHelper->Type == ITEM_HORN_OF_DINORANT)
                 {
@@ -319,7 +319,7 @@ void mu::ui::window::CMoveCommandWindow::SettingCanMoveMap()
                     moveInfo->_bCanMove = true;
                 }
             }
-            else if ((g_ServerListManager->IsNonPvP() == true) && (wcscmp(moveInfo->_ReqInfo.szMainMapName, I18N::Game::Vulcanus) == 0))
+            else if ((g_ServerListManager->IsNonPvP() == true) && CMoveCommandData::IsMapNamed(moveInfo->_ReqInfo.szMainMapName, I18N::Game::Vulcanus, L"Vulcanus"))
             {
                 moveInfo->_bCanMove = false;
             }

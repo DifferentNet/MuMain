@@ -170,3 +170,11 @@ mu_add_test(
     LINK_LIBS
         MuClient
 )
+
+# Who joined and who left between two party lists, for the chat lines (round 10, Q5).
+mu_add_test(
+    NAME test_party_roster_diff
+    SOURCES
+        test_party_roster_diff.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Social/PartyRosterDiff.cpp
+)

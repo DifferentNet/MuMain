@@ -31,11 +31,20 @@ struct HeldItemMove
 // Asks the server to do the move. Returns false when the request was not sent.
 bool SendHeldItemMove(const HeldItemMove& move);
 
+// What a right-click move came to; the caller says why it did not happen.
+enum class AutoMoveResult
+{
+    Moved,         // the move was sent
+    NothingToMove, // no item under the cursor, an item already held, or no window
+    Refused,       // `accepts` said no
+    NoRoom,        // the target has no free squares the item fits
+    NotSent,       // the item could not be picked up or the request not sent
+};
+
 // Moves the item under the cursor in `source` to the first free squares of
 // `target`, the way a right-click moves an item between two open windows.
-// `accepts` decides whether the item may move there. Returns true when the
-// move was sent.
-bool AutoMoveItemAtCursor(mu::ui::window::CInventoryCtrl* source, STORAGE_TYPE sourceType,
-                          mu::ui::window::CInventoryCtrl* target, STORAGE_TYPE targetType,
-                          const std::function<bool(ITEM*)>& accepts);
+// `accepts` decides whether the item may move there.
+AutoMoveResult AutoMoveItemAtCursor(mu::ui::window::CInventoryCtrl* source, STORAGE_TYPE sourceType,
+                                    mu::ui::window::CInventoryCtrl* target, STORAGE_TYPE targetType,
+                                    const std::function<bool(ITEM*)>& accepts);
 } // namespace UI::Items::Placement

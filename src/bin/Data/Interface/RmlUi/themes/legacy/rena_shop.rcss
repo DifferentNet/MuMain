@@ -106,3 +106,20 @@
 /* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
 #rs_title { width: calc(100% * var(--root-scale)); }
 #rs_balance, #rs_bag { width: calc(166px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile"): tabs, shop lines and buttons a finger can take. The Give button ends at
+   100 (64 + 36), so the list starts at 102 and stops above the foot (102 + 220 < 326); it scrolls when its lines no longer
+   fit, so it never covers the hint or the buy buttons. */
+@media (theme: mobile) {
+	.rs-tab { padding: calc(8px * var(--root-scale)) 0; }
+	.rs-row.pick { padding: calc(7px * var(--root-scale)) 0; border-bottom: 1px rgba(255, 255, 255, 28); }
+	#rs_give { height: calc(36px * var(--root-scale)); }
+	#rs_list {
+		top: 102px;
+		height: calc(220px * var(--root-scale));
+		overflow: hidden auto;
+		pointer-events: auto;
+	}
+	#rs_foot { top: 326px; }
+	.rs-act-btn { height: calc(38px * var(--root-scale)); }
+}

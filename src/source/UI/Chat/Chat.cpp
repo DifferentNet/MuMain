@@ -59,8 +59,9 @@ namespace UI::Chat
 typedef struct
 {
     wchar_t   ID[MAX_MONSTER_NAME + 1];
-    wchar_t      Union[30];
-    wchar_t      Guild[30];
+    // "<alliance> rank" and "[guild] rank": room for the longest translated rank (ru, es) after an 8-letter name.
+    wchar_t      Union[64];
+    wchar_t      Guild[64];
     wchar_t      szShopTitle[16];
     // The battle pass' title line «Hero of Season N»; empty since the titles (GameLogic/Events/Titles.h) show it.
     wchar_t      Title[48];
@@ -582,7 +583,7 @@ int CreateChat(wchar_t* character_name, const wchar_t* chat_text, OBJECT* Owner,
 
 void AssignChat(wchar_t* character_name, const wchar_t* chat_text, int flag)
 {
-    for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
+    for (int i = 0; i < CharacterSlotEnd(); i++)
     {
         CHARACTER* c = &CharactersClient[i];
         OBJECT* o = &c->Object;
@@ -596,7 +597,7 @@ void AssignChat(wchar_t* character_name, const wchar_t* chat_text, int flag)
         }
     }
 
-    for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
+    for (int i = 0; i < CharacterSlotEnd(); i++)
     {
         CHARACTER* c = &CharactersClient[i];
         OBJECT* o = &c->Object;

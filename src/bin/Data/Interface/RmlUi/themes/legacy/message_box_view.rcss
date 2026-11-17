@@ -161,8 +161,15 @@
 #panel[data-kind="guild-appoint"] .box-btn:nth-child(4) { left: 112px; top: 127px; }
 
 /* A phone (theme flag "mobile"): the results' OK a finger wide, 84 x 42, centred; its top edge stays
-   where the 54 x 30 button's was (50 above the bottom edge), so the lines keep their room. */
+   where the 54 x 30 button's was (50 above the bottom edge), so the lines keep their room. The guild
+   appointment (213 tall: cap 67, five strips, divider, foot 50): the two appointments 154 x 34 at 20 and
+   58, the two lines from 98, OK and Close 80 x 36 under them at 142. */
 @media (theme: mobile) {
 	#panel[data-kind="blood-castle-result"] .box-btn, #panel[data-kind="chaos-castle-result"] .box-btn,
 	#panel[data-kind="devil-square-rank"] .box-btn { left: 73px; bottom: 8px; width: 84px; height: 42px; }
+	#panel[data-kind="guild-appoint"] .box-btn:nth-child(1) { left: 38px; top: 20px; width: 154px; height: 34px; }
+	#panel[data-kind="guild-appoint"] .box-btn:nth-child(2) { left: 38px; top: 58px; width: 154px; height: 34px; }
+	#panel[data-kind="guild-appoint"] #lines { top: 98px; }
+	#panel[data-kind="guild-appoint"] .box-btn:nth-child(3) { left: 30px; top: 142px; width: 80px; height: 36px; }
+	#panel[data-kind="guild-appoint"] .box-btn:nth-child(4) { left: 120px; top: 142px; width: 80px; height: 36px; }
 }
