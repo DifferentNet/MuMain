@@ -207,3 +207,12 @@ mu_add_test(
         test_key_bindings.cpp
         ${CMAKE_SOURCE_DIR}/src/source/Core/Input/KeyBindings.cpp
 )
+
+# The low frame rate hint: the detector's windows, bar, warm-up and stalls, and which preset the hint offers.
+mu_add_test(
+    NAME test_low_fps_detector
+    SOURCES
+        test_low_fps_detector.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Performance/LowFpsDetector.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Look/LowFpsHintPolicy.cpp
+)

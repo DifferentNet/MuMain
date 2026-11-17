@@ -13073,6 +13073,31 @@
   <data name="GraphicsPresetCustom" xml:space="preserve">
     <value>Własne</value>
   </data>
+  <!-- Low frame rate hint (Scenes/LowFpsHint.h, UI/HUD/GraphicsHint.h) -->
+  <data name="GraphicsHintTitle" xml:space="preserve">
+    <value>Niska liczba klatek</value>
+  </data>
+  <data name="GraphicsHintBody" xml:space="preserve">
+    <value>Gra działa w około %d FPS. Niższe ustawienie grafiki może sprawić, że będzie płynniejsza.</value>
+  </data>
+  <data name="GraphicsHintClassicNote" xml:space="preserve">
+    <value>Niskie to klasyczny wygląd oryginalnej gry.</value>
+  </data>
+  <data name="GraphicsHintLower" xml:space="preserve">
+    <value>Obniż do: %ls</value>
+  </data>
+  <data name="GraphicsHintKeep" xml:space="preserve">
+    <value>Zostaw</value>
+  </data>
+  <data name="GraphicsHintNever" xml:space="preserve">
+    <value>Nie pytaj więcej</value>
+  </data>
+  <data name="GraphicsHintApplied" xml:space="preserve">
+    <value>Ustawienie grafiki: %ls. Zmienisz je w Opcje &gt; Grafika.</value>
+  </data>
+  <data name="GraphicsHintOptionRow" xml:space="preserve">
+    <value>Proponuj niższe ustawienie przy niskim FPS</value>
+  </data>
   <data name="FxaaRow" xml:space="preserve">
     <value>FXAA</value>
   </data>

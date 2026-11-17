@@ -89,6 +89,8 @@ the row reads **Custom** (shown only, it cannot be picked).
 | `GraphicsPreset` | `Auto`, `Low`, `Medium`, `High`, `Ultra` or `Custom` | `Auto` |
 | `Fxaa` | `1` smooths edges of the 3D scene in one cheap pass (for when anti-aliasing is off), `0` off | `0` |
 | `Sharpen` | sharpening of the 3D scene in percent, `0` (off) to `100` | `0` |
+| `LowFpsHint` | the Remaster client on the desktop offers a lower preset when the game runs really slowly ("Low frame rate hint" below): `1` on, `0` off ("Don't ask again"; Options > Graphics turns it back on) | `1` |
+| `LowFpsHintKept` | the preset the player answered "Keep" on: no hint while that preset is chosen. No line: none | none |
 | `SunShadows` | sun shadows of characters, monsters and objects: `0` off, `1` Medium, `2` High. The browser build reads `WebSunShadows` instead (older /play builds saved the presets' value here), and its presets don't set it | `0` |
 | `HdTextures` | `1` loads the upscaled textures and models from `Data\HD` where a file exists (after a restart), `0` off | `0` |
 | `HdTextureSize` | With HD textures on, how large they load (after a restart): `0` by the machine at every start, `1` full, `2` half. Half takes a quarter of the texture memory (about 0.5 GiB instead of 1.9 GiB; the normal maps shrink with it) and still holds 4 times the original texels. `0` picks half on integrated graphics, a software renderer or an unnamed GPU, and on a PC with less than 12 GB of memory; the log line "HD textures at ... size" says which. Options: "HD texture size" | `0` |
@@ -185,6 +187,46 @@ FXAA and sharpening work in both looks; the interface is never filtered.
 
 The login and character selection scenes take the Enhanced features too,
 except the light mood. The interface is the same in both looks.
+
+### Low frame rate hint
+
+The Remaster client on the desktop watches the frame rate and, when it has been
+really low for a while, offers the next lower preset in a small panel near the
+top of the screen: "Lower to High", "Keep" and "Don't ask again". The Classic
+client and the browser build have no hint.
+
+- **When.** The median frame of two 20-second windows in a row is under 30 FPS,
+  or under 70 % of a known cap when that is lower (the FPS cap, else the
+  display's rate under VSync): a 30 FPS cap played at 28 is not slow, at 20 it
+  is. Only steady play counts: in the world, the game window in front and not
+  minimised, no benchmark running and Options closed. Nothing is measured for
+  45 seconds after entering the world and for 20 seconds after a map change, a
+  preset change, getting the focus back or closing Options. Frames longer than
+  half a second (alt-tab, a load hitch) are dropped.
+- **What.** One step down: Ultra to High, High to Medium, Medium to Low (with
+  the note that Low is the classic look of the original game). Custom, Auto and
+  Low get no hint, and the preset is never raised.
+- **The panel** never takes the keyboard: Enter, Esc and the chat keep working.
+  It waits while a message box or a confirm dialog is open or the chat is being
+  typed into, and while the game window is in the background. Unanswered, it
+  goes away after 30 seconds in front of the player, which counts as Keep. It
+  goes away with no answer when Options opens, when the player changes the
+  preset by hand, or on leaving the world; a hint that came due but wasn't
+  shown yet is dropped then too, and after a window that wasn't slow.
+- **Lower to X** applies that preset at once, as the Options row would, and the
+  system log says `Graphics preset: X. Change it in Options > Graphics.` After
+  the quiet time the next step may be offered. When the first window after a
+  step is less than 15 % faster than the one before it, the game is held back
+  by something the preset doesn't change (the processor, the network) and there
+  are no more hints until the next start.
+- **Keep** saves `LowFpsHintKept=<preset>`: no hint while that preset is chosen.
+  **Don't ask again** saves `LowFpsHint=0`; Options > Graphics > "Suggest a
+  lower preset when FPS is low" turns it back on.
+
+The code: `Core/Performance/LowFpsDetector` (the windows and the median),
+`Render/Look/LowFpsHintPolicy` (which preset is offered),
+`Scenes/LowFpsHint` (the frame hook and the answers) and `UI/HUD/GraphicsHint`
+(the panel, `graphics_hint.rml`).
 
 ## Tuning it yourself
 
@@ -386,3 +428,14 @@ restart clears them:
 Diagnostics: `$post view source|bloom|scene` (what feeds the bloom, the blurred
 halo, back to the scene) and `$dynlights stats` (lights the light history
 follows, render log).
+
+The low frame rate hint (Remaster client on the desktop; each line goes to the
+render log):
+
+| Command | Effect |
+|---|---|
+| `$fpshint force` | offers the next lower preset at once (still waits for message boxes and the chat), past Keep, Don't ask again and the session stop |
+| `$fpshint sim <fps>` / `$fpshint sim off` | every frame but a stall counts as that frame rate, to see the hint come due on a fast PC |
+| `$fpshint fast` | 3-second windows, warm-up and quiet time instead of 20/45/20 seconds (again: back to normal) |
+| `$fpshint reset` | forgets the windows and the session stop, clears `LowFpsHintKept` and sets `LowFpsHint=1` |
+| `$fpshint status` | the preset, the settings, what would be offered, the slow windows so far, the bar and the last median |

@@ -183,6 +183,9 @@ void GameConfig::Load()
     m_sunShadows = GameConfigValidation::ValidateSunShadows(
         ReadInt(CfgSectionRender, CfgKeySunShadows, CfgDefaultSunShadows));
     m_sharpen = GameConfigValidation::ValidateSharpen(ReadInt(CfgSectionRender, CfgKeySharpen, CfgDefaultSharpen));
+    m_lowFpsHint = ReadBool(CfgSectionRender, CfgKeyLowFpsHint, CfgDefaultLowFpsHint);
+    m_lowFpsHintKept =
+        GameConfigValidation::ParseGraphicsPreset(ReadString(CfgSectionRender, CfgKeyLowFpsHintKept, L""));
 
     m_renderBackend = GameConfigValidation::ValidateRenderBackend(
         ReadString(CfgSectionRender, CfgKeyRenderBackend, CfgDefaultRenderBackend), CfgDefaultRenderBackend);
@@ -299,6 +302,7 @@ void GameConfig::Save()
     WriteInt(CfgSectionRender, CfgKeySunShadowSoftEdgesStrength, m_sunShadowSoftEdgesStrength);
     WriteInt(CfgSectionRender, CfgKeySunShadows, m_sunShadows);
     WriteInt(CfgSectionRender, CfgKeySharpen, m_sharpen);
+    SaveLowFpsHint();
     WriteBool(CfgSectionRender, CfgKeyDisableEffects, m_disableEffects);
     WriteBool(CfgSectionRender, CfgKeyDisableParticles, m_disableParticles);
     WriteBool(CfgSectionRender, CfgKeyDisableSkillEffectModels, m_disableSkillEffectModels);
@@ -370,6 +374,18 @@ void GameConfig::SaveLootFilter()
     WriteInt(CfgSectionLootFilter, CfgKeyLootFilterMinLevel, m_lootFilterMinLevel);
     WriteInt(CfgSectionLootFilter, CfgKeyLootFilterZenMin, m_lootFilterZenMin);
     WriteStringList(CfgSectionLootFilter, CfgKeyLootFilterNamePrefix, m_lootFilterNames);
+}
+
+void GameConfig::SaveLowFpsHint()
+{
+    WriteBool(CfgSections::CfgSectionRender, CfgKeys::CfgKeyLowFpsHint, m_lowFpsHint);
+    if (!m_lowFpsHintKept.has_value())
+    {
+        RemoveObsoleteKey(CfgSections::CfgSectionRender, CfgKeys::CfgKeyLowFpsHintKept);
+        return;
+    }
+    WriteString(CfgSections::CfgSectionRender, CfgKeys::CfgKeyLowFpsHintKept,
+                GameConfigValidation::FormatGraphicsPreset(*m_lowFpsHintKept));
 }
 
 std::wstring GameConfig::GetKeyBinding(const wchar_t* action)

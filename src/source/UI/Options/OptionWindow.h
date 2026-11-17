@@ -201,6 +201,7 @@ namespace mu::ui::window
         void RmlToggleFxaa();
         // [Render] HdTextures; takes effect after a restart, not part of the presets.
         void RmlToggleHdTextures();
+        void RmlToggleLowFpsHint();
         // [Render] HdTextureSize (dropdown 15): Auto / Full / Half; after a restart, not part of the presets.
         void RmlHdTextureSizeChanged(int index);
         void RmlSharpenChanged(int index);
@@ -439,6 +440,10 @@ namespace mu::ui::window
             bool hdTexturesAvailable = true;
             bool remasterGraphics = true;
             Rml::String hdTexturesLabel;
+            // [Render] LowFpsHint: offer a lower preset when the game runs really slowly (Remaster, desktop).
+            bool lowFpsHint = true;
+            bool lowFpsHintAvailable = false;
+            Rml::String lowFpsHintLabel;
             // [Render] HdTextureSize: Auto / Full / Half, shown while HD textures are on.
             std::vector<Rml::String> hdTextureSizeLabels;
             int hdTextureSizeIndex = 0;
