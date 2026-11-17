@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <limits>
+#include <optional>
 #include <string>
 #include <vector>
 #include "Core/Platform/WinCompat.h"
@@ -316,6 +317,12 @@ public:
     void SetSunShadows(int level);
     int GetSharpen() const { return m_sharpen; }
     void SetSharpen(int percent);
+    // [Render] LowFpsHint (offer a lower preset when the game runs really slowly) and LowFpsHintKept (the preset the
+    // player chose to keep; none when the line is missing). Scenes/LowFpsHint.h.
+    bool GetLowFpsHint() const { return m_lowFpsHint; }
+    void SetLowFpsHint(bool enabled) { m_lowFpsHint = enabled; }
+    const std::optional<GraphicsPreset>& GetLowFpsHintKept() const { return m_lowFpsHintKept; }
+    void SetLowFpsHintKept(std::optional<GraphicsPreset> preset) { m_lowFpsHintKept = preset; }
     bool GetEnhancedLighting() const { return m_enhancedLighting; }
     void SetEnhancedLighting(bool enabled) { m_enhancedLighting = enabled; }
     bool GetDynamicLights() const { return m_dynamicLights; }
@@ -478,6 +485,8 @@ private:
     int m_sunShadowSoftEdgesStrength = 70;
     int m_sunShadows = 0;
     int m_sharpen = 0;
+    bool m_lowFpsHint = true;
+    std::optional<GraphicsPreset> m_lowFpsHintKept;
     std::wstring m_renderBackend;
     bool m_disableEffects;
     bool m_disableParticles;
@@ -501,6 +510,7 @@ private:
                                              int maxCount = (std::numeric_limits<int>::max)());
     void LoadLootFilter();
     void SaveLootFilter();
+    void SaveLowFpsHint();
     void WriteStringList(const wchar_t* section, const wchar_t* keyPrefix, const std::vector<std::wstring>& values);
     std::wstring ReadString(const wchar_t* section, const wchar_t* key, const std::wstring& defaultValue);
     void WriteString(const wchar_t* section, const wchar_t* key, const std::wstring& value);

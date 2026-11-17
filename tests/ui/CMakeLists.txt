@@ -52,6 +52,13 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME chat_fade_tests
+    SOURCES
+        test_chat_fade.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ChatFade.cpp
+)
+
+mu_add_test(
     NAME zen_amount_tests
     SOURCES
         test_zen_amount.cpp

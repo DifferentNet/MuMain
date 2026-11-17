@@ -13052,6 +13052,31 @@
   <data name="GraphicsPresetCustom" xml:space="preserve">
     <value>Kustom</value>
   </data>
+  <!-- Low frame rate hint (Scenes/LowFpsHint.h, UI/HUD/GraphicsHint.h) -->
+  <data name="GraphicsHintTitle" xml:space="preserve">
+    <value>Frame rate rendah</value>
+  </data>
+  <data name="GraphicsHintBody" xml:space="preserve">
+    <value>Game berjalan sekitar %d FPS. Preset grafis yang lebih rendah bisa membuatnya lebih lancar.</value>
+  </data>
+  <data name="GraphicsHintClassicNote" xml:space="preserve">
+    <value>Rendah adalah tampilan klasik game aslinya.</value>
+  </data>
+  <data name="GraphicsHintLower" xml:space="preserve">
+    <value>Turunkan ke %ls</value>
+  </data>
+  <data name="GraphicsHintKeep" xml:space="preserve">
+    <value>Tetap</value>
+  </data>
+  <data name="GraphicsHintNever" xml:space="preserve">
+    <value>Jangan tanya lagi</value>
+  </data>
+  <data name="GraphicsHintApplied" xml:space="preserve">
+    <value>Preset grafis: %ls. Ubah di Opsi &gt; Grafis.</value>
+  </data>
+  <data name="GraphicsHintOptionRow" xml:space="preserve">
+    <value>Sarankan preset lebih rendah saat FPS rendah</value>
+  </data>
   <data name="FxaaRow" xml:space="preserve">
     <value>FXAA</value>
   </data>

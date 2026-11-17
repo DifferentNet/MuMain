@@ -13052,6 +13052,31 @@
   <data name="GraphicsPresetCustom" xml:space="preserve">
     <value>自訂</value>
   </data>
+  <!-- Low frame rate hint (Scenes/LowFpsHint.h, UI/HUD/GraphicsHint.h) -->
+  <data name="GraphicsHintTitle" xml:space="preserve">
+    <value>畫面更新率偏低</value>
+  </data>
+  <data name="GraphicsHintBody" xml:space="preserve">
+    <value>遊戲目前約為 %d FPS。調低圖形預設可以讓畫面更流暢。</value>
+  </data>
+  <data name="GraphicsHintClassicNote" xml:space="preserve">
+    <value>「低」是原版遊戲的經典畫面。</value>
+  </data>
+  <data name="GraphicsHintLower" xml:space="preserve">
+    <value>調低為 %ls</value>
+  </data>
+  <data name="GraphicsHintKeep" xml:space="preserve">
+    <value>保持</value>
+  </data>
+  <data name="GraphicsHintNever" xml:space="preserve">
+    <value>不再詢問</value>
+  </data>
+  <data name="GraphicsHintApplied" xml:space="preserve">
+    <value>圖形預設：%ls。可在 選項 &gt; 圖形 中變更。</value>
+  </data>
+  <data name="GraphicsHintOptionRow" xml:space="preserve">
+    <value>FPS 偏低時建議調低預設</value>
+  </data>
   <data name="FxaaRow" xml:space="preserve">
     <value>FXAA</value>
   </data>

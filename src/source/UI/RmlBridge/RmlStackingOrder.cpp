@@ -163,6 +163,9 @@ constexpr DocumentPlacement Placements[] = {
     {"gm_panel.rml", 10.65f, MainScene},
     {"auction.rml", 10.65f, MainScene},
     {"titles.rml", 10.65f, MainScene},
+    // The low frame rate hint's toast (UI/HUD/GraphicsHint.h): over the HUD and the foreground panels it may sit
+    // beside, under the settings it points to, the tooltips and the message boxes.
+    {"graphics_hint.rml", 10.66f, MainScene},
     // The original drew it at 10.5, under the HUD; the modern theme's settings screen covers the
     // whole screen, HUD included. Still under the tooltips and message boxes.
     {"option_window.rml", 10.67f, EveryScene},

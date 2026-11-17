@@ -13052,6 +13052,31 @@
   <data name="GraphicsPresetCustom" xml:space="preserve">
     <value>Custom</value>
   </data>
+  <!-- Low frame rate hint (Scenes/LowFpsHint.h, UI/HUD/GraphicsHint.h) -->
+  <data name="GraphicsHintTitle" xml:space="preserve">
+    <value>Mababang frame rate</value>
+  </data>
+  <data name="GraphicsHintBody" xml:space="preserve">
+    <value>Tumatakbo ang laro nang mga %d FPS. Mas magiging maayos ito sa mas mababang graphics preset.</value>
+  </data>
+  <data name="GraphicsHintClassicNote" xml:space="preserve">
+    <value>Ang Mababa ang klasikong itsura ng orihinal na laro.</value>
+  </data>
+  <data name="GraphicsHintLower" xml:space="preserve">
+    <value>Ibaba sa %ls</value>
+  </data>
+  <data name="GraphicsHintKeep" xml:space="preserve">
+    <value>Panatilihin</value>
+  </data>
+  <data name="GraphicsHintNever" xml:space="preserve">
+    <value>Huwag nang itanong</value>
+  </data>
+  <data name="GraphicsHintApplied" xml:space="preserve">
+    <value>Graphics preset: %ls. Palitan ito sa Options &gt; Graphics.</value>
+  </data>
+  <data name="GraphicsHintOptionRow" xml:space="preserve">
+    <value>Magmungkahi ng mas mababang preset kapag mababa ang FPS</value>
+  </data>
   <data name="FxaaRow" xml:space="preserve">
     <value>FXAA</value>
   </data>

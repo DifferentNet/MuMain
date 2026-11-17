@@ -1,0 +1,59 @@
+/* Modern theme for the low frame rate hint: a dark iron toast with a gold title, the confirm-style button for
+   "Lower to X" and plain ones for the rest. dp throughout; the panel sizes to its text. */
+
+#graphics_hint {
+	position: absolute;
+	top: 72dp;
+	left: 50%;
+	width: 420dp;
+	margin-left: -210dp;
+	padding: 10dp 14dp 12dp 14dp;
+	font-family: "token(font-body)";
+	font-size: 12dp;
+	color: token(text-primary);
+	border-radius: token(radius-sm)dp;
+	background-color: rgba(8, 10, 8, 230);
+	decorator: linear-gradient(to bottom, rgba(24, 26, 21, 236) 0%, rgba(8, 10, 8, 236) 100%);
+	border-width: 1dp;
+	border-color: token(border-frame);
+	box-shadow: 0 6dp 18dp rgba(0, 0, 0, 158);
+	pointer-events: auto;
+}
+
+.gh-title {
+	display: block;
+	color: token(accent-gold);
+	font-weight: bold;
+	margin-bottom: 6dp;
+}
+
+.gh-body {
+	display: block;
+	white-space: normal;
+}
+
+.gh-note {
+	display: block;
+	margin-top: 4dp;
+	color: token(semantic-warning);
+	white-space: normal;
+}
+
+.gh-buttons {
+	display: block;
+	margin-top: 10dp;
+	text-align: center;
+}
+
+/* base.rcss places .btn absolutely at a fixed width; in this row they flow and fit their label. */
+#graphics_hint .gh-btn {
+	position: relative;
+	display: inline-block;
+	width: auto;
+	min-width: 90dp;
+	height: 26dp;
+	line-height: 26dp;
+	padding: 0 10dp;
+	margin: 0 4dp;
+	white-space: nowrap;
+}

@@ -227,6 +227,13 @@ rows next to Anti-aliasing. The presets, the `GraphicsPreset`, `Fxaa` and
 `Sharpen` keys and how Auto picks a preset from the GPU are described in
 [`enhanced-look.md`](enhanced-look.md#graphics-presets-and-screen-filters).
 
+Under the preset the Remaster client on the desktop has a **Suggest a lower preset when FPS is
+low** checkbox (`[Render] LowFpsHint`, on by default): the low frame rate hint, which offers the
+next lower preset when the game has run really slowly for a while. Its "Don't ask again" button
+turns the checkbox off; checking it turns the hint back on. The Classic client and the browser
+client don't show the row. See
+[`enhanced-look.md`](enhanced-look.md#low-frame-rate-hint).
+
 These rows, **HD textures** and **Sun shadows** are MU Skynet's and belong to the Remaster
 client: the Classic client (no `Data\HD` folder, `Render::Textures::Hd::Installed`) hides them
 and keeps FXAA, sharpening, sun shadows and HD textures off whatever `config.ini` says, and Auto

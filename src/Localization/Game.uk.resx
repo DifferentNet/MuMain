@@ -13052,6 +13052,31 @@
   <data name="GraphicsPresetCustom" xml:space="preserve">
     <value>Власний</value>
   </data>
+  <!-- Low frame rate hint (Scenes/LowFpsHint.h, UI/HUD/GraphicsHint.h) -->
+  <data name="GraphicsHintTitle" xml:space="preserve">
+    <value>Низька частота кадрів</value>
+  </data>
+  <data name="GraphicsHintBody" xml:space="preserve">
+    <value>Гра йде приблизно на %d FPS. Нижчий пресет графіки може зробити її плавнішою.</value>
+  </data>
+  <data name="GraphicsHintClassicNote" xml:space="preserve">
+    <value>Низький — це класичний вигляд оригінальної гри.</value>
+  </data>
+  <data name="GraphicsHintLower" xml:space="preserve">
+    <value>Знизити: %ls</value>
+  </data>
+  <data name="GraphicsHintKeep" xml:space="preserve">
+    <value>Залишити</value>
+  </data>
+  <data name="GraphicsHintNever" xml:space="preserve">
+    <value>Більше не питати</value>
+  </data>
+  <data name="GraphicsHintApplied" xml:space="preserve">
+    <value>Пресет графіки: %ls. Змінити можна в Налаштуваннях &gt; Графіка.</value>
+  </data>
+  <data name="GraphicsHintOptionRow" xml:space="preserve">
+    <value>Пропонувати нижчий пресет при низькому FPS</value>
+  </data>
   <data name="FxaaRow" xml:space="preserve">
     <value>FXAA</value>
   </data>

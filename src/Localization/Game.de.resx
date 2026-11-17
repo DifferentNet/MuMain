@@ -13150,6 +13150,31 @@
   <data name="GraphicsPresetCustom" xml:space="preserve">
     <value>Benutzerdefiniert</value>
   </data>
+  <!-- Low frame rate hint (Scenes/LowFpsHint.h, UI/HUD/GraphicsHint.h) -->
+  <data name="GraphicsHintTitle" xml:space="preserve">
+    <value>Niedrige Bildrate</value>
+  </data>
+  <data name="GraphicsHintBody" xml:space="preserve">
+    <value>Das Spiel läuft mit etwa %d FPS. Eine niedrigere Grafikvoreinstellung kann es flüssiger machen.</value>
+  </data>
+  <data name="GraphicsHintClassicNote" xml:space="preserve">
+    <value>Niedrig ist der klassische Look des Originalspiels.</value>
+  </data>
+  <data name="GraphicsHintLower" xml:space="preserve">
+    <value>Senken auf %ls</value>
+  </data>
+  <data name="GraphicsHintKeep" xml:space="preserve">
+    <value>Beibehalten</value>
+  </data>
+  <data name="GraphicsHintNever" xml:space="preserve">
+    <value>Nicht mehr fragen</value>
+  </data>
+  <data name="GraphicsHintApplied" xml:space="preserve">
+    <value>Grafikvoreinstellung: %ls. Ändern unter Optionen &gt; Grafik.</value>
+  </data>
+  <data name="GraphicsHintOptionRow" xml:space="preserve">
+    <value>Bei niedrigen FPS eine niedrigere Voreinstellung vorschlagen</value>
+  </data>
   <data name="FxaaRow" xml:space="preserve">
     <value>FXAA</value>
   </data>

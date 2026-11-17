@@ -11131,6 +11131,31 @@
   <data name="GraphicsPresetCustom" xml:space="preserve">
     <value>カスタム</value>
   </data>
+  <!-- Low frame rate hint (Scenes/LowFpsHint.h, UI/HUD/GraphicsHint.h) -->
+  <data name="GraphicsHintTitle" xml:space="preserve">
+    <value>フレームレートが低下しています</value>
+  </data>
+  <data name="GraphicsHintBody" xml:space="preserve">
+    <value>現在のフレームレートは約 %d FPS です。グラフィック設定を下げると滑らかになる場合があります。</value>
+  </data>
+  <data name="GraphicsHintClassicNote" xml:space="preserve">
+    <value>「低」はオリジナル版のクラシックな見た目です。</value>
+  </data>
+  <data name="GraphicsHintLower" xml:space="preserve">
+    <value>%ls に下げる</value>
+  </data>
+  <data name="GraphicsHintKeep" xml:space="preserve">
+    <value>このまま</value>
+  </data>
+  <data name="GraphicsHintNever" xml:space="preserve">
+    <value>今後は表示しない</value>
+  </data>
+  <data name="GraphicsHintApplied" xml:space="preserve">
+    <value>グラフィック設定: %ls。オプション &gt; グラフィックで変更できます。</value>
+  </data>
+  <data name="GraphicsHintOptionRow" xml:space="preserve">
+    <value>FPSが低いときに低い設定を提案する</value>
+  </data>
   <data name="FxaaRow" xml:space="preserve">
     <value>FXAA</value>
   </data>
