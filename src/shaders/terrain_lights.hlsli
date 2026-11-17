@@ -4,7 +4,8 @@
 // taken out of the vertex colour (the vertex's torch part, terrain_lights.vert's `normal`) and added back
 // per pixel as smooth round pools on the ground, so the light no longer shows the grid's diamonds.
 // Pairs with terrain_lights.vert. FogUniforms mirrors FogUniform; SceneLighting mirrors
-// mu::SceneLightingUniform, mu::SunShadowUniform and mu::TerrainLightsUniform (std140, desktop block).
+// mu::SceneLightingUniform, mu::SunShadowUniform, mu::SoftParticlesUniform and mu::TerrainLightsUniform
+// (std140, desktop block).
 Texture2D tex : register(t0, space2);
 SamplerState s : register(s0, space2);
 cbuffer FogUniforms : register(b0, space3)
@@ -33,9 +34,11 @@ cbuffer SceneLighting : register(b1, space3)
     float4 sunShadowParameters;     // x: 1 / map size, y: strength, z: normal offset, w: 1 when on
     float4 sunDirectionAndSoftness; // xyz: towards the sun, w: soft edge radius in texels
     float4 sunShadowPenumbra;       // widening edge (sun_shadow.hlsli): x 0 = fixed edge
-    float4 terrainLightHeader;               // x: the number of lights (0..16)
-    float4 terrainLightPositionAndRadius[16]; // xy: world position, w: the pool's radius
-    float4 terrainLightColor[16];             // rgb: colour * weight * gain
+    float4 softProjection;          // soft_particles.hlsli; unused here
+    float4 softDepth;
+    float4 terrainLightHeader;               // x: the number of lights (0..32)
+    float4 terrainLightPositionAndRadius[32]; // xy: world position, w: the pool's radius
+    float4 terrainLightColor[32];             // rgb: colour * weight * gain
 };
 #if TERRAIN_LIGHTS_SUN_SHADOW
 #include "sun_shadow.hlsli"
@@ -56,7 +59,7 @@ struct FSInput
     float3 worldNormal : TEXCOORD8;
 };
 
-static const int kTerrainLightCount = 16;
+static const int kTerrainLightCount = 32;
 
 // Same curve as skinned_lit.frag.hlsl and mu::EnhancedFogAmount() (SceneLighting.cpp).
 float EnhancedFogAmount(float eyeDepth)

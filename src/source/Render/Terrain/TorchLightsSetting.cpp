@@ -2,6 +2,8 @@
 
 #include "Render/Terrain/TorchLights.h"
 
+#include "Render/Effects/SkillFx.h"
+
 #include "Core/Utilities/Log/MuLogger.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "Data/GameConfig/GameConfigConstants.h"
@@ -45,6 +47,8 @@ ShareGrid s_shareGrid;
 // this world.
 bool s_frameActive = false;
 int s_frameWorld = -1;
+// The skill effect lights drawn per pixel this frame.
+std::size_t s_frameEffectLights = 0;
 
 // Whether the frame's ground is the game world's own (not the editor, not another scene).
 [[nodiscard]] bool WorldFrame()
@@ -56,6 +60,7 @@ void EndFrameLights()
 {
     s_shareGrid.Clear();
     s_frameActive = false;
+    s_frameEffectLights = 0;
     mu::GetRenderer().SetTerrainLightsFrame({});
 }
 } // namespace
@@ -96,8 +101,10 @@ void Choose(bool enabled, int strengthPercent)
 
 void BuildFrame()
 {
-    if (s_strength <= 0.0f || !mu::HasTerrainLightPipelines() || !Render::Lighting::DynamicLightsActive() ||
-        !WorldFrame())
+    // The skill light pools show with the torch light off too (Render/Effects/SkillFx.h).
+    const std::size_t effectBudget = static_cast<std::size_t>(Render::Effects::SkillFx::ActivePoolBudget());
+    if ((s_strength <= 0.0f && effectBudget == 0) || !mu::HasTerrainLightPipelines() ||
+        !Render::Lighting::DynamicLightsActive() || !WorldFrame())
     {
         EndFrameLights();
         return;
@@ -109,8 +116,13 @@ void BuildFrame()
     }
 
     Selection selection{};
-    const std::size_t count =
-        Select(Render::Lighting::FrameDynamicLights().Lights(), Hero->Object.Position, selection);
+    const std::span<const Render::Lighting::DynamicLight> lights = Render::Lighting::FrameDynamicLights().Lights();
+    const DarkeningSet darkening(lights);
+    std::size_t count =
+        s_strength > 0.0f ? Select(lights, Hero->Object.Position, selection, Gain(s_strength), &darkening) : 0;
+    s_frameEffectLights = SelectEffects(lights, Hero->Object.Position, effectBudget,
+                                        std::span<Selected>(selection).subspan(count), &darkening);
+    count += s_frameEffectLights;
     if (count == 0)
     {
         EndFrameLights();
@@ -119,12 +131,17 @@ void BuildFrame()
     const std::span<const Selected> selected{selection.data(), count};
     s_shareGrid.Rebuild(selected);
     s_frameActive = true;
-    mu::GetRenderer().SetTerrainLightsFrame(Pack(selected, Gain(s_strength)));
+    mu::GetRenderer().SetTerrainLightsFrame(Pack(selected));
 }
 
 bool FrameActive()
 {
     return s_frameActive && s_frameWorld == gMapManager.WorldActive && WorldFrame();
+}
+
+std::size_t FrameEffectLights()
+{
+    return FrameActive() ? s_frameEffectLights : 0;
 }
 
 const float* Share(int terrainIndex)

@@ -164,9 +164,25 @@ have none.
 The torch light on the ground has no light mood values of its own: it works on
 every map with map lights (the lights map objects make each frame, as the light
 grid has them), with each map's own light colours and the light mood's dynamic
-gain. Effect and character lights (spells, a held torch) are not drawn so. Models
-are unchanged: characters, monsters, gear and objects get exactly the light they
-had before, with the setting on or off.
+gain. Character lights (a held torch) are not drawn so. Models are unchanged:
+characters, monsters, gear and objects get exactly the light they had before,
+with the setting on or off.
+
+Skill effects (Remaster only, `Render/Effects/SkillFx.h`; the web has none) add
+three looks, each its own `[Render]` key in `config.ini`, on (1) by default and
+held by the effect level:
+
+- `SkillLightPools`: spell and effect lights lay a pool of light on the ground,
+  up to 16 of them next to the map lights (effect level 4: 16, 3: 12, 2: 8).
+  This works whatever the torch light setting is; character lights stay as they were.
+- `SoftParticles`: sprites fade where they meet the ground and walls instead of
+  cutting a hard line (effect level 2 and up). They use the world depth that SSAO
+  or haze already draw, so with both off there is no change and no extra pass.
+- `FlipbookBlending`: explosion and fire sheets blend from one frame to the next
+  (effect level 3 and up); the last frame holds.
+
+At effect level 0 and 1 all three are off. In developer builds, `$fx pools|soft|flipbook on|off`
+switches one look (and saves the key) and `$fx status` logs what is on.
 
 Foliage smoothing needs no light mood values either. Why it helps: with HD textures
 the Enhanced samplers lean half a mip level toward the sharper one (the Remaster

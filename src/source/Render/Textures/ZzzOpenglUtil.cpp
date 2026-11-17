@@ -8,6 +8,8 @@
 #include "Render/Renderer/Overlay2DRecorder.h"
 #include "Render/Sprites/GlobalBitmap.h"
 #include "Render/Renderer/RenderUtils.h"
+#include "Render/Effects/SkillFx.h"
+#include "Render/Effects/SoftParticles.h"
 #include "Render/Models/ZzzBMD.h"
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzObject.h"
@@ -946,13 +948,25 @@ void RenderSprite(int Texture, vec3_t Position, float Width, float Height, vec3_
         }
     }
 
+    // Soft effect sprites (Render/Effects/SoftParticles.h): the normal's x carries the softness; the
+    // damage numbers stay as they are.
+    const bool soft = Texture != BITMAP_FONT_HIT &&
+                      Render::Effects::SkillFx::Enabled(Render::Effects::SkillFx::Feature::SoftParticles);
+    const float softness = soft ? Render::Effects::SoftParticles::Softness(Width, Height) : 0.f;
     const mu::Vertex3D vertices[4] = {
-        {p[0][0], p[0][1], p[0][2], 0.f, 0.f, 0.f, c[0][0], c[0][1], color},
-        {p[1][0], p[1][1], p[1][2], 0.f, 0.f, 0.f, c[1][0], c[1][1], color},
-        {p[2][0], p[2][1], p[2][2], 0.f, 0.f, 0.f, c[2][0], c[2][1], color},
-        {p[3][0], p[3][1], p[3][2], 0.f, 0.f, 0.f, c[3][0], c[3][1], color},
+        {p[0][0], p[0][1], p[0][2], softness, 0.f, 0.f, c[0][0], c[0][1], color},
+        {p[1][0], p[1][1], p[1][2], softness, 0.f, 0.f, c[1][0], c[1][1], color},
+        {p[2][0], p[2][1], p[2][2], softness, 0.f, 0.f, c[2][0], c[2][1], color},
+        {p[3][0], p[3][1], p[3][2], softness, 0.f, 0.f, c[3][0], c[3][1], color},
     };
+    if (!soft)
+    {
+        mu::GetRenderer().RenderQuad3D(vertices, static_cast<std::uint32_t>(Texture));
+        return;
+    }
+    mu::GetRenderer().SetSoftParticle(true);
     mu::GetRenderer().RenderQuad3D(vertices, static_cast<std::uint32_t>(Texture));
+    mu::GetRenderer().SetSoftParticle(false);
 }
 
 void RenderSpriteUV(int Texture, vec3_t Position, float Width, float Height, float(*UV)[2], vec3_t Light[4], float Alpha)

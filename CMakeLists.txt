@@ -163,7 +163,10 @@ if(EMSCRIPTEN)
         ambient_particles.frag
         terrain_lights.vert
         terrain_lights.frag
-        terrain_lights_shadow.frag)
+        terrain_lights_shadow.frag
+        soft_particles.vert
+        basic_textured_fog_soft.frag
+        basic_textured_fog_soft_glow.frag)
     foreach(shader_stage IN LISTS MU_SHADER_STAGE_NAMES MU_WEB_SOFT_CLIP_SHADER_STAGE_NAMES)
         if(shader_stage IN_LIST MU_DESKTOP_ONLY_SHADER_STAGE_NAMES)
             continue()

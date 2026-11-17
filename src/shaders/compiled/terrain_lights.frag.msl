@@ -46,9 +46,11 @@ struct SceneLighting
     float4 sunShadowParameters;
     float4 sunDirectionAndSoftness;
     float4 sunShadowPenumbra;
+    float4 softProjection;
+    float4 softDepth;
     float4 terrainLightHeader;
-    float4 terrainLightPositionAndRadius[16];
-    float4 terrainLightColor[16];
+    float4 terrainLightPositionAndRadius[32];
+    float4 terrainLightColor[32];
 };
 
 struct main0_out
@@ -73,7 +75,7 @@ static inline __attribute__((always_inline))
 float3 TorchLighting(thread const float3& worldPosition, constant SceneLighting& _335)
 {
     float3 light = float3(0.0);
-    int count = min(int(_335.terrainLightHeader.x), 16);
+    int count = min(int(_335.terrainLightHeader.x), 32);
     for (int i = 0; i < count; i++)
     {
         float4 positionAndRadius = _335.terrainLightPositionAndRadius[i];

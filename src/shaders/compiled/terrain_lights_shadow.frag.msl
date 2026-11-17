@@ -72,9 +72,11 @@ struct SceneLighting
     float4 sunShadowParameters;
     float4 sunDirectionAndSoftness;
     float4 sunShadowPenumbra;
+    float4 softProjection;
+    float4 softDepth;
     float4 terrainLightHeader;
-    float4 terrainLightPositionAndRadius[16];
-    float4 terrainLightColor[16];
+    float4 terrainLightPositionAndRadius[32];
+    float4 terrainLightColor[32];
 };
 
 struct FogUniforms
@@ -91,7 +93,7 @@ struct FogUniforms
 };
 
 constant spvUnsafeArray<float2, 8> _146 = spvUnsafeArray<float2, 8>({ float2(0.25, 0.0), float2(-0.319290101528167724609375, 0.2924958765506744384765625), float2(0.048872470855712890625, -0.55687654018402099609375), float2(0.40244448184967041015625, 0.524917542934417724609375), float2(-0.738535106182098388671875, -0.1306364536285400390625), float2(0.699604928493499755859375, -0.4450314044952392578125), float2(-0.23400415480136871337890625, 0.870483815670013427734375), float2(-0.44627130031585693359375, -0.859268248081207275390625) });
-constant spvUnsafeArray<float2, 16> _491 = spvUnsafeArray<float2, 16>({ float2(-0.94201624393463134765625, -0.39906215667724609375), float2(0.94558608531951904296875, -0.768907248973846435546875), float2(-0.094184100627899169921875, -0.929388701915740966796875), float2(0.34495937824249267578125, 0.29387760162353515625), float2(-0.91588580608367919921875, 0.4577143192291259765625), float2(-0.8154423236846923828125, -0.87912464141845703125), float2(-0.38277542591094970703125, 0.2767684459686279296875), float2(0.9748439788818359375, 0.7564837932586669921875), float2(0.4432332515716552734375, -0.9751155376434326171875), float2(0.5374298095703125, -0.473734200000762939453125), float2(-0.2649691104888916015625, -0.418930232524871826171875), float2(0.79197514057159423828125, 0.19090187549591064453125), float2(-0.24188840389251708984375, 0.997065067291259765625), float2(-0.8140995502471923828125, 0.91437590122222900390625), float2(0.1998412609100341796875, 0.786413669586181640625), float2(0.14383161067962646484375, -0.141007900238037109375) });
+constant spvUnsafeArray<float2, 16> _492 = spvUnsafeArray<float2, 16>({ float2(-0.94201624393463134765625, -0.39906215667724609375), float2(0.94558608531951904296875, -0.768907248973846435546875), float2(-0.094184100627899169921875, -0.929388701915740966796875), float2(0.34495937824249267578125, 0.29387760162353515625), float2(-0.91588580608367919921875, 0.4577143192291259765625), float2(-0.8154423236846923828125, -0.87912464141845703125), float2(-0.38277542591094970703125, 0.2767684459686279296875), float2(0.9748439788818359375, 0.7564837932586669921875), float2(0.4432332515716552734375, -0.9751155376434326171875), float2(0.5374298095703125, -0.473734200000762939453125), float2(-0.2649691104888916015625, -0.418930232524871826171875), float2(0.79197514057159423828125, 0.19090187549591064453125), float2(-0.24188840389251708984375, 0.997065067291259765625), float2(-0.8140995502471923828125, 0.91437590122222900390625), float2(0.1998412609100341796875, 0.786413669586181640625), float2(0.14383161067962646484375, -0.141007900238037109375) });
 
 struct main0_out
 {
@@ -179,9 +181,9 @@ float SunShadowAmount(thread const float3& worldPosition, thread const float3& n
     float lit = 0.0;
     for (int i = 0; i < 16; i++)
     {
-        float2 tap = (_491[i] * turn) * radius;
-        float3 _519 = float3(uv + tap, depth + dot(depthSlope, tap));
-        lit += sunShadowMap.sample_compare(sunShadowSampler, _519.xy, _519.z, level(0.0));
+        float2 tap = (_492[i] * turn) * radius;
+        float3 _520 = float3(uv + tap, depth + dot(depthSlope, tap));
+        lit += sunShadowMap.sample_compare(sunShadowSampler, _520.xy, _520.z, level(0.0));
     }
     float shadow = 1.0 - (lit / 16.0);
     return shadow * (1.0 - smoothstep(0.800000011920928955078125, 1.0, edge));
@@ -197,7 +199,7 @@ static inline __attribute__((always_inline))
 float3 TorchLighting(thread const float3& worldPosition, constant SceneLighting& _86)
 {
     float3 light = float3(0.0);
-    int count = min(int(_86.terrainLightHeader.x), 16);
+    int count = min(int(_86.terrainLightHeader.x), 32);
     for (int i = 0; i < count; i++)
     {
         float4 positionAndRadius = _86.terrainLightPositionAndRadius[i];
@@ -278,28 +280,28 @@ float TerrainNoiseDetail(thread const float2& uv, thread const float2& uvWidth, 
 }
 
 static inline __attribute__((always_inline))
-float TerrainDetailFactor(thread const float2& uv, thread const float& eyeDepth, texture2d<float> tex, sampler s, constant FogUniforms& _747)
+float TerrainDetailFactor(thread const float2& uv, thread const float& eyeDepth, texture2d<float> tex, sampler s, constant FogUniforms& _748)
 {
     float2 uvDx = dfdx(uv);
     float2 uvDy = dfdy(uv);
     float2 uvWidth = abs(uvDx) + abs(uvDy);
-    if (_747.detailStrength <= 0.0)
+    if (_748.detailStrength <= 0.0)
     {
         return 1.0;
     }
     float param = eyeDepth;
-    float amount = _747.detailStrength * TerrainDetailFade(param);
-    if (_747.detailScale > 0.0)
+    float amount = _748.detailStrength * TerrainDetailFade(param);
+    if (_748.detailScale > 0.0)
     {
         float2 param_1 = uv;
         float2 param_2 = uvDx;
         float2 param_3 = uvDy;
-        float param_4 = _747.detailScale;
+        float param_4 = _748.detailScale;
         return mix(1.0, TerrainSelfDetail(param_1, param_2, param_3, param_4, tex, s), amount);
     }
     float2 param_5 = uv;
     float2 param_6 = uvWidth;
-    float param_7 = -_747.detailScale;
+    float param_7 = -_748.detailScale;
     return 1.0 + (amount * (TerrainNoiseDetail(param_5, param_6, param_7) - 1.0));
 }
 
@@ -311,7 +313,7 @@ float EnhancedFogAmount(thread const float& eyeDepth, constant SceneLighting& _8
 }
 
 static inline __attribute__((always_inline))
-float4 _main(thread const FSInput& _input, constant SceneLighting& _86, depth2d<float> sunShadowMap, sampler sunShadowSampler, texture2d<float> tex, sampler s, constant FogUniforms& _747)
+float4 _main(thread const FSInput& _input, constant SceneLighting& _86, depth2d<float> sunShadowMap, sampler sunShadowSampler, texture2d<float> tex, sampler s, constant FogUniforms& _748)
 {
     float4 texel = tex.sample(s, _input.uv);
     float3 baseLight = fast::max(_input.color.xyz - _input.normal, float3(0.0));
@@ -326,14 +328,14 @@ float4 _main(thread const FSInput& _input, constant SceneLighting& _86, depth2d<
     float4 color = float4(texel.xyz * lit, texel.w * _input.color.w);
     float2 param_5 = _input.uv;
     float param_6 = _input.eyeDepth;
-    float4 _952 = color;
-    float3 _954 = _952.xyz * TerrainDetailFactor(param_5, param_6, tex, s, _747);
-    color.x = _954.x;
-    color.y = _954.y;
-    color.z = _954.z;
-    if (_747.alphaToCoverage != 0u)
+    float4 _953 = color;
+    float3 _955 = _953.xyz * TerrainDetailFactor(param_5, param_6, tex, s, _748);
+    color.x = _955.x;
+    color.y = _955.y;
+    color.z = _955.z;
+    if (_748.alphaToCoverage != 0u)
     {
-        float edge = fast::clamp(((color.w - _747.alphaThreshold) / fast::max(fwidth(color.w), 9.9999997473787516355514526367188e-05)) + 0.5, 0.0, 1.0);
+        float edge = fast::clamp(((color.w - _748.alphaThreshold) / fast::max(fwidth(color.w), 9.9999997473787516355514526367188e-05)) + 0.5, 0.0, 1.0);
         color.w *= edge;
         if (color.w <= 0.0)
         {
@@ -342,24 +344,24 @@ float4 _main(thread const FSInput& _input, constant SceneLighting& _86, depth2d<
     }
     else
     {
-        if ((_747.alphaDiscardEnabled != 0u) && (color.w <= _747.alphaThreshold))
+        if ((_748.alphaDiscardEnabled != 0u) && (color.w <= _748.alphaThreshold))
         {
             discard_fragment();
         }
     }
-    if ((_747.fogEnabled != 0u) && (_86.sceneFogColor.w > 0.0))
+    if ((_748.fogEnabled != 0u) && (_86.sceneFogColor.w > 0.0))
     {
-        float4 _1015 = color;
+        float4 _1016 = color;
         float param_7 = _input.eyeDepth;
-        float3 _1025 = mix(_1015.xyz, _86.sceneFogColor.xyz, float3(EnhancedFogAmount(param_7, _86)));
-        color.x = _1025.x;
-        color.y = _1025.y;
-        color.z = _1025.z;
+        float3 _1026 = mix(_1016.xyz, _86.sceneFogColor.xyz, float3(EnhancedFogAmount(param_7, _86)));
+        color.x = _1026.x;
+        color.y = _1026.y;
+        color.z = _1026.z;
     }
     return color;
 }
 
-fragment main0_out main0(main0_in in [[stage_in]], constant SceneLighting& _86 [[buffer(0)]], constant FogUniforms& _747 [[buffer(1)]], depth2d<float> sunShadowMap [[texture(0)]], texture2d<float> tex [[texture(1)]], sampler sunShadowSampler [[sampler(0)]], sampler s [[sampler(1)]], float4 gl_FragCoord [[position]])
+fragment main0_out main0(main0_in in [[stage_in]], constant SceneLighting& _86 [[buffer(0)]], constant FogUniforms& _748 [[buffer(1)]], depth2d<float> sunShadowMap [[texture(0)]], texture2d<float> tex [[texture(1)]], sampler sunShadowSampler [[sampler(0)]], sampler s [[sampler(1)]], float4 gl_FragCoord [[position]])
 {
     main0_out out = {};
     FSInput _input;
@@ -374,8 +376,8 @@ fragment main0_out main0(main0_in in [[stage_in]], constant SceneLighting& _86 [
     _input.worldPositionAndDynamicLights = in.input_worldPositionAndDynamicLights;
     _input.worldNormal = in.input_worldNormal;
     FSInput param = _input;
-    float4 _1074 = _main(param, _86, sunShadowMap, sunShadowSampler, tex, s, _747);
-    out._entryPointOutput = _1074;
+    float4 _1075 = _main(param, _86, sunShadowMap, sunShadowSampler, tex, s, _748);
+    out._entryPointOutput = _1075;
     return out;
 }
 

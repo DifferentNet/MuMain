@@ -41,6 +41,7 @@ bool SdlGpuReplayState::SelectPipeline(SDL_GPUGraphicsPipeline* pipeline)
     // SDL's WebGPU backend forgets every texture binding when a pipeline is bound: the shadowed
     // receivers would sample no shadow map (a black frame). Rebinding costs nothing elsewhere.
     m_sunShadowMapValid = false;
+    m_softDepthValid = false;
     // The same holds for the normal maps at slots 1 and 2.
     m_normalMapTexture.fill(nullptr);
     m_normalMapSampler.fill(nullptr);
@@ -168,6 +169,7 @@ void SdlGpuReplayState::Invalidate()
     m_viewportValid = false;
     m_scissorValid = false;
     m_sunShadowMapValid = false;
+    m_softDepthValid = false;
     m_normalMapTexture.fill(nullptr);
     m_normalMapSampler.fill(nullptr);
 }
@@ -178,6 +180,7 @@ bool SdlGpuReplayState::SelectSunShadowMap()
         return false;
 
     m_sunShadowMapValid = true;
+    m_softDepthValid = false;
     m_normalMapTexture[0] = nullptr;
     m_normalMapSampler[0] = nullptr;
     return true;
@@ -194,7 +197,22 @@ bool SdlGpuReplayState::SelectNormalMap(Uint32 slot, SDL_GPUTexture* texture, SD
     m_normalMapTexture[index] = texture;
     m_normalMapSampler[index] = sampler;
     if (slot == 1u)
+    {
         m_sunShadowMapValid = false;
+        m_softDepthValid = false;
+    }
+    return true;
+}
+
+bool SdlGpuReplayState::SelectSoftDepth()
+{
+    if (m_softDepthValid)
+        return false;
+
+    m_softDepthValid = true;
+    m_sunShadowMapValid = false;
+    m_normalMapTexture[0] = nullptr;
+    m_normalMapSampler[0] = nullptr;
     return true;
 }
 }

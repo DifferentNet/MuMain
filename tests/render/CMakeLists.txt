@@ -277,6 +277,28 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Render/Lighting/DynamicLightList.cpp
 )
 
+# Remaster skill effects (Render/Effects/SkillFx.h): the effect level's pool budget and which looks
+# each level allows.
+mu_add_test(
+    NAME skill_fx_tests
+    SOURCES
+        test_skill_fx.cpp
+)
+
+# Soft particles: the softness, the fade against the world depth and which draws get a soft twin.
+mu_add_test(
+    NAME soft_particles_tests
+    SOURCES
+        test_soft_particles.cpp
+)
+
+# Flipbook blending: frame, next frame and share; the last frame holds.
+mu_add_test(
+    NAME flipbook_blend_tests
+    SOURCES
+        test_flipbook_blend.cpp
+)
+
 # Smoother cut-out foliage: strength, locks, the cut-out samplers' mip bias and the cut-out test.
 mu_add_test(
     NAME foliage_smoothing_tests

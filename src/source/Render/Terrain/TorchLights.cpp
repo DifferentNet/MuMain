@@ -25,10 +25,22 @@ struct Candidate
     float distance;
 };
 
+// The most lights one selection keeps.
+constexpr std::size_t kMaxSlots = (std::max)(kMaxMapLights, kMaxEffectLights);
+
+[[nodiscard]] bool Brightens(const Lighting::DynamicLight& light)
+{
+    return light.range > 0 && light.color[0] >= 0.0f && light.color[1] >= 0.0f && light.color[2] >= 0.0f;
+}
+
 [[nodiscard]] bool Eligible(const Lighting::DynamicLight& light)
 {
-    return light.fromMap && light.range > 0 && light.color[0] >= 0.0f && light.color[1] >= 0.0f &&
-           light.color[2] >= 0.0f;
+    return light.fromMap && Brightens(light);
+}
+
+[[nodiscard]] bool EligibleEffect(const Lighting::DynamicLight& light)
+{
+    return light.fromEffect && Brightens(light);
 }
 
 [[nodiscard]] bool Darkens(const Lighting::DynamicLight& light)
@@ -53,26 +65,12 @@ struct Candidate
            WrappedCellGap(a.position[1], b.position[1]) <= reach;
 }
 
-[[nodiscard]] bool UnderDarkening(std::span<const Lighting::DynamicLight> lights, const Lighting::DynamicLight& light)
-{
-    for (const Lighting::DynamicLight& other : lights)
-    {
-        if (Darkens(other) && FootprintsOverlap(light, other))
-        {
-            return true;
-        }
-    }
-    return false;
-}
+using Nearest = std::array<Candidate, kMaxSlots + 1>;
 
-// Keeps the kMaxLights + 1 nearest candidates, nearest first.
-void Insert(std::array<Candidate, kMaxLights + 1>& nearest, std::size_t& count, const Candidate& candidate)
+// Keeps the `capacity` nearest candidates, nearest first (the caller skips one not nearer than the last).
+void Insert(Nearest& nearest, std::size_t capacity, std::size_t& count, const Candidate& candidate)
 {
-    if (count == nearest.size() && candidate.distance >= nearest[count - 1].distance)
-    {
-        return;
-    }
-    std::size_t at = count < nearest.size() ? count++ : count - 1;
+    std::size_t at = count < capacity ? count++ : count - 1;
     while (at > 0 && nearest[at - 1].distance > candidate.distance)
     {
         nearest[at] = nearest[at - 1];
@@ -100,7 +98,97 @@ void ScaledBytes(const float light[3], const float* factor, float bytes[3])
     }
     PackedBytes(light[0], light[1], light[2], bytes);
 }
+
+// The `slots` eligible lights nearest to `reference`, nearest first, weighted to fade out over
+// kFadeBand before the next one's distance (at most kMaxDistance); lights of weight 0 are left out.
+template <typename EligibleLight>
+std::size_t SelectNearest(std::span<const Lighting::DynamicLight> lights, const float reference[3], std::size_t slots,
+                          EligibleLight eligible, float gain, const DarkeningSet& darkening, std::span<Selected> out)
+{
+    slots = (std::min)({slots, kMaxSlots, out.size()});
+    if (slots == 0)
+    {
+        return 0;
+    }
+    const std::size_t capacity = slots + 1;
+    Nearest nearest{};
+    std::size_t count = 0;
+    for (const Lighting::DynamicLight& light : lights)
+    {
+        if (!eligible(light))
+        {
+            continue;
+        }
+        const float dx = light.position[0] - reference[0];
+        const float dy = light.position[1] - reference[1];
+        const float distance = std::sqrt(dx * dx + dy * dy);
+        // A light that would not be kept cannot change the set: only the others need the darkening test.
+        if (distance >= kMaxDistance || (count == capacity && distance >= nearest[count - 1].distance) ||
+            darkening.Covers(light))
+        {
+            continue;
+        }
+        Insert(nearest, capacity, count, {&light, distance});
+    }
+
+    // The next light's distance ends the set; the nearer ones fade out before it.
+    const float cutoff = count > slots ? (std::min)(kMaxDistance, nearest[slots].distance) : kMaxDistance;
+    const std::size_t kept = (std::min)(count, slots);
+    std::size_t used = 0;
+    for (std::size_t i = 0; i < kept; ++i)
+    {
+        const float weight = std::clamp((cutoff - nearest[i].distance) / kFadeBand, 0.0f, 1.0f);
+        if (weight <= 0.0f)
+        {
+            continue;
+        }
+        const Lighting::DynamicLight& light = *nearest[i].light;
+        Selected& entry = out[used++];
+        entry.x = light.position[0];
+        entry.y = light.position[1];
+        entry.radius = light.radius * kRadiusScale;
+        entry.weight = weight;
+        std::copy_n(light.color, kColorComponents, entry.color);
+        entry.range = light.range;
+        entry.gain = gain;
+    }
+    return used;
+}
 } // namespace
+
+DarkeningSet::DarkeningSet(std::span<const Lighting::DynamicLight> lights) : m_lights(lights)
+{
+    for (const Lighting::DynamicLight& light : lights)
+    {
+        if (!Darkens(light))
+        {
+            continue;
+        }
+        if (m_count == m_darkening.size())
+        {
+            m_overflow = true;
+            return;
+        }
+        m_darkening[m_count++] = &light;
+    }
+}
+
+bool DarkeningSet::Covers(const Lighting::DynamicLight& light) const
+{
+    if (m_overflow)
+    {
+        return std::any_of(m_lights.begin(), m_lights.end(), [&light](const Lighting::DynamicLight& other)
+                           { return Darkens(other) && FootprintsOverlap(light, other); });
+    }
+    for (std::size_t i = 0; i < m_count; ++i)
+    {
+        if (FootprintsOverlap(light, *m_darkening[i]))
+        {
+            return true;
+        }
+    }
+    return false;
+}
 
 float Resolve(int torchLights, int strengthPercent, bool available, bool lowPreset)
 {
@@ -138,51 +226,30 @@ bool Locks(Block block)
     return block != Block::None;
 }
 
-std::size_t Select(std::span<const Lighting::DynamicLight> lights, const float reference[3], Selection& selected)
+std::size_t Select(std::span<const Lighting::DynamicLight> lights, const float reference[3], Selection& selected,
+                   float gain, const DarkeningSet* darkening)
 {
-    std::array<Candidate, kMaxLights + 1> nearest{};
-    std::size_t count = 0;
-    const bool anyDarkening = std::any_of(lights.begin(), lights.end(), Darkens);
-    for (const Lighting::DynamicLight& light : lights)
+    if (!darkening)
     {
-        if (!Eligible(light))
-        {
-            continue;
-        }
-        const float dx = light.position[0] - reference[0];
-        const float dy = light.position[1] - reference[1];
-        const float distance = std::sqrt(dx * dx + dy * dy);
-        if (distance >= kMaxDistance || (anyDarkening && UnderDarkening(lights, light)))
-        {
-            continue;
-        }
-        Insert(nearest, count, {&light, distance});
+        const DarkeningSet own(lights);
+        return SelectNearest(lights, reference, kMaxMapLights, Eligible, gain, own, selected);
     }
-
-    // The 17th light's distance ends the set; the 16 nearer ones fade out before it.
-    const float cutoff = count > kMaxLights ? (std::min)(kMaxDistance, nearest[kMaxLights].distance) : kMaxDistance;
-    const std::size_t kept = (std::min)(count, kMaxLights);
-    std::size_t used = 0;
-    for (std::size_t i = 0; i < kept; ++i)
-    {
-        const float weight = std::clamp((cutoff - nearest[i].distance) / kFadeBand, 0.0f, 1.0f);
-        if (weight <= 0.0f)
-        {
-            continue;
-        }
-        const Lighting::DynamicLight& light = *nearest[i].light;
-        Selected& entry = selected[used++];
-        entry.x = light.position[0];
-        entry.y = light.position[1];
-        entry.radius = light.radius * kRadiusScale;
-        entry.weight = weight;
-        std::copy_n(light.color, kColorComponents, entry.color);
-        entry.range = light.range;
-    }
-    return used;
+    return SelectNearest(lights, reference, kMaxMapLights, Eligible, gain, *darkening, selected);
 }
 
-mu::TerrainLightsUniform Pack(std::span<const Selected> selected, float gain)
+std::size_t SelectEffects(std::span<const Lighting::DynamicLight> lights, const float reference[3],
+                          std::size_t budget, std::span<Selected> out, const DarkeningSet* darkening)
+{
+    const std::size_t slots = (std::min)(budget, kMaxEffectLights);
+    if (!darkening)
+    {
+        const DarkeningSet own(lights);
+        return SelectNearest(lights, reference, slots, EligibleEffect, kEffectGain, own, out);
+    }
+    return SelectNearest(lights, reference, slots, EligibleEffect, kEffectGain, *darkening, out);
+}
+
+mu::TerrainLightsUniform Pack(std::span<const Selected> selected)
 {
     mu::TerrainLightsUniform uniform{};
     const std::size_t count = (std::min)(selected.size(), kMaxLights);
@@ -195,7 +262,7 @@ mu::TerrainLightsUniform Pack(std::span<const Selected> selected, float gain)
         uniform.positionAndRadius[i][3] = light.radius;
         for (int channel = 0; channel < kColorComponents; ++channel)
         {
-            uniform.color[i][channel] = light.color[channel] * light.weight * gain;
+            uniform.color[i][channel] = light.color[channel] * light.weight * light.gain;
         }
     }
     return uniform;
