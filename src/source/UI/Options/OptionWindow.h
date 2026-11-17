@@ -216,6 +216,8 @@ namespace mu::ui::window
         // part of the graphics presets.
         void RmlToggleWind();
         void RmlWindStrengthChanged(int level);
+        // [Render] SmoothAnimation: saved and applied at once, not part of the graphics presets.
+        void RmlToggleSmoothAnimation();
         // [Render] Haze and HazeStrength (gauge 5, levels 0..10): saved and applied at once, not
         // part of the graphics presets.
         void RmlToggleHaze();
@@ -474,6 +476,11 @@ namespace mu::ui::window
             int windStrength = 10;
             int windStrengthPercent = 100;
             Rml::String windStrengthLabel;
+            // [Render] SmoothAnimation (Remaster PC client only, Render/Models/AnimationSmoothing.h).
+            bool smoothAnimation = true;
+            bool smoothAnimationAvailable = false;
+            Rml::String smoothAnimationLabel;
+            Rml::String smoothAnimationTooltip;
             // [Render] Haze and HazeStrength (Remaster PC client only): locked as the SSAO row is
             // (Render::PostProcessing::Haze::Block), its hint says why; the strength slider (levels
             // 0..10 = 0..100 %) shows while the haze is on and not locked.
@@ -635,6 +642,7 @@ namespace mu::ui::window
         void SyncTuningModel(OptionRmlModel& model);
         void SyncSsaoRows(OptionRmlModel& model);
         void SyncWindRows(OptionRmlModel& model);
+        void SyncSmoothAnimationRow(OptionRmlModel& model);
         void SyncHazeRows(OptionRmlModel& model);
         void SyncParticlesRows(OptionRmlModel& model);
         void SyncTorchLightsRows(OptionRmlModel& model);

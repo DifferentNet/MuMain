@@ -16199,6 +16199,12 @@
   <data name="WindLockedLowPreset" xml:space="preserve">
     <value>Выключено на пресете графики «Низкий».</value>
   </data>
+  <data name="SmoothAnimationRow" xml:space="preserve">
+    <value>Плавная анимация</value>
+  </data>
+  <data name="SmoothAnimationTooltip" xml:space="preserve">
+    <value>Персонажи, монстры и ездовые животные плавно двигаются между позами и плавно переходят от одного действия к другому.</value>
+  </data>
   <data name="HazeRow" xml:space="preserve">
     <value>Дымка вдали</value>
   </data>

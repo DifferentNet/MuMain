@@ -18,6 +18,7 @@
 #include <string_view>
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/CharacterBonePose.h"
+#include "Engine/Object/CharacterAnimationFade.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
 #include "Render/Textures/ZzzTexture.h"
 #include "Engine/AI/ZzzAI.h"
@@ -318,7 +319,7 @@ void AnimateForRender(OBJECT* o, BMD* b, bool Translate)
     if (!o->EnableBoneMatrix)
     {
         b->Animation(BoneTransform, o->AnimationFrame, o->PriorAnimationFrame, o->PriorAction, o->Angle, o->HeadAngle,
-                     false, !Translate);
+                     false, !Translate, nullptr, -1, MAX_BONES, Engine::Object::Fade::For(*o, b->CurrentAction));
         return;
     }
     if (KeepPrepassBones(o, b, Translate)) return;
@@ -328,7 +329,7 @@ void AnimateForRender(OBJECT* o, BMD* b, bool Translate)
     const bool reusable = checkBones && PrepassBonesStand(o, b, Translate);
 #endif
     b->Animation(o->BoneTransform, o->AnimationFrame, o->PriorAnimationFrame, o->PriorAction, o->Angle, o->HeadAngle,
-                 false, !Translate);
+                 false, !Translate, nullptr, -1, MAX_BONES, Engine::Object::Fade::For(*o, b->CurrentAction));
     Engine::Object::BonePose::Forget(*o);
 #ifdef MU_ENABLE_CONTROL_SOCKET
     if (checkBones) EndPrepassBoneCheck(o, b->NumBones, reusable);

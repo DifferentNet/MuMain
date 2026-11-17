@@ -52,6 +52,7 @@
 #include "Render/Lighting/SunShadowSoftEdges.h"
 #include "Render/PostProcessing/SsaoSetting.h"
 #include "Render/Models/WindSway.h"
+#include "Render/Models/AnimationSmoothing.h"
 #include "Render/Look/GraphicsPresetSetting.h"
 #include "Render/Look/LookPresetSetting.h"
 #include "Render/Look/LookProfileSetting.h"
@@ -3000,6 +3001,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     Render::PostProcessing::Ssao::ApplyFromConfig();
     Render::PostProcessing::Haze::ApplyFromConfig();
     Render::Models::Wind::ApplyFromConfig();
+    Render::AnimationSmoothing::ApplyFromConfig();
     Render::Effects::Particles::ApplyFromConfig();
     Render::Terrain::TorchLights::ApplyFromConfig();
     Render::Textures::FoliageSmoothing::ApplyFromConfig();
@@ -3166,6 +3168,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     Render::PostProcessing::Ssao::ApplyFromConfig();
     Render::PostProcessing::Haze::ApplyFromConfig();
     Render::Models::Wind::ApplyFromConfig();
+    Render::AnimationSmoothing::ApplyFromConfig();
     Render::Effects::Particles::ApplyFromConfig();
     Render::Terrain::TorchLights::ApplyFromConfig();
     Render::Textures::FoliageSmoothing::ApplyFromConfig();

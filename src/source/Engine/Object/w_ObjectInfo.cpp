@@ -180,6 +180,7 @@ void OBJECT::Initialize()
     m_pCloth = NULL;
     BoneTransform = NULL;
     PrepassPose = {};
+    Fade = {};
 
     Owner = NULL;
     Prior = NULL;

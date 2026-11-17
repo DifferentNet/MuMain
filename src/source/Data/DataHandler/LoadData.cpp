@@ -45,6 +45,26 @@ std::wstring GetModelFileName(const wchar_t* FileName, int i)
     }
     return name + L".bmd";
 }
+
+// The models the smoothed animation curves (Render/Models/AnimationSmoothing.h): characters, monsters,
+// NPCs and the mounts. Map objects, items, wings, pets and effects keep straight lines between keys.
+bool SmoothsAnimation(int type)
+{
+    switch (type)
+    {
+    case MODEL_PLAYER:
+    case MODEL_UNICON:
+    case MODEL_PEGASUS:
+    case MODEL_DARK_HORSE:
+    case MODEL_FENRIR_BLACK:
+    case MODEL_FENRIR_RED:
+    case MODEL_FENRIR_BLUE:
+    case MODEL_FENRIR_GOLD:
+        return true;
+    default:
+        return type >= MODEL_MONSTER01 && type < MODEL_NPC_END;
+    }
+}
 } // namespace
 
 bool CLoadData::AccessModel(int Type, const wchar_t* Dir, const wchar_t* FileName, int i, bool optional)
@@ -56,6 +76,7 @@ bool CLoadData::AccessModel(int Type, const wchar_t* Dir, const wchar_t* FileNam
     Models[Type].m_iBMDSeqID = Type;
 
     Success = Models[Type].Open2(Dir, Name.c_str());
+    Models[Type].SmoothKeys = Success && SmoothsAnimation(Type);
     // Only a file that was opened is the model of the slot now.
     RememberModelFile(Type, Success ? std::wstring(Dir) + Name : std::wstring());
 

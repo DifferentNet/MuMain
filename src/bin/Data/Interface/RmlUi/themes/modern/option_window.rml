@@ -426,6 +426,12 @@
 							<span class="opt-value">{{wind_strength_percent}}%</span>
 						</div>
 					</div>
+					<!-- Smooth animation: as the legacy theme's row (option_window.rml). -->
+					<div class="opt-row opt-toggle-row opt-row-tipped" data-class-hidden="!smooth_animation_available" data-event-click="option_toggle_smooth_animation">
+						<span class="opt-label">{{smooth_animation_label}}</span>
+						<div class="opt-control"><div class="opt-toggle" data-class-checked="smooth_animation"><div class="opt-toggle-knob"></div></div></div>
+						<span class="opt-row-tip">{{smooth_animation_tooltip}}</span>
+					</div>
 					<!-- Haze: as the legacy theme's rows (option_window.rml). -->
 					<div class="opt-row opt-toggle-row opt-row-tipped" data-class-hidden="!haze_available" data-class-locked="haze_locked" data-event-click="option_toggle_haze">
 						<span class="opt-label">{{haze_label}}</span>

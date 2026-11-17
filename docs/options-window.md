@@ -120,6 +120,9 @@ window writes to these sections:
     Remaster PC client only (the browser and Classic clients hide them). Both apply at once. The row
     is greyed out, its hint saying why, without HD textures and on the Low graphics preset. See
     [`enhanced-look.md`](enhanced-look.md).
+  - `SmoothAnimation` (default `1`): the **Smooth animation** row, Remaster PC client only (the
+    browser and Classic clients hide it). It applies at once. `AnimationFadeMs` (default `160`,
+    `0` to `300`) has no row. See [`enhanced-look.md`](enhanced-look.md).
   - `Haze` and `HazeStrength` (defaults `1` and `70`): the **Distance haze** row and the haze
     strength slider under it (0 to 100 % in steps of 10, shown while the haze is on), Remaster PC
     client only (the browser and Classic clients hide them). Both apply at once. The row is greyed

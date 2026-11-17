@@ -11774,6 +11774,12 @@
   <data name="WindLockedLowPreset" xml:space="preserve">
     <value>Off on the Low graphics preset.</value>
   </data>
+  <data name="SmoothAnimationRow" xml:space="preserve">
+    <value>なめらかなアニメーション</value>
+  </data>
+  <data name="SmoothAnimationTooltip" xml:space="preserve">
+    <value>キャラクター、モンスター、乗り物がポーズの間をなめらかに動き、ひとつの動作から次の動作へ自然につながります。</value>
+  </data>
   <data name="HazeRow" xml:space="preserve">
     <value>Distance haze</value>
   </data>

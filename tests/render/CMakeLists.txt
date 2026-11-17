@@ -206,6 +206,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Render/Models/WindSway.cpp
 )
 
+# Smooth animation: the limited spline between keys, the keys around a segment, cycles, the fade.
+mu_add_test(
+    NAME animation_smoothing_tests
+    SOURCES
+        test_animation_smoothing.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Render/Models/AnimationSmoothing.cpp
+)
+
 # HD textures: the Data\HD path of a texture.
 mu_add_test(
     NAME hd_textures_tests

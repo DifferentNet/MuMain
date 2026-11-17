@@ -28,6 +28,7 @@
 #include "Render/PostProcessing/PostProcessingSetting.h"
 #include "Render/PostProcessing/SsaoSetting.h"
 #include "Render/Models/WindSway.h"
+#include "Render/Models/AnimationSmoothing.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "UI/Mobile/ButtonSize.h"
 #include "UI/Mobile/InterfaceMode.h"
@@ -792,6 +793,12 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("wind_strength", &model.windStrength);
     c.Bind("wind_strength_percent", &model.windStrengthPercent);
     c.Bind("wind_strength_label", &model.windStrengthLabel);
+    // Smooth animation: the Remaster PC client's.
+    model.smoothAnimationAvailable = Render::AnimationSmoothing::Available();
+    c.Bind("smooth_animation_available", &model.smoothAnimationAvailable);
+    c.Bind("smooth_animation", &model.smoothAnimation);
+    c.Bind("smooth_animation_label", &model.smoothAnimationLabel);
+    c.Bind("smooth_animation_tooltip", &model.smoothAnimationTooltip);
     // Haze: the Remaster PC client's, as SSAO's.
     model.hazeAvailable = Render::PostProcessing::Haze::Available() && Render::Look::RemasterGraphicsOptions();
     c.Bind("haze_available", &model.hazeAvailable);
@@ -984,6 +991,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleSsao(); });
     c.BindEventCallback("option_toggle_wind",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleWind(); });
+    c.BindEventCallback("option_toggle_smooth_animation",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleSmoothAnimation(); });
     c.BindEventCallback("option_toggle_haze",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleHaze(); });
     c.BindEventCallback("option_toggle_particles",
@@ -2095,6 +2104,36 @@ void mu::ui::window::COptionWindow::SyncWindRows(OptionRmlModel& model)
     syncText(model.windLabel, "wind_label", I18N::Game::WindRow);
     syncText(model.windTooltip, "wind_tooltip", WindHint(block));
     syncText(model.windStrengthLabel, "wind_strength_label", I18N::Game::WindStrengthRow);
+}
+
+void mu::ui::window::COptionWindow::RmlToggleSmoothAnimation()
+{
+    if (!m_RmlView.GetModel().smoothAnimationAvailable)
+        return;
+    Render::AnimationSmoothing::Choose(GameConfig::GetInstance().GetSmoothAnimation() == 0);
+}
+
+void mu::ui::window::COptionWindow::SyncSmoothAnimationRow(OptionRmlModel& model)
+{
+    if (!model.smoothAnimationAvailable)
+        return;
+    const bool on = GameConfig::GetInstance().GetSmoothAnimation() != 0;
+    if (model.smoothAnimation != on)
+    {
+        model.smoothAnimation = on;
+        m_RmlView.MarkDirty("smooth_animation");
+    }
+    const auto syncText = [this](Rml::String& field, const char* name, const wchar_t* text)
+    {
+        const Rml::String narrow = StringUtils::WideToNarrow(text);
+        if (field != narrow)
+        {
+            field = narrow;
+            m_RmlView.MarkDirty(name);
+        }
+    };
+    syncText(model.smoothAnimationLabel, "smooth_animation_label", I18N::Game::SmoothAnimationRow);
+    syncText(model.smoothAnimationTooltip, "smooth_animation_tooltip", I18N::Game::SmoothAnimationTooltip);
 }
 
 // A locked row ignores clicks (Haze::Block): its saved choice is kept for when the haze can show.
@@ -3265,6 +3304,7 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     }
     SyncSsaoRows(model);
     SyncWindRows(model);
+    SyncSmoothAnimationRow(model);
     SyncHazeRows(model);
     SyncParticlesRows(model);
     SyncTorchLightsRows(model);
