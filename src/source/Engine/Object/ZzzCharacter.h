@@ -30,12 +30,19 @@ void RenderCharactersClient();
 void BuildCharacterScenePickOBB(const OBJECT* o, OBB_t& outOBB);
 void MoveCharacterClient(CHARACTER* cc);
 void MoveCharactersClient();
+// Builds the bones of every live, visible character (model space), on the AnimationTaskPool workers
+// when g_AnimationTaskPoolWorkers is not 0 and the crowd is big enough, else on the calling thread.
+// WaitCharactersAnimation must follow before anything reads those bones or changes a character's
+// animation inputs (SetAction, frames, angles) or loads a model; until then the main thread may only
+// do work that touches neither (MoveBlurs).
 void UpdateCharactersAnimationParallel(std::span<CHARACTER> characters);
 void WaitCharactersAnimation();
 void AnimateCharacterBones(OBJECT* o);
 
 extern size_t g_LastActiveCharacterCount;
 extern bool g_LastAnimationWasParallel;
+// Worker threads for character bones, set once at start-up ([UI] EnableAnimationTaskPool); 0 = main thread only.
+extern std::size_t g_AnimationTaskPoolWorkers;
 
 #ifdef MU_ENABLE_CONTROL_SOCKET
 // Render's recompute against the pre-pass bones of each drawn client character, while enabled.
@@ -46,12 +53,17 @@ struct PrepassBoneCheck
     int players = 0;
     int mismatched = 0;
     float maxDelta = 0.f;
+    // Of those, the ones render would have kept the pre-pass bones for ([UI] ReuseCharacterBones),
+    // and how many of them differ in any bit (must stay 0).
+    int reusable = 0;
+    int reusableMismatched = 0;
 };
 extern PrepassBoneCheck g_PrepassBoneCheck;
-void RecordPrepassBones(const float (*prepass)[3][4], const float (*rendered)[3][4], int numBones, bool player);
+void RecordPrepassBones(const float (*prepass)[3][4], const float (*rendered)[3][4], int numBones, bool player,
+                        bool reusable = false);
 // Around render's Animation() call: Begin keeps the pre-pass bones, End compares render's with them.
 bool BeginPrepassBoneCheck(const OBJECT* o, int numBones);
-void EndPrepassBoneCheck(const OBJECT* o, int numBones);
+void EndPrepassBoneCheck(const OBJECT* o, int numBones, bool reusable);
 #endif
 
 void MoveEye(OBJECT* o, BMD* b, int Right, int Left, int Right2 = -1, int Left2 = -1, int Right3 = -1, int Left3 = -1);

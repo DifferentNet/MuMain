@@ -111,7 +111,8 @@ Missing keys take the defaults below. The options window writes most of them; se
 | **`[UI]`**                  | `Font`                                                                                                | empty                | UI font family; empty uses the platform's default.                                                                                                               |
 | **`[UI]`**                  | `RmlTheme`                                                                                            | `legacy`             | UI theme: `legacy` (the original look) or `modern`. `$theme <name>` switches it for the session.                                                                 |
 | **`[UI]`**                  | `UIScalePercent`                                                                                      | `100`                | UI scale, clamped to `75`-`150`.                                                                                                                                 |
-| **`[UI]`**                  | `EnableAnimationTaskPool`                                                                             | `0`                  | `1` updates character animation through `AnimationTaskPool` when at least 20 characters are visible.                                                             |
+| **`[UI]`**                  | `EnableAnimationTaskPool`                                                                             | `auto`               | Character animation on worker threads once at least 20 characters are visible. `auto` (also when the key is missing): on a PC with 4 or more hardware threads, using half of them less two (1-4 workers) while the main thread helps. `0`/`off`: main thread only. `1`/`on` (any non-zero number, as the key was read before): workers on any PC. The browser build (/play) always animates on the main thread. Edited by hand only. |
+| **`[UI]`**                  | `ReuseCharacterBones`                                                                                 | `1`                  | Developer switch: `1` lets render keep the character bones built earlier in the frame when nothing they depend on changed; `0` builds them again in render, as before. Edited by hand only. |
 | **`[Camera]`**              | `Zoom`                                                                                                | `1735`               | Persisted Orbital-camera distance.                                                                                                                               |
 | **`[Render]`**              | `VSync`                                                                                               | `1`                  | `0` disables VSync across restarts and resolution changes. `$vsync on` / `$vsync off` update it.                                                                 |
 | **`[Render]`**              | `FpsCap`                                                                                              | `-1`                 | Frame cap while VSync is off; `-1` is uncapped. `$fps <value>` updates it.                                                                                       |
@@ -131,8 +132,10 @@ A new install starts from `src/bin/config.ini.template`. Retired keys, such as
 ### Command-line flags and options
 
 - **`connect /u<IP> /p<PORT>`**: connects to that server instead of `[CONNECTION SETTINGS]`.
-- **`--enable-taskpool`**: enables `AnimationTaskPool` regardless of `config.ini`; the
-  20-character threshold still applies.
+- **`--enable-taskpool`**: animates characters on worker threads on any PC, whatever
+  `[UI] EnableAnimationTaskPool` says; the 20-character threshold still applies.
+- **`--disable-taskpool`**: animates characters on the main thread only; wins over
+  `--enable-taskpool` and the config.
 - **`--editor`**: starts with the ImGui editor open in editor-enabled builds (the `-mueditor`
   presets); **F12** toggles it.
 

@@ -1,9 +1,21 @@
-#include "stdafx.h"
 #include "AnimationTaskPool.h"
-#include "Render/Models/ZzzBMD.h"
-#include "Engine/Object/ZzzObject.h"
-#include "Engine/Object/ZzzCharacter.h"
+
 #include <algorithm>
+#include <cassert>
+
+namespace
+{
+// Jobs a thread claims at once: few enough that the threads finish together, enough that the
+// shared counter is not touched once per character.
+constexpr std::size_t JobsPerClaim = 8;
+constexpr int GenerationShift = 32;
+constexpr std::uint64_t IndexMask = 0xFFFFFFFFull;
+
+std::uint64_t ClaimStart(std::uint32_t generation)
+{
+    return static_cast<std::uint64_t>(generation) << GenerationShift;
+}
+} // namespace
 
 AnimationTaskPool& AnimationTaskPool::Instance()
 {
@@ -11,33 +23,23 @@ AnimationTaskPool& AnimationTaskPool::Instance()
     return instance;
 }
 
-void AnimationTaskPool::Initialize(size_t threadCount)
+void AnimationTaskPool::Initialize(std::size_t workerCount)
 {
     if (m_running) return;
 
-    if (threadCount == 0)
-    {
-        unsigned int hardwareCores = std::thread::hardware_concurrency();
-        m_workerCount = std::max(2u, (hardwareCores / 2 > 1) ? (hardwareCores / 2 - 1) : 2u);
-    }
-    else
-    {
-        m_workerCount = std::max(2u, static_cast<unsigned int>(threadCount));
-    }
-
     m_running = true;
-    m_remainingTasks = 0;
-
-    m_queues.reserve(m_workerCount);
-    for (size_t i = 0; i < m_workerCount; ++i)
+    // Read before any thread starts: a batch dispatched right after Initialize (the lazy start) is newer
+    // than this, so the new workers take part in it instead of treating it as already seen.
+    std::uint32_t startGeneration = 0;
     {
-        m_queues.push_back(std::make_unique<WorkerQueue>());
+        std::lock_guard<std::mutex> lock(m_mutex);
+        startGeneration = m_batch.generation;
     }
-
-    m_workers.reserve(m_workerCount);
-    for (size_t i = 0; i < m_workerCount; ++i)
+    const std::size_t count = std::max<std::size_t>(1, workerCount);
+    m_workers.reserve(count);
+    for (std::size_t i = 0; i < count; ++i)
     {
-        m_workers.emplace_back(&AnimationTaskPool::WorkerLoop, this, i);
+        m_workers.emplace_back(&AnimationTaskPool::WorkerLoop, this, startGeneration);
     }
 }
 
@@ -45,7 +47,11 @@ void AnimationTaskPool::Shutdown()
 {
     if (!m_running) return;
 
-    m_running = false;
+    Wait();
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_stopping = true;
+    }
     m_workerCV.notify_all();
 
     for (std::thread& worker : m_workers)
@@ -57,125 +63,100 @@ void AnimationTaskPool::Shutdown()
     }
 
     m_workers.clear();
-    m_queues.clear();
-    m_workerCount = 0;
+    m_stopping = false;
+    m_running = false;
 }
 
-bool AnimationTaskPool::PopTaskLocal(size_t workerIndex, Task& task)
+bool AnimationTaskPool::Dispatch(Job job, void* context, std::size_t count)
 {
-    if (workerIndex >= m_queues.size()) return false;
+    // One batch at a time: the previous one must have been awaited.
+    assert(!InFlight());
+    if (!m_running) return false;
+    if (count == 0) return true;
 
-    WorkerQueue& q = *m_queues[workerIndex];
-    std::lock_guard<std::mutex> lock(q.mutex);
-    if (q.queue.empty()) return false;
-
-    task = std::move(q.queue.front());
-    q.queue.pop_front();
-    return true;
-}
-
-bool AnimationTaskPool::StealTask(size_t thiefIndex, Task& task)
-{
-    size_t count = m_queues.size();
-    if (count <= 1) return false;
-
-    for (size_t i = 1; i < count; ++i)
     {
-        size_t targetIndex = (thiefIndex + i) % count;
-        WorkerQueue& targetQ = *m_queues[targetIndex];
-
-        if (targetQ.mutex.try_lock())
-        {
-            if (!targetQ.queue.empty())
-            {
-                task = std::move(targetQ.queue.back());
-                targetQ.queue.pop_back();
-                targetQ.mutex.unlock();
-                return true;
-            }
-            targetQ.mutex.unlock();
-        }
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_batch.job = job;
+        m_batch.context = context;
+        m_batch.count = count;
+        ++m_batch.generation;
+        m_remaining.store(count, std::memory_order_release);
+        m_claim.store(ClaimStart(m_batch.generation), std::memory_order_release);
     }
-    return false;
-}
-
-void AnimationTaskPool::WorkerLoop(size_t workerIndex)
-{
-    while (m_running)
-    {
-        Task task;
-        if (PopTaskLocal(workerIndex, task) || StealTask(workerIndex, task))
-        {
-            task();
-            int remaining = m_remainingTasks.fetch_sub(1, std::memory_order_acq_rel) - 1;
-            if (remaining <= 0)
-            {
-                std::lock_guard<std::mutex> lock(m_cvMutex);
-                m_waiterCV.notify_all();
-            }
-        }
-        else
-        {
-            std::unique_lock<std::mutex> lock(m_cvMutex);
-            m_workerCV.wait(lock, [this]() {
-                return !m_running || m_remainingTasks.load(std::memory_order_relaxed) > 0;
-            });
-        }
-    }
-}
-
-void AnimationTaskPool::DispatchCharacters(std::span<CHARACTER* const> activeChars)
-{
-    if (!m_running || m_workerCount == 0 || activeChars.empty()) return;
-
-    // Chunk size of 5 characters per task for optimal CPU cache locality
-    constexpr size_t CHUNK_SIZE = 5;
-    size_t totalTasks = (activeChars.size() + CHUNK_SIZE - 1) / CHUNK_SIZE;
-
-    m_remainingTasks.store(static_cast<int>(totalTasks), std::memory_order_release);
-
-    for (size_t t = 0; t < totalTasks; ++t)
-    {
-        size_t startIdx = t * CHUNK_SIZE;
-        size_t endIdx = std::min(startIdx + CHUNK_SIZE, activeChars.size());
-
-        struct Chunk {
-            std::array<CHARACTER*, CHUNK_SIZE> chars;
-            size_t count;
-        } chunk{};
-        chunk.count = endIdx - startIdx;
-        for (size_t i = 0; i < chunk.count; ++i) {
-            chunk.chars[i] = activeChars[startIdx + i];
-        }
-
-        auto chunkTask = [chunk]() {
-            for (size_t i = 0; i < chunk.count; ++i)
-            {
-                CHARACTER* c = chunk.chars[i];
-                OBJECT* o = &c->Object;
-                if (!o->Live || !o->Visible) continue;
-
-                AnimateCharacterBones(o);
-            }
-        };
-
-        size_t targetWorker = t % m_workerCount;
-        WorkerQueue& q = *m_queues[targetWorker];
-        {
-            std::lock_guard<std::mutex> lock(q.mutex);
-            q.queue.push_back(std::move(chunkTask));
-        }
-    }
-
     m_workerCV.notify_all();
+    return true;
 }
 
 void AnimationTaskPool::Wait()
 {
-    if (m_remainingTasks.load(std::memory_order_acquire) <= 0) return;
+    if (!InFlight()) return;
 
-    std::unique_lock<std::mutex> lock(m_cvMutex);
-    m_waiterCV.wait(lock, [this]() {
-        return m_remainingTasks.load(std::memory_order_relaxed) <= 0;
-    });
+    Batch batch;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        batch = m_batch;
+    }
+    RunClaimedJobs(batch);
+
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_waiterCV.wait(lock, [this]() { return m_remaining.load(std::memory_order_acquire) == 0; });
+}
+
+void AnimationTaskPool::WorkerLoop(std::uint32_t startGeneration)
+{
+    std::uint32_t seenGeneration = startGeneration;
+    while (true)
+    {
+        Batch batch;
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            m_workerCV.wait(lock, [&]() { return m_stopping || m_batch.generation != seenGeneration; });
+            if (m_stopping) return;
+            batch = m_batch;
+            seenGeneration = batch.generation;
+        }
+        RunClaimedJobs(batch);
+    }
+}
+
+void AnimationTaskPool::RunClaimedJobs(const Batch& batch)
+{
+    std::size_t first = 0;
+    std::size_t last = 0;
+    while (ClaimJobs(batch, first, last))
+    {
+        for (std::size_t index = first; index < last; ++index)
+        {
+            batch.job(batch.context, index);
+        }
+        FinishJobs(last - first);
+    }
+}
+
+bool AnimationTaskPool::ClaimJobs(const Batch& batch, std::size_t& first, std::size_t& last)
+{
+    std::uint64_t claim = m_claim.load(std::memory_order_acquire);
+    while (true)
+    {
+        const auto generation = static_cast<std::uint32_t>(claim >> GenerationShift);
+        const auto index = static_cast<std::size_t>(claim & IndexMask);
+        if (generation != batch.generation || index >= batch.count) return false;
+
+        const std::size_t taken = std::min(JobsPerClaim, batch.count - index);
+        if (m_claim.compare_exchange_weak(claim, claim + taken, std::memory_order_acq_rel, std::memory_order_acquire))
+        {
+            first = index;
+            last = index + taken;
+            return true;
+        }
+    }
+}
+
+void AnimationTaskPool::FinishJobs(std::size_t finished)
+{
+    if (m_remaining.fetch_sub(finished, std::memory_order_acq_rel) != finished) return;
+
+    // The last job of the batch: the waiter checks m_remaining under the mutex, so notify under it too.
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_waiterCV.notify_all();
 }

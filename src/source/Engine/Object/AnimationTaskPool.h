@@ -1,79 +1,85 @@
 #pragma once
 
-#include <vector>
-#include <thread>
-#include <deque>
-#include <mutex>
-#include <condition_variable>
 #include <atomic>
-#include <functional>
-#include <span>
-#include <array>
-#include <memory>
-
-struct CHARACTER;
+#include <condition_variable>
+#include <cstddef>
+#include <cstdint>
+#include <mutex>
+#include <thread>
+#include <vector>
 
 /**
- * @brief Industry-standard dynamic work-stealing task pool for skeletal animation.
+ * @brief Worker threads that run one batch of independent jobs at a time (character bones).
+ *
+ * Contract: one thread (the game's main thread) calls Dispatch and then Wait before it dispatches
+ * again or touches anything the jobs read or write. While a batch is in flight (InFlight()), the
+ * main thread must not change an object's animation inputs (SetAction) or load a model (BMD::Open2).
+ * Workers claim job indices from one shared counter, a few at a time; Wait lets the calling thread
+ * claim the rest itself before it sleeps.
  */
 class AnimationTaskPool
 {
 public:
-    using Task = std::function<void()>;
+    // Runs the job for one index of the batch; context is the caller's data. A job must not throw:
+    // an exception would leave the batch unfinished (InFlight() for ever) and Wait() blocked.
+    using Job = void (*)(void* context, std::size_t index);
 
     static AnimationTaskPool& Instance();
 
-    /**
-     * @brief Initializes the worker thread pool.
-     * @param threadCount Number of worker threads (0 = auto-calculate based on cores)
-     */
-    void Initialize(size_t threadCount = 0);
+    // Starts workerCount worker threads (at least one). Does nothing while already running.
+    void Initialize(std::size_t workerCount);
 
-    /**
-     * @brief Shuts down all worker threads cleanly.
-     */
+    // Stops and joins the workers. Call after the last Wait.
     void Shutdown();
 
-    /**
-     * @brief Non-blocking dispatch of character animation tasks across worker queues.
-     */
-    void DispatchCharacters(std::span<CHARACTER* const> activeChars);
+    bool IsRunning() const { return m_running; }
+    std::size_t GetWorkerCount() const { return m_workers.size(); }
 
-    /**
-     * @brief Hard synchronization barrier blocking until all dispatched tasks finish.
-     */
+    // Hands count jobs to the workers without waiting. Returns false (and runs nothing) when the
+    // workers are not running: the caller then runs the jobs itself.
+    bool Dispatch(Job job, void* context, std::size_t count);
+
+    // Runs the batch's unclaimed jobs on the calling thread, then blocks until every job finished.
     void Wait();
 
-    /**
-     * @brief Returns number of active worker threads.
-     */
-    size_t GetWorkerCount() const { return m_workerCount; }
+    // True between Dispatch and the end of Wait.
+    bool InFlight() const { return m_remaining.load(std::memory_order_acquire) > 0; }
 
-private:
     AnimationTaskPool() = default;
     ~AnimationTaskPool() { Shutdown(); }
 
     AnimationTaskPool(const AnimationTaskPool&) = delete;
     AnimationTaskPool& operator=(const AnimationTaskPool&) = delete;
 
-    void WorkerLoop(size_t workerIndex);
-    bool PopTaskLocal(size_t workerIndex, Task& task);
-    bool StealTask(size_t thiefIndex, Task& task);
-
-    struct WorkerQueue
+private:
+    struct Batch
     {
-        std::deque<Task> queue;
-        mutable std::mutex mutex;
+        Job job = nullptr;
+        void* context = nullptr;
+        std::size_t count = 0;
+        std::uint32_t generation = 0;
     };
 
-    std::vector<std::thread> m_workers;
-    std::vector<std::unique_ptr<WorkerQueue>> m_queues;
-    
-    std::atomic<int> m_remainingTasks{ 0 };
-    std::atomic<bool> m_running{ false };
-    size_t m_workerCount{ 0 };
+    // startGeneration: the batch generation when the thread was created; any newer batch is its work.
+    void WorkerLoop(std::uint32_t startGeneration);
+    // Claims and runs jobs of the batch until none are left or a newer batch replaced it.
+    void RunClaimedJobs(const Batch& batch);
+    bool ClaimJobs(const Batch& batch, std::size_t& first, std::size_t& last);
+    void FinishJobs(std::size_t finished);
 
-    std::mutex m_cvMutex;
+    std::vector<std::thread> m_workers;
+    bool m_running = false;
+
+    // Guards m_batch, m_stopping and the two condition variables' predicates.
+    std::mutex m_mutex;
     std::condition_variable m_workerCV;
     std::condition_variable m_waiterCV;
+    Batch m_batch;
+    bool m_stopping = false;
+
+    // Next unclaimed index in the low 32 bits, the batch generation in the high 32 bits, so a worker
+    // still holding an older batch can never claim an index of a newer one.
+    std::atomic<std::uint64_t> m_claim{ 0 };
+    // Jobs of the current batch not finished yet.
+    std::atomic<std::size_t> m_remaining{ 0 };
 };
