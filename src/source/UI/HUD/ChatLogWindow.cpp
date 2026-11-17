@@ -1493,9 +1493,11 @@ void mu::ui::window::CSystemLogWindow::ClearAll()
 
 bool mu::ui::window::CSystemLogWindow::CheckChatRedundancy(const type_string& strText, int iSearchLine/* = 1*/)
 {
-    if (m_vecAllMsgs.empty()) return false;
-    auto vri_msgs = m_vecAllMsgs.rbegin();
-    for (int i = 0; (i < iSearchLine) || (vri_msgs != m_vecAllMsgs.rend()); vri_msgs++, i++)
-        if (0 == (*vri_msgs)->GetText().compare(strText)) return true;
+    (void)iSearchLine; // native's loop condition made it search every line anyway
+    // Only the lines on screen count: a repeat whose earlier line has already gone (ShownCount())
+    // must show again, or "no more arrows" would stay silent once its first line faded.
+    const std::size_t shown = std::min<std::size_t>(m_vecAllMsgs.size(), static_cast<std::size_t>(std::max(0, ShownCount())));
+    for (auto vri_msgs = m_vecAllMsgs.rbegin(); vri_msgs != m_vecAllMsgs.rbegin() + shown; ++vri_msgs)
+        if (*vri_msgs != nullptr && 0 == (*vri_msgs)->GetText().compare(strText)) return true;
     return false;
 }
