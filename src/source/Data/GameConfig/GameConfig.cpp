@@ -14,6 +14,7 @@
 #include "Core/Platform/WinIni.h"  // private-profile (.ini) API
 #include "Core/Platform/Dpapi.h"   // Legacy credential format migration
 #include "Core/Platform/PlatformCrypto.h"
+#include "UI/Chat/ChatMacroFile.h"
 
 GameConfig& GameConfig::GetInstance()
 {
@@ -407,6 +408,32 @@ void GameConfig::SetKeyBinding(const wchar_t* action, const std::wstring& keyNam
         return;
     }
     WriteString(CfgSections::CfgSectionKeyBindings, action, keyName);
+}
+
+namespace
+{
+std::wstring ChatMacroKey(int slot)
+{
+    return std::wstring(CfgKeys::CfgKeyChatMacroPrefix) + std::to_wstring(slot + 1);
+}
+} // namespace
+
+bool GameConfig::HasChatMacros()
+{
+    // A missing line reads back as the default; typed chat text never holds a control character.
+    const std::wstring missing = L"\x01";
+    return ReadString(CfgSections::CfgSectionChatMacros, ChatMacroKey(0).c_str(), missing) != missing;
+}
+
+std::wstring GameConfig::GetChatMacro(int slot)
+{
+    return UI::Chat::Macros::DecodeFromIni(
+        ReadString(CfgSections::CfgSectionChatMacros, ChatMacroKey(slot).c_str(), L""));
+}
+
+void GameConfig::SetChatMacro(int slot, const std::wstring& text)
+{
+    WriteString(CfgSections::CfgSectionChatMacros, ChatMacroKey(slot).c_str(), UI::Chat::Macros::EncodeForIni(text));
 }
 
 std::vector<std::wstring> GameConfig::ReadStringList(const wchar_t* section, const wchar_t* keyPrefix, int maxCount)

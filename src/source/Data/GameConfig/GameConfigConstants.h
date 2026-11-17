@@ -15,6 +15,8 @@ namespace CfgSections
     // MU Moldova: the player's key bindings (Core::Input::KeyBindings), one line per action not on its default key,
     // such as Inventory=B.
     inline constexpr wchar_t CfgSectionKeyBindings[] = L"KeyBindings";
+    // MU Skynet: the chat macros (Alt+1..Alt+0, typed as "/1 text".."/0 text"), Macro1..Macro10.
+    inline constexpr wchar_t CfgSectionChatMacros[] = L"ChatMacros";
 }
 
 namespace CfgKeys
@@ -74,6 +76,8 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyLootFilterMinLevel[] = L"MinLevel";
     inline constexpr wchar_t CfgKeyLootFilterZenMin[] = L"ZenMin";
     inline constexpr wchar_t CfgKeyLootFilterNamePrefix[] = L"Name";
+    // MU Skynet: one chat macro per line, Macro1..Macro10 ([ChatMacros]).
+    inline constexpr wchar_t CfgKeyChatMacroPrefix[] = L"Macro";
     // MU Moldova: the on-screen controls' size in percent (Options -> Interface, Button size).
     inline constexpr wchar_t CfgKeyTouchButtonSize[] = L"TouchButtonSize";
     // MU Moldova: whether the phone's top row of buttons is open (its toggle button, UI/HUD/TouchControls).

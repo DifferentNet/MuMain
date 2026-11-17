@@ -1376,7 +1376,7 @@
     <comment>legacy_id=376</comment>
   </data>
   <data name="(%s) stat %d points have been generated." xml:space="preserve">
-    <value>Wygenerowano %d pkt statystyki (%s).</value>
+    <value>(%s): wygenerowano %d pkt statystyki.</value>
     <comment>legacy_id=377</comment>
   </data>
   <data name="stat creation failed from fruit combination." xml:space="preserve">
@@ -7145,7 +7145,7 @@
     <comment>legacy_id=1926</comment>
   </data>
   <data name="one of the certain weapons to 50%%." xml:space="preserve">
-    <value>jedną z określonych broni do 50%%.</value>
+    <value>jedną z określonych broni do 50%.</value>
     <comment>legacy_id=1927</comment>
   </data>
   <data name="Plasma storm skill (Mana:%d)" xml:space="preserve">
@@ -7329,11 +7329,11 @@
     <comment>legacy_id=1982</comment>
   </data>
   <data name="Monster strength decreased 10%%." xml:space="preserve">
-    <value>Siła potworów zmniejszona o 10%%.</value>
+    <value>Siła potworów zmniejszona o 10%.</value>
     <comment>legacy_id=2000</comment>
   </data>
   <data name="5%% increase in castle and arena invitation combine rate." xml:space="preserve">
-    <value>5%% zwiększenie współczynnika łączenia zaproszeń do zamku i na arenę.</value>
+    <value>5% zwiększenie współczynnika łączenia zaproszeń do zamku i na arenę.</value>
     <comment>legacy_id=2001</comment>
   </data>
   <data name="Contract is ongoing therefore dual compact is not possible." xml:space="preserve">
@@ -7481,7 +7481,7 @@
     <comment>legacy_id=2053</comment>
   </data>
   <data name="Minimum Wizardry increment 20%%" xml:space="preserve">
-    <value>Minimalny przyrost magii 20%%</value>
+    <value>Minimalny przyrost magii 20%</value>
     <comment>legacy_id=2054</comment>
   </data>
   <data name="It cannot be applied on another." xml:space="preserve">
@@ -14026,5 +14026,44 @@
   </data>
   <data name="ZenCarryLimitReached" xml:space="preserve">
     <value>Nie możesz nieść więcej Zen.</value>
+  </data>
+  <data name="ChatMacroStored" xml:space="preserve">
+    <value>Alt+%d: %ls</value>
+  </data>
+  <data name="ChatMacroCleared" xml:space="preserve">
+    <value>Makro Alt+%d wyczyszczone.</value>
+  </data>
+  <data name="ExpMaxLevelReached" xml:space="preserve">
+    <value>Osiągnięto już maksymalny poziom.</value>
+  </data>
+  <data name="ExpMaxMasterLevelReached" xml:space="preserve">
+    <value>Osiągnięto już maksymalny poziom mistrza.</value>
+  </data>
+  <data name="ExpMonsterTooWeakForMaster" xml:space="preserve">
+    <value>Zabijaj silniejsze potwory, aby zdobywać doświadczenie mistrza.</value>
+  </data>
+  <data name="SkillCooldownSeconds" xml:space="preserve">
+    <value>Odnowienie: %.1f s</value>
+  </data>
+  <data name="WindowHasNoRoomForItem" xml:space="preserve">
+    <value>Nie ma tu miejsca na ten przedmiot.</value>
+  </data>
+  <data name="PartyMemberJoined" xml:space="preserve">
+    <value>%ls dołącza do drużyny.</value>
+  </data>
+  <data name="PartyMemberLeft" xml:space="preserve">
+    <value>%ls opuszcza drużynę.</value>
+  </data>
+  <data name="KilledByName" xml:space="preserve">
+    <value>Zabójca: %ls</value>
+  </data>
+  <data name="TradeWithNameCompleted" xml:space="preserve">
+    <value>Handel z %ls zakończony.</value>
+  </data>
+  <data name="HotKeyNothingLeft" xml:space="preserve">
+    <value>Brak: %ls.</value>
+  </data>
+  <data name="FriendIsOnline" xml:space="preserve">
+    <value>%ls jest online.</value>
   </data>
 </root>

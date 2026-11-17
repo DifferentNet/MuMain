@@ -757,7 +757,7 @@ void mu::ui::window::CBattlePassWindow::SyncRmlModel()
 {
     m_RmlView.Ensure();
     Rml::ElementDocument* document = m_RmlView.Document();
-    m_ItemTarget.Sync(document ? document->GetElementById("bp_items") : nullptr, IsVisible() && m_tab == 0);
+    m_ItemTarget.Sync(document, "bp_items", IsVisible() && m_tab == 0);
     if (!document)
         return;
 

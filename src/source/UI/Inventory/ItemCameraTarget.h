@@ -5,12 +5,14 @@
 
 #include <RmlUi/Core/Types.h>
 
+#include "UI/RmlBridge/RmlKeptElement.h"
 #include "UI/RmlBridge/RmlRenderTarget.h"
 #include "UI/Scaling/UITransform.h"
 
 namespace Rml
 {
 class Element;
+class ElementDocument;
 }
 
 // Live 3D items shown through an <img>: the drawer runs under the item camera the original drew
@@ -31,6 +33,8 @@ public:
     // Once a frame: sizes the target to `image`'s box, shows it there and points its src at the
     // target. Null or disabled stops the drawing; the image is invisible while it has no frame.
     void Sync(Rml::Element* image, bool enabled);
+    // The same for the image with this id in `document` (null: none). The element is looked up once and kept.
+    void Sync(Rml::ElementDocument* document, const char* id, bool enabled);
     void Disable() { m_target.SetEnabled(false); }
     // The camera's vertical field of view, in degrees: the item camera's 1 unless a window drew
     // its items through another.
@@ -45,6 +49,7 @@ private:
     Rml::Vector2f m_offset{0.f, 0.f};
     Rml::Vector2f m_size{0.f, 0.f};
     UI::RmlBridge::RenderTarget m_target;
+    UI::RmlBridge::KeptElement m_image;
     // The image last hidden by a disabled Sync(): while it stays hidden and disabled, Sync() returns at once
     // (a hidden window's image costs no layout read and no property write every frame).
     const Rml::Element* m_hiddenImage = nullptr;

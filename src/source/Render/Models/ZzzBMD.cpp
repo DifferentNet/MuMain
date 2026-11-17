@@ -1421,6 +1421,31 @@ void BMD::EndRender()
 extern double WorldTime;
 extern int WaterTextureNumber;
 
+namespace
+{
+struct ChromeLight
+{
+    float x;
+    float y;
+};
+
+// The light that moves the chrome shine. cos/sin of the large WorldTime go through a slow argument reduction, and
+// every mesh of a frame asks for the same WorldTime, so it is computed once per new WorldTime (same values as before).
+ChromeLight ChromeLightAt(double worldTime)
+{
+    thread_local bool known = false;
+    thread_local double knownTime = 0.0;
+    thread_local ChromeLight light{};
+    if (!known || worldTime != knownTime)
+    {
+        light = {static_cast<float>(cos(worldTime * 0.001f)), static_cast<float>(sin(worldTime * 0.002f))};
+        knownTime = worldTime;
+        known = true;
+    }
+    return light;
+}
+} // namespace
+
 void BMD::BeginRenderCoinHeap()
 {
     constexpr int meshIndex = 0;
@@ -1800,7 +1825,8 @@ void BMD::RenderMesh(int meshIndex, int renderFlags, float alpha, int blendMeshI
         }
 
         const float wave2 = static_cast<int>(WorldTime) % 5000 * 0.00024f - 0.4f;
-        vec3_t light = {static_cast<float>(cos(WorldTime * 0.001f)), static_cast<float>(sin(WorldTime * 0.002f)), 1.0f};
+        const ChromeLight chromeLight = ChromeLightAt(WorldTime);
+        vec3_t light = {chromeLight.x, chromeLight.y, 1.0f};
         for (int j = 0; j < m->NumNormals && j < MAX_VERTICES; ++j)
         {
             const auto normal = NormalTransform[meshIndex][j];
@@ -1913,7 +1939,7 @@ void BMD::RenderMesh(int meshIndex, int renderFlags, float alpha, int blendMeshI
             .textureCoordinateOffset = {blendMeshTextureCoordU, blendMeshTextureCoordV},
             .chromeWave = wave,
             .chromeWave2 = static_cast<int>(WorldTime) % 5000 * 0.00024f - 0.4f,
-            .chromeLight = {static_cast<float>(cos(WorldTime * 0.001f)), static_cast<float>(sin(WorldTime * 0.002f))},
+            .chromeLight = {ChromeLightAt(WorldTime).x, ChromeLightAt(WorldTime).y},
             .chromeTimeTerm = static_cast<float>(WorldTime) * 0.00006f,
             .textureCoordinates = textureCoordinates,
             .translate = m_LastTranslate,
@@ -2152,7 +2178,8 @@ void BMD::RenderMeshAlternative(int iRndExtFlag, int iParam, int i, int RenderFl
         }
         float Wave2 = (int)WorldTime % 5000 * 0.00024f - 0.4f;
 
-        vec3_t L = { (float)(cos(WorldTime * 0.001f)), (float)(sin(WorldTime * 0.002f)), 1.f };
+        const ChromeLight chromeLight = ChromeLightAt(WorldTime);
+        vec3_t L = { chromeLight.x, chromeLight.y, 1.f };
         for (int j = 0; j < m->NumNormals; j++)
         {
             if (j >= MAX_VERTICES)

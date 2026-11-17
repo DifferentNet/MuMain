@@ -568,3 +568,17 @@ mu_add_test(
         test_pad_target_pick.cpp
         ${CMAKE_SOURCE_DIR}/src/source/UI/HUD/PadTargetPick.cpp
 )
+
+# mu_swprintf into an array cuts a long text instead of writing past the array (round 10, B1).
+mu_add_test(
+    NAME bounded_wide_format_tests
+    SOURCES test_bounded_wide_format.cpp
+)
+
+# The old Data\Macro.txt read into the chat macros, one slot per line (round 10, Q2).
+mu_add_test(
+    NAME chat_macro_file_tests
+    SOURCES
+        test_chat_macro_file.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ChatMacroFile.cpp
+)

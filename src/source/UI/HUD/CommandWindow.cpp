@@ -591,7 +591,7 @@ int mu::ui::window::CCommandWindow::CommandDual(CHARACTER* pSelectedCha)
     int iLevel = CharacterAttribute->Level;
     if (iLevel < 30)
     {
-        wchar_t szError[48] = L"";
+        wchar_t szError[128] = L"";
         mu_swprintf(szError, I18N::Game::OpenOnlyForLevelDOrHigher, 30);
         g_pSystemLogBox->AddText(szError, mu::ui::window::TYPE_ERROR_MESSAGE);
         return 3;

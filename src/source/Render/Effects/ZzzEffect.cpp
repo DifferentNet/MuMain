@@ -24,6 +24,7 @@
 #include "UI/Core/WindowSystem.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "Scenes/MainScene.h"
+#include "Render/Effects/PoolSlotBounds.h"
 
 PARTICLE  Particles[MAX_PARTICLES];
 #ifdef DEVIAS_XMAS_EVENT
@@ -36,6 +37,32 @@ JOINT     Joints[MAX_JOINTS];
 BYTE    g_byUpperBoneLocation[7] = { 25, 26, 27, 20, 34, 35, 36 };
 
 OBJECT Effects[MAX_EFFECTS];
+
+namespace
+{
+// Only End() is used: a create still scans from slot 0, so it takes the same slot as before.
+Render::Effects::PoolSlotBounds s_effectBounds;
+
+// The loops that walk Effects[] and then the skill effects as one range use these, so they skip the free top of
+// both pools. Both ends are read again on every step: an effect created during the loop is still visited.
+int NextJoinedEffectSlot(int index)
+{
+    ++index;
+    if (index < MAX_EFFECTS && index >= s_effectBounds.End())
+        index = MAX_EFFECTS;
+    return index;
+}
+
+int FirstJoinedEffectSlot()
+{
+    return NextJoinedEffectSlot(-1);
+}
+
+int JoinedEffectSlotEnd()
+{
+    return MAX_EFFECTS + g_SkillEffects.SlotEnd();
+}
+} // namespace
 
 bool CheckCharacterRange(OBJECT* so, float Range, short PKKey, BYTE Kind = 0)
 {
@@ -149,7 +176,7 @@ void TerminateOwnerEffectObject(int iOwnerObjectType)
 bool DeleteEffect(int Type, OBJECT* Owner, int iSubType)
 {
     bool bDelete = false;
-    for (int i = 0; i < MAX_EFFECTS; i++)
+    for (int i = 0; i < s_effectBounds.End(); i++)
     {
         OBJECT* o = &Effects[i];
         if (o->Live && o->Type == Type)
@@ -175,7 +202,7 @@ bool DeleteEffect(int Type, OBJECT* Owner, int iSubType)
 
 void DeleteEffect(int efftype)
 {
-    for (int i = 0; i < MAX_EFFECTS; i++)
+    for (int i = 0; i < s_effectBounds.End(); i++)
     {
         OBJECT* o = &Effects[i];
         if (o->Live && o->Type == efftype)
@@ -211,7 +238,7 @@ bool DeleteParticle(int iType)
 
 bool SearchEffect(int iType, OBJECT* pOwner, int iSubType)
 {
-    for (int i = 0; i < MAX_EFFECTS; ++i)
+    for (int i = 0; i < s_effectBounds.End(); ++i)
     {
         OBJECT* o = &Effects[i];
         if (o->Live && o->Type == iType && o->Owner == pOwner)
@@ -229,7 +256,7 @@ bool SearchEffect(int iType, OBJECT* pOwner, int iSubType)
 
 BOOL FindSameEffectOfSameOwner(int iType, OBJECT* pOwner)
 {
-    for (int i = 0; i < MAX_EFFECTS; i++)
+    for (int i = 0; i < s_effectBounds.End(); i++)
     {
         OBJECT* o = &Effects[i];
         if (o->Live)
@@ -336,11 +363,12 @@ void CreateEffectFpsChecked(int Type, vec3_t Position, vec3_t Angle, vec3_t Ligh
 
 void CreateEffect(int Type, vec3_t Position, vec3_t Angle, vec3_t Light, int SubType, OBJECT* Owner, short PKKey, WORD SkillIndex, WORD Skill, WORD SkillSerialNum, float Scale, short int sTargetIndex)
 {
+    const bool isSkillEffect = g_SkillEffects.IsSkillEffect(Type, Position, Angle, Light, SubType, Owner, PKKey, SkillIndex, Skill, SkillSerialNum, Scale, sTargetIndex);
     for (int icntEffect = 0; icntEffect < MAX_EFFECTS; icntEffect++)
     {
         OBJECT* o = &Effects[icntEffect];
 
-        if (g_SkillEffects.IsSkillEffect(Type, Position, Angle, Light, SubType, Owner, PKKey, SkillIndex, Skill, SkillSerialNum, Scale, sTargetIndex))
+        if (isSkillEffect)
         {
             o = g_SkillEffects.CreateEffect();
         }
@@ -348,6 +376,10 @@ void CreateEffect(int Type, vec3_t Position, vec3_t Angle, vec3_t Light, int Sub
         if (!o->Live)
         {
             o->Live = true;
+            if (isSkillEffect)
+                g_SkillEffects.NoteTaken(o);
+            else
+                s_effectBounds.OnTaken(icntEffect);
             o->Type = Type;
             o->SubType = SubType;
             o->LightEnable = true;
@@ -7638,7 +7670,8 @@ void MoveEffects()
         g_pCatapultWindow->SetCameraPos();
     }
 
-    for (int i = 0; i < MAX_EFFECTS; i++)
+    s_effectBounds.TrimEnd(Effects, MAX_EFFECTS);
+    for (int i = 0; i < s_effectBounds.End(); i++)
     {
         OBJECT* o = &Effects[i];
         if (o->Live)
@@ -7731,9 +7764,7 @@ void RenderSkillSpear(OBJECT* o)
 
 void RenderEffects(bool bRenderBlendMesh)
 {
-    int iEffectSize = MAX_EFFECTS + g_SkillEffects.GetSize();
-
-    for (int i = 0; i < iEffectSize; ++i)
+    for (int i = FirstJoinedEffectSlot(); i < JoinedEffectSlotEnd(); i = NextJoinedEffectSlot(i))
     {
         OBJECT* o;
         if (i < MAX_EFFECTS)
@@ -8693,8 +8724,7 @@ void RenderAfterEffects()
     if (!g_Direction.m_CKanturu.IsMayaScene())
         return;
 
-    int iEffectSize = MAX_EFFECTS + g_SkillEffects.GetSize();
-    for (int i = 0; i < iEffectSize; ++i)
+    for (int i = FirstJoinedEffectSlot(); i < JoinedEffectSlotEnd(); i = NextJoinedEffectSlot(i))
     {
         OBJECT* o;
         if (i < MAX_EFFECTS)
@@ -8734,8 +8764,7 @@ void RenderEffectShadows()
         return;
     }
 
-    int iEffectSize = MAX_EFFECTS + g_SkillEffects.GetSize();
-    for (int i = 0; i < iEffectSize; ++i)
+    for (int i = FirstJoinedEffectSlot(); i < JoinedEffectSlotEnd(); i = NextJoinedEffectSlot(i))
     {
         OBJECT* o;
         if (i < MAX_EFFECTS)

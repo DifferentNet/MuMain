@@ -511,7 +511,6 @@ public:
             }
 
             SaveOptions();
-            SaveMacro(L"Data\\Macro.txt");
             MUHelper::g_MuHelper.TriggerStop();
             g_pNewUIMng->ResetActiveUIObj();
 
@@ -661,7 +660,6 @@ std::string Quit(const Request& request, std::unique_ptr<Act>&)
     if (SocketClient != nullptr && g_bGameServerConnected)
     {
         SaveOptions();
-        SaveMacro(L"Data\\Macro.txt");
         MUHelper::g_MuHelper.TriggerStop();
 
         LogOut = true;

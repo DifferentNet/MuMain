@@ -93,6 +93,8 @@ namespace mu::ui::window
         ITEM* GetSlotItem(int iSlotIndex);
         // Whether the hotkey takes the same items as one before it.
         bool RepeatsEarlierHotKey(int iHotKey);
+        // A bound slot with none of its items left: "No X left", at most once per kNothingLeftLineIntervalMs per slot.
+        void PostNothingLeft(int iHotKey);
         // A target's drawer: one frame of the slot's item, framed for `width` x `height`.
         void RenderSlot(int iSlotIndex, const Rml::Vector2f& offset, const Rml::Vector2f& size);
 
@@ -107,5 +109,9 @@ namespace mu::ui::window
 
         // -1 = nothing hovered; set by OnHotkeySlotHover(), cleared by OnUnhover().
         int m_iHoveredSlot = -1;
+
+        static constexpr DWORD kNothingLeftLineIntervalMs = 3000;
+        // When PostNothingLeft last posted a slot's line; 0 = never.
+        DWORD m_dwNothingLeftPosted[HOTKEY_COUNT] = {};
     };
 }

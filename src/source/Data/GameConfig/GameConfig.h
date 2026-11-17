@@ -129,6 +129,14 @@ public:
     std::wstring GetKeyBinding(const wchar_t* action);
     void SetKeyBinding(const wchar_t* action, const std::wstring& keyName);
 
+    // The chat macro of a slot (0..9 = Alt+1..Alt+0) in [ChatMacros]. HasChatMacros says whether the section was
+    // ever written (the old Data\Macro.txt is read once while it was not). SetChatMacro writes at once; an empty
+    // text stays as an empty line so the section keeps saying it was written. The text is kept %-encoded UTF-8
+    // (UI::Chat::Macros::EncodeForIni), so spaces at the ends, quotes and any language come back as typed.
+    bool HasChatMacros();
+    std::wstring GetChatMacro(int slot);
+    void SetChatMacro(int slot, const std::wstring& text);
+
     // The phone or PC layout and the controls, as config.ini words (UI::Mobile::InterfaceMode).
     const std::wstring& GetInterfaceView() const { return m_interfaceView; }
     void SetInterfaceView(const std::wstring& view) { m_interfaceView = view; }

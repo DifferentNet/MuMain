@@ -6,6 +6,7 @@
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/Core/WindowObject.h"
 #include "UI/Inventory/InventoryCtrl.h"
+#include "UI/Inventory/HeldItemPlacement.h"
 #include "UI/Inventory/MyInventory.h"
 #include "UI/Inventory/SocketListSelection.h"
 #include "UI/RmlBridge/RmlThemedView.h"
@@ -167,7 +168,7 @@ namespace mu::ui::window
         // while the machine is ready and the item is a source of the recipe.
         bool AcceptsHeldItem(CPickedItem* pPickedItem);
 
-        bool AutoMoveItem(CInventoryCtrl* srcCtrl, STORAGE_TYPE srcType,
+        UI::Items::Placement::AutoMoveResult AutoMoveItem(CInventoryCtrl* srcCtrl, STORAGE_TYPE srcType,
             CInventoryCtrl* dstCtrl, STORAGE_TYPE dstType, bool requireMixSource);
 
         // Former RenderFrame()/RenderMixDescriptions() native text -- see its own comment

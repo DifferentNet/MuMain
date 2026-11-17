@@ -102,10 +102,15 @@ OBJECT* CSkillEffectMgr::CreateEffect()
     return &m_SkillEffects[MAX_SKILL_EFFECTS - 1];
 }
 
+void CSkillEffectMgr::NoteTaken(const OBJECT* o)
+{
+    m_bounds.OnTaken(static_cast<int>(o - m_SkillEffects));
+}
+
 bool CSkillEffectMgr::DeleteEffect(int Type, OBJECT* Owner, int iSubType)
 {
     bool bDelete = false;
-    for (int i = 0; i < MAX_SKILL_EFFECTS; i++)
+    for (int i = 0; i < m_bounds.End(); i++)
     {
         OBJECT* o = &m_SkillEffects[i];
         if (o->Live && o->Type == Type)
@@ -126,7 +131,7 @@ bool CSkillEffectMgr::DeleteEffect(int Type, OBJECT* Owner, int iSubType)
 
 void CSkillEffectMgr::DeleteEffect(int efftype)
 {
-    for (int i = 0; i < MAX_SKILL_EFFECTS; i++)
+    for (int i = 0; i < m_bounds.End(); i++)
     {
         OBJECT* o = &m_SkillEffects[i];
         if (o->Live && o->Type == efftype)
@@ -148,7 +153,7 @@ void CSkillEffectMgr::DeleteAllEffects()
 
 bool CSkillEffectMgr::SearchEffect(int iType, OBJECT* pOwner, int iSubType)
 {
-    for (int i = 0; i < MAX_SKILL_EFFECTS; ++i)
+    for (int i = 0; i < m_bounds.End(); ++i)
     {
         OBJECT* o = &m_SkillEffects[i];
         if (o->Live && o->Type == iType && o->Owner == pOwner)
@@ -165,7 +170,7 @@ bool CSkillEffectMgr::SearchEffect(int iType, OBJECT* pOwner, int iSubType)
 
 BOOL CSkillEffectMgr::FindSameEffectOfSameOwner(int iType, OBJECT* pOwner)
 {
-    for (int i = 0; i < MAX_SKILL_EFFECTS; i++)
+    for (int i = 0; i < m_bounds.End(); i++)
     {
         OBJECT* o = &m_SkillEffects[i];
         if (o->Live)
@@ -182,7 +187,8 @@ BOOL CSkillEffectMgr::FindSameEffectOfSameOwner(int iType, OBJECT* pOwner)
 
 void CSkillEffectMgr::MoveEffects()
 {
-    for (int i = 0; i < MAX_SKILL_EFFECTS; i++)
+    m_bounds.TrimEnd(m_SkillEffects, MAX_SKILL_EFFECTS);
+    for (int i = 0; i < m_bounds.End(); i++)
     {
         OBJECT* o = &m_SkillEffects[i];
         if (o->Live)

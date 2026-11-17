@@ -7558,7 +7558,7 @@
     <comment>legacy_id=1926</comment>
   </data>
   <data name="one of the certain weapons to 50%%." xml:space="preserve">
-    <value>one of the certain weapons to 50%%.</value>
+    <value>one of the certain weapons to 50%.</value>
     <comment>legacy_id=1927</comment>
   </data>
   <data name="Plasma storm skill (Mana:%d)" xml:space="preserve">
@@ -7742,11 +7742,11 @@
     <comment>legacy_id=1982</comment>
   </data>
   <data name="Monster strength decreased 10%%." xml:space="preserve">
-    <value>Monster strength decreased 10%%.</value>
+    <value>Monster strength decreased 10%.</value>
     <comment>legacy_id=2000</comment>
   </data>
   <data name="5%% increase in castle and arena invitation combine rate." xml:space="preserve">
-    <value>5%% increase in castle and arena invitation combine rate.</value>
+    <value>5% increase in castle and arena invitation combine rate.</value>
     <comment>legacy_id=2001</comment>
   </data>
   <data name="Contract is ongoing therefore dual compact is not possible." xml:space="preserve">
@@ -7894,7 +7894,7 @@
     <comment>legacy_id=2053</comment>
   </data>
   <data name="Minimum Wizardry increment 20%%" xml:space="preserve">
-    <value>Minimum Wizardry increment 20%%</value>
+    <value>Minimum Wizardry increment 20%</value>
     <comment>legacy_id=2054</comment>
   </data>
   <data name="It cannot be applied on another." xml:space="preserve">
@@ -16959,5 +16959,44 @@
   </data>
   <data name="ZenCarryLimitReached" xml:space="preserve">
     <value>You can't carry more Zen.</value>
+  </data>
+  <data name="ChatMacroStored" xml:space="preserve">
+    <value>Alt+%d: %ls</value>
+  </data>
+  <data name="ChatMacroCleared" xml:space="preserve">
+    <value>Alt+%d macro cleared.</value>
+  </data>
+  <data name="ExpMaxLevelReached" xml:space="preserve">
+    <value>You already reached maximum Level.</value>
+  </data>
+  <data name="ExpMaxMasterLevelReached" xml:space="preserve">
+    <value>You already reached maximum master Level.</value>
+  </data>
+  <data name="ExpMonsterTooWeakForMaster" xml:space="preserve">
+    <value>You need to kill stronger monsters to gain master experience.</value>
+  </data>
+  <data name="SkillCooldownSeconds" xml:space="preserve">
+    <value>Cooldown: %.1f sec</value>
+  </data>
+  <data name="WindowHasNoRoomForItem" xml:space="preserve">
+    <value>There is no room for this item here.</value>
+  </data>
+  <data name="PartyMemberJoined" xml:space="preserve">
+    <value>%ls joined the party.</value>
+  </data>
+  <data name="PartyMemberLeft" xml:space="preserve">
+    <value>%ls left the party.</value>
+  </data>
+  <data name="KilledByName" xml:space="preserve">
+    <value>Killed by %ls</value>
+  </data>
+  <data name="TradeWithNameCompleted" xml:space="preserve">
+    <value>Trade with %ls completed.</value>
+  </data>
+  <data name="HotKeyNothingLeft" xml:space="preserve">
+    <value>No %ls left.</value>
+  </data>
+  <data name="FriendIsOnline" xml:space="preserve">
+    <value>%ls is online.</value>
   </data>
 </root>
