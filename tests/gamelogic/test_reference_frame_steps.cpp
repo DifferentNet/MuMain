@@ -45,6 +45,59 @@ TEST_CASE("Below the reference rate each frame is one step [gamelogic][timing]")
     CHECK(referenceFrames == 0.f);
 }
 
+TEST_CASE("Reference frames since the last step grow until a step and start over after it [gamelogic][timing]")
+{
+    // 144 FPS, as CalcFPS keeps it: the frame right after a step starts from its own share.
+    const float factor = static_cast<float>(REFERENCE_FPS / 144.0);
+    float referenceFrames = 0.f;
+    float since = 1.f;
+    bool previousStepped = true;
+    int stepsSeen = 0;
+    for (int frame = 0; frame < 144 * 2; ++frame)
+    {
+        CAPTURE(frame);
+        const int step = TakeReferenceFrameSteps(referenceFrames, factor);
+        const float before = since;
+        since = FramesSinceSteppedFrame(since, previousStepped, factor);
+        if (previousStepped)
+        {
+            CHECK(since == doctest::Approx(factor));
+        }
+        else
+        {
+            CHECK(since == doctest::Approx(before + factor));
+        }
+        if (step != 0)
+        {
+            // The stepping frame closes about one reference frame.
+            CHECK(since >= 1.f - factor);
+            CHECK(since <= 1.f + factor);
+            ++stepsSeen;
+        }
+        else
+        {
+            CHECK(since < 1.f + factor);
+        }
+        previousStepped = step != 0;
+    }
+    CHECK(stepsSeen >= 49);
+}
+
+TEST_CASE("At 25 FPS and below every frame is one reference frame since the last step [gamelogic][timing]")
+{
+    float referenceFrames = 0.f;
+    float since = 1.f;
+    bool previousStepped = true;
+    for (int frame = 0; frame < 10; ++frame)
+    {
+        const int step = TakeReferenceFrameSteps(referenceFrames, 1.f);
+        since = FramesSinceSteppedFrame(since, previousStepped, 1.f);
+        CHECK(step == 1);
+        CHECK(since == 1.f);
+        previousStepped = step != 0;
+    }
+}
+
 namespace
 {
 constexpr int BatchSamples = 10;

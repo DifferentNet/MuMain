@@ -12,6 +12,10 @@ constexpr double REFERENCE_FPS = 25.0;
 
 // Adds a frame's share of a reference frame and takes out the whole reference frames it completes.
 int TakeReferenceFrameSteps(float& referenceFrames, float frameFactor);
+// The reference frames since the last frame that took a step, this frame's share included: `since` was
+// the previous frame's value, and a frame right after a step starts over from its own share. At 25 FPS
+// and below every frame steps and it is always 1.
+float FramesSinceSteppedFrame(float since, bool previousFrameStepped, float frameFactor);
 
 int CalcAngle(float PositionX, float PositionY, float TargetX, float TargetY);
 float CreateAngle(float x1, float y1, float x2, float y2);

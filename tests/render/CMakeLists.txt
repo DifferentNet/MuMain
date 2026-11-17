@@ -299,6 +299,20 @@ mu_add_test(
         test_flipbook_blend.cpp
 )
 
+# Smooth trails: the centripetal curve, pieces, tail ages, U and the trail's end.
+mu_add_test(
+    NAME ribbon_spline_tests
+    SOURCES
+        test_ribbon_spline.cpp
+)
+
+# Smooth trails: the head slice of a player's swing trail.
+mu_add_test(
+    NAME blur_slice_tests
+    SOURCES
+        test_blur_slice.cpp
+)
+
 # Smoother cut-out foliage: strength, locks, the cut-out samplers' mip bias and the cut-out test.
 mu_add_test(
     NAME foliage_smoothing_tests
@@ -406,6 +420,15 @@ add_test(
     COMMAND "${CMAKE_COMMAND}"
         "-DMU_EFFECT_SOURCES=CreateEffect=${MU_EFFECTS_DIR}/ZzzEffect.cpp\;CreateJoint=${MU_EFFECTS_DIR}/ZzzEffectJoint.cpp\;CreateParticle=${MU_EFFECTS_DIR}/ZzzEffectParticle.cpp"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/test_create_has_no_fps_gate.cmake"
+)
+
+# The smooth trails' ribbon and swing head slice are only reached through their gate.
+add_test(
+    NAME ribbons_are_gated
+    COMMAND "${CMAKE_COMMAND}"
+        "-DMU_JOINT_SOURCE=${MU_EFFECTS_DIR}/ZzzEffectJoint.cpp"
+        "-DMU_CHARACTER_SOURCE=${CMAKE_SOURCE_DIR}/src/source/Engine/Object/ZzzCharacter.cpp"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/test_ribbons_gate.cmake"
 )
 
 add_test(
