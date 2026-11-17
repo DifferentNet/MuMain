@@ -23,6 +23,13 @@ void UI::Items::ItemCameraTarget::Sync(Rml::Element* image, bool enabled)
         m_target.SetEnabled(false);
         return;
     }
+    // Already off and hidden for this very element: nothing to do. A new element (a reloaded document,
+    // even at the same address) has no local visibility yet, so it takes the full path below.
+    if (!enabled && image == m_hiddenImage && image->GetLocalProperty(Rml::PropertyId::Visibility) != nullptr)
+    {
+        m_target.SetEnabled(false);
+        return;
+    }
     const bool placed = UI::RmlBridge::DrawnContentBox(*image, m_offset, m_size);
     const bool drawing = enabled && placed && m_size.x >= 1.f && m_size.y >= 1.f;
     m_target.SetEnabled(drawing);
@@ -36,6 +43,7 @@ void UI::Items::ItemCameraTarget::Sync(Rml::Element* image, bool enabled)
         image->SetProperty("visibility", "hidden");
     else
         image->RemoveProperty("visibility");
+    m_hiddenImage = enabled ? nullptr : image;
     if (!source.empty() && image->GetAttribute<Rml::String>("src", "") != source)
         image->SetAttribute("src", source);
 }

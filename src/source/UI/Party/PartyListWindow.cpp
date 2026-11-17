@@ -152,7 +152,7 @@ bool CPartyListWindow::Update()
         const int member = m_PendingLeave;
         m_PendingLeave = -1;
         if (member < PartyNumber && CanLeave(member))
-            g_pPartyInfoWindow->LeaveParty(member);
+            g_pPartyInfoWindow->ConfirmLeaveParty(member);
     }
 
     // Before the reset below: Party[].index still holds what last frame's character pass found,

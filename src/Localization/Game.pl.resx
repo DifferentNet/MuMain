@@ -485,7 +485,7 @@
     <comment>legacy_id=121</comment>
   </data>
   <data name="F2 : Chat window on/off" xml:space="preserve">
-    <value>F2: Włączanie/wyłączanie okna czatu</value>
+    <value>F2: Czat: tylko szepty / wszystkie wiadomości</value>
     <comment>legacy_id=122</comment>
   </data>
   <data name="F3 : Whisper Mode window on/off" xml:space="preserve">
@@ -13930,5 +13930,21 @@
   </data>
   <data name="PartyInviteNotFound" xml:space="preserve">
     <value>Nie znaleziono gracza. Wybierz gracza lub wpisz /party Nazwa.</value>
+  </data>
+  <!-- Round 8: whisper echo, party leave/kick question, /trade Name -->
+  <data name="WhisperEchoTo" xml:space="preserve">
+    <value>[do %ls] %ls</value>
+  </data>
+  <data name="PartyLeaveConfirm" xml:space="preserve">
+    <value>Opuścić drużynę?</value>
+  </data>
+  <data name="PartyKickConfirm" xml:space="preserve">
+    <value>Usunąć %ls z drużyny?</value>
+  </data>
+  <data name="TradePlayerNotFound" xml:space="preserve">
+    <value>Nie znaleziono gracza. Wybierz gracza lub wpisz /trade Nazwa.</value>
+  </data>
+  <data name="CommandPlayerNotFound" xml:space="preserve">
+    <value>Nie znaleziono gracza.</value>
   </data>
 </root>

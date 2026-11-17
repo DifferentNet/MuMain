@@ -11,6 +11,7 @@
 #include "I18N/All.h"
 
 #include "GameLogic/Items/CComGem.h"
+#include "UI/Text/GroupedNumberText.h"
 #include "GameLogic/Combat/DuelMgr.h"
 #include "GameLogic/Events/MatchEvent.h"
 #include "GameLogic/Events/w_CursedTemple.h"
@@ -281,8 +282,7 @@ CALLBACK_RESULT mu::ui::window::CGemIntegrationDisjointMsgBox::DisjointBtnDown(c
     mu::ui::window::GenericDialogConfig cfg;
     cfg.showCancel = true;
     cfg.lines.push_back({ strText, true });
-    mu_swprintf(strText, I18N::Game::DissolvingCostDZen, COMGEM::m_iValue);
-    cfg.lines.push_back({ strText, true });
+    cfg.lines.push_back({ UI::Text::FormatGroupedNumbers(I18N::Game::DissolvingCostDZen, { COMGEM::m_iValue }), true });
     cfg.onPrimary = [] { COMGEM::ProcessCSAction(); COMGEM::Exit(); };
     cfg.onCancel = []
     {
@@ -1158,13 +1158,11 @@ void mu::ui::window::ShowGemIntegrationMixDialog()
     cfg.lines.push_back({I18N::Game::JewelCombination, true, RGBA(255, 128, 0, 255)});
     cfg.lines.push_back({ I18N::Game::ChooseANumberButtonToCombine, false });
 
-    wchar_t szTemp[256] = { 0, };
     for (int k = 0; k < (int)COMGEM::eCOMTYPE_END; ++k)
     {
-        mu_swprintf(szTemp, I18N::Game::CombineDDZenIsRequired, 10 * (k + 1), 500000 * (k + 1));
-
         GenericMenuConfig::MenuButton btn;
-        btn.label = szTemp;
+        btn.label = UI::Text::FormatGroupedNumbers(I18N::Game::CombineDDZenIsRequired,
+                                                   { 10 * (k + 1), 500000 * (k + 1) });
         btn.onClick = [k]
         {
             COMGEM::m_cComType = COMGEM::GetJewelRequireCount(k);
@@ -1183,8 +1181,7 @@ void mu::ui::window::ShowGemIntegrationMixDialog()
             confirmCfg.showCancel = true;
             mu_swprintf(strText, I18N::Game::Lookup(COMGEM::GetJewelIndex(COMGEM::m_cGemType, 0)), I18N::Game::JewelOfSoul, COMGEM::m_cCount);
             confirmCfg.lines.push_back({ strText, true });
-            mu_swprintf(strText, I18N::Game::CombinationCostDZen, COMGEM::m_iValue);
-            confirmCfg.lines.push_back({ strText, true });
+            confirmCfg.lines.push_back({ UI::Text::FormatGroupedNumbers(I18N::Game::CombinationCostDZen, { COMGEM::m_iValue }), true });
             confirmCfg.onPrimary = [] { COMGEM::ProcessCSAction(); COMGEM::Exit(); };
             confirmCfg.onCancel = []
             {

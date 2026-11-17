@@ -79,3 +79,9 @@
 /* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
 #tm_title { width: calc(100% * var(--root-scale)); }
 #tm_today, #tm_power, #tm_ticket, #tm_reset { width: calc(166px * var(--root-scale)); }
+
+/* Phones: taller tier rows and a taller enter button for a finger. */
+@media (theme: mobile) {
+	.tm-tier { padding: calc(5px * var(--root-scale)) calc(4px * var(--root-scale)); }
+	#tm_enter { height: calc(42px * var(--root-scale)); }
+}

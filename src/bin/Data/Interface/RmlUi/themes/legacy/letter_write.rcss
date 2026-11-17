@@ -85,3 +85,22 @@ button { font-family: "token(font-body)"; font-size: 1rem; color: token(text-pri
 #footer .btn { width: 20%; margin-right: 1%; }
 #footer .btn.pose { width: 28%; }
 
+
+/* Phone: finger-sized controls, the rows and buttons tall enough to tap, the panel wider. */
+@media (theme: mobile) {
+	#panel { width: 480dp; height: 340dp; }
+	#window_controls { top: 0; right: -8dp; }
+	#window_controls button { width: 40dp; height: 40dp; padding: 15dp; margin-left: 0; }
+	#btn_minimize { decorator: image(lw-minimize) content-box; }
+	#btn_close_x { decorator: image(lw-close) content-box; }
+	#rows { top: 44dp; }
+	.row { height: 32dp; margin-bottom: 3dp; }
+	.row .label { flex: 0 0 64dp; height: 32dp; line-height: 32dp; }
+	.row .text-field { height: 32dp; }
+	#body_wrap { top: 116dp; bottom: 48dp; }
+	#photo_slot { bottom: 48dp; }
+	#photo_help { left: 0; bottom: 0; padding: 10dp; decorator: image(photo-help) content-box; }
+	#photo_help.active { left: 0; padding: 10dp; decorator: image(photo-help-pressed) content-box; }
+	#footer { height: 42dp; }
+	#footer .btn { height: 40dp; line-height: 40dp; }
+}

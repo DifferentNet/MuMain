@@ -18,6 +18,7 @@
 #include "Audio/DSPlaySound.h"
 #include "GameLogic/Events/w_CursedTemple.h"
 #include "World/MapInfra/MapManager.h"
+#include "UI/Dialogs/GenericConfirmDialog.h"
 
 #include <RmlUi/Core/DataModelHandle.h>
 #include <RmlUi/Core/ElementDocument.h>
@@ -184,7 +185,59 @@ void CPartyInfoWindow::RmlClickKickMember(int index)
     if (index < 0 || index >= PartyNumber)
         return;
 
-    LeaveParty(index);
+    ConfirmLeaveParty(index);
+}
+
+void CPartyInfoWindow::ConfirmLeaveParty(int index)
+{
+    if (index < 0 || index >= PartyNumber)
+        return;
+
+    // Leaving is refused in Cursed Temple anyway (LeaveParty sends nothing there): no question.
+    if (gMapManager.IsCursedTemple())
+    {
+        LeaveParty(index);
+        return;
+    }
+
+    const std::wstring memberName = Party[index].Name;
+    const bool leavingSelf = memberName == Hero->ID;
+
+    wchar_t question[MAX_USERNAME_SIZE + 128] = {};
+    if (leavingSelf)
+        mu_swprintf_s(question, L"%ls", I18N::Game::PartyLeaveConfirm);
+    else
+        mu_swprintf_s(question, I18N::Game::PartyKickConfirm, memberName.c_str());
+
+    mu::ui::window::GenericDialogConfig cfg;
+    cfg.showCancel = true;
+    cfg.lines.push_back({ question, true });
+    cfg.onPrimary = [memberName]
+    {
+        // The window is looked up again: the answer may come after it is gone. The party may have changed
+        // too, so the member is found by name and the kick allowed only as before (leader, or yourself).
+        CSystem* system = CSystem::GetInstance();
+        CPartyInfoWindow* window = system != nullptr ? system->GetUI_NewPartyInfoWindow() : nullptr;
+        if (window == nullptr || Hero == nullptr)
+            return;
+        const int member = FindPartyMember(memberName);
+        if (member < 0)
+            return;
+        const bool allowed = !wcscmp(Party[0].Name, Hero->ID) || !wcscmp(Party[member].Name, Hero->ID);
+        if (allowed)
+            window->LeaveParty(member);
+    };
+    mu::ui::window::g_pGenericConfirmDialog->Show(std::move(cfg));
+}
+
+int CPartyInfoWindow::FindPartyMember(const std::wstring& name)
+{
+    for (int i = 0; i < PartyNumber; ++i)
+    {
+        if (name == Party[i].Name)
+            return i;
+    }
+    return -1;
 }
 
 bool CPartyInfoWindow::UpdateMouseEvent()

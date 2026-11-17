@@ -430,6 +430,9 @@ typedef struct _OBJECT_BLOCK
     OBJECT* Head;
     OBJECT* Tail;
     bool          Visible;
+    // MoveObjects(): every object of this (unseen) block is marked not visible already, so the block
+    // is skipped until it is seen again, an object is created in it or an action object runs.
+    bool          ObjectsHidden;
 
     _OBJECT_BLOCK()
     {
@@ -437,6 +440,7 @@ typedef struct _OBJECT_BLOCK
         Head = NULL;
         Tail = NULL;
         Visible = false;
+        ObjectsHidden = false;
     }
 } OBJECT_BLOCK;
 

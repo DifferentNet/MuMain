@@ -13,6 +13,7 @@
 
 #include "UI/Core/WindowSystem.h"
 #include "Core/Utilities/UsefulDef.h"
+#include "UI/Text/GroupedNumberText.h"
 
 #define	QM_NPCDIALOGUE_FILE			L"Data\\Local\\NPCDialogue.bmd"
 #define	QM_QUESTPROGRESS_FILE		L"Data\\Local\\QuestProgress.bmd"
@@ -500,11 +501,13 @@ void FormatRewardText(SRequestRewardText& line, const SQuestReward& reward)
         break;
 
     case QUEST_REWARD_EXP:
-        FormatRequestRewardText(line, I18N::Game::QuestRewardExp, static_cast<unsigned long>(reward.m_dwValue));
+        FormatRequestRewardText(line, L"%ls",
+                                UI::Text::FormatGroupedNumbers(I18N::Game::QuestRewardExp, { reward.m_dwValue }).c_str());
         break;
 
     case QUEST_REWARD_ZEN:
-        FormatRequestRewardText(line, I18N::Game::QuestRewardZen, static_cast<unsigned long>(reward.m_dwValue));
+        FormatRequestRewardText(line, L"%ls",
+                                UI::Text::FormatGroupedNumbers(I18N::Game::QuestRewardZen, { reward.m_dwValue }).c_str());
         break;
 
     case QUEST_REWARD_ITEM:

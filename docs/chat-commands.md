@@ -64,6 +64,11 @@ whisper names (Up and Down in the name box) without filling the box.
 `/party` alone invites the selected player, else the one standing face to face. When nobody fits, the
 chat says the player was not found.
 
+`/trade Name` asks that player to trade when they are in sight, at any distance; `/trade` alone asks the
+selected player wherever they stand, else the one standing face to face (the server only checks that you see
+each other). When nobody fits, the chat says so. `/guild` and `/duelstart` still need the player next to you
+and now also say so in the chat when nobody fits.
+
 ## Favourites and templates
 
 Both are stored per installation in `config.ini`, not per character - the

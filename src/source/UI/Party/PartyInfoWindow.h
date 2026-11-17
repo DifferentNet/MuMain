@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <string>
 #include <vector>
 
 #include "UI/Core/WindowObject.h"
@@ -79,6 +80,9 @@ namespace mu::ui::window
         void ClosingProcess();
 
         bool LeaveParty(const int iIndex);	// 파티장이 상대방을 강퇴
+        // Asks first, then LeaveParty() on the same member (found again by name: the party may
+        // change while the question is open). Inside Cursed Temple it calls LeaveParty() at once.
+        void ConfirmLeaveParty(int index);
 
         void SetParty(bool bParty);
 
@@ -89,6 +93,8 @@ namespace mu::ui::window
 
 
     private:
+        static int FindPartyMember(const std::wstring& name);
+
         void LoadImages();
         void UnloadImages();
 

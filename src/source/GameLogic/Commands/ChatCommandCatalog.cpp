@@ -62,7 +62,7 @@ void AppendClientCommands(std::vector<ChatCommand>& commands)
     ChatCommandParameter text;
     text.Name = L"text";
 
-    commands.push_back(ClientCommand(L"/trade", L"Trade with the player you selected, or the one who faces you. They have to stand next to you."));
+    commands.push_back(ClientCommand(L"/trade", L"Trade with a player: /trade Name when they are in sight, else the player you selected at any distance, or the one who faces you."));
     commands.push_back(ClientCommand(L"/party", L"Invite the player you selected to your party (also /pt)."));
     commands.push_back(ClientCommand(L"/guild", L"Ask the guild master you selected to take you into the guild."));
     commands.push_back(ClientCommand(L"/union", L"Guild masters: ask the guild master you selected for an alliance."));

@@ -485,7 +485,7 @@
     <comment>legacy_id=121</comment>
   </data>
   <data name="F2 : Chat window on/off" xml:space="preserve">
-    <value>Ｆ２:チャットログ On/Off</value>
+    <value>Ｆ２:チャット ささやきのみ/全て</value>
     <comment>legacy_id=122</comment>
   </data>
   <data name="F3 : Whisper Mode window on/off" xml:space="preserve">
@@ -11984,5 +11984,21 @@
   </data>
   <data name="PartyInviteNotFound" xml:space="preserve">
     <value>プレイヤーが見つかりません。プレイヤーを選択するか /party 名前 と入力してください。</value>
+  </data>
+  <!-- Round 8: whisper echo, party leave/kick question, /trade Name -->
+  <data name="WhisperEchoTo" xml:space="preserve">
+    <value>[%ls へ] %ls</value>
+  </data>
+  <data name="PartyLeaveConfirm" xml:space="preserve">
+    <value>パーティーから抜けますか？</value>
+  </data>
+  <data name="PartyKickConfirm" xml:space="preserve">
+    <value>%ls をパーティーから外しますか？</value>
+  </data>
+  <data name="TradePlayerNotFound" xml:space="preserve">
+    <value>プレイヤーが見つかりません。プレイヤーを選択するか /trade 名前 と入力してください。</value>
+  </data>
+  <data name="CommandPlayerNotFound" xml:space="preserve">
+    <value>プレイヤーが見つかりません。</value>
   </data>
 </root>

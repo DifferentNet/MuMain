@@ -127,6 +127,14 @@ mu_add_test(
     LINK_LIBS MuClient
 )
 
+# Numbers in chat and dialog lines grouped by thousands (round 8, D5).
+mu_add_test(
+    NAME grouped_number_text_tests
+    SOURCES
+        test_grouped_number_text.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Text/GroupedNumberText.cpp
+)
+
 mu_add_test(
     NAME help_pages_tests
     SOURCES test_help_pages.cpp

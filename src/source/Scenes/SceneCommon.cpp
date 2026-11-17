@@ -40,6 +40,7 @@ bool& EnableMainRender = g_sceneInit.LegacyRefEnableMainRender();
 #include "Engine/Object/ZzzInterface.h"
 #include "UI/HUD/Notices.h"
 #include "Engine/Object/ZzzInventory.h"
+#include "UI/Text/GroupedNumberText.h"
 #include "Render/Textures/ZzzTexture.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
 #include "Engine/Object/ZzzObject.h"
@@ -279,8 +280,8 @@ static void SetupGemIntegrationMessage()
         for (int t = 0; t < 2; ++t)
             wcscpy_s(g_lpszMessageBoxCustom[t], MAX_LENGTH_CMB, tLines[t]);
 
-        swprintf_s(g_lpszMessageBoxCustom[g_iNumLineMessageBoxCustom], MAX_LENGTH_CMB,
-            I18N::Game::CombinationCostDZen, COMGEM::m_iValue);
+        wcsncpy_s(g_lpszMessageBoxCustom[g_iNumLineMessageBoxCustom], MAX_LENGTH_CMB,
+            UI::Text::FormatGroupedNumbers(I18N::Game::CombinationCostDZen, { COMGEM::m_iValue }).c_str(), _TRUNCATE);
         ++g_iNumLineMessageBoxCustom;
     }
     else
@@ -297,8 +298,8 @@ static void SetupGemIntegrationMessage()
         for (int t = 0; t < 2; ++t)
             wcscpy_s(g_lpszMessageBoxCustom[t], MAX_LENGTH_CMB, tLines[t]);
 
-        swprintf_s(g_lpszMessageBoxCustom[g_iNumLineMessageBoxCustom], MAX_LENGTH_CMB,
-            I18N::Game::DissolvingCostDZen, COMGEM::m_iValue);
+        wcsncpy_s(g_lpszMessageBoxCustom[g_iNumLineMessageBoxCustom], MAX_LENGTH_CMB,
+            UI::Text::FormatGroupedNumbers(I18N::Game::DissolvingCostDZen, { COMGEM::m_iValue }).c_str(), _TRUNCATE);
         ++g_iNumLineMessageBoxCustom;
     }
 }

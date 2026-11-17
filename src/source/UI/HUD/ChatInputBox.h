@@ -164,6 +164,7 @@ namespace mu::ui::window
         void GetWhsprID(type_string& strWhsprID);
 
         void UpdateWhisperTargetFromRightClick();
+        static void EchoSentWhisper(const wchar_t* whisperId, const wchar_t* text);
     };
 }
 

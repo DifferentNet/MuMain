@@ -121,8 +121,8 @@ TEST_CASE("help with touch controls: the touch page instead of the keys, the sam
 {
     const auto lines = UI::Help::BuildPage(0, kTouch);
 
-    // Spacer, heading, spacer, 18 touch rows, spacer, the tap hint, spacer.
-    REQUIRE(lines.size() == 24);
+    // Spacer, heading, spacer, 20 touch rows, spacer, the tap hint, spacer.
+    REQUIRE(lines.size() == 26);
     CHECK(lines[1].heading);
     CHECK(lines[1].text == I18N::Game::TouchHelpTitle);
     CHECK(CountHeadings(lines) == 1);
@@ -131,9 +131,11 @@ TEST_CASE("help with touch controls: the touch page instead of the keys, the sam
     CHECK(lines[5].text == I18N::Game::HelpControlsWalkHit);
     CHECK(lines[7].text == I18N::Game::TouchHelpAttack);
     CHECK(lines[9].text == I18N::Game::TouchHelpPk);
-    CHECK(lines[13].text == I18N::Game::TouchHelpParty);
-    CHECK(lines[14].text == I18N::Game::TouchHelpPickUp);
-    CHECK(lines[20].text == I18N::Game::TouchHelpView);
+    CHECK(lines[10].text == I18N::Game::TouchHelpTarget);
+    CHECK(lines[12].text == I18N::Game::TouchHelpNova);
+    CHECK(lines[15].text == I18N::Game::TouchHelpParty);
+    CHECK(lines[16].text == I18N::Game::TouchHelpPickUp);
+    CHECK(lines[22].text == I18N::Game::TouchHelpView);
     CHECK(Hint(lines).hint);
     CHECK(Hint(lines).text == I18N::Game::TouchHelpNextHint);
     CHECK(lines.back().halfSpacer);

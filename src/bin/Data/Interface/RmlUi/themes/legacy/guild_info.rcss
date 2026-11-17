@@ -334,3 +334,19 @@
 /* .sharp-text sets display: block above, which outranks base.rcss's .hidden: the hint lines and the button
    hide by phone_hud with this. */
 .gi-note.hidden, #gi_social_btn.hidden { display: none; }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the member and alliance rows twice as tall, so a finger picks
+   the right one (selection is RmlUi's own click on the row, no fixed step in C++), their text and marks centred in
+   the taller row, and the member list ending above the buttons. The buttons keep their art; only the box a finger
+   hits grows (party_info.rcss's padding trick: the negative margin takes back the padding and the decorator paints
+   the content box alone). */
+@media (theme: mobile) {
+	.gi-pane-row.gi-member-row { height: calc(26px * var(--root-scale)); }
+	.gi-pane-row.gi-union-row { height: calc(26px * var(--root-scale)); }
+	.gi-member-row .gi-pane-cell, .gi-union-row .gi-pane-cell { top: calc(6px * var(--root-scale)); }
+	.gi-union-row .line-mark { top: calc(9px * var(--root-scale)); }
+	#gi_member_list { height: calc(222px * var(--root-scale)); }
+	.gi-btn { margin-top: -6px; padding: 6px 0; decorator: image(gi-btn-up) content-box; }
+	.gi-btn:hover { decorator: image(gi-btn-over) content-box; }
+	.gi-btn:active { decorator: image(gi-btn-down) content-box; }
+}

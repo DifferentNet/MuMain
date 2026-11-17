@@ -316,6 +316,16 @@ namespace UI::RmlBridge
     }
     } // namespace
 
+    namespace
+    {
+    unsigned s_themedDocumentsGeneration = 1;
+    } // namespace
+
+    unsigned ThemedDocumentsGeneration()
+    {
+        return s_themedDocumentsGeneration;
+    }
+
     Rml::ElementDocument* ThemedDocumentLoader::Load(Rml::Context* context, const char* documentPath)
     {
         return Load(context, documentPath, std::string(), std::string());
@@ -343,6 +353,7 @@ namespace UI::RmlBridge
         ApplyModelName(rmlText, modelPlaceholder, modelName);
 
         Rml::ElementDocument* doc = context->LoadDocumentFromMemory(rmlText, sourceUrl);
+        ++s_themedDocumentsGeneration;
         NoteMarkupClasses(doc, rmlText);
         UI::Items::GridScroll::Attach(doc);
         ApplyNativeTextSize(doc);

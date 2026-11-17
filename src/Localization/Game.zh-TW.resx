@@ -485,7 +485,7 @@
     <comment>legacy_id=121</comment>
   </data>
   <data name="F2 : Chat window on/off" xml:space="preserve">
-    <value>F2：聊天視窗開/關</value>
+    <value>F2：聊天：僅密語／全部訊息</value>
     <comment>legacy_id=122</comment>
   </data>
   <data name="F3 : Whisper Mode window on/off" xml:space="preserve">
@@ -13909,5 +13909,21 @@
   </data>
   <data name="PartyInviteNotFound" xml:space="preserve">
     <value>找不到玩家。請選擇玩家或輸入 /party 名稱。</value>
+  </data>
+  <!-- Round 8: whisper echo, party leave/kick question, /trade Name -->
+  <data name="WhisperEchoTo" xml:space="preserve">
+    <value>[給 %ls] %ls</value>
+  </data>
+  <data name="PartyLeaveConfirm" xml:space="preserve">
+    <value>要離開隊伍嗎？</value>
+  </data>
+  <data name="PartyKickConfirm" xml:space="preserve">
+    <value>要將 %ls 移出隊伍嗎？</value>
+  </data>
+  <data name="TradePlayerNotFound" xml:space="preserve">
+    <value>找不到玩家。請選擇玩家或輸入 /trade 名稱。</value>
+  </data>
+  <data name="CommandPlayerNotFound" xml:space="preserve">
+    <value>找不到玩家。</value>
   </data>
 </root>

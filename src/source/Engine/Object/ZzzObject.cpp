@@ -4672,6 +4672,12 @@ void MoveObjects()
     MoveObjectSetting(objectCount);
 
     visibleObject = 0;
+    // ActionObject() acts only under this condition (Chaos Castle, the gate actions); without it and outside
+    // the top view (which marks objects of unseen blocks visible), an unseen block whose objects are all
+    // marked not visible already has nothing to do.
+    const bool actionActive = g_iActionWorld >= 0 && g_iActionObjectType >= 0 && g_iActionTime >= 0 &&
+                              gMapManager.WorldActive == g_iActionWorld;
+    const bool mayKeepHidden = !actionActive && !g_Camera.TopViewEnable;
     for (int i = 0; i < 16; i++)
     {
         for (int j = 0; j < 16; j++)
@@ -4679,6 +4685,7 @@ void MoveObjects()
             OBJECT_BLOCK* ob = &ObjectBlock[i * 16 + j];
             if (ob->Visible)
             {
+                ob->ObjectsHidden = false;
                 OBJECT* o = ob->Head;
                 while (1)
                 {
@@ -4698,6 +4705,8 @@ void MoveObjects()
             }
             else
             {
+                if (mayKeepHidden && ob->ObjectsHidden)
+                    continue;
                 OBJECT* o = ob->Head;
                 while (1)
                 {
@@ -4713,6 +4722,7 @@ void MoveObjects()
                     }
                     else break;
                 }
+                ob->ObjectsHidden = mayKeepHidden;
             }
         }
     }
@@ -4741,6 +4751,7 @@ OBJECT* CreateObject(int Type, vec3_t Position, vec3_t Angle, float Scale)
 
     BYTE Block = i * 16 + j;
     OBJECT_BLOCK* ob = &ObjectBlock[Block];
+    ob->ObjectsHidden = false;
     auto* o = new OBJECT;
 
     o->Initialize();

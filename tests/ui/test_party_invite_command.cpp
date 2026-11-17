@@ -4,6 +4,7 @@
 
 #include <string>
 
+using UI::Chat::CommandArgument;
 using UI::Chat::PartyCommandArgument;
 using UI::Chat::SameCharacterName;
 
@@ -40,4 +41,15 @@ TEST_CASE("Names match ignoring case but not length")
     CHECK(SameCharacterName(L"", L""));
     CHECK_FALSE(SameCharacterName(L"Bob", L"Bobby"));
     CHECK_FALSE(SameCharacterName(L"Bob", L"Rob"));
+}
+
+TEST_CASE("The trade command takes a name the same way")
+{
+    CHECK(CommandArgument(L"/trade", { L"/trade" }, L"") == std::wstring_view(L""));
+    CHECK(CommandArgument(L"/Trade  Bob ", { L"/trade" }, L"") == std::wstring_view(L"Bob"));
+    CHECK(CommandArgument(L"/handel Bob", { L"/trade" }, L"/handel") == std::wstring_view(L"Bob"));
+    CHECK(CommandArgument(L"/exchange Bob", { L"/trade", L"/exchange" }, L"") == std::wstring_view(L"Bob"));
+    CHECK_FALSE(CommandArgument(L"/tradeBob", { L"/trade" }, L"").has_value());
+    CHECK_FALSE(CommandArgument(L"/party Bob", { L"/trade" }, L"").has_value());
+    CHECK_FALSE(CommandArgument(L"/trade", { L"" }, L"").has_value());
 }

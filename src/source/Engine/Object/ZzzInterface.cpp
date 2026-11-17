@@ -2104,54 +2104,86 @@ bool CheckMacroLimit(wchar_t* Text)
     return  false;
 }
 
-// A player the party command can invite: another live player in sight, not an offline shop's shadow.
-static bool IsPartyInviteCandidate(CHARACTER* c)
+// A player a chat command (/party, /trade, /guild, /duelstart) can name: another live player in sight, not an
+// offline shop's shadow.
+static bool IsPlayerCommandCandidate(CHARACTER* c)
 {
     const OBJECT* o = &c->Object;
     return o->Live && o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c)
         && (o->Type == MODEL_PLAYER || c->Change);
 }
 
+// The player on the next tile who faces the hero, as the original commands picked one without a selection.
+static CHARACTER* FindFaceToFacePlayer()
+{
+    for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
+    {
+        CHARACTER* c = &CharactersClient[i];
+        OBJECT* o = &c->Object;
+        const bool adjacent = abs((c->PositionX) - (Hero->PositionX)) <= 1 && abs((c->PositionY) - (Hero->PositionY)) <= 1;
+        if (!IsPlayerCommandCandidate(c) || !adjacent)
+        {
+            continue;
+        }
+
+        BYTE Dir1 = (BYTE)((o->Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
+        BYTE Dir2 = (BYTE)((Hero->Object.Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
+        if (abs(Dir1 - Dir2) == 4)
+        {
+            return c;
+        }
+    }
+    return nullptr;
+}
+
+// The player named after a command when they are in sight; without a name the selected player wherever they stand,
+// else the one standing face to face. Null when nothing fits.
+static CHARACTER* FindPlayerCommandTarget(std::wstring_view name)
+{
+    if (!name.empty())
+    {
+        for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
+        {
+            CHARACTER* c = &CharactersClient[i];
+            if (IsPlayerCommandCandidate(c) && UI::Chat::SameCharacterName(c->ID, name))
+            {
+                return c;
+            }
+        }
+        return nullptr;
+    }
+
+    if (SelectedCharacter >= 0 && SelectedCharacter < MAX_CHARACTERS_CLIENT
+        && IsPlayerCommandCandidate(&CharactersClient[SelectedCharacter]))
+    {
+        return &CharactersClient[SelectedCharacter];
+    }
+
+    return FindFaceToFacePlayer();
+}
+
+// The target of /guild and /duelstart, which keep the original reach: the selected player on the next tile, or with
+// no selection the one standing face to face. Null when nothing fits.
+static CHARACTER* FindAdjacentCommandTarget()
+{
+    if (SelectedCharacter < 0 || SelectedCharacter >= MAX_CHARACTERS_CLIENT)
+    {
+        return FindFaceToFacePlayer();
+    }
+
+    CHARACTER* c = &CharactersClient[SelectedCharacter];
+    const OBJECT* o = &c->Object;
+    const bool suitable = o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c)
+        && (o->Type == MODEL_PLAYER || c->Change);
+    const bool adjacent = abs((c->PositionX) - (Hero->PositionX)) <= 1 && abs((c->PositionY) - (Hero->PositionY)) <= 1;
+    return suitable && adjacent ? c : nullptr;
+}
+
 // "/party Name" invites that player when they are in sight; "/party" alone the selected player wherever they stand,
 // else the one standing face to face. The server checks no distance, only that the inviter sees the player.
 static void TryInviteToParty(std::wstring_view name)
 {
-    CHARACTER* target = nullptr;
-
-    if (!name.empty())
-    {
-        for (int i = 0; i < MAX_CHARACTERS_CLIENT && target == nullptr; i++)
-        {
-            CHARACTER* c = &CharactersClient[i];
-            if (IsPartyInviteCandidate(c) && UI::Chat::SameCharacterName(c->ID, name))
-            {
-                target = c;
-            }
-        }
-    }
-    else if (SelectedCharacter >= 0 && SelectedCharacter < MAX_CHARACTERS_CLIENT
-        && IsPartyInviteCandidate(&CharactersClient[SelectedCharacter]))
-    {
-        target = &CharactersClient[SelectedCharacter];
-    }
-    else
-    {
-        for (int i = 0; i < MAX_CHARACTERS_CLIENT && target == nullptr; i++)
-        {
-            CHARACTER* c = &CharactersClient[i];
-            OBJECT* o = &c->Object;
-            if (IsPartyInviteCandidate(c) && abs((c->PositionX) - (Hero->PositionX)) <= 1 && abs((c->PositionY) - (Hero->PositionY)) <= 1)
-            {
-                BYTE Dir1 = (BYTE)((o->Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
-                BYTE Dir2 = (BYTE)((Hero->Object.Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
-                if (abs(Dir1 - Dir2) == 4)
-                {
-                    target = c;
-                }
-            }
-        }
-    }
-
+    CHARACTER* target = FindPlayerCommandTarget(name);
     if (target == nullptr)
     {
         g_pSystemLogBox->AddText(I18N::Game::PartyInviteNotFound, mu::ui::window::TYPE_ERROR_MESSAGE);
@@ -2165,6 +2197,29 @@ static void TryInviteToParty(std::wstring_view name)
     g_pSystemLogBox->AddText(message, mu::ui::window::TYPE_SYSTEM_MESSAGE);
 }
 
+// "/trade Name" asks that player when they are in sight; "/trade" alone the selected player wherever they stand,
+// else the one standing face to face. The server checks no distance, only that the player sees the partner.
+static void TryRequestTrade(std::wstring_view name)
+{
+    CHARACTER* target = FindPlayerCommandTarget(name);
+    if (target == nullptr)
+    {
+        g_pSystemLogBox->AddText(I18N::Game::TradePlayerNotFound, mu::ui::window::TYPE_ERROR_MESSAGE);
+        return;
+    }
+
+    if (IsShopInViewport(target))
+    {
+        g_pSystemLogBox->AddText(I18N::Game::YouCannotTradeRightNow, mu::ui::window::TYPE_ERROR_MESSAGE);
+        return;
+    }
+
+    SocketClient->ToGameServer()->SendTradeRequest(target->Key);
+    wchar_t message[100]{};
+    mu_swprintf(message, I18N::Game::YouHaveRequestedSToTrade, target->ID);
+    g_pSystemLogBox->AddText(message, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+}
+
 bool CheckCommand(wchar_t* Text, bool bMacroText)
 {
     if (g_ConsoleDebug->CheckCommand(Text) == true)
@@ -2174,18 +2229,9 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
 
     if (bMacroText == false && LogOut == false)
     {
-        wchar_t Name[256];
-        int iTextSize = 0;
-        for (int i = 0; i < 256 && Text[i] != ' ' && Text[i] != '\0'; i++)
-        {
-            Name[i] = Text[i];
-            iTextSize = i;
-        }
-        Name[iTextSize] = 0;
-
         if (!g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_STORAGE))
         {
-            if (wcscmp(Name, I18N::Game::Exchange) == 0 || wcscmp(Name, I18N::Game::Trade259) == 0 || wcsicmp(Text, L"/trade") == 0)
+            if (const auto tradeArgument = UI::Chat::CommandArgument(Text, { L"/trade", I18N::Game::Exchange }, I18N::Game::Trade259))
             {
                 if (gMapManager.InChaosCastle() == true)
                 {
@@ -2213,52 +2259,7 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
                     return true;
                 }
 
-                if (SelectedCharacter >= 0 && SelectedCharacter < MAX_CHARACTERS_CLIENT)
-                {
-                    CHARACTER* c = &CharactersClient[SelectedCharacter];
-                    OBJECT* o = &c->Object;
-                    if (o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change) &&
-                        abs((c->PositionX) - (Hero->PositionX)) <= 1 &&
-                        abs((c->PositionY) - (Hero->PositionY)) <= 1)
-                    {
-                        if (IsShopInViewport(c))
-                        {
-                            g_pSystemLogBox->AddText(I18N::Game::YouCannotTradeRightNow, mu::ui::window::TYPE_ERROR_MESSAGE);
-                            return true;
-                        }
-
-                        SocketClient->ToGameServer()->SendTradeRequest(c->Key);
-                        wchar_t message[100]{};
-                        mu_swprintf(message, I18N::Game::YouHaveRequestedSToTrade, c->ID);
-                        g_pSystemLogBox->AddText(message, mu::ui::window::TYPE_SYSTEM_MESSAGE);
-                    }
-                }
-                else for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
-                {
-                    CHARACTER* c = &CharactersClient[i];
-                    OBJECT* o = &c->Object;
-
-                    if (o->Live && o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change) &&
-                        abs((c->PositionX) - (Hero->PositionX)) <= 1 &&
-                        abs((c->PositionY) - (Hero->PositionY)) <= 1)
-                    {
-                        if (IsShopInViewport(c))
-                        {
-                            g_pSystemLogBox->AddText(I18N::Game::YouCannotTradeRightNow, mu::ui::window::TYPE_SYSTEM_MESSAGE);
-                            return true;
-                        }
-
-                        BYTE Dir1 = (BYTE)((o->Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
-                        BYTE Dir2 = (BYTE)((Hero->Object.Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
-                        if (abs(Dir1 - Dir2) == 4) {
-                            SocketClient->ToGameServer()->SendTradeRequest(c->Key);
-                            wchar_t message[100]{};
-                            mu_swprintf(message, I18N::Game::YouHaveRequestedSToTrade, c->ID);
-                            g_pSystemLogBox->AddText(message, mu::ui::window::TYPE_SYSTEM_MESSAGE);
-                            break;
-                        }
-                    }
-                }
+                TryRequestTrade(*tradeArgument);
                 return true;
             }
         }
@@ -2375,34 +2376,13 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
                     return 3;
                 }
                 else
-                    if (SelectedCharacter >= 0 && SelectedCharacter < MAX_CHARACTERS_CLIENT)
-                    {
-                        CHARACTER* c = &CharactersClient[SelectedCharacter];
-                        OBJECT* o = &c->Object;
-                        if (o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change) &&
-                            abs((c->PositionX) - (Hero->PositionX)) <= 1 &&
-                            abs((c->PositionY) - (Hero->PositionY)) <= 1) {
-                            SocketClient->ToGameServer()->SendDuelStartRequest(c->Key, MU_C16(c->ID));
-                        }
-                    }
-                    else for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
-                    {
-                        CHARACTER* c = &CharactersClient[i];
-                        OBJECT* o = &c->Object;
-
-                        if (o->Live && o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change) &&
-                            abs((c->PositionX) - (Hero->PositionX)) <= 1 &&
-                            abs((c->PositionY) - (Hero->PositionY)) <= 1)
-                        {
-                            BYTE Dir1 = (BYTE)((o->Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
-                            BYTE Dir2 = (BYTE)((Hero->Object.Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
-                            if (abs(Dir1 - Dir2) == 4)
-                            {
-                                SocketClient->ToGameServer()->SendDuelStartRequest(c->Key, MU_C16(c->ID));
-                                break;
-                            }
-                        }
-                    }
+                {
+                    CHARACTER* target = FindAdjacentCommandTarget();
+                    if (target != nullptr)
+                        SocketClient->ToGameServer()->SendDuelStartRequest(target->Key, MU_C16(target->ID));
+                    else
+                        g_pSystemLogBox->AddText(I18N::Game::CommandPlayerNotFound, mu::ui::window::TYPE_ERROR_MESSAGE);
+                }
             }
             else
             {
@@ -2436,43 +2416,18 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
                 return true;
             }
 
-            if (SelectedCharacter >= 0 && SelectedCharacter < MAX_CHARACTERS_CLIENT)
+            CHARACTER* target = FindAdjacentCommandTarget();
+            if (target == nullptr)
             {
-                CHARACTER* c = &CharactersClient[SelectedCharacter];
-                OBJECT* o = &c->Object;
-                if (o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change) &&
-                    abs((c->PositionX) - (Hero->PositionX)) <= 1 &&
-                    abs((c->PositionY) - (Hero->PositionY)) <= 1)
-                {
-                    GuildPlayerKey = c->Key;
-                    SocketClient->ToGameServer()->SendGuildJoinRequest(c->Key);
-                    wchar_t Text[100];
-                    mu_swprintf(Text, I18N::Game::YouHaveRequestedSToJoinYourGuild, c->ID);
-                    g_pSystemLogBox->AddText(Text, mu::ui::window::TYPE_SYSTEM_MESSAGE);
-                }
+                g_pSystemLogBox->AddText(I18N::Game::CommandPlayerNotFound, mu::ui::window::TYPE_ERROR_MESSAGE);
+                return true;
             }
-            else for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
-            {
-                CHARACTER* c = &CharactersClient[i];
-                OBJECT* o = &c->Object;
 
-                if (o->Live && o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change) &&
-                    abs((c->PositionX) - (Hero->PositionX)) <= 1 &&
-                    abs((c->PositionY) - (Hero->PositionY)) <= 1)
-                {
-                    BYTE Dir1 = (BYTE)((o->Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
-                    BYTE Dir2 = (BYTE)((Hero->Object.Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
-                    if (abs(Dir1 - Dir2) == 4)
-                    {
-                        GuildPlayerKey = c->Key;
-                        SocketClient->ToGameServer()->SendGuildJoinRequest(c->Key);
-                        wchar_t Text[100];
-                        mu_swprintf(Text, I18N::Game::YouHaveRequestedSToJoinYourGuild, c->ID);
-                        g_pSystemLogBox->AddText(Text, mu::ui::window::TYPE_SYSTEM_MESSAGE);
-                        break;
-                    }
-                }
-            }
+            GuildPlayerKey = target->Key;
+            SocketClient->ToGameServer()->SendGuildJoinRequest(target->Key);
+            wchar_t message[100];
+            mu_swprintf(message, I18N::Game::YouHaveRequestedSToJoinYourGuild, target->ID);
+            g_pSystemLogBox->AddText(message, mu::ui::window::TYPE_SYSTEM_MESSAGE);
             return true;
         }
         if (!wcscmp(Text, I18N::Game::Alliance1354) || !wcsicmp(Text, L"/union") ||

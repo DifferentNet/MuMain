@@ -11,6 +11,7 @@
 #include "GameLogic/Items/CSItemOption.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/ConfirmRequest.h"
+#include "UI/Mobile/InterfaceMode.h"
 
 #include "Core/Utilities/StringUtils.h"
 #include "Render/Text/CUIRenderText.h"
@@ -483,14 +484,17 @@ void mu::ui::window::CGrandShopWindow::SyncItems(GrandShopRmlModel& updated, con
     if (shown == nullptr)
         return;
 
+    const bool phoneView = UI::Mobile::IsPhoneView();
+    const int nameWidth = phoneView ? PHONE_ITEM_NAME_WIDTH : ITEM_NAME_WIDTH;
+    const int priceWidth = phoneView ? PHONE_ITEM_PRICE_WIDTH : ITEM_PRICE_WIDTH;
     for (size_t i = 0; i < shown->lines.size(); ++i)
     {
         const Line& line = *shown->lines[i];
         const std::wstring why = WhyNotBuyable(line);
         GrandShopItem item;
         item.id = "gs_icon_" + std::to_string(i);
-        item.name = MakeLine(ItemName(line), ITEM_NAME_WIDTH, true);
-        item.price = MakeLine(Printf(I18N::Game::GrandShopPrice, Thousands(line.Price).c_str()), ITEM_PRICE_WIDTH);
+        item.name = MakeLine(ItemName(line), nameWidth, true);
+        item.price = MakeLine(Printf(I18N::Game::GrandShopPrice, Thousands(line.Price).c_str()), priceWidth);
         item.index = static_cast<int>(i);
         item.canBuy = why.empty() && !Grand().IsBusy();
         item.hint = StringUtils::WideToNarrow(why.c_str());

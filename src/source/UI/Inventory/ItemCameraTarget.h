@@ -45,5 +45,8 @@ private:
     Rml::Vector2f m_offset{0.f, 0.f};
     Rml::Vector2f m_size{0.f, 0.f};
     UI::RmlBridge::RenderTarget m_target;
+    // The image last hidden by a disabled Sync(): while it stays hidden and disabled, Sync() returns at once
+    // (a hidden window's image costs no layout read and no property write every frame).
+    const Rml::Element* m_hiddenImage = nullptr;
 };
 } // namespace UI::Items
