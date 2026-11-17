@@ -360,7 +360,7 @@ void CNPCQuest::RmlClickComplete()
 
 void CNPCQuest::SyncRmlModel()
 {
-    m_ItemTarget.Sync(m_RmlView.Document() ? m_RmlView.Document()->GetElementById("nq_item") : nullptr, IsVisible());
+    m_ItemTarget.Sync(m_RmlView.Document(), "nq_item", IsVisible());
     if (!m_RmlView.Document() || !IsVisible())
         return;
 

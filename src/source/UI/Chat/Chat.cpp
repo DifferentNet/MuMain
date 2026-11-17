@@ -583,7 +583,7 @@ int CreateChat(wchar_t* character_name, const wchar_t* chat_text, OBJECT* Owner,
 
 void AssignChat(wchar_t* character_name, const wchar_t* chat_text, int flag)
 {
-    for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
+    for (int i = 0; i < CharacterSlotEnd(); i++)
     {
         CHARACTER* c = &CharactersClient[i];
         OBJECT* o = &c->Object;
@@ -597,7 +597,7 @@ void AssignChat(wchar_t* character_name, const wchar_t* chat_text, int flag)
         }
     }
 
-    for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
+    for (int i = 0; i < CharacterSlotEnd(); i++)
     {
         CHARACTER* c = &CharactersClient[i];
         OBJECT* o = &c->Object;

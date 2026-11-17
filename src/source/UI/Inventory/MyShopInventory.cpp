@@ -723,7 +723,7 @@ bool mu::ui::window::CMyShopInventory::Update()
 
 void mu::ui::window::CMyShopInventory::SyncRmlModel()
 {
-    m_ItemTarget.Sync(m_RmlView.Document() ? m_RmlView.Document()->GetElementById("item_view") : nullptr, IsVisible());
+    m_ItemTarget.Sync(m_RmlView.Document(), "item_view", IsVisible());
     if (!m_RmlView.Document()) return;
     UI::RmlBridge::SyncDocumentVisibility(m_RmlView.Document(), IsVisible());
     if (!IsVisible())

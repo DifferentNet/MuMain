@@ -140,7 +140,7 @@ void CMsgBoxIGSBuySelectItem::BindRmlModel(Rml::DataModelConstructor& c, BuySele
 
 void CMsgBoxIGSBuySelectItem::SyncRmlModel()
 {
-    m_ItemTarget.Sync(m_RmlView.Document() ? m_RmlView.Document()->GetElementById("igs_item") : nullptr, true);
+    m_ItemTarget.Sync(m_RmlView.Document(), "igs_item", true);
     if (!m_RmlView.Document())
         return;
     auto& binder = m_RmlView.Binder();

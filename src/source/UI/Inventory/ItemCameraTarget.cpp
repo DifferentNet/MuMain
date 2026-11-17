@@ -48,6 +48,11 @@ void UI::Items::ItemCameraTarget::Sync(Rml::Element* image, bool enabled)
         image->SetAttribute("src", source);
 }
 
+void UI::Items::ItemCameraTarget::Sync(Rml::ElementDocument* document, const char* id, bool enabled)
+{
+    Sync(m_image.Find(document, id), enabled);
+}
+
 void UI::Items::ItemCameraTarget::Render(std::uint32_t width, std::uint32_t height)
 {
     if (width == 0 || height == 0 || !m_drawer)

@@ -6492,6 +6492,8 @@ void MoveCharactersClient()
     ClearCharacterWallMarks();
 
     // Every slot still gets its Visible here, the free ones too, as before.
+    // Every slot that was live since the last frame sits below this end (creates raise it).
+    const int previousSlotEnd = s_characterSlotEnd;
     int slotEnd = 0;
     for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
     {
@@ -6518,7 +6520,10 @@ void MoveCharactersClient()
     {
         // The bones themselves on the main thread, or only handing them to the workers (CharWait has the rest).
         FRAME_PROFILE(CharAnim);
-        UpdateCharactersAnimationParallel(std::span<CHARACTER>(CharactersClient, MAX_CHARACTERS_CLIENT));
+        // Slots at or above both ends were free through the last frame, so its pass already left them with no
+        // bone matrix and no pose, and nothing sets those again until a create takes the slot.
+        const int animationEnd = std::max(previousSlotEnd, CharacterSlotEnd());
+        UpdateCharactersAnimationParallel(std::span<CHARACTER>(CharactersClient, animationEnd));
     }
     // The only main-thread work while the workers animate: it must not touch a character's
     // animation inputs or bones, or load a model (see AnimationTaskPool).
@@ -11683,12 +11688,14 @@ void RenderCharactersClient()
     const int touchMeet = UI::HUD::GamepadControls::PromptMeet();
     // The foe the right stick or the Target button chose gets a gold ring besides the light.
     const int chosenTarget = GameLogic::Touch::ChosenIndex();
-    for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
+    // During a siege the cloaking check below also runs for free slots, so then every slot is still visited.
+    const bool battleCastleStarted = battleCastle::IsBattleCastleStart();
+    for (int i = 0; i < (battleCastleStarted ? MAX_CHARACTERS_CLIENT : CharacterSlotEnd()); ++i)
     {
         CHARACTER* c = &CharactersClient[i];
         OBJECT* o = &c->Object;
 
-        if (c != Hero && battleCastle::IsBattleCastleStart() == true && g_isCharacterBuff(o, eBuff_Cloaking))
+        if (c != Hero && battleCastleStarted && g_isCharacterBuff(o, eBuff_Cloaking))
         {
             if ((Hero->EtcPart == PARTS_ATTACK_KING_TEAM_MARK || Hero->EtcPart == PARTS_ATTACK_TEAM_MARK))
             {
@@ -11850,7 +11857,7 @@ void DeleteCharacter(CHARACTER* c, OBJECT* o)
 
 int FindCharacterIndex(int Key)
 {
-    for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
+    for (int i = 0; i < CharacterSlotEnd(); i++)
     {
         CHARACTER* c = &CharactersClient[i];
         if (c->Object.Live && c->Key == Key)
@@ -11863,7 +11870,7 @@ int FindCharacterIndex(int Key)
 
 int FindCharacterIndexByMonsterIndex(int Type)
 {
-    for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
+    for (int i = 0; i < CharacterSlotEnd(); i++)
     {
         CHARACTER* c = &CharactersClient[i];
         if (c->Object.Live && c->MonsterIndex == Type)
@@ -12684,7 +12691,7 @@ DWORD GetGuildRelationShipBGColor(BYTE GuildRelationShip)
 
 CHARACTER* FindCharacterByID(wchar_t* szName)
 {
-    for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
+    for (int i = 0; i < CharacterSlotEnd(); i++)
     {
         CHARACTER* c = &CharactersClient[i];
         if (c->Object.Live && !wcscmp(szName, c->ID))
@@ -12699,7 +12706,7 @@ CHARACTER* FindCharacterByID(wchar_t* szName)
 
 CHARACTER* FindCharacterByKey(int Key)
 {
-    for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
+    for (int i = 0; i < CharacterSlotEnd(); i++)
     {
         CHARACTER* c = &CharactersClient[i];
         if (c->Object.Live && c->Key == Key)
