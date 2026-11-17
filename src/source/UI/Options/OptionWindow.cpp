@@ -745,6 +745,15 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     model.hdTexturesAvailable = Render::Look::RemasterGraphicsOptions();
 #endif
     c.Bind("hd_textures_available", &model.hdTexturesAvailable);
+    // The low frame rate hint (Scenes/LowFpsHint.h) is the Remaster client's on the desktop: no row elsewhere.
+    c.Bind("low_fps_hint", &model.lowFpsHint);
+    c.Bind("low_fps_hint_label", &model.lowFpsHintLabel);
+#ifdef __EMSCRIPTEN__
+    model.lowFpsHintAvailable = false;
+#else
+    model.lowFpsHintAvailable = Render::Look::RemasterGraphicsOptions();
+#endif
+    c.Bind("low_fps_hint_available", &model.lowFpsHintAvailable);
     c.Bind("hd_texture_size_labels", &model.hdTextureSizeLabels);
     c.Bind("hd_texture_size_index", &model.hdTextureSizeIndex);
     c.Bind("hd_texture_size_row_label", &model.hdTextureSizeRowLabel);
@@ -974,6 +983,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleFxaa(); });
     c.BindEventCallback("option_toggle_hd_textures",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleHdTextures(); });
+    c.BindEventCallback("option_toggle_low_fps_hint",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleLowFpsHint(); });
     c.BindEventCallback("option_toggle_ssao",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleSsao(); });
     c.BindEventCallback("option_toggle_wind",
@@ -1894,6 +1905,14 @@ void mu::ui::window::COptionWindow::RmlToggleHdTextures()
     // their version, so the new value takes effect after a restart (Winmain reads it once).
     GameConfig& config = GameConfig::GetInstance();
     config.SetHdTextures(!config.GetHdTextures());
+    config.Save();
+}
+
+void mu::ui::window::COptionWindow::RmlToggleLowFpsHint()
+{
+    // "Don't ask again" on the hint's toast turns it off; this turns it back on (or off).
+    GameConfig& config = GameConfig::GetInstance();
+    config.SetLowFpsHint(!config.GetLowFpsHint());
     config.Save();
 }
 
@@ -3022,6 +3041,7 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.graphicsPresetRowLabel, "graphics_preset_row_label", I18N::Game::GraphicsPresetRow);
     syncLabel(model.fxaaLabel, "fxaa_label", I18N::Game::FxaaRow);
     syncLabel(model.hdTexturesLabel, "hd_textures_label", I18N::Game::HdTexturesRow);
+    syncLabel(model.lowFpsHintLabel, "low_fps_hint_label", I18N::Game::GraphicsHintOptionRow);
     syncLabel(model.hdTextureSizeRowLabel, "hd_texture_size_row_label", I18N::Game::HdTextureSizeRow);
     syncLabel(model.hdTextureSizeTooltip, "hd_texture_size_tooltip", I18N::Game::HdTextureSizeTooltip);
     syncLabel(model.sharpenRowLabel, "sharpen_row_label", I18N::Game::SharpenRow);
@@ -3210,6 +3230,12 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
         {
             model.hdTextures = hdTextures;
             m_RmlView.MarkDirty("hd_textures");
+        }
+        const bool lowFpsHint = config.GetLowFpsHint();
+        if (model.lowFpsHint != lowFpsHint)
+        {
+            model.lowFpsHint = lowFpsHint;
+            m_RmlView.MarkDirty("low_fps_hint");
         }
         std::vector<Rml::String> sharpenLabels = MultiplierLabels(s_SharpenValues);
         for (std::size_t i = 1; i < sharpenLabels.size(); ++i)

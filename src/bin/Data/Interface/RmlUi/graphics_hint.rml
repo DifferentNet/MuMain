@@ -1,0 +1,22 @@
+<rml>
+<head>
+	<title>Graphics Hint</title>
+	<link type="text/rcss" href="base.rcss"/>
+	<link type="text/rcss" href="graphics_hint.rcss"/>
+</head>
+<body>
+	<!-- The low frame rate hint (UI/HUD/GraphicsHint.cpp binds it by name): a non-modal toast near the top of the
+	     screen. It never takes the keyboard focus; only the panel takes the pointer, the world around it stays
+	     clickable. Shared by both themes, which only style it. -->
+	<div id="graphics_hint" data-model="graphics_hint">
+		<div class="gh-title">{{title_text}}</div>
+		<div class="gh-body">{{body_text}}</div>
+		<div class="gh-note" data-if="has_note">{{note_text}}</div>
+		<div class="gh-buttons">
+			<div id="gh_lower" class="btn btn-ok gh-btn" data-event-click="graphics_hint_lower">{{lower_label}}</div>
+			<div id="gh_keep" class="btn gh-btn" data-event-click="graphics_hint_keep">{{keep_label}}</div>
+			<div id="gh_never" class="btn gh-btn" data-event-click="graphics_hint_never">{{never_label}}</div>
+		</div>
+	</div>
+</body>
+</rml>

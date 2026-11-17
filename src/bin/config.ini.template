@@ -35,6 +35,7 @@ HdTextures=0
 HdTextureSize=0
 SunShadows=0
 Sharpen=0
+LowFpsHint=1
 Anisotropy=8
 Antialiasing=4
 EnhancedLighting=1

@@ -1,0 +1,56 @@
+/* Legacy theme for the low frame rate hint: a flat panel in login.rcss's palette, like the remember-password
+   prompt. dp throughout; the panel sizes to its text, the buttons sit in one row under it. */
+
+#graphics_hint {
+	position: absolute;
+	top: 72dp;
+	left: 50%;
+	width: 420dp;
+	margin-left: -210dp;
+	padding: 10dp 14dp 12dp 14dp;
+	font-family: "token(font-body)";
+	font-size: 12dp;
+	color: token(text-primary);
+	background-color: #1a140a;
+	border: 1dp #806040;
+	pointer-events: auto;
+	/* Clicks never take the keyboard from the chat field. */
+	focus: none;
+}
+
+.gh-title {
+	display: block;
+	color: token(accent-gold);
+	font-weight: bold;
+	margin-bottom: 6dp;
+}
+
+.gh-body {
+	display: block;
+	white-space: normal;
+}
+
+.gh-note {
+	display: block;
+	margin-top: 4dp;
+	color: #ff9c40;
+	white-space: normal;
+}
+
+.gh-buttons {
+	display: block;
+	margin-top: 10dp;
+	text-align: center;
+}
+
+/* base.rcss places .btn absolutely at a fixed width; in this row they flow and fit their label. */
+#graphics_hint .gh-btn {
+	focus: none;
+	position: relative;
+	display: inline-block;
+	width: auto;
+	min-width: 90dp;
+	padding: 0 10dp;
+	margin: 0 4dp;
+	white-space: nowrap;
+}

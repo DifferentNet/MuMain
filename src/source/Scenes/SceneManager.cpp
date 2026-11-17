@@ -69,6 +69,7 @@ FrameTimingState g_frameTiming;
 #include "Camera/CameraConfig.h"
 #include "Camera/CameraProjection.h"
 #include "Scenes/SceneLightingSetup.h"
+#include "Scenes/LowFpsHint.h"
 #include "Scenes/SceneNames.h"
 #include "Render/Lighting/LightMoodSetting.h"
 
@@ -1247,6 +1248,10 @@ static void WatchVSyncPacing()
 void RenderScene(HDC hDC)
 {
     CalcFPS();
+#ifndef __EMSCRIPTEN__
+    // The low frame rate hint measures every frame (Scenes/LowFpsHint.h; Remaster on the desktop only).
+    Scenes::LowFpsHint::OnFrame();
+#endif
     UpdateSceneState();
 
     // Drive auto-reconnect after the scene loops have advanced this frame. It

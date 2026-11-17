@@ -13052,6 +13052,31 @@
   <data name="GraphicsPresetCustom" xml:space="preserve">
     <value>Personalizado</value>
   </data>
+  <!-- Low frame rate hint (Scenes/LowFpsHint.h, UI/HUD/GraphicsHint.h) -->
+  <data name="GraphicsHintTitle" xml:space="preserve">
+    <value>Taxa de quadros baixa</value>
+  </data>
+  <data name="GraphicsHintBody" xml:space="preserve">
+    <value>O jogo está rodando a cerca de %d FPS. Uma predefinição gráfica mais baixa pode deixá-lo mais fluido.</value>
+  </data>
+  <data name="GraphicsHintClassicNote" xml:space="preserve">
+    <value>Baixo é o visual clássico do jogo original.</value>
+  </data>
+  <data name="GraphicsHintLower" xml:space="preserve">
+    <value>Baixar para %ls</value>
+  </data>
+  <data name="GraphicsHintKeep" xml:space="preserve">
+    <value>Manter</value>
+  </data>
+  <data name="GraphicsHintNever" xml:space="preserve">
+    <value>Não perguntar de novo</value>
+  </data>
+  <data name="GraphicsHintApplied" xml:space="preserve">
+    <value>Predefinição gráfica: %ls. Altere em Opções &gt; Gráficos.</value>
+  </data>
+  <data name="GraphicsHintOptionRow" xml:space="preserve">
+    <value>Sugerir uma predefinição mais baixa com FPS baixo</value>
+  </data>
   <data name="FxaaRow" xml:space="preserve">
     <value>FXAA</value>
   </data>
