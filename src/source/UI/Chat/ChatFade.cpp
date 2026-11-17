@@ -32,4 +32,17 @@ ChatFadeState EvaluateChatFade(const std::vector<std::uint64_t>& addedAtMs, std:
     }
     return state;
 }
+
+int SystemLinesShown(const std::vector<std::uint64_t>& arrivalsMs, std::uint64_t nowMs, int maxLines,
+                     std::uint64_t stayMs, bool chatOpen)
+{
+    int count = 0;
+    for (auto it = arrivalsMs.rbegin(); it != arrivalsMs.rend() && count < maxLines; ++it)
+    {
+        if (!chatOpen && nowMs > *it && nowMs - *it >= stayMs)
+            break;
+        ++count;
+    }
+    return count;
+}
 } // namespace UI::Chat
