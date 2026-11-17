@@ -42,6 +42,9 @@ set(shader_specs
     "terrain_lights.vert|cb0,space1+cb1,space1"
     "terrain_lights.frag|cb0,space3+cb1,space3+s0,space2+t0,space2"
     "terrain_lights_shadow.frag|cb0,space3+cb1,space3+s0,space2+s1,space2+t0,space2+t1,space2"
+    "soft_particles.vert|cb0,space1"
+    "basic_textured_fog_soft.frag|cb0,space3+cb1,space3+s0,space2+s1,space2+t0,space2+t1,space2"
+    "basic_textured_fog_soft_glow.frag|cb0,space3+cb1,space3+s0,space2+s1,space2+t0,space2+t1,space2"
 )
 
 foreach(shader_spec IN LISTS shader_specs)

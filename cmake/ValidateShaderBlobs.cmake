@@ -36,6 +36,9 @@ set(MU_SHADER_STAGE_NAMES
     terrain_lights.vert
     terrain_lights.frag
     terrain_lights_shadow.frag
+    soft_particles.vert
+    basic_textured_fog_soft.frag
+    basic_textured_fog_soft_glow.frag
 )
 set(MU_SHADER_BLOB_FORMATS spv msl dxil)
 set(MU_SHADER_BLOB_NAMES)

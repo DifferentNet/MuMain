@@ -151,6 +151,7 @@ void ApplyCall(const FrameLightTarget& target, const Lighting::LightCall& call)
         return;
     Lighting::DynamicLight light = MakeDynamicLight(call.x, call.y, color, call.range, target.height(call.x, call.y));
     light.fromMap = call.source == Lighting::LightSource::Map;
+    light.fromEffect = call.source == Lighting::LightSource::Effect;
     target.frameLights->Add(light);
 }
 } // namespace

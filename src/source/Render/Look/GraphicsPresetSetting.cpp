@@ -11,6 +11,7 @@
 #include "Render/Models/ModelSmoothing.h"
 #include "Render/Models/WindSway.h"
 #include "Render/Effects/ParticlesSetting.h"
+#include "Render/Effects/SkillFx.h"
 #include "Render/Terrain/TorchLights.h"
 #include "Render/Textures/FoliageSmoothing.h"
 #include "Render/Lighting/SunShadowSoftEdges.h"
@@ -159,6 +160,8 @@ void ApplyGraphicsPreset(GraphicsPreset preset)
     Render::Effects::Particles::ApplyFromConfig();
     // The torch light on the ground is off on Low too.
     Render::Terrain::TorchLights::ApplyFromConfig();
+    // The skill effect looks follow the effect level, read when they draw.
+    Render::Effects::SkillFx::ApplyFromConfig();
     // The foliage smoothing is off on Low too.
     Render::Textures::FoliageSmoothing::ApplyFromConfig();
     // The soft sun shadow edges are off on Low too.

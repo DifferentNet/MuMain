@@ -122,11 +122,24 @@ static_assert(offsetof(DynamicLightsUniform, positionAndRadius) == 1 * kSceneLig
 static_assert(offsetof(DynamicLightsUniform, color) == (1 + kMaxDynamicLights) * kSceneLightingRegisterSize);
 static_assert(sizeof(DynamicLightsUniform) == (1 + 2 * kMaxDynamicLights) * kSceneLightingRegisterSize);
 
-// Most torch lights the Remaster's ground draws apply per pixel (Render/Terrain/TorchLights.h).
-inline constexpr std::size_t kMaxTerrainLights = 16;
+// Most lights the Remaster's ground draws apply per pixel (Render/Terrain/TorchLights.h): 16 map
+// lights, then 16 skill effect lights (Render/Effects/SkillFx.h).
+inline constexpr std::size_t kMaxTerrainLights = 32;
+
+// HLSL layout of the soft effect sprites' world depth (Render/Effects/SoftParticles.h): in cbuffer
+// SceneLighting (register(b1, space3)) of soft_particles.hlsli and terrain_lights.hlsli, right after
+// mu::SunShadowUniform (desktop only). All 0 when the frame has no world depth: no sprite fades.
+struct SoftParticlesUniform
+{
+    float projection[4]{}; // 1 / proj[0][0], 1 / proj[1][1], proj[2][2], proj[3][2] (as the haze's)
+    float depth[4]{};      // x: 1 / width, y: 1 / height of the world depth, z: 1 when it is there, w unused
+};
+
+static_assert(offsetof(SoftParticlesUniform, depth) == 1 * kSceneLightingRegisterSize);
+static_assert(sizeof(SoftParticlesUniform) == 2 * kSceneLightingRegisterSize);
 
 // HLSL layout of the frame's torch lights on the ground: the end of cbuffer SceneLighting
-// (register(b1, space3)) in terrain_lights.hlsli, right after mu::SunShadowUniform (desktop only).
+// (register(b1, space3)) in terrain_lights.hlsli, right after mu::SoftParticlesUniform (desktop only).
 // Each light adds color * smooth(1 - d / radius), d being the horizontal distance; the colour is
 // already scaled by the light's hand-over weight and the strength's gain.
 struct TerrainLightsUniform
@@ -140,7 +153,7 @@ static_assert(offsetof(TerrainLightsUniform, header) == 0);
 static_assert(offsetof(TerrainLightsUniform, positionAndRadius) == 1 * kSceneLightingRegisterSize);
 static_assert(offsetof(TerrainLightsUniform, color) == (1 + kMaxTerrainLights) * kSceneLightingRegisterSize);
 static_assert(sizeof(TerrainLightsUniform) == (1 + 2 * kMaxTerrainLights) * kSceneLightingRegisterSize);
-static_assert(sizeof(TerrainLightsUniform) == 528);
+static_assert(sizeof(TerrainLightsUniform) == 1040);
 
 // Enhanced fog: amount = 1 - exp(-(density * max(depth - start, 0))^2). The density makes the
 // amount reach kEnhancedFogCoverageAtEnd at the fog end, so Enhanced fog is clear before the

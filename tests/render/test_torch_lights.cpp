@@ -26,6 +26,14 @@ DynamicLight MapLight(float x, float y, float brightness = 0.5f, int range = 3)
     return light;
 }
 
+DynamicLight EffectLight(float x, float y, float brightness = 0.8f, int range = 2)
+{
+    DynamicLight light = MapLight(x, y, brightness, range);
+    light.fromMap = false;
+    light.fromEffect = true;
+    return light;
+}
+
 constexpr float kHero[3] = {12800.0f, 12800.0f, 0.0f};
 
 using Grid = std::vector<std::array<float, 3>>;
@@ -192,11 +200,12 @@ TEST_CASE("the shader block holds the count, positions, radii and colour * weigh
     a.color[1] = 0.4f;
     a.color[2] = 0.2f;
     a.range = 3;
+    a.gain = 1.2f;
     TorchLights::Selected b = a;
     b.x = 300.0f;
     b.weight = 1.0f;
     const std::array<TorchLights::Selected, 2> selected{a, b};
-    const mu::TerrainLightsUniform uniform = TorchLights::Pack(selected, 1.2f);
+    const mu::TerrainLightsUniform uniform = TorchLights::Pack(selected);
     CHECK(uniform.header[0] == 2.0f);
     CHECK(uniform.positionAndRadius[0][0] == 100.0f);
     CHECK(uniform.positionAndRadius[0][1] == 200.0f);
@@ -302,6 +311,155 @@ TEST_CASE("the removable part gives the bytes of the light without the share, ex
             }
         }
     }
+}
+
+TEST_CASE("the map selection gives each light the gain it was asked for [render][torch_lights]")
+{
+    const std::array<DynamicLight, 2> lights{MapLight(kHero[0] + 100.0f, kHero[1]), MapLight(kHero[0] + 300.0f, kHero[1])};
+    TorchLights::Selection selection{};
+    REQUIRE(TorchLights::Select(lights, kHero, selection, 1.2f) == 2);
+    CHECK(selection[0].gain == Approx(1.2f));
+    CHECK(selection[1].gain == Approx(1.2f));
+    REQUIRE(TorchLights::Select(lights, kHero, selection) == 2);
+    CHECK(selection[0].gain == Approx(1.0f));
+}
+
+TEST_CASE("the map selection never takes effect lights, the effect selection never map lights [render][torch_lights]")
+{
+    std::vector<DynamicLight> lights;
+    lights.push_back(MapLight(kHero[0] + 100.0f, kHero[1]));
+    lights.push_back(EffectLight(kHero[0] + 50.0f, kHero[1]));
+    DynamicLight character = MapLight(kHero[0] + 60.0f, kHero[1]);
+    character.fromMap = false; // a character's light: neither
+    lights.push_back(character);
+
+    TorchLights::Selection selection{};
+    REQUIRE(TorchLights::Select(lights, kHero, selection) == 1);
+    CHECK(selection[0].x == Approx(kHero[0] + 100.0f));
+
+    std::array<TorchLights::Selected, TorchLights::kMaxEffectLights> effects{};
+    REQUIRE(TorchLights::SelectEffects(lights, kHero, 16, effects) == 1);
+    CHECK(effects[0].x == Approx(kHero[0] + 50.0f));
+    CHECK(effects[0].gain == Approx(TorchLights::kEffectGain));
+    CHECK(effects[0].weight == Approx(1.0f));
+    CHECK(effects[0].range == 2);
+}
+
+TEST_CASE("effect lights: darkening, rangeless and far ones are left out [render][torch_lights]")
+{
+    std::vector<DynamicLight> lights;
+    lights.push_back(EffectLight(kHero[0] + 100.0f, kHero[1]));
+    DynamicLight dark = EffectLight(kHero[0] - 2000.0f, kHero[1]);
+    dark.color[0] = -0.3f;
+    lights.push_back(dark);
+    DynamicLight rangeless = EffectLight(kHero[0] + 70.0f, kHero[1]);
+    rangeless.range = 0;
+    lights.push_back(rangeless);
+    lights.push_back(EffectLight(kHero[0] + TorchLights::kMaxDistance + 1.0f, kHero[1]));
+    // Its square touches the darkening light's: left out as map lights are.
+    lights.push_back(EffectLight(kHero[0] - 1700.0f, kHero[1]));
+
+    std::array<TorchLights::Selected, TorchLights::kMaxEffectLights> effects{};
+    REQUIRE(TorchLights::SelectEffects(lights, kHero, 16, effects) == 1);
+    CHECK(effects[0].x == Approx(kHero[0] + 100.0f));
+}
+
+TEST_CASE("the effect budget keeps the nearest, fading out before the next one [render][torch_lights]")
+{
+    std::vector<DynamicLight> lights;
+    for (int i = 12; i >= 1; --i)
+        lights.push_back(EffectLight(kHero[0] + 100.0f * static_cast<float>(i), kHero[1]));
+
+    std::array<TorchLights::Selected, TorchLights::kMaxEffectLights> effects{};
+    // Budget 8: the 9th is at 900, so the 8th (800) fades by 100 / 400 and the 5th is the last at full weight.
+    REQUIRE(TorchLights::SelectEffects(lights, kHero, 8, effects) == 8);
+    for (std::size_t i = 0; i < 8; ++i)
+        CHECK(effects[i].x == Approx(kHero[0] + 100.0f * static_cast<float>(i + 1)));
+    CHECK(effects[4].weight == Approx(1.0f));
+    CHECK(effects[5].weight == Approx(0.75f));
+    CHECK(effects[7].weight == Approx(0.25f));
+
+    // All 12 fit in a budget of 12: no cutoff but the distance limit.
+    REQUIRE(TorchLights::SelectEffects(lights, kHero, 12, effects) == 12);
+    CHECK(effects[11].weight == Approx(1.0f));
+
+    // Never more than kMaxEffectLights, nor more than the room given.
+    std::vector<DynamicLight> many;
+    for (int i = 1; i <= 30; ++i)
+        many.push_back(EffectLight(kHero[0] + 50.0f * static_cast<float>(i), kHero[1]));
+    CHECK(TorchLights::SelectEffects(many, kHero, 99, effects) <= TorchLights::kMaxEffectLights);
+    CHECK(TorchLights::SelectEffects(many, kHero, 99, std::span<TorchLights::Selected>(effects).first(3)) <= 3);
+    // Budget 0 (pools off) selects none.
+    CHECK(TorchLights::SelectEffects(many, kHero, 0, effects) == 0);
+}
+
+TEST_CASE("map and effect lights share the 32-slot block, each with its own gain [render][torch_lights]")
+{
+    std::vector<DynamicLight> lights;
+    for (int i = 1; i <= 20; ++i)
+        lights.push_back(MapLight(kHero[0] + 100.0f * static_cast<float>(i), kHero[1]));
+    for (int i = 1; i <= 20; ++i)
+        lights.push_back(EffectLight(kHero[0], kHero[1] + 100.0f * static_cast<float>(i)));
+
+    TorchLights::Selection selection{};
+    const std::size_t map = TorchLights::Select(lights, kHero, selection, 1.2f);
+    REQUIRE(map == TorchLights::kMaxMapLights);
+    const std::size_t effects =
+        TorchLights::SelectEffects(lights, kHero, 16, std::span<TorchLights::Selected>(selection).subspan(map));
+    REQUIRE(effects == TorchLights::kMaxEffectLights);
+    const std::size_t count = map + effects;
+    REQUIRE(count == TorchLights::kMaxLights);
+
+    const mu::TerrainLightsUniform uniform = TorchLights::Pack({selection.data(), count});
+    CHECK(uniform.header[0] == 32.0f);
+    // Slot 0: the nearest map light at the torch gain; slot 16: the nearest effect light at gain 1.
+    CHECK(uniform.positionAndRadius[0][0] == Approx(kHero[0] + 100.0f));
+    CHECK(uniform.color[0][0] == Approx(0.5f * 1.2f));
+    CHECK(uniform.positionAndRadius[16][1] == Approx(kHero[1] + 100.0f));
+    CHECK(uniform.color[16][0] == Approx(0.8f * TorchLights::kEffectGain));
+    CHECK(uniform.positionAndRadius[31][3] > 0.0f);
+}
+
+TEST_CASE("without effect lights the block is the map lights' alone, as before [render][torch_lights]")
+{
+    std::vector<DynamicLight> lights;
+    for (int i = 1; i <= 5; ++i)
+        lights.push_back(MapLight(kHero[0] + 100.0f * static_cast<float>(i), kHero[1]));
+    TorchLights::Selection selection{};
+    const std::size_t map = TorchLights::Select(lights, kHero, selection, 1.2f);
+    REQUIRE(map == 5);
+    // Pools off: the budget is 0 and nothing follows the map lights.
+    REQUIRE(TorchLights::SelectEffects(lights, kHero, 0, std::span<TorchLights::Selected>(selection).subspan(map)) == 0);
+    const mu::TerrainLightsUniform uniform = TorchLights::Pack({selection.data(), map});
+    CHECK(uniform.header[0] == 5.0f);
+    for (std::size_t i = map; i < TorchLights::kMaxLights; ++i)
+    {
+        CHECK(uniform.positionAndRadius[i][3] == 0.0f);
+        CHECK(uniform.color[i][0] == 0.0f);
+    }
+}
+
+TEST_CASE("more darkening lights than kept apart still leave out every touched light [render][torch_lights]")
+{
+    std::vector<DynamicLight> lights;
+    // 80 darkening lights far away, then one next to a map light.
+    for (int i = 0; i < 80; ++i)
+    {
+        DynamicLight dark = MapLight(1000.0f + 10.0f * static_cast<float>(i), 1000.0f);
+        dark.fromMap = false;
+        dark.color[1] = -0.2f;
+        lights.push_back(dark);
+    }
+    lights.push_back(MapLight(kHero[0] + 100.0f, kHero[1]));
+    lights.push_back(MapLight(kHero[0] + 2000.0f, kHero[1]));
+    DynamicLight dark = MapLight(kHero[0] + 700.0f, kHero[1]);
+    dark.fromMap = false;
+    dark.color[0] = -0.6f;
+    lights.push_back(dark);
+
+    TorchLights::Selection selection{};
+    REQUIRE(TorchLights::Select(lights, kHero, selection) == 1);
+    CHECK(selection[0].x == Approx(kHero[0] + 2000.0f));
 }
 
 TEST_CASE("without a share the removable part is zero [render][torch_lights]")

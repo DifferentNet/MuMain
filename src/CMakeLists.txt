@@ -73,6 +73,20 @@ endif()
 if(MU_SDL_SOURCE_DIR)
   add_subdirectory("${MU_SDL_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/SDL" EXCLUDE_FROM_ALL)
 else()
+  # SDL 3.4.8's D3D12 backend writes a descriptor table of 2 or more past a full descriptor heap
+  # (an access violation in the driver once enough two-sampler draws fill a heap): the patch makes
+  # room before each bind. Applied to the submodule's working tree; a tree that has it is left alone.
+  set(MU_SDL_D3D12_HEAP_PATCH "${CMAKE_SOURCE_DIR}/cmake/patches/sdl-3.4.8-d3d12-descriptor-heap-room.patch")
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${MU_SDL_D3D12_HEAP_PATCH}")
+  execute_process(
+    COMMAND "${CMAKE_COMMAND}"
+      "-DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/SDL"
+      "-DPATCH_FILE=${MU_SDL_D3D12_HEAP_PATCH}"
+      -P "${CMAKE_SOURCE_DIR}/cmake/ApplyGitPatch.cmake"
+    RESULT_VARIABLE mu_sdl_heap_patch_result)
+  if(NOT mu_sdl_heap_patch_result EQUAL 0)
+    message(FATAL_ERROR "ThirdParty/SDL: ${MU_SDL_D3D12_HEAP_PATCH} cannot be applied")
+  endif()
   add_subdirectory(ThirdParty/SDL EXCLUDE_FROM_ALL)
 endif()
 set(_saved_BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS}")

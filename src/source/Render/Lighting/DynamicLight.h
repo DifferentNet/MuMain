@@ -26,6 +26,9 @@ struct DynamicLight
     // lamps and fires. The Remaster's torch light on the ground (Render/Terrain/TorchLights.h)
     // picks only these.
     bool fromMap = false;
+    // Made by a skill or spell's light call (LightSource::Effect through the light history): fire,
+    // lightning, explosions. The Remaster's skill light pools (Render/Effects/SkillFx.h) pick only these.
+    bool fromEffect = false;
 };
 
 } // namespace Render::Lighting

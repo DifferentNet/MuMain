@@ -157,3 +157,35 @@ TEST_CASE("a pipeline change rebinds the normal maps [render][sdl_gpu_replay_sta
     CHECK(state.SelectNormalMap(1, map, sampler));
     CHECK(state.SelectNormalMap(2, map, sampler));
 }
+
+TEST_CASE("the soft particles' depth shares slot 1 with the shadow map and a normal map [render][sdl_gpu_replay_state]")
+{
+    Render::SdlGpuReplayState state;
+    auto* const map = Pointer<SDL_GPUTexture>(7);
+    auto* const sampler = Pointer<SDL_GPUSampler>(8);
+
+    state.SelectPipeline(Pointer<SDL_GPUGraphicsPipeline>(1));
+    CHECK(state.SelectSoftDepth());
+    CHECK_FALSE(state.SelectSoftDepth());
+
+    // The shadow map takes slot 1 away, and the depth takes it back.
+    CHECK(state.SelectSunShadowMap());
+    CHECK(state.SelectSoftDepth());
+    CHECK(state.SelectSunShadowMap());
+    CHECK_FALSE(state.SelectSunShadowMap());
+
+    // A normal map at slot 1 does too; one at slot 2 leaves the depth bound.
+    CHECK(state.SelectSoftDepth());
+    CHECK(state.SelectNormalMap(2, map, sampler));
+    CHECK_FALSE(state.SelectSoftDepth());
+    CHECK(state.SelectNormalMap(1, map, sampler));
+    CHECK(state.SelectSoftDepth());
+    CHECK(state.SelectNormalMap(1, map, sampler));
+
+    // A new pipeline or an editor invalidation forgets it.
+    CHECK(state.SelectSoftDepth());
+    state.SelectPipeline(Pointer<SDL_GPUGraphicsPipeline>(2));
+    CHECK(state.SelectSoftDepth());
+    state.Invalidate();
+    CHECK(state.SelectSoftDepth());
+}

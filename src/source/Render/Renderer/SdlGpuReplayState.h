@@ -33,6 +33,9 @@ public:
     // True when `texture` with `sampler` must be bound at fragment sampler slot `slot` (1 or 2):
     // a lit skinned draw's normal map. Slot 1 is shared with the sun shadow map.
     bool SelectNormalMap(Uint32 slot, SDL_GPUTexture* texture, SDL_GPUSampler* sampler);
+    // True once per pass and after each pipeline change: the world depth must be bound at fragment
+    // sampler slot 1 for a soft particle. Slot 1 is shared with the sun shadow map and a normal map.
+    bool SelectSoftDepth();
     void Invalidate();
 
 private:
@@ -70,6 +73,7 @@ private:
     bool m_viewportValid = false;
     bool m_scissorValid = false;
     bool m_sunShadowMapValid = false;
+    bool m_softDepthValid = false;
     // The normal maps bound at slots 1 and 2 (index slot - 1); null: unknown.
     std::array<SDL_GPUTexture*, 2> m_normalMapTexture{};
     std::array<SDL_GPUSampler*, 2> m_normalMapSampler{};

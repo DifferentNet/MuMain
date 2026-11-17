@@ -53,3 +53,6 @@ EffectLevel=4
 FullEffects=1
 Backend=default
 PreloadMonsters=1
+SkillLightPools=1
+SoftParticles=1
+FlipbookBlending=1

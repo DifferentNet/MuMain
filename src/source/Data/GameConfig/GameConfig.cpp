@@ -164,6 +164,12 @@ void GameConfig::Load()
                                    CfgMinSmoothAnimation, CfgMaxSmoothAnimation);
     m_animationFadeMs = std::clamp(ReadInt(CfgSectionRender, CfgKeyAnimationFadeMs, CfgDefaultAnimationFadeMs),
                                    CfgMinAnimationFadeMs, CfgMaxAnimationFadeMs);
+    m_skillLightPools =
+        std::clamp(ReadInt(CfgSectionRender, CfgKeySkillLightPools, CfgDefaultSkillFx), CfgMinSkillFx, CfgMaxSkillFx);
+    m_softParticles =
+        std::clamp(ReadInt(CfgSectionRender, CfgKeySoftParticles, CfgDefaultSkillFx), CfgMinSkillFx, CfgMaxSkillFx);
+    m_flipbookBlending =
+        std::clamp(ReadInt(CfgSectionRender, CfgKeyFlipbookBlending, CfgDefaultSkillFx), CfgMinSkillFx, CfgMaxSkillFx);
     m_haze = std::clamp(ReadInt(CfgSectionRender, CfgKeyHaze, CfgDefaultHaze), CfgMinHaze, CfgMaxHaze);
     m_hazeStrength = std::clamp(ReadInt(CfgSectionRender, CfgKeyHazeStrength, CfgDefaultHazeStrength),
                                 CfgMinHazeStrength, CfgMaxHazeStrength);
@@ -304,6 +310,9 @@ void GameConfig::Save()
     WriteInt(CfgSectionRender, CfgKeyWindStrength, m_windStrength);
     WriteInt(CfgSectionRender, CfgKeySmoothAnimation, m_smoothAnimation);
     WriteInt(CfgSectionRender, CfgKeyAnimationFadeMs, m_animationFadeMs);
+    WriteInt(CfgSectionRender, CfgKeySkillLightPools, m_skillLightPools);
+    WriteInt(CfgSectionRender, CfgKeySoftParticles, m_softParticles);
+    WriteInt(CfgSectionRender, CfgKeyFlipbookBlending, m_flipbookBlending);
     WriteInt(CfgSectionRender, CfgKeyHaze, m_haze);
     WriteInt(CfgSectionRender, CfgKeyHazeStrength, m_hazeStrength);
     WriteInt(CfgSectionRender, CfgKeyParticles, m_particles);
@@ -569,6 +578,21 @@ void GameConfig::SetSmoothAnimation(int smoothAnimation)
 void GameConfig::SetAnimationFadeMs(int fadeMs)
 {
     m_animationFadeMs = std::clamp(fadeMs, CfgDefaults::CfgMinAnimationFadeMs, CfgDefaults::CfgMaxAnimationFadeMs);
+}
+
+void GameConfig::SetSkillLightPools(int enabled)
+{
+    m_skillLightPools = std::clamp(enabled, CfgDefaults::CfgMinSkillFx, CfgDefaults::CfgMaxSkillFx);
+}
+
+void GameConfig::SetSoftParticles(int enabled)
+{
+    m_softParticles = std::clamp(enabled, CfgDefaults::CfgMinSkillFx, CfgDefaults::CfgMaxSkillFx);
+}
+
+void GameConfig::SetFlipbookBlending(int enabled)
+{
+    m_flipbookBlending = std::clamp(enabled, CfgDefaults::CfgMinSkillFx, CfgDefaults::CfgMaxSkillFx);
 }
 
 void GameConfig::SetHaze(int haze)

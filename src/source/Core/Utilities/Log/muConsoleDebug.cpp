@@ -19,6 +19,10 @@
 #include "Render/PostProcessing/PostProcessingSetting.h"
 #include "Render/Lighting/SoftShadowSetting.h"
 #include "Render/Models/AnimationSmoothing.h"
+#include "Render/Effects/SkillFx.h"
+#include "Render/Renderer/MuRenderer.h"
+#include "Render/Terrain/TorchLights.h"
+#include "Data/GameConfig/GameConfig.h"
 #include "Render/Look/LookPresetSetting.h"
 #include "Render/Renderer/Antialiasing.h"
 #include "Render/Look/LookTuning.h"
@@ -105,6 +109,43 @@ void CmuConsoleDebug::UpdateMainScene()
 namespace
 {
 #if defined(MU_ENABLE_CONTROL_SOCKET) || defined(_EDITOR)
+// $fx pools|soft|flipbook on|off, $fx [status]: the Remaster skill effect looks (Render/Effects/SkillFx.h);
+// the switches are saved to [Render] as SkillLightPools, SoftParticles and FlipbookBlending.
+void SkillFxCommand(const std::wstring& command)
+{
+    namespace SkillFx = Render::Effects::SkillFx;
+    const std::wstring_view argument = command.size() > 4 ? std::wstring_view(command).substr(4) : std::wstring_view();
+    // Bare `$fx` shows the status too.
+    bool understood = argument.empty() || argument == L"status";
+    for (int index = 0; index < SkillFx::kFeatureCount && !understood; ++index)
+    {
+        const auto feature = static_cast<SkillFx::Feature>(index);
+        const std::string name = SkillFx::Name(feature);
+        const std::wstring prefix(name.begin(), name.end());
+        if (argument == prefix + L" on" || argument == prefix + L" off")
+        {
+            SkillFx::Choose(feature, argument == prefix + L" on");
+            understood = true;
+        }
+    }
+    if (!understood)
+    {
+        mu::log::Get("render")->warn("{}: not understood ($fx pools|soft|flipbook on|off, $fx status)",
+                                     Core::Text::ToUtf8(command.c_str()));
+    }
+    const auto state = [](SkillFx::Feature feature)
+    { return SkillFx::Enabled(feature) ? "on" : (SkillFx::Chosen(feature) ? "chosen, held off" : "off"); };
+    mu::log::Get("render")->info(
+        "Skill effects: pools {}, soft {}, flipbook {} (available here: {}, effect level {}, pool budget {}); "
+        "this frame {} effect pools; soft twins {}, soft sprites last frame {}",
+        state(SkillFx::Feature::LightPools), state(SkillFx::Feature::SoftParticles),
+        state(SkillFx::Feature::FlipbookBlend), SkillFx::Available() ? "yes" : "no",
+        GameConfig::GetInstance().GetEffectLevel(), SkillFx::ActivePoolBudget(),
+        Render::Terrain::TorchLights::FrameEffectLights(), mu::HasSoftParticlePipelines() ? "built" : "missing",
+        mu::SoftParticlesDrawnLastFrame() ? "yes" : "no (needs SSAO or haze on)");
+    mu::log::Get("render")->flush();
+}
+
 // Developer builds only: the look profile's live tuning ($look and its aliases), the per-feature
 // session overrides of the look preset, the post-processing diagnostic views and the light
 // history's counts.
@@ -158,6 +199,11 @@ bool CheckDeveloperLookCommand(const std::wstring& command)
                                      Smooth::Enabled() ? "on" : "off", Smooth::Available() ? "yes" : "no",
                                      Smooth::FadeMs());
         mu::log::Get("render")->flush();
+        return true;
+    }
+    if (command == L"$fx" || command.starts_with(L"$fx "))
+    {
+        SkillFxCommand(command);
         return true;
     }
     if (command.starts_with(L"$titlescale "))

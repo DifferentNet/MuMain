@@ -18,10 +18,14 @@
 #include "UI/Core/WindowSystem.h"
 #include "Core/Utilities/FrameProfiler.h"
 #include "Render/Renderer/MuRenderer.h"
+#include "Render/Effects/FlipbookBlend.h"
 #include "Render/Effects/ParticleDrawOrder.h"
 #include "Render/Effects/PoolSlotBounds.h"
+#include "Render/Effects/SkillFx.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "Scenes/MainScene.h"
+
+#include <array>
 
 vec3_t g_vParticleWind = { 0.0f, 0.0f, 0.0f };
 vec3_t g_vParticleWindVelo = { 0.0f, 0.0f, 0.0f };
@@ -29,6 +33,71 @@ vec3_t g_vParticleWindVelo = { 0.0f, 0.0f, 0.0f };
 namespace
 {
 Render::Effects::PoolSlotBounds s_particleBounds;
+
+// Each particle's uncut sheet frame (Render/Effects/FlipbookBlend.h), kept beside PARTICLE so the
+// struct keeps its size; kNoPhase until a sheet particle sets its frame.
+std::array<float, MAX_PARTICLES> s_flipbookPhase = []
+{
+    std::array<float, MAX_PARTICLES> phases{};
+    phases.fill(Render::Effects::FlipbookBlend::kNoPhase);
+    return phases;
+}();
+
+// Sets a sheet particle's frame from its uncut phase, exactly as `o->Frame = phase;` did, and keeps
+// the phase for FlipbookBlend.
+void SetFlipbookFrame(PARTICLE* o, const float phase)
+{
+    o->Frame = static_cast<int>(phase);
+    const std::ptrdiff_t index = o - Particles;
+    if (index >= 0 && index < MAX_PARTICLES)
+    {
+        s_flipbookPhase[index] = phase;
+    }
+}
+
+// The frames a sheet particle of `count` frames shows: its frame and the next one with its share
+// when FlipbookBlend is on, the sheet is additive (a 3-channel texture) and the frame still comes
+// from the kept phase; else its frame alone.
+Render::Effects::FlipbookBlend::Frames FlipbookFrames(const PARTICLE* o, const BITMAP_t* bitmap, const int count)
+{
+    namespace SkillFx = Render::Effects::SkillFx;
+    const Render::Effects::FlipbookBlend::Frames alone{o->Frame, o->Frame, 0.f};
+    const std::ptrdiff_t index = o - Particles;
+    if (bitmap->Components != 3 || index < 0 || index >= MAX_PARTICLES ||
+        !SkillFx::Enabled(SkillFx::Feature::FlipbookBlend))
+    {
+        return alone;
+    }
+    const float phase = s_flipbookPhase[index];
+    if (phase < 0.f || static_cast<int>(phase) != o->Frame)
+    {
+        return alone;
+    }
+    return Render::Effects::FlipbookBlend::Split(phase, count);
+}
+
+// Draws a sheet particle through `draw(frame, light)`: once, or blended as two additive frames whose
+// light adds up to the particle's (each channel at most 1, as one sprite's colour is).
+template <typename DrawFrame>
+void RenderFlipbook(PARTICLE* o, const BITMAP_t* bitmap, const int count, DrawFrame draw)
+{
+    const Render::Effects::FlipbookBlend::Frames frames = FlipbookFrames(o, bitmap, count);
+    if (frames.weight <= 0.f)
+    {
+        draw(o->Frame, o->Light);
+        return;
+    }
+    vec3_t first;
+    vec3_t second;
+    for (int channel = 0; channel < 3; ++channel)
+    {
+        const float light = std::min(o->Light[channel], 1.f);
+        first[channel] = light * (1.f - frames.weight);
+        second[channel] = light * frames.weight;
+    }
+    draw(frames.frame, first);
+    draw(frames.next, second);
+}
 } // namespace
 
 void NoteParticleFreed(int index)
@@ -97,6 +166,7 @@ int CreateParticle(int Type, vec3_t Position, vec3_t Angle, vec3_t Light, int Su
             o->Gravity = 0.f;
             o->LifeTime = 2;
             o->Frame = 0;
+            s_flipbookPhase[i] = Render::Effects::FlipbookBlend::kNoPhase;
             o->Target = Owner;
             o->Rotation = 0.f;
             o->bEnableMove = true;
@@ -4230,7 +4300,7 @@ void MoveParticles()
 
             case BITMAP_EXPLOTION_MONO:
             case BITMAP_EXPLOTION:
-                o->Frame = (20 - o->LifeTime) / 2;
+                SetFlipbookFrame(o, (20 - o->LifeTime) / 2);
                 if (o->SubType == 2)
                 {
                     float Life = 0;
@@ -4238,7 +4308,7 @@ void MoveParticles()
                         Life = (o->LifeTime - 10) * FPS_ANIMATION_FACTOR;
                     else
                         Life = 1;
-                    o->Frame = (20 - Life) / 2;
+                    SetFlipbookFrame(o, (20 - Life) / 2);
                     vec3_t  p, Angle;
                     if ((int)o->LifeTime == 20)
                     {
@@ -4302,13 +4372,13 @@ void MoveParticles()
                 }
                 break;
             case BITMAP_SUMMON_SAHAMUTT_EXPLOSION:
-                o->Frame = (16 - o->LifeTime);
+                SetFlipbookFrame(o, (16 - o->LifeTime));
                 break;
             case BITMAP_SPOT_WATER:
                 o->Frame = (32 - o->LifeTime) / 4;
                 break;
             case BITMAP_EXPLOTION + 1:
-                o->Frame = (12 - o->LifeTime) / 3;
+                SetFlipbookFrame(o, (12 - o->LifeTime) / 3);
                 break;
             case BITMAP_LIGHTNING + 1:
             {
@@ -4340,7 +4410,7 @@ void MoveParticles()
                 Luminosity = (float)(o->LifeTime) / 24.f;
                 o->Scale -= 0.04f * FPS_ANIMATION_FACTOR;
                 o->Rotation += (5) * FPS_ANIMATION_FACTOR;
-                o->Frame = (23 - o->LifeTime) / 6;
+                SetFlipbookFrame(o, (23 - o->LifeTime) / 6);
                 break;
             case BITMAP_FIRE_CURSEDLICH:
             case BITMAP_FIRE_HIK2_MONO:
@@ -4578,7 +4648,7 @@ void MoveParticles()
                     o->Gravity += 0.004f * FPS_ANIMATION_FACTOR;
                     Luminosity = (float)(o->LifeTime) / 24.f;
                     o->Scale -= 0.04f * FPS_ANIMATION_FACTOR;
-                    o->Frame = (23 - o->LifeTime) / 6;
+                    SetFlipbookFrame(o, (23 - o->LifeTime) / 6);
                     o->Position[2] += o->Gravity * 10.f * FPS_ANIMATION_FACTOR;
                 }
                 break;
@@ -4590,7 +4660,7 @@ void MoveParticles()
                     Luminosity = (float)(o->LifeTime) / 24.f;
                     o->Scale -= 0.04f * FPS_ANIMATION_FACTOR;
                     o->Rotation += (5) * FPS_ANIMATION_FACTOR;
-                    o->Frame = (23 - o->LifeTime) / 6;
+                    SetFlipbookFrame(o, (23 - o->LifeTime) / 6);
                     o->Position[2] += o->Gravity * 10.f * FPS_ANIMATION_FACTOR;
                 }
                 break;
@@ -4598,9 +4668,9 @@ void MoveParticles()
                 {
                     o->Gravity += (0.004f) * FPS_ANIMATION_FACTOR;
                     Luminosity = (float)(o->LifeTime) / 24.f;
-                    o->Frame = (15 - o->LifeTime) / 6;
+                    SetFlipbookFrame(o, (15 - o->LifeTime) / 6);
                     o->Scale -= 0.04f * FPS_ANIMATION_FACTOR;
-                    o->Frame = (23 - o->LifeTime) / 6;
+                    SetFlipbookFrame(o, (23 - o->LifeTime) / 6);
                     o->Position[2] += o->Gravity * 10.f * FPS_ANIMATION_FACTOR;
                 }
                 break;
@@ -4610,7 +4680,7 @@ void MoveParticles()
                     Luminosity = (float)(o->LifeTime) / 24.f;
                     o->Scale *= powf(0.95f, FPS_ANIMATION_FACTOR);
                     o->Rotation += (5) * FPS_ANIMATION_FACTOR;
-                    o->Frame = (23 - o->LifeTime) / 6;
+                    SetFlipbookFrame(o, (23 - o->LifeTime) / 6);
                     o->Position[2] += o->Gravity * 10.f * FPS_ANIMATION_FACTOR;
                 }
                 break;
@@ -4623,7 +4693,7 @@ void MoveParticles()
                     o->Position[2] = o->Target->Position[2] + o->StartPosition[2];
                     o->Gravity += (((rand() % 60) + 60) / 100) * FPS_ANIMATION_FACTOR;
                     o->Scale -= o->Gravity * FPS_ANIMATION_FACTOR / 90.f;
-                    o->Frame = (23 - o->LifeTime) / 6;
+                    SetFlipbookFrame(o, (23 - o->LifeTime) / 6);
                     o->Position[2] += o->Gravity * 10.f * FPS_ANIMATION_FACTOR;
                 }
                 break;
@@ -4633,10 +4703,10 @@ void MoveParticles()
                     Luminosity = (float)(o->LifeTime) / 24.f;
                     if (o->LifeTime > 12)
                     {
-                        o->Frame = (24 - o->LifeTime) / 3;
+                        SetFlipbookFrame(o, (24 - o->LifeTime) / 3);
                     }
                     o->Scale += FPS_ANIMATION_FACTOR * 0.04f;
-                    o->Frame = (23 - o->LifeTime) / 6;
+                    SetFlipbookFrame(o, (23 - o->LifeTime) / 6);
                     o->Position[2] += o->Gravity * 10.f * FPS_ANIMATION_FACTOR;
                 }
                 break;
@@ -4645,7 +4715,7 @@ void MoveParticles()
                     o->Gravity += (0.004f) * FPS_ANIMATION_FACTOR;
                     Luminosity = (float)(o->LifeTime) / 24.f;
                     o->Scale *= powf(0.95f, FPS_ANIMATION_FACTOR);
-                    o->Frame = (23 - o->LifeTime) / 6;
+                    SetFlipbookFrame(o, (23 - o->LifeTime) / 6);
                     o->Position[2] += o->Gravity * 10.f * FPS_ANIMATION_FACTOR;
                 }
                 break;
@@ -4656,7 +4726,7 @@ void MoveParticles()
                     o->Rotation += ((float)(rand() % 10 + 10.f)) * FPS_ANIMATION_FACTOR;
                     o->Scale -= 0.04f * FPS_ANIMATION_FACTOR;
                     Vector(Luminosity, Luminosity, Luminosity, o->Light);
-                    o->Frame = (23 - o->LifeTime) / 6;
+                    SetFlipbookFrame(o, (23 - o->LifeTime) / 6);
                     o->Position[2] += o->Gravity * 10.f * FPS_ANIMATION_FACTOR;
                 }
                 break;
@@ -4667,7 +4737,7 @@ void MoveParticles()
                     o->Rotation += ((float)(rand() % 10 + 10.f)) * FPS_ANIMATION_FACTOR;
                     o->Scale -= 0.04f * FPS_ANIMATION_FACTOR;
                     Vector(Luminosity, Luminosity, Luminosity, o->Light);
-                    o->Frame = (23 - o->LifeTime) / 6;
+                    SetFlipbookFrame(o, (23 - o->LifeTime) / 6);
                     o->Position[2] += o->Gravity * 10.f * FPS_ANIMATION_FACTOR;
                 }
                 break;
@@ -4682,7 +4752,7 @@ void MoveParticles()
                     o->Light[2] *= powf(1.0f / (1.1f), FPS_ANIMATION_FACTOR);
                     if (o->Light[2] <= 0.05f || o->Scale <= 0.0f)
                         o->Live = false;
-                    o->Frame = (23 - o->LifeTime) / 6;
+                    SetFlipbookFrame(o, (23 - o->LifeTime) / 6);
                     o->Position[2] += o->Gravity * 10.f * FPS_ANIMATION_FACTOR;
                 }
                 break;
@@ -4696,13 +4766,13 @@ void MoveParticles()
                     o->Light[2] *= powf(1.0f / (1.1f), FPS_ANIMATION_FACTOR);
                     if (o->Light[2] <= 0.05f || o->Scale <= 0.0f)
                         o->Live = false;
-                    o->Frame = (23 - o->LifeTime) / 6;
+                    SetFlipbookFrame(o, (23 - o->LifeTime) / 6);
                     o->Position[2] += o->Gravity * 10.f * FPS_ANIMATION_FACTOR;
                 }
                 break;
                 case 16:
                 {
-                    o->Frame = (3 - o->LifeTime);
+                    SetFlipbookFrame(o, (3 - o->LifeTime));
                     o->Light[0] *= powf(1.0f / (1.7f), FPS_ANIMATION_FACTOR);
                     o->Light[1] *= powf(1.0f / (1.7f), FPS_ANIMATION_FACTOR);
                     o->Light[2] *= powf(1.0f / (1.7f), FPS_ANIMATION_FACTOR);
@@ -4714,7 +4784,7 @@ void MoveParticles()
                     Luminosity = (float)(o->LifeTime) / 24.f;
                     o->Scale += o->Gravity * FPS_ANIMATION_FACTOR;
                     VectorScale(o->Velocity, powf(0.98f, FPS_ANIMATION_FACTOR), o->Velocity);
-                    o->Frame = (23 - o->LifeTime) / 6;
+                    SetFlipbookFrame(o, (23 - o->LifeTime) / 6);
                     o->Position[2] += o->Gravity * 10.f * FPS_ANIMATION_FACTOR;
                     VectorScale(o->Light, powf(0.95f, FPS_ANIMATION_FACTOR), o->Light);
                 }
@@ -4725,7 +4795,7 @@ void MoveParticles()
                     Luminosity = (float)(o->LifeTime) / 24.f;
                     o->Scale += o->Gravity * FPS_ANIMATION_FACTOR;
                     VectorScale(o->Velocity, powf(0.98f, FPS_ANIMATION_FACTOR), o->Velocity);
-                    o->Frame = (23 - o->LifeTime) / 6;
+                    SetFlipbookFrame(o, (23 - o->LifeTime) / 6);
                     o->Position[2] += o->Gravity * 10.f * FPS_ANIMATION_FACTOR;
                 }
                 break;
@@ -6581,7 +6651,7 @@ void MoveParticles()
                 break;
             case BITMAP_BLOOD:
             case BITMAP_BLOOD + 1:
-                o->Frame = (12 - o->LifeTime) / 3;
+                SetFlipbookFrame(o, (12 - o->LifeTime) / 3);
                 //o->Position[2] += o->Gravity * FPS_ANIMATION_FACTOR;
                 //o->Gravity -= 1.5f;
                 VectorScale(o->Velocity, powf(0.95f, FPS_ANIMATION_FACTOR), o->Velocity);
@@ -7046,7 +7116,7 @@ void MoveParticles()
             {
                 if (o->SubType == 0)
                 {
-                    o->Frame = (16 - o->LifeTime) / 4;
+                    SetFlipbookFrame(o, (16 - o->LifeTime) / 4);
                 }
                 else if (o->SubType == 1)
                 {
@@ -7062,7 +7132,7 @@ void MoveParticles()
                 }
                 else if ((o->SubType == 2 || o->SubType == 3) && o->Target != NULL)
                 {
-                    o->Frame = (16 - o->LifeTime) / 4;
+                    SetFlipbookFrame(o, (16 - o->LifeTime) / 4);
 
                     // 플레이어 모델
                     BMD* pModel = &Models[o->Target->Type];
@@ -9092,19 +9162,20 @@ void RenderParticles(BYTE byRenderOneMore)
             case BITMAP_SPARK + 2:
                 if (o->SubType == 0 || o->SubType == 2 || o->SubType == 3)
                 {
-                    RenderSprite(o->TexType, o->Position, Width, Height, o->Light, 0.f, o->Frame % 2 * 0.5f, o->Frame / 2 * 0.5f, 0.5f, 0.5f);
+                    RenderFlipbook(o, pBitmap, 4, [&](int frame, float* light)
+                                   { RenderSprite(o->TexType, o->Position, Width, Height, light, 0.f, frame % 2 * 0.5f, frame / 2 * 0.5f, 0.5f, 0.5f); });
                 }
                 break;
 
             case BITMAP_EXPLOTION_MONO:
             case BITMAP_EXPLOTION:
-                RenderSprite(o->TexType, o->Position, Width, Height, o->Light, 0.f, o->Frame % 4 * 0.25f + 0.005f, o->Frame / 4 * 0.25f + 0.005f, 0.25f - 0.01f, 0.25f - 0.01f);
+            case BITMAP_SUMMON_SAHAMUTT_EXPLOSION:
+                RenderFlipbook(o, pBitmap, 16, [&](int frame, float* light)
+                               { RenderSprite(o->TexType, o->Position, Width, Height, light, 0.f, frame % 4 * 0.25f + 0.005f, frame / 4 * 0.25f + 0.005f, 0.25f - 0.01f, 0.25f - 0.01f); });
                 break;
             case BITMAP_EXPLOTION + 1:
-                RenderSprite(o->TexType, o->Position, Width * 0.25f, Height, o->Light, o->Angle[0], o->Frame % 4 * 0.25f, 0.f, 0.25f, 1.f);
-                break;
-            case BITMAP_SUMMON_SAHAMUTT_EXPLOSION:
-                RenderSprite(o->TexType, o->Position, Width, Height, o->Light, 0.f, o->Frame % 4 * 0.25f + 0.005f, o->Frame / 4 * 0.25f + 0.005f, 0.25f - 0.01f, 0.25f - 0.01f);
+                RenderFlipbook(o, pBitmap, 4, [&](int frame, float* light)
+                               { RenderSprite(o->TexType, o->Position, Width * 0.25f, Height, light, o->Angle[0], frame % 4 * 0.25f, 0.f, 0.25f, 1.f); });
                 break;
             case BITMAP_CLUD64:
             {
@@ -9192,10 +9263,12 @@ void RenderParticles(BYTE byRenderOneMore)
                 RenderSprite(o->TexType, o->Position, Width * 0.25f, Height, o->Light, o->Angle[0], o->Frame % 4 * 0.25f, 0.f, 0.25f, 1.f);
                 break;
             case BITMAP_BLOOD + 1:
-                RenderSprite(o->TexType, o->Position, Width, Height, o->Light, 0.f, o->Frame % 2 * 0.5f, o->Frame / 2 * 0.5f, 0.5f, 0.5f);
+                RenderFlipbook(o, pBitmap, 4, [&](int frame, float* light)
+                               { RenderSprite(o->TexType, o->Position, Width, Height, light, 0.f, frame % 2 * 0.5f, frame / 2 * 0.5f, 0.5f, 0.5f); });
                 break;
             case BITMAP_CHROME_ENERGY2:
-                RenderSprite(o->TexType, o->Position, Width * 0.25f, Height, o->Light, o->Rotation, o->Frame % 4 * 0.25f, 0.f, 0.25f, 1.f);
+                RenderFlipbook(o, pBitmap, 4, [&](int frame, float* light)
+                               { RenderSprite(o->TexType, o->Position, Width * 0.25f, Height, light, o->Rotation, frame % 4 * 0.25f, 0.f, 0.25f, 1.f); });
                 break;
             case BITMAP_FIRE_CURSEDLICH:
             case BITMAP_FIRE_HIK2_MONO:
@@ -9210,7 +9283,8 @@ void RenderParticles(BYTE byRenderOneMore)
                 if (
                     o->SubType == 17 || o->SubType == 5 || o->SubType == 7 || o->SubType == 8 || o->SubType == 11 || o->SubType == 12 || o->SubType == 13)
                 {
-                    RenderSprite(o->TexType, o->Position, Width * 0.25f, Height, o->Light, o->Rotation, o->Frame % 4 * 0.25f, 0.f, 0.25f, 1.f);
+                    RenderFlipbook(o, pBitmap, 4, [&](int frame, float* light)
+                                   { RenderSprite(o->TexType, o->Position, Width * 0.25f, Height, light, o->Rotation, frame % 4 * 0.25f, 0.f, 0.25f, 1.f); });
                 }
                 else if (o->SubType == 18)
                 {
@@ -9221,7 +9295,8 @@ void RenderParticles(BYTE byRenderOneMore)
                     RenderSprite(o->TexType, o->Position, Width, Height, o->Light, o->Rotation);
                 else
                 {
-                    RenderSprite(o->TexType, o->Position, Width * 0.25f, Height, o->Light, o->Angle[0], o->Frame % 4 * 0.25f, 0.f, 0.25f, 1.f);
+                    RenderFlipbook(o, pBitmap, 4, [&](int frame, float* light)
+                                   { RenderSprite(o->TexType, o->Position, Width * 0.25f, Height, light, o->Angle[0], frame % 4 * 0.25f, 0.f, 0.25f, 1.f); });
                 }
                 break;
             case BITMAP_FIRECRACKER:

@@ -403,6 +403,11 @@ public:
     // (terrain_lights.hlsli), when their pipeline has a terrain light twin. The terrain sets it
     // around those runs and back to off after them.
     virtual void SetTerrainLit(bool /*lit*/) {}
+    // Effect sprites recorded while it is on (blended, depth-tested, not depth-writing 3D quads whose
+    // Vertex3D normal x carries the softness) fade where they cut into the world, while the frame has
+    // its world depth (Render/Effects/SoftParticles.h; Enhanced lighting, desktop only). RenderSprite
+    // sets it around its quad and back to off after it.
+    virtual void SetSoftParticle(bool /*soft*/) {}
     // Foliage smoothing (Render/Textures/FoliageSmoothing.h): world quads recorded while it is on (the
     // terrain's grass) take alpha-to-coverage under anti-aliasing as map objects do, when their state
     // allows it (ChooseAlphaCoverage). The terrain sets it around its grass and back to off after it.
@@ -883,6 +888,11 @@ public:
 // Whether the renderer built every terrain light twin (desktop, Enhanced lighting): without them
 // the torch light on the ground stays off (Render/Terrain/TorchLights.h).
 [[nodiscard]] bool HasTerrainLightPipelines();
+// Whether the renderer built every soft effect sprite twin (desktop, Enhanced lighting;
+// Render/Effects/SoftParticles.h), and whether the last frame drew any sprite through one (it needs
+// the world depth: SSAO or haze on).
+[[nodiscard]] bool HasSoftParticlePipelines();
+[[nodiscard]] bool SoftParticlesDrawnLastFrame();
 
 // Keeps Classic texture sampling for the draws made while it is alive.
 class ScopedScreenSpaceSampling

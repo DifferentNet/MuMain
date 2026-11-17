@@ -1,0 +1,136 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct FSInput
+{
+    float4 pos;
+    float2 uv;
+    float4 color;
+    float fogFactor;
+    float eyeDepth;
+    float softness;
+};
+
+struct SceneLighting
+{
+    float4 sceneLightDirection;
+    float4 sceneLightColor;
+    float4 diffuseCurve;
+    float4 rimParameters;
+    float4 specularParameters;
+    float4 sceneFogColor;
+    float4 sceneFogParameters;
+    float4 cameraPosition;
+    float4x4 sunViewProjection;
+    float4 sunShadowParameters;
+    float4 sunDirectionAndSoftness;
+    float4 sunShadowPenumbra;
+    float4 softProjection;
+    float4 softDepth;
+};
+
+struct FogUniforms
+{
+    uint fogEnabled;
+    uint alphaDiscardEnabled;
+    float alphaThreshold;
+    uint alphaToCoverage;
+    float fogStart;
+    float fogEnd;
+    float detailStrength;
+    float detailScale;
+    float4 fogColor;
+};
+
+struct main0_out
+{
+    float4 _entryPointOutput [[color(0)]];
+};
+
+struct main0_in
+{
+    float2 input_uv [[user(locn0)]];
+    float4 input_color [[user(locn1)]];
+    float input_fogFactor [[user(locn2)]];
+    float input_eyeDepth [[user(locn3)]];
+    float input_softness [[user(locn4)]];
+};
+
+static inline __attribute__((always_inline))
+float EnhancedFogAmount(thread const float& eyeDepth, constant SceneLighting& _29)
+{
+    float scaledDistance = fast::max(eyeDepth - _29.sceneFogParameters.x, 0.0) * _29.sceneFogParameters.z;
+    return fast::clamp(1.0 - exp((-scaledDistance) * scaledDistance), 0.0, 1.0);
+}
+
+static inline __attribute__((always_inline))
+float SoftFade(thread const FSInput& _input, constant SceneLighting& _29, texture2d<float> worldDepth, sampler worldDepthSampler)
+{
+    if ((_29.softDepth.z <= 0.0) || (_input.softness <= 0.0))
+    {
+        return 1.0;
+    }
+    float depth = worldDepth.sample(worldDepthSampler, (_input.pos.xy * _29.softDepth.xy), level(0.0)).x;
+    if (depth >= 1.0)
+    {
+        return 1.0;
+    }
+    float sceneDistance = _29.softProjection.w / (depth + _29.softProjection.z);
+    return fast::clamp((sceneDistance - _input.eyeDepth) / _input.softness, 0.0, 1.0);
+}
+
+static inline __attribute__((always_inline))
+float4 _main(thread const FSInput& _input, constant SceneLighting& _29, texture2d<float> worldDepth, sampler worldDepthSampler, texture2d<float> tex, sampler s, constant FogUniforms& _133)
+{
+    float4 color = tex.sample(s, _input.uv) * _input.color;
+    if (_133.alphaToCoverage != 0u)
+    {
+        float edge = fast::clamp(((color.w - _133.alphaThreshold) / fast::max(fwidth(color.w), 9.9999997473787516355514526367188e-05)) + 0.5, 0.0, 1.0);
+        color.w *= edge;
+        if (color.w <= 0.0)
+        {
+            discard_fragment();
+        }
+    }
+    else
+    {
+        if ((_133.alphaDiscardEnabled != 0u) && (color.w <= _133.alphaThreshold))
+        {
+            discard_fragment();
+        }
+    }
+    if ((_133.fogEnabled != 0u) && (_29.sceneFogColor.w > 0.0))
+    {
+        float4 _190 = color;
+        float param = _input.eyeDepth;
+        float3 _200 = mix(_190.xyz, _29.sceneFogColor.xyz, float3(EnhancedFogAmount(param, _29)));
+        color.x = _200.x;
+        color.y = _200.y;
+        color.z = _200.z;
+    }
+    FSInput param_1 = _input;
+    float fade = SoftFade(param_1, _29, worldDepth, worldDepthSampler);
+    color.w *= fade;
+    return color;
+}
+
+fragment main0_out main0(main0_in in [[stage_in]], constant SceneLighting& _29 [[buffer(0)]], constant FogUniforms& _133 [[buffer(1)]], texture2d<float> worldDepth [[texture(0)]], texture2d<float> tex [[texture(1)]], sampler worldDepthSampler [[sampler(0)]], sampler s [[sampler(1)]], float4 gl_FragCoord [[position]])
+{
+    main0_out out = {};
+    FSInput _input;
+    _input.pos = gl_FragCoord;
+    _input.uv = in.input_uv;
+    _input.color = in.input_color;
+    _input.fogFactor = in.input_fogFactor;
+    _input.eyeDepth = in.input_eyeDepth;
+    _input.softness = in.input_softness;
+    FSInput param = _input;
+    float4 _246 = _main(param, _29, worldDepth, worldDepthSampler, tex, s, _133);
+    out._entryPointOutput = _246;
+    return out;
+}
+

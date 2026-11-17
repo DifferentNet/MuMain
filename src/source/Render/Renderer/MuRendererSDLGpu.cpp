@@ -84,6 +84,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "Render/Effects/SkillFx.h"
+#include "Render/Effects/SoftParticles.h"
 #include "Render/Renderer/ReorderableDrawRuns.h"
 #include "Render/Renderer/SkinnedBonePalette.h"
 #include <utility>
@@ -701,20 +703,25 @@ static mu::DynamicLightsUniform s_dynamicLightsUniform{};
 // Sun shadow (desktop, Enhanced lighting; SunShadow.h). The frame's settings arrive with
 // SetSunShadow; the shadowed receivers read mu::SunShadowUniform right after the scene lighting
 // in fragment uniform slot 1, so the Classic and Enhanced shaders keep their bindings.
-// On desktop the torch lights on the ground (terrain_lights.hlsli) follow the sun shadow.
+// On desktop the soft effect sprites' world depth (soft_particles.hlsli) and the torch lights on the
+// ground (terrain_lights.hlsli) follow the sun shadow.
 struct SceneLightingWithSunShadow
 {
     mu::SceneLightingUniform scene;
     mu::SunShadowUniform sun;
 #ifndef __EMSCRIPTEN__
+    mu::SoftParticlesUniform soft;
     mu::TerrainLightsUniform terrainLights;
 #endif
 };
 #ifndef __EMSCRIPTEN__
-static_assert(offsetof(SceneLightingWithSunShadow, terrainLights) ==
+static_assert(offsetof(SceneLightingWithSunShadow, soft) ==
               sizeof(mu::SceneLightingUniform) + sizeof(mu::SunShadowUniform));
-static_assert(sizeof(SceneLightingWithSunShadow) ==
-              sizeof(mu::SceneLightingUniform) + sizeof(mu::SunShadowUniform) + sizeof(mu::TerrainLightsUniform));
+static_assert(offsetof(SceneLightingWithSunShadow, terrainLights) ==
+              sizeof(mu::SceneLightingUniform) + sizeof(mu::SunShadowUniform) + sizeof(mu::SoftParticlesUniform));
+static_assert(sizeof(SceneLightingWithSunShadow) == sizeof(mu::SceneLightingUniform) + sizeof(mu::SunShadowUniform) +
+                                                        sizeof(mu::SoftParticlesUniform) +
+                                                        sizeof(mu::TerrainLightsUniform));
 #else
 static_assert(sizeof(SceneLightingWithSunShadow) == sizeof(mu::SceneLightingUniform) + sizeof(mu::SunShadowUniform));
 #endif
@@ -745,6 +752,19 @@ static std::unordered_map<SDL_GPUGraphicsPipeline*, SDL_GPUGraphicsPipeline*> s_
 // The frame's torch lights on the ground (SetTerrainLightsFrame), pushed after the sun shadow in
 // fragment uniform slot 1.
 static mu::TerrainLightsUniform s_terrainLightsUniform{};
+// The soft twins (soft_particles.vert with basic_textured_fog_soft.frag for Alpha, _soft_glow.frag for
+// Additive and Glow) of the depth-read-only Enhanced 3D pipelines, keyed by them (desktop only; empty
+// unless all were built, see CreateSoftParticlePipelines). Render/Effects/SoftParticles.h.
+static std::unordered_map<SDL_GPUGraphicsPipeline*, SDL_GPUGraphicsPipeline*> s_softParticlePipelines;
+// The point sampler the soft twins read the world depth with at fragment sampler slot 1.
+static SDL_GPUSampler* s_softDepthSampler = nullptr;
+// While the scene and bloom passes of a frame with the world depth replay: soft sprites draw through
+// their twins, which read s_softParticlesUniform (pushed with the scene lighting).
+static bool s_softDepthReady = false;
+static mu::SoftParticlesUniform s_softParticlesUniform{};
+// Whether the last frame drew any soft sprite through its twin ($fx status).
+static bool s_softParticlesDrawnThisFrame = false;
+static bool s_softParticlesDrawnLastFrame = false;
 
 // Post-processing of the 3D scene: with it on, a frame whose scene marked its end
 // (EndSceneGeometry) is replayed in separate scene, bloom and UI passes, see EndFrame.
@@ -805,6 +825,14 @@ bool HasHazePipelines()
 bool HasTerrainLightPipelines()
 {
     return !s_terrainLightPipelines.empty() && !s_terrainLightShadowPipelines.empty();
+}
+bool HasSoftParticlePipelines()
+{
+    return !s_softParticlePipelines.empty() && s_softDepthSampler;
+}
+bool SoftParticlesDrawnLastFrame()
+{
+    return s_softParticlesDrawnLastFrame;
 }
 // Whether the opaque world's depth is drawn on its own: SSAO and the haze both read it.
 [[nodiscard]] static bool WorldDepthWanted()
@@ -1040,6 +1068,9 @@ struct RenderCmd
     // (s_terrainLightPipelines): drawn through it in the frame's own passes; its vertex-to-world
     // rows are in sunShadowRows.
     bool terrainLit{};
+    // Recorded under SetSoftParticle with a pipeline that has a soft twin (s_softParticlePipelines):
+    // drawn through it while the frame has its world depth (s_softDepthReady).
+    bool softParticle{};
     // A skinned item preview under the studio light: drawn with ItemPreviewLightingUniform() in
     // place of the scene lighting.
     bool itemPreviewLighting{};
@@ -1104,7 +1135,8 @@ static Render::DrawCommandHistory s_previousDrawCommands;
     {
         return Counter::BatchBreakDepth;
     }
-    if (previous.pipeline != command.pipeline || previous.terrainLit != command.terrainLit)
+    if (previous.pipeline != command.pipeline || previous.terrainLit != command.terrainLit ||
+        previous.softParticle != command.softParticle)
     {
         return Counter::BatchBreakProgram;
     }
@@ -1285,7 +1317,9 @@ static void PushSceneLightingUniforms()
     SceneLightingWithSunShadow block{s_sceneLightingUniform,
                                      s_sunShadowMapReady ? s_sunShadowUniform : mu::SunShadowUniform{}};
 #ifndef __EMSCRIPTEN__
-    // Only terrain_lights.frag reads it; the other shaders' blocks end before it.
+    // Only the soft twins read the soft block and terrain_lights.frag the torch lights; the other
+    // shaders' blocks end before them.
+    block.soft = s_softParticlesUniform;
     block.terrainLights = s_terrainLightsUniform;
 #endif
     SDL_PushGPUFragmentUniformData(s_cmdBuf, k_FragmentUniformSlotSceneLighting, &block, sizeof(block));
@@ -1346,6 +1380,11 @@ static std::unordered_map<SDL_GPUGraphicsPipeline*, SDL_GPUGraphicsPipeline*> s_
 static bool s_singleSamplePass = false;
 // Whether the built pipelines are multisampled; set by CreatePipelinesForSampleCount.
 static bool s_pipelinesMultisampled = false;
+// Soft sprites draw through their twins only from the first command after the opaque world
+// (LendSoftParticlesDepth): those recorded before EndOpaqueWorld keep their own pipeline.
+static std::size_t s_softParticlesFrom = kNoDrawCommand;
+// The s_renderCmds index ReplayCommands is replaying; kNoDrawCommand outside it.
+static std::size_t s_replayCommandIndex = kNoDrawCommand;
 
 // Replays a recorded draw with `pipeline`: its own, or a variant of it for another pass.
 static void ReplayDrawCommand(const RenderCmd& command, SDL_GPUGraphicsPipeline* pipeline, bool boneDataReady,
@@ -1355,7 +1394,21 @@ static void ReplayDrawCommand(const RenderCmd& command, SDL_GPUGraphicsPipeline*
     // shadow map is ready; the single-sample passes (offscreen, UI) keep the plain pipeline.
     bool sunShadowed = false;
     bool worldRows = false;
-    if (command.terrainWater && !s_singleSamplePass && command.sunShadowRows != ~0u)
+    // A soft effect sprite while the frame has its world depth: its soft twin, which reads the depth
+    // at slot 1 (in place of a sun shadow receiver's shadow map) and the scene's block in slot 1.
+    bool softDepth = false;
+    if (command.softParticle && s_softDepthReady && !s_singleSamplePass &&
+        s_replayCommandIndex != kNoDrawCommand && s_replayCommandIndex >= s_softParticlesFrom)
+    {
+        const auto soft = s_softParticlePipelines.find(pipeline);
+        if (soft != s_softParticlePipelines.end())
+        {
+            pipeline = soft->second;
+            softDepth = true;
+            SelectSceneLightingBlock(false);
+        }
+    }
+    if (!softDepth && command.terrainWater && !s_singleSamplePass && command.sunShadowRows != ~0u)
     {
         const auto water = s_terrainWaterPipelines.find(pipeline);
         if (water != s_terrainWaterPipelines.end())
@@ -1379,7 +1432,7 @@ static void ReplayDrawCommand(const RenderCmd& command, SDL_GPUGraphicsPipeline*
             SelectSceneLightingBlock(false);
         }
     }
-    if (!worldRows && command.sunShadowReceiver && s_sunShadowMapReady && !s_singleSamplePass)
+    if (!softDepth && !worldRows && command.sunShadowReceiver && s_sunShadowMapReady && !s_singleSamplePass)
     {
         const auto shadowed = s_sunShadowReceiverPipelines.find(pipeline);
         if (shadowed != s_sunShadowReceiverPipelines.end() &&
@@ -1423,6 +1476,16 @@ static void ReplayDrawCommand(const RenderCmd& command, SDL_GPUGraphicsPipeline*
         const SDL_GPUTextureSamplerBinding shadowBinding{s_sunShadowMap, s_sunShadowSampler};
         SDL_BindGPUFragmentSamplers(s_renderPass, 1, &shadowBinding, 1);
         ++s_dbgSamplerBindsThisFrame;
+    }
+    if (softDepth)
+    {
+        s_softParticlesDrawnThisFrame = true;
+        if (state.SelectSoftDepth())
+        {
+            const SDL_GPUTextureSamplerBinding depthBinding{s_ssao.GetDepth(), s_softDepthSampler};
+            SDL_BindGPUFragmentSamplers(s_renderPass, 1, &depthBinding, 1);
+            ++s_dbgSamplerBindsThisFrame;
+        }
     }
 
     // Bound again only when the buffer or the vertex size changes; draws in between say where their vertices start.
@@ -1533,6 +1596,10 @@ static SDL_GPUShader* s_fragShaderTerrainWater = nullptr; // terrain_water.frag 
 static SDL_GPUShader* s_vertShaderTerrainLights = nullptr;       // terrain_lights.vert
 static SDL_GPUShader* s_fragShaderTerrainLights = nullptr;       // terrain_lights.frag
 static SDL_GPUShader* s_fragShaderTerrainLightsShadow = nullptr; // terrain_lights_shadow.frag
+// Soft effect sprites (desktop, optional): without them the sprites never fade.
+static SDL_GPUShader* s_vertShaderSoftParticles = nullptr;  // soft_particles.vert
+static SDL_GPUShader* s_fragShaderSoftParticles = nullptr;  // basic_textured_fog_soft.frag
+static SDL_GPUShader* s_fragShaderSoftParticlesGlow = nullptr; // basic_textured_fog_soft_glow.frag
 // Post-processing (optional): without them post-processing is unavailable.
 static SDL_GPUShader* s_vertShaderPostFullscreen = nullptr; // post_fullscreen.vert
 static SDL_GPUShader* s_fragShaderSsao = nullptr;           // post_ssao.frag (only with SSAO on)
@@ -2746,6 +2813,9 @@ public:
         s_particlesAt = kNoDrawCommand;
         s_particlesFrame = {};
         m_terrainLit = false;
+        m_softParticle = false;
+        s_softParticlesDrawnLastFrame = s_softParticlesDrawnThisFrame;
+        s_softParticlesDrawnThisFrame = false;
         m_cutoutQuads = false;
         s_ssaoLinearFog = false;
         if (s_bloomExclusionDepth != 0)
@@ -3051,6 +3121,7 @@ public:
         for (std::size_t index = begin; index < end; ++index)
         {
             const RenderCmd& cmd = s_renderCmds[index];
+            s_replayCommandIndex = index;
             // Replay state and editor commands after texture invalidation, but skip
             // game draws because their deferred texture pointers may be dangling.
             if (s_texturesInvalidated && IsUnsafeInvalidatedDrawCommand(cmd.type))
@@ -3119,6 +3190,7 @@ public:
             }
             } // switch
         }
+        s_replayCommandIndex = kNoDrawCommand;
     }
 
     [[nodiscard]] static SDL_GPUDepthStencilTargetInfo MakeDepthTarget(SDL_GPULoadOp loadOp, SDL_GPUStoreOp storeOp)
@@ -3438,6 +3510,51 @@ public:
         return true;
     }
 
+    // Soft effect sprites from `worldEnd` on read the opaque world's depth RenderSsao just drew
+    // (SoftParticles.h): its projection as the haze takes it, and its size. Only while SoftParticles
+    // is on.
+    static void LendSoftParticlesDepth(const std::size_t worldEnd)
+    {
+        namespace SkillFx = Render::Effects::SkillFx;
+        const glm::mat4& projection = s_ssaoProjection;
+        if (!SkillFx::Enabled(SkillFx::Feature::SoftParticles) || s_softParticlePipelines.empty() ||
+            !s_softDepthSampler || projection[0][0] == 0.0f || projection[1][1] == 0.0f || s_swapW == 0u ||
+            s_swapH == 0u)
+        {
+            return;
+        }
+        mu::SoftParticlesUniform& uniform = s_softParticlesUniform;
+        uniform.projection[0] = 1.0f / projection[0][0];
+        uniform.projection[1] = 1.0f / projection[1][1];
+        uniform.projection[2] = projection[2][2];
+        uniform.projection[3] = projection[3][2];
+        uniform.depth[0] = 1.0f / static_cast<float>(s_swapW);
+        uniform.depth[1] = 1.0f / static_cast<float>(s_swapH);
+        uniform.depth[2] = 1.0f;
+        uniform.depth[3] = 0.0f;
+        s_softParticlesFrom = worldEnd;
+        s_softDepthReady = true;
+    }
+
+    static void ReturnSoftParticlesDepth()
+    {
+        s_softDepthReady = false;
+        s_softParticlesFrom = kNoDrawCommand;
+        s_softParticlesUniform = {};
+    }
+
+    // Returns the world depth however the post-processed frame ends.
+    struct SoftParticlesDepthScope
+    {
+        SoftParticlesDepthScope() = default;
+        SoftParticlesDepthScope(const SoftParticlesDepthScope&) = delete;
+        SoftParticlesDepthScope& operator=(const SoftParticlesDepthScope&) = delete;
+        ~SoftParticlesDepthScope()
+        {
+            ReturnSoftParticlesDepth();
+        }
+    };
+
     // The uniform of this frame's haze, or none (off, the map has none, too short a range).
     [[nodiscard]] static std::optional<mu::SdlGpuHazeUniform> BuildHazeUniform()
     {
@@ -3511,6 +3628,8 @@ public:
     [[nodiscard]] static bool ReplayPostProcessedFrame(SDL_GPUTexture* destination, std::size_t sceneEnd,
                                                        bool boneDataReady)
     {
+        // The world depth is lent to the scene and bloom passes only; the UI pass never has it.
+        const SoftParticlesDepthScope softDepthScope;
         SDL_GPUTexture* const multisampled = IsMultisampled() ? s_multisampleColorTexture : nullptr;
         ReplayView view = FullFrameView();
 
@@ -3525,6 +3644,10 @@ public:
             // shadows go without them.
             const std::size_t worldEnd = GetSsaoWorldEnd(sceneEnd, boneDataReady);
             const bool ssao = worldEnd != kNoDrawCommand && RenderSsao(worldEnd, boneDataReady);
+            if (ssao)
+            {
+                LendSoftParticlesDepth(worldEnd);
+            }
             if (!BeginReplayPass(sceneTarget, MakeDepthTarget(SDL_GPU_LOADOP_CLEAR, SDL_GPU_STOREOP_STORE)))
             {
                 return false;
@@ -3548,6 +3671,7 @@ public:
         {
             RenderBloomSources(sceneEnd, boneDataReady);
         }
+        ReturnSoftParticlesDepth();
 
         // The composite covers every pixel: the target's old content is not loaded.
         // A diagnostic view without its image this frame leaves black instead.
@@ -5981,6 +6105,11 @@ public:
     {
         m_terrainLit = lit && !s_terrainLightPipelines.empty();
     }
+    // Draws with and without it never merge (ClassifyBatchBreak).
+    void SetSoftParticle(bool soft) override
+    {
+        m_softParticle = soft && !s_softParticlePipelines.empty();
+    }
     void SetCutoutQuads(bool cutout) override
     {
         m_cutoutQuads = cutout;
@@ -6430,6 +6559,8 @@ private:
     bool m_stencilTestEnabled = false;
     // SetTerrainLit: the ground draws recorded next take the torch light per pixel.
     bool m_terrainLit = false;
+    // SetSoftParticle: the effect sprites recorded next fade in front of the world depth.
+    bool m_softParticle = false;
     // SetCutoutQuads: the world quads recorded next may take alpha-to-coverage (the grass).
     bool m_cutoutQuads = false;
     int m_boundTextureId = -1;
@@ -6470,6 +6601,23 @@ private:
         RecordSunShadow(command);
         RecordTerrainWater(command);
         RecordTerrainLights(command);
+        RecordSoftParticles(command);
+    }
+
+    // A blended, depth-tested, not depth-writing 3D draw recorded under SetSoftParticle draws through
+    // its pipeline's soft twin while the frame has its world depth (Render/Effects/SoftParticles.h).
+    void RecordSoftParticles(RenderCmd& command) const
+    {
+        namespace Soft = Render::Effects::SoftParticles;
+        if (!m_softParticle || s_screenSpaceSamplingDepth != 0 || command.vtxStride != sizeof(Vertex3D) ||
+            (command.type != RenderCmdType::DrawTriangles && command.type != RenderCmdType::DrawIndexedQuads) ||
+            Soft::TwinFor(command.blendEnabled, command.blendMode, command.depthTestEnabled,
+                          command.depthMaskEnabled) == Soft::Twin::None ||
+            !s_softParticlePipelines.contains(command.pipeline))
+        {
+            return;
+        }
+        command.softParticle = true;
     }
 
     // A depth-tested 3D draw recorded under SetTerrainLit draws through its pipeline's terrain light
@@ -6974,6 +7122,15 @@ private:
                 createShader("terrain_lights", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 2, /*fatal=*/false);
             s_fragShaderTerrainLightsShadow =
                 createShader("terrain_lights_shadow", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 2, /*fatal=*/false);
+            // Soft effect sprites (desktop only): soft_particles.vert takes Transform (b0) and the softness
+            // (the normal's x); the fragment shaders the sprite texture (t0), the world depth (t1),
+            // FogUniforms (b0) and SceneLighting with the soft block (b1).
+            s_vertShaderSoftParticles =
+                createShader("soft_particles", "vert", SDL_GPU_SHADERSTAGE_VERTEX, 0, 0, 1, /*fatal=*/false);
+            s_fragShaderSoftParticles =
+                createShader("basic_textured_fog_soft", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 2, /*fatal=*/false);
+            s_fragShaderSoftParticlesGlow = createShader("basic_textured_fog_soft_glow", "frag",
+                                                         SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 2, /*fatal=*/false);
 #endif
             // The desktop's also takes the normal map (t2); the browser's WGSL has none.
 #ifndef __EMSCRIPTEN__
@@ -7077,7 +7234,8 @@ private:
         for (SDL_GPUShader** shader :
              {&s_vertShader3DWorld, &s_fragShaderTexFogShadow, &s_fragShaderLitShadow, &s_fragShaderShadowCaster,
               &s_fragShaderTerrainWater, &s_vertShaderTerrainLights, &s_fragShaderTerrainLights,
-              &s_fragShaderTerrainLightsShadow})
+              &s_fragShaderTerrainLightsShadow, &s_vertShaderSoftParticles, &s_fragShaderSoftParticles,
+              &s_fragShaderSoftParticlesGlow})
         {
             if (*shader)
             {
@@ -7112,6 +7270,8 @@ private:
         // The 3D layout plus the normal (the torch light taken out of the vertex colour), with
         // terrain_lights.vert (the torch light on the ground).
         ThreeDimensionalTerrainLights,
+        // The 3D layout plus the normal (its x: the sprite's softness), with soft_particles.vert.
+        ThreeDimensionalSoftParticles,
     };
 
     enum class FragmentShader
@@ -7125,6 +7285,8 @@ private:
         TerrainWater,
         TerrainLights,
         TerrainLightsShadow,
+        SoftParticles,
+        SoftParticlesGlow,
     };
 
     struct PipelineBuildDescription
@@ -7165,6 +7327,10 @@ private:
             return s_fragShaderTerrainLights;
         case FragmentShader::TerrainLightsShadow:
             return s_fragShaderTerrainLightsShadow;
+        case FragmentShader::SoftParticles:
+            return s_fragShaderSoftParticles;
+        case FragmentShader::SoftParticlesGlow:
+            return s_fragShaderSoftParticlesGlow;
         case FragmentShader::Textured:
             break;
         }
@@ -7191,6 +7357,10 @@ private:
             return "terrain_lights.frag";
         case FragmentShader::TerrainLightsShadow:
             return "terrain_lights_shadow.frag";
+        case FragmentShader::SoftParticles:
+            return "basic_textured_fog_soft.frag";
+        case FragmentShader::SoftParticlesGlow:
+            return "basic_textured_fog_soft_glow.frag";
         case FragmentShader::Textured:
             break;
         }
@@ -7268,7 +7438,8 @@ private:
         }
         else if (description.vertexLayout == VertexLayout::ThreeDimensional ||
                  description.vertexLayout == VertexLayout::ThreeDimensionalWorld ||
-                 description.vertexLayout == VertexLayout::ThreeDimensionalTerrainLights)
+                 description.vertexLayout == VertexLayout::ThreeDimensionalTerrainLights ||
+                 description.vertexLayout == VertexLayout::ThreeDimensionalSoftParticles)
         {
             // Vertex3D mapped to the 2D shader's input locations:
             //   location 0 (TEXCOORD0 → pos):   float3 pos  — shader reads float2 (x,y), z dropped
@@ -7295,9 +7466,11 @@ private:
 
             vtxBufDesc.pitch = sizeof(Vertex3D);
             numAttribs = 3;
-            if (description.vertexLayout == VertexLayout::ThreeDimensionalTerrainLights)
+            if (description.vertexLayout == VertexLayout::ThreeDimensionalTerrainLights ||
+                description.vertexLayout == VertexLayout::ThreeDimensionalSoftParticles)
             {
-                // location 3 (TEXCOORD3): the normal, which carries the torch light taken out of the colour.
+                // location 3 (TEXCOORD3): the normal, which carries the torch light taken out of the colour
+                // (terrain lights) or the sprite's softness (soft particles).
                 vertexAttribs[3] = {};
                 vertexAttribs[3].location = 3;
                 vertexAttribs[3].buffer_slot = 0;
@@ -7392,6 +7565,7 @@ private:
             : description.vertexLayout == VertexLayout::SkinnedShadow         ? s_vertShaderSkinnedShadow
             : description.vertexLayout == VertexLayout::ThreeDimensionalWorld ? s_vertShader3DWorld
             : description.vertexLayout == VertexLayout::ThreeDimensionalTerrainLights ? s_vertShaderTerrainLights
+            : description.vertexLayout == VertexLayout::ThreeDimensionalSoftParticles ? s_vertShaderSoftParticles
                                                                               : s_vertShader2D;
         pipelineInfo.fragment_shader = GetFragmentShader(description.fragmentShader);
         pipelineInfo.vertex_input_state = vtxInputState;
@@ -7667,6 +7841,7 @@ private:
         s_particles.DestroyPipeline();
         DestroyTerrainWaterPipelines();
         DestroyTerrainLightPipelines();
+        DestroySoftParticlePipelines();
         DestroySunShadowPipelines();
         DestroySingleSamplePipelines();
         s_pipelinesMultisampled = false;
@@ -7884,6 +8059,7 @@ private:
         CreateSunShadowPipelines();
         CreateTerrainWaterPipelines();
         CreateTerrainLightPipelines();
+        CreateSoftParticlePipelines();
         CreateSsaoPipelines();
         CreateParticlesPipeline();
         return true;
@@ -8399,6 +8575,102 @@ private:
         {
             DestroyTerrainLightPipelines();
         }
+    }
+
+    // The soft twins of the depth-read-only Enhanced 3D pipelines that blend Alpha (fading the alpha)
+    // and Additive or Glow (fading the colour), and the world depth's point sampler. Kept only when all
+    // kSoftParticlePipelineCount were built, so a flagged draw always finds its twin.
+    static void CreateSoftParticlePipelines()
+    {
+        DestroySoftParticlePipelines();
+        if (!s_enhancedLightingAvailable || !s_vertShaderSoftParticles || !s_fragShaderSoftParticles ||
+            !s_fragShaderSoftParticlesGlow)
+        {
+            return;
+        }
+        const char* deviceDriver = SDL_GetGPUDeviceDriver(s_device);
+        const char* driverName = deviceDriver ? deviceDriver : "unknown";
+
+        SDL_GPUColorTargetBlendState alpha{};
+        alpha.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+        alpha.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+        alpha.color_blend_op = SDL_GPU_BLENDOP_ADD;
+        alpha.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+        alpha.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+        alpha.alpha_blend_op = SDL_GPU_BLENDOP_ADD;
+        alpha.enable_blend = true;
+        // As the blend table: Additive and Glow keep the target's alpha.
+        SDL_GPUColorTargetBlendState additive = alpha;
+        additive.dst_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+        additive.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ZERO;
+        additive.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+        SDL_GPUColorTargetBlendState glow = additive;
+        glow.src_color_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
+
+        struct SoftBlend
+        {
+            int index;
+            const char* name;
+            SDL_GPUColorTargetBlendState state;
+            FragmentShader fragment;
+        };
+        const SoftBlend blends[] = {
+            {k_PipelineAlpha, "alpha", alpha, FragmentShader::SoftParticles},
+            {static_cast<int>(mu::BlendMode::Additive), "additive", additive, FragmentShader::SoftParticlesGlow},
+            {static_cast<int>(mu::BlendMode::Glow), "glow", glow, FragmentShader::SoftParticlesGlow},
+        };
+        constexpr VertexLayout kLayout = VertexLayout::ThreeDimensionalSoftParticles;
+        int built = 0;
+        for (const SoftBlend& blend : blends)
+        {
+            SDL_GPUGraphicsPipeline* const source = s_pipelines3DEnhancedFog.depthReadOnly[blend.index];
+            if (!source)
+            {
+                continue;
+            }
+            const PipelineBuildResult result = BuildBlendPipeline(
+                blend.state, {"3d-enhanced-fog-soft-particles", blend.name, blend.index, true, false, kLayout, false,
+                              blend.fragment});
+            if (!result.pipeline)
+            {
+                LogPipelineFailure(driverName, result, false);
+                continue;
+            }
+            s_softParticlePipelines[source] = result.pipeline;
+            ++built;
+        }
+
+        SDL_GPUSamplerCreateInfo samplerInfo{};
+        samplerInfo.min_filter = SDL_GPU_FILTER_NEAREST;
+        samplerInfo.mag_filter = SDL_GPU_FILTER_NEAREST;
+        samplerInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_NEAREST;
+        samplerInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+        samplerInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+        samplerInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+        s_softDepthSampler = SDL_CreateGPUSampler(s_device, &samplerInfo);
+
+        constexpr int kSoftParticlePipelineCount = 3;
+        mu::log::Get("render")->info("SDL_gpu -- soft particles: {} of {} pipelines", built,
+                                     kSoftParticlePipelineCount);
+        if (built != kSoftParticlePipelineCount || !s_softDepthSampler)
+        {
+            DestroySoftParticlePipelines();
+        }
+    }
+
+    static void DestroySoftParticlePipelines()
+    {
+        for (const auto& [source, soft] : s_softParticlePipelines)
+        {
+            SDL_ReleaseGPUGraphicsPipeline(s_device, soft);
+        }
+        s_softParticlePipelines.clear();
+        if (s_softDepthSampler)
+        {
+            SDL_ReleaseGPUSampler(s_device, s_softDepthSampler);
+            s_softDepthSampler = nullptr;
+        }
+        s_softDepthReady = false;
     }
 
     // SSAO's pipelines (desktop, only when SSAO or the haze is on at start-up): the depth-only twins

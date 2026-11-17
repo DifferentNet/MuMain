@@ -1,0 +1,100 @@
+#include "stdafx.h"
+
+#include "Render/Effects/SkillFx.h"
+
+#include "Core/Utilities/Log/MuLogger.h"
+#include "Data/GameConfig/GameConfig.h"
+#include "Render/Look/GraphicsPresetSetting.h"
+
+#include <array>
+#include <optional>
+
+namespace Render::Effects::SkillFx
+{
+
+namespace
+{
+std::array<bool, kFeatureCount> s_chosen{};
+bool s_available = false;
+// The state last logged, for logging only its changes.
+std::optional<std::array<bool, kFeatureCount + 1>> s_logged;
+
+constexpr int Index(const Feature feature)
+{
+    return static_cast<int>(feature);
+}
+
+int EffectLevel()
+{
+    return GameConfig::GetInstance().GetEffectLevel();
+}
+
+void Log()
+{
+    const std::array<bool, kFeatureCount + 1> state{s_available, s_chosen[0], s_chosen[1], s_chosen[2]};
+    if (s_logged == state)
+    {
+        return;
+    }
+    s_logged = state;
+    mu::log::Get("render")->info("Skill effects {}: pools {}, soft {}, flipbook {}",
+                                 s_available ? "available" : "not available", s_chosen[0] ? "on" : "off",
+                                 s_chosen[1] ? "on" : "off", s_chosen[2] ? "on" : "off");
+}
+} // namespace
+
+bool Available()
+{
+#ifdef __EMSCRIPTEN__
+    return false;
+#else
+    return Render::Look::RemasterGraphicsOptions();
+#endif
+}
+
+void ApplyFromConfig()
+{
+    const GameConfig& config = GameConfig::GetInstance();
+    s_available = Available();
+    s_chosen[Index(Feature::LightPools)] = config.GetSkillLightPools() != 0;
+    s_chosen[Index(Feature::SoftParticles)] = config.GetSoftParticles() != 0;
+    s_chosen[Index(Feature::FlipbookBlend)] = config.GetFlipbookBlending() != 0;
+    Log();
+}
+
+bool Enabled(const Feature feature)
+{
+    return Resolve(s_chosen[Index(feature)], s_available, feature, EffectLevel());
+}
+
+int ActivePoolBudget()
+{
+    return Enabled(Feature::LightPools) ? PoolBudget(EffectLevel()) : 0;
+}
+
+bool Chosen(const Feature feature)
+{
+    return s_chosen[Index(feature)];
+}
+
+void Choose(const Feature feature, const bool enabled)
+{
+    GameConfig& config = GameConfig::GetInstance();
+    const int value = enabled ? 1 : 0;
+    switch (feature)
+    {
+    case Feature::LightPools:
+        config.SetSkillLightPools(value);
+        break;
+    case Feature::SoftParticles:
+        config.SetSoftParticles(value);
+        break;
+    case Feature::FlipbookBlend:
+        config.SetFlipbookBlending(value);
+        break;
+    }
+    config.Save();
+    ApplyFromConfig();
+}
+
+} // namespace Render::Effects::SkillFx

@@ -169,6 +169,13 @@ namespace CfgKeys
     // (Render/Models/AnimationSmoothing.h); AnimationFadeMs is the fade length (0 to 300 ms, 0 = no fade).
     inline constexpr wchar_t CfgKeySmoothAnimation[] = L"SmoothAnimation";
     inline constexpr wchar_t CfgKeyAnimationFadeMs[] = L"AnimationFadeMs";
+    // [Render] SkillLightPools, SoftParticles, FlipbookBlending: in the Remaster PC client, 0 off, 1 on
+    // (Render/Effects/SkillFx.h): skill lights drawn on the ground as round pools, effect sprites fading
+    // where they cut into the ground and walls, and explosion sheets blending between their frames.
+    // Each one also follows the effect level (Options > Graphics); no Options row.
+    inline constexpr wchar_t CfgKeySkillLightPools[] = L"SkillLightPools";
+    inline constexpr wchar_t CfgKeySoftParticles[] = L"SoftParticles";
+    inline constexpr wchar_t CfgKeyFlipbookBlending[] = L"FlipbookBlending";
     // [Render] Haze: with HD textures, Enhanced lighting and post-processing on, 0 off, 1 distance haze
     // and low ground fog (Render/PostProcessing/HazeSetting.h), and its strength in percent (0 to 100;
     // 70 shows the maps' haze as their light mood gives it).
@@ -401,6 +408,9 @@ namespace CfgDefaults
     inline constexpr int CfgDefaultAnimationFadeMs = 160;
     inline constexpr int CfgMinAnimationFadeMs = 0;
     inline constexpr int CfgMaxAnimationFadeMs = 300;
+    inline constexpr int CfgDefaultSkillFx = 1;
+    inline constexpr int CfgMinSkillFx = 0;
+    inline constexpr int CfgMaxSkillFx = 1;
     inline constexpr int CfgDefaultHaze = 1;
     inline constexpr int CfgMinHaze = 0;
     inline constexpr int CfgMaxHaze = 1;
