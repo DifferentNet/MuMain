@@ -23,6 +23,7 @@
 #include "GameLogic/Skills/SkillManager.h"
 #include "GameLogic/Social/PartyManager.h"
 #include "GameLogic/Touch/SteerHold.h"
+#include "GameLogic/Touch/TargetPassOn.h"
 #include "I18N/All.h"
 #include "MUHelper/MuHelper.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
@@ -161,6 +162,12 @@ float g_padAimY = 0.f;
 int g_targetKey = NoTarget;
 // The target the pad's right stick chose (CycleTarget): the buttons' target while it is a good one.
 int g_chosenKey = NoTarget;
+// When the player chose it, when the buttons last fought it, and where it was last seen (in tiles):
+// dead, it passes on to the next foe that way (KeepChosen).
+Clock::time_point g_chosenAt{};
+Clock::time_point g_chosenFoughtAt{};
+float g_chosenTileX = 0.f;
+float g_chosenTileY = 0.f;
 // The NPC or player the right stick chose where no foe is near (MeetIndex).
 int g_meetKey = NoTarget;
 // When the walk up to a player for their menu was last sent (WalkUpTo).
@@ -567,12 +574,70 @@ int TargetToFight()
     return nearestKey;
 }
 
-// TargetToFight(), now the buttons' target; a chosen one gone is forgotten.
+void NoteChosenTile(const CHARACTER* chosen)
+{
+    g_chosenTileX = chosen->Object.Position[0] / TERRAIN_SCALE;
+    g_chosenTileY = chosen->Object.Position[1] / TERRAIN_SCALE;
+}
+
+// The player chose the foe `key` (the right stick, the Target button): the buttons fight it from now.
+void Choose(int key)
+{
+    g_meetKey = NoTarget;
+    g_chosenKey = g_targetKey = key;
+    g_chosenAt = Clock::now();
+    if (const CHARACTER* chosen = FindByKey(key))
+        NoteChosenTile(chosen);
+}
+
+// The choice is kept while its foe is a good target. Dead or gone, it passes on to the next foe the way
+// that one lay from the hero, while the choice is still the player's (TargetPassOn); out of reach, or
+// left alone too long, it is dropped. Never to a player: the PK switch lets the stick choose one, but a
+// fight passing on to a passer-by would be no one's choice.
+void KeepChosen()
+{
+    if (g_chosenKey == NoTarget)
+        return;
+    const CHARACTER* chosen = FindByKey(g_chosenKey);
+    if (IsGoodTarget(chosen, true))
+    {
+        NoteChosenTile(chosen);
+        return;
+    }
+    const int gone = g_chosenKey;
+    const bool died = chosen == nullptr || !chosen->Object.Live || chosen->Dead != 0;
+    g_chosenKey = NoTarget;
+    if (!died || !TargetPassOn::Passes(g_chosenAt, g_chosenFoughtAt, Attacking != -1, Clock::now()))
+        return;
+    static std::vector<DirectionPick::Candidate> s_candidates;
+    s_candidates.clear();
+    for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
+    {
+        const CHARACTER* character = &CharactersClient[i];
+        if (character->Key == gone || character->Object.Kind == KIND_PLAYER || !IsGoodTarget(character, false))
+            continue;
+        s_candidates.push_back({character->Key, character->Object.Position[0] / TERRAIN_SCALE,
+                                character->Object.Position[1] / TERRAIN_SCALE});
+    }
+    const int next = TargetPassOn::Next(s_candidates, Hero->Object.Position[0] / TERRAIN_SCALE,
+                                        Hero->Object.Position[1] / TERRAIN_SCALE, g_chosenTileX, g_chosenTileY, gone);
+    if (next == DirectionPick::NoKey)
+        return;
+    // Still the player's choice, made when it was: g_chosenAt stays.
+    g_meetKey = NoTarget;
+    g_chosenKey = g_targetKey = next;
+    if (const CHARACTER* passed = FindByKey(next))
+        NoteChosenTile(passed);
+}
+
+// TargetToFight(), now the buttons' target; a chosen one dead passes on or is forgotten (KeepChosen).
 int ChooseTarget()
 {
-    if (g_chosenKey != NoTarget && !IsGoodTarget(FindByKey(g_chosenKey), true))
-        g_chosenKey = NoTarget;
-    return g_targetKey = TargetToFight();
+    KeepChosen();
+    g_targetKey = TargetToFight();
+    if (g_targetKey != NoTarget && g_targetKey == g_chosenKey)
+        g_chosenFoughtAt = Clock::now();
+    return g_targetKey;
 }
 
 void Forget(int key)
@@ -1582,8 +1647,7 @@ int LitKey()
 // and since dead would start from the nearest, likely the one lit already.
 void StepThrough(const std::vector<std::pair<int, int>>& foes, int step)
 {
-    g_meetKey = NoTarget;
-    g_chosenKey = g_targetKey = NextInRound(foes, LitKey(), step);
+    Choose(NextInRound(foes, LitKey(), step));
 }
 } // namespace
 
@@ -1659,10 +1723,7 @@ bool CycleTargetToward(float screenX, float screenY, bool again)
     if (key == DirectionPick::NoKey)
         return false;
     if (foes)
-    {
-        g_meetKey = NoTarget;
-        g_chosenKey = g_targetKey = key;
-    }
+        Choose(key);
     else
     {
         g_meetKey = key;
@@ -1856,14 +1917,14 @@ int ChosenIndex()
 {
     if (!InWorld() || g_chosenKey == NoTarget)
         return -1;
+    // Dead, gone (a warp clears the view) or out of reach: passed on or forgotten now, as the next
+    // button press would (ChooseTarget), so a respawn or another monster under the same key is not
+    // ringed. Asked once a frame, as the characters are drawn: the ring moves on with the kill.
+    KeepChosen();
     const CHARACTER* chosen = FindByKey(g_chosenKey);
     if (!IsGoodTarget(chosen, true))
-    {
-        // Dead, gone (a warp clears the view) or out of reach: forgotten now, as the next button
-        // press would (ChooseTarget), so a respawn or another monster under the same key is not ringed.
-        g_chosenKey = NoTarget;
         return -1;
-    }
+
     // Played with the mouse again: no ring, the choice is kept for when the controls come back.
     if (!g_controlsShown)
         return -1;

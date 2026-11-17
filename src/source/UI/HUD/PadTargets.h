@@ -8,14 +8,24 @@
 
 #include "UI/HUD/PadTargetPick.h"
 
+#include <cstdint>
 #include <optional>
+
 #include <span>
 #include <string_view>
 
 namespace UI::HUD::PadTargets
 {
-// Looks the open windows over again: once a frame while one is open. The span lasts until the next call.
+// The targets in the open windows: asked once a frame while one is open. The windows are walked again
+// only while the pad is at work (Refresh), as a document opens or closes, the screen's size changes or
+// a target's element goes, and every 100 ms otherwise; else the last walk's targets come back. The span
+// lasts until the next call.
 [[nodiscard]] std::span<const PadTargetPick::Target> Collect();
+// The next Collects, for a while, walk the windows every frame: the pad was pressed or pushed, a list
+// scrolled, a page turned, the frame waits for a window to show.
+void Refresh();
+// How often the windows were walked since the last call (the MU_RENDER_TIMING log).
+[[nodiscard]] std::uint32_t TakeCollectCount();
 // Whether the last Collect found a message box or a menu over the windows and took only its controls.
 [[nodiscard]] bool OnDialog();
 // Whether the last Collect found a dropdown's list open (the settings window's) and took only its options.

@@ -475,10 +475,16 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now, st
     }
     g_state.windowCount = onDialog ? 0 : CountWindows(targets);
     g_state.currentWindow = g_state.onTarget && !onDialog ? targets[current].window : -1;
+    // A wait under way (a window to show, a target gone, a dialog closed, a new window settling)
+    // needs every frame's targets, not the ones kept from a moment ago.
+    if (g_state.snapPending || g_state.lostFrames > 0 || g_state.goBack || g_state.newWindowPending
+        || g_state.settleFrames >= 0)
+        PadTargets::Refresh();
 }
 
 void SnapSoon()
 {
+    PadTargets::Refresh();
     g_state.snapPending = true;
     g_state.snapFrames = 0;
     g_state.snapSince = Clock::now();
@@ -494,6 +500,8 @@ void SnapToPage(int window)
 
 void SnapOnNewWindow()
 {
+    PadTargets::Refresh();
+
     g_state.knownTargets = g_state.lastTargets;
     g_state.newWindowPending = true;
     g_state.newWindowFrames = 0;

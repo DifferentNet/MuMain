@@ -925,6 +925,8 @@ bool SlidesBetween(int control)
            || (control >= FirstSkillControl && control < FirstSkillControl + SkillButtons);
 }
 
+void EnsureBoxes();
+
 // Which control a finger landing at a window pixel belongs to.
 int HitTest(float x, float y)
 {
@@ -932,6 +934,7 @@ int HitTest(float x, float y)
     Rml::Context* context = RmlUiRuntime::Instance().GetContext();
     if (!g_shown || document == nullptr || context == nullptr)
         return Touch::NoControl;
+    EnsureBoxes();
     const Rml::Vector2f point(x, y);
     if (IsWindowOver(context->GetElementAtPoint(point), document) || IsPlacedWindowAt(context, document, point))
         return Touch::NoControl;
@@ -1081,6 +1084,46 @@ void FollowNeighbours(Rml::ElementDocument* document)
 double Now()
 {
     return std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
+// With the pad in use and no finger on the controls, the boxes are read only by an A press over a
+// window (ControlAt): measured then (EnsureBoxes), else four times a second, not every frame (pad
+// round 5, 2026-11-17). An open menu, picker or Social panel is measured every frame for its focus.
+constexpr double LazyMeasureSeconds = 0.25;
+struct BoxesMeasure
+{
+    // The boxes are measured lazily now, and not since this frame was laid out.
+    bool lazy = false;
+    bool stale = false;
+    double at = -1e9;
+    // Measures since the last TakeMeasureCount(), for the MU_RENDER_TIMING log.
+    std::uint32_t count = 0;
+};
+BoxesMeasure g_measure;
+
+void MeasureBoxesNow()
+{
+    MeasureBoxes();
+    g_measure.at = Now();
+    g_measure.stale = false;
+    ++g_measure.count;
+}
+
+// The boxes as this frame lays the controls out, for a reader between the lazy measures.
+void EnsureBoxes()
+{
+    if (g_measure.lazy && g_measure.stale)
+        MeasureBoxesNow();
+}
+
+bool AnyFingerOnControls()
+{
+    for (int control = 0; control < ControlCount; ++control)
+    {
+        if (Touch::Control(control).held)
+            return true;
+    }
+    return false;
 }
 
 // A tap shorter than this still lights its button this long (the pressed class).
@@ -1334,12 +1377,16 @@ struct PressLights
     std::array<std::uint32_t, ControlCount> touchSeen{};
     std::array<std::uint32_t, ControlCount> padSeen{};
     std::array<double, ControlCount> until{};
+    // The pressed class as last written.
+    std::array<bool, ControlCount> shown{};
 };
 PressLights g_lights;
 
 // The pressed class on the buttons held, and for a moment after a short tap; written only when it
 // changes. Only where fingers drive the phone's HUD or the pad is in use (lit): elsewhere the class goes.
-void SyncPressed(Rml::ElementDocument* document, bool lit)
+// Between `full` passes a control's element (found by its id) is looked up only as its light changes;
+// a full pass also catches an element made again (a data-if) without the class.
+void SyncPressed(Rml::ElementDocument* document, bool lit, bool full)
 {
     const double now = Now();
     for (int control = AttackControl; control < ControlCount; ++control)
@@ -1351,10 +1398,13 @@ void SyncPressed(Rml::ElementDocument* document, bool lit)
             g_lights.until[control] = now + PressFlashSeconds;
         g_lights.touchSeen[control] = touchPresses;
         g_lights.padSeen[control] = g_pad.presses[control];
+        const bool pressed = lit && (IsHeld(control) || now < g_lights.until[control]);
+        if (!full && pressed == g_lights.shown[control])
+            continue;
         Rml::Element* element = FindElement(document, ControlElement(control));
         if (element == nullptr)
             continue;
-        const bool pressed = lit && (IsHeld(control) || now < g_lights.until[control]);
+        g_lights.shown[control] = pressed;
         if (element->IsClassSet("pressed") != pressed)
             element->SetClass("pressed", pressed);
     }
@@ -2418,6 +2468,7 @@ void Hide()
     SetField(model.knobX, 0.f, "knob_x");
     SetField(model.knobY, 0.f, "knob_y");
     g_boxes.fill(ControlBox{});
+    g_measure = {};
     UI::Mobile::PhoneHudLayout::Release();
     UI::RmlBridge::SyncDocumentVisibility(g_View.Document(), false);
 }
@@ -2522,16 +2573,31 @@ void Update()
     UI::Mobile::Social::Update(GameLogic::Touch::IsSteering());
     SyncDepth(document, model.menuOpen || model.pickerOpen || model.socialOpen);
     UI::Mobile::HeroFrame::Sync(model.hero, [](const char* field) { g_View.MarkDirty(field); });
+    // Played with the pad, the controls are measured lazily (EnsureBoxes): only an A press over a
+    // window reads them then.
+    g_measure.lazy = padInUse && !model.menuOpen && !model.pickerOpen && !model.socialOpen && !AnyFingerOnControls();
+    const bool due = !g_measure.lazy || Now() - g_measure.at >= LazyMeasureSeconds;
     // The pad lights the PC's pad row too: X held shows before the skill animates.
-    SyncPressed(document, (model.fingers && UI::Mobile::ReplacesPcHud()) || padInUse);
+    SyncPressed(document, (model.fingers && UI::Mobile::ReplacesPcHud()) || padInUse, due);
     HintHoldOnce();
     // The boxes the next fingers are tested against: where this frame lays the controls out.
-    MeasureBoxes();
+    if (due)
+        MeasureBoxesNow();
+    else
+        g_measure.stale = true;
     if (model.pickerOpen)
         MeasurePickerPage(document);
     if (model.socialOpen)
         FitSocialPlayers(document);
-    FollowNeighbours(document);
+    if (due)
+        FollowNeighbours(document);
+}
+
+std::uint32_t TakeMeasureCount()
+{
+    const std::uint32_t count = g_measure.count;
+    g_measure.count = 0;
+    return count;
 }
 
 void SetPadAlt(bool alt)

@@ -192,6 +192,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Core/Input/GamepadPageLatch.cpp
 )
 
+# The right stick turning the wheel over a window's long text: by the push and by the clock.
+mu_add_test(
+    NAME gamepad_stick_wheel_tests
+    SOURCES
+        test_gamepad_stick_wheel.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Input/GamepadStickWheel.cpp
+)
+
 # Which shake of the pad plays: a weaker one during a stronger one is dropped.
 mu_add_test(
     NAME gamepad_rumble_tests

@@ -21,6 +21,11 @@ namespace UI::HUD::TouchControls
 // gamepad in use, follows their fingers and the pad's buttons, and acts.
 void Update();
 
+// How often the controls were measured since the last call (the MU_RENDER_TIMING log): every frame for
+// fingers, about four times a second for a pad.
+[[nodiscard]] std::uint32_t TakeMeasureCount();
+
+
 // The controls a gamepad button stands for.
 enum class PadButton : std::uint8_t
 {

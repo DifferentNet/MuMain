@@ -8,6 +8,7 @@
 #include "Core/Input/GamepadStepper.h"
 #include "Core/Input/GamepadStick.h"
 #include "Core/Input/GamepadStickClick.h"
+#include "Core/Input/GamepadStickWheel.h"
 #include "Core/Input/KeyBindingsRuntime.h"
 #include "Core/Input/TouchInput.h"
 #include "Core/Input/UiInputRouter.h"
@@ -266,6 +267,8 @@ struct State
     // When A was last pressed or held: a dialog takes A as its answer only once it has rested.
     Clock::time_point aActive{};
     std::array<DpadWheel, 2> wheels{{{Button::DpadUp, 1}, {Button::DpadDown, -1}}};
+    // With the frame up, the right stick pushed hard up or down over a long text turns the wheel there.
+    Pad::StickWheel stickWheel;
     // The sticks' own buttons, pressed on purpose (Core/Input/GamepadStickClick.h).
     Pad::StickClick leftStickClick;
     Pad::StickClick rightStickClick;
@@ -692,12 +695,40 @@ void PressRightButton(SDL_Window* window, const Presses& presses)
     Pointer::SetButton(window, SDL_BUTTON_RIGHT, held);
 }
 
-// A window open: the right stick moves the pointer, A is its left button (a click, a drag) or the
-// control under it, X and RS its right button.
+// With the frame up, the right stick pushed hard up or down with the pointer over something that
+// scrolls (a quest's text, the help, a list) turns the wheel there; true while it does, and the
+// pointer then stays. A softer push, or one more to the side, moves the pointer as before: the soft
+// push still reaches every button in a long list, the hard one reads it.
+bool TurnWheelWithStick(SDL_Window* window, Pad::StickPosition stick, float seconds)
+{
+    Pad::StickWheel& wheel = g_state.stickWheel;
+    if (!g_state.frameOpen)
+    {
+        wheel.Reset();
+        return false;
+    }
+    bool overScroll = false;
+    // The cheap test first: the pointer's place is looked up only for a push that would turn it.
+    if (wheel.MayTurn(stick))
+    {
+        float x = 0.f;
+        float y = 0.f;
+        PointerPosition(x, y);
+        overScroll = Core::Input::UiScrollsAt(x, y);
+    }
+    Pointer::TurnWheel(window, wheel.Take(stick, overScroll, seconds));
+    return wheel.Turning();
+}
+
+// A window open: the right stick moves the pointer (or turns the wheel, TurnWheelWithStick), A is its
+// left button (a click, a drag) or the control under it, X and RS its right button.
 void PlayPointer(SDL_Window* window, Presses& presses, float seconds)
 {
-    const Pad::StickPosition pointer = Pad::RightStick();
+    Pad::StickPosition pointer = Pad::RightStick();
+    if (TurnWheelWithStick(window, pointer, seconds))
+        pointer = {};
     Pointer::Move(window, pointer.x, pointer.y, seconds, IsPointerOverUi());
+
     // On a slider the frame rests in its middle: a press there would set it to half.
     const bool aPressed = Take(presses, Button::A);
     const bool onGauge = UI::HUD::PadFrame::OnGauge();
@@ -710,9 +741,10 @@ void PlayPointer(SDL_Window* window, Presses& presses, float seconds)
 }
 
 // No window open: a flick of the right stick picks the next target (right or down the next further,
-// left or up the next nearer), RS goes back to the nearest one.
-void PickTargets()
+// left or up the next nearer), RS goes back to the nearest one. True when the choice changed.
+bool PickTargets()
 {
+    bool changed = false;
     const Pad::StickPosition stick = Pad::RightStick();
     const float lean = Pad::Lean(stick);
     const auto now = Clock::now();
@@ -726,10 +758,17 @@ void PickTargets()
         g_state.flickNext = now + (fresh ? FlickFirstRepeat : FlickRepeat);
         // The one that lies the way the stick leans (pad round 3, 2026-11-13); held, the next one on.
         if (GameLogic::Touch::CycleTargetToward(stick.x, stick.y, !fresh))
+        {
             Pad::Rumble(0.f, PickTickStrength, PickTickMilliseconds);
+            changed = true;
+        }
     }
     if (g_state.rightStickClick.Pressed())
+    {
         GameLogic::Touch::ClearChosenTarget();
+        changed = true;
+    }
+    return changed;
 }
 
 // Whether a dialog waits for an answer and has been up long enough to take one from the pad.
@@ -1212,7 +1251,8 @@ void FollowDeath(SDL_Window* window)
     }
 }
 
-void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_point now)
+// `gameWindowOpen`: IsGameWindowOpen() this frame, asked once (it looks at every window).
+void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_point now, bool gameWindowOpen)
 {
     FollowDeath(window);
     const bool dialogAnswers = DialogTakesAnswers(now);
@@ -1234,7 +1274,7 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
         return;
     }
     g_state.menuStepper.Reset();
-    const bool frameOpen = IsGameWindowOpen();
+    const bool frameOpen = gameWindowOpen;
     const bool windowOpen = frameOpen || UI::Dialogs::Modal::IsOpen();
     if (windowOpen != g_state.windowOpen || frameOpen != g_state.frameOpen)
         SwitchWindowMode(window, windowOpen, frameOpen);
@@ -1268,8 +1308,9 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
     }
     else
     {
-        PickTargets();
-        g_state.meet = GameLogic::Touch::MeetIndex();
+        // Asked again only when the stick chose anew: it looks at every character.
+        if (PickTargets())
+            g_state.meet = GameLogic::Touch::MeetIndex();
         PlayMeet(window, presses, now);
         PlayContextA(window, presses);
         // RB: whom the heals and buffs go to (ghinzuro, 2026-11-04).
@@ -1708,6 +1749,17 @@ void LateUpdate()
 
 namespace
 {
+// Whether the pad does anything this frame: a press, a button held, a stick out of its rest.
+bool IsPadActive(const Presses& presses)
+{
+    for (int button = 0; button < Pad::ButtonCount; ++button)
+    {
+        if (presses[button] || Pad::GetButton(static_cast<Button>(button)).held)
+            return true;
+    }
+    return Pad::Lean(Pad::LeftStick()) > 0.f || Pad::Lean(Pad::RightStick()) > 0.f;
+}
+
 void Play()
 {
     SDL_Window* window = Core::Platform::GameWindow();
@@ -1737,6 +1789,10 @@ void Play()
         return;
     }
     g_state.typing = false;
+    // The pad at work (a press, a button or a stick held): the frame's targets are looked for every
+    // frame for a while, else ten times a second (PadTargets::Collect).
+    if (IsPadActive(presses))
+        UI::HUD::PadTargets::Refresh();
 
     const bool inWorld = IsInWorld();
     // A map loading in the world (a gate, a warp): the pad rests, no frame over the HUD meanwhile.
@@ -1758,9 +1814,11 @@ void Play()
         PlayScreens(window, presses, seconds, now);
         return;
     }
-    const bool cardOpened = TellOnce(IsGameWindowOpen() || UI::Dialogs::Modal::IsOpen());
+    const bool gameWindowOpen = IsGameWindowOpen();
+    const bool cardOpened = TellOnce(gameWindowOpen || UI::Dialogs::Modal::IsOpen());
     if (cardOpened)
         WaitForRelease();
-    PlayWorld(window, cardOpened ? Presses{} : presses, seconds, now);
+    PlayWorld(window, cardOpened ? Presses{} : presses, seconds, now, gameWindowOpen);
+
 }
 } // namespace
