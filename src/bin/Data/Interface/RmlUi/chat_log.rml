@@ -29,9 +29,13 @@
 			     No event binding and no :hover: these lines are pointer-events:none so world
 			     clicks pass through the chat window the way they did natively, which also means
 			     they never receive mouse events at all. C++ resolves both the pointed line and
-			     the right-click itself (CChatLogWindow::UpdatePointedLine). -->
+			     the right-click itself (CChatLogWindow::UpdatePointedLine).
+
+			     MU Moldova: `faded` is a line a closed chat has let go after 30 s (UI/Chat/ChatFade.h);
+			     it stays in the list so indices still match, but takes no space. `lead` is the first
+			     line on screen, which carries the bottom-up stacking margin. -->
 			<div data-for="line : lines"
-			     data-attr-class="'chat-line chat-line--' + line.kind + (line.has_id ? ' chat-line--has-id' : '') + (it_index == pointed_index ? ' chat-line--pointed' : '')">{{line.text}}</div>
+			     data-attr-class="'chat-line chat-line--' + line.kind + (line.has_id ? ' chat-line--has-id' : '') + (it_index == pointed_index ? ' chat-line--pointed' : '') + (line.faded ? ' chat-line--faded' : '') + (line.lead ? ' chat-line--lead' : '')">{{line.text}}</div>
 		</div>
 	</div>
 </body>

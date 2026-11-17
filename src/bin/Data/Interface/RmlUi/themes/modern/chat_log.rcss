@@ -71,7 +71,7 @@
 	   defaults to align-items:stretch, which made every line a full-width bar instead. */
 	align-items: flex-start;
 }
-.chat-line:first-child { margin-top: auto; }
+.chat-line--lead { margin-top: auto; }
 
 /* The message well must NOT be a hover target. Core::Input::IsMouseOverUI() gates click-to-move
    on Rml::Context::IsMouseInteracting(), which is true for ANY pointer-events:auto element under
@@ -133,3 +133,8 @@
 	#lines { font-size: 15dp; }
 	.chat-line { line-height: 20dp; }
 }
+
+/* MU Moldova: with the chat closed a line goes 30 s after it came (UI/Chat/ChatFade.h). It stays
+   in the list and takes no space, so the newest lines still sit at the bottom; the first line on
+   screen is .chat-line--lead, not :first-child, because the first child may be gone. */
+.chat-line.chat-line--faded { display: none; }

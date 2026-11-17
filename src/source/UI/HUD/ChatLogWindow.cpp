@@ -26,6 +26,7 @@
 #include <RmlUi/Core/Element.h>
 
 #include "UI/Mobile/InterfaceMode.h"
+#include "UI/Chat/ChatFade.h"
 
 #include <chrono>
 
@@ -41,7 +42,10 @@ constexpr std::chrono::seconds PhoneSystemLineStays{8};
 } // namespace
 using namespace mu::ui::window;
 
-
+std::uint64_t mu::ui::window::ChatLogClockMs()
+{
+    return GetTickCount64();
+}
 
 mu::ui::window::CChatLogWindow::CChatLogWindow()
 {
@@ -626,6 +630,8 @@ void mu::ui::window::CChatLogWindow::BindRmlModel(Rml::DataModelConstructor& c, 
     line.RegisterMember("text", &ChatLogLineEntry::text);
     line.RegisterMember("kind", &ChatLogLineEntry::kind);
     line.RegisterMember("has_id", &ChatLogLineEntry::hasId);
+    line.RegisterMember("faded", &ChatLogLineEntry::faded);
+    line.RegisterMember("lead", &ChatLogLineEntry::lead);
     c.RegisterArray<Rml::Vector<ChatLogLineEntry>>();
 
     c.Bind("lines", &model.lines);
@@ -701,6 +707,9 @@ void mu::ui::window::CChatLogWindow::SyncRmlModel()
 
     SyncNativeLineGeometry();
 
+    if (FadeChanged())
+        m_bLinesDirty = true;
+
     if (m_bLinesDirty)
     {
         // Native's own rule, restated against scroll position: follow the tail while the frame is
@@ -723,6 +732,22 @@ void mu::ui::window::CChatLogWindow::SyncRmlModel()
     }
 
     UpdatePointedLine();
+}
+
+// Open: the player has the chat input up (Enter, the phone's Chat button, the pad's keyboard all
+// show the same INTERFACE_CHATINPUTBOX) or the log's frame is shown.
+bool mu::ui::window::CChatLogWindow::IsChatOpen() const
+{
+    const bool inputOpen = g_pNewUISystem != nullptr && g_pNewUISystem->IsVisible(INTERFACE_CHATINPUTBOX);
+    return inputOpen || m_bShowFrame;
+}
+
+// Cheap per frame: true only when the chat opened or closed, or a line on screen reached its time.
+bool mu::ui::window::CChatLogWindow::FadeChanged()
+{
+    if (IsChatOpen() != m_bChatOpen)
+        return true;
+    return m_NextFadeMs && ChatLogClockMs() >= *m_NextFadeMs;
 }
 
 void mu::ui::window::CChatLogWindow::AfterRmlLayout(Rml::Context* context)
@@ -779,24 +804,42 @@ void mu::ui::window::CChatLogWindow::RebuildLineModel()
     ChatLogRmlModel& model = m_RmlView.GetModel();
     model.lines.clear();
 
+    m_bChatOpen = IsChatOpen();
+    m_NextFadeMs.reset();
+
     type_vector_msgs* pvecMsgs = GetMsgs(GetCurrentMsgType());
     if (pvecMsgs == nullptr)
         return;
 
-    model.lines.reserve(pvecMsgs->size());
+    std::vector<std::uint64_t> addedAt;
+    addedAt.reserve(pvecMsgs->size());
     for (const CMessageText* pMsgText : *pvecMsgs)
+        addedAt.push_back(pMsgText ? pMsgText->GetAddedAtMs() : 0);
+    const UI::Chat::ChatFadeState fade = UI::Chat::EvaluateChatFade(addedAt, ChatLogClockMs(), m_bChatOpen);
+    m_NextFadeMs = fade.nextChangeMs;
+
+    model.lines.reserve(pvecMsgs->size());
+    for (std::size_t index = 0; index < pvecMsgs->size(); ++index)
     {
+        const CMessageText* pMsgText = (*pvecMsgs)[index];
+        const bool faded = !fade.shown[index];
+        const bool lead = static_cast<int>(index) == fade.firstShown;
         const char* slug = pMsgText ? MessageTypeSlug(pMsgText->GetType()) : nullptr;
         if (slug == nullptr || pMsgText->GetText().empty())
         {
             // Native skipped drawing these (bRenderMessage stayed false), but an entry still has
             // to exist: chat_line_rightclick() looks its sender up by array index, so the model
             // and the message vector must stay index-aligned.
-            model.lines.push_back(ChatLogLineEntry{});
+            ChatLogLineEntry blank;
+            blank.faded = faded;
+            blank.lead = lead;
+            model.lines.push_back(std::move(blank));
             continue;
         }
 
         ChatLogLineEntry entry;
+        entry.faded = faded;
+        entry.lead = lead;
         entry.kind = slug;
         entry.hasId = !pMsgText->GetID().empty();
         const type_string composed = entry.hasId
@@ -846,6 +889,9 @@ void mu::ui::window::CChatLogWindow::UpdatePointedLine()
             {
                 Rml::Element* child = lines->GetChild(i);
                 if (child == nullptr)
+                    continue;
+                // A faded line takes no space, but RmlUi may keep its last box; skip it.
+                if (i < (int)model.lines.size() && model.lines[i].faded)
                     continue;
 
                 // The whole row (native tested SCROLL_MIDDLE_PART_HEIGHT), including the gap under
