@@ -58,6 +58,7 @@
 #include "GameLogic/NPCs/npcGateSwitch.h"
 #include "GameLogic/Items/CComGem.h"
 #include "GameLogic/Items/InventoryUtils.h"
+#include "GameLogic/Social/PartyRosterDiff.h"
 #include "UI/Inventory/InventoryContents.h"
 #include "GameLogic/Commands/ChatCommandCatalog.h"
 #include "GameLogic/Events/Cinematic/CDirection.h"
@@ -5841,6 +5842,34 @@ BOOL ReceiveDieExp(const BYTE* ReceiveBuffer, BOOL bEncrypted)
     return (TRUE);
 }
 
+namespace
+{
+// The server answers every kill with these when no experience is given; one line a minute per kind is enough.
+enum class NoExperienceLine
+{
+    MaxLevel,
+    MaxMasterLevel,
+    MonsterTooWeak,
+    Count
+};
+constexpr DWORD kNoExperienceLineIntervalMs = 60 * 1000;
+
+void PostNoExperienceLine(NoExperienceLine kind, const wchar_t* text)
+{
+    static DWORD lastPosted[static_cast<int>(NoExperienceLine::Count)] = {};
+    static bool posted[static_cast<int>(NoExperienceLine::Count)] = {};
+    const int index = static_cast<int>(kind);
+    const DWORD now = GetTickCount();
+    if (posted[index] && now - lastPosted[index] < kNoExperienceLineIntervalMs)
+    {
+        return;
+    }
+    posted[index] = true;
+    lastPosted[index] = now;
+    UI::Chat::PostSystem(text, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+}
+} // namespace
+
 BOOL ReceiveDieExpLarge(const BYTE* ReceiveBuffer, BOOL bEncrypted)
 {
     auto Data = (LPPRECEIVE_EXP_EXTENDED)ReceiveBuffer;
@@ -5878,17 +5907,13 @@ BOOL ReceiveDieExpLarge(const BYTE* ReceiveBuffer, BOOL bEncrypted)
     switch (experienceType)
     {
     case eExperienceType_MaxLevelReached:
-        // TODO: show message "You already reached maximum Level."
-        UI::Chat::PostSystem(L"You already reached maximum Level.", mu::ui::window::TYPE_SYSTEM_MESSAGE);
+        PostNoExperienceLine(NoExperienceLine::MaxLevel, I18N::Game::ExpMaxLevelReached);
         return TRUE;
     case eExperienceType_MaxMasterLevelReached:
-        // TODO: show message "You already reached maximum master Level."
-        UI::Chat::PostSystem(L"You already reached maximum master Level.", mu::ui::window::TYPE_SYSTEM_MESSAGE);
+        PostNoExperienceLine(NoExperienceLine::MaxMasterLevel, I18N::Game::ExpMaxMasterLevelReached);
         return TRUE;
     case eExperienceType_MonsterLevelTooLowForMasterExperience:
-        // TODO: You need to kill stronger monsters to gain master experience.
-        UI::Chat::PostSystem(L"You need to kill stronger monsters to gain master experience.",
-                                 mu::ui::window::TYPE_SYSTEM_MESSAGE);
+        PostNoExperienceLine(NoExperienceLine::MonsterTooWeak, I18N::Game::ExpMonsterTooWeakForMaster);
         return TRUE;
     }
 
@@ -5978,6 +6003,38 @@ void FallingStartCharacter(CHARACTER* c, OBJECT* o)
     }
 }
 
+namespace
+{
+// "Killed by X" when the hero dies to someone in sight; nothing when the killer is not in view.
+void PostKilledBy(const PHEADER_DEFAULT_DIE* Data, int Size)
+{
+    if (Size < static_cast<int>(sizeof(PHEADER_DEFAULT_DIE)))
+    {
+        return;
+    }
+    const int killerKey = ((int)(Data->TKeyH) << 8) + Data->TKeyL;
+    const int killerIndex = FindCharacterIndex(killerKey);
+    if (killerIndex < 0 || killerIndex >= MAX_CHARACTERS_CLIENT)
+    {
+        return;
+    }
+    const CHARACTER* killer = &CharactersClient[killerIndex];
+    if (killer == Hero || killer->ID[0] == L'\0')
+    {
+        return;
+    }
+    // A player outside a duel: the server already says "You got killed by X" (ObjectGotKilledPlugIn).
+    const bool duelKill = g_DuelMgr.IsDuelEnabled() && g_DuelMgr.IsDuelPlayer(const_cast<CHARACTER*>(killer), DUEL_ENEMY);
+    if (killer->Object.Kind == KIND_PLAYER && !duelKill)
+    {
+        return;
+    }
+    wchar_t line[128];
+    mu_swprintf(line, I18N::Game::KilledByName, killer->ID);
+    UI::Chat::PostSystem(line, mu::ui::window::TYPE_ERROR_MESSAGE);
+}
+} // namespace
+
 void ReceiveDie(const BYTE* ReceiveBuffer, int Size)
 {
     auto Data = (LPPHEADER_DEFAULT_DIE)ReceiveBuffer;
@@ -6044,6 +6101,7 @@ void ReceiveDie(const BYTE* ReceiveBuffer, int Size)
     if (c == Hero)
     {
         MUHelper::g_MuHelper.TriggerStop();
+        PostKilledBy(Data, Size);
     }
 
     g_ConsoleDebug->Write(MCD_RECEIVE, L"0x17 [ReceiveDie(%d)]", Key);
@@ -6175,7 +6233,7 @@ void BuildPickedItemName(const ITEM& item, wchar_t (&name)[PickedItemNameSize])
     else if (item.AncientDiscriminator != 0)
         mu_swprintf_s(name, L"%ls ", I18N::Game::Set);
 
-    wchar_t baseName[64]{};
+    wchar_t baseName[128]{};
     GetItemName(item.Type, item.Level, baseName);
     wcscat_s(name, baseName);
     if (item.HasSkill)
@@ -7336,7 +7394,8 @@ void ReceiveTradeExit(const BYTE* ReceiveBuffer)
     case 2: UI::Trade::Closed(UI::Trade::CloseReason::InventoryFull); break;
     case 3: UI::Trade::Closed(UI::Trade::CloseReason::RequestCancelled); break;
     case 4: UI::Trade::Closed(UI::Trade::CloseReason::ReinforcedItem); break;
-    default: UI::Trade::Closed(UI::Trade::CloseReason::Completed); break;
+    case 1: UI::Trade::Closed(UI::Trade::CloseReason::Completed); break;
+    default: UI::Trade::Closed(UI::Trade::CloseReason::Other); break;
     }
     App::Control::Events::RecordTradeClosed(Data->Value);
 }
@@ -7446,6 +7505,36 @@ void ReceivePartyResult(const BYTE* ReceiveBuffer)
     App::Control::Events::RecordPartyAnswer(Data->Value);
 }
 
+namespace
+{
+std::vector<std::wstring> PartyMemberNames()
+{
+    std::vector<std::wstring> names;
+    for (int i = 0; i < PartyNumber && i < MAX_PARTYS; ++i)
+    {
+        names.emplace_back(Party[i].Name);
+    }
+    return names;
+}
+
+// "X joined the party" / "X left the party" for the changes since the list before; none for the hero's own join.
+void PostPartyChanges(const std::vector<std::wstring>& before)
+{
+    const auto changes = GameLogic::Social::PartyRoster::Diff(before, PartyMemberNames(), Hero->ID);
+    wchar_t line[128];
+    for (const std::wstring& name : changes.joined)
+    {
+        mu_swprintf(line, I18N::Game::PartyMemberJoined, name.c_str());
+        UI::Chat::PostSystem(line, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+    }
+    for (const std::wstring& name : changes.left)
+    {
+        mu_swprintf(line, I18N::Game::PartyMemberLeft, name.c_str());
+        UI::Chat::PostSystem(line, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+    }
+}
+} // namespace
+
 void ReceivePartyList(const BYTE* ReceiveBuffer)
 {
     auto Data = (LPPRECEIVE_PARTY_LISTS)ReceiveBuffer;
@@ -7453,6 +7542,7 @@ void ReceivePartyList(const BYTE* ReceiveBuffer)
     {
         Data->Count = MAX_PARTYS;
     }
+    const std::vector<std::wstring> namesBefore = PartyMemberNames();
     int Offset = sizeof(PRECEIVE_PARTY_LISTS);
     PartyNumber = Data->Count;
     for (int i = 0; i < Data->Count; i++)
@@ -7476,6 +7566,7 @@ void ReceivePartyList(const BYTE* ReceiveBuffer)
         Party[i].index = -1;
     }
 
+    PostPartyChanges(namesBefore);
     App::Control::Events::RecordPartyChange("list", Party[0].Name);
 
     g_ConsoleDebug->Write(MCD_RECEIVE, L"0x42 [ReceivePartyList(partynum : %d)]", Data->Count);
@@ -10050,8 +10141,8 @@ void ReceiveLetter(const BYTE* ReceiveBuffer)
     szName[MAX_USERNAME_SIZE] = '\0';
 
     wchar_t szSubject[MAX_TEXT_LENGTH + 1] = {};
-    CMultiLanguage::ConvertFromUtf8(szSubject, Data->Subject, MAX_USERNAME_SIZE);
-    szSubject[MAX_USERNAME_SIZE] = '\0';
+    CMultiLanguage::ConvertFromUtf8(szSubject, Data->Subject, MAX_LETTER_LIST_TITLE_LENGTH);
+    szSubject[MAX_LETTER_LIST_TITLE_LENGTH] = '\0';
 
     const UI::Social::LetterSummary letter{ Data->Index, szName, szSubject, szDate, szTime };
     switch (Data->Read)

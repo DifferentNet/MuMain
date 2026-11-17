@@ -11,6 +11,7 @@
 #include "Engine/Object/ZzzObject.h"
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/AnimationTaskPool.h"
+#include "Engine/Object/CharacterAnimationFade.h"
 #include "Engine/Object/PlayerActionState.h"
 #include "Engine/Object/SwingCadence.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
@@ -350,6 +351,8 @@ void SetAction(OBJECT* o, int Action, bool bBlending)
         return;
     if (o->CurrentAction != Action)
     {
+        // Before the frames change: the fade starts from the pose they show now.
+        Engine::Object::Fade::Begin(*o, static_cast<unsigned short>(Action), bBlending);
         o->PriorAction = o->CurrentAction;
         o->PriorAnimationFrame = o->AnimationFrame;
         o->CurrentAction = Action;

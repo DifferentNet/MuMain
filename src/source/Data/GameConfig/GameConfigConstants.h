@@ -15,6 +15,8 @@ namespace CfgSections
     // MU Moldova: the player's key bindings (Core::Input::KeyBindings), one line per action not on its default key,
     // such as Inventory=B.
     inline constexpr wchar_t CfgSectionKeyBindings[] = L"KeyBindings";
+    // MU Skynet: the chat macros (Alt+1..Alt+0, typed as "/1 text".."/0 text"), Macro1..Macro10.
+    inline constexpr wchar_t CfgSectionChatMacros[] = L"ChatMacros";
 }
 
 namespace CfgKeys
@@ -74,6 +76,8 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyLootFilterMinLevel[] = L"MinLevel";
     inline constexpr wchar_t CfgKeyLootFilterZenMin[] = L"ZenMin";
     inline constexpr wchar_t CfgKeyLootFilterNamePrefix[] = L"Name";
+    // MU Skynet: one chat macro per line, Macro1..Macro10 ([ChatMacros]).
+    inline constexpr wchar_t CfgKeyChatMacroPrefix[] = L"Macro";
     // MU Moldova: the on-screen controls' size in percent (Options -> Interface, Button size).
     inline constexpr wchar_t CfgKeyTouchButtonSize[] = L"TouchButtonSize";
     // MU Moldova: whether the phone's top row of buttons is open (its toggle button, UI/HUD/TouchControls).
@@ -160,6 +164,11 @@ namespace CfgKeys
     // (Render/Models/WindSway.h), and its strength in percent (0 to 100).
     inline constexpr wchar_t CfgKeyWind[] = L"Wind";
     inline constexpr wchar_t CfgKeyWindStrength[] = L"WindStrength";
+    // [Render] SmoothAnimation: in the Remaster PC client, 0 off, 1 characters, monsters, NPCs and mounts
+    // move along curves between their animation keys and fade between actions
+    // (Render/Models/AnimationSmoothing.h); AnimationFadeMs is the fade length (0 to 300 ms, 0 = no fade).
+    inline constexpr wchar_t CfgKeySmoothAnimation[] = L"SmoothAnimation";
+    inline constexpr wchar_t CfgKeyAnimationFadeMs[] = L"AnimationFadeMs";
     // [Render] Haze: with HD textures, Enhanced lighting and post-processing on, 0 off, 1 distance haze
     // and low ground fog (Render/PostProcessing/HazeSetting.h), and its strength in percent (0 to 100;
     // 70 shows the maps' haze as their light mood gives it).
@@ -386,6 +395,12 @@ namespace CfgDefaults
     inline constexpr int CfgDefaultWindStrength = 100;
     inline constexpr int CfgMinWindStrength = 0;
     inline constexpr int CfgMaxWindStrength = 100;
+    inline constexpr int CfgDefaultSmoothAnimation = 1;
+    inline constexpr int CfgMinSmoothAnimation = 0;
+    inline constexpr int CfgMaxSmoothAnimation = 1;
+    inline constexpr int CfgDefaultAnimationFadeMs = 160;
+    inline constexpr int CfgMinAnimationFadeMs = 0;
+    inline constexpr int CfgMaxAnimationFadeMs = 300;
     inline constexpr int CfgDefaultHaze = 1;
     inline constexpr int CfgMinHaze = 0;
     inline constexpr int CfgMaxHaze = 1;

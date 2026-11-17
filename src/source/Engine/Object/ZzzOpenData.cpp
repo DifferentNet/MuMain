@@ -42,6 +42,8 @@
 #include "Render/Items/ItemEffects.h"
 #include "Render/Items/ItemRenderStyles.h"
 #include "Core/Platform/ErrorDialog.h"
+#include "Data/GameConfig/GameConfig.h"
+#include "UI/Chat/ChatMacroFile.h"
 #include "Core/Text/Utf8.h"
 #include "Network/Server/SocketSystem.h"
 #include "Render/Text/CUIRenderText.h"
@@ -3782,25 +3784,62 @@ bool OpenFont()
     return g_pRenderText->Create(g_hDC);
 }
 
-void SaveMacro(const wchar_t* FileName)
+void SaveMacro(int slot)
 {
-    FILE* fp = _wfopen(FileName, L"wt");
-    for (int i = 0; i < 10; i++)
+    if (slot < 0 || slot >= UI::Chat::Macros::kSlotCount)
     {
-        fwprintf(fp, L"%ls\n", MacroText[i]);
+        return;
     }
-    fclose(fp);
+    GameConfig::GetInstance().SetChatMacro(slot, MacroText[slot]);
 }
 
-void OpenMacro(const wchar_t* FileName)
+namespace
 {
-    FILE* fp = _wfopen(FileName, L"rt");
-    if (fp == NULL) return;
-    for (int i = 0; i < 10; i++)
+// The old macro file's whole text, read in the text mode it was written in; empty when there is none.
+std::wstring ReadLegacyMacroFile(const wchar_t* fileName)
+{
+    std::wstring text;
+    FILE* fp = _wfopen(fileName, L"rt");
+    if (fp == nullptr)
     {
-        fwscanf(fp, L"%ls", MacroText[i]);
+        return text;
+    }
+    wchar_t chunk[256];
+    while (fgetws(chunk, static_cast<int>(std::size(chunk)), fp) != nullptr)
+    {
+        text += chunk;
     }
     fclose(fp);
+    return text;
+}
+
+// Once: config.ini gets the old file's macros (the file itself stays as it is).
+void ImportLegacyMacros(const wchar_t* legacyFileName)
+{
+    auto& config = GameConfig::GetInstance();
+    if (config.HasChatMacros())
+    {
+        return;
+    }
+    const auto legacy = UI::Chat::Macros::ParseLegacyFile(ReadLegacyMacroFile(legacyFileName));
+    for (int slot = 0; slot < UI::Chat::Macros::kSlotCount; ++slot)
+    {
+        config.SetChatMacro(slot, legacy[slot]);
+    }
+}
+} // namespace
+
+void LoadMacros(const wchar_t* legacyFileName)
+{
+    ImportLegacyMacros(legacyFileName);
+    auto& config = GameConfig::GetInstance();
+    for (int slot = 0; slot < UI::Chat::Macros::kSlotCount; ++slot)
+    {
+        const std::wstring text = config.GetChatMacro(slot);
+        const size_t length = (std::min)(text.size(), std::size(MacroText[slot]) - 1);
+        wmemcpy(MacroText[slot], text.c_str(), length);
+        MacroText[slot][length] = L'\0';
+    }
 }
 
 namespace
@@ -4545,7 +4584,7 @@ void OpenBasicData(HDC hDC)
     mu_swprintf(Text, L"Data\\Local\\%ls\\SocketItem_%ls.bmd", g_strSelectedML.c_str(), g_strSelectedML.c_str());
     g_SocketItemMgr.OpenSocketItemScript(Text);
 
-    OpenMacro(L"Data\\Macro.txt");
+    LoadMacros(L"Data\\Macro.txt");
 
     g_csItemOption.OpenItemSetScript();
 

@@ -186,6 +186,8 @@ namespace mu::ui::window
         // Right-click: the item under the cursor in my trade grid goes back
         // into the inventory.
         bool ProcessMyTradeItemAutoMoveToInventory();
+        // The move itself: into the first owned bag grid with room; "inventory is full" when none has.
+        bool MoveMyTradeItemToBag();
 
         // Shows the request's dialog; false when a window that forbids trading is
         // open and the client has answered no by itself.

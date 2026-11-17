@@ -14,6 +14,7 @@
 #include "Core/Platform/WinIni.h"  // private-profile (.ini) API
 #include "Core/Platform/Dpapi.h"   // Legacy credential format migration
 #include "Core/Platform/PlatformCrypto.h"
+#include "UI/Chat/ChatMacroFile.h"
 
 GameConfig& GameConfig::GetInstance()
 {
@@ -159,6 +160,10 @@ void GameConfig::Load()
     m_wind = std::clamp(ReadInt(CfgSectionRender, CfgKeyWind, CfgDefaultWind), CfgMinWind, CfgMaxWind);
     m_windStrength = std::clamp(ReadInt(CfgSectionRender, CfgKeyWindStrength, CfgDefaultWindStrength),
                                 CfgMinWindStrength, CfgMaxWindStrength);
+    m_smoothAnimation = std::clamp(ReadInt(CfgSectionRender, CfgKeySmoothAnimation, CfgDefaultSmoothAnimation),
+                                   CfgMinSmoothAnimation, CfgMaxSmoothAnimation);
+    m_animationFadeMs = std::clamp(ReadInt(CfgSectionRender, CfgKeyAnimationFadeMs, CfgDefaultAnimationFadeMs),
+                                   CfgMinAnimationFadeMs, CfgMaxAnimationFadeMs);
     m_haze = std::clamp(ReadInt(CfgSectionRender, CfgKeyHaze, CfgDefaultHaze), CfgMinHaze, CfgMaxHaze);
     m_hazeStrength = std::clamp(ReadInt(CfgSectionRender, CfgKeyHazeStrength, CfgDefaultHazeStrength),
                                 CfgMinHazeStrength, CfgMaxHazeStrength);
@@ -297,6 +302,8 @@ void GameConfig::Save()
     WriteInt(CfgSectionRender, CfgKeySsaoStrength, m_ssaoStrength);
     WriteInt(CfgSectionRender, CfgKeyWind, m_wind);
     WriteInt(CfgSectionRender, CfgKeyWindStrength, m_windStrength);
+    WriteInt(CfgSectionRender, CfgKeySmoothAnimation, m_smoothAnimation);
+    WriteInt(CfgSectionRender, CfgKeyAnimationFadeMs, m_animationFadeMs);
     WriteInt(CfgSectionRender, CfgKeyHaze, m_haze);
     WriteInt(CfgSectionRender, CfgKeyHazeStrength, m_hazeStrength);
     WriteInt(CfgSectionRender, CfgKeyParticles, m_particles);
@@ -415,6 +422,32 @@ void GameConfig::SetKeyBinding(const wchar_t* action, const std::wstring& keyNam
     WriteString(CfgSections::CfgSectionKeyBindings, action, keyName);
 }
 
+namespace
+{
+std::wstring ChatMacroKey(int slot)
+{
+    return std::wstring(CfgKeys::CfgKeyChatMacroPrefix) + std::to_wstring(slot + 1);
+}
+} // namespace
+
+bool GameConfig::HasChatMacros()
+{
+    // A missing line reads back as the default; typed chat text never holds a control character.
+    const std::wstring missing = L"\x01";
+    return ReadString(CfgSections::CfgSectionChatMacros, ChatMacroKey(0).c_str(), missing) != missing;
+}
+
+std::wstring GameConfig::GetChatMacro(int slot)
+{
+    return UI::Chat::Macros::DecodeFromIni(
+        ReadString(CfgSections::CfgSectionChatMacros, ChatMacroKey(slot).c_str(), L""));
+}
+
+void GameConfig::SetChatMacro(int slot, const std::wstring& text)
+{
+    WriteString(CfgSections::CfgSectionChatMacros, ChatMacroKey(slot).c_str(), UI::Chat::Macros::EncodeForIni(text));
+}
+
 std::vector<std::wstring> GameConfig::ReadStringList(const wchar_t* section, const wchar_t* keyPrefix, int maxCount)
 {
     std::vector<std::wstring> result;
@@ -525,6 +558,17 @@ void GameConfig::SetWind(int wind)
 void GameConfig::SetWindStrength(int percent)
 {
     m_windStrength = std::clamp(percent, CfgDefaults::CfgMinWindStrength, CfgDefaults::CfgMaxWindStrength);
+}
+
+void GameConfig::SetSmoothAnimation(int smoothAnimation)
+{
+    m_smoothAnimation =
+        std::clamp(smoothAnimation, CfgDefaults::CfgMinSmoothAnimation, CfgDefaults::CfgMaxSmoothAnimation);
+}
+
+void GameConfig::SetAnimationFadeMs(int fadeMs)
+{
+    m_animationFadeMs = std::clamp(fadeMs, CfgDefaults::CfgMinAnimationFadeMs, CfgDefaults::CfgMaxAnimationFadeMs);
 }
 
 void GameConfig::SetHaze(int haze)

@@ -145,7 +145,7 @@
     <comment>legacy_id=36,1141</comment>
   </data>
   <data name="Atlans" xml:space="preserve">
-    <value>Атланты</value>
+    <value>Атланс</value>
     <comment>legacy_id=37</comment>
   </data>
   <data name="Tarkan" xml:space="preserve">
@@ -405,7 +405,7 @@
     <comment>legacy_id=101</comment>
   </data>
   <data name="Jewel" xml:space="preserve">
-    <value>Драгоценность</value>
+    <value>Камень</value>
     <comment>legacy_id=102</comment>
   </data>
   <data name="Transformation Ring" xml:space="preserve">
@@ -676,19 +676,19 @@
     <comment>legacy_id=165</comment>
   </data>
   <data name="STR" xml:space="preserve">
-    <value>СТР</value>
+    <value>СИЛ</value>
     <comment>legacy_id=166</comment>
   </data>
   <data name="AGI" xml:space="preserve">
-    <value>ОИИ</value>
+    <value>ЛОВ</value>
     <comment>legacy_id=167</comment>
   </data>
   <data name="ENG" xml:space="preserve">
-    <value>АНГЛ</value>
+    <value>ЭНЕ</value>
     <comment>legacy_id=168</comment>
   </data>
   <data name="STA" xml:space="preserve">
-    <value>СТА</value>
+    <value>ВЫН</value>
     <comment>legacy_id=169</comment>
   </data>
   <data name="Wizardry Dmg:%d~%d" xml:space="preserve">
@@ -772,7 +772,7 @@
     <comment>legacy_id=189</comment>
   </data>
   <data name="Party" xml:space="preserve">
-    <value>Вечеринка</value>
+    <value>Группа</value>
     <comment>legacy_id=190,944,3515,3554</comment>
   </data>
   <data name="Type /party with the mouse cursor on" xml:space="preserve">
@@ -804,7 +804,7 @@
     <comment>legacy_id=197</comment>
   </data>
   <data name="Cost" xml:space="preserve">
-    <value>Расходы</value>
+    <value>Цена</value>
     <comment>legacy_id=198,936</comment>
   </data>
   <data name="Spare Points: %d / %d" xml:space="preserve">
@@ -1437,7 +1437,7 @@
     <value>Оконный режим</value>
   </data>
   <data name="Close388" xml:space="preserve">
-    <value>Закрывать</value>
+    <value>Закрыть</value>
     <comment>legacy_id=388,1002</comment>
   </data>
   <data name="Volume" xml:space="preserve">
@@ -2333,7 +2333,7 @@
     <comment>legacy_id=619</comment>
   </data>
   <data name="Excellent" xml:space="preserve">
-    <value>Отличный</value>
+    <value>Экселент</value>
     <comment>legacy_id=620</comment>
   </data>
   <data name="Increases item option by 1 level" xml:space="preserve">
@@ -2573,11 +2573,11 @@
     <comment>legacy_id=680</comment>
   </data>
   <data name="Character" xml:space="preserve">
-    <value>Характер</value>
+    <value>Персонаж</value>
     <comment>legacy_id=681,3423</comment>
   </data>
   <data name="point" xml:space="preserve">
-    <value>точка</value>
+    <value>Очки</value>
     <comment>legacy_id=682</comment>
   </data>
   <data name="EXP" xml:space="preserve">
@@ -3321,7 +3321,7 @@
     <comment>legacy_id=891</comment>
   </data>
   <data name="written on the 100%% winning card." xml:space="preserve">
-    <value>написано на 100% выигрышной карте.</value>
+    <value>написано на 100%% выигрышной карте.</value>
     <comment>legacy_id=892</comment>
   </data>
   <data name="Enter the lucky number" xml:space="preserve">
@@ -3369,11 +3369,11 @@
     <comment>legacy_id=903</comment>
   </data>
   <data name="Register the lucky number on the 100%% winning card." xml:space="preserve">
-    <value>Зарегистрируйте счастливый номер на 100% выигрышной карте.</value>
+    <value>Зарегистрируйте счастливый номер на 100%% выигрышной карте.</value>
     <comment>legacy_id=904</comment>
   </data>
   <data name="PleaseCheckOutTheAnnouncementOn" xml:space="preserve">
-    <value>Пожалуйста, ознакомьтесь с объявлением на официальном сайте о том, как получить 100% выигрышную карту.</value>
+    <value>Пожалуйста, ознакомьтесь с объявлением на официальном сайте о том, как получить 100%% выигрышную карту.</value>
     <comment>legacy_id=905</comment>
   </data>
   <data name="Ring of Honor" xml:space="preserve">
@@ -3689,7 +3689,7 @@
     <comment>legacy_id=992</comment>
   </data>
   <data name="Invite" xml:space="preserve">
-    <value>Приглашать</value>
+    <value>Пригласить</value>
     <comment>legacy_id=993</comment>
   </data>
   <data name="Talking:" xml:space="preserve">
@@ -4425,7 +4425,7 @@
     <comment>legacy_id=1186</comment>
   </data>
   <data name="Dark horse" xml:space="preserve">
-    <value>Темная лошадка</value>
+    <value>Тёмный конь</value>
     <comment>legacy_id=1187</comment>
   </data>
   <data name="Increase %d possible attack distance" xml:space="preserve">
@@ -4901,11 +4901,11 @@
     <comment>legacy_id=1299</comment>
   </data>
   <data name="Master" xml:space="preserve">
-    <value>Владелец</value>
+    <value>Мастер</value>
     <comment>legacy_id=1300,1745</comment>
   </data>
   <data name="Assist. M." xml:space="preserve">
-    <value>Помощь. М.</value>
+    <value>Зам. мастера</value>
     <comment>legacy_id=1301</comment>
   </data>
   <data name="Battle M." xml:space="preserve">
@@ -5833,7 +5833,7 @@
     <comment>legacy_id=1549</comment>
   </data>
   <data name="Improve" xml:space="preserve">
-    <value>Улучшать</value>
+    <value>Улучшить</value>
     <comment>legacy_id=1550</comment>
   </data>
   <data name="To purchase selected castle gate" xml:space="preserve">
@@ -6001,7 +6001,7 @@
     <comment>legacy_id=1592,1599</comment>
   </data>
   <data name="Enter" xml:space="preserve">
-    <value>Входить</value>
+    <value>Войти</value>
     <comment>legacy_id=1593,2147,3457</comment>
   </data>
   <data name="Enter the entrance fee." xml:space="preserve">
@@ -7365,7 +7365,7 @@
     <comment>legacy_id=1972</comment>
   </data>
   <data name="Class" xml:space="preserve">
-    <value>Сорт</value>
+    <value>Класс</value>
     <comment>legacy_id=1973</comment>
   </data>
   <data name="Feel the unusual forces around the Fortress of Crywolf." xml:space="preserve">
@@ -7397,11 +7397,11 @@
     <comment>legacy_id=1982</comment>
   </data>
   <data name="Monster strength decreased 10%%." xml:space="preserve">
-    <value>Сила монстров уменьшилась на 10%%.</value>
+    <value>Сила монстров уменьшилась на 10%.</value>
     <comment>legacy_id=2000</comment>
   </data>
   <data name="5%% increase in castle and arena invitation combine rate." xml:space="preserve">
-    <value>5%% увеличение общей ставки приглашения в замок и на арену.</value>
+    <value>5% увеличение общей ставки приглашения в замок и на арену.</value>
     <comment>legacy_id=2001</comment>
   </data>
   <data name="Contract is ongoing therefore dual compact is not possible." xml:space="preserve">
@@ -7549,7 +7549,7 @@
     <comment>legacy_id=2053</comment>
   </data>
   <data name="Minimum Wizardry increment 20%%" xml:space="preserve">
-    <value>Минимальный прирост Волшебства 20%%</value>
+    <value>Минимальный прирост Волшебства 20%</value>
     <comment>legacy_id=2054</comment>
   </data>
   <data name="It cannot be applied on another." xml:space="preserve">
@@ -7565,7 +7565,7 @@
     <comment>legacy_id=2060</comment>
   </data>
   <data name="Refine" xml:space="preserve">
-    <value>Уточнить</value>
+    <value>Очистка</value>
     <comment>legacy_id=2061,2063</comment>
   </data>
   <data name="Restore" xml:space="preserve">
@@ -7993,7 +7993,7 @@
     <comment>legacy_id=2206</comment>
   </data>
   <data name="I.D. of Kantur Chief Scientist. You can enter the Refinery Tower." xml:space="preserve">
-    <value>ИДЕНТИФИКАТОР. главного научного сотрудника Кантура. Вы можете войти в Башню нефтеперерабатывающего завода.</value>
+    <value>Пропуск главного учёного Кантуру. Открывает вход в Башню очищения.</value>
     <comment>legacy_id=2207</comment>
   </data>
   <data name="Jewel with impurities" xml:space="preserve">
@@ -8169,7 +8169,7 @@
     <comment>legacy_id=2251</comment>
   </data>
   <data name="Day" xml:space="preserve">
-    <value>День</value>
+    <value>дн.</value>
     <comment>legacy_id=2252,2298</comment>
   </data>
   <data name="Experience rate is increased %d%%" xml:space="preserve">
@@ -8349,15 +8349,15 @@
     <comment>legacy_id=2297</comment>
   </data>
   <data name="Hour" xml:space="preserve">
-    <value>Час</value>
+    <value>ч.</value>
     <comment>legacy_id=2299</comment>
   </data>
   <data name="Minute" xml:space="preserve">
-    <value>минута</value>
+    <value>мин.</value>
     <comment>legacy_id=2300</comment>
   </data>
   <data name="Second" xml:space="preserve">
-    <value>Второй</value>
+    <value>сек.</value>
     <comment>legacy_id=2301</comment>
   </data>
   <data name="Available" xml:space="preserve">
@@ -8433,7 +8433,7 @@
     <comment>legacy_id=2325</comment>
   </data>
   <data name="Point2326" xml:space="preserve">
-    <value>Точка</value>
+    <value>Очки</value>
     <comment>legacy_id=2326</comment>
   </data>
   <data name="PC cafe point store allows you to only purchase the objects." xml:space="preserve">
@@ -8617,7 +8617,7 @@
     <comment>legacy_id=2381</comment>
   </data>
   <data name="Shield gage reduced of 50%%." xml:space="preserve">
-    <value>Толщина щита уменьшена на 50%.</value>
+    <value>Толщина щита уменьшена на 50%%.</value>
     <comment>legacy_id=2382</comment>
   </data>
   <data name="Entered the zone %s." xml:space="preserve">
@@ -9261,11 +9261,11 @@
     <comment>legacy_id=2595</comment>
   </data>
   <data name="Health has been recovered of 100%%." xml:space="preserve">
-    <value>Здоровье восстановлено на 100%.</value>
+    <value>Здоровье восстановлено на 100%%.</value>
     <comment>legacy_id=2596</comment>
   </data>
   <data name="Mana has been recovered of 100%%." xml:space="preserve">
-    <value>Мана восстановлена ​​на 100%.</value>
+    <value>Мана восстановлена на 100%%.</value>
     <comment>legacy_id=2597</comment>
   </data>
   <data name="Attack speed has increased of %d." xml:space="preserve">
@@ -10093,11 +10093,11 @@
     <comment>legacy_id=2874</comment>
   </data>
   <data name="YouCanDoAGoblinCombination" xml:space="preserve">
-    <value>Вы можете создать комбинацию Гоблина с Запечатанной Золотой Коробкой, чтобы создать Золотую Коробку.</value>
+    <value>Гоблин превратит Запечатанную золотую коробку в Золотую коробку.</value>
     <comment>legacy_id=2875</comment>
   </data>
   <data name="YouCanDoAGoblinCombination2876" xml:space="preserve">
-    <value>Вы можете создать комбинацию Гоблина с Запечатанной Серебряной Коробкой, чтобы создать Серебряную Коробку.</value>
+    <value>Гоблин превратит Запечатанную серебряную коробку в Серебряную коробку.</value>
     <comment>legacy_id=2876</comment>
   </data>
   <data name="You can do a Goblin combination with a Gold Key to create a Golden Box." xml:space="preserve">
@@ -10413,7 +10413,7 @@
     <comment>legacy_id=2969</comment>
   </data>
   <data name="Up to %d%% EXP gain increase, depending on the number of members in your party." xml:space="preserve">
-    <value>Увеличение получаемого урона до %d%% EXP, в зависимости от количества членов вашей группы.</value>
+    <value>До %d%% больше опыта, зависит от числа участников группы.</value>
     <comment>legacy_id=2970</comment>
   </data>
   <data name="You can acquire Goblin Points by using the MU Item Shop's storage." xml:space="preserve">
@@ -10753,11 +10753,11 @@
     <comment>legacy_id=3059</comment>
   </data>
   <data name="EXP10IncreasePCCafeChaos" xml:space="preserve">
-    <value>10% опыта % Increase/ PC Cafe Доступ к замку Хаоса/ Открытый доступ к Калиме/ Увеличение очков гоблинов</value>
+    <value>+10%% опыта / вход в Chaos Castle PC Cafe / свободный вход в Калиму / больше очков гоблинов</value>
     <comment>legacy_id=3060</comment>
   </data>
   <data name="EXP10IncreasePCCafeChaos3061" xml:space="preserve">
-    <value>10% опыта % Increase/ PC Cafe Доступ к замку Хаоса / Открытый доступ к Калиме / Увеличение очков гоблинов / Использование окна команд Warp / Система выносливости не применяется</value>
+    <value>+10%% опыта / вход в Chaos Castle PC Cafe / свободный вход в Калиму / больше очков гоблинов / окно команд Warp / без системы выносливости</value>
     <comment>legacy_id=3061</comment>
   </data>
   <data name=" PC Cafe" xml:space="preserve">
@@ -16199,6 +16199,12 @@
   <data name="WindLockedLowPreset" xml:space="preserve">
     <value>Выключено на пресете графики «Низкий».</value>
   </data>
+  <data name="SmoothAnimationRow" xml:space="preserve">
+    <value>Плавная анимация</value>
+  </data>
+  <data name="SmoothAnimationTooltip" xml:space="preserve">
+    <value>Персонажи, монстры и ездовые животные плавно двигаются между позами и плавно переходят от одного действия к другому.</value>
+  </data>
   <data name="HazeRow" xml:space="preserve">
     <value>Дымка вдали</value>
   </data>
@@ -16983,5 +16989,44 @@
   </data>
   <data name="PadHintDeath" xml:space="preserve">
     <value>Через несколько секунд вы оживёте: отпустите левый стик и идите дальше</value>
+  </data>
+  <data name="ChatMacroStored" xml:space="preserve">
+    <value>Alt+%d: %ls</value>
+  </data>
+  <data name="ChatMacroCleared" xml:space="preserve">
+    <value>Макрос Alt+%d очищен.</value>
+  </data>
+  <data name="ExpMaxLevelReached" xml:space="preserve">
+    <value>Вы уже достигли максимального уровня.</value>
+  </data>
+  <data name="ExpMaxMasterLevelReached" xml:space="preserve">
+    <value>Вы уже достигли максимального мастер-уровня.</value>
+  </data>
+  <data name="ExpMonsterTooWeakForMaster" xml:space="preserve">
+    <value>Чтобы получать мастер-опыт, убивайте монстров посильнее.</value>
+  </data>
+  <data name="SkillCooldownSeconds" xml:space="preserve">
+    <value>Перезарядка: %.1f сек.</value>
+  </data>
+  <data name="WindowHasNoRoomForItem" xml:space="preserve">
+    <value>Здесь нет места для этого предмета.</value>
+  </data>
+  <data name="PartyMemberJoined" xml:space="preserve">
+    <value>%ls теперь в группе.</value>
+  </data>
+  <data name="PartyMemberLeft" xml:space="preserve">
+    <value>%ls покидает группу.</value>
+  </data>
+  <data name="KilledByName" xml:space="preserve">
+    <value>Убийца: %ls</value>
+  </data>
+  <data name="TradeWithNameCompleted" xml:space="preserve">
+    <value>Обмен с %ls завершён.</value>
+  </data>
+  <data name="HotKeyNothingLeft" xml:space="preserve">
+    <value>Больше нет: %ls.</value>
+  </data>
+  <data name="FriendIsOnline" xml:space="preserve">
+    <value>%ls в сети.</value>
   </data>
 </root>

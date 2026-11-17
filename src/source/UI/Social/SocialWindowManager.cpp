@@ -1076,6 +1076,19 @@ void CFriendList::UpdateFriendState(const wchar_t* pszID, BYTE Number, BYTE Serv
     }
 }
 
+bool CFriendList::FindFriendServer(const wchar_t* pszID, BYTE* pServer) const
+{
+    for (const GUILDLIST_TEXT& entry : m_FriendList)
+    {
+        if (wcsncmp(entry.m_szID, pszID, MAX_USERNAME_SIZE) == 0)
+        {
+            *pServer = entry.m_Server;
+            return true;
+        }
+    }
+    return false;
+}
+
 void CFriendList::UpdateAllFriendState(BYTE Number, BYTE Server)
 {
     for (m_FriendListIter = m_FriendList.begin(); m_FriendListIter != m_FriendList.end(); ++m_FriendListIter)

@@ -1837,9 +1837,12 @@ typedef struct {
     char            Separator;
     char			Time[MAX_LETTER_TIME_LENGTH];
     char            Reserved[30 - MAX_LETTER_DATE_LENGTH - MAX_LETTER_TIME_LENGTH - 1];
-    char			Subject[MAX_LETTER_TITLE_LENGTH];
+    char			Subject[MAX_LETTER_LIST_TITLE_LENGTH];
     BYTE			Read;
 } FS_LETTER_ALERT, * LPFS_LETTER_ALERT;
+// OpenMU AddLetter: subject at offset 46 (32 bytes), state at offset 78, 79 bytes in all.
+static_assert(offsetof(FS_LETTER_ALERT, Subject) == 46, "AddLetter subject offset");
+static_assert(offsetof(FS_LETTER_ALERT, Read) == 78, "AddLetter state offset");
 
 typedef struct {
     PWMSG_HEADER    Header;

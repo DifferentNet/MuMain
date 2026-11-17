@@ -6,6 +6,7 @@
 #include "Core/Math/ZzzMathLib.h"
 #include "GameLogic/Buffs/w_Buff.h"
 #include "Engine/Object/CharacterBonePose.h"
+#include "Render/Models/AnimationSmoothing.h"
 
 class	CInterpolateContainer
 {
@@ -217,6 +218,8 @@ public:
     vec34_t* BoneTransform;
     // The inputs the character pre-pass built BoneTransform from, while nothing else has written it since.
     CharacterBonePose PrepassPose;
+    // The fade into its current action (Engine/Object/CharacterAnimationFade.h).
+    Render::AnimationSmoothing::AnimationFade Fade;
 
 public:
     OBB_t		  OBB;

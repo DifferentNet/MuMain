@@ -21,6 +21,7 @@
 #include "Engine/Object/ZzzInterface.h"
 #include "UI/Chat/ChatInput.h"
 #include "UI/Chat/PartyInviteCommand.h"
+#include "UI/Chat/ChatMacroFile.h"
 #include "UI/Character/OverheadNames.h"
 #include "GameLogic/Combat/ClassAttack.h"
 #include "GameLogic/Combat/SkillCast.h"
@@ -2220,6 +2221,22 @@ static void TryRequestTrade(std::wstring_view name)
     g_pSystemLogBox->AddText(message, mu::ui::window::TYPE_SYSTEM_MESSAGE);
 }
 
+// After "/N text": a line that the macro is kept (or cleared, for "/N" alone).
+static void PostMacroStored(int slot)
+{
+    const int keyNumber = UI::Chat::Macros::SlotKeyNumber(slot);
+    wchar_t message[MAX_TEXT_LENGTH + 64]{};
+    if (MacroText[slot][0] == L'\0')
+    {
+        mu_swprintf(message, I18N::Game::ChatMacroCleared, keyNumber);
+    }
+    else
+    {
+        mu_swprintf(message, I18N::Game::ChatMacroStored, keyNumber, MacroText[slot]);
+    }
+    g_pSystemLogBox->AddText(message, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+}
+
 bool CheckCommand(wchar_t* Text, bool bMacroText)
 {
     if (g_ConsoleDebug->CheckCommand(Text) == true)
@@ -2563,6 +2580,8 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
                     MacroText[i][macroLength++] = Text[j];
                 }
                 MacroText[i][macroLength] = 0;
+                SaveMacro(i);
+                PostMacroStored(i);
                 PlayBuffer(SOUND_CLICK01);
                 return true;
             }
@@ -2898,7 +2917,6 @@ void CheckGate()
                                 if (gt->Map == WD_30BATTLECASTLE || gt->Map == WD_31HUNTING_GROUND)
                                 {
                                     SaveOptions();
-                                    SaveMacro(L"Data\\Macro.txt");
                                 }
 
                                 SelectedItem = -1;
@@ -4248,8 +4266,13 @@ bool IsIllegalMovementByUsingMsg(const wchar_t* szChatText)
         bEquipChangeRing = true;
     }
 
+    // The text was upper-cased above, so the localized command is upper-cased too before it is looked for.
+    wchar_t szWarpUpperChars[64] = {};
+    wcsncpy(szWarpUpperChars, I18N::Game::Warp, std::size(szWarpUpperChars) - 1);
+    _wcsupr(szWarpUpperChars);
+
     if ((wcsstr(szChatTextUpperChars, L"/MOVE") != NULL) ||
-        (wcslen(I18N::Game::Warp) > 0 && wcsstr(szChatTextUpperChars, I18N::Game::Warp) != NULL))
+        (szWarpUpperChars[0] != L'\0' && wcsstr(szChatTextUpperChars, szWarpUpperChars) != NULL))
     {
         std::list<SEASON3B::CMoveCommandData::MOVEINFODATA*> m_listMoveInfoData;
         m_listMoveInfoData = SEASON3B::CMoveCommandData::GetInstance()->GetMoveCommandDatalist();
@@ -4271,11 +4294,11 @@ bool IsIllegalMovementByUsingMsg(const wchar_t* szChatText)
 
         if (li != m_listMoveInfoData.end())
         {
-            if (wcsicmp((*li)->_ReqInfo.szMainMapName, I18N::Game::Atlans) == 0)
+            if (SEASON3B::CMoveCommandData::IsMapNamed((*li)->_ReqInfo.szMainMapName, I18N::Game::Atlans, L"Atlans"))
             {
                 bMoveAtlans = true;
             }
-            else if (wcsicmp((*li)->_ReqInfo.szMainMapName, I18N::Game::Icarus) == 0)
+            else if (SEASON3B::CMoveCommandData::IsMapNamed((*li)->_ReqInfo.szMainMapName, I18N::Game::Icarus, L"Icarus"))
             {
                 bMoveIcarus = true;
             }

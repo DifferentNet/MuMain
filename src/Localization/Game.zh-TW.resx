@@ -1044,7 +1044,7 @@
     <comment>legacy_id=259</comment>
   </data>
   <data name="/warp" xml:space="preserve">
-    <value>/經</value>
+    <value>/warp</value>
     <comment>legacy_id=260</comment>
   </data>
   <data name="You cannot go to Atlans while riding a Unicorn" xml:space="preserve">
@@ -3369,11 +3369,11 @@
     <comment>legacy_id=903</comment>
   </data>
   <data name="Register the lucky number on the 100%% winning card." xml:space="preserve">
-    <value>將幸運數字登記在100%中獎卡上。</value>
+    <value>將幸運數字登記在100%%中獎卡上。</value>
     <comment>legacy_id=904</comment>
   </data>
   <data name="PleaseCheckOutTheAnnouncementOn" xml:space="preserve">
-    <value>如何獲得100%中獎卡請查看官網公告。</value>
+    <value>如何獲得100%%中獎卡請查看官網公告。</value>
     <comment>legacy_id=905</comment>
   </data>
   <data name="Ring of Honor" xml:space="preserve">
@@ -4833,7 +4833,7 @@
     <comment>legacy_id=1299</comment>
   </data>
   <data name="Master" xml:space="preserve">
-    <value>掌握</value>
+    <value>會長</value>
     <comment>legacy_id=1300,1745</comment>
   </data>
   <data name="Assist. M." xml:space="preserve">
@@ -7145,7 +7145,7 @@
     <comment>legacy_id=1926</comment>
   </data>
   <data name="one of the certain weapons to 50%%." xml:space="preserve">
-    <value>某些武器之一達到50%%。</value>
+    <value>某些武器之一達到50%。</value>
     <comment>legacy_id=1927</comment>
   </data>
   <data name="Plasma storm skill (Mana:%d)" xml:space="preserve">
@@ -7329,11 +7329,11 @@
     <comment>legacy_id=1982</comment>
   </data>
   <data name="Monster strength decreased 10%%." xml:space="preserve">
-    <value>怪物強度下降10%%。</value>
+    <value>怪物強度下降10%。</value>
     <comment>legacy_id=2000</comment>
   </data>
   <data name="5%% increase in castle and arena invitation combine rate." xml:space="preserve">
-    <value>5%% i城堡和競技場邀請組合率增加。</value>
+    <value>城堡和競技場邀請組合率增加5%。</value>
     <comment>legacy_id=2001</comment>
   </data>
   <data name="Contract is ongoing therefore dual compact is not possible." xml:space="preserve">
@@ -7481,7 +7481,7 @@
     <comment>legacy_id=2053</comment>
   </data>
   <data name="Minimum Wizardry increment 20%%" xml:space="preserve">
-    <value>最小魔法增量 20%%</value>
+    <value>最小魔法增量 20%</value>
     <comment>legacy_id=2054</comment>
   </data>
   <data name="It cannot be applied on another." xml:space="preserve">
@@ -8285,11 +8285,11 @@
     <comment>legacy_id=2299</comment>
   </data>
   <data name="Minute" xml:space="preserve">
-    <value>分分鐘</value>
+    <value>分鐘</value>
     <comment>legacy_id=2300</comment>
   </data>
   <data name="Second" xml:space="preserve">
-    <value>第二</value>
+    <value>秒</value>
     <comment>legacy_id=2301</comment>
   </data>
   <data name="Available" xml:space="preserve">
@@ -13695,6 +13695,12 @@
   <data name="WindLockedLowPreset" xml:space="preserve">
     <value>Off on the Low graphics preset.</value>
   </data>
+  <data name="SmoothAnimationRow" xml:space="preserve">
+    <value>流暢動畫</value>
+  </data>
+  <data name="SmoothAnimationTooltip" xml:space="preserve">
+    <value>角色、怪物與坐騎在姿勢之間流暢移動，並從一個動作平順銜接到下一個動作。</value>
+  </data>
   <data name="HazeRow" xml:space="preserve">
     <value>Distance haze</value>
   </data>
@@ -14029,5 +14035,44 @@
   </data>
   <data name="PadHintDeath" xml:space="preserve">
     <value>幾秒後就會復活：先放開左搖桿再繼續行走</value>
+  </data>
+  <data name="ChatMacroStored" xml:space="preserve">
+    <value>Alt+%d: %ls</value>
+  </data>
+  <data name="ChatMacroCleared" xml:space="preserve">
+    <value>已清除 Alt+%d 巨集。</value>
+  </data>
+  <data name="ExpMaxLevelReached" xml:space="preserve">
+    <value>你已達到最高等級。</value>
+  </data>
+  <data name="ExpMaxMasterLevelReached" xml:space="preserve">
+    <value>你已達到最高大師等級。</value>
+  </data>
+  <data name="ExpMonsterTooWeakForMaster" xml:space="preserve">
+    <value>擊殺更強的怪物才能獲得大師經驗。</value>
+  </data>
+  <data name="SkillCooldownSeconds" xml:space="preserve">
+    <value>冷卻：%.1f 秒</value>
+  </data>
+  <data name="WindowHasNoRoomForItem" xml:space="preserve">
+    <value>這裡沒有空間放這個物品。</value>
+  </data>
+  <data name="PartyMemberJoined" xml:space="preserve">
+    <value>%ls 加入了隊伍。</value>
+  </data>
+  <data name="PartyMemberLeft" xml:space="preserve">
+    <value>%ls 離開了隊伍。</value>
+  </data>
+  <data name="KilledByName" xml:space="preserve">
+    <value>被 %ls 擊殺</value>
+  </data>
+  <data name="TradeWithNameCompleted" xml:space="preserve">
+    <value>與 %ls 的交易已完成。</value>
+  </data>
+  <data name="HotKeyNothingLeft" xml:space="preserve">
+    <value>%ls 已用完。</value>
+  </data>
+  <data name="FriendIsOnline" xml:space="preserve">
+    <value>%ls 已上線。</value>
   </data>
 </root>

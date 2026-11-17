@@ -24,8 +24,28 @@ void Reset()
     g_pLetterList->ClearLetterList();
 }
 
+namespace
+{
+// After a friend list the server sends one state change per friend already online (the list itself says all
+// offline): for this long those changes are not "X is online" lines.
+constexpr DWORD kFriendListQuietMs = 5000;
+DWORD g_friendListReceivedAt = 0;
+bool g_friendListQuiet = false;
+
+bool FriendListJustArrived()
+{
+    // Unsigned subtraction, so the GetTickCount wrap after 49 days is harmless.
+    if (g_friendListQuiet && GetTickCount() - g_friendListReceivedAt < kFriendListQuietMs)
+        return true;
+    g_friendListQuiet = false;
+    return false;
+}
+} // namespace
+
 void ReplaceFriendList(std::span<const FriendEntry> friends)
 {
+    g_friendListReceivedAt = GetTickCount();
+    g_friendListQuiet = true;
     g_pWindowMgr->Reset();
     for (const FriendEntry& entry : friends)
         g_pFriendList->AddFriend(std::wstring(entry.name).c_str(), 0, entry.server);
@@ -49,10 +69,34 @@ void FriendRemoved(std::wstring_view name)
     g_pWindowMgr->RefreshMainWndPalList();
 }
 
+namespace
+{
+// The friend list's mark for a friend who is not logged in (0xFD and up, ReceiveFriendStateChange).
+constexpr BYTE kFirstOfflineServer = 0xFD;
+
+// "X is online" when a friend in the list goes from offline to online; channel or chat-state changes say nothing.
+void PostFriendOnline(const std::wstring& friendName, BYTE previousServer, bool offline)
+{
+    if (offline || previousServer < kFirstOfflineServer || FriendListJustArrived())
+    {
+        return;
+    }
+    wchar_t line[128];
+    mu_swprintf(line, I18N::Game::FriendIsOnline, friendName.c_str());
+    g_pSystemLogBox->AddText(line, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+}
+} // namespace
+
 void FriendStateChanged(std::wstring_view name, std::uint8_t server, bool offline)
 {
     const std::wstring friendName(name);
+    BYTE previousServer = 0;
+    const bool known = g_pFriendList->FindFriendServer(friendName.c_str(), &previousServer);
     g_pFriendList->UpdateFriendState(friendName.c_str(), 0, server);
+    if (known)
+    {
+        PostFriendOnline(friendName, previousServer, offline);
+    }
     g_pFriendList->Sort();
     g_pWindowMgr->RefreshMainWndPalList();
     g_pFriendMenu->UpdateAllChatWindowInviteList();

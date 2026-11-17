@@ -103,7 +103,7 @@ void mu::ui::window::EventItemEntryView::Sync(bool visible)
     // Over the HUD like every panel the original opened.
     UI::RmlBridge::SyncDocumentVisibilityInFront(m_View.Document(), visible);
     if (m_ItemTarget)
-        m_ItemTarget->Sync(m_View.Document()->GetElementById("entry_item"), visible);
+        m_ItemTarget->Sync(m_View.Document(), "entry_item", visible);
     if (!visible)
         return;
 

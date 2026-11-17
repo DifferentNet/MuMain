@@ -129,6 +129,14 @@ public:
     std::wstring GetKeyBinding(const wchar_t* action);
     void SetKeyBinding(const wchar_t* action, const std::wstring& keyName);
 
+    // The chat macro of a slot (0..9 = Alt+1..Alt+0) in [ChatMacros]. HasChatMacros says whether the section was
+    // ever written (the old Data\Macro.txt is read once while it was not). SetChatMacro writes at once; an empty
+    // text stays as an empty line so the section keeps saying it was written. The text is kept %-encoded UTF-8
+    // (UI::Chat::Macros::EncodeForIni), so spaces at the ends, quotes and any language come back as typed.
+    bool HasChatMacros();
+    std::wstring GetChatMacro(int slot);
+    void SetChatMacro(int slot, const std::wstring& text);
+
     // The phone or PC layout and the controls, as config.ini words (UI::Mobile::InterfaceMode).
     const std::wstring& GetInterfaceView() const { return m_interfaceView; }
     void SetInterfaceView(const std::wstring& view) { m_interfaceView = view; }
@@ -286,6 +294,13 @@ public:
     int GetWindStrength() const { return m_windStrength; }
     void SetWind(int wind);
     void SetWindStrength(int percent);
+    // [Render] SmoothAnimation: in the Remaster PC client, smoother character animation
+    // (Render/Models/AnimationSmoothing.h), 0 off, 1 on; AnimationFadeMs the fade between actions
+    // (both clamped; Options > Graphics applies the first at once, the second is set by hand).
+    int GetSmoothAnimation() const { return m_smoothAnimation; }
+    int GetAnimationFadeMs() const { return m_animationFadeMs; }
+    void SetSmoothAnimation(int smoothAnimation);
+    void SetAnimationFadeMs(int fadeMs);
     // [Render] Haze: with HD textures on, distance haze and low ground fog over the world
     // (Render/PostProcessing/HazeSetting.h), 0 off, 1 on; HazeStrength in percent (both clamped;
     // Options > Graphics applies them at once).
@@ -488,6 +503,8 @@ private:
     int m_ssaoStrength = 100;
     int m_wind = 1;
     int m_windStrength = 100;
+    int m_smoothAnimation = 1;
+    int m_animationFadeMs = 160;
     int m_haze = 1;
     int m_hazeStrength = 70;
     int m_particles = 1;

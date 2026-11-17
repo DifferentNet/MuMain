@@ -246,6 +246,154 @@ void CopyStaticBoneRotation(const BMD::StaticBoneRotation& rotation, float (*mat
         }
     }
 }
+
+namespace Smooth = Render::AnimationSmoothing;
+
+// The head bone's keys of a segment: before, prior, current, after.
+enum HeadKey
+{
+    HeadBefore,
+    HeadPrior,
+    HeadCurrent,
+    HeadAfter,
+    HeadKeyCount
+};
+
+// Two keys of the smoothed animation, picked from the frames as Animation() picks them.
+struct KeySegment
+{
+    unsigned short priorAction = 0;
+    unsigned short action = 0;
+    int priorKey = 0;
+    int key = 0;
+    float blend = 0.f;
+    bool lockPositions = false;
+    Smooth::SplineKeys spline;
+    // The head bone's keys with the head turn in them (only with a head bone).
+    vec4_t head[HeadKeyCount];
+};
+
+// The head bone's key of an action turned by the head angle, as Animation() turns it.
+void TurnedHeadKey(const BoneMatrix_t& keys, int key, const vec3_t headAngle, vec4_t out)
+{
+    constexpr float radFactor = 1.0f / (180.f / Q_PI);
+    vec3_t angle;
+    VectorCopy(keys.Rotation[key], angle);
+    angle[0] -= headAngle[0] * radFactor;
+    angle[2] -= headAngle[1] * radFactor;
+    AngleQuaternion(angle, out);
+}
+
+KeySegment ResolveSegment(const BMD& model, const Smooth::Segment& frames, const vec3_t headAngle)
+{
+    KeySegment segment;
+    segment.priorAction = frames.priorAction < model.NumActions ? frames.priorAction : 0;
+    segment.action = frames.action < model.NumActions ? frames.action : 0;
+    const Action_t& prior = model.Actions[segment.priorAction];
+    const Action_t& current = model.Actions[segment.action];
+
+    const int key = static_cast<int>(frames.frame);
+    segment.blend = frames.frame - static_cast<float>(key);
+    segment.key = (key < 0 || key >= current.NumAnimationKeys) ? 0 : key;
+    const int priorKey = static_cast<int>(frames.priorFrame);
+    segment.priorKey = (priorKey < 0 || priorKey >= prior.NumAnimationKeys) ? 0 : priorKey;
+    segment.lockPositions = prior.LockPositions || current.LockPositions;
+    if (segment.priorAction == segment.action)
+    {
+        segment.spline = Smooth::FindSplineKeys(segment.priorKey, segment.key, current.NumAnimationKeys,
+                                                current.LockPositions, current.Loop, current.Cyclic);
+    }
+
+    const bool hasHeadBone =
+        model.BoneHead >= 0 && model.BoneHead < model.NumBones && !model.Bones[model.BoneHead].Dummy;
+    if (!hasHeadBone)
+    {
+        return segment;
+    }
+    const Bone_t& head = model.Bones[model.BoneHead];
+    TurnedHeadKey(head.BoneMatrixes[segment.priorAction], segment.priorKey, headAngle, segment.head[HeadPrior]);
+    TurnedHeadKey(head.BoneMatrixes[segment.action], segment.key, headAngle, segment.head[HeadCurrent]);
+    if (segment.spline.regular)
+    {
+        TurnedHeadKey(head.BoneMatrixes[segment.action], segment.spline.prev, headAngle, segment.head[HeadBefore]);
+        TurnedHeadKey(head.BoneMatrixes[segment.action], segment.spline.next, headAngle, segment.head[HeadAfter]);
+    }
+    return segment;
+}
+
+// A bone's local rotation at a segment: along the spline where it has one, else the straight blend.
+void SampleBoneRotation(const KeySegment& segment, const BoneMatrix_t& prior, const BoneMatrix_t& current, bool head,
+                        vec4_t rotation)
+{
+    const float* q1 = head ? segment.head[HeadPrior] : prior.Quaternion[segment.priorKey];
+    const float* q2 = head ? segment.head[HeadCurrent] : current.Quaternion[segment.key];
+    if (QuaternionCompare(q1, q2))
+    {
+        QuaternionCopy(q1, rotation);
+    }
+    else if (segment.spline.regular)
+    {
+        const float* q0 = head ? segment.head[HeadBefore] : current.Quaternion[segment.spline.prev];
+        const float* q3 = head ? segment.head[HeadAfter] : current.Quaternion[segment.spline.next];
+        Smooth::SplineQuaternion(q0, q1, q2, q3, segment.blend, rotation);
+    }
+    else
+    {
+        QuaternionNLERP(q1, q2, segment.blend, rotation);
+    }
+}
+
+// A bone's local rotation and position at a segment (the root of a locked action as Animation() places it).
+void SampleBone(const BMD& model, const KeySegment& segment, int bone, vec4_t rotation, vec3_t position)
+{
+    const Bone_t& b = model.Bones[bone];
+    const BoneMatrix_t& prior = b.BoneMatrixes[segment.priorAction];
+    const BoneMatrix_t& current = b.BoneMatrixes[segment.action];
+    SampleBoneRotation(segment, prior, current, bone == model.BoneHead, rotation);
+
+    const float* p1 = prior.Position[segment.priorKey];
+    const float* p2 = current.Position[segment.key];
+    for (int axis = 0; axis < 3; ++axis)
+    {
+        position[axis] = segment.spline.regular
+                             ? Smooth::LimitedHermite(current.Position[segment.spline.prev][axis], p1[axis], p2[axis],
+                                                      current.Position[segment.spline.next][axis], segment.blend)
+                             : p1[axis] * (1.f - segment.blend) + p2[axis] * segment.blend;
+    }
+    if (bone == 0 && segment.lockPositions)
+    {
+        position[0] = current.Position[0][0];
+        position[1] = current.Position[0][1];
+        position[2] += model.BodyHeight;
+    }
+}
+
+// A bone's local matrix in the smoothed animation: its pose at `to`, faded in from its pose at `from`
+// by `weight` when there is a fade.
+void BuildSmoothBoneMatrix(const BMD& model, int bone, const KeySegment& to, const KeySegment* from, float weight,
+                           float (*matrix)[4])
+{
+    vec4_t rotation;
+    vec3_t position;
+    SampleBone(model, to, bone, rotation, position);
+    if (from)
+    {
+        vec4_t fromRotation;
+        vec3_t fromPosition;
+        SampleBone(model, *from, bone, fromRotation, fromPosition);
+        vec4_t faded;
+        QuaternionNLERP(fromRotation, rotation, weight, faded);
+        QuaternionCopy(faded, rotation);
+        for (int axis = 0; axis < 3; ++axis)
+        {
+            position[axis] = fromPosition[axis] + (position[axis] - fromPosition[axis]) * weight;
+        }
+    }
+    QuaternionMatrix(rotation, matrix);
+    matrix[0][3] = position[0];
+    matrix[1][3] = position[1];
+    matrix[2][3] = position[2];
+}
 } // namespace
 
 void BMD::BuildStaticPoses()
@@ -293,6 +441,42 @@ void BMD::ClearStaticPoses()
     m_staticPoses.reset();
 }
 
+void BMD::BuildActionCycles()
+{
+    if (!Bones || !Actions || NumActions <= 0)
+    {
+        return;
+    }
+    for (int action = 0; action < NumActions; ++action)
+    {
+        Action_t& a = Actions[action];
+        a.Cyclic = false;
+        // The keys it shows while looping (see PlayAnimation): one with locked positions wraps before its last.
+        const int shownKeys = a.LockPositions ? a.NumAnimationKeys - 1 : a.NumAnimationKeys;
+        if (shownKeys < Smooth::kMinSplineKeys)
+        {
+            continue;
+        }
+        float wrapStep = 0.f;
+        float largestStep = 0.f;
+        for (int bone = 0; bone < NumBones; ++bone)
+        {
+            const Bone_t& b = Bones[bone];
+            if (b.Dummy || !b.BoneMatrixes || !b.BoneMatrixes[action].Quaternion)
+            {
+                continue;
+            }
+            const vec4_t* keys = b.BoneMatrixes[action].Quaternion;
+            wrapStep = std::max(wrapStep, Smooth::RotationStep(keys[shownKeys - 1], keys[0]));
+            for (int key = 0; key + 1 < shownKeys; ++key)
+            {
+                largestStep = std::max(largestStep, Smooth::RotationStep(keys[key], keys[key + 1]));
+            }
+        }
+        a.Cyclic = Smooth::IsCyclic(wrapStep, largestStep);
+    }
+}
+
 const BMD::StaticBoneRotation* BMD::FindStaticPose(const unsigned short priorAction, const unsigned short currentAction,
                                                    const int priorFrame, const int currentFrame) const
 {
@@ -311,7 +495,8 @@ static vec3_t LightVector2 = { 0.f, -0.5f, -0.8f };
 
 void BMD::Animation(float (*BoneMatrix)[3][4], float AnimationFrame, float PriorFrame, unsigned short PriorAction,
                     vec3_t Angle, vec3_t HeadAngle, bool Parent, bool Translate, const float (*ExtParentMatrix)[4],
-                    short CurrentActionArg, int BoneMatrixCapacity)
+                    short CurrentActionArg, int BoneMatrixCapacity,
+                    const Render::AnimationSmoothing::AnimationFade* Fade)
 {
     if (NumActions <= 0) return;
 
@@ -395,6 +580,33 @@ void BMD::Animation(float (*BoneMatrix)[3][4], float AnimationFrame, float Prior
     const StaticBoneRotation* staticPose =
         FindStaticPose(PriorAction, currentAction, PriorAnimationFrame, currentAnimationFrame);
 
+    // The smoothed animation (Render/Models/AnimationSmoothing.h): only on a spline segment or during a
+    // fade; everything else keeps the straight blend below, bit for bit.
+    const bool smooth = SmoothKeys && Smooth::Enabled();
+    // A fade belongs to one model and one action: an object drawn through another model ignores it.
+    const bool fadeFits = Fade != nullptr && Fade->type >= 0 && Models != nullptr && Models + Fade->type == this &&
+                          Fade->toAction == currentAction;
+    const Smooth::AnimationFade* fade = smooth && fadeFits ? Fade : nullptr;
+    KeySegment toSegment;
+    KeySegment fromSegment;
+    bool smoothPath = false;
+    if (smooth)
+    {
+        const Smooth::Segment frames{PriorAction, currentAction, PriorFrame, AnimationFrame};
+        if (fade)
+        {
+            toSegment = ResolveSegment(*this, Smooth::FadeTarget(frames, Actions[currentAction].NumAnimationKeys),
+                                       HeadAngle);
+            fromSegment = ResolveSegment(*this, fade->from, HeadAngle);
+            smoothPath = true;
+        }
+        else
+        {
+            toSegment = ResolveSegment(*this, frames, HeadAngle);
+            smoothPath = toSegment.spline.regular;
+        }
+    }
+
     // bones loop
     for (int i = 0; i < NumBones; i++)
     {
@@ -427,29 +639,37 @@ void BMD::Animation(float (*BoneMatrix)[3][4], float AnimationFrame, float Prior
         const BoneMatrix_t* bm2 = &b->BoneMatrixes[currentAction];
 
         float Matrix[3][4];
-        if (staticPose && i != BoneHead)
+        if (smoothPath)
         {
-            CopyStaticBoneRotation(staticPose[i], Matrix);
+            BuildSmoothBoneMatrix(*this, i, toSegment, fade ? &fromSegment : nullptr, fade ? fade->weight : 0.f,
+                                  Matrix);
         }
         else
         {
-            BuildBoneRotation(i == BoneHead ? headQ1 : bm1->Quaternion[PriorAnimationFrame],
-                              i == BoneHead ? headQ2 : bm2->Quaternion[currentAnimationFrame], s1, Matrix);
-        }
-        const float* Position1 = bm1->Position[PriorAnimationFrame];
-        const float* Position2 = bm2->Position[currentAnimationFrame];
+            if (staticPose && i != BoneHead)
+            {
+                CopyStaticBoneRotation(staticPose[i], Matrix);
+            }
+            else
+            {
+                BuildBoneRotation(i == BoneHead ? headQ1 : bm1->Quaternion[PriorAnimationFrame],
+                                  i == BoneHead ? headQ2 : bm2->Quaternion[currentAnimationFrame], s1, Matrix);
+            }
+            const float* Position1 = bm1->Position[PriorAnimationFrame];
+            const float* Position2 = bm2->Position[currentAnimationFrame];
 
-        if (i == 0 && bLockPositions)
-        {
-            Matrix[0][3] = bm2->Position[0][0];
-            Matrix[1][3] = bm2->Position[0][1];
-            Matrix[2][3] = Position1[2] * s2 + Position2[2] * s1 + BodyHeight;
-        }
-        else
-        {
-            Matrix[0][3] = Position1[0] * s2 + Position2[0] * s1;
-            Matrix[1][3] = Position1[1] * s2 + Position2[1] * s1;
-            Matrix[2][3] = Position1[2] * s2 + Position2[2] * s1;
+            if (i == 0 && bLockPositions)
+            {
+                Matrix[0][3] = bm2->Position[0][0];
+                Matrix[1][3] = bm2->Position[0][1];
+                Matrix[2][3] = Position1[2] * s2 + Position2[2] * s1 + BodyHeight;
+            }
+            else
+            {
+                Matrix[0][3] = Position1[0] * s2 + Position2[0] * s1;
+                Matrix[1][3] = Position1[1] * s2 + Position2[1] * s1;
+                Matrix[2][3] = Position1[2] * s2 + Position2[2] * s1;
+            }
         }
 
         if (b->Parent == -1)
@@ -1421,6 +1641,31 @@ void BMD::EndRender()
 extern double WorldTime;
 extern int WaterTextureNumber;
 
+namespace
+{
+struct ChromeLight
+{
+    float x;
+    float y;
+};
+
+// The light that moves the chrome shine. cos/sin of the large WorldTime go through a slow argument reduction, and
+// every mesh of a frame asks for the same WorldTime, so it is computed once per new WorldTime (same values as before).
+ChromeLight ChromeLightAt(double worldTime)
+{
+    thread_local bool known = false;
+    thread_local double knownTime = 0.0;
+    thread_local ChromeLight light{};
+    if (!known || worldTime != knownTime)
+    {
+        light = {static_cast<float>(cos(worldTime * 0.001f)), static_cast<float>(sin(worldTime * 0.002f))};
+        knownTime = worldTime;
+        known = true;
+    }
+    return light;
+}
+} // namespace
+
 void BMD::BeginRenderCoinHeap()
 {
     constexpr int meshIndex = 0;
@@ -1800,7 +2045,8 @@ void BMD::RenderMesh(int meshIndex, int renderFlags, float alpha, int blendMeshI
         }
 
         const float wave2 = static_cast<int>(WorldTime) % 5000 * 0.00024f - 0.4f;
-        vec3_t light = {static_cast<float>(cos(WorldTime * 0.001f)), static_cast<float>(sin(WorldTime * 0.002f)), 1.0f};
+        const ChromeLight chromeLight = ChromeLightAt(WorldTime);
+        vec3_t light = {chromeLight.x, chromeLight.y, 1.0f};
         for (int j = 0; j < m->NumNormals && j < MAX_VERTICES; ++j)
         {
             const auto normal = NormalTransform[meshIndex][j];
@@ -1913,7 +2159,7 @@ void BMD::RenderMesh(int meshIndex, int renderFlags, float alpha, int blendMeshI
             .textureCoordinateOffset = {blendMeshTextureCoordU, blendMeshTextureCoordV},
             .chromeWave = wave,
             .chromeWave2 = static_cast<int>(WorldTime) % 5000 * 0.00024f - 0.4f,
-            .chromeLight = {static_cast<float>(cos(WorldTime * 0.001f)), static_cast<float>(sin(WorldTime * 0.002f))},
+            .chromeLight = {ChromeLightAt(WorldTime).x, ChromeLightAt(WorldTime).y},
             .chromeTimeTerm = static_cast<float>(WorldTime) * 0.00006f,
             .textureCoordinates = textureCoordinates,
             .translate = m_LastTranslate,
@@ -2152,7 +2398,8 @@ void BMD::RenderMeshAlternative(int iRndExtFlag, int iParam, int i, int RenderFl
         }
         float Wave2 = (int)WorldTime % 5000 * 0.00024f - 0.4f;
 
-        vec3_t L = { (float)(cos(WorldTime * 0.001f)), (float)(sin(WorldTime * 0.002f)), 1.f };
+        const ChromeLight chromeLight = ChromeLightAt(WorldTime);
+        vec3_t L = { chromeLight.x, chromeLight.y, 1.f };
         for (int j = 0; j < m->NumNormals; j++)
         {
             if (j >= MAX_VERTICES)
@@ -3785,6 +4032,7 @@ bool BMD::Open2(const wchar_t* DirName, const wchar_t* ModelFileName, bool bReAl
 
     Init(false);
     BuildStaticPoses();
+    BuildActionCycles();
 
     m_bCompletedAlloc = true;
     return true;

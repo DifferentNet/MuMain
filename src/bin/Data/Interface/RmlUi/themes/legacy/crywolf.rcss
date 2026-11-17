@@ -100,3 +100,29 @@ img { position: absolute; }
 
 /* The data-for template row has no index of its own; it inherits this one. */
 .timer-run { --i: 0; }
+
+/* MU Moldova: the phone's own HUD (theme flag "mobile-hud"). The battle panel, the altars, the clock and the
+   statue's bar sit under the skill buttons there, and the party's cards stand at the right under the top
+   row: the whole group goes 160 units up (under the notice lines, which end at 115) and 210 left, above the
+   skill buttons and left of their Skills pill even at 130 % buttons and 874 x 402, and left of the cards. The
+   statue's bar takes its left from C++, so it moves by its margin. */
+@media (theme: mobile-hud) {
+	#main { left: 308px; top: 118px; }
+	.altar:nth-child(1) { left: 355px; top: 120px; }
+	.altar:nth-child(2) { left: 372px; top: 122px; }
+	.altar:nth-child(3) { left: 388px; top: 126px; }
+	.altar:nth-child(4) { left: 403px; top: 134px; }
+	.altar:nth-child(5) { left: 415px; top: 146px; }
+	#dark_elf_icon { left: 413px; top: 198px; }
+	#plate { left: 328px; top: 232px; }
+	#balgass_icon { left: 413px; top: 219px; }
+	#balgass_bar { left: 338px; top: 228px; }
+	.timer-digit { top: 242px; }
+	#minute_pad { left: 353px; }
+	#second_pad { left: 380px; }
+	#minutes .timer-digit { left: calc(370px - var(--n) * 7px + var(--i) * 9.8px); }
+	#seconds .timer-digit { left: calc(397px - var(--n) * 7px + var(--i) * 9.8px); }
+	#statue_bar { top: 163px; margin-left: -210px; }
+	#dark_elf_text { left: 272px; top: 199px; }
+	#balgass_text { left: 290px; top: 220px; }
+}

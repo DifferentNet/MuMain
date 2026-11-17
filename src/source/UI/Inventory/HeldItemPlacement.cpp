@@ -47,25 +47,27 @@ bool SendHeldItemMove(const HeldItemMove& move)
     return SendRequestEquipmentItem(move.sourceType, move.sourceIndex, move.item, move.targetType, move.targetIndex);
 }
 
-bool AutoMoveItemAtCursor(CInventoryCtrl* source, STORAGE_TYPE sourceType, CInventoryCtrl* target,
-                          STORAGE_TYPE targetType, const std::function<bool(ITEM*)>& accepts)
+AutoMoveResult AutoMoveItemAtCursor(CInventoryCtrl* source, STORAGE_TYPE sourceType, CInventoryCtrl* target,
+                                    STORAGE_TYPE targetType, const std::function<bool(ITEM*)>& accepts)
 {
     if (CInventoryCtrl::GetPickedItem() != nullptr || source == nullptr || target == nullptr)
-        return false;
+        return AutoMoveResult::NothingToMove;
 
     ITEM* item = source->FindItemAtPointer();
-    if (item == nullptr || !accepts(item))
-        return false;
+    if (item == nullptr)
+        return AutoMoveResult::NothingToMove;
+    if (!accepts(item))
+        return AutoMoveResult::Refused;
 
     const ITEM_ATTRIBUTE& attribute = ItemAttribute[item->Type];
     const int targetIndex = target->FindEmptySlot(attribute.Width, attribute.Height);
     if (targetIndex < 0 || !target->CanMove(targetIndex, item))
-        return false;
+        return AutoMoveResult::NoRoom;
 
     // Picked up and hidden, so the item is off both grids until the server
     // answers; the answer puts it into the target or back.
     if (!CInventoryCtrl::CreatePickedItem(source, item))
-        return false;
+        return AutoMoveResult::NotSent;
     CPickedItem* pickedItem = CInventoryCtrl::GetPickedItem();
     source->RemoveItem(item);
     pickedItem->HidePickedItem();
@@ -74,10 +76,10 @@ bool AutoMoveItemAtCursor(CInventoryCtrl* source, STORAGE_TYPE sourceType, CInve
                                   targetIndex))
     {
         CInventoryCtrl::BackupPickedItem();
-        return false;
+        return AutoMoveResult::NotSent;
     }
 
     PlayBuffer(SOUND_GET_ITEM01);
-    return true;
+    return AutoMoveResult::Moved;
 }
 } // namespace UI::Items::Placement

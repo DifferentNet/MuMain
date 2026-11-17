@@ -7165,7 +7165,7 @@
     <comment>legacy_id=1926</comment>
   </data>
   <data name="one of the certain weapons to 50%%." xml:space="preserve">
-    <value>einer bestimmten Waffe auf 50%% verringert.</value>
+    <value>einer bestimmten Waffe auf 50% verringert.</value>
     <comment>legacy_id=1927</comment>
   </data>
   <data name="Plasma storm skill (Mana:%d)" xml:space="preserve">
@@ -7349,11 +7349,11 @@
     <comment>legacy_id=1982</comment>
   </data>
   <data name="Monster strength decreased 10%%." xml:space="preserve">
-    <value>Die Monsterstärke wurde um 10%% verringert.</value>
+    <value>Die Monsterstärke wurde um 10% verringert.</value>
     <comment>legacy_id=2000</comment>
   </data>
   <data name="5%% increase in castle and arena invitation combine rate." xml:space="preserve">
-    <value>Kombinationsrate für Burg- und Arena-Einladungen +5%%.</value>
+    <value>Kombinationsrate für Burg- und Arena-Einladungen +5%.</value>
     <comment>legacy_id=2001</comment>
   </data>
   <data name="Contract is ongoing therefore dual compact is not possible." xml:space="preserve">
@@ -7501,7 +7501,7 @@
     <comment>legacy_id=2053</comment>
   </data>
   <data name="Minimum Wizardry increment 20%%" xml:space="preserve">
-    <value>Minimaler Zaubereizuwachs 20%%</value>
+    <value>Minimaler Zaubereizuwachs 20%</value>
     <comment>legacy_id=2054</comment>
   </data>
   <data name="It cannot be applied on another." xml:space="preserve">
@@ -13793,6 +13793,12 @@
   <data name="WindLockedLowPreset" xml:space="preserve">
     <value>Off on the Low graphics preset.</value>
   </data>
+  <data name="SmoothAnimationRow" xml:space="preserve">
+    <value>Flüssige Animation</value>
+  </data>
+  <data name="SmoothAnimationTooltip" xml:space="preserve">
+    <value>Charaktere, Monster und Reittiere bewegen sich flüssig zwischen den Posen und gehen weich von einer Aktion in die nächste über.</value>
+  </data>
   <data name="HazeRow" xml:space="preserve">
     <value>Distance haze</value>
   </data>
@@ -14127,5 +14133,44 @@
   </data>
   <data name="PadHintDeath" xml:space="preserve">
     <value>In ein paar Sekunden lebst du wieder: lass den linken Stick los und lauf weiter</value>
+  </data>
+  <data name="ChatMacroStored" xml:space="preserve">
+    <value>Alt+%d: %ls</value>
+  </data>
+  <data name="ChatMacroCleared" xml:space="preserve">
+    <value>Makro Alt+%d gelöscht.</value>
+  </data>
+  <data name="ExpMaxLevelReached" xml:space="preserve">
+    <value>Du hast bereits die Maximalstufe erreicht.</value>
+  </data>
+  <data name="ExpMaxMasterLevelReached" xml:space="preserve">
+    <value>Du hast bereits die maximale Meisterstufe erreicht.</value>
+  </data>
+  <data name="ExpMonsterTooWeakForMaster" xml:space="preserve">
+    <value>Besiege stärkere Monster, um Meistererfahrung zu erhalten.</value>
+  </data>
+  <data name="SkillCooldownSeconds" xml:space="preserve">
+    <value>Abklingzeit: %.1f s</value>
+  </data>
+  <data name="WindowHasNoRoomForItem" xml:space="preserve">
+    <value>Hier ist kein Platz für diesen Gegenstand.</value>
+  </data>
+  <data name="PartyMemberJoined" xml:space="preserve">
+    <value>%ls ist der Gruppe beigetreten.</value>
+  </data>
+  <data name="PartyMemberLeft" xml:space="preserve">
+    <value>%ls hat die Gruppe verlassen.</value>
+  </data>
+  <data name="KilledByName" xml:space="preserve">
+    <value>Getötet von %ls</value>
+  </data>
+  <data name="TradeWithNameCompleted" xml:space="preserve">
+    <value>Handel mit %ls abgeschlossen.</value>
+  </data>
+  <data name="HotKeyNothingLeft" xml:space="preserve">
+    <value>%ls aufgebraucht.</value>
+  </data>
+  <data name="FriendIsOnline" xml:space="preserve">
+    <value>%ls ist online.</value>
   </data>
 </root>
