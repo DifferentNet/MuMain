@@ -14,8 +14,6 @@
 	background-color: #1a140a;
 	border: 1dp #806040;
 	pointer-events: auto;
-	/* Clicks never take the keyboard from the chat field. */
-	focus: none;
 }
 
 .gh-title {
@@ -45,7 +43,6 @@
 
 /* base.rcss places .btn absolutely at a fixed width; in this row they flow and fit their label. */
 #graphics_hint .gh-btn {
-	focus: none;
 	position: relative;
 	display: inline-block;
 	width: auto;
