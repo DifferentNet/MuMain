@@ -195,6 +195,9 @@ namespace CfgKeys
     // slowly, 0 after "Don't ask again". LowFpsHintKept is the preset the player chose to keep (no hint while on it).
     inline constexpr wchar_t CfgKeyLowFpsHint[] = L"LowFpsHint";
     inline constexpr wchar_t CfgKeyLowFpsHintKept[] = L"LowFpsHintKept";
+    // 1 once the Classic client (no Data\HD) turned FXAA, sharpening and sun shadows off a single time
+    // (Render::Look::ApplyStartupGraphics): older Classic clients forced them off every start. Never written while 0.
+    inline constexpr wchar_t CfgKeyClassicGraphicsReset[] = L"ClassicGraphicsReset";
 
     inline constexpr wchar_t CfgKeyRenderBackend[] = L"Backend";
     // DXP-23's per-system effect-cost toggles (MainScene.h's SetDisableEffects/SetDisableParticles/
@@ -409,6 +412,7 @@ namespace CfgDefaults
     inline constexpr int CfgMaxSunShadows = 2;
     inline constexpr int CfgDefaultSharpen = 0;
     inline constexpr bool CfgDefaultLowFpsHint = true;
+    inline constexpr bool CfgDefaultClassicGraphicsReset = false;
     inline constexpr int CfgMinSharpen = 0;
     inline constexpr int CfgMaxSharpen = 100;
     // The share of the screen's usable area a new installation's window takes when no display mode fits.

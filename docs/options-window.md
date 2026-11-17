@@ -227,18 +227,25 @@ rows next to Anti-aliasing. The presets, the `GraphicsPreset`, `Fxaa` and
 `Sharpen` keys and how Auto picks a preset from the GPU are described in
 [`enhanced-look.md`](enhanced-look.md#graphics-presets-and-screen-filters).
 
-Under the preset the Remaster client on the desktop has a **Suggest a lower preset when FPS is
-low** checkbox (`[Render] LowFpsHint`, on by default): the low frame rate hint, which offers the
-next lower preset when the game has run really slowly for a while. Its "Don't ask again" button
-turns the checkbox off; checking it turns the hint back on. The Classic client and the browser
-client don't show the row. See
-[`enhanced-look.md`](enhanced-look.md#low-frame-rate-hint).
+Under the preset both desktop clients (Classic and Remaster) have a **Suggest a lower preset when
+FPS is low** checkbox (`[Render] LowFpsHint`, on by default): the low frame rate hint, which offers
+the next lower preset when the game has run really slowly for a while. Its "Don't ask again" button
+turns the checkbox off; checking it turns the hint back on. The browser client doesn't show the row.
+See [`enhanced-look.md`](enhanced-look.md#low-frame-rate-hint).
 
-These rows, **HD textures** and **Sun shadows** are MU Skynet's and belong to the Remaster
-client: the Classic client (no `Data\HD` folder, `Render::Textures::Hd::Installed`) hides them
-and keeps FXAA, sharpening, sun shadows and HD textures off whatever `config.ini` says, and Auto
-picks no preset there (`Render::Look::RemasterGraphicsOptions`). OpenMU's own rows stay in both.
-The browser client shows them as before.
+The preset, FXAA, sharpening and **Sun shadows** rows are in both desktop clients (sun shadows
+wherever the renderer built their pipelines). In the Classic client (no `Data\HD` folder,
+`Render::Textures::Hd::Installed`) the presets' Medium, High and Ultra rows sharpen 30 % instead of
+40 %, and a new install keeps `config.ini`'s own values (the original look, FXAA, sharpening and
+sun shadows off; the preset reads Custom) instead of picking a preset by GPU. The first start of a
+Classic client that predates this turns FXAA, sharpening and sun shadows off once (older Classic
+clients forced them off every start) and saves `[Render] ClassicGraphicsReset=1`, so a value a
+Remaster run left in `config.ini` doesn't come back on by itself; after that the player's choices
+stay. The Remaster client never writes that line. **HD textures** and the Remaster's own effects
+(SSAO, wind, haze, particles, torch light, foliage smoothing, soft sun shadow edges, HD texture size)
+stay Remaster-only: the Classic client hides them and keeps them off
+(`Render::Look::RemasterGraphicsOptions`). OpenMU's own rows are in both. The browser client shows
+the rows as before.
 
 Under HD textures the Remaster client has an **HD texture size** row (Auto / Full / Half,
 `[Render] HdTextureSize`), shown only while HD textures are on; a change applies after a restart.

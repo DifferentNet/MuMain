@@ -133,7 +133,7 @@ void ApplyGraphicsPreset(GraphicsPreset preset)
     {
         return;
     }
-    const GraphicsSettings settings = GraphicsPresetSettings(preset);
+    const GraphicsSettings settings = GraphicsPresetSettings(preset, RemasterGraphicsOptions());
     GameConfig& config = GameConfig::GetInstance();
     MuSetAnisotropyPreference(settings.anisotropy);
     MuSetAntialiasingPreference(settings.antialiasing);
@@ -170,7 +170,7 @@ void ApplyGraphicsPreset(GraphicsPreset preset)
 void RefreshGraphicsPreset()
 {
     GameConfig& config = GameConfig::GetInstance();
-    config.SetGraphicsPreset(MatchGraphicsPreset(CurrentGraphicsSettings()));
+    config.SetGraphicsPreset(MatchGraphicsPreset(CurrentGraphicsSettings(), RemasterGraphicsOptions()));
     config.Save();
 }
 
@@ -195,22 +195,36 @@ bool RemasterGraphicsOptions()
 void ApplyStartupGraphics()
 {
     GameConfig& config = GameConfig::GetInstance();
-    if (!RemasterGraphicsOptions())
+    const bool classic = !RemasterGraphicsOptions();
+    bool classicMigrated = false;
+    if (classic)
     {
-        // Classic client: OpenMU's settings only, so our filters, sun shadows and HD textures stay off
-        // even where an older client saved them on.
-        config.SetFxaa(false);
-        config.SetSharpen(0);
-        config.SetSunShadows(0);
+        // Classic client: no HD textures, every start.
         config.SetHdTextures(false);
+        // Older Classic clients forced FXAA, sharpening and sun shadows off every start; now the player may turn
+        // them on. Once (the [Render] ClassicGraphicsReset marker) they are cleared, so a value a Remaster run
+        // saved in this config.ini doesn't come back on by itself.
+        const ClassicResetResult reset =
+            ResetClassicScreenSettings(CurrentGraphicsSettings(), config.GetClassicGraphicsReset());
+        if (reset.changed)
+        {
+            config.SetFxaa(reset.settings.fxaa);
+            config.SetSharpen(reset.settings.sharpen);
+            config.SetSunShadows(reset.settings.sunShadows);
+            config.SetClassicGraphicsReset(true);
+            classicMigrated = true;
+            mu::log::Get("render")->info("Classic client: FXAA, sharpening and sun shadows reset once");
+        }
     }
-    // Auto picks a preset only on a new install (no [Render] Look yet) and only on the desktop: an existing
-    // player's choices stay as they are, and the browser's WebGPU device reports no GPU name to go by.
+    // Auto picks a preset only on a new Remaster install (no [Render] Look yet) and only on the desktop: an
+    // existing player's choices stay as they are, the browser's WebGPU device reports no GPU name to go by, and
+    // a new Classic install keeps config.ini's own values (the original look, FXAA, sharpening and sun shadows
+    // off) until the player picks a preset; the name is matched below (Custom unless a row fits).
 #ifdef __EMSCRIPTEN__
     const bool chooseAuto = false;
 #else
     const bool chooseAuto =
-        RemasterGraphicsOptions() && config.GetGraphicsPreset() == GraphicsPreset::Auto && !config.HadSavedLook();
+        !classic && config.GetGraphicsPreset() == GraphicsPreset::Auto && !config.HadSavedLook();
 #endif
     if (chooseAuto)
     {
@@ -222,7 +236,7 @@ void ApplyStartupGraphics()
         ChooseHdTextureSize(gpuName);
         return;
     }
-    if (const int sharpen = UpdatedPresetSharpen(config.GetGraphicsPreset(), config.GetSharpen());
+    if (const int sharpen = UpdatedPresetSharpen(config.GetGraphicsPreset(), config.GetSharpen(), !classic);
         sharpen != config.GetSharpen())
     {
         mu::log::Get("render")->info("Graphics preset {}: sharpening {} -> {} %",
@@ -233,9 +247,11 @@ void ApplyStartupGraphics()
     ApplyLookPreset(config.GetLook());
     ApplyScreenFilters();
     ApplySunShadows();
-    if (config.GetGraphicsPreset() == GraphicsPreset::Auto)
+    if (config.GetGraphicsPreset() == GraphicsPreset::Auto || classicMigrated)
     {
-        // Name the preset the kept settings match (Custom if none), so Auto doesn't wait for the next start.
+        // Name the preset the kept settings match (Custom if none), so Auto doesn't wait for the next start; after
+        // the Classic reset a saved "High" no longer matches its row. Saves config.ini, the ClassicGraphicsReset
+        // marker with it.
         RefreshGraphicsPreset();
     }
 #ifndef __EMSCRIPTEN__

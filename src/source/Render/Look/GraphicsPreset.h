@@ -6,8 +6,10 @@
 
 // The graphics presets (Low, Medium, High, Ultra): each one a row of the settings below. A player's
 // settings that match no row are Custom. The presets set the look, the Enhanced features, the
-// anti-aliasing, the screen filters and the anisotropy; they never touch the effect and shadow
-// switches, VSync, the FPS cap or the window size.
+// anti-aliasing, the screen filters, the anisotropy and the sun shadows; they never touch the effect
+// switches, VSync, the FPS cap or the window size. The Classic client (no Data\HD, `remaster` false
+// below) has the same rows, except that a row which sharpens sharpens ClassicPresetSharpen: the
+// original textures look over-sharpened at the Remaster's 40 %.
 namespace Render::Look
 {
 
@@ -32,15 +34,30 @@ struct GraphicsSettings
     bool operator==(const GraphicsSettings&) const = default;
 };
 
+// The sharpening of the Classic client's Medium, High and Ultra rows, in percent.
+inline constexpr int ClassicPresetSharpen = 30;
 // The row of a concrete preset (Low to Ultra); Low's row for Auto and Custom, which have none.
-[[nodiscard]] GraphicsSettings GraphicsPresetSettings(GraphicsPreset preset);
-// The preset whose row equals `settings`, else Custom.
-[[nodiscard]] GraphicsPreset MatchGraphicsPreset(const GraphicsSettings& settings);
+// `remaster` false gives the Classic client's row.
+[[nodiscard]] GraphicsSettings GraphicsPresetSettings(GraphicsPreset preset, bool remaster = true);
+// The preset whose row (the Remaster's, or the Classic client's when `remaster` is false) equals
+// `settings`, else Custom.
+[[nodiscard]] GraphicsPreset MatchGraphicsPreset(const GraphicsSettings& settings, bool remaster = true);
 // Medium, High and Ultra sharpened 30 % until 2026-11-12, now 40 % (the Remaster looked soft). A
 // player who kept such a preset has 30 saved: `savedSharpen` becomes the preset's current value.
-// Any other preset or value is the player's own and is kept.
+// Any other preset or value is the player's own and is kept. The Classic client (`remaster` false)
+// keeps 30, its own rows' value: `savedSharpen` is returned unchanged.
 inline constexpr int LegacyPresetSharpen = 30;
-[[nodiscard]] int UpdatedPresetSharpen(GraphicsPreset preset, int savedSharpen);
+[[nodiscard]] int UpdatedPresetSharpen(GraphicsPreset preset, int savedSharpen, bool remaster = true);
+// The Classic client's one-time reset of the settings older Classic clients forced off every start (FXAA,
+// sharpening, sun shadows), so a row a Remaster run saved there doesn't come back on. Without the [Render]
+// ClassicGraphicsReset marker the three are cleared and `changed` is true (the caller saves the marker either
+// way); with it `settings` comes back as it is and `changed` is false.
+struct ClassicResetResult
+{
+    GraphicsSettings settings;
+    bool changed = false;
+};
+[[nodiscard]] ClassicResetResult ResetClassicScreenSettings(GraphicsSettings settings, bool markerPresent);
 // What a GPU is, by its name as the driver reports it. An empty or unknown name counts as Integrated.
 enum class GpuClass
 {

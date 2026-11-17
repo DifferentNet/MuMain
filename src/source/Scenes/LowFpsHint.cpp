@@ -364,9 +364,6 @@ namespace Scenes::LowFpsHint
 void OnFrame()
 {
 #ifndef __EMSCRIPTEN__
-    if (!Render::Look::RemasterGraphicsOptions())
-        return;
-
     HintState& state = State();
     const double frameMs = state.lastWorldTimeMs < 0.0 ? 0.0 : WorldTime - state.lastWorldTimeMs;
     state.lastWorldTimeMs = WorldTime;

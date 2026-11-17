@@ -1249,7 +1249,7 @@ void RenderScene(HDC hDC)
 {
     CalcFPS();
 #ifndef __EMSCRIPTEN__
-    // The low frame rate hint measures every frame (Scenes/LowFpsHint.h; Remaster on the desktop only).
+    // The low frame rate hint measures every frame (Scenes/LowFpsHint.h; both desktop clients).
     Scenes::LowFpsHint::OnFrame();
 #endif
     UpdateSceneState();

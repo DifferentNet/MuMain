@@ -100,38 +100,65 @@ bool IsWeakIntegratedGraphics(const std::string& lowerName)
     }
     return false;
 }
+
+// A row as the given client has it: the Classic client sharpens less.
+GraphicsSettings RowFor(const PresetRow& row, bool remaster)
+{
+    GraphicsSettings settings = row.settings;
+    if (!remaster && settings.sharpen != 0)
+    {
+        settings.sharpen = ClassicPresetSharpen;
+    }
+    return settings;
+}
 } // namespace
 
-GraphicsSettings GraphicsPresetSettings(GraphicsPreset preset)
+GraphicsSettings GraphicsPresetSettings(GraphicsPreset preset, bool remaster)
 {
     for (const PresetRow& row : PresetRows)
     {
         if (row.preset == preset)
         {
-            return row.settings;
+            return RowFor(row, remaster);
         }
     }
-    return PresetRows.front().settings;
+    return RowFor(PresetRows.front(), remaster);
 }
 
-int UpdatedPresetSharpen(GraphicsPreset preset, int savedSharpen)
+int UpdatedPresetSharpen(GraphicsPreset preset, int savedSharpen, bool remaster)
 {
+    if (!remaster)
+    {
+        return savedSharpen;
+    }
     const bool sharpenedPreset =
         preset == GraphicsPreset::Medium || preset == GraphicsPreset::High || preset == GraphicsPreset::Ultra;
     return sharpenedPreset && savedSharpen == LegacyPresetSharpen ? GraphicsPresetSettings(preset).sharpen
                                                                    : savedSharpen;
 }
 
-GraphicsPreset MatchGraphicsPreset(const GraphicsSettings& settings)
+GraphicsPreset MatchGraphicsPreset(const GraphicsSettings& settings, bool remaster)
 {
     for (const PresetRow& row : PresetRows)
     {
-        if (row.settings == settings)
+        if (RowFor(row, remaster) == settings)
         {
             return row.preset;
         }
     }
     return GraphicsPreset::Custom;
+}
+
+ClassicResetResult ResetClassicScreenSettings(GraphicsSettings settings, bool markerPresent)
+{
+    if (markerPresent)
+    {
+        return {settings, false};
+    }
+    settings.fxaa = false;
+    settings.sharpen = 0;
+    settings.sunShadows = 0;
+    return {settings, true};
 }
 
 GpuClass ClassifyGpu(std::string_view gpuName)

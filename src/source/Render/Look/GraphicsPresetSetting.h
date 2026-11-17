@@ -17,14 +17,16 @@ void ApplyGraphicsPreset(GraphicsPreset preset);
 void RefreshGraphicsPreset();
 // Saves the screen filters (FXAA, sharpening in percent), applies them and refreshes the preset.
 void ChooseScreenFilters(bool fxaa, int sharpenPercent);
-// Start-up, once the renderer exists: Auto becomes the preset that suits the GPU and is applied and
-// saved by name; any other preset leaves the saved values as they are. Either way the look and the
-// screen filters are applied.
+// Start-up, once the renderer exists: on a new desktop install Auto becomes the preset that suits the GPU
+// (always Low in the Classic client) and is applied and saved by name; any other preset leaves the saved
+// values as they are. Either way the look and the screen filters are applied.
 void ApplyStartupGraphics();
 
-// The settings MU Skynet added on top of OpenMU's (graphics preset, FXAA, sharpening, HD textures,
-// sun shadows) belong to the Remaster client: true there and in the browser, false in the Classic
-// client (no Data\HD), where they stay off and Options doesn't show them.
+// True in the Remaster client and in the browser, false in the Classic client (no Data\HD). It gates the HD
+// textures and the Remaster's own effects (SSAO, wind, haze, particles, torch lights, foliage smoothing, soft
+// sun shadow edges, HD texture size), which stay off in Classic and Options doesn't show there. The graphics
+// preset, FXAA, sharpening and sun shadows are in both clients; Classic's preset rows sharpen less
+// (GraphicsPresetSettings).
 [[nodiscard]] bool RemasterGraphicsOptions();
 
 } // namespace Render::Look

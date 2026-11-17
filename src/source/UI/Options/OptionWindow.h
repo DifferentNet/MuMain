@@ -438,9 +438,8 @@ namespace mu::ui::window
             Rml::String fxaaLabel;
             bool hdTextures = false;
             bool hdTexturesAvailable = true;
-            bool remasterGraphics = true;
             Rml::String hdTexturesLabel;
-            // [Render] LowFpsHint: offer a lower preset when the game runs really slowly (Remaster, desktop).
+            // [Render] LowFpsHint: offer a lower preset when the game runs really slowly (desktop, both clients).
             bool lowFpsHint = true;
             bool lowFpsHintAvailable = false;
             Rml::String lowFpsHintLabel;
@@ -553,8 +552,8 @@ namespace mu::ui::window
             Rml::String anisotropyRowLabel;
             Rml::String anisotropyValueLabel;
             Rml::String anisotropyTooltip;
-            // [Render] SunShadows (WebSunShadows in the browser): Off / Medium / High; in the browser no row on
-            // cards without sun shadow pipelines.
+            // [Render] SunShadows (WebSunShadows in the browser): Off / Medium / High, in both desktop
+            // clients; no row on a renderer without sun shadow pipelines.
             std::vector<Rml::String> sunShadowsLabels;
             int sunShadowsIndex = 0;
             bool sunShadowsAvailable = true;
