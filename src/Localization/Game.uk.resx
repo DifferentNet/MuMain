@@ -608,15 +608,15 @@
     <comment>legacy_id=148</comment>
   </data>
   <data name="/trade(pointing player): trade" xml:space="preserve">
-    <value>/trade(вказуючий гравець): обмін</value>
+    <value>/trade Нік або ціль: обмін</value>
     <comment>legacy_id=149</comment>
   </data>
   <data name="/party(pointing player): form a party" xml:space="preserve">
-    <value>/party(вказуючий гравець): створити групу</value>
+    <value>/party Нік або ціль: у групу (/pt)</value>
     <comment>legacy_id=150</comment>
   </data>
   <data name="/guild(pointing player): form a guild" xml:space="preserve">
-    <value>/guild(вказівний гравець): створити гільдію</value>
+    <value>/guild (обличчям до майстра): у гільдію</value>
     <comment>legacy_id=151</comment>
   </data>
   <data name="/war &lt;guild name&gt;: Declare Guild War" xml:space="preserve">
@@ -628,7 +628,7 @@
     <comment>legacy_id=153</comment>
   </data>
   <data name="/warp &lt;world&gt;: Warp to another world" xml:space="preserve">
-    <value>/warp &lt;світ&gt;: Деформація в інший світ</value>
+    <value>/move &lt;карта&gt;: перейти на іншу карту</value>
     <comment>legacy_id=154</comment>
   </data>
   <data name="/filter word1 word2: View Chats with word" xml:space="preserve">
@@ -1040,7 +1040,7 @@
     <comment>legacy_id=258</comment>
   </data>
   <data name="Trade259" xml:space="preserve">
-    <value>/ торгівля</value>
+    <value>/торгівля</value>
     <comment>legacy_id=259</comment>
   </data>
   <data name="/warp" xml:space="preserve">
@@ -2157,19 +2157,19 @@
     <comment>legacy_id=574</comment>
   </data>
   <data name="Absorb 30%% of damage" xml:space="preserve">
-    <value>Поглинає 30%% of шкоди</value>
+    <value>Поглинає 30%% шкоди</value>
     <comment>legacy_id=575</comment>
   </data>
   <data name="Increase 30%% of attacking &amp; Wizardry Dmg" xml:space="preserve">
-    <value>Збільште на 30%% of шкоду від атаки та магії</value>
+    <value>Збільшення шкоди від атак і магії на 30%%</value>
     <comment>legacy_id=576</comment>
   </data>
   <data name="Increase %d%% of Damage" xml:space="preserve">
-    <value>Збільшення шкоди на %d%% of</value>
+    <value>Збільшення шкоди на %d%%</value>
     <comment>legacy_id=577</comment>
   </data>
   <data name="Absorb %d%% of Damage" xml:space="preserve">
-    <value>Поглинання шкоди %d%% of</value>
+    <value>Поглинання шкоди %d%%</value>
     <comment>legacy_id=578</comment>
   </data>
   <data name="Increase speed" xml:space="preserve">
@@ -2833,7 +2833,7 @@
     <comment>legacy_id=745</comment>
   </data>
   <data name="Parrying 10%% increased" xml:space="preserve">
-    <value>Парування 10%% inзбільшено</value>
+    <value>Парування 10%% збільшено</value>
     <comment>legacy_id=746</comment>
   </data>
   <data name="You have exchanged Dinorants" xml:space="preserve">
@@ -5281,7 +5281,7 @@
     <comment>legacy_id=1416</comment>
   </data>
   <data name="Damage +20%% increase effect" xml:space="preserve">
-    <value>Пошкодження +20%% inпосилення ефекту</value>
+    <value>Пошкодження +20%% посилення ефекту</value>
     <comment>legacy_id=1417</comment>
   </data>
   <data name="Duration 60 seconds" xml:space="preserve">
@@ -6641,7 +6641,7 @@
     <comment>legacy_id=1775</comment>
   </data>
   <data name="%d%% increment" xml:space="preserve">
-    <value>%d%% inприріст</value>
+    <value>%d%% приріст</value>
     <comment>legacy_id=1776</comment>
   </data>
   <data name="DIncrement1777" xml:space="preserve">
@@ -7333,7 +7333,7 @@
     <comment>legacy_id=2000</comment>
   </data>
   <data name="5%% increase in castle and arena invitation combine rate." xml:space="preserve">
-    <value>5%% inзбільшення кількості запрошень на замок і арену.</value>
+    <value>5%% збільшення кількості запрошень на замок і арену.</value>
     <comment>legacy_id=2001</comment>
   </data>
   <data name="Contract is ongoing therefore dual compact is not possible." xml:space="preserve">
@@ -12948,22 +12948,22 @@
     <value>Коронний перемикач %d</value>
   </data>
   <data name="FruitStatIncreased" xml:space="preserve">
-    <value>(%s фрукти) статистика %d очок була Створити.</value>
+    <value>(Фрукт: %ls) Додано очок: %d.</value>
   </data>
   <data name="FruitStatDecreased" xml:space="preserve">
-    <value>(%s фрукти) статистика %d очок була Зниження.</value>
+    <value>(Фрукт: %ls) Знято очок: %d.</value>
   </data>
   <data name="FruitStatCannotIncrease" xml:space="preserve">
-    <value>Ця статистика більше не може бути Створити.</value>
+    <value>Цей параметр більше не можна підвищити.</value>
   </data>
   <data name="FruitStatCannotDecrease" xml:space="preserve">
-    <value>Ця статистика більше не може бути Зниження.</value>
+    <value>Цей параметр більше не можна знизити.</value>
   </data>
   <data name="StatPointsAdded" xml:space="preserve">
-    <value>Створити</value>
+    <value>Додано</value>
   </data>
   <data name="StatPointsRemoved" xml:space="preserve">
-    <value>Зниження</value>
+    <value>Знято</value>
   </data>
   <data name="QuestCompletedSuccessfully" xml:space="preserve">
     <value>Ви успішно виконали квест.</value>
@@ -13974,5 +13974,11 @@
   </data>
   <data name="CommandPlayerNotFound" xml:space="preserve">
     <value>Гравця не знайдено.</value>
+  </data>
+  <data name="WhisperReplyNobody" xml:space="preserve">
+    <value>Вам ще ніхто не шепотів.</value>
+  </data>
+  <data name="ZenCarryLimitReached" xml:space="preserve">
+    <value>Більше Зен ви не можете нести.</value>
   </data>
 </root>

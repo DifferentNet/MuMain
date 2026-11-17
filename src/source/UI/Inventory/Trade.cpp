@@ -152,6 +152,7 @@ void CTrade::BindRmlModel(Rml::DataModelConstructor& c, TradeRmlModel& model)
             cfg.input->mode = mu::ui::window::GenericDialogConfig::InputField::Mode::Text;
             cfg.input->maxLength = UI::Inventory::ZenAmount::kMaxDigits;
             cfg.input->numericOnly = true;
+            cfg.input->zenPreview = true;
             cfg.onPrimary = [this]
             {
                 const std::uint64_t typed =

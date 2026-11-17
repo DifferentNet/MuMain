@@ -27,6 +27,7 @@ void RememberWhisperSender(std::wstring_view sender)
     if (sender.empty() || g_pChatInputBox == nullptr)
         return;
     g_pChatInputBox->AddWhsprIDHistory(std::wstring(sender));
+    g_pChatInputBox->SetLastWhisperSender(std::wstring(sender));
 }
 
 void ResetLogFilter()

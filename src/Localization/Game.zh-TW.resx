@@ -608,15 +608,15 @@
     <comment>legacy_id=148</comment>
   </data>
   <data name="/trade(pointing player): trade" xml:space="preserve">
-    <value>/trade（指向玩家）：交易</value>
+    <value>/trade 名字或目標：交易</value>
     <comment>legacy_id=149</comment>
   </data>
   <data name="/party(pointing player): form a party" xml:space="preserve">
-    <value>/party(指向玩家): 組成隊伍</value>
+    <value>/party 名字或目標：邀請 (/pt)</value>
     <comment>legacy_id=150</comment>
   </data>
   <data name="/guild(pointing player): form a guild" xml:space="preserve">
-    <value>/guild(指向玩家): 組成公會</value>
+    <value>/guild（面對會長）：加入公會</value>
     <comment>legacy_id=151</comment>
   </data>
   <data name="/war &lt;guild name&gt;: Declare Guild War" xml:space="preserve">
@@ -628,7 +628,7 @@
     <comment>legacy_id=153</comment>
   </data>
   <data name="/warp &lt;world&gt;: Warp to another world" xml:space="preserve">
-    <value>/warp &lt;世界&gt;：傳送到另一個世界</value>
+    <value>/move &lt;地圖&gt;：移動到其他地圖</value>
     <comment>legacy_id=154</comment>
   </data>
   <data name="/filter word1 word2: View Chats with word" xml:space="preserve">
@@ -2157,19 +2157,19 @@
     <comment>legacy_id=574</comment>
   </data>
   <data name="Absorb 30%% of damage" xml:space="preserve">
-    <value>吸收30%% of傷害</value>
+    <value>吸收30%%傷害</value>
     <comment>legacy_id=575</comment>
   </data>
   <data name="Increase 30%% of attacking &amp; Wizardry Dmg" xml:space="preserve">
-    <value>攻擊力和魔法傷害增加30%% of</value>
+    <value>攻擊力和魔法傷害增加30%%</value>
     <comment>legacy_id=576</comment>
   </data>
   <data name="Increase %d%% of Damage" xml:space="preserve">
-    <value>增加 %d%% of 傷害</value>
+    <value>增加 %d%% 傷害</value>
     <comment>legacy_id=577</comment>
   </data>
   <data name="Absorb %d%% of Damage" xml:space="preserve">
-    <value>吸收%d%% of傷害</value>
+    <value>吸收%d%%傷害</value>
     <comment>legacy_id=578</comment>
   </data>
   <data name="Increase speed" xml:space="preserve">
@@ -4369,7 +4369,7 @@
     <comment>legacy_id=1172</comment>
   </data>
   <data name="Increase 150%% attack in Dark Spirit class" xml:space="preserve">
-    <value>暗靈級攻擊力增加150%% a</value>
+    <value>暗靈級攻擊力增加150%%</value>
     <comment>legacy_id=1173</comment>
   </data>
   <data name="Increase 2 attack scope in Dark Spirit class" xml:space="preserve">
@@ -13974,5 +13974,11 @@
   </data>
   <data name="CommandPlayerNotFound" xml:space="preserve">
     <value>找不到玩家。</value>
+  </data>
+  <data name="WhisperReplyNobody" xml:space="preserve">
+    <value>還沒有人對你密語。</value>
+  </data>
+  <data name="ZenCarryLimitReached" xml:space="preserve">
+    <value>你無法攜帶更多的 Zen。</value>
   </data>
 </root>

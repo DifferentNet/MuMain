@@ -10,6 +10,7 @@
 #include "UI/RmlBridge/RmlWindowClose.h"
 #include "UI/Dialogs/CommonMessageBox.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
+#include "UI/Inventory/SellConfirmLines.h"
 #include "Engine/Object/ZzzInventory.h"
 #include "GameLogic/Items/ItemCategories.h"
 #include "GameLogic/Items/SaleRefusal.h"
@@ -484,8 +485,10 @@ bool mu::ui::window::CNPCShop::InventoryProcess()
             cfg.lines = {
                 { I18N::Game::AnExpensiveItem, true },
                 { I18N::Game::CheckTheItemPlease, true },
-                { I18N::Game::AreYouSureYouWantToSellIt, true },
             };
+            const auto priceLines = UI::Inventory::SellPriceLines(pItem);
+            cfg.lines.insert(cfg.lines.end(), priceLines.begin(), priceLines.end());
+            cfg.lines.push_back({ I18N::Game::AreYouSureYouWantToSellIt, true });
             cfg.onPrimary = []
             {
                 CPickedItem* pPickedItem = mu::ui::window::CInventoryCtrl::GetPickedItem();

@@ -616,7 +616,7 @@
     <comment>legacy_id=153</comment>
   </data>
   <data name="/warp &lt;world&gt;: Warp to another world" xml:space="preserve">
-    <value>/移動 マップ名：マップへ移動(レベル制限あり)</value>
+    <value>/move マップ名：マップへ移動(レベル制限あり)</value>
     <comment>legacy_id=154</comment>
   </data>
   <data name="/filter word1 word2: View Chats with word" xml:space="preserve">
@@ -10959,6 +10959,10 @@
     <value>JEWELのご購入は、ウィンドウモ?ドでご利用いただくか、一度プログラムを終了してください。</value>
     <comment>legacy_id=3324</comment>
   </data>
+  <data name="You lack %d points." xml:space="preserve">
+    <value>ポイントが%d不足しています。</value>
+    <comment>legacy_id=3325</comment>
+  </data>
   <data name="Font" xml:space="preserve">
     <value>フォント</value>
   </data>
@@ -12049,5 +12053,11 @@
   </data>
   <data name="CommandPlayerNotFound" xml:space="preserve">
     <value>プレイヤーが見つかりません。</value>
+  </data>
+  <data name="WhisperReplyNobody" xml:space="preserve">
+    <value>まだ誰からもささやきがありません。</value>
+  </data>
+  <data name="ZenCarryLimitReached" xml:space="preserve">
+    <value>これ以上ゼンを持てません。</value>
   </data>
 </root>

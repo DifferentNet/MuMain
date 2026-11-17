@@ -6,6 +6,7 @@
 
 using UI::Chat::CommandArgument;
 using UI::Chat::PartyCommandArgument;
+using UI::Chat::ReplyCommandArgument;
 using UI::Chat::SameCharacterName;
 
 TEST_CASE("The party command alone has an empty argument")
@@ -33,6 +34,21 @@ TEST_CASE("Other text is not the party command")
     CHECK_FALSE(PartyCommandArgument(L"/trade", L"").has_value());
     CHECK_FALSE(PartyCommandArgument(L"hello /party", L"").has_value());
     CHECK_FALSE(PartyCommandArgument(L"", L"").has_value());
+}
+
+TEST_CASE("The reply command takes the rest of the line as the whisper")
+{
+    CHECK(ReplyCommandArgument(L"/r hello there") == std::wstring_view(L"hello there"));
+    CHECK(ReplyCommandArgument(L"/REPLY  hi ") == std::wstring_view(L"hi"));
+    CHECK(ReplyCommandArgument(L"/r") == std::wstring_view(L""));
+}
+
+TEST_CASE("Commands that only start like the reply command are not replies")
+{
+    CHECK_FALSE(ReplyCommandArgument(L"/reset").has_value());
+    CHECK_FALSE(ReplyCommandArgument(L"/rift 2").has_value());
+    CHECK_FALSE(ReplyCommandArgument(L"/replyhi").has_value());
+    CHECK_FALSE(ReplyCommandArgument(L"r hello").has_value());
 }
 
 TEST_CASE("Names match ignoring case but not length")

@@ -1776,7 +1776,7 @@ void Action(CHARACTER* c, OBJECT* o, bool Now)
 				{
 					SocketClient->ToGameServer()->SendTalkToNpcRequest(CharactersClient[TargetNpc].Key);
 
-					wchar_t temp[32] = { 0 };
+					wchar_t temp[128] = { 0 };
 					if (monsterIndex == MONSTER_LITTLE_SANTA_RED)
 						mu_swprintf(temp, I18N::Game::HealthHasBeenRecoveredOf100, 100);
 					else if (monsterIndex == MONSTER_LITTLE_SANTA_BLUE)
@@ -2370,7 +2370,7 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
                 int iLevel = CharacterAttribute->Level;
                 if (iLevel < 30)
                 {
-                    wchar_t szError[48] = L"";
+                    wchar_t szError[128] = L"";
                     mu_swprintf(szError, I18N::Game::OpenOnlyForLevelDOrHigher, 30);
                     g_pSystemLogBox->AddText(szError, mu::ui::window::TYPE_ERROR_MESSAGE);
                     return 3;
@@ -3538,6 +3538,12 @@ extern int   CheckSkill;
 
 void SendMacroChat(wchar_t* Text)
 {
+    // "/r text" in a macro whispers back as it does when typed.
+    if (g_pChatInputBox != nullptr && g_pChatInputBox->TrySendReply(Text))
+    {
+        LastMacroTime = GetTickCount64();
+        return;
+    }
     if (!CheckCommand(Text, true))
     {
         // Not while riding, outside the safe zone; the Horn of Fenrir was never in this check.

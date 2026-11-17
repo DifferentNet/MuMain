@@ -537,11 +537,61 @@ void ReceiveServerList(const BYTE* ReceiveBuffer)
 
     g_ConsoleDebug->Write(MCD_RECEIVE, L"0xF4 [ReceiveServerList]");
 }
+
+namespace
+{
+// A C1 packet's size field is one byte, so no text inside it is longer than this.
+constexpr std::size_t MaxPacketTextBytes = 255;
+
+// Converts UTF-8 packet text of at most sourceBytes bytes into a fixed buffer. It never writes past
+// the buffer and always terminates it: text that does not fit is cut. UTF-8 never yields more
+// wide characters than it has bytes, so the scratch buffer holds any packet's text.
+template <std::size_t TargetCapacity>
+void ConvertPacketText(wchar_t (&target)[TargetCapacity], const char* source, std::size_t sourceBytes)
+{
+    static_assert(TargetCapacity > 0);
+    wchar_t converted[MaxPacketTextBytes + 1]{};
+    const auto boundedBytes = static_cast<int>(std::min(sourceBytes, MaxPacketTextBytes));
+    CMultiLanguage::ConvertFromUtf8(converted, source, boundedBytes);
+
+    const std::size_t length = std::min(wcslen(converted), TargetCapacity - 1);
+    std::wmemcpy(target, converted, length);
+    target[length] = L'\0';
+}
+
+// How many bytes of the text field at textOffset (at most fieldSize) the packet really carries; 0 for a
+// packet that ends before it.
+std::size_t PacketTextBytes(const PBMSG_HEADER& header, std::size_t textOffset, std::size_t fieldSize)
+{
+    const std::size_t carried = header.Size > textOffset ? header.Size - textOffset : 0;
+    return std::min(carried, fieldSize);
+}
+
+// How many bytes of chat text a chat or whisper packet carries.
+std::size_t ChatTextBytes(const PCHATING& data)
+{
+    return PacketTextBytes(data.Header, offsetof(PCHATING, ChatText), sizeof data.ChatText);
+}
+
+// Removes the channel prefix (~, @, @@, $, #) from the front of a received chat line.
+void DropChatPrefix(wchar_t* text, std::size_t prefixLength)
+{
+    const std::size_t length = wcslen(text);
+    if (length <= prefixLength)
+    {
+        text[0] = L'\0';
+        return;
+    }
+
+    std::wmemmove(text, text + prefixLength, length - prefixLength + 1);
+}
+} // namespace
+
 void ReceiveServerConnect(const BYTE* ReceiveBuffer)
 {
     auto Data = (LPPRECEIVE_SERVER_ADDRESS)ReceiveBuffer;
-    wchar_t IP[16];
-    CMultiLanguage::ConvertFromUtf8(IP, Data->IP);
+    wchar_t IP[sizeof Data->IP + 1]{};
+    ConvertPacketText(IP, Data->IP, sizeof Data->IP);
 
     g_ErrorReport.Write(L"[ReceiveServerConnect]");
     if (SocketClient != nullptr)
@@ -1789,10 +1839,8 @@ void ReceiveChat(const BYTE* ReceiveBuffer)
         CMultiLanguage::ConvertFromUtf8(ID, Data->ID, MAX_USERNAME_SIZE);
         ID[MAX_USERNAME_SIZE] = L'\0';
 
-        const auto messageSize = Data->Header.Size - MAX_USERNAME_SIZE - sizeof(PBMSG_HEADER);
         wchar_t Text[MAX_CHAT_SIZE + 1]{};
-        CMultiLanguage::ConvertFromUtf8(Text, Data->ChatText);
-        Text[MAX_CHAT_SIZE] = L'\0';
+        ConvertPacketText(Text, Data->ChatText, ChatTextBytes(*Data));
 
         // The prefix the branches below consume is what says which channel
         // this line belongs to; it is read before they shift it away.
@@ -1805,32 +1853,27 @@ void ReceiveChat(const BYTE* ReceiveBuffer)
 
         if (Text[0] == L'~')
         {
-            for (int i = 0; i < messageSize - 1; i++)
-                Text[i] = Text[i + 1];
+            DropChatPrefix(Text, 1);
             UI::Chat::PostChat(ID, Text, mu::ui::window::TYPE_PARTY_MESSAGE);
         }
         else if (Text[0] == L'@' && Text[1] == L'@')
         {
-            for (int i = 0; i < messageSize - 2; i++)
-                Text[i] = Text[i + 2];
+            DropChatPrefix(Text, 2);
             UI::Chat::PostChat(ID, Text, mu::ui::window::TYPE_UNION_MESSAGE);
         }
         else if (Text[0] == L'@')
         {
-            for (int i = 0; i < messageSize - 1; i++)
-                Text[i] = Text[i + 1];
+            DropChatPrefix(Text, 1);
             UI::Chat::PostChat(ID, Text, mu::ui::window::TYPE_GUILD_MESSAGE);
         }
         else if (Text[0] == L'$')
         {
-            for (int i = 0; i < messageSize - 1; i++)
-                Text[i] = Text[i + 2];
+            DropChatPrefix(Text, 2);
             UI::Chat::PostChat(ID, Text, mu::ui::window::TYPE_GENS_MESSAGE);
         }
         else if (Text[0] == L'#')
         {
-            for (int i = 0; i < messageSize - 1; i++)
-                Text[i] = Text[i + 1];
+            DropChatPrefix(Text, 1);
 
             CHARACTER* pFindGm = nullptr;
 
@@ -1905,10 +1948,8 @@ void ReceiveChatWhisper(const BYTE* ReceiveBuffer)
     CMultiLanguage::ConvertFromUtf8(ID, Data->ID, MAX_USERNAME_SIZE);
     ID[MAX_USERNAME_SIZE] = L'\0';
 
-    const auto messageSize = Data->Header.Size - MAX_USERNAME_SIZE - sizeof(PBMSG_HEADER);
     wchar_t Text[MAX_CHAT_SIZE + 1]{};
-    CMultiLanguage::ConvertFromUtf8(Text, Data->ChatText, messageSize);
-    Text[messageSize] = L'\0';
+    ConvertPacketText(Text, Data->ChatText, ChatTextBytes(*Data));
 
     UI::Chat::Whisper::Register(10, ID);
     UI::Chat::RememberWhisperSender(ID);
@@ -1958,15 +1999,17 @@ void ReceiveChatKey(const BYTE* ReceiveBuffer)
     }
 
     wchar_t ChatText[sizeof Data->ChatText + 1]{};
-    CMultiLanguage::ConvertFromUtf8(ChatText, Data->ChatText, sizeof Data->ChatText);
+    ConvertPacketText(ChatText, Data->ChatText,
+                      PacketTextBytes(Data->Header, offsetof(PCHATING_KEY, ChatText), sizeof Data->ChatText));
     UI::Chat::CreateChat(CharactersClient[Index].ID, ChatText, &CharactersClient[Index]);
 }
 
 void ReceiveNotice(const BYTE* ReceiveBuffer)
 {
     auto Data = (LPPRECEIVE_NOTICE)ReceiveBuffer;
-    wchar_t Text[256]{};
-    CMultiLanguage::ConvertFromUtf8(Text, Data->Notice);
+    wchar_t Text[sizeof Data->Notice + 1]{};
+    ConvertPacketText(Text, Data->Notice,
+                      PacketTextBytes(Data->Header, offsetof(PRECEIVE_NOTICE, Notice), sizeof Data->Notice));
 
     if (Data->Result == 0)
     {
@@ -6111,6 +6154,32 @@ void RequestInventorySync()
         SocketClient->ToGameServer()->SendInventoryRequest();
     }
 }
+
+// The size of a picked-up item's name with its quality words.
+constexpr std::size_t PickedItemNameSize = 160;
+// The pickup chat line: the item's name followed by the word for obtained.
+constexpr std::size_t PickedItemMessageSize = PickedItemNameSize + 64;
+
+// Names a picked-up item the way a party member's pickup line does: Excellent or Set first, then
+// +Skill, +Option and +Luck.
+void BuildPickedItemName(const ITEM& item, wchar_t (&name)[PickedItemNameSize])
+{
+    name[0] = L'\0';
+    if (item.ExcellentFlags != 0)
+        mu_swprintf_s(name, L"%ls ", I18N::Game::Excellent);
+    else if (item.AncientDiscriminator != 0)
+        mu_swprintf_s(name, L"%ls ", I18N::Game::Set);
+
+    wchar_t baseName[64]{};
+    GetItemName(item.Type, item.Level, baseName);
+    wcscat_s(name, baseName);
+    if (item.HasSkill)
+        wcscat_s(name, I18N::Game::Skill);
+    if (item.OptionLevel > 0)
+        wcscat_s(name, I18N::Game::Option);
+    if (item.HasLuck)
+        wcscat_s(name, I18N::Game::Luck);
+}
 } // namespace
 
 extern int ItemKey;
@@ -6188,13 +6257,10 @@ void ReceiveGetItem(std::span<const BYTE> ReceiveBuffer)
                 RequestInventorySync();
             }
 
-            wchar_t szItem[64] = {
-                0,
-            };
-            int level = pickedItem->Level;
-            GetItemName(pickedItem->Type, level, szItem);
+            wchar_t szItem[PickedItemNameSize]{};
+            BuildPickedItemName(*pickedItem, szItem);
 
-            wchar_t szMessage[128];
+            wchar_t szMessage[PickedItemMessageSize];
             mu_swprintf(szMessage, L"%ls %ls", szItem, I18N::Game::Obtained);
             UI::Chat::PostSystem(szMessage, mu::ui::window::TYPE_SYSTEM_MESSAGE);
 
@@ -7184,7 +7250,7 @@ BOOL ReceiveTrade(const BYTE* ReceiveBuffer, BOOL bEncrypted)
 {
     auto Data = (LPPCHATING)ReceiveBuffer;
     wchar_t requester[MAX_USERNAME_SIZE + 1]{};
-    CMultiLanguage::ConvertFromUtf8(requester, Data->ID);
+    ConvertPacketText(requester, Data->ID, MAX_USERNAME_SIZE);
     const bool asked = UI::Trade::RequestReceived(requester);
     App::Control::Events::RecordTradeRequested(Data->ID, asked);
 
@@ -8155,7 +8221,7 @@ void ReceiveUnionList(const BYTE* ReceiveBuffer)
                     tmp[j] = pData2->GuildMark[j / 2] & 0x0f;
             }
 
-            wchar_t guildName[MAX_GUILDNAME + 1];
+            wchar_t guildName[MAX_GUILDNAME + 1]{};
             CMultiLanguage::ConvertFromUtf8(guildName, pData2->szGuildName, MAX_GUILDNAME);
 
             UI::Guild::AddAllianceGuild(std::span<const std::uint8_t, 64>(tmp), guildName, pData2->byMemberCount);
@@ -11652,7 +11718,7 @@ void ReceiveBattleCastleProcess(const BYTE* ReceiveBuffer)
 {
     auto pData = (LPPRECEIVE_BC_PROCESS)ReceiveBuffer;
 
-    wchar_t guildName[MAX_GUILDNAME + 1];
+    wchar_t guildName[MAX_GUILDNAME + 1]{};
     CMultiLanguage::ConvertFromUtf8(guildName, pData->m_szGuildName, MAX_GUILDNAME);
 
     switch (pData->m_byBasttleCastleState)
@@ -12076,7 +12142,7 @@ void ReceiveCrywolfHeroList(const BYTE* ReceiveBuffer)
         auto pData2 = (LPPMSG_ANS_CRYWOLF_HERO_LIST_INFO)(ReceiveBuffer + Offset);
         Offset += sizeof(PMSG_ANS_CRYWOLF_HERO_LIST_INFO);
 
-        wchar_t playerName[MAX_USERNAME_SIZE + 1];
+        wchar_t playerName[MAX_USERNAME_SIZE + 1]{};
         CMultiLanguage::ConvertFromUtf8(playerName, pData2->szHeroName, MAX_USERNAME_SIZE);
         auto heroClass = gCharacterManager.ChangeServerClassTypeToClientClassType(pData2->btHeroClass);
         M34CryWolf1st::Set_WorldRank(pData2->iRank, heroClass, pData2->iHeroScore, playerName);
@@ -12994,8 +13060,8 @@ bool ReceiveIGS_StorageGiftItemList(const BYTE* pReceiveBuffer)
         return false;
 #endif // KJH_MOD_SHOP_SCRIPT_DOWNLOAD
 
-    wchar_t szID[MAX_USERNAME_SIZE + 1];
-    wchar_t szMessage[MAX_GIFT_MESSAGE_SIZE];
+    wchar_t szID[MAX_USERNAME_SIZE + 1]{};
+    wchar_t szMessage[MAX_GIFT_MESSAGE_SIZE + 1]{};
     CMultiLanguage::ConvertFromUtf8(szID, Data->chSendUserName, MAX_USERNAME_SIZE);
     CMultiLanguage::ConvertFromUtf8(szMessage, Data->chMessage, MAX_GIFT_MESSAGE_SIZE);
 

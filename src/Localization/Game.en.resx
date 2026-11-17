@@ -608,15 +608,15 @@
     <comment>legacy_id=148</comment>
   </data>
   <data name="/trade(pointing player): trade" xml:space="preserve">
-    <value>/trade(pointing player): trade</value>
+    <value>/trade Name or target: trade</value>
     <comment>legacy_id=149</comment>
   </data>
   <data name="/party(pointing player): form a party" xml:space="preserve">
-    <value>/party(pointing player): form a party</value>
+    <value>/party Name or target: invite (/pt)</value>
     <comment>legacy_id=150</comment>
   </data>
   <data name="/guild(pointing player): form a guild" xml:space="preserve">
-    <value>/guild(pointing player): form a guild</value>
+    <value>/guild (face the master): join guild</value>
     <comment>legacy_id=151</comment>
   </data>
   <data name="/war &lt;guild name&gt;: Declare Guild War" xml:space="preserve">
@@ -628,7 +628,7 @@
     <comment>legacy_id=153</comment>
   </data>
   <data name="/warp &lt;world&gt;: Warp to another world" xml:space="preserve">
-    <value>/warp &lt;world&gt;: Warp to another world</value>
+    <value>/move &lt;map&gt;: Warp to another map</value>
     <comment>legacy_id=154</comment>
   </data>
   <data name="/filter word1 word2: View Chats with word" xml:space="preserve">
@@ -13281,9 +13281,6 @@
   <data name="Checking server availability" xml:space="preserve">
     <value>Checking server availability</value>
   </data>
-  <data name="Connecting to the server" xml:space="preserve">
-    <value>Connecting to the server</value>
-  </data>
   <data name="Logging in" xml:space="preserve">
     <value>Logging in</value>
   </data>
@@ -16928,5 +16925,14 @@
   </data>
   <data name="SoloKalimaFailed" xml:space="preserve">
     <value>Kundun's Lair tier %d failed.</value>
+  </data>
+  <data name="WhisperReplyNobody" xml:space="preserve">
+    <value>Nobody has whispered you yet.</value>
+  </data>
+  <data name="HelpSkynetCommandReply" xml:space="preserve">
+    <value>/r text : Reply to the last whisper</value>
+  </data>
+  <data name="ZenCarryLimitReached" xml:space="preserve">
+    <value>You can't carry more Zen.</value>
   </data>
 </root>

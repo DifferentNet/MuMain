@@ -174,8 +174,9 @@ void mu::ui::window::CChatLogWindow::ProcessAddText(const type_string& strID, co
         SeparateText(strID, strText, MsgType, strText1, strText2);
         if (!strText1.empty())
         {
+            // Only the first row: the rest follows as its own row below, as in the all-messages list.
             const auto pMsgText = new CMessageText;
-            if (!pMsgText->Create(strID, strText, MsgType))
+            if (!pMsgText->Create(strID, strText1, MsgType))
                 delete pMsgText;
             else
             {
@@ -950,15 +951,18 @@ void mu::ui::window::CChatLogWindow::SeparateText(IN const type_string& strID, I
                                                  OUT type_string& strText2)
 {
     g_pRenderText->SetFont(MsgType == TYPE_GM_MESSAGE ? g_hFontBold : g_hFont);
-    int max_first_line_size = CLIENT_WIDTH;
-    if (!strID.empty())
+    // The first row is drawn as one string, "ID : text" (RebuildLineModel()), so it is measured as one: the
+    // sender part measured on its own came out narrower than drawn and the row's end was cut off. The margin
+    // covers the chat window's own font drawing a little wider than this measure.
+    const type_string prefix = strID.empty() ? type_string() : strID + L" : ";
+    const auto firstRowWidth = [&prefix, &strText](std::size_t textLength)
     {
-        const type_string strIDPart = strID + L" : ";
-        max_first_line_size -= g_pRenderText->MeasureText(
-            strIDPart.c_str(), static_cast<int>(strIDPart.length())).cx;
-    }
+        const type_string row = prefix + strText.substr(0, textLength);
+        return static_cast<int>(g_pRenderText->MeasureText(row.c_str(), static_cast<int>(row.length())).cx);
+    };
+    const int max_first_line_size = static_cast<int>(CLIENT_WIDTH) - FIRST_ROW_SAFETY_MARGIN;
 
-    int required_size = g_pRenderText->MeasureText(strText.c_str(), static_cast<int>(strText.length())).cx;
+    int required_size = firstRowWidth(strText.length());
 
     if (required_size <= max_first_line_size)
     {
@@ -979,7 +983,7 @@ void mu::ui::window::CChatLogWindow::SeparateText(IN const type_string& strID, I
             strText2 = strText;
             return;
         }
-        required_size = g_pRenderText->MeasureText(strText.c_str(), iLocToken).cx;
+        required_size = firstRowWidth(static_cast<std::size_t>(iLocToken));
     }
 
     strText1 = strText.substr(0, iLocToken);

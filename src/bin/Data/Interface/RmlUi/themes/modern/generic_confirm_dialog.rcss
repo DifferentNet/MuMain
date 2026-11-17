@@ -334,6 +334,9 @@
 	margin-top: 4dp;
 }
 .gcd-input-row.hidden { display: none; } /* same cascade-tie fix as .gcd-header-rail above */
+/* The zen entries' grouped amount under the field (a .gcd-line, so the same cascade-tie fix). */
+.gcd-zen-preview { margin-top: 2dp; }
+.gcd-zen-preview.hidden { display: none; }
 .gcd-keypad-display {
 	color: token(text-warm);
 	font-weight: bold;

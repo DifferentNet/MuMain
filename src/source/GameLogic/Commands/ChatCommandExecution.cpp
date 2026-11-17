@@ -32,6 +32,13 @@ void ChatCommandCatalog::Execute(const std::wstring& commandLine)
         return;
     }
 
+    // "/r text" whispers back as it does when typed.
+    if (g_pChatInputBox != nullptr && g_pChatInputBox->TrySendReply(commandLine.c_str()))
+    {
+        g_pChatInputBox->AddChatHistory(commandLine);
+        return;
+    }
+
     // One of the client's own commands goes where a typed one goes; the server wouldn't know it.
     const std::wstring command = commandLine.substr(0, commandLine.find(L' '));
     const auto& commands = Catalog().GetCommands();

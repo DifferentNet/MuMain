@@ -608,15 +608,15 @@
     <comment>legacy_id=148</comment>
   </data>
   <data name="/trade(pointing player): trade" xml:space="preserve">
-    <value>/trade(pemain penunjuk): perdagangan</value>
+    <value>/trade Nama atau target: berdagang</value>
     <comment>legacy_id=149</comment>
   </data>
   <data name="/party(pointing player): form a party" xml:space="preserve">
-    <value>/party(pemain penunjuk): membentuk party</value>
+    <value>/party Nama atau target: undang (/pt)</value>
     <comment>legacy_id=150</comment>
   </data>
   <data name="/guild(pointing player): form a guild" xml:space="preserve">
-    <value>/guild(pemain yang menunjuk): membentuk guild</value>
+    <value>/guild (hadap master): gabung guild</value>
     <comment>legacy_id=151</comment>
   </data>
   <data name="/war &lt;guild name&gt;: Declare Guild War" xml:space="preserve">
@@ -628,7 +628,7 @@
     <comment>legacy_id=153</comment>
   </data>
   <data name="/warp &lt;world&gt;: Warp to another world" xml:space="preserve">
-    <value>/ warp &lt;world&gt;: Warp ke dunia lain</value>
+    <value>/move &lt;peta&gt;: pindah ke peta lain</value>
     <comment>legacy_id=154</comment>
   </data>
   <data name="/filter word1 word2: View Chats with word" xml:space="preserve">
@@ -1020,7 +1020,7 @@
     <comment>legacy_id=253</comment>
   </data>
   <data name="Guild254" xml:space="preserve">
-    <value>/ serikat</value>
+    <value>/serikat</value>
     <comment>legacy_id=254</comment>
   </data>
   <data name="You are already in a guild" xml:space="preserve">
@@ -2157,19 +2157,19 @@
     <comment>legacy_id=574</comment>
   </data>
   <data name="Absorb 30%% of damage" xml:space="preserve">
-    <value>Menyerap 30% kerusakan % of</value>
+    <value>Menyerap 30%% kerusakan</value>
     <comment>legacy_id=575</comment>
   </data>
   <data name="Increase 30%% of attacking &amp; Wizardry Dmg" xml:space="preserve">
-    <value>Meningkatkan 30%% of serangan &amp; Dmg Sihir</value>
+    <value>Meningkatkan 30%% kerusakan serangan &amp; sihir</value>
     <comment>legacy_id=576</comment>
   </data>
   <data name="Increase %d%% of Damage" xml:space="preserve">
-    <value>Meningkatkan Kerusakan %d%% of</value>
+    <value>Meningkatkan kerusakan %d%%</value>
     <comment>legacy_id=577</comment>
   </data>
   <data name="Absorb %d%% of Damage" xml:space="preserve">
-    <value>Menyerap Kerusakan %d%% of</value>
+    <value>Menyerap kerusakan %d%%</value>
     <comment>legacy_id=578</comment>
   </data>
   <data name="Increase speed" xml:space="preserve">
@@ -11349,7 +11349,7 @@
     <comment>legacy_id=3324</comment>
   </data>
   <data name="You lack %d points." xml:space="preserve">
-    <value>Anda kekurangan poin %d.</value>
+    <value>Kurang %d poin.</value>
     <comment>legacy_id=3325</comment>
   </data>
   <data name="You can't raise any more levels." xml:space="preserve">
@@ -13974,5 +13974,11 @@
   </data>
   <data name="CommandPlayerNotFound" xml:space="preserve">
     <value>Pemain tidak ditemukan.</value>
+  </data>
+  <data name="WhisperReplyNobody" xml:space="preserve">
+    <value>Belum ada yang berbisik kepadamu.</value>
+  </data>
+  <data name="ZenCarryLimitReached" xml:space="preserve">
+    <value>Kamu tidak bisa membawa Zen lagi.</value>
   </data>
 </root>

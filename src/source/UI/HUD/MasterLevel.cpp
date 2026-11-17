@@ -723,8 +723,8 @@ void mu::ui::window::CMasterLevel::ShowExperienceHint()
     TextList[0][0] = 0;
     TextBold[0] = 0;
     TextListColor[0] = 0;
-    mu_swprintf(TextList[0], L"%I64d / %I64d", Master_Level_Data.lMasterLevel_Experince,
-                Master_Level_Data.lNext_MasterLevel_Experince);
+    mu_swprintf(TextList[0], L"%lld / %lld", static_cast<long long>(Master_Level_Data.lMasterLevel_Experince),
+                static_cast<long long>(Master_Level_Data.lNext_MasterLevel_Experince));
 
     Rml::Element* area = m_RmlView.Document() ? m_RmlView.Document()->GetElementById("experience_area") : nullptr;
     Rml::Vector2f origin;
@@ -976,7 +976,7 @@ bool mu::ui::window::CMasterLevel::CheckSkillPoint(WORD mLevelUpPoint, const _MA
 
     wchar_t Buffer[358] = {};
 
-    mu_swprintf(Buffer, I18N::Game::YouCanTRaiseAnyMoreLevels, skillData.RequiredPoints - mLevelUpPoint);
+    mu_swprintf(Buffer, I18N::Game::YouLackDPoints, skillData.RequiredPoints - mLevelUpPoint);
 
     mu::ui::window::CreateOkMessageBox(Buffer);
 

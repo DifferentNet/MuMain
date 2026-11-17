@@ -9,6 +9,7 @@
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/CustomMessageBox.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
+#include "UI/Inventory/SellConfirmLines.h"
 #include "Engine/Object/ZzzInventory.h"
 #include "UI/Inventory/UIJewelHarmony.h"
 #include "GameLogic/Items/CSItemOption.h"
@@ -638,8 +639,10 @@ bool CInventoryActionController::HandleSellToNPC(CInventoryCtrl* targetControl) 
         cfg.lines = {
             { I18N::Game::AnExpensiveItem, true },
             { I18N::Game::CheckTheItemPlease, true },
-            { I18N::Game::AreYouSureYouWantToSellIt, true },
         };
+        const auto priceLines = UI::Inventory::SellPriceLines(pPickedItem->GetItem());
+        cfg.lines.insert(cfg.lines.end(), priceLines.begin(), priceLines.end());
+        cfg.lines.push_back({ I18N::Game::AreYouSureYouWantToSellIt, true });
         cfg.onPrimary = []
         {
             CPickedItem* pPickedItem = CInventoryCtrl::GetPickedItem();

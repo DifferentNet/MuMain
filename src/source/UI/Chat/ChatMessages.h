@@ -14,7 +14,7 @@ void PostChat(std::wstring_view sender, std::wstring_view text,
 // The player turned incoming whispers off in the chat input.
 bool IsWhisperBlocked();
 // Someone whispered the player: their name joins the whisper-target history (Up/Down in the chat bar's name
-// field), without filling the field.
+// field), without filling the field, and "/r text" answers them.
 void RememberWhisperSender(std::wstring_view sender);
 void ResetLogFilter();
 }

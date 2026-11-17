@@ -608,15 +608,15 @@
     <comment>legacy_id=148</comment>
   </data>
   <data name="/trade(pointing player): trade" xml:space="preserve">
-    <value>/trade (на игрока) : Торговля</value>
+    <value>/trade Ник или цель : Торговля</value>
     <comment>legacy_id=149</comment>
   </data>
   <data name="/party(pointing player): form a party" xml:space="preserve">
-    <value>/party (на игрока) : Позвать в группу</value>
+    <value>/party Ник или цель : В группу (/pt)</value>
     <comment>legacy_id=150</comment>
   </data>
   <data name="/guild(pointing player): form a guild" xml:space="preserve">
-    <value>/guild (на игрока) : Заявка в гильдию</value>
+    <value>/guild (лицом к мастеру) : В гильдию</value>
     <comment>legacy_id=151</comment>
   </data>
   <data name="/war &lt;guild name&gt;: Declare Guild War" xml:space="preserve">
@@ -628,7 +628,7 @@
     <comment>legacy_id=153</comment>
   </data>
   <data name="/warp &lt;world&gt;: Warp to another world" xml:space="preserve">
-    <value>/warp &lt;карта&gt; : Перемещение на карту</value>
+    <value>/move &lt;карта&gt; : Перемещение на карту</value>
     <comment>legacy_id=154</comment>
   </data>
   <data name="/filter word1 word2: View Chats with word" xml:space="preserve">
@@ -2157,19 +2157,19 @@
     <comment>legacy_id=574</comment>
   </data>
   <data name="Absorb 30%% of damage" xml:space="preserve">
-    <value>Поглощает 30%% of урона</value>
+    <value>Поглощает 30%% урона</value>
     <comment>legacy_id=575</comment>
   </data>
   <data name="Increase 30%% of attacking &amp; Wizardry Dmg" xml:space="preserve">
-    <value>Увеличение на 30% % of урона от атак и волшебства.</value>
+    <value>Увеличение урона от атак и волшебства на 30%%</value>
     <comment>legacy_id=576</comment>
   </data>
   <data name="Increase %d%% of Damage" xml:space="preserve">
-    <value>Увеличение урона %d%% of</value>
+    <value>Увеличение урона на %d%%</value>
     <comment>legacy_id=577</comment>
   </data>
   <data name="Absorb %d%% of Damage" xml:space="preserve">
-    <value>Поглощение %d%% of урона</value>
+    <value>Поглощение урона %d%%</value>
     <comment>legacy_id=578</comment>
   </data>
   <data name="Increase speed" xml:space="preserve">
@@ -4369,7 +4369,7 @@
     <comment>legacy_id=1172</comment>
   </data>
   <data name="Increase 150%% attack in Dark Spirit class" xml:space="preserve">
-    <value>Увеличение атаки на 150%% a в классе Темного духа.</value>
+    <value>Увеличение атаки на 150%% в классе Тёмного духа.</value>
     <comment>legacy_id=1173</comment>
   </data>
   <data name="Increase 2 attack scope in Dark Spirit class" xml:space="preserve">
@@ -5349,7 +5349,7 @@
     <comment>legacy_id=1416</comment>
   </data>
   <data name="Damage +20%% increase effect" xml:space="preserve">
-    <value>Урон +20%% inувеличение эффекта</value>
+    <value>Урон +20%% увеличение эффекта</value>
     <comment>legacy_id=1417</comment>
   </data>
   <data name="Duration 60 seconds" xml:space="preserve">
@@ -7401,7 +7401,7 @@
     <comment>legacy_id=2000</comment>
   </data>
   <data name="5%% increase in castle and arena invitation combine rate." xml:space="preserve">
-    <value>5%% inувеличение общей ставки приглашения в замок и на арену.</value>
+    <value>5%% увеличение общей ставки приглашения в замок и на арену.</value>
     <comment>legacy_id=2001</comment>
   </data>
   <data name="Contract is ongoing therefore dual compact is not possible." xml:space="preserve">
@@ -11417,7 +11417,7 @@
     <comment>legacy_id=3324</comment>
   </data>
   <data name="You lack %d points." xml:space="preserve">
-    <value>Вам не хватает баллов %d.</value>
+    <value>Не хватает очков: %d.</value>
     <comment>legacy_id=3325</comment>
   </data>
   <data name="You can't raise any more levels." xml:space="preserve">
@@ -13016,22 +13016,22 @@
     <value>Коронный переключатель %d</value>
   </data>
   <data name="FruitStatIncreased" xml:space="preserve">
-    <value>(фрукты %s) статистика очков %d составила Создавать.</value>
+    <value>(Фрукт: %ls) Добавлено очков: %d.</value>
   </data>
   <data name="FruitStatDecreased" xml:space="preserve">
-    <value>(фрукты %s) статистика очков %d составила Снижаться.</value>
+    <value>(Фрукт: %ls) Снято очков: %d.</value>
   </data>
   <data name="FruitStatCannotIncrease" xml:space="preserve">
-    <value>Эта статистика больше не может быть Создавать.</value>
+    <value>Этот параметр больше нельзя повысить.</value>
   </data>
   <data name="FruitStatCannotDecrease" xml:space="preserve">
-    <value>Эта статистика больше не может быть Снижаться.</value>
+    <value>Этот параметр больше нельзя понизить.</value>
   </data>
   <data name="StatPointsAdded" xml:space="preserve">
-    <value>Создавать</value>
+    <value>Добавлено</value>
   </data>
   <data name="StatPointsRemoved" xml:space="preserve">
-    <value>Снижаться</value>
+    <value>Снято</value>
   </data>
   <data name="QuestCompletedSuccessfully" xml:space="preserve">
     <value>Вы успешно завершили квест.</value>
@@ -16154,7 +16154,7 @@
     <value>Выключено на пресете графики «Низкий».</value>
   </data>
   <data name="SsaoLockedEnhanced" xml:space="preserve">
-    <value>Нужны Enhanced graphics с Enhanced lighting и Bloom and colour grading.</value>
+    <value>Нужны Enhanced graphics с Enhanced lighting и «Свечение и цветокоррекция».</value>
   </data>
   <data name="SsaoAfterRestart" xml:space="preserve">
     <value>Включение заработает после перезапуска.</value>
@@ -16190,7 +16190,7 @@
     <value>Выключено на пресете графики «Низкий».</value>
   </data>
   <data name="HazeLockedEnhanced" xml:space="preserve">
-    <value>Нужны Enhanced graphics с Enhanced lighting и Bloom and colour grading.</value>
+    <value>Нужны Enhanced graphics с Enhanced lighting и «Свечение и цветокоррекция».</value>
   </data>
   <data name="HazeAfterRestart" xml:space="preserve">
     <value>Включение заработает после перезапуска.</value>
@@ -16226,7 +16226,7 @@
     <value>Выключено на пресете графики «Низкий».</value>
   </data>
   <data name="TorchLightsLockedLighting" xml:space="preserve">
-    <value>Нужны Enhanced lighting и Dynamic lights.</value>
+    <value>Нужны Enhanced lighting и «Динамический свет».</value>
   </data>
   <data name="FoliageSmoothingRow" xml:space="preserve">
     <value>Сглаживание листвы и травы</value>
@@ -16590,5 +16590,349 @@
   </data>
   <data name="SoloKalimaFailed" xml:space="preserve">
     <value>Логово Кундуна, тир %d: не пройдено.</value>
+  </data>
+  <data name="Enhanced graphics" xml:space="preserve">
+    <value>Enhanced graphics</value>
+  </data>
+  <data name="Gameplay" xml:space="preserve">
+    <value>Игра</value>
+  </data>
+  <data name="Audio" xml:space="preserve">
+    <value>Звук</value>
+  </data>
+  <data name="Video" xml:space="preserve">
+    <value>Видео</value>
+  </data>
+  <data name="Graphics" xml:space="preserve">
+    <value>Графика</value>
+  </data>
+  <data name="UI" xml:space="preserve">
+    <value>Интерфейс</value>
+  </data>
+  <data name="Display" xml:space="preserve">
+    <value>Экран</value>
+  </data>
+  <data name="Interface" xml:space="preserve">
+    <value>Интерфейс</value>
+  </data>
+  <data name="Quality" xml:space="preserve">
+    <value>Качество</value>
+  </data>
+  <data name="Effects" xml:space="preserve">
+    <value>Эффекты</value>
+  </data>
+  <data name="Shadows" xml:space="preserve">
+    <value>Тени</value>
+  </data>
+  <data name="Enhanced Lighting" xml:space="preserve">
+    <value>Enhanced lighting</value>
+  </data>
+  <data name="Dynamic Lights" xml:space="preserve">
+    <value>Динамический свет</value>
+  </data>
+  <data name="Light Mood" xml:space="preserve">
+    <value>Более тёмный свет карт</value>
+  </data>
+  <data name="Bloom And Colour Grading" xml:space="preserve">
+    <value>Свечение и цветокоррекция</value>
+  </data>
+  <data name="Tuning Directional Light" xml:space="preserve">
+    <value>Направленный свет</value>
+  </data>
+  <data name="Tuning Directional Light Help" xml:space="preserve">
+    <value>Насколько сильно солнце освещает сторону персонажа, монстра или NPC, повёрнутую к нему.</value>
+  </data>
+  <data name="Tuning Rim Intensity" xml:space="preserve">
+    <value>Сила контура</value>
+  </data>
+  <data name="Tuning Rim Intensity Help" xml:space="preserve">
+    <value>Свет по контуру модели, который отделяет её от фона.</value>
+  </data>
+  <data name="Tuning Metallic Shine" xml:space="preserve">
+    <value>Блеск металла</value>
+  </data>
+  <data name="Tuning Metallic Shine Help" xml:space="preserve">
+    <value>Блики на металлических сетах брони, у которых есть блеск.</value>
+  </data>
+  <data name="Tuning Ambient Fill" xml:space="preserve">
+    <value>Рассеянный свет</value>
+  </data>
+  <data name="Tuning Ambient Fill Help" xml:space="preserve">
+    <value>Свет, который получает каждая сторона модели, в том числе отвёрнутая от солнца.</value>
+  </data>
+  <data name="Tuning Minimum Light" xml:space="preserve">
+    <value>Минимальный свет</value>
+  </data>
+  <data name="Tuning Minimum Light Help" xml:space="preserve">
+    <value>Насколько тёмной может стать затенённая сторона модели.</value>
+  </data>
+  <data name="Tuning Highlight Knee" xml:space="preserve">
+    <value>Порог бликов</value>
+  </data>
+  <data name="Tuning Highlight Knee Help" xml:space="preserve">
+    <value>С какой яркости светлые цвета модели плавно уходят в белый, а не становятся сплошь белыми. Меньше — мягче.</value>
+  </data>
+  <data name="Tuning Rim Concentration" xml:space="preserve">
+    <value>Узость контура</value>
+  </data>
+  <data name="Tuning Rim Concentration Help" xml:space="preserve">
+    <value>Насколько узок свет по контуру. Больше — тоньше контур.</value>
+  </data>
+  <data name="Tuning Shine Concentration" xml:space="preserve">
+    <value>Узость блеска</value>
+  </data>
+  <data name="Tuning Shine Concentration Help" xml:space="preserve">
+    <value>Насколько мал блик на металле. Больше — блик меньше и чётче.</value>
+  </data>
+  <data name="Tuning Skill Intensity" xml:space="preserve">
+    <value>Яркость навыков</value>
+  </data>
+  <data name="Tuning Skill Intensity Help" xml:space="preserve">
+    <value>Яркость света, который навыки и эффекты бросают на модели и землю, а не самих спрайтов навыков: 0 убирает только их свет. Свет карт и более тёмный свет карт тоже входят в сумму.</value>
+  </data>
+  <data name="Tuning Skill Radius" xml:space="preserve">
+    <value>Радиус навыков</value>
+  </data>
+  <data name="Tuning Skill Radius Help" xml:space="preserve">
+    <value>Как далеко достаёт свет навыка, во сколько раз больше исходного радиуса. Результат ограничивает «Макс. радиус навыков».</value>
+  </data>
+  <data name="Tuning Skill Fade" xml:space="preserve">
+    <value>Угасание навыков</value>
+  </data>
+  <data name="Tuning Skill Fade Help" xml:space="preserve">
+    <value>За сколько секунд гаснет свет навыка после его окончания. «Сразу» гасит его мгновенно.</value>
+  </data>
+  <data name="Tuning Overlapping Light Cap" xml:space="preserve">
+    <value>Предел наложения света</value>
+  </data>
+  <data name="Tuning Overlapping Light Cap Help" xml:space="preserve">
+    <value>Сколько света в сумме могут дать несколько наложенных навыков. «Без предела» даёт им складываться свободно; свет навыков это не выключает.</value>
+  </data>
+  <data name="Tuning Light Wrap" xml:space="preserve">
+    <value>Огибание светом</value>
+  </data>
+  <data name="Tuning Light Wrap Help" xml:space="preserve">
+    <value>Насколько далеко свет свечи, огня или навыка заходит на бок модели.</value>
+  </data>
+  <data name="Tuning Map Light Smoothing" xml:space="preserve">
+    <value>Плавность света карт</value>
+  </data>
+  <data name="Tuning Map Light Smoothing Help" xml:space="preserve">
+    <value>За сколько секунд мерцающие свечи, огни и свет персонажей плавно меняют яркость. «Сразу» повторяет каждое мерцание.</value>
+  </data>
+  <data name="Tuning Maximum Skill Radius" xml:space="preserve">
+    <value>Макс. радиус навыков</value>
+  </data>
+  <data name="Tuning Maximum Skill Radius Help" xml:space="preserve">
+    <value>Самый большой радиус света навыка после «Радиус навыков», в клетках местности. «Без предела» снимает ограничение; свет навыков это не выключает.</value>
+  </data>
+  <data name="Tuning Mood Strength" xml:space="preserve">
+    <value>Сила тёмного света</value>
+  </data>
+  <data name="Tuning Mood Strength Help" xml:space="preserve">
+    <value>Какая доля более тёмного света каждой карты применяется. 0 % — исходный свет карты, остальной вид Enhanced остаётся. Это же меняет, насколько тёмный свет усиливает свечи, огни и свет навыков.</value>
+  </data>
+  <data name="Tuning Bloom Intensity" xml:space="preserve">
+    <value>Сила свечения</value>
+  </data>
+  <data name="Tuning Bloom Intensity Help" xml:space="preserve">
+    <value>Насколько сильно свечение вокруг ярких эффектов. 0 убирает свечение.</value>
+  </data>
+  <data name="Tuning Bloom Spread" xml:space="preserve">
+    <value>Ширина свечения</value>
+  </data>
+  <data name="Tuning Bloom Spread Help" xml:space="preserve">
+    <value>Как широко расходится свечение вокруг ярких эффектов.</value>
+  </data>
+  <data name="Tuning Colour Grading Strength" xml:space="preserve">
+    <value>Сила цветокоррекции</value>
+  </data>
+  <data name="Tuning Colour Grading Strength Help" xml:space="preserve">
+    <value>Какая доля цветокоррекции карты применяется. 0 % — без неё, свечение остаётся.</value>
+  </data>
+  <data name="Tuning More Settings" xml:space="preserve">
+    <value>Ещё настройки</value>
+  </data>
+  <data name="Tuning Reset" xml:space="preserve">
+    <value>Сбросить</value>
+  </data>
+  <data name="Tuning Reset Group" xml:space="preserve">
+    <value>Сбросить эти настройки</value>
+  </data>
+  <data name="Tuning Reset All" xml:space="preserve">
+    <value>Сбросить всю настройку</value>
+  </data>
+  <data name="Tuning Map Default" xml:space="preserve">
+    <value>По умолчанию</value>
+  </data>
+  <data name="Tuning Custom" xml:space="preserve">
+    <value>Свои</value>
+  </data>
+  <data name="Tuning Not Saved" xml:space="preserve">
+    <value>Не сохранено</value>
+  </data>
+  <data name="Tuning No Cap" xml:space="preserve">
+    <value>Без предела</value>
+  </data>
+  <data name="Tuning Immediate" xml:space="preserve">
+    <value>Сразу</value>
+  </data>
+  <data name="Tuning Seconds Unit" xml:space="preserve">
+    <value>с</value>
+  </data>
+  <data name="Tuning Cells Unit" xml:space="preserve">
+    <value>клет.</value>
+  </data>
+  <data name="Tuning Locked Classic" xml:space="preserve">
+    <value>Включите Enhanced graphics, чтобы менять эти настройки. Ваши значения сохранены.</value>
+  </data>
+  <data name="Tuning Locked Off" xml:space="preserve">
+    <value>Включите эту функцию, чтобы менять эти настройки. Ваши значения сохранены.</value>
+  </data>
+  <data name="Tuning Locked Needs Lighting" xml:space="preserve">
+    <value>Нужно Enhanced lighting. Ваши значения сохранены.</value>
+  </data>
+  <data name="Tuning Locked Unavailable" xml:space="preserve">
+    <value>Недоступно на этой видеокарте.</value>
+  </data>
+  <data name="Tuning Locked Session" xml:space="preserve">
+    <value>Выключено на этот сеанс командой разработчика.</value>
+  </data>
+  <data name="Tuning Locked Session Value" xml:space="preserve">
+    <value>Задано на этот сеанс командой разработчика.</value>
+  </data>
+  <data name="Tuning Save Failed" xml:space="preserve">
+    <value>Не удалось сохранить настройку графики; изменение видно, но не сохранено:</value>
+  </data>
+  <data name="VSync" xml:space="preserve">
+    <value>VSync</value>
+  </data>
+  <data name="FPS Limit" xml:space="preserve">
+    <value>Предел FPS</value>
+  </data>
+  <data name="Disable Effects" xml:space="preserve">
+    <value>Отключить эффекты</value>
+  </data>
+  <data name="Disable Particles" xml:space="preserve">
+    <value>Отключить частицы</value>
+  </data>
+  <data name="Disable Skill Effect Models" xml:space="preserve">
+    <value>Отключить эффекты навыков</value>
+  </data>
+  <data name="Disable Ambient Wildlife" xml:space="preserve">
+    <value>Отключить живность</value>
+  </data>
+  <data name="Disable Wing Shadow" xml:space="preserve">
+    <value>Отключить тень крыльев</value>
+  </data>
+  <data name="Disable Shadows" xml:space="preserve">
+    <value>Отключить тени</value>
+  </data>
+  <data name="Show FPS Counter" xml:space="preserve">
+    <value>Показывать FPS</value>
+  </data>
+  <data name="Show Debug Info" xml:space="preserve">
+    <value>Отладочные данные</value>
+  </data>
+  <data name="UI Theme" xml:space="preserve">
+    <value>Тема интерфейса</value>
+  </data>
+  <data name="UI Scale" xml:space="preserve">
+    <value>Масштаб интерфейса</value>
+  </data>
+  <data name="UI Scale Tooltip" xml:space="preserve">
+    <value>Множитель поверх автоподгонки под размер окна</value>
+  </data>
+  <data name="Legacy" xml:space="preserve">
+    <value>Классическая</value>
+  </data>
+  <data name="Modern" xml:space="preserve">
+    <value>Современная</value>
+  </data>
+  <data name="Uncapped" xml:space="preserve">
+    <value>Без предела</value>
+  </data>
+  <data name="Off" xml:space="preserve">
+    <value>Выкл</value>
+  </data>
+  <data name="Anti-aliasing" xml:space="preserve">
+    <value>Сглаживание</value>
+  </data>
+  <data name="Anti-aliasing Tooltip" xml:space="preserve">
+    <value>Сглаживает края в виде Enhanced; Classic всегда без него</value>
+  </data>
+  <data name="Anisotropic filtering" xml:space="preserve">
+    <value>Анизотропная фильтрация</value>
+  </data>
+  <data name="Anisotropic Filtering Tooltip" xml:space="preserve">
+    <value>Текстуры остаются чёткими под углом: текстуры мира в виде Enhanced, увеличенные текстуры в обоих видах</value>
+  </data>
+  <data name="LoginRememberUsername" xml:space="preserve">
+    <value>Запомнить логин</value>
+    <comment>Login screen: remember-username checkbox label.</comment>
+  </data>
+  <data name="LoginRememberPassword" xml:space="preserve">
+    <value>Запомнить пароль</value>
+    <comment>Login screen: remember-password checkbox label.</comment>
+  </data>
+  <data name="LoginTrustWarning" xml:space="preserve">
+    <value>Сохраняйте пароль только на надёжном ПК.</value>
+    <comment>Login screen: warning under the remember-password checkbox.</comment>
+  </data>
+  <data name="LoginSavePasswordWarningTitle" xml:space="preserve">
+    <value>ВНИМАНИЕ!!!</value>
+    <comment>Remember-password confirmation dialog: header.</comment>
+  </data>
+  <data name="LoginSavePasswordWarningBody" xml:space="preserve">
+    <value>С сохранённым паролем любой за этим компьютером сможет войти в ваш аккаунт. Делайте это только на надёжном ПК. Сохранить пароль?</value>
+    <comment>Remember-password confirmation dialog: body.</comment>
+  </data>
+  <data name="BasicAttackFallback" xml:space="preserve">
+    <value>Обычная атака вместо навыка</value>
+  </data>
+  <data name="Connection lost" xml:space="preserve">
+    <value>Связь потеряна</value>
+  </data>
+  <data name="Checking server availability" xml:space="preserve">
+    <value>Проверка доступности сервера</value>
+  </data>
+  <data name="Logging in" xml:space="preserve">
+    <value>Вход в аккаунт</value>
+  </data>
+  <data name="Loading character list" xml:space="preserve">
+    <value>Загрузка списка персонажей</value>
+  </data>
+  <data name="Entering the game" xml:space="preserve">
+    <value>Вход в игру</value>
+  </data>
+  <data name="Retrying in seconds" xml:space="preserve">
+    <value>Повтор через %d с...</value>
+  </data>
+  <data name="KeepFlightEquipmentInIcarus" xml:space="preserve">
+    <value>В Икаре нельзя снять последние крылья или летающего питомца.</value>
+  </data>
+  <data name="W Coin(C)" xml:space="preserve">
+    <value>W Coin(C)</value>
+  </data>
+  <data name="Goblin Points" xml:space="preserve">
+    <value>Очки гоблинов</value>
+  </data>
+  <data name="Currency" xml:space="preserve">
+    <value>Валюта</value>
+  </data>
+  <data name="Currency: %ls" xml:space="preserve">
+    <value>Валюта: %ls</value>
+  </data>
+  <data name="Other items" xml:space="preserve">
+    <value>Другие предметы</value>
+  </data>
+  <data name="WhisperReplyNobody" xml:space="preserve">
+    <value>Вам ещё никто не шептал.</value>
+  </data>
+  <data name="HelpSkynetCommandReply" xml:space="preserve">
+    <value>/r текст : Ответить на последний шёпот</value>
+  </data>
+  <data name="ZenCarryLimitReached" xml:space="preserve">
+    <value>Больше Дзен вы унести не можете.</value>
   </data>
 </root>

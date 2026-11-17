@@ -123,6 +123,9 @@ namespace mu::ui::window
         static constexpr float SCROLL_TOP_BOTTOM_PART_HEIGHT = 3.0f;
         static constexpr float SCROLL_MIDDLE_PART_HEIGHT = 15.0f;
         static constexpr float CLIENT_WIDTH = WND_WIDTH - SCROLL_BAR_WIDTH * 2.0f - (WND_LEFT_RIGHT_EDGE * 2.0f);
+        // SeparateText(): room kept free at the end of a split first row (the chat window's font draws a
+        // little wider than g_pRenderText measures, most of all on /play).
+        static constexpr int FIRST_ROW_SAFETY_MARGIN = 8;
         typedef std::wstring type_string;
         typedef std::vector<CMessageText*>	type_vector_msgs;
         typedef std::vector<type_string>	type_vector_filters;
