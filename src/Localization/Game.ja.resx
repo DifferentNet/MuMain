@@ -2976,7 +2976,7 @@
     <comment>legacy_id=828</comment>
   </data>
   <data name="You may enter only %d times per day." xml:space="preserve">
-    <value>またはゲーム内告知をご確認下さい</value>
+    <value>1日に%d回まで入場できます。</value>
     <comment>legacy_id=829</comment>
   </data>
   <data name="ISeeThatYouHaveThe" xml:space="preserve">
@@ -3132,7 +3132,7 @@
     <comment>legacy_id=867</comment>
   </data>
   <data name="Entrance is allowed for %d times" xml:space="preserve">
-    <value>クエスト開催時間は、公式サイト</value>
+    <value>入場は%d回まで可能です</value>
     <comment>legacy_id=868</comment>
   </data>
   <data name="%d %s %s Schedule" xml:space="preserve">
@@ -7024,7 +7024,7 @@
     <comment>legacy_id=1926</comment>
   </data>
   <data name="one of the certain weapons to 50%%." xml:space="preserve">
-    <value>一つの耐久度を50%%減少させます。</value>
+    <value>一つの耐久度を50%減少させます。</value>
     <comment>legacy_id=1927</comment>
   </data>
   <data name="Plasma storm skill (Mana:%d)" xml:space="preserve">
@@ -7208,11 +7208,11 @@
     <comment>legacy_id=1982</comment>
   </data>
   <data name="Monster strength decreased 10%%." xml:space="preserve">
-    <value>モンスターの体力が10%%ダウンされました。</value>
+    <value>モンスターの体力が10%ダウンされました。</value>
     <comment>legacy_id=2000</comment>
   </data>
   <data name="5%% increase in castle and arena invitation combine rate." xml:space="preserve">
-    <value>すべてのキャッスル及びクエストの入場アイテムの合成確率が5%%アップされました。</value>
+    <value>すべてのキャッスル及びクエストの入場アイテムの合成確率が5%アップされました。</value>
     <comment>legacy_id=2001</comment>
   </data>
   <data name="Contract is ongoing therefore dual compact is not possible." xml:space="preserve">
@@ -7360,7 +7360,7 @@
     <comment>legacy_id=2053</comment>
   </data>
   <data name="Minimum Wizardry increment 20%%" xml:space="preserve">
-    <value>最小魔力20%%上昇</value>
+    <value>最小魔力20%上昇</value>
     <comment>legacy_id=2054</comment>
   </data>
   <data name="It cannot be applied on another." xml:space="preserve">
@@ -9880,7 +9880,7 @@
     <comment>legacy_id=2920</comment>
   </data>
   <data name="%d sent you a gift." xml:space="preserve">
-    <value>%s さんからのプレゼントです。</value>
+    <value>%d さんからのプレゼントです。</value>
     <comment>legacy_id=2921</comment>
   </data>
   <data name="Use Confirmation" xml:space="preserve">
@@ -10048,7 +10048,7 @@
     <comment>legacy_id=2969</comment>
   </data>
   <data name="Up to %d%% EXP gain increase, depending on the number of members in your party." xml:space="preserve">
-    <value>経験値190%%に増加、パーティー1人毎に＋10%%増加</value>
+    <value>パーティー人数に応じて経験値獲得量が最大%d%%増加します。</value>
     <comment>legacy_id=2970</comment>
   </data>
   <data name="You can acquire Goblin Points by using the MU Item Shop's storage." xml:space="preserve">
@@ -12084,5 +12084,44 @@
   </data>
   <data name="ZenCarryLimitReached" xml:space="preserve">
     <value>これ以上ゼンを持てません。</value>
+  </data>
+  <data name="ChatMacroStored" xml:space="preserve">
+    <value>Alt+%d: %ls</value>
+  </data>
+  <data name="ChatMacroCleared" xml:space="preserve">
+    <value>Alt+%dのマクロを消去しました。</value>
+  </data>
+  <data name="ExpMaxLevelReached" xml:space="preserve">
+    <value>すでに最大レベルに達しています。</value>
+  </data>
+  <data name="ExpMaxMasterLevelReached" xml:space="preserve">
+    <value>すでにマスターレベルの上限に達しています。</value>
+  </data>
+  <data name="ExpMonsterTooWeakForMaster" xml:space="preserve">
+    <value>マスター経験値を得るには、より強いモンスターを倒してください。</value>
+  </data>
+  <data name="SkillCooldownSeconds" xml:space="preserve">
+    <value>クールタイム: %.1f秒</value>
+  </data>
+  <data name="WindowHasNoRoomForItem" xml:space="preserve">
+    <value>ここにはこのアイテムを置く場所がありません。</value>
+  </data>
+  <data name="PartyMemberJoined" xml:space="preserve">
+    <value>%lsがパーティーに参加しました。</value>
+  </data>
+  <data name="PartyMemberLeft" xml:space="preserve">
+    <value>%lsがパーティーから抜けました。</value>
+  </data>
+  <data name="KilledByName" xml:space="preserve">
+    <value>%lsに倒されました</value>
+  </data>
+  <data name="TradeWithNameCompleted" xml:space="preserve">
+    <value>%lsとの取引が完了しました。</value>
+  </data>
+  <data name="HotKeyNothingLeft" xml:space="preserve">
+    <value>%lsがありません。</value>
+  </data>
+  <data name="FriendIsOnline" xml:space="preserve">
+    <value>%lsがオンラインになりました。</value>
   </data>
 </root>

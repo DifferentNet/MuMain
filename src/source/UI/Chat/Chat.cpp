@@ -59,8 +59,9 @@ namespace UI::Chat
 typedef struct
 {
     wchar_t   ID[MAX_MONSTER_NAME + 1];
-    wchar_t      Union[30];
-    wchar_t      Guild[30];
+    // "<alliance> rank" and "[guild] rank": room for the longest translated rank (ru, es) after an 8-letter name.
+    wchar_t      Union[64];
+    wchar_t      Guild[64];
     wchar_t      szShopTitle[16];
     // The battle pass' title line «Hero of Season N»; empty since the titles (GameLogic/Events/Titles.h) show it.
     wchar_t      Title[48];

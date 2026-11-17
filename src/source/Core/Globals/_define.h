@@ -308,6 +308,7 @@ enum struct STORAGE_TYPE
 #define MAX_NAMEFILTERS 500
 
 #define MAX_LETTER_TITLE_LENGTH		60
+#define MAX_LETTER_LIST_TITLE_LENGTH	32	// subject field of the server's AddLetter packet (0xC6)
 #define MAX_LETTER_DATE_LENGTH		10
 #define MAX_LETTER_TIME_LENGTH		8
 

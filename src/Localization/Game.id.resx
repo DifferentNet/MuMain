@@ -1044,7 +1044,7 @@
     <comment>legacy_id=259</comment>
   </data>
   <data name="/warp" xml:space="preserve">
-    <value>/melengkung</value>
+    <value>/warp</value>
     <comment>legacy_id=260</comment>
   </data>
   <data name="You cannot go to Atlans while riding a Unicorn" xml:space="preserve">
@@ -4833,7 +4833,7 @@
     <comment>legacy_id=1299</comment>
   </data>
   <data name="Master" xml:space="preserve">
-    <value>Menguasai</value>
+    <value>Master</value>
     <comment>legacy_id=1300,1745</comment>
   </data>
   <data name="Assist. M." xml:space="preserve">
@@ -7145,7 +7145,7 @@
     <comment>legacy_id=1926</comment>
   </data>
   <data name="one of the certain weapons to 50%%." xml:space="preserve">
-    <value>salah satu senjata tertentu hingga 50%%.</value>
+    <value>salah satu senjata tertentu hingga 50%.</value>
     <comment>legacy_id=1927</comment>
   </data>
   <data name="Plasma storm skill (Mana:%d)" xml:space="preserve">
@@ -7329,11 +7329,11 @@
     <comment>legacy_id=1982</comment>
   </data>
   <data name="Monster strength decreased 10%%." xml:space="preserve">
-    <value>Kekuatan monster menurun 10%%.</value>
+    <value>Kekuatan monster menurun 10%.</value>
     <comment>legacy_id=2000</comment>
   </data>
   <data name="5%% increase in castle and arena invitation combine rate." xml:space="preserve">
-    <value>5%% ipeningkatan tingkat penggabungan undangan kastil dan arena.</value>
+    <value>5% peningkatan tingkat penggabungan undangan kastil dan arena.</value>
     <comment>legacy_id=2001</comment>
   </data>
   <data name="Contract is ongoing therefore dual compact is not possible." xml:space="preserve">
@@ -7481,7 +7481,7 @@
     <comment>legacy_id=2053</comment>
   </data>
   <data name="Minimum Wizardry increment 20%%" xml:space="preserve">
-    <value>Peningkatan Sihir Minimum 20%%</value>
+    <value>Peningkatan Sihir Minimum 20%</value>
     <comment>legacy_id=2054</comment>
   </data>
   <data name="It cannot be applied on another." xml:space="preserve">
@@ -8289,7 +8289,7 @@
     <comment>legacy_id=2300</comment>
   </data>
   <data name="Second" xml:space="preserve">
-    <value>Kedua</value>
+    <value>detik</value>
     <comment>legacy_id=2301</comment>
   </data>
   <data name="Available" xml:space="preserve">
@@ -9433,7 +9433,7 @@
     <comment>legacy_id=2685</comment>
   </data>
   <data name="Vulcanus" xml:space="preserve">
-    <value>gunung berapi</value>
+    <value>Vulcanus</value>
     <comment>legacy_id=2686</comment>
   </data>
   <data name="%s is now invited to duel." xml:space="preserve">
@@ -14005,5 +14005,44 @@
   </data>
   <data name="ZenCarryLimitReached" xml:space="preserve">
     <value>Kamu tidak bisa membawa Zen lagi.</value>
+  </data>
+  <data name="ChatMacroStored" xml:space="preserve">
+    <value>Alt+%d: %ls</value>
+  </data>
+  <data name="ChatMacroCleared" xml:space="preserve">
+    <value>Makro Alt+%d dihapus.</value>
+  </data>
+  <data name="ExpMaxLevelReached" xml:space="preserve">
+    <value>Kamu sudah mencapai level maksimum.</value>
+  </data>
+  <data name="ExpMaxMasterLevelReached" xml:space="preserve">
+    <value>Kamu sudah mencapai level master maksimum.</value>
+  </data>
+  <data name="ExpMonsterTooWeakForMaster" xml:space="preserve">
+    <value>Bunuh monster yang lebih kuat untuk mendapat EXP master.</value>
+  </data>
+  <data name="SkillCooldownSeconds" xml:space="preserve">
+    <value>Jeda: %.1f dtk</value>
+  </data>
+  <data name="WindowHasNoRoomForItem" xml:space="preserve">
+    <value>Tidak ada tempat untuk item ini di sini.</value>
+  </data>
+  <data name="PartyMemberJoined" xml:space="preserve">
+    <value>%ls bergabung ke party.</value>
+  </data>
+  <data name="PartyMemberLeft" xml:space="preserve">
+    <value>%ls keluar dari party.</value>
+  </data>
+  <data name="KilledByName" xml:space="preserve">
+    <value>Dibunuh oleh %ls</value>
+  </data>
+  <data name="TradeWithNameCompleted" xml:space="preserve">
+    <value>Perdagangan dengan %ls selesai.</value>
+  </data>
+  <data name="HotKeyNothingLeft" xml:space="preserve">
+    <value>%ls habis.</value>
+  </data>
+  <data name="FriendIsOnline" xml:space="preserve">
+    <value>%ls sedang online.</value>
   </data>
 </root>

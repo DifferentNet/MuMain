@@ -181,6 +181,9 @@ static void InitializeMainScene()
 
     g_pChatListBox->ClearAll();
     g_pSystemLogBox->ClearAll();
+    // Whispers belong to the character that got them: /r and the whisper names never carry over to the next one.
+    g_pChatInputBox->SetLastWhisperSender({});
+    g_pChatInputBox->RemoveAllWhsprIDHIstory();
 
     g_pSlideHelpMgr->Init();
     g_pUIMapName->Init();

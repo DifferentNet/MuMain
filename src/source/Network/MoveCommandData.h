@@ -46,6 +46,11 @@ namespace SEASON3B
         const MOVEINFODATA* GetMoveCommandDataByIndex(int iIndex);
         const std::list<MOVEINFODATA*>& GetMoveCommandDatalist();
 
+        // The map names of movereq_*.bmd are English whatever the UI language, so a rule for one map checks the English
+        // name (any case) as well as the localized one. With `prefix`, the name only has to start with it.
+        static bool IsMapNamed(const wchar_t* mapName, const wchar_t* localizedName, const wchar_t* englishName,
+                               bool prefix = false);
+
     protected:
         bool Create(const std::wstring& filename);
         void Release();

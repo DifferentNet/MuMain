@@ -593,7 +593,8 @@ bool CTrade::ProcessMyInvenItemAutoMove(CInventoryCtrl* sourceCtrl)
     if (sourceCtrl == nullptr || sourceCtrl->GetStorageType() != STORAGE_TYPE::INVENTORY)
         return false;
 
-    const bool moved = UI::Items::Placement::AutoMoveItemAtCursor(
+    using UI::Items::Placement::AutoMoveResult;
+    const AutoMoveResult result = UI::Items::Placement::AutoMoveItemAtCursor(
         sourceCtrl, STORAGE_TYPE::INVENTORY, m_pMyInvenCtrl, STORAGE_TYPE::TRADE,
         [](ITEM* item)
         {
@@ -602,17 +603,40 @@ bool CTrade::ProcessMyInvenItemAutoMove(CInventoryCtrl* sourceCtrl)
             g_pSystemLogBox->AddText(I18N::Game::TheseItemsCannotBeTraded, mu::ui::window::TYPE_ERROR_MESSAGE);
             return false;
         });
-    if (moved)
-        UncheckMyConfirm();
-    return moved;
+    if (result == AutoMoveResult::NoRoom)
+        g_pSystemLogBox->AddText(I18N::Game::WindowHasNoRoomForItem, mu::ui::window::TYPE_ERROR_MESSAGE);
+    if (result != AutoMoveResult::Moved)
+        return false;
+    UncheckMyConfirm();
+    return true;
+}
+
+// MU Moldova: page 1 first, then bag page 2's grids, like the chaos machine (BagPages.h).
+bool CTrade::MoveMyTradeItemToBag()
+{
+    if (g_pMyInventory == nullptr)
+        return false;
+    using UI::Items::Placement::AutoMoveResult;
+    AutoMoveResult result = AutoMoveResult::NothingToMove;
+    for (int g = 0; g < CMyInventory::OwnedBagGridCount; ++g)
+    {
+        CInventoryCtrl* grid = g_pMyInventory->OwnedBagGrid(g);
+        if (grid == nullptr)
+            continue;
+        result = UI::Items::Placement::AutoMoveItemAtCursor(m_pMyInvenCtrl, STORAGE_TYPE::TRADE, grid,
+                                                            STORAGE_TYPE::INVENTORY, [](ITEM*) { return true; });
+        if (result == AutoMoveResult::Moved)
+            return true;
+    }
+    // The last owned grid had no room either: every page is full.
+    if (result == AutoMoveResult::NoRoom)
+        g_pSystemLogBox->AddText(I18N::Game::InventoryIsFull, mu::ui::window::TYPE_ERROR_MESSAGE);
+    return false;
 }
 
 bool CTrade::ProcessMyTradeItemAutoMoveToInventory()
 {
-    CInventoryCtrl* inventory = g_pMyInventory != nullptr ? g_pMyInventory->GetInventoryCtrl() : nullptr;
-    const bool moved = UI::Items::Placement::AutoMoveItemAtCursor(m_pMyInvenCtrl, STORAGE_TYPE::TRADE, inventory,
-                                                                  STORAGE_TYPE::INVENTORY, [](ITEM*) { return true; });
-    if (!moved)
+    if (!MoveMyTradeItemToBag())
         return false;
 
     // Taking an item out after confirming warns the player, and the confirm
@@ -935,6 +959,15 @@ void CTrade::ProcessToReceiveTradeExit(UI::Trade::CloseReason reason)
         break;
 
     case UI::Trade::CloseReason::Completed:
+        if (m_szYourID[0] != L'\0')
+        {
+            wchar_t line[128];
+            mu_swprintf(line, I18N::Game::TradeWithNameCompleted, m_szYourID);
+            g_pSystemLogBox->AddText(line, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+        }
+        break;
+
+    case UI::Trade::CloseReason::Other:
         break;
     }
 

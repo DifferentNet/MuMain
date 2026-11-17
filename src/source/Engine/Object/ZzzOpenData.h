@@ -30,8 +30,10 @@ void SaveOptionsIfChangedEvery(std::uint32_t intervalMs);
 void MarkOptionsSaved();
 // No layout from the server yet (entering the world): send nothing until it arrives.
 void ForgetSavedOptions();
-void SaveMacro(const wchar_t* FileName);
-void OpenMacro(const wchar_t* FileName);
+// Writes one chat macro (MacroText[slot], 0..9 = Alt+1..Alt+0) into config.ini at once.
+void SaveMacro(int slot);
+// Reads the chat macros from config.ini; the first time, config.ini takes them from the old macro file.
+void LoadMacros(const wchar_t* legacyFileName);
 
 extern wchar_t AbuseFilter[][20];
 extern wchar_t AbuseNameFilter[][20];
