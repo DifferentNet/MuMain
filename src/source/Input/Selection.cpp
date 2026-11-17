@@ -62,7 +62,7 @@ namespace Input::Selection
 {
 int SelectItem()
 {
-    for (int i = 0; i < MAX_ITEMS; i++)
+    for (const int i : GroundItemCandidates())
     {
         OBJECT* o = &Items[i].Object;
         if (o->Live && o->Visible)
@@ -73,7 +73,7 @@ int SelectItem()
     }
     float Luminosity = 1.5f;
 
-    for (int i = 0; i < MAX_ITEMS; i++)
+    for (const int i : GroundItemCandidates())
     {
         OBJECT* o = &Items[i].Object;
         if (o->Live && o->Visible)
@@ -97,7 +97,7 @@ int SelectCharacter(BYTE Kind)
     if (SceneFlag == CHARACTER_SCENE)
         Main = false;
 
-    for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
+    for (int i = 0; i < CharacterSlotEnd(); i++)
     {
         CHARACTER* c = &CharactersClient[i];
         OBJECT* o = &c->Object;
@@ -122,7 +122,7 @@ int SelectCharacter(BYTE Kind)
     Vector(0.8f, 0.8f, 0.8f, Light);
     int iSelected = -1;
     float fNearestDist = 1000000000000.0f;
-    for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
+    for (int i = 0; i < CharacterSlotEnd(); i++)
     {
         CHARACTER* c = &CharactersClient[i];
         OBJECT* o = &c->Object;

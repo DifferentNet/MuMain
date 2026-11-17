@@ -98,9 +98,10 @@ TEST_CASE("help chat page: heading, the sixteen chat rows, then MU Skynet's comm
 {
     const auto lines = UI::Help::BuildPage(1, {});
 
-    // Spacer, heading, spacer, 16 chat rows, then spacer, commands heading, 11 command rows, spacer,
-    // the F1 hint, spacer.
-    REQUIRE(lines.size() == 35);
+    // Spacer, heading, spacer, 16 chat rows, then spacer, commands heading, 12 command rows, spacer,
+    // the F1 hint, spacer: still shorter than the key page, so the hint stays where it was.
+    REQUIRE(lines.size() == 36);
+    CHECK(lines.size() <= UI::Help::BuildPage(0, {}).size());
     CHECK(lines[1].heading);
     CHECK(lines[1].text == I18N::Game::ChattingInstructions);
     CHECK(CountHeadings(lines) == 2);
@@ -111,8 +112,9 @@ TEST_CASE("help chat page: heading, the sixteen chat rows, then MU Skynet's comm
     CHECK(lines[20].text == I18N::Game::HelpSkynetCommandsHeading);
     CHECK(lines[21].text == I18N::Game::HelpSkynetCommandList);
     CHECK(lines[31].text == I18N::Game::HelpSkynetCommandStuck);
-    CHECK(lines[33].hint);
-    CHECK(lines[33].text == I18N::Game::HelpCloseHint);
+    CHECK(lines[32].text == I18N::Game::HelpSkynetCommandReply);
+    CHECK(lines[34].hint);
+    CHECK(lines[34].text == I18N::Game::HelpCloseHint);
     CHECK(lines.back().halfSpacer);
     CHECK(lines.back().text.empty());
 }
@@ -153,8 +155,8 @@ TEST_CASE("help commands page: MU Skynet's commands after the chat page, the las
 {
     const auto lines = UI::Help::BuildPage(2, kTouch);
 
-    // Spacer, heading, spacer, 11 command rows, spacer, the tap hint, spacer.
-    REQUIRE(lines.size() == 17);
+    // Spacer, heading, spacer, 12 command rows, spacer, the tap hint, spacer.
+    REQUIRE(lines.size() == 18);
     CHECK(lines[1].heading);
     CHECK(lines[1].text == I18N::Game::HelpSkynetCommandsHeading);
     CHECK(lines[2].halfSpacer);
@@ -162,6 +164,7 @@ TEST_CASE("help commands page: MU Skynet's commands after the chat page, the las
     CHECK(CountHints(lines) == 1);
     CHECK(lines[3].text == I18N::Game::HelpSkynetCommandList);
     CHECK(lines[13].text == I18N::Game::HelpSkynetCommandStuck);
+    CHECK(lines[14].text == I18N::Game::HelpSkynetCommandReply);
     CHECK(Hint(lines).text == I18N::Game::TouchHelpCloseHint);
     CHECK(lines.back().halfSpacer);
 

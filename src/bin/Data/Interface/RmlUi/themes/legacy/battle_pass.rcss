@@ -352,12 +352,13 @@
 	.bp-q { margin-bottom: calc(4px * var(--root-scale)); padding: calc(4px * var(--root-scale)); }
 	.bp-q-bar, .bp-day-bar { height: calc(18px * var(--root-scale)); }
 	.bp-q-progress, .bp-day-count { line-height: calc(16px * var(--root-scale)); }
-	.bp-q-reroll { width: calc(70px * var(--root-scale)); height: calc(32px * var(--root-scale)); }
-	.bp-day-chests, .bp-chest { height: calc(26px * var(--root-scale)); }
-	.bp-chest { min-width: calc(32px * var(--root-scale)); }
-	.bp-day-chests .bp-chest { width: calc(32px * var(--root-scale)); margin-left: calc(-16px * var(--root-scale)); }
-	.bp-chest-label { line-height: calc(24px * var(--root-scale)); }
-	.bp-day { padding: 0 calc(16px * var(--root-scale)); }
+	.bp-q-reroll { width: calc(70px * var(--root-scale)); height: calc(38px * var(--root-scale)); }
+	/* Chests a finger can take: 40 x 36, the day's row keeping room for half a chest at either end. */
+	.bp-day-chests, .bp-chest { height: calc(36px * var(--root-scale)); }
+	.bp-chest { min-width: calc(40px * var(--root-scale)); }
+	.bp-day-chests .bp-chest { width: calc(40px * var(--root-scale)); margin-left: calc(-20px * var(--root-scale)); }
+	.bp-chest-label { line-height: calc(34px * var(--root-scale)); }
+	.bp-day { padding: 0 calc(20px * var(--root-scale)); }
 	#bp_take { height: calc(38px * var(--root-scale)); }
 
 	#bp_claim { left: 122px; top: 390px; width: 180px; height: 34px; decorator: image(bp-btn-big-up); }

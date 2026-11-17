@@ -69,6 +69,8 @@
 						     is an application rule, enforced in C++ (DigitOnlyInputFilter). -->
 						<input id="gcd_input" type="text" class="text-field gcd-input-field"
 						       data-value="input_value" data-class-hidden="input_is_keypad"/>
+						<!-- The typed amount grouped by thousands, for the zen entries (InputField::zenPreview). -->
+						<div class="gcd-line gcd-zen-preview" data-class-hidden="!has_zen_preview">{{zen_preview}}</div>
 					</div>
 					<div class="gcd-progress-track" data-class-hidden="!has_progress">
 						<div class="gcd-progress-fill" data-style-width="progress_fraction * 100 + '%'"></div>

@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include <execution>
+#include <functional>
 #include <algorithm>
 #include <cassert>
 #include <cstring>
@@ -6465,16 +6466,41 @@ namespace
         TerrainWall[index] |= TW_CHARACTER;
         s_characterWallCells[s_characterWallCount++] = index;
     }
+
+    // All slots until the first frame recomputes it.
+    int s_characterSlotEnd = MAX_CHARACTERS_CLIENT;
+
+    void RaiseCharacterSlotEnd(const CHARACTER* c)
+    {
+        if (CharactersClient == nullptr)
+            return;
+        const std::less<const CHARACTER*> before;
+        if (before(c, CharactersClient) || !before(c, CharactersClient + MAX_CHARACTERS_CLIENT))
+            return;
+        const int index = static_cast<int>(c - CharactersClient);
+        s_characterSlotEnd = std::max(s_characterSlotEnd, index + 1);
+    }
+}
+
+int CharacterSlotEnd()
+{
+    return s_characterSlotEnd;
 }
 
 void MoveCharactersClient()
 {
     ClearCharacterWallMarks();
 
+    // Every slot still gets its Visible here, the free ones too, as before.
+    int slotEnd = 0;
     for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
     {
         CHARACTER* tc = &CharactersClient[i];
         OBJECT* to = &tc->Object;
+        if (to->Live)
+        {
+            slotEnd = i + 1;
+        }
         if (to->Live && tc->Dead == 0 && to->Kind != KIND_TRAP)
         {
             MarkCharacterWall(TERRAIN_INDEX_REPEAT((tc->PositionX), (tc->PositionY)));
@@ -6482,8 +6508,10 @@ void MoveCharactersClient()
 
         to->Visible = TestFrustrum2D(to->Position[0] * 0.01f, to->Position[1] * 0.01f, -20.f);
     }
+    s_characterSlotEnd = slotEnd;
 
-    for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
+    // MoveCharacterClient skips free slots; a character created during a move raises the end.
+    for (int i = 0; i < CharacterSlotEnd(); i++)
     {
         MoveCharacterClient(&CharactersClient[i]);
     }
@@ -11928,6 +11956,7 @@ void CreateCharacterPointer(CHARACTER* c, int Type, unsigned char PositionX, uns
     c->Path.CurrentPath = 0;
     c->Movement = false;
     o->Live = true;
+    RaiseCharacterSlotEnd(c);
     o->Visible = false;
     o->AlphaEnable = true;
     o->LightEnable = true;

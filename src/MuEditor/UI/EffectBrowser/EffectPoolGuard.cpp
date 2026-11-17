@@ -3,6 +3,7 @@
 #ifdef _EDITOR
 
 #include "EffectPoolGuard.h"
+#include "Render/Effects/ZzzEffect.h"
 
 #include <cstddef>
 
@@ -28,12 +29,15 @@ EffectPoolGuard::~EffectPoolGuard()
             break;
         case EffectPool::Sprite:
             m_pools.sprites[index].Live = false;
+            NoteSpriteFreed(slot.index);
             break;
         case EffectPool::Particle:
             m_pools.particles[index].Live = false;
+            NoteParticleFreed(slot.index);
             break;
         case EffectPool::Joint:
             m_pools.joints[index].Live = false;
+            NoteJointFreed(slot.index);
             break;
         }
     }

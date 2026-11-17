@@ -229,6 +229,9 @@
 /* .gcd-input-row sets its own `display`, so an earlier same-specificity `.hidden { display: none;
    }` (base.rcss) loses the cascade tie without this later, more specific override. */
 .gcd-input-row.hidden { display: none; }
+/* The zen entries' grouped amount under the field (a .gcd-line, so the same cascade-tie fix). */
+.gcd-zen-preview { margin-top: 2dp; }
+.gcd-zen-preview.hidden { display: none; }
 .gcd-keypad-display {
 	color: token(text-prompt);
 	font-weight: bold;

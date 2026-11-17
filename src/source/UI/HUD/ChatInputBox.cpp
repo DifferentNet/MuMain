@@ -1,5 +1,7 @@
 ﻿#include "stdafx.h"
 #include "UI/Chat/ChatInput.h"
+#include "UI/Chat/ChatMessages.h"
+#include "UI/Chat/PartyInviteCommand.h"
 #include "UI/HUD/ChatInputBox.h"
 #include "Core/Input/SyntheticInput.h"
 #include "I18N/All.h"
@@ -162,6 +164,11 @@ void mu::ui::window::CChatInputBox::RemoveAllWhsprIDHIstory()
     m_vecWhsprIDHistory.clear();
 }
 
+void mu::ui::window::CChatInputBox::SetLastWhisperSender(const type_string& sender)
+{
+    m_lastWhisperSender = sender;
+}
+
 bool mu::ui::window::CChatInputBox::IsBlockWhisper()
 {
     return m_bBlockWhisper;
@@ -225,7 +232,12 @@ void mu::ui::window::CChatInputBox::SendChatLine()
     }
     wstrText.append(szChatText);
 
-    if (wcslen(szChatText) != 0)
+    // "/r text" goes back to the last player who whispered, before any other command.
+    if (wcslen(szChatText) != 0 && TrySendReply(szChatText))
+    {
+        AddChatHistory(szChatText);
+    }
+    else if (wcslen(szChatText) != 0)
     {
         // Typed commands (/trade, /party, ...) go to the history too, so Up repeats them.
         const std::wstring typedLine = szChatText;
@@ -282,6 +294,34 @@ void mu::ui::window::CChatInputBox::SendChatLine()
     SaveIMEStatus();
 
     g_pNewUISystem->Hide(mu::ui::window::INTERFACE_CHATINPUTBOX);
+}
+
+bool mu::ui::window::CChatInputBox::TrySendReply(const wchar_t* chatText)
+{
+    const auto replyText = UI::Chat::ReplyCommandArgument(chatText);
+    if (!replyText)
+    {
+        return false;
+    }
+
+    if (m_lastWhisperSender.empty())
+    {
+        UI::Chat::PostSystem(I18N::Game::WhisperReplyNobody, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+        return true;
+    }
+
+    if (replyText->empty())
+    {
+        return true;
+    }
+
+    // Copied: the history below may hold the same name, and the whisper text must end in a zero.
+    const type_string sender = m_lastWhisperSender;
+    const type_string text(*replyText);
+    SocketClient->ToGameServer()->SendWhisperMessage(MU_C16(sender.c_str()), MU_C16(text.c_str()));
+    EchoSentWhisper(sender.c_str(), text.c_str());
+    AddWhsprIDHistory(sender);
+    return true;
 }
 
 bool mu::ui::window::CChatInputBox::UpdateKeyEvent()
@@ -599,6 +639,15 @@ void mu::ui::window::CChatInputBox::OnRmlReloaded()
 void mu::ui::window::CChatInputBox::BuildRmlUi()
 {
     m_RmlView.Ensure();
+}
+
+// The party, guild and gens prefix (~ @ $) is added on top when the line is sent, as before.
+void mu::ui::window::CChatInputBox::ApplyFieldLimits()
+{
+    if (Rml::Element* field = GetField("chat_field"))
+        field->SetAttribute("maxlength", static_cast<int>(MAX_CHAT_SIZE));
+    if (Rml::Element* field = GetField("whisper_field"))
+        field->SetAttribute("maxlength", static_cast<int>(MAX_USERNAME_SIZE));
 }
 
 void mu::ui::window::CChatInputBox::SyncRmlModel()

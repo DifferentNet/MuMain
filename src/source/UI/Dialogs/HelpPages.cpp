@@ -62,7 +62,7 @@ void AddSkynetCommandRows(std::vector<UI::Help::PageLine>& lines)
         I18N::Game::HelpSkynetCommandCp,         I18N::Game::HelpSkynetCommandEvents,
         I18N::Game::HelpSkynetCommandPass,       I18N::Game::HelpSkynetCommandPvp,
         I18N::Game::HelpSkynetCommandDuels,      I18N::Game::HelpSkynetCommandTier,
-        I18N::Game::HelpSkynetCommandStuck,
+        I18N::Game::HelpSkynetCommandStuck,      I18N::Game::HelpSkynetCommandReply,
     };
     for (const wchar_t* line : commandLines)
         AddText(lines, line);

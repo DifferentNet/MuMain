@@ -55,4 +55,9 @@ std::optional<std::wstring_view> PartyCommandArgument(std::wstring_view text, st
 {
     return CommandArgument(text, { L"/party", L"/pt" }, localizedCommand);
 }
+
+std::optional<std::wstring_view> ReplyCommandArgument(std::wstring_view text)
+{
+    return CommandArgument(text, { L"/r", L"/reply" }, {});
+}
 } // namespace UI::Chat

@@ -83,6 +83,9 @@ namespace mu::ui::window
             bool masked = false;       // password-style masking (Text mode only -- NumericKeypad
                                        // is unconditionally masked)
             bool numericOnly = false;  // Text mode only; NumericKeypad is always digits-only
+            // Text mode only: a line under the field shows the typed amount grouped by thousands
+            // with "Zen" after it, updated as the player types (the vault and trade zen entries).
+            bool zenPreview = false;
             std::wstring initialText;
         };
         std::optional<InputField> input;
@@ -240,6 +243,9 @@ namespace mu::ui::window
             // Show() by ApplyInputFieldConfig(), and numeric-only filtering is applied in C++ on
             // change (no RmlUi equivalent for it, and it is an application rule).
             Rml::String inputValue;
+            // InputField::zenPreview's line: shown or not, and its text.
+            bool hasZenPreview = false;
+            Rml::String zenPreview;
             // Individually-bound, not a data-for loop over an array -- click handlers need each
             // row's own index (`gcd_keypad_click(i)`), so 10 fixed slots are bound instead.
             int keypadDigit0 = 0, keypadDigit1 = 0, keypadDigit2 = 0, keypadDigit3 = 0, keypadDigit4 = 0;
@@ -268,6 +274,7 @@ namespace mu::ui::window
             bool hasTallPanel = false;
         };
         void BindRmlModel(Rml::DataModelConstructor& c, GenericDialogRmlModel& model);
+        void SyncZenPreview(GenericDialogRmlModel& model, bool inputIsKeypad);
         UI::RmlBridge::ThemedView<GenericDialogRmlModel> m_RmlView{"generic_confirm_dialog",
             [this](Rml::DataModelConstructor& c, GenericDialogRmlModel& model) { BindRmlModel(c, model); },
             {{"Data/Interface/RmlUi/generic_confirm_dialog.rml"}},

@@ -69,6 +69,10 @@ selected player wherever they stand, else the one standing face to face (the ser
 each other). When nobody fits, the chat says so. `/guild` and `/duelstart` still need the player next to you
 and now also say so in the chat when nobody fits.
 
+`/r text` (or `/reply text`) whispers the text back to the last player who whispered you, whatever the name
+box holds; the line shows as your own whisper and joins the history like one. Before anyone has whispered
+you, the chat says so. Only the whole word counts, so `/reset` or `/rift` are not replies.
+
 ## Favourites and templates
 
 Both are stored per installation in `config.ini`, not per character - the

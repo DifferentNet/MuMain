@@ -1,4 +1,5 @@
 #pragma once
+#include <span>
 #include "UI/Inventory/ItemMng.h"
 #include "Render/Items/ItemEffects.h"
 
@@ -85,6 +86,10 @@ void RenderPartObjectEdge2(BMD* b, OBJECT* o, int Flag, bool Translate, float Sc
 
 void RenderPartObjectEdgeLight(BMD* b, OBJECT* o, int Flag, bool Translate, float Scale);
 
+// Ascending Items[] indices of the drops that may be live: a superset of the live ones, so callers still check
+// Live. MoveItems rebuilds it every frame from a full scan and CreateItemDrop/CreateMoneyDrop add a new drop at
+// once, so a loop over it visits the same live items in the same order as a loop over all of Items[].
+std::span<const int> GroundItemCandidates();
 void RenderItems();
 void MoveItems();
 int SelectItem();

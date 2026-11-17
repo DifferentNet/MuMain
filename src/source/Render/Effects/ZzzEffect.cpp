@@ -194,12 +194,13 @@ bool DeleteParticle(int iType)
         return false;
     }
 
-    for (int i = 0; i < MAX_PARTICLES; ++i)
+    for (int i = 0; i < ParticleSlotEnd(); ++i)
     {
         PARTICLE* o = &Particles[i];
         if (o->Live && o->Type == iType)
         {
             o->Live = false;
+            NoteParticleFreed(i);
             o->Target = NULL;
             return true;
         }

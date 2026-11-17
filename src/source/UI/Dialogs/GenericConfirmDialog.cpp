@@ -8,10 +8,12 @@
 #include "Core/Globals/_enum.h"
 #include "Core/Utilities/StringUtils.h"
 #include "Engine/Object/ZzzInventory.h" // RenderItem3D
+#include "I18N/All.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/Core/WindowCommon.h"
 #include "UI/Core/WindowManager.h"
 #include "UI/Core/WindowSystem.h"
+#include "UI/Inventory/ZenAmount.h"
 #include "UI/RmlBridge/RmlColor.h"
 #include "UI/RmlBridge/RmlDialogCanvas.h"
 #include "UI/RmlBridge/RmlDraggable.h"
@@ -19,6 +21,7 @@
 #include "UI/RmlBridge/RmlNumericInputFilter.h"
 #include "UI/RmlBridge/RmlTheme.h"
 #include "UI/Scaling/UITransform.h"
+#include "UI/Text/GroupedNumberText.h"
 
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/ComputedValues.h>
@@ -70,6 +73,8 @@ void CGenericConfirmDialog::BindRmlModel(Rml::DataModelConstructor& c, GenericDi
     c.Bind("input_is_keypad", &model.inputIsKeypad);
     c.Bind("input_text", &model.inputText);
     c.Bind("input_value", &model.inputValue);
+    c.Bind("has_zen_preview", &model.hasZenPreview);
+    c.Bind("zen_preview", &model.zenPreview);
     c.Bind("keypad_digit_0", &model.keypadDigit0);
     c.Bind("keypad_digit_1", &model.keypadDigit1);
     c.Bind("keypad_digit_2", &model.keypadDigit2);
@@ -514,6 +519,28 @@ std::wstring CGenericConfirmDialog::GetInputText() const
     return StringUtils::NarrowToWide(m_Active.input->numericOnly ? UI::RmlBridge::KeepDigitsOnly(value) : value);
 }
 
+void CGenericConfirmDialog::SyncZenPreview(GenericDialogRmlModel& model, bool inputIsKeypad)
+{
+    const bool hasZenPreview = model.hasInput && !inputIsKeypad && m_Active.input->zenPreview;
+    if (model.hasZenPreview != hasZenPreview)
+    {
+        model.hasZenPreview = hasZenPreview;
+        m_RmlView.MarkDirty("has_zen_preview");
+    }
+    if (!hasZenPreview)
+    {
+        return;
+    }
+    const auto typed = static_cast<std::int64_t>(UI::Inventory::ZenAmount::Parse(GetInputText()));
+    const std::wstring preview = UI::Text::GroupThousands(typed) + L" " + I18N::Game::Zen;
+    const Rml::String zenPreview = StringUtils::WideToNarrow(preview.c_str());
+    if (model.zenPreview != zenPreview)
+    {
+        model.zenPreview = zenPreview;
+        m_RmlView.MarkDirty("zen_preview");
+    }
+}
+
 void CGenericConfirmDialog::SyncCanvasTop()
 {
     auto& model = m_RmlView.GetModel();
@@ -638,6 +665,7 @@ void CGenericConfirmDialog::SyncRmlModel()
         model.inputText = inputText;
         m_RmlView.MarkDirty("input_text");
     }
+    SyncZenPreview(model, inputIsKeypad);
     if (inputIsKeypad && m_KeypadMapping.size() == 10)
     {
         int* const slots[10] = {

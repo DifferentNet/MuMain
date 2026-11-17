@@ -66,7 +66,8 @@ namespace
             static_cast<std::uint64_t>(CharacterMachine->StorageGold), CharacterMachine->Gold);
         if (limit == 0)
         {
-            // The hero carries the most there is: a silent no-op, matching native -- still closes.
+            // The hero carries the most there is: nothing can come out, so say why.
+            mu::ui::window::CreateOkMessageBox(I18N::Game::ZenCarryLimitReached);
             return;
         }
         const std::uint32_t amount = UI::Inventory::ZenAmount::Clamp(typed, limit);
@@ -92,6 +93,7 @@ namespace
         cfg.input->mode = mu::ui::window::GenericDialogConfig::InputField::Mode::Text;
         cfg.input->maxLength = UI::Inventory::ZenAmount::kMaxDigits;
         cfg.input->numericOnly = true;
+        cfg.input->zenPreview = true;
         cfg.onPrimary = [move]
         {
             const std::uint64_t typed =

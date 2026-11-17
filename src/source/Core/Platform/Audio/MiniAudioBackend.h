@@ -114,7 +114,19 @@ private:
     // nullptr = no object attached to this slot (safe — Set3DSoundPosition() checks before deref).
     // Story 7.8.1: Changed from const OBJECT* to const void* for cross-platform portability.
     // Cast back to const OBJECT* in Set3DSoundPosition() when accessing position data.
+    // Written only through SetSoundObject(), which keeps m_attachedSlots in step.
     std::array<const void*, MAX_BUFFER> m_soundObjects{};
+    // The slots whose m_soundObjects entry is not nullptr, in no order, and where each stands in that list
+    // (-1 for none): Set3DSoundPosition() visits only them instead of every slot each frame.
+    std::vector<int> m_attachedSlots;
+    std::array<int, MAX_BUFFER> m_attachedSlotIndex = MakeDetachedSlotIndex();
+    static std::array<int, MAX_BUFFER> MakeDetachedSlotIndex()
+    {
+        std::array<int, MAX_BUFFER> index{};
+        index.fill(-1);
+        return index;
+    }
+    void SetSoundObject(int buf, const void* pObject);
 
     float m_bgmVolume = 1.0f; // BGM volume: 0.0 (mute) to 1.0 (full) — Story 5.4.1
     float m_sfxVolume = 1.0f; // SFX volume: 0.0 (mute) to 1.0 (full) — Story 5.4.1

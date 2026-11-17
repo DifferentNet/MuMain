@@ -77,6 +77,8 @@ namespace mu::ui::window
         // Lines sent from the chat field (whispers too), for Up and Down there.
         UI::Chat::ChatHistory m_chatHistory;
         type_vec_history	m_vecWhsprIDHistory;
+        // The player who whispered last: "/r text" and "/reply text" answer them.
+        type_string m_lastWhisperSender;
 
         int m_iCurWhisperIDHistory;
 
@@ -107,9 +109,12 @@ namespace mu::ui::window
 
         void BindRmlModel(Rml::DataModelConstructor& c, ChatInputRmlModel& model);
         void OnRmlReloaded();
+        // Caps the fields at what a line or a name can carry, so nothing typed is cut off unseen on Enter.
+        void ApplyFieldLimits();
         UI::RmlBridge::ThemedView<ChatInputRmlModel> m_RmlView{"chat_input",
             [this](Rml::DataModelConstructor& c, ChatInputRmlModel& model) { BindRmlModel(c, model); },
-            {{"Data/Interface/RmlUi/chat_input.rml"}}, {.afterReload = [this] { OnRmlReloaded(); }}};
+            {{"Data/Interface/RmlUi/chat_input.rml"}},
+            {.afterBuild = [this] { ApplyFieldLimits(); }, .afterReload = [this] { OnRmlReloaded(); }}};
         // Set by OpenningProcess(), consumed once the document is actually visible. CSystem::Show()
         // runs OpenningProcess() BEFORE ShowInterface(), so IsVisible() is still false there and
         // focusing the field at that point lands on a hidden document and is lost. It also has to
@@ -137,6 +142,11 @@ namespace mu::ui::window
         void AddWhsprIDHistory(const type_string& strWhsprID);
         void RemoveWhsprIDHistory(int index);
         void RemoveAllWhsprIDHIstory();
+        void SetLastWhisperSender(const type_string& sender);
+        // "/r text" or "/reply text" (typed, from the command window or a macro): whispers the text to the
+        // last player who whispered. False when the line is not the reply command. The caller keeps the
+        // line in the chat history if it wants it there.
+        bool TrySendReply(const wchar_t* chatText);
 
         bool IsBlockWhisper();
         void SetBlockWhisper(bool bBlockWhisper);

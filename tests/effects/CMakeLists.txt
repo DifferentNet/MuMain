@@ -5,6 +5,13 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Render/Effects/ParticleDrawOrder.cpp
 )
 
+# The slot bounds of the sprite, particle and joint pools: creates still take the lowest free slot.
+mu_add_test(
+    NAME pool_slot_bounds_tests
+    SOURCES
+        test_pool_slot_bounds.cpp
+)
+
 # Creates effects through CreateEffect and records what changes: the effect
 # recorder of the effect catalogue (D40). A binary of its own, because the
 # recorder takes over the effect pools, the registry and the hero; the effect

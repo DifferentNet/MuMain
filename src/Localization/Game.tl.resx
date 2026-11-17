@@ -608,15 +608,15 @@
     <comment>legacy_id=148</comment>
   </data>
   <data name="/trade(pointing player): trade" xml:space="preserve">
-    <value>/trade(pointing player): trade</value>
+    <value>/trade Pangalan o target: trade</value>
     <comment>legacy_id=149</comment>
   </data>
   <data name="/party(pointing player): form a party" xml:space="preserve">
-    <value>/party(pointing player): bumuo ng isang party</value>
+    <value>/party Pangalan o target: imbita (/pt)</value>
     <comment>legacy_id=150</comment>
   </data>
   <data name="/guild(pointing player): form a guild" xml:space="preserve">
-    <value>/guild(pointing player): bumuo ng guild</value>
+    <value>/guild (harap sa master): sumali sa guild</value>
     <comment>legacy_id=151</comment>
   </data>
   <data name="/war &lt;guild name&gt;: Declare Guild War" xml:space="preserve">
@@ -628,7 +628,7 @@
     <comment>legacy_id=153</comment>
   </data>
   <data name="/warp &lt;world&gt;: Warp to another world" xml:space="preserve">
-    <value>/warp &lt;world&gt;: Warp sa ibang mundo</value>
+    <value>/move &lt;mapa&gt;: lumipat ng mapa</value>
     <comment>legacy_id=154</comment>
   </data>
   <data name="/filter word1 word2: View Chats with word" xml:space="preserve">
@@ -2157,19 +2157,19 @@
     <comment>legacy_id=574</comment>
   </data>
   <data name="Absorb 30%% of damage" xml:space="preserve">
-    <value>Sumipsip ng 30%% of pinsala</value>
+    <value>Sumisipsip ng 30%% ng pinsala</value>
     <comment>legacy_id=575</comment>
   </data>
   <data name="Increase 30%% of attacking &amp; Wizardry Dmg" xml:space="preserve">
-    <value>Dagdagan ang 30%% of pag-atake at Wizardry Dmg</value>
+    <value>Dagdag na 30%% sa pinsala ng atake at Wizardry</value>
     <comment>legacy_id=576</comment>
   </data>
   <data name="Increase %d%% of Damage" xml:space="preserve">
-    <value>Dagdagan ang %d%% of Pinsala</value>
+    <value>Dagdag na %d%% sa pinsala</value>
     <comment>legacy_id=577</comment>
   </data>
   <data name="Absorb %d%% of Damage" xml:space="preserve">
-    <value>Isipsip ang %d%% of Pinsala</value>
+    <value>Sumisipsip ng %d%% ng pinsala</value>
     <comment>legacy_id=578</comment>
   </data>
   <data name="Increase speed" xml:space="preserve">
@@ -13999,5 +13999,11 @@
   </data>
   <data name="CommandPlayerNotFound" xml:space="preserve">
     <value>Hindi nakita ang player.</value>
+  </data>
+  <data name="WhisperReplyNobody" xml:space="preserve">
+    <value>Wala pang bumulong sa iyo.</value>
+  </data>
+  <data name="ZenCarryLimitReached" xml:space="preserve">
+    <value>Hindi ka na makapagdadala ng mas maraming Zen.</value>
   </data>
 </root>

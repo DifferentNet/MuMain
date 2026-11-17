@@ -131,12 +131,12 @@ void mu::ui::window::CChatLogWindow::AddText(const type_string& strID, const typ
 
     if (GetNumberOfLines(MsgType) >= MAX_NUMBER_OF_LINES)
     {
-        RemoveFrontLine(MsgType);
+        RemoveFrontLine(MsgType, LINES_DROPPED_AT_CAP);
     }
 
     if (GetNumberOfLines(TYPE_ALL_MESSAGE) >= MAX_NUMBER_OF_LINES)
     {
-        RemoveFrontLine(TYPE_ALL_MESSAGE);
+        RemoveFrontLine(TYPE_ALL_MESSAGE, LINES_DROPPED_AT_CAP);
     }
 
     if (m_vecFilters.empty())
@@ -178,8 +178,9 @@ void mu::ui::window::CChatLogWindow::ProcessAddText(const type_string& strID, co
         SeparateText(strID, strText, MsgType, strText1, strText2);
         if (!strText1.empty())
         {
+            // Only the first row: the rest follows as its own row below, as in the all-messages list.
             const auto pMsgText = new CMessageText;
-            if (!pMsgText->Create(strID, strText, MsgType))
+            if (!pMsgText->Create(strID, strText1, MsgType))
                 delete pMsgText;
             else
             {
@@ -318,7 +319,7 @@ void mu::ui::window::CChatLogWindow::ProcessAddText(const type_string& strID, co
         m_iCurrentRenderEndLine = pvecMsgs->size() - 1;
 }
 
-void mu::ui::window::CChatLogWindow::RemoveFrontLine(MESSAGE_TYPE MsgType)
+void mu::ui::window::CChatLogWindow::RemoveFrontLine(MESSAGE_TYPE MsgType, int count /*= 1*/)
 {
     m_bLinesDirty = true;
     type_vector_msgs* pvecMsgs = GetMsgs(MsgType);
@@ -329,16 +330,16 @@ void mu::ui::window::CChatLogWindow::RemoveFrontLine(MESSAGE_TYPE MsgType)
         return;
     }
 
-    auto vi = pvecMsgs->begin();
-    if (vi != pvecMsgs->end())
-    {
-        delete (*vi);
-        vi = pvecMsgs->erase(vi);
-    }
+    const int removed = std::clamp(count, 0, static_cast<int>(pvecMsgs->size()));
+    for (int i = 0; i < removed; ++i)
+        delete (*pvecMsgs)[i];
+    pvecMsgs->erase(pvecMsgs->begin(), pvecMsgs->begin() + removed);
 
     if (MsgType == GetCurrentMsgType())
     {
-        Scrolling(GetCurrentRenderEndLine());
+        // The end line moves down with its message, so a reader scrolled up keeps the same lines in view and
+        // ProcessAddText() still measures the distance to the tail right (Scrolling() clamps it to the list).
+        Scrolling(GetCurrentRenderEndLine() - removed);
     }
 }
 
@@ -850,12 +851,34 @@ void mu::ui::window::CChatLogWindow::RebuildLineModel()
     }
 }
 
+namespace
+{
+    // An element of `document` found by its id once and kept, so the per-frame callers stop searching the whole
+    // document for it. The kept pointer empties itself when the element goes (a reload or a theme switch builds
+    // the document anew), and one kept from another document is looked for again.
+    Rml::Element* KeptElementById(Rml::ElementDocument* document, Rml::ObserverPtr<Rml::Element>& kept, const char* id)
+    {
+        if (document == nullptr)
+            return nullptr;
+        if (Rml::Element* element = kept.get(); element != nullptr && element->GetOwnerDocument() == document)
+            return element;
+        Rml::Element* element = document->GetElementById(id);
+        kept = element != nullptr ? element->GetObserverPtr() : Rml::ObserverPtr<Rml::Element>{};
+        return element;
+    }
+}
+
+Rml::Element* mu::ui::window::CChatLogWindow::LinesElement() const
+{
+    return KeptElementById(m_RmlView.Document(), m_LinesElement, "lines");
+}
+
 bool mu::ui::window::CChatLogWindow::IsScrolledToBottom() const
 {
     if (!m_RmlView.Document())
         return true;
 
-    Rml::Element* lines = m_RmlView.Document()->GetElementById("lines");
+    Rml::Element* lines = LinesElement();
     if (lines == nullptr)
         return true;
 
@@ -870,7 +893,7 @@ void mu::ui::window::CChatLogWindow::UpdatePointedLine()
     ChatLogRmlModel& model = m_RmlView.GetModel();
     int pointed = -1;
 
-    Rml::Element* lines = m_RmlView.Document() ? m_RmlView.Document()->GetElementById("lines") : nullptr;
+    Rml::Element* lines = LinesElement();
     if (lines != nullptr && IsVisible() && m_bShowChatLog)
     {
         // Raw window pixels, the same space GetAbsoluteOffset() reports in -- deliberately NOT
@@ -931,7 +954,7 @@ void mu::ui::window::CChatLogWindow::UpdatePointedLine()
 
 void mu::ui::window::CChatLogWindow::ApplyLogicalScroll()
 {
-    Rml::Element* lines = m_RmlView.Document() ? m_RmlView.Document()->GetElementById("lines") : nullptr;
+    Rml::Element* lines = LinesElement();
     if (lines == nullptr)
         return;
 
@@ -955,7 +978,7 @@ void mu::ui::window::CChatLogWindow::ApplyLogicalScroll()
 
 void mu::ui::window::CChatLogWindow::SyncLogicalScrollFromView()
 {
-    Rml::Element* lines = m_RmlView.Document() ? m_RmlView.Document()->GetElementById("lines") : nullptr;
+    Rml::Element* lines = LinesElement();
     if (lines == nullptr)
         return;
 
@@ -977,7 +1000,7 @@ void mu::ui::window::CChatLogWindow::ScrollToBottomIfFollowing()
     if (!m_bFollowTail || !m_RmlView.Document())
         return;
 
-    if (Rml::Element* lines = m_RmlView.Document()->GetElementById("lines"))
+    if (Rml::Element* lines = LinesElement())
         lines->SetScrollTop(lines->GetScrollHeight());
 }
 
@@ -996,15 +1019,18 @@ void mu::ui::window::CChatLogWindow::SeparateText(IN const type_string& strID, I
                                                  OUT type_string& strText2)
 {
     g_pRenderText->SetFont(MsgType == TYPE_GM_MESSAGE ? g_hFontBold : g_hFont);
-    int max_first_line_size = CLIENT_WIDTH;
-    if (!strID.empty())
+    // The first row is drawn as one string, "ID : text" (RebuildLineModel()), so it is measured as one: the
+    // sender part measured on its own came out narrower than drawn and the row's end was cut off. The margin
+    // covers the chat window's own font drawing a little wider than this measure.
+    const type_string prefix = strID.empty() ? type_string() : strID + L" : ";
+    const auto firstRowWidth = [&prefix, &strText](std::size_t textLength)
     {
-        const type_string strIDPart = strID + L" : ";
-        max_first_line_size -= g_pRenderText->MeasureText(
-            strIDPart.c_str(), static_cast<int>(strIDPart.length())).cx;
-    }
+        const type_string row = prefix + strText.substr(0, textLength);
+        return static_cast<int>(g_pRenderText->MeasureText(row.c_str(), static_cast<int>(row.length())).cx);
+    };
+    const int max_first_line_size = static_cast<int>(CLIENT_WIDTH) - FIRST_ROW_SAFETY_MARGIN;
 
-    int required_size = g_pRenderText->MeasureText(strText.c_str(), static_cast<int>(strText.length())).cx;
+    int required_size = firstRowWidth(strText.length());
 
     if (required_size <= max_first_line_size)
     {
@@ -1025,7 +1051,7 @@ void mu::ui::window::CChatLogWindow::SeparateText(IN const type_string& strID, I
             strText2 = strText;
             return;
         }
-        required_size = g_pRenderText->MeasureText(strText.c_str(), iLocToken).cx;
+        required_size = firstRowWidth(static_cast<std::size_t>(iLocToken));
     }
 
     strText1 = strText.substr(0, iLocToken);
@@ -1369,7 +1395,7 @@ void mu::ui::window::CSystemLogWindow::SyncRmlModel()
 
 void mu::ui::window::CSystemLogWindow::TrackPanelSize()
 {
-    auto* panel = m_RmlView.Document()->GetElementById("panel");
+    auto* panel = KeptElementById(m_RmlView.Document(), m_PanelElement, "panel");
     if (!panel)
         return;
     const float height = panel->GetBox().GetSize(Rml::BoxArea::Border).y;
@@ -1383,15 +1409,23 @@ void mu::ui::window::CSystemLogWindow::TrackPanelSize()
 // Retain the legacy font metrics; the workspace now owns the message area's origin.
 void mu::ui::window::CSystemLogWindow::SyncNativeGeometry()
 {
-    // Measured in window pixels.
-    float textHeight = 0.f;
+    const float nativeTextPx = UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Normal);
+    // Still selected every frame: later text calls may count on the normal font being current.
+    g_pRenderText->SetFont(g_hFont);
+    // Measured in window pixels, again only when the font, the window size or the text size changed.
+    const void* const font = static_cast<const void*>(g_hFont);
+    if (font != m_MeasuredFont || WindowWidth != m_MeasuredWindowWidth || WindowHeight != m_MeasuredWindowHeight ||
+        nativeTextPx != m_MeasuredNativeTextPx)
     {
         const UI::Scaling::ScopedWindowPixels pixels(static_cast<int>(WindowWidth), static_cast<int>(WindowHeight));
-        g_pRenderText->SetFont(g_hFont);
-        textHeight = static_cast<float>(g_pRenderText->MeasureText(L"Q", 1).cy);
+        m_MeasuredTextHeight = static_cast<float>(g_pRenderText->MeasureText(L"Q", 1).cy);
+        m_MeasuredFont = font;
+        m_MeasuredWindowWidth = WindowWidth;
+        m_MeasuredWindowHeight = WindowHeight;
+        m_MeasuredNativeTextPx = nativeTextPx;
     }
+    float textHeight = m_MeasuredTextHeight;
     // The phone view raises a text too small to read on a phone, and its line and row with it.
-    const float nativeTextPx = UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Normal);
     const float textPx = UI::Mobile::TouchUnit::ReadableTextPx(nativeTextPx);
     textHeight *= nativeTextPx > 0.f ? textPx / nativeTextPx : 1.f;
     const float rowHeight = std::max(1.f, textHeight * 1.2f);

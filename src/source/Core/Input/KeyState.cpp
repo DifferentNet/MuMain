@@ -88,55 +88,93 @@ namespace Core::Input
         std::fill(std::begin(g_keyPressEdges), std::end(g_keyPressEdges), false);
     }
 
-    bool IsKeyDown(int virtualKey)
+    namespace
     {
-        // A scripted press (control socket) counts as down for the frame it
-        // is injected, ahead of the device state below.
-        if (Synthetic::IsKeyHeld(virtualKey))
+        // SDL's state read at the moment IsKeyDown asks for it.
+        struct LiveDeviceState
         {
-            return true;
-        }
-        // A key or button held by a finger on the touch controls.
-        if (Touch::IsKeyHeld(virtualKey))
+            SDL_MouseButtonFlags Mouse() const { return SDL_GetMouseState(nullptr, nullptr); }
+            SDL_Keymod Mods() const { return SDL_GetModState(); }
+            const bool* Keyboard() const { return SDL_GetKeyboardState(nullptr); }
+        };
+
+        // SDL's state read once, for a scan of many keys in a row.
+        struct DeviceStateSnapshot
         {
-            return true;
-        }
+            SDL_MouseButtonFlags mouse = SDL_GetMouseState(nullptr, nullptr);
+            SDL_Keymod mods = SDL_GetModState();
+            const bool* keyboard = SDL_GetKeyboardState(nullptr);
+
+            SDL_MouseButtonFlags Mouse() const { return mouse; }
+            SDL_Keymod Mods() const { return mods; }
+            const bool* Keyboard() const { return keyboard; }
+        };
+
+        template <typename DeviceState>
+        bool IsKeyDownIn(int virtualKey, const DeviceState& device)
+        {
+            // A scripted press (control socket) counts as down for the frame it
+            // is injected, ahead of the device state below.
+            if (Synthetic::IsKeyHeld(virtualKey))
+            {
+                return true;
+            }
+            // A key or button held by a finger on the touch controls.
+            if (Touch::IsKeyHeld(virtualKey))
+            {
+                return true;
+            }
 #ifdef _EDITOR
-        if (g_otherWindowQuery != nullptr && g_otherWindowQuery(virtualKey))
-        {
-            return false;
-        }
+            if (g_otherWindowQuery != nullptr && g_otherWindowQuery(virtualKey))
+            {
+                return false;
+            }
 #endif
 
-        // Poll live input from SDL on every platform. The Win32 path used
-        // GetAsyncKeyState because the old child EDIT controls stole keyboard
-        // focus from the SDL window; they were replaced by the portable text
-        // field (#447), so SDL input state is authoritative here too. The main
-        // loop pumps SDL_PollEvent each frame, so this state stays current.
-        // Mouse buttons and modifiers come from the SDL mouse / mod state.
-        switch (virtualKey)
-        {
-        case VK_LBUTTON:
-            return g_leftMouseButtonPressEdge || Touch::IsMouseButtonHeld(SDL_BUTTON_LEFT) ||
-                   Gamepad::Pointer::IsButtonHeld(SDL_BUTTON_LEFT) ||
-                   (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)) != 0;
-        case VK_RBUTTON:
-            return Touch::IsMouseButtonHeld(SDL_BUTTON_RIGHT) || Gamepad::Pointer::IsButtonHeld(SDL_BUTTON_RIGHT) ||
-                   (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(SDL_BUTTON_RIGHT)) != 0;
-        case VK_MBUTTON:
-            return (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(SDL_BUTTON_MIDDLE)) != 0;
-        case VK_SHIFT:
-            return (SDL_GetModState() & SDL_KMOD_SHIFT) != 0;
-        case VK_CONTROL: return (SDL_GetModState() & SDL_KMOD_CTRL) != 0;
-        case VK_MENU:    return (SDL_GetModState() & SDL_KMOD_ALT) != 0;
-        default: break;
+            // Poll live input from SDL on every platform. The Win32 path used
+            // GetAsyncKeyState because the old child EDIT controls stole keyboard
+            // focus from the SDL window; they were replaced by the portable text
+            // field (#447), so SDL input state is authoritative here too. The main
+            // loop pumps SDL_PollEvent each frame, so this state stays current.
+            // Mouse buttons and modifiers come from the SDL mouse / mod state.
+            switch (virtualKey)
+            {
+            case VK_LBUTTON:
+                return g_leftMouseButtonPressEdge || Touch::IsMouseButtonHeld(SDL_BUTTON_LEFT) ||
+                       Gamepad::Pointer::IsButtonHeld(SDL_BUTTON_LEFT) ||
+                       (device.Mouse() & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)) != 0;
+            case VK_RBUTTON:
+                return Touch::IsMouseButtonHeld(SDL_BUTTON_RIGHT) || Gamepad::Pointer::IsButtonHeld(SDL_BUTTON_RIGHT) ||
+                       (device.Mouse() & SDL_BUTTON_MASK(SDL_BUTTON_RIGHT)) != 0;
+            case VK_MBUTTON:
+                return (device.Mouse() & SDL_BUTTON_MASK(SDL_BUTTON_MIDDLE)) != 0;
+            case VK_SHIFT:
+                return (device.Mods() & SDL_KMOD_SHIFT) != 0;
+            case VK_CONTROL: return (device.Mods() & SDL_KMOD_CTRL) != 0;
+            case VK_MENU:    return (device.Mods() & SDL_KMOD_ALT) != 0;
+            default: break;
+            }
+
+            const SDL_Scancode sc = VkToScancode(virtualKey);
+            if (sc == SDL_SCANCODE_UNKNOWN) return false;
+
+            const bool* state = device.Keyboard();
+            return g_keyPressEdges[sc] || (state != nullptr && state[sc]);
         }
+    } // namespace
 
-        const SDL_Scancode sc = VkToScancode(virtualKey);
-        if (sc == SDL_SCANCODE_UNKNOWN) return false;
+    bool IsKeyDown(int virtualKey)
+    {
+        return IsKeyDownIn(virtualKey, LiveDeviceState{});
+    }
 
-        const bool* state = SDL_GetKeyboardState(nullptr);
-        return g_keyPressEdges[sc] || (state != nullptr && state[sc]);
+    void ReadKeysDown(bool (&down)[256])
+    {
+        const DeviceStateSnapshot device;
+        for (int key = 0; key < 256; ++key)
+        {
+            down[key] = IsKeyDownIn(key, device);
+        }
     }
 
 #ifdef _EDITOR

@@ -100,3 +100,17 @@
 /* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
 #sk_title { width: calc(100% * var(--root-scale)); }
 #sk_power, #sk_ticket, #sk_runs { width: calc(166px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile"): rows, checkboxes and the button a finger can take. The tiers and
+   curses pane stops above the foot (80 + 274 < 358) and scrolls when its rows no longer fit, so it never covers the
+   hint or the enter button. */
+@media (theme: mobile) {
+	.sk-tier, .sk-curse { padding: calc(5px * var(--root-scale)) calc(4px * var(--root-scale)); }
+	.sk-check { width: calc(14px * var(--root-scale)); height: calc(14px * var(--root-scale)); }
+	#sk_list {
+		height: calc(274px * var(--root-scale));
+		overflow: hidden auto;
+		pointer-events: auto;
+	}
+	#sk_enter { height: calc(42px * var(--root-scale)); }
+}

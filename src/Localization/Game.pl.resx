@@ -608,15 +608,15 @@
     <comment>legacy_id=148</comment>
   </data>
   <data name="/trade(pointing player): trade" xml:space="preserve">
-    <value>/trade(gracz wskazujący): handel</value>
+    <value>/trade Nick lub cel: handel</value>
     <comment>legacy_id=149</comment>
   </data>
   <data name="/party(pointing player): form a party" xml:space="preserve">
-    <value>/party(gracz wskazujący): utwórz grupę</value>
+    <value>/party Nick lub cel: zaproś (/pt)</value>
     <comment>legacy_id=150</comment>
   </data>
   <data name="/guild(pointing player): form a guild" xml:space="preserve">
-    <value>/guild(gracz wskazujący): utwórz gildię</value>
+    <value>/guild (przed mistrzem): dołącz do gildii</value>
     <comment>legacy_id=151</comment>
   </data>
   <data name="/war &lt;guild name&gt;: Declare Guild War" xml:space="preserve">
@@ -628,7 +628,7 @@
     <comment>legacy_id=153</comment>
   </data>
   <data name="/warp &lt;world&gt;: Warp to another world" xml:space="preserve">
-    <value>/warp &lt;świat&gt;: Przenieś się do innego świata</value>
+    <value>/move &lt;mapa&gt;: przenieś się na inną mapę</value>
     <comment>legacy_id=154</comment>
   </data>
   <data name="/filter word1 word2: View Chats with word" xml:space="preserve">
@@ -11349,7 +11349,7 @@
     <comment>legacy_id=3324</comment>
   </data>
   <data name="You lack %d points." xml:space="preserve">
-    <value>Brakuje Ci punktów %d.</value>
+    <value>Brakuje %d punktów.</value>
     <comment>legacy_id=3325</comment>
   </data>
   <data name="You can't raise any more levels." xml:space="preserve">
@@ -14020,5 +14020,11 @@
   </data>
   <data name="CommandPlayerNotFound" xml:space="preserve">
     <value>Nie znaleziono gracza.</value>
+  </data>
+  <data name="WhisperReplyNobody" xml:space="preserve">
+    <value>Nikt jeszcze do ciebie nie szeptał.</value>
+  </data>
+  <data name="ZenCarryLimitReached" xml:space="preserve">
+    <value>Nie możesz nieść więcej Zen.</value>
   </data>
 </root>

@@ -608,15 +608,15 @@
     <comment>legacy_id=148</comment>
   </data>
   <data name="/trade(pointing player): trade" xml:space="preserve">
-    <value>/trade(jugador que señala): intercambiar</value>
+    <value>/trade Nombre u objetivo: intercambiar</value>
     <comment>legacy_id=149</comment>
   </data>
   <data name="/party(pointing player): form a party" xml:space="preserve">
-    <value>/party(jugador que señala): formar un grupo</value>
+    <value>/party Nombre u objetivo: invitar (/pt)</value>
     <comment>legacy_id=150</comment>
   </data>
   <data name="/guild(pointing player): form a guild" xml:space="preserve">
-    <value>/gremio(jugador que señala): formar un gremio</value>
+    <value>/guild (frente al maestro): unirse</value>
     <comment>legacy_id=151</comment>
   </data>
   <data name="/war &lt;guild name&gt;: Declare Guild War" xml:space="preserve">
@@ -628,7 +628,7 @@
     <comment>legacy_id=153</comment>
   </data>
   <data name="/warp &lt;world&gt;: Warp to another world" xml:space="preserve">
-    <value>/warp &lt;mundo&gt;: Transportar a otro mundo</value>
+    <value>/move &lt;mapa&gt;: ir a otro mapa</value>
     <comment>legacy_id=154</comment>
   </data>
   <data name="/filter word1 word2: View Chats with word" xml:space="preserve">
@@ -2157,19 +2157,19 @@
     <comment>legacy_id=574</comment>
   </data>
   <data name="Absorb 30%% of damage" xml:space="preserve">
-    <value>Absorbe el 30% del daño % of</value>
+    <value>Absorbe el 30%% del daño</value>
     <comment>legacy_id=575</comment>
   </data>
   <data name="Increase 30%% of attacking &amp; Wizardry Dmg" xml:space="preserve">
-    <value>Aumenta 30% % of ataque y daño de hechicería</value>
+    <value>Aumenta un 30%% el daño de ataque y hechicería</value>
     <comment>legacy_id=576</comment>
   </data>
   <data name="Increase %d%% of Damage" xml:space="preserve">
-    <value>Aumenta el daño de %d%% of</value>
+    <value>Aumenta el daño un %d%%</value>
     <comment>legacy_id=577</comment>
   </data>
   <data name="Absorb %d%% of Damage" xml:space="preserve">
-    <value>Absorber daño %d%% of</value>
+    <value>Absorbe el %d%% del daño</value>
     <comment>legacy_id=578</comment>
   </data>
   <data name="Increase speed" xml:space="preserve">
@@ -4369,7 +4369,7 @@
     <comment>legacy_id=1172</comment>
   </data>
   <data name="Increase 150%% attack in Dark Spirit class" xml:space="preserve">
-    <value>Incrementar 150%% aataque en la clase Espíritu Oscuro</value>
+    <value>Aumenta un 150%% el ataque en la clase Espíritu Oscuro</value>
     <comment>legacy_id=1173</comment>
   </data>
   <data name="Increase 2 attack scope in Dark Spirit class" xml:space="preserve">
@@ -8873,11 +8873,11 @@
     <comment>legacy_id=2464</comment>
   </data>
   <data name="Restores HP by 100%% immediately." xml:space="preserve">
-    <value>Restaura HP al 100% % i inmediatamente.</value>
+    <value>Restaura el 100%% de HP inmediatamente.</value>
     <comment>legacy_id=2500</comment>
   </data>
   <data name="Restores Mana by 100%% immediately." xml:space="preserve">
-    <value>Restaura Mana al 100% % i inmediatamente.</value>
+    <value>Restaura el 100%% de Maná inmediatamente.</value>
     <comment>legacy_id=2501</comment>
   </data>
   <data name="You may continue to use the strengthener power." xml:space="preserve">
@@ -9045,7 +9045,7 @@
     <comment>legacy_id=2550</comment>
   </data>
   <data name="Restores HP by 65%% immediately." xml:space="preserve">
-    <value>Restaura HP en un 65% % i inmediatamente.</value>
+    <value>Restaura el 65%% de HP inmediatamente.</value>
     <comment>legacy_id=2559</comment>
   </data>
   <data name="Cherry Blossoms branches assembly" xml:space="preserve">
@@ -11121,7 +11121,7 @@
     <comment>legacy_id=3266</comment>
   </data>
   <data name="Restores SD by 65%% immediately." xml:space="preserve">
-    <value>Restaura SD en un 65% % i inmediatamente.</value>
+    <value>Restaura el 65%% de SD inmediatamente.</value>
     <comment>legacy_id=3267</comment>
   </data>
   <data name="Click the item to see the quest information again." xml:space="preserve">
@@ -11349,7 +11349,7 @@
     <comment>legacy_id=3324</comment>
   </data>
   <data name="You lack %d points." xml:space="preserve">
-    <value>Te faltan puntos %d.</value>
+    <value>Faltan %d puntos.</value>
     <comment>legacy_id=3325</comment>
   </data>
   <data name="You can't raise any more levels." xml:space="preserve">
@@ -13999,5 +13999,11 @@
   </data>
   <data name="CommandPlayerNotFound" xml:space="preserve">
     <value>Jugador no encontrado.</value>
+  </data>
+  <data name="WhisperReplyNobody" xml:space="preserve">
+    <value>Nadie te ha susurrado todavía.</value>
+  </data>
+  <data name="ZenCarryLimitReached" xml:space="preserve">
+    <value>No puedes llevar más Zen.</value>
   </data>
 </root>

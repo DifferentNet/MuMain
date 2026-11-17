@@ -96,8 +96,11 @@ namespace
         return false;
     }
 
-    void BuffSort(std::list<eBuffState>& buffstate)
+    // The buffs in the reverse of the hero's list order, then the debuffs in list order; `debuffs` is scratch.
+    void BuffSort(std::vector<eBuffState>& buffstate, std::vector<eBuffState>& debuffs)
     {
+        buffstate.clear();
+        debuffs.clear();
         OBJECT* pHeroObject = &Hero->Object;
         int iBuffSize = g_CharacterBuffSize(pHeroObject);
 
@@ -130,10 +133,14 @@ namespace
 
             eBuffClass eBuffClassType = g_IsBuffClass(buf);
             if (eBuffClassType == eBuffClass_Buff)
-                buffstate.push_front(buf);
-            else if (eBuffClassType == eBuffClass_DeBuff)
                 buffstate.push_back(buf);
+            else if (eBuffClassType == eBuffClass_DeBuff)
+                debuffs.push_back(buf);
         }
+
+        // Each buff went to the front before, so the buffs read backwards.
+        std::reverse(buffstate.begin(), buffstate.end());
+        buffstate.insert(buffstate.end(), debuffs.begin(), debuffs.end());
     }
 
     // One @spritesheet rect per 20x28 tile, 10 columns wide (generated in buff_strip.rcss). The
@@ -310,8 +317,8 @@ void CBuffStrip::SyncRmlModel()
         return;
     }
 
-    std::list<eBuffState> buffstate;
-    BuffSort(buffstate);
+    std::vector<eBuffState>& buffstate = m_SortedBuffs;
+    BuffSort(buffstate, m_SortedDebuffs);
 
     // Rebuilt and marked dirty only when the buffs shown change (per-frame cost): an icon is a
     // function of its buff alone. A new document may come with the model reset, so it rebuilds too.
