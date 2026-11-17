@@ -21,6 +21,10 @@ void ClearKeyPressEdges();
 // or digit, matching what the existing call sites already pass.
 bool IsKeyDown(int virtualKey);
 
+// IsKeyDown for every virtual-key code 0..255 at once, reading SDL's keyboard, modifier and mouse state a single
+// time for all of them (the key scan asked 256 times a frame).
+void ReadKeysDown(bool (&down)[256]);
+
 #ifdef _EDITOR
 // Whether a key or button (a virtual-key code as IsKeyDown takes) is with a
 // window that is not the game's, so that IsKeyDown leaves it out. Set by the

@@ -199,12 +199,18 @@
 	#fee_label { left: 71px; top: 413px; }
 	#fee_value { right: 206px; top: 413px; }
 
-	/* The vault page arrows, 30 x 33, either side of the title and clear of the corner close. */
-	.stor-page-btn { top: 2px; width: 30px; height: 33px; }
-	.stor-page-prev { left: 60px; }
-	.stor-page-next { left: 330px; }
+	/* The vault page arrows, 40 x 38 for a finger, either side of the title and clear of the corner close. The
+	   20 x 22 art is drawn 1.6 times in the middle of the box (the decorator paints the content box alone), so it
+	   is not stretched out of shape. */
+	.stor-page-btn { top: 0; width: 40px; height: 38px; box-sizing: border-box; padding: 1.5px 4px; }
+	.stor-page-prev { left: 62px; decorator: image(stor-page-left-up) content-box; }
+	.stor-page-prev:hover { decorator: image(stor-page-left-over) content-box; }
+	.stor-page-prev:active { decorator: image(stor-page-left-down) content-box; }
+	.stor-page-next { left: 318px; decorator: image(stor-page-right-up) content-box; }
+	.stor-page-next:hover { decorator: image(stor-page-right-over) content-box; }
+	.stor-page-next:active { decorator: image(stor-page-right-down) content-box; }
 	/* The sort button as big, left of them. */
-	.stor-sort-btn { left: 24px; top: 2px; width: 30px; height: 33px; }
+	.stor-sort-btn { left: 14px; top: 0; width: 40px; height: 38px; }
 	.stor-sort-icon { width: 20px; height: 13px; margin-left: -10px; margin-top: -6px; }
 	.stor-sort-bar { height: 3px; }
 	.stor-sort-bar-1 { width: 7px; }

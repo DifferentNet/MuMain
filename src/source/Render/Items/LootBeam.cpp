@@ -114,7 +114,7 @@ void RenderAll()
         return;
 
     bool started = false;
-    for (int i = 0; i < MAX_ITEMS; ++i)
+    for (const int i : ::GroundItemCandidates())
     {
         const ITEM_t& entry = ::Items[i];
         if (!entry.Object.Live || !entry.Object.Visible || !Runtime::IsHighlighted(i))

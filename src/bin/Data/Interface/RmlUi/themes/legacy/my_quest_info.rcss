@@ -273,10 +273,14 @@
 
 	.quest-tab, .jobchange-tab, .castletemple-tab { width: 262px; }
 	.quest-empty-msg { width: calc(247px * var(--root-scale)); }
-	.quest-list { width: calc(262px * var(--root-scale)); }
+	.quest-list {
+		width: calc(262px * var(--root-scale));
+		overflow: hidden auto;
+		pointer-events: auto;
+	}
 	.quest-row {
-		height: calc(26px * var(--root-scale));
-		line-height: calc(26px * var(--root-scale));
+		height: calc(34px * var(--root-scale));
+		line-height: calc(34px * var(--root-scale));
 		border-bottom-width: calc(1px * var(--root-scale));
 		border-bottom-color: rgba(255, 255, 255, 28);
 	}

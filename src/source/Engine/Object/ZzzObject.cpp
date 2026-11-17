@@ -5497,6 +5497,46 @@ void    RenderCloudLowLevel(int index, int Type)
     }
 }
 
+namespace
+{
+// GroundItemCandidates(): the first s_groundItemCount entries, ascending and without repeats.
+std::array<int, MAX_ITEMS> s_groundItems{};
+int s_groundItemCount = 0;
+
+void RebuildGroundItemCandidates()
+{
+    s_groundItemCount = 0;
+    for (int i = 0; i < MAX_ITEMS; i++)
+    {
+        if (Items[i].Object.Live)
+            s_groundItems[s_groundItemCount++] = i;
+    }
+}
+
+// A drop that turns live after this frame's MoveItems must still be seen by the later loops of the frame.
+void AddGroundItemCandidate(const ITEM_t* ip)
+{
+    const int index = static_cast<int>(ip - Items);
+    if (index < 0 || index >= MAX_ITEMS)
+        return;
+
+    int* const begin = s_groundItems.data();
+    int* const end = begin + s_groundItemCount;
+    int* const slot = std::lower_bound(begin, end, index);
+    if (slot != end && *slot == index)
+        return;
+
+    std::copy_backward(slot, end, end + 1);
+    *slot = index;
+    ++s_groundItemCount;
+}
+} // namespace
+
+std::span<const int> GroundItemCandidates()
+{
+    return {s_groundItems.data(), static_cast<size_t>(s_groundItemCount)};
+}
+
 void ClearItems()
 {
     for (int i = 0; i < MAX_ITEMS; i++)
@@ -5504,6 +5544,7 @@ void ClearItems()
         OBJECT* o = &Items[i].Object;
         o->Live = false;
     }
+    s_groundItemCount = 0;
 }
 
 void ItemObjectAttribute(OBJECT* o)
@@ -5697,6 +5738,7 @@ void CreateItemDrop(ITEM_t* ip, ItemCreationParams params, vec3_t position, bool
 
     OBJECT* o = &ip->Object;
     o->Live = true;
+    AddGroundItemCandidate(ip);
     o->Type = Data::Items::ToModelSlot(Type);
     o->SubType = 1;
     if (Type == (int)(ITEM_BOX_OF_LUCK))
@@ -5894,6 +5936,7 @@ void CreateMoneyDrop(ITEM_t* ip, int amount, vec3_t position, bool isFreshDrop)
 
     OBJECT* o = &ip->Object;
     o->Live = true;
+    AddGroundItemCandidate(ip);
     o->Type = Data::Items::ToModelSlot(Type);
     o->SubType = 1;
     
@@ -5966,7 +6009,8 @@ static void HandleItemOnGround(OBJECT* o)
 
 void MoveItems()
 {
-    for (int i = 0; i < MAX_ITEMS; i++)
+    RebuildGroundItemCandidates();
+    for (const int i : GroundItemCandidates())
     {
         OBJECT* o = &Items[i].Object;
         if (o->Live)
@@ -6062,7 +6106,7 @@ void RenderItems()
 {
     // Items on the ground keep their Classic look like equipped ones: no bloom from them.
     const mu::ScopedBloomExclusion classicItems;
-    for (int i = 0; i < MAX_ITEMS; i++)
+    for (const int i : GroundItemCandidates())
     {
         OBJECT* o = &Items[i].Object;
         if (o->Live)

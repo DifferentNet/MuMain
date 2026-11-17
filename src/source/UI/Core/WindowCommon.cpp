@@ -215,9 +215,12 @@ void mu::ui::window::CNewKeyInput::ScanAsyncKeyState()
     }
 #endif // _EDITOR
 
+    // Every key's state read in one go: SDL's keyboard, modifier and mouse state are the same for all of them.
+    bool keysDown[256];
+    Core::Input::ReadKeysDown(keysDown);
     for (int key = 0; key < 256; key++)
     {
-        if (Core::Input::IsKeyDown(key))
+        if (keysDown[key])
         {
             if (m_pInputInfo[key].byKeyState == KEY_NONE || m_pInputInfo[key].byKeyState == KEY_RELEASE)
             {

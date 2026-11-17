@@ -310,7 +310,7 @@ void mu::ui::window::CNameWindow::RenderName()
     if (renderLabels)
     {
         namespace LootFilterRuntime = GameLogic::Items::LootFilterRuntime;
-        for (int i = 0; i < MAX_ITEMS; i++)
+        for (const int i : GroundItemCandidates())
         {
             OBJECT* o = &Items[i].Object;
             if (!o->Live || !o->Visible || i == SelectedItem)
@@ -335,7 +335,7 @@ void mu::ui::window::CNameWindow::RenderMonsterHealthBars()
     if (!m_bShowMonsterHealthBar)
         return;
 
-    for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
+    for (int i = 0; i < CharacterSlotEnd(); i++)
     {
         CHARACTER* c = &CharactersClient[i];
         OBJECT* o = &c->Object;

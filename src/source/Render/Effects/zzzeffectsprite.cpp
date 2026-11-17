@@ -16,6 +16,7 @@
 #include "UI/Core/WindowSystem.h"
 #include "Scenes/MainScene.h"
 #include "Render/Renderer/MuRenderer.h"
+#include "Render/Effects/PoolSlotBounds.h"
 
 #include <algorithm>
 #include <array>
@@ -48,7 +49,14 @@ namespace
 // glows and eye lights - are drawn inside one, so post-processing leaves the
 // character's Classic look alone.
 std::array<bool, MAX_SPRITES> s_spriteBloomExcluded{};
+
+Render::Effects::PoolSlotBounds s_spriteBounds;
 } // namespace
+
+void NoteSpriteFreed(int index)
+{
+    s_spriteBounds.OnFreed(index);
+}
 
 int CreateSprite(int Type, vec3_t Position, float Scale, vec3_t Light, OBJECT* Owner, float Rotation, int SubType)
 {
@@ -57,12 +65,13 @@ int CreateSprite(int Type, vec3_t Position, float Scale, vec3_t Light, OBJECT* O
         return false;
     }
 
-    for (int i = 0; i < MAX_SPRITES; i++)
+    for (int i = s_spriteBounds.SearchStart(Sprites); i < MAX_SPRITES; i++)
     {
         OBJECT* o = &Sprites[i];
         if (!o->Live)
         {
             o->Live = true;
+            s_spriteBounds.OnTaken(i);
             o->Type = Type;
             o->SubType = SubType;
             o->Owner = Owner;
@@ -155,7 +164,7 @@ void RenderSprites(BYTE byRenderOneMore)
         return;
     }
 
-    for (int i = 0; i < MAX_SPRITES; i++)
+    for (int i = 0; i < s_spriteBounds.End(); i++)
     {
         OBJECT* o = &Sprites[i];
         if (byRenderOneMore == 1)
@@ -170,6 +179,7 @@ void RenderSprites(BYTE byRenderOneMore)
             if (o->Position[2] <= 300.f)
             {
                 o->Live = false;
+                s_spriteBounds.OnFreed(i);
                 continue;
             }
         }
@@ -208,6 +218,7 @@ void RenderSprites(BYTE byRenderOneMore)
             if (byRenderOneMore == 0 || byRenderOneMore == 2)
             {
                 o->Live = false;
+                s_spriteBounds.OnFreed(i);
             }
         }
     }
@@ -220,7 +231,8 @@ void CheckSprites()
         return;
     }
 
-    for (int i = 0; i < MAX_SPRITES; i++)
+    s_spriteBounds.TrimEnd(Sprites, MAX_SPRITES);
+    for (int i = 0; i < s_spriteBounds.End(); i++)
     {
         OBJECT* o = &Sprites[i];
         if (o->Live)

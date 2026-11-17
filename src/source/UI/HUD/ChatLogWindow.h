@@ -113,6 +113,9 @@ namespace mu::ui::window
     private:
         static constexpr int MAX_CHAT_BUFFER_SIZE = 60;
         static constexpr int MAX_NUMBER_OF_LINES = 200;
+        // A full list drops this many of its oldest lines at once: dropping one per message shifted every row of the
+        // list on every message, while now the appends in between only add a row.
+        static constexpr int LINES_DROPPED_AT_CAP = 20;
         static constexpr float WND_WIDTH = CChatInputBox::CHATBOX_WIDTH;
         static constexpr float FONT_LEADING = 4.0f;
         static constexpr float WND_TOP_BOTTOM_EDGE = 2.0f;
@@ -178,6 +181,9 @@ namespace mu::ui::window
         // tracks wherever the user dragged or scrolled to.
         void ApplyLogicalScroll();
         void SyncLogicalScrollFromView();
+        // #lines of the current document, found by its id once rather than several times a frame.
+        Rml::Element* LinesElement() const;
+        mutable Rml::ObserverPtr<Rml::Element> m_LinesElement;
 
         void BindRmlModel(Rml::DataModelConstructor& c, ChatLogRmlModel& model);
         void OnRmlReloaded();
@@ -210,7 +216,8 @@ namespace mu::ui::window
         void Release();
 
         void AddText(const type_string& strID, const type_string& strText, MESSAGE_TYPE MsgType, MESSAGE_TYPE ErrMsgType = TYPE_ALL_MESSAGE);
-        void RemoveFrontLine(MESSAGE_TYPE MsgType);
+        // Drops the `count` oldest lines of the list; the view keeps showing the same messages.
+        void RemoveFrontLine(MESSAGE_TYPE MsgType, int count = 1);
         void Clear(MESSAGE_TYPE MsgType);
         void ClearAll();
 
@@ -332,7 +339,15 @@ namespace mu::ui::window
             {.afterBuild = [this] { OnRmlBuilt(); }, .afterReload = [this] { OnRmlReloaded(); }}};
         bool m_bLinesDirty = true;
         float m_LastPanelHeight = -1.f;
+        // #panel of the current document, found by its id once rather than every frame.
+        Rml::ObserverPtr<Rml::Element> m_PanelElement;
         void TrackPanelSize();
+        // The height of L"Q" SyncNativeGeometry measured last, and what it was measured with.
+        const void* m_MeasuredFont = nullptr;
+        unsigned int m_MeasuredWindowWidth = 0;
+        unsigned int m_MeasuredWindowHeight = 0;
+        float m_MeasuredNativeTextPx = -1.f;
+        float m_MeasuredTextHeight = 0.f;
         // MU Moldova, the phone view: the newest few messages, each for a while (ChatLogWindow.cpp).
         // When each message of m_vecAllMsgs came, and how many the model showed last.
         std::vector<std::chrono::steady_clock::time_point> m_Arrivals;

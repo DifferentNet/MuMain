@@ -1595,6 +1595,7 @@ void CMapManager::DeleteObjects()
 
     for (int i = 0; i < MAX_SPRITES; i++)
         Sprites[i].Live = false;
+    NoteSpriteFreed(0);
     for (int i = 0; i < MAX_BOIDS; i++)
         Boids[i].Live = false;
     for (int i = 0; i < MAX_FISHS; i++)
@@ -1603,10 +1604,12 @@ void CMapManager::DeleteObjects()
         Leaves[i].Live = false;
     for (int i = 0; i < MAX_PARTICLES; i++)
         Particles[i].Live = false;
+    NoteParticleFreed(0);
     for (int i = 0; i < MAX_POINTS; i++)
         Points[i].Live = false;
     for (int i = 0; i < MAX_JOINTS; i++)
         Joints[i].Live = false;
+    NoteJointFreed(0);
     for (int i = 0; i < MAX_OPERATES; i++)
         Operates[i].Live = false;
     for (int i = 0; i < MAX_EFFECTS; i++)

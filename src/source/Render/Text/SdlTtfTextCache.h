@@ -3,10 +3,11 @@
 #include <SDL3_ttf/SDL_ttf.h>
 
 #include <cstddef>
+#include <list>
 #include <memory>
 #include <string>
 #include <string_view>
-#include <vector>
+#include <unordered_map>
 
 namespace Render::Text
 {
@@ -42,8 +43,29 @@ private:
         int height = 0;
     };
 
+    // The view points into the list entry's own string; list nodes never move, so the view stays valid.
+    struct Key
+    {
+        TTF_Font* font = nullptr;
+        std::string_view utf8;
+
+        bool operator==(const Key& other) const noexcept { return font == other.font && utf8 == other.utf8; }
+    };
+
+    struct KeyHash
+    {
+        std::size_t operator()(const Key& key) const noexcept;
+    };
+
+    using EntryList = std::list<Entry>;
+
+    PreparedText Store(TTF_Font* font, std::string_view utf8, TextOwner text, int width, int height);
+    void EvictLeastRecentlyUsed();
+
     TTF_TextEngine* m_engine = nullptr;
     std::size_t m_capacity = 0;
-    std::vector<Entry> m_entries;
+    // Most recently used first; the back is evicted when the cache is full.
+    EntryList m_entries;
+    std::unordered_map<Key, EntryList::iterator, KeyHash> m_index;
 };
 }

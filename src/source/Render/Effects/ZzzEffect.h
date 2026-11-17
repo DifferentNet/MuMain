@@ -10,6 +10,15 @@ extern PARTICLE Leaves[];
 extern PARTICLE Points[];
 extern PARTICLE Pointers[];
 
+// Code outside the pool's own create, move and render that sets Live to false on Sprites, Particles or Joints
+// tells the pool, so its next create still takes the lowest free slot (Render/Effects/PoolSlotBounds.h). After
+// clearing many slots, pass 0.
+void NoteSpriteFreed(int index);
+void NoteParticleFreed(int index);
+void NoteJointFreed(int index);
+// One past the highest Particles[] slot that may be live.
+int ParticleSlotEnd();
+
 void CreateBlur(CHARACTER* Owner, vec3_t p1, vec3_t p2, vec3_t Light, int Type, bool Short = false, int SubType = 0);
 void MoveBlurs();
 void RenderBlurs();
