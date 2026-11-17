@@ -6,7 +6,7 @@ namespace UI::Character::StatPoints
 {
 namespace
 {
-constexpr std::array<int, 3> Steps = {10, 100, 1000};
+constexpr std::array<int, 5> Steps = {10, 100, 1000, 5000, 10000};
 constexpr std::array<const wchar_t*, 5> Commands = {L"/addstr", L"/addagi", L"/addvit", L"/addene", L"/addcmd"};
 } // namespace
 

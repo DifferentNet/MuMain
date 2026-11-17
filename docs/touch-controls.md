@@ -71,7 +71,7 @@ long list (a potion's seven buttons and Close) scrolls inside the card, at most 
 stays on a 400-pixel-tall screen.
 
 A finger held on a "+" of the character window (a right click, R3 on a pad) opens a menu of bigger
-steps for the free points: +10, +100, +1000 while there are more, then all of them, spent through
+steps for the free points: +10, +100, +1000, +5000, +10000 while there are more, then all of them, spent through
 the server's `/addstr` and the like, which stop at a stat's maximum
 (`UI/Character/StatPointsMenu.{h,cpp}`, tested in `tests/ui/test_stat_points_menu.cpp`). A plain tap
 still adds one point.

@@ -19,7 +19,12 @@ TEST_CASE("the steps below all the points, then all of them [ui][stats]")
     CHECK(MenuAmounts(11) == std::vector<int>{10, 11});
     CHECK(MenuAmounts(500) == std::vector<int>{10, 100, 500});
     CHECK(MenuAmounts(1000) == std::vector<int>{10, 100, 1000});
-    CHECK(MenuAmounts(65535) == std::vector<int>{10, 100, 1000, 65535});
+    CHECK(MenuAmounts(4999) == std::vector<int>{10, 100, 1000, 4999});
+    CHECK(MenuAmounts(5000) == std::vector<int>{10, 100, 1000, 5000});
+    CHECK(MenuAmounts(5001) == std::vector<int>{10, 100, 1000, 5000, 5001});
+    CHECK(MenuAmounts(10000) == std::vector<int>{10, 100, 1000, 5000, 10000});
+    CHECK(MenuAmounts(10001) == std::vector<int>{10, 100, 1000, 5000, 10000, 10001});
+    CHECK(MenuAmounts(65535) == std::vector<int>{10, 100, 1000, 5000, 10000, 65535});
 }
 
 TEST_CASE("one command per stat in the order of the + buttons [ui][stats]")
@@ -29,6 +34,7 @@ TEST_CASE("one command per stat in the order of the + buttons [ui][stats]")
     CHECK(Command(2, 1000) == L"/addvit 1000");
     CHECK(Command(3, 7) == L"/addene 7");
     CHECK(Command(4, 500) == L"/addcmd 500");
+    CHECK(Command(0, 10000) == L"/addstr 10000");
 }
 
 TEST_CASE("no command for an unknown stat or no points [ui][stats]")
