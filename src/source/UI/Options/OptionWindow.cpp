@@ -745,13 +745,14 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     model.hdTexturesAvailable = Render::Look::RemasterGraphicsOptions();
 #endif
     c.Bind("hd_textures_available", &model.hdTexturesAvailable);
-    // The low frame rate hint (Scenes/LowFpsHint.h) is the Remaster client's on the desktop: no row elsewhere.
+    // The low frame rate hint (Scenes/LowFpsHint.h) is the desktop clients' (Classic and Remaster): no row in the
+    // browser.
     c.Bind("low_fps_hint", &model.lowFpsHint);
     c.Bind("low_fps_hint_label", &model.lowFpsHintLabel);
 #ifdef __EMSCRIPTEN__
     model.lowFpsHintAvailable = false;
 #else
-    model.lowFpsHintAvailable = Render::Look::RemasterGraphicsOptions();
+    model.lowFpsHintAvailable = true;
 #endif
     c.Bind("low_fps_hint_available", &model.lowFpsHintAvailable);
     c.Bind("hd_texture_size_labels", &model.hdTextureSizeLabels);
@@ -765,12 +766,9 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("sun_shadows_row_label", &model.sunShadowsRowLabel);
     c.Bind("sun_shadows_value_label", &model.sunShadowsValueLabel);
     c.Bind("sun_shadows_tooltip", &model.sunShadowsTooltip);
-#ifdef __EMSCRIPTEN__
-    // Browser cards without clip distances (soft clip shaders) get no sun shadow pipelines: no row there.
+    // Sun shadows in both desktop clients and the browser, wherever the renderer built their pipelines (browser
+    // cards without clip distances, soft clip shaders, get none): no row elsewhere.
     model.sunShadowsAvailable = mu::GetRenderer().HasSunShadowPipelines();
-#else
-    model.sunShadowsAvailable = Render::Look::RemasterGraphicsOptions();
-#endif
     c.Bind("sun_shadows_available", &model.sunShadowsAvailable);
     // SSAO: the Remaster PC client's (the browser build cannot draw it, the Classic client has no HD textures).
     model.ssaoAvailable = Render::PostProcessing::Ssao::Available() && Render::Look::RemasterGraphicsOptions();
@@ -851,9 +849,6 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("sun_shadow_soft_edges_strength", &model.sunShadowSoftEdgesStrength);
     c.Bind("sun_shadow_soft_edges_strength_percent", &model.sunShadowSoftEdgesStrengthPercent);
     c.Bind("sun_shadow_soft_edges_strength_label", &model.sunShadowSoftEdgesStrengthLabel);
-    // The preset, FXAA and sharpening rows: the Remaster client's (and the browser's), not the Classic one's.
-    model.remasterGraphics = Render::Look::RemasterGraphicsOptions();
-    c.Bind("remaster_graphics", &model.remasterGraphics);
     c.Bind("sharpen_labels", &model.sharpenLabels);
     c.Bind("sharpen_index", &model.sharpenIndex);
     c.Bind("sharpen_row_label", &model.sharpenRowLabel);

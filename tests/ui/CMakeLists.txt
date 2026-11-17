@@ -323,6 +323,15 @@ add_test(
         -P "${CMAKE_CURRENT_SOURCE_DIR}/test_display_settings_contract.cmake"
 )
 
+add_test(
+    NAME classic_graphics_options_contract
+    COMMAND "${CMAKE_COMMAND}"
+        "-DMU_OPTION_WINDOW_RML=${CMAKE_SOURCE_DIR}/src/bin/Data/Interface/RmlUi/option_window.rml"
+        "-DMU_MODERN_OPTION_WINDOW_RML=${CMAKE_SOURCE_DIR}/src/bin/Data/Interface/RmlUi/themes/modern/option_window.rml"
+        "-DMU_OPTION_WINDOW_SOURCE=${CMAKE_SOURCE_DIR}/src/source/UI/Options/OptionWindow.cpp"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/test_classic_graphics_options_contract.cmake"
+)
+
 mu_add_test(
     NAME character_name_lifecycle_tests
     SOURCES test_character_name_lifecycle.cpp

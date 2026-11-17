@@ -323,6 +323,9 @@ public:
     void SetLowFpsHint(bool enabled) { m_lowFpsHint = enabled; }
     const std::optional<GraphicsPreset>& GetLowFpsHintKept() const { return m_lowFpsHintKept; }
     void SetLowFpsHintKept(std::optional<GraphicsPreset> preset) { m_lowFpsHintKept = preset; }
+    // [Render] ClassicGraphicsReset: the Classic client already turned FXAA, sharpening and sun shadows off once.
+    bool GetClassicGraphicsReset() const { return m_classicGraphicsReset; }
+    void SetClassicGraphicsReset(bool done) { m_classicGraphicsReset = done; }
     bool GetEnhancedLighting() const { return m_enhancedLighting; }
     void SetEnhancedLighting(bool enabled) { m_enhancedLighting = enabled; }
     bool GetDynamicLights() const { return m_dynamicLights; }
@@ -486,6 +489,7 @@ private:
     int m_sunShadows = 0;
     int m_sharpen = 0;
     bool m_lowFpsHint = true;
+    bool m_classicGraphicsReset = false;
     std::optional<GraphicsPreset> m_lowFpsHintKept;
     std::wstring m_renderBackend;
     bool m_disableEffects;

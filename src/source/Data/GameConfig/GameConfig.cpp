@@ -186,6 +186,7 @@ void GameConfig::Load()
     m_lowFpsHint = ReadBool(CfgSectionRender, CfgKeyLowFpsHint, CfgDefaultLowFpsHint);
     m_lowFpsHintKept =
         GameConfigValidation::ParseGraphicsPreset(ReadString(CfgSectionRender, CfgKeyLowFpsHintKept, L""));
+    m_classicGraphicsReset = ReadBool(CfgSectionRender, CfgKeyClassicGraphicsReset, CfgDefaultClassicGraphicsReset);
 
     m_renderBackend = GameConfigValidation::ValidateRenderBackend(
         ReadString(CfgSectionRender, CfgKeyRenderBackend, CfgDefaultRenderBackend), CfgDefaultRenderBackend);
@@ -303,6 +304,11 @@ void GameConfig::Save()
     WriteInt(CfgSectionRender, CfgKeySunShadows, m_sunShadows);
     WriteInt(CfgSectionRender, CfgKeySharpen, m_sharpen);
     SaveLowFpsHint();
+    // Only the Classic client ever sets it: the Remaster's config.ini never gets the line.
+    if (m_classicGraphicsReset)
+    {
+        WriteBool(CfgSectionRender, CfgKeyClassicGraphicsReset, true);
+    }
     WriteBool(CfgSectionRender, CfgKeyDisableEffects, m_disableEffects);
     WriteBool(CfgSectionRender, CfgKeyDisableParticles, m_disableParticles);
     WriteBool(CfgSectionRender, CfgKeyDisableSkillEffectModels, m_disableSkillEffectModels);

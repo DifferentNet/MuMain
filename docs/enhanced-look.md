@@ -59,9 +59,16 @@ them:
 | High | Enhanced | on | on | on | on | 4x | off | 40 | 8 | Medium |
 | Ultra | Enhanced | on | on | on | on | 8x | off | 40 | 16 | High |
 
-Sharpening was 30 for Medium, High and Ultra until 2026-11-12. A player who
-kept one of them with 30 saved gets 40 at the next start; any other value is the
-player's own and stays.
+The Classic client (no `Data\HD`) has the same rows, except that Medium, High
+and Ultra sharpen 30 instead of 40 (`ClassicPresetSharpen`): the original
+textures look over-sharpened at 40. Each client names only its own rows, so a
+Remaster row's 40 reads Custom in Classic and Classic's 30 reads Custom in the
+Remaster.
+
+Sharpening was 30 for Medium, High and Ultra until 2026-11-12. A player of the
+Remaster or the browser client who kept one of them with 30 saved gets 40 at the
+next start; any other value is the player's own and stays. The Classic client
+keeps 30, its own rows' value.
 
 With the Remaster's HD textures on, the Enhanced sampler also biases the mip
 level half a level toward the sharper one (`HdMipLodBias`, -0.5), and opaque HD
@@ -89,8 +96,9 @@ the row reads **Custom** (shown only, it cannot be picked).
 | `GraphicsPreset` | `Auto`, `Low`, `Medium`, `High`, `Ultra` or `Custom` | `Auto` |
 | `Fxaa` | `1` smooths edges of the 3D scene in one cheap pass (for when anti-aliasing is off), `0` off | `0` |
 | `Sharpen` | sharpening of the 3D scene in percent, `0` (off) to `100` | `0` |
-| `LowFpsHint` | the Remaster client on the desktop offers a lower preset when the game runs really slowly ("Low frame rate hint" below): `1` on, `0` off ("Don't ask again"; Options > Graphics turns it back on) | `1` |
+| `LowFpsHint` | both desktop clients (Classic and Remaster) offer a lower preset when the game runs really slowly ("Low frame rate hint" below): `1` on, `0` off ("Don't ask again"; Options > Graphics turns it back on) | `1` |
 | `LowFpsHintKept` | the preset the player answered "Keep" on: no hint while that preset is chosen. No line: none | none |
+| `ClassicGraphicsReset` | written only by the Classic client: `1` once it turned FXAA, sharpening and sun shadows off a single time at start-up (older Classic clients forced them off every start; this clears a value a Remaster run left in `config.ini`). From then on the player's choices stay. Not in `config.ini.template`; the Remaster never writes it. No line: the reset is still to come | none |
 | `SunShadows` | sun shadows of characters, monsters and objects: `0` off, `1` Medium, `2` High. The browser build reads `WebSunShadows` instead (older /play builds saved the presets' value here), and its presets don't set it | `0` |
 | `HdTextures` | `1` loads the upscaled textures and models from `Data\HD` where a file exists (after a restart), `0` off | `0` |
 | `HdTextureSize` | With HD textures on, how large they load (after a restart): `0` by the machine at every start, `1` full, `2` half. Half takes a quarter of the texture memory (about 0.5 GiB instead of 1.9 GiB; the normal maps shrink with it) and still holds 4 times the original texels. `0` picks half on integrated graphics, a software renderer or an unnamed GPU, and on a PC with less than 12 GB of memory; the log line "HD textures at ... size" says which. Options: "HD texture size" | `0` |
@@ -182,7 +190,11 @@ client also loads its models without smoothing and without normal maps for
 that run, whatever `SmoothModels` and `NormalMaps` say (nothing is saved; the
 log has a line `Weak GPU ... on Low`). That preset is applied and written to `config.ini` by
 name, so Auto does not run again; the log has a line `Graphics preset Auto: ...
-for GPU '...'`. With any other value start-up leaves the saved values alone.
+for GPU '...'`. The Classic client picks no preset on a new install: it keeps
+`config.ini`'s own values (the original look; FXAA, sharpening and sun shadows
+off) and names the preset they match, Custom unless a row fits; everything MU
+Skynet added stays off until the player turns it on. With any other value
+start-up leaves the saved values alone.
 FXAA and sharpening work in both looks; the interface is never filtered.
 
 The login and character selection scenes take the Enhanced features too,
@@ -190,10 +202,10 @@ except the light mood. The interface is the same in both looks.
 
 ### Low frame rate hint
 
-The Remaster client on the desktop watches the frame rate and, when it has been
-really low for a while, offers the next lower preset in a small panel near the
-top of the screen: "Lower to High", "Keep" and "Don't ask again". The Classic
-client and the browser build have no hint.
+Both desktop clients (Classic and Remaster) watch the frame rate and, when it has
+been really low for a while, offer the next lower preset in a small panel near
+the top of the screen: "Lower to High", "Keep" and "Don't ask again". The browser
+build has no hint.
 
 - **When.** The median frame of two 20-second windows in a row is under 30 FPS,
   or under 70 % of a known cap when that is lower (the FPS cap, else the
@@ -429,7 +441,7 @@ Diagnostics: `$post view source|bloom|scene` (what feeds the bloom, the blurred
 halo, back to the scene) and `$dynlights stats` (lights the light history
 follows, render log).
 
-The low frame rate hint (Remaster client on the desktop; each line goes to the
+The low frame rate hint (both desktop clients; each line goes to the
 render log):
 
 | Command | Effect |

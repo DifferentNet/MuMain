@@ -176,3 +176,96 @@ TEST_CASE("a kept preset's old sharpening moves to the new value [render][look]"
     CHECK(UpdatedPresetSharpen(GraphicsPreset::Auto, 30) == 30);
     CHECK(UpdatedPresetSharpen(GraphicsPreset::Low, 30) == 30);
 }
+
+TEST_CASE("the Classic client's rows sharpen 30 percent, the rest as the Remaster's [render][graphics-preset]")
+{
+    using Render::Look::ClassicPresetSharpen;
+    CHECK(ClassicPresetSharpen == 30);
+    CHECK(GraphicsPresetSettings(GraphicsPreset::Low, false) == GraphicsPresetSettings(GraphicsPreset::Low));
+    for (const GraphicsPreset preset : {GraphicsPreset::Medium, GraphicsPreset::High, GraphicsPreset::Ultra})
+    {
+        const GraphicsSettings classic = GraphicsPresetSettings(preset, false);
+        GraphicsSettings remaster = GraphicsPresetSettings(preset, true);
+        CHECK(classic.sharpen == 30);
+        CHECK(remaster.sharpen == 40);
+        remaster.sharpen = classic.sharpen;
+        CHECK(classic == remaster);
+    }
+    // Auto and Custom get Low's row in both clients.
+    CHECK(GraphicsPresetSettings(GraphicsPreset::Auto, false) == GraphicsPresetSettings(GraphicsPreset::Low, false));
+    CHECK(GraphicsPresetSettings(GraphicsPreset::Custom, false) == GraphicsPresetSettings(GraphicsPreset::Low, false));
+}
+
+TEST_CASE("each client matches its own rows only [render][graphics-preset]")
+{
+    for (const GraphicsPreset preset :
+         {GraphicsPreset::Low, GraphicsPreset::Medium, GraphicsPreset::High, GraphicsPreset::Ultra})
+    {
+        CHECK(MatchGraphicsPreset(GraphicsPresetSettings(preset, false), false) == preset);
+        CHECK(MatchGraphicsPreset(GraphicsPresetSettings(preset, true), true) == preset);
+    }
+    for (const GraphicsPreset preset : {GraphicsPreset::Medium, GraphicsPreset::High, GraphicsPreset::Ultra})
+    {
+        // A Remaster row (40 %) in the Classic client is Custom, and the other way round.
+        CHECK(MatchGraphicsPreset(GraphicsPresetSettings(preset, true), false) == GraphicsPreset::Custom);
+        CHECK(MatchGraphicsPreset(GraphicsPresetSettings(preset, false), true) == GraphicsPreset::Custom);
+    }
+    // Low sharpens nothing: the same row in both.
+    CHECK(MatchGraphicsPreset(GraphicsPresetSettings(GraphicsPreset::Low, true), false) == GraphicsPreset::Low);
+}
+
+TEST_CASE("the Classic client keeps a saved 30 percent sharpening [render][look]")
+{
+    using Render::Look::UpdatedPresetSharpen;
+    CHECK(UpdatedPresetSharpen(GraphicsPreset::High, 30, false) == 30);
+    CHECK(UpdatedPresetSharpen(GraphicsPreset::High, 30, true) == 40);
+    CHECK(UpdatedPresetSharpen(GraphicsPreset::Medium, 30, false) == 30);
+    CHECK(UpdatedPresetSharpen(GraphicsPreset::Ultra, 70, false) == 70);
+    CHECK(UpdatedPresetSharpen(GraphicsPreset::Custom, 40, false) == 40);
+}
+
+TEST_CASE("the Classic client clears FXAA, sharpening and sun shadows once [render][graphics-preset]")
+{
+    using Render::Look::ClassicResetResult;
+    using Render::Look::ResetClassicScreenSettings;
+
+    const GraphicsSettings high = GraphicsPresetSettings(GraphicsPreset::High);
+    const ClassicResetResult reset = ResetClassicScreenSettings(high, false);
+    CHECK(reset.changed);
+    CHECK_FALSE(reset.settings.fxaa);
+    CHECK(reset.settings.sharpen == 0);
+    CHECK(reset.settings.sunShadows == 0);
+    GraphicsSettings expected = high;
+    expected.fxaa = false;
+    expected.sharpen = 0;
+    expected.sunShadows = 0;
+    CHECK(reset.settings == expected);
+    // A Remaster High row saved there is no Classic preset after the reset.
+    CHECK(MatchGraphicsPreset(reset.settings, false) == GraphicsPreset::Custom);
+
+    GraphicsSettings medium = GraphicsPresetSettings(GraphicsPreset::Medium, false);
+    const ClassicResetResult resetMedium = ResetClassicScreenSettings(medium, false);
+    CHECK(resetMedium.changed);
+    CHECK_FALSE(resetMedium.settings.fxaa);
+    CHECK(resetMedium.settings.sharpen == 0);
+
+    // With the marker the player's settings stay as they are.
+    const ClassicResetResult kept = ResetClassicScreenSettings(high, true);
+    CHECK_FALSE(kept.changed);
+    CHECK(kept.settings == high);
+    medium.fxaa = true;
+    medium.sharpen = 70;
+    medium.sunShadows = 2;
+    const ClassicResetResult keptCustom = ResetClassicScreenSettings(medium, true);
+    CHECK_FALSE(keptCustom.changed);
+    CHECK(keptCustom.settings == medium);
+}
+
+TEST_CASE("config.ini.template's values are no preset in either client [render][graphics-preset]")
+{
+    // [Render] of config.ini.template: no Look line (Classic), the Enhanced features on, anti-aliasing 4,
+    // anisotropy 8, FXAA, sharpening and sun shadows off.
+    const GraphicsSettings templateDefaults{LookPreset::Classic, true, true, true, true, 4, false, 0, 8, 0};
+    CHECK(MatchGraphicsPreset(templateDefaults, false) == GraphicsPreset::Custom);
+    CHECK(MatchGraphicsPreset(templateDefaults, true) == GraphicsPreset::Custom);
+}
