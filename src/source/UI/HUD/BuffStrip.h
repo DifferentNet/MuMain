@@ -66,6 +66,9 @@ namespace mu::ui::window
 
         // The buffs shown, in slot order, for mapping a slot's event back to its buff.
         std::vector<int> m_ShownBuffs;
+        // The hero's buffs as shown, and its debuffs on the way there: kept so the per-frame sort reuses them.
+        std::vector<eBuffState> m_SortedBuffs;
+        std::vector<eBuffState> m_SortedDebuffs;
         // The document m_ShownBuffs was last put in (SyncRmlModel() rebuilds for a new one).
         const Rml::ElementDocument* m_SyncedDocument = nullptr;
         // The hovered slot's buff, in the shared tooltip.

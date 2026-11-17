@@ -159,7 +159,7 @@ void Render()
     int count = 0;
     const OBJECT* hero = &Hero->Object;
 
-    for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
+    for (int i = 0; i < CharacterSlotEnd(); ++i)
     {
         CHARACTER* c = &CharactersClient[i];
         if (!IsShown(c, players, npcs))

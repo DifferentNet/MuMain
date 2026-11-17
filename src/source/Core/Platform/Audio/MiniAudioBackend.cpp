@@ -151,7 +151,7 @@ void MiniAudioBackend::Shutdown()
         UnloadSlot(buf);
         // Clear per-slot OBJECT* tracking to prevent dangling
         // pointers if the backend is restarted. Safe even if slot was never loaded.
-        m_soundObjects[buf] = nullptr;
+        SetSoundObject(buf, nullptr);
     }
 
     ReleaseMusicStream();
@@ -349,7 +349,7 @@ bool MiniAudioBackend::PlaySound(ESound buffer, const void* pObject, bool looped
     // pObject may be nullptr (checked in Set3DSoundPosition).
     if (m_sound3DEnabled[bufIdx])
     {
-        m_soundObjects[bufIdx] = pObject;
+        SetSoundObject(bufIdx, pObject);
     }
 
     // Apply stored SFX volume to newly-started effect
@@ -409,7 +409,7 @@ void MiniAudioBackend::StopSound(ESound buffer, bool resetPosition)
     // The slot remains loaded — m_soundLoaded stays true — so the next PlaySound()
     // call can reuse the slot without reloading. Per-frame position updates simply
     // skip this slot (m_soundObjects[bufIdx] == nullptr guard) until PlaySound() fires.
-    m_soundObjects[bufIdx] = nullptr;
+    SetSoundObject(bufIdx, nullptr);
 }
 
 // ---------------------------------------------------------------------------
@@ -478,7 +478,27 @@ void MiniAudioBackend::UnloadSlot(int buf)
     m_activeChannel[buf] = 0;
     m_sound3DEnabled[buf] = false;
     m_loadedChannels[buf] = 0;
-    m_soundObjects[buf] = nullptr;
+    SetSoundObject(buf, nullptr);
+}
+
+void MiniAudioBackend::SetSoundObject(int buf, const void* pObject)
+{
+    m_soundObjects[buf] = pObject;
+    int& index = m_attachedSlotIndex[buf];
+    if (pObject != nullptr && index < 0)
+    {
+        index = static_cast<int>(m_attachedSlots.size());
+        m_attachedSlots.push_back(buf);
+    }
+    else if (pObject == nullptr && index >= 0)
+    {
+        // The last slot of the list takes the place of the one leaving it.
+        const int moved = m_attachedSlots.back();
+        m_attachedSlots[index] = moved;
+        m_attachedSlotIndex[moved] = index;
+        m_attachedSlots.pop_back();
+        index = -1;
+    }
 }
 
 void MiniAudioBackend::ReleaseDecodedSound(int buf)
@@ -514,7 +534,9 @@ void MiniAudioBackend::Set3DSoundPosition()
         return;
     }
 
-    for (int buf = 0; buf < static_cast<int>(MAX_BUFFER); ++buf)
+    // Only slots with an attached object can pass the check below; the slots are independent, so their order
+    // does not matter.
+    for (const int buf : m_attachedSlots)
     {
         if (!m_soundLoaded[buf] || !m_sound3DEnabled[buf] || m_soundObjects[buf] == nullptr)
         {

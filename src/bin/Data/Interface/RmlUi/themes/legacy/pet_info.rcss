@@ -217,3 +217,15 @@
 
 /* The native text size, counter-scaled out of the panel's scale. */
 #panel { font-size: calc(var(--text-px) / var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the two tabs a finger can take, 83 x 32 side by side across the
+   window, above the first group box (75). */
+@media (theme: mobile) {
+	.tab-row { top: 42px; width: 166px; height: 32px; }
+	.tab-btn-darkspirit { left: 83px; }
+	.tab-btn.tab-btn-darkhorse, .tab-btn.tab-btn-darkspirit {
+		width: calc(83px * var(--root-scale));
+		height: calc(32px * var(--root-scale));
+		line-height: calc(32px * var(--root-scale));
+	}
+}

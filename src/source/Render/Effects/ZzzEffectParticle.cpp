@@ -19,11 +19,27 @@
 #include "Core/Utilities/FrameProfiler.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "Render/Effects/ParticleDrawOrder.h"
+#include "Render/Effects/PoolSlotBounds.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "Scenes/MainScene.h"
 
 vec3_t g_vParticleWind = { 0.0f, 0.0f, 0.0f };
 vec3_t g_vParticleWindVelo = { 0.0f, 0.0f, 0.0f };
+
+namespace
+{
+Render::Effects::PoolSlotBounds s_particleBounds;
+} // namespace
+
+void NoteParticleFreed(int index)
+{
+    s_particleBounds.OnFreed(index);
+}
+
+int ParticleSlotEnd()
+{
+    return s_particleBounds.End();
+}
 
 void HandPosition(PARTICLE* o)
 {
@@ -63,12 +79,13 @@ int CreateParticle(int Type, vec3_t Position, vec3_t Angle, vec3_t Light, int Su
         return false;
     }
 
-    for (int i = 0; i < MAX_PARTICLES; i++)
+    for (int i = s_particleBounds.SearchStart(Particles); i < MAX_PARTICLES; i++)
     {
         PARTICLE* o = &Particles[i];
         if (!o->Live)
         {
             o->Live = true;
+            s_particleBounds.OnTaken(i);
             o->Type = Type;
             o->TexType = Type;
             o->SubType = SubType;
@@ -3872,12 +3889,15 @@ void MoveParticles()
 
     int count = 0;
 
-    for (int i = 0; i < MAX_PARTICLES; i++)
+    s_particleBounds.TrimEnd(Particles, MAX_PARTICLES);
+    for (int i = 0; i < s_particleBounds.End(); i++)
     {
         PARTICLE* o = &Particles[i];
 
         if (o->Live)
         {
+            // Its move may end it and then spawn more, which must still be able to take this slot.
+            const Render::Effects::ActivePoolSlot<PARTICLE> active(s_particleBounds, Particles, i);
             count++;
             o->LifeTime -= FPS_ANIMATION_FACTOR;
             if (o->LifeTime <= 0)
@@ -8969,7 +8989,7 @@ namespace
     std::size_t BuildParticleDrawOrder(BYTE pass, Render::Effects::DrawOrder::Entry* entries)
     {
         std::size_t count = 0;
-        for (int particleIndex = 0; particleIndex < MAX_PARTICLES; particleIndex++)
+        for (int particleIndex = 0; particleIndex < s_particleBounds.End(); particleIndex++)
         {
             const PARTICLE* particle = &Particles[particleIndex];
             if (!ShouldRenderParticle(particle, pass)) continue;
@@ -8997,14 +9017,16 @@ void RenderParticles(BYTE byRenderOneMore)
 
     const bool cullOffscreen = !IsEffectCullingDisabledDebug();
     const bool sortDraws = GameConfig::GetInstance().GetSortParticleDraws();
-    std::size_t drawCount = MAX_PARTICLES;
+    std::size_t drawCount = 0;
     if (sortDraws)
     {
         drawCount = BuildParticleDrawOrder(byRenderOneMore, drawOrder);
         Render::Effects::DrawOrder::GroupByTexture(drawOrder, drawCount, drawOrderScratch);
     }
 
-    for (std::size_t drawIndex = 0; drawIndex < drawCount; drawIndex++)
+    // In slot order every slot that may be live is drawn, so the bound is read again on each step.
+    for (std::size_t drawIndex = 0;
+         drawIndex < (sortDraws ? drawCount : static_cast<std::size_t>(s_particleBounds.End())); drawIndex++)
     {
         const int i = sortDraws ? drawOrder[drawIndex].particleIndex : static_cast<int>(drawIndex);
         PARTICLE* o = &Particles[i];

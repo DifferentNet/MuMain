@@ -76,3 +76,13 @@
 
 /* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
 .kanturu-label { width: calc(53px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the three buttons a finger can take, 64 x 38, evenly across the
+   window and inside its bottom. */
+@media (theme: mobile) {
+	.kanturu-btn { top: 214px; width: 64px; height: 38px; }
+	#btn_refresh { left: 11px; }
+	#btn_enter { left: 83px; }
+	#btn_close { left: 155px; }
+	.kanturu-label { width: calc(64px * var(--root-scale)); }
+}

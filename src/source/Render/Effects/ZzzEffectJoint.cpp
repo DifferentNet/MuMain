@@ -17,6 +17,7 @@
 #include "ZzzEffect.h"
 #include "Audio/DSPlaySound.h"
 #include "Render/Effects/AuraJointLifecycle.h"
+#include "Render/Effects/PoolSlotBounds.h"
 #include "Network/Server/WSclient.h"
 #include "GameLogic/Pets/CSPetSystem.h"
 #include "Core/Utilities/FrameProfiler.h"
@@ -29,6 +30,16 @@ using mu::PackABGR;
 
 extern float g_fBoneSave[10][3][4];
 extern int EditFlag;
+
+namespace
+{
+Render::Effects::PoolSlotBounds s_jointBounds;
+} // namespace
+
+void NoteJointFreed(int index)
+{
+    s_jointBounds.OnFreed(index);
+}
 
 void CreateJointFpsChecked(int Type, vec3_t Position, vec3_t TargetPosition, vec3_t Angle, int SubType, OBJECT* Target, float Scale, short PKKey,
     WORD SkillIndex, WORD SkillSerialNum, int iChaIndex, const float* vPriorColor, short int sTargetindex)
@@ -118,12 +129,15 @@ static bool IsTailRunInFrustum(const JOINT* o, int first)
 void CreateJoint(int Type, vec3_t Position, vec3_t TargetPosition, vec3_t Angle, int SubType, OBJECT* Target, float Scale, short PKKey,
     WORD SkillIndex, WORD SkillSerialNum, int iChaIndex, const float* vPriorColor, short int sTargetindex)
 {
-    for (int i = 0; i < MAX_JOINTS; i++)
+    for (int i = s_jointBounds.SearchStart(Joints); i < MAX_JOINTS; i++)
     {
         JOINT* o = &Joints[i];
         if (!o->Live)
         {
             o->Live = true;
+            s_jointBounds.OnTaken(i);
+            // The setup below may end the joint again and start others, which must still be able to take this slot.
+            const Render::Effects::ActivePoolSlot<JOINT> active(s_jointBounds, Joints, i);
             std::memset(o->Tails, 0, sizeof(o->Tails));
             o->TailFrames = 0.f;
             o->Type = Type;
@@ -2817,7 +2831,7 @@ void CreateJoint(int Type, vec3_t Position, vec3_t TargetPosition, vec3_t Angle,
 
 void DeleteJoint(int Type, OBJECT* Target, int SubType)
 {
-    for (int i = 0; i < MAX_JOINTS; i++)
+    for (int i = 0; i < s_jointBounds.End(); i++)
     {
         JOINT* o = &Joints[i];
 
@@ -2828,20 +2842,24 @@ void DeleteJoint(int Type, OBJECT* Target, int SubType)
                 if (SubType == -1 || o->SubType == SubType)
                 {
                     o->Live = false;
+                    s_jointBounds.OnFreed(i);
                 }
             }
         }
         else if (o->Live && o->Type == Type && o->Target == Target)
         {
             if (SubType == -1 || o->SubType == SubType)
+            {
                 o->Live = false;
+                s_jointBounds.OnFreed(i);
+            }
         }
     }
 }
 
 bool SearchJoint(int Type, OBJECT* Target, int SubType)
 {
-    for (int i = 0; i < MAX_JOINTS; i++)
+    for (int i = 0; i < s_jointBounds.End(); i++)
     {
         JOINT* o = &Joints[i];
         if (o->Live && o->Type == Type && o->Target == Target)
@@ -6963,11 +6981,14 @@ void MoveJoint(JOINT* o, int iIndex)
 
 void MoveJoints()
 {
-    for (int i = 0; i < MAX_JOINTS; i++)
+    s_jointBounds.TrimEnd(Joints, MAX_JOINTS);
+    for (int i = 0; i < s_jointBounds.End(); i++)
     {
         JOINT* o = &Joints[i];
         if (o->Live)
         {
+            // Its move may end it and then start more joints, which must still be able to take this slot.
+            const Render::Effects::ActivePoolSlot<JOINT> active(s_jointBounds, Joints, i);
             MoveJoint(o, i);
         }
     }
@@ -6979,7 +7000,7 @@ void RenderJoints(BYTE bRenderOneMore)
     {
         return;
     }
-    for (int i = 0; i < MAX_JOINTS; i++)
+    for (int i = 0; i < s_jointBounds.End(); i++)
     {
         JOINT* o = &Joints[i];
         if (o->Type == BITMAP_JOINT_ENERGY && o->SubType == 54 && o->Target->CurrentAction != MONSTER01_ATTACK1)

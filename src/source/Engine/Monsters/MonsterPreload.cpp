@@ -142,6 +142,9 @@ namespace Engine::Monsters
                 KillNewlyLive(Sprites, m_sprites);
                 KillNewlyLive(Joints, m_joints);
                 KillNewlyLive(Particles, m_particles);
+                NoteSpriteFreed(0);
+                NoteJointFreed(0);
+                NoteParticleFreed(0);
                 KillNewlyLive(Points, m_points);
                 KillNewlyLive(Pointers, m_pointers);
                 for (std::size_t i = 0; i < m_blockTails.size(); ++i)

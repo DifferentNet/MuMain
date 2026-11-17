@@ -3,6 +3,7 @@
 #ifdef _EDITOR
 
 #include "EffectPreviewTracker.h"
+#include "Render/Effects/ZzzEffect.h"
 
 #include <algorithm>
 #include <climits>
@@ -223,9 +224,11 @@ void EffectPreviewTracker::RemoveAll(const EffectPools& pools, RemoveEffect remo
         case EffectPool::Particle:
             pools.particles[index].Live = false;
             pools.particles[index].Target = nullptr;
+            NoteParticleFreed(slot.index);
             break;
         case EffectPool::Joint:
             pools.joints[index].Live = false;
+            NoteJointFreed(slot.index);
             break;
         case EffectPool::Sprite:
             break;

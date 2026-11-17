@@ -193,3 +193,13 @@
 
 /* The mark grid's and the palette's cells take the pointer (guild_mark_paint, guild_mark_color). */
 .gm-grid .gm-cell, .gm-palette .gm-cell { pointer-events: auto; cursor: pointer; }
+
+/* MU Moldova: the phone view (theme flag "mobile"): the buttons and the name box a finger can take, each label
+   centred on its own button. */
+@media (theme: mobile) {
+	.gm-btn-big { top: 94px; height: 42px; }
+	.gm-btn-small { top: 370px; height: 40px; }
+	.gm-btn-big .gm-label { width: calc(108px * var(--root-scale)); }
+	#name_back { top: 54px; height: 34px; }
+	#name_field { top: 60px; height: calc(22px * var(--root-scale)); line-height: calc(22px * var(--root-scale)); }
+}

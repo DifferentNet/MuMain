@@ -30,6 +30,9 @@ void RenderCharactersClient();
 void BuildCharacterScenePickOBB(const OBJECT* o, OBB_t& outOBB);
 void MoveCharacterClient(CHARACTER* cc);
 void MoveCharactersClient();
+// One past the highest CharactersClient[] slot that may be live: every slot from it on is not live, so loops that
+// only act on live characters stop there. CreateCharacterPointer raises it; MoveCharactersClient recomputes it.
+int CharacterSlotEnd();
 // Builds the bones of every live, visible character (model space), on the AnimationTaskPool workers
 // when g_AnimationTaskPoolWorkers is not 0 and the crowd is big enough, else on the calling thread.
 // WaitCharactersAnimation must follow before anything reads those bones or changes a character's
