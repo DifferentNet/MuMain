@@ -191,6 +191,10 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeySunShadows[] = L"SunShadows";
 #endif
     inline constexpr wchar_t CfgKeySharpen[] = L"Sharpen";
+    // The low frame rate hint (Scenes/LowFpsHint.h): 1 offers a lower graphics preset when the game runs really
+    // slowly, 0 after "Don't ask again". LowFpsHintKept is the preset the player chose to keep (no hint while on it).
+    inline constexpr wchar_t CfgKeyLowFpsHint[] = L"LowFpsHint";
+    inline constexpr wchar_t CfgKeyLowFpsHintKept[] = L"LowFpsHintKept";
 
     inline constexpr wchar_t CfgKeyRenderBackend[] = L"Backend";
     // DXP-23's per-system effect-cost toggles (MainScene.h's SetDisableEffects/SetDisableParticles/
@@ -404,6 +408,7 @@ namespace CfgDefaults
     inline constexpr int CfgMinSunShadows = 0;
     inline constexpr int CfgMaxSunShadows = 2;
     inline constexpr int CfgDefaultSharpen = 0;
+    inline constexpr bool CfgDefaultLowFpsHint = true;
     inline constexpr int CfgMinSharpen = 0;
     inline constexpr int CfgMaxSharpen = 100;
     // The share of the screen's usable area a new installation's window takes when no display mode fits.

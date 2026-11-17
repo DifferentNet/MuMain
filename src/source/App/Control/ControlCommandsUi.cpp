@@ -128,6 +128,26 @@ void AddDocumentElement(json& elements, const std::string& name, UI::Windows::Wi
     }
 }
 
+// The low frame rate hint's toast (UI/HUD/GraphicsHint.h): no window of its own, so its buttons are found in its
+// document while it is shown.
+void AddGraphicsHintButtons(json& elements)
+{
+    Rml::Context* context = RmlUiRuntime::Instance().GetContext();
+    if (context == nullptr)
+        return;
+    for (int i = 0; i < context->GetNumDocuments(); ++i)
+    {
+        Rml::ElementDocument* document = context->GetDocument(i);
+        if (document->IsVisible() && document->GetSourceURL().ends_with("/graphics_hint.rml"))
+        {
+            AddFoundElement(elements, "graphics_hint.lower", document->GetElementById("gh_lower"));
+            AddFoundElement(elements, "graphics_hint.keep", document->GetElementById("gh_keep"));
+            AddFoundElement(elements, "graphics_hint.never", document->GetElementById("gh_never"));
+            return;
+        }
+    }
+}
+
 struct NamedElement
 {
     std::string_view name;
@@ -265,6 +285,7 @@ json Elements()
         AddElement(elements, "battle_pass.chest." + name, mu::ui::window::INTERFACE_BATTLE_PASS,
                    std::string(week ? ".bp-week-chest" : ".bp-day-chests") + " #bp_chest_" + name);
     }
+    AddGraphicsHintButtons(elements);
     return elements;
 }
 

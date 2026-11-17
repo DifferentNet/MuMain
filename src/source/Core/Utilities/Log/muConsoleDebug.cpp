@@ -24,6 +24,7 @@
 #include "Core/Text/Utf8.h"
 #include "Render/Sprites/GlobalBitmap.h"
 #include "Render/Textures/ZzzTexture.h"
+#include "Scenes/LowFpsHint.h"
 #include "Scenes/SceneCore.h"
 #include "Scenes/SceneManager.h"
 #include "Scenes/MainScene.h"
@@ -109,6 +110,11 @@ namespace
 bool CheckDeveloperLookCommand(const std::wstring& command)
 {
     if (Render::Look::HandleDeveloperCommand(command) || Render::Look::HandleFeatureOverrideCommand(command))
+    {
+        return true;
+    }
+    // $fpshint (Scenes/LowFpsHint.h), before $fps below would take it.
+    if (Scenes::LowFpsHint::HandleDeveloperCommand(command))
     {
         return true;
     }
