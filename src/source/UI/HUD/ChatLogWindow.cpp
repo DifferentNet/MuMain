@@ -38,7 +38,9 @@ namespace
 // raised to a readable size, and the original kept its six for ever (ghinzuro 2026-11-11: too big).
 // So the phone shows the newest three, and each leaves after a while.
 constexpr int PhoneSystemLines = 3;
-constexpr std::chrono::seconds PhoneSystemLineStays{8};
+constexpr std::uint64_t PhoneSystemLineStaysMs = 8'000;
+// The PC view keeps its six, but each leaves as the chat's lines do (ghinzuro 2026-11-17: «Да, тоже 30 с»).
+constexpr std::uint64_t PcSystemLineStaysMs = UI::Chat::ChatLineShownMs;
 } // namespace
 using namespace mu::ui::window;
 
@@ -1259,7 +1261,7 @@ void mu::ui::window::CSystemLogWindow::AddText(const type_string& strText, MESSA
     }
 
     pvecMsgs->push_back(pMsgText);
-    m_Arrivals.push_back(std::chrono::steady_clock::now());
+    m_Arrivals.push_back(ChatLogClockMs());
 
     m_iCurrentRenderEndLine = pvecMsgs->size() - 1;
 }
@@ -1277,19 +1279,16 @@ void mu::ui::window::CSystemLogWindow::RemoveFrontLine()
     }
 }
 
-// How many of the newest messages the phone view shows now: at most PhoneSystemLines, and none older
-// than PhoneSystemLineStays.
-int mu::ui::window::CSystemLogWindow::PhoneShownCount() const
+// How many of the newest messages show now: on a phone at most PhoneSystemLines, none older than
+// PhoneSystemLineStaysMs; on a PC at most MAX_NUMBER_OF_LINES, none older than PcSystemLineStaysMs
+// while the chat is closed (input up or the log's frame shown: the newest six show again, as the chat log's history does).
+int mu::ui::window::CSystemLogWindow::ShownCount() const
 {
-    const auto now = std::chrono::steady_clock::now();
-    int count = 0;
-    for (auto it = m_Arrivals.rbegin(); it != m_Arrivals.rend() && count < PhoneSystemLines; ++it)
-    {
-        if (now - *it > PhoneSystemLineStays)
-            break;
-        ++count;
-    }
-    return count;
+    if (UI::Mobile::IsPhoneView())
+        return UI::Chat::SystemLinesShown(m_Arrivals, ChatLogClockMs(), PhoneSystemLines, PhoneSystemLineStaysMs, false);
+
+    const bool chatOpen = g_pChatListBox != nullptr && g_pChatListBox->IsChatOpen();
+    return UI::Chat::SystemLinesShown(m_Arrivals, ChatLogClockMs(), MAX_NUMBER_OF_LINES, PcSystemLineStaysMs, chatOpen);
 }
 
 int mu::ui::window::CSystemLogWindow::GetCurrentRenderEndLine() const
@@ -1377,11 +1376,11 @@ void mu::ui::window::CSystemLogWindow::SyncRmlModel()
 
     SyncNativeGeometry();
 
-    // The phone view's lines leave by the clock, and the view can change under them.
-    const int shownOnPhone = UI::Mobile::IsPhoneView() ? PhoneShownCount() : -1;
-    if (shownOnPhone != m_ShownOnPhone)
+    // The lines leave by the clock (and come back while the chat is open on a PC), and the view can change under them.
+    const int shown = ShownCount();
+    if (shown != m_ShownCount)
     {
-        m_ShownOnPhone = shownOnPhone;
+        m_ShownCount = shown;
         m_bLinesDirty = true;
     }
 
@@ -1452,7 +1451,7 @@ void mu::ui::window::CSystemLogWindow::RebuildLineModel()
     model.lines.reserve(m_vecAllMsgs.size());
 
     const bool phone = UI::Mobile::IsPhoneView();
-    const std::size_t first = phone ? m_vecAllMsgs.size() - std::min<std::size_t>(m_vecAllMsgs.size(), static_cast<std::size_t>(PhoneShownCount())) : 0;
+    const std::size_t first = m_vecAllMsgs.size() - std::min<std::size_t>(m_vecAllMsgs.size(), static_cast<std::size_t>(ShownCount()));
     for (std::size_t index = first; index < m_vecAllMsgs.size(); ++index)
     {
         const CMessageText* pMsgText = m_vecAllMsgs[index];
@@ -1494,9 +1493,11 @@ void mu::ui::window::CSystemLogWindow::ClearAll()
 
 bool mu::ui::window::CSystemLogWindow::CheckChatRedundancy(const type_string& strText, int iSearchLine/* = 1*/)
 {
-    if (m_vecAllMsgs.empty()) return false;
-    auto vri_msgs = m_vecAllMsgs.rbegin();
-    for (int i = 0; (i < iSearchLine) || (vri_msgs != m_vecAllMsgs.rend()); vri_msgs++, i++)
-        if (0 == (*vri_msgs)->GetText().compare(strText)) return true;
+    (void)iSearchLine; // native's loop condition made it search every line anyway
+    // Only the lines on screen count: a repeat whose earlier line has already gone (ShownCount())
+    // must show again, or "no more arrows" would stay silent once its first line faded.
+    const std::size_t shown = std::min<std::size_t>(m_vecAllMsgs.size(), static_cast<std::size_t>(std::max(0, ShownCount())));
+    for (auto vri_msgs = m_vecAllMsgs.rbegin(); vri_msgs != m_vecAllMsgs.rbegin() + shown; ++vri_msgs)
+        if (*vri_msgs != nullptr && 0 == (*vri_msgs)->GetText().compare(strText)) return true;
     return false;
 }

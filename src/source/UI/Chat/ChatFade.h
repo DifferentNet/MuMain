@@ -29,4 +29,11 @@ bool IsChatLineShown(std::uint64_t addedAtMs, std::uint64_t nowMs, bool chatOpen
 // Which lines are on screen at nowMs, and when that changes next. Times are milliseconds of one
 // monotonic clock.
 ChatFadeState EvaluateChatFade(const std::vector<std::uint64_t>& addedAtMs, std::uint64_t nowMs, bool chatOpen);
+
+// The system messages at the top left (CSystemLogWindow) go the same way (ghinzuro 2026-11-17: «Да,
+// тоже 30 с»): how many of the newest lines show at nowMs -- at most maxLines, none older than stayMs
+// (arrivals oldest first). An open chat (as CChatLogWindow::IsChatOpen counts it) shows the newest
+// maxLines whatever their age.
+int SystemLinesShown(const std::vector<std::uint64_t>& arrivalsMs, std::uint64_t nowMs, int maxLines,
+                     std::uint64_t stayMs, bool chatOpen);
 } // namespace UI::Chat

@@ -5,6 +5,7 @@
 using UI::Chat::ChatLineShownMs;
 using UI::Chat::EvaluateChatFade;
 using UI::Chat::IsChatLineShown;
+using UI::Chat::SystemLinesShown;
 
 namespace
 {
@@ -77,4 +78,30 @@ TEST_CASE("Nothing is due once every line has gone")
     CHECK(state.shown == std::vector<bool>{false, false});
     CHECK(state.firstShown == -1);
     CHECK_FALSE(state.nextChangeMs.has_value());
+}
+
+TEST_CASE("System log: only the newest lines younger than the stay show")
+{
+    const std::vector<std::uint64_t> arrivals{Now - 20 * 60'000, Now - 31'000, Now - 30'000, Now - 29'999, Now};
+    CHECK(SystemLinesShown(arrivals, Now, 6, 30'000, false) == 2);
+}
+
+TEST_CASE("System log: the line cap holds even for fresh lines")
+{
+    const std::vector<std::uint64_t> arrivals{Now - 3, Now - 2, Now - 1, Now};
+    CHECK(SystemLinesShown(arrivals, Now, 3, 8'000, false) == 3);
+}
+
+TEST_CASE("System log: an open chat shows the newest lines whatever their age")
+{
+    const std::vector<std::uint64_t> arrivals{Now - 20 * 60'000, Now - 10 * 60'000, Now - 60'000};
+    CHECK(SystemLinesShown(arrivals, Now, 6, 30'000, true) == 3);
+    CHECK(SystemLinesShown(arrivals, Now, 2, 30'000, true) == 2);
+    CHECK(SystemLinesShown(arrivals, Now, 6, 30'000, false) == 0);
+}
+
+TEST_CASE("System log: nothing to show and a clock behind an arrival")
+{
+    CHECK(SystemLinesShown({}, Now, 6, 30'000, false) == 0);
+    CHECK(SystemLinesShown({Now + 5}, Now, 6, 30'000, false) == 1);
 }

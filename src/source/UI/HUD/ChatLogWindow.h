@@ -228,10 +228,11 @@ namespace mu::ui::window
         // model is rebuilt only when either changes, never every frame.
         bool m_bChatOpen = false;
         std::optional<std::uint64_t> m_NextFadeMs;
-        bool IsChatOpen() const;
         bool FadeChanged();
 
     public:
+        // The chat input is up or the log's frame is shown; the system log asks too (CSystemLogWindow).
+        bool IsChatOpen() const;
 
         CChatLogWindow();
         ~CChatLogWindow() override;
@@ -372,11 +373,12 @@ namespace mu::ui::window
         unsigned int m_MeasuredWindowHeight = 0;
         float m_MeasuredNativeTextPx = -1.f;
         float m_MeasuredTextHeight = 0.f;
-        // MU Moldova, the phone view: the newest few messages, each for a while (ChatLogWindow.cpp).
-        // When each message of m_vecAllMsgs came, and how many the model showed last.
-        std::vector<std::chrono::steady_clock::time_point> m_Arrivals;
-        int m_ShownOnPhone = -1;
-        int PhoneShownCount() const;
+        // MU Moldova: the newest messages, each for a while -- 3 for 8 s on a phone, 6 for 30 s on a PC
+        // unless the chat is open (ChatLogWindow.cpp, UI/Chat/ChatFade.h). When each message of
+        // m_vecAllMsgs came (ChatLogClockMs()), and how many the model showed last.
+        std::vector<std::uint64_t> m_Arrivals;
+        int m_ShownCount = -1;
+        int ShownCount() const;
 
         void RemoveFrontLine();
         int GetCurrentRenderEndLine() const;
