@@ -196,6 +196,16 @@ def literal_ids(view, definitions):
                 ids[aliases[match[1]]].add(match[2])
             elif len(documents) == 1:
                 ids[documents[0]].add(match[2])
+        # An item camera target's Sync(document, "id", ...) looks the id up in the document as well.
+        for match in re.finditer(r'(?:\.|->)Sync\(\s*' + access + r'\s*,\s*"([^"]+)"', body):
+            index = int(match[1] or 0)
+            if index < len(documents):
+                ids[documents[index]].add(match[2])
+        for match in re.finditer(r'(?:\.|->)Sync\(\s*(\w+)\s*,\s*"([^"]+)"', body):
+            if match[1] in aliases:
+                ids[aliases[match[1]]].add(match[2])
+            elif len(documents) == 1:
+                ids[documents[0]].add(match[2])
     return ids
 
 

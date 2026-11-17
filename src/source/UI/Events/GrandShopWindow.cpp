@@ -396,7 +396,7 @@ void mu::ui::window::CGrandShopWindow::SyncRmlModel()
     // Layer depth UI::RmlBridge::ForegroundPanelLayerDepth: over the HUD and its logs.
     UI::RmlBridge::SyncDocumentVisibilityInFront(document, IsVisible());
     const bool shown = IsVisible();
-    m_ItemTarget.Sync(document->GetElementById("gs_items"), shown && Grand().HasInfo());
+    m_ItemTarget.Sync(document, "gs_items", shown && Grand().HasInfo());
     if (!shown)
         return;
 

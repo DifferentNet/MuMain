@@ -322,7 +322,7 @@ void mu::ui::window::CJewelBankWindow::BindRmlModel(Rml::DataModelConstructor& c
 void mu::ui::window::CJewelBankWindow::SyncRmlModel()
 {
     m_RmlView.Ensure();
-    m_ItemTarget.Sync(m_RmlView.Document() ? m_RmlView.Document()->GetElementById("jb_items") : nullptr, IsVisible());
+    m_ItemTarget.Sync(m_RmlView.Document(), "jb_items", IsVisible());
     if (!m_RmlView.Document())
         return;
 

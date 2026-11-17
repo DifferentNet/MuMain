@@ -337,7 +337,7 @@ bool CGenericConfirmDialog::Render()
 {
     SyncRmlModel();
     Rml::ElementDocument* document = m_RmlView.Document();
-    m_Item3DTarget.Sync(document ? document->GetElementById("gcd_item3d") : nullptr, m_bActive && m_Active.item3D);
+    m_Item3DTarget.Sync(document, "gcd_item3d", m_bActive && m_Active.item3D);
     return true;
 }
 

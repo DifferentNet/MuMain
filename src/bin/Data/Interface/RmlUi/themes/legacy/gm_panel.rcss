@@ -192,3 +192,9 @@
 /* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
 #gm_title { width: calc(100% * var(--root-scale)); }
 #gm_status { width: calc(166px * var(--root-scale)); }
+
+/* MU Moldova: the phone view (theme flag "mobile"): player and warp rows a finger can take. The lists keep their heights
+   and already scroll, so nothing else moves; the window keeps its PC width. */
+@media (theme: mobile) {
+	.gm-row { padding: calc(6px * var(--root-scale)) calc(4px * var(--root-scale)); }
+}

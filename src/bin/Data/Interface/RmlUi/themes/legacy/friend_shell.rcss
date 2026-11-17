@@ -152,16 +152,16 @@ button { font-family: "token(font-body)"; font-size: 1rem; color: token(text-pri
 	#btn_maximize.restore { decorator: image(fs-restore) content-box; }
 	#btn_close { decorator: image(fs-close) content-box; }
 	#tabs, #reject { top: 30dp; }
-	.btn, #reject { height: 28dp; line-height: 28dp; }
+	.btn, #reject { height: 36dp; line-height: 36dp; }
 	.btn { padding: 0 6dp; }
-	.check { width: 12dp; height: 12dp; margin-top: 8dp; }
-	.page { top: 64dp; }
-	.headers, .headers button { height: 22dp; line-height: 22dp; }
-	.scroll-pane { top: 23dp; bottom: 34dp; }
-	.row { height: 30dp; line-height: 30dp; }
-	.row .check { margin-top: 9dp; }
-	.row .read_state { height: 14dp; margin-top: 8dp; }
-	.mail_columns .check_column { height: 30dp; }
-	.actions { height: 30dp; }
+	.check { width: 16dp; height: 16dp; margin-top: 10dp; }
+	.page { top: 72dp; }
+	.headers, .headers button { height: 26dp; line-height: 26dp; }
+	.scroll-pane { top: 27dp; bottom: 42dp; }
+	.row { height: 38dp; line-height: 38dp; }
+	.row .check { margin-top: 11dp; }
+	.row .read_state { height: 14dp; margin-top: 12dp; }
+	.mail_columns .check_column { height: 38dp; }
+	.actions { height: 38dp; }
 	#resize { width: 16dp; height: 16dp; right: -8dp; bottom: -20dp; }
 }

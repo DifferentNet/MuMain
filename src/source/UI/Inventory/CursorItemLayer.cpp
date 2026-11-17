@@ -42,7 +42,7 @@ void UI::Items::SyncCursorItemLayer()
     Rml::ElementDocument* document = g_Layer->view.Document();
     const bool shown = ShownPickedItem() != nullptr;
     UI::RmlBridge::SyncDocumentVisibilityInFront(document, shown);
-    g_Layer->target.Sync(document ? document->GetElementById("cursor_item") : nullptr, shown);
+    g_Layer->target.Sync(document, "cursor_item", shown);
 }
 
 void UI::Items::ReleaseCursorItemLayer()

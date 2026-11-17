@@ -509,13 +509,18 @@ int mu::ui::window::CGmPanelWindow::SecondsLeft(int left, std::chrono::steady_cl
 void mu::ui::window::CGmPanelWindow::NoteLists()
 {
     auto& panel = Panel();
+    const bool eventsChanged = panel.Events().Version != m_eventsVersion;
+    const bool tiersChanged = panel.Tiers().Version != m_tiersVersion;
+    // Runs every frame, also for players who are no GM: the clock is read only when a list came.
+    if (!eventsChanged && !tiersChanged)
+        return;
     const auto now = std::chrono::steady_clock::now();
-    if (panel.Events().Version != m_eventsVersion)
+    if (eventsChanged)
     {
         m_eventsVersion = panel.Events().Version;
         m_eventsAt = now;
     }
-    if (panel.Tiers().Version != m_tiersVersion)
+    if (tiersChanged)
     {
         m_tiersVersion = panel.Tiers().Version;
         m_tiersAt = now;
@@ -1344,7 +1349,7 @@ void mu::ui::window::CGmPanelWindow::SyncRmlModel()
     const bool showItem = IsVisible() && ShownItem() != nullptr;
     if (showItem)
         m_itemTarget.SetFieldOfView(ItemFieldOfView());
-    m_itemTarget.Sync(GetField("gm_items"), showItem);
+    m_itemTarget.Sync(m_RmlView.Document(), "gm_items", showItem);
     if (!m_RmlView.Document())
         return;
 
