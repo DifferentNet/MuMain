@@ -452,7 +452,6 @@ private:
     bool m_gamepadAttackToggle = false;
     bool m_gamepadPageToggle = false;
     int m_gamepadHintsSeen = 0;
-
     std::wstring m_enableAnimationTaskPool;
     bool m_reuseCharacterBones = true;
 

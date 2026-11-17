@@ -14114,7 +14114,7 @@
     <value>Halten</value>
   </data>
   <data name="GamepadToggleMode" xml:space="preserve">
-    <value>Tippen an, tippen aus</value>
+    <value>Drücken: an / aus</value>
   </data>
   <data name="PadHintPickUp" xml:space="preserve">
     <value>Ein Gegenstand in der Nähe: D-pad unten hebt ihn auf, {A} auch ohne Monster in der Nähe</value>

@@ -132,7 +132,6 @@ bool ScrollsFurtherAt(Rml::Context* context, Rml::Vector2f point, bool down)
 }
 
 bool RmlTouchScroll::Begin(Rml::Context* context, Rml::Vector2f point, Rml::Vector2f firstMove)
-
 {
     m_Held.reset();
     Rml::Element* hit = context != nullptr ? context->GetElementAtPoint(point) : nullptr;

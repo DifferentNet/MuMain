@@ -12095,7 +12095,7 @@
     <value>長押し</value>
   </data>
   <data name="GamepadToggleMode" xml:space="preserve">
-    <value>押してオン、もう一度でオフ</value>
+    <value>押してオン／オフ</value>
   </data>
   <data name="PadHintPickUp" xml:space="preserve">
     <value>近くにアイテム：D-pad下で拾う。近くにモンスターがいなければ{A}でも拾える</value>

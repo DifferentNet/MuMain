@@ -65,5 +65,4 @@ namespace Core::Input
     {
         return g_pUiInputConsumer && g_pUiInputConsumer->ScrollsFurtherAt(x, y, down);
     }
-
 }

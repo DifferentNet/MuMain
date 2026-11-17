@@ -266,6 +266,7 @@ void mu::ui::window::CMainFrameWindow::BindRmlModel(Rml::DataModelConstructor& c
     c.Bind("item_slot_1_key", &model.itemSlot1Key);
     c.Bind("item_slot_2_key", &model.itemSlot2Key);
     c.Bind("item_slot_3_key", &model.itemSlot3Key);
+    c.Bind("pad_in_use", &model.padInUse);
 
     c.BindEventCallback("item_hotkey_hover",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& args) { m_ItemHotKey.OnHotkeySlotHover(args.empty() ? 0 : args[0].Get<int>()); });
@@ -839,6 +840,7 @@ void mu::ui::window::CMainFrameWindow::SyncItemSlots()
     SyncText(&MainFrameRmlModel::itemSlot1Key, "item_slot_1_key", PotionKeyText(1));
     SyncText(&MainFrameRmlModel::itemSlot2Key, "item_slot_2_key", PotionKeyText(2));
     SyncText(&MainFrameRmlModel::itemSlot3Key, "item_slot_3_key", PotionKeyText(3));
+    SyncBool(&MainFrameRmlModel::padInUse, "pad_in_use", UI::Mobile::IsGamepadInUse());
 }
 
 void mu::ui::window::CMainFrameWindow::SyncSkillList()

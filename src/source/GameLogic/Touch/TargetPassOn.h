@@ -27,7 +27,6 @@ inline constexpr auto FightAge = std::chrono::seconds(3);
 
 // The foe it passes on to, never `gone`: the nearest within the cone the way (goneX, goneY) lay from
 // the hero (heroX, heroY) (DirectionPick::Pick); NoKey with none that way. All in the map's tiles.
-
 [[nodiscard]] int Next(const std::vector<DirectionPick::Candidate>& candidates, float heroX, float heroY, float goneX,
                        float goneY, int gone);
 } // namespace GameLogic::Touch::TargetPassOn

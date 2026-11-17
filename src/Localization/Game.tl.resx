@@ -14016,7 +14016,7 @@
     <value>Hawakan</value>
   </data>
   <data name="GamepadToggleMode" xml:space="preserve">
-    <value>Pindutin para buksan, ulitin para patayin</value>
+    <value>Pindot: on/off</value>
   </data>
   <data name="PadHintPickUp" xml:space="preserve">
     <value>May item sa malapit: D-pad pababa ang pumupulot, {A} rin kung walang halimaw sa malapit</value>

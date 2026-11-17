@@ -501,7 +501,6 @@ void Recheck(SDL_Window* window)
 
 void SnapSoon()
 {
-
     PadTargets::Refresh();
     g_state.snapPending = true;
     g_state.snapFrames = 0;
@@ -519,7 +518,6 @@ void SnapToPage(int window)
 void SnapOnNewWindow()
 {
     PadTargets::Refresh();
-
     g_state.knownTargets = g_state.lastTargets;
     g_state.newWindowPending = true;
     g_state.newWindowFrames = 0;

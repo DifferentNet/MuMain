@@ -182,6 +182,8 @@ namespace mu::ui::window
             Rml::String itemSlot0Count, itemSlot1Count, itemSlot2Count, itemSlot3Count;
             // The keys the player bound to the 4 potion slots (Q, W, E, R by default).
             Rml::String itemSlot0Key = "Q", itemSlot1Key = "W", itemSlot2Key = "E", itemSlot3Key = "R";
+            // The pad plays: the legacy art's baked-in Q W E R letters are covered (main_frame.rml).
+            bool padInUse = false;
         };
         void BindRmlModel(Rml::DataModelConstructor& c, MainFrameRmlModel& model);
         void OnRmlReloaded();

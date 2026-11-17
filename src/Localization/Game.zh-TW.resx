@@ -14016,7 +14016,7 @@
     <value>按住</value>
   </data>
   <data name="GamepadToggleMode" xml:space="preserve">
-    <value>按一下開啟，再按一下關閉</value>
+    <value>按一下開／關</value>
   </data>
   <data name="PadHintPickUp" xml:space="preserve">
     <value>附近有物品：D-pad 下撿起；附近沒有怪物時 {A} 也可以</value>

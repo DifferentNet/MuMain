@@ -54,9 +54,10 @@ enum class PadButton : std::uint8_t
 
 // Holds or lets go of a control as a finger on it would. A press counts once per hold.
 void SetPadHeld(PadButton button, bool held);
-// The pad's right trigger is held (its second page of skills): the skill buttons 4 and 5 show in the
-// places of the first ones while the pad plays without fingers.
-void SetPadAlt(bool alt);
+// The pad's second page of skills shows (RT held, or tapped with the RT toggle): the skill buttons 4
+// and 5 show in the places of the first ones while the pad plays without fingers. `potions`: RT is
+// held, so the left bumper and trigger drink E and R (they never stay on the toggled page).
+void SetPadAlt(bool skills, bool potions);
 // How many skill buttons are in play: six for a pad alone on the lower hotkey set (the sixth on RT + B),
 // else five. The help and the controls card say "4 to 6" or "4 and 5" by it.
 [[nodiscard]] int SkillButtonsInPlay();

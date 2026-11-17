@@ -14037,7 +14037,7 @@
     <value>Przytrzymaj</value>
   </data>
   <data name="GamepadToggleMode" xml:space="preserve">
-    <value>Dotknij, by włączyć, znów, by wyłączyć</value>
+    <value>Naciśnij: wł./wył.</value>
   </data>
   <data name="PadHintPickUp" xml:space="preserve">
     <value>Przedmiot w pobliżu: D-pad w dół go podnosi, {A} też, gdy nie ma potworów w pobliżu</value>

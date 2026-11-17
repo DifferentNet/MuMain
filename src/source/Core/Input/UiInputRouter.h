@@ -61,7 +61,6 @@ namespace Core::Input
         {
             return false;
         }
-
     };
 
     // Registers the single active UI input consumer. Set once at startup (RmlUiRuntime::Create())
@@ -88,5 +87,4 @@ namespace Core::Input
     bool UiScrollsAt(float x, float y);
     // The registered consumer's IUiInputConsumer::ScrollsFurtherAt(); with none registered nothing scrolls.
     bool UiScrollsFurtherAt(float x, float y, bool down);
-
 }

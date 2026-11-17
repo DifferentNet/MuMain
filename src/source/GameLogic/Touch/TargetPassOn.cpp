@@ -14,6 +14,5 @@ int Next(const std::vector<DirectionPick::Candidate>& candidates, float heroX, f
     // One dead on the hero's own tile lay no way at all: the plain nearest then (Pick takes every
     // candidate as ahead).
     return DirectionPick::Pick(candidates, heroX, heroY, goneX - heroX, goneY - heroY, gone, false);
-
 }
 } // namespace GameLogic::Touch::TargetPassOn

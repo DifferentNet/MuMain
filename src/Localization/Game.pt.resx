@@ -14016,7 +14016,7 @@
     <value>Segurar</value>
   </data>
   <data name="GamepadToggleMode" xml:space="preserve">
-    <value>Aperte para ligar, de novo para desligar</value>
+    <value>Aperte: liga/desliga</value>
   </data>
   <data name="PadHintPickUp" xml:space="preserve">
     <value>Um item perto: D-pad baixo pega, {A} também sem monstros perto</value>

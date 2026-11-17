@@ -14016,7 +14016,7 @@
     <value>Утримувати</value>
   </data>
   <data name="GamepadToggleMode" xml:space="preserve">
-    <value>Торкнутися — увімк., ще раз — вимк.</value>
+    <value>Натисни: увімк/вимк</value>
   </data>
   <data name="PadHintPickUp" xml:space="preserve">
     <value>Предмет поруч: D-pad вниз піднімає його, {A} теж, якщо монстрів поруч немає</value>

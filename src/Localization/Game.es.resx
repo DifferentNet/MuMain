@@ -14016,7 +14016,7 @@
     <value>Mantener</value>
   </data>
   <data name="GamepadToggleMode" xml:space="preserve">
-    <value>Pulsa para activar, otra vez para quitar</value>
+    <value>Pulsar: sí / no</value>
   </data>
   <data name="PadHintPickUp" xml:space="preserve">
     <value>Un objeto cerca: D-pad abajo lo recoge, {A} también sin monstruos cerca</value>

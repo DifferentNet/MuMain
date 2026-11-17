@@ -28,7 +28,6 @@ void Update(SDL_Window* window, Core::Input::Gamepad::Presses& presses, Clock::t
 // not the one kept from a moment ago. Update does the same after the d-pad and the stick moved.
 void Recheck(SDL_Window* window);
 // The windows opened or changed (a hub tab turned): the frame goes to the nearest target as soon as
-
 // there is one.
 void SnapSoon();
 // RT turned the page of the window at `window` (a target's `window`): the frame goes to that page's first

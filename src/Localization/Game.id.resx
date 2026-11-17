@@ -14016,7 +14016,7 @@
     <value>Tahan</value>
   </data>
   <data name="GamepadToggleMode" xml:space="preserve">
-    <value>Ketuk untuk nyala, ketuk lagi untuk mati</value>
+    <value>Tekan: nyala/mati</value>
   </data>
   <data name="PadHintPickUp" xml:space="preserve">
     <value>Item di dekatmu: D-pad bawah mengambilnya, {A} juga jika tidak ada monster di dekat</value>

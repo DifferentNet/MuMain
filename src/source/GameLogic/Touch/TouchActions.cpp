@@ -1784,7 +1784,12 @@ bool HasOtherFoe()
 
 int FightKey()
 {
-    if (!InWorld() || !IsGoodTarget(FindByKey(g_targetKey), true))
+    if (!InWorld())
+        return NoTarget;
+    // The pad reads this before the frame's ChosenIndex() runs (it is drawn later): a choice whose foe
+    // just died passes on now, so the fight key already names the foe it passed on to.
+    KeepChosen();
+    if (!IsGoodTarget(FindByKey(g_targetKey), true))
         return NoTarget;
     return g_targetKey;
 }
@@ -1796,7 +1801,6 @@ int ChosenKey()
 
 bool HasFoeNear()
 {
-
     if (!InWorld())
         return false;
     // The one chosen or fought last counts as A fights it (TargetToFight): a player too.

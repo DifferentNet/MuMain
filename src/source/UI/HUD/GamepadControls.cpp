@@ -20,6 +20,7 @@
 #include "GameLogic/Items/LootFilterRuntime.h"
 #include "GameLogic/Touch/TouchActions.h"
 #include "I18N/All.h"
+#include "MUHelper/MuHelper.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
 #include "Character/CharMakeWin.h"
@@ -97,6 +98,10 @@ constexpr auto WheelRepeat = std::chrono::milliseconds(90);
 constexpr auto ChatHold = std::chrono::milliseconds(500);
 // D-pad up or left held this long: the MU Helper's settings, the Teleport window (ghinzuro, 2026-11-04).
 constexpr auto DpadHold = std::chrono::milliseconds(500);
+// The RT page toggle: RT let go sooner is a tap that turns the page; held longer, the page stays.
+constexpr auto RtTapTime = std::chrono::milliseconds(400);
+// The A toggle: latched with no foe picked within this, the attack lets go.
+constexpr auto AttackPickTime = std::chrono::milliseconds(1000);
 // D-pad down talks to an NPC this near when no drop lies around.
 constexpr int NpcReach = 6;
 // A chosen player's menu opens this near (the world's units; it closes past 300), after a walk up to
@@ -287,14 +292,17 @@ struct State
     // The hero lay dead last frame (FollowDeath).
     bool heroDead = false;
     // The A toggle (Options: Pad attack on A): the attack goes on without A held, on the foe it fights
-    // (attackKey, -1 until the first swing picked one). PlayAttackToggle.
+    // (attackKey, -1 until the first swing picked one, latched at attackSince). PlayAttackToggle.
     bool attackLatched = false;
     int attackKey = -1;
+    Clock::time_point attackSince{};
     // The RT toggle (Options: Pad RT page): the second page stays up until the next tap of RT. RT went
-    // down in the world (rtTapping) and zoomed with the d-pad meanwhile (rtZoomed: not a tap then).
+    // down in the world at rtDownAt (rtTapping) and zoomed with the d-pad meanwhile (rtZoomed: not a
+    // tap then).
     bool pageLatched = false;
     bool rtTapping = false;
     bool rtZoomed = false;
+    Clock::time_point rtDownAt{};
     Clock::time_point lastFrame{};
     // Seconds since the last frame (FrameSeconds), for the overlay's glide.
     float frameSeconds = 0.f;
@@ -480,9 +488,11 @@ void StopAttackToggle()
 void ReleaseControls()
 {
     StopAttackToggle();
+    // An RT let go in a menu, a window or a death is no tap of the page toggle.
+    g_state.rtTapping = false;
     for (const Mapping& mapping : Mappings)
         Controls::SetPadHeld(mapping.control, false);
-    Controls::SetPadAlt(false);
+    Controls::SetPadAlt(false, false);
     Controls::SetPadHeld(PadButton::PickUp, false);
     Controls::SetPadHeld(PadButton::Menu, false);
 }
@@ -564,6 +574,8 @@ void ReleaseForWorldChange(SDL_Window* window)
     // The frame starts anew on the other side: on the screen's first control, or the first window opened.
     UI::HUD::PadFrame::Reset();
     UI::HUD::PadCard::Close();
+    // The skills' page starts on the first one on the other side.
+    g_state.pageLatched = false;
     g_state.frameOpen = false;
     g_state.windowOpen = false;
     g_state.onCharacters = false;
@@ -947,29 +959,31 @@ void TurnWheelWithDpad(SDL_Window* window, Presses& presses, Clock::time_point n
 }
 
 // RT with the page toggle on: a tap in the world turns the page, as RT is let go. RT held to zoom with
-// the d-pad (ZoomWithDpad) is no tap: the page stays.
-void FollowPageToggle(const Presses& presses)
+// the d-pad (ZoomWithDpad) or held RtTapTime or longer is no tap: the page stays.
+void FollowPageToggle(const Presses& presses, Clock::time_point now)
 {
     if (Pressed(presses, Button::RightTrigger) && !g_state.windowOpen)
     {
         g_state.rtTapping = true;
         g_state.rtZoomed = false;
+        g_state.rtDownAt = now;
     }
     if (!g_state.rtTapping || Held(Button::RightTrigger))
         return;
     g_state.rtTapping = false;
-    if (!g_state.rtZoomed && !g_state.windowOpen)
+    if (!g_state.rtZoomed && !g_state.windowOpen && now - g_state.rtDownAt < RtTapTime)
         g_state.pageLatched = !g_state.pageLatched;
 }
 
 // A with the attack toggle on (pad round 5): a tap on a foe starts the attack, and it goes on with A let
 // go. It stops on the next tap of A, a walk with the left stick, B, a window opening, a death or a warp
-// (ReleaseControls), and as the foe dies or goes out of reach: it goes on only to the foe the right
-// stick's choice passed on to (TouchActions' KeepChosen), so a kill never turns the hero on a foe
-// nobody chose.
-void PlayAttackToggle(const Presses& presses)
+// (ReleaseControls), the MU Helper at work, and as the foe dies or goes out of reach: it goes on only
+// to the foe the right stick's choice passed on to (TouchActions' KeepChosen), so a kill never turns
+// the hero on a foe nobody chose. Never latched in a safe zone, and let go if no foe was picked within
+// AttackPickTime.
+void PlayAttackToggle(const Presses& presses, Clock::time_point now)
 {
-    if (!GameConfig::GetInstance().GetGamepadAttackToggle())
+    if (!GameConfig::GetInstance().GetGamepadAttackToggle() || MUHelper::g_MuHelper.IsActive())
     {
         StopAttackToggle();
         return;
@@ -978,8 +992,11 @@ void PlayAttackToggle(const Presses& presses)
     const bool tapped = Pressed(presses, Button::A) && !g_state.waitForRelease[static_cast<int>(Button::A)];
     if (!g_state.attackLatched)
     {
-        if (tapped && GameLogic::Touch::HasFoeNear())
+        if (tapped && !Hero->SafeZone && GameLogic::Touch::HasFoeNear())
+        {
             g_state.attackLatched = true;
+            g_state.attackSince = now;
+        }
         return;
     }
     if (tapped || StickWalks() || Pressed(presses, Button::B))
@@ -990,10 +1007,11 @@ void PlayAttackToggle(const Presses& presses)
     const int fought = GameLogic::Touch::FightKey();
     if (g_state.attackKey == -1)
     {
-        // The first swing picks the foe; with none left to pick, nothing to go on with.
+        // The first swing picks the foe; with none left to pick, or none picked in time, nothing to go
+        // on with.
         if (fought != -1)
             g_state.attackKey = fought;
-        else if (!GameLogic::Touch::HasFoeNear())
+        else if (!GameLogic::Touch::HasFoeNear() || now - g_state.attackSince > AttackPickTime)
             StopAttackToggle();
         return;
     }
@@ -1010,25 +1028,29 @@ void PlayAttackToggle(const Presses& presses)
 // The buttons that press a control hold it while held. A tap shorter than a frame (a quick one on a
 // slow phone, the press that woke the pad in a browser) still presses it once. A button for the other
 // mode lets its control go (B is a skill in the world, Back over a window).
-void HoldMappedControls(const Presses& presses)
+void HoldMappedControls(const Presses& presses, Clock::time_point now)
 {
     const bool attackToggle = GameConfig::GetInstance().GetGamepadAttackToggle();
     std::array<bool, static_cast<int>(PadButton::Count)> held{};
     // The second page shows only in the world: over a window X and Y act on the items. The buttons
     // say the page RT shows now; each button acts on the page it went down on (Pad::PageLatch).
-    // With the RT toggle, the page a tap of RT turned stays up (FollowPageToggle).
+    // With the RT toggle, the page a tap of RT turned stays up for the skills (FollowPageToggle); the
+    // potions on LB and LT drink E and R only while RT is held.
     const bool pageToggle = GameConfig::GetInstance().GetGamepadPageToggle();
     if (pageToggle)
-        FollowPageToggle(presses);
+        FollowPageToggle(presses, now);
     else
         g_state.pageLatched = false;
-    const bool altShown = (pageToggle ? g_state.pageLatched : Held(Button::RightTrigger)) && !g_state.windowOpen;
-    Controls::SetPadAlt(altShown);
+    const bool rtHeld = Held(Button::RightTrigger) && !g_state.windowOpen;
+    const bool altShown = pageToggle ? g_state.pageLatched && !g_state.windowOpen : rtHeld;
+    Controls::SetPadAlt(altShown, rtHeld);
     std::array<bool, Pad::ButtonCount> alt{};
     for (int button = 0; button < Pad::ButtonCount; ++button)
     {
-        const Pad::ButtonState& state = Pad::GetButton(static_cast<Button>(button));
-        alt[button] = g_state.pages[button].Alt(state.held, state.presses, altShown);
+        const Button pad = static_cast<Button>(button);
+        const bool potion = pad == Button::LeftShoulder || pad == Button::LeftTrigger;
+        const Pad::ButtonState& state = Pad::GetButton(pad);
+        alt[button] = g_state.pages[button].Alt(state.held, state.presses, potion ? rtHeld : altShown);
     }
     for (const Mapping& mapping : Mappings)
     {
@@ -1266,6 +1288,8 @@ void PlayDpadUp(const Presses& presses, Clock::time_point now)
     switch (ReadLongPress(g_state.dpadUpPress, Button::DpadUp, presses, now, DpadHold))
     {
     case PressKind::Tap:
+        // The helper fights on its own once started; stopped, A is the player's to tap again.
+        StopAttackToggle();
         Controls::SetPadHeld(PadButton::Auto, true);
         Controls::SetPadHeld(PadButton::Auto, false);
         break;
@@ -1416,7 +1440,7 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
             g_state.meet = GameLogic::Touch::MeetIndex();
         PlayMeet(window, presses, now);
         PlayContextA(window, presses);
-        PlayAttackToggle(presses);
+        PlayAttackToggle(presses, now);
         // RB: whom the heals and buffs go to (ghinzuro, 2026-11-04).
         if (Pressed(presses, Button::RightShoulder) && !g_state.waitForRelease[static_cast<int>(Button::RightShoulder)])
             GameLogic::Touch::ChooseNextFriend();
@@ -1424,7 +1448,7 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
         if (g_state.promptDrop != -1)
             UI::HUD::PadHints::Show(UI::HUD::PadHints::Hint::PickUp);
     }
-    HoldMappedControls(presses);
+    HoldMappedControls(presses, now);
     if (!frameOpen)
     {
         ZoomWithDpad(presses);
@@ -1568,7 +1592,11 @@ void SwitchUse(SDL_Window* window, bool inUse)
     if (inUse && window != nullptr)
         TakePointer(window);
     else if (!inUse)
+    {
         ReleaseAll(window);
+        // Put down: the skills' page is the first one when the pad is picked up again.
+        g_state.pageLatched = false;
+    }
     UI::Mobile::SetGamepadInUse(inUse);
 #ifdef __EMSCRIPTEN__
     // The pad's own keyboard types (UI/HUD/PadKeyboard): the phone's stays down meanwhile.

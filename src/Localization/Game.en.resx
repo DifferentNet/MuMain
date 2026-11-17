@@ -16970,7 +16970,7 @@
     <value>Hold</value>
   </data>
   <data name="GamepadToggleMode" xml:space="preserve">
-    <value>Tap on, tap off</value>
+    <value>Press on, press off</value>
   </data>
   <data name="PadHintPickUp" xml:space="preserve">
     <value>An item near you: d-pad down picks it up, {A} too with no monster near</value>

@@ -16970,7 +16970,7 @@
     <value>Держать</value>
   </data>
   <data name="GamepadToggleMode" xml:space="preserve">
-    <value>Нажать — вкл., ещё раз — выкл.</value>
+    <value>Нажать: вкл./выкл.</value>
   </data>
   <data name="PadHintPickUp" xml:space="preserve">
     <value>Вещь рядом: крестовина вниз поднимает её, {A} тоже, если монстров рядом нет</value>

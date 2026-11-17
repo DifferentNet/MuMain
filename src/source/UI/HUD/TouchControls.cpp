@@ -68,8 +68,9 @@ constexpr int SkillButtons = SkillArrange::SlotCount;
 // its grid fits.
 constexpr int MaxPickEntries = 40;
 
-// The pad's right trigger is held (SetPadAlt).
+// The pad's second page shows for the skills, and for the potions (SetPadAlt).
 bool g_padAlt = false;
+bool g_padPotionAlt = false;
 
 // Back: the skill list's grid first, which Esc does not close (it would open the system menu over it),
 // else Esc as a keyboard presses it.
@@ -489,6 +490,9 @@ struct ControlsModel
     // The pad's right trigger is held: its face buttons cast the skill buttons 4 and 5, shown in the
     // places of the first ones.
     bool padAlt = false;
+    // The left bumper and trigger drink E and R: RT held (with the RT toggle the skills' page may stay
+    // up while the potions are back on Q and W).
+    bool padPotionAlt = false;
     // Fingers drive the controls: the joystick's area shows.
     bool fingers = false;
     // The pad's hero hub is open on its Skills tab: the picker sits under the hub's tabs.
@@ -612,6 +616,7 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     c.Bind("pad", &model.pad);
     UI::HUD::PadGlyphs::Bind(c, model.glyphs);
     c.Bind("pad_alt", &model.padAlt);
+    c.Bind("pad_potion_alt", &model.padPotionAlt);
     c.Bind("under_hub", &model.underHub);
     c.Bind("over_map", &model.overMap);
     c.Bind("fingers", &model.fingers);
@@ -1225,6 +1230,7 @@ void SyncDevices(ControlsModel& model)
     SetField(model.pad, UI::Mobile::IsGamepadInUse(), "pad");
     UI::HUD::PadGlyphs::Sync(model.glyphs, [](const char* name) { g_View.MarkDirty(name); });
     SetField(model.padAlt, model.pad && g_padAlt, "pad_alt");
+    SetField(model.padPotionAlt, model.pad && g_padPotionAlt, "pad_potion_alt");
     SetField(model.fingers, Touch::IsEnabled(), "fingers");
     SetField(model.underHub, UI::HUD::PadHub::IsOnSkills(), "under_hub");
     SetField(model.overMap,
@@ -2621,9 +2627,10 @@ std::uint32_t TakeMeasureCount()
     return count;
 }
 
-void SetPadAlt(bool alt)
+void SetPadAlt(bool skills, bool potions)
 {
-    g_padAlt = alt;
+    g_padAlt = skills;
+    g_padPotionAlt = potions;
 }
 
 void SetPadHeld(PadButton button, bool held)

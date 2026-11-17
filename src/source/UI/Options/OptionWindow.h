@@ -642,7 +642,6 @@ namespace mu::ui::window
             int gamepadPageModeIndex = 0;
             Rml::String gamepadPageModeRowLabel;
             Rml::String gamepadPageModeValueLabel;
-
         };
         void BindRmlModel(Rml::DataModelConstructor& c, OptionRmlModel& model);
         void SyncImpliedEffectRows(OptionRmlModel& model);
