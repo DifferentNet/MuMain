@@ -184,6 +184,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Core/Input/GamepadStepper.cpp
 )
 
+# The page a pad button acts on: taken as it goes down, kept until it is let go.
+mu_add_test(
+    NAME gamepad_page_latch_tests
+    SOURCES
+        test_gamepad_page_latch.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Input/GamepadPageLatch.cpp
+)
+
 # Which shake of the pad plays: a weaker one during a stronger one is dropped.
 mu_add_test(
     NAME gamepad_rumble_tests

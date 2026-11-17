@@ -1224,6 +1224,12 @@ void PauseSteering()
         g_steering.active = false;
 }
 
+void HoldSteering()
+{
+    PauseSteering();
+    g_hold.Hold();
+}
+
 bool IsSteeringOnHold()
 {
     return g_hold.IsWaiting();

@@ -62,6 +62,8 @@ PadKind g_lastKind = PadKind::Xbox;
 // A pad plugged in or out since TakeNews last asked (not the pads open at the start or by the switch).
 PadNews g_news = PadNews::None;
 GlyphChoice g_glyphChoice = GlyphChoice::Auto;
+// The game's window has the focus (SetFocused): without it the pads' presses and pushes go unread.
+bool g_focused = true;
 
 // The pad's kind: SDL's own guess from its vendor and product where it has one (a PC), else its name
 // (the browser gives SDL only the Gamepad.id).
@@ -274,7 +276,9 @@ void AddPad(SDL_JoystickID id)
                                 : free->kind == PadKind::Nintendo  ? "Nintendo"
                                                                    : "Xbox");
 #ifdef __EMSCRIPTEN__
-    TapWakingPress();
+    // A pad woken in a background tab (its press meant for another page) taps nothing here.
+    if (g_focused)
+        TapWakingPress();
 #endif
 }
 
@@ -324,6 +328,19 @@ bool IsOtherDevicePress(const SDL_Event& event)
     default:
         return false;
     }
+}
+
+// A pad button is held or a stick pushed as far as takes the game from the mouse (a worn stick
+// drifting near its centre does not count): the thumbs are on the pad.
+bool IsPadBusy()
+{
+    const bool buttonHeld =
+        std::any_of(g_buttons.begin(), g_buttons.end(), [](const ButtonState& state) { return state.held; });
+    const bool stickPushed = std::any_of(g_pads.begin(), g_pads.end(), [](const Pad& pad) {
+        return pad.handle != nullptr && (RawLean(pad, SDL_GAMEPAD_AXIS_LEFTX) > TakeOverLean ||
+                                         RawLean(pad, SDL_GAMEPAD_AXIS_RIGHTX) > TakeOverLean);
+    });
+    return buttonHeld || stickPushed;
 }
 } // namespace
 
@@ -441,6 +458,11 @@ void ProcessEvent(const SDL_Event& event)
 {
     if (IsOtherDevicePress(event))
     {
+        // A handheld's extra buttons (its back paddles, its own keys) send keys while the thumbs stay
+        // on the pad: such a key does not take the game from a pad that holds a button or a pushed
+        // stick. The key itself still reaches the game. A mouse button or a finger always takes it.
+        if (event.type == SDL_EVENT_KEY_DOWN && IsPadBusy())
+            return;
         g_usedLast = false;
         if (g_offWhenPutDown)
             SetEnabled(false);
@@ -470,6 +492,9 @@ void ProcessEvent(const SDL_Event& event)
     }
     case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
     case SDL_EVENT_GAMEPAD_BUTTON_UP:
+        // Without the focus a press is meant for another window; a release still lets go.
+        if (event.gbutton.down && !g_focused)
+            break;
         if (Pad* pad = FindPad(event.gbutton.which))
         {
             if (event.gbutton.down)
@@ -479,6 +504,8 @@ void ProcessEvent(const SDL_Event& event)
         }
         break;
     case SDL_EVENT_GAMEPAD_AXIS_MOTION:
+        if (!g_focused)
+            break;
         if (Pad* pad = FindPad(event.gaxis.which))
             SetAxis(*pad, event.gaxis.axis, AxisPosition(event.gaxis.value));
         break;
@@ -499,7 +526,10 @@ void Poll()
             if (value == pad.polled[axis])
                 continue;
             pad.polled[axis] = value;
-            SetAxis(pad, axis, AxisPosition(value));
+            // Without the focus the stick is only followed: back in focus, a stick still held where it
+            // was stays let go until it moves again.
+            if (g_focused)
+                SetAxis(pad, axis, AxisPosition(value));
         }
     }
 }
@@ -564,5 +594,12 @@ void Reset()
         if (pad.handle != nullptr)
             ReleasePad(pad);
     }
+}
+
+void SetFocused(bool focused)
+{
+    if (!focused && g_focused)
+        Reset();
+    g_focused = focused;
 }
 } // namespace Core::Input::Gamepad

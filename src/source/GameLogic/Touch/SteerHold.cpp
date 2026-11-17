@@ -40,6 +40,12 @@ void SteerHold::Pause()
         m_waiting = true;
 }
 
+void SteerHold::Hold()
+{
+    m_held = true;
+    m_waiting = true;
+}
+
 void SteerHold::Release()
 {
     m_held = false;

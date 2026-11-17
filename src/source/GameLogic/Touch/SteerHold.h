@@ -27,6 +27,9 @@ public:
     [[nodiscard]] bool MayWalk(const HeroPlace& place);
     // The controls went away under a held stick (a map change, a death): it waits.
     void Pause();
+    // The stick is pushed as the controls come back (a respawn) though no walk was asked meanwhile:
+    // it waits all the same.
+    void Hold();
     // The stick was let go or centred: the next push walks again.
     void Release();
     [[nodiscard]] bool IsWaiting() const { return m_waiting; }

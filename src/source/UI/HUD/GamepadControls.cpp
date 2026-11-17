@@ -3,6 +3,7 @@
 
 #include "Audio/DSPlaySound.h"
 #include "Core/Input/GamepadInput.h"
+#include "Core/Input/GamepadPageLatch.h"
 #include "Core/Input/GamepadPointer.h"
 #include "Core/Input/GamepadStepper.h"
 #include "Core/Input/GamepadStick.h"
@@ -233,6 +234,8 @@ struct State
     // Buttons held while the menu was open: they act in the world only once let go, so the B that
     // closed the menu does not go on to press Back.
     std::array<bool, Pad::ButtonCount> waitForRelease{};
+    // The page (RT held or not) each button went down on, kept until it is let go.
+    std::array<Pad::PageLatch, Pad::ButtonCount> pages{};
     PointerPress a;
     // A window is open: the right stick plays the pointer, A clicks, X right-clicks, B goes back.
     bool windowOpen = false;
@@ -277,6 +280,8 @@ struct State
     Clock::time_point dialogSince{};
     // The on-screen keyboard has the pad (UI/HUD/PadKeyboard).
     bool typing = false;
+    // The hero lay dead last frame (FollowDeath).
+    bool heroDead = false;
     Clock::time_point lastFrame{};
     // Seconds since the last frame (FrameSeconds), for the overlay's glide.
     float frameSeconds = 0.f;
@@ -748,15 +753,20 @@ bool IsPointerOnButton()
 }
 
 // A dialog's answer: Menu, and A off its buttons, press Enter (yes, OK). B is Esc already (Back).
-// A answers only once it rested: A tapped over and over in a fight goes on attacking.
-void AnswerDialog(Presses& presses, bool aRested)
+// A answers only once it rested: A tapped over and over in a fight goes on attacking. Before the
+// dialog `answers` (its first second), Menu is still taken and answers nothing: it would otherwise
+// open the menu of windows over the question.
+void AnswerDialog(Presses& presses, bool answers, bool aRested)
 {
     if (Take(presses, Button::Menu))
     {
-        Core::Input::Touch::TapKey(VK_RETURN);
-        // Still held as the dialog goes, it does not go on to open the menu.
+        if (answers)
+            Core::Input::Touch::TapKey(VK_RETURN);
+        // Still held as the dialog goes (or comes to take answers), it does not go on to open the menu.
         g_state.waitForRelease[static_cast<int>(Button::Menu)] = true;
     }
+    if (!answers)
+        return;
     if (aRested && Pressed(presses, Button::A) && g_state.a.mode == Hold::None && !IsPointerOnButton())
     {
         Take(presses, Button::A);
@@ -885,12 +895,19 @@ void TurnWheelWithDpad(SDL_Window* window, Presses& presses, Clock::time_point n
 void HoldMappedControls(const Presses& presses)
 {
     std::array<bool, static_cast<int>(PadButton::Count)> held{};
-    // The second page shows only in the world: over a window X and Y act on the items.
-    const bool alt = Held(Button::RightTrigger) && !g_state.windowOpen;
-    Controls::SetPadAlt(alt);
+    // The second page shows only in the world: over a window X and Y act on the items. The buttons
+    // say the page RT shows now; each button acts on the page it went down on (Pad::PageLatch).
+    const bool altShown = Held(Button::RightTrigger) && !g_state.windowOpen;
+    Controls::SetPadAlt(altShown);
+    std::array<bool, Pad::ButtonCount> alt{};
+    for (int button = 0; button < Pad::ButtonCount; ++button)
+    {
+        const Pad::ButtonState& state = Pad::GetButton(static_cast<Button>(button));
+        alt[button] = g_state.pages[button].Alt(state.held, state.presses, altShown);
+    }
     for (const Mapping& mapping : Mappings)
     {
-        if (!Applies(mapping, g_state.windowOpen, g_state.frameOpen, alt))
+        if (!Applies(mapping, g_state.windowOpen, g_state.frameOpen, alt[static_cast<int>(mapping.pad)]))
             continue;
         const bool holds = HoldsControl(mapping.pad);
         if (!holds && Pressed(presses, mapping.pad))
@@ -1167,8 +1184,37 @@ void SwitchWindowMode(SDL_Window* window, bool windowOpen, bool frameOpen)
     WaitForRelease();
 }
 
+// The hero died or came back to life: the attack and the skills held let go and act again only once
+// let go, and a pushed stick stops and waits to be let go. The walk is not asked while the hero lies
+// dead, and a respawn on the same map is too short a jump for the walk's own hold to see: the
+// stick held through the death walked the risen hero on.
+void FollowDeath(SDL_Window* window)
+{
+    const bool dead = Hero->Dead != 0;
+    if (dead == g_state.heroDead)
+        return;
+    g_state.heroDead = dead;
+    EndPress(window, g_state.a, {});
+    ReleaseControls();
+    g_state.aPicks = false;
+    g_state.dpadDownTalks = false;
+    g_state.menuWalk = -1;
+    ForgetLongPresses();
+    WaitForRelease();
+    PauseWalking();
+    // Back to life under a pushed stick: it waits to be let go even if it never walked before (the
+    // hero died standing, or the stick was pushed again while dead, when no walk is asked). A push
+    // after letting go walks.
+    if (!dead && Pad::IsPushed(Pad::LeftStick(), false))
+    {
+        GameLogic::Touch::HoldSteering();
+        g_state.steering = true;
+    }
+}
+
 void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_point now)
 {
+    FollowDeath(window);
     const bool dialogAnswers = DialogTakesAnswers(now);
     const bool aRested = now - g_state.aActive >= DialogAnswerDelay;
     if (Pressed(presses, Button::A) || Held(Button::A))
@@ -1201,8 +1247,8 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
     else
         Walk(Pad::LeftStick());
     FollowNpcClick(window);
-    if (dialogAnswers)
-        AnswerDialog(presses, aRested);
+    if (g_state.dialogOpen)
+        AnswerDialog(presses, dialogAnswers, aRested);
     if (windowOpen)
     {
         g_state.aPicks = false;

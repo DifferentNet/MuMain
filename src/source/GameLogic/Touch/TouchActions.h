@@ -36,6 +36,9 @@ void StopSteering();
 // The controls went away under a pushed joystick (a map change, a dialog, death): the walk stops,
 // and the push waits until let go, as after a gate.
 void PauseSteering();
+// The same for a joystick pushed while the walk was not asked (the hero lay dead): it waits until
+// let go even if it never walked.
+void HoldSteering();
 // Whether the joystick is pushed but waiting to be let go.
 [[nodiscard]] bool IsSteeringOnHold();
 // Whether the joystick walks the character now.
