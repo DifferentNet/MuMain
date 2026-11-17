@@ -638,7 +638,6 @@ void KeepChosen()
                                 character->Object.Position[1] / TERRAIN_SCALE});
     }
     const int next = TargetPassOn::Next(s_candidates, heroX, heroY, g_chosenTileX, g_chosenTileY, gone);
-
     if (next == DirectionPick::NoKey)
         return;
     // Still the player's choice, made when it was: g_chosenAt stays.

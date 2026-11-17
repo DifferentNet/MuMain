@@ -297,11 +297,11 @@ struct State
     int attackKey = -1;
     Clock::time_point attackSince{};
     // The RT toggle (Options: Pad RT page): the second page stays up until the next tap of RT. RT went
-    // down in the world at rtDownAt (rtTapping) and zoomed with the d-pad meanwhile (rtZoomed: not a
-    // tap then).
+    // down in the world at rtDownAt (rtTapping) and served another button meanwhile, a d-pad zoom or an
+    // E or R potion on LB or LT (rtUsed: not a tap then).
     bool pageLatched = false;
     bool rtTapping = false;
-    bool rtZoomed = false;
+    bool rtUsed = false;
     Clock::time_point rtDownAt{};
     Clock::time_point lastFrame{};
     // Seconds since the last frame (FrameSeconds), for the overlay's glide.
@@ -959,19 +959,22 @@ void TurnWheelWithDpad(SDL_Window* window, Presses& presses, Clock::time_point n
 }
 
 // RT with the page toggle on: a tap in the world turns the page, as RT is let go. RT held to zoom with
-// the d-pad (ZoomWithDpad) or held RtTapTime or longer is no tap: the page stays.
+// the d-pad (ZoomWithDpad), to drink E or R with LB or LT, or held RtTapTime or longer is no tap: the
+// page stays.
 void FollowPageToggle(const Presses& presses, Clock::time_point now)
 {
     if (Pressed(presses, Button::RightTrigger) && !g_state.windowOpen)
     {
         g_state.rtTapping = true;
-        g_state.rtZoomed = false;
+        g_state.rtUsed = false;
         g_state.rtDownAt = now;
     }
+    if (g_state.rtTapping && (Pressed(presses, Button::LeftShoulder) || Pressed(presses, Button::LeftTrigger)))
+        g_state.rtUsed = true;
     if (!g_state.rtTapping || Held(Button::RightTrigger))
         return;
     g_state.rtTapping = false;
-    if (!g_state.rtZoomed && !g_state.windowOpen && now - g_state.rtDownAt < RtTapTime)
+    if (!g_state.rtUsed && !g_state.windowOpen && now - g_state.rtDownAt < RtTapTime)
         g_state.pageLatched = !g_state.pageLatched;
 }
 
@@ -1030,7 +1033,10 @@ void PlayAttackToggle(const Presses& presses, Clock::time_point now)
 // mode lets its control go (B is a skill in the world, Back over a window).
 void HoldMappedControls(const Presses& presses, Clock::time_point now)
 {
-    const bool attackToggle = GameConfig::GetInstance().GetGamepadAttackToggle();
+    // With the MU Helper at work A holds the attack as with the toggle off (holding it pauses the
+    // helper); PlayAttackToggle latches nothing meanwhile.
+    const bool attackToggle =
+        GameConfig::GetInstance().GetGamepadAttackToggle() && !MUHelper::g_MuHelper.IsActive();
     std::array<bool, static_cast<int>(PadButton::Count)> held{};
     // The second page shows only in the world: over a window X and Y act on the items. The buttons
     // say the page RT shows now; each button acts on the page it went down on (Pad::PageLatch).
@@ -1276,7 +1282,7 @@ void ZoomWithDpad(Presses& presses)
         if (Take(presses, button))
         {
             MouseWheel += step;
-            g_state.rtZoomed = true;
+            g_state.rtUsed = true;
         }
     }
 }
