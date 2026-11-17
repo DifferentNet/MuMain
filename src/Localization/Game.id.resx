@@ -13695,6 +13695,12 @@
   <data name="WindLockedLowPreset" xml:space="preserve">
     <value>Off on the Low graphics preset.</value>
   </data>
+  <data name="SmoothAnimationRow" xml:space="preserve">
+    <value>Animasi halus</value>
+  </data>
+  <data name="SmoothAnimationTooltip" xml:space="preserve">
+    <value>Karakter, monster, dan tunggangan bergerak halus di antara pose dan beralih mulus dari satu aksi ke aksi berikutnya.</value>
+  </data>
   <data name="HazeRow" xml:space="preserve">
     <value>Distance haze</value>
   </data>

@@ -277,6 +277,13 @@ public:
     int GetWindStrength() const { return m_windStrength; }
     void SetWind(int wind);
     void SetWindStrength(int percent);
+    // [Render] SmoothAnimation: in the Remaster PC client, smoother character animation
+    // (Render/Models/AnimationSmoothing.h), 0 off, 1 on; AnimationFadeMs the fade between actions
+    // (both clamped; Options > Graphics applies the first at once, the second is set by hand).
+    int GetSmoothAnimation() const { return m_smoothAnimation; }
+    int GetAnimationFadeMs() const { return m_animationFadeMs; }
+    void SetSmoothAnimation(int smoothAnimation);
+    void SetAnimationFadeMs(int fadeMs);
     // [Render] Haze: with HD textures on, distance haze and low ground fog over the world
     // (Render/PostProcessing/HazeSetting.h), 0 off, 1 on; HazeStrength in percent (both clamped;
     // Options > Graphics applies them at once).
@@ -476,6 +483,8 @@ private:
     int m_ssaoStrength = 100;
     int m_wind = 1;
     int m_windStrength = 100;
+    int m_smoothAnimation = 1;
+    int m_animationFadeMs = 160;
     int m_haze = 1;
     int m_hazeStrength = 70;
     int m_particles = 1;

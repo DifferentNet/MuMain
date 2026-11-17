@@ -2,6 +2,7 @@
 
 #include "CharacterBonePose.h"
 
+#include "Engine/Object/CharacterAnimationFade.h"
 #include "Engine/Object/w_ObjectInfo.h"
 #include "Render/Models/ZzzBMD.h"
 
@@ -25,6 +26,15 @@ bool SameBits(const float (&left)[3], const float (&right)[3])
     return SameBits(left[0], right[0]) && SameBits(left[1], right[1]) && SameBits(left[2], right[2]);
 }
 
+bool SameFade(const CharacterBonePose& left, const CharacterBonePose& right)
+{
+    if (left.fadeActive != right.fadeActive) return false;
+    if (!left.fadeActive) return true;
+    return left.fadePriorAction == right.fadePriorAction && left.fadeAction == right.fadeAction &&
+           SameBits(left.fadePriorFrame, right.fadePriorFrame) && SameBits(left.fadeFrame, right.fadeFrame) &&
+           SameBits(left.fadeWeight, right.fadeWeight);
+}
+
 CharacterBonePose PoseOf(const OBJECT& o, float bodyHeight)
 {
     CharacterBonePose pose;
@@ -41,6 +51,16 @@ CharacterBonePose PoseOf(const OBJECT& o, float bodyHeight)
     }
     pose.bodyHeight = bodyHeight;
     pose.modelGeneration = ModelDataGeneration();
+    pose.smooth = Render::AnimationSmoothing::Enabled();
+    if (const auto* fade = Engine::Object::Fade::For(o, o.CurrentAction))
+    {
+        pose.fadeActive = true;
+        pose.fadePriorAction = fade->from.priorAction;
+        pose.fadeAction = fade->from.action;
+        pose.fadePriorFrame = fade->from.priorFrame;
+        pose.fadeFrame = fade->from.frame;
+        pose.fadeWeight = fade->weight;
+    }
     return pose;
 }
 
@@ -50,7 +70,8 @@ bool SamePose(const CharacterBonePose& left, const CharacterBonePose& right)
            left.priorAction == right.priorAction && SameBits(left.animationFrame, right.animationFrame) &&
            SameBits(left.priorAnimationFrame, right.priorAnimationFrame) && SameBits(left.angle, right.angle) &&
            SameBits(left.headAngle, right.headAngle) && SameBits(left.bodyHeight, right.bodyHeight) &&
-           left.modelGeneration == right.modelGeneration;
+           left.modelGeneration == right.modelGeneration && left.smooth == right.smooth &&
+           SameFade(left, right);
 }
 } // namespace
 

@@ -71,7 +71,10 @@ constexpr std::array<float, 3> SecondLight{0.35f, 0.55f, 0.65f};
     F(m_sTargetIndex) F(m_bpcroom) F(m_v3PrePos1) F(m_v3PrePos2) F(m_Interpolates) F(PrepassPose.valid)            \
     F(PrepassPose.type) F(PrepassPose.currentAction) F(PrepassPose.priorAction) F(PrepassPose.animationFrame)        \
     F(PrepassPose.priorAnimationFrame) F(PrepassPose.angle) F(PrepassPose.headAngle) F(PrepassPose.bodyHeight)       \
-    F(PrepassPose.modelGeneration)
+    F(PrepassPose.modelGeneration) F(PrepassPose.smooth) F(PrepassPose.fadeActive) F(PrepassPose.fadePriorAction)  \
+    F(PrepassPose.fadeAction) F(PrepassPose.fadePriorFrame) F(PrepassPose.fadeFrame) F(PrepassPose.fadeWeight)      \
+    F(Fade.active) F(Fade.type) F(Fade.toAction) F(Fade.from.priorAction) F(Fade.from.action)                        \
+    F(Fade.from.priorFrame) F(Fade.from.frame) F(Fade.startMs) F(Fade.weight)
 
 #define RECORDER_PARTICLE_FIELDS(F)                                                                                  \
     F(Live) F(Type) F(TexType) F(SubType) F(Scale) F(Position) F(Angle) F(Light) F(Alpha) F(LifeTime) F(Target)      \
@@ -91,7 +94,7 @@ constexpr std::array<float, 3> SecondLight{0.35f, 0.55f, 0.65f};
 // Windows build without iterator debugging (OBJECT holds a std::map and
 // std::vectors, whose size depends on it).
 #if defined(_MSC_VER) && defined(_WIN64) && defined(_ITERATOR_DEBUG_LEVEL) && _ITERATOR_DEBUG_LEVEL == 0
-static_assert(sizeof(OBJECT) == 736, "OBJECT changed: update RECORDER_OBJECT_FIELDS");
+static_assert(sizeof(OBJECT) == 792, "OBJECT changed: update RECORDER_OBJECT_FIELDS");
 static_assert(sizeof(PARTICLE) == 136, "PARTICLE changed: update RECORDER_PARTICLE_FIELDS");
 static_assert(sizeof(JOINT) == 9800, "JOINT changed: update RECORDER_JOINT_FIELDS");
 #endif
@@ -308,6 +311,10 @@ struct PatternFiller
     {
         value = (IsA() ? 0xA0000000ul : 0xB0000000ul) + static_cast<unsigned long>(Next());
     }
+    void Set(double& value)
+    {
+        value = IsA() ? 1000.25 + static_cast<double>(Next()) : -2000.5 - static_cast<double>(Next());
+    }
     void Set(float& value)
     {
         value = IsA() ? 1000.25f + static_cast<float>(Next()) : -2000.5f - static_cast<float>(Next());
@@ -397,6 +404,12 @@ std::string Format(unsigned int value)
 std::string Format(unsigned long value)
 {
     return std::to_string(value);
+}
+std::string Format(double value)
+{
+    char text[32];
+    std::snprintf(text, sizeof(text), "%.17g", value);
+    return text;
 }
 std::string Format(float value)
 {

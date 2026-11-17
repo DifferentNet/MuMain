@@ -19,6 +19,15 @@ struct CharacterBonePose
     float headAngle[3] = {};
     float bodyHeight = 0.f;
     std::uint32_t modelGeneration = 0;
+    // The smoothed animation (Render/Models/AnimationSmoothing.h): whether it was on, and the fade the
+    // bones were built with.
+    bool smooth = false;
+    bool fadeActive = false;
+    unsigned short fadePriorAction = 0;
+    unsigned short fadeAction = 0;
+    float fadePriorFrame = 0.f;
+    float fadeFrame = 0.f;
+    float fadeWeight = 0.f;
 };
 
 namespace Engine::Object::BonePose

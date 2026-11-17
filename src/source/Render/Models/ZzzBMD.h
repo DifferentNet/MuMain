@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdint>
 #include <memory>
+#include "Render/Models/AnimationSmoothing.h"
 #include "Render/Sprites/TextureScript.h"
 
 extern const float (*g_pActiveBoneTransform)[3][4];
@@ -139,6 +140,10 @@ typedef struct
     short         NumAnimationKeys;
     bool          LockPositions;
     vec3_t* Positions;
+    // Built when the model loads (BMD::BuildActionCycles): the action's last shown key leads back to its first
+    // about as smoothly as its keys lead into each other, so the smoothed animation
+    // (Render/Models/AnimationSmoothing.h) curves through the wrap. Not saved with the model.
+    bool          Cyclic;
 } Action_t;
 
 typedef struct _Triangle_t3 : public Triangle_t
@@ -277,6 +282,13 @@ public:
     std::shared_ptr<const StaticPoses> m_staticPoses;
     void BuildStaticPoses();
     void ClearStaticPoses();
+    // Sets every action's Cyclic, once the model loads.
+    void BuildActionCycles();
+
+    // Characters, monsters, NPCs and mounts (set as the slot loads, CLoadData::AccessModel): with the smoothed
+    // animation on (Render/Models/AnimationSmoothing.h) Animation() curves through the keys and may fade
+    // between actions. Every other model keeps straight lines between its keys.
+    bool SmoothKeys = false;
     const StaticBoneRotation* FindStaticPose(unsigned short priorAction, unsigned short currentAction,
                                              int priorFrame, int currentFrame) const;
 
@@ -329,10 +341,13 @@ public:
     // fill writes identity into [NumBones, BoneMatrixCapacity) so UBO-uploaded full-size palettes
     // never carry a previous model's matrices; callers passing a buffer smaller than MAX_BONES
     // (e.g. the internal new vec34_t[NumBones] scratch arrays) MUST pass their real capacity.
+    // Fade: a character's fade from its last pose into CurrentAction (Engine/Object/CharacterAnimationFade.h),
+    // or null; it is used only while the smoothed animation is on for this model.
     void Animation(float (*BoneTransform)[3][4], float AnimationFrame, float PriorAnimationFrame,
                    unsigned short PriorAction, vec3_t Angle, vec3_t HeadAngle, bool Parent = false,
                    bool Translate = true, const float (*ExtParentMatrix)[4] = nullptr, short CurrentAction = -1,
-                   int BoneMatrixCapacity = MAX_BONES);
+                   int BoneMatrixCapacity = MAX_BONES,
+                   const Render::AnimationSmoothing::AnimationFade* Fade = nullptr);
     void InterpolationTrans(float(*Mat1)[4], float(*TransMat2)[4], float _Scale);
     void Transform(float(*BoneMatrix)[3][4], vec3_t BoundingBoxMin, vec3_t BoundingBoxMax, OBB_t* OBB, bool Translate = false, float _Scale = 0.0f);
     // DXP-20 increment 2: the state-stash + OBB-from-args portion of Transform(), without the

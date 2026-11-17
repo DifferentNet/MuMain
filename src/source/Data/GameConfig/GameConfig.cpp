@@ -156,6 +156,10 @@ void GameConfig::Load()
     m_wind = std::clamp(ReadInt(CfgSectionRender, CfgKeyWind, CfgDefaultWind), CfgMinWind, CfgMaxWind);
     m_windStrength = std::clamp(ReadInt(CfgSectionRender, CfgKeyWindStrength, CfgDefaultWindStrength),
                                 CfgMinWindStrength, CfgMaxWindStrength);
+    m_smoothAnimation = std::clamp(ReadInt(CfgSectionRender, CfgKeySmoothAnimation, CfgDefaultSmoothAnimation),
+                                   CfgMinSmoothAnimation, CfgMaxSmoothAnimation);
+    m_animationFadeMs = std::clamp(ReadInt(CfgSectionRender, CfgKeyAnimationFadeMs, CfgDefaultAnimationFadeMs),
+                                   CfgMinAnimationFadeMs, CfgMaxAnimationFadeMs);
     m_haze = std::clamp(ReadInt(CfgSectionRender, CfgKeyHaze, CfgDefaultHaze), CfgMinHaze, CfgMaxHaze);
     m_hazeStrength = std::clamp(ReadInt(CfgSectionRender, CfgKeyHazeStrength, CfgDefaultHazeStrength),
                                 CfgMinHazeStrength, CfgMaxHazeStrength);
@@ -291,6 +295,8 @@ void GameConfig::Save()
     WriteInt(CfgSectionRender, CfgKeySsaoStrength, m_ssaoStrength);
     WriteInt(CfgSectionRender, CfgKeyWind, m_wind);
     WriteInt(CfgSectionRender, CfgKeyWindStrength, m_windStrength);
+    WriteInt(CfgSectionRender, CfgKeySmoothAnimation, m_smoothAnimation);
+    WriteInt(CfgSectionRender, CfgKeyAnimationFadeMs, m_animationFadeMs);
     WriteInt(CfgSectionRender, CfgKeyHaze, m_haze);
     WriteInt(CfgSectionRender, CfgKeyHazeStrength, m_hazeStrength);
     WriteInt(CfgSectionRender, CfgKeyParticles, m_particles);
@@ -519,6 +525,17 @@ void GameConfig::SetWind(int wind)
 void GameConfig::SetWindStrength(int percent)
 {
     m_windStrength = std::clamp(percent, CfgDefaults::CfgMinWindStrength, CfgDefaults::CfgMaxWindStrength);
+}
+
+void GameConfig::SetSmoothAnimation(int smoothAnimation)
+{
+    m_smoothAnimation =
+        std::clamp(smoothAnimation, CfgDefaults::CfgMinSmoothAnimation, CfgDefaults::CfgMaxSmoothAnimation);
+}
+
+void GameConfig::SetAnimationFadeMs(int fadeMs)
+{
+    m_animationFadeMs = std::clamp(fadeMs, CfgDefaults::CfgMinAnimationFadeMs, CfgDefaults::CfgMaxAnimationFadeMs);
 }
 
 void GameConfig::SetHaze(int haze)

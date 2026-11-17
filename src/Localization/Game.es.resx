@@ -13695,6 +13695,12 @@
   <data name="WindLockedLowPreset" xml:space="preserve">
     <value>Off on the Low graphics preset.</value>
   </data>
+  <data name="SmoothAnimationRow" xml:space="preserve">
+    <value>Animación fluida</value>
+  </data>
+  <data name="SmoothAnimationTooltip" xml:space="preserve">
+    <value>Los personajes, monstruos y monturas se mueven con fluidez entre poses y pasan suavemente de una acción a la siguiente.</value>
+  </data>
   <data name="HazeRow" xml:space="preserve">
     <value>Distance haze</value>
   </data>

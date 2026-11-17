@@ -41,6 +41,7 @@
 #include "Engine/Object/ZzzOpenData.h"
 #include "Scenes/SceneCore.h"
 #include "Scenes/MainScene.h"
+#include "Engine/Object/CharacterAnimationFade.h"
 #include "Audio/DSPlaySound.h"
 #include "I18N/All.h"
 
@@ -2509,10 +2510,13 @@ bool CharacterAnimation(CHARACTER* c, OBJECT* o)
 
     if (g_isCharacterBuff(o, eDeBuff_Stun) || g_isCharacterBuff(o, eDeBuff_Sleep))
     {
+        // The frames stand still, the fade into them goes on.
+        Engine::Object::Fade::Tick(*o, true);
         return false;
     }
 
     Play = b->PlayAnimation(&o->AnimationFrame, &o->PriorAnimationFrame, &o->PriorAction, PlaySpeed, o->Position, o->Angle);
+    Engine::Object::Fade::Tick(*o, Play);
     if (!Play)
     {
         RecordHeroSwingEnd(c, o, b, PlaySpeed);
@@ -6592,7 +6596,8 @@ void AnimateCharacterBones(OBJECT* o)
 
     // Model space, as render builds them: the model's BodyOrigin and BodyScale belong to whichever object set them last.
     model->Animation(o->BoneTransform, o->AnimationFrame, o->PriorAnimationFrame, o->PriorAction, o->Angle,
-                     o->HeadAngle, false, false, nullptr, o->CurrentAction);
+                     o->HeadAngle, false, false, nullptr, o->CurrentAction, MAX_BONES,
+                     Engine::Object::Fade::For(*o, o->CurrentAction));
     o->EnableBoneMatrix = true;
     Engine::Object::BonePose::Remember(*o, model->BodyHeight);
 }

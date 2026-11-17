@@ -18,6 +18,7 @@
 #include "Render/Lighting/DynamicLightHistory.h"
 #include "Render/PostProcessing/PostProcessingSetting.h"
 #include "Render/Lighting/SoftShadowSetting.h"
+#include "Render/Models/AnimationSmoothing.h"
 #include "Render/Look/LookPresetSetting.h"
 #include "Render/Renderer/Antialiasing.h"
 #include "Render/Look/LookTuning.h"
@@ -130,6 +131,32 @@ bool CheckDeveloperLookCommand(const std::wstring& command)
                                      history.FollowedCount(Render::Lighting::LightSource::Map),
                                      history.FollowedCount(Render::Lighting::LightSource::Character),
                                      history.FollowedCount(Render::Lighting::LightSource::Effect), history.Overflow());
+        mu::log::Get("render")->flush();
+        return true;
+    }
+    // $anim smooth on|off, $anim fade <ms>, $anim status: the smoothed animation
+    // (Render/Models/AnimationSmoothing.h); smooth and fade are saved to [Render] as the Options switch is.
+    if (command == L"$anim" || command.starts_with(L"$anim "))
+    {
+        namespace Smooth = Render::AnimationSmoothing;
+        const std::wstring_view argument = command.size() > 6 ? std::wstring_view(command).substr(6) : std::wstring_view();
+        if (argument == L"smooth on" || argument == L"smooth off")
+        {
+            Smooth::Choose(argument == L"smooth on");
+        }
+        else if (argument.starts_with(L"fade ") && argument.size() > 5 &&
+                 argument.find_first_not_of(L"0123456789", 5) == std::wstring_view::npos && argument.size() <= 9)
+        {
+            Smooth::ChooseFadeMs(_wtoi(std::wstring(argument.substr(5)).c_str()));
+        }
+        else if (argument != L"status")
+        {
+            mu::log::Get("render")->warn("{}: not understood ($anim smooth on|off, $anim fade <0..{} ms>, $anim status)",
+                                         Core::Text::ToUtf8(command.c_str()), Smooth::kMaxFadeMs);
+        }
+        mu::log::Get("render")->info("Smooth animation {} (available here: {}, fade {} ms)",
+                                     Smooth::Enabled() ? "on" : "off", Smooth::Available() ? "yes" : "no",
+                                     Smooth::FadeMs());
         mu::log::Get("render")->flush();
         return true;
     }
