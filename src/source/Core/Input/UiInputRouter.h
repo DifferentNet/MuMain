@@ -55,6 +55,12 @@ namespace Core::Input
         {
             return false;
         }
+        // Whether such a box can still scroll that way (down, or up): one at its end does not, and the
+        // pad's stick then moves the pointer on instead of turning a wheel that moves nothing.
+        virtual bool ScrollsFurtherAt(float /*x*/, float /*y*/, bool /*down*/) const
+        {
+            return false;
+        }
     };
 
     // Registers the single active UI input consumer. Set once at startup (RmlUiRuntime::Create())
@@ -79,4 +85,6 @@ namespace Core::Input
     bool StopUiTouchScrollGlide();
     // The registered consumer's IUiInputConsumer::ScrollsAt(); with none registered nothing scrolls.
     bool UiScrollsAt(float x, float y);
+    // The registered consumer's IUiInputConsumer::ScrollsFurtherAt(); with none registered nothing scrolls.
+    bool UiScrollsFurtherAt(float x, float y, bool down);
 }

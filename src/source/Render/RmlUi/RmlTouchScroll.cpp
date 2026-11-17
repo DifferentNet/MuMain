@@ -114,6 +114,23 @@ bool ScrollsVerticallyAt(Rml::Context* context, Rml::Vector2f point)
     return false;
 }
 
+bool ScrollsFurtherAt(Rml::Context* context, Rml::Vector2f point, bool down)
+{
+    // Half a pixel: a box scrolled to its end by the wheel can stop a fraction short of it.
+    constexpr float EndSlack = 0.5f;
+    for (Rml::Element* element = context != nullptr ? context->GetElementAtPoint(point) : nullptr;
+         element != nullptr; element = element->GetParentNode())
+    {
+        if (!CanScrollY(element))
+            continue;
+        const float top = element->GetScrollTop();
+        const float bottom = element->GetScrollHeight() - element->GetClientHeight();
+        if (down ? top < bottom - EndSlack : top > EndSlack)
+            return true;
+    }
+    return false;
+}
+
 bool RmlTouchScroll::Begin(Rml::Context* context, Rml::Vector2f point, Rml::Vector2f firstMove)
 {
     m_Held.reset();

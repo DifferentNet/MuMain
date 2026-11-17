@@ -31,6 +31,20 @@
 // Global instance
 FrameTimingState g_frameTiming;
 
+namespace
+{
+// The pad's and the on-screen controls' time each frame, summed between two MU_RENDER_TIMING log lines
+// (pad round 5, 2026-11-17): their passes are not in FrameProfiler, whose table is full for the
+// benchmark files.
+struct ControlsTiming
+{
+    double padMs = 0.0;
+    double touchMs = 0.0;
+    unsigned frames = 0;
+};
+ControlsTiming g_controlsTiming;
+} // namespace
+
 //=============================================================================
 // Scene Manager Implementation
 //=============================================================================
@@ -60,6 +74,7 @@ FrameTimingState g_frameTiming;
 #include "Engine/Object/ZzzInterface.h"
 #include "UI/HUD/GamepadControls.h"
 #include "UI/HUD/Notices.h"
+#include "UI/HUD/PadTargets.h"
 #include "UI/HUD/TouchControls.h"
 #include "I18N/All.h"
 #include "Engine/AI/ZzzAI.h"
@@ -514,8 +529,18 @@ void UpdateSceneState()
     UpdateActiveScene();
     // A gamepad presses the on-screen controls' buttons and plays the mouse; then the joystick and
     // buttons of phones and tablets (and the pad's presses) act on what the scene just moved.
+    const bool timed = FrameProfiler::g_TimingWanted;
+    const auto padFrom = timed ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
     UI::HUD::GamepadControls::Update();
+    const auto touchFrom = timed ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
     UI::HUD::TouchControls::Update();
+    if (timed)
+    {
+        const auto touchTo = std::chrono::steady_clock::now();
+        g_controlsTiming.padMs += std::chrono::duration<double, std::milli>(touchFrom - padFrom).count();
+        g_controlsTiming.touchMs += std::chrono::duration<double, std::milli>(touchTo - touchFrom).count();
+        ++g_controlsTiming.frames;
+    }
     // The pad's walk once its buttons acted, as the touch stick's.
     UI::HUD::GamepadControls::LateUpdate();
     UI::Notices::Move();
@@ -1150,7 +1175,16 @@ static void LogFrameTiming()
         FrameProfiler::CompletedCounter(Counter::GpuSkinningSubmissions),
         FrameProfiler::CompletedCounter(Counter::CpuSkinningIneligible),
         FrameProfiler::CompletedCounter(Counter::GpuSkinningFailures));
+    // The pad's and the on-screen controls' average time a frame over the last lines' frames, and how
+    // often the pad's frame walked the windows (PadTargets::Collect) and the controls were measured.
+    ControlsTiming& controls = g_controlsTiming;
+    const double frames = controls.frames > 0 ? static_cast<double>(controls.frames) : 1.0;
+    logger->info("[PAD timing] pad={:.3f}ms touch={:.3f}ms frames={} collects={} measures={}",
+                 controls.padMs / frames, controls.touchMs / frames, controls.frames,
+                 UI::HUD::PadTargets::TakeCollectCount(), UI::HUD::TouchControls::TakeMeasureCount());
+    controls = {};
 }
+
 
 /**
  * @brief Main scene rendering and update function.

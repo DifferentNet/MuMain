@@ -14033,6 +14033,30 @@
   <data name="ZenCarryLimitReached" xml:space="preserve">
     <value>Nie możesz nieść więcej Zen.</value>
   </data>
+  <data name="GamepadAttackModeRow" xml:space="preserve">
+    <value>Atak na A</value>
+  </data>
+  <data name="GamepadPageModeRow" xml:space="preserve">
+    <value>Druga strona na RT</value>
+  </data>
+  <data name="GamepadHoldMode" xml:space="preserve">
+    <value>Przytrzymaj</value>
+  </data>
+  <data name="GamepadToggleMode" xml:space="preserve">
+    <value>Naciśnij: wł./wył.</value>
+  </data>
+  <data name="PadHintPickUp" xml:space="preserve">
+    <value>Przedmiot w pobliżu: D-pad w dół go podnosi, {A} też, gdy nie ma potworów w pobliżu</value>
+  </data>
+  <data name="PadHintWindow" xml:space="preserve">
+    <value>W oknie: D-pad przesuwa ramkę, {A} bierze lub naciska, {B} zamyka</value>
+  </data>
+  <data name="PadHintBagFull" xml:space="preserve">
+    <value>Torba pełna: w ekwipunku {Y} na przedmiocie otwiera jego kartę, by go upuścić lub sprzedać w sklepie</value>
+  </data>
+  <data name="PadHintDeath" xml:space="preserve">
+    <value>Za kilka sekund ożyjesz: puść lewą gałkę i idź dalej</value>
+  </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
   </data>

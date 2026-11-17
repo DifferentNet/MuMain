@@ -266,6 +266,7 @@ void mu::ui::window::CMainFrameWindow::BindRmlModel(Rml::DataModelConstructor& c
     c.Bind("item_slot_1_key", &model.itemSlot1Key);
     c.Bind("item_slot_2_key", &model.itemSlot2Key);
     c.Bind("item_slot_3_key", &model.itemSlot3Key);
+    c.Bind("pad_in_use", &model.padInUse);
 
     c.BindEventCallback("item_hotkey_hover",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& args) { m_ItemHotKey.OnHotkeySlotHover(args.empty() ? 0 : args[0].Get<int>()); });
@@ -760,18 +761,23 @@ void mu::ui::window::CMainFrameWindow::SyncAlerts()
 
 namespace
 {
-// The key the player bound to potion slot N (HOTKEY_Q..HOTKEY_R).
+// The key the player bound to potion slot N (HOTKEY_Q..HOTKEY_R). None while the pad plays: its row over
+// the bar names the pad's buttons, and a keyboard letter there only misleads.
 Rml::String PotionKeyText(int slot)
 {
+    if (UI::Mobile::IsGamepadInUse())
+        return Rml::String();
     namespace KeyBindings = Core::Input::KeyBindings;
     return KeyBindings::KeyName(KeyBindings::Runtime::KeyOf(KeyBindings::PotionAction(slot)));
 }
 
-// The key the player bound to skill hot key N ("7", "Q", "Home"), or an empty string for -1 (no slot).
+// The key the player bound to skill hot key N ("7", "Q", "Home"), or an empty string for -1 (no slot)
+// and while the pad plays (as PotionKeyText).
 Rml::String HotkeyText(int hotkey)
 {
-    if (hotkey < 0)
+    if (hotkey < 0 || UI::Mobile::IsGamepadInUse())
         return Rml::String();
+
     namespace KeyBindings = Core::Input::KeyBindings;
     return KeyBindings::KeyName(KeyBindings::Runtime::KeyOf(KeyBindings::SkillSlotAction(hotkey)));
 }
@@ -834,6 +840,7 @@ void mu::ui::window::CMainFrameWindow::SyncItemSlots()
     SyncText(&MainFrameRmlModel::itemSlot1Key, "item_slot_1_key", PotionKeyText(1));
     SyncText(&MainFrameRmlModel::itemSlot2Key, "item_slot_2_key", PotionKeyText(2));
     SyncText(&MainFrameRmlModel::itemSlot3Key, "item_slot_3_key", PotionKeyText(3));
+    SyncBool(&MainFrameRmlModel::padInUse, "pad_in_use", UI::Mobile::IsGamepadInUse());
 }
 
 void mu::ui::window::CMainFrameWindow::SyncSkillList()

@@ -278,7 +278,12 @@ static constexpr int kHdTextureSizeDropdown = 15;
 static constexpr int kGamepadDeadZoneDropdown = 16;
 static constexpr int kGamepadSpeedDropdown = 17;
 static constexpr int kGamepadGlyphsDropdown = 18;
-static constexpr int kLastDropdownId = kGamepadGlyphsDropdown;
+static constexpr int kGamepadAttackModeDropdown = 19;
+static constexpr int kGamepadPageModeDropdown = 20;
+static constexpr int kLastDropdownId = kGamepadPageModeDropdown;
+// The pad's A and RT rows' choices, in their labels' order: held (as always), or a tap on and a tap off.
+static constexpr int kPadHoldIndex = 0;
+static constexpr int kPadToggleIndex = 1;
 // The gamepad row's choices, in its labels' order.
 static constexpr int kGamepadOnIndex = 0;
 static constexpr int kGamepadQuietIndex = 1;
@@ -932,6 +937,14 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("gamepad_glyphs_index", &model.gamepadGlyphsIndex);
     c.Bind("gamepad_glyphs_row_label", &model.gamepadGlyphsRowLabel);
     c.Bind("gamepad_glyphs_value_label", &model.gamepadGlyphsValueLabel);
+    c.Bind("gamepad_attack_mode_labels", &model.gamepadAttackModeLabels);
+    c.Bind("gamepad_attack_mode_index", &model.gamepadAttackModeIndex);
+    c.Bind("gamepad_attack_mode_row_label", &model.gamepadAttackModeRowLabel);
+    c.Bind("gamepad_attack_mode_value_label", &model.gamepadAttackModeValueLabel);
+    c.Bind("gamepad_page_mode_labels", &model.gamepadPageModeLabels);
+    c.Bind("gamepad_page_mode_index", &model.gamepadPageModeIndex);
+    c.Bind("gamepad_page_mode_row_label", &model.gamepadPageModeRowLabel);
+    c.Bind("gamepad_page_mode_value_label", &model.gamepadPageModeValueLabel);
 
     c.BindEventCallback("option_click_close",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickClose(); });
@@ -1403,6 +1416,12 @@ void mu::ui::window::COptionWindow::RmlDropdownOptionClick(int dropdownId, int o
         break;
     case kGamepadSpeedDropdown:
         RmlGamepadSpeedChanged(optionIndex);
+        break;
+    case kGamepadAttackModeDropdown:
+        RmlGamepadAttackModeChanged(optionIndex);
+        break;
+    case kGamepadPageModeDropdown:
+        RmlGamepadPageModeChanged(optionIndex);
         break;
     case kGamepadGlyphsDropdown:
         RmlGamepadGlyphsChanged(optionIndex);
@@ -2682,6 +2701,24 @@ void mu::ui::window::COptionWindow::RmlGamepadGlyphsChanged(int index)
     config.Save();
 }
 
+void mu::ui::window::COptionWindow::RmlGamepadAttackModeChanged(int index)
+{
+    if (m_rmlSyncCount < kRmlSelectSettleFrames || index < kPadHoldIndex || index > kPadToggleIndex)
+        return;
+    GameConfig& config = GameConfig::GetInstance();
+    config.SetGamepadAttackToggle(index == kPadToggleIndex);
+    config.Save();
+}
+
+void mu::ui::window::COptionWindow::RmlGamepadPageModeChanged(int index)
+{
+    if (m_rmlSyncCount < kRmlSelectSettleFrames || index < kPadHoldIndex || index > kPadToggleIndex)
+        return;
+    GameConfig& config = GameConfig::GetInstance();
+    config.SetGamepadPageToggle(index == kPadToggleIndex);
+    config.Save();
+}
+
 void mu::ui::window::COptionWindow::ApplyPendingInterfaceMode()
 {
     const int view = std::exchange(m_iPendingInterfaceView, -1);
@@ -3103,6 +3140,8 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.gamepadDeadZoneRowLabel, "gamepad_dead_zone_row_label", I18N::Game::GamepadDeadZoneRow);
     syncLabel(model.gamepadSpeedRowLabel, "gamepad_speed_row_label", I18N::Game::GamepadPointerSpeedRow);
     syncLabel(model.gamepadGlyphsRowLabel, "gamepad_glyphs_row_label", I18N::Game::GamepadGlyphsRow);
+    syncLabel(model.gamepadAttackModeRowLabel, "gamepad_attack_mode_row_label", I18N::Game::GamepadAttackModeRow);
+    syncLabel(model.gamepadPageModeRowLabel, "gamepad_page_mode_row_label", I18N::Game::GamepadPageModeRow);
 
     // positioned/root_x/root_y stay at their model defaults (false/0/0, see OptionRmlModel's own
     // comment): window_shell's `.center-both` CSS places the window, a drag moves it.
@@ -3353,6 +3392,16 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
         syncMultiplierRow(model.gamepadGlyphsLabels, "gamepad_glyphs_labels", model.gamepadGlyphsIndex,
                           "gamepad_glyphs_index", model.gamepadGlyphsValueLabel, "gamepad_glyphs_value_label",
                           std::move(glyphLabels), static_cast<int>(Core::Input::Gamepad::GetGlyphChoice()));
+        syncMultiplierRow(model.gamepadAttackModeLabels, "gamepad_attack_mode_labels", model.gamepadAttackModeIndex,
+                          "gamepad_attack_mode_index", model.gamepadAttackModeValueLabel,
+                          "gamepad_attack_mode_value_label",
+                          NarrowLabels({I18N::Game::GamepadHoldMode, I18N::Game::GamepadToggleMode}),
+                          config.GetGamepadAttackToggle() ? kPadToggleIndex : kPadHoldIndex);
+        syncMultiplierRow(model.gamepadPageModeLabels, "gamepad_page_mode_labels", model.gamepadPageModeIndex,
+                          "gamepad_page_mode_index", model.gamepadPageModeValueLabel, "gamepad_page_mode_value_label",
+                          NarrowLabels({I18N::Game::GamepadHoldMode, I18N::Game::GamepadToggleMode}),
+                          config.GetGamepadPageToggle() ? kPadToggleIndex : kPadHoldIndex);
+
     }
     const bool touchButtonsShown = UI::Mobile::ShowsControls();
     if (model.touchButtonsShown != touchButtonsShown)

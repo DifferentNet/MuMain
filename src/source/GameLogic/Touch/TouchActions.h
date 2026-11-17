@@ -36,6 +36,9 @@ void StopSteering();
 // The controls went away under a pushed joystick (a map change, a dialog, death): the walk stops,
 // and the push waits until let go, as after a gate.
 void PauseSteering();
+// The same for a joystick pushed while the walk was not asked (the hero lay dead): it waits until
+// let go even if it never walked.
+void HoldSteering();
 // Whether the joystick is pushed but waiting to be let go.
 [[nodiscard]] bool IsSteeringOnHold();
 // Whether the joystick walks the character now.
@@ -145,6 +148,11 @@ bool NextFoe();
 // Whether any foe A would attack stands within reach, the lit one too: with none, the pad's A picks
 // up or talks instead (pad round 3, 2026-11-13).
 [[nodiscard]] bool HasFoeNear();
+// The key of the foe the buttons fight now while it is a good target, else -1; and the key of the
+// one chosen (as it passed on, KeepChosen), -1 for none. The pad's A toggle follows a fight with them.
+[[nodiscard]] int FightKey();
+[[nodiscard]] int ChosenKey();
+
 [[nodiscard]] int MeetIndex();
 // Walks the character up to that one: true once within `distance` (the world's units, a tile is
 // 100), else sends the walk again now and then. Called every frame until it says true.

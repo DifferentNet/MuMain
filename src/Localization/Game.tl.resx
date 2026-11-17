@@ -14012,6 +14012,30 @@
   <data name="ZenCarryLimitReached" xml:space="preserve">
     <value>Hindi ka na makapagdadala ng mas maraming Zen.</value>
   </data>
+  <data name="GamepadAttackModeRow" xml:space="preserve">
+    <value>Atake sa A</value>
+  </data>
+  <data name="GamepadPageModeRow" xml:space="preserve">
+    <value>Ikalawang pahina sa RT</value>
+  </data>
+  <data name="GamepadHoldMode" xml:space="preserve">
+    <value>Hawakan</value>
+  </data>
+  <data name="GamepadToggleMode" xml:space="preserve">
+    <value>Pindot: on/off</value>
+  </data>
+  <data name="PadHintPickUp" xml:space="preserve">
+    <value>May item sa malapit: D-pad pababa ang pumupulot, {A} rin kung walang halimaw sa malapit</value>
+  </data>
+  <data name="PadHintWindow" xml:space="preserve">
+    <value>Sa window: ginagalaw ng D-pad ang frame, {A} ang kumukuha o pumipindot, {B} ang nagsasara</value>
+  </data>
+  <data name="PadHintBagFull" xml:space="preserve">
+    <value>Puno ang bag: sa inventory, {Y} sa item ang nagbubukas ng card nito, para ihulog o ibenta sa tindahan</value>
+  </data>
+  <data name="PadHintDeath" xml:space="preserve">
+    <value>Babalik ka sa buhay sa ilang segundo: bitawan ang kaliwang stick at maglakad ulit</value>
+  </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
   </data>

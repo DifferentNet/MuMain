@@ -16966,6 +16966,30 @@
   <data name="ZenCarryLimitReached" xml:space="preserve">
     <value>Больше Дзен вы унести не можете.</value>
   </data>
+  <data name="GamepadAttackModeRow" xml:space="preserve">
+    <value>Атака на A</value>
+  </data>
+  <data name="GamepadPageModeRow" xml:space="preserve">
+    <value>Вторая страница на RT</value>
+  </data>
+  <data name="GamepadHoldMode" xml:space="preserve">
+    <value>Держать</value>
+  </data>
+  <data name="GamepadToggleMode" xml:space="preserve">
+    <value>Нажать: вкл./выкл.</value>
+  </data>
+  <data name="PadHintPickUp" xml:space="preserve">
+    <value>Вещь рядом: крестовина вниз поднимает её, {A} тоже, если монстров рядом нет</value>
+  </data>
+  <data name="PadHintWindow" xml:space="preserve">
+    <value>В окне: крестовина двигает рамку, {A} берёт или нажимает, {B} закрывает</value>
+  </data>
+  <data name="PadHintBagFull" xml:space="preserve">
+    <value>Сумка полна: в инвентаре {Y} на вещи открывает её карточку — выбросить или продать в магазине</value>
+  </data>
+  <data name="PadHintDeath" xml:space="preserve">
+    <value>Через несколько секунд вы оживёте: отпустите левый стик и идите дальше</value>
+  </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
   </data>

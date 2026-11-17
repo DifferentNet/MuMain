@@ -5,8 +5,9 @@
    slot-like element one consistent look. #item_slots/#skill_slots take .slot-frame only: the
    strip's own segments (#item_band_fill, #skill_band_fill) already back them. */
 
-/* The original art, the bottom button row, and the readout variant this theme doesn't use. */
-.frame-art, .exp-frame, #buttons, .gauge-num.value-current {
+/* The original art (and the masks over its potion letters), the bottom button row, and the readout
+   variant this theme doesn't use. */
+.frame-art, .potion-key-mask, .exp-frame, #buttons, .gauge-num.value-current {
 	display: none;
 }
 

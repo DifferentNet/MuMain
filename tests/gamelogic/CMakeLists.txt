@@ -116,6 +116,15 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Touch/DirectionPick.cpp
 )
 
+# The foe the player chose passes on as it dies, the way it lay (pad round 5, 2026-11-17).
+mu_add_test(
+    NAME test_target_pass_on
+    SOURCES
+        test_target_pass_on.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Touch/TargetPassOn.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Touch/DirectionPick.cpp
+)
+
 mu_add_test(
     NAME test_steer_hold
     SOURCES

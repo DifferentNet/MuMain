@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cstdint>
 #include <limits>
 #include <optional>
 #include <string_view>
@@ -237,7 +238,8 @@ public:
         std::size_t kept = 0;
         for (std::size_t i = 0; i < m_Targets.size(); ++i)
         {
-            if (!IsInside(*m_Elements[i], *m_Popup))
+            Rml::Element* element = m_Elements[i].get();
+            if (element == nullptr || !IsInside(*element, *m_Popup))
                 continue;
             m_Targets[kept] = m_Targets[i];
             m_Elements[kept] = m_Elements[i];
@@ -252,12 +254,30 @@ public:
 
     bool OnPopup() const { return m_OnPopup; }
 
+    // Null for one gone since (a window's controls made again): the boxes outlive a Collect, the
+    // elements may not.
     Rml::Element* Element(int index) const
     {
-        return index >= 0 && index < static_cast<int>(m_Elements.size()) ? m_Elements[index] : nullptr;
+        return index >= 0 && index < static_cast<int>(m_Elements.size()) ? m_Elements[index].get() : nullptr;
     }
 
-    Rml::Element* List(int index) const { return index >= 0 && index < m_ListCount ? m_Lists[index] : nullptr; }
+    Rml::Element* List(int index) const { return index >= 0 && index < m_ListCount ? m_Lists[index].get() : nullptr; }
+
+    // Whether a target's element or a list went away since the Collect: the targets are stale then.
+    bool AnyGone() const
+    {
+        for (const Rml::ObserverPtr<Rml::Element>& element : m_Elements)
+        {
+            if (!element)
+                return true;
+        }
+        for (int i = 0; i < m_ListCount; ++i)
+        {
+            if (!m_Lists[i])
+                return true;
+        }
+        return false;
+    }
 
     std::span<const Target> Targets() const { return m_Targets; }
 
@@ -310,7 +330,7 @@ private:
             m_Items.push_back({element.GetParentNode(), item, m_Targets.size()});
         }
         m_Targets.push_back(target);
-        m_Elements.push_back(&element);
+        m_Elements.push_back(element.GetObserverPtr());
     }
 
     // Whether the cell lies in a grid only to look at; asked once a grid, as its cells come one after another
@@ -358,12 +378,12 @@ private:
     {
         for (int i = 0; i < m_ListCount; ++i)
         {
-            if (m_Lists[i] == &list)
+            if (m_Lists[i].get() == &list)
                 return i;
         }
         if (m_ListCount == MostLists)
             return PadTargetPick::None;
-        m_Lists[m_ListCount] = &list;
+        m_Lists[m_ListCount] = list.GetObserverPtr();
         return m_ListCount++;
     }
 
@@ -386,14 +406,16 @@ private:
     };
 
     std::vector<Target> m_Targets;
-    std::vector<Rml::Element*> m_Elements;
+    // Watched, not owned: Collect keeps the targets while nothing happens (g_collected) and their elements
+    // may go meanwhile.
+    std::vector<Rml::ObserverPtr<Rml::Element>> m_Elements;
     std::vector<ItemCells> m_Items;
     // The grid IsLookOnly asked about last in this pass, and its answer.
     const Rml::Element* m_LookOnlyGrid = nullptr;
     bool m_LookOnly = false;
     Rml::Element* m_Popup = nullptr;
     bool m_OnPopup = false;
-    std::array<Rml::Element*, MostLists> m_Lists{};
+    std::array<Rml::ObserverPtr<Rml::Element>, MostLists> m_Lists{};
     int m_ListCount = 0;
     int m_Window = 0;
     float m_LargestArea = 0.f;
@@ -420,6 +442,40 @@ struct PagesSeen
 };
 PagesSeen g_pagesSeen;
 
+// The windows are walked control by control, and they were walked every frame (pad round 5,
+// 2026-11-17). Now the last walk is kept while nothing happens: a window read, the pad
+// resting. It is walked again every frame for a while after the pad did something (Refresh), as soon as
+// a document opens, closes or the screen's size changes, as soon as a target's element goes, and at
+// least this often otherwise (goods coming from the server, a timer's text).
+constexpr auto Recollect = std::chrono::milliseconds(100);
+constexpr auto RefreshTime = std::chrono::milliseconds(250);
+struct Collected
+{
+    bool known = false;
+    std::size_t documents = 0;
+    bool screens = false;
+    std::chrono::steady_clock::time_point at{};
+    std::chrono::steady_clock::time_point refreshUntil{};
+    // Walks since the last TakeCollectCount(), for the MU_RENDER_TIMING log.
+    std::uint32_t count = 0;
+};
+Collected g_collected;
+
+// The documents and whether each shows, and the screen's size, folded into one number.
+std::size_t DocumentsPrint(Rml::Context& context)
+{
+    const Rml::Vector2i size = context.GetDimensions();
+    std::size_t print = static_cast<std::size_t>(size.x) * 65599u + static_cast<std::size_t>(size.y);
+    const int documents = context.GetNumDocuments();
+    for (int i = 0; i < documents; ++i)
+    {
+        const Rml::ElementDocument* document = context.GetDocument(i);
+        const std::size_t shown = document != nullptr && document->IsVisible() ? 1u : 0u;
+        print = print * 31u + (reinterpret_cast<std::uintptr_t>(document) << 1u) + shown;
+    }
+    return print;
+}
+
 bool PlacedBox(Rml::ElementDocument& document, Box& box)
 {
     for (const char* rootId : PlacedRoots)
@@ -437,6 +493,18 @@ std::span<const PadTargetPick::Target> Collect()
     Rml::Context* context = RmlUiRuntime::Instance().GetContext();
     if (context == nullptr)
         return {};
+    const auto now = std::chrono::steady_clock::now();
+    const std::size_t documentsPrint = DocumentsPrint(*context);
+    Collected& collected = g_collected;
+    const bool kept = collected.known && collected.documents == documentsPrint && collected.screens == g_screens
+                      && now - collected.at < Recollect && now >= collected.refreshUntil && !g_collector.AnyGone();
+    if (kept)
+        return g_collector.Targets();
+    collected.known = true;
+    collected.documents = documentsPrint;
+    collected.screens = g_screens;
+    collected.at = now;
+    ++collected.count;
     g_collector.Begin(*context);
     const int documents = context->GetNumDocuments();
     g_isWindow.assign(static_cast<std::size_t>(documents), false);
@@ -463,6 +531,18 @@ std::span<const PadTargetPick::Target> Collect()
     }
     g_collector.KeepToPopup();
     return g_collector.Targets();
+}
+
+void Refresh()
+{
+    g_collected.refreshUntil = std::chrono::steady_clock::now() + RefreshTime;
+}
+
+std::uint32_t TakeCollectCount()
+{
+    const std::uint32_t count = g_collected.count;
+    g_collected.count = 0;
+    return count;
 }
 
 bool OnDialog()
@@ -497,6 +577,8 @@ bool ScrollList(int list, int dy)
     const float step = element->GetClientHeight() * ListStepShare * (dy < 0 ? -1.f : 1.f);
     const float before = element->GetScrollTop();
     element->SetScrollTop(std::clamp(before + step, 0.f, most));
+    // The list's targets moved under the frame.
+    Refresh();
     return element->GetScrollTop() != before;
 }
 
@@ -510,6 +592,7 @@ void StepGauge(int target, int dx)
     parameters["key_identifier"] = static_cast<int>(dx < 0 ? Rml::Input::KI_LEFT : Rml::Input::KI_RIGHT);
     element->DispatchEvent(Rml::EventId::Keydown, parameters);
     element->DispatchEvent(Rml::EventId::Keyup, parameters);
+    Refresh();
 }
 
 namespace
@@ -602,6 +685,8 @@ int TurnPage(int window)
         return -1;
     control->Click();
     g_pagesSeen.known = false;
+    Refresh();
+
     return turned;
 }
 

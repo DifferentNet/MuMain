@@ -14012,6 +14012,30 @@
   <data name="ZenCarryLimitReached" xml:space="preserve">
     <value>你無法攜帶更多的 Zen。</value>
   </data>
+  <data name="GamepadAttackModeRow" xml:space="preserve">
+    <value>A 鍵攻擊</value>
+  </data>
+  <data name="GamepadPageModeRow" xml:space="preserve">
+    <value>RT 第二頁</value>
+  </data>
+  <data name="GamepadHoldMode" xml:space="preserve">
+    <value>按住</value>
+  </data>
+  <data name="GamepadToggleMode" xml:space="preserve">
+    <value>按一下開／關</value>
+  </data>
+  <data name="PadHintPickUp" xml:space="preserve">
+    <value>附近有物品：D-pad 下撿起；附近沒有怪物時 {A} 也可以</value>
+  </data>
+  <data name="PadHintWindow" xml:space="preserve">
+    <value>在視窗中：D-pad 移動外框，{A} 拿起或按下，{B} 關閉</value>
+  </data>
+  <data name="PadHintBagFull" xml:space="preserve">
+    <value>背包已滿：在物品欄對物品按 {Y} 開啟卡片，可丟棄或在商店出售</value>
+  </data>
+  <data name="PadHintDeath" xml:space="preserve">
+    <value>幾秒後就會復活：先放開左搖桿再繼續行走</value>
+  </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
   </data>

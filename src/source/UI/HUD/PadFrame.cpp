@@ -299,6 +299,20 @@ void FollowStick(SDL_Window* window, std::span<const Pick::Target> targets, int 
     if (nearest != Pick::None)
         MoveOnto(window, targets[nearest], scale);
 }
+
+// What the target the frame rests on is (an item's place, goods, a slider ...), for the buttons to read.
+void NoteTarget(std::span<const Pick::Target> targets, int current)
+{
+    g_state.onTarget = current != Pick::None;
+    g_state.onItemPlace = g_state.onTarget && (targets[current].cell || targets[current].slot);
+    g_state.onWornPlace = g_state.onTarget && targets[current].slot;
+    g_state.onGoods = g_state.onItemPlace && UI::HUD::PadTargets::IsIn(targets[current], ShopDocument);
+    g_state.onMixItem = g_state.onItemPlace && UI::HUD::PadTargets::IsIn(targets[current], MixDocument);
+    g_state.onEmptyCell = g_state.onTarget && targets[current].empty;
+    g_state.onGauge = g_state.onTarget && g_state.placed && targets[current].gauge;
+    if (g_state.onTarget)
+        g_state.box = targets[current].box;
+}
 } // namespace
 
 namespace UI::HUD::PadFrame
@@ -458,15 +472,7 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now, st
 
     here = PointerPlace(scale);
     current = Pick::At(targets, here.x, here.y);
-    g_state.onTarget = current != Pick::None;
-    g_state.onItemPlace = g_state.onTarget && (targets[current].cell || targets[current].slot);
-    g_state.onWornPlace = g_state.onTarget && targets[current].slot;
-    g_state.onGoods = g_state.onItemPlace && UI::HUD::PadTargets::IsIn(targets[current], ShopDocument);
-    g_state.onMixItem = g_state.onItemPlace && UI::HUD::PadTargets::IsIn(targets[current], MixDocument);
-    g_state.onEmptyCell = g_state.onTarget && targets[current].empty;
-    g_state.onGauge = g_state.onTarget && g_state.placed && targets[current].gauge;
-    if (g_state.onTarget)
-        g_state.box = targets[current].box;
+    NoteTarget(targets, current);
     if (g_state.onTarget && !onDialog)
     {
         g_state.windowPlace = here;
@@ -475,10 +481,27 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now, st
     }
     g_state.windowCount = onDialog ? 0 : CountWindows(targets);
     g_state.currentWindow = g_state.onTarget && !onDialog ? targets[current].window : -1;
+    // A wait under way (a window to show, a target gone, a dialog closed, a new window settling)
+    // needs every frame's targets, not the ones kept from a moment ago.
+    if (g_state.snapPending || g_state.lostFrames > 0 || g_state.goBack || g_state.newWindowPending
+        || g_state.settleFrames >= 0)
+        PadTargets::Refresh();
+}
+
+void Recheck(SDL_Window* window)
+{
+    Rml::Context* context = RmlUiRuntime::Instance().GetContext();
+    if (window == nullptr || context == nullptr)
+        return;
+    PadTargets::Refresh();
+    const std::span<const Pick::Target> targets = PadTargets::Collect();
+    const Point here = PointerPlace(ContextScale(window, *context));
+    NoteTarget(targets, Pick::At(targets, here.x, here.y));
 }
 
 void SnapSoon()
 {
+    PadTargets::Refresh();
     g_state.snapPending = true;
     g_state.snapFrames = 0;
     g_state.snapSince = Clock::now();
@@ -494,6 +517,7 @@ void SnapToPage(int window)
 
 void SnapOnNewWindow()
 {
+    PadTargets::Refresh();
     g_state.knownTargets = g_state.lastTargets;
     g_state.newWindowPending = true;
     g_state.newWindowFrames = 0;

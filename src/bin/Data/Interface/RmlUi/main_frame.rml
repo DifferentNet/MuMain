@@ -24,6 +24,12 @@
 		<div id="frame_left" class="frame-art"></div>
 		<div id="frame_middle" class="frame-art"></div>
 		<div id="frame_right" class="frame-art"></div>
+		<!-- The legacy art's Q W E R letters over the potion slots, covered while the pad plays (its
+		     LB and LT glyphs name the potions then). Legacy only. -->
+		<div id="potion_key_mask_0" class="potion-key-mask" data-if="pad_in_use"></div>
+		<div id="potion_key_mask_1" class="potion-key-mask" data-if="pad_in_use"></div>
+		<div id="potion_key_mask_2" class="potion-key-mask" data-if="pad_in_use"></div>
+		<div id="potion_key_mask_3" class="potion-key-mask" data-if="pad_in_use"></div>
 		<div id="gauge_fill_left"></div>
 		<div id="gauge_fill_right"></div>
 		<div id="item_band_fill" class="slot-fill"></div>

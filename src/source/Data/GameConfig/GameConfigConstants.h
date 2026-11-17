@@ -94,6 +94,11 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyGamepadPointerSpeed[] = L"GamepadPointerSpeed";
     inline constexpr wchar_t CfgKeyGamepadGlyphs[] = L"GamepadGlyphs";
     inline constexpr wchar_t CfgKeyGamepadCardSeen[] = L"GamepadCardSeen";
+    // MU Moldova: A attacks while held (0) or a tap starts and the next tap stops (1); the same for the RT page.
+    inline constexpr wchar_t CfgKeyGamepadAttackToggle[] = L"GamepadAttackToggle";
+    inline constexpr wchar_t CfgKeyGamepadPageToggle[] = L"GamepadPageToggle";
+    // MU Moldova: which one-time pad hints showed already, one bit each (UI/HUD/PadHints).
+    inline constexpr wchar_t CfgKeyGamepadHintsSeen[] = L"GamepadHintsSeen";
     // Animates characters on worker threads when many are in view: auto (default: on a PC with 4 or
     // more hardware threads), 0/off or 1/on; --enable-taskpool / --disable-taskpool override it. Manual
     // config.ini edit only.
@@ -318,6 +323,10 @@ namespace CfgDefaults
     inline constexpr int CfgDefaultGamepadGlyphs = 0;
     inline constexpr int CfgMaxGamepadGlyphs = 3;
     inline constexpr bool CfgDefaultGamepadCardSeen = false;
+    // Hold, as the pad always worked.
+    inline constexpr bool CfgDefaultGamepadAttackToggle = false;
+    inline constexpr bool CfgDefaultGamepadPageToggle = false;
+    inline constexpr int CfgDefaultGamepadHintsSeen = 0;
 
     // Bounds GameConfig clamps to, on load and on set. Below 75% text gets too small to read;
     // above 150% a docked panel no longer fits a small window.

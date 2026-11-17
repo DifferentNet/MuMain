@@ -68,8 +68,9 @@ constexpr int SkillButtons = SkillArrange::SlotCount;
 // its grid fits.
 constexpr int MaxPickEntries = 40;
 
-// The pad's right trigger is held (SetPadAlt).
+// The pad's second page shows for the skills, and for the potions (SetPadAlt).
 bool g_padAlt = false;
+bool g_padPotionAlt = false;
 
 // Back: the skill list's grid first, which Esc does not close (it would open the system menu over it),
 // else Esc as a keyboard presses it.
@@ -489,6 +490,9 @@ struct ControlsModel
     // The pad's right trigger is held: its face buttons cast the skill buttons 4 and 5, shown in the
     // places of the first ones.
     bool padAlt = false;
+    // The left bumper and trigger drink E and R: RT held (with the RT toggle the skills' page may stay
+    // up while the potions are back on Q and W).
+    bool padPotionAlt = false;
     // Fingers drive the controls: the joystick's area shows.
     bool fingers = false;
     // The pad's hero hub is open on its Skills tab: the picker sits under the hub's tabs.
@@ -612,6 +616,7 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     c.Bind("pad", &model.pad);
     UI::HUD::PadGlyphs::Bind(c, model.glyphs);
     c.Bind("pad_alt", &model.padAlt);
+    c.Bind("pad_potion_alt", &model.padPotionAlt);
     c.Bind("under_hub", &model.underHub);
     c.Bind("over_map", &model.overMap);
     c.Bind("fingers", &model.fingers);
@@ -925,6 +930,8 @@ bool SlidesBetween(int control)
            || (control >= FirstSkillControl && control < FirstSkillControl + SkillButtons);
 }
 
+void EnsureBoxes();
+
 // Which control a finger landing at a window pixel belongs to.
 int HitTest(float x, float y)
 {
@@ -932,6 +939,7 @@ int HitTest(float x, float y)
     Rml::Context* context = RmlUiRuntime::Instance().GetContext();
     if (!g_shown || document == nullptr || context == nullptr)
         return Touch::NoControl;
+    EnsureBoxes();
     const Rml::Vector2f point(x, y);
     if (IsWindowOver(context->GetElementAtPoint(point), document) || IsPlacedWindowAt(context, document, point))
         return Touch::NoControl;
@@ -1083,6 +1091,55 @@ double Now()
     return std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
+// With the pad in use and no finger on the controls, the boxes are read only by an A press over a
+// window (ControlAt): measured then (EnsureBoxes), else four times a second, not every frame (pad
+// round 5, 2026-11-17). An open menu, picker or Social panel is measured every frame for its focus.
+constexpr double LazyMeasureSeconds = 0.25;
+struct BoxesMeasure
+{
+    // The boxes are measured lazily now, and not since this frame was laid out.
+    bool lazy = false;
+    bool stale = false;
+    double at = -1e9;
+    // Measures since the last TakeMeasureCount(), for the MU_RENDER_TIMING log.
+    std::uint32_t count = 0;
+    // What the layout followed last: the top row folded or open and the screen's size. A change
+    // measures at once, so the buffs and the system messages move with the row on the same frame.
+    bool quickOpen = false;
+    float screenWidth = 0.f;
+    float screenHeight = 0.f;
+    // Frames still measured at once after such a change: the new layout may only show on the next.
+    int eagerFrames = 0;
+};
+// A change of the row or the screen is measured on this many frames in a row.
+constexpr int EagerFramesAfterChange = 2;
+BoxesMeasure g_measure;
+
+void MeasureBoxesNow()
+{
+    MeasureBoxes();
+    g_measure.at = Now();
+    g_measure.stale = false;
+    ++g_measure.count;
+}
+
+// The boxes as this frame lays the controls out, for a reader between the lazy measures.
+void EnsureBoxes()
+{
+    if (g_measure.lazy && g_measure.stale)
+        MeasureBoxesNow();
+}
+
+bool AnyFingerOnControls()
+{
+    for (int control = 0; control < ControlCount; ++control)
+    {
+        if (Touch::Control(control).held)
+            return true;
+    }
+    return false;
+}
+
 // A tap shorter than this still lights its button this long (the pressed class).
 constexpr double PressFlashSeconds = 0.12;
 
@@ -1173,6 +1230,7 @@ void SyncDevices(ControlsModel& model)
     SetField(model.pad, UI::Mobile::IsGamepadInUse(), "pad");
     UI::HUD::PadGlyphs::Sync(model.glyphs, [](const char* name) { g_View.MarkDirty(name); });
     SetField(model.padAlt, model.pad && g_padAlt, "pad_alt");
+    SetField(model.padPotionAlt, model.pad && g_padPotionAlt, "pad_potion_alt");
     SetField(model.fingers, Touch::IsEnabled(), "fingers");
     SetField(model.underHub, UI::HUD::PadHub::IsOnSkills(), "under_hub");
     SetField(model.overMap,
@@ -1334,12 +1392,16 @@ struct PressLights
     std::array<std::uint32_t, ControlCount> touchSeen{};
     std::array<std::uint32_t, ControlCount> padSeen{};
     std::array<double, ControlCount> until{};
+    // The pressed class as last written.
+    std::array<bool, ControlCount> shown{};
 };
 PressLights g_lights;
 
 // The pressed class on the buttons held, and for a moment after a short tap; written only when it
 // changes. Only where fingers drive the phone's HUD or the pad is in use (lit): elsewhere the class goes.
-void SyncPressed(Rml::ElementDocument* document, bool lit)
+// Between `full` passes a control's element (found by its id) is looked up only as its light changes;
+// a full pass also catches an element made again (a data-if) without the class.
+void SyncPressed(Rml::ElementDocument* document, bool lit, bool full)
 {
     const double now = Now();
     for (int control = AttackControl; control < ControlCount; ++control)
@@ -1351,10 +1413,13 @@ void SyncPressed(Rml::ElementDocument* document, bool lit)
             g_lights.until[control] = now + PressFlashSeconds;
         g_lights.touchSeen[control] = touchPresses;
         g_lights.padSeen[control] = g_pad.presses[control];
+        const bool pressed = lit && (IsHeld(control) || now < g_lights.until[control]);
+        if (!full && pressed == g_lights.shown[control])
+            continue;
         Rml::Element* element = FindElement(document, ControlElement(control));
         if (element == nullptr)
             continue;
-        const bool pressed = lit && (IsHeld(control) || now < g_lights.until[control]);
+        g_lights.shown[control] = pressed;
         if (element->IsClassSet("pressed") != pressed)
             element->SetClass("pressed", pressed);
     }
@@ -2418,6 +2483,7 @@ void Hide()
     SetField(model.knobX, 0.f, "knob_x");
     SetField(model.knobY, 0.f, "knob_y");
     g_boxes.fill(ControlBox{});
+    g_measure = {};
     UI::Mobile::PhoneHudLayout::Release();
     UI::RmlBridge::SyncDocumentVisibility(g_View.Document(), false);
 }
@@ -2522,21 +2588,49 @@ void Update()
     UI::Mobile::Social::Update(GameLogic::Touch::IsSteering());
     SyncDepth(document, model.menuOpen || model.pickerOpen || model.socialOpen);
     UI::Mobile::HeroFrame::Sync(model.hero, [](const char* field) { g_View.MarkDirty(field); });
+    // Played with the pad, the controls are measured lazily (EnsureBoxes): only an A press over a
+    // window reads them then.
+    g_measure.lazy = padInUse && !model.menuOpen && !model.pickerOpen && !model.socialOpen && !AnyFingerOnControls();
+    const Rml::Vector2f screen = document->GetBox().GetSize(Rml::BoxArea::Border);
+    const bool layoutChanged = model.quickOpen != g_measure.quickOpen || screen.x != g_measure.screenWidth
+                               || screen.y != g_measure.screenHeight;
+    g_measure.quickOpen = model.quickOpen;
+    g_measure.screenWidth = screen.x;
+    g_measure.screenHeight = screen.y;
+    if (layoutChanged)
+        g_measure.eagerFrames = EagerFramesAfterChange;
+    const bool eager = g_measure.eagerFrames > 0;
+    if (eager)
+        --g_measure.eagerFrames;
+    const bool due = !g_measure.lazy || eager || Now() - g_measure.at >= LazyMeasureSeconds;
+
     // The pad lights the PC's pad row too: X held shows before the skill animates.
-    SyncPressed(document, (model.fingers && UI::Mobile::ReplacesPcHud()) || padInUse);
+    SyncPressed(document, (model.fingers && UI::Mobile::ReplacesPcHud()) || padInUse, due);
     HintHoldOnce();
     // The boxes the next fingers are tested against: where this frame lays the controls out.
-    MeasureBoxes();
+    if (due)
+        MeasureBoxesNow();
+    else
+        g_measure.stale = true;
     if (model.pickerOpen)
         MeasurePickerPage(document);
     if (model.socialOpen)
         FitSocialPlayers(document);
-    FollowNeighbours(document);
+    if (due)
+        FollowNeighbours(document);
 }
 
-void SetPadAlt(bool alt)
+std::uint32_t TakeMeasureCount()
 {
-    g_padAlt = alt;
+    const std::uint32_t count = g_measure.count;
+    g_measure.count = 0;
+    return count;
+}
+
+void SetPadAlt(bool skills, bool potions)
+{
+    g_padAlt = skills;
+    g_padPotionAlt = potions;
 }
 
 void SetPadHeld(PadButton button, bool held)

@@ -12091,6 +12091,30 @@
   <data name="ZenCarryLimitReached" xml:space="preserve">
     <value>これ以上ゼンを持てません。</value>
   </data>
+  <data name="GamepadAttackModeRow" xml:space="preserve">
+    <value>Aで攻撃</value>
+  </data>
+  <data name="GamepadPageModeRow" xml:space="preserve">
+    <value>RTで2ページ目</value>
+  </data>
+  <data name="GamepadHoldMode" xml:space="preserve">
+    <value>長押し</value>
+  </data>
+  <data name="GamepadToggleMode" xml:space="preserve">
+    <value>押してオン／オフ</value>
+  </data>
+  <data name="PadHintPickUp" xml:space="preserve">
+    <value>近くにアイテム：D-pad下で拾う。近くにモンスターがいなければ{A}でも拾える</value>
+  </data>
+  <data name="PadHintWindow" xml:space="preserve">
+    <value>ウィンドウ内：D-padで枠を動かし、{A}で取る・押す、{B}で閉じる</value>
+  </data>
+  <data name="PadHintBagFull" xml:space="preserve">
+    <value>持ち物がいっぱい：インベントリでアイテムに{Y}を押すとカードが開き、捨てるか店で売れる</value>
+  </data>
+  <data name="PadHintDeath" xml:space="preserve">
+    <value>数秒で生き返る：左スティックを一度離してから歩く</value>
+  </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
   </data>

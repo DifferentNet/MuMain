@@ -54,7 +54,7 @@ body.pad .pad-glyph {
 	height: 15rem;
 	border: 1rem rgba(242, 242, 242, 210);
 	border-radius: 7rem 7rem 3rem 3rem;
-	font-size: 9rem;
+	font-size: 10.5rem;
 	line-height: 13rem;
 }
 .pad-trigger {
@@ -62,7 +62,7 @@ body.pad .pad-glyph {
 	height: 22rem;
 	border: 1rem rgba(242, 242, 242, 210);
 	border-radius: 10rem 10rem 4rem 4rem;
-	font-size: 9rem;
+	font-size: 10.5rem;
 	line-height: 22rem;
 }
 
@@ -73,7 +73,7 @@ body.pad .pad-glyph {
 	border-radius: 10rem;
 }
 .pad-stick {
-	font-size: 8rem;
+	font-size: 10rem;
 	line-height: 18rem;
 }
 .pad-view-back, .pad-view-front {

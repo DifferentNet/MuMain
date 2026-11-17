@@ -2144,6 +2144,7 @@ MSG MainLoop()
 #endif
 
     HandleFocusChange(Core::Platform::HasSDLWindowInputFocus(SDL_GetWindowFlags(g_sdlWindow)));
+    Core::Input::Gamepad::SetFocused(Core::Platform::HasSDLWindowInputFocus(SDL_GetWindowFlags(g_sdlWindow)));
     Core::Input::Synthetic::SetEventDelivery([](SDL_Event& event, bool& propagates)
                                              { return RouteActionInput(event, true, propagates); }, g_sdlWindow);
     Core::Input::Touch::SetEndTyping(EndTyping);
@@ -2233,6 +2234,7 @@ MSG MainLoop()
                 HandleContentScaleChange();
                 break;
             case SDL_EVENT_WINDOW_FOCUS_GAINED:
+                Core::Input::Gamepad::SetFocused(true);
                 HandleFocusChange(true);
                 break;
 #ifndef _WIN32
@@ -2246,15 +2248,23 @@ MSG MainLoop()
             case SDL_EVENT_WINDOW_HIDDEN:
                 // The page went to the background (the phone's app switcher, its screen off) without always
                 // losing focus first: a finger held then never gets its release, and a held joystick would
-                // walk on.
+                // walk on. The pad lets go too, and is not read until the page is back with the focus.
                 Core::Input::Touch::Reset();
+                Core::Input::Gamepad::SetFocused(false);
+                Core::Input::Gamepad::Pointer::Release(g_sdlWindow);
                 ReleaseLegacyMouseButtons();
+                break;
+            case SDL_EVENT_WINDOW_SHOWN:
+                // Back from the background: hidden without losing the focus, it gets no focus event
+                // back either, so the pad follows the window's own focus.
+                Core::Input::Gamepad::SetFocused(
+                    Core::Platform::HasSDLWindowInputFocus(SDL_GetWindowFlags(g_sdlWindow)));
                 break;
             case SDL_EVENT_WINDOW_FOCUS_LOST:
                 // A finger's touch never ends once the page loses focus, nor does a pad's press: let go
                 // of what fingers and the pad hold.
                 Core::Input::Touch::Reset();
-                Core::Input::Gamepad::Reset();
+                Core::Input::Gamepad::SetFocused(false);
                 Core::Input::Gamepad::Pointer::Release(g_sdlWindow);
                 HandleFocusChange(false);
                 ReleaseLegacyMouseButtons();

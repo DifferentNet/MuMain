@@ -105,6 +105,9 @@ void GameConfig::Load()
     SetGamepadPointerSpeed(ReadInt(CfgSectionUI, CfgKeyGamepadPointerSpeed, CfgDefaultGamepadPointerSpeed));
     SetGamepadGlyphs(ReadInt(CfgSectionUI, CfgKeyGamepadGlyphs, CfgDefaultGamepadGlyphs));
     m_gamepadCardSeen = ReadBool(CfgSectionUI, CfgKeyGamepadCardSeen, CfgDefaultGamepadCardSeen);
+    m_gamepadAttackToggle = ReadBool(CfgSectionUI, CfgKeyGamepadAttackToggle, CfgDefaultGamepadAttackToggle);
+    m_gamepadPageToggle = ReadBool(CfgSectionUI, CfgKeyGamepadPageToggle, CfgDefaultGamepadPageToggle);
+    m_gamepadHintsSeen = ReadInt(CfgSectionUI, CfgKeyGamepadHintsSeen, CfgDefaultGamepadHintsSeen);
     m_enableAnimationTaskPool =
         ReadString(CfgSectionUI, CfgKeyEnableAnimationTaskPool, CfgDefaultEnableAnimationTaskPool);
     m_reuseCharacterBones = ReadBool(CfgSectionUI, CfgKeyReuseCharacterBones, CfgDefaultReuseCharacterBones);
@@ -270,6 +273,9 @@ void GameConfig::Save()
     WriteInt(CfgSectionUI, CfgKeyGamepadPointerSpeed, m_gamepadPointerSpeed);
     WriteInt(CfgSectionUI, CfgKeyGamepadGlyphs, m_gamepadGlyphs);
     WriteBool(CfgSectionUI, CfgKeyGamepadCardSeen, m_gamepadCardSeen);
+    WriteBool(CfgSectionUI, CfgKeyGamepadAttackToggle, m_gamepadAttackToggle);
+    WriteBool(CfgSectionUI, CfgKeyGamepadPageToggle, m_gamepadPageToggle);
+    WriteInt(CfgSectionUI, CfgKeyGamepadHintsSeen, m_gamepadHintsSeen);
 
     SaveCamera();
     WriteBool(CfgSectionRender, CfgKeyVSync, m_vsyncEnabled);

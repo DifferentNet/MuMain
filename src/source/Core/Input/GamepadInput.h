@@ -90,7 +90,9 @@ enum class PadNews : std::uint8_t
 };
 [[nodiscard]] PadNews TakeNews();
 // Whether a pad pressed a button or pushed a stick half way out since the last key, mouse button or
-// finger press. A worn stick drifting near its centre does not take the game from the mouse.
+// finger press. A worn stick drifting near its centre does not take the game from the mouse. A key
+// pressed while a pad button is held or a stick pushed half way out does not take the game from the
+// pad (a handheld's paddles send keys); a mouse button or a finger always does.
 [[nodiscard]] bool WasUsedLast();
 
 [[nodiscard]] const ButtonState& GetButton(Button button);
@@ -100,6 +102,10 @@ enum class PadNews : std::uint8_t
 // Lets go of every button and centres the sticks: the window lost the focus, and the pad's
 // releases go elsewhere.
 void Reset();
+// Whether the game's window has the focus (true to start with). Without it the pads' presses and
+// pushes are not read, so a stick held in another window walks no one in the background; losing it
+// lets go of everything (Reset()).
+void SetFocused(bool focused);
 
 // The player's vibration switch (Options -> Interface -> Gamepad "On, no vibration"); on to start with.
 void SetRumble(bool on);
