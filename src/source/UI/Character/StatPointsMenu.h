@@ -9,7 +9,7 @@
 
 namespace UI::Character::StatPoints
 {
-// The steps the menu offers for that many free points: 10, 100 and 1000 while fewer than all of
+// The steps the menu offers for that many free points: 10, 100, 1000, 5000 and 10000 while fewer than all of
 // them, then all of them. Nothing without free points.
 [[nodiscard]] std::vector<int> MenuAmounts(int freePoints);
 
