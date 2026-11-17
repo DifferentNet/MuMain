@@ -83,7 +83,7 @@ namespace mu::ui::window
 
         // Invoked directly from RmlUi data-event-click bindings (see Create()), not polled.
         void RmlClickIncreaseStat(int stat);
-        // A right click on a stat's "+": a menu of +10, +100, +1000 and all the free points.
+        // A right click on a stat's "+": a menu of +10, +100, +1000, +5000, +10000 and all the free points.
         void RmlOpenStatMenu(int stat);
         void RmlClickQuest();
         void RmlClickPet();
