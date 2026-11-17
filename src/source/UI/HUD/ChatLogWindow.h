@@ -228,10 +228,11 @@ namespace mu::ui::window
         // model is rebuilt only when either changes, never every frame.
         bool m_bChatOpen = false;
         std::optional<std::uint64_t> m_NextFadeMs;
-        bool IsChatOpen() const;
         bool FadeChanged();
 
     public:
+        // The chat input is up or the log's frame is shown; the system log asks too (CSystemLogWindow).
+        bool IsChatOpen() const;
 
         CChatLogWindow();
         ~CChatLogWindow() override;

@@ -1281,13 +1281,13 @@ void mu::ui::window::CSystemLogWindow::RemoveFrontLine()
 
 // How many of the newest messages show now: on a phone at most PhoneSystemLines, none older than
 // PhoneSystemLineStaysMs; on a PC at most MAX_NUMBER_OF_LINES, none older than PcSystemLineStaysMs
-// while the chat input is closed (open, the newest six show again, as the chat log's history does).
+// while the chat is closed (input up or the log's frame shown: the newest six show again, as the chat log's history does).
 int mu::ui::window::CSystemLogWindow::ShownCount() const
 {
     if (UI::Mobile::IsPhoneView())
         return UI::Chat::SystemLinesShown(m_Arrivals, ChatLogClockMs(), PhoneSystemLines, PhoneSystemLineStaysMs, false);
 
-    const bool chatOpen = g_pNewUISystem != nullptr && g_pNewUISystem->IsVisible(INTERFACE_CHATINPUTBOX);
+    const bool chatOpen = g_pChatListBox != nullptr && g_pChatListBox->IsChatOpen();
     return UI::Chat::SystemLinesShown(m_Arrivals, ChatLogClockMs(), MAX_NUMBER_OF_LINES, PcSystemLineStaysMs, chatOpen);
 }
 
