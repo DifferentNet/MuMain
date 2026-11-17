@@ -167,6 +167,12 @@ enum INTERFACE_LIST
     // CLootFilterWindow (UI/Options/LootFilterWindow.h), the loot highlight filter's settings. Same reasoning as
     // INTERFACE_CREDITS above.
     INTERFACE_LOOT_FILTER,
+    // CSoloKalimaWindow (UI/Events/SoloKalimaWindow.h), Kundun's Lair (solo Kalima) of its NPC. Same reasoning as
+    // INTERFACE_CREDITS above.
+    INTERFACE_SOLO_KALIMA,
+    // CKeyBindingsWindow (UI/Options/KeyBindingsWindow.h), the player's key bindings. Same reasoning as
+    // INTERFACE_CREDITS above.
+    INTERFACE_KEY_BINDINGS,
     INTERFACE_END,
     INTERFACE_COUNT = INTERFACE_END - 2,
 };

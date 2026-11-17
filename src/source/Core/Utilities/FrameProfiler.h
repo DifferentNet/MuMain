@@ -47,6 +47,8 @@ enum class Pass : int
     ObjectsDraw,
     // Inside RendererReplay: the SSAO depth prepass and occlusion passes (CPU time).
     RendererSsao,
+    // Character bones on the main thread, or only their hand-off to the workers (the rest is CharWait).
+    CharAnim,
     Count_
 };
 
@@ -55,7 +57,7 @@ inline constexpr const char* kPassNames[static_cast<int>(Pass::Count_)] = {
     "MovePart",  "Skinning", "UI",        "RenderBegin", "RenderEnd", "Submit",  "UIUpdate", "RmlInput",
     "UILayout",  "Flush",    "Sprites",   "Particles",   "Joints",    "Overlay", "RmlUpd",   "RmlRend",
     "EndOffscr", "EndStage", "EndReplay", "EndPostUI",   "ObjAnim",   "ObjDraw",
-    "EndSsao",
+    "EndSsao",   "CharAnim",
 };
 
 enum class Counter : int

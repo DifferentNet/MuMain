@@ -13885,6 +13885,55 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>Tutup</value>
   </data>
+  <!-- Key bindings window (UI/Options/KeyBindingsWindow.h, Core/Input/KeyBindings.h) -->
+  <data name="KeyBindingsTitle" xml:space="preserve">
+    <value>Pengaturan tombol</value>
+  </data>
+  <data name="KeyBindingsOpen" xml:space="preserve">
+    <value>Pengaturan tombol</value>
+  </data>
+  <data name="KeyBindingsOpenButton" xml:space="preserve">
+    <value>Atur</value>
+  </data>
+  <data name="KeyBindingsWindows" xml:space="preserve">
+    <value>Jendela</value>
+  </data>
+  <data name="KeyBindingsPotions" xml:space="preserve">
+    <value>Ramuan</value>
+  </data>
+  <data name="KeyBindingsSkills" xml:space="preserve">
+    <value>Skill</value>
+  </data>
+  <data name="KeyBindingsHint" xml:space="preserve">
+    <value>Klik sebuah aksi, lalu tekan tombol barunya. Tombol yang sudah dipakai menukar kedua aksi.</value>
+  </data>
+  <data name="KeyBindingsPress" xml:space="preserve">
+    <value>Tekan tombol (Esc batal)</value>
+  </data>
+  <data name="KeyBindingsFixed" xml:space="preserve">
+    <value>Tombol itu tidak bisa dipakai. Tekan tombol lain (Esc batal).</value>
+  </data>
+  <data name="KeyBindingsReset" xml:space="preserve">
+    <value>Kembalikan bawaan</value>
+  </data>
+  <data name="KeyBindingsClose" xml:space="preserve">
+    <value>Tutup</value>
+  </data>
+  <data name="KeyBindingsInventoryAlt" xml:space="preserve">
+    <value>Inventaris (tombol kedua)</value>
+  </data>
+  <data name="KeyBindingsCommand" xml:space="preserve">
+    <value>Aksi pemain</value>
+  </data>
+  <data name="KeyBindingsHelperToggle" xml:space="preserve">
+    <value>MU Helper nyala/mati</value>
+  </data>
+  <data name="KeyBindingsPotionSlot" xml:space="preserve">
+    <value>Slot ramuan %d</value>
+  </data>
+  <data name="KeyBindingsSkillSlot" xml:space="preserve">
+    <value>Slot skill %d</value>
+  </data>
   <data name="SkillDamageWithMaxDD" xml:space="preserve">
     <value>Kerusakan Keterampilan: %d%% (maks. %d%%)</value>
   </data>

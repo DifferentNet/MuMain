@@ -16414,6 +16414,55 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>Закрыть</value>
   </data>
+  <!-- Key bindings window (UI/Options/KeyBindingsWindow.h, Core/Input/KeyBindings.h) -->
+  <data name="KeyBindingsTitle" xml:space="preserve">
+    <value>Назначение клавиш</value>
+  </data>
+  <data name="KeyBindingsOpen" xml:space="preserve">
+    <value>Назначение клавиш</value>
+  </data>
+  <data name="KeyBindingsOpenButton" xml:space="preserve">
+    <value>Настроить</value>
+  </data>
+  <data name="KeyBindingsWindows" xml:space="preserve">
+    <value>Окна</value>
+  </data>
+  <data name="KeyBindingsPotions" xml:space="preserve">
+    <value>Зелья</value>
+  </data>
+  <data name="KeyBindingsSkills" xml:space="preserve">
+    <value>Умения</value>
+  </data>
+  <data name="KeyBindingsHint" xml:space="preserve">
+    <value>Нажмите на действие, затем на новую клавишу. Если клавиша уже занята, два действия поменяются клавишами.</value>
+  </data>
+  <data name="KeyBindingsPress" xml:space="preserve">
+    <value>Нажмите клавишу (Esc — отмена)</value>
+  </data>
+  <data name="KeyBindingsFixed" xml:space="preserve">
+    <value>Эту клавишу назначить нельзя. Нажмите другую (Esc — отмена).</value>
+  </data>
+  <data name="KeyBindingsReset" xml:space="preserve">
+    <value>Сбросить по умолчанию</value>
+  </data>
+  <data name="KeyBindingsClose" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
+  <data name="KeyBindingsInventoryAlt" xml:space="preserve">
+    <value>Инвентарь (вторая клавиша)</value>
+  </data>
+  <data name="KeyBindingsCommand" xml:space="preserve">
+    <value>Действия с игроком</value>
+  </data>
+  <data name="KeyBindingsHelperToggle" xml:space="preserve">
+    <value>MU Helper вкл/выкл</value>
+  </data>
+  <data name="KeyBindingsPotionSlot" xml:space="preserve">
+    <value>Ячейка зелья %d</value>
+  </data>
+  <data name="KeyBindingsSkillSlot" xml:space="preserve">
+    <value>Ячейка умения %d</value>
+  </data>
   <data name="PingHudLabel" xml:space="preserve">
     <value>Пинг %d мс</value>
   </data>
@@ -16460,5 +16509,86 @@
   </data>
   <data name="CommandPlayerNotFound" xml:space="preserve">
     <value>Игрок не найден.</value>
+  </data>
+  <data name="SoloKalimaTitle" xml:space="preserve">
+    <value>Логово Кундуна</value>
+  </data>
+  <data name="SoloKalimaAsking" xml:space="preserve">
+    <value>Запрашиваю у сервера...</value>
+  </data>
+  <data name="SoloKalimaNoAnswer" xml:space="preserve">
+    <value>Сервер не присылает Логово Кундуна.</value>
+  </data>
+  <data name="SoloKalimaPower" xml:space="preserve">
+    <value>Ваш CP: %ls · HP: %ls</value>
+  </data>
+  <data name="SoloKalimaTickets" xml:space="preserve">
+    <value>Зеркало измерений: %d</value>
+  </data>
+  <data name="SoloKalimaNoTicket" xml:space="preserve">
+    <value>Нет Зеркала измерений.</value>
+  </data>
+  <data name="SoloKalimaRunsLeft" xml:space="preserve">
+    <value>Забегов сегодня: %d, сброс через %ls</value>
+  </data>
+  <data name="SoloKalimaTierTitle" xml:space="preserve">
+    <value>%d. %ls · Калима %d</value>
+  </data>
+  <data name="SoloKalimaTierClosed" xml:space="preserve">
+    <value> · закрыт</value>
+  </data>
+  <data name="SoloKalimaTierDetail" xml:space="preserve">
+    <value>%ls CP · %ls HP · рекорд %ls</value>
+  </data>
+  <data name="SoloKalimaNoRecord" xml:space="preserve">
+    <value>нет</value>
+  </data>
+  <data name="SoloKalimaServerBest" xml:space="preserve">
+    <value>Рекорд сервера, тир %d: %ls · %ls</value>
+  </data>
+  <data name="SoloKalimaNoServerBest" xml:space="preserve">
+    <value>Рекорд сервера, тир %d: пока нет</value>
+  </data>
+  <data name="SoloKalimaCurses" xml:space="preserve">
+    <value>Проклятия: %d из %d (больше добычи)</value>
+  </data>
+  <data name="SoloKalimaCurse" xml:space="preserve">
+    <value>%ls: %ls</value>
+  </data>
+  <data name="SoloKalimaEnter" xml:space="preserve">
+    <value>Войти в тир %d</value>
+  </data>
+  <data name="SoloKalimaEnterAny" xml:space="preserve">
+    <value>Войти</value>
+  </data>
+  <data name="SoloKalimaEntering" xml:space="preserve">
+    <value>Входим...</value>
+  </data>
+  <data name="SoloKalimaInRun" xml:space="preserve">
+    <value>Вы уже в забеге.</value>
+  </data>
+  <data name="SoloKalimaComeToNpc" xml:space="preserve">
+    <value>Подойдите к Миражу (Лоренсия, Девиас).</value>
+  </data>
+  <data name="SoloKalimaNoRuns" xml:space="preserve">
+    <value>Забег сегодня уже был, следующий через %ls</value>
+  </data>
+  <data name="SoloKalimaPickTier" xml:space="preserve">
+    <value>Выберите тир.</value>
+  </data>
+  <data name="SoloKalimaTierLocked" xml:space="preserve">
+    <value>Для тира %d нужно %ls CP и %ls HP.</value>
+  </data>
+  <data name="SoloKalimaSealTimer" xml:space="preserve">
+    <value>Логово · Печать %d</value>
+  </data>
+  <data name="SoloKalimaBossTimer" xml:space="preserve">
+    <value>Логово · Босс</value>
+  </data>
+  <data name="SoloKalimaCleared" xml:space="preserve">
+    <value>Логово Кундуна, тир %d: пройдено!</value>
+  </data>
+  <data name="SoloKalimaFailed" xml:space="preserve">
+    <value>Логово Кундуна, тир %d: не пройдено.</value>
   </data>
 </root>

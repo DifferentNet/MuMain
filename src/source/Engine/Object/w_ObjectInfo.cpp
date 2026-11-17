@@ -179,6 +179,7 @@ void OBJECT::Initialize()
 
     m_pCloth = NULL;
     BoneTransform = NULL;
+    PrepassPose = {};
 
     Owner = NULL;
     Prior = NULL;

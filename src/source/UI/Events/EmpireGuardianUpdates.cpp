@@ -49,6 +49,17 @@ void ShowFinalReward(int experience)
     UI::Dialogs::ShowConfirm(std::move(request));
 }
 
+void ShowSoloKalimaResult(bool cleared)
+{
+    // Kundun's Lair (solo Kalima) borrows the fortress's result packet; the "day" is the lair's tier and it gives no
+    // experience, so one line of its own instead of the Tier Map's.
+    wchar_t text[256]{};
+    UI::Dialogs::ConfirmRequest request;
+    mu_swprintf(text, cleared ? I18N::Game::SoloKalimaCleared : I18N::Game::SoloKalimaFailed, g_pEmpireGuardianTimer->GetDay());
+    request.lines.push_back({text, false});
+    UI::Dialogs::ShowConfirm(std::move(request));
+}
+
 void HideTimer()
 {
     if (UI::Windows::IsVisible(mu::ui::window::INTERFACE_EMPIREGUARDIAN_TIMER))

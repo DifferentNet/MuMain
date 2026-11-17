@@ -1,0 +1,136 @@
+/* Legacy theme for CKeyBindingsWindow (the player's key bindings): the window_shell msgbox frame and title banner,
+   re-sliced as ninepatches (as loot_filter.rcss does) so the art keeps its corners at this width; the scrolling rows,
+   the hint and the foot buttons. Rows and key chips are flat boxes in the original's dark-gold palette: a waiting
+   chip is lit gold, a row that lost its key in a swap flashes. The phone view makes every row finger-sized. */
+
+@spritesheet kb-cap-top-sheet    { src: "../../../newui_msgbox_top.tga";    kb-cap-top:    0px 0px 230px 67px; kb-cap-top-inner:    12px 12px 206px 43px; }
+@spritesheet kb-cap-middle-sheet { src: "../../../newui_msgbox_middle.tga"; kb-cap-middle: 0px 0px 230px 15px; kb-cap-middle-inner: 12px  4px 206px  7px; }
+@spritesheet kb-cap-bottom-sheet { src: "../../../newui_msgbox_bottom.tga"; kb-cap-bottom: 0px 0px 230px 50px; kb-cap-bottom-inner: 12px 12px 206px 26px; }
+@spritesheet kb-back-sheet       { src: "../../../newui_msgbox_back.jpg";   kb-back:       0px 0px 222px 250px; }
+@spritesheet kb-banner-sheet     { src: "../../../newui_Message_03.tga";    kb-banner:     0px 0px 230px 67px; kb-banner-inner:     20px 12px 190px 43px; }
+
+.window-shell-sprite-back   { decorator: image(kb-back repeat left top); }
+.window-shell-sprite-top    { height: 46dp; decorator: ninepatch(kb-cap-top, kb-cap-top-inner); }
+.window-shell-sprite-middle { top: 46dp; bottom: 40dp; decorator: ninepatch(kb-cap-middle, kb-cap-middle-inner); }
+.window-shell-sprite-bottom { height: 40dp; decorator: ninepatch(kb-cap-bottom, kb-cap-bottom-inner); }
+.window-shell-header-rail   { height: 46dp; decorator: ninepatch(kb-banner, kb-banner-inner); }
+
+#panel {
+	width: 380dp;
+	height: 480dp;
+	max-height: 96%;
+	font-family: "token(font-body)";
+	font-size: 1rem;
+	color: token(text-input);
+}
+
+/* The content: the scrolling rows, the hint and the foot, one under the other. An ID selector, so it wins over
+   window_shell.rcss's own .window-shell-content insets. */
+#content {
+	left: 18dp;
+	right: 18dp;
+	top: 34dp;
+	bottom: 16dp;
+	padding-top: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	justify-content: flex-start;
+}
+
+/* The rows scroll with the chat log's scrollbar (base.rcss's .scroll-pane); a stretched flex child bounds it. */
+.kb-scroll {
+	flex: 1 1 0;
+	min-height: 0;
+	padding: 0 8dp 4dp 2dp;
+}
+
+.kb-section {
+	margin: 8dp 0 4dp;
+	padding-bottom: 2dp;
+	border-bottom: 1dp #5a4a2a;
+	color: token(accent-gold);
+	font-weight: bold;
+}
+
+/* A row takes the click; its key sits in a chip on the right. */
+.kb-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	min-height: 24dp;
+	margin-bottom: 1dp;
+	padding: 0 4dp;
+	cursor: pointer;
+	pointer-events: auto;
+	border: 1dp transparent;
+}
+.kb-row:hover { background-color: rgba(120, 100, 60, 60); }
+.kb-row.capturing { background-color: rgba(120, 100, 60, 110); border-color: #c0a060; }
+.kb-row.flash { background-color: rgba(150, 110, 20, 150); border-color: #f0c850; }
+.kb-row-label {
+	flex: 1 1 auto;
+	padding-right: 8dp;
+	white-space: normal;
+	color: token(text-input);
+}
+.kb-row:hover .kb-row-label { color: #ffffff; }
+.kb-key {
+	flex-shrink: 0;
+	min-width: 48dp;
+	height: 20dp;
+	line-height: 20dp;
+	padding: 0 6dp;
+	text-align: center;
+	white-space: nowrap;
+	font-weight: bold;
+	color: token(accent-gold);
+	background-color: rgba(0, 0, 0, 120);
+	border: 1dp #5a4a2a;
+}
+.kb-row.capturing .kb-key { color: #fff0b0; background-color: rgba(150, 110, 20, 220); border-color: #f0c850; }
+
+.kb-hint {
+	flex-shrink: 0;
+	padding: 6dp 2dp 0;
+	white-space: normal;
+	color: token(text-muted);
+	border-top: 1dp #5a4a2a;
+}
+.kb-hint.refused { color: token(semantic-danger); }
+
+/* Text buttons: flat boxes sized by their label (the native button art does not stretch). */
+.kb-foot {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	flex-shrink: 0;
+	padding-top: 6dp;
+}
+.kb-button {
+	min-width: 64dp;
+	height: 24dp;
+	line-height: 24dp;
+	padding: 0 8dp;
+	margin: 0 4dp;
+	text-align: center;
+	white-space: nowrap;
+	cursor: pointer;
+	pointer-events: auto;
+	color: token(text-input);
+	background-color: rgba(60, 45, 20, 220);
+	border: 1dp #8a7040;
+}
+.kb-button:hover { color: #ffffff; border-color: #f0c850; }
+.kb-button:active { background-color: rgba(30, 22, 10, 220); }
+.kb-close { min-width: 100dp; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): the window nearly fills the screen,
+   with larger text and finger-sized rows and buttons (40 dp at least). */
+@media (theme: mobile) {
+	#panel { width: 560dp; max-width: 96%; height: 96%; font-size: 1.3rem; }
+	#content { left: 22dp; right: 22dp; top: 40dp; }
+	.kb-row { min-height: 44dp; }
+	.kb-key { min-width: 64dp; height: 32dp; line-height: 32dp; }
+	.kb-button { height: 40dp; line-height: 40dp; padding: 0 12dp; }
+}

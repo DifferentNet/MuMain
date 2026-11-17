@@ -1,0 +1,102 @@
+/* Legacy theme for CSoloKalimaWindow (Kundun's Lair, solo Kalima), in the Tier Maps window's look (tier_maps.rcss):
+   the docked_panel_frame.rcss frame (linked first; newui_item_back01 top) stretched to the full dock height (432), the
+   title bold and centred, three status lines, then one counter-scaled pane in which the tiers flow (a clickable row
+   each), the picked tier's server record and the curses (base.rcss's checkbox art, a row each), a second one at the
+   foot with the hint and the enter button in the event entry's button art (event_entry.rcss) beside the exit button.
+   Reference px inside #panel; inside the panes, physical px (reference px times --root-scale). */
+
+@spritesheet sk-btn-sheet {
+	src: "../../../newui_btn_empty_big.tga";
+	sk-btn-up: 0px 0px 180px 29px;
+	sk-btn-over: 0px 29px 180px 29px;
+	sk-btn-down: 0px 58px 180px 29px;
+}
+
+.frame-top { decorator: image(docked-bg-top-b); }
+#panel { height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; }
+
+.sk-title { left: 0; top: 12px; text-align: center; font-weight: bold; pointer-events: none; }
+#sk_power { left: 12px; top: 34px; font-weight: bold; pointer-events: none; }
+#sk_ticket { left: 12px; top: 49px; pointer-events: none; }
+#sk_runs { left: 12px; top: 63px; pointer-events: none; }
+
+#sk_list { left: 12px; top: 80px; --flow-w: 166px; line-height: 1.12; }
+.sk-tier {
+	display: block;
+	padding: calc(1px * var(--root-scale)) calc(4px * var(--root-scale));
+	margin-bottom: calc(1px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+}
+.sk-tier-title { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+.sk-tier-detail { display: block; white-space: nowrap; pointer-events: none; }
+.sk-record { display: block; margin-top: calc(2px * var(--root-scale)); white-space: nowrap; }
+.sk-curses-title { display: block; margin-top: calc(5px * var(--root-scale)); white-space: nowrap; font-weight: bold; }
+.sk-curse {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	padding: calc(1px * var(--root-scale)) calc(4px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+}
+.sk-check {
+	flex-shrink: 0;
+	width: calc(10px * var(--root-scale));
+	height: calc(10px * var(--root-scale));
+	margin-right: calc(4px * var(--root-scale));
+	decorator: image(legacy-checkbox-unchecked);
+	pointer-events: none;
+}
+.sk-check.checked { decorator: image(legacy-checkbox-checked); }
+.sk-curse-text { display: block; white-space: nowrap; pointer-events: none; }
+.sk-curse.locked { opacity: 0.45; cursor: arrow; }
+
+#sk_foot { left: 12px; top: 358px; --flow-w: 166px; line-height: 1.12; }
+.sk-hint { display: block; white-space: nowrap; }
+#sk_enter {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-top: calc(4px * var(--root-scale));
+	margin-left: calc(40px * var(--root-scale));
+	width: calc(126px * var(--root-scale));
+	height: calc(29px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	decorator: image(sk-btn-up);
+}
+#sk_enter:hover { decorator: image(sk-btn-over); }
+#sk_enter:active { decorator: image(sk-btn-down); }
+#sk_enter.off { opacity: 0.45; cursor: arrow; }
+#sk_enter.off:hover, #sk_enter.off:active { decorator: image(sk-btn-up); }
+.sk-enter-label { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+
+/* The Tier Maps window's colours: gold title, light text, blue detail. A tier the character may enter is bright, a
+   closed one grey; the picked one on a gold band. Tickets and runs green when there are some, red otherwise; a
+   picked curse gold; a bad hint red. */
+.sk-title { color: rgb(255, 220, 120); }
+#sk_power { color: rgb(240, 240, 240); }
+#sk_ticket, #sk_runs { color: rgb(255, 120, 110); }
+#sk_ticket.ok, #sk_runs.ok { color: rgb(150, 255, 150); }
+.sk-tier { color: rgb(130, 130, 130); }
+.sk-tier:hover { background-color: rgba(255, 255, 255, 14); }
+.sk-tier.open .sk-tier-title { color: rgb(240, 240, 240); }
+.sk-tier.open .sk-tier-detail { color: rgb(200, 220, 255); }
+.sk-tier.selected { background-color: rgba(255, 210, 100, 48); }
+.sk-tier.selected .sk-tier-title { color: rgb(255, 220, 120); }
+.sk-record { color: rgb(170, 170, 170); }
+.sk-curses-title { color: rgb(225, 225, 225); }
+.sk-curse { color: rgb(200, 220, 255); }
+.sk-curse:hover { background-color: rgba(255, 255, 255, 14); }
+.sk-curse.locked:hover { background-color: transparent; }
+.sk-curse.checked { color: rgb(255, 220, 120); }
+.sk-hint { color: rgb(200, 220, 255); }
+.sk-hint.bad { color: rgb(255, 150, 120); }
+.sk-enter-label { color: #ffffff; }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+#sk_title { width: calc(100% * var(--root-scale)); }
+#sk_power, #sk_ticket, #sk_runs { width: calc(166px * var(--root-scale)); }

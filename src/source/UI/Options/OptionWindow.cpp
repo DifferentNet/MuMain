@@ -633,6 +633,9 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("loot_filter_shown", &model.lootFilterShown);
     c.Bind("loot_filter_label", &model.lootFilterLabel);
     c.Bind("loot_filter_button_label", &model.lootFilterButtonLabel);
+    c.Bind("key_bindings_shown", &model.keyBindingsShown);
+    c.Bind("key_bindings_label", &model.keyBindingsLabel);
+    c.Bind("key_bindings_button_label", &model.keyBindingsButtonLabel);
     c.Bind("render_all_effects", &model.renderAllEffects);
     c.Bind("render_all_effects_label", &model.renderAllEffectsLabel);
     c.Bind("windowed_mode", &model.windowedMode);
@@ -937,6 +940,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleSlideHelp(); });
     c.BindEventCallback("option_open_loot_filter",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlOpenLootFilter(); });
+    c.BindEventCallback("option_open_key_bindings",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlOpenKeyBindings(); });
     c.BindEventCallback("option_toggle_render_all_effects",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleRenderAllEffects(); });
     c.BindEventCallback("option_toggle_windowed_mode",
@@ -2671,6 +2676,16 @@ void mu::ui::window::COptionWindow::RmlOpenLootFilter()
     PlayBuffer(SOUND_CLICK01);
 }
 
+void mu::ui::window::COptionWindow::RmlOpenKeyBindings()
+{
+    // The hot keys it sets work in the game; its row is hidden elsewhere.
+    if (SceneFlag != MAIN_SCENE)
+        return;
+    g_pNewUISystem->Hide(mu::ui::window::INTERFACE_OPTION);
+    g_pNewUISystem->Show(mu::ui::window::INTERFACE_KEY_BINDINGS);
+    PlayBuffer(SOUND_CLICK01);
+}
+
 void mu::ui::window::COptionWindow::OnSoundVolumeChanged()
 {
     m_SoundOnOff = (m_iVolumeLevel > 0) ? 1 : 0;
@@ -2979,6 +2994,8 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.slideHelpLabel, "slide_help_label", I18N::Game::SlideHelp);
     syncLabel(model.lootFilterLabel, "loot_filter_label", I18N::Game::LootFilterOpen);
     syncLabel(model.lootFilterButtonLabel, "loot_filter_button_label", I18N::Game::LootFilterOpenButton);
+    syncLabel(model.keyBindingsLabel, "key_bindings_label", I18N::Game::KeyBindingsOpen);
+    syncLabel(model.keyBindingsButtonLabel, "key_bindings_button_label", I18N::Game::KeyBindingsOpenButton);
     syncLabel(model.renderAllEffectsLabel, "render_all_effects_label", I18N::Game::RenderFullEffects);
     syncLabel(model.windowedModeLabel, "windowed_mode_label", I18N::Game::WindowedMode);
     syncLabel(model.soundVolumeLabel, "sound_volume_label", I18N::Game::SoundVolume);
@@ -3041,6 +3058,7 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     if (model.slideHelp != m_bSlideHelp) { model.slideHelp = m_bSlideHelp; m_RmlView.MarkDirty("slide_help"); }
     const bool lootFilterShown = SceneFlag == MAIN_SCENE;
     if (model.lootFilterShown != lootFilterShown) { model.lootFilterShown = lootFilterShown; m_RmlView.MarkDirty("loot_filter_shown"); }
+    if (model.keyBindingsShown != lootFilterShown) { model.keyBindingsShown = lootFilterShown; m_RmlView.MarkDirty("key_bindings_shown"); }
     if (model.renderAllEffects != m_bRenderAllEffects) { model.renderAllEffects = m_bRenderAllEffects; m_RmlView.MarkDirty("render_all_effects"); }
     if (model.windowedMode != m_bWindowedMode) { model.windowedMode = m_bWindowedMode; m_RmlView.MarkDirty("windowed_mode"); }
 

@@ -13885,6 +13885,55 @@
   <data name="LootFilterClose" xml:space="preserve">
     <value>關閉</value>
   </data>
+  <!-- Key bindings window (UI/Options/KeyBindingsWindow.h, Core/Input/KeyBindings.h) -->
+  <data name="KeyBindingsTitle" xml:space="preserve">
+    <value>按鍵設定</value>
+  </data>
+  <data name="KeyBindingsOpen" xml:space="preserve">
+    <value>按鍵設定</value>
+  </data>
+  <data name="KeyBindingsOpenButton" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="KeyBindingsWindows" xml:space="preserve">
+    <value>視窗</value>
+  </data>
+  <data name="KeyBindingsPotions" xml:space="preserve">
+    <value>藥水</value>
+  </data>
+  <data name="KeyBindingsSkills" xml:space="preserve">
+    <value>技能</value>
+  </data>
+  <data name="KeyBindingsHint" xml:space="preserve">
+    <value>點選一個動作，再按下新按鍵。已被使用的按鍵會讓兩個動作互換。</value>
+  </data>
+  <data name="KeyBindingsPress" xml:space="preserve">
+    <value>請按下按鍵（Esc 取消）</value>
+  </data>
+  <data name="KeyBindingsFixed" xml:space="preserve">
+    <value>此按鍵無法指定。請按其他按鍵（Esc 取消）。</value>
+  </data>
+  <data name="KeyBindingsReset" xml:space="preserve">
+    <value>恢復預設</value>
+  </data>
+  <data name="KeyBindingsClose" xml:space="preserve">
+    <value>關閉</value>
+  </data>
+  <data name="KeyBindingsInventoryAlt" xml:space="preserve">
+    <value>背包（第二按鍵）</value>
+  </data>
+  <data name="KeyBindingsCommand" xml:space="preserve">
+    <value>玩家動作</value>
+  </data>
+  <data name="KeyBindingsHelperToggle" xml:space="preserve">
+    <value>MU 助手 開/關</value>
+  </data>
+  <data name="KeyBindingsPotionSlot" xml:space="preserve">
+    <value>藥水欄 %d</value>
+  </data>
+  <data name="KeyBindingsSkillSlot" xml:space="preserve">
+    <value>技能欄 %d</value>
+  </data>
   <data name="SkillDamageWithMaxDD" xml:space="preserve">
     <value>技能傷害：%d%%（上限 %d%%）</value>
   </data>

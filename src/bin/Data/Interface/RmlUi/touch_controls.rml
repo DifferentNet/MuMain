@@ -209,12 +209,12 @@
 		</div>
 	</div>
 
-	<!-- The item hotkeys Q and W (the potions), above the joystick, with how many are left (dimmed when none are). -->
-	<div id="tc_potion_q" class="tc-button tc-potion" data-class-empty="potion_q_count == ''">Q<div class="tc-potion-count">{{potion_q_count}}</div><div class="pad-glyph pad-bumper">{{glyph_lb}}</div></div>
-	<div id="tc_potion_w" class="tc-button tc-potion" data-class-empty="potion_w_count == ''">W<div class="tc-potion-count">{{potion_w_count}}</div><div class="pad-glyph pad-trigger">{{glyph_lt}}</div></div>
+	<!-- The item hotkeys Q and W (the potions; the letters are the keys bound to them), above the joystick, with how many are left (dimmed when none are). -->
+	<div id="tc_potion_q" class="tc-button tc-potion" data-class-empty="potion_q_count == ''">{{potion_q_key}}<div class="tc-potion-count">{{potion_q_count}}</div><div class="pad-glyph pad-bumper">{{glyph_lb}}</div></div>
+	<div id="tc_potion_w" class="tc-button tc-potion" data-class-empty="potion_w_count == ''">{{potion_w_key}}<div class="tc-potion-count">{{potion_w_count}}</div><div class="pad-glyph pad-trigger">{{glyph_lt}}</div></div>
 	<!-- E and R: a pad with RT held drinks them on LB and LT, in Q's and W's places. -->
-	<div id="tc_potion_e" class="tc-button tc-potion" data-class-empty="potion_e_count == ''">E<div class="tc-potion-count">{{potion_e_count}}</div><div class="pad-glyph pad-bumper">{{glyph_lb}}</div></div>
-	<div id="tc_potion_r" class="tc-button tc-potion" data-class-empty="potion_r_count == ''">R<div class="tc-potion-count">{{potion_r_count}}</div><div class="pad-glyph pad-trigger">{{glyph_lt}}</div></div>
+	<div id="tc_potion_e" class="tc-button tc-potion" data-class-empty="potion_e_count == ''">{{potion_e_key}}<div class="tc-potion-count">{{potion_e_count}}</div><div class="pad-glyph pad-bumper">{{glyph_lb}}</div></div>
+	<div id="tc_potion_r" class="tc-button tc-potion" data-class-empty="potion_r_count == ''">{{potion_r_key}}<div class="tc-potion-count">{{potion_r_count}}</div><div class="pad-glyph pad-trigger">{{glyph_lt}}</div></div>
 
 	<!-- Bottom right: attack (held, it fights the tapped or the nearest monster), the hotkey bar's
 	     five skills around it (a pad alone has a sixth) (a tap makes the skill current, holding casts it), pickup (held, it

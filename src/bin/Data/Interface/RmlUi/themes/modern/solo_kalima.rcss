@@ -1,0 +1,117 @@
+/* Modern theme for CSoloKalimaWindow (Kundun's Lair, solo Kalima): docked_panel_frame.rcss's forged panel (linked
+   first) at the full dock height, the modern exit button and the event entry's forged button (event_entry.rcss), in
+   the Tier Maps window's look (tier_maps.rcss); the curses' checkboxes in base.rcss's .modern-checkbox-px recipe.
+   Geometry is the legacy one: reference px inside #panel, physical px (reference px times --root-scale) inside the
+   panes. */
+
+#panel { height: 432px; pointer-events: auto; }
+
+.sharp-text { display: block; position: absolute; white-space: nowrap; text-align: left; transform-origin: left top; }
+
+#btn_exit {
+	position: absolute;
+	left: 13px;
+	top: 392px;
+	width: 36px;
+	height: 28px;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+	pointer-events: auto;
+}
+#btn_exit:hover { border-color: token(accent-steel-hover); }
+
+.sk-title { left: 0; top: 12px; text-align: center; font-weight: bold; pointer-events: none; }
+#sk_power { left: 12px; top: 34px; font-weight: bold; pointer-events: none; }
+#sk_ticket { left: 12px; top: 49px; pointer-events: none; }
+#sk_runs { left: 12px; top: 63px; pointer-events: none; }
+
+#sk_list { left: 12px; top: 80px; --flow-w: 166px; line-height: 1.12; }
+.sk-tier {
+	display: block;
+	padding: calc(1px * var(--root-scale)) calc(4px * var(--root-scale));
+	margin-bottom: calc(1px * var(--root-scale));
+	border-radius: token(radius-sm)px;
+	cursor: pointer;
+	pointer-events: auto;
+}
+.sk-tier-title { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+.sk-tier-detail { display: block; white-space: nowrap; pointer-events: none; }
+.sk-record { display: block; margin-top: calc(2px * var(--root-scale)); white-space: nowrap; }
+.sk-curses-title { display: block; margin-top: calc(5px * var(--root-scale)); white-space: nowrap; font-weight: bold; }
+.sk-curse {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	padding: calc(1px * var(--root-scale)) calc(4px * var(--root-scale));
+	border-radius: token(radius-sm)px;
+	cursor: pointer;
+	pointer-events: auto;
+}
+.sk-check {
+	flex-shrink: 0;
+	box-sizing: border-box;
+	width: calc(10px * var(--root-scale));
+	height: calc(10px * var(--root-scale));
+	margin-right: calc(4px * var(--root-scale));
+	background-color: #0c0e0b;
+	border-width: 1px;
+	border-color: #514a35;
+	border-radius: token(radius-sm)px;
+	pointer-events: none;
+}
+.sk-check.checked {
+	background-color: #8f6922;
+	decorator: linear-gradient(to bottom, #d3aa4e, #8f6922);
+	border-color: #aa8132;
+}
+.sk-curse:hover .sk-check { border-color: token(accent-steel-hover); }
+.sk-curse-text { display: block; white-space: nowrap; pointer-events: none; }
+.sk-curse.locked { opacity: 0.45; cursor: arrow; }
+
+#sk_foot { left: 12px; top: 358px; --flow-w: 166px; line-height: 1.12; }
+.sk-hint { display: block; white-space: nowrap; }
+#sk_enter {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	margin-top: calc(4px * var(--root-scale));
+	margin-left: calc(40px * var(--root-scale));
+	width: calc(126px * var(--root-scale));
+	height: calc(29px * var(--root-scale));
+	cursor: pointer;
+	pointer-events: auto;
+	background-color: token(surface-raised);
+	border: 1px token(border-frame);
+	border-radius: token(radius-sm)px;
+}
+#sk_enter:hover { border-color: token(accent-steel-hover); }
+#sk_enter:active { background-color: token(surface-recessed); }
+#sk_enter.off { opacity: 0.45; cursor: arrow; }
+#sk_enter.off:hover { border-color: token(border-frame); }
+.sk-enter-label { display: block; white-space: nowrap; font-weight: bold; pointer-events: none; }
+
+.sk-title { color: token(accent-gold); }
+#sk_power { color: token(text-primary); }
+#sk_ticket, #sk_runs { color: token(semantic-danger); }
+#sk_ticket.ok, #sk_runs.ok { color: token(semantic-success); }
+.sk-tier { color: token(text-muted); }
+.sk-tier:hover { background-color: rgba(255, 255, 255, 12); }
+.sk-tier.open .sk-tier-title { color: token(text-primary); }
+.sk-tier.open .sk-tier-detail { color: token(text-secondary); }
+.sk-tier.selected { background-color: rgba(255, 200, 90, 40); }
+.sk-tier.selected .sk-tier-title { color: token(accent-gold); }
+.sk-record { color: token(text-muted); }
+.sk-curses-title { color: token(text-primary); }
+.sk-curse { color: token(text-secondary); }
+.sk-curse:hover { background-color: rgba(255, 255, 255, 12); }
+.sk-curse.locked:hover { background-color: transparent; }
+.sk-curse.checked { color: token(accent-gold); }
+.sk-hint { color: token(text-secondary); }
+.sk-hint.bad { color: token(semantic-danger); }
+.sk-enter-label { color: token(text-primary); }
+
+/* Lengths inside counter-scaled layers: reference px times the panel's --root-scale. */
+#sk_title { width: calc(100% * var(--root-scale)); }
+#sk_power, #sk_ticket, #sk_runs { width: calc(166px * var(--root-scale)); }

@@ -105,7 +105,8 @@ void GameConfig::Load()
     SetGamepadGlyphs(ReadInt(CfgSectionUI, CfgKeyGamepadGlyphs, CfgDefaultGamepadGlyphs));
     m_gamepadCardSeen = ReadBool(CfgSectionUI, CfgKeyGamepadCardSeen, CfgDefaultGamepadCardSeen);
     m_enableAnimationTaskPool =
-        ReadBool(CfgSectionUI, CfgKeyEnableAnimationTaskPool, CfgDefaultEnableAnimationTaskPool);
+        ReadString(CfgSectionUI, CfgKeyEnableAnimationTaskPool, CfgDefaultEnableAnimationTaskPool);
+    m_reuseCharacterBones = ReadBool(CfgSectionUI, CfgKeyReuseCharacterBones, CfgDefaultReuseCharacterBones);
 
     m_zoom = ReadInt(CfgSectionCamera, CfgKeyZoom, CfgDefaultZoom);
     m_cameraMode = ReadInt(CfgSectionCamera, CfgKeyCameraMode, CfgDefaultCameraMode);
@@ -369,6 +370,21 @@ void GameConfig::SaveLootFilter()
     WriteInt(CfgSectionLootFilter, CfgKeyLootFilterMinLevel, m_lootFilterMinLevel);
     WriteInt(CfgSectionLootFilter, CfgKeyLootFilterZenMin, m_lootFilterZenMin);
     WriteStringList(CfgSectionLootFilter, CfgKeyLootFilterNamePrefix, m_lootFilterNames);
+}
+
+std::wstring GameConfig::GetKeyBinding(const wchar_t* action)
+{
+    return ReadString(CfgSections::CfgSectionKeyBindings, action, L"");
+}
+
+void GameConfig::SetKeyBinding(const wchar_t* action, const std::wstring& keyName)
+{
+    if (keyName.empty())
+    {
+        RemoveObsoleteKey(CfgSections::CfgSectionKeyBindings, action);
+        return;
+    }
+    WriteString(CfgSections::CfgSectionKeyBindings, action, keyName);
 }
 
 std::vector<std::wstring> GameConfig::ReadStringList(const wchar_t* section, const wchar_t* keyPrefix, int maxCount)

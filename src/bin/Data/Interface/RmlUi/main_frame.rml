@@ -97,14 +97,15 @@
 		<span id="exp_digit">{{exp_digit}}</span>
 	</div>
 
-	<!-- Item hotkeys: hover highlight, stack count, right-click-to-use, and the icon -- the item's
+	<!-- Item hotkeys: hover highlight, stack count, right-click-to-use, the slot's bound key
+	     (Options > Gameplay > Key bindings; Q/W/E/R by default) and the icon -- the item's
 	     native 3D render, drawn into a render target .item-icon shows (CItemHotKey::SyncSlotIcons()),
 	     so the theme's RCSS places it. -->
 	<div id="item_slots" class="hud-part">
-		<div id="item_slot_0" class="slot-frame" data-class-selected="item_slot_0_hovered" data-event-mouseover="item_hotkey_hover(0)" data-event-mouseout="item_hotkey_unhover" data-event-mouseup="item_hotkey_rightclick(0)"><img id="item_icon_0" class="item-icon"/><span class="slot-hotkey-label">Q</span><span class="item-stack-label">{{item_slot_0_count}}</span></div>
-		<div id="item_slot_1" class="slot-frame" data-class-selected="item_slot_1_hovered" data-event-mouseover="item_hotkey_hover(1)" data-event-mouseout="item_hotkey_unhover" data-event-mouseup="item_hotkey_rightclick(1)"><img id="item_icon_1" class="item-icon"/><span class="slot-hotkey-label">W</span><span class="item-stack-label">{{item_slot_1_count}}</span></div>
-		<div id="item_slot_2" class="slot-frame" data-class-selected="item_slot_2_hovered" data-event-mouseover="item_hotkey_hover(2)" data-event-mouseout="item_hotkey_unhover" data-event-mouseup="item_hotkey_rightclick(2)"><img id="item_icon_2" class="item-icon"/><span class="slot-hotkey-label">E</span><span class="item-stack-label">{{item_slot_2_count}}</span></div>
-		<div id="item_slot_3" class="slot-frame" data-class-selected="item_slot_3_hovered" data-event-mouseover="item_hotkey_hover(3)" data-event-mouseout="item_hotkey_unhover" data-event-mouseup="item_hotkey_rightclick(3)"><img id="item_icon_3" class="item-icon"/><span class="slot-hotkey-label">R</span><span class="item-stack-label">{{item_slot_3_count}}</span></div>
+		<div id="item_slot_0" class="slot-frame" data-class-selected="item_slot_0_hovered" data-event-mouseover="item_hotkey_hover(0)" data-event-mouseout="item_hotkey_unhover" data-event-mouseup="item_hotkey_rightclick(0)"><img id="item_icon_0" class="item-icon"/><span class="slot-hotkey-label">{{item_slot_0_key}}</span><span class="item-stack-label">{{item_slot_0_count}}</span></div>
+		<div id="item_slot_1" class="slot-frame" data-class-selected="item_slot_1_hovered" data-event-mouseover="item_hotkey_hover(1)" data-event-mouseout="item_hotkey_unhover" data-event-mouseup="item_hotkey_rightclick(1)"><img id="item_icon_1" class="item-icon"/><span class="slot-hotkey-label">{{item_slot_1_key}}</span><span class="item-stack-label">{{item_slot_1_count}}</span></div>
+		<div id="item_slot_2" class="slot-frame" data-class-selected="item_slot_2_hovered" data-event-mouseover="item_hotkey_hover(2)" data-event-mouseout="item_hotkey_unhover" data-event-mouseup="item_hotkey_rightclick(2)"><img id="item_icon_2" class="item-icon"/><span class="slot-hotkey-label">{{item_slot_2_key}}</span><span class="item-stack-label">{{item_slot_2_count}}</span></div>
+		<div id="item_slot_3" class="slot-frame" data-class-selected="item_slot_3_hovered" data-event-mouseover="item_hotkey_hover(3)" data-event-mouseout="item_hotkey_unhover" data-event-mouseup="item_hotkey_rightclick(3)"><img id="item_icon_3" class="item-icon"/><span class="slot-hotkey-label">{{item_slot_3_key}}</span><span class="item-stack-label">{{item_slot_3_count}}</span></div>
 	</div>
 	<!-- The skill row: the upper-set highlight, then per slot the skill icon (a
 	     skill_icons.rcss/master_skill_icons.rcss sprite bound by C++), its hotkey number and the

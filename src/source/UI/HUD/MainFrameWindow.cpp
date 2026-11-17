@@ -1,5 +1,7 @@
 
 #include "stdafx.h"
+#include "Core/Input/KeyBindingsRuntime.h"
+#include "UI/HUD/KeyHint.h"
 #include <algorithm>
 #include "I18N/All.h"
 
@@ -260,6 +262,10 @@ void mu::ui::window::CMainFrameWindow::BindRmlModel(Rml::DataModelConstructor& c
     c.Bind("item_slot_1_count", &model.itemSlot1Count);
     c.Bind("item_slot_2_count", &model.itemSlot2Count);
     c.Bind("item_slot_3_count", &model.itemSlot3Count);
+    c.Bind("item_slot_0_key", &model.itemSlot0Key);
+    c.Bind("item_slot_1_key", &model.itemSlot1Key);
+    c.Bind("item_slot_2_key", &model.itemSlot2Key);
+    c.Bind("item_slot_3_key", &model.itemSlot3Key);
 
     c.BindEventCallback("item_hotkey_hover",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& args) { m_ItemHotKey.OnHotkeySlotHover(args.empty() ? 0 : args[0].Get<int>()); });
@@ -685,17 +691,25 @@ void mu::ui::window::CMainFrameWindow::SyncButtons()
 {
     // Button tooltips: static strings, converted again only when the locale gives another one
     // (per-frame cost).
+    // The key in each tooltip is the one the player bound (UI::KeyHint), rebuilt when a binding changes.
+    using KeyAction = Core::Input::KeyBindings::Action;
     TextSources& sources = m_TextSources;
-    if (sources.chaInfoTooltip.Changed(I18N::Game::CharacterC))
-        SyncWide(&MainFrameRmlModel::chaInfoTooltip, "chainfo_tooltip", I18N::Game::CharacterC);
-    if (sources.myInvenTooltip.Changed(I18N::Game::InventoryIV))
-        SyncWide(&MainFrameRmlModel::myInvenTooltip, "myinven_tooltip", I18N::Game::InventoryIV);
-    if (sources.friendTooltip.Changed(I18N::Game::FriendF))
-        SyncWide(&MainFrameRmlModel::friendTooltip, "friend_tooltip", I18N::Game::FriendF);
-    if (sources.windowTooltip.Changed(I18N::Game::MenuU))
-        SyncWide(&MainFrameRmlModel::windowTooltip, "window_tooltip", I18N::Game::MenuU);
-    if (sources.battlePassTooltip.Changed(I18N::Game::BattlePassX))
-        SyncWide(&MainFrameRmlModel::battlePassTooltip, "battle_pass_tooltip", I18N::Game::BattlePassX);
+    const long long keys = Core::Input::KeyBindings::Runtime::Revision();
+    if (sources.chaInfoTooltip.Changed(I18N::Game::CharacterC, keys))
+        SyncWide(&MainFrameRmlModel::chaInfoTooltip, "chainfo_tooltip",
+                 UI::KeyHint::WithKey(I18N::Game::CharacterC, KeyAction::Character).c_str());
+    if (sources.myInvenTooltip.Changed(I18N::Game::InventoryIV, keys))
+        SyncWide(&MainFrameRmlModel::myInvenTooltip, "myinven_tooltip",
+                 UI::KeyHint::WithKey(I18N::Game::InventoryIV, KeyAction::Inventory, KeyAction::InventoryAlt).c_str());
+    if (sources.friendTooltip.Changed(I18N::Game::FriendF, keys))
+        SyncWide(&MainFrameRmlModel::friendTooltip, "friend_tooltip",
+                 UI::KeyHint::WithKey(I18N::Game::FriendF, KeyAction::Friends).c_str());
+    if (sources.windowTooltip.Changed(I18N::Game::MenuU, keys))
+        SyncWide(&MainFrameRmlModel::windowTooltip, "window_tooltip",
+                 UI::KeyHint::WithKey(I18N::Game::MenuU, KeyAction::WindowMenu).c_str());
+    if (sources.battlePassTooltip.Changed(I18N::Game::BattlePassX, keys))
+        SyncWide(&MainFrameRmlModel::battlePassTooltip, "battle_pass_tooltip",
+                 UI::KeyHint::WithKey(I18N::Game::BattlePassX, KeyAction::BattlePass).c_str());
     // No SetBtnState() for the battle pass: the window opens from several places, so its state is read here.
     SyncBool(&MainFrameRmlModel::battlePassOpen, "battle_pass_open",
              g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_BATTLE_PASS));
@@ -746,10 +760,20 @@ void mu::ui::window::CMainFrameWindow::SyncAlerts()
 
 namespace
 {
-// A hotkey's number, or an empty string for -1 (one digit fits the string's own buffer).
+// The key the player bound to potion slot N (HOTKEY_Q..HOTKEY_R).
+Rml::String PotionKeyText(int slot)
+{
+    namespace KeyBindings = Core::Input::KeyBindings;
+    return KeyBindings::KeyName(KeyBindings::Runtime::KeyOf(KeyBindings::PotionAction(slot)));
+}
+
+// The key the player bound to skill hot key N ("7", "Q", "Home"), or an empty string for -1 (no slot).
 Rml::String HotkeyText(int hotkey)
 {
-    return hotkey >= 0 ? std::to_string(hotkey) : Rml::String();
+    if (hotkey < 0)
+        return Rml::String();
+    namespace KeyBindings = Core::Input::KeyBindings;
+    return KeyBindings::KeyName(KeyBindings::Runtime::KeyOf(KeyBindings::SkillSlotAction(hotkey)));
 }
 } // namespace
 
@@ -806,6 +830,10 @@ void mu::ui::window::CMainFrameWindow::SyncItemSlots()
     SyncText(&MainFrameRmlModel::itemSlot1Count, "item_slot_1_count", stackCountText(m_ItemHotKey.GetSlotItemCount(1)));
     SyncText(&MainFrameRmlModel::itemSlot2Count, "item_slot_2_count", stackCountText(m_ItemHotKey.GetSlotItemCount(2)));
     SyncText(&MainFrameRmlModel::itemSlot3Count, "item_slot_3_count", stackCountText(m_ItemHotKey.GetSlotItemCount(3)));
+    SyncText(&MainFrameRmlModel::itemSlot0Key, "item_slot_0_key", PotionKeyText(0));
+    SyncText(&MainFrameRmlModel::itemSlot1Key, "item_slot_1_key", PotionKeyText(1));
+    SyncText(&MainFrameRmlModel::itemSlot2Key, "item_slot_2_key", PotionKeyText(2));
+    SyncText(&MainFrameRmlModel::itemSlot3Key, "item_slot_3_key", PotionKeyText(3));
 }
 
 void mu::ui::window::CMainFrameWindow::SyncSkillList()

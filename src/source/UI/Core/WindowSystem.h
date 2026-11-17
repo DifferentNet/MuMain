@@ -49,9 +49,11 @@
 #include "UI/Events/BattlePassWindow.h"
 #include "UI/Events/TierMapsWindow.h"
 #include "UI/Events/EndlessTowerWindow.h"
+#include "UI/Events/SoloKalimaWindow.h"
 #include "UI/Events/RenaShopWindow.h"
 #include "UI/Events/GrandShopWindow.h"
 #include "UI/Options/LootFilterWindow.h"
+#include "UI/Options/KeyBindingsWindow.h"
 #include "UI/Inventory/JewelBankWindow.h"
 #include "UI/Inventory/AuctionWindow.h"
 #include "UI/Dialogs/GmPanelWindow.h"
@@ -205,9 +207,11 @@ namespace mu::ui::window
         CBattlePassWindow* m_pNewBattlePassWindow;
         CTierMapsWindow* m_pNewTierMapsWindow;
         CEndlessTowerWindow* m_pNewEndlessTowerWindow;
+        CSoloKalimaWindow* m_pNewSoloKalimaWindow;
         CRenaShopWindow* m_pNewRenaShopWindow;
         CGrandShopWindow* m_pNewGrandShopWindow;
         CLootFilterWindow* m_pNewLootFilterWindow;
+        CKeyBindingsWindow* m_pNewKeyBindingsWindow;
         CJewelBankWindow* m_pNewJewelBankWindow;
         CAuctionWindow* m_pNewAuctionWindow;
         CGmPanelWindow* m_pNewGmPanelWindow;
@@ -304,9 +308,11 @@ namespace mu::ui::window
         CBattlePassWindow* GetUI_NewBattlePassWindow() const;
         CTierMapsWindow* GetUI_NewTierMapsWindow() const;
         CEndlessTowerWindow* GetUI_NewEndlessTowerWindow() const;
+        CSoloKalimaWindow* GetUI_NewSoloKalimaWindow() const;
         CRenaShopWindow* GetUI_NewRenaShopWindow() const;
         CGrandShopWindow* GetUI_NewGrandShopWindow() const;
         CLootFilterWindow* GetUI_NewLootFilterWindow() const;
+        CKeyBindingsWindow* GetUI_NewKeyBindingsWindow() const;
         CJewelBankWindow* GetUI_NewJewelBankWindow() const;
         CAuctionWindow* GetUI_NewAuctionWindow() const;
         CGmPanelWindow* GetUI_NewGmPanelWindow() const;

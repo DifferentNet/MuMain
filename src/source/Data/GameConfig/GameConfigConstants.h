@@ -12,6 +12,9 @@ namespace CfgSections
     inline constexpr wchar_t CfgSectionRender[] = L"Render";
     // MU Moldova: the loot highlight filter (GameLogic::Items::LootFilter).
     inline constexpr wchar_t CfgSectionLootFilter[] = L"LootFilter";
+    // MU Moldova: the player's key bindings (Core::Input::KeyBindings), one line per action not on its default key,
+    // such as Inventory=B.
+    inline constexpr wchar_t CfgSectionKeyBindings[] = L"KeyBindings";
 }
 
 namespace CfgKeys
@@ -87,9 +90,13 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyGamepadPointerSpeed[] = L"GamepadPointerSpeed";
     inline constexpr wchar_t CfgKeyGamepadGlyphs[] = L"GamepadGlyphs";
     inline constexpr wchar_t CfgKeyGamepadCardSeen[] = L"GamepadCardSeen";
-    // Animates characters on worker threads when many are in view. Off unless set here or
-    // started with --enable-taskpool; manual config.ini edit only.
+    // Animates characters on worker threads when many are in view: auto (default: on a PC with 4 or
+    // more hardware threads), 0/off or 1/on; --enable-taskpool / --disable-taskpool override it. Manual
+    // config.ini edit only.
     inline constexpr wchar_t CfgKeyEnableAnimationTaskPool[] = L"EnableAnimationTaskPool";
+    // Render keeps the bones the character pre-pass built when nothing changed since (developer
+    // switch for measuring, default 1); manual config.ini edit only.
+    inline constexpr wchar_t CfgKeyReuseCharacterBones[] = L"ReuseCharacterBones";
 
     // Camera
     inline constexpr wchar_t CfgKeyZoom[] = L"Zoom";
@@ -301,7 +308,8 @@ namespace CfgDefaults
     inline constexpr int CfgMinUIScalePercent = 75;
     inline constexpr int CfgMaxUIScalePercent = 150;
 
-    inline constexpr bool CfgDefaultEnableAnimationTaskPool = false;
+    inline constexpr wchar_t CfgDefaultEnableAnimationTaskPool[] = L"auto";
+    inline constexpr bool CfgDefaultReuseCharacterBones = true;
 
     // Opt-in until real effects have been visually checked on target hardware.
     inline constexpr bool CfgDefaultSortParticleDraws = false;

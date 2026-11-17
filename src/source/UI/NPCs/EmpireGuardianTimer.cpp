@@ -8,6 +8,12 @@
 using namespace SEASON3B;
 using namespace mu::ui::window;
 
+namespace
+{
+// Kundun's Lair sends seals 1-4 as the zone and this one for its boss.
+constexpr int SoloKalimaBossZone = 5;
+} // namespace
+
 CEmpireGuardianTimer::CEmpireGuardianTimer()
 {
     m_pNewUIMng = NULL;
@@ -89,6 +95,11 @@ void CEmpireGuardianTimer::SyncView()
         // Our server's Endless Tower (map 65, Doppelganger's) borrows this timer and sends the wave as the zone.
         if (gMapManager.WorldActive == WD_65DOPPLEGANGER1)
             mu_swprintf(szText, I18N::Game::EndlessTowerWaveTimer, m_iZone);
+        // Kundun's Lair (solo Kalima) on the Kalima maps does too: the zone is the seal, the one after the last the boss.
+        else if (gMapManager.InHellas() && m_iZone >= SoloKalimaBossZone)
+            mu_swprintf(szText, L"%ls", I18N::Game::SoloKalimaBossTimer);
+        else if (gMapManager.InHellas())
+            mu_swprintf(szText, I18N::Game::SoloKalimaSealTimer, m_iZone);
         else
             mu_swprintf(szText, I18N::Game::RoundDZoneD, m_iDay, m_iZone);
         // The original set no colour for the round: it took whatever the text renderer was left

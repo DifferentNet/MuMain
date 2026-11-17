@@ -1,0 +1,45 @@
+<rml>
+<head>
+	<title>Key bindings</title>
+	<link type="text/rcss" href="base.rcss"/>
+	<link type="text/rcss" href="key_bindings.rcss"/>
+	<link type="text/template" href="window_shell.rml"/>
+</head>
+<!-- The player's key bindings (CKeyBindingsWindow, Core/Input/KeyBindings.h), in the theme's window shell
+     (window_shell.rml: frame, title, centred; dragged by any part that is not a control). In the scrolling area one
+     row per action in three groups (windows, potions, skill slots): its name and its key in a chip. A click on a row
+     waits for a key (the chip shows "..." and lights up); the row that lost its key in a swap flashes for a moment.
+     Under the rows a hint (a refused key turns it into a warning); at the bottom Reset to defaults and Close. C++
+     keeps the bindings and reads the keys; clicks are queued with key_bindings_*(...). -->
+<body template="window_shell" data-model="key_bindings">
+	<div class="kb-scroll scroll-pane">
+		<div class="kb-section">{{labels.windows}}</div>
+		<div class="kb-row" data-for="row : windows" data-attr-id="row.id" data-class-capturing="row.capturing" data-class-flash="row.flash"
+		     data-event-click="key_bindings_capture(row.index)">
+			<span class="kb-row-label">{{row.label}}</span>
+			<span class="kb-key">{{row.key}}</span>
+		</div>
+
+		<div class="kb-section">{{labels.potions}}</div>
+		<div class="kb-row" data-for="row : potions" data-attr-id="row.id" data-class-capturing="row.capturing" data-class-flash="row.flash"
+		     data-event-click="key_bindings_capture(row.index)">
+			<span class="kb-row-label">{{row.label}}</span>
+			<span class="kb-key">{{row.key}}</span>
+		</div>
+
+		<div class="kb-section">{{labels.skills}}</div>
+		<div class="kb-row" data-for="row : skills" data-attr-id="row.id" data-class-capturing="row.capturing" data-class-flash="row.flash"
+		     data-event-click="key_bindings_capture(row.index)">
+			<span class="kb-row-label">{{row.label}}</span>
+			<span class="kb-key">{{row.key}}</span>
+		</div>
+	</div>
+
+	<div class="kb-hint" data-class-refused="refused">{{hint}}</div>
+
+	<div class="kb-foot">
+		<div class="kb-button" data-event-click="key_bindings_reset">{{labels.reset}}</div>
+		<div class="kb-button kb-close" data-event-click="key_bindings_close">{{labels.close}}</div>
+	</div>
+</body>
+</rml>

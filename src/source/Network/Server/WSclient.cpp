@@ -12710,8 +12710,17 @@ bool ReceiveRemainTickEmpireGuardian(const BYTE* ReceiveBuffer)
 bool ReceiveResultEmpireGuardian(const BYTE* ReceiveBuffer)
 {
     auto Data = (LPPMSG_CLEAR_RESULT_EMPIREGUARDIAN)ReceiveBuffer;
+    const auto result = static_cast<EmpireMatchResult>(Data->Result);
 
-    switch (static_cast<EmpireMatchResult>(Data->Result))
+    // Kundun's Lair (solo Kalima) on the Kalima maps sends the same result: its own texts, no experience line.
+    if (gMapManager.InHellas() && result != EmpireMatchResult::ZoneCleared)
+    {
+        UI::EmpireGuardian::ShowSoloKalimaResult(result == EmpireMatchResult::Completed);
+        UI::EmpireGuardian::HideTimer();
+        return true;
+    }
+
+    switch (result)
     {
     case EmpireMatchResult::Failed:
     {

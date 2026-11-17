@@ -66,21 +66,14 @@ bool mu::ui::window::CItemHotKey::UpdateKeyEvent()
 {
     int iIndex = -1;
 
-    if (mu::ui::window::IsPress('Q') == true)
+    // The keys the player bound to the potion slots (Q, W, E, R by default).
+    for (int hotKey = HOTKEY_Q; hotKey < HOTKEY_COUNT; ++hotKey)
     {
-        iIndex = GetHotKeyItemIndex(HOTKEY_Q);
-    }
-    else if (mu::ui::window::IsPress('W') == true)
-    {
-        iIndex = GetHotKeyItemIndex(HOTKEY_W);
-    }
-    else if (mu::ui::window::IsPress('E') == true)
-    {
-        iIndex = GetHotKeyItemIndex(HOTKEY_E);
-    }
-    else if (mu::ui::window::IsPress('R') == true)
-    {
-        iIndex = GetHotKeyItemIndex(HOTKEY_R);
+        if (mu::ui::window::IsActionPress(Core::Input::KeyBindings::PotionAction(hotKey)))
+        {
+            iIndex = GetHotKeyItemIndex(hotKey);
+            break;
+        }
     }
 
     if (iIndex != -1)

@@ -1,0 +1,125 @@
+/* Modern theme for CKeyBindingsWindow (the player's key bindings): window_shell's forged frame and header rail; the
+   scrolling rows in the content well, the hint and the foot buttons. Key chips and buttons in the dark-iron look of
+   base.rcss's .btn: a waiting chip is lit gold, a row that lost its key in a swap flashes. The phone view makes
+   every row finger-sized. */
+
+#panel {
+	width: 400dp;
+	height: 480dp;
+	max-height: 96%;
+	font-family: "token(font-body)";
+	font-size: 12dp;
+	color: token(text-primary);
+}
+
+/* The content: the scrolling rows, the hint and the foot, one under the other. An ID selector, so it wins over
+   window_shell.rcss's own .window-shell-content layout. */
+#content {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	justify-content: flex-start;
+	padding-left: 10dp;
+	padding-right: 10dp;
+	padding-bottom: 8dp;
+}
+
+/* A stretched flex child bounds the scrolling rows (base.rcss's .scroll-pane). */
+.kb-scroll {
+	flex: 1 1 0;
+	min-height: 0;
+	padding: 0 8dp 4dp 2dp;
+}
+
+.kb-section {
+	margin: 10dp 0 4dp;
+	padding-bottom: 3dp;
+	border-bottom: 1dp rgba(255, 255, 255, 20);
+	color: token(accent-gold);
+	font-weight: bold;
+	letter-spacing: 1dp;
+}
+
+/* A row takes the click; its key sits in a chip on the right. */
+.kb-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	min-height: 26dp;
+	margin-bottom: 1dp;
+	padding: 0 4dp;
+	cursor: pointer;
+	pointer-events: auto;
+	border: 1dp transparent;
+	border-radius: token(radius-sm)dp;
+}
+.kb-row:hover { background-color: token(surface-raised); }
+.kb-row.capturing { background-color: token(surface-raised); border-color: token(accent-gold); }
+.kb-row.flash { background-color: rgba(196, 154, 60, 90); border-color: token(accent-gold-hover); }
+.kb-row-label {
+	flex: 1 1 auto;
+	padding-right: 8dp;
+	white-space: normal;
+	color: token(text-primary);
+}
+.kb-key {
+	flex-shrink: 0;
+	min-width: 48dp;
+	height: 20dp;
+	line-height: 20dp;
+	padding: 0 6dp;
+	text-align: center;
+	white-space: nowrap;
+	font-weight: bold;
+	color: token(accent-gold);
+	background-color: token(surface-recessed);
+	border: 1dp token(border-frame);
+	border-radius: token(radius-sm)dp;
+}
+.kb-row:hover .kb-key { border-color: token(accent-steel-hover); }
+.kb-row.capturing .kb-key { color: #fff8e6; background-color: rgba(196, 154, 60, 210); border-color: token(accent-gold-hover); }
+
+.kb-hint {
+	flex-shrink: 0;
+	padding: 6dp 2dp 0;
+	white-space: normal;
+	color: token(text-muted);
+	border-top: 1dp rgba(255, 255, 255, 20);
+}
+.kb-hint.refused { color: token(semantic-danger); }
+
+/* Text buttons sized by their label. */
+.kb-foot {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	flex-shrink: 0;
+	padding-top: 6dp;
+}
+.kb-button {
+	min-width: 64dp;
+	height: 24dp;
+	line-height: 24dp;
+	padding: 0 8dp;
+	margin: 0 4dp;
+	text-align: center;
+	white-space: nowrap;
+	cursor: pointer;
+	pointer-events: auto;
+	color: token(text-primary);
+	background-color: token(surface-raised);
+	border: 1dp token(border-frame);
+	border-radius: token(radius-sm)dp;
+}
+.kb-button:hover { border-color: token(accent-steel-hover); }
+.kb-button:active { background-color: token(surface-recessed); }
+.kb-close { min-width: 100dp; }
+
+/* MU Moldova: the phone view (theme flag "mobile", UI::Mobile::InterfaceMode): the window nearly fills the screen,
+   with larger text and finger-sized rows and buttons (40 dp at least). */
+@media (theme: mobile) {
+	#panel { width: 560dp; max-width: 96%; height: 96%; font-size: 15dp; }
+	.kb-row { min-height: 44dp; }
+	.kb-key { min-width: 64dp; height: 32dp; line-height: 32dp; }
+	.kb-button { height: 40dp; line-height: 40dp; padding: 0 12dp; }
+}

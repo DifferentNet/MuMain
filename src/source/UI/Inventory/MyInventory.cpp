@@ -1,6 +1,8 @@
 ﻿
 #include "stdafx.h"
 #include "UI/Inventory/MyInventory.h"
+#include "Core/Input/KeyBindingsRuntime.h"
+#include "UI/HUD/KeyHint.h"
 #include "UI/Core/WindowSystem.h"
 #include "I18N/All.h"
 extern bool SelectFlag;
@@ -1044,22 +1046,15 @@ bool CMyInventory::UpdateKeyEvent()
 
     if (IsRepeat(VK_CONTROL))
     {
+        // Ctrl + a potion slot's bound key (Q, W, E, R by default) puts the pointed item in that slot.
         int iHotKey = -1;
-        if (IsPress('Q'))
+        for (int hotKey = HOTKEY_Q; hotKey < HOTKEY_COUNT; ++hotKey)
         {
-            iHotKey = HOTKEY_Q;
-        }
-        else if (IsPress('W'))
-        {
-            iHotKey = HOTKEY_W;
-        }
-        else if (IsPress('E'))
-        {
-            iHotKey = HOTKEY_E;
-        }
-        else if (IsPress('R'))
-        {
-            iHotKey = HOTKEY_R;
+            if (IsActionPress(Core::Input::KeyBindings::PotionAction(hotKey)))
+            {
+                iHotKey = hotKey;
+                break;
+            }
         }
 
         if (iHotKey != -1)
@@ -1265,6 +1260,27 @@ void CMyInventory::SyncRmlModel()
     }
 }
 
+namespace
+{
+// "Close (I, V)" with the keys the player bound to the inventory; built again only when the locale or a binding
+// changes (the texts sync every frame).
+const wchar_t* CloseTooltip()
+{
+    static std::wstring text;
+    static const wchar_t* builtFrom = nullptr;
+    static unsigned builtRevision = 0;
+    const unsigned revision = Core::Input::KeyBindings::Runtime::Revision();
+    if (builtFrom != I18N::Game::CloseIV || builtRevision != revision || text.empty())
+    {
+        using KeyAction = Core::Input::KeyBindings::Action;
+        text = UI::KeyHint::WithKey(I18N::Game::CloseIV, KeyAction::Inventory, KeyAction::InventoryAlt);
+        builtFrom = I18N::Game::CloseIV;
+        builtRevision = revision;
+    }
+    return text.c_str();
+}
+} // namespace
+
 void CMyInventory::SyncTexts(bool bagLocked)
 {
     const auto& bag = UI::Inventory::Bag();
@@ -1307,7 +1323,7 @@ void CMyInventory::SyncTexts(bool bagLocked)
     syncWide(&MyInventoryRmlModel::repairTooltip, "repair_tooltip", I18N::Game::RepairL);
     syncWide(&MyInventoryRmlModel::myShopTooltip, "myshop_tooltip",
         m_MyShopMode == MYSHOP_MODE_OPEN ? I18N::Game::OpenPersonalStoreS : I18N::Game::ClosePersonalStoreS);
-    syncWide(&MyInventoryRmlModel::exitTooltip, "exit_tooltip", I18N::Game::CloseIV);
+    syncWide(&MyInventoryRmlModel::exitTooltip, "exit_tooltip", CloseTooltip());
     syncWide(&MyInventoryRmlModel::jewelBankTooltip, "jewel_bank_tooltip", I18N::Game::JewelBankButtonK);
 
     wchar_t setOptionLabelBuf[128];

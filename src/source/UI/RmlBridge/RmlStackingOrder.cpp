@@ -156,6 +156,7 @@ constexpr DocumentPlacement Placements[] = {
     {"battle_pass.rml", 10.65f, MainScene},
     {"tier_maps.rml", 10.65f, MainScene},
     {"endless_tower.rml", 10.65f, MainScene},
+    {"solo_kalima.rml", 10.65f, MainScene},
     {"rena_shop.rml", 10.65f, MainScene},
     {"grand_shop.rml", 10.65f, MainScene},
     {"jewel_bank.rml", 10.65f, MainScene},
@@ -167,6 +168,8 @@ constexpr DocumentPlacement Placements[] = {
     {"option_window.rml", 10.67f, EveryScene},
     // Opened from the settings, so just over them; the game only (it filters the items on the ground).
     {"loot_filter.rml", 10.68f, MainScene},
+    // Opened from the settings like the loot filter; the game only (the hot keys it sets work in the game).
+    {"key_bindings.rml", 10.68f, MainScene},
     // The original drew each tooltip at its owner's depth (item tooltips at 5.5), where the
     // chat log, the friends window, the full map and the HUD hid its rows: an original
     // defect. Every tooltip draws above the windows instead, still under the message boxes.

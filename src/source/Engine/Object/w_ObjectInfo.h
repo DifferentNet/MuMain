@@ -5,6 +5,7 @@
 #include <vector>
 #include "Core/Math/ZzzMathLib.h"
 #include "GameLogic/Buffs/w_Buff.h"
+#include "Engine/Object/CharacterBonePose.h"
 
 class	CInterpolateContainer
 {
@@ -214,6 +215,8 @@ public:
 public:
     vec34_t	 	  Matrix;
     vec34_t* BoneTransform;
+    // The inputs the character pre-pass built BoneTransform from, while nothing else has written it since.
+    CharacterBonePose PrepassPose;
 
 public:
     OBB_t		  OBB;

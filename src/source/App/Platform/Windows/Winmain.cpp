@@ -4,6 +4,7 @@
 #include "Core/Input/GamepadInput.h"
 #include "Core/Input/GamepadPointer.h"
 #include "Core/Input/GamepadStick.h"
+#include "Core/Input/KeyBindingsRuntime.h"
 #include "Core/Input/KeyState.h"
 #include "Core/Utilities/FrameProfiler.h"
 #include "Core/Input/SyntheticInput.h"
@@ -89,6 +90,8 @@ extern EGameScene SceneFlag; // read by WaitForBrowserFrame()
 #include "Engine/AI/ZzzAI.h"
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/AnimationTaskPool.h"
+#include "Engine/Object/AnimationThreadSettings.h"
+#include "Engine/Object/CharacterBonePose.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "Engine/Object/ZzzInventory.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
@@ -192,7 +195,6 @@ int g_iScreenSaverOldValue = 60 * 15;
 
 BOOL g_bUseWindowMode = TRUE;
 BOOL g_bUseFullscreenMode = FALSE;
-bool g_bDisableAnimationTaskPool = true;
 
 #include "Audio/AudioPlayer.h"
 #include "Render/Text/CUIRenderText.h"
@@ -2638,10 +2640,31 @@ void UpdateResolutionDependentSystems()
     CSceneUICoordinator::Instance().RepositionSceneUI();
 }
 
+// How many workers animate the characters (started the first time a crowd is in view), and whether
+// render keeps the pre-pass bones. The browser build has no threads to spare: always the main thread.
+static void ConfigureCharacterAnimation()
+{
+    using namespace Engine::Object::AnimationThreads;
+    const GameConfig& config = GameConfig::GetInstance();
+    Engine::Object::BonePose::g_ReuseEnabled = config.GetReuseCharacterBones();
+#ifdef __EMSCRIPTEN__
+    g_AnimationTaskPoolWorkers = 0;
+#else
+    const Mode mode = ApplyCommandLine(ParseMode(config.GetEnableAnimationTaskPool()),
+                                       wcsstr(GetCommandLineW(), L"--enable-taskpool") != nullptr,
+                                       wcsstr(GetCommandLineW(), L"--disable-taskpool") != nullptr);
+    g_AnimationTaskPoolWorkers = WorkerCount(mode, std::thread::hardware_concurrency());
+#endif
+    mu::log::Get("platform")->info("Character animation: {} worker thread(s), bone reuse {}",
+                                 g_AnimationTaskPoolWorkers, Engine::Object::BonePose::g_ReuseEnabled ? "on" : "off");
+}
+
 static void ShutdownRuntime(std::thread& cpuUsageRecorder, std::optional<Core::Log::Sdl::ScopedLogOutput>& sdlLogOutput)
 {
     // The recorder polls process state until Destroy is set.
     Destroy = true;
+    // No frame runs any more: nothing is in flight, the workers only need to stop.
+    AnimationTaskPool::Instance().Shutdown();
 
     // Closes the control socket and removes its file, so a later client with
     // the same name does not find a live-looking socket.
@@ -2785,6 +2808,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
 
     // Load game settings from INI file first
     GameConfig::GetInstance().Load();
+    // The player's key bindings live in config.ini's [KeyBindings] (Core/Input/KeyBindingsRuntime.h).
+    Core::Input::KeyBindings::Runtime::Load();
 
 #ifndef __EMSCRIPTEN__
     // HD textures (Options): every texture loaded from now on takes its Data\HD copy if there is one.
@@ -2800,11 +2825,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     Render::Textures::NormalMaps::SetRuntimeBuild(runtimeNormalMaps != nullptr && std::strcmp(runtimeNormalMaps, "1") == 0);
 #endif
 
-    // The animation task pool is off unless config.ini or the command line turns it on.
-    if (GameConfig::GetInstance().GetEnableAnimationTaskPool() || wcsstr(GetCommandLineW(), L"--enable-taskpool"))
-    {
-        g_bDisableAnimationTaskPool = false;
-    }
+    ConfigureCharacterAnimation();
 
     // Check for command line server override
     WORD wPortNumber;
@@ -3240,12 +3261,6 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     g_pUIMapName = new CUIMapName; // rozy
 
     g_BuffSystem = BuffStateSystem::Make();
-    // The pool's threads only start when it is on (off by default, g_bDisableAnimationTaskPool, set once
-    // above from config.ini or the command line): a weak PC or a phone has few cores, and idle workers
-    // still cost their stacks.
-    if (!g_bDisableAnimationTaskPool)
-        AnimationTaskPool::Instance().Initialize();
-
     g_MapProcess = MapProcess::Make();
 
     g_petProcess = PetProcess::Make();
