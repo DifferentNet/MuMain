@@ -386,6 +386,8 @@ namespace mu::ui::window
         std::vector<std::uint64_t> m_Arrivals;
         int m_ShownCount = -1;
         int ShownCount() const;
+        // The rows the log keeps room for: 3 on a phone, 6 on a PC and on a phone with the chat open.
+        int ReservedRows() const;
 
         void RemoveFrontLine();
         int GetCurrentRenderEndLine() const;

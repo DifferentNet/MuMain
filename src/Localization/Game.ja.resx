@@ -12411,4 +12411,97 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>定型文</value>
   </data>
+||||||| ce163792b
+  <!-- Round 13 -->
+  <data name="ChatCmdHelpTrade" xml:space="preserve">
+    <value>プレイヤーと取引: 見える範囲なら /trade 名前、それ以外は選択中のプレイヤー(距離不問)か、向かい合っている相手。</value>
+  </data>
+  <data name="ChatCmdHelpParty" xml:space="preserve">
+    <value>選択中のプレイヤーをパーティーに招待(/pt も可)。</value>
+  </data>
+  <data name="ChatCmdHelpGuild" xml:space="preserve">
+    <value>選択中のギルドマスターにギルドへの加入を申し込む。</value>
+  </data>
+  <data name="ChatCmdHelpUnion" xml:space="preserve">
+    <value>ギルドマスター用: 選択中のギルドマスターに同盟を申し込む。</value>
+  </data>
+  <data name="ChatCmdHelpRival" xml:space="preserve">
+    <value>ギルドマスター用: 選択中のギルドマスターのギルドを敵対ギルドに指定。</value>
+  </data>
+  <data name="ChatCmdHelpRivalOff" xml:space="preserve">
+    <value>ギルドマスター用: 選択中のギルドマスターのギルドとの敵対を解除。</value>
+  </data>
+  <data name="ChatCmdHelpDuelStart" xml:space="preserve">
+    <value>選択中のプレイヤーに決闘を申し込む。</value>
+  </data>
+  <data name="ChatCmdHelpDuelEnd" xml:space="preserve">
+    <value>決闘を終了。</value>
+  </data>
+  <data name="ChatCmdHelpReply" xml:space="preserve">
+    <value>最後にささやいてきたプレイヤーにささやき返す(/reply も可)。</value>
+  </data>
+  <data name="ChatCmdHelpFilter" xml:space="preserve">
+    <value>これらの語を含むチャット行だけを表示(5語まで)。語なしで全表示に戻る。</value>
+  </data>
+  <data name="ChatCmdHelpMacro" xml:space="preserve">
+    <value>チャット行をマクロ1に保存。Alt+1で発言。/2～/9と/0はAlt+2～Alt+0に同様。</value>
+  </data>
+  <data name="ChatCmdParamWords" xml:space="preserve">
+    <value>語</value>
+  </data>
+  <data name="ChatCmdParamText" xml:space="preserve">
+    <value>テキスト</value>
+  </data>
+  <data name="OfflineShadowLabel" xml:space="preserve">
+    <value>影 · オフライン</value>
+  </data>
+  <data name="TradePartnerLoweredZen" xml:space="preserve">
+    <value>%lsがゼンを減らしました: %ls -&gt; %ls</value>
+  </data>
+  <data name="TradePartnerRemovedItem" xml:space="preserve">
+    <value>%lsが%lsを取引から外しました</value>
+  </data>
+  <data name="PetLifeLow" xml:space="preserve">
+    <value>%ls: 残り体力%d%%。0で失われます。</value>
+  </data>
+  <data name="PurchaseZenSpent" xml:space="preserve">
+    <value>購入: -%ls ゼン</value>
+  </data>
+  <data name="NewSkillLearned" xml:space="preserve">
+    <value>新しいスキル: %ls</value>
+  </data>
+  <data name="WarpUnlockedKey" xml:space="preserve">
+    <value>レベル%d: 新しいワープ先: %ls (%ls)</value>
+  </data>
+  <data name="WarpUnlocked" xml:space="preserve">
+    <value>レベル%d: 新しいワープ先: %ls</value>
+  </data>
+  <!-- Round 14 -->
+  <data name="DeclineInvitations" xml:space="preserve">
+    <value>招待を断る</value>
+  </data>
+  <data name="InviteDeclinedParty" xml:space="preserve">
+    <value>%ls からのパーティー招待を断りました。</value>
+  </data>
+  <data name="InviteDeclinedTrade" xml:space="preserve">
+    <value>%ls からの取引申請を断りました。</value>
+  </data>
+  <data name="InviteDeclinedDuel" xml:space="preserve">
+    <value>%ls からの決闘申請を断りました。</value>
+  </data>
+  <data name="HelperSafeZone" xml:space="preserve">
+    <value>MU Helper は安全地帯では動作しません。</value>
+  </data>
+  <data name="HelperStoppedSummary" xml:space="preserve">
+    <value>MU Helper を停止しました（%d時間%d分）。レベル: +%d、ゼン: %ls。</value>
+  </data>
+  <data name="SkillBookNotLearnable" xml:space="preserve">
+    <value>このスキルはまだ習得できません。習得条件を確認してください。</value>
+  </data>
+  <data name="CapsLockOn" xml:space="preserve">
+    <value>Caps Lock がオンです</value>
+  </data>
+  <data name="GuildWarAlreadyOn" xml:space="preserve">
+    <value>いずれかのギルドがすでにギルド戦中です。</value>
+  </data>
 </root>

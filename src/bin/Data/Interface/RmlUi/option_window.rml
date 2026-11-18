@@ -83,7 +83,7 @@
 				<div class="checkbox-tick"></div>
 			</div>
 		</div>
-		<div class="option-row option-checkbox-row" data-event-click="option_toggle_vsync">
+		<div class="option-row option-checkbox-row" data-if="vsync_shown" data-event-click="option_toggle_vsync">
 			<span class="option-row-label">{{vsync_label}}</span>
 			<div class="checkbox-box" data-class-checked="vsync_enabled">
 				<div class="checkbox-tick"></div>
@@ -621,6 +621,12 @@
 		<div class="option-row option-checkbox-row option-row-tipped" data-attr-data-hint="zen_walk_pickup_tooltip" data-event-click="option_toggle_zen_walk_pickup">
 			<span class="option-row-label">{{zen_walk_pickup_label}}</span>
 			<div class="checkbox-box" data-class-checked="zen_walk_pickup">
+				<div class="checkbox-tick"></div>
+			</div>
+		</div>
+		<div class="option-row option-checkbox-row" data-event-click="option_toggle_decline_invitations">
+			<span class="option-row-label">{{decline_invitations_label}}</span>
+			<div class="checkbox-box" data-class-checked="decline_invitations">
 				<div class="checkbox-tick"></div>
 			</div>
 		</div>

@@ -368,6 +368,28 @@ body.under-hub #tc_picker {
 	word-break: break-word;
 	overflow: hidden;
 }
+/* MU Skynet: what a cast costs (mana, AG), one line under the name, left of the gold dot; the name then keeps
+   two lines above it. */
+.tc-pick-cost {
+	position: absolute;
+	left: 36rem;
+	right: 12rem;
+	bottom: 2rem;
+	font-size: 10rem;
+	line-height: 11rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	color: token(text-secondary);
+}
+.tc-pick.has-cost .tc-pick-name {
+	bottom: 13rem;
+}
+.tc-pick.has-cost .tc-pick-name span {
+	display: block;
+	max-height: 26rem;
+	overflow: hidden;
+}
 /* On one of the skill buttons already: a gold dot in the corner. */
 .tc-pick-mark {
 	display: none;
@@ -1050,6 +1072,16 @@ body.no-skills .tc-skill, body.no-skills #tc_skill_edit {
 		font-size: 12rem;
 		line-height: 14rem;
 	}
+	.tc-pick-cost {
+		font-size: 12rem;
+		line-height: 13rem;
+	}
+	.tc-pick.has-cost .tc-pick-name {
+		bottom: 15rem;
+	}
+	.tc-pick.has-cost .tc-pick-name span {
+		max-height: 28rem;
+	}
 	#tc_pick_tip {
 		font-size: 12rem;
 		line-height: 15rem;
@@ -1559,6 +1591,18 @@ body.size-60 #tc_menu_panel { top: 76.7rem; }
 	body.size-80 .tc-pick-name { font-size: 15rem; line-height: 17.5rem; }
 	body.size-70 .tc-pick-name { font-size: 17.14rem; line-height: 20rem; }
 	body.size-60 .tc-pick-name { font-size: 20rem; line-height: 23.33rem; }
+	body.size-90 .tc-pick-cost { left: 40rem; right: 13.33rem; bottom: 2.22rem; font-size: 13.33rem; line-height: 14.44rem; }
+	body.size-80 .tc-pick-cost { left: 45rem; right: 15rem; bottom: 2.5rem; font-size: 15rem; line-height: 16.25rem; }
+	body.size-70 .tc-pick-cost { left: 51.43rem; right: 17.14rem; bottom: 2.86rem; font-size: 17.14rem; line-height: 18.57rem; }
+	body.size-60 .tc-pick-cost { left: 60rem; right: 20rem; bottom: 3.33rem; font-size: 20rem; line-height: 21.67rem; }
+	body.size-90 .tc-pick.has-cost .tc-pick-name { bottom: 16.67rem; }
+	body.size-80 .tc-pick.has-cost .tc-pick-name { bottom: 18.75rem; }
+	body.size-70 .tc-pick.has-cost .tc-pick-name { bottom: 21.43rem; }
+	body.size-60 .tc-pick.has-cost .tc-pick-name { bottom: 25rem; }
+	body.size-90 .tc-pick.has-cost .tc-pick-name span { max-height: 31.11rem; }
+	body.size-80 .tc-pick.has-cost .tc-pick-name span { max-height: 35rem; }
+	body.size-70 .tc-pick.has-cost .tc-pick-name span { max-height: 40rem; }
+	body.size-60 .tc-pick.has-cost .tc-pick-name span { max-height: 46.67rem; }
 	body.size-90 #tc_pick_tip { font-size: 13.33rem; line-height: 16.67rem; }
 	body.size-80 #tc_pick_tip { font-size: 15rem; line-height: 18.75rem; }
 	body.size-70 #tc_pick_tip { font-size: 17.14rem; line-height: 21.43rem; }
@@ -1607,4 +1651,66 @@ body.over-map #tc_names, body.over-map #tc_offer, body.over-map #tc_target, body
 	body.size-80 #tc_exp_text { margin-left: -47.4rem; }
 	body.size-70 #tc_exp_text { margin-left: -54.3rem; }
 	body.size-60 #tc_exp_text { margin-left: -63.3rem; }
+}
+
+/* The potion buttons Q and W tinted by the kind of potion on them (UI/Mobile/PotionKind.h): healing red
+   and mana blue as the hero frame's gauges, shield yellow, complex violet; anything else keeps the plain
+   button. A pressed button's own look still wins (body .tc-button.pressed). */
+@media (theme: mobile) {
+	.tc-potion.heal { border-color: rgba(230, 60, 60, 230); background-color: rgba(200, 30, 30, 120); }
+	.tc-potion.mana { border-color: rgba(90, 130, 255, 230); background-color: rgba(40, 80, 220, 120); }
+	.tc-potion.shield { border-color: rgba(240, 210, 70, 230); background-color: rgba(220, 190, 40, 110); }
+	.tc-potion.complex { border-color: rgba(190, 110, 240, 230); background-color: rgba(150, 70, 200, 120); }
+}
+/* In the phone HUD the tint says what the button holds, and a keyboard letter means nothing to a finger:
+   the letter goes. A pad alone keeps it, beside its own glyph. */
+@media (theme: mobile-hud) {
+	.tc-potion-key { display: none; }
+	body.no-touch .tc-potion-key { display: inline; }
+}
+
+/* Marks on the touch controls (UI/HUD/TouchControls.cpp, UI/Mobile/HeroFrame.cpp): a gold dot on the fold
+   button and on Friends for an unread letter or a new chat-room line, and a gold "+" on the level's circle
+   while there are stat points to spend. Placed inside their button, so the button's box (what a finger
+   hits) stays as it is; at the smaller button sizes they keep their size, as their buttons do. Off a phone or
+   tablet they are not drawn. */
+.tc-alert-dot, .tc-alert-plus {
+	display: none;
+}
+@media (theme: mobile) {
+	.tc-alert-dot {
+		display: block;
+		position: absolute;
+		right: 2rem;
+		top: 2rem;
+		width: 8rem;
+		height: 8rem;
+		border-radius: 4rem;
+		background-color: token(accent-gold);
+		pointer-events: none;
+	}
+	.tc-alert-plus {
+		display: block;
+		position: absolute;
+		right: -4rem;
+		top: -3rem;
+		width: 13rem;
+		height: 13rem;
+		border-radius: 7rem;
+		background-color: token(accent-gold);
+		color: #000000;
+		font-size: 12rem;
+		line-height: 13rem;
+		text-align: center;
+		font-effect: none;
+		pointer-events: none;
+	}
+	body.size-90 .tc-alert-dot { right: 2.2rem; top: 2.2rem; width: 8.9rem; height: 8.9rem; border-radius: 4.4rem; }
+	body.size-80 .tc-alert-dot { right: 2.5rem; top: 2.5rem; width: 10rem; height: 10rem; border-radius: 5rem; }
+	body.size-70 .tc-alert-dot { right: 2.9rem; top: 2.9rem; width: 11.4rem; height: 11.4rem; border-radius: 5.7rem; }
+	body.size-60 .tc-alert-dot { right: 3.3rem; top: 3.3rem; width: 13.3rem; height: 13.3rem; border-radius: 6.7rem; }
+	body.size-90 .tc-alert-plus { right: -4.4rem; top: -3.3rem; width: 14.4rem; height: 14.4rem; border-radius: 7.8rem; font-size: 13.3rem; line-height: 14.4rem; }
+	body.size-80 .tc-alert-plus { right: -5rem; top: -3.8rem; width: 16.3rem; height: 16.3rem; border-radius: 8.8rem; font-size: 15rem; line-height: 16.3rem; }
+	body.size-70 .tc-alert-plus { right: -5.7rem; top: -4.3rem; width: 18.6rem; height: 18.6rem; border-radius: 10rem; font-size: 17.1rem; line-height: 18.6rem; }
+	body.size-60 .tc-alert-plus { right: -6.7rem; top: -5rem; width: 21.7rem; height: 21.7rem; border-radius: 11.7rem; font-size: 20rem; line-height: 21.7rem; }
 }

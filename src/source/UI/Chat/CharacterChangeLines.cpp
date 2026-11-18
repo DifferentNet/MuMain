@@ -1,17 +1,22 @@
 #include "stdafx.h"
 #include "UI/Chat/CharacterChangeLines.h"
 
+#include "Character/CharacterManager.h"
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzInventory.h"
 #include "GameLogic/Combat/DuelMgr.h"
 #include "GameLogic/Items/JewelUpgradeResult.h"
 #include "I18N/All.h"
+#include "Network/MoveCommandData.h"
 #include "UI/Chat/ChatMessages.h"
+#include "UI/Chat/WarpUnlocks.h"
 #include "UI/Chat/ZenChangeWindow.h"
 #include "UI/HUD/KeyHint.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Text/GroupedNumberText.h"
 #include "World/MapInfra/MapManager.h"
+
+#include <vector>
 
 namespace UI::Chat::ChangeLines
 {
@@ -24,6 +29,9 @@ ZenChangeWindow g_sale{ZenChangeWindow::Sign::Gain, {0, 3'000, 400}};
 // "Repair all" answers with a money update per repaired item; the first comes within a second or not at all (a
 // refused repair sends nothing).
 ZenChangeWindow g_repair{ZenChangeWindow::Sign::Loss, {0, 3'000, 500, 1'000}};
+// A purchase from an NPC shop: the money update comes with the answer; several quick buys give one line. A shop
+// that takes another currency changes no zen and says nothing.
+ZenChangeWindow g_purchase{ZenChangeWindow::Sign::Loss, {0, 3'000, 400, 1'000}};
 // A death's loss comes just before or just after the death packet.
 ZenChangeWindow g_death{ZenChangeWindow::Sign::Loss, {1'500, 2'500, 600}};
 
@@ -93,7 +101,8 @@ bool NoteZenChange(std::int64_t delta)
 {
     const std::uint32_t now = GetTickCount();
     // The first window that counts a change takes it, so a change is never said twice.
-    return g_sale.Note(delta, now) || g_repair.Note(delta, now) || g_death.Note(delta, now);
+    return g_sale.Note(delta, now) || g_repair.Note(delta, now) || g_purchase.Note(delta, now) ||
+           g_death.Note(delta, now);
 }
 
 void NoteSaleAsked()
@@ -116,6 +125,16 @@ void NoteRepairAsked(const ITEM& item)
     if (item.Type < 0 || item.Durability >= CalcMaxDurability(&item, &ItemAttribute[item.Type], item.Level))
         return;
     NoteRepairAsked();
+}
+
+void NotePurchaseAsked()
+{
+    g_purchase.Arm(GetTickCount());
+}
+
+void NotePurchaseRefused()
+{
+    g_purchase.Stop();
 }
 
 void NoteHeroDeath()
@@ -163,6 +182,34 @@ void NoteLevelUp(int level, int freePoints, bool reset)
     PostSystem(text, mu::ui::window::TYPE_SYSTEM_MESSAGE);
 }
 
+void NoteWarpUnlocks(int oldLevel, int newLevel)
+{
+    if (CharacterAttribute->Resets != 0)
+        return;
+
+    std::vector<WarpUnlocks::Destination> destinations;
+    for (const auto* moveInfo : SEASON3B::CMoveCommandData::GetInstance()->GetMoveCommandDatalist())
+        destinations.push_back({moveInfo->_ReqInfo.szMainMapName, moveInfo->_ReqInfo.iReqLevel});
+
+    const auto baseClass = gCharacterManager.GetBaseClass(CharacterAttribute->Class);
+    const bool reducedClass = baseClass == CLASS_DARK || baseClass == CLASS_DARK_LORD || baseClass == CLASS_RAGEFIGHTER;
+    const auto names = WarpUnlocks::NewlyReached(destinations, reducedClass, oldLevel, newLevel);
+    if (names.empty())
+        return;
+
+    const std::wstring joined = WarpUnlocks::Join(names);
+    std::wstring key;
+    if (!UI::Mobile::IsTouchControls() && !UI::Mobile::IsPhoneView())
+        key = UI::KeyHint::KeyLabel(Core::Input::KeyBindings::Action::Move);
+
+    wchar_t text[256]{};
+    if (key.empty())
+        mu_swprintf(text, I18N::Game::WarpUnlocked, newLevel, joined.c_str());
+    else
+        mu_swprintf(text, I18N::Game::WarpUnlockedKey, newLevel, joined.c_str(), key.c_str());
+    PostSystem(text, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+}
+
 void Tick()
 {
     const std::uint32_t now = GetTickCount();
@@ -170,6 +217,8 @@ void Tick()
         PostZen(I18N::Game::ZenSold, *sold, mu::ui::window::TYPE_SYSTEM_MESSAGE);
     if (const auto repaired = g_repair.Poll(now))
         PostZen(I18N::Game::ZenRepairCost, *repaired, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+    if (const auto spent = g_purchase.Poll(now))
+        PostZen(I18N::Game::PurchaseZenSpent, *spent, mu::ui::window::TYPE_SYSTEM_MESSAGE);
     if (const auto lost = g_death.Poll(now))
         PostZen(I18N::Game::DeathLostZen, *lost, mu::ui::window::TYPE_ERROR_MESSAGE);
 }

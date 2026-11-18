@@ -42,7 +42,6 @@
 #include "Render/Textures/ZzzTexture.h"
 #include "Render/Textures/HdTextures.h"
 #include "Render/Models/ModelSmoothing.h"
-#include "Render/Textures/NormalMaps.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "Render/Lighting/SoftShadowSetting.h"
 #include "Render/Lighting/SunShadowSetting.h"
@@ -83,6 +82,7 @@
 #include "Core/Platform/web/WebFileSystem.h"
 #include "Core/Platform/web/WebKeyboard.h"
 #include "Core/Platform/web/WebPageView.h"
+#include "UI/HUD/ChatInputBox.h"
 #include "UI/RmlBridge/RmlNumericInputFilter.h"
 #include <RmlUi/Core/Element.h>
 extern EGameScene SceneFlag; // read by WaitForBrowserFrame()
@@ -1515,6 +1515,8 @@ mu::web::FieldKeys PhoneKeysFor(const Rml::Element* field)
         return mu::web::FieldKeys::Password;
     if (field->IsClassSet(UI::RmlBridge::NumericFieldClass))
         return mu::web::FieldKeys::Digits;
+    if (field->IsClassSet(mu::web::ChatFieldClass))
+        return mu::web::FieldKeys::Chat;
     return mu::web::FieldKeys::Text;
 }
 
@@ -1526,7 +1528,12 @@ void SyncPhoneKeyboard()
     mu::web::SyncKeyboard(PhoneKeysFor(ui.GetFocusedTextField()));
 
     const std::optional<SDL_FPoint> tap = Core::Input::Touch::TapPoint();
-    mu::web::SyncTapOnTextField(PhoneKeysFor(tap ? ui.GetTextFieldAt(tap->x, tap->y) : nullptr));
+    const Rml::Element* tapped = tap ? ui.GetTextFieldAt(tap->x, tap->y) : nullptr;
+    // The chat's history button gives the focus back to its field: a tap on it counts as one on that field, so an
+    // iPhone keeps its keyboard (it brings one up only for a focus made as the finger lifts).
+    if (tap && tapped == nullptr && g_pChatInputBox != nullptr)
+        tapped = g_pChatInputBox->RecallFieldAt(tap->x, tap->y);
+    mu::web::SyncTapOnTextField(PhoneKeysFor(tapped));
 }
 
 // The frame cap: none while loading; 30 on the login and character screens, where nothing moves fast;
@@ -2831,11 +2838,6 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     Render::Textures::Hd::SetEnabled(hdTextures);
     // The Remaster's smoother models go with the HD textures (off in the Classic client).
     Render::Models::Smoothing::SetLevel(hdTextures ? GameConfig::GetInstance().GetSmoothModels() : 0);
-    // So do the relief maps of the model textures.
-    Render::Textures::NormalMaps::SetEnabled(hdTextures && GameConfig::GetInstance().GetNormalMaps());
-    // They ship prebuilt (scripts/hd_pack.py); building missing ones at load is for development only.
-    const char* runtimeNormalMaps = std::getenv("MU_NORMAL_MAPS_RUNTIME");
-    Render::Textures::NormalMaps::SetRuntimeBuild(runtimeNormalMaps != nullptr && std::strcmp(runtimeNormalMaps, "1") == 0);
 #endif
 
     ConfigureCharacterAnimation();

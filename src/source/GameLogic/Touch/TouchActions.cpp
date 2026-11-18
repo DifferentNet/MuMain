@@ -32,6 +32,7 @@
 #include "Network/Server/WSclient.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
 #include "UI/Chat/ChatMessages.h"
+#include "UI/Chat/SkillCostNotice.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/ModalDialogs.h"
 #include "UI/HUD/GamepadControls.h"
@@ -103,8 +104,6 @@ constexpr int ZenUnderfootReach = 2;
 constexpr auto FullBagRepeat = std::chrono::seconds(3);
 // How often a skill button short of mana or AG asks for a mana potion and says so.
 constexpr auto ShortOfManaRepeat = std::chrono::milliseconds(1500);
-// How often it says so in the chat, while held: a line every 1.5 s buried the chat.
-constexpr auto ShortOfManaSayRepeat = std::chrono::seconds(6);
 // How often a held pet command button sends its command again.
 constexpr auto PetCommandRepeat = std::chrono::seconds(1);
 // How often the pad's Teleport Ally with no friend chosen says so.
@@ -221,7 +220,6 @@ std::wstring g_friendName;
 // When a skill short of mana or AG may ask and say so again, and when a held pet command may go out
 // again.
 Clock::time_point g_shortOfManaAt;
-Clock::time_point g_shortOfManaSaidAt;
 Clock::time_point g_petCommandAt;
 // When the zen underfoot is looked for next.
 Clock::time_point g_zenUnderfootAt;
@@ -1251,12 +1249,8 @@ Progress ShortOfMana(ActionSkillType skill)
     gSkillManager.GetSkillInformation(skill, 1, nullptr, &mana, nullptr);
     const bool manaShort = CharacterAttribute->Mana < mana;
     GameLogic::Combat::CheckMana(Hero, skill);
-    if (now >= g_shortOfManaSaidAt)
-    {
-        g_shortOfManaSaidAt = now + ShortOfManaSayRepeat;
-        UI::Chat::PostSystem(manaShort ? I18N::Game::TouchNoMana : I18N::Game::TouchNoAg,
-                             mu::ui::window::TYPE_ERROR_MESSAGE);
-    }
+    // Once every few seconds, shared with the mouse and keyboard (UI/Chat/SkillCostNotice).
+    UI::Chat::SkillCost::SayShort(manaShort);
     return Progress::Done;
 }
 

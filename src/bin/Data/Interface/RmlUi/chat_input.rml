@@ -45,11 +45,13 @@
 		     dimmed under a red wash; this overlay is that wash. -->
 		<div id="whisper_block" data-class-hidden="whisper_send"></div>
 
-		<input id="chat_field" type="text" class="text-field cib-chat-field" data-value="chat_text"/>
+		<input id="chat_field" type="text" class="text-field text-field--chat cib-chat-field" data-value="chat_text"/>
 		<!-- A phone's quick buttons over the bar (theme mobile only): the saved macros of keys 1 to 5, each only
 		     when set, then the quick chat phrases (UI/Chat/ChatPhrases), which every reader sees in their own
 		     language. A tap sends one as Enter sends a line. -->
 		<div id="quick_row" class="cib-quick">
+			<!-- The line sent before, as Up brings it back in the field (a phone keyboard has no arrows); the field keeps its keyboard. -->
+			<div id="quick_history" class="cib-quick-btn cib-quick-history" data-event-click="chat_history_up">&#8593;</div>
 			<div id="quick_0" class="cib-quick-btn cib-quick-macro" data-class-hidden="!quick_macro_0" data-event-click="chat_quick(0)">{{quick_0}}</div>
 			<div id="quick_1" class="cib-quick-btn cib-quick-macro" data-class-hidden="!quick_macro_1" data-event-click="chat_quick(1)">{{quick_1}}</div>
 			<div id="quick_2" class="cib-quick-btn cib-quick-macro" data-class-hidden="!quick_macro_2" data-event-click="chat_quick(2)">{{quick_2}}</div>

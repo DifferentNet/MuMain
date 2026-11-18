@@ -104,6 +104,29 @@ void WriteJpeg(const std::filesystem::path& path)
     tjFree(compressed);
     tjDestroy(handle);
 }
+// A width x height image of varied colours (fixed seed), as an OZJ file with the given chroma subsampling.
+void WriteNoiseJpeg(const std::filesystem::path& path, int width, int height, int subsampling)
+{
+    std::vector<std::uint8_t> rgb(static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * 3u);
+    std::uint32_t seed = 12345u;
+    for (std::size_t i = 0; i < rgb.size(); ++i)
+    {
+        seed = seed * 1664525u + 1013904223u;
+        rgb[i] = static_cast<std::uint8_t>((seed >> 24) ^ (i % 97u));
+    }
+    tjhandle handle = tjInitCompress();
+    REQUIRE(handle != nullptr);
+    unsigned char* compressed = nullptr;
+    unsigned long length = 0;
+    REQUIRE(tjCompress2(handle, rgb.data(), width, 0, height, TJPF_RGB, &compressed, &length, subsampling, 85, 0) ==
+            0);
+    std::ofstream out(path, std::ios::binary);
+    std::array<char, 24> prefix{};
+    out.write(prefix.data(), prefix.size());
+    out.write(reinterpret_cast<const char*>(compressed), static_cast<std::streamsize>(length));
+    tjFree(compressed);
+    tjDestroy(handle);
+}
 } // namespace
 
 namespace mu
@@ -166,8 +189,6 @@ void TakeFilteredSamplerRequests(std::vector<std::uint32_t>& requests)
     requests.clear();
 }
 void SetTextureFilteringEnabled(bool) {}
-void RegisterNormalMap(std::uint32_t, SDL_GPUTexture*) {}
-void UnregisterNormalMap(std::uint32_t) {}
 } // namespace mu
 
 namespace mu
@@ -334,5 +355,45 @@ TEST_CASE("bitmap loader uploads marked files mipmapped at their original size")
     CHECK(bitmaps.GetUsedTextureMemory() == 20);
     bitmaps.UnloadAllImages();
     CHECK(bitmaps.GetUsedTextureMemory() == 0);
+    std::filesystem::remove_all(dir);
+}
+
+TEST_CASE("a JPEG texture decoded straight to RGBA uploads the same bytes as the RGB decode")
+{
+    struct Case
+    {
+        int width;
+        int height;
+        int subsampling;
+        bool pad;
+    };
+    const std::array<Case, 6> cases{{{37, 23, TJSAMP_420, false},
+                                     {64, 32, TJSAMP_444, false},
+                                     {16, 16, TJSAMP_422, true},
+                                     {33, 17, TJSAMP_GRAY, false},
+                                     {128, 64, TJSAMP_420, true},
+                                     {37, 23, TJSAMP_420, true}}};
+    auto dir = MakeFixtureDir("rgba-direct");
+    std::uint32_t id = 600u;
+    for (const Case& c : cases)
+    {
+        record = {};
+        WriteNoiseJpeg(dir / "noise.OZJ", c.width, c.height, c.subsampling);
+        const auto file = (dir / "noise.jpg").wstring();
+        CGlobalBitmap bitmaps;
+        // A canvas keeps its RGB pixels and so takes the RGB decode.
+        REQUIRE(bitmaps.LoadImage(id++, file, GL_NEAREST, GL_CLAMP_TO_EDGE, c.pad, false, true));
+        const std::vector<std::uint8_t> viaRgb = record.pixels;
+        const int rgbWidth = record.width;
+        REQUIRE(bitmaps.LoadImage(id, file, GL_NEAREST, GL_CLAMP_TO_EDGE, c.pad, false, false));
+        CHECK(record.width == rgbWidth);
+        CHECK(record.pixels == viaRgb);
+        const BITMAP_t* texture = bitmaps.FindTexture(id++);
+        REQUIRE(texture != nullptr);
+        CHECK(texture->Components == 3);
+        CHECK(texture->Buffer == nullptr);
+        CHECK(bitmaps.GetUsedTextureMemory() == 2u * viaRgb.size());
+        bitmaps.UnloadAllImages();
+    }
     std::filesystem::remove_all(dir);
 }

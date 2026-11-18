@@ -5,9 +5,8 @@
 #include <vector>
 
 // How large the HD textures are on the GPU. The Remaster's copies are 4 times the originals on each
-// side (UpscaleMarker.h), RGBA8 with every mip level: about 1.9 GiB of GPU memory, a quarter more with
-// the normal maps. At half size they take a quarter of that and still hold 4 times the originals'
-// texels. [Render] HdTextureSize: 0 picks by the machine at every start, 1 full, 2 half.
+// side (UpscaleMarker.h), RGBA8 with every mip level: about 1.9 GiB of GPU memory. At half size they
+// take a quarter of that and still hold 4 times the originals' texels. [Render] HdTextureSize: 0 picks by the machine at every start, 1 full, 2 half.
 // Read once at start-up, like HD textures: a texture already loaded keeps its size.
 namespace Render::Textures::HdSize
 {

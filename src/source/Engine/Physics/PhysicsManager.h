@@ -207,7 +207,8 @@ protected:
 
 public:
     BOOL Move2(float fTime, int iCount);
-    BOOL Move(float fTime);
+    // setFixedVertices false: the fixed vertices already sit on the bone this frame (a later sub-step of Move2()).
+    BOOL Move(float fTime, bool setFixedVertices = true);
     void GetPosition(int index, vec3_t* pPos);
     int GetVerticesCount() const
     {
@@ -224,7 +225,7 @@ public:
 
 protected:
     virtual void InitForces(void);
-    void MoveVertices(float fTime);
+    void MoveVertices(float fTime, bool setFixedVertices);
     BOOL PreventFromStretching(void);
 
 public:

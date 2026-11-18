@@ -17,4 +17,7 @@ void NoteEquipmentDurability(int slot, int before, int after);
 
 // Once a frame: says the buff ends that settled.
 void Tick();
+
+// A new game (character switch, relog): the warnings already said belong to the previous character.
+void Reset();
 } // namespace UI::Chat::StatusLines

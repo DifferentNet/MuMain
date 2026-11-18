@@ -656,7 +656,7 @@
     <comment>legacy_id=160</comment>
   </data>
   <data name="LV" xml:space="preserve">
-    <value>左心室</value>
+    <value>等級</value>
     <comment>legacy_id=161</comment>
   </data>
   <data name="ATK Dmg" xml:space="preserve">
@@ -1308,7 +1308,7 @@
     <comment>legacy_id=359</comment>
   </data>
   <data name="A G use: %d" xml:space="preserve">
-    <value>G使用：%d</value>
+    <value>AG消耗：%d</value>
     <comment>legacy_id=360</comment>
   </data>
   <data name="Party (P)" xml:space="preserve">
@@ -14331,5 +14331,98 @@
   </data>
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>常用語</value>
+  </data>
+||||||| ce163792b
+  <!-- Round 13 -->
+  <data name="ChatCmdHelpTrade" xml:space="preserve">
+    <value>與玩家交易：對方在視野內時用 /trade 名字，否則與選取的玩家（不限距離）或面對你的玩家交易。</value>
+  </data>
+  <data name="ChatCmdHelpParty" xml:space="preserve">
+    <value>邀請選取的玩家加入隊伍（也可用 /pt）。</value>
+  </data>
+  <data name="ChatCmdHelpGuild" xml:space="preserve">
+    <value>請選取的公會會長讓你加入公會。</value>
+  </data>
+  <data name="ChatCmdHelpUnion" xml:space="preserve">
+    <value>公會會長：向選取的公會會長提出同盟。</value>
+  </data>
+  <data name="ChatCmdHelpRival" xml:space="preserve">
+    <value>公會會長：將選取會長的公會宣告為敵對。</value>
+  </data>
+  <data name="ChatCmdHelpRivalOff" xml:space="preserve">
+    <value>公會會長：結束與選取會長公會的敵對。</value>
+  </data>
+  <data name="ChatCmdHelpDuelStart" xml:space="preserve">
+    <value>向選取的玩家發起決鬥。</value>
+  </data>
+  <data name="ChatCmdHelpDuelEnd" xml:space="preserve">
+    <value>結束你的決鬥。</value>
+  </data>
+  <data name="ChatCmdHelpReply" xml:space="preserve">
+    <value>以悄悄話回覆最後密你的玩家（也可用 /reply）。</value>
+  </data>
+  <data name="ChatCmdHelpFilter" xml:space="preserve">
+    <value>只顯示含這些字詞的聊天行（最多五個）。不帶字詞則恢復全部顯示。</value>
+  </data>
+  <data name="ChatCmdHelpMacro" xml:space="preserve">
+    <value>將一行聊天存為巨集 1；Alt+1 送出。/2 到 /9 與 /0 對應 Alt+2 到 Alt+0。</value>
+  </data>
+  <data name="ChatCmdParamWords" xml:space="preserve">
+    <value>字詞</value>
+  </data>
+  <data name="ChatCmdParamText" xml:space="preserve">
+    <value>文字</value>
+  </data>
+  <data name="OfflineShadowLabel" xml:space="preserve">
+    <value>影子 · 離線</value>
+  </data>
+  <data name="TradePartnerLoweredZen" xml:space="preserve">
+    <value>%ls 降低了 Zen：%ls -&gt; %ls</value>
+  </data>
+  <data name="TradePartnerRemovedItem" xml:space="preserve">
+    <value>%ls 從交易中取出了 %ls</value>
+  </data>
+  <data name="PetLifeLow" xml:space="preserve">
+    <value>%ls：剩餘 %d%% 生命。歸零即消失。</value>
+  </data>
+  <data name="PurchaseZenSpent" xml:space="preserve">
+    <value>購買：-%ls Zen</value>
+  </data>
+  <data name="NewSkillLearned" xml:space="preserve">
+    <value>新技能：%ls</value>
+  </data>
+  <data name="WarpUnlockedKey" xml:space="preserve">
+    <value>等級 %d：新傳送點：%ls（%ls）</value>
+  </data>
+  <data name="WarpUnlocked" xml:space="preserve">
+    <value>等級 %d：新傳送點：%ls</value>
+  </data>
+  <!-- Round 14 -->
+  <data name="DeclineInvitations" xml:space="preserve">
+    <value>拒絕邀請</value>
+  </data>
+  <data name="InviteDeclinedParty" xml:space="preserve">
+    <value>已拒絕 %ls 的組隊邀請。</value>
+  </data>
+  <data name="InviteDeclinedTrade" xml:space="preserve">
+    <value>已拒絕 %ls 的交易請求。</value>
+  </data>
+  <data name="InviteDeclinedDuel" xml:space="preserve">
+    <value>已拒絕 %ls 的決鬥挑戰。</value>
+  </data>
+  <data name="HelperSafeZone" xml:space="preserve">
+    <value>MU Helper 無法在安全區域運作。</value>
+  </data>
+  <data name="HelperStoppedSummary" xml:space="preserve">
+    <value>MU Helper 已停止，運作 %d 小時 %d 分。等級：+%d，Zen：%ls。</value>
+  </data>
+  <data name="SkillBookNotLearnable" xml:space="preserve">
+    <value>目前還無法學習此技能：請查看學習條件。</value>
+  </data>
+  <data name="CapsLockOn" xml:space="preserve">
+    <value>Caps Lock 已開啟</value>
+  </data>
+  <data name="GuildWarAlreadyOn" xml:space="preserve">
+    <value>其中一個公會已在公會戰中。</value>
   </data>
 </root>

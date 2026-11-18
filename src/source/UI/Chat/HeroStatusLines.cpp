@@ -8,6 +8,7 @@
 #include "UI/Chat/BagRoomWarning.h"
 #include "UI/Chat/BuffEndNotices.h"
 #include "UI/Chat/ChatMessages.h"
+#include "UI/Chat/PetLifeWarning.h"
 #include "UI/Inventory/InventoryContents.h"
 #include "World/MapInfra/MapManager.h"
 
@@ -20,6 +21,8 @@ namespace
 {
 BuffEndNotices g_buffEnds;
 BagRoomWarning g_bagRoom;
+PetLifeWarning g_petLife;
+int g_petLifeType = -1;
 
 // The map the last Tick() saw, so entering another one silences the buff ends it brings.
 bool g_worldSeen = false;
@@ -114,8 +117,32 @@ void NoteItemPickedUp()
     }
 }
 
+// The pet or mount in the helper slot: warn at a quarter and a tenth of its life (the Dark Horse is never lost).
+void NotePetLife(int before, int after)
+{
+    const int itemType = CharacterMachine->Equipment[EQUIPMENT_HELPER].Type;
+    if (itemType != g_petLifeType)
+    {
+        g_petLifeType = itemType;
+        g_petLife.Reset();
+    }
+    if (itemType < 0 || itemType == ITEM_DARK_HORSE_ITEM)
+        return;
+
+    if (g_petLife.Note(before, after) == PetLifeWarning::Say::Nothing)
+        return;
+
+    wchar_t line[192]{};
+    mu_swprintf(line, I18N::Game::PetLifeLow, ItemAttribute[itemType].Name, after * 100 / PetLifeWarning::MaxLife);
+    PostSystem(line, mu::ui::window::TYPE_ERROR_MESSAGE);
+    PlayBuffer(SOUND_ERROR01);
+}
+
 void NoteEquipmentDurability(int slot, int before, int after)
 {
+    if (slot == EQUIPMENT_HELPER)
+        NotePetLife(before, after);
+
     if (slot < 0 || slot >= MAX_EQUIPMENT || before <= 0 || after != 0)
         return;
     const int itemType = CharacterMachine->Equipment[slot].Type;
@@ -126,6 +153,14 @@ void NoteEquipmentDurability(int slot, int before, int after)
     mu_swprintf(line, I18N::Game::EquipmentBroken, ItemAttribute[itemType].Name);
     PostSystem(line, mu::ui::window::TYPE_ERROR_MESSAGE);
     PlayBuffer(SOUND_ERROR01);
+}
+
+void Reset()
+{
+    g_buffEnds.Clear();
+    g_bagRoom = BagRoomWarning{};
+    g_petLife.Reset();
+    g_petLifeType = -1;
 }
 
 void Tick()

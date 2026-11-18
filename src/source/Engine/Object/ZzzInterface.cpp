@@ -20,6 +20,7 @@
 #include "Engine/AI/ZzzAI.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "UI/Chat/ChatInput.h"
+#include "UI/Chat/SkillCostNotice.h"
 #include "UI/Chat/PartyInviteCommand.h"
 #include "UI/Chat/ChatMacroFile.h"
 #include "UI/Character/OverheadNames.h"
@@ -143,6 +144,34 @@ int   SelectedOperate = -1;
 int   Attacking = -1;
 
 int   g_iFollowCharacter = -1;
+// The Key of the character g_iFollowCharacter was set to follow.
+static int g_iFollowCharacterKey = -1;
+
+void StartFollowing(int characterIndex)
+{
+    g_iFollowCharacter = characterIndex;
+    g_iFollowCharacterKey = CharactersClient[characterIndex].Key;
+}
+
+static bool IsFollowable(const CHARACTER* c)
+{
+    return c->Object.Live != 0 && c->Object.Kind == KIND_PLAYER;
+}
+
+// The followed player, looked up again by Key when his slot now holds somebody else (he left view and the slot
+// was reused); nullptr when he is gone.
+static CHARACTER* ResolveFollowCharacter()
+{
+    CHARACTER* slot = &CharactersClient[g_iFollowCharacter];
+    if (IsFollowable(slot) && slot->Key == g_iFollowCharacterKey)
+        return slot;
+
+    const int index = FindCharacterIndex(g_iFollowCharacterKey);
+    if (index < 0 || index >= MAX_CHARACTERS_CLIENT || !IsFollowable(&CharactersClient[index]))
+        return nullptr;
+    g_iFollowCharacter = index;
+    return &CharactersClient[index];
+}
 
 bool g_bAutoGetItem = false;
 
@@ -2779,7 +2808,10 @@ void Attack(CHARACTER* c)
         }
     }
 
-    GameLogic::Combat::ExecuteSkill(c, Skill, Distance);
+    if (GameLogic::Combat::ExecuteSkill(c, Skill, Distance) == 0 && c == Hero)
+    {
+        UI::Chat::SkillCost::NoteRefusedCast(Skill);
+    }
 }
 
 
@@ -3197,8 +3229,8 @@ void MoveHero()
         }
         if (g_iFollowCharacter >= 0 && g_iFollowCharacter < MAX_CHARACTERS_CLIENT)
         {
-            CHARACTER* followCharacter = &CharactersClient[g_iFollowCharacter];
-            if (followCharacter->Object.Live == 0)
+            CHARACTER* followCharacter = ResolveFollowCharacter();
+            if (followCharacter == nullptr)
             {
                 g_iFollowCharacter = -1;
             }

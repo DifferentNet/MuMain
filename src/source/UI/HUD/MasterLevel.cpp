@@ -659,7 +659,10 @@ void mu::ui::window::CMasterLevel::RebuildNodeModel()
         entry.column = skillData.Group;
         entry.slot = UI::Skills::MasterTree::SlotInRank(skillData.Index);
         entry.rank = skillAttribute.SkillRank;
-        entry.icon = "image(" + UI::Skills::MasterTree::IconSpriteName(skillAttribute.Magic_Icon, usable) + ")";
+        // Drawn in the content box: the phone view pads the icon into a finger-size hit box around the same art
+        // (master_level.rcss); unpadded, as on a PC, the content box is the whole icon.
+        entry.icon =
+            "image(" + UI::Skills::MasterTree::IconSpriteName(skillAttribute.Magic_Icon, usable) + ") content-box";
         entry.usable = usable;
         entry.arrow = skillData.ArrowDirection;
         entry.levelText = std::to_string(CharacterAttribute->MasterSkillInfo[skillData.Skill].GetSkillLevel());

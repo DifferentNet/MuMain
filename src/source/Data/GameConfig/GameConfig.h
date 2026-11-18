@@ -58,6 +58,11 @@ public:
     void SetEncryptedUsername(const std::wstring& encryptedUsername);
     std::wstring GetEncryptedUsername() const { return m_encryptedUsername; }
 
+    // Name of the character last taken into the game. Character select
+    // preselects it. Written to config.ini right away.
+    std::wstring GetLastCharacter() const { return m_lastCharacter; }
+    void SetLastCharacter(const std::wstring& name);
+
     void SetEncryptedPassword(const std::wstring& encryptedPassword);
     std::wstring GetEncryptedPassword() const { return m_encryptedPassword; }
 
@@ -105,6 +110,8 @@ public:
     void SetBackgroundSound(bool on) { m_backgroundSound = on; }
     bool GetTitlesTownsOnly() const { return m_titlesTownsOnly; }
     void SetTitlesTownsOnly(bool townsOnly) { m_titlesTownsOnly = townsOnly; }
+    bool GetDeclineInvitations() const { return m_declineInvitations; }
+    void SetDeclineInvitations(bool on) { m_declineInvitations = on; }
 
     // The loot highlight filter's raw settings; GameLogic::Items::LootFilterRuntime turns them into rules.
     bool GetLootFilterEnabled() const { return m_lootFilterEnabled; }
@@ -275,9 +282,6 @@ public:
     // [Render] SmoothModels: with HD textures on, how many times each model triangle is split when
     // it loads (0 = off, 1, 2; Render/Models/ModelSmoothing.h).
     int GetSmoothModels() const { return m_smoothModels; }
-    // [Render] NormalMaps: with HD textures on, model textures get a relief map for the Enhanced
-    // lighting (Render/Textures/NormalMaps.h).
-    bool GetNormalMaps() const { return m_normalMaps; }
     // [Render] TerrainDetail: with HD textures on, grain on the ground near the camera, 0 off,
     // 1 self-detail, 2 noise; TerrainDetailStrength in percent (both clamped; after a restart).
     int GetTerrainDetail() const { return m_terrainDetail; }
@@ -463,6 +467,7 @@ private:
     std::wstring m_languageSelection;
     std::wstring m_encryptedUsername;
     std::wstring m_encryptedPassword;
+    std::wstring m_lastCharacter;
 
     std::wstring m_serverIP;
     int m_serverPort;
@@ -476,6 +481,7 @@ private:
     bool m_overheadTitles = true;
     bool m_titleEffects = true;
     bool m_titlesTownsOnly = true;
+    bool m_declineInvitations = false;
     bool m_lootFilterEnabled = true;
     bool m_lootFilterMarker = true;
     bool m_lootFilterSound = false;
@@ -526,7 +532,6 @@ private:
     bool m_hdTextures = false;
     int m_hdTextureSize = 0;
     int m_smoothModels = 1;
-    bool m_normalMaps = true;
     int m_terrainDetail = 1;
     int m_terrainDetailStrength = 60;
     int m_terrainVariation = 2;

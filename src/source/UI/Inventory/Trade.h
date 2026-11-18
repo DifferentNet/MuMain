@@ -13,6 +13,7 @@
 #include "UI/Inventory/StorageInventory.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 #include "UI/Inventory/TradeUpdates.h"
+#include "UI/Inventory/TradeOfferChange.h"
 
 #include <cstdint>
 #include <vector>
@@ -64,6 +65,9 @@ namespace mu::ui::window
         // Bumped by every trade request received and every trade close, so a request dialog left
         // open closes itself once the server cancelled that request (a partner who opened an NPC).
         int            m_nTradeRequestSerial = 0;
+        // "X took Y out of the trade" lines waiting to see whether the item comes back (a move).
+        UI::Trade::PendingRemovals m_pendingRemovals;
+        void FlushPendingRemovals(bool all);
 
         // Window frame/title/both nickname displays/both gold strips/both confirm checkboxes/
         // divider/buttons are RmlUi. Both CInventoryCtrl grids stay native since their icons are

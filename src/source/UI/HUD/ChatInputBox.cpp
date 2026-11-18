@@ -9,6 +9,7 @@
 
 #include "Audio/DSPlaySound.h"
 #include "UI/HUD/ChatLogWindow.h"
+#include "UI/Mobile/InterfaceMode.h"
 #include "UI/Social/SocialWindowBase.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Core/WindowGeometry.h"
@@ -32,6 +33,7 @@
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "Core/Utilities/StringUtils.h"
 #include "Core/Input/ImeInput.h"
+#include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/Elements/ElementFormControlInput.h>
@@ -458,13 +460,8 @@ bool mu::ui::window::CChatInputBox::UpdateKeyEvent()
     {
         if (mu::ui::window::IsPress(VK_UP))
         {
-            type_string draft;
-            GetChatText(draft);
-            if (const auto line = m_chatHistory.Older(draft))
-            {
-                SetFieldText("chat_field", *line);
+            if (RecallOlder("chat_field"))
                 return false;
-            }
         }
         else if (mu::ui::window::IsPress(VK_DOWN))
         {
@@ -478,13 +475,8 @@ bool mu::ui::window::CChatInputBox::UpdateKeyEvent()
 
     if (IsVisible() && IsFieldFocused("whisper_field") && m_bWhisperSend)
     {
-        if (mu::ui::window::IsPress(VK_UP) && false == m_vecWhsprIDHistory.empty())
+        if (mu::ui::window::IsPress(VK_UP) && RecallOlder("whisper_field"))
         {
-            m_iCurWhisperIDHistory--;
-            if (m_iCurWhisperIDHistory < 0)
-                m_iCurWhisperIDHistory = m_vecWhsprIDHistory.size() - 1;
-            SetFieldText("whisper_field", m_vecWhsprIDHistory[m_iCurWhisperIDHistory]);
-
             return false;
         }
         else if (mu::ui::window::IsPress(VK_DOWN) && false == m_vecWhsprIDHistory.empty())
@@ -565,6 +557,18 @@ void mu::ui::window::CChatInputBox::BindRmlModel(Rml::DataModelConstructor& c, C
         {
             if (args.empty()) return;
             SendPhrase(args[0].Get<int>(0));
+        });
+
+    // A phone's history button (a phone keyboard has no arrows): Up in the field that had the focus, which gets it back
+    // so its keyboard stays.
+    c.BindEventCallback("chat_history_up",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
+        {
+            if (!IsVisible())
+                return;
+            const char* field = RecallFieldId();
+            RecallOlder(field);
+            FocusField(field);
         });
 
     c.BindEventCallback("chat_set_type",
@@ -663,6 +667,10 @@ void mu::ui::window::CChatInputBox::SyncRmlModel()
         m_bFocusPending = false;
         FocusField("chat_field");
     }
+    if (IsFieldFocused("chat_field"))
+        m_lastFocusedField = "chat_field";
+    else if (IsFieldFocused("whisper_field"))
+        m_lastFocusedField = "whisper_field";
 
     ChatInputRmlModel& model = m_RmlView.GetModel();
 
@@ -730,6 +738,75 @@ void mu::ui::window::CChatInputBox::SyncQuickButtons(ChatInputRmlModel& model)
     }
 }
 
+const char* mu::ui::window::CChatInputBox::RecallFieldId() const
+{
+    return std::strcmp(m_lastFocusedField, "whisper_field") == 0 && m_bWhisperSend ? "whisper_field" : "chat_field";
+}
+
+Rml::Element* mu::ui::window::CChatInputBox::RecallFieldAt(float x, float y) const
+{
+    Rml::ElementDocument* document = m_RmlView.Document();
+    Rml::Context* context = RmlUiRuntime::Instance().GetContext();
+    if (document == nullptr || context == nullptr || !document->IsVisible() || !IsVisible())
+        return nullptr;
+    for (Rml::Element* element = context->GetElementAtPoint({x, y}); element != nullptr;
+         element = element->GetParentNode())
+    {
+        if (element->GetId() == "quick_history")
+            return element->GetOwnerDocument() == document ? GetField(RecallFieldId()) : nullptr;
+    }
+    return nullptr;
+}
+
+bool mu::ui::window::CChatInputBox::RecallOlder(const char* id)
+{
+    if (std::strcmp(id, "whisper_field") == 0)
+    {
+        if (m_vecWhsprIDHistory.empty())
+            return false;
+        m_iCurWhisperIDHistory--;
+        if (m_iCurWhisperIDHistory < 0)
+            m_iCurWhisperIDHistory = m_vecWhsprIDHistory.size() - 1;
+        SetFieldText("whisper_field", m_vecWhsprIDHistory[m_iCurWhisperIDHistory]);
+        return true;
+    }
+    type_string draft;
+    GetChatText(draft);
+    const auto line = m_chatHistory.Older(draft);
+    if (!line)
+        return false;
+    SetFieldText("chat_field", *line);
+    return true;
+}
+
+float mu::ui::window::CChatInputBox::QuickRowLiftPx() const
+{
+    Rml::ElementDocument* document = m_RmlView.Document();
+    if (document == nullptr || !document->IsVisible() || !IsVisible())
+        return 0.f;
+    if (!m_quickRow || !m_quickPanel || m_quickRow->GetOwnerDocument() != document)
+    {
+        Rml::Element* found = document->GetElementById("quick_row");
+        m_quickRow = found != nullptr ? found->GetObserverPtr() : Rml::ObserverPtr<Rml::Element>();
+        found = document->GetElementById("panel");
+        m_quickPanel = found != nullptr ? found->GetObserverPtr() : Rml::ObserverPtr<Rml::Element>();
+    }
+    Rml::Element* row = m_quickRow.get();
+    Rml::Element* panel = m_quickPanel.get();
+    if (row == nullptr || panel == nullptr || !row->IsVisible() || row->GetNumChildren() == 0)
+        return 0.f;
+    // In the panel's layout px: from the row's top down to the bar's top edge.
+    const float reach = panel->GetAbsoluteOffset(Rml::BoxArea::Border).y - row->GetAbsoluteOffset(Rml::BoxArea::Border).y;
+    if (reach <= 0.f)
+        return 0.f;
+    // The panel is drawn at its slot's scale: two window points projected onto it give window px per layout px.
+    Rml::Vector2f top{0.f, 0.f};
+    Rml::Vector2f lower{0.f, 100.f};
+    if (!panel->Project(top) || !panel->Project(lower) || lower.y <= top.y)
+        return 0.f;
+    return reach * 100.f / (lower.y - top.y);
+}
+
 Rml::Element* mu::ui::window::CChatInputBox::GetField(const char* id) const
 {
     return m_RmlView.Document() ? m_RmlView.Document()->GetElementById(id) : nullptr;
@@ -784,6 +861,10 @@ void mu::ui::window::CChatInputBox::OpenningProcess()
     SetFieldText("chat_field", L"");
     m_chatHistory.ResetBrowsing();
     m_bFocusPending = true;
+    // A phone opens the chat on its history: the frame is what lets a finger scroll the lines and tap one to whisper
+    // (CChatLogWindow::OnLinesTapped). ClosingProcess() hides it again, as on a PC.
+    if (UI::Mobile::ReplacesPcHud() && m_pNewUIChatLogWnd != nullptr)
+        m_pNewUIChatLogWnd->ShowFrame();
 }
 
 void mu::ui::window::CChatInputBox::ClosingProcess()

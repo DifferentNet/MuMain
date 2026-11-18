@@ -73,6 +73,7 @@ void GameConfig::Load()
     m_languageSelection = ReadString(CfgSectionLogin, CfgKeyLanguage, CfgDefaultLanguage);
     m_encryptedUsername = ReadString(CfgSectionLogin, CfgKeyEncryptedUsername, CfgDefaultEncryptedUsername);
     m_encryptedPassword = ReadString(CfgSectionLogin, CfgKeyEncryptedPassword, CfgDefaultEncryptedPassword);
+    m_lastCharacter     = ReadString(CfgSectionLogin, CfgKeyLastCharacter, L"");
 
     m_serverIP = GameConfigValidation::ValidateServerIP(
         ReadString(CfgSectionConnectionSettings, CfgKeyServerIP, CfgDefaultServerIP), CfgDefaultServerIP);
@@ -93,6 +94,7 @@ void GameConfig::Load()
     m_overheadTitles = ReadBool(CfgSectionUI, CfgKeyOverheadTitles, CfgDefaultOverheadTitles);
     m_titleEffects = ReadBool(CfgSectionUI, CfgKeyTitleEffects, CfgDefaultTitleEffects);
     m_titlesTownsOnly = ReadBool(CfgSectionUI, CfgKeyTitlesTownsOnly, CfgDefaultTitlesTownsOnly);
+    m_declineInvitations = ReadBool(CfgSectionUI, CfgKeyDeclineInvitations, CfgDefaultDeclineInvitations);
     LoadLootFilter();
     m_interfaceView = ReadString(CfgSectionUI, CfgKeyInterfaceView, CfgDefaultInterfaceView);
     m_controls = ReadString(CfgSectionUI, CfgKeyControls, CfgDefaultControls);
@@ -139,7 +141,6 @@ void GameConfig::Load()
     m_hdTextures = ReadBool(CfgSectionRender, CfgKeyHdTextures, CfgDefaultHdTextures);
     SetHdTextureSize(ReadInt(CfgSectionRender, CfgKeyHdTextureSize, CfgDefaultHdTextureSize));
     m_smoothModels = std::clamp(ReadInt(CfgSectionRender, CfgKeySmoothModels, CfgDefaultSmoothModels), 0, 2);
-    m_normalMaps = ReadBool(CfgSectionRender, CfgKeyNormalMaps, CfgDefaultNormalMaps);
     m_terrainDetail = std::clamp(ReadInt(CfgSectionRender, CfgKeyTerrainDetail, CfgDefaultTerrainDetail),
                                  CfgMinTerrainDetail, CfgMaxTerrainDetail);
     m_terrainDetailStrength =
@@ -275,6 +276,7 @@ void GameConfig::Save()
     WriteBool(CfgSectionUI, CfgKeyOverheadTitles, m_overheadTitles);
     WriteBool(CfgSectionUI, CfgKeyTitleEffects, m_titleEffects);
     WriteBool(CfgSectionUI, CfgKeyTitlesTownsOnly, m_titlesTownsOnly);
+    WriteBool(CfgSectionUI, CfgKeyDeclineInvitations, m_declineInvitations);
     SaveLootFilter();
     WriteString(CfgSectionUI, CfgKeyInterfaceView, m_interfaceView);
     WriteString(CfgSectionUI, CfgKeyControls, m_controls);
@@ -307,7 +309,6 @@ void GameConfig::Save()
     WriteBool(CfgSectionRender, CfgKeyHdTextures, m_hdTextures);
     WriteInt(CfgSectionRender, CfgKeyHdTextureSize, m_hdTextureSize);
     WriteInt(CfgSectionRender, CfgKeySmoothModels, m_smoothModels);
-    WriteBool(CfgSectionRender, CfgKeyNormalMaps, m_normalMaps);
     WriteInt(CfgSectionRender, CfgKeyTerrainDetail, m_terrainDetail);
     WriteInt(CfgSectionRender, CfgKeyTerrainDetailStrength, m_terrainDetailStrength);
     WriteInt(CfgSectionRender, CfgKeyTerrainVariation, m_terrainVariation);
@@ -826,6 +827,17 @@ void GameConfig::SetEncryptedUsername(const std::wstring& encryptedUsername)
 void GameConfig::SetEncryptedPassword(const std::wstring& encryptedPassword)
 {
     m_encryptedPassword = encryptedPassword;
+}
+
+void GameConfig::SetLastCharacter(const std::wstring& name)
+{
+    if (name == m_lastCharacter)
+    {
+        return;
+    }
+
+    m_lastCharacter = name;
+    WriteString(CfgSections::CfgSectionLogin, CfgKeys::CfgKeyLastCharacter, m_lastCharacter);
 }
 
 void GameConfig::SetServerIP(const std::wstring& ip)

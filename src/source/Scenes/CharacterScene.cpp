@@ -38,12 +38,15 @@
 #include "Camera/CameraProjection.h"
 #include "UI/Scaling/UITransform.h"
 #include "Core/Input/ImeInput.h"
+#include "Scenes/CharacterSlotStep.h"
 #ifdef _EDITOR
 #include "Camera/CameraMode.h"
 #include "Camera/FrustumRenderer.h"
 #endif
 #include "Scenes/SceneLightingSetup.h"
 #include "Scenes/ScenePostProcessing.h"
+#include "Scenes/CharacterPreselect.h"
+#include "Data/GameConfig/GameConfig.h"
 
 // External declarations
 extern EGameScene SceneFlag;
@@ -133,6 +136,38 @@ bool StartGameWithSlot(int slot)
     ::StartGame();
     return true;
 }
+
+namespace
+{
+bool g_preselectPending = false;
+
+// Marks the remembered (or only) character once per character list.
+void ApplyPendingPreselect()
+{
+    if (!g_preselectPending)
+        return;
+
+    g_preselectPending = false;
+    if (SelectedHero >= 0)
+        return;
+
+    std::vector<std::wstring> names(MAX_CHARACTERS_PER_ACCOUNT);
+    for (int slot = 0; slot < MAX_CHARACTERS_PER_ACCOUNT; ++slot)
+        names[slot] = CharacterNameInSlot(slot);
+
+    const int slot = PickPreselectSlot(names, GameConfig::GetInstance().GetLastCharacter());
+    if (slot < 0)
+        return;
+
+    SelectedHero = slot;
+    g_CharSelMainWin.UpdateDisplay();
+}
+} // namespace
+
+void RequestCharacterPreselect()
+{
+    g_preselectPending = true;
+}
 } // namespace Scenes
 
 void CreateCharacterScene()
@@ -199,6 +234,54 @@ void CreateCharacterScene()
     g_ErrorReport.Write(L"> Character scene init success.\r\n");
 }
 
+// No message, creation window, system menu or options window takes the keys (the creation window's name
+// field keeps its arrows).
+static bool CharacterKeysFree()
+{
+    return !(g_MsgWin.IsVisible() || g_CharMakeWin.IsVisible() || g_SysMenuWin.IsVisible() ||
+             g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_OPTION));
+}
+
+// The last pick was made by key: Enter starts that character, not the one under the pointer. A click or
+// a move of the mouse hands the choice back to the pointer.
+static bool s_pickedByKey = false;
+static int s_keyPickMouseX = 0;
+static int s_keyPickMouseY = 0;
+
+static void ForgetKeyPickOnMouse(CInput& input)
+{
+    if (s_pickedByKey && (input.IsLBtnDn() || MouseX != s_keyPickMouseX || MouseY != s_keyPickMouseY))
+        s_pickedByKey = false;
+}
+
+// Left / Right step to the previous / next character, 1 to 5 pick that slot, as a click on the model.
+static void SelectCharacterByKeyboard(CInput& input)
+{
+    if (!CharacterKeysFree() || !g_CharSelMainWin.IsVisible())
+        return;
+
+    int slot = SelectedHero;
+    if (input.IsKeyDown(VK_RIGHT) || input.IsKeyDown(VK_LEFT))
+    {
+        const int step = input.IsKeyDown(VK_RIGHT) ? 1 : -1;
+        slot = Scenes::CharacterSelect::StepToFilledSlot(SelectedHero, step, MAX_CHARACTERS_PER_ACCOUNT,
+                                                         Scenes::HasCharacter);
+    }
+    for (int digit = 0; digit < MAX_CHARACTERS_PER_ACCOUNT; ++digit)
+    {
+        if (input.IsKeyDown('1' + digit) && Scenes::HasCharacter(digit))
+            slot = digit;
+    }
+    if (slot == SelectedHero)
+        return;
+
+    SelectedHero = slot;
+    s_pickedByKey = true;
+    s_keyPickMouseX = MouseX;
+    s_keyPickMouseY = MouseY;
+    g_CharSelMainWin.UpdateDisplay();
+}
+
 void NewMoveCharacterScene()
 {
     if (CurrentProtocolState < RECEIVE_CHARACTERS_LIST)
@@ -213,6 +296,7 @@ void NewMoveCharacterScene()
         InitCharacterScene = true;
         CreateCharacterScene();
     }
+    Scenes::ApplyPendingPreselect();
     InitTerrainLight();
     MoveObjects();
     MoveMounts();
@@ -243,15 +327,16 @@ void NewMoveCharacterScene()
     CInput& rInput = CInput::Instance();
     CSceneUICoordinator& rUIMng = CSceneUICoordinator::Instance();
 
+    ForgetKeyPickOnMouse(rInput);
+    SelectCharacterByKeyboard(rInput);
     if (rInput.IsKeyDown(VK_RETURN))
     {
-        if (!(g_MsgWin.IsVisible() || g_CharMakeWin.IsVisible()
-            || g_SysMenuWin.IsVisible())
+        if (CharacterKeysFree()
             && SelectedHero > -1 && SelectedHero < MAX_CHARACTERS_PER_ACCOUNT)
         {
             ::PlayBuffer(SOUND_CLICK01);
 
-            if (SelectedCharacter >= 0)
+            if (SelectedCharacter >= 0 && !s_pickedByKey)
                 SelectedHero = SelectedCharacter;
 
             ::StartGame();

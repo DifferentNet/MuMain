@@ -28,4 +28,8 @@ namespace Scenes
 // Enters the world with the character in that slot, the way a double click
 // on it does. False when the slot is empty or out of range.
 bool StartGameWithSlot(int slot);
+
+// A fresh character list arrived: on the next scene update, preselect the
+// character last taken into the game, or the only one.
+void RequestCharacterPreselect();
 } // namespace Scenes

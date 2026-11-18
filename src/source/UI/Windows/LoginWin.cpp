@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "UI/Windows/LoginWin.h"
 #include "Core/Input/Input.h"
+#include "Core/Input/KeyState.h"
 #include "UI/Core/SceneUICoordinator.h"
 #include "UI/Windows/CreditWin.h"
 #include "UI/Windows/SysMenuWin.h"
@@ -149,6 +150,7 @@ void CLoginWin::BindRmlModel(Rml::DataModelConstructor& c, LoginRmlModel& model)
     c.Bind("remember_me_label", &model.rememberMeLabel);
     c.Bind("save_password_label", &model.savePasswordLabel);
     c.Bind("trust_warning", &model.trustWarning);
+    c.Bind("caps_lock_note", &model.capsLockNote);
     c.Bind("ok_label", &model.okLabel);
     c.Bind("cancel_label", &model.cancelLabel);
     c.Bind("username", &model.username);
@@ -522,6 +524,16 @@ void CLoginWin::SyncRmlModel()
     syncLabel(&LoginRmlModel::trustWarning, "trust_warning", I18N::Game::LoginTrustWarning);
     syncLabel(&LoginRmlModel::okLabel, "ok_label", I18N::Game::OK);
     syncLabel(&LoginRmlModel::cancelLabel, "cancel_label", I18N::Game::Cancel);
+    syncLabel(&LoginRmlModel::capsLockNote, "caps_lock_note", IsPasswordFocused() && Core::Input::IsCapsLockOn() ? I18N::Game::CapsLockOn : L"");
+}
+
+bool CLoginWin::IsPasswordFocused()
+{
+    Rml::ElementDocument* document = m_RmlView.Document();
+    if (document == nullptr || document->GetContext() == nullptr)
+        return false;
+    const Rml::Element* focus = document->GetContext()->GetFocusElement();
+    return focus != nullptr && focus->GetId() == "input_password";
 }
 
 bool CLoginWin::UpdateMouseEvent()

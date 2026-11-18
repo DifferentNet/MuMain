@@ -1045,8 +1045,8 @@ struct RenderCmd
     SDL_GPUGraphicsPipeline* pipeline;
     SDL_GPUTexture* texture;
     SDL_GPUSampler* sampler;
-    // A lit skinned draw's normal map (Render/Textures/NormalMaps.h), sampled through `sampler`:
-    // the texture's own or the flat one; null for every other draw (desktop only).
+    // A lit skinned draw's normal map slot (the shaders' t1/t2), sampled through `sampler`: always the
+    // flat one (the Remaster has no normal maps since 2026-11-18); null for every other draw (desktop only).
     SDL_GPUTexture* normalMap = nullptr;
     SDL_GPUBuffer* vtxBuffer = nullptr; // null: the frame's s_vtxGpuBuf
     Uint32 vtxOffset;      // in bytes, a multiple of vtxStride
@@ -1582,10 +1582,8 @@ static std::vector<TextureUpdateCmd> s_textureUpdates;
 
 // Default white 1×1 texture used for textureId==0 and unknown IDs.
 static SDL_GPUTexture* s_whiteTexture = nullptr;
-// 1x1 flat normal map (128, 128, 255): bound for lit skinned draws whose texture has no map.
+// 1x1 flat normal map (128, 128, 255): bound for every lit skinned draw, whose shaders still read one.
 static SDL_GPUTexture* s_flatNormalMap = nullptr;
-// The Remaster's normal maps by texture id (Render/Textures/NormalMaps.h); owned by the bitmaps.
-static std::unordered_map<std::uint32_t, SDL_GPUTexture*> s_normalMaps;
 
 // Shader handles for basic_textured (2D path) and basic_colored — released after pipeline creation.
 static SDL_GPUShader* s_vertShader2D = nullptr;      // basic_textured.vert
@@ -1985,37 +1983,8 @@ void UnregisterTexture(std::uint32_t id)
     s_texturesInvalidated = true;
 }
 
-void RegisterNormalMap(std::uint32_t id, SDL_GPUTexture* texture)
-{
-    s_normalMaps[id] = texture;
-}
-
-void UnregisterNormalMap(std::uint32_t id)
-{
-    if (s_normalMaps.erase(id) != 0u)
-    {
-        // Recorded draws may still point at it.
-        s_texturesInvalidated = true;
-    }
-}
-
-[[nodiscard]] static SDL_GPUTexture* NormalMapForDraw(std::uint32_t textureId,
-                                                      mu::SkinningTextureCoordinates coordinates)
-{
-    if (coordinates == mu::SkinningTextureCoordinates::Mesh)
-    {
-        const auto found = s_normalMaps.find(textureId);
-        if (found != s_normalMaps.end() && found->second)
-        {
-            return found->second;
-        }
-    }
-    return s_flatNormalMap;
-}
-
 void ClearTextureRegistry()
 {
-    s_normalMaps.clear();
     const bool hadTextures = !s_textureMap.empty();
     ReleaseOwnedTextures();
     s_textureMap.clear();
@@ -3780,7 +3749,9 @@ public:
     {
         // Staged BEFORE the render pass so the GPU reads current-frame data, eliminating the
         // 1-frame vertex delay that caused streak artifacts when vertex counts varied between frames.
-        std::vector<BufferUpload> bufferUploads;
+        // Both lists are emptied, not freed, so their memory serves every call (render thread only).
+        static std::vector<BufferUpload> bufferUploads;
+        bufferUploads.clear();
 
         if (s_vtxOffset > 0u && EnsureVertexBufferCapacity(s_vtxOffset) &&
             !StageAppended(s_vtxTransferBuf, s_vtxGpuBuf, s_vtxScratch.data(), s_vtxOffset, s_stagedVertices,
@@ -3836,7 +3807,8 @@ public:
             Uint32 height;
             Uint32 bytesPerRow;
         };
-        std::vector<PreparedTexUpload> preparedTexUploads;
+        static std::vector<PreparedTexUpload> preparedTexUploads;
+        preparedTexUploads.clear();
 
         for (const auto& tu : s_textureUpdates)
         {
@@ -6430,7 +6402,7 @@ private:
 #ifndef __EMSCRIPTEN__
         if (enhancedLit)
         {
-            cmd.normalMap = NormalMapForDraw(resolvedTexId, parameters.textureCoordinates);
+            cmd.normalMap = s_flatNormalMap;
         }
 #endif
         cmd.vtxBuffer = frameVertices ? nullptr : s_skinnedMeshBlocks[cached.block].buffer;
@@ -7118,7 +7090,7 @@ private:
         s_fragShaderTexFog =
             createShader("basic_textured_fog", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 2, /*fatal=*/false);
         // skinned_lit.frag also reads the frame's point lights, DynamicLights (b2).
-        // Desktop: the texture (t0) and its normal map (t1, Render/Textures/NormalMaps.h); the browser's
+        // Desktop: the texture (t0) and a normal map (t1, always the flat s_flatNormalMap); the browser's
         // WGSL has no normal map. The desktop call comes first: cmake/ValidateShaderReflection.cmake reads it.
 #ifndef __EMSCRIPTEN__
         s_fragShaderLit = createShader("skinned_lit", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 3, /*fatal=*/false);
@@ -7163,7 +7135,7 @@ private:
             s_fragShaderSoftParticlesGlow = createShader("basic_textured_fog_soft_glow", "frag",
                                                          SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 2, /*fatal=*/false);
 #endif
-            // The desktop's also takes the normal map (t2); the browser's WGSL has none.
+            // The desktop's also takes the (flat) normal map (t2); the browser's WGSL has none.
 #ifndef __EMSCRIPTEN__
             s_fragShaderLitShadow =
                 createShader("skinned_lit_shadow", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 3, 0, 3, /*fatal=*/false);

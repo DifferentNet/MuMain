@@ -1595,3 +1595,8 @@ body.over-map .tc-skill, body.over-map #tc_skill_edit, body.over-map #tc_pickup,
 body.over-map #tc_names, body.over-map #tc_offer, body.over-map #tc_target, body.over-map #tc_bind_hint, body.over-map #tc_exp_text {
 	display: none;
 }
+
+/* The phone marks (an unread letter, stat points to spend) are drawn by the legacy theme the phones run. */
+.tc-alert-dot, .tc-alert-plus {
+	display: none;
+}

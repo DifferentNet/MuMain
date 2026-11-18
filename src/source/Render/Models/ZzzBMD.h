@@ -280,6 +280,9 @@ public:
         std::vector<StaticBoneRotation> rotations;
     };
     std::shared_ptr<const StaticPoses> m_staticPoses;
+    // The animation keys Open2 loads (each bone's Position, Rotation and Quaternion of every action) in one
+    // block instead of three arrays per bone and action; shared like m_staticPoses.
+    std::shared_ptr<float[]> m_animationKeys;
     void BuildStaticPoses();
     void ClearStaticPoses();
     // Sets every action's Cyclic, once the model loads.

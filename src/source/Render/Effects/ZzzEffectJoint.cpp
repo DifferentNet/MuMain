@@ -142,6 +142,7 @@ void CreateJoint(int Type, vec3_t Position, vec3_t TargetPosition, vec3_t Angle,
             // The setup below may end the joint again and start others, which must still be able to take this slot.
             const Render::Effects::ActivePoolSlot<JOINT> active(s_jointBounds, Joints, i);
             std::memset(o->Tails, 0, sizeof(o->Tails));
+            Render::Effects::JointRibbon::Forget(i);
             o->TailFrames = 0.f;
             o->Type = Type;
             o->TexType = o->Type;
@@ -7094,7 +7095,7 @@ void RenderJoints(BYTE bRenderOneMore)
             // An offered trail is drawn as a smooth ribbon; the classic loop below draws the rest as before.
             const bool smooth = ribbonPieces > 0 && Render::Effects::JointRibbon::Offered(*o) &&
                                 (!cullOffscreen || IsTailRunInFrustum(o, 0)) &&
-                                Render::Effects::JointRibbon::Append(*o, ribbonPieces, ribbonQuadBudget, s_quads);
+                                Render::Effects::JointRibbon::Append(*o, i, ribbonPieces, ribbonQuadBudget, s_quads);
             if (!smooth)
             {
             for (int j = 0; j < (int)o->NumTails; j++)

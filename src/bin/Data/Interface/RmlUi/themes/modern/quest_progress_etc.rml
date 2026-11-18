@@ -17,7 +17,7 @@
 		<div class="modern-header-rail-px docked-header-rail-fill">
 			<div class="modern-joint-px"></div>
 			<div class="modern-header-text-px">
-				<div id="title" class="modern-header-title-px">Quest</div>
+				<div id="title" class="modern-header-title-px">{{title_label}}</div>
 			</div>
 			<div class="docked-rail-accent"></div>
 		</div>

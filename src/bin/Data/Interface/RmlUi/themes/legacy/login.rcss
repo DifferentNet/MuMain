@@ -73,6 +73,20 @@ body {
 .login-field-account  { left: 115rem; top: 112rem; }
 .login-field-password { left: 115rem; top: 137rem; }
 
+/* Under the password label, left of the check boxes: "Caps Lock is on" while typing the password. It wraps
+   inside its 84rem (a long word, such as the German one, breaks) so it never reaches the check boxes at 109rem. */
+.caps-lock-note {
+	position: absolute;
+	left: 22rem;
+	top: 156rem;
+	width: 84rem;
+	white-space: normal;
+	word-break: break-word;
+	overflow: hidden;
+	color: token(accent-gold);
+	pointer-events: none;
+}
+
 .input-frame {
 	position: absolute;
 	width: 156rem;

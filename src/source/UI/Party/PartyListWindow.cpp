@@ -21,6 +21,7 @@
 #include "UI/RmlBridge/RmlPointer.h"
 #include "UI/RmlBridge/RmlNativeTextSize.h"
 #include "UI/RmlBridge/RmlTheme.h"
+#include "Render/Renderer/MuRenderer.h"
 #include "Render/Text/CUIRenderText.h"
 
 #include <RmlUi/Core/ElementDocument.h>
@@ -195,6 +196,7 @@ void CPartyListWindow::BindRmlModel(Rml::DataModelConstructor& c, PartyListRmlMo
     card.RegisterMember("leader", &PartyListCardEntry::leader);
     card.RegisterMember("absent", &PartyListCardEntry::absent);
     card.RegisterMember("defense_buff", &PartyListCardEntry::defenseBuff);
+    card.RegisterMember("low", &PartyListCardEntry::low);
     card.RegisterMember("selected", &PartyListCardEntry::selected);
     card.RegisterMember("show_leave", &PartyListCardEntry::showLeave);
     card.RegisterMember("health_length", &PartyListCardEntry::healthLength);
@@ -268,50 +270,76 @@ void CPartyListWindow::SyncCards()
 
     g_pRenderText->SetFont(g_hFont);
 
-    std::vector<PartyListCardEntry> cards;
-    cards.reserve(static_cast<size_t>(PartyNumber));
+    m_ScratchCards.resize(static_cast<size_t>(PartyNumber));
     for (int i = 0; i < PartyNumber; ++i)
     {
         const PARTY_t& member = Party[i];
-        PartyListCardEntry card;
+        PartyListCardEntry& card = m_ScratchCards[static_cast<size_t>(i)];
         card.index = i;
-        card.name = StringUtils::WideToNarrow(member.Name);
+        mu_wchar_to_utf8(member.Name, card.name);
         card.leader = i == 0;
         card.absent = member.index == -1;
         // Under the pointer, or the member a tap on the card chose for the heals and buffs.
-        const bool chosen = !card.absent && member.index >= 0 && member.index < MAX_CHARACTERS_CLIENT &&
-                            CharactersClient[member.index].Key == GameLogic::Touch::FriendKey();
+        const bool inView = member.index >= 0 && member.index < MAX_CHARACTERS_CLIENT;
+        const bool chosen = !card.absent && inView && CharactersClient[member.index].Key == GameLogic::Touch::FriendKey();
         card.selected = !card.absent && (m_iSelectedCharacter == i || chosen);
         card.showLeave = CanLeave(i);
         card.healthLength = HealthBarLength(member.stepHP);
-        if (member.index >= 0 && member.index < MAX_CHARACTERS_CLIENT)
+        card.low = IsLowHealth(!card.absent, member.stepHP);
+        card.defenseBuff = false;
+        if (inView)
         {
             OBJECT* memberObject = &CharactersClient[member.index].Object;
             card.defenseBuff = g_isCharacterBuff(memberObject, eBuff_Defense);
         }
 
         const float nameBox = static_cast<float>(card.leader ? LeaderNameBoxWidth : MemberNameBoxWidth);
-        const float nameWidth = static_cast<float>(g_pRenderText->MeasureText(member.Name, lstrlen(member.Name)).cx);
-        card.nameTextPx = UI::RmlBridge::NativeTextPxInBox(UI::Scaling::FontRole::Normal, nameWidth, nameBox);
-
-        cards.push_back(std::move(card));
+        card.nameTextPx =
+            UI::RmlBridge::NativeTextPxInBox(UI::Scaling::FontRole::Normal, MeasuredNameWidth(i), nameBox);
     }
 
     PartyListRmlModel& model = m_RmlView.GetModel();
-    const bool changed = cards.size() != model.cards.size() ||
-                         !std::equal(cards.begin(), cards.end(), model.cards.begin(),
+    const bool changed = m_ScratchCards.size() != model.cards.size() ||
+                         !std::equal(m_ScratchCards.begin(), m_ScratchCards.end(), model.cards.begin(),
                                      [](const PartyListCardEntry& a, const PartyListCardEntry& b)
                                      {
                                          return a.name == b.name && a.nameTextPx == b.nameTextPx &&
                                                 a.absent == b.absent && a.defenseBuff == b.defenseBuff &&
                                                 a.selected == b.selected && a.showLeave == b.showLeave &&
-                                                a.healthLength == b.healthLength;
+                                                a.healthLength == b.healthLength && a.low == b.low;
                                      });
     if (!changed)
         return;
 
-    model.cards = std::move(cards);
+    model.cards.swap(m_ScratchCards);
     m_RmlView.MarkDirty("cards");
+}
+
+// The width depends on the name, the font the renderer opened (its file and size) and the windows' measuring space,
+// which follows the window's size and the typography scale (UI scale, pixel density): any of those changing measures
+// it again.
+float CPartyListWindow::MeasuredNameWidth(int member)
+{
+    const wchar_t* name = Party[member].Name;
+    const int windowWidth = static_cast<int>(WindowWidth);
+    const int windowHeight = static_cast<int>(WindowHeight);
+    const float typographyScale = UI::Scaling::TypographyScale(windowWidth, windowHeight);
+    const float contentScale = UI::Scaling::GetWindowContentScale();
+    const void* font = mu::GetRenderer().GetTtfFont();
+    NameWidth& cached = m_NameWidths[static_cast<size_t>(member)];
+    if (font != nullptr && cached.font == font && cached.windowWidth == windowWidth &&
+        cached.windowHeight == windowHeight && cached.typographyScale == typographyScale &&
+        cached.contentScale == contentScale && cached.name == name)
+        return cached.width;
+
+    cached.name.assign(name);
+    cached.windowWidth = windowWidth;
+    cached.windowHeight = windowHeight;
+    cached.typographyScale = typographyScale;
+    cached.contentScale = contentScale;
+    cached.font = font;
+    cached.width = static_cast<float>(g_pRenderText->MeasureText(name, lstrlen(name)).cx);
+    return cached.width;
 }
 
 float CPartyListWindow::GetLayerDepth()

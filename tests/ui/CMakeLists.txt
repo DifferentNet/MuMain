@@ -222,6 +222,12 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME potion_kind_tests
+    SOURCES
+        test_potion_kind.cpp
+)
+
+mu_add_test(
     NAME touch_target_tests
     SOURCES
         test_touch_target.cpp
@@ -647,4 +653,34 @@ mu_add_test(
     SOURCES
         test_chat_phrases.cpp
         ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ChatPhrases.cpp
+)
+
+# Round 13: trade offer change, pet life, new skill, warp unlocks, character preselect, short of mana gate.
+mu_add_test(
+    NAME round13_lines_tests
+    SOURCES
+        test_round13_lines.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Scenes/CharacterPreselect.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/PetLifeWarning.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/SeenSkills.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/WarpUnlocks.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Inventory/TradeOfferChange.cpp
+)
+
+# Round 13: the J window's client commands have descriptions in the player's language.
+mu_add_test(
+    NAME round13_client_commands_tests
+    SOURCES test_round13_client_commands.cpp
+    LINK_LIBS MuClient
+)
+
+# Round 14: duel start answers and "duel canceled" once, refused invitation lines, MU Helper run summary.
+mu_add_test(
+    NAME round14_logic_tests
+    SOURCES
+        test_round14_logic.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Combat/DuelReplies.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/DeclinedInviteLines.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/HelperRunSummary.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Text/GroupedNumberText.cpp
 )

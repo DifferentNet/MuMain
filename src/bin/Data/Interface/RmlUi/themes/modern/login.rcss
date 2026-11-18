@@ -188,6 +188,19 @@ body {
 	color: #8d835f;
 }
 
+/* Under the password label, left of the check boxes: "Caps Lock is on" while typing the password. */
+.caps-lock-note {
+	position: absolute;
+	left: 14dp;
+	top: 76dp;
+	width: 82dp;
+	word-break: break-word;
+	font-size: 8dp;
+	color: token(semantic-warning);
+	font-family: "token(font-body)";
+	pointer-events: none;
+}
+
 .login-input {
 	position: absolute;
 	width: 156dp;

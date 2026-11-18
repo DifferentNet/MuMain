@@ -6562,6 +6562,62 @@ void ApplyGroundItemLabelDescriptor(const GroundItemLabelDescriptor& descriptor)
     g_pRenderText->SetBgColor(descriptor.BgColor);
 }
 
+// Everything BuildGroundItemLabelDescriptor() reads that can differ between two frames: the item, the language (names
+// and texts) and the font handles. The loot highlight is applied on top of the cached label each frame.
+struct GroundItemLabelKey
+{
+    int type = -1;
+    int level = 0;
+    BYTE excellentFlags = 0;
+    BYTE optionLevel = 0;
+    BYTE ancientDiscriminator = 0;
+    bool hasSkill = false;
+    bool hasLuck = false;
+    const char* locale = nullptr;
+    HFONT font = nullptr;
+    HFONT boldFont = nullptr;
+
+    bool operator==(const GroundItemLabelKey&) const = default;
+};
+
+GroundItemLabelKey MakeGroundItemLabelKey(const OBJECT* o, const ITEM* ip)
+{
+    return {o->Type,      ip->Level,   ip->ExcellentFlags,       ip->OptionLevel, ip->AncientDiscriminator,
+            ip->HasSkill, ip->HasLuck, I18N::GetCurrentLocale(), g_hFont,         g_hFontBold};
+}
+
+struct CachedGroundItemLabel
+{
+    GroundItemLabelKey key;
+    GroundItemLabelDescriptor descriptor;
+};
+
+// The label of the ground item in Items[index], built again only when its key changes. A trophy's name comes from
+// the server's season list, which the key does not cover, so it is built every time.
+GroundItemLabelDescriptor GroundItemLabel(int index, OBJECT* o, ITEM* ip)
+{
+    static std::vector<CachedGroundItemLabel> cache(MAX_ITEMS);
+    const bool cacheable = index >= 0 && index < MAX_ITEMS &&
+                           !(Data::Items::IsItemModelSlot(o->Type) &&
+                             Data::Items::ToItemType(o->Type) == ITEM_SEASON_TROPHY);
+    if (!cacheable)
+    {
+        GroundItemLabelDescriptor descriptor;
+        BuildGroundItemLabelDescriptor(o, ip, descriptor);
+        return descriptor;
+    }
+
+    CachedGroundItemLabel& cached = cache[static_cast<size_t>(index)];
+    const GroundItemLabelKey key = MakeGroundItemLabelKey(o, ip);
+    if (!(cached.key == key))
+    {
+        cached.key = key;
+        cached.descriptor = GroundItemLabelDescriptor{};
+        BuildGroundItemLabelDescriptor(o, ip, cached.descriptor);
+    }
+    return cached.descriptor;
+}
+
 }
 
 std::wstring GroundItemLabelText(OBJECT* o, ITEM* ip)
@@ -6575,16 +6631,14 @@ void RenderItemName(int i, OBJECT* o, ITEM* ip, bool Sort)
 {
     if (!Sort)
     {
-        GroundItemLabelDescriptor descriptor;
-        BuildGroundItemLabelDescriptor(o, ip, descriptor);
+        GroundItemLabelDescriptor descriptor = GroundItemLabel(i, o, ip);
         ApplyLootHighlight(i, descriptor);
         ApplyGroundItemLabelDescriptor(descriptor);
         g_pRenderText->RenderText(MouseX, MouseY - 15, descriptor.Name, 0, 0, RT3_WRITE_CENTER);
     }
     else
     {
-        GroundItemLabelDescriptor descriptor;
-        BuildGroundItemLabelDescriptor(o, ip, descriptor);
+        GroundItemLabelDescriptor descriptor = GroundItemLabel(i, o, ip);
         ApplyLootHighlight(i, descriptor);
         ApplyGroundItemLabelDescriptor(descriptor);
         g_pRenderText->RenderText(o->ScreenX, o->ScreenY - 15, descriptor.Name, 0, 0, RT3_WRITE_CENTER);
@@ -6796,6 +6850,7 @@ std::wstring GetItemDisplayName(ITEM* pItem)
 
     auto nNameLen = wcsnlen(pAttr->Name, MAX_ITEM_NAME);
     std::wstring strDisplayName(pAttr->Name, nNameLen);
+    // The options stay English: only MU Helper's saved keywords match this name (CMuHelper::ShouldObtainItem).
     std::wstring strOptions;
 
     if (pItem->Level)
@@ -6804,14 +6859,14 @@ std::wstring GetItemDisplayName(ITEM* pItem)
     }
     if (pItem->HasSkill)
     {
-        strOptions += L"+Skill"; // TODO: Use I18N::Game::Skill
+        strOptions += L"+Skill";
     }
     if (pItem->OptionLevel)
     {
-        strOptions += L"+Option"; // TODO: Use I18N::Game::Option
+        strOptions += L"+Option";
     }
     if (pItem->HasLuck) {
-        strOptions += L"+Luck"; // TODO: Use I18N::Game::Luck
+        strOptions += L"+Luck";
     }
 
     return strDisplayName + (strOptions.empty() ? L"" : L" " + strOptions);

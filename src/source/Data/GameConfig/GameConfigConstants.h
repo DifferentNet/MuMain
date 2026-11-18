@@ -38,6 +38,7 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyLanguage[]          = L"Language";
     inline constexpr wchar_t CfgKeyEncryptedUsername[] = L"EncryptedUsername";
     inline constexpr wchar_t CfgKeyEncryptedPassword[] = L"EncryptedPassword";
+    inline constexpr wchar_t CfgKeyLastCharacter[]     = L"LastCharacter";
 
     // Connection
     inline constexpr wchar_t CfgKeyServerIP[]   = L"ServerIP";
@@ -62,6 +63,8 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyTitleEffects[] = L"TitleEffects";
     // MU Moldova: titles only over players in towns (safe zones), UI::TitlePlates::ShownHere().
     inline constexpr wchar_t CfgKeyTitlesTownsOnly[] = L"TitlesTownsOnly";
+    // MU Moldova: party, trade and duel invitations are declined by themselves (UI::Chat::InviteAutoDecline).
+    inline constexpr wchar_t CfgKeyDeclineInvitations[] = L"DeclineInvitations";
     // MU Moldova: the phone or PC layout ("auto", "pc", "phone") and the controls ("auto", "mouse",
     // "touch"), set in the options window's Interface tab. See UI::Mobile::InterfaceMode.
     inline constexpr wchar_t CfgKeyInterfaceView[] = L"InterfaceView";
@@ -149,7 +152,6 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyHdTextures[] = L"HdTextures";
     inline constexpr wchar_t CfgKeyHdTextureSize[] = L"HdTextureSize";
     inline constexpr wchar_t CfgKeySmoothModels[] = L"SmoothModels";
-    inline constexpr wchar_t CfgKeyNormalMaps[] = L"NormalMaps";
     // Grain on the ground near the camera, with HD textures on (desktop only): 0 off, 1 self-detail,
     // 2 noise (Render/Terrain/TerrainDetail.h), and its strength in percent (0 to 100).
     inline constexpr wchar_t CfgKeyTerrainDetail[] = L"TerrainDetail";
@@ -310,6 +312,8 @@ namespace CfgDefaults
     inline constexpr bool CfgDefaultTitleEffects = true;
     // On by default, a switch in Options (ghinzuro, 2026-11-03).
     inline constexpr bool CfgDefaultTitlesTownsOnly = true;
+    // Off by default (round 14).
+    inline constexpr bool CfgDefaultDeclineInvitations = false;
 
     // The loot filter's «Ценное» defaults (ghinzuro 2026-11-11), equal to LootFilter::Preset::Default
     // (test_loot_filter checks it). An empty category string means the Default preset's categories.
@@ -394,7 +398,6 @@ namespace CfgDefaults
     inline constexpr int CfgMinHdTextureSize = 0;
     inline constexpr int CfgMaxHdTextureSize = 2;
     inline constexpr int CfgDefaultSmoothModels = 1;
-    inline constexpr bool CfgDefaultNormalMaps = true;
     inline constexpr int CfgDefaultTerrainDetail = 1;
     inline constexpr int CfgMinTerrainDetail = 0;
     inline constexpr int CfgMaxTerrainDetail = 2;

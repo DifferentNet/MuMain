@@ -81,6 +81,11 @@ std::size_t TextKey(const Render::Renderer::RecordedText& text)
     return CombineKey(key, text.bold ? 1u : 0u);
 }
 
+std::size_t QuadKey(const Render::Renderer::RecordedQuad& quad)
+{
+    return CombineKey(std::hash<std::uint32_t>{}(quad.argb), static_cast<std::size_t>(quad.blend));
+}
+
 std::size_t BitmapKey(const Render::Renderer::RecordedBitmap& bitmap)
 {
     std::size_t key = std::hash<std::wstring_view>{}(bitmap.fileName != nullptr ? bitmap.fileName : L"");
@@ -142,8 +147,9 @@ void UI::Character::WorldLabelLayer::BeginFrame()
         if (m_slots[i].kind == SlotKind::Hidden)
             m_hiddenSlots.push_back(i);
         else
-            m_shownByContent.emplace(m_slots[i].contentKey, i);
+            m_shownByContent.emplace_back(m_slots[i].contentKey, i);
     }
+    std::sort(m_shownByContent.begin(), m_shownByContent.end());
     if (m_view.Document() == nullptr)
         return;
 
@@ -168,13 +174,14 @@ UI::Character::WorldLabelLayer::Slot& UI::Character::WorldLabelLayer::NextSlot(S
                                                                                Matches&& matches)
 {
     std::size_t index = m_slots.size();
-    const auto [first, last] = m_shownByContent.equal_range(contentKey);
-    for (auto it = first; it != last; ++it)
+    const auto first = std::lower_bound(m_shownByContent.begin(), m_shownByContent.end(),
+                                        std::pair<std::size_t, std::size_t>{contentKey, 0});
+    for (auto it = first; it != m_shownByContent.end() && it->first == contentKey; ++it)
     {
-        if (m_slots[it->second].kind == kind && matches(m_slots[it->second]))
+        const Slot& candidate = m_slots[it->second];
+        if (!candidate.drawn && candidate.kind == kind && matches(candidate))
         {
             index = it->second;
-            m_shownByContent.erase(it);
             break;
         }
     }
@@ -324,9 +331,14 @@ void UI::Character::WorldLabelLayer::RecordText(const Render::Renderer::Recorded
 
 void UI::Character::WorldLabelLayer::RecordQuad(const Render::Renderer::RecordedQuad& quad)
 {
-    // A quad has nothing to keep but its kind.
-    Slot& slot = NextSlot(SlotKind::Quad, 0, [](const Slot&) { return true; });
-    SetFill(slot, {quad.x, quad.y, quad.width, quad.height}, AbgrFromArgb(quad.argb), quad.blend);
+    // Takes back a quad slot with the same fill, so when a bar loses a segment or a monster leaves the view
+    // the later quads keep their colour and decorator and only move.
+    const std::uint32_t abgr = AbgrFromArgb(quad.argb);
+    Slot& slot = NextSlot(SlotKind::Quad, QuadKey(quad), [&](const Slot& candidate)
+    {
+        return HasFill(candidate, abgr, quad.blend);
+    });
+    SetFill(slot, {quad.x, quad.y, quad.width, quad.height}, abgr, quad.blend);
 }
 
 void UI::Character::WorldLabelLayer::SetFill(Slot& slot, const Rect& rect, std::uint32_t abgr,
@@ -340,6 +352,16 @@ void UI::Character::WorldLabelLayer::SetFill(Slot& slot, const Rect& rect, std::
     else
         SetBox(slot, rect, blend == Render::Renderer::RecordedBlend::Opaque ? abgr | 0xFF000000u : abgr);
     SetAdditive(slot, additive, abgr);
+}
+
+// Whether the slot already shows what SetFill() would write for this fill.
+bool UI::Character::WorldLabelLayer::HasFill(const Slot& slot, std::uint32_t abgr,
+                                             Render::Renderer::RecordedBlend blend)
+{
+    if (blend == Render::Renderer::RecordedBlend::Additive)
+        return slot.additive && slot.additiveColor == abgr;
+    const std::uint32_t boxColor = blend == Render::Renderer::RecordedBlend::Opaque ? abgr | 0xFF000000u : abgr;
+    return !slot.additive && slot.boxColor == boxColor;
 }
 
 void UI::Character::WorldLabelLayer::SetAdditive(Slot& slot, bool additive, std::uint32_t abgr)
@@ -429,6 +451,12 @@ void UI::Character::WorldLabelLayer::RecordAdditiveMesh(const Render::Renderer::
         v.x -= left;
         v.y -= top;
     }
+    // The src is built again only when the file name changes (compared by content).
+    if (m_meshImageName != mesh.fileName)
+    {
+        m_meshImageName.assign(mesh.fileName);
+        m_meshImageSource = ImageSource(mesh.fileName);
+    }
     static_cast<Render::RmlUi::AdditiveMeshElement*>(slot.mesh)
-        ->SetMesh(ImageSource(mesh.fileName), m_meshVertices, slot.covered ? CoveredOpacity : 1.0f);
+        ->SetMesh(m_meshImageSource, m_meshVertices, slot.covered ? CoveredOpacity : 1.0f);
 }

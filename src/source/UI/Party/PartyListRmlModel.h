@@ -15,6 +15,7 @@ struct PartyListCardEntry
     bool leader = false;    // first card: flag, orange name
     bool absent = false;    // not on this map (Party[].index == -1): red tint, dimmed name
     bool defenseBuff = false;
+    bool low = false;      // on the map with little health left: red tint
     bool selected = false; // the card under the pointer, the skill target
     bool showLeave = false;
     float healthLength = 0.f; // reference px of the health bar's texture shown

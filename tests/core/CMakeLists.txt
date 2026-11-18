@@ -55,6 +55,12 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME test_character_slot_step
+    SOURCES
+        test_character_slot_step.cpp
+)
+
+mu_add_test(
     NAME test_audio_playback
     SOURCES
         test_audio_playback.cpp

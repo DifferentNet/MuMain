@@ -23,6 +23,9 @@ void NoteSaleRefused();
 // waited for when that item has its full durability (the server takes nothing for it).
 void NoteRepairAsked();
 void NoteRepairAsked(const ITEM& item);
+// An item purchase was asked of an NPC shop, or the shop refused it.
+void NotePurchaseAsked();
+void NotePurchaseRefused();
 
 // The hero died. Outside duels and event maps (where nothing is lost) the zen and experience lost are said.
 void NoteHeroDeath();
@@ -32,6 +35,9 @@ void NoteRevivalExperience(std::int64_t before, std::int64_t after);
 
 // A level-up (at most one line a minute) or a reset (always): the stat points to spend, when there are any.
 void NoteLevelUp(int level, int freePoints, bool reset);
+
+// A level-up from `oldLevel` to `newLevel` before the first reset: the warp destinations (M list) it opened.
+void NoteWarpUnlocks(int oldLevel, int newLevel);
 
 // Once a frame: says a sum that has settled.
 void Tick();

@@ -1308,7 +1308,7 @@
     <comment>legacy_id=359</comment>
   </data>
   <data name="A G use: %d" xml:space="preserve">
-    <value>Penggunaan G: %d</value>
+    <value>Biaya AG: %d</value>
     <comment>legacy_id=360</comment>
   </data>
   <data name="Party (P)" xml:space="preserve">
@@ -14331,5 +14331,98 @@
   </data>
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>Frasa</value>
+  </data>
+||||||| ce163792b
+  <!-- Round 13 -->
+  <data name="ChatCmdHelpTrade" xml:space="preserve">
+    <value>Berdagang dengan pemain: /trade Nama jika ia terlihat; jika tidak, dengan pemain yang dipilih dari jarak berapa pun, atau yang menghadap Anda.</value>
+  </data>
+  <data name="ChatCmdHelpParty" xml:space="preserve">
+    <value>Undang pemain yang dipilih ke party Anda (juga /pt).</value>
+  </data>
+  <data name="ChatCmdHelpGuild" xml:space="preserve">
+    <value>Minta guild master yang dipilih menerima Anda di guild.</value>
+  </data>
+  <data name="ChatCmdHelpUnion" xml:space="preserve">
+    <value>Guild master: ajukan aliansi ke guild master yang dipilih.</value>
+  </data>
+  <data name="ChatCmdHelpRival" xml:space="preserve">
+    <value>Guild master: nyatakan guild dari guild master yang dipilih sebagai musuh.</value>
+  </data>
+  <data name="ChatCmdHelpRivalOff" xml:space="preserve">
+    <value>Guild master: akhiri permusuhan dengan guild dari guild master yang dipilih.</value>
+  </data>
+  <data name="ChatCmdHelpDuelStart" xml:space="preserve">
+    <value>Tantang pemain yang dipilih untuk duel.</value>
+  </data>
+  <data name="ChatCmdHelpDuelEnd" xml:space="preserve">
+    <value>Akhiri duel Anda.</value>
+  </data>
+  <data name="ChatCmdHelpReply" xml:space="preserve">
+    <value>Balas bisikan ke pemain terakhir yang berbisik kepada Anda (juga /reply).</value>
+  </data>
+  <data name="ChatCmdHelpFilter" xml:space="preserve">
+    <value>Tampilkan hanya baris chat dengan kata-kata ini (maksimal lima). Tanpa kata, semua tampil lagi.</value>
+  </data>
+  <data name="ChatCmdHelpMacro" xml:space="preserve">
+    <value>Simpan baris chat sebagai makro 1; Alt+1 mengirimnya. /2 sampai /9 dan /0 sama untuk Alt+2 sampai Alt+0.</value>
+  </data>
+  <data name="ChatCmdParamWords" xml:space="preserve">
+    <value>kata</value>
+  </data>
+  <data name="ChatCmdParamText" xml:space="preserve">
+    <value>teks</value>
+  </data>
+  <data name="OfflineShadowLabel" xml:space="preserve">
+    <value>Bayangan · offline</value>
+  </data>
+  <data name="TradePartnerLoweredZen" xml:space="preserve">
+    <value>%ls menurunkan Zen: %ls -&gt; %ls</value>
+  </data>
+  <data name="TradePartnerRemovedItem" xml:space="preserve">
+    <value>%ls mengeluarkan %ls dari trade</value>
+  </data>
+  <data name="PetLifeLow" xml:space="preserve">
+    <value>%ls: nyawa tersisa %d%%. Hilang di 0.</value>
+  </data>
+  <data name="PurchaseZenSpent" xml:space="preserve">
+    <value>Pembelian: -%ls Zen</value>
+  </data>
+  <data name="NewSkillLearned" xml:space="preserve">
+    <value>Skill baru: %ls</value>
+  </data>
+  <data name="WarpUnlockedKey" xml:space="preserve">
+    <value>Level %d: tujuan warp baru: %ls (%ls)</value>
+  </data>
+  <data name="WarpUnlocked" xml:space="preserve">
+    <value>Level %d: tujuan warp baru: %ls</value>
+  </data>
+  <!-- Round 14 -->
+  <data name="DeclineInvitations" xml:space="preserve">
+    <value>Tolak undangan</value>
+  </data>
+  <data name="InviteDeclinedParty" xml:space="preserve">
+    <value>Undangan party dari %ls ditolak.</value>
+  </data>
+  <data name="InviteDeclinedTrade" xml:space="preserve">
+    <value>Permintaan trade dari %ls ditolak.</value>
+  </data>
+  <data name="InviteDeclinedDuel" xml:space="preserve">
+    <value>Tantangan duel dari %ls ditolak.</value>
+  </data>
+  <data name="HelperSafeZone" xml:space="preserve">
+    <value>MU Helper tidak bekerja di zona aman.</value>
+  </data>
+  <data name="HelperStoppedSummary" xml:space="preserve">
+    <value>MU Helper berhenti setelah %d j %d mnt. Level: +%d, zen: %ls.</value>
+  </data>
+  <data name="SkillBookNotLearnable" xml:space="preserve">
+    <value>Kamu belum bisa mempelajari skill ini: lihat persyaratannya.</value>
+  </data>
+  <data name="CapsLockOn" xml:space="preserve">
+    <value>Caps Lock aktif</value>
+  </data>
+  <data name="GuildWarAlreadyOn" xml:space="preserve">
+    <value>Salah satu guild sudah dalam perang guild.</value>
   </data>
 </root>

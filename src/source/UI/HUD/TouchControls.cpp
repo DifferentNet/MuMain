@@ -8,9 +8,11 @@
 #include "Core/Utilities/StringUtils.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "Engine/Object/ZzzCharacter.h"
+#include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "Engine/Object/ZzzOpenData.h"
 #include "GameLogic/Commands/GmPanel.h"
+#include "GameLogic/Skills/SkillManager.h"
 #include "GameLogic/Touch/TouchActions.h"
 #include "I18N/All.h"
 #include "MUHelper/MuHelper.h"
@@ -38,6 +40,7 @@
 #include "UI/RmlBridge/RmlPointer.h"
 #include "UI/RmlBridge/RmlStackingOrder.h"
 #include "UI/RmlBridge/RmlThemedView.h"
+#include "UI/Social/FriendWindow.h"
 
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/DataModelHandle.h>
@@ -169,6 +172,28 @@ void OpenLootFilter()
     PlayBuffer(SOUND_CLICK01);
 }
 
+// The Gens window, as B opens it; without a Gens it says so in the chat.
+void OpenGens()
+{
+    if (!g_pNewUIGensRanking->SetGensInfo())
+        return;
+    g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_GENSRANKING);
+    PlayBuffer(SOUND_CLICK01);
+}
+
+// A character in a Gens (Duprian or Vanert): the menu has the Gens window.
+bool IsInGens()
+{
+    return Hero != nullptr && Hero->m_byGensInfluence != mu::ui::window::CGensRanking::GENSTYPE_NONE;
+}
+
+// An unread letter or a new chat-room line, as the PC bar's Friends button shows them (its dot,
+// MainFrameWindow::SyncAlerts, without the blinking): a dot on the top row's fold button and on Friends.
+bool HasFriendAlert()
+{
+    return g_pFriendMenu->IsNewMailAlert() || g_pLetterList->CheckNoReadLetter() || g_pFriendMenu->IsNewChatAlert();
+}
+
 // The monsters' HP bars, as F8 switches them.
 void ToggleHealthBars()
 {
@@ -233,6 +258,8 @@ const MenuItem MenuItems[] = {
     {&I18N::Game::TouchMenuPkOff, 0, &TogglePk},
     // Shown to game masters only (menu_gm in the markup).
     {&I18N::Game::TouchMenuGm, 'Y'},
+    // Shown to Gens members only (menu_gens in the markup).
+    {&I18N::Game::Gens, 0, &OpenGens},
 };
 constexpr int MenuItemCount = static_cast<int>(std::size(MenuItems));
 
@@ -450,6 +477,8 @@ struct PickerEntry
     Rml::String id;
     Rml::String icon;
     Rml::String name;
+    // What a cast costs (mana, AG) as the tooltip says it; empty for none (a pet command).
+    Rml::String cost;
     // On one of the five skill buttons; on the one being set.
     bool onButton = false;
     bool here = false;
@@ -506,6 +535,10 @@ struct ControlsModel
     bool barsOn = false;
     // A game master's character: the menu has the GM panel.
     bool gmMenu = false;
+    // A character in a Gens: the menu has the Gens window.
+    bool gensMenu = false;
+    // An unread letter or a new chat-room line: a dot on the fold button and on Friends.
+    bool mailAlert = false;
     // The menu's View switch: not on a phone or tablet, which always plays the phone layout.
     bool viewMenu = !UI::Mobile::IsHandheld();
     // The top row's buttons shown; folded, only its first button stays (config.ini [UI] TouchTopRow).
@@ -618,6 +651,8 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     c.Bind("names_on", &model.namesOn);
     c.Bind("bars_on", &model.barsOn);
     c.Bind("menu_gm", &model.gmMenu);
+    c.Bind("menu_gens", &model.gensMenu);
+    c.Bind("mail_alert", &model.mailAlert);
     c.Bind("menu_view", &model.viewMenu);
     c.Bind("quick_open", &model.quickOpen);
     c.Bind("size_pct", &model.sizePercent);
@@ -650,6 +685,7 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     entry.RegisterMember("id", &PickerEntry::id);
     entry.RegisterMember("icon", &PickerEntry::icon);
     entry.RegisterMember("name", &PickerEntry::name);
+    entry.RegisterMember("cost", &PickerEntry::cost);
     entry.RegisterMember("on_button", &PickerEntry::onButton);
     entry.RegisterMember("here", &PickerEntry::here);
     c.RegisterArray<std::vector<PickerEntry>>();
@@ -756,6 +792,8 @@ struct SkillPicker
     int focus = Touch::NoControl;
     // The skills' names, looked up once a showing.
     std::map<int, std::wstring> names;
+    // And their costs, the same.
+    std::map<int, Rml::String> costs;
 };
 SkillPicker g_picker;
 
@@ -1224,6 +1262,8 @@ void SyncLabels(ControlsModel& model)
     const bool pkChanged = model.pkOn != pk;
     SetField(model.pkOn, pk, "pk_on");
     SetField(model.gmMenu, GameLogic::GmPanel::Panel().IsGm(), "menu_gm");
+    SetField(model.gensMenu, IsInGens(), "menu_gens");
+    SetField(model.mailAlert, HasFriendAlert(), "mail_alert");
     SetField(model.quickOpen, GameConfig::GetInstance().GetTouchTopRow(), "quick_open");
     SetField(model.sizePercent, UI::Mobile::TouchUnit::GetPercent(), "size_pct");
     if (g_pNameWindow != nullptr)
@@ -1833,6 +1873,40 @@ const std::wstring& SkillName(int skill)
     return g_picker.names.emplace(skill, std::move(name)).first->second;
 }
 
+// What a skill costs to cast, in the tooltip's own words (mana, AG; a zero left out), on one line; empty for a pet
+// command. Looked up once a showing.
+const Rml::String& SkillCost(int skill)
+{
+    const auto known = g_picker.costs.find(skill);
+    if (known != g_picker.costs.end())
+        return known->second;
+    std::wstring cost;
+    const bool petCommand = skill >= AT_PET_COMMAND_DEFAULT && skill < AT_PET_COMMAND_END;
+    const int skillType = !petCommand && CharacterAttribute != nullptr && skill >= 0 && skill < MAX_SKILLS
+                              ? static_cast<int>(CharacterAttribute->Skill[skill])
+                              : -1;
+    if (skillType >= 0 && skillType < MAX_SKILLS && SkillAttribute[skillType].Name[0] != L'\0')
+    {
+        int mana = 0;
+        int distance = 0;
+        int ag = 0;
+        gSkillManager.GetSkillInformation(skillType, 1, nullptr, &mana, &distance, &ag);
+        wchar_t part[64];
+        if (mana > 0)
+        {
+            mu_swprintf_s(part, I18N::Game::ManaD, mana);
+            cost = part;
+        }
+        if (ag > 0)
+        {
+            mu_swprintf_s(part, I18N::Game::AGUseD, ag);
+            cost += cost.empty() ? L"" : L"  ";
+            cost += part;
+        }
+    }
+    return g_picker.costs.emplace(skill, StringUtils::WideToNarrow(cost.c_str())).first->second;
+}
+
 void OpenPicker(ControlsModel& model, int slot)
 {
     // The game's own list would wait under the picker for a pick.
@@ -1842,6 +1916,7 @@ void OpenPicker(ControlsModel& model, int slot)
     g_binding.until = {};
     g_follow.Drop();
     g_picker.names.clear();
+    g_picker.costs.clear();
     g_picker.pageFollowsSlot = true;
     g_picker.focus = Touch::NoControl;
     SetField(model.menuOpen, false, "menu_open");
@@ -1942,7 +2017,8 @@ void ShowPickerPage(ControlsModel& model, const SkillArrange::HotKeys& keys, boo
         for (int slot = 0; slot < ActiveSlots(); ++slot)
             onButton = onButton || on == SkillArrange::HotKeyOfSlot(slot, upper);
         entries.push_back({PickElements[entry], g_pSkillList->GetSkillIconDecorator(skill),
-                           StringUtils::WideToNarrow(SkillName(skill).c_str()), onButton, on == hotKey});
+                           StringUtils::WideToNarrow(SkillName(skill).c_str()), SkillCost(skill), onButton,
+                           on == hotKey});
     }
     if (entries != model.pickerEntries)
     {

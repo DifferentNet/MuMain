@@ -144,6 +144,7 @@ namespace mu::ui::window
         void RmlToggleAutoAttack();
         void RmlToggleWhisperSound();
         void RmlToggleSlideHelp();
+        void RmlToggleDeclineInvitations();
         // Closes the settings and opens the loot filter's window (in the game only).
         void RmlOpenLootFilter();
         // Closes the settings and opens the key bindings' window (in the game only).
@@ -340,6 +341,9 @@ namespace mu::ui::window
             Rml::String whisperSoundLabel;
             bool slideHelp = true;
             Rml::String slideHelpLabel;
+            // Party, trade and duel invitations declined by themselves (config.ini).
+            bool declineInvitations = false;
+            Rml::String declineInvitationsLabel;
             // The row that opens the loot filter: shown in the game only; its label and its button's text.
             bool lootFilterShown = false;
             Rml::String lootFilterLabel;
@@ -622,6 +626,7 @@ namespace mu::ui::window
             // layout with the fingers in the legacy theme (UI::Mobile::IsHandheld).
             bool layoutChoicesShown = true;
             bool windowModeShown = true;  // false in the browser build: the page owns the canvas
+            bool vsyncShown = true;       // false in the browser build: the page paces the frames
             // The on-screen controls' size (UI::Mobile::ButtonSize::Percents), shown while they are.
             bool touchButtonsShown = false;
             std::vector<Rml::String> touchButtonsLabels;

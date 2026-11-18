@@ -10,6 +10,7 @@
 #include "Camera/CameraState.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "Engine/Object/ZzzCharacter.h"
+#include "I18N/All.h"
 #include "Engine/Object/ZzzInventory.h"
 #include "Engine/Object/ZzzObject.h"
 #include "GameLogic/Events/Titles.h"
@@ -256,7 +257,7 @@ void Render()
         if (IsOfflineShadow(c))
         {
             // A second grey line under the name.
-            const wchar_t* label = GameLogic::Titles::Store::Russian() ? L"\u0422\u0435\u043d\u044c \u00b7 \u043d\u0435 \u0432 \u0441\u0435\u0442\u0438" : L"Shadow \u00b7 offline";
+            const wchar_t* label = I18N::Game::OfflineShadowLabel;
             g_pRenderText->SetFont(g_hFont);
             const SIZE labelSize = Fitted(g_pRenderText->MeasureText(label, lstrlen(label)), fit);
             g_pRenderText->SetTextColor(170, 170, 170, 255);

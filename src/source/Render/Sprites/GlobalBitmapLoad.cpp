@@ -16,8 +16,6 @@
 #include "Render/Textures/TextureFiltering.h"
 #include "Render/Textures/HdTextureSize.h"
 #include "Render/Textures/HdTextures.h"
-#include "Render/Textures/NormalMapFile.h"
-#include "Render/Textures/NormalMaps.h"
 #include "Render/Textures/UpscaleMarker.h"
 #ifdef _EDITOR
 #include "Core/Utilities/AssetLoadWorld.h"
@@ -52,8 +50,6 @@ void RegisterFilteredSampler(std::uint32_t id, void* sampler);
 void MarkFilteredSamplerPending(std::uint32_t id);
 void TakeFilteredSamplerRequests(std::vector<std::uint32_t>& requests);
 void SetTextureFilteringEnabled(bool enabled);
-void RegisterNormalMap(std::uint32_t id, SDL_GPUTexture* texture);
-void UnregisterNormalMap(std::uint32_t id);
 } // namespace mu
 
 namespace
@@ -103,8 +99,9 @@ int NextPowerOfTwo(int value, int maxValue)
     return std::min<int>(result, maxValue);
 }
 
-std::unique_ptr<BITMAP_t> CreateBitmapStorage(GLuint index, const std::wstring& filename, int width, int height,
-                                              int components)
+// A bitmap record without a CPU copy of its pixels.
+std::unique_ptr<BITMAP_t> CreateBitmapRecord(GLuint index, const std::wstring& filename, int width, int height,
+                                             int components)
 {
     auto bitmap = std::make_unique<BITMAP_t>();
     bitmap->BitmapIndex = index;
@@ -114,6 +111,13 @@ std::unique_ptr<BITMAP_t> CreateBitmapStorage(GLuint index, const std::wstring& 
     bitmap->Height = static_cast<float>(height);
     bitmap->Components = components;
     bitmap->Ref = 1;
+    return bitmap;
+}
+
+std::unique_ptr<BITMAP_t> CreateBitmapStorage(GLuint index, const std::wstring& filename, int width, int height,
+                                              int components)
+{
+    auto bitmap = CreateBitmapRecord(index, filename, width, height, components);
     const auto bufferSize =
         static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * static_cast<std::size_t>(components);
     bitmap->BufferStorage.resize(bufferSize);
@@ -196,6 +200,44 @@ bool IsMapCutout(GLuint index, const std::wstring& filename, std::span<const std
 #endif
 }
 
+// Decodes a JPEG as RGB into the top left of a new textureWidth x textureHeight RGB bitmap; a texture
+// padded to a power of two keeps its margin black.
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters): sizes of the image and of the texture.
+std::unique_ptr<BITMAP_t> DecodeJpegToRgbStorage(tjhandle handle, const unsigned char* jpegData, unsigned long jpegSize,
+                                                 int jpegWidth, int jpegHeight, GLuint index,
+                                                 const std::wstring& filename, int textureWidth, int textureHeight)
+{
+    std::vector<unsigned char> decompressedBuffer(static_cast<std::size_t>(jpegWidth) *
+                                                  static_cast<std::size_t>(jpegHeight) * 3u);
+    if (tjDecompress2(handle, jpegData, jpegSize, decompressedBuffer.data(), jpegWidth, 0, jpegHeight, TJPF_RGB,
+                      TJFLAG_FASTDCT) != 0)
+    {
+        ReportTurboError(L"tjDecompress2");
+        return nullptr;
+    }
+
+    auto bitmap = CreateBitmapStorage(index, filename, textureWidth, textureHeight, 3);
+    const int jpegRowSize = jpegWidth * 3;
+    const int textureRowSize = textureWidth * 3;
+    const int rows = std::min<int>(jpegHeight, textureHeight);
+    if (jpegWidth != textureWidth)
+    {
+        std::size_t offset = 0;
+        for (int row = 0; row < rows; ++row)
+        {
+            memcpy(&bitmap->Buffer[offset], &decompressedBuffer[static_cast<std::size_t>(row) * jpegRowSize],
+                   static_cast<std::size_t>(jpegRowSize));
+            offset += static_cast<std::size_t>(textureRowSize);
+        }
+    }
+    else
+    {
+        memcpy(bitmap->Buffer, decompressedBuffer.data(),
+               static_cast<std::size_t>(jpegHeight) * static_cast<std::size_t>(jpegWidth) * 3u);
+    }
+    return bitmap;
+}
+
 // A canvas is drawn on through Buffer at the original size, so an upscaled file
 // loaded into one is brought back to that size. Width and height become the
 // size to upload.
@@ -235,92 +277,6 @@ bool UploadTextureSDLGpu(BITMAP_t* bitmap, std::span<const std::uint8_t> pixels,
                                                          static_cast<std::uint32_t>(height))
                       : mips.chain.size() + 1u);
     return true;
-}
-
-// The Remaster's normal map of an upscaled model texture, read from its prebuilt file next to the
-// texture (Render/Textures/NormalMapFile.h) and mipmapped by the GPU like the texture. A missing or
-// broken file only costs the relief; MU_NORMAL_MAPS_RUNTIME=1 builds it here instead (development).
-// `width` x `height` is the texture as uploaded and `scale` its scale: the file held `fileDivisor`
-// times that (Render/Textures/HdTextureSize.h), and its map is brought down by as much.
-void UploadNormalMap(BITMAP_t& bitmap, const std::wstring& loadedPath, std::span<const std::uint8_t> rgba, int width,
-                     int height, int scale, int fileDivisor, SDL_GPUSamplerAddressMode wrapMode)
-{
-    namespace NormalMaps = Render::Textures::NormalMaps;
-    namespace NormalMapFile = Render::Textures::NormalMapFile;
-    if (!NormalMaps::Enabled() || !NormalMaps::WantsNormalMap(loadedPath))
-    {
-        return;
-    }
-    const int fileWidth = width * fileDivisor;
-    const int fileHeight = height * fileDivisor;
-    int mapWidth = NormalMapFile::HalfSize(fileWidth);
-    int mapHeight = NormalMapFile::HalfSize(fileHeight);
-    std::vector<std::uint8_t> normals = NormalMapFile::Load(
-        loadedPath, fileWidth, fileHeight,
-        [](const std::wstring& path, std::size_t maxBytes, std::vector<std::uint8_t>& bytes) {
-            std::ifstream input(Render::Sprites::NarrowBitmapPath(path), std::ios::binary | std::ios::ate);
-            if (!input)
-            {
-                return false;
-            }
-            const std::streamoff size = input.tellg();
-            if (size < 0 || static_cast<std::uint64_t>(size) > maxBytes)
-            {
-                return false;
-            }
-            try
-            {
-                bytes.resize(static_cast<std::size_t>(size));
-            }
-            catch (const std::bad_alloc&)
-            {
-                return false;
-            }
-            input.seekg(0);
-            return static_cast<bool>(
-                input.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size())));
-        });
-    if (!normals.empty() && fileDivisor == 2)
-    {
-        // Tilts average like colours; a map with an odd side stays as its file has it.
-        std::vector<std::uint8_t> half = Render::Textures::HdSize::HalveRgba(normals, mapWidth, mapHeight, false);
-        if (!half.empty())
-        {
-            normals = std::move(half);
-            mapWidth /= 2;
-            mapHeight /= 2;
-        }
-    }
-    if (normals.empty() && NormalMaps::RuntimeBuild())
-    {
-        normals = NormalMaps::Build(rgba, width, height, scale);
-        mapWidth = width;
-        mapHeight = height;
-    }
-    if (normals.empty())
-    {
-        return;
-    }
-    auto result = mu::UploadBitmapPixels(normals, mapWidth, mapHeight, SDL_GPU_FILTER_LINEAR, wrapMode, {}, true);
-    if (!result)
-    {
-        mu::log::Get("render")->debug("Normal map upload failed for {}: {}", mu_wchar_to_utf8(loadedPath.c_str()),
-                                      result.error);
-        return;
-    }
-    bitmap.sdlNormalMap = result.texture;
-    // Counted with its texture, so the texture memory the game reports includes the relief.
-    bitmap.UploadedBytes += UploadedBytes(mapWidth, mapHeight);
-}
-
-void ReleaseNormalMap(SDL_GPUDevice* device, BITMAP_t& bitmap)
-{
-    mu::UnregisterNormalMap(bitmap.BitmapIndex);
-    if (device && bitmap.sdlNormalMap)
-    {
-        mu::ReleaseBitmapTexture(device, bitmap.sdlNormalMap);
-    }
-    bitmap.sdlNormalMap = nullptr;
 }
 
 // Enhanced samplers cover the whole chain (Vulkan's VK_LOD_CLAMP_NONE).
@@ -693,7 +649,6 @@ void CGlobalBitmap::UnloadImage(GLuint uiBitmapIndex, bool bForce)
             mu::UnregisterTexture(uiBitmapIndex);
             mu::UnregisterSampler(uiBitmapIndex);
             SDL_GPUDevice* device = static_cast<SDL_GPUDevice*>(mu::GetRenderer().GetDevice());
-            ReleaseNormalMap(device, *pBitmap);
             if (device)
             {
                 pBitmap->sdlSampler = nullptr;
@@ -757,7 +712,6 @@ void CGlobalBitmap::UnloadAllImages()
             }
             mu::UnregisterTexture(pBitmap->BitmapIndex);
             mu::UnregisterSampler(pBitmap->BitmapIndex);
-            ReleaseNormalMap(device, *pBitmap);
             pBitmap->sdlSampler = nullptr;
             if (pBitmap->sdlTexture)
             {
@@ -895,56 +849,50 @@ bool CGlobalBitmap::OpenJpegTurbo(GLuint uiBitmapIndex, const std::wstring& file
     jpegWidth /= divisor;
     jpegHeight /= divisor;
 
-    std::vector<unsigned char> decompressedBuffer(static_cast<std::size_t>(jpegWidth) *
-                                                  static_cast<std::size_t>(jpegHeight) * 3u);
-    auto decompressResult = tjDecompress2(tjHandle.get(), jpegData, jpegSize, decompressedBuffer.data(), jpegWidth, 0,
-                                          jpegHeight, TJPF_RGB, TJFLAG_FASTDCT);
-    if (decompressResult != 0)
-    {
-        ReportTurboError(L"tjDecompress2");
-        return false;
-    }
-
     const int textureWidth = fileTextureWidth / divisor;
     const int textureHeight = fileTextureHeight / divisor;
     const int scale = fileScale / divisor;
 
-    auto pNewBitmap = CreateBitmapStorage(uiBitmapIndex, filename, textureWidth, textureHeight, 3);
-    pNewBitmap->Width = static_cast<float>(textureWidth / scale);
-    pNewBitmap->Height = static_cast<float>(textureHeight / scale);
-
-    const int jpegRowSize = jpegWidth * 3;
-    const int textureRowSize = textureWidth * 3;
-    const int rows = std::min<int>(jpegHeight, textureHeight);
-
-    std::size_t offset = 0;
-    if (jpegWidth != textureWidth)
+    // A texture whose pixels nobody reads back and whose image fills it is decoded straight into the
+    // RGBA pixels that are uploaded: the same bytes as the RGB decode padded with alpha 255, without
+    // the RGB copies. Kept pixels stay RGB, and a padded texture keeps its black RGB margin.
+    const bool decodeToRgba = !keepPixels && jpegWidth == textureWidth && jpegHeight == textureHeight;
+    std::unique_ptr<BITMAP_t> pNewBitmap;
+    std::vector<std::uint8_t> rgbaData;
+    int uploadWidth = textureWidth;
+    int uploadHeight = textureHeight;
+    if (decodeToRgba)
     {
-        for (int row = 0; row < rows; ++row)
+        rgbaData.resize(static_cast<std::size_t>(jpegWidth) * static_cast<std::size_t>(jpegHeight) * 4u);
+        if (tjDecompress2(tjHandle.get(), jpegData, jpegSize, rgbaData.data(), jpegWidth, 0, jpegHeight, TJPF_RGBA,
+                          TJFLAG_FASTDCT) != 0)
         {
-            memcpy(&pNewBitmap->Buffer[offset], &decompressedBuffer[static_cast<std::size_t>(row) * jpegRowSize],
-                   static_cast<std::size_t>(jpegRowSize));
-            offset += static_cast<std::size_t>(textureRowSize);
+            ReportTurboError(L"tjDecompress2");
+            return false;
         }
+        pNewBitmap = CreateBitmapRecord(uiBitmapIndex, filename, textureWidth, textureHeight, 3);
     }
     else
     {
-        memcpy(pNewBitmap->Buffer, decompressedBuffer.data(),
-               static_cast<std::size_t>(jpegHeight) * static_cast<std::size_t>(jpegWidth) * 3u);
+        pNewBitmap = DecodeJpegToRgbStorage(tjHandle.get(), jpegData, jpegSize, jpegWidth, jpegHeight, uiBitmapIndex,
+                                            filename, textureWidth, textureHeight);
+        if (!pNewBitmap)
+        {
+            return false;
+        }
+        if (keepPixels && scale > Render::Textures::Upscale::NoScale)
+        {
+            ShrinkCanvas(*pNewBitmap, uploadWidth, uploadHeight, scale);
+        }
+        rgbaData = PadRGBToRGBA(pNewBitmap->Buffer, uploadWidth, uploadHeight);
     }
-
-    int uploadWidth = textureWidth;
-    int uploadHeight = textureHeight;
-    if (keepPixels && scale > Render::Textures::Upscale::NoScale)
-    {
-        ShrinkCanvas(*pNewBitmap, uploadWidth, uploadHeight, scale);
-    }
+    pNewBitmap->Width = static_cast<float>(textureWidth / scale);
+    pNewBitmap->Height = static_cast<float>(textureHeight / scale);
 
     pNewBitmap->TextureNumber = uiBitmapIndex;
     pNewBitmap->worldTexture = worldTexture;
     pNewBitmap->wrapRepeat = uiWrapMode == GL_REPEAT;
     pNewBitmap->scale = static_cast<std::uint8_t>(upscaled ? scale : 1);
-    std::vector<std::uint8_t> rgbaData = PadRGBToRGBA(pNewBitmap->Buffer, uploadWidth, uploadHeight);
     if (m_pixelChange != nullptr)
     {
         (*m_pixelChange)(rgbaData.data(), rgbaData.size() / 4u, 4);
@@ -957,11 +905,6 @@ bool CGlobalBitmap::OpenJpegTurbo(GLuint uiBitmapIndex, const std::wstring& file
         return false;
     }
     pNewBitmap->UploadedBytes = UploadedBytes(uploadWidth, uploadHeight);
-    if (upscaled)
-    {
-        UploadNormalMap(*pNewBitmap, filename_ozj, rgbaData, uploadWidth, uploadHeight, scale, divisor,
-                        MapGLWrapToSDL(uiWrapMode));
-    }
     if (!keepPixels)
     {
         ReleaseUploadedPixels(*pNewBitmap);
@@ -969,16 +912,11 @@ bool CGlobalBitmap::OpenJpegTurbo(GLuint uiBitmapIndex, const std::wstring& file
 
     SDL_GPUTexture* rawTexture = pNewBitmap->sdlTexture;
     SDL_GPUSampler* rawSampler = pNewBitmap->sdlSampler;
-    SDL_GPUTexture* normalMap = pNewBitmap->sdlNormalMap;
     const BITMAP_t& loaded = *pNewBitmap;
     const std::uint32_t uploadedBytes = pNewBitmap->UploadedBytes;
     m_mapBitmap.insert(type_bitmap_map::value_type(uiBitmapIndex, std::move(pNewBitmap)));
     mu::RegisterTexture(uiBitmapIndex, rawTexture);
     mu::RegisterSampler(uiBitmapIndex, rawSampler);
-    if (normalMap)
-    {
-        mu::RegisterNormalMap(uiBitmapIndex, normalMap);
-    }
     RegisterFilteredSampler(loaded);
     m_dwUsedTextureMemory += uploadedBytes;
 
@@ -1109,11 +1047,6 @@ bool CGlobalBitmap::OpenTga(GLuint uiBitmapIndex, const std::wstring& filename, 
         return false;
     }
     pNewBitmap->UploadedBytes = UploadedBytes(uploadWidth, uploadHeight);
-    if (upscaled)
-    {
-        UploadNormalMap(*pNewBitmap, filename_ozt, pNewBitmap->BufferStorage, uploadWidth, uploadHeight, scale,
-                        divisor, MapGLWrapToSDL(uiWrapMode));
-    }
     if (!keepPixels)
     {
         ReleaseUploadedPixels(*pNewBitmap);
@@ -1121,16 +1054,11 @@ bool CGlobalBitmap::OpenTga(GLuint uiBitmapIndex, const std::wstring& filename, 
 
     SDL_GPUTexture* rawTexture = pNewBitmap->sdlTexture;
     SDL_GPUSampler* rawSampler = pNewBitmap->sdlSampler;
-    SDL_GPUTexture* normalMap = pNewBitmap->sdlNormalMap;
     const BITMAP_t& loaded = *pNewBitmap;
     const std::uint32_t uploadedBytes = pNewBitmap->UploadedBytes;
     m_mapBitmap.insert(type_bitmap_map::value_type(uiBitmapIndex, std::move(pNewBitmap)));
     mu::RegisterTexture(uiBitmapIndex, rawTexture);
     mu::RegisterSampler(uiBitmapIndex, rawSampler);
-    if (normalMap)
-    {
-        mu::RegisterNormalMap(uiBitmapIndex, normalMap);
-    }
     RegisterFilteredSampler(loaded);
     m_dwUsedTextureMemory += uploadedBytes;
 

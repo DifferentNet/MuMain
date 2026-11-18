@@ -83,6 +83,7 @@ void mu::ui::window::CMyQuestInfoWindow::BindRmlModel(Rml::DataModelConstructor&
     c.Bind("text_px", &model.textPx);
 
     c.Bind("active_tab", &model.activeTab);
+    c.Bind("title_label", &model.titleLabel);
     c.Bind("tab_quest_label", &model.tabQuestLabel);
     c.Bind("tab_jobchange_label", &model.tabJobChangeLabel);
     c.Bind("tab_castletemple_label", &model.tabCastleTempleLabel);
@@ -150,7 +151,8 @@ void mu::ui::window::CMyQuestInfoWindow::BindRmlModel(Rml::DataModelConstructor&
     c.BindEventCallback("myquest_click_exit",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickExit(); });
 
-    model.tabQuestLabel = StringUtils::WideToNarrow(I18N::Game::Quest);
+    model.titleLabel = StringUtils::WideToNarrow(I18N::Game::Quest);
+    model.tabQuestLabel = model.titleLabel;
     model.tabJobChangeLabel = StringUtils::WideToNarrow(I18N::Game::ChangeClass);
     model.tabCastleTempleLabel = StringUtils::WideToNarrow(I18N::Game::CastleTemple);
 

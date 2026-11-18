@@ -120,3 +120,20 @@
 .node.rank-8 { top: 342px; }
 .node.rank-9 { top: 383px; }
 .node.rank-10 { top: 424px; }
+
+/* On a phone the 13x14 cross and the 20x28 icons are too small for a finger (and the cross is the only
+   close there besides the system's back): padding grows their hit boxes, the art stays where it is in the
+   content box. A skill takes the left part of its box, up to its level text; the cross reaches the
+   panel's top and right edges. */
+@media (theme: mobile) {
+	#close {
+		margin: -9px -16px -14px;
+		padding: 9px 16px 14px;
+		decorator: image(master-exit-up) content-box;
+	}
+	#close:active { decorator: image(master-exit-down) content-box; }
+	.node-icon {
+		margin: -5px -8px;
+		padding: 5px 8px;
+	}
+}

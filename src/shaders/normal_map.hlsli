@@ -1,7 +1,7 @@
-// The Remaster's normal maps (Render/Textures/NormalMaps.h): the texture's relief tilts the
-// surface normal per pixel, so the light picks out rivets, seams and engraving on flat polygons.
-// The map stores the tilt along u and v in red and green (128 = none); the renderer binds a flat
-// 1x1 map for textures without one, which leaves the normal exactly as it was.
+// A normal map tilts the surface normal per pixel. The Remaster's own maps were removed on
+// 2026-11-18 (barely visible, 362 MB of the pack): the renderer always binds its flat 1x1 map, so
+// the normal stays exactly as it was. The map stores the tilt along u and v in red and green
+// (128 = none).
 // No tangents in the vertices: the tangent frame comes from the screen-space derivatives of the
 // position and the texture coordinates (a cotangent frame), mirrored coordinates included.
 

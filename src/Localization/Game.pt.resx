@@ -14332,4 +14332,97 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>Frases</value>
   </data>
+||||||| ce163792b
+  <!-- Round 13 -->
+  <data name="ChatCmdHelpTrade" xml:space="preserve">
+    <value>Negociar com um jogador: /trade Nome se ele estiver à vista; senão, com o jogador selecionado a qualquer distância ou com quem está à sua frente.</value>
+  </data>
+  <data name="ChatCmdHelpParty" xml:space="preserve">
+    <value>Convida o jogador selecionado para o seu grupo (também /pt).</value>
+  </data>
+  <data name="ChatCmdHelpGuild" xml:space="preserve">
+    <value>Pede ao mestre de guilda selecionado para aceitar você na guilda.</value>
+  </data>
+  <data name="ChatCmdHelpUnion" xml:space="preserve">
+    <value>Mestres de guilda: propõe uma aliança ao mestre de guilda selecionado.</value>
+  </data>
+  <data name="ChatCmdHelpRival" xml:space="preserve">
+    <value>Mestres de guilda: declara hostil a guilda do mestre selecionado.</value>
+  </data>
+  <data name="ChatCmdHelpRivalOff" xml:space="preserve">
+    <value>Mestres de guilda: encerra a hostilidade com a guilda do mestre selecionado.</value>
+  </data>
+  <data name="ChatCmdHelpDuelStart" xml:space="preserve">
+    <value>Desafia o jogador selecionado para um duelo.</value>
+  </data>
+  <data name="ChatCmdHelpDuelEnd" xml:space="preserve">
+    <value>Encerra o seu duelo.</value>
+  </data>
+  <data name="ChatCmdHelpReply" xml:space="preserve">
+    <value>Sussurra de volta ao último jogador que sussurrou para você (também /reply).</value>
+  </data>
+  <data name="ChatCmdHelpFilter" xml:space="preserve">
+    <value>Mostra só as linhas do chat com estas palavras (até cinco). Sem palavras, tudo volta a aparecer.</value>
+  </data>
+  <data name="ChatCmdHelpMacro" xml:space="preserve">
+    <value>Salva uma linha do chat como macro 1; Alt+1 a envia. /2 a /9 e /0 fazem o mesmo para Alt+2 a Alt+0.</value>
+  </data>
+  <data name="ChatCmdParamWords" xml:space="preserve">
+    <value>palavras</value>
+  </data>
+  <data name="ChatCmdParamText" xml:space="preserve">
+    <value>texto</value>
+  </data>
+  <data name="OfflineShadowLabel" xml:space="preserve">
+    <value>Sombra · offline</value>
+  </data>
+  <data name="TradePartnerLoweredZen" xml:space="preserve">
+    <value>%ls baixou o zen: %ls -&gt; %ls</value>
+  </data>
+  <data name="TradePartnerRemovedItem" xml:space="preserve">
+    <value>%ls tirou %ls da troca</value>
+  </data>
+  <data name="PetLifeLow" xml:space="preserve">
+    <value>%ls: resta %d%% de vida. Perde-se em 0.</value>
+  </data>
+  <data name="PurchaseZenSpent" xml:space="preserve">
+    <value>Compra: -%ls zen</value>
+  </data>
+  <data name="NewSkillLearned" xml:space="preserve">
+    <value>Nova habilidade: %ls</value>
+  </data>
+  <data name="WarpUnlockedKey" xml:space="preserve">
+    <value>Nível %d: novo destino de teleporte: %ls (%ls)</value>
+  </data>
+  <data name="WarpUnlocked" xml:space="preserve">
+    <value>Nível %d: novo destino de teleporte: %ls</value>
+  </data>
+  <!-- Round 14 -->
+  <data name="DeclineInvitations" xml:space="preserve">
+    <value>Recusar convites</value>
+  </data>
+  <data name="InviteDeclinedParty" xml:space="preserve">
+    <value>Convite de grupo de %ls recusado.</value>
+  </data>
+  <data name="InviteDeclinedTrade" xml:space="preserve">
+    <value>Pedido de troca de %ls recusado.</value>
+  </data>
+  <data name="InviteDeclinedDuel" xml:space="preserve">
+    <value>Desafio de duelo de %ls recusado.</value>
+  </data>
+  <data name="HelperSafeZone" xml:space="preserve">
+    <value>O MU Helper não funciona em zona segura.</value>
+  </data>
+  <data name="HelperStoppedSummary" xml:space="preserve">
+    <value>MU Helper parou após %d h %d min. Níveis: +%d, zen: %ls.</value>
+  </data>
+  <data name="SkillBookNotLearnable" xml:space="preserve">
+    <value>Você ainda não pode aprender esta habilidade: veja os requisitos.</value>
+  </data>
+  <data name="CapsLockOn" xml:space="preserve">
+    <value>Caps Lock está ativado</value>
+  </data>
+  <data name="GuildWarAlreadyOn" xml:space="preserve">
+    <value>Uma das guildas já está em guerra de guildas.</value>
+  </data>
 </root>

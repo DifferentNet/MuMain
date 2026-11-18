@@ -187,6 +187,27 @@ bool CheckMana(CHARACTER* c, int Skill)
     return true;
 }
 
+CostShortfall SkillCostShortfall(int Skill)
+{
+    if (!gSkillManager.AreSkillAttributeRequirementsMet(static_cast<ActionSkillType>(Skill)))
+    {
+        return CostShortfall::None;
+    }
+
+    int iMana = 0;
+    int iSkillMana = 0;
+    gSkillManager.GetSkillInformation(Skill, 1, NULL, &iMana, NULL, &iSkillMana);
+    if (CharacterAttribute->Mana < iMana)
+    {
+        return CostShortfall::Mana;
+    }
+    if (iSkillMana > CharacterAttribute->SkillMana)
+    {
+        return CostShortfall::Ag;
+    }
+    return CostShortfall::None;
+}
+
 int ExecuteSkill(CHARACTER* c, ActionSkillType Skill, float Distance)
 {
     OBJECT* o = &c->Object;

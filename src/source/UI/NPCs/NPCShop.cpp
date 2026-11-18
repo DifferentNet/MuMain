@@ -247,6 +247,7 @@ bool mu::ui::window::CNPCShop::UpdateMouseEvent()
                         {
                             const auto& itemInfo = gambleSys.GetBuyItemInfoConst();
                             SocketClient->ToGameServer()->SendBuyItemFromNpcRequest(itemInfo.ItemIndex);
+                            UI::Chat::ChangeLines::NotePurchaseAsked();
                             BuyCost = itemInfo.ItemCost;
                             g_ConsoleDebug->Write(MCD_SEND, L"0x32 [SendRequestBuy(%d)]", itemInfo.ItemIndex);
                         }
@@ -258,6 +259,7 @@ bool mu::ui::window::CNPCShop::UpdateMouseEvent()
                 if (BuyCost == 0)
                 {
                     SocketClient->ToGameServer()->SendBuyItemFromNpcRequest(iIndex);
+                    UI::Chat::ChangeLines::NotePurchaseAsked();
                     BuyCost = ItemValue(pItem, 0);
                     g_ConsoleDebug->Write(MCD_SEND, L"0x32 [SendRequestBuy(%d)]", iIndex);
                 }

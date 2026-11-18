@@ -1301,14 +1301,21 @@ void mu::ui::window::CSystemLogWindow::RemoveFrontLine()
 
 // How many of the newest messages show now: on a phone at most PhoneSystemLines, none older than
 // PhoneSystemLineStaysMs; on a PC at most MAX_NUMBER_OF_LINES, none older than PcSystemLineStaysMs
-// while the chat is closed (input up or the log's frame shown: the newest six show again, as the chat log's history does).
+// while the chat is closed. With the chat open (input up or the log's frame shown) the newest six show again on both,
+// as the chat log's history does, so a missed line can be read again.
 int mu::ui::window::CSystemLogWindow::ShownCount() const
 {
-    if (UI::Mobile::IsPhoneView())
+    const bool chatOpen = g_pChatListBox != nullptr && g_pChatListBox->IsChatOpen();
+    if (UI::Mobile::IsPhoneView() && !chatOpen)
         return UI::Chat::SystemLinesShown(m_Arrivals, ChatLogClockMs(), PhoneSystemLines, PhoneSystemLineStaysMs, false);
 
-    const bool chatOpen = g_pChatListBox != nullptr && g_pChatListBox->IsChatOpen();
     return UI::Chat::SystemLinesShown(m_Arrivals, ChatLogClockMs(), MAX_NUMBER_OF_LINES, PcSystemLineStaysMs, chatOpen);
+}
+
+int mu::ui::window::CSystemLogWindow::ReservedRows() const
+{
+    const bool chatOpen = g_pChatListBox != nullptr && g_pChatListBox->IsChatOpen();
+    return UI::Mobile::IsPhoneView() && !chatOpen ? PhoneSystemLines : MAX_NUMBER_OF_LINES;
 }
 
 int mu::ui::window::CSystemLogWindow::GetCurrentRenderEndLine() const
@@ -1403,6 +1410,9 @@ void mu::ui::window::CSystemLogWindow::SyncRmlModel()
         m_ShownCount = shown;
         m_bLinesDirty = true;
     }
+    // The phone's chat opened or closed: the log grows to six rows or back to three.
+    if (static_cast<int>(model.lines.size()) != ReservedRows())
+        m_bLinesDirty = true;
 
     if (m_bLinesDirty)
     {
@@ -1470,7 +1480,6 @@ void mu::ui::window::CSystemLogWindow::RebuildLineModel()
     model.lines.clear();
     model.lines.reserve(m_vecAllMsgs.size());
 
-    const bool phone = UI::Mobile::IsPhoneView();
     const std::size_t first = m_vecAllMsgs.size() - std::min<std::size_t>(m_vecAllMsgs.size(), static_cast<std::size_t>(ShownCount()));
     for (std::size_t index = first; index < m_vecAllMsgs.size(); ++index)
     {
@@ -1486,7 +1495,7 @@ void mu::ui::window::CSystemLogWindow::RebuildLineModel()
         model.lines.push_back(std::move(entry));
     }
     // Empty rows preserve the six-line workspace reservation without drawing a backdrop (three on a phone).
-    model.lines.resize(phone ? PhoneSystemLines : MAX_NUMBER_OF_LINES);
+    model.lines.resize(static_cast<std::size_t>(ReservedRows()));
 }
 
 float mu::ui::window::CSystemLogWindow::GetLayerDepth()

@@ -7,6 +7,7 @@
 typedef void* tjhandle;
 
 #define TJPF_RGB 0
+#define TJPF_RGBA 7
 #define TJSAMP_444 0
 #define TJCS_RGB 0
 

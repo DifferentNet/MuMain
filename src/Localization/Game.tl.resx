@@ -1308,7 +1308,7 @@
     <comment>legacy_id=359</comment>
   </data>
   <data name="A G use: %d" xml:space="preserve">
-    <value>A G paggamit: %d</value>
+    <value>Gastos sa AG: %d</value>
     <comment>legacy_id=360</comment>
   </data>
   <data name="Party (P)" xml:space="preserve">
@@ -14331,5 +14331,98 @@
   </data>
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>Parirala</value>
+  </data>
+||||||| ce163792b
+  <!-- Round 13 -->
+  <data name="ChatCmdHelpTrade" xml:space="preserve">
+    <value>Makipagpalitan sa player: /trade Pangalan kung nakikita siya; kung hindi, sa player na pinili mo kahit gaano kalayo, o sa nakaharap sa iyo.</value>
+  </data>
+  <data name="ChatCmdHelpParty" xml:space="preserve">
+    <value>Imbitahan ang player na pinili mo sa iyong party (o /pt).</value>
+  </data>
+  <data name="ChatCmdHelpGuild" xml:space="preserve">
+    <value>Hilingin sa guild master na pinili mo na tanggapin ka sa guild.</value>
+  </data>
+  <data name="ChatCmdHelpUnion" xml:space="preserve">
+    <value>Para sa guild master: mag-alok ng alyansa sa guild master na pinili mo.</value>
+  </data>
+  <data name="ChatCmdHelpRival" xml:space="preserve">
+    <value>Para sa guild master: ideklarang kaaway ang guild ng guild master na pinili mo.</value>
+  </data>
+  <data name="ChatCmdHelpRivalOff" xml:space="preserve">
+    <value>Para sa guild master: tapusin ang alitan sa guild ng guild master na pinili mo.</value>
+  </data>
+  <data name="ChatCmdHelpDuelStart" xml:space="preserve">
+    <value>Hamunin sa duel ang player na pinili mo.</value>
+  </data>
+  <data name="ChatCmdHelpDuelEnd" xml:space="preserve">
+    <value>Tapusin ang iyong duel.</value>
+  </data>
+  <data name="ChatCmdHelpReply" xml:space="preserve">
+    <value>Bumulong pabalik sa huling player na bumulong sa iyo (o /reply).</value>
+  </data>
+  <data name="ChatCmdHelpFilter" xml:space="preserve">
+    <value>Ipakita lang ang mga linya ng chat na may mga salitang ito (hanggang lima). Kapag walang salita, lalabas muli ang lahat.</value>
+  </data>
+  <data name="ChatCmdHelpMacro" xml:space="preserve">
+    <value>I-save ang isang linya ng chat bilang macro 1; sinasabi ito ng Alt+1. Ganoon din ang /2 hanggang /9 at /0 para sa Alt+2 hanggang Alt+0.</value>
+  </data>
+  <data name="ChatCmdParamWords" xml:space="preserve">
+    <value>mga salita</value>
+  </data>
+  <data name="ChatCmdParamText" xml:space="preserve">
+    <value>teksto</value>
+  </data>
+  <data name="OfflineShadowLabel" xml:space="preserve">
+    <value>Anino · offline</value>
+  </data>
+  <data name="TradePartnerLoweredZen" xml:space="preserve">
+    <value>Ibinaba ni %ls ang zen: %ls -&gt; %ls</value>
+  </data>
+  <data name="TradePartnerRemovedItem" xml:space="preserve">
+    <value>Inalis ni %ls ang %ls sa palitan</value>
+  </data>
+  <data name="PetLifeLow" xml:space="preserve">
+    <value>%ls: %d%% na lang ang buhay. Mawawala ito sa 0.</value>
+  </data>
+  <data name="PurchaseZenSpent" xml:space="preserve">
+    <value>Bili: -%ls Zen</value>
+  </data>
+  <data name="NewSkillLearned" xml:space="preserve">
+    <value>Bagong skill: %ls</value>
+  </data>
+  <data name="WarpUnlockedKey" xml:space="preserve">
+    <value>Antas %d: bagong warp: %ls (%ls)</value>
+  </data>
+  <data name="WarpUnlocked" xml:space="preserve">
+    <value>Antas %d: bagong warp: %ls</value>
+  </data>
+  <!-- Round 14 -->
+  <data name="DeclineInvitations" xml:space="preserve">
+    <value>Tanggihan ang mga imbitasyon</value>
+  </data>
+  <data name="InviteDeclinedParty" xml:space="preserve">
+    <value>Tinanggihan ang imbitasyon sa party mula kay %ls.</value>
+  </data>
+  <data name="InviteDeclinedTrade" xml:space="preserve">
+    <value>Tinanggihan ang trade request mula kay %ls.</value>
+  </data>
+  <data name="InviteDeclinedDuel" xml:space="preserve">
+    <value>Tinanggihan ang hamon sa duel mula kay %ls.</value>
+  </data>
+  <data name="HelperSafeZone" xml:space="preserve">
+    <value>Hindi gumagana ang MU Helper sa safe zone.</value>
+  </data>
+  <data name="HelperStoppedSummary" xml:space="preserve">
+    <value>Huminto ang MU Helper pagkatapos ng %d h %d min. Level: +%d, zen: %ls.</value>
+  </data>
+  <data name="SkillBookNotLearnable" xml:space="preserve">
+    <value>Hindi mo pa matututunan ang skill na ito: tingnan ang mga kailangan nito.</value>
+  </data>
+  <data name="CapsLockOn" xml:space="preserve">
+    <value>Naka-on ang Caps Lock</value>
+  </data>
+  <data name="GuildWarAlreadyOn" xml:space="preserve">
+    <value>Nasa guild war na ang isa sa mga guild.</value>
   </data>
 </root>

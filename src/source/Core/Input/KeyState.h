@@ -25,6 +25,9 @@ bool IsKeyDown(int virtualKey);
 // time for all of them (the key scan asked 256 times a frame).
 void ReadKeysDown(bool (&down)[256]);
 
+// Whether Caps Lock is on (SDL's modifier state; in a browser it is known after the first key press).
+bool IsCapsLockOn();
+
 #ifdef _EDITOR
 // Whether a key or button (a virtual-key code as IsKeyDown takes) is with a
 // window that is not the game's, so that IsKeyDown leaves it out. Set by the

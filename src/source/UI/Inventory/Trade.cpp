@@ -3,6 +3,8 @@
 #include "I18N/All.h"
 
 #include "UI/Inventory/Trade.h"
+#include "UI/Chat/ChatMessages.h"
+#include "UI/Chat/InviteAutoDecline.h"
 #include "UI/Inventory/HeldItemPlacement.h"
 #include "UI/Inventory/ZenAmount.h"
 #include "UI/Core/WindowSystem.h"
@@ -303,8 +305,19 @@ bool CTrade::Update()
         || (m_pMyInvenCtrl && false == m_pMyInvenCtrl->Update()))
         return false;
 
+    FlushPendingRemovals(false);
     SyncRmlModel();
     return true;
+}
+
+void CTrade::FlushPendingRemovals(bool all)
+{
+    if (m_pendingRemovals.Empty())
+        return;
+    const std::uint32_t now = GetTickCount();
+    const auto due = m_pendingRemovals.TakeDue(all ? now + UI::Trade::PendingRemovals::HoldMs : now);
+    for (const auto& line : due)
+        UI::Chat::PostSystem(line.c_str(), mu::ui::window::TYPE_ERROR_MESSAGE);
 }
 
 bool CTrade::Render()
@@ -460,7 +473,7 @@ void CTrade::SyncRmlModel()
     else
         mu_swprintf(levelValueBuf, I18N::Game::AboutD, nLevel);
     wchar_t levelBuf[160];
-    mu_swprintf(levelBuf, L"Lv.%ls", levelValueBuf);
+    mu_swprintf(levelBuf, L"%ls %ls", I18N::Game::LV, levelValueBuf);
     syncWide(&TradeRmlModel::yourLevelText, "your_level_text", levelBuf);
     if (m_RmlView.GetModel().yourLevelBucket != nLevel)
     {
@@ -722,6 +735,12 @@ bool CTrade::ProcessToReceiveTradeRequest(const wchar_t* pszYourID)
         return false;
     }
 
+    if (UI::Chat::InviteAutoDecline::ShouldDecline(UI::Chat::InviteKind::Trade, pszYourID))
+    {
+        SocketClient->ToGameServer()->SendTradeRequestResponse(false);
+        return false;
+    }
+
     wcsncpy(m_szYourID, pszYourID, MAX_USERNAME_SIZE);
     m_szYourID[MAX_USERNAME_SIZE] = L'\0';
 
@@ -768,6 +787,8 @@ void CTrade::ProcessToReceiveTradeResult(UI::Trade::RequestReply reply, const UI
             InitYourInvenBackUp();
 
         m_bTradeAlert = false;
+        // A line still waiting from an earlier trade must not speak about this one.
+        m_pendingRemovals.Clear();
         m_nYourGuildType = partner.guildKey;
         wcsncpy(m_szYourID, szTempID, MAX_USERNAME_SIZE);
         m_nYourLevel = partner.level;
@@ -779,6 +800,16 @@ void CTrade::ProcessToReceiveYourItemDelete(BYTE byYourInvenIndex)
 {
     BackUpYourInven(int(byYourInvenIndex));
     ITEM* pYourItemObj = m_pYourInvenCtrl->FindItem(int(byYourInvenIndex));
+    if (pYourItemObj != nullptr)
+    {
+        // Say it: a player who watches his own bag sees only the confirm button go red. The line
+        // waits a moment, since moving an item inside the box also arrives as "gone" + "added".
+        wchar_t itemName[128] = {};
+        ::GetItemName(pYourItemObj->Type, pYourItemObj->Level, itemName);
+        wchar_t line[256] = {};
+        mu_swprintf(line, I18N::Game::TradePartnerRemovedItem, m_szYourID, itemName);
+        m_pendingRemovals.Hold(pYourItemObj->Type, pYourItemObj->Level, line, GetTickCount());
+    }
     m_pYourInvenCtrl->RemoveItem(pYourItemObj);
     AlertYourTradeInven();
     ::PlayBuffer(SOUND_GET_ITEM01);
@@ -846,6 +877,8 @@ void CTrade::BackUpYourInven(ITEM* pYourItemObj)
 void CTrade::ProcessToReceiveYourItemAdd(BYTE byYourInvenIndex, std::span<const BYTE> pbyItemPacket)
 {
     m_pYourInvenCtrl->AddItem(byYourInvenIndex, pbyItemPacket);
+    if (const ITEM* added = m_pYourInvenCtrl->FindItem(int(byYourInvenIndex)))
+        m_pendingRemovals.CancelOn(added->Type, added->Level);
     AlertYourTradeInven();
     ::PlayBuffer(SOUND_GET_ITEM01);
 }
@@ -933,6 +966,8 @@ void CTrade::ProcessToReceiveTradeExit(UI::Trade::CloseReason reason)
     // The server ended the trade or the request (the partner opened an NPC, logged out...): an
     // unanswered request dialog for it goes away by itself.
     ++m_nTradeRequestSerial;
+    // An item taken out just before the end is still taken out: say the waiting lines now.
+    FlushPendingRemovals(true);
 
     switch (reason)
     {

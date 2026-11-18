@@ -31,7 +31,7 @@
 	     by the theme flag "mobile" (touch_controls.rcss). HP under a quarter marks its gauge "low";
 	     a tap on the frame opens the character window. -->
 	<div id="tc_hero">
-		<div id="tc_hero_level"><div class="tc-hero-level-number">{{hero_level}}</div><div class="tc-hero-master" data-if="hero_master != ''">{{hero_master}}</div></div>
+		<div id="tc_hero_level"><div class="tc-hero-level-number">{{hero_level}}</div><div class="tc-hero-master" data-if="hero_master != ''">{{hero_master}}</div><div class="tc-alert-plus" data-if="points_alert">+</div></div>
 		<div id="tc_hero_hp" class="tc-gauge" data-class-low="hero_hp < 0.25 &amp;&amp; hero_hp > 0">
 			<div class="tc-gauge-fill" data-style-width="hero_hp * 100 + '%'"></div>
 			<div class="tc-gauge-text">{{hero_hp_text}}</div>
@@ -70,7 +70,7 @@
 	     end. Before it the button that folds the row away and back (config.ini [UI] TouchTopRow); folded,
 	     the pad's Menu still opens the menu. -->
 	<div id="tc_quick" data-class-collapsed="!quick_open">
-		<div id="tc_quick_toggle" class="tc-button tc-quick-toggle" data-class-open="quick_open"><div class="tc-toggle-line tc-toggle-line-1"></div><div class="tc-toggle-line tc-toggle-line-2"></div><div class="tc-toggle-line tc-toggle-line-3"></div></div>
+		<div id="tc_quick_toggle" class="tc-button tc-quick-toggle" data-class-open="quick_open"><div class="tc-toggle-line tc-toggle-line-1"></div><div class="tc-toggle-line tc-toggle-line-2"></div><div class="tc-toggle-line tc-toggle-line-3"></div><div class="tc-alert-dot" data-if="mail_alert"></div></div>
 		<div id="tc_back" class="tc-button tc-quick">{{back_label}}<div class="pad-glyph pad-face pad-b">{{glyph_b}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div></div>
 		<div id="tc_menu" class="tc-button tc-quick" data-class-open="menu_open">{{menu_label}}
 			<div class="pad-glyph pad-round pad-menu"><div class="pad-menu-line pad-menu-line-1"></div><div class="pad-menu-line pad-menu-line-2"></div><div class="pad-menu-line pad-menu-line-3"></div></div>
@@ -95,7 +95,7 @@
 		<div id="tc_menu_1" class="tc-button tc-menu-item" data-class-focused="menu_focus == 1"><span class="tc-menu-label">{{menu_label_1}}</span></div>
 		<div id="tc_menu_2" class="tc-button tc-menu-item" data-class-focused="menu_focus == 2"><span class="tc-menu-label">{{menu_label_2}}</span></div>
 		<div id="tc_menu_3" class="tc-button tc-menu-item" data-class-focused="menu_focus == 3"><span class="tc-menu-label">{{menu_label_3}}</span></div>
-		<div id="tc_menu_4" class="tc-button tc-menu-item" data-class-focused="menu_focus == 4"><span class="tc-menu-label">{{menu_label_4}}</span></div>
+		<div id="tc_menu_4" class="tc-button tc-menu-item" data-class-focused="menu_focus == 4"><span class="tc-menu-label">{{menu_label_4}}</span><div class="tc-alert-dot" data-if="mail_alert"></div></div>
 		<div id="tc_menu_5" class="tc-button tc-menu-item" data-class-focused="menu_focus == 5"><span class="tc-menu-label">{{menu_label_5}}</span></div>
 		<div id="tc_menu_6" class="tc-button tc-menu-item" data-class-focused="menu_focus == 6"><span class="tc-menu-label">{{menu_label_6}}</span></div>
 		<div id="tc_menu_7" class="tc-button tc-menu-item" data-class-focused="menu_focus == 7"><span class="tc-menu-label">{{menu_label_7}}</span></div>
@@ -120,6 +120,7 @@
 		<div id="tc_menu_22" class="tc-button tc-menu-item" data-class-focused="menu_focus == 22" data-class-on="pk_on"><span class="tc-menu-label">{{menu_label_22}}</span></div>
 		<!-- The GM panel, for game masters only. -->
 		<div id="tc_menu_23" class="tc-button tc-menu-item" data-if="menu_gm" data-class-focused="menu_focus == 23"><span class="tc-menu-label">{{menu_label_23}}</span></div>
+		<div id="tc_menu_24" class="tc-button tc-menu-item" data-if="menu_gens" data-class-focused="menu_focus == 24"><span class="tc-menu-label">{{menu_label_24}}</span></div>
 		<!-- With a pad, its keys for the menu: the stick or the d-pad move the highlight. -->
 		<div id="tc_menu_legend">
 			<div class="pad-glyph pad-face pad-a">{{glyph_a}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div><div class="pad-legend-label">{{pad_open_label}}</div>
@@ -149,9 +150,10 @@
 			</div>
 		</div>
 		<div id="tc_pick_grid">
-			<div class="tc-button tc-pick" data-for="e : picker_entries" data-attr-id="e.id" data-class-on="e.on_button" data-class-here="e.here" data-class-focused="e.id == picker_focus">
+			<div class="tc-button tc-pick" data-for="e : picker_entries" data-attr-id="e.id" data-class-on="e.on_button" data-class-here="e.here" data-class-has-cost="e.cost != ''" data-class-focused="e.id == picker_focus">
 				<div class="tc-skill-icon tc-pick-icon" data-style-decorator="e.icon"></div>
 				<div class="tc-pick-name"><span>{{e.name}}</span></div>
+				<div class="tc-pick-cost" data-if="e.cost != ''">{{e.cost}}</div>
 				<div class="tc-pick-mark"></div>
 			</div>
 			<div id="tc_pick_none" data-if="picker_no_skills">{{picker_no_skills_label}}</div>
@@ -209,9 +211,10 @@
 		</div>
 	</div>
 
-	<!-- The item hotkeys Q and W (the potions; the letters are the keys bound to them), above the joystick, with how many are left (dimmed when none are). -->
-	<div id="tc_potion_q" class="tc-button tc-potion" data-class-empty="potion_q_count == ''">{{potion_q_key}}<div class="tc-potion-count">{{potion_q_count}}</div><div class="pad-glyph pad-bumper">{{glyph_lb}}</div></div>
-	<div id="tc_potion_w" class="tc-button tc-potion" data-class-empty="potion_w_count == ''">{{potion_w_key}}<div class="tc-potion-count">{{potion_w_count}}</div><div class="pad-glyph pad-trigger">{{glyph_lt}}</div></div>
+	<!-- The item hotkeys Q and W (the potions; the letters are the keys bound to them), above the joystick, with how many are left (dimmed when none are),
+	     tinted by the kind of potion on them (UI/Mobile/PotionKind.h: 1 healing, 2 mana, 3 shield, 4 complex). -->
+	<div id="tc_potion_q" class="tc-button tc-potion" data-class-empty="potion_q_count == ''" data-class-heal="potion_q_kind == 1" data-class-mana="potion_q_kind == 2" data-class-shield="potion_q_kind == 3" data-class-complex="potion_q_kind == 4"><span class="tc-potion-key">{{potion_q_key}}</span><div class="tc-potion-count">{{potion_q_count}}</div><div class="pad-glyph pad-bumper">{{glyph_lb}}</div></div>
+	<div id="tc_potion_w" class="tc-button tc-potion" data-class-empty="potion_w_count == ''" data-class-heal="potion_w_kind == 1" data-class-mana="potion_w_kind == 2" data-class-shield="potion_w_kind == 3" data-class-complex="potion_w_kind == 4"><span class="tc-potion-key">{{potion_w_key}}</span><div class="tc-potion-count">{{potion_w_count}}</div><div class="pad-glyph pad-trigger">{{glyph_lt}}</div></div>
 	<!-- E and R: a pad with RT held drinks them on LB and LT, in Q's and W's places. -->
 	<div id="tc_potion_e" class="tc-button tc-potion" data-class-empty="potion_e_count == ''">{{potion_e_key}}<div class="tc-potion-count">{{potion_e_count}}</div><div class="pad-glyph pad-bumper">{{glyph_lb}}</div></div>
 	<div id="tc_potion_r" class="tc-button tc-potion" data-class-empty="potion_r_count == ''">{{potion_r_key}}<div class="tc-potion-count">{{potion_r_count}}</div><div class="pad-glyph pad-trigger">{{glyph_lt}}</div></div>

@@ -697,7 +697,7 @@ void CMuHelperConfigWindow::BindRmlModel(Rml::DataModelConstructor& c, MuHelperC
     l.basicSkill = Narrow(I18N::Game::BasicSkill);
     l.activationSkill1 = Narrow(I18N::Game::ActivationSkill1);
     l.activationSkill2 = Narrow(I18N::Game::ActivationSkill2);
-    l.seconds = "s";
+    l.seconds = Narrow(I18N::Game::TuningSecondsUnit);
     l.extensionUsed = Narrow(I18N::Game::UsedExtensionFunction);
     l.extensionNone = Narrow(I18N::Game::NoExtensionFunctionBeingUsed);
     l.slotHint = Narrow(I18N::Game::MuHelperSlotClearHint);

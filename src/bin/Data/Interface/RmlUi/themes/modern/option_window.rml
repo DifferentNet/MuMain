@@ -55,7 +55,7 @@
 						<span class="opt-label">{{windowed_mode_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="windowed_mode"><div class="opt-toggle-knob"></div></div></div>
 					</div>
-					<div class="opt-row opt-toggle-row" data-event-click="option_toggle_vsync">
+					<div class="opt-row opt-toggle-row" data-if="vsync_shown" data-event-click="option_toggle_vsync">
 						<span class="opt-label">{{vsync_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="vsync_enabled"><div class="opt-toggle-knob"></div></div></div>
 					</div>
@@ -600,6 +600,10 @@
 						<span class="opt-label">{{zen_walk_pickup_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="zen_walk_pickup"><div class="opt-toggle-knob"></div></div></div>
 						<span class="opt-row-tip">{{zen_walk_pickup_tooltip}}</span>
+					</div>
+					<div class="opt-row opt-toggle-row" data-event-click="option_toggle_decline_invitations">
+						<span class="opt-label">{{decline_invitations_label}}</span>
+						<div class="opt-control"><div class="opt-toggle" data-class-checked="decline_invitations"><div class="opt-toggle-knob"></div></div></div>
 					</div>
 					<!-- The loot filter's own window (CLootFilterWindow); only in the game, where there is loot. -->
 					<div class="opt-row" data-class-hidden="!loot_filter_shown">
