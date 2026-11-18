@@ -446,6 +446,7 @@ add_test(
         "-DMU_GROUND_MARKS_HEADER=${MU_EFFECTS_DIR}/GroundMarks.h"
         "-DMU_EFFECT_SOURCE=${MU_EFFECTS_DIR}/ZzzEffect.cpp"
         "-DMU_MOVE_HANDLERS_SOURCE=${MU_EFFECTS_DIR}/Behaviors/MoveHandlers.cpp"
+        "-DMU_CHARACTER_SOURCE=${CMAKE_SOURCE_DIR}/src/source/Engine/Object/ZzzCharacter.cpp"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/test_ground_marks_gate.cmake"
 )
 

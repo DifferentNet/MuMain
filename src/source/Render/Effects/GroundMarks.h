@@ -123,7 +123,7 @@ struct Look
     case Source::Inferno:
     case Source::Hellfire:
         return {Kind::LargeScorch, kMaxHalfSize, kMaxHalfSize};
-    case Source::IceStorm: // one mark a cast over the whole storm (its first shard lays it)
+    case Source::IceStorm: // one mark a cast on the targeted spot, over the whole storm
         return {Kind::Frost, kMaxHalfSize, kMaxHalfSize};
     case Source::Ice:
         return {Kind::Frost, 70.f, 70.f};
