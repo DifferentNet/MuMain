@@ -389,6 +389,9 @@ constexpr float StickDeadZoneUnits = 10.f;
 // Documents over the controls that still leave them the finger, as they only show text: the chat's
 // log lies over the joystick's corner, the scrolling notice's band across the top row.
 constexpr std::string_view PassThroughDocuments[] = {"chat_log.rml", "slide_notice.rml"};
+// The chat's log keeps the finger while its frame is shown (the chat open on its history): a drag there
+// scrolls the history and a tap whispers to a line's sender (chat_log.rcss).
+constexpr std::string_view ChatLogDocument = "chat_log.rml";
 
 // How long a skill picked in the skill list waits for a tap on a skill button to go on.
 constexpr auto BindWindow = std::chrono::seconds(8);
@@ -803,6 +806,16 @@ std::optional<float> CurrentDepth(Rml::ElementDocument* document)
     return UI::RmlBridge::StackingDepthForDocument(FileName(document->GetSourceURL()));
 }
 
+// Whether a document is the chat's log with its frame shown.
+bool IsFramedChatLog(Rml::ElementDocument* document, std::string_view name)
+{
+    // The rule that lets its lines take the finger is the phone HUD's alone (chat_log.rcss).
+    if (name != ChatLogDocument || !UI::Mobile::ReplacesPcHud())
+        return false;
+    const Rml::Element* panel = document->GetElementById("panel");
+    return panel != nullptr && panel->IsClassSet("framed");
+}
+
 // Whether a document is drawn over the controls and keeps the fingers it covers (all but the
 // pass-through ones).
 bool IsDrawnOver(Rml::ElementDocument* owner, Rml::ElementDocument* controls)
@@ -812,7 +825,7 @@ bool IsDrawnOver(Rml::ElementDocument* owner, Rml::ElementDocument* controls)
     const std::string_view name = FileName(owner->GetSourceURL());
     for (const std::string_view passThrough : PassThroughDocuments)
     {
-        if (name == passThrough)
+        if (name == passThrough && !IsFramedChatLog(owner, name))
             return false;
     }
     const std::optional<float> depth = CurrentDepth(owner);

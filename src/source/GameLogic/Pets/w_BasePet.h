@@ -39,9 +39,12 @@ public:
     void Render(bool bForceRender = false);
 
 private:
-    bool UpdateMove(double tick, bool bForceRender = false);
-    bool UpdateModel(double tick, bool bForceRender = false);
-    bool UpdateSound(double tick, bool bForceRender = false);
+    // The steps of Update share one lookup of the current action: `found` tells whether m_actionMap has the move
+    // type, `action` is that action while it still exists (nullptr otherwise).
+    bool FindAction(Smart_Ptr(PetAction)& action) const;
+    bool UpdateMove(double tick, bool bForceRender, bool found, PetAction* action);
+    bool UpdateModel(double tick, bool bForceRender, bool found, PetAction* action);
+    bool UpdateSound(double tick, bool bForceRender, bool found, PetAction* action);
 
     bool CreateEffect(double tick, bool bForceRender = false);
 

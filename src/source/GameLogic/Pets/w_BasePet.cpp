@@ -140,9 +140,16 @@ void PetObject::Update(bool bForceRender)
 
     //-----------------------------//
     auto tick = m_timer->GetTimeElapsed();
-    UpdateModel(tick, bForceRender);
-    UpdateMove(tick, bForceRender);
-    UpdateSound(tick, bForceRender);
+    // m_moveType changes only in UpdateMove (back to standing when its action is missing), so the model and move
+    // steps share one lookup and the sound step looks again only after such a change.
+    Smart_Ptr(PetAction) action;
+    bool found = FindAction(action);
+    const ActionType typeBeforeMove = m_moveType;
+    UpdateModel(tick, bForceRender, found, action.get());
+    UpdateMove(tick, bForceRender, found, action.get());
+    if (m_moveType != typeBeforeMove)
+        found = FindAction(action);
+    UpdateSound(tick, bForceRender, found, action.get());
 }
 
 void PetObject::Render(bool bForceRender)
@@ -193,7 +200,19 @@ void PetObject::SetCommand(int targetKey, ActionType cmdType)
     m_moveType = cmdType;
 }
 
-bool PetObject::UpdateMove(double tick, bool bForceRender)
+bool PetObject::FindAction(Smart_Ptr(PetAction)& action) const
+{
+    const auto iter = m_actionMap.find(m_moveType);
+    if (iter == m_actionMap.end())
+    {
+        action.reset();
+        return false;
+    }
+    action = iter->second.lock();
+    return true;
+}
+
+bool PetObject::UpdateMove(double tick, bool bForceRender, bool found, PetAction* action)
 {
     if (m_oldMoveType != m_moveType)
     {
@@ -206,36 +225,28 @@ bool PetObject::UpdateMove(double tick, bool bForceRender)
         m_obj->Velocity = (*iter2).second;
     }
 
-    auto iter = m_actionMap.find(m_moveType);
-    if (iter == m_actionMap.end())
+    if (!found)
     {
         m_moveType = eAction_Stand;
         return FALSE;
     }
 
-    // std::tr1::weak_ptr<PetAction> petAction = (*iter).second;
-
-    Weak_Ptr(PetAction) petAction = (*iter).second;
-
-    if (petAction.expired() == FALSE)
+    if (action != nullptr)
     {
-        petAction.lock()->Move(m_obj, m_pOwner, m_targetKey, tick, bForceRender);
+        action->Move(m_obj, m_pOwner, m_targetKey, tick, bForceRender);
     }
 
     return TRUE;
 }
 
-bool PetObject::UpdateModel(double tick, bool bForceRender)
+bool PetObject::UpdateModel(double tick, bool bForceRender, bool found, PetAction* action)
 {
-    auto iter = m_actionMap.find(m_moveType);
-    if (iter == m_actionMap.end())
+    if (!found)
         return FALSE;
 
-    Weak_Ptr(PetAction) petAction = (*iter).second;
-
-    if (petAction.expired() == FALSE)
+    if (action != nullptr)
     {
-        petAction.lock()->Model(m_obj, m_pOwner, m_targetKey, tick, bForceRender);
+        action->Model(m_obj, m_pOwner, m_targetKey, tick, bForceRender);
     }
 
     BMD* b = &Models[m_obj->Type];
@@ -246,17 +257,14 @@ bool PetObject::UpdateModel(double tick, bool bForceRender)
     return TRUE;
 }
 
-bool PetObject::UpdateSound(double tick, bool bForceRender)
+bool PetObject::UpdateSound(double tick, bool bForceRender, bool found, PetAction* action)
 {
-    auto iter = m_actionMap.find(m_moveType);
-    if (iter == m_actionMap.end())
+    if (!found)
         return FALSE;
 
-    Weak_Ptr(PetAction) petAction = (*iter).second;
-
-    if (petAction.expired() == FALSE)
+    if (action != nullptr)
     {
-        petAction.lock()->Sound(m_obj, m_pOwner, m_targetKey, tick, bForceRender);
+        action->Sound(m_obj, m_pOwner, m_targetKey, tick, bForceRender);
     }
 
     return TRUE;

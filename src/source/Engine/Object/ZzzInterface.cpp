@@ -3530,6 +3530,17 @@ void SendMacroChat(wchar_t* Text)
     }
 }
 
+bool SendMacroSlot(int slot)
+{
+    if (slot < 0 || slot >= static_cast<int>(std::size(MacroText)) || MacroText[slot][0] == L'\0')
+        return false;
+    const bool macroPauseOver = LastMacroTime < GetTickCount64() - MacroCooldownMs;
+    if (!macroPauseOver || gMapManager.InChaosCastle() || g_Direction.IsDirection())
+        return false;
+    SendMacroChat(MacroText[slot]);
+    return true;
+}
+
 void MoveInterface()
 {
     if (g_Direction.IsDirection())
