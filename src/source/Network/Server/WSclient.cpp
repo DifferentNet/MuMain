@@ -9361,12 +9361,14 @@ void ReceiveDuelRequest(const BYTE* ReceiveBuffer)
     auto Data = (LPPMSG_REQ_DUEL_ANSWER)ReceiveBuffer;
     wchar_t playerName[MAX_USERNAME_SIZE + 1]{};
     CMultiLanguage::ConvertFromUtf8(playerName, Data->szID, MAX_USERNAME_SIZE);
+    // The challenger's key comes with the packet: a lookup by name finds nobody when they are out of sight.
+    const short enemyKey = static_cast<short>(MAKEWORD(Data->bIndexL, Data->bIndexH));
 
     // "Decline invitations" answers even while a message box is open, which would otherwise drop the challenge
     // unanswered.
     if (UI::Chat::InviteAutoDecline::ShouldDecline(UI::Chat::InviteKind::Duel, playerName))
     {
-        g_DuelMgr.SetDuelPlayer(DUEL_ENEMY, FindCharacterByID(playerName)->Key, playerName);
+        g_DuelMgr.SetDuelPlayer(DUEL_ENEMY, enemyKey, playerName);
         g_DuelMgr.SendDuelRequestAnswer(DUEL_ENEMY, FALSE);
         return;
     }
@@ -9375,9 +9377,6 @@ void ReceiveDuelRequest(const BYTE* ReceiveBuffer)
     {
         return;
     }
-
-    auto enemyCharacter = FindCharacterByID(playerName);
-    short enemyKey = enemyCharacter->Key;
 
     g_DuelMgr.SetDuelPlayer(DUEL_ENEMY, enemyKey, playerName);
 

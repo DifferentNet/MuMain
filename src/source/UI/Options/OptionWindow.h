@@ -336,7 +336,7 @@ namespace mu::ui::window
             Rml::String whisperSoundLabel;
             bool slideHelp = true;
             Rml::String slideHelpLabel;
-            // Party, trade, duel and guild invitations declined by themselves (config.ini).
+            // Party, trade and duel invitations declined by themselves (config.ini).
             bool declineInvitations = false;
             Rml::String declineInvitationsLabel;
             // The row that opens the loot filter: shown in the game only; its label and its button's text.

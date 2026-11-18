@@ -62,7 +62,7 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyTitleEffects[] = L"TitleEffects";
     // MU Moldova: titles only over players in towns (safe zones), UI::TitlePlates::ShownHere().
     inline constexpr wchar_t CfgKeyTitlesTownsOnly[] = L"TitlesTownsOnly";
-    // MU Moldova: party, trade, duel and guild invitations are declined by themselves (UI::Chat::InviteAutoDecline).
+    // MU Moldova: party, trade and duel invitations are declined by themselves (UI::Chat::InviteAutoDecline).
     inline constexpr wchar_t CfgKeyDeclineInvitations[] = L"DeclineInvitations";
     // MU Moldova: the phone or PC layout ("auto", "pc", "phone") and the controls ("auto", "mouse",
     // "touch"), set in the options window's Interface tab. See UI::Mobile::InterfaceMode.
