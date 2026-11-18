@@ -46,6 +46,7 @@
 #include "Render/Lighting/SunShadowSetting.h"
 #include "Render/PostProcessing/HazeSetting.h"
 #include "Render/Effects/ParticlesSetting.h"
+#include "Render/Effects/GroundMarks.h"
 #include <optional>
 #include "Camera/CameraManager.h"
 #include "Camera/CameraMode.h"
@@ -320,6 +321,7 @@ static void UpdateGameEntities()
         FRAME_PROFILE(MoveEffects);
         MoveEffects();
     }
+    Render::Effects::GroundMarks::Update();
     MoveJoints();
     {
         FRAME_PROFILE(MoveParticles);
@@ -593,6 +595,9 @@ static void RenderGameWorld(BYTE& byWaterMap, int width, int height)
 
     if (renderEffects)
     {
+        // The Remaster's skill ground marks: on the ground, before the characters, joints and effects
+        // (none on water maps, whose ground is drawn later).
+        Render::Effects::GroundMarks::Draw();
         RenderEffectShadows();
         RenderBoids();
     }

@@ -306,6 +306,13 @@ mu_add_test(
         test_ribbon_spline.cpp
 )
 
+# Skill ground marks: the fade, the pool (renewal, oldest first), the tiles under a mark and its mirror.
+mu_add_test(
+    NAME ground_marks_tests
+    SOURCES
+        test_ground_marks.cpp
+)
+
 # Smooth trails: the head slice of a player's swing trail.
 mu_add_test(
     NAME blur_slice_tests
@@ -429,6 +436,18 @@ add_test(
         "-DMU_JOINT_SOURCE=${MU_EFFECTS_DIR}/ZzzEffectJoint.cpp"
         "-DMU_CHARACTER_SOURCE=${CMAKE_SOURCE_DIR}/src/source/Engine/Object/ZzzCharacter.cpp"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/test_ribbons_gate.cmake"
+)
+
+# The skill ground marks are only laid through their gate; the crack model is skipped only for a mark.
+add_test(
+    NAME ground_marks_are_gated
+    COMMAND "${CMAKE_COMMAND}"
+        "-DMU_GROUND_MARKS_SOURCE=${MU_EFFECTS_DIR}/GroundMarks.cpp"
+        "-DMU_GROUND_MARKS_HEADER=${MU_EFFECTS_DIR}/GroundMarks.h"
+        "-DMU_EFFECT_SOURCE=${MU_EFFECTS_DIR}/ZzzEffect.cpp"
+        "-DMU_MOVE_HANDLERS_SOURCE=${MU_EFFECTS_DIR}/Behaviors/MoveHandlers.cpp"
+        "-DMU_CHARACTER_SOURCE=${CMAKE_SOURCE_DIR}/src/source/Engine/Object/ZzzCharacter.cpp"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/test_ground_marks_gate.cmake"
 )
 
 add_test(

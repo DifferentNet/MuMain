@@ -42,6 +42,7 @@
 #include "Render/Effects/OwnedEffectsProbe.h"
 #include "Render/Effects/BlurSlice.h"
 #include "Render/Effects/SkillFx.h"
+#include "Render/Effects/GroundMarks.h"
 #include "Engine/Object/ZzzOpenData.h"
 #include "Scenes/SceneCore.h"
 #include "Scenes/MainScene.h"
@@ -4458,6 +4459,9 @@ void MoveCharacter(CHARACTER* c, OBJECT* o)
                 Pos[2] = TargetPosition[2] + (rand() % 50) * i;
                 CreateEffect(MODEL_BLIZZARD, Pos, o->Angle, Light, 0, NULL, i + 1);
             }
+            // Remaster ground marks: one frost a cast on the targeted spot, under the whole storm (its shards
+            // land scattered around it, and one may run out of life before landing).
+            Render::Effects::GroundMarks::Add(Render::Effects::GroundMarks::Source::IceStorm, TargetPosition[0], TargetPosition[1]);
             if (c == Hero)
             {
                 ++CharacterMachine->PacketSerial;
