@@ -1,6 +1,6 @@
 // SkillFx.h: the Remaster skill effect looks (desktop, HD textures on), from the player's [Render]
-// SkillLightPools, SoftParticles, FlipbookBlending, SmoothTrails and SkillGroundMarks settings and the effect level
-// (Options > Graphics, [Render] EffectLevel 0..4).
+// SkillLightPools, SoftParticles, FlipbookBlending, SmoothTrails, SkillGroundMarks and SkillHotCores settings and
+// the effect level (Options > Graphics, [Render] EffectLevel 0..4).
 //
 //   LightPools     the lights of skill effects (fire, lightning, explosions) drawn on the ground as
 //                  smooth round pools, beside the map's torch pools (Render/Terrain/TorchLights.h).
@@ -12,12 +12,15 @@
 //                  longer folds over itself at high frame rates (BlurSlice.h).
 //   Decals         fire, ice and earth skills leave a fading mark on the ground (scorch, frost;
 //                  GroundMarks.h).
+//   Cores          where glowing (additive) effects pile up bright, the frame's centre of the pile burns
+//                  toward white in the effects' own colour, in the post-processing composite
+//                  (PostProcessing/HotCores.h, post_composite_cores.frag). Needs post-processing and bloom.
 //
-//   Effect level 4: 16 pools, soft, flipbook, trails of up to 8 pieces a span, 48 ground marks; 3: 12
-//   pools, soft, flipbook, trails of up to 4 pieces, 32 marks; 2: 8 pools, soft, 16 marks; 0 and 1: all
-//   off. In the Classic client (no Data/HD) and on the web all five are off and the frame is the same
-//   as without them.
-//   Console: $fx pools|soft|flipbook|trails|decals on|off, $fx status.
+//   Effect level 4: 16 pools, soft, flipbook, trails of up to 8 pieces a span, 48 ground marks, cores at
+//   full strength; 3: 12 pools, soft, flipbook, trails of up to 4 pieces, 32 marks, cores 0.75; 2: 8 pools,
+//   soft, 16 marks, cores 0.5; 0 and 1: all off. In the Classic client (no Data/HD) and on the web all six
+//   are off and the frame is the same as without them.
+//   Console: $fx pools|soft|flipbook|trails|decals|cores on|off, $fx status.
 //   Main thread only.
 #pragma once
 
@@ -33,8 +36,9 @@ enum class Feature : std::uint8_t
     FlipbookBlend,
     Ribbons,
     Decals,
+    Cores,
 };
-inline constexpr int kFeatureCount = 5;
+inline constexpr int kFeatureCount = 6;
 
 // The most ground pools of effect lights a frame draws (at effect level 4).
 inline constexpr int kMaxPools = 16;
@@ -90,6 +94,20 @@ inline constexpr int kMaxMarks = 48;
     return level == 2 ? 16 : 0;
 }
 
+// The strength of the hot cores at an effect level (0: off; HotCores.h scales the whitening by it).
+[[nodiscard]] constexpr float CoreStrength(const int level)
+{
+    if (level >= 4)
+    {
+        return 1.0f;
+    }
+    if (level == 3)
+    {
+        return 0.75f;
+    }
+    return level == 2 ? 0.5f : 0.0f;
+}
+
 // Whether the effect level lets a feature show.
 [[nodiscard]] constexpr bool LevelAllows(const Feature feature, const int level)
 {
@@ -105,6 +123,8 @@ inline constexpr int kMaxMarks = 48;
         return RibbonPieceBudget(level) > 0;
     case Feature::Decals:
         return MarkBudget(level) > 0;
+    case Feature::Cores:
+        return CoreStrength(level) > 0.0f;
     }
     return false;
 }
@@ -116,7 +136,7 @@ inline constexpr int kMaxMarks = 48;
     return chosen && available && LevelAllows(feature, level);
 }
 
-// The console name of a feature: pools, soft, flipbook, trails, decals.
+// The console name of a feature: pools, soft, flipbook, trails, decals, cores.
 [[nodiscard]] constexpr const char* Name(const Feature feature)
 {
     switch (feature)
@@ -131,13 +151,15 @@ inline constexpr int kMaxMarks = 48;
         return "trails";
     case Feature::Decals:
         return "decals";
+    case Feature::Cores:
+        return "cores";
     }
     return "";
 }
 
 // Whether this client offers the looks at all: the Remaster PC client (never the web, never Classic).
 [[nodiscard]] bool Available();
-// Reads the five settings from GameConfig (startup, graphics preset changes).
+// Reads the six settings from GameConfig (startup, graphics preset changes).
 void ApplyFromConfig();
 namespace Detail
 {
@@ -166,6 +188,9 @@ extern bool g_available;
 [[nodiscard]] int ActiveRibbonQuadBudget();
 // The ground marks that may lie at once now: MarkBudget(effect level), 0 when Decals is off.
 [[nodiscard]] int ActiveMarkBudget();
+// The hot core strength this frame: CoreStrength(effect level), 0 when Cores is off (the composite then runs
+// unchanged).
+[[nodiscard]] float ActiveCoreStrength();
 // Whether the player chose a feature ([Render] setting), whatever the level and the client.
 [[nodiscard]] bool Chosen(Feature feature);
 // Saves a feature's setting ($fx) and applies it at once.
