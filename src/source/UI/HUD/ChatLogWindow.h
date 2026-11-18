@@ -193,6 +193,13 @@ namespace mu::ui::window
         // conversion enters anywhere (that conversion is the bug class RmlPanelGeometry.h warns
         // about).
         void UpdatePointedLine();
+        // The shown line with a sender under a window pixel (the whole row, gap included), or -1.
+        int SenderLineAt(float px, float py) const;
+        // Puts a line's sender into the whisper field; `focusMessage` also takes the caret to the message field.
+        void WhisperToSenderOf(int line, bool focusMessage);
+        // A phone's tap on the chat's history while its frame is shown whispers to the line's sender, as a right
+        // click does on a PC (a long press there would cast the selected skill).
+        void OnLinesTapped(float px, float py);
         // Pushes m_iCurrentRenderEndLine into RmlUi's scroll offset (native's own fPosRate math),
         // and, when no request is pending, reads it back the other way so the logical cursor
         // tracks wherever the user dragged or scrolled to.

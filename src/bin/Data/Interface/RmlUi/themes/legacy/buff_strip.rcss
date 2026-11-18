@@ -239,3 +239,10 @@
 @media (theme: mobile-hud) {
 	#panel { top: 40dp; }
 }
+
+/* MU Moldova: bigger icons for a finger in the phone HUD (24x33 css at a phone's 0.857): six to a
+   row, 6 x 28dp + 5 x 5dp inside the 200dp panel. A tap moves the pointer there, so the buff's
+   tooltip opens on its hover as with a mouse. */
+@media (theme: mobile-hud) {
+	.buff-slot, .buff-icon-art { width: 28dp; height: 39dp; }
+}

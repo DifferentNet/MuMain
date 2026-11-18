@@ -15,7 +15,7 @@
 		<div id="resize_handle" data-class-hidden="!show_frame"
 		     data-event-drag="chat_resize_drag"></div>
 
-		<div id="lines" class="scroll-pane" data-style-height="client_height + 'dp'"
+		<div id="lines" class="scroll-pane" data-style-height="client_height + 'dp'" data-event-click="chat_lines_tap"
 		     data-style---line-px="line_px + 'px'" data-style---row-px="row_px + 'px'">
 			<div data-for="line : lines"
 			     data-attr-class="'chat-line chat-line--' + line.kind + (line.has_id ? ' chat-line--has-id' : '') + (it_index == pointed_index ? ' chat-line--pointed' : '') + (line.faded ? ' chat-line--faded' : '') + (line.lead ? ' chat-line--lead' : '')"

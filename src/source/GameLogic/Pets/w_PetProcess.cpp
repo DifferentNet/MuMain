@@ -361,11 +361,11 @@ void PetProcess::UpdatePets()
     {
         auto tempiter = iter;
         ++iter;
-        Weak_Ptr(PetObject) basepet = *tempiter;
-
-        if (basepet.expired() == false)
+        // A copy keeps the pet alive while it runs, as the weak_ptr's lock() did.
+        const PetObjectPtr pet = *tempiter;
+        if (pet)
         {
-            basepet.lock()->Update();
+            pet->Update();
         }
     }
 }
@@ -376,11 +376,11 @@ void PetProcess::RenderPets()
     {
         auto tempiter = iter;
         ++iter;
-        Weak_Ptr(PetObject) basepet = *tempiter;
-
-        if (basepet.expired() == FALSE)
+        // A copy keeps the pet alive while it runs, as the weak_ptr's lock() did.
+        const PetObjectPtr pet = *tempiter;
+        if (pet)
         {
-            basepet.lock()->Render();
+            pet->Render();
         }
     }
 }

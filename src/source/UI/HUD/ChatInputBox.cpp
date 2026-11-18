@@ -541,6 +541,8 @@ void mu::ui::window::CChatInputBox::BindRmlModel(Rml::DataModelConstructor& c, C
         c.Bind("hint_" + std::to_string(i), &model.buttonHints[i]);
     for (size_t i = 0; i < model.quickPhrases.size(); ++i)
         c.Bind("quick_" + std::to_string(i), &model.quickPhrases[i]);
+    for (size_t i = 0; i < model.quickIsMacro.size(); ++i)
+        c.Bind("quick_macro_" + std::to_string(i), &model.quickIsMacro[i]);
 
     // A phone's quick phrase: sent as Enter sends the line, with Enter's pause between two lines.
     c.BindEventCallback("chat_quick",
@@ -551,6 +553,11 @@ void mu::ui::window::CChatInputBox::BindRmlModel(Rml::DataModelConstructor& c, C
             const ChatInputRmlModel& model = m_RmlView.GetModel();
             if (phrase < 0 || phrase >= static_cast<int>(model.quickPhrases.size()) || !IsVisible())
                 return;
+            if (HasMacro(phrase))
+            {
+                SendQuickMacro(phrase);
+                return;
+            }
             const uint64_t now = GetTickCount64();
             if (m_lastChatTime >= now - ChatCooldownMs)
                 return;
@@ -691,7 +698,14 @@ void mu::ui::window::CChatInputBox::SyncRmlModel()
     static_assert(std::size(quickPhrases) == std::tuple_size_v<decltype(model.quickPhrases)>);
     for (size_t i = 0; i < model.quickPhrases.size(); ++i)
     {
-        Rml::String phrase = StringUtils::WideToNarrow(quickPhrases[i]);
+        // A saved macro of keys 1 to 5 (Alt+1..5 on a PC) takes the button of its number.
+        const bool isMacro = HasMacro(static_cast<int>(i));
+        if (model.quickIsMacro[i] != isMacro)
+        {
+            model.quickIsMacro[i] = isMacro;
+            m_RmlView.MarkDirty("quick_macro_" + std::to_string(i));
+        }
+        Rml::String phrase = StringUtils::WideToNarrow(isMacro ? MacroText[i] : quickPhrases[i]);
         if (model.quickPhrases[i] != phrase)
         {
             model.quickPhrases[i] = std::move(phrase);
@@ -792,6 +806,28 @@ void mu::ui::window::CChatInputBox::GetWhsprID(type_string& strWhsprID)
 void mu::ui::window::CChatInputBox::SetWhsprID(const wchar_t* strWhsprID)
 {
     SetFieldText("whisper_field", strWhsprID ? strWhsprID : L"");
+}
+
+bool mu::ui::window::CChatInputBox::HasMacro(int slot)
+{
+    return slot >= 0 && slot < static_cast<int>(std::size(MacroText)) && MacroText[slot][0] != L'\0';
+}
+
+// A macro on a quick button goes as Alt+N sends it (its pause, its checks); the bar then closes as after a
+// quick phrase, unless a line is half typed.
+void mu::ui::window::CChatInputBox::SendQuickMacro(int slot)
+{
+    if (!SendMacroSlot(slot))
+        return;
+    PlayBuffer(SOUND_CLICK01);
+    if (m_RmlView.GetModel().chatText.empty())
+        g_pNewUISystem->Hide(mu::ui::window::INTERFACE_CHATINPUTBOX);
+}
+
+void mu::ui::window::CChatInputBox::StartWhisperTo(const wchar_t* strWhsprID)
+{
+    SetWhsprID(strWhsprID);
+    FocusField("chat_field");
 }
 
 // The own whisper shows as "[to Name] text" with no sender ID, so a right-click on the line does not

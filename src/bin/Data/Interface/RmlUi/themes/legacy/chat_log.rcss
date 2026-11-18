@@ -150,3 +150,11 @@
    in the list and takes no space, so the newest lines still sit at the bottom; the first line on
    screen is .chat-line--lead, not :first-child, because the first child may be gone. */
 .chat-line.chat-line--faded { display: none; }
+
+/* MU Skynet, phone with touch controls: with the chat open on its history (the frame shown) a finger drags the
+   history up and down and a tap on a line whispers to its sender (CChatLogWindow::OnLinesTapped). With the frame
+   hidden the log stays a pass-through for the world and the joystick, as above. */
+@media (theme: mobile-hud) {
+	#panel.framed #lines { pointer-events: auto; }
+	#panel.framed #lines scrollbarvertical { width: 24dp; }
+}

@@ -10,6 +10,7 @@
 #include <RmlUi/Core/Types.h>
 
 #include <chrono>
+#include <string>
 
 namespace Rml
 {
@@ -38,6 +39,9 @@ struct Sources
     std::chrono::steady_clock::time_point potionsCountedAt{};
     // The EXP percentage in tenths of a percent (427 for 42.7 %); -1 before the first.
     int expTenths = -1;
+    // The time to the next level shown after it, when the pace is known; looked at once a second.
+    std::wstring expTimeToLevel;
+    std::chrono::steady_clock::time_point expPaceCheckedAt{};
 };
 
 struct Model
@@ -56,7 +60,8 @@ struct Model
     Rml::String potionWCount;
     Rml::String potionECount;
     Rml::String potionRCount;
-    // The EXP line's percentage with one decimal ("42.7%"), the phone HUD's text beside the line.
+    // The EXP line's percentage with one decimal ("42.7%"), the phone HUD's text beside the line, and after a minute
+    // of hunting the time to the next level after a middle dot, as the PC's EXP tooltip shows it.
     Rml::String expText;
     Sources seen;
 };

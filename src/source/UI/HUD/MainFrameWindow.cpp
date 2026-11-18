@@ -25,6 +25,7 @@
 #include "Character/CharacterManager.h"
 #include "UI/HUD/HeroGauges.h"
 #include "UI/HUD/ExperiencePace.h"
+#include "UI/HUD/ExperiencePaceText.h"
 #include "UI/Text/GroupedNumberText.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "GameLogic/Skills/SkillManager.h"
@@ -704,16 +705,9 @@ void mu::ui::window::CMainFrameWindow::SyncExperience()
         {
             const std::wstring rate = UI::Text::GroupThousands(static_cast<std::int64_t>(std::llround(*perHour)));
             wchar_t pace[192] = {};
-            const auto minutes = Pace::MinutesToGain(dwNexExperience - dwExperience, *perHour);
-            if (minutes && *minutes <= Pace::MaxShownMinutes)
+            if (const auto when = Pace::TimeToGainText(dwNexExperience - dwExperience, *perHour))
             {
-                wchar_t when[48] = {};
-                if (*minutes >= 60)
-                    mu_swprintf(when, I18N::Game::DurationHoursMinutes, static_cast<int>(*minutes / 60),
-                                static_cast<int>(*minutes % 60));
-                else
-                    mu_swprintf(when, I18N::Game::DurationMinutes, static_cast<int>(*minutes));
-                mu_swprintf(pace, I18N::Game::ExpPaceLine, rate.c_str(), when);
+                mu_swprintf(pace, I18N::Game::ExpPaceLine, rate.c_str(), when->c_str());
             }
             else
             {

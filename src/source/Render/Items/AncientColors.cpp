@@ -80,7 +80,10 @@ GLuint CopyOf(const BMD& model, int mesh, const SetColor& color)
 }
 } // namespace
 
-int SetOfBodyPart(const CHARACTER* c, int bodyPart)
+namespace
+{
+// The set of a body part; `armourSet` is the armour's set when already known (nullptr: worked out when needed).
+int SetOfPart(const CHARACTER* c, int bodyPart, const int* armourSet)
 {
     if (c == nullptr || bodyPart < BODYPART_HELM || bodyPart > BODYPART_BOOTS)
         return 0;
@@ -91,13 +94,34 @@ int SetOfBodyPart(const CHARACTER* c, int bodyPart)
     const int itemType = Data::Items::ToItemType(part.Type);
     if (part.AncientDiscriminator == 0)
     {
+        if (bodyPart == BODYPART_ARMOR)
+            return 0;
         // A plain piece may take the colour of the set the armour shows (BorrowedSet).
-        return bodyPart == BODYPART_ARMOR ? 0 : BorrowedSet(itemType, SetOfBodyPart(c, BODYPART_ARMOR));
+        const int armour = armourSet != nullptr ? *armourSet : SetOfPart(c, BODYPART_ARMOR, nullptr);
+        return BorrowedSet(itemType, armour);
     }
     int discriminator = c == Hero ? OwnDiscriminator(bodyPart, itemType) : 0;
     if (discriminator == 0)
         discriminator = GameLogic::AncientLook::DiscriminatorOf(std::wstring_view(c->ID), bodyPart - BODYPART_HELM);
     return discriminator == 0 ? 0 : PickSet(g_csItemOption.GetSetsOfItem(itemType), discriminator);
+}
+} // namespace
+
+int SetOfBodyPart(const CHARACTER* c, int bodyPart)
+{
+    return SetOfPart(c, bodyPart, nullptr);
+}
+
+BodySets SetsOfBody(const CHARACTER* c)
+{
+    static_assert(BodyPartCount == MAX_BODYPART, "BodySets covers every body part");
+    BodySets sets{};
+    if (c == nullptr)
+        return sets;
+    const int armour = SetOfPart(c, BODYPART_ARMOR, nullptr);
+    for (int bodyPart = BODYPART_HELM; bodyPart <= BODYPART_BOOTS; ++bodyPart)
+        sets[static_cast<std::size_t>(bodyPart)] = bodyPart == BODYPART_ARMOR ? armour : SetOfPart(c, bodyPart, &armour);
+    return sets;
 }
 
 int SetOfItem(int modelSlot, int ancientDiscriminator)
@@ -139,7 +163,7 @@ ScopedSetTextures::ScopedSetTextures(BMD* model)
         const GLuint copy = CopyOf(*model, mesh, *color);
         if (copy == BITMAP_UNKNOWN)
             continue;
-        m_swapped.emplace_back(mesh, model->IndexTexture[mesh]);
+        Remember(mesh, model->IndexTexture[mesh]);
         model->IndexTexture[mesh] = copy;
     }
     g_drawnColor = color;
@@ -147,10 +171,25 @@ ScopedSetTextures::ScopedSetTextures(BMD* model)
 
 ScopedSetTextures::~ScopedSetTextures()
 {
-    for (const auto& [mesh, texture] : m_swapped)
+    for (int i = 0; i < m_swappedCount; ++i)
+    {
+        const Swap& swap = m_swapped[static_cast<std::size_t>(i)];
+        m_model->IndexTexture[swap.first] = swap.second;
+    }
+    for (const auto& [mesh, texture] : m_moreSwapped)
         m_model->IndexTexture[mesh] = texture;
     g_drawnColor = static_cast<const SetColor*>(m_previousColor);
     g_partSet = m_partSet;
+}
+
+void ScopedSetTextures::Remember(int mesh, std::uint32_t texture)
+{
+    if (m_swappedCount < InlineSwaps)
+    {
+        m_swapped[static_cast<std::size_t>(m_swappedCount++)] = Swap(mesh, texture);
+        return;
+    }
+    m_moreSwapped.emplace_back(mesh, texture);
 }
 
 bool PulseColor(float color[3])
