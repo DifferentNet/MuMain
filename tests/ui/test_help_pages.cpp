@@ -185,8 +185,9 @@ TEST_CASE("help with a gamepad: the pad's buttons instead of the keys, LB and RB
 {
     const auto lines = UI::Help::BuildPage(0, kPad);
 
-    // Spacer, heading, spacer, 24 pad rows, spacer, the LB/RB hint, spacer.
-    REQUIRE(lines.size() == 30);
+    // Spacer, heading, spacer, 25 pad rows (nine skill buttons: the RB page's row too), spacer, the
+    // LB/RB hint, spacer.
+    REQUIRE(lines.size() == 31);
     CHECK(lines[1].heading);
     CHECK(lines[1].text == I18N::Game::PadHelpTitle);
     CHECK(CountHeadings(lines) == 1);
@@ -195,9 +196,10 @@ TEST_CASE("help with a gamepad: the pad's buttons instead of the keys, LB and RB
     CHECK(lines[6].text == Xbox(I18N::Game::PadHelpAttack));
     CHECK(lines[8].text == Xbox(I18N::Game::PadHelpPk));
     CHECK(lines[10].text == Xbox(I18N::Game::PadHelpSkills));
-    CHECK(lines[13].text == Xbox(I18N::Game::PadHelpSkillList));
-    CHECK(lines[22].text == I18N::Game::PadHelpKeyboard);
-    CHECK(lines[26].text == Xbox(I18N::Game::PadHelpScreensKeys));
+    CHECK(lines[11].text == Xbox(I18N::Game::PadHelpSkillsThird));
+    CHECK(lines[14].text == Xbox(I18N::Game::PadHelpSkillList));
+    CHECK(lines[23].text == I18N::Game::PadHelpKeyboard);
+    CHECK(lines[27].text == Xbox(I18N::Game::PadHelpScreensKeys));
     CHECK(Hint(lines).text == Xbox(I18N::Game::PadHelpPagesHint));
     // No brace is left for the player to read.
     for (const UI::Help::PageLine& line : lines)
@@ -229,6 +231,8 @@ TEST_CASE("help with a PlayStation pad and five skill buttons: its button names,
     names.view = L"Create";
     CHECK(lines[6].text == UI::HUD::PadButtonNames::Fill(I18N::Game::PadHelpAttack, names));
     CHECK(lines[10].text == UI::HUD::PadButtonNames::Fill(I18N::Game::PadHelpSkillsFive, names));
+    // Five buttons: no RB page, no row for it.
+    CHECK(lines[11].text == UI::HUD::PadButtonNames::Fill(I18N::Game::PadHelpSkillsUse, names));
     CHECK(Hint(lines).text == UI::HUD::PadButtonNames::Fill(I18N::Game::PadHelpPagesHint, names));
 }
 

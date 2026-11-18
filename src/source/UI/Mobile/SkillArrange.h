@@ -15,16 +15,17 @@ inline constexpr int NoSkill = -1;
 using HotKeys = std::array<int, HotKeyCount>;
 
 // The skill buttons stand for five hotkeys: 1-5, or 6-9 and 0 as the upper set (the touch controls
-// keep their own set, which the current skill does not switch). A pad alone has a sixth button
-// (RT + B, pad round 3): hotkey 6 in the lower set. The upper set has no sixth hotkey left, so there
-// the sixth button stands for 1 (empty by the set's rule) and the pad hides it.
+// keep their own set, which the current skill does not switch). A pad alone has four more buttons:
+// a sixth (RT + B, pad round 3) for hotkey 6 and the seventh to ninth (RB + X, Y, B, pad round 6)
+// for hotkeys 7-9, all in the lower set. The upper set has no hotkey left for them, so there they
+// stand for 1 (empty by the set's rule) and the pad hides them.
 inline constexpr int TouchSlotCount = 5;
-inline constexpr int SlotCount = 6;
+inline constexpr int SlotCount = 9;
 
 [[nodiscard]] constexpr int HotKeyOfSlot(int slot, bool upperSet)
 {
     if (slot >= TouchSlotCount)
-        return upperSet ? 1 : 6;
+        return upperSet ? 1 : slot + 1;
     const int hotKey = (upperSet ? 6 : 1) + slot;
     return hotKey == HotKeyCount ? 0 : hotKey;
 }

@@ -13387,10 +13387,10 @@
     <value>Terlalu jauh: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Pilih skill dengan penunjuk dan {A}, lalu tekan {X}, {Y} atau {B} ({RT} + {X}, {Y} atau {B} untuk tombol 4 sampai 6) untuk memasangnya di sana</value>
+    <value>Pilih skill dengan penunjuk dan {A}, lalu tekan {X}, {Y} atau {B} ({RT} + {X}, {Y} atau {B} untuk tombol 4 sampai 6, {RB} + {X}, {Y} atau {B} untuk 7 sampai 9) untuk memasangnya di sana</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Tekan {X}, {Y} atau {B} ({RT} + {X}, {Y} atau {B} untuk tombol 4 sampai 6) untuk memasang skill di sana</value>
+    <value>Tekan {X}, {Y} atau {B} ({RT} + {X}, {Y} atau {B} untuk tombol 4 sampai 6, {RB} + {X}, {Y} atau {B} untuk 7 sampai 9) untuk memasang skill di sana</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>Ketik</value>
@@ -13585,7 +13585,7 @@
     <value>Potion Q dan W</value>
   </data>
   <data name="PadCardFriend" xml:space="preserve">
-    <value>Anggota party berikutnya untuk heal dan buff</value>
+    <value>Ketuk: anggota party berikutnya untuk heal dan buff</value>
   </data>
   <data name="PadCardHelper" xml:space="preserve">
     <value>MU Helper nyala dan mati (tahan: pengaturan)</value>
@@ -14241,5 +14241,14 @@
   </data>
   <data name="PadStickRightObject" xml:space="preserve">
     <value>stik kanan</value>
+  </data>
+  <data name="PadHelpSkillsThird" xml:space="preserve">
+    <value>Tahan {RB}: {X}, {Y} dan {B} memakai skill 7 sampai 9 (ketuk singkat {RB} tetap memilih anggota party)</value>
+  </data>
+  <data name="PadCardSkillsThird" xml:space="preserve">
+    <value>Skill 7–9</value>
+  </data>
+  <data name="PadHintSkillsThird" xml:space="preserve">
+    <value>Tahan {RB}: {X}, {Y} dan {B} memakai skill 7 sampai 9</value>
   </data>
 </root>

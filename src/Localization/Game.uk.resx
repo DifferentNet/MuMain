@@ -13387,10 +13387,10 @@
     <value>Занадто далеко: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Вибери навичку вказівником і {A}, потім натисни {X}, {Y} або {B} ({RT} + {X}, {Y} або {B} для кнопок 4–6), щоб поставити її туди</value>
+    <value>Вибери навичку вказівником і {A}, потім натисни {X}, {Y} або {B} ({RT} + {X}, {Y} або {B} для кнопок 4–6, {RB} + {X}, {Y} або {B} для 7–9), щоб поставити її туди</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Натисни {X}, {Y} або {B} ({RT} + {X}, {Y} або {B} для кнопок 4–6), щоб поставити туди навичку</value>
+    <value>Натисни {X}, {Y} або {B} ({RT} + {X}, {Y} або {B} для кнопок 4–6, {RB} + {X}, {Y} або {B} для 7–9), щоб поставити туди навичку</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>Ввід</value>
@@ -13585,7 +13585,7 @@
     <value>Зілля Q і W</value>
   </data>
   <data name="PadCardFriend" xml:space="preserve">
-    <value>Наступний член групи для лікування й бафів</value>
+    <value>Натискання: наступний член групи для лікування й бафів</value>
   </data>
   <data name="PadCardHelper" xml:space="preserve">
     <value>MU Helper увімк. і вимк. (утримати: налаштування)</value>
@@ -14241,5 +14241,14 @@
   </data>
   <data name="PadStickRightObject" xml:space="preserve">
     <value>правий стік</value>
+  </data>
+  <data name="PadHelpSkillsThird" xml:space="preserve">
+    <value>Утримуй {RB}: {X}, {Y} і {B} застосовують навички 7–9 (коротке натискання {RB} як і раніше вибирає члена групи)</value>
+  </data>
+  <data name="PadCardSkillsThird" xml:space="preserve">
+    <value>Навички 7–9</value>
+  </data>
+  <data name="PadHintSkillsThird" xml:space="preserve">
+    <value>Утримуй {RB}: {X}, {Y} і {B} застосовують навички 7–9</value>
   </data>
 </root>

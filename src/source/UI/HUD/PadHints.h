@@ -15,6 +15,8 @@ enum class Hint
     Window = 1,
     BagFull = 2,
     Death = 3,
+    // A skill on the pad's RB page (hotkeys 7-9, pad round 6): hold RB and press X, Y or B.
+    SkillsThird = 4,
 };
 
 // Whether `bits` (GamepadHintsSeen) says the hint showed already, and `bits` with it marked shown.

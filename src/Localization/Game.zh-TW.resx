@@ -13387,10 +13387,10 @@
     <value>太遠了：</value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>用游標和 {A} 選擇技能，再按 {X}、{Y} 或 {B}（按鈕 4 到 6 為 {RT} + {X}、{Y} 或 {B}）放到那裡</value>
+    <value>用游標和 {A} 選擇技能，再按 {X}、{Y} 或 {B}（按鈕 4 到 6 為 {RT} + {X}、{Y} 或 {B}，7 到 9 為 {RB} + {X}、{Y} 或 {B}）放到那裡</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>按 {X}、{Y} 或 {B}（按鈕 4 到 6 為 {RT} + {X}、{Y} 或 {B}）把技能放到那裡</value>
+    <value>按 {X}、{Y} 或 {B}（按鈕 4 到 6 為 {RT} + {X}、{Y} 或 {B}，7 到 9 為 {RB} + {X}、{Y} 或 {B}）把技能放到那裡</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>輸入</value>
@@ -13585,7 +13585,7 @@
     <value>藥水 Q 和 W</value>
   </data>
   <data name="PadCardFriend" xml:space="preserve">
-    <value>下一個要治療與增益的隊伍成員</value>
+    <value>短按：下一個要治療與增益的隊伍成員</value>
   </data>
   <data name="PadCardHelper" xml:space="preserve">
     <value>MU Helper 開關（按住：設定）</value>
@@ -14241,5 +14241,14 @@
   </data>
   <data name="PadStickRightObject" xml:space="preserve">
     <value>右搖桿</value>
+  </data>
+  <data name="PadHelpSkillsThird" xml:space="preserve">
+    <value>按住 {RB}：{X}、{Y}、{B} 施放技能 7 到 9（短按 {RB} 仍會選擇隊伍成員）</value>
+  </data>
+  <data name="PadCardSkillsThird" xml:space="preserve">
+    <value>技能 7–9</value>
+  </data>
+  <data name="PadHintSkillsThird" xml:space="preserve">
+    <value>按住 {RB}：{X}、{Y}、{B} 施放技能 7 到 9</value>
   </data>
 </root>

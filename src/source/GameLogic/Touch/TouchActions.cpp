@@ -21,8 +21,10 @@
 #include "GameLogic/Items/LootFilterRuntime.h"
 #include "GameLogic/Touch/DirectionPick.h"
 #include "GameLogic/Pets/GIPetManager.h"
+#include "GameLogic/Skills/SkillBuffs.h"
 #include "GameLogic/Skills/SkillManager.h"
 #include "GameLogic/Social/PartyManager.h"
+#include "GameLogic/Touch/AreaAim.h"
 #include "GameLogic/Touch/SteerHold.h"
 #include "GameLogic/Touch/TargetPassOn.h"
 #include "I18N/All.h"
@@ -45,6 +47,7 @@
 #include <cmath>
 #include <map>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -170,6 +173,10 @@ bool g_controlsShown = false;
 // The pad's left stick now, in screen directions; 0, 0 while it rests (UI/HUD/GamepadControls).
 float g_padAimX = 0.f;
 float g_padAimY = 0.f;
+// The joystick's push now (Steer), in screen directions; 0, 0 while it rests. Twister and Aqua Beam
+// fly its way (CastAlongStick).
+float g_stickAimX = 0.f;
+float g_stickAimY = 0.f;
 int g_targetKey = NoTarget;
 // The target the pad's right stick chose (CycleTarget): the buttons' target while it is a good one.
 int g_chosenKey = NoTarget;
@@ -909,9 +916,9 @@ Progress CastWhereHeroStands(ActionSkillType skill, bool onSelf)
                             : Automation::CastSkill(skill, false, NoTarget, true, HuntingDistance));
 }
 
-Progress CastAtMonster(ActionSkillType skill)
+// A cast at the foe `target` (NoTarget: none about), walking up to it when out of reach.
+Progress CastAtFoe(ActionSkillType skill, int target)
 {
-    const int target = ChooseTarget();
     if (target == NoTarget)
     {
         // No monster around: an area skill still goes off where the character stands, but not by
@@ -955,6 +962,155 @@ Progress CastAtMonster(ActionSkillType skill)
     if (Automation::ShouldForgetTarget(result) && result != Automation::SkillResult::Refused)
         Forget(target);
     return OutcomeOf(result);
+}
+
+// How a mage's area skill aims under the pad and the touch controls (pad round 6, B6): at the pack's
+// centre, its area counted as the server counts the hits (OpenMU AreaSkillAttackAction): Flame,
+// Cometfall and Ice Storm nearer than half their TargetAreaDiameter of 3 tiles (server/trim/spell-hits.sql),
+// so a radius of 1.5, the 3 x 3 around the tile; Decay within its EffectRange of 2 on each axis
+// (GetAttackablesInRange, no target area filter), the 5 x 5 square. Twister and Aqua Beam along the
+// stick. The other skills aim at the target as before.
+enum class AreaKind
+{
+    None,
+    PackCentre,
+    StickLine,
+};
+
+struct AreaShape
+{
+    AreaKind kind = AreaKind::None;
+    AreaAim::AreaRule rule = AreaAim::AreaRule::Round;
+    float size = 0.f;
+};
+
+constexpr float SmallAreaRadius = 1.5f;
+constexpr float DecayEffectRange = 2.f;
+
+AreaShape AreaShapeOf(ActionSkillType skill)
+{
+    switch (skill)
+    {
+    case AT_SKILL_FLAME:
+    case AT_SKILL_FLAME_STR:
+    case AT_SKILL_FLAME_STR_MG:
+    case AT_SKILL_BLAST:
+    case AT_SKILL_BLAST_STR:
+    case AT_SKILL_BLAST_STR_MG:
+    case AT_SKILL_ICE_STORM:
+        return {AreaKind::PackCentre, AreaAim::AreaRule::Round, SmallAreaRadius};
+    case AT_SKILL_DECAY:
+    case AT_SKILL_DECAY_STR:
+        return {AreaKind::PackCentre, AreaAim::AreaRule::Square, DecayEffectRange};
+    case AT_SKILL_STORM:
+    case AT_SKILL_FLASH:
+        return {AreaKind::StickLine};
+    default:
+        return {};
+    }
+}
+
+// The foe a pack-centre skill goes on (AreaAim::PackCentre): among the foes about of the lit one's kind
+// (monsters, as a player lit keeps the aim), those within the skill's reach with no wall between; ties
+// to the one nearest `lit`. NoTarget with none in reach.
+int PackCentreKey(ActionSkillType skill, int lit, const AreaShape& shape)
+{
+    const float reach = gSkillManager.GetSkillDistance(skill, Hero);
+    static std::vector<AreaAim::Foe> s_foes;
+    s_foes.clear();
+    for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
+    {
+        const CHARACTER* character = &CharactersClient[i];
+        if (!IsGoodTarget(character, character->Key == lit))
+            continue;
+        const int tileX = TileOf(character->Object.Position[0]);
+        const int tileY = TileOf(character->Object.Position[1]);
+        const bool castable = InReach(character, reach) && CheckWall(Hero->PositionX, Hero->PositionY, tileX, tileY);
+        s_foes.push_back({character->Key, tileX, tileY, character->Object.Kind == KIND_PLAYER, castable});
+    }
+    const int key = AreaAim::PackCentre(s_foes, TileOf(Hero->Object.Position[0]), TileOf(Hero->Object.Position[1]),
+                                        shape.rule, shape.size, lit);
+    return key == AreaAim::NoKey ? NoTarget : key;
+}
+
+// The way the stick pushes now, on the map: the pad's left stick, else the touch joystick. False while
+// both rest.
+bool StickWay(float& dirX, float& dirY)
+{
+    if (g_padAimX != 0.f || g_padAimY != 0.f)
+        return ScreenToMap(g_padAimX, g_padAimY, dirX, dirY);
+    if (g_stickAimX != 0.f || g_stickAimY != 0.f)
+        return ScreenToMap(g_stickAimX, g_stickAimY, dirX, dirY);
+    return false;
+}
+
+// Twister or Aqua Beam the way the stick pushes: at the farthest tile within the skill's reach that
+// way with no wall between (AreaAim::AlongLine), the hero standing for it. None with the stick at rest
+// or no such tile: the cast goes at the target as before.
+std::optional<Progress> CastAlongStick(ActionSkillType skill)
+{
+    float dirX = 0.f;
+    float dirY = 0.f;
+    if (!StickWay(dirX, dirY))
+        return std::nullopt;
+    const float reach = gSkillManager.GetSkillDistance(skill, Hero);
+    for (int tiles = static_cast<int>(reach); tiles >= 1; --tiles)
+    {
+        const std::optional<AreaAim::Step> step = AreaAim::AlongLine(dirX, dirY, tiles, reach);
+        if (!step)
+            continue;
+        const int tileX = Hero->PositionX + step->dx;
+        const int tileY = Hero->PositionY + step->dy;
+        if (tileX < 0 || tileY < 0 || tileX >= TERRAIN_SIZE || tileY >= TERRAIN_SIZE)
+            continue;
+        if (!CheckWall(Hero->PositionX, Hero->PositionY, tileX, tileY))
+            continue;
+        if (!GameLogic::Combat::CanExecuteSkill(Hero, skill, reach))
+            return GiveTurnBack();
+        if (!HeroStands())
+            return Progress::Pending;
+        return OutcomeOf(Automation::CastSkillAtTile(skill, tileX, tileY));
+    }
+    return std::nullopt;
+}
+
+// Whether the lit foe stays the aim of an area skill: chosen with the gold ring, aimed by hand (the pad's
+// pointer or a tap on it, AimedCharacter), or a player. A boss lock or a duel never slides to the
+// crowd around it.
+bool KeepsAim(const CHARACTER* lit)
+{
+    if (lit->Key == g_chosenKey || lit->Object.Kind == KIND_PLAYER)
+        return true;
+    const CHARACTER* aimed = AimedCharacter();
+    return aimed != nullptr && aimed->Key == lit->Key;
+}
+
+// Whether a cast on the foe may go off from where the hero stands: within the skill's reach, no wall between.
+bool Castable(ActionSkillType skill, const CHARACTER* foe)
+{
+    return InReach(foe, gSkillManager.GetSkillDistance(skill, Hero))
+           && CheckWall(Hero->PositionX, Hero->PositionY, TileOf(foe->Object.Position[0]), TileOf(foe->Object.Position[1]));
+}
+
+// A monster-aimed skill from a button: a mage's area skill at the pack's centre or along the stick
+// (AreaShapeOf), the rest at the target. Only while the lit foe itself could be hit from here: out of
+// reach or behind a wall the cast goes at it as before, walking up (and a walk away with Twister held is
+// not rooted by casts along the stick).
+Progress CastAtMonsterAimed(ActionSkillType skill)
+{
+    const AreaShape shape = AreaShapeOf(skill);
+    const int target = ChooseTarget();
+    const CHARACTER* lit = FindByKey(target);
+    if (shape.kind == AreaKind::None || lit == nullptr || KeepsAim(lit) || !Castable(skill, lit))
+        return CastAtFoe(skill, target);
+    if (shape.kind == AreaKind::StickLine)
+    {
+        if (const std::optional<Progress> cast = CastAlongStick(skill))
+            return *cast;
+        return CastAtFoe(skill, target);
+    }
+    const int centre = PackCentreKey(skill, target, shape);
+    return CastAtFoe(skill, centre != NoTarget ? centre : target);
 }
 
 // A heal or a buff on a party member, walking up to them when out of reach as a cast at a monster
@@ -1290,11 +1446,15 @@ void Steer(float screenX, float screenY)
     if (!g_hold.MayWalk(HerePlace()))
     {
         // Past a gate, or the controls went away: the push waits to be let go.
+        g_stickAimX = g_stickAimY = 0.f;
         EndWalk();
         SteerHelper(false);
         return;
     }
     SteerHelper(true);
+    // Before a button holds the hero: Twister and Aqua Beam fly the way the joystick pushes meanwhile.
+    g_stickAimX = screenX;
+    g_stickAimY = screenY;
     if (ButtonHoldsHero())
         return;
     float dirX = 0.f;
@@ -1327,6 +1487,7 @@ void Steer(float screenX, float screenY)
 
 void StopSteering()
 {
+    g_stickAimX = g_stickAimY = 0.f;
     g_steering.blocked = false;
     g_hold.Release();
     SteerHelper(false);
@@ -1338,6 +1499,7 @@ void StopSteering()
 
 void PauseSteering()
 {
+    g_stickAimX = g_stickAimY = 0.f;
     g_steering.blocked = false;
     g_hold.Pause();
     SteerHelper(false);
@@ -1505,7 +1667,7 @@ Progress CastHotKey(int hotKey)
     case SkillAim::Around:
         return CastWhereHeroStands(skill, false);
     default:
-        return CastAtMonster(skill);
+        return CastAtMonsterAimed(skill);
     }
 }
 
@@ -1527,6 +1689,26 @@ bool BindHotKey(int hotKey)
 bool HotKeyHoldsSkill(int hotKey)
 {
     return HotKeySkillIndex(hotKey) >= 0;
+}
+
+bool HotKeyBuffRuns(int hotKey)
+{
+    if (!InWorld())
+        return false;
+    const int index = HotKeySkillIndex(hotKey);
+    if (index < 0 || index >= AT_PET_COMMAND_DEFAULT)
+        return false;
+    const auto skill = static_cast<ActionSkillType>(CharacterAttribute->Skill[index]);
+    const Skills::SkillBuffs::Buff buff = Skills::SkillBuffs::BuffOf(skill);
+    if (buff.state == eBuffNone)
+        return false;
+    CHARACTER* on = Hero;
+    if (!buff.onCasterOnly && GoesOnFriend(skill))
+    {
+        if (const CHARACTER* chosen = ChosenFriend())
+            on = FindByKey(chosen->Key);
+    }
+    return on != nullptr && g_isCharacterBuff((&on->Object), buff.state);
 }
 
 bool HotKeyShortOfMana(int hotKey)

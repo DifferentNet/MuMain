@@ -120,6 +120,9 @@ bool BindHotKey(int hotKey);
 [[nodiscard]] bool HotKeyHoldsSkill(int hotKey);
 // Whether the hotkey's skill wants more mana or AG than the character has: its button shows it.
 [[nodiscard]] bool HotKeyShortOfMana(int hotKey);
+// Whether the hotkey's buff is still on the one it goes to (the hero, or the party member chosen for
+// the heals and buffs): its button shows a ring, and held it does not cast the buff again.
+[[nodiscard]] bool HotKeyBuffRuns(int hotKey);
 
 // Walks to the nearest drop that fits the bag and takes it, then the next, until none is left; says
 // so once in a while when only drops that do not fit lie around. Called every frame while the

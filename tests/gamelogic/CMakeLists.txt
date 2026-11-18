@@ -125,6 +125,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Touch/DirectionPick.cpp
 )
 
+# Where the pad's and touch's area skills aim: the pack's centre, the stick's line (pad round 6).
+mu_add_test(
+    NAME test_area_aim
+    SOURCES
+        test_area_aim.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Touch/AreaAim.cpp
+)
+
 mu_add_test(
     NAME test_steer_hold
     SOURCES

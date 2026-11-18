@@ -13387,10 +13387,10 @@
     <value>Masyadong malayo: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Pumili ng skill gamit ang pointer at {A}, pagkatapos pindutin ang {X}, {Y} o {B} ({RT} + {X}, {Y} o {B} para sa button 4 hanggang 6) para ilagay ito roon</value>
+    <value>Pumili ng skill gamit ang pointer at {A}, pagkatapos pindutin ang {X}, {Y} o {B} ({RT} + {X}, {Y} o {B} para sa button 4 hanggang 6, {RB} + {X}, {Y} o {B} para sa 7 hanggang 9) para ilagay ito roon</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Pindutin ang {X}, {Y} o {B} ({RT} + {X}, {Y} o {B} para sa button 4 hanggang 6) para ilagay roon ang skill</value>
+    <value>Pindutin ang {X}, {Y} o {B} ({RT} + {X}, {Y} o {B} para sa button 4 hanggang 6, {RB} + {X}, {Y} o {B} para sa 7 hanggang 9) para ilagay roon ang skill</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>I-type</value>
@@ -13585,7 +13585,7 @@
     <value>Potion Q at W</value>
   </data>
   <data name="PadCardFriend" xml:space="preserve">
-    <value>Susunod na kasama sa party para sa heal at buff</value>
+    <value>Pindot: susunod na kasama sa party para sa heal at buff</value>
   </data>
   <data name="PadCardHelper" xml:space="preserve">
     <value>MU Helper bukas at sara (hawakan: settings)</value>
@@ -14241,5 +14241,14 @@
   </data>
   <data name="PadStickRightObject" xml:space="preserve">
     <value>kanang stick</value>
+  </data>
+  <data name="PadHelpSkillsThird" xml:space="preserve">
+    <value>Pindutin nang matagal ang {RB}: {X}, {Y} at {B} ang gumagamit ng skill 7 hanggang 9 (ang maikling pindot ng {RB} ay pumipili pa rin ng kasama sa party)</value>
+  </data>
+  <data name="PadCardSkillsThird" xml:space="preserve">
+    <value>Skill 7–9</value>
+  </data>
+  <data name="PadHintSkillsThird" xml:space="preserve">
+    <value>Pindutin nang matagal ang {RB}: {X}, {Y} at {B} ang gumagamit ng skill 7 hanggang 9</value>
   </data>
 </root>

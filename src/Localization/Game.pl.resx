@@ -13408,10 +13408,10 @@
     <value>Za daleko: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Wybierz umiejętność wskaźnikiem i {A}, potem naciśnij {X}, {Y} lub {B} ({RT} + {X}, {Y} lub {B} dla przycisków 4–6), by ją tam umieścić</value>
+    <value>Wybierz umiejętność wskaźnikiem i {A}, potem naciśnij {X}, {Y} lub {B} ({RT} + {X}, {Y} lub {B} dla przycisków 4–6, {RB} + {X}, {Y} lub {B} dla 7–9), by ją tam umieścić</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Naciśnij {X}, {Y} lub {B} ({RT} + {X}, {Y} lub {B} dla przycisków 4–6), by umieścić tam umiejętność</value>
+    <value>Naciśnij {X}, {Y} lub {B} ({RT} + {X}, {Y} lub {B} dla przycisków 4–6, {RB} + {X}, {Y} lub {B} dla 7–9), by umieścić tam umiejętność</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>Pisz</value>
@@ -13606,7 +13606,7 @@
     <value>Mikstury Q i W</value>
   </data>
   <data name="PadCardFriend" xml:space="preserve">
-    <value>Następny członek drużyny do leczenia i bufów</value>
+    <value>Naciśnięcie: następny członek drużyny do leczenia i bufów</value>
   </data>
   <data name="PadCardHelper" xml:space="preserve">
     <value>MU Helper włącz i wyłącz (przytrzymaj: ustawienia)</value>
@@ -14262,5 +14262,14 @@
   </data>
   <data name="PadStickRightObject" xml:space="preserve">
     <value>prawą gałkę</value>
+  </data>
+  <data name="PadHelpSkillsThird" xml:space="preserve">
+    <value>Przytrzymaj {RB}: {X}, {Y} i {B} używają umiejętności 7–9 (krótkie naciśnięcie {RB} nadal wybiera członka drużyny)</value>
+  </data>
+  <data name="PadCardSkillsThird" xml:space="preserve">
+    <value>Umiejętności 7–9</value>
+  </data>
+  <data name="PadHintSkillsThird" xml:space="preserve">
+    <value>Przytrzymaj {RB}: {X}, {Y} i {B} używają umiejętności 7–9</value>
   </data>
 </root>

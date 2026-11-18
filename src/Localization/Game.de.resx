@@ -13485,10 +13485,10 @@
     <value>Zu weit weg: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Wähle mit dem Zeiger und {A} eine Fähigkeit, drücke dann {X}, {Y} oder {B} ({RT} + {X}, {Y} oder {B} für Knöpfe 4 bis 6), um sie dort zu platzieren</value>
+    <value>Wähle mit dem Zeiger und {A} eine Fähigkeit, drücke dann {X}, {Y} oder {B} ({RT} + {X}, {Y} oder {B} für Knöpfe 4 bis 6, {RB} + {X}, {Y} oder {B} für 7 bis 9), um sie dort zu platzieren</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Drücke {X}, {Y} oder {B} ({RT} + {X}, {Y} oder {B} für Knöpfe 4 bis 6), um die Fähigkeit dort zu platzieren</value>
+    <value>Drücke {X}, {Y} oder {B} ({RT} + {X}, {Y} oder {B} für Knöpfe 4 bis 6, {RB} + {X}, {Y} oder {B} für 7 bis 9), um die Fähigkeit dort zu platzieren</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>Tippen</value>
@@ -13683,7 +13683,7 @@
     <value>Tränke Q und W</value>
   </data>
   <data name="PadCardFriend" xml:space="preserve">
-    <value>Nächstes Gruppenmitglied für Heilung und Buffs</value>
+    <value>Tippen: nächstes Gruppenmitglied für Heilung und Buffs</value>
   </data>
   <data name="PadCardHelper" xml:space="preserve">
     <value>MU Helper an und aus (halten: Einstellungen)</value>
@@ -14339,5 +14339,14 @@
   </data>
   <data name="PadStickRightObject" xml:space="preserve">
     <value>rechten Stick</value>
+  </data>
+  <data name="PadHelpSkillsThird" xml:space="preserve">
+    <value>Halte {RB}: {X}, {Y} und {B} wirken die Fähigkeiten 7 bis 9 (kurz {RB} tippen wählt weiter das Gruppenmitglied)</value>
+  </data>
+  <data name="PadCardSkillsThird" xml:space="preserve">
+    <value>Fähigkeiten 7–9</value>
+  </data>
+  <data name="PadHintSkillsThird" xml:space="preserve">
+    <value>Halte {RB}: {X}, {Y} und {B} wirken die Fähigkeiten 7 bis 9</value>
   </data>
 </root>

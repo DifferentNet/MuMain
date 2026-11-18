@@ -15319,10 +15319,10 @@
     <value>Слишком далеко: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Выберите умение курсором и {A}, потом нажмите {X}, {Y} или {B} ({RT} + {X}, {Y} или {B} для кнопок 4–6), куда его поставить</value>
+    <value>Выберите умение курсором и {A}, потом нажмите {X}, {Y} или {B} ({RT} + {X}, {Y} или {B} для кнопок 4–6, {RB} + {X}, {Y} или {B} для 7–9), куда его поставить</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Нажмите {X}, {Y} или {B} ({RT} + {X}, {Y} или {B} для кнопок 4–6), куда поставить умение</value>
+    <value>Нажмите {X}, {Y} или {B} ({RT} + {X}, {Y} или {B} для кнопок 4–6, {RB} + {X}, {Y} или {B} для 7–9), куда поставить умение</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>Ввести</value>
@@ -15925,7 +15925,7 @@
     <value>Зелья Q и W</value>
   </data>
   <data name="PadCardFriend" xml:space="preserve">
-    <value>Следующий в группе для лечения и баффов</value>
+    <value>Нажатие: следующий в группе для лечения и баффов</value>
   </data>
   <data name="PadCardHelper" xml:space="preserve">
     <value>MU Helper вкл. и выкл. (удержание: настройки)</value>
@@ -17195,5 +17195,14 @@
   </data>
   <data name="PadStickRightObject" xml:space="preserve">
     <value>правый стик</value>
+  </data>
+  <data name="PadHelpSkillsThird" xml:space="preserve">
+    <value>Удерживайте {RB}: {X}, {Y} и {B} применяют умения 7–9 (короткое нажатие {RB} по-прежнему выбирает члена группы)</value>
+  </data>
+  <data name="PadCardSkillsThird" xml:space="preserve">
+    <value>Умения 7–9</value>
+  </data>
+  <data name="PadHintSkillsThird" xml:space="preserve">
+    <value>Удерживайте {RB}: {X}, {Y} и {B} применяют умения 7–9</value>
   </data>
 </root>

@@ -15742,10 +15742,10 @@
     <value>Too far away: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Pick a skill with the pointer and {A}, then press {X}, {Y} or {B} ({RT} + {X}, {Y} or {B} for buttons 4 to 6) to put it there</value>
+    <value>Pick a skill with the pointer and {A}, then press {X}, {Y} or {B} ({RT} + {X}, {Y} or {B} for buttons 4 to 6, {RB} + {X}, {Y} or {B} for 7 to 9) to put it there</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Press {X}, {Y} or {B} ({RT} + {X}, {Y} or {B} for buttons 4 to 6) to put the skill there</value>
+    <value>Press {X}, {Y} or {B} ({RT} + {X}, {Y} or {B} for buttons 4 to 6, {RB} + {X}, {Y} or {B} for 7 to 9) to put the skill there</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>Type</value>
@@ -16309,7 +16309,7 @@
     <value>Potions Q and W</value>
   </data>
   <data name="PadCardFriend" xml:space="preserve">
-    <value>Next party member to heal and buff</value>
+    <value>Tap: next party member to heal and buff</value>
   </data>
   <data name="PadCardHelper" xml:space="preserve">
     <value>MU Helper on and off (hold: settings)</value>
@@ -17195,5 +17195,14 @@
   </data>
   <data name="PadStickRightObject" xml:space="preserve">
     <value>right stick</value>
+  </data>
+  <data name="PadHelpSkillsThird" xml:space="preserve">
+    <value>Hold {RB}: {X}, {Y} and {B} cast the skills 7 to 9 (a short tap of {RB} still picks the party member)</value>
+  </data>
+  <data name="PadCardSkillsThird" xml:space="preserve">
+    <value>Skills 7–9</value>
+  </data>
+  <data name="PadHintSkillsThird" xml:space="preserve">
+    <value>Hold {RB}: {X}, {Y} and {B} cast the skills 7 to 9</value>
   </data>
 </root>

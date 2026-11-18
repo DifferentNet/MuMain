@@ -30,8 +30,8 @@ struct Devices
     // Whose button names the pad page says (UI::HUD::PadGlyphs::TextNames).
     Core::Input::Gamepad::PadKind padKind = Core::Input::Gamepad::PadKind::Xbox;
     // The skill buttons in play (UI::HUD::TouchControls::SkillButtonsInPlay()): with five, RT + X and Y
-    // cast the skills 4 and 5, with six RT + B the sixth too.
-    int skillButtons = 6;
+    // cast the skills 4 and 5; with nine RT + B the sixth too, and RB + X, Y, B the seventh to ninth.
+    int skillButtons = 9;
 };
 
 // F1 opens the first page and turns to the next; past the last page it closes the window. The

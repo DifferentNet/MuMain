@@ -127,13 +127,15 @@ void AddTouchPage(std::vector<UI::Help::PageLine>& lines)
         AddText(lines, line);
 }
 
-// The pad page names the buttons of the pad in hand, and the skills RT adds as many as are in play.
+// The pad page names the buttons of the pad in hand, and the skills RT and RB add as many as are in play.
 void AddGamepadPage(std::vector<UI::Help::PageLine>& lines, UI::Help::Devices devices)
 {
     AddText(lines, I18N::Game::PadHelpTitle, true);
     AddHalfSpacer(lines);
     const wchar_t* const skills =
         devices.skillButtons > 5 ? I18N::Game::PadHelpSkills : I18N::Game::PadHelpSkillsFive;
+    // The RB page's line only with its buttons in play; an empty line is left out.
+    const wchar_t* const skillsThird = devices.skillButtons > 6 ? I18N::Game::PadHelpSkillsThird : L"";
     const wchar_t* const padLines[] = {
         I18N::Game::PadHelpSticks,
         I18N::Game::HelpControlsWalkHit,
@@ -143,6 +145,7 @@ void AddGamepadPage(std::vector<UI::Help::PageLine>& lines, UI::Help::Devices de
         I18N::Game::PadHelpPk,
         I18N::Game::PadHelpClickA,
         skills,
+        skillsThird,
         I18N::Game::PadHelpSkillsUse,
         I18N::Game::HelpControlsSkillsSelf,
         I18N::Game::PadHelpSkillList,
@@ -162,7 +165,10 @@ void AddGamepadPage(std::vector<UI::Help::PageLine>& lines, UI::Help::Devices de
     };
     const UI::HUD::PadButtonNames::Names names = UI::HUD::PadGlyphs::TextNames(devices.padKind);
     for (const wchar_t* line : padLines)
-        AddText(lines, UI::HUD::PadButtonNames::Fill(line, names).c_str());
+    {
+        if (*line != L'\0')
+            AddText(lines, UI::HUD::PadButtonNames::Fill(line, names).c_str());
+    }
 }
 
 // With touch controls or a gamepad in hand the commands follow on a page of their own: the chat rows

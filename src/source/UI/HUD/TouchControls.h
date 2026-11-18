@@ -37,6 +37,11 @@ enum class PadButton : std::uint8_t
     Skill4,
     // The pad's sixth skill (RT + B): a pad alone on the lower hotkey set only.
     Skill5,
+    // The pad's third page (RB held + X, Y, B, pad round 6): hotkeys 7-9, a pad alone on the lower
+    // hotkey set only.
+    Skill6,
+    Skill7,
+    Skill8,
     PickUp,
     Auto,
     Menu,
@@ -58,8 +63,12 @@ void SetPadHeld(PadButton button, bool held);
 // and 5 show in the places of the first ones while the pad plays without fingers. `potions`: RT is
 // held, so the left bumper and trigger drink E and R (they never stay on the toggled page).
 void SetPadAlt(bool skills, bool potions);
-// How many skill buttons are in play: six for a pad alone on the lower hotkey set (the sixth on RT + B),
-// else five. The help and the controls card say "4 to 6" or "4 and 5" by it.
+// The pad's third page of skills shows (RB held): the skill buttons 7 to 9 show in the places of the
+// first ones. It wins over the second page while RB is held.
+void SetPadThird(bool skills);
+// How many skill buttons are in play: nine for a pad alone on the lower hotkey set (the sixth on RT + B,
+// the seventh to ninth on RB + X, Y, B), else five. The help and the controls card say "4 to 6" or
+// "4 and 5" by it, and show the RB page with nine.
 [[nodiscard]] int SkillButtonsInPlay();
 
 // The control under a window pixel (the pad's pointer), or -1. The joystick's area does not count:

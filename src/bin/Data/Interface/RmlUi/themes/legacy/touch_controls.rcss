@@ -628,6 +628,22 @@ body.no-skills .tc-skill, body.no-skills #tc_skill_edit {
 .tc-skill.nomana .tc-skill-icon {
 	opacity: 0.45;
 }
+/* The button's buff is still on (pad round 6, N2): a thin green ring inside the edge; held, the button
+   does not cast it again. */
+.tc-buff-ring {
+	display: none;
+	position: absolute;
+	left: 2rem;
+	top: 2rem;
+	right: 2rem;
+	bottom: 2rem;
+	border: 1.5rem rgba(110, 230, 120, 220);
+	border-radius: 8rem;
+	pointer-events: none;
+}
+.tc-skill.buffed .tc-buff-ring {
+	display: block;
+}
 /* A picked skill waits for a button: every one lights up to take it. */
 .tc-skill.bind {
 	opacity: 1;
@@ -1143,7 +1159,7 @@ body.pad #tc_back, body.pad #tc_menu, body.pad #tc_social {
    centred, just over the HUD's bar (640rem centred, 51rem high): the potions LB and LT on its left,
    then attack (A), the three skills X, Y and B, and MU Helper (d-pad up) on its right (ghinzuro,
    2026-11-03: three skills, RT held for the next ones). While RT is held (pad-alt), the skill buttons 4,
-   5 and 6 stand in the places of X, Y and B. No top row (Menu opens the windows, View the Social panel), no
+   5 and 6 stand in the places of X, Y and B; while RB is held (pad-third), 7, 8 and 9 (pad round 6). No top row (Menu opens the windows, View the Social panel), no
    pickup button (d-pad down), no Skills button (LS). */
 body.pad.no-touch #tc_quick, body.pad.no-touch #tc_pickup, body.pad.no-touch #tc_skill_edit, body.pad.no-touch #tc_target,
 body.pad.no-touch #tc_names {
@@ -1175,8 +1191,8 @@ body.pad.no-touch .tc-skill .tc-plus-v {
 body.pad.no-touch #tc_auto {
 	border-radius: 22rem;
 }
-/* The sixth skill button is the pad's alone (RT + B): touch never shows it. */
-#tc_skill_5 {
+/* The sixth to ninth skill buttons are the pad's alone (RT + B, RB + X, Y, B): touch never shows them. */
+#tc_skill_5, #tc_skill_6, #tc_skill_7, #tc_skill_8 {
 	display: none;
 }
 body.pad.no-touch #tc_skill_3, body.pad.no-touch #tc_skill_4 {
@@ -1193,10 +1209,22 @@ body.pad.no-touch.pad-alt #tc_skill_5.unused, body.pad.no-touch.picking #tc_skil
 body.pad.no-touch.pad-alt #tc_skill_0, body.pad.no-touch.pad-alt #tc_skill_1, body.pad.no-touch.pad-alt #tc_skill_2 {
 	display: none;
 }
+/* RB held: the skill buttons 7, 8 and 9 in the places of X, Y and B; RB wins over RT's page. None with no
+   skills learnt, nor on the upper hotkey set. */
+body.pad.no-touch.pad-third #tc_skill_6, body.pad.no-touch.pad-third #tc_skill_7, body.pad.no-touch.pad-third #tc_skill_8 {
+	display: block;
+}
+body.pad.no-touch.pad-third #tc_skill_0, body.pad.no-touch.pad-third #tc_skill_1, body.pad.no-touch.pad-third #tc_skill_2,
+body.pad.no-touch.pad-third #tc_skill_3, body.pad.no-touch.pad-third #tc_skill_4, body.pad.no-touch.pad-third #tc_skill_5,
+body.no-skills.pad.no-touch.pad-third #tc_skill_6, body.no-skills.pad.no-touch.pad-third #tc_skill_7, body.no-skills.pad.no-touch.pad-third #tc_skill_8,
+body.pad.no-touch.pad-third #tc_skill_6.unused, body.pad.no-touch.pad-third #tc_skill_7.unused, body.pad.no-touch.pad-third #tc_skill_8.unused {
+	display: none;
+}
 /* RT is already held: its glyph would only crowd the row, so the face key alone stands in its usual corner. */
-body.pad.no-touch .tc-skill .pad-trigger { display: none; }
+body.pad.no-touch .tc-skill .pad-trigger, body.pad.no-touch .tc-skill .pad-bumper { display: none; }
 body.pad.no-touch .tc-skill .pad-alt-key { left: -8rem; right: auto; }
-body.pad.no-touch #tc_attack, body.pad.no-touch #tc_skill_0, body.pad.no-touch #tc_skill_1, body.pad.no-touch #tc_skill_2, body.pad.no-touch #tc_skill_3, body.pad.no-touch #tc_skill_4, body.pad.no-touch #tc_skill_5 {
+body.pad.no-touch #tc_attack, body.pad.no-touch #tc_skill_0, body.pad.no-touch #tc_skill_1, body.pad.no-touch #tc_skill_2, body.pad.no-touch #tc_skill_3, body.pad.no-touch #tc_skill_4, body.pad.no-touch #tc_skill_5,
+body.pad.no-touch #tc_skill_6, body.pad.no-touch #tc_skill_7, body.pad.no-touch #tc_skill_8 {
 	left: 50%;
 	right: auto;
 	bottom: 60rem;
@@ -1224,21 +1252,29 @@ body.pad.no-touch #tc_attack {
 	font-size: 12rem;
 	border-radius: 27rem;
 }
-body.pad.no-touch #tc_skill_0, body.pad.no-touch #tc_skill_3 { margin-left: -28rem; }
-body.pad.no-touch #tc_skill_1, body.pad.no-touch #tc_skill_4 { margin-left: 36rem; }
-body.pad.no-touch #tc_skill_2, body.pad.no-touch #tc_skill_5 { margin-left: 100rem; }
+body.pad.no-touch #tc_skill_0, body.pad.no-touch #tc_skill_3, body.pad.no-touch #tc_skill_6 { margin-left: -28rem; }
+body.pad.no-touch #tc_skill_1, body.pad.no-touch #tc_skill_4, body.pad.no-touch #tc_skill_7 { margin-left: 36rem; }
+body.pad.no-touch #tc_skill_2, body.pad.no-touch #tc_skill_5, body.pad.no-touch #tc_skill_8 { margin-left: 100rem; }
 body.pad.no-touch .tc-skill .tc-skill-icon { left: 12rem; top: 7rem; }
 body.pad.no-touch #tc_auto { margin-left: 168rem; }
-/* The skill picker (L3) sets all five buttons: they stand in one row then, 4 and 5 where MU Helper
-   was, with RT on their corner (the picker lets RT go, so pad-alt is off while it is open). */
+/* The skill picker (L3) sets all the buttons: 1 to 6 stand in one row then, 4 to 6 where MU Helper was,
+   with RT on their corner (the picker lets RT go, so pad-alt is off while it is open); 7 to 9 in a row
+   over X, Y and B, with RB on theirs. */
 body.pad.no-touch.picking #tc_skill_3, body.pad.no-touch.picking #tc_skill_4, body.pad.no-touch.picking #tc_skill_5, body.pad.no-touch.picking #tc_skill_0, body.pad.no-touch.picking #tc_skill_1, body.pad.no-touch.picking #tc_skill_2 {
 	display: block;
 }
 body.pad.no-touch.picking #tc_skill_3 { margin-left: 164rem; }
 body.pad.no-touch.picking #tc_skill_4 { margin-left: 228rem; }
 body.pad.no-touch.picking #tc_skill_5 { margin-left: 292rem; }
+body.pad.no-touch.picking #tc_skill_6, body.pad.no-touch.picking #tc_skill_7, body.pad.no-touch.picking #tc_skill_8 {
+	display: block;
+	bottom: 124rem;
+}
+body.pad.no-touch.picking #tc_skill_6.unused, body.pad.no-touch.picking #tc_skill_7.unused, body.pad.no-touch.picking #tc_skill_8.unused {
+	display: none;
+}
 body.pad.no-touch.picking #tc_auto { display: none; }
-body.pad.no-touch.picking .tc-skill .pad-trigger { display: block; }
+body.pad.no-touch.picking .tc-skill .pad-trigger, body.pad.no-touch.picking .tc-skill .pad-bumper { display: block; }
 body.pad.no-touch.picking .tc-skill .pad-alt-key { display: none; }
 body.pad.no-touch #tc_attack .pad-glyph { right: auto; left: -8rem; top: -8rem; }
 body.pad.no-touch .tc-potion .pad-glyph, body.pad.no-touch #tc_auto .pad-glyph { left: -8rem; right: auto; top: -8rem; }
@@ -1251,8 +1287,12 @@ body.pad.no-touch #tc_bind_hint {
 
 /* The phone view has no HUD bar: the row sits near the bottom edge, over the EXP line. */
 @media (theme: mobile-hud) {
-	body.pad.no-touch #tc_attack, body.pad.no-touch #tc_skill_0, body.pad.no-touch #tc_skill_1, body.pad.no-touch #tc_skill_2, body.pad.no-touch #tc_skill_3, body.pad.no-touch #tc_skill_4, body.pad.no-touch #tc_skill_5 {
+	body.pad.no-touch #tc_attack, body.pad.no-touch #tc_skill_0, body.pad.no-touch #tc_skill_1, body.pad.no-touch #tc_skill_2, body.pad.no-touch #tc_skill_3, body.pad.no-touch #tc_skill_4, body.pad.no-touch #tc_skill_5,
+	body.pad.no-touch #tc_skill_6, body.pad.no-touch #tc_skill_7, body.pad.no-touch #tc_skill_8 {
 		bottom: 14rem;
+	}
+	body.pad.no-touch.picking #tc_skill_6, body.pad.no-touch.picking #tc_skill_7, body.pad.no-touch.picking #tc_skill_8 {
+		bottom: 78rem;
 	}
 	body.pad.no-touch #tc_potion_q, body.pad.no-touch #tc_potion_w, body.pad.no-touch #tc_potion_e, body.pad.no-touch #tc_potion_r, body.pad.no-touch #tc_auto {
 		bottom: 19rem;

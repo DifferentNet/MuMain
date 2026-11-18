@@ -11466,10 +11466,10 @@
     <value>遠すぎます：</value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>ポインターと{A}でスキルを選び、{X}、{Y}、{B}（ボタン4〜6は{RT}＋{X}、{Y}、{B}）を押してそこに割り当てる</value>
+    <value>ポインターと{A}でスキルを選び、{X}、{Y}、{B}（ボタン4〜6は{RT}＋{X}、{Y}、{B}、7〜9は{RB}＋{X}、{Y}、{B}）を押してそこに割り当てる</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>{X}、{Y}、{B}（ボタン4〜6は{RT}＋{X}、{Y}、{B}）を押してスキルをそこに割り当てる</value>
+    <value>{X}、{Y}、{B}（ボタン4〜6は{RT}＋{X}、{Y}、{B}、7〜9は{RB}＋{X}、{Y}、{B}）を押してスキルをそこに割り当てる</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>入力</value>
@@ -11664,7 +11664,7 @@
     <value>ポーションQとW</value>
   </data>
   <data name="PadCardFriend" xml:space="preserve">
-    <value>回復とバフを送る次のパーティーメンバー</value>
+    <value>短押し：回復とバフを送る次のパーティーメンバー</value>
   </data>
   <data name="PadCardHelper" xml:space="preserve">
     <value>MU Helperのオン・オフ（長押し：設定）</value>
@@ -12320,5 +12320,14 @@
   </data>
   <data name="PadStickRightObject" xml:space="preserve">
     <value>右スティック</value>
+  </data>
+  <data name="PadHelpSkillsThird" xml:space="preserve">
+    <value>{RB}を押したまま：{X}、{Y}、{B}でスキル7〜9を使う（{RB}を短く押すと従来どおりパーティーメンバーを選ぶ）</value>
+  </data>
+  <data name="PadCardSkillsThird" xml:space="preserve">
+    <value>スキル7〜9</value>
+  </data>
+  <data name="PadHintSkillsThird" xml:space="preserve">
+    <value>{RB}を押したまま：{X}、{Y}、{B}でスキル7〜9を使う</value>
   </data>
 </root>

@@ -13387,10 +13387,10 @@
     <value>Demasiado lejos: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Elige una habilidad con el puntero y {A}, luego pulsa {X}, {Y} o {B} ({RT} + {X}, {Y} o {B} para los botones 4 a 6) para colocarla ahí</value>
+    <value>Elige una habilidad con el puntero y {A}, luego pulsa {X}, {Y} o {B} ({RT} + {X}, {Y} o {B} para los botones 4 a 6, {RB} + {X}, {Y} o {B} para 7 a 9) para colocarla ahí</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Pulsa {X}, {Y} o {B} ({RT} + {X}, {Y} o {B} para los botones 4 a 6) para colocar la habilidad ahí</value>
+    <value>Pulsa {X}, {Y} o {B} ({RT} + {X}, {Y} o {B} para los botones 4 a 6, {RB} + {X}, {Y} o {B} para 7 a 9) para colocar la habilidad ahí</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>Escribir</value>
@@ -13585,7 +13585,7 @@
     <value>Pociones Q y W</value>
   </data>
   <data name="PadCardFriend" xml:space="preserve">
-    <value>Siguiente miembro del grupo para curar y mejorar</value>
+    <value>Toque: siguiente miembro del grupo para curar y mejorar</value>
   </data>
   <data name="PadCardHelper" xml:space="preserve">
     <value>MU Helper sí y no (mantener: ajustes)</value>
@@ -14241,5 +14241,14 @@
   </data>
   <data name="PadStickRightObject" xml:space="preserve">
     <value>stick derecho</value>
+  </data>
+  <data name="PadHelpSkillsThird" xml:space="preserve">
+    <value>Mantén {RB}: {X}, {Y} y {B} lanzan las habilidades 7 a 9 (un toque corto de {RB} sigue eligiendo al miembro del grupo)</value>
+  </data>
+  <data name="PadCardSkillsThird" xml:space="preserve">
+    <value>Habilidades 7–9</value>
+  </data>
+  <data name="PadHintSkillsThird" xml:space="preserve">
+    <value>Mantén {RB}: {X}, {Y} y {B} lanzan las habilidades 7 a 9</value>
   </data>
 </root>

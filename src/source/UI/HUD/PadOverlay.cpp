@@ -44,7 +44,7 @@ struct TabView
 };
 
 // The controls card's texts, card[0] .. in pad_overlay.rml, in this order.
-const std::array<const wchar_t* const*, 30> CardLabels = {
+const std::array<const wchar_t* const*, 31> CardLabels = {
     &I18N::Game::PadCardTitle,
     &I18N::Game::PadCardWorld,
     &I18N::Game::PadCardWindows,
@@ -74,7 +74,8 @@ const std::array<const wchar_t* const*, 30> CardLabels = {
     &I18N::Game::PadCardClose,
     &I18N::Game::PadCardAllWindows,
     &I18N::Game::PadClose,
-    &I18N::Game::PadCardLayoutLine};
+    &I18N::Game::PadCardLayoutLine,
+    &I18N::Game::PadCardSkillsThird};
 
 struct OverlayModel
 {
@@ -84,6 +85,8 @@ struct OverlayModel
     std::vector<Rml::String> card;
     // RT + B casts the sixth skill (a pad alone on the lower set): the card shows B in that row and says 4 to 6.
     bool cardSix = true;
+    // RB + X, Y, B cast skills 7 to 9 (the same pad alone on the lower set, pad round 6): the card's row for them.
+    bool cardNine = true;
     bool frameShown = false;
     Rml::String frameLeft;
     Rml::String frameTop;
@@ -138,6 +141,7 @@ void BindModel(Rml::DataModelConstructor& c, OverlayModel& model)
     c.Bind("card_page", &model.cardPage);
     c.Bind("card", &model.card);
     c.Bind("card_six", &model.cardSix);
+    c.Bind("card_nine", &model.cardNine);
     c.Bind("frame_shown", &model.frameShown);
     c.Bind("frame_left", &model.frameLeft);
     c.Bind("frame_top", &model.frameTop);
@@ -259,6 +263,7 @@ void SyncCard(OverlayModel& model, const View& view)
         return;
     const bool six = UI::HUD::TouchControls::SkillButtonsInPlay() > 5;
     SyncBool(model.cardSix, six, "card_six");
+    SyncBool(model.cardNine, UI::HUD::TouchControls::SkillButtonsInPlay() > 6, "card_nine");
     std::vector<Rml::String> card;
     card.reserve(CardLabels.size());
     for (const wchar_t* const* label : CardLabels)
