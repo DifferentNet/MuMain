@@ -240,7 +240,18 @@ std::vector<UI::Help::PageLine> UI::Help::BuildPage(int index, Devices devices)
     std::vector<PageLine> lines;
     AddHalfSpacer(lines);
     AddPageLines(lines, pages[page], devices);
-    AddHint(lines, PageHint(devices, page == last).c_str());
+    const std::wstring hint = PageHint(devices, page == last);
+    if (devices.touchControls)
+    {
+        // On a phone a long page runs under the screen's bottom edge, and the hint row is the only way
+        // to turn it: the row follows the title there (spacer, title, spacer, hint, then the page's own
+        // spacer and rows).
+        std::vector<PageLine> hintLines;
+        AddHint(hintLines, hint.c_str());
+        lines.insert(lines.begin() + 2, hintLines.begin(), hintLines.end());
+    }
+    else
+        AddHint(lines, hint.c_str());
     AddHalfSpacer(lines);
     return lines;
 }

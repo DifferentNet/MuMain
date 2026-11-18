@@ -4,6 +4,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
+#include "Render/Effects/FramePow.h"
 #include "Engine/Object/ZzzInfomation.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
 #include "Render/Models/ZzzBMD.h"
@@ -956,12 +957,12 @@ void MoveButterFly(OBJECT* o)
     float Height = RequestTerrainHeight(o->Position[0], o->Position[1]);
     if (o->Position[2] < Height + 50.f)
     {
-        o->Direction[2] *= pow(0.8f, FPS_ANIMATION_FACTOR);
+        o->Direction[2] *= FramePow(0.8f);
         o->Direction[2] += 1.f * FPS_ANIMATION_FACTOR;
     }
     if (o->Position[2] > Height + 300.f)
     {
-        o->Direction[2] *= pow(0.8f, FPS_ANIMATION_FACTOR);
+        o->Direction[2] *= FramePow(0.8f);
         o->Direction[2] -= 1.f * FPS_ANIMATION_FACTOR;
     }
     o->Position[2] += (float)(rand() % 15 - 7) * 0.3f;

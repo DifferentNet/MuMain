@@ -132,3 +132,15 @@ TEST_CASE("Clearing every slot and noting slot 0 starts the next create at slot 
     pool.bounds.TrimEnd(pool.slots.data(), PoolSize);
     CHECK(pool.bounds.End() == 1);
 }
+
+TEST_CASE("pool slot bounds count every take")
+{
+    PoolSlotBounds bounds;
+    CHECK(bounds.Takes() == 0u);
+    bounds.OnTaken(0);
+    bounds.OnTaken(3);
+    bounds.OnFreed(0);
+    CHECK(bounds.Takes() == 2u);
+    bounds.OnTaken(0);
+    CHECK(bounds.Takes() == 3u);
+}

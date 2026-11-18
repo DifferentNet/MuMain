@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "Render/Effects/FramePow.h"
 #include "Render/Models/ZzzBMD.h"
 #include "Engine/Object/ZzzObject.h"
 #include "Engine/Object/ZzzCharacter.h"
@@ -58,10 +59,10 @@ namespace Render::Effects::Behaviors
         }
         vec3_t tmp = { 0.f, 0.f, 0.f };
         OBJECT* pOwner = o->Owner;
-        o->Scale *= pow(1.2f, FPS_ANIMATION_FACTOR);
-        o->Light[0] *= pow(0.9f, FPS_ANIMATION_FACTOR);
-        o->Light[1] *= pow(0.9f, FPS_ANIMATION_FACTOR);
-        o->Light[2] *= pow(0.9f, FPS_ANIMATION_FACTOR);
+        o->Scale *= FramePow(1.2f);
+        o->Light[0] *= FramePow(0.9f);
+        o->Light[1] *= FramePow(0.9f);
+        o->Light[2] *= FramePow(0.9f);
 
         VectorTransform(tmp, pOwner->BoneTransform[29], o->Position);
         VectorScale(o->Position, pOwner->Scale, o->Position);
@@ -164,9 +165,9 @@ namespace Render::Effects::Behaviors
     {
         if (o->LifeTime <= 20)
         {
-            o->Light[0] *= pow(1.0f / (1.2f), FPS_ANIMATION_FACTOR);
-            o->Light[1] *= pow(1.0f / (1.2f), FPS_ANIMATION_FACTOR);
-            o->Light[2] *= pow(1.0f / (1.2f), FPS_ANIMATION_FACTOR);
+            o->Light[0] *= FramePow(1.0f / (1.2f));
+            o->Light[1] *= FramePow(1.0f / (1.2f));
+            o->Light[2] *= FramePow(1.0f / (1.2f));
         }
         o->Scale += (sinf(WorldTime * 0.005f) * 2.0f) * FPS_ANIMATION_FACTOR;
         o->Angle[1] += (10.0f) * FPS_ANIMATION_FACTOR;

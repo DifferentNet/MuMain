@@ -285,7 +285,8 @@
 		border-bottom-color: rgba(255, 255, 255, 28);
 	}
 	.quest-divider { width: 262px; }
-	.quest-contents { width: calc(262px * var(--root-scale)); }
+	/* Touch scrolls the quest text (y auto; the base rule's "auto hidden" has no vertical scroll). */
+	.quest-contents { width: calc(262px * var(--root-scale)); overflow: hidden auto; pointer-events: auto; }
 	#reward_popup_anchor { left: 140px; }
 	.jobchange-title, .jobchange-contents, .castle-block, .temple-block { width: calc(262px * var(--root-scale)); }
 	.jobchange-state { width: calc(248px * var(--root-scale)); }

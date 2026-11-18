@@ -228,3 +228,17 @@
 
 /* The native text size, counter-scaled out of the panel's scale. */
 #panel { font-size: calc(var(--text-px) / var(--root-scale)); }
+
+/* MU Skynet: the phone view, after the counter-scaled lengths above. The reward list scrolls by
+   touch (y auto; "auto hidden" is x auto and no vertical scroll), and Complete grows its hit box up
+   and sideways without moving its art (the margin is in the panel's reference px, the padding inside
+   the counter-scaled layer). It does not grow down: the exit button's hit box starts at 384. */
+@media (theme: mobile) {
+	.qp-reward-list { overflow: hidden auto; pointer-events: auto; }
+	.qp-btn-complete {
+		margin: -6px -10px 0 -10px;
+		padding: calc(6px * var(--root-scale)) calc(10px * var(--root-scale)) 0 calc(10px * var(--root-scale));
+		decorator: image(qp-btn-complete-idle) content-box;
+	}
+	.qp-btn-complete:hover { decorator: image(qp-btn-complete-hover) content-box; }
+}

@@ -5,6 +5,7 @@
 #include "UI/RmlBridge/RmlThemedView.h"
 #include "UI/RmlBridge/RmlTheme.h"
 #include "UI/RmlBridge/RmlTooltipPlacement.h"
+#include "UI/Mobile/InterfaceMode.h"
 #include "UI/Scaling/UITransform.h"
 #include "Render/Text/CUIRenderTextSDLTtf.h"
 
@@ -115,6 +116,12 @@ namespace UI::RmlBridge::Tooltip
         std::optional<Measurement> s_Measured;
         // The width last set on #tooltip_panel; empty once the document is rebuilt.
         std::string s_PanelWidth;
+        // The scale last set on #tooltip_panel to fit the screen's height (1: none set); 1 once the
+        // document is rebuilt.
+        float s_FitScale = 1.0f;
+        // On the phone a tooltip taller than the screen (a full excellent ancient set part) is drawn
+        // smaller until it fits, but no smaller than this: below it the text no longer reads.
+        constexpr float kPhoneMinFitScale = 0.65f;
 
         void BindModel(Rml::DataModelConstructor& c, TooltipRmlModel& model)
         {
@@ -157,7 +164,8 @@ namespace UI::RmlBridge::Tooltip
 
         UI::RmlBridge::ThemedView<TooltipRmlModel> s_View{
             "tooltip", BindModel, {{"Data/Interface/RmlUi/tooltip.rml"}},
-            {.afterBuild = [] { s_Measured.reset(); s_PanelWidth.clear(); }, .afterReload = [] { OnReloaded(); }}};
+            {.afterBuild = [] { s_Measured.reset(); s_PanelWidth.clear(); s_FitScale = 1.0f; },
+             .afterReload = [] { OnReloaded(); }}};
 
         void OnReloaded()
         {
@@ -271,17 +279,52 @@ namespace UI::RmlBridge::Tooltip
             return measured;
         }
 
-        // Top-left of the panel for the anchor, kept fully inside the viewport.
-        Rml::Vector2f Place(const Config& config, const Measurement& measured, Rml::Vector2i viewport)
+        // The scale #tooltip_panel is drawn at: on the phone, small enough to fit the screen's height.
+        // The PC's tooltips keep their size.
+        float FitScale(const Measurement& measured, Rml::Vector2i viewport)
+        {
+            if (!UI::Mobile::IsPhoneView())
+                return 1.0f;
+            return TooltipPlacement::FitScale(measured.size.y, static_cast<float>(viewport.y), kPhoneMinFitScale);
+        }
+
+        // Draws #tooltip_panel at the scale, around its top-left corner (the body's place), as it is
+        // placed; takes the transform off again at 1.
+        void ApplyFitScale(float scale)
+        {
+            if (scale == s_FitScale)
+                return;
+            Rml::Element* panel = s_View.Document()->GetElementById("tooltip_panel");
+            if (!panel)
+                return;
+            if (scale == 1.0f)
+            {
+                panel->RemoveProperty("transform");
+                panel->RemoveProperty("transform-origin");
+            }
+            else
+            {
+                panel->SetProperty("transform", "scale(" + std::to_string(scale) + ")");
+                panel->SetProperty("transform-origin", "left top");
+            }
+            s_FitScale = scale;
+        }
+
+        // Top-left of the panel for the anchor, kept fully inside the viewport. The panel is drawn at
+        // `scale` around that corner.
+        Rml::Vector2f Place(const Config& config, const Measurement& measured, Rml::Vector2i viewport, float scale)
         {
             // The anchor places the panel's inner (padding) box; a theme's frame lies outside it, as
             // RenderTipTextList() draws its 1-unit frame around the box it anchored.
-            const Rml::Vector2f size = measured.size;
-            float left = config.centerHorizontally ? (config.anchorX - size.x * 0.5f) : (config.anchorX - measured.frameTopLeft.x);
+            const Rml::Vector2f size = measured.size * scale;
+            const Rml::Vector2f frameTopLeft = measured.frameTopLeft * scale;
+            const float frameBottom = measured.frameBottom * scale;
+            float left =
+                config.centerHorizontally ? (config.anchorX - size.x * 0.5f) : (config.anchorX - frameTopLeft.x);
             const bool above = (config.anchor == AnchorPoint::AboveLeft);
             // The anchors as the panel's border box edges: above meets its bottom, below its top.
             const auto edge = [&](float anchorY, bool growsUp)
-            { return growsUp ? anchorY + measured.frameBottom : anchorY - measured.frameTopLeft.y; };
+            { return growsUp ? anchorY + frameBottom : anchorY - frameTopLeft.y; };
             std::optional<float> flipEdge;
             if (config.flipAnchorY)
                 flipEdge = edge(*config.flipAnchorY, !above);
@@ -323,7 +366,9 @@ namespace UI::RmlBridge::Tooltip
         if (contentChanged || !s_Measured || s_Measured->dpRatio != context.GetDensityIndependentPixelRatio())
             s_Measured = Measure(context, config);
 
-        const Rml::Vector2f position = Place(config, *s_Measured, context.GetDimensions());
+        const float scale = FitScale(*s_Measured, context.GetDimensions());
+        ApplyFitScale(scale);
+        const Rml::Vector2f position = Place(config, *s_Measured, context.GetDimensions(), scale);
         if (model.posX != position.x)
         {
             model.posX = position.x;

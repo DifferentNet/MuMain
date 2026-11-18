@@ -28,6 +28,11 @@ public:
     {
         return m_bounds.End();
     }
+    // How many creates took a slot so far (PoolSlotBounds::Takes).
+    std::uint32_t Takes() const
+    {
+        return m_bounds.Takes();
+    }
 
     bool DeleteEffect(int Type, OBJECT* Owner, int iSubType = -1);
     void DeleteEffect(int efftype);

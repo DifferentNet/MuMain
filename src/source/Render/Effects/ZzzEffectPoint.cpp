@@ -14,8 +14,15 @@
 #include "Audio/DSPlaySound.h"
 #include "Network/Server/WSclient.h"
 #include "UI/Core/WindowSystem.h"
+#include "Render/Effects/PoolSlotBounds.h"
 
 PARTICLE Points[MAX_POINTS];
+
+namespace
+{
+// Every live point sits below End(): CreatePoint raises it, MovePoints trims it.
+Render::Effects::PoolSlotBounds s_pointBounds;
+} // namespace
 
 int g_iLatestPoint = -1;
 
@@ -32,6 +39,7 @@ void CreatePoint(vec3_t Position, int Value, vec3_t Color, float scale, bool bMo
         if (!o->Live)
         {
             o->Live = true;
+            s_pointBounds.OnTaken(i);
             o->Type = Value;
             VectorCopy(Position, o->Position);
             o->Position[2] += 140.f;
@@ -90,7 +98,7 @@ void RenderPoints(BYTE byRenderOneMore)
 
     EnableAlphaTest();
     DisableDepthTest();
-    for (int i = 0; i < MAX_POINTS; i++)
+    for (int i = 0; i < s_pointBounds.End(); i++)
     {
         PARTICLE* o = &Points[i];
         if (o->Live)
@@ -130,7 +138,7 @@ void MovePoints()
         return;
     }
 
-    for (int i = 0; i < MAX_POINTS; i++)
+    for (int i = 0; i < s_pointBounds.End(); i++)
     {
         PARTICLE* o = &Points[i];
         if (o->Live)
@@ -159,4 +167,5 @@ void MovePoints()
             }
         }
     }
+    s_pointBounds.TrimEnd(Points, MAX_POINTS);
 }

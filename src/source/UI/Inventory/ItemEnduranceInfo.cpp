@@ -36,6 +36,35 @@ using namespace mu::ui::window;
 
 namespace
 {
+// UpdateMouseEvent() comes before the frame's sync and RmlUi's update rebuilds the rows after it, so the hit
+// boxes are queried in the next two pointer passes after a change, whatever the order of the two.
+constexpr int HitBoxRequeryPasses = 2;
+
+void QueryElements(Rml::ElementDocument* document, const char* selector,
+                   std::vector<Rml::ObserverPtr<Rml::Element>>& out)
+{
+    Rml::ElementList found;
+    document->QuerySelectorAll(found, selector);
+    out.clear();
+    out.reserve(found.size());
+    for (Rml::Element* element : found)
+    {
+        // A data-for row's template stays in the document, hidden: it is no row of its own.
+        if (!element->HasAttribute("data-for"))
+            out.push_back(element->GetObserverPtr());
+    }
+}
+
+bool AnyGone(const std::vector<Rml::ObserverPtr<Rml::Element>>& elements)
+{
+    for (const auto& element : elements)
+    {
+        if (!element)
+            return true;
+    }
+    return false;
+}
+
 // The equipped helper that has an HP frame: every pet slot item (guardian angel, imp,
 // horns, dark horse, pets) but the gamble items, which only use the slot in the shop.
 bool HasHelperLifeFrame()
@@ -238,20 +267,17 @@ bool mu::ui::window::CItemEnduranceInfo::UpdateMouseEvent()
     if (document == nullptr)
         return true;
 
-    Rml::ElementList frames;
-    document->QuerySelectorAll(frames, ".pet");
-    for (Rml::Element* frame : frames)
+    RefreshHitBoxes(document);
+    for (const auto& frame : m_PetFrames)
     {
-        if (UI::RmlBridge::IsPointerWithin(frame))
+        if (UI::RmlBridge::IsPointerWithin(frame.get()))
             return false;
     }
 
     // Each icon's tint is its hit box: the whole icon, or its half when both rings share one.
-    Rml::ElementList tints;
-    document->QuerySelectorAll(tints, "#icon_column .icon-tint");
-    for (size_t i = 0; i < tints.size() && i < m_IconSlots.size(); ++i)
+    for (size_t i = 0; i < m_IconTints.size() && i < m_IconSlots.size(); ++i)
     {
-        if (UI::RmlBridge::IsPointerWithin(tints[i]))
+        if (UI::RmlBridge::IsPointerWithin(m_IconTints[i].get()))
         {
             m_iTooltipIndex = m_IconSlots[i];
             return false;
@@ -259,6 +285,29 @@ bool mu::ui::window::CItemEnduranceInfo::UpdateMouseEvent()
     }
     return true;
 }
+void mu::ui::window::CItemEnduranceInfo::MarkHitBoxesStale()
+{
+    m_HitBoxQueriesLeft = HitBoxRequeryPasses;
+}
+
+void mu::ui::window::CItemEnduranceInfo::RefreshHitBoxes(Rml::ElementDocument* document)
+{
+    const bool documentChanged = m_HitBoxDocument.get() != document;
+    // A row count that differs from the synced rows' (RmlUi not done rebuilding them within the passes, as when
+    // MoveMainScene runs twice in a frame) queries again too, so a new row never misses its hit box.
+    const bool countsDiffer = m_IconTints.size() != m_IconSlots.size() ||
+                              m_PetFrames.size() != m_RmlView.Binder().GetModel().pets.size();
+    if (!documentChanged && !countsDiffer && m_HitBoxQueriesLeft == 0 && !AnyGone(m_PetFrames) &&
+        !AnyGone(m_IconTints))
+        return;
+
+    if (m_HitBoxQueriesLeft > 0)
+        --m_HitBoxQueriesLeft;
+    m_HitBoxDocument = document->GetObserverPtr();
+    QueryElements(document, ".pet", m_PetFrames);
+    QueryElements(document, "#icon_column .icon-tint", m_IconTints);
+}
+
 bool mu::ui::window::CItemEnduranceInfo::UpdateKeyEvent()
 {
     return true;
@@ -335,15 +384,17 @@ void mu::ui::window::CItemEnduranceInfo::InitImageIndex()
 
 namespace
 {
+// True when the field changed.
 template <typename T>
-void SyncItemEnduranceField(RmlModelBinder<UI::ItemEndurance::ItemEnduranceRmlModel>& binder,
+bool SyncItemEnduranceField(RmlModelBinder<UI::ItemEndurance::ItemEnduranceRmlModel>& binder,
                             T UI::ItemEndurance::ItemEnduranceRmlModel::* field, const char* name, T value)
 {
     auto& model = binder.GetModel();
     if (model.*field == value)
-        return;
+        return false;
     model.*field = std::move(value);
     binder.MarkDirty(name);
+    return true;
 }
 
 // The durability band the original's tint and tooltip colours follow. Callers only show items at most half
@@ -449,7 +500,8 @@ void mu::ui::window::CItemEnduranceInfo::SyncLeftColumn()
         addFrame(I18N::Game::SummonedMonsterHP, SummonLife, 100);
     }
 
-    SyncItemEnduranceField(m_RmlView.Binder(), &ItemEnduranceRmlModel::pets, "pets", std::move(pets));
+    if (SyncItemEnduranceField(m_RmlView.Binder(), &ItemEnduranceRmlModel::pets, "pets", std::move(pets)))
+        MarkHitBoxesStale();
 }
 
 const char* mu::ui::window::CItemEnduranceInfo::DurabilityIconImage(int imageIndex)
@@ -549,7 +601,8 @@ void mu::ui::window::CItemEnduranceInfo::SyncIcons()
                 icntItemDurIcon++;
         }
     }
-    SyncItemEnduranceField(m_RmlView.Binder(), &ItemEnduranceRmlModel::icons, "icons", std::move(icons));
+    if (SyncItemEnduranceField(m_RmlView.Binder(), &ItemEnduranceRmlModel::icons, "icons", std::move(icons)))
+        MarkHitBoxesStale();
 }
 
 // The original's tooltip of the icon UpdateMouseEvent() found under the pointer: "name (dur/max)",

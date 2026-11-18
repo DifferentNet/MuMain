@@ -85,8 +85,25 @@ inline constexpr int kMaxPools = 16;
 [[nodiscard]] bool Available();
 // Reads the three settings from GameConfig (startup, graphics preset changes).
 void ApplyFromConfig();
-// Whether a feature shows now (cheap: called for each effect sprite).
-[[nodiscard]] bool Enabled(Feature feature);
+namespace Detail
+{
+// Whether this client offers the looks (Available(), kept by ApplyFromConfig); read by Enabled.
+extern bool g_available;
+// Enabled when the client offers the looks.
+[[nodiscard]] bool EnabledWhenAvailable(Feature feature);
+} // namespace Detail
+
+// Whether a feature shows now (cheap: called for each effect sprite). The web and the Classic client
+// never offer the looks, so they answer here without a call.
+[[nodiscard]] inline bool Enabled(const Feature feature)
+{
+#ifdef __EMSCRIPTEN__
+    static_cast<void>(feature);
+    return false;
+#else
+    return Detail::g_available && Detail::EnabledWhenAvailable(feature);
+#endif
+}
 // The pools of effect lights this frame: PoolBudget(effect level), 0 when LightPools is off.
 [[nodiscard]] int ActivePoolBudget();
 // Whether the player chose a feature ([Render] setting), whatever the level and the client.

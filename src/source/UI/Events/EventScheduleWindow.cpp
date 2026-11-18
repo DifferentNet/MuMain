@@ -276,7 +276,9 @@ void mu::ui::window::CEventScheduleWindow::SyncContent()
     std::vector<EventScheduleRow> rows;
     for (const auto& entry : times.Entries())
     {
-        if (rows.size() >= VISIBLE_ROWS)
+        // The server can list more events than fit (the mini games, the invasions, Crywolf and the
+        // add-on's own): the phone's row box scrolls by touch (event_schedule.rcss), the PC's stops.
+        if (!phoneView && rows.size() >= VISIBLE_ROWS)
             break;
 
         const auto left = std::chrono::duration_cast<std::chrono::seconds>(entry.Deadline - now);

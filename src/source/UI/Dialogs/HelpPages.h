@@ -16,7 +16,8 @@ struct PageLine
     std::wstring text;
     bool heading = false;    // TEXT_COLOR_BLUE and bold
     bool halfSpacer = false; // the "\n" row: half a text height, no text
-    bool hint = false;       // the last row: what turns the page ("F1 : ...", LB and RB, a tap on it)
+    // What turns the page ("F1 : ...", LB and RB, a tap on it): the last row; under the title with touch controls.
+    bool hint = false;
 };
 
 // The devices the player has in hand, which the first pages are about.
