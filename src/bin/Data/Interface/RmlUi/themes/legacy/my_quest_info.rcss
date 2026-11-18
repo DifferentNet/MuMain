@@ -296,3 +296,16 @@
 	.quest-btn-open { left: 64px; decorator: image(myquest-btn-open) content-box; }
 	.quest-btn-giveup { left: 114px; decorator: image(myquest-btn-giveup) content-box; }
 }
+
+/* Round 12: the tabs take a finger's height (38, 33 css) while their art stays 28 high: the padding grows the box
+   a finger hits by 5 above and below, the negative margin takes it back and the tab art paints the content box
+   alone, so nothing under the tab row moves (the job change title starts right under it). */
+@media (theme: mobile) {
+	.tab-btn { margin: calc(-5px * var(--root-scale)) 0; padding: calc(5px * var(--root-scale)) 0; }
+	.tab-btn, .tab-btn-quest.active, .tab-btn-jobchange.active, .tab-btn-castletemple.active {
+		decorator: ninepatch(myquest-phone-tab, myquest-phone-tab-inner) content-box;
+	}
+	.tab-btn-quest.active, .tab-btn-jobchange.active, .tab-btn-castletemple.active {
+		decorator: ninepatch(myquest-phone-tab-on, myquest-phone-tab-on-inner) content-box;
+	}
+}

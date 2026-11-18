@@ -9858,14 +9858,14 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
         else
 #endif// GUILD_WAR_EVENT
         {
+            // Ancient armour in its set's colour (Render/Items/AncientColors.h), all parts worked out at once.
+            const Render::Items::AncientColors::BodySets ancientSets = Render::Items::AncientColors::SetsOfBody(c);
             for (int i = MAX_BODYPART - 1; i >= 0; i--)
             {
                 PART_t* p = &c->BodyPart[i];
                 if (p->Type != -1)
                 {
-                    // Ancient armour in its set's colour (Render/Items/AncientColors.h).
-                    const Render::Items::AncientColors::ScopedPartSet ancientSet(
-                        Render::Items::AncientColors::SetOfBodyPart(c, i));
+                    const Render::Items::AncientColors::ScopedPartSet ancientSet(ancientSets[static_cast<std::size_t>(i)]);
                     int Type = p->Type;
 
                     if (CLASS_SUMMONER == gCharacterManager.GetBaseClass(c->Class))

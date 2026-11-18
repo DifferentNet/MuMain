@@ -4065,7 +4065,7 @@
     <comment>legacy_id=1088</comment>
   </data>
   <data name="Set" xml:space="preserve">
-    <value>Itakda</value>
+    <value>Set</value>
     <comment>legacy_id=1089</comment>
   </data>
   <data name="Ancient Metal" xml:space="preserve">
@@ -4333,7 +4333,7 @@
     <comment>legacy_id=1163</comment>
   </data>
   <data name="when %d" xml:space="preserve">
-    <value>kapag %d</value>
+    <value>%d oras</value>
     <comment>legacy_id=1164</comment>
   </data>
   <data name="Increase attribute damage" xml:space="preserve">
@@ -14165,5 +14165,48 @@
   </data>
   <data name="JewelOptionFailed" xml:space="preserve">
     <value>%ls: nabigo ang pag-upgrade ng opsyon</value>
+  </data>
+  <!-- Round 12 -->
+  <data name="CraftTooManyItems" xml:space="preserve">
+    <value>Sobra ang mga item para sa kombinasyong ito</value>
+  </data>
+  <data name="CraftItemsMissing" xml:space="preserve">
+    <value>Kulang ang mga item para sa kombinasyong ito</value>
+  </data>
+  <data name="CraftItemLevelWrong" xml:space="preserve">
+    <value>Hindi tugma ang antas ng item sa kombinasyong ito</value>
+  </data>
+  <data name="CraftLevelTooLow" xml:space="preserve">
+    <value>Masyadong mababa ang antas mo para sa kombinasyong ito</value>
+  </data>
+  <data name="CraftClassCannot" xml:space="preserve">
+    <value>Hindi kaya ng klase mo ang kombinasyong ito</value>
+  </data>
+  <data name="BuffEnded" xml:space="preserve">
+    <value>Natapos ang buff: %ls</value>
+  </data>
+  <data name="BagAlmostFull" xml:space="preserve">
+    <value>Halos puno na ang bag: %d bakanteng puwang</value>
+  </data>
+  <data name="EquipmentBroken" xml:space="preserve">
+    <value>Sira na ang %ls: ipaayos ito</value>
+  </data>
+  <data name="PotionLowStock" xml:space="preserve">
+    <value>%ls: %d na lang</value>
+  </data>
+  <data name="ArrowsReloadedStacksLeft" xml:space="preserve">
+    <value>Napunan ang palaso, natitirang bungkos: %d</value>
+  </data>
+  <data name="ArrowsLastStack" xml:space="preserve">
+    <value>Huling bungkos ng palaso</value>
+  </data>
+  <data name="EmoteOk" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="EmoteHi" xml:space="preserve">
+    <value>Hi</value>
+  </data>
+  <data name="EmoteWin" xml:space="preserve">
+    <value>manalo</value>
   </data>
 </root>

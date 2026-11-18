@@ -7,6 +7,7 @@
 #include <RmlUi/Core/ObserverPtr.h>
 
 #include "UI/Core/WindowObject.h"
+#include "UI/HUD/LowStockWarning.h"
 #include "UI/Inventory/ItemCameraTarget.h"
 
 namespace Rml { class Element; class ElementDocument; }
@@ -86,6 +87,8 @@ namespace mu::ui::window
 
         // Stack count for the slot's bound item (0 if unbound/non-stacking); feeds #item_slots' stack-label binding.
         int GetSlotItemCount(int iSlotIndex);
+        // The slot's stack count this frame (SyncItemSlots()): "X: N left" once when it falls to the low mark.
+        void NoteSlotCount(int iSlotIndex, int count);
 
     private:
         int GetHotKeyItemIndex(int iType, bool bItemCount = false);
@@ -95,6 +98,9 @@ namespace mu::ui::window
         bool RepeatsEarlierHotKey(int iHotKey);
         // A bound slot with none of its items left: "No X left", at most once per kNothingLeftLineIntervalMs per slot.
         void PostNothingLeft(int iHotKey);
+        // Whether a slot's count moves for something else than drinking: a stack on the cursor, or a vault, trade or
+        // shop window open (the low-stock line only follows the count then).
+        static bool IsCountMovedByHand();
         // A target's drawer: one frame of the slot's item, framed for `width` x `height`.
         void RenderSlot(int iSlotIndex, const Rml::Vector2f& offset, const Rml::Vector2f& size);
 
@@ -113,5 +119,6 @@ namespace mu::ui::window
         static constexpr DWORD kNothingLeftLineIntervalMs = 3000;
         // When PostNothingLeft last posted a slot's line; 0 = never.
         DWORD m_dwNothingLeftPosted[HOTKEY_COUNT] = {};
+        UI::Hud::LowStockWarning m_LowStock[HOTKEY_COUNT];
     };
 }

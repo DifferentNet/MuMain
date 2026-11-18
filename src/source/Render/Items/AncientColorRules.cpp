@@ -250,6 +250,37 @@ const AccentRange* FindAccentRange(int set)
     return found == AccentRanges.end() ? nullptr : &*found;
 }
 
+// FindSetColor by a table indexed by the set's number (set numbers are bytes in itemsettype.bmd), built once at
+// compile time; -1 for a number without a colour. The first entry of a number wins, as a linear search would.
+constexpr std::size_t SetNumbers = 256;
+using SetColorIndex = std::array<std::int16_t, SetNumbers>;
+
+constexpr SetColorIndex MakeSetColorIndex()
+{
+    SetColorIndex index{};
+    index.fill(-1);
+    for (std::size_t i = SetColors.size(); i-- > 0;)
+    {
+        index[static_cast<std::size_t>(SetColors[i].set)] = static_cast<std::int16_t>(i);
+    }
+    return index;
+}
+
+constexpr bool SetNumbersFitIndex()
+{
+    for (const SetColor& c : SetColors)
+    {
+        if (c.set <= 0 || c.set >= static_cast<int>(SetNumbers))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+static_assert(SetNumbersFitIndex(), "set numbers must fit the FindSetColor index");
+
+constexpr SetColorIndex SetColorsByNumber = MakeSetColorIndex();
+
 bool StartsWith(std::wstring_view text, std::wstring_view start)
 {
     return text.size() >= start.size() &&
@@ -267,12 +298,12 @@ bool Contains(std::wstring_view text, std::wstring_view part)
 
 const SetColor* FindSetColor(int set)
 {
-    if (set <= 0)
+    if (set <= 0 || set >= static_cast<int>(SetNumbers))
     {
         return nullptr;
     }
-    const auto found = std::find_if(SetColors.begin(), SetColors.end(), [set](const SetColor& c) { return c.set == set; });
-    return found == SetColors.end() ? nullptr : &*found;
+    const int found = SetColorsByNumber[static_cast<std::size_t>(set)];
+    return found < 0 ? nullptr : &SetColors[static_cast<std::size_t>(found)];
 }
 
 int DiscriminatorOfByte(int ancientByte)

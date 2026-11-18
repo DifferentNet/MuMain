@@ -124,6 +124,8 @@ private:
         float boldPx = 0.f;
         // A string of the current language, which a switch of the language replaces.
         const wchar_t* language = nullptr;
+        // The key bindings' revision: the close tooltip names the bound key.
+        unsigned keyBindings = 0;
 
         bool operator==(const BuildKey&) const = default;
     };

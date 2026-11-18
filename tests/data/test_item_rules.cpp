@@ -192,14 +192,19 @@ TEST_CASE("Item level variants have their own rules [data][items][rules]")
 
     // The Wizard's Ring is bound to the character on the server (OpenMU), so it
     // can't be traded, stored or sold at any level; it can still be dropped.
+    constexpr int WorkingRingDurability = 30;
     for (int level : {0, 1, 2})
     {
-        CHECK(TradeBan(ITEM_WIZARDS_RING, {level}));
-        CHECK(StoreBan(ITEM_WIZARDS_RING, {level}));
-        CHECK(PersonalShopBan(ITEM_WIZARDS_RING, {level}));
-        CHECK(SellingBan(ITEM_WIZARDS_RING, {level}));
+        const ItemState working{level, false, false, WorkingRingDurability};
+        CHECK(TradeBan(ITEM_WIZARDS_RING, working));
+        CHECK(StoreBan(ITEM_WIZARDS_RING, working));
+        CHECK(PersonalShopBan(ITEM_WIZARDS_RING, working));
+        CHECK(SellingBan(ITEM_WIZARDS_RING, working));
     }
     CHECK_FALSE(DropBan(ITEM_WIZARDS_RING));
+    // A worn-out +0 ring (durability 0) sells to a merchant, as the server allows.
+    CHECK_FALSE(SellingBan(ITEM_WIZARDS_RING));
+    CHECK(SellingBan(ITEM_WIZARDS_RING, {1}));
 
     // Remedy of Love +1 to +5 cannot be sold.
     CHECK(SellingBan(ITEM_REMEDY_OF_LOVE, {3}));
@@ -254,8 +259,10 @@ TEST_CASE("Valuable items ask for confirmation [data][items][rules]")
     CHECK(Valuable(ITEM_WING));
     CHECK_FALSE(Valuable(KrisType));
     CHECK(Valuable(KrisType, {7}));
-    CHECK(Valuable(ITEM_WIZARDS_RING));
+    CHECK(Valuable(ITEM_WIZARDS_RING, {0, false, false, 30}));
     CHECK_FALSE(Valuable(ITEM_WIZARDS_RING, {1}));
+    // A worn-out +0 ring (durability 0) is no longer valuable.
+    CHECK_FALSE(Valuable(ITEM_WIZARDS_RING));
 
     // Rented items are not valuable while rented; rented pets only once
     // the rental time ran out.

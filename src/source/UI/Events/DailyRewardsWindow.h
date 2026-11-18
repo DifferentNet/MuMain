@@ -4,6 +4,7 @@
 #include "UI/Core/WindowManager.h"
 #include "UI/Events/DailyRewardsRmlModel.h"
 #include "UI/RmlBridge/RmlStackingOrder.h"
+#include "UI/HUD/KeyHint.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 
 #include <chrono>
@@ -73,6 +74,8 @@ private:
     // A refresh asked for (after the take button) that is due at this time; none while it is the epoch.
     std::chrono::steady_clock::time_point m_refreshDue{};
     bool m_pendingExit = false;
+    // Rebuilds the close tooltip's key label after a key binding changes.
+    UI::KeyHint::LabelWatch m_keyLabels;
     bool m_pendingTake = false;
 
     UI::RmlBridge::ThemedView<DailyRewardsRmlModel> m_RmlView{"daily_rewards",

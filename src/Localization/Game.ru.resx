@@ -397,7 +397,7 @@
     <comment>legacy_id=99,3512</comment>
   </data>
   <data name="Zen" xml:space="preserve">
-    <value>Дзен</value>
+    <value>Зен</value>
     <comment>legacy_id=100,224,1246,3523</comment>
   </data>
   <data name="Heart" xml:space="preserve">
@@ -656,7 +656,7 @@
     <comment>legacy_id=160</comment>
   </data>
   <data name="LV" xml:space="preserve">
-    <value>ЛВ</value>
+    <value>Ур.</value>
     <comment>legacy_id=161</comment>
   </data>
   <data name="ATK Dmg" xml:space="preserve">
@@ -668,7 +668,7 @@
     <comment>legacy_id=163</comment>
   </data>
   <data name="DEF" xml:space="preserve">
-    <value>ДЕФ</value>
+    <value>Защ.</value>
     <comment>legacy_id=164</comment>
   </data>
   <data name="DEF rate" xml:space="preserve">
@@ -768,7 +768,7 @@
     <comment>legacy_id=188</comment>
   </data>
   <data name="Leave" xml:space="preserve">
-    <value>Оставлять</value>
+    <value>Выйти</value>
     <comment>legacy_id=189</comment>
   </data>
   <data name="Party" xml:space="preserve">
@@ -916,7 +916,7 @@
     <comment>legacy_id=227</comment>
   </data>
   <data name="OK" xml:space="preserve">
-    <value>ХОРОШО</value>
+    <value>OK</value>
     <comment>legacy_id=228,337,2811</comment>
   </data>
   <data name="Cancel" xml:space="preserve">
@@ -944,11 +944,11 @@
     <comment>legacy_id=234,2888</comment>
   </data>
   <data name="Deposit" xml:space="preserve">
-    <value>Депозит</value>
+    <value>Положить</value>
     <comment>legacy_id=235</comment>
   </data>
   <data name="Withdraw" xml:space="preserve">
-    <value>Отзывать</value>
+    <value>Забрать</value>
     <comment>legacy_id=236</comment>
   </data>
   <data name="Repair all (A)" xml:space="preserve">
@@ -1112,7 +1112,7 @@
     <comment>legacy_id=280</comment>
   </data>
   <data name="Good" xml:space="preserve">
-    <value>Хороший</value>
+    <value>круто</value>
     <comment>legacy_id=281,282</comment>
   </data>
   <data name="Wow" xml:space="preserve">
@@ -1120,15 +1120,15 @@
     <comment>legacy_id=283,284</comment>
   </data>
   <data name="Nice" xml:space="preserve">
-    <value>Хороший</value>
+    <value>классно</value>
     <comment>legacy_id=285,286</comment>
   </data>
   <data name="Here" xml:space="preserve">
-    <value>Здесь</value>
+    <value>сюда</value>
     <comment>legacy_id=287,288</comment>
   </data>
   <data name="Come" xml:space="preserve">
-    <value>Приходить</value>
+    <value>ко мне</value>
     <comment>legacy_id=289,290</comment>
   </data>
   <data name="come on" xml:space="preserve">
@@ -1136,15 +1136,15 @@
     <comment>legacy_id=291</comment>
   </data>
   <data name="There" xml:space="preserve">
-    <value>Там</value>
+    <value>вон там</value>
     <comment>legacy_id=292,293</comment>
   </data>
   <data name="That" xml:space="preserve">
-    <value>Что</value>
+    <value>вон</value>
     <comment>legacy_id=294,295</comment>
   </data>
   <data name="Not" xml:space="preserve">
-    <value>Нет</value>
+    <value>нет</value>
     <comment>legacy_id=296,297</comment>
   </data>
   <data name="Never" xml:space="preserve">
@@ -1152,11 +1152,11 @@
     <comment>legacy_id=298,299</comment>
   </data>
   <data name="Do not" xml:space="preserve">
-    <value>Не</value>
+    <value>не надо</value>
     <comment>legacy_id=300,301</comment>
   </data>
   <data name="DoNot302" xml:space="preserve">
-    <value>не</value>
+    <value>не хочу</value>
     <comment>legacy_id=302</comment>
   </data>
   <data name="Sorry" xml:space="preserve">
@@ -1168,7 +1168,7 @@
     <comment>legacy_id=306,307</comment>
   </data>
   <data name="Cry" xml:space="preserve">
-    <value>Плакать</value>
+    <value>реву</value>
     <comment>legacy_id=308,309</comment>
   </data>
   <data name="Huh" xml:space="preserve">
@@ -1196,11 +1196,11 @@
     <comment>legacy_id=316</comment>
   </data>
   <data name="Great" xml:space="preserve">
-    <value>Большой</value>
+    <value>супер</value>
     <comment>legacy_id=317,318,338</comment>
   </data>
   <data name="Oh Yeah" xml:space="preserve">
-    <value>Ах, да</value>
+    <value>ура</value>
     <comment>legacy_id=319</comment>
   </data>
   <data name="OhYeah320" xml:space="preserve">
@@ -1212,7 +1212,7 @@
     <comment>legacy_id=321</comment>
   </data>
   <data name="Win" xml:space="preserve">
-    <value>Победить</value>
+    <value>Победа</value>
     <comment>legacy_id=322,323,1396</comment>
   </data>
   <data name="Victory" xml:space="preserve">
@@ -1224,15 +1224,15 @@
     <comment>legacy_id=326,327</comment>
   </data>
   <data name="Tired" xml:space="preserve">
-    <value>Усталый</value>
+    <value>устал</value>
     <comment>legacy_id=328,329</comment>
   </data>
   <data name="Cold" xml:space="preserve">
-    <value>Холодный</value>
+    <value>холодно</value>
     <comment>legacy_id=330,331</comment>
   </data>
   <data name="hurt" xml:space="preserve">
-    <value>повредить</value>
+    <value>больно</value>
     <comment>legacy_id=332,333,334</comment>
   </data>
   <data name="Again" xml:space="preserve">
@@ -1240,7 +1240,7 @@
     <comment>legacy_id=335,336</comment>
   </data>
   <data name="Respect" xml:space="preserve">
-    <value>Уважать</value>
+    <value>уважаю</value>
     <comment>legacy_id=339,340</comment>
   </data>
   <data name="Defeated" xml:space="preserve">
@@ -1252,11 +1252,11 @@
     <comment>legacy_id=342,343</comment>
   </data>
   <data name="Rush" xml:space="preserve">
-    <value>Торопиться</value>
+    <value>быстрее</value>
     <comment>legacy_id=344,345</comment>
   </data>
   <data name="Go go" xml:space="preserve">
-    <value>Иди, иди</value>
+    <value>гоу</value>
     <comment>legacy_id=346,347</comment>
   </data>
   <data name="Look around" xml:space="preserve">
@@ -1677,7 +1677,7 @@
     <comment>legacy_id=449</comment>
   </data>
   <data name="Account" xml:space="preserve">
-    <value>Счет</value>
+    <value>Аккаунт</value>
     <comment>legacy_id=450</comment>
   </data>
   <data name="Password" xml:space="preserve">
@@ -1793,7 +1793,7 @@
     <comment>legacy_id=479</comment>
   </data>
   <data name="Tied!!!" xml:space="preserve">
-    <value>Связанный!!!</value>
+    <value>Ничья!</value>
     <comment>legacy_id=480</comment>
   </data>
   <data name="You are connected to the server" xml:space="preserve">
@@ -2569,7 +2569,7 @@
     <comment>legacy_id=679</comment>
   </data>
   <data name="Rank" xml:space="preserve">
-    <value>Классифицировать</value>
+    <value>Место</value>
     <comment>legacy_id=680</comment>
   </data>
   <data name="Character" xml:space="preserve">
@@ -3425,7 +3425,7 @@
     <comment>legacy_id=917</comment>
   </data>
   <data name="Obtained" xml:space="preserve">
-    <value>Полученный</value>
+    <value>получено</value>
     <comment>legacy_id=918</comment>
   </data>
   <data name="Slide Help" xml:space="preserve">
@@ -3721,7 +3721,7 @@
     <comment>legacy_id=1000</comment>
   </data>
   <data name="Send" xml:space="preserve">
-    <value>Отправлять</value>
+    <value>Отправить</value>
     <comment>legacy_id=1001</comment>
   </data>
   <data name="Prev. Action" xml:space="preserve">
@@ -3753,7 +3753,7 @@
     <comment>legacy_id=1009</comment>
   </data>
   <data name="Reply" xml:space="preserve">
-    <value>Отвечать</value>
+    <value>Ответить</value>
     <comment>legacy_id=1010</comment>
   </data>
   <data name="Delete" xml:space="preserve">
@@ -3773,7 +3773,7 @@
     <comment>legacy_id=1014</comment>
   </data>
   <data name="Write" xml:space="preserve">
-    <value>Писать</value>
+    <value>Написать</value>
     <comment>legacy_id=1015</comment>
   </data>
   <data name="Re: %s" xml:space="preserve">
@@ -3817,7 +3817,7 @@
     <comment>legacy_id=1026</comment>
   </data>
   <data name="Read" xml:space="preserve">
-    <value>Читать</value>
+    <value>Прочитать</value>
     <comment>legacy_id=1027</comment>
   </data>
   <data name=" Sender" xml:space="preserve">
@@ -3897,7 +3897,7 @@
     <comment>legacy_id=1046</comment>
   </data>
   <data name="ID does not exist." xml:space="preserve">
-    <value>Идентификатор не существует.</value>
+    <value>Такого персонажа нет.</value>
     <comment>legacy_id=1047,3263</comment>
   </data>
   <data name="You cannot add more. Please delete to add." xml:space="preserve">
@@ -4129,7 +4129,7 @@
     <comment>legacy_id=1105</comment>
   </data>
   <data name="Apply" xml:space="preserve">
-    <value>Применять</value>
+    <value>Применить</value>
     <comment>legacy_id=1106</comment>
   </data>
   <data name="Open1107" xml:space="preserve">
@@ -4277,7 +4277,7 @@
     <comment>legacy_id=1143</comment>
   </data>
   <data name="Curse" xml:space="preserve">
-    <value>Проклинать</value>
+    <value>Проклятие</value>
     <comment>legacy_id=1144</comment>
   </data>
   <data name="Feel the new Spirit of Guardian!!" xml:space="preserve">
@@ -4333,7 +4333,7 @@
     <comment>legacy_id=1163</comment>
   </data>
   <data name="when %d" xml:space="preserve">
-    <value>когда %d</value>
+    <value>%d ч.</value>
     <comment>legacy_id=1164</comment>
   </data>
   <data name="Increase attribute damage" xml:space="preserve">
@@ -4541,7 +4541,7 @@
     <comment>legacy_id=1216</comment>
   </data>
   <data name="Pet" xml:space="preserve">
-    <value>Домашний питомец</value>
+    <value>Питомец</value>
     <comment>legacy_id=1217</comment>
   </data>
   <data name="AdvStatsTooltip" xml:space="preserve">
@@ -4929,11 +4929,11 @@
     <comment>legacy_id=1307</comment>
   </data>
   <data name="Dissolve" xml:space="preserve">
-    <value>Растворить</value>
+    <value>Распустить</value>
     <comment>legacy_id=1308</comment>
   </data>
   <data name="Release" xml:space="preserve">
-    <value>Выпускать</value>
+    <value>Исключить</value>
     <comment>legacy_id=1309</comment>
   </data>
   <data name="Guild member: %d" xml:space="preserve">
@@ -5009,7 +5009,7 @@
     <comment>legacy_id=1327</comment>
   </data>
   <data name="Failed" xml:space="preserve">
-    <value>Неуспешный</value>
+    <value>Не удалось</value>
     <comment>legacy_id=1328,1531</comment>
   </data>
   <data name="Income" xml:space="preserve">
@@ -5017,7 +5017,7 @@
     <comment>legacy_id=1329</comment>
   </data>
   <data name="Members" xml:space="preserve">
-    <value>Члены</value>
+    <value>Участники</value>
     <comment>legacy_id=1330</comment>
   </data>
   <data name="Incomplete requirements for creating a guild alliance" xml:space="preserve">
@@ -5193,7 +5193,7 @@
     <comment>legacy_id=1374</comment>
   </data>
   <data name="Changed" xml:space="preserve">
-    <value>Измененный</value>
+    <value>Изменено.</value>
     <comment>legacy_id=1375</comment>
   </data>
   <data name="Cancelled" xml:space="preserve">
@@ -5273,11 +5273,11 @@
     <comment>legacy_id=1394</comment>
   </data>
   <data name="Tie!" xml:space="preserve">
-    <value>Галстук!</value>
+    <value>Ничья!</value>
     <comment>legacy_id=1395</comment>
   </data>
   <data name="Lose" xml:space="preserve">
-    <value>Терять</value>
+    <value>Поражение</value>
     <comment>legacy_id=1397</comment>
   </data>
   <data name="Weapon for Invading team" xml:space="preserve">
@@ -5329,7 +5329,7 @@
     <comment>legacy_id=1411</comment>
   </data>
   <data name="Create" xml:space="preserve">
-    <value>Создавать</value>
+    <value>Прибавить</value>
     <comment>legacy_id=1412</comment>
   </data>
   <data name="Potion of bless" xml:space="preserve">
@@ -6093,7 +6093,7 @@
     <comment>legacy_id=1618</comment>
   </data>
   <data name="Confirm" xml:space="preserve">
-    <value>Подтверждать</value>
+    <value>Подтвердить</value>
     <comment>legacy_id=1619</comment>
   </data>
   <data name="Purchasing price: %s(%s)" xml:space="preserve">
@@ -7121,11 +7121,11 @@
     <comment>legacy_id=1901</comment>
   </data>
   <data name="Choose." xml:space="preserve">
-    <value>Выбирать.</value>
+    <value>Выберите.</value>
     <comment>legacy_id=1902</comment>
   </data>
   <data name="Decrease" xml:space="preserve">
-    <value>Снижаться</value>
+    <value>Убавить</value>
     <comment>legacy_id=1903</comment>
   </data>
   <data name="This stat cannot be %s anymore." xml:space="preserve">
@@ -7697,7 +7697,7 @@
     <comment>legacy_id=2097</comment>
   </data>
   <data name="Allowed" xml:space="preserve">
-    <value>Допустимый</value>
+    <value>Можно</value>
     <comment>legacy_id=2098</comment>
   </data>
   <data name="Not allowed" xml:space="preserve">
@@ -10597,7 +10597,7 @@
     <comment>legacy_id=3015</comment>
   </data>
   <data name="Warp3016" xml:space="preserve">
-    <value>Деформация</value>
+    <value>Переместиться</value>
     <comment>legacy_id=3016</comment>
   </data>
   <data name="Loren Market" xml:space="preserve">
@@ -11945,7 +11945,7 @@
     <comment>legacy_id=3504,3542</comment>
   </data>
   <data name="Add" xml:space="preserve">
-    <value>Добавлять</value>
+    <value>Добавить</value>
     <comment>legacy_id=3505</comment>
   </data>
   <data name="Potion" xml:space="preserve">
@@ -11961,7 +11961,7 @@
     <comment>legacy_id=3509</comment>
   </data>
   <data name="Delay" xml:space="preserve">
-    <value>Задерживать</value>
+    <value>Задержка</value>
     <comment>legacy_id=3510</comment>
   </data>
   <data name="Con" xml:space="preserve">
@@ -15724,7 +15724,7 @@
     <value>Нет свободного быстрого слота: наведите на банку и нажмите Ctrl+Q, W, E или R, чтобы поставить её туда.</value>
   </data>
   <data name="InventoryAlreadyOnQuickSlot" xml:space="preserve">
-    <value>Это уже стоит на быстром слоте %lc.</value>
+    <value>Это уже стоит на быстром слоте %ls.</value>
   </data>
   <data name="TouchNoMana" xml:space="preserve">
     <value>Не хватает маны</value>
@@ -17119,5 +17119,48 @@
   </data>
   <data name="JewelOptionFailed" xml:space="preserve">
     <value>%ls: улучшение опции не удалось</value>
+  </data>
+  <!-- Round 12 -->
+  <data name="CraftTooManyItems" xml:space="preserve">
+    <value>Слишком много предметов для этой комбинации</value>
+  </data>
+  <data name="CraftItemsMissing" xml:space="preserve">
+    <value>Для этой комбинации не хватает предметов</value>
+  </data>
+  <data name="CraftItemLevelWrong" xml:space="preserve">
+    <value>Уровень предмета не подходит для этой комбинации</value>
+  </data>
+  <data name="CraftLevelTooLow" xml:space="preserve">
+    <value>Ваш уровень слишком низкий для этой комбинации</value>
+  </data>
+  <data name="CraftClassCannot" xml:space="preserve">
+    <value>Ваш класс не может сделать эту комбинацию</value>
+  </data>
+  <data name="BuffEnded" xml:space="preserve">
+    <value>Бафф закончился: %ls</value>
+  </data>
+  <data name="BagAlmostFull" xml:space="preserve">
+    <value>Сумка почти полна: свободно клеток: %d</value>
+  </data>
+  <data name="EquipmentBroken" xml:space="preserve">
+    <value>Сломано: %ls. Почините</value>
+  </data>
+  <data name="PotionLowStock" xml:space="preserve">
+    <value>%ls: осталось %d</value>
+  </data>
+  <data name="ArrowsReloadedStacksLeft" xml:space="preserve">
+    <value>Стрелы заряжены, осталось пачек: %d</value>
+  </data>
+  <data name="ArrowsLastStack" xml:space="preserve">
+    <value>Последняя пачка стрел</value>
+  </data>
+  <data name="EmoteOk" xml:space="preserve">
+    <value>ок</value>
+  </data>
+  <data name="EmoteHi" xml:space="preserve">
+    <value>прив</value>
+  </data>
+  <data name="EmoteWin" xml:space="preserve">
+    <value>выиграл</value>
   </data>
 </root>

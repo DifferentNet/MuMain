@@ -88,6 +88,9 @@ mu_add_test(
     NAME test_grand_shop_lines
     SOURCES
         test_grand_shop_lines.cpp
+        # The shop sends its commands through the client's network code, which needs the client
+        # globals of Winmain.cpp.
+        ${CMAKE_SOURCE_DIR}/src/source/App/Platform/Windows/Winmain.cpp
     LINK_LIBS
         MuClient
 )

@@ -176,7 +176,7 @@ float4 _main(thread const FSInput& _input, constant SceneLighting& _181, texture
     return color;
 }
 
-fragment main0_out main0(main0_in in [[stage_in]], constant SceneLighting& _181 [[buffer(0)]], constant FogUniforms& _240 [[buffer(1)]], texture2d<float> tex [[texture(0)]], sampler s [[sampler(0)]], float4 gl_FragCoord [[position]])
+fragment main0_out main0(main0_in in [[stage_in]], constant FogUniforms& _240 [[buffer(0)]], constant SceneLighting& _181 [[buffer(1)]], texture2d<float> tex [[texture(0)]], sampler s [[sampler(0)]], float4 gl_FragCoord [[position]])
 {
     main0_out out = {};
     FSInput _input;

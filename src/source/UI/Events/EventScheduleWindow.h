@@ -4,6 +4,7 @@
 #include "UI/Core/WindowManager.h"
 #include "UI/Events/EventScheduleRmlModel.h"
 #include "UI/RmlBridge/RmlStackingOrder.h"
+#include "UI/HUD/KeyHint.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 
 #include <chrono>
@@ -67,6 +68,8 @@ private:
     CManager* m_pNewUIMng = nullptr;
     std::chrono::steady_clock::time_point m_openedAt{};
     bool m_pendingExit = false;
+    // Rebuilds the close tooltip's key label after a key binding changes.
+    UI::KeyHint::LabelWatch m_keyLabels;
 
     UI::RmlBridge::ThemedView<EventScheduleRmlModel> m_RmlView{"event_schedule",
         [this](Rml::DataModelConstructor& c, EventScheduleRmlModel& model) { BindRmlModel(c, model); },

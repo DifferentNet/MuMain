@@ -150,3 +150,11 @@
 	margin-left: 20dp;
 	margin-right: 20dp;
 }
+
+/* MU Moldova: the phone view (theme flag "mobile"): Close keeps its 54 x 30 art, its hit box grows by
+   8 dp above and below and 10 dp at the sides (about 63 x 39 css), the only way out of the credits. */
+@media (theme: mobile) {
+	.btn-close { margin: -8dp -10dp; padding: 8dp 10dp; decorator: image(creditwin-close-idle) content-box; }
+	.btn-close:hover { decorator: image(creditwin-close-hover) content-box; }
+	.btn-close:active { decorator: image(creditwin-close-active) content-box; }
+}

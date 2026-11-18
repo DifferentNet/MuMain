@@ -962,7 +962,8 @@ bool CMyInventory::PutClickedItemOnHotKey()
     else if (bAlreadyThere)
     {
         wchar_t text[128];
-        mu_swprintf_s(text, I18N::Game::InventoryAlreadyOnQuickSlot, L"QWER"[iHotKey]);
+        mu_swprintf_s(text, I18N::Game::InventoryAlreadyOnQuickSlot,
+                      UI::KeyHint::KeyLabel(Core::Input::KeyBindings::PotionAction(iHotKey)).c_str());
         g_pSystemLogBox->AddText(text, TYPE_SYSTEM_MESSAGE);
     }
     else
@@ -1455,6 +1456,17 @@ CInventoryCtrl* CMyInventory::OwnedBagGrid(int i) const
     if (i < 1 || i >= OwnedBagGridCount || UI::Inventory::Bag().OwnedPages() < 2 || g_pMyInventoryExt == nullptr)
         return nullptr;
     return g_pMyInventoryExt->GetExtension(i - 1);
+}
+
+int CMyInventory::FreeCellCount() const
+{
+    int cells = 0;
+    for (int g = 0; g < OwnedBagGridCount; ++g)
+    {
+        if (CInventoryCtrl* grid = OwnedBagGrid(g))
+            cells += grid->GetEmptySlotCount();
+    }
+    return cells;
 }
 
 // The lookups below search every owned bag page: page 2's grids carry their own slot offsets (76 and up).

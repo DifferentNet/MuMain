@@ -1218,6 +1218,24 @@ static mu::ui::window::CInventoryCtrl* ArrowGrid(int index)
     return g_pMyInventory->GetInventoryCtrl();
 }
 
+namespace
+{
+// After a reload took a stack out of the bag: how many are left, or a red line when it was the last one.
+void PostArrowsReloaded()
+{
+    const int stacksLeft = SearchArrowCount();
+    if (stacksLeft <= 0)
+    {
+        g_pSystemLogBox->AddText(I18N::Game::ArrowsReloaded, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+        g_pSystemLogBox->AddText(I18N::Game::ArrowsLastStack, mu::ui::window::TYPE_ERROR_MESSAGE);
+        return;
+    }
+    wchar_t line[128]{};
+    mu_swprintf(line, I18N::Game::ArrowsReloadedStacksLeft, stacksLeft);
+    g_pSystemLogBox->AddText(line, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+}
+} // namespace
+
 void ReloadArrow()
 {
     int Index = SearchArrow();
@@ -1247,7 +1265,7 @@ void ReloadArrow()
                     SendRequestEquipmentItem(STORAGE_TYPE::INVENTORY, Index, pItem, STORAGE_TYPE::INVENTORY, EQUIPMENT_WEAPON_RIGHT);
                 }
                 UI::Inventory::RemoveItem(Index);
-                g_pSystemLogBox->AddText(I18N::Game::ArrowsReloaded, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+                PostArrowsReloaded();
             }
             else
                 if ((gCharacterManager.GetEquipedBowType(rp) == BOWTYPE_CROSSBOW) && (lp->Type == -1))
@@ -1259,7 +1277,7 @@ void ReloadArrow()
                         SendRequestEquipmentItem(STORAGE_TYPE::INVENTORY, Index, pItem, STORAGE_TYPE::INVENTORY, EQUIPMENT_WEAPON_LEFT);
                     }
                     UI::Inventory::RemoveItem(Index);
-                    g_pSystemLogBox->AddText(I18N::Game::ArrowsReloaded, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+                    PostArrowsReloaded();
                 }
         }
     }
@@ -3528,6 +3546,17 @@ void SendMacroChat(wchar_t* Text)
 
         LastMacroTime = GetTickCount64();
     }
+}
+
+bool SendMacroSlot(int slot)
+{
+    if (slot < 0 || slot >= static_cast<int>(std::size(MacroText)) || MacroText[slot][0] == L'\0')
+        return false;
+    const bool macroPauseOver = LastMacroTime < GetTickCount64() - MacroCooldownMs;
+    if (!macroPauseOver || gMapManager.InChaosCastle() || g_Direction.IsDirection())
+        return false;
+    SendMacroChat(MacroText[slot]);
+    return true;
 }
 
 void MoveInterface()
