@@ -64,7 +64,16 @@ TEST_CASE("chat command catalog accepts a complete ordered list")
     CHECK_FALSE(catalog.IsAvailable());
     CHECK(catalog.AddFromPacket(second.data(), static_cast<int32_t>(second.size())));
     CHECK(catalog.IsAvailable());
-    CHECK(catalog.GetCommands().size() == 2);
+
+    // The client's own commands come after the server's once the list is complete.
+    const auto& commands = catalog.GetCommands();
+    const auto serverCommandCount =
+        std::count_if(commands.begin(), commands.end(), [](const auto& command) { return !command.IsLocal; });
+    CHECK(serverCommandCount == 2);
+    CHECK(commands.size() > 2);
+    CHECK_FALSE(commands[0].IsLocal);
+    CHECK_FALSE(commands[1].IsLocal);
+    CHECK(commands[2].IsLocal);
 }
 
 TEST_CASE("chat command catalog rejects a changed list count")

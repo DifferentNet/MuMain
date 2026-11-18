@@ -105,9 +105,17 @@ if(MU_ENABLE_SHADER_COMPILATION)
             COMMENT "HLSL to SPIR-V: ${shader_name}.${stage}.hlsl"
             VERBATIM
         )
+        # SDL binds fragment texture, sampler and uniform slot N to MSL index N. spirv-cross numbers
+        # them in first-use order unless told to keep the SPIR-V bindings, which fragment shaders
+        # can do (no storage resources). Vertex shaders can't: their storage buffers would collide
+        # with the uniform buffers.
+        set(msl_options)
+        if(stage STREQUAL "frag")
+            set(msl_options --msl-decoration-binding)
+        endif()
         add_custom_command(
             OUTPUT "${msl}"
-            COMMAND "${SPIRV_CROSS_EXE}" --msl "${spv}" --output "${msl}"
+            COMMAND "${SPIRV_CROSS_EXE}" --msl ${msl_options} "${spv}" --output "${msl}"
             DEPENDS "${spv}" "${MU_SHADER_COMPILATION_STAMP}" "${SPIRV_CROSS_EXE}"
             COMMENT "SPIR-V to MSL: ${shader_name}.${stage}.spv"
             VERBATIM
