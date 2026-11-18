@@ -158,8 +158,18 @@ require_source("${renderer_source}" "depth_test=\\{\\}" "pipeline diagnostics mu
 require_source("${renderer_source}" "depth_write=\\{\\}" "pipeline diagnostics must include depth-write state")
 require_source("${renderer_source}" "cull=\\{\\}" "pipeline diagnostics must include cull state")
 require_source("${renderer_source}" "error=\\{\\}" "pipeline diagnostics must include the SDL error")
+# One "layout ? value :" step of a vertex-shader selection chain.
+function(vertex_layout_case out layout value)
+    set(${out} "description\\.vertexLayout[ \t\r\n]*==[ \t\r\n]*VertexLayout::${layout}[ \t\r\n]*\\?[ \t\r\n]*${value}[ \t\r\n]*:[ \t\r\n]*" PARENT_SCOPE)
+endfunction()
+
+vertex_layout_case(skinned_handle Skinned s_vertShaderSkinned)
+vertex_layout_case(shadow_handle SkinnedShadow s_vertShaderSkinnedShadow)
+vertex_layout_case(world_handle ThreeDimensionalWorld s_vertShader3DWorld)
+vertex_layout_case(terrain_lights_handle ThreeDimensionalTerrainLights s_vertShaderTerrainLights)
+vertex_layout_case(soft_particles_handle ThreeDimensionalSoftParticles s_vertShaderSoftParticles)
 require_source("${build_source}"
-    "pipelineInfo\\.vertex_shader[ \t\r\n]*=[ \t\r\n]*description\\.vertexLayout[ \t\r\n]*==[ \t\r\n]*VertexLayout::Skinned[ \t\r\n]*\\?[ \t\r\n]*s_vertShaderSkinned[ \t\r\n]*:[ \t\r\n]*description\\.vertexLayout[ \t\r\n]*==[ \t\r\n]*VertexLayout::SkinnedShadow[ \t\r\n]*\\?[ \t\r\n]*s_vertShaderSkinnedShadow[ \t\r\n]*:[ \t\r\n]*s_vertShader2D"
+    "pipelineInfo\\.vertex_shader[ \t\r\n]*=[ \t\r\n]*${skinned_handle}${shadow_handle}${world_handle}${terrain_lights_handle}${soft_particles_handle}s_vertShader2D"
     "pipeline vertex shader handles must remain selected from the pipeline layout")
 require_source("${build_source}"
     "pipelineInfo\\.fragment_shader[ \t\r\n]*=[ \t\r\n]*GetFragmentShader\\(description\\.fragmentShader\\)"
@@ -180,8 +190,13 @@ require_source("${depth_state_source}" "\\.compare_op[ \t\r\n]*=[ \t\r\n]*SDL_GP
     "pipelines must compare depth with LESS_OR_EQUAL, as the classic client's GL_LEQUAL")
 reject_source("${renderer_source}" "SDL_GPU_COMPAREOP_LESS([^_]|$)"
     "no pipeline may compare depth with strict LESS")
+vertex_layout_case(skinned_name Skinned "\"skinned_textured\\.vert\"")
+vertex_layout_case(shadow_name SkinnedShadow "\"skinned_shadow\\.vert\"")
+vertex_layout_case(world_name ThreeDimensionalWorld "\"basic_textured_world\\.vert\"")
+vertex_layout_case(terrain_lights_name ThreeDimensionalTerrainLights "\"terrain_lights\\.vert\"")
+vertex_layout_case(soft_particles_name ThreeDimensionalSoftParticles "\"soft_particles\\.vert\"")
 require_source("${log_source}"
-    "vertexShaderName[ \t\r\n]*=[ \t\r\n]*description\\.vertexLayout[ \t\r\n]*==[ \t\r\n]*VertexLayout::Skinned[ \t\r\n]*\\?[ \t\r\n]*\"skinned_textured\\.vert\"[ \t\r\n]*:[ \t\r\n]*description\\.vertexLayout[ \t\r\n]*==[ \t\r\n]*VertexLayout::SkinnedShadow[ \t\r\n]*\\?[ \t\r\n]*\"skinned_shadow\\.vert\"[ \t\r\n]*:[ \t\r\n]*\"basic_textured\\.vert\""
+    "vertexShaderName[ \t\r\n]*=[ \t\r\n]*${skinned_name}${shadow_name}${world_name}${terrain_lights_name}${soft_particles_name}\"basic_textured\\.vert\""
     "pipeline diagnostics must map the built vertex layout to its exact shader identifier")
 require_source("${log_source}"
     "fragmentShaderName[ \t\r\n]*=[ \t\r\n]*GetFragmentShaderName\\(description\\.fragmentShader\\)"

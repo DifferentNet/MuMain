@@ -389,7 +389,9 @@
       "ground": {
         "rotation": [0, 0, 180]
       },
-      "glow": { "level": 0 }
+      "glow": {
+        "level": 0
+      }
     },
     {
       "number": 38,
@@ -1513,10 +1515,9 @@
         "rotation": [270, 0, 0],
         "scale": 0.0028
       },
-      "ground": {
-        "rotation": [0, 0, -45]
-      },
-      "glow": { "level": 0 }
+      "glow": {
+        "level": 0
+      }
     },
     {
       "number": 135,

@@ -7603,6 +7603,10 @@ private:
                                            ? "skinned_shadow.vert"
                                        : description.vertexLayout == VertexLayout::ThreeDimensionalWorld
                                            ? "basic_textured_world.vert"
+                                       : description.vertexLayout == VertexLayout::ThreeDimensionalTerrainLights
+                                           ? "terrain_lights.vert"
+                                       : description.vertexLayout == VertexLayout::ThreeDimensionalSoftParticles
+                                           ? "soft_particles.vert"
                                            : "basic_textured.vert";
         const char* fragmentShaderName = GetFragmentShaderName(description.fragmentShader);
         const char* cullMode = description.cullFaceEnabled ? "back" : "none";
