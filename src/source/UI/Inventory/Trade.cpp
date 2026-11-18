@@ -4,6 +4,7 @@
 
 #include "UI/Inventory/Trade.h"
 #include "UI/Chat/ChatMessages.h"
+#include "UI/Chat/InviteAutoDecline.h"
 #include "UI/Inventory/HeldItemPlacement.h"
 #include "UI/Inventory/ZenAmount.h"
 #include "UI/Core/WindowSystem.h"
@@ -734,6 +735,12 @@ bool CTrade::ProcessToReceiveTradeRequest(const wchar_t* pszYourID)
         return false;
     }
 
+    if (UI::Chat::InviteAutoDecline::ShouldDecline(UI::Chat::InviteKind::Trade, pszYourID))
+    {
+        SocketClient->ToGameServer()->SendTradeRequestResponse(false);
+        return false;
+    }
+
     wcsncpy(m_szYourID, pszYourID, MAX_USERNAME_SIZE);
     m_szYourID[MAX_USERNAME_SIZE] = L'\0';
 
@@ -780,6 +787,8 @@ void CTrade::ProcessToReceiveTradeResult(UI::Trade::RequestReply reply, const UI
             InitYourInvenBackUp();
 
         m_bTradeAlert = false;
+        // A line still waiting from an earlier trade must not speak about this one.
+        m_pendingRemovals.Clear();
         m_nYourGuildType = partner.guildKey;
         wcsncpy(m_szYourID, szTempID, MAX_USERNAME_SIZE);
         m_nYourLevel = partner.level;

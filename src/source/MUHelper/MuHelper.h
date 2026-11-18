@@ -29,6 +29,8 @@ namespace MUHelper
 		void Load(const ConfigData& config);
 		void Start();
 		void Stop();
+		// A new game (character switch, relog): off, with no run summary.
+		void ResetForNewGame();
 		void Toggle();
 		void TriggerStart();
 		void TriggerStop();

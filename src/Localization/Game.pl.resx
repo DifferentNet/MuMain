@@ -14294,4 +14294,32 @@
   <data name="WarpUnlocked" xml:space="preserve">
     <value>Poziom %d: nowy cel teleportu: %ls</value>
   </data>
+  <!-- Round 14 -->
+  <data name="DeclineInvitations" xml:space="preserve">
+    <value>Odrzucaj zaproszenia</value>
+  </data>
+  <data name="InviteDeclinedParty" xml:space="preserve">
+    <value>Odrzucono zaproszenie do drużyny od %ls.</value>
+  </data>
+  <data name="InviteDeclinedTrade" xml:space="preserve">
+    <value>Odrzucono prośbę o handel od %ls.</value>
+  </data>
+  <data name="InviteDeclinedDuel" xml:space="preserve">
+    <value>Odrzucono wyzwanie na pojedynek od %ls.</value>
+  </data>
+  <data name="HelperSafeZone" xml:space="preserve">
+    <value>MU Helper nie działa w strefie bezpiecznej.</value>
+  </data>
+  <data name="HelperStoppedSummary" xml:space="preserve">
+    <value>MU Helper zatrzymany po %d h %d min. Poziomy: +%d, zen: %ls.</value>
+  </data>
+  <data name="SkillBookNotLearnable" xml:space="preserve">
+    <value>Nie możesz jeszcze nauczyć się tej umiejętności: sprawdź jej wymagania.</value>
+  </data>
+  <data name="CapsLockOn" xml:space="preserve">
+    <value>Caps Lock jest włączony</value>
+  </data>
+  <data name="GuildWarAlreadyOn" xml:space="preserve">
+    <value>Jedna z gildii już toczy wojnę gildii.</value>
+  </data>
 </root>

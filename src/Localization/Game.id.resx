@@ -14273,4 +14273,32 @@
   <data name="WarpUnlocked" xml:space="preserve">
     <value>Level %d: tujuan warp baru: %ls</value>
   </data>
+  <!-- Round 14 -->
+  <data name="DeclineInvitations" xml:space="preserve">
+    <value>Tolak undangan</value>
+  </data>
+  <data name="InviteDeclinedParty" xml:space="preserve">
+    <value>Undangan party dari %ls ditolak.</value>
+  </data>
+  <data name="InviteDeclinedTrade" xml:space="preserve">
+    <value>Permintaan trade dari %ls ditolak.</value>
+  </data>
+  <data name="InviteDeclinedDuel" xml:space="preserve">
+    <value>Tantangan duel dari %ls ditolak.</value>
+  </data>
+  <data name="HelperSafeZone" xml:space="preserve">
+    <value>MU Helper tidak bekerja di zona aman.</value>
+  </data>
+  <data name="HelperStoppedSummary" xml:space="preserve">
+    <value>MU Helper berhenti setelah %d j %d mnt. Level: +%d, zen: %ls.</value>
+  </data>
+  <data name="SkillBookNotLearnable" xml:space="preserve">
+    <value>Kamu belum bisa mempelajari skill ini: lihat persyaratannya.</value>
+  </data>
+  <data name="CapsLockOn" xml:space="preserve">
+    <value>Caps Lock aktif</value>
+  </data>
+  <data name="GuildWarAlreadyOn" xml:space="preserve">
+    <value>Salah satu guild sudah dalam perang guild.</value>
+  </data>
 </root>

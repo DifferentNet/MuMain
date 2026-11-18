@@ -14273,4 +14273,32 @@
   <data name="WarpUnlocked" xml:space="preserve">
     <value>Nivel %d: nuevo destino de teletransporte: %ls</value>
   </data>
+  <!-- Round 14 -->
+  <data name="DeclineInvitations" xml:space="preserve">
+    <value>Rechazar invitaciones</value>
+  </data>
+  <data name="InviteDeclinedParty" xml:space="preserve">
+    <value>Invitación de grupo de %ls rechazada.</value>
+  </data>
+  <data name="InviteDeclinedTrade" xml:space="preserve">
+    <value>Solicitud de comercio de %ls rechazada.</value>
+  </data>
+  <data name="InviteDeclinedDuel" xml:space="preserve">
+    <value>Desafío a duelo de %ls rechazado.</value>
+  </data>
+  <data name="HelperSafeZone" xml:space="preserve">
+    <value>MU Helper no funciona en una zona segura.</value>
+  </data>
+  <data name="HelperStoppedSummary" xml:space="preserve">
+    <value>MU Helper se detuvo tras %d h %d min. Niveles: +%d, zen: %ls.</value>
+  </data>
+  <data name="SkillBookNotLearnable" xml:space="preserve">
+    <value>Aún no puedes aprender esta habilidad: mira sus requisitos.</value>
+  </data>
+  <data name="CapsLockOn" xml:space="preserve">
+    <value>Bloq Mayús está activado</value>
+  </data>
+  <data name="GuildWarAlreadyOn" xml:space="preserve">
+    <value>Uno de los gremios ya está en una guerra de gremios.</value>
+  </data>
 </root>

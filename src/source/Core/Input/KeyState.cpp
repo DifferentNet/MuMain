@@ -88,6 +88,11 @@ namespace Core::Input
         std::fill(std::begin(g_keyPressEdges), std::end(g_keyPressEdges), false);
     }
 
+    bool IsCapsLockOn()
+    {
+        return (SDL_GetModState() & SDL_KMOD_CAPS) != 0;
+    }
+
     namespace
     {
         // SDL's state read at the moment IsKeyDown asks for it.

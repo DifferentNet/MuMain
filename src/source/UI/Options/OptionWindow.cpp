@@ -636,6 +636,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("whisper_sound_label", &model.whisperSoundLabel);
     c.Bind("slide_help", &model.slideHelp);
     c.Bind("slide_help_label", &model.slideHelpLabel);
+    c.Bind("decline_invitations", &model.declineInvitations);
+    c.Bind("decline_invitations_label", &model.declineInvitationsLabel);
     c.Bind("loot_filter_shown", &model.lootFilterShown);
     c.Bind("loot_filter_label", &model.lootFilterLabel);
     c.Bind("loot_filter_button_label", &model.lootFilterButtonLabel);
@@ -914,8 +916,10 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("layout_choices_shown", &model.layoutChoicesShown);
 #ifdef __EMSCRIPTEN__
     model.windowModeShown = false;
+    model.vsyncShown = false;
 #endif
     c.Bind("window_mode_shown", &model.windowModeShown);
+    c.Bind("vsync_shown", &model.vsyncShown);
     c.Bind("touch_buttons_shown", &model.touchButtonsShown);
     c.Bind("touch_buttons_labels", &model.touchButtonsLabels);
     c.Bind("touch_buttons_index", &model.touchButtonsIndex);
@@ -962,6 +966,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleWhisperSound(); });
     c.BindEventCallback("option_toggle_slide_help",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleSlideHelp(); });
+    c.BindEventCallback("option_toggle_decline_invitations",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleDeclineInvitations(); });
     c.BindEventCallback("option_open_loot_filter",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlOpenLootFilter(); });
     c.BindEventCallback("option_open_key_bindings",
@@ -1445,6 +1451,13 @@ void mu::ui::window::COptionWindow::RmlToggleWhisperSound()
 void mu::ui::window::COptionWindow::RmlToggleSlideHelp()
 {
     m_bSlideHelp = !m_bSlideHelp;
+}
+
+void mu::ui::window::COptionWindow::RmlToggleDeclineInvitations()
+{
+    GameConfig& config = GameConfig::GetInstance();
+    config.SetDeclineInvitations(!config.GetDeclineInvitations());
+    config.Save();
 }
 
 void mu::ui::window::COptionWindow::RmlToggleRenderAllEffects()
@@ -3082,6 +3095,7 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.autoAttackLabel, "auto_attack_label", I18N::Game::AutomaticAttack);
     syncLabel(model.whisperSoundLabel, "whisper_sound_label", I18N::Game::BeepSoundForWhispering);
     syncLabel(model.slideHelpLabel, "slide_help_label", I18N::Game::SlideHelp);
+    syncLabel(model.declineInvitationsLabel, "decline_invitations_label", I18N::Game::DeclineInvitations);
     syncLabel(model.lootFilterLabel, "loot_filter_label", I18N::Game::LootFilterOpen);
     syncLabel(model.lootFilterButtonLabel, "loot_filter_button_label", I18N::Game::LootFilterOpenButton);
     syncLabel(model.keyBindingsLabel, "key_bindings_label", I18N::Game::KeyBindingsOpen);
@@ -3149,6 +3163,8 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     if (model.autoAttack != m_bAutoAttack) { model.autoAttack = m_bAutoAttack; m_RmlView.MarkDirty("auto_attack"); }
     if (model.whisperSound != m_bWhisperSound) { model.whisperSound = m_bWhisperSound; m_RmlView.MarkDirty("whisper_sound"); }
     if (model.slideHelp != m_bSlideHelp) { model.slideHelp = m_bSlideHelp; m_RmlView.MarkDirty("slide_help"); }
+    const bool declineInvitations = GameConfig::GetInstance().GetDeclineInvitations();
+    if (model.declineInvitations != declineInvitations) { model.declineInvitations = declineInvitations; m_RmlView.MarkDirty("decline_invitations"); }
     const bool lootFilterShown = SceneFlag == MAIN_SCENE;
     if (model.lootFilterShown != lootFilterShown) { model.lootFilterShown = lootFilterShown; m_RmlView.MarkDirty("loot_filter_shown"); }
     // Phones and tablets have no keyboard to press the new key with (ghinzuro 2026-11-18: «Прятать»).

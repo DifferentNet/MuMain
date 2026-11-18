@@ -584,7 +584,7 @@ bool mu::ui::window::CCommandWindow::CommandFollow(int iSelectedChaIndex)
         return false;
     }
 
-    g_iFollowCharacter = iSelectedChaIndex;
+    StartFollowing(iSelectedChaIndex);
 
     return true;
 }

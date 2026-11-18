@@ -50,6 +50,9 @@ extern int  Attacking;
 extern int  ActionTarget;
 
 extern int   g_iFollowCharacter;
+// Follows the character in this slot (the command window's Follow); the follow keeps the character's Key, so it
+// ends rather than going after somebody else when the slot is reused.
+void StartFollowing(int characterIndex);
 extern int  HeroTile;
 extern int  LoadingWorld;
 

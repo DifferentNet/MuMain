@@ -14273,4 +14273,32 @@
   <data name="WarpUnlocked" xml:space="preserve">
     <value>等級 %d：新傳送點：%ls</value>
   </data>
+  <!-- Round 14 -->
+  <data name="DeclineInvitations" xml:space="preserve">
+    <value>拒絕邀請</value>
+  </data>
+  <data name="InviteDeclinedParty" xml:space="preserve">
+    <value>已拒絕 %ls 的組隊邀請。</value>
+  </data>
+  <data name="InviteDeclinedTrade" xml:space="preserve">
+    <value>已拒絕 %ls 的交易請求。</value>
+  </data>
+  <data name="InviteDeclinedDuel" xml:space="preserve">
+    <value>已拒絕 %ls 的決鬥挑戰。</value>
+  </data>
+  <data name="HelperSafeZone" xml:space="preserve">
+    <value>MU Helper 無法在安全區域運作。</value>
+  </data>
+  <data name="HelperStoppedSummary" xml:space="preserve">
+    <value>MU Helper 已停止，運作 %d 小時 %d 分。等級：+%d，Zen：%ls。</value>
+  </data>
+  <data name="SkillBookNotLearnable" xml:space="preserve">
+    <value>目前還無法學習此技能：請查看學習條件。</value>
+  </data>
+  <data name="CapsLockOn" xml:space="preserve">
+    <value>Caps Lock 已開啟</value>
+  </data>
+  <data name="GuildWarAlreadyOn" xml:space="preserve">
+    <value>其中一個公會已在公會戰中。</value>
+  </data>
 </root>

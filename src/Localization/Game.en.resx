@@ -17227,4 +17227,32 @@
   <data name="WarpUnlocked" xml:space="preserve">
     <value>Level %d: you can now warp to %ls</value>
   </data>
+  <!-- Round 14 -->
+  <data name="DeclineInvitations" xml:space="preserve">
+    <value>Decline invitations</value>
+  </data>
+  <data name="InviteDeclinedParty" xml:space="preserve">
+    <value>Declined a party invitation from %ls.</value>
+  </data>
+  <data name="InviteDeclinedTrade" xml:space="preserve">
+    <value>Declined a trade request from %ls.</value>
+  </data>
+  <data name="InviteDeclinedDuel" xml:space="preserve">
+    <value>Declined a duel challenge from %ls.</value>
+  </data>
+  <data name="HelperSafeZone" xml:space="preserve">
+    <value>MU Helper does not work in a safe zone.</value>
+  </data>
+  <data name="HelperStoppedSummary" xml:space="preserve">
+    <value>MU Helper stopped after %d h %d min. Levels: +%d, zen: %ls.</value>
+  </data>
+  <data name="SkillBookNotLearnable" xml:space="preserve">
+    <value>You can't learn this skill yet: see its requirements.</value>
+  </data>
+  <data name="CapsLockOn" xml:space="preserve">
+    <value>Caps Lock is on</value>
+  </data>
+  <data name="GuildWarAlreadyOn" xml:space="preserve">
+    <value>One of the guilds is already in a guild war.</value>
+  </data>
 </root>

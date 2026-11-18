@@ -62,6 +62,8 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyTitleEffects[] = L"TitleEffects";
     // MU Moldova: titles only over players in towns (safe zones), UI::TitlePlates::ShownHere().
     inline constexpr wchar_t CfgKeyTitlesTownsOnly[] = L"TitlesTownsOnly";
+    // MU Moldova: party, trade, duel and guild invitations are declined by themselves (UI::Chat::InviteAutoDecline).
+    inline constexpr wchar_t CfgKeyDeclineInvitations[] = L"DeclineInvitations";
     // MU Moldova: the phone or PC layout ("auto", "pc", "phone") and the controls ("auto", "mouse",
     // "touch"), set in the options window's Interface tab. See UI::Mobile::InterfaceMode.
     inline constexpr wchar_t CfgKeyInterfaceView[] = L"InterfaceView";
@@ -304,6 +306,8 @@ namespace CfgDefaults
     inline constexpr bool CfgDefaultTitleEffects = true;
     // On by default, a switch in Options (ghinzuro, 2026-11-03).
     inline constexpr bool CfgDefaultTitlesTownsOnly = true;
+    // Off by default (round 14).
+    inline constexpr bool CfgDefaultDeclineInvitations = false;
 
     // The loot filter's «Ценное» defaults (ghinzuro 2026-11-11), equal to LootFilter::Preset::Default
     // (test_loot_filter checks it). An empty category string means the Default preset's categories.

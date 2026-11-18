@@ -27,6 +27,8 @@
 #include "GameLogic/Items/ShopRestrictions.h"
 #include "Engine/Object/ZzzInfomation.h"
 #include "I18N/All.h"
+#include "UI/Chat/ChatMessages.h"
+#include "UI/Chat/HelperRunSummary.h"
 
 #include "MuHelper.h"
 
@@ -60,6 +62,22 @@ namespace MUHelper
         {
             return pChar != nullptr && pChar->Object.Kind == KIND_MONSTER
                 && GameLogic::Automation::IsFortressObjectType(static_cast<int>(pChar->MonsterIndex));
+        }
+
+        UI::Chat::HelperRunSummary g_runSummary;
+
+        // What the run gave, in one chat line; nothing for a short run.
+        void PostRunSummary()
+        {
+            const auto result = g_runSummary.Stop(GetTickCount(), CharacterAttribute->Level, CharacterMachine->Gold);
+            if (!result)
+                return;
+
+            const std::wstring zen = UI::Chat::SignedGroupedZen(result->zen);
+            wchar_t line[256]{};
+            mu_swprintf(line, I18N::Game::HelperStoppedSummary, result->hours, result->minutes, result->levels,
+                zen.c_str());
+            UI::Chat::PostSystem(line, mu::ui::window::TYPE_SYSTEM_MESSAGE);
         }
 
         long long NowMs()
@@ -104,6 +122,12 @@ namespace MUHelper
             // session doesn't have the helper marked active, so it never replies
             // and the bot would otherwise keep running with no way to stop it.
             Stop();
+        }
+        else if (Hero->SafeZone)
+        {
+            // Repeated presses give one line.
+            if (!g_pSystemLogBox->CheckChatRedundancy(I18N::Game::HelperSafeZone))
+                g_pSystemLogBox->AddText(I18N::Game::HelperSafeZone, mu::ui::window::TYPE_ERROR_MESSAGE);
         }
         else
         {
@@ -181,13 +205,23 @@ namespace MUHelper
         _itemsLock.unlock();
 
         m_bActive = true;
+        g_runSummary.Start(GetTickCount(), CharacterAttribute->Level, CharacterMachine->Gold);
         g_ConsoleDebug->Write(MCD_NORMAL, L"[MU Helper] Started");
     }
 
     void CMuHelper::Stop()
     {
+        // The stop is answered by the server too: only the first one of a run says the summary.
+        if (m_bActive)
+            PostRunSummary();
         m_bActive = false;
         g_ConsoleDebug->Write(MCD_NORMAL, L"[MU Helper] Stopped");
+    }
+
+    void CMuHelper::ResetForNewGame()
+    {
+        g_runSummary.Cancel();
+        m_bActive = false;
     }
 
     void CMuHelper::SetSteered(bool bSteered)

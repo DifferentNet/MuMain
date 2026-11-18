@@ -128,6 +128,7 @@ private:
     void SubmitCancel();
     void ApplyRememberMeChange();
     void ApplySavePasswordChange();
+    bool IsPasswordFocused();
 
     struct LoginRmlModel
     {
@@ -140,6 +141,8 @@ private:
         Rml::String rememberMeLabel;
         Rml::String savePasswordLabel;
         Rml::String trustWarning;
+        // "Caps Lock is on" while the password field has focus and Caps Lock is on; empty otherwise.
+        Rml::String capsLockNote;
         Rml::String okLabel;
         Rml::String cancelLabel;
 

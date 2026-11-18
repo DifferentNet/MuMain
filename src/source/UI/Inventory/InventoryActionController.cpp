@@ -1267,12 +1267,13 @@ bool CInventoryActionController::TryConsumeItem(CInventoryCtrl* targetControl, I
                 wEnergy >= pItem->RequireEnergy && wStrength >= pItem->RequireStrength)
             {
                 SendRequestUse(iIndex, 0);
+                return true;
             }
-
-            return true;
         }
 
-        return false;
+        // Not learnable yet: say so, and the right-click never goes on to drop the book on the ground.
+        PostEquipRefusal(I18N::Game::SkillBookNotLearnable);
+        return true;
     }
 
     if (pItem->Type == ITEM_FRUITS)

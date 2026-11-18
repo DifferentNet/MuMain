@@ -155,6 +155,14 @@ void NoteEquipmentDurability(int slot, int before, int after)
     PlayBuffer(SOUND_ERROR01);
 }
 
+void Reset()
+{
+    g_buffEnds.Clear();
+    g_bagRoom = BagRoomWarning{};
+    g_petLife.Reset();
+    g_petLifeType = -1;
+}
+
 void Tick()
 {
     const std::uint32_t now = GetTickCount();

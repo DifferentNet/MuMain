@@ -110,6 +110,8 @@ public:
     void SetBackgroundSound(bool on) { m_backgroundSound = on; }
     bool GetTitlesTownsOnly() const { return m_titlesTownsOnly; }
     void SetTitlesTownsOnly(bool townsOnly) { m_titlesTownsOnly = townsOnly; }
+    bool GetDeclineInvitations() const { return m_declineInvitations; }
+    void SetDeclineInvitations(bool on) { m_declineInvitations = on; }
 
     // The loot highlight filter's raw settings; GameLogic::Items::LootFilterRuntime turns them into rules.
     bool GetLootFilterEnabled() const { return m_lootFilterEnabled; }
@@ -467,6 +469,7 @@ private:
     bool m_overheadTitles = true;
     bool m_titleEffects = true;
     bool m_titlesTownsOnly = true;
+    bool m_declineInvitations = false;
     bool m_lootFilterEnabled = true;
     bool m_lootFilterMarker = true;
     bool m_lootFilterSound = false;

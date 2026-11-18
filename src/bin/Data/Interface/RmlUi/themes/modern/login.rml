@@ -55,6 +55,7 @@
 			       data-value="username"/>
 			<input id="input_password" type="password" class="text-field login-field login-field-password"
 			       data-value="password"/>
+			<span class="caps-lock-note">{{caps_lock_note}}</span>
 
 			<div class="checkbox-row checkbox-remember-me" data-event-click="login_toggle_remember_me">
 				<div class="checkbox-box" data-class-checked="remember_me_checked">
