@@ -31,16 +31,17 @@ int EffectLevel()
 void Log()
 {
     const std::array<bool, kFeatureCount + 1> state{Detail::g_available, s_chosen[0], s_chosen[1], s_chosen[2],
-                                                    s_chosen[3], s_chosen[4]};
+                                                    s_chosen[3], s_chosen[4], s_chosen[5]};
     if (s_logged == state)
     {
         return;
     }
     s_logged = state;
-    mu::log::Get("render")->info("Skill effects {}: pools {}, soft {}, flipbook {}, trails {}, decals {}",
+    mu::log::Get("render")->info("Skill effects {}: pools {}, soft {}, flipbook {}, trails {}, decals {}, cores {}",
                                  Detail::g_available ? "available" : "not available", s_chosen[0] ? "on" : "off",
                                  s_chosen[1] ? "on" : "off", s_chosen[2] ? "on" : "off",
-                                 s_chosen[3] ? "on" : "off", s_chosen[4] ? "on" : "off");
+                                 s_chosen[3] ? "on" : "off", s_chosen[4] ? "on" : "off",
+                                 s_chosen[5] ? "on" : "off");
 }
 } // namespace
 
@@ -64,6 +65,7 @@ void ApplyFromConfig()
     s_chosen[Index(Feature::FlipbookBlend)] = config.GetFlipbookBlending() != 0;
     s_chosen[Index(Feature::Ribbons)] = config.GetSmoothTrails() != 0;
     s_chosen[Index(Feature::Decals)] = config.GetSkillGroundMarks() != 0;
+    s_chosen[Index(Feature::Cores)] = config.GetSkillHotCores() != 0;
     Log();
 }
 
@@ -92,6 +94,11 @@ int ActiveMarkBudget()
     return Enabled(Feature::Decals) ? MarkBudget(EffectLevel()) : 0;
 }
 
+float ActiveCoreStrength()
+{
+    return Enabled(Feature::Cores) ? CoreStrength(EffectLevel()) : 0.0f;
+}
+
 bool Chosen(const Feature feature)
 {
     return s_chosen[Index(feature)];
@@ -117,6 +124,9 @@ void Choose(const Feature feature, const bool enabled)
         break;
     case Feature::Decals:
         config.SetSkillGroundMarks(value);
+        break;
+    case Feature::Cores:
+        config.SetSkillHotCores(value);
         break;
     }
     config.Save();

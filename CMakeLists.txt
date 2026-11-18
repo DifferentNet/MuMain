@@ -97,11 +97,16 @@ if(MU_ENABLE_SHADER_COMPILATION)
         set(spv  "${MU_SHADER_OUTPUT_DIR}/${shader_name}.${stage}.spv")
         set(msl  "${MU_SHADER_OUTPUT_DIR}/${shader_name}.${stage}.msl")
         set(dxil "${MU_SHADER_OUTPUT_DIR}/${shader_name}.${stage}.dxil")
+        # A twin that includes another stage's source rebuilds when that source changes.
+        set(included_sources)
+        if(shader_name STREQUAL "post_composite_cores")
+            list(APPEND included_sources "${MU_SHADER_SOURCE_DIR}/post_composite.frag.hlsl")
+        endif()
 
         add_custom_command(
             OUTPUT "${spv}"
             COMMAND "${GLSLANG_EXE}" -V -D -S "${stage}" -e main -o "${spv}" "${src}"
-            DEPENDS "${src}" "${MU_SHADER_COMPILATION_STAMP}" "${GLSLANG_EXE}"
+            DEPENDS "${src}" ${included_sources} "${MU_SHADER_COMPILATION_STAMP}" "${GLSLANG_EXE}"
             COMMENT "HLSL to SPIR-V: ${shader_name}.${stage}.hlsl"
             VERBATIM
         )
@@ -124,7 +129,7 @@ if(MU_ENABLE_SHADER_COMPILATION)
             OUTPUT "${dxil}"
             COMMAND "${DXC_EXE}" -T "${dxil_profile}" -E main
                 -D MU_D3D12_RAW_STORAGE_BUFFER=1 -Fo "${dxil}" "${src}"
-            DEPENDS "${src}" "${MU_SHADER_COMPILATION_STAMP}" "${DXC_EXE}"
+            DEPENDS "${src}" ${included_sources} "${MU_SHADER_COMPILATION_STAMP}" "${DXC_EXE}"
             COMMENT "HLSL to DXIL: ${shader_name}.${stage}.hlsl"
             VERBATIM
         )
@@ -174,7 +179,8 @@ if(EMSCRIPTEN)
         terrain_lights_shadow.frag
         soft_particles.vert
         basic_textured_fog_soft.frag
-        basic_textured_fog_soft_glow.frag)
+        basic_textured_fog_soft_glow.frag
+        post_composite_cores.frag)
     foreach(shader_stage IN LISTS MU_SHADER_STAGE_NAMES MU_WEB_SOFT_CLIP_SHADER_STAGE_NAMES)
         if(shader_stage IN_LIST MU_DESKTOP_ONLY_SHADER_STAGE_NAMES)
             continue()

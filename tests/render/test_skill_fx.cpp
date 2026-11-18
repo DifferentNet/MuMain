@@ -23,7 +23,7 @@ TEST_CASE("the effect level sets the pool budget [render][skill_fx]")
 
 TEST_CASE("the effect level lets each look show [render][skill_fx]")
 {
-    // Level 4 and 3: all five; 2: pools, soft and decals, no flipbook or trails; 0 and 1: none.
+    // Level 4 and 3: all six; 2: pools, soft, decals and cores, no flipbook or trails; 0 and 1: none.
     for (int level : {3, 4})
     {
         CHECK(SkillFx::LevelAllows(Feature::LightPools, level));
@@ -31,12 +31,14 @@ TEST_CASE("the effect level lets each look show [render][skill_fx]")
         CHECK(SkillFx::LevelAllows(Feature::FlipbookBlend, level));
         CHECK(SkillFx::LevelAllows(Feature::Ribbons, level));
         CHECK(SkillFx::LevelAllows(Feature::Decals, level));
+        CHECK(SkillFx::LevelAllows(Feature::Cores, level));
     }
     CHECK(SkillFx::LevelAllows(Feature::LightPools, 2));
     CHECK(SkillFx::LevelAllows(Feature::SoftParticles, 2));
     CHECK_FALSE(SkillFx::LevelAllows(Feature::FlipbookBlend, 2));
     CHECK_FALSE(SkillFx::LevelAllows(Feature::Ribbons, 2));
     CHECK(SkillFx::LevelAllows(Feature::Decals, 2));
+    CHECK(SkillFx::LevelAllows(Feature::Cores, 2));
     for (int level : {0, 1})
     {
         CHECK_FALSE(SkillFx::LevelAllows(Feature::LightPools, level));
@@ -44,6 +46,7 @@ TEST_CASE("the effect level lets each look show [render][skill_fx]")
         CHECK_FALSE(SkillFx::LevelAllows(Feature::FlipbookBlend, level));
         CHECK_FALSE(SkillFx::LevelAllows(Feature::Ribbons, level));
         CHECK_FALSE(SkillFx::LevelAllows(Feature::Decals, level));
+        CHECK_FALSE(SkillFx::LevelAllows(Feature::Cores, level));
     }
 }
 
@@ -73,9 +76,21 @@ TEST_CASE("the effect level sets the ground mark budget [render][skill_fx]")
     }
 }
 
+TEST_CASE("the effect level sets the hot core strength [render][skill_fx]")
+{
+    CHECK(SkillFx::CoreStrength(5) == doctest::Approx(1.0f));
+    CHECK(SkillFx::CoreStrength(4) == doctest::Approx(1.0f));
+    CHECK(SkillFx::CoreStrength(3) == doctest::Approx(0.75f));
+    CHECK(SkillFx::CoreStrength(2) == doctest::Approx(0.5f));
+    for (int level : {1, 0, -1})
+    {
+        CHECK(SkillFx::CoreStrength(level) == 0.0f);
+    }
+}
+
 TEST_CASE("a look shows only when chosen, offered and allowed by the level [render][skill_fx]")
 {
-    CHECK(SkillFx::kFeatureCount == 5);
+    CHECK(SkillFx::kFeatureCount == 6);
     for (int index = 0; index < SkillFx::kFeatureCount; ++index)
     {
         const auto feature = static_cast<Feature>(index);
@@ -96,4 +111,5 @@ TEST_CASE("the console names the looks [render][skill_fx]")
     CHECK(std::string(SkillFx::Name(Feature::FlipbookBlend)) == "flipbook");
     CHECK(std::string(SkillFx::Name(Feature::Ribbons)) == "trails");
     CHECK(std::string(SkillFx::Name(Feature::Decals)) == "decals");
+    CHECK(std::string(SkillFx::Name(Feature::Cores)) == "cores");
 }

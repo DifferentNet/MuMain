@@ -285,6 +285,14 @@ mu_add_test(
         test_skill_fx.cpp
 )
 
+# Hot cores (Render/PostProcessing/HotCores.h): the whitening weight of bright effect piles, which keeps
+# the hue and leaves dim, unclipped and pure one-channel effects alone.
+mu_add_test(
+    NAME hot_cores_tests
+    SOURCES
+        test_hot_cores.cpp
+)
+
 # Soft particles: the softness, the fade against the world depth and which draws get a soft twin.
 mu_add_test(
     NAME soft_particles_tests
@@ -448,6 +456,18 @@ add_test(
         "-DMU_MOVE_HANDLERS_SOURCE=${MU_EFFECTS_DIR}/Behaviors/MoveHandlers.cpp"
         "-DMU_CHARACTER_SOURCE=${CMAKE_SOURCE_DIR}/src/source/Engine/Object/ZzzCharacter.cpp"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/test_ground_marks_gate.cmake"
+)
+
+# The hot cores are desktop-only and the plain composite runs unchanged while they are off.
+add_test(
+    NAME hot_cores_are_gated
+    COMMAND "${CMAKE_COMMAND}"
+        "-DMU_RENDERER_SOURCE=${CMAKE_SOURCE_DIR}/src/source/Render/Renderer/MuRendererSDLGpu.cpp"
+        "-DMU_POST_PROCESSING_SOURCE=${CMAKE_SOURCE_DIR}/src/source/Render/Renderer/SdlGpuPostProcessing.cpp"
+        "-DMU_HOT_CORES_HEADER=${CMAKE_SOURCE_DIR}/src/source/Render/PostProcessing/HotCores.h"
+        "-DMU_SHADER_SOURCE_DIR=${CMAKE_SOURCE_DIR}/src/shaders"
+        "-DMU_ROOT_CMAKELISTS=${CMAKE_SOURCE_DIR}/CMakeLists.txt"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/test_hot_cores_gate.cmake"
 )
 
 add_test(

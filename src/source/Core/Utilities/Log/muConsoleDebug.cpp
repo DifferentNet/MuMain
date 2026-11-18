@@ -111,9 +111,9 @@ void CmuConsoleDebug::UpdateMainScene()
 namespace
 {
 #if defined(MU_ENABLE_CONTROL_SOCKET) || defined(_EDITOR)
-// $fx pools|soft|flipbook|trails|decals on|off, $fx [status]: the Remaster skill effect looks
+// $fx pools|soft|flipbook|trails|decals|cores on|off, $fx [status]: the Remaster skill effect looks
 // (Render/Effects/SkillFx.h); the switches are saved to [Render] as SkillLightPools, SoftParticles,
-// FlipbookBlending, SmoothTrails and SkillGroundMarks.
+// FlipbookBlending, SmoothTrails, SkillGroundMarks and SkillHotCores.
 void SkillFxCommand(const std::wstring& command)
 {
     namespace SkillFx = Render::Effects::SkillFx;
@@ -133,8 +133,9 @@ void SkillFxCommand(const std::wstring& command)
     }
     if (!understood)
     {
-        mu::log::Get("render")->warn("{}: not understood ($fx pools|soft|flipbook|trails|decals on|off, $fx status)",
-                                     Core::Text::ToUtf8(command.c_str()));
+        mu::log::Get("render")->warn(
+            "{}: not understood ($fx pools|soft|flipbook|trails|decals|cores on|off, $fx status)",
+            Core::Text::ToUtf8(command.c_str()));
     }
     const auto state = [](SkillFx::Feature feature)
     { return SkillFx::Enabled(feature) ? "on" : (SkillFx::Chosen(feature) ? "chosen, held off" : "off"); };
@@ -150,6 +151,18 @@ void SkillFxCommand(const std::wstring& command)
         mu::HasSoftParticlePipelines() ? "built" : "missing",
         mu::SoftParticlesDrawnLastFrame() ? "yes" : "no (needs SSAO or haze on)", ribbons.joints, ribbons.pieces,
         Render::Effects::GroundMarks::Count());
+    const char* coresDrawn = "no (cores off or held off)";
+    if (mu::HotCoresDrawnLastFrame())
+    {
+        coresDrawn = "yes";
+    }
+    else if (SkillFx::Enabled(SkillFx::Feature::Cores))
+    {
+        coresDrawn = "no (needs post-processing with bloom on and the scene view)";
+    }
+    mu::log::Get("render")->info("Hot cores: {} (strength {:.2f}); twin {}, drawn last frame {}",
+                                 state(SkillFx::Feature::Cores), SkillFx::ActiveCoreStrength(),
+                                 mu::HasHotCorePipeline() ? "built" : "missing", coresDrawn);
     mu::log::Get("render")->flush();
 }
 

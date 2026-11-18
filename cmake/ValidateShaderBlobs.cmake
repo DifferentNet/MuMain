@@ -39,6 +39,7 @@ set(MU_SHADER_STAGE_NAMES
     soft_particles.vert
     basic_textured_fog_soft.frag
     basic_textured_fog_soft_glow.frag
+    post_composite_cores.frag
 )
 set(MU_SHADER_BLOB_FORMATS spv msl dxil)
 set(MU_SHADER_BLOB_NAMES)

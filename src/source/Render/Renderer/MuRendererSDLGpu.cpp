@@ -765,6 +765,9 @@ static mu::SoftParticlesUniform s_softParticlesUniform{};
 // Whether the last frame drew any soft sprite through its twin ($fx status).
 static bool s_softParticlesDrawnThisFrame = false;
 static bool s_softParticlesDrawnLastFrame = false;
+// Whether the composite drew the hot cores this frame / the last finished frame (console status).
+static bool s_hotCoresDrawnThisFrame = false;
+static bool s_hotCoresDrawnLastFrame = false;
 
 // Post-processing of the 3D scene: with it on, a frame whose scene marked its end
 // (EndSceneGeometry) is replayed in separate scene, bloom and UI passes, see EndFrame.
@@ -833,6 +836,14 @@ bool HasSoftParticlePipelines()
 bool SoftParticlesDrawnLastFrame()
 {
     return s_softParticlesDrawnLastFrame;
+}
+bool HasHotCorePipeline()
+{
+    return s_postProcessing.HasCoresPipeline();
+}
+bool HotCoresDrawnLastFrame()
+{
+    return s_hotCoresDrawnLastFrame;
 }
 // Whether the opaque world's depth is drawn on its own: SSAO and the haze both read it.
 [[nodiscard]] static bool WorldDepthWanted()
@@ -1611,6 +1622,7 @@ static SDL_GPUShader* s_fragShaderParticles = nullptr;      // ambient_particles
 static SDL_GPUShader* s_fragShaderBloomDown = nullptr;      // post_bloom_down.frag
 static SDL_GPUShader* s_fragShaderBloomUp = nullptr;        // post_bloom_up.frag
 static SDL_GPUShader* s_fragShaderComposite = nullptr;      // post_composite.frag
+static SDL_GPUShader* s_fragShaderCompositeCores = nullptr; // post_composite_cores.frag (desktop)
 // Browser on a card without clip distances (ARM Mali): LoadShaders() takes the soft clip copies
 // (SoftClipShaders.h), which drop the same pixels in the fragment shader.
 static bool s_softClipShaders = false;
@@ -2816,6 +2828,8 @@ public:
         m_softParticle = false;
         s_softParticlesDrawnLastFrame = s_softParticlesDrawnThisFrame;
         s_softParticlesDrawnThisFrame = false;
+        s_hotCoresDrawnLastFrame = s_hotCoresDrawnThisFrame;
+        s_hotCoresDrawnThisFrame = false;
         m_cutoutQuads = false;
         s_ssaoLinearFog = false;
         if (s_bloomExclusionDepth != 0)
@@ -3685,8 +3699,11 @@ public:
         {
             return false;
         }
-        s_postProcessing.DrawComposite(s_cmdBuf, s_renderPass, {s_swapW, s_swapH}, s_postProcessingLook,
-                                       s_postProcessingView);
+        // The hot cores follow $fx and the effect level at once (0 on the web and in Classic).
+        mu::PostProcessingLook look = s_postProcessingLook;
+        look.coreStrength = Render::Effects::SkillFx::ActiveCoreStrength();
+        s_postProcessing.DrawComposite(s_cmdBuf, s_renderPass, {s_swapW, s_swapH}, look, s_postProcessingView);
+        s_hotCoresDrawnThisFrame = s_postProcessing.CoresDrawn();
         ReplayCommands(sceneEnd, s_renderCmds.size(), boneDataReady, ReplaySelection::AllCommands, view);
         EndReplayPass();
         return true;
@@ -7183,6 +7200,10 @@ private:
             s_fragShaderHaze =
                 createShader("post_haze", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 1, /*fatal=*/false);
         }
+        // The composite with hot cores (desktop, always built; SkillFx::Feature::Cores): scene, bloom
+        // source, bloom and grading textures (t0-t3) and CompositeUniforms (b0).
+        s_fragShaderCompositeCores =
+            createShader("post_composite_cores", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 4, 0, 1, /*fatal=*/false);
         // Ambient particles (desktop, always built): ParticleUniforms (vertex b0), nothing else.
         s_vertShaderParticles =
             createShader("ambient_particles", "vert", SDL_GPU_SHADERSTAGE_VERTEX, 0, 0, 1, /*fatal=*/false);
@@ -7259,8 +7280,8 @@ private:
         }
         for (SDL_GPUShader** shader :
              {&s_vertShaderPostFullscreen, &s_fragShaderBloomDown, &s_fragShaderBloomUp, &s_fragShaderComposite,
-              &s_fragShaderSsao, &s_fragShaderSsaoBlur, &s_fragShaderSsaoApply, &s_fragShaderHaze,
-              &s_vertShaderParticles, &s_fragShaderParticles})
+              &s_fragShaderCompositeCores, &s_fragShaderSsao, &s_fragShaderSsaoBlur, &s_fragShaderSsaoApply,
+              &s_fragShaderHaze, &s_vertShaderParticles, &s_fragShaderParticles})
         {
             if (*shader)
             {
@@ -8189,7 +8210,7 @@ private:
     static void CreatePostProcessingPipelines()
     {
         const mu::SdlGpuPostShaders shaders{s_vertShaderPostFullscreen, s_fragShaderBloomDown, s_fragShaderBloomUp,
-                                            s_fragShaderComposite};
+                                            s_fragShaderComposite, s_fragShaderCompositeCores};
         const bool created =
             s_postProcessing.CreatePipelines(s_device, shaders, SDL_GetGPUSwapchainTextureFormat(s_device, s_window),
                                              mu::GetSdlGpuSampleCount(s_sampleCount).value_or(SDL_GPU_SAMPLECOUNT_1));
