@@ -9,6 +9,7 @@
 // RmlUi migration -- see this class's header comment.
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/RmlBridge/RmlTheme.h"
+#include "UI/Inventory/ItemGridScroll.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlNativeTextSize.h"
 #include "UI/Scaling/UITransform.h"
@@ -227,6 +228,12 @@ void CInventoryExtension::SyncRmlModel()
     if (!IsVisible())
         return;
 
+    // Laid out since the grids changed: the paging buttons' ends follow the new height.
+    if (m_gridScrollStale)
+    {
+        UI::Items::GridScroll::Sync(m_RmlView.Document());
+        m_gridScrollStale = false;
+    }
     if (m_extensions[0])
         m_extensions[0]->FollowGridPx(m_RmlView.Document(), "item_grid_1");
     if (m_extensions[1])
@@ -239,21 +246,25 @@ void CInventoryExtension::SyncRmlModel()
     {
         m_RmlView.GetModel().gridCells1 = m_extensions[0]->Cells();
         m_RmlView.MarkDirty("grid_cells_1");
+        m_gridScrollStale = true;
     }
     if (m_extensions[1] && m_RmlView.GetModel().gridCells2 != m_extensions[1]->Cells())
     {
         m_RmlView.GetModel().gridCells2 = m_extensions[1]->Cells();
         m_RmlView.MarkDirty("grid_cells_2");
+        m_gridScrollStale = true;
     }
     if (m_extensions[2] && m_RmlView.GetModel().gridCells3 != m_extensions[2]->Cells())
     {
         m_RmlView.GetModel().gridCells3 = m_extensions[2]->Cells();
         m_RmlView.MarkDirty("grid_cells_3");
+        m_gridScrollStale = true;
     }
     if (m_extensions[3] && m_RmlView.GetModel().gridCells4 != m_extensions[3]->Cells())
     {
         m_RmlView.GetModel().gridCells4 = m_extensions[3]->Cells();
         m_RmlView.MarkDirty("grid_cells_4");
+        m_gridScrollStale = true;
     }
     UI::RmlBridge::SyncNativeTextSize(m_RmlView.Binder());
 

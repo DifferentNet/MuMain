@@ -20,6 +20,9 @@ namespace mu::ui::window
 
         CManager* m_pNewUIMng;
         CInventoryCtrl* m_extensions[MAX_INVENTORY_EXT_COUNT];
+        // A grid came or went (a page bought) while the window showed: the paging buttons look again once
+        // the document is laid out with it (UI/Inventory/ItemGridScroll.h).
+        bool m_gridScrollStale = false;
 
 
         // The grids stay native (live 3D items); a locked (not-yet-purchased) page is flat art the

@@ -7708,6 +7708,13 @@ void ReceivePartyList(const BYTE* ReceiveBuffer)
         p->y = Data2->y;
         p->currHP = Data2->currHP;
         p->maxHP = Data2->maxHP;
+        // The HP steps the party cards draw, from the list's HP until the first party HP packet (0x44) comes;
+        // a member left at 0 steps would show as nearly dead meanwhile.
+        if (p->maxHP > 0)
+        {
+            const long long steps = static_cast<long long>(p->currHP) * 10 / static_cast<long long>(p->maxHP);
+            p->stepHP = static_cast<BYTE>(std::clamp<long long>(steps, 0, 10));
+        }
         Offset += sizeof(PRECEIVE_PARTY_LIST);
     }
 

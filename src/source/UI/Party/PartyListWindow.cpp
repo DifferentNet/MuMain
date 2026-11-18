@@ -196,6 +196,7 @@ void CPartyListWindow::BindRmlModel(Rml::DataModelConstructor& c, PartyListRmlMo
     card.RegisterMember("leader", &PartyListCardEntry::leader);
     card.RegisterMember("absent", &PartyListCardEntry::absent);
     card.RegisterMember("defense_buff", &PartyListCardEntry::defenseBuff);
+    card.RegisterMember("low", &PartyListCardEntry::low);
     card.RegisterMember("selected", &PartyListCardEntry::selected);
     card.RegisterMember("show_leave", &PartyListCardEntry::showLeave);
     card.RegisterMember("health_length", &PartyListCardEntry::healthLength);
@@ -284,6 +285,7 @@ void CPartyListWindow::SyncCards()
         card.selected = !card.absent && (m_iSelectedCharacter == i || chosen);
         card.showLeave = CanLeave(i);
         card.healthLength = HealthBarLength(member.stepHP);
+        card.low = IsLowHealth(!card.absent, member.stepHP);
         card.defenseBuff = false;
         if (inView)
         {
@@ -304,7 +306,7 @@ void CPartyListWindow::SyncCards()
                                          return a.name == b.name && a.nameTextPx == b.nameTextPx &&
                                                 a.absent == b.absent && a.defenseBuff == b.defenseBuff &&
                                                 a.selected == b.selected && a.showLeave == b.showLeave &&
-                                                a.healthLength == b.healthLength;
+                                                a.healthLength == b.healthLength && a.low == b.low;
                                      });
     if (!changed)
         return;

@@ -1593,3 +1593,65 @@ body.over-map #tc_names, body.over-map #tc_target, body.over-map #tc_bind_hint, 
 	body.size-70 #tc_exp_text { margin-left: -54.3rem; }
 	body.size-60 #tc_exp_text { margin-left: -63.3rem; }
 }
+
+/* The potion buttons Q and W tinted by the kind of potion on them (UI/Mobile/PotionKind.h): healing red
+   and mana blue as the hero frame's gauges, shield yellow, complex violet; anything else keeps the plain
+   button. A pressed button's own look still wins (body .tc-button.pressed). */
+@media (theme: mobile) {
+	.tc-potion.heal { border-color: rgba(230, 60, 60, 230); background-color: rgba(200, 30, 30, 120); }
+	.tc-potion.mana { border-color: rgba(90, 130, 255, 230); background-color: rgba(40, 80, 220, 120); }
+	.tc-potion.shield { border-color: rgba(240, 210, 70, 230); background-color: rgba(220, 190, 40, 110); }
+	.tc-potion.complex { border-color: rgba(190, 110, 240, 230); background-color: rgba(150, 70, 200, 120); }
+}
+/* In the phone HUD the tint says what the button holds, and a keyboard letter means nothing to a finger:
+   the letter goes. A pad alone keeps it, beside its own glyph. */
+@media (theme: mobile-hud) {
+	.tc-potion-key { display: none; }
+	body.no-touch .tc-potion-key { display: inline; }
+}
+
+/* Marks on the touch controls (UI/HUD/TouchControls.cpp, UI/Mobile/HeroFrame.cpp): a gold dot on the fold
+   button and on Friends for an unread letter or a new chat-room line, and a gold "+" on the level's circle
+   while there are stat points to spend. Placed inside their button, so the button's box (what a finger
+   hits) stays as it is; at the smaller button sizes they keep their size, as their buttons do. Off a phone or
+   tablet they are not drawn. */
+.tc-alert-dot, .tc-alert-plus {
+	display: none;
+}
+@media (theme: mobile) {
+	.tc-alert-dot {
+		display: block;
+		position: absolute;
+		right: 2rem;
+		top: 2rem;
+		width: 8rem;
+		height: 8rem;
+		border-radius: 4rem;
+		background-color: token(accent-gold);
+		pointer-events: none;
+	}
+	.tc-alert-plus {
+		display: block;
+		position: absolute;
+		right: -4rem;
+		top: -3rem;
+		width: 13rem;
+		height: 13rem;
+		border-radius: 7rem;
+		background-color: token(accent-gold);
+		color: #000000;
+		font-size: 12rem;
+		line-height: 13rem;
+		text-align: center;
+		font-effect: none;
+		pointer-events: none;
+	}
+	body.size-90 .tc-alert-dot { right: 2.2rem; top: 2.2rem; width: 8.9rem; height: 8.9rem; border-radius: 4.4rem; }
+	body.size-80 .tc-alert-dot { right: 2.5rem; top: 2.5rem; width: 10rem; height: 10rem; border-radius: 5rem; }
+	body.size-70 .tc-alert-dot { right: 2.9rem; top: 2.9rem; width: 11.4rem; height: 11.4rem; border-radius: 5.7rem; }
+	body.size-60 .tc-alert-dot { right: 3.3rem; top: 3.3rem; width: 13.3rem; height: 13.3rem; border-radius: 6.7rem; }
+	body.size-90 .tc-alert-plus { right: -4.4rem; top: -3.3rem; width: 14.4rem; height: 14.4rem; border-radius: 7.8rem; font-size: 13.3rem; line-height: 14.4rem; }
+	body.size-80 .tc-alert-plus { right: -5rem; top: -3.8rem; width: 16.3rem; height: 16.3rem; border-radius: 8.8rem; font-size: 15rem; line-height: 16.3rem; }
+	body.size-70 .tc-alert-plus { right: -5.7rem; top: -4.3rem; width: 18.6rem; height: 18.6rem; border-radius: 10rem; font-size: 17.1rem; line-height: 18.6rem; }
+	body.size-60 .tc-alert-plus { right: -6.7rem; top: -5rem; width: 21.7rem; height: 21.7rem; border-radius: 11.7rem; font-size: 20rem; line-height: 21.7rem; }
+}

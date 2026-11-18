@@ -107,6 +107,10 @@ public:
     }
     void Poll() {}
     void Stop() {}
+    [[nodiscard]] bool IsRunning() const
+    {
+        return false;
+    }
 };
 } // namespace App::Control
 

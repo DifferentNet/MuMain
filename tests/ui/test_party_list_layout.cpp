@@ -11,3 +11,14 @@ TEST_CASE("party list health bar follows the ten health steps [ui][party]")
     CHECK(HealthBarLength(13) == doctest::Approx(69.f));
     CHECK(HealthBarLength(-1) == doctest::Approx(0.f));
 }
+
+TEST_CASE("party card turns low at two health steps, only for a member on the map [ui][party]")
+{
+    using namespace UI::Party::List;
+    CHECK(IsLowHealth(true, 0));
+    CHECK(IsLowHealth(true, 2));
+    CHECK_FALSE(IsLowHealth(true, 3));
+    CHECK_FALSE(IsLowHealth(true, 10));
+    CHECK_FALSE(IsLowHealth(false, 0));
+    CHECK_FALSE(IsLowHealth(false, 1));
+}
