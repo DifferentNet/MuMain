@@ -310,6 +310,7 @@ void CStorageInventory::BindRmlModel(Rml::DataModelConstructor& c, StorageRmlMod
         });
 
     c.Bind("zen_text", &model.zenText);
+    c.Bind("zen_caption", &model.zenCaption);
     c.Bind("zen_tier", &model.zenTier);
     c.Bind("fee_label", &model.feeLabel);
     c.Bind("fee_value", &model.feeValue);
@@ -570,6 +571,7 @@ void CStorageInventory::SyncRmlModel()
     wchar_t zenBuf[256] = { 0, };
     ConvertGold(nZen, zenBuf);
     syncWide(&StorageRmlModel::zenText, "zen_text", zenBuf);
+    syncWide(&StorageRmlModel::zenCaption, "zen_caption", I18N::Game::Zen);
 
     // Legacy theme only binds this; modern uses a fixed warm-gold color, same reasoning as
     // my_inventory.rml's #gold_text.

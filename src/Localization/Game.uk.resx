@@ -12891,34 +12891,34 @@
     <value>За замовчуванням</value>
   </data>
   <data name="MixLevelAtLeast" xml:space="preserve">
-    <value>+%d мінімум</value>
+    <value>+%d і вище</value>
   </data>
   <data name="MixLevelAtMost" xml:space="preserve">
-    <value>+%d Максимум</value>
+    <value>+%d і нижче</value>
   </data>
   <data name="MixOption" xml:space="preserve">
-    <value>+%d Варіант</value>
+    <value>опція +%d</value>
   </data>
   <data name="MixOptionAtLeast" xml:space="preserve">
-    <value>+%d Варіант мінімум</value>
+    <value>опція +%d і вище</value>
   </data>
   <data name="MixOptionAtMost" xml:space="preserve">
-    <value>+%d Варіант Максимум</value>
+    <value>опція +%d і нижче</value>
   </data>
   <data name="MixOptionRange" xml:space="preserve">
-    <value>+%d~%d Варіант</value>
+    <value>опція +%d~%d</value>
   </data>
   <data name="MixCount" xml:space="preserve">
-    <value>%d Кількість</value>
+    <value>x%d</value>
   </data>
   <data name="MixCountAtLeast" xml:space="preserve">
-    <value>%d Кількість мінімум</value>
+    <value>x%d і більше</value>
   </data>
   <data name="MixCountAtMost" xml:space="preserve">
-    <value>%d Кількість Максимум</value>
+    <value>x%d і менше</value>
   </data>
   <data name="MixCountRange" xml:space="preserve">
-    <value>%d~%d Кількість</value>
+    <value>x%d~%d</value>
   </data>
   <data name="SummonedMonsterOwner" xml:space="preserve">
     <value>%ls з %ls</value>
@@ -12942,7 +12942,7 @@
     <value>%d Зона очищена</value>
   </data>
   <data name="QuestRewardBuffBonus" xml:space="preserve">
-    <value>Bonus: %ls x %lu хвилина</value>
+    <value>Бонус: %ls на %lu хв.</value>
   </data>
   <data name="CrownSwitchD" xml:space="preserve">
     <value>Коронний перемикач %d</value>
@@ -12981,7 +12981,7 @@
     <value>Item: %ls x %lu/%lu</value>
   </data>
   <data name="QuestRequirementLevel" xml:space="preserve">
-    <value>Level: %lu мінімум</value>
+    <value>Рівень: від %lu</value>
   </data>
   <data name="QuestRequirementZen" xml:space="preserve">
     <value>Zen: %lu</value>
@@ -14074,5 +14074,96 @@
   </data>
   <data name="FriendIsOnline" xml:space="preserve">
     <value>%ls у мережі.</value>
+  </data>
+  <!-- Round 11 -->
+  <data name="MacroCooldown" xml:space="preserve">
+    <value>Час макросу</value>
+  </data>
+  <data name="ServerNonPvpTag" xml:space="preserve">
+    <value>(без PvP)</value>
+  </data>
+  <data name="DurationDays" xml:space="preserve">
+    <value>%d дн.</value>
+  </data>
+  <data name="DurationHoursMinutes" xml:space="preserve">
+    <value>%d год. %02d хв.</value>
+  </data>
+  <data name="DurationMinutes" xml:space="preserve">
+    <value>%d хв.</value>
+  </data>
+  <data name="CharMakeBaseAttributes" xml:space="preserve">
+    <value>Базові характеристики</value>
+  </data>
+  <data name="CharSelectEnterGame" xml:space="preserve">
+    <value>Увійти</value>
+  </data>
+  <data name="LoginCredits" xml:space="preserve">
+    <value>Автори</value>
+  </data>
+  <data name="MoveNeedsLevel" xml:space="preserve">
+    <value>Для цієї карти потрібен рівень %d.</value>
+  </data>
+  <data name="MoveBlockedKiller" xml:space="preserve">
+    <value>Убивця не може переміщатися.</value>
+  </data>
+  <data name="MoveBlockedAtlansMount" xml:space="preserve">
+    <value>До Атлансу не можна на Унірії чи Диноранті.</value>
+  </data>
+  <data name="MoveBlockedHere" xml:space="preserve">
+    <value>На цю карту не можна потрапити з цього сервера.</value>
+  </data>
+  <data name="MoveNeedsGens" xml:space="preserve">
+    <value>Вступіть до Генсу, щоб потрапити на цю карту.</value>
+  </data>
+  <data name="JewelCantUseOnItem" xml:space="preserve">
+    <value>Цей камінь не можна застосувати до цього предмета.</value>
+  </data>
+  <data name="JewelUpgradedTo" xml:space="preserve">
+    <value>%ls: покращено до +%d</value>
+  </data>
+  <data name="JewelUpgradeFailed" xml:space="preserve">
+    <value>%ls: заточка не вдалася, тепер +%d</value>
+  </data>
+  <data name="JewelOptionImproved" xml:space="preserve">
+    <value>%ls: опцію покращено</value>
+  </data>
+  <data name="DeathLostZen" xml:space="preserve">
+    <value>Втрачено: %ls зен</value>
+  </data>
+  <data name="DeathLostExperience" xml:space="preserve">
+    <value>Втрачено досвіду: %ls</value>
+  </data>
+  <data name="ZenSold" xml:space="preserve">
+    <value>Продано: +%ls зен</value>
+  </data>
+  <data name="ZenRepairCost" xml:space="preserve">
+    <value>Ремонт: -%ls зен</value>
+  </data>
+  <data name="LevelUpFreePoints" xml:space="preserve">
+    <value>Рівень %d. Вільні очки: %d (%ls)</value>
+  </data>
+  <data name="ResetFreePoints" xml:space="preserve">
+    <value>Ресет виконано. Вільні очки: %d (%ls)</value>
+  </data>
+  <data name="GuildOnlineD" xml:space="preserve">
+    <value>(у мережі: %d)</value>
+  </data>
+  <data name="ExpTooltipProgress" xml:space="preserve">
+    <value>Досвід: %ls / %ls (%ls%%)</value>
+  </data>
+  <data name="ExpPaceLine" xml:space="preserve">
+    <value>%ls досвіду/год, до рівня ~%ls</value>
+  </data>
+  <data name="ExpPaceRate" xml:space="preserve">
+    <value>%ls досвіду/год</value>
+  </data>
+  <data name="LevelUpFreePointsNoKey" xml:space="preserve">
+    <value>Рівень %d. Вільні очки: %d</value>
+  </data>
+  <data name="ResetFreePointsNoKey" xml:space="preserve">
+    <value>Ресет виконано. Вільні очки: %d</value>
+  </data>
+  <data name="JewelOptionFailed" xml:space="preserve">
+    <value>%ls: покращення опції не вдалося</value>
   </data>
 </root>

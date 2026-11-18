@@ -14,8 +14,15 @@
 #include "Audio/DSPlaySound.h"
 #include "Network/Server/WSclient.h"
 #include "Core/Utilities/Random.h"
+#include "Render/Effects/PoolSlotBounds.h"
 
 PARTICLE Pointers[MAX_POINTERS];
+
+namespace
+{
+// Every live pointer sits below End(): CreatePointer raises it, MovePointers trims it.
+Render::Effects::PoolSlotBounds s_pointerBounds;
+} // namespace
 
 void CreatePointer(int Type, vec3_t Position, float Angle, vec3_t Light, float Scale)
 {
@@ -27,6 +34,7 @@ void CreatePointer(int Type, vec3_t Position, float Angle, vec3_t Light, float S
         if (!o->Live)
         {
             o->Live = true;
+            s_pointerBounds.OnTaken(i);
             o->Type = Type;
             VectorCopy(Position, o->Position);
             VectorCopy(Light, o->Light);
@@ -58,7 +66,7 @@ void CreatePointer(int Type, vec3_t Position, float Angle, vec3_t Light, float S
 
 void MovePointers()
 {
-    for (int i = 0; i < MAX_POINTERS; i++)
+    for (int i = 0; i < s_pointerBounds.End(); i++)
     {
         PARTICLE* o = &Pointers[i];
         if (o->Live)
@@ -87,12 +95,13 @@ void MovePointers()
             }
         }
     }
+    s_pointerBounds.TrimEnd(Pointers, MAX_POINTERS);
 }
 
 void RenderPointers()
 {
     EnableAlphaBlend();
-    for (int i = 0; i < MAX_POINTERS; i++)
+    for (int i = 0; i < s_pointerBounds.End(); i++)
     {
         PARTICLE* o = &Pointers[i];
         if (o->Live)

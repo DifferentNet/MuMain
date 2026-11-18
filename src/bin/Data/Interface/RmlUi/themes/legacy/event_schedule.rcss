@@ -41,4 +41,6 @@
 	.es-rows { width: 226px; }
 	#es_message { width: calc(226px * var(--root-scale)); }
 	.es-name, .es-time { width: calc(226px * var(--root-scale)); }
+	/* The rows past the eleventh, which the PC leaves out, scroll by touch in the eleven rows' height. */
+	.es-rows { height: 352px; overflow: hidden auto; pointer-events: auto; }
 }

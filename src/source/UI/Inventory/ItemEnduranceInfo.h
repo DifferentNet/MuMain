@@ -9,8 +9,13 @@
 #include "UI/Inventory/ItemEnduranceRmlModel.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 
+#include <RmlUi/Core/ObserverPtr.h>
+
+#include <vector>
+
 namespace Rml
 {
+class Element;
 class ElementDocument;
 }
 
@@ -55,6 +60,12 @@ namespace mu::ui::window
         int							m_iTooltipIndex;
         // The equipment slot of each icon synced, in document order (UpdateMouseEvent()).
         std::vector<int> m_IconSlots;
+        // The hit boxes UpdateMouseEvent() tests: the pet frames and the icon tints, in document order. Queried
+        // again only when the document changed or the synced rows changed (RefreshHitBoxes()).
+        std::vector<Rml::ObserverPtr<Rml::Element>> m_PetFrames;
+        std::vector<Rml::ObserverPtr<Rml::Element>> m_IconTints;
+        Rml::ObserverPtr<Rml::Element> m_HitBoxDocument;
+        int m_HitBoxQueriesLeft = 0;
 
     public:
         CItemEnduranceInfo();
@@ -96,6 +107,9 @@ namespace mu::ui::window
         // The image name of an IMAGE_ITEM_DUR_* durability icon; empty for none.
         static const char* DurabilityIconImage(int imageIndex);
         void SyncTooltip();
+        // The rows changed: query the hit boxes again once RmlUi has rebuilt them.
+        void MarkHitBoxesStale();
+        void RefreshHitBoxes(Rml::ElementDocument* document);
 
         void BindRmlModel(Rml::DataModelConstructor& c, UI::ItemEndurance::ItemEnduranceRmlModel& model);
         UI::RmlBridge::ThemedView<UI::ItemEndurance::ItemEnduranceRmlModel> m_RmlView{"item_endurance",

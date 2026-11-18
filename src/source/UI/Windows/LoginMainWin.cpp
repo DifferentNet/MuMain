@@ -11,6 +11,8 @@
 #include "UI/Windows/CreditWin.h"
 #include "Network/Server/WSclient.h"
 #include "Core/Globals/_enum.h"
+#include "Core/Utilities/StringUtils.h"
+#include "I18N/All.h"
 
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/RmlBridge/RmlNativeText.h"
@@ -19,6 +21,7 @@
 #include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/Event.h>
 #include <RmlUi/Core/EventListener.h>
+#include <RmlUi/Core/StringUtilities.h>
 #include <cmath>
 #include <functional>
 
@@ -81,6 +84,19 @@ void CLoginMainWin::OnRmlBuilt()
         e->AddEventListener(Rml::EventId::Click, new ClickCallbackListener([this] { RmlClickMenu(); }));
     if (Rml::Element* e = document->GetElementById("btn_credit"))
         e->AddEventListener(Rml::EventId::Click, new ClickCallbackListener([this] { RmlClickCredit(); }));
+    SetCaptions(document);
+}
+
+// The modern theme's captions under the buttons (legacy hides them: its art carries the icons alone).
+void CLoginMainWin::SetCaptions(Rml::ElementDocument* document)
+{
+    const auto setCaption = [document](const char* id, const wchar_t* text)
+    {
+        if (Rml::Element* e = document->GetElementById(id))
+            e->SetInnerRML(Rml::StringUtilities::EncodeRml(StringUtils::WideToNarrow(text)));
+    };
+    setCaption("menu_caption", I18N::Game::TouchMenu);
+    setCaption("credit_caption", I18N::Game::LoginCredits);
 }
 
 void CLoginMainWin::OnRmlReloaded()

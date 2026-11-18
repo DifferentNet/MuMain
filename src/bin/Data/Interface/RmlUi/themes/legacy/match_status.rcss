@@ -44,3 +44,11 @@ body { pointer-events: none; }
 #result_ok { position: absolute; left: 115px; top: 160px; width: 70px; height: 20px; decorator: image(ms-ok); pointer-events: auto; cursor: pointer; }
 #result_ok:hover { decorator: image(ms-ok-over); }
 .ok-label { display: none; }
+
+/* MU Skynet: the phone view (theme flag "mobile"): OK grows its hit box round the art (the negative
+   margin takes back the padding, the decorator paints the content box alone). It stays inside the
+   result panel, clear of the outcome line at 115. */
+@media (theme: mobile) {
+	#result_ok { margin: -10px -8px; padding: 10px 8px; decorator: image(ms-ok) content-box; }
+	#result_ok:hover { decorator: image(ms-ok-over) content-box; }
+}

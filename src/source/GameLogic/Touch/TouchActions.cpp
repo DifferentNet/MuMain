@@ -1829,8 +1829,9 @@ int MeetIndex()
 {
     if (!InWorld() || g_meetKey == NoTarget || g_chosenKey != NoTarget)
         return -1;
-    // A foe come near takes the place of the one chosen to meet: A attacks again.
-    for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
+    // A foe come near takes the place of the one chosen to meet: A attacks again. A foe is live, so below
+    // CharacterSlotEnd() (asked every frame while a meeting is chosen).
+    for (int i = 0; i < CharacterSlotEnd(); ++i)
     {
         if (IsGoodTarget(&CharactersClient[i], g_forceAttack))
         {

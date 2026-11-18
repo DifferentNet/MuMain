@@ -60,6 +60,7 @@ namespace mu::ui::window
             Rml::String sortTooltip;
 
             Rml::String zenText;
+            Rml::String zenCaption; // the modern theme's wallet label
             Rml::String zenTier; // UI::RmlBridge::GoldTierKey() of the amount, legacy only
             Rml::String feeLabel;
             Rml::String feeValue;

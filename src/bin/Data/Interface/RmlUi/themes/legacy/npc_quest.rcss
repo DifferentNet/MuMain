@@ -197,3 +197,16 @@
 
 /* The native text size, counter-scaled out of the placed root's scale. */
 #content_root { font-size: calc(var(--text-px) / var(--root-scale)); }
+
+/* MU Skynet: the phone view, after the counter-scaled lengths above: Complete grows its hit box up
+   and sideways without moving its art (the margin is in the reference px, the padding inside the
+   counter-scaled layer). It does not grow down: the exit button's hit box starts at 384, and the
+   divider above ends at 346. */
+@media (theme: mobile) {
+	.nq-btn-complete {
+		margin: -7px -10px 0 -10px;
+		padding: calc(7px * var(--root-scale)) calc(10px * var(--root-scale)) 0 calc(10px * var(--root-scale));
+		decorator: image(nq-btn-complete-idle) content-box;
+	}
+	.nq-btn-complete:hover { decorator: image(nq-btn-complete-hover) content-box; }
+}

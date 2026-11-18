@@ -144,6 +144,9 @@ private:
         // Same I18N::Game::OK/Cancel + {{ok_label}}/{{cancel_label}} pattern as LoginWin.cpp.
         Rml::String okLabel, cancelLabel;
 
+        // The modern theme's panel captions (legacy hides them or has them in its art).
+        Rml::String attributesCaption, classCaption, nameCaption;
+
         // The typed character name, two-way bound to char_make.rml's <input data-value="char_name">.
         // RmlUi owns the edit buffer/caret/selection/IME; this is only the committed value, copied
         // into the legacy InputText[0] buffer at submit time so CheckSpecialText()/

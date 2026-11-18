@@ -68,6 +68,7 @@ extern bool SelectFlag;
 #include <RmlUi/Core/Event.h>
 #include <cmath>
 #include <utility>
+#include "UI/Chat/CharacterChangeLines.h"
 #ifdef __EMSCRIPTEN__
 #include "Core/Utilities/FirstOpenTiming.h"
 #endif
@@ -193,6 +194,7 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
 
     c.Bind("title", &model.title);
     c.Bind("gold_text", &model.goldText);
+    c.Bind("zen_caption", &model.zenCaption);
     c.Bind("gold_tier", &model.goldTier);
 
     c.Bind("repair_visible", &model.repairVisible);
@@ -1317,6 +1319,7 @@ void CMyInventory::SyncTexts(bool bagLocked)
     wchar_t goldBuf[256] = { 0, };
     ConvertGold(inputs.zen, goldBuf);
     syncWide(&MyInventoryRmlModel::goldText, "gold_text", goldBuf);
+    syncWide(&MyInventoryRmlModel::zenCaption, "zen_caption", I18N::Game::Zen);
     syncText(&MyInventoryRmlModel::goldTier, "gold_tier",
              UI::RmlBridge::GoldTierKey(GameLogic::Items::ClassifyGoldAmount(inputs.zen)));
 
@@ -1924,10 +1927,12 @@ bool CMyInventory::EquipmentWindowProcess()
 
                 if (g_pNewUISystem->IsVisible(INTERFACE_NPCSHOP) && g_pNPCShop->IsRepairShop())
                 {
+                    UI::Chat::ChangeLines::NoteRepairAsked(*pEquippedItem);
                     SocketClient->ToGameServer()->SendRepairItemRequest(m_iPointedSlot, 0);
                 }
                 else if (m_bRepairEnableLevel == true)
                 {
+                    UI::Chat::ChangeLines::NoteRepairAsked(*pEquippedItem);
                     SocketClient->ToGameServer()->SendRepairItemRequest(m_iPointedSlot, 1);
                 }
 

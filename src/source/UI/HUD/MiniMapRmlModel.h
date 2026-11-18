@@ -30,6 +30,7 @@ struct MiniMapLabelEntry
 {
     Rml::String text;
     float left = 0.f, top = 0.f;
+    bool party = false; // a party member's name, not a boss's
 
     bool operator==(const MiniMapLabelEntry&) const = default;
 };
@@ -39,6 +40,8 @@ struct MiniMapLabelEntry
 struct MiniMapLiveEntry
 {
     bool gold = false, wizard = false, wboss = false;
+    // A party member on this map (from the party list): a dot without a circle.
+    bool party = false;
     float left = 0.f, top = 0.f, size = 0.f;
     float areaLeft = 0.f, areaTop = 0.f, areaSize = 0.f;
 

@@ -19,6 +19,7 @@
 #include "I18N/All.h"
 #include "UI/Scaling/UITransform.h"
 #include "Render/Text/CUIRenderText.h"
+#include "UI/Mobile/PhoneHudLayout.h"
 
 extern void MonsterMoveSandSmoke(OBJECT* o);
 extern void MonsterDieSandSmoke(OBJECT* o);
@@ -263,6 +264,15 @@ void M34CryWolf1st::RenderNoticesCryWolf()
     g_pRenderText->SetFont(g_hFontBold);
     g_pRenderText->SetBgColor(0, 0, 0, 170);
 
+    // The four lines from (190, 63) of the old 640x480 frame, 13 apart. On the phone they start under
+    // the HUD's top there (the buffs, the notice ticker), which draws over them; the span is a long line's.
+    constexpr int NoticeLeft = 190;
+    constexpr int NoticeTop = 63;
+    constexpr int NoticeLinePitch = 13;
+    constexpr float NoticeSpan = 260.f;
+    const int top = std::max(NoticeTop, UI::Mobile::PhoneHudLayout::NativeTopLine(
+                                            static_cast<float>(NoticeLeft), NoticeLeft + NoticeSpan));
+
     for (int i = 0; i < 4; i++)
     {
         if (i == 0)
@@ -273,7 +283,7 @@ void M34CryWolf1st::RenderNoticesCryWolf()
         {
             g_pRenderText->SetTextColor(100, 150, 255, 255);
         }
-        g_pRenderText->RenderText(190, 63 + i * 13, texts[i].c_str());
+        g_pRenderText->RenderText(NoticeLeft, top + i * NoticeLinePitch, texts[i].c_str());
     }
 }
 

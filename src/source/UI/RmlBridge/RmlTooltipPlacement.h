@@ -18,4 +18,9 @@ ButtonHintAnchor ForButton(float left, float top, float width, float height, flo
 // as asked. When that leaves the viewport and a `flipAnchorY` is given, the other way from that
 // anchor, if it fits there; then clamped into the viewport either way.
 float Top(float anchorY, bool above, const float* flipAnchorY, float height, float viewportHeight);
+
+// The scale a box `height` tall is drawn at to fit a viewport `viewportHeight` tall: 1 when it fits,
+// else the viewport's share of it, but never below `minimum` (smaller text no longer reads; the rest
+// stays off screen then).
+float FitScale(float height, float viewportHeight, float minimum);
 } // namespace UI::RmlBridge::TooltipPlacement

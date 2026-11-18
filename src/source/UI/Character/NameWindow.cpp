@@ -19,6 +19,7 @@
 #include "UI/Combat/MonsterHealthBar.h"
 #include "UI/HUD/GamepadControls.h"
 #include "UI/HUD/HudStatus.h"
+#include "UI/Mobile/PhoneHudLayout.h"
 #include "World/GameMaps/GMBattleCastle.h"
 #include "World/GameMaps/GMHellas.h"
 #include "World/GameMaps/GM_Kanturu_3rd.h"
@@ -34,6 +35,13 @@ using namespace mu::ui::window;
 
 namespace
 {
+// The selected monster's name and life bar, in the old 640x480 frame: centred at the top, the bar
+// 13 under the name. On the phone they start under the HUD's top there (NativeTopLine), which draws
+// over them; the span is a long name's.
+constexpr int SelectedNameCentre = 320;
+constexpr int SelectedNameTop = 2;
+constexpr int SelectedBarBelowName = 13;
+constexpr float SelectedNameHalfSpan = 60.f;
 
 // Draws a segmented monster HP bar centered on centerX/topY; steps sets segment count, scale compresses width.
 void DrawHealthBar(int centerX, int topY, float health, int steps, float scale)
@@ -266,14 +274,17 @@ void mu::ui::window::CNameWindow::RenderName()
             OBJECT* o = &c->Object;
             if (o->Kind == KIND_MONSTER)
             {
+                const int phoneTop = UI::Mobile::PhoneHudLayout::NativeTopLine(
+                    SelectedNameCentre - SelectedNameHalfSpan, SelectedNameCentre + SelectedNameHalfSpan);
+                const int nameTop = std::max(SelectedNameTop, phoneTop);
                 g_pRenderText->SetTextColor(255, 230, 200, 255);
                 g_pRenderText->SetBgColor(100, 0, 0, 255);
-                g_pRenderText->RenderText(320, 2, c->ID, 0, 0, RT3_WRITE_CENTER);
+                g_pRenderText->RenderText(SelectedNameCentre, nameTop, c->ID, 0, 0, RT3_WRITE_CENTER);
 
                 if (UI::Combat::HealthBar::ShouldRenderSelected(c->HealthStatus))
                 {
                     // Full-width bar centered under the selected monster's name.
-                    DrawHealthBar(320, 15, c->HealthStatus, 20, 1.f);
+                    DrawHealthBar(SelectedNameCentre, nameTop + SelectedBarBelowName, c->HealthStatus, 20, 1.f);
                 }
             }
             else

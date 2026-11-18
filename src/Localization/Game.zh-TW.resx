@@ -14075,4 +14075,95 @@
   <data name="FriendIsOnline" xml:space="preserve">
     <value>%ls 已上線。</value>
   </data>
+  <!-- Round 11 -->
+  <data name="MacroCooldown" xml:space="preserve">
+    <value>巨集時間</value>
+  </data>
+  <data name="ServerNonPvpTag" xml:space="preserve">
+    <value>(非PvP)</value>
+  </data>
+  <data name="DurationDays" xml:space="preserve">
+    <value>%d天</value>
+  </data>
+  <data name="DurationHoursMinutes" xml:space="preserve">
+    <value>%d小時%02d分</value>
+  </data>
+  <data name="DurationMinutes" xml:space="preserve">
+    <value>%d分鐘</value>
+  </data>
+  <data name="CharMakeBaseAttributes" xml:space="preserve">
+    <value>基本屬性</value>
+  </data>
+  <data name="CharSelectEnterGame" xml:space="preserve">
+    <value>進入</value>
+  </data>
+  <data name="LoginCredits" xml:space="preserve">
+    <value>製作群</value>
+  </data>
+  <data name="MoveNeedsLevel" xml:space="preserve">
+    <value>此地圖需要等級 %d。</value>
+  </data>
+  <data name="MoveBlockedKiller" xml:space="preserve">
+    <value>殺人者狀態下無法移動。</value>
+  </data>
+  <data name="MoveBlockedAtlansMount" xml:space="preserve">
+    <value>騎乘 Uniria 或 Dinorant 時無法進入 Atlans。</value>
+  </data>
+  <data name="MoveBlockedHere" xml:space="preserve">
+    <value>無法從此伺服器前往此地圖。</value>
+  </data>
+  <data name="MoveNeedsGens" xml:space="preserve">
+    <value>加入 Gens 才能進入此地圖。</value>
+  </data>
+  <data name="JewelCantUseOnItem" xml:space="preserve">
+    <value>此寶石無法用於此物品。</value>
+  </data>
+  <data name="JewelUpgradedTo" xml:space="preserve">
+    <value>%ls：強化至 +%d</value>
+  </data>
+  <data name="JewelUpgradeFailed" xml:space="preserve">
+    <value>%ls：強化失敗，目前 +%d</value>
+  </data>
+  <data name="JewelOptionImproved" xml:space="preserve">
+    <value>%ls：選項提升</value>
+  </data>
+  <data name="DeathLostZen" xml:space="preserve">
+    <value>損失：%ls Zen</value>
+  </data>
+  <data name="DeathLostExperience" xml:space="preserve">
+    <value>損失經驗：%ls</value>
+  </data>
+  <data name="ZenSold" xml:space="preserve">
+    <value>出售：+%ls Zen</value>
+  </data>
+  <data name="ZenRepairCost" xml:space="preserve">
+    <value>修理：-%ls Zen</value>
+  </data>
+  <data name="LevelUpFreePoints" xml:space="preserve">
+    <value>等級 %d。可分配點數：%d（%ls）</value>
+  </data>
+  <data name="ResetFreePoints" xml:space="preserve">
+    <value>重置完成。可分配點數：%d（%ls）</value>
+  </data>
+  <data name="GuildOnlineD" xml:space="preserve">
+    <value>（線上：%d）</value>
+  </data>
+  <data name="ExpTooltipProgress" xml:space="preserve">
+    <value>經驗：%ls / %ls（%ls%%）</value>
+  </data>
+  <data name="ExpPaceLine" xml:space="preserve">
+    <value>每小時 %ls 經驗，約 %ls 後升級</value>
+  </data>
+  <data name="ExpPaceRate" xml:space="preserve">
+    <value>每小時 %ls 經驗</value>
+  </data>
+  <data name="LevelUpFreePointsNoKey" xml:space="preserve">
+    <value>等級 %d。可分配點數：%d</value>
+  </data>
+  <data name="ResetFreePointsNoKey" xml:space="preserve">
+    <value>重置完成。可分配點數：%d</value>
+  </data>
+  <data name="JewelOptionFailed" xml:space="preserve">
+    <value>%ls：選項強化失敗</value>
+  </data>
 </root>

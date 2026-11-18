@@ -7,6 +7,7 @@
 #include "Engine/Object/EditObjects.h"
 #include "Engine/Object/ZzzOpenData.h"
 #include "UI/Chat/Chat.h"
+#include "UI/Chat/CharacterChangeLines.h"
 #include "MainScene.h"
 #include "SceneCommon.h"
 #include "Camera/CameraUtility.h"
@@ -375,6 +376,9 @@ void MoveMainScene()
     // the server within half a second, not only when leaving through the menu: closing the window or the
     // tab used to lose it (ghinzuro 2026-11-07).
     SaveOptionsIfChangedEvery(500);
+
+    // Sale, repair and death sums settle a moment after their last money update.
+    UI::Chat::ChangeLines::Tick();
 
     if (ErrorMessage != 0)
         MouseOnWindow = true;

@@ -38,10 +38,14 @@ long CountHints(const std::vector<UI::Help::PageLine>& lines)
     return std::count_if(lines.begin(), lines.end(), [](const UI::Help::PageLine& line) { return line.hint; });
 }
 
-// The hint row is the last but one; the page ends with a spacer.
+// The hint row: the last but one (the page ends with a spacer), or with touch controls the fourth,
+// under the title and its spacer.
 const UI::Help::PageLine& Hint(const std::vector<UI::Help::PageLine>& lines)
 {
-    return lines[lines.size() - 2];
+    const auto hint =
+        std::find_if(lines.begin(), lines.end(), [](const UI::Help::PageLine& line) { return line.hint; });
+    REQUIRE(hint != lines.end());
+    return *hint;
 }
 
 // A pad text with the Xbox names in, as the pad page and hint show it for an Xbox pad.
@@ -123,30 +127,34 @@ TEST_CASE("help with touch controls: the touch page instead of the keys, the sam
 {
     const auto lines = UI::Help::BuildPage(0, kTouch);
 
-    // Spacer, heading, spacer, 20 touch rows, spacer, the tap hint, spacer.
+    // Spacer, heading, spacer, the tap hint (under the title: a long page runs under a phone's bottom
+    // edge), spacer, 20 touch rows, spacer.
     REQUIRE(lines.size() == 26);
     CHECK(lines[1].heading);
     CHECK(lines[1].text == I18N::Game::TouchHelpTitle);
+    CHECK(lines[2].halfSpacer);
+    CHECK(lines[3].hint);
+    CHECK(lines[3].text == I18N::Game::TouchHelpNextHint);
+    CHECK(lines[4].halfSpacer);
     CHECK(CountHeadings(lines) == 1);
     CHECK(CountHints(lines) == 1);
-    CHECK(lines[3].text == I18N::Game::TouchHelpWorld);
-    CHECK(lines[5].text == I18N::Game::HelpControlsWalkHit);
-    CHECK(lines[7].text == I18N::Game::TouchHelpAttack);
-    CHECK(lines[9].text == I18N::Game::TouchHelpPk);
-    CHECK(lines[10].text == I18N::Game::TouchHelpTarget);
-    CHECK(lines[12].text == I18N::Game::TouchHelpNova);
-    CHECK(lines[15].text == I18N::Game::TouchHelpParty);
-    CHECK(lines[16].text == I18N::Game::TouchHelpPickUp);
-    CHECK(lines[22].text == I18N::Game::TouchHelpView);
-    CHECK(Hint(lines).hint);
-    CHECK(Hint(lines).text == I18N::Game::TouchHelpNextHint);
+    CHECK(lines[5].text == I18N::Game::TouchHelpWorld);
+    CHECK(lines[7].text == I18N::Game::HelpControlsWalkHit);
+    CHECK(lines[9].text == I18N::Game::TouchHelpAttack);
+    CHECK(lines[11].text == I18N::Game::TouchHelpPk);
+    CHECK(lines[12].text == I18N::Game::TouchHelpTarget);
+    CHECK(lines[14].text == I18N::Game::TouchHelpNova);
+    CHECK(lines[17].text == I18N::Game::TouchHelpParty);
+    CHECK(lines[18].text == I18N::Game::TouchHelpPickUp);
+    CHECK(lines[24].text == I18N::Game::TouchHelpView);
     CHECK(lines.back().halfSpacer);
 
-    // Spacer, heading, spacer, the 16 chat rows, spacer, the tap hint, spacer: the commands follow.
+    // Spacer, heading, spacer, the tap hint, spacer, the 16 chat rows, spacer: the commands follow.
     const auto chat = UI::Help::BuildPage(1, kTouch);
     REQUIRE(chat.size() == 22);
     CHECK(chat[1].text == I18N::Game::ChattingInstructions);
-    CHECK(chat[18].text == I18N::Game::Lookup(156));
+    CHECK(chat[3].hint);
+    CHECK(chat[20].text == I18N::Game::Lookup(156));
     CHECK(CountHeadings(chat) == 1);
     CHECK(Hint(chat).text == I18N::Game::TouchHelpNextHint);
 }
@@ -155,16 +163,17 @@ TEST_CASE("help commands page: MU Skynet's commands after the chat page, the las
 {
     const auto lines = UI::Help::BuildPage(2, kTouch);
 
-    // Spacer, heading, spacer, 12 command rows, spacer, the tap hint, spacer.
+    // Spacer, heading, spacer, the tap hint, spacer, 12 command rows, spacer.
     REQUIRE(lines.size() == 18);
     CHECK(lines[1].heading);
     CHECK(lines[1].text == I18N::Game::HelpSkynetCommandsHeading);
     CHECK(lines[2].halfSpacer);
+    CHECK(lines[3].hint);
     CHECK(CountHeadings(lines) == 1);
     CHECK(CountHints(lines) == 1);
-    CHECK(lines[3].text == I18N::Game::HelpSkynetCommandList);
-    CHECK(lines[13].text == I18N::Game::HelpSkynetCommandStuck);
-    CHECK(lines[14].text == I18N::Game::HelpSkynetCommandReply);
+    CHECK(lines[5].text == I18N::Game::HelpSkynetCommandList);
+    CHECK(lines[15].text == I18N::Game::HelpSkynetCommandStuck);
+    CHECK(lines[16].text == I18N::Game::HelpSkynetCommandReply);
     CHECK(Hint(lines).text == I18N::Game::TouchHelpCloseHint);
     CHECK(lines.back().halfSpacer);
 

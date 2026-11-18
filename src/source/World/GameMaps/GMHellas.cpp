@@ -2,6 +2,7 @@
 //  GMHellas.cpp
 //////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
+#include "Render/Effects/FramePow.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "Render/Textures/ZzzTexture.h"
@@ -676,7 +677,7 @@ void MoveBigMon(OBJECT* o)
 
     if (o->LifeTime < 20)
     {
-        o->Alpha *= pow(1.0f / (1.2f), FPS_ANIMATION_FACTOR);
+        o->Alpha *= FramePow(1.0f / (1.2f));
         o->Velocity += 0.5f * FPS_ANIMATION_FACTOR;
         o->Angle[0] += 2.f * FPS_ANIMATION_FACTOR;
     }

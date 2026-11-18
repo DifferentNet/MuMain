@@ -19,6 +19,9 @@
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "UI/HUD/MiniMapLayout.h"
 #include "UI/HUD/MiniMapLive.h"
+#include "UI/HUD/MiniMapPartyDots.h"
+#include "Engine/Object/ZzzInventory.h"
+#include "UI/Party/PartyListRefresh.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Mobile/TouchUnit.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
@@ -59,6 +62,8 @@ constexpr float kLabelWidth = 240.f;
 // more than half a square's diagonal, so the whole square is inside.
 constexpr float kLiveSize = 18.f;
 constexpr float kWorldBossSize = 24.f;
+// A party member's dot, physical px.
+constexpr float kPartySize = 10.f;
 constexpr float kLiveRadiusInCells = 0.75f;
 // The side border tiles: 35 x 6 reference units, 20 down each side, turned a quarter.
 constexpr float kTileWidth = 35.f;
@@ -344,6 +349,7 @@ void mu::ui::window::CMiniMap::BindRmlModel(Rml::DataModelConstructor& c, MiniMa
     label.RegisterMember("text", &MiniMapLabelEntry::text);
     label.RegisterMember("left", &MiniMapLabelEntry::left);
     label.RegisterMember("top", &MiniMapLabelEntry::top);
+    label.RegisterMember("party", &MiniMapLabelEntry::party);
     c.RegisterArray<std::vector<MiniMapLabelEntry>>();
     c.Bind("labels", &model.labels);
 
@@ -351,6 +357,7 @@ void mu::ui::window::CMiniMap::BindRmlModel(Rml::DataModelConstructor& c, MiniMa
     live.RegisterMember("gold", &MiniMapLiveEntry::gold);
     live.RegisterMember("wizard", &MiniMapLiveEntry::wizard);
     live.RegisterMember("wboss", &MiniMapLiveEntry::wboss);
+    live.RegisterMember("party", &MiniMapLiveEntry::party);
     live.RegisterMember("left", &MiniMapLiveEntry::left);
     live.RegisterMember("top", &MiniMapLiveEntry::top);
     live.RegisterMember("size", &MiniMapLiveEntry::size);
@@ -407,6 +414,8 @@ void mu::ui::window::CMiniMap::SyncRmlModel()
     if (!visible)
         return;
     UI::MiniMapLive::Live().Request();
+    // The party members' places come with the party list, asked again while the map shows.
+    UI::Party::ListRefresh::Tick(PartyNumber > 0);
 
     SyncScreen();
     SyncClips();
@@ -630,11 +639,49 @@ void mu::ui::window::CMiniMap::SyncLive(const UI::MiniMap::Screen& screen, float
         }
     }
 
+    SyncPartyDots(screen, heroX, heroY, length, lives, labels);
+
     MiniMapRmlModel& model = m_RmlView.GetModel();
     if (model.lives != lives)
     {
         model.lives = std::move(lives);
         m_RmlView.MarkDirty("lives");
+    }
+}
+
+void mu::ui::window::CMiniMap::SyncPartyDots(const UI::MiniMap::Screen& screen, float heroX, float heroY, float length,
+                                            std::vector<MiniMapLiveEntry>& lives,
+                                            std::vector<MiniMapLabelEntry>& labels)
+{
+    std::vector<UI::MiniMap::PartyDots::Member> members;
+    const int count = std::clamp(PartyNumber, 0, MAX_PARTYS);
+    for (int i = 0; i < count; ++i)
+        members.push_back({Party[i].Name, Party[i].Map, Party[i].x, Party[i].y});
+
+    for (const UI::MiniMap::PartyDots::Dot& dot :
+         UI::MiniMap::PartyDots::OnMap(members, gMapManager.WorldActive, Hero ? Hero->ID : L""))
+    {
+        // As the markers: the tile x goes into the map's y, the tile y into its x.
+        const float pointY = (static_cast<float>(dot.x) / 256.f) * length;
+        const float pointX = (static_cast<float>(dot.y) / 256.f) * length;
+        const UI::MiniMap::Marker marker = UI::MiniMap::MarkerQuad(screen, heroX, heroY, pointX, pointY, kPartySize,
+                                                                   0.f, length, UI::MiniMap::MapRotation, false);
+        const float centreX = (marker.quad.topRight.x + marker.quad.bottomLeft.x) * 0.5f;
+        const float centreY = (marker.quad.topRight.y + marker.quad.bottomLeft.y) * 0.5f;
+
+        MiniMapLiveEntry live;
+        live.party = true;
+        live.size = kPartySize;
+        live.left = centreX - kPartySize * 0.5f;
+        live.top = centreY - kPartySize * 0.5f;
+        live.areaLeft = centreX;
+        live.areaTop = centreY;
+        lives.push_back(live);
+
+        MiniMapLabelEntry label{StringUtils::WideToNarrow(dot.name.c_str()), centreX - kLabelWidth * 0.5f,
+                                centreY + kPartySize * 0.5f};
+        label.party = true;
+        labels.push_back(std::move(label));
     }
 }
 

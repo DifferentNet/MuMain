@@ -252,6 +252,8 @@ private:
         bool accountBlockHidden = true;
         Rml::String accountBlockLine1;
         Rml::String accountBlockLine2;
+        // The modern theme's button captions (legacy hides them: its button art carries them).
+        Rml::String createCaption, menuCaption, connectCaption, deleteCaption;
     };
     void BindRmlModel(Rml::DataModelConstructor& c, CharSelMainRmlModel& model);
     UI::RmlBridge::ThemedView<CharSelMainRmlModel> m_RmlView{"char_sel_main",

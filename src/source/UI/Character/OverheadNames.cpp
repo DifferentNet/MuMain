@@ -155,7 +155,8 @@ void Render()
     if (gMapManager.InChaosCastle())
         return;
 
-    std::array<Candidate, MAX_CHARACTERS_CLIENT> found{};
+    // Only the first `count` entries are read, so the array is not zero-filled each frame.
+    std::array<Candidate, MAX_CHARACTERS_CLIENT> found;
     int count = 0;
     const OBJECT* hero = &Hero->Object;
 

@@ -640,7 +640,7 @@
     <comment>legacy_id=156</comment>
   </data>
   <data name="Warp to the corresponding area after %d seconds" xml:space="preserve">
-    <value>Переместитесь в соответствующую область через %d секунд.</value>
+    <value>Перемещение в нужную зону через %d сек.</value>
     <comment>legacy_id=157</comment>
   </data>
   <data name="%s Warp scroll" xml:space="preserve">
@@ -2429,7 +2429,7 @@
     <comment>legacy_id=643</comment>
   </data>
   <data name="Devil Square will open in %d minutes." xml:space="preserve">
-    <value>Площадь Дьявола откроется через %d минут.</value>
+    <value>Площадь Дьявола откроется через %d мин.</value>
     <comment>legacy_id=644</comment>
   </data>
   <data name="The %d Square (%d-%d level)" xml:space="preserve">
@@ -3085,7 +3085,7 @@
     <comment>legacy_id=828</comment>
   </data>
   <data name="You may enter only %d times per day." xml:space="preserve">
-    <value>Вы можете вводить только %d раз в день.</value>
+    <value>Входов в день: не больше %d.</value>
     <comment>legacy_id=829</comment>
   </data>
   <data name="ISeeThatYouHaveThe" xml:space="preserve">
@@ -3169,11 +3169,11 @@
     <comment>legacy_id=849</comment>
   </data>
   <data name="You can enter %s now." xml:space="preserve">
-    <value>Вы можете ввести %s сейчас.</value>
+    <value>Сейчас можно войти: %s.</value>
     <comment>legacy_id=850</comment>
   </data>
   <data name="After %d minutes you may enter %s." xml:space="preserve">
-    <value>Через %d минут вы можете ввести %s.</value>
+    <value>Через %d мин. можно войти: %s.</value>
     <comment>legacy_id=851</comment>
   </data>
   <data name="The time to enter %s has passed." xml:space="preserve">
@@ -3237,11 +3237,11 @@
     <comment>legacy_id=866</comment>
   </data>
   <data name="You are not allowed to enter more than %d times in one day." xml:space="preserve">
-    <value>Вам не разрешено входить более %d раз в день.</value>
+    <value>Входов в день: не больше %d.</value>
     <comment>legacy_id=867</comment>
   </data>
   <data name="Entrance is allowed for %d times" xml:space="preserve">
-    <value>Вход разрешен %d раз.</value>
+    <value>Разрешено входов: %d.</value>
     <comment>legacy_id=868</comment>
   </data>
   <data name="%d %s %s Schedule" xml:space="preserve">
@@ -3997,7 +3997,7 @@
     <comment>legacy_id=1071</comment>
   </data>
   <data name="%d letters are saved in your mailbox (Max: %d)" xml:space="preserve">
-    <value>Письма %d сохраняются в вашем почтовом ящике (Макс: %d)</value>
+    <value>Писем в ящике: %d (максимум %d)</value>
     <comment>legacy_id=1072</comment>
   </data>
   <data name="Your mailbox is full. You must delete letters to receive new ones." xml:space="preserve">
@@ -4857,7 +4857,7 @@
     <comment>legacy_id=1286</comment>
   </data>
   <data name="Maximum no. of guild alliance is 7." xml:space="preserve">
-    <value>Максимум нет. альянса гильдий — 7.</value>
+    <value>В альянсе не больше 7 гильдий.</value>
     <comment>legacy_id=1287</comment>
   </data>
   <data name="Prevent equipment drop" xml:space="preserve">
@@ -5261,7 +5261,7 @@
     <comment>legacy_id=1391</comment>
   </data>
   <data name="It will start after %d seconds" xml:space="preserve">
-    <value>Он начнется через %d секунд.</value>
+    <value>Начало через %d сек.</value>
     <comment>legacy_id=1392</comment>
   </data>
   <data name="Tournament result" xml:space="preserve">
@@ -7385,7 +7385,7 @@
     <comment>legacy_id=1977</comment>
   </data>
   <data name="%s (Accumulated hour : %dseconds)" xml:space="preserve">
-    <value>%s (Накопленный час: %dсекунд)</value>
+    <value>%s (накоплено: %d сек.)</value>
     <comment>legacy_id=1980</comment>
   </data>
   <data name="Crown switch" xml:space="preserve">
@@ -7421,7 +7421,7 @@
     <comment>legacy_id=2005</comment>
   </data>
   <data name="Contract can be made for %d times." xml:space="preserve">
-    <value>Контракт может быть заключен на %d раз.</value>
+    <value>Можно заключить контрактов: %d.</value>
     <comment>legacy_id=2006</comment>
   </data>
   <data name="Would you like to proceed with the contract?" xml:space="preserve">
@@ -7765,15 +7765,15 @@
     <comment>legacy_id=2148</comment>
   </data>
   <data name="You may now proceed to the Refinery Tower." xml:space="preserve">
-    <value>Теперь вы можете перейти к башне нефтеперерабатывающего завода.</value>
+    <value>Теперь можно пройти к Башне очищения.</value>
     <comment>legacy_id=2149</comment>
   </data>
   <data name="Path to the Refinery Tower is now opened." xml:space="preserve">
-    <value>Путь к башне нефтеперерабатывающего завода теперь открыт.</value>
+    <value>Путь к Башне очищения открыт.</value>
     <comment>legacy_id=2150</comment>
   </data>
   <data name="Path to the Refinery Tower will be closed in %d hours." xml:space="preserve">
-    <value>Путь к башне нефтеперерабатывающего завода будет закрыт через %d часов.</value>
+    <value>Путь к Башне очищения закроется через %d ч.</value>
     <comment>legacy_id=2151</comment>
   </data>
   <data name="Battle with Maya is ongoing." xml:space="preserve">
@@ -7781,7 +7781,7 @@
     <comment>legacy_id=2152</comment>
   </data>
   <data name="DPlayersAreTryingToOpen" xml:space="preserve">
-    <value>Игроки %d пытаются открыть путь к Башне нефтеперерабатывающего завода. Вы не можете войти в Башню нефтеперерабатывающего завода, активирована автоматизированная система защиты.</value>
+    <value>Игроков, открывающих путь к Башне очищения: %d. Войти в Башню очищения нельзя: включена автоматическая система защиты.</value>
     <comment>legacy_id=2153</comment>
   </data>
   <data name="Currently %d players are in battle with Maya's lefe hand." xml:space="preserve">
@@ -7805,11 +7805,11 @@
     <comment>legacy_id=2158</comment>
   </data>
   <data name="ForceOfTheNightmareHasInvaded" xml:space="preserve">
-    <value>Силы Кошмара вторглись в Башню. Башня нестабильна, поэтому вход в Башню будет ограничен на %d минут.</value>
+    <value>Силы Кошмара вторглись в Башню. Башня нестабильна, поэтому вход в Башню закрыт на %d мин.</value>
     <comment>legacy_id=2159</comment>
   </data>
   <data name="DefeatTheNightmareThatControllingThe" xml:space="preserve">
-    <value>Победите Кошмар, контролирующий майя, чтобы войти в Башню нефтеперерабатывающего завода.</value>
+    <value>Победите Кошмара, управляющего Майей, чтобы войти в Башню очищения.</value>
     <comment>legacy_id=2160</comment>
   </data>
   <data name="EntranceIsRestrictedToEnsureThe" xml:space="preserve">
@@ -7865,7 +7865,7 @@
     <comment>legacy_id=2173</comment>
   </data>
   <data name="You can't warp to the Refinery Tower." xml:space="preserve">
-    <value>Вы не можете телепортироваться в Башню нефтеперерабатывающего завода.</value>
+    <value>В Башню очищения нельзя телепортироваться.</value>
     <comment>legacy_id=2174</comment>
   </data>
   <data name="You can't warp wearing the Ring of Transformation." xml:space="preserve">
@@ -7885,7 +7885,7 @@
     <comment>legacy_id=2178</comment>
   </data>
   <data name="Refinery Tower" xml:space="preserve">
-    <value>Башня нефтеперерабатывающего завода</value>
+    <value>Башня очищения</value>
     <comment>legacy_id=2179</comment>
   </data>
   <data name="Character: %d" xml:space="preserve">
@@ -9373,7 +9373,7 @@
     <comment>legacy_id=2650</comment>
   </data>
   <data name="Socket option" xml:space="preserve">
-    <value>Вариант розетки</value>
+    <value>Опция сокета</value>
     <comment>legacy_id=2651</comment>
   </data>
   <data name="No item application" xml:space="preserve">
@@ -9393,7 +9393,7 @@
     <comment>legacy_id=2656</comment>
   </data>
   <data name="Socket package option" xml:space="preserve">
-    <value>Вариант пакета розеток</value>
+    <value>Бонус набора сокетов</value>
     <comment>legacy_id=2657</comment>
   </data>
   <data name="Extraction" xml:space="preserve">
@@ -9513,7 +9513,7 @@
     <comment>legacy_id=2688</comment>
   </data>
   <data name="Duel Finished. You will be warped back to the viallage in %d seconds." xml:space="preserve">
-    <value>Дуэль завершена. Вы вернетесь в деревню через %d секунд.</value>
+    <value>Дуэль завершена. Возвращение в деревню через %d сек.</value>
     <comment>legacy_id=2689</comment>
   </data>
   <data name="Duel Invite" xml:space="preserve">
@@ -9753,7 +9753,7 @@
     <comment>legacy_id=2761</comment>
   </data>
   <data name="Enter after %d minutes" xml:space="preserve">
-    <value>Войти через %d минут.</value>
+    <value>Вход через %d мин.</value>
     <comment>legacy_id=2762,2799</comment>
   </data>
   <data name="3 monsters reaching the magic circle," xml:space="preserve">
@@ -12959,34 +12959,34 @@
     <value>По умолчанию</value>
   </data>
   <data name="MixLevelAtLeast" xml:space="preserve">
-    <value>+%d Минимум</value>
+    <value>+%d и выше</value>
   </data>
   <data name="MixLevelAtMost" xml:space="preserve">
-    <value>+%d Максимум</value>
+    <value>+%d и ниже</value>
   </data>
   <data name="MixOption" xml:space="preserve">
-    <value>+%d Вариант</value>
+    <value>опция +%d</value>
   </data>
   <data name="MixOptionAtLeast" xml:space="preserve">
-    <value>+%d Вариант Минимум</value>
+    <value>опция +%d и выше</value>
   </data>
   <data name="MixOptionAtMost" xml:space="preserve">
-    <value>+%d Вариант Максимум</value>
+    <value>опция +%d и ниже</value>
   </data>
   <data name="MixOptionRange" xml:space="preserve">
-    <value>+%d~%d Вариант</value>
+    <value>опция +%d~%d</value>
   </data>
   <data name="MixCount" xml:space="preserve">
-    <value>%d Количество</value>
+    <value>x%d</value>
   </data>
   <data name="MixCountAtLeast" xml:space="preserve">
-    <value>%d Количество Минимум</value>
+    <value>x%d и больше</value>
   </data>
   <data name="MixCountAtMost" xml:space="preserve">
-    <value>%d Количество Максимум</value>
+    <value>x%d и меньше</value>
   </data>
   <data name="MixCountRange" xml:space="preserve">
-    <value>%d~%d Количество</value>
+    <value>x%d~%d</value>
   </data>
   <data name="SummonedMonsterOwner" xml:space="preserve">
     <value>%ls Из %ls</value>
@@ -13010,7 +13010,7 @@
     <value>%d Зона очищена</value>
   </data>
   <data name="QuestRewardBuffBonus" xml:space="preserve">
-    <value>Bonus: %ls x %lu минута</value>
+    <value>Бонус: %ls на %lu мин.</value>
   </data>
   <data name="CrownSwitchD" xml:space="preserve">
     <value>Коронный переключатель %d</value>
@@ -13049,7 +13049,7 @@
     <value>Item: %ls x %lu/%lu</value>
   </data>
   <data name="QuestRequirementLevel" xml:space="preserve">
-    <value>Level: %lu Минимум</value>
+    <value>Уровень: от %lu</value>
   </data>
   <data name="QuestRequirementZen" xml:space="preserve">
     <value>Zen: %lu</value>
@@ -13355,7 +13355,7 @@
     <value>Награды ждут места</value>
   </data>
   <data name="BattlePassQuestKill" xml:space="preserve">
-    <value>Убить %d монстров</value>
+    <value>Убить монстров: %d</value>
   </data>
   <data name="BattlePassQuestReset" xml:space="preserve">
     <value>Сделать ресет</value>
@@ -13367,7 +13367,7 @@
     <value>Сходить на ивенты (Blood Castle, Devil Square, Chaos Castle, PvP-ивент, разлом, мировой босс или рейтинговая дуэль): %d</value>
   </data>
   <data name="BattlePassQuestMap" xml:space="preserve">
-    <value>Убить %d монстров в %ls</value>
+    <value>Убить монстров: %d, карта %ls</value>
   </data>
   <data name="BattlePassQuestGolden" xml:space="preserve">
     <value>Убить золотых монстров: %d</value>
@@ -13388,7 +13388,7 @@
     <value>Играть %d ч за день</value>
   </data>
   <data name="BattlePassQuestRuns" xml:space="preserve">
-    <value>Пройти Тир-карты %d раз или сходить на 15 ивентов</value>
+    <value>Пройти Тир-карты (раз: %d) или сходить на 15 ивентов</value>
   </data>
   <data name="BattlePassQuestScraps" xml:space="preserve">
     <value>Найти Suspicious Scrap of Paper: %d</value>
@@ -13478,10 +13478,10 @@
     <value>Сундук %ls: %d из %d заданий дня</value>
   </data>
   <data name="BattlePassChestWeek" xml:space="preserve">
-    <value>Сундук недели: %d дней из 7 с %d+ заданиями</value>
+    <value>Сундук недели: %d дн. из 7 с %d+ заданиями</value>
   </data>
   <data name="BattlePassChestWeekDays" xml:space="preserve">
-    <value>Сундук недели: %d дней из 7</value>
+    <value>Сундук недели: %d дн. из 7</value>
   </data>
   <data name="BattlePassChestWeekLabel" xml:space="preserve">
     <value>Сундук</value>
@@ -17028,5 +17028,96 @@
   </data>
   <data name="FriendIsOnline" xml:space="preserve">
     <value>%ls в сети.</value>
+  </data>
+  <!-- Round 11 -->
+  <data name="MacroCooldown" xml:space="preserve">
+    <value>Время макроса</value>
+  </data>
+  <data name="ServerNonPvpTag" xml:space="preserve">
+    <value>(без PvP)</value>
+  </data>
+  <data name="DurationDays" xml:space="preserve">
+    <value>%d дн.</value>
+  </data>
+  <data name="DurationHoursMinutes" xml:space="preserve">
+    <value>%d ч. %02d мин.</value>
+  </data>
+  <data name="DurationMinutes" xml:space="preserve">
+    <value>%d мин.</value>
+  </data>
+  <data name="CharMakeBaseAttributes" xml:space="preserve">
+    <value>Базовые характеристики</value>
+  </data>
+  <data name="CharSelectEnterGame" xml:space="preserve">
+    <value>Войти</value>
+  </data>
+  <data name="LoginCredits" xml:space="preserve">
+    <value>Авторы</value>
+  </data>
+  <data name="MoveNeedsLevel" xml:space="preserve">
+    <value>Для этой карты нужен уровень %d.</value>
+  </data>
+  <data name="MoveBlockedKiller" xml:space="preserve">
+    <value>Убийца не может перемещаться.</value>
+  </data>
+  <data name="MoveBlockedAtlansMount" xml:space="preserve">
+    <value>В Атланс нельзя на Унирии или Диноранте.</value>
+  </data>
+  <data name="MoveBlockedHere" xml:space="preserve">
+    <value>На эту карту нельзя попасть с этого сервера.</value>
+  </data>
+  <data name="MoveNeedsGens" xml:space="preserve">
+    <value>Вступите в Генс, чтобы попасть на эту карту.</value>
+  </data>
+  <data name="JewelCantUseOnItem" xml:space="preserve">
+    <value>Этот камень нельзя применить к этому предмету.</value>
+  </data>
+  <data name="JewelUpgradedTo" xml:space="preserve">
+    <value>%ls: улучшено до +%d</value>
+  </data>
+  <data name="JewelUpgradeFailed" xml:space="preserve">
+    <value>%ls: заточка не удалась, теперь +%d</value>
+  </data>
+  <data name="JewelOptionImproved" xml:space="preserve">
+    <value>%ls: опция улучшена</value>
+  </data>
+  <data name="DeathLostZen" xml:space="preserve">
+    <value>Потеряно: %ls зен</value>
+  </data>
+  <data name="DeathLostExperience" xml:space="preserve">
+    <value>Потеряно опыта: %ls</value>
+  </data>
+  <data name="ZenSold" xml:space="preserve">
+    <value>Продано: +%ls зен</value>
+  </data>
+  <data name="ZenRepairCost" xml:space="preserve">
+    <value>Ремонт: -%ls зен</value>
+  </data>
+  <data name="LevelUpFreePoints" xml:space="preserve">
+    <value>Уровень %d. Свободные очки: %d (%ls)</value>
+  </data>
+  <data name="ResetFreePoints" xml:space="preserve">
+    <value>Ресет выполнен. Свободные очки: %d (%ls)</value>
+  </data>
+  <data name="GuildOnlineD" xml:space="preserve">
+    <value>(в сети: %d)</value>
+  </data>
+  <data name="ExpTooltipProgress" xml:space="preserve">
+    <value>Опыт: %ls / %ls (%ls%%)</value>
+  </data>
+  <data name="ExpPaceLine" xml:space="preserve">
+    <value>%ls опыта/ч, до уровня ~%ls</value>
+  </data>
+  <data name="ExpPaceRate" xml:space="preserve">
+    <value>%ls опыта/ч</value>
+  </data>
+  <data name="LevelUpFreePointsNoKey" xml:space="preserve">
+    <value>Уровень %d. Свободные очки: %d</value>
+  </data>
+  <data name="ResetFreePointsNoKey" xml:space="preserve">
+    <value>Ресет выполнен. Свободные очки: %d</value>
+  </data>
+  <data name="JewelOptionFailed" xml:space="preserve">
+    <value>%ls: улучшение опции не удалось</value>
   </data>
 </root>

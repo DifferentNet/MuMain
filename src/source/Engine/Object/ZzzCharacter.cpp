@@ -6,6 +6,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
+#include "Render/Effects/FramePow.h"
 #include <execution>
 #include <functional>
 #include <algorithm>
@@ -38,6 +39,7 @@
 #include "Engine/Object/ZzzInterface.h"
 #include "Engine/Object/ZzzInventory.h"
 #include "Render/Effects/ZzzEffect.h"
+#include "Render/Effects/OwnedEffectsProbe.h"
 #include "Render/Effects/BlurSlice.h"
 #include "Render/Effects/SkillFx.h"
 #include "Engine/Object/ZzzOpenData.h"
@@ -8209,9 +8211,9 @@ void RenderLinkObject(float x, float y, float z, CHARACTER* c, PART_t* f, int Ty
         }
         if (Object->Timer > 0.5f)
         {
-            Object->EyeRight[0] *= powf(0.95f, FPS_ANIMATION_FACTOR);
-            Object->EyeRight[1] *= powf(0.95f, FPS_ANIMATION_FACTOR);
-            Object->EyeRight[2] *= powf(0.95f, FPS_ANIMATION_FACTOR);
+            Object->EyeRight[0] *= FramePow(0.95f);
+            Object->EyeRight[1] *= FramePow(0.95f);
+            Object->EyeRight[2] *= FramePow(0.95f);
         }
 
         CreateSprite(BITMAP_SHOCK_WAVE, Position, Object->Timer, Object->EyeRight, o);
@@ -11095,162 +11097,167 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
             }
         }
 
-        if (g_isCharacterBuff((&c->Object), eBuff_PcRoomSeal1)
-            || g_isCharacterBuff((&c->Object), eBuff_PcRoomSeal2)
-            || g_isCharacterBuff((&c->Object), eBuff_PcRoomSeal3)
-            || g_isCharacterBuff((&c->Object), eBuff_Seal1)
-            || g_isCharacterBuff((&c->Object), eBuff_Seal2)
-            || g_isCharacterBuff((&c->Object), eBuff_Seal3)
-            || g_isCharacterBuff((&c->Object), eBuff_Seal4))
         {
-            if (SearchJoint(MODEL_SPEARSKILL, o, 10) == false
-                && SearchJoint(MODEL_SPEARSKILL, o, 11) == false)
+            // The buff looks below delete their effects every frame the buff is off; a player who owns none skips
+            // the pool scans (Render/Effects/OwnedEffectsProbe.h).
+            const Render::Effects::OwnedEffectsProbe ownedEffects(o);
+            if (g_isCharacterBuff((&c->Object), eBuff_PcRoomSeal1)
+                || g_isCharacterBuff((&c->Object), eBuff_PcRoomSeal2)
+                || g_isCharacterBuff((&c->Object), eBuff_PcRoomSeal3)
+                || g_isCharacterBuff((&c->Object), eBuff_Seal1)
+                || g_isCharacterBuff((&c->Object), eBuff_Seal2)
+                || g_isCharacterBuff((&c->Object), eBuff_Seal3)
+                || g_isCharacterBuff((&c->Object), eBuff_Seal4))
             {
-                for (int i = 0; i < 3; ++i)
+                if (SearchJoint(MODEL_SPEARSKILL, o, 10) == false
+                    && SearchJoint(MODEL_SPEARSKILL, o, 11) == false)
                 {
-                    CreateJoint(MODEL_SPEARSKILL, o->Position, o->Position, o->Angle, 10, o, 12.0f, -1, 0, 0, c->Key);
+                    for (int i = 0; i < 3; ++i)
+                    {
+                        CreateJoint(MODEL_SPEARSKILL, o->Position, o->Position, o->Angle, 10, o, 12.0f, -1, 0, 0, c->Key);
+                    }
                 }
             }
-        }
-        else
-        {
-            DeleteJoint(MODEL_SPEARSKILL, o, 10);
-            DeleteJoint(MODEL_SPEARSKILL, o, 11);
-        }
-        if (g_isCharacterBuff((&c->Object), eBuff_Thorns))
-        {
-            if (SearchJoint(BITMAP_FLARE, o, 43) == false)
+            else if (ownedEffects.MayOwn())
             {
-                vec3_t vLight;
-                Vector(0.9f, 0.6f, 0.1f, vLight);
-                CreateJoint(BITMAP_FLARE, o->Position, o->Position, o->Angle, 43, o, 50.f, 0, 0, 0, 0, vLight);
+                DeleteJoint(MODEL_SPEARSKILL, o, 10);
+                DeleteJoint(MODEL_SPEARSKILL, o, 11);
             }
-        }
-        else
-        {
-            DeleteJoint(BITMAP_FLARE, o, 43);
-        }
-
-        if (g_isCharacterBuff((&c->Object), eBuff_Berserker))
-        {
-            if (!SearchEffect(BITMAP_ORORA, o, 0))
+            if (g_isCharacterBuff((&c->Object), eBuff_Thorns))
             {
-                vec3_t vLight[2];
-                Vector(0.9f, 0.0f, 0.1f, vLight[0]);
-                Vector(1.0f, 1.0f, 1.0f, vLight[1]);
-                for (int i = 0; i < 4; ++i)
-                {
-                    CreateEffect(BITMAP_ORORA, o->Position, o->Angle, vLight[0], i, o);
-                    if (i == 2 || i == 3)
-                        CreateEffect(BITMAP_SPARK + 2, o->Position, o->Angle, vLight[1], i, o);
-                }
-                CreateEffect(BITMAP_LIGHT_MARKS, o->Position, o->Angle, vLight[0], 0, o);
-            }
-        }
-        else
-        {
-            for (int i = 0; i < 4; ++i)
-            {
-                DeleteEffect(BITMAP_ORORA, o, i);
-                if (i == 2 || i == 3)
-                    DeleteEffect(BITMAP_SPARK + 2, o, i);
-            }
-            DeleteEffect(BITMAP_LIGHT_MARKS, o);
-        }
-
-        if (g_isCharacterBuff((&c->Object), eDeBuff_Blind))
-        {
-            if (SearchEffect(MODEL_ALICE_BUFFSKILL_EFFECT, o, 3) == false)
-            {
-                vec3_t vLight;
-                Vector(1.0f, 1.f, 1.f, vLight);
-                CreateEffect(MODEL_ALICE_BUFFSKILL_EFFECT, o->Position, o->Angle, vLight, 3, o);
-            }
-        }
-        else
-        {
-            DeleteEffect(MODEL_ALICE_BUFFSKILL_EFFECT, o, 3);
-        }
-
-        if (g_isCharacterBuff((&c->Object), eDeBuff_Sleep))
-        {
-            if (SearchEffect(MODEL_ALICE_BUFFSKILL_EFFECT, o, 4) == false)
-            {
-                vec3_t vLight;
-                Vector(0.8f, 0.3f, 0.9f, vLight);
-                CreateEffect(MODEL_ALICE_BUFFSKILL_EFFECT, o->Position, o->Angle, vLight, 4, o);
-            }
-        }
-        else
-        {
-            DeleteEffect(MODEL_ALICE_BUFFSKILL_EFFECT, o, 4);
-        }
-
-        if (g_isCharacterBuff((&c->Object), eDeBuff_AttackDown))
-        {
-            if (!SearchEffect(BITMAP_SHINY + 6, o, 1))
-            {
-                vec3_t vLight;
-                Vector(1.4f, 0.2f, 0.2f, vLight);
-                CreateEffect(BITMAP_SHINY + 6, o->Position, o->Angle, vLight, 1, o, -1, 0, 0, 0, 0.5f);
-                CreateEffect(BITMAP_PIN_LIGHT, o->Position, o->Angle, vLight, 1, o, -1, 0, 0, 0, 1.f);
-            }
-        }
-        else
-        {
-            DeleteEffect(BITMAP_SHINY + 6, o, 1);
-            DeleteEffect(BITMAP_PIN_LIGHT, o, 1);
-        }
-
-        if (g_isCharacterBuff((&c->Object), eDeBuff_DefenseDown))
-        {
-            if (!SearchEffect(BITMAP_SHINY + 6, o, 2))
-            {
-                vec3_t vLight;
-                Vector(0.25f, 1.0f, 0.7f, Light);
-                CreateEffect(BITMAP_SHINY + 6, o->Position, o->Angle, vLight, 2, o, -1, 0, 0, 0, 0.5f);
-                CreateEffect(BITMAP_PIN_LIGHT, o->Position, o->Angle, vLight, 2, o, -1, 0, 0, 0, 1.f);
-            }
-        }
-        else
-        {
-            DeleteEffect(BITMAP_SHINY + 6, o, 2);
-            DeleteEffect(BITMAP_PIN_LIGHT, o, 2);
-        }
-
-        if (g_isCharacterBuff((&c->Object), eDeBuff_SahamuttDOT))
-        {
-            g_SummonSystem.CreateDamageOfTimeEffect(AT_SKILL_SUMMON_EXPLOSION, &c->Object);
-        }
-        else
-        {
-            g_SummonSystem.RemoveDamageOfTimeEffect(AT_SKILL_SUMMON_EXPLOSION, &c->Object);
-        }
-
-        if (g_isCharacterBuff((&c->Object), eDeBuff_NeilDOT))
-        {
-            g_SummonSystem.CreateDamageOfTimeEffect(AT_SKILL_SUMMON_REQUIEM, &c->Object);
-        }
-        else
-        {
-            g_SummonSystem.RemoveDamageOfTimeEffect(AT_SKILL_SUMMON_REQUIEM, &c->Object);
-        }
-
-        if (g_isCharacterBuff((&c->Object), eBuff_SwellOfMagicPower))
-        {
-            if (!g_isCharacterBuff((&c->Object), eBuff_Cloaking))
-            {
-                if (!SearchEffect(MODEL_SWELL_OF_MAGICPOWER_BUFF_EFF, o, 0))
+                if (SearchJoint(BITMAP_FLARE, o, 43) == false)
                 {
                     vec3_t vLight;
-                    Vector(0.7f, 0.2f, 0.9f, vLight);
-                    CreateEffect(MODEL_SWELL_OF_MAGICPOWER_BUFF_EFF, o->Position, o->Angle, vLight, 0, o);
+                    Vector(0.9f, 0.6f, 0.1f, vLight);
+                    CreateJoint(BITMAP_FLARE, o->Position, o->Position, o->Angle, 43, o, 50.f, 0, 0, 0, 0, vLight);
                 }
             }
-        }
-        else
-        {
-            DeleteEffect(MODEL_SWELL_OF_MAGICPOWER_BUFF_EFF, o, 0);
+            else if (ownedEffects.MayOwn())
+            {
+                DeleteJoint(BITMAP_FLARE, o, 43);
+            }
+
+            if (g_isCharacterBuff((&c->Object), eBuff_Berserker))
+            {
+                if (!SearchEffect(BITMAP_ORORA, o, 0))
+                {
+                    vec3_t vLight[2];
+                    Vector(0.9f, 0.0f, 0.1f, vLight[0]);
+                    Vector(1.0f, 1.0f, 1.0f, vLight[1]);
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        CreateEffect(BITMAP_ORORA, o->Position, o->Angle, vLight[0], i, o);
+                        if (i == 2 || i == 3)
+                            CreateEffect(BITMAP_SPARK + 2, o->Position, o->Angle, vLight[1], i, o);
+                    }
+                    CreateEffect(BITMAP_LIGHT_MARKS, o->Position, o->Angle, vLight[0], 0, o);
+                }
+            }
+            else if (ownedEffects.MayOwn())
+            {
+                for (int i = 0; i < 4; ++i)
+                {
+                    DeleteEffect(BITMAP_ORORA, o, i);
+                    if (i == 2 || i == 3)
+                        DeleteEffect(BITMAP_SPARK + 2, o, i);
+                }
+                DeleteEffect(BITMAP_LIGHT_MARKS, o);
+            }
+
+            if (g_isCharacterBuff((&c->Object), eDeBuff_Blind))
+            {
+                if (SearchEffect(MODEL_ALICE_BUFFSKILL_EFFECT, o, 3) == false)
+                {
+                    vec3_t vLight;
+                    Vector(1.0f, 1.f, 1.f, vLight);
+                    CreateEffect(MODEL_ALICE_BUFFSKILL_EFFECT, o->Position, o->Angle, vLight, 3, o);
+                }
+            }
+            else if (ownedEffects.MayOwn())
+            {
+                DeleteEffect(MODEL_ALICE_BUFFSKILL_EFFECT, o, 3);
+            }
+
+            if (g_isCharacterBuff((&c->Object), eDeBuff_Sleep))
+            {
+                if (SearchEffect(MODEL_ALICE_BUFFSKILL_EFFECT, o, 4) == false)
+                {
+                    vec3_t vLight;
+                    Vector(0.8f, 0.3f, 0.9f, vLight);
+                    CreateEffect(MODEL_ALICE_BUFFSKILL_EFFECT, o->Position, o->Angle, vLight, 4, o);
+                }
+            }
+            else if (ownedEffects.MayOwn())
+            {
+                DeleteEffect(MODEL_ALICE_BUFFSKILL_EFFECT, o, 4);
+            }
+
+            if (g_isCharacterBuff((&c->Object), eDeBuff_AttackDown))
+            {
+                if (!SearchEffect(BITMAP_SHINY + 6, o, 1))
+                {
+                    vec3_t vLight;
+                    Vector(1.4f, 0.2f, 0.2f, vLight);
+                    CreateEffect(BITMAP_SHINY + 6, o->Position, o->Angle, vLight, 1, o, -1, 0, 0, 0, 0.5f);
+                    CreateEffect(BITMAP_PIN_LIGHT, o->Position, o->Angle, vLight, 1, o, -1, 0, 0, 0, 1.f);
+                }
+            }
+            else if (ownedEffects.MayOwn())
+            {
+                DeleteEffect(BITMAP_SHINY + 6, o, 1);
+                DeleteEffect(BITMAP_PIN_LIGHT, o, 1);
+            }
+
+            if (g_isCharacterBuff((&c->Object), eDeBuff_DefenseDown))
+            {
+                if (!SearchEffect(BITMAP_SHINY + 6, o, 2))
+                {
+                    vec3_t vLight;
+                    Vector(0.25f, 1.0f, 0.7f, Light);
+                    CreateEffect(BITMAP_SHINY + 6, o->Position, o->Angle, vLight, 2, o, -1, 0, 0, 0, 0.5f);
+                    CreateEffect(BITMAP_PIN_LIGHT, o->Position, o->Angle, vLight, 2, o, -1, 0, 0, 0, 1.f);
+                }
+            }
+            else if (ownedEffects.MayOwn())
+            {
+                DeleteEffect(BITMAP_SHINY + 6, o, 2);
+                DeleteEffect(BITMAP_PIN_LIGHT, o, 2);
+            }
+
+            if (g_isCharacterBuff((&c->Object), eDeBuff_SahamuttDOT))
+            {
+                g_SummonSystem.CreateDamageOfTimeEffect(AT_SKILL_SUMMON_EXPLOSION, &c->Object);
+            }
+            else if (&c->Object != o || ownedEffects.MayOwn()) // the probe looked at o
+            {
+                g_SummonSystem.RemoveDamageOfTimeEffect(AT_SKILL_SUMMON_EXPLOSION, &c->Object);
+            }
+
+            if (g_isCharacterBuff((&c->Object), eDeBuff_NeilDOT))
+            {
+                g_SummonSystem.CreateDamageOfTimeEffect(AT_SKILL_SUMMON_REQUIEM, &c->Object);
+            }
+            else if (&c->Object != o || ownedEffects.MayOwn()) // the probe looked at o
+            {
+                g_SummonSystem.RemoveDamageOfTimeEffect(AT_SKILL_SUMMON_REQUIEM, &c->Object);
+            }
+
+            if (g_isCharacterBuff((&c->Object), eBuff_SwellOfMagicPower))
+            {
+                if (!g_isCharacterBuff((&c->Object), eBuff_Cloaking))
+                {
+                    if (!SearchEffect(MODEL_SWELL_OF_MAGICPOWER_BUFF_EFF, o, 0))
+                    {
+                        vec3_t vLight;
+                        Vector(0.7f, 0.2f, 0.9f, vLight);
+                        CreateEffect(MODEL_SWELL_OF_MAGICPOWER_BUFF_EFF, o->Position, o->Angle, vLight, 0, o);
+                    }
+                }
+            }
+            else if (ownedEffects.MayOwn())
+            {
+                DeleteEffect(MODEL_SWELL_OF_MAGICPOWER_BUFF_EFF, o, 0);
+            }
         }
 
         if (gMapManager.InChaosCastle() == false)
