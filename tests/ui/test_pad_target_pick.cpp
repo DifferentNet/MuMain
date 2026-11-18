@@ -65,6 +65,27 @@ TEST_CASE("The d-pad keeps to the row before it turns aside")
     CHECK(Pick::NextThatWay(targets, 0, 1, 0) == 2);
 }
 
+TEST_CASE("The d-pad keeps to a thin row past a near slot just above it")
+{
+    // The bag's tab row (34 x 12 at y 193-205): tab 2, then the junk button 20 further right; the pants'
+    // slot right of tab 2 ends at y 196, above the row's middle (pad round 6).
+    const std::vector<Target> targets{{{51.f, 193.f, 85.f, 205.f}}, {{105.f, 193.f, 139.f, 205.f}},
+                                      {{70.f, 146.f, 120.f, 196.f}}};
+    CHECK(Pick::NextThatWay(targets, 0, 1, 0) == 1);
+    CHECK(Pick::NextThatWay(targets, 1, -1, 0) == 0);
+    // Up from the row the slot is still there.
+    CHECK(Pick::NextThatWay(targets, 0, 0, -1) == 2);
+}
+
+TEST_CASE("The d-pad stops on a small slot between two big ones")
+{
+    // A weapon's slot, the pendant's small one right of it a little higher, the armour's past that.
+    const std::vector<Target> targets{{{0.f, 80.f, 40.f, 160.f}}, {{50.f, 87.f, 72.f, 115.f}},
+                                      {{80.f, 80.f, 130.f, 160.f}}};
+    CHECK(Pick::NextThatWay(targets, 0, 1, 0) == 1);
+    CHECK(Pick::NextThatWay(targets, 2, -1, 0) == 1);
+}
+
 TEST_CASE("The d-pad goes down onto a wide row under a button at its end")
 {
     // A tab at the right, a list's row spanning the window below it, a button straight under further down.

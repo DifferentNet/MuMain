@@ -273,6 +273,15 @@ bool Hop(SDL_Window* window, std::span<const Pick::Target> targets, int from, Pa
     return true;
 }
 
+// The snap onto the windows' first target, due a short while after `since`.
+void PendSnap(Clock::time_point since)
+{
+    g_state.snapPending = true;
+    g_state.snapFrames = 0;
+    g_state.snapSince = since;
+    g_state.snapWindow = -1;
+}
+
 void Tick(Clock::time_point now, bool repeated)
 {
     if (repeated && now - g_state.tickedAt < TickRepeat)
@@ -333,6 +342,10 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now, st
 
     const bool onDialog = PadTargets::OnDialog();
     const bool dialogClosed = g_state.onDialog && !onDialog;
+    // A dialog just opened starts on its first button (an item card on its own action, not on Drop
+    // because Drop lay nearest the item; pad round 6), not on the one nearest where the frame was.
+    if (onDialog && !g_state.onDialog)
+        PendSnap(now);
     g_state.onDialog = onDialog;
     const bool onPopup = PadTargets::OnPopup();
     if (onPopup && !g_state.onPopup)
@@ -358,6 +371,9 @@ void Update(SDL_Window* window, Pad::Presses& presses, Clock::time_point now, st
     const bool lost = Waited(g_state.lostFrames, g_state.lostSince, now, SnapDelay) && buttonUp;
     if (dialogClosed)
     {
+        // Back to where the frame was; the dialog's own snap and settle (it counted one window) are over.
+        g_state.snapPending = false;
+        g_state.settleFrames = -1;
         g_state.backPlace = g_state.windowPlace;
         g_state.goBack = true;
         g_state.goFirst = !g_state.hasWindowPlace;
@@ -502,10 +518,7 @@ void Recheck(SDL_Window* window)
 void SnapSoon()
 {
     PadTargets::Refresh();
-    g_state.snapPending = true;
-    g_state.snapFrames = 0;
-    g_state.snapSince = Clock::now();
-    g_state.snapWindow = -1;
+    PendSnap(Clock::now());
     g_state.settleFrames = -1;
 }
 
