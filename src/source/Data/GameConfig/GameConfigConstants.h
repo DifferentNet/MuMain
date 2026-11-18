@@ -180,6 +180,10 @@ namespace CfgKeys
     // Spirit and Death Stab trails drawn as smooth curves and the sword swing trail without its fold at
     // high frame rates. Follows the effect level too (3 and 4); no Options row.
     inline constexpr wchar_t CfgKeySmoothTrails[] = L"SmoothTrails";
+    // [Render] SkillGroundMarks: in the Remaster PC client, 0 off, 1 on (Render/Effects/SkillFx.h): fire,
+    // ice and earth skills leave a fading scorch, frost or crack mark on the ground. Follows the effect
+    // level too (2 to 4); no Options row.
+    inline constexpr wchar_t CfgKeySkillGroundMarks[] = L"SkillGroundMarks";
     // [Render] Haze: with HD textures, Enhanced lighting and post-processing on, 0 off, 1 distance haze
     // and low ground fog (Render/PostProcessing/HazeSetting.h), and its strength in percent (0 to 100;
     // 70 shows the maps' haze as their light mood gives it).

@@ -20,6 +20,7 @@
 #include "UI/Core/WindowSystem.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "MoveHandlers.h"
+#include "Render/Effects/GroundMarks.h"
 
 
 namespace Render::Effects::Behaviors
@@ -3027,6 +3028,8 @@ namespace Render::Effects::Behaviors
             {
                 if (o->Owner->Type != MODEL_WEREWOLF_HERO)
                 {
+                    // Remaster ground marks: a fading scorch under the crack model (nothing when they are off).
+                    Render::Effects::GroundMarks::Add(Render::Effects::GroundMarks::Source::RagefulBlow, o->StartPosition[0], o->StartPosition[1]);
                     CreateEffectFpsChecked(MODEL_SKILL_FURY_STRIKE + 3, o->StartPosition, Angle, o->Light, 0, o, scale);
                     CreateEffectFpsChecked(MODEL_SKILL_FURY_STRIKE + 1, o->StartPosition, Angle, o->Light, 0, o, scale);
                     CreateEffectFpsChecked(MODEL_SKILL_FURY_STRIKE + 2, o->StartPosition, Angle, o->Light, 0, o, scale);

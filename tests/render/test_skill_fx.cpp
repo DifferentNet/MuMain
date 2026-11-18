@@ -23,24 +23,27 @@ TEST_CASE("the effect level sets the pool budget [render][skill_fx]")
 
 TEST_CASE("the effect level lets each look show [render][skill_fx]")
 {
-    // Level 4 and 3: all four; 2: pools and soft, no flipbook or trails; 0 and 1: none.
+    // Level 4 and 3: all five; 2: pools, soft and decals, no flipbook or trails; 0 and 1: none.
     for (int level : {3, 4})
     {
         CHECK(SkillFx::LevelAllows(Feature::LightPools, level));
         CHECK(SkillFx::LevelAllows(Feature::SoftParticles, level));
         CHECK(SkillFx::LevelAllows(Feature::FlipbookBlend, level));
         CHECK(SkillFx::LevelAllows(Feature::Ribbons, level));
+        CHECK(SkillFx::LevelAllows(Feature::Decals, level));
     }
     CHECK(SkillFx::LevelAllows(Feature::LightPools, 2));
     CHECK(SkillFx::LevelAllows(Feature::SoftParticles, 2));
     CHECK_FALSE(SkillFx::LevelAllows(Feature::FlipbookBlend, 2));
     CHECK_FALSE(SkillFx::LevelAllows(Feature::Ribbons, 2));
+    CHECK(SkillFx::LevelAllows(Feature::Decals, 2));
     for (int level : {0, 1})
     {
         CHECK_FALSE(SkillFx::LevelAllows(Feature::LightPools, level));
         CHECK_FALSE(SkillFx::LevelAllows(Feature::SoftParticles, level));
         CHECK_FALSE(SkillFx::LevelAllows(Feature::FlipbookBlend, level));
         CHECK_FALSE(SkillFx::LevelAllows(Feature::Ribbons, level));
+        CHECK_FALSE(SkillFx::LevelAllows(Feature::Decals, level));
     }
 }
 
@@ -58,9 +61,21 @@ TEST_CASE("the effect level sets the smooth trail budgets [render][skill_fx]")
     CHECK(SkillFx::RibbonQuadBudget(3) == 2048);
 }
 
+TEST_CASE("the effect level sets the ground mark budget [render][skill_fx]")
+{
+    CHECK(SkillFx::MarkBudget(5) == SkillFx::kMaxMarks);
+    CHECK(SkillFx::MarkBudget(4) == 48);
+    CHECK(SkillFx::MarkBudget(3) == 32);
+    CHECK(SkillFx::MarkBudget(2) == 16);
+    for (int level : {1, 0, -1})
+    {
+        CHECK(SkillFx::MarkBudget(level) == 0);
+    }
+}
+
 TEST_CASE("a look shows only when chosen, offered and allowed by the level [render][skill_fx]")
 {
-    CHECK(SkillFx::kFeatureCount == 4);
+    CHECK(SkillFx::kFeatureCount == 5);
     for (int index = 0; index < SkillFx::kFeatureCount; ++index)
     {
         const auto feature = static_cast<Feature>(index);
@@ -80,4 +95,5 @@ TEST_CASE("the console names the looks [render][skill_fx]")
     CHECK(std::string(SkillFx::Name(Feature::SoftParticles)) == "soft");
     CHECK(std::string(SkillFx::Name(Feature::FlipbookBlend)) == "flipbook");
     CHECK(std::string(SkillFx::Name(Feature::Ribbons)) == "trails");
+    CHECK(std::string(SkillFx::Name(Feature::Decals)) == "decals");
 }

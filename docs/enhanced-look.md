@@ -169,7 +169,7 @@ characters, monsters, gear and objects get exactly the light they had before,
 with the setting on or off.
 
 Skill effects (Remaster only, `Render/Effects/SkillFx.h`; the web has none) add
-four looks, each its own `[Render]` key in `config.ini`, on (1) by default and
+five looks, each its own `[Render]` key in `config.ini`, on (1) by default and
 held by the effect level:
 
 - `SkillLightPools`: spell and effect lights lay a pool of light on the ground,
@@ -188,10 +188,24 @@ held by the effect level:
   pieces where it bends, level 3 into up to 4; a frame draws at most 4096 (level 3:
   2048) such quads, the rest as before. At 25 FPS a straight full trail looks as it
   did.
+- `SkillGroundMarks`: fire, ice and earth skills leave a mark on the ground that
+  fades away (effect level 2 and up). Meteor, Flame, Rageful Blow and Earthshake
+  leave a scorch (the crater texture; the earth skills keep their crack model on
+  top), Inferno and Hellfire one wide, a little fainter scorch, Ice Storm (one per
+  cast, over its whole area) and Ice a pale blue frost (the soft cloud texture,
+  added). A mark fades in over two 25 FPS frames, holds (scorch 1 s, frost 0.6 s)
+  and fades out (scorch 4 s, frost 2.4 s). Hits
+  close to a mark of the same kind renew it instead of piling up (a scorch anywhere
+  on another scorch), so spamming a skill never makes a black patch; at most 48
+  marks lie at once (level 3: 32, level 2: 16), the one furthest through its life
+  goes first. Marks follow the slopes tile by tile, are drawn right after the
+  ground, under characters, items, trails and effects, and use no light: the ground
+  and the models keep their brightness. Kalima, Atlans, Icarus and Kanturu's Maya
+  scene have none, and none lie on holes or water tiles.
 
-At effect level 0 and 1 all four are off. In developer builds, `$fx pools|soft|flipbook|trails on|off`
+At effect level 0 and 1 all five are off. In developer builds, `$fx pools|soft|flipbook|trails|decals on|off`
 switches one look (and saves the key) and `$fx status` logs what is on, with the
-smooth trails and their pieces drawn last frame.
+smooth trails and their pieces drawn last frame and the ground marks lying now.
 
 Why the trails needed it: a joint trail keeps one point per 25 FPS frame (the
 newest follows the spell every frame), so at 144 FPS the curve between its points
