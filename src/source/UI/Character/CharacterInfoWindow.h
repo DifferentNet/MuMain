@@ -5,6 +5,7 @@
 #include "UI/Core/WindowObject.h"
 #include "UI/Core/WindowManager.h"
 #include "UI/RmlBridge/RmlThemedView.h"
+#include "UI/HUD/KeyHint.h"
 #include "UI/Dialogs/MessageBox.h"
 #include "UI/Inventory/MyInventory.h"
 
@@ -167,11 +168,16 @@ namespace mu::ui::window
             std::vector<StatLine> advancedAttackLines;
             std::vector<StatLine> advancedDefenseLines;
 
-            // Set once at Create() -- static tooltip text, no per-frame update needed.
+            // Set once at Create() -- static tooltip text; the close and quest ones also after a key binding change.
             Rml::String exitTooltip, questTooltip, petTooltip, masterLevelTooltip, advancedStatsTooltip, titlesTooltip;
         };
 
         void BindRmlModel(Rml::DataModelConstructor& c, CharacterInfoRmlModel& model);
+        // The close and quest tooltips name the keys the player bound; rebuilt after a key binding changes.
+        static std::wstring CloseTooltipText();
+        static std::wstring QuestTooltipText();
+        void SyncKeyLabels();
+        UI::KeyHint::LabelWatch m_keyLabels;
         UI::RmlBridge::ThemedView<CharacterInfoRmlModel> m_RmlView{"character_info",
             [this](Rml::DataModelConstructor& c, CharacterInfoRmlModel& model) { BindRmlModel(c, model); },
             {{"Data/Interface/RmlUi/character_info.rml"}}};

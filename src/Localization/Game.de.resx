@@ -4353,7 +4353,7 @@
     <comment>legacy_id=1163</comment>
   </data>
   <data name="when %d" xml:space="preserve">
-    <value>wenn %d</value>
+    <value>%d Std.</value>
     <comment>legacy_id=1164</comment>
   </data>
   <data name="Increase attribute damage" xml:space="preserve">
@@ -14263,5 +14263,48 @@
   </data>
   <data name="JewelOptionFailed" xml:space="preserve">
     <value>%ls: Optionsverbesserung fehlgeschlagen</value>
+  </data>
+  <!-- Round 12 -->
+  <data name="CraftTooManyItems" xml:space="preserve">
+    <value>Zu viele Gegenstände für diese Kombination</value>
+  </data>
+  <data name="CraftItemsMissing" xml:space="preserve">
+    <value>Für diese Kombination fehlen Gegenstände</value>
+  </data>
+  <data name="CraftItemLevelWrong" xml:space="preserve">
+    <value>Die Gegenstandsstufe passt nicht zu dieser Kombination</value>
+  </data>
+  <data name="CraftLevelTooLow" xml:space="preserve">
+    <value>Dein Level ist für diese Kombination zu niedrig</value>
+  </data>
+  <data name="CraftClassCannot" xml:space="preserve">
+    <value>Deine Klasse kann diese Kombination nicht herstellen</value>
+  </data>
+  <data name="BuffEnded" xml:space="preserve">
+    <value>Buff beendet: %ls</value>
+  </data>
+  <data name="BagAlmostFull" xml:space="preserve">
+    <value>Tasche fast voll: %d freie Felder</value>
+  </data>
+  <data name="EquipmentBroken" xml:space="preserve">
+    <value>%ls ist kaputt: reparieren</value>
+  </data>
+  <data name="PotionLowStock" xml:space="preserve">
+    <value>%ls: noch %d</value>
+  </data>
+  <data name="ArrowsReloadedStacksLeft" xml:space="preserve">
+    <value>Pfeile nachgeladen, Stapel übrig: %d</value>
+  </data>
+  <data name="ArrowsLastStack" xml:space="preserve">
+    <value>Letzter Pfeilstapel</value>
+  </data>
+  <data name="EmoteOk" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="EmoteHi" xml:space="preserve">
+    <value>Hallo</value>
+  </data>
+  <data name="EmoteWin" xml:space="preserve">
+    <value>Sieg</value>
   </data>
 </root>

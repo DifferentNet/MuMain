@@ -264,6 +264,8 @@ namespace mu::ui::window
         // once bought, else null. For windows that look at the whole bag (auction, jewel bank, mix lock).
         static constexpr int OwnedBagGridCount = 3;
         CInventoryCtrl* OwnedBagGrid(int i) const;
+        // The free 1x1 cells over every owned bag grid.
+        int FreeCellCount() const;
         // The shown bag grid under the pointer, else the shown page's first grid (null on a locked page).
         CInventoryCtrl* ShownBagGridAtPointer() const { return PointedBagGrid(); }
 

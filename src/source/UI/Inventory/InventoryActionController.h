@@ -84,6 +84,8 @@ private:
     bool HandleSellToNPC(CInventoryCtrl* targetControl) const;
     bool HandleInventoryRightClickActions(CInventoryCtrl* targetControl, bool mayDrop) const;
     bool TryEquipItem(CInventoryCtrl* targetControl, ITEM* pItem, int iSrcIndex) const;
+    // Why a right-clicked item was not put on: one red line.
+    static void PostEquipRefusal(const wchar_t* text);
     bool TryDropItem(CInventoryCtrl* targetControl, ITEM* pItem) const;
 
     int FindAlternateEquipSlot(int nOriginalSlot, ITEM* pItem) const;

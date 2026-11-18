@@ -1,6 +1,7 @@
 
 #include "stdafx.h"
 #include "I18N/All.h"
+#include "UI/HUD/KeyHint.h"
 
 #include "UI/HUD/CommandWindow.h"
 #include "UI/Character/OverheadNames.h"
@@ -196,9 +197,8 @@ void mu::ui::window::CCommandWindow::BindRmlModel(Rml::DataModelConstructor& c, 
     BindRmlActions(c);
 
     model.titleText = StringUtils::WideToNarrow(I18N::Game::CommandWindow);
-    wchar_t exitText[256] = {};
-    mu_swprintf(exitText, I18N::Game::CloseS, L"D");
-    model.exitTooltip = StringUtils::WideToNarrow(exitText);
+    model.exitTooltip =
+        StringUtils::WideToNarrow(UI::KeyHint::CloseTooltip(Core::Input::KeyBindings::Action::Command).c_str());
     model.buttons.clear();
     for (int i = COMMAND_TRADE; i < COMMAND_END; ++i)
         model.buttons.push_back({StringUtils::WideToNarrow(*kCommandLabels[i]), i});
@@ -235,6 +235,9 @@ void mu::ui::window::CCommandWindow::SyncRmlModel()
     if (!IsVisible())
         return;
 
+    if (m_keyLabels.Changed())
+        SyncField(m_RmlView.Binder(), &CommandWindowRmlModel::exitTooltip, "exit_tooltip",
+                  StringUtils::WideToNarrow(UI::KeyHint::CloseTooltip(Core::Input::KeyBindings::Action::Command).c_str()));
     SyncField(m_RmlView.Binder(), &CommandWindowRmlModel::bigTextPx, "big_text_px",
               UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Big));
     SyncTitle();

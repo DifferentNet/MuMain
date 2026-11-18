@@ -3788,7 +3788,7 @@
     <comment>legacy_id=1046</comment>
   </data>
   <data name="ID does not exist." xml:space="preserve">
-    <value>これ以上追加することができません。既存のものを削除してから追加してください。</value>
+    <value>そのキャラクターは存在しません。</value>
     <comment>legacy_id=1047,3263</comment>
   </data>
   <data name="You cannot add more. Please delete to add." xml:space="preserve">
@@ -4212,7 +4212,7 @@
     <comment>legacy_id=1163</comment>
   </data>
   <data name="when %d" xml:space="preserve">
-    <value>%d時</value>
+    <value>%d時間</value>
     <comment>legacy_id=1164</comment>
   </data>
   <data name="Increase attribute damage" xml:space="preserve">
@@ -12244,5 +12244,48 @@
   </data>
   <data name="JewelOptionFailed" xml:space="preserve">
     <value>%ls: オプション強化失敗</value>
+  </data>
+  <!-- Round 12 -->
+  <data name="CraftTooManyItems" xml:space="preserve">
+    <value>この合成にはアイテムが多すぎます</value>
+  </data>
+  <data name="CraftItemsMissing" xml:space="preserve">
+    <value>この合成にはアイテムが足りません</value>
+  </data>
+  <data name="CraftItemLevelWrong" xml:space="preserve">
+    <value>アイテムのレベルがこの合成に合いません</value>
+  </data>
+  <data name="CraftLevelTooLow" xml:space="preserve">
+    <value>この合成にはレベルが足りません</value>
+  </data>
+  <data name="CraftClassCannot" xml:space="preserve">
+    <value>あなたのクラスではこの合成はできません</value>
+  </data>
+  <data name="BuffEnded" xml:space="preserve">
+    <value>バフ終了: %ls</value>
+  </data>
+  <data name="BagAlmostFull" xml:space="preserve">
+    <value>バッグがほぼ満杯: 空き%dマス</value>
+  </data>
+  <data name="EquipmentBroken" xml:space="preserve">
+    <value>%lsが壊れました: 修理してください</value>
+  </data>
+  <data name="PotionLowStock" xml:space="preserve">
+    <value>%ls: 残り%d</value>
+  </data>
+  <data name="ArrowsReloadedStacksLeft" xml:space="preserve">
+    <value>矢を補充しました。残りの束: %d</value>
+  </data>
+  <data name="ArrowsLastStack" xml:space="preserve">
+    <value>最後の矢の束です</value>
+  </data>
+  <data name="EmoteOk" xml:space="preserve">
+    <value>確認</value>
+  </data>
+  <data name="EmoteHi" xml:space="preserve">
+    <value>あり</value>
+  </data>
+  <data name="EmoteWin" xml:space="preserve">
+    <value>勝利</value>
   </data>
 </root>

@@ -1,6 +1,7 @@
 
 #include "stdafx.h"
 #include "I18N/All.h"
+#include "UI/HUD/KeyHint.h"
 
 #include "UI/Dialogs/ChatCommandWindow.h"
 #include "UI/RmlBridge/RmlPanelGeometry.h"
@@ -748,9 +749,8 @@ void mu::ui::window::CChatCommandWindow::BindRmlModel(Rml::DataModelConstructor&
     c.BindEventCallback("chat_command_right", [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
                         { m_pendingRight = true; });
 
-    wchar_t closeText[256] = {};
-    mu_swprintf_s(closeText, I18N::Game::CloseS, L"J");
-    model.exitTooltip = StringUtils::WideToNarrow(closeText);
+    model.exitTooltip =
+        StringUtils::WideToNarrow(UI::KeyHint::CloseTooltip(Core::Input::KeyBindings::Action::CommandList).c_str());
 }
 
 void mu::ui::window::CChatCommandWindow::OnRmlUnloading()
@@ -773,6 +773,10 @@ void mu::ui::window::CChatCommandWindow::SyncRmlModel()
     UI::RmlBridge::SyncDocumentVisibilityInFront(m_RmlView.Document(), IsVisible());
     if (!IsVisible())
         return;
+
+    if (m_keyLabels.Changed())
+        SyncField(m_RmlView.Binder(), &ChatCommandRmlModel::exitTooltip, "exit_tooltip",
+                  StringUtils::WideToNarrow(UI::KeyHint::CloseTooltip(Core::Input::KeyBindings::Action::CommandList).c_str()));
 
     UI::RmlBridge::SyncNativeTextSize(m_RmlView.Binder());
     SyncContent();

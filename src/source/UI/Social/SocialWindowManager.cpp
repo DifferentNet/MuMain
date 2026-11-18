@@ -850,14 +850,14 @@ void ReceiveChatRoomUserStateChange(DWORD dwWindowUIID, const BYTE* ReceiveBuffe
     case 0x00:
         if (pChatWindow->AddChatPal(szName, Data->Index, 0) >= 3)
         {
-            wcscat(szText, I18N::Game::HasEntered);
+            mu_swprintf(szText, L"%ls %ls", szName, I18N::Game::HasEntered);
             pChatWindow->AddChatText(255, szText, 1, 0);
         }
         break;
     case 0x01:
         if (pChatWindow->GetUserCount() >= 3)
         {
-            wcscat(szText, I18N::Game::HasLeft);
+            mu_swprintf(szText, L"%ls %ls", szName, I18N::Game::HasLeft);
             pChatWindow->AddChatText(255, szText, 1, 0);
         }
         pChatWindow->RemoveChatPal(szName);

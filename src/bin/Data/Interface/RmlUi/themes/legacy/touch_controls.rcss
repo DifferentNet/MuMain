@@ -1538,3 +1538,14 @@ body.over-map .tc-skill, body.over-map #tc_skill_edit, body.over-map #tc_pickup,
 body.over-map #tc_names, body.over-map #tc_target, body.over-map #tc_bind_hint, body.over-map #tc_exp_text {
 	display: none;
 }
+
+/* The EXP line's text with the time to the next level after it (UI/Mobile/HeroFrame.cpp): the row
+   is under the level's circle, so it takes the frame's whole width (the left padding is the
+   circle's), and a text still too long ends in an ellipsis inside the frame. */
+@media (theme: mobile-hud) {
+	#tc_exp_text { margin-left: -38rem; overflow: hidden; text-overflow: ellipsis; }
+	body.size-90 #tc_exp_text { margin-left: -42.3rem; }
+	body.size-80 #tc_exp_text { margin-left: -47.4rem; }
+	body.size-70 #tc_exp_text { margin-left: -54.3rem; }
+	body.size-60 #tc_exp_text { margin-left: -63.3rem; }
+}

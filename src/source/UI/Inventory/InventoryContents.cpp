@@ -115,6 +115,11 @@ ITEM* FindPlayerItem(int index)
     return g_pMyInventoryExt != nullptr ? g_pMyInventoryExt->FindItem(index) : nullptr;
 }
 
+int FreeBagCells()
+{
+    return g_pMyInventory != nullptr ? g_pMyInventory->FreeCellCount() : 0;
+}
+
 ITEM* FindMainInventoryItem(int index)
 {
     return g_pMyInventory->FindItem(index);

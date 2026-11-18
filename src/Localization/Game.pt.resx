@@ -1212,7 +1212,7 @@
     <comment>legacy_id=321</comment>
   </data>
   <data name="Win" xml:space="preserve">
-    <value>Ganhar</value>
+    <value>Vitória</value>
     <comment>legacy_id=322,323,1396</comment>
   </data>
   <data name="Victory" xml:space="preserve">
@@ -4065,7 +4065,7 @@
     <comment>legacy_id=1088</comment>
   </data>
   <data name="Set" xml:space="preserve">
-    <value>Definir</value>
+    <value>Conjunto</value>
     <comment>legacy_id=1089</comment>
   </data>
   <data name="Ancient Metal" xml:space="preserve">
@@ -4333,7 +4333,7 @@
     <comment>legacy_id=1163</comment>
   </data>
   <data name="when %d" xml:space="preserve">
-    <value>quando %d</value>
+    <value>%d h</value>
     <comment>legacy_id=1164</comment>
   </data>
   <data name="Increase attribute damage" xml:space="preserve">
@@ -5205,11 +5205,11 @@
     <comment>legacy_id=1394</comment>
   </data>
   <data name="Tie!" xml:space="preserve">
-    <value>Gravata!</value>
+    <value>Empate!</value>
     <comment>legacy_id=1395</comment>
   </data>
   <data name="Lose" xml:space="preserve">
-    <value>Perder</value>
+    <value>Derrota</value>
     <comment>legacy_id=1397</comment>
   </data>
   <data name="Weapon for Invading team" xml:space="preserve">
@@ -10529,7 +10529,7 @@
     <comment>legacy_id=3015</comment>
   </data>
   <data name="Warp3016" xml:space="preserve">
-    <value>Urdidura</value>
+    <value>Teletransporte</value>
     <comment>legacy_id=3016</comment>
   </data>
   <data name="Loren Market" xml:space="preserve">
@@ -14165,5 +14165,48 @@
   </data>
   <data name="JewelOptionFailed" xml:space="preserve">
     <value>%ls: a melhoria de opção falhou</value>
+  </data>
+  <!-- Round 12 -->
+  <data name="CraftTooManyItems" xml:space="preserve">
+    <value>Itens demais para esta combinação</value>
+  </data>
+  <data name="CraftItemsMissing" xml:space="preserve">
+    <value>Faltam itens para esta combinação</value>
+  </data>
+  <data name="CraftItemLevelWrong" xml:space="preserve">
+    <value>O nível do item não serve para esta combinação</value>
+  </data>
+  <data name="CraftLevelTooLow" xml:space="preserve">
+    <value>Seu nível é baixo demais para esta combinação</value>
+  </data>
+  <data name="CraftClassCannot" xml:space="preserve">
+    <value>Sua classe não pode fazer esta combinação</value>
+  </data>
+  <data name="BuffEnded" xml:space="preserve">
+    <value>Buff terminou: %ls</value>
+  </data>
+  <data name="BagAlmostFull" xml:space="preserve">
+    <value>Bolsa quase cheia: %d espaços livres</value>
+  </data>
+  <data name="EquipmentBroken" xml:space="preserve">
+    <value>%ls quebrou: conserte</value>
+  </data>
+  <data name="PotionLowStock" xml:space="preserve">
+    <value>%ls: restam %d</value>
+  </data>
+  <data name="ArrowsReloadedStacksLeft" xml:space="preserve">
+    <value>Flechas recarregadas, pilhas restantes: %d</value>
+  </data>
+  <data name="ArrowsLastStack" xml:space="preserve">
+    <value>Última pilha de flechas</value>
+  </data>
+  <data name="EmoteOk" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="EmoteHi" xml:space="preserve">
+    <value>Oi</value>
+  </data>
+  <data name="EmoteWin" xml:space="preserve">
+    <value>Ganhar</value>
   </data>
 </root>

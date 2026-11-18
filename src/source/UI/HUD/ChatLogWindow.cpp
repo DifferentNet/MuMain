@@ -25,6 +25,7 @@
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Element.h>
 
+#include "UI/Mobile/ClickSource.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Chat/ChatFade.h"
 
@@ -651,6 +652,10 @@ void mu::ui::window::CChatLogWindow::BindRmlModel(Rml::DataModelConstructor& c, 
     c.BindEventCallback("chat_resize_drag",
         [this](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList&)
         { ResizeToPointer(event.GetParameter<float>("mouse_y", 0.f)); });
+    // Only a phone's history takes clicks (chat_log.rcss), and only a finger's tap there acts.
+    c.BindEventCallback("chat_lines_tap",
+        [this](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList&)
+        { OnLinesTapped(event.GetParameter<float>("mouse_x", 0.f), event.GetParameter<float>("mouse_y", 0.f)); });
 }
 
 void mu::ui::window::CChatLogWindow::OnRmlReloaded()
@@ -893,48 +898,10 @@ bool mu::ui::window::CChatLogWindow::IsScrolledToBottom() const
 void mu::ui::window::CChatLogWindow::UpdatePointedLine()
 {
     ChatLogRmlModel& model = m_RmlView.GetModel();
-    int pointed = -1;
-
-    Rml::Element* lines = LinesElement();
-    if (lines != nullptr && IsVisible() && m_bShowChatLog)
-    {
-        // Raw window pixels, the same space GetAbsoluteOffset() reports in -- deliberately NOT
-        // MouseX/MouseY, which CManager has already remapped into this window's layout space.
-        // Comparing the two directly is what keeps this immune to the UI scale.
-        const float px = g_fWindowMouseX;
-        const float py = g_fWindowMouseY;
-
-        // Clip to the scrolling well first, so a line scrolled out of view is never pointed.
-        const Rml::Vector2f wellPos = lines->GetAbsoluteOffset();
-        const float wellW = lines->GetClientWidth();
-        const float wellH = lines->GetClientHeight();
-        if (px >= wellPos.x && px < wellPos.x + wellW && py >= wellPos.y && py < wellPos.y + wellH)
-        {
-            for (int i = 0; i < lines->GetNumChildren(); i++)
-            {
-                Rml::Element* child = lines->GetChild(i);
-                if (child == nullptr)
-                    continue;
-                // A faded line takes no space, but RmlUi may keep its last box; skip it.
-                if (i < (int)model.lines.size() && model.lines[i].faded)
-                    continue;
-
-                // The whole row (native tested SCROLL_MIDDLE_PART_HEIGHT), including the gap under
-                // a line whose background is only as tall as its text (legacy chat_log.rml).
-                const Rml::Vector2f pos = child->GetAbsoluteOffset();
-                const float h =
-                    child->GetOffsetHeight() + child->GetBox().GetEdge(Rml::BoxArea::Margin, Rml::BoxEdge::Bottom);
-                if (py >= pos.y && py < pos.y + h)
-                {
-                    // Only a line carrying a sender is a target, matching native -- an
-                    // unattributed system line has nothing to whisper to.
-                    if (i < (int)model.lines.size() && model.lines[i].hasId)
-                        pointed = i;
-                    break;
-                }
-            }
-        }
-    }
+    // Raw window pixels, the same space GetAbsoluteOffset() reports in -- deliberately NOT
+    // MouseX/MouseY, which CManager has already remapped into this window's layout space.
+    // Comparing the two directly is what keeps this immune to the UI scale.
+    const int pointed = SenderLineAt(g_fWindowMouseX, g_fWindowMouseY);
 
     if (model.pointedIndex != pointed)
     {
@@ -943,15 +910,68 @@ void mu::ui::window::CChatLogWindow::UpdatePointedLine()
     }
 
     if (pointed >= 0 && mu::ui::window::IsPress(VK_RBUTTON))
+        WhisperToSenderOf(pointed, false);
+}
+
+int mu::ui::window::CChatLogWindow::SenderLineAt(float px, float py) const
+{
+    Rml::Element* lines = LinesElement();
+    if (lines == nullptr || !IsVisible() || !m_bShowChatLog)
+        return -1;
+
+    // Clip to the scrolling well first, so a line scrolled out of view is never pointed.
+    const Rml::Vector2f wellPos = lines->GetAbsoluteOffset();
+    const float wellW = lines->GetClientWidth();
+    const float wellH = lines->GetClientHeight();
+    if (px < wellPos.x || px >= wellPos.x + wellW || py < wellPos.y || py >= wellPos.y + wellH)
+        return -1;
+
+    const ChatLogRmlModel& model = m_RmlView.GetModel();
+    for (int i = 0; i < lines->GetNumChildren(); i++)
     {
-        type_vector_msgs* pvecMsgs = GetMsgs(GetCurrentMsgType());
-        if (pvecMsgs != nullptr && pointed < (int)pvecMsgs->size())
+        Rml::Element* child = lines->GetChild(i);
+        if (child == nullptr)
+            continue;
+        // A faded line takes no space, but RmlUi may keep its last box; skip it.
+        if (i < (int)model.lines.size() && model.lines[i].faded)
+            continue;
+
+        // The whole row (native tested SCROLL_MIDDLE_PART_HEIGHT), including the gap under
+        // a line whose background is only as tall as its text (legacy chat_log.rml).
+        const Rml::Vector2f pos = child->GetAbsoluteOffset();
+        const float h =
+            child->GetOffsetHeight() + child->GetBox().GetEdge(Rml::BoxArea::Margin, Rml::BoxEdge::Bottom);
+        if (py >= pos.y && py < pos.y + h)
         {
-            const type_string& strID = (*pvecMsgs)[pointed]->GetID();
-            if (!strID.empty() && g_pChatInputBox)
-                g_pChatInputBox->SetWhsprID(strID.c_str());
+            // Only a line carrying a sender is a target, matching native -- an
+            // unattributed system line has nothing to whisper to.
+            return i < (int)model.lines.size() && model.lines[i].hasId ? i : -1;
         }
     }
+    return -1;
+}
+
+void mu::ui::window::CChatLogWindow::WhisperToSenderOf(int line, bool focusMessage)
+{
+    type_vector_msgs* pvecMsgs = GetMsgs(GetCurrentMsgType());
+    if (pvecMsgs == nullptr || line < 0 || line >= (int)pvecMsgs->size() || g_pChatInputBox == nullptr)
+        return;
+    const type_string& strID = (*pvecMsgs)[line]->GetID();
+    if (strID.empty())
+        return;
+    if (focusMessage)
+        g_pChatInputBox->StartWhisperTo(strID.c_str());
+    else
+        g_pChatInputBox->SetWhsprID(strID.c_str());
+}
+
+void mu::ui::window::CChatLogWindow::OnLinesTapped(float px, float py)
+{
+    if (!UI::Mobile::IsPhoneView() || !m_bShowFrame || !UI::Mobile::ClickSource::IsFingerTap())
+        return;
+    const int line = SenderLineAt(px, py);
+    if (line >= 0)
+        WhisperToSenderOf(line, true);
 }
 
 void mu::ui::window::CChatLogWindow::ApplyLogicalScroll()

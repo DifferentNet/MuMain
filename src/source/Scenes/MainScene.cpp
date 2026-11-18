@@ -8,6 +8,7 @@
 #include "Engine/Object/ZzzOpenData.h"
 #include "UI/Chat/Chat.h"
 #include "UI/Chat/CharacterChangeLines.h"
+#include "UI/Chat/HeroStatusLines.h"
 #include "MainScene.h"
 #include "SceneCommon.h"
 #include "Camera/CameraUtility.h"
@@ -381,6 +382,8 @@ void MoveMainScene()
 
     // Sale, repair and death sums settle a moment after their last money update.
     UI::Chat::ChangeLines::Tick();
+    // Buff ends settle half a second after their packets (a re-cast can end and start a buff at once).
+    UI::Chat::StatusLines::Tick();
 
     if (ErrorMessage != 0)
         MouseOnWindow = true;

@@ -23,6 +23,8 @@ ITEM* FindPlayerItem(int index);
 // The main grid only, without the extension or equipment.
 ITEM* FindMainInventoryItem(int index);
 void DeleteMainInventoryItem(int index);
+// The free 1x1 cells over every bag page the character owns.
+int FreeBagCells();
 // The item the player chose for an event entry, and its slot; nullptr if none.
 ITEM* StandbyItem();
 int StandbyItemIndex();

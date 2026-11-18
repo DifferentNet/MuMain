@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "I18N/All.h"
+#include "UI/HUD/KeyHint.h"
 
 #include "UI/Events/DailyRewardsWindow.h"
 
@@ -272,9 +273,8 @@ void mu::ui::window::CDailyRewardsWindow::BindRmlModel(Rml::DataModelConstructor
     c.BindEventCallback("daily_rewards_take", [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
                         { m_pendingTake = true; });
 
-    wchar_t closeText[256] = {};
-    mu_swprintf_s(closeText, I18N::Game::CloseS, L"N");
-    model.exitTooltip = StringUtils::WideToNarrow(closeText);
+    model.exitTooltip =
+        StringUtils::WideToNarrow(UI::KeyHint::CloseTooltip(Core::Input::KeyBindings::Action::DailyRewards).c_str());
 }
 
 void mu::ui::window::CDailyRewardsWindow::SyncRmlModel()
@@ -287,6 +287,10 @@ void mu::ui::window::CDailyRewardsWindow::SyncRmlModel()
     UI::RmlBridge::SyncDocumentVisibilityInFront(m_RmlView.Document(), IsVisible());
     if (!IsVisible())
         return;
+
+    if (m_keyLabels.Changed())
+        SyncField(m_RmlView.Binder(), &DailyRewardsRmlModel::exitTooltip, "exit_tooltip",
+                  StringUtils::WideToNarrow(UI::KeyHint::CloseTooltip(Core::Input::KeyBindings::Action::DailyRewards).c_str()));
 
     SyncContent();
 }

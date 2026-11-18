@@ -764,6 +764,13 @@ bool CInventoryActionController::IsSlotOccupied(int nSlot) const
     return (pEquipment->Type != -1);
 }
 
+void CInventoryActionController::PostEquipRefusal(const wchar_t* text)
+{
+    // Repeated clicks on the same item give one line.
+    if (!g_pSystemLogBox->CheckChatRedundancy(text))
+        g_pSystemLogBox->AddText(text, TYPE_ERROR_MESSAGE);
+}
+
 bool CInventoryActionController::TryEquipItem(CInventoryCtrl* targetControl, ITEM* pItem, int iSrcIndex) const
 {
     const ITEM_ATTRIBUTE* pItemAttr = &ItemAttribute[pItem->Type];
@@ -774,12 +781,11 @@ bool CInventoryActionController::TryEquipItem(CInventoryCtrl* targetControl, ITE
         return false;
     }
 
-    // The pad's X puts an item on at once: it says why not, as there is no dragging to show it.
-    const bool says = UI::Mobile::ClickSource::IsPadRightClick();
+    // A right-click (mouse or the pad's X) puts an item on at once: it says why not, as there is no dragging to
+    // show it.
     if (!m_pContext->IsEquipable(nDstIndex, pItem))
     {
-        if (says)
-            g_pSystemLogBox->AddText(I18N::Game::PadCannotEquip, TYPE_ERROR_MESSAGE);
+        PostEquipRefusal(I18N::Game::PadCannotEquip);
         return true;
     }
 
@@ -793,16 +799,14 @@ bool CInventoryActionController::TryEquipItem(CInventoryCtrl* targetControl, ITE
         }
         else
         {
-            if (says)
-                g_pSystemLogBox->AddText(I18N::Game::PadSlotTaken, TYPE_ERROR_MESSAGE);
+            PostEquipRefusal(I18N::Game::PadSlotTaken);
             return true;
         }
     }
 
     if (!m_pContext->IsEquipable(nDstIndex, pItem))
     {
-        if (says)
-            g_pSystemLogBox->AddText(I18N::Game::PadCannotEquip, TYPE_ERROR_MESSAGE);
+        PostEquipRefusal(I18N::Game::PadCannotEquip);
         return true;
     }
 

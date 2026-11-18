@@ -15,4 +15,17 @@ namespace UI::KeyHint
 // With the action(s) on their default keys the text comes back unchanged.
 [[nodiscard]] std::wstring WithKey(const wchar_t* text, Core::Input::KeyBindings::Action action,
                                    Core::Input::KeyBindings::Action alt = Core::Input::KeyBindings::Action::None);
+
+// A window's close tooltip ("Close (C)", I18N::Game::CloseS) with the key bound to the action that opens it.
+[[nodiscard]] std::wstring CloseTooltip(Core::Input::KeyBindings::Action action);
+
+// Tells a window when the key labels it built are stale: true on the first call and after every binding change.
+struct LabelWatch
+{
+    [[nodiscard]] bool Changed();
+
+private:
+    bool m_built = false;
+    unsigned m_revision = 0;
+};
 } // namespace UI::KeyHint

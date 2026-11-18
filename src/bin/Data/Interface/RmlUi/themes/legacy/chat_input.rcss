@@ -144,3 +144,14 @@
 	}
 	.cib-quick-btn:active { background-color: rgba(90, 70, 40, 230); }
 }
+
+/* MU Skynet: a saved macro on a quick button (keys 1 to 5) may be long: it is cut with an ellipsis so three
+   buttons still fit a row of the bar's width and the row stays on a phone's screen. */
+@media (theme: mobile) {
+	.cib-quick-btn.cib-quick-macro {
+		max-width: 76dp;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+}

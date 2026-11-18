@@ -4718,6 +4718,11 @@ void MoveObjects()
     const bool actionActive = g_iActionWorld >= 0 && g_iActionObjectType >= 0 && g_iActionTime >= 0 &&
                               gMapManager.WorldActive == g_iActionWorld;
     const bool mayKeepHidden = !actionActive && !g_Camera.TopViewEnable;
+    // MoveObjectOnEffect() acts only on these maps (its callees return at once elsewhere); the map does not change
+    // inside the loop. ActionObject() is called while actionActive held at the start: it re-checks the condition
+    // itself, and nothing in the loop can turn it on (only server messages call SetActionObject).
+    const bool effectMap =
+        gMapManager.WorldActive == WD_10HEAVEN || gMapManager.InChaosCastle() || gMapManager.InBattleCastle();
     for (int i = 0; i < 16; i++)
     {
         for (int j = 0; j < 16; j++)
@@ -4734,8 +4739,10 @@ void MoveObjects()
                         if (o->Live && o->Visible)
                         {
                             MoveObject(o);
-                            MoveObjectOnEffect(o, objectCount, visibleObject);
-                            ActionObject(o);
+                            if (effectMap)
+                                MoveObjectOnEffect(o, objectCount, visibleObject);
+                            if (actionActive)
+                                ActionObject(o);
                         }
                         if (o->Next == NULL) break;
                         o = o->Next;
@@ -4752,7 +4759,7 @@ void MoveObjects()
                 {
                     if (o != NULL)
                     {
-                        if (o->Live)
+                        if (actionActive && o->Live)
                         {
                             ActionObject(o);
                         }

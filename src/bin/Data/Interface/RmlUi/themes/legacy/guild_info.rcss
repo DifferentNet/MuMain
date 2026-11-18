@@ -350,3 +350,10 @@
 	.gi-btn:hover { decorator: image(gi-btn-over) content-box; }
 	.gi-btn:active { decorator: image(gi-btn-down) content-box; }
 }
+
+/* Round 12: member rows a finger's height (33 css): a long press on a row opens that member's menu (kick,
+   appoint), so a miss would pick the wrong member. The text stays centred in the row. */
+@media (theme: mobile) {
+	.gi-pane-row.gi-member-row { height: calc(38px * var(--root-scale)); }
+	.gi-member-row .gi-pane-cell { top: calc(12px * var(--root-scale)); }
+}

@@ -88,6 +88,9 @@ bool FindTextABS(const wchar_t* Text, const wchar_t* Token, bool First = false);
 bool CheckAbuseFilter(wchar_t* Text, bool bCheckSlash = true);
 bool CheckAbuseNameFilter(wchar_t* Text);
 bool CheckCommand(wchar_t* Text, bool bMacroText = false);
+// Sends the saved chat macro of a slot (0 to 9 for keys 1 to 0) with Alt+1..0's limits: the macro pause, not in
+// Chaos Castle (a phone's quick chat button). False when nothing went: an empty slot, or a limit.
+bool SendMacroSlot(int slot);
 void SetActionClass(CHARACTER* c, OBJECT* o, int Action, int ActionType);
 void RenderBar(float x, float y, float Width, float Height, float Bar, bool Disabled = false, bool clipping = true);
 void RenderOutSides();

@@ -62,7 +62,10 @@
 #include "GameLogic/Social/PartyRosterDiff.h"
 #include "UI/Inventory/InventoryContents.h"
 #include "GameLogic/Items/JewelUpgradeResult.h"
+#include "GameLogic/Items/CraftingRefusal.h"
 #include "UI/Chat/CharacterChangeLines.h"
+#include "UI/Chat/HeroStatusLines.h"
+#include "App/Platform/AttentionSignal.h"
 #include "GameLogic/Commands/ChatCommandCatalog.h"
 #include "GameLogic/Events/Cinematic/CDirection.h"
 #include "Character/CSParts.h"
@@ -1983,6 +1986,7 @@ void ReceiveChatWhisper(const BYTE* ReceiveBuffer)
     }
 
     UI::Chat::PostChat(ID, Text, mu::ui::window::TYPE_WHISPER_MESSAGE);
+    App::Platform::Attention::Request();
 
     App::Control::Events::RecordChatLine(ID, Text, "whisper");
 }
@@ -3904,6 +3908,8 @@ void ReceiveSkillStatus(const BYTE* ReceiveBuffer)
         else
         {
             RegisterBuff(bufftype, o);
+            if (c == Hero)
+                UI::Chat::StatusLines::NoteHeroBuffStarted(bufftype);
             if (bufftype == eBuff_CastleRegimentDefense || bufftype == eBuff_CastleRegimentAttack1 ||
                 bufftype == eBuff_CastleRegimentAttack2 || bufftype == eBuff_CastleRegimentAttack3)
             {
@@ -3928,6 +3934,9 @@ void ReceiveSkillStatus(const BYTE* ReceiveBuffer)
         if (bufftype == eBuffNone || bufftype >= eBuff_Count)
             return;
 
+        // Only a buff the hero had ends: the server also clears buffs that were never there.
+        if (c == Hero && g_isCharacterBuff(o, bufftype))
+            UI::Chat::StatusLines::NoteHeroBuffEnded(bufftype);
         UnRegisterBuff(bufftype, o);
         if (bufftype == eBuff_CastleRegimentDefense || bufftype == eBuff_CastleRegimentAttack1 ||
             bufftype == eBuff_CastleRegimentAttack2 || bufftype == eBuff_CastleRegimentAttack3)
@@ -6306,6 +6315,7 @@ void ReceiveGetItem(std::span<const BYTE> ReceiveBuffer)
         {
             const ITEM* pickedItem = &Items[ItemKey].Item;
             bool shouldResyncInventory = false;
+            bool pickedIntoBag = false;
             auto itemIndex = Data->Value;
             if (itemIndex != GET_ITEM_MULTI)
             {
@@ -6325,6 +6335,7 @@ void ReceiveGetItem(std::span<const BYTE> ReceiveBuffer)
                     if (UI::Inventory::InsertItem(itemIndex, itemData))
                     {
                         pickedItem = UI::Inventory::FindPlayerItem(itemIndex);
+                        pickedIntoBag = true;
                     }
                     else
                     {
@@ -6344,6 +6355,8 @@ void ReceiveGetItem(std::span<const BYTE> ReceiveBuffer)
             wchar_t szMessage[PickedItemMessageSize];
             mu_swprintf(szMessage, L"%ls %ls", szItem, I18N::Game::Obtained);
             UI::Chat::PostSystem(szMessage, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+            if (pickedIntoBag)
+                UI::Chat::StatusLines::NoteItemPickedUp();
 
             int Type = pickedItem->Type;
             if (GameLogic::Items::IsJewelItem(pickedItem) || Type == INDEX_COMPILED_CELE || Type == INDEX_COMPILED_SOUL)
@@ -6815,6 +6828,47 @@ void AddMixResultMessage(bool succeeded)
     mu_swprintf(szText, text.Format, text.Operation);
     UI::Chat::PostSystem(szText, messageType);
 }
+
+const wchar_t* CraftingRefusalText(GameLogic::Items::CraftingRefusal::Reason reason)
+{
+    using GameLogic::Items::CraftingRefusal::Reason;
+    switch (reason)
+    {
+    case Reason::TooManyItems:
+        return I18N::Game::CraftTooManyItems;
+    case Reason::ItemsMissing:
+        return I18N::Game::CraftItemsMissing;
+    case Reason::ImproperItems:
+        return I18N::Game::ImproperItemsForCombination;
+    case Reason::ItemLevel:
+        return I18N::Game::CraftItemLevelWrong;
+    case Reason::LevelTooLow:
+        return I18N::Game::CraftLevelTooLow;
+    case Reason::ClassCannot:
+        return I18N::Game::CraftClassCannot;
+    default:
+        return nullptr;
+    }
+}
+
+// Says why the server refused the combination: one red line, or the old message box for the two ticket recipes.
+void ShowCraftingRefusal(int resultCode)
+{
+    using GameLogic::Items::CraftingRefusal::Reason;
+    const Reason reason = GameLogic::Items::CraftingRefusal::ReasonOf(resultCode, g_MixRecipeMgr.GetCurMixID());
+    if (reason == Reason::DevilSquareLevel)
+    {
+        mu::ui::window::CreateOkMessageBox(I18N::Game::MustBeOverLevel10ToCombineTheInvitationToDevilSquare);
+        return;
+    }
+    if (reason == Reason::BloodCastleLevel)
+    {
+        mu::ui::window::CreateOkMessageBox(I18N::Game::MustBeOverLevel15ToCombineACloakOfInvisibility);
+        return;
+    }
+    if (const wchar_t* text = CraftingRefusalText(reason))
+        UI::Chat::PostSystem(text, mu::ui::window::TYPE_ERROR_MESSAGE);
+}
 } // namespace
 
 void ReceiveMixExtended(std::span<const BYTE> ReceiveBuffer)
@@ -6873,13 +6927,14 @@ void ReceiveMixExtended(std::span<const BYTE> ReceiveBuffer)
         UI::Chat::PostSystem(I18N::Game::NotEnoughZenToCombineItems, mu::ui::window::TYPE_ERROR_MESSAGE);
     }
     break;
-    case 4:
-        mu::ui::window::CreateOkMessageBox(I18N::Game::MustBeOverLevel10ToCombineTheInvitationToDevilSquare);
-        UI::Mix::SetFinished();
-        break;
-
-    case 9:
-        mu::ui::window::CreateOkMessageBox(I18N::Game::MustBeOverLevel15ToCombineACloakOfInvisibility);
+    case GameLogic::Items::CraftingRefusal::ResultTooManyItems:
+    case GameLogic::Items::CraftingRefusal::ResultCharacterLevelTooLow:
+    case GameLogic::Items::CraftingRefusal::ResultLackingMixItems:
+    case GameLogic::Items::CraftingRefusal::ResultIncorrectMixItems:
+    case GameLogic::Items::CraftingRefusal::ResultInvalidItemLevel:
+    case GameLogic::Items::CraftingRefusal::ResultCharacterClassTooLow:
+    case GameLogic::Items::CraftingRefusal::ResultIncorrectBloodCastleItems:
+        ShowCraftingRefusal(Data->Index);
         UI::Mix::SetFinished();
         break;
 
@@ -6894,11 +6949,7 @@ void ReceiveMixExtended(std::span<const BYTE> ReceiveBuffer)
             UI::Mix::LuckyItemResult(false, Data->Index, itemData);
         }
         break;
-    case 3:
     case 5:
-    case 7:
-    case 8:
-    case 0x0A:
     default:
         UI::Mix::SetFinished();
         break;
@@ -7261,7 +7312,10 @@ void ReceiveDurability(const BYTE* ReceiveBuffer)
 
     if (Data->Value < MAX_EQUIPMENT)
     {
-        CharacterMachine->Equipment[Data->Value].Durability = Data->KeyH;
+        ITEM& worn = CharacterMachine->Equipment[Data->Value];
+        const int before = worn.Durability;
+        worn.Durability = Data->KeyH;
+        UI::Chat::StatusLines::NoteEquipmentDurability(Data->Value, before, worn.Durability);
     }
     else
     {
@@ -7351,6 +7405,8 @@ BOOL ReceiveTrade(const BYTE* ReceiveBuffer, BOOL bEncrypted)
     wchar_t requester[MAX_USERNAME_SIZE + 1]{};
     ConvertPacketText(requester, Data->ID, MAX_USERNAME_SIZE);
     const bool asked = UI::Trade::RequestReceived(requester);
+    if (asked)
+        App::Platform::Attention::Request();
     App::Control::Events::RecordTradeRequested(Data->ID, asked);
 
     return (TRUE);
@@ -7501,6 +7557,7 @@ void ReceiveParty(const BYTE* ReceiveBuffer)
     cfg.onCancel = [] { SocketClient->ToGameServer()->SendPartyInviteResponse(false, PartyKey); };
     cfg.tag = "party-invite";
     UI::Dialogs::ShowConfirm(std::move(cfg));
+    App::Platform::Attention::Request();
     App::Control::Events::RecordPartyInvited(PartyKey);
 }
 
@@ -7710,6 +7767,7 @@ void ReceiveGuild(const BYTE* ReceiveBuffer)
     cfg.onAccept = [guildPlayerKey]() { SocketClient->ToGameServer()->SendGuildJoinResponse(true, guildPlayerKey); };
     cfg.onCancel = [guildPlayerKey]() { SocketClient->ToGameServer()->SendGuildJoinResponse(false, guildPlayerKey); };
     UI::Dialogs::ShowConfirm(std::move(cfg));
+    App::Platform::Attention::Request();
 }
 
 void ReceiveGuildResult(const BYTE* ReceiveBuffer)
@@ -8014,33 +8072,33 @@ void ReceiveGuildBeginWar(const BYTE* ReceiveBuffer)
 void ReceiveGuildEndWar(const BYTE* ReceiveBuffer)
 {
     auto Data = (LPPHEADER_DEFAULT)ReceiveBuffer;
-    wchar_t Text[100];
+    wchar_t Text[100] = {0};
     int Win = 0;
     switch (Data->Value)
     {
     case 0:
-        wprintf(Text, I18N::Game::YouHaveLostTheGuildWar);
+        mu_swprintf(Text, L"%ls", I18N::Game::YouHaveLostTheGuildWar);
         break;
     case 1:
-        wprintf(Text, I18N::Game::YouHaveWonTheGuildWar);
+        mu_swprintf(Text, L"%ls", I18N::Game::YouHaveWonTheGuildWar);
         Win = 2;
         break;
     case 2:
-        wprintf(Text, I18N::Game::YouHaveWonTheGuildWarOpposingGuildMasterLeft);
+        mu_swprintf(Text, L"%ls", I18N::Game::YouHaveWonTheGuildWarOpposingGuildMasterLeft);
         Win = 2;
         break;
     case 3:
-        wprintf(Text, I18N::Game::YouHaveLostTheGuildWarGuildMasterLeft);
+        mu_swprintf(Text, L"%ls", I18N::Game::YouHaveLostTheGuildWarGuildMasterLeft);
         break;
     case 4:
-        wprintf(Text, I18N::Game::YouHaveWonTheGuildWarOpposingGuildDisbanded);
+        mu_swprintf(Text, L"%ls", I18N::Game::YouHaveWonTheGuildWarOpposingGuildDisbanded);
         Win = 2;
         break;
     case 5:
-        wprintf(Text, I18N::Game::YouHaveLostTheGuildWarGuildDisbanded);
+        mu_swprintf(Text, L"%ls", I18N::Game::YouHaveLostTheGuildWarGuildDisbanded);
         break;
     case 6:
-        wprintf(Text, I18N::Game::Tied);
+        mu_swprintf(Text, L"%ls", I18N::Game::Tied);
         Win = 1;
         break;
     default:
@@ -9095,7 +9153,12 @@ void ReceiveEventZoneOpenTime(const BYTE* ReceiveBuffer)
                 0,
             };
 
-            mu_swprintf(szOpenTime, I18N::Game::WhenD, Hour);
+            // The hours only when there are any: "1 h After 12 minutes...", else the minutes alone.
+            if (Hour > 0)
+            {
+                mu_swprintf(szOpenTime, I18N::Game::WhenD, Hour);
+                wcscat(szOpenTime, L" ");
+            }
             mu_swprintf(Text, I18N::Game::AfterDMinutesYouMayEnterS, Mini, I18N::Game::ChaosCastle);
             wcscat(szOpenTime, Text);
 
@@ -9277,6 +9340,7 @@ void ReceiveDuelRequest(const BYTE* ReceiveBuffer)
     cfg.onCancel = [] { g_DuelMgr.SendDuelRequestAnswer(DUEL_ENEMY, FALSE); };
     UI::Dialogs::ShowConfirm(std::move(cfg));
     PlayBuffer(SOUND_OPEN_DUELWINDOW);
+    App::Platform::Attention::Request();
 }
 
 void ReceiveDuelStart(const BYTE* ReceiveBuffer)
@@ -10039,7 +10103,7 @@ void ReceiveAddFriendResult(const BYTE* ReceiveBuffer)
     switch (Data->Result)
     {
     case 0x00:
-        wcscat(szText, I18N::Game::IDDoesNotExist);
+        mu_swprintf(szText, L"%ls: %ls", szName, I18N::Game::IDDoesNotExist);
         UI::Social::ShowNotice(szText);
         break;
     case 0x01:
@@ -10053,7 +10117,7 @@ void ReceiveAddFriendResult(const BYTE* ReceiveBuffer)
         UI::Social::ShowNotice(szText);
         break;
     case 0x04:
-        wcscat(szText, I18N::Game::IsAlreadyRegistered);
+        mu_swprintf(szText, L"%ls %ls", szName, I18N::Game::IsAlreadyRegistered);
         UI::Social::ShowNotice(szText);
         break;
     case 0x05:
@@ -10416,6 +10480,7 @@ void ReceiveBuffState(const BYTE* ReceiveBuffer)
     if (Data->byEffectOption == 0)
     {
         RegisterBuff(bufftype, (&Hero->Object), Data->wEffectTime);
+        UI::Chat::StatusLines::NoteHeroBuffStarted(bufftype);
 
         if (bufftype == eBuff_HelpNpc)
         {
@@ -10424,6 +10489,8 @@ void ReceiveBuffState(const BYTE* ReceiveBuffer)
     }
     else
     {
+        if (g_isCharacterBuff((&Hero->Object), bufftype))
+            UI::Chat::StatusLines::NoteHeroBuffEnded(bufftype);
         UnRegisterBuff(bufftype, (&Hero->Object));
     }
 }

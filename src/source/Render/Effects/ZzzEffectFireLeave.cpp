@@ -558,6 +558,15 @@ void RenderLeaves()
         EnableAlphaTest();
     }
 
+    // The map and the texture table don't change while the leaves are drawn: test the map once, and look a texture
+    // up again only when the leaf's type differs from the previous one (one or two types per map).
+    const bool sprites = gMapManager.WorldActive == WD_2DEVIAS || IsIceCity() || IsSantaTown();
+    const bool chaosCastle = gMapManager.InChaosCastle();
+    const bool crywolf = gMapManager.WorldActive == WD_34CRYWOLF_1ST;
+    bool anyTypeLooked = false;
+    int lastType = 0;
+    bool lastTypeFound = false;
+
 #ifdef DEVIAS_XMAS_EVENT
     int iMaxLeaves;
     if (World == WD_2DEVIAS)
@@ -571,12 +580,18 @@ void RenderLeaves()
 #endif // DEVIAS_XMAS_EVENT
     {
         PARTICLE* o = &Leaves[i];
-        if (o->Live
-            && Bitmaps.FindTexture(o->Type)
-            )
+        if (!o->Live)
+            continue;
+        if (!anyTypeLooked || o->Type != lastType)
+        {
+            anyTypeLooked = true;
+            lastType = o->Type;
+            lastTypeFound = Bitmaps.FindTexture(o->Type) != nullptr;
+        }
+        if (lastTypeFound)
         {
             BindTexture(o->Type);
-            if (gMapManager.WorldActive == WD_2DEVIAS || IsIceCity() || IsSantaTown())
+            if (sprites)
             {
                 RenderSprite(o->Type, o->Position, o->Scale, o->Scale, o->Light);
             }
@@ -587,13 +602,13 @@ void RenderLeaves()
                 float Matrix[3][4];
                 AngleMatrix(o->Angle, Matrix);
 
-                if (gMapManager.InChaosCastle() == true)
+                if (chaosCastle)
                     RenderPlane3D(o->TurningForce[0], o->TurningForce[1], Matrix);
                 else
                 {
                     if (o->Type == BITMAP_RAIN)
                     {
-                        if (gMapManager.WorldActive == WD_34CRYWOLF_1ST)
+                        if (crywolf)
                         {
                             if (weather == 1)
                                 RenderPlane3D(1.f, 20.f, Matrix);

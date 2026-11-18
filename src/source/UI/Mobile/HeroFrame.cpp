@@ -5,14 +5,18 @@
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInfomation.h"
 #include "UI/Core/WindowSystem.h"
+#include "UI/HUD/ExperiencePace.h"
+#include "UI/HUD/ExperiencePaceText.h"
 #include "UI/HUD/ItemHotKey.h"
 #include "Network/Server/WSclient.h"
+#include "Core/Utilities/StringUtils.h"
 
 #include <RmlUi/Core/DataModelHandle.h>
 
 #include <algorithm>
 #include <cmath>
 #include <string>
+#include <string_view>
 
 namespace UI::Mobile::HeroFrame
 {
@@ -22,6 +26,8 @@ namespace Gauges = UI::HUD::HeroGauges;
 
 // Counting the potions walks the whole inventory; a count a quarter of a second late is not seen.
 constexpr auto PotionCountEvery = std::chrono::milliseconds(250);
+// The time to the next level changes by the minute; the pace behind it is looked at once a second.
+constexpr auto ExpPaceCheckEvery = std::chrono::seconds(1);
 
 template <typename T> void Set(T& field, const T& value, const char* name, MarkDirty markDirty)
 {
@@ -119,19 +125,47 @@ void SyncPotions(Model& model, bool force, MarkDirty markDirty)
                "potion_r_count", markDirty);
 }
 
-// The percentage the EXP line shows, cut (not rounded) to tenths, so it reads 100 % only when full:
-// written again only when the tenths change, as the experience moves every kill.
-void SyncExpText(Model& model, double progress, bool force, MarkDirty markDirty)
+// The time to the next level at the hero's pace (UI/HUD/ExperiencePace.h); empty while it isn't known or is too
+// long to show.
+std::wstring TimeToLevel(const Gauges::Experience& experience)
+{
+    namespace Pace = UI::HUD::ExperiencePace;
+    const auto perHour = Pace::Hero().PerHour(GetTickCount());
+    if (!perHour)
+        return {};
+    return Pace::TimeToGainText(experience.next - experience.current, *perHour).value_or(std::wstring());
+}
+
+// The percentage the EXP line shows, cut (not rounded) to tenths, so it reads 100 % only when full,
+// then the time to the next level: written again only when the tenths or the time change, as the
+// experience moves every kill; the pace is looked at once a second.
+void SyncExpText(Model& model, const Gauges::Experience& experience, bool force, MarkDirty markDirty)
 {
     constexpr double TenthsPerWhole = 1000.0;
+    // Between the percentage and the time: a middle dot (UTF-8).
+    constexpr std::string_view TimeSeparator = " \xC2\xB7 ";
+    double progress = experience.progress;
     if (!std::isfinite(progress))
         progress = 0.0;
     const int tenths = static_cast<int>(std::floor(std::clamp(progress, 0.0, 1.0) * TenthsPerWhole));
-    if (!force && tenths == model.seen.expTenths)
+
+    Sources& seen = model.seen;
+    const auto now = std::chrono::steady_clock::now();
+    bool timeChanged = false;
+    if (force || tenths != seen.expTenths || now - seen.expPaceCheckedAt >= ExpPaceCheckEvery)
+    {
+        seen.expPaceCheckedAt = now;
+        std::wstring time = TimeToLevel(experience);
+        timeChanged = time != seen.expTimeToLevel;
+        seen.expTimeToLevel = std::move(time);
+    }
+    if (!force && tenths == seen.expTenths && !timeChanged)
         return;
-    model.seen.expTenths = tenths;
-    Set(model.expText, std::to_string(tenths / 10) + "." + std::to_string(tenths % 10) + "%", "hero_exp_text",
-        markDirty);
+    seen.expTenths = tenths;
+    Rml::String text = std::to_string(tenths / 10) + "." + std::to_string(tenths % 10) + "%";
+    if (!seen.expTimeToLevel.empty())
+        text += Rml::String(TimeSeparator) + StringUtils::WideToNarrow(seen.expTimeToLevel.c_str());
+    Set(model.expText, text, "hero_exp_text", markDirty);
 }
 } // namespace
 
@@ -163,9 +197,9 @@ void Sync(Model& model, MarkDirty markDirty)
     SetGauge(model.mp, model.mpText, seen.mp, Gauges::Mana(), MpSlot, force, markDirty);
     SetBar(model.sd, seen.sd, Gauges::Shield(), "hero_sd", force, markDirty);
     SetBar(model.ag, seen.ag, Gauges::SkillMana(), "hero_ag", force, markDirty);
-    const double expProgress = Gauges::ReadExperience().progress;
-    Set(model.exp, static_cast<float>(expProgress), "hero_exp", markDirty);
-    SyncExpText(model, expProgress, force, markDirty);
+    const Gauges::Experience experience = Gauges::ReadExperience();
+    Set(model.exp, static_cast<float>(experience.progress), "hero_exp", markDirty);
+    SyncExpText(model, experience, force, markDirty);
     SyncLevel(model, force, markDirty);
     SyncPotions(model, force, markDirty);
 }
