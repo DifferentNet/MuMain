@@ -120,4 +120,7 @@ body { --item-cell: 20px; }
 	.grid-scroll-down { decorator: image(grid-scroll-dn contain) content-box; }
 	.grid-scroll-down:hover { decorator: image(grid-scroll-dn-over contain) content-box; }
 	.grid-scroll-down:active { decorator: image(grid-scroll-dn-down contain) content-box; }
+	/* The way the rows cannot go any further (ItemGridScroll.cpp): dimmed, so a bright down arrow says more
+	   rows follow. */
+	.item-grid-scroll.at-end { opacity: 0.35; }
 }

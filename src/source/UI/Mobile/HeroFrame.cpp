@@ -4,10 +4,12 @@
 #include "Character/CharacterManager.h"
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInfomation.h"
+#include "GameLogic/Items/ItemCategories.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/HUD/ExperiencePace.h"
 #include "UI/HUD/ExperiencePaceText.h"
 #include "UI/HUD/ItemHotKey.h"
+#include "UI/Mobile/PotionKind.h"
 #include "Network/Server/WSclient.h"
 #include "Core/Utilities/StringUtils.h"
 
@@ -107,6 +109,27 @@ void SetPotions(Rml::String& text, int& seen, int count, bool force, const char*
     Set(text, count > 0 ? std::to_string(count) : Rml::String(), name, markDirty);
 }
 
+// The kind of potion on the item hotkey (an empty one has none).
+int PotionKindOn(int hotKey)
+{
+    namespace Items = GameLogic::Items;
+    const int type = g_pMainFrame->GetItemHotKey(hotKey);
+    const bool bound = type >= 0;
+    return static_cast<int>(ClassifyPotion(bound, bound && Items::IsHealingPotionType(type),
+                                           bound && Items::IsManaPotionType(type),
+                                           bound && Items::IsShieldPotionType(type),
+                                           bound && Items::IsComplexPotionType(type)));
+}
+
+void SetPotionKind(int& field, int& seen, int kind, bool force, const char* name, MarkDirty markDirty)
+{
+    if (!force && kind == seen)
+        return;
+    seen = kind;
+    field = kind;
+    markDirty(name);
+}
+
 void SyncPotions(Model& model, bool force, MarkDirty markDirty)
 {
     const auto now = std::chrono::steady_clock::now();
@@ -123,6 +146,10 @@ void SyncPotions(Model& model, bool force, MarkDirty markDirty)
                "potion_e_count", markDirty);
     SetPotions(model.potionRCount, seen.potionsR, g_pMainFrame->GetItemHotKeyCount(mu::ui::window::HOTKEY_R), force,
                "potion_r_count", markDirty);
+    SetPotionKind(model.potionQKind, seen.potionKindQ, PotionKindOn(mu::ui::window::HOTKEY_Q), force, "potion_q_kind",
+                  markDirty);
+    SetPotionKind(model.potionWKind, seen.potionKindW, PotionKindOn(mu::ui::window::HOTKEY_W), force, "potion_w_kind",
+                  markDirty);
 }
 
 // The time to the next level at the hero's pace (UI/HUD/ExperiencePace.h); empty while it isn't known or is too
@@ -185,6 +212,9 @@ void Bind(Rml::DataModelConstructor& constructor, Model& model)
     constructor.Bind("potion_w_count", &model.potionWCount);
     constructor.Bind("potion_e_count", &model.potionECount);
     constructor.Bind("potion_r_count", &model.potionRCount);
+    constructor.Bind("potion_q_kind", &model.potionQKind);
+    constructor.Bind("potion_w_kind", &model.potionWKind);
+    constructor.Bind("points_alert", &model.pointsAlert);
 }
 
 void Sync(Model& model, MarkDirty markDirty)
@@ -202,5 +232,6 @@ void Sync(Model& model, MarkDirty markDirty)
     SyncExpText(model, experience, force, markDirty);
     SyncLevel(model, force, markDirty);
     SyncPotions(model, force, markDirty);
+    Set(model.pointsAlert, CharacterAttribute->LevelUpPoint > 0, "points_alert", markDirty);
 }
 } // namespace UI::Mobile::HeroFrame

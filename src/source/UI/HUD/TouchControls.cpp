@@ -38,6 +38,7 @@
 #include "UI/RmlBridge/RmlPointer.h"
 #include "UI/RmlBridge/RmlStackingOrder.h"
 #include "UI/RmlBridge/RmlThemedView.h"
+#include "UI/Social/FriendWindow.h"
 
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/DataModelHandle.h>
@@ -158,6 +159,28 @@ void OpenLootFilter()
     PlayBuffer(SOUND_CLICK01);
 }
 
+// The Gens window, as B opens it; without a Gens it says so in the chat.
+void OpenGens()
+{
+    if (!g_pNewUIGensRanking->SetGensInfo())
+        return;
+    g_pNewUISystem->Toggle(mu::ui::window::INTERFACE_GENSRANKING);
+    PlayBuffer(SOUND_CLICK01);
+}
+
+// A character in a Gens (Duprian or Vanert): the menu has the Gens window.
+bool IsInGens()
+{
+    return Hero != nullptr && Hero->m_byGensInfluence != mu::ui::window::CGensRanking::GENSTYPE_NONE;
+}
+
+// An unread letter or a new chat-room line, as the PC bar's Friends button shows them (its dot,
+// MainFrameWindow::SyncAlerts, without the blinking): a dot on the top row's fold button and on Friends.
+bool HasFriendAlert()
+{
+    return g_pFriendMenu->IsNewMailAlert() || g_pLetterList->CheckNoReadLetter() || g_pFriendMenu->IsNewChatAlert();
+}
+
 // The monsters' HP bars, as F8 switches them.
 void ToggleHealthBars()
 {
@@ -222,6 +245,8 @@ const MenuItem MenuItems[] = {
     {&I18N::Game::TouchMenuPkOff, 0, &TogglePk},
     // Shown to game masters only (menu_gm in the markup).
     {&I18N::Game::TouchMenuGm, 'Y'},
+    // Shown to Gens members only (menu_gens in the markup).
+    {&I18N::Game::Gens, 0, &OpenGens},
 };
 constexpr int MenuItemCount = static_cast<int>(std::size(MenuItems));
 
@@ -475,6 +500,10 @@ struct ControlsModel
     bool barsOn = false;
     // A game master's character: the menu has the GM panel.
     bool gmMenu = false;
+    // A character in a Gens: the menu has the Gens window.
+    bool gensMenu = false;
+    // An unread letter or a new chat-room line: a dot on the fold button and on Friends.
+    bool mailAlert = false;
     // The menu's View switch: not on a phone or tablet, which always plays the phone layout.
     bool viewMenu = !UI::Mobile::IsHandheld();
     // The top row's buttons shown; folded, only its first button stays (config.ini [UI] TouchTopRow).
@@ -607,6 +636,8 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     c.Bind("names_on", &model.namesOn);
     c.Bind("bars_on", &model.barsOn);
     c.Bind("menu_gm", &model.gmMenu);
+    c.Bind("menu_gens", &model.gensMenu);
+    c.Bind("mail_alert", &model.mailAlert);
     c.Bind("menu_view", &model.viewMenu);
     c.Bind("quick_open", &model.quickOpen);
     c.Bind("size_pct", &model.sizePercent);
@@ -1201,6 +1232,8 @@ void SyncLabels(ControlsModel& model)
     const bool pkChanged = model.pkOn != pk;
     SetField(model.pkOn, pk, "pk_on");
     SetField(model.gmMenu, GameLogic::GmPanel::Panel().IsGm(), "menu_gm");
+    SetField(model.gensMenu, IsInGens(), "menu_gens");
+    SetField(model.mailAlert, HasFriendAlert(), "mail_alert");
     SetField(model.quickOpen, GameConfig::GetInstance().GetTouchTopRow(), "quick_open");
     SetField(model.sizePercent, UI::Mobile::TouchUnit::GetPercent(), "size_pct");
     if (g_pNameWindow != nullptr)

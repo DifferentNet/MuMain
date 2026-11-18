@@ -51,6 +51,18 @@ SDL_Surface* Decode(ShimHandle* handle, const unsigned char* jpegBuf, unsigned l
     handle->size = jpegSize;
     return handle->rgb;
 }
+// libjpeg-turbo's TJPF_RGBA: the RGB bytes with an opaque alpha after each pixel.
+void CopyRgbRowToRgba(const unsigned char* rgb, unsigned char* rgba, int width)
+{
+    constexpr unsigned char Opaque = 255;
+    for (int x = 0; x < width; ++x)
+    {
+        rgba[x * 4 + 0] = rgb[x * 3 + 0];
+        rgba[x * 4 + 1] = rgb[x * 3 + 1];
+        rgba[x * 4 + 2] = rgb[x * 3 + 2];
+        rgba[x * 4 + 3] = Opaque;
+    }
+}
 } // namespace
 
 extern "C" {
@@ -111,21 +123,30 @@ int tjDecompress2(tjhandle handle, const unsigned char* jpegBuf, unsigned long j
     {
         return Fail("tjDecompress2");
     }
-    if (pixelFormat != TJPF_RGB || width != rgb->w || height != rgb->h)
+    if ((pixelFormat != TJPF_RGB && pixelFormat != TJPF_RGBA) || width != rgb->w || height != rgb->h)
     {
-        g_lastError = "tjDecompress2: only full-size RGB output is supported";
+        g_lastError = "tjDecompress2: only full-size RGB or RGBA output is supported";
         return -1;
     }
 
-    const int rowBytes = width * 3;
+    const bool withAlpha = pixelFormat == TJPF_RGBA;
+    const int rowBytes = width * (withAlpha ? 4 : 3);
     const int dstPitch = pitch == 0 ? rowBytes : pitch;
     const bool bottomUp = (flags & TJFLAG_BOTTOMUP) != 0;
     const auto* src = static_cast<const unsigned char*>(rgb->pixels);
     for (int y = 0; y < height; ++y)
     {
         const int dstRow = bottomUp ? height - 1 - y : y;
-        std::memcpy(dstBuf + static_cast<size_t>(dstRow) * dstPitch, src + static_cast<size_t>(y) * rgb->pitch,
-                    rowBytes);
+        unsigned char* dstLine = dstBuf + static_cast<size_t>(dstRow) * dstPitch;
+        const unsigned char* srcLine = src + static_cast<size_t>(y) * rgb->pitch;
+        if (withAlpha)
+        {
+            CopyRgbRowToRgba(srcLine, dstLine, width);
+        }
+        else
+        {
+            std::memcpy(dstLine, srcLine, rowBytes);
+        }
     }
     return 0;
 }

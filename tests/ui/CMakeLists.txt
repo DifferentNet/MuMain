@@ -222,6 +222,12 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME potion_kind_tests
+    SOURCES
+        test_potion_kind.cpp
+)
+
+mu_add_test(
     NAME touch_target_tests
     SOURCES
         test_touch_target.cpp
