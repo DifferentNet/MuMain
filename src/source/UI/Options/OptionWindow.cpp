@@ -3151,7 +3151,9 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     if (model.slideHelp != m_bSlideHelp) { model.slideHelp = m_bSlideHelp; m_RmlView.MarkDirty("slide_help"); }
     const bool lootFilterShown = SceneFlag == MAIN_SCENE;
     if (model.lootFilterShown != lootFilterShown) { model.lootFilterShown = lootFilterShown; m_RmlView.MarkDirty("loot_filter_shown"); }
-    if (model.keyBindingsShown != lootFilterShown) { model.keyBindingsShown = lootFilterShown; m_RmlView.MarkDirty("key_bindings_shown"); }
+    // Phones and tablets have no keyboard to press the new key with (ghinzuro 2026-11-18: «Прятать»).
+    const bool keyBindingsShown = lootFilterShown && !UI::Mobile::IsHandheld();
+    if (model.keyBindingsShown != keyBindingsShown) { model.keyBindingsShown = keyBindingsShown; m_RmlView.MarkDirty("key_bindings_shown"); }
     if (model.renderAllEffects != m_bRenderAllEffects) { model.renderAllEffects = m_bRenderAllEffects; m_RmlView.MarkDirty("render_all_effects"); }
     if (model.windowedMode != m_bWindowedMode) { model.windowedMode = m_bWindowedMode; m_RmlView.MarkDirty("windowed_mode"); }
 
