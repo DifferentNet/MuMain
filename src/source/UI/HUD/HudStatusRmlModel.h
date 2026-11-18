@@ -16,6 +16,7 @@ struct HudStatusRmlModel
     // A chat macro's cooldown: shown while it runs, its bar emptying from 1 to 0, centred on the
     // world the open docks leave uncovered (worldCentre, the HUD board's reference px).
     bool macroVisible = false;
+    Rml::String macroLabel; // the cooldown's caption in the player's language
     float macroFraction = 0.f;
     float worldCentre = 320.f;
 

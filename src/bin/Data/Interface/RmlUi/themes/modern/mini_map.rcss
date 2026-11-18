@@ -84,6 +84,10 @@ body { pointer-events: none; }
 .live-icon.gold { decorator: image(mm-gold); }
 .live-icon.wizard { decorator: image(mm-wizard); }
 .live-icon.wboss { decorator: image(mm-wboss); }
+/* MU Moldova: a party member on this map, a green dot without a circle, its name in green under it. */
+.live-area.party { display: none; }
+.live-icon.party { decorator: none; background-color: #4fd36ae6; border: 1px #0a3010; border-radius: 5px; }
+.boss-label.party { color: #8cf59a; }
 .boss-label {
 	position: absolute;
 	width: 240px;

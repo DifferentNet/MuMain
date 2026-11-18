@@ -582,3 +582,35 @@ mu_add_test(
         test_chat_macro_file.cpp
         ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ChatMacroFile.cpp
 )
+
+# The zen a sale, a repair or a death changed, summed into one line (round 11, Q3 and Q8).
+mu_add_test(
+    NAME zen_change_window_tests
+    SOURCES
+        test_zen_change_window.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ZenChangeWindow.cpp
+)
+
+# The experience bar's pace per hour and the time to the next level (round 11, Q9).
+mu_add_test(
+    NAME experience_pace_tests
+    SOURCES
+        test_experience_pace.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/HUD/ExperiencePace.cpp
+)
+
+# The party members the big map marks and the party list refresh rhythm (round 11, Q4 and Q5).
+mu_add_test(
+    NAME minimap_party_dots_tests
+    SOURCES
+        test_minimap_party_dots.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/HUD/MiniMapPartyDots.cpp
+)
+
+# What a jewel did to the item it was used on (round 11, Q2).
+mu_add_test(
+    NAME jewel_upgrade_result_tests
+    SOURCES
+        test_jewel_upgrade_result.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/JewelUpgradeResult.cpp
+)

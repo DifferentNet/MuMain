@@ -26,6 +26,7 @@
 #include "UI/RmlBridge/RmlNativeTextSize.h"
 #include "UI/Scaling/UITransform.h"
 #include "Core/Utilities/StringUtils.h"
+#include "UI/Chat/CharacterChangeLines.h"
 #include <RmlUi/Core/ElementDocument.h>
 
 #include <cstddef>
@@ -151,6 +152,7 @@ void mu::ui::window::CNPCShop::RequestRepairAll()
         return;
     }
 
+    UI::Chat::ChangeLines::NoteRepairAsked();
     SocketClient->ToGameServer()->SendRepairItemRequest(0xFF, 0);
 }
 
@@ -495,6 +497,7 @@ bool mu::ui::window::CNPCShop::InventoryProcess()
                 int iSourceIndex = pPickedItem ? pPickedItem->GetSourceLinealPos() : -1;
                 if (iSourceIndex >= MAX_EQUIPMENT_INDEX && iSourceIndex < MAX_MY_INVENTORY_EX_INDEX)
                 {
+                    UI::Chat::ChangeLines::NoteSaleAsked();
                     SocketClient->ToGameServer()->SendSellItemToNpcRequest(iSourceIndex);
                     g_pNPCShop->SetSellingItem(true);
                 }
@@ -518,6 +521,7 @@ bool mu::ui::window::CNPCShop::InventoryProcess()
             const int iSourceIndex = pPickedItem->GetSourceLinealPos();
             if (iSourceIndex >= MAX_EQUIPMENT_INDEX && iSourceIndex < MAX_MY_INVENTORY_EX_INDEX)
             {
+                UI::Chat::ChangeLines::NoteSaleAsked();
                 SocketClient->ToGameServer()->SendSellItemToNpcRequest(iSourceIndex);
                 g_pNPCShop->SetSellingItem(true);
                 return true;

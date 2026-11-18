@@ -88,6 +88,7 @@ namespace mu::ui::window
             Rml::String yourLevelText;
             int yourLevelBucket = 0; // ConvertYourLevel() -- the theme colors each bucket
             Rml::String yourGoldText;
+            Rml::String zenCaption; // the modern theme's wallet labels
             Rml::String yourGoldTier; // UI::RmlBridge::GoldTierKey() of the amount
             bool yourConfirmChecked = false;
 

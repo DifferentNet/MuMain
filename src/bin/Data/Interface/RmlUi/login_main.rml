@@ -15,7 +15,7 @@
 			<div id="btn_menu" class="btn-icon btn-icon-primary btn-icon-menu">
 				<span class="btn-icon-label">≡</span>
 			</div>
-			<span class="btn-icon-caption">Menu</span>
+			<span id="menu_caption" class="btn-icon-caption">Menu</span>
 		</div>
 		<div id="btn_credit_item" class="btn-icon-item">
 			<div id="btn_credit" class="btn-icon btn-icon-credit">
@@ -23,7 +23,7 @@
 				<div class="btn-credit-icon"></div>
 				<span class="btn-icon-label">✦</span>
 			</div>
-			<span class="btn-icon-caption">Credits</span>
+			<span id="credit_caption" class="btn-icon-caption">Credits</span>
 		</div>
 	</div>
 </body>

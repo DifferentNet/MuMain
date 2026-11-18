@@ -53,7 +53,11 @@ std::wstring FormatDuration(std::chrono::seconds left)
 
     wchar_t text[48] = {};
     if (days > 0)
-        mu_swprintf(text, L"%lldd %lld:%02lld:%02lld", days, hours, minutes, seconds);
+    {
+        wchar_t daysText[16] = {};
+        mu_swprintf(daysText, I18N::Game::DurationDays, static_cast<int>(days));
+        mu_swprintf(text, L"%ls %lld:%02lld:%02lld", daysText, hours, minutes, seconds);
+    }
     else if (hours > 0)
         mu_swprintf(text, L"%lld:%02lld:%02lld", hours, minutes, seconds);
     else

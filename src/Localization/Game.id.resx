@@ -14075,4 +14075,95 @@
   <data name="FriendIsOnline" xml:space="preserve">
     <value>%ls sedang online.</value>
   </data>
+  <!-- Round 11 -->
+  <data name="MacroCooldown" xml:space="preserve">
+    <value>Waktu makro</value>
+  </data>
+  <data name="ServerNonPvpTag" xml:space="preserve">
+    <value>(Non-PvP)</value>
+  </data>
+  <data name="DurationDays" xml:space="preserve">
+    <value>%d hr</value>
+  </data>
+  <data name="DurationHoursMinutes" xml:space="preserve">
+    <value>%d j %02d m</value>
+  </data>
+  <data name="DurationMinutes" xml:space="preserve">
+    <value>%d mnt</value>
+  </data>
+  <data name="CharMakeBaseAttributes" xml:space="preserve">
+    <value>Atribut dasar</value>
+  </data>
+  <data name="CharSelectEnterGame" xml:space="preserve">
+    <value>Masuk</value>
+  </data>
+  <data name="LoginCredits" xml:space="preserve">
+    <value>Kredit</value>
+  </data>
+  <data name="MoveNeedsLevel" xml:space="preserve">
+    <value>Peta ini butuh level %d.</value>
+  </data>
+  <data name="MoveBlockedKiller" xml:space="preserve">
+    <value>Pembunuh tidak bisa berpindah peta.</value>
+  </data>
+  <data name="MoveBlockedAtlansMount" xml:space="preserve">
+    <value>Tidak bisa masuk Atlans dengan Uniria atau Dinorant.</value>
+  </data>
+  <data name="MoveBlockedHere" xml:space="preserve">
+    <value>Peta ini tidak bisa dicapai dari server ini.</value>
+  </data>
+  <data name="MoveNeedsGens" xml:space="preserve">
+    <value>Bergabunglah dengan Gens untuk masuk peta ini.</value>
+  </data>
+  <data name="JewelCantUseOnItem" xml:space="preserve">
+    <value>Permata ini tidak bisa dipakai pada item ini.</value>
+  </data>
+  <data name="JewelUpgradedTo" xml:space="preserve">
+    <value>%ls: naik ke +%d</value>
+  </data>
+  <data name="JewelUpgradeFailed" xml:space="preserve">
+    <value>%ls: gagal ditingkatkan, sekarang +%d</value>
+  </data>
+  <data name="JewelOptionImproved" xml:space="preserve">
+    <value>%ls: opsi meningkat</value>
+  </data>
+  <data name="DeathLostZen" xml:space="preserve">
+    <value>Hilang: %ls Zen</value>
+  </data>
+  <data name="DeathLostExperience" xml:space="preserve">
+    <value>Hilang: %ls pengalaman</value>
+  </data>
+  <data name="ZenSold" xml:space="preserve">
+    <value>Terjual: +%ls Zen</value>
+  </data>
+  <data name="ZenRepairCost" xml:space="preserve">
+    <value>Perbaikan: -%ls Zen</value>
+  </data>
+  <data name="LevelUpFreePoints" xml:space="preserve">
+    <value>Level %d. Poin bebas: %d (%ls)</value>
+  </data>
+  <data name="ResetFreePoints" xml:space="preserve">
+    <value>Reset selesai. Poin bebas: %d (%ls)</value>
+  </data>
+  <data name="GuildOnlineD" xml:space="preserve">
+    <value>(online: %d)</value>
+  </data>
+  <data name="ExpTooltipProgress" xml:space="preserve">
+    <value>EXP: %ls / %ls (%ls%%)</value>
+  </data>
+  <data name="ExpPaceLine" xml:space="preserve">
+    <value>%ls EXP/jam, level berikutnya ~%ls lagi</value>
+  </data>
+  <data name="ExpPaceRate" xml:space="preserve">
+    <value>%ls EXP/jam</value>
+  </data>
+  <data name="LevelUpFreePointsNoKey" xml:space="preserve">
+    <value>Level %d. Poin bebas: %d</value>
+  </data>
+  <data name="ResetFreePointsNoKey" xml:space="preserve">
+    <value>Reset selesai. Poin bebas: %d</value>
+  </data>
+  <data name="JewelOptionFailed" xml:space="preserve">
+    <value>%ls: peningkatan opsi gagal</value>
+  </data>
 </root>

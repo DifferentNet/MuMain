@@ -187,8 +187,8 @@ void CServerListManager::InsertServer(CServerGroup* pServerGroup, int iConnectIn
     switch (pServerInfo->m_byNonPvP)
     {
     case 1:
-        mu_swprintf(pServerInfo->m_bName, L"%ls-%d(Non-PVP) %ls", pServerGroup->m_szName,
-            pServerInfo->m_iIndex, I18N::Game::Lookup(iTextIndex));
+        mu_swprintf(pServerInfo->m_bName, L"%ls-%d%ls %ls", pServerGroup->m_szName,
+            pServerInfo->m_iIndex, I18N::Game::ServerNonPvpTag, I18N::Game::Lookup(iTextIndex));
         break;
 
     default:

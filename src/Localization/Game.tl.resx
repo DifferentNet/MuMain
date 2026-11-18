@@ -14075,4 +14075,95 @@
   <data name="FriendIsOnline" xml:space="preserve">
     <value>Online si %ls.</value>
   </data>
+  <!-- Round 11 -->
+  <data name="MacroCooldown" xml:space="preserve">
+    <value>Oras ng macro</value>
+  </data>
+  <data name="ServerNonPvpTag" xml:space="preserve">
+    <value>(Walang PvP)</value>
+  </data>
+  <data name="DurationDays" xml:space="preserve">
+    <value>%d araw</value>
+  </data>
+  <data name="DurationHoursMinutes" xml:space="preserve">
+    <value>%d oras %02d min</value>
+  </data>
+  <data name="DurationMinutes" xml:space="preserve">
+    <value>%d min</value>
+  </data>
+  <data name="CharMakeBaseAttributes" xml:space="preserve">
+    <value>Mga batayang katangian</value>
+  </data>
+  <data name="CharSelectEnterGame" xml:space="preserve">
+    <value>Pumasok</value>
+  </data>
+  <data name="LoginCredits" xml:space="preserve">
+    <value>Mga kredito</value>
+  </data>
+  <data name="MoveNeedsLevel" xml:space="preserve">
+    <value>Kailangan ng antas %d para sa mapang ito.</value>
+  </data>
+  <data name="MoveBlockedKiller" xml:space="preserve">
+    <value>Hindi ka makakalipat habang mamamatay-tao ka.</value>
+  </data>
+  <data name="MoveBlockedAtlansMount" xml:space="preserve">
+    <value>Hindi ka makakapasok sa Atlans habang nakasakay sa Uniria o Dinorant.</value>
+  </data>
+  <data name="MoveBlockedHere" xml:space="preserve">
+    <value>Hindi mararating ang mapang ito mula sa server na ito.</value>
+  </data>
+  <data name="MoveNeedsGens" xml:space="preserve">
+    <value>Sumali sa isang Gens para makapasok sa mapang ito.</value>
+  </data>
+  <data name="JewelCantUseOnItem" xml:space="preserve">
+    <value>Hindi magagamit ang hiyas na ito sa item na ito.</value>
+  </data>
+  <data name="JewelUpgradedTo" xml:space="preserve">
+    <value>%ls: na-upgrade sa +%d</value>
+  </data>
+  <data name="JewelUpgradeFailed" xml:space="preserve">
+    <value>%ls: nabigo ang upgrade, ngayon +%d</value>
+  </data>
+  <data name="JewelOptionImproved" xml:space="preserve">
+    <value>%ls: gumanda ang opsyon</value>
+  </data>
+  <data name="DeathLostZen" xml:space="preserve">
+    <value>Nawala: %ls Zen</value>
+  </data>
+  <data name="DeathLostExperience" xml:space="preserve">
+    <value>Nawala: %ls na karanasan</value>
+  </data>
+  <data name="ZenSold" xml:space="preserve">
+    <value>Naibenta: +%ls Zen</value>
+  </data>
+  <data name="ZenRepairCost" xml:space="preserve">
+    <value>Pagkumpuni: -%ls Zen</value>
+  </data>
+  <data name="LevelUpFreePoints" xml:space="preserve">
+    <value>Antas %d. Libreng puntos: %d (%ls)</value>
+  </data>
+  <data name="ResetFreePoints" xml:space="preserve">
+    <value>Tapos ang reset. Libreng puntos: %d (%ls)</value>
+  </data>
+  <data name="GuildOnlineD" xml:space="preserve">
+    <value>(online: %d)</value>
+  </data>
+  <data name="ExpTooltipProgress" xml:space="preserve">
+    <value>EXP: %ls / %ls (%ls%%)</value>
+  </data>
+  <data name="ExpPaceLine" xml:space="preserve">
+    <value>%ls EXP/oras, susunod na antas sa ~%ls</value>
+  </data>
+  <data name="ExpPaceRate" xml:space="preserve">
+    <value>%ls EXP/oras</value>
+  </data>
+  <data name="LevelUpFreePointsNoKey" xml:space="preserve">
+    <value>Antas %d. Libreng puntos: %d</value>
+  </data>
+  <data name="ResetFreePointsNoKey" xml:space="preserve">
+    <value>Tapos ang reset. Libreng puntos: %d</value>
+  </data>
+  <data name="JewelOptionFailed" xml:space="preserve">
+    <value>%ls: nabigo ang pag-upgrade ng opsyon</value>
+  </data>
 </root>

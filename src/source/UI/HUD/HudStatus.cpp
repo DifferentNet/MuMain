@@ -4,6 +4,7 @@
 #include "Core/Utilities/StringUtils.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "GameLogic/Events/MatchEvent.h"
+#include "I18N/All.h"
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlNativeTextSize.h"
 #include "UI/RmlBridge/RmlSyncField.h"
@@ -30,6 +31,7 @@ void StatusTexts::BindModel(Rml::DataModelConstructor& c, HudStatusRmlModel& mod
     c.Bind("switch_second", &model.switchSecond);
     c.Bind("macro_visible", &model.macroVisible);
     c.Bind("macro_fraction", &model.macroFraction);
+    c.Bind("macro_label", &model.macroLabel);
     c.Bind("world_centre", &model.worldCentre);
     c.Bind("countdown", &model.countdown);
 }
@@ -62,7 +64,11 @@ void StatusTexts::Sync(bool visible, bool worldOverlays)
     SyncField(binder, &HudStatusRmlModel::macroVisible, "macro_visible", macroVisible);
     SyncField(binder, &HudStatusRmlModel::macroFraction, "macro_fraction", macroVisible ? macroFraction : 0.f);
     if (macroVisible)
+    {
         SyncField(binder, &HudStatusRmlModel::worldCentre, "world_centre", UncoveredWorldCentreOnHudBoard());
+        SyncField(binder, &HudStatusRmlModel::macroLabel, "macro_label",
+                  Rml::String(StringUtils::WideToNarrow(I18N::Game::MacroCooldown)));
+    }
 
     SyncField(binder, &HudStatusRmlModel::countdown, "countdown",
               Rml::String(StringUtils::WideToNarrow(matchEvent::CountdownText().c_str())));

@@ -19,6 +19,7 @@
 #include "UI/Social/SocialUpdates.h"
 #include <algorithm>
 #include <memory>
+#include <optional>
 #include <string_view>
 #include "Network/Server/PacketText.h"
 #include "Guild/GuildCache.h"
@@ -60,6 +61,8 @@
 #include "GameLogic/Items/InventoryUtils.h"
 #include "GameLogic/Social/PartyRosterDiff.h"
 #include "UI/Inventory/InventoryContents.h"
+#include "GameLogic/Items/JewelUpgradeResult.h"
+#include "UI/Chat/CharacterChangeLines.h"
 #include "GameLogic/Commands/ChatCommandCatalog.h"
 #include "GameLogic/Events/Cinematic/CDirection.h"
 #include "Character/CSParts.h"
@@ -75,6 +78,7 @@
 #include "UI/Inventory/MixUpdates.h"
 #include "UI/Inventory/ShopUpdates.h"
 #include "Guild/GuildUpdates.h"
+#include "UI/HUD/ExperiencePace.h"
 #include "UI/HUD/HudUpdates.h"
 #include "UI/Core/WindowCommon.h" // ShowTrainerMenuDialog/ShowSeedMasterMenuDialog/etc.
 #include "GameLogic/Events/w_CursedTemple.h"
@@ -1299,6 +1303,8 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     // ones of a previous character before asking for them again.
     GameLogic::Commands::Catalog().Reset();
     GameLogic::Commands::Catalog().RequestOnce();
+    // The experience pace belongs to the previous character (or to the map left).
+    UI::HUD::ExperiencePace::Hero().Reset();
     // The windows fed by hidden chat lines forget the previous character, and the battle pass' marks and the
     // titles ask for the characters around (each feature's enteredWorld, Network/Server/HiddenChatLines.h).
     Network::HiddenChatLines::EnteredWorld();
@@ -1320,6 +1326,8 @@ void ReceiveRevival(const BYTE* ReceiveBuffer)
     CharacterAttribute->Shield = Data->Shield;
     CharacterAttribute->SkillMana = Data->SkillMana;
 
+    std::int64_t experienceBefore = 0;
+    std::int64_t experienceAfter = 0;
     if (gCharacterManager.IsMasterExperienceActive(CharacterAttribute->Class, CharacterAttribute->Level) == true)
     {
         const auto lowerBound = GetMasterLowerBound(Master_Level_Data.nMLevel);
@@ -1349,6 +1357,8 @@ void ReceiveRevival(const BYTE* ReceiveBuffer)
         }
 
         Master_Level_Data.lMasterLevel_Experince = ClampToInterval(selectedExperience, lowerBound, upperBound);
+        experienceBefore = static_cast<std::int64_t>(currentExperience);
+        experienceAfter = static_cast<std::int64_t>(Master_Level_Data.lMasterLevel_Experince);
     }
     else
     {
@@ -1373,8 +1383,13 @@ void ReceiveRevival(const BYTE* ReceiveBuffer)
         }
 
         CharacterAttribute->Experience = ClampToInterval(selectedExperience, lowerBound, upperBound);
+        experienceBefore = static_cast<std::int64_t>(currentExperience);
+        experienceAfter = static_cast<std::int64_t>(CharacterAttribute->Experience);
     }
 
+    // After a death: what it took (UI/Chat/CharacterChangeLines.h); on a plain map change nothing is said.
+    UI::Chat::ChangeLines::NoteRevivalExperience(experienceBefore, experienceAfter);
+    UI::Chat::ChangeLines::NoteZenChange(static_cast<std::int64_t>(Data->Gold) - CharacterMachine->Gold);
     CharacterMachine->Gold = Data->Gold;
     for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
     {
@@ -6102,6 +6117,7 @@ void ReceiveDie(const BYTE* ReceiveBuffer, int Size)
     {
         MUHelper::g_MuHelper.TriggerStop();
         PostKilledBy(Data, Size);
+        UI::Chat::ChangeLines::NoteHeroDeath();
     }
 
     g_ConsoleDebug->Write(MCD_RECEIVE, L"0x17 [ReceiveDie(%d)]", Key);
@@ -6276,7 +6292,9 @@ void ReceiveGetItem(std::span<const BYTE> ReceiveBuffer)
 
             int getGold = CharacterMachine->Gold - backupGold;
 
-            if (getGold > 0)
+            // A sale, a repair or a death says its own sum once its changes stop (UI/Chat/CharacterChangeLines.h).
+            const bool countedElsewhere = UI::Chat::ChangeLines::NoteZenChange(getGold);
+            if (getGold > 0 && !countedElsewhere)
             {
                 wchar_t goldText[64];
                 ConvertGold(getGold, goldText);
@@ -6472,8 +6490,13 @@ void ReceiveModifyItemExtended(std::span<const BYTE> ReceiveBuffer)
     }
 
     int itemindex = Data->Index;
-    if (IsPlayerInventorySlot(itemindex) && UI::Inventory::FindPlayerItem(itemindex))
+    const bool answersJewel = GameLogic::Items::JewelUpgrade::TakeTarget(itemindex, GetTickCount());
+    std::optional<ITEM> itemBefore;
+    if (const ITEM* oldItem = IsPlayerInventorySlot(itemindex) ? UI::Inventory::FindPlayerItem(itemindex) : nullptr)
+    {
+        itemBefore = *oldItem;
         UI::Inventory::RemoveItem(itemindex);
+    }
 
     bool shouldResyncInventory = false;
     if (IsPlayerInventorySlot(itemindex))
@@ -6483,6 +6506,10 @@ void ReceiveModifyItemExtended(std::span<const BYTE> ReceiveBuffer)
     {
         RequestInventorySync();
     }
+
+    const ITEM* itemAfter = IsPlayerInventorySlot(itemindex) ? UI::Inventory::FindPlayerItem(itemindex) : nullptr;
+    if (answersJewel && itemBefore && itemAfter != nullptr && itemAfter->Type == itemBefore->Type)
+        UI::Chat::ChangeLines::PostJewelUpgrade(*itemBefore, *itemAfter);
 
     int iType = Items[itemindex].Item.Type;
     if (iType == ITEM_LOST_MAP || iType == ITEM_POTION + 111)
@@ -6888,12 +6915,14 @@ void ReceiveSell(const BYTE* ReceiveBuffer)
         if (Data->Flag == 0xff)
         {
             UI::Inventory::RestorePickedItem();
+            UI::Chat::ChangeLines::NoteSaleRefused();
 
             UI::Chat::PostChat(Hero->ID, I18N::Game::CannotBeSold, mu::ui::window::TYPE_ERROR_MESSAGE);
         }
         else if (Data->Flag == 0xfe)
         {
             UI::Windows::HideAll();
+            UI::Chat::ChangeLines::NoteSaleRefused();
 
             UI::Chat::PostChat(Hero->ID, I18N::Game::CannotBeSold, mu::ui::window::TYPE_ERROR_MESSAGE);
         }
@@ -6901,6 +6930,7 @@ void ReceiveSell(const BYTE* ReceiveBuffer)
         {
             UI::Inventory::DiscardPickedItem();
 
+            UI::Chat::ChangeLines::NoteZenChange(static_cast<std::int64_t>(Data->Gold) - CharacterMachine->Gold);
             CharacterMachine->Gold = Data->Gold;
 
             PlayBuffer(SOUND_GET_ITEM01);
@@ -6911,6 +6941,7 @@ void ReceiveSell(const BYTE* ReceiveBuffer)
     else
     {
         UI::Inventory::RestorePickedItem();
+        UI::Chat::ChangeLines::NoteSaleRefused();
     }
 
     UI::Shop::NpcSaleFinished();
@@ -6922,6 +6953,8 @@ void ReceiveRepair(const BYTE* ReceiveBuffer)
 
     if (Data->Gold != 0)
     {
+        UI::Chat::ChangeLines::NoteRepairAsked();
+        UI::Chat::ChangeLines::NoteZenChange(static_cast<std::int64_t>(Data->Gold) - CharacterMachine->Gold);
         CharacterMachine->Gold = Data->Gold;
         CharacterMachine->CalculateAll();
         PlayBuffer(SOUND_REPAIR);
@@ -6998,6 +7031,8 @@ void ReceiveLevelUp(const BYTE* ReceiveBuffer, int Size)
             CharacterMachine->CalculateNextExperince();
             CharacterAttribute->Experience = 0;
             ++CharacterAttribute->Resets;
+            UI::HUD::ExperiencePace::Hero().Reset();
+            UI::Chat::ChangeLines::NoteLevelUp(CharacterAttribute->Level, CharacterAttribute->LevelUpPoint, true);
         }
 
         CharacterMachine->CalculateAll();
@@ -7007,6 +7042,7 @@ void ReceiveLevelUp(const BYTE* ReceiveBuffer, int Size)
     }
 
     CharacterMachine->CalculateNextExperince();
+    UI::Chat::ChangeLines::NoteLevelUp(CharacterAttribute->Level, CharacterAttribute->LevelUpPoint, false);
 
     OBJECT* o = &Hero->Object;
 

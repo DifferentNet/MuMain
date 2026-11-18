@@ -22,6 +22,7 @@
 #include "UI/Core/UIManager.h"
 #include "GameLogic/Items/ChangeRingManager.h"
 #include "GameLogic/Items/ItemCategories.h"
+#include "GameLogic/Items/JewelUpgradeResult.h"
 #include "World/MapInfra/PortalMgr.h"
 #include "GameLogic/Quests/CSQuest.h"
 #include "I18N/All.h"
@@ -32,6 +33,7 @@
 #include "UI/Mobile/ClickSource.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Mobile/ItemCard.h"
+#include "UI/Chat/CharacterChangeLines.h"
 
 #include <utility>
 
@@ -649,6 +651,7 @@ bool CInventoryActionController::HandleSellToNPC(CInventoryCtrl* targetControl) 
             int iSourceIndex = pPickedItem ? pPickedItem->GetSourceLinealPos() : -1;
             if (iSourceIndex >= MAX_EQUIPMENT_INDEX && iSourceIndex < MAX_MY_INVENTORY_EX_INDEX)
             {
+                UI::Chat::ChangeLines::NoteSaleAsked();
                 SocketClient->ToGameServer()->SendSellItemToNpcRequest(iSourceIndex);
                 g_pNPCShop->SetSellingItem(true);
             }
@@ -665,6 +668,7 @@ bool CInventoryActionController::HandleSellToNPC(CInventoryCtrl* targetControl) 
         return true;
     }
 
+    UI::Chat::ChangeLines::NoteSaleAsked();
     SocketClient->ToGameServer()->SendSellItemToNpcRequest(sourceIndex);
     g_pNPCShop->SetSellingItem(true);
     return true;
@@ -880,10 +884,12 @@ bool CInventoryActionController::RepairItemAtMousePoint(CInventoryCtrl* targetCo
 
     if (g_pNewUISystem->IsVisible(INTERFACE_NPCSHOP) && g_pNPCShop->IsRepairShop())
     {
+        UI::Chat::ChangeLines::NoteRepairAsked(*pItem);
         SocketClient->ToGameServer()->SendRepairItemRequest(iIndex, 0);
     }
     else
     {
+        UI::Chat::ChangeLines::NoteRepairAsked(*pItem);
         SocketClient->ToGameServer()->SendRepairItemRequest(iIndex, 1);
     }
 
@@ -987,10 +993,15 @@ bool CInventoryActionController::ApplyJewels(CInventoryCtrl* targetControl, CPic
     {
         const int targetIndex = targetControl->GetIndexByItem(pItem);
         SendRequestUse(iSourceIndex, targetIndex);
+        GameLogic::Items::JewelUpgrade::RememberTarget(targetIndex, GetTickCount());
         PlayBuffer(SOUND_GET_ITEM01);
         return true;
     }
 
+    // Only a piece of gear says why: a jewel let go on another jewel or a potion goes on to stack or swap.
+    const bool targetIsGear = iType <= ITEM_WINGS_OF_DARKNESS || GameLogic::Items::IsWingItem(pItem);
+    if (targetIsGear)
+        g_pSystemLogBox->AddText(I18N::Game::JewelCantUseOnItem, mu::ui::window::TYPE_ERROR_MESSAGE);
     return false;
 }
 

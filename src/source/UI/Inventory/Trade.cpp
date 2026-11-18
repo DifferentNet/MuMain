@@ -107,6 +107,7 @@ void CTrade::BindRmlModel(Rml::DataModelConstructor& c, TradeRmlModel& model)
     c.Bind("your_level_text", &model.yourLevelText);
     c.Bind("your_level_bucket", &model.yourLevelBucket);
     c.Bind("your_gold_text", &model.yourGoldText);
+    c.Bind("zen_caption", &model.zenCaption);
     c.Bind("your_gold_tier", &model.yourGoldTier);
     c.Bind("your_confirm_checked", &model.yourConfirmChecked);
 
@@ -470,6 +471,7 @@ void CTrade::SyncRmlModel()
     wchar_t goldBuf[256];
     ::ConvertGold(m_nYourTradeGold, goldBuf);
     syncWide(&TradeRmlModel::yourGoldText, "your_gold_text", goldBuf);
+    syncWide(&TradeRmlModel::zenCaption, "zen_caption", I18N::Game::Zen);
     syncText(&TradeRmlModel::yourGoldTier, "your_gold_tier",
              UI::RmlBridge::GoldTierKey(GameLogic::Items::ClassifyGoldAmount(m_nYourTradeGold)));
 

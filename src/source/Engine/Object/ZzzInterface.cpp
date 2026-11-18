@@ -2076,11 +2076,13 @@ int HeroAngle = 0;
 
 bool CheckMacroLimit(wchar_t* Text)
 {
-    wchar_t string[256];
-    int  length;
-
-    memcpy(string, Text + 3, sizeof(char) * (256 - 2));
-    length = wcslen(I18N::Game::Exchange);
+    // The macro text follows the "/N " prefix; "/N" alone stores an empty macro, which no rule forbids.
+    constexpr size_t MacroPrefixLength = 3;
+    if (wcslen(Text) <= MacroPrefixLength)
+    {
+        return false;
+    }
+    const wchar_t* string = Text + MacroPrefixLength;
     if (wcscmp(string, I18N::Game::Exchange) == 0 || wcscmp(string, I18N::Game::Trade259) == 0 || wcsicmp(string, L"/trade") == 0)
     {
         return  true;
@@ -2292,73 +2294,11 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
             g_pSystemLogBox->AddText(I18N::Game::AuctionStoreClosed, mu::ui::window::TYPE_SYSTEM_MESSAGE);
             return true;
         }
-        if (wcsstr(Text, I18N::Game::Buy) != nullptr || wcsstr(Text, L"/purchase") != nullptr)
+        // The old personal store command: only the whole first word counts, so a chat line that merely contains it is
+        // sent as usual.
+        if (UI::Chat::CommandArgument(Text, { L"/purchase", L"/buy" }, I18N::Game::Buy))
         {
-            if (gMapManager.InChaosCastle() == true)
-            {
-                g_pSystemLogBox->AddText(I18N::Game::CanTBeInChaosCastle, mu::ui::window::TYPE_SYSTEM_MESSAGE);
-                return false;
-            }
-
-            if (::IsStrifeMap(gMapManager.WorldActive))
-            {
-                g_pSystemLogBox->AddText(I18N::Game::CannotApplyInBattleZone, mu::ui::window::TYPE_SYSTEM_MESSAGE);
-                return false;
-            }
-
-            if (
-                g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_NPCSHOP)
-                || g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_STORAGE)
-                || g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_TRADE)
-                || g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_MIXINVENTORY)
-                || g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_LUCKYITEMWND)
-                )
-            {
-                g_pSystemLogBox->AddText(I18N::Game::StoreCanTBeOpened, mu::ui::window::TYPE_SYSTEM_MESSAGE);
-                return false;
-            }
-            wchar_t szCmd[24];
-            wchar_t szId[MAX_USERNAME_SIZE];
-            swscanf(Text, L"%ls %ls", szCmd, szId);
-
-            if (SelectedCharacter >= 0 && SelectedCharacter < MAX_CHARACTERS_CLIENT)
-            {
-                CHARACTER* c = &CharactersClient[SelectedCharacter];
-                OBJECT* o = &c->Object;
-                if (o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change))
-                {
-                    SocketClient->ToGameServer()->SendPlayerShopItemListRequest(c->Key, MU_C16(c->ID));
-                }
-            }
-            else
-            {
-                for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
-                {
-                    CHARACTER* c = &CharactersClient[i];
-                    if (wcslen(szId) > 0 && c->Object.Live)
-                    {
-                        if (wcscmp(c->ID, szId) == 0)
-                        {
-                            SocketClient->ToGameServer()->SendPlayerShopItemListRequest(c->Key, MU_C16(c->ID));
-                        }
-                    }
-                    else
-                    {
-                        OBJECT* o = &c->Object;
-                        if (o->Live && o->Kind == KIND_PLAYER && c != Hero && !UI::OverheadNames::IsOfflineShadow(c) && (o->Type == MODEL_PLAYER || c->Change))
-                        {
-                            BYTE Dir1 = (BYTE)((o->Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
-                            BYTE Dir2 = (BYTE)((Hero->Object.Angle[2] + 22.5f) / 360.f * 8.f + 1.f) % 8;
-                            if (abs(Dir1 - Dir2) == 4)
-                            {
-                                SocketClient->ToGameServer()->SendPlayerShopItemListRequest(c->Key, MU_C16(c->ID));
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
+            g_pSystemLogBox->AddText(I18N::Game::AuctionStoreClosed, mu::ui::window::TYPE_SYSTEM_MESSAGE);
             return true;
         }
 
@@ -2563,7 +2503,9 @@ bool CheckCommand(wchar_t* Text, bool bMacroText)
                 mu_swprintf(Name, L"/%d", i + 1);
             else
                 mu_swprintf(Name, L"/%d", 0);
-            if (Text[0] == Name[0] && Text[1] == Name[1])
+            // Only "/N" alone or followed by a space stores a macro: "/10" or "/1abc" go on as typed.
+            const bool isMacroSlotCommand = Text[0] == Name[0] && Text[1] == Name[1] && (Text[2] == L' ' || Text[2] == L'\0');
+            if (isMacroSlotCommand)
             {
                 if (CheckMacroLimit(Text) == true)
                 {
