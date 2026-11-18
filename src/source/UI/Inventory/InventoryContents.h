@@ -16,6 +16,8 @@ bool InsertItem(int index, std::span<const std::uint8_t> itemData);
 void DiscardPickedItem();
 void RestorePickedItem();
 int TransferSourceIndex();
+// The item on its way was lifted from a bag grid (not the gear, a shop, the vault or a mix).
+bool TransferStartedInBag();
 bool ReceivePlayerTransfer(int index, std::span<const std::uint8_t> itemData);
 void RejectTransfer();
 bool HasPickedItem();

@@ -68,6 +68,12 @@
 			<span class="modern-icon-btn-glyph-px">&#9874;</span>
 		</div>
 
+		<!-- Sell the junk-marked bag items (UI/Inventory/JunkSale, pad round 6 B7): pad and touch only; it asks first. -->
+		<div id="btn_sell_junk" class="modern-icon-btn-px shop-sell-junk" data-if="sell_junk_shown"
+		     data-event-click="npc_shop_sell_junk_click" data-attr-data-hint="sell_junk_tooltip">
+			<div class="shop-junk-coin"></div><span class="shop-junk-count">{{sell_junk_count}}</span>
+		</div>
+
 		<!-- Repair-money strip: base.rcss's shared .modern-wallet-px family (generalized from
 		     CMyInventory's gold strip), showing AllRepairGold instead of the character's own gold. -->
 		<div id="repair_wallet" class="modern-wallet-px shop-repair-wallet" data-class-hidden="!repair_visible">

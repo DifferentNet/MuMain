@@ -44,7 +44,7 @@ struct TabView
 };
 
 // The controls card's texts, card[0] .. in pad_overlay.rml, in this order.
-const std::array<const wchar_t* const*, 29> CardLabels = {
+const std::array<const wchar_t* const*, 31> CardLabels = {
     &I18N::Game::PadCardTitle,
     &I18N::Game::PadCardWorld,
     &I18N::Game::PadCardWindows,
@@ -73,7 +73,9 @@ const std::array<const wchar_t* const*, 29> CardLabels = {
     &I18N::Game::PadCardItemCard,
     &I18N::Game::PadCardClose,
     &I18N::Game::PadCardAllWindows,
-    &I18N::Game::PadClose};
+    &I18N::Game::PadClose,
+    &I18N::Game::PadCardLayoutLine,
+    &I18N::Game::PadCardSkillsThird};
 
 struct OverlayModel
 {
@@ -83,6 +85,8 @@ struct OverlayModel
     std::vector<Rml::String> card;
     // RT + B casts the sixth skill (a pad alone on the lower set): the card shows B in that row and says 4 to 6.
     bool cardSix = true;
+    // RB + X, Y, B cast skills 7 to 9 (the same pad alone on the lower set, pad round 6): the card's row for them.
+    bool cardNine = true;
     bool frameShown = false;
     Rml::String frameLeft;
     Rml::String frameTop;
@@ -121,6 +125,9 @@ struct OverlayModel
     Rml::String windowsLabel;
     Rml::String nextWindowLabel;
     Rml::String nextPageLabel;
+    bool offerShown = false;
+    Rml::String offerLabel;
+    Rml::String offerHoldLabel;
 };
 
 void BindModel(Rml::DataModelConstructor& c, OverlayModel& model)
@@ -137,6 +144,7 @@ void BindModel(Rml::DataModelConstructor& c, OverlayModel& model)
     c.Bind("card_page", &model.cardPage);
     c.Bind("card", &model.card);
     c.Bind("card_six", &model.cardSix);
+    c.Bind("card_nine", &model.cardNine);
     c.Bind("frame_shown", &model.frameShown);
     c.Bind("frame_left", &model.frameLeft);
     c.Bind("frame_top", &model.frameTop);
@@ -172,6 +180,9 @@ void BindModel(Rml::DataModelConstructor& c, OverlayModel& model)
     c.Bind("card_label", &model.cardLabel);
     c.Bind("close_label", &model.closeLabel);
     c.Bind("windows_label", &model.windowsLabel);
+    c.Bind("offer_shown", &model.offerShown);
+    c.Bind("offer_label", &model.offerLabel);
+    c.Bind("offer_hold_label", &model.offerHoldLabel);
 }
 
 // Over the windows and message boxes, under the item on the cursor (RmlStackingOrder.cpp); shown
@@ -258,6 +269,7 @@ void SyncCard(OverlayModel& model, const View& view)
         return;
     const bool six = UI::HUD::TouchControls::SkillButtonsInPlay() > 5;
     SyncBool(model.cardSix, six, "card_six");
+    SyncBool(model.cardNine, UI::HUD::TouchControls::SkillButtonsInPlay() > 6, "card_nine");
     std::vector<Rml::String> card;
     card.reserve(CardLabels.size());
     for (const wchar_t* const* label : CardLabels)
@@ -417,13 +429,25 @@ void SyncLegend(OverlayModel& model, const View& view)
               "close_label");
     SyncLabel(model.windowsLabel, I18N::Game::PadAllWindows, "windows_label");
 }
+
+void SyncOffer(OverlayModel& model, const View& view)
+{
+    const bool shown = view.offerText != nullptr;
+    SyncBool(model.offerShown, shown, "offer_shown");
+    if (!shown)
+        return;
+    // The offer's line is built anew for each item in the same buffer: compared as text, not by its address.
+    SyncString(model.offerLabel, StringUtils::WideToNarrow(view.offerText), "offer_label");
+    SyncLabel(model.offerHoldLabel, I18N::Game::PadOfferEquipHold, "offer_hold_label");
+}
 } // namespace
 
 namespace UI::HUD::PadOverlay
 {
 void Update(const View& view, float seconds)
 {
-    const bool shown = view.hub || view.card || view.legend || view.frame || view.prompt || view.characters;
+    const bool shown = view.hub || view.card || view.legend || view.frame || view.prompt || view.characters
+                       || view.offerText != nullptr;
     if (!shown)
     {
         g_frameWasDrawn = false;
@@ -443,6 +467,7 @@ void Update(const View& view, float seconds)
     SyncTabs(model, view);
     SyncLegend(model, view);
     SyncCharacters(model, view);
+    SyncOffer(model, view);
     SyncCard(model, view);
     UI::HUD::PadGlyphs::Sync(model.glyphs, [](const char* name) { g_View.MarkDirty(name); });
     // Shown again after a theme switch rebuilt the document, too.

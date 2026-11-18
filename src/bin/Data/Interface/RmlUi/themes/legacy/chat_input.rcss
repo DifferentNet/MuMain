@@ -113,24 +113,31 @@
 	pointer-events: none;
 }
 
-/* A phone's quick phrases (ChatInputBox.cpp, chat_quick): a row of five over the bar, shown only in
-   the theme flag "mobile"; a tap sends the phrase as Enter sends a line. */
+/* A phone's quick buttons (ChatInputBox.cpp, chat_quick and chat_phrase): the saved macros of keys 1 to 5
+   (only those set) and the twelve quick chat phrases, over the bar, shown only in the theme flag "mobile";
+   a tap sends one as Enter sends a line. One line the bar's width: a finger drags it sideways for the rest
+   (RmlTouchScroll scrolls a box with overflow-x), so it never covers the chat log above. */
 .cib-quick { display: none; }
 @media (theme: mobile) {
 	.cib-quick {
 		display: flex;
 		position: absolute;
 		left: 0;
-		/* Over the bar (47 high) with 4 between; the bar's width, a second line going up when the
-		   phrases are longer (a language's), so the row never reaches the skill buttons beside it. */
+		/* Over the bar (47 high) with 4 between; the bar's width, so the row never reaches the skill
+		   buttons beside it. One line: the chips past its end scroll in sideways. */
 		bottom: 51dp;
 		width: 281dp;
-		flex-wrap: wrap;
+		height: 30dp; /* a chip: 28 and its border */
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		overflow-y: hidden;
 		gap: 4dp;
 		white-space: nowrap;
 		pointer-events: auto;
 	}
+	.cib-quick scrollbarhorizontal { height: 0; }
 	.cib-quick-btn {
+		flex-shrink: 0;
 		height: 28dp;
 		line-height: 28dp;
 		padding: 0 6dp;

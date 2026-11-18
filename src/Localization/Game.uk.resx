@@ -13282,7 +13282,7 @@
     <value>Геймпад</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Лівий стік: ходьба. Правий стік: нахили до цілі, щоб вибрати її, утримуй, щоб іти далі в той бік; у вікні вільний вказівник</value>
+    <value>{WALKSTICK}: ходьба. {AIMSTICK}: нахили до цілі, щоб вибрати її, утримуй, щоб іти далі в той бік; у вікні вільний вказівник</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
     <value>{A}: торкнися, щоб ударити ціль раз, утримуй, щоб битися далі; без монстрів поруч підняти (утримуй) або поговорити з NPC</value>
@@ -13291,7 +13291,7 @@
     <value>{X}, {Y}, {B}: три кнопки навичок. Утримуй {RT}: {X}, {Y} і {B} застосовують навички 4–6. {RB}: член групи, якому йдуть твої лікування й бафи</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>{LS} (натисни лівий стік, по центру): розстав навички по кнопках</value>
+    <value>{LS} (натисни {WALKSTICK_OBJ}, по центру): розстав навички по кнопках</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>{B} з відкритим вікном: назад, закриває верхнє вікно</value>
@@ -13303,7 +13303,7 @@
     <value>{LB} і {LT}: зілля Q і W, з утриманим {RT} E і R. {RT} + D-pad вгору/вниз: наблизити й віддалити камеру. D-pad ліворуч: мапа (утримати: вікно телепорту). D-pad праворуч: інвентар</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>{RS} (натисни правий стік, по центру): назад до найближчої цілі</value>
+    <value>{RS} (натисни {AIMSTICK_OBJ}, по центру): назад до найближчої цілі</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
     <value>{MENU}: центр героя (інвентар, персонаж, навички, квести, гільдія, налаштування), {LB} і {RB} перемикають його вкладки. Ще раз: усі вікна. Утримуй {MENU}: чат</value>
@@ -13318,10 +13318,10 @@
     <value>Після воріт або зміни мапи відпусти стік, щоб знову йти</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>У вікні: рамка замість вказівника. D-pad або лівий стік: до наступної клітинки чи кнопки (за останнім рядком список прокручується). {A}: взяти, покласти, натиснути. {X}: одягти, використати. {Y}: картка предмета. {RB}: наступне вікно, {RT}: наступна сторінка чи вкладка. Правий стік: вільний вказівник</value>
+    <value>У вікні: рамка замість вказівника. {WALKSTICK} або D-pad: до наступної клітинки чи кнопки (за останнім рядком список прокручується). {A}: взяти, покласти, натиснути. {X}: одягти, використати. {Y}: картка предмета. {RB}: наступне вікно, {RT}: наступна сторінка чи вкладка. {AIMSTICK}: вільний вказівник</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
-    <value>Торкнися, щоб застосувати навичку раз, утримуй, щоб повторювати. Телепорт стрибає туди, куди вказує лівий стік</value>
+    <value>Торкнися, щоб застосувати навичку раз, утримуй, щоб повторювати. Телепорт стрибає туди, куди вказує {WALKSTICK_OBJ}</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
     <value>D-pad вгору: MU Helper увімк. і вимк., утримати: його налаштування. {VIEW}: Соціальне (гравці поруч: обмін, група, гільдія...)</value>
@@ -13387,10 +13387,10 @@
     <value>Занадто далеко: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Вибери навичку вказівником і {A}, потім натисни {X}, {Y} або {B} ({RT} + {X}, {Y} або {B} для кнопок 4–6), щоб поставити її туди</value>
+    <value>Вибери навичку вказівником і {A}, потім натисни {X}, {Y} або {B} ({RT} + {X}, {Y} або {B} для кнопок 4–6, {RB} + {X}, {Y} або {B} для 7–9), щоб поставити її туди</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Натисни {X}, {Y} або {B} ({RT} + {X}, {Y} або {B} для кнопок 4–6), щоб поставити туди навичку</value>
+    <value>Натисни {X}, {Y} або {B} ({RT} + {X}, {Y} або {B} для кнопок 4–6, {RB} + {X}, {Y} або {B} для 7–9), щоб поставити туди навичку</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>Ввід</value>
@@ -13438,7 +13438,7 @@
     <value>PK (меню): торкнись гравця, щоб битися з ним, далі Атака й навички тримаються його. Твою групу не чіпають</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK (меню): правий стік вибирає й гравців, {A} б'ється з ними, твоя група в безпеці</value>
+    <value>PK (меню): {AIMSTICK_OBJ} вибирає й гравців, {A} б'ється з ними, твоя група в безпеці</value>
   </data>
   <data name="TouchShopTapAgainToBuy" xml:space="preserve">
     <value>Торкнись предмета ще раз, щоб купити його.</value>
@@ -13524,6 +13524,63 @@
   <data name="PadCannotEquip" xml:space="preserve">
     <value>Цей предмет не можна одягти: дивись його вимоги</value>
   </data>
+  <data name="EquipNoRoomS" xml:space="preserve">
+    <value>Немає місця в сумці, щоб зняти %ls</value>
+  </data>
+  <data name="EquipSwapTwoItems" xml:space="preserve">
+    <value>Спершу зніміть річ з іншої руки</value>
+  </data>
+  <data name="EquipSwapStopped" xml:space="preserve">
+    <value>Заміну перервано: обидві речі в сумці</value>
+  </data>
+  <data name="PadOfferEquip" xml:space="preserve">
+    <value>Нове: %ls +%d CP</value>
+  </data>
+  <data name="PadOfferEquipHold" xml:space="preserve">
+    <value>Утримуйте, щоб одягти</value>
+  </data>
+  <data name="TouchOfferEquip" xml:space="preserve">
+    <value>Одягти</value>
+  </data>
+  <data name="JunkMark" xml:space="preserve">
+    <value>Мотлох</value>
+  </data>
+  <data name="JunkUnmark" xml:space="preserve">
+    <value>Не мотлох</value>
+  </data>
+  <data name="JunkMarkPlainGear" xml:space="preserve">
+    <value>Позначити прості речі як мотлох</value>
+  </data>
+  <data name="JunkCannotMark" xml:space="preserve">
+    <value>Мотлохом може бути лише проста зброя, щити й броня нижче +7</value>
+  </data>
+  <data name="JunkMarkedD" xml:space="preserve">
+    <value>Позначено як мотлох: %d</value>
+  </data>
+  <data name="ShopSellJunkD" xml:space="preserve">
+    <value>Продати мотлох (%d)</value>
+  </data>
+  <data name="ShopSellJunkTitle" xml:space="preserve">
+    <value>Продати мотлох</value>
+  </data>
+  <data name="ShopSellJunkCountD" xml:space="preserve">
+    <value>Продати мотлох: %d шт.?</value>
+  </data>
+  <data name="ShopSellJunkTotalS" xml:space="preserve">
+    <value>Усього: %ls зен</value>
+  </data>
+  <data name="ShopSellJunkCapD" xml:space="preserve">
+    <value>Ліміт зен: поміститься лише %d шт.</value>
+  </data>
+  <data name="ShopSellJunkDone" xml:space="preserve">
+    <value>Продано %d шт. за %ls зен</value>
+  </data>
+  <data name="ShopSellJunkStopped" xml:space="preserve">
+    <value>Продано %d з %d шт. мотлоху</value>
+  </data>
+  <data name="EquipNotNow" xml:space="preserve">
+    <value>Зараз річ не одягти</value>
+  </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Спершу зніми предмет, одягнений там</value>
   </data>
@@ -13585,7 +13642,7 @@
     <value>Зілля Q і W</value>
   </data>
   <data name="PadCardFriend" xml:space="preserve">
-    <value>Наступний член групи для лікування й бафів</value>
+    <value>Натискання: наступний член групи для лікування й бафів</value>
   </data>
   <data name="PadCardHelper" xml:space="preserve">
     <value>MU Helper увімк. і вимк. (утримати: налаштування)</value>
@@ -13969,21 +14026,6 @@
     <value>Пошкодження навичок: %d%% (макс. %d%%)</value>
   </data>
   <!-- Quick chat on a phone: the phrases over the chat line (UI/HUD/ChatInputBox.cpp) -->
-  <data name="TouchQuickChat1" xml:space="preserve">
-    <value>Привіт!</value>
-  </data>
-  <data name="TouchQuickChat2" xml:space="preserve">
-    <value>Шукаю групу</value>
-  </data>
-  <data name="TouchQuickChat3" xml:space="preserve">
-    <value>Дякую!</value>
-  </data>
-  <data name="TouchQuickChat4" xml:space="preserve">
-    <value>Іду</value>
-  </data>
-  <data name="TouchQuickChat5" xml:space="preserve">
-    <value>Допоможіть!</value>
-  </data>
   <data name="ZenAmountAll" xml:space="preserve">
     <value>Усе</value>
   </data>
@@ -14034,7 +14076,7 @@
     <value>Сумка повна: в інвентарі {Y} на предметі відкриває його картку — викинути або продати в магазині</value>
   </data>
   <data name="PadHintDeath" xml:space="preserve">
-    <value>За кілька секунд ти оживеш: відпусти лівий стік і йди далі</value>
+    <value>За кілька секунд ти оживеш: відпусти {WALKSTICK_OBJ} і йди далі</value>
   </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
@@ -14209,6 +14251,88 @@
   <data name="EmoteWin" xml:space="preserve">
     <value>перемога</value>
   </data>
+  <data name="OptionZenWalkPickup" xml:space="preserve">
+    <value>Підбирати зен під ногами (геймпад, дотик)</value>
+  </data>
+  <data name="OptionZenWalkPickupTip" xml:space="preserve">
+    <value>З геймпадом або сенсорним керуванням зен на вашій клітинці й поруч підбирається без кроку</value>
+  </data>
+  <data name="OptionGamepadLayout" xml:space="preserve">
+    <value>Розкладка геймпада</value>
+  </data>
+  <data name="OptionGamepadLayoutStandard" xml:space="preserve">
+    <value>Стандартна</value>
+  </data>
+  <data name="OptionGamepadLayoutLeftHanded" xml:space="preserve">
+    <value>Для шульги</value>
+  </data>
+  <data name="OptionGamepadLayoutSwapped" xml:space="preserve">
+    <value>Бампери й курки навпаки</value>
+  </data>
+  <data name="PadCardLayoutLine" xml:space="preserve">
+    <value>Розкладка кнопок: Налаштування &gt; Інтерфейс &gt; Розкладка геймпада</value>
+  </data>
+  <data name="PadStickLeft" xml:space="preserve">
+    <value>Лівий стік</value>
+  </data>
+  <data name="PadStickRight" xml:space="preserve">
+    <value>Правий стік</value>
+  </data>
+  <data name="PadStickLeftObject" xml:space="preserve">
+    <value>лівий стік</value>
+  </data>
+  <data name="PadStickRightObject" xml:space="preserve">
+    <value>правий стік</value>
+  </data>
+  <data name="PadHelpSkillsThird" xml:space="preserve">
+    <value>Утримуй {RB}: {X}, {Y} і {B} застосовують навички 7–9 (коротке натискання {RB} як і раніше вибирає члена групи)</value>
+  </data>
+  <data name="PadCardSkillsThird" xml:space="preserve">
+    <value>Навички 7–9</value>
+  </data>
+  <data name="PadHintSkillsThird" xml:space="preserve">
+    <value>Утримуй {RB}: {X}, {Y} і {B} застосовують навички 7–9</value>
+  </data>
+  <data name="ChatPhrase01" xml:space="preserve">
+    <value>Привіт!</value>
+  </data>
+  <data name="ChatPhrase02" xml:space="preserve">
+    <value>Дякую!</value>
+  </data>
+  <data name="ChatPhrase03" xml:space="preserve">
+    <value>Запросіть до групи</value>
+  </data>
+  <data name="ChatPhrase04" xml:space="preserve">
+    <value>Зачекайте на мене</value>
+  </data>
+  <data name="ChatPhrase05" xml:space="preserve">
+    <value>Допоможіть!</value>
+  </data>
+  <data name="ChatPhrase06" xml:space="preserve">
+    <value>Ходімо</value>
+  </data>
+  <data name="ChatPhrase07" xml:space="preserve">
+    <value>Дайте баф, будь ласка</value>
+  </data>
+  <data name="ChatPhrase08" xml:space="preserve">
+    <value>Продаю, пишіть у приват</value>
+  </data>
+  <data name="ChatPhrase09" xml:space="preserve">
+    <value>Куплю, пишіть у приват</value>
+  </data>
+  <data name="ChatPhrase10" xml:space="preserve">
+    <value>Вибачте</value>
+  </data>
+  <data name="ChatPhrase11" xml:space="preserve">
+    <value>Гарна гра</value>
+  </data>
+  <data name="ChatPhrase12" xml:space="preserve">
+    <value>Бувай</value>
+  </data>
+  <data name="PadKeyboardPhrases" xml:space="preserve">
+    <value>Фрази</value>
+  </data>
+||||||| ce163792b
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Обмін з гравцем: /trade Ім'я, якщо він поруч; інакше з вибраним гравцем на будь-якій відстані або з тим, хто стоїть навпроти.</value>

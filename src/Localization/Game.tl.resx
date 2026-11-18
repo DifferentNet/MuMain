@@ -13282,7 +13282,7 @@
     <value>Gamepad</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Kaliwang stick: lakad. Kanang stick: ikiling ito papunta sa target para piliin ito, hawakan para magpatuloy sa direksyong iyon; sa window, malayang pointer</value>
+    <value>{WALKSTICK}: lakad. {AIMSTICK}: ikiling ito papunta sa target para piliin ito, hawakan para magpatuloy sa direksyong iyon; sa window, malayang pointer</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
     <value>{A}: pindutin para tamaan ang target nang isang beses, hawakan para patuloy na lumaban; kung walang halimaw sa malapit, pumulot (hawakan) o kausapin ang NPC</value>
@@ -13291,7 +13291,7 @@
     <value>{X}, {Y}, {B}: ang tatlong button ng skill. Hawakan ang {RT}: ang {X}, {Y} at {B} ang gagamit ng skill 4 hanggang 6. {RB}: ang kasama sa party na tatanggap ng heal at buff mo</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>{LS} (pindutin papasok ang kaliwang stick, nasa gitna): ilagay ang mga skill sa mga button</value>
+    <value>{LS} (pindutin papasok ang {WALKSTICK_OBJ}, nasa gitna): ilagay ang mga skill sa mga button</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>{B} habang may bukas na window: bumalik, isinasara ang window na nasa ibabaw</value>
@@ -13303,7 +13303,7 @@
     <value>{LB} at {LT}: potion Q at W, habang hawak ang {RT} E at R. {RT} + D-pad pataas/pababa: ilapit at ilayo ang camera. D-pad pakaliwa: ang mapa (hawak: Teleport window). D-pad pakanan: ang inventory</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>{RS} (pindutin papasok ang kanang stick, nasa gitna): bumalik sa pinakamalapit na target</value>
+    <value>{RS} (pindutin papasok ang {AIMSTICK_OBJ}, nasa gitna): bumalik sa pinakamalapit na target</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
     <value>{MENU}: ang hero hub (inventory, karakter, skill, quest, guild, settings), ang {LB} at {RB} ang nagpapalit ng tab nito. Ulit: lahat ng window. Hawakan ang {MENU}: ang chat</value>
@@ -13318,10 +13318,10 @@
     <value>Pagkatapos ng gate o paglipat ng mapa, bitawan ang stick para makalakad ulit</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>Sa window: frame imbes na pointer. D-pad o kaliwang stick: sa susunod na cell o button (lampas sa huling hanay, nag-i-scroll ang listahan). {A}: kunin, ilapag, pindutin. {X}: isuot, gamitin. {Y}: ang card ng item. {RB}: ang susunod na window, {RT}: ang susunod na pahina o tab. Kanang stick: malayang pointer</value>
+    <value>Sa window: frame imbes na pointer. {WALKSTICK} o D-pad: sa susunod na cell o button (lampas sa huling hanay, nag-i-scroll ang listahan). {A}: kunin, ilapag, pindutin. {X}: isuot, gamitin. {Y}: ang card ng item. {RB}: ang susunod na window, {RT}: ang susunod na pahina o tab. {AIMSTICK}: malayang pointer</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
-    <value>Pindutin para gamitin ang skill nang isang beses, hawakan para ulitin ito. Ang Teleport ay tatalon kung saan nakaturo ang kaliwang stick</value>
+    <value>Pindutin para gamitin ang skill nang isang beses, hawakan para ulitin ito. Ang Teleport ay tatalon kung saan nakaturo ang {WALKSTICK_OBJ}</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
     <value>D-pad pataas: MU Helper bukas at sara, hawak: ang settings nito. {VIEW}: Social (mga player sa paligid: trade, party, guild...)</value>
@@ -13387,10 +13387,10 @@
     <value>Masyadong malayo: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Pumili ng skill gamit ang pointer at {A}, pagkatapos pindutin ang {X}, {Y} o {B} ({RT} + {X}, {Y} o {B} para sa button 4 hanggang 6) para ilagay ito roon</value>
+    <value>Pumili ng skill gamit ang pointer at {A}, pagkatapos pindutin ang {X}, {Y} o {B} ({RT} + {X}, {Y} o {B} para sa button 4 hanggang 6, {RB} + {X}, {Y} o {B} para sa 7 hanggang 9) para ilagay ito roon</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Pindutin ang {X}, {Y} o {B} ({RT} + {X}, {Y} o {B} para sa button 4 hanggang 6) para ilagay roon ang skill</value>
+    <value>Pindutin ang {X}, {Y} o {B} ({RT} + {X}, {Y} o {B} para sa button 4 hanggang 6, {RB} + {X}, {Y} o {B} para sa 7 hanggang 9) para ilagay roon ang skill</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>I-type</value>
@@ -13438,7 +13438,7 @@
     <value>PK (menu): pindutin ang manlalaro para labanan siya, tapos ang Atake at mga skill ay mananatili sa kanya. Ligtas ang party mo</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK (menu): pumipili rin ng player ang kanang stick, ang {A} ay lumalaban sa kanila, ligtas ang party mo</value>
+    <value>PK (menu): pumipili rin ng player ang {AIMSTICK_OBJ}, ang {A} ay lumalaban sa kanila, ligtas ang party mo</value>
   </data>
   <data name="TouchShopTapAgainToBuy" xml:space="preserve">
     <value>Pindutin ulit ang item para bilhin ito.</value>
@@ -13524,6 +13524,63 @@
   <data name="PadCannotEquip" xml:space="preserve">
     <value>Hindi maisusuot ang item na ito: tingnan ang mga requirement nito</value>
   </data>
+  <data name="EquipNoRoomS" xml:space="preserve">
+    <value>Walang puwang sa bag para hubarin ang %ls</value>
+  </data>
+  <data name="EquipSwapTwoItems" xml:space="preserve">
+    <value>Hubarin muna ang item sa kabilang kamay</value>
+  </data>
+  <data name="EquipSwapStopped" xml:space="preserve">
+    <value>Huminto ang palit: nasa bag ang dalawang item</value>
+  </data>
+  <data name="PadOfferEquip" xml:space="preserve">
+    <value>Bago: %ls +%d CP</value>
+  </data>
+  <data name="PadOfferEquipHold" xml:space="preserve">
+    <value>Pindutin nang matagal para isuot</value>
+  </data>
+  <data name="TouchOfferEquip" xml:space="preserve">
+    <value>Isuot</value>
+  </data>
+  <data name="JunkMark" xml:space="preserve">
+    <value>Basura</value>
+  </data>
+  <data name="JunkUnmark" xml:space="preserve">
+    <value>Hindi basura</value>
+  </data>
+  <data name="JunkMarkPlainGear" xml:space="preserve">
+    <value>Markahan ang simpleng gamit bilang basura</value>
+  </data>
+  <data name="JunkCannotMark" xml:space="preserve">
+    <value>Simpleng armas, kalasag at baluti lang na mas mababa sa +7 ang puwedeng basura</value>
+  </data>
+  <data name="JunkMarkedD" xml:space="preserve">
+    <value>Minarkahang basura: %d</value>
+  </data>
+  <data name="ShopSellJunkD" xml:space="preserve">
+    <value>Ibenta ang basura (%d)</value>
+  </data>
+  <data name="ShopSellJunkTitle" xml:space="preserve">
+    <value>Ibenta ang basura</value>
+  </data>
+  <data name="ShopSellJunkCountD" xml:space="preserve">
+    <value>Ibenta ang %d basurang item?</value>
+  </data>
+  <data name="ShopSellJunkTotalS" xml:space="preserve">
+    <value>Kabuuan: %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkCapD" xml:space="preserve">
+    <value>Limitasyon ng Zen: %d item lang ang kasya</value>
+  </data>
+  <data name="ShopSellJunkDone" xml:space="preserve">
+    <value>Naibenta ang %d item sa %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkStopped" xml:space="preserve">
+    <value>Naibenta ang %d sa %d basurang item</value>
+  </data>
+  <data name="EquipNotNow" xml:space="preserve">
+    <value>Hindi mapalitan ang gamit ngayon</value>
+  </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Hubarin muna ang suot na item doon</value>
   </data>
@@ -13585,7 +13642,7 @@
     <value>Potion Q at W</value>
   </data>
   <data name="PadCardFriend" xml:space="preserve">
-    <value>Susunod na kasama sa party para sa heal at buff</value>
+    <value>Pindot: susunod na kasama sa party para sa heal at buff</value>
   </data>
   <data name="PadCardHelper" xml:space="preserve">
     <value>MU Helper bukas at sara (hawakan: settings)</value>
@@ -13969,21 +14026,6 @@
     <value>Pinsala sa Kasanayan: %d%% (max %d%%)</value>
   </data>
   <!-- Quick chat on a phone: the phrases over the chat line (UI/HUD/ChatInputBox.cpp) -->
-  <data name="TouchQuickChat1" xml:space="preserve">
-    <value>Kumusta!</value>
-  </data>
-  <data name="TouchQuickChat2" xml:space="preserve">
-    <value>Hanap ng party</value>
-  </data>
-  <data name="TouchQuickChat3" xml:space="preserve">
-    <value>Salamat!</value>
-  </data>
-  <data name="TouchQuickChat4" xml:space="preserve">
-    <value>Papunta na</value>
-  </data>
-  <data name="TouchQuickChat5" xml:space="preserve">
-    <value>Tulong!</value>
-  </data>
   <data name="ZenAmountAll" xml:space="preserve">
     <value>Lahat</value>
   </data>
@@ -14034,7 +14076,7 @@
     <value>Puno ang bag: sa inventory, {Y} sa item ang nagbubukas ng card nito, para ihulog o ibenta sa tindahan</value>
   </data>
   <data name="PadHintDeath" xml:space="preserve">
-    <value>Babalik ka sa buhay sa ilang segundo: bitawan ang kaliwang stick at maglakad ulit</value>
+    <value>Babalik ka sa buhay sa ilang segundo: bitawan ang {WALKSTICK_OBJ} at maglakad ulit</value>
   </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
@@ -14209,6 +14251,88 @@
   <data name="EmoteWin" xml:space="preserve">
     <value>manalo</value>
   </data>
+  <data name="OptionZenWalkPickup" xml:space="preserve">
+    <value>Pulutin ang zen sa paanan (pad, touch)</value>
+  </data>
+  <data name="OptionZenWalkPickupTip" xml:space="preserve">
+    <value>Gamit ang gamepad o touch controls, pinupulot ang zen sa tile mo o katabi nito nang walang hakbang</value>
+  </data>
+  <data name="OptionGamepadLayout" xml:space="preserve">
+    <value>Layout ng gamepad</value>
+  </data>
+  <data name="OptionGamepadLayoutStandard" xml:space="preserve">
+    <value>Standard</value>
+  </data>
+  <data name="OptionGamepadLayoutLeftHanded" xml:space="preserve">
+    <value>Kaliwete</value>
+  </data>
+  <data name="OptionGamepadLayoutSwapped" xml:space="preserve">
+    <value>Bumper/trigger pinagpalit</value>
+  </data>
+  <data name="PadCardLayoutLine" xml:space="preserve">
+    <value>Layout ng button: Options &gt; Interface &gt; Layout ng gamepad</value>
+  </data>
+  <data name="PadStickLeft" xml:space="preserve">
+    <value>Kaliwang stick</value>
+  </data>
+  <data name="PadStickRight" xml:space="preserve">
+    <value>Kanang stick</value>
+  </data>
+  <data name="PadStickLeftObject" xml:space="preserve">
+    <value>kaliwang stick</value>
+  </data>
+  <data name="PadStickRightObject" xml:space="preserve">
+    <value>kanang stick</value>
+  </data>
+  <data name="PadHelpSkillsThird" xml:space="preserve">
+    <value>Pindutin nang matagal ang {RB}: {X}, {Y} at {B} ang gumagamit ng skill 7 hanggang 9 (ang maikling pindot ng {RB} ay pumipili pa rin ng kasama sa party)</value>
+  </data>
+  <data name="PadCardSkillsThird" xml:space="preserve">
+    <value>Skill 7–9</value>
+  </data>
+  <data name="PadHintSkillsThird" xml:space="preserve">
+    <value>Pindutin nang matagal ang {RB}: {X}, {Y} at {B} ang gumagamit ng skill 7 hanggang 9</value>
+  </data>
+  <data name="ChatPhrase01" xml:space="preserve">
+    <value>Kumusta!</value>
+  </data>
+  <data name="ChatPhrase02" xml:space="preserve">
+    <value>Salamat!</value>
+  </data>
+  <data name="ChatPhrase03" xml:space="preserve">
+    <value>Imbitahan mo ako sa party</value>
+  </data>
+  <data name="ChatPhrase04" xml:space="preserve">
+    <value>Hintayin mo ako</value>
+  </data>
+  <data name="ChatPhrase05" xml:space="preserve">
+    <value>Tulong!</value>
+  </data>
+  <data name="ChatPhrase06" xml:space="preserve">
+    <value>Tara na</value>
+  </data>
+  <data name="ChatPhrase07" xml:space="preserve">
+    <value>Pa-buff naman</value>
+  </data>
+  <data name="ChatPhrase08" xml:space="preserve">
+    <value>Nagbebenta, i-whisper mo ako</value>
+  </data>
+  <data name="ChatPhrase09" xml:space="preserve">
+    <value>Bumibili, i-whisper mo ako</value>
+  </data>
+  <data name="ChatPhrase10" xml:space="preserve">
+    <value>Pasensya na</value>
+  </data>
+  <data name="ChatPhrase11" xml:space="preserve">
+    <value>Magandang laro</value>
+  </data>
+  <data name="ChatPhrase12" xml:space="preserve">
+    <value>Paalam</value>
+  </data>
+  <data name="PadKeyboardPhrases" xml:space="preserve">
+    <value>Parirala</value>
+  </data>
+||||||| ce163792b
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Makipagpalitan sa player: /trade Pangalan kung nakikita siya; kung hindi, sa player na pinili mo kahit gaano kalayo, o sa nakaharap sa iyo.</value>

@@ -28,35 +28,53 @@ float DistanceTo(const Box& box, float x, float y)
     return std::hypot(dx, dy);
 }
 
-// How far `to` lies the way (dx, dy) points from `from`, weighing a step aside more than one ahead;
-// a negative score when it does not lie that way.
-float Score(const Box& from, const Box& to, int dx, int dy)
+struct Way
+{
+    // How far `to` lies the way (dx, dy) points from `from`, weighing a step aside more than one ahead;
+    // negative when it does not lie that way.
+    float score = -1.f;
+    // Whether `to` spans the start's centre line across the way: it lies in the start's row (or column).
+    bool inLine = false;
+};
+
+Way Score(const Box& from, const Box& to, int dx, int dy)
 {
     const float ahead = dx != 0 ? (to.CentreX() - from.CentreX()) * static_cast<float>(dx)
                                 : (to.CentreY() - from.CentreY()) * static_cast<float>(dy);
     const float size = dx != 0 ? from.right - from.left : from.bottom - from.top;
     if (ahead <= size * AheadShare)
-        return -1.f;
+        return {};
     // Aside: how far the start's centre lies past the target's side, none when the target spans it (a
     // list's wide row under a button at its right end).
     const float aside = dx != 0 ? std::max({to.top - from.CentreY(), 0.f, from.CentreY() - to.bottom})
                                 : std::max({to.left - from.CentreX(), 0.f, from.CentreX() - to.right});
-    return ahead + aside * AsideWeight;
+    // In line also when the target's centre lies in the start's band: a small slot beside a big one (the
+    // pendant between a weapon and the armour) is not passed over for a farther target the line crosses.
+    const float centre = dx != 0 ? to.CentreY() : to.CentreX();
+    const bool centreInBand = dx != 0 ? centre >= from.top && centre <= from.bottom
+                                      : centre >= from.left && centre <= from.right;
+    return {ahead + aside * AsideWeight, aside <= 0.f || centreInBand};
 }
 
+// The best target that way: one in the start's row (or column) before any off it, however near that
+// one is (pad round 6: the bag's thin tab row, whose next button lay farther than the gear slot just
+// above the row).
 int BestThatWay(std::span<const Target> targets, int from, int dx, int dy, bool sameWindow)
 {
     const Target& start = targets[from];
     int best = None;
-    float bestScore = std::numeric_limits<float>::max();
+    Way bestWay{std::numeric_limits<float>::max(), false};
     for (int i = 0; i < static_cast<int>(targets.size()); ++i)
     {
         if (i == from || (targets[i].window == start.window) != sameWindow)
             continue;
-        const float score = Score(start.box, targets[i].box, dx, dy);
-        if (score >= 0.f && score < bestScore)
+        const Way way = Score(start.box, targets[i].box, dx, dy);
+        if (way.score < 0.f)
+            continue;
+        const bool better = way.inLine != bestWay.inLine ? way.inLine : way.score < bestWay.score;
+        if (best == None || better)
         {
-            bestScore = score;
+            bestWay = way;
             best = i;
         }
     }

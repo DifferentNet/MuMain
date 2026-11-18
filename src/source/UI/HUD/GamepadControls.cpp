@@ -46,6 +46,7 @@
 #include "UI/HUD/TouchControls.h"
 #include "UI/Inventory/InventoryContents.h"
 #include "UI/Inventory/MyInventory.h"
+#include "UI/Inventory/QuickEquip.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Windows/MsgWin.h"
 #include "UI/Windows/SysMenuWin.h"
@@ -100,6 +101,11 @@ constexpr auto ChatHold = std::chrono::milliseconds(500);
 constexpr auto DpadHold = std::chrono::milliseconds(500);
 // The RT page toggle: RT let go sooner is a tap that turns the page; held longer, the page stays.
 constexpr auto RtTapTime = std::chrono::milliseconds(400);
+// RB let go sooner, with no skill cast meanwhile, is a tap that chooses the next party member; held
+// longer it only showed the third page of skills.
+constexpr auto RbTapTime = std::chrono::milliseconds(400);
+// The third page (RB held) is in play from this many skill buttons on: a pad alone on the lower set.
+constexpr int ThirdPageButtons = 7;
 // The A toggle: latched with no foe picked within this, the attack lets go.
 constexpr auto AttackPickTime = std::chrono::milliseconds(1000);
 // D-pad down talks to an NPC this near when no drop lies around.
@@ -130,17 +136,38 @@ enum class When : std::uint8_t
     NoFrame,
 };
 
-// Which page of skills a mapping belongs to: the right trigger held turns X and Y to the skill
-// buttons 4 and 5 (ghinzuro, 2026-11-03: three skills on the screen, RT held for the rest).
+// Which page of skills a mapping belongs to: the right trigger held turns X, Y and B to the skill
+// buttons 4 to 6 (ghinzuro, 2026-11-03: three skills on the screen, RT held for the rest), the right
+// bumper held to the buttons 7 to 9 (pad round 6, ghinzuro 2026-11-18). RB wins while it is held.
 enum class Page : std::uint8_t
 {
     Any,
     Main,
     Alt,
+    Third,
 };
 
+// The page numbers Pad::PageLatch keeps.
+constexpr int MainPage = 0;
+constexpr int AltPage = 1;
+constexpr int ThirdPage = 2;
+
+constexpr int PageNumber(Page page)
+{
+    switch (page)
+    {
+    case Page::Alt:
+        return AltPage;
+    case Page::Third:
+        return ThirdPage;
+    default:
+        return MainPage;
+    }
+}
+
 // The pad buttons that press a control as long as they are held, laid out as Diablo's pads: A attacks,
-// X, Y and B cast (with RT held, X, Y and B the next skills), the bumper and trigger on the left drink.
+// X, Y and B cast (with RT held, X, Y and B the next skills, with RB held the three after them), the
+// bumper and trigger on the left drink.
 struct Mapping
 {
     Button pad;
@@ -157,6 +184,10 @@ constexpr Mapping Mappings[] = {
     {Button::Y, PadButton::Skill4, When::World, Page::Alt},
     // The sixth skill (pad round 3): only while the touch controls have six buttons in play.
     {Button::B, PadButton::Skill5, When::World, Page::Alt},
+    // The skills 7 to 9 (pad round 6): only while the touch controls have nine buttons in play.
+    {Button::X, PadButton::Skill6, When::World, Page::Third},
+    {Button::Y, PadButton::Skill7, When::World, Page::Third},
+    {Button::B, PadButton::Skill8, When::World, Page::Third},
     {Button::B, PadButton::Back, When::Window},
     {Button::LeftShoulder, PadButton::PotionQ, When::Always, Page::Main},
     {Button::LeftTrigger, PadButton::PotionW, When::Always, Page::Main},
@@ -167,11 +198,9 @@ constexpr Mapping Mappings[] = {
     {Button::View, PadButton::Social, When::Always},
 };
 
-bool Applies(const Mapping& mapping, bool windowOpen, bool frameOpen, bool alt)
+bool Applies(const Mapping& mapping, bool windowOpen, bool frameOpen, int page)
 {
-    if (mapping.page == Page::Main && alt)
-        return false;
-    if (mapping.page == Page::Alt && !alt)
+    if (mapping.page != Page::Any && PageNumber(mapping.page) != page)
         return false;
     switch (mapping.when)
     {
@@ -241,7 +270,7 @@ struct State
     // Buttons held while the menu was open: they act in the world only once let go, so the B that
     // closed the menu does not go on to press Back.
     std::array<bool, Pad::ButtonCount> waitForRelease{};
-    // The page (RT held or not) each button went down on, kept until it is let go.
+    // The page (RT or RB held or not) each button went down on, kept until it is let go.
     std::array<Pad::PageLatch, Pad::ButtonCount> pages{};
     PointerPress a;
     // A window is open: the right stick plays the pointer, A clicks, X right-clicks, B goes back.
@@ -256,6 +285,8 @@ struct State
     LongPress menuPress;
     LongPress dpadUpPress;
     LongPress dpadLeftPress;
+    // D-pad right, read as a tap or a hold only while the quick equip offer is up (UI/Inventory/QuickEquip).
+    LongPress dpadRightPress;
     // D-pad down's press talks to an NPC (no drop around), rather than holding the pickup button.
     bool dpadDownTalks = false;
     // A, pressed with no foe near and a drop around, holds the pickup button until let go.
@@ -303,6 +334,11 @@ struct State
     bool rtTapping = false;
     bool rtUsed = false;
     Clock::time_point rtDownAt{};
+    // RB went down in the world at rbDownAt (rbTapping), and X, Y or B was pressed meanwhile (rbUsed: a
+    // skill of the third page, not a tap then). FollowFriendTap.
+    bool rbTapping = false;
+    bool rbUsed = false;
+    Clock::time_point rbDownAt{};
     Clock::time_point lastFrame{};
     // Seconds since the last frame (FrameSeconds), for the overlay's glide.
     float frameSeconds = 0.f;
@@ -488,11 +524,13 @@ void StopAttackToggle()
 void ReleaseControls()
 {
     StopAttackToggle();
-    // An RT let go in a menu, a window or a death is no tap of the page toggle.
+    // An RT or RB let go in a menu, a window or a death is no tap of the page toggle or the party.
     g_state.rtTapping = false;
+    g_state.rbTapping = false;
     for (const Mapping& mapping : Mappings)
         Controls::SetPadHeld(mapping.control, false);
     Controls::SetPadAlt(false, false);
+    Controls::SetPadThird(false);
     Controls::SetPadHeld(PadButton::PickUp, false);
     Controls::SetPadHeld(PadButton::Menu, false);
 }
@@ -538,6 +576,7 @@ void ForgetLongPresses()
     g_state.menuPress = {};
     g_state.dpadUpPress = {};
     g_state.dpadLeftPress = {};
+    g_state.dpadRightPress = {};
 }
 
 void WaitForRelease()
@@ -978,6 +1017,29 @@ void FollowPageToggle(const Presses& presses, Clock::time_point now)
         g_state.pageLatched = !g_state.pageLatched;
 }
 
+// RB in the world: held, X, Y and B cast the third page of skills (HoldMappedControls); a tap, let go
+// within RbTapTime with no X, Y or B pressed meanwhile, chooses whom the heals and buffs go to
+// (ghinzuro, 2026-11-04; on the release since pad round 6, as the press may start the third page).
+void FollowFriendTap(const Presses& presses, Clock::time_point now)
+{
+    if (Pressed(presses, Button::RightShoulder) && !g_state.waitForRelease[static_cast<int>(Button::RightShoulder)])
+    {
+        g_state.rbTapping = true;
+        g_state.rbUsed = false;
+        g_state.rbDownAt = now;
+    }
+    // X, Y or B make it no tap only while they cast the third page: with fewer buttons (touch, the upper
+    // set) RB does nothing to them, and a tap of it beside a skill still chooses.
+    if (g_state.rbTapping && Controls::SkillButtonsInPlay() >= ThirdPageButtons
+        && (Pressed(presses, Button::X) || Pressed(presses, Button::Y) || Pressed(presses, Button::B)))
+        g_state.rbUsed = true;
+    if (!g_state.rbTapping || Held(Button::RightShoulder))
+        return;
+    g_state.rbTapping = false;
+    if (!g_state.rbUsed && now - g_state.rbDownAt < RbTapTime)
+        GameLogic::Touch::ChooseNextFriend();
+}
+
 // A with the attack toggle on (pad round 5): a tap on a foe starts the attack, and it goes on with A let
 // go. It stops on the next tap of A, a walk with the left stick, B, a window opening, a death or a warp
 // (ReleaseControls), the MU Helper at work, and as the foe dies or goes out of reach: it goes on only
@@ -1038,10 +1100,11 @@ void HoldMappedControls(const Presses& presses, Clock::time_point now)
     const bool attackToggle =
         GameConfig::GetInstance().GetGamepadAttackToggle() && !MUHelper::g_MuHelper.IsActive();
     std::array<bool, static_cast<int>(PadButton::Count)> held{};
-    // The second page shows only in the world: over a window X and Y act on the items. The buttons
-    // say the page RT shows now; each button acts on the page it went down on (Pad::PageLatch).
-    // With the RT toggle, the page a tap of RT turned stays up for the skills (FollowPageToggle); the
-    // potions on LB and LT drink E and R only while RT is held.
+    // The second and third pages show only in the world: over a window X and Y act on the items. The
+    // buttons say the page RT or RB shows now; each button acts on the page it went down on
+    // (Pad::PageLatch). With the RT toggle, the page a tap of RT turned stays up for the skills
+    // (FollowPageToggle); the potions on LB and LT drink E and R only while RT is held. RB held wins
+    // over RT, held or toggled, for the skills; the potions still follow RT.
     const bool pageToggle = GameConfig::GetInstance().GetGamepadPageToggle();
     if (pageToggle)
         FollowPageToggle(presses, now);
@@ -1049,18 +1112,23 @@ void HoldMappedControls(const Presses& presses, Clock::time_point now)
         g_state.pageLatched = false;
     const bool rtHeld = Held(Button::RightTrigger) && !g_state.windowOpen;
     const bool altShown = pageToggle ? g_state.pageLatched && !g_state.windowOpen : rtHeld;
-    Controls::SetPadAlt(altShown, rtHeld);
-    std::array<bool, Pad::ButtonCount> alt{};
+    const bool thirdShown = HoldsControl(Button::RightShoulder) && !g_state.windowOpen
+                            && Controls::SkillButtonsInPlay() >= ThirdPageButtons;
+    Controls::SetPadAlt(altShown && !thirdShown, rtHeld);
+    Controls::SetPadThird(thirdShown);
+    const int skillPage = thirdShown ? ThirdPage : (altShown ? AltPage : MainPage);
+    const int potionPage = rtHeld ? AltPage : MainPage;
+    std::array<int, Pad::ButtonCount> page{};
     for (int button = 0; button < Pad::ButtonCount; ++button)
     {
         const Button pad = static_cast<Button>(button);
         const bool potion = pad == Button::LeftShoulder || pad == Button::LeftTrigger;
         const Pad::ButtonState& state = Pad::GetButton(pad);
-        alt[button] = g_state.pages[button].Alt(state.held, state.presses, potion ? rtHeld : altShown);
+        page[button] = g_state.pages[button].Page(state.held, state.presses, potion ? potionPage : skillPage);
     }
     for (const Mapping& mapping : Mappings)
     {
-        if (!Applies(mapping, g_state.windowOpen, g_state.frameOpen, alt[static_cast<int>(mapping.pad)]))
+        if (!Applies(mapping, g_state.windowOpen, g_state.frameOpen, page[static_cast<int>(mapping.pad)]))
             continue;
         // Toggled, the attack is held by the latch, not by A (PlayAttackToggle).
         if (mapping.control == PadButton::Attack && attackToggle)
@@ -1308,6 +1376,39 @@ void PlayDpadUp(const Presses& presses, Clock::time_point now)
     }
 }
 
+void OpenInventory()
+{
+    Core::Input::Touch::TapKey(KeyBindings::Runtime::KeyOf(KeyBindings::Action::Inventory));
+}
+
+// D-pad right opens the inventory as it goes down. With the quick equip offer up (pad round 6, B3) it waits instead:
+// a tap opens the inventory, held half a second it puts the offered item on. Only a press that went down while the
+// offer was up can put it on, so a held d-pad never takes an offer that came meanwhile.
+void PlayDpadRight(const Presses& presses, Clock::time_point now)
+{
+    const bool freshPress =
+        Pressed(presses, Button::DpadRight) && !g_state.waitForRelease[static_cast<int>(Button::DpadRight)];
+    const bool tracking = g_state.dpadRightPress.down;
+    if (!tracking && !(freshPress && UI::Inventory::QuickEquip::HasOffer()))
+    {
+        if (freshPress)
+            OpenInventory();
+        return;
+    }
+    switch (ReadLongPress(g_state.dpadRightPress, Button::DpadRight, presses, now, DpadHold))
+    {
+    case PressKind::Tap:
+        OpenInventory();
+        break;
+    case PressKind::Hold:
+        if (!UI::Inventory::QuickEquip::Accept())
+            OpenInventory();
+        break;
+    default:
+        break;
+    }
+}
+
 // D-pad left and right (no window open): the map (Tab) and the inventory (I), as a keyboard
 // opens them (ghinzuro, 2026-11-03), with the keys the player bound. Left held half a second: the Teleport window (M) instead.
 void PlayDpadSides(const Presses& presses, Clock::time_point now)
@@ -1323,8 +1424,7 @@ void PlayDpadSides(const Presses& presses, Clock::time_point now)
     default:
         break;
     }
-    if (Pressed(presses, Button::DpadRight) && !g_state.waitForRelease[static_cast<int>(Button::DpadRight)])
-        Core::Input::Touch::TapKey(KeyBindings::Runtime::KeyOf(KeyBindings::Action::Inventory));
+    PlayDpadRight(presses, now);
 }
 
 // A window opened or closed: what was held lets go and acts again only once let go, as the buttons
@@ -1447,9 +1547,8 @@ void PlayWorld(SDL_Window* window, Presses presses, float seconds, Clock::time_p
         PlayMeet(window, presses, now);
         PlayContextA(window, presses);
         PlayAttackToggle(presses, now);
-        // RB: whom the heals and buffs go to (ghinzuro, 2026-11-04).
-        if (Pressed(presses, Button::RightShoulder) && !g_state.waitForRelease[static_cast<int>(Button::RightShoulder)])
-            GameLogic::Touch::ChooseNextFriend();
+        // RB: a tap chooses whom the heals and buffs go to, held it shows the third page of skills.
+        FollowFriendTap(presses, now);
         g_state.promptDrop = GameLogic::Touch::NearestDropToPick();
         if (g_state.promptDrop != -1)
             UI::HUD::PadHints::Show(UI::HUD::PadHints::Hint::PickUp);
@@ -1814,6 +1913,8 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
     const std::optional<float> windowsLeft = UI::HUD::PadTargets::WindowsLeft();
     if (g_state.frameOpen && windowsLeft && context != nullptr)
         view.topRight = std::max(static_cast<float>(context->GetDimensions().x) - *windowsLeft, 0.f);
+    // The quick equip offer, d-pad right held to take it (no window over the world: the d-pad hops the frame there).
+    view.offerText = g_state.windowOpen ? nullptr : UI::Inventory::QuickEquip::OfferText();
     using Prompt = UI::HUD::PadOverlay::View::Prompt;
     // The NPC or player chosen says what A does, under their feet; else the drop d-pad down takes.
     const int meet = g_state.windowOpen ? -1 : g_state.meet;
@@ -1842,6 +1943,11 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
 
 namespace UI::HUD::GamepadControls
 {
+bool IsGameWindowOpen()
+{
+    return ::IsGameWindowOpen();
+}
+
 bool PlaysPointer()
 {
     return g_state.inUse && (!g_state.inWorld || g_state.windowOpen);

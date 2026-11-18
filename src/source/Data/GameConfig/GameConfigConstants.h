@@ -17,6 +17,7 @@ namespace CfgSections
     inline constexpr wchar_t CfgSectionKeyBindings[] = L"KeyBindings";
     // MU Skynet: the chat macros (Alt+1..Alt+0, typed as "/1 text".."/0 text"), Macro1..Macro10.
     inline constexpr wchar_t CfgSectionChatMacros[] = L"ChatMacros";
+    inline constexpr wchar_t CfgSectionJunk[] = L"Junk";
 }
 
 namespace CfgKeys
@@ -102,6 +103,11 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyGamepadPageToggle[] = L"GamepadPageToggle";
     // MU Moldova: which one-time pad hints showed already, one bit each (UI/HUD/PadHints).
     inline constexpr wchar_t CfgKeyGamepadHintsSeen[] = L"GamepadHintsSeen";
+    // MU Skynet: the pad's button layout, 0 Standard, 1 Left-handed, 2 Bumpers/triggers swapped
+    // (Options -> Interface, Core/Input/GamepadLayout.h).
+    inline constexpr wchar_t CfgKeyGamepadLayout[] = L"GamepadLayout";
+    // MU Skynet: pad and touch players take the zen they walk over (Options -> Gameplay).
+    inline constexpr wchar_t CfgKeyZenWalkPickup[] = L"ZenWalkPickup";
     // Animates characters on worker threads when many are in view: auto (default: on a PC with 4 or
     // more hardware threads), 0/off or 1/on; --enable-taskpool / --disable-taskpool override it. Manual
     // config.ini edit only.
@@ -350,6 +356,11 @@ namespace CfgDefaults
     inline constexpr bool CfgDefaultGamepadAttackToggle = false;
     inline constexpr bool CfgDefaultGamepadPageToggle = false;
     inline constexpr int CfgDefaultGamepadHintsSeen = 0;
+    // Standard, as the pad always played; the last of Core::Input::Gamepad::Layout.
+    inline constexpr int CfgDefaultGamepadLayout = 0;
+    inline constexpr int CfgMaxGamepadLayout = 2;
+    // On (pad round 6, ghinzuro 2026-11-18: on by default, an option to turn it off).
+    inline constexpr bool CfgDefaultZenWalkPickup = true;
 
     // Bounds GameConfig clamps to, on load and on set. Below 75% text gets too small to read;
     // above 150% a docked panel no longer fits a small window.

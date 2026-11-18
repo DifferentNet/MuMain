@@ -144,6 +144,11 @@ public:
     std::wstring GetChatMacro(int slot);
     void SetChatMacro(int slot, const std::wstring& text);
 
+    // One character's junk marks in [Junk], keyed by the character's name (UI::Inventory::JunkSale); "" when none.
+    // SetJunkMarks writes at once; empty marks remove the line.
+    std::wstring GetJunkMarks(const std::wstring& character);
+    void SetJunkMarks(const std::wstring& character, const std::wstring& marks);
+
     // The phone or PC layout and the controls, as config.ini words (UI::Mobile::InterfaceMode).
     const std::wstring& GetInterfaceView() const { return m_interfaceView; }
     void SetInterfaceView(const std::wstring& view) { m_interfaceView = view; }
@@ -184,6 +189,13 @@ public:
     // The one-time pad hints that showed already, one bit each (UI/HUD/PadHints).
     int GetGamepadHintsSeen() const { return m_gamepadHintsSeen; }
     void SetGamepadHintsSeen(int bits) { m_gamepadHintsSeen = bits; }
+    // The pad's button layout: 0 Standard, 1 Left-handed, 2 Bumpers/triggers swapped
+    // (Core::Input::Gamepad::Layout).
+    int GetGamepadLayout() const { return m_gamepadLayout; }
+    void SetGamepadLayout(int layout);
+    // Whether pad and touch players take the zen they walk over (GameLogic::Touch::TakeZenUnderfoot).
+    bool GetZenWalkPickup() const { return m_zenWalkPickup; }
+    void SetZenWalkPickup(bool on) { m_zenWalkPickup = on; }
 
     // Chat commands - the favourites and the named templates of the command
     // window. They belong to the installation, not to a character.
@@ -493,6 +505,8 @@ private:
     bool m_gamepadAttackToggle = false;
     bool m_gamepadPageToggle = false;
     int m_gamepadHintsSeen = 0;
+    int m_gamepadLayout = 0;
+    bool m_zenWalkPickup = true;
     std::wstring m_enableAnimationTaskPool;
     bool m_reuseCharacterBones = true;
 

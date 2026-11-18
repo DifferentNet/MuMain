@@ -2,7 +2,10 @@
 #include "UI/HUD/PadGlyphs.h"
 
 #include "Core/Input/GamepadInput.h"
+#include "Core/Input/GamepadLayout.h"
 #include "I18N/All.h"
+
+#include <utility>
 
 namespace UI::HUD::PadGlyphs
 {
@@ -47,6 +50,36 @@ void SyncName(Rml::String& field, const char* value, const char* name,
     field = value;
     markDirty(name);
 }
+
+// The sticks' glyphs are the same for every maker: LS, RS, and L3 for the left stick pressed in.
+constexpr const char* LeftStickName = "LS";
+constexpr const char* RightStickName = "RS";
+constexpr const char* LeftClickName = "L3";
+constexpr const char* RightClickName = "R3";
+
+// The names by the game's button each physical one plays: the layout's pairs trade their names.
+void SwapForLayout(Names& names, Core::Input::Gamepad::Layout layout)
+{
+    if (!Core::Input::Gamepad::SwapsShoulders(layout))
+        return;
+    std::swap(names.lb, names.lt);
+    std::swap(names.rb, names.rt);
+}
+
+void SwapForLayout(PadButtonNames::Names& names, Core::Input::Gamepad::Layout layout)
+{
+    if (Core::Input::Gamepad::SwapsShoulders(layout))
+    {
+        std::swap(names.lb, names.lt);
+        std::swap(names.rb, names.rt);
+    }
+    if (Core::Input::Gamepad::SwapsSticks(layout))
+    {
+        std::swap(names.ls, names.rs);
+        std::swap(names.walkStick, names.aimStick);
+        std::swap(names.walkStickObject, names.aimStickObject);
+    }
+}
 } // namespace
 
 void Bind(Rml::DataModelConstructor& constructor, Model& model)
@@ -60,6 +93,10 @@ void Bind(Rml::DataModelConstructor& constructor, Model& model)
     constructor.Bind("glyph_rb", &model.rb);
     constructor.Bind("glyph_lt", &model.lt);
     constructor.Bind("glyph_rt", &model.rt);
+    constructor.Bind("glyph_ls", &model.ls);
+    constructor.Bind("glyph_rs", &model.rs);
+    constructor.Bind("glyph_l3", &model.l3);
+    constructor.Bind("glyph_swap", &model.swapShoulders);
 }
 
 void Sync(Model& model, const std::function<void(const char*)>& markDirty)
@@ -71,7 +108,16 @@ void Sync(Model& model, const std::function<void(const char*)>& markDirty)
         model.family = family;
         markDirty("glyph_family");
     }
-    const Names& names = NamesOf(kind);
+    const Core::Input::Gamepad::Layout layout = Core::Input::Gamepad::GetLayout();
+    Names names = NamesOf(kind);
+    SwapForLayout(names, layout);
+    const bool sticksSwapped = Core::Input::Gamepad::SwapsSticks(layout);
+    const bool shouldersSwapped = Core::Input::Gamepad::SwapsShoulders(layout);
+    if (model.swapShoulders != shouldersSwapped)
+    {
+        model.swapShoulders = shouldersSwapped;
+        markDirty("glyph_swap");
+    }
     SyncName(model.a, names.a, "glyph_a", markDirty);
     SyncName(model.b, names.b, "glyph_b", markDirty);
     SyncName(model.x, names.x, "glyph_x", markDirty);
@@ -80,11 +126,19 @@ void Sync(Model& model, const std::function<void(const char*)>& markDirty)
     SyncName(model.rb, names.rb, "glyph_rb", markDirty);
     SyncName(model.lt, names.lt, "glyph_lt", markDirty);
     SyncName(model.rt, names.rt, "glyph_rt", markDirty);
+    SyncName(model.ls, sticksSwapped ? RightStickName : LeftStickName, "glyph_ls", markDirty);
+    SyncName(model.rs, sticksSwapped ? LeftStickName : RightStickName, "glyph_rs", markDirty);
+    SyncName(model.l3, sticksSwapped ? RightClickName : LeftClickName, "glyph_l3", markDirty);
 }
 
 PadButtonNames::Names TextNames(Core::Input::Gamepad::PadKind kind)
 {
     PadButtonNames::Names names;
+    // The sticks in the language's words, left walking and right aiming until the layout swaps them.
+    names.walkStick = I18N::Game::PadStickLeft;
+    names.aimStick = I18N::Game::PadStickRight;
+    names.walkStickObject = I18N::Game::PadStickLeftObject;
+    names.aimStickObject = I18N::Game::PadStickRightObject;
     switch (kind)
     {
     case Core::Input::Gamepad::PadKind::PlayStation:
@@ -116,6 +170,7 @@ PadButtonNames::Names TextNames(Core::Input::Gamepad::PadKind kind)
     case Core::Input::Gamepad::PadKind::Xbox:
         break;
     }
+    SwapForLayout(names, Core::Input::Gamepad::GetLayout());
     return names;
 }
 

@@ -120,11 +120,21 @@ bool BindHotKey(int hotKey);
 [[nodiscard]] bool HotKeyHoldsSkill(int hotKey);
 // Whether the hotkey's skill wants more mana or AG than the character has: its button shows it.
 [[nodiscard]] bool HotKeyShortOfMana(int hotKey);
+// Whether the hotkey's buff is still on the one it goes to (the hero, or the party member chosen for
+// the heals and buffs): its button shows a ring, and held it does not cast the buff again.
+[[nodiscard]] bool HotKeyBuffRuns(int hotKey);
 
 // Walks to the nearest drop that fits the bag and takes it, then the next, until none is left; says
 // so once in a while when only drops that do not fit lie around. Called every frame while the
 // pickup button is held, and after a tap until done.
 Progress PickUpNearest();
+
+// Zen underfoot (Options -> Gameplay, on to start with; pad round 6, B5): zen on the hero's tile or a
+// neighbouring one is asked for where the hero stands, never with a step. Called once a frame while the
+// touch or pad controls show; looks every 250 ms at most, waits for the answer to the pickup before, and
+// passes over a pile asked for (twice and still lying there: 30 s). Nothing while the MU Helper plays,
+// the hero is dead or warps, or a window is open; a pile the loot filter hides stays.
+void TakeZenUnderfoot();
 
 // The pad's right stick picks the target (UI/HUD/GamepadControls): the next monster (or enemy player
 // where players fight) by distance, step 1 the next further, -1 the next nearer, going round. The one

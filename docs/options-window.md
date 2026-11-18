@@ -49,8 +49,8 @@ The window has five tabs:
 | Display | Resolution, windowed mode, VSync, FPS limit, UI scale |
 | Graphics | Quality: graphics preset, Enhanced graphics, anti-aliasing, FXAA, sharpening, anisotropic filtering, render level. Effects: the effect toggles. Shadows: the shadow toggles |
 | Audio | Sound and music volume, whisper sound |
-| Gameplay | Auto attack, slide help |
-| Interface | Language, font, UI theme, FPS counter, debug info |
+| Gameplay | Auto attack, slide help, pick up zen underfoot (pad and touch: zen on the hero's tile or next to it is asked for without a step; on by default) |
+| Interface | Language, font, UI theme, FPS counter, debug info, gamepad layout (Standard, Left-handed: sticks and their clicks swapped, Bumpers/triggers swapped: LB with LT and RB with RT; shown while the pad is on) |
 
 Each setting is a row with its name on the left and its control on the
 right, aligned in two columns. A tab's settings scroll when they don't fit,
@@ -171,6 +171,9 @@ window writes to these sections:
   `--disable-taskpool` command-line flags) animates characters on worker
   threads, and `ReuseCharacterBones` (`1` by default, set by hand only) lets
   render keep the character bones built earlier in the frame.
+  `GamepadLayout` (`0` Standard by default, `1` Left-handed, `2` bumpers and
+  triggers swapped; another number reads as `0`) and `ZenWalkPickup` (`0`/`1`,
+  default `1`) come from the Interface and Gameplay tabs.
 - `[Audio]` - volumes.
 - `[Login]` - language, and the remembered-credential keys (`RememberMe`,
   `SavePassword`, `EncryptedUsername`, `EncryptedPassword`); see

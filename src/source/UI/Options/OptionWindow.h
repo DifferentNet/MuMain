@@ -131,6 +131,7 @@ namespace mu::ui::window
         // 3=language,4=font,5=uiScale,6=antialiasing,7=anisotropy,8=interfaceView,9=controls,
         // 10=touchButtons,11=gamepad,12=graphicsPreset,13=sharpen,14=sunShadows,15=hdTextureSize,
         // 16=gamepadDeadZone,17=gamepadSpeed,18=gamepadGlyphs,19=gamepadAttackMode,20=gamepadPageMode,
+        // 21=gamepadLayout,
         // matching model.openDropdown's
         // own comment (OptionWindow.h).
         // RmlDropdownOptionClick dispatches to RmlResolutionChanged()/RmlFpsCapChanged()/etc. per
@@ -250,6 +251,8 @@ namespace mu::ui::window
         void RmlToggleOverheadTitles();
         void RmlToggleTitleEffects();
         void RmlToggleTitlesTownsOnly();
+        // MU Skynet: pad and touch players take the zen they walk over (GameLogic::Touch::TakeZenUnderfoot).
+        void RmlToggleZenWalkPickup();
         void RmlToggleBackgroundSound();
         void RmlThemeChanged(int index);
         void RmlUIScaleChanged(int index);
@@ -266,6 +269,8 @@ namespace mu::ui::window
         // MU Moldova: A attacks and RT shows the second page while held (0), or a tap on, a tap off (1).
         void RmlGamepadAttackModeChanged(int index);
         void RmlGamepadPageModeChanged(int index);
+        // MU Skynet: the pad's button layout (Core/Input/GamepadLayout.h).
+        void RmlGamepadLayoutChanged(int index);
         void RmlClickClose();
 
         // One tuning slider (UI::Options::TuningRow) as the RmlUi model binds it.
@@ -318,7 +323,7 @@ namespace mu::ui::window
             // 0=resolution, 1=fpsCap, 2=theme, 3=language, 4=font, 5=uiScale, 6=antialiasing,
             // 7=anisotropy, 8=interfaceView, 9=controls, 10=touchButtons, 11=gamepad, 12=graphicsPreset, 13=sharpen, 14=sunShadows, 15=hdTextureSize,
             // 16=gamepadDeadZone, 17=gamepadSpeed, 18=gamepadGlyphs, 19=gamepadAttackMode,
-            // 20=gamepadPageMode (RmlToggleDropdown()/
+            // 20=gamepadPageMode, 21=gamepadLayout (RmlToggleDropdown()/
             // RmlDropdownOptionClick()'s own ids). Replaces RmlUi's native <select>/<option>
             // (WidgetDropDown) entirely -- see option_window.rml's own history for why: that
             // widget's own generated selectbox/selectvalue/selectarrow sub-elements need CSS this
@@ -654,6 +659,13 @@ namespace mu::ui::window
             int gamepadPageModeIndex = 0;
             Rml::String gamepadPageModeRowLabel;
             Rml::String gamepadPageModeValueLabel;
+            std::vector<Rml::String> gamepadLayoutLabels;
+            int gamepadLayoutIndex = 0;
+            Rml::String gamepadLayoutRowLabel;
+            Rml::String gamepadLayoutValueLabel;
+            bool zenWalkPickup = true;
+            Rml::String zenWalkPickupLabel;
+            Rml::String zenWalkPickupTooltip;
         };
         void BindRmlModel(Rml::DataModelConstructor& c, OptionRmlModel& model);
         void SyncImpliedEffectRows(OptionRmlModel& model);

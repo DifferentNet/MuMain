@@ -125,6 +125,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Touch/DirectionPick.cpp
 )
 
+# Where the pad's and touch's area skills aim: the pack's centre, the stick's line (pad round 6).
+mu_add_test(
+    NAME test_area_aim
+    SOURCES
+        test_area_aim.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Touch/AreaAim.cpp
+)
+
 mu_add_test(
     NAME test_steer_hold
     SOURCES
@@ -186,4 +194,22 @@ mu_add_test(
     SOURCES
         test_party_roster_diff.cpp
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Social/PartyRosterDiff.cpp
+)
+
+# Junk marks: which items may be junk, the fingerprint a mark keeps and the marks themselves (pad round 6, B7).
+mu_add_test(
+    NAME test_junk_marks
+    SOURCES
+        test_junk_marks.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/JunkMarks.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/JunkMarkSet.cpp
+)
+
+# The quick equip offer: which pick-ups are offered and how long (pad round 6, B3).
+mu_add_test(
+    NAME test_equip_offer
+    SOURCES
+        test_equip_offer.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/EquipOffer.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/EquipOfferTracker.cpp
 )

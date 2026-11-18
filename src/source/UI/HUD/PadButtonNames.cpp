@@ -7,7 +7,7 @@ namespace UI::HUD::PadButtonNames
 {
 std::wstring Fill(std::wstring_view text, const Names& names)
 {
-    const std::array<std::pair<std::wstring_view, const std::wstring*>, 12> places = {{
+    const std::array<std::pair<std::wstring_view, const std::wstring*>, 16> places = {{
         {L"A", &names.a},
         {L"B", &names.b},
         {L"X", &names.x},
@@ -20,6 +20,10 @@ std::wstring Fill(std::wstring_view text, const Names& names)
         {L"RS", &names.rs},
         {L"MENU", &names.menu},
         {L"VIEW", &names.view},
+        {L"WALKSTICK", &names.walkStick},
+        {L"AIMSTICK", &names.aimStick},
+        {L"WALKSTICK_OBJ", &names.walkStickObject},
+        {L"AIMSTICK_OBJ", &names.aimStickObject},
     }};
     std::wstring filled;
     filled.reserve(text.size());

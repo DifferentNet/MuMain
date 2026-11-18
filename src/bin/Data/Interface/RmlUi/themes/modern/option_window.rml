@@ -595,6 +595,12 @@
 						<span class="opt-label">{{slide_help_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="slide_help"><div class="opt-toggle-knob"></div></div></div>
 					</div>
+					<!-- MU Skynet: pad and touch players take the zen they walk over (GameLogic::Touch::TakeZenUnderfoot). -->
+					<div class="opt-row opt-toggle-row opt-row-tipped" data-event-click="option_toggle_zen_walk_pickup">
+						<span class="opt-label">{{zen_walk_pickup_label}}</span>
+						<div class="opt-control"><div class="opt-toggle" data-class-checked="zen_walk_pickup"><div class="opt-toggle-knob"></div></div></div>
+						<span class="opt-row-tip">{{zen_walk_pickup_tooltip}}</span>
+					</div>
 					<div class="opt-row opt-toggle-row" data-event-click="option_toggle_decline_invitations">
 						<span class="opt-label">{{decline_invitations_label}}</span>
 						<div class="opt-control"><div class="opt-toggle" data-class-checked="decline_invitations"><div class="opt-toggle-knob"></div></div></div>
@@ -766,6 +772,20 @@
 									<div class="option-dropdown-option" data-for="label : gamepad_page_mode_labels"
 									     data-class-selected="it_index == gamepad_page_mode_index"
 									     data-event-click="option_dropdown_option_click(20, it_index)">{{label}}</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!-- MU Skynet: the pad's button layout (Core/Input/GamepadLayout.h); the face buttons stay put. -->
+					<div class="opt-row" data-if="gamepad_index != 2">
+						<span class="opt-label">{{gamepad_layout_row_label}}</span>
+						<div class="opt-control">
+							<div class="option-dropdown">
+								<div class="option-dropdown-value" data-class-open="open_dropdown == 21" data-event-click="option_toggle_dropdown(21)">{{gamepad_layout_value_label}}<div class="opt-caret"></div></div>
+								<div class="option-dropdown-list" data-class-hidden="open_dropdown != 21">
+									<div class="option-dropdown-option" data-for="label : gamepad_layout_labels"
+									     data-class-selected="it_index == gamepad_layout_index"
+									     data-event-click="option_dropdown_option_click(21, it_index)">{{label}}</div>
 								</div>
 							</div>
 						</div>

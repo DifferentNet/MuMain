@@ -33,6 +33,12 @@ TEST_CASE("the buttons stand for hotkeys 1-5, or 6-9 and 0 on the upper set [ui]
     // The pad's sixth button: hotkey 6 below, 1 (empty by the upper set's rule) above.
     CHECK(SkillArrange::HotKeyOfSlot(5, false) == 6);
     CHECK(SkillArrange::HotKeyOfSlot(5, true) == 1);
+    // The pad's RB layer: hotkeys 7, 8 and 9 below, 1 above.
+    CHECK(SkillArrange::HotKeyOfSlot(6, false) == 7);
+    CHECK(SkillArrange::HotKeyOfSlot(7, false) == 8);
+    CHECK(SkillArrange::HotKeyOfSlot(8, false) == 9);
+    CHECK(SkillArrange::HotKeyOfSlot(6, true) == 1);
+    CHECK(SkillArrange::HotKeyOfSlot(8, true) == 1);
 }
 
 TEST_CASE("a skill on no button goes on the chosen one, and what it held comes off [ui][skill-arrange]")
@@ -128,6 +134,14 @@ TEST_CASE("the next empty button is found round the five, the current one when a
     CHECK(SkillArrange::NextEmptySlot(keys, false, 4, SkillArrange::SlotCount) == 5);
     keys[5] = 9;
     CHECK(SkillArrange::NextEmptySlot(keys, false, 2) == 2);
+    // Past the sixth the pad's RB layer: hotkeys 7-9 are empty, so slot 6 follows.
+    CHECK(SkillArrange::NextEmptySlot(keys, false, 5, SkillArrange::SlotCount) == 6);
+    HotKeys full = keys;
+    full[6] = 10;
+    full[7] = 11;
+    full[8] = 12;
+    full[9] = 13;
+    CHECK(SkillArrange::NextEmptySlot(full, false, 5, SkillArrange::SlotCount) == 5);
     // The upper set looks at hotkeys 6-9 and 0.
     CHECK(SkillArrange::NextEmptySlot(keys, true, 0) == 1);
 }

@@ -13282,7 +13282,7 @@
     <value>Mando</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Stick izquierdo: caminar. Stick derecho: inclínalo hacia un objetivo para elegirlo, mantenlo para seguir en esa dirección; en una ventana, un puntero libre</value>
+    <value>{WALKSTICK}: caminar. {AIMSTICK}: inclínalo hacia un objetivo para elegirlo, mantenlo para seguir en esa dirección; en una ventana, un puntero libre</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
     <value>{A}: pulsa para golpear al objetivo una vez, mantén para seguir luchando; sin monstruos cerca, recoger (mantén) o hablar con el NPC</value>
@@ -13291,7 +13291,7 @@
     <value>{X}, {Y}, {B}: los tres botones de habilidad. Mantén {RT}: {X}, {Y} y {B} lanzan las habilidades 4 a 6. {RB}: el miembro del grupo que recibe tus curaciones y mejoras</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>{LS} (pulsa el stick izquierdo, centrado): poner habilidades en los botones</value>
+    <value>{LS} (pulsa el {WALKSTICK_OBJ}, centrado): poner habilidades en los botones</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>{B} con una ventana abierta: atrás, cierra la ventana de arriba</value>
@@ -13303,7 +13303,7 @@
     <value>{LB} y {LT}: pociones Q y W, con {RT} mantenido E y R. {RT} + D-pad arriba/abajo: acercar y alejar la cámara. D-pad izquierda: el mapa (mantenido: ventana de teletransporte). D-pad derecha: el inventario</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>{RS} (pulsa el stick derecho, centrado): volver al objetivo más cercano</value>
+    <value>{RS} (pulsa el {AIMSTICK_OBJ}, centrado): volver al objetivo más cercano</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
     <value>{MENU}: el centro del héroe (inventario, personaje, habilidades, misiones, hermandad, ajustes), {LB} y {RB} cambian sus pestañas. De nuevo: todas las ventanas. Mantén {MENU}: el chat</value>
@@ -13318,10 +13318,10 @@
     <value>Tras una puerta o un cambio de mapa, suelta el stick para volver a caminar</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>En una ventana: un marco en lugar del puntero. D-pad o stick izquierdo: a la siguiente celda o botón (pasada la última fila, la lista se desplaza). {A}: tomar, soltar, pulsar. {X}: equipar, usar. {Y}: la ficha del objeto. {RB}: la siguiente ventana, {RT}: la siguiente página o pestaña. Stick derecho: puntero libre</value>
+    <value>En una ventana: un marco en lugar del puntero. {WALKSTICK} o D-pad: a la siguiente celda o botón (pasada la última fila, la lista se desplaza). {A}: tomar, soltar, pulsar. {X}: equipar, usar. {Y}: la ficha del objeto. {RB}: la siguiente ventana, {RT}: la siguiente página o pestaña. {AIMSTICK}: puntero libre</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
-    <value>Pulsa para usar una habilidad una vez, mantén para repetirla. Teletransporte salta hacia donde apunta el stick izquierdo</value>
+    <value>Pulsa para usar una habilidad una vez, mantén para repetirla. Teletransporte salta hacia donde apunta el {WALKSTICK_OBJ}</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
     <value>D-pad arriba: MU Helper sí y no, mantenido: sus ajustes. {VIEW}: Social (jugadores cerca: comercio, grupo, hermandad...)</value>
@@ -13387,10 +13387,10 @@
     <value>Demasiado lejos: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Elige una habilidad con el puntero y {A}, luego pulsa {X}, {Y} o {B} ({RT} + {X}, {Y} o {B} para los botones 4 a 6) para colocarla ahí</value>
+    <value>Elige una habilidad con el puntero y {A}, luego pulsa {X}, {Y} o {B} ({RT} + {X}, {Y} o {B} para los botones 4 a 6, {RB} + {X}, {Y} o {B} para 7 a 9) para colocarla ahí</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Pulsa {X}, {Y} o {B} ({RT} + {X}, {Y} o {B} para los botones 4 a 6) para colocar la habilidad ahí</value>
+    <value>Pulsa {X}, {Y} o {B} ({RT} + {X}, {Y} o {B} para los botones 4 a 6, {RB} + {X}, {Y} o {B} para 7 a 9) para colocar la habilidad ahí</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>Escribir</value>
@@ -13438,7 +13438,7 @@
     <value>PK (menú): toca a un jugador para luchar contra él, luego Atacar y las habilidades siguen sobre él. Tu grupo se libra</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK (menú): el stick derecho elige también jugadores, {A} lucha contra ellos, tu grupo queda a salvo</value>
+    <value>PK (menú): el {AIMSTICK_OBJ} elige también jugadores, {A} lucha contra ellos, tu grupo queda a salvo</value>
   </data>
   <data name="TouchShopTapAgainToBuy" xml:space="preserve">
     <value>Toca el objeto otra vez para comprarlo.</value>
@@ -13524,6 +13524,63 @@
   <data name="PadCannotEquip" xml:space="preserve">
     <value>Este objeto no se puede equipar: mira sus requisitos</value>
   </data>
+  <data name="EquipNoRoomS" xml:space="preserve">
+    <value>No hay sitio en la bolsa para quitarte %ls</value>
+  </data>
+  <data name="EquipSwapTwoItems" xml:space="preserve">
+    <value>Quítate primero el objeto de la otra mano</value>
+  </data>
+  <data name="EquipSwapStopped" xml:space="preserve">
+    <value>Cambio detenido: ambos objetos están en la bolsa</value>
+  </data>
+  <data name="PadOfferEquip" xml:space="preserve">
+    <value>Nuevo: %ls +%d CP</value>
+  </data>
+  <data name="PadOfferEquipHold" xml:space="preserve">
+    <value>Mantén para equipar</value>
+  </data>
+  <data name="TouchOfferEquip" xml:space="preserve">
+    <value>Equipar</value>
+  </data>
+  <data name="JunkMark" xml:space="preserve">
+    <value>Basura</value>
+  </data>
+  <data name="JunkUnmark" xml:space="preserve">
+    <value>No es basura</value>
+  </data>
+  <data name="JunkMarkPlainGear" xml:space="preserve">
+    <value>Marcar equipo simple como basura</value>
+  </data>
+  <data name="JunkCannotMark" xml:space="preserve">
+    <value>Solo armas, escudos y armaduras simples por debajo de +7 pueden ser basura</value>
+  </data>
+  <data name="JunkMarkedD" xml:space="preserve">
+    <value>Marcados como basura: %d</value>
+  </data>
+  <data name="ShopSellJunkD" xml:space="preserve">
+    <value>Vender basura (%d)</value>
+  </data>
+  <data name="ShopSellJunkTitle" xml:space="preserve">
+    <value>Vender basura</value>
+  </data>
+  <data name="ShopSellJunkCountD" xml:space="preserve">
+    <value>¿Vender %d objetos basura?</value>
+  </data>
+  <data name="ShopSellJunkTotalS" xml:space="preserve">
+    <value>Total: %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkCapD" xml:space="preserve">
+    <value>Límite de Zen: solo caben %d objetos</value>
+  </data>
+  <data name="ShopSellJunkDone" xml:space="preserve">
+    <value>Vendidos %d objetos por %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkStopped" xml:space="preserve">
+    <value>Vendidos %d de %d objetos basura</value>
+  </data>
+  <data name="EquipNotNow" xml:space="preserve">
+    <value>Ahora no puedes cambiar el equipo</value>
+  </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Quita primero el objeto que llevas ahí</value>
   </data>
@@ -13585,7 +13642,7 @@
     <value>Pociones Q y W</value>
   </data>
   <data name="PadCardFriend" xml:space="preserve">
-    <value>Siguiente miembro del grupo para curar y mejorar</value>
+    <value>Toque: siguiente miembro del grupo para curar y mejorar</value>
   </data>
   <data name="PadCardHelper" xml:space="preserve">
     <value>MU Helper sí y no (mantener: ajustes)</value>
@@ -13969,21 +14026,6 @@
     <value>Daño de habilidad: %d%% (máx. %d%%)</value>
   </data>
   <!-- Quick chat on a phone: the phrases over the chat line (UI/HUD/ChatInputBox.cpp) -->
-  <data name="TouchQuickChat1" xml:space="preserve">
-    <value>¡Hola!</value>
-  </data>
-  <data name="TouchQuickChat2" xml:space="preserve">
-    <value>Busco grupo</value>
-  </data>
-  <data name="TouchQuickChat3" xml:space="preserve">
-    <value>¡Gracias!</value>
-  </data>
-  <data name="TouchQuickChat4" xml:space="preserve">
-    <value>Ya voy</value>
-  </data>
-  <data name="TouchQuickChat5" xml:space="preserve">
-    <value>¡Ayuda!</value>
-  </data>
   <data name="ZenAmountAll" xml:space="preserve">
     <value>Todo</value>
   </data>
@@ -14034,7 +14076,7 @@
     <value>Inventario lleno: en el inventario {Y} sobre un objeto abre su ficha, para tirarlo o venderlo en una tienda</value>
   </data>
   <data name="PadHintDeath" xml:space="preserve">
-    <value>Vuelves a la vida en unos segundos: suelta el stick izquierdo y sigue caminando</value>
+    <value>Vuelves a la vida en unos segundos: suelta el {WALKSTICK_OBJ} y sigue caminando</value>
   </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
@@ -14209,6 +14251,88 @@
   <data name="EmoteWin" xml:space="preserve">
     <value>Ganar</value>
   </data>
+  <data name="OptionZenWalkPickup" xml:space="preserve">
+    <value>Recoger zen bajo los pies (mando, táctil)</value>
+  </data>
+  <data name="OptionZenWalkPickupTip" xml:space="preserve">
+    <value>Con mando o controles táctiles, el zen de tu casilla o de al lado se recoge sin dar un paso</value>
+  </data>
+  <data name="OptionGamepadLayout" xml:space="preserve">
+    <value>Distribución del mando</value>
+  </data>
+  <data name="OptionGamepadLayoutStandard" xml:space="preserve">
+    <value>Estándar</value>
+  </data>
+  <data name="OptionGamepadLayoutLeftHanded" xml:space="preserve">
+    <value>Zurdo</value>
+  </data>
+  <data name="OptionGamepadLayoutSwapped" xml:space="preserve">
+    <value>Bumpers/gatillos intercambiados</value>
+  </data>
+  <data name="PadCardLayoutLine" xml:space="preserve">
+    <value>Botones: Opciones &gt; Interfaz &gt; Distribución del mando</value>
+  </data>
+  <data name="PadStickLeft" xml:space="preserve">
+    <value>Stick izquierdo</value>
+  </data>
+  <data name="PadStickRight" xml:space="preserve">
+    <value>Stick derecho</value>
+  </data>
+  <data name="PadStickLeftObject" xml:space="preserve">
+    <value>stick izquierdo</value>
+  </data>
+  <data name="PadStickRightObject" xml:space="preserve">
+    <value>stick derecho</value>
+  </data>
+  <data name="PadHelpSkillsThird" xml:space="preserve">
+    <value>Mantén {RB}: {X}, {Y} y {B} lanzan las habilidades 7 a 9 (un toque corto de {RB} sigue eligiendo al miembro del grupo)</value>
+  </data>
+  <data name="PadCardSkillsThird" xml:space="preserve">
+    <value>Habilidades 7–9</value>
+  </data>
+  <data name="PadHintSkillsThird" xml:space="preserve">
+    <value>Mantén {RB}: {X}, {Y} y {B} lanzan las habilidades 7 a 9</value>
+  </data>
+  <data name="ChatPhrase01" xml:space="preserve">
+    <value>¡Hola!</value>
+  </data>
+  <data name="ChatPhrase02" xml:space="preserve">
+    <value>¡Gracias!</value>
+  </data>
+  <data name="ChatPhrase03" xml:space="preserve">
+    <value>Invítame al grupo</value>
+  </data>
+  <data name="ChatPhrase04" xml:space="preserve">
+    <value>Espérame</value>
+  </data>
+  <data name="ChatPhrase05" xml:space="preserve">
+    <value>¡Ayuda!</value>
+  </data>
+  <data name="ChatPhrase06" xml:space="preserve">
+    <value>Vamos</value>
+  </data>
+  <data name="ChatPhrase07" xml:space="preserve">
+    <value>Dame buff, por favor</value>
+  </data>
+  <data name="ChatPhrase08" xml:space="preserve">
+    <value>Vendo, susúrrame</value>
+  </data>
+  <data name="ChatPhrase09" xml:space="preserve">
+    <value>Compro, susúrrame</value>
+  </data>
+  <data name="ChatPhrase10" xml:space="preserve">
+    <value>Perdón</value>
+  </data>
+  <data name="ChatPhrase11" xml:space="preserve">
+    <value>Buen juego</value>
+  </data>
+  <data name="ChatPhrase12" xml:space="preserve">
+    <value>Adiós</value>
+  </data>
+  <data name="PadKeyboardPhrases" xml:space="preserve">
+    <value>Frases</value>
+  </data>
+||||||| ce163792b
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Comerciar con un jugador: /trade Nombre si está a la vista; si no, con el jugador seleccionado a cualquier distancia o con el que tienes enfrente.</value>

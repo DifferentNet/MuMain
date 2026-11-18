@@ -21,7 +21,7 @@ namespace UI::Mobile::PhoneHudLayout
 struct Edges
 {
     // Room for the controls the pieces keep clear of.
-    static constexpr int MaxControls = 16;
+    static constexpr int MaxControls = 20;
 
     // The bottom of the top row of buttons, and its right end (the page's own menu button is right
     // of it). 0 leaves the party's cards at their theme's place.

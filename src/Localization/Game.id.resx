@@ -13282,7 +13282,7 @@
     <value>Gamepad</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Stik kiri: berjalan. Stik kanan: miringkan ke arah target untuk memilihnya, tahan untuk terus ke arah itu; di jendela, penunjuk bebas</value>
+    <value>{WALKSTICK}: berjalan. {AIMSTICK}: miringkan ke arah target untuk memilihnya, tahan untuk terus ke arah itu; di jendela, penunjuk bebas</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
     <value>{A}: ketuk untuk memukul target sekali, tahan untuk terus bertarung; tanpa monster di dekat, ambil barang (tahan) atau bicara dengan NPC</value>
@@ -13291,7 +13291,7 @@
     <value>{X}, {Y}, {B}: tiga tombol skill. Tahan {RT}: {X}, {Y} dan {B} memakai skill 4 sampai 6. {RB}: anggota party yang menerima heal dan buff-mu</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>{LS} (tekan stik kiri ke dalam, di tengah): pasang skill ke tombol</value>
+    <value>{LS} (tekan {WALKSTICK_OBJ} ke dalam, di tengah): pasang skill ke tombol</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>{B} saat jendela terbuka: kembali, menutup jendela paling atas</value>
@@ -13303,7 +13303,7 @@
     <value>{LB} dan {LT}: potion Q dan W, dengan {RT} ditahan E dan R. {RT} + D-pad atas/bawah: perbesar dan perkecil kamera. D-pad kiri: peta (ditahan: jendela Teleport). D-pad kanan: inventaris</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>{RS} (tekan stik kanan ke dalam, di tengah): kembali ke target terdekat</value>
+    <value>{RS} (tekan {AIMSTICK_OBJ} ke dalam, di tengah): kembali ke target terdekat</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
     <value>{MENU}: pusat hero (inventaris, karakter, skill, misi, guild, pengaturan), {LB} dan {RB} mengganti tab-nya. Lagi: semua jendela. Tahan {MENU}: obrolan</value>
@@ -13318,10 +13318,10 @@
     <value>Setelah gerbang atau pergantian peta, lepaskan stik untuk berjalan lagi</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>Di jendela: bingkai sebagai ganti penunjuk. D-pad atau stik kiri: ke sel atau tombol berikutnya (lewat baris terakhir, daftar menggulir). {A}: ambil, taruh, tekan. {X}: pakai, gunakan. {Y}: kartu item. {RB}: jendela berikutnya, {RT}: halaman atau tab berikutnya. Stik kanan: penunjuk bebas</value>
+    <value>Di jendela: bingkai sebagai ganti penunjuk. {WALKSTICK} atau D-pad: ke sel atau tombol berikutnya (lewat baris terakhir, daftar menggulir). {A}: ambil, taruh, tekan. {X}: pakai, gunakan. {Y}: kartu item. {RB}: jendela berikutnya, {RT}: halaman atau tab berikutnya. {AIMSTICK}: penunjuk bebas</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
-    <value>Ketuk untuk memakai skill sekali, tahan untuk mengulanginya. Teleport melompat ke arah stik kiri</value>
+    <value>Ketuk untuk memakai skill sekali, tahan untuk mengulanginya. Teleport melompat ke arah {WALKSTICK_OBJ}</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
     <value>D-pad atas: MU Helper nyala dan mati, ditahan: pengaturannya. {VIEW}: Sosial (pemain di sekitar: dagang, party, guild...)</value>
@@ -13387,10 +13387,10 @@
     <value>Terlalu jauh: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Pilih skill dengan penunjuk dan {A}, lalu tekan {X}, {Y} atau {B} ({RT} + {X}, {Y} atau {B} untuk tombol 4 sampai 6) untuk memasangnya di sana</value>
+    <value>Pilih skill dengan penunjuk dan {A}, lalu tekan {X}, {Y} atau {B} ({RT} + {X}, {Y} atau {B} untuk tombol 4 sampai 6, {RB} + {X}, {Y} atau {B} untuk 7 sampai 9) untuk memasangnya di sana</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Tekan {X}, {Y} atau {B} ({RT} + {X}, {Y} atau {B} untuk tombol 4 sampai 6) untuk memasang skill di sana</value>
+    <value>Tekan {X}, {Y} atau {B} ({RT} + {X}, {Y} atau {B} untuk tombol 4 sampai 6, {RB} + {X}, {Y} atau {B} untuk 7 sampai 9) untuk memasang skill di sana</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>Ketik</value>
@@ -13438,7 +13438,7 @@
     <value>PK (menu): ketuk pemain untuk melawannya, lalu Serang dan skill tetap mengarah padanya. Party-mu aman</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK (menu): stik kanan juga memilih pemain, {A} melawan mereka, party-mu aman</value>
+    <value>PK (menu): {AIMSTICK_OBJ} juga memilih pemain, {A} melawan mereka, party-mu aman</value>
   </data>
   <data name="TouchShopTapAgainToBuy" xml:space="preserve">
     <value>Ketuk item lagi untuk membelinya.</value>
@@ -13524,6 +13524,63 @@
   <data name="PadCannotEquip" xml:space="preserve">
     <value>Item ini tidak bisa dipakai: lihat syaratnya</value>
   </data>
+  <data name="EquipNoRoomS" xml:space="preserve">
+    <value>Tidak ada ruang di tas untuk melepas %ls</value>
+  </data>
+  <data name="EquipSwapTwoItems" xml:space="preserve">
+    <value>Lepas dulu item di tangan lainnya</value>
+  </data>
+  <data name="EquipSwapStopped" xml:space="preserve">
+    <value>Pertukaran berhenti: kedua item ada di tas</value>
+  </data>
+  <data name="PadOfferEquip" xml:space="preserve">
+    <value>Baru: %ls +%d CP</value>
+  </data>
+  <data name="PadOfferEquipHold" xml:space="preserve">
+    <value>Tahan untuk memakai</value>
+  </data>
+  <data name="TouchOfferEquip" xml:space="preserve">
+    <value>Pakai</value>
+  </data>
+  <data name="JunkMark" xml:space="preserve">
+    <value>Sampah</value>
+  </data>
+  <data name="JunkUnmark" xml:space="preserve">
+    <value>Bukan sampah</value>
+  </data>
+  <data name="JunkMarkPlainGear" xml:space="preserve">
+    <value>Tandai perlengkapan biasa sebagai sampah</value>
+  </data>
+  <data name="JunkCannotMark" xml:space="preserve">
+    <value>Hanya senjata, perisai, dan armor biasa di bawah +7 yang bisa jadi sampah</value>
+  </data>
+  <data name="JunkMarkedD" xml:space="preserve">
+    <value>Ditandai sebagai sampah: %d</value>
+  </data>
+  <data name="ShopSellJunkD" xml:space="preserve">
+    <value>Jual sampah (%d)</value>
+  </data>
+  <data name="ShopSellJunkTitle" xml:space="preserve">
+    <value>Jual sampah</value>
+  </data>
+  <data name="ShopSellJunkCountD" xml:space="preserve">
+    <value>Jual %d item sampah?</value>
+  </data>
+  <data name="ShopSellJunkTotalS" xml:space="preserve">
+    <value>Total: %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkCapD" xml:space="preserve">
+    <value>Batas Zen: hanya muat %d item</value>
+  </data>
+  <data name="ShopSellJunkDone" xml:space="preserve">
+    <value>Terjual %d item seharga %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkStopped" xml:space="preserve">
+    <value>Terjual %d dari %d item sampah</value>
+  </data>
+  <data name="EquipNotNow" xml:space="preserve">
+    <value>Tidak bisa mengganti perlengkapan sekarang</value>
+  </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Lepas dulu item yang dipakai di sana</value>
   </data>
@@ -13585,7 +13642,7 @@
     <value>Potion Q dan W</value>
   </data>
   <data name="PadCardFriend" xml:space="preserve">
-    <value>Anggota party berikutnya untuk heal dan buff</value>
+    <value>Ketuk: anggota party berikutnya untuk heal dan buff</value>
   </data>
   <data name="PadCardHelper" xml:space="preserve">
     <value>MU Helper nyala dan mati (tahan: pengaturan)</value>
@@ -13969,21 +14026,6 @@
     <value>Kerusakan Keterampilan: %d%% (maks. %d%%)</value>
   </data>
   <!-- Quick chat on a phone: the phrases over the chat line (UI/HUD/ChatInputBox.cpp) -->
-  <data name="TouchQuickChat1" xml:space="preserve">
-    <value>Halo!</value>
-  </data>
-  <data name="TouchQuickChat2" xml:space="preserve">
-    <value>Cari party</value>
-  </data>
-  <data name="TouchQuickChat3" xml:space="preserve">
-    <value>Makasih!</value>
-  </data>
-  <data name="TouchQuickChat4" xml:space="preserve">
-    <value>Segera ke sana</value>
-  </data>
-  <data name="TouchQuickChat5" xml:space="preserve">
-    <value>Tolong!</value>
-  </data>
   <data name="ZenAmountAll" xml:space="preserve">
     <value>Semua</value>
   </data>
@@ -14034,7 +14076,7 @@
     <value>Tas penuh: di inventaris {Y} pada item membuka kartunya, untuk membuang atau menjualnya di toko</value>
   </data>
   <data name="PadHintDeath" xml:space="preserve">
-    <value>Kamu hidup lagi dalam beberapa detik: lepaskan stik kiri, lalu berjalan lagi</value>
+    <value>Kamu hidup lagi dalam beberapa detik: lepaskan {WALKSTICK_OBJ}, lalu berjalan lagi</value>
   </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
@@ -14209,6 +14251,88 @@
   <data name="EmoteWin" xml:space="preserve">
     <value>Menang</value>
   </data>
+  <data name="OptionZenWalkPickup" xml:space="preserve">
+    <value>Ambil zen di bawah kaki (gamepad, sentuh)</value>
+  </data>
+  <data name="OptionZenWalkPickupTip" xml:space="preserve">
+    <value>Dengan gamepad atau kontrol sentuh, zen di petakmu atau di sebelahnya diambil tanpa melangkah</value>
+  </data>
+  <data name="OptionGamepadLayout" xml:space="preserve">
+    <value>Tata letak gamepad</value>
+  </data>
+  <data name="OptionGamepadLayoutStandard" xml:space="preserve">
+    <value>Standar</value>
+  </data>
+  <data name="OptionGamepadLayoutLeftHanded" xml:space="preserve">
+    <value>Kidal</value>
+  </data>
+  <data name="OptionGamepadLayoutSwapped" xml:space="preserve">
+    <value>Bumper/trigger ditukar</value>
+  </data>
+  <data name="PadCardLayoutLine" xml:space="preserve">
+    <value>Tata letak tombol: Opsi &gt; Antarmuka &gt; Tata letak gamepad</value>
+  </data>
+  <data name="PadStickLeft" xml:space="preserve">
+    <value>Stik kiri</value>
+  </data>
+  <data name="PadStickRight" xml:space="preserve">
+    <value>Stik kanan</value>
+  </data>
+  <data name="PadStickLeftObject" xml:space="preserve">
+    <value>stik kiri</value>
+  </data>
+  <data name="PadStickRightObject" xml:space="preserve">
+    <value>stik kanan</value>
+  </data>
+  <data name="PadHelpSkillsThird" xml:space="preserve">
+    <value>Tahan {RB}: {X}, {Y} dan {B} memakai skill 7 sampai 9 (ketuk singkat {RB} tetap memilih anggota party)</value>
+  </data>
+  <data name="PadCardSkillsThird" xml:space="preserve">
+    <value>Skill 7–9</value>
+  </data>
+  <data name="PadHintSkillsThird" xml:space="preserve">
+    <value>Tahan {RB}: {X}, {Y} dan {B} memakai skill 7 sampai 9</value>
+  </data>
+  <data name="ChatPhrase01" xml:space="preserve">
+    <value>Halo!</value>
+  </data>
+  <data name="ChatPhrase02" xml:space="preserve">
+    <value>Terima kasih!</value>
+  </data>
+  <data name="ChatPhrase03" xml:space="preserve">
+    <value>Undang aku ke party</value>
+  </data>
+  <data name="ChatPhrase04" xml:space="preserve">
+    <value>Tunggu aku</value>
+  </data>
+  <data name="ChatPhrase05" xml:space="preserve">
+    <value>Tolong!</value>
+  </data>
+  <data name="ChatPhrase06" xml:space="preserve">
+    <value>Ayo</value>
+  </data>
+  <data name="ChatPhrase07" xml:space="preserve">
+    <value>Tolong buff aku</value>
+  </data>
+  <data name="ChatPhrase08" xml:space="preserve">
+    <value>Jual, bisik aku</value>
+  </data>
+  <data name="ChatPhrase09" xml:space="preserve">
+    <value>Beli, bisik aku</value>
+  </data>
+  <data name="ChatPhrase10" xml:space="preserve">
+    <value>Maaf</value>
+  </data>
+  <data name="ChatPhrase11" xml:space="preserve">
+    <value>Permainan bagus</value>
+  </data>
+  <data name="ChatPhrase12" xml:space="preserve">
+    <value>Dah</value>
+  </data>
+  <data name="PadKeyboardPhrases" xml:space="preserve">
+    <value>Frasa</value>
+  </data>
+||||||| ce163792b
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Berdagang dengan pemain: /trade Nama jika ia terlihat; jika tidak, dengan pemain yang dipilih dari jarak berapa pun, atau yang menghadap Anda.</value>

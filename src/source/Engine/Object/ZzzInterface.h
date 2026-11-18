@@ -94,6 +94,9 @@ bool CheckCommand(wchar_t* Text, bool bMacroText = false);
 // Sends the saved chat macro of a slot (0 to 9 for keys 1 to 0) with Alt+1..0's limits: the macro pause, not in
 // Chaos Castle (a phone's quick chat button). False when nothing went: an empty slot, or a limit.
 bool SendMacroSlot(int slot);
+// The pause before a quick chat phrase (UI/Chat/ChatPhrases): 2 s since the last phrase or macro, which share it,
+// and not in Chaos Castle. True when one may go now; the pause then starts again.
+bool TakeQuickPhrasePause();
 void SetActionClass(CHARACTER* c, OBJECT* o, int Action, int ActionType);
 void RenderBar(float x, float y, float Width, float Height, float Bar, bool Disabled = false, bool clipping = true);
 void RenderOutSides();

@@ -95,6 +95,8 @@ enum class PadNews : std::uint8_t
 // pad (a handheld's paddles send keys); a mouse button or a finger always does.
 [[nodiscard]] bool WasUsedLast();
 
+// The game's buttons and sticks, through the player's layout (SetLayout): with the sticks swapped the
+// physical right stick is LeftStick() here.
 [[nodiscard]] const ButtonState& GetButton(Button button);
 [[nodiscard]] StickPosition LeftStick();
 [[nodiscard]] StickPosition RightStick();
@@ -114,6 +116,14 @@ void SetRumble(bool on);
 // with vibration off, the pad off or a pad without motors (a browser without the vibration API). A
 // weaker shake while a stronger one still runs is dropped (Core/Input/GamepadRumble.h).
 void Rumble(float low, float high, int milliseconds);
+
+// The player's button layout (Options -> Interface -> Gamepad layout, Core/Input/GamepadLayout.h);
+// Standard to start with. The buttons and sticks read here are the game's own, already through it.
+// A change lets go of everything first (Reset()): a button held across it is seen again only once
+// pressed anew, so no press goes to the wrong control.
+enum class Layout : std::uint8_t;
+void SetLayout(Layout layout);
+[[nodiscard]] Layout GetLayout();
 
 // The kind of the pad pressed last (of the one connected last until then); Xbox with none.
 [[nodiscard]] PadKind ConnectedKind();

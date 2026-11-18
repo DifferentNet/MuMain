@@ -10,6 +10,7 @@ void UI::Items::RegisterItemGridCells(Rml::DataModelConstructor& c)
         cell.RegisterMember("tint", &ItemGridCell::tint);
         cell.RegisterMember("drop", &ItemGridCell::drop);
         cell.RegisterMember("count", &ItemGridCell::count);
+        cell.RegisterMember("junk", &ItemGridCell::junk);
     }
     c.RegisterArray<ItemGridCells>();
 }

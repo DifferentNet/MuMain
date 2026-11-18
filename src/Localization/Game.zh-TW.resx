@@ -13282,7 +13282,7 @@
     <value>遊戲手把</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>左搖桿：行走。右搖桿：朝目標推動以選取，推住不放則持續朝該方向前進；在視窗中為自由游標</value>
+    <value>{WALKSTICK}：行走。{AIMSTICK}：朝目標推動以選取，推住不放則持續朝該方向前進；在視窗中為自由游標</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
     <value>{A}：輕按攻擊目標一次，按住持續戰鬥；附近沒有怪物時，撿取（按住）或與 NPC 對話</value>
@@ -13291,7 +13291,7 @@
     <value>{X}、{Y}、{B}：三個技能按鈕。按住 {RT}：{X}、{Y} 和 {B} 施放技能 4 到 6。{RB}：接受你治療與增益的隊伍成員</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>{LS}（在中央按下左搖桿）：把技能放到按鈕上</value>
+    <value>{LS}（在中央按下{WALKSTICK_OBJ}）：把技能放到按鈕上</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>視窗開啟時按 {B}：返回，關閉最上層的視窗</value>
@@ -13303,7 +13303,7 @@
     <value>{LB} 和 {LT}：藥水 Q 和 W，按住 {RT} 時為 E 和 R。{RT} + D-pad 上/下：鏡頭拉近與拉遠。D-pad 左：地圖（按住：傳送視窗）。D-pad 右：背包</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>{RS}（在中央按下右搖桿）：回到最近的目標</value>
+    <value>{RS}（在中央按下{AIMSTICK_OBJ}）：回到最近的目標</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
     <value>{MENU}：英雄中心（背包、角色、技能、任務、公會、設定），{LB} 和 {RB} 切換分頁。再按一次：所有視窗。按住 {MENU}：聊天</value>
@@ -13318,10 +13318,10 @@
     <value>經過傳送門或切換地圖後，放開搖桿即可再次行走</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>在視窗中：以外框取代游標。D-pad 或左搖桿：移到下一格或按鈕（超過最後一列時清單會捲動）。{A}：拿起、放下、按下。{X}：裝備、使用。{Y}：物品卡片。{RB}：下一個視窗，{RT}：下一頁或下一個分頁。右搖桿：自由游標</value>
+    <value>在視窗中：以外框取代游標。{WALKSTICK} 或 D-pad：移到下一格或按鈕（超過最後一列時清單會捲動）。{A}：拿起、放下、按下。{X}：裝備、使用。{Y}：物品卡片。{RB}：下一個視窗，{RT}：下一頁或下一個分頁。{AIMSTICK}：自由游標</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
-    <value>輕按使用技能一次，按住則重複施放。瞬間移動會朝左搖桿所指的方向跳躍</value>
+    <value>輕按使用技能一次，按住則重複施放。瞬間移動會朝{WALKSTICK_OBJ}所指的方向跳躍</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
     <value>D-pad 上：MU Helper 開關，按住：其設定。{VIEW}：社交（附近玩家：交易、組隊、公會…）</value>
@@ -13387,10 +13387,10 @@
     <value>太遠了：</value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>用游標和 {A} 選擇技能，再按 {X}、{Y} 或 {B}（按鈕 4 到 6 為 {RT} + {X}、{Y} 或 {B}）放到那裡</value>
+    <value>用游標和 {A} 選擇技能，再按 {X}、{Y} 或 {B}（按鈕 4 到 6 為 {RT} + {X}、{Y} 或 {B}，7 到 9 為 {RB} + {X}、{Y} 或 {B}）放到那裡</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>按 {X}、{Y} 或 {B}（按鈕 4 到 6 為 {RT} + {X}、{Y} 或 {B}）把技能放到那裡</value>
+    <value>按 {X}、{Y} 或 {B}（按鈕 4 到 6 為 {RT} + {X}、{Y} 或 {B}，7 到 9 為 {RB} + {X}、{Y} 或 {B}）把技能放到那裡</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>輸入</value>
@@ -13438,7 +13438,7 @@
     <value>PK（選單）：點玩家與其戰鬥，之後攻擊和技能會持續對他。你的隊伍不受影響</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK（選單）：右搖桿也會選取玩家，{A} 與他們戰鬥，你的隊伍不受波及</value>
+    <value>PK（選單）：{AIMSTICK_OBJ}也會選取玩家，{A} 與他們戰鬥，你的隊伍不受波及</value>
   </data>
   <data name="TouchShopTapAgainToBuy" xml:space="preserve">
     <value>再點一次物品即可購買。</value>
@@ -13524,6 +13524,63 @@
   <data name="PadCannotEquip" xml:space="preserve">
     <value>無法裝備此物品：請查看其需求</value>
   </data>
+  <data name="EquipNoRoomS" xml:space="preserve">
+    <value>背包沒有空位可卸下%ls</value>
+  </data>
+  <data name="EquipSwapTwoItems" xml:space="preserve">
+    <value>請先卸下另一隻手的物品</value>
+  </data>
+  <data name="EquipSwapStopped" xml:space="preserve">
+    <value>替換已中止：兩件物品都在背包裡</value>
+  </data>
+  <data name="PadOfferEquip" xml:space="preserve">
+    <value>新裝備：%ls +%d CP</value>
+  </data>
+  <data name="PadOfferEquipHold" xml:space="preserve">
+    <value>長按以裝備</value>
+  </data>
+  <data name="TouchOfferEquip" xml:space="preserve">
+    <value>裝備</value>
+  </data>
+  <data name="JunkMark" xml:space="preserve">
+    <value>垃圾</value>
+  </data>
+  <data name="JunkUnmark" xml:space="preserve">
+    <value>非垃圾</value>
+  </data>
+  <data name="JunkMarkPlainGear" xml:space="preserve">
+    <value>將普通裝備標為垃圾</value>
+  </data>
+  <data name="JunkCannotMark" xml:space="preserve">
+    <value>只有+7以下的普通武器、盾牌與防具可標為垃圾</value>
+  </data>
+  <data name="JunkMarkedD" xml:space="preserve">
+    <value>已標為垃圾：%d 件</value>
+  </data>
+  <data name="ShopSellJunkD" xml:space="preserve">
+    <value>出售垃圾（%d）</value>
+  </data>
+  <data name="ShopSellJunkTitle" xml:space="preserve">
+    <value>出售垃圾</value>
+  </data>
+  <data name="ShopSellJunkCountD" xml:space="preserve">
+    <value>要出售 %d 件垃圾嗎？</value>
+  </data>
+  <data name="ShopSellJunkTotalS" xml:space="preserve">
+    <value>合計：%ls Zen</value>
+  </data>
+  <data name="ShopSellJunkCapD" xml:space="preserve">
+    <value>Zen 上限：只能再賣 %d 件</value>
+  </data>
+  <data name="ShopSellJunkDone" xml:space="preserve">
+    <value>已出售 %d 件，獲得 %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkStopped" xml:space="preserve">
+    <value>已出售 %d / %d 件垃圾</value>
+  </data>
+  <data name="EquipNotNow" xml:space="preserve">
+    <value>現在無法更換裝備</value>
+  </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>請先卸下該處穿戴的物品</value>
   </data>
@@ -13585,7 +13642,7 @@
     <value>藥水 Q 和 W</value>
   </data>
   <data name="PadCardFriend" xml:space="preserve">
-    <value>下一個要治療與增益的隊伍成員</value>
+    <value>短按：下一個要治療與增益的隊伍成員</value>
   </data>
   <data name="PadCardHelper" xml:space="preserve">
     <value>MU Helper 開關（按住：設定）</value>
@@ -13969,21 +14026,6 @@
     <value>技能傷害：%d%%（上限 %d%%）</value>
   </data>
   <!-- Quick chat on a phone: the phrases over the chat line (UI/HUD/ChatInputBox.cpp) -->
-  <data name="TouchQuickChat1" xml:space="preserve">
-    <value>你好！</value>
-  </data>
-  <data name="TouchQuickChat2" xml:space="preserve">
-    <value>求組隊</value>
-  </data>
-  <data name="TouchQuickChat3" xml:space="preserve">
-    <value>謝謝！</value>
-  </data>
-  <data name="TouchQuickChat4" xml:space="preserve">
-    <value>馬上到</value>
-  </data>
-  <data name="TouchQuickChat5" xml:space="preserve">
-    <value>救命！</value>
-  </data>
   <data name="ZenAmountAll" xml:space="preserve">
     <value>全部</value>
   </data>
@@ -14034,7 +14076,7 @@
     <value>背包已滿：在物品欄對物品按 {Y} 開啟卡片，可丟棄或在商店出售</value>
   </data>
   <data name="PadHintDeath" xml:space="preserve">
-    <value>幾秒後就會復活：先放開左搖桿再繼續行走</value>
+    <value>幾秒後就會復活：先放開{WALKSTICK_OBJ}再繼續行走</value>
   </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
@@ -14209,6 +14251,88 @@
   <data name="EmoteWin" xml:space="preserve">
     <value>贏</value>
   </data>
+  <data name="OptionZenWalkPickup" xml:space="preserve">
+    <value>撿起腳下的金幣（手把、觸控）</value>
+  </data>
+  <data name="OptionZenWalkPickupTip" xml:space="preserve">
+    <value>使用手把或觸控操作時，所在格與相鄰格的金幣不需走動即可撿起</value>
+  </data>
+  <data name="OptionGamepadLayout" xml:space="preserve">
+    <value>手把配置</value>
+  </data>
+  <data name="OptionGamepadLayoutStandard" xml:space="preserve">
+    <value>標準</value>
+  </data>
+  <data name="OptionGamepadLayoutLeftHanded" xml:space="preserve">
+    <value>左手</value>
+  </data>
+  <data name="OptionGamepadLayoutSwapped" xml:space="preserve">
+    <value>肩鍵/扳機互換</value>
+  </data>
+  <data name="PadCardLayoutLine" xml:space="preserve">
+    <value>按鍵配置：選項 &gt; 介面 &gt; 手把配置</value>
+  </data>
+  <data name="PadStickLeft" xml:space="preserve">
+    <value>左搖桿</value>
+  </data>
+  <data name="PadStickRight" xml:space="preserve">
+    <value>右搖桿</value>
+  </data>
+  <data name="PadStickLeftObject" xml:space="preserve">
+    <value>左搖桿</value>
+  </data>
+  <data name="PadStickRightObject" xml:space="preserve">
+    <value>右搖桿</value>
+  </data>
+  <data name="PadHelpSkillsThird" xml:space="preserve">
+    <value>按住 {RB}：{X}、{Y}、{B} 施放技能 7 到 9（短按 {RB} 仍會選擇隊伍成員）</value>
+  </data>
+  <data name="PadCardSkillsThird" xml:space="preserve">
+    <value>技能 7–9</value>
+  </data>
+  <data name="PadHintSkillsThird" xml:space="preserve">
+    <value>按住 {RB}：{X}、{Y}、{B} 施放技能 7 到 9</value>
+  </data>
+  <data name="ChatPhrase01" xml:space="preserve">
+    <value>你好！</value>
+  </data>
+  <data name="ChatPhrase02" xml:space="preserve">
+    <value>謝謝！</value>
+  </data>
+  <data name="ChatPhrase03" xml:space="preserve">
+    <value>邀請我入隊</value>
+  </data>
+  <data name="ChatPhrase04" xml:space="preserve">
+    <value>等等我</value>
+  </data>
+  <data name="ChatPhrase05" xml:space="preserve">
+    <value>救命！</value>
+  </data>
+  <data name="ChatPhrase06" xml:space="preserve">
+    <value>走吧</value>
+  </data>
+  <data name="ChatPhrase07" xml:space="preserve">
+    <value>請幫我加狀態</value>
+  </data>
+  <data name="ChatPhrase08" xml:space="preserve">
+    <value>出售，請密我</value>
+  </data>
+  <data name="ChatPhrase09" xml:space="preserve">
+    <value>收購，請密我</value>
+  </data>
+  <data name="ChatPhrase10" xml:space="preserve">
+    <value>抱歉</value>
+  </data>
+  <data name="ChatPhrase11" xml:space="preserve">
+    <value>打得好</value>
+  </data>
+  <data name="ChatPhrase12" xml:space="preserve">
+    <value>再見</value>
+  </data>
+  <data name="PadKeyboardPhrases" xml:space="preserve">
+    <value>常用語</value>
+  </data>
+||||||| ce163792b
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>與玩家交易：對方在視野內時用 /trade 名字，否則與選取的玩家（不限距離）或面對你的玩家交易。</value>

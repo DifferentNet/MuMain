@@ -2,6 +2,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
 #include "Core/Input/GamepadInput.h"
+#include "Core/Input/GamepadLayout.h"
 #include "Core/Input/GamepadPointer.h"
 #include "Core/Input/GamepadStick.h"
 #include "Core/Input/KeyBindingsRuntime.h"
@@ -2957,6 +2958,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
                                             100.f);
     Core::Input::Gamepad::SetGlyphChoice(
         static_cast<Core::Input::Gamepad::GlyphChoice>(GameConfig::GetInstance().GetGamepadGlyphs()));
+    Core::Input::Gamepad::SetLayout(Core::Input::Gamepad::LayoutFromIndex(GameConfig::GetInstance().GetGamepadLayout()));
 
 #ifndef _WIN32
     // Install POSIX crash-diagnostic signal handlers. After SDL_Init (R8

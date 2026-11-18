@@ -10,7 +10,9 @@
 #include "UI/RmlBridge/RmlWindowClose.h"
 #include "UI/Dialogs/CommonMessageBox.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
+#include "UI/Inventory/JunkSale.h"
 #include "UI/Inventory/SellConfirmLines.h"
+#include "UI/Mobile/InterfaceMode.h"
 #include "Engine/Object/ZzzInventory.h"
 #include "GameLogic/Items/ItemCategories.h"
 #include "GameLogic/Items/SaleRefusal.h"
@@ -30,6 +32,7 @@
 #include <RmlUi/Core/ElementDocument.h>
 
 #include <cstddef>
+#include <string>
 #include <utility>
 
 using namespace SEASON3B;
@@ -40,6 +43,22 @@ extern int BuyCost;
 namespace
 {
 namespace TapToBuy = UI::Shop::TapToBuy;
+
+// How often the shop counts the junk it could buy: the count walks the whole bag.
+constexpr DWORD JunkCountEveryMs = 250;
+
+// The junk a sale would take now, counted again every JunkCountEveryMs.
+int JunkCountNowAndThen()
+{
+    static DWORD s_countedAt = 0;
+    static int s_count = 0;
+    const DWORD now = GetTickCount();
+    if (s_countedAt != 0 && now - s_countedAt < JunkCountEveryMs)
+        return s_count;
+    s_countedAt = now;
+    s_count = UI::Inventory::JunkSale::SellableCount();
+    return s_count;
+}
 
 // The item a finger's first tap chose lights up as one the window acts on (item_grid.rcss).
 constexpr const char* ChosenCellClass = "drop-valid";
@@ -133,11 +152,20 @@ void mu::ui::window::CNPCShop::BindRmlModel(Rml::DataModelConstructor& c, NPCSho
     c.Bind("repair_all_label", &model.repairAllLabel);
     c.Bind("repair_gold_text", &model.repairGoldText);
     c.Bind("repair_gold_tier", &model.repairGoldTier);
+    c.Bind("sell_junk_shown", &model.sellJunkShown);
+    c.Bind("sell_junk_count", &model.sellJunkCount);
+    c.Bind("sell_junk_tooltip", &model.sellJunkTooltip);
 
     c.BindEventCallback("npc_shop_repair_click",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { ToggleState(); });
     c.BindEventCallback("npc_shop_repair_all_click",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RequestRepairAll(); });
+    c.BindEventCallback("npc_shop_sell_junk_click",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
+        {
+            if (!m_bSellingItem && !UI::Inventory::JunkSale::IsSelling())
+                UI::Inventory::JunkSale::AskToSell();
+        });
 }
 
 void mu::ui::window::CNPCShop::RequestRepairAll()
@@ -421,6 +449,16 @@ void mu::ui::window::CNPCShop::SyncRmlModel()
     syncWide(&NPCShopRmlModel::repairAllTooltip, "repair_all_tooltip", I18N::Game::RepairAllA);
     syncWide(&NPCShopRmlModel::repairAllLabel, "repair_all_label", I18N::Game::RepairAll);
 
+    const int junk = UI::Mobile::ShowsControls() ? JunkCountNowAndThen() : 0;
+    syncBool(&NPCShopRmlModel::sellJunkShown, "sell_junk_shown", junk > 0 && !UI::Inventory::JunkSale::IsSelling());
+    if (junk > 0)
+    {
+        syncText(&NPCShopRmlModel::sellJunkCount, "sell_junk_count", std::to_string(junk));
+        wchar_t junkBuf[128] = {};
+        mu_swprintf(junkBuf, I18N::Game::ShopSellJunkD, junk);
+        syncWide(&NPCShopRmlModel::sellJunkTooltip, "sell_junk_tooltip", junkBuf);
+    }
+
     wchar_t goldBuf[256] = { 0, };
     ConvertGold(AllRepairGold, goldBuf);
     syncWide(&NPCShopRmlModel::repairGoldText, "repair_gold_text", goldBuf);
@@ -554,6 +592,7 @@ void mu::ui::window::CNPCShop::OpenningProcess()
 
 void mu::ui::window::CNPCShop::ClosingProcess()
 {
+    UI::Inventory::JunkSale::StopSale();
     SocketClient->ToGameServer()->SendCloseNpcRequest();
 
     m_dwShopState = SHOP_STATE_BUYNSELL;

@@ -3,6 +3,7 @@
 #include "UI/Core/UIManager.h"
 #include "UI/Inventory/InventoryCtrl.h"
 #include "UI/Inventory/InventorySort.h"
+#include "UI/Inventory/JunkSale.h"
 #include "UI/RmlBridge/RmlElementBox.h"
 #include "UI/RmlBridge/RmlPanelGeometry.h"
 #include "UI/Inventory/ItemMng.h"
@@ -1133,6 +1134,19 @@ bool mu::ui::window::CInventoryCtrl::DropActsOn(ITEM* pPickItem, ITEM* pTargetIt
 
 // Render()'s cell pass, as state: the tint under each item, the drop preview under the item on the
 // cursor, and each item's stack count.
+void mu::ui::window::CInventoryCtrl::MarkJunkCells()
+{
+    // Junk marks are the bag's alone (pad round 6, B7).
+    if (m_StorageType != STORAGE_TYPE::INVENTORY)
+        return;
+    for (const ITEM* pItem : m_vecItem)
+    {
+        const int topLeft = pItem->y * m_nColumn + pItem->x;
+        if (topLeft >= 0 && topLeft < static_cast<int>(m_Cells.size()))
+            m_Cells[topLeft].junk = UI::Inventory::JunkSale::IsMarked(GetIndex(pItem->x, pItem->y), *pItem);
+    }
+}
+
 void mu::ui::window::CInventoryCtrl::UpdateCells()
 {
     m_Cells.assign(static_cast<std::size_t>(m_nColumn * m_nRow), UI::Items::ItemGridCell{});
@@ -1155,6 +1169,8 @@ void mu::ui::window::CInventoryCtrl::UpdateCells()
         m_Cells[iCurSquareIndex].tint = std::string(TintClass(pItem->byColorState)) + " pad-item-"
                                         + std::to_string(pItem->y * m_nColumn + pItem->x);
     }
+
+    MarkJunkCells();
 
     for (const ITEM* pItem : m_vecItem)
     {

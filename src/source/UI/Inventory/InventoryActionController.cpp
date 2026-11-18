@@ -6,6 +6,8 @@
 #include "UI/Inventory/MyInventory.h"
 #include "UI/Inventory/InventoryCtrl.h"
 #include "UI/Inventory/InventorySort.h"
+#include "UI/Inventory/EquipSwap.h"
+#include "UI/Inventory/JunkSale.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/CustomMessageBox.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
@@ -498,8 +500,28 @@ bool CInventoryActionController::ShowTouchItemCard(CInventoryCtrl* targetControl
         };
     }
 
+    SetJunkAction(targetControl, *pItem, target, card);
     UI::Mobile::ItemCard::Show(std::move(card));
     return true;
+}
+
+void CInventoryActionController::SetJunkAction(CInventoryCtrl* targetControl, const ITEM& item,
+                                               RightClickTarget target, UI::Mobile::ItemCard::Content& card)
+{
+    // Junk marks are for bag items, by the bag alone or at a shop (pad round 6, B7).
+    const bool bagOrShop = target == RightClickTarget::Inventory || target == RightClickTarget::Shop;
+    if (!bagOrShop || targetControl->GetStorageType() != STORAGE_TYPE::INVENTORY
+        || !UI::Inventory::JunkSale::OffersMark(item))
+        return;
+    const int slot = targetControl->GetIndexByItem(const_cast<ITEM*>(&item));
+    card.junkLabel = UI::Inventory::JunkSale::IsMarked(slot, item) ? I18N::Game::JunkUnmark : I18N::Game::JunkMark;
+    const DWORD itemKey = item.Key;
+    card.junk = [targetControl, itemKey]
+    {
+        // Found again by its key: the card stays open while the bag may change.
+        if (ITEM* marked = targetControl->FindItemByKey(itemKey))
+            UI::Inventory::JunkSale::ToggleMark(targetControl->GetIndexByItem(marked));
+    };
 }
 
 void CInventoryActionController::SetBagItemAction(CInventoryCtrl* targetControl, const ITEM& item,
@@ -717,7 +739,8 @@ bool CInventoryActionController::HandleInventoryRightClickActions(CInventoryCtrl
 
     if (!IsItemMovePending())
     {
-        if (TryEquipItem(targetControl, pItem, iIndex))
+        // The pad and the touch card never drop: they swap a worn item instead (pad round 6, N1).
+        if (TryEquipItem(targetControl, pItem, iIndex, !mayDrop))
         {
             return true;
         }
@@ -771,7 +794,8 @@ void CInventoryActionController::PostEquipRefusal(const wchar_t* text)
         g_pSystemLogBox->AddText(text, TYPE_ERROR_MESSAGE);
 }
 
-bool CInventoryActionController::TryEquipItem(CInventoryCtrl* targetControl, ITEM* pItem, int iSrcIndex) const
+bool CInventoryActionController::TryEquipItem(CInventoryCtrl* targetControl, ITEM* pItem, int iSrcIndex,
+                                              bool maySwap) const
 {
     const ITEM_ATTRIBUTE* pItemAttr = &ItemAttribute[pItem->Type];
     int nDstIndex = pItemAttr->m_byItemSlot;
@@ -797,6 +821,12 @@ bool CInventoryActionController::TryEquipItem(CInventoryCtrl* targetControl, ITE
         {
             nDstIndex = nAltSlot;
         }
+        else if (maySwap && iSrcIndex >= 0)
+        {
+            // Says its own refusals.
+            UI::Inventory::EquipSwap::PutOn(iSrcIndex);
+            return true;
+        }
         else
         {
             PostEquipRefusal(I18N::Game::PadSlotTaken);
@@ -810,7 +840,8 @@ bool CInventoryActionController::TryEquipItem(CInventoryCtrl* targetControl, ITE
         return true;
     }
 
-    if (!CInventoryCtrl::CreatePickedItem(nullptr, pItem))
+    // Owned by its grid, so a refused move puts it back in its cell.
+    if (!CInventoryCtrl::CreatePickedItem(targetControl, pItem))
     {
         return false;
     }

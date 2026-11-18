@@ -18,6 +18,8 @@ enum class Page : std::uint8_t
     Symbols,
     // A number pad, for a field that takes digits only.
     Digits,
+    // The quick chat phrases (UI/Chat/ChatPhrases), the chat line's only.
+    Phrases,
 };
 
 enum class Action : std::uint8_t
@@ -35,8 +37,10 @@ enum class Action : std::uint8_t
     Symbols,
     // Back to the letters.
     Letters,
-    // English letters and Russian ones.
+    // English letters, Russian ones and the chat's phrases.
     Language,
+    // Sends its quick chat phrase at once.
+    Phrase,
 };
 
 struct Key
@@ -47,6 +51,8 @@ struct Key
     std::string_view upper;
     // In key widths: an ordinary key is 1.
     float width = 1.f;
+    // What a Phrase key sends: the phrase's id (UI/Chat/ChatPhrases), 1 and up.
+    int phrase = 0;
 };
 
 // A key's place: its row from the top and its place in the row from the left.

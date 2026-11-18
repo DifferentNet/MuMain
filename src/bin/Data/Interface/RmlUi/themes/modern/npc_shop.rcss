@@ -42,6 +42,11 @@
 .shop-btn-repair     { left: 54px; }
 .shop-btn-repair-all { left: 98px; }
 
+/* Sell junk (pad round 6, B7): left of the repair buttons, a coin and the count. */
+.shop-sell-junk { left: 12px; }
+.shop-junk-coin { position: absolute; left: 5px; top: 8px; width: 8px; height: 8px; border-radius: 4px; background-color: token(accent-gold); pointer-events: none; }
+.shop-junk-count { position: absolute; left: 16px; top: 0; color: token(accent-gold); pointer-events: none; }
+
 /* Repair-money strip: this window's own 10/355/170/24 native geometry (RenderRepairMoney()), not
    MyInventory's 15/366/160 gold-strip column -- overridden per .modern-wallet-px's own base.rcss
    comment inviting exactly this for a window whose layout doesn't share Inventory's column. */
@@ -173,6 +178,7 @@
 	.shop-btn-repair, .shop-btn-repair-all { left: 364px; }
 	.shop-btn-repair { top: 156px; }
 	.shop-btn-repair-all { top: 202px; }
+	.shop-sell-junk { left: 364px; top: 248px; }
 
 	.shop-repair-wallet { left: 16px; top: 402px; width: 336px; height: 24px; }
 	.shop-repair-value { left: 234px; right: auto; top: 407px; }

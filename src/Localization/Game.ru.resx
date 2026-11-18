@@ -15214,7 +15214,7 @@
     <value>Геймпад</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Левый стик: идти. Правый стик: наклоните к цели — выбрать её, держите — дальше в ту сторону; в окне — свободный курсор</value>
+    <value>{WALKSTICK}: идти. {AIMSTICK}: наклоните к цели — выбрать её, держите — дальше в ту сторону; в окне — свободный курсор</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
     <value>{A}: нажмите — ударить цель, держите — продолжать бой; без монстров рядом — поднять (держите) или поговорить с NPC</value>
@@ -15223,7 +15223,7 @@
     <value>{X}, {Y}, {B}: три кнопки умений. Держите {RT}: {X}, {Y} и {B} применяют умения 4–6. {RB}: кого из группы лечить и баффать</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>{LS} (нажмите левый стик, не наклоняя): расставить умения по кнопкам</value>
+    <value>{LS} (нажмите {WALKSTICK_OBJ}, не наклоняя): расставить умения по кнопкам</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>{B} при открытом окне: назад, закрывает верхнее окно</value>
@@ -15235,7 +15235,7 @@
     <value>{LB} и {LT}: зелья Q и W, с зажатым {RT} — E и R. {RT} + крестовина вверх/вниз: приблизить и отдалить камеру. Крестовина влево: карта (удержать: окно телепорта). Крестовина вправо: инвентарь</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>{RS} (нажмите правый стик, не наклоняя): снова ближайшая цель</value>
+    <value>{RS} (нажмите {AIMSTICK_OBJ}, не наклоняя): снова ближайшая цель</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
     <value>{MENU}: центр героя (инвентарь, персонаж, навыки, квесты, гильдия, настройки), {LB} и {RB} листают вкладки. Ещё раз: все окна. Держите {MENU} — чат</value>
@@ -15250,10 +15250,10 @@
     <value>После ворот или смены карты отпустите стик, чтобы снова идти</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>В окне вместо курсора рамка. Крестовина или левый стик: к следующей ячейке или кнопке (за последним рядом список прокручивается). {A}: взять, положить, нажать. {X}: надеть, использовать. {Y}: карточка вещи. {RB}: следующее окно, {RT}: следующая страница или вкладка. Правый стик: свободный курсор</value>
+    <value>В окне вместо курсора рамка. {WALKSTICK} или крестовина: к следующей ячейке или кнопке (за последним рядом список прокручивается). {A}: взять, положить, нажать. {X}: надеть, использовать. {Y}: карточка вещи. {RB}: следующее окно, {RT}: следующая страница или вкладка. {AIMSTICK}: свободный курсор</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
-    <value>Нажмите — применить один раз, держите — повторять. Телепорт прыгает туда, куда наклонён левый стик</value>
+    <value>Нажмите — применить один раз, держите — повторять. Телепорт прыгает туда, куда наклонён {WALKSTICK_OBJ}</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
     <value>Крестовина вверх: MU Helper вкл/выкл, удержать: его настройки. {VIEW}: «Общение» (игроки рядом: трейд, пати, гильдия...)</value>
@@ -15319,10 +15319,10 @@
     <value>Слишком далеко: </value>
   </data>
   <data name="PadBindPick" xml:space="preserve">
-    <value>Выберите умение курсором и {A}, потом нажмите {X}, {Y} или {B} ({RT} + {X}, {Y} или {B} для кнопок 4–6), куда его поставить</value>
+    <value>Выберите умение курсором и {A}, потом нажмите {X}, {Y} или {B} ({RT} + {X}, {Y} или {B} для кнопок 4–6, {RB} + {X}, {Y} или {B} для 7–9), куда его поставить</value>
   </data>
   <data name="PadBindPlace" xml:space="preserve">
-    <value>Нажмите {X}, {Y} или {B} ({RT} + {X}, {Y} или {B} для кнопок 4–6), куда поставить умение</value>
+    <value>Нажмите {X}, {Y} или {B} ({RT} + {X}, {Y} или {B} для кнопок 4–6, {RB} + {X}, {Y} или {B} для 7–9), куда поставить умение</value>
   </data>
   <data name="PadKeyboardType" xml:space="preserve">
     <value>Ввести</value>
@@ -15766,7 +15766,7 @@
     <value>PK (меню): нажмите на игрока, чтобы напасть, дальше атака и умения бьют его. Группу не трогают</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK (меню): правый стик выбирает и игроков, {A} атакует, группу не трогают</value>
+    <value>PK (меню): {AIMSTICK_OBJ} выбирает и игроков, {A} атакует, группу не трогают</value>
   </data>
   <data name="GamepadOffLater" xml:space="preserve">
     <value>Геймпад выключится, когда вы нажмёте клавишу, кнопку мыши или экран</value>
@@ -15925,7 +15925,7 @@
     <value>Зелья Q и W</value>
   </data>
   <data name="PadCardFriend" xml:space="preserve">
-    <value>Следующий в группе для лечения и баффов</value>
+    <value>Нажатие: следующий в группе для лечения и баффов</value>
   </data>
   <data name="PadCardHelper" xml:space="preserve">
     <value>MU Helper вкл. и выкл. (удержание: настройки)</value>
@@ -15995,6 +15995,63 @@
   </data>
   <data name="PadCannotEquip" xml:space="preserve">
     <value>Эту вещь не надеть: смотрите её требования</value>
+  </data>
+  <data name="EquipNoRoomS" xml:space="preserve">
+    <value>Нет места в сумке, чтобы снять %ls</value>
+  </data>
+  <data name="EquipSwapTwoItems" xml:space="preserve">
+    <value>Сначала снимите вещь из другой руки</value>
+  </data>
+  <data name="EquipSwapStopped" xml:space="preserve">
+    <value>Замена прервана: обе вещи в сумке</value>
+  </data>
+  <data name="PadOfferEquip" xml:space="preserve">
+    <value>Новое: %ls +%d CP</value>
+  </data>
+  <data name="PadOfferEquipHold" xml:space="preserve">
+    <value>Удерживайте, чтобы надеть</value>
+  </data>
+  <data name="TouchOfferEquip" xml:space="preserve">
+    <value>Надеть</value>
+  </data>
+  <data name="JunkMark" xml:space="preserve">
+    <value>Хлам</value>
+  </data>
+  <data name="JunkUnmark" xml:space="preserve">
+    <value>Не хлам</value>
+  </data>
+  <data name="JunkMarkPlainGear" xml:space="preserve">
+    <value>Отметить простые вещи как хлам</value>
+  </data>
+  <data name="JunkCannotMark" xml:space="preserve">
+    <value>Хламом может быть только простое оружие, щиты и броня ниже +7</value>
+  </data>
+  <data name="JunkMarkedD" xml:space="preserve">
+    <value>Отмечено как хлам: %d</value>
+  </data>
+  <data name="ShopSellJunkD" xml:space="preserve">
+    <value>Продать хлам (%d)</value>
+  </data>
+  <data name="ShopSellJunkTitle" xml:space="preserve">
+    <value>Продать хлам</value>
+  </data>
+  <data name="ShopSellJunkCountD" xml:space="preserve">
+    <value>Продать хлам: %d шт.?</value>
+  </data>
+  <data name="ShopSellJunkTotalS" xml:space="preserve">
+    <value>Всего: %ls зен</value>
+  </data>
+  <data name="ShopSellJunkCapD" xml:space="preserve">
+    <value>Предел зен: поместится только %d шт.</value>
+  </data>
+  <data name="ShopSellJunkDone" xml:space="preserve">
+    <value>Продано %d шт. за %ls зен</value>
+  </data>
+  <data name="ShopSellJunkStopped" xml:space="preserve">
+    <value>Продано %d из %d шт. хлама</value>
+  </data>
+  <data name="EquipNotNow" xml:space="preserve">
+    <value>Сейчас вещь не надеть</value>
   </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Сначала снимите то, что там надето</value>
@@ -16510,21 +16567,6 @@
     <value>Урон навыка: %d%% (макс. %d%%)</value>
   </data>
   <!-- Quick chat on a phone: the phrases over the chat line (UI/HUD/ChatInputBox.cpp) -->
-  <data name="TouchQuickChat1" xml:space="preserve">
-    <value>Привет!</value>
-  </data>
-  <data name="TouchQuickChat2" xml:space="preserve">
-    <value>Нужна группа</value>
-  </data>
-  <data name="TouchQuickChat3" xml:space="preserve">
-    <value>Спасибо!</value>
-  </data>
-  <data name="TouchQuickChat4" xml:space="preserve">
-    <value>Иду</value>
-  </data>
-  <data name="TouchQuickChat5" xml:space="preserve">
-    <value>Помогите!</value>
-  </data>
   <!-- Round 8: whisper echo, party leave/kick question, /trade Name -->
   <data name="WhisperEchoTo" xml:space="preserve">
     <value>[для %ls] %ls</value>
@@ -16988,7 +17030,7 @@
     <value>Сумка полна: в инвентаре {Y} на вещи открывает её карточку — выбросить или продать в магазине</value>
   </data>
   <data name="PadHintDeath" xml:space="preserve">
-    <value>Через несколько секунд вы оживёте: отпустите левый стик и идите дальше</value>
+    <value>Через несколько секунд вы оживёте: отпустите {WALKSTICK_OBJ} и идите дальше</value>
   </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
@@ -17163,6 +17205,88 @@
   <data name="EmoteWin" xml:space="preserve">
     <value>выиграл</value>
   </data>
+  <data name="OptionZenWalkPickup" xml:space="preserve">
+    <value>Подбирать зен под ногами (геймпад, касание)</value>
+  </data>
+  <data name="OptionZenWalkPickupTip" xml:space="preserve">
+    <value>С геймпадом или сенсорным управлением зен на вашей клетке и рядом подбирается без шага</value>
+  </data>
+  <data name="OptionGamepadLayout" xml:space="preserve">
+    <value>Раскладка геймпада</value>
+  </data>
+  <data name="OptionGamepadLayoutStandard" xml:space="preserve">
+    <value>Стандартная</value>
+  </data>
+  <data name="OptionGamepadLayoutLeftHanded" xml:space="preserve">
+    <value>Для левши</value>
+  </data>
+  <data name="OptionGamepadLayoutSwapped" xml:space="preserve">
+    <value>Бамперы и курки наоборот</value>
+  </data>
+  <data name="PadCardLayoutLine" xml:space="preserve">
+    <value>Раскладка кнопок: Настройки &gt; Интерфейс &gt; Раскладка геймпада</value>
+  </data>
+  <data name="PadStickLeft" xml:space="preserve">
+    <value>Левый стик</value>
+  </data>
+  <data name="PadStickRight" xml:space="preserve">
+    <value>Правый стик</value>
+  </data>
+  <data name="PadStickLeftObject" xml:space="preserve">
+    <value>левый стик</value>
+  </data>
+  <data name="PadStickRightObject" xml:space="preserve">
+    <value>правый стик</value>
+  </data>
+  <data name="PadHelpSkillsThird" xml:space="preserve">
+    <value>Удерживайте {RB}: {X}, {Y} и {B} применяют умения 7–9 (короткое нажатие {RB} по-прежнему выбирает члена группы)</value>
+  </data>
+  <data name="PadCardSkillsThird" xml:space="preserve">
+    <value>Умения 7–9</value>
+  </data>
+  <data name="PadHintSkillsThird" xml:space="preserve">
+    <value>Удерживайте {RB}: {X}, {Y} и {B} применяют умения 7–9</value>
+  </data>
+  <data name="ChatPhrase01" xml:space="preserve">
+    <value>Привет!</value>
+  </data>
+  <data name="ChatPhrase02" xml:space="preserve">
+    <value>Спасибо!</value>
+  </data>
+  <data name="ChatPhrase03" xml:space="preserve">
+    <value>Пригласите в группу</value>
+  </data>
+  <data name="ChatPhrase04" xml:space="preserve">
+    <value>Подождите меня</value>
+  </data>
+  <data name="ChatPhrase05" xml:space="preserve">
+    <value>Помогите!</value>
+  </data>
+  <data name="ChatPhrase06" xml:space="preserve">
+    <value>Пошли</value>
+  </data>
+  <data name="ChatPhrase07" xml:space="preserve">
+    <value>Дайте бафф, пожалуйста</value>
+  </data>
+  <data name="ChatPhrase08" xml:space="preserve">
+    <value>Продаю, пишите в личку</value>
+  </data>
+  <data name="ChatPhrase09" xml:space="preserve">
+    <value>Куплю, пишите в личку</value>
+  </data>
+  <data name="ChatPhrase10" xml:space="preserve">
+    <value>Извините</value>
+  </data>
+  <data name="ChatPhrase11" xml:space="preserve">
+    <value>Хорошая игра</value>
+  </data>
+  <data name="ChatPhrase12" xml:space="preserve">
+    <value>Пока</value>
+  </data>
+  <data name="PadKeyboardPhrases" xml:space="preserve">
+    <value>Фразы</value>
+  </data>
+||||||| ce163792b
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Обмен с игроком: /trade Имя, если он рядом; иначе с выбранным игроком на любом расстоянии или с тем, кто стоит напротив.</value>

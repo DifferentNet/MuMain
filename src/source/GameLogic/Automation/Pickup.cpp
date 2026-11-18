@@ -23,6 +23,38 @@ static int TileDistance(int fromX, int fromY, int toX, int toY)
     return static_cast<int>(std::ceil(std::sqrt(static_cast<double>(dx * dx + dy * dy))));
 }
 
+// Sends the request for the drop, unless another one still waits for its answer.
+static PickupResult RequestPickup(int itemIndex)
+{
+    // One pickup at a time: the server answers with the item, and SendGetItem is what remembers which
+    // request is outstanding.
+    if (SendGetItem != -1)
+    {
+        return PickupResult::Busy;
+    }
+
+    SendGetItem = itemIndex;
+    SocketClient->ToGameServer()->SendPickupItemRequest(itemIndex);
+    return PickupResult::Requested;
+}
+
+PickupResult PickUpItemInPlace(int itemIndex, int maximumDistance)
+{
+    if (itemIndex < 0 || itemIndex >= MAX_ITEMS || !Items[itemIndex].Object.Live)
+    {
+        return PickupResult::Gone;
+    }
+
+    const OBJECT& dropObject = Items[itemIndex].Object;
+    const int dropX = (int)(dropObject.Position[0] / TERRAIN_SCALE);
+    const int dropY = (int)(dropObject.Position[1] / TERRAIN_SCALE);
+    if (TileDistance(Hero->PositionX, Hero->PositionY, dropX, dropY) > maximumDistance)
+    {
+        return PickupResult::TooFar;
+    }
+    return RequestPickup(itemIndex);
+}
+
 PickupResult PickUpItem(int itemIndex, int maximumDistance)
 {
     if (itemIndex < 0 || itemIndex >= MAX_ITEMS)
@@ -61,18 +93,9 @@ PickupResult PickUpItem(int itemIndex, int maximumDistance)
         return PickupResult::Approaching;
     }
 
-    // One pickup at a time: the server answers with the item, and
-    // SendGetItem is what remembers which request is outstanding. Gated
-    // here and not before the walk, as the helper this was extracted from
-    // gated it: approaching the next drop while an answer is outstanding is
-    // what keeps the helper moving.
-    if (SendGetItem != -1)
-    {
-        return PickupResult::Busy;
-    }
-
-    SendGetItem = itemIndex;
-    SocketClient->ToGameServer()->SendPickupItemRequest(itemIndex);
-    return PickupResult::Requested;
+    // Gated here and not before the walk, as the helper this was extracted
+    // from gated it: approaching the next drop while an answer is
+    // outstanding is what keeps the helper moving.
+    return RequestPickup(itemIndex);
 }
 } // namespace GameLogic::Automation

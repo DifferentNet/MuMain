@@ -244,6 +244,9 @@
 /* The sort button (InventorySort.h): an idle tab plate at the grid's top right (x 141-175, under the boots' slot),
    three bars short to long in the page numbers' gray, lighter on hover; dimmed and deaf while it can't sort. */
 #btn_bag_sort { left: 141px; }
+#btn_bag_junk { left: 105px; }
+.bag-junk-coin { position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin-left: -4px; margin-top: -4px; border-radius: 4px; background-color: #c9982c; pointer-events: none; }
+.bag-junk:hover .bag-junk-coin { background-color: #ffcc19; }
 .bag-sort.busy { pointer-events: none; filter: brightness(0.5); }
 .bag-sort-icon { position: absolute; left: 50%; top: 50%; width: 12px; height: 8px; margin-left: -6px; margin-top: -4px; pointer-events: none; }
 .bag-sort-bar { position: absolute; left: 0; height: 2px; background-color: #a0a0a0; }
@@ -325,6 +328,8 @@
 	.bag-tab-lock { right: 6px; top: 12px; width: 14px; height: 16px; }
 	/* The sort button left of the tabs, as tall, a little narrower, its bars bigger. */
 	#btn_bag_sort { left: calc(var(--bag-x) + 8 * var(--item-cell) - 216px); width: 48px; }
+	#btn_bag_junk { left: calc(var(--bag-x) + 8 * var(--item-cell) - 268px); width: 48px; }
+	.bag-junk-coin { width: 18px; height: 18px; margin-left: -9px; margin-top: -9px; border-radius: 9px; }
 	.bag-sort-icon { width: 20px; height: 13px; margin-left: -10px; margin-top: -6px; }
 	.bag-sort-bar { height: 3px; }
 	.bag-sort-bar-1 { width: 7px; }
@@ -347,6 +352,7 @@
 	#panel.beside .inv-btn-jewel-bank { top: 208px; }
 	/* The sort button joins them, under the jewel bank; the gold its width again. */
 	#panel.beside #btn_bag_sort { left: calc(var(--bag-x) + 8 * var(--item-cell) + 12px); top: 254px; width: 44px; height: 36px; }
+	#panel.beside #btn_bag_junk { left: calc(var(--bag-x) + 8 * var(--item-cell) + 12px); top: 300px; width: 44px; height: 36px; }
 	#panel.beside #gold_bg { width: 200px; }
 	/* The corner close lies right of the bag there: the tabs keep the bag's right edge. */
 	#panel.beside .bag-tab-1 { left: calc(var(--bag-x) + 8 * var(--item-cell) - 124px); }

@@ -47,7 +47,7 @@
 		<img id="item_view" class="item-view"/>
 		<div id="item_grid_counts" class="item-grid-counts">
 			<div class="item-count" data-for="c : grid_cells"><span class="item-count-text counter-scaled" data-if="c.count != ''"
-			     data-style-font-size="text_px + 'px'">{{c.count}}</span></div>
+			     data-style-font-size="text_px + 'px'">{{c.count}}</span><div class="item-junk" data-if="c.junk"></div></div>
 		</div>
 		<!-- Bag page 2 while not bought (UI/Inventory/BagPages.h): over the grid, what it gives, its price
 		     and the button that asks to buy it. -->
@@ -75,6 +75,9 @@
 		</div>
 		<!-- The sort button (InventorySort.h) at the grid's top right, right of the page tabs and shown without
 		     them too: a tab with three bars, dimmed while it can't sort. -->
+		<!-- Mark plain gear as junk (UI/Inventory/JunkSale, pad round 6 B7): pad and touch only, left of the sort button. -->
+		<div id="btn_bag_junk" class="bag-tab bag-junk" data-if="junk_mark_shown"
+		     data-event-click="my_inventory_mark_junk" data-attr-data-hint="junk_mark_tooltip"><div class="bag-junk-coin"></div></div>
 		<div id="btn_bag_sort" class="bag-tab bag-sort" data-class-busy="bag_sort_busy"
 		     data-event-click="my_inventory_bag_sort" data-attr-data-hint="bag_sort_tooltip">
 			<div class="bag-sort-icon"><div class="bag-sort-bar bag-sort-bar-1"></div><div class="bag-sort-bar bag-sort-bar-2"></div><div class="bag-sort-bar bag-sort-bar-3"></div></div>

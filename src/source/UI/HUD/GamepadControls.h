@@ -60,6 +60,11 @@ void LateUpdate();
 // under it count as aimed at.
 [[nodiscard]] bool PlaysPointer();
 
+// Whether one of the game's windows is open (not the HUD's parts nor the map), the skill list's grid
+// or the Golden Archer's and Lena's windows included: the pad's frame hops over it, and zen underfoot
+// waits (GameLogic/Touch/TouchActions). It looks at every window: once a frame at most.
+[[nodiscard]] bool IsGameWindowOpen();
+
 // Whether the game's pointer is not drawn: the pad plays the world, its frame rests on a target, or
 // its keyboard is up.
 [[nodiscard]] bool HidesPointer();

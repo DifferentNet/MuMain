@@ -28,6 +28,8 @@ const wchar_t* TextOf(Hint hint)
         return I18N::Game::PadHintBagFull;
     case Hint::Death:
         return I18N::Game::PadHintDeath;
+    case Hint::SkillsThird:
+        return I18N::Game::PadHintSkillsThird;
     }
     return nullptr;
 }

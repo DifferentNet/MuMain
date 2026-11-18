@@ -7,7 +7,13 @@
 // touch_controls.rml, pad_overlay.rml and pad_keyboard.rml bind the same fields: the body takes the
 // classes glyph-ps / glyph-nin from glyph_family, a face glyph shows {{glyph_a}} .. {{glyph_y}} (empty
 // for PlayStation, whose shapes gamepad_glyphs.rcss draws from the glyph's .pad-ps boxes), a bumper or
-// trigger {{glyph_lb}} .. {{glyph_rt}}.
+// trigger {{glyph_lb}} .. {{glyph_rt}}, a stick {{glyph_ls}} / {{glyph_rs}} and the left stick's click
+// {{glyph_l3}}.
+//
+// The glyphs follow the player's button layout (Core/Input/GamepadLayout.h): a glyph stands where the
+// game's control is and names the physical button that plays it. With the shoulders swapped {{glyph_lb}}
+// says LT and the body takes the class swap-shoulders from glyph_swap (gamepad_glyphs.rcss draws a
+// .pad-bumper as a trigger then, and the other way round); with the sticks swapped {{glyph_ls}} says RS.
 #pragma once
 
 #include "Core/Input/GamepadKind.h"
@@ -33,6 +39,11 @@ struct Model
     Rml::String rb = "RB";
     Rml::String lt = "LT";
     Rml::String rt = "RT";
+    Rml::String ls = "LS";
+    Rml::String rs = "RS";
+    Rml::String l3 = "L3";
+    // The bumpers and the triggers trade places (the layout): their glyphs trade their shapes.
+    bool swapShoulders = false;
 };
 
 void Bind(Rml::DataModelConstructor& constructor, Model& model);
@@ -43,7 +54,8 @@ void Sync(Model& model, const std::function<void(const char*)>& markDirty);
 
 // The buttons' names in words for a text (UI/HUD/PadButtonNames): Xbox A .. LB .. LS, Menu, View;
 // PlayStation Cross, Circle, Square, Triangle (in the game's language), L1 .. L3, Options, Create;
-// Nintendo B A Y X by place, L R ZL ZR, LS RS, + and -.
+// Nintendo B A Y X by place, L R ZL ZR, LS RS, + and -. Each by the game's button it plays, through the
+// player's layout: with the shoulders swapped {LB} names LT.
 [[nodiscard]] PadButtonNames::Names TextNames(Core::Input::Gamepad::PadKind kind);
 // The text with the names of the glyphs shown now (Core::Input::Gamepad::ShownKind()).
 [[nodiscard]] std::wstring Named(const wchar_t* text);

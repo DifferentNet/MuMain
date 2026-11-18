@@ -5,7 +5,7 @@
 	<link type="text/rcss" href="gamepad_glyphs.rcss"/>
 	<link type="text/rcss" href="pad_overlay.rcss"/>
 </head>
-<body class="pad" data-model="pad_overlay" data-class-glyph-ps="glyph_family == 1" data-class-glyph-nin="glyph_family == 2">
+<body class="pad" data-model="pad_overlay" data-class-glyph-ps="glyph_family == 1" data-class-glyph-nin="glyph_family == 2" data-class-swap-shoulders="glyph_swap">
 	<!-- What the gamepad shows over the world and its windows (UI/HUD/PadOverlay.cpp): the frame
 	     on the cell or button the pad is on (UI/HUD/PadFrame), the hero hub's tabs with what the
 	     pad's buttons do in a window (UI/HUD/PadHub), and over the drop d-pad down would pick up, a
@@ -18,6 +18,13 @@
 			<div class="pad-glyph pad-dpad pad-dpad-down" data-if="!prompt_a"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
 			<div class="pad-glyph pad-face pad-a" data-if="prompt_a">{{glyph_a}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div>
 			<div class="po-label">{{pickup_label}}</div>
+		</div>
+	</div>
+	<!-- The quick equip offer (UI/Inventory/QuickEquip, pad round 6 B3): a picked-up item worth more, d-pad right held puts it on. -->
+	<div id="po_offer" data-if="offer_shown">
+		<div id="po_offer_inner">
+			<div class="po-offer-text">{{offer_label}}</div>
+			<div class="po-pair"><div class="pad-glyph pad-dpad pad-dpad-right"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div><div class="po-label">{{offer_hold_label}}</div></div>
 		</div>
 	</div>
 	<div id="po_top" data-if="hub_open || legend_shown || characters_shown" data-style-right="top_right">
@@ -54,8 +61,8 @@
 		</div>
 		<div class="pc-body" data-if="card_page == 0">
 			<div class="pc-col">
-				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-round pad-stick">LS</div></div><div class="pc-label">{{card[4]}}</div></div>
-				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-round pad-stick">RS</div></div><div class="pc-label">{{card[5]}}</div></div>
+				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-round pad-stick">{{glyph_ls}}</div></div><div class="pc-label">{{card[4]}}</div></div>
+				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-round pad-stick">{{glyph_rs}}</div></div><div class="pc-label">{{card[5]}}</div></div>
 				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-bumper">{{glyph_lb}}</div><div class="pad-glyph pad-trigger">{{glyph_lt}}</div></div><div class="pc-label">{{card[6]}}</div></div>
 				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-bumper">{{glyph_rb}}</div></div><div class="pc-label">{{card[7]}}</div></div>
 				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-dpad pad-dpad-up"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div></div><div class="pc-label">{{card[8]}}</div></div>
@@ -67,15 +74,16 @@
 				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-face pad-a">{{glyph_a}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div></div><div class="pc-label">{{card[12]}}</div></div>
 				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-face pad-x">{{glyph_x}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div><div class="pad-glyph pad-face pad-y">{{glyph_y}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div><div class="pad-glyph pad-face pad-b">{{glyph_b}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div></div><div class="pc-label">{{card[13]}}</div></div>
 				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-trigger">{{glyph_rt}}</div><div class="pc-plus">+</div><div class="pad-glyph pad-face pad-x">{{glyph_x}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div><div class="pad-glyph pad-face pad-y">{{glyph_y}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div><div class="pad-glyph pad-face pad-b" data-if="card_six">{{glyph_b}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div></div><div class="pc-label">{{card[14]}}</div></div>
+				<div class="pc-row" data-if="card_nine"><div class="pc-keys"><div class="pad-glyph pad-bumper">{{glyph_rb}}</div><div class="pc-plus">+</div><div class="pad-glyph pad-face pad-x">{{glyph_x}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div><div class="pad-glyph pad-face pad-y">{{glyph_y}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div><div class="pad-glyph pad-face pad-b">{{glyph_b}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div></div><div class="pc-label">{{card[30]}}</div></div>
 				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-round pad-view"><div class="pad-view-back"></div><div class="pad-view-front"></div></div></div><div class="pc-label">{{card[15]}}</div></div>
 				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-round pad-menu"><div class="pad-menu-line pad-menu-line-1"></div><div class="pad-menu-line pad-menu-line-2"></div><div class="pad-menu-line pad-menu-line-3"></div></div></div><div class="pc-label">{{card[16]}}</div></div>
-				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-round pad-stick">L3</div></div><div class="pc-label">{{card[17]}}</div></div>
+				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-round pad-stick">{{glyph_l3}}</div></div><div class="pc-label">{{card[17]}}</div></div>
 			</div>
 		</div>
 		<div class="pc-body" data-if="card_page == 1">
 			<div class="pc-col">
-				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-round pad-stick">LS</div><div class="pad-glyph pad-dpad pad-dpad-up"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div></div><div class="pc-label">{{card[18]}}</div></div>
-				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-round pad-stick">RS</div></div><div class="pc-label">{{card[19]}}</div></div>
+				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-round pad-stick">{{glyph_ls}}</div><div class="pad-glyph pad-dpad pad-dpad-up"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div></div><div class="pc-label">{{card[18]}}</div></div>
+				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-round pad-stick">{{glyph_rs}}</div></div><div class="pc-label">{{card[19]}}</div></div>
 				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-bumper">{{glyph_rb}}</div></div><div class="pc-label">{{card[20]}}</div></div>
 				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-trigger">{{glyph_rt}}</div></div><div class="pc-label">{{card[21]}}</div></div>
 				<div class="pc-row"><div class="pc-keys"><div class="pad-glyph pad-bumper">{{glyph_lb}}</div><div class="pad-glyph pad-bumper">{{glyph_rb}}</div></div><div class="pc-label">{{card[22]}}</div></div>
@@ -93,6 +101,8 @@
 			<div class="po-pair" data-if="hub_open"><div class="pad-glyph pad-dpad pad-dpad-sides"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div><div class="po-label">{{card[3]}}</div></div>
 			<div class="po-pair"><div class="pad-glyph pad-face pad-b">{{glyph_b}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div><div class="po-label">{{card[28]}}</div></div>
 		</div>
+		<!-- Where the button layout is chosen (Options -> Interface -> Gamepad layout, pad round 6 B1). -->
+		<div id="pc_note">{{card[29]}}</div>
 	</div>
 </body>
 </rml>

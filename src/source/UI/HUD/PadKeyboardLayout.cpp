@@ -1,5 +1,7 @@
 #include "UI/HUD/PadKeyboardLayout.h"
 
+#include "UI/Chat/ChatPhrases.h"
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -25,6 +27,10 @@ constexpr Key Do(Action action, float width)
 constexpr Key Wide(std::string_view text, float width)
 {
     return {A::Type, text, text, width};
+}
+constexpr Key P(int id)
+{
+    return {A::Phrase, {}, {}, 1.f, id};
 }
 
 constexpr Key LatinDigits[] = {T("1"), T("2"), T("3"), T("4"), T("5"), T("6"), T("7"), T("8"), T("9"), T("0")};
@@ -65,6 +71,17 @@ constexpr Key DigitsMiddle[] = {T("4"), T("5"), T("6")};
 constexpr Key DigitsLow[] = {T("7"), T("8"), T("9")};
 constexpr Key DigitsBottom[] = {Do(A::Backspace, 1.f), T("0"), Do(A::Enter, 1.f)};
 constexpr std::span<const Key> DigitsRows[] = {DigitsTop, DigitsMiddle, DigitsLow, DigitsBottom};
+
+// Three phrases a row, in the order of their ids; the last row to the letters, Backspace and Enter.
+constexpr Key PhrasesFirst[] = {P(1), P(2), P(3)};
+constexpr Key PhrasesSecond[] = {P(4), P(5), P(6)};
+constexpr Key PhrasesThird[] = {P(7), P(8), P(9)};
+constexpr Key PhrasesFourth[] = {P(10), P(11), P(12)};
+constexpr Key PhrasesBottom[] = {Do(A::Language, 1.f), Do(A::Backspace, 1.f), Do(A::Enter, 1.f)};
+constexpr std::span<const Key> PhrasesRows[] = {PhrasesFirst, PhrasesSecond, PhrasesThird, PhrasesFourth,
+                                                PhrasesBottom};
+static_assert(std::size(PhrasesRows) - 1 == UI::Chat::Phrases::Count / std::size(PhrasesFirst),
+              "every phrase has its key");
 
 float RowWidth(std::span<const Key> row)
 {
@@ -118,6 +135,8 @@ std::span<const std::span<const Key>> Rows(Page page)
         return SymbolsRows;
     case Page::Digits:
         return DigitsRows;
+    case Page::Phrases:
+        return PhrasesRows;
     default:
         return LatinRows;
     }

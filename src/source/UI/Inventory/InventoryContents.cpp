@@ -67,6 +67,12 @@ int TransferSourceIndex()
     return g_pMyShopInventory->GetSourceIndex();
 }
 
+bool TransferStartedInBag()
+{
+    const auto* pickedItem = mu::ui::window::CInventoryCtrl::GetPickedItem();
+    return pickedItem != nullptr && pickedItem->GetSourceStorageType() == STORAGE_TYPE::INVENTORY;
+}
+
 bool ReceivePlayerTransfer(int index, std::span<const std::uint8_t> itemData)
 {
     DiscardPickedItem();
