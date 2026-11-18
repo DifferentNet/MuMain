@@ -229,6 +229,9 @@ namespace GameLogic::Items
         // left the Signs on the ground).
         case ITEM_SIGN_OF_DIMENSIONS:
         case ITEM_MIRROR_OF_DIMENSIONS:
+        // Spirit 13:31: level 0 is the Spirit of Dark Horse, level 1 the Spirit of Dark Raven (Dark Lord pets);
+        // the helper picks both up with the quest items (ghinzuro, 2026-11-18).
+        case ITEM_SPIRIT:
         // Class quest items: 2nd class (Scroll of Emperor / Ring of Honor, Broken Sword / Dark Stone, Tear of Elf,
         // Soul Shard of Wizard) and 3rd class (Flame of Death Beam Knight, Horn of Hell Maine, Feather of Dark
         // Phoenix, Eye of Abyssal).

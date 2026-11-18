@@ -47,7 +47,8 @@ namespace GameLogic::Items
     bool IsTieredSilverOrGoldMedalType(int itemType);
     // Quest and event items: Symbol of Kundun, the Devil Square, Blood Castle, Chaos Castle, Kalima and
     // Illusion Temple entries and their parts, Secromicon fragments, Condor's flame and feather, Loch's feather,
-    // the 2nd and 3rd class quest items.
+    // the 2nd and 3rd class quest items, the Signs and Mirror of Dimensions (Kundun's Lair) and the Dark Lord
+    // pet Spirit 13:31 (Dark Horse / Dark Raven). The loot filter files them as Quest, which can't be hidden.
     bool IsQuestItem(const ITEM* pItem);
     bool IsRefineStone(const ITEM* pItem);
     bool IsSocketSeedOrSphere(const ITEM* pItem);
