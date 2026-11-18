@@ -8,16 +8,18 @@
 //                  frame already has its world depth (SSAO or haze on; MuRendererSDLGpu).
 //   FlipbookBlend  explosion and fire sheets blend from one frame to the next (FlipbookBlend.h).
 //   Ribbons        the Evil Spirit and Death Stab trails are drawn as smooth curves whose texture and
-//                  end move every frame (RibbonSpline.h, JointRibbon.h), and the sword swing trail no
-//                  longer folds over itself at high frame rates (BlurSlice.h).
+//                  end move every frame (RibbonSpline.h, JointRibbon.h), the sword swing trail no
+//                  longer folds over itself at high frame rates (BlurSlice.h), and Twisting Slash's lead
+//                  ghost weapon lays a flat orange band over the arc it sweeps (WheelRibbon.h).
 //   Decals         fire, ice and earth skills leave a fading mark on the ground (scorch, frost;
 //                  GroundMarks.h).
 //   Cores          where glowing (additive) effects pile up bright, the frame's centre of the pile burns
 //                  toward white in the effects' own colour, in the post-processing composite
 //                  (PostProcessing/HotCores.h, post_composite_cores.frag). Needs post-processing and bloom.
 //
-//   Effect level 4: 16 pools, soft, flipbook, trails of up to 8 pieces a span, 48 ground marks, cores at
-//   full strength; 3: 12 pools, soft, flipbook, trails of up to 4 pieces, 32 marks, cores 0.75; 2: 8 pools,
+//   Effect level 4: 16 pools, soft, flipbook, trails of up to 8 pieces a span (Twisting Slash band: one
+//   piece per 5 degrees), 48 ground marks, cores at full strength; 3: 12 pools, soft, flipbook, trails of up
+//   to 4 pieces (band: 10 degrees), 32 marks, cores 0.75; 2: 8 pools,
 //   soft, 16 marks, cores 0.5; 0 and 1: all off. In the Classic client (no Data/HD) and on the web all six
 //   are off and the frame is the same as without them.
 //   Console: $fx pools|soft|flipbook|trails|decals|cores on|off, $fx status.
@@ -67,7 +69,9 @@ inline constexpr int kMaxPools = 16;
     return level == 3 ? 4 : 0;
 }
 
-// The most smooth trail quads a frame draws at an effect level; past it trails draw as classic.
+// The smooth trail quads a frame aims at, at an effect level: a trail that starts to be drawn past it
+// takes 1 piece a span (as many quads as classic) and keeps that; past twice it every trail takes 1 that
+// frame (JointRibbon.h).
 [[nodiscard]] constexpr int RibbonQuadBudget(const int level)
 {
     if (level >= 4)

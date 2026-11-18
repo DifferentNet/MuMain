@@ -328,6 +328,13 @@ mu_add_test(
         test_blur_slice.cpp
 )
 
+# Smooth trails: Twisting Slash's arc band (head, arc, pieces, fade, points on the orbit).
+mu_add_test(
+    NAME wheel_ribbon_tests
+    SOURCES
+        test_wheel_ribbon.cpp
+)
+
 # Smoother cut-out foliage: strength, locks, the cut-out samplers' mip bias and the cut-out test.
 mu_add_test(
     NAME foliage_smoothing_tests
@@ -437,12 +444,14 @@ add_test(
         -P "${CMAKE_CURRENT_SOURCE_DIR}/test_create_has_no_fps_gate.cmake"
 )
 
-# The smooth trails' ribbon and swing head slice are only reached through their gate.
+# The smooth trails' ribbon, swing head slice and Twisting Slash band are only reached through their gate.
 add_test(
     NAME ribbons_are_gated
     COMMAND "${CMAKE_COMMAND}"
         "-DMU_JOINT_SOURCE=${MU_EFFECTS_DIR}/ZzzEffectJoint.cpp"
         "-DMU_CHARACTER_SOURCE=${CMAKE_SOURCE_DIR}/src/source/Engine/Object/ZzzCharacter.cpp"
+        "-DMU_EFFECT_SOURCE=${MU_EFFECTS_DIR}/ZzzEffect.cpp"
+        "-DMU_MOVE_HANDLERS_SOURCE=${MU_EFFECTS_DIR}/Behaviors/MoveHandlers.cpp"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/test_ribbons_gate.cmake"
 )
 

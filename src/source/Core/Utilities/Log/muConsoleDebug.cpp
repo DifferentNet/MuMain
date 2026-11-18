@@ -22,6 +22,7 @@
 #include "Render/Effects/GroundMarks.h"
 #include "Render/Effects/JointRibbon.h"
 #include "Render/Effects/SkillFx.h"
+#include "Render/Effects/WheelRibbon.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "Render/Terrain/TorchLights.h"
 #include "Data/GameConfig/GameConfig.h"
@@ -143,14 +144,14 @@ void SkillFxCommand(const std::wstring& command)
     mu::log::Get("render")->info(
         "Skill effects: pools {}, soft {}, flipbook {}, trails {}, decals {} (available here: {}, effect level {}, "
         "pool budget {}, trail pieces per span {}, mark budget {}); this frame {} effect pools; soft twins {}, soft "
-        "sprites last frame {}; ribbon joints {}, pieces {} last frame; ground marks {}",
+        "sprites last frame {}; ribbon joints {}, pieces {}, wheel arcs {} last frame; ground marks {}",
         state(SkillFx::Feature::LightPools), state(SkillFx::Feature::SoftParticles),
         state(SkillFx::Feature::FlipbookBlend), state(SkillFx::Feature::Ribbons), state(SkillFx::Feature::Decals),
         SkillFx::Available() ? "yes" : "no", GameConfig::GetInstance().GetEffectLevel(), SkillFx::ActivePoolBudget(),
         SkillFx::ActiveRibbonPieces(), SkillFx::ActiveMarkBudget(), Render::Terrain::TorchLights::FrameEffectLights(),
         mu::HasSoftParticlePipelines() ? "built" : "missing",
         mu::SoftParticlesDrawnLastFrame() ? "yes" : "no (needs SSAO or haze on)", ribbons.joints, ribbons.pieces,
-        Render::Effects::GroundMarks::Count());
+        Render::Effects::WheelRibbon::LastFrameArcs(), Render::Effects::GroundMarks::Count());
     const char* coresDrawn = "no (cores off or held off)";
     if (mu::HotCoresDrawnLastFrame())
     {

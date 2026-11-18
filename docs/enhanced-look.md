@@ -184,10 +184,18 @@ held by the effect level:
   Evil Spirit spirits and Death Stab's wind are drawn as smooth curves instead of
   straight pieces with a kink at every point, and their texture and end move every
   frame instead of jumping 25 times a second. A player's sword swing trail no
-  longer folds over itself above 25 FPS. Level 4 cuts a trail span into up to 8
-  pieces where it bends, level 3 into up to 4; a frame draws at most 4096 (level 3:
-  2048) such quads, the rest as before. At 25 FPS a straight full trail looks as it
-  did.
+  longer folds over itself above 25 FPS. Twisting Slash, which has no trail of its
+  own (ghost weapons circle the caster), gets a flat orange band over the last
+  90 degrees the cast's first ghost weapon swept (one band per cast), at the weapon's height and 90 units wide around
+  its orbit; it brightens toward the weapon and fades out over the ghosts' last five
+  25 FPS frames, and the ghost weapons are drawn on top as before (also for other
+  players' casts). Level 4 cuts a trail span into up to 8 pieces where it bends and
+  the band into one piece per 5 degrees, level 3 into up to 4 and one per 10 degrees.
+  A frame aims at 4096 (level 3: 2048) smooth trail quads: a trail that starts past
+  that takes one piece per span (as many quads as before) and keeps it while it
+  stays in view, so a trail does not switch its look in flight (one that leaves the
+  view and comes back chooses again), and past twice that every trail takes one
+  piece that frame. At 25 FPS a straight full trail looks as it did.
 - `SkillGroundMarks`: fire, ice and earth skills leave a mark on the ground that
   fades away (effect level 2 and up). Meteor, Flame, Rageful Blow and Earthshake
   leave a scorch (the crater texture; the earth skills keep their crack model on
@@ -220,7 +228,7 @@ held by the effect level:
 
 At effect level 0 and 1 all six are off. In developer builds, `$fx pools|soft|flipbook|trails|decals|cores on|off`
 switches one look (and saves the key) and `$fx status` logs what is on, with the
-smooth trails and their pieces drawn last frame, the ground marks lying now and
+smooth trails, their pieces and the Twisting Slash bands (wheel arcs) drawn last frame, the ground marks lying now and
 the hot core strength, whether its shader was built and whether the last frame drew it.
 
 Why the trails needed it: a joint trail keeps one point per 25 FPS frame (the
