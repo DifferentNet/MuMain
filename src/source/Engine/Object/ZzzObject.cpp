@@ -1,6 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
+#include "Render/Effects/FramePow.h"
 #include "Camera/CameraMove.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
 #include "Render/Models/ZzzBMD.h"
@@ -2052,7 +2053,7 @@ void Draw_RenderObject(OBJECT* o, bool Translate, int Select, int ExtraMon)
 
                     if (o->LifeTime <= 20)
                     {
-                        o->BlendMeshLight *= pow(0.86f, FPS_ANIMATION_FACTOR);
+                        o->BlendMeshLight *= FramePow(0.86f);
                     }
                     b->RenderBody(RENDER_TEXTURE, o->Alpha, o->BlendMesh, o->BlendMeshLight, o->BlendMeshTexCoordU, o->BlendMeshTexCoordV, o->HiddenMesh);
                 }
@@ -2063,7 +2064,7 @@ void Draw_RenderObject(OBJECT* o, bool Translate, int Select, int ExtraMon)
                     //Vector(0.7f, 0.2f, 0.9f, b->BodyLight);
                     if (o->LifeTime <= 10)
                     {
-                        o->BlendMeshLight *= pow(0.8f, FPS_ANIMATION_FACTOR);
+                        o->BlendMeshLight *= FramePow(0.8f);
                     }
                     b->RenderBody(RENDER_TEXTURE, o->Alpha, o->BlendMesh, o->BlendMeshLight, o->BlendMeshTexCoordU, o->BlendMeshTexCoordV, o->HiddenMesh);
                 }

@@ -1,6 +1,8 @@
 #ifndef __ZZZ_EFFECT_H__
 #define __ZZZ_EFFECT_H__
 
+#include <cstdint>
+
 extern OBJECT Effects[];
 extern OBJECT Sprites[];
 extern JOINT Joints[];
@@ -105,6 +107,10 @@ void TerminateOwnerEffectObject(int iOwnerObjectType = -1);
 
 bool DeleteEffect(int Type, OBJECT* Owner, int iSubType = -1);
 bool SearchEffect(int iType, OBJECT* pOwner, int iSubType = -1);
+// Whether a live effect or skill effect is owned by `owner` (what DeleteEffect(Type, Owner) could delete).
+bool HasEffectOf(const OBJECT* owner);
+// How many effects and skill effects were created so far (wraps around).
+std::uint32_t EffectTakes();
 
 void CreateBomb(vec3_t p, bool Exp, int SubType = 0);
 void CreateBomb2(vec3_t p, bool Exp, int SubType = 0, float Scale = 0.0f);
@@ -113,6 +119,10 @@ void CreateInferno(vec3_t Position, int SubType = 0);
 
 void DeleteJoint(int Type, OBJECT* Target, int SubType = -1);
 bool SearchJoint(int Type, OBJECT* Target, int SubType = -1);
+// Whether a live joint has `target` as its target (what DeleteJoint(Type, Target) could delete).
+bool HasJointOn(const OBJECT* target);
+// How many joints were created so far (wraps around).
+std::uint32_t JointTakes();
 void CreateTail(JOINT* o, float Matrix[3][4], bool Blur = false);
 void CreateTailAxis(JOINT* o, float Matrix[3][4], BYTE axis = 0);
 

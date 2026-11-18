@@ -15,7 +15,6 @@ namespace Render::Effects::SkillFx
 namespace
 {
 std::array<bool, kFeatureCount> s_chosen{};
-bool s_available = false;
 // The state last logged, for logging only its changes.
 std::optional<std::array<bool, kFeatureCount + 1>> s_logged;
 
@@ -31,17 +30,19 @@ int EffectLevel()
 
 void Log()
 {
-    const std::array<bool, kFeatureCount + 1> state{s_available, s_chosen[0], s_chosen[1], s_chosen[2]};
+    const std::array<bool, kFeatureCount + 1> state{Detail::g_available, s_chosen[0], s_chosen[1], s_chosen[2]};
     if (s_logged == state)
     {
         return;
     }
     s_logged = state;
     mu::log::Get("render")->info("Skill effects {}: pools {}, soft {}, flipbook {}",
-                                 s_available ? "available" : "not available", s_chosen[0] ? "on" : "off",
+                                 Detail::g_available ? "available" : "not available", s_chosen[0] ? "on" : "off",
                                  s_chosen[1] ? "on" : "off", s_chosen[2] ? "on" : "off");
 }
 } // namespace
+
+bool Detail::g_available = false;
 
 bool Available()
 {
@@ -55,16 +56,16 @@ bool Available()
 void ApplyFromConfig()
 {
     const GameConfig& config = GameConfig::GetInstance();
-    s_available = Available();
+    Detail::g_available = Available();
     s_chosen[Index(Feature::LightPools)] = config.GetSkillLightPools() != 0;
     s_chosen[Index(Feature::SoftParticles)] = config.GetSoftParticles() != 0;
     s_chosen[Index(Feature::FlipbookBlend)] = config.GetFlipbookBlending() != 0;
     Log();
 }
 
-bool Enabled(const Feature feature)
+bool Detail::EnabledWhenAvailable(const Feature feature)
 {
-    return Resolve(s_chosen[Index(feature)], s_available, feature, EffectLevel());
+    return Resolve(s_chosen[Index(feature)], true, feature, EffectLevel());
 }
 
 int ActivePoolBudget()

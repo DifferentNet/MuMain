@@ -2,6 +2,7 @@
 #include "UI/Mobile/PhoneHudLayout.h"
 
 #include "Render/RmlUi/RmlUiRuntime.h"
+#include "Render/Textures/ZzzOpenglUtil.h"
 #include "UI/HUD/TouchControls.h"
 #include "UI/Mobile/NoticesUnderPanel.h"
 #include "UI/Mobile/PhoneHudFit.h"
@@ -397,7 +398,8 @@ constexpr std::size_t PieceCount = std::size(Pieces);
 
 std::array<PieceState, PieceCount> g_states;
 
-float BuffsBottom(Rml::Element& /*lane*/)
+// The bottom of the buff icons in window px, 0 with none shown.
+float ShownBuffsBottom()
 {
     // The buff strip is the first piece. It is drawn at the HUD's scale (a scale and a shift): two
     // window points projected onto it give the window's y of its bottom.
@@ -417,6 +419,30 @@ float BuffsBottom(Rml::Element& /*lane*/)
         return 0.f;
     const float bottom = panel->GetAbsoluteOffset(Rml::BoxArea::Border).y + height;
     return (bottom - top.y) * 100.f / (lower.y - top.y);
+}
+
+float BuffsBottom(Rml::Element& /*lane*/)
+{
+    return ShownBuffsBottom();
+}
+
+// The bottom of the notice ticker's band in window px where it crosses left..right, 0 while no notice
+// runs there. The lane document is screen-space: its offsets are window px.
+float TickerBottom(float left, float right)
+{
+    static_assert(Pieces[6].document == "slide_notice.rml");
+    Rml::Element* lane = g_states[6].element.get();
+    if (lane == nullptr || !lane->IsVisible())
+        return 0.f;
+    Rml::ElementDocument* document = lane->GetOwnerDocument();
+    Rml::Element* band = document != nullptr ? document->GetElementById("band") : nullptr;
+    if (band == nullptr || !band->IsVisible())
+        return 0.f;
+    const Rml::Vector2f offset = band->GetAbsoluteOffset(Rml::BoxArea::Border);
+    const Rml::Vector2f size = band->GetBox().GetSize(Rml::BoxArea::Border);
+    if (size.x <= 0.f || size.y <= 0.f || right <= offset.x || left >= offset.x + size.x)
+        return 0.f;
+    return offset.y + size.y;
 }
 
 Frame ReadFrame(const Edges& edges)
@@ -487,6 +513,28 @@ void UI::Mobile::PhoneHudLayout::Release()
 bool UI::Mobile::PhoneHudLayout::CoversLabel(const TouchTarget::Box& label)
 {
     return Fit::Overlaps({g_labelZones.data(), g_labelZoneCount}, label);
+}
+
+float UI::Mobile::PhoneHudLayout::TopLabelLine(float left, float right)
+{
+    const float clearance = TopClearance(left, right);
+    if (clearance <= 0.f)
+        return 0.f;
+    float line = clearance + g_frame.gap;
+    // The buff icons are centred across under the top row: taken as crossing any span up there.
+    if (const float buffs = ShownBuffsBottom(); buffs > 0.f)
+        line = std::max(line, buffs + g_frame.gap);
+    if (const float ticker = TickerBottom(left, right); ticker > 0.f)
+        line = std::max(line, ticker + g_frame.gap);
+    return line;
+}
+
+int UI::Mobile::PhoneHudLayout::NativeTopLine(float left, float right)
+{
+    const float line = TopLabelLine(ConvertPositionX(left), ConvertPositionX(right));
+    if (line <= 0.f || g_fScreenRate_y <= 0.f)
+        return 0;
+    return static_cast<int>(std::ceil((line - g_fScreenOffset_y) / g_fScreenRate_y));
 }
 
 float UI::Mobile::PhoneHudLayout::TopClearance(float left, float right)

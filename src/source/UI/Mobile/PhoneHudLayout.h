@@ -72,4 +72,14 @@ void Release();
 // the top row's band, and the hero frame where the span crosses it. The speech bubbles kept on the
 // screen stop under it, where they can be read. 0 while the PC's HUD shows.
 [[nodiscard]] float TopClearance(float left, float right);
+
+// Where a native label at the world's top between left and right (window pixels) starts on the phone
+// (window pixels): under the HUD's top there (TopClearance), the buff icons centred under the top row,
+// and the notice ticker's band while a notice runs over the span. The labels draw under the HUD, which
+// would cover them. 0 while the PC's HUD shows, or where nothing of the phone's HUD lies above the span.
+[[nodiscard]] float TopLabelLine(float left, float right);
+
+// TopLabelLine for a native label of the old 640x480 frame between left and right (the frame's x): the
+// frame's y it starts at, rounded down the frame. 0 where TopLabelLine is 0: the label keeps its place.
+[[nodiscard]] int NativeTopLine(float left, float right);
 } // namespace UI::Mobile::PhoneHudLayout

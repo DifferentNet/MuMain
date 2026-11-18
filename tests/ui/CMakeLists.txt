@@ -58,6 +58,13 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ChatFade.cpp
 )
 
+# The high-water end of the chat plate pool (UI/Chat/ChatPlateBound.h).
+mu_add_test(
+    NAME chat_plate_bound_tests
+    SOURCES
+        test_chat_plate_bound.cpp
+)
+
 mu_add_test(
     NAME zen_amount_tests
     SOURCES

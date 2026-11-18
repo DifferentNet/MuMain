@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cstdint>
 
 namespace Render::Effects
 {
@@ -37,11 +38,15 @@ public:
     // The create set `index` live; it was the lowest free slot, so every slot below it is live.
     void OnTaken(int index)
     {
+        ++m_takes;
         m_firstFree = index;
         m_end = std::max(m_end, index + 1);
     }
 
     void OnFreed(int index) { m_firstFree = std::min(m_firstFree, index); }
+
+    // How many creates took a slot so far (wraps around); a change says something was created.
+    [[nodiscard]] std::uint32_t Takes() const { return m_takes; }
 
     // Moves End() down past the free slots at the top; right at any time. `capacity` is the pool's size.
     template <typename Slot>
@@ -80,6 +85,7 @@ private:
     int m_end = 0;
     std::array<int, MaxActive> m_active{};
     int m_activeCount = 0;
+    std::uint32_t m_takes = 0;
 };
 
 // Enter/Leave for one scope, so every return and continue of the body leaves the slot.

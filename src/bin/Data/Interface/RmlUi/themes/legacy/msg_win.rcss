@@ -129,3 +129,10 @@
 .mode-cancel-only #btn_cancel, .mode-both #btn_cancel, .mode-input #btn_cancel { display: block; }
 .mode-both #btn_cancel { left: 200dp; }
 .mode-input #btn_cancel { left: 264dp; }
+
+/* MU Skynet: the phone view (theme flag "mobile") draws the box larger for fingers, as the login box
+   next to it (login.rcss). The translate keeps .center-both's centring (base.rcss): the scale works
+   round the box's middle, so the box stays centred on the screen. */
+@media (theme: mobile) {
+	#panel { transform: translate(-50%, -50%) scale(1.35); }
+}
