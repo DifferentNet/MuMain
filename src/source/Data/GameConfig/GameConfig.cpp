@@ -172,6 +172,8 @@ void GameConfig::Load()
         std::clamp(ReadInt(CfgSectionRender, CfgKeyFlipbookBlending, CfgDefaultSkillFx), CfgMinSkillFx, CfgMaxSkillFx);
     m_smoothTrails =
         std::clamp(ReadInt(CfgSectionRender, CfgKeySmoothTrails, CfgDefaultSkillFx), CfgMinSkillFx, CfgMaxSkillFx);
+    m_skillGroundMarks = std::clamp(ReadInt(CfgSectionRender, CfgKeySkillGroundMarks, CfgDefaultSkillFx),
+                                    CfgMinSkillFx, CfgMaxSkillFx);
     m_haze = std::clamp(ReadInt(CfgSectionRender, CfgKeyHaze, CfgDefaultHaze), CfgMinHaze, CfgMaxHaze);
     m_hazeStrength = std::clamp(ReadInt(CfgSectionRender, CfgKeyHazeStrength, CfgDefaultHazeStrength),
                                 CfgMinHazeStrength, CfgMaxHazeStrength);
@@ -316,6 +318,7 @@ void GameConfig::Save()
     WriteInt(CfgSectionRender, CfgKeySoftParticles, m_softParticles);
     WriteInt(CfgSectionRender, CfgKeyFlipbookBlending, m_flipbookBlending);
     WriteInt(CfgSectionRender, CfgKeySmoothTrails, m_smoothTrails);
+    WriteInt(CfgSectionRender, CfgKeySkillGroundMarks, m_skillGroundMarks);
     WriteInt(CfgSectionRender, CfgKeyHaze, m_haze);
     WriteInt(CfgSectionRender, CfgKeyHazeStrength, m_hazeStrength);
     WriteInt(CfgSectionRender, CfgKeyParticles, m_particles);
@@ -601,6 +604,11 @@ void GameConfig::SetFlipbookBlending(int enabled)
 void GameConfig::SetSmoothTrails(int enabled)
 {
     m_smoothTrails = std::clamp(enabled, CfgDefaults::CfgMinSkillFx, CfgDefaults::CfgMaxSkillFx);
+}
+
+void GameConfig::SetSkillGroundMarks(int enabled)
+{
+    m_skillGroundMarks = std::clamp(enabled, CfgDefaults::CfgMinSkillFx, CfgDefaults::CfgMaxSkillFx);
 }
 
 void GameConfig::SetHaze(int haze)

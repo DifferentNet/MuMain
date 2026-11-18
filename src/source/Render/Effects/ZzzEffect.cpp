@@ -25,6 +25,7 @@
 #include "Engine/Object/ZzzInterface.h"
 #include "Scenes/MainScene.h"
 #include "Render/Effects/PoolSlotBounds.h"
+#include "Render/Effects/GroundMarks.h"
 
 PARTICLE  Particles[MAX_PARTICLES];
 #ifdef DEVIAS_XMAS_EVENT
@@ -789,6 +790,11 @@ void CreateEffect(int Type, vec3_t Position, vec3_t Angle, vec3_t Light, int Sub
                 {
                     o->LifeTime = 40;
                     o->Weapon = CharacterMachine->PacketSerial;
+                    // Not under the map's own fires (no owner).
+                    if (o->Owner != nullptr)
+                    {
+                        Render::Effects::GroundMarks::Add(Render::Effects::GroundMarks::Source::Flame, o->Position[0], o->Position[1]);
+                    }
                 }
                 else if (o->SubType == 1 || o->SubType == 2)
                 {
@@ -808,6 +814,10 @@ void CreateEffect(int Type, vec3_t Position, vec3_t Angle, vec3_t Light, int Sub
                 else if (o->SubType == 5)
                 {
                     o->LifeTime = 20;
+                    if (o->Owner != nullptr)
+                    {
+                        Render::Effects::GroundMarks::Add(Render::Effects::GroundMarks::Source::Flame, o->Position[0], o->Position[1]);
+                    }
                 }
                 else if (o->SubType == 6)
                 {
@@ -1003,6 +1013,7 @@ void CreateEffect(int Type, vec3_t Position, vec3_t Angle, vec3_t Light, int Sub
                 case 0:
                     Vector(0.8f, 0.8f, 0.8f, o->Light);
                     o->LifeTime = 15;
+                    Render::Effects::GroundMarks::Add(Render::Effects::GroundMarks::Source::Inferno, o->Position[0], o->Position[1]);
                     break;
                 case 1:
                     Vector(1.0f, .5f, .2f, o->Light);
@@ -1671,6 +1682,7 @@ void CreateEffect(int Type, vec3_t Position, vec3_t Angle, vec3_t Light, int Sub
                         o->Weapon = CharacterMachine->PacketSerial++;
                         AttackCharacterRange(o->Skill, o->Position, 300.f, o->Weapon, o->PKKey);
                     }
+                    Render::Effects::GroundMarks::Add(Render::Effects::GroundMarks::Source::Hellfire, o->Position[0], o->Position[1]);
                 }
                 else if (o->SubType == 1 || o->SubType == 4)
                 {
@@ -1698,6 +1710,7 @@ void CreateEffect(int Type, vec3_t Position, vec3_t Angle, vec3_t Light, int Sub
                     o->Velocity = 1.f;
                     o->Angle[0] = 0.f;
                     o->BlendMesh = 0;
+                    Render::Effects::GroundMarks::Add(Render::Effects::GroundMarks::Source::Ice, o->Position[0], o->Position[1]);
                     break;
 
                 case 1:
@@ -6956,6 +6969,10 @@ void MoveEffect(OBJECT* o, int iIndex)
                     }
                 }
                 CreateParticleFpsChecked(BITMAP_EXPLOTION, Position, o->Angle, Light);
+                if (o->SubType == 0 || o->SubType == 2 || o->SubType == 4)
+                {
+                    Render::Effects::GroundMarks::Add(Render::Effects::GroundMarks::Source::Meteor, o->Position[0], o->Position[1]);
+                }
 
                 o->Live = false;
             }

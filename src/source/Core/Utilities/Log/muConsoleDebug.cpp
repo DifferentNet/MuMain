@@ -19,6 +19,7 @@
 #include "Render/PostProcessing/PostProcessingSetting.h"
 #include "Render/Lighting/SoftShadowSetting.h"
 #include "Render/Models/AnimationSmoothing.h"
+#include "Render/Effects/GroundMarks.h"
 #include "Render/Effects/JointRibbon.h"
 #include "Render/Effects/SkillFx.h"
 #include "Render/Renderer/MuRenderer.h"
@@ -110,9 +111,9 @@ void CmuConsoleDebug::UpdateMainScene()
 namespace
 {
 #if defined(MU_ENABLE_CONTROL_SOCKET) || defined(_EDITOR)
-// $fx pools|soft|flipbook|trails on|off, $fx [status]: the Remaster skill effect looks
+// $fx pools|soft|flipbook|trails|decals on|off, $fx [status]: the Remaster skill effect looks
 // (Render/Effects/SkillFx.h); the switches are saved to [Render] as SkillLightPools, SoftParticles,
-// FlipbookBlending and SmoothTrails.
+// FlipbookBlending, SmoothTrails and SkillGroundMarks.
 void SkillFxCommand(const std::wstring& command)
 {
     namespace SkillFx = Render::Effects::SkillFx;
@@ -132,21 +133,23 @@ void SkillFxCommand(const std::wstring& command)
     }
     if (!understood)
     {
-        mu::log::Get("render")->warn("{}: not understood ($fx pools|soft|flipbook|trails on|off, $fx status)",
+        mu::log::Get("render")->warn("{}: not understood ($fx pools|soft|flipbook|trails|decals on|off, $fx status)",
                                      Core::Text::ToUtf8(command.c_str()));
     }
     const auto state = [](SkillFx::Feature feature)
     { return SkillFx::Enabled(feature) ? "on" : (SkillFx::Chosen(feature) ? "chosen, held off" : "off"); };
     const Render::Effects::JointRibbon::FrameStats ribbons = Render::Effects::JointRibbon::LastFrameStats();
     mu::log::Get("render")->info(
-        "Skill effects: pools {}, soft {}, flipbook {}, trails {} (available here: {}, effect level {}, pool "
-        "budget {}, trail pieces per span {}); this frame {} effect pools; soft twins {}, soft sprites last "
-        "frame {}; ribbon joints {}, pieces {} last frame",
+        "Skill effects: pools {}, soft {}, flipbook {}, trails {}, decals {} (available here: {}, effect level {}, "
+        "pool budget {}, trail pieces per span {}, mark budget {}); this frame {} effect pools; soft twins {}, soft "
+        "sprites last frame {}; ribbon joints {}, pieces {} last frame; ground marks {}",
         state(SkillFx::Feature::LightPools), state(SkillFx::Feature::SoftParticles),
-        state(SkillFx::Feature::FlipbookBlend), state(SkillFx::Feature::Ribbons), SkillFx::Available() ? "yes" : "no",
-        GameConfig::GetInstance().GetEffectLevel(), SkillFx::ActivePoolBudget(), SkillFx::ActiveRibbonPieces(),
-        Render::Terrain::TorchLights::FrameEffectLights(), mu::HasSoftParticlePipelines() ? "built" : "missing",
-        mu::SoftParticlesDrawnLastFrame() ? "yes" : "no (needs SSAO or haze on)", ribbons.joints, ribbons.pieces);
+        state(SkillFx::Feature::FlipbookBlend), state(SkillFx::Feature::Ribbons), state(SkillFx::Feature::Decals),
+        SkillFx::Available() ? "yes" : "no", GameConfig::GetInstance().GetEffectLevel(), SkillFx::ActivePoolBudget(),
+        SkillFx::ActiveRibbonPieces(), SkillFx::ActiveMarkBudget(), Render::Terrain::TorchLights::FrameEffectLights(),
+        mu::HasSoftParticlePipelines() ? "built" : "missing",
+        mu::SoftParticlesDrawnLastFrame() ? "yes" : "no (needs SSAO or haze on)", ribbons.joints, ribbons.pieces,
+        Render::Effects::GroundMarks::Count());
     mu::log::Get("render")->flush();
 }
 
