@@ -80,6 +80,40 @@ inline void CatmullRom(const float* p0, const float* p1, const float* p2, const 
     return std::clamp(wanted, 1, std::max(maxPieces, 1));
 }
 
+// The most pieces a span of one trail takes: `kept` stays with the trail from frame to frame, `built`
+// is this frame's (kept, or 1 past the hard cap).
+struct StickyChoice
+{
+    int kept;
+    int built;
+};
+
+// A trail chooses its most pieces a span when it starts to be drawn (no kept choice, or not drawn the
+// frame before): maxPieces when even its longest trail (`worstQuads`, quads at maxPieces) fits in what
+// the frame's `budget` has left after `quadsSoFar`, else 1, as many quads as the classic trail. It then
+// keeps that choice (no more than maxPieces) while it is drawn every frame, so it does not switch its
+// look near the budget; a trail that was not drawn a frame (out of view) chooses again. Past twice the
+// budget, counting the trail's own longest at its choice, it is built with 1 piece that frame.
+// worstQuads / most * kept is exact while worstQuads is a multiple of maxPieces, as JointRibbon::Append
+// passes it (spans x maxPieces x faces).
+[[nodiscard]] constexpr StickyChoice StickyPieces(const int previous, const bool drawnLastFrame, const int maxPieces,
+                                                  const int quadsSoFar, const int worstQuads, const int budget)
+{
+    const int most = std::max(maxPieces, 1);
+    int kept = 0;
+    if (previous > 0 && drawnLastFrame)
+    {
+        kept = std::min(previous, most);
+    }
+    else
+    {
+        kept = quadsSoFar + worstQuads <= budget ? most : 1;
+    }
+    const int worstAtKept = worstQuads / most * kept;
+    const int built = quadsSoFar + worstAtKept > 2 * budget ? 1 : kept;
+    return StickyChoice{kept, built};
+}
+
 // A tail's age in reference frames. Slot 0 is the joint now; slot 1 was laid `phase` ago (the joint's
 // TailFrames plus this frame's FPS_ANIMATION_FACTOR, 1 at 25 FPS), each older slot one more.
 [[nodiscard]] constexpr float TailAge(const int slot, const float phase)
