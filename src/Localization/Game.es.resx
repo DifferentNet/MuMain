@@ -13524,6 +13524,63 @@
   <data name="PadCannotEquip" xml:space="preserve">
     <value>Este objeto no se puede equipar: mira sus requisitos</value>
   </data>
+  <data name="EquipNoRoomS" xml:space="preserve">
+    <value>No hay sitio en la bolsa para quitarte %ls</value>
+  </data>
+  <data name="EquipSwapTwoItems" xml:space="preserve">
+    <value>Quítate primero el objeto de la otra mano</value>
+  </data>
+  <data name="EquipSwapStopped" xml:space="preserve">
+    <value>Cambio detenido: ambos objetos están en la bolsa</value>
+  </data>
+  <data name="PadOfferEquip" xml:space="preserve">
+    <value>Nuevo: %ls +%d CP</value>
+  </data>
+  <data name="PadOfferEquipHold" xml:space="preserve">
+    <value>Mantén para equipar</value>
+  </data>
+  <data name="TouchOfferEquip" xml:space="preserve">
+    <value>Equipar</value>
+  </data>
+  <data name="JunkMark" xml:space="preserve">
+    <value>Basura</value>
+  </data>
+  <data name="JunkUnmark" xml:space="preserve">
+    <value>No es basura</value>
+  </data>
+  <data name="JunkMarkPlainGear" xml:space="preserve">
+    <value>Marcar equipo simple como basura</value>
+  </data>
+  <data name="JunkCannotMark" xml:space="preserve">
+    <value>Solo armas, escudos y armaduras simples por debajo de +7 pueden ser basura</value>
+  </data>
+  <data name="JunkMarkedD" xml:space="preserve">
+    <value>Marcados como basura: %d</value>
+  </data>
+  <data name="ShopSellJunkD" xml:space="preserve">
+    <value>Vender basura (%d)</value>
+  </data>
+  <data name="ShopSellJunkTitle" xml:space="preserve">
+    <value>Vender basura</value>
+  </data>
+  <data name="ShopSellJunkCountD" xml:space="preserve">
+    <value>¿Vender %d objetos basura?</value>
+  </data>
+  <data name="ShopSellJunkTotalS" xml:space="preserve">
+    <value>Total: %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkCapD" xml:space="preserve">
+    <value>Límite de Zen: solo caben %d objetos</value>
+  </data>
+  <data name="ShopSellJunkDone" xml:space="preserve">
+    <value>Vendidos %d objetos por %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkStopped" xml:space="preserve">
+    <value>Vendidos %d de %d objetos basura</value>
+  </data>
+  <data name="EquipNotNow" xml:space="preserve">
+    <value>Ahora no puedes cambiar el equipo</value>
+  </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Quita primero el objeto que llevas ahí</value>
   </data>

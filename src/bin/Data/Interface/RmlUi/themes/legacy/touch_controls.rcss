@@ -718,6 +718,24 @@ body.no-skills .tc-skill, body.no-skills #tc_skill_edit {
 	border-radius: 22rem;
 }
 #tc_pickup { right: 8rem; bottom: 124rem; }
+/* The quick equip offer (pad round 6, B3): a chip over Pickup while an offer is up; a tap puts the item on. */
+#tc_offer {
+	display: none;
+	right: 8rem;
+	bottom: 176rem;
+	max-width: 220rem;
+	padding: 4rem 10rem;
+	border-radius: 10rem;
+	border-color: token(accent-gold);
+	font-size: 12rem;
+	line-height: 16rem;
+}
+#tc_offer.shown {
+	display: block;
+}
+.tc-offer-do {
+	color: token(accent-gold);
+}
 /* Opens the skill picker: left of the arc's second button, above the first. */
 #tc_skill_edit {
 	right: 230rem;
@@ -990,6 +1008,7 @@ body.no-skills .tc-skill, body.no-skills #tc_skill_edit {
 		border-radius: 19rem;
 	}
 	#tc_pickup { right: 10rem; bottom: 109rem; width: 60rem; }
+	#tc_offer { right: 10rem; bottom: 155rem; max-width: 200rem; }
 	#tc_auto { right: 109rem; bottom: 10rem; }
 	#tc_target { right: 155rem; bottom: 10rem; width: 60rem; }
 	#tc_names { right: 223rem; bottom: 10rem; width: 60rem; }
@@ -1162,7 +1181,7 @@ body.pad #tc_back, body.pad #tc_menu, body.pad #tc_social {
    5 and 6 stand in the places of X, Y and B; while RB is held (pad-third), 7, 8 and 9 (pad round 6). No top row (Menu opens the windows, View the Social panel), no
    pickup button (d-pad down), no Skills button (LS). */
 body.pad.no-touch #tc_quick, body.pad.no-touch #tc_pickup, body.pad.no-touch #tc_skill_edit, body.pad.no-touch #tc_target,
-body.pad.no-touch #tc_names {
+body.pad.no-touch #tc_names, body.pad.no-touch #tc_offer {
 	display: none;
 }
 /* The row keeps its own sizes whatever the phone's smaller buttons: the skills' corners, icons and
@@ -1575,7 +1594,7 @@ body #tc_attack.pressed, body #tc_attack.pk.pressed {
    joystick stay over it. A hidden button takes no finger (TouchControls.cpp reads only shown boxes). */
 body.over-map #tc_hero, body.over-map #tc_exp, body.over-map .tc-potion, body.over-map #tc_attack,
 body.over-map .tc-skill, body.over-map #tc_skill_edit, body.over-map #tc_pickup, body.over-map #tc_auto,
-body.over-map #tc_names, body.over-map #tc_target, body.over-map #tc_bind_hint, body.over-map #tc_exp_text {
+body.over-map #tc_names, body.over-map #tc_offer, body.over-map #tc_target, body.over-map #tc_bind_hint, body.over-map #tc_exp_text {
 	display: none;
 }
 

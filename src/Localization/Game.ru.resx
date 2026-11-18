@@ -15996,6 +15996,63 @@
   <data name="PadCannotEquip" xml:space="preserve">
     <value>Эту вещь не надеть: смотрите её требования</value>
   </data>
+  <data name="EquipNoRoomS" xml:space="preserve">
+    <value>Нет места в сумке, чтобы снять %ls</value>
+  </data>
+  <data name="EquipSwapTwoItems" xml:space="preserve">
+    <value>Сначала снимите вещь из другой руки</value>
+  </data>
+  <data name="EquipSwapStopped" xml:space="preserve">
+    <value>Замена прервана: обе вещи в сумке</value>
+  </data>
+  <data name="PadOfferEquip" xml:space="preserve">
+    <value>Новое: %ls +%d CP</value>
+  </data>
+  <data name="PadOfferEquipHold" xml:space="preserve">
+    <value>Удерживайте, чтобы надеть</value>
+  </data>
+  <data name="TouchOfferEquip" xml:space="preserve">
+    <value>Надеть</value>
+  </data>
+  <data name="JunkMark" xml:space="preserve">
+    <value>Хлам</value>
+  </data>
+  <data name="JunkUnmark" xml:space="preserve">
+    <value>Не хлам</value>
+  </data>
+  <data name="JunkMarkPlainGear" xml:space="preserve">
+    <value>Отметить простые вещи как хлам</value>
+  </data>
+  <data name="JunkCannotMark" xml:space="preserve">
+    <value>Хламом может быть только простое оружие, щиты и броня ниже +7</value>
+  </data>
+  <data name="JunkMarkedD" xml:space="preserve">
+    <value>Отмечено как хлам: %d</value>
+  </data>
+  <data name="ShopSellJunkD" xml:space="preserve">
+    <value>Продать хлам (%d)</value>
+  </data>
+  <data name="ShopSellJunkTitle" xml:space="preserve">
+    <value>Продать хлам</value>
+  </data>
+  <data name="ShopSellJunkCountD" xml:space="preserve">
+    <value>Продать хлам: %d шт.?</value>
+  </data>
+  <data name="ShopSellJunkTotalS" xml:space="preserve">
+    <value>Всего: %ls зен</value>
+  </data>
+  <data name="ShopSellJunkCapD" xml:space="preserve">
+    <value>Предел зен: поместится только %d шт.</value>
+  </data>
+  <data name="ShopSellJunkDone" xml:space="preserve">
+    <value>Продано %d шт. за %ls зен</value>
+  </data>
+  <data name="ShopSellJunkStopped" xml:space="preserve">
+    <value>Продано %d из %d шт. хлама</value>
+  </data>
+  <data name="EquipNotNow" xml:space="preserve">
+    <value>Сейчас вещь не надеть</value>
+  </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Сначала снимите то, что там надето</value>
   </data>

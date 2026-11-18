@@ -13524,6 +13524,63 @@
   <data name="PadCannotEquip" xml:space="preserve">
     <value>Цей предмет не можна одягти: дивись його вимоги</value>
   </data>
+  <data name="EquipNoRoomS" xml:space="preserve">
+    <value>Немає місця в сумці, щоб зняти %ls</value>
+  </data>
+  <data name="EquipSwapTwoItems" xml:space="preserve">
+    <value>Спершу зніміть річ з іншої руки</value>
+  </data>
+  <data name="EquipSwapStopped" xml:space="preserve">
+    <value>Заміну перервано: обидві речі в сумці</value>
+  </data>
+  <data name="PadOfferEquip" xml:space="preserve">
+    <value>Нове: %ls +%d CP</value>
+  </data>
+  <data name="PadOfferEquipHold" xml:space="preserve">
+    <value>Утримуйте, щоб одягти</value>
+  </data>
+  <data name="TouchOfferEquip" xml:space="preserve">
+    <value>Одягти</value>
+  </data>
+  <data name="JunkMark" xml:space="preserve">
+    <value>Мотлох</value>
+  </data>
+  <data name="JunkUnmark" xml:space="preserve">
+    <value>Не мотлох</value>
+  </data>
+  <data name="JunkMarkPlainGear" xml:space="preserve">
+    <value>Позначити прості речі як мотлох</value>
+  </data>
+  <data name="JunkCannotMark" xml:space="preserve">
+    <value>Мотлохом може бути лише проста зброя, щити й броня нижче +7</value>
+  </data>
+  <data name="JunkMarkedD" xml:space="preserve">
+    <value>Позначено як мотлох: %d</value>
+  </data>
+  <data name="ShopSellJunkD" xml:space="preserve">
+    <value>Продати мотлох (%d)</value>
+  </data>
+  <data name="ShopSellJunkTitle" xml:space="preserve">
+    <value>Продати мотлох</value>
+  </data>
+  <data name="ShopSellJunkCountD" xml:space="preserve">
+    <value>Продати мотлох: %d шт.?</value>
+  </data>
+  <data name="ShopSellJunkTotalS" xml:space="preserve">
+    <value>Усього: %ls зен</value>
+  </data>
+  <data name="ShopSellJunkCapD" xml:space="preserve">
+    <value>Ліміт зен: поміститься лише %d шт.</value>
+  </data>
+  <data name="ShopSellJunkDone" xml:space="preserve">
+    <value>Продано %d шт. за %ls зен</value>
+  </data>
+  <data name="ShopSellJunkStopped" xml:space="preserve">
+    <value>Продано %d з %d шт. мотлоху</value>
+  </data>
+  <data name="EquipNotNow" xml:space="preserve">
+    <value>Зараз річ не одягти</value>
+  </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Спершу зніми предмет, одягнений там</value>
   </data>

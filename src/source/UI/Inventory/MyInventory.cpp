@@ -42,6 +42,8 @@ extern bool SelectFlag;
 #include "GameLogic/Items/TradeRestrictions.h"
 #include "UI/Inventory/BagPages.h"
 #include "UI/Inventory/InventorySort.h"
+#include "UI/Inventory/JunkSale.h"
+#include "UI/Mobile/InterfaceMode.h"
 #include "UI/Inventory/InventoryExtension.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
 
@@ -227,6 +229,8 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
     c.Bind("bag_buy_label", &model.bagBuyLabel);
     c.Bind("bag_sort_busy", &model.bagSortBusy);
     c.Bind("bag_sort_tooltip", &model.bagSortTooltip);
+    c.Bind("junk_mark_shown", &model.junkMarkShown);
+    c.Bind("junk_mark_tooltip", &model.junkMarkTooltip);
 
     c.BindEventCallback("my_inventory_bag_page",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& args)
@@ -241,6 +245,8 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
         {
             UI::Inventory::Sort().Request(UI::Inventory::InventorySort::Target::Bag);
         });
+    c.BindEventCallback("my_inventory_mark_junk",
+        [](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { UI::Inventory::JunkSale::MarkPlainGear(); });
 
     c.BindEventCallback("my_inventory_set_option_hover",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
@@ -1173,6 +1179,7 @@ void CMyInventory::SyncRmlModel()
 
     syncBool(&MyInventoryRmlModel::bagSortBusy, "bag_sort_busy",
              UI::Inventory::Sort().IsBlocked(UI::Inventory::InventorySort::Target::Bag));
+    syncBool(&MyInventoryRmlModel::junkMarkShown, "junk_mark_shown", UI::Mobile::ShowsControls());
 
     SyncTexts(locked);
 
@@ -1316,6 +1323,7 @@ void CMyInventory::SyncTexts(bool bagLocked)
                  inputs.bagBuying ? I18N::Game::BagPageBuying : I18N::Game::BagPageBuyConfirm);
     }
     syncWide(&MyInventoryRmlModel::bagSortTooltip, "bag_sort_tooltip", I18N::Game::InventorySortHint);
+    syncWide(&MyInventoryRmlModel::junkMarkTooltip, "junk_mark_tooltip", I18N::Game::JunkMarkPlainGear);
 
     wchar_t goldBuf[256] = { 0, };
     ConvertGold(inputs.zen, goldBuf);

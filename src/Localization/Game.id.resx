@@ -13524,6 +13524,63 @@
   <data name="PadCannotEquip" xml:space="preserve">
     <value>Item ini tidak bisa dipakai: lihat syaratnya</value>
   </data>
+  <data name="EquipNoRoomS" xml:space="preserve">
+    <value>Tidak ada ruang di tas untuk melepas %ls</value>
+  </data>
+  <data name="EquipSwapTwoItems" xml:space="preserve">
+    <value>Lepas dulu item di tangan lainnya</value>
+  </data>
+  <data name="EquipSwapStopped" xml:space="preserve">
+    <value>Pertukaran berhenti: kedua item ada di tas</value>
+  </data>
+  <data name="PadOfferEquip" xml:space="preserve">
+    <value>Baru: %ls +%d CP</value>
+  </data>
+  <data name="PadOfferEquipHold" xml:space="preserve">
+    <value>Tahan untuk memakai</value>
+  </data>
+  <data name="TouchOfferEquip" xml:space="preserve">
+    <value>Pakai</value>
+  </data>
+  <data name="JunkMark" xml:space="preserve">
+    <value>Sampah</value>
+  </data>
+  <data name="JunkUnmark" xml:space="preserve">
+    <value>Bukan sampah</value>
+  </data>
+  <data name="JunkMarkPlainGear" xml:space="preserve">
+    <value>Tandai perlengkapan biasa sebagai sampah</value>
+  </data>
+  <data name="JunkCannotMark" xml:space="preserve">
+    <value>Hanya senjata, perisai, dan armor biasa di bawah +7 yang bisa jadi sampah</value>
+  </data>
+  <data name="JunkMarkedD" xml:space="preserve">
+    <value>Ditandai sebagai sampah: %d</value>
+  </data>
+  <data name="ShopSellJunkD" xml:space="preserve">
+    <value>Jual sampah (%d)</value>
+  </data>
+  <data name="ShopSellJunkTitle" xml:space="preserve">
+    <value>Jual sampah</value>
+  </data>
+  <data name="ShopSellJunkCountD" xml:space="preserve">
+    <value>Jual %d item sampah?</value>
+  </data>
+  <data name="ShopSellJunkTotalS" xml:space="preserve">
+    <value>Total: %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkCapD" xml:space="preserve">
+    <value>Batas Zen: hanya muat %d item</value>
+  </data>
+  <data name="ShopSellJunkDone" xml:space="preserve">
+    <value>Terjual %d item seharga %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkStopped" xml:space="preserve">
+    <value>Terjual %d dari %d item sampah</value>
+  </data>
+  <data name="EquipNotNow" xml:space="preserve">
+    <value>Tidak bisa mengganti perlengkapan sekarang</value>
+  </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Lepas dulu item yang dipakai di sana</value>
   </data>

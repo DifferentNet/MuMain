@@ -17,6 +17,7 @@ namespace CfgSections
     inline constexpr wchar_t CfgSectionKeyBindings[] = L"KeyBindings";
     // MU Skynet: the chat macros (Alt+1..Alt+0, typed as "/1 text".."/0 text"), Macro1..Macro10.
     inline constexpr wchar_t CfgSectionChatMacros[] = L"ChatMacros";
+    inline constexpr wchar_t CfgSectionJunk[] = L"Junk";
 }
 
 namespace CfgKeys

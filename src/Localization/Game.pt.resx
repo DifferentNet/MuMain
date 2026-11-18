@@ -13524,6 +13524,63 @@
   <data name="PadCannotEquip" xml:space="preserve">
     <value>Este item não pode ser equipado: veja seus requisitos</value>
   </data>
+  <data name="EquipNoRoomS" xml:space="preserve">
+    <value>Sem espaço na bolsa para tirar %ls</value>
+  </data>
+  <data name="EquipSwapTwoItems" xml:space="preserve">
+    <value>Tire primeiro o item da outra mão</value>
+  </data>
+  <data name="EquipSwapStopped" xml:space="preserve">
+    <value>Troca interrompida: os dois itens estão na bolsa</value>
+  </data>
+  <data name="PadOfferEquip" xml:space="preserve">
+    <value>Novo: %ls +%d CP</value>
+  </data>
+  <data name="PadOfferEquipHold" xml:space="preserve">
+    <value>Segure para equipar</value>
+  </data>
+  <data name="TouchOfferEquip" xml:space="preserve">
+    <value>Equipar</value>
+  </data>
+  <data name="JunkMark" xml:space="preserve">
+    <value>Lixo</value>
+  </data>
+  <data name="JunkUnmark" xml:space="preserve">
+    <value>Não é lixo</value>
+  </data>
+  <data name="JunkMarkPlainGear" xml:space="preserve">
+    <value>Marcar equipamento simples como lixo</value>
+  </data>
+  <data name="JunkCannotMark" xml:space="preserve">
+    <value>Só armas, escudos e armaduras simples abaixo de +7 podem ser lixo</value>
+  </data>
+  <data name="JunkMarkedD" xml:space="preserve">
+    <value>Marcados como lixo: %d</value>
+  </data>
+  <data name="ShopSellJunkD" xml:space="preserve">
+    <value>Vender lixo (%d)</value>
+  </data>
+  <data name="ShopSellJunkTitle" xml:space="preserve">
+    <value>Vender lixo</value>
+  </data>
+  <data name="ShopSellJunkCountD" xml:space="preserve">
+    <value>Vender %d itens de lixo?</value>
+  </data>
+  <data name="ShopSellJunkTotalS" xml:space="preserve">
+    <value>Total: %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkCapD" xml:space="preserve">
+    <value>Limite de Zen: só cabem %d itens</value>
+  </data>
+  <data name="ShopSellJunkDone" xml:space="preserve">
+    <value>Vendidos %d itens por %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkStopped" xml:space="preserve">
+    <value>Vendidos %d de %d itens de lixo</value>
+  </data>
+  <data name="EquipNotNow" xml:space="preserve">
+    <value>Não é possível trocar o equipamento agora</value>
+  </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Tire primeiro o item usado ali</value>
   </data>

@@ -51,6 +51,23 @@
 .shop-btn-repair     { left: 54px; }
 .shop-btn-repair-all { left: 98px; }
 
+/* Sell junk (pad round 6, B7): left of the repair buttons, a coin and the count. */
+.shop-sell-junk {
+	position: absolute;
+	left: 12px;
+	top: 390px;
+	width: 36px;
+	height: 29px;
+	box-sizing: border-box;
+	cursor: pointer;
+	pointer-events: auto;
+	border: 1px #7a5c1c;
+	background-color: rgba(0, 0, 0, 180);
+}
+.shop-sell-junk:hover { border-color: #ffcc19; }
+.shop-junk-coin { position: absolute; left: 4px; top: 9px; width: 9px; height: 9px; border-radius: 5px; background-color: #e8b83a; pointer-events: none; }
+.shop-junk-count { position: absolute; left: 15px; top: 6px; color: #ffcc19; font-weight: bold; pointer-events: none; }
+
 @spritesheet repair-money-sheet { src: "../../../newui_item_money2.tga"; repair-money: 0px 0px 170px 24px; }
 .repair-money {
 	position: absolute;
@@ -126,6 +143,9 @@
 	.shop-btn { left: 364px; width: 44px; height: 36px; }
 	.shop-btn-repair { top: 150px; }
 	.shop-btn-repair-all { top: 196px; }
+	.shop-sell-junk { left: 364px; top: 242px; width: 44px; height: 36px; }
+	.shop-junk-coin { left: 6px; top: 12px; width: 12px; height: 12px; border-radius: 6px; }
+	.shop-junk-count { left: 21px; top: 9px; }
 
 	.repair-money { left: 56px; top: 398px; }
 	.repair-money-label, .repair-money-value { top: 405px; }

@@ -13622,6 +13622,63 @@
   <data name="PadCannotEquip" xml:space="preserve">
     <value>Dieser Gegenstand kann nicht angelegt werden: siehe seine Anforderungen</value>
   </data>
+  <data name="EquipNoRoomS" xml:space="preserve">
+    <value>Kein Platz in der Tasche, um %ls abzulegen</value>
+  </data>
+  <data name="EquipSwapTwoItems" xml:space="preserve">
+    <value>Lege zuerst den Gegenstand in der anderen Hand ab</value>
+  </data>
+  <data name="EquipSwapStopped" xml:space="preserve">
+    <value>Tausch abgebrochen: beide Gegenstände sind in der Tasche</value>
+  </data>
+  <data name="PadOfferEquip" xml:space="preserve">
+    <value>Neu: %ls +%d CP</value>
+  </data>
+  <data name="PadOfferEquipHold" xml:space="preserve">
+    <value>Halten zum Anlegen</value>
+  </data>
+  <data name="TouchOfferEquip" xml:space="preserve">
+    <value>Anlegen</value>
+  </data>
+  <data name="JunkMark" xml:space="preserve">
+    <value>Ramsch</value>
+  </data>
+  <data name="JunkUnmark" xml:space="preserve">
+    <value>Kein Ramsch</value>
+  </data>
+  <data name="JunkMarkPlainGear" xml:space="preserve">
+    <value>Einfache Ausrüstung als Ramsch markieren</value>
+  </data>
+  <data name="JunkCannotMark" xml:space="preserve">
+    <value>Nur einfache Waffen, Schilde und Rüstungen unter +7 können Ramsch sein</value>
+  </data>
+  <data name="JunkMarkedD" xml:space="preserve">
+    <value>Als Ramsch markiert: %d</value>
+  </data>
+  <data name="ShopSellJunkD" xml:space="preserve">
+    <value>Ramsch verkaufen (%d)</value>
+  </data>
+  <data name="ShopSellJunkTitle" xml:space="preserve">
+    <value>Ramsch verkaufen</value>
+  </data>
+  <data name="ShopSellJunkCountD" xml:space="preserve">
+    <value>%d Ramsch-Gegenstände verkaufen?</value>
+  </data>
+  <data name="ShopSellJunkTotalS" xml:space="preserve">
+    <value>Gesamt: %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkCapD" xml:space="preserve">
+    <value>Zen-Grenze: nur %d Gegenstände passen</value>
+  </data>
+  <data name="ShopSellJunkDone" xml:space="preserve">
+    <value>%d Gegenstände für %ls Zen verkauft</value>
+  </data>
+  <data name="ShopSellJunkStopped" xml:space="preserve">
+    <value>%d von %d Ramsch-Gegenständen verkauft</value>
+  </data>
+  <data name="EquipNotNow" xml:space="preserve">
+    <value>Ausrüstung kann gerade nicht gewechselt werden</value>
+  </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Lege zuerst den dort getragenen Gegenstand ab</value>
   </data>

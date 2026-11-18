@@ -13524,6 +13524,63 @@
   <data name="PadCannotEquip" xml:space="preserve">
     <value>Hindi maisusuot ang item na ito: tingnan ang mga requirement nito</value>
   </data>
+  <data name="EquipNoRoomS" xml:space="preserve">
+    <value>Walang puwang sa bag para hubarin ang %ls</value>
+  </data>
+  <data name="EquipSwapTwoItems" xml:space="preserve">
+    <value>Hubarin muna ang item sa kabilang kamay</value>
+  </data>
+  <data name="EquipSwapStopped" xml:space="preserve">
+    <value>Huminto ang palit: nasa bag ang dalawang item</value>
+  </data>
+  <data name="PadOfferEquip" xml:space="preserve">
+    <value>Bago: %ls +%d CP</value>
+  </data>
+  <data name="PadOfferEquipHold" xml:space="preserve">
+    <value>Pindutin nang matagal para isuot</value>
+  </data>
+  <data name="TouchOfferEquip" xml:space="preserve">
+    <value>Isuot</value>
+  </data>
+  <data name="JunkMark" xml:space="preserve">
+    <value>Basura</value>
+  </data>
+  <data name="JunkUnmark" xml:space="preserve">
+    <value>Hindi basura</value>
+  </data>
+  <data name="JunkMarkPlainGear" xml:space="preserve">
+    <value>Markahan ang simpleng gamit bilang basura</value>
+  </data>
+  <data name="JunkCannotMark" xml:space="preserve">
+    <value>Simpleng armas, kalasag at baluti lang na mas mababa sa +7 ang puwedeng basura</value>
+  </data>
+  <data name="JunkMarkedD" xml:space="preserve">
+    <value>Minarkahang basura: %d</value>
+  </data>
+  <data name="ShopSellJunkD" xml:space="preserve">
+    <value>Ibenta ang basura (%d)</value>
+  </data>
+  <data name="ShopSellJunkTitle" xml:space="preserve">
+    <value>Ibenta ang basura</value>
+  </data>
+  <data name="ShopSellJunkCountD" xml:space="preserve">
+    <value>Ibenta ang %d basurang item?</value>
+  </data>
+  <data name="ShopSellJunkTotalS" xml:space="preserve">
+    <value>Kabuuan: %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkCapD" xml:space="preserve">
+    <value>Limitasyon ng Zen: %d item lang ang kasya</value>
+  </data>
+  <data name="ShopSellJunkDone" xml:space="preserve">
+    <value>Naibenta ang %d item sa %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkStopped" xml:space="preserve">
+    <value>Naibenta ang %d sa %d basurang item</value>
+  </data>
+  <data name="EquipNotNow" xml:space="preserve">
+    <value>Hindi mapalitan ang gamit ngayon</value>
+  </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Hubarin muna ang suot na item doon</value>
   </data>

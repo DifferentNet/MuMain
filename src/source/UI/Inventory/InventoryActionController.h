@@ -79,11 +79,15 @@ private:
     // None for an item the right click would only drop: the card's Drop asks first.
     void SetBagItemAction(CInventoryCtrl* targetControl, const ITEM& item, std::function<void()> runRightClick,
                           UI::Mobile::ItemCard::Content& card) const;
+    // The card's Junk / Not junk for a plain weapon, shield or armour in the bag (UI/Inventory/JunkSale).
+    static void SetJunkAction(CInventoryCtrl* targetControl, const ITEM& item, RightClickTarget target,
+                              UI::Mobile::ItemCard::Content& card);
     bool HandleStorageAutoMove(CInventoryCtrl* targetControl) const;
     bool HandleMixAutoMove(CInventoryCtrl* targetControl) const;
     bool HandleSellToNPC(CInventoryCtrl* targetControl) const;
     bool HandleInventoryRightClickActions(CInventoryCtrl* targetControl, bool mayDrop) const;
-    bool TryEquipItem(CInventoryCtrl* targetControl, ITEM* pItem, int iSrcIndex) const;
+    // maySwap (the pad's X, the touch card): a taken place swaps the worn item into the bag (UI/Inventory/EquipSwap).
+    bool TryEquipItem(CInventoryCtrl* targetControl, ITEM* pItem, int iSrcIndex, bool maySwap) const;
     // Why a right-clicked item was not put on: one red line.
     static void PostEquipRefusal(const wchar_t* text);
     bool TryDropItem(CInventoryCtrl* targetControl, ITEM* pItem) const;

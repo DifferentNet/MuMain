@@ -125,6 +125,9 @@ struct OverlayModel
     Rml::String windowsLabel;
     Rml::String nextWindowLabel;
     Rml::String nextPageLabel;
+    bool offerShown = false;
+    Rml::String offerLabel;
+    Rml::String offerHoldLabel;
 };
 
 void BindModel(Rml::DataModelConstructor& c, OverlayModel& model)
@@ -177,6 +180,9 @@ void BindModel(Rml::DataModelConstructor& c, OverlayModel& model)
     c.Bind("card_label", &model.cardLabel);
     c.Bind("close_label", &model.closeLabel);
     c.Bind("windows_label", &model.windowsLabel);
+    c.Bind("offer_shown", &model.offerShown);
+    c.Bind("offer_label", &model.offerLabel);
+    c.Bind("offer_hold_label", &model.offerHoldLabel);
 }
 
 // Over the windows and message boxes, under the item on the cursor (RmlStackingOrder.cpp); shown
@@ -423,13 +429,25 @@ void SyncLegend(OverlayModel& model, const View& view)
               "close_label");
     SyncLabel(model.windowsLabel, I18N::Game::PadAllWindows, "windows_label");
 }
+
+void SyncOffer(OverlayModel& model, const View& view)
+{
+    const bool shown = view.offerText != nullptr;
+    SyncBool(model.offerShown, shown, "offer_shown");
+    if (!shown)
+        return;
+    // The offer's line is built anew for each item in the same buffer: compared as text, not by its address.
+    SyncString(model.offerLabel, StringUtils::WideToNarrow(view.offerText), "offer_label");
+    SyncLabel(model.offerHoldLabel, I18N::Game::PadOfferEquipHold, "offer_hold_label");
+}
 } // namespace
 
 namespace UI::HUD::PadOverlay
 {
 void Update(const View& view, float seconds)
 {
-    const bool shown = view.hub || view.card || view.legend || view.frame || view.prompt || view.characters;
+    const bool shown = view.hub || view.card || view.legend || view.frame || view.prompt || view.characters
+                       || view.offerText != nullptr;
     if (!shown)
     {
         g_frameWasDrawn = false;
@@ -449,6 +467,7 @@ void Update(const View& view, float seconds)
     SyncTabs(model, view);
     SyncLegend(model, view);
     SyncCharacters(model, view);
+    SyncOffer(model, view);
     SyncCard(model, view);
     UI::HUD::PadGlyphs::Sync(model.glyphs, [](const char* name) { g_View.MarkDirty(name); });
     // Shown again after a theme switch rebuilt the document, too.

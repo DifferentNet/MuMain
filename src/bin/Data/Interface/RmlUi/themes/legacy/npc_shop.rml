@@ -50,6 +50,12 @@
 		<div id="btn_repair_all" class="shop-btn shop-btn-repair-all" data-class-hidden="!repair_visible"
 		     data-event-click="npc_shop_repair_all_click" data-attr-data-hint="repair_all_tooltip"></div>
 
+		<!-- Sell the junk-marked bag items (UI/Inventory/JunkSale, pad round 6 B7): pad and touch only; it asks first. -->
+		<div id="btn_sell_junk" class="shop-sell-junk" data-if="sell_junk_shown"
+		     data-event-click="npc_shop_sell_junk_click" data-attr-data-hint="sell_junk_tooltip">
+			<div class="shop-junk-coin"></div><span class="shop-junk-count">{{sell_junk_count}}</span>
+		</div>
+
 		<div id="repair_money_bg" class="repair-money" data-class-hidden="!repair_visible"></div>
 		<span id="repair_all_label" class="sharp-text repair-money-label" data-class-hidden="!repair_visible" data-style-font-size="text_px + 'px'">{{repair_all_label}}</span>
 		<span id="repair_gold_text" class="sharp-text repair-money-value gold-amount" data-class-hidden="!repair_visible" data-style-font-size="text_px + 'px'"

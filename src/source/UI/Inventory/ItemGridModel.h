@@ -23,6 +23,8 @@ struct ItemGridCell
     Rml::String drop;
     // An item's stack count, on its top-right cell.
     Rml::String count;
+    // A bag item marked as junk (UI/Inventory/JunkSale): a coin on its top-left cell.
+    bool junk = false;
 
     bool operator==(const ItemGridCell&) const = default;
 };

@@ -153,6 +153,9 @@ namespace mu::ui::window
             // The sort button on the grid's top edge (UI/Inventory/InventorySort.h), dimmed while it can't sort.
             bool bagSortBusy = false;
             Rml::String bagSortTooltip;
+            // "Mark plain gear" as junk (UI/Inventory/JunkSale): pad and touch only.
+            bool junkMarkShown = false;
+            Rml::String junkMarkTooltip;
         };
         void BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlModel& model);
         void OnRmlBuilt();
@@ -303,6 +306,11 @@ namespace mu::ui::window
 
         // Public to allow refresh when resolution changes
         void SetEquipmentSlotInfo();
+        // Public for the pad's swap (UI/Inventory/EquipSwap), which takes the worn item off first.
+        // Takes the worn item off into the first free place in the bag, as the right click does.
+        // False when nothing is worn there, it may not come off, or the bag has no room; `saysWhenFull`
+        // tells the player the bag has no room.
+        bool TakeOffToBag(int equipmentSlot, bool saysWhenFull = false);
 
     protected:
         void DeleteEquippingEffect();
@@ -327,10 +335,6 @@ namespace mu::ui::window
         // Whether worn gear may go to the bag now: no repair, no reply awaited, no item on the mouse,
         // no NPC shop open.
         bool CanTakeOffToBagNow() const;
-        // Takes the worn item off into the first free place in the bag, as the right click does.
-        // False when nothing is worn there, it may not come off, or the bag has no room; `saysWhenFull`
-        // tells the player the bag has no room.
-        bool TakeOffToBag(int equipmentSlot, bool saysWhenFull = false);
         // A finger's long press or the pad's R3 on worn gear: the item card, with Take off. False when
         // there is no card to show.
         bool ShowWornItemCard();

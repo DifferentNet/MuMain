@@ -25,6 +25,7 @@
 #include "UI/HUD/PadHub.h"
 #include "UI/HUD/SkillList.h"
 #include "UI/HUD/Skills/SkillTooltip.h"
+#include "UI/Inventory/QuickEquip.h"
 #include "UI/Mobile/FollowThrough.h"
 #include "UI/Mobile/HeroFrame.h"
 #include "UI/Mobile/InterfaceMode.h"
@@ -99,12 +100,20 @@ void ToggleQuickRow()
 // Every drop's name on the ground (defined with the menu's switches below).
 void ToggleItemNames();
 
+// The quick equip offer's chip: the player's own tap puts the offered item on (not a tap in its first moments).
+void AcceptEquipOffer()
+{
+    UI::Inventory::QuickEquip::AcceptTap();
+}
+
 // Buttons that press a key, as a keyboard would: the potions drink the item hotkeys Q and W, the chat
 // button opens the chat field (Enter), Back closes the window on top or, with none open, opens the
 // system menu (Esc, as a phone has none), and the rest open their windows (UI/HUD/HotKey.cpp). The top
 // row's first button folds the row, and Loot shows the drops' names as the menu's switch does. The phone
 // view's hero frame opens the character window (C); it shows only in the phone view, and a hidden frame
-// takes no finger. Controls are numbered by their place here: new ones go at the end. The keys are the defaults;
+// takes no finger. The quick equip offer's chip puts the offered item on (UI/Inventory/QuickEquip); hidden with no
+// offer, it takes no finger either. Controls are numbered by their place here: new ones go at the end, before the hero
+// frame, which stays last. The keys are the defaults;
 // a tap presses the key the player bound to that action now (KeyBindings::Runtime::RemapDefaultKey).
 struct KeyButton
 {
@@ -119,6 +128,7 @@ constexpr KeyButton KeyButtons[] = {
     {"tc_character", 'C'}, {"tc_move", 'M'},     {"tc_map", VK_TAB},     {"tc_back", VK_ESCAPE, &Back},
     {"tc_potion_e", 'E'},  {"tc_potion_r", 'R'},
     {"tc_quick_toggle", 0, &ToggleQuickRow},       {"tc_names", 0, &ToggleItemNames},
+    {"tc_offer", 0, &AcceptEquipOffer},
     {"tc_hero", 'C'},
 };
 constexpr int KeyButtonCount = static_cast<int>(std::size(KeyButtons));
@@ -505,6 +515,10 @@ struct ControlsModel
     int sizePercent = 100;
     Rml::String attackLabel;
     Rml::String pickupLabel;
+    // The quick equip offer (UI/Inventory/QuickEquip): its chip, its line and the chip's button text.
+    bool offerShown = false;
+    Rml::String offerText;
+    Rml::String offerDoLabel;
     Rml::String autoLabel;
     Rml::String targetLabel;
     Rml::String namesLabel;
@@ -609,6 +623,9 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     c.Bind("size_pct", &model.sizePercent);
     c.Bind("attack_label", &model.attackLabel);
     c.Bind("pickup_label", &model.pickupLabel);
+    c.Bind("offer_shown", &model.offerShown);
+    c.Bind("offer_text", &model.offerText);
+    c.Bind("offer_do_label", &model.offerDoLabel);
     c.Bind("auto_label", &model.autoLabel);
     c.Bind("target_label", &model.targetLabel);
     c.Bind("names_label", &model.namesLabel);
@@ -1186,6 +1203,17 @@ void SyncPotionKeys(ControlsModel& model)
     }
 }
 
+// The quick equip offer's chip, every frame: it goes the moment its offer does.
+void SyncOffer(ControlsModel& model)
+{
+    const wchar_t* text = UI::Inventory::QuickEquip::OfferText();
+    SetField(model.offerShown, text != nullptr, "offer_shown");
+    if (text == nullptr)
+        return;
+    SetField(model.offerText, StringUtils::WideToNarrow(text), "offer_text");
+    SyncLabel(model.offerDoLabel, I18N::Game::TouchOfferEquip, "offer_do_label");
+}
+
 // The labels follow the language a few times a second, and the PK switch at once: some thirty
 // conversions a frame were work a slow phone's frame could do without.
 void SyncLabels(ControlsModel& model)
@@ -1203,6 +1231,7 @@ void SyncLabels(ControlsModel& model)
         SetField(model.namesOn, g_pNameWindow->ShowsItemNames(), "names_on");
         SetField(model.barsOn, g_pNameWindow->ShowsHealthBars(), "bars_on");
     }
+    SyncOffer(model);
     const double now = Now();
     if (!pkChanged && s_labelsAt >= 0.0 && now >= s_labelsAt && now - s_labelsAt < LabelSeconds)
         return;

@@ -180,6 +180,8 @@ namespace mu::ui::window
 
         UI::Items::ItemGridCells m_Cells;
         void UpdateCells();
+        // The coin on a junk-marked bag item's top-left cell (UI/Inventory/JunkSale).
+        void MarkJunkCells();
         // Whether dropping `pPickItem` on `pTargetItem` acts on it: Render()'s green cell.
         bool DropActsOn(ITEM* pPickItem, ITEM* pTargetItem);
 

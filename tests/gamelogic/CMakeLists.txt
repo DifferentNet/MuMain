@@ -195,3 +195,21 @@ mu_add_test(
         test_party_roster_diff.cpp
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Social/PartyRosterDiff.cpp
 )
+
+# Junk marks: which items may be junk, the fingerprint a mark keeps and the marks themselves (pad round 6, B7).
+mu_add_test(
+    NAME test_junk_marks
+    SOURCES
+        test_junk_marks.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/JunkMarks.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/JunkMarkSet.cpp
+)
+
+# The quick equip offer: which pick-ups are offered and how long (pad round 6, B3).
+mu_add_test(
+    NAME test_equip_offer
+    SOURCES
+        test_equip_offer.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/EquipOffer.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/EquipOfferTracker.cpp
+)

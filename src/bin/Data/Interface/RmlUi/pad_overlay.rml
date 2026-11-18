@@ -20,6 +20,13 @@
 			<div class="po-label">{{pickup_label}}</div>
 		</div>
 	</div>
+	<!-- The quick equip offer (UI/Inventory/QuickEquip, pad round 6 B3): a picked-up item worth more, d-pad right held puts it on. -->
+	<div id="po_offer" data-if="offer_shown">
+		<div id="po_offer_inner">
+			<div class="po-offer-text">{{offer_label}}</div>
+			<div class="po-pair"><div class="pad-glyph pad-dpad pad-dpad-right"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div><div class="po-label">{{offer_hold_label}}</div></div>
+		</div>
+	</div>
 	<div id="po_top" data-if="hub_open || legend_shown || characters_shown" data-style-right="top_right">
 		<div id="po_characters" data-if="characters_shown">
 			<div class="po-pair"><div class="pad-glyph pad-bumper">{{glyph_lb}}</div><div class="pad-glyph pad-bumper">{{glyph_rb}}</div><div class="po-label">{{character_label}}</div></div>

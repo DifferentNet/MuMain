@@ -16380,6 +16380,63 @@
   <data name="PadCannotEquip" xml:space="preserve">
     <value>This item can't be put on: see its requirements</value>
   </data>
+  <data name="EquipNoRoomS" xml:space="preserve">
+    <value>No room in the bag to take off %ls</value>
+  </data>
+  <data name="EquipSwapTwoItems" xml:space="preserve">
+    <value>Take off the item in the other hand first</value>
+  </data>
+  <data name="EquipSwapStopped" xml:space="preserve">
+    <value>The swap stopped: both items are in the bag</value>
+  </data>
+  <data name="PadOfferEquip" xml:space="preserve">
+    <value>New: %ls +%d CP</value>
+  </data>
+  <data name="PadOfferEquipHold" xml:space="preserve">
+    <value>Hold to put on</value>
+  </data>
+  <data name="TouchOfferEquip" xml:space="preserve">
+    <value>Put on</value>
+  </data>
+  <data name="JunkMark" xml:space="preserve">
+    <value>Junk</value>
+  </data>
+  <data name="JunkUnmark" xml:space="preserve">
+    <value>Not junk</value>
+  </data>
+  <data name="JunkMarkPlainGear" xml:space="preserve">
+    <value>Mark plain gear as junk</value>
+  </data>
+  <data name="JunkCannotMark" xml:space="preserve">
+    <value>Only plain weapons, shields and armour below +7 can be junk</value>
+  </data>
+  <data name="JunkMarkedD" xml:space="preserve">
+    <value>Marked as junk: %d</value>
+  </data>
+  <data name="ShopSellJunkD" xml:space="preserve">
+    <value>Sell junk (%d)</value>
+  </data>
+  <data name="ShopSellJunkTitle" xml:space="preserve">
+    <value>Sell junk</value>
+  </data>
+  <data name="ShopSellJunkCountD" xml:space="preserve">
+    <value>Sell %d junk items?</value>
+  </data>
+  <data name="ShopSellJunkTotalS" xml:space="preserve">
+    <value>Total: %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkCapD" xml:space="preserve">
+    <value>Zen limit: only %d items fit</value>
+  </data>
+  <data name="ShopSellJunkDone" xml:space="preserve">
+    <value>Sold %d items for %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkStopped" xml:space="preserve">
+    <value>Sold %d of %d junk items</value>
+  </data>
+  <data name="EquipNotNow" xml:space="preserve">
+    <value>Can't change gear right now</value>
+  </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Take off the item worn there first</value>
   </data>

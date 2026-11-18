@@ -23,6 +23,9 @@ struct Content
     // E and R, offered while a pad plays (RT with LB / LT drinks them); a phone shows only Q and W.
     std::function<void()> putOnE;
     std::function<void()> putOnR;
+    // Marks it as junk or takes the mark off (pad and touch, a bag item: UI/Inventory/JunkSale), and its label.
+    std::wstring junkLabel;
+    std::function<void()> junk;
     // Drops it on the ground, after asking.
     std::function<void()> drop;
 };

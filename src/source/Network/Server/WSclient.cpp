@@ -61,6 +61,9 @@
 #include "GameLogic/Items/InventoryUtils.h"
 #include "GameLogic/Social/PartyRosterDiff.h"
 #include "UI/Inventory/InventoryContents.h"
+#include "UI/Inventory/EquipSwap.h"
+#include "UI/Inventory/JunkSale.h"
+#include "UI/Inventory/QuickEquip.h"
 #include "GameLogic/Items/JewelUpgradeResult.h"
 #include "GameLogic/Items/CraftingRefusal.h"
 #include "UI/Chat/CharacterChangeLines.h"
@@ -1739,6 +1742,16 @@ BOOL ReceiveInventoryExtended(std::span<const BYTE> ReceiveBuffer)
     UI::Inventory::ClearAllItems();
     // The list is the server's whole inventory: an item move given up on before it is settled.
     NoteInventoryListReceived();
+    // However the list ends (a short packet too): a gear swap under way stops, and the junk marks are read for this
+    // character and meet the bag (following it only after this client's own sort).
+    struct BagListed
+    {
+        ~BagListed()
+        {
+            UI::Inventory::EquipSwap::Stop();
+            UI::Inventory::JunkSale::OnBagListed();
+        }
+    } bagListed;
 
     auto Data = safe_cast<PHEADER_DEFAULT_SUBCODE_WORD>(ReceiveBuffer);
     if (Data == nullptr)
@@ -6356,7 +6369,11 @@ void ReceiveGetItem(std::span<const BYTE> ReceiveBuffer)
             mu_swprintf(szMessage, L"%ls %ls", szItem, I18N::Game::Obtained);
             UI::Chat::PostSystem(szMessage, mu::ui::window::TYPE_SYSTEM_MESSAGE);
             if (pickedIntoBag)
+            {
                 UI::Chat::StatusLines::NoteItemPickedUp();
+                // Better gear may be offered to put on (pad and touch, pad round 6 B3).
+                UI::Inventory::QuickEquip::NoteItemPicked(itemIndex);
+            }
 
             int Type = pickedItem->Type;
             if (GameLogic::Items::IsJewelItem(pickedItem) || Type == INDEX_COMPILED_CELE || Type == INDEX_COMPILED_SOUL)
@@ -6406,6 +6423,7 @@ BOOL ReceiveEquipmentItemExtended(std::span<const BYTE> ReceiveBuffer)
 {
     if (TakeLateItemMoveAnswer())
     {
+        UI::Inventory::EquipSwap::Stop();
         // The answer to a move the client gave up on (IsItemMovePending): the
         // picked item went back already, and the inventory list asked for then
         // follows this packet and puts every item where the server has it.
@@ -6446,9 +6464,15 @@ BOOL ReceiveEquipmentItemExtended(std::span<const BYTE> ReceiveBuffer)
 
         if (storageType == STORAGE_TYPE::INVENTORY)
         {
+            // A junk mark follows its item to another bag cell (others go once their item left the bag).
+            const bool fromBag = UI::Inventory::TransferStartedInBag();
             if (!UI::Inventory::ReceivePlayerTransfer(Data->Index, itemData))
             {
                 RequestInventorySync();
+            }
+            else if (fromBag)
+            {
+                UI::Inventory::JunkSale::OnItemMoved(iSourceIndex, Data->Index);
             }
         }
         else if (storageType == STORAGE_TYPE::TRADE)
@@ -6476,6 +6500,8 @@ BOOL ReceiveEquipmentItemExtended(std::span<const BYTE> ReceiveBuffer)
         UI::Inventory::RejectTransfer();
     }
 
+    // A gear swap's next step (pad round 6, N1).
+    UI::Inventory::EquipSwap::OnMoveAnswer(Data->SubCode != 255);
     FlushPacketAfterItemMove();
 
     g_ConsoleDebug->Write(MCD_RECEIVE, L"0x24 [ReceiveEquipmentItem(%d %d)]", Data->SubCode, Data->Index);
@@ -6996,6 +7022,8 @@ void ReceiveSell(const BYTE* ReceiveBuffer)
     }
 
     UI::Shop::NpcSaleFinished();
+    // "Sell junk" goes on with its next item, or stops on a refusal (pad round 6, B7).
+    UI::Inventory::JunkSale::OnSaleAnswer(Data->Flag != 0 && Data->Flag != 0xff && Data->Flag != 0xfe);
 }
 
 void ReceiveRepair(const BYTE* ReceiveBuffer)

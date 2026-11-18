@@ -68,6 +68,10 @@ namespace mu::ui::window
             Rml::String repairAllLabel;
             Rml::String repairGoldText;
             Rml::String repairGoldTier; // UI::RmlBridge::GoldTierKey() of the amount
+            // "Sell junk (N)" (UI/Inventory/JunkSale, pad round 6 B7): pad and touch only, with marked items to sell.
+            bool sellJunkShown = false;
+            Rml::String sellJunkCount;
+            Rml::String sellJunkTooltip;
             // The grids as their documents draw them (CInventoryCtrl::Cells()).
             UI::Items::ItemGridCells gridCells;
         };

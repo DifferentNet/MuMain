@@ -114,6 +114,38 @@ body {
 	line-height: 22dp;
 }
 
+/* The quick equip offer (pad round 6, B3): centred over the pad's row along the bottom, clear of the hero. */
+#po_offer {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 170dp;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+}
+#po_offer_inner {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	max-width: 90%;
+	padding: 4dp 10dp;
+	border: 1dp token(border-frame);
+	border-radius: 6dp;
+	background-color: rgba(6, 7, 6, 230);
+	font-size: 15dp;
+}
+#po_offer_inner .pad-glyph {
+	position: relative;
+}
+.po-offer-text {
+	margin-right: 12dp;
+	color: token(accent-gold);
+	line-height: 22dp;
+}
+
 /* The controls card (pad round 3, B4): in the middle of the screen, clear of the hub's tabs along the
    top and the pad's row along the bottom. */
 #po_card {

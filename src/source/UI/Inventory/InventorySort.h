@@ -35,6 +35,10 @@ public:
     // or the vault is lifted or auto-moved: the server is moving them.
     bool IsWaiting() const;
 
+    // IsWaiting() for a sort of `target`. The server sends the sorted bag before its answer, so while the bag's
+    // list comes this tells that it answers this client's own sort.
+    bool IsWaitingFor(Target target) const;
+
     // The button of `target` is dimmed: a sort waits for its answer, an item is on the cursor or its move waits for
     // the server, or a window that moves items is open (a trade, the personal shop, the chaos machine or another
     // mix); for the bag also any NPC's window other than the vault, and the jewel bank.
@@ -45,6 +49,7 @@ public:
 
 private:
     std::chrono::steady_clock::time_point m_askedAt{};
+    Target m_target = Target::Bag;
 };
 
 inline InventorySort& Sort()

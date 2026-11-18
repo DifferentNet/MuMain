@@ -9,6 +9,9 @@
 #include "UI/Chat/Chat.h"
 #include "UI/Chat/CharacterChangeLines.h"
 #include "UI/Chat/HeroStatusLines.h"
+#include "UI/Inventory/EquipSwap.h"
+#include "UI/Inventory/JunkSale.h"
+#include "UI/Inventory/QuickEquip.h"
 #include "MainScene.h"
 #include "SceneCommon.h"
 #include "Camera/CameraUtility.h"
@@ -384,6 +387,10 @@ void MoveMainScene()
     UI::Chat::ChangeLines::Tick();
     // Buff ends settle half a second after their packets (a re-cast can end and start a buff at once).
     UI::Chat::StatusLines::Tick();
+    // Pad round 6: the swap's second move, the quick equip offer's end, the junk sale's next item.
+    UI::Inventory::EquipSwap::Tick();
+    UI::Inventory::QuickEquip::Tick();
+    UI::Inventory::JunkSale::Tick();
 
     if (ErrorMessage != 0)
         MouseOnWindow = true;

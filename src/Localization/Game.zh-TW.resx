@@ -13524,6 +13524,63 @@
   <data name="PadCannotEquip" xml:space="preserve">
     <value>無法裝備此物品：請查看其需求</value>
   </data>
+  <data name="EquipNoRoomS" xml:space="preserve">
+    <value>背包沒有空位可卸下%ls</value>
+  </data>
+  <data name="EquipSwapTwoItems" xml:space="preserve">
+    <value>請先卸下另一隻手的物品</value>
+  </data>
+  <data name="EquipSwapStopped" xml:space="preserve">
+    <value>替換已中止：兩件物品都在背包裡</value>
+  </data>
+  <data name="PadOfferEquip" xml:space="preserve">
+    <value>新裝備：%ls +%d CP</value>
+  </data>
+  <data name="PadOfferEquipHold" xml:space="preserve">
+    <value>長按以裝備</value>
+  </data>
+  <data name="TouchOfferEquip" xml:space="preserve">
+    <value>裝備</value>
+  </data>
+  <data name="JunkMark" xml:space="preserve">
+    <value>垃圾</value>
+  </data>
+  <data name="JunkUnmark" xml:space="preserve">
+    <value>非垃圾</value>
+  </data>
+  <data name="JunkMarkPlainGear" xml:space="preserve">
+    <value>將普通裝備標為垃圾</value>
+  </data>
+  <data name="JunkCannotMark" xml:space="preserve">
+    <value>只有+7以下的普通武器、盾牌與防具可標為垃圾</value>
+  </data>
+  <data name="JunkMarkedD" xml:space="preserve">
+    <value>已標為垃圾：%d 件</value>
+  </data>
+  <data name="ShopSellJunkD" xml:space="preserve">
+    <value>出售垃圾（%d）</value>
+  </data>
+  <data name="ShopSellJunkTitle" xml:space="preserve">
+    <value>出售垃圾</value>
+  </data>
+  <data name="ShopSellJunkCountD" xml:space="preserve">
+    <value>要出售 %d 件垃圾嗎？</value>
+  </data>
+  <data name="ShopSellJunkTotalS" xml:space="preserve">
+    <value>合計：%ls Zen</value>
+  </data>
+  <data name="ShopSellJunkCapD" xml:space="preserve">
+    <value>Zen 上限：只能再賣 %d 件</value>
+  </data>
+  <data name="ShopSellJunkDone" xml:space="preserve">
+    <value>已出售 %d 件，獲得 %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkStopped" xml:space="preserve">
+    <value>已出售 %d / %d 件垃圾</value>
+  </data>
+  <data name="EquipNotNow" xml:space="preserve">
+    <value>現在無法更換裝備</value>
+  </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>請先卸下該處穿戴的物品</value>
   </data>

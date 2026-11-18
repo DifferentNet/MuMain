@@ -46,6 +46,7 @@
 #include "UI/HUD/TouchControls.h"
 #include "UI/Inventory/InventoryContents.h"
 #include "UI/Inventory/MyInventory.h"
+#include "UI/Inventory/QuickEquip.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Windows/MsgWin.h"
 #include "UI/Windows/SysMenuWin.h"
@@ -284,6 +285,8 @@ struct State
     LongPress menuPress;
     LongPress dpadUpPress;
     LongPress dpadLeftPress;
+    // D-pad right, read as a tap or a hold only while the quick equip offer is up (UI/Inventory/QuickEquip).
+    LongPress dpadRightPress;
     // D-pad down's press talks to an NPC (no drop around), rather than holding the pickup button.
     bool dpadDownTalks = false;
     // A, pressed with no foe near and a drop around, holds the pickup button until let go.
@@ -573,6 +576,7 @@ void ForgetLongPresses()
     g_state.menuPress = {};
     g_state.dpadUpPress = {};
     g_state.dpadLeftPress = {};
+    g_state.dpadRightPress = {};
 }
 
 void WaitForRelease()
@@ -1372,6 +1376,39 @@ void PlayDpadUp(const Presses& presses, Clock::time_point now)
     }
 }
 
+void OpenInventory()
+{
+    Core::Input::Touch::TapKey(KeyBindings::Runtime::KeyOf(KeyBindings::Action::Inventory));
+}
+
+// D-pad right opens the inventory as it goes down. With the quick equip offer up (pad round 6, B3) it waits instead:
+// a tap opens the inventory, held half a second it puts the offered item on. Only a press that went down while the
+// offer was up can put it on, so a held d-pad never takes an offer that came meanwhile.
+void PlayDpadRight(const Presses& presses, Clock::time_point now)
+{
+    const bool freshPress =
+        Pressed(presses, Button::DpadRight) && !g_state.waitForRelease[static_cast<int>(Button::DpadRight)];
+    const bool tracking = g_state.dpadRightPress.down;
+    if (!tracking && !(freshPress && UI::Inventory::QuickEquip::HasOffer()))
+    {
+        if (freshPress)
+            OpenInventory();
+        return;
+    }
+    switch (ReadLongPress(g_state.dpadRightPress, Button::DpadRight, presses, now, DpadHold))
+    {
+    case PressKind::Tap:
+        OpenInventory();
+        break;
+    case PressKind::Hold:
+        if (!UI::Inventory::QuickEquip::Accept())
+            OpenInventory();
+        break;
+    default:
+        break;
+    }
+}
+
 // D-pad left and right (no window open): the map (Tab) and the inventory (I), as a keyboard
 // opens them (ghinzuro, 2026-11-03), with the keys the player bound. Left held half a second: the Teleport window (M) instead.
 void PlayDpadSides(const Presses& presses, Clock::time_point now)
@@ -1387,8 +1424,7 @@ void PlayDpadSides(const Presses& presses, Clock::time_point now)
     default:
         break;
     }
-    if (Pressed(presses, Button::DpadRight) && !g_state.waitForRelease[static_cast<int>(Button::DpadRight)])
-        Core::Input::Touch::TapKey(KeyBindings::Runtime::KeyOf(KeyBindings::Action::Inventory));
+    PlayDpadRight(presses, now);
 }
 
 // A window opened or closed: what was held lets go and acts again only once let go, as the buttons
@@ -1877,6 +1913,8 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
     const std::optional<float> windowsLeft = UI::HUD::PadTargets::WindowsLeft();
     if (g_state.frameOpen && windowsLeft && context != nullptr)
         view.topRight = std::max(static_cast<float>(context->GetDimensions().x) - *windowsLeft, 0.f);
+    // The quick equip offer, d-pad right held to take it (no window over the world: the d-pad hops the frame there).
+    view.offerText = g_state.windowOpen ? nullptr : UI::Inventory::QuickEquip::OfferText();
     using Prompt = UI::HUD::PadOverlay::View::Prompt;
     // The NPC or player chosen says what A does, under their feet; else the drop d-pad down takes.
     const int meet = g_state.windowOpen ? -1 : g_state.meet;

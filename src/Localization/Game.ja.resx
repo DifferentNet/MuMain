@@ -11603,6 +11603,63 @@
   <data name="PadCannotEquip" xml:space="preserve">
     <value>このアイテムは装備できません：必要条件を確認してください</value>
   </data>
+  <data name="EquipNoRoomS" xml:space="preserve">
+    <value>%lsを外すためのバッグの空きがありません</value>
+  </data>
+  <data name="EquipSwapTwoItems" xml:space="preserve">
+    <value>先にもう片方の手の装備を外してください</value>
+  </data>
+  <data name="EquipSwapStopped" xml:space="preserve">
+    <value>入れ替えを中止しました：両方の装備はバッグにあります</value>
+  </data>
+  <data name="PadOfferEquip" xml:space="preserve">
+    <value>新装備：%ls +%d CP</value>
+  </data>
+  <data name="PadOfferEquipHold" xml:space="preserve">
+    <value>長押しで装備</value>
+  </data>
+  <data name="TouchOfferEquip" xml:space="preserve">
+    <value>装備する</value>
+  </data>
+  <data name="JunkMark" xml:space="preserve">
+    <value>不用品</value>
+  </data>
+  <data name="JunkUnmark" xml:space="preserve">
+    <value>不用品ではない</value>
+  </data>
+  <data name="JunkMarkPlainGear" xml:space="preserve">
+    <value>普通の装備を不用品にする</value>
+  </data>
+  <data name="JunkCannotMark" xml:space="preserve">
+    <value>不用品にできるのは+7未満の普通の武器・盾・防具だけです</value>
+  </data>
+  <data name="JunkMarkedD" xml:space="preserve">
+    <value>不用品に指定：%d個</value>
+  </data>
+  <data name="ShopSellJunkD" xml:space="preserve">
+    <value>不用品を売る（%d）</value>
+  </data>
+  <data name="ShopSellJunkTitle" xml:space="preserve">
+    <value>不用品を売る</value>
+  </data>
+  <data name="ShopSellJunkCountD" xml:space="preserve">
+    <value>不用品%d個を売りますか？</value>
+  </data>
+  <data name="ShopSellJunkTotalS" xml:space="preserve">
+    <value>合計：%ls Zen</value>
+  </data>
+  <data name="ShopSellJunkCapD" xml:space="preserve">
+    <value>Zenの上限：%d個までしか売れません</value>
+  </data>
+  <data name="ShopSellJunkDone" xml:space="preserve">
+    <value>%d個を%ls Zenで売りました</value>
+  </data>
+  <data name="ShopSellJunkStopped" xml:space="preserve">
+    <value>%d個を売りました（不用品%d個中）</value>
+  </data>
+  <data name="EquipNotNow" xml:space="preserve">
+    <value>今は装備を変更できません</value>
+  </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>先にそこに装備しているアイテムを外してください</value>
   </data>

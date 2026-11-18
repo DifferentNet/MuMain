@@ -177,6 +177,9 @@
 /* The sort button (InventorySort.h): an idle tab at the grid's top right (x 145-175), three bars short to long in
    the page numbers' colour, lighter on hover; dimmed and deaf while it can't sort. */
 #btn_bag_sort { left: 145px; }
+#btn_bag_junk { left: 111px; }
+.bag-junk-coin { position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; margin-left: -4px; margin-top: -4px; border-radius: 4px; background-color: token(text-secondary); pointer-events: none; }
+.bag-junk:hover .bag-junk-coin { background-color: token(accent-gold); }
 .bag-sort.busy { pointer-events: none; filter: brightness(0.5); }
 .bag-sort-icon { position: absolute; left: 50%; top: 50%; width: 10px; height: 7px; margin-left: -5px; margin-top: -4px; pointer-events: none; }
 .bag-sort-bar { position: absolute; left: 0; height: 1px; background-color: token(text-secondary); }
@@ -344,6 +347,8 @@
 	.bag-tab-lock-body { top: 4px; width: 7px; height: 5px; }
 	/* The sort button left of the tabs on the rail, its bars bigger. */
 	#btn_bag_sort { left: auto; right: 134px; }
+	#btn_bag_junk { left: auto; right: 174px; }
+	.bag-junk-coin { width: 14px; height: 14px; margin-left: -7px; margin-top: -7px; border-radius: 7px; }
 	.bag-sort-icon { width: 18px; height: 12px; margin-left: -9px; margin-top: -6px; }
 	.bag-sort-bar { height: 2px; }
 	.bag-sort-bar-1 { width: 7px; }
@@ -374,4 +379,5 @@
 	#panel.beside .inv-btn-jewel-bank { top: 216px; }
 	/* The sort button joins them, under the jewel bank. */
 	#panel.beside #btn_bag_sort { left: calc(var(--bag-x) + 8 * var(--item-cell) + 12px); right: auto; top: 262px; width: 44px; height: 36px; }
+	#panel.beside #btn_bag_junk { left: calc(var(--bag-x) + 8 * var(--item-cell) + 12px); right: auto; top: 308px; width: 44px; height: 36px; }
 }

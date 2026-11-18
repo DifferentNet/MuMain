@@ -63,6 +63,8 @@ struct View
     bool prompt = false;
     float promptX = 0.f;
     float promptY = 0.f;
+    // The quick equip offer's line (UI/Inventory/QuickEquip), d-pad right held to take it; nullptr for none.
+    const wchar_t* offerText = nullptr;
     // How far from the right the tabs and the legend end, so they stay off the windows; 0 = the whole width.
     float topRight = 0.f;
 };

@@ -110,6 +110,7 @@ void InventorySort::Request(Target target)
         return;
 
     m_askedAt = std::chrono::steady_clock::now();
+    m_target = target;
     PlayBuffer(SOUND_CLICK01);
     SendCommand(target == Target::Bag ? BagCommand : VaultCommand);
 }
@@ -118,6 +119,11 @@ bool InventorySort::IsWaiting() const
 {
     return m_askedAt != std::chrono::steady_clock::time_point{}
         && std::chrono::steady_clock::now() - m_askedAt < AnswerTimeout;
+}
+
+bool InventorySort::IsWaitingFor(Target target) const
+{
+    return IsWaiting() && m_target == target;
 }
 
 bool InventorySort::IsBlocked(Target target) const

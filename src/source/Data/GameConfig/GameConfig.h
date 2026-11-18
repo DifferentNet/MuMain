@@ -137,6 +137,11 @@ public:
     std::wstring GetChatMacro(int slot);
     void SetChatMacro(int slot, const std::wstring& text);
 
+    // One character's junk marks in [Junk], keyed by the character's name (UI::Inventory::JunkSale); "" when none.
+    // SetJunkMarks writes at once; empty marks remove the line.
+    std::wstring GetJunkMarks(const std::wstring& character);
+    void SetJunkMarks(const std::wstring& character, const std::wstring& marks);
+
     // The phone or PC layout and the controls, as config.ini words (UI::Mobile::InterfaceMode).
     const std::wstring& GetInterfaceView() const { return m_interfaceView; }
     void SetInterfaceView(const std::wstring& view) { m_interfaceView = view; }

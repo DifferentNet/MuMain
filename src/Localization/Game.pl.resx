@@ -13545,6 +13545,63 @@
   <data name="PadCannotEquip" xml:space="preserve">
     <value>Tego przedmiotu nie można założyć: zobacz jego wymagania</value>
   </data>
+  <data name="EquipNoRoomS" xml:space="preserve">
+    <value>Brak miejsca w torbie, by zdjąć %ls</value>
+  </data>
+  <data name="EquipSwapTwoItems" xml:space="preserve">
+    <value>Najpierw zdejmij przedmiot z drugiej ręki</value>
+  </data>
+  <data name="EquipSwapStopped" xml:space="preserve">
+    <value>Zamiana przerwana: oba przedmioty są w torbie</value>
+  </data>
+  <data name="PadOfferEquip" xml:space="preserve">
+    <value>Nowe: %ls +%d CP</value>
+  </data>
+  <data name="PadOfferEquipHold" xml:space="preserve">
+    <value>Przytrzymaj, by założyć</value>
+  </data>
+  <data name="TouchOfferEquip" xml:space="preserve">
+    <value>Załóż</value>
+  </data>
+  <data name="JunkMark" xml:space="preserve">
+    <value>Złom</value>
+  </data>
+  <data name="JunkUnmark" xml:space="preserve">
+    <value>Nie złom</value>
+  </data>
+  <data name="JunkMarkPlainGear" xml:space="preserve">
+    <value>Oznacz zwykły sprzęt jako złom</value>
+  </data>
+  <data name="JunkCannotMark" xml:space="preserve">
+    <value>Złomem może być tylko zwykła broń, tarcze i zbroje poniżej +7</value>
+  </data>
+  <data name="JunkMarkedD" xml:space="preserve">
+    <value>Oznaczono jako złom: %d</value>
+  </data>
+  <data name="ShopSellJunkD" xml:space="preserve">
+    <value>Sprzedaj złom (%d)</value>
+  </data>
+  <data name="ShopSellJunkTitle" xml:space="preserve">
+    <value>Sprzedaj złom</value>
+  </data>
+  <data name="ShopSellJunkCountD" xml:space="preserve">
+    <value>Sprzedać %d przedmiotów złomu?</value>
+  </data>
+  <data name="ShopSellJunkTotalS" xml:space="preserve">
+    <value>Razem: %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkCapD" xml:space="preserve">
+    <value>Limit Zen: zmieści się tylko %d przedmiotów</value>
+  </data>
+  <data name="ShopSellJunkDone" xml:space="preserve">
+    <value>Sprzedano %d przedmiotów za %ls Zen</value>
+  </data>
+  <data name="ShopSellJunkStopped" xml:space="preserve">
+    <value>Sprzedano %d z %d przedmiotów złomu</value>
+  </data>
+  <data name="EquipNotNow" xml:space="preserve">
+    <value>Nie można teraz zmienić sprzętu</value>
+  </data>
   <data name="PadSlotTaken" xml:space="preserve">
     <value>Najpierw zdejmij przedmiot noszony w tym miejscu</value>
   </data>

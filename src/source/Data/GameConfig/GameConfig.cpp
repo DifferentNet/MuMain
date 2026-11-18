@@ -470,6 +470,21 @@ void GameConfig::SetChatMacro(int slot, const std::wstring& text)
     WriteString(CfgSections::CfgSectionChatMacros, ChatMacroKey(slot).c_str(), UI::Chat::Macros::EncodeForIni(text));
 }
 
+std::wstring GameConfig::GetJunkMarks(const std::wstring& character)
+{
+    return ReadString(CfgSections::CfgSectionJunk, character.c_str(), L"");
+}
+
+void GameConfig::SetJunkMarks(const std::wstring& character, const std::wstring& marks)
+{
+    if (marks.empty())
+    {
+        RemoveObsoleteKey(CfgSections::CfgSectionJunk, character.c_str());
+        return;
+    }
+    WriteString(CfgSections::CfgSectionJunk, character.c_str(), marks);
+}
+
 std::vector<std::wstring> GameConfig::ReadStringList(const wchar_t* section, const wchar_t* keyPrefix, int maxCount)
 {
     std::vector<std::wstring> result;

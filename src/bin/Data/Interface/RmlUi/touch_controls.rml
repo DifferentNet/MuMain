@@ -307,6 +307,8 @@
 	<div id="tc_pickup" class="tc-button tc-small">{{pickup_label}}
 		<div class="pad-glyph pad-dpad pad-dpad-down"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
 	</div>
+	<!-- The quick equip offer (UI/Inventory/QuickEquip, pad round 6 B3): a picked-up item worth more; a tap puts it on. -->
+	<div id="tc_offer" class="tc-button" data-class-shown="offer_shown"><div class="tc-offer-text">{{offer_text}}</div><div class="tc-offer-do">{{offer_do_label}}</div></div>
 	<div id="tc_auto" class="tc-button tc-small" data-class-on="helper_on">{{auto_label}}
 		<div class="pad-glyph pad-dpad pad-dpad-up"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
 	</div>

@@ -54,6 +54,17 @@ body { --item-cell: 20px; }
 /* A stack count, centred 6 in from its item's right edge and 1 below its top, in bold white with
    a black edge where the original drew newui_number1 digits. Counter-scaled text layer: it turns
    about its top-right corner. */
+/* A bag item marked as junk (pad round 6, B7): a small gold coin on its top-left cell. */
+.item-junk {
+	position: absolute;
+	left: 2px;
+	bottom: 2px;
+	width: 9px;
+	height: 9px;
+	border: 1px #5a3c08;
+	border-radius: 5px;
+	background-color: #e8b83a;
+}
 .item-count-text {
 	position: absolute;
 	right: 0;
