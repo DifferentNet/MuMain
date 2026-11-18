@@ -657,6 +657,8 @@ double FPS;
 float FPS_ANIMATION_FACTOR;
 // Whole 25 FPS reference frames that passed this frame (0 or 1): the step for integer frame counters.
 int REFERENCE_FRAME_STEP;
+// Reference frames since the last frame that took a step, this frame included (1 at 25 FPS and below).
+float REFERENCE_FRAMES_SINCE_STEP = 1.f;
 // Counts rendered frames: tells which calls came within the same frame.
 unsigned int RENDERED_FRAME;
 double FPS_AVG;
@@ -668,6 +670,11 @@ int TakeReferenceFrameSteps(float& referenceFrames, float frameFactor)
     const int steps = static_cast<int>(referenceFrames);
     referenceFrames -= static_cast<float>(steps);
     return steps;
+}
+
+float FramesSinceSteppedFrame(float since, bool previousFrameStepped, float frameFactor)
+{
+    return (previousFrameStepped ? 0.f : since) + frameFactor;
 }
 
 bool rand_fps_check(int reference_frames)
@@ -697,6 +704,10 @@ void CalcFPS()
     FPS_ANIMATION_FACTOR = std::clamp(static_cast<float>(fpsRatio), 0.f, 1.f);
     static float referenceFrames = 0.f;
     REFERENCE_FRAME_STEP = TakeReferenceFrameSteps(referenceFrames, FPS_ANIMATION_FACTOR);
+    static bool previousFrameStepped = true;
+    REFERENCE_FRAMES_SINCE_STEP =
+        FramesSinceSteppedFrame(REFERENCE_FRAMES_SINCE_STEP, previousFrameStepped, FPS_ANIMATION_FACTOR);
+    previousFrameStepped = REFERENCE_FRAME_STEP != 0;
     ++RENDERED_FRAME;
 
     // Calculate average fps every 2 seconds or 25 frames

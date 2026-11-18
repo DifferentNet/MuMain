@@ -23,26 +23,44 @@ TEST_CASE("the effect level sets the pool budget [render][skill_fx]")
 
 TEST_CASE("the effect level lets each look show [render][skill_fx]")
 {
-    // Level 4 and 3: all three; 2: pools and soft, no flipbook; 0 and 1: none.
+    // Level 4 and 3: all four; 2: pools and soft, no flipbook or trails; 0 and 1: none.
     for (int level : {3, 4})
     {
         CHECK(SkillFx::LevelAllows(Feature::LightPools, level));
         CHECK(SkillFx::LevelAllows(Feature::SoftParticles, level));
         CHECK(SkillFx::LevelAllows(Feature::FlipbookBlend, level));
+        CHECK(SkillFx::LevelAllows(Feature::Ribbons, level));
     }
     CHECK(SkillFx::LevelAllows(Feature::LightPools, 2));
     CHECK(SkillFx::LevelAllows(Feature::SoftParticles, 2));
     CHECK_FALSE(SkillFx::LevelAllows(Feature::FlipbookBlend, 2));
+    CHECK_FALSE(SkillFx::LevelAllows(Feature::Ribbons, 2));
     for (int level : {0, 1})
     {
         CHECK_FALSE(SkillFx::LevelAllows(Feature::LightPools, level));
         CHECK_FALSE(SkillFx::LevelAllows(Feature::SoftParticles, level));
         CHECK_FALSE(SkillFx::LevelAllows(Feature::FlipbookBlend, level));
+        CHECK_FALSE(SkillFx::LevelAllows(Feature::Ribbons, level));
     }
+}
+
+TEST_CASE("the effect level sets the smooth trail budgets [render][skill_fx]")
+{
+    CHECK(SkillFx::RibbonPieceBudget(5) == 8);
+    CHECK(SkillFx::RibbonPieceBudget(4) == 8);
+    CHECK(SkillFx::RibbonPieceBudget(3) == 4);
+    for (int level : {2, 1, 0, -1})
+    {
+        CHECK(SkillFx::RibbonPieceBudget(level) == 0);
+        CHECK(SkillFx::RibbonQuadBudget(level) == 0);
+    }
+    CHECK(SkillFx::RibbonQuadBudget(4) == 4096);
+    CHECK(SkillFx::RibbonQuadBudget(3) == 2048);
 }
 
 TEST_CASE("a look shows only when chosen, offered and allowed by the level [render][skill_fx]")
 {
+    CHECK(SkillFx::kFeatureCount == 4);
     for (int index = 0; index < SkillFx::kFeatureCount; ++index)
     {
         const auto feature = static_cast<Feature>(index);
@@ -61,4 +79,5 @@ TEST_CASE("the console names the looks [render][skill_fx]")
     CHECK(std::string(SkillFx::Name(Feature::LightPools)) == "pools");
     CHECK(std::string(SkillFx::Name(Feature::SoftParticles)) == "soft");
     CHECK(std::string(SkillFx::Name(Feature::FlipbookBlend)) == "flipbook");
+    CHECK(std::string(SkillFx::Name(Feature::Ribbons)) == "trails");
 }

@@ -38,6 +38,8 @@
 #include "Engine/Object/ZzzInterface.h"
 #include "Engine/Object/ZzzInventory.h"
 #include "Render/Effects/ZzzEffect.h"
+#include "Render/Effects/BlurSlice.h"
+#include "Render/Effects/SkillFx.h"
 #include "Engine/Object/ZzzOpenData.h"
 #include "Scenes/SceneCore.h"
 #include "Scenes/MainScene.h"
@@ -3963,10 +3965,20 @@ void CreateWeaponBlur(CHARACTER* c, OBJECT* o, BMD* b)
                 // high frame rates - the points pile onto a single weapon position and the streak
                 // disappears. Span a fixed PlaySpeed slice so the trail renders the same at any FPS.
                 const float playSpeed = b->Actions[b->CurrentAction].PlaySpeed;
-                float animationFrame = o->AnimationFrame - playSpeed;
+                // Remaster smooth trails: a player's swing lays only the head of the slice, the animation
+                // since the slice the last reference frame kept, so it no longer folds over that one.
+                namespace SkillFx = Render::Effects::SkillFx;
+                namespace BlurSlice = Render::Effects::BlurSlice;
+                const bool headSlice = o->Type == MODEL_PLAYER && SkillFx::Enabled(SkillFx::Feature::Ribbons);
+                const BlurSlice::Slice slice = headSlice
+                    ? BlurSlice::HeadSlice(REFERENCE_FRAMES_SINCE_STEP, static_cast<int>(inter))
+                    : BlurSlice::FullSlice(static_cast<int>(inter));
+                float animationFrame = headSlice ? o->AnimationFrame - playSpeed * slice.share
+                                                 : o->AnimationFrame - playSpeed;
                 const float priorAnimationFrame = o->PriorAnimationFrame;
-                const float animationSpeed = playSpeed / inter;
-                for (int i = 0; i < (int)(inter); ++i)
+                const float animationSpeed = headSlice ? playSpeed * slice.share / static_cast<float>(slice.samples)
+                                                       : playSpeed / inter;
+                for (int i = 0; i < slice.samples; ++i)
                 {
                     b->Animation(BoneTransform, animationFrame, priorAnimationFrame, o->PriorAction, o->Angle, o->HeadAngle);
 

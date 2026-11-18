@@ -17,6 +17,8 @@
 #include "ZzzEffect.h"
 #include "Audio/DSPlaySound.h"
 #include "Render/Effects/AuraJointLifecycle.h"
+#include "Render/Effects/JointRibbon.h"
+#include "Render/Effects/SkillFx.h"
 #include "Render/Effects/PoolSlotBounds.h"
 #include "Network/Server/WSclient.h"
 #include "GameLogic/Pets/CSPetSystem.h"
@@ -7000,6 +7002,9 @@ void RenderJoints(BYTE bRenderOneMore)
     {
         return;
     }
+    // Smooth trails (Remaster, SkillFx::Feature::Ribbons): 0 pieces when they are off.
+    const int ribbonPieces = Render::Effects::SkillFx::ActiveRibbonPieces();
+    const int ribbonQuadBudget = Render::Effects::SkillFx::ActiveRibbonQuadBudget();
     for (int i = 0; i < s_jointBounds.End(); i++)
     {
         JOINT* o = &Joints[i];
@@ -7070,6 +7075,12 @@ void RenderJoints(BYTE bRenderOneMore)
             };
             const auto addQuad = [](const mu::Vertex3D(&quad)[4]) { s_quads.insert(s_quads.end(), quad, quad + 4); };
 
+            // An offered trail is drawn as a smooth ribbon; the classic loop below draws the rest as before.
+            const bool smooth = ribbonPieces > 0 && Render::Effects::JointRibbon::Offered(*o) &&
+                                (!cullOffscreen || IsTailRunInFrustum(o, 0)) &&
+                                Render::Effects::JointRibbon::Append(*o, ribbonPieces, ribbonQuadBudget, s_quads);
+            if (!smooth)
+            {
             for (int j = 0; j < (int)o->NumTails; j++)
             {
                 if (cullOffscreen && j % kCulledSegmentRun == 0)
@@ -7365,6 +7376,7 @@ void RenderJoints(BYTE bRenderOneMore)
                         addQuad(faceTwoVerts);
                     }
                 }
+            }
             }
             flushQuads();
             if (o->Type == BITMAP_JOINT_HEALING && o->SubType == 8)
