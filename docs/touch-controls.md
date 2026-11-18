@@ -294,7 +294,7 @@ Each window restyles itself under `@media (theme: mobile)` in both themes; on a 
 | Character (legacy) | The stat "+" buttons take a 50 x 50 finger area round their art (padding with a negative margin). |
 | Party, quests, jewel bank | The party's kick cross takes a 41 x 41 finger area round it; the quest progress window's page arrows sit further apart (the left one at 112 px) with 8 px around each, and the answer rows get 6 px above and below in the quest progress window and 4 px in the NPC quest window (its dialogue band is centred on 7 lines, so a full band with 4 answers still clears the title and the divider). The jewel bank's zen buttons are narrow and as tall as the row (30 x 31: 5 px above and below their art, 2 px beside it), moved left (106 and 138 px); the name and the count are cut 74 px wide so they stop short of them. The art stays where it was (padding with a negative margin, the face painted on the content box); in the Modern theme the kick cross and the zen buttons lose their thin border on the phone. |
 | Social | Fewer players are listed while the panel would run past its foot (a short screen, many actions): the last row of cards goes until the panel fits, never the first row (`FitSocialPlayers`, measured on the frame's layout; the limit resets when it opens). A player chosen by a tap who is still around but past the cards that fit takes the last card; one who leaves leaves nobody chosen, and the actions wait for a new tap. Party says `TouchMenuParty`. |
-| Chat input (legacy) | Five quick phrases over the bar (`TouchQuickChat1..5`, all 11 languages), the bar's width, wrapping upward; a tap sends one as Enter sends a line (`CChatInputBox::SendChatLine`, Enter's 1 s pause between lines); a line half typed comes back in the bar after it. Hidden off the phone view and in the Modern theme. |
+| Chat input (legacy) | Quick buttons over the bar in one line the bar's width, dragged sideways for the rest: the saved macros of keys 1 to 5 (only those set; a tap sends one as Alt+N does), then the twelve quick chat phrases (pad round 6, see the pad's keyboard below: each reader sees them in their own language, 2 s pause shared with the macros). A tap sends one as Enter sends a line (`CChatInputBox::SendPhrase`); a line half typed comes back in the bar after it. Hidden off the phone view and in the Modern theme. |
 | Touch menu | Drawn over every window while open (`OpenTouchMenuDepth`); a tap on the dimmed screen around it shuts it, and it shuts while a dialog waits for an answer. |
 | Map (Tab): names | A tap names the marker under it, or else the nearest drawn one within 22 finger units at 100 % (`TouchUnit::FullPixels`), live event monsters first (`UI::MiniMap::PickHint`, tested in `tests/ui/test_mini_map_layout.cpp`). A mouse names only the marker under it, as before. |
 | Teleport (warp list) | Rows 44 units tall (were 30); a pressed reachable row lights up as a hovered one does (`move_command.rcss`). |
@@ -494,13 +494,26 @@ The phone's own keyboard stays down while the pad types and comes back if a fing
 | Y | Space |
 | LT | Shift: once for one capital, twice to stay |
 | RT | The symbols page, and back to the letters |
-| View | English or Russian letters |
+| View | English letters, Russian ones, then (the chat line only) the quick chat phrases |
 | LB, RB | Move the cursor (held, it repeats) |
 | Menu | Enter: send the chat line, log in |
 
 A key a pad button also presses carries that button's glyph. A password field gets English letters
 only; a field that takes digits (`text-field--numeric`) gets a number pad. Buttons still held when
 the keyboard closes act only once released, so the B that closed it does not also press Back.
+
+**Quick chat phrases** (pad round 6). Twelve phrases: Hello! / Thanks! / Invite me to the party / Wait for me /
+Help! / Let's go / Buff me, please / Selling, whisper me / Buying, whisper me / Sorry / Good game / Bye. Every
+reader sees a phrase in their own language, in the chat log and over the head. On the pad keyboard's phrase page
+(the chat's message line only, not the whisper name; View after the Russian letters) A sends the highlighted one at once; on a phone the chips
+over the chat bar do the same. A phrase goes to the channel the chat bar is on (normal, party, guild) or to the
+whisper target when one is filled in, with a 2 s pause shared with the macros (a phrase after a macro waits 2 s,
+a macro after a phrase the macros' own 4 s), and not in Chaos Castle; a phrase refused for either plays the error sound. On the wire it is ordinary chat text after
+the channel prefix: a token and the English text, `[#07] Buff me, please`; a client that knows the id shows its own
+text, an older one (and the control socket's log) the English line. The server only relays it. Unknown ids show
+as they came; a typed `[#07] anything` shows as the phrase. Mouse play has no phrase row; bots never use it
+(`UI/Chat/ChatPhrases`, the texts `ChatPhrase01..12` in `UI/Chat/ChatPhraseTexts`, tested in
+`tests/ui/test_chat_phrases.cpp`).
 
 | Piece | File | Role |
 |---|---|---|

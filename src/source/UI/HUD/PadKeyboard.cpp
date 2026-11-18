@@ -8,6 +8,7 @@
 #include "I18N/All.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "Scenes/SceneCore.h"
+#include "UI/Chat/ChatPhraseTexts.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/HUD/ChatInputBox.h"
 #include "UI/HUD/PadGlyphs.h"
@@ -78,6 +79,8 @@ struct KeyView
     bool locked = false;
     // A symbol drawn from DejaVu Sans (the only bundled font with the keyboard's arrows).
     bool icon = false;
+    // A quick chat phrase: a long label, drawn smaller.
+    bool phrase = false;
     // The pad button that also presses it: "x", "y", "lt", "rt", "view", "menu" or none.
     Rml::String glyph;
 };
@@ -112,6 +115,7 @@ void BindModel(Rml::DataModelConstructor& c, KeyboardModel& model)
     key.RegisterMember("on", &KeyView::on);
     key.RegisterMember("locked", &KeyView::locked);
     key.RegisterMember("icon", &KeyView::icon);
+    key.RegisterMember("phrase", &KeyView::phrase);
     key.RegisterMember("glyph", &KeyView::glyph);
     c.RegisterArray<std::vector<KeyView>>();
     auto row = c.RegisterStruct<RowView>();
@@ -142,6 +146,8 @@ struct State
     Page page = Page::Latin;
     // The letters the symbols page goes back to, and a new field starts with.
     Page letters = Page::Latin;
+    // The field is the chat's message line: View goes on from the Russian letters to the phrases.
+    bool phrases = false;
     Shift shift = Shift::Off;
     Spot spot = LettersStart;
     bool rowsDirty = true;
@@ -238,6 +244,12 @@ bool IsChatField(const Rml::Element* field)
     return chat != nullptr && chat->TakesTypingFrom(field->GetOwnerDocument());
 }
 
+// The chat's message line itself, not its whisper name: the one the quick chat phrases go from.
+bool IsChatMessageLine(const Rml::Element* field)
+{
+    return IsChatField(field) && field->GetId() == "chat_field";
+}
+
 // The chat closes as with Esc; any other field just lets go of the keys.
 void Close(Rml::Element* field)
 {
@@ -266,15 +278,35 @@ void ToggleSymbols()
     SetPage(g_state.page == Page::Symbols ? g_state.letters : Page::Symbols);
 }
 
+// View: English -> Russian -> the chat's phrases (the chat's line only) -> English.
 void SwitchLanguage(const Rml::Element* field)
 {
     if (g_state.page == Page::Digits || IsPassword(field))
         return;
+    if (g_state.page == Page::Phrases)
+    {
+        g_state.letters = Page::Latin;
+        SetPage(Page::Latin);
+        return;
+    }
+    if (g_state.letters == Page::Cyrillic && g_state.phrases)
+    {
+        SetPage(Page::Phrases);
+        return;
+    }
     g_state.letters = g_state.letters == Page::Latin ? Page::Cyrillic : Page::Latin;
     if (IsLetters(g_state.page))
         SetPage(g_state.letters);
     else
         g_state.rowsDirty = true;
+}
+
+// Sent at once to the chat's channel (or its whisper target), as the chat's own Enter sends a line.
+void SendPhrase(const Layout::Key& key, const Rml::Element* field)
+{
+    if (!IsChatMessageLine(field) || g_pChatInputBox == nullptr)
+        return;
+    g_pChatInputBox->SendPhrase(key.phrase);
 }
 
 void CycleShift()
@@ -341,6 +373,9 @@ void Press(const Layout::Key& key, Rml::Element* field)
     case Action::Language:
         SwitchLanguage(field);
         break;
+    case Action::Phrase:
+        SendPhrase(key, field);
+        break;
     }
 }
 
@@ -348,6 +383,7 @@ void Open(Rml::Element* field)
 {
     g_state.field = field;
     g_state.shift = Shift::Off;
+    g_state.phrases = IsChatMessageLine(field);
     if (IsPassword(field) && g_state.letters == Page::Cyrillic)
         g_state.letters = Page::Latin;
     const bool digits = IsDigitsOnly(field);
@@ -398,6 +434,16 @@ Rml::String LetterLabel(const Layout::Key& key)
     return Rml::String(capital ? key.upper : key.lower);
 }
 
+// The page View goes to next.
+Rml::String LanguageLabel()
+{
+    if (g_state.page == Page::Phrases)
+        return "EN";
+    if (g_state.letters == Page::Cyrillic && g_state.phrases)
+        return StringUtils::WideToNarrow(I18N::Game::PadKeyboardPhrases);
+    return g_state.letters == Page::Latin ? "RU" : "EN";
+}
+
 Rml::String ActionLabel(Action action)
 {
     switch (action)
@@ -417,7 +463,7 @@ Rml::String ActionLabel(Action action)
     case Action::Letters:
         return g_state.letters == Page::Cyrillic ? "\xD0\x90\xD0\x91\xD0\x92" : "ABC"; // АБВ
     case Action::Language:
-        return g_state.letters == Page::Latin ? "RU" : "EN";
+        return LanguageLabel();
     default:
         return {};
     }
@@ -450,13 +496,22 @@ Rml::String GlyphFor(Action action)
     }
 }
 
+Rml::String PhraseLabel(const Layout::Key& key)
+{
+    const wchar_t* text = UI::Chat::PhraseTexts::OwnText(key.phrase);
+    return text != nullptr ? StringUtils::WideToNarrow(text) : Rml::String();
+}
+
 KeyView ViewOf(const Layout::Key& key, float pageWidth)
 {
     KeyView view;
     const bool letter = key.action == Action::Type;
-    view.label = letter ? LetterLabel(key) : ActionLabel(key.action);
+    view.phrase = key.action == Action::Phrase;
+    view.label = letter         ? LetterLabel(key)
+                 : view.phrase ? PhraseLabel(key)
+                               : ActionLabel(key.action);
     view.width = Rml::CreateString("%.4f%%", key.width / pageWidth * 100.f);
-    view.action = !letter;
+    view.action = !letter && !view.phrase;
     view.on = key.action == Action::Shift && g_state.shift != Shift::Off;
     view.locked = key.action == Action::Shift && g_state.shift == Shift::Locked;
     view.icon = IsIcon(key.action);

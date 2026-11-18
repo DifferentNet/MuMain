@@ -6,6 +6,7 @@
 #include "UI/Core/WindowObject.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 #include "UI/Chat/ChatHistory.h"
+#include "UI/Chat/ChatPhrases.h"
 
 #pragma warning(disable : 4786)
 #include <array>
@@ -40,10 +41,13 @@ namespace mu::ui::window
 
         // The buttons' hints, in the button row's order.
         std::array<Rml::String, 10> buttonHints;
-        // A phone's quick phrases over the bar (theme mobile): a tap sends one as Enter sends a line.
+        // A phone's quick buttons over the bar (theme mobile): the saved macros of keys 1 to 5, each shown
+        // only when set; a tap sends it as Alt+N does.
         std::array<Rml::String, 5> quickPhrases;
-        // Which of them carry a saved macro (cut short in the rcss when long).
         std::array<bool, 5> quickIsMacro{};
+        // Then the quick chat phrases (UI/Chat/ChatPhrases) in the player's language: a tap sends one at once,
+        // each reader sees it in theirs.
+        std::array<Rml::String, UI::Chat::Phrases::Count> chatPhrases;
     };
 
     class CChatInputBox : public CObject
@@ -112,6 +116,9 @@ namespace mu::ui::window
         // A phone's quick chat buttons 1 to 5 carry the saved macros of keys 1 to 5 (MacroText) when set.
         static bool HasMacro(int slot);
         void SendQuickMacro(int slot);
+        // Sends a line as Enter does; a line half typed comes back in the bar after it.
+        void SendLineKeepingDraft(const type_string& line);
+        void SyncQuickButtons(ChatInputRmlModel& model);
 
         void BindRmlModel(Rml::DataModelConstructor& c, ChatInputRmlModel& model);
         void OnRmlReloaded();
@@ -153,6 +160,10 @@ namespace mu::ui::window
         // last player who whispered. False when the line is not the reply command. The caller keeps the
         // line in the chat history if it wants it there.
         bool TrySendReply(const wchar_t* chatText);
+        // A quick chat phrase (UI/Chat/ChatPhrases, 1 and up) to the channel chosen or the whisper target, as Enter
+        // sends a line; the pad keyboard's phrase page and a phone's chips. The bar must be open. False when nothing
+        // went: an unknown id, or the pause shared with the macros (TakeQuickPhrasePause).
+        bool SendPhrase(int id);
 
         bool IsBlockWhisper();
         void SetBlockWhisper(bool bBlockWhisper);

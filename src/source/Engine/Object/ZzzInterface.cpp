@@ -199,6 +199,8 @@ int  InputLength[12];
 wchar_t MacroText[10][256];
 
 constexpr uint64_t MacroCooldownMs = 4000; // 4 Seconds
+// A quick chat phrase waits less: shared with the macros through LastMacroTime.
+constexpr uint64_t QuickPhraseCooldownMs = 2000;
 uint64_t  LastMacroTime = 0;
 
 int  WhisperIDCurrent = 2;
@@ -3556,6 +3558,16 @@ bool SendMacroSlot(int slot)
     if (!macroPauseOver || gMapManager.InChaosCastle() || g_Direction.IsDirection())
         return false;
     SendMacroChat(MacroText[slot]);
+    return true;
+}
+
+bool TakeQuickPhrasePause()
+{
+    const uint64_t now = GetTickCount64();
+    const bool pauseOver = LastMacroTime + QuickPhraseCooldownMs <= now;
+    if (!pauseOver || gMapManager.InChaosCastle() || g_Direction.IsDirection())
+        return false;
+    LastMacroTime = now;
     return true;
 }
 

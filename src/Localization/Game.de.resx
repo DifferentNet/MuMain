@@ -14124,21 +14124,6 @@
     <value>Fähigkeitsschaden: %d%% (max. %d%%)</value>
   </data>
   <!-- Quick chat on a phone: the phrases over the chat line (UI/HUD/ChatInputBox.cpp) -->
-  <data name="TouchQuickChat1" xml:space="preserve">
-    <value>Hallo!</value>
-  </data>
-  <data name="TouchQuickChat2" xml:space="preserve">
-    <value>Suche Gruppe</value>
-  </data>
-  <data name="TouchQuickChat3" xml:space="preserve">
-    <value>Danke!</value>
-  </data>
-  <data name="TouchQuickChat4" xml:space="preserve">
-    <value>Bin unterwegs</value>
-  </data>
-  <data name="TouchQuickChat5" xml:space="preserve">
-    <value>Hilfe!</value>
-  </data>
   <data name="ZenAmountAll" xml:space="preserve">
     <value>Alles</value>
   </data>
@@ -14405,5 +14390,44 @@
   </data>
   <data name="PadHintSkillsThird" xml:space="preserve">
     <value>Halte {RB}: {X}, {Y} und {B} wirken die Fähigkeiten 7 bis 9</value>
+  </data>
+  <data name="ChatPhrase01" xml:space="preserve">
+    <value>Hallo!</value>
+  </data>
+  <data name="ChatPhrase02" xml:space="preserve">
+    <value>Danke!</value>
+  </data>
+  <data name="ChatPhrase03" xml:space="preserve">
+    <value>Lad mich in die Gruppe ein</value>
+  </data>
+  <data name="ChatPhrase04" xml:space="preserve">
+    <value>Wartet auf mich</value>
+  </data>
+  <data name="ChatPhrase05" xml:space="preserve">
+    <value>Hilfe!</value>
+  </data>
+  <data name="ChatPhrase06" xml:space="preserve">
+    <value>Los geht's</value>
+  </data>
+  <data name="ChatPhrase07" xml:space="preserve">
+    <value>Buff mich bitte</value>
+  </data>
+  <data name="ChatPhrase08" xml:space="preserve">
+    <value>Verkaufe, flüstert mich an</value>
+  </data>
+  <data name="ChatPhrase09" xml:space="preserve">
+    <value>Kaufe, flüstert mich an</value>
+  </data>
+  <data name="ChatPhrase10" xml:space="preserve">
+    <value>Entschuldigung</value>
+  </data>
+  <data name="ChatPhrase11" xml:space="preserve">
+    <value>Gutes Spiel</value>
+  </data>
+  <data name="ChatPhrase12" xml:space="preserve">
+    <value>Tschüss</value>
+  </data>
+  <data name="PadKeyboardPhrases" xml:space="preserve">
+    <value>Sätze</value>
   </data>
 </root>

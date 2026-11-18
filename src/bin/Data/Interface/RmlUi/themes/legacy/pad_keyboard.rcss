@@ -97,6 +97,13 @@ body.pk-digits #pk_panel {
 	font-family: "DejaVu Sans";
 	font-size: 19dp;
 }
+/* A quick chat phrase (the chat line's phrase page): a long label, smaller and cut at the key's edge. */
+.pk-key.pk-phrase .pk-cap {
+	padding: 0 6dp;
+	font-size: 14dp;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
 .pk-key.pk-on .pk-cap {
 	color: token(accent-gold);
 }

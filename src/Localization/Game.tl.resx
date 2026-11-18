@@ -14026,21 +14026,6 @@
     <value>Pinsala sa Kasanayan: %d%% (max %d%%)</value>
   </data>
   <!-- Quick chat on a phone: the phrases over the chat line (UI/HUD/ChatInputBox.cpp) -->
-  <data name="TouchQuickChat1" xml:space="preserve">
-    <value>Kumusta!</value>
-  </data>
-  <data name="TouchQuickChat2" xml:space="preserve">
-    <value>Hanap ng party</value>
-  </data>
-  <data name="TouchQuickChat3" xml:space="preserve">
-    <value>Salamat!</value>
-  </data>
-  <data name="TouchQuickChat4" xml:space="preserve">
-    <value>Papunta na</value>
-  </data>
-  <data name="TouchQuickChat5" xml:space="preserve">
-    <value>Tulong!</value>
-  </data>
   <data name="ZenAmountAll" xml:space="preserve">
     <value>Lahat</value>
   </data>
@@ -14307,5 +14292,44 @@
   </data>
   <data name="PadHintSkillsThird" xml:space="preserve">
     <value>Pindutin nang matagal ang {RB}: {X}, {Y} at {B} ang gumagamit ng skill 7 hanggang 9</value>
+  </data>
+  <data name="ChatPhrase01" xml:space="preserve">
+    <value>Kumusta!</value>
+  </data>
+  <data name="ChatPhrase02" xml:space="preserve">
+    <value>Salamat!</value>
+  </data>
+  <data name="ChatPhrase03" xml:space="preserve">
+    <value>Imbitahan mo ako sa party</value>
+  </data>
+  <data name="ChatPhrase04" xml:space="preserve">
+    <value>Hintayin mo ako</value>
+  </data>
+  <data name="ChatPhrase05" xml:space="preserve">
+    <value>Tulong!</value>
+  </data>
+  <data name="ChatPhrase06" xml:space="preserve">
+    <value>Tara na</value>
+  </data>
+  <data name="ChatPhrase07" xml:space="preserve">
+    <value>Pa-buff naman</value>
+  </data>
+  <data name="ChatPhrase08" xml:space="preserve">
+    <value>Nagbebenta, i-whisper mo ako</value>
+  </data>
+  <data name="ChatPhrase09" xml:space="preserve">
+    <value>Bumibili, i-whisper mo ako</value>
+  </data>
+  <data name="ChatPhrase10" xml:space="preserve">
+    <value>Pasensya na</value>
+  </data>
+  <data name="ChatPhrase11" xml:space="preserve">
+    <value>Magandang laro</value>
+  </data>
+  <data name="ChatPhrase12" xml:space="preserve">
+    <value>Paalam</value>
+  </data>
+  <data name="PadKeyboardPhrases" xml:space="preserve">
+    <value>Parirala</value>
   </data>
 </root>

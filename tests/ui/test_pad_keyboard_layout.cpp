@@ -3,6 +3,7 @@
 #include "UI/HUD/PadKeyboardLayout.h"
 
 #include <cmath>
+#include <set>
 // doctest prints a failed string_view comparison through operator<<, which MSVC declares in <ostream>.
 #include <ostream>
 #include <string_view>
@@ -14,7 +15,7 @@ using Layout::Spot;
 
 namespace
 {
-constexpr Page AllPages[] = {Page::Latin, Page::Cyrillic, Page::Symbols, Page::Digits};
+constexpr Page AllPages[] = {Page::Latin, Page::Cyrillic, Page::Symbols, Page::Digits, Page::Phrases};
 
 std::string_view TypedAt(Page page, Spot spot)
 {
@@ -111,4 +112,23 @@ TEST_CASE("a spot from another page is kept on this one [ui][pad-keyboard]")
     CHECK(kept.row == 3);
     CHECK(kept.column == 2);
     CHECK(Layout::Clamp(Page::Digits, {-1, -1}) == Spot{0, 0});
+}
+
+TEST_CASE("the phrase page has each phrase once, and the way back to the letters [ui][pad-keyboard]")
+{
+    std::multiset<int> phrases;
+    for (const auto row : Layout::Rows(Page::Phrases))
+    {
+        for (const Layout::Key& key : row)
+        {
+            if (key.action == Action::Phrase)
+                phrases.insert(key.phrase);
+        }
+    }
+    CHECK(phrases.size() == 12);
+    for (int id = 1; id <= 12; ++id)
+        CHECK(phrases.count(id) == 1);
+    CHECK(Layout::KeyAt(Page::Phrases, Layout::Find(Page::Phrases, Action::Language)).action == Action::Language);
+    // Letter pages carry no phrase keys.
+    CHECK(Layout::KeyAt(Page::Latin, Layout::Find(Page::Latin, Action::Phrase)).action != Action::Phrase);
 }

@@ -14,7 +14,7 @@
 // | Y | Space |
 // | LT | Shift: once for one capital, twice to stay |
 // | RT | The symbols, and back to the letters |
-// | View | English or Russian letters |
+// | View | English letters, Russian ones, then (the chat's line only) the quick chat phrases: A sends one at once |
 // | LB, RB | Move the cursor (held, it repeats) |
 // | Menu | Enter: send the chat, log in |
 #pragma once

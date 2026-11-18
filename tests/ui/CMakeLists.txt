@@ -640,3 +640,11 @@ mu_add_test(
         test_emote_keywords.cpp
         ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/EmoteKeywords.cpp
 )
+
+# Pad round 6: quick chat phrases, the token on the wire and the reader's own text.
+mu_add_test(
+    NAME chat_phrases_tests
+    SOURCES
+        test_chat_phrases.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ChatPhrases.cpp
+)

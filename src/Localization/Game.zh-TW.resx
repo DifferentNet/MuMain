@@ -14026,21 +14026,6 @@
     <value>技能傷害：%d%%（上限 %d%%）</value>
   </data>
   <!-- Quick chat on a phone: the phrases over the chat line (UI/HUD/ChatInputBox.cpp) -->
-  <data name="TouchQuickChat1" xml:space="preserve">
-    <value>你好！</value>
-  </data>
-  <data name="TouchQuickChat2" xml:space="preserve">
-    <value>求組隊</value>
-  </data>
-  <data name="TouchQuickChat3" xml:space="preserve">
-    <value>謝謝！</value>
-  </data>
-  <data name="TouchQuickChat4" xml:space="preserve">
-    <value>馬上到</value>
-  </data>
-  <data name="TouchQuickChat5" xml:space="preserve">
-    <value>救命！</value>
-  </data>
   <data name="ZenAmountAll" xml:space="preserve">
     <value>全部</value>
   </data>
@@ -14307,5 +14292,44 @@
   </data>
   <data name="PadHintSkillsThird" xml:space="preserve">
     <value>按住 {RB}：{X}、{Y}、{B} 施放技能 7 到 9</value>
+  </data>
+  <data name="ChatPhrase01" xml:space="preserve">
+    <value>你好！</value>
+  </data>
+  <data name="ChatPhrase02" xml:space="preserve">
+    <value>謝謝！</value>
+  </data>
+  <data name="ChatPhrase03" xml:space="preserve">
+    <value>邀請我入隊</value>
+  </data>
+  <data name="ChatPhrase04" xml:space="preserve">
+    <value>等等我</value>
+  </data>
+  <data name="ChatPhrase05" xml:space="preserve">
+    <value>救命！</value>
+  </data>
+  <data name="ChatPhrase06" xml:space="preserve">
+    <value>走吧</value>
+  </data>
+  <data name="ChatPhrase07" xml:space="preserve">
+    <value>請幫我加狀態</value>
+  </data>
+  <data name="ChatPhrase08" xml:space="preserve">
+    <value>出售，請密我</value>
+  </data>
+  <data name="ChatPhrase09" xml:space="preserve">
+    <value>收購，請密我</value>
+  </data>
+  <data name="ChatPhrase10" xml:space="preserve">
+    <value>抱歉</value>
+  </data>
+  <data name="ChatPhrase11" xml:space="preserve">
+    <value>打得好</value>
+  </data>
+  <data name="ChatPhrase12" xml:space="preserve">
+    <value>再見</value>
+  </data>
+  <data name="PadKeyboardPhrases" xml:space="preserve">
+    <value>常用語</value>
   </data>
 </root>

@@ -14026,21 +14026,6 @@
     <value>Kerusakan Keterampilan: %d%% (maks. %d%%)</value>
   </data>
   <!-- Quick chat on a phone: the phrases over the chat line (UI/HUD/ChatInputBox.cpp) -->
-  <data name="TouchQuickChat1" xml:space="preserve">
-    <value>Halo!</value>
-  </data>
-  <data name="TouchQuickChat2" xml:space="preserve">
-    <value>Cari party</value>
-  </data>
-  <data name="TouchQuickChat3" xml:space="preserve">
-    <value>Makasih!</value>
-  </data>
-  <data name="TouchQuickChat4" xml:space="preserve">
-    <value>Segera ke sana</value>
-  </data>
-  <data name="TouchQuickChat5" xml:space="preserve">
-    <value>Tolong!</value>
-  </data>
   <data name="ZenAmountAll" xml:space="preserve">
     <value>Semua</value>
   </data>
@@ -14307,5 +14292,44 @@
   </data>
   <data name="PadHintSkillsThird" xml:space="preserve">
     <value>Tahan {RB}: {X}, {Y} dan {B} memakai skill 7 sampai 9</value>
+  </data>
+  <data name="ChatPhrase01" xml:space="preserve">
+    <value>Halo!</value>
+  </data>
+  <data name="ChatPhrase02" xml:space="preserve">
+    <value>Terima kasih!</value>
+  </data>
+  <data name="ChatPhrase03" xml:space="preserve">
+    <value>Undang aku ke party</value>
+  </data>
+  <data name="ChatPhrase04" xml:space="preserve">
+    <value>Tunggu aku</value>
+  </data>
+  <data name="ChatPhrase05" xml:space="preserve">
+    <value>Tolong!</value>
+  </data>
+  <data name="ChatPhrase06" xml:space="preserve">
+    <value>Ayo</value>
+  </data>
+  <data name="ChatPhrase07" xml:space="preserve">
+    <value>Tolong buff aku</value>
+  </data>
+  <data name="ChatPhrase08" xml:space="preserve">
+    <value>Jual, bisik aku</value>
+  </data>
+  <data name="ChatPhrase09" xml:space="preserve">
+    <value>Beli, bisik aku</value>
+  </data>
+  <data name="ChatPhrase10" xml:space="preserve">
+    <value>Maaf</value>
+  </data>
+  <data name="ChatPhrase11" xml:space="preserve">
+    <value>Permainan bagus</value>
+  </data>
+  <data name="ChatPhrase12" xml:space="preserve">
+    <value>Dah</value>
+  </data>
+  <data name="PadKeyboardPhrases" xml:space="preserve">
+    <value>Frasa</value>
   </data>
 </root>

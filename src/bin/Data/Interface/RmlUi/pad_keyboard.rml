@@ -23,7 +23,7 @@
 			<div class="pk-key" data-for="key, key_index : row.keys" data-style-width="key.width"
 			     data-class-focused="row_index == focus_row && key_index == focus_column"
 			     data-class-pk-action="key.action" data-class-pk-on="key.on" data-class-pk-locked="key.locked"
-			     data-class-pk-icon="key.icon">
+			     data-class-pk-icon="key.icon" data-class-pk-phrase="key.phrase">
 				<div class="pk-cap">{{key.label}}</div>
 				<div class="pad-glyph pad-face pad-x pk-glyph" data-if="key.glyph == 'x'">{{glyph_x}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div>
 				<div class="pad-glyph pad-face pad-y pk-glyph" data-if="key.glyph == 'y'">{{glyph_y}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div>

@@ -12105,21 +12105,6 @@
     <value>スキル攻撃力: %d%% (最大 %d%%)</value>
   </data>
   <!-- Quick chat on a phone: the phrases over the chat line (UI/HUD/ChatInputBox.cpp) -->
-  <data name="TouchQuickChat1" xml:space="preserve">
-    <value>こんにちは！</value>
-  </data>
-  <data name="TouchQuickChat2" xml:space="preserve">
-    <value>パーティー募集</value>
-  </data>
-  <data name="TouchQuickChat3" xml:space="preserve">
-    <value>ありがとう！</value>
-  </data>
-  <data name="TouchQuickChat4" xml:space="preserve">
-    <value>今行きます</value>
-  </data>
-  <data name="TouchQuickChat5" xml:space="preserve">
-    <value>助けて！</value>
-  </data>
   <data name="ZenAmountAll" xml:space="preserve">
     <value>すべて</value>
   </data>
@@ -12386,5 +12371,44 @@
   </data>
   <data name="PadHintSkillsThird" xml:space="preserve">
     <value>{RB}を押したまま：{X}、{Y}、{B}でスキル7〜9を使う</value>
+  </data>
+  <data name="ChatPhrase01" xml:space="preserve">
+    <value>こんにちは！</value>
+  </data>
+  <data name="ChatPhrase02" xml:space="preserve">
+    <value>ありがとう！</value>
+  </data>
+  <data name="ChatPhrase03" xml:space="preserve">
+    <value>パーティーに招待して</value>
+  </data>
+  <data name="ChatPhrase04" xml:space="preserve">
+    <value>待って</value>
+  </data>
+  <data name="ChatPhrase05" xml:space="preserve">
+    <value>助けて！</value>
+  </data>
+  <data name="ChatPhrase06" xml:space="preserve">
+    <value>行こう</value>
+  </data>
+  <data name="ChatPhrase07" xml:space="preserve">
+    <value>バフをお願い</value>
+  </data>
+  <data name="ChatPhrase08" xml:space="preserve">
+    <value>売ります、ささやきで</value>
+  </data>
+  <data name="ChatPhrase09" xml:space="preserve">
+    <value>買います、ささやきで</value>
+  </data>
+  <data name="ChatPhrase10" xml:space="preserve">
+    <value>ごめん</value>
+  </data>
+  <data name="ChatPhrase11" xml:space="preserve">
+    <value>お疲れ様</value>
+  </data>
+  <data name="ChatPhrase12" xml:space="preserve">
+    <value>またね</value>
+  </data>
+  <data name="PadKeyboardPhrases" xml:space="preserve">
+    <value>定型文</value>
   </data>
 </root>

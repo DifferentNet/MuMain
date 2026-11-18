@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "UI/Chat/ChatInput.h"
 #include "UI/Chat/ChatMessages.h"
+#include "UI/Chat/ChatPhraseTexts.h"
 #include "UI/Chat/PartyInviteCommand.h"
 #include "UI/HUD/ChatInputBox.h"
 #include "Core/Input/SyntheticInput.h"
@@ -543,35 +544,27 @@ void mu::ui::window::CChatInputBox::BindRmlModel(Rml::DataModelConstructor& c, C
         c.Bind("quick_" + std::to_string(i), &model.quickPhrases[i]);
     for (size_t i = 0; i < model.quickIsMacro.size(); ++i)
         c.Bind("quick_macro_" + std::to_string(i), &model.quickIsMacro[i]);
+    for (size_t i = 0; i < model.chatPhrases.size(); ++i)
+        c.Bind("phrase_" + std::to_string(i), &model.chatPhrases[i]);
 
-    // A phone's quick phrase: sent as Enter sends the line, with Enter's pause between two lines.
+    // A phone's quick button: its saved macro, sent as Alt+N sends it.
     c.BindEventCallback("chat_quick",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& args)
         {
             if (args.empty()) return;
-            const int phrase = args[0].Get<int>(-1);
+            const int slot = args[0].Get<int>(-1);
             const ChatInputRmlModel& model = m_RmlView.GetModel();
-            if (phrase < 0 || phrase >= static_cast<int>(model.quickPhrases.size()) || !IsVisible())
+            if (slot < 0 || slot >= static_cast<int>(model.quickPhrases.size()) || !IsVisible() || !HasMacro(slot))
                 return;
-            if (HasMacro(phrase))
-            {
-                SendQuickMacro(phrase);
-                return;
-            }
-            const uint64_t now = GetTickCount64();
-            if (m_lastChatTime >= now - ChatCooldownMs)
-                return;
-            m_lastChatTime = now;
-            PlayBuffer(SOUND_CLICK01);
-            // A line half typed is not lost: the phrase goes, then the bar opens again with the draft.
-            const Rml::String draft = model.chatText;
-            SetFieldText("chat_field", StringUtils::NarrowToWide(model.quickPhrases[static_cast<size_t>(phrase)]));
-            SendChatLine();
-            if (!draft.empty())
-            {
-                g_pNewUISystem->Show(mu::ui::window::INTERFACE_CHATINPUTBOX);
-                SetFieldText("chat_field", StringUtils::NarrowToWide(draft));
-            }
+            SendQuickMacro(slot);
+        });
+
+    // A phone's quick chat phrase chip (1 and up).
+    c.BindEventCallback("chat_phrase",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& args)
+        {
+            if (args.empty()) return;
+            SendPhrase(args[0].Get<int>(0));
         });
 
     c.BindEventCallback("chat_set_type",
@@ -692,26 +685,7 @@ void mu::ui::window::CChatInputBox::SyncRmlModel()
         m_RmlView.MarkDirty("input_msg_type");
     }
 
-    const wchar_t* const quickPhrases[] = {I18N::Game::TouchQuickChat1, I18N::Game::TouchQuickChat2,
-                                           I18N::Game::TouchQuickChat3, I18N::Game::TouchQuickChat4,
-                                           I18N::Game::TouchQuickChat5};
-    static_assert(std::size(quickPhrases) == std::tuple_size_v<decltype(model.quickPhrases)>);
-    for (size_t i = 0; i < model.quickPhrases.size(); ++i)
-    {
-        // A saved macro of keys 1 to 5 (Alt+1..5 on a PC) takes the button of its number.
-        const bool isMacro = HasMacro(static_cast<int>(i));
-        if (model.quickIsMacro[i] != isMacro)
-        {
-            model.quickIsMacro[i] = isMacro;
-            m_RmlView.MarkDirty("quick_macro_" + std::to_string(i));
-        }
-        Rml::String phrase = StringUtils::WideToNarrow(isMacro ? MacroText[i] : quickPhrases[i]);
-        if (model.quickPhrases[i] != phrase)
-        {
-            model.quickPhrases[i] = std::move(phrase);
-            m_RmlView.MarkDirty("quick_" + std::to_string(i));
-        }
-    }
+    SyncQuickButtons(model);
 
     // Native's string table for the buttons' hints (RenderTooltip()).
     static constexpr int kHintText[10] = {1681, 1682, 1683, 3321, 1684, 1685, 750, 1686, 751, 752};
@@ -722,6 +696,36 @@ void mu::ui::window::CChatInputBox::SyncRmlModel()
         {
             model.buttonHints[i] = std::move(hint);
             m_RmlView.MarkDirty("hint_" + std::to_string(i));
+        }
+    }
+}
+
+void mu::ui::window::CChatInputBox::SyncQuickButtons(ChatInputRmlModel& model)
+{
+    for (size_t i = 0; i < model.quickPhrases.size(); ++i)
+    {
+        // A saved macro of keys 1 to 5 (Alt+1..5 on a PC) takes the button of its number.
+        const bool isMacro = HasMacro(static_cast<int>(i));
+        if (model.quickIsMacro[i] != isMacro)
+        {
+            model.quickIsMacro[i] = isMacro;
+            m_RmlView.MarkDirty("quick_macro_" + std::to_string(i));
+        }
+        Rml::String macro = isMacro ? StringUtils::WideToNarrow(MacroText[i]) : Rml::String();
+        if (model.quickPhrases[i] != macro)
+        {
+            model.quickPhrases[i] = std::move(macro);
+            m_RmlView.MarkDirty("quick_" + std::to_string(i));
+        }
+    }
+    for (size_t i = 0; i < model.chatPhrases.size(); ++i)
+    {
+        const wchar_t* own = UI::Chat::PhraseTexts::OwnText(static_cast<int>(i) + 1);
+        Rml::String phrase = own != nullptr ? StringUtils::WideToNarrow(own) : Rml::String();
+        if (model.chatPhrases[i] != phrase)
+        {
+            model.chatPhrases[i] = std::move(phrase);
+            m_RmlView.MarkDirty("phrase_" + std::to_string(i));
         }
     }
 }
@@ -824,6 +828,33 @@ void mu::ui::window::CChatInputBox::SendQuickMacro(int slot)
         g_pNewUISystem->Hide(mu::ui::window::INTERFACE_CHATINPUTBOX);
 }
 
+bool mu::ui::window::CChatInputBox::SendPhrase(int id)
+{
+    const type_string line = UI::Chat::Phrases::Compose(id);
+    if (line.empty() || !IsVisible())
+        return false;
+    if (!TakeQuickPhrasePause())
+    {
+        // Too soon after the last phrase or macro, or in Chaos Castle: the refusal sound, as for a failed action.
+        PlayBuffer(SOUND_ERROR01);
+        return false;
+    }
+    PlayBuffer(SOUND_CLICK01);
+    SendLineKeepingDraft(line);
+    return true;
+}
+
+void mu::ui::window::CChatInputBox::SendLineKeepingDraft(const type_string& line)
+{
+    const Rml::String draft = m_RmlView.GetModel().chatText;
+    SetFieldText("chat_field", line);
+    SendChatLine();
+    if (draft.empty())
+        return;
+    g_pNewUISystem->Show(mu::ui::window::INTERFACE_CHATINPUTBOX);
+    SetFieldText("chat_field", StringUtils::NarrowToWide(draft));
+}
+
 void mu::ui::window::CChatInputBox::StartWhisperTo(const wchar_t* strWhsprID)
 {
     SetWhsprID(strWhsprID);
@@ -834,8 +865,14 @@ void mu::ui::window::CChatInputBox::StartWhisperTo(const wchar_t* strWhsprID)
 // retarget the whisper to the player's own name.
 void mu::ui::window::CChatInputBox::EchoSentWhisper(const wchar_t* whisperId, const wchar_t* text)
 {
+    // A quick chat phrase shows in the player's own language, as the one it goes to reads it.
+    wchar_t shown[MAX_CHAT_SIZE + 1] = { L'\0' };
+    wcsncpy(shown, text, MAX_CHAT_SIZE);
+    shown[MAX_CHAT_SIZE] = L'\0';
+    UI::Chat::PhraseTexts::ShowInOwnLanguage(shown, std::size(shown));
+
     wchar_t echo[MAX_USERNAME_SIZE + MAX_CHAT_SIZE + 32] = { L'\0' };
-    mu_swprintf_s(echo, I18N::Game::WhisperEchoTo, whisperId, text);
+    mu_swprintf_s(echo, I18N::Game::WhisperEchoTo, whisperId, shown);
     g_pChatListBox->AddText(L"", echo, mu::ui::window::TYPE_WHISPER_MESSAGE);
 }
 
