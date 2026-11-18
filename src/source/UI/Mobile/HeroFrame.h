@@ -36,6 +36,9 @@ struct Sources
     // E and R: the pad drinks them with RT held (UI/HUD/GamepadControls).
     int potionsE = 0;
     int potionsR = 0;
+    // What Q and W hold (UI/Mobile/PotionKind.h).
+    int potionKindQ = 0;
+    int potionKindW = 0;
     std::chrono::steady_clock::time_point potionsCountedAt{};
     // The EXP percentage in tenths of a percent (427 for 42.7 %); -1 before the first.
     int expTenths = -1;
@@ -60,6 +63,11 @@ struct Model
     Rml::String potionWCount;
     Rml::String potionECount;
     Rml::String potionRCount;
+    // The kind of potion on Q and W (UI::Mobile::PotionKind as int): the buttons are tinted by it.
+    int potionQKind = 0;
+    int potionWKind = 0;
+    // Free stat points to spend: a "+" on the level's circle.
+    bool pointsAlert = false;
     // The EXP line's percentage with one decimal ("42.7%"), the phone HUD's text beside the line, and after a minute
     // of hunting the time to the next level after a middle dot, as the PC's EXP tooltip shows it.
     Rml::String expText;

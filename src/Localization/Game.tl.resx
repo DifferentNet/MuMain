@@ -14273,4 +14273,32 @@
   <data name="WarpUnlocked" xml:space="preserve">
     <value>Antas %d: bagong warp: %ls</value>
   </data>
+  <!-- Round 14 -->
+  <data name="DeclineInvitations" xml:space="preserve">
+    <value>Tanggihan ang mga imbitasyon</value>
+  </data>
+  <data name="InviteDeclinedParty" xml:space="preserve">
+    <value>Tinanggihan ang imbitasyon sa party mula kay %ls.</value>
+  </data>
+  <data name="InviteDeclinedTrade" xml:space="preserve">
+    <value>Tinanggihan ang trade request mula kay %ls.</value>
+  </data>
+  <data name="InviteDeclinedDuel" xml:space="preserve">
+    <value>Tinanggihan ang hamon sa duel mula kay %ls.</value>
+  </data>
+  <data name="HelperSafeZone" xml:space="preserve">
+    <value>Hindi gumagana ang MU Helper sa safe zone.</value>
+  </data>
+  <data name="HelperStoppedSummary" xml:space="preserve">
+    <value>Huminto ang MU Helper pagkatapos ng %d h %d min. Level: +%d, zen: %ls.</value>
+  </data>
+  <data name="SkillBookNotLearnable" xml:space="preserve">
+    <value>Hindi mo pa matututunan ang skill na ito: tingnan ang mga kailangan nito.</value>
+  </data>
+  <data name="CapsLockOn" xml:space="preserve">
+    <value>Naka-on ang Caps Lock</value>
+  </data>
+  <data name="GuildWarAlreadyOn" xml:space="preserve">
+    <value>Nasa guild war na ang isa sa mga guild.</value>
+  </data>
 </root>

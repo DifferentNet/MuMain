@@ -960,7 +960,7 @@
     <comment>legacy_id=238</comment>
   </data>
   <data name="Repair all" xml:space="preserve">
-    <value>Восстановить все</value>
+    <value>Отремонтировать все</value>
     <comment>legacy_id=239</comment>
   </data>
   <data name="open" xml:space="preserve">
@@ -984,11 +984,11 @@
     <comment>legacy_id=244</comment>
   </data>
   <data name="Number of Rena you have collected" xml:space="preserve">
-    <value>Количество Рена, которое вы собрали</value>
+    <value>Собрано Рены</value>
     <comment>legacy_id=245</comment>
   </data>
   <data name="Number of Registered Rena" xml:space="preserve">
-    <value>Количество зарегистрированных Рена</value>
+    <value>Зарегистрировано Рены</value>
     <comment>legacy_id=246</comment>
   </data>
   <data name="Lucky number" xml:space="preserve">
@@ -2005,7 +2005,7 @@
     <comment>legacy_id=535</comment>
   </data>
   <data name="An expensive item!" xml:space="preserve">
-    <value>Дорогая вещь!</value>
+    <value>Дорогой предмет!</value>
     <comment>legacy_id=536</comment>
   </data>
   <data name="Check the item please" xml:space="preserve">
@@ -2433,7 +2433,7 @@
     <comment>legacy_id=644</comment>
   </data>
   <data name="The %d Square (%d-%d level)" xml:space="preserve">
-    <value>Квадрат %d (уровень %d-%d)</value>
+    <value>Площадь %d (уровень %d-%d)</value>
     <comment>legacy_id=645</comment>
   </data>
   <data name="The %d Square (Over %d level)" xml:space="preserve">
@@ -2537,7 +2537,7 @@
     <comment>legacy_id=671</comment>
   </data>
   <data name="No human has ever gone there." xml:space="preserve">
-    <value>Ни один человек никогда туда не ходил.</value>
+    <value>Туда ещё не ступал ни один человек.</value>
     <comment>legacy_id=672</comment>
   </data>
   <data name="Do not believe anything you see in there." xml:space="preserve">
@@ -3097,7 +3097,7 @@
     <comment>legacy_id=831</comment>
   </data>
   <data name="YourWillToHelpTheArchangel" xml:space="preserve">
-    <value>Мы ценим ваше желание помочь Архангелу. Но будьте осторожны, молодой воин Замка Крови — опасное место. Да пребудет с тобой Бог.</value>
+    <value>Мы ценим ваше желание помочь Архангелу. Но будьте осторожны, юный воин: Кровавый замок — опасное место. Да хранит вас Бог.</value>
     <comment>legacy_id=832</comment>
   </data>
   <data name="AhGreatWarriorThanksToYour" xml:space="preserve">
@@ -3321,7 +3321,7 @@
     <comment>legacy_id=891</comment>
   </data>
   <data name="written on the 100%% winning card." xml:space="preserve">
-    <value>написано на 100%% выигрышной карте.</value>
+    <value>с карты со 100%% выигрышем.</value>
     <comment>legacy_id=892</comment>
   </data>
   <data name="Enter the lucky number" xml:space="preserve">
@@ -3333,7 +3333,7 @@
     <comment>legacy_id=894</comment>
   </data>
   <data name="Lucky number registered" xml:space="preserve">
-    <value>Счастливое число зарегистрировано</value>
+    <value>Счастливый номер зарегистрирован</value>
     <comment>legacy_id=895</comment>
   </data>
   <data name="Leave at least one empty slot in your inventory." xml:space="preserve">
@@ -3417,11 +3417,11 @@
     <comment>legacy_id=915</comment>
   </data>
   <data name="Please make sure to differentiate" xml:space="preserve">
-    <value>Пожалуйста, не забудьте дифференцировать</value>
+    <value>Не путайте</value>
     <comment>legacy_id=916</comment>
   </data>
   <data name="Alphabet O and number 0, and Alphabet I and number 1" xml:space="preserve">
-    <value>Алфавит О и цифра 0, Алфавит I и цифра 1.</value>
+    <value>букву O и цифру 0, букву I и цифру 1.</value>
     <comment>legacy_id=917</comment>
   </data>
   <data name="Obtained" xml:space="preserve">
@@ -4297,7 +4297,7 @@
     <comment>legacy_id=1152</comment>
   </data>
   <data name="Try again next time" xml:space="preserve">
-    <value>Попробуй еще раз в следующий раз</value>
+    <value>Повезёт в следующий раз.</value>
     <comment>legacy_id=1153</comment>
   </data>
   <data name="In %s, Currently [%d/%d] entered." xml:space="preserve">
@@ -4753,47 +4753,47 @@
     <comment>legacy_id=1256</comment>
   </data>
   <data name="To make the alliance," xml:space="preserve">
-    <value>Чтобы заключить союз,</value>
+    <value>Чтобы заключить альянс,</value>
     <comment>legacy_id=1257</comment>
   </data>
   <data name="Face the guild master" xml:space="preserve">
-    <value>Встретьтесь с главой гильдии</value>
+    <value>встаньте перед мастером</value>
     <comment>legacy_id=1258</comment>
   </data>
   <data name="of desired guild for guild alliance" xml:space="preserve">
-    <value>желаемой гильдии для альянса гильдий</value>
+    <value>гильдии, с которой хотите альянс,</value>
     <comment>legacy_id=1259</comment>
   </data>
   <data name="Enter /alliance or Guild alliance" xml:space="preserve">
-    <value>Введите /alliance или альянс гильдии.</value>
+    <value>и введите /alliance или нажмите</value>
     <comment>legacy_id=1260</comment>
   </data>
   <data name="button in command window." xml:space="preserve">
-    <value>кнопка в командном окне.</value>
+    <value>«Альянс» в окне команд.</value>
     <comment>legacy_id=1261</comment>
   </data>
   <data name="If the opposite is not a guild" xml:space="preserve">
-    <value>Если наоборот не гильдия</value>
+    <value>Если та гильдия ещё не в альянсе,</value>
     <comment>legacy_id=1262</comment>
   </data>
   <data name="alliance, opposite alliance should" xml:space="preserve">
-    <value>альянс, противоположный альянс должен</value>
+    <value>она станет главной гильдией</value>
     <comment>legacy_id=1263</comment>
   </data>
   <data name="be the main alliance for creating" xml:space="preserve">
-    <value>быть главным альянсом для создания</value>
+    <value>нового альянса.</value>
     <comment>legacy_id=1264</comment>
   </data>
   <data name="guild alliance. Request the" xml:space="preserve">
-    <value>союз гильдий. Запросить</value>
+    <value>Если та гильдия уже в альянсе,</value>
     <comment>legacy_id=1265</comment>
   </data>
   <data name="registration to opposite alliance," xml:space="preserve">
-    <value>регистрация в противоположном альянсе,</value>
+    <value>ваша гильдия подаст заявку</value>
     <comment>legacy_id=1266</comment>
   </data>
   <data name="if the opposite is guild alliance." xml:space="preserve">
-    <value>если противоположностью является альянс гильдии.</value>
+    <value>на вступление в этот альянс.</value>
     <comment>legacy_id=1267</comment>
   </data>
   <data name="Request has been cancelled." xml:space="preserve">
@@ -4829,15 +4829,15 @@
     <comment>legacy_id=1275</comment>
   </data>
   <data name="From %s, for a guild alliance" xml:space="preserve">
-    <value>От %s, для альянса гильдий.</value>
+    <value>От %s (альянс гильдий):</value>
     <comment>legacy_id=1280</comment>
   </data>
   <data name="Received a registration request" xml:space="preserve">
-    <value>Получил заявку на регистрацию</value>
+    <value>заявка на вступление в альянс.</value>
     <comment>legacy_id=1281</comment>
   </data>
   <data name="Received a withdrawal request" xml:space="preserve">
-    <value>Получил запрос на вывод средств</value>
+    <value>заявка на выход из альянса.</value>
     <comment>legacy_id=1282</comment>
   </data>
   <data name="Approve?" xml:space="preserve">
@@ -4845,15 +4845,15 @@
     <comment>legacy_id=1283</comment>
   </data>
   <data name="From %s, for a hostile guild" xml:space="preserve">
-    <value>От %s, для враждебной гильдии.</value>
+    <value>От %s (вражда гильдий):</value>
     <comment>legacy_id=1284</comment>
   </data>
   <data name="Received cancellation request." xml:space="preserve">
-    <value>Получил запрос на отмену.</value>
+    <value>предложение прекратить вражду.</value>
     <comment>legacy_id=1285</comment>
   </data>
   <data name="Received approval request." xml:space="preserve">
-    <value>Получен запрос на одобрение.</value>
+    <value>предложение объявить вражду.</value>
     <comment>legacy_id=1286</comment>
   </data>
   <data name="Maximum no. of guild alliance is 7." xml:space="preserve">
@@ -4909,7 +4909,7 @@
     <comment>legacy_id=1301</comment>
   </data>
   <data name="Battle M." xml:space="preserve">
-    <value>Баттл М.</value>
+    <value>Боевой мастер</value>
     <comment>legacy_id=1302</comment>
   </data>
   <data name="Create guild" xml:space="preserve">
@@ -4925,7 +4925,7 @@
     <comment>legacy_id=1306</comment>
   </data>
   <data name="Position" xml:space="preserve">
-    <value>Позиция</value>
+    <value>Должность</value>
     <comment>legacy_id=1307</comment>
   </data>
   <data name="Dissolve" xml:space="preserve">
@@ -4981,7 +4981,7 @@
     <comment>legacy_id=1320</comment>
   </data>
   <data name="Hostility guild" xml:space="preserve">
-    <value>Гильдия враждебности</value>
+    <value>Вражеская гильдия</value>
     <comment>legacy_id=1321</comment>
   </data>
   <data name="Suspend hostilities" xml:space="preserve">
@@ -5137,7 +5137,7 @@
     <comment>legacy_id=1360</comment>
   </data>
   <data name="None" xml:space="preserve">
-    <value>Никто</value>
+    <value>Нет</value>
     <comment>legacy_id=1361,3667</comment>
   </data>
   <data name="Guild members %d/%d" xml:space="preserve">
@@ -5165,7 +5165,7 @@
     <comment>legacy_id=1367</comment>
   </data>
   <data name="Would you like to cancel the ranking?" xml:space="preserve">
-    <value>Хотите отменить рейтинг?</value>
+    <value>Снять должность?</value>
     <comment>legacy_id=1368</comment>
   </data>
   <data name="Would you like to release?" xml:space="preserve">
@@ -5281,11 +5281,11 @@
     <comment>legacy_id=1397</comment>
   </data>
   <data name="Weapon for Invading team" xml:space="preserve">
-    <value>Оружие для команды вторжения</value>
+    <value>Оружие атакующих</value>
     <comment>legacy_id=1400</comment>
   </data>
   <data name="Weapon for defending team" xml:space="preserve">
-    <value>Оружие для защищающейся команды</value>
+    <value>Оружие защитников</value>
     <comment>legacy_id=1401</comment>
   </data>
   <data name="Castle Gate 1" xml:space="preserve">
@@ -5293,11 +5293,11 @@
     <comment>legacy_id=1402</comment>
   </data>
   <data name="Castle Gate 2" xml:space="preserve">
-    <value>Ворота замка 2</value>
+    <value>Замковые ворота 2</value>
     <comment>legacy_id=1403</comment>
   </data>
   <data name="Castle Gate 3" xml:space="preserve">
-    <value>Ворота замка 3</value>
+    <value>Замковые ворота 3</value>
     <comment>legacy_id=1404</comment>
   </data>
   <data name="Front yard" xml:space="preserve">
@@ -5305,11 +5305,11 @@
     <comment>legacy_id=1405</comment>
   </data>
   <data name="Front yard1" xml:space="preserve">
-    <value>Передний двор1</value>
+    <value>Передний двор 1</value>
     <comment>legacy_id=1406</comment>
   </data>
   <data name="Front yard2" xml:space="preserve">
-    <value>Передний двор2</value>
+    <value>Передний двор 2</value>
     <comment>legacy_id=1407</comment>
   </data>
   <data name="Bridge" xml:space="preserve">
@@ -5325,7 +5325,7 @@
     <comment>legacy_id=1410</comment>
   </data>
   <data name="To shoot." xml:space="preserve">
-    <value>Стрелять.</value>
+    <value>«Стрелять».</value>
     <comment>legacy_id=1411</comment>
   </data>
   <data name="Create" xml:space="preserve">
@@ -5365,7 +5365,7 @@
     <comment>legacy_id=1420</comment>
   </data>
   <data name="%u : %u : %u remained for the next stage." xml:space="preserve">
-    <value>%u : %u : %u остался на следующем этапе.</value>
+    <value>До следующего этапа: %u : %u : %u.</value>
     <comment>legacy_id=1421</comment>
   </data>
   <data name="Disband alliance" xml:space="preserve">
@@ -5373,7 +5373,7 @@
     <comment>legacy_id=1422</comment>
   </data>
   <data name="%s guild from the alliance" xml:space="preserve">
-    <value>%s гильдия из альянса</value>
+    <value>Гильдию %s из альянса</value>
     <comment>legacy_id=1423</comment>
   </data>
   <data name="Castle Siege has been announced." xml:space="preserve">
@@ -5381,11 +5381,11 @@
     <comment>legacy_id=1428</comment>
   </data>
   <data name="You have no ability" xml:space="preserve">
-    <value>У тебя нет способностей</value>
+    <value>У вас нет права</value>
     <comment>legacy_id=1429</comment>
   </data>
   <data name="To attack the castle." xml:space="preserve">
-    <value>Чтобы атаковать замок.</value>
+    <value>атаковать замок.</value>
     <comment>legacy_id=1430</comment>
   </data>
   <data name="Announcement qualification" xml:space="preserve">
@@ -5401,19 +5401,19 @@
     <comment>legacy_id=1434</comment>
   </data>
   <data name="Announce" xml:space="preserve">
-    <value>объявить</value>
+    <value>Объявить</value>
     <comment>legacy_id=1435</comment>
   </data>
   <data name="Register the acquired sign." xml:space="preserve">
-    <value>Зарегистрируйте приобретенный знак.</value>
+    <value>Зарегистрируйте полученные знаки.</value>
     <comment>legacy_id=1436</comment>
   </data>
   <data name="Acquired no. of sign: %u" xml:space="preserve">
-    <value>Приобретенный нет. знака: %u</value>
+    <value>Получено знаков: %u</value>
     <comment>legacy_id=1437</comment>
   </data>
   <data name="Registered no. of sign: %u" xml:space="preserve">
-    <value>Зарегистрированный номер. знака: %u</value>
+    <value>Зарегистрировано знаков: %u</value>
     <comment>legacy_id=1438</comment>
   </data>
   <data name="Register" xml:space="preserve">
@@ -5421,11 +5421,11 @@
     <comment>legacy_id=1439,1894</comment>
   </data>
   <data name="Announcement and registration period" xml:space="preserve">
-    <value>Срок объявления и регистрации</value>
+    <value>Период объявлений и регистрации</value>
     <comment>legacy_id=1440</comment>
   </data>
   <data name="has ended." xml:space="preserve">
-    <value>закончилось.</value>
+    <value>закончился.</value>
     <comment>legacy_id=1441</comment>
   </data>
   <data name="Truce period." xml:space="preserve">
@@ -5449,7 +5449,7 @@
     <comment>legacy_id=1446</comment>
   </data>
   <data name="Affiliated guild: %s" xml:space="preserve">
-    <value>Дочерняя гильдия: %s</value>
+    <value>Гильдия-владелец: %s</value>
     <comment>legacy_id=1447</comment>
   </data>
   <data name="Status" xml:space="preserve">
@@ -5557,15 +5557,15 @@
     <comment>legacy_id=1475</comment>
   </data>
   <data name="Can command to open or close" xml:space="preserve">
-    <value>Может дать команду открыть или закрыть</value>
+    <value>Можно открыть или закрыть</value>
     <comment>legacy_id=1476</comment>
   </data>
   <data name="the castle gate in front" xml:space="preserve">
-    <value>ворота замка впереди</value>
+    <value>ворота замка перед вами.</value>
     <comment>legacy_id=1477</comment>
   </data>
   <data name="Be careful! It might be beneficial to the enemy" xml:space="preserve">
-    <value>Будь осторожен! Это может быть выгодно врагу.</value>
+    <value>Осторожно! Это может помочь врагу.</value>
     <comment>legacy_id=1478</comment>
   </data>
   <data name="Receive skill from %s" xml:space="preserve">
@@ -5601,7 +5601,7 @@
     <comment>legacy_id=1487</comment>
   </data>
   <data name="already pressing %s" xml:space="preserve">
-    <value>уже нажимаю %s</value>
+    <value>уже держит %s</value>
     <comment>legacy_id=1488</comment>
   </data>
   <data name="Official seal registration will start" xml:space="preserve">
@@ -5637,7 +5637,7 @@
     <comment>legacy_id=1497</comment>
   </data>
   <data name="Are you really want to quit the Siege Wargare?" xml:space="preserve">
-    <value>Вы действительно хотите выйти из Siege Wargare?</value>
+    <value>Точно отказаться от участия в осаде замка?</value>
     <comment>legacy_id=1498</comment>
   </data>
   <data name="Shoot" xml:space="preserve">
@@ -5701,7 +5701,7 @@
     <comment>legacy_id=1513</comment>
   </data>
   <data name="This guild is not registered in Castle Siege." xml:space="preserve">
-    <value>Эта гильдия не зарегистрирована в Castle Siege.</value>
+    <value>Эта гильдия не зарегистрирована на осаду замка.</value>
     <comment>legacy_id=1514</comment>
   </data>
   <data name="It's not a surrendering period for Castle Siege." xml:space="preserve">
@@ -5761,11 +5761,11 @@
     <comment>legacy_id=1528</comment>
   </data>
   <data name="Stat" xml:space="preserve">
-    <value>Стат</value>
+    <value>Статус</value>
     <comment>legacy_id=1529</comment>
   </data>
   <data name="Order" xml:space="preserve">
-    <value>Заказ</value>
+    <value>Место</value>
     <comment>legacy_id=1530</comment>
   </data>
   <data name="Processing" xml:space="preserve">
@@ -5781,27 +5781,27 @@
     <comment>legacy_id=1534</comment>
   </data>
   <data name="Siege period is over." xml:space="preserve">
-    <value>Период блокады закончился.</value>
+    <value>Период осады окончен.</value>
     <comment>legacy_id=1535</comment>
   </data>
   <data name="Siege registration period." xml:space="preserve">
-    <value>Период регистрации осады.</value>
+    <value>Период регистрации на осаду.</value>
     <comment>legacy_id=1536</comment>
   </data>
   <data name="Standby period for sign registration." xml:space="preserve">
-    <value>Период ожидания для регистрации вывески.</value>
+    <value>Ожидание регистрации знаков.</value>
     <comment>legacy_id=1537,1548</comment>
   </data>
   <data name="Period for sign registration." xml:space="preserve">
-    <value>Срок регистрации вывески.</value>
+    <value>Период регистрации знаков.</value>
     <comment>legacy_id=1538</comment>
   </data>
   <data name="Standby period for announcement." xml:space="preserve">
-    <value>Период ожидания для объявления.</value>
+    <value>Ожидание объявлений.</value>
     <comment>legacy_id=1539</comment>
   </data>
   <data name="Announcement period." xml:space="preserve">
-    <value>Срок объявления.</value>
+    <value>Период объявлений.</value>
     <comment>legacy_id=1540</comment>
   </data>
   <data name="Siege preparation period." xml:space="preserve">
@@ -5809,7 +5809,7 @@
     <comment>legacy_id=1541</comment>
   </data>
   <data name="Siege period." xml:space="preserve">
-    <value>Период блокады.</value>
+    <value>Период осады.</value>
     <comment>legacy_id=1542</comment>
   </data>
   <data name="Siege is over." xml:space="preserve">
@@ -5849,7 +5849,7 @@
     <comment>legacy_id=1553</comment>
   </data>
   <data name="Would you like to repair?" xml:space="preserve">
-    <value>Хотите сделать ремонт?</value>
+    <value>Отремонтировать?</value>
     <comment>legacy_id=1554</comment>
   </data>
   <data name="Upgrading the durability of selected castle gate" xml:space="preserve">
@@ -5869,39 +5869,39 @@
     <comment>legacy_id=1559</comment>
   </data>
   <data name="DUR : %d/%d" xml:space="preserve">
-    <value>ПРОДОЛЖИТЕЛЬНОСТЬ: %d/%d</value>
+    <value>Прочность: %d/%d</value>
     <comment>legacy_id=1560</comment>
   </data>
   <data name="DP : %d" xml:space="preserve">
-    <value>ДП: %d</value>
+    <value>Защита: %d</value>
     <comment>legacy_id=1561</comment>
   </data>
   <data name="RR : %d%%" xml:space="preserve">
-    <value>ЧР: %d%%</value>
+    <value>Восстановление: %d%%</value>
     <comment>legacy_id=1562</comment>
   </data>
   <data name="DUR +%d" xml:space="preserve">
-    <value>ДУР +%d</value>
+    <value>Прочность +%d</value>
     <comment>legacy_id=1563</comment>
   </data>
   <data name="DPD1564" xml:space="preserve">
-    <value>ДП +%d</value>
+    <value>Защита +%d</value>
     <comment>legacy_id=1564</comment>
   </data>
   <data name="RRD1565" xml:space="preserve">
-    <value>Зарплата +%d%%</value>
+    <value>Восстановление +%d%%</value>
     <comment>legacy_id=1565</comment>
   </data>
   <data name="Chaos combination Goblin tax rate %d%%" xml:space="preserve">
-    <value>Комбинация хаоса, ставка налога для гоблинов %d%%</value>
+    <value>Налог гоблина хаоса: %d%%</value>
     <comment>legacy_id=1566</comment>
   </data>
   <data name="Various NPC tax rate %d%%" xml:space="preserve">
-    <value>Различные ставки налога для NPC %d%%</value>
+    <value>Налог остальных NPC: %d%%</value>
     <comment>legacy_id=1567</comment>
   </data>
   <data name="Apply1568" xml:space="preserve">
-    <value>Применять?</value>
+    <value>Применить?</value>
     <comment>legacy_id=1568</comment>
   </data>
   <data name="Enter the deposit amount." xml:space="preserve">
@@ -5913,19 +5913,19 @@
     <comment>legacy_id=1570</comment>
   </data>
   <data name="Enter the withdrawal amount." xml:space="preserve">
-    <value>Введите сумму вывода.</value>
+    <value>Введите сумму, которую хотите забрать.</value>
     <comment>legacy_id=1571</comment>
   </data>
   <data name="Adjust tax rate" xml:space="preserve">
-    <value>Скорректировать ставку налога</value>
+    <value>Изменить налог</value>
     <comment>legacy_id=1572</comment>
   </data>
   <data name="Chaos combination Goblin: %d(%d)%%" xml:space="preserve">
-    <value>Комбинация Хаоса Гоблин: %d(%d)%%</value>
+    <value>Гоблин хаоса: %d(%d)%%</value>
     <comment>legacy_id=1573</comment>
   </data>
   <data name="NPC: %d(%d)%%" xml:space="preserve">
-    <value>НПС: %d(%d)%%</value>
+    <value>NPC: %d(%d)%%</value>
     <comment>legacy_id=1574</comment>
   </data>
   <data name="Only the lord of the castle" xml:space="preserve">
@@ -5933,11 +5933,11 @@
     <comment>legacy_id=1575</comment>
   </data>
   <data name="can adjust the tax rate." xml:space="preserve">
-    <value>может корректировать ставку налога.</value>
+    <value>может менять налог.</value>
     <comment>legacy_id=1576</comment>
   </data>
   <data name="Tax adjustment available" xml:space="preserve">
-    <value>Возможна налоговая корректировка</value>
+    <value>Налог можно менять</value>
     <comment>legacy_id=1577</comment>
   </data>
   <data name="during Truce Period." xml:space="preserve">
@@ -5945,11 +5945,11 @@
     <comment>legacy_id=1578</comment>
   </data>
   <data name="Maximum Tax rates: 3%%" xml:space="preserve">
-    <value>Максимальные налоговые ставки: 3%%</value>
+    <value>Наибольший налог: 3%%</value>
     <comment>legacy_id=1579</comment>
   </data>
   <data name="NPCs include" xml:space="preserve">
-    <value>NPC включают в себя</value>
+    <value>К NPC относятся</value>
     <comment>legacy_id=1580</comment>
   </data>
   <data name="Elf Lala, Potion Girl" xml:space="preserve">
@@ -5981,7 +5981,7 @@
     <comment>legacy_id=1587</comment>
   </data>
   <data name="Senior NPC" xml:space="preserve">
-    <value>Старший НПС</value>
+    <value>Управляющий замком</value>
     <comment>legacy_id=1588</comment>
   </data>
   <data name="Castle Gate" xml:space="preserve">
@@ -6037,7 +6037,7 @@
     <comment>legacy_id=1603,2415</comment>
   </data>
   <data name="Maintain" xml:space="preserve">
-    <value>Поддерживать</value>
+    <value>Основная</value>
     <comment>legacy_id=1604,1607</comment>
   </data>
   <data name="Invading team" xml:space="preserve">
@@ -6061,7 +6061,7 @@
     <comment>legacy_id=1610</comment>
   </data>
   <data name="To repair selected statue" xml:space="preserve">
-    <value>Чтобы отремонтировать выбранную статую</value>
+    <value>Отремонтировать выбранную статую</value>
     <comment>legacy_id=1611</comment>
   </data>
   <data name="Would you like to purchase?" xml:space="preserve">
@@ -6109,7 +6109,7 @@
     <comment>legacy_id=1622</comment>
   </data>
   <data name="Tax rate: %d%% (changed in real-time)" xml:space="preserve">
-    <value>Налоговая ставка: %d%% (изменяется в режиме реального времени)</value>
+    <value>Налог: %d%% (меняется сразу)</value>
     <comment>legacy_id=1623</comment>
   </data>
   <data name="Only the guild members" xml:space="preserve">
@@ -7093,11 +7093,11 @@
     <comment>legacy_id=1891</comment>
   </data>
   <data name="Lucky Coin Exchange" xml:space="preserve">
-    <value>Счастливый обмен монет</value>
+    <value>Обмен счастливых монет</value>
     <comment>legacy_id=1892</comment>
   </data>
   <data name="X %d Coins" xml:space="preserve">
-    <value>X монет %d</value>
+    <value>X %d монет</value>
     <comment>legacy_id=1893</comment>
   </data>
   <data name="Exchange 10 Coins" xml:space="preserve">
@@ -7257,11 +7257,11 @@
     <comment>legacy_id=1937</comment>
   </data>
   <data name="Exchanged Lucky Coins" xml:space="preserve">
-    <value>Обменивайте счастливые монеты</value>
+    <value>Обменянные счастливые монеты</value>
     <comment>legacy_id=1938</comment>
   </data>
   <data name="will not be returned." xml:space="preserve">
-    <value>не будет возвращен.</value>
+    <value>не возвращаются.</value>
     <comment>legacy_id=1939</comment>
   </data>
   <data name="Exchange1940" xml:space="preserve">
@@ -7433,7 +7433,7 @@
     <comment>legacy_id=2008</comment>
   </data>
   <data name="All NPCs in Crywolf have been deleted." xml:space="preserve">
-    <value>Все NPC в Crywolf были удалены.</value>
+    <value>Все NPC в Crywolf погибли.</value>
     <comment>legacy_id=2009</comment>
   </data>
   <data name="Drop it to receive the gift." xml:space="preserve">
@@ -7785,23 +7785,23 @@
     <comment>legacy_id=2153</comment>
   </data>
   <data name="Currently %d players are in battle with Maya's lefe hand." xml:space="preserve">
-    <value>В настоящее время игроки %d сражаются за левую руку Майи.</value>
+    <value>С левой рукой Майи сейчас сражается игроков: %d.</value>
     <comment>legacy_id=2154</comment>
   </data>
   <data name="Currently %d players are in battle with Maya's right hand." xml:space="preserve">
-    <value>В настоящее время игроки %d сражаются за правую руку Майи.</value>
+    <value>С правой рукой Майи сейчас сражается игроков: %d.</value>
     <comment>legacy_id=2155</comment>
   </data>
   <data name="Currently %d players are in battle with Maya's both hands." xml:space="preserve">
-    <value>В настоящее время игроки %d сражаются обеими руками Майи.</value>
+    <value>С обеими руками Майи сейчас сражается игроков: %d.</value>
     <comment>legacy_id=2156</comment>
   </data>
   <data name="Currently %d players are in battle with Nightmare." xml:space="preserve">
-    <value>В настоящее время игроки %d сражаются с Кошмаром.</value>
+    <value>С Кошмаром сейчас сражается игроков: %d.</value>
     <comment>legacy_id=2157</comment>
   </data>
   <data name="Boss Battle will start soon." xml:space="preserve">
-    <value>Битва с Боссом скоро начнется.</value>
+    <value>Битва с боссом скоро начнётся.</value>
     <comment>legacy_id=2158</comment>
   </data>
   <data name="ForceOfTheNightmareHasInvaded" xml:space="preserve">
@@ -7829,15 +7829,15 @@
     <comment>legacy_id=2164</comment>
   </data>
   <data name="NightmareHasLostTheControlOf" xml:space="preserve">
-    <value>Кошмар потерял контроль над левой рукой Майи. В настоящее время есть выжившие %d.</value>
+    <value>Кошмар потерял контроль над левой рукой Майи. Выживших сейчас: %d.</value>
     <comment>legacy_id=2165</comment>
   </data>
   <data name="NightmareHasLostTheControlOf2166" xml:space="preserve">
-    <value>Кошмар потерял контроль над правой рукой Майи. В настоящее время есть выжившие %d.</value>
+    <value>Кошмар потерял контроль над правой рукой Майи. Выживших сейчас: %d.</value>
     <comment>legacy_id=2166</comment>
   </data>
   <data name="More power from %d players are needed." xml:space="preserve">
-    <value>Требуется больше мощности от игроков %d.</value>
+    <value>Нужна помощь игроков: %d.</value>
     <comment>legacy_id=2167</comment>
   </data>
   <data name="Nightmare has lost the control of Maya's left hand." xml:space="preserve">
@@ -7857,7 +7857,7 @@
     <comment>legacy_id=2171</comment>
   </data>
   <data name="'Moonstone Pendant' authentication has failed." xml:space="preserve">
-    <value>Аутентификация «Подвеска из лунного камня» не удалась.</value>
+    <value>Проверка «Подвески из лунного камня» не пройдена.</value>
     <comment>legacy_id=2172</comment>
   </data>
   <data name="Time limit for entrance is over." xml:space="preserve">
@@ -7873,7 +7873,7 @@
     <comment>legacy_id=2175</comment>
   </data>
   <data name="YouCanOnlyWarpRidingA" xml:space="preserve">
-    <value>Деформироваться можно только верхом на Диноранте, Темной Лошади, Фенрире или в крыльях и плаще.</value>
+    <value>Телепортироваться можно только верхом на Диноранте, Темной Лошади, Фенрире или в крыльях либо плаще.</value>
     <comment>legacy_id=2176</comment>
   </data>
   <data name="Kanturu" xml:space="preserve">
@@ -8529,7 +8529,7 @@
     <comment>legacy_id=2359</comment>
   </data>
   <data name="The allies are advancing on. We are not far from the victory! Charge on!" xml:space="preserve">
-    <value>Союзники продвигаются вперед. Мы недалеко от победы! Заряжайтесь!</value>
+    <value>Союзники наступают. Победа близка! Вперёд!</value>
     <comment>legacy_id=2360</comment>
   </data>
   <data name="AlthoughWeHaveLostThisBattle" xml:space="preserve">
@@ -8557,7 +8557,7 @@
     <comment>legacy_id=2366</comment>
   </data>
   <data name="The admission and scroll levels do not match." xml:space="preserve">
-    <value>Уровни входа и прокрутки не совпадают.</value>
+    <value>Уровень свитка не подходит для этого входа.</value>
     <comment>legacy_id=2367</comment>
   </data>
   <data name="You cannot enter the zone with the number of members exceeding the limit." xml:space="preserve">
@@ -8597,11 +8597,11 @@
     <comment>legacy_id=2376</comment>
   </data>
   <data name="Achieved Kill Point" xml:space="preserve">
-    <value>Достигнута точка убийства</value>
+    <value>Набрано очков убийств</value>
     <comment>legacy_id=2377,3644</comment>
   </data>
   <data name="Required Kill Point" xml:space="preserve">
-    <value>Требуемая точка убийства</value>
+    <value>Нужно очков убийств</value>
     <comment>legacy_id=2378</comment>
   </data>
   <data name="Absorb damage with the protection shield." xml:space="preserve">
@@ -8653,11 +8653,11 @@
     <comment>legacy_id=2390</comment>
   </data>
   <data name="Kill Point %d achieved." xml:space="preserve">
-    <value>Точка уничтожения %d достигнута.</value>
+    <value>Набрано очков убийств: %d.</value>
     <comment>legacy_id=2391</comment>
   </data>
   <data name="Kill Point isn't sufficient." xml:space="preserve">
-    <value>Kill Point недостаточно.</value>
+    <value>Не хватает очков убийств.</value>
     <comment>legacy_id=2392</comment>
   </data>
   <data name="Battle closed." xml:space="preserve">
@@ -8721,7 +8721,7 @@
     <comment>legacy_id=2407</comment>
   </data>
   <data name="&lt;STEP 3: Official Skills&gt;" xml:space="preserve">
-    <value>&lt;ШАГ 3: Официальные навыки&gt;</value>
+    <value>&lt;ШАГ 3: Особые навыки&gt;</value>
     <comment>legacy_id=2408</comment>
   </data>
   <data name="YouMayAchieveTheKillPoints" xml:space="preserve">
@@ -8729,7 +8729,7 @@
     <comment>legacy_id=2409</comment>
   </data>
   <data name="Mouse wheel button ? change skill types, Shift + mouse right-click ? use" xml:space="preserve">
-    <value>Кнопка колеса мыши? изменить типы навыков, Shift + щелчок правой кнопкой мыши? использовать</value>
+    <value>Колёсико мыши — сменить навык, Shift + правая кнопка мыши — применить</value>
     <comment>legacy_id=2410</comment>
   </data>
   <data name="ThereAre4TypesOfSkills" xml:space="preserve">
@@ -8737,11 +8737,11 @@
     <comment>legacy_id=2411</comment>
   </data>
   <data name="Entrance enabled." xml:space="preserve">
-    <value>Вход разрешен.</value>
+    <value>Вход открыт.</value>
     <comment>legacy_id=2412</comment>
   </data>
   <data name="Entrance disabled." xml:space="preserve">
-    <value>Вход отключен.</value>
+    <value>Вход закрыт.</value>
     <comment>legacy_id=2413</comment>
   </data>
   <data name="Hero List" xml:space="preserve">
@@ -9549,11 +9549,11 @@
     <comment>legacy_id=2698</comment>
   </data>
   <data name="Select an Colosseum you'd like to watch." xml:space="preserve">
-    <value>Выберите Колизей, который вы хотите посмотреть.</value>
+    <value>Выберите Колизей для просмотра.</value>
     <comment>legacy_id=2699</comment>
   </data>
   <data name="Colosseum # %d" xml:space="preserve">
-    <value>Колизей # %d</value>
+    <value>Колизей № %d</value>
     <comment>legacy_id=2700</comment>
   </data>
   <data name="Watch" xml:space="preserve">
@@ -9569,7 +9569,7 @@
     <comment>legacy_id=2704</comment>
   </data>
   <data name="No duel on." xml:space="preserve">
-    <value>Никакой дуэли.</value>
+    <value>Дуэлей нет.</value>
     <comment>legacy_id=2705</comment>
   </data>
   <data name="Not available" xml:space="preserve">
@@ -9733,15 +9733,15 @@
     <comment>legacy_id=2756</comment>
   </data>
   <data name="Only those in possession of a Mirror of Dimensions" xml:space="preserve">
-    <value>Только те, у кого есть Зеркало Измерений.</value>
+    <value>Только те, у кого есть Зеркало измерений,</value>
     <comment>legacy_id=2757</comment>
   </data>
   <data name="may pass through the Doppelganger gate." xml:space="preserve">
-    <value>может пройти через ворота Доппельгангера.</value>
+    <value>могут пройти через врата Доппельгангера.</value>
     <comment>legacy_id=2758</comment>
   </data>
   <data name="Will you show me your mirror?" xml:space="preserve">
-    <value>Покажешь мне свое зеркало?</value>
+    <value>Покажете своё зеркало?</value>
     <comment>legacy_id=2759</comment>
   </data>
   <data name="Mirror of Dimensions" xml:space="preserve">
@@ -9817,7 +9817,7 @@
     <comment>legacy_id=2779</comment>
   </data>
   <data name="Gaion's Order" xml:space="preserve">
-    <value>Орден Гайона</value>
+    <value>Приказ Гайона</value>
     <comment>legacy_id=2783</comment>
   </data>
   <data name="It contains Gaion's plans for the destruction of the empire" xml:space="preserve">
@@ -9861,7 +9861,7 @@
     <comment>legacy_id=2793</comment>
   </data>
   <data name="Jerint the Assistant" xml:space="preserve">
-    <value>Джеринт Ассистент</value>
+    <value>Ассистент Джеринт</value>
     <comment>legacy_id=2794</comment>
   </data>
   <data name="Without Gaion's Order," xml:space="preserve">
@@ -9873,7 +9873,7 @@
     <comment>legacy_id=2796</comment>
   </data>
   <data name="Will you show me the order?" xml:space="preserve">
-    <value>Покажешь мне заказ?</value>
+    <value>Покажете приказ?</value>
     <comment>legacy_id=2797</comment>
   </data>
   <data name="EntryTime2798" xml:space="preserve">
@@ -9889,7 +9889,7 @@
     <comment>legacy_id=2801</comment>
   </data>
   <data name="has been cleared." xml:space="preserve">
-    <value>был очищен.</value>
+    <value>пройдена.</value>
     <comment>legacy_id=2802</comment>
   </data>
   <data name="You have failed to conquer the" xml:space="preserve">
@@ -9977,15 +9977,15 @@
     <comment>legacy_id=2834,2842</comment>
   </data>
   <data name="The round 7 map (Sunday) can only" xml:space="preserve">
-    <value>На карте 7-го тура (воскресенье) можно только</value>
+    <value>На карту 7-го раунда (воскресенье)</value>
     <comment>legacy_id=2835</comment>
   </data>
   <data name="be accessed if you have a" xml:space="preserve">
-    <value>доступ, если у вас есть</value>
+    <value>можно войти, только если у вас есть</value>
     <comment>legacy_id=2836</comment>
   </data>
   <data name="CompleteSecromicon2837" xml:space="preserve">
-    <value>Полный Секромикон.</value>
+    <value>полный Секромикон.</value>
     <comment>legacy_id=2837</comment>
   </data>
   <data name="You can only enter as a member of a party." xml:space="preserve">
@@ -10477,7 +10477,7 @@
     <comment>legacy_id=2985</comment>
   </data>
   <data name="Gain Contribution: %u" xml:space="preserve">
-    <value>Вклад в выигрыш: %u</value>
+    <value>Очки вклада: %u</value>
     <comment>legacy_id=2986</comment>
   </data>
   <data name="Battle2987" xml:space="preserve">
@@ -10857,7 +10857,7 @@
     <comment>legacy_id=3089</comment>
   </data>
   <data name="Gens Info Window" xml:space="preserve">
-    <value>Окно информации о Генсе</value>
+    <value>Информация о Генсе</value>
     <comment>legacy_id=3090</comment>
   </data>
   <data name="Gens" xml:space="preserve">
@@ -10873,7 +10873,7 @@
     <comment>legacy_id=3093</comment>
   </data>
   <data name="You have not joined a gens." xml:space="preserve">
-    <value>Вы не вступили в род.</value>
+    <value>Вы не вступили в Генс.</value>
     <comment>legacy_id=3094</comment>
   </data>
   <data name="Level3095" xml:space="preserve">
@@ -10881,27 +10881,27 @@
     <comment>legacy_id=3095</comment>
   </data>
   <data name="Gain Contribution" xml:space="preserve">
-    <value>Получите вклад</value>
+    <value>Вклад</value>
     <comment>legacy_id=3096,3643</comment>
   </data>
   <data name="The amount of contribution needed for promotion to the next rank is %d." xml:space="preserve">
-    <value>Сумма вклада, необходимая для перехода на следующий ранг, составляет %d.</value>
+    <value>Для следующего звания нужно очков вклада: %d.</value>
     <comment>legacy_id=3097</comment>
   </data>
   <data name="Gens Ranking" xml:space="preserve">
-    <value>Генсовый рейтинг</value>
+    <value>Рейтинг</value>
     <comment>legacy_id=3098</comment>
   </data>
   <data name="Gens Description" xml:space="preserve">
-    <value>Описание гена</value>
+    <value>Описание</value>
     <comment>legacy_id=3100</comment>
   </data>
   <data name="GensRankingRewardsAreGivenOut" xml:space="preserve">
-    <value>Награды за рейтинг Gens выдаются вместе с патчем в первую неделю каждого месяца.</value>
+    <value>Награды рейтинга Генс выдаются в первую неделю каждого месяца.</value>
     <comment>legacy_id=3101</comment>
   </data>
   <data name="GensRankingRewardsCanBeClaimed" xml:space="preserve">
-    <value>Награды за рейтинг Гена можно запросить у NPC-управляющего Гена.## Награды Генса автоматически исчезнут, если их не запросить в течение недели.</value>
+    <value>Награды рейтинга Генс выдаёт NPC-распорядитель Генс.## Если не забрать награду за неделю, она исчезнет.</value>
     <comment>legacy_id=3102</comment>
   </data>
   <data name="Gens Info (B)" xml:space="preserve">
@@ -11065,7 +11065,7 @@
     <comment>legacy_id=3143</comment>
   </data>
   <data name="W Coin(P)" xml:space="preserve">
-    <value>W Монета (P)</value>
+    <value>W Coin(P)</value>
     <comment>legacy_id=3144</comment>
   </data>
   <data name="My W Coin(P) : %s" xml:space="preserve">
@@ -12369,7 +12369,7 @@
     <comment>legacy_id=3619</comment>
   </data>
   <data name="You're not in a guild." xml:space="preserve">
-    <value>Ты не в гильдии.</value>
+    <value>Вы не состоите в гильдии.</value>
     <comment>legacy_id=3620</comment>
   </data>
   <data name="You can only participate in the Arca War if you're in a guild." xml:space="preserve">
@@ -13007,7 +13007,7 @@
     <value>Не удалось разобрать связку.</value>
   </data>
   <data name="ZoneDCleared" xml:space="preserve">
-    <value>%d Зона очищена</value>
+    <value>Зона %d пройдена</value>
   </data>
   <data name="QuestRewardBuffBonus" xml:space="preserve">
     <value>Бонус: %ls на %lu мин.</value>
@@ -13082,10 +13082,10 @@
     <value>Воскресение</value>
   </data>
   <data name="BloodCastleQuestCompleted" xml:space="preserve">
-    <value>Поздравляем! Вы успешно завершил квест «Кровавый замок»!</value>
+    <value>Поздравляем! Вы прошли квест «Кровавый замок»!</value>
   </data>
   <data name="BloodCastleQuestFailed" xml:space="preserve">
-    <value>К сожалению, вы потерпели неудачу чтобы завершить квест «Кровавый замок».</value>
+    <value>К сожалению, квест «Кровавый замок» не выполнен.</value>
   </data>
   <data name="MixLevel" xml:space="preserve">
     <value>+%d</value>
@@ -17226,5 +17226,33 @@
   </data>
   <data name="WarpUnlocked" xml:space="preserve">
     <value>Уровень %d: новый телепорт — %ls</value>
+  </data>
+  <!-- Round 14 -->
+  <data name="DeclineInvitations" xml:space="preserve">
+    <value>Отклонять приглашения</value>
+  </data>
+  <data name="InviteDeclinedParty" xml:space="preserve">
+    <value>Приглашение в группу от %ls отклонено.</value>
+  </data>
+  <data name="InviteDeclinedTrade" xml:space="preserve">
+    <value>Предложение обмена от %ls отклонено.</value>
+  </data>
+  <data name="InviteDeclinedDuel" xml:space="preserve">
+    <value>Вызов на дуэль от %ls отклонён.</value>
+  </data>
+  <data name="HelperSafeZone" xml:space="preserve">
+    <value>MU Helper не работает в безопасной зоне.</value>
+  </data>
+  <data name="HelperStoppedSummary" xml:space="preserve">
+    <value>MU Helper остановлен через %d ч %d мин. Уровни: +%d, зен: %ls.</value>
+  </data>
+  <data name="SkillBookNotLearnable" xml:space="preserve">
+    <value>Этот навык пока нельзя изучить: посмотрите его требования.</value>
+  </data>
+  <data name="CapsLockOn" xml:space="preserve">
+    <value>Включён Caps Lock</value>
+  </data>
+  <data name="GuildWarAlreadyOn" xml:space="preserve">
+    <value>Одна из гильдий уже воюет с другой гильдией.</value>
   </data>
 </root>

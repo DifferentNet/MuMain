@@ -222,6 +222,12 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME potion_kind_tests
+    SOURCES
+        test_potion_kind.cpp
+)
+
+mu_add_test(
     NAME touch_target_tests
     SOURCES
         test_touch_target.cpp
@@ -658,4 +664,15 @@ mu_add_test(
     NAME round13_client_commands_tests
     SOURCES test_round13_client_commands.cpp
     LINK_LIBS MuClient
+)
+
+# Round 14: duel start answers and "duel canceled" once, refused invitation lines, MU Helper run summary.
+mu_add_test(
+    NAME round14_logic_tests
+    SOURCES
+        test_round14_logic.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Combat/DuelReplies.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/DeclinedInviteLines.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/HelperRunSummary.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Text/GroupedNumberText.cpp
 )

@@ -523,7 +523,6 @@
 	.option-tab-panel { padding: 2dp 14dp 0 4dp; }
 	.option-row { min-height: 40dp; margin-bottom: 4dp; }
 	.checkbox-box { width: 26dp; height: 26dp; }
-	.option-open-btn { height: 36dp; line-height: 36dp; padding: 0 12dp; }
 	.option-gauge { width: 186dp; height: 24dp; }
 	.option-gauge.effect-gauge { width: 105dp; height: 22dp; }
 	.option-dropdown { max-width: none; height: 34dp; }
@@ -562,3 +561,9 @@
 }
 .option-open-btn:hover { color: #ffffff; border-color: #f0c850; }
 .option-open-btn:active { background-color: rgba(30, 22, 10, 220); }
+
+/* After the base .option-open-btn rule: with equal specificity the later rule wins, so the phone size
+   has to come last. */
+@media (theme: mobile) {
+	.option-open-btn { height: 36dp; line-height: 36dp; padding: 0 12dp; }
+}

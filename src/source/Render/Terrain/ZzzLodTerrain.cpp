@@ -25,6 +25,7 @@
 #include "Render/Effects/ZzzEffect.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "Render/Renderer/RenderUtils.h"
+#include "Render/Terrain/PickSegment.h"
 #include "Render/Terrain/TerrainHeightGrid.h"
 #include "Render/Lighting/DynamicLightHistory.h"
 #include "Render/Lighting/DynamicLightList.h"
@@ -3507,8 +3508,43 @@ void InitTerrainRay(int HeroX, int HeroY)
     }*/
 }
 
+namespace
+{
+// The mouse segment of the current ground pick, on the ground plane.
+Render::Terrain::Pick::Segment2D s_pickSegment;
+
+#ifdef _DEBUG
+// A debug build outlines every tile the pick visits, so it visits them all.
+constexpr bool SkipBlocksThePickMisses = false;
+#else
+constexpr bool SkipBlocksThePickMisses = true;
+#endif
+
+void BeginGroundPick()
+{
+    s_pickSegment = {MousePosition[0], MousePosition[1], MouseTarget[0], MouseTarget[1]};
+}
+
+// Whether the pick segment can hit a tile of the 4 x 4 block at tile (xf, yf). The block is
+// grown by a tile on each side, which covers the rounding of the hit point.
+bool PickMayHitBlock(float xf, float yf)
+{
+    constexpr float BlockTiles = 4.f;
+    constexpr float MarginTiles = 1.f;
+    const float minX = (xf - MarginTiles) * TERRAIN_SCALE;
+    const float minY = (yf - MarginTiles) * TERRAIN_SCALE;
+    const float maxX = (xf + BlockTiles + MarginTiles) * TERRAIN_SCALE;
+    const float maxY = (yf + BlockTiles + MarginTiles) * TERRAIN_SCALE;
+    return Render::Terrain::Pick::SegmentCrossesBox(s_pickSegment, minX, minY, maxX, maxY);
+}
+} // namespace
+
 void RenderTerrainBlock(float xf, float yf, int xi, int yi, bool EditFlag)
 {
+    if (EditFlag && SkipBlocksThePickMisses && !PickMayHitBlock(xf, yf))
+    {
+        return;
+    }
     //int x = ((xi/4)&63);
     //int y = ((yi/4)&63);
     //int lodi = LodBuffer[y*64+x];
@@ -3849,6 +3885,7 @@ void RenderTerrain(bool EditFlag)
     {
         SelectFlag = false;
         InitCollisionDetectLineToFace();
+        BeginGroundPick();
     }
 
     TerrainFlag = TERRAIN_MAP_NORMAL;

@@ -61,6 +61,12 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME pick_segment_tests
+    SOURCES
+        test_pick_segment.cpp
+)
+
+mu_add_test(
     NAME mip_chain_tests
     SOURCES
         test_mip_chain.cpp

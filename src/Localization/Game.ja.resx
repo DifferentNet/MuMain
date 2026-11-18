@@ -12352,4 +12352,32 @@
   <data name="WarpUnlocked" xml:space="preserve">
     <value>レベル%d: 新しいワープ先: %ls</value>
   </data>
+  <!-- Round 14 -->
+  <data name="DeclineInvitations" xml:space="preserve">
+    <value>招待を断る</value>
+  </data>
+  <data name="InviteDeclinedParty" xml:space="preserve">
+    <value>%ls からのパーティー招待を断りました。</value>
+  </data>
+  <data name="InviteDeclinedTrade" xml:space="preserve">
+    <value>%ls からの取引申請を断りました。</value>
+  </data>
+  <data name="InviteDeclinedDuel" xml:space="preserve">
+    <value>%ls からの決闘申請を断りました。</value>
+  </data>
+  <data name="HelperSafeZone" xml:space="preserve">
+    <value>MU Helper は安全地帯では動作しません。</value>
+  </data>
+  <data name="HelperStoppedSummary" xml:space="preserve">
+    <value>MU Helper を停止しました（%d時間%d分）。レベル: +%d、ゼン: %ls。</value>
+  </data>
+  <data name="SkillBookNotLearnable" xml:space="preserve">
+    <value>このスキルはまだ習得できません。習得条件を確認してください。</value>
+  </data>
+  <data name="CapsLockOn" xml:space="preserve">
+    <value>Caps Lock がオンです</value>
+  </data>
+  <data name="GuildWarAlreadyOn" xml:space="preserve">
+    <value>いずれかのギルドがすでにギルド戦中です。</value>
+  </data>
 </root>

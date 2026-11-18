@@ -66,6 +66,8 @@
 #include "UI/Chat/CharacterChangeLines.h"
 #include "UI/Chat/SeenSkills.h"
 #include "UI/Chat/HeroStatusLines.h"
+#include "UI/Chat/InviteAutoDecline.h"
+#include "GameLogic/Combat/DuelReplies.h"
 #include "App/Platform/AttentionSignal.h"
 #include "GameLogic/Commands/ChatCommandCatalog.h"
 #include "GameLogic/Events/Cinematic/CDirection.h"
@@ -930,6 +932,14 @@ extern void StopMusic();
 
 extern BOOL g_bPacketAfter_EquipmentItem;
 
+namespace
+{
+// "The duel has been canceled" once per duel that ended without a winner (GameLogic/Combat/DuelReplies.h).
+GameLogic::Combat::DuelEndNotice g_duelEndNotice;
+// The lowest level the server lets fight a duel (OpenMU DuelActions).
+constexpr int DuelMinimumLevel = 30;
+}
+
 void InitGame()
 {
     EnableUse = 0;
@@ -992,7 +1002,12 @@ void InitGame()
     g_csQuest.clearQuest();
 
     g_DuelMgr.Reset();
+    g_duelEndNotice.Reset();
+    MUHelper::g_MuHelper.ResetForNewGame();
     UI::Windows::Hide(mu::ui::window::INTERFACE_DUEL_WINDOW);
+    // The guild war score frame is never hidden by HideAll; a war still on is shown again on entering.
+    UI::Windows::Hide(mu::ui::window::INTERFACE_BATTLE_SOCCER_SCORE);
+    UI::Chat::StatusLines::Reset();
 
     UI::Windows::ResetLegacyPanels();
 
@@ -7584,6 +7599,12 @@ void ReceiveParty(const BYTE* ReceiveBuffer)
     auto Data = (LPPHEADER_DEFAULT_KEY)ReceiveBuffer;
     PartyKey = ((int)(Data->KeyH) << 8) + Data->KeyL;
 
+    if (UI::Chat::InviteAutoDecline::ShouldDecline(UI::Chat::InviteKind::Party, CharactersClient[FindCharacterIndex(PartyKey)].ID))
+    {
+        SocketClient->ToGameServer()->SendPartyInviteResponse(false, PartyKey);
+        return;
+    }
+
     UI::Dialogs::ConfirmRequest cfg;
     cfg.cancellable = true;
     cfg.lines = {
@@ -7687,6 +7708,13 @@ void ReceivePartyList(const BYTE* ReceiveBuffer)
         p->y = Data2->y;
         p->currHP = Data2->currHP;
         p->maxHP = Data2->maxHP;
+        // The HP steps the party cards draw, from the list's HP until the first party HP packet (0x44) comes;
+        // a member left at 0 steps would show as nearly dead meanwhile.
+        if (p->maxHP > 0)
+        {
+            const long long steps = static_cast<long long>(p->currHP) * 10 / static_cast<long long>(p->maxHP);
+            p->stepHP = static_cast<BYTE>(std::clamp<long long>(steps, 0, 10));
+        }
         Offset += sizeof(PRECEIVE_PARTY_LIST);
     }
 
@@ -7723,6 +7751,7 @@ void ReceivePartyLeave(const BYTE* ReceiveBuffer)
 {
     App::Control::Events::RecordPartyChange("left", L"");
 
+    // Following is not a party feature: leaving the party keeps it.
     PartyNumber = 0;
     memset(Party, 0, sizeof(Party));
     for (int i = 0; i < MAX_PARTYS; i++)
@@ -7730,24 +7759,6 @@ void ReceivePartyLeave(const BYTE* ReceiveBuffer)
         Party[i].index = -1;
     }
     UI::Chat::PostSystem(I18N::Game::YouHaveJustLeftTheParty, mu::ui::window::TYPE_ERROR_MESSAGE);
-
-    if (g_iFollowCharacter >= 0)
-    {
-        bool IsParty = false;
-        CHARACTER* c = &CharactersClient[g_iFollowCharacter];
-        for (int i = 0; i < PartyNumber; ++i)
-        {
-            if (wcscmp(Party[i].Name, c->ID) == 0 && wcslen(Party[i].Name) == wcslen(c->ID))
-            {
-                IsParty = true;
-            }
-        }
-
-        if (IsParty == false)
-        {
-            g_iFollowCharacter = -1;
-        }
-    }
 }
 
 void ReceivePartyGetItem(const BYTE* ReceiveBuffer)
@@ -8041,7 +8052,8 @@ void ReceiveDeclareWarResult(const BYTE* ReceiveBuffer)
         UI::Chat::PostSystem(I18N::Game::TheOpposingGuildMasterIsNotInTheGame, mu::ui::window::TYPE_ERROR_MESSAGE);
         break;
     case 3:
-        UI::Chat::PostSystem(I18N::Game::ThatGuildDoesNotExist, mu::ui::window::TYPE_ERROR_MESSAGE);
+        // OpenMU GuildWarRequestResult.NotInGuild: the one who declares has no guild.
+        UI::Chat::PostSystem(I18N::Game::YouReNotInAGuild, mu::ui::window::TYPE_ERROR_MESSAGE);
         break;
     case 4:
         UI::Chat::PostSystem(I18N::Game::YouCanNotDeclareAGuildWarNow, mu::ui::window::TYPE_ERROR_MESSAGE);
@@ -8050,7 +8062,8 @@ void ReceiveDeclareWarResult(const BYTE* ReceiveBuffer)
         UI::Chat::PostSystem(I18N::Game::OnlyGuildMastersCanDeclareAGuildWar, mu::ui::window::TYPE_ERROR_MESSAGE);
         break;
     case 6:
-        UI::Chat::PostSystem(I18N::Game::YourRequestForAGuildWarIsRefused, mu::ui::window::TYPE_ERROR_MESSAGE);
+        // OpenMU GuildWarRequestResult.AlreadyInWar.
+        UI::Chat::PostSystem(I18N::Game::GuildWarAlreadyOn, mu::ui::window::TYPE_ERROR_MESSAGE);
         break;
     }
     if (Data->Value != 1 && !EnableGuildWar)
@@ -9345,17 +9358,25 @@ void ReceiveMatchGameCommand(const BYTE* ReceiveBuffer)
 
 void ReceiveDuelRequest(const BYTE* ReceiveBuffer)
 {
+    auto Data = (LPPMSG_REQ_DUEL_ANSWER)ReceiveBuffer;
+    wchar_t playerName[MAX_USERNAME_SIZE + 1]{};
+    CMultiLanguage::ConvertFromUtf8(playerName, Data->szID, MAX_USERNAME_SIZE);
+    // The challenger's key comes with the packet: a lookup by name finds nobody when they are out of sight.
+    const short enemyKey = static_cast<short>(MAKEWORD(Data->bIndexL, Data->bIndexH));
+
+    // "Decline invitations" answers even while a message box is open, which would otherwise drop the challenge
+    // unanswered.
+    if (UI::Chat::InviteAutoDecline::ShouldDecline(UI::Chat::InviteKind::Duel, playerName))
+    {
+        g_DuelMgr.SetDuelPlayer(DUEL_ENEMY, enemyKey, playerName);
+        g_DuelMgr.SendDuelRequestAnswer(DUEL_ENEMY, FALSE);
+        return;
+    }
+
     if (UI::Dialogs::IsMessageBoxOpen())
     {
         return;
     }
-
-    auto Data = (LPPMSG_REQ_DUEL_ANSWER)ReceiveBuffer;
-    wchar_t playerName[MAX_USERNAME_SIZE + 1]{};
-    CMultiLanguage::ConvertFromUtf8(playerName, Data->szID, MAX_USERNAME_SIZE);
-
-    auto enemyCharacter = FindCharacterByID(playerName);
-    short enemyKey = enemyCharacter->Key;
 
     g_DuelMgr.SetDuelPlayer(DUEL_ENEMY, enemyKey, playerName);
 
@@ -9382,28 +9403,31 @@ void ReceiveDuelRequest(const BYTE* ReceiveBuffer)
 
 void ReceiveDuelStart(const BYTE* ReceiveBuffer)
 {
+    using GameLogic::Combat::DuelStartReply;
+
     auto Data = (LPPMSG_ANS_DUEL_INVITE)ReceiveBuffer;
     wchar_t szMessage[256];
     wchar_t playerName[MAX_USERNAME_SIZE + 1]{};
     CMultiLanguage::ConvertFromUtf8(playerName, Data->szID, MAX_USERNAME_SIZE);
-    if (Data->nResult == 0)
+    switch (GameLogic::Combat::ClassifyDuelStart(Data->nResult))
     {
+    case DuelStartReply::Accepted:
         g_DuelMgr.EnableDuel(TRUE);
         g_DuelMgr.SetHeroAsDuelPlayer(DUEL_HERO);
         g_DuelMgr.SetDuelPlayer(DUEL_ENEMY, MAKEWORD(Data->bIndexL, Data->bIndexH), playerName);
+        g_duelEndNotice.Started();
         mu_swprintf(szMessage, I18N::Game::SHasAcceptedYourChallenge, g_DuelMgr.GetDuelPlayerID(DUEL_ENEMY));
         UI::Chat::PostSystem(szMessage, mu::ui::window::TYPE_ERROR_MESSAGE);
 
         UI::Windows::Show(mu::ui::window::INTERFACE_DUEL_WINDOW);
         PlayBuffer(SOUND_START_DUEL);
-    }
-    else if (Data->nResult == 15)
-    {
+        break;
+    case DuelStartReply::Declined:
         g_DuelMgr.SetDuelPlayer(DUEL_ENEMY, MAKEWORD(Data->bIndexL, Data->bIndexH), playerName);
         mu_swprintf(szMessage, I18N::Game::SHasDeclinedYourChallenge, g_DuelMgr.GetDuelPlayerID(DUEL_ENEMY));
         UI::Chat::PostSystem(szMessage, mu::ui::window::TYPE_ERROR_MESSAGE);
-    }
-    else if (Data->nResult == 16)
+        break;
+    case DuelStartReply::ArenaFull:
     {
         UI::Dialogs::ConfirmRequest cfg;
         cfg.lines = {
@@ -9411,18 +9435,22 @@ void ReceiveDuelStart(const BYTE* ReceiveBuffer)
             { I18N::Game::TryItAgainLater, false },
         };
         UI::Dialogs::ShowConfirm(std::move(cfg));
+        break;
     }
-    else if (Data->nResult == 28)
-    {
+    case DuelStartReply::TooLowLevel:
         g_DuelMgr.SetDuelPlayer(DUEL_ENEMY, MAKEWORD(Data->bIndexL, Data->bIndexH), playerName);
-        mu_swprintf(szMessage, I18N::Game::OpenOnlyForLevelDOrHigher, 30);
+        mu_swprintf(szMessage, I18N::Game::OpenOnlyForLevelDOrHigher, DuelMinimumLevel);
         UI::Chat::PostSystem(szMessage, mu::ui::window::TYPE_ERROR_MESSAGE);
-    }
-    else if (Data->nResult == 30)
-    {
+        break;
+    case DuelStartReply::NotEnoughZen:
         g_DuelMgr.SetDuelPlayer(DUEL_ENEMY, MAKEWORD(Data->bIndexL, Data->bIndexH), playerName);
-        mu_swprintf(szMessage, I18N::Game::ZenIsInsufficient);
-        UI::Chat::PostSystem(szMessage, mu::ui::window::TYPE_ERROR_MESSAGE);
+        UI::Chat::PostSystem(I18N::Game::ZenIsInsufficient, mu::ui::window::TYPE_ERROR_MESSAGE);
+        break;
+    case DuelStartReply::Failed:
+        UI::Chat::PostSystem(I18N::Game::TheDuelHasBeenCanceled, mu::ui::window::TYPE_ERROR_MESSAGE);
+        break;
+    case DuelStartReply::Unknown:
+        break;
     }
 }
 
@@ -9438,7 +9466,8 @@ void ReceiveDuelEnd(const BYTE* ReceiveBuffer)
         g_DuelMgr.EnableDuel(FALSE);
         g_DuelMgr.SetDuelPlayer(DUEL_ENEMY, MAKEWORD(Data->bIndexL, Data->bIndexH), playerName);
 
-        UI::Chat::PostSystem(I18N::Game::TheDuelHasBeenCanceled, mu::ui::window::TYPE_ERROR_MESSAGE);
+        if (g_duelEndNotice.OnEnded(IsDuelArena(), GetTickCount()))
+            UI::Chat::PostSystem(I18N::Game::TheDuelHasBeenCanceled, mu::ui::window::TYPE_ERROR_MESSAGE);
 
         if (g_wtMatchTimeLeft.m_Type == 2)
             g_wtMatchTimeLeft.m_Time = 0;
@@ -9584,6 +9613,7 @@ void ReceiveDuelWatcherList(const BYTE* ReceiveBuffer)
 void ReceiveDuelResult(const BYTE* ReceiveBuffer)
 {
     auto Data = (LPPMSG_DUEL_RESULT_BROADCAST)ReceiveBuffer;
+    g_duelEndNotice.Finished();
 
     wchar_t szMessage[256];
     mu_swprintf(szMessage, I18N::Game::DuelFinishedYouWillBeWarpedBackToTheViallageInDSeconds, 10);

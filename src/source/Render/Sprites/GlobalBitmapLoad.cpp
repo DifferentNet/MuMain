@@ -99,8 +99,9 @@ int NextPowerOfTwo(int value, int maxValue)
     return std::min<int>(result, maxValue);
 }
 
-std::unique_ptr<BITMAP_t> CreateBitmapStorage(GLuint index, const std::wstring& filename, int width, int height,
-                                              int components)
+// A bitmap record without a CPU copy of its pixels.
+std::unique_ptr<BITMAP_t> CreateBitmapRecord(GLuint index, const std::wstring& filename, int width, int height,
+                                             int components)
 {
     auto bitmap = std::make_unique<BITMAP_t>();
     bitmap->BitmapIndex = index;
@@ -110,6 +111,13 @@ std::unique_ptr<BITMAP_t> CreateBitmapStorage(GLuint index, const std::wstring& 
     bitmap->Height = static_cast<float>(height);
     bitmap->Components = components;
     bitmap->Ref = 1;
+    return bitmap;
+}
+
+std::unique_ptr<BITMAP_t> CreateBitmapStorage(GLuint index, const std::wstring& filename, int width, int height,
+                                              int components)
+{
+    auto bitmap = CreateBitmapRecord(index, filename, width, height, components);
     const auto bufferSize =
         static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * static_cast<std::size_t>(components);
     bitmap->BufferStorage.resize(bufferSize);
@@ -190,6 +198,44 @@ bool IsMapCutout(GLuint index, const std::wstring& filename, std::span<const std
         Render::Textures::AlphaTest::FromReference(Render::Textures::AlphaTestReference));
     return Render::Textures::FoliageSmoothing::IsCutout(coverage);
 #endif
+}
+
+// Decodes a JPEG as RGB into the top left of a new textureWidth x textureHeight RGB bitmap; a texture
+// padded to a power of two keeps its margin black.
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters): sizes of the image and of the texture.
+std::unique_ptr<BITMAP_t> DecodeJpegToRgbStorage(tjhandle handle, const unsigned char* jpegData, unsigned long jpegSize,
+                                                 int jpegWidth, int jpegHeight, GLuint index,
+                                                 const std::wstring& filename, int textureWidth, int textureHeight)
+{
+    std::vector<unsigned char> decompressedBuffer(static_cast<std::size_t>(jpegWidth) *
+                                                  static_cast<std::size_t>(jpegHeight) * 3u);
+    if (tjDecompress2(handle, jpegData, jpegSize, decompressedBuffer.data(), jpegWidth, 0, jpegHeight, TJPF_RGB,
+                      TJFLAG_FASTDCT) != 0)
+    {
+        ReportTurboError(L"tjDecompress2");
+        return nullptr;
+    }
+
+    auto bitmap = CreateBitmapStorage(index, filename, textureWidth, textureHeight, 3);
+    const int jpegRowSize = jpegWidth * 3;
+    const int textureRowSize = textureWidth * 3;
+    const int rows = std::min<int>(jpegHeight, textureHeight);
+    if (jpegWidth != textureWidth)
+    {
+        std::size_t offset = 0;
+        for (int row = 0; row < rows; ++row)
+        {
+            memcpy(&bitmap->Buffer[offset], &decompressedBuffer[static_cast<std::size_t>(row) * jpegRowSize],
+                   static_cast<std::size_t>(jpegRowSize));
+            offset += static_cast<std::size_t>(textureRowSize);
+        }
+    }
+    else
+    {
+        memcpy(bitmap->Buffer, decompressedBuffer.data(),
+               static_cast<std::size_t>(jpegHeight) * static_cast<std::size_t>(jpegWidth) * 3u);
+    }
+    return bitmap;
 }
 
 // A canvas is drawn on through Buffer at the original size, so an upscaled file
@@ -803,56 +849,50 @@ bool CGlobalBitmap::OpenJpegTurbo(GLuint uiBitmapIndex, const std::wstring& file
     jpegWidth /= divisor;
     jpegHeight /= divisor;
 
-    std::vector<unsigned char> decompressedBuffer(static_cast<std::size_t>(jpegWidth) *
-                                                  static_cast<std::size_t>(jpegHeight) * 3u);
-    auto decompressResult = tjDecompress2(tjHandle.get(), jpegData, jpegSize, decompressedBuffer.data(), jpegWidth, 0,
-                                          jpegHeight, TJPF_RGB, TJFLAG_FASTDCT);
-    if (decompressResult != 0)
-    {
-        ReportTurboError(L"tjDecompress2");
-        return false;
-    }
-
     const int textureWidth = fileTextureWidth / divisor;
     const int textureHeight = fileTextureHeight / divisor;
     const int scale = fileScale / divisor;
 
-    auto pNewBitmap = CreateBitmapStorage(uiBitmapIndex, filename, textureWidth, textureHeight, 3);
-    pNewBitmap->Width = static_cast<float>(textureWidth / scale);
-    pNewBitmap->Height = static_cast<float>(textureHeight / scale);
-
-    const int jpegRowSize = jpegWidth * 3;
-    const int textureRowSize = textureWidth * 3;
-    const int rows = std::min<int>(jpegHeight, textureHeight);
-
-    std::size_t offset = 0;
-    if (jpegWidth != textureWidth)
+    // A texture whose pixels nobody reads back and whose image fills it is decoded straight into the
+    // RGBA pixels that are uploaded: the same bytes as the RGB decode padded with alpha 255, without
+    // the RGB copies. Kept pixels stay RGB, and a padded texture keeps its black RGB margin.
+    const bool decodeToRgba = !keepPixels && jpegWidth == textureWidth && jpegHeight == textureHeight;
+    std::unique_ptr<BITMAP_t> pNewBitmap;
+    std::vector<std::uint8_t> rgbaData;
+    int uploadWidth = textureWidth;
+    int uploadHeight = textureHeight;
+    if (decodeToRgba)
     {
-        for (int row = 0; row < rows; ++row)
+        rgbaData.resize(static_cast<std::size_t>(jpegWidth) * static_cast<std::size_t>(jpegHeight) * 4u);
+        if (tjDecompress2(tjHandle.get(), jpegData, jpegSize, rgbaData.data(), jpegWidth, 0, jpegHeight, TJPF_RGBA,
+                          TJFLAG_FASTDCT) != 0)
         {
-            memcpy(&pNewBitmap->Buffer[offset], &decompressedBuffer[static_cast<std::size_t>(row) * jpegRowSize],
-                   static_cast<std::size_t>(jpegRowSize));
-            offset += static_cast<std::size_t>(textureRowSize);
+            ReportTurboError(L"tjDecompress2");
+            return false;
         }
+        pNewBitmap = CreateBitmapRecord(uiBitmapIndex, filename, textureWidth, textureHeight, 3);
     }
     else
     {
-        memcpy(pNewBitmap->Buffer, decompressedBuffer.data(),
-               static_cast<std::size_t>(jpegHeight) * static_cast<std::size_t>(jpegWidth) * 3u);
+        pNewBitmap = DecodeJpegToRgbStorage(tjHandle.get(), jpegData, jpegSize, jpegWidth, jpegHeight, uiBitmapIndex,
+                                            filename, textureWidth, textureHeight);
+        if (!pNewBitmap)
+        {
+            return false;
+        }
+        if (keepPixels && scale > Render::Textures::Upscale::NoScale)
+        {
+            ShrinkCanvas(*pNewBitmap, uploadWidth, uploadHeight, scale);
+        }
+        rgbaData = PadRGBToRGBA(pNewBitmap->Buffer, uploadWidth, uploadHeight);
     }
-
-    int uploadWidth = textureWidth;
-    int uploadHeight = textureHeight;
-    if (keepPixels && scale > Render::Textures::Upscale::NoScale)
-    {
-        ShrinkCanvas(*pNewBitmap, uploadWidth, uploadHeight, scale);
-    }
+    pNewBitmap->Width = static_cast<float>(textureWidth / scale);
+    pNewBitmap->Height = static_cast<float>(textureHeight / scale);
 
     pNewBitmap->TextureNumber = uiBitmapIndex;
     pNewBitmap->worldTexture = worldTexture;
     pNewBitmap->wrapRepeat = uiWrapMode == GL_REPEAT;
     pNewBitmap->scale = static_cast<std::uint8_t>(upscaled ? scale : 1);
-    std::vector<std::uint8_t> rgbaData = PadRGBToRGBA(pNewBitmap->Buffer, uploadWidth, uploadHeight);
     if (m_pixelChange != nullptr)
     {
         (*m_pixelChange)(rgbaData.data(), rgbaData.size() / 4u, 4);

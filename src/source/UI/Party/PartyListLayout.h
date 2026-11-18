@@ -15,4 +15,8 @@ constexpr int MemberNameBoxWidth = 58;
 // The health bar's width for a member's health step (0..10, a step above 10 is a full bar).
 float HealthBarLength(int stepHP);
 
+// A member on the map with this many health steps or fewer gets the card's low-health tint.
+constexpr int LowHealthSteps = 2;
+bool IsLowHealth(bool onMap, int stepHP);
+
 } // namespace UI::Party::List

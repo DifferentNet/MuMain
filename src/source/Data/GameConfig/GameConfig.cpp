@@ -94,6 +94,7 @@ void GameConfig::Load()
     m_overheadTitles = ReadBool(CfgSectionUI, CfgKeyOverheadTitles, CfgDefaultOverheadTitles);
     m_titleEffects = ReadBool(CfgSectionUI, CfgKeyTitleEffects, CfgDefaultTitleEffects);
     m_titlesTownsOnly = ReadBool(CfgSectionUI, CfgKeyTitlesTownsOnly, CfgDefaultTitlesTownsOnly);
+    m_declineInvitations = ReadBool(CfgSectionUI, CfgKeyDeclineInvitations, CfgDefaultDeclineInvitations);
     LoadLootFilter();
     m_interfaceView = ReadString(CfgSectionUI, CfgKeyInterfaceView, CfgDefaultInterfaceView);
     m_controls = ReadString(CfgSectionUI, CfgKeyControls, CfgDefaultControls);
@@ -273,6 +274,7 @@ void GameConfig::Save()
     WriteBool(CfgSectionUI, CfgKeyOverheadTitles, m_overheadTitles);
     WriteBool(CfgSectionUI, CfgKeyTitleEffects, m_titleEffects);
     WriteBool(CfgSectionUI, CfgKeyTitlesTownsOnly, m_titlesTownsOnly);
+    WriteBool(CfgSectionUI, CfgKeyDeclineInvitations, m_declineInvitations);
     SaveLootFilter();
     WriteString(CfgSectionUI, CfgKeyInterfaceView, m_interfaceView);
     WriteString(CfgSectionUI, CfgKeyControls, m_controls);

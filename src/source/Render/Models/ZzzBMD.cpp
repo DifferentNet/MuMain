@@ -1212,6 +1212,27 @@ bool BMD::PlayAnimation(float* AnimationFrame, float* PriorAnimationFrame, unsig
 
     return Loop;
 }
+namespace
+{
+// The two bone matrix arrays the attached-model helpers below fill per call, kept per thread instead of
+// allocated on every call (they run every frame an effect of that kind lives).
+constexpr std::size_t BoneScratchLocal = 0;
+constexpr std::size_t BoneScratchResult = 1;
+constexpr std::size_t FloatsPerBoneMatrix = sizeof(vec34_t) / sizeof(float);
+
+vec34_t* BoneMatrixScratch(std::size_t slot, int numBones)
+{
+    static thread_local std::array<std::vector<float>, 2> scratch;
+    std::vector<float>& floats = scratch[slot];
+    const std::size_t required = static_cast<std::size_t>(numBones) * FloatsPerBoneMatrix;
+    if (floats.size() < required)
+    {
+        floats.resize(required);
+    }
+    return reinterpret_cast<vec34_t*>(floats.data());
+}
+} // namespace
+
 void BMD::AnimationTransformWithAttachHighModel_usingGlobalTM(OBJECT* oHighHierarchyModel, BMD* bmdHighHierarchyModel, int iBoneNumberHighHierarchyModel, vec3_t& vOutPosHighHiearachyModelBone, vec3_t* arrOutSetfAllBonePositions, bool bApplyTMtoVertices)
 {
     if (NumBones < 1) return;
@@ -1224,7 +1245,7 @@ void BMD::AnimationTransformWithAttachHighModel_usingGlobalTM(OBJECT* oHighHiera
     vec3_t		Temp, v3Position;
     OBB_t		OBB;
 
-    arrBonesTMLocal = new vec34_t[NumBones];
+    arrBonesTMLocal = BoneMatrixScratch(BoneScratchLocal, NumBones);
     Vector(0.0f, 0.0f, 0.0f, Temp);
 
     memset(arrBonesTMLocal, 0, sizeof(vec34_t) * NumBones);
@@ -1266,7 +1287,6 @@ void BMD::AnimationTransformWithAttachHighModel_usingGlobalTM(OBJECT* oHighHiera
         Transform(BoneTransform, Temp, Temp, &OBB, false);
     }
 
-    delete[] arrBonesTMLocal;
 }
 
 void BMD::AnimationTransformWithAttachHighModel(OBJECT* oHighHierarchyModel, BMD* bmdHighHierarchyModel, int iBoneNumberHighHierarchyModel, vec3_t& vOutPosHighHiearachyModelBone, vec3_t* arrOutSetfAllBonePositions)
@@ -1279,10 +1299,10 @@ void BMD::AnimationTransformWithAttachHighModel(OBJECT* oHighHierarchyModel, BMD
     vec34_t		tmBoneHierarchicalObject;
     vec3_t		Temp, v3Position;
 
-    arrBonesTMLocal = new vec34_t[NumBones];
+    arrBonesTMLocal = BoneMatrixScratch(BoneScratchLocal, NumBones);
     Vector(0.0f, 0.0f, 0.0f, Temp);
 
-    arrBonesTMLocalResult = new vec34_t[NumBones];
+    arrBonesTMLocalResult = BoneMatrixScratch(BoneScratchResult, NumBones);
 
     memset(arrBonesTMLocalResult, 0, sizeof(vec34_t) * NumBones);
     memset(arrBonesTMLocal, 0, sizeof(vec34_t) * NumBones);
@@ -1316,8 +1336,6 @@ void BMD::AnimationTransformWithAttachHighModel(OBJECT* oHighHierarchyModel, BMD
         Vector(arrBonesTMLocalResult[i_][0][3], arrBonesTMLocalResult[i_][1][3], arrBonesTMLocalResult[i_][2][3], arrOutSetfAllBonePositions[i_]);
     }
 
-    delete[] arrBonesTMLocalResult;
-    delete[] arrBonesTMLocal;
 }
 
 void BMD::AnimationTransformOnlySelf(vec3_t* arrOutSetfAllBonePositions, const OBJECT* oSelf)
@@ -1329,7 +1347,7 @@ void BMD::AnimationTransformOnlySelf(vec3_t* arrOutSetfAllBonePositions, const O
 
     vec3_t		Temp;
 
-    arrBonesTMLocal = new vec34_t[NumBones];
+    arrBonesTMLocal = BoneMatrixScratch(BoneScratchLocal, NumBones);
     Vector(0.0f, 0.0f, 0.0f, Temp);
 
     memset(arrBonesTMLocal, 0, sizeof(vec34_t) * NumBones);
@@ -1341,7 +1359,6 @@ void BMD::AnimationTransformOnlySelf(vec3_t* arrOutSetfAllBonePositions, const O
     {
         Vector(arrBonesTMLocal[i_][0][3], arrBonesTMLocal[i_][1][3], arrBonesTMLocal[i_][2][3], arrOutSetfAllBonePositions[i_]);
     }
-    delete[] arrBonesTMLocal;
 }
 
 void BMD::AnimationTransformOnlySelf(vec3_t* arrOutSetfAllBonePositions,
@@ -1370,7 +1387,7 @@ void BMD::AnimationTransformOnlySelf(vec3_t* arrOutSetfAllBonePositions,
     v3RootPosition[1] = v3Position[1];
     v3RootPosition[2] = v3Position[2];
 
-    arrBonesTMLocal = new vec34_t[NumBones];
+    arrBonesTMLocal = BoneMatrixScratch(BoneScratchLocal, NumBones);
     Vector(0.0f, 0.0f, 0.0f, Temp);
 
     memset(arrBonesTMLocal, 0, sizeof(vec34_t) * NumBones);
@@ -1406,7 +1423,6 @@ void BMD::AnimationTransformOnlySelf(vec3_t* arrOutSetfAllBonePositions,
             arrOutSetfAllBonePositions[i_]);
     }
 
-    delete[] arrBonesTMLocal;
 }
 
 vec3_t		g_vright;		// needs to be set to viewer's right in order for chrome to work
@@ -3561,6 +3577,7 @@ void BMD::ShareFrom(BMD& owner)
     Meshs = owner.Meshs;
     Bones = owner.Bones;
     Actions = owner.Actions;
+    m_animationKeys = owner.m_animationKeys;
     m_staticPoses = owner.m_staticPoses;
     Textures = owner.Textures;
     IndexTexture = owner.IndexTexture;
@@ -3597,9 +3614,12 @@ void BMD::Release()
 
     const bool othersUseTheData = m_sharedDataUsers && m_sharedDataUsers.use_count() > 1;
     m_sharedDataUsers.reset();
+    // Open2's keys live in one block; a model built from SMD files has an array per key set.
+    const bool keysInBlock = m_animationKeys != nullptr;
     if (othersUseTheData)
     {
         // The last slot that uses the data frees it.
+        m_animationKeys.reset();
         Meshs = nullptr;
         Bones = nullptr;
         Actions = nullptr;
@@ -3624,7 +3644,13 @@ void BMD::Release()
                 for (int j = 0; j < NumActions; ++j)
                 {
                     BoneMatrix_t* bm = &b->BoneMatrixes[j];
-                    if (bm)
+                    if (bm && keysInBlock)
+                    {
+                        bm->Position = nullptr;
+                        bm->Rotation = nullptr;
+                        bm->Quaternion = nullptr;
+                    }
+                    else if (bm)
                     {
                         if (bm->Position) {
 							delete[] bm->Position;
@@ -3645,6 +3671,7 @@ void BMD::Release()
             }
         }
     }
+    m_animationKeys.reset();
 
     if (Actions)
     {
@@ -3794,6 +3821,39 @@ private:
     size_t ptr;
 };
 
+
+namespace
+{
+constexpr std::size_t FloatsPerVec3 = 3;
+constexpr std::size_t FloatsPerVec4 = 4;
+constexpr int BoneNameBytes = 32;
+
+// The floats Open2 needs for the animation keys of the bones stored at data + ptr: a position, a
+// rotation and a quaternion per key of every action, for each bone that is not a dummy.
+std::size_t CountAnimationKeyFloats(const unsigned char* data, int ptr, int numBones, const Action_t* actions,
+                                    int numActions)
+{
+    std::size_t keysPerBone = 0;
+    for (int j = 0; j < numActions; ++j)
+    {
+        keysPerBone += static_cast<std::size_t>(std::max<short>(actions[j].NumAnimationKeys, 0));
+    }
+    const std::size_t fileBytesPerBone = keysPerBone * sizeof(vec3_t) * 2u;
+    std::size_t floats = 0;
+    for (int i = 0; i < numBones; ++i)
+    {
+        const bool dummy = *(const char*)(data + ptr) != 0;
+        ptr += sizeof(char);
+        if (dummy)
+        {
+            continue;
+        }
+        ptr += BoneNameBytes + static_cast<int>(sizeof(short)) + static_cast<int>(fileBytesPerBone);
+        floats += keysPerBone * (FloatsPerVec3 * 2u + FloatsPerVec4);
+    }
+    return floats;
+}
+} // namespace
 
 bool BMD::Open2(const wchar_t* DirName, const wchar_t* ModelFileName, bool bReAlloc)
 {
@@ -3985,6 +4045,10 @@ bool BMD::Open2(const wchar_t* DirName, const wchar_t* ModelFileName, bool bReAl
         }
     }
 
+    // Every bone's keys of every action share one block (m_animationKeys).
+    const std::size_t keyFloats = CountAnimationKeyFloats(data, ptr, NumBones, Actions, NumActions);
+    m_animationKeys = keyFloats > 0 ? std::shared_ptr<float[]>(new float[keyFloats]) : nullptr;
+    float* nextKey = m_animationKeys.get();
     for (int i = 0; i < NumBones; ++i)
     {
         Bone_t& b = Bones[i];
@@ -4006,9 +4070,12 @@ bool BMD::Open2(const wchar_t* DirName, const wchar_t* ModelFileName, bool bReAl
 
                 if (numKeys > 0)
                 {
-                    bm.Position = new vec3_t[numKeys];
-                    bm.Rotation = new vec3_t[numKeys];
-                    bm.Quaternion = new vec4_t[numKeys];
+                    bm.Position = reinterpret_cast<vec3_t*>(nextKey);
+                    nextKey += static_cast<std::size_t>(numKeys) * FloatsPerVec3;
+                    bm.Rotation = reinterpret_cast<vec3_t*>(nextKey);
+                    nextKey += static_cast<std::size_t>(numKeys) * FloatsPerVec3;
+                    bm.Quaternion = reinterpret_cast<vec4_t*>(nextKey);
+                    nextKey += static_cast<std::size_t>(numKeys) * FloatsPerVec4;
 
                     memcpy(bm.Position, data + ptr, sizeof(vec3_t) * numKeys); ptr += sizeof(vec3_t) * numKeys;
                     memcpy(bm.Rotation, data + ptr, sizeof(vec3_t) * numKeys); ptr += sizeof(vec3_t) * numKeys;

@@ -14273,4 +14273,32 @@
   <data name="WarpUnlocked" xml:space="preserve">
     <value>Рівень %d: новий телепорт — %ls</value>
   </data>
+  <!-- Round 14 -->
+  <data name="DeclineInvitations" xml:space="preserve">
+    <value>Відхиляти запрошення</value>
+  </data>
+  <data name="InviteDeclinedParty" xml:space="preserve">
+    <value>Запрошення в групу від %ls відхилено.</value>
+  </data>
+  <data name="InviteDeclinedTrade" xml:space="preserve">
+    <value>Пропозицію обміну від %ls відхилено.</value>
+  </data>
+  <data name="InviteDeclinedDuel" xml:space="preserve">
+    <value>Виклик на дуель від %ls відхилено.</value>
+  </data>
+  <data name="HelperSafeZone" xml:space="preserve">
+    <value>MU Helper не працює в безпечній зоні.</value>
+  </data>
+  <data name="HelperStoppedSummary" xml:space="preserve">
+    <value>MU Helper зупинено через %d год %d хв. Рівні: +%d, зен: %ls.</value>
+  </data>
+  <data name="SkillBookNotLearnable" xml:space="preserve">
+    <value>Цю навичку поки не можна вивчити: перегляньте її вимоги.</value>
+  </data>
+  <data name="CapsLockOn" xml:space="preserve">
+    <value>Увімкнено Caps Lock</value>
+  </data>
+  <data name="GuildWarAlreadyOn" xml:space="preserve">
+    <value>Одна з гільдій уже воює з іншою гільдією.</value>
+  </data>
 </root>
