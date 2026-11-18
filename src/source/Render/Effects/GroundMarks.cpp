@@ -2,7 +2,6 @@
 
 #include "Render/Effects/GroundMarks.h"
 
-#include "Render/Models/ZzzBMD.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "Render/Renderer/RenderUtils.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
@@ -78,15 +77,6 @@ int TextureOf(const Kind kind)
         return BITMAP_CRATER;
     case Kind::Frost:
         return BITMAP_CLUD64;
-    case Kind::Crack:
-    {
-        const BMD& model = Models[MODEL_SKILL_FURY_STRIKE + 3];
-        if (model.NumMeshs <= 0 || model.IndexTexture == nullptr)
-        {
-            return -1;
-        }
-        return static_cast<int>(model.IndexTexture[0]);
-    }
     }
     return -1;
 }
@@ -188,7 +178,7 @@ bool Add(const Source source, const float x, const float y)
         return false;
     }
     const Look look = LookOf(source);
-    // No texture (the crack model's failed to load): no mark, so the classic crack model stays.
+    // No texture loaded: no mark.
     if (TextureOf(look.kind) < 0 || !IsGroundTile(FloorToInt(x / TERRAIN_SCALE), FloorToInt(y / TERRAIN_SCALE)))
     {
         return false;

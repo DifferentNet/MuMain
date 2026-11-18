@@ -1,11 +1,11 @@
 // GroundMarks.h: fading marks that fire, ice and earth skills leave on the ground (Remaster,
 // Render/Effects/SkillFx.h, Feature::Decals).
 //
-//   Scorch  Meteor and Flame: the crater texture (Effect/Cratered), alpha blended, white.
+//   Scorch  Meteor, Flame, Rageful Blow and Earthshake: the crater texture (Effect/Cratered), alpha
+//           blended, white (the earth skills keep their crack model on top: its white strokes, flat on
+//           the ground, read as noise).
 //   Large   Inferno and Hellfire: one wide scorch, a little fainter.
 //   Frost   Ice Storm and Ice: the soft cloud texture (Effect/Clud64) added in a pale blue.
-//   Crack   Rageful Blow and Earthshake: the texture of their crack model (MODEL_SKILL_FURY_STRIKE + 3),
-//           which is not created while the mark is laid.
 //
 // A mark fades in over 2 reference frames (25 Hz ticks), holds, then fades out as 1 - t^2. The marks
 // lie in a fixed pool (SkillFx::MarkBudget of the effect level, at most 48); a hit close to a mark of
@@ -32,9 +32,8 @@ enum class Kind : std::uint8_t
     Scorch,
     LargeScorch,
     Frost,
-    Crack,
 };
-inline constexpr int kKindCount = 4;
+inline constexpr int kKindCount = 3;
 
 // The skills that lay a mark.
 enum class Source : std::uint8_t
@@ -45,7 +44,7 @@ enum class Source : std::uint8_t
     Hellfire,
     IceStorm,
     Ice,
-    RagefulBlow, // and Earthshake: the same crack
+    RagefulBlow, // and Earthshake: a scorch under their crack model
 };
 
 // How long a kind of mark lasts, in reference frames (25 Hz), and how strong it is at its peak.
@@ -62,14 +61,14 @@ inline constexpr float kFadeInTicks = 2.f;
 {
     switch (kind)
     {
+    // The crater art is mostly soft edge (its alpha averages a third), and the Remaster's grass stands
+    // over the ground: a scorch holds at full alpha to be seen at night.
     case Kind::Scorch:
-        return {25.f, 100.f, 0.6f};
+        return {25.f, 100.f, 1.f};
     case Kind::LargeScorch:
-        return {25.f, 100.f, 0.45f};
+        return {25.f, 100.f, 0.85f};
     case Kind::Frost:
-        return {15.f, 60.f, 0.35f};
-    case Kind::Crack:
-        return {35.f, 60.f, 1.f};
+        return {15.f, 60.f, 0.5f};
     }
     return {0.f, 0.f, 0.f};
 }
@@ -128,8 +127,8 @@ struct Look
         return {Kind::Frost, kMaxHalfSize, kMaxHalfSize};
     case Source::Ice:
         return {Kind::Frost, 70.f, 70.f};
-    case Source::RagefulBlow: // the crack art is about 2:1
-        return {Kind::Crack, 85.f, 50.f};
+    case Source::RagefulBlow:
+        return {Kind::Scorch, 75.f, 75.f};
     }
     return {Kind::Scorch, 0.f, 0.f};
 }

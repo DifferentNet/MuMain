@@ -11,7 +11,7 @@ using GroundMarks::Kind;
 using GroundMarks::Mark;
 using GroundMarks::MarkPool;
 
-constexpr Kind kAllKinds[] = {Kind::Scorch, Kind::LargeScorch, Kind::Frost, Kind::Crack};
+constexpr Kind kAllKinds[] = {Kind::Scorch, Kind::LargeScorch, Kind::Frost};
 
 Mark MarkAt(const float x, const float y, const Kind kind = Kind::Scorch, const float half = 80.f)
 {
@@ -64,28 +64,25 @@ TEST_CASE("the lifetimes and peaks of the plan [render][ground_marks]")
 {
     CHECK(GroundMarks::Lifetime(Kind::Scorch) == 125.f);
     CHECK(GroundMarks::Lifetime(Kind::LargeScorch) == 125.f);
-    CHECK(GroundMarks::Lifetime(Kind::Crack) == 95.f);
     CHECK(GroundMarks::Lifetime(Kind::Frost) == 75.f);
-    CHECK(GroundMarks::LifeOf(Kind::Scorch).peak == doctest::Approx(0.6f));
-    CHECK(GroundMarks::LifeOf(Kind::LargeScorch).peak == doctest::Approx(0.45f));
-    CHECK(GroundMarks::LifeOf(Kind::Crack).peak == doctest::Approx(1.f));
-    CHECK(GroundMarks::LifeOf(Kind::Frost).peak == doctest::Approx(0.35f));
+    CHECK(GroundMarks::LifeOf(Kind::Scorch).peak == doctest::Approx(1.f));
+    CHECK(GroundMarks::LifeOf(Kind::LargeScorch).peak == doctest::Approx(0.85f));
+    CHECK(GroundMarks::LifeOf(Kind::Frost).peak == doctest::Approx(0.5f));
     CHECK(GroundMarks::LookOf(GroundMarks::Source::Inferno).kind == Kind::LargeScorch);
     CHECK(GroundMarks::LookOf(GroundMarks::Source::Hellfire).kind == Kind::LargeScorch);
     CHECK(GroundMarks::LookOf(GroundMarks::Source::Meteor).kind == Kind::Scorch);
     CHECK(GroundMarks::LookOf(GroundMarks::Source::Flame).kind == Kind::Scorch);
     CHECK(GroundMarks::LookOf(GroundMarks::Source::IceStorm).kind == Kind::Frost);
     CHECK(GroundMarks::LookOf(GroundMarks::Source::Ice).kind == Kind::Frost);
-    CHECK(GroundMarks::LookOf(GroundMarks::Source::RagefulBlow).kind == Kind::Crack);
-    // The crack art is wide; the storm's one frost covers its 300 x 300 area.
-    CHECK(GroundMarks::LookOf(GroundMarks::Source::RagefulBlow).halfW == 85.f);
-    CHECK(GroundMarks::LookOf(GroundMarks::Source::RagefulBlow).halfH == 50.f);
+    // The earth skills lay a scorch under their crack model; the storm's one frost covers its 300 x 300 area.
+    CHECK(GroundMarks::LookOf(GroundMarks::Source::RagefulBlow).kind == Kind::Scorch);
+    CHECK(GroundMarks::LookOf(GroundMarks::Source::RagefulBlow).halfW == 75.f);
+    CHECK(GroundMarks::LookOf(GroundMarks::Source::RagefulBlow).halfH == 75.f);
     CHECK(GroundMarks::LookOf(GroundMarks::Source::IceStorm).halfW == GroundMarks::kMaxHalfSize);
     CHECK(GroundMarks::LookOf(GroundMarks::Source::IceStorm).halfH == GroundMarks::kMaxHalfSize);
     CHECK(GroundMarks::MergeShareOf(Kind::Scorch) == 1.f);
     CHECK(GroundMarks::MergeShareOf(Kind::LargeScorch) == 1.f);
     CHECK(GroundMarks::MergeShareOf(Kind::Frost) == doctest::Approx(0.6f));
-    CHECK(GroundMarks::MergeShareOf(Kind::Crack) == doctest::Approx(0.6f));
 }
 
 TEST_CASE("a hit close to a mark of the same kind renews it [render][ground_marks]")

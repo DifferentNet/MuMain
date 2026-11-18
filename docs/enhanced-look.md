@@ -189,12 +189,12 @@ held by the effect level:
   2048) such quads, the rest as before. At 25 FPS a straight full trail looks as it
   did.
 - `SkillGroundMarks`: fire, ice and earth skills leave a mark on the ground that
-  fades away (effect level 2 and up). Meteor and Flame leave a scorch (the crater
-  texture), Inferno and Hellfire one wide, fainter scorch, Ice Storm (one per cast,
-  over its whole area) and Ice a pale blue frost (the soft cloud texture, added),
-  Rageful Blow and Earthshake a wide crack (the texture of their crack model, which
-  is then not drawn). A mark fades in over two 25 FPS frames, holds (scorch 1 s,
-  crack 1.4 s, frost 0.6 s) and fades out (scorch 4 s, crack and frost 2.4 s). Hits
+  fades away (effect level 2 and up). Meteor, Flame, Rageful Blow and Earthshake
+  leave a scorch (the crater texture; the earth skills keep their crack model on
+  top), Inferno and Hellfire one wide, a little fainter scorch, Ice Storm (one per
+  cast, over its whole area) and Ice a pale blue frost (the soft cloud texture,
+  added). A mark fades in over two 25 FPS frames, holds (scorch 1 s, frost 0.6 s)
+  and fades out (scorch 4 s, frost 2.4 s). Hits
   close to a mark of the same kind renew it instead of piling up (a scorch anywhere
   on another scorch), so spamming a skill never makes a black patch; at most 48
   marks lie at once (level 3: 32, level 2: 16), the one furthest through its life

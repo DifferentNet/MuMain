@@ -10,7 +10,7 @@
 //   Ribbons        the Evil Spirit and Death Stab trails are drawn as smooth curves whose texture and
 //                  end move every frame (RibbonSpline.h, JointRibbon.h), and the sword swing trail no
 //                  longer folds over itself at high frame rates (BlurSlice.h).
-//   Decals         fire, ice and earth skills leave a fading mark on the ground (scorch, frost, crack;
+//   Decals         fire, ice and earth skills leave a fading mark on the ground (scorch, frost;
 //                  GroundMarks.h).
 //
 //   Effect level 4: 16 pools, soft, flipbook, trails of up to 8 pieces a span, 48 ground marks; 3: 12

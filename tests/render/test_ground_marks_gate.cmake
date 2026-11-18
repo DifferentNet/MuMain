@@ -1,7 +1,7 @@
 # The skill ground marks (Render/Effects/SkillFx.h, Feature::Decals) must leave the classic frame alone
 # when they are off: GroundMarks::Add reads the Decals gate before anything else, the Rageful Blow crack
-# model is skipped only when Add laid a mark, the hooks pass no rand() and GroundMarks itself never
-# calls rand() or touches the terrain light.
+# model is always created, the hooks pass no rand() and GroundMarks itself never calls rand() or touches
+# the terrain light.
 foreach(variable MU_GROUND_MARKS_SOURCE MU_GROUND_MARKS_HEADER MU_EFFECT_SOURCE MU_MOVE_HANDLERS_SOURCE)
     if(NOT DEFINED ${variable})
         message(FATAL_ERROR "${variable} is required")
@@ -82,7 +82,7 @@ endfunction()
 check_hook_guard("${MU_EFFECT_SOURCE}" "Flame" "o->Owner != nullptr" 2)
 check_hook_guard("${MU_MOVE_HANDLERS_SOURCE}" "IceStorm" "o->PKKey == 1" 1)
 
-# The crack model: created in one place, only when Add laid no mark (Add is false while Decals is off).
+# The crack model: created in one place, whether or not a mark was laid (the mark is a scorch under it).
 read_source("${MU_MOVE_HANDLERS_SOURCE}" moves)
 string(REGEX MATCHALL "MODEL_SKILL_FURY_STRIKE \\+ 3" crackModels "${moves}")
 list(LENGTH crackModels crackModelCount)
@@ -90,8 +90,8 @@ if(NOT crackModelCount EQUAL 1)
     message(FATAL_ERROR "${MU_MOVE_HANDLERS_SOURCE}: expected one MODEL_SKILL_FURY_STRIKE + 3, found ${crackModelCount}")
 endif()
 string(REGEX MATCH
-       "const bool crackMark = Render::Effects::GroundMarks::Add\\(Render::Effects::GroundMarks::Source::RagefulBlow[^;]*;[ \t\n]*if \\(!crackMark\\)[ \t\n]*{[ \t\n]*CreateEffectFpsChecked\\(MODEL_SKILL_FURY_STRIKE \\+ 3"
-       crackGate "${moves}")
-if(NOT crackGate)
-    message(FATAL_ERROR "${MU_MOVE_HANDLERS_SOURCE}: the crack model is not behind the crack mark")
+       "Render::Effects::GroundMarks::Add\\(Render::Effects::GroundMarks::Source::RagefulBlow[^;]*;[ \t\n]*CreateEffectFpsChecked\\(MODEL_SKILL_FURY_STRIKE \\+ 3"
+       crackModel "${moves}")
+if(NOT crackModel)
+    message(FATAL_ERROR "${MU_MOVE_HANDLERS_SOURCE}: the crack model must follow the Rageful Blow mark unconditionally")
 endif()
