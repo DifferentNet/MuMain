@@ -309,6 +309,10 @@ public:
     void SetSkillLightPools(int enabled);
     void SetSoftParticles(int enabled);
     void SetFlipbookBlending(int enabled);
+    // [Render] SmoothTrails: in the Remaster PC client, smooth skill and swing trails (SkillFx.h), 0 off,
+    // 1 on (clamped; set by hand or with $fx trails).
+    int GetSmoothTrails() const { return m_smoothTrails; }
+    void SetSmoothTrails(int enabled);
     // [Render] Haze: with HD textures on, distance haze and low ground fog over the world
     // (Render/PostProcessing/HazeSetting.h), 0 off, 1 on; HazeStrength in percent (both clamped;
     // Options > Graphics applies them at once).
@@ -516,6 +520,7 @@ private:
     int m_skillLightPools = 1;
     int m_softParticles = 1;
     int m_flipbookBlending = 1;
+    int m_smoothTrails = 1;
     int m_haze = 1;
     int m_hazeStrength = 70;
     int m_particles = 1;

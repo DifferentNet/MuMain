@@ -169,7 +169,7 @@ characters, monsters, gear and objects get exactly the light they had before,
 with the setting on or off.
 
 Skill effects (Remaster only, `Render/Effects/SkillFx.h`; the web has none) add
-three looks, each its own `[Render]` key in `config.ini`, on (1) by default and
+four looks, each its own `[Render]` key in `config.ini`, on (1) by default and
 held by the effect level:
 
 - `SkillLightPools`: spell and effect lights lay a pool of light on the ground,
@@ -180,9 +180,28 @@ held by the effect level:
   or haze already draw, so with both off there is no change and no extra pass.
 - `FlipbookBlending`: explosion and fire sheets blend from one frame to the next
   (effect level 3 and up); the last frame holds.
+- `SmoothTrails`: smooth trails at high frame rates (effect level 3 and up). The
+  Evil Spirit spirits and Death Stab's wind are drawn as smooth curves instead of
+  straight pieces with a kink at every point, and their texture and end move every
+  frame instead of jumping 25 times a second. A player's sword swing trail no
+  longer folds over itself above 25 FPS. Level 4 cuts a trail span into up to 8
+  pieces where it bends, level 3 into up to 4; a frame draws at most 4096 (level 3:
+  2048) such quads, the rest as before. At 25 FPS a straight full trail looks as it
+  did.
 
-At effect level 0 and 1 all three are off. In developer builds, `$fx pools|soft|flipbook on|off`
-switches one look (and saves the key) and `$fx status` logs what is on.
+At effect level 0 and 1 all four are off. In developer builds, `$fx pools|soft|flipbook|trails on|off`
+switches one look (and saves the key) and `$fx status` logs what is on, with the
+smooth trails and their pieces drawn last frame.
+
+Why the trails needed it: a joint trail keeps one point per 25 FPS frame (the
+newest follows the spell every frame), so at 144 FPS the curve between its points
+was still straight lines, its texture was laid by point and its oldest piece fell
+off whole. Now the points are joined by a centripetal Catmull-Rom curve (the kind
+that never loops or overshoots between close points), the texture follows each
+point's age and the end is cut at the trail's length. The sword trail lays ten
+poses of the last swing slice every frame but only a 25 FPS frame keeps them; the
+frames in between laid a whole slice that overlapped the kept one. Now they lay
+only the swing since the kept slice.
 
 Foliage smoothing needs no light mood values either. Why it helps: with HD textures
 the Enhanced samplers lean half a mip level toward the sharper one (the Remaster

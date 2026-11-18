@@ -30,15 +30,17 @@ int EffectLevel()
 
 void Log()
 {
-    const std::array<bool, kFeatureCount + 1> state{Detail::g_available, s_chosen[0], s_chosen[1], s_chosen[2]};
+    const std::array<bool, kFeatureCount + 1> state{Detail::g_available, s_chosen[0], s_chosen[1], s_chosen[2],
+                                                    s_chosen[3]};
     if (s_logged == state)
     {
         return;
     }
     s_logged = state;
-    mu::log::Get("render")->info("Skill effects {}: pools {}, soft {}, flipbook {}",
+    mu::log::Get("render")->info("Skill effects {}: pools {}, soft {}, flipbook {}, trails {}",
                                  Detail::g_available ? "available" : "not available", s_chosen[0] ? "on" : "off",
-                                 s_chosen[1] ? "on" : "off", s_chosen[2] ? "on" : "off");
+                                 s_chosen[1] ? "on" : "off", s_chosen[2] ? "on" : "off",
+                                 s_chosen[3] ? "on" : "off");
 }
 } // namespace
 
@@ -60,6 +62,7 @@ void ApplyFromConfig()
     s_chosen[Index(Feature::LightPools)] = config.GetSkillLightPools() != 0;
     s_chosen[Index(Feature::SoftParticles)] = config.GetSoftParticles() != 0;
     s_chosen[Index(Feature::FlipbookBlend)] = config.GetFlipbookBlending() != 0;
+    s_chosen[Index(Feature::Ribbons)] = config.GetSmoothTrails() != 0;
     Log();
 }
 
@@ -71,6 +74,16 @@ bool Detail::EnabledWhenAvailable(const Feature feature)
 int ActivePoolBudget()
 {
     return Enabled(Feature::LightPools) ? PoolBudget(EffectLevel()) : 0;
+}
+
+int ActiveRibbonPieces()
+{
+    return Enabled(Feature::Ribbons) ? RibbonPieceBudget(EffectLevel()) : 0;
+}
+
+int ActiveRibbonQuadBudget()
+{
+    return Enabled(Feature::Ribbons) ? RibbonQuadBudget(EffectLevel()) : 0;
 }
 
 bool Chosen(const Feature feature)
@@ -92,6 +105,9 @@ void Choose(const Feature feature, const bool enabled)
         break;
     case Feature::FlipbookBlend:
         config.SetFlipbookBlending(value);
+        break;
+    case Feature::Ribbons:
+        config.SetSmoothTrails(value);
         break;
     }
     config.Save();

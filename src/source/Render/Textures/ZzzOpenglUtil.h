@@ -13,6 +13,7 @@ extern double  FPS;
 extern double  FPS_AVG;
 extern float  FPS_ANIMATION_FACTOR;
 extern int REFERENCE_FRAME_STEP;
+extern float REFERENCE_FRAMES_SINCE_STEP;
 extern unsigned int RENDERED_FRAME;
 extern double  WorldTime;
 extern bool   FogEnable;
