@@ -134,15 +134,6 @@ if(TARGET mu_webp)
             ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/PackedOzt.cpp
         LINK_LIBS mu_webp
     )
-    # The Remaster's prebuilt normal maps (scripts/hd_pack.py), read from Data\HD.
-    mu_add_test(
-        NAME normal_map_file_tests
-        SOURCES
-            test_normal_map_file.cpp
-            ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/NormalMapFile.cpp
-            ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/NormalMaps.cpp
-        LINK_LIBS mu_webp
-    )
 endif()
 
 # The marker of upscaled art that CGlobalBitmap reads from OZJ and OZT files.
@@ -220,13 +211,6 @@ mu_add_test(
     SOURCES
         test_hd_textures.cpp
         ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/HdTexturePath.cpp
-)
-
-mu_add_test(
-    NAME normal_maps_tests
-    SOURCES
-        test_normal_maps.cpp
-        ${CMAKE_SOURCE_DIR}/src/source/Render/Textures/NormalMaps.cpp
 )
 
 # Leaf litter: which model texture it is and when a sprig hangs in the air.

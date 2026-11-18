@@ -41,7 +41,6 @@
 #include "Render/Textures/ZzzTexture.h"
 #include "Render/Textures/HdTextures.h"
 #include "Render/Models/ModelSmoothing.h"
-#include "Render/Textures/NormalMaps.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "Render/Lighting/SoftShadowSetting.h"
 #include "Render/Lighting/SunShadowSetting.h"
@@ -2838,11 +2837,6 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     Render::Textures::Hd::SetEnabled(hdTextures);
     // The Remaster's smoother models go with the HD textures (off in the Classic client).
     Render::Models::Smoothing::SetLevel(hdTextures ? GameConfig::GetInstance().GetSmoothModels() : 0);
-    // So do the relief maps of the model textures.
-    Render::Textures::NormalMaps::SetEnabled(hdTextures && GameConfig::GetInstance().GetNormalMaps());
-    // They ship prebuilt (scripts/hd_pack.py); building missing ones at load is for development only.
-    const char* runtimeNormalMaps = std::getenv("MU_NORMAL_MAPS_RUNTIME");
-    Render::Textures::NormalMaps::SetRuntimeBuild(runtimeNormalMaps != nullptr && std::strcmp(runtimeNormalMaps, "1") == 0);
 #endif
 
     ConfigureCharacterAnimation();

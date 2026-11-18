@@ -138,7 +138,6 @@ void GameConfig::Load()
     m_hdTextures = ReadBool(CfgSectionRender, CfgKeyHdTextures, CfgDefaultHdTextures);
     SetHdTextureSize(ReadInt(CfgSectionRender, CfgKeyHdTextureSize, CfgDefaultHdTextureSize));
     m_smoothModels = std::clamp(ReadInt(CfgSectionRender, CfgKeySmoothModels, CfgDefaultSmoothModels), 0, 2);
-    m_normalMaps = ReadBool(CfgSectionRender, CfgKeyNormalMaps, CfgDefaultNormalMaps);
     m_terrainDetail = std::clamp(ReadInt(CfgSectionRender, CfgKeyTerrainDetail, CfgDefaultTerrainDetail),
                                  CfgMinTerrainDetail, CfgMaxTerrainDetail);
     m_terrainDetailStrength =
@@ -304,7 +303,6 @@ void GameConfig::Save()
     WriteBool(CfgSectionRender, CfgKeyHdTextures, m_hdTextures);
     WriteInt(CfgSectionRender, CfgKeyHdTextureSize, m_hdTextureSize);
     WriteInt(CfgSectionRender, CfgKeySmoothModels, m_smoothModels);
-    WriteBool(CfgSectionRender, CfgKeyNormalMaps, m_normalMaps);
     WriteInt(CfgSectionRender, CfgKeyTerrainDetail, m_terrainDetail);
     WriteInt(CfgSectionRender, CfgKeyTerrainDetailStrength, m_terrainDetailStrength);
     WriteInt(CfgSectionRender, CfgKeyTerrainVariation, m_terrainVariation);

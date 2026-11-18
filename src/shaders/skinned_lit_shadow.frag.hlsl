@@ -5,7 +5,7 @@
 // followed by mu::SunShadowUniform (std140).
 Texture2D tex : register(t0, space2);
 SamplerState s : register(s0, space2);
-// The Remaster's normal map (normal_map.hlsli), sampled like the texture; flat without one.
+// A normal map (normal_map.hlsli), sampled like the texture; the renderer always binds the flat one.
 Texture2D normalMap : register(t2, space2);
 SamplerState normalMapSampler : register(s2, space2);
 #include "normal_map.hlsli"

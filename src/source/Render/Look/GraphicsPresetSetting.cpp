@@ -21,7 +21,6 @@
 #include "Render/Renderer/MuRenderer.h"
 #include "Render/Textures/HdTextureSize.h"
 #include "Render/Textures/HdTextures.h"
-#include "Render/Textures/NormalMaps.h"
 
 #include <string>
 
@@ -49,23 +48,21 @@ std::string ReportedGpuName()
 }
 
 // Remaster on a weak GPU with the Low preset: the models load as they are in the files (smoothing splits
-// every triangle into four or sixteen) and without normal maps, which only the Enhanced lighting reads and
-// which add a quarter to the HD textures' memory. For this run only, nothing is saved: with another preset
-// the next start loads both again. Called before the first model or texture loads.
+// every triangle into four or sixteen). For this run only, nothing is saved: with another preset the next
+// start smooths them again. Called before the first model loads.
 void LightenModelsForWeakGpu(const std::string& gpuName)
 {
     if (!IsWeakGpu(gpuName) || GameConfig::GetInstance().GetGraphicsPreset() != GraphicsPreset::Low)
     {
         return;
     }
-    if (Render::Models::Smoothing::Level() == 0 && !Render::Textures::NormalMaps::Enabled())
+    if (Render::Models::Smoothing::Level() == 0)
     {
-        // Classic client, or HD textures off: there is nothing to lighten.
+        // Classic client, HD textures off or SmoothModels=0: there is nothing to lighten.
         return;
     }
     Render::Models::Smoothing::SetLevel(0);
-    Render::Textures::NormalMaps::SetEnabled(false);
-    mu::log::Get("render")->info("Weak GPU '{}' on Low: model smoothing and normal maps off for this run", gpuName);
+    mu::log::Get("render")->info("Weak GPU '{}' on Low: model smoothing off for this run", gpuName);
 }
 
 // Remaster: whether the HD textures load at half size this run ([Render] HdTextureSize; Auto goes by
