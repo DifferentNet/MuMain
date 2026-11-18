@@ -190,7 +190,8 @@ game writes, in the order `Save()` writes them, plus `Backend`.
 
 ## Key bindings
 
-Options > Gameplay has a Key bindings row (in the game only) that closes the
+Options > Gameplay has a Key bindings row (in the game only, and not on phones and
+tablets, which have no keyboard to press the new key with) that closes the
 settings and opens the key bindings window (`UI/Options/KeyBindingsWindow.h`,
 `key_bindings.rml`, both themes). It lists every action with its key, in
 three groups:
