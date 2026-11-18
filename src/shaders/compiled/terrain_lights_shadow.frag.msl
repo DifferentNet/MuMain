@@ -361,7 +361,7 @@ float4 _main(thread const FSInput& _input, constant SceneLighting& _86, depth2d<
     return color;
 }
 
-fragment main0_out main0(main0_in in [[stage_in]], constant SceneLighting& _86 [[buffer(0)]], constant FogUniforms& _748 [[buffer(1)]], depth2d<float> sunShadowMap [[texture(0)]], texture2d<float> tex [[texture(1)]], sampler sunShadowSampler [[sampler(0)]], sampler s [[sampler(1)]], float4 gl_FragCoord [[position]])
+fragment main0_out main0(main0_in in [[stage_in]], constant FogUniforms& _748 [[buffer(0)]], constant SceneLighting& _86 [[buffer(1)]], texture2d<float> tex [[texture(0)]], depth2d<float> sunShadowMap [[texture(1)]], sampler s [[sampler(0)]], sampler sunShadowSampler [[sampler(1)]], float4 gl_FragCoord [[position]])
 {
     main0_out out = {};
     FSInput _input;

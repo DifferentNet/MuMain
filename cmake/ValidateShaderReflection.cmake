@@ -290,6 +290,7 @@ set(shader_specs
     "soft_particles.vert|vert|0,1,2,3|0|0|1"
     "basic_textured_fog_soft.frag|frag||2|0|2"
     "basic_textured_fog_soft_glow.frag|frag||2|0|2"
+    "post_composite_cores.frag|frag||4|0|1"
 )
 
 foreach(shader_spec IN LISTS shader_specs)
@@ -336,8 +337,13 @@ foreach(shader_spec IN LISTS shader_specs)
     if(NOT blob_mode)
         file(WRITE "${json_path}" "${reflection_json}")
 
+        # As the build's mu_add_shader: fragment shaders keep their SPIR-V bindings as MSL indices.
+        set(msl_options)
+        if(stage STREQUAL "frag")
+            set(msl_options --msl-decoration-binding)
+        endif()
         execute_process(
-            COMMAND "${SPIRV_CROSS_EXE}" "${spv_path}" --msl --output "${msl_path}"
+            COMMAND "${SPIRV_CROSS_EXE}" "${spv_path}" --msl ${msl_options} --output "${msl_path}"
             RESULT_VARIABLE msl_result
             ERROR_VARIABLE msl_error
         )

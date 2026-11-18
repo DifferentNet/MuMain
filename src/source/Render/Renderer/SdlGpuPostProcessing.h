@@ -22,6 +22,9 @@ struct SdlGpuPostShaders
     SDL_GPUShader* bloomDown = nullptr;
     SDL_GPUShader* bloomUp = nullptr;
     SDL_GPUShader* composite = nullptr;
+    // Optional (desktop): post_composite_cores.frag, the composite with hot cores. Without it the
+    // composite runs plain.
+    SDL_GPUShader* compositeCores = nullptr;
 };
 
 // Mirrors BloomUniforms in post_bloom_down.frag.hlsl and post_bloom_up.frag.hlsl.
@@ -33,7 +36,7 @@ struct SdlGpuBloomUniform
 };
 static_assert(sizeof(SdlGpuBloomUniform) == 16);
 
-// Mirrors CompositeUniforms in post_composite.frag.hlsl.
+// Mirrors CompositeUniforms in post_composite.frag.hlsl (and post_composite_cores.frag.hlsl).
 struct SdlGpuCompositeUniform
 {
     float inverseTargetSize[2];
@@ -43,12 +46,15 @@ struct SdlGpuCompositeUniform
     float gradingStrength;
     float fxaa;    // 1: FXAA on
     float sharpen; // 0..1, 0: off
-    float padding[2];
+    // 0..1 hot core strength; read only by post_composite_cores.frag (0 for the plain composite).
+    float coreStrength;
+    float padding;
 };
 static_assert(offsetof(SdlGpuCompositeUniform, bloomScale) == 8);
 static_assert(offsetof(SdlGpuCompositeUniform, gradingStrength) == 12);
 static_assert(offsetof(SdlGpuCompositeUniform, fxaa) == 16);
 static_assert(offsetof(SdlGpuCompositeUniform, sharpen) == 20);
+static_assert(offsetof(SdlGpuCompositeUniform, coreStrength) == 24);
 static_assert(sizeof(SdlGpuCompositeUniform) == 32);
 
 // The textures and passes that turn the rendered 3D scene into the processed
@@ -85,6 +91,10 @@ public:
                                        SDL_GPUTextureFormat frameFormat, SDL_GPUSampleCount sampleCount);
     void DestroyPipelines();
     [[nodiscard]] bool IsAvailable() const;
+    // Whether the hot core twin of the composite was built (not needed for IsAvailable).
+    [[nodiscard]] bool HasCoresPipeline() const;
+    // Whether the last DrawComposite drew the hot cores.
+    [[nodiscard]] bool CoresDrawn() const;
 
     // The scene, bloom source and bloom chain textures for frames of `size`,
     // recreated when the size changed.
@@ -101,7 +111,9 @@ public:
     // RenderBloom ran (with the same level falloff), graded through the grading
     // table at the look's grading strength when one is set, after the look's
     // screen filters (FXAA, sharpening). The diagnostic views show the bloom
-    // source or the bloom instead, ungraded and unfiltered.
+    // source or the bloom instead, ungraded and unfiltered. With the look's core
+    // strength above 0, the hot core twin built and the bloom rendered, the scene
+    // view also burns the bright piles of the bloom source toward white (HotCores.h).
     void DrawComposite(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* pass, SdlGpuTargetSize size,
                        const PostProcessingLook& look, PostProcessingView view);
 
@@ -123,6 +135,10 @@ private:
     [[nodiscard]] bool CreateSamplers();
     [[nodiscard]] bool CreateGradingTexture();
     void ReleaseTargets();
+    // Binds the composite pipeline and its textures: the plain one, or with `cores` the hot core
+    // twin, which also reads the bloom source between the scene and the bloom.
+    void BindComposite(SDL_GPURenderPass* pass, const SDL_GPUTextureSamplerBinding& shown, bool bloom, bool grading,
+                       bool cores);
     void RunBloomPass(SDL_GPUCommandBuffer* commandBuffer, SDL_GPUGraphicsPipeline* pipeline, const BloomLevel& target,
                       SDL_GPULoadOp loadOp, SDL_GPUTexture* source, SdlGpuTargetSize sourceSize, float levelWeight);
 
@@ -132,6 +148,7 @@ private:
     SDL_GPUGraphicsPipeline* m_bloomDownPipeline = nullptr;
     SDL_GPUGraphicsPipeline* m_bloomUpPipeline = nullptr;
     SDL_GPUGraphicsPipeline* m_compositePipeline = nullptr;
+    SDL_GPUGraphicsPipeline* m_compositeCoresPipeline = nullptr; // optional
     SDL_GPUSampler* m_pointSampler = nullptr;
     SDL_GPUSampler* m_linearSampler = nullptr;
 
@@ -140,6 +157,7 @@ private:
     SDL_GPUTexture* m_bloomSourceTexture = nullptr;
     std::array<BloomLevel, BloomLevelCount> m_bloomLevels{};
     bool m_bloomRendered = false;
+    bool m_coresDrawn = false;
 
     SDL_GPUTexture* m_gradingTexture = nullptr;
     bool m_gradingEnabled = false;

@@ -307,8 +307,33 @@ void CItemDataHandler::KeepFieldsNotInBmd(std::vector<ItemDefinition>& items,
     }
 }
 
+namespace
+{
+// A .bmd record keeps damage in one byte, so the export caps it at 255. Names each item that loses
+// damage that way, for the editor console and the log.
+std::string ReportCappedBmdDamage()
+{
+    constexpr WORD BmdByteMax = 255;
+    std::string report;
+    for (const ItemDefinition& item : g_ItemDatabase.GetAllSlots())
+    {
+        if (!item.Exists() || (item.damageMin <= BmdByteMax && item.damageMax <= BmdByteMax))
+        {
+            continue;
+        }
+        const std::string line = "Warning: " + item.names.GetNeutral() + " (" + std::to_string(item.group) + ":" +
+                                 std::to_string(item.number) + ") damage " + std::to_string(item.damageMin) + "-" +
+                                 std::to_string(item.damageMax) + " is capped at 255 in the .bmd files";
+        MU_LOG_WARN(mu::log::Get("data"), "{}", line);
+        report += line + "\n";
+    }
+    return report;
+}
+} // namespace
+
 bool CItemDataHandler::ExportAsBmd(std::string& changeLog)
 {
+    changeLog += ReportCappedBmdDamage();
     bool success = true;
     for (const ItemBmdLanguage& language : GetItemBmdLanguages())
     {

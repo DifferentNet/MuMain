@@ -2,12 +2,23 @@
 // on top, colour graded through the map's lookup table. Draws into the frame's destination before
 // the UI. The player's screen filters (FXAA, sharpening) run on the scene first.
 // CompositeUniforms mirrors mu::SdlGpuCompositeUniform.
+// With COMPOSITE_CORES (post_composite_cores.frag.hlsl, desktop only) it also reads the effects-only
+// image (the bloom source) and burns its bright piles toward white (Render/PostProcessing/HotCores.h).
 Texture2D scene : register(t0, space2);
 SamplerState sceneSampler : register(s0, space2);   // linear: texel centres give the texel, FXAA blends between them
+#ifdef COMPOSITE_CORES
+Texture2D effects : register(t1, space2);
+SamplerState effectsSampler : register(s1, space2); // point: one texel per pixel
+Texture2D bloom : register(t2, space2);
+SamplerState bloomSampler : register(s2, space2);   // linear: the bloom is half resolution
+Texture2D grading : register(t3, space2);
+SamplerState gradingSampler : register(s3, space2); // linear: interpolates between table entries
+#else
 Texture2D bloom : register(t1, space2);
 SamplerState bloomSampler : register(s1, space2);   // linear: the bloom is half resolution
 Texture2D grading : register(t2, space2);
 SamplerState gradingSampler : register(s2, space2); // linear: interpolates between table entries
+#endif
 cbuffer CompositeUniforms : register(b0, space3)
 {
     float2 inverseTargetSize;
@@ -15,7 +26,12 @@ cbuffer CompositeUniforms : register(b0, space3)
     float gradingStrength; // 0: ungraded; else blend of the graded colour with the ungraded one
     float fxaa;            // 1: FXAA on
     float sharpen;         // 0..1 sharpening strength, 0: off
+#ifdef COMPOSITE_CORES
+    float coreStrength;    // 0..1 hot core strength (SkillFx::CoreStrength)
+    float padding;
+#else
     float2 padding;
+#endif
 };
 struct FSInput
 {
@@ -32,6 +48,12 @@ static const float kGradingSize = 32.0;
 float3 Grade(float3 color);
 bool Fxaa(float2 uv, inout float3 color);
 float3 Sharpen(float2 uv, float3 center);
+#ifdef COMPOSITE_CORES
+// The hot core thresholds: kCoreMeanLow and kCoreMaxLow in Render/PostProcessing/HotCores.h.
+static const float kCoreMeanLow = 0.45;
+static const float kCoreMaxLow = 0.85;
+float CoreWeight(float3 effect);
+#endif
 
 float4 main(FSInput input) : SV_Target
 {
@@ -48,6 +70,13 @@ float4 main(FSInput input) : SV_Target
     {
         color.rgb = Sharpen(uv, color.rgb);
     }
+#ifdef COMPOSITE_CORES
+    // Hot cores, before the bloom and grading: where the effects alone are clipped and bright, the
+    // pixel goes toward white (a lerp, so its hue stays). The effects texture is read here, between
+    // the scene and the bloom, to keep the binding order.
+    const float3 effect = effects.SampleLevel(effectsSampler, uv, 0.0).rgb;
+    color.rgb += (1.0 - color.rgb) * CoreWeight(effect);
+#endif
     if (bloomScale > 0.0)
     {
         // Screen blend: a dark pixel gains about the glow's light, a bright one little, so glows
@@ -79,6 +108,16 @@ float3 Grade(float3 color)
     const float3 upper = grading.Sample(gradingSampler, float2(x + upperSlice * sliceWidth, y)).rgb;
     return lerp(lower, upper, sliceBlend);
 }
+
+#ifdef COMPOSITE_CORES
+// Render::PostProcessing::HotCores::CoreWeight mirrors this weight.
+float CoreWeight(float3 effect)
+{
+    const float mean = (effect.r + effect.g + effect.b) / 3.0;
+    const float peak = max(max(effect.r, effect.g), effect.b);
+    return saturate(coreStrength) * smoothstep(kCoreMeanLow, 1.0, mean) * smoothstep(kCoreMaxLow, 1.0, peak);
+}
+#endif
 
 float Luma(float3 color)
 {

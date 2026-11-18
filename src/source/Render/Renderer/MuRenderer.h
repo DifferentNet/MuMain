@@ -72,6 +72,9 @@ struct PostProcessingLook
     // Screen filters of the finished scene (see Render/PostProcessing/ScreenFilterSetting.h).
     bool fxaa = false;
     float sharpen = 0.0f; // 0..1
+    // Hot cores of bright effect piles (Render/PostProcessing/HotCores.h, desktop Remaster): 0 off (the
+    // plain composite), else their strength up to 1. Set per frame from SkillFx::ActiveCoreStrength.
+    float coreStrength = 0.0f;
 };
 
 // ---------------------------------------------------------------------------
@@ -893,6 +896,10 @@ public:
 // the world depth: SSAO or haze on).
 [[nodiscard]] bool HasSoftParticlePipelines();
 [[nodiscard]] bool SoftParticlesDrawnLastFrame();
+// Whether the renderer built the hot core composite (desktop; Render/PostProcessing/HotCores.h), and
+// whether the last processed frame drew it (it needs post-processing and bloom on).
+[[nodiscard]] bool HasHotCorePipeline();
+[[nodiscard]] bool HotCoresDrawnLastFrame();
 
 // Keeps Classic texture sampling for the draws made while it is alive.
 class ScopedScreenSpaceSampling

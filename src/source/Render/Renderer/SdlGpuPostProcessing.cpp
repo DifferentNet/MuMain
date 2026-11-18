@@ -152,6 +152,16 @@ bool SdlGpuPostProcessing::CreatePipelines(SDL_GPUDevice* device, const SdlGpuPo
         DestroyPipelines();
         return false;
     }
+    // The hot core twin is optional: without it the composite runs plain.
+    if (shaders.compositeCores)
+    {
+        m_compositeCoresPipeline = BuildPipeline(device, shaders.fullscreenVertex,
+                                                 {shaders.compositeCores, frameFormat, sampleCount, false, true});
+        if (!m_compositeCoresPipeline)
+        {
+            log::Get("render")->warn("SDL_gpu -- hot core composite failed: {}", SDL_GetError());
+        }
+    }
     return true;
 }
 
@@ -160,12 +170,24 @@ void SdlGpuPostProcessing::DestroyPipelines()
     ReleasePipeline(m_device, m_bloomDownPipeline);
     ReleasePipeline(m_device, m_bloomUpPipeline);
     ReleasePipeline(m_device, m_compositePipeline);
+    ReleasePipeline(m_device, m_compositeCoresPipeline);
+    m_coresDrawn = false;
 }
 
 bool SdlGpuPostProcessing::IsAvailable() const
 {
     return m_bloomDownPipeline && m_bloomUpPipeline && m_compositePipeline && m_pointSampler && m_linearSampler &&
            m_gradingTexture;
+}
+
+bool SdlGpuPostProcessing::HasCoresPipeline() const
+{
+    return m_compositeCoresPipeline != nullptr;
+}
+
+bool SdlGpuPostProcessing::CoresDrawn() const
+{
+    return m_coresDrawn;
 }
 
 bool SdlGpuPostProcessing::CreateSamplers()
@@ -339,6 +361,7 @@ void SdlGpuPostProcessing::RenderBloom(SDL_GPUCommandBuffer* commandBuffer, floa
 void SdlGpuPostProcessing::DrawComposite(SDL_GPUCommandBuffer* commandBuffer, SDL_GPURenderPass* pass,
                                          SdlGpuTargetSize size, const PostProcessingLook& look, PostProcessingView view)
 {
+    m_coresDrawn = false;
     if (!IsAvailable() || !m_sceneTexture || size.width == 0u || size.height == 0u)
     {
         return;
@@ -384,29 +407,47 @@ void SdlGpuPostProcessing::DrawComposite(SDL_GPUCommandBuffer* commandBuffer, SD
     const float bloomScale =
         bloom ? look.bloomStrength / Render::PostProcessing::BloomWeightSum(ActiveBloomLevels, look.bloomLevelFalloff)
               : 0.0f;
-    // Unused inputs still need a binding: the scene texture stands in for them.
-    const SDL_GPUTextureSamplerBinding bindings[] = {
-        {shown, shownSampler},
-        {bloom ? m_bloomLevels[0].texture : m_sceneTexture, m_linearSampler},
-        {grading ? m_gradingTexture : m_sceneTexture, m_linearSampler},
-    };
+    // The hot cores read the bloom source, so only the scene view of a frame with bloom shows them.
+    const bool cores = sceneShown && bloom && look.coreStrength > 0.0f && m_compositeCoresPipeline;
 
     const SDL_GPUViewport viewport{0.0f, 0.0f, static_cast<float>(size.width), static_cast<float>(size.height),
                                    0.0f, 1.0f};
     const SDL_Rect scissor{0, 0, static_cast<int>(size.width), static_cast<int>(size.height)};
     SDL_SetGPUViewport(pass, &viewport);
     SDL_SetGPUScissor(pass, &scissor);
-    SDL_BindGPUGraphicsPipeline(pass, m_compositePipeline);
-    SDL_BindGPUFragmentSamplers(pass, 0, bindings, static_cast<Uint32>(std::size(bindings)));
+    BindComposite(pass, {shown, shownSampler}, bloom, grading, cores);
     const SdlGpuCompositeUniform uniform{
         {1.0f / static_cast<float>(size.width), 1.0f / static_cast<float>(size.height)},
         bloomScale,
         gradingStrength,
         sceneShown && look.fxaa ? 1.0f : 0.0f,
         sceneShown ? std::clamp(look.sharpen, 0.0f, 1.0f) : 0.0f,
-        {0.0f, 0.0f}};
+        cores ? std::clamp(look.coreStrength, 0.0f, 1.0f) : 0.0f,
+        0.0f};
     SDL_PushGPUFragmentUniformData(commandBuffer, 0, &uniform, sizeof(uniform));
     SDL_DrawGPUPrimitives(pass, FullscreenVertexCount, 1, 0, 0);
+    m_coresDrawn = cores;
+}
+
+void SdlGpuPostProcessing::BindComposite(SDL_GPURenderPass* pass, const SDL_GPUTextureSamplerBinding& shown,
+                                         bool bloom, bool grading, bool cores)
+{
+    // Unused inputs still need a binding: the scene texture stands in for them.
+    const SDL_GPUTextureSamplerBinding bloomBinding{bloom ? m_bloomLevels[0].texture : m_sceneTexture,
+                                                    m_linearSampler};
+    const SDL_GPUTextureSamplerBinding gradingBinding{grading ? m_gradingTexture : m_sceneTexture, m_linearSampler};
+    if (cores)
+    {
+        // Point: the bloom source has one texel per pixel, as the scene.
+        const SDL_GPUTextureSamplerBinding bindings[] = {
+            shown, {m_bloomSourceTexture, m_pointSampler}, bloomBinding, gradingBinding};
+        SDL_BindGPUGraphicsPipeline(pass, m_compositeCoresPipeline);
+        SDL_BindGPUFragmentSamplers(pass, 0, bindings, static_cast<Uint32>(std::size(bindings)));
+        return;
+    }
+    const SDL_GPUTextureSamplerBinding bindings[] = {shown, bloomBinding, gradingBinding};
+    SDL_BindGPUGraphicsPipeline(pass, m_compositePipeline);
+    SDL_BindGPUFragmentSamplers(pass, 0, bindings, static_cast<Uint32>(std::size(bindings)));
 }
 
 bool SdlGpuPostProcessing::SetGradingTable(std::span<const std::uint8_t> rgba)

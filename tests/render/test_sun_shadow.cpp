@@ -115,12 +115,13 @@ TEST_CASE("a map's mood gives the frame its sun [render][sunshadow]")
     Data::Maps::LightMood mood{};
     const float focus[3] = {100.0f, 200.0f, 300.0f};
 
-    // The default sun stands where the Classic terrain light comes from.
+    // The default sun stands at azimuth 225, so the shadows fall to the side of the default camera.
     const mu::SunShadowFrame frame = BuildFrame(mood, 1, focus);
     CHECK(frame.enabled);
     CHECK(frame.mapSize == 2048u);
-    CHECK(frame.towardSun[0] > 0.0f);
+    CHECK(frame.towardSun[0] < 0.0f);
     CHECK(frame.towardSun[1] < 0.0f);
+    CHECK(frame.towardSun[0] == doctest::Approx(frame.towardSun[1]));
     CHECK(frame.towardSun[2] == doctest::Approx(std::sin(40.0 * 3.14159265358979323846 / 180.0)));
     CHECK(frame.strength == doctest::Approx(0.8f));
     CHECK(frame.softness == doctest::Approx(4.0f));

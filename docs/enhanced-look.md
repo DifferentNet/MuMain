@@ -169,7 +169,7 @@ characters, monsters, gear and objects get exactly the light they had before,
 with the setting on or off.
 
 Skill effects (Remaster only, `Render/Effects/SkillFx.h`; the web has none) add
-five looks, each its own `[Render]` key in `config.ini`, on (1) by default and
+six looks, each its own `[Render]` key in `config.ini`, on (1) by default and
 held by the effect level:
 
 - `SkillLightPools`: spell and effect lights lay a pool of light on the ground,
@@ -202,10 +202,26 @@ held by the effect level:
   ground, under characters, items, trails and effects, and use no light: the ground
   and the models keep their brightness. Kalima, Atlans, Icarus and Kanturu's Maya
   scene have none, and none lie on holes or water tiles.
+- `SkillHotCores`: where glowing effects pile up bright, the centre of the pile
+  burns toward white and fades back through the effects' own colour to the edge
+  (effect level 4: full strength, 3: 0.75, 2: 0.5). It is worked out in the
+  post-processing composite from the image of the glowing (additive) draws alone
+  that the bloom already makes (`Render/PostProcessing/HotCores.h`,
+  `post_composite_cores.frag`): where that image is clipped in a channel and
+  bright overall (mean above 0.45, brightest channel above 0.85), the pixel goes
+  toward white before the bloom and the grading. Going toward white keeps the hue,
+  so the MU colours stay. No new pass, target or texture. Limits: it needs
+  post-processing with bloom on (no bloom, no cores); every glowing draw takes
+  part, so torches and portals can get a core too, while characters, wings and
+  weapon glows (left out of the bloom) never do; the image is 8-bit, so a pile of
+  one pure colour (pure red only) never whitens, while fire and lightning go
+  yellow-white and blue-white. With it off, or at strength 0, the composite is the
+  same shader as before and the frame is unchanged.
 
-At effect level 0 and 1 all five are off. In developer builds, `$fx pools|soft|flipbook|trails|decals on|off`
+At effect level 0 and 1 all six are off. In developer builds, `$fx pools|soft|flipbook|trails|decals|cores on|off`
 switches one look (and saves the key) and `$fx status` logs what is on, with the
-smooth trails and their pieces drawn last frame and the ground marks lying now.
+smooth trails and their pieces drawn last frame, the ground marks lying now and
+the hot core strength, whether its shader was built and whether the last frame drew it.
 
 Why the trails needed it: a joint trail keeps one point per 25 FPS frame (the
 newest follows the spell every frame), so at 144 FPS the curve between its points
