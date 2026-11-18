@@ -62,7 +62,7 @@
 		     scheme -- same reasoning as MyInventory's #gold_text (my_inventory.rml). -->
 		<div id="money_bg" class="modern-wallet-px stor-wallet-px">
 			<div class="modern-wallet-coin-px"></div>
-			<span class="modern-wallet-label-px">Zen</span>
+			<span class="modern-wallet-label-px">{{zen_caption}}</span>
 		</div>
 		<span id="zen_text" class="modern-wallet-value-px">{{zen_text}}</span>
 		<span id="fee_label" class="stor-fee-label-px">{{fee_label}}</span>

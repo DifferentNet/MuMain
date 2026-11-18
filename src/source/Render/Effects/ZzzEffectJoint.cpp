@@ -2,6 +2,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
+#include "Render/Effects/FramePow.h"
 #include <cfloat>
 #include <cstring>
 #include <SDL3/SDL.h>
@@ -2831,6 +2832,21 @@ void CreateJoint(int Type, vec3_t Position, vec3_t TargetPosition, vec3_t Angle,
     }
 }
 
+bool HasJointOn(const OBJECT* target)
+{
+    for (int i = 0; i < s_jointBounds.End(); ++i)
+    {
+        if (Joints[i].Live && Joints[i].Target == target)
+            return true;
+    }
+    return false;
+}
+
+std::uint32_t JointTakes()
+{
+    return s_jointBounds.Takes();
+}
+
 void DeleteJoint(int Type, OBJECT* Target, int SubType)
 {
     for (int i = 0; i < s_jointBounds.End(); i++)
@@ -3596,11 +3612,11 @@ void MoveJoint(JOINT* o, int iIndex)
 
             if (o->LifeTime < 50)
             {
-                VectorScale(o->Light, powf(1.f / 1.1f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.1f), o->Light);
             }
             else if (o->LifeTime > 80)
             {
-                VectorScale(o->Light, powf(1.25f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.25f), o->Light);
             }
         }
         else if (o->SubType == 10)
@@ -3635,11 +3651,11 @@ void MoveJoint(JOINT* o, int iIndex)
 
             if (o->LifeTime < 40)
             {
-                VectorScale(o->Light, powf(1.f / 1.1f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.1f), o->Light);
             }
             else if (o->LifeTime > 68)
             {
-                VectorScale(o->Light, powf(1.2f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.2f), o->Light);
             }
         }
         else if (o->SubType == 14)
@@ -3649,7 +3665,7 @@ void MoveJoint(JOINT* o, int iIndex)
                 float fLumi = o->LifeTime / 5.f;
                 VectorScale(o->Light, powf(fLumi, FPS_ANIMATION_FACTOR), o->Light);
             }
-            o->Scale *= powf(1.05f, FPS_ANIMATION_FACTOR);
+            o->Scale *= FramePow(1.05f);
             VectorCopy(o->Target->Position, o->Position);
         }
         else if (o->SubType == 15)
@@ -3660,7 +3676,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
             MoveHumming(o->Position, o->Angle, p, 10.f);
 
-            VectorScale(o->Light, powf(1.f / 1.08f, FPS_ANIMATION_FACTOR), o->Light);
+            VectorScale(o->Light, FramePow(1.f / 1.08f), o->Light);
 
             CreateSprite(BITMAP_SHINY + 1, p, (float)(rand() % 4 + 4) * 0.2f, o->Light, o->Target, (float)(rand() % 360));
         }
@@ -3672,7 +3688,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
             MoveHumming(o->Position, o->Angle, p, 10.f);
 
-            VectorScale(o->Light, powf(1.f / 1.08f, FPS_ANIMATION_FACTOR), o->Light);
+            VectorScale(o->Light, FramePow(1.f / 1.08f), o->Light);
 
             CreateSprite(BITMAP_SHINY + 1, p, (float)(rand() % 4 + 4) * 0.2f, o->Light, o->Target, (float)(rand() % 360), 1);
         }
@@ -3703,7 +3719,7 @@ void MoveJoint(JOINT* o, int iIndex)
                     }
                     else if (o->LifeTime < 6)
                     {
-                        VectorScale(o->Light, powf(1.f / 1.8f, FPS_ANIMATION_FACTOR), o->Light);
+                        VectorScale(o->Light, FramePow(1.f / 1.8f), o->Light);
                     }
 
                     if (o->SubType == 13)
@@ -3810,7 +3826,7 @@ void MoveJoint(JOINT* o, int iIndex)
                     if ((att & TW_NOATTACKZONE) == TW_NOATTACKZONE)
                     {
                         o->Velocity = 0.f;
-                        o->LifeTime *= powf(1.f / 5.f, FPS_ANIMATION_FACTOR);
+                        o->LifeTime *= FramePow(1.f / 5.f);
                         break;
                     }
                 }
@@ -3928,7 +3944,7 @@ void MoveJoint(JOINT* o, int iIndex)
                 }
                 if (o->LifeTime < 10)
                 {
-                    VectorScale(o->Light, powf(1.f / 1.2f, FPS_ANIMATION_FACTOR), o->Light);
+                    VectorScale(o->Light, FramePow(1.f / 1.2f), o->Light);
                     VectorCopy(o->Light, Light);
                 }
                 if (o->SubType == 13)
@@ -3970,7 +3986,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
             if (o->LifeTime < 10)
             {
-                VectorScale(o->Light, powf(1.f / 1.2f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.2f), o->Light);
                 VectorCopy(o->Light, Light);
             }
             else if (o->LifeTime > 18 && o->LifeTime < 20 && (o->SubType == 2 || o->SubType == 21))
@@ -4024,7 +4040,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
             if (o->LifeTime < 10)
             {
-                VectorScale(o->Light, powf(1.f / 1.15f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.15f), o->Light);
             }
         }
         else if (o->SubType == 11)
@@ -4202,8 +4218,8 @@ void MoveJoint(JOINT* o, int iIndex)
             o->Direction[2] += ((float)(rand() % 32 - 16) * 0.8f) * FPS_ANIMATION_FACTOR;
             o->Angle[0] += (o->Direction[0]) * FPS_ANIMATION_FACTOR;
             o->Angle[2] += (o->Direction[2]) * FPS_ANIMATION_FACTOR;
-            o->Direction[0] *= powf(0.6f, FPS_ANIMATION_FACTOR);
-            o->Direction[2] *= powf(0.8f, FPS_ANIMATION_FACTOR);
+            o->Direction[0] *= FramePow(0.6f);
+            o->Direction[2] *= FramePow(0.8f);
 
             if (o->LifeTime < 30)
                 Luminosity = o->LifeTime / 30.f;
@@ -4223,7 +4239,7 @@ void MoveJoint(JOINT* o, int iIndex)
         {
             if (o->LifeTime < 10)
             {
-                VectorScale(o->Light, powf(1.f / 1.45f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.45f), o->Light);
 
                 if (o->Light[0] < 0.2f)
                     o->Live = false;
@@ -4251,21 +4267,21 @@ void MoveJoint(JOINT* o, int iIndex)
         if (o->SubType == 1)
         {
             o->Velocity += FPS_ANIMATION_FACTOR * 0.3f;
-            o->Light[0] *= powf(1.f / 1.4f, FPS_ANIMATION_FACTOR);
+            o->Light[0] *= FramePow(1.f / 1.4f);
             o->Light[1] = o->Light[0];
             o->Light[2] = o->Light[0];
         }
         else if (o->SubType == 3)
         {
             o->Velocity += FPS_ANIMATION_FACTOR * 0.1f;
-            o->Light[0] *= powf(1.f / 1.1f, FPS_ANIMATION_FACTOR);
+            o->Light[0] *= FramePow(1.f / 1.1f);
             o->Light[1] = o->Light[0];
             o->Light[2] = o->Light[0];
         }
         else if (o->SubType == 4)
         {
             o->Velocity += FPS_ANIMATION_FACTOR * 0.1f;
-            o->Light[0] *= powf(1.f / 1.1f, FPS_ANIMATION_FACTOR);
+            o->Light[0] *= FramePow(1.f / 1.1f);
             o->Light[1] = o->Light[0];
             o->Light[2] = o->Light[0];
         }
@@ -4397,7 +4413,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
                 if (o->Weapon == 0)
                 {
-                    o->Direction[1] *= powf(0.95f, FPS_ANIMATION_FACTOR);
+                    o->Direction[1] *= FramePow(0.95f);
                     if (o->Direction[1] < 10.f) o->Direction[1] = -10.f;
                 }
                 if (o->Weapon > 40)
@@ -4428,7 +4444,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
             if (o->LifeTime < 10)
             {
-                VectorScale(o->Light, powf(1.f / 1.2f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.2f), o->Light);
             }
 
             o->Scale -= (5.f) * FPS_ANIMATION_FACTOR;
@@ -5173,7 +5189,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
             if (o->LifeTime < 4)
             {
-                VectorScale(o->Light, powf(1.f / 1.2f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.2f), o->Light);
             }
 
             if (o->SubType == 2)
@@ -5232,7 +5248,7 @@ void MoveJoint(JOINT* o, int iIndex)
                 CreateSprite(BITMAP_SHINY + 1, o->TargetPosition, 1.5f, o->Light, NULL, (float)((rand() % 360)));
                 if (o->LifeTime < 8)
                 {
-                    VectorScale(o->Light, powf(1.f / 1.4f, FPS_ANIMATION_FACTOR), o->Light);
+                    VectorScale(o->Light, FramePow(1.f / 1.4f), o->Light);
                 }
             }
             else
@@ -5266,7 +5282,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
             if (o->LifeTime < 4)
             {
-                VectorScale(o->Light, powf(1.f / 1.2f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.2f), o->Light);
             }
         }
         else if (o->SubType == 9)
@@ -5293,7 +5309,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
             if (o->LifeTime < 4)
             {
-                VectorScale(o->Light, powf(1.f / 1.2f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.2f), o->Light);
             }
         }
         else if (o->SubType == 10)
@@ -5320,7 +5336,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
             if (o->LifeTime < 4)
             {
-                VectorScale(o->Light, powf(1.f / 1.2f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.2f), o->Light);
             }
         }
         else if (o->SubType == 11)
@@ -5396,7 +5412,7 @@ void MoveJoint(JOINT* o, int iIndex)
         if (o->SubType == 1)
         {
             o->Velocity += FPS_ANIMATION_FACTOR * 0.1f;
-            o->Light[0] *= powf(1.f / 1.1f, FPS_ANIMATION_FACTOR);
+            o->Light[0] *= FramePow(1.f / 1.1f);
             o->Light[1] = o->Light[0];
             o->Light[2] = o->Light[0];
         }
@@ -5404,7 +5420,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
             if (o->LifeTime < 5)
             {
-                VectorScale(o->Light, powf(1.f / 1.3f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.3f), o->Light);
             }
         break;
     case BITMAP_FLARE:
@@ -5525,7 +5541,7 @@ void MoveJoint(JOINT* o, int iIndex)
                 o->Position[0] = o->TargetPosition[0];
                 o->Position[1] = o->TargetPosition[1];
                 o->Position[2] += (o->Direction[2]) * FPS_ANIMATION_FACTOR;
-                VectorScale(o->Light, powf(1.f / 1.1f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.1f), o->Light);
             }
             AddTerrainLight(o->Position[0], o->Position[1], o->Light, 1, PrimaryTerrainLight);
         }
@@ -5594,7 +5610,7 @@ void MoveJoint(JOINT* o, int iIndex)
             o->Position[1] += (o->Direction[1] * 12) * FPS_ANIMATION_FACTOR;
             VectorCopy(o->Position, o->TargetPosition);
 
-            o->Scale *= powf(1.1f, FPS_ANIMATION_FACTOR);
+            o->Scale *= FramePow(1.1f);
             o->Light[0] = 0.5f + (float)(rand() % 64) / 255;
             o->Light[1] = 0.5f + (float)(rand() % 64) / 255;
             o->Light[2] = 0.5f + (float)(rand() % 128) / 255;
@@ -5811,7 +5827,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
             if (o->LifeTime < 12)
             {
-                VectorScale(o->Light, powf(1.f / 1.3f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.3f), o->Light);
             }
         }
         else if (o->SubType == 16 && o->Target != NULL)
@@ -5827,7 +5843,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
             if (o->LifeTime < 20)
             {
-                VectorScale(o->Light, powf(1.f / 1.1f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.1f), o->Light);
             }
             else if (o->LifeTime < 40)
             {
@@ -5837,9 +5853,9 @@ void MoveJoint(JOINT* o, int iIndex)
             }
             else
             {
-                o->Light[0] *= powf(1.04f, FPS_ANIMATION_FACTOR);
-                o->Light[1] *= powf(1.04f, FPS_ANIMATION_FACTOR);
-                o->Light[2] *= powf(1.04f, FPS_ANIMATION_FACTOR);
+                o->Light[0] *= FramePow(1.04f);
+                o->Light[1] *= FramePow(1.04f);
+                o->Light[2] *= FramePow(1.04f);
             }
         }
         else if (o->SubType == 23)
@@ -5925,7 +5941,7 @@ void MoveJoint(JOINT* o, int iIndex)
                     o->Position[0] = o->TargetPosition[0];
                     o->Position[1] = o->TargetPosition[1];
                     o->Position[2] += (o->Direction[2]) * FPS_ANIMATION_FACTOR;
-                    VectorScale(o->Light, powf(1.f / 1.05f, FPS_ANIMATION_FACTOR), o->Light);
+                    VectorScale(o->Light, FramePow(1.f / 1.05f), o->Light);
 
                     CreateSprite(BITMAP_PIN_LIGHT, o->Position, 1.5f, o->Light, NULL);
                     CreateSprite(BITMAP_PIN_LIGHT, o->Position, 0.5f, o->Light, NULL);
@@ -5942,7 +5958,7 @@ void MoveJoint(JOINT* o, int iIndex)
         {
             if (o->LifeTime < 10)
             {
-                VectorScale(o->Light, powf(1.f / 1.3f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.3f), o->Light);
             }
         }
 
@@ -5984,7 +6000,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
                 if (o->LifeTime < 10)
                 {
-                    o->Light[0] *= powf(1.0f / 1.2f, FPS_ANIMATION_FACTOR);
+                    o->Light[0] *= FramePow(1.0f / 1.2f);
                     o->Light[1] = o->Light[0];
                     o->Light[2] = o->Light[0];
                 }
@@ -6019,7 +6035,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
                 if (o->LifeTime < 10)
                 {
-                    o->Light[0] *= powf(1.0f / 1.2f, FPS_ANIMATION_FACTOR);
+                    o->Light[0] *= FramePow(1.0f / 1.2f);
                     o->Light[1] = o->Light[0];
                     o->Light[2] = o->Light[0];
                 }
@@ -6059,7 +6075,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
                 if (o->LifeTime < 15)
                 {
-                    o->Light[0] *= powf(1.0f / 1.2f, FPS_ANIMATION_FACTOR);
+                    o->Light[0] *= FramePow(1.0f / 1.2f);
                     o->Light[1] = o->Light[0];
                     o->Light[2] = o->Light[0];
                 }
@@ -6082,7 +6098,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
             if (o->LifeTime < 15)
             {
-                VectorScale(o->Light, powf(1.f / 1.2f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.2f), o->Light);
             }
         }
         else if (o->SubType == 8 || o->SubType == 9)
@@ -6136,7 +6152,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
                 if (o->LifeTime < 15)
                 {
-                    VectorScale(o->Light, powf(1.f / 1.2f, FPS_ANIMATION_FACTOR), o->Light);
+                    VectorScale(o->Light, FramePow(1.f / 1.2f), o->Light);
                 }
 
                 if (o->SubType != 18)
@@ -6242,7 +6258,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
                 if (o->LifeTime < 15)
                 {
-                    VectorScale(o->Light, powf(1.f / 1.5f, FPS_ANIMATION_FACTOR), o->Light);
+                    VectorScale(o->Light, FramePow(1.f / 1.5f), o->Light);
                 }
             }
             else
@@ -6300,7 +6316,7 @@ void MoveJoint(JOINT* o, int iIndex)
                                 if ((att & TW_NOATTACKZONE) == TW_NOATTACKZONE)
                                 {
                                     o->Velocity = 0.f;
-                                    o->LifeTime *= powf(1.f / 5.f, FPS_ANIMATION_FACTOR);
+                                    o->LifeTime *= FramePow(1.f / 5.f);
                                     break;
                                 }
                             }
@@ -6371,7 +6387,7 @@ void MoveJoint(JOINT* o, int iIndex)
                                     if ((att & TW_NOATTACKZONE) == TW_NOATTACKZONE)
                                     {
                                         o->Velocity = 0.f;
-                                        o->LifeTime *= powf(1.f / 5.f, FPS_ANIMATION_FACTOR);
+                                        o->LifeTime *= FramePow(1.f / 5.f);
                                         break;
                                     }
                                 }
@@ -6402,7 +6418,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
                 if (o->LifeTime < 15)
                 {
-                    VectorScale(o->Light, powf(1.f / 1.3f, FPS_ANIMATION_FACTOR), o->Light);
+                    VectorScale(o->Light, FramePow(1.f / 1.3f), o->Light);
                 }
             }
             else if (o->SubType >= 2 && o->SubType <= 6)
@@ -6425,7 +6441,7 @@ void MoveJoint(JOINT* o, int iIndex)
                 }
                 if (o->LifeTime < o->MultiUse)
                 {
-                    VectorScale(o->Light, powf(1.f / 1.3f, FPS_ANIMATION_FACTOR), o->Light);
+                    VectorScale(o->Light, FramePow(1.f / 1.3f), o->Light);
                 }
                 if ((int)o->LifeTime % 5 == 0 && o->SubType == 2)
                 {
@@ -6457,7 +6473,7 @@ void MoveJoint(JOINT* o, int iIndex)
                 }
                 if (o->LifeTime < o->MultiUse)
                 {
-                    VectorScale(o->Light, powf(1.f / 1.3f, FPS_ANIMATION_FACTOR), o->Light);
+                    VectorScale(o->Light, FramePow(1.f / 1.3f), o->Light);
                 }
                 o->Position[2] = RequestTerrainHeight(o->Position[0], o->Position[1]) + 3.f;
             }
@@ -6500,7 +6516,7 @@ void MoveJoint(JOINT* o, int iIndex)
             }
         }
 
-        VectorScale(o->Light, powf(1.f / 1.2f, FPS_ANIMATION_FACTOR), o->Light);
+        VectorScale(o->Light, FramePow(1.f / 1.2f), o->Light);
         break;
     case BITMAP_PIERCING:
         if (o->SubType == 0)
@@ -6520,7 +6536,7 @@ void MoveJoint(JOINT* o, int iIndex)
             }
             o->Velocity -= FPS_ANIMATION_FACTOR * 2.f;
 
-            VectorScale(o->Light, powf(1.f / 1.4f, FPS_ANIMATION_FACTOR), o->Light);
+            VectorScale(o->Light, FramePow(1.f / 1.4f), o->Light);
         }
         else if (o->SubType == 1)
         {
@@ -6539,7 +6555,7 @@ void MoveJoint(JOINT* o, int iIndex)
             }
             o->Velocity -= FPS_ANIMATION_FACTOR * 2.f;
 
-            VectorScale(o->Light, powf(1.f / 1.4f, FPS_ANIMATION_FACTOR), o->Light);
+            VectorScale(o->Light, FramePow(1.f / 1.4f), o->Light);
         }
         break;
     case BITMAP_FLARE_FORCE:
@@ -6603,7 +6619,7 @@ void MoveJoint(JOINT* o, int iIndex)
             }
             if (o->LifeTime < 7)
             {
-                VectorScale(o->Light, powf(1.f / 1.5f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.5f), o->Light);
             }
         }
         else if (o->NumTails < o->MaxTails - 1)
@@ -6686,7 +6702,7 @@ void MoveJoint(JOINT* o, int iIndex)
             || (o->SubType >= 11 && o->SubType <= 13)
             ) && o->LifeTime < 10)
         {
-            VectorScale(o->Light, powf(1.f / 1.3f, FPS_ANIMATION_FACTOR), o->Light);
+            VectorScale(o->Light, FramePow(1.f / 1.3f), o->Light);
         }
         break;
 
@@ -6773,7 +6789,7 @@ void MoveJoint(JOINT* o, int iIndex)
                     o->m_bCreateTails = false;
                 }
 
-                VectorScale(o->Light, powf(1.f / 1.2f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.2f), o->Light);
             }
             if (o->SubType < 2)
             {
@@ -6801,7 +6817,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
             if (o->LifeTime < 15)
             {
-                VectorScale(o->Light, powf(1.f / 1.3f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.3f), o->Light);
             }
         }
         else if (o->SubType == 6)
@@ -6843,7 +6859,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
             if (o->LifeTime < (o->Weapon / 2))
             {
-                VectorScale(o->Light, powf(1.f / 1.3f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.3f), o->Light);
             }
         }
         break;
@@ -6865,7 +6881,7 @@ void MoveJoint(JOINT* o, int iIndex)
 
             if (o->LifeTime < 10)
             {
-                VectorScale(o->Light, powf(1.f / 1.2f, FPS_ANIMATION_FACTOR), o->Light);
+                VectorScale(o->Light, FramePow(1.f / 1.2f), o->Light);
                 VectorCopy(o->Light, Light);
             }
 
@@ -6881,7 +6897,7 @@ void MoveJoint(JOINT* o, int iIndex)
     case BITMAP_PIN_LIGHT:
     {
         o->Velocity += FPS_ANIMATION_FACTOR * 0.1f;
-        VectorScale(o->Light, powf(0.9f, FPS_ANIMATION_FACTOR), o->Light);
+        VectorScale(o->Light, FramePow(0.9f), o->Light);
     }
     break;
     case BITMAP_FORCEPILLAR:
@@ -6924,7 +6940,7 @@ void MoveJoint(JOINT* o, int iIndex)
         Models[o->Target->Type].TransformByObjectBone(o->Position, o->Target, 2);
 
         o->Position[2] += (20.0f) * FPS_ANIMATION_FACTOR;
-        VectorScale(o->Light, powf(0.7f, FPS_ANIMATION_FACTOR), o->Light);
+        VectorScale(o->Light, FramePow(0.7f), o->Light);
     }
     break;
     case BITMAP_LAVA:
@@ -6951,7 +6967,7 @@ void MoveJoint(JOINT* o, int iIndex)
         {
             Models[o->Target->Type].TransformByObjectBone(o->Position, o->Target, 36);
         }
-        VectorScale(o->Light, powf(0.8f, FPS_ANIMATION_FACTOR), o->Light);
+        VectorScale(o->Light, FramePow(0.8f), o->Light);
     }
     break;
     }
@@ -7218,7 +7234,7 @@ void RenderJoints(BYTE bRenderOneMore)
                             float  scale = 0.7f;
                             vec3_t Light;
                             float  fJointHeight = (j) * 0.01f;
-                            VectorScale(o->Light, powf(0.9978f, FPS_ANIMATION_FACTOR), o->Light);
+                            VectorScale(o->Light, FramePow(0.9978f), o->Light);
                             Vector(o->Light[0] - fJointHeight, o->Light[1] - fJointHeight, o->Light[2] - fJointHeight, Light);
 
                             vec3_t  Position;
@@ -7387,7 +7403,7 @@ void RenderJoints(BYTE bRenderOneMore)
             { 
                 vec3_t Light;
                 EnableAlphaBlend();
-                o->Velocity *= powf(1.f / 1.1f, FPS_ANIMATION_FACTOR);
+                o->Velocity *= FramePow(1.f / 1.1f);
                 Vector(o->Velocity, o->Velocity, o->Velocity, Light);
                 RenderTerrainAlphaBitmap(BITMAP_MAGIC + 1, o->TargetPosition[0], o->TargetPosition[1], 2.f, 2.f, Light);
                 DisableAlphaBlend();

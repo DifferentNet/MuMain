@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Core/Text/TextLineWrap.h"
 #include "UI/Chat/Chat.h"
+#include "UI/Chat/ChatPlateBound.h"
 #include "Character/CharacterManager.h" // gCharacterManager
 #include "Camera/CameraProjection.h" // CameraProjection
 
@@ -83,6 +84,17 @@ typedef struct
 #define MAX_CHAT 120
 
 CHAT Chat[MAX_CHAT];
+
+namespace
+{
+// The per-frame walks over Chat stop at End(); every slot from it on has all its lifetimes run out.
+ChatPlateBound s_chatBound;
+
+bool IsIdlePlate(const CHAT& c)
+{
+    return c.IDLifeTime <= 0 && c.LifeTime[0] <= 0 && c.LifeTime[1] <= 0;
+}
+} // namespace
 
 void SetBooleanPosition(CHAT* c)
 {
@@ -504,6 +516,7 @@ void CreateChat(wchar_t* character_name, const wchar_t* chat_text, CHARACTER* Ow
         CHAT* c = &Chat[i];
         if (c->Owner == Owner)
         {
+            s_chatBound.OnUsed(i);
             Core::Text::CopyWideString(c->ID, std::size(c->ID), character_name);
             c->Color = Color;
             AddGuildName(c, Owner);
@@ -530,6 +543,7 @@ void CreateChat(wchar_t* character_name, const wchar_t* chat_text, CHARACTER* Ow
         CHAT* c = &Chat[i];
         if (c->IDLifeTime <= 0 && c->LifeTime[0] <= 0)
         {
+            s_chatBound.OnUsed(i);
             c->Owner = Owner;
             Core::Text::CopyWideString(c->ID, std::size(c->ID), character_name);
             c->Color = Color;
@@ -564,6 +578,7 @@ int CreateChat(wchar_t* character_name, const wchar_t* chat_text, OBJECT* Owner,
         CHAT* c = &Chat[i];
         if (c->IDLifeTime <= 0 && c->LifeTime[0] <= 0)
         {
+            s_chatBound.OnUsed(i);
             c->Owner = NULL;
             Core::Text::CopyWideString(c->ID, std::size(c->ID), character_name);
             c->Color = Color;
@@ -614,7 +629,7 @@ void AssignChat(wchar_t* character_name, const wchar_t* chat_text, int flag)
 
 void MoveChat()
 {
-    for (int i = 0; i < MAX_CHAT; i++)
+    for (int i = 0; i < s_chatBound.End(); i++)
     {
         CHAT* c = &Chat[i];
         if (c->IDLifeTime > 0)
@@ -637,13 +652,16 @@ void MoveChat()
             EnableShopTitleDraw(c->Owner);
         }
     }
+    // A trimmed slot has had its last walk: its lifetimes ran out and its owner's shop title is drawn again.
+    s_chatBound.TrimEnd(Chat, IsIdlePlate);
 }
 
 
 bool HasPlate(const CHARACTER* owner)
 {
-    for (const CHAT& c : Chat)
+    for (int i = 0; i < s_chatBound.End(); i++)
     {
+        const CHAT& c = Chat[i];
         if (c.Owner == owner && (c.IDLifeTime > 0 || c.LifeTime[0] > 0))
             return true;
     }
@@ -654,7 +672,7 @@ void RenderBooleans()
 {
     g_pRenderText->SetFont(g_hFont);
 
-    for (int i = 0; i < MAX_CHAT; i++)
+    for (int i = 0; i < s_chatBound.End(); i++)
     {
         CHAT* ci = &Chat[i];
         if (ci->IDLifeTime > 0 || ci->LifeTime[0] > 0)
@@ -686,12 +704,12 @@ void RenderBooleans()
         }
     }
 
-    for (int i = 0; i < MAX_CHAT; i++)		//. Bubble sorting
+    for (int i = 0; i < s_chatBound.End(); i++)		//. Bubble sorting
     {
         CHAT* ci = &Chat[i];
         if (ci->IDLifeTime > 0 || ci->LifeTime[0] > 0)
         {
-            for (int j = 0; j < MAX_CHAT; j++)
+            for (int j = 0; j < s_chatBound.End(); j++)
             {
                 CHAT* cj = &Chat[j];
                 if (i != j && (cj->IDLifeTime > 0 || cj->LifeTime[0] > 0))
@@ -709,7 +727,7 @@ void RenderBooleans()
         }
     }
 
-    for (int i = 0; i < MAX_CHAT; i++)
+    for (int i = 0; i < s_chatBound.End(); i++)
     {
         CHAT* ci = &Chat[i];
         if (ci->IDLifeTime > 0 || ci->LifeTime[0] > 0)

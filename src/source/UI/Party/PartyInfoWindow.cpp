@@ -3,6 +3,7 @@
 #include "I18N/All.h"
 
 #include "UI/Party/PartyInfoWindow.h"
+#include "UI/Party/PartyListRefresh.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Core/WindowGeometry.h"
 #include "UI/HUD/KeyHint.h"
@@ -159,6 +160,7 @@ void CPartyInfoWindow::OpenningProcess()
     // A click left from an earlier opening never opens the Social panel later.
     m_openSocialAsked = false;
     SocketClient->ToGameServer()->SendPartyListRequest();
+    UI::Party::ListRefresh::NoteAsked();
 }
 
 void CPartyInfoWindow::ClosingProcess()
@@ -267,6 +269,8 @@ bool CPartyInfoWindow::UpdateKeyEvent()
 bool CPartyInfoWindow::Update()
 {
     SetParty(PartyNumber > 0);
+    // The members' maps and places come with the party list, asked again while the window shows.
+    UI::Party::ListRefresh::Tick(IsVisible() && PartyNumber > 0);
     SyncRmlModel();
     OpenSocialIfAsked();
     return true;

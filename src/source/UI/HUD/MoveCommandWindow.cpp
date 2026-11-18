@@ -18,6 +18,7 @@
 #include "UI/RmlBridge/RmlDocumentVisibility.h"
 #include "UI/RmlBridge/RmlPointer.h"
 #include "Core/Utilities/StringUtils.h"
+#include "UI/Text/GroupedNumberText.h"
 #include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Event.h>
@@ -262,75 +263,116 @@ void mu::ui::window::CMoveCommandWindow::SetStrifeMap()
     }
 }
 
+namespace
+{
+// Why the hero can't take a warp list entry, in the order the checks run; None when it can.
+enum class MoveBlock
+{
+    None,
+    Level,
+    Zen,
+    Killer,
+    IcarusFlight,
+    AtlansMount,
+    ServerRule,
+    Gens,
+};
+
+// The level-400 maps ask the same of every class.
+constexpr int FullLevelMoveRequirement = 400;
+
+// The level a warp list entry asks of the hero: the Dark classes need two thirds of the listed level.
+int RequiredMoveLevel(int listedLevel)
+{
+    const auto baseClass = gCharacterManager.GetBaseClass(CharacterAttribute->Class);
+    const bool reducedClass = baseClass == CLASS_DARK || baseClass == CLASS_DARK_LORD || baseClass == CLASS_RAGEFIGHTER;
+    if (!reducedClass || listedLevel == FullLevelMoveRequirement)
+        return listedLevel;
+    return int(float(listedLevel) * 2.f / 3.f);
+}
+
+// The map's own rule: wings for Icarus, no Uniria or Dinorant in Atlans, no Vulcanus on a non-PvP server.
+MoveBlock EvaluateMapRule(const wchar_t* mapName)
+{
+    const ITEM* rightRing = &CharacterMachine->Equipment[EQUIPMENT_RING_RIGHT];
+    const ITEM* leftRing = &CharacterMachine->Equipment[EQUIPMENT_RING_LEFT];
+    ITEM* helper = &CharacterMachine->Equipment[EQUIPMENT_HELPER];
+    ITEM* wing = &CharacterMachine->Equipment[EQUIPMENT_WING];
+
+    if (SEASON3B::CMoveCommandData::IsMapNamed(mapName, I18N::Game::Icarus, L"Icarus"))
+    {
+        const bool canFly = GameLogic::Items::HasFlightEquipment(helper, wing)
+            && helper->Type != ITEM_HORN_OF_UNIRIA
+            && !g_ChangeRingMgr->CheckBanMoveIcarusMap(rightRing->Type, leftRing->Type);
+        return canFly ? MoveBlock::None : MoveBlock::IcarusFlight;
+    }
+    if (SEASON3B::CMoveCommandData::IsMapNamed(mapName, I18N::Game::Atlans, L"Atlans", true))
+    {
+        const bool onLandMount = helper->Type == ITEM_HORN_OF_UNIRIA || helper->Type == ITEM_HORN_OF_DINORANT;
+        return onLandMount ? MoveBlock::AtlansMount : MoveBlock::None;
+    }
+    if (g_ServerListManager->IsNonPvP() && SEASON3B::CMoveCommandData::IsMapNamed(mapName, I18N::Game::Vulcanus, L"Vulcanus"))
+        return MoveBlock::ServerRule;
+    return MoveBlock::None;
+}
+
+MoveBlock EvaluateMove(const SEASON3B::CMoveCommandData::MOVEINFODATA& moveInfo)
+{
+    if (CharacterAttribute->Level < RequiredMoveLevel(moveInfo._ReqInfo.iReqLevel))
+        return MoveBlock::Level;
+    if (static_cast<int>(CharacterMachine->Gold) < moveInfo._ReqInfo.iReqZen)
+        return MoveBlock::Zen;
+    if (static_cast<int>(Hero->PK) >= PVP_MURDERER1)
+        return MoveBlock::Killer;
+
+    const MoveBlock mapRule = EvaluateMapRule(moveInfo._ReqInfo.szMainMapName);
+    if (mapRule != MoveBlock::None)
+        return mapRule;
+    if (moveInfo._bStrife && Hero->m_byGensInfluence == 0)
+        return MoveBlock::Gens;
+    return MoveBlock::None;
+}
+
+// One line saying why a red row doesn't warp; the window stays open.
+void PostMoveBlock(const SEASON3B::CMoveCommandData::MOVEINFODATA& moveInfo, MoveBlock block)
+{
+    wchar_t text[128] = {};
+    switch (block)
+    {
+    case MoveBlock::Level:
+        mu_swprintf(text, I18N::Game::MoveNeedsLevel, RequiredMoveLevel(moveInfo._ReqInfo.iReqLevel));
+        break;
+    case MoveBlock::Zen:
+        mu_swprintf(text, L"%ls", I18N::Game::YouAreShortOfZen);
+        break;
+    case MoveBlock::Killer:
+        mu_swprintf(text, L"%ls", I18N::Game::MoveBlockedKiller);
+        break;
+    case MoveBlock::IcarusFlight:
+        mu_swprintf(text, L"%ls", I18N::Game::YouCanEnterIcarusOnlyWithWingsDinorantFenrirr);
+        break;
+    case MoveBlock::AtlansMount:
+        mu_swprintf(text, L"%ls", I18N::Game::MoveBlockedAtlansMount);
+        break;
+    case MoveBlock::ServerRule:
+        mu_swprintf(text, L"%ls", I18N::Game::MoveBlockedHere);
+        break;
+    case MoveBlock::Gens:
+        mu_swprintf(text, L"%ls", I18N::Game::MoveNeedsGens);
+        break;
+    case MoveBlock::None:
+        return;
+    }
+    g_pSystemLogBox->AddText(text, mu::ui::window::TYPE_ERROR_MESSAGE);
+}
+} // namespace
+
 void mu::ui::window::CMoveCommandWindow::SettingCanMoveMap()
 {
-    int a = gMapManager.WorldActive;
-
-    DWORD iZen;
-    int iLevel, iReqLevel, iReqZen;
-
     for (auto* moveInfo : m_listMoveInfoData)
     {
-        moveInfo->_bCanMove = false;
         moveInfo->_bSelected = false;
-
-        iLevel = CharacterAttribute->Level;
-        iZen = CharacterMachine->Gold;
-        iReqLevel = moveInfo->_ReqInfo.iReqLevel;
-        iReqZen = moveInfo->_ReqInfo.iReqZen;
-
-        if ((gCharacterManager.GetBaseClass(CharacterAttribute->Class) == CLASS_DARK || gCharacterManager.GetBaseClass(CharacterAttribute->Class) == CLASS_DARK_LORD
-            || gCharacterManager.GetBaseClass(CharacterAttribute->Class) == CLASS_RAGEFIGHTER)
-            && (iReqLevel != 400))
-        {
-            iReqLevel = int(float(iReqLevel) * 2.f / 3.f);
-        }
-
-        if (iLevel >= iReqLevel && (int)iZen >= iReqZen && (int)Hero->PK < PVP_MURDERER1)
-        {
-            ITEM* pEquipedRightRing = &CharacterMachine->Equipment[EQUIPMENT_RING_RIGHT];
-            ITEM* pEquipedLeftRing = &CharacterMachine->Equipment[EQUIPMENT_RING_LEFT];
-            ITEM* pEquipedHelper = &CharacterMachine->Equipment[EQUIPMENT_HELPER];
-            ITEM* pEquipedWing = &CharacterMachine->Equipment[EQUIPMENT_WING];
-
-            if (CMoveCommandData::IsMapNamed(moveInfo->_ReqInfo.szMainMapName, I18N::Game::Icarus, L"Icarus"))
-            {
-                if (
-                    GameLogic::Items::HasFlightEquipment(pEquipedHelper, pEquipedWing)
-                    && !(pEquipedHelper->Type == ITEM_HORN_OF_UNIRIA)
-                    && (g_ChangeRingMgr->CheckBanMoveIcarusMap(pEquipedRightRing->Type, pEquipedLeftRing->Type) == false)
-                    )
-                {
-                    moveInfo->_bCanMove = true;
-                }
-                else
-                {
-                    moveInfo->_bCanMove = false;
-                }
-            }
-            else if (CMoveCommandData::IsMapNamed(moveInfo->_ReqInfo.szMainMapName, I18N::Game::Atlans, L"Atlans", true))
-            {
-                if (pEquipedHelper->Type == ITEM_HORN_OF_UNIRIA || pEquipedHelper->Type == ITEM_HORN_OF_DINORANT)
-                {
-                    moveInfo->_bCanMove = false;
-                }
-                else
-                {
-                    moveInfo->_bCanMove = true;
-                }
-            }
-            else if ((g_ServerListManager->IsNonPvP() == true) && CMoveCommandData::IsMapNamed(moveInfo->_ReqInfo.szMainMapName, I18N::Game::Vulcanus, L"Vulcanus"))
-            {
-                moveInfo->_bCanMove = false;
-            }
-            else
-            {
-                moveInfo->_bCanMove = true;
-            }
-        }
-
-        if (moveInfo->_bCanMove && moveInfo->_bStrife && 0 == Hero->m_byGensInfluence)
-            moveInfo->_bCanMove = false;
+        moveInfo->_bCanMove = EvaluateMove(*moveInfo) == MoveBlock::None;
     }
 }
 
@@ -361,8 +403,13 @@ void mu::ui::window::CMoveCommandWindow::RmlClickWarp(int row)
     for (int i = 0; i < row && li != m_listMoveInfoData.end(); ++i)
         ++li;
 
-    if (li == m_listMoveInfoData.end() || (*li)->_bCanMove == false)
+    if (li == m_listMoveInfoData.end())
         return;
+    if (!(*li)->_bCanMove)
+    {
+        PostMoveBlock(**li, EvaluateMove(**li));
+        return;
+    }
 
     if (IsTheMapInDifferentServer(gMapManager.WorldActive, (*li)->_ReqInfo.index))
     {
@@ -534,8 +581,7 @@ void mu::ui::window::CMoveCommandWindow::RebuildRowModel()
         entry.mapName = StringUtils::WideToNarrow(moveInfo->_ReqInfo.szMainMapName);
         _itow(iReqLevel, szText, 10);
         entry.reqLevel = StringUtils::WideToNarrow(szText);
-        _itow(moveInfo->_ReqInfo.iReqZen, szText, 10);
-        entry.reqZen = StringUtils::WideToNarrow(szText);
+        entry.reqZen = StringUtils::WideToNarrow(UI::Text::GroupThousands(moveInfo->_ReqInfo.iReqZen).c_str());
         entry.canMove = moveInfo->_bCanMove;
         entry.levelUnmet = iReqLevel > iLevel;
         entry.zenUnmet = moveInfo->_ReqInfo.iReqZen > (int)iZen;

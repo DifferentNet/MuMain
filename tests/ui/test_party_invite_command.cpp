@@ -69,3 +69,13 @@ TEST_CASE("The trade command takes a name the same way")
     CHECK_FALSE(CommandArgument(L"/party Bob", { L"/trade" }, L"").has_value());
     CHECK_FALSE(CommandArgument(L"/trade", { L"" }, L"").has_value());
 }
+
+TEST_CASE("The old store command counts only as the whole first word")
+{
+    CHECK(CommandArgument(L"/purchase", { L"/purchase", L"/buy" }, L"/Kupit").has_value());
+    CHECK(CommandArgument(L"/BUY Bob", { L"/purchase", L"/buy" }, L"/Kupit") == std::wstring_view(L"Bob"));
+    CHECK(CommandArgument(L"/Kupit", { L"/purchase", L"/buy" }, L"/Kupit").has_value());
+    CHECK_FALSE(CommandArgument(L"wtb sword /purchase 123456789012345678901234567890", { L"/purchase", L"/buy" }, L"/Kupit").has_value());
+    CHECK_FALSE(CommandArgument(L"/purchases", { L"/purchase", L"/buy" }, L"").has_value());
+    CHECK_FALSE(CommandArgument(L"/kupit", { L"/purchase", L"/buy" }, L"/Kupit").has_value());
+}

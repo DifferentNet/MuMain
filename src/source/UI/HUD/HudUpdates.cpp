@@ -3,6 +3,7 @@
 #include "UI/HUD/HudUpdates.h"
 
 #include "UI/Core/WindowSystem.h"
+#include "UI/HUD/ExperiencePace.h"
 #include "UI/HUD/GensRanking.h"
 #include "UI/HUD/MasterLevel.h"
 #include "UI/HUD/UIMapName.h"
@@ -27,6 +28,9 @@ void ShowMapName()
 
 void ShowExperienceGain(std::int64_t previous, std::int64_t gained, bool master)
 {
+    // The experience bar's tooltip tells the pace from these gains.
+    UI::HUD::ExperiencePace::Hero().Add(GetTickCount(), gained, master);
+
     if (master)
     {
         g_pMainFrame->SetPreExp_Wide(previous);

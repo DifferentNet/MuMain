@@ -78,7 +78,7 @@
 
 		<div id="your_gold_bg" class="modern-wallet-px trade-gold-your">
 			<div class="modern-wallet-coin-px"></div>
-			<span class="modern-wallet-label-px">Zen</span>
+			<span class="modern-wallet-label-px">{{zen_caption}}</span>
 		</div>
 		<span id="your_gold_text" class="modern-wallet-value-px trade-gold-your-value gold-amount"
 		      data-class-gold-base="your_gold_tier == 'base'"
@@ -96,7 +96,7 @@
 
 		<div id="my_gold_bg" class="modern-wallet-px trade-gold-my">
 			<div class="modern-wallet-coin-px"></div>
-			<span class="modern-wallet-label-px">Zen</span>
+			<span class="modern-wallet-label-px">{{zen_caption}}</span>
 		</div>
 		<span id="my_gold_text" class="modern-wallet-value-px trade-gold-my-value gold-amount"
 		      data-class-gold-base="my_gold_tier == 'base'"

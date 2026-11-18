@@ -210,6 +210,9 @@ void CCharMakeWin::BindRmlModel(Rml::DataModelConstructor& c, CharMakeRmlModel& 
     c.Bind("desc_line2", &model.descLine2);
     c.Bind("ok_label", &model.okLabel);
     c.Bind("cancel_label", &model.cancelLabel);
+    c.Bind("attributes_caption", &model.attributesCaption);
+    c.Bind("class_caption", &model.classCaption);
+    c.Bind("name_caption", &model.nameCaption);
     c.Bind("char_name", &model.charName);
 
     c.BindEventCallback("charmake_select_job",
@@ -527,6 +530,9 @@ void CCharMakeWin::SyncRmlModel()
 
     syncLabel(&CharMakeRmlModel::okLabel, "ok_label", I18N::Game::OK);
     syncLabel(&CharMakeRmlModel::cancelLabel, "cancel_label", I18N::Game::Cancel);
+    syncLabel(&CharMakeRmlModel::attributesCaption, "attributes_caption", I18N::Game::CharMakeBaseAttributes);
+    syncLabel(&CharMakeRmlModel::classCaption, "class_caption", I18N::Game::Class);
+    syncLabel(&CharMakeRmlModel::nameCaption, "name_caption", I18N::Game::Name);
 }
 
 void CCharMakeWin::SelectCreateCharacter()

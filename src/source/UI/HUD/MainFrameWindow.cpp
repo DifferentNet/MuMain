@@ -3,6 +3,8 @@
 #include "Core/Input/KeyBindingsRuntime.h"
 #include "UI/HUD/KeyHint.h"
 #include <algorithm>
+#include <cmath>
+#include <string>
 #include "I18N/All.h"
 
 #include "UI/HUD/MainFrameWindow.h"	// self
@@ -22,6 +24,8 @@
 #include "World/MapInfra/MapManager.h"
 #include "Character/CharacterManager.h"
 #include "UI/HUD/HeroGauges.h"
+#include "UI/HUD/ExperiencePace.h"
+#include "UI/Text/GroupedNumberText.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "GameLogic/Skills/SkillManager.h"
 #include "UI/HUD/Skills/SkillIconAtlas.h"
@@ -679,12 +683,47 @@ void mu::ui::window::CMainFrameWindow::SyncExperience()
         mu_swprintf(szExp, kNumberFormat, iExp);
         SyncWide(&MainFrameRmlModel::expDigit, "exp_digit", szExp);
     }
-    if (m_TextSources.expTooltip.Changed(I18N::Game::EXPI64dI64d, dwExperience, dwNexExperience))
+    // Grouped numbers and the percent; after a minute of hunting also the pace and the time to the next level
+    // (UI/HUD/ExperiencePace.h). Built again when the numbers change and once a second, not every frame.
+    const DWORD now = GetTickCount();
+    const bool numbersChanged =
+        m_TextSources.expTooltip.Changed(I18N::Game::ExpTooltipProgress, dwExperience, dwNexExperience);
+    const bool secondPassed =
+        m_TextSources.expPace.Changed(I18N::Game::ExpPaceLine, static_cast<long long>(now / 1000));
+    if (numbersChanged || secondPassed)
     {
+        wchar_t percent[16] = {};
+        mu_swprintf(percent, L"%.2f", std::clamp(fRatio, 0.0, 1.0) * 100.0);
         wchar_t szTip[256] = {};
-        mu_swprintf(szTip, I18N::Game::EXPI64dI64d, static_cast<unsigned long long>(dwExperience),
-                    static_cast<unsigned long long>(dwNexExperience));
-        SyncWide(&MainFrameRmlModel::expTooltip, "exp_tooltip", szTip);
+        mu_swprintf(szTip, I18N::Game::ExpTooltipProgress, UI::Text::GroupThousands(dwExperience).c_str(),
+                    UI::Text::GroupThousands(dwNexExperience).c_str(), percent);
+        std::wstring tip = szTip;
+
+        namespace Pace = UI::HUD::ExperiencePace;
+        if (const auto perHour = Pace::Hero().PerHour(now))
+        {
+            const std::wstring rate = UI::Text::GroupThousands(static_cast<std::int64_t>(std::llround(*perHour)));
+            wchar_t pace[192] = {};
+            const auto minutes = Pace::MinutesToGain(dwNexExperience - dwExperience, *perHour);
+            if (minutes && *minutes <= Pace::MaxShownMinutes)
+            {
+                wchar_t when[48] = {};
+                if (*minutes >= 60)
+                    mu_swprintf(when, I18N::Game::DurationHoursMinutes, static_cast<int>(*minutes / 60),
+                                static_cast<int>(*minutes % 60));
+                else
+                    mu_swprintf(when, I18N::Game::DurationMinutes, static_cast<int>(*minutes));
+                mu_swprintf(pace, I18N::Game::ExpPaceLine, rate.c_str(), when);
+            }
+            else
+            {
+                // More than 99 hours to go (or nothing left to gain): the pace alone.
+                mu_swprintf(pace, I18N::Game::ExpPaceRate, rate.c_str());
+            }
+            tip += L'\n';
+            tip += pace;
+        }
+        SyncWide(&MainFrameRmlModel::expTooltip, "exp_tooltip", tip.c_str());
     }
 }
 

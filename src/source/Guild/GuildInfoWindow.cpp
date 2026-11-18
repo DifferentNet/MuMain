@@ -36,6 +36,7 @@
 
 #include <algorithm>
 #include <initializer_list>
+#include <iterator>
 #include <string>
 #include <string_view>
 
@@ -596,7 +597,8 @@ void mu::ui::window::CGuildInfoWindow::SyncContent()
         // The original's Render_Text() and each tab's Render_*().
         const float tabWidth = static_cast<float>(GuildConstants::UILayout::TAB_WIDTH);
         title = line(I18N::Game::Guild, false, 190.f);
-        mu_swprintf(Text, L"%ls ( Score:%d )", GuildMark[Hero->GuildMarkIndex].GuildName, GuildTotalScore);
+        mu_swprintf(Text, L"%ls ( %ls:%d )", GuildMark[Hero->GuildMarkIndex].GuildName, I18N::Game::Score,
+                    GuildTotalScore);
         guildName = line(Text, false, 120.f);
         tabInfo = line(I18N::Game::Guild, false, tabWidth);
         tabMembers = line(I18N::Game::Members, false, tabWidth);
@@ -632,6 +634,15 @@ void mu::ui::window::CGuildInfoWindow::SyncContent()
             else
             {
                 mu_swprintf(Text, I18N::Game::GuildMemberD, g_nGuildMemberCount);
+            }
+            {
+                const auto online = std::count_if(m_Members.begin(), m_Members.end(),
+                                                  [](const MemberEntry& member) { return member.server != 255; });
+                wchar_t onlineText[64]{};
+                mu_swprintf(onlineText, I18N::Game::GuildOnlineD, static_cast<int>(online));
+                const size_t used = wcslen(Text);
+                if (used + 1 < std::size(Text))
+                    mu_swprintf_s(Text + used, std::size(Text) - used, L" %ls", onlineText);
             }
             memberCount = line(Text, false, 80.f);
             mu_swprintf(Text, L"%ls : %ls", I18N::Game::HostilityGuild,
@@ -852,7 +863,17 @@ void mu::ui::window::CGuildInfoWindow::AddGuildMember(GUILD_LIST_t* pInfo)
     entry.number = pInfo->Number;
     entry.server = pInfo->Server;
     entry.guildStatus = pInfo->GuildStatus;
-    m_Members.push_back(std::move(entry));
+    // The master first, then who is online, then the rest; the server's order is kept within each group.
+    const auto rank = [](const MemberEntry& member)
+    {
+        if (member.guildStatus == G_MASTER)
+            return 0;
+        return member.server != 255 ? 1 : 2;
+    };
+    const int entryRank = rank(entry);
+    const auto at = std::find_if(m_Members.begin(), m_Members.end(),
+                                 [&](const MemberEntry& member) { return rank(member) > entryRank; });
+    m_Members.insert(at, std::move(entry));
     m_SelectedMember = m_Members.front().name;
 }
 

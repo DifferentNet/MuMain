@@ -23,7 +23,7 @@
 		</div>
 
 		<div id="macro" data-if="macro_visible" data-style-left="world_centre + 'px'">
-			<div class="sharp-text macro-label" data-style-font-size="text_px + 'px'">Macro Time</div>
+			<div class="sharp-text macro-label" data-style-font-size="text_px + 'px'">{{macro_label}}</div>
 			<div class="macro-shadow"></div>
 			<div class="macro-bar">
 				<div class="macro-track">

@@ -1300,7 +1300,7 @@ void mu::ui::window::CCursedTempleSystem::SetMatchStatus(const UI::CursedTemple:
 
     if (status.relicHolderIndex == 0xffff)
     {
-        memset(&m_HolyItemPlayerName, 0, sizeof(char));
+        m_HolyItemPlayerName[0] = L'\0';
     }
 
     m_HolyItemPlayerIndex = status.relicHolderIndex;
@@ -1309,7 +1309,7 @@ void mu::ui::window::CCursedTempleSystem::SetMatchStatus(const UI::CursedTemple:
     m_MyTeam = status.localTeam;
 
     wchar_t message[200];
-    memset(&message, 0, sizeof(char));
+    message[0] = L'\0';
 
     if (m_MyTeam == SEASON3A::eTeam_Allied)
     {
@@ -1358,7 +1358,7 @@ void mu::ui::window::CCursedTempleSystem::SetSkillPoints(std::uint8_t points)
     if (m_SkillPoint < points)
     {
         wchar_t message[100];
-        memset(&message, 0, sizeof(char));
+        message[0] = L'\0';
         mu_swprintf(message, I18N::Game::KillPointDAchieved, points - m_SkillPoint);
         g_pSystemLogBox->AddText(message, mu::ui::window::TYPE_SYSTEM_MESSAGE);
     }

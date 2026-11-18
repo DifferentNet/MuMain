@@ -64,6 +64,9 @@ private:
     // MU Moldova: the live event monsters (UI/HUD/MiniMapLive.h); their names join the boss labels.
     void SyncLive(const UI::MiniMap::Screen& screen, float heroX, float heroY, float length,
                   std::vector<MiniMapLabelEntry>& labels);
+    // The party members on this map: a dot each, their names with the boss labels.
+    void SyncPartyDots(const UI::MiniMap::Screen& screen, float heroX, float heroY, float length,
+                       std::vector<MiniMapLiveEntry>& lives, std::vector<MiniMapLabelEntry>& labels);
 
     CManager* m_pNewUIMng;
     MINI_MAP m_Mini_Map_Data[MAX_MINI_MAP_DATA];

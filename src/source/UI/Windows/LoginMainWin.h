@@ -70,6 +70,7 @@ private:
     void OpenSysMenu();
     void OpenCredits();
     void OnRmlBuilt();
+    static void SetCaptions(Rml::ElementDocument* document);
     void OnRmlReloaded();
 
     UI::RmlBridge::ThemedView<> m_RmlView{{{"Data/Interface/RmlUi/login_main.rml"}},

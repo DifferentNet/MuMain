@@ -12,6 +12,13 @@ mu_add_test(
         test_pool_slot_bounds.cpp
 )
 
+# FramePow: the memo of powf(base, FPS_ANIMATION_FACTOR) gives the same bits as powf.
+mu_add_test(
+    NAME test_frame_pow
+    SOURCES
+        test_frame_pow.cpp
+)
+
 # Creates effects through CreateEffect and records what changes: the effect
 # recorder of the effect catalogue (D40). A binary of its own, because the
 # recorder takes over the effect pools, the registry and the hero; the effect

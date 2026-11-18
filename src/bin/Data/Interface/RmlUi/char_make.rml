@@ -14,10 +14,10 @@
 		<!-- Decorative backdrops (modern only) -- siblings, not parents, so nesting doesn't shift the
 		     existing #panel-relative positions of the real content below. -->
 		<div id="attributes_panel" class="side-panel"></div>
-		<span class="panel-kicker panel-kicker-attributes">Base Attributes</span>
+		<span class="panel-kicker panel-kicker-attributes">{{attributes_caption}}</span>
 
 		<div id="class_panel" class="side-panel"></div>
-		<span class="panel-kicker panel-kicker-class">Class</span>
+		<span class="panel-kicker panel-kicker-class">{{class_caption}}</span>
 
 		<div id="identity_strip" class="side-panel"></div>
 
@@ -47,7 +47,7 @@
 
 		<!-- "Name" label needed only by modern -- legacy's cha_id.tga sprite already bakes it into
 		     the art. Static text, not {{...}}-bound, matching other hardcoded captions. -->
-		<span id="input_label" class="input-label">Name</span>
+		<span id="input_label" class="input-label">{{name_caption}}</span>
 
 		<!-- Frame art behind the field; each theme positions/sizes both to agree. -->
 		<div id="input_frame" class="input-frame"></div>

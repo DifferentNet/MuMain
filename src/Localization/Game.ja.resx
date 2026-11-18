@@ -12154,4 +12154,95 @@
   <data name="FriendIsOnline" xml:space="preserve">
     <value>%lsがオンラインになりました。</value>
   </data>
+  <!-- Round 11 -->
+  <data name="MacroCooldown" xml:space="preserve">
+    <value>マクロ時間</value>
+  </data>
+  <data name="ServerNonPvpTag" xml:space="preserve">
+    <value>(PvPなし)</value>
+  </data>
+  <data name="DurationDays" xml:space="preserve">
+    <value>%d日</value>
+  </data>
+  <data name="DurationHoursMinutes" xml:space="preserve">
+    <value>%d時間%02d分</value>
+  </data>
+  <data name="DurationMinutes" xml:space="preserve">
+    <value>%d分</value>
+  </data>
+  <data name="CharMakeBaseAttributes" xml:space="preserve">
+    <value>基本ステータス</value>
+  </data>
+  <data name="CharSelectEnterGame" xml:space="preserve">
+    <value>入場</value>
+  </data>
+  <data name="LoginCredits" xml:space="preserve">
+    <value>クレジット</value>
+  </data>
+  <data name="MoveNeedsLevel" xml:space="preserve">
+    <value>このマップにはレベル%dが必要です。</value>
+  </data>
+  <data name="MoveBlockedKiller" xml:space="preserve">
+    <value>殺人者の状態では移動できません。</value>
+  </data>
+  <data name="MoveBlockedAtlansMount" xml:space="preserve">
+    <value>ユニリアやディノラントに乗ってアトランスには入れません。</value>
+  </data>
+  <data name="MoveBlockedHere" xml:space="preserve">
+    <value>このサーバーからはこのマップへ行けません。</value>
+  </data>
+  <data name="MoveNeedsGens" xml:space="preserve">
+    <value>このマップに入るにはゲンスに加入してください。</value>
+  </data>
+  <data name="JewelCantUseOnItem" xml:space="preserve">
+    <value>この宝石はこのアイテムに使えません。</value>
+  </data>
+  <data name="JewelUpgradedTo" xml:space="preserve">
+    <value>%ls: +%dに強化されました</value>
+  </data>
+  <data name="JewelUpgradeFailed" xml:space="preserve">
+    <value>%ls: 強化失敗、現在+%d</value>
+  </data>
+  <data name="JewelOptionImproved" xml:space="preserve">
+    <value>%ls: オプションが上がりました</value>
+  </data>
+  <data name="DeathLostZen" xml:space="preserve">
+    <value>ゼンを失いました: %ls</value>
+  </data>
+  <data name="DeathLostExperience" xml:space="preserve">
+    <value>経験値を失いました: %ls</value>
+  </data>
+  <data name="ZenSold" xml:space="preserve">
+    <value>売却: +%ls ゼン</value>
+  </data>
+  <data name="ZenRepairCost" xml:space="preserve">
+    <value>修理: -%ls ゼン</value>
+  </data>
+  <data name="LevelUpFreePoints" xml:space="preserve">
+    <value>レベル%d。未振りポイント: %d (%ls)</value>
+  </data>
+  <data name="ResetFreePoints" xml:space="preserve">
+    <value>リセット完了。未振りポイント: %d (%ls)</value>
+  </data>
+  <data name="GuildOnlineD" xml:space="preserve">
+    <value>(オンライン: %d)</value>
+  </data>
+  <data name="ExpTooltipProgress" xml:space="preserve">
+    <value>経験値：%ls / %ls（%ls%%）</value>
+  </data>
+  <data name="ExpPaceLine" xml:space="preserve">
+    <value>%ls EXP/時、次のレベルまで約%ls</value>
+  </data>
+  <data name="ExpPaceRate" xml:space="preserve">
+    <value>%ls EXP/時</value>
+  </data>
+  <data name="LevelUpFreePointsNoKey" xml:space="preserve">
+    <value>レベル%d。未振りポイント: %d</value>
+  </data>
+  <data name="ResetFreePointsNoKey" xml:space="preserve">
+    <value>リセット完了。未振りポイント: %d</value>
+  </data>
+  <data name="JewelOptionFailed" xml:space="preserve">
+    <value>%ls: オプション強化失敗</value>
+  </data>
 </root>

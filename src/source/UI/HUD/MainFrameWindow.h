@@ -230,7 +230,7 @@ namespace mu::ui::window
         {
             TextSource hpText, mpText, hpCurrent, mpCurrent, hpTooltip, mpTooltip;
             TextSource agText, agCurrent, agTooltip, sdText, sdCurrent, sdTooltip;
-            TextSource expDigit, expTooltip;
+            TextSource expDigit, expTooltip, expPace;
             TextSource chaInfoTooltip, myInvenTooltip, friendTooltip, windowTooltip, battlePassTooltip, cShopTooltip;
         };
         TextSources m_TextSources;

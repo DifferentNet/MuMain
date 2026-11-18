@@ -14096,4 +14096,95 @@
   <data name="FriendIsOnline" xml:space="preserve">
     <value>%ls jest online.</value>
   </data>
+  <!-- Round 11 -->
+  <data name="MacroCooldown" xml:space="preserve">
+    <value>Czas makra</value>
+  </data>
+  <data name="ServerNonPvpTag" xml:space="preserve">
+    <value>(Bez PvP)</value>
+  </data>
+  <data name="DurationDays" xml:space="preserve">
+    <value>%d d</value>
+  </data>
+  <data name="DurationHoursMinutes" xml:space="preserve">
+    <value>%d godz. %02d min</value>
+  </data>
+  <data name="DurationMinutes" xml:space="preserve">
+    <value>%d min</value>
+  </data>
+  <data name="CharMakeBaseAttributes" xml:space="preserve">
+    <value>Atrybuty bazowe</value>
+  </data>
+  <data name="CharSelectEnterGame" xml:space="preserve">
+    <value>Wejdź</value>
+  </data>
+  <data name="LoginCredits" xml:space="preserve">
+    <value>Twórcy</value>
+  </data>
+  <data name="MoveNeedsLevel" xml:space="preserve">
+    <value>Ta mapa wymaga poziomu %d.</value>
+  </data>
+  <data name="MoveBlockedKiller" xml:space="preserve">
+    <value>Jako zabójca nie możesz się teleportować.</value>
+  </data>
+  <data name="MoveBlockedAtlansMount" xml:space="preserve">
+    <value>Nie wejdziesz do Atlans na Unirii ani Dinorancie.</value>
+  </data>
+  <data name="MoveBlockedHere" xml:space="preserve">
+    <value>Na tę mapę nie można przejść z tego serwera.</value>
+  </data>
+  <data name="MoveNeedsGens" xml:space="preserve">
+    <value>Dołącz do Gens, aby wejść na tę mapę.</value>
+  </data>
+  <data name="JewelCantUseOnItem" xml:space="preserve">
+    <value>Tego klejnotu nie można użyć na tym przedmiocie.</value>
+  </data>
+  <data name="JewelUpgradedTo" xml:space="preserve">
+    <value>%ls: ulepszono do +%d</value>
+  </data>
+  <data name="JewelUpgradeFailed" xml:space="preserve">
+    <value>%ls: ulepszenie nieudane, teraz +%d</value>
+  </data>
+  <data name="JewelOptionImproved" xml:space="preserve">
+    <value>%ls: opcja ulepszona</value>
+  </data>
+  <data name="DeathLostZen" xml:space="preserve">
+    <value>Utracono: %ls Zen</value>
+  </data>
+  <data name="DeathLostExperience" xml:space="preserve">
+    <value>Utracono: %ls doświadczenia</value>
+  </data>
+  <data name="ZenSold" xml:space="preserve">
+    <value>Sprzedano: +%ls Zen</value>
+  </data>
+  <data name="ZenRepairCost" xml:space="preserve">
+    <value>Naprawa: -%ls Zen</value>
+  </data>
+  <data name="LevelUpFreePoints" xml:space="preserve">
+    <value>Poziom %d. Wolne punkty: %d (%ls)</value>
+  </data>
+  <data name="ResetFreePoints" xml:space="preserve">
+    <value>Reset wykonany. Wolne punkty: %d (%ls)</value>
+  </data>
+  <data name="GuildOnlineD" xml:space="preserve">
+    <value>(online: %d)</value>
+  </data>
+  <data name="ExpTooltipProgress" xml:space="preserve">
+    <value>EXP: %ls / %ls (%ls%%)</value>
+  </data>
+  <data name="ExpPaceLine" xml:space="preserve">
+    <value>%ls EXP/h, następny poziom za ~%ls</value>
+  </data>
+  <data name="ExpPaceRate" xml:space="preserve">
+    <value>%ls EXP/h</value>
+  </data>
+  <data name="LevelUpFreePointsNoKey" xml:space="preserve">
+    <value>Poziom %d. Wolne punkty: %d</value>
+  </data>
+  <data name="ResetFreePointsNoKey" xml:space="preserve">
+    <value>Reset wykonany. Wolne punkty: %d</value>
+  </data>
+  <data name="JewelOptionFailed" xml:space="preserve">
+    <value>%ls: ulepszenie opcji nieudane</value>
+  </data>
 </root>

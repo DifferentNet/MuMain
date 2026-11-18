@@ -36,3 +36,17 @@ TEST_CASE("a tooltip with no room on either side, or no flip anchor, is shifted 
     CHECK(Placement::Top(595.f, false, &flip, 20.f, 600.f) == doctest::Approx(580.f));
     CHECK(Placement::Top(0.f, false, nullptr, 700.f, 600.f) == doctest::Approx(0.f));
 }
+
+TEST_CASE("a tooltip taller than the viewport is drawn smaller until it fits, but not below the minimum")
+{
+    // Fits: its own size, to the last pixel.
+    CHECK(Placement::FitScale(400.f, 412.f, 0.65f) == 1.f);
+    CHECK(Placement::FitScale(412.f, 412.f, 0.65f) == 1.f);
+    // Too tall: the viewport's share of it.
+    CHECK(Placement::FitScale(515.f, 412.f, 0.65f) == doctest::Approx(0.8f));
+    // Far too tall: the minimum, the rest off screen.
+    CHECK(Placement::FitScale(1000.f, 412.f, 0.65f) == doctest::Approx(0.65f));
+    // Nothing measured yet, or no viewport: its own size.
+    CHECK(Placement::FitScale(0.f, 412.f, 0.65f) == 1.f);
+    CHECK(Placement::FitScale(500.f, 0.f, 0.65f) == 1.f);
+}

@@ -91,7 +91,7 @@
 		     legacy's dark theme and clashes with modern's warm-iron chrome. -->
 		<div id="gold_bg" class="modern-wallet-px">
 			<div class="modern-wallet-coin-px"></div>
-			<span class="modern-wallet-label-px">Zen</span>
+			<span class="modern-wallet-label-px">{{zen_caption}}</span>
 		</div>
 		<span id="gold_text" class="modern-wallet-value-px">{{gold_text}}</span>
 

@@ -158,6 +158,10 @@ void CCharSelMainWin::BindRmlModel(Rml::DataModelConstructor& c, CharSelMainRmlM
     c.Bind("account_block_hidden", &model.accountBlockHidden);
     c.Bind("account_block_line1", &model.accountBlockLine1);
     c.Bind("account_block_line2", &model.accountBlockLine2);
+    c.Bind("create_caption", &model.createCaption);
+    c.Bind("menu_caption", &model.menuCaption);
+    c.Bind("connect_caption", &model.connectCaption);
+    c.Bind("delete_caption", &model.deleteCaption);
 
     c.BindEventCallback("charsel_create_click",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickCreate(); });
@@ -354,6 +358,10 @@ void CCharSelMainWin::SyncRmlModel()
     };
     syncLabel(&CharSelMainRmlModel::accountBlockLine1, "account_block_line1", I18N::Game::ThisAccountIsItemBlocked);
     syncLabel(&CharSelMainRmlModel::accountBlockLine2, "account_block_line2", I18N::Game::PleaseCheckOnHttpMuonlineWebzenComSite);
+    syncLabel(&CharSelMainRmlModel::createCaption, "create_caption", I18N::Game::PadCreate);
+    syncLabel(&CharSelMainRmlModel::menuCaption, "menu_caption", I18N::Game::TouchMenu);
+    syncLabel(&CharSelMainRmlModel::connectCaption, "connect_caption", I18N::Game::CharSelectEnterGame);
+    syncLabel(&CharSelMainRmlModel::deleteCaption, "delete_caption", I18N::Game::Delete);
 }
 
 void CCharSelMainWin::DeleteCharacter()

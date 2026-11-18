@@ -30,7 +30,8 @@ class CEventScheduleWindow : public CObject
         // the native size while the panel shrinks, so the time lines need the room.
         PHONE_WINDOW_WIDTH = 270,
         PHONE_CONTENT_WIDTH = PHONE_WINDOW_WIDTH - 2 * 22,
-        // Rows that fit between the title and the exit button: a name line and a time line each.
+        // Rows that fit between the title and the exit button: a name line and a time line each. The phone
+        // view lists them all and scrolls.
         VISIBLE_ROWS = 11,
     };
 
