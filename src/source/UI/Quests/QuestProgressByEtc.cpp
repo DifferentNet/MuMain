@@ -94,6 +94,7 @@ void CQuestProgressByEtc::BindRmlModel(Rml::DataModelConstructor& c, QuestProgre
     c.Bind("reward_rows", &model.rewardRows);
 
     c.Bind("request_complete", &model.requestComplete);
+    c.Bind("title_label", &model.titleLabel);
     c.Bind("ok_label", &model.okLabel);
     c.Bind("exit_tooltip", &model.exitTooltip);
 
@@ -118,6 +119,7 @@ void CQuestProgressByEtc::BindRmlModel(Rml::DataModelConstructor& c, QuestProgre
     c.BindEventCallback("questprogressetc_complete",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickComplete(); });
 
+    model.titleLabel = StringUtils::WideToNarrow(I18N::Game::Quest);
     model.okLabel = StringUtils::WideToNarrow(I18N::Game::OK);
     model.exitTooltip = StringUtils::WideToNarrow(I18N::Game::Close388);
 }

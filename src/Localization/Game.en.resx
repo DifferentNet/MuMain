@@ -1308,7 +1308,7 @@
     <comment>legacy_id=359</comment>
   </data>
   <data name="A G use: %d" xml:space="preserve">
-    <value>A G use: %d</value>
+    <value>AG cost: %d</value>
     <comment>legacy_id=360</comment>
   </data>
   <data name="Party (P)" xml:space="preserve">
@@ -17162,5 +17162,69 @@
   </data>
   <data name="EmoteWin" xml:space="preserve">
     <value>Win</value>
+  </data>
+  <!-- Round 13 -->
+  <data name="ChatCmdHelpTrade" xml:space="preserve">
+    <value>Trade with a player: /trade Name when they are in sight, else the player you selected at any distance, or the one who faces you.</value>
+  </data>
+  <data name="ChatCmdHelpParty" xml:space="preserve">
+    <value>Invite the player you selected to your party (also /pt).</value>
+  </data>
+  <data name="ChatCmdHelpGuild" xml:space="preserve">
+    <value>Ask the guild master you selected to take you into the guild.</value>
+  </data>
+  <data name="ChatCmdHelpUnion" xml:space="preserve">
+    <value>Guild masters: ask the guild master you selected for an alliance.</value>
+  </data>
+  <data name="ChatCmdHelpRival" xml:space="preserve">
+    <value>Guild masters: declare the guild of the guild master you selected hostile.</value>
+  </data>
+  <data name="ChatCmdHelpRivalOff" xml:space="preserve">
+    <value>Guild masters: end the hostility with the guild of the guild master you selected.</value>
+  </data>
+  <data name="ChatCmdHelpDuelStart" xml:space="preserve">
+    <value>Challenge the player you selected to a duel.</value>
+  </data>
+  <data name="ChatCmdHelpDuelEnd" xml:space="preserve">
+    <value>End your duel.</value>
+  </data>
+  <data name="ChatCmdHelpReply" xml:space="preserve">
+    <value>Whisper the text back to the last player who whispered you (also /reply).</value>
+  </data>
+  <data name="ChatCmdHelpFilter" xml:space="preserve">
+    <value>Show only the chat lines with these words (up to five). Without words, everything shows again.</value>
+  </data>
+  <data name="ChatCmdHelpMacro" xml:space="preserve">
+    <value>Save a chat line as macro 1; Alt+1 says it. /2 to /9 and /0 do the same for Alt+2 to Alt+0.</value>
+  </data>
+  <data name="ChatCmdParamWords" xml:space="preserve">
+    <value>words</value>
+  </data>
+  <data name="ChatCmdParamText" xml:space="preserve">
+    <value>text</value>
+  </data>
+  <data name="OfflineShadowLabel" xml:space="preserve">
+    <value>Shadow · offline</value>
+  </data>
+  <data name="TradePartnerLoweredZen" xml:space="preserve">
+    <value>%ls lowered the zen: %ls -&gt; %ls</value>
+  </data>
+  <data name="TradePartnerRemovedItem" xml:space="preserve">
+    <value>%ls took %ls out of the trade</value>
+  </data>
+  <data name="PetLifeLow" xml:space="preserve">
+    <value>%ls: %d%% life left. It is lost at 0.</value>
+  </data>
+  <data name="PurchaseZenSpent" xml:space="preserve">
+    <value>Purchase: -%ls Zen</value>
+  </data>
+  <data name="NewSkillLearned" xml:space="preserve">
+    <value>New skill: %ls</value>
+  </data>
+  <data name="WarpUnlockedKey" xml:space="preserve">
+    <value>Level %d: you can now warp to %ls (%ls)</value>
+  </data>
+  <data name="WarpUnlocked" xml:space="preserve">
+    <value>Level %d: you can now warp to %ls</value>
   </data>
 </root>

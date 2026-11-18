@@ -14307,4 +14307,68 @@
   <data name="EmoteWin" xml:space="preserve">
     <value>Sieg</value>
   </data>
+  <!-- Round 13 -->
+  <data name="ChatCmdHelpTrade" xml:space="preserve">
+    <value>Handel mit einem Spieler: /trade Name, wenn er in Sicht ist, sonst mit dem gewählten Spieler auf jede Entfernung oder mit dem, der dir gegenübersteht.</value>
+  </data>
+  <data name="ChatCmdHelpParty" xml:space="preserve">
+    <value>Lädt den gewählten Spieler in deine Gruppe ein (auch /pt).</value>
+  </data>
+  <data name="ChatCmdHelpGuild" xml:space="preserve">
+    <value>Bittet den gewählten Gildenmeister, dich in die Gilde aufzunehmen.</value>
+  </data>
+  <data name="ChatCmdHelpUnion" xml:space="preserve">
+    <value>Gildenmeister: bittet den gewählten Gildenmeister um ein Bündnis.</value>
+  </data>
+  <data name="ChatCmdHelpRival" xml:space="preserve">
+    <value>Gildenmeister: erklärt die Gilde des gewählten Gildenmeisters zum Feind.</value>
+  </data>
+  <data name="ChatCmdHelpRivalOff" xml:space="preserve">
+    <value>Gildenmeister: beendet die Feindschaft mit der Gilde des gewählten Gildenmeisters.</value>
+  </data>
+  <data name="ChatCmdHelpDuelStart" xml:space="preserve">
+    <value>Fordert den gewählten Spieler zum Duell.</value>
+  </data>
+  <data name="ChatCmdHelpDuelEnd" xml:space="preserve">
+    <value>Beendet dein Duell.</value>
+  </data>
+  <data name="ChatCmdHelpReply" xml:space="preserve">
+    <value>Flüstert dem Spieler zurück, der dir zuletzt geflüstert hat (auch /reply).</value>
+  </data>
+  <data name="ChatCmdHelpFilter" xml:space="preserve">
+    <value>Zeigt nur Chatzeilen mit diesen Wörtern (bis zu fünf). Ohne Wörter wird wieder alles gezeigt.</value>
+  </data>
+  <data name="ChatCmdHelpMacro" xml:space="preserve">
+    <value>Speichert eine Chatzeile als Makro 1; Alt+1 sagt sie. /2 bis /9 und /0 genauso für Alt+2 bis Alt+0.</value>
+  </data>
+  <data name="ChatCmdParamWords" xml:space="preserve">
+    <value>Wörter</value>
+  </data>
+  <data name="ChatCmdParamText" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="OfflineShadowLabel" xml:space="preserve">
+    <value>Schatten · offline</value>
+  </data>
+  <data name="TradePartnerLoweredZen" xml:space="preserve">
+    <value>%ls hat das Zen gesenkt: %ls -&gt; %ls</value>
+  </data>
+  <data name="TradePartnerRemovedItem" xml:space="preserve">
+    <value>%ls hat %ls aus dem Handel genommen</value>
+  </data>
+  <data name="PetLifeLow" xml:space="preserve">
+    <value>%ls: noch %d%% Leben. Bei 0 ist es verloren.</value>
+  </data>
+  <data name="PurchaseZenSpent" xml:space="preserve">
+    <value>Kauf: -%ls Zen</value>
+  </data>
+  <data name="NewSkillLearned" xml:space="preserve">
+    <value>Neue Fertigkeit: %ls</value>
+  </data>
+  <data name="WarpUnlockedKey" xml:space="preserve">
+    <value>Level %d: neues Teleportziel: %ls (%ls)</value>
+  </data>
+  <data name="WarpUnlocked" xml:space="preserve">
+    <value>Level %d: neues Teleportziel: %ls</value>
+  </data>
 </root>

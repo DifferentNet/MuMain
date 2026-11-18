@@ -1,6 +1,7 @@
 #include "Core/Platform/WinCompat.h"
 #include "Data/Translation/MultiLanguage.h"
 #include "GameLogic/Commands/ChatCommandCatalog.h"
+#include "GameLogic/Commands/ClientCommandList.h"
 
 #include "doctest.h"
 
@@ -18,6 +19,16 @@ int32_t CMultiLanguage::ConvertFromUtf8(wchar_t* target, const char* source, int
 
     target[length] = L'\0';
     return length;
+}
+
+// The real list (ClientCommandList.cpp) needs the localized strings of MuClient;
+// round13_tests checks it. This stand-in adds one local command.
+void GameLogic::Commands::AppendClientCommands(std::vector<ChatCommand>& commands)
+{
+    ChatCommand command;
+    command.Command = L"/local";
+    command.IsLocal = true;
+    commands.push_back(command);
 }
 
 namespace

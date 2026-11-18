@@ -19,6 +19,7 @@
 #include "UI/RmlBridge/RmlPointer.h"
 #include "Core/Utilities/StringUtils.h"
 #include "UI/Text/GroupedNumberText.h"
+#include "UI/Chat/WarpUnlocks.h"
 #include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Event.h>
@@ -279,16 +280,12 @@ enum class MoveBlock
 };
 
 // The level-400 maps ask the same of every class.
-constexpr int FullLevelMoveRequirement = 400;
-
 // The level a warp list entry asks of the hero: the Dark classes need two thirds of the listed level.
 int RequiredMoveLevel(int listedLevel)
 {
     const auto baseClass = gCharacterManager.GetBaseClass(CharacterAttribute->Class);
     const bool reducedClass = baseClass == CLASS_DARK || baseClass == CLASS_DARK_LORD || baseClass == CLASS_RAGEFIGHTER;
-    if (!reducedClass || listedLevel == FullLevelMoveRequirement)
-        return listedLevel;
-    return int(float(listedLevel) * 2.f / 3.f);
+    return UI::Chat::WarpUnlocks::RequiredLevel(listedLevel, reducedClass);
 }
 
 // The map's own rule: wings for Icarus, no Uniria or Dinorant in Atlans, no Vulcanus on a non-PvP server.

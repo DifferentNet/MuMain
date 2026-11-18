@@ -44,6 +44,8 @@
 #endif
 #include "Scenes/SceneLightingSetup.h"
 #include "Scenes/ScenePostProcessing.h"
+#include "Scenes/CharacterPreselect.h"
+#include "Data/GameConfig/GameConfig.h"
 
 // External declarations
 extern EGameScene SceneFlag;
@@ -133,6 +135,38 @@ bool StartGameWithSlot(int slot)
     ::StartGame();
     return true;
 }
+
+namespace
+{
+bool g_preselectPending = false;
+
+// Marks the remembered (or only) character once per character list.
+void ApplyPendingPreselect()
+{
+    if (!g_preselectPending)
+        return;
+
+    g_preselectPending = false;
+    if (SelectedHero >= 0)
+        return;
+
+    std::vector<std::wstring> names(MAX_CHARACTERS_PER_ACCOUNT);
+    for (int slot = 0; slot < MAX_CHARACTERS_PER_ACCOUNT; ++slot)
+        names[slot] = CharacterNameInSlot(slot);
+
+    const int slot = PickPreselectSlot(names, GameConfig::GetInstance().GetLastCharacter());
+    if (slot < 0)
+        return;
+
+    SelectedHero = slot;
+    g_CharSelMainWin.UpdateDisplay();
+}
+} // namespace
+
+void RequestCharacterPreselect()
+{
+    g_preselectPending = true;
+}
 } // namespace Scenes
 
 void CreateCharacterScene()
@@ -213,6 +247,7 @@ void NewMoveCharacterScene()
         InitCharacterScene = true;
         CreateCharacterScene();
     }
+    Scenes::ApplyPendingPreselect();
     InitTerrainLight();
     MoveObjects();
     MoveMounts();

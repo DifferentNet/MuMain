@@ -140,7 +140,8 @@
 			     data-style-font-size="text_px + 'px'">
 				<div class="gi-pane-row gi-member-row" data-for="r : member_rows"
 				     data-class-selected="r.selected" data-class-officer="r.officer"
-				     data-event-click="guild_info_select_member(it_index)">
+				     data-event-click="guild_info_select_member(it_index)"
+				     data-event-dblclick="guild_info_whisper_member(it_index)">
 					<!-- A backgrounded element with children paints an unclosed box in this
 					     build, so the row backdrop is a childless leaf (engine-findings.md). -->
 					<div class="gi-pane-row-back"></div>

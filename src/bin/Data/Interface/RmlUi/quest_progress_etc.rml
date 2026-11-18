@@ -19,7 +19,7 @@
 		<div class="frame-piece frame-right"></div>
 		<div class="frame-piece frame-bottom"></div>
 
-		<span class="sharp-text" id="title" data-style-font-size="text_px + 'px'">Quest</span>
+		<span class="sharp-text" id="title" data-style-font-size="text_px + 'px'">{{title_label}}</span>
 		<div class="sharp-text qp-subject" data-style-font-size="text_px + 'px'">{{subject}}</div>
 
 		<div class="sharp-text qp-npc-lines" data-style-font-size="text_px + 'px'">

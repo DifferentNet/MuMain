@@ -2,8 +2,12 @@
 
 #include "UI/Inventory/TradeUpdates.h"
 
+#include "Engine/Object/ZzzInventory.h"
+#include "I18N/All.h"
+#include "UI/Chat/ChatMessages.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Inventory/Trade.h"
+#include "UI/Inventory/TradeOfferChange.h"
 
 #include <string>
 
@@ -41,7 +45,22 @@ void OwnGoldAnswered(bool accepted)
 
 void PartnerGoldChanged(int gold)
 {
+    const int before = g_pTrade->GetYourTradeGold();
     g_pTrade->SetYourTradeGold(gold);
+
+    if (!IsZenLowered(before, gold))
+        return;
+
+    // The classic trick: 10,000,000 becomes 1,000,000 while the player looks at his own bag.
+    wchar_t partner[MAX_USERNAME_SIZE + 1] = {};
+    g_pTrade->GetYourID(partner);
+    wchar_t beforeText[64] = {};
+    wchar_t afterText[64] = {};
+    ::ConvertGold(before, beforeText);
+    ::ConvertGold(gold, afterText);
+    wchar_t line[256] = {};
+    mu_swprintf(line, I18N::Game::TradePartnerLoweredZen, partner, beforeText, afterText);
+    UI::Chat::PostSystem(line, mu::ui::window::TYPE_ERROR_MESSAGE);
 }
 
 void PartnerConfirmChanged(PartnerConfirm state)

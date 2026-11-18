@@ -64,6 +64,7 @@
 #include "GameLogic/Items/JewelUpgradeResult.h"
 #include "GameLogic/Items/CraftingRefusal.h"
 #include "UI/Chat/CharacterChangeLines.h"
+#include "UI/Chat/SeenSkills.h"
 #include "UI/Chat/HeroStatusLines.h"
 #include "App/Platform/AttentionSignal.h"
 #include "GameLogic/Commands/ChatCommandCatalog.h"
@@ -108,6 +109,7 @@ using namespace mu::ui::window;
 #include "GameLogic/Social/GambleSystem.h"
 #include "GameLogic/Quests/QuestMng.h"
 #include "Scenes/SceneCommon.h"
+#include "Scenes/CharacterScene.h"
 #ifdef PBG_ADD_SECRETBUFF
 #include "FatigueTimeSystem.h"
 #endif // PBG_ADD_SECRETBUFF
@@ -869,6 +871,7 @@ void ReceiveCharacterListExtended(const BYTE* ReceiveBuffer)
         Offset += sizeof(PRECEIVE_CHARACTER_LIST_EXTENDED);
     }
 
+    Scenes::RequestCharacterPreselect();
     CurrentProtocolState = RECEIVE_CHARACTERS_LIST;
 }
 
@@ -1506,6 +1509,31 @@ void ReceiveRevival(const BYTE* ReceiveBuffer)
     g_ConsoleDebug->Write(MCD_RECEIVE, L"0x04 [ReceiveRevival]");
 }
 
+namespace
+{
+UI::Chat::SeenSkills g_seenSkills;
+
+// "New skill: X" for a skill the hero did not have in this session. Not for pet commands, nor for master skills
+// (they come from the master tree window, which shows them, and often replace a base skill).
+void NoteSkillAdded(int skillType)
+{
+    if (skillType <= 0 || skillType >= MAX_SKILLS)
+        return;
+    if (skillType >= AT_PET_COMMAND_DEFAULT && skillType < AT_PET_COMMAND_END)
+        return;
+    const BYTE useType = SkillAttribute[skillType].SkillUseType;
+    if (useType == SKILL_USE_TYPE_MASTER || useType == SKILL_USE_TYPE_MASTERLEVEL ||
+        useType == SKILL_USE_TYPE_MASTERACTIVE)
+        return;
+    if (!g_seenSkills.NoteAdded(skillType))
+        return;
+
+    wchar_t line[128]{};
+    mu_swprintf(line, I18N::Game::NewSkillLearned, SkillAttribute[skillType].Name);
+    UI::Chat::PostSystem(line, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+}
+} // namespace
+
 void ReceiveMagicList(const BYTE* ReceiveBuffer)
 {
     int Master_Skill_Bool = -1;
@@ -1524,6 +1552,7 @@ void ReceiveMagicList(const BYTE* ReceiveBuffer)
         auto Data2 = (LPPRECEIVE_MAGIC_LIST)(ReceiveBuffer + Offset);
         CharacterAttribute->Skill[Data2->Index] = (ActionSkillType)Data2->Type;
         CharacterAttribute->SkillLevel[Data2->Index] = Data2->Level;
+        NoteSkillAdded(Data2->Type);
     }
     else if (Data->ListType == 0x02)
     {
@@ -1540,12 +1569,14 @@ void ReceiveMagicList(const BYTE* ReceiveBuffer)
         {
             ZeroMemory(CharacterAttribute->Skill, MAX_SKILLS * sizeof(WORD));
             ZeroMemory(CharacterAttribute->SkillLevel, MAX_SKILLS * sizeof(BYTE));
+            g_seenSkills.BeginList(CharacterAttribute->Name);
         }
         for (int i = 0; i < Data->Value; i++)
         {
             auto Data2 = (LPPRECEIVE_MAGIC_LIST)(ReceiveBuffer + Offset);
             CharacterAttribute->Skill[Data2->Index] = (ActionSkillType)Data2->Type;
             CharacterAttribute->SkillLevel[Data2->Index] = Data2->Level;
+            g_seenSkills.NoteKnown(Data2->Type);
             Offset += sizeof(PRECEIVE_MAGIC_LIST);
         }
 
@@ -6733,6 +6764,11 @@ void ReceiveBuyExtended(const std::span<const BYTE> ReceiveBuffer)
         itemData = itemData.subspan(0, length);
     }
 
+    if (Data->Index == BUY_FAILED || Data->Index == BUY_FAILED_SILENT)
+    {
+        UI::Chat::ChangeLines::NotePurchaseRefused();
+    }
+
     if (Data->Index == BUY_FAILED)
     {
         UI::Windows::HideAll();
@@ -7094,6 +7130,7 @@ void ReceiveLevelUp(const BYTE* ReceiveBuffer, int Size)
 
     CharacterMachine->CalculateNextExperince();
     UI::Chat::ChangeLines::NoteLevelUp(CharacterAttribute->Level, CharacterAttribute->LevelUpPoint, false);
+    UI::Chat::ChangeLines::NoteWarpUnlocks(previousLevel, CharacterAttribute->Level);
 
     OBJECT* o = &Hero->Object;
 

@@ -58,6 +58,11 @@ public:
     void SetEncryptedUsername(const std::wstring& encryptedUsername);
     std::wstring GetEncryptedUsername() const { return m_encryptedUsername; }
 
+    // Name of the character last taken into the game. Character select
+    // preselects it. Written to config.ini right away.
+    std::wstring GetLastCharacter() const { return m_lastCharacter; }
+    void SetLastCharacter(const std::wstring& name);
+
     void SetEncryptedPassword(const std::wstring& encryptedPassword);
     std::wstring GetEncryptedPassword() const { return m_encryptedPassword; }
 
@@ -451,6 +456,7 @@ private:
     std::wstring m_languageSelection;
     std::wstring m_encryptedUsername;
     std::wstring m_encryptedPassword;
+    std::wstring m_lastCharacter;
 
     std::wstring m_serverIP;
     int m_serverPort;
