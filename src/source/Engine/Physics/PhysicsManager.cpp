@@ -570,11 +570,13 @@ void CPhysicsCloth::SetLink(int iLink, int iVertex1, int iVertex2, float fDistan
     link.m_byStyle = byStyle;
 }
 
+// The bone does not move between the sub-steps and nothing but SetFixedVertices() writes a fixed vertex, so only the
+// first sub-step sets them (at the same point as before: after its spring forces read last frame's positions).
 BOOL CPhysicsCloth::Move2(float fTime, int iCount)
 {
     for (int i = 0; i < iCount; ++i)
     {
-        if (!Move(fTime))
+        if (!Move(fTime, i == 0))
         {
             return (FALSE);
         }
@@ -583,7 +585,7 @@ BOOL CPhysicsCloth::Move2(float fTime, int iCount)
     return (TRUE);
 }
 
-BOOL CPhysicsCloth::Move(float fTime)
+BOOL CPhysicsCloth::Move(float fTime, bool setFixedVertices)
 {
     switch (PCT_MASK_ELASTIC & m_dwType)
     {
@@ -612,7 +614,7 @@ BOOL CPhysicsCloth::Move(float fTime)
     CPhysicsManager::s_vWind[0] = m_fWind * sinf((180.0f + m_oOwner->Angle[2]) * Q_PI / 180.0f);
     CPhysicsManager::s_vWind[1] = -m_fWind * cosf((180.0f + m_oOwner->Angle[2]) * Q_PI / 180.0f);
 
-    MoveVertices(fTime);
+    MoveVertices(fTime, setFixedVertices);
 
     if (!PreventFromStretching())
     {
@@ -637,7 +639,7 @@ void CPhysicsCloth::InitForces(void)
     }
 }
 
-void CPhysicsCloth::MoveVertices(float fTime)
+void CPhysicsCloth::MoveVertices(float fTime, bool setFixedVertices)
 {
     InitForces();
 
@@ -687,7 +689,8 @@ void CPhysicsCloth::MoveVertices(float fTime)
         }
     }
 
-    SetFixedVertices(m_oOwner->BoneTransform[m_iBone]);
+    if (setFixedVertices)
+        SetFixedVertices(m_oOwner->BoneTransform[m_iBone]);
     for (int iVertex = 0; iVertex < m_iNumVertices; ++iVertex)
     {
         m_pVertices[iVertex].Move(fTime);

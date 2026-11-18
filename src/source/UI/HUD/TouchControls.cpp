@@ -8,9 +8,11 @@
 #include "Core/Utilities/StringUtils.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "Engine/Object/ZzzCharacter.h"
+#include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "Engine/Object/ZzzOpenData.h"
 #include "GameLogic/Commands/GmPanel.h"
+#include "GameLogic/Skills/SkillManager.h"
 #include "GameLogic/Touch/TouchActions.h"
 #include "I18N/All.h"
 #include "MUHelper/MuHelper.h"
@@ -420,6 +422,8 @@ struct PickerEntry
     Rml::String id;
     Rml::String icon;
     Rml::String name;
+    // What a cast costs (mana, AG) as the tooltip says it; empty for none (a pet command).
+    Rml::String cost;
     // On one of the five skill buttons; on the one being set.
     bool onButton = false;
     bool here = false;
@@ -631,6 +635,7 @@ void BindModel(Rml::DataModelConstructor& c, ControlsModel& model)
     entry.RegisterMember("id", &PickerEntry::id);
     entry.RegisterMember("icon", &PickerEntry::icon);
     entry.RegisterMember("name", &PickerEntry::name);
+    entry.RegisterMember("cost", &PickerEntry::cost);
     entry.RegisterMember("on_button", &PickerEntry::onButton);
     entry.RegisterMember("here", &PickerEntry::here);
     c.RegisterArray<std::vector<PickerEntry>>();
@@ -737,6 +742,8 @@ struct SkillPicker
     int focus = Touch::NoControl;
     // The skills' names, looked up once a showing.
     std::map<int, std::wstring> names;
+    // And their costs, the same.
+    std::map<int, Rml::String> costs;
 };
 SkillPicker g_picker;
 
@@ -1787,6 +1794,40 @@ const std::wstring& SkillName(int skill)
     return g_picker.names.emplace(skill, std::move(name)).first->second;
 }
 
+// What a skill costs to cast, in the tooltip's own words (mana, AG; a zero left out), on one line; empty for a pet
+// command. Looked up once a showing.
+const Rml::String& SkillCost(int skill)
+{
+    const auto known = g_picker.costs.find(skill);
+    if (known != g_picker.costs.end())
+        return known->second;
+    std::wstring cost;
+    const bool petCommand = skill >= AT_PET_COMMAND_DEFAULT && skill < AT_PET_COMMAND_END;
+    const int skillType = !petCommand && CharacterAttribute != nullptr && skill >= 0 && skill < MAX_SKILLS
+                              ? static_cast<int>(CharacterAttribute->Skill[skill])
+                              : -1;
+    if (skillType >= 0 && skillType < MAX_SKILLS && SkillAttribute[skillType].Name[0] != L'\0')
+    {
+        int mana = 0;
+        int distance = 0;
+        int ag = 0;
+        gSkillManager.GetSkillInformation(skillType, 1, nullptr, &mana, &distance, &ag);
+        wchar_t part[64];
+        if (mana > 0)
+        {
+            mu_swprintf_s(part, I18N::Game::ManaD, mana);
+            cost = part;
+        }
+        if (ag > 0)
+        {
+            mu_swprintf_s(part, I18N::Game::AGUseD, ag);
+            cost += cost.empty() ? L"" : L"  ";
+            cost += part;
+        }
+    }
+    return g_picker.costs.emplace(skill, StringUtils::WideToNarrow(cost.c_str())).first->second;
+}
+
 void OpenPicker(ControlsModel& model, int slot)
 {
     // The game's own list would wait under the picker for a pick.
@@ -1796,6 +1837,7 @@ void OpenPicker(ControlsModel& model, int slot)
     g_binding.until = {};
     g_follow.Drop();
     g_picker.names.clear();
+    g_picker.costs.clear();
     g_picker.pageFollowsSlot = true;
     g_picker.focus = Touch::NoControl;
     SetField(model.menuOpen, false, "menu_open");
@@ -1896,7 +1938,8 @@ void ShowPickerPage(ControlsModel& model, const SkillArrange::HotKeys& keys, boo
         for (int slot = 0; slot < ActiveSlots(); ++slot)
             onButton = onButton || on == SkillArrange::HotKeyOfSlot(slot, upper);
         entries.push_back({PickElements[entry], g_pSkillList->GetSkillIconDecorator(skill),
-                           StringUtils::WideToNarrow(SkillName(skill).c_str()), onButton, on == hotKey});
+                           StringUtils::WideToNarrow(SkillName(skill).c_str()), SkillCost(skill), onButton,
+                           on == hotKey});
     }
     if (entries != model.pickerEntries)
     {

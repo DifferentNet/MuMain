@@ -104,6 +104,15 @@ namespace mu::ui::window
         bool IsFieldFocused(const char* id) const;
         void SetFieldText(const char* id, const type_string& text);
         void FocusField(const char* id);
+        // Up in a field: the chat field's line sent before, the whisper field's name before. False when nothing came.
+        bool RecallOlder(const char* id);
+        // That field for the history button: the whisper field when it had the focus last and takes a name.
+        const char* RecallFieldId() const;
+        // The field that had the focus last, for the phone's history button (a tap on it takes the focus away).
+        const char* m_lastFocusedField = "chat_field";
+        // The quick phrase row and the bar, found once per document (QuickRowLiftPx() reads them every frame).
+        mutable Rml::ObserverPtr<Rml::Element> m_quickRow;
+        mutable Rml::ObserverPtr<Rml::Element> m_quickPanel;
 
         // Sends the chat field's line as Enter does (to the channel chosen, or the whisper target),
         // clears the field and closes the bar.
@@ -140,6 +149,13 @@ namespace mu::ui::window
 
 
         bool HaveFocus();
+        // A phone's quick phrase row stands over the bar, where the chat log's lowest lines are: how far it
+        // reaches above the bar in window px, 0 while the bar or the row is not shown. The phone's HUD layout
+        // lifts the log by it (PhoneHudLayout.cpp).
+        float QuickRowLiftPx() const;
+        // The field the phone's history button gives the focus back to when the window point x, y is on that
+        // button; nullptr elsewhere. The page's keyboard treats a tap there as one on the field.
+        Rml::Element* RecallFieldAt(float x, float y) const;
 
         void AddChatHistory(const type_string& strText);
         void RemoveChatHistory(int index);

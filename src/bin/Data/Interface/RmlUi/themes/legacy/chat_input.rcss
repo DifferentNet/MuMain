@@ -155,3 +155,18 @@
 		white-space: nowrap;
 	}
 }
+
+/* MU Skynet: on a phone the two fields take a finger from higher up: the hit area grows 5 upwards, to just
+   under the 26-high buttons, and the text stays where it was on the art. The history button opens the row
+   (ChatInputBox.cpp, chat_history_up): Up's line sent before, in an arrow a little bigger than the phrases. */
+@media (theme: mobile) {
+	.cib-whisper-field, .cib-chat-field {
+		top: 27dp;
+		height: 19dp;
+		padding-top: 5dp;
+	}
+	.cib-quick-btn.cib-quick-history {
+		font-size: 14dp;
+		padding: 0 10dp;
+	}
+}

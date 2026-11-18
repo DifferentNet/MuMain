@@ -3,6 +3,8 @@
 
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
+#include "UI/Core/WindowSystem.h"
+#include "UI/HUD/ChatInputBox.h"
 #include "UI/HUD/TouchControls.h"
 #include "UI/Mobile/NoticesUnderPanel.h"
 #include "UI/Mobile/PhoneHudFit.h"
@@ -239,6 +241,31 @@ void PlaceChat(Rml::Element& chat, const Frame& frame)
         UI::Placement::Invalidate();
 }
 
+// How far the chat bar's quick phrase row reaches above the bar, in window px; 0 while it is not shown.
+float QuickRowLift(Rml::Element& /*input*/)
+{
+    const mu::ui::window::CChatInputBox* box = g_pChatInputBox;
+    return box != nullptr ? box->QuickRowLiftPx() : 0.f;
+}
+
+void PlaceChatInput(Rml::Element& input, const Frame& /*frame*/)
+{
+    // The quick phrase row stands over the bar, where the log's lowest lines are: a margin over the input's
+    // slot lifts the log standing on it clear of the row. The margin is in the slot's layout px.
+    const float lift = QuickRowLift(input);
+    bool changed = false;
+    if (lift > 0.f)
+        changed = SetPx(input, Rml::PropertyId::MarginTop, OffsetFor(input, {0.f, lift}).y - OffsetFor(input, {0.f, 0.f}).y);
+    else if (input.GetLocalProperty(Rml::PropertyId::MarginTop) != nullptr)
+    {
+        input.RemoveProperty(Rml::PropertyId::MarginTop);
+        changed = true;
+    }
+    // The windows in the chat's slots follow.
+    if (changed)
+        UI::Placement::Invalidate();
+}
+
 // The bottom of the buff icons in window px, 0 with none shown (defined with the pieces' states).
 float BuffsBottom(Rml::Element& lane);
 
@@ -381,6 +408,7 @@ void PlaceParty(Rml::Element& panel, const Frame& frame)
 constexpr const char* CornerMoved[] = {"left", "top", "margin-left"};
 constexpr const char* PartyMoved[] = {"left", "top", "width", "height", "transform", "--root-scale"};
 constexpr const char* ChatMoved[] = {"margin-left"};
+constexpr const char* ChatInputMoved[] = {"margin-top"};
 constexpr const char* LaneMoved[] = {"left", "top", "width", "overflow-x", "overflow-y"};
 constexpr const char* BoardMoved[] = {"left"};
 
@@ -393,6 +421,7 @@ constexpr Piece Pieces[] = {
     {"workspace.rml", ".chat-stack", PlaceChat, ChatMoved, nullptr},
     {"slide_notice.rml", "#lane", PlaceSlideLane, LaneMoved, BuffsBottom},
     {"notices.rml", "#board", PlaceNotices, BoardMoved, WidestNotice},
+    {"workspace.rml", ".slot[data-window=\"chat_input\"]", PlaceChatInput, ChatInputMoved, QuickRowLift},
 };
 constexpr std::size_t PieceCount = std::size(Pieces);
 

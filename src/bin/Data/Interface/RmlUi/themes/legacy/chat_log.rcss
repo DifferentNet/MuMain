@@ -157,4 +157,7 @@
 @media (theme: mobile-hud) {
 	#panel.framed #lines { pointer-events: auto; }
 	#panel.framed #lines scrollbarvertical { width: 24dp; }
+	/* The chat opens framed on a phone; the 10dp strip is too thin for a finger, the bar's size button steps the
+	   height instead. */
+	#resize_handle { display: none; }
 }
