@@ -1,6 +1,9 @@
 // The pad's buttons named in a text (the help's pad page, a hint): the texts say {A}, {B}, {X}, {Y}, {LB},
 // {RB}, {LT}, {RT}, {LS}, {RS} (a stick pressed in), {MENU} and {VIEW}, and the names of the pad in hand
 // go in their place (UI/HUD/PadGlyphs: Xbox letters, PlayStation's Cross .. L1 .., Nintendo's letters).
+// The sticks by their job, in words that follow the player's layout (left-handed: the right stick walks):
+// {WALKSTICK} and {AIMSTICK} as a label ("Left stick: walk"), {WALKSTICK_OBJ} and {AIMSTICK_OBJ} inside
+// a sentence ("let go of the left stick"); the words come from the language (PadStickLeft ..).
 #pragma once
 
 #include <string>
@@ -23,6 +26,10 @@ struct Names
     std::wstring rs = L"RS";
     std::wstring menu = L"Menu";
     std::wstring view = L"View";
+    std::wstring walkStick = L"Left stick";
+    std::wstring aimStick = L"Right stick";
+    std::wstring walkStickObject = L"left stick";
+    std::wstring aimStickObject = L"right stick";
 };
 
 // The text with each {NAME} it knows replaced; any other brace is left as it is.

@@ -8,6 +8,7 @@
 #include "Data/GameConfig/GameConfig.h"
 #include "Data/GameConfig/GameConfigConstants.h"
 #include "Core/Input/GamepadInput.h"
+#include "Core/Input/GamepadLayout.h"
 #include "Core/Input/GamepadPointer.h"
 #include "Core/Input/GamepadStick.h"
 #include "UI/Chat/MessageType.h"
@@ -280,7 +281,8 @@ static constexpr int kGamepadSpeedDropdown = 17;
 static constexpr int kGamepadGlyphsDropdown = 18;
 static constexpr int kGamepadAttackModeDropdown = 19;
 static constexpr int kGamepadPageModeDropdown = 20;
-static constexpr int kLastDropdownId = kGamepadPageModeDropdown;
+static constexpr int kGamepadLayoutDropdown = 21;
+static constexpr int kLastDropdownId = kGamepadLayoutDropdown;
 // The pad's A and RT rows' choices, in their labels' order: held (as always), or a tap on and a tap off.
 static constexpr int kPadHoldIndex = 0;
 static constexpr int kPadToggleIndex = 1;
@@ -945,6 +947,13 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
     c.Bind("gamepad_page_mode_index", &model.gamepadPageModeIndex);
     c.Bind("gamepad_page_mode_row_label", &model.gamepadPageModeRowLabel);
     c.Bind("gamepad_page_mode_value_label", &model.gamepadPageModeValueLabel);
+    c.Bind("gamepad_layout_labels", &model.gamepadLayoutLabels);
+    c.Bind("gamepad_layout_index", &model.gamepadLayoutIndex);
+    c.Bind("gamepad_layout_row_label", &model.gamepadLayoutRowLabel);
+    c.Bind("gamepad_layout_value_label", &model.gamepadLayoutValueLabel);
+    c.Bind("zen_walk_pickup", &model.zenWalkPickup);
+    c.Bind("zen_walk_pickup_label", &model.zenWalkPickupLabel);
+    c.Bind("zen_walk_pickup_tooltip", &model.zenWalkPickupTooltip);
 
     c.BindEventCallback("option_click_close",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickClose(); });
@@ -1087,6 +1096,8 @@ void mu::ui::window::COptionWindow::BindRmlModel(Rml::DataModelConstructor& c, O
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleBackgroundSound(); });
     c.BindEventCallback("option_toggle_titles_towns_only",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleTitlesTownsOnly(); });
+    c.BindEventCallback("option_toggle_zen_walk_pickup",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlToggleZenWalkPickup(); });
 
 }
 
@@ -1422,6 +1433,9 @@ void mu::ui::window::COptionWindow::RmlDropdownOptionClick(int dropdownId, int o
         break;
     case kGamepadPageModeDropdown:
         RmlGamepadPageModeChanged(optionIndex);
+        break;
+    case kGamepadLayoutDropdown:
+        RmlGamepadLayoutChanged(optionIndex);
         break;
     case kGamepadGlyphsDropdown:
         RmlGamepadGlyphsChanged(optionIndex);
@@ -2576,6 +2590,13 @@ void mu::ui::window::COptionWindow::RmlToggleTitlesTownsOnly()
     config.Save();
 }
 
+void mu::ui::window::COptionWindow::RmlToggleZenWalkPickup()
+{
+    GameConfig& config = GameConfig::GetInstance();
+    config.SetZenWalkPickup(!config.GetZenWalkPickup());
+    config.Save();
+}
+
 void mu::ui::window::COptionWindow::RmlThemeChanged(int index)
 {
     // See RmlResolutionChanged's own comment -- same settle-frame guard applies here.
@@ -2716,6 +2737,16 @@ void mu::ui::window::COptionWindow::RmlGamepadPageModeChanged(int index)
         return;
     GameConfig& config = GameConfig::GetInstance();
     config.SetGamepadPageToggle(index == kPadToggleIndex);
+    config.Save();
+}
+
+void mu::ui::window::COptionWindow::RmlGamepadLayoutChanged(int index)
+{
+    if (m_rmlSyncCount < kRmlSelectSettleFrames || index < 0 || index >= Core::Input::Gamepad::LayoutCount)
+        return;
+    GameConfig& config = GameConfig::GetInstance();
+    config.SetGamepadLayout(index);
+    Core::Input::Gamepad::SetLayout(Core::Input::Gamepad::LayoutFromIndex(config.GetGamepadLayout()));
     config.Save();
 }
 
@@ -3142,6 +3173,9 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     syncLabel(model.gamepadGlyphsRowLabel, "gamepad_glyphs_row_label", I18N::Game::GamepadGlyphsRow);
     syncLabel(model.gamepadAttackModeRowLabel, "gamepad_attack_mode_row_label", I18N::Game::GamepadAttackModeRow);
     syncLabel(model.gamepadPageModeRowLabel, "gamepad_page_mode_row_label", I18N::Game::GamepadPageModeRow);
+    syncLabel(model.gamepadLayoutRowLabel, "gamepad_layout_row_label", I18N::Game::OptionGamepadLayout);
+    syncLabel(model.zenWalkPickupLabel, "zen_walk_pickup_label", I18N::Game::OptionZenWalkPickup);
+    syncLabel(model.zenWalkPickupTooltip, "zen_walk_pickup_tooltip", I18N::Game::OptionZenWalkPickupTip);
 
     // positioned/root_x/root_y stay at their model defaults (false/0/0, see OptionRmlModel's own
     // comment): window_shell's `.center-both` CSS places the window, a drag moves it.
@@ -3403,6 +3437,12 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
                           "gamepad_page_mode_index", model.gamepadPageModeValueLabel, "gamepad_page_mode_value_label",
                           NarrowLabels({I18N::Game::GamepadHoldMode, I18N::Game::GamepadToggleMode}),
                           config.GetGamepadPageToggle() ? kPadToggleIndex : kPadHoldIndex);
+        syncMultiplierRow(model.gamepadLayoutLabels, "gamepad_layout_labels", model.gamepadLayoutIndex,
+                          "gamepad_layout_index", model.gamepadLayoutValueLabel, "gamepad_layout_value_label",
+                          NarrowLabels({I18N::Game::OptionGamepadLayoutStandard,
+                                        I18N::Game::OptionGamepadLayoutLeftHanded,
+                                        I18N::Game::OptionGamepadLayoutSwapped}),
+                          static_cast<int>(Core::Input::Gamepad::GetLayout()));
 
     }
     const bool touchButtonsShown = UI::Mobile::ShowsControls();
@@ -3428,6 +3468,8 @@ void mu::ui::window::COptionWindow::SyncRmlModel()
     if (model.backgroundSound != backgroundSound) { model.backgroundSound = backgroundSound; m_RmlView.MarkDirty("background_sound"); }
     const bool titlesTownsOnly = GameConfig::GetInstance().GetTitlesTownsOnly();
     if (model.titlesTownsOnly != titlesTownsOnly) { model.titlesTownsOnly = titlesTownsOnly; m_RmlView.MarkDirty("titles_towns_only"); }
+    const bool zenWalkPickup = GameConfig::GetInstance().GetZenWalkPickup();
+    if (model.zenWalkPickup != zenWalkPickup) { model.zenWalkPickup = zenWalkPickup; m_RmlView.MarkDirty("zen_walk_pickup"); }
 
     m_iThemeIndex = FindCurrentThemeIndex();
     if (model.themeIndex != m_iThemeIndex) { model.themeIndex = m_iThemeIndex; m_RmlView.MarkDirty("theme_index"); }

@@ -7,7 +7,7 @@
 	<link type="text/rcss" href="gamepad_glyphs.rcss"/>
 	<link type="text/rcss" href="touch_controls.rcss"/>
 </head>
-<body class="native-text" data-model="touch_controls" data-class-glyph-ps="glyph_family == 1" data-class-glyph-nin="glyph_family == 2" data-class-size-60="size_pct == 60" data-class-size-70="size_pct == 70" data-class-size-80="size_pct == 80" data-class-size-90="size_pct == 90" data-class-pad="pad" data-class-pad-alt="pad_alt" data-class-pad-potion-alt="pad_potion_alt" data-class-no-touch="!fingers" data-class-picking="picker_open" data-class-socialising="social_open" data-class-under-hub="under_hub" data-class-over-map="over_map" data-class-no-skills="no_skills &amp;&amp; !picker_open">
+<body class="native-text" data-model="touch_controls" data-class-glyph-ps="glyph_family == 1" data-class-glyph-nin="glyph_family == 2" data-class-swap-shoulders="glyph_swap" data-class-size-60="size_pct == 60" data-class-size-70="size_pct == 70" data-class-size-80="size_pct == 80" data-class-size-90="size_pct == 90" data-class-pad="pad" data-class-pad-alt="pad_alt" data-class-pad-potion-alt="pad_potion_alt" data-class-no-touch="!fingers" data-class-picking="picker_open" data-class-socialising="social_open" data-class-under-hub="under_hub" data-class-over-map="over_map" data-class-no-skills="no_skills &amp;&amp; !picker_open">
 	<!-- The on-screen controls of phones and tablets (UI/HUD/TouchControls.cpp), shown only on a touch
 	     device in the world. Nothing here takes the pointer (pointer-events: none throughout): fingers
 	     reach the controls through Core::Input::Touch, which C++ answers from these elements' boxes,
@@ -271,7 +271,7 @@
 		<div class="pad-glyph pad-trigger">{{glyph_rt}}</div><div class="pad-glyph pad-face pad-b pad-alt-key">{{glyph_b}}<div class="pad-ps"><div class="pad-ps-1"></div><div class="pad-ps-2"></div><div class="pad-ps-3"></div></div></div>
 	</div>
 	<!-- Beside the skill buttons: opens the skill picker, which sets them. -->
-	<div id="tc_skill_edit" class="tc-button">{{skills_label}}<div class="pad-glyph pad-round pad-stick">LS</div></div>
+	<div id="tc_skill_edit" class="tc-button">{{skills_label}}<div class="pad-glyph pad-round pad-stick">{{glyph_ls}}</div></div>
 	<div id="tc_pickup" class="tc-button tc-small">{{pickup_label}}
 		<div class="pad-glyph pad-dpad pad-dpad-down"><div class="pad-dpad-v"></div><div class="pad-dpad-h"></div><div class="pad-dpad-lit"></div></div>
 	</div>

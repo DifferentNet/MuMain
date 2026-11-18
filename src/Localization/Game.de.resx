@@ -13380,7 +13380,7 @@
     <value>Gamepad</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Linker Stick: laufen. Rechter Stick: zu einem Ziel neigen, um es zu wählen, halten, um in diese Richtung weiterzugehen; in einem Fenster ein freier Zeiger</value>
+    <value>{WALKSTICK}: laufen. {AIMSTICK}: zu einem Ziel neigen, um es zu wählen, halten, um in diese Richtung weiterzugehen; in einem Fenster ein freier Zeiger</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
     <value>{A}: tippen schlägt das Ziel einmal, halten kämpft weiter; ohne Monster in der Nähe aufheben (halten) oder mit dem NPC sprechen</value>
@@ -13389,7 +13389,7 @@
     <value>{X}, {Y}, {B}: die drei Fähigkeitsknöpfe. {RT} halten: {X}, {Y} und {B} wirken die Fähigkeiten 4 bis 6. {RB}: das Gruppenmitglied, das deine Heilung und Buffs erhält</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>{LS} (linken Stick eindrücken, zentriert): Fähigkeiten auf die Knöpfe legen</value>
+    <value>{LS} ({WALKSTICK_OBJ} eindrücken, zentriert): Fähigkeiten auf die Knöpfe legen</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>{B} bei offenem Fenster: zurück, schließt das oberste Fenster</value>
@@ -13401,7 +13401,7 @@
     <value>{LB} und {LT}: Tränke Q und W, mit gehaltenem {RT} E und R. {RT} + D-pad oben/unten: Kamera heran- und wegzoomen. D-pad links: die Karte (gehalten: Teleport-Fenster). D-pad rechts: das Inventar</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>{RS} (rechten Stick eindrücken, zentriert): zurück zum nächsten Ziel</value>
+    <value>{RS} ({AIMSTICK_OBJ} eindrücken, zentriert): zurück zum nächsten Ziel</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
     <value>{MENU}: die Heldenzentrale (Inventar, Charakter, Fähigkeiten, Quests, Gilde, Einstellungen), {LB} und {RB} wechseln ihre Tabs. Nochmal: alle Fenster. {MENU} halten: der Chat</value>
@@ -13416,10 +13416,10 @@
     <value>Nach einem Tor oder Kartenwechsel den Stick loslassen, um wieder zu laufen</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>In einem Fenster: ein Rahmen statt des Zeigers. D-pad oder linker Stick: zur nächsten Zelle oder zum nächsten Knopf (nach der letzten Zeile scrollt die Liste). {A}: nehmen, ablegen, drücken. {X}: anlegen, benutzen. {Y}: die Gegenstandskarte. {RB}: das nächste Fenster, {RT}: die nächste Seite oder der nächste Tab. Rechter Stick: freier Zeiger</value>
+    <value>In einem Fenster: ein Rahmen statt des Zeigers. {WALKSTICK} oder D-Pad: zur nächsten Zelle oder zum nächsten Knopf (nach der letzten Zeile scrollt die Liste). {A}: nehmen, ablegen, drücken. {X}: anlegen, benutzen. {Y}: die Gegenstandskarte. {RB}: das nächste Fenster, {RT}: die nächste Seite oder der nächste Tab. {AIMSTICK}: freier Zeiger</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
-    <value>Tippen setzt eine Fähigkeit einmal ein, halten wiederholt sie. Teleport springt in die Richtung, in die der linke Stick zeigt</value>
+    <value>Tippen setzt eine Fähigkeit einmal ein, halten wiederholt sie. Teleport springt in die Richtung, in die du den {WALKSTICK_OBJ} neigst</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
     <value>D-pad oben: MU Helper an und aus, gehalten: seine Einstellungen. {VIEW}: Social (Spieler in der Nähe: Handel, Gruppe, Gilde ...)</value>
@@ -13536,7 +13536,7 @@
     <value>PK (Menü): tippe einen Spieler an, um ihn zu bekämpfen; Angriff und Fähigkeiten bleiben dann an ihm. Deine Gruppe bleibt verschont</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK (Menü): der rechte Stick wählt auch Spieler, {A} bekämpft sie, deine Gruppe bleibt verschont</value>
+    <value>PK (Menü): mit dem {AIMSTICK_OBJ} wählst du auch Spieler, {A} bekämpft sie, deine Gruppe bleibt verschont</value>
   </data>
   <data name="TouchShopTapAgainToBuy" xml:space="preserve">
     <value>Tippe den Gegenstand erneut an, um ihn zu kaufen.</value>
@@ -14132,7 +14132,7 @@
     <value>Inventar voll: im Inventar öffnet {Y} auf einem Gegenstand seine Karte, zum Fallenlassen oder Verkaufen im Laden</value>
   </data>
   <data name="PadHintDeath" xml:space="preserve">
-    <value>In ein paar Sekunden lebst du wieder: lass den linken Stick los und lauf weiter</value>
+    <value>In ein paar Sekunden lebst du wieder: lass den {WALKSTICK_OBJ} los und lauf weiter</value>
   </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
@@ -14306,5 +14306,38 @@
   </data>
   <data name="EmoteWin" xml:space="preserve">
     <value>Sieg</value>
+  </data>
+  <data name="OptionZenWalkPickup" xml:space="preserve">
+    <value>Zen unter den Füßen aufheben (Pad, Touch)</value>
+  </data>
+  <data name="OptionZenWalkPickupTip" xml:space="preserve">
+    <value>Mit Gamepad oder Touch-Steuerung wird Zen auf deinem Feld und daneben ohne Schritt aufgehoben</value>
+  </data>
+  <data name="OptionGamepadLayout" xml:space="preserve">
+    <value>Gamepad-Belegung</value>
+  </data>
+  <data name="OptionGamepadLayoutStandard" xml:space="preserve">
+    <value>Standard</value>
+  </data>
+  <data name="OptionGamepadLayoutLeftHanded" xml:space="preserve">
+    <value>Linkshänder</value>
+  </data>
+  <data name="OptionGamepadLayoutSwapped" xml:space="preserve">
+    <value>Schultertasten/Trigger getauscht</value>
+  </data>
+  <data name="PadCardLayoutLine" xml:space="preserve">
+    <value>Tastenbelegung: Optionen &gt; Oberfläche &gt; Gamepad-Belegung</value>
+  </data>
+  <data name="PadStickLeft" xml:space="preserve">
+    <value>Linker Stick</value>
+  </data>
+  <data name="PadStickRight" xml:space="preserve">
+    <value>Rechter Stick</value>
+  </data>
+  <data name="PadStickLeftObject" xml:space="preserve">
+    <value>linken Stick</value>
+  </data>
+  <data name="PadStickRightObject" xml:space="preserve">
+    <value>rechten Stick</value>
   </data>
 </root>

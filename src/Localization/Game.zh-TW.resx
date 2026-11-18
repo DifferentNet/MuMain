@@ -13282,7 +13282,7 @@
     <value>遊戲手把</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>左搖桿：行走。右搖桿：朝目標推動以選取，推住不放則持續朝該方向前進；在視窗中為自由游標</value>
+    <value>{WALKSTICK}：行走。{AIMSTICK}：朝目標推動以選取，推住不放則持續朝該方向前進；在視窗中為自由游標</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
     <value>{A}：輕按攻擊目標一次，按住持續戰鬥；附近沒有怪物時，撿取（按住）或與 NPC 對話</value>
@@ -13291,7 +13291,7 @@
     <value>{X}、{Y}、{B}：三個技能按鈕。按住 {RT}：{X}、{Y} 和 {B} 施放技能 4 到 6。{RB}：接受你治療與增益的隊伍成員</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>{LS}（在中央按下左搖桿）：把技能放到按鈕上</value>
+    <value>{LS}（在中央按下{WALKSTICK_OBJ}）：把技能放到按鈕上</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>視窗開啟時按 {B}：返回，關閉最上層的視窗</value>
@@ -13303,7 +13303,7 @@
     <value>{LB} 和 {LT}：藥水 Q 和 W，按住 {RT} 時為 E 和 R。{RT} + D-pad 上/下：鏡頭拉近與拉遠。D-pad 左：地圖（按住：傳送視窗）。D-pad 右：背包</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>{RS}（在中央按下右搖桿）：回到最近的目標</value>
+    <value>{RS}（在中央按下{AIMSTICK_OBJ}）：回到最近的目標</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
     <value>{MENU}：英雄中心（背包、角色、技能、任務、公會、設定），{LB} 和 {RB} 切換分頁。再按一次：所有視窗。按住 {MENU}：聊天</value>
@@ -13318,10 +13318,10 @@
     <value>經過傳送門或切換地圖後，放開搖桿即可再次行走</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>在視窗中：以外框取代游標。D-pad 或左搖桿：移到下一格或按鈕（超過最後一列時清單會捲動）。{A}：拿起、放下、按下。{X}：裝備、使用。{Y}：物品卡片。{RB}：下一個視窗，{RT}：下一頁或下一個分頁。右搖桿：自由游標</value>
+    <value>在視窗中：以外框取代游標。{WALKSTICK} 或 D-pad：移到下一格或按鈕（超過最後一列時清單會捲動）。{A}：拿起、放下、按下。{X}：裝備、使用。{Y}：物品卡片。{RB}：下一個視窗，{RT}：下一頁或下一個分頁。{AIMSTICK}：自由游標</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
-    <value>輕按使用技能一次，按住則重複施放。瞬間移動會朝左搖桿所指的方向跳躍</value>
+    <value>輕按使用技能一次，按住則重複施放。瞬間移動會朝{WALKSTICK_OBJ}所指的方向跳躍</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
     <value>D-pad 上：MU Helper 開關，按住：其設定。{VIEW}：社交（附近玩家：交易、組隊、公會…）</value>
@@ -13438,7 +13438,7 @@
     <value>PK（選單）：點玩家與其戰鬥，之後攻擊和技能會持續對他。你的隊伍不受影響</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK（選單）：右搖桿也會選取玩家，{A} 與他們戰鬥，你的隊伍不受波及</value>
+    <value>PK（選單）：{AIMSTICK_OBJ}也會選取玩家，{A} 與他們戰鬥，你的隊伍不受波及</value>
   </data>
   <data name="TouchShopTapAgainToBuy" xml:space="preserve">
     <value>再點一次物品即可購買。</value>
@@ -14034,7 +14034,7 @@
     <value>背包已滿：在物品欄對物品按 {Y} 開啟卡片，可丟棄或在商店出售</value>
   </data>
   <data name="PadHintDeath" xml:space="preserve">
-    <value>幾秒後就會復活：先放開左搖桿再繼續行走</value>
+    <value>幾秒後就會復活：先放開{WALKSTICK_OBJ}再繼續行走</value>
   </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
@@ -14208,5 +14208,38 @@
   </data>
   <data name="EmoteWin" xml:space="preserve">
     <value>贏</value>
+  </data>
+  <data name="OptionZenWalkPickup" xml:space="preserve">
+    <value>撿起腳下的金幣（手把、觸控）</value>
+  </data>
+  <data name="OptionZenWalkPickupTip" xml:space="preserve">
+    <value>使用手把或觸控操作時，所在格與相鄰格的金幣不需走動即可撿起</value>
+  </data>
+  <data name="OptionGamepadLayout" xml:space="preserve">
+    <value>手把配置</value>
+  </data>
+  <data name="OptionGamepadLayoutStandard" xml:space="preserve">
+    <value>標準</value>
+  </data>
+  <data name="OptionGamepadLayoutLeftHanded" xml:space="preserve">
+    <value>左手</value>
+  </data>
+  <data name="OptionGamepadLayoutSwapped" xml:space="preserve">
+    <value>肩鍵/扳機互換</value>
+  </data>
+  <data name="PadCardLayoutLine" xml:space="preserve">
+    <value>按鍵配置：選項 &gt; 介面 &gt; 手把配置</value>
+  </data>
+  <data name="PadStickLeft" xml:space="preserve">
+    <value>左搖桿</value>
+  </data>
+  <data name="PadStickRight" xml:space="preserve">
+    <value>右搖桿</value>
+  </data>
+  <data name="PadStickLeftObject" xml:space="preserve">
+    <value>左搖桿</value>
+  </data>
+  <data name="PadStickRightObject" xml:space="preserve">
+    <value>右搖桿</value>
   </data>
 </root>

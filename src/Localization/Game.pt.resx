@@ -13282,7 +13282,7 @@
     <value>Controle</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Analógico esquerdo: andar. Analógico direito: incline-o na direção de um alvo para escolhê-lo, segure para seguir nessa direção; numa janela, um ponteiro livre</value>
+    <value>{WALKSTICK}: andar. {AIMSTICK}: incline-o na direção de um alvo para escolhê-lo, segure para seguir nessa direção; numa janela, um ponteiro livre</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
     <value>{A}: aperte para golpear o alvo uma vez, segure para continuar lutando; sem monstros perto, pegar (segure) ou falar com o NPC</value>
@@ -13291,7 +13291,7 @@
     <value>{X}, {Y}, {B}: os três botões de habilidade. Segure {RT}: {X}, {Y} e {B} usam as habilidades 4 a 6. {RB}: o membro do grupo que recebe suas curas e buffs</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>{LS} (aperte o analógico esquerdo, centralizado): colocar habilidades nos botões</value>
+    <value>{LS} (aperte o {WALKSTICK_OBJ}, centralizado): colocar habilidades nos botões</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>{B} com uma janela aberta: voltar, fecha a janela de cima</value>
@@ -13303,7 +13303,7 @@
     <value>{LB} e {LT}: poções Q e W, com {RT} segurado E e R. {RT} + D-pad cima/baixo: aproximar e afastar a câmera. D-pad esquerda: o mapa (segurado: janela de Teleporte). D-pad direita: o inventário</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>{RS} (aperte o analógico direito, centralizado): de volta ao alvo mais próximo</value>
+    <value>{RS} (aperte o {AIMSTICK_OBJ}, centralizado): de volta ao alvo mais próximo</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
     <value>{MENU}: o painel do herói (inventário, personagem, habilidades, missões, guilda, ajustes), {LB} e {RB} trocam suas abas. De novo: todas as janelas. Segure {MENU}: o chat</value>
@@ -13318,10 +13318,10 @@
     <value>Depois de um portão ou de uma troca de mapa, solte o analógico para andar de novo</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>Numa janela: uma moldura no lugar do ponteiro. D-pad ou analógico esquerdo: para a próxima célula ou botão (depois da última linha, a lista rola). {A}: pegar, soltar, apertar. {X}: equipar, usar. {Y}: a ficha do item. {RB}: a próxima janela, {RT}: a próxima página ou aba. Analógico direito: ponteiro livre</value>
+    <value>Numa janela: uma moldura no lugar do ponteiro. {WALKSTICK} ou D-pad: para a próxima célula ou botão (depois da última linha, a lista rola). {A}: pegar, soltar, apertar. {X}: equipar, usar. {Y}: a ficha do item. {RB}: a próxima janela, {RT}: a próxima página ou aba. {AIMSTICK}: ponteiro livre</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
-    <value>Aperte para usar uma habilidade uma vez, segure para repeti-la. Teleporte salta para onde o analógico esquerdo aponta</value>
+    <value>Aperte para usar uma habilidade uma vez, segure para repeti-la. Teleporte salta para onde o {WALKSTICK_OBJ} aponta</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
     <value>D-pad cima: MU Helper liga e desliga, segurado: seus ajustes. {VIEW}: Social (jogadores por perto: troca, grupo, guilda...)</value>
@@ -13438,7 +13438,7 @@
     <value>PK (menu): toque num jogador para lutar contra ele, depois Atacar e as habilidades seguem nele. Seu grupo é poupado</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK (menu): o analógico direito escolhe também jogadores, {A} luta contra eles, seu grupo é poupado</value>
+    <value>PK (menu): o {AIMSTICK_OBJ} escolhe também jogadores, {A} luta contra eles, seu grupo é poupado</value>
   </data>
   <data name="TouchShopTapAgainToBuy" xml:space="preserve">
     <value>Toque no item de novo para comprá-lo.</value>
@@ -14034,7 +14034,7 @@
     <value>Inventário cheio: no inventário {Y} sobre um item abre a ficha, para largar ou vender numa loja</value>
   </data>
   <data name="PadHintDeath" xml:space="preserve">
-    <value>Você volta à vida em alguns segundos: solte o analógico esquerdo e siga andando</value>
+    <value>Você volta à vida em alguns segundos: solte o {WALKSTICK_OBJ} e siga andando</value>
   </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
@@ -14208,5 +14208,38 @@
   </data>
   <data name="EmoteWin" xml:space="preserve">
     <value>Ganhar</value>
+  </data>
+  <data name="OptionZenWalkPickup" xml:space="preserve">
+    <value>Pegar zen sob os pés (controle, toque)</value>
+  </data>
+  <data name="OptionZenWalkPickupTip" xml:space="preserve">
+    <value>Com controle ou comandos de toque, o zen na sua casa ou ao lado é pego sem dar um passo</value>
+  </data>
+  <data name="OptionGamepadLayout" xml:space="preserve">
+    <value>Layout do controle</value>
+  </data>
+  <data name="OptionGamepadLayoutStandard" xml:space="preserve">
+    <value>Padrão</value>
+  </data>
+  <data name="OptionGamepadLayoutLeftHanded" xml:space="preserve">
+    <value>Canhoto</value>
+  </data>
+  <data name="OptionGamepadLayoutSwapped" xml:space="preserve">
+    <value>Bumpers/gatilhos trocados</value>
+  </data>
+  <data name="PadCardLayoutLine" xml:space="preserve">
+    <value>Botões: Opções &gt; Interface &gt; Layout do controle</value>
+  </data>
+  <data name="PadStickLeft" xml:space="preserve">
+    <value>Analógico esquerdo</value>
+  </data>
+  <data name="PadStickRight" xml:space="preserve">
+    <value>Analógico direito</value>
+  </data>
+  <data name="PadStickLeftObject" xml:space="preserve">
+    <value>analógico esquerdo</value>
+  </data>
+  <data name="PadStickRightObject" xml:space="preserve">
+    <value>analógico direito</value>
   </data>
 </root>

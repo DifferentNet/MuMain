@@ -44,7 +44,7 @@ struct TabView
 };
 
 // The controls card's texts, card[0] .. in pad_overlay.rml, in this order.
-const std::array<const wchar_t* const*, 29> CardLabels = {
+const std::array<const wchar_t* const*, 30> CardLabels = {
     &I18N::Game::PadCardTitle,
     &I18N::Game::PadCardWorld,
     &I18N::Game::PadCardWindows,
@@ -73,7 +73,8 @@ const std::array<const wchar_t* const*, 29> CardLabels = {
     &I18N::Game::PadCardItemCard,
     &I18N::Game::PadCardClose,
     &I18N::Game::PadCardAllWindows,
-    &I18N::Game::PadClose};
+    &I18N::Game::PadClose,
+    &I18N::Game::PadCardLayoutLine};
 
 struct OverlayModel
 {

@@ -126,6 +126,13 @@ bool BindHotKey(int hotKey);
 // pickup button is held, and after a tap until done.
 Progress PickUpNearest();
 
+// Zen underfoot (Options -> Gameplay, on to start with; pad round 6, B5): zen on the hero's tile or a
+// neighbouring one is asked for where the hero stands, never with a step. Called once a frame while the
+// touch or pad controls show; looks every 250 ms at most, waits for the answer to the pickup before, and
+// passes over a pile asked for (twice and still lying there: 30 s). Nothing while the MU Helper plays,
+// the hero is dead or warps, or a window is open; a pile the loot filter hides stays.
+void TakeZenUnderfoot();
+
 // The pad's right stick picks the target (UI/HUD/GamepadControls): the next monster (or enemy player
 // where players fight) by distance, step 1 the next further, -1 the next nearer, going round. The one
 // chosen stays the buttons' target while it lives and stays near, over the one under the engine's own

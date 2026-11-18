@@ -177,6 +177,13 @@ public:
     // The one-time pad hints that showed already, one bit each (UI/HUD/PadHints).
     int GetGamepadHintsSeen() const { return m_gamepadHintsSeen; }
     void SetGamepadHintsSeen(int bits) { m_gamepadHintsSeen = bits; }
+    // The pad's button layout: 0 Standard, 1 Left-handed, 2 Bumpers/triggers swapped
+    // (Core::Input::Gamepad::Layout).
+    int GetGamepadLayout() const { return m_gamepadLayout; }
+    void SetGamepadLayout(int layout);
+    // Whether pad and touch players take the zen they walk over (GameLogic::Touch::TakeZenUnderfoot).
+    bool GetZenWalkPickup() const { return m_zenWalkPickup; }
+    void SetZenWalkPickup(bool on) { m_zenWalkPickup = on; }
 
     // Chat commands - the favourites and the named templates of the command
     // window. They belong to the installation, not to a character.
@@ -487,6 +494,8 @@ private:
     bool m_gamepadAttackToggle = false;
     bool m_gamepadPageToggle = false;
     int m_gamepadHintsSeen = 0;
+    int m_gamepadLayout = 0;
+    bool m_zenWalkPickup = true;
     std::wstring m_enableAnimationTaskPool;
     bool m_reuseCharacterBones = true;
 

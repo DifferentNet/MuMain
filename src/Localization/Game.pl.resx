@@ -13303,7 +13303,7 @@
     <value>Pad</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Lewa gałka: chodzenie. Prawa gałka: przechyl ją w stronę celu, by go wybrać, przytrzymaj, by iść dalej w tę stronę; w oknie wolny wskaźnik</value>
+    <value>{WALKSTICK}: chodzenie. {AIMSTICK}: przechyl ją w stronę celu, by go wybrać, przytrzymaj, by iść dalej w tę stronę; w oknie wolny wskaźnik</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
     <value>{A}: dotknij, by uderzyć cel raz, przytrzymaj, by walczyć dalej; bez potworów w pobliżu podnieś (przytrzymaj) lub porozmawiaj z NPC</value>
@@ -13312,7 +13312,7 @@
     <value>{X}, {Y}, {B}: trzy przyciski umiejętności. Przytrzymaj {RT}: {X}, {Y} i {B} rzucają umiejętności 4–6. {RB}: członek drużyny, do którego idą twoje leczenie i bufy</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>{LS} (wciśnij lewą gałkę, na środku): przypisz umiejętności do przycisków</value>
+    <value>{LS} (wciśnij {WALKSTICK_OBJ}, na środku): przypisz umiejętności do przycisków</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>{B} przy otwartym oknie: wstecz, zamyka okno na wierzchu</value>
@@ -13324,7 +13324,7 @@
     <value>{LB} i {LT}: mikstury Q i W, z przytrzymanym {RT} E i R. {RT} + D-pad w górę/w dół: przybliż i oddal kamerę. D-pad w lewo: mapa (przytrzymany: okno teleportu). D-pad w prawo: ekwipunek</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>{RS} (wciśnij prawą gałkę, na środku): wróć do najbliższego celu</value>
+    <value>{RS} (wciśnij {AIMSTICK_OBJ}, na środku): wróć do najbliższego celu</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
     <value>{MENU}: centrum bohatera (ekwipunek, postać, umiejętności, zadania, gildia, ustawienia), {LB} i {RB} zmieniają jego karty. Ponownie: wszystkie okna. Przytrzymaj {MENU}: czat</value>
@@ -13339,10 +13339,10 @@
     <value>Po bramie lub zmianie mapy puść gałkę, by znów chodzić</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>W oknie: ramka zamiast wskaźnika. D-pad lub lewa gałka: do następnej komórki lub przycisku (za ostatnim rzędem lista się przewija). {A}: weź, odłóż, naciśnij. {X}: załóż, użyj. {Y}: karta przedmiotu. {RB}: następne okno, {RT}: następna strona lub karta. Prawa gałka: wolny wskaźnik</value>
+    <value>W oknie: ramka zamiast wskaźnika. {WALKSTICK} lub D-pad: do następnej komórki lub przycisku (za ostatnim rzędem lista się przewija). {A}: weź, odłóż, naciśnij. {X}: załóż, użyj. {Y}: karta przedmiotu. {RB}: następne okno, {RT}: następna strona lub karta. {AIMSTICK}: wolny wskaźnik</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
-    <value>Dotknij, by użyć umiejętności raz, przytrzymaj, by ją powtarzać. Teleport skacze w stronę, w którą wskazuje lewa gałka</value>
+    <value>Dotknij, by użyć umiejętności raz, przytrzymaj, by ją powtarzać. Teleport skacze w stronę, w którą wychylasz {WALKSTICK_OBJ}</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
     <value>D-pad w górę: MU Helper włącz i wyłącz, przytrzymany: jego ustawienia. {VIEW}: Społeczność (gracze w pobliżu: handel, drużyna, gildia...)</value>
@@ -13459,7 +13459,7 @@
     <value>PK (menu): stuknij gracza, aby z nim walczyć, potem Atak i umiejętności trzymają się jego. Twoja drużyna jest oszczędzona</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK (menu): prawa gałka wybiera też graczy, {A} z nimi walczy, twoja drużyna jest oszczędzana</value>
+    <value>PK (menu): wychylając {AIMSTICK_OBJ}, wybierasz też graczy, {A} z nimi walczy, twoja drużyna jest oszczędzana</value>
   </data>
   <data name="TouchShopTapAgainToBuy" xml:space="preserve">
     <value>Stuknij przedmiot ponownie, aby go kupić.</value>
@@ -14055,7 +14055,7 @@
     <value>Torba pełna: w ekwipunku {Y} na przedmiocie otwiera jego kartę, by go upuścić lub sprzedać w sklepie</value>
   </data>
   <data name="PadHintDeath" xml:space="preserve">
-    <value>Za kilka sekund ożyjesz: puść lewą gałkę i idź dalej</value>
+    <value>Za kilka sekund ożyjesz: puść {WALKSTICK_OBJ} i idź dalej</value>
   </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
@@ -14229,5 +14229,38 @@
   </data>
   <data name="EmoteWin" xml:space="preserve">
     <value>Wygrać</value>
+  </data>
+  <data name="OptionZenWalkPickup" xml:space="preserve">
+    <value>Podnoś zen pod stopami (pad, dotyk)</value>
+  </data>
+  <data name="OptionZenWalkPickupTip" xml:space="preserve">
+    <value>Z padem lub sterowaniem dotykowym zen na twoim polu i obok jest podnoszony bez kroku</value>
+  </data>
+  <data name="OptionGamepadLayout" xml:space="preserve">
+    <value>Układ pada</value>
+  </data>
+  <data name="OptionGamepadLayoutStandard" xml:space="preserve">
+    <value>Standardowy</value>
+  </data>
+  <data name="OptionGamepadLayoutLeftHanded" xml:space="preserve">
+    <value>Dla leworęcznych</value>
+  </data>
+  <data name="OptionGamepadLayoutSwapped" xml:space="preserve">
+    <value>Bumpery/spusty zamienione</value>
+  </data>
+  <data name="PadCardLayoutLine" xml:space="preserve">
+    <value>Układ przycisków: Opcje &gt; Interfejs &gt; Układ pada</value>
+  </data>
+  <data name="PadStickLeft" xml:space="preserve">
+    <value>Lewa gałka</value>
+  </data>
+  <data name="PadStickRight" xml:space="preserve">
+    <value>Prawa gałka</value>
+  </data>
+  <data name="PadStickLeftObject" xml:space="preserve">
+    <value>lewą gałkę</value>
+  </data>
+  <data name="PadStickRightObject" xml:space="preserve">
+    <value>prawą gałkę</value>
   </data>
 </root>

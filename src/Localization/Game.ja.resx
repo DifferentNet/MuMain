@@ -11361,7 +11361,7 @@
     <value>ゲームパッド</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>左スティック：歩く。右スティック：ターゲットの方へ倒すと選択、倒したままでその方向へ進み続ける。ウィンドウ内では自由ポインター</value>
+    <value>{WALKSTICK}：歩く。{AIMSTICK}：ターゲットの方へ倒すと選択、倒したままでその方向へ進み続ける。ウィンドウ内では自由ポインター</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
     <value>{A}：押すとターゲットを1回攻撃、長押しで戦い続ける。近くにモンスターがいなければ拾う（長押し）かNPCと話す</value>
@@ -11370,7 +11370,7 @@
     <value>{X}、{Y}、{B}：3つのスキルボタン。{RT}長押し：{X}、{Y}、{B}でスキル4〜6。{RB}：回復とバフを送るパーティーメンバー</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>{LS}（左スティックを中央で押し込む）：スキルをボタンに割り当てる</value>
+    <value>{LS}（{WALKSTICK_OBJ}を中央で押し込む）：スキルをボタンに割り当てる</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>ウィンドウが開いているときの{B}：戻る、一番上のウィンドウを閉じる</value>
@@ -11382,7 +11382,7 @@
     <value>{LB}と{LT}：ポーションQとW、{RT}長押し中はEとR。{RT}＋D-pad上/下：カメラのズームイン・アウト。D-pad左：マップ（長押し：テレポートウィンドウ）。D-pad右：インベントリ</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>{RS}（右スティックを中央で押し込む）：一番近いターゲットに戻る</value>
+    <value>{RS}（{AIMSTICK_OBJ}を中央で押し込む）：一番近いターゲットに戻る</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
     <value>{MENU}：ヒーローハブ（インベントリ、キャラクター、スキル、クエスト、ギルド、設定）。{LB}と{RB}でタブを切り替え。もう一度：すべてのウィンドウ。{MENU}長押し：チャット</value>
@@ -11397,10 +11397,10 @@
     <value>ゲートやマップ移動のあとは、スティックを一度離すと再び歩ける</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>ウィンドウ内：ポインターの代わりに枠。D-padまたは左スティック：次のマスやボタンへ（最後の行を過ぎるとリストがスクロール）。{A}：取る、置く、押す。{X}：装備、使用。{Y}：アイテムカード。{RB}：次のウィンドウ、{RT}：次のページまたはタブ。右スティック：自由ポインター</value>
+    <value>ウィンドウ内：ポインターの代わりに枠。{WALKSTICK}またはD-pad：次のマスやボタンへ（最後の行を過ぎるとリストがスクロール）。{A}：取る、置く、押す。{X}：装備、使用。{Y}：アイテムカード。{RB}：次のウィンドウ、{RT}：次のページまたはタブ。{AIMSTICK}：自由ポインター</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
-    <value>押すとスキルを1回使用、長押しで繰り返す。テレポートは左スティックの方向へ跳ぶ</value>
+    <value>押すとスキルを1回使用、長押しで繰り返す。テレポートは{WALKSTICK_OBJ}の方向へ跳ぶ</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
     <value>D-pad上：MU Helperのオン・オフ、長押し：その設定。{VIEW}：ソーシャル（周りのプレイヤー：取引、パーティー、ギルド…）</value>
@@ -11517,7 +11517,7 @@
     <value>PK（メニュー）：プレイヤーをタップして戦闘開始、その後は攻撃とスキルがその相手に向かいます。パーティーは対象外です</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK（メニュー）：右スティックはプレイヤーも選び、{A}で戦う。自分のパーティーは対象外</value>
+    <value>PK（メニュー）：{AIMSTICK_OBJ}はプレイヤーも選び、{A}で戦う。自分のパーティーは対象外</value>
   </data>
   <data name="TouchShopTapAgainToBuy" xml:space="preserve">
     <value>もう一度アイテムをタップすると購入します。</value>
@@ -12113,7 +12113,7 @@
     <value>持ち物がいっぱい：インベントリでアイテムに{Y}を押すとカードが開き、捨てるか店で売れる</value>
   </data>
   <data name="PadHintDeath" xml:space="preserve">
-    <value>数秒で生き返る：左スティックを一度離してから歩く</value>
+    <value>数秒で生き返る：{WALKSTICK_OBJ}を一度離してから歩く</value>
   </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
@@ -12287,5 +12287,38 @@
   </data>
   <data name="EmoteWin" xml:space="preserve">
     <value>勝利</value>
+  </data>
+  <data name="OptionZenWalkPickup" xml:space="preserve">
+    <value>足元のゼンを拾う（パッド・タッチ）</value>
+  </data>
+  <data name="OptionZenWalkPickupTip" xml:space="preserve">
+    <value>ゲームパッドまたはタッチ操作時、自分のマスと隣のマスのゼンを歩かずに拾います</value>
+  </data>
+  <data name="OptionGamepadLayout" xml:space="preserve">
+    <value>ゲームパッド配置</value>
+  </data>
+  <data name="OptionGamepadLayoutStandard" xml:space="preserve">
+    <value>標準</value>
+  </data>
+  <data name="OptionGamepadLayoutLeftHanded" xml:space="preserve">
+    <value>左利き</value>
+  </data>
+  <data name="OptionGamepadLayoutSwapped" xml:space="preserve">
+    <value>バンパー/トリガー入れ替え</value>
+  </data>
+  <data name="PadCardLayoutLine" xml:space="preserve">
+    <value>ボタン配置: オプション &gt; インターフェース &gt; ゲームパッド配置</value>
+  </data>
+  <data name="PadStickLeft" xml:space="preserve">
+    <value>左スティック</value>
+  </data>
+  <data name="PadStickRight" xml:space="preserve">
+    <value>右スティック</value>
+  </data>
+  <data name="PadStickLeftObject" xml:space="preserve">
+    <value>左スティック</value>
+  </data>
+  <data name="PadStickRightObject" xml:space="preserve">
+    <value>右スティック</value>
   </data>
 </root>

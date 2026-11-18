@@ -13282,7 +13282,7 @@
     <value>Mando</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Stick izquierdo: caminar. Stick derecho: inclínalo hacia un objetivo para elegirlo, mantenlo para seguir en esa dirección; en una ventana, un puntero libre</value>
+    <value>{WALKSTICK}: caminar. {AIMSTICK}: inclínalo hacia un objetivo para elegirlo, mantenlo para seguir en esa dirección; en una ventana, un puntero libre</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
     <value>{A}: pulsa para golpear al objetivo una vez, mantén para seguir luchando; sin monstruos cerca, recoger (mantén) o hablar con el NPC</value>
@@ -13291,7 +13291,7 @@
     <value>{X}, {Y}, {B}: los tres botones de habilidad. Mantén {RT}: {X}, {Y} y {B} lanzan las habilidades 4 a 6. {RB}: el miembro del grupo que recibe tus curaciones y mejoras</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>{LS} (pulsa el stick izquierdo, centrado): poner habilidades en los botones</value>
+    <value>{LS} (pulsa el {WALKSTICK_OBJ}, centrado): poner habilidades en los botones</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>{B} con una ventana abierta: atrás, cierra la ventana de arriba</value>
@@ -13303,7 +13303,7 @@
     <value>{LB} y {LT}: pociones Q y W, con {RT} mantenido E y R. {RT} + D-pad arriba/abajo: acercar y alejar la cámara. D-pad izquierda: el mapa (mantenido: ventana de teletransporte). D-pad derecha: el inventario</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>{RS} (pulsa el stick derecho, centrado): volver al objetivo más cercano</value>
+    <value>{RS} (pulsa el {AIMSTICK_OBJ}, centrado): volver al objetivo más cercano</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
     <value>{MENU}: el centro del héroe (inventario, personaje, habilidades, misiones, hermandad, ajustes), {LB} y {RB} cambian sus pestañas. De nuevo: todas las ventanas. Mantén {MENU}: el chat</value>
@@ -13318,10 +13318,10 @@
     <value>Tras una puerta o un cambio de mapa, suelta el stick para volver a caminar</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>En una ventana: un marco en lugar del puntero. D-pad o stick izquierdo: a la siguiente celda o botón (pasada la última fila, la lista se desplaza). {A}: tomar, soltar, pulsar. {X}: equipar, usar. {Y}: la ficha del objeto. {RB}: la siguiente ventana, {RT}: la siguiente página o pestaña. Stick derecho: puntero libre</value>
+    <value>En una ventana: un marco en lugar del puntero. {WALKSTICK} o D-pad: a la siguiente celda o botón (pasada la última fila, la lista se desplaza). {A}: tomar, soltar, pulsar. {X}: equipar, usar. {Y}: la ficha del objeto. {RB}: la siguiente ventana, {RT}: la siguiente página o pestaña. {AIMSTICK}: puntero libre</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
-    <value>Pulsa para usar una habilidad una vez, mantén para repetirla. Teletransporte salta hacia donde apunta el stick izquierdo</value>
+    <value>Pulsa para usar una habilidad una vez, mantén para repetirla. Teletransporte salta hacia donde apunta el {WALKSTICK_OBJ}</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
     <value>D-pad arriba: MU Helper sí y no, mantenido: sus ajustes. {VIEW}: Social (jugadores cerca: comercio, grupo, hermandad...)</value>
@@ -13438,7 +13438,7 @@
     <value>PK (menú): toca a un jugador para luchar contra él, luego Atacar y las habilidades siguen sobre él. Tu grupo se libra</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK (menú): el stick derecho elige también jugadores, {A} lucha contra ellos, tu grupo queda a salvo</value>
+    <value>PK (menú): el {AIMSTICK_OBJ} elige también jugadores, {A} lucha contra ellos, tu grupo queda a salvo</value>
   </data>
   <data name="TouchShopTapAgainToBuy" xml:space="preserve">
     <value>Toca el objeto otra vez para comprarlo.</value>
@@ -14034,7 +14034,7 @@
     <value>Inventario lleno: en el inventario {Y} sobre un objeto abre su ficha, para tirarlo o venderlo en una tienda</value>
   </data>
   <data name="PadHintDeath" xml:space="preserve">
-    <value>Vuelves a la vida en unos segundos: suelta el stick izquierdo y sigue caminando</value>
+    <value>Vuelves a la vida en unos segundos: suelta el {WALKSTICK_OBJ} y sigue caminando</value>
   </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
@@ -14208,5 +14208,38 @@
   </data>
   <data name="EmoteWin" xml:space="preserve">
     <value>Ganar</value>
+  </data>
+  <data name="OptionZenWalkPickup" xml:space="preserve">
+    <value>Recoger zen bajo los pies (mando, táctil)</value>
+  </data>
+  <data name="OptionZenWalkPickupTip" xml:space="preserve">
+    <value>Con mando o controles táctiles, el zen de tu casilla o de al lado se recoge sin dar un paso</value>
+  </data>
+  <data name="OptionGamepadLayout" xml:space="preserve">
+    <value>Distribución del mando</value>
+  </data>
+  <data name="OptionGamepadLayoutStandard" xml:space="preserve">
+    <value>Estándar</value>
+  </data>
+  <data name="OptionGamepadLayoutLeftHanded" xml:space="preserve">
+    <value>Zurdo</value>
+  </data>
+  <data name="OptionGamepadLayoutSwapped" xml:space="preserve">
+    <value>Bumpers/gatillos intercambiados</value>
+  </data>
+  <data name="PadCardLayoutLine" xml:space="preserve">
+    <value>Botones: Opciones &gt; Interfaz &gt; Distribución del mando</value>
+  </data>
+  <data name="PadStickLeft" xml:space="preserve">
+    <value>Stick izquierdo</value>
+  </data>
+  <data name="PadStickRight" xml:space="preserve">
+    <value>Stick derecho</value>
+  </data>
+  <data name="PadStickLeftObject" xml:space="preserve">
+    <value>stick izquierdo</value>
+  </data>
+  <data name="PadStickRightObject" xml:space="preserve">
+    <value>stick derecho</value>
   </data>
 </root>

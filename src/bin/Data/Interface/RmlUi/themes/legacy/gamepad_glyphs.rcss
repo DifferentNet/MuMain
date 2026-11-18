@@ -7,6 +7,8 @@
    .pad-face.pad-a / -b / -x / -y   a dark disc with the letter in the button's colour
    .pad-bumper (LB, RB)             a flat key rounded on top
    .pad-trigger (LT, RT)            a tall key rounded on top
+                                    (body.swap-shoulders, the Bumpers/triggers swapped layout: the
+                                    two trade their looks, as their names trade places)
    .pad-round.pad-view              a disc with two overlapping windows (View)
    .pad-round.pad-menu              a disc with three lines (Menu)
    .pad-round.pad-stick             a disc with the stick's letters (LS: the left stick pressed)
@@ -64,6 +66,21 @@ body.pad .pad-glyph {
 	border-radius: 10rem 10rem 4rem 4rem;
 	font-size: 10.5rem;
 	line-height: 22rem;
+}
+
+/* The bumpers and the triggers swapped (Options -> Interface -> Gamepad layout): a control the game's LB
+   plays is pressed with the trigger, so its glyph is drawn as one, and the other way round. */
+body.swap-shoulders .pad-bumper {
+	width: 20rem;
+	height: 22rem;
+	border-radius: 10rem 10rem 4rem 4rem;
+	line-height: 22rem;
+}
+body.swap-shoulders .pad-trigger {
+	width: 26rem;
+	height: 15rem;
+	border-radius: 7rem 7rem 3rem 3rem;
+	line-height: 13rem;
 }
 
 .pad-round {

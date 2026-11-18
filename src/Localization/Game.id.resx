@@ -13282,7 +13282,7 @@
     <value>Gamepad</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Stik kiri: berjalan. Stik kanan: miringkan ke arah target untuk memilihnya, tahan untuk terus ke arah itu; di jendela, penunjuk bebas</value>
+    <value>{WALKSTICK}: berjalan. {AIMSTICK}: miringkan ke arah target untuk memilihnya, tahan untuk terus ke arah itu; di jendela, penunjuk bebas</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
     <value>{A}: ketuk untuk memukul target sekali, tahan untuk terus bertarung; tanpa monster di dekat, ambil barang (tahan) atau bicara dengan NPC</value>
@@ -13291,7 +13291,7 @@
     <value>{X}, {Y}, {B}: tiga tombol skill. Tahan {RT}: {X}, {Y} dan {B} memakai skill 4 sampai 6. {RB}: anggota party yang menerima heal dan buff-mu</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>{LS} (tekan stik kiri ke dalam, di tengah): pasang skill ke tombol</value>
+    <value>{LS} (tekan {WALKSTICK_OBJ} ke dalam, di tengah): pasang skill ke tombol</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>{B} saat jendela terbuka: kembali, menutup jendela paling atas</value>
@@ -13303,7 +13303,7 @@
     <value>{LB} dan {LT}: potion Q dan W, dengan {RT} ditahan E dan R. {RT} + D-pad atas/bawah: perbesar dan perkecil kamera. D-pad kiri: peta (ditahan: jendela Teleport). D-pad kanan: inventaris</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>{RS} (tekan stik kanan ke dalam, di tengah): kembali ke target terdekat</value>
+    <value>{RS} (tekan {AIMSTICK_OBJ} ke dalam, di tengah): kembali ke target terdekat</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
     <value>{MENU}: pusat hero (inventaris, karakter, skill, misi, guild, pengaturan), {LB} dan {RB} mengganti tab-nya. Lagi: semua jendela. Tahan {MENU}: obrolan</value>
@@ -13318,10 +13318,10 @@
     <value>Setelah gerbang atau pergantian peta, lepaskan stik untuk berjalan lagi</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>Di jendela: bingkai sebagai ganti penunjuk. D-pad atau stik kiri: ke sel atau tombol berikutnya (lewat baris terakhir, daftar menggulir). {A}: ambil, taruh, tekan. {X}: pakai, gunakan. {Y}: kartu item. {RB}: jendela berikutnya, {RT}: halaman atau tab berikutnya. Stik kanan: penunjuk bebas</value>
+    <value>Di jendela: bingkai sebagai ganti penunjuk. {WALKSTICK} atau D-pad: ke sel atau tombol berikutnya (lewat baris terakhir, daftar menggulir). {A}: ambil, taruh, tekan. {X}: pakai, gunakan. {Y}: kartu item. {RB}: jendela berikutnya, {RT}: halaman atau tab berikutnya. {AIMSTICK}: penunjuk bebas</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
-    <value>Ketuk untuk memakai skill sekali, tahan untuk mengulanginya. Teleport melompat ke arah stik kiri</value>
+    <value>Ketuk untuk memakai skill sekali, tahan untuk mengulanginya. Teleport melompat ke arah {WALKSTICK_OBJ}</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
     <value>D-pad atas: MU Helper nyala dan mati, ditahan: pengaturannya. {VIEW}: Sosial (pemain di sekitar: dagang, party, guild...)</value>
@@ -13438,7 +13438,7 @@
     <value>PK (menu): ketuk pemain untuk melawannya, lalu Serang dan skill tetap mengarah padanya. Party-mu aman</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK (menu): stik kanan juga memilih pemain, {A} melawan mereka, party-mu aman</value>
+    <value>PK (menu): {AIMSTICK_OBJ} juga memilih pemain, {A} melawan mereka, party-mu aman</value>
   </data>
   <data name="TouchShopTapAgainToBuy" xml:space="preserve">
     <value>Ketuk item lagi untuk membelinya.</value>
@@ -14034,7 +14034,7 @@
     <value>Tas penuh: di inventaris {Y} pada item membuka kartunya, untuk membuang atau menjualnya di toko</value>
   </data>
   <data name="PadHintDeath" xml:space="preserve">
-    <value>Kamu hidup lagi dalam beberapa detik: lepaskan stik kiri, lalu berjalan lagi</value>
+    <value>Kamu hidup lagi dalam beberapa detik: lepaskan {WALKSTICK_OBJ}, lalu berjalan lagi</value>
   </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
@@ -14208,5 +14208,38 @@
   </data>
   <data name="EmoteWin" xml:space="preserve">
     <value>Menang</value>
+  </data>
+  <data name="OptionZenWalkPickup" xml:space="preserve">
+    <value>Ambil zen di bawah kaki (gamepad, sentuh)</value>
+  </data>
+  <data name="OptionZenWalkPickupTip" xml:space="preserve">
+    <value>Dengan gamepad atau kontrol sentuh, zen di petakmu atau di sebelahnya diambil tanpa melangkah</value>
+  </data>
+  <data name="OptionGamepadLayout" xml:space="preserve">
+    <value>Tata letak gamepad</value>
+  </data>
+  <data name="OptionGamepadLayoutStandard" xml:space="preserve">
+    <value>Standar</value>
+  </data>
+  <data name="OptionGamepadLayoutLeftHanded" xml:space="preserve">
+    <value>Kidal</value>
+  </data>
+  <data name="OptionGamepadLayoutSwapped" xml:space="preserve">
+    <value>Bumper/trigger ditukar</value>
+  </data>
+  <data name="PadCardLayoutLine" xml:space="preserve">
+    <value>Tata letak tombol: Opsi &gt; Antarmuka &gt; Tata letak gamepad</value>
+  </data>
+  <data name="PadStickLeft" xml:space="preserve">
+    <value>Stik kiri</value>
+  </data>
+  <data name="PadStickRight" xml:space="preserve">
+    <value>Stik kanan</value>
+  </data>
+  <data name="PadStickLeftObject" xml:space="preserve">
+    <value>stik kiri</value>
+  </data>
+  <data name="PadStickRightObject" xml:space="preserve">
+    <value>stik kanan</value>
   </data>
 </root>

@@ -198,6 +198,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Core/Input/GamepadPageLatch.cpp
 )
 
+# The pad's button layouts: each its own inverse, the face buttons, View, Menu and the d-pad fixed.
+mu_add_test(
+    NAME gamepad_layout_tests
+    SOURCES
+        test_gamepad_layout.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Input/GamepadLayout.cpp
+)
+
 # The right stick turning the wheel over a window's long text: by the push and by the clock.
 mu_add_test(
     NAME gamepad_stick_wheel_tests

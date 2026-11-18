@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Core/Input/GamepadInput.h"
 
+#include "Core/Input/GamepadLayout.h"
 #include "Core/Input/GamepadPointer.h"
 #include "Core/Input/GamepadRumble.h"
 #include "Core/Input/GamepadStick.h"
@@ -62,6 +63,9 @@ PadKind g_lastKind = PadKind::Xbox;
 // A pad plugged in or out since TakeNews last asked (not the pads open at the start or by the switch).
 PadNews g_news = PadNews::None;
 GlyphChoice g_glyphChoice = GlyphChoice::Auto;
+// The player's button layout (SetLayout): the pads keep their buttons by place, the shared state is
+// the game's buttons through it.
+Layout g_layout = Layout::Standard;
 // The game's window has the focus (SetFocused): without it the pads' presses and pushes go unread.
 bool g_focused = true;
 
@@ -144,17 +148,19 @@ bool AnyPadHolds(int button)
                        [button](const Pad& pad) { return pad.handle != nullptr && pad.held[button]; });
 }
 
-// One pad's button changed: the shared state follows, a press counts when no other pad held it.
+// One pad's button changed: the shared state of the game's button it plays (the layout's) follows,
+// a press counts when no other pad held it.
 void SetPadButton(Pad& pad, Button button, bool down)
 {
     const auto index = static_cast<int>(button);
     if (pad.held[index] == down)
         return;
-    const bool wasHeld = g_buttons[index].held;
+    ButtonState& played = g_buttons[static_cast<int>(Swapped(button, g_layout))];
+    const bool wasHeld = played.held;
     pad.held[index] = down;
-    g_buttons[index].held = AnyPadHolds(index);
-    if (!wasHeld && g_buttons[index].held)
-        ++g_buttons[index].presses;
+    played.held = AnyPadHolds(index);
+    if (!wasHeld && played.held)
+        ++played.presses;
     if (down)
         g_usedLast = true;
 }
@@ -208,7 +214,7 @@ void ReleasePad(Pad& pad)
     pad.axes.fill(0.f);
 }
 
-// A press and its release at once, of a button no pad holds: the reader sees one tap.
+// A press and its release at once, of a game's button no pad holds: the reader sees one tap.
 void Tap(Button button)
 {
     ButtonState& state = g_buttons[static_cast<int>(button)];
@@ -247,7 +253,7 @@ void TapWakingPress()
     for (std::size_t index = 0; index < std::size(StandardButtons); ++index)
     {
         if ((held & (1u << index)) != 0)
-            Tap(StandardButtons[index]);
+            Tap(Swapped(StandardButtons[index], g_layout));
     }
 }
 #endif
@@ -408,6 +414,21 @@ void SetRumble(bool on)
 bool IsRumbleOn()
 {
     return g_rumble;
+}
+
+void SetLayout(Layout layout)
+{
+    if (layout == g_layout)
+        return;
+    // Let go under the old layout, so each game's button held is released, not one it no longer plays.
+    Reset();
+    g_layout = layout;
+    mu::log::Get("input")->info("Gamepad layout {}", static_cast<int>(layout));
+}
+
+Layout GetLayout()
+{
+    return g_layout;
 }
 
 PadKind ConnectedKind()
@@ -575,16 +596,26 @@ StickPosition Stick(SDL_GamepadAxis xAxis, SDL_GamepadAxis yAxis)
     }
     return furthest;
 }
-} // namespace
 
-StickPosition LeftStick()
+StickPosition PhysicalLeftStick()
 {
     return Stick(SDL_GAMEPAD_AXIS_LEFTX, SDL_GAMEPAD_AXIS_LEFTY);
 }
 
-StickPosition RightStick()
+StickPosition PhysicalRightStick()
 {
     return Stick(SDL_GAMEPAD_AXIS_RIGHTX, SDL_GAMEPAD_AXIS_RIGHTY);
+}
+} // namespace
+
+StickPosition LeftStick()
+{
+    return SwapsSticks(g_layout) ? PhysicalRightStick() : PhysicalLeftStick();
+}
+
+StickPosition RightStick()
+{
+    return SwapsSticks(g_layout) ? PhysicalLeftStick() : PhysicalRightStick();
 }
 
 void Reset()

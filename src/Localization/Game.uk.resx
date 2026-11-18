@@ -13282,7 +13282,7 @@
     <value>Геймпад</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Лівий стік: ходьба. Правий стік: нахили до цілі, щоб вибрати її, утримуй, щоб іти далі в той бік; у вікні вільний вказівник</value>
+    <value>{WALKSTICK}: ходьба. {AIMSTICK}: нахили до цілі, щоб вибрати її, утримуй, щоб іти далі в той бік; у вікні вільний вказівник</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
     <value>{A}: торкнися, щоб ударити ціль раз, утримуй, щоб битися далі; без монстрів поруч підняти (утримуй) або поговорити з NPC</value>
@@ -13291,7 +13291,7 @@
     <value>{X}, {Y}, {B}: три кнопки навичок. Утримуй {RT}: {X}, {Y} і {B} застосовують навички 4–6. {RB}: член групи, якому йдуть твої лікування й бафи</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>{LS} (натисни лівий стік, по центру): розстав навички по кнопках</value>
+    <value>{LS} (натисни {WALKSTICK_OBJ}, по центру): розстав навички по кнопках</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>{B} з відкритим вікном: назад, закриває верхнє вікно</value>
@@ -13303,7 +13303,7 @@
     <value>{LB} і {LT}: зілля Q і W, з утриманим {RT} E і R. {RT} + D-pad вгору/вниз: наблизити й віддалити камеру. D-pad ліворуч: мапа (утримати: вікно телепорту). D-pad праворуч: інвентар</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>{RS} (натисни правий стік, по центру): назад до найближчої цілі</value>
+    <value>{RS} (натисни {AIMSTICK_OBJ}, по центру): назад до найближчої цілі</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
     <value>{MENU}: центр героя (інвентар, персонаж, навички, квести, гільдія, налаштування), {LB} і {RB} перемикають його вкладки. Ще раз: усі вікна. Утримуй {MENU}: чат</value>
@@ -13318,10 +13318,10 @@
     <value>Після воріт або зміни мапи відпусти стік, щоб знову йти</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>У вікні: рамка замість вказівника. D-pad або лівий стік: до наступної клітинки чи кнопки (за останнім рядком список прокручується). {A}: взяти, покласти, натиснути. {X}: одягти, використати. {Y}: картка предмета. {RB}: наступне вікно, {RT}: наступна сторінка чи вкладка. Правий стік: вільний вказівник</value>
+    <value>У вікні: рамка замість вказівника. {WALKSTICK} або D-pad: до наступної клітинки чи кнопки (за останнім рядком список прокручується). {A}: взяти, покласти, натиснути. {X}: одягти, використати. {Y}: картка предмета. {RB}: наступне вікно, {RT}: наступна сторінка чи вкладка. {AIMSTICK}: вільний вказівник</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
-    <value>Торкнися, щоб застосувати навичку раз, утримуй, щоб повторювати. Телепорт стрибає туди, куди вказує лівий стік</value>
+    <value>Торкнися, щоб застосувати навичку раз, утримуй, щоб повторювати. Телепорт стрибає туди, куди вказує {WALKSTICK_OBJ}</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
     <value>D-pad вгору: MU Helper увімк. і вимк., утримати: його налаштування. {VIEW}: Соціальне (гравці поруч: обмін, група, гільдія...)</value>
@@ -13438,7 +13438,7 @@
     <value>PK (меню): торкнись гравця, щоб битися з ним, далі Атака й навички тримаються його. Твою групу не чіпають</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK (меню): правий стік вибирає й гравців, {A} б'ється з ними, твоя група в безпеці</value>
+    <value>PK (меню): {AIMSTICK_OBJ} вибирає й гравців, {A} б'ється з ними, твоя група в безпеці</value>
   </data>
   <data name="TouchShopTapAgainToBuy" xml:space="preserve">
     <value>Торкнись предмета ще раз, щоб купити його.</value>
@@ -14034,7 +14034,7 @@
     <value>Сумка повна: в інвентарі {Y} на предметі відкриває його картку — викинути або продати в магазині</value>
   </data>
   <data name="PadHintDeath" xml:space="preserve">
-    <value>За кілька секунд ти оживеш: відпусти лівий стік і йди далі</value>
+    <value>За кілька секунд ти оживеш: відпусти {WALKSTICK_OBJ} і йди далі</value>
   </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
@@ -14208,5 +14208,38 @@
   </data>
   <data name="EmoteWin" xml:space="preserve">
     <value>перемога</value>
+  </data>
+  <data name="OptionZenWalkPickup" xml:space="preserve">
+    <value>Підбирати зен під ногами (геймпад, дотик)</value>
+  </data>
+  <data name="OptionZenWalkPickupTip" xml:space="preserve">
+    <value>З геймпадом або сенсорним керуванням зен на вашій клітинці й поруч підбирається без кроку</value>
+  </data>
+  <data name="OptionGamepadLayout" xml:space="preserve">
+    <value>Розкладка геймпада</value>
+  </data>
+  <data name="OptionGamepadLayoutStandard" xml:space="preserve">
+    <value>Стандартна</value>
+  </data>
+  <data name="OptionGamepadLayoutLeftHanded" xml:space="preserve">
+    <value>Для шульги</value>
+  </data>
+  <data name="OptionGamepadLayoutSwapped" xml:space="preserve">
+    <value>Бампери й курки навпаки</value>
+  </data>
+  <data name="PadCardLayoutLine" xml:space="preserve">
+    <value>Розкладка кнопок: Налаштування &gt; Інтерфейс &gt; Розкладка геймпада</value>
+  </data>
+  <data name="PadStickLeft" xml:space="preserve">
+    <value>Лівий стік</value>
+  </data>
+  <data name="PadStickRight" xml:space="preserve">
+    <value>Правий стік</value>
+  </data>
+  <data name="PadStickLeftObject" xml:space="preserve">
+    <value>лівий стік</value>
+  </data>
+  <data name="PadStickRightObject" xml:space="preserve">
+    <value>правий стік</value>
   </data>
 </root>

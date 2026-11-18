@@ -2597,6 +2597,11 @@ void Update()
     else
         UpdateButtons(model);
     UpdateStick(model);
+    // Zen the hero walks over is taken where it lies (Options -> Gameplay); not while a panel of these
+    // controls or the pad's pointer is busy over a window.
+    if (!model.menuOpen && !model.pickerOpen && !model.socialOpen &&
+        !(padInUse && UI::HUD::GamepadControls::PlaysPointer()))
+        GameLogic::Touch::TakeZenUnderfoot();
     // A walk to a player for an action of the Social panel; the stick takes over from it.
     UI::Mobile::Social::Update(GameLogic::Touch::IsSteering());
     SyncDepth(document, model.menuOpen || model.pickerOpen || model.socialOpen);

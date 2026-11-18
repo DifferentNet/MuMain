@@ -1842,6 +1842,11 @@ UI::HUD::PadOverlay::View OverlayView(bool playing)
 
 namespace UI::HUD::GamepadControls
 {
+bool IsGameWindowOpen()
+{
+    return ::IsGameWindowOpen();
+}
+
 bool PlaysPointer()
 {
     return g_state.inUse && (!g_state.inWorld || g_state.windowOpen);

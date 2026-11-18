@@ -192,6 +192,13 @@ body {
 	justify-content: center;
 	margin-top: 4dp;
 }
+/* The line under the foot naming where the button layout is chosen. */
+#pc_note {
+	margin-top: 3dp;
+	text-align: center;
+	font-size: 0.85em;
+	color: token(text-muted);
+}
 /* The phone view: the card fills the screen's width. */
 @media (theme: mobile) {
 	#po_card {

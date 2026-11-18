@@ -4,6 +4,7 @@
 #include "Audio/DSPlaySound.h"
 #include "Camera/CameraProjection.h"
 #include "Camera/CameraState.h"
+#include "Data/GameConfig/GameConfig.h"
 #include "Engine/AI/ZzzAI.h"
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInfomation.h"
@@ -26,9 +27,12 @@
 #include "GameLogic/Touch/TargetPassOn.h"
 #include "I18N/All.h"
 #include "MUHelper/MuHelper.h"
+#include "Network/Server/WSclient.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
 #include "UI/Chat/ChatMessages.h"
 #include "UI/Core/WindowSystem.h"
+#include "UI/Dialogs/ModalDialogs.h"
+#include "UI/HUD/GamepadControls.h"
 #include "UI/HUD/PadGlyphs.h"
 #include "UI/HUD/PadHints.h"
 #include "UI/HUD/QuickCommandWindow.h"
@@ -86,6 +90,12 @@ constexpr auto UnreachableDropTime = std::chrono::seconds(3);
 // passed over this long instead.
 constexpr int RefusedDropAsks = 2;
 constexpr auto RefusedDropTime = std::chrono::seconds(30);
+// Zen underfoot (pad round 6, B5): zen this many tiles away or nearer, across or along (a diagonal
+// neighbour too), is taken where the hero stands, looked for at most this often.
+constexpr int ZenUnderfootTiles = 1;
+constexpr auto ZenUnderfootRepeat = std::chrono::milliseconds(250);
+// Pickup's own measure rounds a diagonal neighbour's sqrt(2) up to 2 tiles: its limit for the request.
+constexpr int ZenUnderfootReach = 2;
 // How often the pickup button says the bag is full.
 constexpr auto FullBagRepeat = std::chrono::seconds(3);
 // How often a skill button short of mana or AG asks for a mana potion and says so.
@@ -206,6 +216,8 @@ std::wstring g_friendName;
 Clock::time_point g_shortOfManaAt;
 Clock::time_point g_shortOfManaSaidAt;
 Clock::time_point g_petCommandAt;
+// When the zen underfoot is looked for next.
+Clock::time_point g_zenUnderfootAt;
 Clock::time_point g_noFriendSaidAt;
 
 bool InWorld()
@@ -1198,6 +1210,33 @@ int NearestFittingDrop(bool* unfit)
     return nearest;
 }
 
+// Zen lying on the hero's tile or a neighbouring one that was not passed over and is not hidden by the loot
+// filter, NoDrop for none.
+int ZenUnderfoot()
+{
+    for (int i = 0; i < MAX_ITEMS; ++i)
+    {
+        const ITEM_t& drop = ::Items[i];
+        if (!drop.Object.Live || drop.Item.Type != ITEM_ZEN)
+            continue;
+        const int dx = std::abs(Hero->PositionX - TileOf(drop.Object.Position[0]));
+        const int dy = std::abs(Hero->PositionY - TileOf(drop.Object.Position[1]));
+        if (std::max(dx, dy) > ZenUnderfootTiles)
+            continue;
+        if (IsSkipped(i) || GameLogic::Items::LootFilterRuntime::IsHidden(i))
+            continue;
+        return i;
+    }
+    return NoDrop;
+}
+
+// Whether a modal asks something or one of the game's windows is open (as the pad's frame sees them):
+// the player is busy in it, not walking over zen.
+bool IsWindowOpen()
+{
+    return UI::Dialogs::Modal::IsOpen() || UI::HUD::GamepadControls::IsGameWindowOpen();
+}
+
 // The drop the pickup button takes now, searched afresh and kept for the prompt (NearestDropToPick).
 int NearestDropNow()
 {
@@ -1550,6 +1589,30 @@ Progress PickUpNearest()
         break;
     }
     return Progress::Done;
+}
+
+void TakeZenUnderfoot()
+{
+    if (!GameConfig::GetInstance().GetZenWalkPickup() || !InWorld())
+        return;
+    if (MUHelper::g_MuHelper.IsActive() || Hero->Object.Teleport != TELEPORT_NONE)
+        return;
+    const auto now = Clock::now();
+    if (now < g_zenUnderfootAt)
+        return;
+    g_zenUnderfootAt = now + ZenUnderfootRepeat;
+    // The answer for the drop before is still on its way (this one's or the pickup button's).
+    if (SendGetItem != -1)
+        return;
+
+    ForgetGoneDrops();
+    const int zen = ZenUnderfoot();
+    // The windows only once zen lies there: most turns find none.
+    if (zen == NoDrop || IsWindowOpen())
+        return;
+    // Passed over while the server answers; asked twice and still lying there, it is not ours (Skip).
+    if (Automation::PickUpItemInPlace(zen, ZenUnderfootReach) == Automation::PickupResult::Requested)
+        Skip(zen, AskedDropTime, true);
 }
 
 void SetForceAttack(bool on)

@@ -15637,7 +15637,7 @@
     <value>Gamepad</value>
   </data>
   <data name="PadHelpSticks" xml:space="preserve">
-    <value>Left stick: walk. Right stick: lean it towards a target to pick it, hold to go on that way; in a window, a free pointer</value>
+    <value>{WALKSTICK}: walk. {AIMSTICK}: lean it towards a target to pick it, hold to go on that way; in a window, a free pointer</value>
   </data>
   <data name="PadHelpAttack" xml:space="preserve">
     <value>{A}: tap to hit the target once, hold to keep fighting; with no monster near, pick up (hold) or talk to the NPC</value>
@@ -15646,7 +15646,7 @@
     <value>{X}, {Y}, {B}: the three skill buttons. Hold {RT}: {X}, {Y} and {B} cast the skills 4 to 6. {RB}: the party member your heals and buffs go to</value>
   </data>
   <data name="PadHelpSkillList" xml:space="preserve">
-    <value>{LS} (click the left stick in, centred): put skills on the buttons</value>
+    <value>{LS} (click the {WALKSTICK_OBJ} in, centred): put skills on the buttons</value>
   </data>
   <data name="PadHelpBack" xml:space="preserve">
     <value>{B} with a window open: back, closes the window on top</value>
@@ -15658,7 +15658,7 @@
     <value>{LB} and {LT}: potions Q and W, with {RT} held E and R. {RT} + d-pad up/down: zoom the camera in and out. D-pad left: the map (held: Teleport window). D-pad right: the inventory</value>
   </data>
   <data name="PadHelpClick" xml:space="preserve">
-    <value>{RS} (click the right stick in, centred): back to the nearest target</value>
+    <value>{RS} (click the {AIMSTICK_OBJ} in, centred): back to the nearest target</value>
   </data>
   <data name="PadHelpMenu" xml:space="preserve">
     <value>{MENU}: the hero hub (inventory, character, skills, quests, guild, settings), {LB} and {RB} turn its tabs. Again: every window. Hold {MENU}: the chat</value>
@@ -15673,10 +15673,10 @@
     <value>After a gate or a map change, let go of the stick to walk again</value>
   </data>
   <data name="PadHelpClickA" xml:space="preserve">
-    <value>In a window: a frame instead of the pointer. D-pad or left stick: to the next cell or button (past the last row, the list scrolls). {A}: take, put down, press. {X}: put on, use. {Y}: the item card. {RB}: the next window, {RT}: the next page or tab. Right stick: free pointer</value>
+    <value>In a window: a frame instead of the pointer. {WALKSTICK} or D-pad: to the next cell or button (past the last row, the list scrolls). {A}: take, put down, press. {X}: put on, use. {Y}: the item card. {RB}: the next window, {RT}: the next page or tab. {AIMSTICK}: free pointer</value>
   </data>
   <data name="PadHelpSkillsUse" xml:space="preserve">
-    <value>Tap to use a skill once, hold to repeat it. Teleport jumps the way the left stick points</value>
+    <value>Tap to use a skill once, hold to repeat it. Teleport jumps the way the {WALKSTICK_OBJ} points</value>
   </data>
   <data name="PadHelpAuto" xml:space="preserve">
     <value>D-pad up: MU Helper on and off, held: its settings. {VIEW}: Social (players around: trade, party, guild...)</value>
@@ -16186,7 +16186,7 @@
     <value>PK (menu): tap a player to fight them, then Attack and skills keep at them. Your party is spared</value>
   </data>
   <data name="PadHelpPk" xml:space="preserve">
-    <value>PK (menu): the right stick picks players too, {A} fights them, your party is spared</value>
+    <value>PK (menu): the {AIMSTICK_OBJ} picks players too, {A} fights them, your party is spared</value>
   </data>
   <data name="GamepadOffLater" xml:space="preserve">
     <value>The gamepad turns off when you next press a key, a mouse button or the screen</value>
@@ -16988,7 +16988,7 @@
     <value>Bag full: in the inventory {Y} on an item opens its card, to drop it or sell it at a shop</value>
   </data>
   <data name="PadHintDeath" xml:space="preserve">
-    <value>You come back to life in a few seconds: let go of the left stick, then walk on</value>
+    <value>You come back to life in a few seconds: let go of the {WALKSTICK_OBJ}, then walk on</value>
   </data>
   <data name="ChatMacroStored" xml:space="preserve">
     <value>Alt+%d: %ls</value>
@@ -17162,5 +17162,38 @@
   </data>
   <data name="EmoteWin" xml:space="preserve">
     <value>Win</value>
+  </data>
+  <data name="OptionZenWalkPickup" xml:space="preserve">
+    <value>Pick up zen underfoot (pad, touch)</value>
+  </data>
+  <data name="OptionZenWalkPickupTip" xml:space="preserve">
+    <value>With a gamepad or touch controls, zen on your tile or next to it is picked up without a step</value>
+  </data>
+  <data name="OptionGamepadLayout" xml:space="preserve">
+    <value>Gamepad layout</value>
+  </data>
+  <data name="OptionGamepadLayoutStandard" xml:space="preserve">
+    <value>Standard</value>
+  </data>
+  <data name="OptionGamepadLayoutLeftHanded" xml:space="preserve">
+    <value>Left-handed</value>
+  </data>
+  <data name="OptionGamepadLayoutSwapped" xml:space="preserve">
+    <value>Bumpers/triggers swapped</value>
+  </data>
+  <data name="PadCardLayoutLine" xml:space="preserve">
+    <value>Button layout: Options &gt; Interface &gt; Gamepad layout</value>
+  </data>
+  <data name="PadStickLeft" xml:space="preserve">
+    <value>Left stick</value>
+  </data>
+  <data name="PadStickRight" xml:space="preserve">
+    <value>Right stick</value>
+  </data>
+  <data name="PadStickLeftObject" xml:space="preserve">
+    <value>left stick</value>
+  </data>
+  <data name="PadStickRightObject" xml:space="preserve">
+    <value>right stick</value>
   </data>
 </root>

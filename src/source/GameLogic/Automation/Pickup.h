@@ -85,4 +85,9 @@ inline constexpr float PickupReach = 2.0f;
 // the dropped-item table, `maximumDistance` the caller's own limit in
 // tiles.
 PickupResult PickUpItem(int itemIndex, int maximumDistance);
+
+// Asks the server for a drop the character stands at, without a step: farther than `maximumDistance`
+// tiles it answers TooFar, and the character's walk and move target are never touched (the zen a pad
+// or touch player walks over, GameLogic::Touch::TakeZenUnderfoot). One request at a time, as PickUpItem.
+PickupResult PickUpItemInPlace(int itemIndex, int maximumDistance);
 } // namespace GameLogic::Automation

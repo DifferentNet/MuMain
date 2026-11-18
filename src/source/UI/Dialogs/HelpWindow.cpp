@@ -4,6 +4,7 @@
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/HelpPages.h"
 #include "Core/Input/GamepadInput.h"
+#include "Core/Input/GamepadLayout.h"
 #include "UI/HUD/TouchControls.h"
 #include "UI/Mobile/InterfaceMode.h"
 #include "Audio/DSPlaySound.h"
@@ -185,9 +186,10 @@ void mu::ui::window::CHelpWindow::RebuildPageModel()
     const UI::Help::Devices devices = DevicesInHand();
     // A pad put down or picked up while the window is open changes how many pages there are.
     m_iIndex = std::min(m_iIndex, PageCount() - 1);
+    const int padLayout = static_cast<int>(Core::Input::Gamepad::GetLayout());
     if (m_BuiltPage == m_iIndex && m_BuiltTextPx == textPx && m_BuiltTouchControls == devices.touchControls &&
         m_BuiltGamepad == devices.gamepad && m_BuiltPadKind == static_cast<int>(devices.padKind) &&
-        m_BuiltSkillButtons == devices.skillButtons)
+        m_BuiltSkillButtons == devices.skillButtons && m_BuiltPadLayout == padLayout)
         return;
 
     m_BuiltPage = m_iIndex;
@@ -195,6 +197,7 @@ void mu::ui::window::CHelpWindow::RebuildPageModel()
     m_BuiltTouchControls = devices.touchControls;
     m_BuiltGamepad = devices.gamepad;
     m_BuiltPadKind = static_cast<int>(devices.padKind);
+    m_BuiltPadLayout = padLayout;
     m_BuiltSkillButtons = devices.skillButtons;
 
     const std::vector<UI::Help::PageLine> page = UI::Help::BuildPage(m_iIndex, devices);

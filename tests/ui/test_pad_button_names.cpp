@@ -39,6 +39,17 @@ TEST_CASE("pad button names: the pad in hand's names go in [ui][gamepad]")
     CHECK(Fill(L"{A}{B}", PlayStation()) == L"CrossCircle");
 }
 
+TEST_CASE("pad button names: the sticks by their job [ui][gamepad]")
+{
+    CHECK(Fill(L"{WALKSTICK}: walk. {AIMSTICK}: pick", Names{}) == L"Left stick: walk. Right stick: pick");
+    CHECK(Fill(L"let go of the {WALKSTICK_OBJ}, the {AIMSTICK_OBJ} picks", Names{}) ==
+          L"let go of the left stick, the right stick picks");
+    Names leftHanded;
+    leftHanded.walkStick = L"Right stick";
+    leftHanded.walkStickObject = L"right stick";
+    CHECK(Fill(L"{WALKSTICK}, the {WALKSTICK_OBJ}", leftHanded) == L"Right stick, the right stick");
+}
+
 TEST_CASE("pad button names: other braces and text stay as they are [ui][gamepad]")
 {
     CHECK(Fill(L"", Names{}) == L"");

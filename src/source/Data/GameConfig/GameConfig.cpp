@@ -108,6 +108,8 @@ void GameConfig::Load()
     m_gamepadAttackToggle = ReadBool(CfgSectionUI, CfgKeyGamepadAttackToggle, CfgDefaultGamepadAttackToggle);
     m_gamepadPageToggle = ReadBool(CfgSectionUI, CfgKeyGamepadPageToggle, CfgDefaultGamepadPageToggle);
     m_gamepadHintsSeen = ReadInt(CfgSectionUI, CfgKeyGamepadHintsSeen, CfgDefaultGamepadHintsSeen);
+    SetGamepadLayout(ReadInt(CfgSectionUI, CfgKeyGamepadLayout, CfgDefaultGamepadLayout));
+    m_zenWalkPickup = ReadBool(CfgSectionUI, CfgKeyZenWalkPickup, CfgDefaultZenWalkPickup);
     m_enableAnimationTaskPool =
         ReadString(CfgSectionUI, CfgKeyEnableAnimationTaskPool, CfgDefaultEnableAnimationTaskPool);
     m_reuseCharacterBones = ReadBool(CfgSectionUI, CfgKeyReuseCharacterBones, CfgDefaultReuseCharacterBones);
@@ -288,6 +290,8 @@ void GameConfig::Save()
     WriteBool(CfgSectionUI, CfgKeyGamepadAttackToggle, m_gamepadAttackToggle);
     WriteBool(CfgSectionUI, CfgKeyGamepadPageToggle, m_gamepadPageToggle);
     WriteInt(CfgSectionUI, CfgKeyGamepadHintsSeen, m_gamepadHintsSeen);
+    WriteInt(CfgSectionUI, CfgKeyGamepadLayout, m_gamepadLayout);
+    WriteBool(CfgSectionUI, CfgKeyZenWalkPickup, m_zenWalkPickup);
 
     SaveCamera();
     WriteBool(CfgSectionRender, CfgKeyVSync, m_vsyncEnabled);
@@ -790,6 +794,13 @@ void GameConfig::SetGamepadPointerSpeed(int percent)
 void GameConfig::SetGamepadGlyphs(int choice)
 {
     m_gamepadGlyphs = std::clamp(choice, 0, CfgDefaults::CfgMaxGamepadGlyphs);
+}
+
+void GameConfig::SetGamepadLayout(int layout)
+{
+    // A hand-edited number out of range is the standard layout, not the nearest one.
+    const bool known = layout >= 0 && layout <= CfgDefaults::CfgMaxGamepadLayout;
+    m_gamepadLayout = known ? layout : CfgDefaults::CfgDefaultGamepadLayout;
 }
 
 void GameConfig::SetEncryptedUsername(const std::wstring& encryptedUsername)
