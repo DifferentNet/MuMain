@@ -8069,7 +8069,7 @@ void RenderEffects(bool bRenderBlendMesh)
                 case MODEL_SKILL_WHEEL1:
                     break;
                 case MODEL_SKILL_WHEEL2:
-                    if (wheelPieces > 0 && o->Owner && Render::Effects::WheelRibbon::IsLeadGhost(o->m_bySkillSerialNum))
+                    if (!bRenderBlendMesh && wheelPieces > 0 && o->Owner && Render::Effects::WheelRibbon::IsLeadGhost(o->m_bySkillSerialNum))
                         Render::Effects::WheelRibbon::Draw(*o, wheelPieces);
                     RenderWheelWeapon(o);
                     break;

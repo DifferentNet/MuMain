@@ -3,7 +3,8 @@
 # frame's ribbon pieces (0 when the feature is off), read from SkillFx::ActiveRibbonPieces();
 # CreateWeaponBlur takes the swing's head slice only when headSlice is set, from the Ribbons gate.
 # RenderEffects draws Twisting Slash's arc band (WheelRibbon) only in a statement that first checks the
-# pieces it read the same way and that the ghost is its cast's lead, right before the ghost weapon; the
+# pieces it read the same way and that the ghost is its cast's lead, right before the ghost weapon, and
+# only outside the blend-mesh pass (water maps run RenderEffects twice), so once a frame; the
 # cast's move, once, marks the lead. CreateJoint, and only it, forgets a slot's kept ribbon pieces, where
 # it clears the new joint's tails.
 foreach(variable MU_JOINT_SOURCE MU_CHARACTER_SOURCE MU_EFFECT_SOURCE MU_MOVE_HANDLERS_SOURCE)
@@ -66,5 +67,5 @@ check_gated("${MU_EFFECT_SOURCE}" "WheelRibbon::"
             "wheelPieces = Render::Effects::SkillFx::ActiveRibbonPieces\\(\\)")
 check_count("${MU_EFFECT_SOURCE}" "WheelRibbon::" 2)
 check_count("${MU_EFFECT_SOURCE}"
-            "case MODEL_SKILL_WHEEL2:[ \t\n]*if \\(wheelPieces > 0 && o->Owner && Render::Effects::WheelRibbon::IsLeadGhost\\(o->m_bySkillSerialNum\\)\\)[ \t\n]*Render::Effects::WheelRibbon::Draw\\(\\*o, wheelPieces\\);[ \t\n]*RenderWheelWeapon\\(o\\);" 1)
+            "case MODEL_SKILL_WHEEL2:[ \t\n]*if \\(!bRenderBlendMesh && wheelPieces > 0 && o->Owner && Render::Effects::WheelRibbon::IsLeadGhost\\(o->m_bySkillSerialNum\\)\\)[ \t\n]*Render::Effects::WheelRibbon::Draw\\(\\*o, wheelPieces\\);[ \t\n]*RenderWheelWeapon\\(o\\);" 1)
 check_count("${MU_MOVE_HANDLERS_SOURCE}" "WheelRibbon::LayGhost\\(o->m_bySkillSerialNum\\)" 1)
