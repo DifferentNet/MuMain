@@ -2,6 +2,7 @@
 #include "GameLogic/Events/SeasonMarks.h"
 
 #include "Core/Text/Utf8.h"
+#include "Core/Utilities/ArraySlot.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInfomation.h"
@@ -385,13 +386,8 @@ int Store::RiderFenrirSeason(const OBJECT* mount) const
     if (m_fenrirs.empty() || CharactersClient == nullptr)
         return 0;
 
-    for (int i = 0; i < MAX_CHARACTERS_CLIENT; ++i)
-    {
-        const CHARACTER& rider = CharactersClient[i];
-        if (&rider.Object == mount->Owner)
-            return FenrirSeasonOf(rider.ID);
-    }
-    return 0;
+    const int slot = Core::Utilities::SlotOfMember(CharactersClient, MAX_CHARACTERS_CLIENT, &CHARACTER::Object, mount->Owner);
+    return slot < 0 ? 0 : FenrirSeasonOf(CharactersClient[slot].ID);
 }
 
 const SeasonLook* Store::FenrirLookOf(int season)

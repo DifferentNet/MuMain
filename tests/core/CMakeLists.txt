@@ -153,6 +153,12 @@ add_test(
 )
 
 mu_add_test(
+    NAME array_slot_tests
+    SOURCES
+        test_array_slot.cpp
+)
+
+mu_add_test(
     NAME durability_band_tests
     SOURCES
         test_durability_band.cpp

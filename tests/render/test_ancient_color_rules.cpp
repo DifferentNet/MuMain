@@ -41,6 +41,20 @@ TEST_CASE("every ancient set has its own colour entry")
     CHECK(count == 46);
 }
 
+TEST_CASE("a set's colour entry is found by its own number")
+{
+    for (int set = -1; set < 300; ++set)
+    {
+        const SetColor* color = FindSetColor(set);
+        if (color != nullptr)
+        {
+            CHECK(color->set == set);
+        }
+    }
+    CHECK(FindSetColor(256) == nullptr);
+    CHECK(FindSetColor(-5) == nullptr);
+}
+
 TEST_CASE("the two sets of a model differ")
 {
     const SetColor& kantata = *FindSetColor(Kantata);

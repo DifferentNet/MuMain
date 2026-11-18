@@ -5577,7 +5577,7 @@ public:
         cmd.vtxOffset = vtxOffset;
         cmd.vtxStride = sizeof(Vertex3D);
         cmd.vtxCount = static_cast<Uint32>(vertices.size());
-        cmd.vu.mvp = m_mvpMatrix;
+        cmd.vu.mvp = Mvp();
         cmd.vu.fogStart = m_fogUniform.fogStart;
         cmd.vu.fogEnd = m_fogUniform.fogEnd;
         cmd.fogUniform = m_fogUniform;
@@ -5676,7 +5676,7 @@ public:
         cmd.vtxOffset = vtxOffset;
         cmd.vtxStride = sizeof(Vertex3D);
         cmd.idxCount = drawQuads * 6u;
-        cmd.vu.mvp = m_mvpMatrix;
+        cmd.vu.mvp = Mvp();
         cmd.vu.fogStart = m_fogUniform.fogStart;
         cmd.vu.fogEnd = m_fogUniform.fogEnd;
         cmd.fogUniform = m_fogUniform;
@@ -5978,7 +5978,7 @@ public:
         cmd.vtxStride = sizeof(Vertex3D);
         cmd.idxCount = numIndices;
         cmd.stripIdxOffset = stripIdxByteOffset;
-        cmd.vu.mvp = m_mvpMatrix;
+        cmd.vu.mvp = Mvp();
         cmd.vu.fogStart = m_fogUniform.fogStart;
         cmd.vu.fogEnd = m_fogUniform.fogEnd;
         cmd.fogUniform = m_fogUniform;
@@ -6232,7 +6232,7 @@ public:
     void LoadIdentity() override
     {
         ActiveMatrix() = glm::mat4(1.0f);
-        UpdateMVP();
+        MarkMvpDirty();
     }
 
     void PushMatrix() override
@@ -6269,25 +6269,25 @@ public:
             else
                 mu::log::Get("render")->warn("projection matrix stack underflow");
         }
-        UpdateMVP();
+        MarkMvpDirty();
     }
 
     void Translate(float x, float y, float z) override
     {
         ActiveMatrix() = glm::translate(ActiveMatrix(), glm::vec3(x, y, z));
-        UpdateMVP();
+        MarkMvpDirty();
     }
 
     void Rotate(float angle, float x, float y, float z) override
     {
         ActiveMatrix() = glm::rotate(ActiveMatrix(), glm::radians(angle), glm::vec3(x, y, z));
-        UpdateMVP();
+        MarkMvpDirty();
     }
 
     void Scale(float x, float y, float z) override
     {
         ActiveMatrix() = glm::scale(ActiveMatrix(), glm::vec3(x, y, z));
-        UpdateMVP();
+        MarkMvpDirty();
     }
 
     void MultMatrix(const float* m) override
@@ -6295,7 +6295,7 @@ public:
         if (m)
         {
             ActiveMatrix() = ActiveMatrix() * glm::make_mat4(m);
-            UpdateMVP();
+            MarkMvpDirty();
         }
     }
 
@@ -6304,7 +6304,7 @@ public:
         if (m)
         {
             ActiveMatrix() = glm::make_mat4(m);
-            UpdateMVP();
+            MarkMvpDirty();
         }
     }
 
@@ -6421,7 +6421,7 @@ private:
         cmd.vtxStride = sizeof(SkinnedVertex3D);
         cmd.colorOffset = colorOffset;
         cmd.vtxCount = vertexCount;
-        skinningVu.mvp = m_mvpMatrix;
+        skinningVu.mvp = Mvp();
         skinningVu.bodyOriginAndScale[0] = parameters.bodyOrigin[0];
         skinningVu.bodyOriginAndScale[1] = parameters.bodyOrigin[1];
         skinningVu.bodyOriginAndScale[2] = parameters.bodyOrigin[2];
@@ -6528,9 +6528,21 @@ private:
         return (m_matrixMode == 0x1700) ? m_modelViewMatrix : m_projMatrix;
     }
 
-    void UpdateMVP()
+    // The matrix calls only mark the product stale; it is multiplied when a draw reads it (most calls are followed
+    // by more matrix calls before the next draw).
+    void MarkMvpDirty()
     {
-        m_mvpMatrix = m_projMatrix * m_modelViewMatrix;
+        m_mvpDirty = true;
+    }
+
+    const glm::mat4& Mvp()
+    {
+        if (m_mvpDirty)
+        {
+            m_mvpCache = m_projMatrix * m_modelViewMatrix;
+            m_mvpDirty = false;
+        }
+        return m_mvpCache;
     }
 
     // Resolve texture ID for draw calls.
@@ -6586,7 +6598,9 @@ private:
     glm::mat4 m_mvStack[k_MatrixStackDepth]{};
     int m_projStackTop = 0;
     int m_mvStackTop = 0;
-    glm::mat4 m_mvpMatrix{1.0f};
+    // projection * modelview; read only through Mvp().
+    glm::mat4 m_mvpCache{1.0f};
+    bool m_mvpDirty = false;
 
     // The blend and depth state a draw was recorded with: batching compares it, and
     // post-processing picks the draws that feed the bloom by it.

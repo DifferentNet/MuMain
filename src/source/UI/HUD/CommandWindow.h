@@ -7,6 +7,7 @@
 #include "UI/Core/WindowManager.h"
 #include "UI/HUD/CommandWindowRmlModel.h"
 #include "UI/RmlBridge/RmlStackingOrder.h"
+#include "UI/HUD/KeyHint.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 #include "UI/Scaling/UITransform.h"
 #include "Engine/Object/ZzzCharacter.h"
@@ -45,6 +46,8 @@ namespace mu::ui::window
         UI::RmlBridge::ThemedView<CommandWindowRmlModel> m_RmlView{"command_window",
             [this](Rml::DataModelConstructor& c, CommandWindowRmlModel& model) { BindRmlModel(c, model); },
             {{"Data/Interface/RmlUi/command_window.rml"}}};
+        // Rebuilds the close tooltip's key label after a key binding changes.
+        UI::KeyHint::LabelWatch m_keyLabels;
         // A button press, queued by RmlUi's click and run from Update(), outside RmlUi's own
         // event dispatch (Special opens another window).
         int m_PendingCommand = COMMAND_NONE;

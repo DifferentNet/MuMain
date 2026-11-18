@@ -1,5 +1,6 @@
 <rml>
 	<!-- bound-geometry: panel and well heights follow the user resize, in dp -->
+	<!-- rml-contract-optional-callback: chat_lines_tap: only the legacy theme (the phone view) has the finger tap on a chat line that whispers to its sender -->
 <head>
 	<title>Chat Log</title>
 	<link type="text/rcss" href="base.rcss"/>

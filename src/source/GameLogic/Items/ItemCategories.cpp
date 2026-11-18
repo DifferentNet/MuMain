@@ -225,6 +225,10 @@ namespace GameLogic::Items
         case ITEM_FLAME_OF_CONDOR:
         case ITEM_FEATHER_OF_CONDOR:
         case ITEM_LOCHS_FEATHER:
+        // Kundun's Lair: five Signs of Dimensions make the Mirror, its ticket (ghinzuro, 2026-11-18: the helper
+        // left the Signs on the ground).
+        case ITEM_SIGN_OF_DIMENSIONS:
+        case ITEM_MIRROR_OF_DIMENSIONS:
         // Class quest items: 2nd class (Scroll of Emperor / Ring of Honor, Broken Sword / Dark Stone, Tear of Elf,
         // Soul Shard of Wizard) and 3rd class (Flame of Death Beam Knight, Horn of Hell Maine, Feather of Dark
         // Phoenix, Eye of Abyssal).

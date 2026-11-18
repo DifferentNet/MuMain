@@ -452,3 +452,52 @@ int mu::ui::window::CItemHotKey::GetSlotItemCount(int iSlotIndex)
 {
     return GetHotKeyItemIndex(iSlotIndex, true);
 }
+
+bool mu::ui::window::CItemHotKey::IsCountMovedByHand()
+{
+    constexpr int HandWindows[] = {INTERFACE_STORAGE, INTERFACE_STORAGE_EXT, INTERFACE_TRADE, INTERFACE_NPCSHOP,
+                                   INTERFACE_MYSHOP_INVENTORY, INTERFACE_PURCHASESHOP_INVENTORY};
+    if (CInventoryCtrl::GetPickedItem() != nullptr)
+    {
+        return true;
+    }
+    for (const int window : HandWindows)
+    {
+        if (g_pNewUISystem->IsVisible(window))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void mu::ui::window::CItemHotKey::NoteSlotCount(int iSlotIndex, int count)
+{
+    if (iSlotIndex < HOTKEY_Q || iSlotIndex >= HOTKEY_COUNT || m_iHotKeyItemType[iSlotIndex] == -1)
+    {
+        return;
+    }
+    const int itemType = m_iHotKeyItemType[iSlotIndex];
+    const int itemLevel = m_iHotKeyItemLevel[iSlotIndex];
+    if (IsCountMovedByHand())
+    {
+        m_LowStock[iSlotIndex].Follow(itemType, itemLevel, count);
+        return;
+    }
+    if (!m_LowStock[iSlotIndex].Note(itemType, itemLevel, count, GetTickCount()))
+    {
+        return;
+    }
+    // The item the key uses next (a slot can take several potion sizes), as UpdateKeyEvent() picks it.
+    const ITEM* next = GetSlotItem(iSlotIndex);
+    if (next == nullptr)
+    {
+        return;
+    }
+
+    wchar_t itemName[128]{};
+    GetItemName(next->Type, next->Level, itemName);
+    wchar_t line[192];
+    mu_swprintf(line, I18N::Game::PotionLowStock, itemName, count);
+    g_pSystemLogBox->AddText(line, mu::ui::window::TYPE_ERROR_MESSAGE);
+}

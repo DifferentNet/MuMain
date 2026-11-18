@@ -42,6 +42,8 @@ namespace mu::ui::window
         std::array<Rml::String, 10> buttonHints;
         // A phone's quick phrases over the bar (theme mobile): a tap sends one as Enter sends a line.
         std::array<Rml::String, 5> quickPhrases;
+        // Which of them carry a saved macro (cut short in the rcss when long).
+        std::array<bool, 5> quickIsMacro{};
     };
 
     class CChatInputBox : public CObject
@@ -107,6 +109,10 @@ namespace mu::ui::window
         // clears the field and closes the bar.
         void SendChatLine();
 
+        // A phone's quick chat buttons 1 to 5 carry the saved macros of keys 1 to 5 (MacroText) when set.
+        static bool HasMacro(int slot);
+        void SendQuickMacro(int slot);
+
         void BindRmlModel(Rml::DataModelConstructor& c, ChatInputRmlModel& model);
         void OnRmlReloaded();
         // Caps the fields at what a line or a name can carry, so nothing typed is cut off unseen on Enter.
@@ -168,6 +174,8 @@ namespace mu::ui::window
         void ClosingProcess();
 
         void SetWhsprID(const wchar_t* strWhsprID);
+        // Puts the name into the whisper field and the caret into the message field (a phone's tap on a chat line).
+        void StartWhisperTo(const wchar_t* strWhsprID);
 
     protected:
         void GetChatText(type_string& strText);

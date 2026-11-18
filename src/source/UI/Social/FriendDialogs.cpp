@@ -63,8 +63,8 @@ FriendDialogs::DialogId FriendDialogs::Show(GenericDialogConfig config, DWORD pa
 
 void FriendDialogs::Notice(const wchar_t* text)
 {
+    // No title: the notice's text says it all (the button's label was its title before).
     GenericDialogConfig config;
-    config.title = I18N::Game::OK;
     config.primaryLabel = I18N::Game::OK;
     config.lines.push_back({text});
     Show(std::move(config));
