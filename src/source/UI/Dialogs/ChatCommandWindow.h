@@ -5,6 +5,7 @@
 #include "UI/Core/WindowManager.h"
 #include "UI/Dialogs/ChatCommandRmlModel.h"
 #include "UI/RmlBridge/RmlStackingOrder.h"
+#include "UI/HUD/KeyHint.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 #include "UI/Scaling/UITransform.h"
 #include "GameLogic/Commands/ChatCommandCatalog.h"
@@ -199,6 +200,8 @@ private:
     };
     std::vector<PendingHit> m_pendingHits;
     bool m_pendingExit = false;
+    // Rebuilds the close tooltip's key label after a key binding changes.
+    UI::KeyHint::LabelWatch m_keyLabels;
     bool m_pendingLeft = false;
     bool m_pendingRight = false;
 };

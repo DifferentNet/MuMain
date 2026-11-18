@@ -2,6 +2,7 @@
 #include "UI/HUD/KeyHint.h"
 
 #include "Core/Input/KeyBindingsRuntime.h"
+#include "I18N/All.h"
 
 #include <string_view>
 
@@ -71,5 +72,22 @@ std::wstring WithKey(const wchar_t* text, KeyBindings::Action action, KeyBinding
     }
     result += L")";
     return result;
+}
+
+std::wstring CloseTooltip(KeyBindings::Action action)
+{
+    wchar_t text[256] = {};
+    mu_swprintf_s(text, I18N::Game::CloseS, KeyLabel(action).c_str());
+    return text;
+}
+
+bool LabelWatch::Changed()
+{
+    const unsigned revision = KeyBindings::Runtime::Revision();
+    if (m_built && revision == m_revision)
+        return false;
+    m_built = true;
+    m_revision = revision;
+    return true;
 }
 } // namespace UI::KeyHint

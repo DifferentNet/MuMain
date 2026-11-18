@@ -18,6 +18,7 @@
 #include "UI/Core/UIManager.h"
 #include "Network/Server/ServerListManager.h"
 #include "I18N/All.h"
+#include "UI/HUD/KeyHint.h"
 #include "GameLogic/Items/ItemCategories.h"
 #include "Core/Utilities/StringUtils.h"
 #include "UI/Scaling/UITransform.h"
@@ -242,17 +243,36 @@ void mu::ui::window::CCharacterInfoWindow::BindRmlModel(Rml::DataModelConstructo
     model.eneLabel = StringUtils::WideToNarrow(I18N::Game::ENG);
     model.cmdLabel = StringUtils::WideToNarrow(I18N::Game::Command);
 
-    wchar_t strText[256];
-    mu_swprintf(strText, I18N::Game::CloseS, L"C");
-    model.exitTooltip = StringUtils::WideToNarrow(strText);
-    mu_swprintf(strText, L"%ls(%ls)", I18N::Game::Quest, L"T");
-    model.questTooltip = StringUtils::WideToNarrow(strText);
+    model.exitTooltip = StringUtils::WideToNarrow(CloseTooltipText().c_str());
+    model.questTooltip = StringUtils::WideToNarrow(QuestTooltipText().c_str());
     model.petTooltip = StringUtils::WideToNarrow(I18N::Game::Pet);
     model.masterLevelTooltip = StringUtils::WideToNarrow(I18N::Game::MasterSkillTreeA);
     model.advancedStatsTooltip = StringUtils::WideToNarrow(I18N::Game::AdvStatsTooltip);
     model.titlesTooltip = StringUtils::WideToNarrow(I18N::Game::TitlesTooltip);
     model.advancedAttackTitle = StringUtils::WideToNarrow(I18N::Game::AdvStatsAttack);
     model.advancedDefenseTitle = StringUtils::WideToNarrow(I18N::Game::AdvStatsDefense);
+}
+
+std::wstring mu::ui::window::CCharacterInfoWindow::CloseTooltipText()
+{
+    return UI::KeyHint::CloseTooltip(Core::Input::KeyBindings::Action::Character);
+}
+
+std::wstring mu::ui::window::CCharacterInfoWindow::QuestTooltipText()
+{
+    std::wstring text = I18N::Game::Quest;
+    text += L"(" + UI::KeyHint::KeyLabel(Core::Input::KeyBindings::Action::Quests) + L")";
+    return text;
+}
+
+void mu::ui::window::CCharacterInfoWindow::SyncKeyLabels()
+{
+    if (!m_keyLabels.Changed())
+        return;
+    SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::exitTooltip, "exit_tooltip",
+              Rml::String(StringUtils::WideToNarrow(CloseTooltipText().c_str())));
+    SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::questTooltip, "quest_tooltip",
+              Rml::String(StringUtils::WideToNarrow(QuestTooltipText().c_str())));
 }
 
 void mu::ui::window::CCharacterInfoWindow::BuildRmlUi()
@@ -523,6 +543,7 @@ void mu::ui::window::CCharacterInfoWindow::SyncRmlModel()
     auto& model = m_RmlView.GetModel();
 
     UI::RmlBridge::SyncNativeTextSize(m_RmlView.Binder());
+    SyncKeyLabels();
 
     SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::canLevelUp, "can_level_up", CharacterAttribute->LevelUpPoint > 0);
     SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::showCharisma, "show_charisma",

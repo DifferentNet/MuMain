@@ -4,6 +4,7 @@
 #include "UI/Events/BattlePassWindow.h"
 
 #include "Audio/DSPlaySound.h"
+#include "Core/Input/KeyBindingsRuntime.h"
 #include "Character/CharacterManager.h"
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInfomation.h"
@@ -11,6 +12,7 @@
 #include "GameLogic/Events/BattlePass.h"
 #include "GameLogic/Events/SeasonMarks.h"
 #include "UI/Core/WindowSystem.h"
+#include "UI/HUD/KeyHint.h"
 #include "UI/Inventory/ItemMng.h"
 #include "UI/Tooltip/LegacyTextListTooltip.h"
 
@@ -786,6 +788,7 @@ bool mu::ui::window::CBattlePassWindow::SyncContent()
     key.textPx = UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Normal);
     key.boldPx = UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Bold);
     key.language = I18N::Game::BattlePassTitle;
+    key.keyBindings = Core::Input::KeyBindings::Runtime::Revision();
     if (m_builtFrom == key)
         return false;
     m_builtFrom = key;
@@ -1087,9 +1090,8 @@ bool mu::ui::window::CBattlePassWindow::SyncContent()
     SyncFieldFrom(binder, &BattlePassRmlModel::rerollLabel, "reroll_label", updated);
     SyncFieldFrom(binder, &BattlePassRmlModel::rerollTooltip, "reroll_tooltip", updated);
 
-    wchar_t closeText[256] = {};
-    mu_swprintf_s(closeText, I18N::Game::CloseS, L"X");
-    SyncField(binder, &BattlePassRmlModel::exitTooltip, "exit_tooltip", Narrow(closeText));
+    SyncField(binder, &BattlePassRmlModel::exitTooltip, "exit_tooltip",
+              Narrow(UI::KeyHint::CloseTooltip(Core::Input::KeyBindings::Action::BattlePass)));
     return true;
 }
 

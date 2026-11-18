@@ -871,10 +871,16 @@ void mu::ui::window::CMainFrameWindow::SyncItemSlots()
     SyncBool(&MainFrameRmlModel::itemSlot1Hovered, "item_slot_1_hovered", m_ItemHotKey.GetHoveredSlot() == 1);
     SyncBool(&MainFrameRmlModel::itemSlot2Hovered, "item_slot_2_hovered", m_ItemHotKey.GetHoveredSlot() == 2);
     SyncBool(&MainFrameRmlModel::itemSlot3Hovered, "item_slot_3_hovered", m_ItemHotKey.GetHoveredSlot() == 3);
-    SyncText(&MainFrameRmlModel::itemSlot0Count, "item_slot_0_count", stackCountText(m_ItemHotKey.GetSlotItemCount(0)));
-    SyncText(&MainFrameRmlModel::itemSlot1Count, "item_slot_1_count", stackCountText(m_ItemHotKey.GetSlotItemCount(1)));
-    SyncText(&MainFrameRmlModel::itemSlot2Count, "item_slot_2_count", stackCountText(m_ItemHotKey.GetSlotItemCount(2)));
-    SyncText(&MainFrameRmlModel::itemSlot3Count, "item_slot_3_count", stackCountText(m_ItemHotKey.GetSlotItemCount(3)));
+    int counts[HOTKEY_COUNT]{};
+    for (int slot = HOTKEY_Q; slot < HOTKEY_COUNT; ++slot)
+    {
+        counts[slot] = m_ItemHotKey.GetSlotItemCount(slot);
+        m_ItemHotKey.NoteSlotCount(slot, counts[slot]);
+    }
+    SyncText(&MainFrameRmlModel::itemSlot0Count, "item_slot_0_count", stackCountText(counts[0]));
+    SyncText(&MainFrameRmlModel::itemSlot1Count, "item_slot_1_count", stackCountText(counts[1]));
+    SyncText(&MainFrameRmlModel::itemSlot2Count, "item_slot_2_count", stackCountText(counts[2]));
+    SyncText(&MainFrameRmlModel::itemSlot3Count, "item_slot_3_count", stackCountText(counts[3]));
     SyncText(&MainFrameRmlModel::itemSlot0Key, "item_slot_0_key", PotionKeyText(0));
     SyncText(&MainFrameRmlModel::itemSlot1Key, "item_slot_1_key", PotionKeyText(1));
     SyncText(&MainFrameRmlModel::itemSlot2Key, "item_slot_2_key", PotionKeyText(2));

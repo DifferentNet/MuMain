@@ -3897,7 +3897,7 @@
     <comment>legacy_id=1046</comment>
   </data>
   <data name="ID does not exist." xml:space="preserve">
-    <value>身份證不存在。</value>
+    <value>該角色不存在。</value>
     <comment>legacy_id=1047,3263</comment>
   </data>
   <data name="You cannot add more. Please delete to add." xml:space="preserve">
@@ -4065,7 +4065,7 @@
     <comment>legacy_id=1088</comment>
   </data>
   <data name="Set" xml:space="preserve">
-    <value>放</value>
+    <value>套裝</value>
     <comment>legacy_id=1089</comment>
   </data>
   <data name="Ancient Metal" xml:space="preserve">
@@ -4333,7 +4333,7 @@
     <comment>legacy_id=1163</comment>
   </data>
   <data name="when %d" xml:space="preserve">
-    <value>當 %d 時</value>
+    <value>%d小時</value>
     <comment>legacy_id=1164</comment>
   </data>
   <data name="Increase attribute damage" xml:space="preserve">
@@ -5205,11 +5205,11 @@
     <comment>legacy_id=1394</comment>
   </data>
   <data name="Tie!" xml:space="preserve">
-    <value>領帶！</value>
+    <value>平手！</value>
     <comment>legacy_id=1395</comment>
   </data>
   <data name="Lose" xml:space="preserve">
-    <value>失去</value>
+    <value>敗</value>
     <comment>legacy_id=1397</comment>
   </data>
   <data name="Weapon for Invading team" xml:space="preserve">
@@ -14165,5 +14165,48 @@
   </data>
   <data name="JewelOptionFailed" xml:space="preserve">
     <value>%ls：選項強化失敗</value>
+  </data>
+  <!-- Round 12 -->
+  <data name="CraftTooManyItems" xml:space="preserve">
+    <value>此合成的物品過多</value>
+  </data>
+  <data name="CraftItemsMissing" xml:space="preserve">
+    <value>此合成缺少物品</value>
+  </data>
+  <data name="CraftItemLevelWrong" xml:space="preserve">
+    <value>物品等級不符合此合成</value>
+  </data>
+  <data name="CraftLevelTooLow" xml:space="preserve">
+    <value>你的等級不足以進行此合成</value>
+  </data>
+  <data name="CraftClassCannot" xml:space="preserve">
+    <value>你的職業無法進行此合成</value>
+  </data>
+  <data name="BuffEnded" xml:space="preserve">
+    <value>增益結束：%ls</value>
+  </data>
+  <data name="BagAlmostFull" xml:space="preserve">
+    <value>背包快滿了：剩 %d 格</value>
+  </data>
+  <data name="EquipmentBroken" xml:space="preserve">
+    <value>%ls 已損壞：請修理</value>
+  </data>
+  <data name="PotionLowStock" xml:space="preserve">
+    <value>%ls：剩 %d</value>
+  </data>
+  <data name="ArrowsReloadedStacksLeft" xml:space="preserve">
+    <value>箭矢已補充，剩餘 %d 組</value>
+  </data>
+  <data name="ArrowsLastStack" xml:space="preserve">
+    <value>最後一組箭矢</value>
+  </data>
+  <data name="EmoteOk" xml:space="preserve">
+    <value>好的</value>
+  </data>
+  <data name="EmoteHi" xml:space="preserve">
+    <value>你好</value>
+  </data>
+  <data name="EmoteWin" xml:space="preserve">
+    <value>贏</value>
   </data>
 </root>

@@ -306,6 +306,7 @@ void ChatInviteAnswered(std::uint32_t chatWindow, ChatInviteOutcome outcome)
             wchar_t szText[MAX_TEXT_LENGTH + 1] = {0};
             wcsncpy(szText, pChatWindow->GetCurrentInvitePal(), MAX_USERNAME_SIZE);
             szText[MAX_USERNAME_SIZE] = '\0';
+            wcscat(szText, L" ");
             wcscat(szText, I18N::Game::HasBeenInvited);
             pChatWindow->AddChatText(255, szText, 1, 0);
         }

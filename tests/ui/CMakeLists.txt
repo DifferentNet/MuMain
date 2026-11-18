@@ -621,3 +621,22 @@ mu_add_test(
         test_jewel_upgrade_result.cpp
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/JewelUpgradeResult.cpp
 )
+
+# Round 12: chaos machine refusals, buff end / bag room / low potion lines (UI/Chat, UI/HUD, GameLogic/Items).
+mu_add_test(
+    NAME round12_status_lines_tests
+    SOURCES
+        test_round12_status_lines.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/CraftingRefusal.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/BuffEndNotices.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/BagRoomWarning.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/HUD/LowStockWarning.cpp
+)
+
+# Round 12: emote keywords in chat (case folding, whole words for short ones).
+mu_add_test(
+    NAME emote_keywords_tests
+    SOURCES
+        test_emote_keywords.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/EmoteKeywords.cpp
+)
