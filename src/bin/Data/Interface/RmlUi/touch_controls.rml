@@ -149,9 +149,10 @@
 			</div>
 		</div>
 		<div id="tc_pick_grid">
-			<div class="tc-button tc-pick" data-for="e : picker_entries" data-attr-id="e.id" data-class-on="e.on_button" data-class-here="e.here" data-class-focused="e.id == picker_focus">
+			<div class="tc-button tc-pick" data-for="e : picker_entries" data-attr-id="e.id" data-class-on="e.on_button" data-class-here="e.here" data-class-has-cost="e.cost != ''" data-class-focused="e.id == picker_focus">
 				<div class="tc-skill-icon tc-pick-icon" data-style-decorator="e.icon"></div>
 				<div class="tc-pick-name"><span>{{e.name}}</span></div>
+				<div class="tc-pick-cost" data-if="e.cost != ''">{{e.cost}}</div>
 				<div class="tc-pick-mark"></div>
 			</div>
 			<div id="tc_pick_none" data-if="picker_no_skills">{{picker_no_skills_label}}</div>

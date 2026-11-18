@@ -160,7 +160,12 @@ public:
         std::uint32_t abgr;
     };
 
-    Quads() : m_vertices(m_own), m_toScreen(true) {}
+    // The screen's quads go into one scratch list, emptied here and kept to reuse its memory: plates are drawn one
+    // at a time on the render thread.
+    Quads() : m_vertices(ScreenScratch()), m_toScreen(true)
+    {
+        m_vertices.clear();
+    }
     explicit Quads(std::vector<RecordedVertex>& out) : m_vertices(out), m_toScreen(false) {}
     Quads(const Quads&) = delete;
     Quads& operator=(const Quads&) = delete;
@@ -176,7 +181,12 @@ public:
     void Flush();
 
 private:
-    std::vector<RecordedVertex> m_own;
+    static std::vector<RecordedVertex>& ScreenScratch()
+    {
+        static std::vector<RecordedVertex> scratch;
+        return scratch;
+    }
+
     std::vector<RecordedVertex>& m_vertices;
     bool m_toScreen;
 };
@@ -194,8 +204,8 @@ void Quads::Flush()
         return;
     }
 
-    std::vector<mu::Vertex2D> vertices;
-    vertices.reserve(m_vertices.size());
+    static std::vector<mu::Vertex2D> vertices;
+    vertices.clear();
     for (const RecordedVertex& v : m_vertices)
         vertices.push_back({v.x, static_cast<float>(WindowHeight) - v.y, v.u, v.v, v.abgr});
     // EnableAlphaBlend() sets up the additive state (no depth writes) and records Glow; Additive weighs the colour by

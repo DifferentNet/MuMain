@@ -40,6 +40,8 @@ namespace
     float  s_time = NOTICE_LIFETIME;
     float  s_blinkPhase = 0.f;
     Notice s_notices[MAX_NOTICE];
+    // Bumped by every write to s_notices, so SyncView() rebuilds the lines only when they changed.
+    unsigned s_noticesVersion = 0;
 
     void BindModel(Rml::DataModelConstructor& c, UI::Notices::NoticesRmlModel& model)
     {
@@ -70,6 +72,7 @@ namespace
                 s_notices[i - 1].Color = s_notices[i].Color;
                 wcscpy(s_notices[i - 1].Text, s_notices[i].Text);
             }
+            ++s_noticesVersion;
         }
     }
 }
@@ -84,6 +87,7 @@ namespace UI::Notices
     void Clear()
     {
         memset(s_notices, 0, sizeof(s_notices));
+        ++s_noticesVersion;
     }
 
     void Create(const wchar_t* text, int color)
@@ -108,6 +112,7 @@ namespace UI::Notices
             CopyText(s_notices[s_count++].Text, bottomText);
         }
         s_time = NOTICE_LIFETIME;
+        ++s_noticesVersion;
     }
 
     void Move()
@@ -141,6 +146,20 @@ namespace UI::Notices
         SyncField(s_view.Binder(), &NoticesRmlModel::lineHeightPx, "line_height_px",
                   CUIRenderTextSDLTtf::LineHeightPx(UI::Scaling::FontRole::Bold));
 
+        // Between writes only the gold lines' blink half changes. A model emptied by a release of the view (its line
+        // count differs) is filled again.
+        static unsigned syncedVersion = 0;
+        static bool syncedDim = false;
+        static bool synced = false;
+        static std::size_t syncedLines = 0;
+        const bool dim = (int)s_blinkPhase % 10 < 5;
+        if (synced && syncedVersion == s_noticesVersion && syncedDim == dim &&
+            s_view.GetModel().lines.size() == syncedLines)
+            return;
+        synced = true;
+        syncedVersion = s_noticesVersion;
+        syncedDim = dim;
+
         std::vector<NoticeLineEntry> lines;
         int shown = 0;
         for (int i = 0; i < MAX_NOTICE; i++)
@@ -156,12 +175,13 @@ namespace UI::Notices
             {
                 line.text = StringUtils::WideToNarrow(n.Text);
                 if (n.Color == 0)
-                    line.kind = (int)s_blinkPhase % 10 < 5 ? "gold-dim" : "gold";
+                    line.kind = dim ? "gold-dim" : "gold";
                 else
                     line.kind = "green";
             }
             lines.push_back(std::move(line));
         }
+        syncedLines = lines.size();
         SyncField(s_view.Binder(), &NoticesRmlModel::lines, "lines", std::move(lines));
     }
 

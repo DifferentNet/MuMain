@@ -37,6 +37,7 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyLanguage[]          = L"Language";
     inline constexpr wchar_t CfgKeyEncryptedUsername[] = L"EncryptedUsername";
     inline constexpr wchar_t CfgKeyEncryptedPassword[] = L"EncryptedPassword";
+    inline constexpr wchar_t CfgKeyLastCharacter[]     = L"LastCharacter";
 
     // Connection
     inline constexpr wchar_t CfgKeyServerIP[]   = L"ServerIP";

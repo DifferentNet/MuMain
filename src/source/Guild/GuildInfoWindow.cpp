@@ -526,6 +526,13 @@ void mu::ui::window::CGuildInfoWindow::BindRmlModel(Rml::DataModelConstructor& c
                             if (arguments.size() == 1)
                                 SelectMember(arguments[0].Get<int>(-1));
                         });
+    // A double click (a double tap on phones) on another member opens a whisper to him, as in the friends window.
+    c.BindEventCallback("guild_info_whisper_member",
+                        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& arguments)
+                        {
+                            if (arguments.size() == 1)
+                                WhisperMember(arguments[0].Get<int>(-1));
+                        });
 }
 
 void mu::ui::window::CGuildInfoWindow::OnRmlReloaded()
@@ -906,6 +913,21 @@ void mu::ui::window::CGuildInfoWindow::SelectMember(int displayIndex)
     if (SelectedMember() == nullptr)
         m_SelectedMember.clear();
     m_RmlView.MarkDirty("member_rows");
+}
+
+void mu::ui::window::CGuildInfoWindow::WhisperMember(int displayIndex)
+{
+    const auto& rows = m_RmlView.GetModel().memberRows;
+    if (displayIndex < 0 || displayIndex >= static_cast<int>(rows.size()) || g_pChatInputBox == nullptr)
+        return;
+    const std::wstring name = StringUtils::NarrowToWide(rows[displayIndex].name);
+    if (name.empty() || name == Hero->ID)
+        return;
+    // Offline members too: the server answers that the player is not connected, as for a friend.
+    // Open the chat input first, otherwise only the whisper target changes and nothing shows.
+    if (!g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_CHATINPUTBOX))
+        g_pNewUISystem->Show(mu::ui::window::INTERFACE_CHATINPUTBOX);
+    g_pChatInputBox->StartWhisperTo(name.c_str());
 }
 
 void mu::ui::window::CGuildInfoWindow::UnionGuildClear()

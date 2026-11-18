@@ -12,4 +12,16 @@ namespace GameLogic::Combat
     bool ExecuteSkillComplete(CHARACTER* c);
     bool CanExecuteSkill(CHARACTER* c, ActionSkillType Skill, float Distance);
     bool CheckMana(CHARACTER* c, int Skill);
+
+    enum class CostShortfall
+    {
+        None,
+        Mana,
+        Ag,
+    };
+
+    // What the hero lacks to pay for the skill, weighed as CheckMana does but
+    // without asking for a potion. None when the skill's stat requirements are
+    // not met: then the cost is not the reason.
+    CostShortfall SkillCostShortfall(int Skill);
 }

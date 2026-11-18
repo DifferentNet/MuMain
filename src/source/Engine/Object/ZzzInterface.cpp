@@ -20,6 +20,7 @@
 #include "Engine/AI/ZzzAI.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "UI/Chat/ChatInput.h"
+#include "UI/Chat/SkillCostNotice.h"
 #include "UI/Chat/PartyInviteCommand.h"
 #include "UI/Chat/ChatMacroFile.h"
 #include "UI/Character/OverheadNames.h"
@@ -2777,7 +2778,10 @@ void Attack(CHARACTER* c)
         }
     }
 
-    GameLogic::Combat::ExecuteSkill(c, Skill, Distance);
+    if (GameLogic::Combat::ExecuteSkill(c, Skill, Distance) == 0 && c == Hero)
+    {
+        UI::Chat::SkillCost::NoteRefusedCast(Skill);
+    }
 }
 
 

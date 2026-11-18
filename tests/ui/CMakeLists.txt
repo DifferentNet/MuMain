@@ -640,3 +640,22 @@ mu_add_test(
         test_emote_keywords.cpp
         ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/EmoteKeywords.cpp
 )
+
+# Round 13: trade offer change, pet life, new skill, warp unlocks, character preselect, short of mana gate.
+mu_add_test(
+    NAME round13_lines_tests
+    SOURCES
+        test_round13_lines.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Scenes/CharacterPreselect.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/PetLifeWarning.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/SeenSkills.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/WarpUnlocks.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Inventory/TradeOfferChange.cpp
+)
+
+# Round 13: the J window's client commands have descriptions in the player's language.
+mu_add_test(
+    NAME round13_client_commands_tests
+    SOURCES test_round13_client_commands.cpp
+    LINK_LIBS MuClient
+)

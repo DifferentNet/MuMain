@@ -73,6 +73,7 @@ void GameConfig::Load()
     m_languageSelection = ReadString(CfgSectionLogin, CfgKeyLanguage, CfgDefaultLanguage);
     m_encryptedUsername = ReadString(CfgSectionLogin, CfgKeyEncryptedUsername, CfgDefaultEncryptedUsername);
     m_encryptedPassword = ReadString(CfgSectionLogin, CfgKeyEncryptedPassword, CfgDefaultEncryptedPassword);
+    m_lastCharacter     = ReadString(CfgSectionLogin, CfgKeyLastCharacter, L"");
 
     m_serverIP = GameConfigValidation::ValidateServerIP(
         ReadString(CfgSectionConnectionSettings, CfgKeyServerIP, CfgDefaultServerIP), CfgDefaultServerIP);
@@ -800,6 +801,17 @@ void GameConfig::SetEncryptedUsername(const std::wstring& encryptedUsername)
 void GameConfig::SetEncryptedPassword(const std::wstring& encryptedPassword)
 {
     m_encryptedPassword = encryptedPassword;
+}
+
+void GameConfig::SetLastCharacter(const std::wstring& name)
+{
+    if (name == m_lastCharacter)
+    {
+        return;
+    }
+
+    m_lastCharacter = name;
+    WriteString(CfgSections::CfgSectionLogin, CfgKeys::CfgKeyLastCharacter, m_lastCharacter);
 }
 
 void GameConfig::SetServerIP(const std::wstring& ip)

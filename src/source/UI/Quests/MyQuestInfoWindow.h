@@ -131,6 +131,7 @@ namespace mu::ui::window
             float textPx = 0.f; // native text size in physical px (RmlNativeTextSize.h)
 
             int activeTab = TAB_QUEST;
+            Rml::String titleLabel;
             Rml::String tabQuestLabel, tabJobChangeLabel, tabCastleTempleLabel;
 
             bool questListEmpty = true;

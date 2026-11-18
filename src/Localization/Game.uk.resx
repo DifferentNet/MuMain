@@ -1308,7 +1308,7 @@
     <comment>legacy_id=359</comment>
   </data>
   <data name="A G use: %d" xml:space="preserve">
-    <value>A G використовуйте: %d</value>
+    <value>Витрата AG: %d</value>
     <comment>legacy_id=360</comment>
   </data>
   <data name="Party (P)" xml:space="preserve">
@@ -14208,5 +14208,69 @@
   </data>
   <data name="EmoteWin" xml:space="preserve">
     <value>перемога</value>
+  </data>
+  <!-- Round 13 -->
+  <data name="ChatCmdHelpTrade" xml:space="preserve">
+    <value>Обмін з гравцем: /trade Ім'я, якщо він поруч; інакше з вибраним гравцем на будь-якій відстані або з тим, хто стоїть навпроти.</value>
+  </data>
+  <data name="ChatCmdHelpParty" xml:space="preserve">
+    <value>Запросити вибраного гравця до групи (також /pt).</value>
+  </data>
+  <data name="ChatCmdHelpGuild" xml:space="preserve">
+    <value>Попросити вибраного майстра гільдії прийняти вас до гільдії.</value>
+  </data>
+  <data name="ChatCmdHelpUnion" xml:space="preserve">
+    <value>Для майстрів гільдій: запропонувати союз вибраному майстру гільдії.</value>
+  </data>
+  <data name="ChatCmdHelpRival" xml:space="preserve">
+    <value>Для майстрів гільдій: оголосити гільдію вибраного майстра ворожою.</value>
+  </data>
+  <data name="ChatCmdHelpRivalOff" xml:space="preserve">
+    <value>Для майстрів гільдій: припинити ворожнечу з гільдією вибраного майстра.</value>
+  </data>
+  <data name="ChatCmdHelpDuelStart" xml:space="preserve">
+    <value>Викликати вибраного гравця на дуель.</value>
+  </data>
+  <data name="ChatCmdHelpDuelEnd" xml:space="preserve">
+    <value>Завершити дуель.</value>
+  </data>
+  <data name="ChatCmdHelpReply" xml:space="preserve">
+    <value>Відповісти пошепки тому, хто останнім написав вам (також /reply).</value>
+  </data>
+  <data name="ChatCmdHelpFilter" xml:space="preserve">
+    <value>Показувати в чаті лише рядки з цими словами (до п'яти). Без слів знову видно все.</value>
+  </data>
+  <data name="ChatCmdHelpMacro" xml:space="preserve">
+    <value>Зберегти рядок чату як макрос 1; Alt+1 надсилає його. /2–/9 і /0 так само для Alt+2–Alt+0.</value>
+  </data>
+  <data name="ChatCmdParamWords" xml:space="preserve">
+    <value>слова</value>
+  </data>
+  <data name="ChatCmdParamText" xml:space="preserve">
+    <value>текст</value>
+  </data>
+  <data name="OfflineShadowLabel" xml:space="preserve">
+    <value>Тінь · не в мережі</value>
+  </data>
+  <data name="TradePartnerLoweredZen" xml:space="preserve">
+    <value>%ls зменшив зен: %ls -&gt; %ls</value>
+  </data>
+  <data name="TradePartnerRemovedItem" xml:space="preserve">
+    <value>%ls прибрав з обміну: %ls</value>
+  </data>
+  <data name="PetLifeLow" xml:space="preserve">
+    <value>%ls: лишилося %d%% життя. На 0 зникне.</value>
+  </data>
+  <data name="PurchaseZenSpent" xml:space="preserve">
+    <value>Покупка: -%ls зен</value>
+  </data>
+  <data name="NewSkillLearned" xml:space="preserve">
+    <value>Нова навичка: %ls</value>
+  </data>
+  <data name="WarpUnlockedKey" xml:space="preserve">
+    <value>Рівень %d: новий телепорт — %ls (%ls)</value>
+  </data>
+  <data name="WarpUnlocked" xml:space="preserve">
+    <value>Рівень %d: новий телепорт — %ls</value>
   </data>
 </root>

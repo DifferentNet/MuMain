@@ -11,6 +11,10 @@
 #include "UI/RmlBridge/RmlThemedView.h"
 #include "UI/Scaling/UITransform.h"
 
+#include <array>
+#include <string>
+#include <vector>
+
 namespace Rml
 {
 class ElementDocument;
@@ -55,6 +59,20 @@ namespace mu::ui::window
         int m_PendingLeave = -1;
         // The card under the pointer (the document's party_hover), -1 for none.
         int m_HoveredCard = -1;
+        // SyncCards()' list, filled in place each frame and swapped into the model only when it differs.
+        std::vector<PartyListCardEntry> m_ScratchCards;
+        // A member's name width as MeasureText() gave it, measured again when the name or the font changes.
+        struct NameWidth
+        {
+            std::wstring name;
+            int windowWidth = 0;
+            int windowHeight = 0;
+            float typographyScale = 0.f;
+            float contentScale = 0.f;
+            const void* font = nullptr;
+            float width = 0.f;
+        };
+        std::array<NameWidth, MAX_PARTYS> m_NameWidths;
 
     public:
         CPartyListWindow();
@@ -82,6 +100,7 @@ namespace mu::ui::window
         void BuildRmlUi();
         void SyncRmlModel();
         void SyncCards();
+        float MeasuredNameWidth(int member);
         bool CanLeave(int member) const;
 
         bool SelectCharacterInPartyList(PARTY_t* pMember);

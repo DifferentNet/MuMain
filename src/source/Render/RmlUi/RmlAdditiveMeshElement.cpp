@@ -84,9 +84,11 @@ void Render::RmlUi::AdditiveMeshElement::OnRender()
     if (m_meshDirty)
     {
         m_meshDirty = false;
-        // MakeGeometry takes the mesh; SetMesh() fills it again next frame.
-        Rml::Mesh mesh = m_mesh;
-        m_geometry = renderManager->MakeGeometry(std::move(mesh));
+        // MakeGeometry takes the mesh; the old geometry's mesh comes back emptied, its memory kept, for SetMesh()
+        // to fill next frame, so nothing is copied or allocated once both have grown.
+        Rml::Mesh spare = m_geometry.Release(Rml::Geometry::ReleaseMode::ClearMesh);
+        m_geometry = renderManager->MakeGeometry(std::move(m_mesh));
+        m_mesh = std::move(spare);
     }
     if (m_texture && m_geometry)
         m_geometry.Render(GetAbsoluteOffset(Rml::BoxArea::Border), m_texture);

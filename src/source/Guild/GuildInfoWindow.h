@@ -135,6 +135,7 @@ namespace mu::ui::window
         void AddGuildMember(GUILD_LIST_t* pInfo);
         // Select a member from the displayed rows.
         void SelectMember(int displayIndex);
+        void WhisperMember(int displayIndex);
         // Select an alliance from the displayed rows.
         void SelectUnion(int displayIndex);
         void GuildClear();

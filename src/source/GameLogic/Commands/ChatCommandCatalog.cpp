@@ -1,4 +1,5 @@
 #include "GameLogic/Commands/ChatCommandCatalog.h"
+#include "GameLogic/Commands/ClientCommandList.h"
 
 #include "Data/Translation/MultiLanguage.h"
 
@@ -39,40 +40,6 @@ std::wstring ReadString(const BYTE* data, int32_t offset, int32_t length)
     CMultiLanguage::ConvertFromUtf8(buffer.data(), reinterpret_cast<const char*>(data + offset), length);
     buffer[length] = L'\0';
     return std::wstring(buffer.data());
-}
-
-ChatCommand ClientCommand(const wchar_t* command, const wchar_t* description,
-                          std::vector<ChatCommandParameter> parameters = {})
-{
-    ChatCommand result;
-    result.Command = command;
-    result.Name = command;
-    result.Description = description;
-    result.Parameters = std::move(parameters);
-    result.IsLocal = true;
-    return result;
-}
-
-// The commands the client handles itself (CheckCommand in Engine/Object/ZzzInterface.cpp). The server only
-// lists its own, so these come after them (MU Moldova, 2026-10-21). Most act on the player you selected.
-void AppendClientCommands(std::vector<ChatCommand>& commands)
-{
-    ChatCommandParameter words;
-    words.Name = L"words";
-    ChatCommandParameter text;
-    text.Name = L"text";
-
-    commands.push_back(ClientCommand(L"/trade", L"Trade with a player: /trade Name when they are in sight, else the player you selected at any distance, or the one who faces you."));
-    commands.push_back(ClientCommand(L"/party", L"Invite the player you selected to your party (also /pt)."));
-    commands.push_back(ClientCommand(L"/guild", L"Ask the guild master you selected to take you into the guild."));
-    commands.push_back(ClientCommand(L"/union", L"Guild masters: ask the guild master you selected for an alliance."));
-    commands.push_back(ClientCommand(L"/rival", L"Guild masters: declare the guild of the guild master you selected hostile."));
-    commands.push_back(ClientCommand(L"/rivaloff", L"Guild masters: end the hostility with the guild of the guild master you selected."));
-    commands.push_back(ClientCommand(L"/duelstart", L"Challenge the player you selected to a duel."));
-    commands.push_back(ClientCommand(L"/duelend", L"End your duel."));
-    commands.push_back(ClientCommand(L"/r", L"Whisper the text back to the last player who whispered you (also /reply).", {text}));
-    commands.push_back(ClientCommand(L"/filter", L"Show only the chat lines with these words (up to five). Without words, everything shows again.", {words}));
-    commands.push_back(ClientCommand(L"/1", L"Save a chat line as macro 1; Alt+1 says it. /2 to /9 and /0 do the same for Alt+2 to Alt+0.", {text}));
 }
 } // namespace
 

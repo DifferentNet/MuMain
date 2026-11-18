@@ -58,6 +58,7 @@ namespace mu::ui::window
         // Set once at BuildRmlUi() time (I18N::Game::OK/Close388) -- legacy CButton had no data
         // binding, so these were previously native ChangeText()/ChangeToolTipText() calls; same
         // "set once after modelCreated" pattern CMyQuestInfoWindow's own tooltip strings use.
+        Rml::String titleLabel;
         Rml::String okLabel;
         Rml::String exitTooltip;
     };
