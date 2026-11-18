@@ -2,7 +2,7 @@
 # when they are off: GroundMarks::Add reads the Decals gate before anything else, the Rageful Blow crack
 # model is always created, the hooks pass no rand() and GroundMarks itself never calls rand() or touches
 # the terrain light.
-foreach(variable MU_GROUND_MARKS_SOURCE MU_GROUND_MARKS_HEADER MU_EFFECT_SOURCE MU_MOVE_HANDLERS_SOURCE)
+foreach(variable MU_GROUND_MARKS_SOURCE MU_GROUND_MARKS_HEADER MU_EFFECT_SOURCE MU_MOVE_HANDLERS_SOURCE MU_CHARACTER_SOURCE)
     if(NOT DEFINED ${variable})
         message(FATAL_ERROR "${variable} is required")
     endif()
@@ -50,7 +50,7 @@ endforeach()
 
 # The hooks: every statement laying a mark passes no rand().
 set(hooks 0)
-foreach(source "${MU_EFFECT_SOURCE}" "${MU_MOVE_HANDLERS_SOURCE}")
+foreach(source "${MU_EFFECT_SOURCE}" "${MU_MOVE_HANDLERS_SOURCE}" "${MU_CHARACTER_SOURCE}")
     read_source("${source}" text)
     string(REGEX MATCHALL "[^;{}]*GroundMarks::Add\\([^;{}]*" statements "${text}")
     foreach(statement IN LISTS statements)
@@ -78,9 +78,24 @@ function(check_hook_guard source markSource guard expected)
                             "(${guardedCount} of ${allCount}, expected ${expected})")
     endif()
 endfunction()
-# Flame: not under the map's ownerless fires. Ice Storm: one frost a cast, from its first shard.
+# Flame: not under the map's ownerless fires.
 check_hook_guard("${MU_EFFECT_SOURCE}" "Flame" "o->Owner != nullptr" 2)
-check_hook_guard("${MU_MOVE_HANDLERS_SOURCE}" "IceStorm" "o->PKKey == 1" 1)
+
+# Ice Storm: one frost a cast, laid where the cast is made on its targeted spot, never by a shard.
+read_source("${MU_MOVE_HANDLERS_SOURCE}" moves)
+string(FIND "${moves}" "Source::IceStorm" shardMark)
+if(NOT shardMark EQUAL -1)
+    message(FATAL_ERROR "${MU_MOVE_HANDLERS_SOURCE}: Ice Storm frost must not be laid by a falling shard")
+endif()
+read_source("${MU_CHARACTER_SOURCE}" character)
+string(REGEX MATCHALL "Source::IceStorm, TargetPosition\\[0\\], TargetPosition\\[1\\]\\)" castMarks "${character}")
+string(REGEX MATCHALL "Source::IceStorm" iceStormMarks "${character}")
+list(LENGTH castMarks castCount)
+list(LENGTH iceStormMarks iceStormCount)
+if(NOT castCount EQUAL 1 OR NOT iceStormCount EQUAL 1)
+    message(FATAL_ERROR "${MU_CHARACTER_SOURCE}: expected one Ice Storm frost at TargetPosition, "
+                        "found ${castCount} of ${iceStormCount}")
+endif()
 
 # The crack model: created in one place, whether or not a mark was laid (the mark is a scorch under it).
 read_source("${MU_MOVE_HANDLERS_SOURCE}" moves)

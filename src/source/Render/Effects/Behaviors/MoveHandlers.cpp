@@ -5195,11 +5195,6 @@ namespace Render::Effects::Behaviors
                 }
 
                 CreateEffectFpsChecked(MODEL_BLIZZARD, Position, o->Angle, o->Light, 1, NULL, o->PKKey);
-                // One frost a cast: the first of its ten shards (PKKey 1 to 10, ZzzCharacter.cpp) lays it.
-                if (o->PKKey == 1)
-                {
-                    Render::Effects::GroundMarks::Add(Render::Effects::GroundMarks::Source::IceStorm, o->Position[0], o->Position[1]);
-                }
 
                 o->Live = false;
             }
