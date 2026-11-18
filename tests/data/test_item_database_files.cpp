@@ -23,6 +23,7 @@
 #include <filesystem>
 #include <fstream>
 #include <random>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -146,6 +147,32 @@ const ItemDefinition* FindItem(const std::vector<ItemDefinition>& items, int ite
     });
     return found != items.end() ? &*found : nullptr;
 }
+
+#ifdef _EDITOR
+// What a bmd export and import keeps of the items: a bmd record holds damage in one byte, so the
+// export caps it at 255, and a bmd translation equal to the English name can't be told from no
+// translation, so the import leaves it out.
+std::vector<ItemDefinition> ExpectedAfterBmdRoundTrip(std::span<const ItemDefinition> items)
+{
+    constexpr WORD BmdByteMax = 255;
+    std::vector<ItemDefinition> expected(items.begin(), items.end());
+    for (ItemDefinition& item : expected)
+    {
+        item.damageMin = (std::min)(item.damageMin, BmdByteMax);
+        item.damageMax = (std::min)(item.damageMax, BmdByteMax);
+        for (const ItemBmdLanguage& language : GetItemBmdLanguages())
+        {
+            const auto& translations = item.names.GetTranslations();
+            const auto translation = translations.find(language.locale);
+            if (translation != translations.end() && translation->second == item.names.GetNeutral())
+            {
+                item.names.Set(language.locale, "");
+            }
+        }
+    }
+    return expected;
+}
+#endif
 } // namespace
 
 TEST_CASE("Shipped item data loads without problems [data][items]")
@@ -502,19 +529,21 @@ TEST_CASE("Exporting the items as bmd and importing them again gives the same da
     I18N::SetLocale("en");
     std::string errorMessage;
     REQUIRE(g_ItemDataHandler.Load(errorMessage));
+    const std::vector<ItemDefinition> expected = ExpectedAfterBmdRoundTrip(g_ItemDatabase.GetAllSlots());
     std::string changeLog;
     REQUIRE(g_ItemDataHandler.ExportAsBmd(changeLog));
+    // The shipped data has damage above 255, which the export reports as capped.
+    CHECK(changeLog.find("capped at 255") != std::string::npos);
 
     const ItemBmdImportResult result = g_ItemDataHandler.ImportFromBmd();
     REQUIRE_FALSE(HasErrors(result.issues));
     CHECK(result.validationIssues.empty());
     // Tags, wing tiers, weapon kinds, potion priorities and rule flags are not in the bmd files;
-    // the items keep the ones they have, so the files below match.
+    // the items keep the ones they have, so the files below match what the bmd files can hold.
     for (int group = 0; group < MAX_ITEM_TYPE; ++group)
     {
         INFO(GetItemGroupFileName(group));
-        CHECK(WriteItemGroupJson(group, g_ItemDatabase.GetAllSlots()) ==
-              TestFiles::ReadWholeFile(DataDirectory / "Items" / GetItemGroupFileName(group)));
+        CHECK(WriteItemGroupJson(group, g_ItemDatabase.GetAllSlots()) == WriteItemGroupJson(group, expected));
     }
 }
 
