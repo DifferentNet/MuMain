@@ -21,6 +21,7 @@
 #include "Engine/Object/ZzzInterface.h"
 #include "MoveHandlers.h"
 #include "Render/Effects/GroundMarks.h"
+#include "Render/Effects/WheelRibbon.h"
 
 
 namespace Render::Effects::Behaviors
@@ -2781,7 +2782,16 @@ namespace Render::Effects::Behaviors
     // MODEL_SKILL_WHEEL1
     bool Move_MODEL_SKILL_WHEEL1(OBJECT* o, int index, float Luminosity)
     {
-        CreateEffectFpsChecked(MODEL_SKILL_WHEEL2, o->Position, o->Angle, o->Light, 4 - o->LifeTime, o->Owner, o->PKKey, o->Skill, o->Kind);
+        // CreateEffectFpsChecked opened up (the same odds and the same ghost) so the cast can mark its first
+        // ghost as the lead, which draws Twisting Slash's arc band (WheelRibbon.h, LayGhost).
+        if (rand_fps_check(1))
+        {
+            const Render::Effects::WheelRibbon::LaidGhost laid =
+                Render::Effects::WheelRibbon::LayGhost(o->m_bySkillSerialNum);
+            CreateEffect(MODEL_SKILL_WHEEL2, o->Position, o->Angle, o->Light, 4 - o->LifeTime, o->Owner, o->PKKey,
+                         o->Skill, o->Kind, laid.ghostMark);
+            o->m_bySkillSerialNum = laid.castMark;
+        }
         return true;
     }
 

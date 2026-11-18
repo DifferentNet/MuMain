@@ -355,3 +355,48 @@ TEST_CASE("the point cap and the tail limits hold [render][ribbon_spline]")
     CHECK(Spline::Build(longTrail.tails, Spline::kMaxRibbonTails + 1, 40, 1.0f, 1.0f, 8, s_points.data(), 300) == 0);
     CHECK(Spline::kMinRibbonTails == 3);
 }
+
+TEST_CASE("a new trail takes the most pieces only when its longest fits the budget [render][ribbon_spline]")
+{
+    // Evil Spirit at level 4: 5 spans x 8 pieces x 2 faces.
+    constexpr int worst = 5 * 8 * 2;
+    const Spline::StickyChoice fits = Spline::StickyPieces(0, false, 8, 1000, worst, 4096);
+    CHECK(fits.kept == 8);
+    CHECK(fits.built == 8);
+    // Exactly at the budget still fits.
+    CHECK(Spline::StickyPieces(0, false, 8, 4096 - worst, worst, 4096).kept == 8);
+    // Past it: 1 piece a span, never the classic draw.
+    const Spline::StickyChoice over = Spline::StickyPieces(0, false, 8, 4096 - worst + 1, worst, 4096);
+    CHECK(over.kept == 1);
+    CHECK(over.built == 1);
+    // Not drawn the frame before: it chooses again.
+    CHECK(Spline::StickyPieces(1, false, 8, 0, worst, 4096).kept == 8);
+}
+
+TEST_CASE("a drawn trail keeps its pieces whatever the budget does [render][ribbon_spline]")
+{
+    constexpr int worst = 5 * 8 * 2;
+    // Kept 8 although the frame is now past the budget (below twice it).
+    const Spline::StickyChoice keeps = Spline::StickyPieces(8, true, 8, 5000, worst, 4096);
+    CHECK(keeps.kept == 8);
+    CHECK(keeps.built == 8);
+    // Kept 1 although the frame has room again.
+    const Spline::StickyChoice stays = Spline::StickyPieces(1, true, 8, 0, worst, 4096);
+    CHECK(stays.kept == 1);
+    CHECK(stays.built == 1);
+    // The level dropped (4 -> 3): the kept choice is clamped to the new most.
+    CHECK(Spline::StickyPieces(8, true, 4, 0, 5 * 4 * 2, 2048).kept == 4);
+}
+
+TEST_CASE("past twice the budget a trail is built with 1 piece that frame only [render][ribbon_spline]")
+{
+    constexpr int worst = 5 * 8 * 2;
+    const Spline::StickyChoice capped = Spline::StickyPieces(8, true, 8, 2 * 4096 - worst + 1, worst, 4096);
+    CHECK(capped.kept == 8);
+    CHECK(capped.built == 1);
+    // Right at twice the budget it is still built with its pieces.
+    CHECK(Spline::StickyPieces(8, true, 8, 2 * 4096 - worst, worst, 4096).built == 8);
+    // The cap counts the trail's longest at its kept pieces: 4 of 8 halves it.
+    CHECK(Spline::StickyPieces(4, true, 8, 2 * 4096 - worst / 2, worst, 4096).built == 4);
+    CHECK(Spline::StickyPieces(4, true, 8, 2 * 4096 - worst / 2 + 1, worst, 4096).built == 1);
+}

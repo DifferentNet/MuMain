@@ -31,6 +31,16 @@ constexpr int kEvilSpiritSubType = 0;
 // Main thread only: RenderJoints is the one caller.
 std::array<Spline::RibbonPoint, kMaxPoints> s_points;
 
+// The most pieces a span each joint slot's trail keeps (0: none chosen) and the frame it was last
+// drawn in; beside Joints, which does not grow. Forget clears a slot when it takes a new joint.
+struct SlotState
+{
+    std::uint8_t pieces = 0;
+    unsigned int lastFrame = 0;
+};
+static_assert(kMaxPiecesPerSpan <= 0xFF, "SlotState::pieces must hold the most pieces");
+std::array<SlotState, MAX_JOINTS> s_slots;
+
 unsigned int s_statsFrame = 0;
 FrameStats s_current;
 FrameStats s_last;
@@ -92,6 +102,14 @@ void AddFace(std::vector<mu::Vertex3D>& quads, const Spline::RibbonPoint& a, con
     quads.push_back(vertex(b, cornerOne, vOne));
 }
 
+// Whether the slot's trail was drawn the frame before, or already this frame (water maps draw twice). A
+// trail skipped for a frame (it left the view frustum) chooses its pieces again when it is back, so it
+// may change its look then.
+bool DrawnLastFrame(const SlotState& state)
+{
+    return state.lastFrame == RENDERED_FRAME || state.lastFrame + 1 == RENDERED_FRAME;
+}
+
 bool HasFace(const JOINT& joint, const int face)
 {
     return (joint.RenderFace & face) == face;
@@ -131,10 +149,10 @@ bool Offered(const JOINT& joint)
            joint.MaxTails >= Spline::kMinRibbonTails;
 }
 
-bool Append(const JOINT& joint, const int maxPieces, const int quadBudget, std::vector<mu::Vertex3D>& quads)
+bool Append(const JOINT& joint, const int slot, const int maxPieces, const int quadBudget,
+            std::vector<mu::Vertex3D>& quads)
 {
-    FrameStats& stats = CurrentFrameStats();
-    if (stats.quads >= quadBudget)
+    if (slot < 0 || slot >= MAX_JOINTS)
     {
         return false;
     }
@@ -143,22 +161,38 @@ bool Append(const JOINT& joint, const int maxPieces, const int quadBudget, std::
     {
         return false;
     }
+    FrameStats& stats = CurrentFrameStats();
+    SlotState& state = s_slots[slot];
+    const int most = std::clamp(maxPieces, 1, kMaxPiecesPerSpan);
+    const int longestSpans = std::min<int>(joint.MaxTails, Spline::kMaxRibbonTails) - 1;
+    const int worstQuads = longestSpans * most * FacesOf(joint);
+    const Spline::StickyChoice choice =
+        Spline::StickyPieces(state.pieces, DrawnLastFrame(state), most, stats.quads, worstQuads, quadBudget);
     const float frameFactor = FPS_ANIMATION_FACTOR;
     const float phase = joint.TailFrames + frameFactor;
-    const int pieces = std::clamp(maxPieces, 1, kMaxPiecesPerSpan);
     const int points =
-        Spline::Build(joint.Tails, laid, joint.MaxTails, phase, frameFactor, pieces, s_points.data(), kMaxPoints);
-    const int newQuads = (points - 1) * FacesOf(joint);
-    if (points < 2 || stats.quads + newQuads > quadBudget)
+        Spline::Build(joint.Tails, laid, joint.MaxTails, phase, frameFactor, choice.built, s_points.data(), kMaxPoints);
+    if (points < 2)
     {
         return false;
     }
+    const int newQuads = (points - 1) * FacesOf(joint);
     quads.reserve(quads.size() + static_cast<std::size_t>(newQuads) * kVerticesPerQuad);
     EmitQuads(joint, points, quads);
+    state.pieces = static_cast<std::uint8_t>(choice.kept);
+    state.lastFrame = RENDERED_FRAME;
     ++stats.joints;
     stats.pieces += points - 1;
     stats.quads += newQuads;
     return true;
+}
+
+void Forget(const int slot)
+{
+    if (slot >= 0 && slot < MAX_JOINTS)
+    {
+        s_slots[slot] = SlotState{};
+    }
 }
 
 FrameStats LastFrameStats()

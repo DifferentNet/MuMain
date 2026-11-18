@@ -27,6 +27,8 @@
 #include "Scenes/MainScene.h"
 #include "Render/Effects/PoolSlotBounds.h"
 #include "Render/Effects/GroundMarks.h"
+#include "Render/Effects/SkillFx.h"
+#include "Render/Effects/WheelRibbon.h"
 
 PARTICLE  Particles[MAX_PARTICLES];
 #ifdef DEVIAS_XMAS_EVENT
@@ -7804,6 +7806,8 @@ void RenderSkillSpear(OBJECT* o)
 
 void RenderEffects(bool bRenderBlendMesh)
 {
+    // Twisting Slash's arc band (Remaster smooth trails, SkillFx::Feature::Ribbons): 0 pieces when they are off.
+    const int wheelPieces = Render::Effects::SkillFx::ActiveRibbonPieces();
     for (int i = FirstJoinedEffectSlot(); i < JoinedEffectSlotEnd(); i = NextJoinedEffectSlot(i))
     {
         OBJECT* o;
@@ -8065,6 +8069,8 @@ void RenderEffects(bool bRenderBlendMesh)
                 case MODEL_SKILL_WHEEL1:
                     break;
                 case MODEL_SKILL_WHEEL2:
+                    if (wheelPieces > 0 && o->Owner && Render::Effects::WheelRibbon::IsLeadGhost(o->m_bySkillSerialNum))
+                        Render::Effects::WheelRibbon::Draw(*o, wheelPieces);
                     RenderWheelWeapon(o);
                     break;
                 case MODEL_SKILL_FURY_STRIKE:
