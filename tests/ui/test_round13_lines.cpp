@@ -164,6 +164,25 @@ TEST_CASE("character select preselects the last played or the only character [ui
     CHECK(Scenes::PickPreselectSlot({}, L"Elf") == -1);
 }
 
+TEST_CASE("no mana line for a cast refused before the cost [ui][round13]")
+{
+    using UI::Chat::SkillCost::RefusalContext;
+    using UI::Chat::SkillCost::RefusalMayBeAboutCost;
+    CHECK(RefusalMayBeAboutCost(RefusalContext{}));
+    RefusalContext dead;
+    dead.dead = true;
+    CHECK_FALSE(RefusalMayBeAboutCost(dead));
+    RefusalContext safe;
+    safe.safeZone = true;
+    CHECK_FALSE(RefusalMayBeAboutCost(safe));
+    RefusalContext temple;
+    temple.cursedTemple = true;
+    CHECK_FALSE(RefusalMayBeAboutCost(temple));
+    RefusalContext condition;
+    condition.useConditionMet = false;
+    CHECK_FALSE(RefusalMayBeAboutCost(condition));
+}
+
 TEST_CASE("short of mana is said at most once in a while [ui][round13]")
 {
     UI::Chat::SkillCost::SayGate gate;

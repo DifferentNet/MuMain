@@ -4,11 +4,14 @@
 
 #include "UI/Chat/SkillCostNotice.h"
 
+#include "Engine/Object/ZzzCharacter.h"
+#include "Engine/Object/ZzzInterface.h"
 #include "GameLogic/Combat/SkillExecution.h"
 #include "I18N/All.h"
 #include "MUHelper/MuHelper.h"
 #include "UI/Chat/ChatMessages.h"
 #include "UI/Core/WindowSystem.h"
+#include "World/MapInfra/MapManager.h"
 
 namespace UI::Chat::SkillCost
 {
@@ -29,7 +32,17 @@ void SayShort(bool manaShort)
 
 void NoteRefusedCast(int skill)
 {
-    if (MUHelper::g_MuHelper.IsActive())
+    if (MUHelper::g_MuHelper.IsActive() || Hero == nullptr)
+    {
+        return;
+    }
+
+    RefusalContext context;
+    context.dead = Hero->Dead > 0;
+    context.safeZone = Hero->SafeZone;
+    context.cursedTemple = gMapManager.IsCursedTemple();
+    context.useConditionMet = !context.dead && CheckSkillUseCondition(&Hero->Object, skill);
+    if (!RefusalMayBeAboutCost(context))
     {
         return;
     }
