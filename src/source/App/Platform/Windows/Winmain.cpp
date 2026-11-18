@@ -82,6 +82,7 @@
 #include "Core/Platform/web/WebFileSystem.h"
 #include "Core/Platform/web/WebKeyboard.h"
 #include "Core/Platform/web/WebPageView.h"
+#include "UI/HUD/ChatInputBox.h"
 #include "UI/RmlBridge/RmlNumericInputFilter.h"
 #include <RmlUi/Core/Element.h>
 extern EGameScene SceneFlag; // read by WaitForBrowserFrame()
@@ -1514,6 +1515,8 @@ mu::web::FieldKeys PhoneKeysFor(const Rml::Element* field)
         return mu::web::FieldKeys::Password;
     if (field->IsClassSet(UI::RmlBridge::NumericFieldClass))
         return mu::web::FieldKeys::Digits;
+    if (field->IsClassSet(mu::web::ChatFieldClass))
+        return mu::web::FieldKeys::Chat;
     return mu::web::FieldKeys::Text;
 }
 
@@ -1525,7 +1528,12 @@ void SyncPhoneKeyboard()
     mu::web::SyncKeyboard(PhoneKeysFor(ui.GetFocusedTextField()));
 
     const std::optional<SDL_FPoint> tap = Core::Input::Touch::TapPoint();
-    mu::web::SyncTapOnTextField(PhoneKeysFor(tap ? ui.GetTextFieldAt(tap->x, tap->y) : nullptr));
+    const Rml::Element* tapped = tap ? ui.GetTextFieldAt(tap->x, tap->y) : nullptr;
+    // The chat's history button gives the focus back to its field: a tap on it counts as one on that field, so an
+    // iPhone keeps its keyboard (it brings one up only for a focus made as the finger lifts).
+    if (tap && tapped == nullptr && g_pChatInputBox != nullptr)
+        tapped = g_pChatInputBox->RecallFieldAt(tap->x, tap->y);
+    mu::web::SyncTapOnTextField(PhoneKeysFor(tapped));
 }
 
 // The frame cap: none while loading; 30 on the login and character screens, where nothing moves fast;

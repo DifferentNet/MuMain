@@ -12,7 +12,11 @@ enum class FieldKeys : int
     Text = 1,
     Password = 2, // without suggestions
     Digits = 3,   // a number field (UI::RmlBridge::NumericFieldClass: zen, counts): the number keys
+    Chat = 4,     // a chat line (ChatFieldClass): the action key says Send, a sentence starts with a capital
 };
+
+// The class of a text field whose line is sent with Enter as a chat line: FieldKeys::Chat.
+inline constexpr const char* ChatFieldClass = "text-field--chat";
 
 // A text field took the keys (RmlUi's ActivateKeyboard, again as its caret moves): the keyboard comes
 // up, the page keeps the field's line, lineTop to lineBottom as fractions of the window's height,

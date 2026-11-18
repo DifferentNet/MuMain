@@ -5,7 +5,7 @@
 #include "UI/RmlBridge/RmlThemedView.h"
 
 #include <string>
-#include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace Rml
@@ -99,12 +99,16 @@ private:
     void SetBox(Slot& slot, const Rect& rect, std::uint32_t abgr);
     void SetFill(Slot& slot, const Rect& rect, std::uint32_t abgr, Render::Renderer::RecordedBlend blend);
     void SetAdditive(Slot& slot, bool additive, std::uint32_t abgr);
+    static bool HasFill(const Slot& slot, std::uint32_t abgr, Render::Renderer::RecordedBlend blend);
     void SetCovered(Slot& slot, const Rect& rect);
 
     std::vector<Slot> m_slots;
     std::vector<Render::Renderer::RecordedVertex> m_meshVertices; // RecordAdditiveMesh()'s, kept to reuse the memory
-    // This frame: the slots shown last frame and not taken yet, by content key, and the hidden ones.
-    std::unordered_multimap<std::size_t, std::size_t> m_shownByContent;
+    std::wstring m_meshImageName;  // the file name RecordAdditiveMesh() last built a src from
+    std::string m_meshImageSource; // and that src
+    // This frame: the slots shown last frame as (content key, slot index), sorted once in BeginFrame() (a slot
+    // taken this frame is marked drawn, not removed), and the hidden ones.
+    std::vector<std::pair<std::size_t, std::size_t>> m_shownByContent;
     std::vector<std::size_t> m_hiddenSlots;
     std::size_t m_drawn = 0;
     // The labels draw under every window.

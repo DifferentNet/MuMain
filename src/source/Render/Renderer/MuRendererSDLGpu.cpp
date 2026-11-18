@@ -3780,7 +3780,9 @@ public:
     {
         // Staged BEFORE the render pass so the GPU reads current-frame data, eliminating the
         // 1-frame vertex delay that caused streak artifacts when vertex counts varied between frames.
-        std::vector<BufferUpload> bufferUploads;
+        // Both lists are emptied, not freed, so their memory serves every call (render thread only).
+        static std::vector<BufferUpload> bufferUploads;
+        bufferUploads.clear();
 
         if (s_vtxOffset > 0u && EnsureVertexBufferCapacity(s_vtxOffset) &&
             !StageAppended(s_vtxTransferBuf, s_vtxGpuBuf, s_vtxScratch.data(), s_vtxOffset, s_stagedVertices,
@@ -3836,7 +3838,8 @@ public:
             Uint32 height;
             Uint32 bytesPerRow;
         };
-        std::vector<PreparedTexUpload> preparedTexUploads;
+        static std::vector<PreparedTexUpload> preparedTexUploads;
+        preparedTexUploads.clear();
 
         for (const auto& tu : s_textureUpdates)
         {

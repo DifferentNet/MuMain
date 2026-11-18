@@ -368,6 +368,28 @@ body.under-hub #tc_picker {
 	word-break: break-word;
 	overflow: hidden;
 }
+/* MU Skynet: what a cast costs (mana, AG), one line under the name, left of the gold dot; the name then keeps
+   two lines above it. */
+.tc-pick-cost {
+	position: absolute;
+	left: 36rem;
+	right: 12rem;
+	bottom: 2rem;
+	font-size: 10rem;
+	line-height: 11rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	color: token(text-secondary);
+}
+.tc-pick.has-cost .tc-pick-name {
+	bottom: 13rem;
+}
+.tc-pick.has-cost .tc-pick-name span {
+	display: block;
+	max-height: 26rem;
+	overflow: hidden;
+}
 /* On one of the skill buttons already: a gold dot in the corner. */
 .tc-pick-mark {
 	display: none;
@@ -1015,6 +1037,16 @@ body.no-skills .tc-skill, body.no-skills #tc_skill_edit {
 		font-size: 12rem;
 		line-height: 14rem;
 	}
+	.tc-pick-cost {
+		font-size: 12rem;
+		line-height: 13rem;
+	}
+	.tc-pick.has-cost .tc-pick-name {
+		bottom: 15rem;
+	}
+	.tc-pick.has-cost .tc-pick-name span {
+		max-height: 28rem;
+	}
 	#tc_pick_tip {
 		font-size: 12rem;
 		line-height: 15rem;
@@ -1500,6 +1532,18 @@ body.size-60 #tc_menu_panel { top: 76.7rem; }
 	body.size-80 .tc-pick-name { font-size: 15rem; line-height: 17.5rem; }
 	body.size-70 .tc-pick-name { font-size: 17.14rem; line-height: 20rem; }
 	body.size-60 .tc-pick-name { font-size: 20rem; line-height: 23.33rem; }
+	body.size-90 .tc-pick-cost { left: 40rem; right: 13.33rem; bottom: 2.22rem; font-size: 13.33rem; line-height: 14.44rem; }
+	body.size-80 .tc-pick-cost { left: 45rem; right: 15rem; bottom: 2.5rem; font-size: 15rem; line-height: 16.25rem; }
+	body.size-70 .tc-pick-cost { left: 51.43rem; right: 17.14rem; bottom: 2.86rem; font-size: 17.14rem; line-height: 18.57rem; }
+	body.size-60 .tc-pick-cost { left: 60rem; right: 20rem; bottom: 3.33rem; font-size: 20rem; line-height: 21.67rem; }
+	body.size-90 .tc-pick.has-cost .tc-pick-name { bottom: 16.67rem; }
+	body.size-80 .tc-pick.has-cost .tc-pick-name { bottom: 18.75rem; }
+	body.size-70 .tc-pick.has-cost .tc-pick-name { bottom: 21.43rem; }
+	body.size-60 .tc-pick.has-cost .tc-pick-name { bottom: 25rem; }
+	body.size-90 .tc-pick.has-cost .tc-pick-name span { max-height: 31.11rem; }
+	body.size-80 .tc-pick.has-cost .tc-pick-name span { max-height: 35rem; }
+	body.size-70 .tc-pick.has-cost .tc-pick-name span { max-height: 40rem; }
+	body.size-60 .tc-pick.has-cost .tc-pick-name span { max-height: 46.67rem; }
 	body.size-90 #tc_pick_tip { font-size: 13.33rem; line-height: 16.67rem; }
 	body.size-80 #tc_pick_tip { font-size: 15rem; line-height: 18.75rem; }
 	body.size-70 #tc_pick_tip { font-size: 17.14rem; line-height: 21.43rem; }

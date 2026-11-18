@@ -630,8 +630,9 @@
   let keyboardShift = 0;                // CSS pixels the game is moved up
   let tappedSinceKeyboard = false;      // a tap on the game since it last asked for the keyboard
   // The keys of the game's field, numbered as WebKeyboard.h's FieldKeys: a password field gets a
-  // keyboard without suggestions, a number field (zen, counts) the phone's number keys.
-  const FIELD_KEYS = [null, "text", "password", "digits"];
+  // keyboard without suggestions, a number field (zen, counts) the phone's number keys, the chat line
+  // a Send key and a capital at a sentence's start.
+  const FIELD_KEYS = [null, "text", "password", "digits", "chat"];
   let keyboardKeys = "text";            // the keys #keyboard has
   let keyboardKeysAsked = null;         // the keys the game's frame asked for last (askKeyboardKeys)
   function setKeyboardKeys(keys) {
@@ -640,6 +641,11 @@
     if (keyboardInput.type !== type) keyboardInput.type = type;
     const mode = keys === "digits" ? "numeric" : "text";
     if (keyboardInput.inputMode !== mode) keyboardInput.inputMode = mode;
+    // As attributes: older Safari has no properties for them.
+    const enter = keys === "chat" ? "send" : "go";
+    if (keyboardInput.getAttribute("enterkeyhint") !== enter) keyboardInput.setAttribute("enterkeyhint", enter);
+    const capitals = keys === "chat" ? "sentences" : "off";
+    if (keyboardInput.getAttribute("autocapitalize") !== capitals) keyboardInput.setAttribute("autocapitalize", capitals);
   }
   // A frame of the game may ask twice: a guess as a field takes the keys, then the field's own keys
   // at the frame's end. The phone redraws its keyboard for each change, so only the last ask is made.
@@ -734,7 +740,13 @@
     const shownUnderFinger = keyboardShownUnderFinger && keyboardWanted;
     keyboardShownUnderFinger = false;
     const keys = keyboardTapField || (shownUnderFinger ? keyboardKeys : null);
-    // Up already: only from a field to one with other keys (text to a number field).
+    // Up already: only from a field to one with other keys (text to a number field). A chat line and a
+    // plain text field share the letter keys: their own attributes change in place, the keyboard stays.
+    const letters = (k) => k === "text" || k === "chat";
+    if (keys && keyboardOnScreen() && keys !== keyboardKeys && letters(keys) && letters(keyboardKeys)) {
+      setKeyboardKeys(keys);
+      return;
+    }
     if (!keys || (keyboardOnScreen() && keys === keyboardKeys)) return;
     setKeyboardKeys(keys);
     keyboardInput.blur();               // a focus() on the focused field brings nothing up
