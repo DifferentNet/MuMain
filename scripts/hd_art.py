@@ -57,7 +57,7 @@ detail   the original's fine grain back in the World*, Object*, Monster, NPC, It
          DETAIL_MIN_COVER (5 %) opaque, foliage OZT in World*, Object*, Item and Player (tree, leaf,
          grass, bush, flower, plant, moss, ivy, vine: soft leaves stay; trunks are OZJ; never names with
          treemonster, bark or root; Monster and NPC names are creatures and get grain), Player faces
-         (hd_pack.PLAYER_FACE) and, in Item and Player only, glows: names with render, effect, glow,
+         (DETAIL_PLAYER_FACE) and, in Item and Player only, glows: names with render, effect, glow,
          flare, shine, light or hide, and nearly black originals (median max(R, G, B) under DETAIL_DARK =
          0.02).
          Like cutouts it keeps the clean file in <work>/detail (OZT too; the note beside it is written
@@ -756,8 +756,8 @@ DETAIL_GEAR_FOLDERS = re.compile(r"^(item|player)$", re.IGNORECASE)
 DETAIL_FOLIAGE = re.compile(r"tree|leaf|grass|bush|flower|plant|moss|ivy|vine", re.IGNORECASE)
 # ... but trunks, bark, roots and tree creatures are never foliage (Object34/35/55 treemonster01, Object42/43 rootree).
 DETAIL_NOT_FOLIAGE = re.compile(r"treemonster|bark|root", re.IGNORECASE)
-# Player faces and skin keep no grain: the same rule as hd_pack.PLAYER_FACE (NormalMaps.cpp IsPlayerFace),
-# matched against the file name with its extension.
+# Player faces and skin keep no grain (their painted shading stays as drawn): skin_*, skinclassN.*, levelclassN.*,
+# head_n.* and any name with face, matched against the file name with its extension.
 DETAIL_PLAYER_FACE = re.compile(r"^(skin_|skinclass[0-9]+\.|levelclass[0-9]+\.)|head_n\.|face", re.IGNORECASE)
 DETAIL_DARK = 0.02  # Item/Player only: median max(R, G, B) of the original below this = an additive glow on black
 # Item/Player only: glows, flares and render effects by name (dark gear on black atlases stays in).

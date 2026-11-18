@@ -268,9 +268,6 @@ public:
     // [Render] SmoothModels: with HD textures on, how many times each model triangle is split when
     // it loads (0 = off, 1, 2; Render/Models/ModelSmoothing.h).
     int GetSmoothModels() const { return m_smoothModels; }
-    // [Render] NormalMaps: with HD textures on, model textures get a relief map for the Enhanced
-    // lighting (Render/Textures/NormalMaps.h).
-    bool GetNormalMaps() const { return m_normalMaps; }
     // [Render] TerrainDetail: with HD textures on, grain on the ground near the camera, 0 off,
     // 1 self-detail, 2 noise; TerrainDetailStrength in percent (both clamped; after a restart).
     int GetTerrainDetail() const { return m_terrainDetail; }
@@ -518,7 +515,6 @@ private:
     bool m_hdTextures = false;
     int m_hdTextureSize = 0;
     int m_smoothModels = 1;
-    bool m_normalMaps = true;
     int m_terrainDetail = 1;
     int m_terrainDetailStrength = 60;
     int m_terrainVariation = 2;

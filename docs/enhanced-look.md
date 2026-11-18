@@ -101,7 +101,7 @@ the row reads **Custom** (shown only, it cannot be picked).
 | `ClassicGraphicsReset` | written only by the Classic client: `1` once it turned FXAA, sharpening and sun shadows off a single time at start-up (older Classic clients forced them off every start; this clears a value a Remaster run left in `config.ini`). From then on the player's choices stay. Not in `config.ini.template`; the Remaster never writes it. No line: the reset is still to come | none |
 | `SunShadows` | sun shadows of characters, monsters and objects: `0` off, `1` Medium, `2` High. The browser build reads `WebSunShadows` instead (older /play builds saved the presets' value here), and its presets don't set it | `0` |
 | `HdTextures` | `1` loads the upscaled textures and models from `Data\HD` where a file exists (after a restart), `0` off | `0` |
-| `HdTextureSize` | With HD textures on, how large they load (after a restart): `0` by the machine at every start, `1` full, `2` half. Half takes a quarter of the texture memory (about 0.5 GiB instead of 1.9 GiB; the normal maps shrink with it) and still holds 4 times the original texels. `0` picks half on integrated graphics, a software renderer or an unnamed GPU, and on a PC with less than 12 GB of memory; the log line "HD textures at ... size" says which. Options: "HD texture size" | `0` |
+| `HdTextureSize` | With HD textures on, how large they load (after a restart): `0` by the machine at every start, `1` full, `2` half. Half takes a quarter of the texture memory (about 0.5 GiB instead of 1.9 GiB) and still holds 4 times the original texels. `0` picks half on integrated graphics, a software renderer or an unnamed GPU, and on a PC with less than 12 GB of memory; the log line "HD textures at ... size" says which. Options: "HD texture size" | `0` |
 | `TerrainDetail` | With HD textures on (desktop only, Enhanced lighting), fine grain on the ground tiles around the hero that fades out towards the horizon (not on water or grass, nor on the tiles of large distinct stones: boulders, cobbles, flagstones; after a restart): `0` off, `1` the tile texture's own detail repeated about once per tile, `2` soft noise of about 25 world units | `1` |
 | `TerrainDetailStrength` | Strength of that grain in percent, `0` (off) to `100` | `60` |
 | `TerrainVariation` | With HD textures on (desktop only), breaks the visible repeat of the ground textures (after a restart): `0` off, `1` large soft patches of brighter/darker and warmer/cooler ground (grass follows them), `2` the same plus each texture repeat of the plain tiles (grass, ground, wood, rock) mirrored at random, which stays seamless (the tiles of large distinct stones, such as Noria's boulders and the cobbles and flagstones of a few maps, are never mirrored) | `2` |
@@ -261,9 +261,8 @@ integrated graphics (Intel Iris; AMD "Radeon Graphics", a Vega named "...
 Graphics" such as the Ryzen APUs' "RX Vega 11 Graphics", or Vega without "RX")
 and an empty or unknown name get Medium; every other GPU gets High. On a
 software renderer or weak integrated graphics with the Low preset, the HD
-client also loads its models without smoothing and without normal maps for
-that run, whatever `SmoothModels` and `NormalMaps` say (nothing is saved; the
-log has a line `Weak GPU ... on Low`). That preset is applied and written to `config.ini` by
+client also loads its models without smoothing for that run, whatever
+`SmoothModels` says (nothing is saved; the log has a line `Weak GPU ... on Low`). That preset is applied and written to `config.ini` by
 name, so Auto does not run again; the log has a line `Graphics preset Auto: ...
 for GPU '...'`. The Classic client picks no preset on a new install: it keeps
 `config.ini`'s own values (the original look; FXAA, sharpening and sun shadows
