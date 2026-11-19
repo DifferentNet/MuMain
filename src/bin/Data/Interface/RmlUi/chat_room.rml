@@ -34,7 +34,7 @@
         <div class="pal" data-for="pal : invite_pals" data-class-selected="pal.name == selected_invite" data-event-click="room_action('invite_select', pal.name)" data-event-dblclick="room_action('invite_send_clicked')">{{pal.name}}</div>
     </div>
     <div id="footer">
-        <input id="chat_field" type="text" class="text-field" data-value="draft" data-attrif-disabled="locked"/><button id="btn_invite_send" class="btn" data-class-hidden="!show_invite" data-event-click="room_action('invite_send')">{{invite_label}}</button><button id="btn_invite" class="btn" data-event-click="room_action('invite_toggle')">{{invite_button_label}}</button>
+        <input id="chat_field" type="text" class="text-field text-field--chat" data-value="draft" data-attrif-disabled="locked"/><button id="btn_invite_send" class="btn" data-class-hidden="!show_invite" data-event-click="room_action('invite_send')">{{invite_label}}</button><button id="btn_invite" class="btn" data-event-click="room_action('invite_toggle')">{{invite_button_label}}</button>
     </div>
     <handle id="resize" size_target="#document" edge_margin="0px"/>
 </body>

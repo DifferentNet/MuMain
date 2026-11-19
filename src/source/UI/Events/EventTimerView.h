@@ -26,7 +26,12 @@ public:
 
     void Build();
     // Unloads the document; from the window's own Release().
-    void Release() { m_View.Release(); }
+    void Release()
+    {
+        m_View.Release();
+        for (bool& built : m_LineBuilt)
+            built = false;
+    }
 
     struct Line
     {
@@ -42,6 +47,13 @@ public:
     void Sync(bool visible, const Line& first, const Line& second, const Line& time);
 
 private:
+    // A line's text is converted only when it changed, not every frame (lines: first, second, time).
+    void SyncLineText(int index, const std::wstring& text, Rml::String EventTimerRmlModel::* field,
+                      const char* fieldName);
+
     UI::RmlBridge::ThemedView<EventTimerRmlModel> m_View;
+    static constexpr int LineCount = 3;
+    bool m_LineBuilt[LineCount] = {};
+    std::wstring m_LineSources[LineCount];
 };
 } // namespace mu::ui::window

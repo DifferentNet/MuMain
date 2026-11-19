@@ -190,28 +190,57 @@ void CMuHelperBar::SyncRmlModel()
 
     // The ping label: the server's last round trip, green below 100 ms, yellow below 200, red above, grey while
     // the server waits for a late answer. Hidden on a server without the add-on (no line ever came).
-    const auto& ping = GameLogic::PingHud::Ping();
-    std::string pingText;
-    std::string pingLevel;
-    std::string pingHint;
-    if (ping.HasReading())
+    // Formatted again only when a number, the stale state or the language changed (per-frame cost).
+    const PingTextKey pingKey = CurrentPingTextKey();
+    if (!m_bPingBuilt || !(pingKey == m_PingBuiltFor))
     {
-        const auto& reading = ping.Current();
-        wchar_t label[64] = {};
-        mu_swprintf_s(label, I18N::Game::PingHudLabel, reading.lastMs);
-        pingText = StringUtils::WideToNarrow(label);
-        pingLevel = ping.IsStale() ? "stale" : reading.lastMs < 100 ? "good" : reading.lastMs < 200 ? "fair" : "bad";
-
-        wchar_t hint[256] = {};
-        if (reading.networkMs >= 0)
-            mu_swprintf_s(hint, I18N::Game::PingHudHintNetwork, reading.lastMs, reading.medianMs, reading.networkMs);
-        else
-            mu_swprintf_s(hint, I18N::Game::PingHudHint, reading.lastMs, reading.medianMs);
-        pingHint = StringUtils::WideToNarrow(hint);
+        BuildPingTexts(pingKey);
+        m_bPingBuilt = true;
+        m_PingBuiltFor = pingKey;
     }
-    SyncField(m_RmlView.Binder(), &MuHelperBarRmlModel::pingText, "ping_text", pingText);
-    SyncField(m_RmlView.Binder(), &MuHelperBarRmlModel::pingLevel, "ping_level", pingLevel);
-    SyncField(m_RmlView.Binder(), &MuHelperBarRmlModel::pingHint, "ping_hint", pingHint);
+    SyncField(m_RmlView.Binder(), &MuHelperBarRmlModel::pingText, "ping_text", m_PingText);
+    SyncField(m_RmlView.Binder(), &MuHelperBarRmlModel::pingLevel, "ping_level", m_PingLevel);
+    SyncField(m_RmlView.Binder(), &MuHelperBarRmlModel::pingHint, "ping_hint", m_PingHint);
+}
+
+CMuHelperBar::PingTextKey CMuHelperBar::CurrentPingTextKey()
+{
+    const auto& ping = GameLogic::PingHud::Ping();
+    PingTextKey key;
+    key.hasReading = ping.HasReading();
+    if (!key.hasReading)
+        return key;
+
+    const auto& reading = ping.Current();
+    key.lastMs = reading.lastMs;
+    key.medianMs = reading.medianMs;
+    key.networkMs = reading.networkMs;
+    key.stale = ping.IsStale();
+    key.labelFormat = I18N::Game::PingHudLabel;
+    key.hintFormat = I18N::Game::PingHudHint;
+    key.hintNetworkFormat = I18N::Game::PingHudHintNetwork;
+    return key;
+}
+
+void CMuHelperBar::BuildPingTexts(const PingTextKey& key)
+{
+    m_PingText.clear();
+    m_PingLevel.clear();
+    m_PingHint.clear();
+    if (!key.hasReading)
+        return;
+
+    wchar_t label[64] = {};
+    mu_swprintf_s(label, key.labelFormat, key.lastMs);
+    m_PingText = StringUtils::WideToNarrow(label);
+    m_PingLevel = key.stale ? "stale" : key.lastMs < 100 ? "good" : key.lastMs < 200 ? "fair" : "bad";
+
+    wchar_t hint[256] = {};
+    if (key.networkMs >= 0)
+        mu_swprintf_s(hint, key.hintNetworkFormat, key.lastMs, key.medianMs, key.networkMs);
+    else
+        mu_swprintf_s(hint, key.hintFormat, key.lastMs, key.medianMs);
+    m_PingHint = StringUtils::WideToNarrow(hint);
 }
 
 void CMuHelperBar::SyncText(Rml::String MuHelperBarRmlModel::* field, const char* boundName, const Rml::String& text)
