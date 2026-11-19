@@ -20,6 +20,17 @@ bool MountGameFiles();
 // Without a pack, or where it failed to load, the files still download one by one as the game opens them.
 void LoadWorldFiles(int world);
 
+// Starts reading the pack of map folder `world` (LoadWorldFiles' number) as soon as the map the game is
+// about to enter is known: a gate stepped on, a warp asked for, a character picked. LoadWorldFiles for the
+// same world then takes that read instead of starting its own; another world drops it, and the page drops
+// one left unused for 10 s. Writes nothing into /game. Does not block.
+void PrefetchWorldFiles(int world);
+
+// The map folder (LoadWorldFiles' number) the character `name` (UTF-8) was last in, kept in the browser's
+// storage for the character select screen; 0 where it isn't known.
+void RememberCharacterWorld(const std::string& name, int world);
+int RememberedCharacterWorld(const std::string& name);
+
 // Starts downloading the Chinese and Korean fallback fonts (BundledFonts.h IsLateFallbackFont) in the
 // background, into the service worker's store, so that opening them later reads the device. Call it
 // once the game is in a map, so they don't share the line with the startup pack or a map's pack. Does
@@ -43,6 +54,10 @@ constexpr double FrameFileBudgetMs = 3.5;
 // of the game is open; it returns at once until the pack is here, and does nothing after it was taken.
 // Returns the milliseconds it spent.
 double InstallLatePack(double budgetMs);
+
+// True once the late pack's files are in /game (InstallLatePack): from then on reading one of its textures
+// doesn't download it alone. False where there is none or its download failed.
+bool LatePackInstalled();
 
 // The deferred parts of the startup pack (tools/web/make_startup_pack.py: the sounds and music), which the
 // game starts without: writes the files of each part the page downloaded into /game in place of their

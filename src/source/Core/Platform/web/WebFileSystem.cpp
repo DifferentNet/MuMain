@@ -263,6 +263,41 @@ EM_ASYNC_JS(int, MuWeb_InstallMapPack, (int world), {
     return written.length;
 });
 
+// index.html Module.muMapPackPrefetch(world): starts reading the map's pack before the server answers;
+// MuWeb_InstallMapPack then takes that read. Nothing is written into /game here. Not for the map whose
+// pack is in place already.
+EM_JS(void, MuWeb_PrefetchMapPack, (int world), {
+    if (Module["muMapPackWorld"] !== world && Module["muMapPackPrefetch"]) {
+        Module["muMapPackPrefetch"](world);
+    }
+});
+
+// The map folder each character was last in, by name, in the browser's storage ("mu-web/character-maps",
+// a JSON object, the most recent last, at most 32 names), for the character select screen. 0 where none.
+EM_JS(void, MuWeb_RememberCharacterWorld, (const char* name, int world), {
+    try {
+        const key = "mu-web/character-maps";
+        const who = "c:" + UTF8ToString(name);   // never an integer-like key, which objects order first
+        let maps = {};
+        try { maps = JSON.parse(localStorage.getItem(key) || "{}") || {}; } catch (e) { maps = {}; }
+        if (maps[who] === world) return;
+        delete maps[who];
+        maps[who] = world;
+        const names = Object.keys(maps);
+        for (let i = 0; i < names.length - 32; i++) delete maps[names[i]];
+        localStorage.setItem(key, JSON.stringify(maps));
+    } catch (e) { /* no storage */ }
+});
+EM_JS(int, MuWeb_RememberedCharacterWorld, (const char* name), {
+    try {
+        const maps = JSON.parse(localStorage.getItem("mu-web/character-maps") || "{}") || {};
+        const world = maps["c:" + UTF8ToString(name)];
+        return Number.isInteger(world) && world > 0 ? world : 0;
+    } catch (e) {
+        return 0;
+    }
+});
+
 // Creates the folders above `path` (a path below /game), remembering the ones made.
 void MakeParentFolders(const std::string& path, std::set<std::string>& made)
 {
@@ -525,15 +560,32 @@ struct PackInstallTiming
     }
 };
 
-// Runs on a worker thread: WasmFS can't create a fetch backend on the browser's main thread.
-void SetUpMount()
+// The text of files.txt the page downloaded beside the packs (index.html Module.muFileList), handed over
+// once; null where it didn't come (the mount reads it then).
+EM_ASYNC_JS(char*, MuWeb_TakeFileList, (), {
+    const loading = Module["muFileList"];
+    Module["muFileList"] = null;
+    let text = null;
+    try {
+        text = loading ? await loading : null;
+    } catch (e) {
+        text = null;
+    }
+    return text ? stringToNewUTF8(text) : 0;
+});
+
+// Runs on a worker thread: WasmFS can't create a fetch backend on the browser's main thread. `pageList`:
+// files.txt as the page downloaded it, or empty, where the mount downloads it.
+void SetUpMount(const std::string& pageList)
 {
     const auto started = std::chrono::steady_clock::now();
     backend_t fetch = wasmfs_create_fetch_backend(g_pageFolderUrl.c_str(), ChunkSize);
-    std::string list;
+    std::string list = pageList;
     std::set<std::string> madeServerFolders;
-    if (!fetch || wasmfs_create_directory(ServerDir, 0777, fetch) != 0 || !CreateOnServer("files.txt", madeServerFolders)
-        || !ReadWholeFile(std::string(ServerDir) + "/files.txt", list))
+    if (!fetch || wasmfs_create_directory(ServerDir, 0777, fetch) != 0
+        || (list.empty()
+            && (!CreateOnServer("files.txt", madeServerFolders)
+                || !ReadWholeFile(std::string(ServerDir) + "/files.txt", list))))
     {
         g_mountState = -1;
         return;
@@ -595,9 +647,10 @@ void SetUpMount()
     }
 
     // The time for files.txt (a download), then for the files and links made from it.
-    std::printf("Web file system: %zu game files, %zu of them downloaded when first read (files.txt %.0f ms, "
-                "files and links %.0f ms)\n",
-                count, linked, listMs, MsSince(filesStarted));
+    std::printf("Web file system: %zu game files, %zu of them downloaded when first read (files.txt %s %.0f ms, "
+                "files and links %.0f ms, mount %.0f ms)\n",
+                count, linked, pageList.empty() ? "from the mount" : "from the page", listMs, MsSince(filesStarted),
+                MsSince(started));
     g_mountState = count > 0 ? 1 : -1;
 }
 
@@ -928,7 +981,14 @@ bool mu::web::MountGameFiles()
                     g_pageReads ? "through the service worker while the page runs"
                                 : "by synchronous requests (?syncreads)");
     }
-    std::thread worker(SetUpMount);
+    // Taken here: a worker's Module isn't the page's.
+    std::string pageList;
+    if (char* list = MuWeb_TakeFileList())
+    {
+        pageList = list;
+        std::free(list);
+    }
+    std::thread worker([&pageList] { SetUpMount(pageList); });
     while (g_mountState.load() == 0)
     {
         emscripten_sleep(10);
@@ -1101,11 +1161,18 @@ EM_JS(int, MuWeb_InstallLatePackSlice, (double budgetMs, int* done), {
     return job.written;
 });
 
+// The late pack's files are all in /game (InstallLatePack).
+static bool g_latePackInstalled = false;
+
+bool mu::web::LatePackInstalled()
+{
+    return g_latePackInstalled;
+}
+
 double mu::web::InstallLatePack(double budgetMs)
 {
-    static bool installed = false;
     static PackInstallTiming timing;
-    if (installed || !(budgetMs > 0))
+    if (g_latePackInstalled || !(budgetMs > 0))
     {
         return 0;
     }
@@ -1122,7 +1189,7 @@ double mu::web::InstallLatePack(double budgetMs)
     {
         return ms;
     }
-    installed = true;
+    g_latePackInstalled = true;
     std::printf("Web file system: %d files from the late pack in %.0f ms over %d frames (at most %.1f ms a frame)\n",
                 written, timing.totalMs, timing.frames, timing.longestMs);
     return ms;
@@ -1167,4 +1234,25 @@ void mu::web::LoadWorldFiles(int world)
     {
         std::printf("Web file system: map folder %d, its pack is in place already\n", world);
     }
+}
+
+void mu::web::PrefetchWorldFiles(int world)
+{
+    if (world > 0)
+    {
+        MuWeb_PrefetchMapPack(world);
+    }
+}
+
+void mu::web::RememberCharacterWorld(const std::string& name, int world)
+{
+    if (!name.empty() && world > 0)
+    {
+        MuWeb_RememberCharacterWorld(name.c_str(), world);
+    }
+}
+
+int mu::web::RememberedCharacterWorld(const std::string& name)
+{
+    return name.empty() ? 0 : MuWeb_RememberedCharacterWorld(name.c_str());
 }

@@ -161,6 +161,8 @@ void ApplyPendingPreselect()
 
     SelectedHero = slot;
     g_CharSelMainWin.UpdateDisplay();
+    // The remembered character's map starts reading now (browser only), dropped if another one is entered.
+    gMapManager.PrefetchMapFilesOfCharacter(CharactersClient[slot].ID);
 }
 } // namespace
 

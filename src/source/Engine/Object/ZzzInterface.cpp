@@ -2896,6 +2896,7 @@ void CheckGate()
                                 else
                                 {
                                     SocketClient->ToGameServer()->SendEnterGateRequest(i, 0, 0);
+                                    gMapManager.PrefetchMapFiles(gt->Map);
                                     bResult = true;
                                 }
                             }

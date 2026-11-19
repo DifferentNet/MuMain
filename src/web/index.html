@@ -1710,14 +1710,15 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       }).catch((e) => console.warn(`${label} not kept on this device: ${e}`));
     }
     // Reads a pack ({name, hash, files: [[path, size], ...]}) into one array: from its copy on the
-    // device (kept) or from the server, telling onNetworkBytes about each downloaded byte.
-    async function readPack(label, entry, store, kept, onNetworkBytes) {
+    // device (kept) or from the server, telling onNetworkBytes about each downloaded byte. `signal`
+    // (optional, an AbortSignal) stops it, the download too.
+    async function readPack(label, entry, store, kept, onNetworkBytes, signal) {
       let body, packed;
       if (kept) {
         body = kept.body;
         packed = kept.headers.get("X-Mu-Packed") === "1";
       } else {
-        const source = await fetchPacked(entry.name, { cache: "no-store" });
+        const source = await fetchPacked(entry.name, signal ? { cache: "no-store", signal } : { cache: "no-store" });
         body = counted(source.response.body, onNetworkBytes);
         packed = source.packed;
         if (store) {
@@ -1731,6 +1732,10 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       const reader = unpacked(body, packed).getReader();
       let received = 0;
       for (;;) {
+        if (signal && signal.aborted) {
+          reader.cancel().catch(() => {});
+          throw signal.reason;
+        }
         const { done, value } = await reader.read();
         if (done) break;
         if (received + value.length > total) throw new Error(`${entry.name} is bigger than its index says`);
@@ -1741,18 +1746,19 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       return { files: entry.files, bytes };
     }
     // A pack's files and bytes: from the device where it is kept and reads, else from the server.
-    async function loadPack(label, entry, store, kept, onNetworkBytes) {
+    async function loadPack(label, entry, store, kept, onNetworkBytes, signal) {
       if (kept) {
         try {
-          const pack = await readPack(label, entry, null, kept, null);
+          const pack = await readPack(label, entry, null, kept, null, signal);
           console.log(`${label} from this device (${entry.hash})`);
           return pack;
         } catch (e) {
+          if (signal && signal.aborted) throw e;   // stopped, not broken: the kept copy stays
           console.warn(`${label} on this device didn't read, downloading it again: ${e}`);
           await store.delete(packKey(entry)).catch(() => {});
         }
       }
-      return readPack(label, entry, store, null, onNetworkBytes);
+      return readPack(label, entry, store, null, onNetworkBytes, signal);
     }
     // Runs the tasks given to it at most `count` at a time, in the order given.
     function taskQueue(count) {
@@ -1801,6 +1807,11 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     }
     let packDone = false;
     const startupParts = startupPack();
+    // files.txt, the list of every game file (436 KB), downloads beside the packs and goes to
+    // WebFileSystem.cpp MountGameFiles (Module.muFileList) as text, null where it didn't come: the game
+    // asked the mount for it only after the startup pack was in place, one more wait before the login screen.
+    const fileListLoad = fetch("files.txt", { cache: "no-cache" })
+      .then((response) => response.ok ? response.text() : null).catch(() => null);
     // Settles with nothing once every part has come or failed. The parts' bytes (166 MB) are copied
     // into the game's memory (WebFileSystem.cpp) and must go then: a result holding the parts held
     // them all game long (2026-10-30).
@@ -1881,25 +1892,23 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         return null;
       }
     }
-    // WebFileSystem.cpp LoadWorldFiles: the files of the map folder the game enters (Data/WorldN,
-    // ObjectN), or null where the map has no pack. startup.json "maps" (tools/web/make_startup_pack.py)
-    // has each pack's hash: a map without one has no pack (the login and character scenes), and a pack
-    // this device keeps reads with the index kept beside it, without a request to the server first
-    // (0.1-0.6 s on a phone's line, at every map change). Without "maps" (an older startup.json) or a
-    // pack kept, the index comes from the server as before. A release published while the page is open
-    // is picked up for a map's pack only where the pack isn't kept.
-    async function mapPack(world) {
+    // `progress(total)` gives what to tell about each downloaded byte, `total` the pack's packed size.
+    // `ahead` (a read ahead, mapPackAhead): stopped by its `abort` (AbortController), and only where this
+    // device keeps packs, so a read ahead dropped or refused is never downloaded twice (MAP_PACK_NO_STORE).
+    const MAP_PACK_NO_STORE = "no storage on this device";
+    async function readMapPack(world, progress, ahead) {
       const hashes = releaseIndex && releaseIndex.maps;
       if (hashes && !hashes[world]) return null;
+      const signal = ahead ? ahead.abort.signal : undefined;
       mapPacksLoading++;
       try {
         const store = await openStore(MAP_PACK_STORE);
+        if (ahead && !store) throw new Error(MAP_PACK_NO_STORE);
         const local = store && hashes ? await keptMapPack(store, world, hashes[world]) : null;
         if (local) {
-          return await loadPack(`Map pack ${world}`, local.entry, store, local.kept,
-                                downloadProgress("the map", local.entry.packed || 0));
+          return await loadPack(`Map pack ${world}`, local.entry, store, local.kept, progress(local.entry.packed || 0), signal);
         }
-        const indexResponse = await fetch(`packs/world${world}.json`, { cache: "no-cache" });
+        const indexResponse = await fetch(`packs/world${world}.json`, signal ? { cache: "no-cache", signal } : { cache: "no-cache" });
         // startup.json lists this map's pack, so a missing index is a failure, not a map without one.
         if (!indexResponse.ok) {
           if (hashes) throw new Error(`packs/world${world}.json: HTTP ${indexResponse.status}`);
@@ -1908,9 +1917,86 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         const entry = Object.assign(await indexResponse.json(), { name: mapPackName(world) });
         const kept = store ? await store.match(packKey(entry)).catch(() => undefined) : undefined;
         if (store) keepMapIndex(store, world, entry);
-        return await loadPack(`Map pack ${world}`, entry, store, kept, downloadProgress("the map", entry.packed || 0));
+        return await loadPack(`Map pack ${world}`, entry, store, kept, progress(entry.packed || 0), signal);
       } finally {
         mapPacksLoading--;
+      }
+    }
+    // A map's pack read ahead (Module.muMapPackPrefetch, WebFileSystem.cpp PrefetchWorldFiles): the game
+    // knows the next map when a gate is stepped on, a warp is asked for or a character is picked, before
+    // the server answers. One at a time: {world, loading, abort, settled, received, total, totalKnown,
+    // claimed, progress, timer}. mapPack takes it for the same world; another world drops it, and so does
+    // MAP_PACK_AHEAD_MS unused after it came (a refused warp: up to ~30 MB held that long). A read still
+    // going when dropped stops, its download too. Nothing is written into the game's files early. Only
+    // where this device keeps packs (not ?nostore, not a private window).
+    const MAP_PACK_AHEAD_MS = 10000;
+    let mapPackAhead = null;
+    function dropMapPackAhead(why) {
+      const ahead = mapPackAhead;
+      if (!ahead) return;
+      mapPackAhead = null;
+      clearTimeout(ahead.timer);
+      if (!ahead.settled) ahead.abort.abort(new DOMException("read ahead dropped", "AbortError"));
+      console.log(`Map pack ${ahead.world} read ahead, dropped (${why})`);
+    }
+    function prefetchMapPack(world) {
+      const hashes = releaseIndex && releaseIndex.maps;
+      if (!hashes || !hashes[world]) return;   // no pack, or no hash to read a kept one without a request
+      if (!self.caches || pageParams.has("nostore")) return;
+      if (mapPackAhead && mapPackAhead.world === world) return;
+      dropMapPackAhead(`map ${world} instead`);
+      const ahead = { world, abort: new AbortController(), settled: false, received: 0, total: 0, totalKnown: false,
+                      claimed: false, progress: null, timer: 0 };
+      ahead.loading = readMapPack(world, (total) => {
+        ahead.total = total;
+        ahead.totalKnown = true;
+        if (ahead.claimed && !ahead.progress) ahead.progress = downloadProgress("the map", total);
+        return (bytes) => {
+          ahead.received += bytes;
+          if (ahead.progress) ahead.progress(bytes);
+        };
+      }, ahead);
+      ahead.loading.catch(() => {}).finally(() => {
+        ahead.settled = true;
+        if (mapPackAhead === ahead) ahead.timer = setTimeout(() => { if (mapPackAhead === ahead) dropMapPackAhead("unused"); }, MAP_PACK_AHEAD_MS);
+      });
+      mapPackAhead = ahead;
+      console.log(`Map pack ${world}: reading ahead`);
+    }
+    // WebFileSystem.cpp LoadWorldFiles: the files of the map folder the game enters (Data/WorldN,
+    // ObjectN), or null where the map has no pack. startup.json "maps" (tools/web/make_startup_pack.py)
+    // has each pack's hash: a map without one has no pack (the login and character scenes), and a pack
+    // this device keeps reads with the index kept beside it, without a request to the server first
+    // (0.1-0.6 s on a phone's line, at every map change). Without "maps" (an older startup.json) or a
+    // pack kept, the index comes from the server as before. A release published while the page is open
+    // is picked up for a map's pack only where the pack isn't kept. A read ahead of this world is taken
+    // (one that failed is read again here).
+    async function mapPack(world) {
+      try {
+        const ahead = mapPackAhead;
+        if (ahead && ahead.world === world) {
+          clearTimeout(ahead.timer);
+          mapPackAhead = null;
+          ahead.claimed = true;
+          // "X of Y MB" once the pack's size is known (its index read); the bytes so far count too.
+          if (ahead.totalKnown) {
+            ahead.progress = downloadProgress("the map", ahead.total);
+            if (ahead.received) ahead.progress(ahead.received);
+          }
+          const started = performance.now();
+          try {
+            const pack = await ahead.loading;
+            console.log(`Map pack ${world} read ahead, taken (waited ${Math.round(performance.now() - started)} ms)`);
+            return pack;
+          } catch (e) {
+            if (e && e.message === MAP_PACK_NO_STORE) console.log(`Map pack ${world}: no read ahead without storage`);
+            else console.warn(`Map pack ${world} read ahead failed (${e}), reading it again`);
+          }
+        } else {
+          dropMapPackAhead(`map ${world} entered`);
+        }
+        return await readMapPack(world, (total) => downloadProgress("the map", total));
+      } finally {
         setStatus("");
       }
     }
@@ -2277,6 +2363,8 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       canvas,
       muStartupPack: startupParts,
       muMapPack: mapPack,
+      muMapPackPrefetch: prefetchMapPack,
+      muFileList: fileListLoad,
       // The late pack once it is here ({files, bytes}), handed over once; else null.
       muLatePack: () => { const pack = latePack; latePack = null; return pack; },
       // The deferred parts' files (paths), and the next part that came or failed, handed over once; else null.
@@ -2320,9 +2408,10 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         (async () => {
           const started = performance.now();
           let result, how;
-          if (await workerKeepsCode()) {
+          const early = await codeDownload;
+          if (early.fromWorker) {
             try {
-              result = await WebAssembly.instantiateStreaming(fetch(unpackedCodeUrl(), { credentials: "same-origin" }), imports);
+              result = await WebAssembly.instantiateStreaming(early.response, imports);
               codeFromWorker = true;
               how = "kept on this device unpacked, its compiled code too where the browser keeps it";
             } catch (e) {
@@ -2331,7 +2420,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
           }
           if (!result) {
             try {
-              const source = await fetchPacked("Main.wasm", { credentials: "same-origin" }, code["Main.wasm"]);
+              const source = await (early.packed || fetchPacked("Main.wasm", { credentials: "same-origin" }, code["Main.wasm"]));
               const wasm = new Response(unpacked(source.response.body, source.packed), { headers: { "Content-Type": "application/wasm" } });
               result = await WebAssembly.instantiateStreaming(wasm, imports);
               how = "unpacked by the page";
@@ -2341,12 +2430,28 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
               how = "Main.wasm";
             }
           }
-          appendLog(`Game code ready in ${((performance.now() - started) / 1000).toFixed(1)} s (${how})`);
+          appendLog(`Game code ready in ${((performance.now() - started) / 1000).toFixed(1)} s, ` +
+                    `${((performance.now() - codeDownloadStarted) / 1000).toFixed(1)} s after its download started (${how})`);
           done(result.instance, result.module);
         })().catch((e) => gameCrashed("Main.wasm: " + e));
         return {};
       },
     };
+    // Main.wasm starts downloading now, beside Main.js, instead of once Main.js has loaded and run
+    // (instantiateWasm above takes it): the same requests as before, only sooner. {fromWorker, response}
+    // through the service worker that keeps it unpacked, else {packed} (fetchPacked).
+    const codeDownloadStarted = performance.now();
+    const codeDownload = (async () => {
+      const init = { credentials: "same-origin" };
+      if (await workerKeepsCode()) {
+        const response = fetch(unpackedCodeUrl(), init);
+        response.catch(() => {});   // instantiateWasm says what failed
+        return { fromWorker: true, response };
+      }
+      const packed = fetchPacked("Main.wasm", init, code["Main.wasm"]);
+      packed.catch(() => {});
+      return { fromWorker: false, packed };
+    })();
     const script = document.createElement("script");
     script.src = versioned("Main.js");
     script.onerror = () => setStatus("Main.js didn't load: is the web build in this folder?", true);

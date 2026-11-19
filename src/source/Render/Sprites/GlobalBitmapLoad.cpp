@@ -23,6 +23,7 @@
 #endif
 #ifdef __EMSCRIPTEN__
 #include "Core/Utilities/FirstOpenTiming.h"
+#include "Render/Sprites/TextureWarmUp.h"
 #endif
 
 #include <SDL3/SDL_gpu.h>
@@ -615,7 +616,24 @@ bool CGlobalBitmap::ResolvePendingLoad(GLuint uiBitmapIndex)
     bitmap.IsSkin = pending->IsSkin;
     bitmap.IsHair = pending->IsHair;
     m_BitmapCache.Remove(uiBitmapIndex);
+#ifdef __EMSCRIPTEN__
+    Render::TextureWarmUp::NoteResolved(filename);
+#endif
     return true;
+}
+
+std::vector<std::pair<GLuint, std::wstring>> CGlobalBitmap::PendingLoads() const
+{
+    std::vector<std::pair<GLuint, std::wstring>> pending;
+    pending.reserve(m_pendingLoads);
+    for (const auto& [index, bitmap] : m_mapBitmap)
+    {
+        if (bitmap && bitmap->pendingLoad)
+        {
+            pending.emplace_back(index, bitmap->FileName);
+        }
+    }
+    return pending;
 }
 
 void CGlobalBitmap::UnloadImage(GLuint uiBitmapIndex, bool bForce)

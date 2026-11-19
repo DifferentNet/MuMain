@@ -414,6 +414,7 @@ void mu::ui::window::CMoveCommandWindow::RmlClickWarp(int row)
     }
 
     SocketClient->ToGameServer()->SendWarpCommandRequest(GetMoveCommandKey(), (*li)->_ReqInfo.index);
+    gMapManager.PrefetchMapFilesOfGate((*li)->_ReqInfo.iGateNum);
 
     g_pNewUISystem->Hide(mu::ui::window::INTERFACE_MOVEMAP);
 }

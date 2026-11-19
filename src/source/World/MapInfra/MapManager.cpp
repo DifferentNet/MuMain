@@ -14,6 +14,7 @@
 #include "Render/Terrain/ZzzLodTerrain.h"
 #include "Engine/Object/ZzzObject.h"
 #include "Engine/Object/ZzzOpenData.h"
+#include "Engine/Object/ZzzInfomation.h"
 #include "Render/Textures/ZzzTexture.h"
 #include "GameLogic/Events/w_CursedTemple.h"
 #include "Network/Server/WSclient.h"
@@ -1210,28 +1211,18 @@ void CMapManager::LoadWorld(int Map)
 
     wchar_t FileName[64];
     wchar_t WorldName[32];
-    int  iMapWorld = this->WorldActive + 1;
-
-    if (InBloodCastle(Map) == true)
-    {
-        iMapWorld = WD_11BLOODCASTLE1 + 1;
-    }
-    else if (gMapManager.InHellas(Map) == true)
-    {
-        iMapWorld = WD_24HELLAS + 1;
-    }
-    else if (InChaosCastle(Map) == true)
-    {
-        iMapWorld = WD_18CHAOS_CASTLE + 1;
-    }
-    else if (gMapManager.IsCursedTemple())
-    {
-        iMapWorld = WD_45CURSEDTEMPLE_LV1 + 2;
-    }
+    const int iMapWorld = MapFolderNumber(this->WorldActive);
 
 #ifdef __EMSCRIPTEN__
     // In the browser: the map's files (Data/WorldN, Data/ObjectN) in one download before Load() reads them.
     mu::web::LoadWorldFiles(iMapWorld);
+    // The character select screen starts reading this map's pack for this character next time. By
+    // CharacterAttribute->Name (set when the character is picked, CharacterScene StartGame): on world entry
+    // this runs before ReceiveJoinMapServer gives the hero its name.
+    if ((SceneFlag == MAIN_SCENE || SceneFlag == LOADING_SCENE) && CharacterAttribute != nullptr)
+    {
+        mu::web::RememberCharacterWorld(StringUtils::WideToNarrow(CharacterAttribute->Name), iMapWorld);
+    }
     // Chinese and Korean fonts downloaded since the last map open now, under the loading screen. The
     // first map in the game starts their download, so it doesn't share the line with that map's pack.
     if (mu::web::LateFontsReady())
@@ -1614,6 +1605,52 @@ void CMapManager::DeleteObjects()
         Operates[i].Live = false;
     for (int i = 0; i < MAX_EFFECTS; i++)
         Effects[i].Live = false;
+}
+
+int CMapManager::MapFolderNumber(int map)
+{
+    // LoadWorld loads this folder.
+    if (InBloodCastle(map))
+        return WD_11BLOODCASTLE1 + 1;
+    if (InHellas(map))
+        return WD_24HELLAS + 1;
+    if (InChaosCastle(map))
+        return WD_18CHAOS_CASTLE + 1;
+    if (map >= WD_45CURSEDTEMPLE_LV1 && map <= WD_45CURSEDTEMPLE_LV6)
+        return WD_45CURSEDTEMPLE_LV1 + 2;
+    return map + 1;
+}
+
+void CMapManager::PrefetchMapFiles(int map)
+{
+#ifdef __EMSCRIPTEN__
+    if (map >= 0 && map < NUM_WD)
+    {
+        mu::web::PrefetchWorldFiles(MapFolderNumber(map));
+    }
+#else
+    (void)map;
+#endif
+}
+
+void CMapManager::PrefetchMapFilesOfGate(int gate)
+{
+    if (GateAttribute != nullptr && gate >= 0 && gate < MAX_GATES)
+    {
+        PrefetchMapFiles(GateAttribute[gate].Map);
+    }
+}
+
+void CMapManager::PrefetchMapFilesOfCharacter(const wchar_t* name)
+{
+#ifdef __EMSCRIPTEN__
+    if (name != nullptr && name[0] != L'\0')
+    {
+        mu::web::PrefetchWorldFiles(mu::web::RememberedCharacterWorld(StringUtils::WideToNarrow(name)));
+    }
+#else
+    (void)name;
+#endif
 }
 
 bool CMapManager::InChaosCastle(int iMap)

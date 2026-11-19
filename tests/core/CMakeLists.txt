@@ -253,6 +253,14 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Render/Look/LowFpsHintPolicy.cpp
 )
 
+# The learned texture warm list's order and cap (Render/Sprites/TextureWarmUp keeps its names this way).
+mu_add_test(
+    NAME recent_names_tests
+    SOURCES
+        test_recent_names.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/Core/Utilities/RecentNames.cpp
+)
+
 # Reading a whole stream in one read (texture files): same bytes as a byte-by-byte read.
 mu_add_test(
     NAME stream_bytes_tests
