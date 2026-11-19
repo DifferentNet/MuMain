@@ -19,7 +19,16 @@
 #include "UI/Scaling/UITransform.h"
 #include "Render/Text/CUIRenderText.h"
 
+#include "UI/Mobile/InterfaceMode.h"
+#include "UI/Placement/WindowPlacement.h"
+#include "UI/RmlBridge/RmlKeptElement.h"
+
+#include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/ElementDocument.h>
+
+#include <algorithm>
+#include <cmath>
+#include <optional>
 
 namespace
 {
@@ -54,12 +63,14 @@ namespace
         c.Bind("lines", &model.lines);
     }
 
-    // The notices in RmlUi (notices.rml): one main-context document above every other document but
-    // the tooltip (the original drew the notices after every window). Render() fills it; Move(),
-    // which runs once per frame before the scene draws, hides it when the scene stopped calling
-    // Render() (the loading scene draws no notices).
+    // The notices in RmlUi (notices.rml): one main-context document under every window (the original
+    // drew the notices after every window, where on a small screen they covered the windows' buttons;
+    // RmlStackingOrder.cpp), still over the world, the HUD's boards and the touch controls. Render()
+    // fills it; Move(), which runs once per frame before the scene draws, hides it when the scene
+    // stopped calling Render() (the loading scene draws no notices).
     UI::RmlBridge::ThemedView<UI::Notices::NoticesRmlModel> s_view{"notices", BindModel, {{"Data/Interface/RmlUi/notices.rml"}}};
     bool s_renderedThisFrame = false;
+    UI::RmlBridge::KeptElement s_board;
 
     // Shift the buffer up by one when it is full so the newest line fits.
     void Scroll()
@@ -185,6 +196,61 @@ namespace UI::Notices
         SyncField(s_view.Binder(), &NoticesRmlModel::lines, "lines", std::move(lines));
     }
 
+    // The widest notice line now shown, in window px (the lines are .sharp-text, laid out at their
+    // size on the screen); 0 with none.
+    float WidestLine(Rml::Element& board)
+    {
+        Rml::ElementList lines;
+        board.GetElementsByClassName(lines, "notice-text");
+        float widest = 0.f;
+        for (Rml::Element* line : lines)
+            widest = std::max(widest, line->GetBox().GetSize(Rml::BoxArea::Border).x);
+        return widest;
+    }
+
+    // On the PC the board centres in the world the docked windows leave (the inventory, the character,
+    // the auction), as the phone's HUD places it (UI/Mobile/PhoneHudLayout.cpp, PlaceNotices()): the
+    // notices lie under the windows, so on the screen's centre an open window hid their lines. Where
+    // the free world is narrower than the widest line (a window across the screen), they keep the
+    // screen's centre.
+    void PlaceOnPc()
+    {
+        // The phone's HUD places the board itself, and takes its left off again when it lets go.
+        if (UI::Mobile::ReplacesPcHud())
+            return;
+        Rml::Element* board = s_board.Find(s_view.Document(), "board");
+        const Rml::Context* context = RmlUiRuntime::Instance().GetContext();
+        if (board == nullptr || context == nullptr)
+            return;
+        constexpr float Gap = 8.f; // window px kept free on each side of the widest line
+        const float screen = static_cast<float>(context->GetDimensions().x);
+        const float left = UI::Placement::UncoveredWorldLeft();
+        const float right = UI::Placement::UncoveredWorldRight();
+        std::optional<float> boardLeft;
+        if (right > left && right - left < screen - 1.f && right - left >= WidestLine(*board) + 2.f * Gap)
+        {
+            // The board is centred on its left edge (margin-left: -320px, its scale about its centre).
+            Rml::Vector2f centre{(left + right) / 2.f, 0.f};
+            if (Rml::Element* block = board->GetOffsetParent())
+            {
+                block->Project(centre);
+                centre -= block->GetAbsoluteOffset(Rml::BoxArea::Padding);
+            }
+            boardLeft = std::round(centre.x);
+        }
+        // Written only when it differs: a board rebuilt by a theme switch comes at the theme's centre.
+        const Rml::Property* current = board->GetLocalProperty(Rml::PropertyId::Left);
+        if (boardLeft.has_value())
+        {
+            if (current == nullptr || current->unit != Rml::Unit::PX || current->Get<float>() != *boardLeft)
+                board->SetProperty(Rml::PropertyId::Left, Rml::Property(*boardLeft, Rml::Unit::PX));
+        }
+        else if (current != nullptr)
+        {
+            board->RemoveProperty(Rml::PropertyId::Left);
+        }
+    }
+
     void RenderNative()
     {
         EnableAlphaTest();
@@ -231,7 +297,10 @@ namespace UI::Notices
 
         s_view.Ensure();
         if (s_view.Document() != nullptr)
+        {
             SyncView(true);
+            PlaceOnPc();
+        }
         else
             RenderNative();
 

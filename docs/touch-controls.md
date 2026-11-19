@@ -201,10 +201,10 @@ CSS px wide it would reach the first one), never past the screen's left edge. Wo
 chat balloons, shop titles) under the top row's band, the hero frame with the location bar, or a
 control draw at a quarter of their strength (`PhoneHudLayout::CoversLabel`, used by
 `UI/Character/WorldLabelLayer`): they draw under every window, and their text would mix with the
-buttons'. The notices go under the open menu and skill picker, dimmed by the backdrop, and back over
-every window once they shut (`UI/Mobile/NoticesUnderPanel`). While a window covers part of the
-screen (the inventory, the character), the notices centre in the world it leaves, kept whole on the
-screen. The notice ticker runs in a strip under the top row, right of the hero frame, clipped to it
+buttons'. The notices lie under every window, the open menu and skill picker included
+(`RmlStackingOrder.cpp`; `UI/Mobile/NoticesUnderPanel` never raises them). While a window covers part
+of the screen (the inventory, the character), the notices centre in the world it leaves, kept whole on
+the screen; the PC centres them the same way (`UI/HUD/Notices.cpp`). The notice ticker runs in a strip under the top row, right of the hero frame, clipped to it
 (`slide_notice.rml` `#lane`). The PC's HUD shows all of these as before.
 
 Wherever the touch or pad controls show, the skill buttons and Skills hide until the character knows a
@@ -546,7 +546,7 @@ as they came; a typed `[#07] anything` shows as the phrase. Mouse play has no ph
 | Item card | `UI/Mobile/ItemCard.{h,cpp}`, `UI/Inventory/InventoryActionController.cpp`, `UI/Inventory/MyInventory.cpp`, `UI/Inventory/StorageInventory.cpp`, `UI/Inventory/StorageInventoryExt.cpp` | The card (a generic menu dialog); the controller opens it for a finger's long press or R3 on a bag item, the inventory for a tap, a long press or R3 on worn gear, the storages for a long press or the pad's Y on theirs. |
 | Click source | `UI/Mobile/ClickSource.{h,cpp}` | Whether a window's click came from a finger's tap, drag or long press, or from the pad's R3 (`Touch::Pointer::LastLeftPress`), so that a window can ask first only for those. |
 | Finger unit | `UI/Mobile/TouchUnit.{h,cpp}`, `UI/Mobile/ButtonSize.{h,cpp}` | The unit the controls are sized in and the Button size option (Options → Interface, `OptionWindow.cpp`). |
-| Neighbours | `UI/Mobile/PhoneHudLayout.{h,cpp}`, sums in `UI/Mobile/PhoneHudFit.{h,cpp}` | Moves the buffs, pets' frames, system messages, skill list, party cards and chat beside the controls; tells the world labels where the HUD lies over them; puts the notices under the open menu (`UI/Mobile/NoticesUnderPanel.{h,cpp}`, writes only on a change). Finds each document once (again every 250 ms while missing) and places a piece only when the controls, the screen or the piece's size changed, or every 250 ms. |
+| Neighbours | `UI/Mobile/PhoneHudLayout.{h,cpp}`, sums in `UI/Mobile/PhoneHudFit.{h,cpp}` | Moves the buffs, pets' frames, system messages, skill list, party cards and chat beside the controls; tells the world labels where the HUD lies over them; keeps the notices under the open menu (`UI/Mobile/NoticesUnderPanel.{h,cpp}`: their own depth lies under every window, so it never raises them). Finds each document once (again every 250 ms while missing) and places a piece only when the controls, the screen or the piece's size changed, or every 250 ms. |
 | Page | `UI/Mobile/PhonePage.{h,cpp}`, `Core/Platform/web/WebScreen.{h,cpp}` | Screen wake lock (let go after 5 idle minutes) and the back gesture (browser only). |
 
 The element ids in `touch_controls.rml` are the contract with C++ (`ControlElement()`): a theme may

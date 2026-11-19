@@ -102,6 +102,7 @@ void CPartyInfoWindow::BindRmlModel(Rml::DataModelConstructor& c, PartyInfoRmlMo
 
     c.Bind("has_party", &model.hasParty);
     c.Bind("phone_hud", &model.phoneHud);
+    c.Bind("in_chaos_castle", &model.inChaosCastle);
     c.Bind("social_label", &model.socialLabel);
     c.Bind("window_title", &model.windowTitle);
     c.Bind("exit_tooltip", &model.exitTooltip);
@@ -221,8 +222,8 @@ void CPartyInfoWindow::OpenSocialIfAsked()
 
 void CPartyInfoWindow::OpenCommandWindowForParty()
 {
-    // The command window's own rule (the D key, UI/HUD/HotKey.cpp): nothing in Chaos Castle, one line where
-    // players fight.
+    // The command window's own rule (the D key, UI/HUD/HotKey.cpp): nothing in Chaos Castle (the button
+    // hides there, SyncRmlModel()), one line where players fight.
     if (gMapManager.InChaosCastle())
         return;
     if (::IsStrifeMap(gMapManager.WorldActive))
@@ -399,6 +400,12 @@ void CPartyInfoWindow::SyncRmlModel()
 
     UI::RmlBridge::SyncNativeTextSize(m_RmlView.Binder());
     SyncPhoneHud();
+
+    if (const bool inChaosCastle = gMapManager.InChaosCastle(); model.inChaosCastle != inChaosCastle)
+    {
+        model.inChaosCastle = inChaosCastle;
+        m_RmlView.MarkDirty("in_chaos_castle");
+    }
 
     if (model.hasParty != m_bParty)
     {

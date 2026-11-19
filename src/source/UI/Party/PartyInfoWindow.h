@@ -135,6 +135,9 @@ namespace mu::ui::window
             // The phone layout with the on-screen controls (UI::Mobile::ReplacesPcHud()): the hint leaves out
             // the mouse and a button opens the Social panel instead.
             bool phoneHud = false;
+            // In Chaos Castle the button to the players nearby hides, on the phone (the Social panel) and the PC
+            // (the command window, which the D key's rule never opens there) alike.
+            bool inChaosCastle = false;
             std::vector<TextLine> emptyStateLines;
             // The hint line that stands a little apart from those above it.
             int emptyParagraphAt = -1;

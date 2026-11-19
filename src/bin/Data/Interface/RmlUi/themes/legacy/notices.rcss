@@ -1,7 +1,8 @@
 /* Legacy theme for the notices, reproducing UI::Notices::Render(): bold text on a
    rgba(0, 0, 0, 128) box sized to the text; the gold notice (colour 0) blinks between alpha 128
-   and 255 every five animation frames, the green one (colour 1) does not. Above every window
-   (stacking table): the original drew the notices after every window. */
+   and 255 every five animation frames, the green one (colour 1) does not. Under every window
+   (stacking table): the original drew the notices after every window, where they covered the
+   windows' buttons on a small screen. */
 
 body { pointer-events: none; }
 #board { pointer-events: none; font-family: "token(font-body)"; }

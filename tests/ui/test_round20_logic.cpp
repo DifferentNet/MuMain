@@ -109,11 +109,11 @@ TEST_CASE("warp list: a new death replaces the old spot, a new login forgets it 
     CHECK_FALSE(spot.Get(kStartMs + 63001, world, x, y));
 }
 
-TEST_CASE("trade: a trade closed without the server's exit drops its waiting lines [ui][round20]")
+TEST_CASE("trade: PendingRemovals::Clear empties the queue [ui][round20]")
 {
     UI::Trade::PendingRemovals pending;
     pending.Hold(100, 9, L"took out", 1'000);
-    // The window closed (a warp): ProcessClosing() clears what still waits.
+    // What CTrade::ProcessClosing() calls when the window closes without the server's exit (a warp).
     pending.Clear();
     CHECK(pending.Empty());
     // The next trade hears nothing of it.

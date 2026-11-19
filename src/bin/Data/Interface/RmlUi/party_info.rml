@@ -20,8 +20,9 @@
 			<span data-for="line : empty_state_lines" data-class-paragraph="it_index == empty_paragraph_at">{{line.text}}</span>
 		</div>
 		<!-- With no party: the phone view opens the touch HUD's list of players nearby, where a party is offered
-		     with a tap; the PC opens the command window (D) with Party picked, then a click on a player. -->
-		<div id="party_social_btn" data-class-hidden="has_party" data-class-pc="!phone_hud"
+		     with a tap; the PC opens the command window (D) with Party picked, then a click on a player.
+		     Hidden in Chaos Castle, where neither the Social panel nor the command window is offered. -->
+		<div id="party_social_btn" data-class-hidden="has_party || in_chaos_castle" data-class-pc="!phone_hud"
 		     data-event-click="party_open_social">
 			<span class="sharp-text sharp-centre sharp-middle" data-style-font-size="text_px + 'px'">{{social_label}}</span>
 		</div>
