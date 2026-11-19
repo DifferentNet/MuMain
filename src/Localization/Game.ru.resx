@@ -17446,4 +17446,11 @@
   <data name="PartyHintSharedExperience" xml:space="preserve">
     <value>В группе опыт делится по уровню.</value>
   </data>
+  <!-- web round 25 -->
+  <data name="AlreadyConnectedWaitHint" xml:space="preserve">
+    <value>Вышли или обрыв связи? Войдите через минуту.</value>
+  </data>
+  <data name="ReloadThePageForNewVersion" xml:space="preserve">
+    <value>Вышла новая версия: обновите страницу.</value>
+  </data>
 </root>

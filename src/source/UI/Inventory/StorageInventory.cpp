@@ -390,6 +390,7 @@ void CStorageInventory::Release()
     }
 
     m_RmlView.Release();
+    m_SyncedTextInputs.reset();
 }
 
 bool CStorageInventory::IsPointerOverPanel()
@@ -540,6 +541,31 @@ void CStorageInventory::SyncRmlModel()
     {
         if (m_RmlView.GetModel().*field != value) { m_RmlView.GetModel().*field = value; m_RmlView.MarkDirty(boundName); }
     };
+
+    const auto& pages = UI::Storage::Pages();
+    syncBool(&StorageRmlModel::titleLocked, "title_locked", m_bLock);
+    syncBool(&StorageRmlModel::pagesVisible, "pages_visible", pages.HasInfo() && pages.Pages() > 1);
+    syncBool(&StorageRmlModel::pagesBusy, "pages_busy",
+             pages.IsSwitching() || g_pPickedItem != nullptr || IsItemMovePending() || m_bItemAutoMove
+                 || UI::Inventory::Sort().IsWaiting());
+    syncBool(&StorageRmlModel::sortVisible, "sort_visible", pages.HasInfo());
+    syncBool(&StorageRmlModel::sortBusy, "sort_busy", IsSortBusy());
+    syncBool(&StorageRmlModel::expandVisible, "expand_visible", CharacterAttribute->IsVaultExtended > 0);
+    syncBool(&StorageRmlModel::storageLocked, "storage_locked", m_bLock);
+
+    SyncTexts();
+}
+
+void CStorageInventory::SyncTexts()
+{
+    const auto& pages = UI::Storage::Pages();
+    const TextInputs inputs{I18N::LocaleIndex(I18N::GetCurrentLocale()), pages.HasInfo(), pages.Page(), pages.Pages(),
+                            m_bLock, static_cast<int>(CharacterMachine->StorageGold),
+                            static_cast<int>(CharacterAttribute->Level), static_cast<int>(Master_Level_Data.nMLevel)};
+    if (m_SyncedTextInputs == inputs)
+        return;
+    m_SyncedTextInputs = inputs;
+
     auto syncText = [this](Rml::String StorageRmlModel::* field, const char* boundName, const Rml::String& value)
     {
         if (m_RmlView.GetModel().*field != value) { m_RmlView.GetModel().*field = value; m_RmlView.MarkDirty(boundName); }
@@ -552,20 +578,12 @@ void CStorageInventory::SyncRmlModel()
     // "Storage (open/close)" title text, red when locked; once the server told the vault page, "Storage 3/8"
     // between the arrows (the lock shows on its button, and in legacy as the title's red), which leaves room
     // for the arrows in every language.
-    const auto& pages = UI::Storage::Pages();
     wchar_t titleBuf[128];
     if (pages.HasInfo())
         mu_swprintf(titleBuf, L"%ls %d/%d", I18N::Game::Storage, pages.Page(), pages.Pages());
     else
         mu_swprintf(titleBuf, L"%ls (%ls)", I18N::Game::Storage, I18N::Game::Lookup(m_bLock ? 241 : 240));
     syncWide(&StorageRmlModel::title, "title", titleBuf);
-    syncBool(&StorageRmlModel::titleLocked, "title_locked", m_bLock);
-    syncBool(&StorageRmlModel::pagesVisible, "pages_visible", pages.HasInfo() && pages.Pages() > 1);
-    syncBool(&StorageRmlModel::pagesBusy, "pages_busy",
-             pages.IsSwitching() || g_pPickedItem != nullptr || IsItemMovePending() || m_bItemAutoMove
-                 || UI::Inventory::Sort().IsWaiting());
-    syncBool(&StorageRmlModel::sortVisible, "sort_visible", pages.HasInfo());
-    syncBool(&StorageRmlModel::sortBusy, "sort_busy", IsSortBusy());
     syncWide(&StorageRmlModel::sortTooltip, "sort_tooltip", I18N::Game::InventorySortHint);
 
     const int nZen = CharacterMachine->StorageGold;
@@ -593,10 +611,7 @@ void CStorageInventory::SyncRmlModel()
     ConvertGold(nFee, feeBuf);
     syncWide(&StorageRmlModel::feeValue, "fee_value", feeBuf);
 
-    syncBool(&StorageRmlModel::expandVisible, "expand_visible", CharacterAttribute->IsVaultExtended > 0);
     syncWide(&StorageRmlModel::expandTooltip, "expand_tooltip", I18N::Game::OpeningAnExpandedVaultH);
-
-    syncBool(&StorageRmlModel::storageLocked, "storage_locked", m_bLock);
 
     syncWide(&StorageRmlModel::insertTooltip, "insert_tooltip", I18N::Game::Deposit);
     syncWide(&StorageRmlModel::takeTooltip, "take_tooltip", I18N::Game::Withdraw);

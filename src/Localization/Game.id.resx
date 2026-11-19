@@ -14492,4 +14492,11 @@
   <data name="PartyHintSharedExperience" xml:space="preserve">
     <value>Dalam party, EXP dibagi menurut level.</value>
   </data>
+  <!-- web round 25 -->
+  <data name="AlreadyConnectedWaitHint" xml:space="preserve">
+    <value>Keluar atau putus? Masuk lagi semenit lagi.</value>
+  </data>
+  <data name="ReloadThePageForNewVersion" xml:space="preserve">
+    <value>Versi baru tersedia: muat ulang halaman.</value>
+  </data>
 </root>

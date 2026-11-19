@@ -393,12 +393,16 @@ namespace mu::ui::window
         // unless the chat is open (ChatLogWindow.cpp, UI/Chat/ChatFade.h). When each message of
         // m_vecAllMsgs came (ChatLogClockMs()), and how many the model showed last.
         std::vector<std::uint64_t> m_Arrivals;
+        // How many times each line of m_vecAllMsgs came in a row (shown as "×N", UI/Chat/ChatFade.h).
+        std::vector<int> m_RepeatCounts;
         int m_ShownCount = -1;
         int ShownCount() const;
         // The rows the log keeps room for: 3 on a phone, 6 on a PC and on a phone with the chat open.
         int ReservedRows() const;
 
         void RemoveFrontLine();
+        // The same text again within a moment: counts it on the newest line instead of adding one.
+        bool FoldIntoNewestLine(const type_string& strText, MESSAGE_TYPE MsgType);
         int GetCurrentRenderEndLine() const;
 
     public:

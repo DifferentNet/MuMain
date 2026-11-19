@@ -14590,4 +14590,11 @@
   <data name="PartyHintSharedExperience" xml:space="preserve">
     <value>In einer Party wird die Erfahrung nach Stufe geteilt.</value>
   </data>
+  <!-- web round 25 -->
+  <data name="AlreadyConnectedWaitHint" xml:space="preserve">
+    <value>Raus oder getrennt? In einer Minute einloggen.</value>
+  </data>
+  <data name="ReloadThePageForNewVersion" xml:space="preserve">
+    <value>Neue Version da: Seite neu laden.</value>
+  </data>
 </root>

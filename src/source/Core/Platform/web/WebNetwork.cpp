@@ -43,6 +43,7 @@ struct WebConnection
     bool closed = false;
     bool receiving = false;    // BeginReceive called: deliver packets
     bool disconnectedReported = false;
+    double openedAtMs = 0.0;   // emscripten_get_now() when the socket opened, for the close line in the log
     mu::web::MuPacketEncryptor encryptor;
     mu::web::MuPacketDecryptor decryptor;
     std::vector<std::vector<std::uint8_t>> pendingPackets; // arrived before BeginReceive
@@ -140,6 +141,7 @@ EM_BOOL OnOpen(int, const EmscriptenWebSocketOpenEvent*, void* userData)
     if (WebConnection* connection = Find(static_cast<std::int32_t>(reinterpret_cast<std::intptr_t>(userData))))
     {
         connection->open = true;
+        connection->openedAtMs = emscripten_get_now();
     }
     return EM_TRUE;
 }
@@ -179,17 +181,48 @@ EM_BOOL OnMessage(int, const EmscriptenWebSocketMessageEvent* event, void* userD
     return EM_TRUE;
 }
 
-EM_BOOL OnClose(int, const EmscriptenWebSocketCloseEvent*, void* userData)
+std::string SecondsOpen(const WebConnection& connection)
+{
+    constexpr double MsPerSecond = 1000.0;
+    const auto seconds = static_cast<long long>((emscripten_get_now() - connection.openedAtMs) / MsPerSecond);
+    return std::to_string(seconds) + " s";
+}
+
+// "Connection 3 closed: code 1006, not clean, <reason> after 812 s" - why a player was dropped, in the page's log.
+void LogClosed(std::int32_t handle, const WebConnection& connection, const EmscriptenWebSocketCloseEvent& event)
+{
+    std::string text = "Connection " + std::to_string(handle) + " closed: code " + std::to_string(event.code);
+    if (!event.wasClean)
+    {
+        text += ", not clean";
+    }
+    if (std::strlen(event.reason) > 0)
+    {
+        text += ", ";
+        text += event.reason;
+    }
+    text += " after " + SecondsOpen(connection);
+    Log(LogLevel::Info, text);
+}
+
+EM_BOOL OnClose(int, const EmscriptenWebSocketCloseEvent* event, void* userData)
 {
     const auto handle = static_cast<std::int32_t>(reinterpret_cast<std::intptr_t>(userData));
-    if (WebConnection* connection = Find(handle))
+    WebConnection* connection = Find(handle);
+    if (connection == nullptr)
     {
-        connection->closed = true;
-        if (connection->open)
-        {
-            ReportDisconnected(handle, connection);
-        }
+        return EM_TRUE;
     }
+    connection->closed = true;
+    if (!connection->open)
+    {
+        return EM_TRUE;
+    }
+    if (event != nullptr)
+    {
+        LogClosed(handle, *connection, *event);
+    }
+    ReportDisconnected(handle, connection);
     return EM_TRUE;
 }
 
@@ -198,6 +231,8 @@ EM_BOOL OnError(int, const EmscriptenWebSocketErrorEvent*, void* userData)
     const auto handle = static_cast<std::int32_t>(reinterpret_cast<std::intptr_t>(userData));
     if (WebConnection* connection = Find(handle))
     {
+        const std::string state = connection->open ? "after " + SecondsOpen(*connection) : "before it opened";
+        Log(LogLevel::Warning, "Connection " + std::to_string(handle) + " error " + state);
         connection->closed = true;
         if (connection->open)
         {

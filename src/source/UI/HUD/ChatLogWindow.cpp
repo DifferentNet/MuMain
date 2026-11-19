@@ -1294,6 +1294,11 @@ void mu::ui::window::CSystemLogWindow::AddText(const type_string& strText, MESSA
         return;
     }
 
+    if (FoldIntoNewestLine(strText, MsgType))
+    {
+        return;
+    }
+
     auto pMsgText = new CMessageText;
     if (!pMsgText->Create(L"", strText, MsgType))
     {
@@ -1308,8 +1313,29 @@ void mu::ui::window::CSystemLogWindow::AddText(const type_string& strText, MESSA
 
     pvecMsgs->push_back(pMsgText);
     m_Arrivals.push_back(ChatLogClockMs());
+    m_RepeatCounts.push_back(1);
 
     m_iCurrentRenderEndLine = pvecMsgs->size() - 1;
+}
+
+bool mu::ui::window::CSystemLogWindow::FoldIntoNewestLine(const type_string& strText, MESSAGE_TYPE MsgType)
+{
+    if (m_vecAllMsgs.empty() || m_Arrivals.size() != m_vecAllMsgs.size() || m_RepeatCounts.size() != m_vecAllMsgs.size())
+    {
+        return false;
+    }
+
+    const CMessageText* pNewest = m_vecAllMsgs.back();
+    const bool sameAsNewest = pNewest != nullptr && pNewest->GetType() == MsgType && pNewest->GetText() == strText;
+    const std::uint64_t nowMs = ChatLogClockMs();
+    if (!UI::Chat::FoldsIntoNewestSystemLine(sameAsNewest, m_Arrivals.back(), nowMs))
+    {
+        return false;
+    }
+
+    m_Arrivals.back() = nowMs;
+    ++m_RepeatCounts.back();
+    return true;
 }
 
 void mu::ui::window::CSystemLogWindow::RemoveFrontLine()
@@ -1322,6 +1348,8 @@ void mu::ui::window::CSystemLogWindow::RemoveFrontLine()
         vi = m_vecAllMsgs.erase(vi);
         if (!m_Arrivals.empty())
             m_Arrivals.erase(m_Arrivals.begin());
+        if (!m_RepeatCounts.empty())
+            m_RepeatCounts.erase(m_RepeatCounts.begin());
     }
 }
 
@@ -1517,7 +1545,8 @@ void mu::ui::window::CSystemLogWindow::RebuildLineModel()
         // Native's own two-way split: system messages blue, EVERYTHING else the error red -- not a
         // per-type mapping like the chat log's.
         entry.kind = (pMsgText->GetType() == TYPE_SYSTEM_MESSAGE) ? "system" : "error";
-        entry.text = StringUtils::WideToNarrow(pMsgText->GetText().c_str());
+        const int repeats = index < m_RepeatCounts.size() ? m_RepeatCounts[index] : 1;
+        entry.text = StringUtils::WideToNarrow(UI::Chat::WithRepeatCount(pMsgText->GetText(), repeats).c_str());
         model.lines.push_back(std::move(entry));
     }
     // Empty rows preserve the six-line workspace reservation without drawing a backdrop (three on a phone).
@@ -1542,6 +1571,7 @@ void mu::ui::window::CSystemLogWindow::ClearAll()
         delete (*vi_msg);
     m_vecAllMsgs.clear();
     m_Arrivals.clear();
+    m_RepeatCounts.clear();
 
     m_iCurrentRenderEndLine = -1;
 }

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <vector>
 
 // MU Moldova: the chat log (UI/HUD/ChatLogWindow.cpp) lets old lines go while the chat is closed
@@ -36,4 +37,15 @@ ChatFadeState EvaluateChatFade(const std::vector<std::uint64_t>& addedAtMs, std:
 // maxLines whatever their age.
 int SystemLinesShown(const std::vector<std::uint64_t>& arrivalsMs, std::uint64_t nowMs, int maxLines,
                      std::uint64_t stayMs, bool chatOpen);
+
+// Round 25: the same system message again within SystemLineRepeatMs of the newest line (its time is
+// refreshed on every repeat) adds "×N" to that line instead of a new row.
+inline constexpr std::uint64_t SystemLineRepeatMs = 3'000;
+
+// Whether a message that came at nowMs folds into the newest line, which came (or last repeated) at
+// newestArrivalMs; sameAsNewest says whether it has the newest line's text and type.
+bool FoldsIntoNewestSystemLine(bool sameAsNewest, std::uint64_t newestArrivalMs, std::uint64_t nowMs);
+
+// The line as shown: the text, then " ×N" when it came N > 1 times in a row.
+std::wstring WithRepeatCount(const std::wstring& text, int count);
 } // namespace UI::Chat

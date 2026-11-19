@@ -17446,4 +17446,11 @@
   <data name="PartyHintSharedExperience" xml:space="preserve">
     <value>A party shares the experience by level.</value>
   </data>
+  <!-- web round 25 -->
+  <data name="AlreadyConnectedWaitHint" xml:space="preserve">
+    <value>Left or disconnected? Log in again in a minute.</value>
+  </data>
+  <data name="ReloadThePageForNewVersion" xml:space="preserve">
+    <value>A new version is out: reload the page.</value>
+  </data>
 </root>

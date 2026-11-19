@@ -12,6 +12,7 @@
 #include "UI/Inventory/MyInventory.h"
 #include "UI/NPCs/ShopTapToBuy.h"
 #include "UI/RmlBridge/RmlThemedView.h"
+#include <optional>
 #include <span>
 
 namespace Rml { class ElementDocument; }
@@ -86,6 +87,21 @@ namespace mu::ui::window
 
         void BuildRmlUi();
         void SyncRmlModel();
+
+        // Everything the window's texts (title, tax, repair zen, junk count, tooltips) are built from (round 25:
+        // formatted only when one of these changed, not every frame while the shop is open).
+        struct TextInputs
+        {
+            int locale = -1;
+            int taxRate = 0;
+            int repairGold = 0;
+            int junk = 0;
+            bool operator==(const TextInputs&) const = default;
+        };
+        // The texts into the model; formats them again only when their inputs changed.
+        void SyncTexts(int junk);
+        // The inputs SyncTexts() last built from; empty until the first sync after a build.
+        std::optional<TextInputs> m_SyncedTextInputs;
 
     public:
         CNPCShop();

@@ -16,6 +16,8 @@
 #include "UI/Inventory/TradeOfferChange.h"
 
 #include <cstdint>
+#include <optional>
+#include <string>
 #include <vector>
 
 namespace Rml { class ElementDocument; }
@@ -137,6 +139,27 @@ namespace mu::ui::window
 
         void BuildRmlUi();
         void SyncRmlModel();
+
+        // Everything the window's texts (names, guild, level, zen, labels, tooltips) are built from besides the two
+        // names (round 25: formatted only when one of these changed, not every frame while the trade is open).
+        struct TextInputs
+        {
+            int locale = -1;
+            int yourGuildMark = -1; // the GuildMark[] entry of the partner's guild, -1 for none
+            std::wstring yourGuildName; // its name, which can come after the entry (guild info)
+            int yourLevelBucket = 0;
+            int yourGold = 0;
+            int myGold = 0;
+            bool operator==(const TextInputs&) const = default;
+        };
+        // The texts into the model; formats them again only when their inputs changed.
+        void SyncTexts();
+        // The inputs and names SyncTexts() last built from; empty until the first sync after a build.
+        std::optional<TextInputs> m_SyncedTextInputs;
+        std::wstring m_SyncedYourId;
+        std::wstring m_SyncedMyId;
+        // The "Warning" badges over the partner's flagged items; they follow the grid and wobble every frame.
+        void SyncItemWarningBadges();
 
     public:
         CTrade();

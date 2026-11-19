@@ -14492,4 +14492,11 @@
   <data name="PartyHintSharedExperience" xml:space="preserve">
     <value>組隊時經驗值依等級分配。</value>
   </data>
+  <!-- web round 25 -->
+  <data name="AlreadyConnectedWaitHint" xml:space="preserve">
+    <value>剛離開或斷線？請等一分鐘後再登入。</value>
+  </data>
+  <data name="ReloadThePageForNewVersion" xml:space="preserve">
+    <value>已有新版本：請重新整理頁面。</value>
+  </data>
 </root>
