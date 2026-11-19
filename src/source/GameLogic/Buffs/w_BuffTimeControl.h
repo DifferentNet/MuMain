@@ -12,6 +12,10 @@ public:
     void RegisterBuffTime(eBuffState bufftype, DWORD curbufftime);
     bool UnRegisterBuffTime(eBuffState bufftype);
     bool IsBuffTime(eBuffTimeType bufftype);
+    // Starts (or restarts with the new time) the countdown of one buff timer.
+    void StartBuffTimer(eBuffTimeType bufftimetype, eBuffState bufftype, DWORD seconds);
+    // Drops every buff timer: a relog or a character switch starts with none.
+    void Clear();
 
 public:
     void GetBuffStringTime(eBuffState bufftype, std::wstring& timeText);

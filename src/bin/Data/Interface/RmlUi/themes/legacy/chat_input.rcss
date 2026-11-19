@@ -177,3 +177,9 @@
 		padding: 0 10dp;
 	}
 }
+
+/* MU Skynet: while the pause after a quick phrase or macro runs (2 s, ChatInputBox.cpp quick_paused) the phrase
+   chips are dimmed, so a tap that only gets the refusal sound is not a surprise. */
+@media (theme: mobile) {
+	.cib-quick-btn.cib-phrase.paused { opacity: 0.45; }
+}

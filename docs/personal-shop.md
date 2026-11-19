@@ -47,3 +47,10 @@ counts as one piece, and the jewel bundles of the jewel mix as their number of
 pieces. The server doesn't split bundles and gives no change, so the buyer
 needs items which match the price exactly. When the items or coins are not
 enough, the server says which amount is missing.
+
+## Selling
+
+When a buyer takes an item from your shop, the chat says what was sold, to whom
+and for how much, e.g. `Sold Jewel of Bless to Name for 1,500,000 Zen`, or with
+an item price `... for 2 Jewel of Soul`. When the client can't tell the item or
+its price, it says only the buyer's name, as before.

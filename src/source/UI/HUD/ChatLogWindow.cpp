@@ -728,8 +728,8 @@ void mu::ui::window::CChatLogWindow::SyncRmlModel()
         m_bFollowTail = !m_bShowFrame || IsScrolledToBottom();
 
         m_bLinesDirty = false;
-        RebuildLineModel();
-        m_RmlView.MarkDirty("lines");
+        if (RebuildLineModel())
+            m_RmlView.MarkDirty("lines");
 
         // Arms a one-shot pin, consumed after RmlUi layout. It must be a latch, not a per-frame call:
         // the new lines only have a resolved scroll height after RmlUi lays them out, so the pin
@@ -807,17 +807,46 @@ void mu::ui::window::CChatLogWindow::SyncNativeLineGeometry()
     syncFloat(&ChatLogRmlModel::rowPx, "row_px", SCROLL_MIDDLE_PART_HEIGHT * dpRatio * growth);
 }
 
-void mu::ui::window::CChatLogWindow::RebuildLineModel()
+namespace
+{
+    // The line's "ID : text" in UTF-8, made the first time the log shows the message and kept on it.
+    const Rml::String& CachedLineUtf8(mu::ui::window::CMessageText& message)
+    {
+        if (message.GetLineUtf8().empty())
+        {
+            const std::wstring composed = message.GetID().empty()
+                ? message.GetText()
+                : message.GetID() + L" : " + message.GetText();
+            message.SetLineUtf8(StringUtils::WideToNarrow(composed.c_str()));
+        }
+        return message.GetLineUtf8();
+    }
+
+    // Writes `wanted` into `slot` only when it differs; true when it did.
+    bool StoreLineEntry(mu::ui::window::ChatLogLineEntry& slot, const mu::ui::window::ChatLogLineEntry& wanted)
+    {
+        if (slot.text == wanted.text && slot.kind == wanted.kind && slot.hasId == wanted.hasId
+            && slot.faded == wanted.faded && slot.lead == wanted.lead)
+            return false;
+        slot = wanted;
+        return true;
+    }
+}
+
+bool mu::ui::window::CChatLogWindow::RebuildLineModel()
 {
     ChatLogRmlModel& model = m_RmlView.GetModel();
-    model.lines.clear();
 
     m_bChatOpen = IsChatOpen();
     m_NextFadeMs.reset();
 
     type_vector_msgs* pvecMsgs = GetMsgs(GetCurrentMsgType());
     if (pvecMsgs == nullptr)
-        return;
+    {
+        const bool hadLines = !model.lines.empty();
+        model.lines.clear();
+        return hadLines;
+    }
 
     std::vector<std::uint64_t> addedAt;
     addedAt.reserve(pvecMsgs->size());
@@ -826,36 +855,33 @@ void mu::ui::window::CChatLogWindow::RebuildLineModel()
     const UI::Chat::ChatFadeState fade = UI::Chat::EvaluateChatFade(addedAt, ChatLogClockMs(), m_bChatOpen);
     m_NextFadeMs = fade.nextChangeMs;
 
-    model.lines.reserve(pvecMsgs->size());
+    bool changed = model.lines.size() != pvecMsgs->size();
+    model.lines.resize(pvecMsgs->size());
+    ChatLogLineEntry wanted;
     for (std::size_t index = 0; index < pvecMsgs->size(); ++index)
     {
-        const CMessageText* pMsgText = (*pvecMsgs)[index];
-        const bool faded = !fade.shown[index];
-        const bool lead = static_cast<int>(index) == fade.firstShown;
+        CMessageText* pMsgText = (*pvecMsgs)[index];
+        wanted.faded = !fade.shown[index];
+        wanted.lead = static_cast<int>(index) == fade.firstShown;
         const char* slug = pMsgText ? MessageTypeSlug(pMsgText->GetType()) : nullptr;
         if (slug == nullptr || pMsgText->GetText().empty())
         {
             // Native skipped drawing these (bRenderMessage stayed false), but an entry still has
             // to exist: chat_line_rightclick() looks its sender up by array index, so the model
             // and the message vector must stay index-aligned.
-            ChatLogLineEntry blank;
-            blank.faded = faded;
-            blank.lead = lead;
-            model.lines.push_back(std::move(blank));
-            continue;
+            wanted.text.clear();
+            wanted.kind.clear();
+            wanted.hasId = false;
         }
-
-        ChatLogLineEntry entry;
-        entry.faded = faded;
-        entry.lead = lead;
-        entry.kind = slug;
-        entry.hasId = !pMsgText->GetID().empty();
-        const type_string composed = entry.hasId
-            ? pMsgText->GetID() + L" : " + pMsgText->GetText()
-            : pMsgText->GetText();
-        entry.text = StringUtils::WideToNarrow(composed.c_str());
-        model.lines.push_back(std::move(entry));
+        else
+        {
+            wanted.kind = slug;
+            wanted.hasId = !pMsgText->GetID().empty();
+            wanted.text = CachedLineUtf8(*pMsgText);
+        }
+        changed |= StoreLineEntry(model.lines[index], wanted);
     }
+    return changed;
 }
 
 namespace

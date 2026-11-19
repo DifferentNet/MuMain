@@ -381,7 +381,7 @@
     <comment>legacy_id=95</comment>
   </data>
   <data name="Can only be used in moving unit" xml:space="preserve">
-    <value>Может использоваться только в движущемся блоке.</value>
+    <value>Только верхом.</value>
     <comment>legacy_id=96</comment>
   </data>
   <data name="Skill Power: %d ~ %d" xml:space="preserve">
@@ -876,7 +876,7 @@
     <comment>legacy_id=216</comment>
   </data>
   <data name="Point: %d" xml:space="preserve">
-    <value>Точка: %d</value>
+    <value>Очки: %d</value>
     <comment>legacy_id=217</comment>
   </data>
   <data name="Explanation" xml:space="preserve">
@@ -1056,7 +1056,7 @@
     <comment>legacy_id=262</comment>
   </data>
   <data name="You can enter Icarus only with wings, dinorant, fenrirr" xml:space="preserve">
-    <value>В Икар можно войти только с крыльями, динорант, фенрирр</value>
+    <value>В Икар — только с крыльями, на Диноранте или Фенрире.</value>
     <comment>legacy_id=263</comment>
   </data>
   <data name="/whisper off" xml:space="preserve">
@@ -1344,7 +1344,7 @@
     <comment>legacy_id=368</comment>
   </data>
   <data name="About %d" xml:space="preserve">
-    <value>О %d</value>
+    <value>%d+</value>
     <comment>legacy_id=369</comment>
   </data>
   <data name="Warning!" xml:space="preserve">
@@ -1372,7 +1372,7 @@
     <comment>legacy_id=375</comment>
   </data>
   <data name="Do you want to use the fruit?" xml:space="preserve">
-    <value>Хотите использовать фрукты?</value>
+    <value>Съесть плод?</value>
     <comment>legacy_id=376</comment>
   </data>
   <data name="(%s) stat %d points have been generated." xml:space="preserve">
@@ -1380,7 +1380,7 @@
     <comment>legacy_id=377</comment>
   </data>
   <data name="stat creation failed from fruit combination." xml:space="preserve">
-    <value>Не удалось создать статистику из-за комбинации фруктов.</value>
+    <value>Плод не дал очков.</value>
     <comment>legacy_id=378</comment>
   </data>
   <data name="(%s fruit) stat %d points have been %s." xml:space="preserve">
@@ -2177,7 +2177,7 @@
     <comment>legacy_id=579</comment>
   </data>
   <data name="You are lack of %s items." xml:space="preserve">
-    <value>Вам не хватает элементов %s.</value>
+    <value>%s: не хватает предметов.</value>
     <comment>legacy_id=580</comment>
   </data>
   <data name="Combine items after organizing your inventory." xml:space="preserve">
@@ -2845,7 +2845,7 @@
     <comment>legacy_id=748</comment>
   </data>
   <data name="Must be over level 10 to use fruits" xml:space="preserve">
-    <value>Должен быть выше 10 уровня, чтобы использовать фрукты.</value>
+    <value>Плоды можно есть с 10 уровня.</value>
     <comment>legacy_id=749</comment>
   </data>
   <data name="Chat display On/Off (F2)" xml:space="preserve">
@@ -3489,7 +3489,7 @@
     <comment>legacy_id=934</comment>
   </data>
   <data name="Min. Level" xml:space="preserve">
-    <value>Мин. Уровень</value>
+    <value>Мин. ур.</value>
     <comment>legacy_id=935</comment>
   </data>
   <data name="You must be in a party" xml:space="preserve">
@@ -4353,7 +4353,7 @@
     <comment>legacy_id=1168</comment>
   </data>
   <data name="No pet" xml:space="preserve">
-    <value>Нет домашнего животного</value>
+    <value>Нет питомца</value>
     <comment>legacy_id=1169</comment>
   </data>
   <data name="CommandD1170" xml:space="preserve">
@@ -4689,7 +4689,7 @@
     <comment>legacy_id=1236</comment>
   </data>
   <data name="Check the details in pet information window" xml:space="preserve">
-    <value>Проверьте детали в окне информации о домашнем животном.</value>
+    <value>Подробности — в окне питомца.</value>
     <comment>legacy_id=1237</comment>
   </data>
   <data name="Can't be used in the safe zone" xml:space="preserve">
@@ -6813,7 +6813,7 @@
     <comment>legacy_id=1811</comment>
   </data>
   <data name="Corresponding item is inappropriate." xml:space="preserve">
-    <value>Соответствующий элемент не подходит.</value>
+    <value>Этот предмет не подходит.</value>
     <comment>legacy_id=1812</comment>
   </data>
   <data name="Are you sure to disband %s %d?" xml:space="preserve">
@@ -7149,7 +7149,7 @@
     <comment>legacy_id=1908</comment>
   </data>
   <data name="To decrease the fruit, weapons, armors and others must be removed." xml:space="preserve">
-    <value>Чтобы уменьшить количество фруктов, необходимо снять оружие, доспехи и т. д.</value>
+    <value>Чтобы убрать очки плодом, снимите оружие, доспехи и остальные вещи.</value>
     <comment>legacy_id=1909</comment>
   </data>
   <data name="Possible to decrease stat 1~9 point" xml:space="preserve">
@@ -7157,7 +7157,7 @@
     <comment>legacy_id=1910</comment>
   </data>
   <data name="Impossible since the usable fruit points are at maximum." xml:space="preserve">
-    <value>Это невозможно, поскольку количество полезных фруктов максимально.</value>
+    <value>Больше очков плодами не добавить.</value>
     <comment>legacy_id=1911</comment>
   </data>
   <data name="Cannot be decreased under the default stat value." xml:space="preserve">
@@ -7477,7 +7477,7 @@
     <comment>legacy_id=2025</comment>
   </data>
   <data name="Arrow will not decrease during activation" xml:space="preserve">
-    <value>Стрелка не будет уменьшаться во время активации</value>
+    <value>Стрелы не тратятся, пока навык действует</value>
     <comment>legacy_id=2026,2040</comment>
   </data>
   <data name="You've been playing for %d hours." xml:space="preserve">
@@ -7529,7 +7529,7 @@
     <comment>legacy_id=2048</comment>
   </data>
   <data name="Can be used from the mount item" xml:space="preserve">
-    <value>Можно использовать из элемента монтирования.</value>
+    <value>Работает верхом на питомце.</value>
     <comment>legacy_id=2049</comment>
   </data>
   <data name="Can be used after %dminutes" xml:space="preserve">
@@ -7565,7 +7565,7 @@
     <comment>legacy_id=2060</comment>
   </data>
   <data name="Refine" xml:space="preserve">
-    <value>Очистка</value>
+    <value>Переработка</value>
     <comment>legacy_id=2061,2063</comment>
   </data>
   <data name="Restore" xml:space="preserve">
@@ -7661,11 +7661,11 @@
     <comment>legacy_id=2087</comment>
   </data>
   <data name="For restoring reinforced item," xml:space="preserve">
-    <value>Для восстановления усиленного предмета,</value>
+    <value>У усиленного предмета</value>
     <comment>legacy_id=2088</comment>
   </data>
   <data name="Incorrect item" xml:space="preserve">
-    <value>Неправильный элемент</value>
+    <value>Не тот предмет.</value>
     <comment>legacy_id=2089</comment>
   </data>
   <data name="not %s" xml:space="preserve">
@@ -7705,23 +7705,23 @@
     <comment>legacy_id=2099</comment>
   </data>
   <data name="reinforcement option has to be" xml:space="preserve">
-    <value>вариант армирования должен быть</value>
+    <value>опция усиления</value>
     <comment>legacy_id=2100</comment>
   </data>
   <data name="deleted through restoration." xml:space="preserve">
-    <value>удалил через восстановление.</value>
+    <value>снимается восстановлением.</value>
     <comment>legacy_id=2101</comment>
   </data>
   <data name="Restoration is deleting the" xml:space="preserve">
-    <value>Восстановление – это удаление</value>
+    <value>Восстановление снимает</value>
     <comment>legacy_id=2102</comment>
   </data>
   <data name="reinforcement option" xml:space="preserve">
-    <value>вариант армирования</value>
+    <value>опцию усиления</value>
     <comment>legacy_id=2103</comment>
   </data>
   <data name="of the weapons." xml:space="preserve">
-    <value>оружия.</value>
+    <value>с оружия.</value>
     <comment>legacy_id=2104</comment>
   </data>
   <data name="%s has failed.." xml:space="preserve">
@@ -8041,7 +8041,7 @@
     <comment>legacy_id=2219</comment>
   </data>
   <data name="Refine the item to create" xml:space="preserve">
-    <value>Уточните элемент для создания</value>
+    <value>Переработайте предмет, чтобы получить</value>
     <comment>legacy_id=2220</comment>
   </data>
   <data name="the Refining Stone." xml:space="preserve">
@@ -8237,7 +8237,7 @@
     <comment>legacy_id=2268</comment>
   </data>
   <data name="Congratulations. Please contact CS team and change it to item." xml:space="preserve">
-    <value>Поздравляю. Пожалуйста, свяжитесь с командой CS и измените его на элемент.</value>
+    <value>Обратитесь к администрации, чтобы получить предмет.</value>
     <comment>legacy_id=2269</comment>
   </data>
   <data name="You will be assigned to a stage according to your level." xml:space="preserve">
@@ -8509,11 +8509,11 @@
     <comment>legacy_id=2345</comment>
   </data>
   <data name="Please upload the assembly items." xml:space="preserve">
-    <value>Пожалуйста, загрузите элементы сборки.</value>
+    <value>Положите предметы для сборки.</value>
     <comment>legacy_id=2346</comment>
   </data>
   <data name="from above the level %d, %s enabled and on." xml:space="preserve">
-    <value>сверху уровень %d, %s включен и включен.</value>
+    <value>Доступно с уровня %d: %s.</value>
     <comment>legacy_id=2347</comment>
   </data>
   <data name="2nd Wing" xml:space="preserve">
@@ -9037,11 +9037,11 @@
     <comment>legacy_id=2523</comment>
   </data>
   <data name="This is more than the value of your resettable points." xml:space="preserve">
-    <value>Это больше, чем стоимость ваших обнуляемых баллов.</value>
+    <value>Это больше очков, чем можно сбросить.</value>
     <comment>legacy_id=2524</comment>
   </data>
   <data name="Would you like to reset?" xml:space="preserve">
-    <value>Хотите сбросить настройки?</value>
+    <value>Сбросить очки?</value>
     <comment>legacy_id=2525</comment>
   </data>
   <data name="You cannot purchase while the seal effects remain active." xml:space="preserve">
@@ -9073,7 +9073,7 @@
     <comment>legacy_id=2532</comment>
   </data>
   <data name="Duration period: %s" xml:space="preserve">
-    <value>Период продолжительности: %s</value>
+    <value>Осталось: %s</value>
     <comment>legacy_id=2533</comment>
   </data>
   <data name="Collect Cherry Blossoms and take it to the spirit for item compensation." xml:space="preserve">
@@ -9377,7 +9377,7 @@
     <comment>legacy_id=2651</comment>
   </data>
   <data name="No item application" xml:space="preserve">
-    <value>Нет заявки на предмет</value>
+    <value>(пусто)</value>
     <comment>legacy_id=2652</comment>
   </data>
   <data name="Element: %s" xml:space="preserve">
@@ -9397,7 +9397,7 @@
     <comment>legacy_id=2657</comment>
   </data>
   <data name="Extraction" xml:space="preserve">
-    <value>Добыча</value>
+    <value>Извлечение</value>
     <comment>legacy_id=2660</comment>
   </data>
   <data name="Assembly" xml:space="preserve">
@@ -9405,7 +9405,7 @@
     <comment>legacy_id=2661</comment>
   </data>
   <data name="Application" xml:space="preserve">
-    <value>Приложение</value>
+    <value>Вставка сферы</value>
     <comment>legacy_id=2662</comment>
   </data>
   <data name="Destruction" xml:space="preserve">
@@ -10661,7 +10661,7 @@
     <comment>legacy_id=3035</comment>
   </data>
   <data name="Cannot use the selected item." xml:space="preserve">
-    <value>Невозможно использовать выбранный элемент.</value>
+    <value>Этот предмет нельзя использовать.</value>
     <comment>legacy_id=3036</comment>
   </data>
   <data name="Price: %s" xml:space="preserve">
@@ -10741,7 +10741,7 @@
     <comment>legacy_id=3056</comment>
   </data>
   <data name="Doppelganger" xml:space="preserve">
-    <value>двойник</value>
+    <value>Доппельгангер</value>
     <comment>legacy_id=3057</comment>
   </data>
   <data name="Increases Max Mana 4%%" xml:space="preserve">
@@ -13064,7 +13064,7 @@
     <value>Предмет: %ls x %lu</value>
   </data>
   <data name="OperationRefining" xml:space="preserve">
-    <value>Уточнить</value>
+    <value>Переработка</value>
   </data>
   <data name="OperationRestoring" xml:space="preserve">
     <value>Восстановить</value>
@@ -13094,7 +13094,7 @@
     <value>+%d~%d</value>
   </data>
   <data name="FruitCaption" xml:space="preserve">
-    <value>( фрукты %ls )</value>
+    <value>( плод: %ls )</value>
   </data>
   <data name="QuestRequirementSkill" xml:space="preserve">
     <value>Skill: %ls</value>
@@ -17378,5 +17378,15 @@
   </data>
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>Одна из гильдий уже воюет с другой гильдией.</value>
+  </data>
+  <!-- Round 15 -->
+  <data name="InviteRefusedBusyTrade" xml:space="preserve">
+    <value>Предложение обмена от %ls пропущено: было открыто окно.</value>
+  </data>
+  <data name="InviteRefusedBusyDuel" xml:space="preserve">
+    <value>Вызов на дуэль от %ls пропущен: было открыто окно.</value>
+  </data>
+  <data name="SoldItemToFor" xml:space="preserve">
+    <value>Продано: %ls — игроку %ls за %ls.</value>
   </data>
 </root>

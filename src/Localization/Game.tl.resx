@@ -876,7 +876,7 @@
     <comment>legacy_id=216</comment>
   </data>
   <data name="Point: %d" xml:space="preserve">
-    <value>Punto: %d</value>
+    <value>Puntos: %d</value>
     <comment>legacy_id=217</comment>
   </data>
   <data name="Explanation" xml:space="preserve">
@@ -1056,7 +1056,7 @@
     <comment>legacy_id=262</comment>
   </data>
   <data name="You can enter Icarus only with wings, dinorant, fenrirr" xml:space="preserve">
-    <value>Maaari kang pumasok sa Icarus na may mga pakpak, dinorant, fenrirr</value>
+    <value>Maaari kang pumasok sa Icarus na may mga pakpak, dinorant, fenrir</value>
     <comment>legacy_id=263</comment>
   </data>
   <data name="/whisper off" xml:space="preserve">
@@ -1344,7 +1344,7 @@
     <comment>legacy_id=368</comment>
   </data>
   <data name="About %d" xml:space="preserve">
-    <value>Tungkol sa %d</value>
+    <value>%d+</value>
     <comment>legacy_id=369</comment>
   </data>
   <data name="Warning!" xml:space="preserve">
@@ -9005,7 +9005,7 @@
     <comment>legacy_id=2532</comment>
   </data>
   <data name="Duration period: %s" xml:space="preserve">
-    <value>Tagal ng tagal: %s</value>
+    <value>Natitira: %s</value>
     <comment>legacy_id=2533</comment>
   </data>
   <data name="Collect Cherry Blossoms and take it to the spirit for item compensation." xml:space="preserve">
@@ -9309,7 +9309,7 @@
     <comment>legacy_id=2651</comment>
   </data>
   <data name="No item application" xml:space="preserve">
-    <value>Walang application ng item</value>
+    <value>(walang laman)</value>
     <comment>legacy_id=2652</comment>
   </data>
   <data name="Element: %s" xml:space="preserve">
@@ -14424,5 +14424,15 @@
   </data>
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>Nasa guild war na ang isa sa mga guild.</value>
+  </data>
+  <!-- Round 15 -->
+  <data name="InviteRefusedBusyTrade" xml:space="preserve">
+    <value>Hindi natanggap ang trade request mula kay %ls: may bukas na window.</value>
+  </data>
+  <data name="InviteRefusedBusyDuel" xml:space="preserve">
+    <value>Hindi natanggap ang hamon sa duel mula kay %ls: may bukas na window.</value>
+  </data>
+  <data name="SoldItemToFor" xml:space="preserve">
+    <value>Nabenta ang %ls kay %ls sa halagang %ls.</value>
   </data>
 </root>

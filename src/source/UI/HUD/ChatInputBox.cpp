@@ -448,12 +448,21 @@ bool mu::ui::window::CChatInputBox::UpdateKeyEvent()
         return false;
     }
 
-    const uint64_t currentTickCount = GetTickCount64();
-    if (IsVisible() && HaveFocus() && mu::ui::window::IsPress(VK_RETURN)
-        && m_lastChatTime < currentTickCount - ChatCooldownMs)
+    if (IsVisible() && HaveFocus() && mu::ui::window::IsPress(VK_RETURN))
     {
-        m_lastChatTime = currentTickCount;
-        SendChatLine();
+        // An empty field only closes the bar: it never waits for the cooldown.
+        PendingLine line = CurrentLine();
+        if (line.text.empty())
+        {
+            SendChatLine();
+            return false;
+        }
+        // Too soon after the last line: the line stays and goes by itself (SendPendingLine).
+        const auto result = m_sendGate.OnEnter(GetTickCount64());
+        if (result == UI::Chat::ChatSendGate::EnterResult::SendNow)
+            SendChatLine();
+        else if (result == UI::Chat::ChatSendGate::EnterResult::Pending)
+            m_pendingLine = std::move(line);
         return false;
     }
     if (IsVisible() && IsFieldFocused("chat_field"))
@@ -509,8 +518,33 @@ bool mu::ui::window::CChatInputBox::UpdateKeyEvent()
 bool mu::ui::window::CChatInputBox::Update()
 {
     BuildRmlUi();
+    SendPendingLine();
     SyncRmlModel();
     return true;
+}
+
+mu::ui::window::CChatInputBox::PendingLine mu::ui::window::CChatInputBox::CurrentLine()
+{
+    PendingLine line;
+    GetChatText(line.text);
+    GetWhsprID(line.whisperId);
+    line.inputMsgType = m_iInputMsgType;
+    line.whisperSend = m_bWhisperSend;
+    return line;
+}
+
+void mu::ui::window::CChatInputBox::SendPendingLine()
+{
+    if (!m_sendGate.IsPending())
+        return;
+    // The bar closed, or the player changed the line while it waited: it is not sent by itself.
+    if (!IsVisible() || !(CurrentLine() == m_pendingLine))
+    {
+        m_sendGate.Cancel();
+        return;
+    }
+    if (m_sendGate.TakeDue(GetTickCount64()))
+        SendChatLine();
 }
 
 bool mu::ui::window::CChatInputBox::Render()
@@ -530,6 +564,7 @@ void mu::ui::window::CChatInputBox::BindRmlModel(Rml::DataModelConstructor& c, C
     c.Bind("show_chat_log", &model.showChatLog);
     c.Bind("show_frame", &model.showFrame);
     c.Bind("whisper_send", &model.whisperSend);
+    c.Bind("quick_paused", &model.quickPaused);
     for (size_t i = 0; i < model.buttonHints.size(); ++i)
         c.Bind("hint_" + std::to_string(i), &model.buttonHints[i]);
     for (size_t i = 0; i < model.quickPhrases.size(); ++i)
@@ -694,6 +729,7 @@ void mu::ui::window::CChatInputBox::SyncRmlModel()
     }
 
     SyncQuickButtons(model);
+    syncBool(&ChatInputRmlModel::quickPaused, "quick_paused", QuickPhrasePauseRunning());
 
     // Native's string table for the buttons' hints (RenderTooltip()).
     static constexpr int kHintText[10] = {1681, 1682, 1683, 3321, 1684, 1685, 750, 1686, 751, 752};
@@ -872,6 +908,7 @@ void mu::ui::window::CChatInputBox::ClosingProcess()
     m_pNewUIChatLogWnd->HideFrame();
 
     m_bFocusPending = false;
+    m_sendGate.Cancel();
     if (Rml::Element* field = GetField("chat_field")) field->Blur();
     if (Rml::Element* field = GetField("whisper_field")) field->Blur();
 

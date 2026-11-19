@@ -10,6 +10,7 @@ namespace UI::Chat::InviteAutoDecline
 namespace
 {
 DeclinedInviteLines g_lines;
+DeclinedInviteLines g_busyLines;
 
 const wchar_t* LineFormat(InviteKind kind)
 {
@@ -36,5 +37,20 @@ bool ShouldDecline(InviteKind kind, const wchar_t* sender)
         PostSystem(line, mu::ui::window::TYPE_SYSTEM_MESSAGE);
     }
     return true;
+}
+
+void SayRefusedWhileBusy(InviteKind kind, const wchar_t* sender)
+{
+    if (kind == InviteKind::Party)
+        return;
+
+    const wchar_t* name = sender != nullptr ? sender : L"";
+    if (!g_busyLines.ShouldSay(kind, name, GetTickCount()))
+        return;
+
+    wchar_t line[256]{};
+    const wchar_t* format = kind == InviteKind::Trade ? I18N::Game::InviteRefusedBusyTrade : I18N::Game::InviteRefusedBusyDuel;
+    mu_swprintf(line, format, name);
+    PostSystem(line, mu::ui::window::TYPE_SYSTEM_MESSAGE);
 }
 } // namespace UI::Chat::InviteAutoDecline

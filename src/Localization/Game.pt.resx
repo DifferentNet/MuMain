@@ -876,7 +876,7 @@
     <comment>legacy_id=216</comment>
   </data>
   <data name="Point: %d" xml:space="preserve">
-    <value>Ponto: %d</value>
+    <value>Pontos: %d</value>
     <comment>legacy_id=217</comment>
   </data>
   <data name="Explanation" xml:space="preserve">
@@ -1056,7 +1056,7 @@
     <comment>legacy_id=262</comment>
   </data>
   <data name="You can enter Icarus only with wings, dinorant, fenrirr" xml:space="preserve">
-    <value>Você só pode entrar em Ícaro com asas, dinorant, fenrirr</value>
+    <value>Você só pode entrar em Ícaro com asas, dinorant, fenrir</value>
     <comment>legacy_id=263</comment>
   </data>
   <data name="/whisper off" xml:space="preserve">
@@ -1344,7 +1344,7 @@
     <comment>legacy_id=368</comment>
   </data>
   <data name="About %d" xml:space="preserve">
-    <value>Sobre %d</value>
+    <value>%d+</value>
     <comment>legacy_id=369</comment>
   </data>
   <data name="Warning!" xml:space="preserve">
@@ -9309,7 +9309,7 @@
     <comment>legacy_id=2651</comment>
   </data>
   <data name="No item application" xml:space="preserve">
-    <value>Nenhuma aplicação de item</value>
+    <value>(vazio)</value>
     <comment>legacy_id=2652</comment>
   </data>
   <data name="Element: %s" xml:space="preserve">
@@ -14424,5 +14424,15 @@
   </data>
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>Uma das guildas já está em guerra de guildas.</value>
+  </data>
+  <!-- Round 15 -->
+  <data name="InviteRefusedBusyTrade" xml:space="preserve">
+    <value>Pedido de troca de %ls perdido: havia uma janela aberta.</value>
+  </data>
+  <data name="InviteRefusedBusyDuel" xml:space="preserve">
+    <value>Desafio de duelo de %ls perdido: havia uma janela aberta.</value>
+  </data>
+  <data name="SoldItemToFor" xml:space="preserve">
+    <value>Vendido: %ls para %ls por %ls.</value>
   </data>
 </root>

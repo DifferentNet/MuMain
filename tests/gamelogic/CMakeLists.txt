@@ -213,3 +213,13 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/EquipOffer.cpp
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/EquipOfferTracker.cpp
 )
+
+# Buff countdowns are cleared on relog / character switch and restart with a sent time (round 15, B8).
+mu_add_test(
+    NAME test_buff_time_control
+    SOURCES
+        test_buff_time_control.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/App/Platform/Windows/Winmain.cpp
+    LINK_LIBS
+        MuClient
+)

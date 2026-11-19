@@ -684,3 +684,12 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/HelperRunSummary.cpp
         ${CMAKE_SOURCE_DIR}/src/source/UI/Text/GroupedNumberText.cpp
 )
+
+# Round 15: a chat line sent too soon waits for the cooldown, the inviter's class and guild line.
+mu_add_test(
+    NAME round15_logic_tests
+    SOURCES
+        test_round15_logic.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ChatSendGate.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/InviterDetailText.cpp
+)

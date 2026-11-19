@@ -1056,7 +1056,7 @@
     <comment>legacy_id=262</comment>
   </data>
   <data name="You can enter Icarus only with wings, dinorant, fenrirr" xml:space="preserve">
-    <value>You can enter Icarus only with wings, dinorant, fenrirr</value>
+    <value>You can enter Icarus only with wings, a Dinorant or a Fenrir.</value>
     <comment>legacy_id=263</comment>
   </data>
   <data name="/whisper off" xml:space="preserve">
@@ -1344,7 +1344,7 @@
     <comment>legacy_id=368</comment>
   </data>
   <data name="About %d" xml:space="preserve">
-    <value>About %d</value>
+    <value>%d+</value>
     <comment>legacy_id=369</comment>
   </data>
   <data name="Warning!" xml:space="preserve">
@@ -9722,7 +9722,7 @@
     <comment>legacy_id=2651</comment>
   </data>
   <data name="No item application" xml:space="preserve">
-    <value>No item application</value>
+    <value>(empty)</value>
     <comment>legacy_id=2652</comment>
   </data>
   <data name="Element: %s" xml:space="preserve">
@@ -17378,5 +17378,15 @@
   </data>
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>One of the guilds is already in a guild war.</value>
+  </data>
+  <!-- Round 15 -->
+  <data name="InviteRefusedBusyTrade" xml:space="preserve">
+    <value>%ls wanted to trade (a window was open).</value>
+  </data>
+  <data name="InviteRefusedBusyDuel" xml:space="preserve">
+    <value>%ls challenged you to a duel (a window was open).</value>
+  </data>
+  <data name="SoldItemToFor" xml:space="preserve">
+    <value>Sold %ls to %ls for %ls.</value>
   </data>
 </root>

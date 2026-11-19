@@ -4,6 +4,7 @@
 #include <array>
 
 #include "Engine/Object/ZzzInfomation.h"
+#include "Engine/Object/ZzzInventory.h"
 #include "I18N/All.h"
 
 // Kept apart from the protocol logic in PersonalShopCurrency.cpp, so that the
@@ -42,5 +43,19 @@ const wchar_t* GetCurrencyName(const ItemPrice& price)
     default:
         return I18N::Game::Zen;
     }
+}
+
+std::wstring FormatPrice(const ItemPrice& price)
+{
+    wchar_t amount[64]{};
+    if (price.Kind == PriceKind::Zen)
+        ConvertGold(price.Amount, amount);
+    else
+        mu_swprintf(amount, L"%d", price.Amount);
+
+    std::wstring text = amount;
+    text.push_back(L' ');
+    text.append(GetCurrencyName(price));
+    return text;
 }
 } // namespace GameLogic::PersonalShop

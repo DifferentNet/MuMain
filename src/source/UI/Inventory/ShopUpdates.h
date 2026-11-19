@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <span>
+#include <string>
 #include <string_view>
 
 // Shop changes the server reports: the NPC shop, this player's personal shop, another player's
@@ -26,6 +27,8 @@ void ShowOwnShopTitle(std::wstring_view title);
 void SetOwnShopOpen(bool open);
 void ReplaceOwnShopItems(std::span<const ShopItem> items, std::wstring_view title);
 int OwnShopPriceTargetIndex();
+// The name of the item in the own shop's slot, empty when the slot holds none.
+std::wstring OwnShopItemName(int slot);
 
 // Remembers the current price of the own shop slot before an update replaces it, so a
 // refused update can restore it. Only the latest update is remembered; set-price answers

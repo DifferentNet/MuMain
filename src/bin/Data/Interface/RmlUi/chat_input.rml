@@ -57,18 +57,18 @@
 			<div id="quick_2" class="cib-quick-btn cib-quick-macro" data-class-hidden="!quick_macro_2" data-event-click="chat_quick(2)">{{quick_2}}</div>
 			<div id="quick_3" class="cib-quick-btn cib-quick-macro" data-class-hidden="!quick_macro_3" data-event-click="chat_quick(3)">{{quick_3}}</div>
 			<div id="quick_4" class="cib-quick-btn cib-quick-macro" data-class-hidden="!quick_macro_4" data-event-click="chat_quick(4)">{{quick_4}}</div>
-			<div id="phrase_1" class="cib-quick-btn cib-phrase" data-event-click="chat_phrase(1)">{{phrase_0}}</div>
-			<div id="phrase_2" class="cib-quick-btn cib-phrase" data-event-click="chat_phrase(2)">{{phrase_1}}</div>
-			<div id="phrase_3" class="cib-quick-btn cib-phrase" data-event-click="chat_phrase(3)">{{phrase_2}}</div>
-			<div id="phrase_4" class="cib-quick-btn cib-phrase" data-event-click="chat_phrase(4)">{{phrase_3}}</div>
-			<div id="phrase_5" class="cib-quick-btn cib-phrase" data-event-click="chat_phrase(5)">{{phrase_4}}</div>
-			<div id="phrase_6" class="cib-quick-btn cib-phrase" data-event-click="chat_phrase(6)">{{phrase_5}}</div>
-			<div id="phrase_7" class="cib-quick-btn cib-phrase" data-event-click="chat_phrase(7)">{{phrase_6}}</div>
-			<div id="phrase_8" class="cib-quick-btn cib-phrase" data-event-click="chat_phrase(8)">{{phrase_7}}</div>
-			<div id="phrase_9" class="cib-quick-btn cib-phrase" data-event-click="chat_phrase(9)">{{phrase_8}}</div>
-			<div id="phrase_10" class="cib-quick-btn cib-phrase" data-event-click="chat_phrase(10)">{{phrase_9}}</div>
-			<div id="phrase_11" class="cib-quick-btn cib-phrase" data-event-click="chat_phrase(11)">{{phrase_10}}</div>
-			<div id="phrase_12" class="cib-quick-btn cib-phrase" data-event-click="chat_phrase(12)">{{phrase_11}}</div>
+			<div id="phrase_1" class="cib-quick-btn cib-phrase" data-class-paused="quick_paused" data-event-click="chat_phrase(1)">{{phrase_0}}</div>
+			<div id="phrase_2" class="cib-quick-btn cib-phrase" data-class-paused="quick_paused" data-event-click="chat_phrase(2)">{{phrase_1}}</div>
+			<div id="phrase_3" class="cib-quick-btn cib-phrase" data-class-paused="quick_paused" data-event-click="chat_phrase(3)">{{phrase_2}}</div>
+			<div id="phrase_4" class="cib-quick-btn cib-phrase" data-class-paused="quick_paused" data-event-click="chat_phrase(4)">{{phrase_3}}</div>
+			<div id="phrase_5" class="cib-quick-btn cib-phrase" data-class-paused="quick_paused" data-event-click="chat_phrase(5)">{{phrase_4}}</div>
+			<div id="phrase_6" class="cib-quick-btn cib-phrase" data-class-paused="quick_paused" data-event-click="chat_phrase(6)">{{phrase_5}}</div>
+			<div id="phrase_7" class="cib-quick-btn cib-phrase" data-class-paused="quick_paused" data-event-click="chat_phrase(7)">{{phrase_6}}</div>
+			<div id="phrase_8" class="cib-quick-btn cib-phrase" data-class-paused="quick_paused" data-event-click="chat_phrase(8)">{{phrase_7}}</div>
+			<div id="phrase_9" class="cib-quick-btn cib-phrase" data-class-paused="quick_paused" data-event-click="chat_phrase(9)">{{phrase_8}}</div>
+			<div id="phrase_10" class="cib-quick-btn cib-phrase" data-class-paused="quick_paused" data-event-click="chat_phrase(10)">{{phrase_9}}</div>
+			<div id="phrase_11" class="cib-quick-btn cib-phrase" data-class-paused="quick_paused" data-event-click="chat_phrase(11)">{{phrase_10}}</div>
+			<div id="phrase_12" class="cib-quick-btn cib-phrase" data-class-paused="quick_paused" data-event-click="chat_phrase(12)">{{phrase_11}}</div>
 		</div>
 	</div>
 </body>
