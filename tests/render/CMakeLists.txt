@@ -61,6 +61,12 @@ mu_add_test(
 )
 
 mu_add_test(
+    NAME ground_quad_run_tests
+    SOURCES
+        test_ground_quad_run.cpp
+)
+
+mu_add_test(
     NAME pick_segment_tests
     SOURCES
         test_pick_segment.cpp

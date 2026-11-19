@@ -25,6 +25,7 @@
 #include "Render/Effects/ZzzEffect.h"
 #include "Render/Renderer/MuRenderer.h"
 #include "Render/Renderer/RenderUtils.h"
+#include "Render/Terrain/GroundQuadRun.h"
 #include "Render/Terrain/PickSegment.h"
 #include "Render/Terrain/TerrainHeightGrid.h"
 #include "Render/Lighting/DynamicLightHistory.h"
@@ -1813,10 +1814,18 @@ static const std::vector<std::uint32_t>& GroundFacesByTexture()
     return order;
 }
 
-// Quads per ground draw: well under the SDL_gpu renderer's k_MaxQuads (4096), which clamps a longer draw.
-constexpr std::size_t kGroundQuadsPerDraw = 1024;
-constexpr std::size_t kQuadVertices = 4;
 constexpr std::uint32_t kOpaqueAlphaBits = 0xFF000000u;
+
+// The run RenderGroundFaces and RenderLayerFaces gather between draws (one at a time, main thread only).
+static Render::Terrain::GroundQuadRun s_groundQuadRun;
+
+// Draws the gathered run, if any, and starts the next one.
+static void FlushGroundQuadRun()
+{
+    if (!s_groundQuadRun.Empty())
+        mu::GetRenderer().RenderQuad3D(s_groundQuadRun.Vertices(), 0u);
+    s_groundQuadRun.Clear();
+}
 
 // True when every vertex of the face has full alpha: the renderer picks alpha-to-coverage per draw from
 // that, so a draw never mixes opaque and translucent faces.
@@ -1831,18 +1840,13 @@ static bool IsOpaqueGroundFace(const GroundFace& face)
 }
 
 // Draws the ground faces kept since the last call, one draw per texture run (split every
-// kGroundQuadsPerDraw quads) instead of one per face: the same quads in the same order and state.
+// GroundQuadRun::kMaxQuads quads) instead of one per face: the same quads in the same order and state.
 // Grass (grass true) keeps the alpha test RenderTerrain set for it.
 static void RenderGroundFaces(bool grass)
 {
-    static std::vector<mu::Vertex3D> run;
-    run.clear();
+    s_groundQuadRun.Clear();
     bool runOpaque = true;
-    const auto flush = [&]() {
-        if (!run.empty())
-            mu::GetRenderer().RenderQuad3D(run, 0u);
-        run.clear();
-    };
+    const auto flush = FlushGroundQuadRun;
 
     int boundTexture = -1;
     bool drawn = true;
@@ -1866,10 +1870,10 @@ static void RenderGroundFaces(bool grass)
         if (!drawn)
             continue;
         const bool opaque = IsOpaqueGroundFace(face);
-        if (opaque != runOpaque || run.size() >= kGroundQuadsPerDraw * kQuadVertices)
+        if (opaque != runOpaque || s_groundQuadRun.Full())
             flush();
         runOpaque = opaque;
-        run.insert(run.end(), std::begin(face.vertices), std::end(face.vertices));
+        s_groundQuadRun.Append(face.vertices);
     }
     flush();
     mu::GetRenderer().SetTerrainLit(false);
@@ -1947,16 +1951,11 @@ static void SetLayerFaceState(const LayerFace& face)
 }
 
 // Draws the layer faces in their recorded order, one draw per run of neighbouring faces with the same
-// texture and blend (split every kGroundQuadsPerDraw quads) instead of one per face.
+// texture and blend (split every GroundQuadRun::kMaxQuads quads) instead of one per face.
 static void RenderLayerFaces()
 {
-    static std::vector<mu::Vertex3D> run;
-    run.clear();
-    const auto flush = [&]() {
-        if (!run.empty())
-            mu::GetRenderer().RenderQuad3D(run, 0u);
-        run.clear();
-    };
+    s_groundQuadRun.Clear();
+    const auto flush = FlushGroundQuadRun;
 
     // Depth-tested without writing, so a layer stays on its own ground (same vertices, less or equal)
     // and nearer ground drawn before it still hides it.
@@ -1965,14 +1964,14 @@ static void RenderLayerFaces()
     for (const LayerFace& face : s_layerFaces)
     {
         const bool sameState = runFace && runFace->texture == face.texture && runFace->blend == face.blend;
-        if (!sameState || run.size() >= kGroundQuadsPerDraw * kQuadVertices)
+        if (!sameState || s_groundQuadRun.Full())
         {
             flush();
             if (!sameState)
                 SetLayerFaceState(face);
             runFace = &face;
         }
-        run.insert(run.end(), std::begin(face.vertices), std::end(face.vertices));
+        s_groundQuadRun.Append(face.vertices);
     }
     flush();
     mu::GetRenderer().SetTerrainLit(false);

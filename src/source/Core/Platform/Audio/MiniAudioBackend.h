@@ -78,6 +78,9 @@ private:
     bool HasFailedMusicTrack(const char* name) const;
     bool StartMusicStream(const std::string& identity);
     void ReleaseMusicStream();
+    // Pauses the music stream while the music volume is 0 and resumes it when it rises: a silent
+    // stream would still be decoded and resampled every audio callback.
+    void ApplyMusicSilence();
     void UnloadSlot(int buf);
     void ReleaseDecodedSound(int buf);
 #ifdef __EMSCRIPTEN__
@@ -133,6 +136,9 @@ private:
 
     ma_sound m_musicSound{};
     bool m_musicLoaded = false;
+    // The loaded stream is paused by ApplyMusicSilence() (music volume 0); IsEndMusic() still reports it
+    // as playing, as it was while it played silently.
+    bool m_musicPausedForSilence = false;
     // Separators-normalized track name, not the resolved path — see IsSameMusicTrack().
     std::string m_currentMusicName;
     // Session failures survive stop calls and track changes; enforced playback retries them.
