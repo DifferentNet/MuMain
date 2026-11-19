@@ -14476,4 +14476,20 @@
   <data name="FieldRepairAllConfirm" xml:space="preserve">
     <value>Perbaiki semua perlengkapan yang dipakai seharga %ls zen?</value>
   </data>
+  <!-- Round 20 -->
+  <data name="WarpListYouAreHere" xml:space="preserve">
+    <value>Kamu di sini</value>
+  </data>
+  <data name="WarpListYouDiedHere" xml:space="preserve">
+    <value>Kamu mati di sini</value>
+  </data>
+  <data name="PartyHintInviteByName" xml:space="preserve">
+    <value>Ketik /party Nama untuk mengundang pemain.</value>
+  </data>
+  <data name="PartyHintInviteFromCommandWindow" xml:space="preserve">
+    <value>Atau tekan %ls, pilih %ls, lalu klik pemain.</value>
+  </data>
+  <data name="PartyHintSharedExperience" xml:space="preserve">
+    <value>Dalam party, EXP dibagi menurut level.</value>
+  </data>
 </root>

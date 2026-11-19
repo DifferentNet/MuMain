@@ -190,3 +190,7 @@
 	font-family: "token(font-body)";
 	pointer-events: none;
 }
+
+/* MU Moldova: on the PC the same button at the native button's height, well below the hint (which wraps to
+   several lines in some languages) and as wide as the party rows, so the longest label fits. */
+#party_social_btn.pc { left: 10px; top: 260px; width: 170px; height: 29px; }

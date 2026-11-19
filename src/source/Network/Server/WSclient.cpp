@@ -68,6 +68,7 @@
 #include "GameLogic/Items/JewelUpgradeResult.h"
 #include "GameLogic/Items/CraftingRefusal.h"
 #include "UI/Chat/CharacterChangeLines.h"
+#include "UI/HUD/MoveCommandWindow.h"
 #include "UI/Chat/SeenSkills.h"
 #include "UI/Chat/HeroStatusLines.h"
 #include "UI/Chat/InviteAutoDecline.h"
@@ -1364,6 +1365,8 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     // ones of a previous character before asking for them again.
     GameLogic::Commands::Catalog().Reset();
     GameLogic::Commands::Catalog().RequestOnce();
+    // The warp list's "you died here" row belonged to the previous character.
+    UI::MoveCommand::ForgetHeroDeath();
     // The experience pace belongs to the previous character (or to the map left).
     UI::HUD::ExperiencePace::Hero().Reset();
     // The windows fed by hidden chat lines forget the previous character, and the battle pass' marks and the
@@ -1381,6 +1384,7 @@ void ReceiveRevival(const BYTE* ReceiveBuffer)
     Hero->Object.Teleport = false;
     Hero->Object.Live = false;
     auto Data = (LPPRECEIVE_REVIVAL_EXTENDED)ReceiveBuffer;
+    UI::MoveCommand::NoteHeroRevival();
 
     CharacterAttribute->Life = Data->Life;
     CharacterAttribute->Mana = Data->Mana;
@@ -2341,6 +2345,8 @@ BOOL ReceiveTeleport(const BYTE* ReceiveBuffer, BOOL bEncrypted)
     }
     else
     {
+        // A map change or a gate, not a teleport inside the map: the warp list's "you died here" row is done.
+        UI::MoveCommand::NoteHeroWarp();
         // Before the view is emptied, not after: the events name the objects
         // that are about to disappear, and their slots are reused.
         App::Control::Events::RecordViewCleared("the character teleported");
@@ -6230,6 +6236,8 @@ void ReceiveDie(const BYTE* ReceiveBuffer, int Size)
         MUHelper::g_MuHelper.StopForHeroDeath();
         PostKilledBy(Data, Size);
         UI::Chat::ChangeLines::NoteHeroDeath();
+        // The warp list marks the map he died on (UI/HUD/WarpListMarks.h).
+        UI::MoveCommand::NoteHeroDeath();
     }
 
     g_ConsoleDebug->Write(MCD_RECEIVE, L"0x17 [ReceiveDie(%d)]", Key);

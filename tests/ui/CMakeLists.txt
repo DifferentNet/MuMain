@@ -700,3 +700,12 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/ChatSendGate.cpp
         ${CMAKE_SOURCE_DIR}/src/source/UI/Chat/InviterDetailText.cpp
 )
+
+# Round 20: the warp list's "you are here" / "you died here" rows, a trade's waiting lines dropped on close.
+mu_add_test(
+    NAME round20_logic_tests
+    SOURCES
+        test_round20_logic.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/HUD/WarpListMarks.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/UI/Inventory/TradeOfferChange.cpp
+)
