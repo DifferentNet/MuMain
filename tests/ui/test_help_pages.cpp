@@ -192,7 +192,7 @@ TEST_CASE("help with a gamepad: the pad's buttons instead of the keys, LB and RB
     CHECK(lines[1].text == I18N::Game::PadHelpTitle);
     CHECK(CountHeadings(lines) == 1);
     CHECK(CountHints(lines) == 1);
-    CHECK(lines[3].text == I18N::Game::PadHelpSticks);
+    CHECK(lines[3].text == Xbox(I18N::Game::PadHelpSticks));
     CHECK(lines[6].text == Xbox(I18N::Game::PadHelpAttack));
     CHECK(lines[8].text == Xbox(I18N::Game::PadHelpPk));
     CHECK(lines[10].text == Xbox(I18N::Game::PadHelpSkills));
