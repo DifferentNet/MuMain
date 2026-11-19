@@ -12524,4 +12524,38 @@
   <data name="TouchHelpDoubleTapMove" xml:space="preserve">
     <value>アイテムをダブルタップで移動</value>
   </data>
+  <!-- Round 17 -->
+  <data name="MuHelperStoppedHeroDied" xml:space="preserve">
+    <value>MU Helper停止：キャラクターが死亡しました。</value>
+  </data>
+  <data name="MuHelperNoHealPotions" xml:space="preserve">
+    <value>MU Helper：回復ポーションがありません。</value>
+  </data>
+  <data name="MuHelperBagFull" xml:space="preserve">
+    <value>MU Helper：バッグに空きがなく、アイテムを拾えません。</value>
+  </data>
+  <data name="RepairNoZen" xml:space="preserve">
+    <value>装備の修理に必要なゼンが足りません。</value>
+  </data>
+  <data name="MuHelperUnconfiguredZ" xml:space="preserve">
+    <value>MU Helperは通常攻撃のみです。スキル・ポーション・拾得は設定で選べます (Z)</value>
+  </data>
+  <data name="MuHelperUnconfiguredTouch" xml:space="preserve">
+    <value>MU Helperは通常攻撃のみです。スキル・ポーション・拾得はメニュー → MU Helperで選べます</value>
+  </data>
+  <data name="TicketFitsYourLevel" xml:space="preserve">
+    <value>あなたのレベルに合っています</value>
+  </data>
+  <data name="TicketYouNeedPlusD" xml:space="preserve">
+    <value>必要なチケットは +%d です</value>
+  </data>
+  <data name="EntryTicketNotInBag" xml:space="preserve">
+    <value>チケット: %ls +%d — バッグにありません</value>
+  </data>
+  <data name="FieldRepairAllConfirm" xml:space="preserve">
+    <value>装備中のアイテムをすべて %ls ゼンで修理しますか？</value>
+  </data>
+  <data name="Official MU Helper Setting has been saved." xml:space="preserve">
+    <value>MU Helperの設定を保存しました。</value>
+  </data>
 </root>

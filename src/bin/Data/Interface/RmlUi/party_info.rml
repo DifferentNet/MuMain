@@ -26,7 +26,8 @@
 		</div>
 
 		<div class="party-list" data-class-hidden="!has_party">
-			<div class="party-row" data-for="m : members">
+			<div class="party-row" data-for="m : members"
+			     data-event-dblclick="party_whisper_member(m.index)">
 				<!-- RenderGroupBox(x, y, 170, 70, 70, 20): the fills, the corners, then the edges. -->
 				<div class="gbox-title-fill"></div>
 				<div class="gbox-content-fill"></div>
@@ -42,7 +43,7 @@
 				<div class="gbox-edge gbox-edge-bottom party-edge-bottom"></div>
 				<div class="gbox-edge gbox-edge-left party-edge-left"></div>
 
-				<span class="sharp-text party-name" data-class-leader="m.is_leader" data-style-font-size="text_px + 'px'">{{m.name}}</span>
+				<span class="sharp-text party-name" data-event-click="party_tap_member(m.index)" data-class-leader="m.is_leader" data-style-font-size="text_px + 'px'">{{m.name}}</span>
 				<div class="party-flag" data-class-hidden="!m.is_leader"></div>
 				<span class="sharp-text party-map" data-style-font-size="text_px + 'px'">{{m.map_text}}</span>
 				<span class="sharp-text party-coord" data-style-font-size="text_px + 'px'">{{m.coord_text}}</span>

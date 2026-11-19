@@ -9,6 +9,7 @@
 #include "Character/CharacterManager.h"
 #include "Audio/DSPlaySound.h"
 #include "UI/RmlBridge/RmlTheme.h"
+#include "GameLogic/Events/EntryLevels.h"
 
 #include <string>
 #include <vector>
@@ -21,26 +22,6 @@ CEnterBloodCastle::CEnterBloodCastle() : m_View("blood_castle_enter", "Data/Inte
     m_pNewUIMng = NULL;
 
     m_iNumActiveBtn = 1;
-
-    m_iBloodCastleLimitLevel[0][0] = 15;  m_iBloodCastleLimitLevel[0][1] = 80;
-    m_iBloodCastleLimitLevel[1][0] = 81;  m_iBloodCastleLimitLevel[1][1] = 130;
-    m_iBloodCastleLimitLevel[2][0] = 131; m_iBloodCastleLimitLevel[2][1] = 180;
-    m_iBloodCastleLimitLevel[3][0] = 181; m_iBloodCastleLimitLevel[3][1] = 230;
-    m_iBloodCastleLimitLevel[4][0] = 231; m_iBloodCastleLimitLevel[4][1] = 280;
-    m_iBloodCastleLimitLevel[5][0] = 281; m_iBloodCastleLimitLevel[5][1] = 330;
-    m_iBloodCastleLimitLevel[6][0] = 331; m_iBloodCastleLimitLevel[6][1] = 400;
-    // Castle 8: the third class from level 331 (MU Skynet has no master levels; the server's
-    // MiniGameDefinition asks the same, trim/bc8-ds7-third-class.sql).
-    m_iBloodCastleLimitLevel[7][0] = 331; m_iBloodCastleLimitLevel[7][1] = 400;
-
-    m_iBloodCastleLimitLevel[8][0] = 10;  m_iBloodCastleLimitLevel[8][1] = 60;
-    m_iBloodCastleLimitLevel[9][0] = 61;  m_iBloodCastleLimitLevel[9][1] = 110;
-    m_iBloodCastleLimitLevel[10][0] = 111; m_iBloodCastleLimitLevel[10][1] = 160;
-    m_iBloodCastleLimitLevel[11][0] = 161; m_iBloodCastleLimitLevel[11][1] = 210;
-    m_iBloodCastleLimitLevel[12][0] = 211; m_iBloodCastleLimitLevel[12][1] = 260;
-    m_iBloodCastleLimitLevel[13][0] = 261; m_iBloodCastleLimitLevel[13][1] = 310;
-    m_iBloodCastleLimitLevel[14][0] = 311; m_iBloodCastleLimitLevel[14][1] = 400;
-    m_iBloodCastleLimitLevel[15][0] = 311; m_iBloodCastleLimitLevel[15][1] = 400;
 }
 
 CEnterBloodCastle::~CEnterBloodCastle()
@@ -104,35 +85,11 @@ bool CEnterBloodCastle::UpdateKeyEvent()
     return true;
 }
 
-int CEnterBloodCastle::CheckLimitLV(int iIndex)
+int CEnterBloodCastle::CheckLimitLV()
 {
-    int	iVal = 0;
-    int iRet = 0;
-
-    if (iIndex == 1)
-    {
-        iVal = 8;
-    }
-
-    int iLevel = CharacterAttribute->Level;
-
-    // A third class goes to castle 8 from its level on; below it (after a reset) it takes the castle of
-    // its level like everyone else.
-    if (gCharacterManager.IsThirdClass(CharacterAttribute->Class)
-        && iLevel >= m_iBloodCastleLimitLevel[iVal + MAX_ENTER_GRADE - 1][0])
-        return MAX_ENTER_GRADE - 1;
-
-    for (int iCastleLV = 0; iCastleLV < MAX_ENTER_GRADE - 1; ++iCastleLV)
-    {
-        if (iLevel >= m_iBloodCastleLimitLevel[iVal + iCastleLV][0]
-            && iLevel <= m_iBloodCastleLimitLevel[iVal + iCastleLV][1])
-        {
-            iRet = iCastleLV;
-            break;
-        }
-    }
-
-    return iRet;
+    // Below the first band the first button stays enabled, as before (the server refuses).
+    const int grade = GameLogic::Events::EntryLevels::HeroGrade(GameLogic::Events::EntryLevels::Event::BloodCastle);
+    return grade < 0 ? 0 : grade;
 }
 
 bool CEnterBloodCastle::Update()
@@ -175,29 +132,12 @@ void CEnterBloodCastle::OpenningProcess()
 {
     SocketClient->ToGameServer()->SendCloseNpcRequest();
 
-    int iLimitLVIndex = 0;
-    if (gCharacterManager.GetBaseClass(Hero->Class) == CLASS_DARK || gCharacterManager.GetBaseClass(Hero->Class) == CLASS_DARK_LORD
-        || gCharacterManager.GetBaseClass(Hero->Class) == CLASS_RAGEFIGHTER)
-    {
-        iLimitLVIndex = 1;
-    }
-
-    m_iNumActiveBtn = CheckLimitLV(iLimitLVIndex);
+    m_iNumActiveBtn = CheckLimitLV();
 
     // Every button locked (grey, never hovered) but the hero's band.
     std::vector<EventEntryView::Button> buttons(MAX_ENTER_GRADE);
-    wchar_t sztext[255] = { 0, };
-    for (int i = 0; i < MAX_ENTER_GRADE - 1; i++)
-    {
-        mu_swprintf(sztext, I18N::Game::CastleDLevelDD, i + 1
-            , m_iBloodCastleLimitLevel[(iLimitLVIndex * MAX_ENTER_GRADE) + i][0]
-            , m_iBloodCastleLimitLevel[(iLimitLVIndex * MAX_ENTER_GRADE) + i][1]);
-        buttons[i].label = sztext;
-    }
-    mu_swprintf(sztext, I18N::MiniGameEntry::CastleThirdClass, 8
-        , m_iBloodCastleLimitLevel[(iLimitLVIndex * MAX_ENTER_GRADE) + MAX_ENTER_GRADE - 1][0]
-        , m_iBloodCastleLimitLevel[(iLimitLVIndex * MAX_ENTER_GRADE) + MAX_ENTER_GRADE - 1][1]);
-    buttons[MAX_ENTER_GRADE - 1].label = sztext;
+    for (int i = 0; i < MAX_ENTER_GRADE; i++)
+        buttons[i].label = GameLogic::Events::EntryLevels::BandLabel(GameLogic::Events::EntryLevels::Event::BloodCastle, i);
     buttons[m_iNumActiveBtn].enabled = true;
 
     SetViewContent(buttons);
@@ -210,6 +150,10 @@ void CEnterBloodCastle::ClosingProcess()
 
 void CEnterBloodCastle::SetViewContent(const std::vector<EventEntryView::Button>& buttons)
 {
-    const std::vector<std::wstring> lines = {I18N::Game::YourWillToHelpTheArchangel};
+    // The ticket of the hero's castle first: castle N takes the Cloak of Invisibility +N.
+    const std::vector<EventEntryView::Line> lines = {
+        EventEntryView::TicketLine(ITEM_INVISIBILITY_CLOAK, m_iNumActiveBtn + 1),
+        {I18N::Game::YourWillToHelpTheArchangel},
+    };
     m_View.SetContent(I18N::Game::MessengerOfArchangel, lines, buttons);
 }

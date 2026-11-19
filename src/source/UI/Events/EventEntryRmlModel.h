@@ -10,6 +10,7 @@ namespace mu::ui::window
 struct EventEntryLineEntry
 {
     Rml::String text;
+    bool missing = false; // drawn red: the ticket for the hero's band is not in the bag
 
     bool operator==(const EventEntryLineEntry&) const = default;
 };

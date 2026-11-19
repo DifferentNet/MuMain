@@ -29,6 +29,9 @@
 #include "I18N/All.h"
 #include "UI/Chat/ChatMessages.h"
 #include "UI/Chat/HelperRunSummary.h"
+#include "UI/HUD/KeyHint.h"
+#include "UI/Mobile/InterfaceMode.h"
+#include "App/Platform/AttentionSignal.h"
 
 #include "MuHelper.h"
 
@@ -146,6 +149,39 @@ namespace MUHelper
         SocketClient->ToGameServer()->SendMuHelperStatusChangeRequest(1);
     }
 
+    void CMuHelper::StopForHeroDeath()
+    {
+        // A player farming with the game in the background used to find the character standing in town an hour
+        // later: the death stopped the helper without a word.
+        if (m_bActive && !m_bStopExplained)
+        {
+            m_bStopExplained = true;
+            UI::Chat::PostSystem(I18N::Game::MuHelperStoppedHeroDied, mu::ui::window::TYPE_ERROR_MESSAGE);
+            App::Platform::Attention::Request();
+        }
+        TriggerStop();
+    }
+
+    void CMuHelper::HintIfUnconfigured()
+    {
+        const bool bAttackSkill = m_config.aiSkill[0] != 0 || m_config.aiSkill[1] != 0 || m_config.aiSkill[2] != 0;
+        // A support elf sets only buffs and the heal: she is set up as well.
+        const bool bSupport = m_config.aiBuff[0] != 0 || m_config.aiBuff[1] != 0 || m_config.aiBuff[2] != 0 ||
+                              m_config.bAutoHeal;
+        if (m_bSetupHintSaid || bAttackSkill || bSupport || m_config.bUseHealPotion || PicksUpItems())
+        {
+            return;
+        }
+
+        m_bSetupHintSaid = true;
+        // No keyboard on the touch HUD: the settings open from its menu there.
+        const bool bTouch = UI::Mobile::IsTouchControls() || UI::Mobile::IsPhoneView();
+        const std::wstring text = bTouch
+            ? std::wstring(I18N::Game::MuHelperUnconfiguredTouch)
+            : UI::KeyHint::WithKey(I18N::Game::MuHelperUnconfiguredZ, Core::Input::KeyBindings::Action::MuHelperSettings);
+        UI::Chat::PostSystem(text.c_str(), mu::ui::window::TYPE_SYSTEM_MESSAGE);
+    }
+
     void CMuHelper::Start()
     {
         if (m_bActive)
@@ -185,6 +221,7 @@ namespace MUHelper
         m_bManaShort = false;
         m_bLastPotionWasMana = false;
         m_setNotified.clear();
+        m_bStopExplained = false;
         m_mapForgottenUntil.clear();
         m_approachWatch.Reset();
         m_iApproachLogs = 0;
@@ -207,6 +244,7 @@ namespace MUHelper
         m_bActive = true;
         g_runSummary.Start(GetTickCount(), CharacterAttribute->Level, CharacterMachine->Gold);
         g_ConsoleDebug->Write(MCD_NORMAL, L"[MU Helper] Started");
+        HintIfUnconfigured();
     }
 
     void CMuHelper::Stop()
@@ -222,6 +260,7 @@ namespace MUHelper
     {
         g_runSummary.Cancel();
         m_bActive = false;
+        m_bSetupHintSaid = false;
     }
 
     void CMuHelper::SetSteered(bool bSteered)
@@ -261,6 +300,13 @@ namespace MUHelper
         if (Hero->SafeZone)
         {
             g_ConsoleDebug->Write(MCD_NORMAL, L"[MU Helper] Entered safezone. Stopping.");
+            // Said once: this repeats on every frame until the server's answer stops the run. After a death the
+            // respawn in town is no news.
+            if (!m_bStopExplained)
+            {
+                m_bStopExplained = true;
+                UI::Chat::PostSystem(I18N::Game::HelperSafeZone, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+            }
             TriggerStop();
             return;
         }
@@ -1169,7 +1215,12 @@ namespace MUHelper
         const int iManaIndex = bNeedMana ? g_pMyInventory->FindManaItemIndex() : -1;
         if (bNeedMana && iManaIndex == -1 && m_bManaShort)
         {
-            NotifyOnce(-1, I18N::Game::MuHelperNoManaPotions);
+            NotifyOnce(NoticeNoManaPotions, I18N::Game::MuHelperNoManaPotions);
+        }
+        // No healing potion left while health is under the threshold: the character would just die.
+        if (bNeedHeal && iHealIndex == -1 && NotifyOnce(NoticeNoHealPotions, I18N::Game::MuHelperNoHealPotions))
+        {
+            App::Platform::Attention::Request();
         }
 
         // Both needed: they take turns (2026-11-02, ghinzuro: the knight stopped drinking mana; in a crowd he is
@@ -1379,14 +1430,15 @@ namespace MUHelper
         NotifyOnce(iKey, szText);
     }
 
-    void CMuHelper::NotifyOnce(int iKey, const wchar_t* pszText)
+    bool CMuHelper::NotifyOnce(int iKey, const wchar_t* pszText)
     {
         if (!m_setNotified.insert(iKey).second)
         {
-            return;
+            return false;
         }
         g_pChatListBox->AddText(L"", pszText, mu::ui::window::TYPE_SYSTEM_MESSAGE);
         g_ConsoleDebug->Write(MCD_NORMAL, L"[MU Helper] %ls", pszText);
+        return true;
     }
 
     int CMuHelper::RecoverHealth()
@@ -1574,6 +1626,10 @@ namespace MUHelper
                     if (iGoldCost <= CharacterMachine->Gold)
                     {
                         SocketClient->ToGameServer()->SendRepairItemRequest(i, 1);
+                    }
+                    else
+                    {
+                        NotifyOnce(NoticeNoRepairZen, I18N::Game::RepairNoZen);
                     }
                 }
             }
@@ -2478,11 +2534,24 @@ namespace MUHelper
             int iItemY = (int)(Items[iItemId].Object.Position[1] / TERRAIN_SCALE);
 
             int iDistance = ComputeDistanceBetween({ Hero->PositionX, Hero->PositionY }, { iItemX, iItemY });
-            if (iDistance <= iMinDistance)
+            if (iDistance > iMinDistance)
             {
-                iMinDistance = iDistance;
-                iClosestItemId = iItemId;
+                continue;
             }
+
+            // A drop the bag has no room for stays on the ground: the walks to it and the refused pickups took much
+            // of a long run once the bag was full. Said once a run, with the window's call back.
+            if (!g_pMyInventory->HasRoomForDrop(&Items[iItemId].Item))
+            {
+                if (NotifyOnce(NoticeBagFull, I18N::Game::MuHelperBagFull))
+                {
+                    App::Platform::Attention::Request();
+                }
+                continue;
+            }
+
+            iMinDistance = iDistance;
+            iClosestItemId = iItemId;
         }
 
         return iClosestItemId;

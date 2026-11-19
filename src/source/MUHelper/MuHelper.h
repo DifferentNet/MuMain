@@ -34,6 +34,9 @@ namespace MUHelper
 		void Toggle();
 		void TriggerStart();
 		void TriggerStop();
+		// The hero died: a running helper says so in the chat and calls the player back to the window
+		// (App::Platform::Attention), then the stop is asked as before.
+		void StopForHeroDeath();
 		bool IsActive() { return m_bActive; }
 		// The player walks the character by hand (the phone's joystick, the pad's stick) while the helper
 		// runs: meanwhile it only drinks its potions, as the stick and the helper pulled the character
@@ -124,7 +127,22 @@ namespace MUHelper
 		void ForgetTarget(int iTargetId, GameLogic::Automation::SkillResult result);
 		// Says once per run in the chat why a skill isn't used.
 		void NotifySkillBlocked(ActionSkillType iSkill, SkillBlock block, bool bPlainAttack);
-		void NotifyOnce(int iKey, const wchar_t* pszText);
+		// True when the line went out now, false when this run already said it.
+		bool NotifyOnce(int iKey, const wchar_t* pszText);
+		// The once-per-run notices that are not about a skill (those use skill * 8 + reason, never negative).
+		enum NoticeKey : int
+		{
+			NoticeNoManaPotions = -1,
+			NoticeNoHealPotions = -2,
+			NoticeBagFull = -3,
+			NoticeNoRepairZen = -4,
+		};
+		// The first start of a login with no attack skill, no potion and no pickup set: one hint where the
+		// settings are.
+		void HintIfUnconfigured();
+		bool m_bSetupHintSaid = false;   // this login; cleared by ResetForNewGame
+		// The run's stop was already explained in the chat (a death, a safe zone): the other reason says nothing.
+		bool m_bStopExplained = false;
 
 	private:
 		ConfigData m_config;

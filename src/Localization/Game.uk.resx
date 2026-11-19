@@ -12145,7 +12145,7 @@
     <comment>legacy_id=3579</comment>
   </data>
   <data name="Official MU Helper Setting has been saved." xml:space="preserve">
-    <value>Офіційне налаштування MU Helper збережено.</value>
+    <value>Налаштування MU Helper збережено.</value>
     <comment>legacy_id=3580</comment>
   </data>
   <data name="Official MU Helper can't be implemented in this region." xml:space="preserve">
@@ -14444,5 +14444,36 @@
   </data>
   <data name="TouchHelpDoubleTapMove" xml:space="preserve">
     <value>Подвійний дотик до предмета перекладає його</value>
+  </data>
+  <!-- Round 17 -->
+  <data name="MuHelperStoppedHeroDied" xml:space="preserve">
+    <value>MU Helper зупинено: персонаж загинув.</value>
+  </data>
+  <data name="MuHelperNoHealPotions" xml:space="preserve">
+    <value>MU Helper: банки лікування закінчилися.</value>
+  </data>
+  <data name="MuHelperBagFull" xml:space="preserve">
+    <value>MU Helper: у сумці немає місця, речі лишаються на землі.</value>
+  </data>
+  <data name="RepairNoZen" xml:space="preserve">
+    <value>Не вистачає зену на ремонт спорядження.</value>
+  </data>
+  <data name="MuHelperUnconfiguredZ" xml:space="preserve">
+    <value>MU Helper б’є лише звичайною атакою: навички, банки й підбір налаштовуються в його вікні (Z)</value>
+  </data>
+  <data name="MuHelperUnconfiguredTouch" xml:space="preserve">
+    <value>MU Helper б’є лише звичайною атакою: навички, банки й підбір налаштовуються в Меню → MU Helper</value>
+  </data>
+  <data name="TicketFitsYourLevel" xml:space="preserve">
+    <value>Підходить вашому рівню</value>
+  </data>
+  <data name="TicketYouNeedPlusD" xml:space="preserve">
+    <value>Вам потрібен квиток +%d</value>
+  </data>
+  <data name="EntryTicketNotInBag" xml:space="preserve">
+    <value>Квиток: %ls +%d — немає в сумці</value>
+  </data>
+  <data name="FieldRepairAllConfirm" xml:space="preserve">
+    <value>Відремонтувати все вдягнене за %ls зен?</value>
   </data>
 </root>

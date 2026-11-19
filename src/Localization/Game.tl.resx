@@ -12145,7 +12145,7 @@
     <comment>legacy_id=3579</comment>
   </data>
   <data name="Official MU Helper Setting has been saved." xml:space="preserve">
-    <value>Na-save na ang Opisyal na Setting ng Katulong sa MU.</value>
+    <value>Na-save ang settings ng MU Helper.</value>
     <comment>legacy_id=3580</comment>
   </data>
   <data name="Official MU Helper can't be implemented in this region." xml:space="preserve">
@@ -14444,5 +14444,36 @@
   </data>
   <data name="TouchHelpDoubleTapMove" xml:space="preserve">
     <value>I-double tap ang item para ilipat ito</value>
+  </data>
+  <!-- Round 17 -->
+  <data name="MuHelperStoppedHeroDied" xml:space="preserve">
+    <value>Huminto ang MU Helper: namatay ang karakter mo.</value>
+  </data>
+  <data name="MuHelperNoHealPotions" xml:space="preserve">
+    <value>MU Helper: ubos na ang healing potion.</value>
+  </data>
+  <data name="MuHelperBagFull" xml:space="preserve">
+    <value>MU Helper: puno ang bag, naiiwan sa lupa ang mga item.</value>
+  </data>
+  <data name="RepairNoZen" xml:space="preserve">
+    <value>Kulang ang zen para ayusin ang gamit.</value>
+  </data>
+  <data name="MuHelperUnconfiguredZ" xml:space="preserve">
+    <value>Karaniwang atake lang ang gamit ng MU Helper: itakda ang skill, potion at pagpulot sa settings nito (Z)</value>
+  </data>
+  <data name="MuHelperUnconfiguredTouch" xml:space="preserve">
+    <value>Karaniwang atake lang ang gamit ng MU Helper: itakda ang skill, potion at pagpulot sa Menu → MU Helper</value>
+  </data>
+  <data name="TicketFitsYourLevel" xml:space="preserve">
+    <value>Akma sa level mo</value>
+  </data>
+  <data name="TicketYouNeedPlusD" xml:space="preserve">
+    <value>Kailangan mo ang ticket +%d</value>
+  </data>
+  <data name="EntryTicketNotInBag" xml:space="preserve">
+    <value>Ticket: %ls +%d — wala sa bag</value>
+  </data>
+  <data name="FieldRepairAllConfirm" xml:space="preserve">
+    <value>Ayusin lahat ng suot na gamit sa halagang %ls zen?</value>
   </data>
 </root>

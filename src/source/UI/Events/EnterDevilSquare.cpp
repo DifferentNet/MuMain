@@ -9,6 +9,7 @@
 #include "Character/CharacterManager.h"
 #include "Audio/DSPlaySound.h"
 #include "UI/RmlBridge/RmlTheme.h"
+#include "GameLogic/Events/EntryLevels.h"
 
 #include <string>
 #include <vector>
@@ -21,24 +22,6 @@ CEnterDevilSquare::CEnterDevilSquare() : m_View("devil_square_enter", "Data/Inte
     m_pNewUIMng = NULL;
 
     m_iNumActiveBtn = 1;
-
-    m_iDevilSquareLimitLevel[0][0] = 15; m_iDevilSquareLimitLevel[0][1] = 130;
-    m_iDevilSquareLimitLevel[1][0] = 131; m_iDevilSquareLimitLevel[1][1] = 180;
-    m_iDevilSquareLimitLevel[2][0] = 181; m_iDevilSquareLimitLevel[2][1] = 230;
-    m_iDevilSquareLimitLevel[3][0] = 231; m_iDevilSquareLimitLevel[3][1] = 280;
-    m_iDevilSquareLimitLevel[4][0] = 281; m_iDevilSquareLimitLevel[4][1] = 330;
-    m_iDevilSquareLimitLevel[5][0] = 331; m_iDevilSquareLimitLevel[5][1] = 400;
-    // Square 7: the third class from level 331 (MU Skynet has no master levels; the server's
-    // MiniGameDefinition asks the same, trim/bc8-ds7-third-class.sql).
-    m_iDevilSquareLimitLevel[6][0] = 331; m_iDevilSquareLimitLevel[6][1] = 400;
-
-    m_iDevilSquareLimitLevel[7][0] = 15; m_iDevilSquareLimitLevel[7][1] = 110;
-    m_iDevilSquareLimitLevel[8][0] = 111; m_iDevilSquareLimitLevel[8][1] = 160;
-    m_iDevilSquareLimitLevel[9][0] = 161; m_iDevilSquareLimitLevel[9][1] = 210;
-    m_iDevilSquareLimitLevel[10][0] = 211; m_iDevilSquareLimitLevel[10][1] = 260;
-    m_iDevilSquareLimitLevel[11][0] = 261; m_iDevilSquareLimitLevel[11][1] = 310;
-    m_iDevilSquareLimitLevel[12][0] = 311; m_iDevilSquareLimitLevel[12][1] = 400;
-    m_iDevilSquareLimitLevel[13][0] = 311; m_iDevilSquareLimitLevel[13][1] = 400;
 }
 
 CEnterDevilSquare::~CEnterDevilSquare()
@@ -128,64 +111,23 @@ float CEnterDevilSquare::GetLayerDepth()
     return 4.0f;
 }
 
-int CEnterDevilSquare::CheckLimitLV(int iIndex)
+int CEnterDevilSquare::CheckLimitLV()
 {
-    int	iVal = 0;
-    int iRet = 0;
-
-    if (iIndex == 1)
-    {
-        iVal = 7;
-    }
-
-    const int iLevel = CharacterAttribute->Level;
-
-    // A third class goes to square 7 from its level on; below it (after a reset) it takes the square of
-    // its level like everyone else.
-    if (gCharacterManager.IsThirdClass(CharacterAttribute->Class)
-        && iLevel >= m_iDevilSquareLimitLevel[iVal + MAX_ENTER_GRADE - 1][0])
-        return MAX_ENTER_GRADE - 1;
-
-    for (int iCastleLV = 0; iCastleLV < MAX_ENTER_GRADE - 1; ++iCastleLV)
-    {
-        if (iLevel >= m_iDevilSquareLimitLevel[iVal + iCastleLV][0]
-            && iLevel <= m_iDevilSquareLimitLevel[iVal + iCastleLV][1])
-        {
-            iRet = iCastleLV;
-            break;
-        }
-    }
-
-    return iRet;
+    // Below the first band the first button stays enabled, as before (the server refuses).
+    const int grade = GameLogic::Events::EntryLevels::HeroGrade(GameLogic::Events::EntryLevels::Event::DevilSquare);
+    return grade < 0 ? 0 : grade;
 }
 
 void CEnterDevilSquare::OpenningProcess()
 {
     SocketClient->ToGameServer()->SendCloseNpcRequest();
 
-    int iLimitLVIndex = 0;
-    if (gCharacterManager.GetBaseClass(Hero->Class) == CLASS_DARK || gCharacterManager.GetBaseClass(Hero->Class) == CLASS_DARK_LORD
-        || gCharacterManager.GetBaseClass(Hero->Class) == CLASS_RAGEFIGHTER)
-    {
-        iLimitLVIndex = 1;
-    }
-
-    m_iNumActiveBtn = CheckLimitLV(iLimitLVIndex);
+    m_iNumActiveBtn = CheckLimitLV();
 
     // Every button locked (grey, never hovered) but the hero's band.
     std::vector<EventEntryView::Button> buttons(MAX_ENTER_GRADE);
-    wchar_t sztext[255] = { 0, };
-    for (int i = 0; i < MAX_ENTER_GRADE - 1; i++)
-    {
-        mu_swprintf(sztext, I18N::Game::TheDSquareDDLevel, i + 1,
-                    m_iDevilSquareLimitLevel[(iLimitLVIndex * MAX_ENTER_GRADE) + i][0],
-                    m_iDevilSquareLimitLevel[(iLimitLVIndex * MAX_ENTER_GRADE) + i][1]);
-        buttons[i].label = sztext;
-    }
-    mu_swprintf(sztext, I18N::MiniGameEntry::SquareThirdClass, 7,
-                m_iDevilSquareLimitLevel[(iLimitLVIndex * MAX_ENTER_GRADE) + MAX_ENTER_GRADE - 1][0],
-                m_iDevilSquareLimitLevel[(iLimitLVIndex * MAX_ENTER_GRADE) + MAX_ENTER_GRADE - 1][1]);
-    buttons[MAX_ENTER_GRADE - 1].label = sztext;
+    for (int i = 0; i < MAX_ENTER_GRADE; i++)
+        buttons[i].label = GameLogic::Events::EntryLevels::BandLabel(GameLogic::Events::EntryLevels::Event::DevilSquare, i);
     buttons[m_iNumActiveBtn].enabled = true;
 
     SetViewContent(buttons);
@@ -200,13 +142,15 @@ void CEnterDevilSquare::ClosingProcess()
 void CEnterDevilSquare::SetViewContent(const std::vector<EventEntryView::Button>& buttons)
 {
     // Keep all six translated fragments in their original order.
-    const std::vector<std::wstring> lines = {
-        I18N::Game::YouVeBeenGivenAChanceToProveYourBravery,
-        I18N::Game::NoOneHasEverEnteredTheDevilSquareYet,
-        I18N::Game::NoHumanHasEverGoneThere,
-        I18N::Game::DoNotBelieveAnythingYouSeeInThere,
-        I18N::Game::OnlyTrustYourBraveryAndStrength,
-        I18N::Game::OnlyYourBraveryAndStrengthWillKeepYouAlive,
+    // Before them, the ticket of the hero's square: square N takes the Devil's Invitation +N.
+    const std::vector<EventEntryView::Line> lines = {
+        EventEntryView::TicketLine(ITEM_DEVILS_INVITATION, m_iNumActiveBtn + 1),
+        {I18N::Game::YouVeBeenGivenAChanceToProveYourBravery},
+        {I18N::Game::NoOneHasEverEnteredTheDevilSquareYet},
+        {I18N::Game::NoHumanHasEverGoneThere},
+        {I18N::Game::DoNotBelieveAnythingYouSeeInThere},
+        {I18N::Game::OnlyTrustYourBraveryAndStrength},
+        {I18N::Game::OnlyYourBraveryAndStrengthWillKeepYouAlive},
     };
 
     m_View.SetContent(I18N::Game::DevilSquare, lines, buttons);

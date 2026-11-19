@@ -56,16 +56,26 @@ def translation(symbol, keys, localized):
     return value
 
 
-def event_state(window, source, keys, localized):
+def event_state(window, source, keys, localized, repo):
     title = "MessengerOfArchangel" if window == "blood_castle_enter" else "DevilSquare"
-    lines = re.search(r'const std::vector<std::wstring> lines = \{(.*?)\};', source, re.S)
+    lines = re.search(r'const std::vector<EventEntryView::Line> lines = \{(.*?)\};', source, re.S)
     symbols = re.findall(r'I18N::Game::(\w+)', lines[1]) if lines else ["YourWillToHelpTheArchangel"]
     description = [translation(symbol, keys, localized) for symbol in symbols]
     blood = window == "blood_castle_enter"
+    # The ticket line comes first (EventEntryView::TicketLine); its longer "not in the bag" form.
+    ticket = "Cloak of Invisibility" if blood else "Devil's Invitation"
+    description.insert(0, translation("EntryTicketNotInBag", keys, localized).replace("%ls", "%s") % (ticket, 8 if blood else 7))
     pattern = "CastleDLevelDD" if blood else "TheDSquareDDLevel"
     third = "CastleThirdClass" if blood else "SquareThirdClass"
-    levels = re.findall(r'm_i\w+LimitLevel\[(\d+)\]\[(\d+)\] = (\d+)', source)
-    limits = {(int(index), int(bound)): int(value) for index, bound, value in levels}
+    # The bands live in GameLogic/Events/EntryLevels.cpp; the first table is the one most classes read.
+    table = (repo / "src/source/GameLogic/Events/EntryLevels.cpp").read_text(encoding="utf-8")
+    name = "BloodCastleBands" if blood else "DevilSquareBands"
+    body = re.search(name + r'\[2\]\[\w+\] = \{\s*\{(.*?\})\},', table, re.S)[1]
+    pairs = re.findall(r'\{(\d+), (\d+)\}', body)
+    limits = {}
+    for index, (low, high) in enumerate(pairs):
+        limits[index, 0] = int(low)
+        limits[index, 1] = int(high)
     count = 8 if blood else 7
     buttons = [translation(pattern, keys, localized) % (i + 1, limits[i, 0], limits[i, 1])
                for i in range(count - 1)]
@@ -142,7 +152,7 @@ def prepare_document(repo, theme, window, keys, localized):
              for name, symbol in source_bindings(source).items()}
     state.setdefault("title", translation("PersonalStore", keys, localized))
     if window.endswith("_enter"):
-        state, description, buttons = event_state(window, source, keys, localized)
+        state, description, buttons = event_state(window, source, keys, localized, repo)
         expand_repeat(root, "line : lines", description)
         expand_repeat(root, "b, i : buttons", buttons)
     project_markup(root, state)

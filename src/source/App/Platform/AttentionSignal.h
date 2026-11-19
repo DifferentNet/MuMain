@@ -1,7 +1,8 @@
 #pragma once
 
 // Calls the player back to a game window that is not in front when something waits for an answer: a whisper, or a
-// party, trade, guild or duel request (Network/Server/WSclient.cpp). Never for normal chat.
+// party, trade, guild or duel request (Network/Server/WSclient.cpp), or the MU Helper stopping on a death or running
+// out of healing potions or bag room (MUHelper/MuHelper.cpp). Never for normal chat.
 namespace App::Platform::Attention
 {
 // PC: the taskbar button flashes until the window gets the focus. /play: the tab title starts with "(!) " until the

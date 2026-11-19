@@ -123,6 +123,9 @@ namespace mu::ui::window
 
             bool repairVisible = false;
             Rml::String repairTooltip;
+            bool repairAllVisible = false; // the second hammer, while repair mode is on
+            Rml::String repairAllTooltip;
+            int repairAllCount = 0; // the worn items it would repair (the legacy theme's "xN" mark)
 
             bool myShopVisible = false;
             bool myShopModeOpen = true;
@@ -289,6 +292,9 @@ namespace mu::ui::window
         int   FindEmptySlot(IN int cx, IN int cy) const;
         int   FindEmptySlotIncludingExtensions(IN int cx, IN int cy) const;
         int   FindEmptySlotIncludingExtensions(ITEM* pItem) const;
+        // Whether a drop picked up now would fit: zen, a free place on any owned bag page, or a stack in the bag it
+        // joins (the server stacks potions and the like on pickup; AreItemsStackable decides as for a drag).
+        bool  HasRoomForDrop(ITEM* pDrop) const;
         bool  IsItem(short int siType, bool bcheckPick = false) const;
         int   GetNumItemByKey(DWORD dwItemKey) const;
         int   GetNumItemByType(short sItemType) const;
@@ -360,6 +366,8 @@ namespace mu::ui::window
         void RenderItemToolTip(int iSlotIndex) const;
         bool CanOpenMyShopInterface();
         void ToggleRepairMode();
+        // In repair mode away from a shop: repairs every damaged worn item (GameLogic/Items/FieldRepair.h).
+        void RequestFieldRepairAll();
 
         // The equipped and the grid's items, into the document's #item_view. Last, so it is
         // destroyed first.

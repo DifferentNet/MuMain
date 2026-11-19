@@ -96,6 +96,11 @@
 		<div id="btn_repair" class="inv-btn inv-btn-repair" data-class-hidden="!repair_visible"
 		     data-event-click="my_inventory_repair_click" data-attr-data-hint="repair_tooltip"></div>
 
+		<!-- Repair all worn items (A), only in repair mode; it sits where the hidden personal-store button was. -->
+		<div id="btn_repair_all" class="inv-btn inv-btn-repair-all" data-class-hidden="!repair_all_visible"
+		     data-event-click="my_inventory_repair_all_click" data-attr-data-hint="repair_all_tooltip"><span
+		     class="inv-btn-badge" data-if="repair_all_count > 0">&#215;{{repair_all_count}}</span></div>
+
 		<div id="btn_myshop" class="inv-btn inv-btn-myshop" data-class-hidden="!myshop_visible"
 		     data-class-close-mode="!myshop_mode_open" data-class-locked="myshop_locked"
 		     data-event-click="my_inventory_myshop_click" data-attr-data-hint="myshop_tooltip"></div>
