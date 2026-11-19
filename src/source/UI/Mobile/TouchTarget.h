@@ -4,6 +4,7 @@
 // The sums only; the touch controls measure the boxes from their document.
 #pragma once
 
+#include <array>
 #include <span>
 
 namespace UI::Mobile::TouchTarget
@@ -19,6 +20,19 @@ struct Box
 };
 
 inline constexpr int NoBox = -1;
+
+// A point in window pixels.
+struct Point
+{
+    float x = 0.f;
+    float y = 0.f;
+};
+
+inline constexpr int ProbeCount = 5;
+
+// Where a control is looked under for a window drawn over it: its centre and four points towards its
+// corners, as far in as a round button's edge (a window over the box's empty corner hides nothing of it).
+[[nodiscard]] std::array<Point, ProbeCount> Probes(const Box& box);
 
 // How far a point lies outside a box; 0 inside it or on its edge.
 [[nodiscard]] float DistanceOutside(const Box& box, float x, float y);

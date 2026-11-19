@@ -437,6 +437,11 @@ body.pad #tc_pick_legend {
 body.socialising #tc_quick {
 	z-index: 0;
 }
+/* A control a window hides keeps hidden while the menu, the skill picker or the Social panel lifts the
+   controls over every window (TouchControls.cpp, SyncUnderWindow): no Attack over the inventory. */
+.under-window {
+	visibility: hidden;
+}
 #tc_social_panel {
 	position: absolute;
 	z-index: 3;

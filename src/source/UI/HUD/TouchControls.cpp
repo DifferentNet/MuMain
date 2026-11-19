@@ -45,6 +45,7 @@
 #include "UI/RmlBridge/RmlThemedView.h"
 #include "UI/Social/FriendWindow.h"
 
+#include <RmlUi/Core/ComputedValues.h>
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/DataModelHandle.h>
 #include <RmlUi/Core/Element.h>
@@ -897,6 +898,12 @@ std::string_view FileName(const Rml::String& url)
     return slash == std::string_view::npos ? path : path.substr(slash + 1);
 }
 
+// The depth the controls lie at with no panel of theirs open: under the windows (RmlStackingOrder.cpp).
+float RestDepth()
+{
+    return UI::RmlBridge::StackingDepthForDocument(DocumentName).value_or(0.f);
+}
+
 // The depth a document is drawn at now: its z-index, which differs from the table's for a few (the
 // phone view's HUD overlays, these controls while their menu is open).
 std::optional<float> CurrentDepth(Rml::ElementDocument* document)
@@ -917,9 +924,9 @@ bool IsFramedChatLog(Rml::ElementDocument* document, std::string_view name)
     return panel != nullptr && panel->IsClassSet("framed");
 }
 
-// Whether a document is drawn over the controls and keeps the fingers it covers (all but the
-// pass-through ones).
-bool IsDrawnOver(Rml::ElementDocument* owner, Rml::ElementDocument* controls)
+// Whether a document is drawn over the controls lying at `ownDepth` and keeps the fingers it covers
+// (all but the pass-through ones).
+bool IsDrawnOverAt(Rml::ElementDocument* owner, Rml::ElementDocument* controls, std::optional<float> ownDepth)
 {
     if (owner == nullptr || owner == controls)
         return false;
@@ -930,8 +937,13 @@ bool IsDrawnOver(Rml::ElementDocument* owner, Rml::ElementDocument* controls)
             return false;
     }
     const std::optional<float> depth = CurrentDepth(owner);
-    const std::optional<float> ownDepth = CurrentDepth(controls);
     return !depth || !ownDepth || *depth > *ownDepth;
+}
+
+// Whether a document is drawn over the controls where they lie now.
+bool IsDrawnOver(Rml::ElementDocument* owner, Rml::ElementDocument* controls)
+{
+    return IsDrawnOverAt(owner, controls, CurrentDepth(controls));
 }
 
 // Whether the element a finger landed on is a window over the controls (a document drawn above
@@ -948,12 +960,13 @@ bool IsWindowOver(Rml::Element* hit, Rml::ElementDocument* controls)
 // events (the inventory's item grid is clicked by its native code), so RmlUi's hit test looks
 // through it to the controls below. A panel marked "touch-through" (an event's timer or score
 // frame, which takes no taps) leaves the point to the controls.
-Rml::ElementDocument* PlacedWindowAt(Rml::Context* context, Rml::ElementDocument* controls, Rml::Vector2f point)
+Rml::ElementDocument* PlacedWindowAtDepth(Rml::Context* context, Rml::ElementDocument* controls, Rml::Vector2f point,
+                                          std::optional<float> controlsDepth)
 {
     for (int index = 0; index < context->GetNumDocuments(); ++index)
     {
         Rml::ElementDocument* other = context->GetDocument(index);
-        if (other == nullptr || !other->IsVisible() || !IsDrawnOver(other, controls))
+        if (other == nullptr || !other->IsVisible() || !IsDrawnOverAt(other, controls, controlsDepth))
             continue;
         for (const char* rootId : {"panel", "content_root"})
         {
@@ -964,6 +977,11 @@ Rml::ElementDocument* PlacedWindowAt(Rml::Context* context, Rml::ElementDocument
         }
     }
     return nullptr;
+}
+
+Rml::ElementDocument* PlacedWindowAt(Rml::Context* context, Rml::ElementDocument* controls, Rml::Vector2f point)
+{
+    return PlacedWindowAtDepth(context, controls, point, CurrentDepth(controls));
 }
 
 bool IsPlacedWindowAt(Rml::Context* context, Rml::ElementDocument* controls, Rml::Vector2f point)
@@ -1106,10 +1124,30 @@ Rml::Element* FindElement(Rml::ElementDocument* document, const char* id)
     return element;
 }
 
+// A control a window hides keeps hidden under this class (touch_controls.rcss) while a panel is open
+// (SyncUnderWindow).
+constexpr const char* UnderWindowClass = "under-window";
+
+// Whether an element is laid out on the screen: shown, or hidden only by UnderWindowClass. Such a control
+// keeps its box, so the HUD pieces placed beside the controls (FollowNeighbours) stay where they are; it
+// takes no finger, as only the open panel's hit test runs then.
+bool IsLaidOut(Rml::Element* element)
+{
+    for (Rml::Element* node = element; node != nullptr; node = node->GetParentNode())
+    {
+        if (node->IsVisible())
+            continue;
+        const bool displayed = node->GetComputedValues().display() != Rml::Style::Display::None;
+        if (!displayed || !node->IsClassSet(UnderWindowClass))
+            return false;
+    }
+    return true;
+}
+
 ControlBox BoxOf(Rml::ElementDocument* document, const char* id)
 {
     Rml::Element* element = FindElement(document, id);
-    if (element == nullptr || !element->IsVisible(true))
+    if (element == nullptr || !IsLaidOut(element))
         return ControlBox{};
     const Rml::Vector2f offset = element->GetAbsoluteOffset(Rml::BoxArea::Border);
     const Rml::Vector2f size = element->GetBox().GetSize(Rml::BoxArea::Border);
@@ -2730,11 +2768,138 @@ void UpdateButtons(ControlsModel& model)
 // its panel is seen whole and takes the fingers; under them otherwise.
 void SyncDepth(Rml::ElementDocument* document, bool panelOpen)
 {
-    const float depth = panelOpen ? UI::RmlBridge::OpenTouchMenuDepth
-                                 : UI::RmlBridge::StackingDepthForDocument(DocumentName).value_or(0.f);
+    const float depth = panelOpen ? UI::RmlBridge::OpenTouchMenuDepth : RestDepth();
     const Rml::Property* current = document->GetLocalProperty(Rml::PropertyId::ZIndex);
     if (current == nullptr || current->Get<float>() != depth)
         document->SetProperty(Rml::PropertyId::ZIndex, Rml::Property(depth, Rml::Unit::NUMBER));
+}
+
+// The controls' own panels, the screen they dim and the top row the panels open from: drawn over every
+// window while a panel is open, as SyncDepth lifts them.
+constexpr std::string_view PanelElements[] = {"tc_quick",           "tc_menu_backdrop", "tc_menu_panel",
+                                              "tc_picker_backdrop", "tc_picker",        "tc_social_backdrop",
+                                              "tc_social_panel"};
+// How often an open panel looks again which controls the windows hide (a window may open or shut).
+constexpr double UnderWindowCheckSeconds = 0.25;
+
+// Whether the controls carry UnderWindowClass now, and when, for which document and with the picker open
+// or not they were last looked under: another document (the theme's built anew) or the picker opening or
+// shutting is looked under at once.
+struct UnderWindowState
+{
+    bool marked = false;
+    double at = 0.0;
+    const Rml::ElementDocument* document = nullptr;
+    bool picking = false;
+};
+UnderWindowState g_underWindow;
+
+// Whether a window drawn over the controls at their own depth covers the point: what hides a control
+// while no panel lifts them. The finger's rule (WindowOverAt), the controls themselves looked through.
+bool IsUnderWindowAtRest(Rml::Context* context, Rml::ElementDocument* controls, Rml::Vector2f point)
+{
+    const std::optional<float> restDepth = RestDepth();
+    Rml::Element* hit = context->GetElementAtPoint(point, controls);
+    if (hit != nullptr && hit != hit->GetOwnerDocument() && IsDrawnOverAt(hit->GetOwnerDocument(), controls, restDepth))
+        return true;
+    return PlacedWindowAtDepth(context, controls, point, restDepth) != nullptr;
+}
+
+// Whether any window is drawn over the controls at their own depth: with none, nothing is looked under.
+bool AnyWindowAboveRest(Rml::Context* context, Rml::ElementDocument* controls)
+{
+    const std::optional<float> restDepth = RestDepth();
+    for (int index = 0; index < context->GetNumDocuments(); ++index)
+    {
+        Rml::ElementDocument* other = context->GetDocument(index);
+        if (other != nullptr && other->IsVisible() && IsDrawnOverAt(other, controls, restDepth))
+            return true;
+    }
+    return false;
+}
+
+// The element whose box a control is looked under by: the joystick's ring, not the wide area it stands
+// in; null for the joystick with no ring shown (a finger on it).
+Rml::Element* ProbedElement(Rml::Element* element)
+{
+    if (element->GetId() != "tc_stick")
+        return element;
+    return element->GetElementById("tc_stick_idle");
+}
+
+// Whether a window at rest covers any of an element's probes (UI/Mobile/TouchTarget): a part of it shows
+// under no window, the rest would show over one.
+bool IsElementUnderWindow(Rml::Context* context, Rml::ElementDocument* controls, Rml::Element* element)
+{
+    element = ProbedElement(element);
+    if (element == nullptr)
+        return false;
+    const Rml::Vector2f offset = element->GetAbsoluteOffset(Rml::BoxArea::Border);
+    const Rml::Vector2f size = element->GetBox().GetSize(Rml::BoxArea::Border);
+    const UI::Mobile::TouchTarget::Box box{true, offset.x, offset.y, offset.x + size.x, offset.y + size.y};
+    for (const UI::Mobile::TouchTarget::Point& probe : UI::Mobile::TouchTarget::Probes(box))
+    {
+        if (IsUnderWindowAtRest(context, controls, Rml::Vector2f(probe.x, probe.y)))
+            return true;
+    }
+    return false;
+}
+
+// Whether an element of the controls shows whatever covers it while a panel is open: the panels, and the
+// skill buttons the picker sets (lit over its dimmed screen).
+bool ShowsOverWindows(Rml::Element* element, bool picking)
+{
+    const std::string_view id(element->GetId());
+    if (std::find(std::begin(PanelElements), std::end(PanelElements), id) != std::end(PanelElements))
+        return true;
+    return picking && element->IsClassSet("tc-skill");
+}
+
+void MarkControlsUnderWindows(Rml::ElementDocument* document, bool picking)
+{
+    Rml::Context* context = RmlUiRuntime::Instance().GetContext();
+    if (context == nullptr)
+        return;
+    const bool anyWindow = AnyWindowAboveRest(context, document);
+    for (int index = 0; index < document->GetNumChildren(); ++index)
+    {
+        Rml::Element* element = document->GetChild(index);
+        // Not shown at all (display: none), it is not looked under.
+        const bool displayed = element->GetComputedValues().display() != Rml::Style::Display::None;
+        const bool hidden = anyWindow && displayed && !ShowsOverWindows(element, picking) &&
+                            IsElementUnderWindow(context, document, element);
+        element->SetClass(UnderWindowClass, hidden);
+    }
+}
+
+void ClearControlsUnderWindows(Rml::ElementDocument* document)
+{
+    for (int index = 0; index < document->GetNumChildren(); ++index)
+        document->GetChild(index)->SetClass(UnderWindowClass, false);
+}
+
+// While a panel lifts the controls over every window (SyncDepth), the controls a window hid stay hidden:
+// Attack and the buttons beside it do not show over the inventory under the Social panel. With no window
+// open nothing is hidden.
+void SyncUnderWindow(Rml::ElementDocument* document, bool panelOpen, bool picking)
+{
+    if (!panelOpen)
+    {
+        if (!g_underWindow.marked)
+            return;
+        ClearControlsUnderWindows(document);
+        g_underWindow.marked = false;
+        return;
+    }
+    const double now = Now();
+    const bool same = g_underWindow.document == document && g_underWindow.picking == picking;
+    if (g_underWindow.marked && same && now - g_underWindow.at < UnderWindowCheckSeconds)
+        return;
+    g_underWindow.marked = true;
+    g_underWindow.at = now;
+    g_underWindow.document = document;
+    g_underWindow.picking = picking;
+    MarkControlsUnderWindows(document, picking);
 }
 
 void Hide()
@@ -2870,6 +3035,7 @@ void Update()
     // A walk to a player for an action of the Social panel; the stick takes over from it.
     UI::Mobile::Social::Update(GameLogic::Touch::IsSteering());
     SyncDepth(document, model.menuOpen || model.pickerOpen || model.socialOpen);
+    SyncUnderWindow(document, model.menuOpen || model.pickerOpen || model.socialOpen, model.pickerOpen);
     UI::Mobile::HeroFrame::Sync(model.hero, [](const char* field) { g_View.MarkDirty(field); });
     // Played with the pad, the controls are measured lazily (EnsureBoxes): only an A press over a
     // window reads them then.
