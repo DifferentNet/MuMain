@@ -1110,24 +1110,8 @@ void CMapManager::Load() // OK
     else
     {
         wchar_t DirName[32];
-        int iMapWorld = this->WorldActive + 1;
-
-        if (this->InBloodCastle() == true)
-        {
-            iMapWorld = WD_11BLOODCASTLE1 + 1;
-        }
-        else if (this->InChaosCastle() == true)
-        {
-            iMapWorld = WD_18CHAOS_CASTLE + 1;
-        }
-        else if (this->InHellas() == true)
-        {
-            iMapWorld = WD_24HELLAS + 1;
-        }
-        else if (gMapManager.IsCursedTemple())
-        {
-            iMapWorld = WD_45CURSEDTEMPLE_LV1 + 2;
-        }
+        // The same folder LoadWorld and the map pack read-ahead use.
+        const int iMapWorld = MapFolderNumber(this->WorldActive);
 
         mu_swprintf(DirName, L"Data\\Object%d\\", iMapWorld);
         for (i = MODEL_WORLD_OBJECT; i < MAX_WORLD_OBJECTS; i++)
