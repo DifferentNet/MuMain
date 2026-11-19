@@ -255,8 +255,9 @@ void CMsgWin::SetMsg(MSG_WIN_TYPE eType, std::wstring lpszMsg, std::wstring lpsz
     }
     else
     {
-        lpszMsg.copy(m_aszMsg[0], MW_MSG_ROW_MAX - 1);
-        lpszMsg2.copy(m_aszMsg[1], MW_MSG_ROW_MAX - 1);
+        // copy() writes no terminator, and the rows still hold earlier messages.
+        m_aszMsg[0][lpszMsg.copy(m_aszMsg[0], MW_MSG_ROW_MAX - 1)] = L'\0';
+        m_aszMsg[1][lpszMsg2.copy(m_aszMsg[1], MW_MSG_ROW_MAX - 1)] = L'\0';
         m_nMsgLine = 2;
     }
 }
