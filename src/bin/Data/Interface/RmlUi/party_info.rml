@@ -17,11 +17,12 @@
 		<span class="sharp-text" id="title" data-style-font-size="text_px + 'px'">{{window_title}}</span>
 
 		<div class="sharp-text party-empty-msg" data-class-hidden="has_party" data-style-font-size="text_px + 'px'">
-			<span data-for="line : empty_state_lines" data-class-paragraph="it_index == 3">{{line.text}}</span>
+			<span data-for="line : empty_state_lines" data-class-paragraph="it_index == empty_paragraph_at">{{line.text}}</span>
 		</div>
-		<!-- The phone view (no mouse to type /party with): opens the touch HUD's list of players nearby, where
-		     a party is offered with a tap. -->
-		<div id="party_social_btn" data-class-hidden="has_party || !phone_hud" data-event-click="party_open_social">
+		<!-- With no party: the phone view opens the touch HUD's list of players nearby, where a party is offered
+		     with a tap; the PC opens the command window (D) with Party picked, then a click on a player. -->
+		<div id="party_social_btn" data-class-hidden="has_party" data-class-pc="!phone_hud"
+		     data-event-click="party_open_social">
 			<span class="sharp-text sharp-centre sharp-middle" data-style-font-size="text_px + 'px'">{{social_label}}</span>
 		</div>
 

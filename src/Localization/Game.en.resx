@@ -17430,4 +17430,20 @@
   <data name="FieldRepairAllConfirm" xml:space="preserve">
     <value>Repair all worn items for %ls zen?</value>
   </data>
+  <!-- Round 20 -->
+  <data name="WarpListYouAreHere" xml:space="preserve">
+    <value>You are here</value>
+  </data>
+  <data name="WarpListYouDiedHere" xml:space="preserve">
+    <value>You died here</value>
+  </data>
+  <data name="PartyHintInviteByName" xml:space="preserve">
+    <value>Type /party Name to invite a player.</value>
+  </data>
+  <data name="PartyHintInviteFromCommandWindow" xml:space="preserve">
+    <value>Or press %ls, pick %ls and click a player.</value>
+  </data>
+  <data name="PartyHintSharedExperience" xml:space="preserve">
+    <value>A party shares the experience by level.</value>
+  </data>
 </root>

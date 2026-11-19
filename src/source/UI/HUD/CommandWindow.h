@@ -74,6 +74,8 @@ namespace mu::ui::window
         void ClosingProcess();
 
         int	GetCurCommandType();
+        // Picks a command as its button would (the party window's button opens this window with Party picked).
+        void SelectCommand(int command) { PressCommandButton(command); }
 
         void SetMouseCursor(int iCursorType);
         int	 GetMouseCursor();

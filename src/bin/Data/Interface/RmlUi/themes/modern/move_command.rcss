@@ -112,6 +112,21 @@
 .mc-row .col.unmet { color: token(semantic-danger); }
 .mc-row.can-move .col.unmet { color: token(text-primary); }
 
+/* MU Moldova: the map the hero is on (here) and the one he last died on (back): a bar at the row's left and a
+   faint tint. */
+.mc-mark { display: none; }
+.mc-row.here .mc-mark, .mc-row.back .mc-mark {
+	display: block;
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: calc(3px * var(--root-scale));
+}
+.mc-row.here .mc-mark { background-color: token(accent-gold); }
+.mc-row.back .mc-mark { background-color: token(semantic-danger); }
+.mc-row.here, .mc-row.back { background-color: token(surface-recessed); }
+
 /* The only action this window offers, so it takes the crimson hero treatment -- which also keeps
    native's own red close bar. */
 #close_bar {
@@ -153,6 +168,8 @@
 	/* Rows as tall as a finger (44, were 30); a pressed row lights up like a hovered one, as a finger has no hover. */
 	.mc-row, .mc-row .col { line-height: calc(44px * var(--root-scale)); }
 	.mc-row.can-move:active { background-color: token(surface-raised); }
+	/* A finger-tall row gets a wider here / back bar. */
+	.mc-row.here .mc-mark, .mc-row.back .mc-mark { width: calc(5px * var(--root-scale)); }
 	.mc-row {
 		padding-bottom: 0px;
 		border-bottom-width: calc(1px * var(--root-scale));

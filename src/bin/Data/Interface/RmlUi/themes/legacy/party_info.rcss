@@ -183,3 +183,7 @@
 #party_social_btn:hover { decorator: image(party-social-over); }
 #party_social_btn:active { decorator: image(party-social-down); }
 #party_social_btn .sharp-text { position: absolute; white-space: nowrap; color: token(text-primary); pointer-events: none; }
+
+/* MU Moldova: on the PC the same button at the native button art's height, well below the hint (which wraps to
+   several lines in some languages) and as wide as the party rows, so the longest label fits. */
+#party_social_btn.pc { left: 10px; top: 260px; width: 170px; height: 29px; }

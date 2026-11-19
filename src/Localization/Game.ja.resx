@@ -12558,4 +12558,20 @@
   <data name="Official MU Helper Setting has been saved." xml:space="preserve">
     <value>MU Helperの設定を保存しました。</value>
   </data>
+  <!-- Round 20 -->
+  <data name="WarpListYouAreHere" xml:space="preserve">
+    <value>現在地</value>
+  </data>
+  <data name="WarpListYouDiedHere" xml:space="preserve">
+    <value>ここで倒れました</value>
+  </data>
+  <data name="PartyHintInviteByName" xml:space="preserve">
+    <value>/party 名前 でプレイヤーを招待できます。</value>
+  </data>
+  <data name="PartyHintInviteFromCommandWindow" xml:space="preserve">
+    <value>または %ls を押して %ls を選び、プレイヤーをクリックします。</value>
+  </data>
+  <data name="PartyHintSharedExperience" xml:space="preserve">
+    <value>パーティーでは経験値がレベルに応じて分配されます。</value>
+  </data>
 </root>

@@ -19,6 +19,11 @@ namespace mu::ui::window
         bool canMove = false;
         bool levelUnmet = false; // only meaningful while !canMove, same as native
         bool zenUnmet = false;
+        // The row of the map the hero is on, and of the map he last died on (UI/HUD/WarpListMarks.h); the hint
+        // under the pointer says which.
+        bool here = false;
+        bool back = false;
+        Rml::String markHint;
 
         int index = 0; // position in m_listMoveInfoData, not the map index
     };
