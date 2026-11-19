@@ -1813,7 +1813,8 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     // are kept with them; one on this device reads at once. A download that failed is tried once more
     // after DEFERRED_RETRY_MS. Each part that came ({files, bytes}) or failed (bytes null) waits in
     // deferredSettled for WebFileSystem.cpp InstallDeferredParts (Module.muDeferredPart), which writes
-    // its files into /game between two frames; the game reads a failed part's files one by one.
+    // its files into /game between frames, a few milliseconds' worth a frame over several frames; the game
+    // reads a failed part's files one by one.
     const DEFERRED_RETRY_MS = 2000;
     const deferredEntries = ((releaseIndex && releaseIndex.parts) || []).filter((part) => part.deferred);
     const deferredSettled = [];
@@ -1845,8 +1846,8 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     // The late pack (startup.json "late", tools/web/make_startup_pack.py): textures the game reads only
     // once it is played, 23 MB of the 73.5 the startup download took (2026-11-03). It downloads after
     // the startup pack, while the player logs in, a map's pack going first, and is kept like the
-    // startup pack's parts. WebFileSystem.cpp InstallLatePack takes it between two frames
-    // (Module.muLatePack); until then, or where it fails, the game downloads a file it needs by itself.
+    // startup pack's parts. WebFileSystem.cpp InstallLatePack writes it between frames, a few
+    // milliseconds' worth a frame over several frames (Module.muLatePack); until then, or where it fails, the game downloads a file it needs by itself.
     let latePack = null;
     const latePackLoading = startupPackSettled.then(async () => {
       const entry = releaseIndex && releaseIndex.late;
@@ -1856,16 +1857,57 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       const kept = store ? await store.match(packKey(entry)).catch(() => undefined) : undefined;
       latePack = await loadPack("Late pack", entry, store, kept, () => {});
     }).catch((e) => console.warn(`Late pack: ${e}; the game downloads its files one by one instead`));
+    // A map pack's index (packs/worldN.json) is kept beside the pack, under the pack's hash.
+    const mapPackName = (world) => `packs/world${world}.pack`;
+    const mapIndexKey = (world, hash) => new URL(`packs/world${world}.json?v=${hash}`, location.href).href;
+    function keepMapIndex(store, world, entry) {
+      const key = mapIndexKey(world, entry.hash);
+      return store.put(key, new Response(JSON.stringify(entry))).then(async () => {
+        for (const request of await store.keys()) {
+          if (request.url !== key && packPath(request.url) === packPath(key)) await store.delete(request);
+        }
+      }).catch(() => {});
+    }
+    // The pack of `world` with the hash startup.json names and its index, where this device keeps
+    // both: {entry, kept}; else null.
+    async function keptMapPack(store, world, hash) {
+      try {
+        const kept = await store.match(packKey({ name: mapPackName(world), hash }));
+        const index = kept && await store.match(mapIndexKey(world, hash));
+        if (!index) return null;
+        const entry = Object.assign(await index.json(), { name: mapPackName(world) });
+        return entry.hash === hash ? { entry, kept } : null;
+      } catch (e) {
+        return null;
+      }
+    }
     // WebFileSystem.cpp LoadWorldFiles: the files of the map folder the game enters (Data/WorldN,
-    // ObjectN), or null where the map has no pack.
+    // ObjectN), or null where the map has no pack. startup.json "maps" (tools/web/make_startup_pack.py)
+    // has each pack's hash: a map without one has no pack (the login and character scenes), and a pack
+    // this device keeps reads with the index kept beside it, without a request to the server first
+    // (0.1-0.6 s on a phone's line, at every map change). Without "maps" (an older startup.json) or a
+    // pack kept, the index comes from the server as before. A release published while the page is open
+    // is picked up for a map's pack only where the pack isn't kept.
     async function mapPack(world) {
+      const hashes = releaseIndex && releaseIndex.maps;
+      if (hashes && !hashes[world]) return null;
       mapPacksLoading++;
       try {
-        const indexResponse = await fetch(`packs/world${world}.json`, { cache: "no-cache" });
-        if (!indexResponse.ok) return null;
-        const entry = Object.assign({ name: `packs/world${world}.pack` }, await indexResponse.json());
         const store = await openStore(MAP_PACK_STORE);
+        const local = store && hashes ? await keptMapPack(store, world, hashes[world]) : null;
+        if (local) {
+          return await loadPack(`Map pack ${world}`, local.entry, store, local.kept,
+                                downloadProgress("the map", local.entry.packed || 0));
+        }
+        const indexResponse = await fetch(`packs/world${world}.json`, { cache: "no-cache" });
+        // startup.json lists this map's pack, so a missing index is a failure, not a map without one.
+        if (!indexResponse.ok) {
+          if (hashes) throw new Error(`packs/world${world}.json: HTTP ${indexResponse.status}`);
+          return null;
+        }
+        const entry = Object.assign(await indexResponse.json(), { name: mapPackName(world) });
         const kept = store ? await store.match(packKey(entry)).catch(() => undefined) : undefined;
+        if (store) keepMapIndex(store, world, entry);
         return await loadPack(`Map pack ${world}`, entry, store, kept, downloadProgress("the map", entry.packed || 0));
       } finally {
         mapPacksLoading--;
@@ -2004,7 +2046,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         try {
           const response = await fetch(`packs/world${world}.json`, { cache: "no-cache" });
           if (!response.ok) continue;
-          const entry = Object.assign({ name: `packs/world${world}.pack` }, await response.json());
+          const entry = Object.assign(await response.json(), { name: mapPackName(world) });
           if (!(await store.match(packKey(entry)))) packs.push([world, entry]);
         } catch (e) { /* that map downloads when entered */ }
       }
@@ -2017,11 +2059,13 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       if (!store) return { worlds: 0, kept: 0 };
       const list = await (await fetch("files.txt", { cache: "no-cache" })).text();
       const worlds = (list.match(/^packs\/world\d+\.json\r?$/gm) || []).length;
-      const kept = new Set((await store.keys()).map((request) => packPath(request.url))).size;
+      // The packs, not the indexes kept beside them (keepMapIndex).
+      const kept = new Set((await store.keys()).map((request) => packPath(request.url))
+                             .filter((path) => path.endsWith(".pack"))).size;
       return { worlds, kept: Math.min(kept, worlds) };
     }
     // Downloads a map's pack into its storage as the game would keep it on entering the map (mapPack).
-    async function keepMapPack(store, entry) {
+    async function keepMapPack(store, world, entry) {
       const source = await fetchPacked(entry.name, { cache: "no-store" });
       const key = packKey(entry);
       await store.put(key, new Response(await source.response.arrayBuffer(),
@@ -2029,6 +2073,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       for (const request of await store.keys()) {
         if (request.url !== key && packPath(request.url) === packPath(key)) await store.delete(request);
       }
+      await keepMapIndex(store, world, entry);
       return entry.packed || 0;
     }
     async function downloadRestInBackground(job) {
@@ -2078,7 +2123,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
           if (job.stopped) return;
           while (mapPacksLoading) await new Promise((resume) => setTimeout(resume, 250));
           try {
-            const size = await keepMapPack(maps.store, entry);
+            const size = await keepMapPack(maps.store, world, entry);
             bytes += size;
             done++;
             downloadButton.progress(null, null, size);

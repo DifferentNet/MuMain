@@ -16,7 +16,7 @@ downloads the parts holding them, not all 115 MB again.
 
 The late pack: packs/startup-late.pack.gz with the files of --late (src/web/late-files.txt), textures the
 game lists at the start but reads only once it is played. The page downloads it after the startup pack,
-while the player logs in, and the game puts its files in place between two frames once it is here
+while the player logs in, and the game puts its files in place between frames, over several, once it is here
 (WebFileSystem.cpp InstallLatePack); until then the game downloads one it needs by itself, so these
 files keep their versions too.
 
@@ -24,7 +24,7 @@ The deferred parts: the startup pack's sounds and music (DEFERRED_FOLDERS, Data/
 15 MB of the 51 the startup download took (2026-11-12), each its own part marked "deferred" in
 startup.json, with the hash and name it had before it was deferred, so the players' copies stay. The
 page doesn't wait for them: it downloads them right after the other parts (before the late pack) and
-keeps them like those, and the game puts their files in place between two frames once they are here
+keeps them like those, and the game puts their files in place between frames, over several, once they are here
 (WebFileSystem.cpp InstallDeferredParts). Until then MiniAudioBackend.cpp only notes the sounds the game
 loads and the music it plays, and loads them a few a frame once the files are here; where a part fails,
 the game reads its files one by one. They get no versions: the game doesn't read them before the part
@@ -64,6 +64,9 @@ startup.json, which the page reads first:
             and what --models lists for it (src/web/model-files.txt, "<model> <file>" lines made by
             tools/web/make_map_files.py: a monster's sounds). The game reads them one after another
             and waits for each; the page starts them all when the model is read (fetch-backend.js).
+  maps      {map number: hash} of the map packs (packs/worldN.json's "hash"): the page reads a map's
+            pack it keeps without asking the server for its index first, and knows at once that a map
+            without an entry has no pack (index.html mapPack).
 A URL with ?v=<hash> names one version of a file, so the page's service worker (sw.js) keeps it on
 the device and asks the server again only when the hash changes. Files beside Main.js get none:
 scripts/publish-web.py rewrites config.ini for the server it publishes to.
@@ -350,7 +353,7 @@ def model_groups(root, versions, models_path):
 
 def write_map_packs(root, listed, in_startup_pack, extras):
     """Writes a pack per map (the module's docstring). Returns (the packs' names, the paths of the
-    maps' folders in them, how many were written, megabytes in them)."""
+    maps' folders in them, how many were written, megabytes in them, {map number: the pack's hash})."""
     maps = {}
     for path in listed:
         folders = path.split("/")
@@ -361,7 +364,7 @@ def write_map_packs(root, listed, in_startup_pack, extras):
     for world, paths in extras.items():
         maps.setdefault(world, []).extend([path, packed_size(os.path.join(root, path))] for path in paths
                                           if path not in folder_files)
-    names, packed, written, total = [], set(), 0, 0
+    names, packed, written, total, hashes = [], set(), 0, 0, {}
     for world, files in sorted(maps.items()):
         name = f"world{world}"
         index_path = os.path.join(root, PACKS, name + ".json")
@@ -372,10 +375,11 @@ def write_map_packs(root, listed, in_startup_pack, extras):
                 json.dump(entry, out, separators=(",", ":"))
             os.replace(index_path + ".tmp", index_path)
         names.append(name)
+        hashes[str(world)] = entry["hash"]
         packed.update(path for path, _ in files if path in folder_files)
         written += wrote
         total += sum(size for _, size in files)
-    return names, packed, written, total / 1e6
+    return names, packed, written, total / 1e6, hashes
 
 
 def main():
@@ -426,7 +430,8 @@ def main():
         parts_written += late_written
     in_startup_pack = {path for path, _ in files}
     extras = read_map_files(args.maps, args.root, set(listed), seen) if args.maps else {}
-    maps, in_map_packs, maps_written, map_megabytes = write_map_packs(args.root, listed, in_startup_pack, extras)
+    maps, in_map_packs, maps_written, map_megabytes, map_hashes = write_map_packs(args.root, listed, in_startup_pack,
+                                                                                 extras)
 
     kept = {os.path.basename(part["name"]) + ".gz" for part in parts + ([late] if late else [])}
     kept.update(name + suffix for name in maps for suffix in (".pack.gz", ".json"))
@@ -445,7 +450,7 @@ def main():
     code = {name: file_hash(os.path.join(args.root, name)) for name in CODE
             if os.path.isfile(os.path.join(args.root, name))}
     groups = model_groups(args.root, versions, args.models)
-    index = {"parts": parts, "code": code, "versions": versions, "groups": groups}
+    index = {"parts": parts, "code": code, "versions": versions, "groups": groups, "maps": map_hashes}
     if late:
         index["late"] = late
     with open(index_path + ".tmp", "w", encoding="utf-8") as out:

@@ -2420,13 +2420,17 @@ MSG MainLoop()
                 // it moved (options open or closed).
                 Render::Look::ApplyPendingTuning();
 #ifdef __EMSCRIPTEN__
-                // Between frames, where no texture file is open.
-                mu::web::InstallLatePack();
-                // The sounds and music, where no sound file is open, then the sounds that waited for them.
-                mu::web::InstallDeferredParts();
-                if (g_platformAudio != nullptr)
                 {
-                    g_platformAudio->LoadWaitingSounds();
+                    // One budget a frame for the three, each getting what the ones before it left.
+                    double fileBudgetMs = mu::web::FrameFileBudgetMs;
+                    // Between frames, where no texture file is open.
+                    fileBudgetMs -= mu::web::InstallLatePack(fileBudgetMs);
+                    // The sounds and music, where no sound file is open, then the sounds that waited for them.
+                    fileBudgetMs -= mu::web::InstallDeferredParts(fileBudgetMs);
+                    if (g_platformAudio != nullptr)
+                    {
+                        g_platformAudio->LoadWaitingSounds(fileBudgetMs);
+                    }
                 }
                 MuWebFollowPageSize();
                 UI::Mobile::FollowPage();

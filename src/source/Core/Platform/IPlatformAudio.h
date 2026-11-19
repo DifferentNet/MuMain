@@ -48,9 +48,10 @@ public:
 
 #ifdef __EMSCRIPTEN__
     // Web build: loads the sounds and starts the music the game asked for while their files were on their
-    // way (WebFileSystem.h WaitsForDeferredPart), a few a frame once they are here. Call it between frames,
-    // after mu::web::InstallDeferredParts.
-    virtual void LoadWaitingSounds() {}
+    // way (WebFileSystem.h WaitsForDeferredPart), a few a frame once they are here, within `budgetMs` (what
+    // mu::web::FrameFileBudgetMs left; none where nothing is). Call it between frames, after
+    // mu::web::InstallDeferredParts.
+    virtual void LoadWaitingSounds(double /*budgetMs*/) {}
 #endif
 };
 

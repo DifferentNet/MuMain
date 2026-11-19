@@ -252,3 +252,10 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/Core/Performance/LowFpsDetector.cpp
         ${CMAKE_SOURCE_DIR}/src/source/Render/Look/LowFpsHintPolicy.cpp
 )
+
+# Reading a whole stream in one read (texture files): same bytes as a byte-by-byte read.
+mu_add_test(
+    NAME stream_bytes_tests
+    SOURCES
+        test_stream_bytes.cpp
+)

@@ -17,6 +17,7 @@
 #include "Render/Textures/HdTextureSize.h"
 #include "Render/Textures/HdTextures.h"
 #include "Render/Textures/UpscaleMarker.h"
+#include "Core/Utilities/StreamBytes.h"
 #ifdef _EDITOR
 #include "Core/Utilities/AssetLoadWorld.h"
 #endif
@@ -31,7 +32,6 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
-#include <iterator>
 #include <memory>
 #include <span>
 #include <string>
@@ -791,8 +791,7 @@ bool CGlobalBitmap::OpenJpegTurbo(GLuint uiBitmapIndex, const std::wstring& file
         return false;
     }
 
-    std::vector<unsigned char> jpegBuf((std::istreambuf_iterator<char>(compressedFile)),
-                                       std::istreambuf_iterator<char>());
+    std::vector<unsigned char> jpegBuf = Core::Utilities::ReadRemainingBytes<unsigned char>(compressedFile);
     compressedFile.close();
 
     if (jpegBuf.size() <= 24)
@@ -941,7 +940,7 @@ bool CGlobalBitmap::OpenTga(GLuint uiBitmapIndex, const std::wstring& filename, 
             mu::log::Get("render")->debug("OpenTga -- file open failed: {}", mu_wchar_to_utf8(path.c_str()));
             return false;
         }
-        bytes.assign(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
+        bytes = Core::Utilities::ReadRemainingBytes<unsigned char>(input);
         if (!Render::Textures::PackedOzt::IsPacked(bytes))
         {
             return true;
@@ -1303,7 +1302,7 @@ bool CGlobalBitmap::ReadBitmapPixels(const BITMAP_t& bitmap, std::vector<std::ui
     {
         return false;
     }
-    const std::vector<unsigned char> file((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+    const std::vector<unsigned char> file = Core::Utilities::ReadRemainingBytes<unsigned char>(input);
 
     // The texture as loaded: an original image, padded to this size.
     const auto width = static_cast<int>(bitmap.Width);

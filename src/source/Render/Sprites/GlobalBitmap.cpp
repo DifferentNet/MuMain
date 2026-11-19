@@ -2,13 +2,13 @@
 #include "stdafx.h"
 #include "Render/Sprites/GlobalBitmap.h"
 #include "Core/Platform/PathResolve.h"
+#include "Core/Utilities/StreamBytes.h"
 #include "GlobalBitmapPath.h"
 
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <fstream>
-#include <iterator>
 #include <memory>
 #include <string>
 #include <vector>
@@ -504,7 +504,7 @@ bool CGlobalBitmap::Save_Image(const std::wstring& src, const std::wstring& dest
         return false;
     }
 
-    std::vector<char> buffer((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+    std::vector<char> buffer = Core::Utilities::ReadRemainingBytes<char>(input);
     input.close();
 
     if (buffer.empty())

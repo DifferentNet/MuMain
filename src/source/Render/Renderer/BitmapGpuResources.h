@@ -64,6 +64,30 @@ public:
         decltype(&SDL_GetError) getError = &SDL_GetError;
     };
 
+    // When a slot that is used again must wait for the GPU to finish its last upload.
+    struct FencePolicy
+    {
+        // Each time (Vulkan, D3D12, Metal): the GPU copies from the slot's memory when it runs the
+        // submission, so writing the next texture into it first would change the earlier one.
+        bool waitEverySlot = true;
+        // Otherwise (WebGPU: the upload hands the slot's bytes to the queue at once,
+        // wgpuQueueWriteBuffer, so the memory is free again right away) one wait after this many
+        // submissions or staged bytes since the last one, so the browser's GPU process never queues a
+        // whole map's textures; the other fences are released without a wait.
+        std::size_t checkpointSubmissions = 0;
+        std::uint64_t checkpointBytes = 0;
+    };
+    // Every field spelled out: a default member initializer can't be used before the class ends (clang).
+    static constexpr FencePolicy kWaitEverySlot{true, 0, 0};
+    static constexpr std::size_t kWebCheckpointSubmissions = 16;
+    static constexpr std::uint64_t kWebCheckpointBytes = std::uint64_t{8} << 20;
+    static constexpr FencePolicy kWaitAtCheckpoints{false, kWebCheckpointSubmissions, kWebCheckpointBytes};
+#ifdef __EMSCRIPTEN__
+    static constexpr FencePolicy kDefaultFencePolicy = kWaitAtCheckpoints;
+#else
+    static constexpr FencePolicy kDefaultFencePolicy = kWaitEverySlot;
+#endif
+
     struct Result
     {
         SDL_GPUTexture* texture = nullptr; // Caller owns this handle on success.
@@ -77,7 +101,7 @@ public:
     };
 
     BitmapGpuResources();
-    explicit BitmapGpuResources(Calls calls);
+    explicit BitmapGpuResources(Calls calls, FencePolicy fencePolicy = kDefaultFencePolicy);
     ~BitmapGpuResources() = default;
     BitmapGpuResources(const BitmapGpuResources&) = delete;
     BitmapGpuResources& operator=(const BitmapGpuResources&) = delete;
@@ -118,13 +142,19 @@ private:
     };
     bool OnOwnerThread() const;
     void Fail(const char* stage, bool gpuError);
-    bool Retire(Slot& slot);
+    // `mustWait`: whatever the policy (Shutdown).
+    bool Retire(Slot& slot, bool mustWait = false);
+    bool CheckpointDue() const;
     void LoseSlot(Slot& slot);
     void AdvanceSlot();
     void ReleaseHandles();
     Result Failure() const;
 
     Calls m_calls;
+    FencePolicy m_fencePolicy = kDefaultFencePolicy;
+    // Submissions and staged bytes since the last fence wait (kWaitAtCheckpoints).
+    std::size_t m_unwaitedSubmissions = 0;
+    std::uint64_t m_unwaitedBytes = 0;
     SDL_GPUDevice* m_device = nullptr;
     std::thread::id m_thread;
     std::array<Slot, kSlotCount> m_slots{};

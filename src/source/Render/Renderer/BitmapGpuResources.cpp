@@ -9,7 +9,10 @@
 namespace Render::Renderer
 {
 BitmapGpuResources::BitmapGpuResources() = default;
-BitmapGpuResources::BitmapGpuResources(Calls calls) : m_calls(calls) {}
+BitmapGpuResources::BitmapGpuResources(Calls calls, FencePolicy fencePolicy)
+    : m_calls(calls), m_fencePolicy(fencePolicy)
+{
+}
 
 bool BitmapGpuResources::OnOwnerThread() const
 {
@@ -57,6 +60,8 @@ bool BitmapGpuResources::Initialize(SDL_GPUDevice* device)
     m_thread = std::this_thread::get_id();
     m_faulted = false;
     m_next = 0;
+    m_unwaitedSubmissions = 0;
+    m_unwaitedBytes = 0;
     m_stage.clear();
     m_error.clear();
 
@@ -102,10 +107,23 @@ bool BitmapGpuResources::Initialize(SDL_GPUDevice* device)
     return true;
 }
 
-bool BitmapGpuResources::Retire(Slot& slot)
+bool BitmapGpuResources::CheckpointDue() const
+{
+    return m_unwaitedSubmissions >= m_fencePolicy.checkpointSubmissions ||
+           m_unwaitedBytes >= m_fencePolicy.checkpointBytes;
+}
+
+bool BitmapGpuResources::Retire(Slot& slot, bool mustWait)
 {
     if (!slot.fence)
     {
+        return true;
+    }
+    if (!mustWait && !m_fencePolicy.waitEverySlot && !CheckpointDue())
+    {
+        // The queue holds this slot's bytes already (FencePolicy): nothing to wait for.
+        m_calls.releaseFence(m_device, slot.fence);
+        slot.fence = nullptr;
         return true;
     }
     if (!m_calls.wait(m_device, true, &slot.fence, 1))
@@ -116,6 +134,8 @@ bool BitmapGpuResources::Retire(Slot& slot)
     }
     m_calls.releaseFence(m_device, slot.fence);
     slot.fence = nullptr;
+    m_unwaitedSubmissions = 0;
+    m_unwaitedBytes = 0;
     return true;
 }
 
@@ -330,6 +350,8 @@ BitmapGpuResources::Result BitmapGpuResources::Upload(std::span<const std::uint8
             return Failure();
         }
         slot.fence = fence;
+        ++m_unwaitedSubmissions;
+        m_unwaitedBytes += used;
         AdvanceSlot();
     }
     m_stage.clear();
@@ -380,7 +402,7 @@ bool BitmapGpuResources::Shutdown()
     bool retired = true;
     for (auto& slot : m_slots)
     {
-        if (!slot.lost && !Retire(slot))
+        if (!slot.lost && !Retire(slot, true))
         {
             retired = false;
             break;
@@ -393,6 +415,8 @@ bool BitmapGpuResources::Shutdown()
     m_device = nullptr;
     m_thread = {};
     m_next = 0;
+    m_unwaitedSubmissions = 0;
+    m_unwaitedBytes = 0;
     m_faulted = false;
     return retired;
 }

@@ -68,7 +68,7 @@ public:
     [[nodiscard]] float GetSFXVolume() const override;
 
 #ifdef __EMSCRIPTEN__
-    void LoadWaitingSounds() override;
+    void LoadWaitingSounds(double budgetMs) override;
 #endif
 
 private:

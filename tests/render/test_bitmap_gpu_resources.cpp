@@ -564,3 +564,52 @@ TEST_CASE("a mip chain whose levels do not halve is refused before anything is c
     CHECK(fake.uploads.empty());
     CHECK(owner.LastStage() == "upload: invalid mip chain");
 }
+
+TEST_CASE("web fence policy waits for one upload in sixteen and frees the other slots at once")
+{
+    Fake fake;
+    Owner owner(fake.Calls(), Owner::kWaitAtCheckpoints);
+    REQUIRE(owner.Initialize(Device()));
+    std::vector<std::uint8_t> pixels(std::size_t{65} * 2u * 4u, 0x5a);
+    constexpr int uploads = 100;
+    for (int i = 0; i < uploads; ++i)
+    {
+        auto result = owner.Upload(pixels, 65, 2, filter, wrap);
+        REQUIRE(result);
+        fake.Calls().releaseTexture(Device(), result.texture);
+    }
+    // Waits at the 17th, 33rd ... 97th upload: 16 submissions since the last one each time.
+    CHECK(fake.waits == (uploads - 1) / static_cast<int>(Owner::kWebCheckpointSubmissions));
+    CHECK(fake.fences == 3);
+    CHECK(fake.overwrite); // a slot is written again before its last upload was waited for
+    CHECK_FALSE(fake.cycled);
+    const int waitsBefore = fake.waits;
+    CHECK(owner.Shutdown());
+    CHECK(fake.waits == waitsBefore + 3); // shutdown still waits for every slot
+    CHECK(fake.fences == 0);
+}
+
+TEST_CASE("web fence policy also waits once the staged bytes since the last wait reach the limit")
+{
+    const std::vector<std::uint8_t> pixels(std::size_t{1024} * 1024u * 4u, 0x11);
+    REQUIRE(pixels.size() == Owner::kSlotCapacity);
+    const auto run = [&](Owner::FencePolicy policy)
+    {
+        Fake fake;
+        Owner owner(fake.Calls(), policy);
+        REQUIRE(owner.Initialize(Device()));
+        for (int i = 0; i < 6; ++i)
+        {
+            auto result = owner.Upload(pixels, 1024, 1024, filter, wrap);
+            REQUIRE(result);
+            fake.Calls().releaseTexture(Device(), result.texture);
+        }
+        const int waits = fake.waits;
+        CHECK(owner.Shutdown());
+        return waits;
+    };
+    // A full slot is 4 MB: the 4th upload sees 12 MB unwaited and waits, the 5th 4 MB and doesn't,
+    // the 6th 8 MB and waits.
+    CHECK(run(Owner::kWaitAtCheckpoints) == 2);
+    CHECK(run(Owner::kWaitEverySlot) == 3);
+}
