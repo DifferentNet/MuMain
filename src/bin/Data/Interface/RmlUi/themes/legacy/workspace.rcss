@@ -139,4 +139,10 @@ body {
 	.event-hud .slot[data-window="duel"] { left: calc(254px * var(--hud-scale)); top: calc(96px * var(--hud-scale)); }
 	.event-hud .slot[data-window="kanturu_info"] { left: calc(270px * var(--hud-scale)); top: calc(96px * var(--hud-scale)); }
 	.event-hud .slot[data-window="doppelganger_frame"] { left: calc(207px * var(--hud-scale)); top: calc(181px * var(--hud-scale)); }
+	/* A duel watcher's spectator list (57 wide, 18 a name) sat in the bottom-right corner, under the skill
+	   buttons. Its slot is the list's bottom-left corner and the names stack upwards from it: centred on the
+	   frame's middle, the server's most spectators (10, OpenMU MaximumSpectatorsPerDuelRoom) fill 96 to 276
+	   under the buffs, over the events' place (a watcher sees none of those events, and the duel score is
+	   the duellists' own); right of the joystick's area and left of the skill buttons. */
+	.event-hud .slot[data-window="duel_watch_users"] { left: calc(292px * var(--hud-scale)); top: calc(276px * var(--hud-scale)); }
 }

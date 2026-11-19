@@ -161,6 +161,7 @@ static void InitializeMainScene()
 
     CurrentProtocolState = REQUEST_JOIN_MAP_SERVER;
     SocketClient->ToGameServer()->SendSelectCharacter(MU_C16(CharactersClient[SelectedHero].ID));
+    gMapManager.PrefetchMapFilesOfCharacter(CharactersClient[SelectedHero].ID);
 
     // Remember which character is in play so auto-reconnect can re-select it.
     ReconnectManager::Instance().CacheCharacter(CharactersClient[SelectedHero].ID);

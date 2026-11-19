@@ -92,6 +92,16 @@ public:
     bool InBattleCastle(int iMap = -1);
     const wchar_t* GetMapName(int iMap);
 
+    // The map folder number LoadWorld loads for map `map` (Data/World<n>, the web build's map pack):
+    // map + 1, one folder for all Blood Castles, Chaos Castles, Hellas levels and Illusion Temples.
+    int MapFolderNumber(int map);
+    // In the browser: starts reading the pack of the map about to be entered (mu::web::PrefetchWorldFiles),
+    // by map index, by the gate of a warp list entry (movereq iGateNum), or by the map a character was
+    // last in (remembered at each map load). Does nothing elsewhere or where the map isn't known.
+    void PrefetchMapFiles(int map);
+    void PrefetchMapFilesOfGate(int gate);
+    void PrefetchMapFilesOfCharacter(const wchar_t* name);
+
 public:
     int WorldActive;
 };

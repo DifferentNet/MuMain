@@ -14476,4 +14476,20 @@
   <data name="FieldRepairAllConfirm" xml:space="preserve">
     <value>Ayusin lahat ng suot na gamit sa halagang %ls zen?</value>
   </data>
+  <!-- Round 20 -->
+  <data name="WarpListYouAreHere" xml:space="preserve">
+    <value>Nandito ka</value>
+  </data>
+  <data name="WarpListYouDiedHere" xml:space="preserve">
+    <value>Dito ka namatay</value>
+  </data>
+  <data name="PartyHintInviteByName" xml:space="preserve">
+    <value>I-type ang /party Pangalan para mag-imbita ng player.</value>
+  </data>
+  <data name="PartyHintInviteFromCommandWindow" xml:space="preserve">
+    <value>O pindutin ang %ls, piliin ang %ls at i-click ang player.</value>
+  </data>
+  <data name="PartyHintSharedExperience" xml:space="preserve">
+    <value>Sa party, hinahati ang EXP ayon sa level.</value>
+  </data>
 </root>

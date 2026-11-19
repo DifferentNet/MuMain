@@ -68,6 +68,7 @@
 #include "GameLogic/Items/JewelUpgradeResult.h"
 #include "GameLogic/Items/CraftingRefusal.h"
 #include "UI/Chat/CharacterChangeLines.h"
+#include "UI/HUD/MoveCommandWindow.h"
 #include "UI/Chat/SeenSkills.h"
 #include "UI/Chat/HeroStatusLines.h"
 #include "UI/Chat/InviteAutoDecline.h"
@@ -138,6 +139,10 @@ using namespace mu::ui::window;
 #include "Engine/Monsters/MonsterPreload.h"
 #include "UI/Text/GroupedNumberText.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #define MAX_DEBUG_MAX 10
 
 extern BYTE m_AltarState[];
@@ -160,6 +165,33 @@ extern int g_iKeyPadEnable;
 
 extern BOOL g_bWhileMovingZone;
 extern DWORD g_dwLatestZoneMoving;
+
+namespace
+{
+// LoadingWorld after a map entry: the world stays black and the hero still until it drops below this.
+constexpr int MapEntryCountdownFrames = 30;
+
+#ifdef __EMSCRIPTEN__
+// Stand switch for measuring: /play?entryhold=N keeps the world black N more frames after a map entry
+// (0 to this many; off without the parameter).
+constexpr int MaxEntryHoldFrames = 30;
+
+EM_JS(int, MuWeb_EntryHoldFrames, (int maxFrames), {
+    const frames = parseInt(new URLSearchParams(location.search).get("entryhold"), 10);
+    return Number.isFinite(frames) ? Math.min(maxFrames, Math.max(0, frames)) : 0;
+});
+#endif
+
+int MapEntryCountdownStart()
+{
+#ifdef __EMSCRIPTEN__
+    static const int holdFrames = MuWeb_EntryHoldFrames(MaxEntryHoldFrames);
+    return MapEntryCountdownFrames + holdFrames;
+#else
+    return MapEntryCountdownFrames;
+#endif
+}
+} // namespace
 
 extern bool g_PetEnableDuel;
 
@@ -1287,7 +1319,7 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     App::Control::Events::RecordTeleportPacket();
 
     Engine::Monsters::PreloadMap(Data->Map, true);
-    LoadingWorld = 30;
+    LoadingWorld = MapEntryCountdownStart();
     MouseUpdateTime = 0;
     MouseUpdateTimeMax = 6;
 
@@ -1364,6 +1396,8 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     // ones of a previous character before asking for them again.
     GameLogic::Commands::Catalog().Reset();
     GameLogic::Commands::Catalog().RequestOnce();
+    // The warp list's "you died here" row belonged to the previous character.
+    UI::MoveCommand::ForgetHeroDeath();
     // The experience pace belongs to the previous character (or to the map left).
     UI::HUD::ExperiencePace::Hero().Reset();
     // The windows fed by hidden chat lines forget the previous character, and the battle pass' marks and the
@@ -1381,6 +1415,7 @@ void ReceiveRevival(const BYTE* ReceiveBuffer)
     Hero->Object.Teleport = false;
     Hero->Object.Live = false;
     auto Data = (LPPRECEIVE_REVIVAL_EXTENDED)ReceiveBuffer;
+    UI::MoveCommand::NoteHeroRevival();
 
     CharacterAttribute->Life = Data->Life;
     CharacterAttribute->Mana = Data->Mana;
@@ -2341,6 +2376,8 @@ BOOL ReceiveTeleport(const BYTE* ReceiveBuffer, BOOL bEncrypted)
     }
     else
     {
+        // A map change or a gate, not a teleport inside the map: the warp list's "you died here" row is done.
+        UI::MoveCommand::NoteHeroWarp();
         // Before the view is emptied, not after: the events name the objects
         // that are about to disappear, and their slots are reused.
         App::Control::Events::RecordViewCleared("the character teleported");
@@ -2416,7 +2453,7 @@ BOOL ReceiveTeleport(const BYTE* ReceiveBuffer, BOOL bEncrypted)
         g_dwLatestZoneMoving = GetTickCount();
         g_bWhileMovingZone = FALSE;
 
-        LoadingWorld = 30;
+        LoadingWorld = MapEntryCountdownStart();
 
         MouseUpdateTime = 0;
         MouseUpdateTimeMax = 6;
@@ -6230,6 +6267,8 @@ void ReceiveDie(const BYTE* ReceiveBuffer, int Size)
         MUHelper::g_MuHelper.StopForHeroDeath();
         PostKilledBy(Data, Size);
         UI::Chat::ChangeLines::NoteHeroDeath();
+        // The warp list marks the map he died on (UI/HUD/WarpListMarks.h).
+        UI::MoveCommand::NoteHeroDeath();
     }
 
     g_ConsoleDebug->Write(MCD_RECEIVE, L"0x17 [ReceiveDie(%d)]", Key);

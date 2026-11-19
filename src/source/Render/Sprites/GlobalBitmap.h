@@ -232,6 +232,8 @@ public:
     void EndDeferredLoads();
     // Loads a recorded file now; false when the number has none or the file fails to load.
     bool ResolvePendingLoad(GLuint uiBitmapIndex);
+    // The numbers recorded and not loaded yet, with their file names.
+    [[nodiscard]] std::vector<std::pair<GLuint, std::wstring>> PendingLoads() const;
 #ifdef _EDITOR
     // The world that was active when the texture of this number was last
     // loaded, also when the file was loaded already (Core::AssetLoadWorld:

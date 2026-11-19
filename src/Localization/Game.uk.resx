@@ -14476,4 +14476,20 @@
   <data name="FieldRepairAllConfirm" xml:space="preserve">
     <value>Відремонтувати все вдягнене за %ls зен?</value>
   </data>
+  <!-- Round 20 -->
+  <data name="WarpListYouAreHere" xml:space="preserve">
+    <value>Ви тут</value>
+  </data>
+  <data name="WarpListYouDiedHere" xml:space="preserve">
+    <value>Тут ви загинули</value>
+  </data>
+  <data name="PartyHintInviteByName" xml:space="preserve">
+    <value>Введіть /party Ім'я, щоб запросити гравця.</value>
+  </data>
+  <data name="PartyHintInviteFromCommandWindow" xml:space="preserve">
+    <value>Або натисніть %ls, виберіть «%ls» і клацніть по гравцю.</value>
+  </data>
+  <data name="PartyHintSharedExperience" xml:space="preserve">
+    <value>У групі досвід ділиться за рівнем.</value>
+  </data>
 </root>

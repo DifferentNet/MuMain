@@ -275,6 +275,10 @@ void mu::ui::window::CChatInputBox::SendChatLine()
                     }
 
                     SocketClient->ToGameServer()->SendWarpCommandRequest(g_pMoveCommandWindow->GetMoveCommandKey(), iMapIndex);
+                    if (const auto* move = SEASON3B::CMoveCommandData::GetInstance()->GetMoveCommandDataByIndex(iMapIndex))
+                    {
+                        gMapManager.PrefetchMapFilesOfGate(move->_ReqInfo.iGateNum);
+                    }
                     AddChatHistory(szChatText);
                 }
                 else

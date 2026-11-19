@@ -22,42 +22,44 @@
 #include "World/MapInfra/MapManager.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
 #include "UI/HUD/ChatInputBox.h"
+#include "UI/HUD/CommandWindow.h"
+#include "Engine/Object/ZzzInventory.h"
 
 #include <RmlUi/Core/DataModelHandle.h>
 #include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Event.h>
 
-#include <array>
-#include <span>
+#include <string>
 
 using namespace SEASON3B;
 using namespace mu::ui::window;
 
 namespace
 {
-// The hint with no party: how to make one with the mouse (lines 0-4), then why (5-6). The phone view leaves the
-// mouse lines out.
-constexpr std::size_t kMouseHintLines = 5;
-
-std::array<const wchar_t*, 7> EmptyStateTexts()
+// The hint with no party: the ways to invite that work now, then why. The phone view has no command window key:
+// its button opens the players nearby instead, so that line is left out there.
+std::vector<std::wstring> EmptyStateTexts(bool phoneHud)
 {
-    return {I18N::Game::TypePartyWithTheMouseCursorOn, I18N::Game::ThePlayerYouWouldLike,
-            I18N::Game::ToCreateAPartyWith,            I18N::Game::AndYouCanCreate,
-            I18N::Game::APartyWithThem,                I18N::Game::YouCanShareMoreExpWith,
-            I18N::Game::YourPartyMembersBasedOnLevel};
+    std::vector<std::wstring> texts;
+    texts.emplace_back(I18N::Game::PartyHintInviteByName);
+    if (!phoneHud)
+    {
+        wchar_t line[256] = {};
+        const std::wstring key = UI::KeyHint::KeyLabel(Core::Input::KeyBindings::Action::Command);
+        mu_swprintf(line, I18N::Game::PartyHintInviteFromCommandWindow, key.c_str(), I18N::Game::Party);
+        texts.emplace_back(line);
+    }
+    texts.emplace_back(I18N::Game::PartyHintSharedExperience);
+    return texts;
 }
 
-// The hint's lines for the layout: all of them, or in the phone HUD those after the mouse lines.
+// The hint's lines for the layout; the last one (why) stands a little apart.
 template <typename Line> std::vector<Line> EmptyStateLines(bool phoneHud)
 {
-    const auto texts = EmptyStateTexts();
-    std::span<const wchar_t* const> shown(texts);
-    if (phoneHud)
-        shown = shown.subspan(kMouseHintLines);
     std::vector<Line> lines;
-    for (const wchar_t* text : shown)
-        lines.push_back({StringUtils::WideToNarrow(text)});
+    for (const std::wstring& text : EmptyStateTexts(phoneHud))
+        lines.push_back({StringUtils::WideToNarrow(text.c_str())});
     return lines;
 }
 } // namespace
@@ -100,6 +102,7 @@ void CPartyInfoWindow::BindRmlModel(Rml::DataModelConstructor& c, PartyInfoRmlMo
 
     c.Bind("has_party", &model.hasParty);
     c.Bind("phone_hud", &model.phoneHud);
+    c.Bind("in_chaos_castle", &model.inChaosCastle);
     c.Bind("social_label", &model.socialLabel);
     c.Bind("window_title", &model.windowTitle);
     c.Bind("exit_tooltip", &model.exitTooltip);
@@ -108,6 +111,7 @@ void CPartyInfoWindow::BindRmlModel(Rml::DataModelConstructor& c, PartyInfoRmlMo
     textLine.RegisterMember("text", &TextLine::text);
     c.RegisterArray<std::vector<TextLine>>();
     c.Bind("empty_state_lines", &model.emptyStateLines);
+    c.Bind("empty_paragraph_at", &model.emptyParagraphAt);
 
     auto member = c.RegisterStruct<PartyMemberRow>();
     member.RegisterMember("name", &PartyMemberRow::name);
@@ -148,7 +152,20 @@ void CPartyInfoWindow::BindRmlModel(Rml::DataModelConstructor& c, PartyInfoRmlMo
         UI::KeyHint::WithKey(I18N::Game::ClosePartyWindowP, Core::Input::KeyBindings::Action::Party).c_str());
     model.socialLabel = StringUtils::WideToNarrow(I18N::Game::TouchSocialTitle);
 
+    FillEmptyState(model);
+}
+
+void CPartyInfoWindow::FillEmptyState(PartyInfoRmlModel& model)
+{
     model.emptyStateLines = EmptyStateLines<TextLine>(model.phoneHud);
+    model.emptyParagraphAt = static_cast<int>(model.emptyStateLines.size()) - 1;
+}
+
+void CPartyInfoWindow::RebuildEmptyState()
+{
+    FillEmptyState(m_RmlView.GetModel());
+    m_RmlView.MarkDirty("empty_state_lines");
+    m_RmlView.MarkDirty("empty_paragraph_at");
 }
 
 void CPartyInfoWindow::BuildRmlUi()
@@ -173,6 +190,8 @@ void CPartyInfoWindow::OpenningProcess()
 {
     // A click left from an earlier opening never opens the Social panel later.
     m_openSocialAsked = false;
+    // The command window's key may have been rebound since.
+    RebuildEmptyState();
     SocketClient->ToGameServer()->SendPartyListRequest();
     UI::Party::ListRefresh::NoteAsked();
 }
@@ -192,10 +211,33 @@ void CPartyInfoWindow::OpenSocialIfAsked()
     if (!m_openSocialAsked)
         return;
     m_openSocialAsked = false;
-    if (!UI::Mobile::ReplacesPcHud())
+    if (UI::Mobile::ReplacesPcHud())
+    {
+        g_pNewUISystem->Hide(mu::ui::window::INTERFACE_PARTY);
+        UI::HUD::TouchControls::ShowSocialPanel();
         return;
+    }
+    OpenCommandWindowForParty();
+}
+
+void CPartyInfoWindow::OpenCommandWindowForParty()
+{
+    // The command window's own rule (the D key, UI/HUD/HotKey.cpp): nothing in Chaos Castle (the button
+    // hides there, SyncRmlModel()), one line where players fight.
+    if (gMapManager.InChaosCastle())
+        return;
+    if (::IsStrifeMap(gMapManager.WorldActive))
+    {
+        if (g_pSystemLogBox->CheckChatRedundancy(I18N::Game::TheCommandWindowCannotBeActivatedInBattleZone) == FALSE)
+            g_pSystemLogBox->AddText(I18N::Game::TheCommandWindowCannotBeActivatedInBattleZone,
+                                     mu::ui::window::TYPE_SYSTEM_MESSAGE);
+        return;
+    }
     g_pNewUISystem->Hide(mu::ui::window::INTERFACE_PARTY);
-    UI::HUD::TouchControls::ShowSocialPanel();
+    g_pNewUISystem->Show(mu::ui::window::INTERFACE_COMMAND);
+    if (g_pCommandWindow != nullptr)
+        g_pCommandWindow->SelectCommand(COMMAND_PARTY);
+    PlayBuffer(SOUND_CLICK01);
 }
 
 void CPartyInfoWindow::WhisperMember(int index, const Rml::Event& event, bool tap)
@@ -359,6 +401,12 @@ void CPartyInfoWindow::SyncRmlModel()
     UI::RmlBridge::SyncNativeTextSize(m_RmlView.Binder());
     SyncPhoneHud();
 
+    if (const bool inChaosCastle = gMapManager.InChaosCastle(); model.inChaosCastle != inChaosCastle)
+    {
+        model.inChaosCastle = inChaosCastle;
+        m_RmlView.MarkDirty("in_chaos_castle");
+    }
+
     if (model.hasParty != m_bParty)
     {
         model.hasParty = m_bParty;
@@ -409,8 +457,7 @@ void CPartyInfoWindow::SyncPhoneHud()
     model.phoneHud = phoneHud;
     m_RmlView.MarkDirty("phone_hud");
 
-    model.emptyStateLines = EmptyStateLines<TextLine>(phoneHud);
-    m_RmlView.MarkDirty("empty_state_lines");
+    RebuildEmptyState();
 }
 
 void CPartyInfoWindow::LoadImages()

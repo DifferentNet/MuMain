@@ -56,7 +56,17 @@
   #status.bad { color: var(--bad); }
   #status[hidden] { display: none; }
   footer { height: 2.5rem; display: flex; gap: 1rem; align-items: center; padding: 0 1rem; border-top: 1px solid var(--line); background: var(--panel); color: var(--muted); font-size: .8125rem; }
-  footer button { font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 4px; padding: .15rem .6rem; cursor: pointer; }
+  footer button { font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 4px; padding: .15rem .6rem; cursor: pointer; white-space: nowrap; }
+  /* A footer button's label in full and short (setFooterLabel): on a PC window narrower than 1280 px the
+     two-language labels took two lines, and the footer spilled over the game (2026-11-19); there the
+     footer also drops its title and closes up, so it keeps one line down to 800 px. The phone's menu
+     panel is a column: full labels there. */
+  footer .label-short { display: none; }
+  @media (max-width: 1279px) {
+    html:not(.phone) footer { gap: .5rem; }
+    html:not(.phone) footer > span, html:not(.phone) footer .label-full { display: none; }
+    html:not(.phone) footer .label-short { display: inline; }
+  }
   footer select { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: .1rem .3rem; }
   footer label { white-space: nowrap; }
   /* Phones: the buttons and the quality choice fit on one line without the title. */
@@ -87,6 +97,8 @@
   #play-fullscreen { font: inherit; font-size: 1.125rem; font-weight: 600; color: #1b1406; background: var(--gold); border: 0; border-radius: 6px; padding: .6rem 2.25rem; cursor: pointer; }
   #play-here { font: inherit; font-size: .8125rem; color: var(--muted); background: none; border: 0; padding: .25rem; text-decoration: underline; cursor: pointer; }
   #install { font: inherit; font-size: 1rem; font-weight: 600; color: var(--gold); background: transparent; border: 1px solid var(--gold); border-radius: 6px; padding: .45rem 1.5rem; cursor: pointer; }
+  /* The note of a new release (newVersionCheck): in gold, and the menu button on phones too. */
+  footer #new-version, html.phone #menu.news { color: var(--gold); border-color: var(--gold); }
   #play-fullscreen[hidden], #install[hidden], footer button[hidden], #install-hint[hidden], #play-here[hidden] { display: none; }
   /* The Play card's choice of how the game's files come: Lite (as it is played) or Full (all now). */
   #download-choice { display: flex; flex-direction: column; align-items: center; gap: .3rem; margin-top: .2rem; font-size: .8125rem; color: var(--muted); text-align: center; }
@@ -113,7 +125,7 @@
 <body>
 <div id="stage"><canvas id="canvas" tabindex="0" oncontextmenu="event.preventDefault()"></canvas></div>
 <input id="keyboard" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" tabindex="-1" aria-hidden="true">
-<div id="status">Loading…</div>
+<div id="status">Loading… · Загрузка…</div>
 <pre id="log" hidden></pre>
 <button id="menu" type="button" aria-label="Menu" title="Menu">⋮</button>
 <div id="play">
@@ -136,7 +148,8 @@
   <button id="toggle-log" type="button">Log</button>
   <button id="fullscreen" type="button">Fullscreen</button>
   <button id="install-menu" type="button" hidden>Install</button>
-  <button id="download-game" type="button" hidden>Download game</button>
+  <button id="download-game" type="button" hidden><span class="label-full">Download game · Скачать игру</span><span class="label-short">Скачать игру</span></button>
+  <button id="new-version" type="button" hidden title="A new version of the game came out while this page was open · Пока страница была открыта, вышла новая версия игры"><span class="label-full">New version: reload · Новая версия: обновить</span><span class="label-short">Новая версия: обновить</span></button>
   <button id="view" type="button" hidden title="The game's layout, as in its Options → Interface">View</button>
   <button id="screenshot" type="button" hidden title="A picture of the game, saved as a download">Screenshot</button>
   <label title="How many pixels the game draws while Options has Auto resolution; Lowest also turns effects and shadows off">Quality
@@ -153,6 +166,16 @@
   const logEl = document.getElementById("log");
   const canvas = document.getElementById("canvas");
   const playCard = document.getElementById("play");
+  // A footer button's label: `full`, and `short` for a narrow PC window (the CSS's .label-short).
+  function setFooterLabel(button, full, short) {
+    const [fullSpan, shortSpan] = [full, short].map((text, i) => {
+      const span = document.createElement("span");
+      span.className = i ? "label-short" : "label-full";
+      span.textContent = text;
+      return span;
+    });
+    button.replaceChildren(fullSpan, shortSpan);
+  }
   function setStatus(text, bad) {
     statusEl.hidden = !text;
     statusEl.textContent = text || "";
@@ -475,7 +498,7 @@
         en += phoneView ? " (phone)" : " (PC)";
         ru += phoneView ? " (телефон)" : " (ПК)";
       }
-      viewButton.textContent = "View: " + en + " · Вид: " + ru;
+      setFooterLabel(viewButton, "View: " + en + " · Вид: " + ru, "Вид: " + ru);
       // A phone or tablet always plays the phone layout (UI/Mobile/InterfaceMode.cpp): no choice there.
       viewButton.hidden = phone;
       // The game runs: it can take a screenshot too (below).
@@ -1296,27 +1319,31 @@
     gameEnded = true;
     document.title = "MU Skynet";
     statusEl.classList.remove("bad");
-    box.innerHTML = "<p></p>";
+    box.innerHTML = "<p></p><p></p>";
     box.firstChild.textContent = "You left the game.";
+    box.lastChild.textContent = "Вы вышли из игры.";
     const again = document.createElement("button");
-    again.textContent = "Play again";
+    again.textContent = "Play again · Играть снова";
     again.onclick = () => location.reload();
     styleStatusButton(again);
     box.appendChild(again);
     statusEl.appendChild(box);
   };
-  function gameCrashed(error, title = "The game stopped because of an error.") {
+  // The crash panel's first lines, [English, Russian].
+  const CRASH_TITLE = ["The game stopped because of an error.", "Игра остановилась из-за ошибки."];
+  function gameCrashed(error, title = CRASH_TITLE) {
     const box = stopGame();
     if (!box) return;
     statusEl.classList.add("bad");
-    box.innerHTML = "<p></p><p></p>";
-    box.firstChild.textContent = title;
+    box.innerHTML = "<p></p><p></p><p></p>";
+    box.children[0].textContent = title[0];
+    box.children[1].textContent = title[1];
     box.lastChild.textContent = String(error && error.message || error).slice(0, 300);
     const reload = document.createElement("button");
-    reload.textContent = "Reload";
+    reload.textContent = "Reload · Обновить страницу";
     reload.onclick = () => location.reload();
     const reset = document.createElement("button");
-    reset.textContent = "Reset settings and reload";
+    reset.textContent = "Reset settings and reload · Сбросить настройки и обновить";
     reset.onclick = () => { location.search = "?reset"; };
     for (const button of [reload, reset]) {
       styleStatusButton(button);
@@ -1330,7 +1357,8 @@
   function gpuDeviceLost(info) {
     if (!info || info.reason === "destroyed" || pageGone || crashed) return;
     gameCrashed(String(info.message || "").slice(0, 200),
-                "The graphics device was lost (GPU reset or the browser freed it). Reload to continue.");
+                ["The graphics device was lost (GPU reset or the browser freed it). Reload to continue.",
+                 "Связь с видеокартой потеряна (сброс драйвера, или браузер её освободил). Обновите страницу, чтобы продолжить."]);
   }
   window.muTestDeviceLost = () => gpuDeviceLost({ reason: "unknown", message: "test" });
   // Leaving the page can keep it frozen in Chrome's back/forward cache with its sockets open, and
@@ -1583,7 +1611,9 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     setStatus(["This iPhone or iPad can't run the game yet: no " + missing.join(", ") + ".", UPDATE_IOS[0], "",
                "Этот iPhone или iPad пока не может запустить игру.", UPDATE_IOS[1]].join("\n"), true);
   } else if (missing.length) {
-    setStatus("This browser can't run the game: no " + missing.join(", ") + ". Use a current Chrome or Edge.", true);
+    statusEl.style.whiteSpace = "pre-line";
+    setStatus(["This browser can't run the game: no " + missing.join(", ") + ". Use a current Chrome or Edge.",
+               "Этот браузер не может запустить игру. Откройте её в свежем Chrome или Edge."].join("\n"), true);
   } else checkGpu().then(async (gpuCheck) => {
     if (!gpuCheck.ok) {
       showGpuProblem(gpuCheck.gpu, gpuCheck.browser, gpuCheck.missing);
@@ -1635,6 +1665,32 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     // Main.js?v=<hash>: one version of the file, which the service worker keeps (sw.js).
     const code = (releaseIndex && releaseIndex.code) || {};
     const versioned = (name) => code[name] ? `${name}?v=${code[name]}` : name;
+    // A release of /play while this tab stayed open: the old game kept running for days, and after a
+    // server deploy that changed its data the player saw odd things and no hint (2026-11-19). When
+    // the page is shown again and every NEW_VERSION_CHECK_MS, at most once per NEW_VERSION_CHECK_MS (wall time, so a sleep counts), it asks startup.json again; a
+    // Main.wasm of another hash shows the footer's (the ⋮ menu's) "New version: reload". The page never
+    // reloads by itself, and the crash and exit panels have their own reload.
+    const NEW_VERSION_CHECK_MS = 10 * 60 * 1000;
+    const newVersionButton = document.getElementById("new-version");
+    let newVersionCheckedAt = Date.now();
+    function newVersionCheck() {
+      const running = code["Main.wasm"];
+      if (document.hidden || !running || crashed || gameEnded || !newVersionButton.hidden) return;
+      if (Date.now() - newVersionCheckedAt < NEW_VERSION_CHECK_MS) return;
+      newVersionCheckedAt = Date.now();
+      fetch("startup.json", { cache: "no-cache" }).then((response) => response.ok ? response.json() : null).then((index) => {
+        const latest = index && index.code && index.code["Main.wasm"];
+        if (!latest || latest === running) return;
+        appendLog(`New version on the server (Main.wasm ${latest}, this page runs ${running}): "New version: reload" shown`);
+        newVersionButton.hidden = false;
+        document.getElementById("menu").classList.add("news");
+      }).catch(() => {});
+    }
+    newVersionButton.onclick = () => location.reload();
+    document.addEventListener("visibilitychange", newVersionCheck);
+    setInterval(newVersionCheck, NEW_VERSION_CHECK_MS);   // a tab never hidden checks too
+    // For a check on a stand, without the wait: the same check now.
+    window.muTestNewVersion = () => { newVersionCheckedAt = -NEW_VERSION_CHECK_MS; newVersionCheck(); };
 
     // Main.wasm and the packs come as gzip copies (Main.wasm.gz, packs/*.pack.gz, written by
     // tools/web/make_startup_pack.py), which the page unpacks itself: the web server sends files as
@@ -1661,8 +1717,8 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     function counted(body, onBytes) {
       return body.pipeThrough(new TransformStream({ transform(chunk, out) { onBytes(chunk.length); out.enqueue(chunk); } }));
     }
-    // "Downloading <what>… X of Y MB" as the bytes come (a total of 0: not known).
-    function downloadProgress(what, total) {
+    // "Downloading <what>… X of Y MB · <whatRu>: X из Y МБ" as the bytes come (a total of 0: not known).
+    function downloadProgress(what, whatRu, total) {
       let received = 0;
       let shownMb = -1;
       return (bytes) => {
@@ -1670,8 +1726,9 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         const mb = Math.floor(received / 1e6);
         if (mb === shownMb) return;
         shownMb = mb;
-        setStatus(total ? `Downloading ${what}… ${Math.min(mb, Math.round(total / 1e6))} of ${Math.round(total / 1e6)} MB`
-                        : `Downloading ${what}… ${mb} MB`);
+        const shown = Math.min(mb, Math.round(total / 1e6)), all = Math.round(total / 1e6);
+        setStatus(total ? `Downloading ${what}… ${shown} of ${all} MB · ${whatRu}: ${shown} из ${all} МБ`
+                        : `Downloading ${what}… ${mb} MB · ${whatRu}: ${mb} МБ`);
       };
     }
 
@@ -1710,14 +1767,15 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       }).catch((e) => console.warn(`${label} not kept on this device: ${e}`));
     }
     // Reads a pack ({name, hash, files: [[path, size], ...]}) into one array: from its copy on the
-    // device (kept) or from the server, telling onNetworkBytes about each downloaded byte.
-    async function readPack(label, entry, store, kept, onNetworkBytes) {
+    // device (kept) or from the server, telling onNetworkBytes about each downloaded byte. `signal`
+    // (optional, an AbortSignal) stops it, the download too.
+    async function readPack(label, entry, store, kept, onNetworkBytes, signal) {
       let body, packed;
       if (kept) {
         body = kept.body;
         packed = kept.headers.get("X-Mu-Packed") === "1";
       } else {
-        const source = await fetchPacked(entry.name, { cache: "no-store" });
+        const source = await fetchPacked(entry.name, signal ? { cache: "no-store", signal } : { cache: "no-store" });
         body = counted(source.response.body, onNetworkBytes);
         packed = source.packed;
         if (store) {
@@ -1731,6 +1789,10 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       const reader = unpacked(body, packed).getReader();
       let received = 0;
       for (;;) {
+        if (signal && signal.aborted) {
+          reader.cancel().catch(() => {});
+          throw signal.reason;
+        }
         const { done, value } = await reader.read();
         if (done) break;
         if (received + value.length > total) throw new Error(`${entry.name} is bigger than its index says`);
@@ -1741,18 +1803,19 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       return { files: entry.files, bytes };
     }
     // A pack's files and bytes: from the device where it is kept and reads, else from the server.
-    async function loadPack(label, entry, store, kept, onNetworkBytes) {
+    async function loadPack(label, entry, store, kept, onNetworkBytes, signal) {
       if (kept) {
         try {
-          const pack = await readPack(label, entry, null, kept, null);
+          const pack = await readPack(label, entry, null, kept, null, signal);
           console.log(`${label} from this device (${entry.hash})`);
           return pack;
         } catch (e) {
+          if (signal && signal.aborted) throw e;   // stopped, not broken: the kept copy stays
           console.warn(`${label} on this device didn't read, downloading it again: ${e}`);
           await store.delete(packKey(entry)).catch(() => {});
         }
       }
-      return readPack(label, entry, store, null, onNetworkBytes);
+      return readPack(label, entry, store, null, onNetworkBytes, signal);
     }
     // Runs the tasks given to it at most `count` at a time, in the order given.
     function taskQueue(count) {
@@ -1789,9 +1852,9 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         }
       }
       const toDownload = parts.reduce((sum, part, i) => sum + (kept[i] ? 0 : part.packed), 0);
-      const onNetworkBytes = downloadProgress("game data", toDownload);
+      const onNetworkBytes = downloadProgress("game data", "Данные игры", toDownload);
       if (toDownload) onNetworkBytes(0);
-      else setStatus("Loading game data…");
+      else setStatus("Loading game data… · Загрузка данных игры…");
       const queue = taskQueue(PACK_DOWNLOADS);
       return parts.map((part, i) => {
         const loading = queue(() => loadPack(`Startup pack part ${part.name}`, part, store, kept[i], onNetworkBytes));
@@ -1801,6 +1864,11 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     }
     let packDone = false;
     const startupParts = startupPack();
+    // files.txt, the list of every game file (436 KB), downloads beside the packs and goes to
+    // WebFileSystem.cpp MountGameFiles (Module.muFileList) as text, null where it didn't come: the game
+    // asked the mount for it only after the startup pack was in place, one more wait before the login screen.
+    const fileListLoad = fetch("files.txt", { cache: "no-cache" })
+      .then((response) => response.ok ? response.text() : null).catch(() => null);
     // Settles with nothing once every part has come or failed. The parts' bytes (166 MB) are copied
     // into the game's memory (WebFileSystem.cpp) and must go then: a result holding the parts held
     // them all game long (2026-10-30).
@@ -1881,25 +1949,23 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         return null;
       }
     }
-    // WebFileSystem.cpp LoadWorldFiles: the files of the map folder the game enters (Data/WorldN,
-    // ObjectN), or null where the map has no pack. startup.json "maps" (tools/web/make_startup_pack.py)
-    // has each pack's hash: a map without one has no pack (the login and character scenes), and a pack
-    // this device keeps reads with the index kept beside it, without a request to the server first
-    // (0.1-0.6 s on a phone's line, at every map change). Without "maps" (an older startup.json) or a
-    // pack kept, the index comes from the server as before. A release published while the page is open
-    // is picked up for a map's pack only where the pack isn't kept.
-    async function mapPack(world) {
+    // `progress(total)` gives what to tell about each downloaded byte, `total` the pack's packed size.
+    // `ahead` (a read ahead, mapPackAhead): stopped by its `abort` (AbortController), and only where this
+    // device keeps packs, so a read ahead dropped or refused is never downloaded twice (MAP_PACK_NO_STORE).
+    const MAP_PACK_NO_STORE = "no storage on this device";
+    async function readMapPack(world, progress, ahead) {
       const hashes = releaseIndex && releaseIndex.maps;
       if (hashes && !hashes[world]) return null;
+      const signal = ahead ? ahead.abort.signal : undefined;
       mapPacksLoading++;
       try {
         const store = await openStore(MAP_PACK_STORE);
+        if (ahead && !store) throw new Error(MAP_PACK_NO_STORE);
         const local = store && hashes ? await keptMapPack(store, world, hashes[world]) : null;
         if (local) {
-          return await loadPack(`Map pack ${world}`, local.entry, store, local.kept,
-                                downloadProgress("the map", local.entry.packed || 0));
+          return await loadPack(`Map pack ${world}`, local.entry, store, local.kept, progress(local.entry.packed || 0), signal);
         }
-        const indexResponse = await fetch(`packs/world${world}.json`, { cache: "no-cache" });
+        const indexResponse = await fetch(`packs/world${world}.json`, signal ? { cache: "no-cache", signal } : { cache: "no-cache" });
         // startup.json lists this map's pack, so a missing index is a failure, not a map without one.
         if (!indexResponse.ok) {
           if (hashes) throw new Error(`packs/world${world}.json: HTTP ${indexResponse.status}`);
@@ -1908,9 +1974,86 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         const entry = Object.assign(await indexResponse.json(), { name: mapPackName(world) });
         const kept = store ? await store.match(packKey(entry)).catch(() => undefined) : undefined;
         if (store) keepMapIndex(store, world, entry);
-        return await loadPack(`Map pack ${world}`, entry, store, kept, downloadProgress("the map", entry.packed || 0));
+        return await loadPack(`Map pack ${world}`, entry, store, kept, progress(entry.packed || 0), signal);
       } finally {
         mapPacksLoading--;
+      }
+    }
+    // A map's pack read ahead (Module.muMapPackPrefetch, WebFileSystem.cpp PrefetchWorldFiles): the game
+    // knows the next map when a gate is stepped on, a warp is asked for or a character is picked, before
+    // the server answers. One at a time: {world, loading, abort, settled, received, total, totalKnown,
+    // claimed, progress, timer}. mapPack takes it for the same world; another world drops it, and so does
+    // MAP_PACK_AHEAD_MS unused after it came (a refused warp: up to ~30 MB held that long). A read still
+    // going when dropped stops, its download too. Nothing is written into the game's files early. Only
+    // where this device keeps packs (not ?nostore, not a private window).
+    const MAP_PACK_AHEAD_MS = 10000;
+    let mapPackAhead = null;
+    function dropMapPackAhead(why) {
+      const ahead = mapPackAhead;
+      if (!ahead) return;
+      mapPackAhead = null;
+      clearTimeout(ahead.timer);
+      if (!ahead.settled) ahead.abort.abort(new DOMException("read ahead dropped", "AbortError"));
+      console.log(`Map pack ${ahead.world} read ahead, dropped (${why})`);
+    }
+    function prefetchMapPack(world) {
+      const hashes = releaseIndex && releaseIndex.maps;
+      if (!hashes || !hashes[world]) return;   // no pack, or no hash to read a kept one without a request
+      if (!self.caches || pageParams.has("nostore")) return;
+      if (mapPackAhead && mapPackAhead.world === world) return;
+      dropMapPackAhead(`map ${world} instead`);
+      const ahead = { world, abort: new AbortController(), settled: false, received: 0, total: 0, totalKnown: false,
+                      claimed: false, progress: null, timer: 0 };
+      ahead.loading = readMapPack(world, (total) => {
+        ahead.total = total;
+        ahead.totalKnown = true;
+        if (ahead.claimed && !ahead.progress) ahead.progress = downloadProgress("the map", "Карта", total);
+        return (bytes) => {
+          ahead.received += bytes;
+          if (ahead.progress) ahead.progress(bytes);
+        };
+      }, ahead);
+      ahead.loading.catch(() => {}).finally(() => {
+        ahead.settled = true;
+        if (mapPackAhead === ahead) ahead.timer = setTimeout(() => { if (mapPackAhead === ahead) dropMapPackAhead("unused"); }, MAP_PACK_AHEAD_MS);
+      });
+      mapPackAhead = ahead;
+      console.log(`Map pack ${world}: reading ahead`);
+    }
+    // WebFileSystem.cpp LoadWorldFiles: the files of the map folder the game enters (Data/WorldN,
+    // ObjectN), or null where the map has no pack. startup.json "maps" (tools/web/make_startup_pack.py)
+    // has each pack's hash: a map without one has no pack (the login and character scenes), and a pack
+    // this device keeps reads with the index kept beside it, without a request to the server first
+    // (0.1-0.6 s on a phone's line, at every map change). Without "maps" (an older startup.json) or a
+    // pack kept, the index comes from the server as before. A release published while the page is open
+    // is picked up for a map's pack only where the pack isn't kept. A read ahead of this world is taken
+    // (one that failed is read again here).
+    async function mapPack(world) {
+      try {
+        const ahead = mapPackAhead;
+        if (ahead && ahead.world === world) {
+          clearTimeout(ahead.timer);
+          mapPackAhead = null;
+          ahead.claimed = true;
+          // "X of Y MB" once the pack's size is known (its index read); the bytes so far count too.
+          if (ahead.totalKnown) {
+            ahead.progress = downloadProgress("the map", "Карта", ahead.total);
+            if (ahead.received) ahead.progress(ahead.received);
+          }
+          const started = performance.now();
+          try {
+            const pack = await ahead.loading;
+            console.log(`Map pack ${world} read ahead, taken (waited ${Math.round(performance.now() - started)} ms)`);
+            return pack;
+          } catch (e) {
+            if (e && e.message === MAP_PACK_NO_STORE) console.log(`Map pack ${world}: no read ahead without storage`);
+            else console.warn(`Map pack ${world} read ahead failed (${e}), reading it again`);
+          }
+        } else {
+          dropMapPackAhead(`map ${world} entered`);
+        }
+        return await readMapPack(world, (total) => downloadProgress("the map", "Карта", total));
+      } finally {
         setStatus("");
       }
     }
@@ -2034,31 +2177,48 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       downloadButton.update();
       return job;
     }
-    // Every map's pack (packs/worldN.json in files.txt) not kept on this device yet, as
-    // [world, index entry]; for the full download.
+    // The numbers of the maps that have a pack: startup.json's "maps" ({map number: the pack's hash}),
+    // else the packs/worldN.json lines of files.txt, the list the page already has (fileListLoad) or,
+    // where that didn't come, asks for again. files.txt came up to three times a visit (2026-11-19).
+    async function mapPackWorlds() {
+      const hashes = releaseIndex && releaseIndex.maps;
+      if (hashes) return Object.keys(hashes).map(Number);
+      const list = (await fileListLoad) || await (await fetch("files.txt", { cache: "no-cache" })).text();
+      return [...list.matchAll(/^packs\/world(\d+)\.json\r?$/gm)].map((match) => Number(match[1]));
+    }
+    // How many map indexes (packs/worldN.json) the full download asks for at once: they came one after
+    // another, about 80 round trips before the first pack (2026-11-19).
+    const MAP_INDEX_DOWNLOADS = 6;
+    // [world, index entry] where this device doesn't keep `world`'s pack yet; else null. Where this
+    // device keeps the pack of the hash startup.json names, its index isn't asked for.
+    async function mapPackToKeep(store, world, hash) {
+      try {
+        if (hash && await store.match(packKey({ name: mapPackName(world), hash }))) return null;
+        const response = await fetch(`packs/world${world}.json`, { cache: "no-cache" });
+        if (!response.ok) return null;
+        const entry = Object.assign(await response.json(), { name: mapPackName(world) });
+        return (await store.match(packKey(entry))) ? null : [world, entry];
+      } catch (e) {
+        return null;   // that map downloads when entered
+      }
+    }
+    // Every map's pack not kept on this device yet, as [world, index entry] in the maps' order; for
+    // the full download.
     async function mapPacksToKeep() {
       const store = await openStore(MAP_PACK_STORE);
       if (!store) return { store: null, packs: [], worlds: 0 };
-      const list = await (await fetch("files.txt", { cache: "no-cache" })).text();
-      const worlds = [...list.matchAll(/^packs\/world(\d+)\.json\r?$/gm)].map((match) => Number(match[1]));
-      const packs = [];
-      for (const world of worlds) {
-        try {
-          const response = await fetch(`packs/world${world}.json`, { cache: "no-cache" });
-          if (!response.ok) continue;
-          const entry = Object.assign(await response.json(), { name: mapPackName(world) });
-          if (!(await store.match(packKey(entry)))) packs.push([world, entry]);
-        } catch (e) { /* that map downloads when entered */ }
-      }
-      return { store, packs, worlds: worlds.length };
+      const worlds = await mapPackWorlds();
+      const hashes = (releaseIndex && releaseIndex.maps) || {};
+      const queue = taskQueue(MAP_INDEX_DOWNLOADS);
+      const found = await Promise.all(worlds.map((world) => queue(() => mapPackToKeep(store, world, hashes[world]))));
+      return { store, packs: found.filter(Boolean), worlds: worlds.length };
     }
     // How many maps have a pack and how many of them this device keeps (any release's copy), for the
     // button's share of the game on the device.
     async function mapPackCounts() {
       const store = await openStore(MAP_PACK_STORE);
       if (!store) return { worlds: 0, kept: 0 };
-      const list = await (await fetch("files.txt", { cache: "no-cache" })).text();
-      const worlds = (list.match(/^packs\/world\d+\.json\r?$/gm) || []).length;
+      const worlds = (await mapPackWorlds()).length;
       // The packs, not the indexes kept beside them (keepMapIndex).
       const kept = new Set((await store.keys()).map((request) => packPath(request.url))
                              .filter((path) => path.endsWith(".pack"))).size;
@@ -2103,8 +2263,11 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       let mapsKept = 0;
       try {
         if (full) {
+          const lookup = performance.now();
           maps = await mapPacksToKeep();
           mapsKept = maps.worlds - maps.packs.length;
+          appendLog(`Map packs: ${maps.packs.length} of ${maps.worlds} not on this device ` +
+                    `(looked up in ${Math.round(performance.now() - lookup)} ms)`);
         } else {
           const counts = await mapPackCounts();
           maps.worlds = counts.worlds;
@@ -2191,14 +2354,14 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         button.hidden = false;
         const running = downloadJob && downloadJob.full && !downloadJob.stopped;
         if (have >= total) {
-          button.textContent = "Game downloaded ✓";
+          setFooterLabel(button, "Game downloaded · Игра скачана ✓", "Игра скачана ✓");
           button.title = "The whole game is on this device · Вся игра на этом устройстве";
         } else if (running) {
-          button.textContent = `Downloading ${percent()} %`;
+          setFooterLabel(button, `Downloading · Скачивание · ${percent()} %`, `Скачивание · ${percent()} %`);
           button.title = `${have} of ${total} files, ${Math.round(megabytes)} MB so far; tap to stop · ` +
                          `${have} из ${total} файлов, скачано ${Math.round(megabytes)} МБ; нажмите, чтобы остановить`;
         } else {
-          button.textContent = `Download game · ${percent()} %`;
+          setFooterLabel(button, `Download game · Скачать игру · ${percent()} %`, `Скачать игру · ${percent()} %`);
           button.title = "Download the whole game to this device now, so nothing in the game waits for the network · " +
                          "Скачать всю игру на это устройство сейчас, чтобы в игре ничего не ждало сети";
         }
@@ -2277,6 +2440,8 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       canvas,
       muStartupPack: startupParts,
       muMapPack: mapPack,
+      muMapPackPrefetch: prefetchMapPack,
+      muFileList: fileListLoad,
       // The late pack once it is here ({files, bytes}), handed over once; else null.
       muLatePack: () => { const pack = latePack; latePack = null; return pack; },
       // The deferred parts' files (paths), and the next part that came or failed, handed over once; else null.
@@ -2320,9 +2485,10 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         (async () => {
           const started = performance.now();
           let result, how;
-          if (await workerKeepsCode()) {
+          const early = await codeDownload;
+          if (early.fromWorker) {
             try {
-              result = await WebAssembly.instantiateStreaming(fetch(unpackedCodeUrl(), { credentials: "same-origin" }), imports);
+              result = await WebAssembly.instantiateStreaming(early.response, imports);
               codeFromWorker = true;
               how = "kept on this device unpacked, its compiled code too where the browser keeps it";
             } catch (e) {
@@ -2331,7 +2497,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
           }
           if (!result) {
             try {
-              const source = await fetchPacked("Main.wasm", { credentials: "same-origin" }, code["Main.wasm"]);
+              const source = await (early.packed || fetchPacked("Main.wasm", { credentials: "same-origin" }, code["Main.wasm"]));
               const wasm = new Response(unpacked(source.response.body, source.packed), { headers: { "Content-Type": "application/wasm" } });
               result = await WebAssembly.instantiateStreaming(wasm, imports);
               how = "unpacked by the page";
@@ -2341,12 +2507,28 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
               how = "Main.wasm";
             }
           }
-          appendLog(`Game code ready in ${((performance.now() - started) / 1000).toFixed(1)} s (${how})`);
+          appendLog(`Game code ready in ${((performance.now() - started) / 1000).toFixed(1)} s, ` +
+                    `${((performance.now() - codeDownloadStarted) / 1000).toFixed(1)} s after its download started (${how})`);
           done(result.instance, result.module);
         })().catch((e) => gameCrashed("Main.wasm: " + e));
         return {};
       },
     };
+    // Main.wasm starts downloading now, beside Main.js, instead of once Main.js has loaded and run
+    // (instantiateWasm above takes it): the same requests as before, only sooner. {fromWorker, response}
+    // through the service worker that keeps it unpacked, else {packed} (fetchPacked).
+    const codeDownloadStarted = performance.now();
+    const codeDownload = (async () => {
+      const init = { credentials: "same-origin" };
+      if (await workerKeepsCode()) {
+        const response = fetch(unpackedCodeUrl(), init);
+        response.catch(() => {});   // instantiateWasm says what failed
+        return { fromWorker: true, response };
+      }
+      const packed = fetchPacked("Main.wasm", init, code["Main.wasm"]);
+      packed.catch(() => {});
+      return { fromWorker: false, packed };
+    })();
     const script = document.createElement("script");
     script.src = versioned("Main.js");
     script.onerror = () => setStatus("Main.js didn't load: is the web build in this folder?", true);

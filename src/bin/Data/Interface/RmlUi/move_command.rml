@@ -40,10 +40,15 @@
 				<!-- The row is narrower than the pane: the spare lane on the right is where the
 				     scrollbar lives (a full-width row sits under the handle and swallows the drag).
 				     The strut gives the row its text's line height; the cells stand on it. -->
+				<!-- here / back: the map the hero is on and the one he last died on, a bar at the row's left; the
+				     hint under the pointer says which (UI/HUD/WarpListMarks.h). -->
 				<div class="mc-row" data-for="row : rows"
 				     data-class-can-move="row.can_move"
+				     data-class-here="row.here" data-class-back="row.back"
+				     data-attr-data-hint="row.mark_hint" data-attr-data-row="row.index"
 				     data-event-click="movecommand_warp(row.index)">
 					<span class="mc-strut">&#160;</span>
+					<span class="mc-mark"></span>
 					<span class="col col-strife">{{row.strife_text}}</span>
 					<span class="col col-map">{{row.map_name}}</span>
 					<span class="col col-level" data-class-unmet="row.level_unmet">{{row.req_level}}</span>

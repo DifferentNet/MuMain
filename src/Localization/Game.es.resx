@@ -14476,4 +14476,20 @@
   <data name="FieldRepairAllConfirm" xml:space="preserve">
     <value>¿Reparar todo el equipo puesto por %ls zen?</value>
   </data>
+  <!-- Round 20 -->
+  <data name="WarpListYouAreHere" xml:space="preserve">
+    <value>Estás aquí</value>
+  </data>
+  <data name="WarpListYouDiedHere" xml:space="preserve">
+    <value>Aquí moriste</value>
+  </data>
+  <data name="PartyHintInviteByName" xml:space="preserve">
+    <value>Escribe /party Nombre para invitar a un jugador.</value>
+  </data>
+  <data name="PartyHintInviteFromCommandWindow" xml:space="preserve">
+    <value>O pulsa %ls, elige %ls y haz clic en un jugador.</value>
+  </data>
+  <data name="PartyHintSharedExperience" xml:space="preserve">
+    <value>En grupo, la experiencia se reparte según el nivel.</value>
+  </data>
 </root>

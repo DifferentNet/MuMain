@@ -598,7 +598,7 @@ static void LogLateModelLoad(const std::string& name, std::chrono::steady_clock:
         return;
     }
     const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
-    MU_LOG_INFO(mu::log::Get("data"), "late model load: {} {:.0f} ms", name, ms);
+    MU_LOG_INFO(mu::log::Get("data"), "late model load: {} {:.0f} ms (entry countdown {})", name, ms, LoadingWorld);
 }
 
 static void LoadNpc(int Type)

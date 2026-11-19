@@ -4,6 +4,7 @@
 #include "UI/Core/WindowManager.h"
 #include "Network/MoveCommandData.h"
 #include "UI/HUD/MoveCommandRmlModel.h"
+#include "UI/HUD/WarpListMarks.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 #include "UI/Scaling/UITransform.h"
 
@@ -17,6 +18,13 @@ namespace UI::MoveCommand
 {
     // The panel's width when no theme slot sizes it; the theme lays out the rest.
     constexpr int kWindowWidth = 230;
+
+    // The hero's last death outside the events, for the warp list's "you died here" row (UI/HUD/WarpListMarks.h).
+    // Called by the network side: a death, the respawn, a map change or gate (not an in-map teleport), a new login.
+    void NoteHeroDeath();
+    void NoteHeroRevival();
+    void NoteHeroWarp();
+    void ForgetHeroDeath();
 }
 
 namespace mu::ui::window
@@ -39,6 +47,16 @@ namespace mu::ui::window
         // the document is visible and RmlUi has laid it out. Re-asserting a scroll position every
         // frame would fight the player's own drag and wheel.
         bool						m_bRewindPending = false;
+        // Frames left to bring the "you died here" row into view after an opening: its row element exists only once
+        // RmlUi has applied the new rows.
+        int							m_ScrollToBackFrames = 0;
+        // The "back" row (its MoveCommandRowEntry::index) that opening looks for.
+        int							m_ScrollToBackRow = -1;
+        // The rows' hints, built with the document.
+        Rml::String					m_HereHint;
+        Rml::String					m_BackHint;
+        // Where each row of m_listMoveInfoData lands (UI/HUD/WarpListMarks.h), built with the list.
+        std::vector<UI::MoveCommand::Marks::RowSpot> m_RowSpots;
         float						m_FillWidth = 0.f;
         float						m_FillHeight = 0.f;
 
@@ -91,6 +109,10 @@ namespace mu::ui::window
         void BuildRmlUi();
         void SyncRmlModel();
         void RebuildRowModel();
+        // The rows marked "here" and "back" (positions in m_listMoveInfoData), -1 for none.
+        void FindMarkedRows(int& hereRow, int& backRow) const;
+        // After an opening: the list starts at the top, or with the "back" row in view when there is one.
+        void ApplyOpeningScroll();
         // Warps to the list entry at `row` (a position in m_listMoveInfoData, as pushed into
         // MoveCommandRowEntry::index), if the character still meets its requirements.
         void RmlClickWarp(int row);

@@ -564,6 +564,9 @@ void CTrade::UnloadImages()
 
 void CTrade::ProcessClosing()
 {
+    // A trade can end without the server's exit (a warp, the window closed another way): the "took out" lines
+    // still waiting belong to it and must not speak later.
+    m_pendingRemovals.Clear();
     m_pYourInvenCtrl->RemoveAllItems();
     m_pMyInvenCtrl->RemoveAllItems();
 

@@ -20,6 +20,9 @@
 #include "Core/Utilities/StringUtils.h"
 #include "UI/Text/GroupedNumberText.h"
 #include "UI/Chat/WarpUnlocks.h"
+#include "UI/HUD/WarpListMarks.h"
+#include "Engine/Object/ZzzInfomation.h"
+#include "GameLogic/Combat/DuelMgr.h"
 #include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Event.h>
@@ -55,6 +58,25 @@ namespace
             }
         }
         return false;
+    }
+
+    // Where a warp list row lands: the world and the middle of its gate's area (Data\Gate.bmd). A gate the client
+    // does not know gives no spot, so its row is never marked.
+    UI::MoveCommand::Marks::RowSpot RowSpotOf(const SEASON3B::CMoveCommandData::MOVEINFODATA& moveInfo)
+    {
+        UI::MoveCommand::Marks::RowSpot spot;
+        const int gate = moveInfo._ReqInfo.iGateNum;
+        if (GateAttribute == nullptr || gate < 0 || gate >= MAX_GATES)
+            return spot;
+        const GATE_ATTRIBUTE& attribute = GateAttribute[gate];
+        const bool knownGate = attribute.x2 > 0 && attribute.y2 > 0
+            && attribute.x2 >= attribute.x1 && attribute.y2 >= attribute.y1;
+        if (!knownGate)
+            return spot;
+        spot.world = attribute.Map;
+        spot.x = (attribute.x1 + attribute.x2) / 2;
+        spot.y = (attribute.y1 + attribute.y2) / 2;
+        return spot;
     }
 };
 
@@ -102,6 +124,10 @@ void mu::ui::window::CMoveCommandWindow::Release()
 void mu::ui::window::CMoveCommandWindow::RefreshData()
 {
     m_listMoveInfoData = CMoveCommandData::GetInstance()->GetMoveCommandDatalist();
+    m_RowSpots.clear();
+    m_RowSpots.reserve(m_listMoveInfoData.size());
+    for (const auto* moveInfo : m_listMoveInfoData)
+        m_RowSpots.push_back(RowSpotOf(*moveInfo));
 }
 
 void mu::ui::window::CMoveCommandWindow::SetFillPlacementSize(float width, float height)
@@ -362,7 +388,43 @@ void PostMoveBlock(const SEASON3B::CMoveCommandData::MOVEINFODATA& moveInfo, Mov
     }
     g_pSystemLogBox->AddText(text, mu::ui::window::TYPE_ERROR_MESSAGE);
 }
+
+// How many frames an opening waits for the rows before it gives up bringing the "back" row into view.
+constexpr int kScrollToBackFrames = 10;
+
+// Deaths that send the hero nowhere he would want to go back to: the event maps, the Endless Tower (the
+// Doppelganger maps) and duels.
+bool DiedInEvent()
+{
+    const int world = gMapManager.WorldActive;
+    const bool towerMap = world >= WD_65DOPPLEGANGER1 && world <= WD_68DOPPLEGANGER4;
+    return g_DuelMgr.IsDuelEnabled() || world == WD_64DUELARENA || towerMap || gMapManager.InBloodCastle()
+        || gMapManager.InDevilSquare() || gMapManager.InChaosCastle() || gMapManager.InHellas()
+        || gMapManager.InHiddenHellas();
+}
 } // namespace
+
+void UI::MoveCommand::NoteHeroDeath()
+{
+    if (Hero == nullptr || DiedInEvent())
+        return;
+    Marks::HeroDeathSpot().NoteDeath(gMapManager.WorldActive, Hero->PositionX, Hero->PositionY, GetTickCount());
+}
+
+void UI::MoveCommand::NoteHeroRevival()
+{
+    Marks::HeroDeathSpot().NoteRevival();
+}
+
+void UI::MoveCommand::NoteHeroWarp()
+{
+    Marks::HeroDeathSpot().NoteWarp();
+}
+
+void UI::MoveCommand::ForgetHeroDeath()
+{
+    Marks::HeroDeathSpot().Clear();
+}
 
 void mu::ui::window::CMoveCommandWindow::SettingCanMoveMap()
 {
@@ -414,6 +476,7 @@ void mu::ui::window::CMoveCommandWindow::RmlClickWarp(int row)
     }
 
     SocketClient->ToGameServer()->SendWarpCommandRequest(GetMoveCommandKey(), (*li)->_ReqInfo.index);
+    gMapManager.PrefetchMapFilesOfGate((*li)->_ReqInfo.iGateNum);
 
     g_pNewUISystem->Hide(mu::ui::window::INTERFACE_MOVEMAP);
 }
@@ -478,6 +541,9 @@ void mu::ui::window::CMoveCommandWindow::BindRmlModel(Rml::DataModelConstructor&
     row.RegisterMember("level_unmet", &MoveCommandRowEntry::levelUnmet);
     row.RegisterMember("zen_unmet", &MoveCommandRowEntry::zenUnmet);
     row.RegisterMember("index", &MoveCommandRowEntry::index);
+    row.RegisterMember("here", &MoveCommandRowEntry::here);
+    row.RegisterMember("back", &MoveCommandRowEntry::back);
+    row.RegisterMember("mark_hint", &MoveCommandRowEntry::markHint);
     c.RegisterArray<std::vector<MoveCommandRowEntry>>();
     c.Bind("rows", &model.rows);
 
@@ -508,6 +574,8 @@ void mu::ui::window::CMoveCommandWindow::BindRmlModel(Rml::DataModelConstructor&
     model.headLevel = StringUtils::WideToNarrow(I18N::Game::MinLevel);
     model.headZen = StringUtils::WideToNarrow(I18N::Game::Cost);
     model.closeText = StringUtils::WideToNarrow(I18N::Game::Close388);
+    m_HereHint = StringUtils::WideToNarrow(I18N::Game::WarpListYouAreHere);
+    m_BackHint = StringUtils::WideToNarrow(I18N::Game::WarpListYouDiedHere);
 }
 
 void mu::ui::window::CMoveCommandWindow::OnRmlBuilt()
@@ -539,12 +607,56 @@ void mu::ui::window::CMoveCommandWindow::SyncRmlModel()
     if (Rml::Element* list = m_RmlView.Document()->GetElementById("list"))
         list->SetClass("no-scroll", list->GetScrollHeight() <= list->GetClientHeight() + 0.5f);
 
+    ApplyOpeningScroll();
+}
+
+void mu::ui::window::CMoveCommandWindow::ApplyOpeningScroll()
+{
     if (m_bRewindPending)
     {
         m_bRewindPending = false;
         if (Rml::Element* list = m_RmlView.Document()->GetElementById("list"))
             list->SetScrollTop(0.f);
+        int hereRow = -1;
+        FindMarkedRows(hereRow, m_ScrollToBackRow);
+        m_ScrollToBackFrames = m_ScrollToBackRow >= 0 ? kScrollToBackFrames : 0;
+        // The rows still show the previous opening until RmlUi applies this frame's model: look from the next one.
+        return;
     }
+    if (m_ScrollToBackFrames <= 0)
+        return;
+
+    --m_ScrollToBackFrames;
+    m_RmlView.Document()->UpdateDocument();
+    Rml::Element* list = m_RmlView.Document()->GetElementById("list");
+    Rml::Element* backRow = list != nullptr ? list->QuerySelector(".mc-row.back") : nullptr;
+    // Only the row this opening marked: an element left from an earlier opening has another index.
+    if (backRow == nullptr || backRow->GetAttribute<int>("data-row", -1) != m_ScrollToBackRow)
+        return;
+    m_ScrollToBackFrames = 0;
+    backRow->ScrollIntoView(Rml::ScrollIntoViewOptions(Rml::ScrollAlignment::Center, Rml::ScrollAlignment::Nearest,
+                                                       Rml::ScrollBehavior::Instant, Rml::ScrollParentage::Closest));
+}
+
+void mu::ui::window::CMoveCommandWindow::FindMarkedRows(int& hereRow, int& backRow) const
+{
+    hereRow = -1;
+    backRow = -1;
+    if (Hero == nullptr)
+        return;
+
+    const auto& spots = m_RowSpots;
+    hereRow = UI::MoveCommand::Marks::NearestRow(spots, gMapManager.WorldActive, Hero->PositionX, Hero->PositionY);
+
+    int world = -1;
+    int x = 0;
+    int y = 0;
+    if (!UI::MoveCommand::Marks::HeroDeathSpot().Get(GetTickCount(), world, x, y))
+        return;
+    backRow = UI::MoveCommand::Marks::NearestRow(spots, world, x, y);
+    // Still where he died: the "here" mark says it all.
+    if (backRow == hereRow)
+        backRow = -1;
 }
 
 void mu::ui::window::CMoveCommandWindow::RebuildRowModel()
@@ -557,6 +669,12 @@ void mu::ui::window::CMoveCommandWindow::RebuildRowModel()
     const int iLevel = CharacterAttribute->Level;
     const DWORD iZen = CharacterMachine->Gold;
     const Rml::String strifeMark = StringUtils::WideToNarrow(I18N::Game::Battle2987);
+
+    int hereRow = -1;
+    int backRow = -1;
+    FindMarkedRows(hereRow, backRow);
+    const Rml::String& hereHint = m_HereHint;
+    const Rml::String& backHint = m_BackHint;
 
     wchar_t szText[24];
     int index = 0;
@@ -582,6 +700,9 @@ void mu::ui::window::CMoveCommandWindow::RebuildRowModel()
         entry.canMove = moveInfo->_bCanMove;
         entry.levelUnmet = iReqLevel > iLevel;
         entry.zenUnmet = moveInfo->_ReqInfo.iReqZen > (int)iZen;
+        entry.here = index == hereRow;
+        entry.back = index == backRow;
+        entry.markHint = entry.back ? backHint : entry.here ? hereHint : Rml::String();
         entry.index = index++;
 
         rows.push_back(std::move(entry));
@@ -597,7 +718,7 @@ void mu::ui::window::CMoveCommandWindow::RebuildRowModel()
                            return a.canMove == b.canMove && a.levelUnmet == b.levelUnmet
                                && a.zenUnmet == b.zenUnmet && a.strifeText == b.strifeText
                                && a.reqLevel == b.reqLevel && a.reqZen == b.reqZen
-                               && a.mapName == b.mapName;
+                               && a.mapName == b.mapName && a.here == b.here && a.back == b.back;
                        });
     if (!changed)
         return;

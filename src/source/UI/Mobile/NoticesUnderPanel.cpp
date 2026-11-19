@@ -77,6 +77,14 @@ void UI::Mobile::NoticesUnderPanel::Sync(bool panelOpen)
         Release();
         return;
     }
+    // The notices' own depth lies under every window already (RmlStackingOrder.cpp): never raised to
+    // the menu's.
+    const auto depth = UI::RmlBridge::StackingDepthForDocument(NoticesFile);
+    if (depth.has_value() && *depth <= UnderOpenMenuDepth)
+    {
+        Release();
+        return;
+    }
     Rml::Element* notices = Find();
     if (notices == nullptr)
         return;

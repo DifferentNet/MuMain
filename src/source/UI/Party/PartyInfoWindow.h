@@ -106,6 +106,10 @@ namespace mu::ui::window
         void SyncRmlModel();
         void SyncPhoneHud();
         void OpenSocialIfAsked();
+        // The PC's way to the players nearby: the command window (D) with Party picked, as if its button was pressed.
+        void OpenCommandWindowForParty();
+        // The no-party hint for the layout and the current key bindings.
+        void RebuildEmptyState();
 
         // One member "status card" row -- mirrors RenderMemberStatue()'s per-slot rendering.
         struct PartyMemberRow
@@ -131,7 +135,12 @@ namespace mu::ui::window
             // The phone layout with the on-screen controls (UI::Mobile::ReplacesPcHud()): the hint leaves out
             // the mouse and a button opens the Social panel instead.
             bool phoneHud = false;
+            // In Chaos Castle the button to the players nearby hides, on the phone (the Social panel) and the PC
+            // (the command window, which the D key's rule never opens there) alike.
+            bool inChaosCastle = false;
             std::vector<TextLine> emptyStateLines;
+            // The hint line that stands a little apart from those above it.
+            int emptyParagraphAt = -1;
             std::vector<PartyMemberRow> members;
 
             // Set once at Create(); static I18N labels, never re-synced (this window has no
@@ -142,6 +151,7 @@ namespace mu::ui::window
         };
 
         void BindRmlModel(Rml::DataModelConstructor& c, PartyInfoRmlModel& model);
+        static void FillEmptyState(PartyInfoRmlModel& model);
         UI::RmlBridge::ThemedView<PartyInfoRmlModel> m_RmlView{"party_info",
             [this](Rml::DataModelConstructor& c, PartyInfoRmlModel& model) { BindRmlModel(c, model); },
             {{"Data/Interface/RmlUi/party_info.rml"}}};

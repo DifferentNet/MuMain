@@ -205,6 +205,7 @@ BOOL g_bUseFullscreenMode = FALSE;
 #ifdef __EMSCRIPTEN__
 #include "Core/Utilities/FirstOpenTiming.h"
 #include "UI/Core/WindowWarmUp.h"
+#include "Render/Sprites/TextureWarmUp.h"
 #endif
 
 extern int LogIn;
@@ -2438,6 +2439,7 @@ MSG MainLoop()
                 MuWebFollowLowestQuality();
                 MuWebFollowShotRequest();
                 UI::WarmUp::Tick(Core::FirstOpenTiming::LastFrameMs());
+                Render::TextureWarmUp::Tick(Core::FirstOpenTiming::LastFrameMs());
 #endif
                 FollowWindowTitle();
                 RenderProfiledFrame();

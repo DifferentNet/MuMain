@@ -14476,4 +14476,20 @@
   <data name="FieldRepairAllConfirm" xml:space="preserve">
     <value>花費 %ls 金幣修理所有穿戴中的裝備？</value>
   </data>
+  <!-- Round 20 -->
+  <data name="WarpListYouAreHere" xml:space="preserve">
+    <value>你在這裡</value>
+  </data>
+  <data name="WarpListYouDiedHere" xml:space="preserve">
+    <value>你在這裡陣亡</value>
+  </data>
+  <data name="PartyHintInviteByName" xml:space="preserve">
+    <value>輸入 /party 名稱 邀請玩家。</value>
+  </data>
+  <data name="PartyHintInviteFromCommandWindow" xml:space="preserve">
+    <value>或按 %ls，選擇「%ls」後點擊玩家。</value>
+  </data>
+  <data name="PartyHintSharedExperience" xml:space="preserve">
+    <value>組隊時經驗值依等級分配。</value>
+  </data>
 </root>

@@ -153,7 +153,7 @@ siege lists, the cash shop lists.
 
 | Surface | Native code | Status |
 |---|---|---|
-| Centre-screen notices | `UI::Notices::Render()` | Done: `notices.rml`, depth 20, above game windows and tooltips, below scene and reconnect documents |
+| Centre-screen notices | `UI::Notices::Render()` | Done: `notices.rml`, depth 1.93, under every game window (round 24: they covered the windows' buttons on phones), over the HUD boards and touch controls, below scene and reconnect documents |
 | Map name banner | `CUIMapName::Render()` | Done: `map_name.rml`, cropped artwork centered on world entry, behind every window |
 | Party HP bars over heads, Kanturu result banner, siege build-time bars, Hellas object labels | `RenderPartyHP()`, `M39Kanturu3rd::RenderKanturu3rdinterface()`, `battleCastle::RenderBuildTimes()`, `RenderObjectDescription()` | Done: recorded by the world-label layer |
 | Siege crown switch lines, macro cooldown, event entry countdown | `RenderSwichState()`, `RenderTimes()`, `CSBaseMatch::RenderTime()` | Done: `hud_status.rml` on the HUD board (`UI::Hud::StatusTexts`); `$preview status` |

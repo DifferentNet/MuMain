@@ -2,6 +2,8 @@
 
 #include "ItemJsonCommon.h"
 
+#include "Core/Utilities/StreamBytes.h"
+
 #include <algorithm>
 #include <cctype>
 #include <fstream>
@@ -191,7 +193,7 @@ std::optional<std::string> ReadTextFile(const std::filesystem::path& path)
     {
         return std::nullopt;
     }
-    std::string text((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string text = Core::Utilities::ReadRemainingText(file);
     if (text.starts_with(Utf8ByteOrderMark))
     {
         text.erase(0, Utf8ByteOrderMark.size());

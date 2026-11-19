@@ -12,6 +12,7 @@
 #include <vector>
 
 using Core::Utilities::ReadRemainingBytes;
+using Core::Utilities::ReadRemainingText;
 
 namespace
 {
@@ -82,4 +83,35 @@ TEST_CASE("ReadRemainingBytes falls back to reading on where the stream can't se
     std::istream input(&buffer);
     const auto bytes = ReadRemainingBytes<char>(input);
     CHECK(std::string(bytes.begin(), bytes.end()) == Pattern(3000));
+
+    NoSeek textBuffer(Pattern(3000));
+    std::istream textInput(&textBuffer);
+    CHECK(ReadRemainingText(textInput) == Pattern(3000));
+}
+
+TEST_CASE("ReadRemainingText returns a file's text, an empty file and a stream read part way")
+{
+    const auto path = std::filesystem::temp_directory_path() / "mu_stream_text_test.txt";
+    const std::string content = Pattern(70000);
+    {
+        std::ofstream out(path, std::ios::binary);
+        out.write(content.data(), static_cast<std::streamsize>(content.size()));
+    }
+    {
+        std::ifstream input(path, std::ios::binary);
+        CHECK(ReadRemainingText(input) == content);
+    }
+    {
+        std::ifstream input(path, std::ios::binary);
+        input.seekg(3);
+        CHECK(ReadRemainingText(input) == content.substr(3));
+    }
+    {
+        std::ofstream out(path, std::ios::binary | std::ios::trunc);
+    }
+    {
+        std::ifstream input(path, std::ios::binary);
+        CHECK(ReadRemainingText(input).empty());
+    }
+    std::filesystem::remove(path);
 }

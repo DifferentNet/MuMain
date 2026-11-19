@@ -122,9 +122,19 @@ TEST_CASE("documents stack as the original's windows did [ui][stacking]")
     // TODO 44: the message box over the tooltip; the tooltip over every window.
     CHECK(Depth("message_box_view.rml") > Depth("tooltip.rml"));
     CHECK(Depth("tooltip.rml") > Depth("chat_command.rml"));
-    // Notices over the message and result boxes, under the loading screen and the scene windows.
-    CHECK(Depth("notices.rml") > Depth("message_box_view.rml"));
-    CHECK(Depth("notices.rml") > Depth("generic_confirm_dialog.rml"));
+    // Notices under every window and message box (on a phone's small screen they covered the game
+    // menu's buttons), over the event boards, the slide band, the touch controls and the names; under
+    // the loading screen and the scene windows.
+    for (const char* window : {"quick_command.rml", "trade.rml", "my_inventory.rml", "mu_helper_config.rml",
+                               "character_info.rml", "chat_log.rml", "system_log.rml", "main_frame.rml",
+                               "command_window.rml", "tooltip.rml", "message_box_view.rml",
+                               "generic_confirm_dialog.rml", "generic_menu_dialog.rml", "cursor_item.rml"})
+        CHECK_MESSAGE(Depth("notices.rml") < Depth(window), window);
+    for (const char* hud : {"kanturu_info.rml", "slide_notice.rml", "touch_controls.rml", "world_labels.rml",
+                            "hud_status.rml", "login_scene.rml"})
+        CHECK_MESSAGE(Depth("notices.rml") > Depth(hud), hud);
+    for (const char* overlay : {"system_log.rml", "chat_log.rml"})
+        CHECK_MESSAGE(Depth("notices.rml") < PhoneViewStackingDepth(overlay).value(), overlay);
     CHECK(Depth("loading.rml") > Depth("notices.rml"));
     CHECK(Depth("sys_menu.rml") > Depth("notices.rml"));
     CHECK(Depth("reconnect_dialog.rml") > Depth("loading.rml"));

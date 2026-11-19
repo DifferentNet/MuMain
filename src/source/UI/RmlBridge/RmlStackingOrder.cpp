@@ -14,7 +14,11 @@ constexpr float MessageBoxDepth = 10.7f;   // CNewUIMessageBoxMng
 constexpr float PadOverlayDepth = 10.72f;
 // Out of the world the frame rests on the login and character screens' windows and message boxes.
 constexpr float PadOverlayOutsideDepth = 31.5f;
-constexpr float NoticesDepth = 20.0f;      // UI::Notices::Render(), after every window
+// UI::Notices::Render(): the original drew the notices after every window, where on a small screen their
+// lines covered the windows' buttons (the game menu's Cancel). Under every window now (the lowest, the
+// player menu, is 2.0), over the event boards (kanturu_info.rml, 1.92), the slide band, the touch controls
+// and the names; under the phone view's logs (UnderPhoneWindowsDepth, 1.95).
+constexpr float NoticesDepth = 1.93f;
 constexpr float SceneBalloonDepth = 29.0f; // CUIMng::Render(): balloons, then its windows
 constexpr float SceneWindowDepth = 30.0f;
 constexpr float OverSceneWindowsDepth = 30.5f; // a main-scene window opened over CUIMng's windows

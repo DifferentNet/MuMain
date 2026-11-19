@@ -27,8 +27,9 @@
 		<div class="party-empty-msg" data-class-hidden="has_party">
 			<span data-for="line : empty_state_lines">{{line.text}}</span>
 		</div>
-		<!-- The phone view (no mouse to type /party with): opens the touch HUD's list of players nearby. -->
-		<div id="party_social_btn" data-class-hidden="has_party || !phone_hud" data-event-click="party_open_social">
+		<!-- The phone view (no mouse to type /party with): opens the touch HUD's list of players nearby.
+		     Hidden in Chaos Castle, where neither the Social panel nor the command window is offered. -->
+		<div id="party_social_btn" data-class-hidden="has_party || !phone_hud || in_chaos_castle" data-event-click="party_open_social">
 			<span class="party-social-label">{{social_label}}</span>
 		</div>
 
