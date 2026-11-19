@@ -14425,4 +14425,14 @@
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>Uma das guildas já está em guerra de guildas.</value>
   </data>
+  <!-- Round 16 -->
+  <data name="StatButtonTooltip" xml:space="preserve">
+    <value>Clique: +1. Clique direito: +10, +100 e mais, ou todos</value>
+  </data>
+  <data name="NewSkillOnButton" xml:space="preserve">
+    <value>Nova habilidade: %ls (botão de habilidade %d)</value>
+  </data>
+  <data name="TouchHelpDoubleTapMove" xml:space="preserve">
+    <value>Toque duas vezes em um item para movê-lo</value>
+  </data>
 </root>

@@ -1,7 +1,8 @@
 // MU Moldova: a finger buys from an NPC's shop with two taps on the item (CNPCShop). The mouse buys
 // with one click, as it always has; on a phone a finger brushing over the shop must not spend the
 // player's zen. The first tap chooses the item (it lights up and its tooltip shows), a second tap on
-// it soon after buys it, and a tap on another item chooses that one instead.
+// it soon after buys it, and a tap on another item chooses that one instead. A consumable the potion
+// keys take (round 16) stays chosen after a buy, so each further tap soon after buys one more of it.
 #pragma once
 
 #include <chrono>
@@ -34,6 +35,7 @@ enum class Action : std::uint8_t
 [[nodiscard]] std::optional<std::uint32_t> Chosen(const Choice& choice, Clock::time_point now);
 
 // A tap on the shop's item `itemKey` at `now`. `choice` is kept up to date: it holds the item after
-// Choose and nothing after Buy, so a third tap chooses again.
-[[nodiscard]] Action Tap(Choice& choice, std::uint32_t itemKey, Clock::time_point now);
+// Choose. After Buy it holds nothing, so a third tap chooses again, unless `repeats` (a stackable
+// consumable): then it holds the item from `now`, and a next tap within SecondTapTime buys again.
+[[nodiscard]] Action Tap(Choice& choice, std::uint32_t itemKey, Clock::time_point now, bool repeats = false);
 } // namespace UI::Shop::TapToBuy

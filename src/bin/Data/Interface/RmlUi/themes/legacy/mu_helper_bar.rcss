@@ -86,8 +86,12 @@
 	text-align: center;
 	color: token(text-primary);
 	white-space: nowrap;
-	pointer-events: none;
+	/* MU Skynet: a click or tap opens the map (MuHelperBar.cpp). */
+	pointer-events: auto;
+	cursor: pointer;
 }
+#text:hover { color: token(text-heading); }
+#text:active { color: token(text-selected); }
 
 .mu-btn {
 	position: absolute;
@@ -143,4 +147,6 @@
    position readout alone. */
 @media (theme: mobile-hud) {
 	#seg_c, #btn_config, #btn_start, #btn_stop { display: none; }
+	/* The readout opens the map on a tap: its box takes the bar's whole height, the text where it was. */
+	#text { top: 0dp; padding-top: 5dp; padding-bottom: 11dp; }
 }

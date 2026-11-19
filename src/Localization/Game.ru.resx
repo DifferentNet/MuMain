@@ -13097,10 +13097,10 @@
     <value>( фрукты %ls )</value>
   </data>
   <data name="QuestRequirementSkill" xml:space="preserve">
-    <value>Skill: %ls</value>
+    <value>Навык: %ls</value>
   </data>
   <data name="QuestRequirementBuff" xml:space="preserve">
-    <value>Bonus: %ls</value>
+    <value>Бонус: %ls</value>
   </data>
   <data name="EventScheduleTitle" xml:space="preserve">
     <value>Ивенты</value>
@@ -16215,7 +16215,7 @@
     <value>Высокие</value>
   </data>
   <data name="SunShadowsTooltip" xml:space="preserve">
-    <value>Настоящие тени от солнца у персонажей, монстров и объектов (вид Enhanced). Средние: карта 2048, высокие: 4096. Выкл — старые плоские тени.</value>
+    <value>Настоящие тени от солнца у персонажей, монстров и объектов (с «Улучшенной графикой»). Средние: карта 2048, высокие: 4096. Выкл — старые плоские тени.</value>
   </data>
   <data name="SoftShadowsRow" xml:space="preserve">
     <value>Мягкие тени</value>
@@ -16236,7 +16236,7 @@
     <value>Выключено на пресете графики «Низкий».</value>
   </data>
   <data name="SsaoLockedEnhanced" xml:space="preserve">
-    <value>Нужны Enhanced graphics с Enhanced lighting и «Свечение и цветокоррекция».</value>
+    <value>Нужны «Улучшенная графика», «Улучшенное освещение» и «Свечение и цветокоррекция».</value>
   </data>
   <data name="SsaoAfterRestart" xml:space="preserve">
     <value>Включение заработает после перезапуска.</value>
@@ -16278,7 +16278,7 @@
     <value>Выключено на пресете графики «Низкий».</value>
   </data>
   <data name="HazeLockedEnhanced" xml:space="preserve">
-    <value>Нужны Enhanced graphics с Enhanced lighting и «Свечение и цветокоррекция».</value>
+    <value>Нужны «Улучшенная графика», «Улучшенное освещение» и «Свечение и цветокоррекция».</value>
   </data>
   <data name="HazeAfterRestart" xml:space="preserve">
     <value>Включение заработает после перезапуска.</value>
@@ -16314,7 +16314,7 @@
     <value>Выключено на пресете графики «Низкий».</value>
   </data>
   <data name="TorchLightsLockedLighting" xml:space="preserve">
-    <value>Нужны Enhanced lighting и «Динамический свет».</value>
+    <value>Нужны «Улучшенное освещение» и «Динамический свет».</value>
   </data>
   <data name="FoliageSmoothingRow" xml:space="preserve">
     <value>Сглаживание листвы и травы</value>
@@ -16665,7 +16665,7 @@
     <value>Логово Кундуна, тир %d: не пройдено.</value>
   </data>
   <data name="Enhanced graphics" xml:space="preserve">
-    <value>Enhanced graphics</value>
+    <value>Улучшенная графика</value>
   </data>
   <data name="Gameplay" xml:space="preserve">
     <value>Игра</value>
@@ -16698,7 +16698,7 @@
     <value>Тени</value>
   </data>
   <data name="Enhanced Lighting" xml:space="preserve">
-    <value>Enhanced lighting</value>
+    <value>Улучшенное освещение</value>
   </data>
   <data name="Dynamic Lights" xml:space="preserve">
     <value>Динамический свет</value>
@@ -16803,7 +16803,7 @@
     <value>Сила тёмного света</value>
   </data>
   <data name="Tuning Mood Strength Help" xml:space="preserve">
-    <value>Какая доля более тёмного света каждой карты применяется. 0 % — исходный свет карты, остальной вид Enhanced остаётся. Это же меняет, насколько тёмный свет усиливает свечи, огни и свет навыков.</value>
+    <value>Какая доля более тёмного света каждой карты применяется. 0 % — исходный свет карты, остальное от «Улучшенной графики» остаётся. Это же меняет, насколько тёмный свет усиливает свечи, огни и свет навыков.</value>
   </data>
   <data name="Tuning Bloom Intensity" xml:space="preserve">
     <value>Сила свечения</value>
@@ -16857,13 +16857,13 @@
     <value>клет.</value>
   </data>
   <data name="Tuning Locked Classic" xml:space="preserve">
-    <value>Включите Enhanced graphics, чтобы менять эти настройки. Ваши значения сохранены.</value>
+    <value>Включите «Улучшенную графику», чтобы менять эти настройки. Ваши значения сохранены.</value>
   </data>
   <data name="Tuning Locked Off" xml:space="preserve">
     <value>Включите эту функцию, чтобы менять эти настройки. Ваши значения сохранены.</value>
   </data>
   <data name="Tuning Locked Needs Lighting" xml:space="preserve">
-    <value>Нужно Enhanced lighting. Ваши значения сохранены.</value>
+    <value>Нужно «Улучшенное освещение». Ваши значения сохранены.</value>
   </data>
   <data name="Tuning Locked Unavailable" xml:space="preserve">
     <value>Недоступно на этой видеокарте.</value>
@@ -16932,13 +16932,13 @@
     <value>Сглаживание</value>
   </data>
   <data name="Anti-aliasing Tooltip" xml:space="preserve">
-    <value>Сглаживает края в виде Enhanced; Classic всегда без него</value>
+    <value>Сглаживает края с «Улучшенной графикой»; Classic всегда без него</value>
   </data>
   <data name="Anisotropic filtering" xml:space="preserve">
     <value>Анизотропная фильтрация</value>
   </data>
   <data name="Anisotropic Filtering Tooltip" xml:space="preserve">
-    <value>Текстуры остаются чёткими под углом: текстуры мира в виде Enhanced, увеличенные текстуры в обоих видах</value>
+    <value>Текстуры остаются чёткими под углом: текстуры мира с «Улучшенной графикой», увеличенные текстуры в обоих видах</value>
   </data>
   <data name="LoginRememberUsername" xml:space="preserve">
     <value>Запомнить логин</value>
@@ -17378,5 +17378,15 @@
   </data>
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>Одна из гильдий уже воюет с другой гильдией.</value>
+  </data>
+  <!-- Round 16 -->
+  <data name="StatButtonTooltip" xml:space="preserve">
+    <value>Клик: +1. Правый клик: +10, +100 и больше или все</value>
+  </data>
+  <data name="NewSkillOnButton" xml:space="preserve">
+    <value>Новый навык: %ls (кнопка навыка %d)</value>
+  </data>
+  <data name="TouchHelpDoubleTapMove" xml:space="preserve">
+    <value>Двойное касание вещи перекладывает её</value>
   </data>
 </root>

@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "UI/Inventory/StorageInventoryExt.h"
 #include "UI/Inventory/InventorySort.h"
+#include "UI/Inventory/HeldItemPlacement.h"
 #include "I18N/All.h"
 
 #include "Audio/DSPlaySound.h"
@@ -259,6 +260,16 @@ void CStorageInventoryExt::ProcessInventoryCtrl()
         ITEM* pItemObj = pPickedItem->GetItem();
         if (pItemObj == nullptr)
         {
+            return;
+        }
+
+        // Round 16: a finger's double tap moves the item to the bag (CStorageInventory::ProcessInventoryCtrl).
+        if ((IsPress(VK_LBUTTON) || IsRelease(VK_LBUTTON)) && UI::Mobile::ClickSource::IsFingerDoubleTap()
+            && !UI::Inventory::Sort().IsWaiting()
+            && UI::Items::Placement::IsHeldOverItsSquares(m_pNewInventoryCtrl))
+        {
+            if (IsRelease(VK_LBUTTON) && UI::Items::Placement::PutHeldItemBack(m_pNewInventoryCtrl))
+                ProcessStorageItemAutoMove();
             return;
         }
 

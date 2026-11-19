@@ -14425,4 +14425,14 @@
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>Salah satu guild sudah dalam perang guild.</value>
   </data>
+  <!-- Round 16 -->
+  <data name="StatButtonTooltip" xml:space="preserve">
+    <value>Klik: +1. Klik kanan: +10, +100 dan lebih, atau semua</value>
+  </data>
+  <data name="NewSkillOnButton" xml:space="preserve">
+    <value>Skill baru: %ls (tombol skill %d)</value>
+  </data>
+  <data name="TouchHelpDoubleTapMove" xml:space="preserve">
+    <value>Ketuk dua kali item untuk memindahkannya</value>
+  </data>
 </root>

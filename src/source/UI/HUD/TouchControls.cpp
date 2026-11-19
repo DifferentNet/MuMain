@@ -18,6 +18,7 @@
 #include "MUHelper/MuHelper.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "Scenes/SceneCore.h"
+#include "UI/Chat/ChatMessages.h"
 #include "UI/Core/WindowCommon.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/ModalDialogs.h"
@@ -60,6 +61,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace
@@ -1538,6 +1540,23 @@ void HintHoldOnce()
     g_pSystemLogBox->AddText(I18N::Game::TouchHelpItem, mu::ui::window::TYPE_SYSTEM_MESSAGE);
 }
 
+// Round 16: the first time fingers open the vault, a trade or the chaos machine in a session, a line
+// says that a double tap moves an item there and back (InventoryActionController::MoveOnDoubleTap).
+void HintDoubleTapOnce()
+{
+    static bool s_shown = false;
+    if (s_shown || g_pNewUISystem == nullptr || g_pSystemLogBox == nullptr)
+        return;
+    if (!Touch::IsEnabled() || UI::Mobile::IsGamepadInUse())
+        return;
+    if (!g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_STORAGE) &&
+        !g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_MIXINVENTORY) &&
+        !g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_TRADE))
+        return;
+    s_shown = true;
+    g_pSystemLogBox->AddText(I18N::Game::TouchHelpDoubleTapMove, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+}
+
 void HoldForPad(int control, bool held)
 {
     if (control < 0 || control >= ControlCount || g_pad.held[control] == held)
@@ -1848,6 +1867,55 @@ int SlotToSet()
     if (keys[SlotHotKey(0)] == SkillArrange::NoSkill)
         return 0;
     return SkillArrange::NextEmptySlot(keys, g_upperSet, 0, ActiveSlots());
+}
+
+// Skills learned this session while the controls showed (WSclient's "New skill" line), waiting for Update() to put
+// them on a skill button: the skill list counts a new skill only after its packet is read through.
+struct NewSkill
+{
+    int index = 0; // in the character's skill list, what a hotkey holds
+    int type = 0;
+};
+std::vector<NewSkill> g_newSkills;
+
+// Whether a learned skill can go on a skill button: one the picker lists, on no hotkey yet.
+bool TakesSkillButton(const SkillArrange::HotKeys& keys, int skillIndex)
+{
+    if (std::find(keys.begin(), keys.end(), skillIndex) != keys.end())
+        return false;
+    const std::vector<int> listed = g_pSkillList->GetListedSkills();
+    return std::find(listed.begin(), listed.end(), skillIndex) != listed.end();
+}
+
+// The skill on the first empty skill button of the set in use; the button's number (1 the first), or 0 with every
+// button taken or a skill no button takes. A filled button is never replaced.
+int PutOnEmptySkillButton(int skillIndex)
+{
+    const SkillArrange::HotKeys keys = ReadHotKeys();
+    if (!TakesSkillButton(keys, skillIndex))
+        return 0;
+    const int slot = SlotToSet();
+    const int hotKey = SlotHotKey(slot);
+    if (keys[hotKey] != SkillArrange::NoSkill)
+        return 0;
+    WriteHotKeys(keys, SkillArrange::Placed(keys, hotKey, skillIndex));
+    return slot + 1;
+}
+
+// The "New skill" lines of the skills learned since the last frame; with `place`, each first goes on an empty skill
+// button and its line names the button.
+void SayNewSkills(bool place)
+{
+    for (const NewSkill& skill : std::exchange(g_newSkills, {}))
+    {
+        const int button = place ? PutOnEmptySkillButton(skill.index) : 0;
+        wchar_t line[160]{};
+        if (button > 0)
+            mu_swprintf(line, I18N::Game::NewSkillOnButton, SkillAttribute[skill.type].Name, button);
+        else
+            mu_swprintf(line, I18N::Game::NewSkillLearned, SkillAttribute[skill.type].Name);
+        UI::Chat::PostSystem(line, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+    }
 }
 
 // A skill's or pet command's name, as its tooltip heads it; looked up once a showing.
@@ -2640,6 +2708,7 @@ void Update()
     ReleaseChargeLetGo();
     if (!UI::Mobile::ShowsControls())
     {
+        SayNewSkills(false);
         // The PK switch belongs to these controls: with them gone (a mouse or a pad took over) a click
         // on a player must not attack them unasked.
         GameLogic::Touch::SetForceAttack(false);
@@ -2650,6 +2719,7 @@ void Update()
     const bool inWorld = SceneFlag == MAIN_SCENE && LoadingWorld < 30 && Hero != nullptr;
     if (!inWorld)
     {
+        SayNewSkills(false);
         Hide();
         GameLogic::Touch::Reset();
         UI::Mobile::Social::Cancel();
@@ -2689,6 +2759,7 @@ void Update()
     GameLogic::Touch::SetControlsShown(true);
     ControlsModel& model = g_View.GetModel();
     g_upperSet = ChooseUpperSet();
+    SayNewSkills(true);
     // The pad's pointer aims only while it plays the pointer (a window open); in the world the right
     // stick picks the target instead (UI/HUD/GamepadControls).
     const bool padInUse = UI::Mobile::IsGamepadInUse();
@@ -2748,6 +2819,7 @@ void Update()
     // The pad lights the PC's pad row too: X held shows before the skill animates.
     SyncPressed(document, (model.fingers && UI::Mobile::ReplacesPcHud()) || padInUse, due);
     HintHoldOnce();
+    HintDoubleTapOnce();
     // The boxes the next fingers are tested against: where this frame lays the controls out.
     if (due)
         MeasureBoxesNow();
@@ -2864,6 +2936,14 @@ void ActivateMenuFocus()
     const int focus = g_View.GetModel().menuFocus;
     if (focus >= 0 && focus < MenuItemCount)
         ++g_pad.presses[FirstMenuItemControl + focus];
+}
+
+bool OfferNewSkill(int skillIndex, int skillType)
+{
+    if (!UI::Mobile::ShowsControls())
+        return false;
+    g_newSkills.push_back({skillIndex, skillType});
+    return true;
 }
 
 bool OpenSkillPicker()

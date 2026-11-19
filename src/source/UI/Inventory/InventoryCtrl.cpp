@@ -1303,7 +1303,7 @@ bool UI::Items::DrawnGridGeometry(Rml::Element* grid, int columns, int rows, flo
 void mu::ui::window::CInventoryCtrl::FollowGridPx(Rml::ElementDocument* doc, const char* gridId)
 {
     UI::Items::GridGeometry geometry;
-    if (!UI::Items::DrawnGridGeometry(doc ? doc->GetElementById(gridId) : nullptr, m_nColumn, m_nRow,
+    if (!UI::Items::DrawnGridGeometry(m_FollowedGrid.Find(doc, gridId), m_nColumn, m_nRow,
                                       m_Geometry.PitchX(), m_Geometry.PitchY(), geometry))
         return;
     m_Geometry = geometry;
@@ -1312,7 +1312,7 @@ void mu::ui::window::CInventoryCtrl::FollowGridPx(Rml::ElementDocument* doc, con
 void mu::ui::window::CInventoryCtrl::FollowGridPx(Rml::ElementDocument* doc, const char* gridId, int firstRow)
 {
     UI::Items::GridGeometry geometry;
-    if (!UI::Items::DrawnGridGeometry(doc ? doc->GetElementById(gridId) : nullptr, m_nColumn, m_nRow,
+    if (!UI::Items::DrawnGridGeometry(m_FollowedGrid.Find(doc, gridId), m_nColumn, m_nRow,
                                       m_Geometry.PitchX(), m_Geometry.PitchY(), geometry))
         return;
     m_Geometry = {geometry.Left(), geometry.Top() + firstRow * geometry.PitchY(), geometry.PitchX(), geometry.PitchY(),

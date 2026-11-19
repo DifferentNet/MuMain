@@ -14425,4 +14425,14 @@
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>Uno de los gremios ya está en una guerra de gremios.</value>
   </data>
+  <!-- Round 16 -->
+  <data name="StatButtonTooltip" xml:space="preserve">
+    <value>Clic: +1. Clic derecho: +10, +100 y más, o todos</value>
+  </data>
+  <data name="NewSkillOnButton" xml:space="preserve">
+    <value>Nueva habilidad: %ls (botón de habilidad %d)</value>
+  </data>
+  <data name="TouchHelpDoubleTapMove" xml:space="preserve">
+    <value>Toca dos veces un objeto para moverlo</value>
+  </data>
 </root>

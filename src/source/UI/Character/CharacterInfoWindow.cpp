@@ -19,6 +19,7 @@
 #include "Network/Server/ServerListManager.h"
 #include "I18N/All.h"
 #include "UI/HUD/KeyHint.h"
+#include "UI/Mobile/InterfaceMode.h"
 #include "GameLogic/Items/ItemCategories.h"
 #include "Core/Utilities/StringUtils.h"
 #include "UI/Scaling/UITransform.h"
@@ -211,6 +212,8 @@ void mu::ui::window::CCharacterInfoWindow::BindRmlModel(Rml::DataModelConstructo
     c.Bind("masterlevel_tooltip", &model.masterLevelTooltip);
     c.Bind("advstats_tooltip", &model.advancedStatsTooltip);
     c.Bind("titles_tooltip", &model.titlesTooltip);
+    c.Bind("stat_button_tooltip", &model.statButtonTooltip);
+    c.Bind("stat_button_tooltip_shown", &model.statButtonTooltipShown);
 
     c.BindEventCallback("chainfo_increase_stat",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList& arguments)
@@ -249,6 +252,7 @@ void mu::ui::window::CCharacterInfoWindow::BindRmlModel(Rml::DataModelConstructo
     model.masterLevelTooltip = StringUtils::WideToNarrow(I18N::Game::MasterSkillTreeA);
     model.advancedStatsTooltip = StringUtils::WideToNarrow(I18N::Game::AdvStatsTooltip);
     model.titlesTooltip = StringUtils::WideToNarrow(I18N::Game::TitlesTooltip);
+    model.statButtonTooltip = StringUtils::WideToNarrow(I18N::Game::StatButtonTooltip);
     model.advancedAttackTitle = StringUtils::WideToNarrow(I18N::Game::AdvStatsAttack);
     model.advancedDefenseTitle = StringUtils::WideToNarrow(I18N::Game::AdvStatsDefense);
 }
@@ -546,6 +550,8 @@ void mu::ui::window::CCharacterInfoWindow::SyncRmlModel()
     SyncKeyLabels();
 
     SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::canLevelUp, "can_level_up", CharacterAttribute->LevelUpPoint > 0);
+    SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::statButtonTooltipShown, "stat_button_tooltip_shown",
+              !UI::Mobile::ShowsControls());
     SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::showCharisma, "show_charisma",
               gCharacterManager.GetBaseClass(Hero->Class) == CLASS_DARK_LORD);
     SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::petEnabled, "pet_enabled", CPetInfoWindow::IsAvailable());

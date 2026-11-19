@@ -89,25 +89,26 @@ using namespace mu::ui::window;
 
 namespace
 {
-// The paperdoll's slots and the theme's element for each.
+// The paperdoll's slots, the theme's element for each and its item box (#<id>_item).
 struct SlotAnchor
 {
     int slot;
     const char* id;
+    const char* itemId;
 };
 constexpr SlotAnchor SlotAnchors[] = {
-    {EQUIPMENT_HELPER, "slot_helper"},
-    {EQUIPMENT_HELM, "slot_helm"},
-    {EQUIPMENT_WING, "slot_wing"},
-    {EQUIPMENT_WEAPON_LEFT, "slot_weapon_left"},
-    {EQUIPMENT_ARMOR, "slot_armor"},
-    {EQUIPMENT_WEAPON_RIGHT, "slot_weapon_right"},
-    {EQUIPMENT_GLOVES, "slot_gloves"},
-    {EQUIPMENT_PANTS, "slot_pants"},
-    {EQUIPMENT_BOOTS, "slot_boots"},
-    {EQUIPMENT_RING_LEFT, "slot_ring_left"},
-    {EQUIPMENT_AMULET, "slot_amulet"},
-    {EQUIPMENT_RING_RIGHT, "slot_ring_right"},
+    {EQUIPMENT_HELPER, "slot_helper", "slot_helper_item"},
+    {EQUIPMENT_HELM, "slot_helm", "slot_helm_item"},
+    {EQUIPMENT_WING, "slot_wing", "slot_wing_item"},
+    {EQUIPMENT_WEAPON_LEFT, "slot_weapon_left", "slot_weapon_left_item"},
+    {EQUIPMENT_ARMOR, "slot_armor", "slot_armor_item"},
+    {EQUIPMENT_WEAPON_RIGHT, "slot_weapon_right", "slot_weapon_right_item"},
+    {EQUIPMENT_GLOVES, "slot_gloves", "slot_gloves_item"},
+    {EQUIPMENT_PANTS, "slot_pants", "slot_pants_item"},
+    {EQUIPMENT_BOOTS, "slot_boots", "slot_boots_item"},
+    {EQUIPMENT_RING_LEFT, "slot_ring_left", "slot_ring_left_item"},
+    {EQUIPMENT_AMULET, "slot_amulet", "slot_amulet_item"},
+    {EQUIPMENT_RING_RIGHT, "slot_ring_right", "slot_ring_right_item"},
 };
 // This window's slot in the workspace (WindowSystem.cpp), and #panel's class beside a neighbour there.
 constexpr const char* PlacementSlotName = "inventory";
@@ -641,11 +642,13 @@ void CMyInventory::DeleteAllItems() const
 // The paperdoll's slots and their items' boxes where the theme draws them, in window pixels.
 void CMyInventory::SyncNativeLayout()
 {
+    static_assert(std::size(SlotAnchors) == SlotAnchorCount);
     Rml::ElementDocument* document = m_RmlView.Document();
-    for (const SlotAnchor& anchor : SlotAnchors)
+    for (int i = 0; i < SlotAnchorCount; ++i)
     {
+        const SlotAnchor& anchor = SlotAnchors[i];
         auto& slot = m_EquipmentSlots[anchor.slot];
-        Rml::Element* box = document != nullptr ? document->GetElementById(anchor.id) : nullptr;
+        Rml::Element* box = m_SlotBoxes[i].Find(document, anchor.id);
         Rml::Vector2f offset;
         Rml::Vector2f size;
         ShownBox(box, offset, size);
@@ -655,8 +658,7 @@ void CMyInventory::SyncNativeLayout()
         slot.height = size.y;
 
         // A slot the theme hides (the phone view's bag-only inventory) takes no click and draws no item.
-        const std::string itemId = std::string(anchor.id) + "_item";
-        ShownBox(document != nullptr ? document->GetElementById(itemId) : nullptr, offset, size);
+        ShownBox(m_SlotItemBoxes[i].Find(document, anchor.itemId), offset, size);
         slot.itemX = offset.x;
         slot.itemY = offset.y;
         slot.itemWidth = size.x;
@@ -765,7 +767,7 @@ void CMyInventory::AskBagPageBuy()
 void CMyInventory::SyncBesideNeighbour()
 {
     Rml::ElementDocument* document = m_RmlView.Document();
-    Rml::Element* panel = document != nullptr ? document->GetElementById("panel") : nullptr;
+    Rml::Element* panel = m_PanelElement.Find(document, "panel");
     const bool beside = UI::Placement::HasOpenNeighbour(PlacementSlotName);
     if (panel == nullptr || panel->IsClassSet(BesideClass) == beside)
         return;
@@ -1115,12 +1117,12 @@ bool CMyInventory::Update()
         // (UpdateMouseEvent() ran just before) -- the help on a phone's screen: the worn item's
         // tooltip showed through it.
         Rml::ElementDocument* document = g_pNewUIMng->IsPointerOnOtherWindow(this) ? nullptr : m_RmlView.Document();
-        for (const SlotAnchor& anchor : SlotAnchors)
+        for (int i = 0; i < SlotAnchorCount; ++i)
         {
-            const std::string itemId = std::string(anchor.id) + "_item";
-            if (document != nullptr && UI::RmlBridge::IsPointerWithin(document->GetElementById(itemId)))
+            if (document != nullptr &&
+                UI::RmlBridge::IsPointerWithin(m_SlotItemBoxes[i].Find(document, SlotAnchors[i].itemId)))
             {
-                m_iPointedSlot = anchor.slot;
+                m_iPointedSlot = SlotAnchors[i].slot;
                 break;
             }
         }
@@ -1787,6 +1789,8 @@ void CMyInventory::SyncSlotStates()
 {
     auto& states = m_RmlView.GetModel().slotStates;
     bool changed = false;
+    // Built in place each frame and copied into the model only when a slot's state changed.
+    Rml::String& value = m_SlotStateScratch;
     for (int i = 0; i < MAX_EQUIPMENT_INDEX; i++)
     {
         const char* state = "";
@@ -1817,7 +1821,7 @@ void CMyInventory::SyncSlotStates()
                 state = "unequipable";
         }
 
-        Rml::String value = state;
+        value.assign(state);
         // Nothing worn there: the pad's frame offers nothing to take (UI/HUD/PadTargets).
         if (CharacterMachine->Equipment[i].Type == -1)
             value += value.empty() ? "bare" : " bare";
@@ -1831,19 +1835,21 @@ void CMyInventory::SyncSlotStates()
         }
         if (states[i] != value)
         {
-            states[i] = std::move(value);
+            states[i] = value;
             changed = true;
         }
     }
     if (changed)
         m_RmlView.MarkDirty("slot_states");
 
-    // Page 2: its two 8x4 grids' cells one after the other, as the 8x8 grid draws them.
-    UI::Items::ItemGridCells cells;
+    // Page 1: the bag grid's own cells, compared in place. Page 2: its two 8x4 grids' cells one after the
+    // other, as the 8x8 grid draws them, built into a reused vector.
+    const UI::Items::ItemGridCells* cells = &m_PageCells;
+    m_PageCells.clear();
     if (m_BagPage == 1)
     {
         if (m_pNewInventoryCtrl)
-            cells = m_pNewInventoryCtrl->Cells();
+            cells = &m_pNewInventoryCtrl->Cells();
     }
     else
     {
@@ -1852,17 +1858,17 @@ void CMyInventory::SyncSlotStates()
             if (CInventoryCtrl* grid = BagGrid(i))
             {
                 const UI::Items::ItemGridCells& part = grid->Cells();
-                cells.insert(cells.end(), part.begin(), part.end());
+                m_PageCells.insert(m_PageCells.end(), part.begin(), part.end());
             }
             else
             {
-                cells.resize(cells.size() + COLUMN_INVENTORY * ROW_INVENTORY_EXT);
+                m_PageCells.resize(m_PageCells.size() + COLUMN_INVENTORY * ROW_INVENTORY_EXT);
             }
         }
     }
-    if (m_RmlView.GetModel().gridCells != cells)
+    if (m_RmlView.GetModel().gridCells != *cells)
     {
-        m_RmlView.GetModel().gridCells = std::move(cells);
+        m_RmlView.GetModel().gridCells = *cells;
         m_RmlView.MarkDirty("grid_cells");
     }
 

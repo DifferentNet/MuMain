@@ -14523,4 +14523,14 @@
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>Eine der Gilden ist bereits in einem Gildenkrieg.</value>
   </data>
+  <!-- Round 16 -->
+  <data name="StatButtonTooltip" xml:space="preserve">
+    <value>Klick: +1. Rechtsklick: +10, +100 und mehr oder alle</value>
+  </data>
+  <data name="NewSkillOnButton" xml:space="preserve">
+    <value>Neue Fertigkeit: %ls (Fertigkeitstaste %d)</value>
+  </data>
+  <data name="TouchHelpDoubleTapMove" xml:space="preserve">
+    <value>Doppeltippen auf einen Gegenstand verschiebt ihn</value>
+  </data>
 </root>

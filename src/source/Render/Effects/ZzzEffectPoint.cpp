@@ -55,7 +55,19 @@ void CreatePoint(vec3_t Position, int Value, vec3_t Color, float scale, bool bMo
     }
 }
 
-void RenderNumberPoints(vec3_t Position, int Num, vec3_t Color, float Alpha, float Scale)
+// The camera's yaw as sine and cosine: the same for every number of a frame, so RenderPoints() computes it once.
+struct NumberFacing
+{
+    float sinTh;
+    float cosTh;
+};
+
+static NumberFacing CameraNumberFacing()
+{
+    return {sinf((float)(ANGLE_TO_RAD * (g_Camera.Angle[2]))), cosf((float)(ANGLE_TO_RAD * (g_Camera.Angle[2])))};
+}
+
+void RenderNumberPoints(vec3_t Position, int Num, vec3_t Color, float Alpha, float Scale, const NumberFacing& facing)
 {
     vec3_t p;
     VectorCopy(Position, p);
@@ -67,13 +79,13 @@ void RenderNumberPoints(vec3_t Position, int Num, vec3_t Color, float Alpha, flo
 
     char Text[32];
     snprintf(Text, sizeof(Text), "%d", Num);
-    p[0] -= strlen(Text) * 5.f;
-    unsigned int Length = strlen(Text);
+    const unsigned int Length = static_cast<unsigned int>(strlen(Text));
+    p[0] -= Length * 5.f;
     p[0] -= Length * Scale * 0.125f;
     p[1] -= Length * Scale * 0.125f;
 
-    float sinTh = sinf((float)(ANGLE_TO_RAD * (g_Camera.Angle[2])));
-    float cosTh = cosf((float)(ANGLE_TO_RAD * (g_Camera.Angle[2])));
+    const float sinTh = facing.sinTh;
+    const float cosTh = facing.cosTh;
 
     for (unsigned int i = 0; i < Length; i++)
     {
@@ -98,6 +110,7 @@ void RenderPoints(BYTE byRenderOneMore)
 
     EnableAlphaTest();
     DisableDepthTest();
+    const NumberFacing facing = CameraNumberFacing();
     for (int i = 0; i < s_pointBounds.End(); i++)
     {
         PARTICLE* o = &Points[i];
@@ -121,7 +134,7 @@ void RenderPoints(BYTE byRenderOneMore)
 
             if (o->Type > -1)
             {
-                RenderNumberPoints(o->Position, o->Type, o->Angle, o->Gravity * 0.4f, o->Scale);
+                RenderNumberPoints(o->Position, o->Type, o->Angle, o->Gravity * 0.4f, o->Scale, facing);
             }
             else
             {

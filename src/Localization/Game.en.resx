@@ -17379,4 +17379,14 @@
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>One of the guilds is already in a guild war.</value>
   </data>
+  <!-- Round 16 -->
+  <data name="StatButtonTooltip" xml:space="preserve">
+    <value>Click: +1. Right click: +10, +100 and more, or all</value>
+  </data>
+  <data name="NewSkillOnButton" xml:space="preserve">
+    <value>New skill: %ls (skill button %d)</value>
+  </data>
+  <data name="TouchHelpDoubleTapMove" xml:space="preserve">
+    <value>Double tap an item to move it</value>
+  </data>
 </root>

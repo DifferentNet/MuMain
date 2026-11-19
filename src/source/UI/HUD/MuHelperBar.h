@@ -52,6 +52,8 @@ namespace mu::ui::window
         // Set by the RmlUi document's data-event-click bindings; polled and cleared like other windows' RmlClickX().
         void RmlClickConfig() { m_bRmlConfigClicked = true; }
         void RmlClickToggle() { m_bRmlToggleClicked = true; }
+        // A click or tap on the position readout opens the map, as Tab (and the touch Map button) does.
+        void RmlClickPosition() { m_bRmlPositionClicked = true; }
 
     private:
         struct MuHelperBarRmlModel
@@ -73,6 +75,7 @@ namespace mu::ui::window
 
         bool m_bRmlConfigClicked = false;
         bool m_bRmlToggleClicked = false;
+        bool m_bRmlPositionClicked = false;
 
         // The hovered button's hint (0 config, 1 start, 2 stop), in the shared tooltip.
 

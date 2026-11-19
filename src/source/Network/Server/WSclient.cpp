@@ -90,6 +90,7 @@
 #include "Guild/GuildUpdates.h"
 #include "UI/HUD/ExperiencePace.h"
 #include "UI/HUD/HudUpdates.h"
+#include "UI/HUD/TouchControls.h"
 #include "UI/Core/WindowCommon.h" // ShowTrainerMenuDialog/ShowSeedMasterMenuDialog/etc.
 #include "GameLogic/Events/w_CursedTemple.h"
 #include "GameLogic/Skills/SummonSystem.h"
@@ -1555,8 +1556,9 @@ namespace
 UI::Chat::SeenSkills g_seenSkills;
 
 // "New skill: X" for a skill the hero did not have in this session. Not for pet commands, nor for master skills
-// (they come from the master tree window, which shows them, and often replace a base skill).
-void NoteSkillAdded(int skillType)
+// (they come from the master tree window, which shows them, and often replace a base skill). With the on-screen
+// controls shown the skill goes on an empty skill button first, and the line comes from there (TouchControls).
+void NoteSkillAdded(int skillIndex, int skillType)
 {
     if (skillType <= 0 || skillType >= MAX_SKILLS)
         return;
@@ -1567,6 +1569,8 @@ void NoteSkillAdded(int skillType)
         useType == SKILL_USE_TYPE_MASTERACTIVE)
         return;
     if (!g_seenSkills.NoteAdded(skillType))
+        return;
+    if (UI::HUD::TouchControls::OfferNewSkill(skillIndex, skillType))
         return;
 
     wchar_t line[128]{};
@@ -1593,7 +1597,7 @@ void ReceiveMagicList(const BYTE* ReceiveBuffer)
         auto Data2 = (LPPRECEIVE_MAGIC_LIST)(ReceiveBuffer + Offset);
         CharacterAttribute->Skill[Data2->Index] = (ActionSkillType)Data2->Type;
         CharacterAttribute->SkillLevel[Data2->Index] = Data2->Level;
-        NoteSkillAdded(Data2->Type);
+        NoteSkillAdded(Data2->Index, Data2->Type);
     }
     else if (Data->ListType == 0x02)
     {

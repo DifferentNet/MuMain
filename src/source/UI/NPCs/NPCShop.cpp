@@ -287,14 +287,16 @@ bool mu::ui::window::CNPCShop::UpdateMouseEvent()
 // Whether this release of the left button on the shop's item buys it. A mouse's click does, as it
 // always has. A finger's drag that ends here never does: it was a swipe, not a choice. A finger's tap
 // buys only as the second on the item the first one chose, unless the shop asks before it sells
-// anyway (`asksFirst`: the gamble shop's question).
+// anyway (`asksFirst`: the gamble shop's question). A potion or another consumable the potion keys
+// take stays chosen after a buy: each further tap soon after buys one more.
 bool mu::ui::window::CNPCShop::IsBuyRelease(const ITEM& item, bool asksFirst)
 {
     if (UI::Mobile::ClickSource::IsFingerDrag())
         return false;
     if (asksFirst || !UI::Mobile::ClickSource::IsFingerTap())
         return true;
-    if (TapToBuy::Tap(m_TapChoice, item.Key, TapToBuy::Clock::now()) == TapToBuy::Action::Buy)
+    const bool repeats = CMyInventory::CanRegisterItemHotKey(item.Type);
+    if (TapToBuy::Tap(m_TapChoice, item.Key, TapToBuy::Clock::now(), repeats) == TapToBuy::Action::Buy)
         return true;
     ShowTapAgainHint();
     return false;

@@ -6,6 +6,8 @@
 #include "UI/Chat/ChatMessages.h"
 #include "UI/Chat/InviteAutoDecline.h"
 #include "UI/Inventory/HeldItemPlacement.h"
+#include "UI/Inventory/InventorySort.h"
+#include "UI/Mobile/ClickSource.h"
 #include "UI/Inventory/ZenAmount.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/RmlBridge/RmlElementBox.h"
@@ -574,6 +576,16 @@ void CTrade::ProcessMyInvenCtrl()
     // item window: the inventory above this window takes the press.
     if (m_pMyInvenCtrl == nullptr || !mu::ui::window::IsRelease(VK_LBUTTON))
         return;
+
+    // Round 16: a finger's double tap on my trade item takes it back to the bag, as the right click
+    // does. The first tap lifted it: it goes back on its squares before the move.
+    if (UI::Mobile::ClickSource::IsFingerDoubleTap() && !UI::Inventory::Sort().IsWaiting()
+        && UI::Items::Placement::IsHeldOverItsSquares(m_pMyInvenCtrl))
+    {
+        if (UI::Items::Placement::PutHeldItemBack(m_pMyInvenCtrl))
+            ProcessMyTradeItemAutoMoveToInventory();
+        return;
+    }
 
     const auto move = UI::Items::Placement::FindHeldItemMove(m_pMyInvenCtrl, STORAGE_TYPE::TRADE);
     if (!move)

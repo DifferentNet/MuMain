@@ -170,6 +170,10 @@ namespace mu::ui::window
 
             // Set once at Create() -- static tooltip text; the close and quest ones also after a key binding change.
             Rml::String exitTooltip, questTooltip, petTooltip, masterLevelTooltip, advancedStatsTooltip, titlesTooltip;
+            // The stat "+" buttons' tooltip (a click adds 1, a right click opens the menu of more), shown only to a
+            // mouse: on touch and pad the hold / R3 opens the menu and their help says so.
+            Rml::String statButtonTooltip;
+            bool statButtonTooltipShown = false;
         };
 
         void BindRmlModel(Rml::DataModelConstructor& c, CharacterInfoRmlModel& model);

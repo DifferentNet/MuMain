@@ -14425,4 +14425,14 @@
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>Nasa guild war na ang isa sa mga guild.</value>
   </data>
+  <!-- Round 16 -->
+  <data name="StatButtonTooltip" xml:space="preserve">
+    <value>I-click: +1. I-right click: +10, +100 at higit pa, o lahat</value>
+  </data>
+  <data name="NewSkillOnButton" xml:space="preserve">
+    <value>Bagong skill: %ls (skill button %d)</value>
+  </data>
+  <data name="TouchHelpDoubleTapMove" xml:space="preserve">
+    <value>I-double tap ang item para ilipat ito</value>
+  </data>
 </root>

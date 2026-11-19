@@ -92,6 +92,12 @@ void ActivateMenuFocus();
 // window's phone button (UI/Party/PartyInfoWindow.h) asks for it.
 void ShowSocialPanel();
 
+// A skill the hero learned just now (its index in the character's skill list, what a hotkey holds, and its type),
+// while the on-screen controls show: the next Update() puts it on the first empty skill button of the set in use and
+// says "New skill: X (skill button N)", or only "New skill: X" with every button taken. A filled button is never
+// replaced. False with the controls not shown: the caller says "New skill" itself, and the mouse's keys stay as set.
+[[nodiscard]] bool OfferNewSkill(int skillIndex, int skillType);
+
 // Opens the skill picker on the first empty skill button (the pad's L3). False with the controls not
 // shown, where there is no picker.
 bool OpenSkillPicker();

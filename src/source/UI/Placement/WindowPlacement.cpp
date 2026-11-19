@@ -25,6 +25,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 namespace UI::Placement
 {
@@ -64,6 +65,18 @@ bool g_relayoutOpenDocuments = false;
 std::unordered_map<Rml::Element*, float> g_regionFit;
 unsigned int g_lastWidth = 0;
 unsigned int g_lastHeight = 0;
+// Bumped wherever a slot's "open" class may change (PrepareSlots(), InitialPosition()): HasOpenNeighbour()'s
+// answers hold while it, the workspace document and the themed documents' generation stay the same.
+unsigned g_slotsOpenRevision = 0;
+struct NeighbourAnswer
+{
+    std::string slotName;
+    Rml::ElementDocument* workspace = nullptr;
+    unsigned revision = 0;
+    unsigned documentsGeneration = 0;
+    bool open = false;
+};
+std::vector<NeighbourAnswer> g_neighbourAnswers;
 float g_uncoveredLeft = 0.f;
 float g_uncoveredRight = 0.f;
 // The last published workspace bounds, applied to every document whose <body> has
@@ -360,6 +373,7 @@ static Rml::ElementList PrepareSlots(Rml::ElementDocument* workspace, const UI::
     Rml::ElementList slots;
     workspace->QuerySelectorAll(slots, ".slot");
     CheckNames(slots);
+    ++g_slotsOpenRevision;
     for (Rml::Element* slot : slots)
     {
         Entry* entry = EntryFor(slot);
@@ -643,12 +657,8 @@ void Update()
     }
 }
 
-bool HasOpenNeighbour(std::string_view slotName)
+static bool FindOpenNeighbour(Rml::ElementDocument* workspace, std::string_view slotName)
 {
-    Rml::ElementDocument* workspace = Workspace();
-    if (workspace == nullptr)
-        return false;
-
     Rml::ElementList slots;
     workspace->QuerySelectorAll(slots, ".slot");
     const auto own = std::find_if(slots.begin(), slots.end(), [slotName](Rml::Element* slot)
@@ -658,6 +668,28 @@ bool HasOpenNeighbour(std::string_view slotName)
     Rml::Element* region = (*own)->GetParentNode();
     return std::any_of(slots.begin(), slots.end(), [own, region](Rml::Element* slot)
                        { return slot != *own && slot->GetParentNode() == region && slot->IsClassSet("open"); });
+}
+
+bool HasOpenNeighbour(std::string_view slotName)
+{
+    Rml::ElementDocument* workspace = Workspace();
+    if (workspace == nullptr)
+        return false;
+
+    // Asked every frame while the bag is open; the slots' "open" classes change only when the workspace arranges.
+    const unsigned generation = UI::RmlBridge::ThemedDocumentsGeneration();
+    auto answer = std::find_if(g_neighbourAnswers.begin(), g_neighbourAnswers.end(),
+                               [slotName](const NeighbourAnswer& a) { return a.slotName == slotName; });
+    if (answer == g_neighbourAnswers.end())
+        answer = g_neighbourAnswers.insert(g_neighbourAnswers.end(), NeighbourAnswer{std::string(slotName)});
+    else if (answer->workspace == workspace && answer->revision == g_slotsOpenRevision &&
+             answer->documentsGeneration == generation)
+        return answer->open;
+    answer->workspace = workspace;
+    answer->revision = g_slotsOpenRevision;
+    answer->documentsGeneration = generation;
+    answer->open = FindOpenNeighbour(workspace, slotName);
+    return answer->open;
 }
 
 float UncoveredWorldLeft()
@@ -683,6 +715,7 @@ bool InitialPosition(std::string_view slotName, float width, float height, float
         if (slot->GetAttribute<Rml::String>("data-window", "") != slotName)
             continue;
         // Laid out only to be read: the window floats, so it takes no room in its region.
+        ++g_slotsOpenRevision;
         slot->SetClass("open", true);
         SetLength(slot, Rml::PropertyId::Width, width);
         SetLength(slot, Rml::PropertyId::Height, height);

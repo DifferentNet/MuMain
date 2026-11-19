@@ -10,6 +10,8 @@ namespace UI::Mobile::ClickSource
 {
 // The left button came from a finger's tap: pressed and let go where the finger lifted.
 [[nodiscard]] bool IsFingerTap();
+// That tap was a finger's second tap in quick succession at the same place (a double tap).
+[[nodiscard]] bool IsFingerDoubleTap();
 // The left button came from a finger that moved off where it landed: a drag, or a swipe.
 [[nodiscard]] bool IsFingerDrag();
 // The right button comes from a finger held still (the long press).

@@ -13,6 +13,7 @@
 #include "GameLogic/Items/IInventoryActionContext.h"
 #include "Data/GameData/ItemData/ItemTagSet.h"
 #include "UI/RmlBridge/RmlThemedView.h"
+#include "UI/RmlBridge/RmlKeptElement.h"
 #include "UI/Inventory/ItemCameraTarget.h"
 #include "UI/Inventory/ItemGridModel.h"
 #include <cstdint>
@@ -81,6 +82,12 @@ namespace mu::ui::window
 
 
         EQUIPMENT_ITEM m_EquipmentSlots[MAX_EQUIPMENT_INDEX];
+        // SyncNativeLayout()'s theme elements per paperdoll slot (SlotAnchors' order): the slot and its item box,
+        // kept so the per-frame layout skips the document search.
+        static constexpr int SlotAnchorCount = 12;
+        UI::RmlBridge::KeptElement m_SlotBoxes[SlotAnchorCount];
+        UI::RmlBridge::KeptElement m_SlotItemBoxes[SlotAnchorCount];
+        UI::RmlBridge::KeptElement m_PanelElement;
         int	m_iPointedSlot;
 
         MYSHOP_MODE m_MyShopMode;
@@ -168,6 +175,9 @@ namespace mu::ui::window
         void SyncRmlModel();
         // The equipment slots' states and the grid's cells, into the model.
         void SyncSlotStates();
+        // SyncSlotStates()' scratch: a slot's state as it is built, and page 2's cells.
+        Rml::String m_SlotStateScratch;
+        UI::Items::ItemGridCells m_PageCells;
 
         // Everything the window's texts (labels, tooltips, zen, bag page price) are built from.
         struct TextInputs

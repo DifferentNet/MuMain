@@ -14425,4 +14425,14 @@
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>Одна з гільдій уже воює з іншою гільдією.</value>
   </data>
+  <!-- Round 16 -->
+  <data name="StatButtonTooltip" xml:space="preserve">
+    <value>Клік: +1. Правий клік: +10, +100 і більше або всі</value>
+  </data>
+  <data name="NewSkillOnButton" xml:space="preserve">
+    <value>Нова навичка: %ls (кнопка навички %d)</value>
+  </data>
+  <data name="TouchHelpDoubleTapMove" xml:space="preserve">
+    <value>Подвійний дотик до предмета перекладає його</value>
+  </data>
 </root>

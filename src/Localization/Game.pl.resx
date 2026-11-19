@@ -14446,4 +14446,14 @@
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>Jedna z gildii już toczy wojnę gildii.</value>
   </data>
+  <!-- Round 16 -->
+  <data name="StatButtonTooltip" xml:space="preserve">
+    <value>Klik: +1. Prawy klik: +10, +100 i więcej lub wszystkie</value>
+  </data>
+  <data name="NewSkillOnButton" xml:space="preserve">
+    <value>Nowa umiejętność: %ls (przycisk umiejętności %d)</value>
+  </data>
+  <data name="TouchHelpDoubleTapMove" xml:space="preserve">
+    <value>Stuknij dwukrotnie przedmiot, aby go przenieść</value>
+  </data>
 </root>

@@ -10,6 +10,7 @@
 #include "UI/Mobile/PhoneHudFit.h"
 #include "UI/Mobile/TouchUnit.h"
 #include "UI/Placement/WindowPlacement.h"
+#include "UI/RmlBridge/RmlKeptElement.h"
 #include "UI/Scaling/UITransform.h"
 
 #include <RmlUi/Core/Context.h>
@@ -463,8 +464,9 @@ float TickerBottom(float left, float right)
     Rml::Element* lane = g_states[6].element.get();
     if (lane == nullptr || !lane->IsVisible())
         return 0.f;
-    Rml::ElementDocument* document = lane->GetOwnerDocument();
-    Rml::Element* band = document != nullptr ? document->GetElementById("band") : nullptr;
+    // Asked once a frame while a notice runs; the band is kept rather than searched for each time.
+    static UI::RmlBridge::KeptElement s_band;
+    Rml::Element* band = s_band.Find(lane->GetOwnerDocument(), "band");
     if (band == nullptr || !band->IsVisible())
         return 0.f;
     const Rml::Vector2f offset = band->GetAbsoluteOffset(Rml::BoxArea::Border);

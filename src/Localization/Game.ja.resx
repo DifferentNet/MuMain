@@ -12504,4 +12504,14 @@
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>いずれかのギルドがすでにギルド戦中です。</value>
   </data>
+  <!-- Round 16 -->
+  <data name="StatButtonTooltip" xml:space="preserve">
+    <value>クリック: +1。右クリック: +10、+100 以上、または全部</value>
+  </data>
+  <data name="NewSkillOnButton" xml:space="preserve">
+    <value>新しいスキル: %ls（スキルボタン %d）</value>
+  </data>
+  <data name="TouchHelpDoubleTapMove" xml:space="preserve">
+    <value>アイテムをダブルタップで移動</value>
+  </data>
 </root>

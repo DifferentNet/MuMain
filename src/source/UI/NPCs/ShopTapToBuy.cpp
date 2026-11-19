@@ -9,11 +9,11 @@ std::optional<std::uint32_t> Chosen(const Choice& choice, Clock::time_point now)
     return choice.itemKey;
 }
 
-Action Tap(Choice& choice, std::uint32_t itemKey, Clock::time_point now)
+Action Tap(Choice& choice, std::uint32_t itemKey, Clock::time_point now, bool repeats)
 {
     if (Chosen(choice, now) == itemKey)
     {
-        choice = {};
+        choice = repeats ? Choice{itemKey, now} : Choice{};
         return Action::Buy;
     }
     choice = {itemKey, now};

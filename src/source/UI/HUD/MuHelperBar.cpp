@@ -7,6 +7,7 @@
 #include "UI/Core/WindowSystem.h"
 #include "World/MapInfra/MapManager.h"
 #include "MUHelper/MuHelper.h"
+#include "Core/Input/TouchInput.h"
 #include "GameLogic/Character/PingHud.h"
 
 #include "Render/RmlUi/RmlUiRuntime.h"
@@ -73,6 +74,8 @@ void CMuHelperBar::BindRmlModel(Rml::DataModelConstructor& c, MuHelperBarRmlMode
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickConfig(); });
     c.BindEventCallback("mu_helper_toggle_click",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickToggle(); });
+    c.BindEventCallback("mu_helper_position_click",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickPosition(); });
 }
 
 void CMuHelperBar::OnRmlReloaded()
@@ -125,6 +128,14 @@ bool CMuHelperBar::Update()
         m_bRmlToggleClicked = false;
         MUHelper::g_MuHelper.Toggle();
         PlayBuffer(SOUND_CLICK01);
+    }
+    else if (m_bRmlPositionClicked)
+    {
+        m_bRmlPositionClicked = false;
+        // The key's own path (HotKey.cpp) opens or closes the map, with its guards (dialogs, game over) and sound.
+        // Not while a text field (the chat line) is being typed in: the tapped key would end the typing.
+        if (RmlUiRuntime::Instance().GetFocusedTextField() == nullptr)
+            Core::Input::Touch::TapKey(VK_TAB);
     }
 
     if ((IsVisible() == true) && (Hero != NULL))

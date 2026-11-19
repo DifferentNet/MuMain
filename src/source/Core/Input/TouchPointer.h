@@ -64,6 +64,9 @@ enum class LeftPress : std::uint8_t
     Drag,
 };
 [[nodiscard]] LeftPress LastLeftPress();
+// The last left press was a tap that came soon after another tap close to it (a double tap): its
+// press and release carry two clicks.
+[[nodiscard]] bool LastTapIsDouble();
 
 // How far the finger playing the mouse is from where it landed, in window pixels: which way a drag
 // set off when it began.

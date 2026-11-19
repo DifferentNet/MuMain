@@ -14425,4 +14425,14 @@
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>其中一個公會已在公會戰中。</value>
   </data>
+  <!-- Round 16 -->
+  <data name="StatButtonTooltip" xml:space="preserve">
+    <value>點擊：+1。右鍵：+10、+100 以上或全部</value>
+  </data>
+  <data name="NewSkillOnButton" xml:space="preserve">
+    <value>新技能：%ls（技能按鈕 %d）</value>
+  </data>
+  <data name="TouchHelpDoubleTapMove" xml:space="preserve">
+    <value>輕點兩下物品即可移動</value>
+  </data>
 </root>
