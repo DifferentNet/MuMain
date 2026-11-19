@@ -80,6 +80,7 @@
 #include "GameLogic/Combat/OwnSkillEcho.h"
 #include "Engine/Monsters/MonsterPreload.h"
 
+#include <array>
 #include <iterator>
 
 extern int g_iChatInputType;
@@ -2818,6 +2819,35 @@ void Attack(CHARACTER* c)
 BOOL g_bWhileMovingZone = FALSE;
 DWORD g_dwLatestZoneMoving = 0;
 
+namespace
+{
+// CheckGate() runs every frame while the hero stands in a gate he may not take: say why once, then
+// again only after this pause. Kept per gate, so another gate is said at once (and two overlapping
+// gates don't take turns every frame).
+constexpr DWORD GateRefusalRepeatMs = 3000;
+
+struct GateRefusal
+{
+    bool said = false;
+    DWORD tick = 0;
+};
+std::array<GateRefusal, MAX_GATES> g_gateRefusals;
+
+bool ShouldSayGateRefusal(int gate)
+{
+    GateRefusal& refusal = g_gateRefusals[gate];
+    const DWORD now = GetTickCount();
+    if (refusal.said && now - refusal.tick < GateRefusalRepeatMs)
+    {
+        return false;
+    }
+
+    refusal.said = true;
+    refusal.tick = now;
+    return true;
+}
+} // namespace
+
 void CheckGate()
 {
     if ((g_pMyInventory->IsItem(ITEM_CURSED_CASTLE_WATER, true)) || (gMapManager.IsCursedTemple() && g_pMyInventory->IsItem(ITEM_CURSED_CASTLE_WATER, false)))
@@ -2857,32 +2887,44 @@ void CheckGate()
                         if (((i >= 45 && i <= 49) || (i >= 55 && i <= 56)) &&
                             ((CharacterMachine->Equipment[EQUIPMENT_HELPER].Type >= ITEM_HORN_OF_UNIRIA && CharacterMachine->Equipment[EQUIPMENT_HELPER].Type <= ITEM_HORN_OF_DINORANT)))
                         {
-                            g_pSystemLogBox->AddText(I18N::Game::YouCannotGoToAtlansWhileRidingAUnicorn, mu::ui::window::TYPE_ERROR_MESSAGE);
+                            if (ShouldSayGateRefusal(i))
+                            {
+                                g_pSystemLogBox->AddText(I18N::Game::YouCannotGoToAtlansWhileRidingAUnicorn, mu::ui::window::TYPE_ERROR_MESSAGE);
+                            }
                         }
                         else if ((62 <= i && i <= 65) &&
                             !GameLogic::Items::HasFlightEquipment(&CharacterMachine->Equipment[EQUIPMENT_HELPER], &CharacterMachine->Equipment[EQUIPMENT_WING]))
                         {
-                            g_pSystemLogBox->AddText(I18N::Game::YouCanEnterIcarusOnlyWithWingsDinorantFenrirr, mu::ui::window::TYPE_ERROR_MESSAGE);
-
-                            if (CharacterAttribute->Level < Level)
+                            if (ShouldSayGateRefusal(i))
                             {
-                                wchar_t Text[100];
-                                mu_swprintf(Text, I18N::Game::OnlyCharactersOverLevelDCanEnter, Level);
-                                g_pSystemLogBox->AddText(Text, mu::ui::window::TYPE_ERROR_MESSAGE);
+                                g_pSystemLogBox->AddText(I18N::Game::YouCanEnterIcarusOnlyWithWingsDinorantFenrirr, mu::ui::window::TYPE_ERROR_MESSAGE);
+
+                                if (CharacterAttribute->Level < Level)
+                                {
+                                    wchar_t Text[100];
+                                    mu_swprintf(Text, I18N::Game::OnlyCharactersOverLevelDCanEnter, Level);
+                                    g_pSystemLogBox->AddText(Text, mu::ui::window::TYPE_ERROR_MESSAGE);
+                                }
                             }
                         }
 
                         else if ((62 <= i && i <= 65) && (CharacterMachine->Equipment[EQUIPMENT_HELPER].Type == ITEM_HORN_OF_UNIRIA))
                         {
-                            g_pSystemLogBox->AddText(I18N::Game::YouCannotWarpWhileRidingOnAUnicorn, mu::ui::window::TYPE_ERROR_MESSAGE);
+                            if (ShouldSayGateRefusal(i))
+                            {
+                                g_pSystemLogBox->AddText(I18N::Game::YouCannotWarpWhileRidingOnAUnicorn, mu::ui::window::TYPE_ERROR_MESSAGE);
+                            }
                         }
                         else if (CharacterAttribute->Level < Level)
                         {
-                            LoadingWorld = 50;
-                            wchar_t Text[100];
-                            mu_swprintf(Text, I18N::Game::OnlyCharactersOverLevelDCanEnter, Level);
-                            g_pSystemLogBox->AddText(Text, mu::ui::window::TYPE_ERROR_MESSAGE);
-                            //							return;
+                            // No LoadingWorld countdown here: it blacked the world out and hid the windows
+                            // and touch controls for 20 frames, again and again while the hero stood there.
+                            if (ShouldSayGateRefusal(i))
+                            {
+                                wchar_t Text[100];
+                                mu_swprintf(Text, I18N::Game::OnlyCharactersOverLevelDCanEnter, Level);
+                                g_pSystemLogBox->AddText(Text, mu::ui::window::TYPE_ERROR_MESSAGE);
+                            }
                         }
                         else
                         {

@@ -184,7 +184,8 @@ EM_JS(char*, MuWeb_PageFolderUrl, (), {
 // promise of its parts, each a promise of {files: [[path, size], ...], bytes}); this writes each
 // part's files into /game as it arrives and lets go of it, so the page never holds the whole pack.
 // A part that fails leaves its files to download one by one. Returns how many files it wrote, 0
-// without a pack.
+// without a pack; the time spent writing (not waiting for the parts) is left for
+// MuWeb_StartupPackWriteMs.
 EM_ASYNC_JS(int, MuWeb_InstallStartupPack, (), {
     let parts = null;
     try {
@@ -195,6 +196,7 @@ EM_ASYNC_JS(int, MuWeb_InstallStartupPack, (), {
     Module["muStartupPack"] = null;
     const folders = new Set();
     let written = 0;
+    let writeMs = 0;
     for (let i = 0; parts && i < parts.length; i++) {
         let pack = null;
         try {
@@ -203,6 +205,7 @@ EM_ASYNC_JS(int, MuWeb_InstallStartupPack, (), {
             err("Startup pack part " + (i + 1) + ": " + e + "; the game downloads its files one by one instead");
         }
         parts[i] = null;
+        const writeStart = performance.now();
         let offset = 0;
         for (const [path, size] of pack ? pack.files : []) {
             const full = "/game/" + path;
@@ -216,8 +219,14 @@ EM_ASYNC_JS(int, MuWeb_InstallStartupPack, (), {
             }
             offset += size;
         }
+        writeMs += performance.now() - writeStart;
     }
+    Module["muStartupPackWriteMs"] = writeMs;
     return written;
+});
+
+EM_JS(double, MuWeb_StartupPackWriteMs, (), {
+    return Module["muStartupPackWriteMs"] || 0;
 });
 
 // The page downloads a map's pack (index.html: Module.muMapPack(world), a promise of the same shape as
@@ -961,10 +970,14 @@ bool mu::web::MountGameFiles()
     {
         return false;
     }
+    const auto packStart = std::chrono::steady_clock::now();
     const int packed = MuWeb_InstallStartupPack();
     if (packed > 0)
     {
-        std::printf("Web file system: %d files from the startup pack\n", packed);
+        const double packMs =
+            std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - packStart).count();
+        std::printf("Web file system: %d files from the startup pack in %.0f ms (%.0f ms writing)\n", packed, packMs,
+                    MuWeb_StartupPackWriteMs());
     }
 
     // Asked here, on the page's thread: a worker's location is its script's.

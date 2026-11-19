@@ -139,6 +139,10 @@ using namespace mu::ui::window;
 #include "Engine/Monsters/MonsterPreload.h"
 #include "UI/Text/GroupedNumberText.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #define MAX_DEBUG_MAX 10
 
 extern BYTE m_AltarState[];
@@ -161,6 +165,33 @@ extern int g_iKeyPadEnable;
 
 extern BOOL g_bWhileMovingZone;
 extern DWORD g_dwLatestZoneMoving;
+
+namespace
+{
+// LoadingWorld after a map entry: the world stays black and the hero still until it drops below this.
+constexpr int MapEntryCountdownFrames = 30;
+
+#ifdef __EMSCRIPTEN__
+// Stand switch for measuring: /play?entryhold=N keeps the world black N more frames after a map entry
+// (0 to this many; off without the parameter).
+constexpr int MaxEntryHoldFrames = 30;
+
+EM_JS(int, MuWeb_EntryHoldFrames, (int maxFrames), {
+    const frames = parseInt(new URLSearchParams(location.search).get("entryhold"), 10);
+    return Number.isFinite(frames) ? Math.min(maxFrames, Math.max(0, frames)) : 0;
+});
+#endif
+
+int MapEntryCountdownStart()
+{
+#ifdef __EMSCRIPTEN__
+    static const int holdFrames = MuWeb_EntryHoldFrames(MaxEntryHoldFrames);
+    return MapEntryCountdownFrames + holdFrames;
+#else
+    return MapEntryCountdownFrames;
+#endif
+}
+} // namespace
 
 extern bool g_PetEnableDuel;
 
@@ -1288,7 +1319,7 @@ BOOL ReceiveJoinMapServer(std::span<const BYTE> ReceiveBuffer)
     App::Control::Events::RecordTeleportPacket();
 
     Engine::Monsters::PreloadMap(Data->Map, true);
-    LoadingWorld = 30;
+    LoadingWorld = MapEntryCountdownStart();
     MouseUpdateTime = 0;
     MouseUpdateTimeMax = 6;
 
@@ -2422,7 +2453,7 @@ BOOL ReceiveTeleport(const BYTE* ReceiveBuffer, BOOL bEncrypted)
         g_dwLatestZoneMoving = GetTickCount();
         g_bWhileMovingZone = FALSE;
 
-        LoadingWorld = 30;
+        LoadingWorld = MapEntryCountdownStart();
 
         MouseUpdateTime = 0;
         MouseUpdateTimeMax = 6;
