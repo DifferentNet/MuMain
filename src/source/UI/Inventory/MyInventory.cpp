@@ -46,6 +46,8 @@ extern bool SelectFlag;
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Inventory/InventoryExtension.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
+#include "GameLogic/Items/FieldRepair.h"
+#include "UI/Chat/ChatMessages.h"
 
 // RmlUi migration -- see this class's header comment.
 #include "Render/RmlUi/RmlUiRuntime.h"
@@ -202,6 +204,9 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
 
     c.Bind("repair_visible", &model.repairVisible);
     c.Bind("repair_tooltip", &model.repairTooltip);
+    c.Bind("repair_all_visible", &model.repairAllVisible);
+    c.Bind("repair_all_tooltip", &model.repairAllTooltip);
+    c.Bind("repair_all_count", &model.repairAllCount);
 
     c.Bind("myshop_visible", &model.myShopVisible);
     c.Bind("myshop_mode_open", &model.myShopModeOpen);
@@ -279,6 +284,8 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
         });
     c.BindEventCallback("my_inventory_repair_click",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { ToggleRepairMode(); });
+    c.BindEventCallback("my_inventory_repair_all_click",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RequestFieldRepairAll(); });
     c.BindEventCallback("my_inventory_myshop_click",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
         {
@@ -1022,6 +1029,15 @@ bool CMyInventory::UpdateKeyEvent()
         }
     }
 
+    // A is a reserved letter (KeyBindings::IsAssignable); still, a key the player gave an action stays that action's.
+    if (IsPress('A') == true && m_RepairMode == SEASON3B::REPAIR_MODE_ON
+        && g_pNewUISystem->IsVisible(INTERFACE_NPCSHOP) == false
+        && Core::Input::KeyBindings::Runtime::Current().ActionOf('A') == Core::Input::KeyBindings::Action::None)
+    {
+        RequestFieldRepairAll();
+        return false;
+    }
+
     if (CanOpenMyShopInterface() == true && IsPress('S'))
     {
         if (m_bMyShopOpen)
@@ -1195,6 +1211,13 @@ void CMyInventory::SyncRmlModel()
         || g_pNewUISystem->IsVisible(INTERFACE_STORAGE);
 
     syncBool(&MyInventoryRmlModel::repairVisible, "repair_visible", m_bRepairEnableLevel && !otherWindowOpen);
+    const bool repairAllVisible = m_bRepairEnableLevel && !otherWindowOpen && m_RepairMode == SEASON3B::REPAIR_MODE_ON;
+    syncBool(&MyInventoryRmlModel::repairAllVisible, "repair_all_visible", repairAllVisible);
+    // The legacy theme's hammer is the toggle's: a "xN" mark of the worn items to repair tells the two apart.
+    syncInt(&MyInventoryRmlModel::repairAllCount, "repair_all_count",
+        repairAllVisible
+            ? GameLogic::Items::FieldRepair::PlanRepairAll(std::numeric_limits<std::int64_t>::max()).count
+            : 0);
 
     syncBool(&MyInventoryRmlModel::myShopVisible, "myshop_visible", m_bMyShopOpen && !otherWindowOpen);
     syncBool(&MyInventoryRmlModel::myShopModeOpen, "myshop_mode_open", m_MyShopMode == MYSHOP_MODE_OPEN);
@@ -1335,6 +1358,7 @@ void CMyInventory::SyncTexts(bool bagLocked)
              UI::RmlBridge::GoldTierKey(GameLogic::Items::ClassifyGoldAmount(inputs.zen)));
 
     syncWide(&MyInventoryRmlModel::repairTooltip, "repair_tooltip", I18N::Game::RepairL);
+    syncWide(&MyInventoryRmlModel::repairAllTooltip, "repair_all_tooltip", I18N::Game::RepairAllA);
     syncWide(&MyInventoryRmlModel::myShopTooltip, "myshop_tooltip",
         m_MyShopMode == MYSHOP_MODE_OPEN ? I18N::Game::OpenPersonalStoreS : I18N::Game::ClosePersonalStoreS);
     syncWide(&MyInventoryRmlModel::exitTooltip, "exit_tooltip", CloseTooltip());
@@ -1583,6 +1607,75 @@ int CMyInventory::FindEmptySlotIncludingExtensions(ITEM* pItem) const
 
     const ITEM_ATTRIBUTE* pItemAttr = &ItemAttribute[pItem->Type];
     return FindEmptySlotIncludingExtensions(pItemAttr->Width, pItemAttr->Height);
+}
+
+namespace
+{
+    // The stack size the server gives a stackable drop (its ItemDefinition.Durability), 0 for an item that
+    // doesn't stack on pickup. Only the stackables that drop from monsters; an unknown one counts as not
+    // stacking, so the helper at worst skips a drop it could have taken. Arrows and bolts are worn items
+    // there and never stack.
+    int PickupStackLimit(int type)
+    {
+        if (type >= ITEM_POTION && type <= ITEM_ANTIDOTE && type != ITEM_SIEGE_POTION)
+        {
+            return 255; // server/trim/season3.sql, part 6
+        }
+        if (GameLogic::Items::IsShieldPotionType(type) || GameLogic::Items::IsComplexPotionType(type))
+        {
+            return 255; // server/trim/merchants.sql
+        }
+        switch (type)
+        {
+        case ITEM_SYMBOL_OF_KUNDUN:
+            return 5;
+        case ITEM_SPLINTER_OF_ARMOR:
+        case ITEM_BLESS_OF_GUARDIAN:
+            return 20;
+        case ITEM_CLAW_OF_BEAST:
+            return 10;
+        default:
+            return 0;
+        }
+    }
+
+    // OpenMU's CanCompletelyStackOn: the same item and level, and both stacks together fit one stack. A drop
+    // that would only partly fit leaves its rest on the ground, which the helper would try again forever.
+    bool StacksCompletelyOn(const ITEM* pDrop, const ITEM* pTarget)
+    {
+        if (pTarget == nullptr || pTarget->Type != pDrop->Type || pTarget->Level != pDrop->Level)
+        {
+            return false;
+        }
+        const int limit = PickupStackLimit(pDrop->Type);
+        return limit > 1 && static_cast<int>(pDrop->Durability) + static_cast<int>(pTarget->Durability) <= limit;
+    }
+}
+
+bool CMyInventory::HasRoomForDrop(ITEM* pDrop) const
+{
+    if (pDrop == nullptr || pDrop->Type == ITEM_ZEN || FindEmptySlotIncludingExtensions(pDrop) != -1)
+    {
+        return pDrop != nullptr;
+    }
+
+    for (int g = 0; g < OwnedBagGridCount; ++g)
+    {
+        CInventoryCtrl* grid = OwnedBagGrid(g);
+        if (grid == nullptr)
+        {
+            continue;
+        }
+        const size_t count = grid->GetNumberOfItems();
+        for (size_t i = 0; i < count; ++i)
+        {
+            if (StacksCompletelyOn(pDrop, grid->GetItem(static_cast<int>(i))))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 void CMyInventory::SetStandbyItemKey(DWORD dwItemKey)
@@ -2260,6 +2353,45 @@ void CMyInventory::ToggleRepairMode()
     {
         SetRepairMode(false);
     }
+}
+
+void CMyInventory::RequestFieldRepairAll()
+{
+    namespace FieldRepair = GameLogic::Items::FieldRepair;
+    if (!m_bRepairEnableLevel || m_RepairMode != SEASON3B::REPAIR_MODE_ON
+        || g_pNewUISystem->IsVisible(INTERFACE_NPCSHOP) || CInventoryCtrl::GetPickedItem() != nullptr)
+        return;
+
+    const FieldRepair::Plan plan = FieldRepair::PlanRepairAll(CharacterMachine->Gold);
+    PlayBuffer(SOUND_CLICK01);
+    if (plan.count == 0)
+    {
+        // Damaged gear the zen does not cover says so; whole gear needs no line.
+        if (plan.shortOfZen)
+            UI::Chat::PostSystem(I18N::Game::RepairNoZen, TYPE_ERROR_MESSAGE);
+        return;
+    }
+
+    SetRepairMode(false);
+    if (plan.cost <= FieldRepair::ConfirmAboveZen || g_pGenericConfirmDialog == nullptr)
+    {
+        FieldRepair::Send(plan);
+        return;
+    }
+
+    wchar_t price[64] = {};
+    ConvertGold(static_cast<double>(plan.cost), price);
+    wchar_t question[256] = {};
+    mu_swprintf(question, I18N::Game::FieldRepairAllConfirm, price);
+
+    GenericDialogConfig cfg;
+    cfg.lines = {{question, true}};
+    cfg.primaryLabel = I18N::Game::RepairAll;
+    cfg.showCancel = true;
+    cfg.cancelLabel = I18N::Game::Cancel;
+    // Planned again on the click: the gear or the zen may have changed while the box was open.
+    cfg.onPrimary = [] { FieldRepair::Send(FieldRepair::PlanRepairAll(CharacterMachine->Gold)); };
+    g_pGenericConfirmDialog->Show(std::move(cfg));
 }
 
 bool CMyInventory::IsItem(short int siType, bool bcheckPick) const

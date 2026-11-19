@@ -12165,7 +12165,7 @@
     <comment>legacy_id=3579</comment>
   </data>
   <data name="Official MU Helper Setting has been saved." xml:space="preserve">
-    <value>Die Einstellungen des offiziellen MU Helper wurden gespeichert.</value>
+    <value>MU Helper-Einstellungen gespeichert.</value>
     <comment>legacy_id=3580</comment>
   </data>
   <data name="Official MU Helper can't be implemented in this region." xml:space="preserve">
@@ -14542,5 +14542,36 @@
   </data>
   <data name="TouchHelpDoubleTapMove" xml:space="preserve">
     <value>Doppeltippen auf einen Gegenstand verschiebt ihn</value>
+  </data>
+  <!-- Round 17 -->
+  <data name="MuHelperStoppedHeroDied" xml:space="preserve">
+    <value>MU Helper gestoppt: Dein Charakter ist gestorben.</value>
+  </data>
+  <data name="MuHelperNoHealPotions" xml:space="preserve">
+    <value>MU Helper: keine Heiltränke mehr.</value>
+  </data>
+  <data name="MuHelperBagFull" xml:space="preserve">
+    <value>MU Helper: kein Platz in der Tasche, Gegenstände bleiben liegen.</value>
+  </data>
+  <data name="RepairNoZen" xml:space="preserve">
+    <value>Nicht genug Zen für die Reparatur der Ausrüstung.</value>
+  </data>
+  <data name="MuHelperUnconfiguredZ" xml:space="preserve">
+    <value>MU Helper greift nur normal an: Fertigkeiten, Tränke und Aufheben stellst du in seinen Einstellungen ein (Z)</value>
+  </data>
+  <data name="MuHelperUnconfiguredTouch" xml:space="preserve">
+    <value>MU Helper greift nur normal an: Fertigkeiten, Tränke und Aufheben stellst du unter Menü → MU Helper ein</value>
+  </data>
+  <data name="TicketFitsYourLevel" xml:space="preserve">
+    <value>Passt zu deiner Stufe</value>
+  </data>
+  <data name="TicketYouNeedPlusD" xml:space="preserve">
+    <value>Du brauchst Ticket +%d</value>
+  </data>
+  <data name="EntryTicketNotInBag" xml:space="preserve">
+    <value>Ticket: %ls +%d — nicht in der Tasche</value>
+  </data>
+  <data name="FieldRepairAllConfirm" xml:space="preserve">
+    <value>Alle angelegten Gegenstände für %ls Zen reparieren?</value>
   </data>
 </root>

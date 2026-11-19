@@ -223,3 +223,11 @@ mu_add_test(
     LINK_LIBS
         MuClient
 )
+
+# Blood Castle / Devil Square level bands shared by the entry windows and the ticket tooltips (round 17, Q5).
+mu_add_test(
+    NAME test_entry_levels
+    SOURCES
+        test_entry_levels.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Events/EntryLevels.cpp
+)

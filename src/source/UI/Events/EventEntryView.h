@@ -26,6 +26,16 @@ public:
         bool enabled = false;
     };
 
+    struct Line
+    {
+        std::wstring text;
+        bool missing = false; // red
+    };
+
+    // The ticket for a band: its name and level in white when one is in the bag (any page), else a red
+    // "not in the bag" line.
+    static Line TicketLine(short itemType, int ticketLevel);
+
     EventEntryView(const char* modelName, const char* documentPath);
 
     void Build();
@@ -33,8 +43,7 @@ public:
     void Release() { m_View.Release(); }
 
     // Complete translated content, set when the window opens. The theme owns its layout.
-    void SetContent(const wchar_t* title, const std::vector<std::wstring>& lines,
-                    const std::vector<Button>& buttons);
+    void SetContent(const wchar_t* title, const std::vector<Line>& lines, const std::vector<Button>& buttons);
 
     // Per frame, inside the window's CManager transform scope.
     void Sync(bool visible);

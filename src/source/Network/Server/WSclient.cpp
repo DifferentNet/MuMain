@@ -6227,7 +6227,7 @@ void ReceiveDie(const BYTE* ReceiveBuffer, int Size)
 
     if (c == Hero)
     {
-        MUHelper::g_MuHelper.TriggerStop();
+        MUHelper::g_MuHelper.StopForHeroDeath();
         PostKilledBy(Data, Size);
         UI::Chat::ChangeLines::NoteHeroDeath();
     }

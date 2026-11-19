@@ -17,7 +17,7 @@
 		<div class="card" data-for="card : cards" data-class-leader="card.leader" data-class-absent="card.absent"
 		     data-class-defense="card.defense_buff" data-class-low="card.low" data-class-selected="card.selected"
 		     data-event-mouseover="party_hover(card.index)" data-event-mouseout="party_unhover"
-		     data-event-click="party_pick(card.index)">
+		     data-event-click="party_pick(card.index)" data-event-dblclick="party_follow(card.index)">
 			<div class="card-fill"></div>
 			<div class="card-tint"></div>
 			<div class="card-select"></div>

@@ -12145,7 +12145,7 @@
     <comment>legacy_id=3579</comment>
   </data>
   <data name="Official MU Helper Setting has been saved." xml:space="preserve">
-    <value>Oficjalne ustawienie pomocnika MU zostało zapisane.</value>
+    <value>Ustawienia MU Helper zapisane.</value>
     <comment>legacy_id=3580</comment>
   </data>
   <data name="Official MU Helper can't be implemented in this region." xml:space="preserve">
@@ -14465,5 +14465,36 @@
   </data>
   <data name="TouchHelpDoubleTapMove" xml:space="preserve">
     <value>Stuknij dwukrotnie przedmiot, aby go przenieść</value>
+  </data>
+  <!-- Round 17 -->
+  <data name="MuHelperStoppedHeroDied" xml:space="preserve">
+    <value>MU Helper zatrzymany: twoja postać zginęła.</value>
+  </data>
+  <data name="MuHelperNoHealPotions" xml:space="preserve">
+    <value>MU Helper: skończyły się mikstury leczenia.</value>
+  </data>
+  <data name="MuHelperBagFull" xml:space="preserve">
+    <value>MU Helper: brak miejsca w torbie, przedmioty zostają na ziemi.</value>
+  </data>
+  <data name="RepairNoZen" xml:space="preserve">
+    <value>Za mało zenów na naprawę ekwipunku.</value>
+  </data>
+  <data name="MuHelperUnconfiguredZ" xml:space="preserve">
+    <value>MU Helper atakuje tylko zwykłym atakiem: umiejętności, mikstury i podnoszenie ustawisz w jego oknie (Z)</value>
+  </data>
+  <data name="MuHelperUnconfiguredTouch" xml:space="preserve">
+    <value>MU Helper atakuje tylko zwykłym atakiem: umiejętności, mikstury i podnoszenie ustawisz w Menu → MU Helper</value>
+  </data>
+  <data name="TicketFitsYourLevel" xml:space="preserve">
+    <value>Pasuje do twojego poziomu</value>
+  </data>
+  <data name="TicketYouNeedPlusD" xml:space="preserve">
+    <value>Potrzebujesz biletu +%d</value>
+  </data>
+  <data name="EntryTicketNotInBag" xml:space="preserve">
+    <value>Bilet: %ls +%d — brak w torbie</value>
+  </data>
+  <data name="FieldRepairAllConfirm" xml:space="preserve">
+    <value>Naprawić cały założony ekwipunek za %ls zenów?</value>
   </data>
 </root>

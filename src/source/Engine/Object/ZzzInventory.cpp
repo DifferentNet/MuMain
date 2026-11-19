@@ -76,6 +76,7 @@
 #include "GameLogic/Skills/SkillManager.h"
 #include "Camera/CameraProjection.h"
 #include "Render/Text/CUIRenderText.h"
+#include "GameLogic/Events/EntryLevels.h"
 
 extern int g_iChatInputType;
 
@@ -1856,6 +1857,33 @@ static int64_t NpcShopChargeWithTax(ITEM* ip)
 {
     const int64_t price = ShopPurchasePrice(ip);
     return price + price * g_pNPCShop->GetTaxRate() / 100;
+}
+
+// A Blood Castle / Devil Square ticket's band (castle or square N takes the ticket +N): green with "fits your level"
+// for the hero's band, else red with the ticket the hero needs (none when the hero is below every band).
+static void AddEntryTicketBandLines(GameLogic::Events::EntryLevels::Event event, int ticketLevel)
+{
+    using namespace GameLogic::Events::EntryLevels;
+    const int grade = ticketLevel - 1;
+    if (grade < 0 || grade >= GradeCount(event))
+        return;
+
+    const int heroGrade = HeroGrade(event);
+    const bool fits = heroGrade == grade;
+    mu_swprintf(TextList[TextNum], L"%ls", BandLabel(event, grade).c_str());
+    TextListColor[TextNum] = fits ? TEXT_COLOR_GREEN : TEXT_COLOR_RED;
+    TextBold[TextNum] = false;
+    TextNum++;
+
+    if (fits)
+        mu_swprintf(TextList[TextNum], I18N::Game::TicketFitsYourLevel);
+    else if (heroGrade >= 0)
+        mu_swprintf(TextList[TextNum], I18N::Game::TicketYouNeedPlusD, heroGrade + 1);
+    else
+        return;
+    TextListColor[TextNum] = fits ? TEXT_COLOR_GREEN : TEXT_COLOR_RED;
+    TextBold[TextNum] = false;
+    TextNum++;
 }
 
 static void RenderItemOwnCombatPower(const ITEM* ip, const GameLogic::Items::CombatPowerItem& item, int points)
@@ -3765,6 +3793,7 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
 
     if (ip->Type == ITEM_DEVILS_INVITATION)
     {
+        AddEntryTicketBandLines(GameLogic::Events::EntryLevels::Event::DevilSquare, Level);
         mu_swprintf(TextList[TextNum], I18N::Game::TheRemainingTimeIsShown);
         TextListColor[TextNum] = TEXT_COLOR_WHITE;
         TextBold[TextNum] = false;
@@ -4300,6 +4329,7 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
         TextListColor[TextNum] = TEXT_COLOR_WHITE;
         mu_swprintf(TextList[TextNum], I18N::Game::UsedWhenEnteringBloodCastle);
         TextNum++;
+        AddEntryTicketBandLines(GameLogic::Events::EntryLevels::Event::BloodCastle, Level);
         mu_swprintf(TextList[TextNum], L"\n");
         TextNum++; SkipNum++;
         mu_swprintf(TextList[TextNum], I18N::Game::TheRemainingTimeIsShown);

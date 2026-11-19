@@ -12145,7 +12145,7 @@
     <comment>legacy_id=3579</comment>
   </data>
   <data name="Official MU Helper Setting has been saved." xml:space="preserve">
-    <value>官方 MU Helper 設定已儲存。</value>
+    <value>MU Helper 設定已儲存。</value>
     <comment>legacy_id=3580</comment>
   </data>
   <data name="Official MU Helper can't be implemented in this region." xml:space="preserve">
@@ -14444,5 +14444,36 @@
   </data>
   <data name="TouchHelpDoubleTapMove" xml:space="preserve">
     <value>輕點兩下物品即可移動</value>
+  </data>
+  <!-- Round 17 -->
+  <data name="MuHelperStoppedHeroDied" xml:space="preserve">
+    <value>MU Helper 已停止：角色死亡。</value>
+  </data>
+  <data name="MuHelperNoHealPotions" xml:space="preserve">
+    <value>MU Helper：治療藥水用完了。</value>
+  </data>
+  <data name="MuHelperBagFull" xml:space="preserve">
+    <value>MU Helper：背包已滿，物品留在地上。</value>
+  </data>
+  <data name="RepairNoZen" xml:space="preserve">
+    <value>金幣不足，無法修理裝備。</value>
+  </data>
+  <data name="MuHelperUnconfiguredZ" xml:space="preserve">
+    <value>MU Helper 只用普通攻擊：技能、藥水和拾取請在設定中選擇 (Z)</value>
+  </data>
+  <data name="MuHelperUnconfiguredTouch" xml:space="preserve">
+    <value>MU Helper 只用普通攻擊：技能、藥水和拾取請在選單 → MU Helper 中選擇</value>
+  </data>
+  <data name="TicketFitsYourLevel" xml:space="preserve">
+    <value>適合你的等級</value>
+  </data>
+  <data name="TicketYouNeedPlusD" xml:space="preserve">
+    <value>你需要 +%d 的門票</value>
+  </data>
+  <data name="EntryTicketNotInBag" xml:space="preserve">
+    <value>門票：%ls +%d — 不在背包中</value>
+  </data>
+  <data name="FieldRepairAllConfirm" xml:space="preserve">
+    <value>花費 %ls 金幣修理所有穿戴中的裝備？</value>
   </data>
 </root>

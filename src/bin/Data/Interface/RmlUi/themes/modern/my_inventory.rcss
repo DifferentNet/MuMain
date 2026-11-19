@@ -46,6 +46,7 @@
 .inv-btn-exit   { left: 15px;  color: #d59b79; border-color: #5c382b; }
 .inv-btn-repair { left: 56px;  }
 .inv-btn-myshop { left: 97px;  }
+.inv-btn-repair-all { left: 97px; }
 .inv-btn-myshop.close-mode { color: token(accent-gold-hover); border-color: token(border-hover); }
 /* The jewel bank, where the expanded inventory's button was. */
 .inv-btn-jewel-bank { left: 138px; }
@@ -360,6 +361,7 @@
 	.inv-btn-exit { left: 20px; }
 	.inv-btn-repair { left: 100px; }
 	.inv-btn-myshop { left: 180px; }
+	.inv-btn-repair-all { left: 180px; }
 	.inv-btn-jewel-bank { left: 260px; }
 
 	/* Beside another window: the bag alone under the gold, the buttons down its right side, 44 x 36. */
@@ -376,6 +378,7 @@
 	#panel.beside .inv-btn-exit { top: 78px; }
 	#panel.beside .inv-btn-repair { top: 124px; }
 	#panel.beside .inv-btn-myshop { top: 170px; }
+	#panel.beside .inv-btn-repair-all { top: 170px; }
 	#panel.beside .inv-btn-jewel-bank { top: 216px; }
 	/* The sort button joins them, under the jewel bank. */
 	#panel.beside #btn_bag_sort { left: calc(var(--bag-x) + 8 * var(--item-cell) + 12px); right: auto; top: 262px; width: 44px; height: 36px; }

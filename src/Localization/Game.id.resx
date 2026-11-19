@@ -12145,7 +12145,7 @@
     <comment>legacy_id=3579</comment>
   </data>
   <data name="Official MU Helper Setting has been saved." xml:space="preserve">
-    <value>Pengaturan resmi MU Helper telah disimpan.</value>
+    <value>Pengaturan MU Helper disimpan.</value>
     <comment>legacy_id=3580</comment>
   </data>
   <data name="Official MU Helper can't be implemented in this region." xml:space="preserve">
@@ -14444,5 +14444,36 @@
   </data>
   <data name="TouchHelpDoubleTapMove" xml:space="preserve">
     <value>Ketuk dua kali item untuk memindahkannya</value>
+  </data>
+  <!-- Round 17 -->
+  <data name="MuHelperStoppedHeroDied" xml:space="preserve">
+    <value>MU Helper berhenti: karaktermu mati.</value>
+  </data>
+  <data name="MuHelperNoHealPotions" xml:space="preserve">
+    <value>MU Helper: ramuan penyembuh habis.</value>
+  </data>
+  <data name="MuHelperBagFull" xml:space="preserve">
+    <value>MU Helper: tas penuh, item tetap di tanah.</value>
+  </data>
+  <data name="RepairNoZen" xml:space="preserve">
+    <value>Zen tidak cukup untuk memperbaiki perlengkapan.</value>
+  </data>
+  <data name="MuHelperUnconfiguredZ" xml:space="preserve">
+    <value>MU Helper hanya memakai serangan biasa: atur skill, ramuan, dan pungut di pengaturannya (Z)</value>
+  </data>
+  <data name="MuHelperUnconfiguredTouch" xml:space="preserve">
+    <value>MU Helper hanya memakai serangan biasa: atur skill, ramuan, dan pungut di Menu → MU Helper</value>
+  </data>
+  <data name="TicketFitsYourLevel" xml:space="preserve">
+    <value>Cocok untuk levelmu</value>
+  </data>
+  <data name="TicketYouNeedPlusD" xml:space="preserve">
+    <value>Kamu butuh tiket +%d</value>
+  </data>
+  <data name="EntryTicketNotInBag" xml:space="preserve">
+    <value>Tiket: %ls +%d — tidak ada di tas</value>
+  </data>
+  <data name="FieldRepairAllConfirm" xml:space="preserve">
+    <value>Perbaiki semua perlengkapan yang dipakai seharga %ls zen?</value>
   </data>
 </root>

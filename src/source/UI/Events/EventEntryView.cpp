@@ -9,6 +9,9 @@
 #include "UI/RmlBridge/RmlPointer.h"
 #include "UI/RmlBridge/RmlNativeTextSize.h"
 #include "UI/Mobile/InterfaceMode.h"
+#include "UI/Core/WindowSystem.h"
+#include "UI/Inventory/MyInventory.h"
+#include "Engine/Object/ZzzInfomation.h"
 
 #include <RmlUi/Core/ElementDocument.h>
 
@@ -29,6 +32,7 @@ void mu::ui::window::EventEntryView::BindModel(Rml::DataModelConstructor& c, Eve
 
     auto line = c.RegisterStruct<EventEntryLineEntry>();
     line.RegisterMember("text", &EventEntryLineEntry::text);
+    line.RegisterMember("missing", &EventEntryLineEntry::missing);
     c.RegisterArray<std::vector<EventEntryLineEntry>>();
     c.Bind("lines", &model.lines);
 
@@ -54,15 +58,27 @@ void mu::ui::window::EventEntryView::Build()
     m_View.Ensure();
 }
 
-void mu::ui::window::EventEntryView::SetContent(const wchar_t* title, const std::vector<std::wstring>& lines,
+mu::ui::window::EventEntryView::Line mu::ui::window::EventEntryView::TicketLine(short itemType, int ticketLevel)
+{
+    const wchar_t* name = ItemAttribute[itemType].Name;
+    wchar_t text[256] = {};
+    const bool inBag = g_pMyInventory != nullptr && g_pMyInventory->FindItemIndex(itemType, ticketLevel) != -1;
+    if (inBag)
+        mu_swprintf(text, L"%ls +%d", name, ticketLevel);
+    else
+        mu_swprintf(text, I18N::Game::EntryTicketNotInBag, name, ticketLevel);
+    return {text, !inBag};
+}
+
+void mu::ui::window::EventEntryView::SetContent(const wchar_t* title, const std::vector<Line>& lines,
                                                 const std::vector<Button>& buttons)
 {
     Build();
     EventEntryRmlModel& model = m_View.GetModel();
     model.titleText = StringUtils::WideToNarrow(title != nullptr ? title : L"");
     model.lines.clear();
-    for (const std::wstring& text : lines)
-        model.lines.push_back({StringUtils::WideToNarrow(text.c_str())});
+    for (const Line& line : lines)
+        model.lines.push_back({StringUtils::WideToNarrow(line.text.c_str()), line.missing});
     model.buttons.clear();
     for (const Button& button : buttons)
         model.buttons.push_back({StringUtils::WideToNarrow(button.label.c_str()), button.enabled});

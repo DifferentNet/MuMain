@@ -55,7 +55,6 @@ namespace mu::ui::window
         // The window's RmlUi document (entry frame, lines, level buttons, exit).
         EventEntryView m_View;
 
-        int							m_iBloodCastleLimitLevel[MAX_ENTER_GRADE * 2][2];
         int m_iNumActiveBtn; // the enabled button: the hero's level band
 
     public:
@@ -84,7 +83,8 @@ namespace mu::ui::window
         // The title and description lines of the original's Render(), with the level buttons.
         void SetViewContent(const std::vector<EventEntryView::Button>& buttons);
 
-        int	CheckLimitLV(int iIndex);
+        // The hero's band (GameLogic/Events/EntryLevels.h); the first one when none fits.
+        int	CheckLimitLV();
     };
 }
 
