@@ -6576,20 +6576,29 @@ constexpr BYTE LootHighlightBgR = 90;
 constexpr BYTE LootHighlightBgG = 64;
 constexpr BYTE LootHighlightBgB = 12;
 
-void ApplyLootHighlight(int index, GroundItemLabelDescriptor& descriptor)
+// The font and colours a label is drawn with this frame: the cached label's, with the loot highlight on top. Kept
+// apart from the name so the cached label is read in place, not copied with its name each frame.
+struct GroundItemLabelStyle
+{
+    HFONT Font = g_hFont;
+    DWORD TextColor = 0xFFFFFFFF;
+    DWORD BgColor = 0xFF000000;
+};
+
+void ApplyLootHighlight(int index, GroundItemLabelStyle& style)
 {
     if (!GameLogic::Items::LootFilterRuntime::IsHighlighted(index))
         return;
-    descriptor.Font = g_hFontBold;
-    if (descriptor.BgColor == MakeRgba(0, 0, 0, 255))
-        descriptor.BgColor = MakeRgba(LootHighlightBgR, LootHighlightBgG, LootHighlightBgB, 255);
+    style.Font = g_hFontBold;
+    if (style.BgColor == MakeRgba(0, 0, 0, 255))
+        style.BgColor = MakeRgba(LootHighlightBgR, LootHighlightBgG, LootHighlightBgB, 255);
 }
 
-void ApplyGroundItemLabelDescriptor(const GroundItemLabelDescriptor& descriptor)
+void ApplyGroundItemLabelStyle(const GroundItemLabelStyle& style)
 {
-    g_pRenderText->SetFont(descriptor.Font);
-    g_pRenderText->SetTextColor(descriptor.TextColor);
-    g_pRenderText->SetBgColor(descriptor.BgColor);
+    g_pRenderText->SetFont(style.Font);
+    g_pRenderText->SetTextColor(style.TextColor);
+    g_pRenderText->SetBgColor(style.BgColor);
 }
 
 // Everything BuildGroundItemLabelDescriptor() reads that can differ between two frames: the item, the language (names
@@ -6623,8 +6632,10 @@ struct CachedGroundItemLabel
 };
 
 // The label of the ground item in Items[index], built again only when its key changes. A trophy's name comes from
-// the server's season list, which the key does not cover, so it is built every time.
-GroundItemLabelDescriptor GroundItemLabel(int index, OBJECT* o, ITEM* ip)
+// the server's season list, which the key does not cover, so it is built every time (into one shared label).
+// The reference stays valid until the next call: the cache never grows (MAX_ITEMS entries from the start), and only
+// this item's own entry, or the shared one, is rebuilt.
+const GroundItemLabelDescriptor& GroundItemLabel(int index, OBJECT* o, ITEM* ip)
 {
     static std::vector<CachedGroundItemLabel> cache(MAX_ITEMS);
     const bool cacheable = index >= 0 && index < MAX_ITEMS &&
@@ -6632,9 +6643,10 @@ GroundItemLabelDescriptor GroundItemLabel(int index, OBJECT* o, ITEM* ip)
                              Data::Items::ToItemType(o->Type) == ITEM_SEASON_TROPHY);
     if (!cacheable)
     {
-        GroundItemLabelDescriptor descriptor;
-        BuildGroundItemLabelDescriptor(o, ip, descriptor);
-        return descriptor;
+        static GroundItemLabelDescriptor uncached;
+        uncached = GroundItemLabelDescriptor{};
+        BuildGroundItemLabelDescriptor(o, ip, uncached);
+        return uncached;
     }
 
     CachedGroundItemLabel& cached = cache[static_cast<size_t>(index)];
@@ -6661,17 +6673,19 @@ void RenderItemName(int i, OBJECT* o, ITEM* ip, bool Sort)
 {
     if (!Sort)
     {
-        GroundItemLabelDescriptor descriptor = GroundItemLabel(i, o, ip);
-        ApplyLootHighlight(i, descriptor);
-        ApplyGroundItemLabelDescriptor(descriptor);
-        g_pRenderText->RenderText(MouseX, MouseY - 15, descriptor.Name, 0, 0, RT3_WRITE_CENTER);
+        const GroundItemLabelDescriptor& label = GroundItemLabel(i, o, ip);
+        GroundItemLabelStyle style{label.Font, label.TextColor, label.BgColor};
+        ApplyLootHighlight(i, style);
+        ApplyGroundItemLabelStyle(style);
+        g_pRenderText->RenderText(MouseX, MouseY - 15, label.Name, 0, 0, RT3_WRITE_CENTER);
     }
     else
     {
-        GroundItemLabelDescriptor descriptor = GroundItemLabel(i, o, ip);
-        ApplyLootHighlight(i, descriptor);
-        ApplyGroundItemLabelDescriptor(descriptor);
-        g_pRenderText->RenderText(o->ScreenX, o->ScreenY - 15, descriptor.Name, 0, 0, RT3_WRITE_CENTER);
+        const GroundItemLabelDescriptor& label = GroundItemLabel(i, o, ip);
+        GroundItemLabelStyle style{label.Font, label.TextColor, label.BgColor};
+        ApplyLootHighlight(i, style);
+        ApplyGroundItemLabelStyle(style);
+        g_pRenderText->RenderText(o->ScreenX, o->ScreenY - 15, label.Name, 0, 0, RT3_WRITE_CENTER);
     }
 
     g_pRenderText->SetTextColor(255, 230, 200, 255);

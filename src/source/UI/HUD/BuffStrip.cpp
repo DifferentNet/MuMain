@@ -171,8 +171,9 @@ namespace
     }
 
     // The original's tooltip rows (RenderBuffTooltip()): the buff's name in bold blue, its
-    // description lines, then the remaining duration in purple if it has one.
-    std::vector<UI::RmlBridge::Tooltip::Line> BuildTooltip(eBuffState buff)
+    // description lines, then the remaining duration in purple if it has one (`bufftime`, from
+    // g_BuffStringTime(); empty without one).
+    std::vector<UI::RmlBridge::Tooltip::Line> BuildTooltip(eBuffState buff, const std::wstring& bufftime)
     {
         using UI::RmlBridge::Tooltip::LineColor;
         std::vector<UI::RmlBridge::Tooltip::Line> lines;
@@ -192,8 +193,6 @@ namespace
             lines.push_back(std::move(line));
         }
 
-        std::wstring bufftime;
-        g_BuffStringTime(buff, bufftime);
         if (!bufftime.empty())
         {
             wchar_t durLine[128] = {};
@@ -362,7 +361,22 @@ void CBuffStrip::SyncTooltip()
     // Native RenderTipTextList() hung the box from the icon's centre, 20 of its 28 units down.
     UI::RmlBridge::ElementTooltip::Placement placement;
     placement.anchorAt = 20.f / 28.f;
-    m_Tooltip.Show(BuildTooltip(static_cast<eBuffState>(m_ShownBuffs[slot])), placement);
+
+    // Shown again each frame (it follows the icon and takes the tooltip back from another owner), but
+    // its lines are built only when the buff, its time left (to the second, as shown) or the language changes.
+    const int buff = m_ShownBuffs[slot];
+    m_TooltipTimeNow.clear();
+    g_BuffStringTime(static_cast<eBuffState>(buff), m_TooltipTimeNow);
+    const int locale = I18N::LocaleIndex(I18N::GetCurrentLocale());
+    if (!m_TooltipBuilt || buff != m_TooltipBuff || locale != m_TooltipLocale || m_TooltipTimeNow != m_TooltipTime)
+    {
+        m_TooltipBuilt = true;
+        m_TooltipBuff = buff;
+        m_TooltipLocale = locale;
+        m_TooltipTime = m_TooltipTimeNow;
+        m_TooltipLines = BuildTooltip(static_cast<eBuffState>(buff), m_TooltipTime);
+    }
+    m_Tooltip.Show(m_TooltipLines, placement);
 }
 
 void CBuffStrip::OnBuffRightClick(int slot)

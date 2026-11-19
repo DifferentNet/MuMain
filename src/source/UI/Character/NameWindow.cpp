@@ -279,8 +279,7 @@ void mu::ui::window::CNameWindow::RenderName()
                 const int nameTop = std::max(SelectedNameTop, phoneTop);
                 g_pRenderText->SetTextColor(255, 230, 200, 255);
                 g_pRenderText->SetBgColor(100, 0, 0, 255);
-                const std::wstring health = UI::Combat::HealthBar::PercentText(c->HealthStatus);
-                const std::wstring nameLine = health.empty() ? std::wstring(c->ID) : std::wstring(c->ID) + L"  " + health;
+                const std::wstring& nameLine = UI::Combat::HealthBar::NameLine(c->ID, c->HealthStatus);
                 g_pRenderText->RenderText(SelectedNameCentre, nameTop, nameLine.c_str(), 0, 0, RT3_WRITE_CENTER);
 
                 if (UI::Combat::HealthBar::ShouldRenderSelected(c->HealthStatus))

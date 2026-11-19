@@ -5,6 +5,7 @@
 #include "UI/RmlBridge/RmlElementTooltip.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 
+#include <string>
 #include <vector>
 
 namespace Rml { class ElementDocument; }
@@ -73,6 +74,15 @@ namespace mu::ui::window
         const Rml::ElementDocument* m_SyncedDocument = nullptr;
         // The hovered slot's buff, in the shared tooltip.
         UI::RmlBridge::ElementTooltip m_Tooltip;
+        // The tooltip's lines and what they were built from (the buff, its time left as shown, the language):
+        // built again only when one of those changes, not each frame. m_TooltipTimeNow is this frame's time text,
+        // kept so reading it reuses its buffer.
+        std::vector<UI::RmlBridge::Tooltip::Line> m_TooltipLines;
+        bool m_TooltipBuilt = false;
+        int m_TooltipBuff = 0;
+        int m_TooltipLocale = -1;
+        std::wstring m_TooltipTime;
+        std::wstring m_TooltipTimeNow;
         void SyncTooltip();
 
         void SyncRmlModel();

@@ -227,6 +227,13 @@ mu_add_test(
         test_potion_kind.cpp
 )
 
+# The phone hero frame's "+": stat points or master points to spend (UI/Mobile/HeroFrame.h).
+mu_add_test(
+    NAME hero_points_alert_tests
+    SOURCES test_hero_points_alert.cpp
+    LINK_LIBS RmlUi::Core
+)
+
 mu_add_test(
     NAME touch_target_tests
     SOURCES
