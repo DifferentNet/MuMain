@@ -201,6 +201,7 @@ void mu::ui::window::CNPCShop::Release()
     }
 
     m_RmlView.Release();
+    m_SyncedTextInputs.reset();
 }
 
 bool mu::ui::window::CNPCShop::UpdateMouseEvent()
@@ -431,6 +432,22 @@ void mu::ui::window::CNPCShop::SyncRmlModel()
     {
         if (model.*field != value) { model.*field = value; m_RmlView.MarkDirty(boundName); }
     };
+
+    syncBool(&NPCShopRmlModel::repairVisible, "repair_visible", m_bRepairShop);
+    const int junk = UI::Mobile::ShowsControls() ? JunkCountNowAndThen() : 0;
+    syncBool(&NPCShopRmlModel::sellJunkShown, "sell_junk_shown", junk > 0 && !UI::Inventory::JunkSale::IsSelling());
+
+    SyncTexts(junk);
+}
+
+void mu::ui::window::CNPCShop::SyncTexts(int junk)
+{
+    const TextInputs inputs{I18N::LocaleIndex(I18N::GetCurrentLocale()), m_iTaxRate, AllRepairGold, junk};
+    if (m_SyncedTextInputs == inputs)
+        return;
+    m_SyncedTextInputs = inputs;
+
+    auto& model = m_RmlView.GetModel();
     auto syncText = [&](Rml::String NPCShopRmlModel::* field, const char* boundName, const Rml::String& value)
     {
         if (model.*field != value) { model.*field = value; m_RmlView.MarkDirty(boundName); }
@@ -446,13 +463,10 @@ void mu::ui::window::CNPCShop::SyncRmlModel()
     mu_swprintf(taxRateBuf, I18N::Game::TaxRateDChangedInRealTime, m_iTaxRate);
     syncWide(&NPCShopRmlModel::taxRateText, "tax_rate_text", taxRateBuf);
 
-    syncBool(&NPCShopRmlModel::repairVisible, "repair_visible", m_bRepairShop);
     syncWide(&NPCShopRmlModel::repairTooltip, "repair_tooltip", I18N::Game::RepairL);
     syncWide(&NPCShopRmlModel::repairAllTooltip, "repair_all_tooltip", I18N::Game::RepairAllA);
     syncWide(&NPCShopRmlModel::repairAllLabel, "repair_all_label", I18N::Game::RepairAll);
 
-    const int junk = UI::Mobile::ShowsControls() ? JunkCountNowAndThen() : 0;
-    syncBool(&NPCShopRmlModel::sellJunkShown, "sell_junk_shown", junk > 0 && !UI::Inventory::JunkSale::IsSelling());
     if (junk > 0)
     {
         syncText(&NPCShopRmlModel::sellJunkCount, "sell_junk_count", std::to_string(junk));

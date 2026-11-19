@@ -14492,4 +14492,11 @@
   <data name="PartyHintSharedExperience" xml:space="preserve">
     <value>Sa party, hinahati ang EXP ayon sa level.</value>
   </data>
+  <!-- web round 25 -->
+  <data name="AlreadyConnectedWaitHint" xml:space="preserve">
+    <value>Umalis o naputol? Mag-log in ulit sa 1 minuto.</value>
+  </data>
+  <data name="ReloadThePageForNewVersion" xml:space="preserve">
+    <value>May bagong bersyon: i-reload ang page.</value>
+  </data>
 </root>

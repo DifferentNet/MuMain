@@ -236,6 +236,7 @@ void CTrade::Release()
     }
 
     m_RmlView.Release();
+    m_SyncedTextInputs.reset();
 }
 
 bool CTrade::IsPointerOverPanel()
@@ -444,6 +445,44 @@ void CTrade::SyncRmlModel()
     {
         if (m_RmlView.GetModel().*field != value) { m_RmlView.GetModel().*field = value; m_RmlView.MarkDirty(boundName); }
     };
+
+    SyncTexts();
+
+    syncBool(&TradeRmlModel::yourConfirmChecked, "your_confirm_checked", m_bYourConfirm);
+    syncBool(&TradeRmlModel::myConfirmChecked, "my_confirm_checked", m_bMyConfirm);
+    syncBool(&TradeRmlModel::myConfirmWaiting, "my_confirm_waiting", m_nMyTradeWait > 0);
+
+    // sin(WorldTime)-based alpha pulse on the "Warning" word.
+    const int nAlpha = int(std::min<int>(255, sin(WorldTime / 200) * 200 + 275));
+    syncFloat(&TradeRmlModel::warningOpacity, "warning_opacity", nAlpha / 255.f);
+
+    SyncItemWarningBadges();
+}
+
+void CTrade::SyncTexts()
+{
+    int yourGuildMark = -1;
+    for (int i = 0; i < MAX_MARKS; ++i)
+    {
+        if (GuildMark[i].Key != -1 && GuildMark[i].Key == m_nYourGuildType)
+        {
+            yourGuildMark = i;
+            break;
+        }
+    }
+    const TextInputs inputs{I18N::LocaleIndex(I18N::GetCurrentLocale()), yourGuildMark,
+                            yourGuildMark >= 0 ? std::wstring(GuildMark[yourGuildMark].GuildName) : std::wstring(),
+                            ConvertYourLevel(), m_nYourTradeGold, m_nMyTradeGold};
+    if (m_SyncedTextInputs == inputs && m_SyncedYourId == m_szYourID && m_SyncedMyId == Hero->ID)
+        return;
+    m_SyncedTextInputs = inputs;
+    m_SyncedYourId = m_szYourID;
+    m_SyncedMyId = Hero->ID;
+
+    auto syncBool = [this](bool TradeRmlModel::* field, const char* boundName, bool value)
+    {
+        if (m_RmlView.GetModel().*field != value) { m_RmlView.GetModel().*field = value; m_RmlView.MarkDirty(boundName); }
+    };
     auto syncText = [this](Rml::String TradeRmlModel::* field, const char* boundName, const Rml::String& value)
     {
         if (m_RmlView.GetModel().*field != value) { m_RmlView.GetModel().*field = value; m_RmlView.MarkDirty(boundName); }
@@ -457,19 +496,12 @@ void CTrade::SyncRmlModel()
 
     syncWide(&TradeRmlModel::yourIdText, "your_id_text", m_szYourID);
 
-    Rml::String guildName;
-    for (int i = 0; i < MAX_MARKS; ++i)
-    {
-        if (GuildMark[i].Key != -1 && GuildMark[i].Key == m_nYourGuildType)
-        {
-            guildName = StringUtils::WideToNarrow(GuildMark[i].GuildName);
-            break;
-        }
-    }
+    const Rml::String guildName =
+        yourGuildMark >= 0 ? StringUtils::WideToNarrow(GuildMark[yourGuildMark].GuildName) : Rml::String();
     syncBool(&TradeRmlModel::yourGuildVisible, "your_guild_visible", !guildName.empty());
     syncText(&TradeRmlModel::yourGuildName, "your_guild_name", guildName);
 
-    const int nLevel = ConvertYourLevel();
+    const int nLevel = inputs.yourLevelBucket;
     wchar_t levelValueBuf[128];
     if (nLevel == 400)
         mu_swprintf(levelValueBuf, L"%d", nLevel);
@@ -498,24 +530,19 @@ void CTrade::SyncRmlModel()
 
     syncWide(&TradeRmlModel::myIdText, "my_id_text", Hero->ID);
 
-    syncBool(&TradeRmlModel::yourConfirmChecked, "your_confirm_checked", m_bYourConfirm);
-    syncBool(&TradeRmlModel::myConfirmChecked, "my_confirm_checked", m_bMyConfirm);
-    syncBool(&TradeRmlModel::myConfirmWaiting, "my_confirm_waiting", m_nMyTradeWait > 0);
-
     syncWide(&TradeRmlModel::warningLabel, "warning_label", I18N::Game::Warning);
     syncWide(&TradeRmlModel::noticeLine1, "notice_line1", I18N::Game::NoticePleaseCheckOut);
     syncWide(&TradeRmlModel::noticeLine2, "notice_line2", I18N::Game::TheLevelOfThePlayer);
     syncWide(&TradeRmlModel::noticeLine3, "notice_line3", I18N::Game::AndTheItemsBeforeTrading);
 
-    // sin(WorldTime)-based alpha pulse on the "Warning" word.
-    const int nAlpha = int(std::min<int>(255, sin(WorldTime / 200) * 200 + 275));
-    syncFloat(&TradeRmlModel::warningOpacity, "warning_opacity", nAlpha / 255.f);
-
     syncWide(&TradeRmlModel::closeTooltip, "close_tooltip", I18N::Game::Close388);
     syncWide(&TradeRmlModel::zenTooltip, "zen_tooltip", I18N::Game::ZenTrade);
 
     syncWide(&TradeRmlModel::itemWarningText, "item_warning_text", I18N::Game::Warning);
+}
 
+void CTrade::SyncItemWarningBadges()
+{
     // Former RenderWarningArrow()'s "Warning" text badge, one per your-side item flagged
     // ITEM_COLOR_TRADE_WARNING. The grid is in window pixels; the badges are #panel-relative
     // reference px, with the same sinf() wobble the native arrow glyph still animates with -- see

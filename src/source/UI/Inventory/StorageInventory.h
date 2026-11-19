@@ -16,6 +16,8 @@
 #include "UI/RmlBridge/RmlThemedView.h"
 #include "UI/Inventory/StorageUpdates.h"
 
+#include <optional>
+
 namespace Rml { class ElementDocument; }
 
 namespace mu::ui::window
@@ -87,6 +89,25 @@ namespace mu::ui::window
 
         void BuildRmlUi();
         void SyncRmlModel();
+
+        // Everything the window's texts (title, zen, fee, tooltips) are built from (round 25: formatted only when
+        // one of these changed, not every frame while the vault is open).
+        struct TextInputs
+        {
+            int locale = -1;
+            bool hasPageInfo = false;
+            int page = 0;
+            int pages = 0;
+            bool locked = false;
+            int zen = 0;
+            int level = 0;
+            int masterLevel = 0;
+            bool operator==(const TextInputs&) const = default;
+        };
+        // The texts into the model; formats them again only when their inputs changed.
+        void SyncTexts();
+        // The inputs SyncTexts() last built from; empty until the first sync after a build.
+        std::optional<TextInputs> m_SyncedTextInputs;
 
         // An arrow click (-1 or +1), handled in Update() rather than inside RmlUi's event dispatch.
         int m_nPendingPageStep = 0;

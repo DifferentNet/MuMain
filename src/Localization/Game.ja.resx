@@ -12574,4 +12574,11 @@
   <data name="PartyHintSharedExperience" xml:space="preserve">
     <value>パーティーでは経験値がレベルに応じて分配されます。</value>
   </data>
+  <!-- web round 25 -->
+  <data name="AlreadyConnectedWaitHint" xml:space="preserve">
+    <value>退出・切断直後は1分待って再ログインを。</value>
+  </data>
+  <data name="ReloadThePageForNewVersion" xml:space="preserve">
+    <value>新バージョンです。ページを更新してください。</value>
+  </data>
 </root>

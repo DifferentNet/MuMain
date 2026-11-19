@@ -14492,4 +14492,11 @@
   <data name="PartyHintSharedExperience" xml:space="preserve">
     <value>У групі досвід ділиться за рівнем.</value>
   </data>
+  <!-- web round 25 -->
+  <data name="AlreadyConnectedWaitHint" xml:space="preserve">
+    <value>Вийшли чи обрив зв'язку? Увійдіть за хвилину.</value>
+  </data>
+  <data name="ReloadThePageForNewVersion" xml:space="preserve">
+    <value>Вийшла нова версія: оновіть сторінку.</value>
+  </data>
 </root>

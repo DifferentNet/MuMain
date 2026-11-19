@@ -27,8 +27,8 @@ page doesn't wait for them: it downloads them right after the other parts (befor
 keeps them like those, and the game puts their files in place between frames, over several, once they are here
 (WebFileSystem.cpp InstallDeferredParts). Until then MiniAudioBackend.cpp only notes the sounds the game
 loads and the music it plays, and loads them a few a frame once the files are here; where a part fails,
-the game reads its files one by one. They get no versions: the game doesn't read them before the part
-came or failed.
+the game reads its files one by one. So they get versions, which keep those files on the device; the page's
+background download on a computer leaves them out (they come in their parts).
 
 A pack per map: packs/worldN.pack.gz with the files of Data/WorldN and Data/ObjectN (the map's ground
 and objects) that aren't in the startup pack, and packs/worldN.json, their paths and sizes and a hash.
@@ -443,8 +443,10 @@ def main():
             os.remove(os.path.join(args.root, old))
     compressed = [name for name in GZIP_COPIES if gzip_copy(os.path.join(args.root, name))]
 
-    # The late pack's files keep theirs: the game downloads one it needs before the pack is here.
-    in_packs = in_startup_pack | in_map_packs
+    # The late pack's files keep theirs: the game downloads one it needs before the pack is here. So do the
+    # deferred parts' files: where a part failed, the game reads them one by one.
+    in_deferred_parts = {path for part in parts if part.get("deferred") for path, _ in part["files"]}
+    in_packs = (in_startup_pack - in_deferred_parts) | in_map_packs
     versions = {path: file_hash(os.path.join(args.root, path)) for path in listed
                 if "/" in path and path not in in_packs and not path.startswith(PACKS + "/")}
     code = {name: file_hash(os.path.join(args.root, name)) for name in CODE
@@ -479,7 +481,8 @@ def main():
         size = os.path.getsize(os.path.join(args.root, name + ".gz"))
         print(f"{name}.gz: {size / 1e6:.1f} MB")
     print(f"Map packs: {len(maps)}, {map_megabytes:.0f} MB in them, {maps_written} written")
-    print(f"Files downloaded one by one, with versions: {len(versions)}; "
+    print(f"Files downloaded one by one, with versions: {len(versions)} "
+          f"({len(in_deferred_parts & versions.keys())} of them in the deferred parts); "
           f"{len(groups)} models with {sum(len(group) - 1 for group in groups)} files read together")
     return 0
 

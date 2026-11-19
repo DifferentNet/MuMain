@@ -1001,9 +1001,15 @@
   const pageParams = new URLSearchParams(location.search);
 
   // startup.json (tools/web/make_startup_pack.py): the startup pack's parts and the hashes of Main.js
-  // and Main.wasm. Asked for at once, while the page checks the graphics card.
+  // and Main.wasm. Asked for at once, while the page checks the graphics card. Its ETag is kept: the new
+  // version check reads startup.json (432 KB) again only when the server's ETag is another.
+  let releaseIndexEtag = null;
   const releaseIndexLoad = fetch("startup.json", { cache: "no-cache" })
-    .then((response) => response.ok ? response.json() : null).catch(() => null);
+    .then((response) => {
+      if (!response.ok) return null;
+      releaseIndexEtag = response.headers.get("ETag");
+      return response.json();
+    }).catch(() => null);
 
   // The service worker (sw.js) keeps the game's files on the device and shows a note of its own when
   // there is no connection. index.html?nosw removes it and the files it kept (its "mu-web/files"), to
@@ -1678,7 +1684,20 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       if (document.hidden || !running || crashed || gameEnded || !newVersionButton.hidden) return;
       if (Date.now() - newVersionCheckedAt < NEW_VERSION_CHECK_MS) return;
       newVersionCheckedAt = Date.now();
-      fetch("startup.json", { cache: "no-cache" }).then((response) => response.ok ? response.json() : null).then((index) => {
+      fetch("startup.json", { cache: "no-cache" }).then((response) => {
+        if (!response.ok) return null;
+        // The same ETag: the same startup.json, not parsed again. A server without ETags is read every time.
+        const etag = response.headers.get("ETag");
+        if (etag && etag === releaseIndexEtag) {
+          if (response.body) response.body.cancel().catch(() => {});
+          return null;
+        }
+        // Kept only once the body parsed: a body cut mid-transfer must not hide the next check's answer.
+        return response.json().then((index) => {
+          releaseIndexEtag = etag;
+          return index;
+        });
+      }).then((index) => {
         const latest = index && index.code && index.code["Main.wasm"];
         if (!latest || latest === running) return;
         appendLog(`New version on the server (Main.wasm ${latest}, this page runs ${running}): "New version: reload" shown`);
@@ -1817,6 +1836,22 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       }
       return readPack(label, entry, store, null, onNetworkBytes, signal);
     }
+    // A pack read that failed is tried once more after PACK_RETRY_MS: a phone's line drops for a moment. Not
+    // one that was stopped (its abort signal), nor a file the server doesn't have (HTTP 404), nor a read ahead
+    // without storage. `read(attempt)` reads it, attempt 0 then 1 (a kept copy that didn't read is gone by then).
+    const PACK_RETRY_MS = 2000;
+    async function withOneRetry(label, read, signal) {
+      try {
+        return await read(0);
+      } catch (e) {
+        const message = String((e && e.message) || e);
+        if ((signal && signal.aborted) || /HTTP 404\b/.test(message) || message === MAP_PACK_NO_STORE) throw e;
+        console.warn(`${label}: ${e}; trying once more`);
+        await new Promise((resolve) => setTimeout(resolve, PACK_RETRY_MS));
+        if (signal && signal.aborted) throw signal.reason;
+        return read(1);
+      }
+    }
     // Runs the tasks given to it at most `count` at a time, in the order given.
     function taskQueue(count) {
       let running = 0;
@@ -1857,7 +1892,9 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       else setStatus("Loading game data… · Загрузка данных игры…");
       const queue = taskQueue(PACK_DOWNLOADS);
       return parts.map((part, i) => {
-        const loading = queue(() => loadPack(`Startup pack part ${part.name}`, part, store, kept[i], onNetworkBytes));
+        const label = `Startup pack part ${part.name}`;
+        const loading = queue(() => withOneRetry(label,
+          (attempt) => loadPack(label, part, store, attempt ? undefined : kept[i], onNetworkBytes)));
         loading.catch(() => {});   // WebFileSystem.cpp says which part failed
         return loading;
       });
@@ -1879,11 +1916,10 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     // and music, 15 MB of the 51 the startup download took (2026-11-12). The game starts without them:
     // they download right after the other parts, a map's pack going first, alongside the late pack, and
     // are kept with them; one on this device reads at once. A download that failed is tried once more
-    // after DEFERRED_RETRY_MS. Each part that came ({files, bytes}) or failed (bytes null) waits in
+    // (withOneRetry). Each part that came ({files, bytes}) or failed (bytes null) waits in
     // deferredSettled for WebFileSystem.cpp InstallDeferredParts (Module.muDeferredPart), which writes
     // its files into /game between frames, a few milliseconds' worth a frame over several frames; the game
     // reads a failed part's files one by one.
-    const DEFERRED_RETRY_MS = 2000;
     const deferredEntries = ((releaseIndex && releaseIndex.parts) || []).filter((part) => part.deferred);
     const deferredSettled = [];
     (async () => {
@@ -1898,13 +1934,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
             await startupPackSettled;
             while (mapPacksLoading) await new Promise((resolve) => setTimeout(resolve, 500));
           }
-          try {
-            pack = await loadPack(label, entry, store, kept, () => {});
-          } catch (e) {
-            console.warn(`${label}: ${e}; trying once more`);
-            await new Promise((resolve) => setTimeout(resolve, DEFERRED_RETRY_MS));
-            pack = await loadPack(label, entry, store, undefined, () => {});
-          }
+          pack = await withOneRetry(label, (attempt) => loadPack(label, entry, store, attempt ? undefined : kept, () => {}));
         } catch (e) {
           console.warn(`${label}: ${e}; the game reads its files one by one instead`);
         }
@@ -1923,7 +1953,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       while (mapPacksLoading) await new Promise((resolve) => setTimeout(resolve, 500));
       const store = await openStore(STARTUP_STORE);
       const kept = store ? await store.match(packKey(entry)).catch(() => undefined) : undefined;
-      latePack = await loadPack("Late pack", entry, store, kept, () => {});
+      latePack = await withOneRetry("Late pack", (attempt) => loadPack("Late pack", entry, store, attempt ? undefined : kept, () => {}));
     }).catch((e) => console.warn(`Late pack: ${e}; the game downloads its files one by one instead`));
     // A map pack's index (packs/worldN.json) is kept beside the pack, under the pack's hash.
     const mapPackName = (world) => `packs/world${world}.pack`;
@@ -2052,7 +2082,14 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         } else {
           dropMapPackAhead(`map ${world} entered`);
         }
-        return await readMapPack(world, (total) => downloadProgress("the map", "Карта", total));
+        // Counted across the retry's pause too: the late pack and the deferred parts wait for the map.
+        mapPacksLoading++;
+        try {
+          return await withOneRetry(`Map pack ${world}`,
+            () => readMapPack(world, (total) => downloadProgress("the map", "Карта", total)));
+        } finally {
+          mapPacksLoading--;
+        }
       } finally {
         setStatus("");
       }
@@ -2155,13 +2192,17 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       }
     }
     // The versioned files' URLs (startup.json "versions") and the ones of them this device keeps. Not
-    // the late pack's files, which come in it (latePackLoading).
+    // the late pack's files, which come in it (latePackLoading), nor the deferred parts' sounds and music
+    // (deferredEntries), which come in those: their versions are for a part that failed.
     async function keptFiles() {
       const versions = releaseIndex && releaseIndex.versions;
       if (!versions || !self.caches || !(navigator.serviceWorker && navigator.serviceWorker.controller)) return null;
       const kept = new Set((await (await caches.open("mu-web/files")).keys()).map((request) => request.url));
-      const inLatePack = new Set(((releaseIndex.late && releaseIndex.late.files) || []).map(([path]) => path));
-      const urls = Object.keys(versions).filter((path) => !inLatePack.has(path))
+      const inPacks = new Set(((releaseIndex.late && releaseIndex.late.files) || []).map(([path]) => path));
+      for (const part of deferredEntries) {
+        for (const [path] of part.files || []) inPacks.add(path);
+      }
+      const urls = Object.keys(versions).filter((path) => !inPacks.has(path))
         .map((path) => [path, new URL(`${path}?v=${versions[path]}`, location.href).href]);
       return { kept, urls };
     }

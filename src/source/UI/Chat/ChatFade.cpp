@@ -45,4 +45,19 @@ int SystemLinesShown(const std::vector<std::uint64_t>& arrivalsMs, std::uint64_t
     }
     return count;
 }
+
+bool FoldsIntoNewestSystemLine(bool sameAsNewest, std::uint64_t newestArrivalMs, std::uint64_t nowMs)
+{
+    if (!sameAsNewest)
+        return false;
+    // A clock that went back (or a stamp from the same tick) still counts as a repeat.
+    return nowMs <= newestArrivalMs || nowMs - newestArrivalMs < SystemLineRepeatMs;
+}
+
+std::wstring WithRepeatCount(const std::wstring& text, int count)
+{
+    if (count <= 1)
+        return text;
+    return text + L" \u00D7" + std::to_wstring(count);
+}
 } // namespace UI::Chat

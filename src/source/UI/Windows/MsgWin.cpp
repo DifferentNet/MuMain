@@ -255,8 +255,9 @@ void CMsgWin::SetMsg(MSG_WIN_TYPE eType, std::wstring lpszMsg, std::wstring lpsz
     }
     else
     {
-        lpszMsg.copy(m_aszMsg[0], MW_MSG_ROW_MAX - 1);
-        lpszMsg2.copy(m_aszMsg[1], MW_MSG_ROW_MAX - 1);
+        // copy() writes no terminator, and the rows still hold earlier messages.
+        m_aszMsg[0][lpszMsg.copy(m_aszMsg[0], MW_MSG_ROW_MAX - 1)] = L'\0';
+        m_aszMsg[1][lpszMsg2.copy(m_aszMsg[1], MW_MSG_ROW_MAX - 1)] = L'\0';
         m_nMsgLine = 2;
     }
 }
@@ -293,7 +294,12 @@ void CMsgWin::PopUp(int nMsgCode, wchar_t* pszMsg)
     case MESSAGE_VERSION:
     case RECEIVE_LOG_IN_FAIL_VERSION:
         lpszMsg = I18N::Game::NewVersionOfGameIsRequired;
+#ifdef __EMSCRIPTEN__
+        // /play gets the new version from the web server: a page reload is all it takes.
+        lpszMsg2 = I18N::Game::ReloadThePageForNewVersion;
+#else
         lpszMsg2 = I18N::Game::PleaseDownloadTheNewVersion;
+#endif
         break;
     case MESSAGE_INPUT_ID:
         lpszMsg = I18N::Game::EnterYourAccount;
@@ -309,6 +315,7 @@ void CMsgWin::PopUp(int nMsgCode, wchar_t* pszMsg)
         break;
     case RECEIVE_LOG_IN_FAIL_ID_CONNECTED:
         lpszMsg = I18N::Game::YourAccountIsAlreadyConnected;
+        lpszMsg2 = I18N::Game::AlreadyConnectedWaitHint;
         break;
     case RECEIVE_LOG_IN_FAIL_ID_BLOCK:
     case MESSAGE_DELETE_CHARACTER_ID_BLOCK:

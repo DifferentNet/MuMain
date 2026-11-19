@@ -213,19 +213,9 @@ namespace UI::Notices
     // notices lie under the windows, so on the screen's centre an open window hid their lines. Where
     // the free world is narrower than the widest line (a window across the screen), they keep the
     // screen's centre.
-    void PlaceOnPc()
+    void PlaceBoardOnPc(Rml::Element* board, float screen, float left, float right)
     {
-        // The phone's HUD places the board itself, and takes its left off again when it lets go.
-        if (UI::Mobile::ReplacesPcHud())
-            return;
-        Rml::Element* board = s_board.Find(s_view.Document(), "board");
-        const Rml::Context* context = RmlUiRuntime::Instance().GetContext();
-        if (board == nullptr || context == nullptr)
-            return;
         constexpr float Gap = 8.f; // window px kept free on each side of the widest line
-        const float screen = static_cast<float>(context->GetDimensions().x);
-        const float left = UI::Placement::UncoveredWorldLeft();
-        const float right = UI::Placement::UncoveredWorldRight();
         std::optional<float> boardLeft;
         if (right > left && right - left < screen - 1.f && right - left >= WidestLine(*board) + 2.f * Gap)
         {
@@ -249,6 +239,56 @@ namespace UI::Notices
         {
             board->RemoveProperty(Rml::PropertyId::Left);
         }
+    }
+
+    // What the board's place depends on. PlaceOnPc() walks the lines and allocates, so it runs only when one of
+    // these changed rather than every frame (round 25).
+    struct PcPlacementInputs
+    {
+        unsigned noticesVersion = 0;
+        float left = 0.f;
+        float right = 0.f;
+        float screen = 0.f;
+        float textPx = 0.f;
+        const Rml::Element* board = nullptr;
+        bool operator==(const PcPlacementInputs&) const = default;
+    };
+
+    // New lines are laid out at the next context update, so WidestLine() reads their width a frame later: after a
+    // change the board is placed again on this many following frames.
+    constexpr int PlaceFramesAfterChange = 2;
+
+    void PlaceOnPc()
+    {
+        static PcPlacementInputs placedFor;
+        static int framesLeft = 0;
+        // The phone's HUD places the board itself, and takes its left off again when it lets go.
+        if (UI::Mobile::ReplacesPcHud())
+        {
+            placedFor = {};
+            return;
+        }
+        Rml::Element* board = s_board.Find(s_view.Document(), "board");
+        const Rml::Context* context = RmlUiRuntime::Instance().GetContext();
+        if (board == nullptr || context == nullptr)
+            return;
+
+        PcPlacementInputs inputs;
+        inputs.noticesVersion = s_noticesVersion;
+        inputs.left = UI::Placement::UncoveredWorldLeft();
+        inputs.right = UI::Placement::UncoveredWorldRight();
+        inputs.screen = static_cast<float>(context->GetDimensions().x);
+        inputs.textPx = UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Bold);
+        inputs.board = board;
+        if (inputs != placedFor)
+        {
+            placedFor = inputs;
+            framesLeft = PlaceFramesAfterChange + 1;
+        }
+        if (framesLeft <= 0)
+            return;
+        --framesLeft;
+        PlaceBoardOnPc(board, inputs.screen, inputs.left, inputs.right);
     }
 
     void RenderNative()

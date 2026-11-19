@@ -6,6 +6,9 @@ using UI::Chat::ChatLineShownMs;
 using UI::Chat::EvaluateChatFade;
 using UI::Chat::IsChatLineShown;
 using UI::Chat::SystemLinesShown;
+using UI::Chat::FoldsIntoNewestSystemLine;
+using UI::Chat::SystemLineRepeatMs;
+using UI::Chat::WithRepeatCount;
 
 namespace
 {
@@ -104,4 +107,20 @@ TEST_CASE("System log: nothing to show and a clock behind an arrival")
 {
     CHECK(SystemLinesShown({}, Now, 6, 30'000, false) == 0);
     CHECK(SystemLinesShown({Now + 5}, Now, 6, 30'000, false) == 1);
+}
+
+TEST_CASE("System log: the same message within 3 s folds into the newest line")
+{
+    CHECK(FoldsIntoNewestSystemLine(true, Now - 1, Now));
+    CHECK(FoldsIntoNewestSystemLine(true, Now - SystemLineRepeatMs + 1, Now));
+    CHECK_FALSE(FoldsIntoNewestSystemLine(true, Now - SystemLineRepeatMs, Now));
+    CHECK_FALSE(FoldsIntoNewestSystemLine(false, Now - 1, Now));
+    CHECK(FoldsIntoNewestSystemLine(true, Now + 5, Now));
+}
+
+TEST_CASE("System log: a repeated line shows its count")
+{
+    CHECK(WithRepeatCount(L"No arrows", 1) == L"No arrows");
+    CHECK(WithRepeatCount(L"No arrows", 0) == L"No arrows");
+    CHECK(WithRepeatCount(L"No arrows", 3) == L"No arrows \u00D73");
 }

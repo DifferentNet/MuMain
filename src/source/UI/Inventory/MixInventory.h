@@ -10,6 +10,8 @@
 #include "UI/Inventory/MyInventory.h"
 #include "UI/Inventory/SocketListSelection.h"
 #include "UI/RmlBridge/RmlThemedView.h"
+#include <array>
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -175,6 +177,58 @@ namespace mu::ui::window
         // (MixInventory.cpp) for the full per-field translation.
         // #panel\'s drawn size over its laid-out size: the scale its placement gives it.
         float DrawnPanelScale();
+
+        // What the recipe check reads from one item of the machine's grid (CMixItem::SetItem()), plus the item
+        // itself: a different item or a changed one gives the texts another recipe, source list or rate.
+        struct MixItemFingerprint
+        {
+            const ITEM* item = nullptr;
+            DWORD key = 0;
+            short type = 0;
+            int level = 0;
+            BYTE durability = 0;
+            BYTE optionLevel = 0;
+            BYTE optionType = 0;
+            BYTE excellentFlags = 0;
+            BYTE ancient = 0;
+            BYTE specialNum = 0;
+            WORD harmonyLevel = 0;
+            bool option380 = false;
+            BYTE socketCount = 0;
+            std::array<BYTE, MAX_SOCKETS> socketSeeds{};
+            std::array<BYTE, MAX_SOCKETS> socketSpheres{};
+            bool operator==(const MixItemFingerprint&) const = default;
+        };
+        // Everything the machine's texts (title, tooltip, recipe, rates, zen, sources, advice, descriptions and
+        // their fit) are built from besides the grid's items (round 25: built only when one of these changed).
+        struct TextInputs
+        {
+            int locale = -1;
+            int mixType = 0;
+            int mixSubType = 0;
+            int mixState = 0;
+            bool dustMode = false;
+            int taxRate = 0;
+            int plusChaosRate = 0;
+            bool mixInit = false;
+            bool readyToMix = false;
+            const void* currentRecipe = nullptr;
+            const void* similarRecipe = nullptr;
+            int successRate = 0;
+            int requiredZen = 0;
+            float panelScale = 0.f;
+            float textPx = 0.f;
+            const void* document = nullptr;
+            bool operator==(const TextInputs&) const = default;
+        };
+        // Whether the texts need building again; remembers the inputs it saw. The dust mode always builds them:
+        // its counter counts down the week on its own.
+        bool MixTextsChanged();
+        std::optional<TextInputs> m_SyncedTextInputs;
+        std::vector<MixItemFingerprint> m_SyncedItems;
+        // MixTextsChanged()'s scratch, kept to reuse its memory.
+        std::vector<MixItemFingerprint> m_ItemScratch;
+
         void SyncMixContentModel();
         void SyncSocketListModel();
         bool RefreshSocketOptions();

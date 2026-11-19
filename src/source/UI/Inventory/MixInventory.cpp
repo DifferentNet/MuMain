@@ -177,6 +177,7 @@ void CMixInventory::BindRmlModel(Rml::DataModelConstructor& c, MixInventoryRmlMo
 void CMixInventory::OnRmlReloaded()
 {
     m_SocketTextDirty = true;
+    m_SyncedTextInputs.reset();
 }
 
 void CMixInventory::BuildRmlUi()
@@ -196,6 +197,7 @@ void CMixInventory::Release()
         m_pNewUIMng = NULL;
     }
     m_RmlView.Release();
+    m_SyncedTextInputs.reset();
 }
 
 void CMixInventory::SetMixState(int iMixState)
@@ -398,6 +400,16 @@ void CMixInventory::SyncRmlModel()
         if (model.*field != value) { model.*field = value; m_RmlView.MarkDirty(boundName); }
     };
 
+    // Mirrors RenderFrame()'s former early-return-at-MIX_FINISHED (which stopped the button from
+    // rendering at all) and SetMixState()'s former m_BtnMix.Lock()/UnLock() calls.
+    syncBool(&MixInventoryRmlModel::mixVisible, "mix_visible", GetMixState() != MIX_FINISHED);
+    syncBool(&MixInventoryRmlModel::mixLocked, "mix_locked", GetMixState() == MIX_REQUESTED);
+    if (!MixTextsChanged())
+    {
+        SyncSocketListModel();
+        return;
+    }
+
     // Former RenderFrame() title switch -- same cases, same strings, now driving this RmlUi title
     // span instead of a native RenderText() call.
     const wchar_t* titleText = I18N::Game::Chaos;
@@ -441,13 +453,62 @@ void CMixInventory::SyncRmlModel()
     }
     syncWide(&MixInventoryRmlModel::mixTooltip, "mix_tooltip", tooltipText);
 
-    // Mirrors RenderFrame()'s former early-return-at-MIX_FINISHED (which stopped the button from
-    // rendering at all) and SetMixState()'s former m_BtnMix.Lock()/UnLock() calls.
-    syncBool(&MixInventoryRmlModel::mixVisible, "mix_visible", GetMixState() != MIX_FINISHED);
-    syncBool(&MixInventoryRmlModel::mixLocked, "mix_locked", GetMixState() == MIX_REQUESTED);
-
     SyncMixContentModel();
     SyncSocketListModel();
+}
+
+bool CMixInventory::MixTextsChanged()
+{
+    m_ItemScratch.clear();
+    const int count = m_pNewInventoryCtrl != nullptr ? static_cast<int>(m_pNewInventoryCtrl->GetNumberOfItems()) : 0;
+    for (int i = 0; i < count; ++i)
+    {
+        const ITEM* item = m_pNewInventoryCtrl->GetItem(i);
+        if (item == nullptr)
+            continue;
+        MixItemFingerprint print;
+        print.item = item;
+        print.key = item->Key;
+        print.type = item->Type;
+        print.level = item->Level;
+        print.durability = item->Durability;
+        print.optionLevel = item->OptionLevel;
+        print.optionType = item->OptionType;
+        print.excellentFlags = item->ExcellentFlags;
+        print.ancient = item->AncientDiscriminator;
+        print.specialNum = item->SpecialNum;
+        print.harmonyLevel = item->Jewel_Of_Harmony_OptionLevel;
+        print.option380 = item->option_380;
+        print.socketCount = item->SocketCount;
+        std::copy(std::begin(item->SocketSeedID), std::end(item->SocketSeedID), print.socketSeeds.begin());
+        std::copy(std::begin(item->SocketSphereLv), std::end(item->SocketSphereLv), print.socketSpheres.begin());
+        m_ItemScratch.push_back(print);
+    }
+
+    TextInputs inputs;
+    inputs.locale = I18N::LocaleIndex(I18N::GetCurrentLocale());
+    inputs.mixType = g_MixRecipeMgr.GetMixInventoryType();
+    inputs.mixSubType = g_MixRecipeMgr.GetMixSubType();
+    inputs.mixState = GetMixState();
+    inputs.dustMode = GameLogic::ExcellentDust::IsDustMode();
+    inputs.taxRate = g_nChaosTaxRate;
+    inputs.plusChaosRate = g_MixRecipeMgr.GetPlusChaosRate();
+    inputs.mixInit = g_MixRecipeMgr.IsMixInit() == TRUE;
+    inputs.readyToMix = g_MixRecipeMgr.IsReadyToMix() == TRUE;
+    inputs.currentRecipe = g_MixRecipeMgr.GetCurRecipe();
+    inputs.similarRecipe = g_MixRecipeMgr.GetMostSimilarRecipe();
+    inputs.successRate = g_MixRecipeMgr.GetSuccessRate();
+    inputs.requiredZen = g_MixRecipeMgr.GetReqiredZen();
+    inputs.panelScale = DrawnPanelScale();
+    inputs.textPx = UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Normal);
+    inputs.document = m_RmlView.Document();
+
+    const bool same = m_SyncedTextInputs == inputs && m_SyncedItems == m_ItemScratch;
+    if (same && !inputs.dustMode)
+        return false;
+    m_SyncedTextInputs = inputs;
+    m_SyncedItems.swap(m_ItemScratch);
+    return true;
 }
 
 bool CMixInventory::RefreshSocketOptions()

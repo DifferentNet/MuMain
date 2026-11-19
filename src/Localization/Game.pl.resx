@@ -14513,4 +14513,11 @@
   <data name="PartyHintSharedExperience" xml:space="preserve">
     <value>W grupie doświadczenie dzieli się według poziomu.</value>
   </data>
+  <!-- web round 25 -->
+  <data name="AlreadyConnectedWaitHint" xml:space="preserve">
+    <value>Wyjście lub zerwane łącze? Wejdź za minutę.</value>
+  </data>
+  <data name="ReloadThePageForNewVersion" xml:space="preserve">
+    <value>Jest nowa wersja: odśwież stronę.</value>
+  </data>
 </root>
