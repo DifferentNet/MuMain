@@ -40,6 +40,11 @@ public:
     // Turns `step` pages on (1) or back (-1): back from the first page stays there, on from the last
     // closes the window. F1, the menu's Help, the pad's LB and RB, a click or tap on the hint row.
     void TurnPage(int step);
+#ifdef __EMSCRIPTEN__
+    // The warm-up (UI/Core/WindowWarmUp.h): the first page, as an opening shows it.
+    Rml::ElementDocument* GetWarmUpDocument() const override { return m_RmlView.Document(); }
+    bool PrepareWarmUp() override;
+#endif
 
 private:
     void BuildRmlUi();

@@ -38,6 +38,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cwchar>
 #ifdef __EMSCRIPTEN__
 #include "Core/Utilities/FirstOpenTiming.h"
 #endif
@@ -550,11 +551,76 @@ void mu::ui::window::CCharacterInfoWindow::SyncRmlModel()
               gCharacterManager.GetBaseClass(Hero->Class) == CLASS_DARK_LORD);
     SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::petEnabled, "pet_enabled", CPetInfoWindow::IsAvailable());
 
-    BuildSubjectTexts();
-    BuildTableTexts();
-    BuildAttributeLines();
+    SyncSubjectOpacity();
+    if (StatInputsChanged())
+    {
+        BuildSubjectTexts();
+        BuildTableTexts();
+        BuildAttributeLines();
+    }
     if (model.advancedView)
         BuildAdvancedStatsLines();
+}
+
+namespace
+{
+    // Appends the bytes of `value` to `out`: StatInputsChanged() compares the inputs as raw memory.
+    template <typename T>
+    void AppendBytes(std::vector<unsigned char>& out, const T& value)
+    {
+        const auto* bytes = reinterpret_cast<const unsigned char*>(&value);
+        out.insert(out.end(), bytes, bytes + sizeof(T));
+    }
+
+    // Appends the characters of `text` and its end, so a name written over in place counts as a change.
+    void AppendText(std::vector<unsigned char>& out, const wchar_t* text)
+    {
+        if (text == nullptr)
+            text = L"";
+        const auto* bytes = reinterpret_cast<const unsigned char*>(text);
+        out.insert(out.end(), bytes, bytes + (std::wcslen(text) + 1) * sizeof(wchar_t));
+    }
+}
+
+bool mu::ui::window::CCharacterInfoWindow::StatInputsChanged()
+{
+    // The Our Forces HP buff makes BuildAttributeLines() recalculate the attributes (CalculateAll())
+    // every frame, as it always did: built every frame while it is up.
+    if (g_isCharacterBuff((&Hero->Object), eBuff_Hp_up_Ourforces))
+    {
+        m_statInputs.clear();
+        return true;
+    }
+
+    std::vector<unsigned char>& inputs = m_statInputsScratch;
+    inputs.clear();
+    AppendBytes(inputs, *CharacterAttribute);
+    AppendBytes(inputs, CharacterMachine->Equipment);
+    // GetAttackDamage() counts a weapon held on the pointer in place of the one it was taken from.
+    AppendBytes(inputs, PickItem);
+    AppendBytes(inputs, SrcInventory);
+    AppendBytes(inputs, SrcInventoryIndex);
+    AppendBytes(inputs, Master_Level_Data);
+    AppendBytes(inputs, Hero->Class);
+    AppendBytes(inputs, Hero->CurrentSkill);
+    AppendBytes(inputs, Hero->Helper.Type);
+    AppendBytes(inputs, Hero->PK);
+    AppendBytes(inputs, PartyNumber);
+    for (const auto& [buff, count] : Hero->Object.m_BuffMap.m_Buff)
+    {
+        AppendBytes(inputs, buff);
+        AppendBytes(inputs, count);
+    }
+    AppendBytes(inputs, g_ServerListManager->GetNonPVPInfo());
+    AppendText(inputs, g_ServerListManager->GetSelectServerName());
+    AppendBytes(inputs, g_ServerListManager->GetSelectServerIndex());
+    // A language switch swaps every text pointer.
+    AppendBytes(inputs, I18N::Game::LevelUResetsU);
+
+    if (inputs == m_statInputs)
+        return false;
+    m_statInputs.swap(inputs);
+    return true;
 }
 
 namespace
@@ -658,7 +724,11 @@ void mu::ui::window::CCharacterInfoWindow::BuildSubjectTexts()
         g_ServerListManager->GetSelectServerName(), g_ServerListManager->GetSelectServerIndex());
     SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::serverNameText, "servername_text",
               StringUtils::WideToNarrow(strServerName));
+}
 
+// The class and server lines take turns (WorldTime), so their opacity follows every frame.
+void mu::ui::window::CCharacterInfoWindow::SyncSubjectOpacity()
+{
     SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::classNameOpacity, "classname_opacity",
               SubjectLineOpacity(WorldTime, false));
     SyncField(m_RmlView.Binder(), &CharacterInfoRmlModel::serverNameOpacity, "servername_opacity",

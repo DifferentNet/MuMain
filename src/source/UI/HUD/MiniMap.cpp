@@ -249,6 +249,7 @@ void mu::ui::window::CMiniMap::LoadImages(const wchar_t* Filename)
     }
     else
     {
+        ++m_MapDataGeneration;
         m_bSuccess = true;
         fclose(pFile);
         // The texture itself is loaded by the document (mini_map.rml's .map).
@@ -306,6 +307,7 @@ void mu::ui::window::CMiniMap::LoadImages(const wchar_t* Filename)
 
 void mu::ui::window::CMiniMap::UnloadImages()
 {
+    ++m_MapDataGeneration;
     m_WorldName.clear();
 }
 
@@ -409,6 +411,7 @@ void mu::ui::window::CMiniMap::SyncRmlModel()
         {
             UI::MiniMapLive::Live().Closed();
             m_LiveHints.clear();
+            m_MapSyncKeyValid = false;
         }
     }
     if (!visible)
@@ -439,7 +442,13 @@ bool mu::ui::window::CMiniMap::PrepareWarmUp()
 void mu::ui::window::CMiniMap::SyncScreen()
 {
     UI::RmlBridge::SyncNativeTextSize(m_RmlView.Binder());
-    Sync(m_RmlView.Binder(), &MiniMapRmlModel::closeHint, "close_hint", StringUtils::WideToNarrow(I18N::Game::Close388));
+    // Converted once per language text, not every frame.
+    if (m_pCloseHintSource != I18N::Game::Close388)
+    {
+        m_pCloseHintSource = I18N::Game::Close388;
+        Sync(m_RmlView.Binder(), &MiniMapRmlModel::closeHint, "close_hint",
+             StringUtils::WideToNarrow(I18N::Game::Close388));
+    }
 
     // The border tiles depend on the screen alone: rebuilt when it changes, or when a theme reload
     // left the model empty.
@@ -496,9 +505,41 @@ void mu::ui::window::CMiniMap::SyncClips()
     m_RmlView.MarkDirty("clips");
 }
 
+mu::ui::window::CMiniMap::MapSyncKey mu::ui::window::CMiniMap::CurrentMapSyncKey() const
+{
+    MapSyncKey key;
+    key.screen = CurrentScreen();
+    key.world = gMapManager.WorldActive;
+    key.heroX = Hero->PositionX;
+    key.heroY = Hero->PositionY;
+    key.mapDataGeneration = m_MapDataGeneration;
+    key.occupationState = m_OccupationState;
+    const UI::MiniMapLive::Store& store = UI::MiniMapLive::Live();
+    key.liveEntries = store.EntriesFor(gMapManager.WorldActive);
+    key.liveVersion = store.Version();
+    key.liveCell = store.Cell();
+    key.partyCount = std::clamp(PartyNumber, 0, MAX_PARTYS);
+    for (int i = 0; i < key.partyCount; ++i)
+    {
+        MapPartyMemberKey& member = key.party[i];
+        std::wcsncpy(member.name, Party[i].Name, MAX_USERNAME_SIZE);
+        member.map = Party[i].Map;
+        member.x = Party[i].x;
+        member.y = Party[i].y;
+    }
+    return key;
+}
+
 void mu::ui::window::CMiniMap::SyncMap()
 {
-    const UI::MiniMap::Screen screen = CurrentScreen();
+    // The markers, labels and dots follow the key's inputs alone: nothing to rebuild while none changed.
+    const MapSyncKey key = CurrentMapSyncKey();
+    if (m_MapSyncKeyValid && key == m_MapSyncKey)
+        return;
+    m_MapSyncKey = key;
+    m_MapSyncKeyValid = true;
+
+    const UI::MiniMap::Screen screen = key.screen;
     const float length = UI::MiniMap::MapLength;
     const float heroY = (static_cast<float>(Hero->PositionX) / 256.f) * length;
     const float heroX = (static_cast<float>(Hero->PositionY) / 256.f) * length;

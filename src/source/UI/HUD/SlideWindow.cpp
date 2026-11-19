@@ -80,22 +80,45 @@ void mu::ui::window::CSlideWindow::SyncRmlModel()
         SyncField(m_RmlView.Binder(), &SlideNoticeRmlModel::textTop, "text_top", static_cast<float>(d.y));
         SyncField(m_RmlView.Binder(), &SlideNoticeRmlModel::bandTop, "band_top", static_cast<float>(d.y - 3));
         SyncField(m_RmlView.Binder(), &SlideNoticeRmlModel::bandHeight, "band_height", static_cast<float>(d.bandHeight));
-        // RmlUi's rgba() alpha is 0-255, not 0-1, so both colours are built whole here rather
-        // than assembled in the document.
+        SyncColors(d);
+        SyncText(d.text ? d.text : L"");
+    }
+
+    UI::RmlBridge::SyncDocumentVisibility(m_RmlView.Document(), true);
+}
+
+void mu::ui::window::CSlideWindow::SyncColors(const UI::HUD::SlideDisplay& d)
+{
+    // RmlUi's rgba() alpha is 0-255, not 0-1, so both colours are built whole here rather
+    // than assembled in the document.
+    const int alpha = static_cast<int>(d.alpha);
+    if (alpha != m_BandColorAlpha)
+    {
+        m_BandColorAlpha = alpha;
         char band[40] = {};
         std::snprintf(band, sizeof(band), "rgba(0,0,0,%u)", static_cast<unsigned>(d.alpha));
         SyncField(m_RmlView.Binder(), &SlideNoticeRmlModel::bandColor, "band_color", Rml::String(band));
+    }
 
+    if (alpha != m_TextColorAlpha || d.colorRgb != m_TextColorRgb)
+    {
+        m_TextColorAlpha = alpha;
+        m_TextColorRgb = d.colorRgb;
         char rgb[48] = {};
         std::snprintf(rgb, sizeof(rgb), "rgba(%u,%u,%u,%u)", d.colorRgb & 0xFF,
                       (d.colorRgb >> 8) & 0xFF, (d.colorRgb >> 16) & 0xFF,
                       static_cast<unsigned>(d.alpha));
         SyncField(m_RmlView.Binder(), &SlideNoticeRmlModel::textColor, "text_color", Rml::String(rgb));
-        SyncField(m_RmlView.Binder(), &SlideNoticeRmlModel::text, "text",
-                  StringUtils::WideToNarrow(d.text ? d.text : L""));
     }
+}
 
-    UI::RmlBridge::SyncDocumentVisibility(m_RmlView.Document(), true);
+void mu::ui::window::CSlideWindow::SyncText(const wchar_t* text)
+{
+    if (m_TextBuilt && m_TextSource == text)
+        return;
+    m_TextBuilt = true;
+    m_TextSource = text;
+    SyncField(m_RmlView.Binder(), &SlideNoticeRmlModel::text, "text", StringUtils::WideToNarrow(text));
 }
 
 void mu::ui::window::CSlideWindow::Release()

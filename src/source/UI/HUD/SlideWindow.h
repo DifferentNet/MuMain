@@ -6,6 +6,8 @@
 
 #include <RmlUi/Core/Types.h>
 
+#include <string>
+
 namespace Rml
 {
 class ElementDocument;
@@ -61,8 +63,18 @@ namespace mu::ui::window
 
         void BuildRmlUi();
         void SyncRmlModel();
+        void SyncColors(const UI::HUD::SlideDisplay& d);
+        void SyncText(const wchar_t* text);
 
         UI::HUD::SlideTicker* m_pSlideMgr;
+
+        // What the colours and the text were last built from: built again only on a change, not every
+        // frame (the ticker keeps its text in one buffer it edits in place, so the text is compared).
+        int m_BandColorAlpha = -1;
+        unsigned m_TextColorRgb = 0;
+        int m_TextColorAlpha = -1;
+        bool m_TextBuilt = false;
+        std::wstring m_TextSource;
     };
 }
 
