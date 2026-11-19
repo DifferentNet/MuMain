@@ -1328,7 +1328,7 @@
     <comment>legacy_id=368</comment>
   </data>
   <data name="About %d" xml:space="preserve">
-    <value>%d代</value>
+    <value>%d+</value>
     <comment>legacy_id=369</comment>
   </data>
   <data name="Warning!" xml:space="preserve">
@@ -4732,7 +4732,7 @@
     <comment>legacy_id=1304</comment>
   </data>
   <data name="Back" xml:space="preserve">
-    <value>以前</value>
+    <value>戻る</value>
     <comment>legacy_id=1306</comment>
   </data>
   <data name="Position" xml:space="preserve">
@@ -12503,6 +12503,16 @@
   </data>
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>いずれかのギルドがすでにギルド戦中です。</value>
+  </data>
+  <!-- Round 15 -->
+  <data name="InviteRefusedBusyTrade" xml:space="preserve">
+    <value>%ls からの取引申請を受けられませんでした（ウィンドウが開いていました）。</value>
+  </data>
+  <data name="InviteRefusedBusyDuel" xml:space="preserve">
+    <value>%ls からの決闘申請を受けられませんでした（ウィンドウが開いていました）。</value>
+  </data>
+  <data name="SoldItemToFor" xml:space="preserve">
+    <value>%ls を %ls に %ls で売りました。</value>
   </data>
   <!-- Round 16 -->
   <data name="StatButtonTooltip" xml:space="preserve">

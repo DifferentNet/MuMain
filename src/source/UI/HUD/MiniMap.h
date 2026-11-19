@@ -91,5 +91,38 @@ private:
     std::vector<LiveHint> m_LiveHints;
     // The screen the border tiles' matrices were built for (SyncScreen()).
     UI::MiniMap::Screen m_SideLinesScreen;
+    // The close hint's language text the narrow copy was made from (SyncScreen()).
+    const wchar_t* m_pCloseHintSource = nullptr;
+
+    // Everything SyncMap() builds the map, its markers, the labels, the live and party dots and the
+    // hint boxes from: rebuilt only when one of these changed (per-frame cost while the map shows).
+    struct MapPartyMemberKey
+    {
+        wchar_t name[MAX_USERNAME_SIZE + 1] = {};
+        BYTE map = 0;
+        BYTE x = 0;
+        BYTE y = 0;
+        bool operator==(const MapPartyMemberKey&) const = default;
+    };
+    struct MapSyncKey
+    {
+        UI::MiniMap::Screen screen;
+        int world = -1;
+        int heroX = -1;
+        int heroY = -1;
+        unsigned mapDataGeneration = 0;
+        BYTE occupationState = 0;
+        const void* liveEntries = nullptr;
+        unsigned liveVersion = 0;
+        int liveCell = 0;
+        int partyCount = 0;
+        MapPartyMemberKey party[MAX_PARTYS] = {};
+        bool operator==(const MapSyncKey&) const = default;
+    };
+    MapSyncKey CurrentMapSyncKey() const;
+    bool m_MapSyncKeyValid = false;
+    MapSyncKey m_MapSyncKey;
+    // Counts LoadImages()/UnloadImages(): the world's marker data changed.
+    unsigned m_MapDataGeneration = 0;
 };
 }

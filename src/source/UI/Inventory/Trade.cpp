@@ -5,6 +5,7 @@
 #include "UI/Inventory/Trade.h"
 #include "UI/Chat/ChatMessages.h"
 #include "UI/Chat/InviteAutoDecline.h"
+#include "UI/Chat/InviterDetail.h"
 #include "UI/Inventory/HeldItemPlacement.h"
 #include "UI/Inventory/InventorySort.h"
 #include "UI/Mobile/ClickSource.h"
@@ -744,6 +745,7 @@ bool CTrade::ProcessToReceiveTradeRequest(const wchar_t* pszYourID)
     if (g_pNewUISystem->IsImpossibleTradeInterface())
     {
         SocketClient->ToGameServer()->SendTradeRequestResponse(false);
+        UI::Chat::InviteAutoDecline::SayRefusedWhileBusy(UI::Chat::InviteKind::Trade, pszYourID);
         return false;
     }
 
@@ -758,10 +760,10 @@ bool CTrade::ProcessToReceiveTradeRequest(const wchar_t* pszYourID)
 
     mu::ui::window::GenericDialogConfig cfg;
     cfg.showCancel = true;
-    cfg.lines = {
-        { m_szYourID, false },
-        { I18N::Game::WouldLikeToTradeWithYou, false },
-    };
+    cfg.lines.push_back({ m_szYourID, false });
+    if (std::wstring detail = UI::Chat::InviterDetail::ForName(m_szYourID); !detail.empty())
+        cfg.lines.push_back({ std::move(detail), false });
+    cfg.lines.push_back({ I18N::Game::WouldLikeToTradeWithYou, false });
     cfg.onPrimary = [] { SocketClient->ToGameServer()->SendTradeRequestResponse(true); };
     cfg.onCancel = [] { SocketClient->ToGameServer()->SendTradeRequestResponse(false); };
     const int serial = ++m_nTradeRequestSerial;
@@ -1004,7 +1006,7 @@ void CTrade::ProcessToReceiveTradeExit(UI::Trade::CloseReason reason)
         break;
 
     case UI::Trade::CloseReason::ReinforcedItem:
-        g_pSystemLogBox->AddText(I18N::Game::ReinforcedItemCanTBeTraded, mu::ui::window::TYPE_ERROR_MESSAGE);
+        g_pSystemLogBox->AddText(I18N::Game::TheseItemsCannotBeTraded, mu::ui::window::TYPE_ERROR_MESSAGE);
         break;
 
     case UI::Trade::CloseReason::Completed:

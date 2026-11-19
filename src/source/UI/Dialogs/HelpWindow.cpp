@@ -243,6 +243,18 @@ void mu::ui::window::CHelpWindow::OpenningProcess()
 
 void mu::ui::window::CHelpWindow::ClosingProcess() {}
 
+#ifdef __EMSCRIPTEN__
+bool mu::ui::window::CHelpWindow::PrepareWarmUp()
+{
+    if (!m_RmlView.Document())
+        return false;
+    // Every opening starts on the first page (OpenningProcess()).
+    m_iIndex = 0;
+    RebuildPageModel();
+    return true;
+}
+#endif
+
 void mu::ui::window::CHelpWindow::AutoUpdateIndex()
 {
     TurnPage(1);

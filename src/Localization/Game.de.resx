@@ -1344,7 +1344,7 @@
     <comment>legacy_id=368</comment>
   </data>
   <data name="About %d" xml:space="preserve">
-    <value>Etwa %d</value>
+    <value>%d+</value>
     <comment>legacy_id=369</comment>
   </data>
   <data name="Warning!" xml:space="preserve">
@@ -14522,6 +14522,16 @@
   </data>
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>Eine der Gilden ist bereits in einem Gildenkrieg.</value>
+  </data>
+  <!-- Round 15 -->
+  <data name="InviteRefusedBusyTrade" xml:space="preserve">
+    <value>Handelsanfrage von %ls verpasst: ein Fenster war offen.</value>
+  </data>
+  <data name="InviteRefusedBusyDuel" xml:space="preserve">
+    <value>Duellforderung von %ls verpasst: ein Fenster war offen.</value>
+  </data>
+  <data name="SoldItemToFor" xml:space="preserve">
+    <value>%ls an %ls für %ls verkauft.</value>
   </data>
   <!-- Round 16 -->
   <data name="StatButtonTooltip" xml:space="preserve">

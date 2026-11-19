@@ -1344,7 +1344,7 @@
     <comment>legacy_id=368</comment>
   </data>
   <data name="About %d" xml:space="preserve">
-    <value>關於 %d</value>
+    <value>%d+</value>
     <comment>legacy_id=369</comment>
   </data>
   <data name="Warning!" xml:space="preserve">
@@ -9309,7 +9309,7 @@
     <comment>legacy_id=2651</comment>
   </data>
   <data name="No item application" xml:space="preserve">
-    <value>無項目申請</value>
+    <value>(空)</value>
     <comment>legacy_id=2652</comment>
   </data>
   <data name="Element: %s" xml:space="preserve">
@@ -14424,6 +14424,16 @@
   </data>
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>其中一個公會已在公會戰中。</value>
+  </data>
+  <!-- Round 15 -->
+  <data name="InviteRefusedBusyTrade" xml:space="preserve">
+    <value>未能接受 %ls 的交易請求（當時有視窗開著）。</value>
+  </data>
+  <data name="InviteRefusedBusyDuel" xml:space="preserve">
+    <value>未能接受 %ls 的決鬥挑戰（當時有視窗開著）。</value>
+  </data>
+  <data name="SoldItemToFor" xml:space="preserve">
+    <value>已將 %ls 賣給 %ls，價格 %ls。</value>
   </data>
   <!-- Round 16 -->
   <data name="StatButtonTooltip" xml:space="preserve">

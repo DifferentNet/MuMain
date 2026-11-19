@@ -18,7 +18,20 @@
 		<div id="lines" class="scroll-pane" data-style-height="client_height + 'dp'" data-event-click="chat_lines_tap"
 		     data-style---line-px="line_px + 'px'" data-style---row-px="row_px + 'px'">
 			<div data-for="line : lines"
-			     data-attr-class="'chat-line chat-line--' + line.kind + (line.has_id ? ' chat-line--has-id' : '') + (it_index == pointed_index ? ' chat-line--pointed' : '') + (line.faded ? ' chat-line--faded' : '') + (line.lead ? ' chat-line--lead' : '')"
+			     class="chat-line"
+			     data-class-chat-line--chat="line.kind == 'chat'"
+			     data-class-chat-line--whisper="line.kind == 'whisper'"
+			     data-class-chat-line--system="line.kind == 'system'"
+			     data-class-chat-line--error="line.kind == 'error'"
+			     data-class-chat-line--party="line.kind == 'party'"
+			     data-class-chat-line--guild="line.kind == 'guild'"
+			     data-class-chat-line--union="line.kind == 'union'"
+			     data-class-chat-line--gens="line.kind == 'gens'"
+			     data-class-chat-line--gm="line.kind == 'gm'"
+			     data-class-chat-line--has-id="line.has_id"
+			     data-class-chat-line--pointed="it_index == pointed_index"
+			     data-class-chat-line--faded="line.faded"
+			     data-class-chat-line--lead="line.lead"
 			     data-style-font-size="text_px + 'px'">{{line.text}}</div>
 		</div>
 	</div>

@@ -87,3 +87,21 @@ commands you reach for don't change when your character does.
 The `[ChatCommands]` section of `config.ini` holds both lists. A template is
 stored as `label|command|value|value|...`, so a value can't contain a `|` - one
 that does is stored with a space in its place.
+
+## Sending a chat line
+
+Chat lines go out at most one a second. Enter on a line sooner than that keeps
+the line in the field and sends it by itself when the second has passed;
+pressing Enter again meanwhile changes nothing. The waiting line is dropped,
+not sent, when the chat bar closes or when the line, the whisper name or the
+channel is changed before it goes. Enter on an empty field just closes the bar.
+
+On phones the quick phrase buttons are dimmed while the short pause after a
+phrase or macro runs (2 seconds); a tap then does nothing.
+
+A trade request or duel challenge that comes while a window is open is refused,
+because it could not be answered there, and a chat line says who it was from
+(e.g. "Name wanted to trade (a window was open)."). Repeated requests from the
+same player within 10 seconds give no new line. With **Decline invitations**
+on (options, Gameplay) every invitation is refused with its own chat line
+instead.

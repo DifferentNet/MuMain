@@ -97,6 +97,8 @@ bool SendMacroSlot(int slot);
 // The pause before a quick chat phrase (UI/Chat/ChatPhrases): 2 s since the last phrase or macro, which share it,
 // and not in Chaos Castle. True when one may go now; the pause then starts again.
 bool TakeQuickPhrasePause();
+// Whether the pause after a quick phrase or macro still runs (the phone dims the phrase chips).
+bool QuickPhrasePauseRunning();
 void SetActionClass(CHARACTER* c, OBJECT* o, int Action, int ActionType);
 void RenderBar(float x, float y, float Width, float Height, float Bar, bool Disabled = false, bool clipping = true);
 void RenderOutSides();

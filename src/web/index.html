@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-visual, viewport-fit=cover">
 <meta name="theme-color" content="#0d0e12">
 <link rel="manifest" href="manifest.webmanifest">
-<title>MU Online (web)</title>
+<title>MU Skynet</title>
 <script>
   // What the game runs on, decided before the page is drawn, so nothing jumps: a phone, a tablet or a
   // computer. Phones and tablets are played with the fingers: they get the touch page (html.phone: the
@@ -138,6 +138,7 @@
   <button id="install-menu" type="button" hidden>Install</button>
   <button id="download-game" type="button" hidden>Download game</button>
   <button id="view" type="button" hidden title="The game's layout, as in its Options → Interface">View</button>
+  <button id="screenshot" type="button" hidden title="A picture of the game, saved as a download">Screenshot</button>
   <label title="How many pixels the game draws while Options has Auto resolution; Lowest also turns effects and shadows off">Quality
     <select id="quality">
       <option value="high">High</option>
@@ -477,6 +478,8 @@
       viewButton.textContent = "View: " + en + " · Вид: " + ru;
       // A phone or tablet always plays the phone layout (UI/Mobile/InterfaceMode.cpp): no choice there.
       viewButton.hidden = phone;
+      // The game runs: it can take a screenshot too (below).
+      shotButton.hidden = false;
     },
   };
   viewButton.onclick = () => {
@@ -484,6 +487,33 @@
     footer.classList.remove("open");
     canvas.focus();
   };
+
+  // Screenshot: Print Screen's picture, which in the browser stays inside the game's own files. The game
+  // takes muShotRequest between frames, writes the next frame as a JPEG and hands its bytes to muShotReady
+  // (Core/Platform/web/WebPageView.h), which saves them as a download named by the local date and time.
+  const shotButton = document.getElementById("screenshot");
+  window.muShotRequest = false;
+  shotButton.onclick = () => {
+    window.muShotRequest = true;
+    footer.classList.remove("open");
+    canvas.focus();
+  };
+  window.muShotReady = (bytes) => {
+    const two = (n) => String(n).padStart(2, "0");
+    const now = new Date();
+    const name = `MU-Skynet-${now.getFullYear()}-${two(now.getMonth() + 1)}-${two(now.getDate())}_` +
+                 `${two(now.getHours())}-${two(now.getMinutes())}-${two(now.getSeconds())}.jpg`;
+    const url = URL.createObjectURL(new Blob([bytes], { type: "image/jpeg" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    appendLog("Screenshot saved as " + name);
+  };
+  window.muShotFailed = () => appendLog("Screenshot failed", true);
 
   // Phones: Play opens the game fullscreen; "Stay in the browser" keeps the address bar (the menu's
   // Fullscreen does it later); Install (below) puts it on the home screen. Not where the page already
@@ -764,11 +794,14 @@
     if (stageMoveHeld) return;
     const view = window.visualViewport;
     let shift = 0;
-    if (keyboardWanted && keyboardLine && view) {
+    // Only with a keyboard up, and only when it covers the field: a field just above the screen's
+    // bottom edge stays where it is (no keyboard: the chat line on a phone without one up yet).
+    if (keyboardWanted && keyboardLine && view && keyboardOnScreen()) {
       const rect = canvas.getBoundingClientRect();
       const top = rect.top + keyboardShift; // where the game is when not moved
       const lineTop = top + keyboardLine[0] * rect.height, lineBottom = top + keyboardLine[1] * rect.height;
-      shift = Math.max(0, Math.min(lineBottom + KEYBOARD_GAP - (view.offsetTop + view.height), lineTop));
+      const viewBottom = view.offsetTop + view.height;
+      if (lineBottom > viewBottom) shift = Math.max(0, Math.min(lineBottom + KEYBOARD_GAP - viewBottom, lineTop));
     }
     shift = Math.round(shift);
     if (shift === keyboardShift) return;
@@ -1196,6 +1229,7 @@
   // can leave a lock taken (inside malloc, say), and the next call from the page (saving settings,
   // a key, a network message) would wait for it forever and freeze the tab.
   let crashed = false;
+  let gameEnded = false;  // stopped by the player's own exit: its files are whole, so saveConfig still runs
   const openSockets = new Set();
   const PageWebSocket = WebSocket;
   window.WebSocket = class extends PageWebSocket {
@@ -1219,26 +1253,62 @@
     event.preventDefault();
     event.returnValue = "";
   }
-  window.muInWorld = (inWorld) => {
+  // The game also gives the tab's title: the character's name in the world. While the "(!) " mark is on
+  // (App/Platform/AttentionSignal.cpp), the mark stays and the title it gives back is the new one.
+  window.muInWorld = (inWorld, title) => {
     if (inWorld && !crashed) addEventListener("beforeunload", askBeforeLeaving);
     else removeEventListener("beforeunload", askBeforeLeaving);
     worldEnteredAt = inWorld ? worldEnteredAt || performance.now() : 0;
+    if (!title) return;
+    if (window.Module && window.Module.muAttentionTitle !== undefined) {
+      window.Module.muAttentionTitle = title;
+      document.title = "(!) " + title;
+    } else {
+      document.title = title;
+    }
   };
-  function gameCrashed(error, title = "The game stopped because of an error.") {
-    if (crashed) return;
+  // The game stopped, by an error or by the player's own exit: no more calls into it, its sockets closed,
+  // and the status panel over the picture, emptied for the caller's lines and buttons.
+  function stopGame() {
+    if (crashed) return null;
     crashed = true;
     removeEventListener("beforeunload", askBeforeLeaving);
     playCard.classList.remove("show");
+    shotButton.hidden = true;
     for (const socket of openSockets) {
       socket.onmessage = socket.onclose = socket.onerror = null;
       try { socket.close(); } catch (e) {}
     }
     statusEl.hidden = false;
-    statusEl.classList.add("bad");
     statusEl.style.pointerEvents = "auto";
     statusEl.style.background = "rgba(13,14,18,.92)";
     statusEl.innerHTML = "";
-    const box = document.createElement("div");
+    return document.createElement("div");
+  }
+  const styleStatusButton = (button) => {
+    button.style.cssText = "font: inherit; margin: .25rem; padding: .3rem .8rem; cursor: pointer;";
+  };
+  // The game's loop ended (Exit game, or OK on a lost connection: Core/Platform/web/WebPageView.h): the
+  // page said nothing and closing it still asked "Leave site?". Now it says so and offers a new start.
+  window.muGameEnded = () => {
+    const box = stopGame();
+    if (!box) return;
+    gameEnded = true;
+    document.title = "MU Skynet";
+    statusEl.classList.remove("bad");
+    box.innerHTML = "<p></p>";
+    box.firstChild.textContent = "You left the game.";
+    const again = document.createElement("button");
+    again.textContent = "Play again";
+    again.onclick = () => location.reload();
+    styleStatusButton(again);
+    box.appendChild(again);
+    statusEl.appendChild(box);
+  };
+  function gameCrashed(error, title = "The game stopped because of an error.") {
+    const box = stopGame();
+    if (!box) return;
+    statusEl.classList.add("bad");
     box.innerHTML = "<p></p><p></p>";
     box.firstChild.textContent = title;
     box.lastChild.textContent = String(error && error.message || error).slice(0, 300);
@@ -1249,7 +1319,7 @@
     reset.textContent = "Reset settings and reload";
     reset.onclick = () => { location.search = "?reset"; };
     for (const button of [reload, reset]) {
-      button.style.cssText = "font: inherit; margin: .25rem; padding: .3rem .8rem; cursor: pointer;";
+      styleStatusButton(button);
       box.appendChild(button);
     }
     statusEl.appendChild(box);
@@ -1329,7 +1399,7 @@
   } catch (e) { /* no storage in this browser */ }
   let savedConfig = null;
   function saveConfig() {
-    if (crashed) return;
+    if (crashed && !gameEnded) return;
     try {
       const text = new TextDecoder().decode(Module.FS.readFile("/game/config.ini"));
       if (text && text !== savedConfig) {

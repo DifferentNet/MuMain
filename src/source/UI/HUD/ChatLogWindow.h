@@ -39,6 +39,9 @@ namespace mu::ui::window
         DWORD m_dwIndentSize;
         // When the line came (ChatLogClockMs()); a closed chat lets it go after a while (UI/Chat/ChatFade.h).
         std::uint64_t m_addedAtMs = 0;
+        // The line as the chat log shows it ("ID : text"), in UTF-8, made once when the log first shows it
+        // (CChatLogWindow::RebuildLineModel()) instead of on every rebuild of the list.
+        std::string m_lineUtf8;
 
     public:
         TMessageText() : m_MsgType(TYPE_UNKNOWN), m_dwIndentSize(0) {}
@@ -53,6 +56,7 @@ namespace mu::ui::window
             m_strText = strText;
             m_MsgType = MsgType;
             m_addedAtMs = ChatLogClockMs();
+            m_lineUtf8.clear();
 
             return true;
         }
@@ -60,6 +64,7 @@ namespace mu::ui::window
         {
             m_strID.resize(0);
             m_strText.resize(0);
+            m_lineUtf8.clear();
             m_MsgType = TYPE_UNKNOWN;
         }
 
@@ -67,6 +72,9 @@ namespace mu::ui::window
         const type_string& GetText() const { return m_strText; }
         MESSAGE_TYPE GetType() const { return m_MsgType; }
         std::uint64_t GetAddedAtMs() const { return m_addedAtMs; }
+        // Empty until the chat log has made it (a shown line is never empty: it has text).
+        const std::string& GetLineUtf8() const { return m_lineUtf8; }
+        void SetLineUtf8(std::string line) { m_lineUtf8 = std::move(line); }
     };
 
     typedef TMessageText<wchar_t> CMessageText;
@@ -180,8 +188,9 @@ namespace mu::ui::window
         void SyncNativeLineGeometry();
         // Rebuilds the bound line list from the currently-selected message vector. Kept
         // index-aligned with that vector (undrawable entries become blanks rather than being
-        // skipped) because chat_line_rightclick() resolves a sender by array index.
-        void RebuildLineModel();
+        // skipped) because chat_line_rightclick() resolves a sender by array index. Only entries
+        // that differ are rewritten; returns whether any did, so an unchanged list is not marked dirty.
+        bool RebuildLineModel();
         // Pins #lines to the bottom after the model's line list changes, so a new message scrolls
         // into view exactly as native's own "follow the tail" behaviour did. Skipped while the
         // user has scrolled up, same as native.

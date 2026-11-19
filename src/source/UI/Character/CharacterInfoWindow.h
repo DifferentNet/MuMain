@@ -117,8 +117,12 @@ namespace mu::ui::window
         void BuildRmlUi();
         void SyncRmlModel();
         void BuildSubjectTexts();
+        void SyncSubjectOpacity();
         void BuildTableTexts();
         void BuildAttributeLines();
+        // True when anything the subject, table and attribute texts are built from changed since they
+        // were built last (per-frame cost: the window formats about ten texts and three lists).
+        bool StatInputsChanged();
         // The advanced stats tab: asks the server for the stats while it shows, and rebuilds its lines when an
         // answer came (GameLogic/Character/AdvancedStats.h).
         void BuildAdvancedStatsLines();
@@ -190,6 +194,10 @@ namespace mu::ui::window
         CManager* m_pNewUIMng;
         // The answer of the advanced stats store the tab's lines were built from (Store::Version()).
         unsigned m_advancedStatsVersion = ~0u;
+        // The raw inputs the texts were built from (StatInputsChanged()), and the buffer the current
+        // ones are gathered in; both keep their room, so the per-frame check allocates nothing.
+        std::vector<unsigned char> m_statInputs;
+        std::vector<unsigned char> m_statInputsScratch;
 
     };
 }

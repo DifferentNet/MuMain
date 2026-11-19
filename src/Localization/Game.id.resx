@@ -1056,7 +1056,7 @@
     <comment>legacy_id=262</comment>
   </data>
   <data name="You can enter Icarus only with wings, dinorant, fenrirr" xml:space="preserve">
-    <value>Anda dapat memasuki Icarus hanya dengan sayap, dinorant, fenrirr</value>
+    <value>Anda dapat memasuki Icarus hanya dengan sayap, dinorant, fenrir</value>
     <comment>legacy_id=263</comment>
   </data>
   <data name="/whisper off" xml:space="preserve">
@@ -1344,7 +1344,7 @@
     <comment>legacy_id=368</comment>
   </data>
   <data name="About %d" xml:space="preserve">
-    <value>Tentang %d</value>
+    <value>%d+</value>
     <comment>legacy_id=369</comment>
   </data>
   <data name="Warning!" xml:space="preserve">
@@ -9309,7 +9309,7 @@
     <comment>legacy_id=2651</comment>
   </data>
   <data name="No item application" xml:space="preserve">
-    <value>Tidak ada aplikasi item</value>
+    <value>(kosong)</value>
     <comment>legacy_id=2652</comment>
   </data>
   <data name="Element: %s" xml:space="preserve">
@@ -14424,6 +14424,16 @@
   </data>
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>Salah satu guild sudah dalam perang guild.</value>
+  </data>
+  <!-- Round 15 -->
+  <data name="InviteRefusedBusyTrade" xml:space="preserve">
+    <value>Permintaan trade dari %ls terlewat: ada jendela yang terbuka.</value>
+  </data>
+  <data name="InviteRefusedBusyDuel" xml:space="preserve">
+    <value>Tantangan duel dari %ls terlewat: ada jendela yang terbuka.</value>
+  </data>
+  <data name="SoldItemToFor" xml:space="preserve">
+    <value>Terjual: %ls ke %ls seharga %ls.</value>
   </data>
   <!-- Round 16 -->
   <data name="StatButtonTooltip" xml:space="preserve">
