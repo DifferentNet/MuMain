@@ -29,7 +29,8 @@ struct WarmUpWindow
 };
 
 // The windows of the hotkeys and the phone's top row and menu that have a document of their own, the
-// most opened first. Not here: the skill picker and the phone's menu and Social panel (parts of the
+// most opened first (MU Helper's settings, Commands and Help last). Not here: the NPC windows (shops,
+// storage: their opening talks to the server), the skill picker and the phone's menu and Social panel (parts of the
 // touch controls' document, always shown), the skill grid (part of the main frame's), the chat line
 // (small, and it holds the text field the phone's keyboard follows), Friends (its document belongs to the
 // legacy friend window manager, CUIFriendWindow, with no document to show on its own).
@@ -45,6 +46,9 @@ constexpr WarmUpWindow kWarmUpWindows[] = {
     {"Daily", mu::ui::window::INTERFACE_DAILY_REWARDS},
     {"Events", mu::ui::window::INTERFACE_EVENT_SCHEDULE},
     {"BattlePass", mu::ui::window::INTERFACE_BATTLE_PASS},
+    {"MuHelper", mu::ui::window::INTERFACE_MUHELPER},
+    {"Commands", mu::ui::window::INTERFACE_COMMAND},
+    {"Help", mu::ui::window::INTERFACE_HELP},
 };
 constexpr int kWarmUpWindowCount = static_cast<int>(std::size(kWarmUpWindows));
 constexpr int kNoWindow = -1;

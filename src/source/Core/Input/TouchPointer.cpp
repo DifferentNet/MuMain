@@ -75,6 +75,8 @@ State g_state;
 bool g_fingerPlaced = false;
 // Outside State: a tap's press and release reach the game's windows after the finger has lifted.
 LeftPress g_lastLeftPress = LeftPress::NotFinger;
+// That tap was the second of a double tap (TapClicks gave 2).
+bool g_lastTapDouble = false;
 // No mouse or pad press since a finger last landed (FingerHasPointer).
 bool g_fingerHasPointer = true;
 
@@ -201,6 +203,7 @@ void Tap(SDL_Window* window)
 {
     const Uint8 clicks = TapClicks(g_state.x, g_state.y, WindowHeight(window));
     g_lastLeftPress = LeftPress::Tap;
+    g_lastTapDouble = clicks == 2;
     PushButton(window, SDL_BUTTON_LEFT, true, clicks, g_state.x, g_state.y);
     PushButton(window, SDL_BUTTON_LEFT, false, clicks, g_state.x, g_state.y);
 }
@@ -269,6 +272,7 @@ void StartDrag(SDL_Window* window)
     g_state.phase = Phase::Dragging;
     g_state.heldAtLanding = true;
     g_lastLeftPress = LeftPress::Drag;
+    g_lastTapDouble = false;
     PushButton(window, SDL_BUTTON_LEFT, true, 1, g_state.downX, g_state.downY);
 }
 
@@ -455,6 +459,7 @@ void Reset(SDL_Window* window)
         ReleaseButtons(window);
     g_state = State{};
     g_lastLeftPress = LeftPress::NotFinger;
+    g_lastTapDouble = false;
 }
 
 bool Rest(SDL_Window* window)
@@ -471,6 +476,7 @@ void ForgetFinger()
 {
     g_fingerPlaced = false;
     g_lastLeftPress = LeftPress::NotFinger;
+    g_lastTapDouble = false;
     g_fingerHasPointer = false;
 }
 
@@ -499,6 +505,11 @@ std::optional<SDL_FPoint> TapPoint()
 LeftPress LastLeftPress()
 {
     return g_lastLeftPress;
+}
+
+bool LastTapIsDouble()
+{
+    return g_lastLeftPress == LeftPress::Tap && g_lastTapDouble;
 }
 
 SDL_FPoint MoveFromLanding()

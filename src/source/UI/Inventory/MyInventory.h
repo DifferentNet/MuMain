@@ -13,6 +13,7 @@
 #include "GameLogic/Items/IInventoryActionContext.h"
 #include "Data/GameData/ItemData/ItemTagSet.h"
 #include "UI/RmlBridge/RmlThemedView.h"
+#include "UI/RmlBridge/RmlKeptElement.h"
 #include "UI/Inventory/ItemCameraTarget.h"
 #include "UI/Inventory/ItemGridModel.h"
 #include <cstdint>
@@ -81,6 +82,12 @@ namespace mu::ui::window
 
 
         EQUIPMENT_ITEM m_EquipmentSlots[MAX_EQUIPMENT_INDEX];
+        // SyncNativeLayout()'s theme elements per paperdoll slot (SlotAnchors' order): the slot and its item box,
+        // kept so the per-frame layout skips the document search.
+        static constexpr int SlotAnchorCount = 12;
+        UI::RmlBridge::KeptElement m_SlotBoxes[SlotAnchorCount];
+        UI::RmlBridge::KeptElement m_SlotItemBoxes[SlotAnchorCount];
+        UI::RmlBridge::KeptElement m_PanelElement;
         int	m_iPointedSlot;
 
         MYSHOP_MODE m_MyShopMode;
@@ -116,6 +123,9 @@ namespace mu::ui::window
 
             bool repairVisible = false;
             Rml::String repairTooltip;
+            bool repairAllVisible = false; // the second hammer, while repair mode is on
+            Rml::String repairAllTooltip;
+            int repairAllCount = 0; // the worn items it would repair (the legacy theme's "xN" mark)
 
             bool myShopVisible = false;
             bool myShopModeOpen = true;
@@ -168,6 +178,9 @@ namespace mu::ui::window
         void SyncRmlModel();
         // The equipment slots' states and the grid's cells, into the model.
         void SyncSlotStates();
+        // SyncSlotStates()' scratch: a slot's state as it is built, and page 2's cells.
+        Rml::String m_SlotStateScratch;
+        UI::Items::ItemGridCells m_PageCells;
 
         // Everything the window's texts (labels, tooltips, zen, bag page price) are built from.
         struct TextInputs
@@ -279,6 +292,9 @@ namespace mu::ui::window
         int   FindEmptySlot(IN int cx, IN int cy) const;
         int   FindEmptySlotIncludingExtensions(IN int cx, IN int cy) const;
         int   FindEmptySlotIncludingExtensions(ITEM* pItem) const;
+        // Whether a drop picked up now would fit: zen, a free place on any owned bag page, or a stack in the bag it
+        // joins (the server stacks potions and the like on pickup; AreItemsStackable decides as for a drag).
+        bool  HasRoomForDrop(ITEM* pDrop) const;
         bool  IsItem(short int siType, bool bcheckPick = false) const;
         int   GetNumItemByKey(DWORD dwItemKey) const;
         int   GetNumItemByType(short sItemType) const;
@@ -350,6 +366,8 @@ namespace mu::ui::window
         void RenderItemToolTip(int iSlotIndex) const;
         bool CanOpenMyShopInterface();
         void ToggleRepairMode();
+        // In repair mode away from a shop: repairs every damaged worn item (GameLogic/Items/FieldRepair.h).
+        void RequestFieldRepairAll();
 
         // The equipped and the grid's items, into the document's #item_view. Last, so it is
         // destroyed first.

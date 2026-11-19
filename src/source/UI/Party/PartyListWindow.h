@@ -57,6 +57,8 @@ namespace mu::ui::window
         // A leave button press, queued by RmlUi's click and run from Update(), outside RmlUi's
         // own event dispatch.
         int m_PendingLeave = -1;
+        // A mouse double click on a card: Update() starts following that member when he is in view.
+        int m_PendingFollow = -1;
         // The card under the pointer (the document's party_hover), -1 for none.
         int m_HoveredCard = -1;
         // SyncCards()' list, filled in place each frame and swapped into the model only when it differs.

@@ -723,12 +723,16 @@ body.no-skills .tc-skill, body.no-skills #tc_skill_edit {
 	width: 26rem;
 	height: 36rem;
 }
-/* Shrinks from the top down as the cooldown runs out (height bound to its fraction). */
+/* Shrinks from the top down as the cooldown runs out: scaleY() bound to its fraction, from the bottom
+   edge. A transform, unlike a height, does not lay the whole document out again on each step. */
 .tc-cooldown {
 	position: absolute;
 	left: 0;
 	bottom: 0;
 	width: 100%;
+	height: 100%;
+	transform-origin: center bottom;
+	transform: scaleY(0);
 	background-color: rgba(0, 0, 0, 150);
 }
 
@@ -1713,4 +1717,63 @@ body.over-map #tc_names, body.over-map #tc_offer, body.over-map #tc_target, body
 	body.size-80 .tc-alert-plus { right: -5rem; top: -3.8rem; width: 16.3rem; height: 16.3rem; border-radius: 8.8rem; font-size: 15rem; line-height: 16.3rem; }
 	body.size-70 .tc-alert-plus { right: -5.7rem; top: -4.3rem; width: 18.6rem; height: 18.6rem; border-radius: 10rem; font-size: 17.1rem; line-height: 18.6rem; }
 	body.size-60 .tc-alert-plus { right: -6.7rem; top: -5rem; width: 21.7rem; height: 21.7rem; border-radius: 11.7rem; font-size: 20rem; line-height: 21.7rem; }
+}
+
+/* Round 15 on the phone HUD (UI/HUD/TouchControls.cpp).
+   A long social action or window name takes up to three lines inside its button, as the menu's labels take
+   two. Measured with DejaVu Sans at 12 units: Russian "Приостановить" is 97 units wide and "Приостановить
+   военные действия" and Polish "Zawiesić działania wojenne" need three lines, so the buttons are 110 wide
+   (98 inside the border and padding; the row of 10 still makes two rows) and the lines 13 apart (three in
+   the 40 inside a 44-unit button). */
+@media (theme: mobile-hud) {
+	.tc-soc-act {
+		width: 110rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.tc-soc-act-label {
+		line-height: 13rem;
+		text-align: center;
+		white-space: normal;
+	}
+	body.size-90 .tc-soc-act { width: 122.22rem; }
+	body.size-80 .tc-soc-act { width: 137.5rem; }
+	body.size-70 .tc-soc-act { width: 157.14rem; }
+	body.size-60 .tc-soc-act { width: 183.33rem; }
+	body.size-90 .tc-soc-act-label { line-height: 14.44rem; }
+	body.size-80 .tc-soc-act-label { line-height: 16.25rem; }
+	body.size-70 .tc-soc-act-label { line-height: 18.57rem; }
+	body.size-60 .tc-soc-act-label { line-height: 21.67rem; }
+
+	/* The quick equip offer goes above the skill arc, where the bind hint shows: the chip no longer covers
+	   skills 4 and 5. While the hint is up (a skill being bound) or the skill list is open, the chip hides. */
+	#tc_offer { right: 10rem; bottom: 212rem; max-width: 194rem; }
+	#tc_offer.binding, body.picking #tc_offer { display: none; }
+
+	/* Pick up and Skills grow to their label (German "Fähigkeiten", Ukrainian "Підібрати"), anchored on the
+	   right so they grow to the left; Skills is 36 units tall. The Button size widths are the least widths. */
+	#tc_pickup {
+		width: auto;
+		min-width: 60rem;
+		padding: 0 6rem;
+		white-space: nowrap;
+	}
+	#tc_skill_edit {
+		bottom: 99rem;
+		width: auto;
+		min-width: 54rem;
+		height: 36rem;
+		padding: 0 6rem;
+		line-height: 32rem;
+		border-radius: 18rem;
+	}
+	body.size-90 #tc_pickup { width: auto; min-width: 66rem; }
+	body.size-80 #tc_pickup { width: auto; min-width: 74rem; }
+	body.size-70 #tc_pickup { width: auto; min-width: 83rem; }
+	body.size-60 #tc_pickup { width: auto; min-width: 96rem; }
+	body.size-90 #tc_skill_edit { width: auto; min-width: 66rem; height: 40rem; line-height: 36rem; border-radius: 20rem; }
+	body.size-80 #tc_skill_edit { width: auto; min-width: 74rem; height: 45rem; line-height: 41rem; border-radius: 22.5rem; }
+	body.size-70 #tc_skill_edit { width: auto; min-width: 83rem; height: 51.43rem; line-height: 47.43rem; border-radius: 25.71rem; }
+	body.size-60 #tc_skill_edit { width: auto; min-width: 96rem; height: 60rem; line-height: 56rem; border-radius: 30rem; }
 }

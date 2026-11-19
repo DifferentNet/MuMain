@@ -66,13 +66,20 @@ struct Model
     // The kind of potion on Q and W (UI::Mobile::PotionKind as int): the buttons are tinted by it.
     int potionQKind = 0;
     int potionWKind = 0;
-    // Free stat points to spend: a "+" on the level's circle.
+    // Free stat points, or master points, to spend: a "+" on the level's circle (PointsToSpend()).
     bool pointsAlert = false;
     // The EXP line's percentage with one decimal ("42.7%"), the phone HUD's text beside the line, and after a minute
     // of hunting the time to the next level after a middle dot, as the PC's EXP tooltip shows it.
     Rml::String expText;
     Sources seen;
 };
+
+// Whether the "+" shows: free stat points, or on a master-level character free master points (a reminder; the tap
+// still opens the character window).
+[[nodiscard]] constexpr bool PointsToSpend(int levelUpPoints, bool master, int masterPoints)
+{
+    return levelUpPoints > 0 || (master && masterPoints > 0);
+}
 
 void Bind(Rml::DataModelConstructor& constructor, Model& model);
 

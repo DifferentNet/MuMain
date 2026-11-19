@@ -17,6 +17,11 @@ bool IsFingerTap()
     return Finger::LastLeftPress() == Finger::LeftPress::Tap;
 }
 
+bool IsFingerDoubleTap()
+{
+    return Finger::LastTapIsDouble();
+}
+
 bool IsFingerDrag()
 {
     return Finger::LastLeftPress() == Finger::LeftPress::Drag;

@@ -19,7 +19,7 @@
         <span class="sharp-text sharp-flow" id="title" data-style-font-size="bold_text_px + 'px'">{{title_text}}</span>
 
         <div class="sharp-text sharp-flow scroll-pane entry-lines" id="entry_description" data-style-font-size="text_px + 'px'">
-            <span class="entry-line" data-for="line : lines">{{line.text}}</span>
+            <span class="entry-line" data-for="line : lines" data-class-missing="line.missing">{{line.text}}</span>
         </div>
 
         <div class="sharp-text sharp-flow scroll-pane entry-buttons" id="entry_levels" data-style-font-size="bold_text_px + 'px'">

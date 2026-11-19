@@ -1056,7 +1056,7 @@
     <comment>legacy_id=262</comment>
   </data>
   <data name="You can enter Icarus only with wings, dinorant, fenrirr" xml:space="preserve">
-    <value>Anda dapat memasuki Icarus hanya dengan sayap, dinorant, fenrirr</value>
+    <value>Anda dapat memasuki Icarus hanya dengan sayap, dinorant, fenrir</value>
     <comment>legacy_id=263</comment>
   </data>
   <data name="/whisper off" xml:space="preserve">
@@ -1344,7 +1344,7 @@
     <comment>legacy_id=368</comment>
   </data>
   <data name="About %d" xml:space="preserve">
-    <value>Tentang %d</value>
+    <value>%d+</value>
     <comment>legacy_id=369</comment>
   </data>
   <data name="Warning!" xml:space="preserve">
@@ -9309,7 +9309,7 @@
     <comment>legacy_id=2651</comment>
   </data>
   <data name="No item application" xml:space="preserve">
-    <value>Tidak ada aplikasi item</value>
+    <value>(kosong)</value>
     <comment>legacy_id=2652</comment>
   </data>
   <data name="Element: %s" xml:space="preserve">
@@ -12145,7 +12145,7 @@
     <comment>legacy_id=3579</comment>
   </data>
   <data name="Official MU Helper Setting has been saved." xml:space="preserve">
-    <value>Pengaturan resmi MU Helper telah disimpan.</value>
+    <value>Pengaturan MU Helper disimpan.</value>
     <comment>legacy_id=3580</comment>
   </data>
   <data name="Official MU Helper can't be implemented in this region." xml:space="preserve">
@@ -14424,5 +14424,56 @@
   </data>
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>Salah satu guild sudah dalam perang guild.</value>
+  </data>
+  <!-- Round 15 -->
+  <data name="InviteRefusedBusyTrade" xml:space="preserve">
+    <value>Permintaan trade dari %ls terlewat: ada jendela yang terbuka.</value>
+  </data>
+  <data name="InviteRefusedBusyDuel" xml:space="preserve">
+    <value>Tantangan duel dari %ls terlewat: ada jendela yang terbuka.</value>
+  </data>
+  <data name="SoldItemToFor" xml:space="preserve">
+    <value>Terjual: %ls ke %ls seharga %ls.</value>
+  </data>
+  <!-- Round 16 -->
+  <data name="StatButtonTooltip" xml:space="preserve">
+    <value>Klik: +1. Klik kanan: +10, +100 dan lebih, atau semua</value>
+  </data>
+  <data name="NewSkillOnButton" xml:space="preserve">
+    <value>Skill baru: %ls (tombol skill %d)</value>
+  </data>
+  <data name="TouchHelpDoubleTapMove" xml:space="preserve">
+    <value>Ketuk dua kali item untuk memindahkannya</value>
+  </data>
+  <!-- Round 17 -->
+  <data name="MuHelperStoppedHeroDied" xml:space="preserve">
+    <value>MU Helper berhenti: karaktermu mati.</value>
+  </data>
+  <data name="MuHelperNoHealPotions" xml:space="preserve">
+    <value>MU Helper: ramuan penyembuh habis.</value>
+  </data>
+  <data name="MuHelperBagFull" xml:space="preserve">
+    <value>MU Helper: tas penuh, item tetap di tanah.</value>
+  </data>
+  <data name="RepairNoZen" xml:space="preserve">
+    <value>Zen tidak cukup untuk memperbaiki perlengkapan.</value>
+  </data>
+  <data name="MuHelperUnconfiguredZ" xml:space="preserve">
+    <value>MU Helper hanya memakai serangan biasa: atur skill, ramuan, dan pungut di pengaturannya (Z)</value>
+  </data>
+  <data name="MuHelperUnconfiguredTouch" xml:space="preserve">
+    <value>MU Helper hanya memakai serangan biasa: atur skill, ramuan, dan pungut di Menu → MU Helper</value>
+  </data>
+  <data name="TicketFitsYourLevel" xml:space="preserve">
+    <value>Cocok untuk levelmu</value>
+  </data>
+  <data name="TicketYouNeedPlusD" xml:space="preserve">
+    <value>Kamu butuh tiket +%d</value>
+  </data>
+  <data name="EntryTicketNotInBag" xml:space="preserve">
+    <value>Tiket: %ls +%d — tidak ada di tas</value>
+  </data>
+  <data name="FieldRepairAllConfirm" xml:space="preserve">
+    <value>Perbaiki semua perlengkapan yang dipakai seharga %ls zen?</value>
   </data>
 </root>

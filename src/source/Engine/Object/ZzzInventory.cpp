@@ -76,6 +76,7 @@
 #include "GameLogic/Skills/SkillManager.h"
 #include "Camera/CameraProjection.h"
 #include "Render/Text/CUIRenderText.h"
+#include "GameLogic/Events/EntryLevels.h"
 
 extern int g_iChatInputType;
 
@@ -1856,6 +1857,33 @@ static int64_t NpcShopChargeWithTax(ITEM* ip)
 {
     const int64_t price = ShopPurchasePrice(ip);
     return price + price * g_pNPCShop->GetTaxRate() / 100;
+}
+
+// A Blood Castle / Devil Square ticket's band (castle or square N takes the ticket +N): green with "fits your level"
+// for the hero's band, else red with the ticket the hero needs (none when the hero is below every band).
+static void AddEntryTicketBandLines(GameLogic::Events::EntryLevels::Event event, int ticketLevel)
+{
+    using namespace GameLogic::Events::EntryLevels;
+    const int grade = ticketLevel - 1;
+    if (grade < 0 || grade >= GradeCount(event))
+        return;
+
+    const int heroGrade = HeroGrade(event);
+    const bool fits = heroGrade == grade;
+    mu_swprintf(TextList[TextNum], L"%ls", BandLabel(event, grade).c_str());
+    TextListColor[TextNum] = fits ? TEXT_COLOR_GREEN : TEXT_COLOR_RED;
+    TextBold[TextNum] = false;
+    TextNum++;
+
+    if (fits)
+        mu_swprintf(TextList[TextNum], I18N::Game::TicketFitsYourLevel);
+    else if (heroGrade >= 0)
+        mu_swprintf(TextList[TextNum], I18N::Game::TicketYouNeedPlusD, heroGrade + 1);
+    else
+        return;
+    TextListColor[TextNum] = fits ? TEXT_COLOR_GREEN : TEXT_COLOR_RED;
+    TextBold[TextNum] = false;
+    TextNum++;
 }
 
 static void RenderItemOwnCombatPower(const ITEM* ip, const GameLogic::Items::CombatPowerItem& item, int points)
@@ -3765,6 +3793,7 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
 
     if (ip->Type == ITEM_DEVILS_INVITATION)
     {
+        AddEntryTicketBandLines(GameLogic::Events::EntryLevels::Event::DevilSquare, Level);
         mu_swprintf(TextList[TextNum], I18N::Game::TheRemainingTimeIsShown);
         TextListColor[TextNum] = TEXT_COLOR_WHITE;
         TextBold[TextNum] = false;
@@ -4300,6 +4329,7 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
         TextListColor[TextNum] = TEXT_COLOR_WHITE;
         mu_swprintf(TextList[TextNum], I18N::Game::UsedWhenEnteringBloodCastle);
         TextNum++;
+        AddEntryTicketBandLines(GameLogic::Events::EntryLevels::Event::BloodCastle, Level);
         mu_swprintf(TextList[TextNum], L"\n");
         TextNum++; SkipNum++;
         mu_swprintf(TextList[TextNum], I18N::Game::TheRemainingTimeIsShown);
@@ -6546,20 +6576,29 @@ constexpr BYTE LootHighlightBgR = 90;
 constexpr BYTE LootHighlightBgG = 64;
 constexpr BYTE LootHighlightBgB = 12;
 
-void ApplyLootHighlight(int index, GroundItemLabelDescriptor& descriptor)
+// The font and colours a label is drawn with this frame: the cached label's, with the loot highlight on top. Kept
+// apart from the name so the cached label is read in place, not copied with its name each frame.
+struct GroundItemLabelStyle
+{
+    HFONT Font = g_hFont;
+    DWORD TextColor = 0xFFFFFFFF;
+    DWORD BgColor = 0xFF000000;
+};
+
+void ApplyLootHighlight(int index, GroundItemLabelStyle& style)
 {
     if (!GameLogic::Items::LootFilterRuntime::IsHighlighted(index))
         return;
-    descriptor.Font = g_hFontBold;
-    if (descriptor.BgColor == MakeRgba(0, 0, 0, 255))
-        descriptor.BgColor = MakeRgba(LootHighlightBgR, LootHighlightBgG, LootHighlightBgB, 255);
+    style.Font = g_hFontBold;
+    if (style.BgColor == MakeRgba(0, 0, 0, 255))
+        style.BgColor = MakeRgba(LootHighlightBgR, LootHighlightBgG, LootHighlightBgB, 255);
 }
 
-void ApplyGroundItemLabelDescriptor(const GroundItemLabelDescriptor& descriptor)
+void ApplyGroundItemLabelStyle(const GroundItemLabelStyle& style)
 {
-    g_pRenderText->SetFont(descriptor.Font);
-    g_pRenderText->SetTextColor(descriptor.TextColor);
-    g_pRenderText->SetBgColor(descriptor.BgColor);
+    g_pRenderText->SetFont(style.Font);
+    g_pRenderText->SetTextColor(style.TextColor);
+    g_pRenderText->SetBgColor(style.BgColor);
 }
 
 // Everything BuildGroundItemLabelDescriptor() reads that can differ between two frames: the item, the language (names
@@ -6593,8 +6632,10 @@ struct CachedGroundItemLabel
 };
 
 // The label of the ground item in Items[index], built again only when its key changes. A trophy's name comes from
-// the server's season list, which the key does not cover, so it is built every time.
-GroundItemLabelDescriptor GroundItemLabel(int index, OBJECT* o, ITEM* ip)
+// the server's season list, which the key does not cover, so it is built every time (into one shared label).
+// The reference stays valid until the next call: the cache never grows (MAX_ITEMS entries from the start), and only
+// this item's own entry, or the shared one, is rebuilt.
+const GroundItemLabelDescriptor& GroundItemLabel(int index, OBJECT* o, ITEM* ip)
 {
     static std::vector<CachedGroundItemLabel> cache(MAX_ITEMS);
     const bool cacheable = index >= 0 && index < MAX_ITEMS &&
@@ -6602,9 +6643,10 @@ GroundItemLabelDescriptor GroundItemLabel(int index, OBJECT* o, ITEM* ip)
                              Data::Items::ToItemType(o->Type) == ITEM_SEASON_TROPHY);
     if (!cacheable)
     {
-        GroundItemLabelDescriptor descriptor;
-        BuildGroundItemLabelDescriptor(o, ip, descriptor);
-        return descriptor;
+        static GroundItemLabelDescriptor uncached;
+        uncached = GroundItemLabelDescriptor{};
+        BuildGroundItemLabelDescriptor(o, ip, uncached);
+        return uncached;
     }
 
     CachedGroundItemLabel& cached = cache[static_cast<size_t>(index)];
@@ -6631,17 +6673,19 @@ void RenderItemName(int i, OBJECT* o, ITEM* ip, bool Sort)
 {
     if (!Sort)
     {
-        GroundItemLabelDescriptor descriptor = GroundItemLabel(i, o, ip);
-        ApplyLootHighlight(i, descriptor);
-        ApplyGroundItemLabelDescriptor(descriptor);
-        g_pRenderText->RenderText(MouseX, MouseY - 15, descriptor.Name, 0, 0, RT3_WRITE_CENTER);
+        const GroundItemLabelDescriptor& label = GroundItemLabel(i, o, ip);
+        GroundItemLabelStyle style{label.Font, label.TextColor, label.BgColor};
+        ApplyLootHighlight(i, style);
+        ApplyGroundItemLabelStyle(style);
+        g_pRenderText->RenderText(MouseX, MouseY - 15, label.Name, 0, 0, RT3_WRITE_CENTER);
     }
     else
     {
-        GroundItemLabelDescriptor descriptor = GroundItemLabel(i, o, ip);
-        ApplyLootHighlight(i, descriptor);
-        ApplyGroundItemLabelDescriptor(descriptor);
-        g_pRenderText->RenderText(o->ScreenX, o->ScreenY - 15, descriptor.Name, 0, 0, RT3_WRITE_CENTER);
+        const GroundItemLabelDescriptor& label = GroundItemLabel(i, o, ip);
+        GroundItemLabelStyle style{label.Font, label.TextColor, label.BgColor};
+        ApplyLootHighlight(i, style);
+        ApplyGroundItemLabelStyle(style);
+        g_pRenderText->RenderText(o->ScreenX, o->ScreenY - 15, label.Name, 0, 0, RT3_WRITE_CENTER);
     }
 
     g_pRenderText->SetTextColor(255, 230, 200, 255);

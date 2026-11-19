@@ -17,7 +17,7 @@ bool MountGameFiles();
 // Brings the files of the map folders Data/World<world> and Data/Object<world> in one download (the
 // map's pack, packs/world<world>, tools/web/make_startup_pack.py) before the game reads them, instead of
 // a request per file. Call it before loading a map; blocks until done, yielding to the browser meanwhile.
-// Without a pack the files still download one by one as the game opens them.
+// Without a pack, or where it failed to load, the files still download one by one as the game opens them.
 void LoadWorldFiles(int world);
 
 // Starts downloading the Chinese and Korean fallback fonts (BundledFonts.h IsLateFallbackFont) in the
@@ -29,17 +29,27 @@ void DownloadLateFonts();
 // True once DownloadLateFonts finished.
 bool LateFontsReady();
 
+// The most time a frame spends on the files that come after the game started: InstallLatePack,
+// InstallDeferredParts and IPlatformAudio::LoadWaitingSounds together, in that order, each getting what
+// the ones before it left and waiting for the next frame where nothing is left. The late pack's 1,538
+// files in one go froze a phone's frame for 150-400 ms. A file not written yet keeps its link to /server,
+// so the game can still read it meanwhile.
+constexpr double FrameFileBudgetMs = 3.5;
+
 // Once the page downloaded the late pack (packs/startup-late.pack, tools/web/make_startup_pack.py:
 // textures the game reads only once it is played), writes its files into /game in place of their links,
-// as the startup pack's are. Call it between frames, where no file of the game is open; it returns at
-// once until the pack is here, and does nothing after it was taken.
-void InstallLatePack();
+// as the startup pack's are, over several frames: as many as `budgetMs` allows (at least one file where
+// it is above 0, none where it isn't), the rest at the next calls. Call it between frames, where no file
+// of the game is open; it returns at once until the pack is here, and does nothing after it was taken.
+// Returns the milliseconds it spent.
+double InstallLatePack(double budgetMs);
 
 // The deferred parts of the startup pack (tools/web/make_startup_pack.py: the sounds and music), which the
 // game starts without: writes the files of each part the page downloaded into /game in place of their
-// links, as the late pack's; a part that failed leaves its files to download one by one. Call it between
-// frames, where no sound file is open; MountGameFiles calls it once too.
-void InstallDeferredParts();
+// links, as the late pack's, over several frames within `budgetMs` the same way; a part that failed
+// leaves its files to download one by one. Call it between frames, where no sound file is open;
+// MountGameFiles calls it once too, without a limit. Returns the milliseconds it spent.
+double InstallDeferredParts(double budgetMs);
 
 // True while the file at `path` (as the game opens it, below /game, after MuResolvePath) belongs to a
 // deferred part that hasn't come or failed yet: reading it now would download it alone, the part's

@@ -1328,7 +1328,7 @@
     <comment>legacy_id=368</comment>
   </data>
   <data name="About %d" xml:space="preserve">
-    <value>%d代</value>
+    <value>%d+</value>
     <comment>legacy_id=369</comment>
   </data>
   <data name="Warning!" xml:space="preserve">
@@ -4732,7 +4732,7 @@
     <comment>legacy_id=1304</comment>
   </data>
   <data name="Back" xml:space="preserve">
-    <value>以前</value>
+    <value>戻る</value>
     <comment>legacy_id=1306</comment>
   </data>
   <data name="Position" xml:space="preserve">
@@ -12503,5 +12503,59 @@
   </data>
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>いずれかのギルドがすでにギルド戦中です。</value>
+  </data>
+  <!-- Round 15 -->
+  <data name="InviteRefusedBusyTrade" xml:space="preserve">
+    <value>%ls からの取引申請を受けられませんでした（ウィンドウが開いていました）。</value>
+  </data>
+  <data name="InviteRefusedBusyDuel" xml:space="preserve">
+    <value>%ls からの決闘申請を受けられませんでした（ウィンドウが開いていました）。</value>
+  </data>
+  <data name="SoldItemToFor" xml:space="preserve">
+    <value>%ls を %ls に %ls で売りました。</value>
+  </data>
+  <!-- Round 16 -->
+  <data name="StatButtonTooltip" xml:space="preserve">
+    <value>クリック: +1。右クリック: +10、+100 以上、または全部</value>
+  </data>
+  <data name="NewSkillOnButton" xml:space="preserve">
+    <value>新しいスキル: %ls（スキルボタン %d）</value>
+  </data>
+  <data name="TouchHelpDoubleTapMove" xml:space="preserve">
+    <value>アイテムをダブルタップで移動</value>
+  </data>
+  <!-- Round 17 -->
+  <data name="MuHelperStoppedHeroDied" xml:space="preserve">
+    <value>MU Helper停止：キャラクターが死亡しました。</value>
+  </data>
+  <data name="MuHelperNoHealPotions" xml:space="preserve">
+    <value>MU Helper：回復ポーションがありません。</value>
+  </data>
+  <data name="MuHelperBagFull" xml:space="preserve">
+    <value>MU Helper：バッグに空きがなく、アイテムを拾えません。</value>
+  </data>
+  <data name="RepairNoZen" xml:space="preserve">
+    <value>装備の修理に必要なゼンが足りません。</value>
+  </data>
+  <data name="MuHelperUnconfiguredZ" xml:space="preserve">
+    <value>MU Helperは通常攻撃のみです。スキル・ポーション・拾得は設定で選べます (Z)</value>
+  </data>
+  <data name="MuHelperUnconfiguredTouch" xml:space="preserve">
+    <value>MU Helperは通常攻撃のみです。スキル・ポーション・拾得はメニュー → MU Helperで選べます</value>
+  </data>
+  <data name="TicketFitsYourLevel" xml:space="preserve">
+    <value>あなたのレベルに合っています</value>
+  </data>
+  <data name="TicketYouNeedPlusD" xml:space="preserve">
+    <value>必要なチケットは +%d です</value>
+  </data>
+  <data name="EntryTicketNotInBag" xml:space="preserve">
+    <value>チケット: %ls +%d — バッグにありません</value>
+  </data>
+  <data name="FieldRepairAllConfirm" xml:space="preserve">
+    <value>装備中のアイテムをすべて %ls ゼンで修理しますか？</value>
+  </data>
+  <data name="Official MU Helper Setting has been saved." xml:space="preserve">
+    <value>MU Helperの設定を保存しました。</value>
   </data>
 </root>

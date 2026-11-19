@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <span>
+#include <string>
 #include <vector>
 
 // The prices of items in personal shops. Zen always works; prices in items
@@ -77,4 +78,8 @@ std::vector<ItemPrice> GetAllowedPriceTypes();
 /// Defined in PersonalShopCurrencyName.cpp, as it needs the item and
 /// text tables of the game.
 const wchar_t* GetCurrencyName(const ItemPrice& price);
+
+/// The price as a chat line names it, e.g. "1,500,000 Zen" or "3 Jewel of Bless".
+/// Defined in PersonalShopCurrencyName.cpp too.
+std::wstring FormatPrice(const ItemPrice& price);
 } // namespace GameLogic::PersonalShop

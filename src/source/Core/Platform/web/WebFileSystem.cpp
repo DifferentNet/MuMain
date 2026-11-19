@@ -30,6 +30,7 @@
 #include <cstring>
 #include <climits>
 #include <fcntl.h>
+#include <limits>
 #include <mutex>
 #include <set>
 #include <string>
@@ -222,16 +223,24 @@ EM_ASYNC_JS(int, MuWeb_InstallStartupPack, (), {
 // The page downloads a map's pack (index.html: Module.muMapPack(world), a promise of the same shape as
 // the startup pack's, or of null where the map has none); this writes its files into /game in place of
 // their links to /server, and turns the previous map's files back into links, so only one map's pack
-// takes memory. Returns how many files it wrote, 0 without a pack, -1 when they are in place already.
+// takes memory. A world without a pack (the login and character scenes, which the startup pack holds)
+// leaves the previous map's files in place: a relog back into that map then needs nothing, where it
+// read the whole pack again (Lorencia's 438 files); so does a pack that failed to load. Returns how many
+// files it wrote, 0 without a pack, -1 when they are in place already, -2 when the pack failed to load.
 EM_ASYNC_JS(int, MuWeb_InstallMapPack, (int world), {
     if (Module["muMapPackWorld"] === world) {
         return -1;
     }
     let pack = null;
+    let failed = false;
     try {
         pack = Module["muMapPack"] ? await Module["muMapPack"](world) : null;
     } catch (e) {
+        failed = true;
         err("Map pack " + world + ": " + e + "; the game downloads the map's files one by one instead");
+    }
+    if (!pack) {
+        return failed ? -2 : 0;
     }
     for (const path of Module["muMapPackFiles"] || []) {
         FS.unlink("/game/" + path);
@@ -250,7 +259,7 @@ EM_ASYNC_JS(int, MuWeb_InstallMapPack, (int world), {
         offset += size;
     }
     Module["muMapPackFiles"] = written;
-    Module["muMapPackWorld"] = pack ? world : null;
+    Module["muMapPackWorld"] = world;
     return written.length;
 });
 
@@ -269,14 +278,21 @@ void MakeParentFolders(const std::string& path, std::set<std::string>& made)
 }
 
 // A file created inside the fetch mount downloads from "<base URL>/<its path under the mount>";
-// the base is the page's folder (g_pageFolderUrl), so the files sit beside Main.js.
-bool CreateOnServer(const std::string& relativePath)
+// the base is the page's folder (g_pageFolderUrl), so the files sit beside Main.js. `madeFolders`
+// remembers the folders made: each mkdir is a call to the mount's thread, and the ~11,000 files of
+// files.txt asked for their folders again every time.
+bool CreateOnServer(const std::string& relativePath, std::set<std::string>& madeFolders)
 {
     const std::string full = std::string(ServerDir) + "/" + relativePath;
     for (std::size_t slash = full.find('/', std::string(ServerDir).size() + 1); slash != std::string::npos;
          slash = full.find('/', slash + 1))
     {
-        ::mkdir(full.substr(0, slash).c_str(), 0777);
+        std::string folder = full.substr(0, slash);
+        if (!madeFolders.contains(folder))
+        {
+            ::mkdir(folder.c_str(), 0777);
+            madeFolders.insert(std::move(folder));
+        }
     }
 
     const int fd = ::open(full.c_str(), O_CREAT | O_RDONLY, 0444);
@@ -488,17 +504,42 @@ bool WriteWholeFile(const std::string& path, const std::string& content)
     return ok;
 }
 
+// Milliseconds since `start`.
+double MsSince(std::chrono::steady_clock::time_point start)
+{
+    return std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
+}
+
+// The frames a pack's files were written in, for its log line.
+struct PackInstallTiming
+{
+    double totalMs = 0;
+    double longestMs = 0;
+    int frames = 0;
+
+    void Add(double ms)
+    {
+        totalMs += ms;
+        longestMs = std::max(longestMs, ms);
+        ++frames;
+    }
+};
+
 // Runs on a worker thread: WasmFS can't create a fetch backend on the browser's main thread.
 void SetUpMount()
 {
+    const auto started = std::chrono::steady_clock::now();
     backend_t fetch = wasmfs_create_fetch_backend(g_pageFolderUrl.c_str(), ChunkSize);
     std::string list;
-    if (!fetch || wasmfs_create_directory(ServerDir, 0777, fetch) != 0 || !CreateOnServer("files.txt")
+    std::set<std::string> madeServerFolders;
+    if (!fetch || wasmfs_create_directory(ServerDir, 0777, fetch) != 0 || !CreateOnServer("files.txt", madeServerFolders)
         || !ReadWholeFile(std::string(ServerDir) + "/files.txt", list))
     {
         g_mountState = -1;
         return;
     }
+    const double listMs = MsSince(started);
+    const auto filesStarted = std::chrono::steady_clock::now();
 
     std::size_t count = 0;
     std::size_t linked = 0;
@@ -526,7 +567,7 @@ void SetUpMount()
             ++count; // from the startup pack
             continue;
         }
-        if (!CreateOnServer(line))
+        if (!CreateOnServer(line, madeServerFolders))
         {
             continue;
         }
@@ -553,7 +594,10 @@ void SetUpMount()
         }
     }
 
-    std::printf("Web file system: %zu game files, %zu of them downloaded when first read\n", count, linked);
+    // The time for files.txt (a download), then for the files and links made from it.
+    std::printf("Web file system: %zu game files, %zu of them downloaded when first read (files.txt %.0f ms, "
+                "files and links %.0f ms)\n",
+                count, linked, listMs, MsSince(filesStarted));
     g_mountState = count > 0 ? 1 : -1;
 }
 
@@ -706,20 +750,41 @@ EM_JS(char*, MuWeb_DeferredFiles, (), {
     return files.length ? stringToNewUTF8(files.join("\n")) : 0;
 });
 
+// What MuWeb_InstallDeferredSlice tells about the part it worked on.
+struct DeferredSlice
+{
+    int written = 0; // files of the part written so far
+    int files = 0;   // files in the part
+    int done = 0;    // 1 once the part's last file was written (or the part failed)
+};
+
 // Index.html's Module.muDeferredPart: the next deferred part that came ({files, bytes}) or failed (bytes
-// null), handed over once. Writes a part's files into /game in place of their links to /server, as the
-// late pack's (a file that doesn't write keeps its link), and returns its paths, a line each, to free,
-// with how many it wrote in *written; null while no part waits.
-EM_JS(char*, MuWeb_InstallDeferredPart, (int* written), {
-    const part = Module["muDeferredPart"] ? Module["muDeferredPart"]() : null;
-    if (!part) {
-        return 0;
+// null), handed over once. Writes the part's files into /game in place of their links to /server, as the
+// late pack's (a file that doesn't write keeps its link), as many as `budgetMs` allows (at least one),
+// the rest at the next calls, and returns the paths it dealt with, a line each, to free (a failed part's
+// all at once), filling *slice; null while no part waits.
+EM_JS(char*, MuWeb_InstallDeferredSlice, (double budgetMs, DeferredSlice* slice), {
+    let job = Module["muDeferredJob"];
+    if (!job) {
+        const part = Module["muDeferredPart"] ? Module["muDeferredPart"]() : null;
+        if (!part) {
+            return 0;
+        }
+        job = Module["muDeferredJob"] = {part, at: 0, offset: 0, count: 0, failed: 0, firstError: null};
     }
-    let count = 0;
-    let offset = 0;
-    let failed = 0;
-    let firstError = null;
-    for (const [path, size] of part.bytes ? part.files : []) {
+    const part = job.part;
+    const files = part.files;
+    const paths = [];
+    if (!part.bytes) {
+        files.forEach(([path]) => paths.push(path));
+        job.at = files.length;
+    }
+    const start = performance.now();
+    while (part.bytes && job.at < files.length) {
+        const [path, size] = files[job.at++];
+        const offset = job.offset;
+        job.offset += size;
+        paths.push(path);
         const full = "/game/" + path;
         try {
             FS.unlink(full);
@@ -732,12 +797,12 @@ EM_JS(char*, MuWeb_InstallDeferredPart, (int* written), {
             FS.mkdirTree(full.substring(0, full.lastIndexOf("/")));
             wrote = FS.writeFile(full, part.bytes.subarray(offset, offset + size)) >= 0;
         } catch (e) {
-            firstError = firstError || e;
+            job.firstError = job.firstError || e;
         }
         if (wrote) {
-            ++count;
+            ++job.count;
         } else {
-            ++failed;
+            ++job.failed;
             try {
                 FS.unlink(full);
             } catch (e) {
@@ -745,17 +810,26 @@ EM_JS(char*, MuWeb_InstallDeferredPart, (int* written), {
             try {
                 FS.symlink("/server/" + path, full);
             } catch (e) {
-                firstError = firstError || e;
+                job.firstError = job.firstError || e;
             }
         }
-        offset += size;
+        if (performance.now() - start >= budgetMs) {
+            break;
+        }
     }
-    if (failed) {
-        err("Deferred part: " + failed + " files didn't write (" + (firstError || "no reason given") +
-            "); the game downloads them one by one");
+    const done = job.at >= files.length;
+    if (done) {
+        Module["muDeferredJob"] = null;
+        if (job.failed) {
+            err("Deferred part: " + job.failed + " files didn't write (" + (job.firstError || "no reason given") +
+                "); the game downloads them one by one");
+        }
     }
-    HEAP32[(written >>> 0) >>> 2] = count;
-    return stringToNewUTF8(part.files.map(([path]) => path).join("\n"));
+    const at = (slice >>> 0) >>> 2;
+    HEAP32[at] = job.count;
+    HEAP32[at + 1] = files.length;
+    HEAP32[at + 2] = done ? 1 : 0;
+    return stringToNewUTF8(paths.join("\n"));
 });
 
 // The lines of `text`, one call each. Returns how many there were.
@@ -771,6 +845,48 @@ std::size_t ForEachLine(std::string_view text, Visit visit)
         ++count;
     }
     return count;
+}
+
+PackInstallTiming g_deferredPartTiming;
+
+// Writes the deferred parts' files that came for at most `budgetMs` (at least one file where it is above
+// 0), letting go of their paths in g_waitingDeferredFiles as they are written, so the sounds waiting for
+// them load.
+void InstallDeferredPartsWithin(double budgetMs)
+{
+    if (g_waitingDeferredFiles.empty() || !(budgetMs > 0))
+    {
+        return;
+    }
+    const auto started = std::chrono::steady_clock::now();
+    for (double left = budgetMs; left > 0; left = budgetMs - MsSince(started))
+    {
+        const auto sliceStarted = std::chrono::steady_clock::now();
+        DeferredSlice slice;
+        char* paths = MuWeb_InstallDeferredSlice(left, &slice);
+        if (!paths)
+        {
+            return;
+        }
+        ForEachLine(paths, [](std::string_view path) { g_waitingDeferredFiles.erase(std::string(path)); });
+        std::free(paths);
+        g_deferredPartTiming.Add(MsSince(sliceStarted));
+        if (!slice.done)
+        {
+            return; // the budget is used up
+        }
+        const PackInstallTiming timing = std::exchange(g_deferredPartTiming, {});
+        if (slice.written > 0)
+        {
+            std::printf("Web file system: %d of %d files from a deferred part (sounds, music) in %.0f ms over %d "
+                        "frames (at most %.1f ms a frame)\n",
+                        slice.written, slice.files, timing.totalMs, timing.frames, timing.longestMs);
+        }
+        else
+        {
+            std::printf("Web file system: a deferred part failed; its %d files are read one by one\n", slice.files);
+        }
+    }
 }
 
 // Fills g_waitingDeferredFiles from the page.
@@ -836,8 +952,9 @@ bool mu::web::MountGameFiles()
         }
     }
     NoteDeferredFiles();
-    // A part kept on this device may be here already: then the game loads its sounds as before.
-    InstallDeferredParts();
+    // A part kept on this device may be here already: then the game loads its sounds as before, the
+    // whole part now (no frame to keep).
+    InstallDeferredPartsWithin(std::numeric_limits<double>::infinity());
     return ::chdir(GameDir) == 0;
 }
 
@@ -945,70 +1062,77 @@ bool mu::web::LateFontsReady()
 }
 
 // Index.html's Module.muLatePack: the late pack ({files, bytes}) once it is here, handed over once.
-// Writes its files into /game in place of their links to /server; a file that doesn't write keeps its
-// link. Returns how many it wrote, -1 while the pack isn't here.
-EM_JS(int, MuWeb_InstallLatePack, (), {
-    const pack = Module["muLatePack"] ? Module["muLatePack"]() : null;
-    if (!pack) {
-        return -1;
+// Writes its files into /game in place of their links to /server, as many as `budgetMs` allows (at least
+// one), the rest at the next calls; a file that doesn't write keeps its link. Returns how many it wrote
+// so far, -1 while the pack isn't here; *done becomes 1 with the pack's last file.
+EM_JS(int, MuWeb_InstallLatePackSlice, (double budgetMs, int* done), {
+    let job = Module["muLatePackJob"];
+    if (!job) {
+        const pack = Module["muLatePack"] ? Module["muLatePack"]() : null;
+        if (!pack) {
+            return -1;
+        }
+        job = Module["muLatePackJob"] = {pack, at: 0, offset: 0, written: 0};
     }
-    let written = 0;
-    let offset = 0;
-    for (const [path, size] of pack.files) {
+    const files = job.pack.files;
+    const start = performance.now();
+    while (job.at < files.length) {
+        const [path, size] = files[job.at++];
+        const offset = job.offset;
+        job.offset += size;
         const full = "/game/" + path;
         try {
             FS.unlink(full);
         } catch (e) {
         }
-        if (FS.writeFile(full, pack.bytes.subarray(offset, offset + size)) >= 0) {
-            ++written;
+        if (FS.writeFile(full, job.pack.bytes.subarray(offset, offset + size)) >= 0) {
+            ++job.written;
         } else {
             FS.symlink("/server/" + path, full);
         }
-        offset += size;
+        if (performance.now() - start >= budgetMs) {
+            break;
+        }
     }
-    return written;
+    if (job.at >= files.length) {
+        Module["muLatePackJob"] = null;
+        HEAP32[(done >>> 0) >>> 2] = 1;
+    }
+    return job.written;
 });
 
-void mu::web::InstallLatePack()
+double mu::web::InstallLatePack(double budgetMs)
 {
     static bool installed = false;
-    if (installed)
+    static PackInstallTiming timing;
+    if (installed || !(budgetMs > 0))
     {
-        return;
+        return 0;
     }
     const auto start = std::chrono::steady_clock::now();
-    const int written = MuWeb_InstallLatePack();
+    int done = 0;
+    const int written = MuWeb_InstallLatePackSlice(budgetMs, &done);
+    const double ms = MsSince(start);
     if (written < 0)
     {
-        return;
+        return ms;
+    }
+    timing.Add(ms);
+    if (!done)
+    {
+        return ms;
     }
     installed = true;
-    const auto ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
-    std::printf("Web file system: %d files from the late pack in %.0f ms\n", written, ms);
+    std::printf("Web file system: %d files from the late pack in %.0f ms over %d frames (at most %.1f ms a frame)\n",
+                written, timing.totalMs, timing.frames, timing.longestMs);
+    return ms;
 }
 
-void mu::web::InstallDeferredParts()
+double mu::web::InstallDeferredParts(double budgetMs)
 {
-    if (g_waitingDeferredFiles.empty())
-    {
-        return;
-    }
-    int written = 0;
-    while (char* paths = MuWeb_InstallDeferredPart(&written))
-    {
-        const std::size_t files =
-            ForEachLine(paths, [](std::string_view path) { g_waitingDeferredFiles.erase(std::string(path)); });
-        std::free(paths);
-        if (written > 0)
-        {
-            std::printf("Web file system: %d of %zu files from a deferred part (sounds, music)\n", written, files);
-        }
-        else
-        {
-            std::printf("Web file system: a deferred part failed; its %zu files are read one by one\n", files);
-        }
-    }
+    const auto start = std::chrono::steady_clock::now();
+    InstallDeferredPartsWithin(budgetMs);
+    return MsSince(start);
 }
 
 bool mu::web::WaitsForDeferredPart(const std::string& path)
@@ -1023,9 +1147,24 @@ std::size_t mu::web::DeferredFilesWaiting()
 
 void mu::web::LoadWorldFiles(int world)
 {
+    const auto start = std::chrono::steady_clock::now();
     const int written = MuWeb_InstallMapPack(world);
-    if (written >= 0)
+    const double ms = MsSince(start);
+    if (written > 0)
     {
-        std::printf("Web file system: map folder %d, %d files from its pack\n", world, written);
+        std::printf("Web file system: map folder %d, %d files from its pack in %.0f ms\n", world, written, ms);
+    }
+    else if (written == 0)
+    {
+        std::printf("Web file system: map folder %d, no pack (%.0f ms)\n", world, ms);
+    }
+    else if (written == -2)
+    {
+        std::printf("Web file system: map folder %d, its pack failed to load; keeping the previous files (%.0f ms)\n",
+                    world, ms);
+    }
+    else
+    {
+        std::printf("Web file system: map folder %d, its pack is in place already\n", world);
     }
 }

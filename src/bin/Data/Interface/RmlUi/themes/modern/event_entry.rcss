@@ -70,6 +70,8 @@
 
 #title { color: token(text-warm); }
 .entry-line { color: token(text-primary); }
+/* The ticket of the hero's band is not in the bag (EventEntryView::TicketLine). */
+.entry-line.missing { color: token(semantic-danger); }
 /* MU Moldova: the band itself carries its background and border over its full height. A separate absolute art
    layer (top/bottom 0) inside the flex band stayed a thin bar at the band's top, above the label (Hexfire,
    2026-11-17: "the buttons are above the text"). */

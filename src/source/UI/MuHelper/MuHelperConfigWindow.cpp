@@ -19,6 +19,7 @@
 #include "UI/RmlBridge/RmlWindowClose.h"
 #include "UI/RmlBridge/RmlNativeTextSize.h"
 #include "UI/RmlBridge/RmlTheme.h"
+#include "UI/Chat/ChatMessages.h"
 
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/Element.h>
@@ -101,6 +102,15 @@ void CMuHelperConfigWindow::Release()
 
 void CMuHelperConfigWindow::Show(bool bShow)
 {
+    if (!bShow && CObject::IsVisible())
+    {
+        // The detail panel holds its gauges and buff interval until its own Save: closing the helper with the
+        // panel open keeps those edits as well, so nothing set in either window is lost.
+        if (g_pMuHelperDetail && g_pMuHelperDetail->IsVisible())
+            g_pMuHelperDetail->Save();
+        SaveIfChanged();
+    }
+
     if (!bShow)
     {
         // A focused field in a hidden document would keep every window's key handling suspended
@@ -400,6 +410,7 @@ void CMuHelperConfigWindow::RemoveExtraItem()
 void CMuHelperConfigWindow::LoadSavedConfig(const ConfigData& config)
 {
     UI::MuHelper::StagedConfig() = config;
+    m_bInitUnsaved = false;
     ApplyConfig();
 }
 
@@ -432,6 +443,7 @@ void CMuHelperConfigWindow::ApplyConfig()
 void CMuHelperConfigWindow::Reset()
 {
     ConfigData& c = UI::MuHelper::StagedConfig();
+    m_bInitUnsaved = false;
 
     c.iHuntingRange = 6;
 
@@ -484,6 +496,7 @@ void CMuHelperConfigWindow::Reset()
 void CMuHelperConfigWindow::InitConfig()
 {
     Reset();
+    m_bInitUnsaved = true;
 
     if (g_pMuHelperDetail)
         g_pMuHelperDetail->InitConfig();
@@ -492,6 +505,25 @@ void CMuHelperConfigWindow::InitConfig()
 void CMuHelperConfigWindow::SaveConfig()
 {
     ConfigData& c = UI::MuHelper::StagedConfig();
+    c = CollectConfig();
+    g_MuHelper.Save(c);
+    m_bInitUnsaved = false;
+
+    UI::Chat::PostSystem(I18N::Game::OfficialMUHelperSettingHasBeenSaved, TYPE_SYSTEM_MESSAGE);
+}
+
+void CMuHelperConfigWindow::SaveIfChanged()
+{
+    if (SocketClient == nullptr || Hero == nullptr)
+        return;
+    if (!m_bInitUnsaved && CollectConfig() == g_MuHelper.GetConfig())
+        return;
+    SaveConfig();
+}
+
+ConfigData CMuHelperConfigWindow::CollectConfig() const
+{
+    ConfigData c = UI::MuHelper::StagedConfig();
     const MuHelperConfigRmlModel& model = m_RmlView.GetModel();
 
     // The fields only accept digits as they are typed, but a paste bypasses that filter.
@@ -509,8 +541,7 @@ void CMuHelperConfigWindow::SaveConfig()
         c.aiSkill[i] = m_aiSelectedSkills[i] > 0 ? m_aiSelectedSkills[i] : 0;
         c.aiBuff[i] = m_aiSelectedSkills[3 + i] > 0 ? m_aiSelectedSkills[3 + i] : 0;
     }
-
-    g_MuHelper.Save(c);
+    return c;
 }
 
 void CMuHelperConfigWindow::BindRmlModel(Rml::DataModelConstructor& c, MuHelperConfigRmlModel& model)

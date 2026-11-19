@@ -29,8 +29,12 @@
 	color: token(text-primary);
 	font-family: "token(font-body)";
 	white-space: nowrap;
-	pointer-events: none;
+	/* MU Skynet: a click or tap opens the map (MuHelperBar.cpp). */
+	pointer-events: auto;
+	cursor: pointer;
 }
+#text:hover { color: token(text-warm); }
+#text:active { color: token(accent-gold-hover); }
 
 .mu-btn {
 	position: absolute;

@@ -19,16 +19,13 @@ BuffTimeControl::BuffTimeControl()
 
 BuffTimeControl::~BuffTimeControl()
 {
-    for (auto iter = m_BuffTimeList.begin(); iter != m_BuffTimeList.end(); )
-    {
-        auto tempiter = iter;
-        ++iter;
+    Clear();
+}
 
-        auto bufftimetype = static_cast<eBuffTimeType>((*tempiter).first);
-
-        Core::Time::FrameTimerScheduler::Instance().Kill(bufftimetype);
-        m_BuffTimeList.erase(tempiter);
-    }
+void BuffTimeControl::Clear()
+{
+    for (const auto& entry : m_BuffTimeList)
+        Core::Time::FrameTimerScheduler::Instance().Kill(entry.first);
 
     m_BuffTimeList.clear();
 }
@@ -91,6 +88,8 @@ void BuffTimeControl::RegisterBuffTime(eBuffState bufftype, DWORD curbufftime)
 {
     eBuffTimeType  bufftimetype = CheckBuffTimeType(bufftype);
 
+    // Without a time from the server the running countdown stays: only a sent time restarts it.
+    const bool hasServerTime = curbufftime != 0;
     curbufftime = GetBuffMaxTime(bufftype, curbufftime);
 
     if (bufftimetype == eBuffTime_None || curbufftime == -1)
@@ -98,14 +97,21 @@ void BuffTimeControl::RegisterBuffTime(eBuffState bufftype, DWORD curbufftime)
         return;
     }
 
-    if (IsBuffTime(bufftimetype)) return;
+    if (!hasServerTime && IsBuffTime(bufftimetype))
+    {
+        return;
+    }
 
-    BuffTimeInfo  buffinfo;
+    StartBuffTimer(bufftimetype, bufftype, curbufftime);
+}
+
+void BuffTimeControl::StartBuffTimer(eBuffTimeType bufftimetype, eBuffState bufftype, DWORD seconds)
+{
+    // A buff the server sends again with its time (renewed) takes the new time.
+    BuffTimeInfo& buffinfo = m_BuffTimeList[bufftimetype];
     buffinfo.s_BuffType = bufftype;
-    buffinfo.s_CurBuffTime = curbufftime * 1000;
+    buffinfo.s_CurBuffTime = seconds * 1000;
     buffinfo.s_EventBuffTime = GetTickCount();
-
-    m_BuffTimeList.insert(std::make_pair(bufftimetype, buffinfo));
 
     // Tick the buff's remaining time every 900ms; the timer removes itself once
     // the buff expires (replaces the per-buff SetTimer/WM_TIMER).

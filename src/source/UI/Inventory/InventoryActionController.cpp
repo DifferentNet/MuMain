@@ -7,6 +7,7 @@
 #include "UI/Inventory/InventoryCtrl.h"
 #include "UI/Inventory/InventorySort.h"
 #include "UI/Inventory/EquipSwap.h"
+#include "UI/Inventory/HeldItemPlacement.h"
 #include "UI/Inventory/JunkSale.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/CustomMessageBox.h"
@@ -224,6 +225,10 @@ bool CInventoryActionController::HandleInventoryActions(CInventoryCtrl* targetCo
 
     if (hasPickedItem && IsRelease(VK_LBUTTON))
     {
+        if (MoveOnDoubleTap(targetControl))
+        {
+            return true;
+        }
         return HandlePickedItemPlacement(targetControl);
     }
 
@@ -247,6 +252,40 @@ bool CInventoryActionController::HandleInventoryActions(CInventoryCtrl* targetCo
     }
 
     return false;
+}
+
+// Round 16: a finger's double tap on an item in the bag moves it to the open vault, trade or chaos
+// machine, as the right click does. Never in a shop (that would sell) or with the bag alone (use,
+// equip or drop). The first tap lifted the item: it goes back to its squares before the move.
+bool CInventoryActionController::MoveOnDoubleTap(CInventoryCtrl* targetControl) const
+{
+    if (!UI::Mobile::ClickSource::IsFingerDoubleTap() || UI::Inventory::Sort().IsWaiting())
+    {
+        return false;
+    }
+
+    const RightClickTarget target = FindRightClickTarget();
+    if (target != RightClickTarget::Storage && target != RightClickTarget::Mix && target != RightClickTarget::Trade)
+    {
+        return false;
+    }
+
+    if (!UI::Items::Placement::IsHeldOverItsSquares(targetControl))
+    {
+        return false;
+    }
+
+    const DWORD itemKey = CInventoryCtrl::GetPickedItem()->GetItem()->Key;
+    if (!UI::Items::Placement::PutHeldItemBack(targetControl))
+    {
+        return false;
+    }
+
+    if (IsItemAtPointer(targetControl, itemKey))
+    {
+        RunRightClickAction(targetControl, target, false);
+    }
+    return true;
 }
 
 bool CInventoryActionController::HandlePickedItemPlacement(CInventoryCtrl* targetControl) const

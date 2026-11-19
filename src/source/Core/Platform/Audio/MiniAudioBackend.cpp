@@ -81,10 +81,6 @@ bool IsSameMusicTrack(const std::string& identity, const char* name)
 }
 
 #ifdef __EMSCRIPTEN__
-// The most time a frame spends loading the sounds that waited for their files (LoadWaitingSounds), one
-// sound at least: decoding the startup pack's 207 sounds in one frame would freeze the picture.
-constexpr std::chrono::microseconds WaitingSoundsFrameBudget{3500};
-
 // The page's count of the sounds that wait for their files: Module.muWaitingSounds in the browser
 // console (0 where none waits or none ever did).
 EM_JS(void, MuWeb_NoteWaitingSounds, (int count), { Module["muWaitingSounds"] = count; });
@@ -287,6 +283,13 @@ bool MiniAudioBackend::PlaySound(ESound buffer, const void* pObject, bool looped
     }
 
     if (!m_soundLoaded[bufIdx])
+    {
+        return false;
+    }
+
+    // At effect volume 0 a sound played once would only be mixed and resampled unheard: it is not started
+    // (like the editor's mute). Looped sounds still start, so they are heard once the volume rises.
+    if (!looped && m_sfxVolume <= 0.0f)
     {
         return false;
     }
@@ -685,16 +688,47 @@ bool MiniAudioBackend::StartMusicStream(const std::string& identity)
 
     ma_sound_set_looping(&m_musicSound, MA_TRUE);
     ma_sound_set_volume(&m_musicSound, m_bgmVolume);
-    result = ma_sound_start(&m_musicSound);
-    if (result != MA_SUCCESS)
+    // At music volume 0 the stream waits paused; ApplyMusicSilence() starts it when the volume rises.
+    if (m_bgmVolume > 0.0f)
     {
-        ma_sound_uninit(&m_musicSound);
-        mu::log::Get("audio")->error("AUDIO: MiniAudioBackend::PlayMusic -- failed to start stream '{}' ({})",
-            filePath, static_cast<int>(result));
-        return false;
+        result = ma_sound_start(&m_musicSound);
+        if (result != MA_SUCCESS)
+        {
+            ma_sound_uninit(&m_musicSound);
+            mu::log::Get("audio")->error("AUDIO: MiniAudioBackend::PlayMusic -- failed to start stream '{}' ({})",
+                filePath, static_cast<int>(result));
+            return false;
+        }
     }
     m_musicLoaded = true;
+    m_musicPausedForSilence = m_bgmVolume <= 0.0f;
     return true;
+}
+
+void MiniAudioBackend::ApplyMusicSilence()
+{
+    if (!m_initialized || !m_musicLoaded)
+    {
+        return;
+    }
+
+    const bool silent = m_bgmVolume <= 0.0f;
+    if (silent && !m_musicPausedForSilence)
+    {
+        // Only a stream that is playing is paused, so a resume never starts one that stopped otherwise.
+        if (!ma_sound_is_playing(&m_musicSound))
+        {
+            return;
+        }
+        ma_sound_stop(&m_musicSound);
+        m_musicPausedForSilence = true;
+        return;
+    }
+    if (!silent && m_musicPausedForSilence)
+    {
+        ma_sound_start(&m_musicSound);
+        m_musicPausedForSilence = false;
+    }
 }
 
 void MiniAudioBackend::ReleaseMusicStream()
@@ -705,6 +739,7 @@ void MiniAudioBackend::ReleaseMusicStream()
         ma_sound_uninit(&m_musicSound);
         m_musicLoaded = false;
     }
+    m_musicPausedForSilence = false;
     m_currentMusicName.clear();
 }
 
@@ -754,6 +789,10 @@ bool MiniAudioBackend::IsEndMusic()
     if (!m_initialized || !m_musicLoaded)
     {
         return true;
+    }
+    if (m_musicPausedForSilence)
+    {
+        return false;
     }
 
     return !ma_sound_is_playing(&m_musicSound);
@@ -833,6 +872,7 @@ void MiniAudioBackend::SetBGMVolume(float level)
     {
         ma_sound_set_volume(&m_musicSound, m_bgmVolume);
     }
+    ApplyMusicSilence();
 }
 
 // ---------------------------------------------------------------------------
@@ -953,11 +993,12 @@ void MiniAudioBackend::StartWaitingMusic()
     PlayMusic(name.c_str(), m_waitingMusicEnforced);
 }
 
-// Loads the waiting sounds whose files are here, in the order asked for, as many as
-// WaitingSoundsFrameBudget allows; the others keep waiting. Looks through them again only once another
+// Loads the waiting sounds whose files are here, in the order asked for, as many as `budgetMs` allows
+// (one at least where it is above 0, none where it isn't: decoding the startup pack's 207 sounds in one
+// frame would freeze the picture); the others keep waiting. Looks through them again only once another
 // part came or failed (m_deferredFilesAtLastLook). Once none waits any more it says in the page's log how
 // many it loaded and in how many frames.
-void MiniAudioBackend::LoadWaitingSounds()
+void MiniAudioBackend::LoadWaitingSounds(double budgetMs)
 {
     if (!m_initialized)
     {
@@ -965,10 +1006,11 @@ void MiniAudioBackend::LoadWaitingSounds()
     }
     StartWaitingMusic();
     const std::size_t filesWaiting = mu::web::DeferredFilesWaiting();
-    if (m_waitingSounds.Empty() || filesWaiting == m_deferredFilesAtLastLook)
+    if (m_waitingSounds.Empty() || filesWaiting == m_deferredFilesAtLastLook || !(budgetMs > 0))
     {
         return;
     }
+    const std::chrono::duration<double, std::milli> budget{budgetMs};
     const auto here = [](const WaitingSoundLoad& load) { return !mu::web::WaitsForDeferredPart(load.path); };
     const auto start = std::chrono::steady_clock::now();
     bool outOfTime = false;
@@ -977,7 +1019,7 @@ void MiniAudioBackend::LoadWaitingSounds()
     {
         LoadSound(static_cast<ESound>(load->slot), load->file.c_str(), load->channels, load->enable3D);
         ++loaded;
-        if (std::chrono::steady_clock::now() - start >= WaitingSoundsFrameBudget)
+        if (std::chrono::steady_clock::now() - start >= budget)
         {
             outOfTime = true; // the rest next frame, looking through them again
             break;

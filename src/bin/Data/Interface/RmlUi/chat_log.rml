@@ -22,8 +22,9 @@
 		     data-event-drag="chat_resize_drag"></div>
 
 		<div id="lines" class="scroll-pane" data-style-height="client_height + 'dp'">
-			<!-- data-attr-class replaces the whole class attribute, so every class this line needs
-			     is composed here -- there is no static class= to merge with. `kind` is the
+			<!-- One data-class per class, no data-attr-class: a class attribute set from data would
+			     drop the data-class ones, and one composed string re-ran for every line whenever
+			     the pointed line moved. `kind` is the
 			     lowercase message-type slug C++ pushes (chat/whisper/party/...), and `has-id`
 			     marks a line whose sender can be right-clicked to target a whisper.
 
@@ -36,7 +37,20 @@
 			     it stays in the list so indices still match, but takes no space. `lead` is the first
 			     line on screen, which carries the bottom-up stacking margin. -->
 			<div data-for="line : lines"
-			     data-attr-class="'chat-line chat-line--' + line.kind + (line.has_id ? ' chat-line--has-id' : '') + (it_index == pointed_index ? ' chat-line--pointed' : '') + (line.faded ? ' chat-line--faded' : '') + (line.lead ? ' chat-line--lead' : '')">{{line.text}}</div>
+			     class="chat-line"
+			     data-class-chat-line--chat="line.kind == 'chat'"
+			     data-class-chat-line--whisper="line.kind == 'whisper'"
+			     data-class-chat-line--system="line.kind == 'system'"
+			     data-class-chat-line--error="line.kind == 'error'"
+			     data-class-chat-line--party="line.kind == 'party'"
+			     data-class-chat-line--guild="line.kind == 'guild'"
+			     data-class-chat-line--union="line.kind == 'union'"
+			     data-class-chat-line--gens="line.kind == 'gens'"
+			     data-class-chat-line--gm="line.kind == 'gm'"
+			     data-class-chat-line--has-id="line.has_id"
+			     data-class-chat-line--pointed="it_index == pointed_index"
+			     data-class-chat-line--faded="line.faded"
+			     data-class-chat-line--lead="line.lead">{{line.text}}</div>
 		</div>
 	</div>
 </body>

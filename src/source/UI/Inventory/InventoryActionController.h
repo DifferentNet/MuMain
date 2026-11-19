@@ -43,6 +43,7 @@ public:
     [[nodiscard]] static BagRightClick WhatBagRightClickDoes();
 
 private:
+    bool MoveOnDoubleTap(CInventoryCtrl* targetControl) const;
     bool HandlePickedItemPlacement(CInventoryCtrl* targetControl) const;
     bool TryApplyJewel(CInventoryCtrl* targetControl, CPickedItem* pPickedItem, ITEM* pPickItem,
                        int iSourceIndex, int iTargetIndex) const;

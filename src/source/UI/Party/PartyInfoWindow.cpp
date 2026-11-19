@@ -21,8 +21,10 @@
 #include "GameLogic/Events/w_CursedTemple.h"
 #include "World/MapInfra/MapManager.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
+#include "UI/HUD/ChatInputBox.h"
 
 #include <RmlUi/Core/DataModelHandle.h>
+#include <RmlUi/Core/Element.h>
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/Event.h>
 
@@ -126,6 +128,18 @@ void CPartyInfoWindow::BindRmlModel(Rml::DataModelConstructor& c, PartyInfoRmlMo
             if (arguments.size() == 1)
                 RmlClickKickMember(arguments[0].Get<int>(-1));
         });
+    c.BindEventCallback("party_whisper_member",
+        [this](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList& arguments)
+        {
+            if (arguments.size() == 1)
+                WhisperMember(arguments[0].Get<int>(-1), event, false);
+        });
+    c.BindEventCallback("party_tap_member",
+        [this](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList& arguments)
+        {
+            if (arguments.size() == 1)
+                WhisperMember(arguments[0].Get<int>(-1), event, true);
+        });
     c.BindEventCallback("party_open_social",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RmlClickOpenSocial(); });
 
@@ -182,6 +196,26 @@ void CPartyInfoWindow::OpenSocialIfAsked()
         return;
     g_pNewUISystem->Hide(mu::ui::window::INTERFACE_PARTY);
     UI::HUD::TouchControls::ShowSocialPanel();
+}
+
+void CPartyInfoWindow::WhisperMember(int index, const Rml::Event& event, bool tap)
+{
+    // Touch taps, the mouse double-clicks: a tap pair would otherwise also send a double click.
+    if (tap != UI::Mobile::IsTouchControls())
+        return;
+    if (index < 0 || index >= PartyNumber || g_pChatInputBox == nullptr || Hero == nullptr)
+        return;
+    const Rml::Element* target = event.GetTargetElement();
+    if (target != nullptr && target->IsClassSet("party-kick-btn"))
+        return;
+
+    const wchar_t* name = Party[index].Name;
+    if (name[0] == L'\0' || wcscmp(name, Hero->ID) == 0)
+        return;
+    // Open the chat input first, otherwise only the whisper target changes and nothing shows.
+    if (!g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_CHATINPUTBOX))
+        g_pNewUISystem->Show(mu::ui::window::INTERFACE_CHATINPUTBOX);
+    g_pChatInputBox->StartWhisperTo(name);
 }
 
 void CPartyInfoWindow::RmlClickKickMember(int index)

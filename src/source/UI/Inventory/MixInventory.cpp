@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "UI/Inventory/MixInventory.h"
 #include "UI/Inventory/HeldItemPlacement.h"
+#include "UI/Inventory/InventorySort.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/RmlBridge/RmlElementBox.h"
 #include "UI/RmlBridge/RmlPointer.h"
@@ -1073,6 +1074,16 @@ bool CMixInventory::InventoryProcess()
     m_pNewInventoryCtrl->SetSquareColorNormal(m_fInventoryColor[0], m_fInventoryColor[1], m_fInventoryColor[2]);
     if (!mu::ui::window::IsRelease(VK_LBUTTON))
         return false;
+
+    // Round 16: a finger's double tap on an item in the box takes it back to the bag, as the right
+    // click does. The first tap lifted it: it goes back on its squares before the move.
+    if (UI::Mobile::ClickSource::IsFingerDoubleTap() && !UI::Inventory::Sort().IsWaiting()
+        && UI::Items::Placement::IsHeldOverItsSquares(m_pNewInventoryCtrl))
+    {
+        if (UI::Items::Placement::PutHeldItemBack(m_pNewInventoryCtrl))
+            ProcessMixItemAutoMoveToInventory();
+        return true;
+    }
 
     const auto move =
         UI::Items::Placement::FindHeldItemMove(m_pNewInventoryCtrl, g_MixRecipeMgr.GetMixInventoryEquipmentIndex());

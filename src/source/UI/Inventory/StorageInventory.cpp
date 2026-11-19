@@ -17,6 +17,7 @@
 #include "UI/Inventory/MyInventory.h"
 #include "UI/Inventory/StorageInventoryExt.h"
 #include "UI/Inventory/InventorySort.h"
+#include "UI/Inventory/HeldItemPlacement.h"
 #include "UI/Inventory/VaultPages.h"
 #include "UI/Inventory/ZenAmount.h"
 #include "Scenes/SceneCore.h" // g_iLengthAuthorityCode -- the WEBZEN password field's maxLength below
@@ -655,6 +656,18 @@ void CStorageInventory::ProcessInventoryCtrl()
         ITEM* pItemObj = pPickedItem->GetItem();
         if (nullptr == pItemObj)
         {
+            return;
+        }
+
+        // Round 16: a finger's double tap on a vault item moves it to the bag, as the right click does.
+        // Its first tap lifted the item; the second tap's press sends nothing, and its release puts the
+        // item back on its squares before the move.
+        if ((IsPress(VK_LBUTTON) || IsRelease(VK_LBUTTON)) && UI::Mobile::ClickSource::IsFingerDoubleTap()
+            && !UI::Inventory::Sort().IsWaiting()
+            && UI::Items::Placement::IsHeldOverItsSquares(m_pNewInventoryCtrl))
+        {
+            if (IsRelease(VK_LBUTTON) && UI::Items::Placement::PutHeldItemBack(m_pNewInventoryCtrl))
+                ProcessStorageItemAutoMove();
             return;
         }
 

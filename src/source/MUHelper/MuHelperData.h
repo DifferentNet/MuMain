@@ -111,6 +111,9 @@ namespace MUHelper
 		bool bAutoAcceptFriend = false;
 		bool bAutoAcceptGuild = false;
 		bool bFallbackBasicAttack = true;
+
+		// The settings window saves on close only what differs from what the helper runs with.
+		bool operator==(const _PetAttackConfig&) const = default;
 	} ConfigData;
 
 	// The saved settings hold 12 extra item names of 15 bytes (UTF-8) each.

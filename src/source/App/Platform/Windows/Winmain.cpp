@@ -2048,6 +2048,23 @@ static void MuWebFollowLowestQuality()
         mu::log::Get("render")->info("Quality above Lowest: the player's effect and shadow settings back");
     }
 }
+
+// Browser build, once a frame: the page's Screenshot item (index.html). The next frame is taken as Print
+// Screen takes it, into the game's own files, which the browser can't reach: the page gets the picture as
+// a download instead, and the file goes. No chat line: the browser shows the download itself.
+static void MuWebFollowShotRequest()
+{
+    if (!mu::web::TakePageShotRequest())
+        return;
+    const bool started = RequestScriptedScreenshot(L"", BestScreenshotQuality, [](const ScreenshotOutcome& outcome) {
+        if (outcome.saved)
+            mu::web::OfferShot(Core::Text::ToUtf8(outcome.path.c_str()).c_str());
+        else
+            mu::web::ShowShotFailed();
+    });
+    if (!started)
+        mu::web::ShowShotFailed();
+}
 #endif
 
 // Inspect only the active SDL union member, including for synthetic events.
@@ -2124,6 +2141,42 @@ bool RouteActionInput(SDL_Event& event, bool synthetic, bool& propagates)
         return false;
     }
 }
+
+namespace
+{
+constexpr const char* GameTitle = "MU Skynet";
+
+// The window's title (the tab's on /play): the character's name while one is in the world
+// ("Name – MU Skynet"), the game's name elsewhere. Checked every frame, set only on a change.
+void FollowWindowTitle()
+{
+    const bool inWorld = SceneFlag == MAIN_SCENE;
+    const wchar_t* name = inWorld && Hero != nullptr ? Hero->ID : L"";
+    static bool titled = false;
+    static bool titledInWorld = false;
+    static std::wstring titledName;
+    if (titled && inWorld == titledInWorld && titledName == name)
+    {
+        return;
+    }
+#ifndef __EMSCRIPTEN__
+    SDL_Window* window = Core::Platform::GameWindow();
+    if (window == nullptr)
+    {
+        return;
+    }
+#endif
+    titled = true;
+    titledInWorld = inWorld;
+    titledName = name;
+    const std::string title = name[0] != L'\0' ? Core::Text::ToUtf8(name) + " \xE2\x80\x93 " + GameTitle : GameTitle;
+#ifdef __EMSCRIPTEN__
+    mu::web::ShowInWorld(inWorld, title.c_str());
+#else
+    SDL_SetWindowTitle(window, title.c_str());
+#endif
+}
+} // namespace
 
 MSG MainLoop()
 {
@@ -2367,21 +2420,26 @@ MSG MainLoop()
                 // it moved (options open or closed).
                 Render::Look::ApplyPendingTuning();
 #ifdef __EMSCRIPTEN__
-                // Between frames, where no texture file is open.
-                mu::web::InstallLatePack();
-                // The sounds and music, where no sound file is open, then the sounds that waited for them.
-                mu::web::InstallDeferredParts();
-                if (g_platformAudio != nullptr)
                 {
-                    g_platformAudio->LoadWaitingSounds();
+                    // One budget a frame for the three, each getting what the ones before it left.
+                    double fileBudgetMs = mu::web::FrameFileBudgetMs;
+                    // Between frames, where no texture file is open.
+                    fileBudgetMs -= mu::web::InstallLatePack(fileBudgetMs);
+                    // The sounds and music, where no sound file is open, then the sounds that waited for them.
+                    fileBudgetMs -= mu::web::InstallDeferredParts(fileBudgetMs);
+                    if (g_platformAudio != nullptr)
+                    {
+                        g_platformAudio->LoadWaitingSounds(fileBudgetMs);
+                    }
                 }
                 MuWebFollowPageSize();
                 UI::Mobile::FollowPage();
-                mu::web::ShowInWorld(SceneFlag == MAIN_SCENE);
                 UI::Mobile::PhonePage::Update();
                 MuWebFollowLowestQuality();
+                MuWebFollowShotRequest();
                 UI::WarmUp::Tick(Core::FirstOpenTiming::LastFrameMs());
 #endif
+                FollowWindowTitle();
                 RenderProfiledFrame();
 #ifdef __EMSCRIPTEN__
                 // After the frame's own focus changes, so the page gets the field's keys before it runs.
@@ -2978,7 +3036,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
 #endif
 
     g_sdlWindow =
-        SDL_CreateWindow("MU Online", static_cast<int>(WindowWidth), static_cast<int>(WindowHeight), windowFlags);
+        SDL_CreateWindow(GameTitle, static_cast<int>(WindowWidth), static_cast<int>(WindowHeight), windowFlags);
     if (!g_sdlWindow)
     {
         g_ErrorReport.Write(L"> SDL_CreateWindow failed.\r\n");
@@ -3318,6 +3376,10 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     std::thread cpuUsageRecorder(RecordCpuUsage);
 #endif
     const MSG msg = MainLoop();
+#ifdef __EMSCRIPTEN__
+    // The page's own panel says the game ended and offers to start again; a closed tab no longer asks.
+    mu::web::ShowGameEnded();
+#endif
     ShutdownRuntime(cpuUsageRecorder, sdlLogOutput);
 
     return msg.wParam;

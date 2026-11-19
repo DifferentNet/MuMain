@@ -7,6 +7,7 @@
 #pragma warning(disable : 4786)
 #include "UI/Inventory/ItemGridGeometry.h"
 #include "UI/Inventory/ItemGridModel.h"
+#include "UI/RmlBridge/RmlKeptElement.h"
 #include <vector>
 
 #include "UI/Core/WindowManager.h"
@@ -153,6 +154,8 @@ namespace mu::ui::window
 
         type_vec_item	m_vecItem;
         UI::Items::GridGeometry m_Geometry;
+        // FollowGridPx()'s grid element, kept so the per-frame follow skips the document search.
+        UI::RmlBridge::KeptElement m_FollowedGrid;
         STORAGE_TYPE m_StorageType;
         int	m_nColumn, m_nRow;
         /**

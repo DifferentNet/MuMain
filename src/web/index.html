@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, interactive-widget=resizes-visual, viewport-fit=cover">
 <meta name="theme-color" content="#0d0e12">
 <link rel="manifest" href="manifest.webmanifest">
-<title>MU Online (web)</title>
+<title>MU Skynet</title>
 <script>
   // What the game runs on, decided before the page is drawn, so nothing jumps: a phone, a tablet or a
   // computer. Phones and tablets are played with the fingers: they get the touch page (html.phone: the
@@ -138,6 +138,7 @@
   <button id="install-menu" type="button" hidden>Install</button>
   <button id="download-game" type="button" hidden>Download game</button>
   <button id="view" type="button" hidden title="The game's layout, as in its Options → Interface">View</button>
+  <button id="screenshot" type="button" hidden title="A picture of the game, saved as a download">Screenshot</button>
   <label title="How many pixels the game draws while Options has Auto resolution; Lowest also turns effects and shadows off">Quality
     <select id="quality">
       <option value="high">High</option>
@@ -477,6 +478,8 @@
       viewButton.textContent = "View: " + en + " · Вид: " + ru;
       // A phone or tablet always plays the phone layout (UI/Mobile/InterfaceMode.cpp): no choice there.
       viewButton.hidden = phone;
+      // The game runs: it can take a screenshot too (below).
+      shotButton.hidden = false;
     },
   };
   viewButton.onclick = () => {
@@ -484,6 +487,33 @@
     footer.classList.remove("open");
     canvas.focus();
   };
+
+  // Screenshot: Print Screen's picture, which in the browser stays inside the game's own files. The game
+  // takes muShotRequest between frames, writes the next frame as a JPEG and hands its bytes to muShotReady
+  // (Core/Platform/web/WebPageView.h), which saves them as a download named by the local date and time.
+  const shotButton = document.getElementById("screenshot");
+  window.muShotRequest = false;
+  shotButton.onclick = () => {
+    window.muShotRequest = true;
+    footer.classList.remove("open");
+    canvas.focus();
+  };
+  window.muShotReady = (bytes) => {
+    const two = (n) => String(n).padStart(2, "0");
+    const now = new Date();
+    const name = `MU-Skynet-${now.getFullYear()}-${two(now.getMonth() + 1)}-${two(now.getDate())}_` +
+                 `${two(now.getHours())}-${two(now.getMinutes())}-${two(now.getSeconds())}.jpg`;
+    const url = URL.createObjectURL(new Blob([bytes], { type: "image/jpeg" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    appendLog("Screenshot saved as " + name);
+  };
+  window.muShotFailed = () => appendLog("Screenshot failed", true);
 
   // Phones: Play opens the game fullscreen; "Stay in the browser" keeps the address bar (the menu's
   // Fullscreen does it later); Install (below) puts it on the home screen. Not where the page already
@@ -764,11 +794,14 @@
     if (stageMoveHeld) return;
     const view = window.visualViewport;
     let shift = 0;
-    if (keyboardWanted && keyboardLine && view) {
+    // Only with a keyboard up, and only when it covers the field: a field just above the screen's
+    // bottom edge stays where it is (no keyboard: the chat line on a phone without one up yet).
+    if (keyboardWanted && keyboardLine && view && keyboardOnScreen()) {
       const rect = canvas.getBoundingClientRect();
       const top = rect.top + keyboardShift; // where the game is when not moved
       const lineTop = top + keyboardLine[0] * rect.height, lineBottom = top + keyboardLine[1] * rect.height;
-      shift = Math.max(0, Math.min(lineBottom + KEYBOARD_GAP - (view.offsetTop + view.height), lineTop));
+      const viewBottom = view.offsetTop + view.height;
+      if (lineBottom > viewBottom) shift = Math.max(0, Math.min(lineBottom + KEYBOARD_GAP - viewBottom, lineTop));
     }
     shift = Math.round(shift);
     if (shift === keyboardShift) return;
@@ -1196,6 +1229,7 @@
   // can leave a lock taken (inside malloc, say), and the next call from the page (saving settings,
   // a key, a network message) would wait for it forever and freeze the tab.
   let crashed = false;
+  let gameEnded = false;  // stopped by the player's own exit: its files are whole, so saveConfig still runs
   const openSockets = new Set();
   const PageWebSocket = WebSocket;
   window.WebSocket = class extends PageWebSocket {
@@ -1219,26 +1253,62 @@
     event.preventDefault();
     event.returnValue = "";
   }
-  window.muInWorld = (inWorld) => {
+  // The game also gives the tab's title: the character's name in the world. While the "(!) " mark is on
+  // (App/Platform/AttentionSignal.cpp), the mark stays and the title it gives back is the new one.
+  window.muInWorld = (inWorld, title) => {
     if (inWorld && !crashed) addEventListener("beforeunload", askBeforeLeaving);
     else removeEventListener("beforeunload", askBeforeLeaving);
     worldEnteredAt = inWorld ? worldEnteredAt || performance.now() : 0;
+    if (!title) return;
+    if (window.Module && window.Module.muAttentionTitle !== undefined) {
+      window.Module.muAttentionTitle = title;
+      document.title = "(!) " + title;
+    } else {
+      document.title = title;
+    }
   };
-  function gameCrashed(error, title = "The game stopped because of an error.") {
-    if (crashed) return;
+  // The game stopped, by an error or by the player's own exit: no more calls into it, its sockets closed,
+  // and the status panel over the picture, emptied for the caller's lines and buttons.
+  function stopGame() {
+    if (crashed) return null;
     crashed = true;
     removeEventListener("beforeunload", askBeforeLeaving);
     playCard.classList.remove("show");
+    shotButton.hidden = true;
     for (const socket of openSockets) {
       socket.onmessage = socket.onclose = socket.onerror = null;
       try { socket.close(); } catch (e) {}
     }
     statusEl.hidden = false;
-    statusEl.classList.add("bad");
     statusEl.style.pointerEvents = "auto";
     statusEl.style.background = "rgba(13,14,18,.92)";
     statusEl.innerHTML = "";
-    const box = document.createElement("div");
+    return document.createElement("div");
+  }
+  const styleStatusButton = (button) => {
+    button.style.cssText = "font: inherit; margin: .25rem; padding: .3rem .8rem; cursor: pointer;";
+  };
+  // The game's loop ended (Exit game, or OK on a lost connection: Core/Platform/web/WebPageView.h): the
+  // page said nothing and closing it still asked "Leave site?". Now it says so and offers a new start.
+  window.muGameEnded = () => {
+    const box = stopGame();
+    if (!box) return;
+    gameEnded = true;
+    document.title = "MU Skynet";
+    statusEl.classList.remove("bad");
+    box.innerHTML = "<p></p>";
+    box.firstChild.textContent = "You left the game.";
+    const again = document.createElement("button");
+    again.textContent = "Play again";
+    again.onclick = () => location.reload();
+    styleStatusButton(again);
+    box.appendChild(again);
+    statusEl.appendChild(box);
+  };
+  function gameCrashed(error, title = "The game stopped because of an error.") {
+    const box = stopGame();
+    if (!box) return;
+    statusEl.classList.add("bad");
     box.innerHTML = "<p></p><p></p>";
     box.firstChild.textContent = title;
     box.lastChild.textContent = String(error && error.message || error).slice(0, 300);
@@ -1249,7 +1319,7 @@
     reset.textContent = "Reset settings and reload";
     reset.onclick = () => { location.search = "?reset"; };
     for (const button of [reload, reset]) {
-      button.style.cssText = "font: inherit; margin: .25rem; padding: .3rem .8rem; cursor: pointer;";
+      styleStatusButton(button);
       box.appendChild(button);
     }
     statusEl.appendChild(box);
@@ -1329,7 +1399,7 @@
   } catch (e) { /* no storage in this browser */ }
   let savedConfig = null;
   function saveConfig() {
-    if (crashed) return;
+    if (crashed && !gameEnded) return;
     try {
       const text = new TextDecoder().decode(Module.FS.readFile("/game/config.ini"));
       if (text && text !== savedConfig) {
@@ -1743,7 +1813,8 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     // are kept with them; one on this device reads at once. A download that failed is tried once more
     // after DEFERRED_RETRY_MS. Each part that came ({files, bytes}) or failed (bytes null) waits in
     // deferredSettled for WebFileSystem.cpp InstallDeferredParts (Module.muDeferredPart), which writes
-    // its files into /game between two frames; the game reads a failed part's files one by one.
+    // its files into /game between frames, a few milliseconds' worth a frame over several frames; the game
+    // reads a failed part's files one by one.
     const DEFERRED_RETRY_MS = 2000;
     const deferredEntries = ((releaseIndex && releaseIndex.parts) || []).filter((part) => part.deferred);
     const deferredSettled = [];
@@ -1775,8 +1846,8 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     // The late pack (startup.json "late", tools/web/make_startup_pack.py): textures the game reads only
     // once it is played, 23 MB of the 73.5 the startup download took (2026-11-03). It downloads after
     // the startup pack, while the player logs in, a map's pack going first, and is kept like the
-    // startup pack's parts. WebFileSystem.cpp InstallLatePack takes it between two frames
-    // (Module.muLatePack); until then, or where it fails, the game downloads a file it needs by itself.
+    // startup pack's parts. WebFileSystem.cpp InstallLatePack writes it between frames, a few
+    // milliseconds' worth a frame over several frames (Module.muLatePack); until then, or where it fails, the game downloads a file it needs by itself.
     let latePack = null;
     const latePackLoading = startupPackSettled.then(async () => {
       const entry = releaseIndex && releaseIndex.late;
@@ -1786,16 +1857,57 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       const kept = store ? await store.match(packKey(entry)).catch(() => undefined) : undefined;
       latePack = await loadPack("Late pack", entry, store, kept, () => {});
     }).catch((e) => console.warn(`Late pack: ${e}; the game downloads its files one by one instead`));
+    // A map pack's index (packs/worldN.json) is kept beside the pack, under the pack's hash.
+    const mapPackName = (world) => `packs/world${world}.pack`;
+    const mapIndexKey = (world, hash) => new URL(`packs/world${world}.json?v=${hash}`, location.href).href;
+    function keepMapIndex(store, world, entry) {
+      const key = mapIndexKey(world, entry.hash);
+      return store.put(key, new Response(JSON.stringify(entry))).then(async () => {
+        for (const request of await store.keys()) {
+          if (request.url !== key && packPath(request.url) === packPath(key)) await store.delete(request);
+        }
+      }).catch(() => {});
+    }
+    // The pack of `world` with the hash startup.json names and its index, where this device keeps
+    // both: {entry, kept}; else null.
+    async function keptMapPack(store, world, hash) {
+      try {
+        const kept = await store.match(packKey({ name: mapPackName(world), hash }));
+        const index = kept && await store.match(mapIndexKey(world, hash));
+        if (!index) return null;
+        const entry = Object.assign(await index.json(), { name: mapPackName(world) });
+        return entry.hash === hash ? { entry, kept } : null;
+      } catch (e) {
+        return null;
+      }
+    }
     // WebFileSystem.cpp LoadWorldFiles: the files of the map folder the game enters (Data/WorldN,
-    // ObjectN), or null where the map has no pack.
+    // ObjectN), or null where the map has no pack. startup.json "maps" (tools/web/make_startup_pack.py)
+    // has each pack's hash: a map without one has no pack (the login and character scenes), and a pack
+    // this device keeps reads with the index kept beside it, without a request to the server first
+    // (0.1-0.6 s on a phone's line, at every map change). Without "maps" (an older startup.json) or a
+    // pack kept, the index comes from the server as before. A release published while the page is open
+    // is picked up for a map's pack only where the pack isn't kept.
     async function mapPack(world) {
+      const hashes = releaseIndex && releaseIndex.maps;
+      if (hashes && !hashes[world]) return null;
       mapPacksLoading++;
       try {
-        const indexResponse = await fetch(`packs/world${world}.json`, { cache: "no-cache" });
-        if (!indexResponse.ok) return null;
-        const entry = Object.assign({ name: `packs/world${world}.pack` }, await indexResponse.json());
         const store = await openStore(MAP_PACK_STORE);
+        const local = store && hashes ? await keptMapPack(store, world, hashes[world]) : null;
+        if (local) {
+          return await loadPack(`Map pack ${world}`, local.entry, store, local.kept,
+                                downloadProgress("the map", local.entry.packed || 0));
+        }
+        const indexResponse = await fetch(`packs/world${world}.json`, { cache: "no-cache" });
+        // startup.json lists this map's pack, so a missing index is a failure, not a map without one.
+        if (!indexResponse.ok) {
+          if (hashes) throw new Error(`packs/world${world}.json: HTTP ${indexResponse.status}`);
+          return null;
+        }
+        const entry = Object.assign(await indexResponse.json(), { name: mapPackName(world) });
         const kept = store ? await store.match(packKey(entry)).catch(() => undefined) : undefined;
+        if (store) keepMapIndex(store, world, entry);
         return await loadPack(`Map pack ${world}`, entry, store, kept, downloadProgress("the map", entry.packed || 0));
       } finally {
         mapPacksLoading--;
@@ -1934,7 +2046,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         try {
           const response = await fetch(`packs/world${world}.json`, { cache: "no-cache" });
           if (!response.ok) continue;
-          const entry = Object.assign({ name: `packs/world${world}.pack` }, await response.json());
+          const entry = Object.assign(await response.json(), { name: mapPackName(world) });
           if (!(await store.match(packKey(entry)))) packs.push([world, entry]);
         } catch (e) { /* that map downloads when entered */ }
       }
@@ -1947,11 +2059,13 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       if (!store) return { worlds: 0, kept: 0 };
       const list = await (await fetch("files.txt", { cache: "no-cache" })).text();
       const worlds = (list.match(/^packs\/world\d+\.json\r?$/gm) || []).length;
-      const kept = new Set((await store.keys()).map((request) => packPath(request.url))).size;
+      // The packs, not the indexes kept beside them (keepMapIndex).
+      const kept = new Set((await store.keys()).map((request) => packPath(request.url))
+                             .filter((path) => path.endsWith(".pack"))).size;
       return { worlds, kept: Math.min(kept, worlds) };
     }
     // Downloads a map's pack into its storage as the game would keep it on entering the map (mapPack).
-    async function keepMapPack(store, entry) {
+    async function keepMapPack(store, world, entry) {
       const source = await fetchPacked(entry.name, { cache: "no-store" });
       const key = packKey(entry);
       await store.put(key, new Response(await source.response.arrayBuffer(),
@@ -1959,6 +2073,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       for (const request of await store.keys()) {
         if (request.url !== key && packPath(request.url) === packPath(key)) await store.delete(request);
       }
+      await keepMapIndex(store, world, entry);
       return entry.packed || 0;
     }
     async function downloadRestInBackground(job) {
@@ -2008,7 +2123,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
           if (job.stopped) return;
           while (mapPacksLoading) await new Promise((resume) => setTimeout(resume, 250));
           try {
-            const size = await keepMapPack(maps.store, entry);
+            const size = await keepMapPack(maps.store, world, entry);
             bytes += size;
             done++;
             downloadButton.progress(null, null, size);

@@ -3593,6 +3593,11 @@ bool SendMacroSlot(int slot)
     return true;
 }
 
+bool QuickPhrasePauseRunning()
+{
+    return LastMacroTime + QuickPhraseCooldownMs > GetTickCount64();
+}
+
 bool TakeQuickPhrasePause()
 {
     const uint64_t now = GetTickCount64();

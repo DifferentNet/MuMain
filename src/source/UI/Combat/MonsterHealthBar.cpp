@@ -12,6 +12,22 @@ constexpr double HealthSteps = 250.0;
 constexpr double DecimalBelowPercent = 10.0;
 } // namespace
 
+const std::wstring& UI::Combat::HealthBar::NameLine(const wchar_t* name, float healthStatus)
+{
+    static bool built = false;
+    static std::wstring lastName;
+    static float lastHealth = 0.0f;
+    static std::wstring line;
+    if (built && healthStatus == lastHealth && lastName == name)
+        return line;
+    built = true;
+    lastName = name;
+    lastHealth = healthStatus;
+    const std::wstring health = PercentText(healthStatus);
+    line = health.empty() ? lastName : lastName + L"  " + health;
+    return line;
+}
+
 bool UI::Combat::HealthBar::ShouldRenderSelected(float healthStatus)
 {
     return healthStatus != 0.0f;

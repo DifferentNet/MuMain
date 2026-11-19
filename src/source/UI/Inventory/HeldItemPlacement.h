@@ -31,6 +31,15 @@ struct HeldItemMove
 // Asks the server to do the move. Returns false when the request was not sent.
 bool SendHeldItemMove(const HeldItemMove& move);
 
+// The held item was lifted from `grid` and the pointer is over the squares it came from (the
+// second tap of a finger's double tap, after the first lifted it).
+[[nodiscard]] bool IsHeldOverItsSquares(mu::ui::window::CInventoryCtrl* grid);
+
+// Puts that item back on its squares without asking the server for anything. True once no item
+// is held; false, with the item still held, when it is not over its squares in `grid` or a move
+// is waiting for the server.
+bool PutHeldItemBack(mu::ui::window::CInventoryCtrl* grid);
+
 // What a right-click move came to; the caller says why it did not happen.
 enum class AutoMoveResult
 {

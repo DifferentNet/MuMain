@@ -3,6 +3,7 @@
 #include "UI/Inventory/ShopUpdates.h"
 
 #include "Core/Globals/_enum.h"
+#include "Engine/Object/ZzzInventory.h"
 #include "GameLogic/Items/PersonalShopCurrency.h"
 #include "GameLogic/Items/PersonalShopTitleImp.h"
 #include "GameShop/InGameShop.h"
@@ -62,6 +63,17 @@ void ReplaceOwnShopItems(std::span<const ShopItem> items, std::wstring_view titl
 int OwnShopPriceTargetIndex()
 {
     return g_pMyShopInventory->GetTargetIndex();
+}
+
+std::wstring OwnShopItemName(int slot)
+{
+    auto* shop = g_pMyShopInventory;
+    const ITEM* item = shop != nullptr ? shop->FindItem(slot) : nullptr;
+    if (item == nullptr)
+        return {};
+    wchar_t name[128] = {};
+    ::GetItemName(item->Type, item->Level, name);
+    return name;
 }
 
 void RememberReplacedOwnShopPrice(int slot)

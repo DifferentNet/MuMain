@@ -232,6 +232,9 @@ void Sync(Model& model, MarkDirty markDirty)
     SyncExpText(model, experience, force, markDirty);
     SyncLevel(model, force, markDirty);
     SyncPotions(model, force, markDirty);
-    Set(model.pointsAlert, CharacterAttribute->LevelUpPoint > 0, "points_alert", markDirty);
+    Set(model.pointsAlert,
+        PointsToSpend(CharacterAttribute->LevelUpPoint, gCharacterManager.IsMasterLevel(Hero->Class),
+                      Master_Level_Data.nMLevelUpMPoint),
+        "points_alert", markDirty);
 }
 } // namespace UI::Mobile::HeroFrame

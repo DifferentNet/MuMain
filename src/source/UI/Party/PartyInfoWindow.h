@@ -12,7 +12,7 @@
 #include "UI/Inventory/MyInventory.h"
 #include "UI/RmlBridge/RmlThemedView.h"
 
-namespace Rml { class ElementDocument; }
+namespace Rml { class ElementDocument; class Event; }
 
 namespace mu::ui::window
 {
@@ -90,6 +90,10 @@ namespace mu::ui::window
         void RmlClickKickMember(int index);
         // The phone view's button under the hint: asks Update() to open the Social panel, outside the click.
         void RmlClickOpenSocial();
+        // A double click on a member's row (with the touch controls a tap on his name only, so a tap elsewhere on the
+        // row doesn't open the chat): the chat opens with a whisper to him,
+        // as in the guild window. Not on the kick button, not on the hero.
+        void WhisperMember(int index, const Rml::Event& event, bool tap);
 
 
     private:

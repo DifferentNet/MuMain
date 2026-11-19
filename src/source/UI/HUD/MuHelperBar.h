@@ -52,6 +52,8 @@ namespace mu::ui::window
         // Set by the RmlUi document's data-event-click bindings; polled and cleared like other windows' RmlClickX().
         void RmlClickConfig() { m_bRmlConfigClicked = true; }
         void RmlClickToggle() { m_bRmlToggleClicked = true; }
+        // A click or tap on the position readout opens the map, as Tab (and the touch Map button) does.
+        void RmlClickPosition() { m_bRmlPositionClicked = true; }
 
     private:
         struct MuHelperBarRmlModel
@@ -73,6 +75,7 @@ namespace mu::ui::window
 
         bool m_bRmlConfigClicked = false;
         bool m_bRmlToggleClicked = false;
+        bool m_bRmlPositionClicked = false;
 
         // The hovered button's hint (0 config, 1 start, 2 stop), in the shared tooltip.
 
@@ -91,5 +94,26 @@ namespace mu::ui::window
         static constexpr int HintCount = 3;
         const wchar_t* m_pHintSources[HintCount] = {};
         Rml::String m_HintTexts[HintCount];
+
+        // The ping label's inputs: the texts are formatted again only when one of them changed.
+        struct PingTextKey
+        {
+            bool hasReading = false;
+            int lastMs = -1;
+            int medianMs = -1;
+            int networkMs = -1;
+            bool stale = false;
+            const wchar_t* labelFormat = nullptr;
+            const wchar_t* hintFormat = nullptr;
+            const wchar_t* hintNetworkFormat = nullptr;
+            bool operator==(const PingTextKey&) const = default;
+        };
+        static PingTextKey CurrentPingTextKey();
+        void BuildPingTexts(const PingTextKey& key);
+        bool m_bPingBuilt = false;
+        PingTextKey m_PingBuiltFor;
+        std::string m_PingText;
+        std::string m_PingLevel;
+        std::string m_PingHint;
     };
 }

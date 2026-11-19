@@ -71,6 +71,7 @@
 #include "UI/Chat/SeenSkills.h"
 #include "UI/Chat/HeroStatusLines.h"
 #include "UI/Chat/InviteAutoDecline.h"
+#include "UI/Chat/InviterDetail.h"
 #include "GameLogic/Combat/DuelReplies.h"
 #include "App/Platform/AttentionSignal.h"
 #include "GameLogic/Commands/ChatCommandCatalog.h"
@@ -90,6 +91,7 @@
 #include "Guild/GuildUpdates.h"
 #include "UI/HUD/ExperiencePace.h"
 #include "UI/HUD/HudUpdates.h"
+#include "UI/HUD/TouchControls.h"
 #include "UI/Core/WindowCommon.h" // ShowTrainerMenuDialog/ShowSeedMasterMenuDialog/etc.
 #include "GameLogic/Events/w_CursedTemple.h"
 #include "GameLogic/Skills/SummonSystem.h"
@@ -1052,6 +1054,18 @@ void InitGame()
     UI::Guild::ClearNotices();
 }
 
+namespace
+{
+    // InitGame() for a session that ends: back to the character list, to the login or a reconnect. The buff
+    // countdowns of the last character go too, or the next one would show their old time. A move to another map
+    // server (CSMapServer) keeps the same character and its countdowns, so it calls InitGame() alone.
+    void InitGameForNewSession()
+    {
+        TheBuffTimeControl().Clear();
+        InitGame();
+    }
+}
+
 BOOL ReceiveLogOut(const BYTE* ReceiveBuffer, BOOL bEncrypted)
 {
     LogOut = false;
@@ -1081,7 +1095,7 @@ BOOL ReceiveLogOut(const BYTE* ReceiveBuffer, BOOL bEncrypted)
 
         g_sceneInit.ResetForDisconnect();
         CurrentProtocolState = REQUEST_JOIN_SERVER;
-        InitGame();
+        InitGameForNewSession();
         break;
     case 2:
         if (SceneFlag == MAIN_SCENE)
@@ -1113,7 +1127,7 @@ BOOL ReceiveLogOut(const BYTE* ReceiveBuffer, BOOL bEncrypted)
 
         LogIn = 0;
         g_csMapServer.Init();
-        InitGame();
+        InitGameForNewSession();
         break;
     }
 
@@ -1162,7 +1176,7 @@ void ResetClientToLoginScene()
     CurrentProtocolState = REQUEST_JOIN_SERVER;
     LogIn = 0;
     g_csMapServer.Init();
-    InitGame();
+    InitGameForNewSession();
 
     UI::Social::Reset();
 }
@@ -1555,8 +1569,9 @@ namespace
 UI::Chat::SeenSkills g_seenSkills;
 
 // "New skill: X" for a skill the hero did not have in this session. Not for pet commands, nor for master skills
-// (they come from the master tree window, which shows them, and often replace a base skill).
-void NoteSkillAdded(int skillType)
+// (they come from the master tree window, which shows them, and often replace a base skill). With the on-screen
+// controls shown the skill goes on an empty skill button first, and the line comes from there (TouchControls).
+void NoteSkillAdded(int skillIndex, int skillType)
 {
     if (skillType <= 0 || skillType >= MAX_SKILLS)
         return;
@@ -1567,6 +1582,8 @@ void NoteSkillAdded(int skillType)
         useType == SKILL_USE_TYPE_MASTERACTIVE)
         return;
     if (!g_seenSkills.NoteAdded(skillType))
+        return;
+    if (UI::HUD::TouchControls::OfferNewSkill(skillIndex, skillType))
         return;
 
     wchar_t line[128]{};
@@ -1593,7 +1610,7 @@ void ReceiveMagicList(const BYTE* ReceiveBuffer)
         auto Data2 = (LPPRECEIVE_MAGIC_LIST)(ReceiveBuffer + Offset);
         CharacterAttribute->Skill[Data2->Index] = (ActionSkillType)Data2->Type;
         CharacterAttribute->SkillLevel[Data2->Index] = Data2->Level;
-        NoteSkillAdded(Data2->Type);
+        NoteSkillAdded(Data2->Index, Data2->Type);
     }
     else if (Data->ListType == 0x02)
     {
@@ -6210,7 +6227,7 @@ void ReceiveDie(const BYTE* ReceiveBuffer, int Size)
 
     if (c == Hero)
     {
-        MUHelper::g_MuHelper.TriggerStop();
+        MUHelper::g_MuHelper.StopForHeroDeath();
         PostKilledBy(Data, Size);
         UI::Chat::ChangeLines::NoteHeroDeath();
     }
@@ -7662,10 +7679,10 @@ void ReceiveParty(const BYTE* ReceiveBuffer)
 
     UI::Dialogs::ConfirmRequest cfg;
     cfg.cancellable = true;
-    cfg.lines = {
-        { CharactersClient[FindCharacterIndex(PartyKey)].ID, false },
-        { I18N::Game::SomeoneRequestsYouToJoinTheirAParty, false },
-    };
+    cfg.lines.push_back({ CharactersClient[FindCharacterIndex(PartyKey)].ID, false });
+    if (std::wstring detail = UI::Chat::InviterDetail::ForKey(PartyKey); !detail.empty())
+        cfg.lines.push_back({ std::move(detail), false });
+    cfg.lines.push_back({ I18N::Game::SomeoneRequestsYouToJoinTheirAParty, false });
     cfg.onAccept = [] { SocketClient->ToGameServer()->SendPartyInviteResponse(true, PartyKey); };
     cfg.onCancel = [] { SocketClient->ToGameServer()->SendPartyInviteResponse(false, PartyKey); };
     cfg.tag = "party-invite";
@@ -9428,8 +9445,12 @@ void ReceiveDuelRequest(const BYTE* ReceiveBuffer)
         return;
     }
 
+    // A message box open: the challenge is refused (it used to stay unanswered) and said in the chat. The refusal
+    // goes straight to this challenger: the duel manager may hold another one whose dialog is open.
     if (UI::Dialogs::IsMessageBoxOpen())
     {
+        SocketClient->ToGameServer()->SendDuelStartResponse(FALSE, enemyKey, MU_C16(playerName));
+        UI::Chat::InviteAutoDecline::SayRefusedWhileBusy(UI::Chat::InviteKind::Duel, playerName);
         return;
     }
 
@@ -9438,6 +9459,7 @@ void ReceiveDuelRequest(const BYTE* ReceiveBuffer)
     if (UI::Dialogs::IsDuelRequestBlocked())
     {
         g_DuelMgr.SendDuelRequestAnswer(DUEL_ENEMY, FALSE);
+        UI::Chat::InviteAutoDecline::SayRefusedWhileBusy(UI::Chat::InviteKind::Duel, playerName);
         return;
     }
 
@@ -9445,10 +9467,10 @@ void ReceiveDuelRequest(const BYTE* ReceiveBuffer)
     UI::Dialogs::ConfirmRequest cfg;
     cfg.cancellable = true;
     cfg.duelCaption = std::wstring(L"[") + g_DuelMgr.GetDuelPlayerID(DUEL_ENEMY) + L"]";
-    cfg.lines = {
-        { I18N::Game::YouAreChallengedToADuel, false },
-        { I18N::Game::WouldYouLikeToAcceptTheChallenge, false },
-    };
+    if (std::wstring detail = UI::Chat::InviterDetail::ForKey(enemyKey); !detail.empty())
+        cfg.lines.push_back({ std::move(detail), false });
+    cfg.lines.push_back({ I18N::Game::YouAreChallengedToADuel, false });
+    cfg.lines.push_back({ I18N::Game::WouldYouLikeToAcceptTheChallenge, false });
     cfg.onAccept = [] { g_DuelMgr.SendDuelRequestAnswer(DUEL_ENEMY, TRUE); };
     cfg.onCancel = [] { g_DuelMgr.SendDuelRequestAnswer(DUEL_ENEMY, FALSE); };
     UI::Dialogs::ShowConfirm(std::move(cfg));
@@ -10088,8 +10110,20 @@ void NotifySoldItem(const BYTE* ReceiveBuffer)
     wchar_t szId[MAX_USERNAME_SIZE + 2] = {0};
 
     CMultiLanguage::ConvertFromUtf8(szId, Header->szId, MAX_USERNAME_SIZE);
-    wchar_t Text[100];
-    mu_swprintf(Text, I18N::Game::ItemWasSoldToS, szId);
+    wchar_t Text[256];
+    // The server says "sold" before it takes the item away: it still stands in its shop cell with its price.
+    const int slot = Header->byPos;
+    const std::wstring itemName = UI::Shop::OwnShopItemName(slot);
+    GameLogic::PersonalShop::ItemPrice price;
+    if (!itemName.empty() && GetPersonalItemPrice(slot, price, PSHOPWNDTYPE_SALE))
+    {
+        mu_swprintf(Text, I18N::Game::SoldItemToFor, itemName.c_str(), szId,
+                    GameLogic::PersonalShop::FormatPrice(price).c_str());
+    }
+    else
+    {
+        mu_swprintf(Text, I18N::Game::ItemWasSoldToS, szId);
+    }
     UI::Chat::PostSystem(Text, mu::ui::window::TYPE_SYSTEM_MESSAGE);
 }
 

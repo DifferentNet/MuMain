@@ -56,14 +56,24 @@ void mu::ui::window::EventTimerView::Sync(bool visible, const Line& first, const
               UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Normal));
     SyncField(m_View.Binder(), &EventTimerRmlModel::bigTextPx, "big_text_px",
               UI::RmlBridge::NativeTextPx(UI::Scaling::FontRole::Big));
-    auto syncLine = [&](const Line& line, Rml::String EventTimerRmlModel::* text, const char* textName,
+    auto syncLine = [&](int index, const Line& line, Rml::String EventTimerRmlModel::* text, const char* textName,
                         Rml::String EventTimerRmlModel::* state, const char* stateName)
     {
-        SyncField(m_View.Binder(), text, textName, StringUtils::WideToNarrow(line.text.c_str()));
+        SyncLineText(index, line.text, text, textName);
         SyncField(m_View.Binder(), state, stateName, Rml::String(line.state));
     };
-    syncLine(first, &EventTimerRmlModel::killsText, "kills_text", &EventTimerRmlModel::killsState, "kills_state");
-    syncLine(second, &EventTimerRmlModel::timeLeftText, "time_left_text", &EventTimerRmlModel::timeLeftState,
+    syncLine(0, first, &EventTimerRmlModel::killsText, "kills_text", &EventTimerRmlModel::killsState, "kills_state");
+    syncLine(1, second, &EventTimerRmlModel::timeLeftText, "time_left_text", &EventTimerRmlModel::timeLeftState,
              "time_left_state");
-    syncLine(time, &EventTimerRmlModel::timeText, "time_text", &EventTimerRmlModel::timeState, "time_state");
+    syncLine(2, time, &EventTimerRmlModel::timeText, "time_text", &EventTimerRmlModel::timeState, "time_state");
+}
+
+void mu::ui::window::EventTimerView::SyncLineText(int index, const std::wstring& text,
+                                                  Rml::String EventTimerRmlModel::* field, const char* fieldName)
+{
+    if (m_LineBuilt[index] && m_LineSources[index] == text)
+        return;
+    m_LineBuilt[index] = true;
+    m_LineSources[index] = text;
+    SyncField(m_View.Binder(), field, fieldName, StringUtils::WideToNarrow(text.c_str()));
 }

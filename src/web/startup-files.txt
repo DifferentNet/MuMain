@@ -2175,6 +2175,8 @@ Data/World74/TileGrass03.OZT
 Data/World74/leaf01.ozt
 Data/World74/leaf01.ozj
 Data/World74/leaf02.ozj
+Data/World74/Fog.OZJ
+Data/World74/TileRock04.OZJ
 Data/World1/rain01.OZT
 Data/World1/rain02.OZT
 Data/World10/rain03.OZT
@@ -2277,6 +2279,11 @@ Data/World75/TileGrass03.OZT
 Data/World75/leaf01.ozt
 Data/World75/leaf01.ozj
 Data/World75/leaf02.ozj
+Data/World75/Fog.OZJ
+Data/World75/TileRock04.OZJ
+Data/World75/rain01.OZT
+Data/World75/rain02.OZT
+Data/World75/rain03.OZT
 Data/Interface/cha_id.OZT
 Data/Interface/b_create.OZT
 Data/Interface/b_connect.OZT

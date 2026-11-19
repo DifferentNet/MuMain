@@ -156,6 +156,17 @@ bool CPartyListWindow::Update()
             g_pPartyInfoWindow->ConfirmLeaveParty(member);
     }
 
+    // Party[].index still holds last frame's character pass here (it is reset below).
+    if (m_PendingFollow >= 0)
+    {
+        const int member = m_PendingFollow;
+        m_PendingFollow = -1;
+        const int index = member < PartyNumber ? Party[member].index : -1;
+        if (index >= 0 && index < MAX_CHARACTERS_CLIENT && Hero != nullptr && &CharactersClient[index] != Hero
+            && CharactersClient[index].Object.Live && CharactersClient[index].Object.Kind == KIND_PLAYER)
+            StartFollowing(index);
+    }
+
     // Before the reset below: Party[].index still holds what last frame's character pass found,
     // which is what the original's Render() read.
     SyncRmlModel();
@@ -235,6 +246,21 @@ void CPartyListWindow::BindRmlModel(Rml::DataModelConstructor& c, PartyListRmlMo
                                 return;
                             GameLogic::Touch::ToggleFriend(CharactersClient[index].Key);
                             PlayBuffer(SOUND_CLICK01);
+                        });
+    // A double click on a card with the mouse: follow that member (out of view: nothing). Touch keeps the tap's pick;
+    // the leave button is no follow.
+    c.BindEventCallback("party_follow",
+                        [this](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList& arguments)
+                        {
+                            if (UI::Mobile::ShowsControls() || arguments.size() != 1)
+                                return;
+                            for (Rml::Element* part = event.GetTargetElement();
+                                 part != nullptr && part != event.GetCurrentElement(); part = part->GetParentNode())
+                            {
+                                if (part->IsClassSet("card-leave"))
+                                    return;
+                            }
+                            m_PendingFollow = arguments[0].Get<int>(-1);
                         });
     // Only the card's own mouseout: one bubbling up from a part of it leaves the card hovered.
     c.BindEventCallback("party_unhover",

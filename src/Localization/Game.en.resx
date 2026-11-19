@@ -1056,7 +1056,7 @@
     <comment>legacy_id=262</comment>
   </data>
   <data name="You can enter Icarus only with wings, dinorant, fenrirr" xml:space="preserve">
-    <value>You can enter Icarus only with wings, dinorant, fenrirr</value>
+    <value>You can enter Icarus only with wings, a Dinorant or a Fenrir.</value>
     <comment>legacy_id=263</comment>
   </data>
   <data name="/whisper off" xml:space="preserve">
@@ -1344,7 +1344,7 @@
     <comment>legacy_id=368</comment>
   </data>
   <data name="About %d" xml:space="preserve">
-    <value>About %d</value>
+    <value>%d+</value>
     <comment>legacy_id=369</comment>
   </data>
   <data name="Warning!" xml:space="preserve">
@@ -9722,7 +9722,7 @@
     <comment>legacy_id=2651</comment>
   </data>
   <data name="No item application" xml:space="preserve">
-    <value>No item application</value>
+    <value>(empty)</value>
     <comment>legacy_id=2652</comment>
   </data>
   <data name="Element: %s" xml:space="preserve">
@@ -12558,7 +12558,7 @@
     <comment>legacy_id=3579</comment>
   </data>
   <data name="Official MU Helper Setting has been saved." xml:space="preserve">
-    <value>Official MU Helper Setting has been saved.</value>
+    <value>MU Helper settings saved.</value>
     <comment>legacy_id=3580</comment>
   </data>
   <data name="Official MU Helper can't be implemented in this region." xml:space="preserve">
@@ -17378,5 +17378,56 @@
   </data>
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>One of the guilds is already in a guild war.</value>
+  </data>
+  <!-- Round 15 -->
+  <data name="InviteRefusedBusyTrade" xml:space="preserve">
+    <value>%ls wanted to trade (a window was open).</value>
+  </data>
+  <data name="InviteRefusedBusyDuel" xml:space="preserve">
+    <value>%ls challenged you to a duel (a window was open).</value>
+  </data>
+  <data name="SoldItemToFor" xml:space="preserve">
+    <value>Sold %ls to %ls for %ls.</value>
+  </data>
+  <!-- Round 16 -->
+  <data name="StatButtonTooltip" xml:space="preserve">
+    <value>Click: +1. Right click: +10, +100 and more, or all</value>
+  </data>
+  <data name="NewSkillOnButton" xml:space="preserve">
+    <value>New skill: %ls (skill button %d)</value>
+  </data>
+  <data name="TouchHelpDoubleTapMove" xml:space="preserve">
+    <value>Double tap an item to move it</value>
+  </data>
+  <!-- Round 17 -->
+  <data name="MuHelperStoppedHeroDied" xml:space="preserve">
+    <value>MU Helper stopped: your character died.</value>
+  </data>
+  <data name="MuHelperNoHealPotions" xml:space="preserve">
+    <value>MU Helper: out of healing potions.</value>
+  </data>
+  <data name="MuHelperBagFull" xml:space="preserve">
+    <value>MU Helper: no room in the bag, items stay on the ground.</value>
+  </data>
+  <data name="RepairNoZen" xml:space="preserve">
+    <value>Not enough zen to repair the gear.</value>
+  </data>
+  <data name="MuHelperUnconfiguredZ" xml:space="preserve">
+    <value>MU Helper uses plain attacks only: set skills, potions and pickup in its settings (Z)</value>
+  </data>
+  <data name="MuHelperUnconfiguredTouch" xml:space="preserve">
+    <value>MU Helper uses plain attacks only: set skills, potions and pickup in Menu → MU Helper</value>
+  </data>
+  <data name="TicketFitsYourLevel" xml:space="preserve">
+    <value>Fits your level</value>
+  </data>
+  <data name="TicketYouNeedPlusD" xml:space="preserve">
+    <value>You need ticket +%d</value>
+  </data>
+  <data name="EntryTicketNotInBag" xml:space="preserve">
+    <value>Ticket: %ls +%d — not in the bag</value>
+  </data>
+  <data name="FieldRepairAllConfirm" xml:space="preserve">
+    <value>Repair all worn items for %ls zen?</value>
   </data>
 </root>

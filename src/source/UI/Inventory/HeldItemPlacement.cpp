@@ -47,6 +47,22 @@ bool SendHeldItemMove(const HeldItemMove& move)
     return SendRequestEquipmentItem(move.sourceType, move.sourceIndex, move.item, move.targetType, move.targetIndex);
 }
 
+bool IsHeldOverItsSquares(CInventoryCtrl* grid)
+{
+    CPickedItem* pickedItem = CInventoryCtrl::GetPickedItem();
+    return grid != nullptr && pickedItem != nullptr && pickedItem->GetItem() != nullptr &&
+           pickedItem->GetOwnerInventory() == grid &&
+           pickedItem->GetTargetLinealPos(grid) == pickedItem->GetSourceLinealPos();
+}
+
+bool PutHeldItemBack(CInventoryCtrl* grid)
+{
+    if (!IsHeldOverItsSquares(grid) || IsItemMovePending())
+        return false;
+    CInventoryCtrl::BackupPickedItem();
+    return CInventoryCtrl::GetPickedItem() == nullptr;
+}
+
 AutoMoveResult AutoMoveItemAtCursor(CInventoryCtrl* source, STORAGE_TYPE sourceType, CInventoryCtrl* target,
                                     STORAGE_TYPE targetType, const std::function<bool(ITEM*)>& accepts)
 {

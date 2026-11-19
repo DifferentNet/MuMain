@@ -299,6 +299,92 @@ TEST_CASE("audio shutdown clears failed tracks even without a loaded stream [aud
     std::filesystem::remove_all(directory);
 }
 
+TEST_CASE("music volume 0 pauses the track and a raised volume resumes it [audio][music]")
+{
+    auto backend = std::make_unique<mu::MiniAudioBackend>();
+    InitNoDeviceEngine(*backend);
+    const std::filesystem::path testDirectory = CreateMusicAsset();
+    const std::string track = (testDirectory / "Data" / "Music" / "track.wav").generic_string();
+
+    backend->PlayMusic(track.c_str(), false);
+    REQUIRE(ma_sound_is_playing(&backend->m_musicSound));
+
+    backend->SetBGMVolume(0.0f);
+    CHECK_FALSE(ma_sound_is_playing(&backend->m_musicSound));
+    CHECK(backend->m_musicLoaded);
+    // The game still sees the track as playing, as when it played silently.
+    CHECK_FALSE(backend->IsEndMusic());
+
+    backend->SetBGMVolume(0.5f);
+    CHECK(ma_sound_is_playing(&backend->m_musicSound));
+    CHECK_FALSE(backend->IsEndMusic());
+
+    backend->StopMusic(nullptr, true);
+    CHECK(backend->IsEndMusic());
+
+    backend->Shutdown();
+    std::filesystem::remove_all(testDirectory);
+}
+
+TEST_CASE("a track started at music volume 0 waits paused until the volume rises [audio][music]")
+{
+    auto backend = std::make_unique<mu::MiniAudioBackend>();
+    InitNoDeviceEngine(*backend);
+    const std::filesystem::path testDirectory = CreateMusicAsset();
+    const std::string track = (testDirectory / "Data" / "Music" / "track.wav").generic_string();
+
+    backend->SetBGMVolume(0.0f);
+    backend->PlayMusic(track.c_str(), true);
+    REQUIRE(backend->m_musicLoaded);
+    CHECK_FALSE(ma_sound_is_playing(&backend->m_musicSound));
+    CHECK_FALSE(backend->IsEndMusic());
+
+    backend->SetBGMVolume(1.0f);
+    CHECK(ma_sound_is_playing(&backend->m_musicSound));
+
+    backend->Shutdown();
+    std::filesystem::remove_all(testDirectory);
+}
+
+TEST_CASE("at effect volume 0 a sound played once does not start and a looped one does [audio][volume]")
+{
+    auto backend = std::make_unique<mu::MiniAudioBackend>();
+    InitNoDeviceEngine(*backend);
+
+    constexpr ma_uint64 sourceFrameCount = 1024;
+    std::array<float, sourceFrameCount> sourceFrames{};
+    sourceFrames.fill(0.25f);
+    ma_audio_buffer_config bufferConfig =
+        ma_audio_buffer_config_init(ma_format_f32, 1, sourceFrameCount, sourceFrames.data(), nullptr);
+    ma_audio_buffer audioBuffer{};
+    REQUIRE(ma_audio_buffer_init(&bufferConfig, &audioBuffer) == MA_SUCCESS);
+
+    constexpr ESound soundId = SOUND_CLICK01;
+    const int soundIndex = static_cast<int>(soundId);
+    ma_sound* const sound = &backend->m_sounds[soundIndex][0];
+    REQUIRE(ma_sound_init_from_data_source(&backend->m_engine, reinterpret_cast<ma_data_source*>(&audioBuffer), 0,
+                                           nullptr, sound) == MA_SUCCESS);
+    backend->m_soundLoaded[soundIndex] = true;
+    backend->m_loadedChannels[soundIndex] = 1;
+    backend->m_activeChannel[soundIndex] = 0;
+
+    backend->SetSFXVolume(0.0f);
+    CHECK_FALSE(backend->PlaySound(soundId, nullptr, false));
+    CHECK_FALSE(ma_sound_is_playing(sound));
+
+    // A looped sound starts silently, so it is heard when the volume rises.
+    CHECK(backend->PlaySound(soundId, nullptr, true));
+    CHECK(ma_sound_is_playing(sound));
+    backend->StopSound(soundId, true);
+
+    backend->SetSFXVolume(0.5f);
+    CHECK(backend->PlaySound(soundId, nullptr, false));
+    CHECK(ma_sound_is_playing(sound));
+
+    backend->Shutdown();
+    ma_audio_buffer_uninit(&audioBuffer);
+}
+
 #ifdef _EDITOR
 namespace
 {

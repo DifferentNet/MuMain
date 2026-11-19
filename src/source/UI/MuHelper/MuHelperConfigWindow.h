@@ -143,6 +143,11 @@ namespace mu::ui::window
         void ApplyConfig();
         void InitConfig();
         void SaveConfig();
+        // The staged settings with the slots and number fields this window holds, as Save sends them.
+        MUHelper::ConfigData CollectConfig() const;
+        // On every way out (Esc, X, Close, another window closing this one): what differs from the running
+        // settings is saved, so ticks that show are ticks the helper uses.
+        void SaveIfChanged();
 
         void OnToggle(const Rml::String& key);
         void OnButton(const Rml::String& key);
@@ -168,6 +173,9 @@ namespace mu::ui::window
         std::array<int, SkillSlotCount> m_aiSelectedSkills{};
         Rml::String m_selectedExtraItem;
         bool m_bExtraItemsDirty = true;
+        // "Initialization" ran since the last save: the helper already runs the defaults (ApplyConfig), the server
+        // still has the old settings.
+        bool m_bInitUnsaved = false;
 
         void BindRmlModel(Rml::DataModelConstructor& c, MuHelperConfigRmlModel& model);
         // After every build: the field filters and limits the theme cannot set.

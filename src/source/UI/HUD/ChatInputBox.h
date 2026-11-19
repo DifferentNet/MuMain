@@ -7,6 +7,7 @@
 #include "UI/RmlBridge/RmlThemedView.h"
 #include "UI/Chat/ChatHistory.h"
 #include "UI/Chat/ChatPhrases.h"
+#include "UI/Chat/ChatSendGate.h"
 
 #pragma warning(disable : 4786)
 #include <array>
@@ -48,6 +49,8 @@ namespace mu::ui::window
         // Then the quick chat phrases (UI/Chat/ChatPhrases) in the player's language: a tap sends one at once,
         // each reader sees it in theirs.
         std::array<Rml::String, UI::Chat::Phrases::Count> chatPhrases;
+        // The phrase chips are dimmed while the pause after a phrase or macro runs (TakeQuickPhrasePause).
+        bool quickPaused = false;
     };
 
     class CChatInputBox : public CObject
@@ -73,8 +76,21 @@ namespace mu::ui::window
         typedef std::wstring type_string;
         typedef std::vector<type_string>	type_vec_history;
 
-        const uint64_t ChatCooldownMs = 1000; // 1 Second
-        uint64_t  m_lastChatTime = 0;
+        static constexpr uint64_t ChatCooldownMs = 1000; // 1 Second
+        // Enter within the cooldown keeps the line and Update() sends it once the second passed.
+        UI::Chat::ChatSendGate m_sendGate{ChatCooldownMs};
+        // What the waiting line was when Enter kept it: a line changed since (text, whisper target or channel)
+        // is not sent by itself.
+        struct PendingLine
+        {
+            type_string text;
+            type_string whisperId;
+            int inputMsgType = 0;
+            bool whisperSend = false;
+            bool operator==(const PendingLine&) const = default;
+        };
+        PendingLine m_pendingLine;
+        PendingLine CurrentLine();
 
         CManager* m_pNewUIMng;
         CChatLogWindow* m_pNewUIChatLogWnd;
@@ -121,6 +137,8 @@ namespace mu::ui::window
         // Sends the chat field's line as Enter does (to the channel chosen, or the whisper target),
         // clears the field and closes the bar.
         void SendChatLine();
+        // The line Enter kept during the cooldown, once the cooldown passed.
+        void SendPendingLine();
 
         // A phone's quick chat buttons 1 to 5 carry the saved macros of keys 1 to 5 (MacroText) when set.
         static bool HasMacro(int slot);

@@ -46,6 +46,8 @@ extern bool SelectFlag;
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Inventory/InventoryExtension.h"
 #include "UI/Dialogs/GenericConfirmDialog.h"
+#include "GameLogic/Items/FieldRepair.h"
+#include "UI/Chat/ChatMessages.h"
 
 // RmlUi migration -- see this class's header comment.
 #include "Render/RmlUi/RmlUiRuntime.h"
@@ -89,25 +91,26 @@ using namespace mu::ui::window;
 
 namespace
 {
-// The paperdoll's slots and the theme's element for each.
+// The paperdoll's slots, the theme's element for each and its item box (#<id>_item).
 struct SlotAnchor
 {
     int slot;
     const char* id;
+    const char* itemId;
 };
 constexpr SlotAnchor SlotAnchors[] = {
-    {EQUIPMENT_HELPER, "slot_helper"},
-    {EQUIPMENT_HELM, "slot_helm"},
-    {EQUIPMENT_WING, "slot_wing"},
-    {EQUIPMENT_WEAPON_LEFT, "slot_weapon_left"},
-    {EQUIPMENT_ARMOR, "slot_armor"},
-    {EQUIPMENT_WEAPON_RIGHT, "slot_weapon_right"},
-    {EQUIPMENT_GLOVES, "slot_gloves"},
-    {EQUIPMENT_PANTS, "slot_pants"},
-    {EQUIPMENT_BOOTS, "slot_boots"},
-    {EQUIPMENT_RING_LEFT, "slot_ring_left"},
-    {EQUIPMENT_AMULET, "slot_amulet"},
-    {EQUIPMENT_RING_RIGHT, "slot_ring_right"},
+    {EQUIPMENT_HELPER, "slot_helper", "slot_helper_item"},
+    {EQUIPMENT_HELM, "slot_helm", "slot_helm_item"},
+    {EQUIPMENT_WING, "slot_wing", "slot_wing_item"},
+    {EQUIPMENT_WEAPON_LEFT, "slot_weapon_left", "slot_weapon_left_item"},
+    {EQUIPMENT_ARMOR, "slot_armor", "slot_armor_item"},
+    {EQUIPMENT_WEAPON_RIGHT, "slot_weapon_right", "slot_weapon_right_item"},
+    {EQUIPMENT_GLOVES, "slot_gloves", "slot_gloves_item"},
+    {EQUIPMENT_PANTS, "slot_pants", "slot_pants_item"},
+    {EQUIPMENT_BOOTS, "slot_boots", "slot_boots_item"},
+    {EQUIPMENT_RING_LEFT, "slot_ring_left", "slot_ring_left_item"},
+    {EQUIPMENT_AMULET, "slot_amulet", "slot_amulet_item"},
+    {EQUIPMENT_RING_RIGHT, "slot_ring_right", "slot_ring_right_item"},
 };
 // This window's slot in the workspace (WindowSystem.cpp), and #panel's class beside a neighbour there.
 constexpr const char* PlacementSlotName = "inventory";
@@ -201,6 +204,9 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
 
     c.Bind("repair_visible", &model.repairVisible);
     c.Bind("repair_tooltip", &model.repairTooltip);
+    c.Bind("repair_all_visible", &model.repairAllVisible);
+    c.Bind("repair_all_tooltip", &model.repairAllTooltip);
+    c.Bind("repair_all_count", &model.repairAllCount);
 
     c.Bind("myshop_visible", &model.myShopVisible);
     c.Bind("myshop_mode_open", &model.myShopModeOpen);
@@ -278,6 +284,8 @@ void CMyInventory::BindRmlModel(Rml::DataModelConstructor& c, MyInventoryRmlMode
         });
     c.BindEventCallback("my_inventory_repair_click",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { ToggleRepairMode(); });
+    c.BindEventCallback("my_inventory_repair_all_click",
+        [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&) { RequestFieldRepairAll(); });
     c.BindEventCallback("my_inventory_myshop_click",
         [this](Rml::DataModelHandle, Rml::Event&, const Rml::VariantList&)
         {
@@ -641,11 +649,13 @@ void CMyInventory::DeleteAllItems() const
 // The paperdoll's slots and their items' boxes where the theme draws them, in window pixels.
 void CMyInventory::SyncNativeLayout()
 {
+    static_assert(std::size(SlotAnchors) == SlotAnchorCount);
     Rml::ElementDocument* document = m_RmlView.Document();
-    for (const SlotAnchor& anchor : SlotAnchors)
+    for (int i = 0; i < SlotAnchorCount; ++i)
     {
+        const SlotAnchor& anchor = SlotAnchors[i];
         auto& slot = m_EquipmentSlots[anchor.slot];
-        Rml::Element* box = document != nullptr ? document->GetElementById(anchor.id) : nullptr;
+        Rml::Element* box = m_SlotBoxes[i].Find(document, anchor.id);
         Rml::Vector2f offset;
         Rml::Vector2f size;
         ShownBox(box, offset, size);
@@ -655,8 +665,7 @@ void CMyInventory::SyncNativeLayout()
         slot.height = size.y;
 
         // A slot the theme hides (the phone view's bag-only inventory) takes no click and draws no item.
-        const std::string itemId = std::string(anchor.id) + "_item";
-        ShownBox(document != nullptr ? document->GetElementById(itemId) : nullptr, offset, size);
+        ShownBox(m_SlotItemBoxes[i].Find(document, anchor.itemId), offset, size);
         slot.itemX = offset.x;
         slot.itemY = offset.y;
         slot.itemWidth = size.x;
@@ -765,7 +774,7 @@ void CMyInventory::AskBagPageBuy()
 void CMyInventory::SyncBesideNeighbour()
 {
     Rml::ElementDocument* document = m_RmlView.Document();
-    Rml::Element* panel = document != nullptr ? document->GetElementById("panel") : nullptr;
+    Rml::Element* panel = m_PanelElement.Find(document, "panel");
     const bool beside = UI::Placement::HasOpenNeighbour(PlacementSlotName);
     if (panel == nullptr || panel->IsClassSet(BesideClass) == beside)
         return;
@@ -1020,6 +1029,15 @@ bool CMyInventory::UpdateKeyEvent()
         }
     }
 
+    // A is a reserved letter (KeyBindings::IsAssignable); still, a key the player gave an action stays that action's.
+    if (IsPress('A') == true && m_RepairMode == SEASON3B::REPAIR_MODE_ON
+        && g_pNewUISystem->IsVisible(INTERFACE_NPCSHOP) == false
+        && Core::Input::KeyBindings::Runtime::Current().ActionOf('A') == Core::Input::KeyBindings::Action::None)
+    {
+        RequestFieldRepairAll();
+        return false;
+    }
+
     if (CanOpenMyShopInterface() == true && IsPress('S'))
     {
         if (m_bMyShopOpen)
@@ -1115,12 +1133,12 @@ bool CMyInventory::Update()
         // (UpdateMouseEvent() ran just before) -- the help on a phone's screen: the worn item's
         // tooltip showed through it.
         Rml::ElementDocument* document = g_pNewUIMng->IsPointerOnOtherWindow(this) ? nullptr : m_RmlView.Document();
-        for (const SlotAnchor& anchor : SlotAnchors)
+        for (int i = 0; i < SlotAnchorCount; ++i)
         {
-            const std::string itemId = std::string(anchor.id) + "_item";
-            if (document != nullptr && UI::RmlBridge::IsPointerWithin(document->GetElementById(itemId)))
+            if (document != nullptr &&
+                UI::RmlBridge::IsPointerWithin(m_SlotItemBoxes[i].Find(document, SlotAnchors[i].itemId)))
             {
-                m_iPointedSlot = anchor.slot;
+                m_iPointedSlot = SlotAnchors[i].slot;
                 break;
             }
         }
@@ -1193,6 +1211,13 @@ void CMyInventory::SyncRmlModel()
         || g_pNewUISystem->IsVisible(INTERFACE_STORAGE);
 
     syncBool(&MyInventoryRmlModel::repairVisible, "repair_visible", m_bRepairEnableLevel && !otherWindowOpen);
+    const bool repairAllVisible = m_bRepairEnableLevel && !otherWindowOpen && m_RepairMode == SEASON3B::REPAIR_MODE_ON;
+    syncBool(&MyInventoryRmlModel::repairAllVisible, "repair_all_visible", repairAllVisible);
+    // The legacy theme's hammer is the toggle's: a "xN" mark of the worn items to repair tells the two apart.
+    syncInt(&MyInventoryRmlModel::repairAllCount, "repair_all_count",
+        repairAllVisible
+            ? GameLogic::Items::FieldRepair::PlanRepairAll(std::numeric_limits<std::int64_t>::max()).count
+            : 0);
 
     syncBool(&MyInventoryRmlModel::myShopVisible, "myshop_visible", m_bMyShopOpen && !otherWindowOpen);
     syncBool(&MyInventoryRmlModel::myShopModeOpen, "myshop_mode_open", m_MyShopMode == MYSHOP_MODE_OPEN);
@@ -1333,6 +1358,7 @@ void CMyInventory::SyncTexts(bool bagLocked)
              UI::RmlBridge::GoldTierKey(GameLogic::Items::ClassifyGoldAmount(inputs.zen)));
 
     syncWide(&MyInventoryRmlModel::repairTooltip, "repair_tooltip", I18N::Game::RepairL);
+    syncWide(&MyInventoryRmlModel::repairAllTooltip, "repair_all_tooltip", I18N::Game::RepairAllA);
     syncWide(&MyInventoryRmlModel::myShopTooltip, "myshop_tooltip",
         m_MyShopMode == MYSHOP_MODE_OPEN ? I18N::Game::OpenPersonalStoreS : I18N::Game::ClosePersonalStoreS);
     syncWide(&MyInventoryRmlModel::exitTooltip, "exit_tooltip", CloseTooltip());
@@ -1583,6 +1609,75 @@ int CMyInventory::FindEmptySlotIncludingExtensions(ITEM* pItem) const
     return FindEmptySlotIncludingExtensions(pItemAttr->Width, pItemAttr->Height);
 }
 
+namespace
+{
+    // The stack size the server gives a stackable drop (its ItemDefinition.Durability), 0 for an item that
+    // doesn't stack on pickup. Only the stackables that drop from monsters; an unknown one counts as not
+    // stacking, so the helper at worst skips a drop it could have taken. Arrows and bolts are worn items
+    // there and never stack.
+    int PickupStackLimit(int type)
+    {
+        if (type >= ITEM_POTION && type <= ITEM_ANTIDOTE && type != ITEM_SIEGE_POTION)
+        {
+            return 255; // server/trim/season3.sql, part 6
+        }
+        if (GameLogic::Items::IsShieldPotionType(type) || GameLogic::Items::IsComplexPotionType(type))
+        {
+            return 255; // server/trim/merchants.sql
+        }
+        switch (type)
+        {
+        case ITEM_SYMBOL_OF_KUNDUN:
+            return 5;
+        case ITEM_SPLINTER_OF_ARMOR:
+        case ITEM_BLESS_OF_GUARDIAN:
+            return 20;
+        case ITEM_CLAW_OF_BEAST:
+            return 10;
+        default:
+            return 0;
+        }
+    }
+
+    // OpenMU's CanCompletelyStackOn: the same item and level, and both stacks together fit one stack. A drop
+    // that would only partly fit leaves its rest on the ground, which the helper would try again forever.
+    bool StacksCompletelyOn(const ITEM* pDrop, const ITEM* pTarget)
+    {
+        if (pTarget == nullptr || pTarget->Type != pDrop->Type || pTarget->Level != pDrop->Level)
+        {
+            return false;
+        }
+        const int limit = PickupStackLimit(pDrop->Type);
+        return limit > 1 && static_cast<int>(pDrop->Durability) + static_cast<int>(pTarget->Durability) <= limit;
+    }
+}
+
+bool CMyInventory::HasRoomForDrop(ITEM* pDrop) const
+{
+    if (pDrop == nullptr || pDrop->Type == ITEM_ZEN || FindEmptySlotIncludingExtensions(pDrop) != -1)
+    {
+        return pDrop != nullptr;
+    }
+
+    for (int g = 0; g < OwnedBagGridCount; ++g)
+    {
+        CInventoryCtrl* grid = OwnedBagGrid(g);
+        if (grid == nullptr)
+        {
+            continue;
+        }
+        const size_t count = grid->GetNumberOfItems();
+        for (size_t i = 0; i < count; ++i)
+        {
+            if (StacksCompletelyOn(pDrop, grid->GetItem(static_cast<int>(i))))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void CMyInventory::SetStandbyItemKey(DWORD dwItemKey)
 {
     m_dwStandbyItemKey = dwItemKey;
@@ -1787,6 +1882,8 @@ void CMyInventory::SyncSlotStates()
 {
     auto& states = m_RmlView.GetModel().slotStates;
     bool changed = false;
+    // Built in place each frame and copied into the model only when a slot's state changed.
+    Rml::String& value = m_SlotStateScratch;
     for (int i = 0; i < MAX_EQUIPMENT_INDEX; i++)
     {
         const char* state = "";
@@ -1817,7 +1914,7 @@ void CMyInventory::SyncSlotStates()
                 state = "unequipable";
         }
 
-        Rml::String value = state;
+        value.assign(state);
         // Nothing worn there: the pad's frame offers nothing to take (UI/HUD/PadTargets).
         if (CharacterMachine->Equipment[i].Type == -1)
             value += value.empty() ? "bare" : " bare";
@@ -1831,19 +1928,21 @@ void CMyInventory::SyncSlotStates()
         }
         if (states[i] != value)
         {
-            states[i] = std::move(value);
+            states[i] = value;
             changed = true;
         }
     }
     if (changed)
         m_RmlView.MarkDirty("slot_states");
 
-    // Page 2: its two 8x4 grids' cells one after the other, as the 8x8 grid draws them.
-    UI::Items::ItemGridCells cells;
+    // Page 1: the bag grid's own cells, compared in place. Page 2: its two 8x4 grids' cells one after the
+    // other, as the 8x8 grid draws them, built into a reused vector.
+    const UI::Items::ItemGridCells* cells = &m_PageCells;
+    m_PageCells.clear();
     if (m_BagPage == 1)
     {
         if (m_pNewInventoryCtrl)
-            cells = m_pNewInventoryCtrl->Cells();
+            cells = &m_pNewInventoryCtrl->Cells();
     }
     else
     {
@@ -1852,17 +1951,17 @@ void CMyInventory::SyncSlotStates()
             if (CInventoryCtrl* grid = BagGrid(i))
             {
                 const UI::Items::ItemGridCells& part = grid->Cells();
-                cells.insert(cells.end(), part.begin(), part.end());
+                m_PageCells.insert(m_PageCells.end(), part.begin(), part.end());
             }
             else
             {
-                cells.resize(cells.size() + COLUMN_INVENTORY * ROW_INVENTORY_EXT);
+                m_PageCells.resize(m_PageCells.size() + COLUMN_INVENTORY * ROW_INVENTORY_EXT);
             }
         }
     }
-    if (m_RmlView.GetModel().gridCells != cells)
+    if (m_RmlView.GetModel().gridCells != *cells)
     {
-        m_RmlView.GetModel().gridCells = std::move(cells);
+        m_RmlView.GetModel().gridCells = *cells;
         m_RmlView.MarkDirty("grid_cells");
     }
 
@@ -2254,6 +2353,45 @@ void CMyInventory::ToggleRepairMode()
     {
         SetRepairMode(false);
     }
+}
+
+void CMyInventory::RequestFieldRepairAll()
+{
+    namespace FieldRepair = GameLogic::Items::FieldRepair;
+    if (!m_bRepairEnableLevel || m_RepairMode != SEASON3B::REPAIR_MODE_ON
+        || g_pNewUISystem->IsVisible(INTERFACE_NPCSHOP) || CInventoryCtrl::GetPickedItem() != nullptr)
+        return;
+
+    const FieldRepair::Plan plan = FieldRepair::PlanRepairAll(CharacterMachine->Gold);
+    PlayBuffer(SOUND_CLICK01);
+    if (plan.count == 0)
+    {
+        // Damaged gear the zen does not cover says so; whole gear needs no line.
+        if (plan.shortOfZen)
+            UI::Chat::PostSystem(I18N::Game::RepairNoZen, TYPE_ERROR_MESSAGE);
+        return;
+    }
+
+    SetRepairMode(false);
+    if (plan.cost <= FieldRepair::ConfirmAboveZen || g_pGenericConfirmDialog == nullptr)
+    {
+        FieldRepair::Send(plan);
+        return;
+    }
+
+    wchar_t price[64] = {};
+    ConvertGold(static_cast<double>(plan.cost), price);
+    wchar_t question[256] = {};
+    mu_swprintf(question, I18N::Game::FieldRepairAllConfirm, price);
+
+    GenericDialogConfig cfg;
+    cfg.lines = {{question, true}};
+    cfg.primaryLabel = I18N::Game::RepairAll;
+    cfg.showCancel = true;
+    cfg.cancelLabel = I18N::Game::Cancel;
+    // Planned again on the click: the gear or the zen may have changed while the box was open.
+    cfg.onPrimary = [] { FieldRepair::Send(FieldRepair::PlanRepairAll(CharacterMachine->Gold)); };
+    g_pGenericConfirmDialog->Show(std::move(cfg));
 }
 
 bool CMyInventory::IsItem(short int siType, bool bcheckPick) const

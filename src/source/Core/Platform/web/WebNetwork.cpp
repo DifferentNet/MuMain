@@ -97,6 +97,14 @@ void ReportDisconnected(std::int32_t handle, WebConnection* connection)
 // index.html?packets: every packet sent and received, unencrypted, in the page's log.
 EM_JS(int, MuWeb_LogPackets, (), { return new URLSearchParams(location.search).has("packets") ? 1 : 0; });
 
+// The switch read once: the page's address does not change while the game runs (its only pushState, WebScreen.cpp's
+// back-button trap, keeps the address), so no JS call per packet.
+bool LogPackets()
+{
+    static const bool on = MuWeb_LogPackets() != 0;
+    return on;
+}
+
 void LogPacket(const char* direction, std::int32_t handle, const std::uint8_t* data, std::size_t size)
 {
     std::string text = std::string(direction) + " " + std::to_string(handle) + ":";
@@ -115,7 +123,7 @@ void LogPacket(const char* direction, std::int32_t handle, const std::uint8_t* d
 
 void Deliver(std::int32_t handle, WebConnection* connection, std::vector<std::uint8_t>&& packet)
 {
-    if (MuWeb_LogPackets())
+    if (LogPackets())
     {
         LogPacket("recv", handle, packet.data(), packet.size());
     }
@@ -409,7 +417,7 @@ void mu::web::SendPacket(std::int32_t handle, const std::uint8_t* data, std::siz
             Log(LogLevel::Error, "Not sent: malformed outgoing packet (handle " + std::to_string(handle) + ")");
             return;
         }
-        if (MuWeb_LogPackets())
+        if (LogPackets())
         {
             LogPacket("send", handle, data + offset, length);
         }

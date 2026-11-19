@@ -163,7 +163,8 @@ void CheckEvent(RmlLayoutFixture& fixture, Rml::ElementDocument& document, const
     description->QuerySelectorAll(fragments, ".entry-line");
     levels->QuerySelectorAll(buttons, ".entry-btn");
     const bool blood = window == "blood_castle_enter";
-    CHECK(fragments.size() == (blood ? 1 : 6));
+    // The ticket line (EventEntryView::TicketLine) comes before the flavour lines.
+    CHECK(fragments.size() == (blood ? 2 : 7));
     CHECK(buttons.size() == (blood ? BloodLevelCount : DevilLevelCount));
     CheckSources(document);
     Rml::Vector2f titlePosition, titleSize, descriptionPosition, descriptionSize, levelsPosition, levelsSize, exitPosition, exitSize;

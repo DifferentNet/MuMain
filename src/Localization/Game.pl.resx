@@ -876,7 +876,7 @@
     <comment>legacy_id=216</comment>
   </data>
   <data name="Point: %d" xml:space="preserve">
-    <value>Punkt: %d</value>
+    <value>Punkty: %d</value>
     <comment>legacy_id=217</comment>
   </data>
   <data name="Explanation" xml:space="preserve">
@@ -1056,7 +1056,7 @@
     <comment>legacy_id=262</comment>
   </data>
   <data name="You can enter Icarus only with wings, dinorant, fenrirr" xml:space="preserve">
-    <value>Do Icarus można wejść tylko ze skrzydłami, dinorantem, fenrirrem</value>
+    <value>Do Icarus można wejść tylko ze skrzydłami, dinorantem, fenrirem</value>
     <comment>legacy_id=263</comment>
   </data>
   <data name="/whisper off" xml:space="preserve">
@@ -1344,7 +1344,7 @@
     <comment>legacy_id=368</comment>
   </data>
   <data name="About %d" xml:space="preserve">
-    <value>O %d</value>
+    <value>%d+</value>
     <comment>legacy_id=369</comment>
   </data>
   <data name="Warning!" xml:space="preserve">
@@ -4853,7 +4853,7 @@
     <comment>legacy_id=1304</comment>
   </data>
   <data name="Back" xml:space="preserve">
-    <value>Z powrotem</value>
+    <value>Wstecz</value>
     <comment>legacy_id=1306</comment>
   </data>
   <data name="Position" xml:space="preserve">
@@ -9309,7 +9309,7 @@
     <comment>legacy_id=2651</comment>
   </data>
   <data name="No item application" xml:space="preserve">
-    <value>Brak aplikacji przedmiotu</value>
+    <value>(pusty)</value>
     <comment>legacy_id=2652</comment>
   </data>
   <data name="Element: %s" xml:space="preserve">
@@ -12145,7 +12145,7 @@
     <comment>legacy_id=3579</comment>
   </data>
   <data name="Official MU Helper Setting has been saved." xml:space="preserve">
-    <value>Oficjalne ustawienie pomocnika MU zostało zapisane.</value>
+    <value>Ustawienia MU Helper zapisane.</value>
     <comment>legacy_id=3580</comment>
   </data>
   <data name="Official MU Helper can't be implemented in this region." xml:space="preserve">
@@ -14445,5 +14445,56 @@
   </data>
   <data name="GuildWarAlreadyOn" xml:space="preserve">
     <value>Jedna z gildii już toczy wojnę gildii.</value>
+  </data>
+  <!-- Round 15 -->
+  <data name="InviteRefusedBusyTrade" xml:space="preserve">
+    <value>Prośba o handel od %ls przepadła: było otwarte okno.</value>
+  </data>
+  <data name="InviteRefusedBusyDuel" xml:space="preserve">
+    <value>Wyzwanie na pojedynek od %ls przepadło: było otwarte okno.</value>
+  </data>
+  <data name="SoldItemToFor" xml:space="preserve">
+    <value>Sprzedano %ls graczowi %ls za %ls.</value>
+  </data>
+  <!-- Round 16 -->
+  <data name="StatButtonTooltip" xml:space="preserve">
+    <value>Klik: +1. Prawy klik: +10, +100 i więcej lub wszystkie</value>
+  </data>
+  <data name="NewSkillOnButton" xml:space="preserve">
+    <value>Nowa umiejętność: %ls (przycisk umiejętności %d)</value>
+  </data>
+  <data name="TouchHelpDoubleTapMove" xml:space="preserve">
+    <value>Stuknij dwukrotnie przedmiot, aby go przenieść</value>
+  </data>
+  <!-- Round 17 -->
+  <data name="MuHelperStoppedHeroDied" xml:space="preserve">
+    <value>MU Helper zatrzymany: twoja postać zginęła.</value>
+  </data>
+  <data name="MuHelperNoHealPotions" xml:space="preserve">
+    <value>MU Helper: skończyły się mikstury leczenia.</value>
+  </data>
+  <data name="MuHelperBagFull" xml:space="preserve">
+    <value>MU Helper: brak miejsca w torbie, przedmioty zostają na ziemi.</value>
+  </data>
+  <data name="RepairNoZen" xml:space="preserve">
+    <value>Za mało zenów na naprawę ekwipunku.</value>
+  </data>
+  <data name="MuHelperUnconfiguredZ" xml:space="preserve">
+    <value>MU Helper atakuje tylko zwykłym atakiem: umiejętności, mikstury i podnoszenie ustawisz w jego oknie (Z)</value>
+  </data>
+  <data name="MuHelperUnconfiguredTouch" xml:space="preserve">
+    <value>MU Helper atakuje tylko zwykłym atakiem: umiejętności, mikstury i podnoszenie ustawisz w Menu → MU Helper</value>
+  </data>
+  <data name="TicketFitsYourLevel" xml:space="preserve">
+    <value>Pasuje do twojego poziomu</value>
+  </data>
+  <data name="TicketYouNeedPlusD" xml:space="preserve">
+    <value>Potrzebujesz biletu +%d</value>
+  </data>
+  <data name="EntryTicketNotInBag" xml:space="preserve">
+    <value>Bilet: %ls +%d — brak w torbie</value>
+  </data>
+  <data name="FieldRepairAllConfirm" xml:space="preserve">
+    <value>Naprawić cały założony ekwipunek za %ls zenów?</value>
   </data>
 </root>

@@ -213,3 +213,21 @@ mu_add_test(
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/EquipOffer.cpp
         ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Items/EquipOfferTracker.cpp
 )
+
+# Buff countdowns are cleared on relog / character switch and restart with a sent time (round 15, B8).
+mu_add_test(
+    NAME test_buff_time_control
+    SOURCES
+        test_buff_time_control.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/App/Platform/Windows/Winmain.cpp
+    LINK_LIBS
+        MuClient
+)
+
+# Blood Castle / Devil Square level bands shared by the entry windows and the ticket tooltips (round 17, Q5).
+mu_add_test(
+    NAME test_entry_levels
+    SOURCES
+        test_entry_levels.cpp
+        ${CMAKE_SOURCE_DIR}/src/source/GameLogic/Events/EntryLevels.cpp
+)

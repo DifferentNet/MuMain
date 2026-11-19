@@ -3,6 +3,8 @@
 
 #include "Audio/DSPlaySound.h"
 #include "Camera/CameraManager.h"
+#include "Core/Input/GamepadInput.h"
+#include "Core/Input/GamepadLayout.h"
 #include "Core/Input/KeyBindingsRuntime.h"
 #include "Core/Input/TouchInput.h"
 #include "Core/Utilities/StringUtils.h"
@@ -18,6 +20,7 @@
 #include "MUHelper/MuHelper.h"
 #include "Render/RmlUi/RmlUiRuntime.h"
 #include "Scenes/SceneCore.h"
+#include "UI/Chat/ChatMessages.h"
 #include "UI/Core/WindowCommon.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Dialogs/ModalDialogs.h"
@@ -60,6 +63,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace
@@ -620,6 +624,17 @@ struct ControlsModel
     std::array<Rml::String, Core::Input::KeyBindings::PotionSlotCount> potionKeys{"Q", "W", "E", "R"};
     // The bindings' revision the potion keys were made from.
     unsigned potionKeysRevision = 0;
+    // What the bind hint was made from: its language text, and for a pad's line the glyphs' kind and
+    // the button layout (made again only when one changed).
+    struct BindHintKey
+    {
+        const wchar_t* text = nullptr;
+        bool named = false;
+        int padKind = -1;
+        int padLayout = -1;
+        bool operator==(const BindHintKey&) const = default;
+    };
+    std::optional<BindHintKey> bindHintKey;
     // The phone view's hero frame.
     UI::Mobile::HeroFrame::Model hero;
 };
@@ -846,6 +861,35 @@ template <int First, int Last> constexpr auto ControlRange()
     return controls;
 }
 
+// The control of a key button, by its element's id; -1 for none.
+constexpr int KeyButtonControl(std::string_view element)
+{
+    for (int i = 0; i < KeyButtonCount; ++i)
+    {
+        if (element == KeyButtons[i].element)
+            return FirstKeyControl + i;
+    }
+    return -1;
+}
+constexpr int OfferControl = KeyButtonControl("tc_offer");
+static_assert(OfferControl >= 0);
+
+// `controls` with the quick equip chip moved to the end: on a phone it lies over the skill arc's top for
+// ten seconds, and a finger on a skill button under it casts the skill.
+template <size_t Count> constexpr std::array<int, Count> WithOfferLast(const std::array<int, Count>& controls)
+{
+    std::array<int, Count> ordered{};
+    size_t next = 0;
+    for (const int control : controls)
+    {
+        if (control != OfferControl)
+            ordered[next++] = control;
+    }
+    if (next < Count)
+        ordered[next] = OfferControl;
+    return ordered;
+}
+
 std::string_view FileName(const Rml::String& url)
 {
     const std::string_view path(url);
@@ -1029,7 +1073,8 @@ int HitTest(float x, float y)
         return HeroControl;
     // The buttons before the joystick's area, which they stand in. The Skills button takes a finger
     // inside it, but a thumb between it and the skill buttons it lies beside casts.
-    static constexpr auto Buttons = ControlRange<HeroControl - 1, AttackControl>();
+    static constexpr auto Buttons = WithOfferLast(ControlRange<HeroControl - 1, AttackControl>());
+    static_assert(Buttons.back() == OfferControl);
     for (const float margin : {0.f, slop})
     {
         if (const int button = ClosestControl(Buttons, x, y, margin); button != Touch::NoControl)
@@ -1146,9 +1191,12 @@ void FollowNeighbours(Rml::ElementDocument* document)
         keepLeftOf(g_boxes[FirstSkillControl + slot]);
     keepLeftOf(g_boxes[SkillEditControl]);
     // The buttons the party's cards, the chat and the world labels keep clear of (MeasureBoxes() laid
-    // them out this frame): 2 potions + 6 + the skill buttons, within Edges::MaxControls.
-    static_assert(2 + 6 + SkillButtons <= UI::Mobile::PhoneHudLayout::Edges::MaxControls);
-    for (int control : {AttackControl, PickupControl, AutoControl, TargetControl, SkillEditControl})
+    // them out this frame): 2 potions + 7 + the skill buttons, within Edges::MaxControls. The quick equip
+    // chip counts while it shows (over the skill arc, where the cards' column may reach).
+    static_assert(2 + 7 + SkillButtons <= UI::Mobile::PhoneHudLayout::Edges::MaxControls);
+    constexpr std::array<int, 6> ClearOf{AttackControl, PickupControl, AutoControl, TargetControl, SkillEditControl,
+                                         OfferControl};
+    for (const int control : ClearOf)
         edges.KeepClearOf(g_boxes[control]);
     edges.KeepClearOf(BoxOf(document, "tc_names"));
     for (int slot = 0; slot < SkillButtons; ++slot)
@@ -1412,17 +1460,42 @@ bool WaitingForButton()
 }
 
 // The line over the skill buttons while one is being set, in the words of the device in use: a pad's
-// with its buttons' names and as many buttons under RT as are in play.
-std::wstring BindHint(bool gridOpen)
+// with its buttons' names (key.named) and as many buttons under RT as are in play.
+ControlsModel::BindHintKey BindHintSource(bool gridOpen)
 {
+    ControlsModel::BindHintKey key;
     if (g_binding.pendingSlot >= 0)
-        return I18N::Game::TouchBindPickFor;
+    {
+        key.text = I18N::Game::TouchBindPickFor;
+        return key;
+    }
     if (!UI::Mobile::IsGamepadInUse())
-        return gridOpen ? I18N::Game::TouchBindPick : I18N::Game::TouchBindPlace;
+    {
+        key.text = gridOpen ? I18N::Game::TouchBindPick : I18N::Game::TouchBindPlace;
+        return key;
+    }
     const bool nine = ActiveSlots() > SkillArrange::TouchSlotCount;
     if (gridOpen)
-        return UI::HUD::PadGlyphs::Named(nine ? I18N::Game::PadBindPick : I18N::Game::PadBindPickFive);
-    return UI::HUD::PadGlyphs::Named(nine ? I18N::Game::PadBindPlace : I18N::Game::PadBindPlaceFive);
+        key.text = nine ? I18N::Game::PadBindPick : I18N::Game::PadBindPickFive;
+    else
+        key.text = nine ? I18N::Game::PadBindPlace : I18N::Game::PadBindPlaceFive;
+    key.named = true;
+    key.padKind = static_cast<int>(Core::Input::Gamepad::ShownKind());
+    key.padLayout = static_cast<int>(Core::Input::Gamepad::GetLayout());
+    return key;
+}
+
+// The bind hint is converted only when its source changed, not every frame.
+void SyncBindHint(ControlsModel& model, bool gridOpen)
+{
+    const ControlsModel::BindHintKey key = BindHintSource(gridOpen);
+    if (model.bindHintKey == key)
+        return;
+    model.bindHintKey = key;
+    if (key.named)
+        SyncLabel(model.bindHint, UI::HUD::PadGlyphs::Named(key.text).c_str(), "bind_hint");
+    else
+        SyncLabel(model.bindHint, key.text, "bind_hint");
 }
 
 void UpdateBinding(ControlsModel& model)
@@ -1451,7 +1524,7 @@ void UpdateBinding(ControlsModel& model)
     for (int slot = 0; slot < SkillButtons; ++slot)
         SetField(model.skillBind[slot], waiting || slot == g_binding.pendingSlot, SkillBindFields[slot].c_str());
     SetField(model.hintShown, gridOpen || waiting, "hint_shown");
-    SyncLabel(model.bindHint, BindHint(gridOpen).c_str(), "bind_hint");
+    SyncBindHint(model, gridOpen);
 }
 
 // A dialog that waits for an answer (the system menu, a confirmation, a message box): the menu
@@ -1536,6 +1609,23 @@ void HintHoldOnce()
         return;
     s_shown = true;
     g_pSystemLogBox->AddText(I18N::Game::TouchHelpItem, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+}
+
+// Round 16: the first time fingers open the vault, a trade or the chaos machine in a session, a line
+// says that a double tap moves an item there and back (InventoryActionController::MoveOnDoubleTap).
+void HintDoubleTapOnce()
+{
+    static bool s_shown = false;
+    if (s_shown || g_pNewUISystem == nullptr || g_pSystemLogBox == nullptr)
+        return;
+    if (!Touch::IsEnabled() || UI::Mobile::IsGamepadInUse())
+        return;
+    if (!g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_STORAGE) &&
+        !g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_MIXINVENTORY) &&
+        !g_pNewUISystem->IsVisible(mu::ui::window::INTERFACE_TRADE))
+        return;
+    s_shown = true;
+    g_pSystemLogBox->AddText(I18N::Game::TouchHelpDoubleTapMove, mu::ui::window::TYPE_SYSTEM_MESSAGE);
 }
 
 void HoldForPad(int control, bool held)
@@ -1848,6 +1938,55 @@ int SlotToSet()
     if (keys[SlotHotKey(0)] == SkillArrange::NoSkill)
         return 0;
     return SkillArrange::NextEmptySlot(keys, g_upperSet, 0, ActiveSlots());
+}
+
+// Skills learned this session while the controls showed (WSclient's "New skill" line), waiting for Update() to put
+// them on a skill button: the skill list counts a new skill only after its packet is read through.
+struct NewSkill
+{
+    int index = 0; // in the character's skill list, what a hotkey holds
+    int type = 0;
+};
+std::vector<NewSkill> g_newSkills;
+
+// Whether a learned skill can go on a skill button: one the picker lists, on no hotkey yet.
+bool TakesSkillButton(const SkillArrange::HotKeys& keys, int skillIndex)
+{
+    if (std::find(keys.begin(), keys.end(), skillIndex) != keys.end())
+        return false;
+    const std::vector<int> listed = g_pSkillList->GetListedSkills();
+    return std::find(listed.begin(), listed.end(), skillIndex) != listed.end();
+}
+
+// The skill on the first empty skill button of the set in use; the button's number (1 the first), or 0 with every
+// button taken or a skill no button takes. A filled button is never replaced.
+int PutOnEmptySkillButton(int skillIndex)
+{
+    const SkillArrange::HotKeys keys = ReadHotKeys();
+    if (!TakesSkillButton(keys, skillIndex))
+        return 0;
+    const int slot = SlotToSet();
+    const int hotKey = SlotHotKey(slot);
+    if (keys[hotKey] != SkillArrange::NoSkill)
+        return 0;
+    WriteHotKeys(keys, SkillArrange::Placed(keys, hotKey, skillIndex));
+    return slot + 1;
+}
+
+// The "New skill" lines of the skills learned since the last frame; with `place`, each first goes on an empty skill
+// button and its line names the button.
+void SayNewSkills(bool place)
+{
+    for (const NewSkill& skill : std::exchange(g_newSkills, {}))
+    {
+        const int button = place ? PutOnEmptySkillButton(skill.index) : 0;
+        wchar_t line[160]{};
+        if (button > 0)
+            mu_swprintf(line, I18N::Game::NewSkillOnButton, SkillAttribute[skill.type].Name, button);
+        else
+            mu_swprintf(line, I18N::Game::NewSkillLearned, SkillAttribute[skill.type].Name);
+        UI::Chat::PostSystem(line, mu::ui::window::TYPE_SYSTEM_MESSAGE);
+    }
 }
 
 // A skill's or pet command's name, as its tooltip heads it; looked up once a showing.
@@ -2640,6 +2779,7 @@ void Update()
     ReleaseChargeLetGo();
     if (!UI::Mobile::ShowsControls())
     {
+        SayNewSkills(false);
         // The PK switch belongs to these controls: with them gone (a mouse or a pad took over) a click
         // on a player must not attack them unasked.
         GameLogic::Touch::SetForceAttack(false);
@@ -2650,6 +2790,7 @@ void Update()
     const bool inWorld = SceneFlag == MAIN_SCENE && LoadingWorld < 30 && Hero != nullptr;
     if (!inWorld)
     {
+        SayNewSkills(false);
         Hide();
         GameLogic::Touch::Reset();
         UI::Mobile::Social::Cancel();
@@ -2689,6 +2830,7 @@ void Update()
     GameLogic::Touch::SetControlsShown(true);
     ControlsModel& model = g_View.GetModel();
     g_upperSet = ChooseUpperSet();
+    SayNewSkills(true);
     // The pad's pointer aims only while it plays the pointer (a window open); in the world the right
     // stick picks the target instead (UI/HUD/GamepadControls).
     const bool padInUse = UI::Mobile::IsGamepadInUse();
@@ -2748,6 +2890,7 @@ void Update()
     // The pad lights the PC's pad row too: X held shows before the skill animates.
     SyncPressed(document, (model.fingers && UI::Mobile::ReplacesPcHud()) || padInUse, due);
     HintHoldOnce();
+    HintDoubleTapOnce();
     // The boxes the next fingers are tested against: where this frame lays the controls out.
     if (due)
         MeasureBoxesNow();
@@ -2864,6 +3007,14 @@ void ActivateMenuFocus()
     const int focus = g_View.GetModel().menuFocus;
     if (focus >= 0 && focus < MenuItemCount)
         ++g_pad.presses[FirstMenuItemControl + focus];
+}
+
+bool OfferNewSkill(int skillIndex, int skillType)
+{
+    if (!UI::Mobile::ShowsControls())
+        return false;
+    g_newSkills.push_back({skillIndex, skillType});
+    return true;
 }
 
 bool OpenSkillPicker()
