@@ -12597,4 +12597,8 @@
   <data name="PadHelpItems" xml:space="preserve">
     <value>装備中より良い新しいアイテム：D-pad右を長押しで装備。インベントリでは{Y}でアイテムカードを開く（不用品マーク）。商人では「不用品を売る」ボタンで{A}を押すと不用品を売る。足元のゼンは自動で拾う</value>
   </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>クラフト</value>
+  </data>
 </root>

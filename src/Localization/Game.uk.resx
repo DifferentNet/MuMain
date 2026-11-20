@@ -14515,4 +14515,8 @@
   <data name="PadHelpItems" xml:space="preserve">
     <value>Новий предмет кращий за вдягнений: утримуй D-pad праворуч, щоб надіти. В інвентарі {Y} відкриває картку предмета (позначка «мотлох»); у торговця {A} на кнопці «Продати мотлох» продає мотлох. Зен під ногами підбирається сам</value>
   </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>Крафт</value>
+  </data>
 </root>

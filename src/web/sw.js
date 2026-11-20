@@ -67,12 +67,15 @@ async function versionedFile(event) {
   const cache = await caches.open(FILES).catch(() => null);
   const kept = cache ? await cache.match(request.url).catch(() => undefined) : undefined;
   if (!range) {
+    // A whole file from the device is passed on as kept, without X-Mu-Kept (byteRange): a response of
+    // our own would lose the code the browser keeps compiled for a kept script.
     if (kept) return kept;
+    if (request.destination === "worker") return threadScript(event, cache);
     const response = await fetch(request.url, { credentials: "same-origin" });
     if (response.status === 200 && cache) event.waitUntil(keep(cache, request.url, response.clone()));
     return response;
   }
-  if (kept) return byteRange(await kept.blob(), kept.headers, range);
+  if (kept) return byteRange(await kept.blob(), kept.headers, range, true);
   let download = downloads.get(request.url);
   if (!download) {
     download = downloadWhole(request.url, request.headers.has("X-Mu-Background"));
@@ -85,6 +88,40 @@ async function versionedFile(event) {
   const whole = await download;
   // An error, or an answer that isn't the whole file: passed on as the server gave it.
   return whole.blob ? byteRange(whole.blob, whole.response.headers, range) : whole.response.clone();
+}
+
+// The game's threads load Main.js?v= as workers (request.destination "worker"), and nothing asks for a
+// refused one again, so the game wouldn't start: a busy server's answer (HTTP 429 or 503) for one is
+// asked again here by the page's rule (index.html fetchWhenFree: after its Retry-After, and at least
+// 1 s doubling up to 8 s, for up to 30 s). The page's own requests are left to the page and to
+// fetch-backend.js, so nothing is asked again twice over. The threads start together: they share one
+// asking (threadScripts) instead of each asking the busy server on its own.
+const threadScripts = new Map();
+function threadScript(event, cache) {
+  const url = event.request.url;
+  let asking = threadScripts.get(url);
+  if (!asking) {
+    asking = fetchWhenFree(url, { credentials: "same-origin" });
+    threadScripts.set(url, asking);
+    event.waitUntil(asking.then((response) => response.status === 200 && cache && keep(cache, url, response.clone()))
+      .catch(() => {}).finally(() => threadScripts.delete(url)));
+  }
+  // Each thread gets a copy; the first answer itself is never read, so a copy can be made of it later.
+  return asking.then((response) => response.clone());
+}
+
+async function fetchWhenFree(url, init) {
+  const started = Date.now();
+  for (let tries = 0; ; tries++) {
+    const response = await fetch(url, init);
+    if (response.status !== 429 && response.status !== 503) return response;
+    const retryAfter = response.headers.get("Retry-After");
+    const seconds = retryAfter && isFinite(retryAfter) ? Number(retryAfter) : 0;
+    const wait = Math.max(seconds * 1000, Math.min(1000 * 2 ** tries, 8000)) * (1 + Math.random() / 4);
+    if (Date.now() - started + wait > 30000) return response;
+    if (response.body) response.body.cancel().catch(() => {});
+    await new Promise((resume) => setTimeout(resume, wait));
+  }
 }
 
 // Downloads a whole file: {blob, response (to keep, with the blob as its body)}, or {response}
@@ -109,10 +146,14 @@ async function unpackedCode(event, url) {
   const fillOnly = url.searchParams.has("keep");
   const cache = await caches.open(CODE).catch(() => null);
   const kept = cache ? await cache.match(key).catch(() => undefined) : undefined;
-  if (kept) return fillOnly ? new Response(null, { status: 204 }) : kept;
+  // The kept code itself is passed on as kept (see versionedFile); the 204 says it came from the device.
+  if (kept) return fillOnly ? new Response(null, { status: 204, headers: { "X-Mu-Kept": "1" } }) : kept;
   let body = null;
   if (self.DecompressionStream) {
     const packed = await fetch(new URL(`Main.wasm.gz?v=${version}`, url), { credentials: "same-origin" }).catch(() => null);
+    // A busy server (HTTP 429 or 503) is passed on, for the page to ask again (index.html fetchWhenFree):
+    // Main.wasm itself would be refused too, and is four times as big.
+    if (packed && (packed.status === 429 || packed.status === 503)) return packed;
     if (packed && packed.ok) {
       // A server that marks the copy as gzip has the browser unpack it already.
       body = /gzip/i.test(packed.headers.get("Content-Encoding") || "")
@@ -154,11 +195,14 @@ async function keep(cache, url, response) {
 
 // "Range: bytes=a-b" (or "bytes=a-") as the web server answers it (server/web/serve-web.py),
 // keeping the file's headers, cross-origin isolation among them. A slice of a Blob reads only its
-// own bytes, so a range of a long sound kept on the device doesn't read the whole file.
-function byteRange(blob, fileHeaders, range) {
+// own bytes, so a range of a long sound kept on the device doesn't read the whole file. `fromDevice`
+// adds "X-Mu-Kept: 1": the server wasn't asked, so the game's file system doesn't take the answer
+// as a sign that a busy server answers again (fetch-backend.js, heard).
+function byteRange(blob, fileHeaders, range, fromDevice) {
   const match = /^bytes=(\d+)-(\d*)$/.exec(range.trim());
   const headers = new Headers(fileHeaders);
   headers.delete("ETag");
+  if (fromDevice) headers.set("X-Mu-Kept", "1");
   if (!match) return new Response(blob, { status: 200, headers });
   const size = blob.size;
   const start = Number(match[1]);

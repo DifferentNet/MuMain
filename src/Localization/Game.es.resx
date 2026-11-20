@@ -14515,4 +14515,8 @@
   <data name="PadHelpItems" xml:space="preserve">
     <value>Un objeto nuevo es mejor: mantén D-pad derecha para ponértelo. En el inventario {Y} abre la ficha del objeto (marca de basura); en un mercader, {A} sobre el botón Vender basura vende la basura. El zen bajo tus pies se recoge solo</value>
   </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>Artesanía</value>
+  </data>
 </root>

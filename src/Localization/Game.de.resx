@@ -14613,4 +14613,8 @@
   <data name="PadHelpItems" xml:space="preserve">
     <value>Ein neuer Gegenstand ist besser: D-pad rechts halten, um ihn anzulegen. Im Inventar öffnet {Y} die Karte des Gegenstands (Ramsch-Markierung); beim Händler verkauft {A} auf der Schaltfläche Ramsch verkaufen den Ramsch. Zen unter deinen Füßen wird von selbst aufgehoben</value>
   </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>Handwerk</value>
+  </data>
 </root>

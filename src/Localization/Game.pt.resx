@@ -14515,4 +14515,8 @@
   <data name="PadHelpItems" xml:space="preserve">
     <value>Um item novo é melhor: segure D-pad direita para equipá-lo. No inventário {Y} abre a ficha do item (marca de lixo); num mercador, {A} no botão Vender lixo vende o lixo. O zen sob os seus pés é pego sozinho</value>
   </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>Artesanato</value>
+  </data>
 </root>

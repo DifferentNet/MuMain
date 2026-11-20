@@ -14515,4 +14515,8 @@
   <data name="PadHelpItems" xml:space="preserve">
     <value>比身上更好的新物品：按住 D-pad 右即可穿上。在背包中按 {Y} 開啟物品卡片（垃圾標記）；在商人處對「出售垃圾」按鈕按 {A} 出售垃圾。腳下的 Zen 會自動撿起</value>
   </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>製作</value>
+  </data>
 </root>

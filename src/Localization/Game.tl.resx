@@ -14515,4 +14515,8 @@
   <data name="PadHelpItems" xml:space="preserve">
     <value>Mas maganda ang bagong item: hawakan ang D-pad pakanan para isuot ito. Sa inventory, {Y} ang nagbubukas ng card ng item (marka ng basura); sa merchant, {A} sa button na Ibenta ang basura ang nagbebenta ng basura. Kusang napupulot ang zen sa ilalim ng paa mo</value>
   </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>Paggawa</value>
+  </data>
 </root>

@@ -14536,4 +14536,8 @@
   <data name="PadHelpItems" xml:space="preserve">
     <value>Nowy przedmiot jest lepszy: przytrzymaj D-pad w prawo, by go założyć. W ekwipunku {Y} otwiera kartę przedmiotu (znacznik złomu); u kupca {A} na przycisku Sprzedaj złom sprzedaje złom. Zen pod stopami podnosi się sam</value>
   </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>Rzemiosło</value>
+  </data>
 </root>

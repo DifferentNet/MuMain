@@ -81,6 +81,8 @@
 				<div id="box_o_repair" class="mh-box mhc-group mhc-repair"><div class="b b-fill"></div>
 					<div class="mhc-content">
 						<div id="cb_repair" class="mh-check" data-event-click="muhelper_toggle('repair')"><div class="checkbox-box modern-checkbox-px" data-class-checked="checks.repair"></div><span class="mh-text checkbox-label">{{labels.repair}}</span></div>
+						<!-- The item kinds below have no room left for the crafting materials. -->
+						<div id="cb_pick_craft" class="mh-check" data-event-click="muhelper_toggle('pick_craft')"><div class="checkbox-box modern-checkbox-px" data-class-checked="checks.pick_craft"></div><span class="mh-text checkbox-label">{{labels.pick_craft}}</span></div>
 					</div>
 				</div>
 				</div>

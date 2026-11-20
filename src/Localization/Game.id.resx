@@ -14515,4 +14515,8 @@
   <data name="PadHelpItems" xml:space="preserve">
     <value>Item baru lebih baik: tahan D-pad kanan untuk memakainya. Di inventaris {Y} membuka kartu item (tanda sampah); di pedagang, {A} pada tombol Jual sampah menjual sampahnya. Zen di bawah kakimu terambil sendiri</value>
   </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>Kerajinan</value>
+  </data>
 </root>
