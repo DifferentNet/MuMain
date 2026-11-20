@@ -14332,7 +14332,6 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>常用語</value>
   </data>
-||||||| ce163792b
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>與玩家交易：對方在視野內時用 /trade 名字，否則與選取的玩家（不限距離）或面對你的玩家交易。</value>
