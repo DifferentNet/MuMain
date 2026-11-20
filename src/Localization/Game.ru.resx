@@ -17453,4 +17453,8 @@
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>Вышла новая версия: обновите страницу.</value>
   </data>
+  <!-- skill book quest (2026-11-20) -->
+  <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
+    <value>Сначала пройдите квест Марлона (с 220 уровня).</value>
+  </data>
 </root>

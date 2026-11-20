@@ -17453,4 +17453,8 @@
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>A new version is out: reload the page.</value>
   </data>
+  <!-- skill book quest (2026-11-20) -->
+  <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
+    <value>Complete Marlon's quest first (from level 220).</value>
+  </data>
 </root>

@@ -14499,4 +14499,8 @@
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>Nova versão disponível: recarregue a página.</value>
   </data>
+  <!-- skill book quest (2026-11-20) -->
+  <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
+    <value>Conclua primeiro a missão de Marlon (a partir do nível 220).</value>
+  </data>
 </root>
