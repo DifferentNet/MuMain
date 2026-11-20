@@ -61,19 +61,59 @@ EM_JS(void, MuWeb_KeepScreenOn, (int on), {
 });
 
 // Module.muInput: the page's input events counted, seen first by the window (capture) and never held
-// up (passive), so the game's own handlers get them as before.
+// up (passive), so the game's own handlers get them as before. `down`: the contacts down now (a finger,
+// a pen, a mouse button) by pointer id, each with the time of its last event. A lift, a cancel or a
+// lost capture takes one off; leaving the page (blur, hidden) takes them all, and a mouse or pen
+// moving with no button down its own.
 EM_JS(int, MuWeb_TakePageInputs, (), {
     let input = Module.muInput;
     if (!input)
     {
-        input = Module.muInput = {count : 0};
+        input = Module.muInput = {count : 0, down : new Map()};
+        const listen = {capture : true, passive : true};
         const count = function() { input.count++; };
         for (const type of ["pointerdown", "pointermove", "touchstart", "keydown", "wheel"])
-            window.addEventListener(type, count, {capture : true, passive : true});
+            window.addEventListener(type, count, listen);
+        window.addEventListener(
+            "pointerdown", function(event) { input.down.set(event.pointerId, performance.now()); }, listen);
+        window.addEventListener(
+            "pointermove", function(event) {
+                if (!input.down.has(event.pointerId))
+                    return;
+                if (event.buttons)
+                    input.down.set(event.pointerId, performance.now());
+                else
+                    input.down.delete(event.pointerId);
+            }, listen);
+        const lift = function(event) { input.down.delete(event.pointerId); };
+        for (const type of ["pointerup", "pointercancel", "lostpointercapture"])
+            window.addEventListener(type, lift, listen);
+        window.addEventListener("blur", function() { input.down.clear(); });
+        document.addEventListener(
+            "visibilitychange", function() {
+                if (document.hidden)
+                    input.down.clear();
+            });
     }
     const count = input.count;
     input.count = 0;
     return count;
+});
+
+// Whether a contact is down on the page (Module.muInput.down); one with no event for 10 minutes counts
+// as lifted, so an end the browser never sent cannot keep the game awake for good.
+EM_JS(int, MuWeb_PageContactDown, (), {
+    const input = Module.muInput;
+    if (!input || !input.down.size)
+        return 0;
+    const LONGEST_STILL_MS = 10 * 60 * 1000;
+    const now = performance.now();
+    for (const [id, at] of input.down)
+    {
+        if (now - at > LONGEST_STILL_MS)
+            input.down.delete(id);
+    }
+    return input.down.size > 0 ? 1 : 0;
 });
 
 // Module.muBack: the entry the page keeps on top of its history while armed, and the presses counted.
@@ -137,6 +177,11 @@ void mu::web::KeepScreenOn(bool on)
 int mu::web::TakePageInputs()
 {
     return MuWeb_TakePageInputs();
+}
+
+bool mu::web::IsPageContactDown()
+{
+    return MuWeb_PageContactDown() != 0;
 }
 
 void mu::web::ArmBackGesture(bool armed)

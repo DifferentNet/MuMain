@@ -14533,4 +14533,8 @@
   <data name="ItemLinkCommandTooLong" xml:space="preserve">
     <value>The message with items is too long.</value>
   </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>Rzemiosło</value>
+  </data>
 </root>

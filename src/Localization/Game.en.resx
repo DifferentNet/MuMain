@@ -14205,6 +14205,42 @@
     <value>Fate 100 %; jewels, zen used up.</value>
     <comment>legacy_id=3922</comment>
   </data>
+  <data name="KundunBoxUpgradeName2" xml:space="preserve">
+    <value>Box of Kundun +1 to +2</value>
+    <comment>legacy_id=3923</comment>
+  </data>
+  <data name="KundunBoxUpgradeName3" xml:space="preserve">
+    <value>Box of Kundun +2 to +3</value>
+    <comment>legacy_id=3924</comment>
+  </data>
+  <data name="KundunBoxUpgradeName4" xml:space="preserve">
+    <value>Box of Kundun +3 to +4</value>
+    <comment>legacy_id=3925</comment>
+  </data>
+  <data name="KundunBoxUpgradeItems2" xml:space="preserve">
+    <value>5 Box +1 + Jewel of Chaos.</value>
+    <comment>legacy_id=3926</comment>
+  </data>
+  <data name="KundunBoxUpgradeItems3" xml:space="preserve">
+    <value>4 Box +2 + Jewel of Chaos.</value>
+    <comment>legacy_id=3927</comment>
+  </data>
+  <data name="KundunBoxUpgradeItems4" xml:space="preserve">
+    <value>6 Box +3 + Jewel of Chaos.</value>
+    <comment>legacy_id=3928</comment>
+  </data>
+  <data name="KundunBoxUpgradeSuccess" xml:space="preserve">
+    <value>Success 100 %.</value>
+    <comment>legacy_id=3929</comment>
+  </data>
+  <data name="KundunBoxUpgradeNoPlus5" xml:space="preserve">
+    <value>No Box of Kundun +5 this way.</value>
+    <comment>legacy_id=3930</comment>
+  </data>
+  <!-- MU Moldova: a line of the Chaos Goblin menu's regular mix button: the Box of Kundun upgrades (recipes 59-61) -->
+  <data name="KundunBoxUpgradeMenuLine" xml:space="preserve">
+    <value>Box of Kundun +1, +2, +3: one plus higher</value>
+  </data>
   <data name="GmPanelTitleAdmin" xml:space="preserve">
     <value>GM panel - admin</value>
   </data>
@@ -16483,6 +16519,10 @@
   <!-- MU Helper: quest items pick-up -->
   <data name="HelperPickQuestItems" xml:space="preserve">
     <value>Quest items</value>
+  </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>Crafting</value>
   </data>
   <!-- MU Moldova: Excellent Dust button in the Chaos Goblin's method menu -->
   <data name="ExcellentDustMenuButton" xml:space="preserve">

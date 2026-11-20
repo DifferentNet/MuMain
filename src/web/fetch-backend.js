@@ -13,7 +13,11 @@
  * A file with a hash in startup.json ("versions", tools/web/make_startup_pack.py) is asked for as
  * path?v=<hash>: the page's service worker (sw.js) keeps it on the device under that URL and goes to
  * the server again only when a release changes the file, and so its hash. A file it already keeps is
- * read from there directly (readKept). Without startup.json or a hash, the plain URL.
+ * read from there directly (readKept). Without startup.json or a hash, the plain URL. startup.json is
+ * the page's copy (index.html, Module.muReleaseIndexText: the release the running code belongs to),
+ * and this asks the server for its own only where the page has none: a game this device keeps, opened
+ * while a busy server refused that second ask, read every file without its hash from the server, 3 s
+ * each and failing, instead of from the device (2026-11-20).
  *
  * Files the game read together on an earlier visit (a monster's models, textures and sounds, the first
  * time it is seen) are read together again: when the first of them is read, the rest start too
@@ -31,11 +35,17 @@
  * 2026-10-29). While it waits, the page's thread runs work other threads send it (Emscripten's
  * emscripten_futex_wait.c), and a synchronous request needs no event loop: the worker sends it
  * downloadOnPageThread.
+ *
+ * A busy web server answers 429 or 503 with Retry-After (server/web/serve-web.py caps the file
+ * requests it answers at a time, per player address and in all): such a read is asked again
+ * (askWhenFree, BUSY_GIVE_UP_MS), where before it failed at once and the game had a file missing.
  */
 addToLibrary({
   // On the page's thread: bytes start..end of the file at `url` (a C string) go to `buffer` when they
-  // fit in `capacity`; the answer's status and the file's size (from Content-Range, -1 without) go to
-  // `info` (two doubles). Returns how many bytes the answer has, -1 when none came.
+  // fit in `capacity`; the answer's status, the file's size (from Content-Range, -1 without), its
+  // Retry-After in seconds (-1 without) and 1 where the service worker answered it from the device
+  // (sw.js, X-Mu-Kept; else 0) go to `info` (four doubles). Returns how many bytes the answer has, -1
+  // when none came.
   $downloadOnPageThread__proxy: 'sync',
   $downloadOnPageThread__deps: ['$UTF8ToString'],
   $downloadOnPageThread: function(url, start, end, buffer, capacity, info) {
@@ -51,8 +61,12 @@ addToLibrary({
     }
     var text = request.responseText;
     var total = /\/(\d+)$/.exec(request.getResponseHeader('Content-Range') || '');
+    var retryAfter = request.getResponseHeader('Retry-After');
+    var kept = request.getResponseHeader('X-Mu-Kept') ? 1 : 0;
     {{{ makeSetValue('info', 0, 'request.status', 'double') }}};
     {{{ makeSetValue('info', 8, 'total ? parseInt(total[1], 10) : -1', 'double') }}};
+    {{{ makeSetValue('info', 16, 'retryAfter && isFinite(retryAfter) ? Number(retryAfter) : -1', 'double') }}};
+    {{{ makeSetValue('info', 24, 'kept', 'double') }}};
     if (text.length <= capacity) {
       for (var i = 0; i < text.length; i++) {
         HEAPU8[buffer + i] = text.charCodeAt(i) & 0xff;
@@ -61,12 +75,22 @@ addToLibrary({
     return text.length;
   },
 
+  // On the page's thread: startup.json's text as the page read it (index.html, Module.muReleaseIndexText,
+  // handed over once), in memory this mount frees (malloc); 0 where the page has none.
+  $releaseIndexOnPageThread__proxy: 'sync',
+  $releaseIndexOnPageThread__deps: ['$stringToNewUTF8'],
+  $releaseIndexOnPageThread: function() {
+    var text = Module['muReleaseIndexText'] ? Module['muReleaseIndexText']() : null;
+    return typeof text == 'string' ? stringToNewUTF8(text) : 0;
+  },
+
   _wasmfs_create_fetch_backend_js__deps: [
     '$wasmFS$backends',
     '$wasmFS$JSMemoryRanges',
     '$UTF8ToString',
     '$stringToNewUTF8',
     '$downloadOnPageThread',
+    '$releaseIndexOnPageThread',
     'malloc',
     'free',
     'MuWeb_FilesOnPageThread',
@@ -76,21 +100,135 @@ addToLibrary({
   _wasmfs_create_fetch_backend_js: async function(backend) {
     // This runs in a worker, whose location is Main.js's: the page's folder.
     var pageFolder = new URL('.', self.location.href).href;
+
+    // A busy server's answer (HTTP 429 or 503) is asked again (askWhenFree): after its Retry-After, and
+    // at least BUSY_FIRST_WAIT_MS, doubling with each busy answer in a row up to BUSY_MOST_WAIT_MS, up to
+    // a quarter longer at random, so reads refused together don't all come back together; for up to
+    // BUSY_GIVE_UP_MS in all (some six tries), and then the busy answer fails the read as before. The
+    // game waits for each read, one after another, so once a read has given up the next ones get only
+    // BUSY_AFTER_GIVE_UP_MS until the server answers something else (serverBusy): a map's hundred reads
+    // don't each hold the game for half a minute. The page does the same for its own downloads
+    // (index.html, fetchWhenFree).
+    var BUSY_FIRST_WAIT_MS = 1000;
+    var BUSY_MOST_WAIT_MS = 8000;
+    var BUSY_GIVE_UP_MS = 30000;
+    var BUSY_AFTER_GIVE_UP_MS = 3000;
+    var serverBusy = false;
+    // At most one line every BUSY_NOTE_MS about the reads waiting for a busy server.
+    var BUSY_NOTE_MS = 10000;
+    var busyNotedAt = -BUSY_NOTE_MS;
+    var busySinceNote = 0;
+
+    function busy(answer) {
+      return answer.status == 429 || answer.status == 503;
+    }
+
+    // Retry-After in seconds, -1 without (or in its date form, which the web server doesn't send).
+    function retryAfterSeconds(text) {
+      return text && isFinite(text) ? Number(text) : -1;
+    }
+
+    // An answer from the server that isn't busy ends serverBusy; one the service worker gave from the
+    // device (`kept`, sw.js X-Mu-Kept) doesn't: the server may still be refusing the files it lacks.
+    function heard(answer) {
+      if (answer.status && !busy(answer) && !answer.kept) {
+        serverBusy = false;
+      }
+      return answer;
+    }
+
+    // `ask()` (one try: a promise of {status, retryAfter, ...}) until its answer isn't a busy server's
+    // or the time is up (see BUSY_GIVE_UP_MS); gives the last answer. `what` names it in the log.
+    async function askWhenFree(ask, what) {
+      var started = performance.now();
+      var budget = serverBusy ? BUSY_AFTER_GIVE_UP_MS : BUSY_GIVE_UP_MS;
+      for (var tries = 0; ; tries++) {
+        var answer = await ask();
+        if (!busy(answer)) {
+          return answer;
+        }
+        var wait = Math.max(answer.retryAfter * 1000, Math.min(BUSY_FIRST_WAIT_MS * 2 ** tries, BUSY_MOST_WAIT_MS)) *
+                   (1 + Math.random() / 4);
+        var waited = performance.now() - started;
+        if (waited + wait > budget) {
+          serverBusy = true;
+          console.warn(`Web files: ${what}: the server stayed busy (HTTP ${answer.status}) for ` +
+                       `${(waited / 1000).toFixed(1)} s, ${tries + 1} tries; given up`);
+          return answer;
+        }
+        busySinceNote++;
+        if (performance.now() - busyNotedAt >= BUSY_NOTE_MS) {
+          console.warn(`Web files: the server is busy (HTTP ${answer.status}): ${busySinceNote} busy answer(s) since ` +
+                       `the last line; reads ask again after its Retry-After, at least 1 s doubling up to 8 s`);
+          busyNotedAt = performance.now();
+          busySinceNote = 0;
+        }
+        await new Promise((wake) => setTimeout(wake, wait));
+      }
+    }
+
     var versions = null;
     var builtGroups = new Map(); // a model's path -> the paths of the files read after it
+    // startup.json's "versions" (path -> hash), with its "groups" ([[model, file, ...]], numbers counting
+    // the paths of "versions" from 0) put in builtGroups.
+    function hashesOf(index) {
+      var hashes = index.versions || {};
+      var paths = Object.keys(hashes);
+      for (var group of index.groups || []) {
+        builtGroups.set(paths[group[0]], group.slice(1).map((number) => paths[number]));
+      }
+      return hashes;
+    }
+
+    // The page's copy of startup.json (releaseIndexOnPageThread), parsed; null where the page has none.
+    function pageReleaseIndex() {
+      var text = releaseIndexOnPageThread();
+      if (!text) {
+        return null;
+      }
+      try {
+        return JSON.parse(UTF8ToString(text));
+      } catch (_e) {
+        return null;
+      } finally {
+        _free(text);
+      }
+    }
+
+    var pageIndexAsked = false;
     function fileVersions() {
+      if (!versions && !pageIndexAsked) {
+        pageIndexAsked = true;
+        var index = pageReleaseIndex();
+        try {
+          if (index) {
+            versions = Promise.resolve(hashesOf(index));
+          }
+        } catch (_e) {
+          // Malformed "groups": this asks the server for its own below.
+        }
+      }
       if (!versions) {
-        versions = fetch(new URL('startup.json', pageFolder), {cache: 'no-cache'})
-          .then((response) => response.ok ? response.json() : {})
-          .then((index) => {
-            var hashes = index.versions || {};
-            // "groups": [[model, file, ...]], numbers counting the paths of "versions" from 0.
-            var paths = Object.keys(hashes);
-            for (var group of index.groups || []) {
-              builtGroups.set(paths[group[0]], group.slice(1).map((number) => paths[number]));
+        // The page has no copy: this asks the server for its own.
+        if (serverBusy) {
+          // A read has given up on the busy server: asking for startup.json first would hold each read
+          // twice as long. Asked for again once the server answers something else.
+          return Promise.resolve({});
+        }
+        versions = askWhenFree(async () => {
+          var response = await fetch(new URL('startup.json', pageFolder), {cache: 'no-cache'});
+          return heard({status: response.status, retryAfter: retryAfterSeconds(response.headers.get('Retry-After')), response});
+        }, 'startup.json')
+          .then((answer) => {
+            if (busy(answer)) {
+              // Asked for again at the next read: without the hashes every file would come from the
+              // server for the rest of the visit, even those this device keeps.
+              versions = null;
+              return {};
             }
-            return hashes;
-          }, () => ({}));
+            return answer.response.ok ? answer.response.json() : {};
+          })
+          .then(hashesOf, () => ({}));
       }
       return versions;
     }
@@ -114,10 +252,10 @@ addToLibrary({
       return pageFolder + path + (hash ? `?v=${hash}` : '');
     }
 
-    // See downloadOnPageThread: {status, size, bytes}, or {status: 0} without an answer.
+    // See downloadOnPageThread: {status, size, bytes, retryAfter, kept}, or {status: 0} without an answer.
     function askPageThread(url, start, end) {
       var urlText = stringToNewUTF8(url);
-      var info = _malloc(16);
+      var info = _malloc(32);
       var capacity = end - start + 1;
       var buffer = _malloc(capacity);
       try {
@@ -136,6 +274,8 @@ addToLibrary({
           status: {{{ makeGetValue('info', 0, 'double') }}},
           size: {{{ makeGetValue('info', 8, 'double') }}},
           bytes: HEAPU8.slice(buffer, buffer + length),
+          retryAfter: {{{ makeGetValue('info', 16, 'double') }}},
+          kept: {{{ makeGetValue('info', 24, 'double') }}} == 1,
         };
       } finally {
         _free(urlText);
@@ -182,10 +322,18 @@ addToLibrary({
     }
 
     // Bytes start..end of a file: {status, size (the whole file's, from Content-Range; -1 without),
-    // bytes (where the status is a success)}.
-    async function download(url, start, end) {
+    // bytes (where the status is a success), retryAfter (seconds, -1 without)}. A busy server is asked
+    // again (askWhenFree), unless `once`: a read ahead (readEarlyNow), which the game's own read takes
+    // over from (takeEarly).
+    async function download(url, start, end, once) {
+      var ask = () => downloadOnce(url, start, end);
+      return once ? ask() : askWhenFree(ask, pagePath(url) || url);
+    }
+
+    // One try of download: from the device where the file is kept, else from the server.
+    async function downloadOnce(url, start, end) {
       if (_MuWeb_FilesOnPageThread()) {
-        return askPageThread(url, start, end);
+        return heard(askPageThread(url, start, end));
       }
       var kept = await readKept(url, start, end);
       if (kept) {
@@ -193,11 +341,14 @@ addToLibrary({
       }
       var response = await fetch(url, {headers: {'Range': `bytes=${start}-${end}`}});
       var total = /\/(\d+)$/.exec(response.headers.get('Content-Range') || '');
-      return {
+      return heard({
         status: response.status,
         size: total ? parseInt(total[1], 10) : -1,
         bytes: response.ok ? new Uint8Array(await response.arrayBuffer()) : null,
-      };
+        retryAfter: retryAfterSeconds(response.headers.get('Retry-After')),
+        // The service worker kept the file after readKept looked.
+        kept: response.headers.has('X-Mu-Kept'),
+      });
     }
 
     function succeeded(answer) {
@@ -384,7 +535,7 @@ addToLibrary({
 
     async function readEarlyNow(url, read) {
       earlyReading++;
-      var answer = await download(url, 0, read.end).catch(() => null);
+      var answer = await download(url, 0, read.end, true).catch(() => null);
       earlyReading--;
       read.settle(answer);
       startEarlyReads();

@@ -140,3 +140,29 @@ TEST_CASE("a blob of zeros, as an older client saved it, reads as strong monster
     ConfigDataSerDe::Deserialize(packet, out);
     CHECK(out.bStrongTargetFirst);
 }
+
+TEST_CASE("the crafting materials switch is off in older blobs, survives a save and load and leaves its neighbours alone [ui][muhelper]")
+{
+    PRECEIVE_MUHELPER_DATA zeros{};
+    ConfigData fromOlder;
+    fromOlder.bPickCraftItems = true;
+    ConfigDataSerDe::Deserialize(zeros, fromOlder);
+    CHECK_FALSE(fromOlder.bPickCraftItems);
+
+    ConfigData c;
+    c.bPickCraftItems = true;
+    c.bPickQuestItems = false;
+    c.bStrongTargetFirst = true;
+    ConfigData out = RoundTrip(c);
+    CHECK(out.bPickCraftItems);
+    CHECK_FALSE(out.bPickQuestItems);
+    CHECK(out.bStrongTargetFirst);
+
+    c.bPickCraftItems = false;
+    c.bPickQuestItems = true;
+    c.bStrongTargetFirst = false;
+    out = RoundTrip(c);
+    CHECK_FALSE(out.bPickCraftItems);
+    CHECK(out.bPickQuestItems);
+    CHECK_FALSE(out.bStrongTargetFirst);
+}

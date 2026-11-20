@@ -1438,22 +1438,35 @@ void HandleWindowResize(int width, int height)
 //   which left MU Helper standing in a pack of monsters: so the wait is timed by a small worker, whose
 //   timers browsers don't slow, and its message wakes the game. A phone freezes a background page
 //   whole, worker too, so there nothing changes.
+// - A phone held upright, under the page's "Turn your phone sideways" (Module.muCovered, index.html),
+//   runs at the reference rate as well. Neither page shows the picture, so the next frame isn't drawn:
+//   the result says why (BrowserFrameNotDrawn), and the renderer skips the frame as it does a minimized
+//   window's (IMuRenderer::SetDrawingPaused). The frame after the page shows again is drawn.
 // - A device that can't keep up with the cap (a frame's own work above about 24 ms, on average) is
 //   held to 30 frames a second, evenly, instead of an uneven 30-40; it goes back above once frames
-//   are quick again (below about 16 ms).
-EM_ASYNC_JS(void, WaitForBrowserFrameJs, (int capFps), {
-    const state = Module["muFramePace"] || (Module["muFramePace"] = { cost: 0, slow: false });
+//   are quick again (below about 16 ms). A frame not drawn is no measure of that, nor one over 250 ms
+//   (a map loaded in one frame), which held 30 for about a second after every warp.
+// `idle` (a phone nobody touched for a while, WaitForBrowserFrame) is for the page: Module.muFramePace.idle,
+// and pausedAt, the end of the last frame idle or not drawn (index.html autoQuality).
+EM_ASYNC_JS(int, WaitForBrowserFrameJs, (int capFps, int idle), {
+    const LONGEST_COST_SAMPLE_MS = 250;
+    const REFERENCE_FPS = 25;
+    const NOT_DRAWN_HIDDEN = 1;
+    const NOT_DRAWN_COVERED = 2;
+    const state = Module["muFramePace"] ||
+                  (Module["muFramePace"] = { cost: 0, slow: false, idle: false, notDrawn: 0, pausedAt: 0 });
     const start = Module["muLastFrameEnd"] || 0;
     const now = performance.now();
+    const cost = now - start;
     // Loading's frames are no measure of the world's.
-    if (start > 0 && capFps) {
-        const cost = now - start;
+    if (start > 0 && capFps && !state.notDrawn && cost <= LONGEST_COST_SAMPLE_MS) {
         state.cost = state.cost ? state.cost * 0.9 + cost * 0.1 : cost;
         if (!state.slow && state.cost > 24) state.slow = true;
         else if (state.slow && state.cost < 16) state.slow = false;
     }
+    state.idle = !!idle;
     let fps = capFps;
-    if (document.hidden && fps) fps = 25;
+    if ((document.hidden || Module["muCovered"]) && fps) fps = REFERENCE_FPS;
     else if (fps > 30 && state.slow) fps = 30;
     if (!fps) {
         if (!Module["muYieldChannel"]) {
@@ -1505,7 +1518,12 @@ EM_ASYNC_JS(void, WaitForBrowserFrameJs, (int capFps), {
             }
         }
     }
+    // Asked after the wait: a page that came back during it draws the next frame.
+    state.notDrawn = !fps ? 0 : document.hidden ? NOT_DRAWN_HIDDEN : Module["muCovered"] ? NOT_DRAWN_COVERED : 0;
     Module["muLastFrameEnd"] = performance.now();
+    // The last frame held back on purpose: the page's Quality measure leaves such a time out (autoQuality).
+    if (state.idle || state.notDrawn) state.pausedAt = Module["muLastFrameEnd"];
+    return state.notDrawn;
 });
 
 mu::web::FieldKeys PhoneKeysFor(const Rml::Element* field)
@@ -1537,21 +1555,87 @@ void SyncPhoneKeyboard()
     mu::web::SyncTapOnTextField(PhoneKeysFor(tapped));
 }
 
+namespace
+{
+// What WaitForBrowserFrameJs says of the next frame: drawn, or not and why.
+enum class BrowserFrameNotDrawn : int
+{
+    No = 0,
+    Hidden = 1,  // the page is in the background
+    Covered = 2, // a phone held upright, under the page's "Turn your phone sideways"
+};
+
+// A phone in the world nobody touched (screen, keys, pad) for this long is held to IdleFps: the
+// picture of a standing hero needs no 60, and the battery lasts. The first touch brings the cap back;
+// a finger or pad button held down, however still, is a touch all along (UI::Mobile::PhonePage).
+constexpr double IdleAfterSeconds = 30.0;
+constexpr int IdleFps = 30;
+
+bool g_browserIdle = false;
+BrowserFrameNotDrawn g_notDrawnReason = BrowserFrameNotDrawn::No;
+int g_framesNotDrawn = 0;
+
+bool IsBrowserIdle()
+{
+    return SceneFlag == MAIN_SCENE && UI::Mobile::IsHandheld() &&
+           UI::Mobile::PhonePage::SecondsSinceInput() >= IdleAfterSeconds;
+}
+
+void FollowBrowserIdle(bool idle)
+{
+    if (idle == g_browserIdle)
+        return;
+    g_browserIdle = idle;
+    if (idle)
+        mu::log::Get("render")->info("Idle: {} fps", IdleFps);
+    else
+        mu::log::Get("render")->info("Idle ended");
+}
+
+// Keeps the renderer's drawing paused while the page isn't seen, and says once, when it is seen
+// again, how many frames weren't drawn.
+void FollowFrameDrawing(BrowserFrameNotDrawn reason)
+{
+    mu::GetRenderer().SetDrawingPaused(reason != BrowserFrameNotDrawn::No);
+    if (reason != BrowserFrameNotDrawn::No)
+    {
+        g_notDrawnReason = reason;
+        ++g_framesNotDrawn;
+        return;
+    }
+    if (g_framesNotDrawn == 0)
+        return;
+    mu::log::Get("render")->info("Not drawn while {}: {} frames",
+                                 g_notDrawnReason == BrowserFrameNotDrawn::Covered ? "covered" : "hidden",
+                                 g_framesNotDrawn);
+    g_framesNotDrawn = 0;
+}
+} // namespace
+
 // The frame cap: none while loading; 30 on the login and character screens, where nothing moves fast;
 // in the world the Options FPS limit, 60 when it has none (a phone's 90-120 Hz screen gains nothing
-// the game's 25-step logic shows, and costs heat).
+// the game's 25-step logic shows, and costs heat), and never under REFERENCE_FPS (the game's logic
+// runs slow below it: an FPS limit of 24 saved before the list became 25/30/60 runs as 25). A phone
+// left alone in the world runs at IdleFps.
 void WaitForBrowserFrame()
 {
     constexpr int WorldFps = 60;
     constexpr int MenuFps = 30;
+    constexpr int LowestFps = static_cast<int>(REFERENCE_FPS);
     if (SceneFlag == WEBZEN_SCENE || SceneFlag == LOADING_SCENE)
     {
-        WaitForBrowserFrameJs(0);
+        FollowBrowserIdle(false);
+        FollowFrameDrawing(static_cast<BrowserFrameNotDrawn>(WaitForBrowserFrameJs(0, 0)));
         return;
     }
     const int limit = GameConfig::GetInstance().GetFpsCap();
-    const int worldFps = limit > 0 ? std::min(limit, WorldFps) : WorldFps;
-    WaitForBrowserFrameJs(SceneFlag == MAIN_SCENE ? worldFps : std::min(worldFps, MenuFps));
+    const int worldFps = limit > 0 ? std::clamp(limit, LowestFps, WorldFps) : WorldFps;
+    const bool idle = IsBrowserIdle();
+    FollowBrowserIdle(idle);
+    int capFps = SceneFlag == MAIN_SCENE ? worldFps : std::min(worldFps, MenuFps);
+    if (idle)
+        capFps = std::min(capFps, IdleFps);
+    FollowFrameDrawing(static_cast<BrowserFrameNotDrawn>(WaitForBrowserFrameJs(capFps, idle ? 1 : 0)));
 }
 #endif
 
@@ -1941,8 +2025,12 @@ void MuWebFollowPageSize()
 {
     if (g_sdlWindow == nullptr)
         return;
+    // The serial first: most frames nothing changed.
+    const int serial = mu::web::GetAutoDisplaySerial();
+    if (serial < 0 || serial == g_webDisplaySerial)
+        return;
     const auto display = mu::web::GetAutoDisplay();
-    if (!display || display->serial == g_webDisplaySerial)
+    if (!display)
         return;
 
     g_webDisplaySerial = display->serial;

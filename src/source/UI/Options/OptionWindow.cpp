@@ -426,7 +426,14 @@ static const int s_NumFonts = sizeof(s_Fonts) / sizeof(s_Fonts[0]);
 // FPS cap choices offered by the Video tab's FPS Limit row -- -1 matches SceneManager::SetTargetFps's
 // own "uncapped" sentinel and GameConfig::GetFpsCap()'s default, so "Uncapped" doubles as this
 // setting's untouched-by-the-user state (see Winmain.cpp's EffectiveOffVSyncTargetFps()).
+// The browser build paces its frames between the game's reference rate, 25 (below it the game runs
+// slow), and 60 (Winmain.cpp WaitForBrowserFrame): there anything above 60 is 60, so the list is
+// only what it can do, and the untouched state shows as 60 (FindCurrentFpsCapIndex).
+#ifdef __EMSCRIPTEN__
+static const int s_FpsCapValues[] = { 25, 30, 60 };
+#else
 static const int s_FpsCapValues[] = { 24, 30, 60, 120, 144, -1 };
+#endif
 static const int s_NumFpsCapValues = sizeof(s_FpsCapValues) / sizeof(s_FpsCapValues[0]);
 
 // The Video tab's Anti-aliasing and Anisotropic filtering rows, in the values config.ini holds
@@ -2972,13 +2979,21 @@ void mu::ui::window::COptionWindow::ApplyFont()
 
 int mu::ui::window::COptionWindow::FindCurrentFpsCapIndex()
 {
-    const int fpsCap = GameConfig::GetInstance().GetFpsCap();
+    int fpsCap = GameConfig::GetInstance().GetFpsCap();
+#ifdef __EMSCRIPTEN__
+    // As the browser paces the frames: none (-1, 0) or above the list's top is its top (60), below
+    // its bottom (an old 24) is its bottom (25).
+    const int lowest = s_FpsCapValues[0];
+    const int highest = s_FpsCapValues[s_NumFpsCapValues - 1];
+    fpsCap = fpsCap <= 0 ? highest : std::clamp(fpsCap, lowest, highest);
+#endif
     for (int i = 0; i < s_NumFpsCapValues; ++i)
     {
         if (s_FpsCapValues[i] == fpsCap)
             return i;
     }
-    return s_NumFpsCapValues - 1;  // "Uncapped" -- last entry, matches CfgDefaultFpsCap (-1)
+    // "Uncapped" -- last entry, matches CfgDefaultFpsCap (-1); 60 in the browser build.
+    return s_NumFpsCapValues - 1;
 }
 
 int mu::ui::window::COptionWindow::FindCurrentThemeIndex()
