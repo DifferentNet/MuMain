@@ -30,6 +30,10 @@
 #include "UI/Chat/ChatFade.h"
 #include "UI/Chat/ItemLinkAttach.h"
 #include "UI/RmlBridge/RmlElementBox.h"
+#include "UI/RmlBridge/RmlPointer.h"
+#include "UI/HUD/MainFrameWindow.h"
+#include "UI/Tooltip/LegacyTextListTooltip.h"
+#include "Core/Input/UiInputRouter.h"
 #include "Engine/Object/ZzzInventory.h"
 
 #include <chrono>
@@ -513,8 +517,9 @@ bool mu::ui::window::CChatLogWindow::UpdateMouseEvent()
 {
     // Everything this used to do belongs to RmlUi now: the wheel, the scrollbar and the per-line
     // hit tests are #lines' (base.rcss's .scroll-pane), and the resize is a drag on #resize_handle
-    // (ResizeToPointer()). Only a click on an item's name is the log's own, and the world must not take it.
-    return !TakeLinkClick();
+    // (ResizeToPointer()). Only an item's name is the log's own while the chat is open, and the world must not
+    // take the pointer there.
+    return !TakeLinkPointer();
 }
 
 void mu::ui::window::CChatLogWindow::ResizeToPointer(float pointerYPx)
@@ -611,7 +616,7 @@ bool mu::ui::window::CChatLogWindow::Render()
     // frame while it shows (it hides itself in a frame it isn't drawn).
     const std::optional<ItemLinkTip>& tip = m_PinnedLink ? m_PinnedLink : m_HoveredLink;
     if (tip && tip->item)
-        ::RenderItemInfoAtPx(tip->anchor.x, tip->anchor.y, tip->item.get(), false);
+        ::RenderItemInfoAboveRowAtPx(TipSpot(*tip), tip->item.get());
     return true;
 }
 
@@ -1045,18 +1050,28 @@ void mu::ui::window::CChatLogWindow::OnLinesTapped(float px, float py)
         WhisperToSenderOf(line, true);
 }
 
-std::optional<mu::ui::window::CChatLogWindow::ItemLinkTip> mu::ui::window::CChatLogWindow::LinkAt(float px, float py)
+namespace
+{
+    // How far a link's tooltip stands from its line and from the log's right edge, in the log's units.
+    constexpr float LinkTipGap = 4.f;
+}
+
+bool mu::ui::window::CChatLogWindow::ShownBox::Contains(float x, float y) const
+{
+    return x >= pos.x && x < pos.x + size.x && y >= pos.y && y < pos.y + size.y;
+}
+
+template <typename Pick>
+std::optional<mu::ui::window::CChatLogWindow::ItemLinkTip> mu::ui::window::CChatLogWindow::PickShownLink(Pick pick)
 {
     Rml::Element* lines = LinesElement();
     Rml::ElementDocument* document = m_RmlView.Document();
     if (lines == nullptr || document == nullptr || !document->IsVisible() || !IsVisible() || !m_bShowChatLog)
         return std::nullopt;
 
-    // Only inside the scrolling well, so a line scrolled out of view is never pointed.
-    Rml::Vector2f wellPos;
-    Rml::Vector2f wellSize;
-    if (!UI::RmlBridge::DrawnBox(*lines, Rml::BoxArea::Padding, wellPos, wellSize) || px < wellPos.x
-        || px >= wellPos.x + wellSize.x || py < wellPos.y || py >= wellPos.y + wellSize.y)
+    // The scrolling well, so a line scrolled out of view is never pointed.
+    ShownBox well;
+    if (!UI::RmlBridge::DrawnBox(*lines, Rml::BoxArea::Padding, well.pos, well.size))
         return std::nullopt;
 
     type_vector_msgs* pvecMsgs = GetMsgs(GetCurrentMsgType());
@@ -1069,49 +1084,93 @@ std::optional<mu::ui::window::CChatLogWindow::ItemLinkTip> mu::ui::window::CChat
         const ChatLogLineEntry& entry = model.lines[static_cast<std::size_t>(i)];
         const CMessageText* message = (*pvecMsgs)[static_cast<std::size_t>(i)];
         Rml::Element* row = lines->GetChild(i);
-        if (entry.faded || entry.segs.empty() || message == nullptr || row == nullptr)
+        ShownBox line;
+        if (entry.faded || entry.segs.empty() || message == nullptr || row == nullptr
+            || !UI::RmlBridge::DrawnBox(*row, Rml::BoxArea::Border, line.pos, line.size))
             continue;
-        if (auto tip = LinkInRow(*row, *message, px, py))
-            return tip;
+        const std::vector<UI::Chat::ChatItemLink>& links = message->GetLinks();
+        for (int c = 0; c < row->GetNumChildren(); ++c)
+        {
+            Rml::Element* piece = row->GetChild(c);
+            // The pieces carry their link's index (chat_log.rml); plain text and data-for's own hidden template don't.
+            const int link = piece != nullptr ? piece->GetAttribute<int>("link", -1) : -1;
+            ShownBox name;
+            if (link < 0 || link >= static_cast<int>(links.size())
+                || !UI::RmlBridge::DrawnBox(*piece, Rml::BoxArea::Border, name.pos, name.size))
+                continue;
+            if (pick(*message, link, name, well))
+                return ItemLinkTip{links[static_cast<std::size_t>(link)].item, message, link,
+                                   {name.pos.x + name.size.x / 2.f, line.pos.y}};
+        }
     }
     return std::nullopt;
 }
 
-std::optional<mu::ui::window::CChatLogWindow::ItemLinkTip> mu::ui::window::CChatLogWindow::LinkInRow(
-    Rml::Element& row, const CMessageText& message, float px, float py) const
+std::optional<mu::ui::window::CChatLogWindow::ItemLinkTip> mu::ui::window::CChatLogWindow::LinkAt(float px, float py)
 {
-    const std::vector<UI::Chat::ChatItemLink>& links = message.GetLinks();
-    for (int c = 0; c < row.GetNumChildren(); ++c)
-    {
-        Rml::Element* piece = row.GetChild(c);
-        // The pieces carry their link's index (chat_log.rml); plain text and data-for's own hidden template don't.
-        const int link = piece != nullptr ? piece->GetAttribute<int>("link", -1) : -1;
-        if (link < 0 || link >= static_cast<int>(links.size()))
-            continue;
-        Rml::Vector2f offset;
-        Rml::Vector2f size;
-        if (!UI::RmlBridge::DrawnBox(*piece, Rml::BoxArea::Border, offset, size))
-            continue;
-        if (px >= offset.x && px < offset.x + size.x && py >= offset.y && py < offset.y + size.y)
-            return ItemLinkTip{links[static_cast<std::size_t>(link)].item, {offset.x + size.x / 2.f, offset.y}};
-    }
-    return std::nullopt;
+    return PickShownLink([px, py](const CMessageText&, int, const ShownBox& name, const ShownBox& well)
+                         { return well.Contains(px, py) && name.Contains(px, py); });
 }
 
-bool mu::ui::window::CChatLogWindow::TakeLinkClick()
+std::optional<mu::ui::window::CChatLogWindow::ItemLinkTip> mu::ui::window::CChatLogWindow::LinkAgain(const ItemLinkTip& tip)
 {
-    // A phone opens a tooltip by a tap on the history (OnLinesTapped()); a closed chat lets clicks through.
-    if (UI::Mobile::IsPhoneView() || !mu::ui::window::IsPress(VK_LBUTTON) || !IsChatOpen())
+    return PickShownLink(
+        [&tip](const CMessageText& message, int link, const ShownBox& name, const ShownBox& well)
+        {
+            return &message == tip.message && link == tip.link
+                && message.GetLinks()[static_cast<std::size_t>(link)].item == tip.item
+                && well.Contains(name.pos.x + name.size.x / 2.f, name.pos.y + name.size.y / 2.f);
+        });
+}
+
+UI::Tooltip::AboveRow mu::ui::window::CChatLogWindow::TipSpot(const ItemLinkTip& tip)
+{
+    const float gap = LinkTipGap * (m_PanelScale > 0.f ? m_PanelScale : 1.f);
+    UI::Tooltip::AboveRow spot;
+    spot.x = tip.anchor.x;
+    spot.bottomY = tip.anchor.y - gap;
+    spot.besideX = tip.anchor.x;
+    Rml::Vector2f panelPos;
+    Rml::Vector2f panelSize;
+    if (Rml::Element* panel = KeptElementById(m_RmlView.Document(), m_PanelElement, "panel");
+        panel != nullptr && UI::RmlBridge::DrawnBox(*panel, Rml::BoxArea::Border, panelPos, panelSize))
+        spot.besideX = panelPos.x + panelSize.x + gap;
+    return spot;
+}
+
+bool mu::ui::window::CChatLogWindow::OtherUiUnderPointer() const
+{
+    const CObject* active = m_pNewUIMng != nullptr ? m_pNewUIMng->GetActiveMouseUIObj() : nullptr;
+    if ((active != nullptr && active != this) || MouseOnWindow
+        || (g_pMainFrame != nullptr && g_pMainFrame->IsMouseOverHud()))
+        return true;
+    return Core::Input::IsMouseOverUI() && !UI::RmlBridge::IsPointerOver(m_RmlView.Document());
+}
+
+bool mu::ui::window::CChatLogWindow::TakeLinkPointer()
+{
+    // A phone opens a tooltip by a tap on the history (OnLinesTapped()); a closed chat lets the pointer through.
+    if (UI::Mobile::IsPhoneView() || !IsChatOpen() || OtherUiUnderPointer())
         return false;
     std::optional<ItemLinkTip> link = LinkAt(g_fWindowMouseX, g_fWindowMouseY);
     if (!link)
         return false;
 
-    m_bLinkPressTaken = true;
-    const bool same = m_PinnedLink && m_PinnedLink->item == link->item;
-    UnpinLink();
-    if (!same)
-        m_PinnedLink = std::move(link);
+    // The press the world would walk on, also when the button went down and up within one frame (only
+    // MouseLButtonPush tells then).
+    if (mu::ui::window::IsPress(VK_LBUTTON) || MouseLButtonPush)
+    {
+        m_bLinkPressTaken = true;
+        const bool same = m_PinnedLink && m_PinnedLink->item == link->item;
+        UnpinLink();
+        if (!same)
+            m_PinnedLink = std::move(link);
+        // As the bag takes a click it used (UI/Inventory/MyInventory.cpp ResetMouseLButton): nothing acts on this
+        // press after the log, nor on its release.
+        MouseLButton = false;
+        MouseLButtonPop = false;
+        MouseLButtonPush = false;
+    }
     return true;
 }
 
@@ -1125,10 +1184,13 @@ void mu::ui::window::CChatLogWindow::FollowItemLinks()
     }
     if (m_PinnedLink && (!IsChatOpen() || !m_bShowChatLog))
         UnpinLink();
+    // The shown tooltip stays on its line as it moves, and goes with it.
+    if (m_PinnedLink)
+        m_PinnedLink = LinkAgain(*m_PinnedLink);
 
-    // A phone has no pointer to hover with: its last tap stays where it was.
+    // A phone has no pointer to hover with: its last tap stays where it was. Nor is a name under another window.
     m_HoveredLink.reset();
-    if (!UI::Mobile::IsPhoneView())
+    if (!UI::Mobile::IsPhoneView() && !OtherUiUnderPointer())
         m_HoveredLink = LinkAt(g_fWindowMouseX, g_fWindowMouseY);
 }
 

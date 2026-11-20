@@ -36,15 +36,13 @@ public:
         TooLong,
     };
 
-    // The field holds at most maxChars characters, a token counted as long as it shows.
-    explicit ItemLinkDraft(std::size_t maxChars) : m_maxChars(maxChars) {}
-
     bool Empty() const { return m_tokens.empty(); }
     std::size_t Count() const { return m_tokens.size(); }
     void Clear();
 
-    // Why `item` cannot go into a field holding `fieldText` with at most `maxItems` items; None when it can.
-    Refusal CanInsert(std::wstring_view fieldText, const Item& item, int maxItems) const;
+    // Why `item` cannot go into a field holding `fieldText` with at most `maxItems` items and `maxChars` characters
+    // (a token counted as long as it shows); None when it can.
+    Refusal CanInsert(std::wstring_view fieldText, const Item& item, int maxItems, std::size_t maxChars) const;
     // Puts the item's token into `text` (the field's text) at the caret, never inside another token; returns the
     // caret after it.
     std::size_t Insert(std::wstring& text, std::size_t caret, Item item);
@@ -64,7 +62,6 @@ private:
     const Item* ItemOf(int key) const;
     void ForgetUnused();
 
-    std::size_t m_maxChars;
     std::vector<ItemLinkTokens::Token> m_tokens;
     std::vector<std::pair<int, Item>> m_items;
     std::wstring m_text;

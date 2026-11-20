@@ -17506,4 +17506,7 @@
   <data name="ItemLinkCommandTooLong" xml:space="preserve">
     <value>Сообщение с вещами слишком длинное.</value>
   </data>
+  <data name="ItemLinkWait" xml:space="preserve">
+    <value>Подождите %d с перед следующим сообщением с вещами.</value>
+  </data>
 </root>

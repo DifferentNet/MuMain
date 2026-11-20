@@ -27,6 +27,11 @@ namespace Rml
     class Context;
 }
 
+namespace UI::Tooltip
+{
+    struct AboveRow;
+}
+
 namespace mu::ui::window
 {
     class CManager;
@@ -235,29 +240,53 @@ namespace mu::ui::window
         // tooltip instead, and the next tap closes it.
         void OnLinesTapped(float px, float py);
 
-        // MU Moldova, items in the chat (UI/Chat/ItemLinks.h): the item whose tooltip shows, and the window pixel
-        // the tooltip hangs from (the top middle of its name).
+        // MU Moldova, items in the chat (UI/Chat/ItemLinks.h): the item whose tooltip shows, which link it is
+        // (`link` of `message`, only compared: that line may be gone since), and the window pixel the tooltip stands
+        // on (the middle of the name, at the top of its line).
         struct ItemLinkTip
         {
             std::shared_ptr<ITEM> item;
+            const CMessageText* message = nullptr;
+            int link = -1;
             Rml::Vector2f anchor;
         };
+        // A box in window pixels.
+        struct ShownBox
+        {
+            Rml::Vector2f pos;
+            Rml::Vector2f size;
+            bool Contains(float x, float y) const;
+        };
+        // The tooltip of the first item name in the shown lines that `pick` takes; it is asked with the line, the
+        // link's index in it, the name's box and the scrolling well's box.
+        template <typename Pick> std::optional<ItemLinkTip> PickShownLink(Pick pick);
         // The item's name under a window pixel in a shown line, if any.
         std::optional<ItemLinkTip> LinkAt(float px, float py);
-        std::optional<ItemLinkTip> LinkInRow(Rml::Element& row, const CMessageText& message, float px, float py) const;
-        // PC: a left click on an item's name while the chat is open shows its tooltip until the next click
-        // (FollowItemLinks()); true when the click was that.
-        bool TakeLinkClick();
-        // Each frame: the name under the pointer, and a click elsewhere, Esc or a closing chat letting the shown
-        // tooltip go.
+        // A shown tooltip's name where it is now: its line moves as lines come and the log scrolls. None once the
+        // line left the log or the name's middle is out of the well.
+        std::optional<ItemLinkTip> LinkAgain(const ItemLinkTip& tip);
+        // Where the tooltip goes: a few pixels above its line, or right of the log when there is no room above.
+        UI::Tooltip::AboveRow TipSpot(const ItemLinkTip& tip);
+        // PC, while the chat is open: the pointer over an item's name is the log's (the world neither walks nor
+        // picks there), and a left click on it shows its tooltip until the next click (FollowItemLinks()) and goes
+        // no further. True when the pointer is on a name.
+        bool TakeLinkPointer();
+        // Another window, the HUD's bar or another document is under the pointer: no name of the log is pointed
+        // then (the tests the world's own click uses, UI/HUD/GamepadControls.cpp IsPointerOverUi(), less the log).
+        bool OtherUiUnderPointer() const;
+        // Each frame: the name under the pointer, the shown tooltip following its line, and a click elsewhere, Esc,
+        // a closing chat or its line scrolling out letting it go.
         void FollowItemLinks();
         void UnpinLink();
-        // The tooltip a click or tap opened; it stays until the next click, Esc or the chat closing.
+        // The tooltip a click or tap opened; it stays until the next click, Esc, the chat closing or its line going
+        // out of view.
         std::optional<ItemLinkTip> m_PinnedLink;
         // The name the pointer is over this frame.
         std::optional<ItemLinkTip> m_HoveredLink;
-        // This frame's left press went to an item's name (TakeLinkClick()).
+        // This frame's left press went to an item's name (TakeLinkPointer()).
         bool m_bLinkPressTaken = false;
+        // #panel of the current document, the right edge a tooltip with no room above goes beside.
+        Rml::ObserverPtr<Rml::Element> m_PanelElement;
         // Phone: the tooltip this tap's press closed, which the tap itself must not open again (OnLinesTapped()).
         std::shared_ptr<ITEM> m_LinkClosedByPress;
         // Pushes m_iCurrentRenderEndLine into RmlUi's scroll offset (native's own fPosRate math),

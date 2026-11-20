@@ -326,12 +326,51 @@ TEST_CASE("A long name is cut with an ellipsis")
     CHECK(ItemLinkWire::ClipName(L"Short Name") == L"Short Name");
     const std::wstring exact(ItemLinkWire::MaxNameLength, L'a');
     CHECK(ItemLinkWire::ClipName(exact) == exact);
-    const std::wstring cut = ItemLinkWire::ClipName(L"Excellent Dragon Knight Helm of the Sky +13");
+    CHECK(ItemLinkWire::Clip(exact, L"") == exact);
+    // No level: only the ellipsis.
+    const std::wstring cut = ItemLinkWire::ClipName(L"Excellent Divine Sword of Archangel");
+    CHECK(cut == L"Excellent Divine Sword of A…");
     CHECK(cut.size() == ItemLinkWire::MaxNameLength);
-    CHECK(cut.back() == ItemLinkWire::Ellipsis);
     // No space before the ellipsis.
-    const std::wstring as(25, L'a');
-    CHECK(ItemLinkWire::ClipName(as + L"  bbbbb") == as + ItemLinkWire::Ellipsis);
+    const std::wstring as(26, L'a');
+    CHECK(ItemLinkWire::ClipName(as + L" bbbb") == as + ItemLinkWire::Ellipsis);
+}
+
+TEST_CASE("A cut name keeps its level, as the server cuts it")
+{
+    const std::wstring sword = ItemLinkWire::ClipName(L"Divine Sword of Archangel +15");
+    CHECK(sword == L"Divine Sword of Archang… +15");
+    CHECK(sword.size() == ItemLinkWire::MaxNameLength);
+    CHECK(ItemLinkWire::ClipName(L"Excellent Great Dragon Armor +13") == L"Excellent Great Dragon… +13");
+    CHECK(ItemLinkWire::Clip(L"Excellent Great Dragon Armor", L" +13") == L"Excellent Great Dragon… +13");
+    // Exactly 28 with the level, a short name, spaces around it.
+    CHECK(ItemLinkWire::ClipName(L"Excellent Great Dragon A +13") == L"Excellent Great Dragon A +13");
+    CHECK(ItemLinkWire::ClipName(L"Excellent Kris +3") == L"Excellent Kris +3");
+    CHECK(ItemLinkWire::ClipName(L" Kris  +3 ") == L"Kris +3");
+    // Not a level: no digits, three digits, a letter, or the name's start.
+    CHECK(ItemLinkWire::ClipName(L"Excellent Box +x") == L"Excellent Box +x");
+    CHECK(ItemLinkWire::ClipName(L"Excellent Divine Sword of Arch +") == L"Excellent Divine Sword of A…");
+    CHECK(ItemLinkWire::ClipName(L"Excellent Divine Sword of Arch +100") == L"Excellent Divine Sword of A…");
+    CHECK(ItemLinkWire::ClipName(L"+5") == L"+5");
+    // In another language the level stays too.
+    CHECK(ItemLinkWire::ClipName(L"Отличный Меч Божественного Архангела +15") == L"Отличный Меч Божественн… +15");
+}
+
+TEST_CASE("A cut name never splits a surrogate pair")
+{
+    const std::wstring as(26, L'a');
+    if constexpr (sizeof(wchar_t) == 2)
+    {
+        const std::wstring emoji = ItemLinkWire::Clip(as + L"\U0001F600bb", L"");
+        CHECK(emoji == as + ItemLinkWire::Ellipsis);
+        const std::wstring withLevel = ItemLinkWire::Clip(std::wstring(22, L'a') + L"\U0001F600bb", L" +15");
+        CHECK(withLevel == std::wstring(22, L'a') + ItemLinkWire::Ellipsis + L" +15");
+    }
+    else
+    {
+        // One wchar_t is one code point: the emoji is one character, as a whole one it may stay.
+        CHECK(ItemLinkWire::Clip(as + L"\U0001F600bb", L"") == as + L"\U0001F600" + ItemLinkWire::Ellipsis);
+    }
 }
 
 TEST_CASE("The command's size is counted as the packet carries it")
@@ -431,19 +470,50 @@ TEST_CASE("The field's caret in characters maps to the wide text")
 
 TEST_CASE("The draft refuses a fourth item and an item that does not fit")
 {
-    ItemLinkDraft draft(20);
+    ItemLinkDraft draft;
     std::wstring text = L"hi ";
     const auto helm = DraftItem(L"[Helm]", L"i12:1:0");
-    REQUIRE(draft.CanInsert(text, helm, 3) == ItemLinkDraft::Refusal::None);
+    REQUIRE(draft.CanInsert(text, helm, 3, 20) == ItemLinkDraft::Refusal::None);
     draft.Insert(text, text.size(), helm);
     draft.Insert(text, text.size(), helm);
-    CHECK(draft.CanInsert(text, helm, 2) == ItemLinkDraft::Refusal::TooManyItems);
-    CHECK(draft.CanInsert(text, DraftItem(L"[Very long name]", L"i1:1:0"), 3) == ItemLinkDraft::Refusal::TooLong);
+    CHECK(draft.CanInsert(text, helm, 2, 20) == ItemLinkDraft::Refusal::TooManyItems);
+    CHECK(draft.CanInsert(text, DraftItem(L"[Very long name]", L"i1:1:0"), 3, 20) == ItemLinkDraft::Refusal::TooLong);
+}
+
+TEST_CASE("A party or guild line has one character less for its items")
+{
+    CHECK(ItemLinkWire::MaxLineLength(L"n") == ItemLinkWire::MaxChatLength);
+    CHECK(ItemLinkWire::MaxLineLength(L"s") == ItemLinkWire::MaxChatLength);
+    CHECK(ItemLinkWire::MaxLineLength(L"w:Friend") == ItemLinkWire::MaxChatLength);
+    CHECK(ItemLinkWire::MaxLineLength(L"p") == ItemLinkWire::MaxChatLength - 1);
+    CHECK(ItemLinkWire::MaxLineLength(L"g") == ItemLinkWire::MaxChatLength - 1);
+
+    // 84 characters and a 6-character token: 90 fits the normal chat, not the party's 89.
+    ItemLinkDraft draft;
+    const std::wstring text(84, L'a');
+    const auto helm = DraftItem(L"[Helm]", L"i12:1:0");
+    CHECK(draft.CanInsert(text, helm, 3, ItemLinkWire::MaxLineLength(L"n")) == ItemLinkDraft::Refusal::None);
+    CHECK(draft.CanInsert(text, helm, 3, ItemLinkWire::MaxLineLength(L"p")) == ItemLinkDraft::Refusal::TooLong);
+    CHECK(draft.CanInsert(text, helm, 3, ItemLinkWire::MaxLineLength(L"g")) == ItemLinkDraft::Refusal::TooLong);
+}
+
+TEST_CASE("The cooldown counts whole seconds up, as the server does")
+{
+    CHECK(ItemLinkWire::CooldownWait(std::nullopt, 1000, 5) == 0);
+    CHECK(ItemLinkWire::CooldownWait(1000, 1000, 5) == 5);
+    CHECK(ItemLinkWire::CooldownWait(1000, 1001, 5) == 5);
+    CHECK(ItemLinkWire::CooldownWait(1000, 2000, 5) == 4);
+    CHECK(ItemLinkWire::CooldownWait(1000, 5999, 5) == 1);
+    CHECK(ItemLinkWire::CooldownWait(1000, 6000, 5) == 0);
+    CHECK(ItemLinkWire::CooldownWait(1000, 60000, 5) == 0);
+    // No cooldown from the server, a clock that went back.
+    CHECK(ItemLinkWire::CooldownWait(1000, 1500, 0) == 0);
+    CHECK(ItemLinkWire::CooldownWait(5000, 1000, 5) == 5);
 }
 
 TEST_CASE("The draft puts items in at the caret and sends them in order")
 {
-    ItemLinkDraft draft(90);
+    ItemLinkDraft draft;
     std::wstring text = L"a b";
     CHECK(draft.Insert(text, 2, DraftItem(L"[Ring]", L"i13:1:0")) == 8);
     CHECK(draft.Insert(text, 0, DraftItem(L"[Helm]", L"v4:2:7")) == 6);
@@ -459,7 +529,7 @@ TEST_CASE("The draft puts items in at the caret and sends them in order")
 
 TEST_CASE("The draft follows Backspace on a token and forgets its item")
 {
-    ItemLinkDraft draft(90);
+    ItemLinkDraft draft;
     std::wstring text = L"x ";
     draft.Insert(text, 2, DraftItem(L"[Ring]", L"i13:1:0"));
     const auto fix = draft.Follow(L"x [Ring", 7);
@@ -471,7 +541,7 @@ TEST_CASE("The draft follows Backspace on a token and forgets its item")
 
 TEST_CASE("The whisper echo finds each token in the shown line")
 {
-    ItemLinkDraft draft(90);
+    ItemLinkDraft draft;
     std::wstring text = L"see ";
     draft.Insert(text, text.size(), DraftItem(L"[Ring]", L"i13:1:0"));
     const auto links = draft.LinksIn(L"[to Friend] see [Ring]");

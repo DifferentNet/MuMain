@@ -19,6 +19,11 @@ ButtonHintAnchor ForButton(float left, float top, float width, float height, flo
 // anchor, if it fits there; then clamped into the viewport either way.
 float Top(float anchorY, bool above, const float* flipAnchorY, float height, float viewportHeight);
 
+// The left edge of a box `height` tall at `left`, growing from `anchorY` (above: its bottom there; below: its top
+// there). When it does not fit on that side without being moved and a `besideLeft` is given (the right edge of the
+// window the anchor lies in), that instead: the box goes beside the window rather than over it. Not yet clamped.
+float LeftOrBeside(float left, float anchorY, bool above, const float* besideLeft, float height, float viewportHeight);
+
 // The scale a box `height` tall is drawn at to fit a viewport `viewportHeight` tall: 1 when it fits,
 // else the viewport's share of it, but never below `minimum` (smaller text no longer reads; the rest
 // stays off screen then).

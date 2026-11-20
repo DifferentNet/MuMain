@@ -144,7 +144,8 @@ namespace mu::ui::window
         void CloseSentLine();
 
         // MU Moldova, items in the chat line (UI/Chat/ItemLinks.h): Shift+click puts an item's "[name]" into the
-        // field, a token counted as long as it shows within the line's characters; the line then goes as "/il …".
+        // field, a token counted as long as it shows within the channel's line (89 characters in the party and the
+        // guild, 90 elsewhere); the line then goes as "/il …".
         UI::Chat::ItemLinkDraft m_linkDraft;
         // The field's text the tokens were last followed in (FollowChatField()).
         Rml::String m_linkSeenText;
@@ -166,8 +167,11 @@ namespace mu::ui::window
             Refused,
         };
         // A line holding items goes as "/il …"; NotLinked when it holds none or cannot carry them (the gens
-        // channel, a command): it then goes as typed. Refused: too long for the packet, the line stays.
+        // channel, a command): it then goes as typed. Refused: too long for the packet, or sooner than the server's
+        // cooldown after the last one (UI::Chat::ItemLinks::CooldownWait()); the line stays with its items.
         LinkedSend SendLineWithItems();
+        // The whisper target a line with items goes to; empty when the bar sends to the channel.
+        type_string ItemLinkWhisperTarget();
         // The own whisper with its items as links, as EchoSentWhisper() shows a plain one.
         void EchoWhisperWithItems(const type_string& whisperId, const type_string& text);
         // The line Enter kept during the cooldown, once the cooldown passed.

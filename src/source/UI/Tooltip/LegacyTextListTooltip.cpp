@@ -69,7 +69,10 @@ const void* ItemInfoOwner()
     return &token;
 }
 
-void ShowLegacyTextList(int lineCount, float anchorX, float anchorY, Placement placement, const void* owner)
+namespace
+{
+UI::RmlBridge::Tooltip::Config TextListConfig(int lineCount, float anchorX, float anchorY, Placement placement,
+                                              const void* owner)
 {
     UI::RmlBridge::Tooltip::Config config;
     config.lines = BuildLines(lineCount);
@@ -81,6 +84,19 @@ void ShowLegacyTextList(int lineCount, float anchorX, float anchorY, Placement p
     config.textAlign = UI::RmlBridge::Tooltip::Config::TextAlign::Center;
     // Every item information tooltip is drawn from its window's Render() while the item is hovered.
     config.refreshEachFrame = owner == ItemInfoOwner();
+    return config;
+}
+} // namespace
+
+void ShowLegacyTextList(int lineCount, float anchorX, float anchorY, Placement placement, const void* owner)
+{
+    UI::RmlBridge::Tooltip::Show(TextListConfig(lineCount, anchorX, anchorY, placement, owner), owner);
+}
+
+void ShowLegacyTextListAboveRow(int lineCount, const AboveRow& spot, const void* owner)
+{
+    UI::RmlBridge::Tooltip::Config config = TextListConfig(lineCount, spot.x, spot.bottomY, Placement::Above, owner);
+    config.besideX = spot.besideX;
     UI::RmlBridge::Tooltip::Show(config, owner);
 }
 

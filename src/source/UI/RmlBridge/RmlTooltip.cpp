@@ -328,8 +328,10 @@ namespace UI::RmlBridge::Tooltip
             std::optional<float> flipEdge;
             if (config.flipAnchorY)
                 flipEdge = edge(*config.flipAnchorY, !above);
-            const float top = TooltipPlacement::Top(edge(config.anchorY, above), above,
-                                                    flipEdge ? &*flipEdge : nullptr, size.y,
+            const float anchorEdge = edge(config.anchorY, above);
+            left = TooltipPlacement::LeftOrBeside(left, anchorEdge, above, config.besideX ? &*config.besideX : nullptr,
+                                                  size.y, static_cast<float>(viewport.y));
+            const float top = TooltipPlacement::Top(anchorEdge, above, flipEdge ? &*flipEdge : nullptr, size.y,
                                                     static_cast<float>(viewport.y));
 
             // Clamped on all four sides to the real viewport (this document has no parent transform),

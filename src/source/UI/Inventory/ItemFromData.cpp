@@ -45,12 +45,17 @@ std::unique_ptr<ITEM> Make(std::span<const std::uint8_t> data)
     std::array<BYTE, MaximumItemBytes> padded{};
     std::copy_n(data.begin(), std::min(data.size(), padded.size()), padded.begin());
     const ItemCreationParams p = ParseItemData(std::span<const BYTE>(padded.data(), padded.size()));
+    // The number has 12 bits: bytes no server writes (a link's hex) could name a type past the item tables, or
+    // one of a later group's (the GM panel's ParseSaved refuses such a number too).
+    const int type = p.Group * MAX_ITEM_INDEX + p.Number;
+    if (p.Group < 0 || p.Number < 0 || p.Number >= MAX_ITEM_INDEX || type >= MAX_ITEM)
+        return nullptr;
 
     auto item = std::make_unique<ITEM>();
     std::memset(item.get(), 0, sizeof(ITEM));
     item->bPeriodItem = p.WithExpiration;
     item->bExpiredPeriod = p.IsExpired;
-    item->Type = static_cast<short>(p.Group * MAX_ITEM_INDEX + p.Number);
+    item->Type = static_cast<short>(type);
     item->Level = p.Level;
     item->Durability = p.Durability;
     item->HasLuck = p.WithLuck;

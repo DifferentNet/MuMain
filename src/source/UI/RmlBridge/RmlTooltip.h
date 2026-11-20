@@ -89,6 +89,9 @@ namespace UI::RmlBridge::Tooltip
         // Where the tooltip grows the other way from when it does not fit on `anchor`'s side (a
         // button hint: the button's other edge). Without it, it is only shifted back on screen.
         std::optional<float> flipAnchorY;
+        // Where the panel's left edge goes instead when it does not fit on `anchor`'s side (an item link's tooltip:
+        // right of the chat window, so it covers no line of it); it is then only shifted on screen vertically.
+        std::optional<float> besideX;
 
         // True: anchorX is the tooltip's horizontal CENTER (matches RenderTipTextList()'s own
         // `sx - fWidth/2` centering -- the item tooltip's existing behavior, anchored under/over

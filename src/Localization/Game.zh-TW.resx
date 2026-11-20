@@ -14512,6 +14512,9 @@
   <data name="ItemLinkCommandTooLong" xml:space="preserve">
     <value>The message with items is too long.</value>
   </data>
+  <data name="ItemLinkWait" xml:space="preserve">
+    <value>Wait %d s before the next message with items.</value>
+  </data>
   <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
   <data name="HelperPickCraftItems" xml:space="preserve">
     <value>製作</value>

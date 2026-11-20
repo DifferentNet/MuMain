@@ -36,6 +36,12 @@ float Top(float anchorY, bool above, const float* flipAnchorY, float height, flo
     return std::max(0.f, std::min(top, viewportHeight - height));
 }
 
+float LeftOrBeside(float left, float anchorY, bool above, const float* besideLeft, float height, float viewportHeight)
+{
+    const float top = above ? anchorY - height : anchorY;
+    return besideLeft && !Fits(top, height, viewportHeight) ? *besideLeft : left;
+}
+
 float FitScale(float height, float viewportHeight, float minimum)
 {
     if (height <= viewportHeight || height <= 0.f || viewportHeight <= 0.f)

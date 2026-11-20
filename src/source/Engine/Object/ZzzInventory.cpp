@@ -1936,9 +1936,10 @@ static void RenderItemCombatPower(const ITEM* ip)
     }
 }
 
-// (sx, sy) in the screen's 640x480 stretch, `screen`.
+// (sx, sy) in the screen's 640x480 stretch, `screen`. With `aboveRow` the tooltip goes there instead (in window
+// pixels, UI/Tooltip/LegacyTextListTooltip.h).
 static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy, ITEM* ip, bool Sell, int Inventype,
-                           bool bItemTextListBoxUse)
+                           bool bItemTextListBoxUse, const UI::Tooltip::AboveRow* aboveRow = nullptr)
 {
     // Unconditional: the early returns below (and the pet-item delegation further down, which
     // renders its own tooltip via giPetManager::RenderPetItemInfo() instead) used to mean "this
@@ -5537,7 +5538,11 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
 
     bool isrendertooltip = true;
 
-    if (isrendertooltip)
+    if (isrendertooltip && aboveRow != nullptr)
+    {
+        UI::Tooltip::ShowLegacyTextListAboveRow(TextNum, *aboveRow);
+    }
+    else if (isrendertooltip)
     {
         UI::Tooltip::ShowLegacyTextList(
             TextNum,
@@ -5765,6 +5770,12 @@ void RenderItemInfoAtPx(float x, float y, ITEM* ip, bool Sell, int Inventype, bo
 {
     InScreenSpace(x, y, [&](const UI::Scaling::Transform& screen, int sx, int sy)
                   { RenderItemInfo(screen, sx, sy, ip, Sell, Inventype, bItemTextListBoxUse); });
+}
+
+void RenderItemInfoAboveRowAtPx(const UI::Tooltip::AboveRow& spot, ITEM* ip)
+{
+    InScreenSpace(spot.x, spot.bottomY, [&](const UI::Scaling::Transform& screen, int sx, int sy)
+                  { RenderItemInfo(screen, sx, sy, ip, false, 0, false, &spot); });
 }
 
 void RenderRepairInfoAtPx(float x, float y, ITEM* ip, bool Sell)

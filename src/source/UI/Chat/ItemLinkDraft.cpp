@@ -11,13 +11,14 @@ void ItemLinkDraft::Clear()
     m_text.clear();
 }
 
-ItemLinkDraft::Refusal ItemLinkDraft::CanInsert(std::wstring_view fieldText, const Item& item, int maxItems) const
+ItemLinkDraft::Refusal ItemLinkDraft::CanInsert(std::wstring_view fieldText, const Item& item, int maxItems,
+                                                std::size_t maxChars) const
 {
     if (static_cast<int>(m_tokens.size()) >= maxItems)
         return Refusal::TooManyItems;
     const std::size_t shown = ItemLinkTokens::CharacterOfIndex(fieldText, fieldText.size());
     const std::size_t added = ItemLinkTokens::CharacterOfIndex(item.token, item.token.size());
-    if (shown + added > m_maxChars)
+    if (shown + added > maxChars)
         return Refusal::TooLong;
     return Refusal::None;
 }

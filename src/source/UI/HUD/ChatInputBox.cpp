@@ -46,9 +46,10 @@ using namespace mu::ui::window;
 
 namespace
 {
-// MU Moldova, items in the chat line: a token counts as long as it shows within what the field takes. The server
-// names the items in English and judges the length of the line it writes.
-constexpr std::size_t ItemLinkCharBudget = MAX_CHAT_SIZE;
+// MU Moldova, items in the chat line: a token counts as long as it shows within what the channel's line takes
+// (UI::Chat::ItemLinkWire::MaxLineLength). The server names the items in English and judges the length of the line
+// it writes.
+static_assert(MAX_CHAT_SIZE == UI::Chat::ItemLinkWire::MaxChatLength);
 constexpr std::size_t RefusalLineSize = 256;
 
 UI::Chat::ItemLinkWire::InputChannel InputChannelOf(int inputMsgType)
@@ -92,7 +93,6 @@ void PlayChatWords(const std::wstring& line)
 } // namespace
 
 mu::ui::window::CChatInputBox::CChatInputBox()
-    : m_linkDraft(ItemLinkCharBudget)
 {
     Init();
 }
@@ -381,9 +381,7 @@ mu::ui::window::CChatInputBox::LinkedSend mu::ui::window::CChatInputBox::SendLin
         return LinkedSend::NotLinked;
 
     const type_string text = m_linkDraft.Text();
-    type_string whisperId;
-    GetWhsprID(whisperId);
-    const type_string target = m_bWhisperSend ? whisperId : type_string();
+    const type_string target = ItemLinkWhisperTarget();
     const auto route = Wire::RouteOf(text, InputChannelOf(m_iInputMsgType), target);
     if (!route)
         return LinkedSend::NotLinked;
@@ -395,8 +393,17 @@ mu::ui::window::CChatInputBox::LinkedSend mu::ui::window::CChatInputBox::SendLin
         UI::Chat::PostSystem(I18N::Game::ItemLinkCommandTooLong, mu::ui::window::TYPE_ERROR_MESSAGE);
         return LinkedSend::Refused;
     }
+    // The server would refuse it and the line would be gone: it stays, items and all, until the cooldown is over.
+    if (const int wait = UI::Chat::ItemLinks::CooldownWait(); wait > 0)
+    {
+        wchar_t refusal[RefusalLineSize] = { L'\0' };
+        mu_swprintf(refusal, I18N::Game::ItemLinkWait, wait);
+        UI::Chat::PostSystem(refusal, mu::ui::window::TYPE_ERROR_MESSAGE);
+        return LinkedSend::Refused;
+    }
 
     SocketClient->ToGameServer()->SendPublicChatMessage(MU_C16(Hero->ID), MU_C16(command->c_str()));
+    UI::Chat::ItemLinks::NoteSent();
     // The server sends a whisper to its target only: the own one shows here, as a plain whisper does.
     if (route->channel.front() == Wire::WhisperChannel)
     {
@@ -409,6 +416,15 @@ mu::ui::window::CChatInputBox::LinkedSend mu::ui::window::CChatInputBox::SendLin
     }
     AddChatHistory(text);
     return LinkedSend::Sent;
+}
+
+mu::ui::window::CChatInputBox::type_string mu::ui::window::CChatInputBox::ItemLinkWhisperTarget()
+{
+    if (!m_bWhisperSend)
+        return {};
+    type_string whisperId;
+    GetWhsprID(whisperId);
+    return whisperId;
 }
 
 void mu::ui::window::CChatInputBox::EchoWhisperWithItems(const type_string& whisperId, const type_string& text)
@@ -426,7 +442,10 @@ bool mu::ui::window::CChatInputBox::InsertItemLink(UI::Chat::ItemLinkDraft::Item
     FollowChatField();
     type_string text;
     GetChatText(text);
-    const auto refusal = m_linkDraft.CanInsert(text, item, UI::Chat::ItemLinks::MaxItems());
+    const auto route = UI::Chat::ItemLinkWire::RouteOf(text, InputChannelOf(m_iInputMsgType), ItemLinkWhisperTarget());
+    const std::size_t maxChars =
+        route ? UI::Chat::ItemLinkWire::MaxLineLength(route->channel) : UI::Chat::ItemLinkWire::MaxChatLength;
+    const auto refusal = m_linkDraft.CanInsert(text, item, UI::Chat::ItemLinks::MaxItems(), maxChars);
     if (refusal != UI::Chat::ItemLinkDraft::Refusal::None)
     {
         PostLinkRefusal(refusal);

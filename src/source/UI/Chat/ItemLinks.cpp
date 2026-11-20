@@ -41,6 +41,9 @@ struct State
 {
     bool offered = false;
     int maxItems = 0;
+    int cooldownSeconds = 0;
+    // When the last message with items went; kept over a new character, as the server's cooldown is the account's.
+    std::optional<std::uint64_t> sentAt;
     ItemLinkPending pending;
 };
 
@@ -77,6 +80,7 @@ void TakeHello(const std::wstring& text)
         return;
     State& state = Links();
     state.maxItems = std::clamp(hello->maxItems, 0, ItemLinkWire::MaxLinks);
+    state.cooldownSeconds = std::max(hello->cooldownSeconds, 0);
     state.offered = state.maxItems > 0;
 }
 
@@ -102,6 +106,7 @@ void ForgetAndHello()
     State& state = Links();
     state.offered = false;
     state.maxItems = 0;
+    state.cooldownSeconds = 0;
     state.pending.Clear();
     SendCommand(ItemLinkWire::HelloCommand);
 }
@@ -171,6 +176,17 @@ bool IsOffered()
 int MaxItems()
 {
     return Links().maxItems;
+}
+
+int CooldownWait()
+{
+    const State& state = Links();
+    return ItemLinkWire::CooldownWait(state.sentAt, GetTickCount64(), state.cooldownSeconds);
+}
+
+void NoteSent()
+{
+    Links().sentAt = GetTickCount64();
 }
 
 std::optional<Linked> TakeFor(std::wstring_view sender, std::wstring_view text, mu::ui::window::MESSAGE_TYPE kind)

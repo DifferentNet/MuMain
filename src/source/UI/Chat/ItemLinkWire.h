@@ -32,6 +32,9 @@ inline constexpr wchar_t Ellipsis = L'…';
 // The command goes in a chat packet (C1, at most 255 bytes): a 3-byte header and the 10-byte name before it,
 // a zero after it.
 inline constexpr std::size_t MaxCommandBytes = 255 - 3 - 10 - 1;
+// The longest line the server writes for a channel, the party's "~" and the guild's "@" in front counted
+// (ItemLinkRules.MaxChatLength, the client's MAX_CHAT_SIZE).
+inline constexpr std::size_t MaxChatLength = 90;
 
 // The storages a ref names.
 inline constexpr wchar_t InventoryStorage = L'i';
@@ -98,6 +101,14 @@ struct Route
 // (empty: the line goes as typed). Otherwise the whisper target when there is one, else the channel chosen.
 std::optional<Route> RouteOf(std::wstring_view text, InputChannel channel, std::wstring_view whisperTarget);
 
+// How many characters the line of a "/il" channel may have: MaxChatLength less the prefix the server puts in front
+// of it (party and guild: 89).
+std::size_t MaxLineLength(std::wstring_view channel);
+
+// The whole seconds left of a cooldown of cooldownSeconds that began at sentAtMs, rounded up as the server counts
+// them (PostRules.WaitSeconds); 0 when it is over or nothing was sent.
+int CooldownWait(std::optional<std::uint64_t> sentAtMs, std::uint64_t nowMs, int cooldownSeconds);
+
 // An item's token in the typed text.
 struct PlacedRef
 {
@@ -115,6 +126,11 @@ std::optional<std::wstring> BuildCommand(std::wstring_view channel, std::wstring
 // How many bytes the text takes in UTF-8, as the packet carries it.
 std::size_t Utf8Bytes(std::wstring_view text);
 
-// The name cut to MaxNameLength, ending with an ellipsis when cut (as the server cuts its own).
-std::wstring ClipName(std::wstring name);
+// The name in at most MaxNameLength characters, as the server cuts its own (ItemLinkRules.VisibleName): the level at
+// its end (" +1" .. " +15") stays whole and the rest is cut, ending with an ellipsis ("Divine Sword of Archang… +15").
+std::wstring ClipName(std::wstring_view name);
+
+// The name and then the suffix in at most MaxNameLength characters: when they don't fit, the name is cut (never inside
+// a surrogate pair, no space before the ellipsis) and ends with an ellipsis, the suffix stays whole.
+std::wstring Clip(std::wstring_view name, std::wstring_view suffix);
 } // namespace UI::Chat::ItemLinkWire

@@ -17,4 +17,15 @@ const void* ItemInfoOwner();
 void ShowLegacyTextList(int lineCount, float anchorX, float anchorY,
                         Placement placement = Placement::Below, const void* owner = ItemInfoOwner());
 void HideLegacyTextList(const void* owner = ItemInfoOwner());
+
+// Where an item tooltip goes above a row instead of its window's usual place (an item's name in the chat log), in
+// screen pixels: centred on x with its bottom at bottomY; when it does not fit above, its left edge at besideX
+// (right of the window the row is in) instead.
+struct AboveRow
+{
+    float x = 0.f;
+    float bottomY = 0.f;
+    float besideX = 0.f;
+};
+void ShowLegacyTextListAboveRow(int lineCount, const AboveRow& spot, const void* owner = ItemInfoOwner());
 }

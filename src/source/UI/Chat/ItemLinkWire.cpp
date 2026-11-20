@@ -134,6 +134,45 @@ std::size_t Utf8BytesOf(std::uint32_t codePoint)
         return 3;
     return 4;
 }
+
+bool IsHighSurrogate(wchar_t c)
+{
+    const auto unit = static_cast<std::uint32_t>(c);
+    return unit >= FirstHighSurrogate && unit < FirstLowSurrogate;
+}
+
+std::wstring_view TrimStart(std::wstring_view text)
+{
+    while (!text.empty() && std::iswspace(text.front()))
+        text.remove_prefix(1);
+    return text;
+}
+
+std::wstring_view TrimEnd(std::wstring_view text)
+{
+    while (!text.empty() && std::iswspace(text.back()))
+        text.remove_suffix(1);
+    return text;
+}
+
+// The level at the end of a name, " +1" .. " +15" (a space, a plus and one or two digits); empty when there is none.
+std::wstring_view LevelSuffix(std::wstring_view name)
+{
+    constexpr std::wstring_view LevelMark = L" +";
+    constexpr std::size_t MaxLevelDigits = 2;
+    const std::size_t plus = name.rfind(LevelMark);
+    if (plus == std::wstring_view::npos || plus == 0)
+        return {};
+    const std::wstring_view digits = name.substr(plus + LevelMark.size());
+    if (digits.empty() || digits.size() > MaxLevelDigits)
+        return {};
+    for (const wchar_t c : digits)
+    {
+        if (c < L'0' || c > L'9')
+            return {};
+    }
+    return name.substr(plus);
+}
 } // namespace
 
 std::optional<Hello> ParseHello(std::wstring_view line)
@@ -224,6 +263,25 @@ std::optional<Route> RouteOf(std::wstring_view text, InputChannel channel, std::
     }
 }
 
+std::size_t MaxLineLength(std::wstring_view channel)
+{
+    constexpr std::size_t PrefixLength = 1;
+    const bool prefixed = channel.size() == 1 && (channel.front() == PartyChannel || channel.front() == GuildChannel);
+    return prefixed ? MaxChatLength - PrefixLength : MaxChatLength;
+}
+
+int CooldownWait(std::optional<std::uint64_t> sentAtMs, std::uint64_t nowMs, int cooldownSeconds)
+{
+    constexpr std::uint64_t MillisecondsPerSecond = 1000;
+    if (!sentAtMs || cooldownSeconds <= 0)
+        return 0;
+    const std::uint64_t cooldownMs = static_cast<std::uint64_t>(cooldownSeconds) * MillisecondsPerSecond;
+    const std::uint64_t passed = nowMs > *sentAtMs ? nowMs - *sentAtMs : 0;
+    if (passed >= cooldownMs)
+        return 0;
+    return static_cast<int>((cooldownMs - passed + MillisecondsPerSecond - 1) / MillisecondsPerSecond);
+}
+
 std::optional<std::wstring> BuildCommand(std::wstring_view channel, std::wstring_view text, std::size_t bodyStart,
                                          const std::vector<PlacedRef>& placed)
 {
@@ -265,14 +323,24 @@ std::size_t Utf8Bytes(std::wstring_view text)
     return bytes;
 }
 
-std::wstring ClipName(std::wstring name)
+std::wstring Clip(std::wstring_view name, std::wstring_view suffix)
 {
-    if (name.size() <= MaxNameLength)
-        return name;
-    name.resize(MaxNameLength - 1);
-    while (!name.empty() && std::iswspace(name.back()))
-        name.pop_back();
-    name.push_back(Ellipsis);
-    return name;
+    if (name.size() + suffix.size() <= MaxNameLength)
+        return std::wstring(name) + std::wstring(suffix);
+
+    std::size_t keep = MaxNameLength - suffix.size() - 1;
+    if (keep > 0 && IsHighSurrogate(name[keep - 1]))
+        --keep;
+    std::wstring clipped(TrimEnd(name.substr(0, keep)));
+    clipped.push_back(Ellipsis);
+    clipped += suffix;
+    return clipped;
+}
+
+std::wstring ClipName(std::wstring_view name)
+{
+    name = TrimEnd(TrimStart(name));
+    const std::wstring_view level = LevelSuffix(name);
+    return Clip(TrimEnd(name.substr(0, name.size() - level.size())), level);
 }
 } // namespace UI::Chat::ItemLinkWire
