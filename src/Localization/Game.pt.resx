@@ -14499,4 +14499,8 @@
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>Nova versão disponível: recarregue a página.</value>
   </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>Artesanato</value>
+  </data>
 </root>

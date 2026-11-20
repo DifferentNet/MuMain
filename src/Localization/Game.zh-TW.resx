@@ -14499,4 +14499,8 @@
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>已有新版本：請重新整理頁面。</value>
   </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>製作</value>
+  </data>
 </root>

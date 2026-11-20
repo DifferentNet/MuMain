@@ -67,6 +67,12 @@ namespace MUHelper
                 && GameLogic::Automation::IsFortressObjectType(static_cast<int>(pChar->MonsterIndex));
         }
 
+        // The quest option leaves the crafting materials (feathers, Spirit, Fenrir parts) to the crafting option.
+        bool IsHelperQuestItem(const ITEM* pItem)
+        {
+            return GameLogic::Items::IsQuestItem(pItem) && !GameLogic::Items::IsCraftingMaterialItem(pItem);
+        }
+
         UI::Chat::HelperRunSummary g_runSummary;
 
         // What the run gave, in one chat line; nothing for a short run.
@@ -1771,7 +1777,7 @@ namespace MUHelper
     {
         return m_config.bPickAllItems || m_config.bPickZen || m_config.bPickJewel || m_config.bPickAncient
             || m_config.bPickExcellent || m_config.bPickExtraItems || m_config.bPickContainers
-            || m_config.bPickQuestItems;
+            || m_config.bPickQuestItems || m_config.bPickCraftItems;
     }
 
     bool CMuHelper::IsWithinReach(int iTargetId, float fReach) const
@@ -2426,7 +2432,8 @@ namespace MUHelper
             || (m_config.bPickAncient && IsAncientItem(pItem))
             || (m_config.bPickExcellent && IsExcellentItem(pItem))
             || (m_config.bPickContainers && GameLogic::Items::IsContainerItem(pItem))
-            || (m_config.bPickQuestItems && GameLogic::Items::IsQuestItem(pItem)))
+            || (m_config.bPickQuestItems && IsHelperQuestItem(pItem))
+            || (m_config.bPickCraftItems && GameLogic::Items::IsCraftingMaterialItem(pItem)))
         {
             return true;
         }
