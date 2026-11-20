@@ -230,7 +230,7 @@ namespace GameLogic::Items
         case ITEM_SIGN_OF_DIMENSIONS:
         case ITEM_MIRROR_OF_DIMENSIONS:
         // Spirit 13:31: level 0 is the Spirit of Dark Horse, level 1 the Spirit of Dark Raven (Dark Lord pets);
-        // the helper picks both up with the quest items (ghinzuro, 2026-11-18).
+        // the helper picks both up with the crafting materials (IsCraftingMaterialItem, ghinzuro, 2026-11-20).
         case ITEM_SPIRIT:
         // Class quest items: 2nd class (Scroll of Emperor / Ring of Honor, Broken Sword / Dark Stone, Tear of Elf,
         // Soul Shard of Wizard) and 3rd class (Flame of Death Beam Knight, Horn of Hell Maine, Feather of Dark
@@ -243,6 +243,28 @@ namespace GameLogic::Items
         case ITEM_HORN_OF_HELL_MAINE:
         case ITEM_FEATHER_OF_DARK_PHOENIX:
         case ITEM_EYE_OF_ABYSSAL:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    bool IsCraftingMaterialItem(const ITEM* pItem)
+    {
+        switch (pItem->Type)
+        {
+        // Level 0 is Loch's Feather, level 1 the Crest of Monarch.
+        case ITEM_LOCHS_FEATHER:
+        case ITEM_FEATHER_OF_CONDOR:
+        case ITEM_FLAME_OF_CONDOR:
+        // Level 0 is the Spirit of Dark Horse, level 1 the Spirit of Dark Raven.
+        case ITEM_SPIRIT:
+        // Fenrir materials.
+        case ITEM_SPLINTER_OF_ARMOR:
+        case ITEM_BLESS_OF_GUARDIAN:
+        case ITEM_CLAW_OF_BEAST:
+        case ITEM_FRAGMENT_OF_HORN:
+        case ITEM_BROKEN_HORN:
             return true;
         default:
             return false;

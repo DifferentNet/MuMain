@@ -50,6 +50,11 @@ namespace GameLogic::Items
     // the 2nd and 3rd class quest items, the Signs and Mirror of Dimensions (Kundun's Lair) and the Dark Lord
     // pet Spirit 13:31 (Dark Horse / Dark Raven). The loot filter files them as Quest, which can't be hidden.
     bool IsQuestItem(const ITEM* pItem);
+    // Crafting materials the helper picks up with its own option: Loch's Feather and Crest of Monarch (both levels),
+    // Condor's feather and flame, the Dark Lord pet Spirit 13:31 and the Fenrir materials (Splinter of Armor, Bless of
+    // Guardian, Claw of Beast, Fragment of Horn, Broken Horn). The quest option leaves them to this one; the loot
+    // filter still files the feathers and the Spirit as Quest (IsQuestItem).
+    bool IsCraftingMaterialItem(const ITEM* pItem);
     bool IsRefineStone(const ITEM* pItem);
     bool IsSocketSeedOrSphere(const ITEM* pItem);
     bool IsSocketSeedOrSphereType(int itemType);

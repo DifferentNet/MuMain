@@ -14499,4 +14499,8 @@
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>Versi baru tersedia: muat ulang halaman.</value>
   </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>Kerajinan</value>
+  </data>
 </root>

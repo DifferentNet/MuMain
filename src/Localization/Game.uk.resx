@@ -14499,4 +14499,8 @@
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>Вийшла нова версія: оновіть сторінку.</value>
   </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>Крафт</value>
+  </data>
 </root>
