@@ -26,6 +26,22 @@ using MeasureChatRow = std::function<float(const std::wstring& row)>;
 inline constexpr wchar_t MinRowSample[] = L"WWWWW";
 bool ChatRowTooNarrow(float rowWidth, const MeasureChatRow& measure);
 
+// What a message is split into rows with when it comes (CChatLogWindow::CanSplitRows()).
+enum class ChatRowSource
+{
+    // Not yet: RmlUi has not updated the log's document since it was built, or not laid out its hidden row; the
+    // message waits for the next frame.
+    Wait,
+    // The hidden row of the message's type (chat_log.rml), in the log's own font.
+    LogFont,
+    // The native font against the original's client width: no RmlUi at all, or a log whose chat_log.rml has no
+    // hidden row (an older or overridden theme), which would otherwise keep every message waiting.
+    NativeFont,
+};
+// `rmlUi`: RmlUi runs; `logUpdated`: RmlUi has updated the log's document since it was built; `hasProbe`: that
+// document has the hidden row of the message's type; `room`: the width that row gives a row's text, 0 until laid out.
+ChatRowSource ChooseChatRowSource(bool rmlUi, bool logUpdated, bool hasProbe, float room);
+
 // The rows `text` takes when no row may be wider than `rowWidth`. The first row is drawn with `prefix`
 // ("ID : ") in front of it and counts it as its first word: a word that does not fit after it starts the
 // second row, and the first holds the sender alone. The rows hold the text only. A row breaks at a space (the

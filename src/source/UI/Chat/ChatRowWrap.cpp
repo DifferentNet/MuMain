@@ -23,6 +23,17 @@ bool ChatRowTooNarrow(float rowWidth, const MeasureChatRow& measure)
     return rowWidth < measure(MinRowSample);
 }
 
+ChatRowSource ChooseChatRowSource(bool rmlUi, bool logUpdated, bool hasProbe, float room)
+{
+    if (!rmlUi)
+        return ChatRowSource::NativeFont;
+    if (!logUpdated)
+        return ChatRowSource::Wait;
+    if (!hasProbe)
+        return ChatRowSource::NativeFont;
+    return room > 0.f ? ChatRowSource::LogFont : ChatRowSource::Wait;
+}
+
 std::vector<std::wstring> WrapChatRows(const std::wstring& prefix, const std::wstring& text, float rowWidth,
                                        const MeasureChatRow& measure)
 {

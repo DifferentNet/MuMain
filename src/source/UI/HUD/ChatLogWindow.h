@@ -149,8 +149,9 @@ namespace mu::ui::window
         static constexpr float SCROLL_TOP_BOTTOM_PART_HEIGHT = 3.0f;
         static constexpr float SCROLL_MIDDLE_PART_HEIGHT = 15.0f;
         static constexpr float CLIENT_WIDTH = WND_WIDTH - SCROLL_BAR_WIDTH * 2.0f - (WND_LEFT_RIGHT_EDGE * 2.0f);
-        // SplitIntoRows() without RmlUi, or in a log too narrow to split for: room kept free at the end of a row
-        // measured with g_pRenderText (the chat window's font draws a little wider than it measures, most of all on /play).
+        // SplitIntoRows() without RmlUi or a hidden row, or in a log too narrow to split for: room kept free at the
+        // end of a row measured with g_pRenderText (the chat window's font draws a little wider than it measures,
+        // most of all on /play).
         static constexpr int FIRST_ROW_SAFETY_MARGIN = 8;
         typedef std::wstring type_string;
         typedef std::vector<CMessageText*>	type_vector_msgs;
@@ -227,10 +228,12 @@ namespace mu::ui::window
         // which RmlUi leaves as it was, and one not laid out yet are brought up to date here, once a frame at most.
         float RowRoom(MESSAGE_TYPE MsgType);
         // Whether a message of this type can be split into rows now: on the hidden row, or with the native font
-        // when there is no RmlUi to wait for.
+        // when there is no RmlUi to wait for or the log's markup has no hidden row (UI::Chat::ChooseChatRowSource()).
         bool CanSplitRows(MESSAGE_TYPE MsgType);
         // The document RmlUi has updated since it was built (AfterRmlLayout()); only compared, never followed.
         const Rml::ElementDocument* m_UpdatedDocument = nullptr;
+        // The document whose missing hidden row CanSplitRows() has logged, once; only compared, never followed.
+        const Rml::ElementDocument* m_NoProbeLogged = nullptr;
         // RowRoom() forced the document's layout this frame.
         bool m_bLayoutForced = false;
         // MU Skynet: messages that came before the log could measure their rows (the first ones at world entry come

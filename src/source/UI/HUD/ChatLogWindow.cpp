@@ -78,6 +78,7 @@ void mu::ui::window::CChatLogWindow::Init()
 
     m_UpdatedDocument = nullptr;
     m_bLayoutForced = false;
+    m_NoProbeLogged = nullptr;
 }
 
 bool mu::ui::window::CChatLogWindow::Create(CManager* pNewUIMng, int nShowingLines /* = 6 */)
@@ -613,8 +614,9 @@ void mu::ui::window::CChatLogWindow::OnRmlReloaded()
 {
     // The next SyncRmlModel() fills the rebuilt document.
     m_bLinesDirty = true;
-    // Its rows are measured once RmlUi has updated it (RowRoom()).
+    // Its rows are measured once RmlUi has updated it (RowRoom()), and a missing hidden row is logged again.
     m_UpdatedDocument = nullptr;
+    m_NoProbeLogged = nullptr;
     UI::Placement::Invalidate();
 }
 
@@ -1054,7 +1056,19 @@ float mu::ui::window::CChatLogWindow::RowRoom(MESSAGE_TYPE MsgType)
 
 bool mu::ui::window::CChatLogWindow::CanSplitRows(MESSAGE_TYPE MsgType)
 {
-    return RmlUiRuntime::Instance().GetContext() == nullptr || RowRoom(MsgType) > 0.f;
+    const Rml::ElementDocument* document = m_RmlView.Document();
+    const bool logUpdated = document != nullptr && document == m_UpdatedDocument;
+    const bool hasProbe = RowProbe(MsgType) != nullptr;
+    const UI::Chat::ChatRowSource source = UI::Chat::ChooseChatRowSource(
+        RmlUiRuntime::Instance().GetContext() != nullptr, logUpdated, hasProbe, RowRoom(MsgType));
+    if (source == UI::Chat::ChatRowSource::NativeFont && logUpdated && !hasProbe && m_NoProbeLogged != document)
+    {
+        m_NoProbeLogged = document;
+        // %ls: the web build's vswprintf (musl) knows no %hs.
+        g_ErrorReport.Write(L"> [ChatLog] No #%ls in chat_log.rml: rows measured with the native font.\r\n",
+                            MsgType == TYPE_GM_MESSAGE ? L"line_probe_gm" : L"line_probe");
+    }
+    return source != UI::Chat::ChatRowSource::Wait;
 }
 
 std::vector<mu::ui::window::CChatLogWindow::type_string> mu::ui::window::CChatLogWindow::SplitIntoRows(
@@ -1078,7 +1092,8 @@ std::vector<mu::ui::window::CChatLogWindow::type_string> mu::ui::window::CChatLo
             return UI::Chat::WrapChatRows(prefix, strText, rowWidth, measure);
     }
 
-    // No RmlUi, or a log too narrow to split for: the native font against the original's client width.
+    // No RmlUi, a log without the hidden row (CanSplitRows()), or one too narrow to split for: the native font
+    // against the original's client width.
     g_pRenderText->SetFont(MsgType == TYPE_GM_MESSAGE ? g_hFontBold : g_hFont);
     return UI::Chat::WrapChatRows(prefix, strText, static_cast<float>(CLIENT_WIDTH) - FIRST_ROW_SAFETY_MARGIN,
         [](const type_string& row)

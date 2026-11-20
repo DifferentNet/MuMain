@@ -2,7 +2,9 @@
 
 #include "UI/Chat/ChatRowWrap.h"
 
+using UI::Chat::ChatRowSource;
 using UI::Chat::ChatRowTooNarrow;
+using UI::Chat::ChooseChatRowSource;
 using UI::Chat::ChatRowWidth;
 using UI::Chat::WrapChatRows;
 
@@ -105,4 +107,19 @@ TEST_CASE("A row narrower than a few wide letters is too narrow to split for")
     CHECK(ChatRowTooNarrow(9.9f, Units));
     CHECK_FALSE(ChatRowTooNarrow(10.f, Units));
     CHECK(ChatRowTooNarrow(0.f, Units));
+}
+
+TEST_CASE("A message waits for the log's hidden row only while that row can still come")
+{
+    // No RmlUi: the native font at once.
+    CHECK(ChooseChatRowSource(false, false, false, 0.f) == ChatRowSource::NativeFont);
+    // The log's document not built, or not updated by RmlUi yet: wait.
+    CHECK(ChooseChatRowSource(true, false, false, 0.f) == ChatRowSource::Wait);
+    CHECK(ChooseChatRowSource(true, false, true, 0.f) == ChatRowSource::Wait);
+    // Updated but not laid out yet: wait; laid out: the log's own font.
+    CHECK(ChooseChatRowSource(true, true, true, 0.f) == ChatRowSource::Wait);
+    CHECK(ChooseChatRowSource(true, true, true, 281.f) == ChatRowSource::LogFont);
+    // Updated, and its markup has no hidden row (an older or overridden chat_log.rml): the native font, never a
+    // wait that would last for good.
+    CHECK(ChooseChatRowSource(true, true, false, 0.f) == ChatRowSource::NativeFont);
 }
