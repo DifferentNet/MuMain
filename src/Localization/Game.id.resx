@@ -14332,7 +14332,6 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>Frasa</value>
   </data>
-||||||| ce163792b
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Berdagang dengan pemain: /trade Nama jika ia terlihat; jika tidak, dengan pemain yang dipilih dari jarak berapa pun, atau yang menghadap Anda.</value>

@@ -14332,7 +14332,6 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>Parirala</value>
   </data>
-||||||| ce163792b
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Makipagpalitan sa player: /trade Pangalan kung nakikita siya; kung hindi, sa player na pinili mo kahit gaano kalayo, o sa nakaharap sa iyo.</value>

@@ -12411,7 +12411,6 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>定型文</value>
   </data>
-||||||| ce163792b
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>プレイヤーと取引: 見える範囲なら /trade 名前、それ以外は選択中のプレイヤー(距離不問)か、向かい合っている相手。</value>

@@ -14332,7 +14332,6 @@
   <data name="PadKeyboardPhrases" xml:space="preserve">
     <value>Frases</value>
   </data>
-||||||| ce163792b
   <!-- Round 13 -->
   <data name="ChatCmdHelpTrade" xml:space="preserve">
     <value>Comerciar con un jugador: /trade Nombre si está a la vista; si no, con el jugador seleccionado a cualquier distancia o con el que tienes enfrente.</value>
