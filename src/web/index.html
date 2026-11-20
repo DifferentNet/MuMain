@@ -1014,11 +1014,66 @@
   function store(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* no storage */ } }
   const pageParams = new URLSearchParams(location.search);
 
+  // fetch, but a busy web server's answer (HTTP 429 or 503: server/web/serve-web.py caps the file
+  // requests it answers at a time, per player address and in all, and says in Retry-After when to come
+  // back) is asked again, as fetch-backend.js does for the game's own reads: after its Retry-After, and
+  // at least 1 s, doubling with each busy answer in a row up to 8 s, up to a quarter longer at random;
+  // for up to 30 s in all, and then the busy answer is the answer. Once a download has given up, the
+  // next ones get 3 s until the server answers something else (busyGaveUp). `init.signal` (optional)
+  // ends the wait too.
+  const BUSY_FIRST_WAIT_MS = 1000, BUSY_MOST_WAIT_MS = 8000, BUSY_GIVE_UP_MS = 30000, BUSY_AFTER_GIVE_UP_MS = 3000;
+  const BUSY_NOTE_MS = 10000;   // at most a line this often about downloads waiting for a busy server
+  const busyAnswer = (response) => response.status === 429 || response.status === 503;
+  let busyGaveUp = false, busyNotedAt = -BUSY_NOTE_MS, busySinceNote = 0;
+  async function fetchWhenFree(url, init) {
+    const started = performance.now();
+    const budget = busyGaveUp ? BUSY_AFTER_GIVE_UP_MS : BUSY_GIVE_UP_MS;
+    const signal = init && init.signal;
+    for (let tries = 0; ; tries++) {
+      const response = await fetch(url, init);
+      if (!busyAnswer(response)) {
+        // An answer the service worker gave from the device (sw.js, X-Mu-Kept) says nothing of the server.
+        if (!response.headers.has("X-Mu-Kept")) busyGaveUp = false;
+        return response;
+      }
+      const retryAfter = response.headers.get("Retry-After");
+      const seconds = retryAfter && isFinite(retryAfter) ? Number(retryAfter) : 0;
+      const wait = Math.max(seconds * 1000, Math.min(BUSY_FIRST_WAIT_MS * 2 ** tries, BUSY_MOST_WAIT_MS)) *
+                   (1 + Math.random() / 4);
+      const waited = performance.now() - started;
+      if (waited + wait > budget) {
+        busyGaveUp = true;
+        console.warn(`${url}: the server stayed busy (HTTP ${response.status}) for ${(waited / 1000).toFixed(1)} s, ` +
+                     `${tries + 1} tries; given up`);
+        return response;
+      }
+      if (response.body) response.body.cancel().catch(() => {});
+      busySinceNote++;
+      if (performance.now() - busyNotedAt >= BUSY_NOTE_MS) {
+        console.warn(`The server is busy (HTTP ${response.status}, ${url}): ${busySinceNote} busy answer(s) since the ` +
+                     "last line; downloads ask again after its Retry-After, at least 1 s doubling up to 8 s");
+        busyNotedAt = performance.now();
+        busySinceNote = 0;
+      }
+      await new Promise((resume) => {
+        if (signal && signal.aborted) return resume();
+        const done = () => {
+          clearTimeout(timer);
+          if (signal) signal.removeEventListener("abort", done);
+          resume();
+        };
+        const timer = setTimeout(done, wait);
+        if (signal) signal.addEventListener("abort", done, { once: true });
+      });
+      if (signal && signal.aborted) throw signal.reason || new DOMException("Aborted", "AbortError");
+    }
+  }
+
   // startup.json (tools/web/make_startup_pack.py): the startup pack's parts and the hashes of Main.js
   // and Main.wasm. Asked for at once, while the page checks the graphics card. Its ETag is kept: the new
   // version check reads startup.json (432 KB) again only when the server's ETag is another.
   let releaseIndexEtag = null;
-  const releaseIndexLoad = fetch("startup.json", { cache: "no-cache" })
+  const releaseIndexLoad = fetchWhenFree("startup.json", { cache: "no-cache" })
     .then((response) => {
       if (!response.ok) return null;
       releaseIndexEtag = response.headers.get("ETag");
@@ -1058,7 +1113,13 @@
   // rebuild its frame buffers.
   const PHONE_RESIZE_DELAY_MS = 200;
   // A phone held upright shows "Turn your phone sideways" (#rotate) over the game, which keeps its size.
+  // Nobody sees the game then: it runs at its reference rate and draws nothing (Module.muCovered,
+  // Winmain.cpp WaitForBrowserFrameJs) until the phone turns sideways again.
   const portrait = matchMedia("(orientation: portrait)");
+  const coveredByRotate = () => phone && portrait.matches;
+  portrait.addEventListener("change", () => {
+    if (window.Module) window.Module.muCovered = coveredByRotate();
+  });
   if (pageParams.has("reset")) {
     try {
       for (const key of ["mu-web/resolution", "mu-web/quality", "mu-web/quality-auto", "mu-web/effects-before-lowest"]) {
@@ -1140,15 +1201,21 @@
     if (canvas.style.height !== cssH) canvas.style.height = cssH;
   }
 
+  // A computer's window being dragged to a new size resizes the page at every step: the canvas follows
+  // at once there too, the game's size once the drag pauses. Entering or leaving fullscreen takes the
+  // new size at once.
+  const PC_RESIZE_DELAY_MS = 120;
   let displayTimer = 0;
+  let fullscreenAtResize = inFullscreen();
   function stageResized() {
-    if (!phone) {
+    fitCanvas();
+    clearTimeout(displayTimer);
+    if (!phone && inFullscreen() !== fullscreenAtResize) {
+      fullscreenAtResize = inFullscreen();
       updateDisplay();
       return;
     }
-    fitCanvas();
-    clearTimeout(displayTimer);
-    displayTimer = setTimeout(updateDisplay, PHONE_RESIZE_DELAY_MS);
+    displayTimer = setTimeout(updateDisplay, phone ? PHONE_RESIZE_DELAY_MS : PC_RESIZE_DELAY_MS);
   }
   const stageObserver = new ResizeObserver((entries) => {
     const box = entries[0].devicePixelContentBoxSize && entries[0].devicePixelContentBoxSize[0];
@@ -1221,11 +1288,18 @@
   // the player hasn't picked a quality in the footer. Measured over 20 s while the page is shown, from
   // 45 s after the character enters the world and 20 s after a step, not while a map loads; two slow
   // measures in a row step down. A player who capped the game below 50 frames (Options, FPS Limit)
-  // gets 70 % of the cap as the bar. index.html?noautoquality turns it off.
+  // gets 70 % of the cap as the bar. index.html?noautoquality turns it off. A measure that took in a
+  // time the game drew fewer frames on purpose doesn't count: the page hidden or just back, the phone
+  // upright under "Turn your phone sideways", or nobody touching it (30 frames, Module.muFramePace.idle
+  // and pausedAt, Winmain.cpp WaitForBrowserFrameJs).
   const AUTO_QUALITY = { afterWorldMs: 45000, afterStepMs: 20000, windowMs: 20000, minFps: 40, slowInRow: 2 };
   const LOWER_QUALITY = { high: "medium", medium: "low" };
   const QUALITY_NAMES = { high: "High", medium: "Medium", low: "Low", lowest: "Lowest" };
   let worldEnteredAt = 0;      // performance.now() the character entered the world, 0: not in it
+  let pageShownAt = -Infinity; // performance.now() the page last came back on screen
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") pageShownAt = performance.now();
+  });
   const autoQuality = {
     windowStart: 0, windowFrames: 0, slow: 0, quietUntil: 0,
     playerPicked() {
@@ -1246,7 +1320,9 @@
       const now = performance.now();
       const lower = LOWER_QUALITY[display.quality];
       if (!lower || this.playerPicked()) return;
-      if (busy || document.visibilityState !== "visible" || !worldEnteredAt ||
+      const pace = (window.Module && window.Module.muFramePace) || {};
+      const heldBack = coveredByRotate() || pace.idle || Math.max(pageShownAt, pace.pausedAt || 0) >= this.windowStart;
+      if (busy || document.visibilityState !== "visible" || heldBack || !worldEnteredAt ||
           now < worldEnteredAt + AUTO_QUALITY.afterWorldMs || now < this.quietUntil) {
         this.restart(now);
         this.slow = 0;
@@ -1293,6 +1369,7 @@
   // key. The game says when its character enters and leaves the world (Core/Platform/web/WebPageView.h).
   // Not once the game stopped, where Reload just reloads.
   function askBeforeLeaving(event) {
+    if (reloadingPage) return;
     event.preventDefault();
     event.returnValue = "";
   }
@@ -1372,10 +1449,52 @@
     statusEl.appendChild(box);
     console.error("The game stopped:", error);
   }
+  // The WebGPU device lost while nobody looked (the page in the background, or back for under 2 s: a
+  // phone frees a hidden page's GPU) reloads the page once it is seen again, at once if it is, with
+  // config.ini saved first; the game runs on meanwhile, drawing nothing while hidden. At most once in
+  // 2 minutes per tab (sessionStorage): lost again so soon, or without the storage, it says so as below.
+  const DEVICE_LOST_RELOAD = { key: "mu-web/device-lost-reload", afterShownMs: 2000, gapMs: 120000 };
+  let reloadingPage = false;
+  function mayReloadForLostDevice() {
+    const now = Date.now();
+    try {
+      const last = Number(sessionStorage.getItem(DEVICE_LOST_RELOAD.key)) || 0;
+      if (Math.abs(now - last) < DEVICE_LOST_RELOAD.gapMs) return false;
+      sessionStorage.setItem(DEVICE_LOST_RELOAD.key, String(now));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  function reloadForLostDevice() {
+    saveConfig();
+    // Stamped again: a page shown minutes after the loss counts its 2 minutes from this reload.
+    try {
+      sessionStorage.setItem(DEVICE_LOST_RELOAD.key, String(Date.now()));
+    } catch (e) {}
+    reloadingPage = true;
+    removeEventListener("beforeunload", askBeforeLeaving);
+    location.reload();
+  }
+  function reloadWhenSeen() {
+    if (!document.hidden) {
+      reloadForLostDevice();
+      return;
+    }
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) reloadForLostDevice(); });
+  }
   // The WebGPU device lost (a GPU or driver reset, or the browser freed it, on phones mostly): the
   // picture stays black or frozen, so say so. Not when the page destroyed it or is going away.
   function gpuDeviceLost(info) {
-    if (!info || info.reason === "destroyed" || pageGone || crashed) return;
+    if (!info || info.reason === "destroyed" || pageGone || crashed || reloadingPage) return;
+    const unseen = document.hidden || performance.now() - pageShownAt < DEVICE_LOST_RELOAD.afterShownMs;
+    if (unseen && mayReloadForLostDevice()) {
+      appendLog(`Graphics device lost while the page was not seen (${info.message || info.reason}): ` +
+                (document.hidden ? "reloading when it is shown" : "reloading"));
+      saveConfig();
+      reloadWhenSeen();
+      return;
+    }
     gameCrashed(String(info.message || "").slice(0, 200),
                 ["The graphics device was lost (GPU reset or the browser freed it). Reload to continue.",
                  "Связь с видеокартой потеряна (сброс драйвера, или браузер её освободил). Обновите страницу, чтобы продолжить."]);
@@ -1734,12 +1853,14 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     async function fetchPacked(name, init, version) {
       const query = version ? `?v=${version}` : "";
       if (self.DecompressionStream) {
-        const response = await fetch(name + ".gz" + query, init).catch(() => null);
+        const response = await fetchWhenFree(name + ".gz" + query, init).catch(() => null);
         if (response && response.ok) {
           return { response, packed: !/gzip/i.test(response.headers.get("Content-Encoding") || "") };
         }
+        // Still busy after the tries: the copy as it is would be refused too, and is bigger.
+        if (response && busyAnswer(response)) throw new Error(`${name}.gz: HTTP ${response.status}`);
       }
-      const response = await fetch(name + query, init);
+      const response = await fetchWhenFree(name + query, init);
       if (!response.ok) throw new Error(`${name}: HTTP ${response.status}`);
       return { response, packed: false };
     }
@@ -1885,11 +2006,13 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     }
     // The startup pack's parts the game waits for, each a promise of its files and bytes (WebFileSystem.cpp
     // takes them in order as they come), or null where startup.json has none. Not the deferred ones
-    // (deferredSettled below), but this keeps them in the storage too.
+    // (deferredSettled below), but this keeps them in the storage too. Not the desktop one (the Modern
+    // theme, make_startup_pack.py) on a phone or tablet, which always plays the legacy theme
+    // (UI/RmlBridge/RmlTheme.cpp, by the same device check: Module.muDevice).
     async function startupPack() {
       const allParts = releaseIndex && releaseIndex.parts;
       if (!allParts) return null;
-      const parts = allParts.filter((part) => !part.deferred);
+      const parts = allParts.filter((part) => !part.deferred && !(phone && part.desktop));
       const store = await openStore(STARTUP_STORE);
       const kept = await Promise.all(parts.map((part) => store && store.match(packKey(part)).catch(() => undefined)));
       if (store) {
@@ -1918,7 +2041,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     // files.txt, the list of every game file (436 KB), downloads beside the packs and goes to
     // WebFileSystem.cpp MountGameFiles (Module.muFileList) as text, null where it didn't come: the game
     // asked the mount for it only after the startup pack was in place, one more wait before the login screen.
-    const fileListLoad = fetch("files.txt", { cache: "no-cache" })
+    const fileListLoad = fetchWhenFree("files.txt", { cache: "no-cache" })
       .then((response) => response.ok ? response.text() : null).catch(() => null);
     // Settles with nothing once every part has come or failed. The parts' bytes (166 MB) are copied
     // into the game's memory (WebFileSystem.cpp) and must go then: a result holding the parts held
@@ -2009,7 +2132,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
         if (local) {
           return await loadPack(`Map pack ${world}`, local.entry, store, local.kept, progress(local.entry.packed || 0), signal);
         }
-        const indexResponse = await fetch(`packs/world${world}.json`, signal ? { cache: "no-cache", signal } : { cache: "no-cache" });
+        const indexResponse = await fetchWhenFree(`packs/world${world}.json`, signal ? { cache: "no-cache", signal } : { cache: "no-cache" });
         // startup.json lists this map's pack, so a missing index is a failure, not a map without one.
         if (!indexResponse.ok) {
           if (hashes) throw new Error(`packs/world${world}.json: HTTP ${indexResponse.status}`);
@@ -2163,7 +2286,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     // Downloads one file through the service worker, which keeps it whole and answers its first
     // byte: the file's size, from Content-Range.
     async function downloadInBackground(url) {
-      const response = await fetch(url, { headers: { "Range": "bytes=0-0", "X-Mu-Background": "1" } });
+      const response = await fetchWhenFree(url, { headers: { "Range": "bytes=0-0", "X-Mu-Background": "1" } });
       await response.arrayBuffer();
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const size = /\/(\d+)$/.exec(response.headers.get("Content-Range") || "");
@@ -2238,7 +2361,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     async function mapPackWorlds() {
       const hashes = releaseIndex && releaseIndex.maps;
       if (hashes) return Object.keys(hashes).map(Number);
-      const list = (await fileListLoad) || await (await fetch("files.txt", { cache: "no-cache" })).text();
+      const list = (await fileListLoad) || await (await fetchWhenFree("files.txt", { cache: "no-cache" })).text();
       return [...list.matchAll(/^packs\/world(\d+)\.json\r?$/gm)].map((match) => Number(match[1]));
     }
     // How many map indexes (packs/worldN.json) the full download asks for at once: they came one after
@@ -2249,7 +2372,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     async function mapPackToKeep(store, world, hash) {
       try {
         if (hash && await store.match(packKey({ name: mapPackName(world), hash }))) return null;
-        const response = await fetch(`packs/world${world}.json`, { cache: "no-cache" });
+        const response = await fetchWhenFree(`packs/world${world}.json`, { cache: "no-cache" });
         if (!response.ok) return null;
         const entry = Object.assign(await response.json(), { name: mapPackName(world) });
         return (await store.match(packKey(entry))) ? null : [world, entry];
@@ -2486,7 +2609,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     }
     async function keepCodeForNextStart() {
       if (!(await workerKeepsCode())) return;
-      const response = await fetch(unpackedCodeUrl(true), { credentials: "same-origin", priority: "low" });
+      const response = await fetchWhenFree(unpackedCodeUrl(true), { credentials: "same-origin", priority: "low" });
       if (response.status === 204) appendLog("Game code kept on this device for the next start");
     }
 
@@ -2507,6 +2630,8 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       muDepthClamp: gpuCheck.depthClamp,
       muKeyboard: phone ? phoneKeyboard : undefined,
       muDevice: device.kind,
+      // "Turn your phone sideways" covers the game (kept current by its matchMedia, above).
+      muCovered: coveredByRotate(),
       print: (text) => { if (gpuErrorEcho(text)) return; console.log(text); appendLog(text, false); },
       printErr: (text) => { if (!gpuErrorEcho(text) && appendLog(text, true)) console.error(text); },
       setStatus: (text) => { if (packDone || text) setStatus(text); },
@@ -2557,8 +2682,10 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
               result = await WebAssembly.instantiateStreaming(wasm, imports);
               how = "unpacked by the page";
             } catch (e) {
+              // Still busy after the tries: Main.wasm would be refused too, and is four times as big.
+              if (/HTTP (429|503)\b/.test(String((e && e.message) || e))) throw e;
               appendLog(`Main.wasm.gz didn't load (${e}), taking Main.wasm`, true);
-              result = await WebAssembly.instantiateStreaming(fetch(versioned("Main.wasm"), { credentials: "same-origin" }), imports);
+              result = await WebAssembly.instantiateStreaming(fetchWhenFree(versioned("Main.wasm"), { credentials: "same-origin" }), imports);
               how = "Main.wasm";
             }
           }
@@ -2576,7 +2703,7 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
     const codeDownload = (async () => {
       const init = { credentials: "same-origin" };
       if (await workerKeepsCode()) {
-        const response = fetch(unpackedCodeUrl(), init);
+        const response = fetchWhenFree(unpackedCodeUrl(), init);
         response.catch(() => {});   // instantiateWasm says what failed
         return { fromWorker: true, response };
       }
@@ -2584,10 +2711,25 @@ fn fs(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
       packed.catch(() => {});
       return { fromWorker: false, packed };
     })();
-    const script = document.createElement("script");
-    script.src = versioned("Main.js");
-    script.onerror = () => setStatus("Main.js didn't load: is the web build in this folder?", true);
-    document.body.appendChild(script);
+    // A script that didn't load doesn't say why, and a busy server (HTTP 429 or 503) refuses Main.js
+    // too: it is asked for again three times, 2, 4 and 8 s apart, before the note.
+    let mainJsTries = 0;
+    const loadMainJs = () => {
+      const script = document.createElement("script");
+      script.src = versioned("Main.js");
+      script.onerror = () => {
+        script.remove();
+        if (++mainJsTries <= 3) {
+          const seconds = 2 ** mainJsTries;
+          setStatus(`Main.js didn't load, trying again in ${seconds} s… · Main.js не загрузился, ещё раз через ${seconds} с…`);
+          setTimeout(loadMainJs, 1000 * seconds);
+        } else {
+          setStatus("Main.js didn't load: is the web build in this folder?", true);
+        }
+      };
+      document.body.appendChild(script);
+    };
+    loadMainJs();
   });
 </script>
 </body>

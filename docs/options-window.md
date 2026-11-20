@@ -88,7 +88,9 @@ window writes to these sections:
     remote session, VSync forced off in the driver), the game caps it at that display's rate (60 FPS at least),
     144 FPS when the rate is unknown, writes one warning to the log and looks every 15 seconds
     whether VSync paces again (`Scenes/FramePacing.h`, `VsyncWatch`).
-  - `FpsCap`: the frame limit while VSync is off, `-1` for none.
+  - `FpsCap`: the frame limit while VSync is off, `-1` for none. The browser build offers 25, 30
+    and 60 only (it never draws more than 60, nor fewer than 25 a second: `-1` and anything above 60
+    show as 60, an old 24 as 25 and runs as 25).
   - `EffectLevel` (0 to 4) and `FullEffects`: the effect level bar and its "Render full effects" checkbox.
   - `Look` (default `Classic`): the "Enhanced graphics" checkbox, ticked for
     the Enhanced look; see [`enhanced-look.md`](enhanced-look.md).

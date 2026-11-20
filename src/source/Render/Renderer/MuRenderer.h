@@ -506,6 +506,14 @@ public:
     // Per-frame lifecycle. Called from the MuMain.cpp game loop.
     virtual void BeginFrame() {}
     virtual void EndFrame() {}
+    // Browser build: while paused, BeginFrame() starts no frame (the page isn't seen: a tab in the
+    // background, a phone held upright under the page's cover), as for a minimized window; the game
+    // itself runs on. Set before each frame by the frame pacing (Winmain.cpp WaitForBrowserFrame).
+    virtual void SetDrawingPaused(bool /*paused*/) {}
+    [[nodiscard]] virtual bool IsDrawingPaused() const
+    {
+        return false;
+    }
     virtual void SetStatsEnabled(bool /*enabled*/) {}
     [[nodiscard]] virtual RendererStats GetFrameStats() const
     {

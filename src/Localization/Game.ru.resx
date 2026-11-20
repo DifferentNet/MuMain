@@ -16136,6 +16136,10 @@
   <data name="HelperPickQuestItems" xml:space="preserve">
     <value>Квестовые предметы</value>
   </data>
+  <!-- MU Helper: crafting materials pick-up (feathers, Spirit, Fenrir materials) -->
+  <data name="HelperPickCraftItems" xml:space="preserve">
+    <value>Крафт</value>
+  </data>
   <!-- MU Moldova: Excellent Dust button in the Chaos Goblin's method menu -->
   <data name="ExcellentDustMenuButton" xml:space="preserve">
     <value>Пыль экселента</value>

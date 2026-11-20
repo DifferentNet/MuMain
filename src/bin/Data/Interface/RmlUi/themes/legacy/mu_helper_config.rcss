@@ -76,7 +76,7 @@
 #box_o_repair { left: 75px; top: 73px;  width: 102px; height: 50px; }
 #box_o_mode   { left: 12px; top: 120px; width: 165px; height: 30px; }
 #box_o_items  { left: 12px; top: 147px; width: 165px; height: 195px; }
-#box_o_list   { left: 16px; top: 235px; width: 158px; height: 75px; }
+#box_o_list   { left: 16px; top: 250px; width: 158px; height: 60px; }
 
 #o_range_label  { left: 18px; top: 78px; }
 #o_range_rule   { left: 18px; top: 83px; }
@@ -94,13 +94,16 @@
 #cb_pick_ancient   { left: 85px; top: 170px; }
 #cb_pick_zen       { left: 22px; top: 185px; }
 #cb_pick_excellent { left: 85px; top: 185px; }
-#cb_pick_extra     { left: 22px; top: 200px; }
+/* The crafting materials take a fourth row, so the extra item, its field and the list are 15 px lower and
+   the list 15 px shorter. */
+#cb_pick_craft     { left: 22px; top: 200px; }
+#cb_pick_extra     { left: 22px; top: 215px; }
 
-#item_plate { left: 34px; top: 216px; }
-#item_name  { left: 36px; top: 219px; }
-#btn_add_item, #btn_add_item_label { left: 132px; top: 208px; }
+#item_plate { left: 34px; top: 231px; }
+#item_name  { left: 36px; top: 234px; }
+#btn_add_item, #btn_add_item_label { left: 132px; top: 223px; }
 
-#extra_list { position: absolute; left: 20px; top: 238px; }
+#extra_list { position: absolute; left: 20px; top: 253px; }
 #btn_delete_item, #btn_delete_item_label { left: 132px; top: 309px; }
 
 /* --- Other ------------------------------------------------------------------------------------- */
@@ -134,7 +137,7 @@
 #btn_party_setting_label { width: calc(38px * var(--root-scale)); height: calc(24px * var(--root-scale)); line-height: calc(24px * var(--root-scale)); }
 #item_name { width: calc(88px * var(--root-scale)); height: calc(12px * var(--root-scale)); }
 #btn_add_item_label { width: calc(38px * var(--root-scale)); height: calc(24px * var(--root-scale)); line-height: calc(24px * var(--root-scale)); }
-#extra_list { width: calc(160px * var(--root-scale)); height: calc(70px * var(--root-scale)); }
+#extra_list { width: calc(160px * var(--root-scale)); height: calc(55px * var(--root-scale)); }
 .mh-extra-row { height: calc(13px * var(--root-scale)); padding: calc(3px * var(--root-scale)) 0 0 calc(8px * var(--root-scale)); }
 #btn_delete_item_label { width: calc(38px * var(--root-scale)); height: calc(24px * var(--root-scale)); line-height: calc(24px * var(--root-scale)); }
 #btn_save_label { width: calc(52px * var(--root-scale)); height: calc(26px * var(--root-scale)); line-height: calc(26px * var(--root-scale)); }
@@ -162,7 +165,7 @@
 #cb_pick_all .checkbox-label, #cb_pick_selected .checkbox-label { width: calc(138px * var(--root-scale)); }
 #cb_pick_jewel .checkbox-label, #cb_pick_zen .checkbox-label { width: calc(47px * var(--root-scale)); }
 #cb_pick_ancient .checkbox-label, #cb_pick_excellent .checkbox-label { width: calc(70px * var(--root-scale)); }
-#cb_pick_extra .checkbox-label { width: calc(94px * var(--root-scale)); }
+#cb_pick_craft .checkbox-label, #cb_pick_extra .checkbox-label { width: calc(94px * var(--root-scale)); }
 #extension_used, #extension_none { width: calc(151px * var(--root-scale)); }
 
 /* The hunting page's line on clearing a skill slot shows in the phone view only (below). */
@@ -300,6 +303,7 @@
 	#cb_pick_excellent { left: 48px; top: 304px; }
 	#cb_pick_boxes { left: 180px; top: 226px; }
 	#cb_pick_quest { left: 180px; top: 252px; }
+	#cb_pick_craft { left: 180px; top: 278px; }
 	#cb_pick_extra { left: 332px; top: 84px; }
 	#item_plate { left: 334px; top: 113px; }
 	#item_name {
@@ -349,7 +353,8 @@
 	#cb_auto_guild .checkbox-label { width: calc(250px * var(--root-scale)); }
 	#cb_pick_jewel .checkbox-label, #cb_pick_ancient .checkbox-label, #cb_pick_zen .checkbox-label,
 	#cb_pick_excellent .checkbox-label { width: calc(120px * var(--root-scale)); }
-	#cb_pick_boxes .checkbox-label, #cb_pick_quest .checkbox-label { width: calc(108px * var(--root-scale)); }
+	#cb_pick_boxes .checkbox-label, #cb_pick_quest .checkbox-label,
+	#cb_pick_craft .checkbox-label { width: calc(108px * var(--root-scale)); }
 	#basic_skill_label, #activation1_label, #activation2_label { width: calc(226px * var(--root-scale)); }
 	#cb_skill2_delay .checkbox-label, #cb_skill3_delay .checkbox-label { width: calc(74px * var(--root-scale)); }
 	#distance_unit, #skill2_unit, #skill3_unit { width: calc(20px * var(--root-scale)); }
