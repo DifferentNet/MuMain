@@ -446,6 +446,40 @@ TEST_CASE("Without a caret that fits, the narrowest edit is followed")
     CHECK(tokens[0].start == 2);
 }
 
+TEST_CASE("Edits on both sides of a token in one frame keep it at its new start")
+{
+    // Home, "p", End, "q" before the field is followed: one edit across the whole token.
+    std::vector<Token> tokens = {{0, 16, 4}};
+    CHECK_FALSE(ItemLinkTokens::ApplyEdit(L"[Bone Blade +15]", L"p[Bone Blade +15]q", 18, tokens));
+    REQUIRE(tokens.size() == 1);
+    CHECK(tokens[0].start == 1);
+    CHECK(tokens[0].length == 16);
+    CHECK(tokens[0].key == 4);
+}
+
+TEST_CASE("Typing inside a token still drops it, even with the same token after it")
+{
+    std::vector<Token> tokens = {{0, 16, 0}};
+    CHECK_FALSE(ItemLinkTokens::ApplyEdit(L"[Bone Blade +15]", L"[Bone Blxade +15]", 9, tokens));
+    CHECK(tokens.empty());
+    tokens = {{0, 6, 0}, {7, 6, 1}};
+    CHECK_FALSE(ItemLinkTokens::ApplyEdit(L"[Helm] [Helm]", L"[Hexlm] [Helm]", 4, tokens));
+    REQUIRE(tokens.size() == 1);
+    CHECK(tokens[0].key == 1);
+    CHECK(tokens[0].start == 8);
+}
+
+TEST_CASE("Edits around two tokens in one frame keep both, in order")
+{
+    std::vector<Token> tokens = {{0, 6, 0}, {11, 6, 1}};
+    CHECK_FALSE(ItemLinkTokens::ApplyEdit(L"[Helm] and [Ring]", L"p[Helm] and [Ring]q", 19, tokens));
+    REQUIRE(tokens.size() == 2);
+    CHECK(tokens[0].key == 0);
+    CHECK(tokens[0].start == 1);
+    CHECK(tokens[1].key == 1);
+    CHECK(tokens[1].start == 12);
+}
+
 TEST_CASE("A token goes in at the caret, never inside another token")
 {
     std::vector<Token> tokens = {{2, 6, 0}};

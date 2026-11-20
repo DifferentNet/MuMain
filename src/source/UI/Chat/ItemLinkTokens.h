@@ -28,7 +28,9 @@ struct Fix
 
 // Follows one edit of the field from `before` to `after` (caretAfter: the caret after it): tokens past the edit
 // move, tokens it touched go (whole when one character at a token's edge was deleted -- then the fix says what
-// the field shows -- else as plain text). Tokens are in order and describe `before`.
+// the field shows -- else as plain text). A touched token whose whole text stands in `after` again, in its order
+// among the tokens, stays there: edits on both of its sides read as one edit across it. Tokens are in order and
+// describe `before`.
 std::optional<Fix> ApplyEdit(std::wstring_view before, std::wstring_view after, std::size_t caretAfter,
                              std::vector<Token>& tokens);
 

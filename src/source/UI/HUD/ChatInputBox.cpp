@@ -388,7 +388,10 @@ mu::ui::window::CChatInputBox::LinkedSend mu::ui::window::CChatInputBox::SendLin
     const auto command = Wire::BuildCommand(route->channel, text, route->bodyStart, m_linkDraft.Placed());
     if (!command)
         return LinkedSend::NotLinked;
-    if (Wire::Utf8Bytes(*command) > Wire::MaxCommandBytes)
+    // Text typed after the items went in can make the line longer than its channel takes (names counted as shown).
+    const std::size_t lineLength = UI::Chat::ItemLinkTokens::CharacterOfIndex(text, text.size()) -
+                                   UI::Chat::ItemLinkTokens::CharacterOfIndex(text, route->bodyStart);
+    if (lineLength > Wire::MaxLineLength(route->channel) || Wire::Utf8Bytes(*command) > Wire::MaxCommandBytes)
     {
         UI::Chat::PostSystem(I18N::Game::ItemLinkCommandTooLong, mu::ui::window::TYPE_ERROR_MESSAGE);
         return LinkedSend::Refused;

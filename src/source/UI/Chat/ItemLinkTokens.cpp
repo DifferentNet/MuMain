@@ -88,6 +88,16 @@ std::optional<Fix> ApplyEdit(std::wstring_view before, std::wstring_view after, 
     const Change change = ChangeAtCaret(before, after, caretAfter).value_or(WidestCommonEnds(before, after));
     const auto delta = static_cast<std::ptrdiff_t>(change.inserted)
                        - static_cast<std::ptrdiff_t>(change.removedEnd - change.removedStart);
+    // Where the first token past the edit stands in `after`: a touched token found again must end before it.
+    std::size_t limit = after.size();
+    for (const Token& token : tokens)
+    {
+        if (change.removedEnd <= token.start)
+        {
+            limit = static_cast<std::size_t>(static_cast<std::ptrdiff_t>(token.start) + delta);
+            break;
+        }
+    }
     std::optional<Fix> fix;
     std::ptrdiff_t takenOut = 0;
     std::vector<Token> kept;
@@ -107,13 +117,26 @@ std::optional<Fix> ApplyEdit(std::wstring_view before, std::wstring_view after, 
             kept.push_back(token);
             continue;
         }
-        // Touched: out whole for one character deleted at its edge, else it stays as plain text.
+        // Touched: out whole for one character deleted at its edge.
         if (!fix && IsEdgeDeletion(change, token))
         {
             std::wstring text(after);
             text.erase(token.start, token.length - 1);
             fix = Fix{std::move(text), token.start};
             takenOut = -static_cast<std::ptrdiff_t>(token.length - 1);
+            continue;
+        }
+        // Edits on both of its sides in one frame read as one edit across it: it stays where its whole text stands
+        // again, after the token before it and before the next one; else it is plain text now.
+        if (end > before.size())
+            continue;
+        const std::size_t from = kept.empty() ? 0 : kept.back().start + kept.back().length;
+        const std::size_t found = after.find(before.substr(token.start, token.length), from);
+        if (found != std::wstring_view::npos && found + token.length <= limit)
+        {
+            Token moved = token;
+            moved.start = found;
+            kept.push_back(moved);
         }
     }
     tokens = std::move(kept);

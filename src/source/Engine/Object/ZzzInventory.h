@@ -216,7 +216,7 @@ void GetSpecialOptionText(int Type, wchar_t* Text, WORD Option, BYTE Value, int 
 // screen's 640x480 stretch, the space the original computed it in, whichever window asks.
 void RenderItemInfoAtPx(float x, float y, ITEM* ip, bool Sell, int Inventype = 0, bool bItemTextListBoxUse = false);
 // The information tooltip above a row that names the item (an item link in the chat log), beside its window when
-// there is no room above.
+// there is no room above. A Dark Lord pet shows there as a plain item: a link carries no pet info.
 void RenderItemInfoAboveRowAtPx(const UI::Tooltip::AboveRow& spot, ITEM* ip);
 void RenderRepairInfoAtPx(float x, float y, ITEM* ip, bool Sell);
 void RenderSkillInfo(int sx, int sy, int Type, int SkillNum = 0, int iRenderPoint = STRP_NONE);

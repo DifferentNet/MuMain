@@ -167,8 +167,10 @@ namespace mu::ui::window
             Refused,
         };
         // A line holding items goes as "/il …"; NotLinked when it holds none or cannot carry them (the gens
-        // channel, a command): it then goes as typed. Refused: too long for the packet, or sooner than the server's
-        // cooldown after the last one (UI::Chat::ItemLinks::CooldownWait()); the line stays with its items.
+        // channel, a command): it then goes as typed. Refused: longer than its channel's line takes
+        // (UI::Chat::ItemLinkWire::MaxLineLength, names counted as shown), too long for the packet, or sooner than
+        // the server's cooldown after the last one (UI::Chat::ItemLinks::CooldownWait()); the line stays with its
+        // items.
         LinkedSend SendLineWithItems();
         // The whisper target a line with items goes to; empty when the bar sends to the channel.
         type_string ItemLinkWhisperTarget();

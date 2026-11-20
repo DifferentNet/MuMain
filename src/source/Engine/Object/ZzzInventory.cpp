@@ -1971,7 +1971,9 @@ static void RenderItemInfo(const UI::Scaling::Transform& screen, int sx, int sy,
         TextList[i][0] = 0;
     }
 
-    if (!Sell && (GameLogic::Items::IsDarkLordPet(ip)))
+    // MU Moldova: an item linked in the chat (shown above its row) carries no pet info, and the last pet info the
+    // server sent belongs to another pet: a Dark Lord pet shows there as a plain item, as at the NPC shop.
+    if (!Sell && aboveRow == nullptr && (GameLogic::Items::IsDarkLordPet(ip)))
     {
         static DebouncedAction debouncedPetInfoRequest([ip, Inventype]()
             {
