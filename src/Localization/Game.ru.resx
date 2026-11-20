@@ -17495,6 +17495,25 @@
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>Вышла новая версия: обновите страницу.</value>
   </data>
+  <!-- item links in chat -->
+  <data name="ItemLinkToChat" xml:space="preserve">
+    <value>В чат</value>
+  </data>
+  <data name="ItemLinkTooManyItems" xml:space="preserve">
+    <value>Не больше %d вещей в одном сообщении.</value>
+  </data>
+  <data name="ItemLinkTooLong" xml:space="preserve">
+    <value>В сообщении нет места для ещё одной вещи.</value>
+  </data>
+  <data name="ItemLinkCommandTooLong" xml:space="preserve">
+    <value>Сообщение с вещами слишком длинное.</value>
+  </data>
+  <data name="ItemLinkWait" xml:space="preserve">
+    <value>Подождите %d с перед следующим сообщением с вещами.</value>
+  </data>
+  <data name="ItemLinkAlreadyIn" xml:space="preserve">
+    <value>Эта вещь уже есть в сообщении.</value>
+  </data>
   <!-- skill book quest (2026-11-20) -->
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
     <value>Сначала пройдите квест Марлона (с 220 уровня).</value>

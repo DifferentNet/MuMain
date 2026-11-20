@@ -177,3 +177,15 @@
 	   height instead. */
 	#resize_handle { display: none; }
 }
+
+/* MU Moldova, items in the chat (UI/Chat/ItemLinks.h): an item's "[name]" in a line, coloured as the item tooltip
+   colours names (RenderTipTextList(): white, gold from +7, green excellent, violet socket, green on blue ancient).
+   A dark ground under each name keeps it readable on the gold, cyan and green lines. No side padding: the chat breaks
+   a long line by its measured text (CChatLogWindow::SeparateText()). The names take no pointer either; C++ finds
+   the one under the pointer (CChatLogWindow::LinkAt()). */
+.chat-link           { background-color: rgba(0, 0, 0, 190); pointer-events: none; }
+.chat-link--normal   { color: rgb(255, 255, 255); }
+.chat-link--high     { color: rgb(255, 204, 26); }
+.chat-link--excellent { color: rgb(26, 255, 128); }
+.chat-link--socket   { color: rgb(179, 102, 255); }
+.chat-link--ancient  { color: rgb(0, 255, 0); background-color: rgba(60, 60, 200, 220); }

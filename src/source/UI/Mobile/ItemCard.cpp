@@ -69,6 +69,7 @@ void Show(Content content)
     AddButton(cfg, I18N::Game::TouchItemHotkeyE, std::move(content.putOnE));
     AddButton(cfg, I18N::Game::TouchItemHotkeyR, std::move(content.putOnR));
     AddButton(cfg, std::move(content.junkLabel), std::move(content.junk));
+    AddButton(cfg, I18N::Game::ItemLinkToChat, std::move(content.toChat));
     if (content.drop)
     {
         AddButton(cfg, I18N::Game::TouchItemDrop,

@@ -14498,6 +14498,25 @@
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>May bagong bersyon: i-reload ang page.</value>
   </data>
+  <!-- item links in chat -->
+  <data name="ItemLinkToChat" xml:space="preserve">
+    <value>Sa chat</value>
+  </data>
+  <data name="ItemLinkTooManyItems" xml:space="preserve">
+    <value>Hanggang %d item lang sa isang mensahe.</value>
+  </data>
+  <data name="ItemLinkTooLong" xml:space="preserve">
+    <value>Wala nang puwang para sa isa pang item sa mensaheng ito.</value>
+  </data>
+  <data name="ItemLinkCommandTooLong" xml:space="preserve">
+    <value>Masyadong mahaba ang mensaheng may mga item.</value>
+  </data>
+  <data name="ItemLinkWait" xml:space="preserve">
+    <value>Maghintay ng %d segundo bago ang susunod na mensaheng may mga item.</value>
+  </data>
+  <data name="ItemLinkAlreadyIn" xml:space="preserve">
+    <value>Nasa mensahe na ang item na ito.</value>
+  </data>
   <!-- skill book quest (2026-11-20) -->
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
     <value>Tapusin muna ang quest ni Marlon (mula level 220).</value>

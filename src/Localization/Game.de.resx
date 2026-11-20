@@ -14596,6 +14596,25 @@
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>Neue Version da: Seite neu laden.</value>
   </data>
+  <!-- item links in chat -->
+  <data name="ItemLinkToChat" xml:space="preserve">
+    <value>In den Chat</value>
+  </data>
+  <data name="ItemLinkTooManyItems" xml:space="preserve">
+    <value>Höchstens %d Gegenstände pro Nachricht.</value>
+  </data>
+  <data name="ItemLinkTooLong" xml:space="preserve">
+    <value>In dieser Nachricht ist kein Platz für einen weiteren Gegenstand.</value>
+  </data>
+  <data name="ItemLinkCommandTooLong" xml:space="preserve">
+    <value>Die Nachricht mit Gegenständen ist zu lang.</value>
+  </data>
+  <data name="ItemLinkWait" xml:space="preserve">
+    <value>Warte %d s bis zur nächsten Nachricht mit Gegenständen.</value>
+  </data>
+  <data name="ItemLinkAlreadyIn" xml:space="preserve">
+    <value>Dieser Gegenstand ist schon in der Nachricht.</value>
+  </data>
   <!-- skill book quest (2026-11-20) -->
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
     <value>Schließe zuerst Marlons Quest ab (ab Level 220).</value>

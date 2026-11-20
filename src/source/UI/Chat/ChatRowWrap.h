@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <functional>
 #include <string>
 #include <vector>
@@ -50,4 +51,19 @@ ChatRowSource ChooseChatRowSource(bool rmlUi, bool logUpdated, bool hasProbe, fl
 // wider than a row, the first row takes one character after it. One empty row for an empty text.
 std::vector<std::wstring> WrapChatRows(const std::wstring& prefix, const std::wstring& text, float rowWidth,
                                        const MeasureChatRow& measure);
+
+// MU Skynet, items in the chat: a piece of the text, text[start, start + length).
+struct ChatTextSpan
+{
+    std::size_t start = 0;
+    std::size_t length = 0;
+};
+
+// WrapChatRows() as the pieces of `text` its rows are, so a row's place in the text is known. `keepWhole`
+// (an item's name in brackets, UI/Chat/ChatItemLink.h) stays whole in one row: a row never breaks at a space
+// inside one, and a word wider than a row breaks before one rather than inside it. Only a piece wider than a
+// whole row is cut. With no `keepWhole` the rows are exactly WrapChatRows()'s.
+std::vector<ChatTextSpan> WrapChatRowSpans(const std::wstring& prefix, const std::wstring& text, float rowWidth,
+                                           const MeasureChatRow& measure,
+                                           const std::vector<ChatTextSpan>& keepWhole = {});
 } // namespace UI::Chat

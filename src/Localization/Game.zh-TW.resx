@@ -14498,6 +14498,25 @@
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>已有新版本：請重新整理頁面。</value>
   </data>
+  <!-- item links in chat -->
+  <data name="ItemLinkToChat" xml:space="preserve">
+    <value>分享至聊天</value>
+  </data>
+  <data name="ItemLinkTooManyItems" xml:space="preserve">
+    <value>每則訊息最多 %d 件物品。</value>
+  </data>
+  <data name="ItemLinkTooLong" xml:space="preserve">
+    <value>這則訊息已無空間再放一件物品。</value>
+  </data>
+  <data name="ItemLinkCommandTooLong" xml:space="preserve">
+    <value>含物品的訊息過長。</value>
+  </data>
+  <data name="ItemLinkWait" xml:space="preserve">
+    <value>請等待 %d 秒後再傳送含物品的訊息。</value>
+  </data>
+  <data name="ItemLinkAlreadyIn" xml:space="preserve">
+    <value>這件物品已在訊息中。</value>
+  </data>
   <!-- skill book quest (2026-11-20) -->
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
     <value>請先完成馬龍的任務（220 級起）。</value>

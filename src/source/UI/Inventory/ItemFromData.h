@@ -11,6 +11,7 @@ typedef struct tagITEM ITEM;
 // with no key and outside the manager's list.
 namespace UI::Items::FromData
 {
-// The item those bytes describe (ParseItemData); null when there are too few of them for an item.
+// The item those bytes describe (ParseItemData); null when there are too few of them for an item or their group
+// and number name no item type.
 std::unique_ptr<ITEM> Make(std::span<const std::uint8_t> data);
 } // namespace UI::Items::FromData

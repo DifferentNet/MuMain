@@ -38,6 +38,8 @@
 #include "UI/Mobile/InterfaceMode.h"
 #include "UI/Mobile/ItemCard.h"
 #include "UI/Chat/CharacterChangeLines.h"
+#include "UI/Chat/ItemLinks.h"
+#include "UI/Chat/ItemLinkWire.h"
 
 #include <utility>
 
@@ -541,6 +543,14 @@ bool CInventoryActionController::ShowTouchItemCard(CInventoryCtrl* targetControl
     }
 
     SetJunkAction(targetControl, *pItem, target, card);
+    // MU Moldova: a bag item's name into the chat line (UI/Chat/ItemLinks.h).
+    if (targetControl->GetStorageType() == STORAGE_TYPE::INVENTORY && UI::Chat::ItemLinks::IsOffered())
+    {
+        card.toChat = [targetControl, itemKey]
+        {
+            UI::Chat::ItemLinks::GridItemToChatByKey(UI::Chat::ItemLinkWire::InventoryStorage, *targetControl, itemKey);
+        };
+    }
     UI::Mobile::ItemCard::Show(std::move(card));
     return true;
 }

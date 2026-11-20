@@ -8,9 +8,12 @@
 #include "UI/Chat/ChatHistory.h"
 #include "UI/Chat/ChatPhrases.h"
 #include "UI/Chat/ChatSendGate.h"
+#include "UI/Chat/ItemLinkDraft.h"
 
 #pragma warning(disable : 4786)
 #include <array>
+#include <cstddef>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -137,6 +140,48 @@ namespace mu::ui::window
         // Sends the chat field's line as Enter does (to the channel chosen, or the whisper target),
         // clears the field and closes the bar.
         void SendChatLine();
+        // Clears the field and closes the bar after a line went.
+        void CloseSentLine();
+
+        // MU Moldova, items in the chat line (UI/Chat/ItemLinks.h): Shift+click puts an item's "[name]" into the
+        // field, a token counted as long as it shows within the channel's line (89 characters in the party and the
+        // guild, 90 elsewhere); the line then goes as "/il …".
+        UI::Chat::ItemLinkDraft m_linkDraft;
+        // The field's text the tokens were last followed in (FollowChatField()).
+        Rml::String m_linkSeenText;
+        // The caret (in characters) to put after an item once the bar that just opened takes the focus.
+        std::optional<std::size_t> m_linkCaretPending;
+        // The last line with items that went to the channel, until the bar opens again after the server refused it
+        // (UI::Chat::ItemLinks::LastLineRefused()): it then comes back, items and all, so the player loses no line
+        // to a refusal (two of one item, a line the server finds too long with the items' English names, its
+        // cooldown). A whisper never comes back to its sender, so it is not kept.
+        std::optional<UI::Chat::ItemLinkDraft> m_refusedLine;
+        void RestoreRefusedLine();
+        // Follows the player's edits of a line holding items: a token at the caret's edge goes out whole.
+        void FollowChatField();
+        // Shows `text` in the chat field with the caret at `caret` (an index into it), keeping the items.
+        void PutChatField(const type_string& text, std::size_t caret);
+        void SetChatCaret(std::size_t characters);
+        // The chat field's caret as an index into `text` (the field's text).
+        std::size_t ChatCaret(const type_string& text) const;
+        // Opens the bar for an item where Enter opens it; false in Chaos Castle while its timer shows.
+        bool OpenForItemLink();
+        enum class LinkedSend
+        {
+            NotLinked,
+            Sent,
+            Refused,
+        };
+        // A line holding items goes as "/il …"; NotLinked when it holds none or cannot carry them (the gens
+        // channel, a command): it then goes as typed. Refused: longer than its channel's line takes
+        // (UI::Chat::ItemLinkWire::MaxLineLength, names counted as shown), too long for the packet, or sooner than
+        // the server's cooldown after the last one (UI::Chat::ItemLinks::CooldownWait()); the line stays with its
+        // items.
+        LinkedSend SendLineWithItems();
+        // The whisper target a line with items goes to; empty when the bar sends to the channel.
+        type_string ItemLinkWhisperTarget();
+        // The own whisper with its items as links, as EchoSentWhisper() shows a plain one.
+        void EchoWhisperWithItems(const type_string& whisperId, const type_string& text);
         // The line Enter kept during the cooldown, once the cooldown passed.
         void SendPendingLine();
 
@@ -221,6 +266,10 @@ namespace mu::ui::window
         void SetWhsprID(const wchar_t* strWhsprID);
         // Puts the name into the whisper field and the caret into the message field (a phone's tap on a chat line).
         void StartWhisperTo(const wchar_t* strWhsprID);
+        // MU Moldova: puts an own item's "[name]" into the chat line at the caret, opening the bar as Enter does
+        // (UI/Chat/ItemLinks.h ToChat). An item refused (too many, the line too long) says why in the chat. False
+        // when the bar cannot open here.
+        bool InsertItemLink(UI::Chat::ItemLinkDraft::Item item);
 
     protected:
         void GetChatText(type_string& strText);
@@ -228,6 +277,8 @@ namespace mu::ui::window
 
         void UpdateWhisperTargetFromRightClick();
         static void EchoSentWhisper(const wchar_t* whisperId, const wchar_t* text);
+        // "[to Name] text" as the own whisper shows.
+        static type_string WhisperEchoText(const wchar_t* whisperId, const wchar_t* text);
     };
 }
 

@@ -37,6 +37,20 @@ TEST_CASE("a tooltip with no room on either side, or no flip anchor, is shifted 
     CHECK(Placement::Top(0.f, false, nullptr, 700.f, 600.f) == doctest::Approx(0.f));
 }
 
+TEST_CASE("a tooltip with no room above its anchor goes beside the window instead")
+{
+    // Above a chat line at y 300: a 200-tall tooltip fits there, a 350-tall one goes right of the chat (x 420).
+    const float beside = 420.f;
+    CHECK(Placement::LeftOrBeside(100.f, 300.f, true, &beside, 200.f, 600.f) == doctest::Approx(100.f));
+    CHECK(Placement::LeftOrBeside(100.f, 300.f, true, &beside, 350.f, 600.f) == doctest::Approx(420.f));
+    // Exactly to the top edge still fits; without a place beside it stays.
+    CHECK(Placement::LeftOrBeside(100.f, 300.f, true, &beside, 300.f, 600.f) == doctest::Approx(100.f));
+    CHECK(Placement::LeftOrBeside(100.f, 300.f, true, nullptr, 350.f, 600.f) == doctest::Approx(100.f));
+    // Below: past the bottom edge.
+    CHECK(Placement::LeftOrBeside(100.f, 500.f, false, &beside, 150.f, 600.f) == doctest::Approx(420.f));
+    CHECK(Placement::LeftOrBeside(100.f, 400.f, false, &beside, 150.f, 600.f) == doctest::Approx(100.f));
+}
+
 TEST_CASE("a tooltip taller than the viewport is drawn smaller until it fits, but not below the minimum")
 {
     // Fits: its own size, to the last pixel.

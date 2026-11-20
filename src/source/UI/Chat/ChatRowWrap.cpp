@@ -38,6 +38,15 @@ std::vector<std::wstring> WrapChatRows(const std::wstring& prefix, const std::ws
                                        const MeasureChatRow& measure)
 {
     std::vector<std::wstring> rows;
+    for (const ChatTextSpan& row : WrapChatRowSpans(prefix, text, rowWidth, measure))
+        rows.push_back(text.substr(row.start, row.length));
+    return rows;
+}
+
+std::vector<ChatTextSpan> WrapChatRowSpans(const std::wstring& prefix, const std::wstring& text, float rowWidth,
+                                           const MeasureChatRow& measure, const std::vector<ChatTextSpan>& keepWhole)
+{
+    std::vector<ChatTextSpan> rows;
     std::size_t start = 0;
     // Whether text[start, end) fits the row being filled; the first row is measured with the prefix.
     const auto fits = [&](std::size_t end)
@@ -45,12 +54,22 @@ std::vector<std::wstring> WrapChatRows(const std::wstring& prefix, const std::ws
         const std::wstring row = text.substr(start, end - start);
         return measure(rows.empty() ? prefix + row : row) <= rowWidth;
     };
+    // The piece kept whole that a row ending at `at` would cut, if any.
+    const auto cutPiece = [&](std::size_t at) -> const ChatTextSpan*
+    {
+        for (const ChatTextSpan& piece : keepWhole)
+        {
+            if (piece.start < at && at < piece.start + piece.length)
+                return &piece;
+        }
+        return nullptr;
+    };
 
     while (start < text.size())
     {
         if (fits(text.size()))
         {
-            rows.push_back(text.substr(start));
+            rows.push_back({start, text.size() - start});
             return rows;
         }
 
@@ -61,6 +80,8 @@ std::vector<std::wstring> WrapChatRows(const std::wstring& prefix, const std::ws
         {
             if (space == start || text[space - 1] == L' ')
                 continue; // spaces in a row: only the first one ends a word
+            if (cutPiece(space) != nullptr)
+                continue; // a space inside an item's name ends no word
             if (!fits(space))
                 break;
             end = space;
@@ -78,16 +99,19 @@ std::vector<std::wstring> WrapChatRows(const std::wstring& prefix, const std::ws
                 ++end;
             if (end < text.size() && IsLeadSurrogate(text[end - 1]))
                 end = end - 1 > start ? end - 1 : end + 1;
+            // Before an item's name it would cut, unless the row starts with that name (wider than a row).
+            if (const ChatTextSpan* piece = cutPiece(end); piece != nullptr && piece->start > start)
+                end = piece->start;
         }
 
-        rows.push_back(text.substr(start, end - start));
+        rows.push_back({start, end - start});
         start = end;
         while (start < text.size() && text[start] == L' ')
             ++start;
     }
 
     if (rows.empty())
-        rows.emplace_back();
+        rows.push_back({0, 0});
     return rows;
 }
 } // namespace UI::Chat

@@ -14498,6 +14498,25 @@
   <data name="ReloadThePageForNewVersion" xml:space="preserve">
     <value>Versi baru tersedia: muat ulang halaman.</value>
   </data>
+  <!-- item links in chat -->
+  <data name="ItemLinkToChat" xml:space="preserve">
+    <value>Ke obrolan</value>
+  </data>
+  <data name="ItemLinkTooManyItems" xml:space="preserve">
+    <value>Maksimal %d item dalam satu pesan.</value>
+  </data>
+  <data name="ItemLinkTooLong" xml:space="preserve">
+    <value>Tidak ada ruang untuk item lain dalam pesan ini.</value>
+  </data>
+  <data name="ItemLinkCommandTooLong" xml:space="preserve">
+    <value>Pesan dengan item terlalu panjang.</value>
+  </data>
+  <data name="ItemLinkWait" xml:space="preserve">
+    <value>Tunggu %d detik sebelum pesan berikutnya dengan item.</value>
+  </data>
+  <data name="ItemLinkAlreadyIn" xml:space="preserve">
+    <value>Item ini sudah ada di pesan.</value>
+  </data>
   <!-- skill book quest (2026-11-20) -->
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">
     <value>Selesaikan dulu misi Marlon (mulai level 220).</value>

@@ -8,19 +8,30 @@
 #include "Render/Textures/ZzzTexture.h"
 #include "UI/HUD/ChatInputBox.h"
 #include "UI/RmlBridge/RmlThemedView.h"
+#include "UI/Chat/ChatItemLink.h"
+#include "UI/Chat/ChatRowWrap.h"
+
+#include <RmlUi/Core/Types.h>
 
 #pragma warning(disable : 4786)
 #include <string>
 #include <chrono>
 #include <cstdint>
 #include <deque>
+#include <memory>
 #include <optional>
 #include <vector>
 
 namespace Rml
 {
     class ElementDocument;
+    class Element;
     class Context;
+}
+
+namespace UI::Tooltip
+{
+    struct AboveRow;
 }
 
 namespace mu::ui::window
@@ -29,6 +40,8 @@ namespace mu::ui::window
 
     // The clock a chat line is stamped with when it comes (ChatLogWindow.cpp), in milliseconds.
     std::uint64_t ChatLogClockMs();
+    // MU Moldova: a new number for a chat row that shows items, never 0 and never one in use.
+    int NextChatLinkSerial();
 
     template <class T>
     class TMessageText
@@ -43,6 +56,10 @@ namespace mu::ui::window
         // The line as the chat log shows it ("ID : text"), in UTF-8, made once when the log first shows it
         // (CChatLogWindow::RebuildLineModel()) instead of on every rebuild of the list.
         std::string m_lineUtf8;
+        // MU Moldova: the items whose "[name]" this row shows (UI/Chat/ItemLinks.h), in the order they stand.
+        std::vector<UI::Chat::ChatItemLink> m_links;
+        // The row's own number among the rows that show items (NextChatLinkSerial()), 0 for a row without.
+        int m_linkSerial = 0;
 
     public:
         TMessageText() : m_MsgType(TYPE_UNKNOWN), m_dwIndentSize(0) {}
@@ -58,6 +75,8 @@ namespace mu::ui::window
             m_MsgType = MsgType;
             m_addedAtMs = ChatLogClockMs();
             m_lineUtf8.clear();
+            m_links.clear();
+            m_linkSerial = 0;
 
             return true;
         }
@@ -66,6 +85,8 @@ namespace mu::ui::window
             m_strID.resize(0);
             m_strText.resize(0);
             m_lineUtf8.clear();
+            m_links.clear();
+            m_linkSerial = 0;
             m_MsgType = TYPE_UNKNOWN;
         }
 
@@ -76,9 +97,27 @@ namespace mu::ui::window
         // Empty until the chat log has made it (a shown line is never empty: it has text).
         const std::string& GetLineUtf8() const { return m_lineUtf8; }
         void SetLineUtf8(std::string line) { m_lineUtf8 = std::move(line); }
+        const std::vector<UI::Chat::ChatItemLink>& GetLinks() const { return m_links; }
+        void SetLinks(std::vector<UI::Chat::ChatItemLink> links)
+        {
+            m_links = std::move(links);
+            m_linkSerial = m_links.empty() ? 0 : NextChatLinkSerial();
+        }
+        int GetLinkSerial() const { return m_linkSerial; }
     };
 
     typedef TMessageText<wchar_t> CMessageText;
+
+    // MU Moldova: a piece of a chat line that shows items (UI/Chat/ItemLinks.h): plain text, or an item's
+    // "[name]" (`link` its index in the row's links, `rarity` the slug of .chat-link--<rarity>).
+    struct ChatLogSegment
+    {
+        Rml::String text;
+        int link = -1;
+        Rml::String rarity;
+
+        bool operator==(const ChatLogSegment&) const = default;
+    };
 
     // One rendered chat line. `kind` is the lowercase message-type slug the RCSS builds its
     // .chat-line--<kind> class from; `hasId` marks a line whose sender can be right-clicked to
@@ -93,6 +132,12 @@ namespace mu::ui::window
         bool hasId = false;
         bool faded = false;
         bool lead = false;
+        // A line that shows items is drawn from these pieces and leaves `text` empty; other lines have none.
+        Rml::Vector<ChatLogSegment> segs;
+        // That line's CMessageText::GetLinkSerial(), which its element carries (chat_log.rml): the message an
+        // element shows is found by it, as a row's place among the elements may be another message's until
+        // RmlUi next updates them (lines come and go at the cap as soon as they arrive).
+        int msg = 0;
     };
 
     // RmlUi owns this window's whole presentation now: the background fill, every message line,
@@ -209,8 +254,62 @@ namespace mu::ui::window
         // Puts a line's sender into the whisper field; `focusMessage` also takes the caret to the message field.
         void WhisperToSenderOf(int line, bool focusMessage);
         // A phone's tap on the chat's history while its frame is shown whispers to the line's sender, as a right
-        // click does on a PC (a long press there would cast the selected skill).
+        // click does on a PC (a long press there would cast the selected skill). A tap on an item's name shows its
+        // tooltip instead, and the next tap closes it.
         void OnLinesTapped(float px, float py);
+
+        // MU Moldova, items in the chat (UI/Chat/ItemLinks.h): the item whose tooltip shows, which link it is
+        // (`link` of `message`, only compared: that line may be gone since), and the window pixel the tooltip stands
+        // on (the middle of the name, at the top of its line).
+        struct ItemLinkTip
+        {
+            std::shared_ptr<ITEM> item;
+            const CMessageText* message = nullptr;
+            int link = -1;
+            Rml::Vector2f anchor;
+        };
+        // A box in window pixels.
+        struct ShownBox
+        {
+            Rml::Vector2f pos;
+            Rml::Vector2f size;
+            bool Contains(float x, float y) const;
+        };
+        // The tooltip of the first item name in the shown lines that `pick` takes; it is asked with the line, the
+        // link's index in it, the name's box and the scrolling well's box.
+        template <typename Pick> std::optional<ItemLinkTip> PickShownLink(Pick pick);
+        // The item's name under a window pixel in a shown line, if any.
+        std::optional<ItemLinkTip> LinkAt(float px, float py);
+        // A shown tooltip's name where it is now: its line moves as lines come and the log scrolls. None once the
+        // line left the log or the name's middle is out of the well.
+        std::optional<ItemLinkTip> LinkAgain(const ItemLinkTip& tip);
+        // Where the tooltip goes: a few pixels above its line, or right of the log when there is no room above.
+        UI::Tooltip::AboveRow TipSpot(const ItemLinkTip& tip);
+        // PC, while the chat is open: the pointer over an item's name is the log's (the world neither walks nor
+        // picks there), and a left click on it shows its tooltip until the next click (FollowItemLinks()) and goes
+        // no further. True when the pointer is on a name.
+        bool TakeLinkPointer();
+        // Another window, the HUD's bar or another document is under the pointer: no name of the log is pointed
+        // then (the tests the world's own click uses, UI/HUD/GamepadControls.cpp IsPointerOverUi(), less the log).
+        bool OtherUiUnderPointer() const;
+        // Each frame: the name under the pointer, the shown tooltip following its line, and a click elsewhere, Esc,
+        // a closing chat or its line scrolling out letting it go.
+        void FollowItemLinks();
+        void UnpinLink();
+        // The tooltip a click or tap opened; it stays until the next click, Esc, the chat closing or its line going
+        // out of view.
+        std::optional<ItemLinkTip> m_PinnedLink;
+        // The name the pointer is over this frame.
+        std::optional<ItemLinkTip> m_HoveredLink;
+        // This frame's left press went to an item's name (TakeLinkPointer()).
+        bool m_bLinkPressTaken = false;
+        // The pointer is over another window this frame (OtherUiUnderPointer()): a bag or vault item's tooltip there
+        // takes the one item tooltip, and the pinned one steps aside until the pointer leaves it.
+        bool m_bPointerOnOtherUi = false;
+        // #panel of the current document, the right edge a tooltip with no room above goes beside.
+        Rml::ObserverPtr<Rml::Element> m_PanelElement;
+        // Phone: the tooltip this tap's press closed, which the tap itself must not open again (OnLinesTapped()).
+        std::shared_ptr<ITEM> m_LinkClosedByPress;
         // Pushes m_iCurrentRenderEndLine into RmlUi's scroll offset (native's own fPosRate math),
         // and, when no request is pending, reads it back the other way so the logical cursor
         // tracks wherever the user dragged or scrolled to.
@@ -245,6 +344,7 @@ namespace mu::ui::window
             type_string text;
             MESSAGE_TYPE type;
             MESSAGE_TYPE errType;
+            std::vector<UI::Chat::ChatItemLink> links;
         };
         std::deque<PendingMessage> m_PendingMessages;
         void AddPendingMessages();
@@ -290,6 +390,9 @@ namespace mu::ui::window
         void Release();
 
         void AddText(const type_string& strID, const type_string& strText, MESSAGE_TYPE MsgType, MESSAGE_TYPE ErrMsgType = TYPE_ALL_MESSAGE);
+        // MU Moldova: a line that shows items; each link's start and length are in `strText`.
+        void AddLinkedText(const type_string& strID, const type_string& strText, MESSAGE_TYPE MsgType,
+                           std::vector<UI::Chat::ChatItemLink> links);
         // Drops the `count` oldest lines of the list; the view keeps showing the same messages.
         void RemoveFrontLine(MESSAGE_TYPE MsgType, int count = 1);
         void Clear(MESSAGE_TYPE MsgType);
@@ -341,14 +444,25 @@ namespace mu::ui::window
 
     protected:
         type_vector_msgs* GetMsgs(MESSAGE_TYPE MsgType);
+        void AddWithLinks(const type_string& strID, const type_string& strText, MESSAGE_TYPE MsgType,
+                          MESSAGE_TYPE ErrMsgType, const std::vector<UI::Chat::ChatItemLink>& links);
         // Adds the message's rows, or keeps it pending while the log cannot measure them yet.
-        void ProcessAddText(const type_string& strID, const type_string& strText, MESSAGE_TYPE MsgType, MESSAGE_TYPE ErrMsgType);
-        void AddRows(const type_string& strID, const type_string& strText, MESSAGE_TYPE MsgType, MESSAGE_TYPE ErrMsgType);
+        void ProcessAddText(const type_string& strID, const type_string& strText, MESSAGE_TYPE MsgType,
+                            MESSAGE_TYPE ErrMsgType, const std::vector<UI::Chat::ChatItemLink>& links);
+        // One row of a message, into its own list, the all-messages list and, for an error, the list it belongs
+        // to. False when that list is missing; the message then stops there.
+        bool AddRow(type_vector_msgs& msgs, const type_string& strID, const type_string& strRow, MESSAGE_TYPE MsgType,
+                    MESSAGE_TYPE ErrMsgType, const std::vector<UI::Chat::ChatItemLink>& links);
+        // Splits the message into rows now and adds them, each with the links standing wholly in it.
+        void AddRows(const type_string& strID, const type_string& strText, MESSAGE_TYPE MsgType, MESSAGE_TYPE ErrMsgType,
+                     const std::vector<UI::Chat::ChatItemLink>& links);
 
-        // The rows a message takes in the log, none wider than a row of the log (UI/Chat/ChatRowWrap.h): the
-        // first is drawn with "ID : " in front of it, the rest hold the text alone.
-        std::vector<type_string> SplitIntoRows(const type_string& strID, const type_string& strText,
-                                               MESSAGE_TYPE MsgType);
+        // The rows a message takes in the log, none wider than a row of the log (UI/Chat/ChatRowWrap.h), as the
+        // pieces of strText they hold: the first is drawn with "ID : " in front of it, the rest hold the text alone.
+        // An item's name (`links`) stays whole in one row.
+        std::vector<UI::Chat::ChatTextSpan> SplitIntoRows(const type_string& strID, const type_string& strText,
+                                                          MESSAGE_TYPE MsgType,
+                                                          const std::vector<UI::Chat::ChatItemLink>& links);
 
         bool CheckFilterText(const type_string& strTestText);
         void AddFilterWord(const type_string& strWord);
