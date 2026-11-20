@@ -78,6 +78,10 @@ std::optional<LinksLine> ParseLinks(std::wstring_view line);
 // The "#ILK" channel a chat line of this sender and type belongs to; empty for lines that never carry links.
 std::optional<wchar_t> ChannelOfLine(std::wstring_view sender, mu::ui::window::MESSAGE_TYPE type);
 
+// Whether a chat line of this channel is the player `ownName`'s own: a shout comes from ShoutSender, its text
+// "Name: line".
+bool IsOwnLine(std::wstring_view sender, std::wstring_view text, wchar_t channel, std::wstring_view ownName);
+
 // One item of "/il": "<storage><slot>:<type>:<level>", e.g. "i37:6153:13".
 std::wstring ItemRef(wchar_t storage, int slot, int type, int level);
 
@@ -105,9 +109,32 @@ std::optional<Route> RouteOf(std::wstring_view text, InputChannel channel, std::
 // of it (party and guild: 89).
 std::size_t MaxLineLength(std::wstring_view channel);
 
-// The whole seconds left of a cooldown of cooldownSeconds that began at sentAtMs, rounded up as the server counts
-// them (PostRules.WaitSeconds); 0 when it is over or nothing was sent.
-int CooldownWait(std::optional<std::uint64_t> sentAtMs, std::uint64_t nowMs, int cooldownSeconds);
+// The client's guard against the server's cooldown (one message with items per account every cooldownSeconds of
+// "#ILH"), so a line the server would refuse stays in the chat bar instead of going and being lost. The server
+// counts from when it took the line, which only its answer tells: the guard counts from the sender's own line
+// coming back with its items (Confirmed()). Until then it counts from the sending, and a line that has not come back
+// after EchoWaitMs was refused, so the server's cooldown never began: the guard lets go of it. A whisper comes back
+// to no one; it counts from the sending, WhisperMarginMs longer for its way to the server. Times are milliseconds
+// of one monotonic clock.
+class Cooldown
+{
+public:
+    static constexpr std::uint64_t EchoWaitMs = 2'000;
+    static constexpr std::uint64_t WhisperMarginMs = 1'000;
+
+    // A message with items went; `comesBack`: its line comes back to the sender (all but a whisper).
+    void Sent(std::uint64_t nowMs, bool comesBack);
+    // The sender's own line with items came back: the server took it just now.
+    void Confirmed(std::uint64_t nowMs);
+    // The whole seconds before the next message with items may go, rounded up as the server counts them
+    // (PostRules.WaitSeconds); 0 when it may go now.
+    int Wait(std::uint64_t nowMs, int cooldownSeconds) const;
+
+private:
+    std::optional<std::uint64_t> m_fromMs;
+    std::uint64_t m_marginMs = 0;
+    bool m_awaitingEcho = false;
+};
 
 // An item's token in the typed text.
 struct PlacedRef

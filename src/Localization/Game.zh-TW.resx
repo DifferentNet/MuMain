@@ -14501,19 +14501,19 @@
   </data>
   <!-- item links in chat -->
   <data name="ItemLinkToChat" xml:space="preserve">
-    <value>To chat</value>
+    <value>分享至聊天</value>
   </data>
   <data name="ItemLinkTooManyItems" xml:space="preserve">
-    <value>Up to %d items in one message.</value>
+    <value>每則訊息最多 %d 件物品。</value>
   </data>
   <data name="ItemLinkTooLong" xml:space="preserve">
-    <value>No room for another item in this message.</value>
+    <value>這則訊息已無空間再放一件物品。</value>
   </data>
   <data name="ItemLinkCommandTooLong" xml:space="preserve">
-    <value>The message with items is too long.</value>
+    <value>含物品的訊息過長。</value>
   </data>
   <data name="ItemLinkWait" xml:space="preserve">
-    <value>Wait %d s before the next message with items.</value>
+    <value>請等待 %d 秒後再傳送含物品的訊息。</value>
   </data>
   <!-- skill book quest (2026-11-20) -->
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">

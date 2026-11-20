@@ -39,8 +39,8 @@
 
 			     MU Moldova, items in the chat (UI/Chat/ItemLinks.h): a line that shows items leaves `text`
 			     empty and comes as `segs`, plain pieces and each item's [name] (.chat-link--<rarity>; its
-			     `link` attribute is what CChatLogWindow::LinkAt() finds it by). Nothing between the parts:
-			     a space there would show. -->
+			     `link` attribute is what CChatLogWindow::LinkAt() finds it by, the line's `msg` attribute
+			     the message it shows). Nothing between the parts: a space there would show. -->
 			<div data-for="line : lines"
 			     class="chat-line"
 			     data-class-chat-line--chat="line.kind == 'chat'"
@@ -55,6 +55,7 @@
 			     data-class-chat-line--has-id="line.has_id"
 			     data-class-chat-line--pointed="it_index == pointed_index"
 			     data-class-chat-line--faded="line.faded"
+			     data-attr-msg="line.msg"
 			     data-class-chat-line--lead="line.lead">{{line.text}}<span data-for="seg : line.segs"
 				       data-class-chat-link="seg.link >= 0"
 				       data-class-chat-link--normal="seg.rarity == 'normal'"

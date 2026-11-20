@@ -406,9 +406,10 @@ mu::ui::window::CChatInputBox::LinkedSend mu::ui::window::CChatInputBox::SendLin
     }
 
     SocketClient->ToGameServer()->SendPublicChatMessage(MU_C16(Hero->ID), MU_C16(command->c_str()));
-    UI::Chat::ItemLinks::NoteSent();
     // The server sends a whisper to its target only: the own one shows here, as a plain whisper does.
-    if (route->channel.front() == Wire::WhisperChannel)
+    const bool whisper = route->channel.front() == Wire::WhisperChannel;
+    UI::Chat::ItemLinks::NoteSent(!whisper);
+    if (whisper)
     {
         EchoWhisperWithItems(target, text);
         AddWhsprIDHistory(target);

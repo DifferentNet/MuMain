@@ -521,18 +521,56 @@ TEST_CASE("A party or guild line has one character less for its items")
     CHECK(draft.CanInsert(text, helm, 3, ItemLinkWire::MaxLineLength(L"g")) == ItemLinkDraft::Refusal::TooLong);
 }
 
-TEST_CASE("The cooldown counts whole seconds up, as the server does")
+TEST_CASE("The cooldown counts whole seconds up from the server's answer, as the server does")
 {
-    CHECK(ItemLinkWire::CooldownWait(std::nullopt, 1000, 5) == 0);
-    CHECK(ItemLinkWire::CooldownWait(1000, 1000, 5) == 5);
-    CHECK(ItemLinkWire::CooldownWait(1000, 1001, 5) == 5);
-    CHECK(ItemLinkWire::CooldownWait(1000, 2000, 5) == 4);
-    CHECK(ItemLinkWire::CooldownWait(1000, 5999, 5) == 1);
-    CHECK(ItemLinkWire::CooldownWait(1000, 6000, 5) == 0);
-    CHECK(ItemLinkWire::CooldownWait(1000, 60000, 5) == 0);
+    ItemLinkWire::Cooldown cooldown;
+    CHECK(cooldown.Wait(1000, 5) == 0);
+
+    // Sent, then the own line came back: counted from its coming back.
+    cooldown.Sent(1000, true);
+    CHECK(cooldown.Wait(1000, 5) == 5);
+    cooldown.Confirmed(1200);
+    CHECK(cooldown.Wait(1201, 5) == 5);
+    CHECK(cooldown.Wait(2200, 5) == 4);
+    CHECK(cooldown.Wait(6199, 5) == 1);
+    CHECK(cooldown.Wait(6200, 5) == 0);
+    CHECK(cooldown.Wait(60000, 5) == 0);
     // No cooldown from the server, a clock that went back.
-    CHECK(ItemLinkWire::CooldownWait(1000, 1500, 0) == 0);
-    CHECK(ItemLinkWire::CooldownWait(5000, 1000, 5) == 5);
+    CHECK(cooldown.Wait(1500, 0) == 0);
+    CHECK(cooldown.Wait(1000, 5) == 5);
+}
+
+TEST_CASE("A line that never comes back was refused, and the cooldown lets go of it")
+{
+    ItemLinkWire::Cooldown cooldown;
+    cooldown.Sent(1000, true);
+    CHECK(cooldown.Wait(1000 + ItemLinkWire::Cooldown::EchoWaitMs - 1, 5) == 4);
+    CHECK(cooldown.Wait(1000 + ItemLinkWire::Cooldown::EchoWaitMs, 5) == 0);
+    // It came back late after all: the server took it then.
+    cooldown.Confirmed(4000);
+    CHECK(cooldown.Wait(4000, 5) == 5);
+    CHECK(cooldown.Wait(9000, 5) == 0);
+}
+
+TEST_CASE("A whisper never comes back: its cooldown counts from the sending, a margin longer")
+{
+    ItemLinkWire::Cooldown cooldown;
+    cooldown.Sent(1000, false);
+    CHECK(cooldown.Wait(1000, 5) == 6);
+    CHECK(cooldown.Wait(1000 + ItemLinkWire::Cooldown::EchoWaitMs, 5) == 4);
+    CHECK(cooldown.Wait(6999, 5) == 1);
+    CHECK(cooldown.Wait(7000, 5) == 0);
+}
+
+TEST_CASE("The player's own line: by its sender, a shout by the name in its text")
+{
+    CHECK(ItemLinkWire::IsOwnLine(L"Hero", L"look [Kris]", ItemLinkWire::NormalChannel, L"Hero"));
+    CHECK(ItemLinkWire::IsOwnLine(L"Hero", L"look [Kris]", ItemLinkWire::PartyChannel, L"Hero"));
+    CHECK_FALSE(ItemLinkWire::IsOwnLine(L"Heroine", L"look [Kris]", ItemLinkWire::NormalChannel, L"Hero"));
+    CHECK_FALSE(ItemLinkWire::IsOwnLine(L"Hero", L"look [Kris]", ItemLinkWire::NormalChannel, L""));
+    CHECK(ItemLinkWire::IsOwnLine(ItemLinkWire::ShoutSender, L"Hero: look [Kris]", ItemLinkWire::ShoutChannel, L"Hero"));
+    CHECK_FALSE(ItemLinkWire::IsOwnLine(ItemLinkWire::ShoutSender, L"Heroine: look [Kris]", ItemLinkWire::ShoutChannel, L"Hero"));
+    CHECK_FALSE(ItemLinkWire::IsOwnLine(ItemLinkWire::ShoutSender, L"Hero", ItemLinkWire::ShoutChannel, L"Hero"));
 }
 
 TEST_CASE("The draft puts items in at the caret and sends them in order")

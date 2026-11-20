@@ -232,6 +232,15 @@ std::optional<wchar_t> ChannelOfLine(std::wstring_view sender, mu::ui::window::M
     }
 }
 
+bool IsOwnLine(std::wstring_view sender, std::wstring_view text, wchar_t channel, std::wstring_view ownName)
+{
+    if (ownName.empty())
+        return false;
+    if (channel != ShoutChannel)
+        return sender == ownName;
+    return text.starts_with(ownName) && text.substr(ownName.size()).starts_with(L": ");
+}
+
 std::wstring ItemRef(wchar_t storage, int slot, int type, int level)
 {
     return std::wstring(1, storage) + std::to_wstring(slot) + L':' + std::to_wstring(type) + L':'
@@ -270,16 +279,32 @@ std::size_t MaxLineLength(std::wstring_view channel)
     return prefixed ? MaxChatLength - PrefixLength : MaxChatLength;
 }
 
-int CooldownWait(std::optional<std::uint64_t> sentAtMs, std::uint64_t nowMs, int cooldownSeconds)
+void Cooldown::Sent(std::uint64_t nowMs, bool comesBack)
+{
+    m_fromMs = nowMs;
+    m_marginMs = comesBack ? 0 : WhisperMarginMs;
+    m_awaitingEcho = comesBack;
+}
+
+void Cooldown::Confirmed(std::uint64_t nowMs)
+{
+    m_fromMs = nowMs;
+    m_marginMs = 0;
+    m_awaitingEcho = false;
+}
+
+int Cooldown::Wait(std::uint64_t nowMs, int cooldownSeconds) const
 {
     constexpr std::uint64_t MillisecondsPerSecond = 1000;
-    if (!sentAtMs || cooldownSeconds <= 0)
+    if (!m_fromMs || cooldownSeconds <= 0)
         return 0;
-    const std::uint64_t cooldownMs = static_cast<std::uint64_t>(cooldownSeconds) * MillisecondsPerSecond;
-    const std::uint64_t passed = nowMs > *sentAtMs ? nowMs - *sentAtMs : 0;
-    if (passed >= cooldownMs)
+    const std::uint64_t passed = nowMs > *m_fromMs ? nowMs - *m_fromMs : 0;
+    if (m_awaitingEcho && passed >= EchoWaitMs)
         return 0;
-    return static_cast<int>((cooldownMs - passed + MillisecondsPerSecond - 1) / MillisecondsPerSecond);
+    const std::uint64_t lastsMs = static_cast<std::uint64_t>(cooldownSeconds) * MillisecondsPerSecond + m_marginMs;
+    if (passed >= lastsMs)
+        return 0;
+    return static_cast<int>((lastsMs - passed + MillisecondsPerSecond - 1) / MillisecondsPerSecond);
 }
 
 std::optional<std::wstring> BuildCommand(std::wstring_view channel, std::wstring_view text, std::size_t bodyStart,

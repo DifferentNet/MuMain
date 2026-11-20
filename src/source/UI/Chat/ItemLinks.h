@@ -28,10 +28,11 @@ bool IsOffered();
 // How many items one message may show (the server's number, at most ItemLinkWire::MaxLinks).
 int MaxItems();
 // The whole seconds before the next message with items may go: the server takes one every cooldownSeconds of
-// "#ILH" per account and refuses one sooner. 0 when it may go now.
+// "#ILH" per account and refuses one sooner (ItemLinkWire::Cooldown). 0 when it may go now.
 int CooldownWait();
-// A message with items went to the server: the cooldown begins.
-void NoteSent();
+// A message with items went to the server; `comesBack`: its line comes back to the sender (all but a whisper),
+// which tells the server took it (TakeFor()).
+void NoteSent(bool comesBack);
 
 // A chat line with its items: the text the log shows (each name in the reader's language) and the links in it.
 struct Linked

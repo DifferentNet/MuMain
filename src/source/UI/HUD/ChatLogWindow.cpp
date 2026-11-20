@@ -38,7 +38,9 @@
 #include "Engine/Object/ZzzInventory.h"
 #include "UI/Chat/ChatRowWrap.h"
 
+#include <algorithm>
 #include <chrono>
+#include <limits>
 #include <utility>
 
 using namespace SEASON3B;
@@ -58,6 +60,14 @@ using namespace mu::ui::window;
 std::uint64_t mu::ui::window::ChatLogClockMs()
 {
     return GetTickCount64();
+}
+
+int mu::ui::window::NextChatLinkSerial()
+{
+    // The log keeps a few hundred rows; numbers come back round long after the rows that had them are gone.
+    static int serial = 0;
+    serial = serial == std::numeric_limits<int>::max() ? 1 : serial + 1;
+    return serial;
 }
 
 mu::ui::window::CChatLogWindow::CChatLogWindow()
@@ -643,6 +653,7 @@ void mu::ui::window::CChatLogWindow::BindRmlModel(Rml::DataModelConstructor& c, 
     line.RegisterMember("faded", &ChatLogLineEntry::faded);
     line.RegisterMember("lead", &ChatLogLineEntry::lead);
     line.RegisterMember("segs", &ChatLogLineEntry::segs);
+    line.RegisterMember("msg", &ChatLogLineEntry::msg);
     c.RegisterArray<Rml::Vector<ChatLogLineEntry>>();
 
     c.Bind("lines", &model.lines);
@@ -866,7 +877,8 @@ namespace
     bool StoreLineEntry(mu::ui::window::ChatLogLineEntry& slot, const mu::ui::window::ChatLogLineEntry& wanted)
     {
         if (slot.text == wanted.text && slot.kind == wanted.kind && slot.hasId == wanted.hasId
-            && slot.faded == wanted.faded && slot.lead == wanted.lead && slot.segs == wanted.segs)
+            && slot.faded == wanted.faded && slot.lead == wanted.lead && slot.segs == wanted.segs
+            && slot.msg == wanted.msg)
             return false;
         slot = wanted;
         return true;
@@ -915,6 +927,7 @@ bool mu::ui::window::CChatLogWindow::RebuildLineModel()
             wanted.kind.clear();
             wanted.hasId = false;
             wanted.segs.clear();
+            wanted.msg = 0;
         }
         else
         {
@@ -924,11 +937,13 @@ bool mu::ui::window::CChatLogWindow::RebuildLineModel()
             {
                 wanted.text = CachedLineUtf8(*pMsgText);
                 wanted.segs.clear();
+                wanted.msg = 0;
             }
             else
             {
                 wanted.text.clear();
                 LinkSegments(*pMsgText, wanted.segs);
+                wanted.msg = pMsgText->GetLinkSerial();
             }
         }
         changed |= StoreLineEntry(model.lines[index], wanted);
@@ -1097,16 +1112,23 @@ std::optional<mu::ui::window::CChatLogWindow::ItemLinkTip> mu::ui::window::CChat
     type_vector_msgs* pvecMsgs = GetMsgs(GetCurrentMsgType());
     if (pvecMsgs == nullptr)
         return std::nullopt;
-    const ChatLogRmlModel& model = m_RmlView.GetModel();
-    const int count = std::min({lines->GetNumChildren(), static_cast<int>(model.lines.size()), static_cast<int>(pvecMsgs->size())});
-    for (int i = 0; i < count; ++i)
+    // A row's message is the one its element names (ChatLogLineEntry::msg), not the one at its place: the list
+    // changes as lines come, the elements only when RmlUi next updates them. One gone since is no longer pointed.
+    const auto messageOf = [pvecMsgs](int serial) -> const CMessageText*
     {
-        const ChatLogLineEntry& entry = model.lines[static_cast<std::size_t>(i)];
-        const CMessageText* message = (*pvecMsgs)[static_cast<std::size_t>(i)];
+        const auto found = std::find_if(pvecMsgs->rbegin(), pvecMsgs->rend(), [serial](const CMessageText* message)
+                                        { return message != nullptr && message->GetLinkSerial() == serial; });
+        return found != pvecMsgs->rend() ? *found : nullptr;
+    };
+    for (int i = 0; i < lines->GetNumChildren(); ++i)
+    {
         Rml::Element* row = lines->GetChild(i);
+        const int serial = row != nullptr ? row->GetAttribute<int>("msg", 0) : 0;
+        if (serial <= 0 || row->IsClassSet("chat-line--faded"))
+            continue;
+        const CMessageText* message = messageOf(serial);
         ShownBox line;
-        if (entry.faded || entry.segs.empty() || message == nullptr || row == nullptr
-            || !UI::RmlBridge::DrawnBox(*row, Rml::BoxArea::Border, line.pos, line.size))
+        if (message == nullptr || !UI::RmlBridge::DrawnBox(*row, Rml::BoxArea::Border, line.pos, line.size))
             continue;
         const std::vector<UI::Chat::ChatItemLink>& links = message->GetLinks();
         for (int c = 0; c < row->GetNumChildren(); ++c)

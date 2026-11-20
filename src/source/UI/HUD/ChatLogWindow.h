@@ -40,6 +40,8 @@ namespace mu::ui::window
 
     // The clock a chat line is stamped with when it comes (ChatLogWindow.cpp), in milliseconds.
     std::uint64_t ChatLogClockMs();
+    // MU Moldova: a new number for a chat row that shows items, never 0 and never one in use.
+    int NextChatLinkSerial();
 
     template <class T>
     class TMessageText
@@ -56,6 +58,8 @@ namespace mu::ui::window
         std::string m_lineUtf8;
         // MU Moldova: the items whose "[name]" this row shows (UI/Chat/ItemLinks.h), in the order they stand.
         std::vector<UI::Chat::ChatItemLink> m_links;
+        // The row's own number among the rows that show items (NextChatLinkSerial()), 0 for a row without.
+        int m_linkSerial = 0;
 
     public:
         TMessageText() : m_MsgType(TYPE_UNKNOWN), m_dwIndentSize(0) {}
@@ -72,6 +76,7 @@ namespace mu::ui::window
             m_addedAtMs = ChatLogClockMs();
             m_lineUtf8.clear();
             m_links.clear();
+            m_linkSerial = 0;
 
             return true;
         }
@@ -81,6 +86,7 @@ namespace mu::ui::window
             m_strText.resize(0);
             m_lineUtf8.clear();
             m_links.clear();
+            m_linkSerial = 0;
             m_MsgType = TYPE_UNKNOWN;
         }
 
@@ -92,7 +98,12 @@ namespace mu::ui::window
         const std::string& GetLineUtf8() const { return m_lineUtf8; }
         void SetLineUtf8(std::string line) { m_lineUtf8 = std::move(line); }
         const std::vector<UI::Chat::ChatItemLink>& GetLinks() const { return m_links; }
-        void SetLinks(std::vector<UI::Chat::ChatItemLink> links) { m_links = std::move(links); }
+        void SetLinks(std::vector<UI::Chat::ChatItemLink> links)
+        {
+            m_links = std::move(links);
+            m_linkSerial = m_links.empty() ? 0 : NextChatLinkSerial();
+        }
+        int GetLinkSerial() const { return m_linkSerial; }
     };
 
     typedef TMessageText<wchar_t> CMessageText;
@@ -123,6 +134,10 @@ namespace mu::ui::window
         bool lead = false;
         // A line that shows items is drawn from these pieces and leaves `text` empty; other lines have none.
         Rml::Vector<ChatLogSegment> segs;
+        // That line's CMessageText::GetLinkSerial(), which its element carries (chat_log.rml): the message an
+        // element shows is found by it, as a row's place among the elements may be another message's until
+        // RmlUi next updates them (lines come and go at the cap as soon as they arrive).
+        int msg = 0;
     };
 
     // RmlUi owns this window's whole presentation now: the background fill, every message line,

@@ -14599,19 +14599,19 @@
   </data>
   <!-- item links in chat -->
   <data name="ItemLinkToChat" xml:space="preserve">
-    <value>To chat</value>
+    <value>In den Chat</value>
   </data>
   <data name="ItemLinkTooManyItems" xml:space="preserve">
-    <value>Up to %d items in one message.</value>
+    <value>Höchstens %d Gegenstände pro Nachricht.</value>
   </data>
   <data name="ItemLinkTooLong" xml:space="preserve">
-    <value>No room for another item in this message.</value>
+    <value>In dieser Nachricht ist kein Platz für einen weiteren Gegenstand.</value>
   </data>
   <data name="ItemLinkCommandTooLong" xml:space="preserve">
-    <value>The message with items is too long.</value>
+    <value>Die Nachricht mit Gegenständen ist zu lang.</value>
   </data>
   <data name="ItemLinkWait" xml:space="preserve">
-    <value>Wait %d s before the next message with items.</value>
+    <value>Warte %d s bis zur nächsten Nachricht mit Gegenständen.</value>
   </data>
   <!-- skill book quest (2026-11-20) -->
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">

@@ -42,8 +42,8 @@ struct State
     bool offered = false;
     int maxItems = 0;
     int cooldownSeconds = 0;
-    // When the last message with items went; kept over a new character, as the server's cooldown is the account's.
-    std::optional<std::uint64_t> sentAt;
+    // Kept over a new character, as the server's cooldown is the account's.
+    ItemLinkWire::Cooldown cooldown;
     ItemLinkPending pending;
 };
 
@@ -181,12 +181,12 @@ int MaxItems()
 int CooldownWait()
 {
     const State& state = Links();
-    return ItemLinkWire::CooldownWait(state.sentAt, GetTickCount64(), state.cooldownSeconds);
+    return state.cooldown.Wait(GetTickCount64(), state.cooldownSeconds);
 }
 
-void NoteSent()
+void NoteSent(bool comesBack)
 {
-    Links().sentAt = GetTickCount64();
+    Links().cooldown.Sent(GetTickCount64(), comesBack);
 }
 
 std::optional<Linked> TakeFor(std::wstring_view sender, std::wstring_view text, mu::ui::window::MESSAGE_TYPE kind)
@@ -200,6 +200,8 @@ std::optional<Linked> TakeFor(std::wstring_view sender, std::wstring_view text, 
     const auto line = state.pending.Take(sender, *channel, GetTickCount64());
     if (!line)
         return std::nullopt;
+    if (Hero != nullptr && ItemLinkWire::IsOwnLine(sender, text, *channel, Hero->ID))
+        state.cooldown.Confirmed(GetTickCount64());
     return Build(text, line->links);
 }
 

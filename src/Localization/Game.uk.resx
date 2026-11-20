@@ -14501,19 +14501,19 @@
   </data>
   <!-- item links in chat -->
   <data name="ItemLinkToChat" xml:space="preserve">
-    <value>To chat</value>
+    <value>У чат</value>
   </data>
   <data name="ItemLinkTooManyItems" xml:space="preserve">
-    <value>Up to %d items in one message.</value>
+    <value>Не більше %d речей в одному повідомленні.</value>
   </data>
   <data name="ItemLinkTooLong" xml:space="preserve">
-    <value>No room for another item in this message.</value>
+    <value>У повідомленні немає місця для ще однієї речі.</value>
   </data>
   <data name="ItemLinkCommandTooLong" xml:space="preserve">
-    <value>The message with items is too long.</value>
+    <value>Повідомлення з речами задовге.</value>
   </data>
   <data name="ItemLinkWait" xml:space="preserve">
-    <value>Wait %d s before the next message with items.</value>
+    <value>Зачекайте %d с перед наступним повідомленням з речами.</value>
   </data>
   <!-- skill book quest (2026-11-20) -->
   <data name="SkillBookNeedsHeroQuest" xml:space="preserve">

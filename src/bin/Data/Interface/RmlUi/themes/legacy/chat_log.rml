@@ -32,6 +32,7 @@
 			     data-class-chat-line--pointed="it_index == pointed_index"
 			     data-class-chat-line--faded="line.faded"
 			     data-class-chat-line--lead="line.lead"
+			     data-attr-msg="line.msg"
 			     data-style-font-size="text_px + 'px'">{{line.text}}<span data-for="seg : line.segs"
 				       data-class-chat-link="seg.link >= 0"
 				       data-class-chat-link--normal="seg.rarity == 'normal'"
